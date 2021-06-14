@@ -3,115 +3,158 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04AAEC48BE6
-	for <linux-xfs@archiver.kernel.org>; Mon, 14 Jun 2021 20:49:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52CA2C48BE6
+	for <linux-xfs@archiver.kernel.org>; Mon, 14 Jun 2021 20:59:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DEA3561356
-	for <linux-xfs@archiver.kernel.org>; Mon, 14 Jun 2021 20:49:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 419EA60241
+	for <linux-xfs@archiver.kernel.org>; Mon, 14 Jun 2021 20:59:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235658AbhFNUvZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 14 Jun 2021 16:51:25 -0400
-Received: from mail.kernel.org ([198.145.29.99]:44792 "EHLO mail.kernel.org"
+        id S234686AbhFNVBD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 14 Jun 2021 17:01:03 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47172 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235672AbhFNUvU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 14 Jun 2021 16:51:20 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id F371F6124B;
-        Mon, 14 Jun 2021 20:49:16 +0000 (UTC)
+        id S233438AbhFNVBD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 14 Jun 2021 17:01:03 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A70B8601FC;
+        Mon, 14 Jun 2021 20:58:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1623703757;
-        bh=zV0dqEAohcnqRJ8+DZGQOARf3CoDmFOSm1/UEz8Yc70=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Rg1d15cUPB+5xJvLHi1GSCnd9551UnSDW+jKmsUVFPCQv6P51rfduRJiUVKl2TtAj
-         v85aZTaseyn6avHBh7scotDj4Hv6AjY8leueT49wA3hhY9lY2WRnRqvbBlmlUoEDOq
-         yM1OIPRbfEg5OhLCqxJLUFqC6gBreN7infxuHd1qHkw/RK557kLaPm5R5lSpjlb9MJ
-         Byzs5I4+DhV3Hc2icQcDYj6A310ywaIPhdGKgRRtl+botZTR5jUOS5E7mwx64n41FL
-         iTspObYrZDRb8v1D+j9bpb8lXOLFg5Cm2+rB2AgO0uJe1J3ZhT1WuQ+FWw5kin2Ni3
-         TeVNZ1tXsMtkg==
-Date:   Mon, 14 Jun 2021 13:49:16 -0700
+        s=k20201202; t=1623704339;
+        bh=cMHHKXEhgSN/qU3wyKkcWDOqzWlLR9l7uyxeP6Xke5w=;
+        h=Subject:From:To:Cc:Date:From;
+        b=jrw4lsb2dFMmHfOFSUKELauvfexO+K4lO/NN/+LwaoVasVd4J4mXkWwKXjcfi4dEH
+         GLHLqTrmRKt9gOE99EtT3q5NQJEd5Xw5O6kuBorOfsylN49z/6Jj028oa5/CJsa5a+
+         ziN3V34ktyhfA4LkxOTgBLVPhy79W8dYzYHUwitGr4nISKnZ42cfLqpB/fz+X07sxh
+         W+Nv75MCtWssUNgSh6+8nVZW0ERm2WVtaP4mIAmPqNiueeE2HdgQmxGQCy6kE7Nh2l
+         9zysJcms0RGosHr3wMfVZyjNzIn4Q0Vf2AoWkIaHrCoymZIa8R7zxSQx9QIEzjXv64
+         i68P2GbWq3vMA==
+Subject: [PATCHSET v2 00/13] fstests: move test group lists into test files
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Allison Henderson <allison.henderson@oracle.com>
-Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org, guan@eryu.me, amir73il@gmail.com,
-        ebiggers@kernel.org
-Subject: Re: [PATCH 13/13] misc: update documentation to reflect
- auto-generated group files
-Message-ID: <20210614204916.GB2945720@locust>
-References: <162317276202.653489.13006238543620278716.stgit@locust>
- <162317283324.653489.9381968524443830077.stgit@locust>
- <6638e618-3d97-a403-311c-941de3db6320@oracle.com>
+To:     djwong@kernel.org, guaneryu@gmail.com
+Cc:     Allison Henderson <allison.henderson@oracle.com>,
+        Chandan Babu R <chandanrlinux@gmail.com>,
+        linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me,
+        amir73il@gmail.com, ebiggers@kernel.org
+Date:   Mon, 14 Jun 2021 13:58:59 -0700
+Message-ID: <162370433910.3800603.9623820748404628250.stgit@locust>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <6638e618-3d97-a403-311c-941de3db6320@oracle.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 14, 2021 at 12:39:46PM -0700, Allison Henderson wrote:
-> 
-> 
-> On 6/8/21 10:20 AM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Update the documentation to outline the new requirements for test files
-> > so that we can generate group files during build.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> Ok, that sounds about right
-> Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+Hi all,
 
-Thanks to you and Eric and Chandan for reviewing this!
+Test group files (e.g. tests/generic/group) are a pain to keep up.
+Every week I rebase on Eryu's latest upstream, and every week I have to
+slog through dozens of trivial merge conflicts because of the
+groupfiles.  Moving tests is annoying because we have to maintain all
+this code to move the group associations from one /group file to
+another.
+
+It doesn't need to be this way -- we could move each test's group
+information into the test itself, and automatically generate the group
+files as part of the make process.  This series does exactly that.
+
+The first few patches add some convenient anchors for the new
+per-testfile group tagging and a conversion script to migrate existing
+test files.  Next there's a huge patch that is the results of running
+the conversion script, followed by cleanup of the golden outputs.  After
+that comes the build infrastructure to generate group files and other
+tweaks to the existing maintainer scripts to use the new infrastructure.
+Finally, remove the group files themselves and the (now unnecessary)
+code that maintained them.
+
+v1: promote from rfc, use group.list for autogenerated group files, fix
+    odd build warts, rename preamble function, update readme
+v2: add reviews, remove _cleanup functions that mirror the standard one,
+    use rm -rf to clean $tmp.*
+
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
+
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
 
 --D
 
-> 
-> > ---
-> >   README |   19 ++++++++++++++++---
-> >   1 file changed, 16 insertions(+), 3 deletions(-)
-> > 
-> > 
-> > diff --git a/README b/README
-> > index 048491a6..ab298ca9 100644
-> > --- a/README
-> > +++ b/README
-> > @@ -140,7 +140,8 @@ Running tests:
-> >       - ./check '*/001' '*/002' '*/003'
-> >       - ./check '*/06?'
-> >       - Groups of tests maybe ran by: ./check -g [group(s)]
-> > -      See the 'group' file for details on groups
-> > +      See the tests/*/group.list files after building xfstests to learn about
-> > +      each test's group memberships.
-> >       - If you want to run all tests regardless of what group they are in
-> >         (including dangerous tests), use the "all" group: ./check -g all
-> >       - To randomize test order: ./check -r [test(s)]
-> > @@ -174,8 +175,8 @@ Test script environment:
-> >       When developing a new test script keep the following things in
-> >       mind.  All of the environment variables and shell procedures are
-> > -    available to the script once the "common/rc" file has been
-> > -    sourced.
-> > +    available to the script once the "common/preamble" file has been
-> > +    sourced and the "_begin_fstest" function has been called.
-> >        1. The tests are run from an arbitrary directory.  If you want to
-> >   	do operations on an XFS filesystem (good idea, eh?), then do
-> > @@ -249,6 +250,18 @@ Test script environment:
-> >   	  in the ./new script. It can contain only alphanumeric characters
-> >   	  and dash. Note the "NNN-" part is added automatically.
-> > +     6. Test group membership: Each test can be associated with any number
-> > +	of groups for convenient selection of subsets of tests.  Test names
-> > +	can be any sequence of non-whitespace characters.  Test authors
-> > +	associate a test with groups by passing the names of those groups as
-> > +	arguments to the _begin_fstest function:
-> > +
-> > +	_begin_fstest auto quick subvol snapshot
-> > +
-> > +	The build process scans test files for _begin_fstest invocations and
-> > +	compiles the group list from that information.  In other words, test
-> > +	files must call _begin_fstest or they will not be run.
-> > +
-> >   Verified output:
-> >       Each test script has a name, e.g. 007, and an associated
-> > 
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=autogenerate-groupfiles-5.14
+---
+ .gitignore             |    3 
+ README                 |   19 +
+ check                  |    6 
+ common/preamble        |   57 ++++
+ include/buildgrouplist |    8 +
+ new                    |  217 +++++-----------
+ tests/Makefile         |    4 
+ tests/btrfs/001        |   19 -
+ tests/btrfs/002        |   19 -
+ tests/btrfs/003        |   15 -
+ tests/btrfs/004        |   15 -
+ tests/btrfs/005        |   21 --
+ tests/btrfs/006        |   21 --
+ tests/btrfs/006.out    |    2 
+ tests/btrfs/012.out    |    2 
+ tests/btrfs/Makefile   |    6 
+ tests/btrfs/group      |  246 ------------------
+ tests/ceph/Makefile    |    6 
+ tests/ceph/group       |    4 
+ tests/cifs/Makefile    |    6 
+ tests/cifs/group       |    6 
+ tests/ext4/Makefile    |    6 
+ tests/ext4/group       |   64 -----
+ tests/f2fs/Makefile    |    6 
+ tests/f2fs/group       |    7 -
+ tests/generic/068      |    3 
+ tests/generic/184.out  |    2 
+ tests/generic/Makefile |    6 
+ tests/generic/group    |  643 ------------------------------------------------
+ tests/nfs/Makefile     |    6 
+ tests/nfs/group        |    6 
+ tests/ocfs2/Makefile   |    6 
+ tests/ocfs2/group      |    1 
+ tests/overlay/Makefile |    6 
+ tests/overlay/group    |  100 -------
+ tests/perf/Makefile    |    6 
+ tests/perf/group       |    1 
+ tests/shared/Makefile  |    6 
+ tests/shared/group     |    8 -
+ tests/udf/Makefile     |    6 
+ tests/udf/group        |    6 
+ tests/xfs/004          |    3 
+ tests/xfs/Makefile     |    6 
+ tests/xfs/group        |  534 ----------------------------------------
+ tools/convert-group    |  138 ++++++++++
+ tools/mkgroupfile      |   42 +++
+ tools/mvtest           |   12 -
+ tools/nextid           |    1 
+ tools/nextid           |   31 ++
+ tools/sort-group       |  112 --------
+ 50 files changed, 459 insertions(+), 2017 deletions(-)
+ create mode 100644 common/preamble
+ create mode 100644 include/buildgrouplist
+ delete mode 100644 tests/btrfs/group
+ delete mode 100644 tests/ceph/group
+ delete mode 100644 tests/cifs/group
+ delete mode 100644 tests/ext4/group
+ delete mode 100644 tests/f2fs/group
+ delete mode 100644 tests/generic/group
+ delete mode 100644 tests/nfs/group
+ delete mode 100644 tests/ocfs2/group
+ delete mode 100644 tests/overlay/group
+ delete mode 100644 tests/perf/group
+ delete mode 100644 tests/shared/group
+ delete mode 100644 tests/udf/group
+ delete mode 100644 tests/xfs/group
+ create mode 100755 tools/convert-group
+ create mode 100755 tools/mkgroupfile
+ delete mode 120000 tools/nextid
+ create mode 100755 tools/nextid
+ delete mode 100755 tools/sort-group
+
