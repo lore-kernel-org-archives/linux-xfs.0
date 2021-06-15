@@ -2,67 +2,41 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A10FC48BE5
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Jun 2021 15:38:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7775C48BDF
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Jun 2021 16:19:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3FE4E61494
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Jun 2021 15:38:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BF144616E9
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Jun 2021 16:19:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231583AbhFOPk3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 15 Jun 2021 11:40:29 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:30483 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231609AbhFOPk0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Jun 2021 11:40:26 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1623771501;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=GQZqxqodLYuBb006+Cum+sMilH+MHHn6VAMHYk9AC2E=;
-        b=F4nCzkTgfXEMud/hlHuuUzY96yVE4XokxTdqoTg38f3d8u2nWoJ5k3cVafimBMDpZ1Sr1U
-        2VFnyWteM8DRFkjOyrJ95b4cfTHvjj+R5esHc/Eb0S5HY3yBJqUa0vXIO8Lfvhy0WkuqGN
-        ch1NnmokXkmZOPLzRPuGyvucj6M94T4=
-Received: from mail-oi1-f200.google.com (mail-oi1-f200.google.com
- [209.85.167.200]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-521-eh3rc0K9OEuOs7WBmWkA7w-1; Tue, 15 Jun 2021 11:38:17 -0400
-X-MC-Unique: eh3rc0K9OEuOs7WBmWkA7w-1
-Received: by mail-oi1-f200.google.com with SMTP id f16-20020acacf100000b02901eed1481b82so6443826oig.20
-        for <linux-xfs@vger.kernel.org>; Tue, 15 Jun 2021 08:38:17 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=GQZqxqodLYuBb006+Cum+sMilH+MHHn6VAMHYk9AC2E=;
-        b=ogSyhWiTEDszi57s8Tt9lskoXT/W+smOEhYS/Lmm4mj95+zJHMNRyi1WxZoloZr9Vj
-         5FAITtl3WOFq2ay2myspaBQcNUzx6+lp+L72SOjINuYlnzUOhDXW5jY6oBmPubccL6kb
-         Hf9e5okYO6Z0JCcHapz/EFiG8J3m4fc5nX4t4Ldc0g6oXpDq5JTKhCDpmGo68mq91TTJ
-         Dqu/bQxEVG18zYmp93u/H84hpa9lsHRdmY96sV8Zpgle7qPdagejbTRtf2vRggiF3XAK
-         4BTWDVeFDk6AFu9B8CJq7TWIYhTJwfJzUZOZ3GemB0L+RWO5kc9kXGTCS85ZE7Dgdw9F
-         FRkg==
-X-Gm-Message-State: AOAM533vOZAD4YZ1S48Ov0NXIKWC0exihJz0pxkj9Boyj+W/edfQfgZd
-        0O6qakZ2tdOMQbi3+Rf1oMhxV5TcxkO86GnF0ux+co6xaftw8uNOW5MkKgmkpu20R3S7oQdv0n3
-        IL40B288ywIoTaEA9drd1
-X-Received: by 2002:a54:4385:: with SMTP id u5mr14789347oiv.30.1623771497109;
-        Tue, 15 Jun 2021 08:38:17 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJxaE6wRLj4ms9xKkO5gp/TzaTspE+rXCXj/ZQ7UIMmSs4HE5Tsvo0/dyDq2TUveZrRnGJYufg==
-X-Received: by 2002:a54:4385:: with SMTP id u5mr14789336oiv.30.1623771496923;
-        Tue, 15 Jun 2021 08:38:16 -0700 (PDT)
-Received: from bfoster ([98.216.211.229])
-        by smtp.gmail.com with ESMTPSA id f25sm4173698oto.26.2021.06.15.08.38.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 15 Jun 2021 08:38:16 -0700 (PDT)
-Date:   Tue, 15 Jun 2021 11:38:14 -0400
-From:   Brian Foster <bfoster@redhat.com>
+        id S230380AbhFOQVe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 15 Jun 2021 12:21:34 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60552 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230450AbhFOQV0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 15 Jun 2021 12:21:26 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 4E32B616EA;
+        Tue, 15 Jun 2021 16:19:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1623773962;
+        bh=QAMJ2mAwUxvPNsJ5yiyHppBLEhPPp9OczV4LpsCXCgc=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=deKOdVhkvkUYq1D3ePsTBDE9YV4w9itsbkI3X2FyGdlsUHsXGsjnhReFxMqTC3gIw
+         7Onz3H5CxLWm5NfHBP+yjChHdbLfFWzRKxoN9yfi+YYaRL8VzSWqJIIZI701G/z3aP
+         f8bqLjZcgccYNUSgHByd8awj1UnpXiMjlIDZWAnTJbnZOJX4M+3SlIip9PW6s7ZYyt
+         qgcq+K9cyOIeewgZWCbzxZJ2cmjOzPPJL2mwQvb3UTpoO/8+2XP7RPL+1Qk0aIuJ/w
+         DNdqyhzwUnuHa7mMuJGCpW3spzbi5zUIVw2Bx7OwK2RC++Nv+e9RGysfNy3gKHI61I
+         YPqTNlpqMPQsQ==
+Date:   Tue, 15 Jun 2021 09:19:21 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
 Subject: Re: [PATCH 2/2] xfs: don't wait on future iclogs when pushing the CIL
-Message-ID: <YMjJZigzh3AbpOPA@bfoster>
+Message-ID: <20210615161921.GC158209@locust>
 References: <20210615064658.854029-1-david@fromorbit.com>
  <20210615064658.854029-3-david@fromorbit.com>
 MIME-Version: 1.0
@@ -158,16 +132,13 @@ On Tue, Jun 15, 2021 at 04:46:58PM +1000, Dave Chinner wrote:
 > +			spin_lock(&log->l_icloglock);
 > +		}
 
-I'm confused at what this is attempting to accomplish. If we have a
-single CIL force and that happens to span several iclogs, isn't the goal
-to wait on the previous iclog to ensure the previously written content
-of the current checkpoint is on-disk? If so, it looks to me that
-commit_iclog will always match log->l_iclog in that scenario because in
-the commit record path we don't (potentially) switch it out until toward
-the end of this function. Hmm.. did you mean to check ->ic_prev against
-->l_iclog perhaps, or am I just missing something else?
+I'm confused.  How can you tell that we need to wait for
+commit_iclog->ic_prev to be written out by comparing commit_iclog to
+log->l_iclog?  Can't you determine this by checking ic_prev for DIRTY
+state?
 
-Brian
+--D
+
 
 >  		commit_iclog->ic_flags |= XLOG_ICL_NEED_FLUSH;
 >  	}
@@ -175,4 +146,3 @@ Brian
 > -- 
 > 2.31.1
 > 
-
