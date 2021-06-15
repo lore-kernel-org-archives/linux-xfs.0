@@ -2,50 +2,49 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DF19C49EA5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38916C49EA2
 	for <linux-xfs@archiver.kernel.org>; Tue, 15 Jun 2021 09:18:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 46AFE61245
+	by mail.kernel.org (Postfix) with ESMTP id 0F85C61433
 	for <linux-xfs@archiver.kernel.org>; Tue, 15 Jun 2021 09:18:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231555AbhFOJUn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 15 Jun 2021 05:20:43 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:54714 "EHLO
+        id S231538AbhFOJUm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 15 Jun 2021 05:20:42 -0400
+Received: from smtp-out1.suse.de ([195.135.220.28]:54674 "EHLO
         smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231354AbhFOJUX (ORCPT
+        with ESMTP id S231346AbhFOJUX (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Jun 2021 05:20:23 -0400
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id 466B1219D7;
+        by smtp-out1.suse.de (Postfix) with ESMTP id 3C982219D0;
         Tue, 15 Jun 2021 09:18:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
         t=1623748695; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=emP2yQ1eljPd1NFX6C4KS1pG2iKhLeUQkNZ2AuwC2+s=;
-        b=Ah4EmbVQ6M39Y6+LU7t5DiCtD8hmTR3/RGkh8tJS5uPiaiUD/ZFzLAf39R9vJhHv1ZFrNg
-        rBVfWnox2lo0wiGuZOyP9FN3z7Ckf/lgG42jhWZz+3BA6qKjAxv25g68m0gAv7zqISGoqY
-        llRqrQ+QCGd6kMX8Rkvq6oLOdVeal2M=
+        bh=eJPcNasQsdD4alraw2ySNp9CvXcKAD7eZsBqJbvJG/E=;
+        b=mNYsE3Moem4CPgipCoJBVW3pKbWM/RieHW2msBIFTGhF0DkZcz1nTEkMIpUU6UjabKdm0W
+        M6mVM1MuYXexKl9goxJrYVfD+Tj4mmSH179+L8f9whj6gJTW9LfV41g3sQXs+Pcg/O4WWi
+        7FgLS7vOukNIO2t4r3TRkcs19pHiAsQ=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
         s=susede2_ed25519; t=1623748695;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=emP2yQ1eljPd1NFX6C4KS1pG2iKhLeUQkNZ2AuwC2+s=;
-        b=vSYdhpsCRnSXzaqR2+4HccdDgz/dZS4DZTpvxk9nYt/ZMaxbF9lFh/PZNIXU3vyPSMZ5Hn
-        shWE2wmxGojI+MDQ==
+        bh=eJPcNasQsdD4alraw2ySNp9CvXcKAD7eZsBqJbvJG/E=;
+        b=diw0cB6TtQrkCRKrb/BOoRn14gZQ/b0qj0myLemQdccLwtuT7qpBMKRtuoiLaD5N0Be4IC
+        3HLDqaJki5AW9ODA==
 Received: from quack2.suse.cz (unknown [10.100.200.198])
-        by relay2.suse.de (Postfix) with ESMTP id 2375CA3B93;
+        by relay2.suse.de (Postfix) with ESMTP id 19077A3B84;
         Tue, 15 Jun 2021 09:18:15 +0000 (UTC)
 Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id 4B42F1F2CC3; Tue, 15 Jun 2021 11:18:14 +0200 (CEST)
+        id 3D26D1F2CC0; Tue, 15 Jun 2021 11:18:14 +0200 (CEST)
 From:   Jan Kara <jack@suse.cz>
 To:     <linux-fsdevel@vger.kernel.org>
 Cc:     Christoph Hellwig <hch@infradead.org>,
@@ -60,123 +59,109 @@ Cc:     Christoph Hellwig <hch@infradead.org>,
         linux-f2fs-devel@lists.sourceforge.net, <linux-mm@kvack.org>,
         <linux-xfs@vger.kernel.org>, Miklos Szeredi <miklos@szeredi.hu>,
         Steve French <sfrench@samba.org>, Ted Tso <tytso@mit.edu>,
-        Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>
-Subject: [PATCH 10/14] zonefs: Convert to using invalidate_lock
-Date:   Tue, 15 Jun 2021 11:18:00 +0200
-Message-Id: <20210615091814.28626-10-jack@suse.cz>
+        Matthew Wilcox <willy@infradead.org>,
+        Pavel Reichl <preichl@redhat.com>,
+        Dave Chinner <dchinner@redhat.com>,
+        Eric Sandeen <sandeen@redhat.com>, Jan Kara <jack@suse.cz>
+Subject: [PATCH 07/14] xfs: Refactor xfs_isilocked()
+Date:   Tue, 15 Jun 2021 11:17:57 +0200
+Message-Id: <20210615091814.28626-7-jack@suse.cz>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210615090844.6045-1-jack@suse.cz>
 References: <20210615090844.6045-1-jack@suse.cz>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3534; h=from:subject; bh=X1+FAHnRq/hvKiFmSNKc+MwXBtDprJwr7H1BxXLJ9wE=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBgyHBIL5zkdMExsJLTZiQSWW/f9riYmtp7RAK4a4BF P6yR1FuJATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCYMhwSAAKCRCcnaoHP2RA2UjtCA DoGEOo5arbFkmjtyizZRD5fM5r5JrObCwT2t+IQJ3QFCXxSozqyYb8zdpzsUOCM2dt827sgezUBiyD Vu951paF9lgXzwVfR4FN3ipP6AxAoiPXiFOi1wEJKe9v9uz3RxZczz6Bw35QqUkxbSR/8+2jfiGS63 XXrEEZLjtDjyjwMshEgx2uym2/CX0BTl9G844bnsnWrguD8USkL1mj8coFJDG5CQrBiQ906PvCvOtV nUhYdWPV8a4dCwkPsRjykm5JceG862taTZwcqe3kWyUz1oNZ3/OZmLvag09+5UnF5LBUYqVZk29tQ1 yXRMzbLBXY8cwUKqFfjzq+/PVbqkf3
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2613; i=jack@suse.cz; h=from:subject; bh=U+bbQrzY4NRNf6bjNug/8v3gG53d1tZPwGQTBPmqTzM=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBgyHBGb6DDZ1XROYQY0WKzslcvTC5Zc+A/26r5bbgz 3WGOnWOJATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCYMhwRgAKCRCcnaoHP2RA2aRdB/ 9ARdUkK0QlTWiC/gWPnxKJ8Av4wBT4lrAPdR1a5S0uvs+LB+14MAWG84ZF9HIOr0LFDOMd282bJoaJ IseWFk4fqZdzNu3cYmvZzy4dyFh4eGr+1caf0RtF0InMJoGmONPMk/b5o7/Of1f8V1mUn9qDynxzBU wlSqOKQ4+bvxwZ6oJR2Q8PYRCbiS+qwNDWa8t1PFEl1l4ds/PPt0JyhEt11F2sblY2y2RB7/uYWCLv MEpWPPohHUJyO2cUxiHMTfOnJc31j92fbjJ72x/LASoZUIStAazqwBX2/Rx9nUvSddiRuGfZnMdOZJ T06WayHXGk7uGywNCl05BBOH3cZn62
 X-Developer-Key: i=jack@suse.cz; a=openpgp; fpr=93C6099A142276A28BBE35D815BC833443038D8C
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Use invalidate_lock instead of zonefs' private i_mmap_sem. The intended
-purpose is exactly the same.
+From: Pavel Reichl <preichl@redhat.com>
 
-CC: Damien Le Moal <damien.lemoal@wdc.com>
-CC: Johannes Thumshirn <jth@kernel.org>
-CC: <linux-fsdevel@vger.kernel.org>
-Acked-by: Damien Le Moal <damien.lemoal@wdc.com>
+Refactor xfs_isilocked() to use newly introduced __xfs_rwsem_islocked().
+__xfs_rwsem_islocked() is a helper function which encapsulates checking
+state of rw_semaphores hold by inode.
+
+Signed-off-by: Pavel Reichl <preichl@redhat.com>
+Suggested-by: Dave Chinner <dchinner@redhat.com>
+Suggested-by: Eric Sandeen <sandeen@redhat.com>
+Suggested-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/zonefs/super.c  | 23 +++++------------------
- fs/zonefs/zonefs.h |  7 +++----
- 2 files changed, 8 insertions(+), 22 deletions(-)
+ fs/xfs/xfs_inode.c | 34 ++++++++++++++++++++++++++--------
+ fs/xfs/xfs_inode.h |  2 +-
+ 2 files changed, 27 insertions(+), 9 deletions(-)
 
-diff --git a/fs/zonefs/super.c b/fs/zonefs/super.c
-index cd145d318b17..8931a566038e 100644
---- a/fs/zonefs/super.c
-+++ b/fs/zonefs/super.c
-@@ -462,7 +462,7 @@ static int zonefs_file_truncate(struct inode *inode, loff_t isize)
- 	inode_dio_wait(inode);
- 
- 	/* Serialize against page faults */
--	down_write(&zi->i_mmap_sem);
-+	filemap_invalidate_lock(inode->i_mapping);
- 
- 	/* Serialize against zonefs_iomap_begin() */
- 	mutex_lock(&zi->i_truncate_mutex);
-@@ -500,7 +500,7 @@ static int zonefs_file_truncate(struct inode *inode, loff_t isize)
- 
- unlock:
- 	mutex_unlock(&zi->i_truncate_mutex);
--	up_write(&zi->i_mmap_sem);
-+	filemap_invalidate_unlock(inode->i_mapping);
- 
- 	return ret;
- }
-@@ -575,18 +575,6 @@ static int zonefs_file_fsync(struct file *file, loff_t start, loff_t end,
- 	return ret;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index e4c2da4566f1..ffd47217a8fa 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -342,9 +342,29 @@ xfs_ilock_demote(
  }
  
--static vm_fault_t zonefs_filemap_fault(struct vm_fault *vmf)
--{
--	struct zonefs_inode_info *zi = ZONEFS_I(file_inode(vmf->vma->vm_file));
--	vm_fault_t ret;
--
--	down_read(&zi->i_mmap_sem);
--	ret = filemap_fault(vmf);
--	up_read(&zi->i_mmap_sem);
--
--	return ret;
--}
--
- static vm_fault_t zonefs_filemap_page_mkwrite(struct vm_fault *vmf)
+ #if defined(DEBUG) || defined(XFS_WARN)
+-int
++static inline bool
++__xfs_rwsem_islocked(
++	struct rw_semaphore	*rwsem,
++	bool			shared)
++{
++	if (!debug_locks)
++		return rwsem_is_locked(rwsem);
++
++	if (!shared)
++		return lockdep_is_held_type(rwsem, 0);
++
++	/*
++	 * We are checking that the lock is held at least in shared
++	 * mode but don't care that it might be held exclusively
++	 * (i.e. shared | excl). Hence we check if the lock is held
++	 * in any mode rather than an explicit shared mode.
++	 */
++	return lockdep_is_held_type(rwsem, -1);
++}
++
++bool
+ xfs_isilocked(
+-	xfs_inode_t		*ip,
++	struct xfs_inode	*ip,
+ 	uint			lock_flags)
  {
- 	struct inode *inode = file_inode(vmf->vma->vm_file);
-@@ -607,16 +595,16 @@ static vm_fault_t zonefs_filemap_page_mkwrite(struct vm_fault *vmf)
- 	file_update_time(vmf->vma->vm_file);
+ 	if (lock_flags & (XFS_ILOCK_EXCL|XFS_ILOCK_SHARED)) {
+@@ -359,15 +379,13 @@ xfs_isilocked(
+ 		return rwsem_is_locked(&ip->i_mmaplock.mr_lock);
+ 	}
  
- 	/* Serialize against truncates */
--	down_read(&zi->i_mmap_sem);
-+	filemap_invalidate_lock_shared(inode->i_mapping);
- 	ret = iomap_page_mkwrite(vmf, &zonefs_iomap_ops);
--	up_read(&zi->i_mmap_sem);
-+	filemap_invalidate_unlock_shared(inode->i_mapping);
+-	if (lock_flags & (XFS_IOLOCK_EXCL|XFS_IOLOCK_SHARED)) {
+-		if (!(lock_flags & XFS_IOLOCK_SHARED))
+-			return !debug_locks ||
+-				lockdep_is_held_type(&VFS_I(ip)->i_rwsem, 0);
+-		return rwsem_is_locked(&VFS_I(ip)->i_rwsem);
++	if (lock_flags & (XFS_IOLOCK_EXCL | XFS_IOLOCK_SHARED)) {
++		return __xfs_rwsem_islocked(&VFS_I(ip)->i_rwsem,
++				(lock_flags & XFS_IOLOCK_SHARED));
+ 	}
  
- 	sb_end_pagefault(inode->i_sb);
- 	return ret;
+ 	ASSERT(0);
+-	return 0;
++	return false;
  }
+ #endif
  
- static const struct vm_operations_struct zonefs_file_vm_ops = {
--	.fault		= zonefs_filemap_fault,
-+	.fault		= filemap_fault,
- 	.map_pages	= filemap_map_pages,
- 	.page_mkwrite	= zonefs_filemap_page_mkwrite,
- };
-@@ -1158,7 +1146,6 @@ static struct inode *zonefs_alloc_inode(struct super_block *sb)
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index ca826cfba91c..4659e1568966 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -410,7 +410,7 @@ void		xfs_ilock(xfs_inode_t *, uint);
+ int		xfs_ilock_nowait(xfs_inode_t *, uint);
+ void		xfs_iunlock(xfs_inode_t *, uint);
+ void		xfs_ilock_demote(xfs_inode_t *, uint);
+-int		xfs_isilocked(xfs_inode_t *, uint);
++bool		xfs_isilocked(struct xfs_inode *, uint);
+ uint		xfs_ilock_data_map_shared(struct xfs_inode *);
+ uint		xfs_ilock_attr_map_shared(struct xfs_inode *);
  
- 	inode_init_once(&zi->i_vnode);
- 	mutex_init(&zi->i_truncate_mutex);
--	init_rwsem(&zi->i_mmap_sem);
- 	zi->i_wr_refcnt = 0;
- 
- 	return &zi->i_vnode;
-diff --git a/fs/zonefs/zonefs.h b/fs/zonefs/zonefs.h
-index 51141907097c..7b147907c328 100644
---- a/fs/zonefs/zonefs.h
-+++ b/fs/zonefs/zonefs.h
-@@ -70,12 +70,11 @@ struct zonefs_inode_info {
- 	 * and changes to the inode private data, and in particular changes to
- 	 * a sequential file size on completion of direct IO writes.
- 	 * Serialization of mmap read IOs with truncate and syscall IO
--	 * operations is done with i_mmap_sem in addition to i_truncate_mutex.
--	 * Only zonefs_seq_file_truncate() takes both lock (i_mmap_sem first,
--	 * i_truncate_mutex second).
-+	 * operations is done with invalidate_lock in addition to
-+	 * i_truncate_mutex.  Only zonefs_seq_file_truncate() takes both lock
-+	 * (invalidate_lock first, i_truncate_mutex second).
- 	 */
- 	struct mutex		i_truncate_mutex;
--	struct rw_semaphore	i_mmap_sem;
- 
- 	/* guarded by i_truncate_mutex */
- 	unsigned int		i_wr_refcnt;
 -- 
 2.26.2
 
