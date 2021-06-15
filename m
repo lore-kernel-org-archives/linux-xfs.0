@@ -2,76 +2,260 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02A70C48BE5
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Jun 2021 05:46:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E844DC48BDF
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Jun 2021 06:47:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C7C8B61410
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Jun 2021 05:46:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BC70D611C0
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Jun 2021 06:47:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229613AbhFOFsP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 15 Jun 2021 01:48:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60502 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229520AbhFOFsP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Jun 2021 01:48:15 -0400
-Received: from mail-io1-xd31.google.com (mail-io1-xd31.google.com [IPv6:2607:f8b0:4864:20::d31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB7B6C061574
-        for <linux-xfs@vger.kernel.org>; Mon, 14 Jun 2021 22:46:10 -0700 (PDT)
-Received: by mail-io1-xd31.google.com with SMTP id f10so27606559iok.6
-        for <linux-xfs@vger.kernel.org>; Mon, 14 Jun 2021 22:46:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:from:date:message-id:subject:to;
-        bh=bujYkvahA9pdALBPohebAeETbBhe69gpmgZv1ffMXwQ=;
-        b=Ie3aLBr6jN99Y/JcnE3Uq8nOAlWs1Vs6LAz0zGxuVhQxW5gL+aiQ435fTRdf+rjY+B
-         nlfVKuirs5Mq3V6QB/Khxbo4e7iwdWGesd7QOZYP1O7J7mtBnvwOPiSZFw72P6Jv+obj
-         wp70W3q2zSFPz/sS96uke6m2dFiEPdAvfm24gB3g1CvUyrGR+IRyJ6YdIwS43vX1339I
-         bbliOpqBQ+09ze6xnQFeOCBwTEzdoQh2TWAuLCFhLHuuZpWGE8lmMfJ5xa21pW8wkfSi
-         s4TxOcU9xgTGgBr26DTv2fx6S83nPfzSovXzSoIOb8sCLvygo+TJnkUegFgyCn8t+2aS
-         Ae3w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
-        bh=bujYkvahA9pdALBPohebAeETbBhe69gpmgZv1ffMXwQ=;
-        b=XfxIWFdvkifHSpK5tO0wtSOhMGtFrHaD9adBQkkAhMeO4MaLROt6QgYxqz5zUZlb3T
-         b9ekjpPSfxUjHT2gbIMjKRa1FOT+Eg1+EdflmgYkrQoGmi+2On2FFzuQz7HNMxtVwnu/
-         r9siupA+0dBF+/t7KCEsP95Nxo/scyjS/naf+n9vAJUzkzbcJzg5D0jH9YbIHrr6a4aH
-         XRUzxgXUcYqWC7Nbb+3J6nfsb2vTx0jmYwx92tkm7pqy1V6c18/Gis7RXH2YymeabSLI
-         hZSSkmZp0vMthssLeGYDed50wrXscnOCXsCDu/SMPyV5SKfEtAslWFpXHGP34/UtIe2U
-         JREw==
-X-Gm-Message-State: AOAM532n7d5upJ7g7MN6tD14wakhIO1LxqE1gI1dk1cwV6JZ4D+MVpkP
-        oL3EpT2q83ntkuNjaby/JX1WuUaZ/yCeumny8ao+2vUj7YFWpA==
-X-Google-Smtp-Source: ABdhPJylF5Ej23dAF07axE8nkr3/zRHZohNGSCcYhxrBcWQ8QEM+nJBIY/iSBcADs6OnNi2x/7kGaL8clKSYpH4+QL8=
-X-Received: by 2002:a05:6602:1348:: with SMTP id i8mr938592iov.208.1623735970196;
- Mon, 14 Jun 2021 22:46:10 -0700 (PDT)
-MIME-Version: 1.0
-From:   =?UTF-8?Q?Ralf_Gro=C3=9F?= <ralf.gross+xfs@gmail.com>
-Date:   Tue, 15 Jun 2021 07:45:59 +0200
-Message-ID: <CANSSxykVgGj5PHzfPm_xvJi_dpooS_vBpO14-S3KhM6BZfBFtA@mail.gmail.com>
-Subject: copy / move reflink files to new filesystem / or whole fs
+        id S229960AbhFOGtI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 15 Jun 2021 02:49:08 -0400
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:45260 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229613AbhFOGtI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Jun 2021 02:49:08 -0400
+Received: from dread.disaster.area (pa49-179-138-183.pa.nsw.optusnet.com.au [49.179.138.183])
+        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id A341C80BB74
+        for <linux-xfs@vger.kernel.org>; Tue, 15 Jun 2021 16:47:02 +1000 (AEST)
+Received: from discord.disaster.area ([192.168.253.110])
+        by dread.disaster.area with esmtp (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1lt2qj-00CwrU-Br
+        for linux-xfs@vger.kernel.org; Tue, 15 Jun 2021 16:47:01 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.94)
+        (envelope-from <david@fromorbit.com>)
+        id 1lt2qj-003aCf-41
+        for linux-xfs@vger.kernel.org; Tue, 15 Jun 2021 16:47:01 +1000
+From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Subject: [PATCH 1/2] xfs: add iclog state trace events
+Date:   Tue, 15 Jun 2021 16:46:57 +1000
+Message-Id: <20210615064658.854029-2-david@fromorbit.com>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20210615064658.854029-1-david@fromorbit.com>
+References: <20210615064658.854029-1-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
+        a=MnllW2CieawZLw/OcHE/Ng==:117 a=MnllW2CieawZLw/OcHE/Ng==:17
+        a=r6YtysWOX24A:10 a=20KFwNOVAAAA:8 a=JC3f8D-8zRvaPpV0yQQA:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi,
+From: Dave Chinner <dchinner@redhat.com>
 
-is there any way to copy or move data between 2 xfs fs with reflinks
-on the same host, so that the data is not rehydrated (I guess cp
---reflink will not be working)? If this is not possible, would it be
-able to clone the existing fs to a new one and then continue to use
-both?
+For the DEBUGS!
 
-Background: I've backup data on a 350 TB reflink xfs fs, now a second
-fs will be added to the server and parts of existing data should be
-moved to it. If it's possible to clone the whole fs I could delete
-parts of it afterwards, but copying/moving single directories would be
-easier.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_log.c   | 18 ++++++++++++++++
+ fs/xfs/xfs_trace.h | 52 ++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 70 insertions(+)
 
-Ralf
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index e921b554b683..54fd6a695bb5 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -524,6 +524,7 @@ __xlog_state_release_iclog(
+ 		iclog->ic_header.h_tail_lsn = cpu_to_be64(tail_lsn);
+ 		xlog_verify_tail_lsn(log, iclog, tail_lsn);
+ 		/* cycle incremented when incrementing curr_block */
++		trace_xlog_iclog_syncing(iclog, _RET_IP_);
+ 		return true;
+ 	}
+ 
+@@ -543,6 +544,7 @@ xlog_state_release_iclog(
+ {
+ 	lockdep_assert_held(&log->l_icloglock);
+ 
++	trace_xlog_iclog_release(iclog, _RET_IP_);
+ 	if (iclog->ic_state == XLOG_STATE_IOERROR)
+ 		return -EIO;
+ 
+@@ -804,6 +806,7 @@ xlog_wait_on_iclog(
+ {
+ 	struct xlog		*log = iclog->ic_log;
+ 
++	trace_xlog_iclog_wait_on(iclog, _RET_IP_);
+ 	if (!XLOG_FORCED_SHUTDOWN(log) &&
+ 	    iclog->ic_state != XLOG_STATE_ACTIVE &&
+ 	    iclog->ic_state != XLOG_STATE_DIRTY) {
+@@ -1804,6 +1807,7 @@ xlog_write_iclog(
+ 	unsigned int		count)
+ {
+ 	ASSERT(bno < log->l_logBBsize);
++	trace_xlog_iclog_write(iclog, _RET_IP_);
+ 
+ 	/*
+ 	 * We lock the iclogbufs here so that we can serialise against I/O
+@@ -1950,6 +1954,7 @@ xlog_sync(
+ 	unsigned int		size;
+ 
+ 	ASSERT(atomic_read(&iclog->ic_refcnt) == 0);
++	trace_xlog_iclog_sync(iclog, _RET_IP_);
+ 
+ 	count = xlog_calc_iclog_size(log, iclog, &roundoff);
+ 
+@@ -2488,6 +2493,7 @@ xlog_state_activate_iclog(
+ 	int			*iclogs_changed)
+ {
+ 	ASSERT(list_empty_careful(&iclog->ic_callbacks));
++	trace_xlog_iclog_activate(iclog, _RET_IP_);
+ 
+ 	/*
+ 	 * If the number of ops in this iclog indicate it just contains the
+@@ -2577,6 +2583,8 @@ xlog_state_clean_iclog(
+ {
+ 	int			iclogs_changed = 0;
+ 
++	trace_xlog_iclog_clean(dirty_iclog, _RET_IP_);
++
+ 	dirty_iclog->ic_state = XLOG_STATE_DIRTY;
+ 
+ 	xlog_state_activate_iclogs(log, &iclogs_changed);
+@@ -2636,6 +2644,7 @@ xlog_state_set_callback(
+ 	struct xlog_in_core	*iclog,
+ 	xfs_lsn_t		header_lsn)
+ {
++	trace_xlog_iclog_callback(iclog, _RET_IP_);
+ 	iclog->ic_state = XLOG_STATE_CALLBACK;
+ 
+ 	ASSERT(XFS_LSN_CMP(atomic64_read(&log->l_last_sync_lsn),
+@@ -2717,6 +2726,7 @@ xlog_state_do_iclog_callbacks(
+ 		__releases(&log->l_icloglock)
+ 		__acquires(&log->l_icloglock)
+ {
++	trace_xlog_iclog_callbacks_start(iclog, _RET_IP_);
+ 	spin_unlock(&log->l_icloglock);
+ 	spin_lock(&iclog->ic_callback_lock);
+ 	while (!list_empty(&iclog->ic_callbacks)) {
+@@ -2736,6 +2746,7 @@ xlog_state_do_iclog_callbacks(
+ 	 */
+ 	spin_lock(&log->l_icloglock);
+ 	spin_unlock(&iclog->ic_callback_lock);
++	trace_xlog_iclog_callbacks_done(iclog, _RET_IP_);
+ }
+ 
+ STATIC void
+@@ -2827,6 +2838,7 @@ xlog_state_done_syncing(
+ 
+ 	spin_lock(&log->l_icloglock);
+ 	ASSERT(atomic_read(&iclog->ic_refcnt) == 0);
++	trace_xlog_iclog_sync_done(iclog, _RET_IP_);
+ 
+ 	/*
+ 	 * If we got an error, either on the first buffer, or in the case of
+@@ -2899,6 +2911,8 @@ xlog_state_get_iclog_space(
+ 	atomic_inc(&iclog->ic_refcnt);	/* prevents sync */
+ 	log_offset = iclog->ic_offset;
+ 
++	trace_xlog_iclog_get_space(iclog, _RET_IP_);
++
+ 	/* On the 1st write to an iclog, figure out lsn.  This works
+ 	 * if iclogs marked XLOG_STATE_WANT_SYNC always write out what they are
+ 	 * committing to.  If the offset is set, that's how many blocks
+@@ -3056,6 +3070,7 @@ xlog_state_switch_iclogs(
+ {
+ 	ASSERT(iclog->ic_state == XLOG_STATE_ACTIVE);
+ 	assert_spin_locked(&log->l_icloglock);
++	trace_xlog_iclog_switch(iclog, _RET_IP_);
+ 
+ 	if (!eventual_size)
+ 		eventual_size = iclog->ic_offset;
+@@ -3138,6 +3153,8 @@ xfs_log_force(
+ 	if (iclog->ic_state == XLOG_STATE_IOERROR)
+ 		goto out_error;
+ 
++	trace_xlog_iclog_force(iclog, _RET_IP_);
++
+ 	if (iclog->ic_state == XLOG_STATE_DIRTY ||
+ 	    (iclog->ic_state == XLOG_STATE_ACTIVE &&
+ 	     atomic_read(&iclog->ic_refcnt) == 0 && iclog->ic_offset == 0)) {
+@@ -3225,6 +3242,7 @@ xlog_force_lsn(
+ 		goto out_error;
+ 
+ 	while (be64_to_cpu(iclog->ic_header.h_lsn) != lsn) {
++		trace_xlog_iclog_force_lsn(iclog, _RET_IP_);
+ 		iclog = iclog->ic_next;
+ 		if (iclog == log->l_iclog)
+ 			goto out_unlock;
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 71dca776c110..79ee973ba1ed 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -24,6 +24,7 @@ struct xlog_ticket;
+ struct xlog_recover;
+ struct xlog_recover_item;
+ struct xlog_rec_header;
++struct xlog_in_core;
+ struct xfs_buf_log_format;
+ struct xfs_inode_log_format;
+ struct xfs_bmbt_irec;
+@@ -3927,6 +3928,57 @@ DEFINE_EVENT(xfs_icwalk_class, name,	\
+ DEFINE_ICWALK_EVENT(xfs_ioc_free_eofblocks);
+ DEFINE_ICWALK_EVENT(xfs_blockgc_free_space);
+ 
++DECLARE_EVENT_CLASS(xlog_iclog_class,
++	TP_PROTO(struct xlog_in_core *iclog, unsigned long caller_ip),
++	TP_ARGS(iclog, caller_ip),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(uint32_t, state)
++		__field(int32_t, refcount)
++		__field(uint32_t, offset)
++		__field(unsigned long long, lsn)
++		__field(unsigned long, caller_ip)
++	),
++	TP_fast_assign(
++		__entry->dev = iclog->ic_log->l_mp->m_super->s_dev;
++		__entry->state = iclog->ic_state;
++		__entry->refcount = atomic_read(&iclog->ic_refcnt);
++		__entry->offset = iclog->ic_offset;
++		__entry->lsn = be64_to_cpu(iclog->ic_header.h_lsn);
++		__entry->caller_ip = caller_ip;
++	),
++	TP_printk("dev %d:%d state 0x%x refcnt %d offset %u lsn 0x%llx caller %pS",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->state,
++		  __entry->refcount,
++		  __entry->offset,
++		  __entry->lsn,
++		  (char *)__entry->caller_ip)
++
++);
++
++#define DEFINE_ICLOG_EVENT(name)	\
++DEFINE_EVENT(xlog_iclog_class, name,	\
++	TP_PROTO(struct xlog_in_core *iclog, unsigned long caller_ip), \
++	TP_ARGS(iclog, caller_ip))
++
++DEFINE_ICLOG_EVENT(xlog_iclog_activate);
++DEFINE_ICLOG_EVENT(xlog_iclog_clean);
++DEFINE_ICLOG_EVENT(xlog_iclog_callback);
++DEFINE_ICLOG_EVENT(xlog_iclog_callbacks_start);
++DEFINE_ICLOG_EVENT(xlog_iclog_callbacks_done);
++DEFINE_ICLOG_EVENT(xlog_iclog_force);
++DEFINE_ICLOG_EVENT(xlog_iclog_force_lsn);
++DEFINE_ICLOG_EVENT(xlog_iclog_get_space);
++DEFINE_ICLOG_EVENT(xlog_iclog_release);
++DEFINE_ICLOG_EVENT(xlog_iclog_switch);
++DEFINE_ICLOG_EVENT(xlog_iclog_sync);
++DEFINE_ICLOG_EVENT(xlog_iclog_syncing);
++DEFINE_ICLOG_EVENT(xlog_iclog_sync_done);
++DEFINE_ICLOG_EVENT(xlog_iclog_want_sync);
++DEFINE_ICLOG_EVENT(xlog_iclog_wait_on);
++DEFINE_ICLOG_EVENT(xlog_iclog_write);
++
+ #endif /* _TRACE_XFS_H */
+ 
+ #undef TRACE_INCLUDE_PATH
+-- 
+2.31.1
+
