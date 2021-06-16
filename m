@@ -3,43 +3,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D11ACC48BE5
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Jun 2021 23:55:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AEF8DC48BE5
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Jun 2021 23:55:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B23266112D
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Jun 2021 23:55:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 94C516112D
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Jun 2021 23:55:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234698AbhFPX5n (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Jun 2021 19:57:43 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55176 "EHLO mail.kernel.org"
+        id S234722AbhFPX5p (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Jun 2021 19:57:45 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55198 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229503AbhFPX5n (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 16 Jun 2021 19:57:43 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 5BF946112D;
-        Wed, 16 Jun 2021 23:55:36 +0000 (UTC)
+        id S229503AbhFPX5p (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 16 Jun 2021 19:57:45 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 656836112D;
+        Wed, 16 Jun 2021 23:55:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1623887736;
-        bh=Jcu7xPvBGdtjQfLOXJYY2qVHj9sx9V1byLs35YQxkyY=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=KRVbla5a49elhnXKo4tnI6AeOzqflNjsuShCARZf3EFFN0k8Toqu18oZ7KvqEzA+4
-         r24yPGtfHGfJLfq70i+N535jIn/DooLP5PYq5SZ6eFdQJ+UDyfiI2EJxlkYrWI9PLk
-         QWWmcMmwbN8jG7Uyuiu+83UsZhkrcXdG9vnxcu9MpUBRi8+7WQLnOWt9JNO0Hhp7c2
-         +hMc9E8R52SS953ToK/xLSk/2FNRcayEY+GHgwfi5d+ETVyKnr9ERGA8gQhign+kWf
-         93f4vHNZ8DhbS0M/WAgZ/1ztgD3+8XxHSoUYkUSYpIU5pzNqGG5AE7p+HkWfo+f3Bo
-         G1Zt/ETU4Og+A==
-Subject: [PATCH 2/2] xfs: print name of function causing fs shutdown instead
- of hex pointer
+        s=k20201202; t=1623887738;
+        bh=Bfy5jKBTELQA4nIaPSP5JzSbq371DjEgoXPzqBUHbxM=;
+        h=Subject:From:To:Cc:Date:From;
+        b=h5qh+yDIhYqAoQNCXO3TsnQ8fWnN8q+adywLTUf28fKOiFZoQAMQ5gI1w61Y6roDp
+         CQkqoMdoDvwYg38VBcP908ZmpIEepk/3fYpqe574PkA3RvZwnEUrdvjNZFl+dTcLKv
+         a8YdZmyQpveT++Ak0e4RBimrozs3SYSvzo+8zDg/DNYAKWUk/C/iBZlkVB/i4WmRO1
+         mv45SA5ghJlswOchXLLQ+nT6Fxpa5H8H9pq23uRK3mJjepXR3Jmw6HNkZYcmmWoayF
+         BWfiiUIbn+OgJ5yNMAymIi5czBMisJbW+9DR3YYubdLAuUZ6AlbI6EdDuGSF3plNgw
+         L3M120TQKoHBw==
+Subject: [PATCHSET 0/2] xfs: minor fixes to log recovery problems
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Wed, 16 Jun 2021 16:55:36 -0700
-Message-ID: <162388773604.3427063.17701184250204042441.stgit@locust>
-In-Reply-To: <162388772484.3427063.6225456710511333443.stgit@locust>
-References: <162388772484.3427063.6225456710511333443.stgit@locust>
+Date:   Wed, 16 Jun 2021 16:55:38 -0700
+Message-ID: <162388773802.3427167.4556309820960423454.stgit@locust>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -48,37 +45,35 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hi all,
 
-In xfs_do_force_shutdown, print the symbolic name of the function that
-called us to shut down the filesystem instead of a raw hex pointer.
-This makes debugging a lot easier:
+This series fixes a couple of bugs that I found in log recovery.  The
+first problem is that we don't reserve space for per-AG btree expansion
+when we inactivate inodes during log recovery.  If a file with shared
+blocks were to be unlinked, this can result in transaction failure
+because inactivation assumes that it doesn't need to reserve blocks to
+free files and cannot handle a refcount btree expansion.
 
-XFS (sda): xfs_do_force_shutdown(0x2) called from line 2440 of file
-	fs/xfs/xfs_log.c. Return address = ffffffffa038bc38
+The second problem addressed here is that if log recovery fails due to
+something that doesn't directly impact the log (like ENOSPC during
+transaction allocation, or ENOMEM allocating buffers) it will leave the
+log running, which means that it writes an unmount record after recovery
+fails.  The /next/ mount will see a clean log and start running, even
+though the metadata isn't consistent.
 
-becomes:
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
-XFS (sda): xfs_do_force_shutdown(0x2) called from line 2440 of file
-	fs/xfs/xfs_log.c. Return address = xfs_trans_mod_sb+0x25
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=log-recovery-fixes-5.14
 ---
- fs/xfs/xfs_fsops.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 07c745cd483e..b7f979eca1e2 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -543,7 +543,7 @@ xfs_do_force_shutdown(
- 	}
- 
- 	xfs_notice(mp,
--"%s(0x%x) called from line %d of file %s. Return address = "PTR_FMT,
-+"%s(0x%x) called from line %d of file %s. Return address = %pS",
- 		__func__, flags, lnnum, fname, __return_address);
- 
- 	if (flags & SHUTDOWN_CORRUPT_INCORE) {
+ fs/xfs/xfs_log.c         |    3 +++
+ fs/xfs/xfs_log_recover.c |    5 ++++-
+ fs/xfs/xfs_mount.c       |   10 +++++++++-
+ 3 files changed, 16 insertions(+), 2 deletions(-)
 
