@@ -2,114 +2,53 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E566C48BE6
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Jun 2021 15:57:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B5E6C48BE5
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Jun 2021 16:32:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ED33A61164
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Jun 2021 15:57:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1047361356
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Jun 2021 16:32:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235085AbhFPP7y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Jun 2021 11:59:54 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:46732 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234698AbhFPP7X (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Jun 2021 11:59:23 -0400
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id 4D62F21A32;
-        Wed, 16 Jun 2021 15:57:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1623859034; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=MzEXeyUJtYhb/jhKtsstzQNYPYyugeSQ7deyI5/x/eg=;
-        b=QluPc+xaSD6lMsYHFrTXOo9S19BGMh1dPOZCU9V9lAjMlVkbzEPC76NIYkzAlyHL6z0G2X
-        6V1D7RAO4dKfvHWXp9WKGolBz/Xim2qqndj/0aTBqw4NNJ/W710NpTjVSzVtUU+bCo6ztK
-        HR1Cd37auJvcp2UU0GST9EsPQ8ys2k8=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1623859034;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=MzEXeyUJtYhb/jhKtsstzQNYPYyugeSQ7deyI5/x/eg=;
-        b=jHTUUdWi2cy0yZq6g8W0CohAQJWdKoqUkM3WbwT5QWy5M/vj4YqpLcOCdoKxgHFiAm+6jn
-        h8dOe0bJlFuiCtAw==
-Received: from quack2.suse.cz (unknown [10.100.200.198])
-        by relay2.suse.de (Postfix) with ESMTP id 638F1A3BAE;
-        Wed, 16 Jun 2021 15:57:13 +0000 (UTC)
-Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id 4FE0F1F2C68; Wed, 16 Jun 2021 17:57:12 +0200 (CEST)
-Date:   Wed, 16 Jun 2021 17:57:12 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>,
-        linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>,
-        ceph-devel@vger.kernel.org, Chao Yu <yuchao0@huawei.com>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Jeff Layton <jlayton@kernel.org>,
-        Johannes Thumshirn <jth@kernel.org>,
-        linux-cifs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
-        linux-xfs@vger.kernel.org, Miklos Szeredi <miklos@szeredi.hu>,
-        Steve French <sfrench@samba.org>, Ted Tso <tytso@mit.edu>,
-        Matthew Wilcox <willy@infradead.org>,
-        Pavel Reichl <preichl@redhat.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        Eric Sandeen <sandeen@redhat.com>
-Subject: Re: [PATCH 07/14] xfs: Refactor xfs_isilocked()
-Message-ID: <20210616155712.GC28250@quack2.suse.cz>
-References: <20210615090844.6045-1-jack@suse.cz>
- <20210615091814.28626-7-jack@suse.cz>
- <YMmOCK4wHc9lerEc@infradead.org>
- <20210616085304.GA28250@quack2.suse.cz>
- <20210616154705.GE158209@locust>
+        id S229602AbhFPQeh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Jun 2021 12:34:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53224 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229575AbhFPQeh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Jun 2021 12:34:37 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F1CB8C061574
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Jun 2021 09:32:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
+        Content-Description:In-Reply-To:References;
+        bh=W25BuR1Escd7TTD7UYAfVOqUhYXpX4MSwFbBmmv7PL0=; b=k8ffZhYFfdYSAot2SVlFwJ8UP6
+        CUG3NMYLgf2PzeNr1F45idCAS61d7rYiPpvNP7rg93nvVMTg7BIXQpQc8ZHBzpwQIcJPHPOleYeTO
+        Km9l9XeChvj2mYEIIaCCBbfxZvDAqN3iTYi+kRrYKSSkwKwbFsVjYzbqRH5tzaFJbxFsLLQ6ZBFKZ
+        NP2lHDKcBiRKP9wpMEiETdW65WKxo3u6+gMFKeaMb+1S662vZtaKgzhly5Zldvck+oF9UmlSDlzSN
+        okCyNjx1nNgAmhhxs+t/8O7F/Olhe3LCCkoq/kOWk6TXF+y8rFAkMxNtemh+fxRERyms9jBo9Za6S
+        eCeNTeoA==;
+Received: from [2001:4bb8:19b:fdce:84d:447:81f0:ca60] (helo=localhost)
+        by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1ltYSb-008G0N-82
+        for linux-xfs@vger.kernel.org; Wed, 16 Jun 2021 16:32:17 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     linux-xfs@vger.kernel.org
+Subject: log write cleanups
+Date:   Wed, 16 Jun 2021 18:32:04 +0200
+Message-Id: <20210616163212.1480297-1-hch@lst.de>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210616154705.GE158209@locust>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed 16-06-21 08:47:05, Darrick J. Wong wrote:
-> On Wed, Jun 16, 2021 at 10:53:04AM +0200, Jan Kara wrote:
-> > On Wed 16-06-21 06:37:12, Christoph Hellwig wrote:
-> > > On Tue, Jun 15, 2021 at 11:17:57AM +0200, Jan Kara wrote:
-> > > > From: Pavel Reichl <preichl@redhat.com>
-> > > > 
-> > > > Refactor xfs_isilocked() to use newly introduced __xfs_rwsem_islocked().
-> > > > __xfs_rwsem_islocked() is a helper function which encapsulates checking
-> > > > state of rw_semaphores hold by inode.
-> > > 
-> > > __xfs_rwsem_islocked doesn't seem to actually existing in any tree I
-> > > checked yet?
-> > 
-> > __xfs_rwsem_islocked is introduced by this patch so I'm not sure what are
-> > you asking about... :)
-> 
-> The sentence structure implies that __xfs_rwsem_islocked was previously
-> introduced.  You might change the commit message to read:
-> 
-> "Introduce a new __xfs_rwsem_islocked predicate to encapsulate checking
-> the state of a rw_semaphore, then refactor xfs_isilocked to use it."
-> 
-> Since it's not quite a straight copy-paste of the old code.
+Hi all,
 
-Ah, ok. Sure, I can rephrase the changelog (or we can just update it on
-commit if that's the only problem with this series...). Oh, now I've
-remembered I've promised you a branch to pull :) Here it is with this
-change and Christoph's Reviewed-by tags:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/jack/linux-fs.git hole_punch_fixes
-
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+this series cleans up a few loose ends that I noticed while reviewing
+the recent log rework.
