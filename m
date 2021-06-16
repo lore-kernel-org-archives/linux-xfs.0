@@ -7,57 +7,57 @@ X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BEEFCC48BE5
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Jun 2021 00:18:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 982A8C48BDF
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Jun 2021 00:46:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9CABA611BE
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Jun 2021 00:18:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 70A1C61241
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Jun 2021 00:46:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231453AbhFPAUf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 15 Jun 2021 20:20:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59672 "EHLO
+        id S231804AbhFPAsh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 15 Jun 2021 20:48:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37892 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231307AbhFPAUe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Jun 2021 20:20:34 -0400
-Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E37AC061574
-        for <linux-xfs@vger.kernel.org>; Tue, 15 Jun 2021 17:18:29 -0700 (PDT)
-Received: by mail-pj1-x102a.google.com with SMTP id g4so687904pjk.0
-        for <linux-xfs@vger.kernel.org>; Tue, 15 Jun 2021 17:18:29 -0700 (PDT)
+        with ESMTP id S231800AbhFPAsh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Jun 2021 20:48:37 -0400
+Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B2DEC061760
+        for <linux-xfs@vger.kernel.org>; Tue, 15 Jun 2021 17:46:31 -0700 (PDT)
+Received: by mail-pl1-x62f.google.com with SMTP id e1so229887plh.8
+        for <linux-xfs@vger.kernel.org>; Tue, 15 Jun 2021 17:46:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=intel-com.20150623.gappssmtp.com; s=20150623;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=U9ut0QO/e/N5V/O+/xxowpWen8UQyCbn6qtxkVe0D8Y=;
-        b=JcupgDdHq+fmTtYahFp9g+jILqxB19u88v4xnoU55fWLv4k3YOt/xNPurkbzegMsAG
-         NNMrQSJN/bCEgjMYNZUC20WGOBAV1diTK74G7f/VHGvqLwYEedYJtJ3nI0833KtrM7kU
-         t9kGTrMECpFStf9TPmnQQJw6nw5sTkNZ2hgie5DWKEimBuk2Ql3jpZVgHKeZscFIfEWT
-         FSm5OEwpwmmecOzudMjp4Rt+2O5WBV1LrdshwyVWQvhqJ4gbyL3GU3vgiXpk/OOtUG+R
-         9SDYxzyZHGzVP/HJP4qSzGSitzNNqYPJe6gGlgIMCb0EV5UH0BYz1vfNwhv1uIyZDqE+
-         Oifw==
+        bh=1UGOQAS/gnlRXyh5KGqeT8Vh25LI5tpduRj0+a7sMPk=;
+        b=vo8kqB3upoOfLkcjr7BktRu/G8ZVEhvIzJRE4kky8AJ4PfRn8k2gzYYoapgpQuUbxb
+         eW8RGrn7MgbOV4zezM2DvxEUGloaOcI+ZwM7w+hGK1ODQGZY61Whd9RnPKTR0JjPdOAy
+         gZlhjQRZo7WgJTr5eaAqs0zFWg4doaen5CBF+OQ/OSQS1JEdId+qBnmjbsRXh8Bcc94F
+         UwUUw+zf7f3sRdQ6CmITUZn9WRx5c/WThXOvJbtfrGxqQQj9KFvUmE3zt4KqLqj3Vi9e
+         8vOqYXgaBsZ+ftPDLJY3C8RjB2YsfygyA0wu/S313rMtXG+DAjfSWIE7PNAJaUVVbjMq
+         fihg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=U9ut0QO/e/N5V/O+/xxowpWen8UQyCbn6qtxkVe0D8Y=;
-        b=Fe+TIxoNVSIc95rrMvUP5gCSXn/XrGsN4SXNHAuPKVSETiMeXe+EamK2CtYjpuIs9a
-         60NtmMc7J/R9zAFGuwjRzRorbffogTOqQs1E/atehwPL/su5rEjBoeYVwU+k9GPDHAyJ
-         8150XvJTi+N4Ph8LppMGOZf1CFWAX75Dpu7BIUt3SwU99087MbMeFZ//4rGSt2WE9TSv
-         MKuAx7QJ8It1kYTyKaBaJRJlLraU8ZiFIvSeqHbBzhSuQomqN+/ePcUvmVtnwk7VSdvQ
-         4VgCiICFYLkMXxgXFlyw1vZT7UWkvLYstrW6a6MeMaioh/7gpA5sunWxdIe8wa1QCfAC
-         5wuw==
-X-Gm-Message-State: AOAM533y++UrGeMIC5+a3lul16NEQE5rA04V6Yp7gQyZbZuSw0qm/iFA
-        x+yJ30P0fZuEkjoPbyep8Ro6+T9AnhDcw6wgz82UqQ==
-X-Google-Smtp-Source: ABdhPJyDslf/YwZkzYx2Z/IqSadb826GT3g94w753bjCVGDQs7kdVkKXA5TwIzZBSN9veDsTezagh2Bmxl7wkmkaDYQ=
-X-Received: by 2002:a17:90a:ea8c:: with SMTP id h12mr7432919pjz.149.1623802708921;
- Tue, 15 Jun 2021 17:18:28 -0700 (PDT)
+        bh=1UGOQAS/gnlRXyh5KGqeT8Vh25LI5tpduRj0+a7sMPk=;
+        b=UUWW5M71S6OEAnCJ8WfpZrW8THmOeA/kDNM8v2x3tWgWOHewa6dBpzme2yajFYu/YI
+         iha39EIvsuQ+4sMtb89xfdBM+IEJ0UYqanfrKyEzanGjbCDBd0cTz+o97KluFmra5dUk
+         I5zxdiQqLdeVTxm7wwau/Y51fFL9DKWfPkJA20M8D/rhqlChPFwm14QmoNIwrelr0QLc
+         fO1XGnsOSr05ADLVanW034i4TpRqDlnULO8F8RKpgS8CpfhddvTNyRYlBoZ6pFVVdDL5
+         JMEf5Jno33x4JXdPZyEuwA6f2tLHuMTjIMIGeysA8i+y/HAbc8zfc0uWLXItVe8vUrwC
+         nGgA==
+X-Gm-Message-State: AOAM533+yewTmnMbVgS4gqAU77hGQH1nwE1l3ks3BRQTWP+wd+hK6SWR
+        WwBaj7SEwnOsriUfLyewVld/wkI5Luhb9/pLBnLc7w==
+X-Google-Smtp-Source: ABdhPJxnjJTq18+nazpJrwCbf8hmuZEuQ5kMFby00dnTlWpwUJ3rx4rFxrMADpX4C943d5rXD+aKPVKy1eqHRare17k=
+X-Received: by 2002:a17:90a:ea8c:: with SMTP id h12mr7535174pjz.149.1623804390579;
+ Tue, 15 Jun 2021 17:46:30 -0700 (PDT)
 MIME-Version: 1.0
-References: <20210604011844.1756145-1-ruansy.fnst@fujitsu.com> <20210604011844.1756145-2-ruansy.fnst@fujitsu.com>
-In-Reply-To: <20210604011844.1756145-2-ruansy.fnst@fujitsu.com>
+References: <20210604011844.1756145-1-ruansy.fnst@fujitsu.com> <20210604011844.1756145-3-ruansy.fnst@fujitsu.com>
+In-Reply-To: <20210604011844.1756145-3-ruansy.fnst@fujitsu.com>
 From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Tue, 15 Jun 2021 17:18:18 -0700
-Message-ID: <CAPcyv4ibuHeQ7o=sTZpQoryv=_3WuBFJhodBnAEVRPmvo=nAeQ@mail.gmail.com>
-Subject: Re: [PATCH v4 01/10] pagemap: Introduce ->memory_failure()
+Date:   Tue, 15 Jun 2021 17:46:19 -0700
+Message-ID: <CAPcyv4jA8FW6PMxaETETQxjnpn9aE2Nevq-R96BJr8QzixYRsQ@mail.gmail.com>
+Subject: Re: [PATCH v4 02/10] dax: Introduce holder for dax_device
 To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
 Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         linux-xfs <linux-xfs@vger.kernel.org>,
@@ -76,56 +76,125 @@ List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 On Thu, Jun 3, 2021 at 6:19 PM Shiyang Ruan <ruansy.fnst@fujitsu.com> wrote:
-
-Hi Ruan, apologies for the delays circling back to this.
-
 >
-> When memory-failure occurs, we call this function which is implemented
-> by each kind of devices.  For the fsdax case, pmem device driver
-> implements it.  Pmem device driver will find out the filesystem in which
-> the corrupted page located in.  And finally call filesystem handler to
-> deal with this error.
+> To easily track filesystem from a pmem device, we introduce a holder for
+> dax_device structure, and also its operation.  This holder is used to
+> remember who is using this dax_device:
+>  - When it is the backend of a filesystem, the holder will be the
+>    superblock of this filesystem.
+>  - When this pmem device is one of the targets in a mapped device, the
+>    holder will be this mapped device.  In this case, the mapped device
+>    has its own dax_device and it will follow the first rule.  So that we
+>    can finally track to the filesystem we needed.
 >
-> The filesystem will try to recover the corrupted data if possiable.
+> The holder and holder_ops will be set when filesystem is being mounted,
+> or an target device is being activated.
 >
-
-Let's move this change to the patch that needs it, this patch does not
-do anything on its own.
-
 > Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
 > ---
->  include/linux/memremap.h | 8 ++++++++
->  1 file changed, 8 insertions(+)
+>  drivers/dax/super.c | 38 ++++++++++++++++++++++++++++++++++++++
+>  include/linux/dax.h | 10 ++++++++++
+>  2 files changed, 48 insertions(+)
 >
-> diff --git a/include/linux/memremap.h b/include/linux/memremap.h
-> index 45a79da89c5f..473fe18c516a 100644
-> --- a/include/linux/memremap.h
-> +++ b/include/linux/memremap.h
-> @@ -87,6 +87,14 @@ struct dev_pagemap_ops {
->          * the page back to a CPU accessible page.
->          */
->         vm_fault_t (*migrate_to_ram)(struct vm_fault *vmf);
+> diff --git a/drivers/dax/super.c b/drivers/dax/super.c
+> index 5fa6ae9dbc8b..d118e2a7dc70 100644
+> --- a/drivers/dax/super.c
+> +++ b/drivers/dax/super.c
+> @@ -222,8 +222,10 @@ struct dax_device {
+>         struct cdev cdev;
+>         const char *host;
+>         void *private;
+
+@private is likely too generic of a name now, it would be better to
+call this @parent.
+
+> +       void *holder;
+
+This should probably be called holder_data, and this structure could
+use some kernel-doc to clarify what the fields mean.
+
+>         unsigned long flags;
+>         const struct dax_operations *ops;
+> +       const struct dax_holder_operations *holder_ops;
+>  };
+>
+>  static ssize_t write_cache_show(struct device *dev,
+> @@ -373,6 +375,24 @@ int dax_zero_page_range(struct dax_device *dax_dev, pgoff_t pgoff,
+>  }
+>  EXPORT_SYMBOL_GPL(dax_zero_page_range);
+>
+> +int dax_corrupted_range(struct dax_device *dax_dev, struct block_device *bdev,
+> +               loff_t offset, size_t size, void *data)
+
+Why is @bdev an argument to this routine?  The primary motivation for
+a 'struct dax_device' is to break the association with 'struct
+block_device'. The filesystem may know that the logical addresses
+associated with a given dax_dev alias with the logical addresses of a
+given bdev, but that knowledge need not leak into the API.
+
+> +{
+> +       int rc = -ENXIO;
+> +       if (!dax_dev)
+> +               return rc;
 > +
-> +       /*
-> +        * Handle the memory failure happens on one page.  Notify the processes
-> +        * who are using this page, and try to recover the data on this page
-> +        * if necessary.
-> +        */
+> +       if (dax_dev->holder) {
+> +               rc = dax_dev->holder_ops->corrupted_range(dax_dev, bdev, offset,
+> +                                                         size, data);
 
-I thought we discussed that this needed to be range based here:
+A bikeshed comment, but I do not like the name corrupted_range(),
+because "corrupted" implies a permanent state. The source of this
+notification is memory_failure() and that does not convey "permanent"
+vs "transient" it just reports "failure". So, to keep the naming
+consistent with the pgmap notification callback lets call this one
+"notify_failure".
 
-https://lore.kernel.org/r/CAPcyv4jhUU3NVD8HLZnJzir+SugB6LnnrgJZ-jP45BZrbJ1dJQ@mail.gmail.com
+> +               if (rc == -ENODEV)
+> +                       rc = -ENXIO;
+> +       } else
+> +               rc = -EOPNOTSUPP;
+> +       return rc;
+> +}
+> +EXPORT_SYMBOL_GPL(dax_corrupted_range);
 
-...but also incorporate Christoph's feedback to not use notifiers.
+dax_holder_notify_failure() makes it clearer that this is
+communicating a failure up the holder stack.
 
-> +       int (*memory_failure)(struct dev_pagemap *pgmap, unsigned long pfn,
-> +                             int flags);
+> +
+>  #ifdef CONFIG_ARCH_HAS_PMEM_API
+>  void arch_wb_cache_pmem(void *addr, size_t size);
+>  void dax_flush(struct dax_device *dax_dev, void *addr, size_t size)
+> @@ -624,6 +644,24 @@ void put_dax(struct dax_device *dax_dev)
+>  }
+>  EXPORT_SYMBOL_GPL(put_dax);
+>
+> +void dax_set_holder(struct dax_device *dax_dev, void *holder,
+> +               const struct dax_holder_operations *ops)
+> +{
+> +       if (!dax_dev)
+> +               return;
+> +       dax_dev->holder = holder;
+> +       dax_dev->holder_ops = ops;
 
-Change this callback to
+I think there needs to be some synchronization here, perhaps a global
+dax_dev_rwsem that is taken for read in the notification path and
+write when adding a holder to the chain.
 
-int (*notify_memory_failure)(struct dev_pagemap *pgmap, unsigned long
-pfn, unsigned long nr_pfns)
+I also wonder if this should be an event that triggers a dax_dev stack
+to re-report any failure notifications. For example the pmem driver
+may have recorded a list of bad blocks at the beginning of time.
+Likely the filesystem or other holder would like to get that
+pre-existing list of failures at first registration. Have you given
+thought about how the filesystem is told about pre-existing badblocks?
 
-...to pass a range and to clarify that this callback is for
-memory_failure() to notify the pgmap, the pgmap notifies the owner via
-the holder callbacks.
+> +}
+> +EXPORT_SYMBOL_GPL(dax_set_holder);
+> +
+> +void *dax_get_holder(struct dax_device *dax_dev)
+> +{
+> +       if (!dax_dev)
+> +               return NULL;
+> +       return dax_dev->holder;
+> +}
+> +EXPORT_SYMBOL_GPL(dax_get_holder);
+
+Where is this used?
