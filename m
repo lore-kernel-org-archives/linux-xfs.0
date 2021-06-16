@@ -3,40 +3,43 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEF8DC48BE5
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Jun 2021 23:55:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 174B6C48BE5
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Jun 2021 23:55:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 94C516112D
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Jun 2021 23:55:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F2ABD6113C
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Jun 2021 23:55:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234722AbhFPX5p (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Jun 2021 19:57:45 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55198 "EHLO mail.kernel.org"
+        id S234511AbhFPX5u (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Jun 2021 19:57:50 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55218 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229503AbhFPX5p (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 16 Jun 2021 19:57:45 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 656836112D;
-        Wed, 16 Jun 2021 23:55:38 +0000 (UTC)
+        id S229503AbhFPX5u (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 16 Jun 2021 19:57:50 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id DEA1F60FD7;
+        Wed, 16 Jun 2021 23:55:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1623887738;
-        bh=Bfy5jKBTELQA4nIaPSP5JzSbq371DjEgoXPzqBUHbxM=;
-        h=Subject:From:To:Cc:Date:From;
-        b=h5qh+yDIhYqAoQNCXO3TsnQ8fWnN8q+adywLTUf28fKOiFZoQAMQ5gI1w61Y6roDp
-         CQkqoMdoDvwYg38VBcP908ZmpIEepk/3fYpqe574PkA3RvZwnEUrdvjNZFl+dTcLKv
-         a8YdZmyQpveT++Ak0e4RBimrozs3SYSvzo+8zDg/DNYAKWUk/C/iBZlkVB/i4WmRO1
-         mv45SA5ghJlswOchXLLQ+nT6Fxpa5H8H9pq23uRK3mJjepXR3Jmw6HNkZYcmmWoayF
-         BWfiiUIbn+OgJ5yNMAymIi5czBMisJbW+9DR3YYubdLAuUZ6AlbI6EdDuGSF3plNgw
-         L3M120TQKoHBw==
-Subject: [PATCHSET 0/2] xfs: minor fixes to log recovery problems
+        s=k20201202; t=1623887744;
+        bh=V+Om14e3dFOtK4Atx9RV7J+I68Z2jf2MKd3eJwEIQaU=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=HuM1j5iha3OpU/FgqkgNhpsVbx9H+MLRQWYUoSPwuvdOXub6kfm3hUS/kEgfiSQHt
+         XipCIh6MeRsj5FsGH8mxsVfJsvM/mPVVUzVyX1EbDMjeF66sfJ3Ywqm0c7boQXLko0
+         ZJuAv3nFQZ7kLJ5WR0fDA+InkR5/RjYmBR6K3+GWWBx5Odvm7C1fXp7d/SRXB4jpn7
+         4JK2pblPyStKMXp2b4CSYzArj8ath+NzS1f+cLFLCK9JXc4gajBXk3dflQZVQrFiI4
+         YGguTeNuzqnfgyKqm5YJoSJ0Y+FNhPdEyTm6IPg7w3ZO7pJ+fnK7z4MEsTbqpziQWA
+         Cmeko1LvYMmEg==
+Subject: [PATCH 1/2] xfs: fix log intent recovery ENOSPC shutdowns when
+ inactivating inodes
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Wed, 16 Jun 2021 16:55:38 -0700
-Message-ID: <162388773802.3427167.4556309820960423454.stgit@locust>
+Date:   Wed, 16 Jun 2021 16:55:43 -0700
+Message-ID: <162388774359.3427167.14326615553028119265.stgit@locust>
+In-Reply-To: <162388773802.3427167.4556309820960423454.stgit@locust>
+References: <162388773802.3427167.4556309820960423454.stgit@locust>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -45,35 +48,53 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-This series fixes a couple of bugs that I found in log recovery.  The
-first problem is that we don't reserve space for per-AG btree expansion
-when we inactivate inodes during log recovery.  If a file with shared
-blocks were to be unlinked, this can result in transaction failure
-because inactivation assumes that it doesn't need to reserve blocks to
-free files and cannot handle a refcount btree expansion.
+During regular operation, the xfs_inactive operations create
+transactions with zero block reservation because in general we're
+freeing space, not asking for more.  The per-AG space reservations
+created at mount time enable us to handle expansions of the refcount
+btree without needing to reserve blocks to the transaction.
 
-The second problem addressed here is that if log recovery fails due to
-something that doesn't directly impact the log (like ENOSPC during
-transaction allocation, or ENOMEM allocating buffers) it will leave the
-log running, which means that it writes an unmount record after recovery
-fails.  The /next/ mount will see a clean log and start running, even
-though the metadata isn't consistent.
+Unfortunately, log recovery doesn't create the per-AG space reservations
+when intent items are being recovered.  This isn't an issue for intent
+item recovery itself because they explicitly request blocks, but any
+inode inactivation that can happen during log recovery uses the same
+xfs_inactive paths as regular runtime.  If a refcount btree expansion
+happens, the transaction will fail due to blk_res_used > blk_res, and we
+shut down the filesystem unnecessarily.
 
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
+Fix this problem by making per-AG reservations temporarily so that we
+can handle the inactivations, and releasing them at the end.  This
+brings the recovery environment closer to the runtime environment.
 
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=log-recovery-fixes-5.14
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_log.c         |    3 +++
- fs/xfs/xfs_log_recover.c |    5 ++++-
- fs/xfs/xfs_mount.c       |   10 +++++++++-
- 3 files changed, 16 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_mount.c |   10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index c3a96fb3ad80..d0755494597f 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -859,9 +859,17 @@ xfs_mountfs(
+ 	/*
+ 	 * Finish recovering the file system.  This part needed to be delayed
+ 	 * until after the root and real-time bitmap inodes were consistently
+-	 * read in.
++	 * read in.  Temporarily create per-AG space reservations for metadata
++	 * btree shape changes because space freeing transactions (for inode
++	 * inactivation) require the per-AG reservation in lieu of reserving
++	 * blocks.
+ 	 */
++	error = xfs_fs_reserve_ag_blocks(mp);
++	if (error && error == -ENOSPC)
++		xfs_warn(mp,
++	"ENOSPC reserving per-AG metadata pool, log recovery may fail.");
+ 	error = xfs_log_mount_finish(mp);
++	xfs_fs_unreserve_ag_blocks(mp);
+ 	if (error) {
+ 		xfs_warn(mp, "log mount finish failed");
+ 		goto out_rtunmount;
 
