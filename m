@@ -2,320 +2,310 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30FC0C48BE8
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Jun 2021 06:50:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8768C48BE6
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Jun 2021 07:05:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0CE6A61246
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Jun 2021 06:50:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9DCB161001
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Jun 2021 07:05:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231455AbhFPGwP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Jun 2021 02:52:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33544 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231193AbhFPGwO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Jun 2021 02:52:14 -0400
-Received: from mail-pl1-x632.google.com (mail-pl1-x632.google.com [IPv6:2607:f8b0:4864:20::632])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49911C061574
-        for <linux-xfs@vger.kernel.org>; Tue, 15 Jun 2021 23:50:09 -0700 (PDT)
-Received: by mail-pl1-x632.google.com with SMTP id x10so628295plg.3
-        for <linux-xfs@vger.kernel.org>; Tue, 15 Jun 2021 23:50:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=+Kn3PBZvfdrm3M++IQCcW4SjJvH/DG1JZP1myaOpJRg=;
-        b=EOUg1SGoT/6uPzoDXTs7vcmZcQci9D4manCusk+A1HK/afG4VmUTZJ89jjcHHhF+15
-         uDqVUdG5Jdourr03Cxc0YGw7sbmPEt9Pr3EGYAPrRyqSEEBLdhkj+MTnwPyydv0GBvoM
-         dfqP3Y4INs8cQT5ly23nRsxM3joBbpiFsfbw40tuTTT4WoV1SqU9dQ4Ajfz3c6Ty/0q8
-         1cZOMl+cehTCGKZQ7JY74pJGDp2MPTk0DAJ7yBKQdp6tvwCQExYpIOb+7tmP7sZ/9HqU
-         rqItzUaIRiLJ5q0EBSfITxk49RBh4zDf49bvuF7oxdH6oq0gdzedyMoEZVeEQCFEmpXu
-         6UCQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=+Kn3PBZvfdrm3M++IQCcW4SjJvH/DG1JZP1myaOpJRg=;
-        b=rZ28K52ZVj3w14UEZa3FH2oJdC31LRqi03MS0JF3x3eZpQRAIbF6ZaHWJG/I6kiglW
-         Akllm+VHBEMC58NIEFXXR706gV9MpMCLCDmFRDW6Yne/lCa6LGWRKiCm87+o7koQ4VRO
-         YmEy7B4fgeiqgDytHehMOsdMmHFSgQLFE4u/QhFATIdu3vxDFOxuwckHqZUQh+YnbGj0
-         dSskBP2hTqPNHs6mOB66OpVJ+xGjoZPxY3SdmEyMitGh8T+s8AqVXH+83t08bQlcoP6s
-         Z2gAY+wYMnfYMciOGOHc5XisL9+zaEH9tL5P2xNssYflrZoFo3AMm0qxRKayaMG7CXnQ
-         rjTQ==
-X-Gm-Message-State: AOAM5313z0UnNZ8ek1FKDTXkDr1x2+IHO0JKP2ACOMrNEgbV5/+Q0z2b
-        hSzMBKNxp3FYUKccSQTqNnRSjh5E/0q7kn6VgwdTLQ==
-X-Google-Smtp-Source: ABdhPJyQRs1D11qRe1LliJmjI3lSiLNlJfJSax7U3r7FSVTrVSQxBNBqbhHBO+w23FsmYdODe6G8Ue0jGeGbsigANto=
-X-Received: by 2002:a17:902:b497:b029:115:e287:7b55 with SMTP id
- y23-20020a170902b497b0290115e2877b55mr7677048plr.79.1623826208688; Tue, 15
- Jun 2021 23:50:08 -0700 (PDT)
+        id S230527AbhFPHHw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Jun 2021 03:07:52 -0400
+Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:52620 "EHLO
+        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230508AbhFPHHw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Jun 2021 03:07:52 -0400
+Received: from dread.disaster.area (pa49-179-138-183.pa.nsw.optusnet.com.au [49.179.138.183])
+        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id 8304341B6;
+        Wed, 16 Jun 2021 17:05:43 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1ltPcM-00DKu0-9R; Wed, 16 Jun 2021 17:05:42 +1000
+Date:   Wed, 16 Jun 2021 17:05:42 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [BUG] generic/475 recovery failure(s)
+Message-ID: <20210616070542.GY664593@dread.disaster.area>
+References: <YMIsWJ0Cb2ot/UjG@bfoster>
+ <YMOzT1goreWVgo8S@bfoster>
+ <20210611223332.GS664593@dread.disaster.area>
 MIME-Version: 1.0
-References: <20210604011844.1756145-1-ruansy.fnst@fujitsu.com> <20210604011844.1756145-6-ruansy.fnst@fujitsu.com>
-In-Reply-To: <20210604011844.1756145-6-ruansy.fnst@fujitsu.com>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Tue, 15 Jun 2021 23:49:57 -0700
-Message-ID: <CAPcyv4heVL+9T3R8dTRw7yaFsL65MXN2qbuqFnO4G2fHMFgYiA@mail.gmail.com>
-Subject: Re: [PATCH v4 05/10] mm, pmem: Implement ->memory_failure() in pmem driver
-To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Linux MM <linux-mm@kvack.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        device-mapper development <dm-devel@redhat.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        david <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>,
-        Alasdair Kergon <agk@redhat.com>,
-        Mike Snitzer <snitzer@redhat.com>,
-        Goldwyn Rodrigues <rgoldwyn@suse.de>,
-        Linux NVDIMM <nvdimm@lists.linux.dev>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210611223332.GS664593@dread.disaster.area>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
+        a=MnllW2CieawZLw/OcHE/Ng==:117 a=MnllW2CieawZLw/OcHE/Ng==:17
+        a=kj9zAlcOel0A:10 a=r6YtysWOX24A:10 a=7-415B0cAAAA:8
+        a=45Q58tYZw5yRBjafCv8A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 3, 2021 at 6:19 PM Shiyang Ruan <ruansy.fnst@fujitsu.com> wrote:
->
-> Call the ->memory_failure() which is implemented by pmem driver, in
-> order to finally notify filesystem to handle the corrupted data.  The
-> handler which collects and kills processes are moved into
-> mf_dax_kill_procs(), which will be called by filesystem.
->
-> Keep the old handler in order to roll back if driver or filesystem
-> does not support ->memory_failure()/->corrupted_range().
->
-> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
-> ---
->  block/genhd.c         | 30 ++++++++++++++++++
->  drivers/nvdimm/pmem.c | 14 +++++++++
->  include/linux/genhd.h |  1 +
->  mm/memory-failure.c   | 71 +++++++++++++++++++++++++++----------------
+On Sat, Jun 12, 2021 at 08:33:32AM +1000, Dave Chinner wrote:
+> On Fri, Jun 11, 2021 at 03:02:39PM -0400, Brian Foster wrote:
+> > On Thu, Jun 10, 2021 at 11:14:32AM -0400, Brian Foster wrote:
+> > > Hi all,
+> > > 
+> > > I'm seeing what looks like at least one new generic/475 failure on
+> > > current for-next. (I've seen one related to an attr buffer that seems to
+> > > be older and harder to reproduce.). The test devices are a couple ~15GB
+> > > lvm devices formatted with mkfs defaults. I'm still trying to establish
+> > > reproducibility, but so far a failure seems fairly reliable within ~30
+> > > iterations.
+> > > 
+> > > The first [1] looks like log recovery failure processing an EFI. The
+> > > second variant [2] looks like it passes log recovery, but then fails the
+> > > mount in the COW extent cleanup stage due to a refcountbt problem. I've
+> > > also seen one that looks like the same free space corruption error as
+> > > [1], but triggered via the COW recovery codepath in [2], so these could
+> > > very well be related. A snippet of the dmesg output for each failed
+> > > mount is appended below.
+> > > 
+> > ...
+> > 
+> > A couple updates..
+> > 
+> > First (as noted on irc), the generic/475 failure is not new as I was
+> > able to produce it on vanilla 5.13.0-rc4. I'm not quite sure how far
+> > back that one goes, but Dave noted he's seen it on occasion for some
+> > time.
+> > 
+> > The generic/019 failure I'm seeing does appear to be new as I cannot
+> > reproduce on 5.13.0-rc4. This failure looks more like silent fs
+> > corruption. I.e., the test or log recovery doesn't explicitly fail, but
+> > the post-test xfs_repair check detects corruption. Example xfs_repair
+> > output is appended below (note that 'xfs_repair -n' actually crashes,
+> > while destructive repair seems to work). Since this reproduces fairly
+> > reliably on for-next, I bisected it (while also navigating an unmount
+> > hang that I don't otherwise have data on) down to facd77e4e38b ("xfs:
+> > CIL work is serialised, not pipelined"). From a quick glance at that I'm
+> > not quite sure what the problem is there, just that it doesn't occur
+> > prior to that particular commit.
+> 
+> I suspect that there's an underlying bug in the overlapping CIL
+> commit record sequencing. This commit will be the first time we are
+> actually getting overlapping checkpoints that need ordering via the
+> commit record writes. Hence I suspect what is being seen here is a
+> subtle ordering bug that has been in that code since it was first
+> introduced but never exercised until now..
+> 
+> I haven't had any success in reproducing this yet, I'll keep trying
+> to see if I can get it to trigger so I can look at it in more
+> detail...
 
-I would not expect a patch that converts the pmem driver to touch
-mm/memory-failure.c. mf_generic_kill_procs() has nothing to do with
-the pmem driver.
+I think I have reproduced this enough to have some idea about what
+is happening here. I has RUI recovery fail converting an unwritten
+extent which was added in a RUI+RUD+rmapbt buffer modification a few
+operations prior to the RUI that failed. Turns out that the on-disk
+buffer had an LSN stamped in it more recent than the LSN of the
+checkpoint being recovered and it all goes downhill from there.
 
->  4 files changed, 90 insertions(+), 26 deletions(-)
->
-> diff --git a/block/genhd.c b/block/genhd.c
-> index 9f8cb7beaad1..75834bd057df 100644
-> --- a/block/genhd.c
-> +++ b/block/genhd.c
-> @@ -718,6 +718,36 @@ struct block_device *bdget_disk(struct gendisk *disk, int partno)
->         return bdev;
->  }
->
-> +/**
-> + * bdget_disk_sector - get block device by given sector number
-> + * @disk: gendisk of interest
-> + * @sector: sector number
-> + *
-> + * RETURNS: the found block device where sector locates in
-> + */
-> +struct block_device *bdget_disk_sector(struct gendisk *disk, sector_t sector)
-> +{
-> +       struct block_device *part = NULL, *p;
-> +       unsigned long idx;
-> +
-> +       rcu_read_lock();
-> +       xa_for_each(&disk->part_tbl, idx, p) {
-> +               if (p->bd_partno == 0)
-> +                       continue;
-> +               if (p->bd_start_sect <= sector &&
-> +                       sector < p->bd_start_sect + bdev_nr_sectors(p)) {
-> +                       part = p;
-> +                       break;
-> +               }
-> +       }
-> +       rcu_read_unlock();
-> +       if (!part)
-> +               part = disk->part0;
-> +
-> +       return bdget_disk(disk, part->bd_partno);
-> +}
-> +EXPORT_SYMBOL(bdget_disk_sector);
+The problematic checkpoints at the end of the log overlap
+like this:
 
-I can't see any justification for this function. The pmem driver does
-not need it and the upper layer holders should have their own
-mechanism to go from dax_dev offset to bdev if they need to, but
-hopefully they don't. A dax_device failure should be independent of a
-block_device failure.
+Oper (0): tid: 53552074  len: 0  clientid: TRANS  flags: START 
+cycle: 52       version: 2              lsn: 52,13938   tail_lsn: 52,10816
+cycle: 52       version: 2              lsn: 52,14002   tail_lsn: 52,10816
+cycle: 52       version: 2              lsn: 52,14066   tail_lsn: 52,10816
+cycle: 52       version: 2              lsn: 52,14130   tail_lsn: 52,10816
+Oper (27): tid: c960e383  len: 0  clientid: TRANS  flags: START 
+cycle: 52       version: 2              lsn: 52,14194   tail_lsn: 52,10816
+cycle: 52       version: 2              lsn: 52,14258   tail_lsn: 52,10816
+.....
+cycle: 52       version: 2              lsn: 52,15410   tail_lsn: 52,10816
+cycle: 52       version: 2              lsn: 52,15474   tail_lsn: 52,10816
+Oper (29): tid: c960e383  len: 0  clientid: TRANS  flags: COMMIT 
+Oper (30): tid: 53552074  len: 0  clientid: TRANS  flags: COMMIT 
+cycle: 52       version: 2              lsn: 52,15513   tail_lsn: 52,10816
+Oper (0): tid: 22790ee5  len: 0  clientid: TRANS  flags: START 
+cycle: 52       version: 2              lsn: 52,15577   tail_lsn: 52,10816
+cycle: 52       version: 2              lsn: 52,15641   tail_lsn: 52,10816
+cycle: 52       version: 2              lsn: 52,15705   tail_lsn: 52,10816
+cycle: 52       version: 2              lsn: 52,15769   tail_lsn: 52,10816
 
-> +
->  /*
->   * print a full list of all partitions - intended for places where the root
->   * filesystem can't be mounted and thus to give the victim some idea of what
-> diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
-> index ed10a8b66068..98349e7d0a28 100644
-> --- a/drivers/nvdimm/pmem.c
-> +++ b/drivers/nvdimm/pmem.c
-> @@ -364,9 +364,23 @@ static void pmem_release_disk(void *__pmem)
->         put_disk(pmem->disk);
->  }
->
-> +static int pmem_pagemap_memory_failure(struct dev_pagemap *pgmap,
-> +               unsigned long pfn, int flags)
-> +{
-> +       struct pmem_device *pdev =
-> +                       container_of(pgmap, struct pmem_device, pgmap);
+You can see the commit records for transaction IDs (tid: xxx)
+53552074 and c960e383 are ordered differently to the start records.
+The checkpoint "tid: 22790ee5" is the last checkpoint in the log
+which is incomplete and so isn't recovered.
 
-This local variable is called @pmem not @pdev in other parts of the driver.
+Now, from this information I don't know whether the commit records
+are correctly ordered as the CIL code is suppposed to do, but what
+has happened is that log recovery tags checkpoints with the start
+lsn of the checkpoint and uses that for recovery. That's the lsn it
+stamps into metadata recovered by that commit.
 
-> +       loff_t offset = PFN_PHYS(pfn) - pdev->phys_addr - pdev->data_offset;
-> +       struct block_device *bdev =
-> +                       bdget_disk_sector(pdev->disk, offset >> SECTOR_SHIFT);
-> +
-> +       return dax_corrupted_range(pdev->dax_dev, bdev, offset,
-> +                                  page_size(pfn_to_page(pfn)), &flags);
+So, we recover "tid: c960e383" first with a lsn of 0x340003732,
+then recover "tid: 53552074" with a lsn of 0x3400003632. Hence even
+if the commit records are correctly ordered, log recovery screws up
+the LSN used to recover the checkpoints and hence incorrectly
+recovers buffers and stamps incorrect LSNs into buffers.
 
-Per previous comments this interface should be range based. Why is the
-last argument &flags? That was passed in by value so any changes to it
-will not be reflected back to memory_failure()?
+So, once this is all recovered, we go to handle outstanding intents.
+We start with a RUI that is an rmap conversion, and it fails to find
+the rmap record that it is converting and assert fails. It didn't
+find the record because the rmapbt block modification was not
+replayed because the on-disk rmapbt block was updated in "tid:
+c960e383" and so has a lsn of 0x340003732 stamped in it. And so the
+modification that added the record in "tid: 53552074" was skipped
+because it ran with an LSN less than what was already on disk.
 
-> +}
-> +
->  static const struct dev_pagemap_ops fsdax_pagemap_ops = {
->         .kill                   = pmem_pagemap_kill,
->         .cleanup                = pmem_pagemap_cleanup,
-> +       .memory_failure         = pmem_pagemap_memory_failure,
->  };
->
->  static int pmem_attach_disk(struct device *dev,
-> diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-> index 6fc26f7bdf71..2ad70c02c343 100644
-> --- a/include/linux/genhd.h
-> +++ b/include/linux/genhd.h
-> @@ -219,6 +219,7 @@ static inline void add_disk_no_queue_reg(struct gendisk *disk)
->
->  extern void del_gendisk(struct gendisk *gp);
->  extern struct block_device *bdget_disk(struct gendisk *disk, int partno);
-> +extern struct block_device *bdget_disk_sector(struct gendisk *disk, sector_t sector);
->
->  void set_disk_ro(struct gendisk *disk, bool read_only);
->
-> diff --git a/mm/memory-failure.c b/mm/memory-failure.c
-> index 4377e727d478..43017d7f3918 100644
-> --- a/mm/memory-failure.c
-> +++ b/mm/memory-failure.c
-> @@ -1247,6 +1247,36 @@ static void unmap_and_kill(struct list_head *to_kill, unsigned long pfn,
->         kill_procs(to_kill, flags & MF_MUST_KILL, false, pfn, flags);
->  }
->
-> +static int mf_generic_kill_procs(unsigned long long pfn, int flags)
-> +{
-> +       struct page *page = pfn_to_page(pfn);
-> +       LIST_HEAD(to_kill);
-> +       dax_entry_t cookie;
-> +
-> +       /*
-> +        * Prevent the inode from being freed while we are interrogating
-> +        * the address_space, typically this would be handled by
-> +        * lock_page(), but dax pages do not use the page lock. This
-> +        * also prevents changes to the mapping of this pfn until
-> +        * poison signaling is complete.
-> +        */
-> +       cookie = dax_lock_page(page);
-> +       if (!cookie)
-> +               return -EBUSY;
-> +       /*
-> +        * Unlike System-RAM there is no possibility to swap in a
-> +        * different physical page at a given virtual address, so all
-> +        * userspace consumption of ZONE_DEVICE memory necessitates
-> +        * SIGBUS (i.e. MF_MUST_KILL)
-> +        */
-> +       flags |= MF_ACTION_REQUIRED | MF_MUST_KILL;
-> +       collect_procs(page, &to_kill, flags & MF_ACTION_REQUIRED);
-> +
-> +       unmap_and_kill(&to_kill, pfn, page->mapping, page->index, flags);
-> +       dax_unlock_page(page, cookie);
-> +       return 0;
-> +}
-> +
+IOWs, we got a RUI conversion failure because the above two nested
+checkpoints were either replayed out of order or were replayed with
+the incorrect LSNs.
 
-Per above, I am surprised to find this in this patch, it belong in its
-own patch if at all.
+From here, I'm working as I write this because, well, complex... :/
 
->  int mf_dax_kill_procs(struct address_space *mapping, pgoff_t index, int flags)
->  {
->         LIST_HEAD(to_kill);
-> @@ -1348,9 +1378,7 @@ static int memory_failure_dev_pagemap(unsigned long pfn, int flags,
->                 struct dev_pagemap *pgmap)
->  {
->         struct page *page = pfn_to_page(pfn);
-> -       LIST_HEAD(to_kill);
->         int rc = -EBUSY;
-> -       dax_entry_t cookie;
->
->         if (flags & MF_COUNT_INCREASED)
->                 /*
-> @@ -1364,20 +1392,9 @@ static int memory_failure_dev_pagemap(unsigned long pfn, int flags,
->                 goto out;
->         }
->
-> -       /*
-> -        * Prevent the inode from being freed while we are interrogating
-> -        * the address_space, typically this would be handled by
-> -        * lock_page(), but dax pages do not use the page lock. This
-> -        * also prevents changes to the mapping of this pfn until
-> -        * poison signaling is complete.
-> -        */
-> -       cookie = dax_lock_page(page);
-> -       if (!cookie)
-> -               goto out;
-> -
->         if (hwpoison_filter(page)) {
->                 rc = 0;
-> -               goto unlock;
-> +               goto out;
->         }
->
->         if (pgmap->type == MEMORY_DEVICE_PRIVATE) {
-> @@ -1385,7 +1402,7 @@ static int memory_failure_dev_pagemap(unsigned long pfn, int flags,
->                  * TODO: Handle HMM pages which may need coordination
->                  * with device-side memory.
->                  */
-> -               goto unlock;
-> +               goto out;
->         }
->
->         /*
-> @@ -1395,19 +1412,21 @@ static int memory_failure_dev_pagemap(unsigned long pfn, int flags,
->         SetPageHWPoison(page);
->
->         /*
-> -        * Unlike System-RAM there is no possibility to swap in a
-> -        * different physical page at a given virtual address, so all
-> -        * userspace consumption of ZONE_DEVICE memory necessitates
-> -        * SIGBUS (i.e. MF_MUST_KILL)
-> +        * Call driver's implementation to handle the memory failure,
-> +        * otherwise roll back to generic handler.
->          */
-> -       flags |= MF_ACTION_REQUIRED | MF_MUST_KILL;
-> -       collect_procs_file(page, page->mapping, page->index, &to_kill,
-> -                          flags & MF_ACTION_REQUIRED);
-> +       if (pgmap->ops->memory_failure) {
-> +               rc = pgmap->ops->memory_failure(pgmap, pfn, flags);
-> +               /*
-> +                * Roll back to generic handler too if operation is not
-> +                * supported inside the driver/device/filesystem.
-> +                */
-> +               if (rc != EOPNOTSUPP)
-> +                       goto out;
-> +       }
-> +
-> +       rc = mf_generic_kill_procs(pfn, flags);
->
-> -       unmap_and_kill(&to_kill, pfn, page->mapping, page->index, flags);
-> -       rc = 0;
-> -unlock:
-> -       dax_unlock_page(page, cookie);
->  out:
->         /* drop pgmap ref acquired in caller */
->         put_dev_pagemap(pgmap);
-> --
-> 2.31.1
->
->
->
+Hypothesis: If the two nested checkpoints had their commit records
+written out of order, then what wasn't complete in 53552074 should
+be in c960e383 but was ignored. There were only two RUIs left
+incomplete in 53552074 (i.e. had no RUD+rmapbt buffer mods) and they
+weren't in c960e383. Hence c960e383 does not follow 53552074.
+Indeed, I found both RUDs at the start of checkpoint 22790ee5 (which
+wasn't complete or replayed), hence log recovery was correct to be
+replaying those RUIs.
+
+So, lets use this same intent -> intent done split across
+checkpoints to verify that 53552074 follows c960e383. So:
+
+----------------------------------------------------------------------------
+Oper (26): tid: d3047f93  len: 48  clientid: TRANS  flags: none
+RUI:  #regs: 1  num_extents: 1  id: 0xffff888034f3edb0
+(s: 0x25198c, l: 1, own: 518, off: 2714540, f: 0x20000001) 
+....
+----------------------------------------------------------------------------
+Oper (2): tid: 53552074  len: 16  clientid: TRANS  flags: none
+RUD:  #regs: 1                   id: 0xffff8880422f1d90
+.....
+----------------------------------------------------------------------------
+Oper (24): tid: 53552074  len: 48  clientid: TRANS  flags: none
+RUI:  #regs: 1  num_extents: 1  id: 0xffff8880422f35c0
+(s: 0x107de7, l: 1, own: 521, off: 2854494, f: 0x5) 
+....
+----------------------------------------------------------------------------
+Oper (39): tid: c960e383  len: 16  clientid: TRANS  flags: none
+RUD:  #regs: 1                   id: 0xffff888034f3edb0
+....
+----------------------------------------------------------------------------
+Oper (28): tid: c960e383  len: 48  clientid: TRANS  flags: none
+RUI:  #regs: 1  num_extents: 1  id: 0xffff8880422f1d90
+(s: 0x31285f, l: 1, own: 520, off: 3195131, f: 0x5) 
+----------------------------------------------------------------------------
+Oper (29): tid: c960e383  len: 0  clientid: TRANS  flags: COMMIT 
+----------------------------------------------------------------------------
+Oper (30): tid: 53552074  len: 0  clientid: TRANS  flags: COMMIT 
+....
+----------------------------------------------------------------------------
+Oper (0): tid: 22790ee5  len: 0  clientid: TRANS  flags: START 
+----------------------------------------------------------------------------
+Oper (1): tid: 22790ee5  len: 16  clientid: TRANS  flags: none
+TRAN:     tid: e50e7922  num_items: 876
+----------------------------------------------------------------------------
+Oper (2): tid: 22790ee5  len: 16  clientid: TRANS  flags: none
+RUD:  #regs: 1                   id: 0xffff8880422f35c0
+----------------------------------------------------------------------------
+
+Yup, there's the ordering evidence. The checkpoint sequence is:
+
+d3047f93 (RUI 0xffff888034f3edb0)
+c960e383 (RUD 0xffff888034f3edb0)
+
+c960e383 (RUI 0xffff8880422f1d90)
+53552074 (RUD 0xffff8880422f1d90)
+
+53552074 (RUI 0xffff8880422f35c0)
+22790ee5 (RUD 0xffff8880422f35c0)
+
+So what we have here is log recovery failing to handle checkpoints
+that -start- out of order in the log because it uses the /start lsn/
+for recovery LSN sequencing, not the commit record LSN. However, it
+uses the commit record ordering for sequencing the recovery of
+checkpoints. The code that uses the start lsn for recvery of commit
+records appears to be:
+
+STATIC int
+xlog_recover_items_pass2(
+        struct xlog                     *log,
+        struct xlog_recover             *trans,
+        struct list_head                *buffer_list,
+        struct list_head                *item_list)
+{
+        struct xlog_recover_item        *item;
+        int                             error = 0;
+
+        list_for_each_entry(item, item_list, ri_list) {
+                trace_xfs_log_recover_item_recover(log, trans, item,
+                                XLOG_RECOVER_PASS2);
+
+                if (item->ri_ops->commit_pass2)
+                        error = item->ri_ops->commit_pass2(log, buffer_list,
+>>>>>>>>>>                               item, trans->r_lsn);
+                if (error)
+                        return error;
+        }
+
+        return error;
+}
+
+trans->r_lsn is the LSN where the start record for the
+commit is found, not the LSN the commit record was found. At run
+time, we do all our ordering off start record LSN because new
+journal writes cannot be allowed to overwrite the start of the
+checkpoint before every item in the checkpoint has been written back
+to disk. If we were to use the commit record LSN, the AIL would
+allow the tail of the log to move over the start of the checkpoint
+before every thing was written.
+
+However, what is the implication of the AIL having -start lsns- for
+checkpoint sequences out of order? And for log recovery finding the
+head of the log? I think it means we have the potential for
+checkpoint N to be complete in the log an needing recovery, but
+checkpoint N+1 is not complete because we've allowed the tail of the
+log to move past the start of that checkpoint. That will also cause
+corruption log recovery corruption. And I have a sneaking suspiciion
+that this may cause fsync/log force issues as well....
+
+----
+
+Ok, time to step back and think about this for a bit. The good news
+is that this can only happen with pipelined CIL commits, while means
+allowing more than one CIL push to be in progress at once. We can
+avoid this whole problem simply by setting the CIL workqueue back to
+running just a single ordered work at a time. Call that Plan B.
+
+The bad news is that this is zero day bug, so all kernels out there
+will fail to recovery with out of order start records. Back before
+delayed logging, we could have mulitple transactions commit to the
+journal in just about any order and nesting, and they used exactly
+the same start/commit ordering in recovery that is causing us
+problems now. This wouldn't have been noticed, however, because
+transactions were tiny back then, not huge checkpoints like we run
+now. And if is was, it likely would have been blamed on broken
+storage because it's so ephemeral and there was little test
+infrastructure that exercised these paths... :/
+
+What this means is that we can't just make a fix to log recovery
+because taking a log from a current kernel and replaying it on an
+older kernel might still go very wrong, and do so silently. So I
+think we have to fix what we write to the log.
+
+Hence I think the only way forward here is to recognise that the
+AIL, log forces and log recovery all require strictly ordered
+checkpoint start records (and hence LSNs) as well as commit records.
+We already strictly order the commit records (and this analysis
+proves it is working correctly), so we should be able to leverage
+the existing functionality to do this.
+
+So I think I see a simple way out of this. I'll sleep on it and see
+if if I still think that in the morning...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
