@@ -2,67 +2,56 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A5F5C48BE8
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Jun 2021 07:33:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A63B7C48BE6
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Jun 2021 08:14:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4B4B3610F7
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Jun 2021 07:33:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 89BBB611CE
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Jun 2021 08:14:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231179AbhFPHfT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Jun 2021 03:35:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43320 "EHLO
+        id S232115AbhFPIQJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Jun 2021 04:16:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52658 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231132AbhFPHfT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Jun 2021 03:35:19 -0400
+        with ESMTP id S232083AbhFPIQH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Jun 2021 04:16:07 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E62EFC061574;
-        Wed, 16 Jun 2021 00:33:13 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7D95C061574
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Jun 2021 01:14:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=hwWvq7TQGATF8evlhCqvc2H6xYP+A2KS0Fsb7ItfDEA=; b=rfU9gyQ8pkR0Bj/6M2Fwtc7p0b
-        EcTHyyOyRmon6A/cjIvUpGynakobo7+nqn/9scVkMLVlzTJzrZh/7DRiot2edAV/3xv5hfW6LQz8m
-        XFr0DMhsxfwQ708P+PQulaY4ioxb5mlS/zUek8YPgGHOkcXo0JTi74/uB1YL1Evfj/HQ5Audp9Wyv
-        rTqKHG19bH6Lb+O2Wwdgv+n7lxQemIDvBrzVHPHmFShZ2ckov9PDV83sGG9R6EBilUles0UMd+FmW
-        jgaaB9g6Flq/0bRp6vh5SMoCf+sV+U1lXWLrgNIGcqpNpamTCOJXma1ZIrvK65+/XfU5s39EejP3d
-        eurEDpFA==;
+        bh=l2WBiCb5duYJRA9nKpihqrJOH1Qjg6utSrFiu8qAdtc=; b=BYHL4slCpkib23pEIeRpksYAph
+        bEQRgYKzKt0Yu81TbaDgOqc5lh27JdQjfcrVcJNPx7Jn5ts4eYuEcu9KCH3OPS1uaglFu8wK65lSl
+        V/t9j/dW3rc+OZZ1IsVGe9qqr8+K9ByV1dDqoFnNoaYTsfGLgs64Vw2kKVTtkEqEaA1OXSDkMLn5D
+        Sp6gmfJKbmsMAp1ozcJEilFJBgOC2uesJD3zDNerJ0EzyxzT2Nj+Snj2TAIAXxQtMzEZagVnSdFZA
+        7p5EpUq1k9w/PNClW3MVPTq7n2MfNkN8EyOjjlXwTh3zU5r+HpSk67wnrmtRhSulvvC4K2ennzHIo
+        2+rxQHfg==;
 Received: from hch by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1ltQ2G-007koT-Ej; Wed, 16 Jun 2021 07:32:40 +0000
-Date:   Wed, 16 Jun 2021 08:32:28 +0100
+        id 1ltQg6-007nDY-91; Wed, 16 Jun 2021 08:13:42 +0000
+Date:   Wed, 16 Jun 2021 09:13:38 +0100
 From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     guaneryu@gmail.com, Chandan Babu R <chandanrlinux@gmail.com>,
-        Allison Henderson <allison.henderson@oracle.com>,
-        linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me,
-        amir73il@gmail.com, ebiggers@kernel.org
-Subject: Re: [PATCH 07/13] fstests: automatically generate group files
-Message-ID: <YMmpDGT9b4dBdSh2@infradead.org>
-References: <162370433910.3800603.9623820748404628250.stgit@locust>
- <162370437774.3800603.15907676407985880109.stgit@locust>
+Cc:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
+        david@fromorbit.com, hch@infradead.org, bfoster@redhat.com
+Subject: Re: [PATCH 01/16] xfs: refactor the inode recycling code
+Message-ID: <YMmysh+WafvmJwwm@infradead.org>
+References: <162360479631.1530792.17147217854887531696.stgit@locust>
+ <162360480240.1530792.10821283161255096063.stgit@locust>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <162370437774.3800603.15907676407985880109.stgit@locust>
+In-Reply-To: <162360480240.1530792.10821283161255096063.stgit@locust>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 14, 2021 at 01:59:37PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Now that we've moved the group membership details into the test case
-> files themselves, automatically generate the group files during build.
-> The autogenerated files are named "group.list" instead of "group" to
-> avoid conflicts between generated and (stale) SCM files as everyone
-> rebases.
+Looks good,
 
-Hmm, so we now need to run make to regenerate the group information?
-That is for sure going to create various issues with people forgetting
-to regenerate it.  What about regenerating it everytime a group based
-run is executed?
+Reviewed-by: Christoph Hellwig <hch@lst.de>
