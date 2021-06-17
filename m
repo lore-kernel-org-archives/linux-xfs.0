@@ -2,322 +2,202 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B328AC2B9F4
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Jun 2021 04:49:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D339C48BE5
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Jun 2021 06:51:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 98834613CB
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Jun 2021 04:49:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0196361159
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Jun 2021 06:51:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229515AbhFQEvG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Jun 2021 00:51:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46562 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229495AbhFQEvG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Jun 2021 00:51:06 -0400
-Received: from mail-pg1-x52e.google.com (mail-pg1-x52e.google.com [IPv6:2607:f8b0:4864:20::52e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B069C061574
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Jun 2021 21:48:53 -0700 (PDT)
-Received: by mail-pg1-x52e.google.com with SMTP id e20so3959741pgg.0
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Jun 2021 21:48:53 -0700 (PDT)
+        id S229693AbhFQGxy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Jun 2021 02:53:54 -0400
+Received: from esa2.fujitsucc.c3s2.iphmx.com ([68.232.152.246]:22287 "EHLO
+        esa2.fujitsucc.c3s2.iphmx.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229616AbhFQGxx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Jun 2021 02:53:53 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=fujitsu.com; i=@fujitsu.com; q=dns/txt; s=fj1;
+  t=1623912707; x=1655448707;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=q3SWwtj4qzmFnyMwMbjBILrRVzaGsuXQfK38ahs8v5c=;
+  b=cMDE69pKtzSar0km4H9ZfASbxbOfIfU3WZcf7+mZuoWpIzzUtvhM8uP/
+   n5hhIohfotRzkkHz6G6p8qD4gefNe5GxApbQup9WvO1R552O9homv20Ig
+   keO9qTaq6P+fI7taJc3+xmjwOseveayLvW8vLMDbQhMWWaRDbpoZIDabA
+   QV3+3pDBARjZZdxBLk+1rQ+w2IOh0sD1lub+5stnPWFQUvN2hjf9Gxo1N
+   T88UMee0Qx61LwJC51rI30GW8U5ow926/AfYQz04yaa2sz98KkZ1CJW2y
+   mmGyhxZmwYT9JIcdY80ueTIOPrG01+FcG/8eaKRgBauOEgMhp5qrgy0yJ
+   w==;
+IronPort-SDR: AuDTIrPqhhn5FGoDfRNZPlWCYwFCZt4BlwwM4q/eVoiAurV4LvZRbHGt+HEmRE5RUJBv7kyJbE
+ EO0khuLelaOPhVC9m5BLTHJFbcGXS9AS+2ThY3qDCqOgFrTleHlg5+Ab1QMWcGuFfsDGGUNew8
+ NS7zhuuw5rDF4zM401KmT2UIq1PHvq3URBcqytEcpDco5kxy730/UfkcH2zoxAfYhzU7FnwZNC
+ mDHn1l/PUtYauUu0DkvuGhGEIOOm5Epme9UnGjsGExZLxiVp6GRX1DG2+bi7C1h3ro6WQ+uxre
+ pPI=
+X-IronPort-AV: E=McAfee;i="6200,9189,10017"; a="41442165"
+X-IronPort-AV: E=Sophos;i="5.83,278,1616425200"; 
+   d="scan'208";a="41442165"
+Received: from mail-os2jpn01lp2052.outbound.protection.outlook.com (HELO JPN01-OS2-obe.outbound.protection.outlook.com) ([104.47.92.52])
+  by ob1.fujitsucc.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jun 2021 15:51:05 +0900
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=JSU9zVF3PQwGTrGOaKxXB1iqY0y9Jyjyiy6uM3vk6fT0yhqxOzKEd3ODo6GRFo8LR7AGTgaqdw4axWi4WYgVbbDhnkK9CO5gEyfYbcyTRjYdXt3gkYAaQ316D+xVNCLwYVyOc9sDMlAl2O9gr4yMe3g1y8Pz+hdHW0URlZLB9bYl2lX8pBoKO49P3Qs0lQqQp43TSDeG0PxAYV3ouLl70I0icIrMy3/U5zQ69ImTI3RaC7CtPYATBBBKqTJQXRWv3ElPkP4Tb4xAYecra8R31RZOdNKLPR8JzslYuzHwksLe5RHmirLySFBeKafMMZuIcX4gFyV+0o5Go+nmP+o7AQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=q3SWwtj4qzmFnyMwMbjBILrRVzaGsuXQfK38ahs8v5c=;
+ b=I0ug9q7tacmymhdMrPpbGP/ydSAv4uC8apqusNPdzszMCysDAwhZFSo7j5D5HYxZ4YdZW/y//2LjYxq+taxzbpY2OPDuzdXVCj4xC7DK3g57zStWPHiZ7TE5FtRQ5Ophaisjejj5JRu3h0WvWyW4Q+s3jnUVJFKFQQEFaSKhNC9N4ee4LpfxLMGQeOi+Ej3sysgelhjKaZGwf66sw6QIroaF7jlAujgQzA0+Drsl1nzDz+F2+BY2y3xxg8jwyxfVjQny5ujLab9rE+349epe7bVq/Hgxb4ZEJ8uhiLsj9wVwSa82jdTc/nJln9ee/aXa92glSdGxk6g0AVQGjAkgAA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=fujitsu.com; dmarc=pass action=none header.from=fujitsu.com;
+ dkim=pass header.d=fujitsu.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=references:user-agent:from:to:cc:subject:in-reply-to:date
-         :message-id:mime-version;
-        bh=zwfVW/ex+0Y2v+3tB9JlX30chwSCYylMaMnNpaqIICU=;
-        b=aKyTCRkACUY2yPWF9wOn7fXzHQeqess0bF6zh5C7RgizwUBEO+dzcxFf1OqNDGd+5u
-         yK0iAhoEajeelzSOKS0rljEdL/pkMoZCuhekNA3DZ1uqcfgFkGnFUvJaCR26riRZe9MJ
-         J7F3EZWb21bl64caM8M3EfVOkudt9WxAxhrBVDugPTB3dpsK1aVektyLmQc4xozCFI5J
-         zZrul8C4Apa2KXrCw8OB8Ej3W34z/5+T+yAqVh2ZaeK7RI0UKWUYXGSuB0bk8RFXGdIe
-         dp7uuvhwX4GLn+GtoRKISALOFzGhJGYD2982t4MNDmm3lYTvjVDA7TIg1dyTXdlwQiMV
-         HLJQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:references:user-agent:from:to:cc:subject
-         :in-reply-to:date:message-id:mime-version;
-        bh=zwfVW/ex+0Y2v+3tB9JlX30chwSCYylMaMnNpaqIICU=;
-        b=hBvXyEx+VgP1htk/Ch3Lzrkn5y7VszeAvrGHT/JmFH+ltfJCPnR2DbJ7PmFaGMw0RM
-         otkx69zuFV9h6Hv5yKAdl/guJTSIOPg/vpLREMI67xMq1bnBek4R/d/rAcmNdGDtbQIi
-         gu5dww5qt3FnG7VWN02mkgGs3HP6+tzM85u2ybXv+zhdmLAhEPt5rOIfnJDcpIN+FVkS
-         Nxj/mkkjHUvSZGryAqd1HpNx53MwlNinqx3LjD8Z3iiOdzzcpOiNn+0Z6UIfeOaZntNj
-         yGoWuZzBMVqJu4rmpz5xYhxOEd9AeZuiEIZyQnsyew2GGIPlDr1UvVCBIHkBI9Gig0wv
-         pc5g==
-X-Gm-Message-State: AOAM531kfB5JzC67W5NEBMbMF9or8U+kYmKhm5EXoEzhMeXO2hrBMTKV
-        4S02IBE5tjKpGvXjzlJ7GDKgOal52mLOcg==
-X-Google-Smtp-Source: ABdhPJz6S0wg8WpvKirnX/mXID5jk6vKU01DbyWYV4BZZkN4Nclay40VE44EgKsNpZ6u6Z4EcowWfg==
-X-Received: by 2002:a63:344d:: with SMTP id b74mr3160821pga.266.1623905332355;
-        Wed, 16 Jun 2021 21:48:52 -0700 (PDT)
-Received: from garuda ([122.167.159.50])
-        by smtp.gmail.com with ESMTPSA id v6sm3671483pfi.46.2021.06.16.21.48.50
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Wed, 16 Jun 2021 21:48:51 -0700 (PDT)
-References: <20210428065152.77280-1-chandanrlinux@gmail.com> <20210428065152.77280-2-chandanrlinux@gmail.com> <20210429011231.GF63242@dread.disaster.area> <875z0399gw.fsf@garuda> <20210430224415.GG63242@dread.disaster.area> <87y2cwnnzp.fsf@garuda> <20210504000306.GJ63242@dread.disaster.area> <874kfh5p32.fsf@garuda> <20210506032751.GN63242@dread.disaster.area> <87cztxwkvy.fsf@garuda>
-User-agent: mu4e 1.0; emacs 26.1
-From:   Chandan Babu R <chandanrlinux@gmail.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs: Prevent deadlock when allocating blocks for AGFL
-In-reply-to: <87cztxwkvy.fsf@garuda>
-Date:   Thu, 17 Jun 2021 10:18:48 +0530
-Message-ID: <875yydqeof.fsf@garuda>
+ d=fujitsu.onmicrosoft.com; s=selector2-fujitsu-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=q3SWwtj4qzmFnyMwMbjBILrRVzaGsuXQfK38ahs8v5c=;
+ b=iWZewIaPt0LIGEgujahZYObTIVKUGoTDf+ZGK4JUk5NbfnBQ/glec5dOcQ9bSBJ5uIZ87nRdCMvhaz+9bo2CvE5xav6bM9JcfdhSw6None7jcXQiOXl4jqqhNFWYy3ZiMJM9KmEw0AQIjw8k1NRcBIJ2RPBrT9s7fbxK0PH5XY8=
+Received: from OSBPR01MB2920.jpnprd01.prod.outlook.com (2603:1096:604:18::16)
+ by OSBPR01MB4856.jpnprd01.prod.outlook.com (2603:1096:604:7c::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.16; Thu, 17 Jun
+ 2021 06:51:01 +0000
+Received: from OSBPR01MB2920.jpnprd01.prod.outlook.com
+ ([fe80::b985:8239:6cf0:1228]) by OSBPR01MB2920.jpnprd01.prod.outlook.com
+ ([fe80::b985:8239:6cf0:1228%7]) with mapi id 15.20.4242.019; Thu, 17 Jun 2021
+ 06:51:01 +0000
+From:   "ruansy.fnst@fujitsu.com" <ruansy.fnst@fujitsu.com>
+To:     Dan Williams <dan.j.williams@intel.com>
+CC:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Linux MM <linux-mm@kvack.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        device-mapper development <dm-devel@redhat.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        david <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@redhat.com>,
+        Goldwyn Rodrigues <rgoldwyn@suse.de>,
+        Linux NVDIMM <nvdimm@lists.linux.dev>
+Subject: RE: [PATCH v4 03/10] fs: Introduce ->corrupted_range() for superblock
+Thread-Topic: [PATCH v4 03/10] fs: Introduce ->corrupted_range() for
+ superblock
+Thread-Index: AQHXWN/AzVDrjJsgmE+2b5OugDUMoqsV4P2AgAHv3zA=
+Date:   Thu, 17 Jun 2021 06:51:01 +0000
+Message-ID: <OSBPR01MB29203DC17C538F7B1B1C9224F40E9@OSBPR01MB2920.jpnprd01.prod.outlook.com>
+References: <20210604011844.1756145-1-ruansy.fnst@fujitsu.com>
+ <20210604011844.1756145-4-ruansy.fnst@fujitsu.com>
+ <CAPcyv4h=bUCgFudKTrW09dzi8MWxg7cBC9m68zX1=HY24ftR-A@mail.gmail.com>
+In-Reply-To: <CAPcyv4h=bUCgFudKTrW09dzi8MWxg7cBC9m68zX1=HY24ftR-A@mail.gmail.com>
+Accept-Language: en-US, zh-CN
+Content-Language: zh-CN
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: intel.com; dkim=none (message not signed)
+ header.d=none;intel.com; dmarc=none action=none header.from=fujitsu.com;
+x-originating-ip: [223.111.68.150]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 9bc86cc8-d9ee-4736-37ed-08d9315c44f3
+x-ms-traffictypediagnostic: OSBPR01MB4856:
+x-microsoft-antispam-prvs: <OSBPR01MB4856A89FF3579D50D3422FC8F40E9@OSBPR01MB4856.jpnprd01.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:6790;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: tYl0grprqRz+W6fT1QjtUggeWce5+pK/AHly/LYAfJmrvhqlNtcx+JaHfJw2SZmpcfHQFdOw1cegHG4MuYiXaryM10FXIOaRraX8OImoVEbrXWycrCF47gXmSaxEm4Y1xvJ79pHo2sDIHz7b6g7cRj8jw2jMu+x4zCYL61vYVV4lUBHc1nLfLAeIO+nfpRn8SRh0SpEMB6YiGvZHdSl71s3HFtWK3Nwq1AF5rgGJvxhM7R4VXopmcvak7p2B91tWHg/L3GShc2veEpTVt2Bme7omt7wmY6glxBZDtAkgVhBH1WK9DY8uZ38ImosVX4RYNqr/yELO/ldabbPaObjoqunRWedf1Y6OpbMo+HX4y3aEjv91fQDvsKXH+u7iTo/lLcpYrZ17MztZkDHQIC7q1rcybgeJQrcWuuP+qI9IlR0qqobSyiocJAsJeVAuJYSiXogF5Jk+sRaDk6fpwJiDo7AsG16m7s3HGOlsZrd6TpCysN1SO+zDSWB7vzUyouF1ZaoFP6DaWacfIAQQ3LJCglEgA/m29WNZmuKbKJwqWGsC/jTllEjgAXcBJ2tj5/yufN9vES1Cez81oW18/Rxf/yDhdo1WRPKOLX8VYnAI4SQ=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:OSBPR01MB2920.jpnprd01.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(136003)(39850400004)(376002)(346002)(366004)(396003)(83380400001)(316002)(7416002)(66476007)(478600001)(38100700002)(5660300002)(86362001)(7696005)(2906002)(8936002)(54906003)(6506007)(186003)(9686003)(66556008)(55016002)(26005)(71200400001)(52536014)(8676002)(6916009)(33656002)(66946007)(66446008)(85182001)(76116006)(4326008)(53546011)(64756008)(122000001);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?NGNGa1pCek5FR0pNQjZtci8zMWQ2SmRySnJ0NDNjcmxlZUtmcm5EeXkwV0xp?=
+ =?utf-8?B?VjUxZ3dKc0VNa3d5bWtxejczY09DWVlmd1dpYjJIdHpYZ255S0ptcXBMa011?=
+ =?utf-8?B?ekZPeG9hTE1HTlJGQ3BOanVSZmFvbW1KMC9qQUh3cXdQVU5HRU53Sndwc0Jo?=
+ =?utf-8?B?czN3ajdFRjBldE5rZW80VWdqeHY1L0gxRVd0SFErZk50a2hiUm9CZGw3R0dV?=
+ =?utf-8?B?VnE1MHgwTTgrMFFMcmUzR3lwWXJUMUhWeG9jOFR3WkIvWWNEK2ZFOXB0TCsv?=
+ =?utf-8?B?R3MyWmJvR3ppcVA5NWIrZnVabTdzb0FWL0lBTUhFWW0wK0ZYTTlyL29PZi9P?=
+ =?utf-8?B?ek4yeVFwdWJlNlBVSGFjSUpwbDJ2MUVuck5rWitiK2RLekUvYjRCTVBDeWdS?=
+ =?utf-8?B?bWxPZVJwdElaMTJ3Z0JyaEJYclBqZWFxNVo0VGFBcUQ2SXpzL2hxSkFCTTlj?=
+ =?utf-8?B?U092clJ0QjdHK0JBVllGNk1pVlRMN0FHdW80YjFQVzIxWnpjTWEyeHJzRkN3?=
+ =?utf-8?B?cE9OeDQ5RVhaWUttVXBQbjlhQURwTXlKQ0JxNW90VndNZ25OOHhLS09Kc0RN?=
+ =?utf-8?B?aGt3SnhscklLRSt5SndFSFk5SGFwR2FLUm43bUFnVGFQNVRnSm9WU1ZrbG1D?=
+ =?utf-8?B?RTVtMXlnYTJkazFUY2VPOS9tMnJKNTVsWFVQT2pyVzlWdVVpcDZsYi9vcDM4?=
+ =?utf-8?B?L29vNnZtWHF4RW0raUUybnhtNlFkOHd0MEZ4WnZqOUU0R3ltdkgvY2VqcXBU?=
+ =?utf-8?B?Y0VjSW50S3VITGR3WmdNN0VKM1Y2dCs0d0U1ZmI4NHE5aFFnSm5sUXJXa3NQ?=
+ =?utf-8?B?WE5OZDV5cm9RWERFU0dVd0g3S3dXemxHcWxCRUJqOUFLdXRycm03L2VqaEVv?=
+ =?utf-8?B?dDM0cFl3b3VqdVZ4OW5vcHc0MU1sZmZKdElVYjhLZ3NLRStsYjcwaURYYnFy?=
+ =?utf-8?B?ZHBNaGo4NTJTQU5GRzJRTW9EK0pqR2IySDdDUXd1NnpjOWYvYnp2ZVpRNXVu?=
+ =?utf-8?B?ZktGR0w2ZmdySnFLUEdCWDlEZjNHTUxEYjJjQ1ZhU2lWTVNJTThhWTVhLzdF?=
+ =?utf-8?B?bEVOeUJWMUYwNWVUdjRVR1loSWFNdk42K2J0Z2FNNjY5REQwUHRkaUZMdVUv?=
+ =?utf-8?B?ay9RRE12cUJHWjc1NktkZ0FndzVZT0srdGw5QWhpUnBoYjVVdVdWRGk5VDlM?=
+ =?utf-8?B?eFpPOTIyWjFWaG9wRENCWlYraWxwcnNIVzdPQkQ2MzZISzYxdmgwMkRRQlo0?=
+ =?utf-8?B?Smd3WllMdXNVcG4weElXdHFFWE1WZEJmeEcvakVHeGVYYllseFNwY2Mvbzkx?=
+ =?utf-8?B?UW1DczE4OHJKdXY2UHVaUWZlY2tiRkNEbFlhNXpZeEZJYmZES1RrQld6cGZt?=
+ =?utf-8?B?cC9mUnluNHNKZnNGNmtEUkFUdXRnVjkwQi95TU03Z3hqUDV0amdUalVjbFhm?=
+ =?utf-8?B?aDluV0RrVlY0b3cxUWowOWpOV2l0d3IyalFIQVp5VldYMjdFbnEvRXg3NnNm?=
+ =?utf-8?B?SFIzcmZrdEVJZkNyTXlIQnhiMlJkbk5tUW54bXBwbnZocS9CRk91a0lkMTBW?=
+ =?utf-8?B?RFo3b0lMYmpPR2kySk9iYTcwdFVabUxEeDFrcHlUMW5QbHl3OU1ZUVRZbmIy?=
+ =?utf-8?B?aGZja1hPd3dFalYzMEQ0Qno3K1BJZHphT2VkZHJva1ZhRG5iVE9rTk9LREcz?=
+ =?utf-8?B?T0oxd3NxRlBNVldLbGZvZmtZb1VyNW1OdXM4ZFV1czdZREtwSUJ6QVcwYkZX?=
+ =?utf-8?Q?xKgrLvvn98zJ+7/l/E/nlm2QRA0yEYD0ETrBs3y?=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain
+X-OriginatorOrg: fujitsu.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: OSBPR01MB2920.jpnprd01.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9bc86cc8-d9ee-4736-37ed-08d9315c44f3
+X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Jun 2021 06:51:01.2138
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: a19f121d-81e1-4858-a9d8-736e267fd4c7
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: ZNyeEpxnh2h2NQPVuaOkbKiYSDw2095Z24xBRfNevIfCBaZDaLNG0jLJ2hrGzsmX/it518RqkD7VhyWT6aWFkw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: OSBPR01MB4856
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 11 May 2021 at 17:19, Chandan Babu R wrote:
-> On 06 May 2021 at 08:57, Dave Chinner wrote:
->> On Wed, May 05, 2021 at 06:12:41PM +0530, Chandan Babu R wrote:
->>> > Hence when doing allocation for the free list, we need to fail the
->>> > allocation rather than block on the only remaining free extent in
->>> > the AG. If we are freeing extents, the AGFL not being full is not an
->>> > issue at all. And if we are allocating extents, the transaction
->>> > reservations should have ensured that the AG had sufficient space in
->>> > it to complete the entire operation without deadlocking waiting for
->>> > space.
->>> >
->>> > Either way, I don't see a problem with making sure the AGFL
->>> > allocations just skip busy extents and fail if the only free extents
->>> > are ones this transaction has freed itself.
->>> >
->>>
->>> Hmm. In the scenario where *all* free extents in the AG were originally freed
->>> by the current transaction (and hence busy in the transaction),
->>
->> How does that happen?
->
-> I tried in vain to arrive at the above mentioned scenario by consuming away as
-> many blocks as possible from the filesystem. At best, I could arrive at an AG
-> with just one free extent record in the cntbt (NOTE: I had to disable global
-> reservation by invoking "xfs_io -x -c 'resblks 0' $mntpnt"):
->
-> recs[1] = [startblock,blockcount]
-> 1:[32767,1]
->
-> For each AG available in an FS instance, we take away 8
-> (i.e. XFS_ALLOC_AGFL_RESERVE + 4) blocks from the global free data blocks
-> counter. This reservation is applied to the FS as a whole rather than each AG
-> individually. Hence we could get to a scenario where an AG could have less
-> than 8 free blocks. I could not find any other restriction in the code that
-> explicitly prevents an AG from having zero free extents.
->
-> However, I could not create such an AG because any fs operation that needs
-> extent allocation to be done would try to reserve more than 1 extent causing
-> the above cited AG to not be chosen.
->
->>
->>> we would need
->>> to be able to recognize this situation and skip invoking
->>> xfs_extent_busy_flush() altogether.
->>
->> If we are freeing extents (i.e XFS_ALLOC_FLAG_FREEING is set) and
->> we are doing allocation for AGFL and we only found busy extents,
->> then it's OK to fail the allocation.
->
-> When freeing an extent, the following patch skips allocation of blocks to AGFL
-> if all the free extents found are busy,
->
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index aaa19101bb2a..5310e311d5c6 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -1694,6 +1694,7 @@ xfs_alloc_ag_vextent_size(
->  	 * are no smaller extents available.
->  	 */
->  	if (!i) {
-> +alloc_small_extent:
->  		error = xfs_alloc_ag_vextent_small(args, cnt_cur,
->  						   &fbno, &flen, &i);
->  		if (error)
-> @@ -1710,6 +1711,9 @@ xfs_alloc_ag_vextent_size(
->  		/*
->  		 * Search for a non-busy extent that is large enough.
->  		 */
-> +		xfs_agblock_t	orig_fbno = NULLAGBLOCK;
-> +		xfs_extlen_t	orig_flen;
-> +
->  		for (;;) {
->  			error = xfs_alloc_get_rec(cnt_cur, &fbno, &flen, &i);
->  			if (error)
-> @@ -1719,6 +1723,11 @@ xfs_alloc_ag_vextent_size(
->  				goto error0;
->  			}
->
-> +			if (orig_fbno == NULLAGBLOCK) {
-> +				orig_fbno = fbno;
-> +				orig_flen = flen;
-> +			}
-> +
->  			busy = xfs_alloc_compute_aligned(args, fbno, flen,
->  					&rbno, &rlen, &busy_gen);
->
-> @@ -1729,6 +1738,13 @@ xfs_alloc_ag_vextent_size(
->  			if (error)
->  				goto error0;
->  			if (i == 0) {
-> +				if (args->freeing_extent) {
-> +					error = xfs_alloc_lookup_eq(cnt_cur,
-> +							orig_fbno, orig_flen, &i);
-> +					ASSERT(!error && i);
-> +					goto alloc_small_extent;
-> +				}
-> +
->  				/*
->  				 * Our only valid extents must have been busy.
->  				 * Make it unbusy by forcing the log out and
-> @@ -1819,7 +1835,7 @@ xfs_alloc_ag_vextent_size(
->  	 */
->  	args->len = rlen;
->  	if (rlen < args->minlen) {
-> -		if (busy) {
-> +		if (busy && !args->freeing_extent) {
->  			xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
->  			trace_xfs_alloc_size_busy(args);
->  			xfs_extent_busy_flush(args->mp, args->pag, busy_gen);
-> @@ -2641,6 +2657,7 @@ xfs_alloc_fix_freelist(
->  	targs.alignment = targs.minlen = targs.prod = 1;
->  	targs.type = XFS_ALLOCTYPE_THIS_AG;
->  	targs.pag = pag;
-> +	targs.freeing_extent = flags & XFS_ALLOC_FLAG_FREEING;
->  	error = xfs_alloc_read_agfl(mp, tp, targs.agno, &agflbp);
->  	if (error)
->  		goto out_agbp_relse;
-> diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-> index a4427c5775c2..1e0fc28ef87a 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.h
-> +++ b/fs/xfs/libxfs/xfs_alloc.h
-> @@ -78,6 +78,7 @@ typedef struct xfs_alloc_arg {
->  #ifdef DEBUG
->  	bool		alloc_minlen_only; /* allocate exact minlen extent */
->  #endif
-> +	bool		freeing_extent;
->  } xfs_alloc_arg_t;
->
->  /*
->
-> With the above patch, xfs/538 cause the following call trace to be printed,
->
->    XFS (vdc2): Internal error i != 1 at line 3426 of file fs/xfs/libxfs/xfs_btree.c.  Caller xfs_btree_insert+0x15c/0x1f0
->    CPU: 2 PID: 1284 Comm: punch-alternati Not tainted 5.12.0-rc8-next-20210419-chandan #19
->    Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.12.0-1 04/01/2014
->    Call Trace:
->     dump_stack+0x64/0x7c
->     xfs_corruption_error+0x85/0x90
->     ? xfs_btree_insert+0x15c/0x1f0
->     xfs_btree_insert+0x18d/0x1f0
->     ? xfs_btree_insert+0x15c/0x1f0
->     ? xfs_allocbt_init_common+0x30/0xf0
->     xfs_free_ag_extent+0x463/0x9d0
->     __xfs_free_extent+0xe5/0x200
->     xfs_trans_free_extent+0x3e/0x100
->     xfs_extent_free_finish_item+0x24/0x40
->     xfs_defer_finish_noroll+0x1f7/0x5c0
->     __xfs_trans_commit+0x12f/0x300
->     xfs_free_file_space+0x1af/0x2c0
->     xfs_file_fallocate+0x1ca/0x430
->     ? __cond_resched+0x16/0x40
->     ? inode_security+0x22/0x60
->     ? selinux_file_permission+0xe2/0x120
->     vfs_fallocate+0x146/0x2e0
->     __x64_sys_fallocate+0x3e/0x70
->     do_syscall_64+0x40/0x80
->     entry_SYSCALL_64_after_hwframe+0x44/0xae
->
-> The above call trace occurs during execution of the step #2 listed below,
-> 1. Filling up 90% of the free space of the filesystem.
-> 2. Punch alternate blocks of files.
->
-> Just before the failure, the filesystem had ~9000 busy extents. So I think we
-> have to flush busy extents even when refilling AGFL for the purpose of freeing
-> an extent.
->
->>
->> We have options here - once we get to the end of the btree and
->> haven't found a candidate that isn't busy, we could fail
->> immediately. Or maybe we try an optimisitic flush which forces the
->> log and waits for as short while (instead of forever) for the
->> generation to change and then fail if we get a timeout response. Or
->> maybe there's a more elegant way of doing this that hasn't yet
->> rattled out of my poor, overloaded brain right now.
->>
->> Just because we currently do a blocking flush doesn't mean we always
->> must do a blocking flush....
->
-> I will try to work out a solution.
-
-I believe the following should be taken into consideration to design an
-"optimistic flush delay" based solution,
-1. Time consumed to perform a discard operation on a filesystem's block.
-2. The size of extents that are being discarded.
-3. Number of discard operation requests contained in a bio.
-
-AFAICT, The combinations resulting from the above make it impossible to
-calculate a time delay during which sufficient number of busy extents are
-guaranteed to have been freed so as to fill up the AGFL to the required
-levels. In other words, sufficent number of busy extents may not have been
-discarded even after the optimistic delay interval elapses.
-
-The other solution that I had thought about was to introduce a new flag for
-the second argument of xfs_log_force(). The new flag will cause
-xlog_state_do_iclog_callbacks() to wait on completion of all of the CIL ctxs
-associated with the iclog that xfs_log_force() would be waiting on. Hence, a
-call to xfs_log_force(mp, NEW_SYNC_FLAG) will return only after all the busy
-extents associated with the iclog are discarded.
-
-However, this method is also flawed as described below.
-
-----------------------------------------------------------
- Task A                        Task B
-----------------------------------------------------------
- Submit a filled up iclog
- for write operation
- (Assume that the iclog
- has non-zero number of CIL
- ctxs associated with it).
- On completion of iclog write
- operation, discard requests
- for busy extents are issued.
-
- Write log records (including
- commit record) into another
- iclog.
-
-                               A task which is trying
-                               to fill AGFL will now
-                               invoke xfs_log_force()
-                               with the new sync
-                               flag.
-                               Submit the 2nd iclog which
-                               was partially filled by
-                               Task A.
-                               If there are no
-                               discard requests
-                               associated this iclog,
-                               xfs_log_force() will
-                               return. As the discard
-                               requests associated with
-                               the first iclog are yet
-                               to be completed,
-                               we end up incorrectly
-                               concluding that
-                               all busy extents
-                               have been processed.
-----------------------------------------------------------
-
-The inconsistency indicated above could also occur when discard requests
-issued against second iclog get processed before discard requests associated
-with the first iclog.
-
-XFS_EXTENT_BUSY_IN_TRANS flag based solution is the only method that I can
-think of that can solve this problem correctly. However I do agree with your
-earlier observation that we should not flush busy extents unless we have
-checked for presence of free extents in the btree records present on the left
-side of the btree cursor.
-
---
-chandan
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBEYW4gV2lsbGlhbXMgPGRhbi5q
+LndpbGxpYW1zQGludGVsLmNvbT4NCj4gU3ViamVjdDogUmU6IFtQQVRDSCB2NCAwMy8xMF0gZnM6
+IEludHJvZHVjZSAtPmNvcnJ1cHRlZF9yYW5nZSgpIGZvciBzdXBlcmJsb2NrDQo+IA0KPiBbIGRy
+b3Agb2xkIGxpbnV4LW52ZGltbUBsaXN0cy4wMS5vcmcsIGFkZCBudmRpbW1AbGlzdHMubGludXgu
+ZGV2IF0NCj4gDQo+IE9uIFRodSwgSnVuIDMsIDIwMjEgYXQgNjoxOSBQTSBTaGl5YW5nIFJ1YW4g
+PHJ1YW5zeS5mbnN0QGZ1aml0c3UuY29tPiB3cm90ZToNCj4gPg0KPiA+IE1lbW9yeSBmYWlsdXJl
+IG9jY3VycyBpbiBmc2RheCBtb2RlIHdpbGwgZmluYWxseSBiZSBoYW5kbGVkIGluDQo+ID4gZmls
+ZXN5c3RlbS4gIFdlIGludHJvZHVjZSB0aGlzIGludGVyZmFjZSB0byBmaW5kIG91dCBmaWxlcyBv
+ciBtZXRhZGF0YQ0KPiA+IGFmZmVjdGVkIGJ5IHRoZSBjb3JydXB0ZWQgcmFuZ2UsIGFuZCB0cnkg
+dG8gcmVjb3ZlciB0aGUgY29ycnVwdGVkIGRhdGENCj4gPiBpZiBwb3NzaWFibGUuDQo+ID4NCj4g
+PiBTaWduZWQtb2ZmLWJ5OiBTaGl5YW5nIFJ1YW4gPHJ1YW5zeS5mbnN0QGZ1aml0c3UuY29tPg0K
+PiA+IC0tLQ0KPiA+ICBpbmNsdWRlL2xpbnV4L2ZzLmggfCAyICsrDQo+ID4gIDEgZmlsZSBjaGFu
+Z2VkLCAyIGluc2VydGlvbnMoKykNCj4gPg0KPiA+IGRpZmYgLS1naXQgYS9pbmNsdWRlL2xpbnV4
+L2ZzLmggYi9pbmNsdWRlL2xpbnV4L2ZzLmggaW5kZXgNCj4gPiBjM2M4OGZkYjliMmEuLjkyYWYz
+NmM0MjI1ZiAxMDA2NDQNCj4gPiAtLS0gYS9pbmNsdWRlL2xpbnV4L2ZzLmgNCj4gPiArKysgYi9p
+bmNsdWRlL2xpbnV4L2ZzLmgNCj4gPiBAQCAtMjE3Niw2ICsyMTc2LDggQEAgc3RydWN0IHN1cGVy
+X29wZXJhdGlvbnMgew0KPiA+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBzdHJ1
+Y3Qgc2hyaW5rX2NvbnRyb2wgKik7DQo+ID4gICAgICAgICBsb25nICgqZnJlZV9jYWNoZWRfb2Jq
+ZWN0cykoc3RydWN0IHN1cGVyX2Jsb2NrICosDQo+ID4gICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgc3RydWN0IHNocmlua19jb250cm9sICopOw0KPiA+ICsgICAgICAgaW50ICgq
+Y29ycnVwdGVkX3JhbmdlKShzdHJ1Y3Qgc3VwZXJfYmxvY2sgKnNiLCBzdHJ1Y3QgYmxvY2tfZGV2
+aWNlDQo+ICpiZGV2LA0KPiA+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBsb2ZmX3Qg
+b2Zmc2V0LCBzaXplX3QgbGVuLCB2b2lkICpkYXRhKTsNCj4gDQo+IFdoeSBkb2VzIHRoZSBzdXBl
+cmJsb2NrIG5lZWQgYSBuZXcgb3BlcmF0aW9uPyBXb3VsZG4ndCB3aGF0ZXZlciBmdW5jdGlvbiBp
+cw0KPiBzcGVjaWZpZWQgaGVyZSBqdXN0IGJlIHNwZWNpZmllZCB0byB0aGUgZGF4X2RldiBhcyB0
+aGUNCj4gLT5ub3RpZnlfZmFpbHVyZSgpIGhvbGRlciBjYWxsYmFjaz8NCg0KQmVjYXVzZSB3ZSBu
+ZWVkIHRvIGZpbmQgb3V0IHdoaWNoIGZpbGUgaXMgZWZmZWN0ZWQgYnkgdGhlIGdpdmVuIHBvaXNv
+biBwYWdlIHNvIHRoYXQgbWVtb3J5LWZhaWx1cmUgY29kZSBjYW4gZG8gY29sbGVjdF9wcm9jcygp
+IGFuZCBraWxsX3Byb2NzKCkgam9icy4gIEFuZCBpdCBuZWVkcyBmaWxlc3lzdGVtIHRvIHVzZSBp
+dHMgcm1hcCBmZWF0dXJlIHRvIHNlYXJjaCB0aGUgZmlsZSBmcm9tIGEgZ2l2ZW4gb2Zmc2V0LiAg
+U28sIHdlIG5lZWQgdGhpcyBpbXBsZW1lbnRlZCBieSB0aGUgc3BlY2lmaWVkIGZpbGVzeXN0ZW0g
+YW5kIGNhbGxlZCBieSBkYXhfZGV2aWNlJ3MgaG9sZGVyLg0KDQpUaGlzIGlzIHRoZSBjYWxsIHRy
+YWNlIEkgZGVzY3JpYmVkIGluIGNvdmVyIGxldHRlcjoNCm1lbW9yeV9mYWlsdXJlKCkNCiAqIGZz
+ZGF4IGNhc2UNCiBwZ21hcC0+b3BzLT5tZW1vcnlfZmFpbHVyZSgpICAgICAgPT4gcG1lbV9wZ21h
+cF9tZW1vcnlfZmFpbHVyZSgpDQogIGRheF9kZXZpY2UtPmhvbGRlcl9vcHMtPmNvcnJ1cHRlZF9y
+YW5nZSgpID0+DQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIC0gZnNfZGF4
+X2NvcnJ1cHRlZF9yYW5nZSgpDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+IC0gbWRfZGF4X2NvcnJ1cHRlZF9yYW5nZSgpDQogICBzYi0+c19vcHMtPmN1cnJ1cHRlZF9yYW5n
+ZSgpICAgID0+IHhmc19mc19jb3JydXB0ZWRfcmFuZ2UoKSAgPD09ICoqSEVSRSoqDQogICAgeGZz
+X3JtYXBfcXVlcnlfcmFuZ2UoKQ0KICAgICB4ZnNfY3VycnVwdF9oZWxwZXIoKQ0KICAgICAgKiBj
+b3JydXB0ZWQgb24gbWV0YWRhdGENCiAgICAgICAgICB0cnkgdG8gcmVjb3ZlciBkYXRhLCBjYWxs
+IHhmc19mb3JjZV9zaHV0ZG93bigpDQogICAgICAqIGNvcnJ1cHRlZCBvbiBmaWxlIGRhdGENCiAg
+ICAgICAgICB0cnkgdG8gcmVjb3ZlciBkYXRhLCBjYWxsIG1mX2RheF9raWxsX3Byb2NzKCkNCiAq
+IG5vcm1hbCBjYXNlDQogbWZfZ2VuZXJpY19raWxsX3Byb2NzKCkNCg0KQXMgeW91IGNhbiBzZWUs
+IHRoaXMgbmV3IGFkZGVkIG9wZXJhdGlvbiBpcyBhbiBpbXBvcnRhbnQgZm9yIHRoZSB3aG9sZSBw
+cm9ncmVzcy4NCg0KDQotLQ0KVGhhbmtzLA0KUnVhbi4NCg==
