@@ -2,170 +2,322 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
 	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D72FEC48BE5
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Jun 2021 01:28:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B328AC2B9F4
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Jun 2021 04:49:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ADE2E613E1
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Jun 2021 01:28:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 98834613CB
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Jun 2021 04:49:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232023AbhFQBaO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Jun 2021 21:30:14 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37088 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231942AbhFQBaO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 16 Jun 2021 21:30:14 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 9CC13613DE;
-        Thu, 17 Jun 2021 01:28:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1623893287;
-        bh=C/vXiM5mV25q05CDSSuFHiPOSj/ZYDc4+8FiWYnTQmY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=YXBxabqceEzd8X+c/i546AhOOGA/mvxbTP4tMrU6+kOe1hqrl7BqJSykIQOL0fmhS
-         G+R5dov0J9BCO1LWBOVkuUpr1XsFDdMuFGOpKJYlr10KNTAwfEEkIJKQudcfdJ0SGb
-         +8uFA8+LEkDjcC/uIKWPq8NBy6xP2avP4oa+tE6ec8LrBtff5FCx/FqDA10xnK7dIM
-         s2fvgJjSFwzJi7pBhuPESbjLzGgh/OWXY8GdvdmYiDaSE932q4V8GmNEmpEn7GPczK
-         zf0DuhpCrPd4SbQpux+icMoWT0HFmloxEDobgFbERzBb2ZKlHswyzJEcB/wnVep5y1
-         A6dklkjzXpMiQ==
-Date:   Wed, 16 Jun 2021 18:28:07 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
+        id S229515AbhFQEvG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Jun 2021 00:51:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46562 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229495AbhFQEvG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Jun 2021 00:51:06 -0400
+Received: from mail-pg1-x52e.google.com (mail-pg1-x52e.google.com [IPv6:2607:f8b0:4864:20::52e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B069C061574
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Jun 2021 21:48:53 -0700 (PDT)
+Received: by mail-pg1-x52e.google.com with SMTP id e20so3959741pgg.0
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Jun 2021 21:48:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=references:user-agent:from:to:cc:subject:in-reply-to:date
+         :message-id:mime-version;
+        bh=zwfVW/ex+0Y2v+3tB9JlX30chwSCYylMaMnNpaqIICU=;
+        b=aKyTCRkACUY2yPWF9wOn7fXzHQeqess0bF6zh5C7RgizwUBEO+dzcxFf1OqNDGd+5u
+         yK0iAhoEajeelzSOKS0rljEdL/pkMoZCuhekNA3DZ1uqcfgFkGnFUvJaCR26riRZe9MJ
+         J7F3EZWb21bl64caM8M3EfVOkudt9WxAxhrBVDugPTB3dpsK1aVektyLmQc4xozCFI5J
+         zZrul8C4Apa2KXrCw8OB8Ej3W34z/5+T+yAqVh2ZaeK7RI0UKWUYXGSuB0bk8RFXGdIe
+         dp7uuvhwX4GLn+GtoRKISALOFzGhJGYD2982t4MNDmm3lYTvjVDA7TIg1dyTXdlwQiMV
+         HLJQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:references:user-agent:from:to:cc:subject
+         :in-reply-to:date:message-id:mime-version;
+        bh=zwfVW/ex+0Y2v+3tB9JlX30chwSCYylMaMnNpaqIICU=;
+        b=hBvXyEx+VgP1htk/Ch3Lzrkn5y7VszeAvrGHT/JmFH+ltfJCPnR2DbJ7PmFaGMw0RM
+         otkx69zuFV9h6Hv5yKAdl/guJTSIOPg/vpLREMI67xMq1bnBek4R/d/rAcmNdGDtbQIi
+         gu5dww5qt3FnG7VWN02mkgGs3HP6+tzM85u2ybXv+zhdmLAhEPt5rOIfnJDcpIN+FVkS
+         Nxj/mkkjHUvSZGryAqd1HpNx53MwlNinqx3LjD8Z3iiOdzzcpOiNn+0Z6UIfeOaZntNj
+         yGoWuZzBMVqJu4rmpz5xYhxOEd9AeZuiEIZyQnsyew2GGIPlDr1UvVCBIHkBI9Gig0wv
+         pc5g==
+X-Gm-Message-State: AOAM531kfB5JzC67W5NEBMbMF9or8U+kYmKhm5EXoEzhMeXO2hrBMTKV
+        4S02IBE5tjKpGvXjzlJ7GDKgOal52mLOcg==
+X-Google-Smtp-Source: ABdhPJz6S0wg8WpvKirnX/mXID5jk6vKU01DbyWYV4BZZkN4Nclay40VE44EgKsNpZ6u6Z4EcowWfg==
+X-Received: by 2002:a63:344d:: with SMTP id b74mr3160821pga.266.1623905332355;
+        Wed, 16 Jun 2021 21:48:52 -0700 (PDT)
+Received: from garuda ([122.167.159.50])
+        by smtp.gmail.com with ESMTPSA id v6sm3671483pfi.46.2021.06.16.21.48.50
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Wed, 16 Jun 2021 21:48:51 -0700 (PDT)
+References: <20210428065152.77280-1-chandanrlinux@gmail.com> <20210428065152.77280-2-chandanrlinux@gmail.com> <20210429011231.GF63242@dread.disaster.area> <875z0399gw.fsf@garuda> <20210430224415.GG63242@dread.disaster.area> <87y2cwnnzp.fsf@garuda> <20210504000306.GJ63242@dread.disaster.area> <874kfh5p32.fsf@garuda> <20210506032751.GN63242@dread.disaster.area> <87cztxwkvy.fsf@garuda>
+User-agent: mu4e 1.0; emacs 26.1
+From:   Chandan Babu R <chandanrlinux@gmail.com>
 To:     Dave Chinner <david@fromorbit.com>
-Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
-Subject: Re: [BUG] generic/475 recovery failure(s)
-Message-ID: <20210617012807.GL158209@locust>
-References: <YMIsWJ0Cb2ot/UjG@bfoster>
- <YMOzT1goreWVgo8S@bfoster>
- <20210611223332.GS664593@dread.disaster.area>
- <20210616070542.GY664593@dread.disaster.area>
- <YMpgFmEzjpWnmZ66@bfoster>
- <20210616210500.GF158209@locust>
- <20210616225407.GA664593@dread.disaster.area>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] xfs: Prevent deadlock when allocating blocks for AGFL
+In-reply-to: <87cztxwkvy.fsf@garuda>
+Date:   Thu, 17 Jun 2021 10:18:48 +0530
+Message-ID: <875yydqeof.fsf@garuda>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210616225407.GA664593@dread.disaster.area>
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 17, 2021 at 08:54:07AM +1000, Dave Chinner wrote:
-> On Wed, Jun 16, 2021 at 02:05:00PM -0700, Darrick J. Wong wrote:
-> > On Wed, Jun 16, 2021 at 04:33:26PM -0400, Brian Foster wrote:
-> > > On Wed, Jun 16, 2021 at 05:05:42PM +1000, Dave Chinner wrote:
-> > > > Ok, time to step back and think about this for a bit. The good news
-> > > > is that this can only happen with pipelined CIL commits, while means
-> > > > allowing more than one CIL push to be in progress at once. We can
-> > > > avoid this whole problem simply by setting the CIL workqueue back to
-> > > > running just a single ordered work at a time. Call that Plan B.
-> > > > 
-> > > > The bad news is that this is zero day bug, so all kernels out there
-> > > > will fail to recovery with out of order start records. Back before
-> > > > delayed logging, we could have mulitple transactions commit to the
-> > > > journal in just about any order and nesting, and they used exactly
-> > > > the same start/commit ordering in recovery that is causing us
-> > > > problems now. This wouldn't have been noticed, however, because
-> > > > transactions were tiny back then, not huge checkpoints like we run
-> > > > now. And if is was, it likely would have been blamed on broken
-> > > > storage because it's so ephemeral and there was little test
-> > > > infrastructure that exercised these paths... :/
-> > 
-> > It's a zero day bug, but at least nobody tripped over this until two
-> > months ago.  I've been dealing on and off with customer escalations
-> > involving a filesystem with large reflinked images that goes down, and
-> > then some time after the recovery (minutes to weeks) they hit a
-> > corruption goto and crash again.  I've been able to pin down the
-> > symptoms to ... the "corrupt" refcount btree block containing partial
-> > old contents, where the old contents are always aligned to 128 byte
-> > boundaries, and when Dave mentioned this last night I realized that he
-> > and I might have fallen into the same thing.
-> 
-> I have my suspicions that this has been causing issues for a long
-> time, but it's been so rare that it's been impossible to reproduce
-> and hence capture the information needed to debug it. This time,
-> however, the failure triggered an assert before recovery completed
-> and so left the filesystem in the state where I could repeat log
-> recovery and have it fail with the same ASSERT fail over and over
-> again.
-> 
-> <meme> A few hours later.... </meme>
-> 
-> > > > What this means is that we can't just make a fix to log recovery
-> > > > because taking a log from a current kernel and replaying it on an
-> > > > older kernel might still go very wrong, and do so silently. So I
-> > > > think we have to fix what we write to the log.
-> > > > 
-> > > > Hence I think the only way forward here is to recognise that the
-> > > > AIL, log forces and log recovery all require strictly ordered
-> > > > checkpoint start records (and hence LSNs) as well as commit records.
-> > > > We already strictly order the commit records (and this analysis
-> > > > proves it is working correctly), so we should be able to leverage
-> > > > the existing functionality to do this.
-> > > > 
-> > > 
-> > > Ok. I still need to poke at the code and think about this, but what you
-> > > describe here all makes sense. I wonder a bit if we have the option to
-> > > fix recovery via some kind of backwards incompatibility, but that
-> > > requires more thought (didn't we implement or at least consider
-> > > something like a transient feature bit state some time reasonably
-> > > recently? I thought we did but I can't quite put my finger on what it
-> > > was for or if it landed upstream.).
-> > 
-> > We did -- it was (is) a patchset to turn on log incompat feature bits in
-> > the superblock, and clear them later on when they're not in use and the
-> > log is being cleaned.  I proposed doing that for atomic file content
-> > swapping, and Allison's deferred xattrs patchset will want the same to
-> > protect xattr log intent items.
-> > 
-> > > That train of thought aside, ordering start records a la traditional
-> > > commit record ordering seems like a sane option. I am starting to think
-> > > that your plan B might actually be a wise plan A, though. I already
-> > > wished we weren't pushing so much log rewrite/rework through all in one
-> > > cycle. Now it sounds like we require even more significant (in
-> > > complexity, if not code churn, as I don't yet have a picture of what
-> > > "start record ordering" looks like) functional changes to make an
-> > > otherwise isolated change safe. Just my .02.
-> > 
-> > /me guesses that we should go with plan B for 5.14, and work on fixing
-> > whatever's wrong for 5.15.  But since it's never possible to tell how
-> > much time is left until the merge window opens, I'll keep an open
-> > mind...
-> 
-> The simple fix appears to have worked. That was just applying the
-> same write ordering code the commit records use to the start record
-> write.
-> 
-> The series of fixes I have now has run about a thousand cycles of
-> g/019 without a log hang or a log recovery failure, so I think I've
-> got viable fixes for the issues g/019 has exposed. I also suspect
-> that this start record ordering issue is what g/475 was tripping
-> over, too.
+On 11 May 2021 at 17:19, Chandan Babu R wrote:
+> On 06 May 2021 at 08:57, Dave Chinner wrote:
+>> On Wed, May 05, 2021 at 06:12:41PM +0530, Chandan Babu R wrote:
+>>> > Hence when doing allocation for the free list, we need to fail the
+>>> > allocation rather than block on the only remaining free extent in
+>>> > the AG. If we are freeing extents, the AGFL not being full is not an
+>>> > issue at all. And if we are allocating extents, the transaction
+>>> > reservations should have ensured that the AG had sufficient space in
+>>> > it to complete the entire operation without deadlocking waiting for
+>>> > space.
+>>> >
+>>> > Either way, I don't see a problem with making sure the AGFL
+>>> > allocations just skip busy extents and fail if the only free extents
+>>> > are ones this transaction has freed itself.
+>>> >
+>>>
+>>> Hmm. In the scenario where *all* free extents in the AG were originally freed
+>>> by the current transaction (and hence busy in the transaction),
+>>
+>> How does that happen?
+>
+> I tried in vain to arrive at the above mentioned scenario by consuming away as
+> many blocks as possible from the filesystem. At best, I could arrive at an AG
+> with just one free extent record in the cntbt (NOTE: I had to disable global
+> reservation by invoking "xfs_io -x -c 'resblks 0' $mntpnt"):
+>
+> recs[1] = [startblock,blockcount]
+> 1:[32767,1]
+>
+> For each AG available in an FS instance, we take away 8
+> (i.e. XFS_ALLOC_AGFL_RESERVE + 4) blocks from the global free data blocks
+> counter. This reservation is applied to the FS as a whole rather than each AG
+> individually. Hence we could get to a scenario where an AG could have less
+> than 8 free blocks. I could not find any other restriction in the code that
+> explicitly prevents an AG from having zero free extents.
+>
+> However, I could not create such an AG because any fs operation that needs
+> extent allocation to be done would try to reserve more than 1 extent causing
+> the above cited AG to not be chosen.
+>
+>>
+>>> we would need
+>>> to be able to recognize this situation and skip invoking
+>>> xfs_extent_busy_flush() altogether.
+>>
+>> If we are freeing extents (i.e XFS_ALLOC_FLAG_FREEING is set) and
+>> we are doing allocation for AGFL and we only found busy extents,
+>> then it's OK to fail the allocation.
+>
+> When freeing an extent, the following patch skips allocation of blocks to AGFL
+> if all the free extents found are busy,
+>
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index aaa19101bb2a..5310e311d5c6 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -1694,6 +1694,7 @@ xfs_alloc_ag_vextent_size(
+>  	 * are no smaller extents available.
+>  	 */
+>  	if (!i) {
+> +alloc_small_extent:
+>  		error = xfs_alloc_ag_vextent_small(args, cnt_cur,
+>  						   &fbno, &flen, &i);
+>  		if (error)
+> @@ -1710,6 +1711,9 @@ xfs_alloc_ag_vextent_size(
+>  		/*
+>  		 * Search for a non-busy extent that is large enough.
+>  		 */
+> +		xfs_agblock_t	orig_fbno = NULLAGBLOCK;
+> +		xfs_extlen_t	orig_flen;
+> +
+>  		for (;;) {
+>  			error = xfs_alloc_get_rec(cnt_cur, &fbno, &flen, &i);
+>  			if (error)
+> @@ -1719,6 +1723,11 @@ xfs_alloc_ag_vextent_size(
+>  				goto error0;
+>  			}
+>
+> +			if (orig_fbno == NULLAGBLOCK) {
+> +				orig_fbno = fbno;
+> +				orig_flen = flen;
+> +			}
+> +
+>  			busy = xfs_alloc_compute_aligned(args, fbno, flen,
+>  					&rbno, &rlen, &busy_gen);
+>
+> @@ -1729,6 +1738,13 @@ xfs_alloc_ag_vextent_size(
+>  			if (error)
+>  				goto error0;
+>  			if (i == 0) {
+> +				if (args->freeing_extent) {
+> +					error = xfs_alloc_lookup_eq(cnt_cur,
+> +							orig_fbno, orig_flen, &i);
+> +					ASSERT(!error && i);
+> +					goto alloc_small_extent;
+> +				}
+> +
+>  				/*
+>  				 * Our only valid extents must have been busy.
+>  				 * Make it unbusy by forcing the log out and
+> @@ -1819,7 +1835,7 @@ xfs_alloc_ag_vextent_size(
+>  	 */
+>  	args->len = rlen;
+>  	if (rlen < args->minlen) {
+> -		if (busy) {
+> +		if (busy && !args->freeing_extent) {
+>  			xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
+>  			trace_xfs_alloc_size_busy(args);
+>  			xfs_extent_busy_flush(args->mp, args->pag, busy_gen);
+> @@ -2641,6 +2657,7 @@ xfs_alloc_fix_freelist(
+>  	targs.alignment = targs.minlen = targs.prod = 1;
+>  	targs.type = XFS_ALLOCTYPE_THIS_AG;
+>  	targs.pag = pag;
+> +	targs.freeing_extent = flags & XFS_ALLOC_FLAG_FREEING;
+>  	error = xfs_alloc_read_agfl(mp, tp, targs.agno, &agflbp);
+>  	if (error)
+>  		goto out_agbp_relse;
+> diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+> index a4427c5775c2..1e0fc28ef87a 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.h
+> +++ b/fs/xfs/libxfs/xfs_alloc.h
+> @@ -78,6 +78,7 @@ typedef struct xfs_alloc_arg {
+>  #ifdef DEBUG
+>  	bool		alloc_minlen_only; /* allocate exact minlen extent */
+>  #endif
+> +	bool		freeing_extent;
+>  } xfs_alloc_arg_t;
+>
+>  /*
+>
+> With the above patch, xfs/538 cause the following call trace to be printed,
+>
+>    XFS (vdc2): Internal error i != 1 at line 3426 of file fs/xfs/libxfs/xfs_btree.c.  Caller xfs_btree_insert+0x15c/0x1f0
+>    CPU: 2 PID: 1284 Comm: punch-alternati Not tainted 5.12.0-rc8-next-20210419-chandan #19
+>    Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.12.0-1 04/01/2014
+>    Call Trace:
+>     dump_stack+0x64/0x7c
+>     xfs_corruption_error+0x85/0x90
+>     ? xfs_btree_insert+0x15c/0x1f0
+>     xfs_btree_insert+0x18d/0x1f0
+>     ? xfs_btree_insert+0x15c/0x1f0
+>     ? xfs_allocbt_init_common+0x30/0xf0
+>     xfs_free_ag_extent+0x463/0x9d0
+>     __xfs_free_extent+0xe5/0x200
+>     xfs_trans_free_extent+0x3e/0x100
+>     xfs_extent_free_finish_item+0x24/0x40
+>     xfs_defer_finish_noroll+0x1f7/0x5c0
+>     __xfs_trans_commit+0x12f/0x300
+>     xfs_free_file_space+0x1af/0x2c0
+>     xfs_file_fallocate+0x1ca/0x430
+>     ? __cond_resched+0x16/0x40
+>     ? inode_security+0x22/0x60
+>     ? selinux_file_permission+0xe2/0x120
+>     vfs_fallocate+0x146/0x2e0
+>     __x64_sys_fallocate+0x3e/0x70
+>     do_syscall_64+0x40/0x80
+>     entry_SYSCALL_64_after_hwframe+0x44/0xae
+>
+> The above call trace occurs during execution of the step #2 listed below,
+> 1. Filling up 90% of the free space of the filesystem.
+> 2. Punch alternate blocks of files.
+>
+> Just before the failure, the filesystem had ~9000 busy extents. So I think we
+> have to flush busy extents even when refilling AGFL for the purpose of freeing
+> an extent.
+>
+>>
+>> We have options here - once we get to the end of the btree and
+>> haven't found a candidate that isn't busy, we could fail
+>> immediately. Or maybe we try an optimisitic flush which forces the
+>> log and waits for as short while (instead of forever) for the
+>> generation to change and then fail if we get a timeout response. Or
+>> maybe there's a more elegant way of doing this that hasn't yet
+>> rattled out of my poor, overloaded brain right now.
+>>
+>> Just because we currently do a blocking flush doesn't mean we always
+>> must do a blocking flush....
+>
+> I will try to work out a solution.
 
-Hooray!
+I believe the following should be taken into consideration to design an
+"optimistic flush delay" based solution,
+1. Time consumed to perform a discard operation on a filesystem's block.
+2. The size of extents that are being discarded.
+3. Number of discard operation requests contained in a bio.
 
-> Given that we still have a couple of months before this will be
-> released to users, I'd much prefer that we move forwards with
-> testing the fixes because there is a suspicion and anecdotal
-> evidence that this problem has been affecting users for a long time
-> regardless of the recent changes that have brought it out into the
-> daylight.
-> 
-> I'm about to split up the fix into smaller chunks and then I'll post
-> the series for review.
+AFAICT, The combinations resulting from the above make it impossible to
+calculate a time delay during which sufficient number of busy extents are
+guaranteed to have been freed so as to fill up the AGFL to the required
+levels. In other words, sufficent number of busy extents may not have been
+discarded even after the optimistic delay interval elapses.
 
-Ok, looking forward to it.  Given the recent rash of log related bugs, I
-think I'm going to defer review of all new code patchsets (hch's log
-cleanup, deferred inactivation) for 5.15 to prioritize making the
-problems go away.
+The other solution that I had thought about was to introduce a new flag for
+the second argument of xfs_log_force(). The new flag will cause
+xlog_state_do_iclog_callbacks() to wait on completion of all of the CIL ctxs
+associated with the iclog that xfs_log_force() would be waiting on. Hence, a
+call to xfs_log_force(mp, NEW_SYNC_FLAG) will return only after all the busy
+extents associated with the iclog are discarded.
 
---D
+However, this method is also flawed as described below.
 
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+----------------------------------------------------------
+ Task A                        Task B
+----------------------------------------------------------
+ Submit a filled up iclog
+ for write operation
+ (Assume that the iclog
+ has non-zero number of CIL
+ ctxs associated with it).
+ On completion of iclog write
+ operation, discard requests
+ for busy extents are issued.
+
+ Write log records (including
+ commit record) into another
+ iclog.
+
+                               A task which is trying
+                               to fill AGFL will now
+                               invoke xfs_log_force()
+                               with the new sync
+                               flag.
+                               Submit the 2nd iclog which
+                               was partially filled by
+                               Task A.
+                               If there are no
+                               discard requests
+                               associated this iclog,
+                               xfs_log_force() will
+                               return. As the discard
+                               requests associated with
+                               the first iclog are yet
+                               to be completed,
+                               we end up incorrectly
+                               concluding that
+                               all busy extents
+                               have been processed.
+----------------------------------------------------------
+
+The inconsistency indicated above could also occur when discard requests
+issued against second iclog get processed before discard requests associated
+with the first iclog.
+
+XFS_EXTENT_BUSY_IN_TRANS flag based solution is the only method that I can
+think of that can solve this problem correctly. However I do agree with your
+earlier observation that we should not flush busy extents unless we have
+checked for presence of free extents in the btree records present on the left
+side of the btree cursor.
+
+--
+chandan
