@@ -6,63 +6,68 @@ X-Spam-Status: No, score=-6.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
 	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5CF1C48BE8
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Jun 2021 00:11:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0ED9C48BE5
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Jun 2021 00:13:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8272C613BF
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Jun 2021 00:11:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7F8F2613D0
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Jun 2021 00:13:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234660AbhFQANP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Jun 2021 20:13:15 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56866 "EHLO mail.kernel.org"
+        id S234883AbhFQAP1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Jun 2021 20:15:27 -0400
+Received: from mail.kernel.org ([198.145.29.99]:57150 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234895AbhFQANP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 16 Jun 2021 20:13:15 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 430CE613BD;
-        Thu, 17 Jun 2021 00:11:08 +0000 (UTC)
+        id S229575AbhFQAP1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 16 Jun 2021 20:15:27 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8FB7860E0C;
+        Thu, 17 Jun 2021 00:13:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1623888668;
-        bh=nhg+Fy1fIiG3Vno1vgDqYmHtLHajvRjl9dqzcLq4ZoU=;
+        s=k20201202; t=1623888800;
+        bh=V1MnliyHzlS3vqcOeyP2kHlhKsnv/xQewb4i+2q7Fr0=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=j/M90DsaReYLA6aCxeuNmOEt8BCo58FjJJ9uI8dHsBTXF/7q7pvaMxXrLqi7EDMbF
-         GGkPJk4VLkjyzHnHMlHVbAiq/YIbpWE8y8OGhG1avlu/4GoDuMGQZ2jnp8MYHNJMSZ
-         jigNAn23W8K36Iyrf7gCFG91dKrKptbeE905Ea+tabuvsSS2M1fL/wIj1SuWe1gU3B
-         /Sg5/cv+hHmUMBHwoqs6EhFPweIHYRVRvI9Uc/8hgrsouigfD7zy20FaWhtFAY7R0d
-         D49ykgWMI7RCGj1NcPaVQvFMG8jIC4Wp4cpBUUMqwt8/al2XVx7dcZmqgbkcrSQ7Lt
-         1JizA3YcpBddw==
-Date:   Wed, 16 Jun 2021 17:11:07 -0700
+        b=Xbc0WUM9FNaGYV/xAzmYNAInXzpQrmuk0jXuYn+yQylWvfNU6LOdnh4EYAQIQAOjE
+         fBsXCdfUUjqg3VXX05R5J53MSSS0f7tqKiVBL/k08j3nP1pQ++IMPTril/dFNWtbwS
+         544Q4hEqPRrQMOe3oxuUS9mldR/ceOT2Qv1EqgyBZ45qJKlMgQW9kQAuCPYaourdpk
+         OQYDOfnF8Os78BqrMbWqJ48tuAzD4J4kNThNXdDWzazD2tbI/CGs74W7WrEL99PvsF
+         IVtC/vgBjjfz4/j58yUM+GwGAe3jGX0RuCINPkCRqrvpq3e0y4Hk6JK6m6wMLyYBjZ
+         8FVLbIAmS/stg==
+Date:   Wed, 16 Jun 2021 17:13:20 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     guaneryu@gmail.com,
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     guaneryu@gmail.com, Chandan Babu R <chandanrlinux@gmail.com>,
         Allison Henderson <allison.henderson@oracle.com>,
-        Chandan Babu R <chandanrlinux@gmail.com>,
         linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me,
-        amir73il@gmail.com
-Subject: Re: [PATCH 13/13] misc: update documentation to reflect
- auto-generated group files
-Message-ID: <20210617001107.GJ158209@locust>
+        amir73il@gmail.com, ebiggers@kernel.org
+Subject: Re: [PATCH 07/13] fstests: automatically generate group files
+Message-ID: <20210617001320.GK158209@locust>
 References: <162370433910.3800603.9623820748404628250.stgit@locust>
- <162370441083.3800603.11964136184573090396.stgit@locust>
- <YMpmdsFuRqwBfatu@sol.localdomain>
+ <162370437774.3800603.15907676407985880109.stgit@locust>
+ <YMmpDGT9b4dBdSh2@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YMpmdsFuRqwBfatu@sol.localdomain>
+In-Reply-To: <YMmpDGT9b4dBdSh2@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 16, 2021 at 02:00:38PM -0700, Eric Biggers wrote:
-> On Mon, Jun 14, 2021 at 02:00:10PM -0700, Darrick J. Wong wrote:
-> > +     6. Test group membership: Each test can be associated with any number
-> > +	of groups for convenient selection of subsets of tests.  Test names
-> > +	can be any sequence of non-whitespace characters.
+On Wed, Jun 16, 2021 at 08:32:28AM +0100, Christoph Hellwig wrote:
+> On Mon, Jun 14, 2021 at 01:59:37PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Now that we've moved the group membership details into the test case
+> > files themselves, automatically generate the group files during build.
+> > The autogenerated files are named "group.list" instead of "group" to
+> > avoid conflicts between generated and (stale) SCM files as everyone
+> > rebases.
 > 
-> I think this should be "Test group names", not "Test names"?
+> Hmm, so we now need to run make to regenerate the group information?
+> That is for sure going to create various issues with people forgetting
+> to regenerate it.  What about regenerating it everytime a group based
+> run is executed?
 
-Or "group names".  Will change.
+<shrug> What's wrong with requiring everyone to run 'make' when they
+change something in fstests?  I suspect most people already do that as
+muscle memory for most every other code project on the planet, or as
+part of `make install' prior to starting it fstests.
 
 --D
-
-> 
-> - Eric
