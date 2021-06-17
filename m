@@ -2,95 +2,96 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F894C49EA6
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Jun 2021 08:26:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67D5CC48BE5
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Jun 2021 08:53:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 75E9D613FB
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Jun 2021 08:26:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4E99E60FF0
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Jun 2021 08:53:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230361AbhFQI2d (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Jun 2021 04:28:33 -0400
-Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:51631 "EHLO
-        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230411AbhFQI2c (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Jun 2021 04:28:32 -0400
-Received: from dread.disaster.area (pa49-179-138-183.pa.nsw.optusnet.com.au [49.179.138.183])
-        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id D26BE10B706
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Jun 2021 18:26:22 +1000 (AEST)
-Received: from discord.disaster.area ([192.168.253.110])
-        by dread.disaster.area with esmtp (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1ltnLx-00DjwK-CB
-        for linux-xfs@vger.kernel.org; Thu, 17 Jun 2021 18:26:21 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.94)
-        (envelope-from <david@fromorbit.com>)
-        id 1ltnLx-0044v1-3R
-        for linux-xfs@vger.kernel.org; Thu, 17 Jun 2021 18:26:21 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 0/8 V2] xfs: log fixes for for-next
-Date:   Thu, 17 Jun 2021 18:26:09 +1000
-Message-Id: <20210617082617.971602-1-david@fromorbit.com>
-X-Mailer: git-send-email 2.31.1
+        id S231270AbhFQIzb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Jun 2021 04:55:31 -0400
+Received: from smtp-out2.suse.de ([195.135.220.29]:38750 "EHLO
+        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230312AbhFQIza (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Jun 2021 04:55:30 -0400
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out2.suse.de (Postfix) with ESMTP id D1E741FDBF;
+        Thu, 17 Jun 2021 08:53:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1623920001; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=AqMZ6VDXQs8fACSxjEoTa3jWnXqlOeaX0ILKp41Ujpg=;
+        b=vt+nizqaqNppg74ojCy5P9EV49Hx8U+2xEiapBW704yiHrbUGgs/d6MGdqxK3PVg/GkS/e
+        RmLG2VCA7qqBsKJQ7MGYHGTGsmziJNs06z1QldT/CEjXmHCCf36WDqS67BmefBDMgvjlUV
+        srhgdjuc1NB9pzfw/X19pQ/TcfLcXeQ=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1623920001;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=AqMZ6VDXQs8fACSxjEoTa3jWnXqlOeaX0ILKp41Ujpg=;
+        b=wNcM/bzZp+S6rae1Cjx+blaWgX6JIc/huCvNunJbz5gnULci61sK6dgac/Q02qOuAkVL3e
+        V86JObPs0j//SiDQ==
+Received: from quack2.suse.cz (unknown [10.100.200.198])
+        by relay2.suse.de (Postfix) with ESMTP id 17E65A3BB7;
+        Thu, 17 Jun 2021 08:53:20 +0000 (UTC)
+Received: by quack2.suse.cz (Postfix, from userid 1000)
+        id E611F1F2C64; Thu, 17 Jun 2021 10:53:19 +0200 (CEST)
+Date:   Thu, 17 Jun 2021 10:53:19 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org,
+        Dave Chinner <david@fromorbit.com>, ceph-devel@vger.kernel.org,
+        Chao Yu <yuchao0@huawei.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Jeff Layton <jlayton@kernel.org>,
+        Johannes Thumshirn <jth@kernel.org>,
+        linux-cifs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
+        linux-xfs@vger.kernel.org, Miklos Szeredi <miklos@szeredi.hu>,
+        Steve French <sfrench@samba.org>, Ted Tso <tytso@mit.edu>,
+        Matthew Wilcox <willy@infradead.org>,
+        Pavel Reichl <preichl@redhat.com>,
+        Dave Chinner <dchinner@redhat.com>,
+        Eric Sandeen <sandeen@redhat.com>
+Subject: Re: [PATCH 07/14] xfs: Refactor xfs_isilocked()
+Message-ID: <20210617085319.GD32587@quack2.suse.cz>
+References: <20210615090844.6045-1-jack@suse.cz>
+ <20210615091814.28626-7-jack@suse.cz>
+ <YMr/eA3Eq2u6yUNw@infradead.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
-        a=MnllW2CieawZLw/OcHE/Ng==:117 a=MnllW2CieawZLw/OcHE/Ng==:17
-        a=r6YtysWOX24A:10 a=VwQbUJbxAAAA:8 a=eHPav1ZAIdXSiaH8SJwA:9
-        a=AjGcO6oz07-iQ99wixmX:22
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YMr/eA3Eq2u6yUNw@infradead.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+On Thu 17-06-21 08:53:28, Christoph Hellwig wrote:
+> On Tue, Jun 15, 2021 at 11:17:57AM +0200, Jan Kara wrote:
+> > From: Pavel Reichl <preichl@redhat.com>
+> > 
+> > Refactor xfs_isilocked() to use newly introduced __xfs_rwsem_islocked().
+> > __xfs_rwsem_islocked() is a helper function which encapsulates checking
+> > state of rw_semaphores hold by inode.
+> 
+> Looks good with the updated commit log:
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-This is followup from the first set of log fixes for for-next that
-were posted here:
+I suppose you mean Reviewed-by, don't you?
 
-https://lore.kernel.org/linux-xfs/20210615175719.GD158209@locust/T/#mde2cf0bb7d2ac369815a7e9371f0303efc89f51b
+								Honza
 
-The first two patches of this series are updates for those patches,
-change log below. The rest is the fix for the bigger issue we
-uncovered in investigating the generic/019 failures, being that
-we're triggering a zero-day bug in the way log recovery assigns LSNs
-to checkpoints.
-
-The "simple" fix of using the same ordering code as the commit
-record for the start records in the CIL push turned into a lot of
-patches once I started cleaning it up, separating out all the
-different bits and finally realising all the things I needed to
-change to avoid unintentional logic/behavioural changes. Hence
-there's some code movement, some factoring, API changes to
-xlog_write(), changing where we attach callbacks to commit iclogs so
-they remain correctly ordered if there are multiple commit records
-in the one iclog and then, finally, strictly ordering the start
-records....
-
-The original "simple fix" I tested last night ran almost a thousand
-cycles of generic/019 without a log hang or recovery failure of any
-kind. The refactored patchset has run a couple hundred cycles of
-g/019 and g/475 over the last few hours without a failure, so I'm
-posting this so we can get a review iteration done while I sleep so
-we can - hopefully - get this sorted out before the end of the week.
-
-Cheers,
-
-Dave.
-
-Version 2:
-
-- tested on 5.13-rc6 + linux-xfs/for-next
-- added strings for XLOG_STATE* variables to tracepoint output.
-- rewrote the past/future iclog detection to use iclog header LSNs
-  rather than iclog states as the state values do not tell us anything
-  useful about the temporal relativity of the iclog in relation to
-  the current commit iclog.
-- added patches to strictly order checkpoint start records the same
-  way we strictly order checkpoint commit records.
-
-
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
