@@ -2,178 +2,202 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B20EC49361
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Jun 2021 15:14:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9469C49361
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Jun 2021 15:18:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0793B61411
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Jun 2021 15:14:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B5C86141B
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Jun 2021 15:18:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233233AbhFQPQP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Jun 2021 11:16:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46504 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233232AbhFQPQO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Jun 2021 11:16:14 -0400
-Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28BCEC061574
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Jun 2021 08:14:06 -0700 (PDT)
-Received: by mail-pj1-x102f.google.com with SMTP id z3-20020a17090a3983b029016bc232e40bso4021632pjb.4
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Jun 2021 08:14:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=references:user-agent:from:to:cc:subject:in-reply-to:date
-         :message-id:mime-version;
-        bh=3BHd6vTTLUADiPufyVv7/M1teGQ7qwZxcJa6d639znk=;
-        b=SNk6Rmf37KoE7lOsIzaV2VEdrLpBoTcyCMLMz7kv0dpQcPJ14InfCHfzqOPSU30Jt/
-         WthhK8DQzqpGFgDAZdw/LofS4eZPy+Mptb7mlXYIXxYlr5zGH5fO0Td1fCeKy/wKOMpL
-         sbjipTnhsr3qJqXXTjvlhwEAcHXO00r1m1x4HJo3zj4N1ecewIppkDEQOT9Y+DhfzRyU
-         Q4iuPuApMDBdvzG/zfN2/zadA1bbvl2kRsUW7MbhpUzOSzoqFK1qZxwVXVqScoiTMG0H
-         qP7XbPheR2nmTSPbBVZxSdpFwLfR4V8snVwNkQ8vE3qDTQKE6qqIaTYVTGLrjSi6glAS
-         QWkw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:references:user-agent:from:to:cc:subject
-         :in-reply-to:date:message-id:mime-version;
-        bh=3BHd6vTTLUADiPufyVv7/M1teGQ7qwZxcJa6d639znk=;
-        b=gyRvlHohs0LeXVokhcIGP7u8sJiZnux9w1jcvJ9qSyqhTpECkHyQTX7ohCWvROTa2W
-         8ThQCf0M/rqi0a6pDp14+AxGd4PYtSCdLk708/WEQnEx452ICA1kQwxqS/kumjNm6cm0
-         dC5elW+LJ0zLaA0MHKBhzNLyL0Mw1FkuQ/bhJ1Eom0awOEDfE576B38QNhTkgWR/NBUo
-         CcBfuI9l/z4PyQMcAD7mYiOGmRD7q3wO81haAC7bEemqk5vIpes+NOZ/zLrhtoTsxec6
-         TOX6lC+LHxXNwNzR0ftfUx+uoLtaV3Kvg+7K0JzcZtiqa6BL2hDBfDFPdyTLdgNSHTeJ
-         GrVw==
-X-Gm-Message-State: AOAM532px5oM7ctMtYp5g+jSRc8VBa2R97V6WhUDsm62/12by9JouwzE
-        eA0fgbosjSjsAyKL2Xwz2sS9RFCFbQZjiQ==
-X-Google-Smtp-Source: ABdhPJw/lFOe+fua4MX4j2klp+QRsks6skC4kUVxKmS11A5jaMe29TE9e1w5gHX3dTDnLCcZ8noV5g==
-X-Received: by 2002:a17:902:b210:b029:11a:bf7b:1a83 with SMTP id t16-20020a170902b210b029011abf7b1a83mr363156plr.84.1623942845548;
-        Thu, 17 Jun 2021 08:14:05 -0700 (PDT)
-Received: from garuda ([122.167.159.50])
-        by smtp.gmail.com with ESMTPSA id z24sm5709669pfk.149.2021.06.17.08.14.04
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 17 Jun 2021 08:14:05 -0700 (PDT)
-References: <162388772484.3427063.6225456710511333443.stgit@locust> <162388773053.3427063.16153257434224756166.stgit@locust>
-User-agent: mu4e 1.0; emacs 26.1
-From:   Chandan Babu R <chandanrlinux@gmail.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs: fix type mismatches in the inode reclaim functions
-In-reply-to: <162388773053.3427063.16153257434224756166.stgit@locust>
-Date:   Thu, 17 Jun 2021 20:44:02 +0530
-Message-ID: <874kdwr0at.fsf@garuda>
-MIME-Version: 1.0
+        id S233202AbhFQPUM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Jun 2021 11:20:12 -0400
+Received: from mail-mw2nam08on2073.outbound.protection.outlook.com ([40.107.101.73]:27232
+        "EHLO NAM04-MW2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S233111AbhFQPUM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 17 Jun 2021 11:20:12 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=BSKbggmrye6E/q9GUQ/zDcrpDQ/a+YL11vIFCpCuNd4gJXRocm9uL0TGzX+S1zUBYBcpsgOdrlsSa9NUcQ6g96aMe47WG1HJWeGGhWHeyqALjjttcDWjuIv2ODrNp1TBcsyeR26ZMYd59Ge/VO1MnB4efFE0UxfjNbVV4Zm1EOFnDBMjlMZmRFm3+M0+oYzszJjgc2KgfaCHHetjPpazHrLN5U6zOSpr8K7yzDGXH/zHdFXTkxkGNOWWXXobms2ZXk3Plfp+EROmSlSlHGvMX2cubEj0KOzHgXI1XQoGDONxfvl9h/bdiNwCTXfAv1gzCkYBXEPteTj64sEqADlzXg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=0vTCKBj0SX1TNChLxKKivsBwKkvPBzLKm0hXJsAP19E=;
+ b=Wn8C6LfZmutlaFqzexEpn4nc8nD8aH/mV4SkPnn4zu9Qyam+kpFZGMPhWJKkA10NvncH4BzlBO+jBmr3RhROhcBlz4cVk20l6WEi5iq/dE987SJMxuTdVONlWWQRt0sVeM3y/0Xwi3rIkECadNIhQ7mQGqTAYbvVfLWmdVsEF+ORIa5u1wNytyHb6exYe0UmtIQp+Q9SItvNJZ9JE9kgzpz+n1wVFqLnIQw88hzPKWWEbVBTvTrI0y9gO1vAyaMn8ZRBoAEnaZJMTXDJcXVmirpodpurVBM1wFHdPHNAJA8KiU2ZuMXxS8Dq6/CllFKaHJLPeA2pJOcHiH8rO1qrKw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=0vTCKBj0SX1TNChLxKKivsBwKkvPBzLKm0hXJsAP19E=;
+ b=jjr4v8umTxQMRymeGR7uSYlujzp4StOUaHNPTjyhsxapsWlz+NTR0KOkm6uYnbrc1LqWMMywIvxmU5j0j5dxm+TpYBydqxXLlX6MrVU00/GdApVx+tuPSi7yfpxtp54W1pzfl9xh6UVd3fsI1hz/s+NmFUaUoyuL38owfl1SNdg=
+Authentication-Results: linux-foundation.org; dkim=none (message not signed)
+ header.d=none;linux-foundation.org; dmarc=none action=none
+ header.from=amd.com;
+Received: from DM6PR12MB4419.namprd12.prod.outlook.com (2603:10b6:5:2aa::20)
+ by DM5PR12MB1595.namprd12.prod.outlook.com (2603:10b6:4:3::15) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.4242.19; Thu, 17 Jun 2021 15:18:02 +0000
+Received: from DM6PR12MB4419.namprd12.prod.outlook.com
+ ([fe80::b972:f4d6:9db3:5761]) by DM6PR12MB4419.namprd12.prod.outlook.com
+ ([fe80::b972:f4d6:9db3:5761%2]) with mapi id 15.20.4242.021; Thu, 17 Jun 2021
+ 15:18:02 +0000
+From:   Alex Sierra <alex.sierra@amd.com>
+To:     akpm@linux-foundation.org, Felix.Kuehling@amd.com,
+        linux-mm@kvack.org, rcampbell@nvidia.com,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc:     amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        hch@lst.de, jgg@nvidia.com, jglisse@redhat.com,
+        Alex Sierra <alex.sierra@amd.com>
+Subject: [PATCH v3 0/8] Support DEVICE_GENERIC memory in migrate_vma_*
+Date:   Thu, 17 Jun 2021 10:16:57 -0500
+Message-Id: <20210617151705.15367-1-alex.sierra@amd.com>
+X-Mailer: git-send-email 2.17.1
 Content-Type: text/plain
+X-Originating-IP: [165.204.78.1]
+X-ClientProxiedBy: SN4PR0501CA0088.namprd05.prod.outlook.com
+ (2603:10b6:803:22::26) To DM6PR12MB4419.namprd12.prod.outlook.com
+ (2603:10b6:5:2aa::20)
+MIME-Version: 1.0
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from alex-MS-7B09.amd.com (165.204.78.1) by SN4PR0501CA0088.namprd05.prod.outlook.com (2603:10b6:803:22::26) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4264.9 via Frontend Transport; Thu, 17 Jun 2021 15:18:00 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 72caeba3-f7e2-486c-4ea6-08d931a318e3
+X-MS-TrafficTypeDiagnostic: DM5PR12MB1595:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <DM5PR12MB1595B10E77C185FAF5A3B8C8FD0E9@DM5PR12MB1595.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:9508;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: p1gtpA4dRdisytZQ5rIHtkym8PFrc/M9UrJ9YptLWGUAwUe4VlD/tfpBflopqII2RyJaEf/od0cBKqzC/avQgDw40Pf53OeREuLe2viHCj3ivs1gxbWuABZUG56Gv0iJg9y6tH1YQWx0EVMElOghLYAqCMiY3wzZbafUnLoYIu54dvi0BzT0D2S54VVeS4bmX33avPpkFurqaG81HlIUjmAR5l9cwUmozTHNd4sSlRpTgA+eINMTkmoc6CssgZ+gixyal0fhxJeBRtQTXBEPe6nnuYbvOc693brIGZ31dOYc+o0OHwIdMCSUnivUPlYPLDIdm4e+TxWJ/BxbTKYeXWLTDc6/lLzbIgoSEGXTgkrI+OcB/FurEBkgpSHxtwq5y8bW/dW/Zo329r3U6gycx6EomZGJYTfp41jIIZcdaAlYgAjmMwa0AbJ+tOuHoYm+oIbJIKvVpXc023ZpZfHNhf/W1b96AS8+BuSmqaYrTKFgdjgWTmIiVgFkHhewbIdl1+FHmCLeTvvY3dCy4MQwQn2hss3cg8JAUDNYYugKIs8GOtmCjYr1TZSrbLOP3F1iFZlUCZYGC6Aj1NJZtkAmfBO2nasUa8flus7A2q+c3wyZZhw94XeGnkVD35KMH2RsrYOahdMJEGuQE5OU5OiD4Ha9Hjv7TJv7FgflzF5pwjv1u54HIJQerR9rzJk3OsIQE5WPzbzb8dfG+TulVGiIao4QeyZ5UMS8Yr+oj5n8C6IxujbsGrXemdqOGqADGJAYbhEUmUqriwAgt5C0vsDkm9RuxkHCPha/44dr27edlTbGDiQZIkvjNY4pywWvsV/AprULHpo5xavKY7dvgthTQg==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR12MB4419.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(39860400002)(396003)(346002)(136003)(376002)(1076003)(86362001)(966005)(956004)(316002)(66476007)(66556008)(6666004)(36756003)(478600001)(2616005)(44832011)(66946007)(52116002)(7416002)(5660300002)(8936002)(83380400001)(26005)(4326008)(16526019)(6486002)(186003)(2906002)(7696005)(38100700002)(38350700002)(8676002)(41533002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?6G5rVYljCq0uevLEsnVZVc7wR8dXbSLjFi40BL4YzosFBQqufuTw6bXuMA3Y?=
+ =?us-ascii?Q?o79S8L5gadZh4Z5vovYug9Wx7dkMgspdpar3CUd9qX9qsBUx8HCBuCUiBPFF?=
+ =?us-ascii?Q?VbJ9rTj29HKpAl5SCOVcPUj5AAbHnZ1HKjvDNoHWd3ZIROTYKeW+TN9LHr1d?=
+ =?us-ascii?Q?+5OiHGC99up7ERLQszjyKK0/zR6kt21on0Cu++Rqh6yjqJKC9xrIIZexy8LT?=
+ =?us-ascii?Q?Vy0h8Nz27e+rc39uyXaG+QW6IxoSlr0wegNgMfyArU2OfouonjqWnUvYZ3zz?=
+ =?us-ascii?Q?F48SRPDVHVhwY/wRacBJ3b3F8HuB8pKUpquKtTFwLYMJU+RWNiRs8/AeYfK+?=
+ =?us-ascii?Q?p9qdZ4+tRYmqtdBJdkJlUNzdj/yJ68QcwAe9yt0AXMAuCF1pJoblwqnKd0Az?=
+ =?us-ascii?Q?O4nt4n2aOmvM6INRbx5B3lajstaFbK5DvNVDcnGM/RXWrnzYKvq407JZZR+T?=
+ =?us-ascii?Q?F6JjP+tn4mqTFtx0G77ZfNCr0l9vvcic8y4bbqVzehPekimQ0H+7+6viraZW?=
+ =?us-ascii?Q?wI3J/c/P8uj2JjwyOP8FB5CKpqCnAdKDogDJaTpIn+Bdu0AQGrF+sGqHLpVy?=
+ =?us-ascii?Q?TT2PbBkadAtlpo/U/K01z3fYoXVK34QFerVLAgYTP/PLi0yUn34m9mrgZPCK?=
+ =?us-ascii?Q?r9awVsI0YL9GybXKIg/bgOLCph70qFfFucTKS56PXwuCyGINEUjsuHSRG8ya?=
+ =?us-ascii?Q?qMB7AdJ0FCg2D6So0jMZny9Sp3Y2LKaqYC7PH9ShCeFKFeehQ525vBmcH5no?=
+ =?us-ascii?Q?MPO1LRNZfHlWZgi2k+g0SeLCm0Kri14tfG7mEICqh8RIWHn50NY1YikJxIwz?=
+ =?us-ascii?Q?a56bSiOeDMo1OhcnT4vSPl+8pAMk8+vNsarZ2yOxLAh9d7/9rh4LSfTGmRDr?=
+ =?us-ascii?Q?0LjG+Y3U6rv4ZYNuvSDqicbPjyiUc5n4xONyKD13rv4PC8zw1xVKXYV6dBMt?=
+ =?us-ascii?Q?yZGz6ZkOfpnLw9ciBnw5LKyEWm4vtcwigNbuAvNz1h8Mqzg1qympvTh73W1z?=
+ =?us-ascii?Q?IjfPPZ2nfo0hpksBcaqLDH5gg9ggw3/asA1YAAxUO4ArC8Fgk0CJ/Q9/QkZ1?=
+ =?us-ascii?Q?aIZCOz/OcidjhYb99UuX5RvWH8Exe3Nmbgn93RbwYp6IiwB/annaQnZzZHVe?=
+ =?us-ascii?Q?CRM1lkmnLaWo7KhPpvSVkez+gQ0Ww9ZXgPbGtJLIo8Bhqx81a5HsgB15ZJxE?=
+ =?us-ascii?Q?5lPtLOMqv50G7gKb7E7vsIku6z9uvupfL7jj6/Cm8tKl+XzJWsGNeU/gfVnQ?=
+ =?us-ascii?Q?4PLCHmALZeF/u3rEcHZjUlpP35v2wGkXHoBk9cTEvQ65klphoI0X1PacK7/F?=
+ =?us-ascii?Q?0WHam9oHNxSZ5KwpG20UKqts?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 72caeba3-f7e2-486c-4ea6-08d931a318e3
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR12MB4419.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jun 2021 15:18:01.7780
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: jn9PGHhZeBfu99+nAbhulrVyHiSf+q56GqQmnKMHVsax4HXvWa4V5+kRd1J1E4GwuR88yt8aYuW6fmv1GKbENA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR12MB1595
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 17 Jun 2021 at 05:25, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
->
-> It's currently unlikely that we will ever end up with more than 4
-> billion inodes waiting for reclamation, but the fs object code uses long
-> int for object counts and we're certainly capable of generating that
-> many.  Instead of truncating the internal counters, widen them and
-> report the object counts correctly.
->
+v1:
+AMD is building a system architecture for the Frontier supercomputer with a
+coherent interconnect between CPUs and GPUs. This hardware architecture allows
+the CPUs to coherently access GPU device memory. We have hardware in our labs
+and we are working with our partner HPE on the BIOS, firmware and software
+for delivery to the DOE.
 
-The changes look good to me.
+The system BIOS advertises the GPU device memory (aka VRAM) as SPM
+(special purpose memory) in the UEFI system address map. The amdgpu driver looks
+it up with lookup_resource and registers it with devmap as MEMORY_DEVICE_GENERIC
+using devm_memremap_pages.
 
-Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
+Now we're trying to migrate data to and from that memory using the migrate_vma_*
+helpers so we can support page-based migration in our unified memory allocations,
+while also supporting CPU access to those pages.
 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  fs/xfs/xfs_icache.c |    8 ++++----
->  fs/xfs/xfs_icache.h |    6 +++---
->  fs/xfs/xfs_trace.h  |    4 ++--
->  3 files changed, 9 insertions(+), 9 deletions(-)
->
->
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 6b44fc734cb5..18dae6d3d69a 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -1084,11 +1084,11 @@ xfs_reclaim_inodes(
->  long
->  xfs_reclaim_inodes_nr(
->  	struct xfs_mount	*mp,
-> -	int			nr_to_scan)
-> +	unsigned long		nr_to_scan)
->  {
->  	struct xfs_icwalk	icw = {
->  		.icw_flags	= XFS_ICWALK_FLAG_SCAN_LIMIT,
-> -		.icw_scan_limit	= nr_to_scan,
-> +		.icw_scan_limit	= max_t(unsigned long, LONG_MAX, nr_to_scan),
->  	};
->  
->  	if (xfs_want_reclaim_sick(mp))
-> @@ -1106,13 +1106,13 @@ xfs_reclaim_inodes_nr(
->   * Return the number of reclaimable inodes in the filesystem for
->   * the shrinker to determine how much to reclaim.
->   */
-> -int
-> +long
->  xfs_reclaim_inodes_count(
->  	struct xfs_mount	*mp)
->  {
->  	struct xfs_perag	*pag;
->  	xfs_agnumber_t		ag = 0;
-> -	int			reclaimable = 0;
-> +	long			reclaimable = 0;
->  
->  	while ((pag = xfs_perag_get_tag(mp, ag, XFS_ICI_RECLAIM_TAG))) {
->  		ag = pag->pag_agno + 1;
-> diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-> index 00dc98a92835..c751cc32dc46 100644
-> --- a/fs/xfs/xfs_icache.h
-> +++ b/fs/xfs/xfs_icache.h
-> @@ -15,7 +15,7 @@ struct xfs_icwalk {
->  	kgid_t		icw_gid;
->  	prid_t		icw_prid;
->  	__u64		icw_min_file_size;
-> -	int		icw_scan_limit;
-> +	long		icw_scan_limit;
->  };
->  
->  /* Flags that reflect xfs_fs_eofblocks functionality. */
-> @@ -49,8 +49,8 @@ void xfs_inode_free(struct xfs_inode *ip);
->  void xfs_reclaim_worker(struct work_struct *work);
->  
->  void xfs_reclaim_inodes(struct xfs_mount *mp);
-> -int xfs_reclaim_inodes_count(struct xfs_mount *mp);
-> -long xfs_reclaim_inodes_nr(struct xfs_mount *mp, int nr_to_scan);
-> +long xfs_reclaim_inodes_count(struct xfs_mount *mp);
-> +long xfs_reclaim_inodes_nr(struct xfs_mount *mp, unsigned long nr_to_scan);
->  
->  void xfs_inode_mark_reclaimable(struct xfs_inode *ip);
->  
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 428dc71f7f8b..85fa864f8e2f 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -3894,7 +3894,7 @@ DECLARE_EVENT_CLASS(xfs_icwalk_class,
->  		__field(uint32_t, gid)
->  		__field(prid_t, prid)
->  		__field(__u64, min_file_size)
-> -		__field(int, scan_limit)
-> +		__field(long, scan_limit)
->  		__field(unsigned long, caller_ip)
->  	),
->  	TP_fast_assign(
-> @@ -3909,7 +3909,7 @@ DECLARE_EVENT_CLASS(xfs_icwalk_class,
->  		__entry->scan_limit = icw ? icw->icw_scan_limit : 0;
->  		__entry->caller_ip = caller_ip;
->  	),
-> -	TP_printk("dev %d:%d flags 0x%x uid %u gid %u prid %u minsize %llu scan_limit %d caller %pS",
-> +	TP_printk("dev %d:%d flags 0x%x uid %u gid %u prid %u minsize %llu scan_limit %ld caller %pS",
->  		  MAJOR(__entry->dev), MINOR(__entry->dev),
->  		  __entry->flags,
->  		  __entry->uid,
+This patch series makes a few changes to make MEMORY_DEVICE_GENERIC pages behave
+correctly in the migrate_vma_* helpers. We are looking for feedback about this
+approach. If we're close, what's needed to make our patches acceptable upstream?
+If we're not close, any suggestions how else to achieve what we are trying to do
+(i.e. page migration and coherent CPU access to VRAM)?
 
+This work is based on HMM and our SVM memory manager that was recently upstreamed
+to Dave Airlie's drm-next branch
+https://lore.kernel.org/dri-devel/20210527205606.2660-6-Felix.Kuehling@amd.com/T/#r996356015e295780eb50453e7dbd5d0d68b47cbc
+On top of that we did some rework of our VRAM management for migrations to remove
+some incorrect assumptions, allow partially successful migrations and GPU memory
+mappings that mix pages in VRAM and system memory.
+https://patchwork.kernel.org/project/dri-devel/list/?series=489811
+
+v2:
+This patch series version has merged "[RFC PATCH v3 0/2]
+mm: remove extra ZONE_DEVICE struct page refcount" patch series made by
+Ralph Campbell. It also applies at the top of these series, our changes
+to support device generic type in migration_vma helpers.
+This has been tested in systems with device memory that has coherent
+access by CPU.
+
+Also addresses the following feedback made in v1:
+- Isolate in one patch kernel/resource.c modification, based
+on Christoph's feedback.
+- Add helpers check for generic and private type to avoid
+duplicated long lines.
+
+v3:
+- Include cover letter from v1
+- Rename dax_layout_is_idle_page func to dax_page_unused in patch
+ext4/xfs: add page refcount helper
+
+Patches 1-2 Rebased Ralph Campbell's ZONE_DEVICE page refcounting patches
+Patches 4-5 are for context to show how we are looking up the SPM 
+memory and registering it with devmap.
+Patches 3,6-8 are the changes we are trying to upstream or rework to 
+make them acceptable upstream.
+
+Alex Sierra (6):
+  kernel: resource: lookup_resource as exported symbol
+  drm/amdkfd: add SPM support for SVM
+  drm/amdkfd: generic type as sys mem on migration to ram
+  include/linux/mm.h: helpers to check zone device generic type
+  mm: add generic type support to migrate_vma helpers
+  mm: call pgmap->ops->page_free for DEVICE_GENERIC pages
+
+Ralph Campbell (2):
+  ext4/xfs: add page refcount helper
+  mm: remove extra ZONE_DEVICE struct page refcount
+
+ arch/powerpc/kvm/book3s_hv_uvmem.c       |  2 +-
+ drivers/gpu/drm/amd/amdkfd/kfd_migrate.c | 15 ++++--
+ drivers/gpu/drm/nouveau/nouveau_dmem.c   |  2 +-
+ fs/dax.c                                 |  8 +--
+ fs/ext4/inode.c                          |  5 +-
+ fs/xfs/xfs_file.c                        |  4 +-
+ include/linux/dax.h                      | 10 ++++
+ include/linux/memremap.h                 |  7 +--
+ include/linux/mm.h                       | 52 +++---------------
+ kernel/resource.c                        |  2 +-
+ lib/test_hmm.c                           |  2 +-
+ mm/internal.h                            |  8 +++
+ mm/memremap.c                            | 69 +++++++-----------------
+ mm/migrate.c                             | 13 ++---
+ mm/page_alloc.c                          |  3 ++
+ mm/swap.c                                | 45 ++--------------
+ 16 files changed, 83 insertions(+), 164 deletions(-)
 
 -- 
-chandan
+2.17.1
+
