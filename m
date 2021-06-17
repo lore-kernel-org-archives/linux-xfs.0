@@ -7,180 +7,307 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE6D0C49EA3
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61718C49EA2
 	for <linux-xfs@archiver.kernel.org>; Thu, 17 Jun 2021 08:26:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AF961613FB
+	by mail.kernel.org (Postfix) with ESMTP id 4518861412
 	for <linux-xfs@archiver.kernel.org>; Thu, 17 Jun 2021 08:26:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230238AbhFQI2c (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Jun 2021 04:28:32 -0400
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:37665 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230241AbhFQI2b (ORCPT
+        id S229931AbhFQI2b (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Jun 2021 04:28:31 -0400
+Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:50407 "EHLO
+        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230215AbhFQI2b (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Jun 2021 04:28:31 -0400
 Received: from dread.disaster.area (pa49-179-138-183.pa.nsw.optusnet.com.au [49.179.138.183])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id A82D980B74C
+        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id A60666A95D
         for <linux-xfs@vger.kernel.org>; Thu, 17 Jun 2021 18:26:22 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1ltnLx-00DjwN-EE
+        id 1ltnLx-00Djwi-KX
         for linux-xfs@vger.kernel.org; Thu, 17 Jun 2021 18:26:21 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1ltnLx-0044v6-6X
+        id 1ltnLx-0044vO-CU
         for linux-xfs@vger.kernel.org; Thu, 17 Jun 2021 18:26:21 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 2/8] xfs: don't wait on future iclogs when pushing the CIL
-Date:   Thu, 17 Jun 2021 18:26:11 +1000
-Message-Id: <20210617082617.971602-3-david@fromorbit.com>
+Subject: [PATCH 8/8] xfs: order CIL checkpoint start records
+Date:   Thu, 17 Jun 2021 18:26:17 +1000
+Message-Id: <20210617082617.971602-9-david@fromorbit.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210617082617.971602-1-david@fromorbit.com>
 References: <20210617082617.971602-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
         a=MnllW2CieawZLw/OcHE/Ng==:117 a=MnllW2CieawZLw/OcHE/Ng==:17
-        a=7yxSLlwqS3lPvJho:21 a=r6YtysWOX24A:10 a=20KFwNOVAAAA:8
-        a=RZvj3mB4rQ5jD1Y1fNEA:9 a=ryn_BjxYRQEVhTpXJPha:22
+        a=r6YtysWOX24A:10 a=20KFwNOVAAAA:8 a=ujfmx-CFliL-SBMTDWgA:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The iclogbuf ring attached to the struct xlog is circular, hence the
-first and last iclogs in the ring can only be determined by
-comparing them against the log->l_iclog pointer.
+Because log recovery depends on strictly ordered start records as
+well as strictly ordered commit records.
 
-In xfs_cil_push_work(), we want to wait on previous iclogs that were
-issued so that we can flush them to stable storage with the commit
-record write, and it simply waits on the previous iclog in the ring.
-This, however, leads to CIL push hangs in generic/019 like so:
+This is a zero day bug in the way XFS writes pipelined transactions
+to the journal which is exposed by commit facd77e4e38b ("xfs: CIL
+work is serialised, not pipelined") which re-introduces explicit
+concurrent commits back into the on-disk journal.
 
-task:kworker/u33:0   state:D stack:12680 pid:    7 ppid:     2 flags:0x00004000
-Workqueue: xfs-cil/pmem1 xlog_cil_push_work
-Call Trace:
- __schedule+0x30b/0x9f0
- schedule+0x68/0xe0
- xlog_wait_on_iclog+0x121/0x190
- ? wake_up_q+0xa0/0xa0
- xlog_cil_push_work+0x994/0xa10
- ? _raw_spin_lock+0x15/0x20
- ? xfs_swap_extents+0x920/0x920
- process_one_work+0x1ab/0x390
- worker_thread+0x56/0x3d0
- ? rescuer_thread+0x3c0/0x3c0
- kthread+0x14d/0x170
- ? __kthread_bind_mask+0x70/0x70
- ret_from_fork+0x1f/0x30
+The XFS journal commit code has never ordered start records and we
+have relied on strict commit record ordering for correct recovery
+ordering of concurrently written transactions. Unfortunately, root
+cause analysis uncovered the fact that log recovery uses the LSN of
+the start record for transaction commit processing. Hence the
+commits are processed in strict orderi by recovery, but the LSNs
+associated with the commits can be out of order and so recovery may
+stamp incorrect LSNs into objects and/or misorder intents in the AIL
+for later processing. This can result in log recovery failures
+and/or on disk corruption, sometimes silent.
 
-With other threads blocking in either xlog_state_get_iclog_space()
-waiting for iclog space or xlog_grant_head_wait() waiting for log
-reservation space.
+Because this is a long standing log recovery issue, we can't just
+fix log recovery and call it good. This still leaves older kernels
+susceptible to recovery failures and corruption when replaying a log
+from a kernel that pipelines checkpoints. There is also the issue
+that in-memory ordering for AIL pushing and data integrity
+operations are based on checkpoint start LSNs, and if the start LSN
+is incorrect in the journal, it is also incorrect in memory.
 
-The problem here is that the previous iclog on the ring might
-actually be a future iclog. That is, if log->l_iclog points at
-commit_iclog, commit_iclog is the first (oldest) iclog in the ring
-and there are no previous iclogs pending as they have all completed
-their IO and been activated again. IOWs, commit_iclog->ic_prev
-points to an iclog that will be written in the future, not one that
-has been written in the past.
+Hence there's really only one choice for fixing this zero-day bug:
+we need to strictly order checkpoint start records in ascending
+sequence order in the log, the same way we already strictly order
+commit records.
 
-Hence, in this case, waiting on the ->ic_prev iclog is incorrect
-behaviour, and depending on the state of the future iclog, we can
-end up with a circular ABA wait cycle and we hang.
-
-The fix is made more complex by the fact that many iclogs states
-cannot be used to determine if the iclog is a past or future iclog.
-Hence we have to determine past iclogs by checking the LSN of the
-iclog rather than their state. A past ACTIVE iclog will have a LSN
-of zero, while a future ACTIVE iclog will have a LSN greater than
-the current iclog. We don't wait on either of these cases.
-
-Similarly, a future iclog that hasn't completed IO will have an LSN
-greater than the current iclog and so we don't wait on them. A past
-iclog that is still undergoing IO completion will have a LSN less
-than the current iclog and those are the only iclogs that we need to
-wait on.
-
-Hence we can use the iclog LSN to determine what iclogs we need to
-wait on here.
-
-Fixes: 5fd9256ce156 ("xfs: separate CIL commit record IO")
-Reported-by: Brian Foster <bfoster@redhat.com>
+Fixes: facd77e4e38b ("xfs: CIL work is serialised, not pipelined")
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_log_cil.c | 51 ++++++++++++++++++++++++++++++++++++++------
- 1 file changed, 45 insertions(+), 6 deletions(-)
+ fs/xfs/xfs_log.c      |   1 +
+ fs/xfs/xfs_log_cil.c  | 101 +++++++++++++++++++++++++++++-------------
+ fs/xfs/xfs_log_priv.h |   1 +
+ 3 files changed, 71 insertions(+), 32 deletions(-)
 
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 359246d54db7..94b6bccb9de9 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -3743,6 +3743,7 @@ xfs_log_force_umount(
+ 	 * avoid races.
+ 	 */
+ 	spin_lock(&log->l_cilp->xc_push_lock);
++	wake_up_all(&log->l_cilp->xc_start_wait);
+ 	wake_up_all(&log->l_cilp->xc_commit_wait);
+ 	spin_unlock(&log->l_cilp->xc_push_lock);
+ 	xlog_state_do_callback(log);
 diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 705619e9dab4..2fb0ab02dda3 100644
+index 87e30917ce2e..722c21f21b81 100644
 --- a/fs/xfs/xfs_log_cil.c
 +++ b/fs/xfs/xfs_log_cil.c
-@@ -1075,15 +1075,54 @@ xlog_cil_push_work(
- 	ticket = ctx->ticket;
+@@ -684,6 +684,7 @@ xlog_cil_committed(
+ 	 */
+ 	if (abort) {
+ 		spin_lock(&ctx->cil->xc_push_lock);
++		wake_up_all(&ctx->cil->xc_start_wait);
+ 		wake_up_all(&ctx->cil->xc_commit_wait);
+ 		spin_unlock(&ctx->cil->xc_push_lock);
+ 	}
+@@ -788,6 +789,10 @@ xlog_cil_build_trans_hdr(
+  * If the context doesn't have a start_lsn recorded, then this iclog will
+  * contain the start record for the checkpoint. Otherwise this write contains
+  * the commit record for the checkpoint.
++ *
++ * Once we've set the LSN for the given operation, wake up any ordered write
++ * waiters that can make progress now that we have a stable LSN for write
++ * ordering purposes.
+  */
+ void
+ xlog_cil_set_ctx_write_state(
+@@ -798,9 +803,16 @@ xlog_cil_set_ctx_write_state(
+ 	xfs_lsn_t		lsn = be64_to_cpu(iclog->ic_header.h_lsn);
+ 
+ 	ASSERT(!ctx->commit_lsn);
+-	spin_lock(&cil->xc_push_lock);
+ 	if (!ctx->start_lsn) {
++		spin_lock(&cil->xc_push_lock);
++		/*
++		 * The LSN we need to pass to the log items on transaction
++		 * commit is the LSN reported by the first log vector write, not
++		 * the commit lsn. If we use the commit record lsn then we can
++		 * move the tail beyond the grant write head.
++		 */
+ 		ctx->start_lsn = lsn;
++		wake_up_all(&cil->xc_start_wait);
+ 		spin_unlock(&cil->xc_push_lock);
+ 		return;
+ 	}
+@@ -811,9 +823,6 @@ xlog_cil_set_ctx_write_state(
+ 	 * context controls when the iclog is released for IO.
+ 	 */
+ 	atomic_inc(&iclog->ic_refcnt);
+-	ctx->commit_iclog = iclog;
+-	ctx->commit_lsn = lsn;
+-	spin_unlock(&cil->xc_push_lock);
  
  	/*
--	 * If the checkpoint spans multiple iclogs, wait for all previous
--	 * iclogs to complete before we submit the commit_iclog. In this case,
--	 * the commit_iclog write needs to issue a pre-flush so that the
--	 * ordering is correctly preserved down to stable storage.
-+	 * If the checkpoint spans multiple iclogs, wait for all previous iclogs
-+	 * to complete before we submit the commit_iclog. We can't use state
-+	 * checks for this - ACTIVE can be either a past completed iclog or a
-+	 * future iclog being filled, while WANT_SYNC through SYNC_DONE can be a
-+	 * past or future iclog awaiting IO or ordered IO completion to be run.
-+	 * In the latter case, if it's a future iclog and we wait on it, the we
-+	 * will hang because it won't get processed through to ic_force_wait
-+	 * wakeup until this commit_iclog is written to disk.  Hence we use the
-+	 * iclog header lsn and compare it to the commit lsn to determine if we
-+	 * need to wait on iclogs or not.
- 	 */
- 	spin_lock(&log->l_icloglock);
- 	if (ctx->start_lsn != commit_lsn) {
--		xlog_wait_on_iclog(commit_iclog->ic_prev);
--		spin_lock(&log->l_icloglock);
-+		struct xlog_in_core	*iclog;
-+
-+		for (iclog = commit_iclog->ic_prev;
-+		     iclog != commit_iclog;
-+		     iclog = iclog->ic_prev) {
-+			xfs_lsn_t	hlsn;
-+
-+			/*
-+			 * If the LSN of the iclog is zero or in the future it
-+			 * means it has passed through IO completion and
-+			 * activation and hence all previous iclogs have also
-+			 * done so. We do not need to wait at all in this case.
-+			 */
-+			hlsn = be64_to_cpu(iclog->ic_header.h_lsn);
-+			if (!hlsn || XFS_LSN_CMP(hlsn, commit_lsn) > 0)
-+				break;
-+
-+			/*
-+			 * If the LSN of the iclog is older than the commit lsn,
-+			 * we have to wait on it. Waiting on this via the
-+			 * ic_force_wait should also order the completion of all
-+			 * older iclogs, too, but we leave checking that to the
-+			 * next loop iteration.
-+			 */
-+			ASSERT(XFS_LSN_CMP(hlsn, commit_lsn) < 0);
-+			xlog_wait_on_iclog(iclog);
-+			spin_lock(&log->l_icloglock);
-+		}
-+
-+		/*
-+		 * Regardless of whether we need to wait or not, the the
-+		 * commit_iclog write needs to issue a pre-flush so that the
-+		 * ordering for this checkpoint is correctly preserved down to
-+		 * stable storage.
-+		 */
- 		commit_iclog->ic_flags |= XLOG_ICL_NEED_FLUSH;
+ 	 * xlog_state_get_iclog_space() guarantees there is enough space in the
+@@ -827,6 +836,12 @@ xlog_cil_set_ctx_write_state(
  	}
+ 	list_add_tail(&ctx->iclog_entry, &iclog->ic_callbacks);
+ 	spin_unlock(&iclog->ic_callback_lock);
++
++	spin_lock(&cil->xc_push_lock);
++	ctx->commit_iclog = iclog;
++	ctx->commit_lsn = lsn;
++	wake_up_all(&cil->xc_commit_wait);
++	spin_unlock(&cil->xc_push_lock);
+ }
+ 
+ /*
+@@ -834,10 +849,16 @@ xlog_cil_set_ctx_write_state(
+  * relies on the context LSN being zero until the log write has guaranteed the
+  * LSN that the log write will start at via xlog_state_get_iclog_space().
+  */
++enum {
++	_START_RECORD,
++	_COMMIT_RECORD,
++};
++
+ static int
+ xlog_cil_order_write(
+ 	struct xfs_cil		*cil,
+-	xfs_csn_t		sequence)
++	xfs_csn_t		sequence,
++	int			record)
+ {
+ 	struct xfs_cil_ctx	*ctx;
+ 
+@@ -860,19 +881,50 @@ xlog_cil_order_write(
+ 		 */
+ 		if (ctx->sequence >= sequence)
+ 			continue;
+-		if (!ctx->commit_lsn) {
+-			/*
+-			 * It is still being pushed! Wait for the push to
+-			 * complete, then start again from the beginning.
+-			 */
+-			xlog_wait(&cil->xc_commit_wait, &cil->xc_push_lock);
+-			goto restart;
++
++		/* Wait until the LSN for the record has been recorded. */
++		switch (record) {
++		case _START_RECORD:
++			if (!ctx->start_lsn) {
++				xlog_wait(&cil->xc_start_wait, &cil->xc_push_lock);
++				goto restart;
++			}
++			break;
++		case _COMMIT_RECORD:
++			if (!ctx->commit_lsn) {
++				xlog_wait(&cil->xc_commit_wait, &cil->xc_push_lock);
++				goto restart;
++			}
++			break;
++		default:
++			ASSERT(0);
++			break;
+ 		}
+ 	}
+ 	spin_unlock(&cil->xc_push_lock);
+ 	return 0;
+ }
+ 
++/*
++ * Write out the log vector change now attached to the CIL context. This will
++ * write a start record that needs to be strictly ordered in ascending CIL
++ * sequence order so that log recovery will always use in-order start LSNs when
++ * replaying checkpoints.
++ */
++static int
++xlog_cil_write_chain(
++	struct xfs_cil_ctx	*ctx,
++	uint32_t		num_bytes)
++{
++	struct xlog		*log = ctx->cil->xc_log;
++	int			error;
++
++	error = xlog_cil_order_write(ctx->cil, ctx->sequence, _START_RECORD);
++	if (error)
++		return error;
++	return xlog_write(log, ctx, &ctx->lv_chain, ctx->ticket, num_bytes);
++}
++
+ /*
+  * Write out the commit record of a checkpoint transaction to close off a
+  * running log write. These commit records are strictly ordered in ascending CIL
+@@ -906,7 +958,7 @@ xlog_cil_write_commit_record(
+ 	if (XLOG_FORCED_SHUTDOWN(log))
+ 		return -EIO;
+ 
+-	error = xlog_cil_order_write(ctx->cil, ctx->sequence);
++	error = xlog_cil_order_write(ctx->cil, ctx->sequence, _COMMIT_RECORD);
+ 	if (error)
+ 		return error;
+ 
+@@ -1125,17 +1177,10 @@ xlog_cil_push_work(
+ 	wait_for_completion(&bdev_flush);
+ 
+ 	/*
+-	 * The LSN we need to pass to the log items on transaction commit is the
+-	 * LSN reported by the first log vector write, not the commit lsn. If we
+-	 * use the commit record lsn then we can move the tail beyond the grant
+-	 * write head.
+-	 */
+-	error = xlog_write(log, ctx, &ctx->lv_chain, ctx->ticket, num_bytes);
+-
+-	/*
+-	 * Take the lvhdr back off the lv_chain as it should not be passed
+-	 * to log IO completion.
++	 * Once we write the log vector chain, take the lvhdr back off it as it
++	 * must not be passed to log IO completion.
+ 	 */
++	error = xlog_cil_write_chain(ctx, num_bytes);
+ 	list_del(&lvhdr.lv_list);
+ 	if (error)
+ 		goto out_abort_free_ticket;
+@@ -1144,15 +1189,6 @@ xlog_cil_push_work(
+ 	if (error)
+ 		goto out_abort_free_ticket;
+ 
+-	/*
+-	 * now the checkpoint commit is complete and we've attached the
+-	 * callbacks to the iclog we can assign the commit LSN to the context
+-	 * and wake up anyone who is waiting for the commit to complete.
+-	 */
+-	spin_lock(&cil->xc_push_lock);
+-	wake_up_all(&cil->xc_commit_wait);
+-	spin_unlock(&cil->xc_push_lock);
+-
+ 	/*
+ 	 * Pull the ticket off the ctx so we can ungrant it after releasing the
+ 	 * commit_iclog. The ctx may be freed by the time we return from
+@@ -1728,6 +1764,7 @@ xlog_cil_init(
+ 	init_waitqueue_head(&cil->xc_push_wait);
+ 	init_rwsem(&cil->xc_ctx_lock);
+ 	init_waitqueue_head(&cil->xc_commit_wait);
++	init_waitqueue_head(&cil->xc_start_wait);
+ 	log->l_cilp = cil;
+ 
+ 	ctx = xlog_cil_ctx_alloc();
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index 72dfa3b89513..b807a179b916 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -279,6 +279,7 @@ struct xfs_cil {
+ 	bool			xc_push_commit_stable;
+ 	struct list_head	xc_committing;
+ 	wait_queue_head_t	xc_commit_wait;
++	wait_queue_head_t	xc_start_wait;
+ 	xfs_csn_t		xc_current_sequence;
+ 	wait_queue_head_t	xc_push_wait;	/* background push throttle */
  
 -- 
 2.31.1
