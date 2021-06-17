@@ -2,128 +2,295 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 425F6C48BE5
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Jun 2021 16:32:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 768F8C2B9F4
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Jun 2021 16:45:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 208B56128B
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Jun 2021 16:32:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4FB3E613F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Jun 2021 16:45:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231176AbhFQQeL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Jun 2021 12:34:11 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51496 "EHLO mail.kernel.org"
+        id S231184AbhFQQrq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Jun 2021 12:47:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:57352 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229683AbhFQQeK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 17 Jun 2021 12:34:10 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 004F760C40;
-        Thu, 17 Jun 2021 16:32:02 +0000 (UTC)
+        id S230343AbhFQQrq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 17 Jun 2021 12:47:46 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 55EE5613F3;
+        Thu, 17 Jun 2021 16:45:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1623947523;
-        bh=Y9MAkFl/jnxhmbGYvknaytrWo1sMhzoDXlpyvDJDLcI=;
+        s=k20201202; t=1623948338;
+        bh=8PxD6F55kPmoMWZ3tI8DgrfHZsMx3GoADqe8B4Kvznk=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=p1laN/brbSgTDibxAQsTLRdkRN1MnOew8tSgdgKlVCVI1MlEEp0L2hf9ikKetvaC4
-         uAgyrjowzm3LPxP/J+eYqNIucqkz0C/S3fiHpcih0eSCHg6B11tohcBFVkMZHtKhTm
-         l6BPc1pt3LwR2/XCYAVMVdMD/rgSdXONuFnWdar8RvHsBC5EXWSMBQ3a8FJSsm+lj/
-         E0OJ3YtI8D4CVDXkemlPhdYj3nnnWMruPPmhm0sKGiemcFZo/CPWeA8a+MqOgVJovq
-         a2w24VN/WMnn2gVQgd9XAl+SCK74GV7QGWtqz0qQwCZ5ENt0n3IvCmmHSGIt9zYbjZ
-         X+UHvUa1UU8aw==
-Date:   Thu, 17 Jun 2021 09:32:02 -0700
+        b=QStkQKbITxKd573seUGCEcfwBwSyBUe0CvvGOsLMkvXrbz3iUv9RBxwdXQZlVrAbr
+         eKd0JZnwcz/i2hjugGFglAn7lVibACJ4IdO4n6Lwp1KI50IE+oMfoeu3AdAwLK7ALX
+         spVk172UZorVEyF0OeD/B+mQP/oERnLen4NS2+1Ve4aq+0eiJEfADXfPL2g+E/XzsO
+         rps6wUthLG7ryMNGekyrNf+WjrNRlzyXWZnk2qVdDm04X9hndNgz8+vLSGNI45XBV6
+         7Bn932VY/QvD0qp8Dzty5OpJZ8y00m04pcypaRCvQxc4vXs7saTtpcxrvdHK6O3NSi
+         uotSLrLEwa2ug==
+Date:   Thu, 17 Jun 2021 09:45:37 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Jan Kara <jack@suse.cz>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>,
-        ceph-devel@vger.kernel.org, Chao Yu <yuchao0@huawei.com>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Jeff Layton <jlayton@kernel.org>,
-        Johannes Thumshirn <jth@kernel.org>,
-        linux-cifs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
-        linux-xfs@vger.kernel.org, Miklos Szeredi <miklos@szeredi.hu>,
-        Steve French <sfrench@samba.org>, Ted Tso <tytso@mit.edu>,
-        Matthew Wilcox <willy@infradead.org>,
-        Pavel Reichl <preichl@redhat.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        Eric Sandeen <sandeen@redhat.com>
-Subject: Re: [PATCH 07/14] xfs: Refactor xfs_isilocked()
-Message-ID: <20210617163202.GR158209@locust>
-References: <20210615090844.6045-1-jack@suse.cz>
- <20210615091814.28626-7-jack@suse.cz>
- <YMmOCK4wHc9lerEc@infradead.org>
- <20210616085304.GA28250@quack2.suse.cz>
- <20210616154705.GE158209@locust>
- <20210616155712.GC28250@quack2.suse.cz>
- <20210617162920.GQ158209@locust>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/8] xfs: add iclog state trace events
+Message-ID: <20210617164537.GS158209@locust>
+References: <20210617082617.971602-1-david@fromorbit.com>
+ <20210617082617.971602-2-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210617162920.GQ158209@locust>
+In-Reply-To: <20210617082617.971602-2-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 17, 2021 at 09:29:20AM -0700, Darrick J. Wong wrote:
-> On Wed, Jun 16, 2021 at 05:57:12PM +0200, Jan Kara wrote:
-> > On Wed 16-06-21 08:47:05, Darrick J. Wong wrote:
-> > > On Wed, Jun 16, 2021 at 10:53:04AM +0200, Jan Kara wrote:
-> > > > On Wed 16-06-21 06:37:12, Christoph Hellwig wrote:
-> > > > > On Tue, Jun 15, 2021 at 11:17:57AM +0200, Jan Kara wrote:
-> > > > > > From: Pavel Reichl <preichl@redhat.com>
-> > > > > > 
-> > > > > > Refactor xfs_isilocked() to use newly introduced __xfs_rwsem_islocked().
-> > > > > > __xfs_rwsem_islocked() is a helper function which encapsulates checking
-> > > > > > state of rw_semaphores hold by inode.
-> > > > > 
-> > > > > __xfs_rwsem_islocked doesn't seem to actually existing in any tree I
-> > > > > checked yet?
-> > > > 
-> > > > __xfs_rwsem_islocked is introduced by this patch so I'm not sure what are
-> > > > you asking about... :)
-> > > 
-> > > The sentence structure implies that __xfs_rwsem_islocked was previously
-> > > introduced.  You might change the commit message to read:
-> > > 
-> > > "Introduce a new __xfs_rwsem_islocked predicate to encapsulate checking
-> > > the state of a rw_semaphore, then refactor xfs_isilocked to use it."
-> > > 
-> > > Since it's not quite a straight copy-paste of the old code.
-> > 
-> > Ah, ok. Sure, I can rephrase the changelog (or we can just update it on
-> > commit if that's the only problem with this series...). Oh, now I've
-> > remembered I've promised you a branch to pull :) Here it is with this
-> > change and Christoph's Reviewed-by tags:
-> > 
-> > git://git.kernel.org/pub/scm/linux/kernel/git/jack/linux-fs.git hole_punch_fixes
+On Thu, Jun 17, 2021 at 06:26:10PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> To catch-up the list with the ext4 concall:
+> For the DEBUGS!
 > 
-> Dave Chinner and I have been experimenting with accepting tagged pull
-> requests, where the tag message is the most recent cover letter so that
-> the git history can capture the broader justification for the series and
-> the development revision history.  Signed tags would be ideal too,
-> though given the impossibility of meeting in person to exchange gnupg
-> keys (and the fact that one has to verify that the patches in the branch
-> more or less match what's on the list) I don't consider that an
-> impediment.
-> 
-> Also, if you want me to take this through the xfs tree then it would
-> make things much easier if you could base this branch off 5.13-rc4, or
-> something that won't cause a merge request to pull in a bunch of
-> unrelated upstream changes.
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Oh, and also: Please send pull requests as a new thread tagged '[GIT
-PULL]' so the requests don't get buried in a patch reply thread.
+Still looks fine to me.
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> --D
+> ---
+>  fs/xfs/xfs_log.c      | 18 +++++++++++++
+>  fs/xfs/xfs_log_priv.h | 10 ++++++++
+>  fs/xfs/xfs_trace.h    | 60 +++++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 88 insertions(+)
 > 
-> > 
-> > 								Honza
-> > -- 
-> > Jan Kara <jack@suse.com>
-> > SUSE Labs, CR
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index e921b554b683..54fd6a695bb5 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -524,6 +524,7 @@ __xlog_state_release_iclog(
+>  		iclog->ic_header.h_tail_lsn = cpu_to_be64(tail_lsn);
+>  		xlog_verify_tail_lsn(log, iclog, tail_lsn);
+>  		/* cycle incremented when incrementing curr_block */
+> +		trace_xlog_iclog_syncing(iclog, _RET_IP_);
+>  		return true;
+>  	}
+>  
+> @@ -543,6 +544,7 @@ xlog_state_release_iclog(
+>  {
+>  	lockdep_assert_held(&log->l_icloglock);
+>  
+> +	trace_xlog_iclog_release(iclog, _RET_IP_);
+>  	if (iclog->ic_state == XLOG_STATE_IOERROR)
+>  		return -EIO;
+>  
+> @@ -804,6 +806,7 @@ xlog_wait_on_iclog(
+>  {
+>  	struct xlog		*log = iclog->ic_log;
+>  
+> +	trace_xlog_iclog_wait_on(iclog, _RET_IP_);
+>  	if (!XLOG_FORCED_SHUTDOWN(log) &&
+>  	    iclog->ic_state != XLOG_STATE_ACTIVE &&
+>  	    iclog->ic_state != XLOG_STATE_DIRTY) {
+> @@ -1804,6 +1807,7 @@ xlog_write_iclog(
+>  	unsigned int		count)
+>  {
+>  	ASSERT(bno < log->l_logBBsize);
+> +	trace_xlog_iclog_write(iclog, _RET_IP_);
+>  
+>  	/*
+>  	 * We lock the iclogbufs here so that we can serialise against I/O
+> @@ -1950,6 +1954,7 @@ xlog_sync(
+>  	unsigned int		size;
+>  
+>  	ASSERT(atomic_read(&iclog->ic_refcnt) == 0);
+> +	trace_xlog_iclog_sync(iclog, _RET_IP_);
+>  
+>  	count = xlog_calc_iclog_size(log, iclog, &roundoff);
+>  
+> @@ -2488,6 +2493,7 @@ xlog_state_activate_iclog(
+>  	int			*iclogs_changed)
+>  {
+>  	ASSERT(list_empty_careful(&iclog->ic_callbacks));
+> +	trace_xlog_iclog_activate(iclog, _RET_IP_);
+>  
+>  	/*
+>  	 * If the number of ops in this iclog indicate it just contains the
+> @@ -2577,6 +2583,8 @@ xlog_state_clean_iclog(
+>  {
+>  	int			iclogs_changed = 0;
+>  
+> +	trace_xlog_iclog_clean(dirty_iclog, _RET_IP_);
+> +
+>  	dirty_iclog->ic_state = XLOG_STATE_DIRTY;
+>  
+>  	xlog_state_activate_iclogs(log, &iclogs_changed);
+> @@ -2636,6 +2644,7 @@ xlog_state_set_callback(
+>  	struct xlog_in_core	*iclog,
+>  	xfs_lsn_t		header_lsn)
+>  {
+> +	trace_xlog_iclog_callback(iclog, _RET_IP_);
+>  	iclog->ic_state = XLOG_STATE_CALLBACK;
+>  
+>  	ASSERT(XFS_LSN_CMP(atomic64_read(&log->l_last_sync_lsn),
+> @@ -2717,6 +2726,7 @@ xlog_state_do_iclog_callbacks(
+>  		__releases(&log->l_icloglock)
+>  		__acquires(&log->l_icloglock)
+>  {
+> +	trace_xlog_iclog_callbacks_start(iclog, _RET_IP_);
+>  	spin_unlock(&log->l_icloglock);
+>  	spin_lock(&iclog->ic_callback_lock);
+>  	while (!list_empty(&iclog->ic_callbacks)) {
+> @@ -2736,6 +2746,7 @@ xlog_state_do_iclog_callbacks(
+>  	 */
+>  	spin_lock(&log->l_icloglock);
+>  	spin_unlock(&iclog->ic_callback_lock);
+> +	trace_xlog_iclog_callbacks_done(iclog, _RET_IP_);
+>  }
+>  
+>  STATIC void
+> @@ -2827,6 +2838,7 @@ xlog_state_done_syncing(
+>  
+>  	spin_lock(&log->l_icloglock);
+>  	ASSERT(atomic_read(&iclog->ic_refcnt) == 0);
+> +	trace_xlog_iclog_sync_done(iclog, _RET_IP_);
+>  
+>  	/*
+>  	 * If we got an error, either on the first buffer, or in the case of
+> @@ -2899,6 +2911,8 @@ xlog_state_get_iclog_space(
+>  	atomic_inc(&iclog->ic_refcnt);	/* prevents sync */
+>  	log_offset = iclog->ic_offset;
+>  
+> +	trace_xlog_iclog_get_space(iclog, _RET_IP_);
+> +
+>  	/* On the 1st write to an iclog, figure out lsn.  This works
+>  	 * if iclogs marked XLOG_STATE_WANT_SYNC always write out what they are
+>  	 * committing to.  If the offset is set, that's how many blocks
+> @@ -3056,6 +3070,7 @@ xlog_state_switch_iclogs(
+>  {
+>  	ASSERT(iclog->ic_state == XLOG_STATE_ACTIVE);
+>  	assert_spin_locked(&log->l_icloglock);
+> +	trace_xlog_iclog_switch(iclog, _RET_IP_);
+>  
+>  	if (!eventual_size)
+>  		eventual_size = iclog->ic_offset;
+> @@ -3138,6 +3153,8 @@ xfs_log_force(
+>  	if (iclog->ic_state == XLOG_STATE_IOERROR)
+>  		goto out_error;
+>  
+> +	trace_xlog_iclog_force(iclog, _RET_IP_);
+> +
+>  	if (iclog->ic_state == XLOG_STATE_DIRTY ||
+>  	    (iclog->ic_state == XLOG_STATE_ACTIVE &&
+>  	     atomic_read(&iclog->ic_refcnt) == 0 && iclog->ic_offset == 0)) {
+> @@ -3225,6 +3242,7 @@ xlog_force_lsn(
+>  		goto out_error;
+>  
+>  	while (be64_to_cpu(iclog->ic_header.h_lsn) != lsn) {
+> +		trace_xlog_iclog_force_lsn(iclog, _RET_IP_);
+>  		iclog = iclog->ic_next;
+>  		if (iclog == log->l_iclog)
+>  			goto out_unlock;
+> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+> index e4e421a70335..330befd9f6be 100644
+> --- a/fs/xfs/xfs_log_priv.h
+> +++ b/fs/xfs/xfs_log_priv.h
+> @@ -50,6 +50,16 @@ enum xlog_iclog_state {
+>  	XLOG_STATE_IOERROR,	/* IO error happened in sync'ing log */
+>  };
+>  
+> +#define XLOG_STATE_STRINGS \
+> +	{ XLOG_STATE_ACTIVE,	"XLOG_STATE_ACTIVE" }, \
+> +	{ XLOG_STATE_WANT_SYNC,	"XLOG_STATE_WANT_SYNC" }, \
+> +	{ XLOG_STATE_SYNCING,	"XLOG_STATE_SYNCING" }, \
+> +	{ XLOG_STATE_DONE_SYNC,	"XLOG_STATE_DONE_SYNC" }, \
+> +	{ XLOG_STATE_CALLBACK,	"XLOG_STATE_CALLBACK" }, \
+> +	{ XLOG_STATE_DIRTY,	"XLOG_STATE_DIRTY" }, \
+> +	{ XLOG_STATE_IOERROR,	"XLOG_STATE_IOERROR" }
+> +
+> +
+>  /*
+>   * Log ticket flags
+>   */
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 71dca776c110..28d570742000 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -24,6 +24,7 @@ struct xlog_ticket;
+>  struct xlog_recover;
+>  struct xlog_recover_item;
+>  struct xlog_rec_header;
+> +struct xlog_in_core;
+>  struct xfs_buf_log_format;
+>  struct xfs_inode_log_format;
+>  struct xfs_bmbt_irec;
+> @@ -3927,6 +3928,65 @@ DEFINE_EVENT(xfs_icwalk_class, name,	\
+>  DEFINE_ICWALK_EVENT(xfs_ioc_free_eofblocks);
+>  DEFINE_ICWALK_EVENT(xfs_blockgc_free_space);
+>  
+> +TRACE_DEFINE_ENUM(XLOG_STATE_ACTIVE);
+> +TRACE_DEFINE_ENUM(XLOG_STATE_WANT_SYNC);
+> +TRACE_DEFINE_ENUM(XLOG_STATE_SYNCING);
+> +TRACE_DEFINE_ENUM(XLOG_STATE_DONE_SYNC);
+> +TRACE_DEFINE_ENUM(XLOG_STATE_CALLBACK);
+> +TRACE_DEFINE_ENUM(XLOG_STATE_DIRTY);
+> +TRACE_DEFINE_ENUM(XLOG_STATE_IOERROR);
+> +
+> +DECLARE_EVENT_CLASS(xlog_iclog_class,
+> +	TP_PROTO(struct xlog_in_core *iclog, unsigned long caller_ip),
+> +	TP_ARGS(iclog, caller_ip),
+> +	TP_STRUCT__entry(
+> +		__field(dev_t, dev)
+> +		__field(uint32_t, state)
+> +		__field(int32_t, refcount)
+> +		__field(uint32_t, offset)
+> +		__field(unsigned long long, lsn)
+> +		__field(unsigned long, caller_ip)
+> +	),
+> +	TP_fast_assign(
+> +		__entry->dev = iclog->ic_log->l_mp->m_super->s_dev;
+> +		__entry->state = iclog->ic_state;
+> +		__entry->refcount = atomic_read(&iclog->ic_refcnt);
+> +		__entry->offset = iclog->ic_offset;
+> +		__entry->lsn = be64_to_cpu(iclog->ic_header.h_lsn);
+> +		__entry->caller_ip = caller_ip;
+> +	),
+> +	TP_printk("dev %d:%d state %s refcnt %d offset %u lsn 0x%llx caller %pS",
+> +		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> +		  __print_symbolic(__entry->state, XLOG_STATE_STRINGS),
+> +		  __entry->refcount,
+> +		  __entry->offset,
+> +		  __entry->lsn,
+> +		  (char *)__entry->caller_ip)
+> +
+> +);
+> +
+> +#define DEFINE_ICLOG_EVENT(name)	\
+> +DEFINE_EVENT(xlog_iclog_class, name,	\
+> +	TP_PROTO(struct xlog_in_core *iclog, unsigned long caller_ip), \
+> +	TP_ARGS(iclog, caller_ip))
+> +
+> +DEFINE_ICLOG_EVENT(xlog_iclog_activate);
+> +DEFINE_ICLOG_EVENT(xlog_iclog_clean);
+> +DEFINE_ICLOG_EVENT(xlog_iclog_callback);
+> +DEFINE_ICLOG_EVENT(xlog_iclog_callbacks_start);
+> +DEFINE_ICLOG_EVENT(xlog_iclog_callbacks_done);
+> +DEFINE_ICLOG_EVENT(xlog_iclog_force);
+> +DEFINE_ICLOG_EVENT(xlog_iclog_force_lsn);
+> +DEFINE_ICLOG_EVENT(xlog_iclog_get_space);
+> +DEFINE_ICLOG_EVENT(xlog_iclog_release);
+> +DEFINE_ICLOG_EVENT(xlog_iclog_switch);
+> +DEFINE_ICLOG_EVENT(xlog_iclog_sync);
+> +DEFINE_ICLOG_EVENT(xlog_iclog_syncing);
+> +DEFINE_ICLOG_EVENT(xlog_iclog_sync_done);
+> +DEFINE_ICLOG_EVENT(xlog_iclog_want_sync);
+> +DEFINE_ICLOG_EVENT(xlog_iclog_wait_on);
+> +DEFINE_ICLOG_EVENT(xlog_iclog_write);
+> +
+>  #endif /* _TRACE_XFS_H */
+>  
+>  #undef TRACE_INCLUDE_PATH
+> -- 
+> 2.31.1
+> 
