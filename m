@@ -4,193 +4,199 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,TVD_PH_BODY_ACCOUNTS_PRE
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2648C49361
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Jun 2021 17:49:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B433C2B9F4
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Jun 2021 17:50:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 90556613E7
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Jun 2021 17:49:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0295A613CE
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Jun 2021 17:50:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232716AbhFQRvT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Jun 2021 13:51:19 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34344 "EHLO mail.kernel.org"
+        id S232645AbhFQRws (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Jun 2021 13:52:48 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35120 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232732AbhFQRvS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 17 Jun 2021 13:51:18 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id B2CCE613CE;
-        Thu, 17 Jun 2021 17:49:10 +0000 (UTC)
+        id S231249AbhFQRwr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 17 Jun 2021 13:52:47 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C77326101A;
+        Thu, 17 Jun 2021 17:50:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1623952150;
-        bh=csp3b2i9jG3KHe088V4p53MzZdpU0HAfTeLYq1bvQOM=;
+        s=k20201202; t=1623952239;
+        bh=WizqEekRW7e/y5KVCzOocNFPAR9MBg80pVZj2aIZQwY=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=rYE/lcPmQ/QDmLhqVnpG0rtG2y4Ml+pjitAw574mg7jQfn2s7uPW9w5fRbfNbEBfD
-         4M5rSw+3CooA5/tGZaMQFJuE0gPXIS++mmMiRrOrmCinDYCDeJgKrdZAcvLnmATrXt
-         R1bpMWITicNoVcEKW00ibmzg6GZ4yLSKJRF1LwZLmCSs7lqiitsMcytYDYUMA6mKcc
-         CbK51WVTaLLQY17a5hB+UNZNbCMtr7WcqcHRdyRjhHNq0U84lH+aAYnJd2UiCcah61
-         gbvbBQW43NBp62vn38JdGxBGL3pSvqp+ZQzBCNnDFUzm2j2nV1yERvnjnXE9Vwnlqr
-         efX+7R7qagQQQ==
-Date:   Thu, 17 Jun 2021 10:49:10 -0700
+        b=abqeKYEBwciTyYqFTXtdi2sxVEaR+m7MAmELEmu/4Py3OC3/K/DaPltz2x75zGdp8
+         1Isl4QOi26Hl+yUwgIYiMLaeSy1z+buKkubT686XzZHJDUxWHGTNfHBuZuGg1hne30
+         0Ph+qgN0eC3xUk2SJniOVa896MkmpChGBjUVQWyFZEgQGIH0CN1VD5f/S2yw58LOjM
+         gLgUYDfr3JBmppTewWTqUeMdGVDU8ohQfn42ppN3zLIppgcb13bJTbl+eMgTwFPt9s
+         q/1VHT7vSEJRvtxSNcYv3WknJTtQIzFi4LnvMzcyE5nOPNBtKBFzwHs61TmPfW9GCj
+         f/bqPVGT+BzLw==
+Date:   Thu, 17 Jun 2021 10:50:39 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/8] xfs: don't wait on future iclogs when pushing the CIL
-Message-ID: <20210617174910.GT158209@locust>
+Subject: Re: [PATCH 3/8] xfs: move xlog_commit_record to xfs_log_cil.c
+Message-ID: <20210617175039.GU158209@locust>
 References: <20210617082617.971602-1-david@fromorbit.com>
- <20210617082617.971602-3-david@fromorbit.com>
+ <20210617082617.971602-4-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210617082617.971602-3-david@fromorbit.com>
+In-Reply-To: <20210617082617.971602-4-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 17, 2021 at 06:26:11PM +1000, Dave Chinner wrote:
+On Thu, Jun 17, 2021 at 06:26:12PM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> The iclogbuf ring attached to the struct xlog is circular, hence the
-> first and last iclogs in the ring can only be determined by
-> comparing them against the log->l_iclog pointer.
+> It is only used by the CIL checkpoints, and is the counterpart to
+> start record formatting and writing that is already local to
+> xfs_log_cil.c.
 > 
-> In xfs_cil_push_work(), we want to wait on previous iclogs that were
-> issued so that we can flush them to stable storage with the commit
-> record write, and it simply waits on the previous iclog in the ring.
-> This, however, leads to CIL push hangs in generic/019 like so:
-> 
-> task:kworker/u33:0   state:D stack:12680 pid:    7 ppid:     2 flags:0x00004000
-> Workqueue: xfs-cil/pmem1 xlog_cil_push_work
-> Call Trace:
->  __schedule+0x30b/0x9f0
->  schedule+0x68/0xe0
->  xlog_wait_on_iclog+0x121/0x190
->  ? wake_up_q+0xa0/0xa0
->  xlog_cil_push_work+0x994/0xa10
->  ? _raw_spin_lock+0x15/0x20
->  ? xfs_swap_extents+0x920/0x920
->  process_one_work+0x1ab/0x390
->  worker_thread+0x56/0x3d0
->  ? rescuer_thread+0x3c0/0x3c0
->  kthread+0x14d/0x170
->  ? __kthread_bind_mask+0x70/0x70
->  ret_from_fork+0x1f/0x30
-> 
-> With other threads blocking in either xlog_state_get_iclog_space()
-> waiting for iclog space or xlog_grant_head_wait() waiting for log
-> reservation space.
-> 
-> The problem here is that the previous iclog on the ring might
-> actually be a future iclog. That is, if log->l_iclog points at
-> commit_iclog, commit_iclog is the first (oldest) iclog in the ring
-> and there are no previous iclogs pending as they have all completed
-> their IO and been activated again. IOWs, commit_iclog->ic_prev
-> points to an iclog that will be written in the future, not one that
-> has been written in the past.
-> 
-> Hence, in this case, waiting on the ->ic_prev iclog is incorrect
-> behaviour, and depending on the state of the future iclog, we can
-> end up with a circular ABA wait cycle and we hang.
-> 
-> The fix is made more complex by the fact that many iclogs states
-> cannot be used to determine if the iclog is a past or future iclog.
-> Hence we have to determine past iclogs by checking the LSN of the
-> iclog rather than their state. A past ACTIVE iclog will have a LSN
-> of zero, while a future ACTIVE iclog will have a LSN greater than
-> the current iclog. We don't wait on either of these cases.
-> 
-> Similarly, a future iclog that hasn't completed IO will have an LSN
-> greater than the current iclog and so we don't wait on them. A past
-> iclog that is still undergoing IO completion will have a LSN less
-> than the current iclog and those are the only iclogs that we need to
-> wait on.
-> 
-> Hence we can use the iclog LSN to determine what iclogs we need to
-> wait on here.
-> 
-> Fixes: 5fd9256ce156 ("xfs: separate CIL commit record IO")
-> Reported-by: Brian Foster <bfoster@redhat.com>
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  fs/xfs/xfs_log_cil.c | 51 ++++++++++++++++++++++++++++++++++++++------
->  1 file changed, 45 insertions(+), 6 deletions(-)
+>  fs/xfs/xfs_log.c      | 41 ---------------------------------------
+>  fs/xfs/xfs_log_cil.c  | 45 ++++++++++++++++++++++++++++++++++++++++++-
+>  fs/xfs/xfs_log_priv.h |  2 --
+>  3 files changed, 44 insertions(+), 44 deletions(-)
 > 
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index 54fd6a695bb5..cf661c155786 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -1563,47 +1563,6 @@ xlog_alloc_log(
+>  	return ERR_PTR(error);
+>  }	/* xlog_alloc_log */
+>  
+> -/*
+> - * Write out the commit record of a transaction associated with the given
+> - * ticket to close off a running log write. Return the lsn of the commit record.
+> - */
+> -int
+> -xlog_commit_record(
+> -	struct xlog		*log,
+> -	struct xlog_ticket	*ticket,
+> -	struct xlog_in_core	**iclog,
+> -	xfs_lsn_t		*lsn)
+> -{
+> -	struct xlog_op_header	ophdr = {
+> -		.oh_clientid = XFS_TRANSACTION,
+> -		.oh_tid = cpu_to_be32(ticket->t_tid),
+> -		.oh_flags = XLOG_COMMIT_TRANS,
+> -	};
+> -	struct xfs_log_iovec reg = {
+> -		.i_addr = &ophdr,
+> -		.i_len = sizeof(struct xlog_op_header),
+> -		.i_type = XLOG_REG_TYPE_COMMIT,
+> -	};
+> -	struct xfs_log_vec vec = {
+> -		.lv_niovecs = 1,
+> -		.lv_iovecp = &reg,
+> -	};
+> -	int	error;
+> -	LIST_HEAD(lv_chain);
+> -	INIT_LIST_HEAD(&vec.lv_list);
+> -	list_add(&vec.lv_list, &lv_chain);
+> -
+> -	if (XLOG_FORCED_SHUTDOWN(log))
+> -		return -EIO;
+> -
+> -	/* account for space used by record data */
+> -	ticket->t_curr_res -= reg.i_len;
+> -	error = xlog_write(log, &lv_chain, ticket, lsn, iclog, reg.i_len);
+> -	if (error)
+> -		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
+> -	return error;
+> -}
+> -
+>  /*
+>   * Compute the LSN that we'd need to push the log tail towards in order to have
+>   * (a) enough on-disk log space to log the number of bytes specified, (b) at
 > diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index 705619e9dab4..2fb0ab02dda3 100644
+> index 2fb0ab02dda3..2c8b25888c53 100644
 > --- a/fs/xfs/xfs_log_cil.c
 > +++ b/fs/xfs/xfs_log_cil.c
-> @@ -1075,15 +1075,54 @@ xlog_cil_push_work(
->  	ticket = ctx->ticket;
+> @@ -783,6 +783,48 @@ xlog_cil_build_trans_hdr(
+>  	tic->t_curr_res -= lvhdr->lv_bytes;
+>  }
 >  
->  	/*
-> -	 * If the checkpoint spans multiple iclogs, wait for all previous
-> -	 * iclogs to complete before we submit the commit_iclog. In this case,
-> -	 * the commit_iclog write needs to issue a pre-flush so that the
-> -	 * ordering is correctly preserved down to stable storage.
-> +	 * If the checkpoint spans multiple iclogs, wait for all previous iclogs
-> +	 * to complete before we submit the commit_iclog. We can't use state
-> +	 * checks for this - ACTIVE can be either a past completed iclog or a
-> +	 * future iclog being filled, while WANT_SYNC through SYNC_DONE can be a
-> +	 * past or future iclog awaiting IO or ordered IO completion to be run.
-> +	 * In the latter case, if it's a future iclog and we wait on it, the we
-> +	 * will hang because it won't get processed through to ic_force_wait
-> +	 * wakeup until this commit_iclog is written to disk.  Hence we use the
-> +	 * iclog header lsn and compare it to the commit lsn to determine if we
-> +	 * need to wait on iclogs or not.
->  	 */
->  	spin_lock(&log->l_icloglock);
->  	if (ctx->start_lsn != commit_lsn) {
-> -		xlog_wait_on_iclog(commit_iclog->ic_prev);
-> -		spin_lock(&log->l_icloglock);
-> +		struct xlog_in_core	*iclog;
-> +
-> +		for (iclog = commit_iclog->ic_prev;
-> +		     iclog != commit_iclog;
-> +		     iclog = iclog->ic_prev) {
-> +			xfs_lsn_t	hlsn;
-> +
-> +			/*
-> +			 * If the LSN of the iclog is zero or in the future it
-> +			 * means it has passed through IO completion and
-> +			 * activation and hence all previous iclogs have also
-> +			 * done so. We do not need to wait at all in this case.
-> +			 */
-> +			hlsn = be64_to_cpu(iclog->ic_header.h_lsn);
-> +			if (!hlsn || XFS_LSN_CMP(hlsn, commit_lsn) > 0)
-> +				break;
-> +
-> +			/*
-> +			 * If the LSN of the iclog is older than the commit lsn,
-> +			 * we have to wait on it. Waiting on this via the
-> +			 * ic_force_wait should also order the completion of all
-> +			 * older iclogs, too, but we leave checking that to the
-> +			 * next loop iteration.
-> +			 */
-> +			ASSERT(XFS_LSN_CMP(hlsn, commit_lsn) < 0);
-> +			xlog_wait_on_iclog(iclog);
-> +			spin_lock(&log->l_icloglock);
+> +/*
+> + * Write out the commit record of a checkpoint transaction associated with the
+> + * given ticket to close off a running log write. Return the lsn of the commit
+> + * record.
+> + */
+> +int
 
-The presence of a loop here confuses me a bit -- we really only need to
-check and wait on commit->ic_prev since xlog_wait_on_iclog waits for
-both the iclog that it is given as well as all previous iclogs, right?
+static int, like the robot suggests?
 
-Does "we leave checking that to the next loop iteration" mean that once
-we've waited on commit->ic_prev, the next iclog iterated (i.e.
-commit->ic_prev->ic_prev) should break out of the loop?
+With that fixed,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> +		}
+> +xlog_cil_write_commit_record(
+> +	struct xlog		*log,
+> +	struct xlog_ticket	*ticket,
+> +	struct xlog_in_core	**iclog,
+> +	xfs_lsn_t		*lsn)
+> +{
+> +	struct xlog_op_header	ophdr = {
+> +		.oh_clientid = XFS_TRANSACTION,
+> +		.oh_tid = cpu_to_be32(ticket->t_tid),
+> +		.oh_flags = XLOG_COMMIT_TRANS,
+> +	};
+> +	struct xfs_log_iovec reg = {
+> +		.i_addr = &ophdr,
+> +		.i_len = sizeof(struct xlog_op_header),
+> +		.i_type = XLOG_REG_TYPE_COMMIT,
+> +	};
+> +	struct xfs_log_vec vec = {
+> +		.lv_niovecs = 1,
+> +		.lv_iovecp = &reg,
+> +	};
+> +	int	error;
+> +	LIST_HEAD(lv_chain);
+> +	INIT_LIST_HEAD(&vec.lv_list);
+> +	list_add(&vec.lv_list, &lv_chain);
 > +
-> +		/*
-> +		 * Regardless of whether we need to wait or not, the the
-> +		 * commit_iclog write needs to issue a pre-flush so that the
-> +		 * ordering for this checkpoint is correctly preserved down to
-> +		 * stable storage.
-> +		 */
->  		commit_iclog->ic_flags |= XLOG_ICL_NEED_FLUSH;
+> +	if (XLOG_FORCED_SHUTDOWN(log))
+> +		return -EIO;
+> +
+> +	/* account for space used by record data */
+> +	ticket->t_curr_res -= reg.i_len;
+> +	error = xlog_write(log, &lv_chain, ticket, lsn, iclog, reg.i_len);
+> +	if (error)
+> +		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
+> +	return error;
+> +}
+> +
+>  /*
+>   * CIL item reordering compare function. We want to order in ascending ID order,
+>   * but we want to leave items with the same ID in the order they were added to
+> @@ -1041,7 +1083,8 @@ xlog_cil_push_work(
 >  	}
+>  	spin_unlock(&cil->xc_push_lock);
 >  
+> -	error = xlog_commit_record(log, ctx->ticket, &commit_iclog, &commit_lsn);
+> +	error = xlog_cil_write_commit_record(log, ctx->ticket, &commit_iclog,
+> +			&commit_lsn);
+>  	if (error)
+>  		goto out_abort_free_ticket;
+>  
+> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+> index 330befd9f6be..26f26769d1c6 100644
+> --- a/fs/xfs/xfs_log_priv.h
+> +++ b/fs/xfs/xfs_log_priv.h
+> @@ -490,8 +490,6 @@ void	xlog_print_trans(struct xfs_trans *);
+>  int	xlog_write(struct xlog *log, struct list_head *lv_chain,
+>  		struct xlog_ticket *tic, xfs_lsn_t *start_lsn,
+>  		struct xlog_in_core **commit_iclog, uint32_t len);
+> -int	xlog_commit_record(struct xlog *log, struct xlog_ticket *ticket,
+> -		struct xlog_in_core **iclog, xfs_lsn_t *lsn);
+>  
+>  void	xfs_log_ticket_ungrant(struct xlog *log, struct xlog_ticket *ticket);
+>  void	xfs_log_ticket_regrant(struct xlog *log, struct xlog_ticket *ticket);
 > -- 
 > 2.31.1
 > 
