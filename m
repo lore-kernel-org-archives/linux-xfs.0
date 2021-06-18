@@ -7,38 +7,37 @@ X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88233C48BDF
-	for <linux-xfs@archiver.kernel.org>; Fri, 18 Jun 2021 18:54:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31375C48BDF
+	for <linux-xfs@archiver.kernel.org>; Fri, 18 Jun 2021 18:54:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 700C161209
-	for <linux-xfs@archiver.kernel.org>; Fri, 18 Jun 2021 18:54:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 15447613ED
+	for <linux-xfs@archiver.kernel.org>; Fri, 18 Jun 2021 18:54:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232103AbhFRS4P (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 18 Jun 2021 14:56:15 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57058 "EHLO mail.kernel.org"
+        id S232148AbhFRS4V (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 18 Jun 2021 14:56:21 -0400
+Received: from mail.kernel.org ([198.145.29.99]:57086 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231689AbhFRS4O (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 18 Jun 2021 14:56:14 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 55E8C613E2;
-        Fri, 18 Jun 2021 18:54:05 +0000 (UTC)
+        id S231689AbhFRS4U (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 18 Jun 2021 14:56:20 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id CF06561209;
+        Fri, 18 Jun 2021 18:54:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1624042445;
-        bh=f1hw58I/DOcO+olYszejb9hFX41cDm58bja+XIhTh0w=;
+        s=k20201202; t=1624042450;
+        bh=ykhEUEm9WONsb4V/zWKuyrCWMmqeDg2xWoxVdZMCusc=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=bUSLXezew2lrZGHfK1tJLe4VKaTVhEZSEKyEcHgSuBgygCbdrH5VHIB0Cli6d50DH
-         B5WEe5z26WkItPw0tBytwqn7BLYT+BJgoSjN3kSa7zyMc35UbhQVHJdT4vUCzQbbyp
-         ez2jaZ8VAy8WaCbPPxxI6kTA8Zahd2KA2s2mHHJzUOQjxXRC18Z9FiOntjs9enp+G3
-         3wCPvJB1Ulsa5hkEQHRIS7TYOwxw6K/yOvxOtNF5f5eLH+RBDQxVG4L1kzPbDRxHlO
-         AcglmruvUIhotXoYiul6zqzto3gyCdV25CsuRbA3mtDCh1n1Hz5Ft4fhVu2V5krmCl
-         ++1fJcUxwarOw==
-Subject: [PATCH 2/3] xfs: print name of function causing fs shutdown instead
- of hex pointer
+        b=bJSsMeWo/ZHkub6JAype91QjJeBec8GTHPnp6gC9HXXy7R0eo21L3W4P7hQF5WMrf
+         PbVRj5/jViz7VzaPErrzbYR8x7adbwpf0H7OxotYNUNwaVFJe1+HiRWt/hZFGdl8DF
+         EI3THd5Z6MYg454t3OUfhZt87xhiDt3FWJgstSzkmfdwRGSrmzFP83PqopM0zDSgq5
+         Y8O73kwUgYwrCJY3Q/Q4BG1vfyngBYkOjnTwF7d6d/PwkYeXezKuQSX/yc4vDxSq1D
+         S6SKEqmoFGzUR+H7A+ZAx2ybQmhRUZWoIq1CO8uwJxWi5jGoaw18ImZanBRhYF7x2P
+         A5OYYj0Znhe0g==
+Subject: [PATCH 3/3] xfs: shorten the shutdown messages to a single line
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
-Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org,
-        hch@infradead.org, chandanrlinux@gmail.com, bfoster@redhat.com
-Date:   Fri, 18 Jun 2021 11:54:05 -0700
-Message-ID: <162404244503.2377241.5074228710477395763.stgit@locust>
+Cc:     linux-xfs@vger.kernel.org, hch@infradead.org,
+        chandanrlinux@gmail.com, bfoster@redhat.com
+Date:   Fri, 18 Jun 2021 11:54:10 -0700
+Message-ID: <162404245053.2377241.2678360661858649500.stgit@locust>
 In-Reply-To: <162404243382.2377241.18273624393083430320.stgit@locust>
 References: <162404243382.2377241.18273624393083430320.stgit@locust>
 User-Agent: StGit/0.19
@@ -51,36 +50,54 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-In xfs_do_force_shutdown, print the symbolic name of the function that
-called us to shut down the filesystem instead of a raw hex pointer.
-This makes debugging a lot easier:
-
-XFS (sda): xfs_do_force_shutdown(0x2) called from line 2440 of file
-	fs/xfs/xfs_log.c. Return address = ffffffffa038bc38
-
-becomes:
-
-XFS (sda): xfs_do_force_shutdown(0x2) called from line 2440 of file
-	fs/xfs/xfs_log.c. Return address = xfs_trans_mod_sb+0x25
+Consolidate the shutdown messages to a single line containing the
+reason, the passed-in flags, the source of the shutdown, and the end
+result.  This means we now only have one line to look for when
+debugging, which is useful when the fs goes down while something else is
+flooding dmesg.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_fsops.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/xfs_fsops.c |   16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
 
 diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 07c745cd483e..b7f979eca1e2 100644
+index b7f979eca1e2..6ed29b158312 100644
 --- a/fs/xfs/xfs_fsops.c
 +++ b/fs/xfs/xfs_fsops.c
-@@ -543,7 +543,7 @@ xfs_do_force_shutdown(
+@@ -538,25 +538,25 @@ xfs_do_force_shutdown(
+ 
+ 	if (flags & SHUTDOWN_FORCE_UMOUNT) {
+ 		xfs_alert(mp,
+-"User initiated shutdown received. Shutting down filesystem");
++"User initiated shutdown (0x%x) received. Shutting down filesystem",
++				flags);
+ 		return;
  	}
  
- 	xfs_notice(mp,
--"%s(0x%x) called from line %d of file %s. Return address = "PTR_FMT,
-+"%s(0x%x) called from line %d of file %s. Return address = %pS",
- 		__func__, flags, lnnum, fname, __return_address);
- 
+-	xfs_notice(mp,
+-"%s(0x%x) called from line %d of file %s. Return address = %pS",
+-		__func__, flags, lnnum, fname, __return_address);
+-
  	if (flags & SHUTDOWN_CORRUPT_INCORE) {
+ 		xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_CORRUPT,
+-"Corruption of in-memory data detected.  Shutting down filesystem");
++"Corruption of in-memory data (0x%x) detected at %pS (%s:%d).  Shutting down filesystem",
++				flags, __return_address, fname, lnnum);
+ 		if (XFS_ERRLEVEL_HIGH <= xfs_error_level)
+ 			xfs_stack_trace();
+ 	} else if (logerror) {
+ 		xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_LOGERROR,
+-			"Log I/O Error Detected. Shutting down filesystem");
++"Log I/O error (0x%x) detected at %pS (%s:%d). Shutting down filesystem",
++				flags, __return_address, fname, lnnum);
+ 	} else {
+ 		xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_IOERROR,
+-			"I/O Error Detected. Shutting down filesystem");
++"I/O error (0x%x) detected at %pS (%s:%d). Shutting down filesystem",
++				flags, __return_address, fname, lnnum);
+ 	}
+ 
+ 	xfs_alert(mp,
 
