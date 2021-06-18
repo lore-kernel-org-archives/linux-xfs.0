@@ -2,105 +2,124 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95FEEC2B9F4
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Jun 2021 23:52:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39CCBC48BDF
+	for <linux-xfs@archiver.kernel.org>; Fri, 18 Jun 2021 05:52:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6F75B611BE
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Jun 2021 23:52:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 101E461369
+	for <linux-xfs@archiver.kernel.org>; Fri, 18 Jun 2021 05:52:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231151AbhFQXyj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Jun 2021 19:54:39 -0400
-Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:57621 "EHLO
-        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230484AbhFQXyi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Jun 2021 19:54:38 -0400
-Received: from dread.disaster.area (pa49-179-138-183.pa.nsw.optusnet.com.au [49.179.138.183])
-        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 2980A105DBE;
-        Fri, 18 Jun 2021 09:52:27 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1lu1oA-00DzCu-Kc; Fri, 18 Jun 2021 09:52:26 +1000
-Date:   Fri, 18 Jun 2021 09:52:26 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Alex Sierra <alex.sierra@amd.com>
-Cc:     akpm@linux-foundation.org, Felix.Kuehling@amd.com,
-        linux-mm@kvack.org, rcampbell@nvidia.com,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        hch@lst.de, jgg@nvidia.com, jglisse@redhat.com
-Subject: Re: [PATCH v3 1/8] ext4/xfs: add page refcount helper
-Message-ID: <20210617235226.GI664593@dread.disaster.area>
-References: <20210617151705.15367-1-alex.sierra@amd.com>
- <20210617151705.15367-2-alex.sierra@amd.com>
+        id S232298AbhFRFyt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 18 Jun 2021 01:54:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41928 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229671AbhFRFys (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Jun 2021 01:54:48 -0400
+Received: from mail-pl1-x635.google.com (mail-pl1-x635.google.com [IPv6:2607:f8b0:4864:20::635])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49933C061574
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Jun 2021 22:52:39 -0700 (PDT)
+Received: by mail-pl1-x635.google.com with SMTP id c15so4038681pls.13
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Jun 2021 22:52:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=references:user-agent:from:to:cc:subject:in-reply-to:date
+         :message-id:mime-version;
+        bh=bstSfRFIS5dbIoxeLlhmy1swFU+PaS8DK3Dgr6Hp5bA=;
+        b=JWqGPbv5oMl0KLLDq/yqK5i6eEXLUF3+w0OJ0yhlOKx4KhoOxXVTeeejTLmbmeUYKA
+         uBcokuC8yxDYf0TZLczzvQDWD06EZIx3sgcE4UIu9ypP/plNJHFux/KqQsUPadwWIBj+
+         qbkyLINsn+WcO+MwTqSS3ZfwBgQeYu0+SBNH+uKS4NOtnAC4Tb8JVTHyxZhhEI+pakiF
+         ChAK+4b7aTtXSpnQq0ryftsDqm4e1lT7RgON7MsXswjoudivlDHF2Y6odwBmjDdGpjXP
+         iKwp8h1qvWmKioxdxUs+hsb/5K+d03+gp694HbXW0yqu2Y/uyr+UDYVDUZIqSq2QdUKV
+         k0FA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:references:user-agent:from:to:cc:subject
+         :in-reply-to:date:message-id:mime-version;
+        bh=bstSfRFIS5dbIoxeLlhmy1swFU+PaS8DK3Dgr6Hp5bA=;
+        b=nuP7zBN+nBRjSzmXLXZVmxt9s2FMhphFRSwvyTP70iDkQG9GYq5iat9nqVOHL4TM/E
+         qcM1fTW9LfkN+CsYoYD468pMAogrBVPCvydRwus8aAZRU/h7eIjnYxo6/Zki5X9tu3hC
+         SFk64uTBj/gD4dldzVC0bqpdLxOgo0HTTubKJW8RqoMG9pXHr922rPKg8IG6/NFgeTrk
+         73Vq9wrmBl1HuVQPpd7YD5cg1Q1Be5oVct5pYCyWEkcZ2XIXYGEA5wNSqUOjVo3U1yrQ
+         wnpYTGFDmU5z8CLnidlNRKbSyXqedzXF8iPoMIqtQQ4a/jPwLLiAgiPMVRg8zudGHdih
+         rEww==
+X-Gm-Message-State: AOAM533eV43rOnazrHPf9sbUHt+lv3lw466nCb8zje0q1I41oXhBc2NO
+        bHkpPjMk0/FrYz6zHQE6pp3J2YvHjF3gaA==
+X-Google-Smtp-Source: ABdhPJzEW1KkW9TdZWTgM+u/scnuYxCpC5TKkoiUxpJ908CcAlczIVVryDF5W3s4HsnzOpXAzi+N7g==
+X-Received: by 2002:a17:90b:1e11:: with SMTP id pg17mr9186838pjb.12.1623995558570;
+        Thu, 17 Jun 2021 22:52:38 -0700 (PDT)
+Received: from garuda ([122.167.197.147])
+        by smtp.gmail.com with ESMTPSA id k9sm7376666pgq.27.2021.06.17.22.52.36
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Thu, 17 Jun 2021 22:52:38 -0700 (PDT)
+References: <20210616163212.1480297-1-hch@lst.de> <20210616163212.1480297-2-hch@lst.de>
+User-agent: mu4e 1.0; emacs 26.1
+From:   Chandan Babu R <chandanrlinux@gmail.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/8] xfs: change the type of ic_datap
+In-reply-to: <20210616163212.1480297-2-hch@lst.de>
+Date:   Fri, 18 Jun 2021 11:22:35 +0530
+Message-ID: <878s37u3bw.fsf@garuda>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210617151705.15367-2-alex.sierra@amd.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
-        a=MnllW2CieawZLw/OcHE/Ng==:117 a=MnllW2CieawZLw/OcHE/Ng==:17
-        a=kj9zAlcOel0A:10 a=r6YtysWOX24A:10 a=Ikd4Dj_1AAAA:8 a=zd2uoN0lAAAA:8
-        a=7-415B0cAAAA:8 a=_NB1ZJQsyc3AttudJlgA:9 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 17, 2021 at 10:16:58AM -0500, Alex Sierra wrote:
-> From: Ralph Campbell <rcampbell@nvidia.com>
-> 
-> There are several places where ZONE_DEVICE struct pages assume a reference
-> count == 1 means the page is idle and free. Instead of open coding this,
-> add a helper function to hide this detail.
-> 
-> v2:
-> [AS]: rename dax_layout_is_idle_page func to dax_page_unused
+On 16 Jun 2021 at 22:02, Christoph Hellwig wrote:
+> Turn ic_datap from a char into a void pointer given that it points
+> to arbitrary data.
+>
 
-Did you even compile test this?
+xlog_alloc_log() has the following statement,
 
-> Signed-off-by: Ralph Campbell <rcampbell@nvidia.com>
-> Signed-off-by: Alex Sierra <alex.sierra@amd.com>
+iclog->ic_datap = (char *)iclog->ic_data + log->l_iclog_hsize;
+
+Maybe the "char *" typecast can be converted to "void *" as part of this
+patch.
+
+The remaining changes look good to me.
+
+Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
+
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/dax.c            |  4 ++--
->  fs/ext4/inode.c     |  5 +----
->  fs/xfs/xfs_file.c   |  4 +---
->  include/linux/dax.h | 10 ++++++++++
->  4 files changed, 14 insertions(+), 9 deletions(-)
-> 
-> diff --git a/fs/dax.c b/fs/dax.c
-> index 26d5dcd2d69e..321f4ddc6643 100644
-> --- a/fs/dax.c
-> +++ b/fs/dax.c
-> @@ -358,7 +358,7 @@ static void dax_disassociate_entry(void *entry, struct address_space *mapping,
->  	for_each_mapped_pfn(entry, pfn) {
->  		struct page *page = pfn_to_page(pfn);
+>  fs/xfs/xfs_log.c      | 2 +-
+>  fs/xfs/xfs_log_priv.h | 2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index e921b554b68367..8999c78f3ac6d9 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -3613,7 +3613,7 @@ xlog_verify_iclog(
+>  		if (field_offset & 0x1ff) {
+>  			clientid = ophead->oh_clientid;
+>  		} else {
+> -			idx = BTOBBT((char *)&ophead->oh_clientid - iclog->ic_datap);
+> +			idx = BTOBBT((void *)&ophead->oh_clientid - iclog->ic_datap);
+>  			if (idx >= (XLOG_HEADER_CYCLE_SIZE / BBSIZE)) {
+>  				j = idx / (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
+>  				k = idx % (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
+> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+> index e4e421a7033558..96dbe713954f7e 100644
+> --- a/fs/xfs/xfs_log_priv.h
+> +++ b/fs/xfs/xfs_log_priv.h
+> @@ -185,7 +185,7 @@ typedef struct xlog_in_core {
+>  	u32			ic_offset;
+>  	enum xlog_iclog_state	ic_state;
+>  	unsigned int		ic_flags;
+> -	char			*ic_datap;	/* pointer to iclog data */
+> +	void			*ic_datap;	/* pointer to iclog data */
 >  
-> -		WARN_ON_ONCE(trunc && page_ref_count(page) > 1);
-> +		WARN_ON_ONCE(trunc && !dax_layout_is_idle_page(page));
+>  	/* Callback structures need their own cacheline */
+>  	spinlock_t		ic_callback_lock ____cacheline_aligned_in_smp;
 
-Because you still use dax_layout_is_idle_page() here, not
-dax_page_unused()...
 
->  		WARN_ON_ONCE(page->mapping && page->mapping != mapping);
->  		page->mapping = NULL;
->  		page->index = 0;
-> @@ -372,7 +372,7 @@ static struct page *dax_busy_page(void *entry)
->  	for_each_mapped_pfn(entry, pfn) {
->  		struct page *page = pfn_to_page(pfn);
->  
-> -		if (page_ref_count(page) > 1)
-> +		if (!dax_layout_is_idle_page(page))
-
-Here too.
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+chandan
