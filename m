@@ -2,64 +2,186 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81F83C48BDF
-	for <linux-xfs@archiver.kernel.org>; Fri, 18 Jun 2021 22:51:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40B0DC2B9F4
+	for <linux-xfs@archiver.kernel.org>; Sat, 19 Jun 2021 16:14:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 552C3613C1
-	for <linux-xfs@archiver.kernel.org>; Fri, 18 Jun 2021 22:51:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 11E82610CA
+	for <linux-xfs@archiver.kernel.org>; Sat, 19 Jun 2021 16:14:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234184AbhFRWxz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 18 Jun 2021 18:53:55 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:49904 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233892AbhFRWxz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Jun 2021 18:53:55 -0400
-Received: from dread.disaster.area (pa49-179-138-183.pa.nsw.optusnet.com.au [49.179.138.183])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 18426104433C;
-        Sat, 19 Jun 2021 08:51:43 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1luNKw-00ELnq-I0; Sat, 19 Jun 2021 08:51:42 +1000
-Date:   Sat, 19 Jun 2021 08:51:42 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: log write cleanups
-Message-ID: <20210618225142.GN664593@dread.disaster.area>
-References: <20210616163212.1480297-1-hch@lst.de>
+        id S234690AbhFSQQg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 19 Jun 2021 12:16:36 -0400
+Received: from mail-dm6nam11on2059.outbound.protection.outlook.com ([40.107.223.59]:41185
+        "EHLO NAM11-DM6-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S232640AbhFSQQf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 19 Jun 2021 12:16:35 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=NVF3boRUHPGJz/Re/TBcx+XrczeQAlaaAnYqRXmajyH6HQA7Nw2TBpNkqgco53hB8RBBW8XiLW0JO+lwa43f52DelNRJXUzgJjcGMset0S1bcHQPEnLJalwyh70o3IGS+TJSBnAiwLDONKQnu0WCkT7RK6TVmD0LLd7CdRZMDXg5GUa8qmYs+iRqIJ6cibD+Z/RmPcznwk+TkihNFC81z9S6QljcCaqsAI1ljNCHRcD/Pk8Ch2gDpwH0uu2QwiNXIaGqXAD3oA5zGU9ilHXntv0Jm91hx5DZId3xszwG7F2WtMY3CN7IvQ2qQB+sJ8O2wAsHG66eEaNv20F0w7KnbQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=S1rnC2kOjdNy5wDyvoRwIoOxTHeBALQ8jntlpMIeuZg=;
+ b=meL5qxnMJsFXPCguwLYUQxEU4sQBg4kwy1tl8NAiu4XDh8tiXGL2V3U4faZfuJSMdpuO0m37C8vJ2WN2dRCir+1+QBGis5+67A8zPVeC34R0oDEc4qhi2FvH4Y0zCnxWSlNKNua91/QpmkDXSfgRddeNLnCv4gGT7nIz1JUlGIjOEojIybumDiX+swPipESnFghw8iPmTDnJPBkcXfuBN5/xhINohqXFUfu9J7PW0qXQC2YMd6rYaBb0nAOGwrgKApY2Pxryhcc5EHJsBbtp8iqGpAuh1ysGecxlaLGy61apPPoaqgP+d6ezvGiD4SE6qNCP92r33ufdsOuJ5GHbhw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=S1rnC2kOjdNy5wDyvoRwIoOxTHeBALQ8jntlpMIeuZg=;
+ b=X4ZbBYAgeg3TS/YA5v37zzLkmOrJldpKdJeeQmPBGjwEM5Jxh+bqiQz7iGmeLY0TaVt2kHBUKCmadztW2J2opRzkmkdEDbKtKwGlzRdpC4LnGvdMTPp9TtkXtOGtkeXWZsEKjMHprb8Y085vVkWYmrbOYYyojQXqp5RKA9vj/14=
+Authentication-Results: redhat.com; dkim=none (message not signed)
+ header.d=none;redhat.com; dmarc=none action=none header.from=amd.com;
+Received: from SA0PR12MB4430.namprd12.prod.outlook.com (2603:10b6:806:70::20)
+ by SN1PR12MB2415.namprd12.prod.outlook.com (2603:10b6:802:26::23) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.15; Sat, 19 Jun
+ 2021 16:14:22 +0000
+Received: from SA0PR12MB4430.namprd12.prod.outlook.com
+ ([fe80::5ce6:fed4:e00f:27e4]) by SA0PR12MB4430.namprd12.prod.outlook.com
+ ([fe80::5ce6:fed4:e00f:27e4%6]) with mapi id 15.20.4242.023; Sat, 19 Jun 2021
+ 16:14:22 +0000
+Subject: Re: [PATCH v3 1/8] ext4/xfs: add page refcount helper
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     akpm@linux-foundation.org, Felix.Kuehling@amd.com,
+        linux-mm@kvack.org, rcampbell@nvidia.com,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        hch@lst.de, jgg@nvidia.com, jglisse@redhat.com
+References: <20210617151705.15367-1-alex.sierra@amd.com>
+ <20210617151705.15367-2-alex.sierra@amd.com>
+ <20210617235226.GI664593@dread.disaster.area>
+From:   "Sierra Guiza, Alejandro (Alex)" <alex.sierra@amd.com>
+Message-ID: <12d08476-6f2c-e411-2999-f0d4a8ad887a@amd.com>
+Date:   Sat, 19 Jun 2021 11:14:20 -0500
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
+In-Reply-To: <20210617235226.GI664593@dread.disaster.area>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+X-Originating-IP: [165.204.77.11]
+X-ClientProxiedBy: SA0PR11CA0047.namprd11.prod.outlook.com
+ (2603:10b6:806:d0::22) To SA0PR12MB4430.namprd12.prod.outlook.com
+ (2603:10b6:806:70::20)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210616163212.1480297-1-hch@lst.de>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
-        a=MnllW2CieawZLw/OcHE/Ng==:117 a=MnllW2CieawZLw/OcHE/Ng==:17
-        a=kj9zAlcOel0A:10 a=r6YtysWOX24A:10 a=7-415B0cAAAA:8
-        a=ZpT5fmD6inDxu0QeJakA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from [172.31.9.47] (165.204.77.11) by SA0PR11CA0047.namprd11.prod.outlook.com (2603:10b6:806:d0::22) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.21 via Frontend Transport; Sat, 19 Jun 2021 16:14:21 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: bf7df0e5-d919-4c27-83ea-08d9333d4ccb
+X-MS-TrafficTypeDiagnostic: SN1PR12MB2415:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <SN1PR12MB241566743BA030561EDF41DCFD0C9@SN1PR12MB2415.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:4941;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: MkcEGTnOgRIwEk9eMoAPmSQrHB5xvF6jgtTXqfLo2BGWAJiUNJ7DgqfDGH4JtRvyZQCDWr0sG+THDq3PvAGtANTwWX0HGjkD8jjtM00diYJnvXRIZkAuzSETdGLfn/ujmUmz2fP4e9I9o2xdWQ7J2K5kNtNwpKJalFmbmd5T5hpSKtshpnauXAbaCFAz7xgVrDwLKayT+ZU6gXjpQ1A7K/K8uI6H0gXOCXaESAwVh/yX1fKR3D9C1MCaTZbQ1hGY96j5W1GaocMb3GxA9CK4nvPI33mVLGO8PDY2U70aN2pa9u396oajIuVyoVruuXhFaanqxq7FAoB197PkAhSbdya7F61ofwRkgks/7SJ2/XbpDUXOiSgM/WThGI79ErzU58DdisDSfCqiac/Z2t3xsy2oxb91CTPkvdRzJTbXWhFhiKQqMva2mFAgrRM0lqhqISC0CTc7GS4UxNNZTIHkDk3AJVzj8yul67r5wtuBrtncNQu5Z6ZAnWns9UTjS2bElGqFB1lXwlurWYmYJQUgAzTsOXLMn0/Y3hn9T8Y+mJFhSVbBoy+h7wL66cLPMfdOGjieikV52CcnVYVyzGwnOj6h9+OGlsejfrORyo534dzmq5qJQikLJght1BWdpizPk0Qd9VocQVOPWpWIeeTM1xOn1gsFLPhurAOLLTd2s/PGmLH94Pp28MK5Ljyq5S9dqqC3CjDue9/tacASLpzDZA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA0PR12MB4430.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(396003)(366004)(136003)(39860400002)(346002)(376002)(16526019)(38100700002)(66476007)(83380400001)(186003)(36756003)(38350700002)(8936002)(5660300002)(86362001)(66946007)(478600001)(52116002)(31686004)(956004)(4326008)(53546011)(2616005)(26005)(6916009)(8676002)(316002)(16576012)(2906002)(31696002)(66556008)(7416002)(6486002)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?OVNuZ3BvUWJKMi9YNGJsNzlxNnhDUHJTMFF0MTlBNkV1ck9XMjB4NFRpWjhV?=
+ =?utf-8?B?WUpucDA4eG9DeTVKcmdEQWwwT1JGeXNVZ2IyTW5ibmJrbVhlZDFkYXdCZm5D?=
+ =?utf-8?B?dERDRVQ2WTB0YXVINlZnTzRPTXB2VEZFN3pMVUhMZ2RpdE50bHluMzVCbVdT?=
+ =?utf-8?B?WjNUQU1ma09sM1FmY2tnakdWa3JlZ2ZuOWJsK244bzZvWWlpaldVeHoxeFoy?=
+ =?utf-8?B?MTlUeHcvaEpWSnRFLytNdTJWTzZ4ZUtOc0Z2ZGFhK3Vpakp6RFlRMFg1VXg2?=
+ =?utf-8?B?MEdTUWdWdm1RS3FkNUYvRnJuWFhrRG5sbUUwREhScmNzTmpsS2RlRUxTNFN6?=
+ =?utf-8?B?bElYM1ptUkFvZzZibVM5Um9teWJ6dEZCc0k3KzRhMlBzczQvdUtEOVR3MUVt?=
+ =?utf-8?B?emM0dVIzdlNzRHNBeXQyRDlRczcwR2xOc3lPNjl6SXV4QnE1U3NDWHQwalNT?=
+ =?utf-8?B?RHRDdzM2a3N1bWtaNFhxZzFKZUpHVjdIRG1YQUNma1A2ZnlwZFY3VXpOdnda?=
+ =?utf-8?B?OW14WVNNZkVWeDZVdmFuajVwcEdram9UMXpnVnkwclF0MXZEcHY0bFo4YWVQ?=
+ =?utf-8?B?MG1VTC8zT29iZ2MyOGhIVDZEdXVyMVB5SDJBcmxXblhzb2JIZTJtWUxjZW5R?=
+ =?utf-8?B?SVZYWk8zZ2loNStUa0FlLzNYaEhFdngvSXJIeWRnZzhqMlUzTFJSK0ZydXFu?=
+ =?utf-8?B?cU4yeUJDcjJsQldmN0RlMzFicmpXelFaR0JWRmxBbUlMQy9Jb0Zzcjlrd2xk?=
+ =?utf-8?B?VVAwUUNJZitpeDVTVG4rd25OQUZuL1RHRnFxS3NLd1BEYjF5NTZLYkdsV2V3?=
+ =?utf-8?B?UjBtU0MzQzlDbGdod21YYlUwekZyNjFzK3pFcEkydU4xV0RIYzAwK1F3ZnV5?=
+ =?utf-8?B?MzNrajNQdE5XM0t4czFzanNBc21BVUlwOGdsTEVNVmJ4ZFcvcFFxUVNLWi8r?=
+ =?utf-8?B?VVVDZTgwWjNzRDNlbm1nOEN2YUg0WUF0Qm5qMWZDY3JyazVGODlkREs2eXdF?=
+ =?utf-8?B?VGp6Skc5TWZDWkRFYlpaT09EbWR4T3I5NFVNUndqN3B2VkdqVVJ6aGhzK0Nx?=
+ =?utf-8?B?SjZLZ0dDNWZlZTdTT25SYnVyL3dGQzFEN0dKKzNtMjNDNEtSYi82M3l6S3lj?=
+ =?utf-8?B?ZFBZb3djUk9EOUExRjZHdFBRWFZBWHJEYXZoblhJNjlpQ0hrNmNPdkRiRkh4?=
+ =?utf-8?B?SHc0ajlPRGtiZDhzWWJmZXlGczF2MlM3TkpQZU5HaXBRSkErWFYwMzVYbS9t?=
+ =?utf-8?B?WGtZZUlqVDl6TFNVRHY5a0FoUDNOZTNJenFQMWdGcUNvTVhVRFpSWkszenZo?=
+ =?utf-8?B?cXptOTV6OEgvUDJaVDFRc2ZPVVJyVXFVdWZQMGxCaTNGYm9vbFI5b3M4R2RF?=
+ =?utf-8?B?YWt3OGtqOXZDejNOMWFEbTJROWZsZkNLTUJzZVRPRUJYcnpvVXNzQjE1Y3JO?=
+ =?utf-8?B?cnNoNDMrSXk4YzRyWDRlMHFlVXBOaWkwWFk0djh4ZGpPQ0kxbXlINk9zd0Zj?=
+ =?utf-8?B?aUJScldjSUdXY3NKYkdpbzJTU3pXM3I3VFBpV1hYdnFrK2xuSG1jYmJmb25z?=
+ =?utf-8?B?YXZBNjl0S1NKNVBRVHJvU0lHS0V4clVmNGt6bEl5bmFaTlhEVE9wMEg1bVZF?=
+ =?utf-8?B?ZWdHWEsrTWlBSnMyUFFVYWhKbXlDZk9wMXVjR3JtUDU1VkJnM0NqSnNZZkNW?=
+ =?utf-8?B?UVluV2p0NFQ3dnNsOGNtQm5uMWFwZTZERE9OYzlBcEo4eW5SMFRiZ2NmS3h6?=
+ =?utf-8?Q?9ZtuNjhl7z9erJOPBpfe9bN5sc4DcnlKIa48bVj?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: bf7df0e5-d919-4c27-83ea-08d9333d4ccb
+X-MS-Exchange-CrossTenant-AuthSource: SA0PR12MB4430.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Jun 2021 16:14:22.7100
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 1mAGd+CUOxi03UOZSdHcPiwYEq1a9mfKqHB9CzFFDx0I6sb0nXAlS0YWf6EPRJS51JxGQBWYk2OiIf6i2K/Z0Q==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN1PR12MB2415
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 16, 2021 at 06:32:04PM +0200, Christoph Hellwig wrote:
-> Hi all,
-> 
-> this series cleans up a few loose ends that I noticed while reviewing
-> the recent log rework.
 
-This is all going to have to be rebased once I fix all the current
-problems with the log code we are hitting.
+On 6/17/2021 6:52 PM, Dave Chinner wrote:
+> On Thu, Jun 17, 2021 at 10:16:58AM -0500, Alex Sierra wrote:
+>> From: Ralph Campbell <rcampbell@nvidia.com>
+>>
+>> There are several places where ZONE_DEVICE struct pages assume a reference
+>> count == 1 means the page is idle and free. Instead of open coding this,
+>> add a helper function to hide this detail.
+>>
+>> v2:
+>> [AS]: rename dax_layout_is_idle_page func to dax_page_unused
+> Did you even compile test this?
+Thanks for catching this Dave, my mistake, I was building without 
+CONFIG_FS_DAX, as I was using DEVICE_GENERIC only.
+I'll send the corrected patch in replay.
 
-In the mean time, can we focus on sorting out the current
-correctness issues rather than largely cosmetic changes to the log
-code?
+Regards,
 
-Cheers,
+Alex Sierra
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+>
+>> Signed-off-by: Ralph Campbell <rcampbell@nvidia.com>
+>> Signed-off-by: Alex Sierra <alex.sierra@amd.com>
+>> ---
+>>   fs/dax.c            |  4 ++--
+>>   fs/ext4/inode.c     |  5 +----
+>>   fs/xfs/xfs_file.c   |  4 +---
+>>   include/linux/dax.h | 10 ++++++++++
+>>   4 files changed, 14 insertions(+), 9 deletions(-)
+>>
+>> diff --git a/fs/dax.c b/fs/dax.c
+>> index 26d5dcd2d69e..321f4ddc6643 100644
+>> --- a/fs/dax.c
+>> +++ b/fs/dax.c
+>> @@ -358,7 +358,7 @@ static void dax_disassociate_entry(void *entry, struct address_space *mapping,
+>>   	for_each_mapped_pfn(entry, pfn) {
+>>   		struct page *page = pfn_to_page(pfn);
+>>   
+>> -		WARN_ON_ONCE(trunc && page_ref_count(page) > 1);
+>> +		WARN_ON_ONCE(trunc && !dax_layout_is_idle_page(page));
+> Because you still use dax_layout_is_idle_page() here, not
+> dax_page_unused()...
+>
+>>   		WARN_ON_ONCE(page->mapping && page->mapping != mapping);
+>>   		page->mapping = NULL;
+>>   		page->index = 0;
+>> @@ -372,7 +372,7 @@ static struct page *dax_busy_page(void *entry)
+>>   	for_each_mapped_pfn(entry, pfn) {
+>>   		struct page *page = pfn_to_page(pfn);
+>>   
+>> -		if (page_ref_count(page) > 1)
+>> +		if (!dax_layout_is_idle_page(page))
+> Here too.
+>
+> Cheers,
+>
+> Dave.
