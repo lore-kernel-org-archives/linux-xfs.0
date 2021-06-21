@@ -2,71 +2,136 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02F27C49361
-	for <linux-xfs@archiver.kernel.org>; Mon, 21 Jun 2021 05:21:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FFAEC48BE5
+	for <linux-xfs@archiver.kernel.org>; Mon, 21 Jun 2021 05:23:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DCD8B61183
-	for <linux-xfs@archiver.kernel.org>; Mon, 21 Jun 2021 05:20:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2CB696100A
+	for <linux-xfs@archiver.kernel.org>; Mon, 21 Jun 2021 05:23:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229695AbhFUFXM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 21 Jun 2021 01:23:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47256 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229486AbhFUFXM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Jun 2021 01:23:12 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 83671C061574;
-        Sun, 20 Jun 2021 22:20:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=RmnGNYxD0DXeHEZ0u+JkPf/yQlVZ0wR0OQWyNvlyvT0=; b=ra0YgzVxF/qjRM0r7jv9fdpTnJ
-        QFSsbQwOEJPp6ih/EpqW4dvMtzd+ijGq8+hsU3RDNIMH3UXzQ6bWwL/ED0mFWsIVmu0DyO3Cwvrbs
-        FIPCBLvC5ERy8FTUHdsSkUtCFp4WPXSEXZrQP6Mp3LavfCOBuwpA3uWb30kSsaOOg6SuT3Ze6LiAq
-        JxbHE+y7NOj2amFGO1LhZSZYdm10vdlE29HO2N1CqdeqtjicSn9lJ04bJiTvkBaeG9excuJHmTITx
-        qFu3l5RCytbcb+SBpyYoeYzcV1A3u4C7Q0zl0Mne1rSNz/nLnK/dKpGjHE1BDaJOlu963vOX4Wa2B
-        yz7AZhSA==;
-Received: from hch by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1lvCLy-00CkLs-26; Mon, 21 Jun 2021 05:20:18 +0000
-Date:   Mon, 21 Jun 2021 06:20:10 +0100
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Eryu Guan <guaneryu@gmail.com>,
-        Chandan Babu R <chandanrlinux@gmail.com>,
-        Allison Henderson <allison.henderson@oracle.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        fstests <fstests@vger.kernel.org>, Eryu Guan <guan@eryu.me>,
-        ebiggers@kernel.org
-Subject: Re: [PATCH 07/13] fstests: automatically generate group files
-Message-ID: <YNAhip+sLWk7B4ZV@infradead.org>
-References: <162370433910.3800603.9623820748404628250.stgit@locust>
- <162370437774.3800603.15907676407985880109.stgit@locust>
- <YMmpDGT9b4dBdSh2@infradead.org>
- <20210617001320.GK158209@locust>
- <YMsAEQsNhI1Y5JR8@infradead.org>
- <20210617171500.GC158186@locust>
- <YMyjgGEuLLcid9i+@infradead.org>
- <CAOQ4uxjvkJh2XcfDgj7g+JUkFXEc36_6YOKQHJ=pX2hpGfUDhQ@mail.gmail.com>
+        id S229719AbhFUFZe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 21 Jun 2021 01:25:34 -0400
+Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:53935 "EHLO
+        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229710AbhFUFZd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Jun 2021 01:25:33 -0400
+Received: from dread.disaster.area (pa49-179-138-183.pa.nsw.optusnet.com.au [49.179.138.183])
+        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id D7C6A685D5;
+        Mon, 21 Jun 2021 15:23:18 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1lvCOz-00FCoQ-Do; Mon, 21 Jun 2021 15:23:17 +1000
+Date:   Mon, 21 Jun 2021 15:23:17 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [ANNOUNCE] xfs-linux: for-next **REBASED** to 2909e02fec6c
+Message-ID: <20210621052317.GT664593@dread.disaster.area>
+References: <20210619204825.GH158209@locust>
+ <20210621025217.GS664593@dread.disaster.area>
+ <20210621042731.GH158232@locust>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxjvkJh2XcfDgj7g+JUkFXEc36_6YOKQHJ=pX2hpGfUDhQ@mail.gmail.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20210621042731.GH158232@locust>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
+        a=MnllW2CieawZLw/OcHE/Ng==:117 a=MnllW2CieawZLw/OcHE/Ng==:17
+        a=kj9zAlcOel0A:10 a=r6YtysWOX24A:10 a=7-415B0cAAAA:8
+        a=YN1xK9wuQBiCV1uvvWIA:9 a=7Zwj6sZBwVKJAoWSPKxL6X1jA+E=:19
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jun 18, 2021 at 06:32:18PM +0300, Amir Goldstein wrote:
-> > Just stick to the original version and see if anyone screams loud
+On Sun, Jun 20, 2021 at 09:27:31PM -0700, Darrick J. Wong wrote:
+> On Mon, Jun 21, 2021 at 12:52:17PM +1000, Dave Chinner wrote:
+> > On Sat, Jun 19, 2021 at 01:48:25PM -0700, Darrick J. Wong wrote:
+> > > Dave Chinner (43):
+> > >       [0a683794ace2] xfs: split up xfs_buf_allocate_memory
+> > >       [07b5c5add42a] xfs: use xfs_buf_alloc_pages for uncached buffers
+> > >       [c9fa563072e1] xfs: use alloc_pages_bulk_array() for buffers
+> > >       [02c511738688] xfs: merge _xfs_buf_get_pages()
+> > >       [e7d236a6fe51] xfs: move page freeing into _xfs_buf_free_pages()
+> > >       [9bbafc71919a] xfs: move xfs_perag_get/put to xfs_ag.[ch]
+> > >       [61aa005a5bd7] xfs: prepare for moving perag definitions and support to libxfs
+> > >       [07b6403a6873] xfs: move perag structure and setup to libxfs/xfs_ag.[ch]
+> > >       [f250eedcf762] xfs: make for_each_perag... a first class citizen
+> > >       [934933c3eec9] xfs: convert raw ag walks to use for_each_perag
+> > >       [6f4118fc6482] xfs: convert xfs_iwalk to use perag references
+> > >       [7f8d3b3ca6fe] xfs: convert secondary superblock walk to use perags
+> > >       [45d066211756] xfs: pass perags through to the busy extent code
+> > >       [30933120ad79] xfs: push perags through the ag reservation callouts
+> > >       [58d43a7e3263] xfs: pass perags around in fsmap data dev functions
+> > >       [be9fb17d88f0] xfs: add a perag to the btree cursor
+> > >       [fa9c3c197329] xfs: convert rmap btree cursor to using a perag
+> > >       [a81a06211fb4] xfs: convert refcount btree cursor to use perags
+> > >       [289d38d22cd8] xfs: convert allocbt cursors to use perags
+> > >       [7b13c5155182] xfs: use perag for ialloc btree cursors
+> > >       [50f02fe3338d] xfs: remove agno from btree cursor
+> > >       [4268547305c9] xfs: simplify xfs_dialloc_select_ag() return values
+> > >       [89b1f55a2951] xfs: collapse AG selection for inode allocation
+> > >       [b652afd93703] xfs: get rid of xfs_dir_ialloc()
+> > >       [309161f6603c] xfs: inode allocation can use a single perag instance
+> > >       [8237fbf53d6f] xfs: clean up and simplify xfs_dialloc()
+> > >       [f40aadb2bb64] xfs: use perag through unlink processing
+> > >       [509201163fca] xfs: remove xfs_perag_t
+> > >       [977ec4ddf0b7] xfs: don't take a spinlock unconditionally in the DIO fastpath
+> > >       [289ae7b48c2c] xfs: get rid of xb_to_gfp()
+> > >       [8bcac7448a94] xfs: merge xfs_buf_allocate_memory
+> > >       [9ba0889e2272] xfs: drop the AGI being passed to xfs_check_agi_freecount
+> > >       [90e2c1c20ac6] xfs: perag may be null in xfs_imap()
+> > >       [a6a65fef5ef8] xfs: log stripe roundoff is a property of the log
+> > >       [25f25648e57c] xfs: separate CIL commit record IO
+> > 
+> > Ugh. I'm still getting hangs on the wait added by this code:
+> > 
+> > +	/*
+> > +	 * If the checkpoint spans multiple iclogs, wait for all previous
+> > +	 * iclogs to complete before we submit the commit_iclog.
+> > +	 */
+> > +	if (ctx->start_lsn != commit_lsn) {
+> > +		spin_lock(&log->l_icloglock);
+> > +		xlog_wait_on_iclog(commit_iclog->ic_prev);
+> > +	}
+> > +
+> > 
+> > That's the hang the first two patches of my fixup series addressed.
+> > I note that:
+> > 
+> > >       [9b845604a4d5] xfs: remove xfs_blkdev_issue_flush
+> > >       [e45cc747a6fd] xfs: async blkdev cache flush
+> > >       [d7693a7f4ef9] xfs: CIL checkpoint flushes caches unconditionally
+> > >       [6a5c6f5ef0a4] xfs: remove need_start_rec parameter from xlog_write()
+> > >       [feb616896031] xfs: journal IO cache flush reductions
+> > >       [e30fbb337045] xfs: Fix CIL throttle hang when CIL space used going backwards
+> > >       [742140d2a486] xfs: xfs_log_force_lsn isn't passed a LSN
+> > >       [0f4976a8b389] xfs: add iclog state trace events
+> > 
+> > You included the trace events patch, but not the patch containing
+> > the bug fix for commit_iclog->ic_prev pointing to a future iclog
+> > instead of a past iclog....
 > 
-> What is the original version?
+> Doh, I didn't think the trace patch was all that controversial. :(
 
-The patch that Darrick posted, which requires make to be run to
-generatethe group files.
+The trace patch isn't controversial, just pointing out something I
+didn't expect. I thought it was a straight revert and the rest of
+the work would come when it's all sorted...
+
+> So, uh, since we got a week extension, which patches do I need to get
+> things ship-shape for 5.14?
+
+Not sure yet - I still don't have a clear handle on why shutdown is
+hanging in xlog_wait_on_iclog() - it hung with the LSN fixup in
+place so there's another shutdown action here that I haven't grokked
+yet. I'll let you know when I've got to the bottom of it.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
