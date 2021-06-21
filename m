@@ -7,41 +7,41 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8677FC48BE5
-	for <linux-xfs@archiver.kernel.org>; Mon, 21 Jun 2021 23:10:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1A4DC48BE5
+	for <linux-xfs@archiver.kernel.org>; Mon, 21 Jun 2021 23:10:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6B0D861042
-	for <linux-xfs@archiver.kernel.org>; Mon, 21 Jun 2021 23:10:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B3716134F
+	for <linux-xfs@archiver.kernel.org>; Mon, 21 Jun 2021 23:10:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231311AbhFUXMi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 21 Jun 2021 19:12:38 -0400
-Received: from mail.kernel.org ([198.145.29.99]:32790 "EHLO mail.kernel.org"
+        id S231243AbhFUXMo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 21 Jun 2021 19:12:44 -0400
+Received: from mail.kernel.org ([198.145.29.99]:32838 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231303AbhFUXMi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 21 Jun 2021 19:12:38 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 6040460FDB;
-        Mon, 21 Jun 2021 23:10:23 +0000 (UTC)
+        id S231321AbhFUXMn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 21 Jun 2021 19:12:43 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C7B3F61164;
+        Mon, 21 Jun 2021 23:10:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1624317023;
-        bh=svo2yslHV6vLBvNuHy+0po+SdKZ2IoFuEW3kHhvDfM8=;
+        s=k20201202; t=1624317028;
+        bh=9wpMlNRFR79HuGP8o06CLQOuNKtKppvG1pEnF9wp3ps=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=bRqrKuKPAjm96MJPfueL6tcKZdRg7+huTR5oV0LKo99mi77dahrcLQ5I44pr1D0jP
-         tFIyFbFfnhkI4YZOu8YkdN6lEcg++e29aNbjt8l2PZi1c8ZRnYZnMNZBo2+Usaoe6s
-         03lDYBKqjGS0KjXlmTvz4ErLCdGkONc9o9yjZ8v6BPrQbroqso400kvxoUfgT6p1ad
-         fnlFyCEcNkNOHLZDQd36OgOrgJwxPsbcwyHWL6LrQN81VVIR/QDFtP5J3RmhvT/sFy
-         VvzEhbFd9aCxEHDOVm1oVgsXbRB7zM6/ZKu+MtC+yuHEbohBajcbzAdFb3YB4u6Gyg
-         qWbCKbv+Dvurg==
-Subject: [PATCH 03/13] fstests: refactor test boilerplate code
+        b=ekgzqPcyCvCVe3qEx8FLF1d3I4VtxNK3UMmKujZWc4yUHWwSf7ptI1Eg5rYrWUV/m
+         DmPa11XNfnDmQoeoLJL9gLHx1b/avsRNqwi+2e1MC8oA289j/Mtni5f367Y3JSSDYa
+         kpr85yaxjrz/Ju/bxFsZNkGmTatTI4G3an9d0kcuCAtvzFxszTODWnGL3YBFQtZ/Lr
+         /9lHkScJwIWFlXG+Wnxki3mZB18yWuo93uo0jfNluJqdVyzPEJy18GhzlMdPGbny3R
+         qpU5Uh1d+b4sEUh88PpmRCAO0jBNA2wFq8glbejsjBUJsCaOcnM/0hvBl21yGvdOXS
+         2HCcW9eV67LWg==
+Subject: [PATCH 04/13] fstests: add tool migrate group membership data to test
+ files
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com
 Cc:     Chandan Babu R <chandanrlinux@gmail.com>,
         Allison Henderson <allison.henderson@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Eric Biggers <ebiggers@google.com>, linux-xfs@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
         fstests@vger.kernel.org, guan@eryu.me, amir73il@gmail.com,
         ebiggers@kernel.org
-Date:   Mon, 21 Jun 2021 16:10:23 -0700
-Message-ID: <162431702312.4090790.12118119463621535575.stgit@locust>
+Date:   Mon, 21 Jun 2021 16:10:28 -0700
+Message-ID: <162431702856.4090790.8962121526105342327.stgit@locust>
 In-Reply-To: <162431700639.4090790.11684371602638166127.stgit@locust>
 References: <162431700639.4090790.11684371602638166127.stgit@locust>
 User-Agent: StGit/0.19
@@ -54,130 +54,163 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create two new helper functions to deal with boilerplate test code:
-
-A helper function to set the seq and seqnum variables.  We will expand
-on this in the next patch so that fstests can autogenerate group files
-from now on.
-
-A helper function to register cleanup code that will run if the test
-exits or trips over a standard range of signals.
+Create a tool to migrate the mapping of tests <-> groups out of the
+group file and into the individual test file as a _begin_fstest
+call.  In the next patches we'll rewrite all the test files and auto
+generate the group files from the tests.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Eric Biggers <ebiggers@google.com>
 ---
- common/preamble |   55 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- new             |   33 ++++++++++++---------------------
- 2 files changed, 67 insertions(+), 21 deletions(-)
- create mode 100644 common/preamble
+ tools/convert-group |  138 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 138 insertions(+)
+ create mode 100755 tools/convert-group
 
 
-diff --git a/common/preamble b/common/preamble
-new file mode 100644
-index 00000000..fba766de
+diff --git a/tools/convert-group b/tools/convert-group
+new file mode 100755
+index 00000000..81ad9934
 --- /dev/null
-+++ b/common/preamble
-@@ -0,0 +1,55 @@
++++ b/tools/convert-group
+@@ -0,0 +1,138 @@
 +#!/bin/bash
 +# SPDX-License-Identifier: GPL-2.0
 +# Copyright (c) 2021 Oracle.  All Rights Reserved.
 +
-+# Boilerplate fstests functionality
++# Move group tags from the groups file into the test files themselves.
 +
-+# Standard cleanup function.  Individual tests can override this.
-+_cleanup()
++if [ -z "$1" ] || [ "$1" = "--help" ]; then
++	echo "Usage: $0 test_dir [test_dirs...]"
++	exit 1
++fi
++
++obliterate_group_file() {
++	sed -e 's/^#.*$//g' < group | while read test groups; do
++		if [ -z "$test" ]; then
++			continue;
++		elif [ ! -e "$test" ]; then
++			echo "Ignoring unknown test file \"$test\"."
++			continue
++		fi
++
++		# Replace all the open-coded test preparation code with a
++		# single call to _begin_fstest.
++		sed -e '/^seqres=\$RESULT_DIR\/\$seq$/d' \
++		    -e '/^seqres=\"\$RESULT_DIR\/\$seq\"$/d' \
++		    -e '/^echo "QA output created by \$seq"$/d' \
++		    -e '/^here=`pwd`$/d' \
++		    -e '/^here=\$(pwd)$/d' \
++		    -e '/^here=\$PWD$/d' \
++		    -e '/^here=\"`pwd`\"$/d' \
++		    -e '/^tmp=\/tmp\/\$\$$/d' \
++		    -e '/^status=1.*failure.*is.*the.*default/d' \
++		    -e '/^status=1.*FAILure.*is.*the.*default/d' \
++		    -e '/^status=1.*success.*is.*the.*default/d' \
++		    -e '/^status=1.*default.*failure/d' \
++		    -e '/^echo.*QA output created by.*seq/d' \
++		    -e '/^# remove previous \$seqres.full before test/d' \
++		    -e '/^rm -f \$seqres.full/d' \
++		    -e 's|^# get standard environment, filters and checks|# Import common functions.|g' \
++		    -e '/^\. \.\/common\/rc/d' \
++		    -e '/^\. common\/rc/d' \
++		    -e 's|^seq=.*$|. ./common/preamble\n_begin_fstest '"$groups"'|g' \
++		    -i "$test"
++
++		# Replace the open-coded trap calls that register cleanup code
++		# with a call to _register_cleanup.
++		#
++		# For tests that registered empty-string cleanups or open-coded
++		# calls to remove $tmp files, remove the _register_cleanup
++		# calls entirely because the default _cleanup does that for us.
++		#
++		# For tests that now have a _register_cleanup call for the
++		# _cleanup function, remove the explicit call because
++		# _begin_fstest already registers that for us.
++		#
++		# For tests that override _cleanup, insert a comment noting
++		# that it is overriding the default, to match the ./new
++		# template.
++		sed -e 's|^trap "exit \\\$status" 0 1 2 3 15|_register_cleanup ""|g' \
++		    -e 's|^trap "\(.*\)[[:space:]]*; exit \\\$status" 0 1 2 3 15|_register_cleanup "\1"|g' \
++		    -e 's|^trap "\(.*\)[[:space:]]*; exit \\\$status" 1 2 3 15|_register_cleanup "\1"|g' \
++		    -e 's|^trap '"'"'\(.*\)[[:space:]]*; exit \$status'"'"' 0 1 2 3 15|_register_cleanup "\1"|g' \
++		    -e 's|^trap "\(.*\)[[:space:]]*; exit \\\$status" 0 1 2 3 7 15|_register_cleanup "\1" BUS|g' \
++		    -e 's|^_register_cleanup "[[:space:]]*\([^[:space:]]*\)[[:space:]]*"|_register_cleanup "\1"|g' \
++		    -e '/^_register_cleanup ""$/d' \
++		    -e '/^_register_cleanup "rm -f \$tmp.*"$/d' \
++		    -e '/^_register_cleanup "_cleanup"$/d' \
++		    -e 's|^_cleanup()|# Override the default cleanup function.\n_cleanup()|g' \
++		    -i "$test"
++
++		# If the test doesn't import any common functionality,
++		# get rid of the pointless comment.
++		if ! grep -q '^\. .*common' "$test"; then
++			sed -e '/^# Import common functions.$/d' -i "$test"
++		fi
++
++		# Replace the "status=1" lines that don't have the usual
++		# "failure is the default" message if there's no other code
++		# between _begin_fstest and status=1.
++		if grep -q '^status=1$' "$test"; then
++			awk '
++BEGIN {
++	saw_groupinfo = 0;
++}
 +{
-+	cd /
-+	rm -r -f $tmp.*
++	if ($0 ~ /^_begin_fstest/) {
++		saw_groupinfo = 1;
++		printf("%s\n", $0);
++	} else if ($0 ~ /^status=1$/) {
++		if (saw_groupinfo == 0) {
++			printf("%s\n", $0);
++		}
++	} else if ($0 == "") {
++		printf("\n");
++	} else {
++		saw_groupinfo = 0;
++		printf("%s\n", $0);
++	}
++}
++' < "$test" > "$test.new"
++			cat "$test.new" > "$test"
++			rm -f "$test.new"
++		fi
++
++		# Get rid of _cleanup functions that match the standard one.
++		# Thanks to Eric Biggers for providing this.
++		sed -z -E \
++			-e 's/(#[^#\n]*\n)*_cleanup\(\)\n\{\n(\s+cd \/\n)?\s+rm -r?f "?\$tmp"?\.\*\n\}\n\n?//' \
++			-e 's/(#[^#\n]*\n)*_cleanup\(\)\n\{\n(\s+cd \/\n)?\s+rm -fr "?\$tmp"?\.\*\n\}\n\n?//' \
++			-i "$test"
++
++		# Collapse sequences of blank lines to a single blank line.
++		awk '
++BEGIN {
++	saw_blank = 0;
++}
++{
++	if ($0 ~ /^$/) {
++		if (saw_blank == 0) {
++			printf("\n");
++			saw_blank = 1;
++		}
++	} else {
++		printf("%s\n", $0);
++		saw_blank = 0;
++	}
++}
++' < "$test" > "$test.new"
++		cat "$test.new" > "$test"
++		rm -f "$test.new"
++	done
 +}
 +
-+# Install the supplied cleanup code as a signal handler for HUP, INT, QUIT,
-+# TERM, or when the test exits.  Extra signals can be specified as subsequent
-+# parameters.
-+_register_cleanup()
-+{
-+	local cleanup="$1"
-+	shift
-+
-+	test -n "$cleanup" && cleanup="${cleanup}; "
-+	trap "${cleanup}exit \$status" EXIT HUP INT QUIT TERM $*
-+}
-+
-+# Prepare to run a fstest by initializing the required global variables to
-+# their defaults, sourcing common functions, registering a cleanup function,
-+# and removing the $seqres.full file.
-+#
-+# The list of group memberships for this test (e.g. auto quick rw) must be
-+# passed as arguments to this helper.  It is not necessary to name this test
-+# explicitly as a member of the 'all' group.
-+_begin_fstest()
-+{
-+	if [ -n "$seq" ]; then
-+		echo "_begin_fstest can only be called once!"
-+		exit 1
-+	fi
-+
-+	seq=`basename $0`
-+	seqres=$RESULT_DIR/$seq
-+	echo "QA output created by $seq"
-+
-+	here=`pwd`
-+	tmp=/tmp/$$
-+	status=1	# failure is the default!
-+
-+	_register_cleanup _cleanup
-+
-+	. ./common/rc
-+
-+	# remove previous $seqres.full before test
-+	rm -f $seqres.full
-+
-+}
-diff --git a/new b/new
-index 357983d9..531fd123 100755
---- a/new
-+++ b/new
-@@ -153,27 +153,18 @@ cat <<End-of-File >$tdir/$id
- #
- # what am I here for?
- #
--seq=\`basename \$0\`
--seqres=\$RESULT_DIR/\$seq
--echo "QA output created by \$seq"
--
--here=\`pwd\`
--tmp=/tmp/\$\$
--status=1	# failure is the default!
--trap "_cleanup; exit \\\$status" 0 1 2 3 15
--
--_cleanup()
--{
--	cd /
--	rm -f \$tmp.*
--}
--
--# get standard environment, filters and checks
--. ./common/rc
--. ./common/filter
--
--# remove previous \$seqres.full before test
--rm -f \$seqres.full
-+. ./common/preamble
-+_begin_fstest group list here
-+
-+# Override the default cleanup function.
-+# _cleanup()
-+# {
-+# 	cd /
-+# 	rm -r -f \$tmp.*
-+# }
-+
-+# Import common functions.
-+# . ./common/filter
- 
- # real QA test starts here
- 
++curr_dir="$PWD"
++for tdir in "$@"; do
++	cd "tests/$tdir"
++	obliterate_group_file
++	cd "$curr_dir"
++done
 
