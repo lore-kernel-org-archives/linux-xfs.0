@@ -6,65 +6,67 @@ X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
 	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 457E0C48BE5
-	for <linux-xfs@archiver.kernel.org>; Mon, 21 Jun 2021 05:19:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02F27C49361
+	for <linux-xfs@archiver.kernel.org>; Mon, 21 Jun 2021 05:21:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1F7E06108E
-	for <linux-xfs@archiver.kernel.org>; Mon, 21 Jun 2021 05:19:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DCD8B61183
+	for <linux-xfs@archiver.kernel.org>; Mon, 21 Jun 2021 05:20:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229486AbhFUFWG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 21 Jun 2021 01:22:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47014 "EHLO
+        id S229695AbhFUFXM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 21 Jun 2021 01:23:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47256 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229441AbhFUFWG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Jun 2021 01:22:06 -0400
+        with ESMTP id S229486AbhFUFXM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Jun 2021 01:23:12 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C51F8C061574
-        for <linux-xfs@vger.kernel.org>; Sun, 20 Jun 2021 22:19:52 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 83671C061574;
+        Sun, 20 Jun 2021 22:20:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=ACOKAR/jemk0c8n3dt7fWn9OsMNIgDn9l9hVNA+aC14=; b=pt3Up9diQrrxSBj7RuHFTIgvB5
-        4xwxj1nJSCTCQnCDheqIJzil4ONrxNHgyatzc7kh0qWYHsFZOFsPnhuLmVbN1tgxwWSYIrV20teK5
-        b1WD56eKyQGbn3OTlpQlhOi973FB1ctc5RP1TxKPBK5i/WAm76DEOaH/PNDtQ5SJ/Fds2rntAVO+j
-        5n7oI50Nc/XB+G/Zik/xoMRVIe12NeOKAck5l8xQ2UYe6dBmZUp2UNbuT4B99YJhYDBttfxvPv5eV
-        670nZkXB//4xxXi9uNaQSpimbZwFrm6ZrvZIB7FJgZM5QbALQOMoGWstODTHZ43LggHtF0zH8/UqU
-        QHYRVL+g==;
+        bh=RmnGNYxD0DXeHEZ0u+JkPf/yQlVZ0wR0OQWyNvlyvT0=; b=ra0YgzVxF/qjRM0r7jv9fdpTnJ
+        QFSsbQwOEJPp6ih/EpqW4dvMtzd+ijGq8+hsU3RDNIMH3UXzQ6bWwL/ED0mFWsIVmu0DyO3Cwvrbs
+        FIPCBLvC5ERy8FTUHdsSkUtCFp4WPXSEXZrQP6Mp3LavfCOBuwpA3uWb30kSsaOOg6SuT3Ze6LiAq
+        JxbHE+y7NOj2amFGO1LhZSZYdm10vdlE29HO2N1CqdeqtjicSn9lJ04bJiTvkBaeG9excuJHmTITx
+        qFu3l5RCytbcb+SBpyYoeYzcV1A3u4C7Q0zl0Mne1rSNz/nLnK/dKpGjHE1BDaJOlu963vOX4Wa2B
+        yz7AZhSA==;
 Received: from hch by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1lvCL3-00CkJy-GA; Mon, 21 Jun 2021 05:19:16 +0000
-Date:   Mon, 21 Jun 2021 06:19:13 +0100
+        id 1lvCLy-00CkLs-26; Mon, 21 Jun 2021 05:20:18 +0000
+Date:   Mon, 21 Jun 2021 06:20:10 +0100
 From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org,
-        david@fromorbit.com, hch@infradead.org
-Subject: Re: [PATCH 06/16] xfs: defer inode inactivation to a workqueue
-Message-ID: <YNAhUUJp4THloqpm@infradead.org>
-References: <162360479631.1530792.17147217854887531696.stgit@locust>
- <162360482987.1530792.9282768072804488207.stgit@locust>
- <YMeA/3nXG/bdFoMA@bfoster>
- <20210614192720.GF2945763@locust>
- <YMi8kAJok6ZH71yh@bfoster>
- <20210615205324.GA158232@locust>
- <YMta7aDtYSSV/CPd@bfoster>
- <20210617184111.GD158232@locust>
- <YMym8SfmBHPoFbwu@bfoster>
- <20210618145847.GC158209@locust>
+To:     Amir Goldstein <amir73il@gmail.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Eryu Guan <guaneryu@gmail.com>,
+        Chandan Babu R <chandanrlinux@gmail.com>,
+        Allison Henderson <allison.henderson@oracle.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        fstests <fstests@vger.kernel.org>, Eryu Guan <guan@eryu.me>,
+        ebiggers@kernel.org
+Subject: Re: [PATCH 07/13] fstests: automatically generate group files
+Message-ID: <YNAhip+sLWk7B4ZV@infradead.org>
+References: <162370433910.3800603.9623820748404628250.stgit@locust>
+ <162370437774.3800603.15907676407985880109.stgit@locust>
+ <YMmpDGT9b4dBdSh2@infradead.org>
+ <20210617001320.GK158209@locust>
+ <YMsAEQsNhI1Y5JR8@infradead.org>
+ <20210617171500.GC158186@locust>
+ <YMyjgGEuLLcid9i+@infradead.org>
+ <CAOQ4uxjvkJh2XcfDgj7g+JUkFXEc36_6YOKQHJ=pX2hpGfUDhQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210618145847.GC158209@locust>
+In-Reply-To: <CAOQ4uxjvkJh2XcfDgj7g+JUkFXEc36_6YOKQHJ=pX2hpGfUDhQ@mail.gmail.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jun 18, 2021 at 07:58:47AM -0700, Darrick J. Wong wrote:
-> ...I think I will look into adding your series on to the start of mine.
-> I was rather hoping that hch would save us all the trouble and repost
-> the quotaoff killing patches + fstests fixes, but that clearly wasn't in
-> the cards for 5.14.
+On Fri, Jun 18, 2021 at 06:32:18PM +0300, Amir Goldstein wrote:
+> > Just stick to the original version and see if anyone screams loud
+> 
+> What is the original version?
 
-I thought people weren't too happy with that patchset and had all other
-ind of ideas to work around quotaoff.  I can dust it off again if there
-is interest.
+The patch that Darrick posted, which requires make to be run to
+generatethe group files.
