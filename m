@@ -2,48 +2,52 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A86E9C48BE5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6FCAC48BC2
 	for <linux-xfs@archiver.kernel.org>; Mon, 21 Jun 2021 13:16:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8359961164
+	by mail.kernel.org (Postfix) with ESMTP id AB67B61206
 	for <linux-xfs@archiver.kernel.org>; Mon, 21 Jun 2021 13:16:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229640AbhFUNTD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 21 Jun 2021 09:19:03 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:59071 "EHLO
+        id S229663AbhFUNTE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 21 Jun 2021 09:19:04 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:48694 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229663AbhFUNTC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Jun 2021 09:19:02 -0400
+        by vger.kernel.org with ESMTP id S229807AbhFUNTD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Jun 2021 09:19:03 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1624281407;
+        s=mimecast20190719; t=1624281408;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=19UQ3nD1fqb9evHmIF5pt8XVqyIPe8VkrZC70Sv6Lm4=;
-        b=SSp0P9wUm3QSnZXFze7oIWJYhnZVZm+8xr90rx1tO56noC/Q/wHpO3D6crnba0q2jCi8pw
-        D3m+GIOSBCQRS4NtoYiOuR4eTLccfpY3X2Iu1p6WIJJ0maMHe+2hoqKYuP/Z0RqVvwZkni
-        ZVLF2sdHqJdrnFF+rrOCT3gJVT4W2/o=
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=avKJ+3lc+M+z7gYuRHHQuE1KcKN2w4H8kxupy56rSAo=;
+        b=N9EFWJKQ8KvTALxruDB84Xnd1XnsjrKnm9KaxBUH4Jk4Nd+I+WNKl9s+93VsDNeQygjkSE
+        PdEgPbVNdxAL44nqFm6q/MoFrTMdKyWYpcMAW3raFZys11bIQcWbndehZ1YQ5CMI/lOhdo
+        bxnfb3yNcXXxj1vSqu5EhVwYtfqHwJU=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-515-nl21A4znM-SUZpd95_rOzA-1; Mon, 21 Jun 2021 09:16:46 -0400
-X-MC-Unique: nl21A4znM-SUZpd95_rOzA-1
+ us-mta-375-UUHP8qKrM-q5kGbZ6IOIYg-1; Mon, 21 Jun 2021 09:16:47 -0400
+X-MC-Unique: UUHP8qKrM-q5kGbZ6IOIYg-1
 Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 3A3A7800D62
-        for <linux-xfs@vger.kernel.org>; Mon, 21 Jun 2021 13:16:45 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 15D1D800D55
+        for <linux-xfs@vger.kernel.org>; Mon, 21 Jun 2021 13:16:46 +0000 (UTC)
 Received: from bfoster.redhat.com (ovpn-112-50.rdu2.redhat.com [10.10.112.50])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id EB9CA19C46
-        for <linux-xfs@vger.kernel.org>; Mon, 21 Jun 2021 13:16:44 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id C7BB819C46
+        for <linux-xfs@vger.kernel.org>; Mon, 21 Jun 2021 13:16:45 +0000 (UTC)
 From:   Brian Foster <bfoster@redhat.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v2 0/2] xfs: fix buffer use after free on unpin abort
-Date:   Mon, 21 Jun 2021 09:16:42 -0400
-Message-Id: <20210621131644.128177-1-bfoster@redhat.com>
+Subject: [PATCH v2 2/2] xfs: remove dead stale buf unpin handling code
+Date:   Mon, 21 Jun 2021 09:16:44 -0400
+Message-Id: <20210621131644.128177-3-bfoster@redhat.com>
+In-Reply-To: <20210621131644.128177-1-bfoster@redhat.com>
+References: <20210621131644.128177-1-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
@@ -51,21 +55,66 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-v2:
-- Split assert in patch 2.
-v1: https://lore.kernel.org/linux-xfs/20210511135257.878743-1-bfoster@redhat.com/
-- Rework patch 1 to hold conditionally in the abort case and document
-  the underlying design flaw.
-- Add patch 2 to remove some unused code.
-rfc: https://lore.kernel.org/linux-xfs/20210503121816.561340-1-bfoster@redhat.com/
+This code goes back to a time when transaction commits wrote
+directly to iclogs. The associated log items were pinned, written to
+the log, and then "uncommitted" if some part of the log write had
+failed. This uncommit sequence called an ->iop_unpin_remove()
+handler that was eventually folded into ->iop_unpin() via the remove
+parameter. The log subsystem has since changed significantly in that
+transactions commit to the CIL instead of direct to iclogs, though
+log items must still be aborted in the event of an eventual log I/O
+error. However, the context for a log item abort is now asynchronous
+from transaction commit, which means the committing transaction has
+been freed by this point in time and the transaction uncommit
+sequence of events is no longer relevant.
 
-Brian Foster (2):
-  xfs: hold buffer across unpin and potential shutdown processing
-  xfs: remove dead stale buf unpin handling code
+Further, since stale buffers remain locked at transaction commit
+through unpin, we can be certain that the buffer is not associated
+with any transaction when the unpin callback executes. Remove this
+unused hunk of code and replace it with an assertion that the buffer
+is disassociated from transaction context.
 
- fs/xfs/xfs_buf_item.c | 58 +++++++++++++++++--------------------------
- 1 file changed, 23 insertions(+), 35 deletions(-)
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+---
+ fs/xfs/xfs_buf_item.c | 21 ++-------------------
+ 1 file changed, 2 insertions(+), 19 deletions(-)
 
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 464587c5a2cb..2828ce45b701 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -516,28 +516,11 @@ xfs_buf_item_unpin(
+ 		ASSERT(xfs_buf_islocked(bp));
+ 		ASSERT(bp->b_flags & XBF_STALE);
+ 		ASSERT(bip->__bli_format.blf_flags & XFS_BLF_CANCEL);
++		ASSERT(list_empty(&lip->li_trans));
++		ASSERT(!bp->b_transp);
+ 
+ 		trace_xfs_buf_item_unpin_stale(bip);
+ 
+-		if (remove) {
+-			/*
+-			 * If we are in a transaction context, we have to
+-			 * remove the log item from the transaction as we are
+-			 * about to release our reference to the buffer.  If we
+-			 * don't, the unlock that occurs later in
+-			 * xfs_trans_uncommit() will try to reference the
+-			 * buffer which we no longer have a hold on.
+-			 */
+-			if (!list_empty(&lip->li_trans))
+-				xfs_trans_del_item(lip);
+-
+-			/*
+-			 * Since the transaction no longer refers to the buffer,
+-			 * the buffer should no longer refer to the transaction.
+-			 */
+-			bp->b_transp = NULL;
+-		}
+-
+ 		/*
+ 		 * If we get called here because of an IO error, we may or may
+ 		 * not have the item on the AIL. xfs_trans_ail_delete() will
 -- 
 2.26.3
 
