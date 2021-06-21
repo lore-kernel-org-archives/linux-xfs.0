@@ -2,102 +2,85 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3BDCC48BC2
-	for <linux-xfs@archiver.kernel.org>; Mon, 21 Jun 2021 22:10:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68136C4743C
+	for <linux-xfs@archiver.kernel.org>; Mon, 21 Jun 2021 22:34:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7D08D611C1
-	for <linux-xfs@archiver.kernel.org>; Mon, 21 Jun 2021 22:10:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4449C6113E
+	for <linux-xfs@archiver.kernel.org>; Mon, 21 Jun 2021 22:34:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230212AbhFUWMy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 21 Jun 2021 18:12:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50308 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230006AbhFUWMx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Jun 2021 18:12:53 -0400
-Received: from ozlabs.org (ozlabs.org [IPv6:2401:3900:2:1::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D54C9C061574;
-        Mon, 21 Jun 2021 15:10:38 -0700 (PDT)
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mail.ozlabs.org (Postfix) with ESMTPSA id 4G83cr0lZHz9sRN;
-        Tue, 22 Jun 2021 08:10:36 +1000 (AEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=canb.auug.org.au;
-        s=201702; t=1624313436;
-        bh=GnzZNzlmyed4Oqjm8Dz4y6A/UQBy79JHgxdRF+4U/yg=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=HITEbOXkKV3JA4R2YfqYpm2lZAdV0jc0dN5GqnkZgr7M27zl69c4FZ33FRJl8pMSZ
-         c6NpY0Uhlzt5bLuRod2pLPn6CDwGOAbAqTMm7akOzJ1PrpKA/93IhAGhXFxu5x2VBO
-         M7sdbe/eOzzCuVFlwlZ7PLfvkWCvE5mS7wGZQhS8ZMYhWIUerh51uwFzbzxifQpVQz
-         QkfpjQg5P9xLrCpUbDLBW2GRfqMaV5zjmBSZoU6PBfQjDZEzI5MaN60DfOtdUHlE2+
-         FF8HWOJTFJbM24VJgwd8774dkj/OQr2YorcSvPOJG9lttCmwzBUQ+6z7sjINeT43Ep
-         7Yuf357aaiaNA==
-Date:   Tue, 22 Jun 2021 08:10:34 +1000
-From:   Stephen Rothwell <sfr@canb.auug.org.au>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
-        Allison Henderson <allison.henderson@oracle.com>,
-        Chandan Babu R <chandanrlinux@gmail.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Next Mailing List <linux-next@vger.kernel.org>
-Subject: Re: linux-next: Signed-off-by missing for commits in the xfs tree
-Message-ID: <20210622081034.472513aa@canb.auug.org.au>
-In-Reply-To: <20210621215159.GE3619569@locust>
-References: <20210621082656.59cae0d8@canb.auug.org.au>
-        <20210621171208.GD3619569@locust>
-        <20210622072719.1d312bf0@canb.auug.org.au>
-        <20210621215159.GE3619569@locust>
+        id S232048AbhFUWgw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 21 Jun 2021 18:36:52 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53394 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231669AbhFUWgv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 21 Jun 2021 18:36:51 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 10487600D3
+        for <linux-xfs@vger.kernel.org>; Mon, 21 Jun 2021 22:34:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1624314877;
+        bh=qUe9Pp02p1Q4MwQkuwP1rbBreCMfb5xP+OUu7+ScsCI=;
+        h=Date:From:To:Subject:From;
+        b=uSqyPpJ2HrKMB1qpEv+i9HjRCflF87K+N37tGK8HLRe4eVF9Ptd+E+VqYn4Lz1wwL
+         3yFwLCju4W8Ao78YNcNrkHoKLy1Rj7PadHbHjHIeRT87I/yKm05AyNNRCKpzvKW6VQ
+         D+naAwAB5/GKEhmY55WLbYbAG06YR9b8aSZJRyzOO12dgkewwh8ENLjSYBB/1zNq68
+         +BtyA81IDC6sJ2JeD7ltf+lyKc9NTKRKmlwP/xWXeYQpl2h2tWagomCcKGPQ1AZyRi
+         AmC16Ac9PO/ik5EMNMis9SejUA8NE2lIDwbYRmCObto+FZP4Hvr44MKgeJviNogpRS
+         HzBoBp2waHcWA==
+Date:   Mon, 21 Jun 2021 15:34:36 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH] xfs: fix endianness issue in xfs_ag_shrink_space
+Message-ID: <20210621223436.GF3619569@locust>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/=XLiURUMYZZpPMDN6ot1ilS";
- protocol="application/pgp-signature"; micalg=pgp-sha256
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
---Sig_/=XLiURUMYZZpPMDN6ot1ilS
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+From: Darrick J. Wong <djwong@kernel.org>
 
-Hi Darrick,
+The AGI buffer is in big-endian format, so we must convert the
+endianness to CPU format to do any comparisons.
 
-On Mon, 21 Jun 2021 14:51:59 -0700 "Darrick J. Wong" <djwong@kernel.org> wr=
-ote:
->
-> > Of course, you should not really rebase a published tree at all (unless
-> > vitally necessary) - see Documentation/maintainer/rebasing-and-merging.=
-rst =20
->=20
-> Heh.  That ship has sailed, unfortunately.  If we /really/ care about
-> maintainers adding their own SoB tags to non-merge commits then I /have/
-> to rebase.
+Fixes: 46141dc891f7 ("xfs: introduce xfs_ag_shrink_space()")
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+ fs/xfs/libxfs/xfs_ag.c |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-We do *not* care about maintainers adding their own SOB to non-merge
-commits that are in a branch that are all committed by someone else.
-As you say, that is not possible without rewriting the whole branch.
-
---=20
-Cheers,
-Stephen Rothwell
-
---Sig_/=XLiURUMYZZpPMDN6ot1ilS
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAmDRDloACgkQAVBC80lX
-0Gwy4wgAjuRwKDluvG4G3yoAmqLWo/ZeKoIe9KO7pftZsDQnYkNp0Jv/1Mbk4Hvx
-6JfCcQpIOCk6KhUqtAtAUjozYS1PTyE9HD9Hp1N8oSvMz7ezMrUBKeu7OOhHK2Mi
-I+K6VsB02Y8XHaOsKw9WyeUu+cYsFS+pWxWWB2tdolxjS8ae+82HMWEh1UQxaEpa
-Z+lnzR4eapKQe9t9yy5b2EMlVGbodz/VFcxWspphnTZIt+w9ZeH6FrGhck/OJKRX
-IVX0v4GnYYF8hQq5C3tSlL7Mo5t3dv2xkJiKKDLXfb/QJa7U0h3IloZvVLDPTJy0
-ohDXpt3/Mx0nm3Si7f/iT9X1o11UoA==
-=7XIC
------END PGP SIGNATURE-----
-
---Sig_/=XLiURUMYZZpPMDN6ot1ilS--
+diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+index c68a36688474..afff2ab7e9f1 100644
+--- a/fs/xfs/libxfs/xfs_ag.c
++++ b/fs/xfs/libxfs/xfs_ag.c
+@@ -510,6 +510,7 @@ xfs_ag_shrink_space(
+ 	struct xfs_buf		*agibp, *agfbp;
+ 	struct xfs_agi		*agi;
+ 	struct xfs_agf		*agf;
++	xfs_agblock_t		aglen;
+ 	int			error, err2;
+ 
+ 	ASSERT(agno == mp->m_sb.sb_agcount - 1);
+@@ -524,14 +525,14 @@ xfs_ag_shrink_space(
+ 		return error;
+ 
+ 	agf = agfbp->b_addr;
++	aglen = be32_to_cpu(agi->agi_length);
+ 	/* some extra paranoid checks before we shrink the ag */
+ 	if (XFS_IS_CORRUPT(mp, agf->agf_length != agi->agi_length))
+ 		return -EFSCORRUPTED;
+-	if (delta >= agi->agi_length)
++	if (delta >= aglen)
+ 		return -EINVAL;
+ 
+-	args.fsbno = XFS_AGB_TO_FSB(mp, agno,
+-				    be32_to_cpu(agi->agi_length) - delta);
++	args.fsbno = XFS_AGB_TO_FSB(mp, agno, aglen - delta);
+ 
+ 	/*
+ 	 * Disable perag reservations so it doesn't cause the allocation request
