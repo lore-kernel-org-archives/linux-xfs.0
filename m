@@ -2,135 +2,146 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EFD6C48BE5
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Jun 2021 10:05:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BAA28C2B9F4
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Jun 2021 12:40:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 01829613B1
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Jun 2021 10:05:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 99C446135A
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Jun 2021 12:40:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229800AbhFVKHT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 22 Jun 2021 06:07:19 -0400
-Received: from smtp-out2.suse.de ([195.135.220.29]:40790 "EHLO
-        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229490AbhFVKHT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Jun 2021 06:07:19 -0400
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id 3EDF41FD45;
-        Tue, 22 Jun 2021 10:05:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1624356302; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type;
-        bh=J3kbE7iH7QbzIIxkb82odwgZdE+ENBNes3YiuYmeOBM=;
-        b=dbZaYxuILiRaFr5eNjCKVx6KLWyV30rDu5zcZWDodg8k7DNY7SWjEZsUjnr5AvUkLeoYiS
-        IHYg6a4F9HqAuNfp8iPFhDinfZYOmytz1WvpkmY7MT9VelJIw7Ly1l+rRfeoLeqtKNjjwd
-        fwFvvGTBEW6Ey6AH3SgXEnY/VY7pGY8=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1624356302;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type;
-        bh=J3kbE7iH7QbzIIxkb82odwgZdE+ENBNes3YiuYmeOBM=;
-        b=dJM0H9PJ8/7nbIk7JI1om+3Wij9R9egMfTmQEuWbdz7G7HypNCeGEN3y6FauKdmkzHQoxG
-        XKOS4oqruWUet4Bg==
-Received: from quack2.suse.cz (unknown [10.100.224.230])
-        by relay2.suse.de (Postfix) with ESMTP id 308DEA3B8D;
-        Tue, 22 Jun 2021 10:05:02 +0000 (UTC)
-Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id 0FC951E1515; Tue, 22 Jun 2021 12:05:02 +0200 (CEST)
-Date:   Tue, 22 Jun 2021 12:05:02 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-        ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net
-Subject: [GIT PULL] fs: Hole punch fixes
-Message-ID: <20210622100502.GE14261@quack2.suse.cz>
+        id S231604AbhFVMmr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 22 Jun 2021 08:42:47 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:25474 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231610AbhFVMlQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Jun 2021 08:41:16 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1624365540;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=IM6QVTZupRnXc/vceV0VbinzPSL6+IdZClii7ORqxk4=;
+        b=T8pp3lY12CG/s4psPG+LYDbIulPA4cJXkd9bg0YayIuqyTlxG6pSWpX1mxdDIWYUUFALLD
+        SL0PN74e3Q+ecAlSjpdYPbzaqtO7OAzp0irThfr+VUv6SQhLMotc0l2GC1u4x0GU32zWw7
+        yevTmokU8f9ac/pHUwEOEuh8RsoJpPU=
+Received: from mail-qt1-f199.google.com (mail-qt1-f199.google.com
+ [209.85.160.199]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-182-gfKnVIUOP36FVToJFOYHcw-1; Tue, 22 Jun 2021 08:38:59 -0400
+X-MC-Unique: gfKnVIUOP36FVToJFOYHcw-1
+Received: by mail-qt1-f199.google.com with SMTP id 62-20020aed30440000b029024cabef375cso2085504qte.17
+        for <linux-xfs@vger.kernel.org>; Tue, 22 Jun 2021 05:38:59 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=IM6QVTZupRnXc/vceV0VbinzPSL6+IdZClii7ORqxk4=;
+        b=tqecmMWy4cUqQh6PYxMTBr20jCkZpqAqt3d7ryRRVav0QJ0JhZ0qSxiT+qOOTc8aS1
+         Z2/kGl9NksQwGzQMR4oj581G8PnaD+YY8MtUIR/dzB73fUoIdFQYkseSP72rVDHntv2M
+         dUfzLLSIYfoJsVzO3d7h526cdzZZ9budEU/Kwy7jhNWcQGnoQtnWipqSUF51mk4WimyC
+         nxe01mSsnlJsYsIztfax5Emq6JRlzPbYFamXvOFF0aVjGNA/EbUGF1YPxC9fvc46kfEs
+         4lEZXausUCJGHG6a1QLmQAn9bgU5rDcDbmOzz2jt0YdT5XR3XwU7HfquTmZQmbFif50Y
+         AB8g==
+X-Gm-Message-State: AOAM532QTIvtdJoBFS8Ix+G6KmEfa7aMyJ67TOvBMmrYeL1dHHfPfcwp
+        zQErdeg3mSEjNYXOb1QZOW7JgGd8OnBtBIJ21uF/nbYSa/w8LMdC22M4Pb+y48yU/b8zE/4figj
+        9U6wh5QXC23JL2GjWpeIv
+X-Received: by 2002:ac8:670f:: with SMTP id e15mr3237327qtp.291.1624365538502;
+        Tue, 22 Jun 2021 05:38:58 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzl015yw4W4nHKcunyZv4xgk71X0E7+xVH9kqEa2GXQSzsgRAV1w1un7YtUCAVObTKVrNBnVg==
+X-Received: by 2002:ac8:670f:: with SMTP id e15mr3237316qtp.291.1624365538294;
+        Tue, 22 Jun 2021 05:38:58 -0700 (PDT)
+Received: from bfoster ([98.216.211.229])
+        by smtp.gmail.com with ESMTPSA id z13sm1602610qtn.4.2021.06.22.05.38.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 22 Jun 2021 05:38:57 -0700 (PDT)
+Date:   Tue, 22 Jun 2021 08:38:56 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/4] xfs: don't nest icloglock inside ic_callback_lock
+Message-ID: <YNHZ4Bsr27u53TxG@bfoster>
+References: <20210622040604.1290539-1-david@fromorbit.com>
+ <20210622040604.1290539-2-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20210622040604.1290539-2-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-  Hello Darrick,
+On Tue, Jun 22, 2021 at 02:06:01PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> It's completely unnecessary because callbacks are added to iclogs
+> without holding the icloglock, hence no amount of ordering between
+> the icloglock and ic_callback_lock will order the removal of
+> callbacks from the iclog.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_log.c | 18 ++++--------------
+>  1 file changed, 4 insertions(+), 14 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index e93cac6b5378..bb4390942275 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -2773,11 +2773,8 @@ static void
+>  xlog_state_do_iclog_callbacks(
+>  	struct xlog		*log,
+>  	struct xlog_in_core	*iclog)
+> -		__releases(&log->l_icloglock)
+> -		__acquires(&log->l_icloglock)
+>  {
+>  	trace_xlog_iclog_callbacks_start(iclog, _RET_IP_);
+> -	spin_unlock(&log->l_icloglock);
+>  	spin_lock(&iclog->ic_callback_lock);
+>  	while (!list_empty(&iclog->ic_callbacks)) {
+>  		LIST_HEAD(tmp);
+> @@ -2789,12 +2786,6 @@ xlog_state_do_iclog_callbacks(
+>  		spin_lock(&iclog->ic_callback_lock);
+>  	}
+>  
+> -	/*
+> -	 * Pick up the icloglock while still holding the callback lock so we
+> -	 * serialise against anyone trying to add more callbacks to this iclog
+> -	 * now we've finished processing.
+> -	 */
 
-  here is a prepared pull request with the hole punch fixes:
+This makes sense wrt to the current locking, but I'd like to better
+understand what's being removed. When would we add callbacks to an iclog
+that's made it to this stage (i.e., already completed I/O)? Is this some
+historical case or attempt at defensive logic?
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jack/linux-fs.git hole_punch_fixes_for_5.14-rc1
+Brian
 
-Top of the tree is a68454854cd9. The full shortlog is:
+> -	spin_lock(&log->l_icloglock);
+>  	spin_unlock(&iclog->ic_callback_lock);
+>  	trace_xlog_iclog_callbacks_done(iclog, _RET_IP_);
+>  }
+> @@ -2836,13 +2827,12 @@ xlog_state_do_callback(
+>  				iclog = iclog->ic_next;
+>  				continue;
+>  			}
+> +			spin_unlock(&log->l_icloglock);
+>  
+> -			/*
+> -			 * Running callbacks will drop the icloglock which means
+> -			 * we'll have to run at least one more complete loop.
+> -			 */
+> -			cycled_icloglock = true;
+>  			xlog_state_do_iclog_callbacks(log, iclog);
+> +			cycled_icloglock = true;
+> +
+> +			spin_lock(&log->l_icloglock);
+>  			if (XLOG_FORCED_SHUTDOWN(log))
+>  				wake_up_all(&iclog->ic_force_wait);
+>  			else
+> -- 
+> 2.31.1
+> 
 
-Jan Kara (13):
-      mm: Fix comments mentioning i_mutex
-      documentation: Sync file_operations members with reality
-      mm: Protect operations adding pages to page cache with invalidate_lock
-      mm: Add functions to lock invalidate_lock for two mappings
-      ext4: Convert to use mapping->invalidate_lock
-      ext2: Convert to using invalidate_lock
-      xfs: Convert to use invalidate_lock
-      xfs: Convert double locking of MMAPLOCK to use VFS helpers
-      zonefs: Convert to using invalidate_lock
-      f2fs: Convert to using invalidate_lock
-      fuse: Convert to using invalidate_lock
-      ceph: Fix race between hole punch and page fault
-      cifs: Fix race between hole punch and page fault
-
-Pavel Reichl (1):
-      xfs: Refactor xfs_isilocked()
-
-The diffstat is
-
- Documentation/filesystems/locking.rst |  77 +++++++++++++++-------
- fs/ceph/addr.c                        |   9 ++-
- fs/ceph/file.c                        |   2 +
- fs/cifs/smb2ops.c                     |   2 +
- fs/ext2/ext2.h                        |  11 ----
- fs/ext2/file.c                        |   7 +-
- fs/ext2/inode.c                       |  12 ++--
- fs/ext2/super.c                       |   3 -
- fs/ext4/ext4.h                        |  10 ---
- fs/ext4/extents.c                     |  25 +++----
- fs/ext4/file.c                        |  13 ++--
- fs/ext4/inode.c                       |  47 +++++--------
- fs/ext4/ioctl.c                       |   4 +-
- fs/ext4/super.c                       |  13 ++--
- fs/ext4/truncate.h                    |   8 ++-
- fs/f2fs/data.c                        |   4 +-
- fs/f2fs/f2fs.h                        |   1 -
- fs/f2fs/file.c                        |  62 +++++++++--------
- fs/f2fs/super.c                       |   1 -
- fs/fuse/dax.c                         |  50 +++++++-------
- fs/fuse/dir.c                         |  11 ++--
- fs/fuse/file.c                        |  10 +--
- fs/fuse/fuse_i.h                      |   7 --
- fs/fuse/inode.c                       |   1 -
- fs/inode.c                            |   2 +
- fs/xfs/xfs_bmap_util.c                |  15 +++--
- fs/xfs/xfs_file.c                     |  13 ++--
- fs/xfs/xfs_inode.c                    | 121 ++++++++++++++++++----------------
- fs/xfs/xfs_inode.h                    |   3 +-
- fs/xfs/xfs_super.c                    |   2 -
- fs/zonefs/super.c                     |  23 ++-----
- fs/zonefs/zonefs.h                    |   7 +-
- include/linux/fs.h                    |  39 +++++++++++
- mm/filemap.c                          | 113 ++++++++++++++++++++++++++-----
- mm/madvise.c                          |   2 +-
- mm/memory-failure.c                   |   2 +-
- mm/readahead.c                        |   2 +
- mm/rmap.c                             |  41 ++++++------
- mm/shmem.c                            |  20 +++---
- mm/truncate.c                         |   9 +--
- 40 files changed, 453 insertions(+), 351 deletions(-)
-
-							Thanks
-								Honza
-
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
