@@ -7,129 +7,158 @@ X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C794FC2B9F4
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Jun 2021 12:40:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 185B0C49EA2
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Jun 2021 12:42:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A62B160FF2
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Jun 2021 12:40:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0421060FF2
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Jun 2021 12:42:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231644AbhFVMm5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 22 Jun 2021 08:42:57 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:52413 "EHLO
+        id S231446AbhFVMoP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 22 Jun 2021 08:44:15 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:45982 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229999AbhFVMl2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Jun 2021 08:41:28 -0400
+        by vger.kernel.org with ESMTP id S231293AbhFVMoA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Jun 2021 08:44:00 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1624365552;
+        s=mimecast20190719; t=1624365704;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=ya5yyWfTX8+CsAsj4fkti9KQ8++ZtmpTifiRu8lZnfE=;
-        b=NKrgjaVTzWr61i7afM3UTZiElTyd4qRxJEXvMqQVhQTOkC6cXre9buZxa/hm58MPCGzMH1
-        kcpywcjGQQyyO06OsNutP8ERD/OwtHD7qVg51nocsyojAWkCl0DexSZEQ8ge5l9cU6B6cw
-        JizDISD1Vb0gdij9jNjLgPlAt1zhmmQ=
-Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com
- [209.85.222.197]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-115-RiMWcvy6MP-wRRYXXaPnDQ-1; Tue, 22 Jun 2021 08:39:10 -0400
-X-MC-Unique: RiMWcvy6MP-wRRYXXaPnDQ-1
-Received: by mail-qk1-f197.google.com with SMTP id t131-20020a37aa890000b02903a9f6c1e8bfso17812973qke.10
-        for <linux-xfs@vger.kernel.org>; Tue, 22 Jun 2021 05:39:10 -0700 (PDT)
+        bh=OwlEtufjM+4iMlqpevxFMZ49J/laHz0egsRZ4NF3YP8=;
+        b=eaeX9yPWQSP3T3FoQT9f1BXQiGDA3wqzyB+MljCx/yoAzC/IRaZkxcZND3LzQ78C4KQgNq
+        YTA9vF1Wuy/VgegqPaSEdl2y6sg0DtA9VDSuqSfPV6UScuuS0GdNgaHTFJA6N4Kt2x/HaN
+        +awJPJSH4sDU6GI4i2fHIR7J3wHXrto=
+Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
+ [209.85.222.200]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-446-gqBAtBh0N9a_LPwQbPyD6w-1; Tue, 22 Jun 2021 08:41:39 -0400
+X-MC-Unique: gqBAtBh0N9a_LPwQbPyD6w-1
+Received: by mail-qk1-f200.google.com with SMTP id r190-20020a375dc70000b02903acea04c19fso17859972qkb.8
+        for <linux-xfs@vger.kernel.org>; Tue, 22 Jun 2021 05:41:39 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=ya5yyWfTX8+CsAsj4fkti9KQ8++ZtmpTifiRu8lZnfE=;
-        b=EyC7gPaWbmjUKqTtuebT237+qZiEOLmW0bUP14lhSBn/Zxbn80JJZ/OXF4UgvCXIOV
-         KIDrzLocgWkDtIgCCB8AbQ9boR5AA160zo6UMN2gZ5Db/VZCm1qhCnbWTTrg6aKiXj/x
-         T4yZApK+vLUGz9F7qy4MlUmEDzxIj8tj1LE67N+h/FfVxCwqRf9UWajGlbDkIVJCTFS1
-         1UUHjy8V6EyTKhMl3vZk6ZMWkh9miY7/QI77mSHNT62LNa5DijCGKaVs5G8CK2zyIxxl
-         0wOWS8x0FWSuOy2/Adkr6WvfDNlocwdQuBAADud9/WpS73rz/EPHU1EjTHivTNrmFlL3
-         iobw==
-X-Gm-Message-State: AOAM533NBDavmGCA6QeDQFSntV+Bialuigqiel96K4+5nnRLPvZZqjxq
-        ZQ6op5w7FcJGsVLjy4oLgWjr2OKZGNqgKJYc9Oa3xasWR4NxmpO9IvNgVaop/992oqeqlK6oq+o
-        1wISuIRcr14cjNsfOb9sR
-X-Received: by 2002:ac8:43cc:: with SMTP id w12mr3228317qtn.137.1624365549882;
-        Tue, 22 Jun 2021 05:39:09 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzbfEJNz+1oPlQuu/rRkZ3CB9fowsJdmNZrqGeKU87mHAh2skfneeyNrC3ESv+A50O1p8ov8g==
-X-Received: by 2002:ac8:43cc:: with SMTP id w12mr3228298qtn.137.1624365549696;
-        Tue, 22 Jun 2021 05:39:09 -0700 (PDT)
+        bh=OwlEtufjM+4iMlqpevxFMZ49J/laHz0egsRZ4NF3YP8=;
+        b=lVetHfCpSU0wr2P6ccBJsBXCmLyyCtxLwY7HOWwlEVcPDG0xZ6ELGmoEjgvfMUG8fx
+         wUMiuJW+xjOGLWe0ajcuXGUaKjXuS5dH1D1sbFNe3NUpP0g9CI4TIYTQdPLiy6+ZyFZv
+         ZcmrhZKJf6d3PGSt/6Wbh8mXrEVXfhtBGmOLS2XHuFrllHFBX1AEKlS2Uw6I2vt+TmQ3
+         Mfg3H0eERpDGxWdwo8JC4vzJQYa1E4EIGNdFArJC7MlaZTVMwYIvE/Bfq+wMR8nG0s+Q
+         81xWXvnQ5XBmFVPVeSj+c7cUz440zALr4uLvoGnBTWcSkOss72RBucgDTIdG7SsEFi7Q
+         g31g==
+X-Gm-Message-State: AOAM532ebRynI9HX/wmhjUVX0+Ep/XXXmdY3DaL4knU7zqmzV7EN14lm
+        BBS2VjRJ0+Teror4Tx//tmen2ROt6YxtrGU3Fb9kIXFwjARJtGDoRvorur+OPKdlFjQQntnJxgq
+        qJleMjD+6G+0HQJ8AxKG4
+X-Received: by 2002:a05:620a:d45:: with SMTP id o5mr3967039qkl.319.1624365699121;
+        Tue, 22 Jun 2021 05:41:39 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJycRjEabNQotD3kWChsG0cUR58LmG4lex7wiHkqBa9NUHxeVpvMm2khn/fpC09Hp4STZycogw==
+X-Received: by 2002:a05:620a:d45:: with SMTP id o5mr3967017qkl.319.1624365698933;
+        Tue, 22 Jun 2021 05:41:38 -0700 (PDT)
 Received: from bfoster ([98.216.211.229])
-        by smtp.gmail.com with ESMTPSA id m11sm1543418qtn.81.2021.06.22.05.39.09
+        by smtp.gmail.com with ESMTPSA id k124sm12458172qkc.132.2021.06.22.05.41.38
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 22 Jun 2021 05:39:09 -0700 (PDT)
-Date:   Tue, 22 Jun 2021 08:39:07 -0400
+        Tue, 22 Jun 2021 05:41:38 -0700 (PDT)
+Date:   Tue, 22 Jun 2021 08:41:37 -0400
 From:   Brian Foster <bfoster@redhat.com>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/4] xfs: remove callback dequeue loop from
- xlog_state_do_iclog_callbacks
-Message-ID: <YNHZ67ucUUEPJNbh@bfoster>
+Subject: Re: [PATCH 3/4] xfs: Fix a CIL UAF by getting get rid of the iclog
+ callback lock
+Message-ID: <YNHagR8Z6F4K38ul@bfoster>
 References: <20210622040604.1290539-1-david@fromorbit.com>
- <20210622040604.1290539-3-david@fromorbit.com>
+ <20210622040604.1290539-4-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210622040604.1290539-3-david@fromorbit.com>
+In-Reply-To: <20210622040604.1290539-4-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 22, 2021 at 02:06:02PM +1000, Dave Chinner wrote:
+On Tue, Jun 22, 2021 at 02:06:03PM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> If we are processing callbacks on an iclog, nothing can be
-> concurrently adding callbacks to the loop. We only add callbacks to
-> the iclog when they are in ACTIVE or WANT_SYNC state, and we
-> explicitly do not add callbacks if the iclog is already in IOERROR
-> state.
+> The iclog callback chain has it's own lock. That was added way back
+> in 2008 by myself to alleviate severe lock contention on the
+> icloglock in commit 114d23aae512 ("[XFS] Per iclog callback chain
+> lock"). This was long before delayed logging took the icloglock out
+> of the hot transaction commit path and removed all contention on it.
+> Hence the separate ic_callback_lock doesn't serve any scalability
+> purpose anymore, and hasn't for close on a decade.
 > 
-> The only way to have a dequeue racing with an enqueue is to be
-> processing a shutdown without a direct reference to an iclog in
-> ACTIVE or WANT_SYNC state. As the enqueue avoids this race
-> condition, we only ever need a single dequeue operation in
-> xlog_state_do_iclog_callbacks(). Hence we can remove the loop.
+> Further, we only attach callbacks to iclogs in one place where we
+> are already taking the icloglock soon after attaching the callbacks.
+> We also have to drop the icloglock to run callbacks and grab it
+> immediately afterwards again. So given that the icloglock is no
+> longer hot, making it cover callbacks again doesn't really change
+> the locking patterns very much at all.
 > 
-
-This sort of relates to my question on the previous patch..
-
+> We also need to extend the icloglock to cover callback addition to
+> fix a zero-day UAF in the CIL push code. This occurs when shutdown
+> races with xlog_cil_push_work() and the shutdown runs the callbacks
+> before the push releases the iclog. This results in the CIL context
+> structure attached to the iclog being freed by the callback before
+> the CIL push has finished referencing it, leading to UAF bugs.
+> 
+> Hence, to avoid this UAF, we need the callback attachment to be
+> atomic with post processing of the commit iclog and references to
+> the structures being attached to the iclog. This requires holding
+> the icloglock as that's the only way to serialise iclog state
+> against a shutdown in progress.
+> 
+> The result is we need to be using the icloglock to protect the
+> callback list addition and removal and serialise them with shutdown.
+> That makes the ic_callback_lock redundant and so it can be removed.
+> 
+> Fixes: 71e330b59390 ("xfs: Introduce delayed logging core code")
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
+>  fs/xfs/xfs_log.c      | 34 ++++++----------------------------
+>  fs/xfs/xfs_log_cil.c  | 16 ++++++++++++----
+>  fs/xfs/xfs_log_priv.h |  3 ---
+>  3 files changed, 18 insertions(+), 35 deletions(-)
+> 
+...
+> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> index 3c2b1205944d..27bed1d9cf29 100644
+> --- a/fs/xfs/xfs_log_cil.c
+> +++ b/fs/xfs/xfs_log_cil.c
+...
+> @@ -898,8 +904,10 @@ xlog_cil_push_work(
+>  	 * iclogs to complete before we submit the commit_iclog. In this case,
+>  	 * the commit_iclog write needs to issue a pre-flush so that the
+>  	 * ordering is correctly preserved down to stable storage.
+> +	 *
+> +	 * NOTE: It is not safe reference the ctx after this check as we drop
+
+			   safe to reference
+
+> +	 * the icloglock if we have to wait for completion of other iclogs.
+>  	 */
+
+Also, it's probably more clear to just say it's not safe to access the
+ctx once we drop the lock since the conditional lock cycle is obvious
+from the code. Otherwise:
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/xfs/xfs_log.c | 16 ++++++----------
->  1 file changed, 6 insertions(+), 10 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index bb4390942275..05b00fa4d661 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -2774,19 +2774,15 @@ xlog_state_do_iclog_callbacks(
->  	struct xlog		*log,
->  	struct xlog_in_core	*iclog)
->  {
-> -	trace_xlog_iclog_callbacks_start(iclog, _RET_IP_);
-> -	spin_lock(&iclog->ic_callback_lock);
-> -	while (!list_empty(&iclog->ic_callbacks)) {
-> -		LIST_HEAD(tmp);
-> +	LIST_HEAD(tmp);
->  
-> -		list_splice_init(&iclog->ic_callbacks, &tmp);
+> -	spin_lock(&log->l_icloglock);
+>  	if (ctx->start_lsn != commit_lsn) {
+>  		xlog_wait_on_iclog(commit_iclog->ic_prev);
+>  		spin_lock(&log->l_icloglock);
+> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+> index 293d82b1fc0d..4c41bbfa33b0 100644
+> --- a/fs/xfs/xfs_log_priv.h
+> +++ b/fs/xfs/xfs_log_priv.h
+> @@ -216,9 +216,6 @@ typedef struct xlog_in_core {
+>  	enum xlog_iclog_state	ic_state;
+>  	unsigned int		ic_flags;
+>  	char			*ic_datap;	/* pointer to iclog data */
 > -
-> -		spin_unlock(&iclog->ic_callback_lock);
-> -		xlog_cil_process_committed(&tmp);
-> -		spin_lock(&iclog->ic_callback_lock);
-> -	}
-> +	trace_xlog_iclog_callbacks_start(iclog, _RET_IP_);
+> -	/* Callback structures need their own cacheline */
+> -	spinlock_t		ic_callback_lock ____cacheline_aligned_in_smp;
+>  	struct list_head	ic_callbacks;
 >  
-> +	spin_lock(&iclog->ic_callback_lock);
-> +	list_splice_init(&iclog->ic_callbacks, &tmp);
->  	spin_unlock(&iclog->ic_callback_lock);
-> +
-> +	xlog_cil_process_committed(&tmp);
->  	trace_xlog_iclog_callbacks_done(iclog, _RET_IP_);
->  }
->  
+>  	/* reference counts need their own cacheline */
 > -- 
 > 2.31.1
 > 
