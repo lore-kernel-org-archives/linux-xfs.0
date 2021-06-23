@@ -7,140 +7,99 @@ X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DD5BC4743C
-	for <linux-xfs@archiver.kernel.org>; Wed, 23 Jun 2021 10:18:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38D66C4743C
+	for <linux-xfs@archiver.kernel.org>; Wed, 23 Jun 2021 10:19:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D7C8B61164
-	for <linux-xfs@archiver.kernel.org>; Wed, 23 Jun 2021 10:18:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 192716024A
+	for <linux-xfs@archiver.kernel.org>; Wed, 23 Jun 2021 10:19:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229987AbhFWKVN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 23 Jun 2021 06:21:13 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:25641 "EHLO
+        id S230030AbhFWKVV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 23 Jun 2021 06:21:21 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:46396 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229833AbhFWKVM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Jun 2021 06:21:12 -0400
+        by vger.kernel.org with ESMTP id S229833AbhFWKVV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Jun 2021 06:21:21 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1624443535;
+        s=mimecast20190719; t=1624443543;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=uLB7su9bfNdFifSbLwSrVC/occnJihW8FJl8MeBy86Q=;
-        b=Se20YS9DKWitypP22PYveJoKbTqBPaBqP+R5vxM8ixCwV7/5ksC9oe7JAwXsu1JPvb1bPa
-        OqLrQeQW1oZedzBccDp5mdmisxm5IS0Zixw/pnqZZzo+30irxzX+7NyxIur5/1DohGpCuN
-        A/Sve/9IZgod8zz2iy3h8rJ2LqYsRSk=
-Received: from mail-qk1-f198.google.com (mail-qk1-f198.google.com
- [209.85.222.198]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-576-ZSIZM3mNM72-4w47VsI0uQ-1; Wed, 23 Jun 2021 06:18:53 -0400
-X-MC-Unique: ZSIZM3mNM72-4w47VsI0uQ-1
-Received: by mail-qk1-f198.google.com with SMTP id 142-20020a370d940000b02903b12767b75aso1924988qkn.6
-        for <linux-xfs@vger.kernel.org>; Wed, 23 Jun 2021 03:18:53 -0700 (PDT)
+        bh=r9Vtk8QcLVX2AtyoCT/oZD6hF+yhr/6Mj5ae/QAkdjo=;
+        b=ZnCUmXT5DBWHmtrPdRy7LhNpyNZqbsHaI/EerUjrdO01PqanDNUC9J5YKe+qEKjQVJtSAS
+        KdkmVigXfTNBObe94SoUdWaFNubFqiSmxYd2CIBMDPj3tlCA3wvn/IlSuOYmL4YEaJymEE
+        aR2HMqLqJQPmWj7iLOiv7xr6H9z7aHI=
+Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com
+ [209.85.222.199]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-360-uudwz5PmPkSet1QLK9q9UA-1; Wed, 23 Jun 2021 06:19:00 -0400
+X-MC-Unique: uudwz5PmPkSet1QLK9q9UA-1
+Received: by mail-qk1-f199.google.com with SMTP id d194-20020a3768cb0000b02903ad9d001bb6so1920869qkc.7
+        for <linux-xfs@vger.kernel.org>; Wed, 23 Jun 2021 03:19:00 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=uLB7su9bfNdFifSbLwSrVC/occnJihW8FJl8MeBy86Q=;
-        b=QFhvzLNaHcJ3/S4GYJj+SoJ/MP+n4vHvzxRRbCGJEGzfRcx9yeXdc1My/pDc/v3Aqs
-         YYhFFQrsku4u9TUFVDxOis6slpXVXOkyCQB1oUFF7DFwgP9vKOHislLDVfGvm63dGbOW
-         BwDqLkUbA41KR+Mbtu9RSw9Vtc8Y4dieJuXnylJF4cPpfjW4W7h2NYX9DnTXggkfUT33
-         gNZuelnSDwPwl8WEZIjLE1b1l8JUK9wJj+lKZYqsqkcv49JR2UQNHA/VoBumtdz8S/Rr
-         TxWDdXajQMb/0PsH/jCkcgqd5VcBt86qvEf9lXDum2aDdbYCH9xdwBrHqiLJEX3ibrBf
-         yd/w==
-X-Gm-Message-State: AOAM532LXmLySLildB7qx0HPlN3BtKMXLUqQe7sSV88tIVb2coO/DyLu
-        wA+RzsX5a/6WIrfUEpdHoxfWA2SH3iQKdFs1pGE1oZK1vxTCojjzAS/4gOSciu4tv6Yh/j2cT5/
-        4MSqkwROlPYAWzTuRi0UM
-X-Received: by 2002:ac8:6f37:: with SMTP id i23mr3204212qtv.376.1624443533499;
-        Wed, 23 Jun 2021 03:18:53 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwrzXN30qFVpAR2ejGrCYDQYELWCHDxbYKuZsjvngf4XZl0odMsXN2I4KlSCeCXPt1bguEYUQ==
-X-Received: by 2002:ac8:6f37:: with SMTP id i23mr3204199qtv.376.1624443533302;
-        Wed, 23 Jun 2021 03:18:53 -0700 (PDT)
+        bh=r9Vtk8QcLVX2AtyoCT/oZD6hF+yhr/6Mj5ae/QAkdjo=;
+        b=NQLQKbnFbXlMsvRF+sJso4tOhGyqbHq6WOPeaXqjd908DzBWKJQk5jTMy7Yf0+z3NP
+         tL5ltRpBh4XZSjXTgGqvcyaq+m6+buRUw4NHrtFlrF1tKg+i8TlIEMYCmOztaxvibDIa
+         H4vFaL5TMB3J+bETaXloma3a3Uyk8MlhLTLx/L7umcrLII/MlLNgjykshtXdawPng642
+         sMMH4aVltg5NNG7vUTP8RmdI5RDnC/i5Fw3IVh52bbR51hEmIGDHR+1E5nlyA6Q+2Z7v
+         W1lRlQw7ZxBvBusYDdegDG5e6lwYRNyWiczRpSE/O/uSoEDO9W/Tl4PBiCGKI494vBbn
+         wiSg==
+X-Gm-Message-State: AOAM533+4DTOxSHOzKk0RV8ctBB4dauyqkvxfR1aoXJ3eSHmHsKXXtUC
+        h8N8oVhRm+pmMSfOrteoFpM933BVNPBcx/Wc2anTdxhlI2rlBhyNIlFbmAD6DNAshNgD7Kpc3aG
+        NvTLHnaI1dF+hUSIeWUlI
+X-Received: by 2002:a05:622a:1701:: with SMTP id h1mr3188365qtk.36.1624443540005;
+        Wed, 23 Jun 2021 03:19:00 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJwqni1T+iQFiCXNAf7it3enD8HlVgzsvaDSyGNHTslzIlKTURdIizdMkjj6tQp71ye6s1ssbg==
+X-Received: by 2002:a05:622a:1701:: with SMTP id h1mr3188359qtk.36.1624443539877;
+        Wed, 23 Jun 2021 03:18:59 -0700 (PDT)
 Received: from bfoster ([98.216.211.229])
-        by smtp.gmail.com with ESMTPSA id h5sm15415971qkg.122.2021.06.23.03.18.52
+        by smtp.gmail.com with ESMTPSA id r19sm3481743qtw.59.2021.06.23.03.18.59
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 23 Jun 2021 03:18:52 -0700 (PDT)
-Date:   Wed, 23 Jun 2021 06:18:51 -0400
+        Wed, 23 Jun 2021 03:18:59 -0700 (PDT)
+Date:   Wed, 23 Jun 2021 06:18:57 -0400
 From:   Brian Foster <bfoster@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
+To:     Allison Henderson <allison.henderson@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/4] xfs: don't nest icloglock inside ic_callback_lock
-Message-ID: <YNMKi4JzPmdnIHNg@bfoster>
-References: <20210622040604.1290539-1-david@fromorbit.com>
- <20210622040604.1290539-2-david@fromorbit.com>
- <YNHZ4Bsr27u53TxG@bfoster>
- <20210622224247.GY664593@dread.disaster.area>
+Subject: Re: [PATCH] xfs: Initialize error in xfs_attr_remove_iter
+Message-ID: <YNMKkfHvrP0/jzAB@bfoster>
+References: <20210622210852.9511-1-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210622224247.GY664593@dread.disaster.area>
+In-Reply-To: <20210622210852.9511-1-allison.henderson@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 23, 2021 at 08:42:47AM +1000, Dave Chinner wrote:
-> On Tue, Jun 22, 2021 at 08:38:56AM -0400, Brian Foster wrote:
-> > On Tue, Jun 22, 2021 at 02:06:01PM +1000, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > It's completely unnecessary because callbacks are added to iclogs
-> > > without holding the icloglock, hence no amount of ordering between
-> > > the icloglock and ic_callback_lock will order the removal of
-> > > callbacks from the iclog.
-> > > 
-> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > ---
-> > >  fs/xfs/xfs_log.c | 18 ++++--------------
-> > >  1 file changed, 4 insertions(+), 14 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> > > index e93cac6b5378..bb4390942275 100644
-> > > --- a/fs/xfs/xfs_log.c
-> > > +++ b/fs/xfs/xfs_log.c
-> > > @@ -2773,11 +2773,8 @@ static void
-> > >  xlog_state_do_iclog_callbacks(
-> > >  	struct xlog		*log,
-> > >  	struct xlog_in_core	*iclog)
-> > > -		__releases(&log->l_icloglock)
-> > > -		__acquires(&log->l_icloglock)
-> > >  {
-> > >  	trace_xlog_iclog_callbacks_start(iclog, _RET_IP_);
-> > > -	spin_unlock(&log->l_icloglock);
-> > >  	spin_lock(&iclog->ic_callback_lock);
-> > >  	while (!list_empty(&iclog->ic_callbacks)) {
-> > >  		LIST_HEAD(tmp);
-> > > @@ -2789,12 +2786,6 @@ xlog_state_do_iclog_callbacks(
-> > >  		spin_lock(&iclog->ic_callback_lock);
-> > >  	}
-> > >  
-> > > -	/*
-> > > -	 * Pick up the icloglock while still holding the callback lock so we
-> > > -	 * serialise against anyone trying to add more callbacks to this iclog
-> > > -	 * now we've finished processing.
-> > > -	 */
-> > 
-> > This makes sense wrt to the current locking, but I'd like to better
-> > understand what's being removed. When would we add callbacks to an iclog
-> > that's made it to this stage (i.e., already completed I/O)? Is this some
-> > historical case or attempt at defensive logic?
+On Tue, Jun 22, 2021 at 02:08:52PM -0700, Allison Henderson wrote:
+> A recent bug report generated a warning that a code path in
+> xfs_attr_remove_iter could potentially return error uninitialized in the
+> case of XFS_DAS_RM_SHRINK state.  Fix this by initializing error.
 > 
-> This was done in 2008. It's very likely that, at the time, nobody
-> (including me) understood the iclog state machine well enough to
-> determine if we could race with adding iclogs at this time. Maybe
-> they did race and this was a bandaid over, say, a shutdown race condition.
-> But, more likely, it was just defensive to try to prevent callbacks
-> from being added before the iclog was marked ACTIVE again...
-> 
-> Really, though, nobody is going to be able to tell you why the code
-> was written like this in the first place because even the author
-> doesn't remember...
-> 
-
-Ok, just wanted to be sure there wasn't some context I was missing. The
-patch seems fine to me:
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+> ---
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-> -Dave.
+>  fs/xfs/libxfs/xfs_attr.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index 611dc67..d9d7d51 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -1375,7 +1375,7 @@ xfs_attr_remove_iter(
+>  {
+>  	struct xfs_da_args		*args = dac->da_args;
+>  	struct xfs_da_state		*state = dac->da_state;
+> -	int				retval, error;
+> +	int				retval, error = 0;
+>  	struct xfs_inode		*dp = args->dp;
+>  
+>  	trace_xfs_attr_node_removename(args);
 > -- 
-> Dave Chinner
-> david@fromorbit.com
+> 2.7.4
 > 
 
