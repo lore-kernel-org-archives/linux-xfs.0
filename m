@@ -2,183 +2,119 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DB01C2B9F4
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Jun 2021 21:02:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7EB7C2B9F4
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Jun 2021 21:12:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 79E7361952
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Jun 2021 21:02:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C56546197B
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Jun 2021 21:12:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229794AbhFYVFN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 25 Jun 2021 17:05:13 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52388 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229573AbhFYVFL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 25 Jun 2021 17:05:11 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id DBF1461952;
-        Fri, 25 Jun 2021 21:02:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1624654970;
-        bh=TX55pgx16kXHPQyJsJd773GYrTxqJ7UdC1GptbEPcuc=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=njzOCPQhYgRrLejLqYjd3sOmoyZwXA2bOxp9vgQaTZTvGg5CVNVNo772gzkg5Gsb+
-         2rgep86AWCZwcJaQBdKz+tPDNVVR7I3ITglAhpVh0I9rPjPFMWAWmSVWSbdZS+OPWy
-         /8mYkUSqyl6zaIPmvIKxdR3WJAKciLiTqpQuXAu5h1EA3yWFpQlGlrDE7lT3efMczP
-         TsY6U8z1BidVo9VW86pjiG0eQ28QyarFi4AKxKAaPs5RM71wXAfAt+qWvgzZwIWh/t
-         LgHldCn/CKfD6u1fHEdIpqFXTP6B0IbW/flRFsdiK0ZqanNuCw0zOjf8HLVybApJ/8
-         zDgsiMxNblL1w==
-Date:   Fri, 25 Jun 2021 14:02:49 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
+        id S229573AbhFYVPH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 25 Jun 2021 17:15:07 -0400
+Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:51373 "EHLO
+        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229531AbhFYVPG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Jun 2021 17:15:06 -0400
+Received: from dread.disaster.area (pa49-179-138-183.pa.nsw.optusnet.com.au [49.179.138.183])
+        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 749CE105A69;
+        Sat, 26 Jun 2021 07:12:43 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1lwt7y-00GynF-BY; Sat, 26 Jun 2021 07:12:42 +1000
+Date:   Sat, 26 Jun 2021 07:12:42 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Ml Ml <mliebherr99@googlemail.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/4] xfs: don't wait on future iclogs when pushing the CIL
-Message-ID: <20210625210249.GE13784@locust>
-References: <20210622040604.1290539-1-david@fromorbit.com>
- <20210622040604.1290539-5-david@fromorbit.com>
+Subject: Re: XFS Mount need ages
+Message-ID: <20210625211242.GC664593@dread.disaster.area>
+References: <CANFxOjCAYYs7ck0wrnM1AD0pBKE74=4PcDj_k+gHGjDmmvZBzg@mail.gmail.com>
+ <CANFxOjATBAnEJ=pZEjsdsbaY=ziGOo8b3fXL_otYRmDPQOi=_w@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20210622040604.1290539-5-david@fromorbit.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CANFxOjATBAnEJ=pZEjsdsbaY=ziGOo8b3fXL_otYRmDPQOi=_w@mail.gmail.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
+        a=MnllW2CieawZLw/OcHE/Ng==:117 a=MnllW2CieawZLw/OcHE/Ng==:17
+        a=8nJEP1OIZ-IA:10 a=r6YtysWOX24A:10 a=mK_AVkanAAAA:8 a=7-415B0cAAAA:8
+        a=yUgxei8nGljsMp-3sYIA:9 a=wPNLvfGTeEIA:10 a=3gWm3jAn84ENXaBijsEo:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 22, 2021 at 02:06:04PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Fri, Jun 25, 2021 at 02:05:29PM +0200, Ml Ml wrote:
+> After a loong time it mounted now. Here is some more info:
 > 
-> The iclogbuf ring attached to the struct xlog is circular, hence the
-> first and last iclogs in the ring can only be determined by
-> comparing them against the log->l_iclog pointer.
+> xfs_info /mnt/backup-cluster5
+> meta-data=/dev/rbd6              isize=512    agcount=65536, agsize=32768 blks
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>          =                       sectsz=512   attr=2, projid32bit=1
+>          =                       crc=1        finobt=1, sparse=1, rmapbt=0
+>          =                       reflink=0
+> data     =                       bsize=4096   blocks=2147483648, imaxpct=25
+>          =                       sunit=16     swidth=16 blks
+> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+> log      =internal log           bsize=4096   blocks=2560, version=2
+                                                ^^^^^^^^^^^
+>          =                       sectsz=512   sunit=0 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
 > 
-> In xfs_cil_push_work(), we want to wait on previous iclogs that were
-> issued so that we can flush them to stable storage with the commit
-> record write, and it simply waits on the previous iclog in the ring.
-> This, however, leads to CIL push hangs in generic/019 like so:
-> 
-> task:kworker/u33:0   state:D stack:12680 pid:    7 ppid:     2 flags:0x00004000
-> Workqueue: xfs-cil/pmem1 xlog_cil_push_work
-> Call Trace:
->  __schedule+0x30b/0x9f0
->  schedule+0x68/0xe0
->  xlog_wait_on_iclog+0x121/0x190
->  ? wake_up_q+0xa0/0xa0
->  xlog_cil_push_work+0x994/0xa10
->  ? _raw_spin_lock+0x15/0x20
->  ? xfs_swap_extents+0x920/0x920
->  process_one_work+0x1ab/0x390
->  worker_thread+0x56/0x3d0
->  ? rescuer_thread+0x3c0/0x3c0
->  kthread+0x14d/0x170
->  ? __kthread_bind_mask+0x70/0x70
->  ret_from_fork+0x1f/0x30
-> 
-> With other threads blocking in either xlog_state_get_iclog_space()
-> waiting for iclog space or xlog_grant_head_wait() waiting for log
-> reservation space.
-> 
-> The problem here is that the previous iclog on the ring might
-> actually be a future iclog. That is, if log->l_iclog points at
-> commit_iclog, commit_iclog is the first (oldest) iclog in the ring
-> and there are no previous iclogs pending as they have all completed
-> their IO and been activated again. IOWs, commit_iclog->ic_prev
-> points to an iclog that will be written in the future, not one that
-> has been written in the past.
-> 
-> Hence, in this case, waiting on the ->ic_prev iclog is incorrect
-> behaviour, and depending on the state of the future iclog, we can
-> end up with a circular ABA wait cycle and we hang.
-> 
-> The fix is made more complex by the fact that many iclogs states
-> cannot be used to determine if the iclog is a past or future iclog.
-> Hence we have to determine past iclogs by checking the LSN of the
-> iclog rather than their state. A past ACTIVE iclog will have a LSN
-> of zero, while a future ACTIVE iclog will have a LSN greater than
-> the current iclog. We don't wait on either of these cases.
-> 
-> Similarly, a future iclog that hasn't completed IO will have an LSN
-> greater than the current iclog and so we don't wait on them. A past
-> iclog that is still undergoing IO completion will have a LSN less
-> than the current iclog and those are the only iclogs that we need to
-> wait on.
-> 
-> Hence we can use the iclog LSN to determine what iclogs we need to
-> wait on here.
-> 
-> Fixes: 5fd9256ce156 ("xfs: separate CIL commit record IO")
-> Reported-by: Brian Foster <bfoster@redhat.com>
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> On Fri, Jun 25, 2021 at 12:49 PM Ml Ml <mliebherr99@googlemail.com> wrote:
+> >
+> > Hello List,
+> >
+> > i have a rbd block device with xfs on it. After resizing it (from 6TB
+> > to 8TB i think) the mount need hours to complete:
+> >
+> > I started the mount 15mins ago.:
+> >   mount -nv /dev/rbd6 /mnt/backup-cluster5
+> >
+> > ps:
+> > root      1143  0.2  0.0   8904  3088 pts/0    D+   12:17   0:03  |
+> >    \_ mount -nv /dev/rbd6 /mnt/backup-cluster5
+> >
+> >
+> > There is no timeout or ANY msg in dmesg until now.
+> >
+> > strace -p 1143  :  seems to do nothing.
+> > iotop --pid=1143: uses about 50KB/sec
+> >
+> > dd bs=1M count=2048 if=/dev/rbd6 of=/dev/null => gives me 50MB/sec
+> >
+> >
+> > Any idea what´s the problem here?
 
-Ok, looks good to me.
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+You started with a ~10GB sized filesystem (based on sunit, agsize
+and log size) and have grown it almost 3 orders of magnitude. This
+is way beyond recommendations - problems with fs layout tend to
+expose themselves before the filesystem has been grown by a factor
+of 10x, let alone ~1000x.
 
---D
+What I'd say is happening here is that if mount needed to iterate
+all the AGs for some reason (e.g. an unclean shutdown), and it now
+has to read all the AGF and AGI headers.  That's 130,000 IOs it now
+needs to do.  At 100 IOPS, that's going to take 1300 seconds - a bit
+over 20 minutes. And mount may have to do more than this (read AG
+btrees to count blocks), so it could be doing thousands of IOs per
+AG, which because of the sub-optimal layout, is multiplied by tens
+of thousands of times...
 
-> ---
->  fs/xfs/xfs_log_cil.c | 35 ++++++++++++++++++++++++++++-------
->  1 file changed, 28 insertions(+), 7 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index 27bed1d9cf29..83a932878177 100644
-> --- a/fs/xfs/xfs_log_cil.c
-> +++ b/fs/xfs/xfs_log_cil.c
-> @@ -877,7 +877,7 @@ xlog_cil_push_work(
->  	 * Once we attach the ctx to the iclog, a shutdown can process the
->  	 * iclog, run the callbacks and free the ctx. The only thing preventing
->  	 * this potential UAF situation here is that we are holding the
-> -	 * icloglock. Hence we cannot access the ctx after we have attached the
-> +	 * icloglock. Hence we cannot access the ctx once we have attached the
->  	 * callbacks and dropped the icloglock.
->  	 */
->  	spin_lock(&log->l_icloglock);
-> @@ -900,17 +900,38 @@ xlog_cil_push_work(
->  	spin_unlock(&cil->xc_push_lock);
->  
->  	/*
-> -	 * If the checkpoint spans multiple iclogs, wait for all previous
-> -	 * iclogs to complete before we submit the commit_iclog. In this case,
-> -	 * the commit_iclog write needs to issue a pre-flush so that the
-> -	 * ordering is correctly preserved down to stable storage.
-> +	 * If the checkpoint spans multiple iclogs, wait for all previous iclogs
-> +	 * to complete before we submit the commit_iclog. We can't use state
-> +	 * checks for this - ACTIVE can be either a past completed iclog or a
-> +	 * future iclog being filled, while WANT_SYNC through SYNC_DONE can be a
-> +	 * past or future iclog awaiting IO or ordered IO completion to be run.
-> +	 * In the latter case, if it's a future iclog and we wait on it, the we
-> +	 * will hang because it won't get processed through to ic_force_wait
-> +	 * wakeup until this commit_iclog is written to disk.  Hence we use the
-> +	 * iclog header lsn and compare it to the commit lsn to determine if we
-> +	 * need to wait on iclogs or not.
->  	 *
->  	 * NOTE: It is not safe reference the ctx after this check as we drop
->  	 * the icloglock if we have to wait for completion of other iclogs.
->  	 */
->  	if (ctx->start_lsn != commit_lsn) {
-> -		xlog_wait_on_iclog(commit_iclog->ic_prev);
-> -		spin_lock(&log->l_icloglock);
-> +		xfs_lsn_t	plsn;
-> +
-> +		plsn = be64_to_cpu(commit_iclog->ic_prev->ic_header.h_lsn);
-> +		if (plsn && XFS_LSN_CMP(plsn, commit_lsn) < 0) {
-> +			/*
-> +			 * Waiting on ic_force_wait orders the completion of
-> +			 * iclogs older than ic_prev. Hence we only need to wait
-> +			 * on the most recent older iclog here.
-> +			 */
-> +			xlog_wait_on_iclog(commit_iclog->ic_prev);
-> +			spin_lock(&log->l_icloglock);
-> +		}
-> +
-> +		/*
-> +		 * We need to issue a pre-flush so that the ordering for this
-> +		 * checkpoint is correctly preserved down to stable storage.
-> +		 */
->  		commit_iclog->ic_flags |= XLOG_ICL_NEED_FLUSH;
->  	}
->  
-> -- 
-> 2.31.1
-> 
+Ceph RBDs ain't the fastest devices around, so this is very likely.
+
+When you deploy a TB scale device, start with a TB-scale device, not
+a device that is <10GB. Starting with a TB scale device will give
+you TB-scale AGs, not 128MB sized AGs. Scanning a couple of dozen
+AGs takes very little time, scanning tens of thousands of tiny AGs
+takes a long time...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
