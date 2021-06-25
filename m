@@ -2,93 +2,80 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00DDBC2B9F4
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Jun 2021 14:55:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D963C2B9F4
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Jun 2021 18:20:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D272561965
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Jun 2021 14:55:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 465416195D
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Jun 2021 18:20:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229653AbhFYO5o (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 25 Jun 2021 10:57:44 -0400
-Received: from sandeen.net ([63.231.237.45]:43108 "EHLO sandeen.net"
+        id S229586AbhFYSWk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 25 Jun 2021 14:22:40 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60542 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230235AbhFYO5o (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 25 Jun 2021 10:57:44 -0400
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 14DB84CDD56;
-        Fri, 25 Jun 2021 09:55:01 -0500 (CDT)
-To:     Ml Ml <mliebherr99@googlemail.com>, linux-xfs@vger.kernel.org
-References: <CANFxOjCAYYs7ck0wrnM1AD0pBKE74=4PcDj_k+gHGjDmmvZBzg@mail.gmail.com>
- <CANFxOjATBAnEJ=pZEjsdsbaY=ziGOo8b3fXL_otYRmDPQOi=_w@mail.gmail.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: XFS Mount need ages
-Message-ID: <9a2da15c-b42e-98b1-a2c4-b1bd6474888b@sandeen.net>
-Date:   Fri, 25 Jun 2021 09:55:21 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.11.0
+        id S229531AbhFYSWi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 25 Jun 2021 14:22:38 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 1534E6195B;
+        Fri, 25 Jun 2021 18:20:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1624645217;
+        bh=Z9f+aKLR0PNMQ+J9H8JUZzxEQtRaykxdrS07DjXMFEw=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=eZokSngDTZxCCnDdtW2oh77RmhwNpt9byO8U3hK+RSIyD60ZtVQHV9t82bBjHxONw
+         1LWPL+nx/dsd1HgGgTGMK0rnFLuEiVHsDaUcC4fb7cvS9cP9DUEGOAtt/ufN9QU9l2
+         dY8pcYqT95nKw7ErS3DDHvpdhuT0mwfsV20qA+tvnqxE2/GqgnL8BIMtat2S54f/+P
+         g0k4F14XI/o4mmhZRgXRm/wz+D8M8ekdDAvUE9qzlN1tjJcOOb6SAacWCNenO0APE3
+         SZmalHRFUWcfNUUl14IRCHZAbG0rij3LfDhZDz3h3oP67Fd5/1EWjzwqbrHFeQUWQ3
+         hXrhAwz/gOsEg==
+Date:   Fri, 25 Jun 2021 11:20:16 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Allison Henderson <allison.henderson@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: Initialize error in xfs_attr_remove_iter
+Message-ID: <20210625182016.GA13784@locust>
+References: <20210622210852.9511-1-allison.henderson@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <CANFxOjATBAnEJ=pZEjsdsbaY=ziGOo8b3fXL_otYRmDPQOi=_w@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210622210852.9511-1-allison.henderson@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-What's in dmesg now? Was it doing log recovery? Which kernel version is this?
-More info please.
-
-Also for your dd speed test, please use iflag=direct to ensure you aren't
-reading cached data.
-
--Eric
-
-On 6/25/21 7:05 AM, Ml Ml wrote:
-> After a loong time it mounted now. Here is some more info:
+On Tue, Jun 22, 2021 at 02:08:52PM -0700, Allison Henderson wrote:
+> A recent bug report generated a warning that a code path in
+> xfs_attr_remove_iter could potentially return error uninitialized in the
+> case of XFS_DAS_RM_SHRINK state.  Fix this by initializing error.
 > 
-> xfs_info /mnt/backup-cluster5
-> meta-data=/dev/rbd6              isize=512    agcount=65536, agsize=32768 blks
->          =                       sectsz=512   attr=2, projid32bit=1
->          =                       crc=1        finobt=1, sparse=1, rmapbt=0
->          =                       reflink=0
-> data     =                       bsize=4096   blocks=2147483648, imaxpct=25
->          =                       sunit=16     swidth=16 blks
-> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-> log      =internal log           bsize=4096   blocks=2560, version=2
->          =                       sectsz=512   sunit=0 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+
+Looks good,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+
+--D
+
+> ---
+>  fs/xfs/libxfs/xfs_attr.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> On Fri, Jun 25, 2021 at 12:49 PM Ml Ml <mliebherr99@googlemail.com> wrote:
->>
->> Hello List,
->>
->> i have a rbd block device with xfs on it. After resizing it (from 6TB
->> to 8TB i think) the mount need hours to complete:
->>
->> I started the mount 15mins ago.:
->>   mount -nv /dev/rbd6 /mnt/backup-cluster5
->>
->> ps:
->> root      1143  0.2  0.0   8904  3088 pts/0    D+   12:17   0:03  |
->>    \_ mount -nv /dev/rbd6 /mnt/backup-cluster5
->>
->>
->> There is no timeout or ANY msg in dmesg until now.
->>
->> strace -p 1143  :  seems to do nothing.
->> iotop --pid=1143: uses about 50KB/sec
->>
->> dd bs=1M count=2048 if=/dev/rbd6 of=/dev/null => gives me 50MB/sec
->>
->>
->> Any idea what´s the problem here?
->>
->> Cheers,
->> Michael
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index 611dc67..d9d7d51 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -1375,7 +1375,7 @@ xfs_attr_remove_iter(
+>  {
+>  	struct xfs_da_args		*args = dac->da_args;
+>  	struct xfs_da_state		*state = dac->da_state;
+> -	int				retval, error;
+> +	int				retval, error = 0;
+>  	struct xfs_inode		*dp = args->dp;
+>  
+>  	trace_xfs_attr_node_removename(args);
+> -- 
+> 2.7.4
 > 
