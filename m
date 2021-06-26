@@ -7,409 +7,205 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C3ADC49EA7
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Jun 2021 22:18:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CA35C2B9F4
+	for <linux-xfs@archiver.kernel.org>; Sat, 26 Jun 2021 02:01:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 73BB361956
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Jun 2021 22:18:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F01D6196E
+	for <linux-xfs@archiver.kernel.org>; Sat, 26 Jun 2021 02:01:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229812AbhFYWVR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 25 Jun 2021 18:21:17 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37186 "EHLO mail.kernel.org"
+        id S229987AbhFZCEI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 25 Jun 2021 22:04:08 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36830 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229531AbhFYWVR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 25 Jun 2021 18:21:17 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 997DD6194D;
-        Fri, 25 Jun 2021 22:18:55 +0000 (UTC)
+        id S229915AbhFZCEH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 25 Jun 2021 22:04:07 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2E1826194B;
+        Sat, 26 Jun 2021 02:01:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1624659535;
-        bh=WQn/y+XSY6pXVJaFQ1srCT7khcBg1El06X6P6WnBEos=;
+        s=k20201202; t=1624672906;
+        bh=7lj1wJ8aXwILaejhB67DJ9JA/rD3ghlBZV8kLV7rAx8=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=spOVyMQaHuw4z5FV5lnbgqr1E8v7xZ7R2V8fzOuq6BCdpZkSAeLaZ3aqhS6pnEfc5
-         bdSxKbEwxsiOgul6k7U0xa648pB9Gfliwx4fdios4mf/1Q+kUc//etvpdPdXFY1jQ7
-         LWAgPmHXh0BQL7sEjbMqhd8TxBqrK8K4P97AmxbIVDTcf7uSU2sBH7hkTybuIiv4t8
-         aPx9IIZ+qyj83gCN4jKDIdEoj/QduZuylXiqr6NkG4UJttTpvkd0YdnGID0AVznxI9
-         0tUuku8vJHyVL3Xuj6+J9kYYsY7GeIiYGcucU1CSa86190I8n5snSZtgl3FmYghdCS
-         h/UTfh/JAtTjA==
-Date:   Fri, 25 Jun 2021 15:18:55 -0700
+        b=IcKWvO9nDOy6y9CgYnIGelRKStZ1/jnHvlEbAzK0osyIKcuc9p5mdnqjAGI2jytn4
+         BX+dYC4uezHikHTNkjIK15nkIIx8FU0gnasEKG/vua9rNiOi8ryOyifUoGrAfAT+wl
+         A1BV2kZKj3JjrnaP7kfn/9rJAcMGFbZv1q+sx9PLDUAcs/aFl93teTnNHQ5A3wZ223
+         Zj+n4RXV8TvFT1ahWZ8Mbxuta050Kwlkg63pYIVGQI4W3yP+Ano6guND5XJ/kZF5Qg
+         BFMchMDmggHN6oHyR17KTUs7t17i0xyypq7sHKEJdN/EWvULxYRv0wbDOEhJxHgYxm
+         UI/GAGV8c484w==
+Date:   Fri, 25 Jun 2021 19:01:45 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     "ruansy.fnst@fujitsu.com" <ruansy.fnst@fujitsu.com>
-Cc:     "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
-        "david@fromorbit.com" <david@fromorbit.com>,
-        "hch@lst.de" <hch@lst.de>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "nvdimm@lists.linux.dev" <nvdimm@lists.linux.dev>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "rgoldwyn@suse.de" <rgoldwyn@suse.de>,
-        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
-        "willy@infradead.org" <willy@infradead.org>
-Subject: Re: [PATCH v6.1 6/7] fs/xfs: Handle CoW for fsdax write() path
-Message-ID: <20210625221855.GG13784@locust>
-References: <OSBPR01MB2920A2BCD568364C1363AFA6F4369@OSBPR01MB2920.jpnprd01.prod.outlook.com>
- <20210615072147.73852-1-ruansy.fnst@fujitsu.com>
- <OSBPR01MB2920D2D275EB0DB15C37D079F4079@OSBPR01MB2920.jpnprd01.prod.outlook.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: [PATCH 2/3] xfs: remove kmem_alloc_io()
+Message-ID: <20210626020145.GH13784@locust>
+References: <20210625023029.1472466-1-david@fromorbit.com>
+ <20210625023029.1472466-3-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <OSBPR01MB2920D2D275EB0DB15C37D079F4079@OSBPR01MB2920.jpnprd01.prod.outlook.com>
+In-Reply-To: <20210625023029.1472466-3-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 24, 2021 at 08:49:17AM +0000, ruansy.fnst@fujitsu.com wrote:
-> Hi Darrick,
+On Fri, Jun 25, 2021 at 12:30:28PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Do you have any comment on this?
-
-Sorry, was on vacation.
-
-> Thanks,
-> Ruan.
+> Since commit 59bb47985c1d ("mm, sl[aou]b: guarantee natural alignment
+> for kmalloc(power-of-two)"), the core slab code now guarantees slab
+> alignment in all situations sufficient for IO purposes (i.e. minimum
+> of 512 byte alignment of >= 512 byte sized heap allocations) we no
+> longer need the workaround in the XFS code to provide this
+> guarantee.
 > 
-> > -----Original Message-----
-> > From: Shiyang Ruan <ruansy.fnst@fujitsu.com>
-> > Subject: [PATCH v6.1 6/7] fs/xfs: Handle CoW for fsdax write() path
-> > 
-> > Hi Darrick,
-> > 
-> > Since other patches looks good, I post this RFC patch singly to hot-fix the
-> > problem in xfs_dax_write_iomap_ops->iomap_end() of v6 that the error code
-> > was ingored. I will split this in two patches(changes in iomap and xfs
-> > respectively) in next formal version if it looks ok.
-> > 
-> > ====
-> > 
-> > Introduce a new interface called "iomap_post_actor()" in iomap_ops.  And call
-> > it between ->actor() and ->iomap_end().  It is mean to handle the error code
-> > returned from ->actor().  In this patchset, it is used to remap or cancel the
-> > CoW extents according to the error code.
-> > 
-> > Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
-> > ---
-> >  fs/dax.c               | 27 ++++++++++++++++++---------
-> >  fs/iomap/apply.c       |  4 ++++
-> >  fs/xfs/xfs_bmap_util.c |  3 +--
-> >  fs/xfs/xfs_file.c      |  5 +++--
-> >  fs/xfs/xfs_iomap.c     | 33 ++++++++++++++++++++++++++++++++-
-> >  fs/xfs/xfs_iomap.h     | 24 ++++++++++++++++++++++++
-> >  fs/xfs/xfs_iops.c      |  7 +++----
-> >  fs/xfs/xfs_reflink.c   |  3 +--
-> >  include/linux/iomap.h  |  8 ++++++++
-> >  9 files changed, 94 insertions(+), 20 deletions(-)
-> > 
-> > diff --git a/fs/dax.c b/fs/dax.c
-> > index 93f16210847b..0740c2610b6f 100644
-> > --- a/fs/dax.c
-> > +++ b/fs/dax.c
-> > @@ -1537,7 +1537,7 @@ static vm_fault_t dax_iomap_pte_fault(struct
-> > vm_fault *vmf, pfn_t *pfnp,
-> >  	struct iomap iomap = { .type = IOMAP_HOLE };
-> >  	struct iomap srcmap = { .type = IOMAP_HOLE };
-> >  	unsigned flags = IOMAP_FAULT;
-> > -	int error;
-> > +	int error, copied = PAGE_SIZE;
-> >  	bool write = vmf->flags & FAULT_FLAG_WRITE;
-> >  	vm_fault_t ret = 0, major = 0;
-> >  	void *entry;
-> > @@ -1598,7 +1598,7 @@ static vm_fault_t dax_iomap_pte_fault(struct
-> > vm_fault *vmf, pfn_t *pfnp,
-> >  	ret = dax_fault_actor(vmf, pfnp, &xas, &entry, false, flags,
-> >  			      &iomap, &srcmap);
-> >  	if (ret == VM_FAULT_SIGBUS)
-> > -		goto finish_iomap;
-> > +		goto finish_iomap_actor;
-> > 
-> >  	/* read/write MAPPED, CoW UNWRITTEN */
-> >  	if (iomap.flags & IOMAP_F_NEW) {
-> > @@ -1607,10 +1607,16 @@ static vm_fault_t dax_iomap_pte_fault(struct
-> > vm_fault *vmf, pfn_t *pfnp,
-> >  		major = VM_FAULT_MAJOR;
-> >  	}
-> > 
-> > + finish_iomap_actor:
-> > +	if (ops->iomap_post_actor) {
-> > +		if (ret & VM_FAULT_ERROR)
-> > +			copied = 0;
-> > +		ops->iomap_post_actor(inode, pos, PMD_SIZE, copied, flags,
-> > +				      &iomap, &srcmap);
-> > +	}
-> > +
-> >  finish_iomap:
-> >  	if (ops->iomap_end) {
-> > -		int copied = PAGE_SIZE;
-> > -
-> >  		if (ret & VM_FAULT_ERROR)
-> >  			copied = 0;
-> >  		/*
-> > @@ -1677,7 +1683,7 @@ static vm_fault_t dax_iomap_pmd_fault(struct
-> > vm_fault *vmf, pfn_t *pfnp,
-> >  	pgoff_t max_pgoff;
-> >  	void *entry;
-> >  	loff_t pos;
-> > -	int error;
-> > +	int error, copied = PMD_SIZE;
-> > 
-> >  	/*
-> >  	 * Check whether offset isn't beyond end of file now. Caller is @@ -1736,12
-> > +1742,15 @@ static vm_fault_t dax_iomap_pmd_fault(struct vm_fault *vmf,
-> > pfn_t *pfnp,
-> >  	ret = dax_fault_actor(vmf, pfnp, &xas, &entry, true, flags,
-> >  			      &iomap, &srcmap);
-> > 
-> > +	if (ret == VM_FAULT_FALLBACK)
-> > +		copied = 0;
-> > +	if (ops->iomap_post_actor) {
-> > +		ops->iomap_post_actor(inode, pos, PMD_SIZE, copied, flags,
-> > +				      &iomap, &srcmap);
-> > +	}
-> > +
-> >  finish_iomap:
-> >  	if (ops->iomap_end) {
-> > -		int copied = PMD_SIZE;
-> > -
-> > -		if (ret == VM_FAULT_FALLBACK)
-> > -			copied = 0;
-> >  		/*
-> >  		 * The fault is done by now and there's no way back (other
-> >  		 * thread may be already happily using PMD we have installed).
-> > diff --git a/fs/iomap/apply.c b/fs/iomap/apply.c index
-> > 0493da5286ad..26a54ded184f 100644
-> > --- a/fs/iomap/apply.c
-> > +++ b/fs/iomap/apply.c
-> > @@ -84,6 +84,10 @@ iomap_apply(struct inode *inode, loff_t pos, loff_t length,
-> > unsigned flags,
-> >  	written = actor(inode, pos, length, data, &iomap,
-> >  			srcmap.type != IOMAP_HOLE ? &srcmap : &iomap);
-> > 
-> > +	if (ops->iomap_post_actor) {
-> > +		written = ops->iomap_post_actor(inode, pos, length, written,
-> > +						flags, &iomap, &srcmap);
+> Replace the use of kmem_alloc_io() with kmem_alloc() or
+> kmem_alloc_large() appropriately, and remove the kmem_alloc_io()
+> interface altogether.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/kmem.c            | 25 -------------------------
+>  fs/xfs/kmem.h            |  1 -
+>  fs/xfs/xfs_buf.c         |  3 +--
+>  fs/xfs/xfs_log.c         |  3 +--
+>  fs/xfs/xfs_log_recover.c |  4 +---
+>  fs/xfs/xfs_trace.h       |  1 -
+>  6 files changed, 3 insertions(+), 34 deletions(-)
+> 
+> diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
+> index e986b95d94c9..3f2979fd2f2b 100644
+> --- a/fs/xfs/kmem.c
+> +++ b/fs/xfs/kmem.c
+> @@ -56,31 +56,6 @@ __kmem_vmalloc(size_t size, xfs_km_flags_t flags)
+>  	return ptr;
+>  }
+>  
+> -/*
+> - * Same as kmem_alloc_large, except we guarantee the buffer returned is aligned
+> - * to the @align_mask. We only guarantee alignment up to page size, we'll clamp
+> - * alignment at page size if it is larger. vmalloc always returns a PAGE_SIZE
+> - * aligned region.
+> - */
+> -void *
+> -kmem_alloc_io(size_t size, int align_mask, xfs_km_flags_t flags)
+> -{
+> -	void	*ptr;
+> -
+> -	trace_kmem_alloc_io(size, flags, _RET_IP_);
+> -
+> -	if (WARN_ON_ONCE(align_mask >= PAGE_SIZE))
+> -		align_mask = PAGE_SIZE - 1;
+> -
+> -	ptr = kmem_alloc(size, flags | KM_MAYFAIL);
+> -	if (ptr) {
+> -		if (!((uintptr_t)ptr & align_mask))
+> -			return ptr;
+> -		kfree(ptr);
+> -	}
+> -	return __kmem_vmalloc(size, flags);
+> -}
+> -
+>  void *
+>  kmem_alloc_large(size_t size, xfs_km_flags_t flags)
+>  {
+> diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
+> index 38007117697e..9ff20047f8b8 100644
+> --- a/fs/xfs/kmem.h
+> +++ b/fs/xfs/kmem.h
+> @@ -57,7 +57,6 @@ kmem_flags_convert(xfs_km_flags_t flags)
+>  }
+>  
+>  extern void *kmem_alloc(size_t, xfs_km_flags_t);
+> -extern void *kmem_alloc_io(size_t size, int align_mask, xfs_km_flags_t flags);
+>  extern void *kmem_alloc_large(size_t size, xfs_km_flags_t);
+>  static inline void  kmem_free(const void *ptr)
+>  {
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 8ff42b3585e0..a5ef1f9eb622 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -315,7 +315,6 @@ xfs_buf_alloc_kmem(
+>  	struct xfs_buf	*bp,
+>  	xfs_buf_flags_t	flags)
+>  {
+> -	int		align_mask = xfs_buftarg_dma_alignment(bp->b_target);
 
-How many operations actually need an iomap_post_actor?  It's just the
-dax ones, right?  Which is ... iomap_truncate_page, iomap_zero_range,
-dax_iomap_fault, and dax_iomap_rw, right?  We don't need a post_actor
-for other iomap functionality (like FIEMAP, SEEK_DATA/SEEK_HOLE, etc.)
-so adding a new function pointer for all operations feels a bit
-overbroad.
+Is xfs_buftarg_dma_alignment unused now?
 
-I had imagined that you'd create a struct dax_iomap_ops to wrap all the
-extra functionality that you need for dax operations:
+-or-
 
-struct dax_iomap_ops {
-	struct iomap_ops	iomap_ops;
-
-	int			(*end_io)(inode, pos, length...);
-};
-
-And alter the four functions that you need to take the special
-dax_iomap_ops.  I guess the downside is that this makes
-iomap_truncate_page and iomap_zero_range more complicated, but maybe
-it's just time to split those into DAX-specific versions.  Then we'd be
-rid of the cross-links betwee fs/iomap/buffered-io.c and fs/dax.c.
-
-> > +	}
-> >  out:
-> >  	/*
-> >  	 * Now the data has been copied, commit the range we've copied.  This
-> > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c index
-> > a5e9d7d34023..2a36dc93ff27 100644
-> > --- a/fs/xfs/xfs_bmap_util.c
-> > +++ b/fs/xfs/xfs_bmap_util.c
-> > @@ -965,8 +965,7 @@ xfs_free_file_space(
-> >  		return 0;
-> >  	if (offset + len > XFS_ISIZE(ip))
-> >  		len = XFS_ISIZE(ip) - offset;
-> > -	error = iomap_zero_range(VFS_I(ip), offset, len, NULL,
-> > -			&xfs_buffered_write_iomap_ops);
-> > +	error = xfs_iomap_zero_range(ip, offset, len, NULL);
-> >  	if (error)
-> >  		return error;
-> > 
-> > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c index 396ef36dcd0a..89406ec6741b
-> > 100644
-> > --- a/fs/xfs/xfs_file.c
-> > +++ b/fs/xfs/xfs_file.c
-> > @@ -684,11 +684,12 @@ xfs_file_dax_write(
-> >  	pos = iocb->ki_pos;
-> > 
-> >  	trace_xfs_file_dax_write(iocb, from);
-> > -	ret = dax_iomap_rw(iocb, from, &xfs_direct_write_iomap_ops);
-> > +	ret = dax_iomap_rw(iocb, from, &xfs_dax_write_iomap_ops);
-> >  	if (ret > 0 && iocb->ki_pos > i_size_read(inode)) {
-> >  		i_size_write(inode, iocb->ki_pos);
-> >  		error = xfs_setfilesize(ip, pos, ret);
-> >  	}
-> > +
-> >  out:
-> >  	if (iolock)
-> >  		xfs_iunlock(ip, iolock);
-> > @@ -1309,7 +1310,7 @@ __xfs_filemap_fault(
-> > 
-> >  		ret = dax_iomap_fault(vmf, pe_size, &pfn, NULL,
-> >  				(write_fault && !vmf->cow_page) ?
-> > -				 &xfs_direct_write_iomap_ops :
-> > +				 &xfs_dax_write_iomap_ops :
-> >  				 &xfs_read_iomap_ops);
-> >  		if (ret & VM_FAULT_NEEDDSYNC)
-> >  			ret = dax_finish_sync_fault(vmf, pe_size, pfn); diff --git
-> > a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c index d154f42e2dc6..2f322e2f8544
-> > 100644
-> > --- a/fs/xfs/xfs_iomap.c
-> > +++ b/fs/xfs/xfs_iomap.c
-> > @@ -761,7 +761,8 @@ xfs_direct_write_iomap_begin(
-> > 
-> >  		/* may drop and re-acquire the ilock */
-> >  		error = xfs_reflink_allocate_cow(ip, &imap, &cmap, &shared,
-> > -				&lockmode, flags & IOMAP_DIRECT);
-> > +				&lockmode,
-> > +				(flags & IOMAP_DIRECT) || IS_DAX(inode));
-> >  		if (error)
-> >  			goto out_unlock;
-> >  		if (shared)
-> > @@ -854,6 +855,36 @@ const struct iomap_ops xfs_direct_write_iomap_ops =
-> > {
-> >  	.iomap_begin		= xfs_direct_write_iomap_begin,
-> >  };
-> > 
-> > +static int
-> > +xfs_dax_write_iomap_post_actor(
-> > +	struct inode		*inode,
-> > +	loff_t			pos,
-> > +	loff_t			length,
-> > +	ssize_t			written,
-> > +	unsigned int		flags,
-> > +	struct iomap		*iomap,
-> > +	struct iomap		*srcmap)
-> > +{
-> > +	int			error = 0;
-> > +	struct xfs_inode	*ip = XFS_I(inode);
-> > +	bool			cow = xfs_is_cow_inode(ip);
-> > +
-> > +	if (written <= 0) {
-> > +		if (cow)
-> > +			xfs_reflink_cancel_cow_range(ip, pos, length, true);
-> > +		return written;
-> > +	}
-> > +
-> > +	if (cow)
-> > +		error = xfs_reflink_end_cow(ip, pos, written);
-> > +	return error ?: written;
-> > +}
-
-This is pretty much the same as what xfs_dio_write_end_io does, right?
-
-I had imagined that you'd change the function signatures to drop the
-iocb so that you could reuse this code instead of creating a whole new
-callback.
-
-Ah well.  Can I send you some prep patches to clean up some of the weird
-iomap code as a preparation series for this?
+Should we trust that the memory allocators will always maintain at least
+the current alignment guarantees, or actually check the alignment of the
+returned buffer if CONFIG_XFS_DEBUG=y?
 
 --D
 
-> > +
-> > +const struct iomap_ops xfs_dax_write_iomap_ops = {
-> > +	.iomap_begin		= xfs_direct_write_iomap_begin,
-> > +	.iomap_post_actor	= xfs_dax_write_iomap_post_actor,
-> > +};
-> > +
-> >  static int
-> >  xfs_buffered_write_iomap_begin(
-> >  	struct inode		*inode,
-> > diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h index
-> > 7d3703556d0e..fbacf638ab21 100644
-> > --- a/fs/xfs/xfs_iomap.h
-> > +++ b/fs/xfs/xfs_iomap.h
-> > @@ -42,8 +42,32 @@ xfs_aligned_fsb_count(
-> > 
-> >  extern const struct iomap_ops xfs_buffered_write_iomap_ops;  extern const
-> > struct iomap_ops xfs_direct_write_iomap_ops;
-> > +extern const struct iomap_ops xfs_dax_write_iomap_ops;
-> >  extern const struct iomap_ops xfs_read_iomap_ops;  extern const struct
-> > iomap_ops xfs_seek_iomap_ops;  extern const struct iomap_ops
-> > xfs_xattr_iomap_ops;
-> > 
-> > +static inline int
-> > +xfs_iomap_zero_range(
-> > +	struct xfs_inode	*ip,
-> > +	loff_t			offset,
-> > +	loff_t			len,
-> > +	bool			*did_zero)
-> > +{
-> > +	return iomap_zero_range(VFS_I(ip), offset, len, did_zero,
-> > +			IS_DAX(VFS_I(ip)) ? &xfs_dax_write_iomap_ops
-> > +					  : &xfs_buffered_write_iomap_ops); }
-> > +
-> > +static inline int
-> > +xfs_iomap_truncate_page(
-> > +	struct xfs_inode	*ip,
-> > +	loff_t			pos,
-> > +	bool			*did_zero)
-> > +{
-> > +	return iomap_truncate_page(VFS_I(ip), pos, did_zero,
-> > +			IS_DAX(VFS_I(ip)) ? &xfs_dax_write_iomap_ops
-> > +					  : &xfs_buffered_write_iomap_ops); }
-> > +
-> >  #endif /* __XFS_IOMAP_H__*/
-> > diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c index
-> > dfe24b7f26e5..6d936c3e1a6e 100644
-> > --- a/fs/xfs/xfs_iops.c
-> > +++ b/fs/xfs/xfs_iops.c
-> > @@ -911,8 +911,8 @@ xfs_setattr_size(
-> >  	 */
-> >  	if (newsize > oldsize) {
-> >  		trace_xfs_zero_eof(ip, oldsize, newsize - oldsize);
-> > -		error = iomap_zero_range(inode, oldsize, newsize - oldsize,
-> > -				&did_zeroing, &xfs_buffered_write_iomap_ops);
-> > +		error = xfs_iomap_zero_range(ip, oldsize, newsize - oldsize,
-> > +				&did_zeroing);
-> >  	} else {
-> >  		/*
-> >  		 * iomap won't detect a dirty page over an unwritten block (or a @@
-> > -924,8 +924,7 @@ xfs_setattr_size(
-> >  						     newsize);
-> >  		if (error)
-> >  			return error;
-> > -		error = iomap_truncate_page(inode, newsize, &did_zeroing,
-> > -				&xfs_buffered_write_iomap_ops);
-> > +		error = xfs_iomap_truncate_page(ip, newsize, &did_zeroing);
-> >  	}
-> > 
-> >  	if (error)
-> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c index
-> > d25434f93235..9a780948dbd0 100644
-> > --- a/fs/xfs/xfs_reflink.c
-> > +++ b/fs/xfs/xfs_reflink.c
-> > @@ -1266,8 +1266,7 @@ xfs_reflink_zero_posteof(
-> >  		return 0;
-> > 
-> >  	trace_xfs_zero_eof(ip, isize, pos - isize);
-> > -	return iomap_zero_range(VFS_I(ip), isize, pos - isize, NULL,
-> > -			&xfs_buffered_write_iomap_ops);
-> > +	return xfs_iomap_zero_range(ip, isize, pos - isize, NULL);
-> >  }
-> > 
-> >  /*
-> > diff --git a/include/linux/iomap.h b/include/linux/iomap.h index
-> > 95562f863ad0..58f2e1c78018 100644
-> > --- a/include/linux/iomap.h
-> > +++ b/include/linux/iomap.h
-> > @@ -135,6 +135,14 @@ struct iomap_ops {
-> >  			unsigned flags, struct iomap *iomap,
-> >  			struct iomap *srcmap);
-> > 
-> > +	/*
-> > +	 * Handle the error code from actor(). Do the finishing jobs for extra
-> > +	 * operations, such as CoW, according to whether written is negative.
-> > +	 */
-> > +	int (*iomap_post_actor)(struct inode *inode, loff_t pos, loff_t length,
-> > +			ssize_t written, unsigned flags, struct iomap *iomap,
-> > +			struct iomap *srcmap);
-> > +
-> >  	/*
-> >  	 * Commit and/or unreserve space previous allocated using iomap_begin.
-> >  	 * Written indicates the length of the successful write operation which
-> > --
-> > 2.31.1
+>  	xfs_km_flags_t	kmflag_mask = KM_NOFS;
+>  	size_t		size = BBTOB(bp->b_length);
+>  
+> @@ -323,7 +322,7 @@ xfs_buf_alloc_kmem(
+>  	if (!(flags & XBF_READ))
+>  		kmflag_mask |= KM_ZERO;
+>  
+> -	bp->b_addr = kmem_alloc_io(size, align_mask, kmflag_mask);
+> +	bp->b_addr = kmem_alloc(size, kmflag_mask);
+>  	if (!bp->b_addr)
+>  		return -ENOMEM;
+>  
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index e93cac6b5378..404970a4343c 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -1451,7 +1451,6 @@ xlog_alloc_log(
+>  	 */
+>  	ASSERT(log->l_iclog_size >= 4096);
+>  	for (i = 0; i < log->l_iclog_bufs; i++) {
+> -		int align_mask = xfs_buftarg_dma_alignment(mp->m_logdev_targp);
+>  		size_t bvec_size = howmany(log->l_iclog_size, PAGE_SIZE) *
+>  				sizeof(struct bio_vec);
+>  
+> @@ -1463,7 +1462,7 @@ xlog_alloc_log(
+>  		iclog->ic_prev = prev_iclog;
+>  		prev_iclog = iclog;
+>  
+> -		iclog->ic_data = kmem_alloc_io(log->l_iclog_size, align_mask,
+> +		iclog->ic_data = kmem_alloc_large(log->l_iclog_size,
+>  						KM_MAYFAIL | KM_ZERO);
+>  		if (!iclog->ic_data)
+>  			goto out_free_iclog;
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index fee4fbadea0a..cc559815e08f 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -79,8 +79,6 @@ xlog_alloc_buffer(
+>  	struct xlog	*log,
+>  	int		nbblks)
+>  {
+> -	int align_mask = xfs_buftarg_dma_alignment(log->l_targ);
+> -
+>  	/*
+>  	 * Pass log block 0 since we don't have an addr yet, buffer will be
+>  	 * verified on read.
+> @@ -108,7 +106,7 @@ xlog_alloc_buffer(
+>  	if (nbblks > 1 && log->l_sectBBsize > 1)
+>  		nbblks += log->l_sectBBsize;
+>  	nbblks = round_up(nbblks, log->l_sectBBsize);
+> -	return kmem_alloc_io(BBTOB(nbblks), align_mask, KM_MAYFAIL | KM_ZERO);
+> +	return kmem_alloc_large(BBTOB(nbblks), KM_MAYFAIL | KM_ZERO);
+>  }
+>  
+>  /*
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index f9d8d605f9b1..6865e838a71b 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -3689,7 +3689,6 @@ DEFINE_EVENT(xfs_kmem_class, name, \
+>  	TP_PROTO(ssize_t size, int flags, unsigned long caller_ip), \
+>  	TP_ARGS(size, flags, caller_ip))
+>  DEFINE_KMEM_EVENT(kmem_alloc);
+> -DEFINE_KMEM_EVENT(kmem_alloc_io);
+>  DEFINE_KMEM_EVENT(kmem_alloc_large);
+>  
+>  TRACE_EVENT(xfs_check_new_dalign,
+> -- 
+> 2.31.1
 > 
