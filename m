@@ -3,279 +3,284 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41A1BC2B9F4
-	for <linux-xfs@archiver.kernel.org>; Sat, 26 Jun 2021 02:06:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDB34C49EA6
+	for <linux-xfs@archiver.kernel.org>; Sat, 26 Jun 2021 14:58:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1B5796196E
-	for <linux-xfs@archiver.kernel.org>; Sat, 26 Jun 2021 02:06:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 995AA61C3A
+	for <linux-xfs@archiver.kernel.org>; Sat, 26 Jun 2021 14:58:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229916AbhFZCId (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 25 Jun 2021 22:08:33 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37186 "EHLO mail.kernel.org"
+        id S229630AbhFZPAi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 26 Jun 2021 11:00:38 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44420 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229906AbhFZCId (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 25 Jun 2021 22:08:33 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id ECEF16157E;
-        Sat, 26 Jun 2021 02:06:11 +0000 (UTC)
+        id S229518AbhFZPAh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 26 Jun 2021 11:00:37 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id F3C7561C3A
+        for <linux-xfs@vger.kernel.org>; Sat, 26 Jun 2021 14:58:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1624673172;
-        bh=jA9QkEvjdNKpYi0nRotkBVzsoBLSoQPnm2z8SON/rbw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=GyupCat/s8kliaP4fXaLJZYQCyGJm3Gp0XBsk6rVbt9jen0ldmrdM39TB9jS0YAz2
-         6bp9F4tLyHI7b9tN50w03XhNHlPRsYwFOtW6/Ymxpnj+kt91wAasdGqQKdfGKY0jfv
-         MULoQ7sK1ipvNQ4gu95OG1rX2I2SAafdNRGz6JMCNoDmuVBFC0pZUedEbLQNytM7kz
-         RNPYalG1X4hnYudYAlZ8wVJmj6eypofKqAH3v7bFTBbWp2jB+4aZKjbpcQRZSBMXj2
-         Q0FW0ziaTOtqo4/MnNjEUWG5GYzflX0etDEoe+YMobqlNsE6VIwcbAIrcHpvuFmZAU
-         1bvwPxAYxnXsg==
-Date:   Fri, 25 Jun 2021 19:06:11 -0700
+        s=k20201202; t=1624719495;
+        bh=tP8Q35lelD5Y+zWT9vofWom6+IMEPEONSSElWOnvm4s=;
+        h=Date:From:To:Subject:From;
+        b=lY3wl8yHa9I+7ifflOeG6hBBzy5QZY2Ff05hLDMXKyHkGCQz/F68PmU1PTSAog/e9
+         iMAFMVHbDSpCjjQadREoJRcmo574Lzerflw5RRLUJgJdAFop9k6k4s9+th74xkI27w
+         fQ8DfT4RoCOqkswEi9UQ3uKbyePNyeqRyByO6PvEZS800ka3Phk/MZjexUmN4N/5ZB
+         afiHEdczkdDvDDgPSYRmIEZfdUGmBZHWBVl28Nk/NdpprLO7DFKXSEpFRZjJ7cTZ4D
+         MYTqwRoo4oHBJzKPCxJOaaRKP9WpTzlEco94t3CFtesrc8H7PwvRXcher4x9k3s9oQ
+         g5On5tLOMkovg==
+Date:   Sat, 26 Jun 2021 07:58:14 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [PATCH 3/3] xfs: replace kmem_alloc_large() with kvmalloc()
-Message-ID: <20210626020611.GI13784@locust>
-References: <20210625023029.1472466-1-david@fromorbit.com>
- <20210625023029.1472466-4-david@fromorbit.com>
+To:     xfs <linux-xfs@vger.kernel.org>
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 1effb72a8179
+Message-ID: <20210626145814.GJ13784@locust>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210625023029.1472466-4-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jun 25, 2021 at 12:30:29PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> There is no reason for this wrapper existing anymore. All the places
-> that use KM_NOFS allocation are within transaction contexts and
-> hence covered by memalloc_nofs_save/restore contexts. Hence we don't
-> need any special handling of vmalloc for large IOs anymore and
-> so special casing this code isn't necessary.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Hi folks,
 
-Looks pretty straightforward,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+The for-next branch of the xfs-linux repository at:
 
---D
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-> ---
->  fs/xfs/kmem.c                 | 39 -----------------------------------
->  fs/xfs/kmem.h                 |  1 -
->  fs/xfs/libxfs/xfs_attr_leaf.c |  2 +-
->  fs/xfs/scrub/attr.c           | 14 +++++++------
->  fs/xfs/scrub/attr.h           |  3 ---
->  fs/xfs/xfs_log.c              |  4 ++--
->  fs/xfs/xfs_log_cil.c          | 10 ++++++++-
->  fs/xfs/xfs_log_recover.c      |  2 +-
->  fs/xfs/xfs_trace.h            |  1 -
->  9 files changed, 21 insertions(+), 55 deletions(-)
-> 
-> diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
-> index 3f2979fd2f2b..6f49bf39183c 100644
-> --- a/fs/xfs/kmem.c
-> +++ b/fs/xfs/kmem.c
-> @@ -29,42 +29,3 @@ kmem_alloc(size_t size, xfs_km_flags_t flags)
->  		congestion_wait(BLK_RW_ASYNC, HZ/50);
->  	} while (1);
->  }
-> -
-> -
-> -/*
-> - * __vmalloc() will allocate data pages and auxiliary structures (e.g.
-> - * pagetables) with GFP_KERNEL, yet we may be under GFP_NOFS context here. Hence
-> - * we need to tell memory reclaim that we are in such a context via
-> - * PF_MEMALLOC_NOFS to prevent memory reclaim re-entering the filesystem here
-> - * and potentially deadlocking.
-> - */
-> -static void *
-> -__kmem_vmalloc(size_t size, xfs_km_flags_t flags)
-> -{
-> -	unsigned nofs_flag = 0;
-> -	void	*ptr;
-> -	gfp_t	lflags = kmem_flags_convert(flags);
-> -
-> -	if (flags & KM_NOFS)
-> -		nofs_flag = memalloc_nofs_save();
-> -
-> -	ptr = __vmalloc(size, lflags);
-> -
-> -	if (flags & KM_NOFS)
-> -		memalloc_nofs_restore(nofs_flag);
-> -
-> -	return ptr;
-> -}
-> -
-> -void *
-> -kmem_alloc_large(size_t size, xfs_km_flags_t flags)
-> -{
-> -	void	*ptr;
-> -
-> -	trace_kmem_alloc_large(size, flags, _RET_IP_);
-> -
-> -	ptr = kmem_alloc(size, flags | KM_MAYFAIL);
-> -	if (ptr)
-> -		return ptr;
-> -	return __kmem_vmalloc(size, flags);
-> -}
-> diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
-> index 9ff20047f8b8..54da6d717a06 100644
-> --- a/fs/xfs/kmem.h
-> +++ b/fs/xfs/kmem.h
-> @@ -57,7 +57,6 @@ kmem_flags_convert(xfs_km_flags_t flags)
->  }
->  
->  extern void *kmem_alloc(size_t, xfs_km_flags_t);
-> -extern void *kmem_alloc_large(size_t size, xfs_km_flags_t);
->  static inline void  kmem_free(const void *ptr)
->  {
->  	kvfree(ptr);
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> index b910bd209949..16d64872acc0 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> @@ -489,7 +489,7 @@ xfs_attr_copy_value(
->  	}
->  
->  	if (!args->value) {
-> -		args->value = kmem_alloc_large(valuelen, KM_NOLOCKDEP);
-> +		args->value = kvmalloc(valuelen, GFP_KERNEL | __GFP_NOLOCKDEP);
->  		if (!args->value)
->  			return -ENOMEM;
->  	}
-> diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-> index 552af0cf8482..6c36af6dbd35 100644
-> --- a/fs/xfs/scrub/attr.c
-> +++ b/fs/xfs/scrub/attr.c
-> @@ -25,11 +25,11 @@
->   * reallocating the buffer if necessary.  Buffer contents are not preserved
->   * across a reallocation.
->   */
-> -int
-> +static int
->  xchk_setup_xattr_buf(
->  	struct xfs_scrub	*sc,
->  	size_t			value_size,
-> -	xfs_km_flags_t		flags)
-> +	gfp_t			flags)
->  {
->  	size_t			sz;
->  	struct xchk_xattr_buf	*ab = sc->buf;
-> @@ -57,7 +57,7 @@ xchk_setup_xattr_buf(
->  	 * Don't zero the buffer upon allocation to avoid runtime overhead.
->  	 * All users must be careful never to read uninitialized contents.
->  	 */
-> -	ab = kmem_alloc_large(sizeof(*ab) + sz, flags);
-> +	ab = kvmalloc(sizeof(*ab) + sz, flags);
->  	if (!ab)
->  		return -ENOMEM;
->  
-> @@ -79,7 +79,7 @@ xchk_setup_xattr(
->  	 * without the inode lock held, which means we can sleep.
->  	 */
->  	if (sc->flags & XCHK_TRY_HARDER) {
-> -		error = xchk_setup_xattr_buf(sc, XATTR_SIZE_MAX, 0);
-> +		error = xchk_setup_xattr_buf(sc, XATTR_SIZE_MAX, GFP_KERNEL);
->  		if (error)
->  			return error;
->  	}
-> @@ -138,7 +138,8 @@ xchk_xattr_listent(
->  	 * doesn't work, we overload the seen_enough variable to convey
->  	 * the error message back to the main scrub function.
->  	 */
-> -	error = xchk_setup_xattr_buf(sx->sc, valuelen, KM_MAYFAIL);
-> +	error = xchk_setup_xattr_buf(sx->sc, valuelen,
-> +			GFP_KERNEL | __GFP_RETRY_MAYFAIL);
->  	if (error == -ENOMEM)
->  		error = -EDEADLOCK;
->  	if (error) {
-> @@ -323,7 +324,8 @@ xchk_xattr_block(
->  		return 0;
->  
->  	/* Allocate memory for block usage checking. */
-> -	error = xchk_setup_xattr_buf(ds->sc, 0, KM_MAYFAIL);
-> +	error = xchk_setup_xattr_buf(ds->sc, 0,
-> +			GFP_KERNEL | __GFP_RETRY_MAYFAIL);
->  	if (error == -ENOMEM)
->  		return -EDEADLOCK;
->  	if (error)
-> diff --git a/fs/xfs/scrub/attr.h b/fs/xfs/scrub/attr.h
-> index 13a1d2e8424d..1719e1c4da59 100644
-> --- a/fs/xfs/scrub/attr.h
-> +++ b/fs/xfs/scrub/attr.h
-> @@ -65,7 +65,4 @@ xchk_xattr_dstmap(
->  			BITS_TO_LONGS(sc->mp->m_attr_geo->blksize);
->  }
->  
-> -int xchk_setup_xattr_buf(struct xfs_scrub *sc, size_t value_size,
-> -		xfs_km_flags_t flags);
-> -
->  #endif	/* __XFS_SCRUB_ATTR_H__ */
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index 404970a4343c..6cc51b0cb99e 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -1462,8 +1462,8 @@ xlog_alloc_log(
->  		iclog->ic_prev = prev_iclog;
->  		prev_iclog = iclog;
->  
-> -		iclog->ic_data = kmem_alloc_large(log->l_iclog_size,
-> -						KM_MAYFAIL | KM_ZERO);
-> +		iclog->ic_data = kvzalloc(log->l_iclog_size,
-> +				GFP_KERNEL | __GFP_RETRY_MAYFAIL);
->  		if (!iclog->ic_data)
->  			goto out_free_iclog;
->  #ifdef DEBUG
-> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index 3c2b1205944d..bf9d747352df 100644
-> --- a/fs/xfs/xfs_log_cil.c
-> +++ b/fs/xfs/xfs_log_cil.c
-> @@ -185,7 +185,15 @@ xlog_cil_alloc_shadow_bufs(
->  			 */
->  			kmem_free(lip->li_lv_shadow);
->  
-> -			lv = kmem_alloc_large(buf_size, KM_NOFS);
-> +			/*
-> +			 * We are in transaction context, which means this
-> +			 * allocation will pick up GFP_NOFS from the
-> +			 * memalloc_nofs_save/restore context the transaction
-> +			 * holds. This means we can use GFP_KERNEL here so the
-> +			 * generic kvmalloc() code will run vmalloc on
-> +			 * contiguous page allocation failure as we require.
-> +			 */
-> +			lv = kvmalloc(buf_size, GFP_KERNEL);
->  			memset(lv, 0, xlog_cil_iovec_space(niovecs));
->  
->  			lv->lv_item = lip;
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index cc559815e08f..1a291bf50776 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -106,7 +106,7 @@ xlog_alloc_buffer(
->  	if (nbblks > 1 && log->l_sectBBsize > 1)
->  		nbblks += log->l_sectBBsize;
->  	nbblks = round_up(nbblks, log->l_sectBBsize);
-> -	return kmem_alloc_large(BBTOB(nbblks), KM_MAYFAIL | KM_ZERO);
-> +	return kvzalloc(BBTOB(nbblks), GFP_KERNEL | __GFP_RETRY_MAYFAIL);
->  }
->  
->  /*
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 6865e838a71b..38f2f67303f7 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -3689,7 +3689,6 @@ DEFINE_EVENT(xfs_kmem_class, name, \
->  	TP_PROTO(ssize_t size, int flags, unsigned long caller_ip), \
->  	TP_ARGS(size, flags, caller_ip))
->  DEFINE_KMEM_EVENT(kmem_alloc);
-> -DEFINE_KMEM_EVENT(kmem_alloc_large);
->  
->  TRACE_EVENT(xfs_check_new_dalign,
->  	TP_PROTO(struct xfs_mount *mp, int new_dalign, xfs_ino_t calc_rootino),
-> -- 
-> 2.31.1
-> 
+has just been updated.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.  Aside from bug fixes, this is it for 5.14.
+
+The new head of the for-next branch is commit:
+
+1effb72a8179 xfs: don't wait on future iclogs when pushing the CIL
+
+New Commits:
+
+Allison Henderson (15):
+      [4126c06e25b3] xfs: Reverse apply 72b97ea40d
+      [a8490f699f6e] xfs: Add xfs_attr_node_remove_name
+      [6286514b63e1] xfs: Refactor xfs_attr_set_shortform
+      [f0f7c502c728] xfs: Separate xfs_attr_node_addname and xfs_attr_node_addname_clear_incomplete
+      [6ca5a4a1f529] xfs: Add helper xfs_attr_node_addname_find_attr
+      [5d954cc09f6b] xfs: Hoist xfs_attr_node_addname
+      [83c6e70789ff] xfs: Hoist xfs_attr_leaf_addname
+      [3f562d092bb1] xfs: Hoist node transaction handling
+      [2b74b03c13c4] xfs: Add delay ready attr remove routines
+      [8f502a400982] xfs: Add delay ready attr set routines
+      [0e6acf29db6f] xfs: Remove xfs_attr_rmtval_set
+      [4fd084dbbd05] xfs: Clean up xfs_attr_node_addname_clear_incomplete
+      [4a4957c16dc6] xfs: Fix default ASSERT in xfs_attr_set_iter
+      [816c8e39b7ea] xfs: Make attr name schemes consistent
+      [d3a3340b6af2] xfs: Initialize error in xfs_attr_remove_iter
+
+Brian Foster (2):
+      [84d8949e7707] xfs: hold buffer across unpin and potential shutdown processing
+      [e53d3aa0b605] xfs: remove dead stale buf unpin handling code
+
+Christoph Hellwig (4):
+      [5a981e4ea8ff] xfs: mark xfs_bmap_set_attrforkoff static
+      [54cd3aa6f810] xfs: remove ->b_offset handling for page backed buffers
+      [934d1076bb2c] xfs: simplify the b_page_count calculation
+      [170041f71596] xfs: cleanup error handling in xfs_buf_get_map
+
+Darrick J. Wong (38):
+      [a7bcb147fef3] xfs: clean up open-coded fs block unit conversions
+      [20bd8e63f30b] xfs: remove unnecessary shifts
+      [1ad2cfe0a570] xfs: move the quotaoff dqrele inode walk into xfs_icache.c
+      [3ea06d73e3c0] xfs: detach inode dquots at the end of inactivation
+      [df60019739d8] xfs: move the inode walk functions further down
+      [c1115c0cba2b] xfs: rename xfs_inode_walk functions to xfs_icwalk
+      [c809d7e948a1] xfs: pass the goal of the incore inode walk to xfs_inode_walk()
+      [b9baaef42f76] xfs: separate the dqrele_all inode grab logic from xfs_inode_walk_ag_grab
+      [9d2793ceecb9] xfs: move xfs_inew_wait call into xfs_dqrele_inode
+      [7fdff52623b4] xfs: remove iter_flags parameter from xfs_inode_walk_*
+      [f427cf5c6236] xfs: remove indirect calls from xfs_inode_walk{,_ag}
+      [d20d5edcf941] xfs: clean up inode state flag tests in xfs_blockgc_igrab
+      [594ab00b760f] xfs: make the icwalk processing functions clean up the grab state
+      [919a4ddb6841] xfs: fix radix tree tag signs
+      [9d5ee8375951] xfs: pass struct xfs_eofblocks to the inode scan callback
+      [f1bc5c5630f9] xfs: merge xfs_reclaim_inodes_ag into xfs_inode_walk_ag
+      [c076ae7a9361] xfs: refactor per-AG inode tagging functions
+      [ebf2e3372332] Merge tag 'xfs-buf-bulk-alloc-tag' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs into xfs-5.14-merge2
+      [c3eabd365034] Merge tag 'xfs-perag-conv-tag' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs into xfs-5.14-merge2
+      [f52edf6c54d9] Merge tag 'unit-conversion-cleanups-5.14_2021-06-03' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-5.14-merge2
+      [8b943d21d40d] Merge tag 'assorted-fixes-5.14-1_2021-06-03' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-5.14-merge2
+      [ffc18582ed18] Merge tag 'inode-walk-cleanups-5.14_2021-06-03' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-5.14-merge2
+      [255794c7ed7a] xfs: only reset incore inode health state flags when reclaiming an inode
+      [7975e465af6b] xfs: drop IDONTCACHE on inodes when we mark them sick
+      [2d53f66baffd] xfs: change the prefix of XFS_EOF_FLAGS_* to XFS_ICWALK_FLAG_
+      [9492750a8b18] xfs: selectively keep sick inodes in memory
+      [b26b2bf14f82] xfs: rename struct xfs_eofblocks to xfs_icwalk
+      [295abff2fb94] Merge tag 'fix-inode-health-reports-5.14_2021-06-08' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-5.14-merge2
+      [68b2c8bcdb81] Merge tag 'rename-eofblocks-5.14_2021-06-08' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-5.14-merge2
+      [d1015e2ebda6] Merge tag 'xfs-delay-ready-attrs-v20.1' of https://github.com/allisonhenderson/xfs_work into xfs-5.14-merge4
+      [ff7bebeb91f8] xfs: refactor the inode recycling code
+      [77b4d2861e83] xfs: separate primary inode selection criteria in xfs_iget_cache_hit
+      [10be350b8c6c] xfs: fix type mismatches in the inode reclaim functions
+      [3a1c3abe8971] xfs: print name of function causing fs shutdown instead of hex pointer
+      [c06ad17cfa0b] xfs: shorten the shutdown messages to a single line
+      [81ed94751b15] xfs: fix log intent recovery ENOSPC shutdowns when inactivating inodes
+      [4e6b8270c820] xfs: force the log offline when log intent item recovery fails
+      [a8f3522c9a1f] xfs: fix endianness issue in xfs_ag_shrink_space
+
+Dave Chinner (47):
+      [0a683794ace2] xfs: split up xfs_buf_allocate_memory
+      [07b5c5add42a] xfs: use xfs_buf_alloc_pages for uncached buffers
+      [c9fa563072e1] xfs: use alloc_pages_bulk_array() for buffers
+      [02c511738688] xfs: merge _xfs_buf_get_pages()
+      [e7d236a6fe51] xfs: move page freeing into _xfs_buf_free_pages()
+      [9bbafc71919a] xfs: move xfs_perag_get/put to xfs_ag.[ch]
+      [61aa005a5bd7] xfs: prepare for moving perag definitions and support to libxfs
+      [07b6403a6873] xfs: move perag structure and setup to libxfs/xfs_ag.[ch]
+      [f250eedcf762] xfs: make for_each_perag... a first class citizen
+      [934933c3eec9] xfs: convert raw ag walks to use for_each_perag
+      [6f4118fc6482] xfs: convert xfs_iwalk to use perag references
+      [7f8d3b3ca6fe] xfs: convert secondary superblock walk to use perags
+      [45d066211756] xfs: pass perags through to the busy extent code
+      [30933120ad79] xfs: push perags through the ag reservation callouts
+      [58d43a7e3263] xfs: pass perags around in fsmap data dev functions
+      [be9fb17d88f0] xfs: add a perag to the btree cursor
+      [fa9c3c197329] xfs: convert rmap btree cursor to using a perag
+      [a81a06211fb4] xfs: convert refcount btree cursor to use perags
+      [289d38d22cd8] xfs: convert allocbt cursors to use perags
+      [7b13c5155182] xfs: use perag for ialloc btree cursors
+      [50f02fe3338d] xfs: remove agno from btree cursor
+      [4268547305c9] xfs: simplify xfs_dialloc_select_ag() return values
+      [89b1f55a2951] xfs: collapse AG selection for inode allocation
+      [b652afd93703] xfs: get rid of xfs_dir_ialloc()
+      [309161f6603c] xfs: inode allocation can use a single perag instance
+      [8237fbf53d6f] xfs: clean up and simplify xfs_dialloc()
+      [f40aadb2bb64] xfs: use perag through unlink processing
+      [509201163fca] xfs: remove xfs_perag_t
+      [977ec4ddf0b7] xfs: don't take a spinlock unconditionally in the DIO fastpath
+      [289ae7b48c2c] xfs: get rid of xb_to_gfp()
+      [8bcac7448a94] xfs: merge xfs_buf_allocate_memory
+      [9ba0889e2272] xfs: drop the AGI being passed to xfs_check_agi_freecount
+      [90e2c1c20ac6] xfs: perag may be null in xfs_imap()
+      [a6a65fef5ef8] xfs: log stripe roundoff is a property of the log
+      [a79b28c284fd] xfs: separate CIL commit record IO
+      [b5071ada510a] xfs: remove xfs_blkdev_issue_flush
+      [0431d926b399] xfs: async blkdev cache flush
+      [bad77c375e8d] xfs: CIL checkpoint flushes caches unconditionally
+      [3468bb1ca6e8] xfs: remove need_start_rec parameter from xlog_write()
+      [eef983ffeae7] xfs: journal IO cache flush reductions
+      [19f4e7cc8197] xfs: Fix CIL throttle hang when CIL space used going backwards
+      [5f9b4b0de8dc] xfs: xfs_log_force_lsn isn't passed a LSN
+      [956f6daa84bf] xfs: add iclog state trace events
+      [6be001021f0b] xfs: don't nest icloglock inside ic_callback_lock
+      [b6903358c230] xfs: remove callback dequeue loop from xlog_state_do_iclog_callbacks
+      [a1bb8505e921] xfs: Fix a CIL UAF by getting get rid of the iclog callback lock
+      [1effb72a8179] xfs: don't wait on future iclogs when pushing the CIL
+
+Geert Uytterhoeven (1):
+      [18842e0a4f48] xfs: Fix 64-bit division on 32-bit in xlog_state_switch_iclogs()
+
+Jiapeng Chong (1):
+      [9673261c32dc] xfs: Remove redundant assignment to busy
+
+Shaokun Zhang (2):
+      [5f7fd7508620] xfs: sort variable alphabetically to avoid repeated declaration
+      [9bb38aa08039] xfs: remove redundant initialization of variable error
+
+
+Code Diffstat:
+
+ fs/xfs/libxfs/xfs_ag.c             |  280 ++++++++-
+ fs/xfs/libxfs/xfs_ag.h             |  136 +++++
+ fs/xfs/libxfs/xfs_ag_resv.c        |   11 +-
+ fs/xfs/libxfs/xfs_ag_resv.h        |   15 +
+ fs/xfs/libxfs/xfs_alloc.c          |  111 ++--
+ fs/xfs/libxfs/xfs_alloc.h          |    2 +-
+ fs/xfs/libxfs/xfs_alloc_btree.c    |   31 +-
+ fs/xfs/libxfs/xfs_alloc_btree.h    |    9 +-
+ fs/xfs/libxfs/xfs_attr.c           |  956 +++++++++++++++++------------
+ fs/xfs/libxfs/xfs_attr.h           |  403 +++++++++++++
+ fs/xfs/libxfs/xfs_attr_leaf.c      |    5 +-
+ fs/xfs/libxfs/xfs_attr_leaf.h      |    2 +-
+ fs/xfs/libxfs/xfs_attr_remote.c    |  167 +++---
+ fs/xfs/libxfs/xfs_attr_remote.h    |    8 +-
+ fs/xfs/libxfs/xfs_bmap.c           |    3 +-
+ fs/xfs/libxfs/xfs_bmap.h           |    1 -
+ fs/xfs/libxfs/xfs_btree.c          |   15 +-
+ fs/xfs/libxfs/xfs_btree.h          |   10 +-
+ fs/xfs/libxfs/xfs_ialloc.c         |  641 ++++++++++----------
+ fs/xfs/libxfs/xfs_ialloc.h         |   40 +-
+ fs/xfs/libxfs/xfs_ialloc_btree.c   |   46 +-
+ fs/xfs/libxfs/xfs_ialloc_btree.h   |   13 +-
+ fs/xfs/libxfs/xfs_inode_buf.c      |    2 +-
+ fs/xfs/libxfs/xfs_log_format.h     |    3 -
+ fs/xfs/libxfs/xfs_refcount.c       |  122 ++--
+ fs/xfs/libxfs/xfs_refcount.h       |    9 +-
+ fs/xfs/libxfs/xfs_refcount_btree.c |   39 +-
+ fs/xfs/libxfs/xfs_refcount_btree.h |    7 +-
+ fs/xfs/libxfs/xfs_rmap.c           |  147 ++---
+ fs/xfs/libxfs/xfs_rmap.h           |    6 +-
+ fs/xfs/libxfs/xfs_rmap_btree.c     |   46 +-
+ fs/xfs/libxfs/xfs_rmap_btree.h     |    6 +-
+ fs/xfs/libxfs/xfs_sb.c             |  146 +----
+ fs/xfs/libxfs/xfs_sb.h             |    9 -
+ fs/xfs/libxfs/xfs_shared.h         |   20 +-
+ fs/xfs/libxfs/xfs_types.c          |    4 +-
+ fs/xfs/libxfs/xfs_types.h          |    1 +
+ fs/xfs/scrub/agheader.c            |    1 +
+ fs/xfs/scrub/agheader_repair.c     |   33 +-
+ fs/xfs/scrub/alloc.c               |    3 +-
+ fs/xfs/scrub/bmap.c                |   21 +-
+ fs/xfs/scrub/common.c              |   15 +-
+ fs/xfs/scrub/fscounters.c          |   42 +-
+ fs/xfs/scrub/health.c              |    2 +-
+ fs/xfs/scrub/ialloc.c              |    9 +-
+ fs/xfs/scrub/refcount.c            |    3 +-
+ fs/xfs/scrub/repair.c              |   14 +-
+ fs/xfs/scrub/rmap.c                |    3 +-
+ fs/xfs/scrub/trace.c               |    3 +-
+ fs/xfs/xfs_attr_inactive.c         |    2 +-
+ fs/xfs/xfs_bio_io.c                |   35 ++
+ fs/xfs/xfs_bmap_util.c             |    6 +-
+ fs/xfs/xfs_buf.c                   |  311 ++++------
+ fs/xfs/xfs_buf.h                   |    3 +-
+ fs/xfs/xfs_buf_item.c              |   97 ++-
+ fs/xfs/xfs_discard.c               |    6 +-
+ fs/xfs/xfs_dquot_item.c            |    2 +-
+ fs/xfs/xfs_extent_busy.c           |   35 +-
+ fs/xfs/xfs_extent_busy.h           |    7 +-
+ fs/xfs/xfs_file.c                  |   70 ++-
+ fs/xfs/xfs_filestream.c            |    2 +-
+ fs/xfs/xfs_fsmap.c                 |   80 ++-
+ fs/xfs/xfs_fsops.c                 |   24 +-
+ fs/xfs/xfs_health.c                |   15 +-
+ fs/xfs/xfs_icache.c                | 1162 ++++++++++++++++++++----------------
+ fs/xfs/xfs_icache.h                |   58 +-
+ fs/xfs/xfs_inode.c                 |  234 ++++----
+ fs/xfs/xfs_inode.h                 |    9 +-
+ fs/xfs/xfs_inode_item.c            |   18 +-
+ fs/xfs/xfs_inode_item.h            |    2 +-
+ fs/xfs/xfs_ioctl.c                 |   41 +-
+ fs/xfs/xfs_iops.c                  |    4 +-
+ fs/xfs/xfs_iwalk.c                 |   84 ++-
+ fs/xfs/xfs_linux.h                 |    2 +
+ fs/xfs/xfs_log.c                   |  273 ++++-----
+ fs/xfs/xfs_log.h                   |    5 +-
+ fs/xfs/xfs_log_cil.c               |  138 +++--
+ fs/xfs/xfs_log_priv.h              |   41 +-
+ fs/xfs/xfs_log_recover.c           |   61 +-
+ fs/xfs/xfs_mount.c                 |  136 +----
+ fs/xfs/xfs_mount.h                 |  110 +---
+ fs/xfs/xfs_qm.c                    |   10 +-
+ fs/xfs/xfs_qm.h                    |    1 -
+ fs/xfs/xfs_qm_syscalls.c           |   54 +-
+ fs/xfs/xfs_reflink.c               |   13 +-
+ fs/xfs/xfs_super.c                 |   10 +-
+ fs/xfs/xfs_super.h                 |    1 -
+ fs/xfs/xfs_symlink.c               |    9 +-
+ fs/xfs/xfs_trace.c                 |    2 +
+ fs/xfs/xfs_trace.h                 |  115 +++-
+ fs/xfs/xfs_trans.c                 |    6 +-
+ fs/xfs/xfs_trans.h                 |    4 +-
+ 92 files changed, 3855 insertions(+), 3064 deletions(-)
