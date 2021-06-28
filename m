@@ -2,91 +2,99 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6671C2B9F4
-	for <linux-xfs@archiver.kernel.org>; Mon, 28 Jun 2021 11:50:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 173BCC49EA3
+	for <linux-xfs@archiver.kernel.org>; Mon, 28 Jun 2021 12:38:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 99A43619BF
-	for <linux-xfs@archiver.kernel.org>; Mon, 28 Jun 2021 11:50:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA7BE61C74
+	for <linux-xfs@archiver.kernel.org>; Mon, 28 Jun 2021 12:38:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232674AbhF1LxI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 28 Jun 2021 07:53:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57176 "EHLO
+        id S232692AbhF1Mki (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 28 Jun 2021 08:40:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39504 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232524AbhF1LxH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Jun 2021 07:53:07 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 679B3C061574;
-        Mon, 28 Jun 2021 04:50:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=GDSq0NtU1BVOXfQ/dS8BZrVt+kCI2fOBmY8YWTpCw/Q=; b=hArg8QhORkUpq8rvl4GS8UcGMq
-        w2nry9nqQ4dTFrkSER3m/Bvhe8rpJt2vNG3JC7/Ot3rDAHFiCrd+85ubk3hLZexRDUEB5Pw33wo+a
-        TU0WHxxqQTlDy0Mrs9SQAgIAzQ4Q80aQeOeBUDqG2UpbANzBr9e11Ogszrhr/w69i4y1dGN2QdmR9
-        I2zbeb90l7jmRkwoPbRr7A2fThQv5UMl96a0ifilFKVP+cpRHKVTPTL3JyyVYsGNml5SFlQBLkTfb
-        NAKxjO6pSaZpbH7MZq6cOkoLYxNEo2d4JpYkY5ZhD1RCLLNFAL0t0eDRXPTEWDWWSUqiMcFSuSp5k
-        kezd82UQ==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1lxpll-002vLV-Tr; Mon, 28 Jun 2021 11:49:53 +0000
-Date:   Mon, 28 Jun 2021 12:49:41 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        nvdimm@lists.linux.dev, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org, dm-devel@redhat.com,
-        darrick.wong@oracle.com, dan.j.williams@intel.com,
-        david@fromorbit.com, hch@lst.de, agk@redhat.com,
-        snitzer@redhat.com, rgoldwyn@suse.de
-Subject: Re: [PATCH v5 5/9] mm: Introduce mf_dax_kill_procs() for fsdax case
-Message-ID: <YNm3VeeWuI0m4Vcx@casper.infradead.org>
-References: <20210628000218.387833-1-ruansy.fnst@fujitsu.com>
- <20210628000218.387833-6-ruansy.fnst@fujitsu.com>
+        with ESMTP id S232502AbhF1Mki (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Jun 2021 08:40:38 -0400
+Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 978A9C061574;
+        Mon, 28 Jun 2021 05:38:11 -0700 (PDT)
+Received: by mail-pl1-x636.google.com with SMTP id v12so8851117plo.10;
+        Mon, 28 Jun 2021 05:38:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=WT6v9uHvNGHnkrWHqw+IXv7PjvRxi0xOsDaWugRiQFY=;
+        b=QBNZk2FzsKVZFkEr2ZWCddj45xygaewHlKrtuogtrs9agXtqPkt9I87Pg8ePtRsK86
+         4KEp6j8xcsOlWbj+fRie+VbcwEsfUlSm8Vsgl2GVEpbNYZ3XrfE8Q6a0TGPq5Yp6wmqt
+         sp8FLOKmtRdqhCAdsdoRPhOzrf8mdLp3v+AG//g5HC9SKt6/KQQtnw9OCXOna1cHHdfm
+         wahn2cLq5XCPwGdTgPwa5L/lzgSbnJq7Fs2dZUKPgxuN6DhvqHaWDS6t2UMfwFVkxEDy
+         o31Lfac7whjlPs3ig1RDDBaBtd2O36KPpwfRPRrFIuS+enwfsX8ut6XBEwlQi1x3ZgMI
+         XYkQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=WT6v9uHvNGHnkrWHqw+IXv7PjvRxi0xOsDaWugRiQFY=;
+        b=JMN4iFmCiB03MDfpjaIBklF44yuws6qIpmFgVTY/ukJfYA0B6wZemWg7D464/31s9H
+         89eNE6JYPlGM1oQmFejW+tanQV+XWcLrwTSZKMRP5NzrtKZD18k/Im9Jvem2lcvZetxl
+         1e94xnTNeMe4HXfZQ/ZgjdTBBfH+CUVR44siwi4ceSIHFzj1ppl4UtwMLot9W3dIgGjR
+         5mUGwNyiqw610jfOPXX2XXdpbFdwvl93IUOXhD1fbi9umwGWkyG4LcTLEYYk0rQ4t3ey
+         6QD0oXn+cG2c2En2flB+lJ2NC0uIbhPRfmP6cWmAUPgrx9JGVNp4k6+HPvTYf+GY4f39
+         Re9w==
+X-Gm-Message-State: AOAM530iI/+4S2nVZwpEdSijqEDptSVAKAMtSk0ik5MwA08KTuYKrSbz
+        X0xZoRjPBFsq5DouxbYmkGVF6axrB8/4mFFU
+X-Google-Smtp-Source: ABdhPJzdkVuvbX+deaYXYvXccVsMs9GcFLfmgAKhU2DOdgfJq1F9YYoem/FHmnOSftHIvwN94oL18A==
+X-Received: by 2002:a17:90a:fd11:: with SMTP id cv17mr5786896pjb.8.1624883890837;
+        Mon, 28 Jun 2021 05:38:10 -0700 (PDT)
+Received: from localhost.localdomain ([36.62.198.29])
+        by smtp.gmail.com with ESMTPSA id gl17sm2822835pjb.13.2021.06.28.05.38.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 28 Jun 2021 05:38:10 -0700 (PDT)
+From:   Wang Shilong <wangshilong1991@gmail.com>
+To:     linux-fsdevel@vger.kernel.org
+Cc:     linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, wangshilong1991@gmail.com
+Subject: [PATCH v2] fs: forbid invalid project ID
+Date:   Mon, 28 Jun 2021 08:38:01 -0400
+Message-Id: <20210628123801.3511-1-wangshilong1991@gmail.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210628000218.387833-6-ruansy.fnst@fujitsu.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 28, 2021 at 08:02:14AM +0800, Shiyang Ruan wrote:
-> +/*
-> + * dax_load_pfn - Load pfn of the DAX entry corresponding to a page
-> + * @mapping:	The file whose entry we want to load
-> + * @index:	offset where the DAX entry located in
-> + *
-> + * Return:	pfn number of the DAX entry
-> + */
+fileattr_set_prepare() should check if project ID
+is valid, otherwise dqget() will return NULL for
+such project ID quota.
 
-This is an externally visible function; why not add the second '*' and
-make this kernel-doc?
+Signed-off-by: Wang Shilong <wshilong@ddn.com>
+---
+v1->v2: try to fix in the VFS
+---
+ fs/ioctl.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-> +unsigned long dax_load_pfn(struct address_space *mapping, unsigned long index)
-> +{
-> +	XA_STATE(xas, &mapping->i_pages, index);
-> +	void *entry;
-> +	unsigned long pfn;
-> +
-> +	xas_lock_irq(&xas);
-> +	entry = xas_load(&xas);
-> +	pfn = dax_to_pfn(entry);
-> +	xas_unlock_irq(&xas);
-
-Why do you need the i_pages lock to do this?  is the rcu_read_lock()
-insufficient?  For that matter, why use the xas functions?  Why not
-simply:
-
-	void *entry = xa_load(&mapping->i_pages, index);
-	return dax_to_pfn(entry);
-
-Looking at it more though, how do you know this is a PFN entry?
-It could be locked, for example.  Or the zero page, or empty.
-
-But I think this is unnecessary; why not just pass the PFN into
-mf_dax_kill_procs?
+diff --git a/fs/ioctl.c b/fs/ioctl.c
+index 1e2204fa9963..5db5b218637b 100644
+--- a/fs/ioctl.c
++++ b/fs/ioctl.c
+@@ -845,6 +845,9 @@ static int fileattr_set_prepare(struct inode *inode,
+ 	if (fa->fsx_cowextsize == 0)
+ 		fa->fsx_xflags &= ~FS_XFLAG_COWEXTSIZE;
+ 
++	if (!projid_valid(KPROJIDT_INIT(fa->fsx_projid)))
++		return -EINVAL;
++
+ 	return 0;
+ }
+ 
+-- 
+2.27.0
 
