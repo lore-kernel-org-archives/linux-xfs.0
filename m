@@ -2,85 +2,86 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A92DEC11F66
-	for <linux-xfs@archiver.kernel.org>; Mon, 28 Jun 2021 22:34:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1609C11F66
+	for <linux-xfs@archiver.kernel.org>; Tue, 29 Jun 2021 05:31:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 87BD461CFA
-	for <linux-xfs@archiver.kernel.org>; Mon, 28 Jun 2021 22:34:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A8EC761DC5
+	for <linux-xfs@archiver.kernel.org>; Tue, 29 Jun 2021 05:31:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234106AbhF1Wge (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 28 Jun 2021 18:36:34 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:54729 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233442AbhF1Wgd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Jun 2021 18:36:33 -0400
-Received: from dread.disaster.area (pa49-179-138-183.pa.nsw.optusnet.com.au [49.179.138.183])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 74A7F1044A55;
-        Tue, 29 Jun 2021 08:34:04 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1lxzpL-000XQU-FI; Tue, 29 Jun 2021 08:34:03 +1000
-Date:   Tue, 29 Jun 2021 08:34:03 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Wang Shilong <wangshilong1991@gmail.com>
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net
-Subject: Re: [PATCH v2] fs: forbid invalid project ID
-Message-ID: <20210628223403.GE664593@dread.disaster.area>
-References: <20210628123801.3511-1-wangshilong1991@gmail.com>
+        id S230216AbhF2Fd0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 29 Jun 2021 01:33:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38768 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229969AbhF2FdZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Jun 2021 01:33:25 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CF01C061574;
+        Mon, 28 Jun 2021 22:30:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=cmynA9A822fLrD7UtdkS3IWPldsRV8lA/D07DeYfc5U=; b=Ufxz9d2ZOAlmZ8x0+E8MVKFXXb
+        DyC1ImCCf65waP7HkLZ/SlwLT4GFUqwM4RhJZ1U3kDRtvbr7fQoPLemPvaOsSeL7lVEqCRlrvmMGN
+        PUvxxM3Dvi9RDRiOGp0EkbvfLAkNTLcycHyUmNLNk/SSQnp9GJiJ8zgoLDd79QI3Od/clKlzzdUSW
+        PdFJFPK9jCV6PSwoDw+VtyYcEwPeWP6cgI5TprjeHGOcMs6vlzz53KBzTbA3OOHZZDiP+eGwXCJB2
+        G7R8YT2ouNIeMg0mEABAU2P7MmHNcADjqNNjU1hFZM963lgvecy7DGEv9H39yFkNXwRMErGeQYi7u
+        vLVJmumw==;
+Received: from hch by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1ly6Jg-003n4a-1T; Tue, 29 Jun 2021 05:29:59 +0000
+Date:   Tue, 29 Jun 2021 06:29:48 +0100
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com
+Subject: Re: [PATCH 0/2] iomap: small block problems
+Message-ID: <YNqvzNd+7+YtXfQj@infradead.org>
+References: <20210628172727.1894503-1-agruenba@redhat.com>
+ <YNoJPZ4NWiqok/by@casper.infradead.org>
+ <YNoLTl602RrckQND@infradead.org>
+ <YNpGW2KNMF9f77bk@casper.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210628123801.3511-1-wangshilong1991@gmail.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
-        a=MnllW2CieawZLw/OcHE/Ng==:117 a=MnllW2CieawZLw/OcHE/Ng==:17
-        a=kj9zAlcOel0A:10 a=r6YtysWOX24A:10 a=lB0dNpNiAAAA:8 a=7-415B0cAAAA:8
-        a=7euumQaoeVMSjSfkz0cA:9 a=CjuIK1q_8ugA:10 a=c-ZiYqmG3AbHTdtsH08C:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <YNpGW2KNMF9f77bk@casper.infradead.org>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 28, 2021 at 08:38:01AM -0400, Wang Shilong wrote:
-> fileattr_set_prepare() should check if project ID
-> is valid, otherwise dqget() will return NULL for
-> such project ID quota.
+On Mon, Jun 28, 2021 at 10:59:55PM +0100, Matthew Wilcox wrote:
+> > > so permit pages without an iop to enter writeback and create an iop
+> > > *then*.  Would that solve your problem?
+> > 
+> > It is the right thing to do, especially when combined with a feature
+> > patch to not bother to create the iomap_page structure on small
+> > block size file systems when the extent covers the whole page.
 > 
-> Signed-off-by: Wang Shilong <wshilong@ddn.com>
-> ---
-> v1->v2: try to fix in the VFS
-> ---
->  fs/ioctl.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/fs/ioctl.c b/fs/ioctl.c
-> index 1e2204fa9963..5db5b218637b 100644
-> --- a/fs/ioctl.c
-> +++ b/fs/ioctl.c
-> @@ -845,6 +845,9 @@ static int fileattr_set_prepare(struct inode *inode,
->  	if (fa->fsx_cowextsize == 0)
->  		fa->fsx_xflags &= ~FS_XFLAG_COWEXTSIZE;
->  
-> +	if (!projid_valid(KPROJIDT_INIT(fa->fsx_projid)))
-> +		return -EINVAL;
+> We don't know the extent layout at the point where *this* patch creates
+> iomap_pages during writeback.  I imagine we can delay creating one until
+> we find out what our destination layout will be?
 
-This needs to go further up in this function in the section where
-project IDs passed into this function are validated. Projids are
-only allowed to be changed when current_user_ns() == &init_user_ns,
-so this needs to be associated with that verification context.
+Hmm.  Actually ->page_mkwrite is always is always called on an uptodate
+page and we even assert that.  I should have remembered the whole page
+fault path better.
 
-This check should also use make_kprojid(), please, not open code
-KPROJIDT_INIT.
+So yeah, I think we should take patch 1 from Andreas, then a non-folio
+version of your patch as a start.  The next steps then would be in
+approximate order:
 
-Cheers,
+ 1. remove the iomap_page_create in iomap_page_mkwrite_actor as it
+    clearly is not needed at that point
+ 2. don't bother to create an iomap_page in iomap_readpage_actor when
+    the iomap spans the whole page
+ 3. don't create the iomap_page in __iomap_write_begin when the
+    page is marked uptodate or the write covers the whole page 
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+delaying the creation further in iomap_writepage_map will be harder
+as the loop around iomap_add_to_ioend is still fundamentally block
+based.
