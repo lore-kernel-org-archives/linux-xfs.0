@@ -7,270 +7,212 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DEEAC11F69
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Jun 2021 06:14:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BAA9DC11F65
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Jun 2021 06:38:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6758A61D01
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Jun 2021 06:14:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A0C2B61D08
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Jun 2021 06:38:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229933AbhF3GRG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 30 Jun 2021 02:17:06 -0400
-Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:52899 "EHLO
+        id S232540AbhF3Gkq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 30 Jun 2021 02:40:46 -0400
+Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:38268 "EHLO
         mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231587AbhF3GRG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Jun 2021 02:17:06 -0400
+        by vger.kernel.org with ESMTP id S232426AbhF3Gkq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Jun 2021 02:40:46 -0400
 Received: from dread.disaster.area (pa49-179-138-183.pa.nsw.optusnet.com.au [49.179.138.183])
-        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 6BD31106B0F;
-        Wed, 30 Jun 2021 16:14:35 +1000 (AEST)
+        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id BB6FE106AE4
+        for <linux-xfs@vger.kernel.org>; Wed, 30 Jun 2021 16:38:16 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lyTUY-0012JN-Lg; Wed, 30 Jun 2021 16:14:34 +1000
+        id 1lyTrU-0012kH-0a
+        for linux-xfs@vger.kernel.org; Wed, 30 Jun 2021 16:38:16 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1lyTUY-007LTw-E7; Wed, 30 Jun 2021 16:14:34 +1000
+        id 1lyTrT-007LlD-PH
+        for linux-xfs@vger.kernel.org; Wed, 30 Jun 2021 16:38:15 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org, linux-mm@kvack.org
-Subject: [PATCH 3/3] xfs: replace kmem_alloc_large() with kvmalloc()
-Date:   Wed, 30 Jun 2021 16:14:31 +1000
-Message-Id: <20210630061431.1750745-4-david@fromorbit.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH 3/9] xfs: move recovery needed state updates to xfs_log_mount_finish
+Date:   Wed, 30 Jun 2021 16:38:07 +1000
+Message-Id: <20210630063813.1751007-4-david@fromorbit.com>
 X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20210630061431.1750745-1-david@fromorbit.com>
-References: <20210630061431.1750745-1-david@fromorbit.com>
+In-Reply-To: <20210630063813.1751007-1-david@fromorbit.com>
+References: <20210630063813.1751007-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
         a=MnllW2CieawZLw/OcHE/Ng==:117 a=MnllW2CieawZLw/OcHE/Ng==:17
-        a=r6YtysWOX24A:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
-        a=dSPyfIX0mPSTpOhiuKoA:9 a=AjGcO6oz07-iQ99wixmX:22
+        a=r6YtysWOX24A:10 a=20KFwNOVAAAA:8 a=MU6oyeIEaMzVx_n5NM0A:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-There is no reason for this wrapper existing anymore. All the places
-that use KM_NOFS allocation are within transaction contexts and
-hence covered by memalloc_nofs_save/restore contexts. Hence we don't
-need any special handling of vmalloc for large IOs anymore and
-so special casing this code isn't necessary.
+xfs_log_mount_finish() needs to know if recovery is needed or not to
+make descisions on whether to flush the log and AIL.  Move the
+handling of the NEED_RECOVERY state out to this function rather than
+needing a temporary variable to store this state over the call to
+xlog_recover_finish().
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/kmem.c                 | 39 -----------------------------------
- fs/xfs/kmem.h                 |  1 -
- fs/xfs/libxfs/xfs_attr_leaf.c |  2 +-
- fs/xfs/scrub/attr.c           | 14 +++++++------
- fs/xfs/scrub/attr.h           |  3 ---
- fs/xfs/xfs_log.c              |  4 ++--
- fs/xfs/xfs_log_cil.c          | 10 ++++++++-
- fs/xfs/xfs_log_recover.c      |  2 +-
- fs/xfs/xfs_trace.h            |  1 -
- 9 files changed, 21 insertions(+), 55 deletions(-)
+ fs/xfs/xfs_log.c         | 24 ++++++++-----
+ fs/xfs/xfs_log_recover.c | 73 +++++++++++++++-------------------------
+ 2 files changed, 43 insertions(+), 54 deletions(-)
 
-diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
-index 3f2979fd2f2b..6f49bf39183c 100644
---- a/fs/xfs/kmem.c
-+++ b/fs/xfs/kmem.c
-@@ -29,42 +29,3 @@ kmem_alloc(size_t size, xfs_km_flags_t flags)
- 		congestion_wait(BLK_RW_ASYNC, HZ/50);
- 	} while (1);
- }
--
--
--/*
-- * __vmalloc() will allocate data pages and auxiliary structures (e.g.
-- * pagetables) with GFP_KERNEL, yet we may be under GFP_NOFS context here. Hence
-- * we need to tell memory reclaim that we are in such a context via
-- * PF_MEMALLOC_NOFS to prevent memory reclaim re-entering the filesystem here
-- * and potentially deadlocking.
-- */
--static void *
--__kmem_vmalloc(size_t size, xfs_km_flags_t flags)
--{
--	unsigned nofs_flag = 0;
--	void	*ptr;
--	gfp_t	lflags = kmem_flags_convert(flags);
--
--	if (flags & KM_NOFS)
--		nofs_flag = memalloc_nofs_save();
--
--	ptr = __vmalloc(size, lflags);
--
--	if (flags & KM_NOFS)
--		memalloc_nofs_restore(nofs_flag);
--
--	return ptr;
--}
--
--void *
--kmem_alloc_large(size_t size, xfs_km_flags_t flags)
--{
--	void	*ptr;
--
--	trace_kmem_alloc_large(size, flags, _RET_IP_);
--
--	ptr = kmem_alloc(size, flags | KM_MAYFAIL);
--	if (ptr)
--		return ptr;
--	return __kmem_vmalloc(size, flags);
--}
-diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
-index 9ff20047f8b8..54da6d717a06 100644
---- a/fs/xfs/kmem.h
-+++ b/fs/xfs/kmem.h
-@@ -57,7 +57,6 @@ kmem_flags_convert(xfs_km_flags_t flags)
- }
- 
- extern void *kmem_alloc(size_t, xfs_km_flags_t);
--extern void *kmem_alloc_large(size_t size, xfs_km_flags_t);
- static inline void  kmem_free(const void *ptr)
- {
- 	kvfree(ptr);
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index b910bd209949..16d64872acc0 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -489,7 +489,7 @@ xfs_attr_copy_value(
- 	}
- 
- 	if (!args->value) {
--		args->value = kmem_alloc_large(valuelen, KM_NOLOCKDEP);
-+		args->value = kvmalloc(valuelen, GFP_KERNEL | __GFP_NOLOCKDEP);
- 		if (!args->value)
- 			return -ENOMEM;
- 	}
-diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-index 552af0cf8482..6c36af6dbd35 100644
---- a/fs/xfs/scrub/attr.c
-+++ b/fs/xfs/scrub/attr.c
-@@ -25,11 +25,11 @@
-  * reallocating the buffer if necessary.  Buffer contents are not preserved
-  * across a reallocation.
-  */
--int
-+static int
- xchk_setup_xattr_buf(
- 	struct xfs_scrub	*sc,
- 	size_t			value_size,
--	xfs_km_flags_t		flags)
-+	gfp_t			flags)
- {
- 	size_t			sz;
- 	struct xchk_xattr_buf	*ab = sc->buf;
-@@ -57,7 +57,7 @@ xchk_setup_xattr_buf(
- 	 * Don't zero the buffer upon allocation to avoid runtime overhead.
- 	 * All users must be careful never to read uninitialized contents.
- 	 */
--	ab = kmem_alloc_large(sizeof(*ab) + sz, flags);
-+	ab = kvmalloc(sizeof(*ab) + sz, flags);
- 	if (!ab)
- 		return -ENOMEM;
- 
-@@ -79,7 +79,7 @@ xchk_setup_xattr(
- 	 * without the inode lock held, which means we can sleep.
- 	 */
- 	if (sc->flags & XCHK_TRY_HARDER) {
--		error = xchk_setup_xattr_buf(sc, XATTR_SIZE_MAX, 0);
-+		error = xchk_setup_xattr_buf(sc, XATTR_SIZE_MAX, GFP_KERNEL);
- 		if (error)
- 			return error;
- 	}
-@@ -138,7 +138,8 @@ xchk_xattr_listent(
- 	 * doesn't work, we overload the seen_enough variable to convey
- 	 * the error message back to the main scrub function.
- 	 */
--	error = xchk_setup_xattr_buf(sx->sc, valuelen, KM_MAYFAIL);
-+	error = xchk_setup_xattr_buf(sx->sc, valuelen,
-+			GFP_KERNEL | __GFP_RETRY_MAYFAIL);
- 	if (error == -ENOMEM)
- 		error = -EDEADLOCK;
- 	if (error) {
-@@ -323,7 +324,8 @@ xchk_xattr_block(
- 		return 0;
- 
- 	/* Allocate memory for block usage checking. */
--	error = xchk_setup_xattr_buf(ds->sc, 0, KM_MAYFAIL);
-+	error = xchk_setup_xattr_buf(ds->sc, 0,
-+			GFP_KERNEL | __GFP_RETRY_MAYFAIL);
- 	if (error == -ENOMEM)
- 		return -EDEADLOCK;
- 	if (error)
-diff --git a/fs/xfs/scrub/attr.h b/fs/xfs/scrub/attr.h
-index 13a1d2e8424d..1719e1c4da59 100644
---- a/fs/xfs/scrub/attr.h
-+++ b/fs/xfs/scrub/attr.h
-@@ -65,7 +65,4 @@ xchk_xattr_dstmap(
- 			BITS_TO_LONGS(sc->mp->m_attr_geo->blksize);
- }
- 
--int xchk_setup_xattr_buf(struct xfs_scrub *sc, size_t value_size,
--		xfs_km_flags_t flags);
--
- #endif	/* __XFS_SCRUB_ATTR_H__ */
 diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 5f6fc0ee4584..71fd8c0cad92 100644
+index 3ea67a90bcde..6e6f490a8ab5 100644
 --- a/fs/xfs/xfs_log.c
 +++ b/fs/xfs/xfs_log.c
-@@ -1462,8 +1462,8 @@ xlog_alloc_log(
- 		iclog->ic_prev = prev_iclog;
- 		prev_iclog = iclog;
+@@ -698,9 +698,9 @@ int
+ xfs_log_mount_finish(
+ 	struct xfs_mount	*mp)
+ {
+-	int	error = 0;
+-	bool	readonly = (mp->m_flags & XFS_MOUNT_RDONLY);
+-	bool	recovered = mp->m_log->l_flags & XLOG_RECOVERY_NEEDED;
++	struct xlog		*log = mp->m_log;
++	bool			readonly = (mp->m_flags & XFS_MOUNT_RDONLY);
++	int			error = 0;
  
--		iclog->ic_data = kmem_alloc_large(log->l_iclog_size,
--						KM_MAYFAIL | KM_ZERO);
-+		iclog->ic_data = kvzalloc(log->l_iclog_size,
-+				GFP_KERNEL | __GFP_RETRY_MAYFAIL);
- 		if (!iclog->ic_data)
- 			goto out_free_iclog;
- #ifdef DEBUG
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index b128aaa9b870..d162e8b83e90 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -185,7 +185,15 @@ xlog_cil_alloc_shadow_bufs(
- 			 */
- 			kmem_free(lip->li_lv_shadow);
+ 	if (mp->m_flags & XFS_MOUNT_NORECOVERY) {
+ 		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
+@@ -731,7 +731,8 @@ xfs_log_mount_finish(
+ 	 * mount failure occurs.
+ 	 */
+ 	mp->m_super->s_flags |= SB_ACTIVE;
+-	error = xlog_recover_finish(mp->m_log);
++	if (log->l_flags & XLOG_RECOVERY_NEEDED)
++		error = xlog_recover_finish(log);
+ 	if (!error)
+ 		xfs_log_work_queue(mp);
+ 	mp->m_super->s_flags &= ~SB_ACTIVE;
+@@ -746,17 +747,24 @@ xfs_log_mount_finish(
+ 	 * Don't push in the error case because the AIL may have pending intents
+ 	 * that aren't removed until recovery is cancelled.
+ 	 */
+-	if (!error && recovered) {
+-		xfs_log_force(mp, XFS_LOG_SYNC);
+-		xfs_ail_push_all_sync(mp->m_ail);
++	if (log->l_flags & XLOG_RECOVERY_NEEDED) {
++		if (!error) {
++			xfs_log_force(mp, XFS_LOG_SYNC);
++			xfs_ail_push_all_sync(mp->m_ail);
++		}
++		xfs_notice(mp, "Ending recovery (logdev: %s)",
++				mp->m_logname ? mp->m_logname : "internal");
++	} else {
++		xfs_info(mp, "Ending clean mount");
+ 	}
+ 	xfs_buftarg_drain(mp->m_ddev_targp);
  
--			lv = kmem_alloc_large(buf_size, KM_NOFS);
-+			/*
-+			 * We are in transaction context, which means this
-+			 * allocation will pick up GFP_NOFS from the
-+			 * memalloc_nofs_save/restore context the transaction
-+			 * holds. This means we can use GFP_KERNEL here so the
-+			 * generic kvmalloc() code will run vmalloc on
-+			 * contiguous page allocation failure as we require.
-+			 */
-+			lv = kvmalloc(buf_size, GFP_KERNEL);
- 			memset(lv, 0, xlog_cil_iovec_space(niovecs));
++	log->l_flags &= ~XLOG_RECOVERY_NEEDED;
+ 	if (readonly)
+ 		mp->m_flags |= XFS_MOUNT_RDONLY;
  
- 			lv->lv_item = lip;
+ 	/* Make sure the log is dead if we're returning failure. */
+-	ASSERT(!error || (mp->m_log->l_flags & XLOG_IO_ERROR));
++	ASSERT(!error || (log->l_flags & XLOG_IO_ERROR));
+ 
+ 	return error;
+ }
 diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index cc559815e08f..1a291bf50776 100644
+index f1b828dedb25..aeaf4e7fc447 100644
 --- a/fs/xfs/xfs_log_recover.c
 +++ b/fs/xfs/xfs_log_recover.c
-@@ -106,7 +106,7 @@ xlog_alloc_buffer(
- 	if (nbblks > 1 && log->l_sectBBsize > 1)
- 		nbblks += log->l_sectBBsize;
- 	nbblks = round_up(nbblks, log->l_sectBBsize);
--	return kmem_alloc_large(BBTOB(nbblks), KM_MAYFAIL | KM_ZERO);
-+	return kvzalloc(BBTOB(nbblks), GFP_KERNEL | __GFP_RETRY_MAYFAIL);
+@@ -3414,62 +3414,43 @@ xlog_recover(
  }
  
  /*
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 6865e838a71b..38f2f67303f7 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3689,7 +3689,6 @@ DEFINE_EVENT(xfs_kmem_class, name, \
- 	TP_PROTO(ssize_t size, int flags, unsigned long caller_ip), \
- 	TP_ARGS(size, flags, caller_ip))
- DEFINE_KMEM_EVENT(kmem_alloc);
--DEFINE_KMEM_EVENT(kmem_alloc_large);
+- * In the first part of recovery we replay inodes and buffers and build
+- * up the list of extent free items which need to be processed.  Here
+- * we process the extent free items and clean up the on disk unlinked
+- * inode lists.  This is separated from the first part of recovery so
+- * that the root and real-time bitmap inodes can be read in from disk in
+- * between the two stages.  This is necessary so that we can free space
+- * in the real-time portion of the file system.
++ * In the first part of recovery we replay inodes and buffers and build up the
++ * list of intents which need to be processed.  Here we process the intents  and
++ * clean up the on disk unlinked inode lists.  This is separated from the first
++ * part of recovery so that the root and real-time bitmap inodes can be read in
++ * from disk in between the two stages.  This is necessary so that we can free
++ * space in the real-time portion of the file system.
+  */
+ int
+ xlog_recover_finish(
+ 	struct xlog	*log)
+ {
+-	/*
+-	 * Now we're ready to do the transactions needed for the
+-	 * rest of recovery.  Start with completing all the extent
+-	 * free intent records and then process the unlinked inode
+-	 * lists.  At this point, we essentially run in normal mode
+-	 * except that we're still performing recovery actions
+-	 * rather than accepting new requests.
+-	 */
+-	if (log->l_flags & XLOG_RECOVERY_NEEDED) {
+-		int	error;
+-		error = xlog_recover_process_intents(log);
+-		if (error) {
+-			/*
+-			 * Cancel all the unprocessed intent items now so that
+-			 * we don't leave them pinned in the AIL.  This can
+-			 * cause the AIL to livelock on the pinned item if
+-			 * anyone tries to push the AIL (inode reclaim does
+-			 * this) before we get around to xfs_log_mount_cancel.
+-			 */
+-			xlog_recover_cancel_intents(log);
+-			xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
+-			xfs_alert(log->l_mp, "Failed to recover intents");
+-			return error;
+-		}
++	int	error;
  
- TRACE_EVENT(xfs_check_new_dalign,
- 	TP_PROTO(struct xfs_mount *mp, int new_dalign, xfs_ino_t calc_rootino),
++	error = xlog_recover_process_intents(log);
++	if (error) {
+ 		/*
+-		 * Sync the log to get all the intents out of the AIL.
+-		 * This isn't absolutely necessary, but it helps in
+-		 * case the unlink transactions would have problems
+-		 * pushing the intents out of the way.
++		 * Cancel all the unprocessed intent items now so that we don't
++		 * leave them pinned in the AIL.  This can cause the AIL to
++		 * livelock on the pinned item if anyone tries to push the AIL
++		 * (inode reclaim does this) before we get around to
++		 * xfs_log_mount_cancel.
+ 		 */
+-		xfs_log_force(log->l_mp, XFS_LOG_SYNC);
+-
+-		xlog_recover_process_iunlinks(log);
++		xlog_recover_cancel_intents(log);
++		xfs_alert(log->l_mp, "Failed to recover intents");
++		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
++		return error;
++	}
+ 
+-		xlog_recover_check_summary(log);
++	/*
++	 * Sync the log to get all the intents out of the AIL.  This isn't
++	 * absolutely necessary, but it helps in case the unlink transactions
++	 * would have problems pushing the intents out of the way.
++	 */
++	xfs_log_force(log->l_mp, XFS_LOG_SYNC);
++	xlog_recover_process_iunlinks(log);
+ 
+-		xfs_notice(log->l_mp, "Ending recovery (logdev: %s)",
+-				log->l_mp->m_logname ? log->l_mp->m_logname
+-						     : "internal");
+-		log->l_flags &= ~XLOG_RECOVERY_NEEDED;
+-	} else {
+-		xfs_info(log->l_mp, "Ending clean mount");
+-	}
++	xlog_recover_check_summary(log);
+ 	return 0;
+ }
+ 
 -- 
 2.31.1
 
