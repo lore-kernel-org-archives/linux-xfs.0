@@ -2,107 +2,83 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-20.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF45EC11F65
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Jun 2021 14:46:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D038C11F65
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Jun 2021 15:23:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AEECB611CA
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Jun 2021 14:46:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0322061476
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Jun 2021 15:23:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234882AbhF3Osf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 30 Jun 2021 10:48:35 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:58722 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235177AbhF3Osb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Jun 2021 10:48:31 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1625064361;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=Y4vf1yqzrS3vFpHReQKYOpbBl+OSfAyb+Khv5JrEsWA=;
-        b=AqCEOH7nbEb/FU0NLcp0bLXQHuBAhQSxZO1eEY1HiOies2QJf/zxX9ikBcgDmaQe9xVLqb
-        +58rMwFry2rjflBfj9SKERNRNjNlzehu25iObBE2rIj0Sr+iaMZDVmXnd/13YX1wpsQ/CE
-        5Z97+FAiJEYZYr/k34J6e6za/zi8N5U=
-Received: from mail-wr1-f70.google.com (mail-wr1-f70.google.com
- [209.85.221.70]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-76-mOcbEWGPNMSZDjuwHn3sUQ-1; Wed, 30 Jun 2021 10:45:58 -0400
-X-MC-Unique: mOcbEWGPNMSZDjuwHn3sUQ-1
-Received: by mail-wr1-f70.google.com with SMTP id l12-20020a5d410c0000b029012b4f055c9bso837688wrp.4
-        for <linux-xfs@vger.kernel.org>; Wed, 30 Jun 2021 07:45:58 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=Y4vf1yqzrS3vFpHReQKYOpbBl+OSfAyb+Khv5JrEsWA=;
-        b=ijBATL5mSyh3BJs3fsPDTOZRRTxYbIaLKSnWCa6+a1iB+xh21TiRZmyCxZMq8vN8Fj
-         BZwyEfF2MmMLi+QTzFW+NTmUqMMlYUJLSbi5UKzgg1yUdoLUclgiD/82dSPwmO901FqE
-         PBxY8LbwhHcdIQPodQIFdZ9TLK3ZM8cCRfyMdFheZtgVIJFIvQE6rw8BWUwkKzqU2v7a
-         gBO81RxfsWCwrmPto/ZTf/f7H4ajCOa+Cw/ipzmywbkTkRItckSLiHTAT5HMYhEZNylq
-         E8PKxqCaUXXwhKOGG82d+sXess16Cnt57vnJ9KKX6L2DYaoHD2xDtKhw2AE/7stpCnP+
-         biog==
-X-Gm-Message-State: AOAM5329WpsAXLaIMmsP2K7XX9OA31+zorxeGlXsPFQl/KeTGDa0LeJS
-        A+5pLR4TymxlPJfQk23WbFOnfAiCwAKSOiahlu6gsIrtivfTquzSNCtUOhVhP3AazhQ6Ckbdb6B
-        tIFZ4YkDN/wzCS2EI22T1ZNvs7PR2Ihs/wmmW
-X-Received: by 2002:a5d:5745:: with SMTP id q5mr13230652wrw.329.1625064357357;
-        Wed, 30 Jun 2021 07:45:57 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzgU5oFUHVMXKdZBHHmE78pYqUjAWgIPUUXK096keRw4Ekq8bzPm3W555Qgaz0gc7LPesnRODsUtpLUc8qY2+Y=
-X-Received: by 2002:a5d:5745:: with SMTP id q5mr13230628wrw.329.1625064357193;
- Wed, 30 Jun 2021 07:45:57 -0700 (PDT)
+        id S235689AbhF3P0W (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 30 Jun 2021 11:26:22 -0400
+Received: from mga17.intel.com ([192.55.52.151]:42187 "EHLO mga17.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S235508AbhF3P0V (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 30 Jun 2021 11:26:21 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10031"; a="188746524"
+X-IronPort-AV: E=Sophos;i="5.83,312,1616482800"; 
+   d="scan'208";a="188746524"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Jun 2021 08:23:52 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.83,312,1616482800"; 
+   d="scan'208";a="457283527"
+Received: from lkp-server01.sh.intel.com (HELO 4aae0cb4f5b5) ([10.239.97.150])
+  by fmsmga008.fm.intel.com with ESMTP; 30 Jun 2021 08:23:51 -0700
+Received: from kbuild by 4aae0cb4f5b5 with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1lyc47-0009qT-8P; Wed, 30 Jun 2021 15:23:51 +0000
+Date:   Wed, 30 Jun 2021 23:22:45 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Cc:     kbuild-all@lists.01.org
+Subject: [PATCH] xfs: fix semicolon.cocci warnings
+Message-ID: <20210630152245.GA57242@cee36b42cf60>
+References: <20210630063813.1751007-3-david@fromorbit.com>
 MIME-Version: 1.0
-References: <YNoJPZ4NWiqok/by@casper.infradead.org> <20210628172727.1894503-1-agruenba@redhat.com>
- <20210629091239.1930040-1-agruenba@redhat.com> <YNx69luCAxlLMDAG@casper.infradead.org>
-In-Reply-To: <YNx69luCAxlLMDAG@casper.infradead.org>
-From:   Andreas Gruenbacher <agruenba@redhat.com>
-Date:   Wed, 30 Jun 2021 16:45:45 +0200
-Message-ID: <CAHc6FU4_eQMQinMfTHG42phuW6r7PTtyecDfMESp-KziaicL8w@mail.gmail.com>
-Subject: Re: [PATCH 0/2] iomap: small block problems
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        cluster-devel <cluster-devel@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210630063813.1751007-3-david@fromorbit.com>
+X-Patchwork-Hint: ignore
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 30, 2021 at 4:09 PM Matthew Wilcox <willy@infradead.org> wrote:
-> On Tue, Jun 29, 2021 at 11:12:39AM +0200, Andreas Gruenbacher wrote:
-> > Below is a version of your patch on top of v5.13 which has passed some
-> > local testing here.
-> >
-> > Thanks,
-> > Andreas
-> >
-> > --
-> >
-> > iomap: Permit pages without an iop to enter writeback
-> >
-> > Permit pages without an iop to enter writeback and create an iop *then*.  This
-> > allows filesystems to mark pages dirty without having to worry about how the
-> > iop block tracking is implemented.
->
-> How about ...
->
-> Create an iop in the writeback path if one doesn't exist.  This allows
-> us to avoid creating the iop in some cases.  The only current case we
-> do that for is pages with inline data, but it can be extended to pages
-> which are entirely within an extent.  It also allows for an iop to be
-> removed from pages in the future (eg page split).
->
-> > Suggested-by: Matthew Wilcox <willy@infradead.org>
-> > Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
->
-> Co-developed-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+From: kernel test robot <lkp@intel.com>
 
-Sure, that works for me.
+fs/xfs/xfs_log.c:2803:3-4: Unneeded semicolon
 
-Thanks,
-Andreas
 
+ Remove unneeded semicolon.
+
+Generated by: scripts/coccinelle/misc/semicolon.cocci
+
+CC: Dave Chinner <dchinner@redhat.com>
+Reported-by: kernel test robot <lkp@intel.com>
+Signed-off-by: kernel test robot <lkp@intel.com>
+---
+
+url:    https://github.com/0day-ci/linux/commits/Dave-Chinner/xfs-shutdown-is-a-racy-mess/20210630-144028
+base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
+:::::: branch date: 9 hours ago
+:::::: commit date: 9 hours ago
+
+ xfs_log.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -2800,7 +2800,7 @@ xlog_state_do_callback(
+ 				wake_up_all(&iclog->ic_force_wait);
+ 			else
+ 				xlog_state_clean_iclog(log, iclog);
+-		};
++		}
+ 
+ 		if (repeats > 5000) {
+ 			flushcnt += repeats;
