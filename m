@@ -2,537 +2,235 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-21.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44F80C11F67
-	for <linux-xfs@archiver.kernel.org>; Tue, 29 Jun 2021 21:01:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 524D9C11F67
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Jun 2021 00:23:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1AAF061D8E
-	for <linux-xfs@archiver.kernel.org>; Tue, 29 Jun 2021 21:01:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2E15C61D1A
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Jun 2021 00:23:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235665AbhF2VEK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 29 Jun 2021 17:04:10 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52098 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235653AbhF2VEI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 29 Jun 2021 17:04:08 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 5FF9661D81;
-        Tue, 29 Jun 2021 21:01:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625000500;
-        bh=Qye8Gb01Funch/qmliE90qh5iZ17gYbzWuZoY1RVGu4=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=PyrBMoKKXhiZFezHw7VX2gRfxyuUd41DX1ww1sKiO3r+iv459PphLPcw1F/sHcySu
-         LXTlNkmzg4JXiYCvFotGtgYRQLjKPw+xNBaQ6LqMInN3cyJ13OYQ3MCtzllP2VkAB/
-         9ubVQzzZSV7sCcpqR1gZbZRPyGg2JD7qn4v53cJqzwV8uwPa8zqF8vvqp1BDg2DBRW
-         3HYlczsCO0jMG7EkFCe0y35uo35eAIb7x+2X9olHU+luraUmef4BRQ/c6WV4C5DCZp
-         e0g0h51eyh3jbA3DxrkMO/9+ARIjHD7Kdqj5qRn41OGWwpMIPnSeOBDxE57wnjMdmz
-         qo787QfM03d2A==
-Date:   Tue, 29 Jun 2021 14:01:40 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     "ruansy.fnst@fujitsu.com" <ruansy.fnst@fujitsu.com>
-Cc:     "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
-        "david@fromorbit.com" <david@fromorbit.com>,
-        "hch@lst.de" <hch@lst.de>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "nvdimm@lists.linux.dev" <nvdimm@lists.linux.dev>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "rgoldwyn@suse.de" <rgoldwyn@suse.de>,
-        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
-        "willy@infradead.org" <willy@infradead.org>
-Subject: Re: [PATCH v6.1 6/7] fs/xfs: Handle CoW for fsdax write() path
-Message-ID: <20210629210140.GA13750@locust>
-References: <OSBPR01MB2920A2BCD568364C1363AFA6F4369@OSBPR01MB2920.jpnprd01.prod.outlook.com>
- <20210615072147.73852-1-ruansy.fnst@fujitsu.com>
- <OSBPR01MB2920D2D275EB0DB15C37D079F4079@OSBPR01MB2920.jpnprd01.prod.outlook.com>
- <20210625221855.GG13784@locust>
- <OSBPR01MB2920922639112230407000E9F4039@OSBPR01MB2920.jpnprd01.prod.outlook.com>
- <20210628050919.GL13784@locust>
- <OSBPR01MB2920EAD893B64E46C8110641F4029@OSBPR01MB2920.jpnprd01.prod.outlook.com>
+        id S235533AbhF3AZ4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 29 Jun 2021 20:25:56 -0400
+Received: from mail-dm6nam12on2083.outbound.protection.outlook.com ([40.107.243.83]:34575
+        "EHLO NAM12-DM6-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S233056AbhF3AZz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 29 Jun 2021 20:25:55 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=CrR5mmc/qmtXYawpqRjE39VM6UEVnMXHYrdSBcB/Et0vU5PceOpxyx92HgyO+vEBbM05zw6BsQ8im2VuZki/BVKBVove96yNl7Z4B+wL7zhyp5IehkYkOnQxIYsG4NfEUf9gj4nqSck8mPJfQExry9f4VyP/gzWyvqyCKnv78J0Kn8NWK6gWPCck4mei+Y2rzI6DrFYZE+pi+9P7c74XC8DMeWusDPBEa/ZCP0wX6NvbLL/7Y9WJW9w4V9r94bYZ3N8DFIp3QGeZug8SV/rnTgwvvlMkv912TEyOKs2/wFMQof5Lv8QnuDXe9q6gBJYlkIeON/6f8IyPfyQ+MGge+Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=e/MU13EJJdQtq1C0Hzvv1TZhNFjRG3LECltiLLJS/7w=;
+ b=aoW5lZkGO2nIccyYWqHi9s981hLiOG0015EqtS6y321vbxRUAwjL2s8aImpYqiVhLqnkOESO84ak3mjyXbm/OpfxNYbZDsXakAoeV2PmShW49oGNaB3UtE2ZdWkFjq0neSrnXTbILBsW9tK6osPgsOKB1qAd1Xx/5yiGxPSTR+cc4c0uE4Rijnn/uiNhR5FrL4J8LVbYkawUhvRpxUsfgvdNkwpmKVSiAfeKiPnqUsx4YdWMbGEHNo6Z61qGZ0ZmUehtm6L6LDlh7eMR5Qw1lCw4luMqCmJNG6f3gz+bDKSyEegtOndAokq85yMOQ6/e5DWrhAoxzaykPaHkP/F8Hw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.112.32) smtp.rcpttodomain=kvack.org smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=none sp=none pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=e/MU13EJJdQtq1C0Hzvv1TZhNFjRG3LECltiLLJS/7w=;
+ b=EYurZZMIGtgj1obxKwnF6Mg+qkNcCpPTb56JabJ1NmEYuq+BwzDKj1vRVLO4g3hsRprNqMT35oxRbu/ZDAPJRdeD3wC0dDAqRp/Ypk89uaEwy5lshPlS8BnzBL2Izr8L/SKdqZfM4/jFhfvvmy73/P3mwUCb28/xhPwpQlJVAW/ilFUKADy16t6m6YVkvL6iyWdTCbbHvVO9Fgn6HrEPF+r63pU6ss0hWLP2wyKoxPqVRfyLVdOibl8zSiuR9xRJfju38ofPzv2aYE68ssseG1ESDellRNwIRkxcfBFU8zjOB5N9GAbfw2SvaDrxHb5D9Zol22mZga1Wa6loi4vIQA==
+Received: from BN0PR03CA0024.namprd03.prod.outlook.com (2603:10b6:408:e6::29)
+ by SJ0PR12MB5406.namprd12.prod.outlook.com (2603:10b6:a03:3ae::5) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4264.20; Wed, 30 Jun
+ 2021 00:23:26 +0000
+Received: from BN8NAM11FT019.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:408:e6:cafe::96) by BN0PR03CA0024.outlook.office365.com
+ (2603:10b6:408:e6::29) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4264.19 via Frontend
+ Transport; Wed, 30 Jun 2021 00:23:26 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.112.32)
+ smtp.mailfrom=nvidia.com; kvack.org; dkim=none (message not signed)
+ header.d=none;kvack.org; dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.112.32 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.112.32; helo=mail.nvidia.com;
+Received: from mail.nvidia.com (216.228.112.32) by
+ BN8NAM11FT019.mail.protection.outlook.com (10.13.176.158) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ 15.20.4264.18 via Frontend Transport; Wed, 30 Jun 2021 00:23:25 +0000
+Received: from HQMAIL107.nvidia.com (172.20.187.13) by HQMAIL109.nvidia.com
+ (172.20.187.15) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 29 Jun
+ 2021 17:23:24 -0700
+Received: from rcampbell-test.nvidia.com (172.20.187.5) by mail.nvidia.com
+ (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1497.2 via Frontend
+ Transport; Wed, 30 Jun 2021 00:23:24 +0000
+Subject: Re: [PATCH v3 2/8] mm: remove extra ZONE_DEVICE struct page refcount
+To:     Felix Kuehling <felix.kuehling@amd.com>,
+        Alex Sierra <alex.sierra@amd.com>, <akpm@linux-foundation.org>,
+        <linux-mm@kvack.org>, <linux-ext4@vger.kernel.org>,
+        <linux-xfs@vger.kernel.org>, "Yang, Philip" <Philip.Yang@amd.com>
+CC:     <amd-gfx@lists.freedesktop.org>, <dri-devel@lists.freedesktop.org>,
+        <hch@lst.de>, <jgg@nvidia.com>, <jglisse@redhat.com>
+References: <20210617151705.15367-1-alex.sierra@amd.com>
+ <20210617151705.15367-3-alex.sierra@amd.com>
+ <7163dbb6-67b5-6eef-5772-500fd2107e5c@nvidia.com>
+ <cecd2164-ebfd-382b-af73-992cdc4304b7@amd.com>
+From:   Ralph Campbell <rcampbell@nvidia.com>
+Message-ID: <4f6dd918-d79b-1aa7-3a4c-caa67ddc29bc@nvidia.com>
+Date:   Tue, 29 Jun 2021 17:23:24 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <OSBPR01MB2920EAD893B64E46C8110641F4029@OSBPR01MB2920.jpnprd01.prod.outlook.com>
+In-Reply-To: <cecd2164-ebfd-382b-af73-992cdc4304b7@amd.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 1d9fe82a-6e48-4743-715d-08d93b5d46f9
+X-MS-TrafficTypeDiagnostic: SJ0PR12MB5406:
+X-Microsoft-Antispam-PRVS: <SJ0PR12MB54068E2956E48723E5DE3CCBC2019@SJ0PR12MB5406.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:9508;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: prh+q7BtytT3EGdDeO2L6f6NlgXGp8P3c/Z+Ab4mb+XT3Mwz/Wos2jk/NdGF31S4DKC5WYGnfLtNos03UzKbFGl9QFw7MCBnx4cT4geSwQ9Ff/CjG+zv6j/yDz01EatNiNNvue6zCY7xpI6SCb8aJbFRq/KYYh02M7mCxL+IoBxX9vxRKCvepEIY6a85mEw/FH0vk/2DFfDxbPa58TaohzlQDhEMb3wlDC4fwbZjsgUM/6n52zd0xslAE2ReB24NFRGOx2GBHC4vpJpGyMFItn67NONnDcukZfFY9D2494b9Z+f1GPXeRl01/usCNOyuk0KIyiSSBlfSAsc93ND5pebjFKQV3Gd4h6elk7mRdMsyH01aof5LblUnzsLHW0ic1J+9i+wyesVB8UfT+ZQB7H4GEK3Tc4vFFzkGhO28YWel0bTgqWQDg4UyBLh/VSaNzihGrif+n8/bA7hDwNvZBllAYCPHmAQPLPxbq4DbPqRg+xH7C1tMhG0SBFkeIoh98WOGT2r7dsB1HuwTNC4V5rbEwIoNhgoc2iYKAXw5E5dzIgAlHBhPwgH+D19mm0NmKKrLiKX2RwS5k/RIA3MfKx+PD0fCepAEliYEEkmU/m0G43uuNjhq6SZKFbH9TVAPeCstwhOaN5WhO562ldQqyUyhMDQY6x09niDqCNfQ5BvXyio9bK3C2adK3M1INpUdc9nhdfuMB0rYA43/lzMrVylk9oIwFOI3HfuHqYf/bD+t0yyYqjSPTbSeW9XWPbp8
+X-Forefront-Antispam-Report: CIP:216.228.112.32;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:schybrid01.nvidia.com;CAT:NONE;SFS:(4636009)(346002)(376002)(39860400002)(396003)(136003)(36840700001)(46966006)(336012)(47076005)(7696005)(5660300002)(356005)(82740400003)(53546011)(36860700001)(36756003)(426003)(8676002)(186003)(82310400003)(2906002)(31696002)(316002)(54906003)(7416002)(70586007)(26005)(86362001)(7636003)(83380400001)(110136005)(478600001)(8936002)(70206006)(31686004)(4326008)(2616005)(43740500002)(2101003);DIR:OUT;SFP:1101;
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Jun 2021 00:23:25.6836
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1d9fe82a-6e48-4743-715d-08d93b5d46f9
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.112.32];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT019.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR12MB5406
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 29, 2021 at 11:25:37AM +0000, ruansy.fnst@fujitsu.com wrote:
-> 
-> 
-> > -----Original Message-----
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > Subject: Re: [PATCH v6.1 6/7] fs/xfs: Handle CoW for fsdax write() path
-> > 
-> > On Mon, Jun 28, 2021 at 02:55:03AM +0000, ruansy.fnst@fujitsu.com wrote:
-> > > > -----Original Message-----
-> > > > Subject: Re: [PATCH v6.1 6/7] fs/xfs: Handle CoW for fsdax write()
-> > > > path
-> > > >
-> > > > On Thu, Jun 24, 2021 at 08:49:17AM +0000, ruansy.fnst@fujitsu.com wrote:
-> > > > > Hi Darrick,
-> > > > >
-> > > > > Do you have any comment on this?
-> > > >
-> > > > Sorry, was on vacation.
-> > > >
-> > > > > Thanks,
-> > > > > Ruan.
-> > > > >
-> > > > > > -----Original Message-----
-> > > > > > From: Shiyang Ruan <ruansy.fnst@fujitsu.com>
-> > > > > > Subject: [PATCH v6.1 6/7] fs/xfs: Handle CoW for fsdax write()
-> > > > > > path
-> > > > > >
-> > > > > > Hi Darrick,
-> > > > > >
-> > > > > > Since other patches looks good, I post this RFC patch singly to
-> > > > > > hot-fix the problem in xfs_dax_write_iomap_ops->iomap_end() of
-> > > > > > v6 that the error code was ingored. I will split this in two
-> > > > > > patches(changes in iomap and xfs
-> > > > > > respectively) in next formal version if it looks ok.
-> > > > > >
-> > > > > > ====
-> > > > > >
-> > > > > > Introduce a new interface called "iomap_post_actor()" in iomap_ops.
-> > > > > > And call it between ->actor() and ->iomap_end().  It is mean to
-> > > > > > handle the error code returned from ->actor().  In this
-> > > > > > patchset, it is used to remap or cancel the CoW extents according to the
-> > error code.
-> > > > > >
-> > > > > > Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
-> > > > > > ---
-> > > > > >  fs/dax.c               | 27 ++++++++++++++++++---------
-> > > > > >  fs/iomap/apply.c       |  4 ++++
-> > > > > >  fs/xfs/xfs_bmap_util.c |  3 +--
-> > > > > >  fs/xfs/xfs_file.c      |  5 +++--
-> > > > > >  fs/xfs/xfs_iomap.c     | 33 ++++++++++++++++++++++++++++++++-
-> > > > > >  fs/xfs/xfs_iomap.h     | 24 ++++++++++++++++++++++++
-> > > > > >  fs/xfs/xfs_iops.c      |  7 +++----
-> > > > > >  fs/xfs/xfs_reflink.c   |  3 +--
-> > > > > >  include/linux/iomap.h  |  8 ++++++++
-> > > > > >  9 files changed, 94 insertions(+), 20 deletions(-)
-> > > > > >
-> > > > > > diff --git a/fs/dax.c b/fs/dax.c index
-> > > > > > 93f16210847b..0740c2610b6f 100644
-> > > > > > --- a/fs/dax.c
-> > > > > > +++ b/fs/dax.c
-> > > > > > @@ -1537,7 +1537,7 @@ static vm_fault_t
-> > > > > > dax_iomap_pte_fault(struct vm_fault *vmf, pfn_t *pfnp,
-> > > > > >  	struct iomap iomap = { .type = IOMAP_HOLE };
-> > > > > >  	struct iomap srcmap = { .type = IOMAP_HOLE };
-> > > > > >  	unsigned flags = IOMAP_FAULT;
-> > > > > > -	int error;
-> > > > > > +	int error, copied = PAGE_SIZE;
-> > > > > >  	bool write = vmf->flags & FAULT_FLAG_WRITE;
-> > > > > >  	vm_fault_t ret = 0, major = 0;
-> > > > > >  	void *entry;
-> > > > > > @@ -1598,7 +1598,7 @@ static vm_fault_t
-> > > > > > dax_iomap_pte_fault(struct vm_fault *vmf, pfn_t *pfnp,
-> > > > > >  	ret = dax_fault_actor(vmf, pfnp, &xas, &entry, false, flags,
-> > > > > >  			      &iomap, &srcmap);
-> > > > > >  	if (ret == VM_FAULT_SIGBUS)
-> > > > > > -		goto finish_iomap;
-> > > > > > +		goto finish_iomap_actor;
-> > > > > >
-> > > > > >  	/* read/write MAPPED, CoW UNWRITTEN */
-> > > > > >  	if (iomap.flags & IOMAP_F_NEW) { @@ -1607,10 +1607,16 @@
-> > > > > > static vm_fault_t dax_iomap_pte_fault(struct vm_fault *vmf,
-> > > > > > pfn_t *pfnp,
-> > > > > >  		major = VM_FAULT_MAJOR;
-> > > > > >  	}
-> > > > > >
-> > > > > > + finish_iomap_actor:
-> > > > > > +	if (ops->iomap_post_actor) {
-> > > > > > +		if (ret & VM_FAULT_ERROR)
-> > > > > > +			copied = 0;
-> > > > > > +		ops->iomap_post_actor(inode, pos, PMD_SIZE, copied, flags,
-> > > > > > +				      &iomap, &srcmap);
-> > > > > > +	}
-> > > > > > +
-> > > > > >  finish_iomap:
-> > > > > >  	if (ops->iomap_end) {
-> > > > > > -		int copied = PAGE_SIZE;
-> > > > > > -
-> > > > > >  		if (ret & VM_FAULT_ERROR)
-> > > > > >  			copied = 0;
-> > > > > >  		/*
-> > > > > > @@ -1677,7 +1683,7 @@ static vm_fault_t
-> > > > > > dax_iomap_pmd_fault(struct vm_fault *vmf, pfn_t *pfnp,
-> > > > > >  	pgoff_t max_pgoff;
-> > > > > >  	void *entry;
-> > > > > >  	loff_t pos;
-> > > > > > -	int error;
-> > > > > > +	int error, copied = PMD_SIZE;
-> > > > > >
-> > > > > >  	/*
-> > > > > >  	 * Check whether offset isn't beyond end of file now. Caller
-> > > > > > is @@
-> > > > > > -1736,12
-> > > > > > +1742,15 @@ static vm_fault_t dax_iomap_pmd_fault(struct
-> > > > > > +vm_fault *vmf,
-> > > > > > pfn_t *pfnp,
-> > > > > >  	ret = dax_fault_actor(vmf, pfnp, &xas, &entry, true, flags,
-> > > > > >  			      &iomap, &srcmap);
-> > > > > >
-> > > > > > +	if (ret == VM_FAULT_FALLBACK)
-> > > > > > +		copied = 0;
-> > > > > > +	if (ops->iomap_post_actor) {
-> > > > > > +		ops->iomap_post_actor(inode, pos, PMD_SIZE, copied, flags,
-> > > > > > +				      &iomap, &srcmap);
-> > > > > > +	}
-> > > > > > +
-> > > > > >  finish_iomap:
-> > > > > >  	if (ops->iomap_end) {
-> > > > > > -		int copied = PMD_SIZE;
-> > > > > > -
-> > > > > > -		if (ret == VM_FAULT_FALLBACK)
-> > > > > > -			copied = 0;
-> > > > > >  		/*
-> > > > > >  		 * The fault is done by now and there's no way back (other
-> > > > > >  		 * thread may be already happily using PMD we have installed).
-> > > > > > diff --git a/fs/iomap/apply.c b/fs/iomap/apply.c index
-> > > > > > 0493da5286ad..26a54ded184f 100644
-> > > > > > --- a/fs/iomap/apply.c
-> > > > > > +++ b/fs/iomap/apply.c
-> > > > > > @@ -84,6 +84,10 @@ iomap_apply(struct inode *inode, loff_t pos,
-> > > > > > loff_t length, unsigned flags,
-> > > > > >  	written = actor(inode, pos, length, data, &iomap,
-> > > > > >  			srcmap.type != IOMAP_HOLE ? &srcmap : &iomap);
-> > > > > >
-> > > > > > +	if (ops->iomap_post_actor) {
-> > > > > > +		written = ops->iomap_post_actor(inode, pos, length, written,
-> > > > > > +						flags, &iomap, &srcmap);
-> > > >
-> > > > How many operations actually need an iomap_post_actor?  It's just
-> > > > the dax ones, right?  Which is ... iomap_truncate_page,
-> > > > iomap_zero_range, dax_iomap_fault, and dax_iomap_rw, right?  We
-> > > > don't need a post_actor for other iomap functionality (like FIEMAP,
-> > > > SEEK_DATA/SEEK_HOLE, etc.) so adding a new function pointer for all
-> > operations feels a bit overbroad.
-> > >
-> > > Yes.
-> > >
-> > > >
-> > > > I had imagined that you'd create a struct dax_iomap_ops to wrap all
-> > > > the extra functionality that you need for dax operations:
-> > > >
-> > > > struct dax_iomap_ops {
-> > > > 	struct iomap_ops	iomap_ops;
-> > > >
-> > > > 	int			(*end_io)(inode, pos, length...);
-> > > > };
-> > > >
-> > > > And alter the four functions that you need to take the special
-> > dax_iomap_ops.
-> > > > I guess the downside is that this makes iomap_truncate_page and
-> > > > iomap_zero_range more complicated, but maybe it's just time to split
-> > > > those into DAX-specific versions.  Then we'd be rid of the
-> > > > cross-links betwee fs/iomap/buffered-io.c and fs/dax.c.
-> > >
-> > > This seems to be a better solution.  I'll try in this way.  Thanks for your
-> > guidance.
-> > 
-> > I started writing on Friday a patchset to apply this style cleanup both to the
-> > directio and dax paths.  The cleanups were pretty straightforward until I
-> > started reading the dax code paths again and realized that file writes still have
-> > the weird behavior of mapping extents into a file, zeroing them, then issuing the
-> > actual write to the extent.  IOWs, a double-write to avoid exposing stale
-> > contents if crash.
-> 
-> The current code seems not zeroing an unwritten extent when writing in
-> fsdax mode?  Just allocate unwritten extents in filesystem, and then
-> write data in fsdax.
+On 6/28/21 9:46 AM, Felix Kuehling wrote:
+> Am 2021-06-17 um 3:16 p.m. schrieb Ralph Campbell:
+>> On 6/17/21 8:16 AM, Alex Sierra wrote:
+>>> From: Ralph Campbell <rcampbell@nvidia.com>
+>>>
+>>> ZONE_DEVICE struct pages have an extra reference count that
+>>> complicates the
+>>> code for put_page() and several places in the kernel that need to
+>>> check the
+>>> reference count to see that a page is not being used (gup, compaction,
+>>> migration, etc.). Clean up the code so the reference count doesn't
+>>> need to
+>>> be treated specially for ZONE_DEVICE.
+>>>
+>>> v2:
+>>> AS: merged this patch in linux 5.11 version
+>>>
+>>> Signed-off-by: Ralph Campbell <rcampbell@nvidia.com>
+>>> Signed-off-by: Alex Sierra <alex.sierra@amd.com>
+>>> ---
+>>>    arch/powerpc/kvm/book3s_hv_uvmem.c     |  2 +-
+>>>    drivers/gpu/drm/nouveau/nouveau_dmem.c |  2 +-
+>>>    fs/dax.c                               |  4 +-
+>>>    include/linux/dax.h                    |  2 +-
+>>>    include/linux/memremap.h               |  7 +--
+>>>    include/linux/mm.h                     | 44 -----------------
+>>>    lib/test_hmm.c                         |  2 +-
+>>>    mm/internal.h                          |  8 +++
+>>>    mm/memremap.c                          | 68 +++++++-------------------
+>>>    mm/migrate.c                           |  5 --
+>>>    mm/page_alloc.c                        |  3 ++
+>>>    mm/swap.c                              | 45 ++---------------
+>>>    12 files changed, 45 insertions(+), 147 deletions(-)
+>>>
+>> I think it is great that you are picking this up and trying to revive it.
+>>
+>> However, I have a number of concerns about how it affects existing
+>> ZONE_DEVICE
+>> MEMORY_DEVICE_GENERIC and MEMORY_DEVICE_FS_DAX users and I don't see this
+>> addressing them. For example, dev_dax_probe() allocates
+>> MEMORY_DEVICE_GENERIC
+>> struct pages and then:
+>>    dev_dax_fault()
+>>      dev_dax_huge_fault()
+>>        __dev_dax_pte_fault()
+>>          vmf_insert_mixed()
+>> which just inserts the PFN into the CPU page tables without increasing
+>> the page
+>> refcount so it is zero (whereas it was one before). But using
+>> get_page() will
+>> trigger VM_BUG_ON_PAGE() if it is enabled. There isn't any current
+>> notion of
+>> free verses allocated for these struct pages. I suppose init_page_count()
+>> could be called on all the struct pages in dev_dax_probe() to fix that
+>> though.
+> Hi Ralph,
+>
+> For DEVICE_GENERIC pages free_zone_device_page doesn't do anything. So
+> I'm not sure what the reference counting is good for in this case.
+>
+> Alex is going to add free_zone_device_page support for DEVICE_GENERIC
+> pages (patch 8 of this series). However, even then, it only does
+> anything if there is an actual call to put_page. Where would that call
+> come from in the dev_dax driver case?
 
-That's not what it does.  See xfs_iomap_write_direct:
+Correct, the drivers/dax/device.c driver allocates MEMORY_DEVICE_GENERIC
+struct pages and doesn't seem to allocate/free the page nor increment/decrement
+the reference count but it does call vmf_insert_mixed() if the /dev/file
+is mmap()'ed into a user process' address space. If devm_memremap_pages()
+returns the array of ZONE_DEVICE struct pages initialized with a reference
+count of zero, then the CPU page tables will have a PTE/PFN that points to
+a struct page with a zero reference count. This goes against the normal
+expectation in the rest of the mm code that assumes a page mapped by a CPU
+has a non-zero reference count.
+So yes, nothing "bad" happens because put_page() isn't called but the
+reference count will differ from other drivers that call vmf_insert_mixed()
+or vm_insert_page() where the page was allocated with alloc_pages() or
+similar.
 
-	/*
-	 * For DAX, we do not allocate unwritten extents, but instead we
-	 * zero the block before we commit the transaction.  Ideally
-	 * we'd like to do this outside the transaction context, but if
-	 * we commit and then crash we may not have zeroed the blocks
-	 * and this will be exposed on recovery of the allocation. Hence
-	 * we must zero before commit.
-	 *
-	 * Further, if we are mapping unwritten extents here, we need to
-	 * zero and convert them to written so that we don't need an
-	 * unwritten extent callback for DAX. This also means that we
-	 * need to be able to dip into the reserve block pool for bmbt
-	 * block allocation if there is no space left but we need to do
-	 * unwritten extent conversion.
-	 */
-	if (IS_DAX(VFS_I(ip))) {
-		bmapi_flags = XFS_BMAPI_CONVERT | XFS_BMAPI_ZERO;
-		if (imap->br_state == XFS_EXT_UNWRITTEN) {
-			force = true;
-			nr_exts = XFS_IEXT_WRITE_UNWRITTEN_CNT;
-			dblocks = XFS_DIOSTRAT_SPACE_RES(mp, 0) << 1;
-		}
-	}
-
-Originally added in:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=1ca191576fc862b4766f58e41aa362b28a7c1866
-
-Of course, that was six years ago when the mm folks were still arguing
-about whether they'd have struct page or pfns or some combination of the
-two for DAX.  I'm not sure if those limitations still exist, or if they
-quietly disappeared and xfs/ext4/ext2 haven't noticed.  I think I see
-that we store pfns in i_pages along with a lock bit, but I don't know if
-that lock bit is sufficient to prevent races between page faults.
-
-Hence my question below:
-> 
-> > 
-> > Apparently the reason for this was that dax (at least 6 years ago) had no
-> > concept paralleling the page lock, so it was necessary to do that to avoid page
-> > fault handlers racing to map pfns into the file mapping?
-> > That would seem to prevent us from doing the more standard behavior of
-> > allocate unwritten, write data, convert mapping... but is that still the case?  Or
-> > can we get rid of this bad quirk?
-> 
-> I am not sure about this...
-
-Me neither.
-
---D
-
-> 
-> 
+>> I'm even less clear about how to fix MEMORY_DEVICE_FS_DAX. File
+>> systems have clear
+>> allocate and free states for backing storage but there are the
+>> complications with
+>> the page cache references, etc. to consider. The >1 to 1 reference
+>> count seems to
+>> be used to tell when a page is idle (no I/O, reclaim scanners) rather
+>> than free
+>> (not allocated to any file) but I'm not 100% sure about that since I
+>> don't really
+>> understand all the issues around why a file system needs to have a DAX
+>> mount option
+>> besides knowing that the storage block size has to be a multiple of
+>> the page size.
+> The only thing that happens in free_zone_device_page for FS_DAX pages is
+> wake_up_var(&page->_refcount). I guess, whoever is waiting for this
+> wake-up will need to be prepared to see a refcount 0 instead of 1 now. I
+> see these callers that would need to be updated:
+>
+> ./fs/ext4/inode.c:        error = ___wait_var_event(&page->_refcount,
+> ./fs/ext4/inode.c-                atomic_read(&page->_refcount) == 1,
+> ./fs/ext4/inode.c-                TASK_INTERRUPTIBLE, 0, 0,
+> ./fs/ext4/inode.c-                ext4_wait_dax_page(ei));
 > --
-> Thanks,
-> Ruan.
-> 
-> > 
-> > --D
-> > 
-> > >
-> > > >
-> > > > > > +	}
-> > > > > >  out:
-> > > > > >  	/*
-> > > > > >  	 * Now the data has been copied, commit the range we've copied.
-> > > > > > This diff --git a/fs/xfs/xfs_bmap_util.c
-> > > > > > b/fs/xfs/xfs_bmap_util.c index
-> > > > > > a5e9d7d34023..2a36dc93ff27 100644
-> > > > > > --- a/fs/xfs/xfs_bmap_util.c
-> > > > > > +++ b/fs/xfs/xfs_bmap_util.c
-> > > > > > @@ -965,8 +965,7 @@ xfs_free_file_space(
-> > > > > >  		return 0;
-> > > > > >  	if (offset + len > XFS_ISIZE(ip))
-> > > > > >  		len = XFS_ISIZE(ip) - offset;
-> > > > > > -	error = iomap_zero_range(VFS_I(ip), offset, len, NULL,
-> > > > > > -			&xfs_buffered_write_iomap_ops);
-> > > > > > +	error = xfs_iomap_zero_range(ip, offset, len, NULL);
-> > > > > >  	if (error)
-> > > > > >  		return error;
-> > > > > >
-> > > > > > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c index
-> > > > > > 396ef36dcd0a..89406ec6741b
-> > > > > > 100644
-> > > > > > --- a/fs/xfs/xfs_file.c
-> > > > > > +++ b/fs/xfs/xfs_file.c
-> > > > > > @@ -684,11 +684,12 @@ xfs_file_dax_write(
-> > > > > >  	pos = iocb->ki_pos;
-> > > > > >
-> > > > > >  	trace_xfs_file_dax_write(iocb, from);
-> > > > > > -	ret = dax_iomap_rw(iocb, from, &xfs_direct_write_iomap_ops);
-> > > > > > +	ret = dax_iomap_rw(iocb, from, &xfs_dax_write_iomap_ops);
-> > > > > >  	if (ret > 0 && iocb->ki_pos > i_size_read(inode)) {
-> > > > > >  		i_size_write(inode, iocb->ki_pos);
-> > > > > >  		error = xfs_setfilesize(ip, pos, ret);
-> > > > > >  	}
-> > > > > > +
-> > > > > >  out:
-> > > > > >  	if (iolock)
-> > > > > >  		xfs_iunlock(ip, iolock);
-> > > > > > @@ -1309,7 +1310,7 @@ __xfs_filemap_fault(
-> > > > > >
-> > > > > >  		ret = dax_iomap_fault(vmf, pe_size, &pfn, NULL,
-> > > > > >  				(write_fault && !vmf->cow_page) ?
-> > > > > > -				 &xfs_direct_write_iomap_ops :
-> > > > > > +				 &xfs_dax_write_iomap_ops :
-> > > > > >  				 &xfs_read_iomap_ops);
-> > > > > >  		if (ret & VM_FAULT_NEEDDSYNC)
-> > > > > >  			ret = dax_finish_sync_fault(vmf, pe_size, pfn); diff --git
-> > > > > > a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c index
-> > > > > > d154f42e2dc6..2f322e2f8544
-> > > > > > 100644
-> > > > > > --- a/fs/xfs/xfs_iomap.c
-> > > > > > +++ b/fs/xfs/xfs_iomap.c
-> > > > > > @@ -761,7 +761,8 @@ xfs_direct_write_iomap_begin(
-> > > > > >
-> > > > > >  		/* may drop and re-acquire the ilock */
-> > > > > >  		error = xfs_reflink_allocate_cow(ip, &imap, &cmap, &shared,
-> > > > > > -				&lockmode, flags & IOMAP_DIRECT);
-> > > > > > +				&lockmode,
-> > > > > > +				(flags & IOMAP_DIRECT) || IS_DAX(inode));
-> > > > > >  		if (error)
-> > > > > >  			goto out_unlock;
-> > > > > >  		if (shared)
-> > > > > > @@ -854,6 +855,36 @@ const struct iomap_ops
-> > > > > > xfs_direct_write_iomap_ops = {
-> > > > > >  	.iomap_begin		= xfs_direct_write_iomap_begin,
-> > > > > >  };
-> > > > > >
-> > > > > > +static int
-> > > > > > +xfs_dax_write_iomap_post_actor(
-> > > > > > +	struct inode		*inode,
-> > > > > > +	loff_t			pos,
-> > > > > > +	loff_t			length,
-> > > > > > +	ssize_t			written,
-> > > > > > +	unsigned int		flags,
-> > > > > > +	struct iomap		*iomap,
-> > > > > > +	struct iomap		*srcmap)
-> > > > > > +{
-> > > > > > +	int			error = 0;
-> > > > > > +	struct xfs_inode	*ip = XFS_I(inode);
-> > > > > > +	bool			cow = xfs_is_cow_inode(ip);
-> > > > > > +
-> > > > > > +	if (written <= 0) {
-> > > > > > +		if (cow)
-> > > > > > +			xfs_reflink_cancel_cow_range(ip, pos, length, true);
-> > > > > > +		return written;
-> > > > > > +	}
-> > > > > > +
-> > > > > > +	if (cow)
-> > > > > > +		error = xfs_reflink_end_cow(ip, pos, written);
-> > > > > > +	return error ?: written;
-> > > > > > +}
-> > > >
-> > > > This is pretty much the same as what xfs_dio_write_end_io does, right?
-> > >
-> > > It just handles the end part of CoW here.
-> > > xfs_dio_write_end_io() also updates file size, which is only needed in write()
-> > but not in page fault.  And the update file size work is done in
-> > xfs_dax_file_write(), it's fine, no need to modify it.
-> > >
-> > > >
-> > > > I had imagined that you'd change the function signatures to drop the
-> > > > iocb so that you could reuse this code instead of creating a whole new
-> > callback.
-> > > >
-> > > > Ah well.  Can I send you some prep patches to clean up some of the
-> > > > weird iomap code as a preparation series for this?
-> > >
-> > > Sure.  Thanks.
-> > >
-> > >
-> > > --
-> > > Ruan.
-> > >
-> > > >
-> > > > --D
-> > > >
-> > > > > > +
-> > > > > > +const struct iomap_ops xfs_dax_write_iomap_ops = {
-> > > > > > +	.iomap_begin		= xfs_direct_write_iomap_begin,
-> > > > > > +	.iomap_post_actor	= xfs_dax_write_iomap_post_actor,
-> > > > > > +};
-> > > > > > +
-> > > > > >  static int
-> > > > > >  xfs_buffered_write_iomap_begin(
-> > > > > >  	struct inode		*inode,
-> > > > > > diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h index
-> > > > > > 7d3703556d0e..fbacf638ab21 100644
-> > > > > > --- a/fs/xfs/xfs_iomap.h
-> > > > > > +++ b/fs/xfs/xfs_iomap.h
-> > > > > > @@ -42,8 +42,32 @@ xfs_aligned_fsb_count(
-> > > > > >
-> > > > > >  extern const struct iomap_ops xfs_buffered_write_iomap_ops;
-> > > > > > extern const struct iomap_ops xfs_direct_write_iomap_ops;
-> > > > > > +extern const struct iomap_ops xfs_dax_write_iomap_ops;
-> > > > > >  extern const struct iomap_ops xfs_read_iomap_ops;  extern const
-> > > > > > struct iomap_ops xfs_seek_iomap_ops;  extern const struct
-> > > > > > iomap_ops xfs_xattr_iomap_ops;
-> > > > > >
-> > > > > > +static inline int
-> > > > > > +xfs_iomap_zero_range(
-> > > > > > +	struct xfs_inode	*ip,
-> > > > > > +	loff_t			offset,
-> > > > > > +	loff_t			len,
-> > > > > > +	bool			*did_zero)
-> > > > > > +{
-> > > > > > +	return iomap_zero_range(VFS_I(ip), offset, len, did_zero,
-> > > > > > +			IS_DAX(VFS_I(ip)) ? &xfs_dax_write_iomap_ops
-> > > > > > +					  : &xfs_buffered_write_iomap_ops); }
-> > > > > > +
-> > > > > > +static inline int
-> > > > > > +xfs_iomap_truncate_page(
-> > > > > > +	struct xfs_inode	*ip,
-> > > > > > +	loff_t			pos,
-> > > > > > +	bool			*did_zero)
-> > > > > > +{
-> > > > > > +	return iomap_truncate_page(VFS_I(ip), pos, did_zero,
-> > > > > > +			IS_DAX(VFS_I(ip)) ? &xfs_dax_write_iomap_ops
-> > > > > > +					  : &xfs_buffered_write_iomap_ops); }
-> > > > > > +
-> > > > > >  #endif /* __XFS_IOMAP_H__*/
-> > > > > > diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c index
-> > > > > > dfe24b7f26e5..6d936c3e1a6e 100644
-> > > > > > --- a/fs/xfs/xfs_iops.c
-> > > > > > +++ b/fs/xfs/xfs_iops.c
-> > > > > > @@ -911,8 +911,8 @@ xfs_setattr_size(
-> > > > > >  	 */
-> > > > > >  	if (newsize > oldsize) {
-> > > > > >  		trace_xfs_zero_eof(ip, oldsize, newsize - oldsize);
-> > > > > > -		error = iomap_zero_range(inode, oldsize, newsize - oldsize,
-> > > > > > -				&did_zeroing, &xfs_buffered_write_iomap_ops);
-> > > > > > +		error = xfs_iomap_zero_range(ip, oldsize, newsize - oldsize,
-> > > > > > +				&did_zeroing);
-> > > > > >  	} else {
-> > > > > >  		/*
-> > > > > >  		 * iomap won't detect a dirty page over an unwritten block
-> > > > > > (or a @@
-> > > > > > -924,8 +924,7 @@ xfs_setattr_size(
-> > > > > >  						     newsize);
-> > > > > >  		if (error)
-> > > > > >  			return error;
-> > > > > > -		error = iomap_truncate_page(inode, newsize, &did_zeroing,
-> > > > > > -				&xfs_buffered_write_iomap_ops);
-> > > > > > +		error = xfs_iomap_truncate_page(ip, newsize, &did_zeroing);
-> > > > > >  	}
-> > > > > >
-> > > > > >  	if (error)
-> > > > > > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c index
-> > > > > > d25434f93235..9a780948dbd0 100644
-> > > > > > --- a/fs/xfs/xfs_reflink.c
-> > > > > > +++ b/fs/xfs/xfs_reflink.c
-> > > > > > @@ -1266,8 +1266,7 @@ xfs_reflink_zero_posteof(
-> > > > > >  		return 0;
-> > > > > >
-> > > > > >  	trace_xfs_zero_eof(ip, isize, pos - isize);
-> > > > > > -	return iomap_zero_range(VFS_I(ip), isize, pos - isize, NULL,
-> > > > > > -			&xfs_buffered_write_iomap_ops);
-> > > > > > +	return xfs_iomap_zero_range(ip, isize, pos - isize, NULL);
-> > > > > >  }
-> > > > > >
-> > > > > >  /*
-> > > > > > diff --git a/include/linux/iomap.h b/include/linux/iomap.h index
-> > > > > > 95562f863ad0..58f2e1c78018 100644
-> > > > > > --- a/include/linux/iomap.h
-> > > > > > +++ b/include/linux/iomap.h
-> > > > > > @@ -135,6 +135,14 @@ struct iomap_ops {
-> > > > > >  			unsigned flags, struct iomap *iomap,
-> > > > > >  			struct iomap *srcmap);
-> > > > > >
-> > > > > > +	/*
-> > > > > > +	 * Handle the error code from actor(). Do the finishing jobs for extra
-> > > > > > +	 * operations, such as CoW, according to whether written is negative.
-> > > > > > +	 */
-> > > > > > +	int (*iomap_post_actor)(struct inode *inode, loff_t pos, loff_t length,
-> > > > > > +			ssize_t written, unsigned flags, struct iomap *iomap,
-> > > > > > +			struct iomap *srcmap);
-> > > > > > +
-> > > > > >  	/*
-> > > > > >  	 * Commit and/or unreserve space previous allocated using
-> > > > iomap_begin.
-> > > > > >  	 * Written indicates the length of the successful write
-> > > > > > operation which
-> > > > > > --
-> > > > > > 2.31.1
-> > > > >
+> ./fs/fuse/dax.c:    return ___wait_var_event(&page->_refcount,
+> ./fs/fuse/dax.c-            atomic_read(&page->_refcount) == 1,
+> TASK_INTERRUPTIBLE,
+> ./fs/fuse/dax.c-            0, 0, fuse_wait_dax_page(inode));
+> --
+> ./fs/xfs/xfs_file.c:    return ___wait_var_event(&page->_refcount,
+> ./fs/xfs/xfs_file.c-            atomic_read(&page->_refcount) == 1,
+> TASK_INTERRUPTIBLE,
+> ./fs/xfs/xfs_file.c-            0, 0, xfs_wait_dax_page(inode));
+>
+> Regarding your page-cache comment, doesn't DAX mean that those file
+> pages are not in the page cache?
+>
+> Regards,
+>    Felix
+>
+I don't really understand the FS_DAX code. I can see the __wait_var_event()
+is being used when truncating or punching holes in files but I'm not
+quite sure if it is using the >1 to 1 reference count to know when a
+page has no "extra" references or if it means the page is actually
+"free" and no longer assigned to a file.
+I really think some FS_DAX expert needs to weigh in on these reference count
+changes.
+
