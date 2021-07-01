@@ -2,77 +2,111 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C8BDC11F65
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Jun 2021 21:49:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9A5DC11F69
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Jul 2021 15:37:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3F9D361474
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Jun 2021 21:49:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 898956141C
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Jul 2021 15:37:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232394AbhF3Vvg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 30 Jun 2021 17:51:36 -0400
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:50652 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232042AbhF3Vvg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Jun 2021 17:51:36 -0400
-Received: from dread.disaster.area (pa49-179-138-183.pa.nsw.optusnet.com.au [49.179.138.183])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 6AC6C69A1C;
-        Thu,  1 Jul 2021 07:49:05 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1lyi4t-001Hgw-GP; Thu, 01 Jul 2021 07:49:03 +1000
-Date:   Thu, 1 Jul 2021 07:49:03 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [PATCH 1/3] mm: Add kvrealloc()
-Message-ID: <20210630214903.GF664593@dread.disaster.area>
-References: <20210630061431.1750745-1-david@fromorbit.com>
- <20210630061431.1750745-2-david@fromorbit.com>
- <20210630160843.GM13784@locust>
+        id S233332AbhGAPkR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Jul 2021 11:40:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48492 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233064AbhGAPkQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Jul 2021 11:40:16 -0400
+Received: from mail-wm1-x333.google.com (mail-wm1-x333.google.com [IPv6:2a00:1450:4864:20::333])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14259C061762;
+        Thu,  1 Jul 2021 08:37:46 -0700 (PDT)
+Received: by mail-wm1-x333.google.com with SMTP id o33-20020a05600c5121b02901e360c98c08so7106813wms.5;
+        Thu, 01 Jul 2021 08:37:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=4AawkGCXS8076zqa2ceQS9Q+T6ktDkZLlSiDG0RFEDc=;
+        b=MJKdeO/ZRwo92yK/m4HDNEVwfcJnNgUjgPXa0GIXoXtxhcFf2eduSinBeG2lfRf7N8
+         arfHhzmKJc6OjgZ3u80Wnav/tMMO/PvDQ64/1bltYZ4fbwjhOruxijD9bekyyEMA5k2+
+         VHEDfg3BaTZO7tHm6DhTfiALkkBlE7c1wphVoiYiNW/EtgTYQjOBynRZRb3eygsNhTYz
+         /fzYMkpljjvNMTswP5ouLQ4uY6vi1GEuPlUHb8mIRzwqEYvfGm160rmdE/pBHP5fTeG+
+         FO+LVWd6kmajhXkRpUmPxx+F4Ff7lAoKkynlmf7lVimZAJtUlm06XjxAXqsieNzldK9C
+         hn0g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=4AawkGCXS8076zqa2ceQS9Q+T6ktDkZLlSiDG0RFEDc=;
+        b=NEPyQj12qRdnvQBhqfJFaGXzjUl1yLc/90KdBWik6o+ToTsNsLw/4Iwuzl5azSjlb1
+         QP4PN3vZ1L48Ic4jRJlZPzauYyaZ4hJ/1SZaX35cWohrfxd3RjNT1WeyEqSxB8WLjavk
+         2f5+x07Hd6clUb3cUCvzH9O04IE95RLXTBNTrUqagyj63LsZxExBAer9IkOkifBazjXa
+         ZaI2ZCrua0AHq2bZvmCasEAJa88WfsXn8xXNN4vbE8G7a9uwxRauRxm2ziQ+jdbMr7jt
+         AdewF5OoO+PGRlDpHPnl/Ut5RGpthH9FP/HC2MXv6+yjsInd8paDch6crDm+ru5A6kqN
+         Kf3A==
+X-Gm-Message-State: AOAM531Fy445228CEZfCDf/Qdpt6PnhTzBh+u4wLyGKN6/J8/mOcoQlp
+        2CefJ+YPznC5/jDFDD/HgRhbbkW1EuNayec/y4oS/i9lcG0w6iz7
+X-Google-Smtp-Source: ABdhPJw83WgbDLafRLinqmNHcEfgEMwgPJTNgx2lfoPjuMO6IZwQYVdVB2s5O0sbbb4w6nVh2gP6BADr/5Fvpd4lOgU=
+X-Received: by 2002:a05:600c:21c8:: with SMTP id x8mr11345208wmj.167.1625153864584;
+ Thu, 01 Jul 2021 08:37:44 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210630160843.GM13784@locust>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
-        a=MnllW2CieawZLw/OcHE/Ng==:117 a=MnllW2CieawZLw/OcHE/Ng==:17
-        a=kj9zAlcOel0A:10 a=e_q4qTt1xDgA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=RaIoV-Duqy7ywgANOlkA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+References: <20210628123801.3511-1-wangshilong1991@gmail.com> <20210628223403.GE664593@dread.disaster.area>
+In-Reply-To: <20210628223403.GE664593@dread.disaster.area>
+From:   Wang Shilong <wangshilong1991@gmail.com>
+Date:   Thu, 1 Jul 2021 23:37:33 +0800
+Message-ID: <CAP9B-QnCjz4UTALx0W4QA=7qTcEHTVOVid+kJW8Te-dgJoobHg@mail.gmail.com>
+Subject: Re: [PATCH v2] fs: forbid invalid project ID
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        Ext4 Developers List <linux-ext4@vger.kernel.org>,
+        linux-f2fs-devel@lists.sourceforge.net
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 30, 2021 at 09:08:43AM -0700, Darrick J. Wong wrote:
-> On Wed, Jun 30, 2021 at 04:14:29PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> > index 1721fce2ec94..fee4fbadea0a 100644
-> > --- a/fs/xfs/xfs_log_recover.c
-> > +++ b/fs/xfs/xfs_log_recover.c
-> > @@ -2062,7 +2062,7 @@ xlog_recover_add_to_cont_trans(
-> >  	old_ptr = item->ri_buf[item->ri_cnt-1].i_addr;
-> >  	old_len = item->ri_buf[item->ri_cnt-1].i_len;
-> >  
-> > -	ptr = krealloc(old_ptr, len + old_len, GFP_KERNEL | __GFP_NOFAIL);
-> > +	ptr = kvrealloc(old_ptr, old_len, len + old_len, GFP_KERNEL);
-> 
-> kvrealloc can return null, so this needs to check for that and -ENOMEM,
-> right?  It'll suck that log recovery fails, but such is life.
+On Tue, Jun 29, 2021 at 6:34 AM Dave Chinner <david@fromorbit.com> wrote:
+>
+> On Mon, Jun 28, 2021 at 08:38:01AM -0400, Wang Shilong wrote:
+> > fileattr_set_prepare() should check if project ID
+> > is valid, otherwise dqget() will return NULL for
+> > such project ID quota.
+> >
+> > Signed-off-by: Wang Shilong <wshilong@ddn.com>
+> > ---
+> > v1->v2: try to fix in the VFS
+> > ---
+> >  fs/ioctl.c | 3 +++
+> >  1 file changed, 3 insertions(+)
+> >
+> > diff --git a/fs/ioctl.c b/fs/ioctl.c
+> > index 1e2204fa9963..5db5b218637b 100644
+> > --- a/fs/ioctl.c
+> > +++ b/fs/ioctl.c
+> > @@ -845,6 +845,9 @@ static int fileattr_set_prepare(struct inode *inode,
+> >       if (fa->fsx_cowextsize == 0)
+> >               fa->fsx_xflags &= ~FS_XFLAG_COWEXTSIZE;
+> >
+> > +     if (!projid_valid(KPROJIDT_INIT(fa->fsx_projid)))
+> > +             return -EINVAL;
+>
+> This needs to go further up in this function in the section where
+> project IDs passed into this function are validated. Projids are
+> only allowed to be changed when current_user_ns() == &init_user_ns,
+> so this needs to be associated with that verification context.
+>
+> This check should also use make_kprojid(), please, not open code
+> KPROJIDT_INIT.
 
-Ok, looking through the code it seems that returning -ENOMEM here
-is a non-destructive (i.e. retry-able) failure. It will simply stop
-processing the log at the point this occurs and abort all pending
-objects that haven't been processed. The error message is less than
-stellar ("log mount/recovery failed: error %d") but at least no
-other damage will be done. I'll update it.
+You are right, let me send a V3
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
