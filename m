@@ -2,92 +2,106 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6147C11F68
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Jul 2021 09:18:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF408C11F6A
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Jul 2021 09:23:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CA65261416
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Jul 2021 09:18:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 888DB61090
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Jul 2021 09:23:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230354AbhGBJVH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 2 Jul 2021 05:21:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56562 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230112AbhGBJVH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jul 2021 05:21:07 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 83024C061762
-        for <linux-xfs@vger.kernel.org>; Fri,  2 Jul 2021 02:18:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=AQ/n55taTn8nQwCpJcxALrqYjBxc2AC+Dsg6en/wXaI=; b=DW9Pmq1aPW4+QbLXgkRu9jDKlr
-        MlFgSx9ahdE9ySFyrnZu2P5hEjizWjban0AZ7+D6OCaFrQV9WO8eSUYQb1B1MOCfJ/gteVLZFPSin
-        DfaMV/PlpHj7XPG/xfyeOuSqSeHvo+qQhOS+g1YuWo7Gz60kAj40LMPXxCezSJN4sXWfFLNO6Urbh
-        ExX/8BP1A1N8KrQgqAr6dz6I+2WkHGiExAfiNv76AalTZZ8gp189kCFlsjzxJhIJsUDbj4u7sIX2z
-        N0pRgubcOTwL3n1aBYRw++0+EngRFvhxd858DKTopqRoIIHL5RmUvvWy3C/PBRQu3qdQS1lvZYfr4
-        fMCktn4Q==;
-Received: from hch by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1lzFJ7-007YLe-2M; Fri, 02 Jul 2021 09:18:05 +0000
-Date:   Fri, 2 Jul 2021 10:17:57 +0100
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/5] xfs: attached iclog callbacks in
- xlog_cil_set_ctx_write_state()
-Message-ID: <YN7ZxfrWoCjNFv3g@infradead.org>
-References: <20210630072108.1752073-1-david@fromorbit.com>
- <20210630072108.1752073-5-david@fromorbit.com>
+        id S231231AbhGBJZb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 2 Jul 2021 05:25:31 -0400
+Received: from szxga08-in.huawei.com ([45.249.212.255]:10238 "EHLO
+        szxga08-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231162AbhGBJZa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jul 2021 05:25:30 -0400
+Received: from dggemv704-chm.china.huawei.com (unknown [172.30.72.57])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4GGTxp4ZHrz1BTML;
+        Fri,  2 Jul 2021 17:17:34 +0800 (CST)
+Received: from dggpemm500006.china.huawei.com (7.185.36.236) by
+ dggemv704-chm.china.huawei.com (10.3.19.47) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2176.2; Fri, 2 Jul 2021 17:22:56 +0800
+Received: from thunder-town.china.huawei.com (10.174.179.0) by
+ dggpemm500006.china.huawei.com (7.185.36.236) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2176.2; Fri, 2 Jul 2021 17:22:56 +0800
+From:   Zhen Lei <thunder.leizhen@huawei.com>
+To:     Christoph Hellwig <hch@infradead.org>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+CC:     Zhen Lei <thunder.leizhen@huawei.com>
+Subject: [PATCH -next 1/1] iomap: Fix a false positive of UBSAN in iomap_seek_data()
+Date:   Fri, 2 Jul 2021 17:21:09 +0800
+Message-ID: <20210702092109.2601-1-thunder.leizhen@huawei.com>
+X-Mailer: git-send-email 2.26.0.windows.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210630072108.1752073-5-david@fromorbit.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.174.179.0]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ dggpemm500006.china.huawei.com (7.185.36.236)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 30, 2021 at 05:21:07PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Now that we have a mechanism to guarantee that the callbacks
-> attached to an iclog are owned by the context that attaches them
-> until they drop their reference to the iclog via
-> xlog_state_release_iclog(), we can attach callbacks to the iclog at
-> any time we have an active reference to the iclog.
-> 
-> xlog_state_get_iclog_space() always guarantees that the commit
-> record will fit in the iclog it returns, so we can move this IO
-> callback setting to xlog_cil_set_ctx_write_state(), record the
-> commit iclog in the context and remove the need for the commit iclog
-> to be returned by xlog_write() altogether.
-> 
-> This, in turn, allows us to move the wakeup for ordered commit
-> recrod writes up into xlog_cil_set_ctx_write_state(), too, because
+Move the evaluation expression "size - offset" after the "if (offset < 0)"
+judgment statement to eliminate a false positive produced by the UBSAN.
 
-s/recrod/record/
+No functional changes.
 
-> --- a/fs/xfs/xfs_log_cil.c
-> +++ b/fs/xfs/xfs_log_cil.c
-> @@ -646,11 +646,41 @@ xlog_cil_set_ctx_write_state(
->  	xfs_lsn_t		lsn = be64_to_cpu(iclog->ic_header.h_lsn);
->  
->  	ASSERT(!ctx->commit_lsn);
-> +	if (!ctx->start_lsn) {
-> +		spin_lock(&cil->xc_push_lock);
->  		ctx->start_lsn = lsn;
-> +		spin_unlock(&cil->xc_push_lock);
-> +		return;
+==========================================================================
+UBSAN: Undefined behaviour in fs/iomap.c:1435:9
+signed integer overflow:
+0 - -9223372036854775808 cannot be represented in type 'long long int'
+CPU: 1 PID: 462 Comm: syz-executor852 Tainted: G ---------r-  - 4.18.0+ #1
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS ...
+Call Trace:
+ __dump_stack lib/dump_stack.c:77 [inline]
+ dump_stack+0xca/0x13e lib/dump_stack.c:113
+ ubsan_epilogue+0xe/0x81 lib/ubsan.c:159
+ handle_overflow+0x193/0x1e2 lib/ubsan.c:190
+ iomap_seek_data+0x128/0x140 fs/iomap.c:1435
+ ext4_llseek+0x1e3/0x290 fs/ext4/file.c:494
+ vfs_llseek fs/read_write.c:300 [inline]
+ ksys_lseek+0xe9/0x160 fs/read_write.c:313
+ do_syscall_64+0xca/0x5b0 arch/x86/entry/common.c:293
+ entry_SYSCALL_64_after_hwframe+0x6a/0xdf
+==========================================================================
 
-What does xc_push_lock protect here?  None of the read of
-->start_lsn are under xc_push_lock, and this patch moves one of the
-two readers to be under l_icloglock.
+Signed-off-by: Zhen Lei <thunder.leizhen@huawei.com>
+---
+ fs/iomap/seek.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Also I wonder if the comment about what is done if start_lsn is not
-set would be better right above the if instead of on top of the function
-so that it stays closer to the code it documents.
+diff --git a/fs/iomap/seek.c b/fs/iomap/seek.c
+index dab1b02eba5b..778e3e84c95e 100644
+--- a/fs/iomap/seek.c
++++ b/fs/iomap/seek.c
+@@ -83,13 +83,14 @@ loff_t
+ iomap_seek_data(struct inode *inode, loff_t offset, const struct iomap_ops *ops)
+ {
+ 	loff_t size = i_size_read(inode);
+-	loff_t length = size - offset;
++	loff_t length;
+ 	loff_t ret;
+ 
+ 	/* Nothing to be found before or beyond the end of the file. */
+ 	if (offset < 0 || offset >= size)
+ 		return -ENXIO;
+ 
++	length = size - offset;
+ 	while (length > 0) {
+ 		ret = iomap_apply(inode, offset, length, IOMAP_REPORT, ops,
+ 				  &offset, iomap_seek_data_actor);
+-- 
+2.25.1
+
+
