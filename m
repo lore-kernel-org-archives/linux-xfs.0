@@ -7,57 +7,131 @@ X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2805C11F68
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Jul 2021 07:48:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 541B9C11F68
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Jul 2021 08:00:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 714D6613F7
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Jul 2021 07:48:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3C2886140E
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Jul 2021 08:00:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230023AbhGBHuu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 2 Jul 2021 03:50:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36528 "EHLO
+        id S230245AbhGBIDD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 2 Jul 2021 04:03:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39236 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229519AbhGBHus (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jul 2021 03:50:48 -0400
+        with ESMTP id S230214AbhGBIDD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jul 2021 04:03:03 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A92E8C061762
-        for <linux-xfs@vger.kernel.org>; Fri,  2 Jul 2021 00:48:16 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97B05C061762
+        for <linux-xfs@vger.kernel.org>; Fri,  2 Jul 2021 01:00:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=+IrjHVDlbGz8wTBvijMcSLVethpIGEmvLZz3ziFTRH0=; b=YKLu6evQZv87hhCom0sP/2+G14
-        QRYZMnZxHr1XC7CWP/ksQH5qSqoh8yTLJx1gRtXgXmtaHbp9JTs7KTwzJ+3IECIHoH1nwMFbv4yk2
-        6aeLSbx6xHXFpLbcXTnag6eFgqcL/Q90pC17VQbABQ0zjq3A7xYgosg9u8AA9CcfZ7YUqCEvVfDdC
-        MTtw2VkrWj2hYlzvVv+1AzLSXw1LInd7Jmum8zwZPWkSiQjBz8e54oblslmhtl25YJYRHgDYoIFOC
-        Iew5cW6HkXZzXDlu6mpVbyNQTC1FMLYGfSEh1g/pCZ1CRBB1AkIHkC4I2K8EOBrHD5sAPm2Wfgz17
-        9Azw7mdw==;
+        bh=TXTAdWMAtN301PVXiI2WOJk5s0zbA0HrdJnrc9P5NGY=; b=qdajw1QP0CyHpApFrn71oGn++a
+        crpZneeEWMeJdcYpQPsGfnIesbtnkc8Ona4j2s+s6AQ7Ptmaw6aACdTwLmPdkDCnSjp7TFEvBFV+d
+        P3b1W7gUw9muLQLjNmx4gkrLn60JUkgysBlUUCo9Xof+qyME8gEMVnM9VKO+tkoFY0rbIHHFS7+4h
+        CA5sL9J6dLkCrRGkKX82MNTLsSPVjtrNLHk+9ji5RdQuRf/TLjeY2AXvY2gZlB4OhRD8s2OwCSK1c
+        /OPJR2pS1J5Z/UORXFSP0n3FKTBAnd5KMehKDStyum0kHWIJ44jMPFoyS1yPHEe97GnFO/IzjDMWn
+        /l1CRQhw==;
 Received: from hch by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1lzDuB-007T8Q-4j; Fri, 02 Jul 2021 07:48:09 +0000
-Date:   Fri, 2 Jul 2021 08:48:07 +0100
+        id 1lzE5q-007Tdf-Nf; Fri, 02 Jul 2021 08:00:15 +0000
+Date:   Fri, 2 Jul 2021 09:00:10 +0100
 From:   Christoph Hellwig <hch@infradead.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/9] xfs: convert XLOG_FORCED_SHUTDOWN() to
- xlog_is_shutdown()
-Message-ID: <YN7Et6kfwhGaVfEp@infradead.org>
+Subject: Re: [PATCH 2/9] xfs: XLOG_STATE_IOERROR must die
+Message-ID: <YN7HivsUsXYmfBHM@infradead.org>
 References: <20210630063813.1751007-1-david@fromorbit.com>
- <20210630063813.1751007-2-david@fromorbit.com>
+ <20210630063813.1751007-3-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210630063813.1751007-2-david@fromorbit.com>
+In-Reply-To: <20210630063813.1751007-3-david@fromorbit.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> @@ -366,7 +366,7 @@ xfs_log_writable(
->  		return false;
->  	if (xfs_readonly_buftarg(mp->m_log->l_targ))
->  		return false;
-> -	if (XFS_FORCED_SHUTDOWN(mp))
-> +	if (xlog_is_shutdown(mp->m_log))
+>  	else
+>  		ASSERT(iclog->ic_state == XLOG_STATE_WANT_SYNC ||
+> -		       iclog->ic_state == XLOG_STATE_IOERROR);
+> +			xlog_is_shutdown(log));
 
-This wasn't XLOG_FORCED_SHUTDOWN to start with.  Same for a few more
-spots.
+Nit:  think doing this as:
+
+	else if (!xlog_is_shutdown(log))
+		ASSERT(iclog->ic_state == XLOG_STATE_WANT_SYNC);
+
+would be a tad cleaner.
+
+>  		else
+>  			ASSERT(iclog->ic_state == XLOG_STATE_WANT_SYNC ||
+> -			       iclog->ic_state == XLOG_STATE_IOERROR);
+> +				xlog_is_shutdown(log));
+
+Same here.
+
+> @@ -2765,12 +2755,13 @@ xlog_state_do_callback(
+>  	struct xlog_in_core	*iclog;
+>  	struct xlog_in_core	*first_iclog;
+>  	bool			cycled_icloglock;
+> -	bool			ioerror;
+>  	int			flushcnt = 0;
+>  	int			repeats = 0;
+>  
+>  	spin_lock(&log->l_icloglock);
+>  	do {
+> +		repeats++;
+> +
+>  		/*
+>  		 * Scan all iclogs starting with the one pointed to by the
+>  		 * log.  Reset this starting point each time the log is
+> @@ -2779,23 +2770,21 @@ xlog_state_do_callback(
+>  		 * Keep looping through iclogs until one full pass is made
+>  		 * without running any callbacks.
+>  		 */
+> -		first_iclog = log->l_iclog;
+> -		iclog = log->l_iclog;
+>  		cycled_icloglock = false;
+> -		ioerror = false;
+> -		repeats++;
+> -
+> -		do {
+> +		first_iclog = NULL;
+> +		for (iclog = log->l_iclog;
+> +		     iclog != first_iclog;
+> +		     iclog = iclog->ic_next) {
+>  			LIST_HEAD(cb_list);
+>  
+> -			if (xlog_state_iodone_process_iclog(log, iclog,
+> -							&ioerror))
+> -				break;
+> +			if (!first_iclog)
+> +				first_iclog = iclog;
+>  
+> -			if (iclog->ic_state != XLOG_STATE_CALLBACK &&
+> -			    iclog->ic_state != XLOG_STATE_IOERROR) {
+> -				iclog = iclog->ic_next;
+> -				continue;
+> +			if (!xlog_is_shutdown(log)) {
+> +				if (xlog_state_iodone_process_iclog(log, iclog))
+> +					break;
+> +				if (iclog->ic_state != XLOG_STATE_CALLBACK)
+> +					continue;
+>  			}
+>  			list_splice_init(&iclog->ic_callbacks, &cb_list);
+>  			spin_unlock(&log->l_icloglock);
+> @@ -2810,8 +2799,7 @@ xlog_state_do_callback(
+>  				wake_up_all(&iclog->ic_force_wait);
+>  			else
+>  				xlog_state_clean_iclog(log, iclog);
+> -			iclog = iclog->ic_next;
+> -		} while (first_iclog != iclog);
+> +		};
+
+I don't think swiching to a random other iteration style here helps
+to review.  Please keep the old in in this otherwise pretty mechnical
+change and clean it up later if you strongly prefer the new style.
+(which I'm really not sold on, btw - yes it makes the continiue easier
+but otherwise isn't all that great either).
+
+Otherwise looks fine and long overdue.
