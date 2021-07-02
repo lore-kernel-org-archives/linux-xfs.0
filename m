@@ -2,106 +2,73 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF408C11F6A
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Jul 2021 09:23:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29A00C11F68
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Jul 2021 09:28:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 888DB61090
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Jul 2021 09:23:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 10A986120C
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Jul 2021 09:28:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231231AbhGBJZb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 2 Jul 2021 05:25:31 -0400
-Received: from szxga08-in.huawei.com ([45.249.212.255]:10238 "EHLO
-        szxga08-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231162AbhGBJZa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jul 2021 05:25:30 -0400
-Received: from dggemv704-chm.china.huawei.com (unknown [172.30.72.57])
-        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4GGTxp4ZHrz1BTML;
-        Fri,  2 Jul 2021 17:17:34 +0800 (CST)
-Received: from dggpemm500006.china.huawei.com (7.185.36.236) by
- dggemv704-chm.china.huawei.com (10.3.19.47) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Fri, 2 Jul 2021 17:22:56 +0800
-Received: from thunder-town.china.huawei.com (10.174.179.0) by
- dggpemm500006.china.huawei.com (7.185.36.236) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Fri, 2 Jul 2021 17:22:56 +0800
-From:   Zhen Lei <thunder.leizhen@huawei.com>
-To:     Christoph Hellwig <hch@infradead.org>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-CC:     Zhen Lei <thunder.leizhen@huawei.com>
-Subject: [PATCH -next 1/1] iomap: Fix a false positive of UBSAN in iomap_seek_data()
-Date:   Fri, 2 Jul 2021 17:21:09 +0800
-Message-ID: <20210702092109.2601-1-thunder.leizhen@huawei.com>
-X-Mailer: git-send-email 2.26.0.windows.1
+        id S230205AbhGBJas (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 2 Jul 2021 05:30:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58802 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230078AbhGBJar (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jul 2021 05:30:47 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF18DC061762
+        for <linux-xfs@vger.kernel.org>; Fri,  2 Jul 2021 02:28:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=/RbPgCHo+ZYnem+RKjM/+96wWN87Ik6vEBmaEoiWhZk=; b=dTqdaagK1/eBFmWDkBchKCheua
+        Qrx16OxRL7cTkYe+PrfQ0E+metsDaRNRG0pX31Yb+LZJpywuNmi0q26NdewAb/IvDC9TMKd0yHvB2
+        9yagSPIst7y0Z9ZD3iWqiuZ13Xi9gVgRXOmRN4YhOi46DKh+D+hGNZl4LLJuYUEt5NzJs3NLkOCy8
+        2mYmBmszSu6u2hOtzMbT6ctlhCIQG9ofzhOFwbD3NE4fthVRRe/e00rZqoTAZaZLCeWkJSp2JDdq9
+        pEHU0833pUFqlvGXMKB9Pbo/Mk5yFNq5f0hrMIv+0vb4h+F8Edi+Cl01jJN27HhMYwZUyoVG3vivr
+        f7waFIEw==;
+Received: from hch by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1lzFSe-007Z1i-4h; Fri, 02 Jul 2021 09:27:52 +0000
+Date:   Fri, 2 Jul 2021 10:27:48 +0100
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/9] xfs: convert XLOG_FORCED_SHUTDOWN() to
+ xlog_is_shutdown()
+Message-ID: <YN7cFL6eVVi+dom+@infradead.org>
+References: <20210630063813.1751007-1-david@fromorbit.com>
+ <20210630063813.1751007-2-david@fromorbit.com>
+ <YN7Et6kfwhGaVfEp@infradead.org>
+ <20210702084558.GG664593@dread.disaster.area>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.174.179.0]
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- dggpemm500006.china.huawei.com (7.185.36.236)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210702084558.GG664593@dread.disaster.area>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Move the evaluation expression "size - offset" after the "if (offset < 0)"
-judgment statement to eliminate a false positive produced by the UBSAN.
+On Fri, Jul 02, 2021 at 06:45:58PM +1000, Dave Chinner wrote:
+> On Fri, Jul 02, 2021 at 08:48:07AM +0100, Christoph Hellwig wrote:
+> > > @@ -366,7 +366,7 @@ xfs_log_writable(
+> > >  		return false;
+> > >  	if (xfs_readonly_buftarg(mp->m_log->l_targ))
+> > >  		return false;
+> > > -	if (XFS_FORCED_SHUTDOWN(mp))
+> > > +	if (xlog_is_shutdown(mp->m_log))
+> > 
+> > This wasn't XLOG_FORCED_SHUTDOWN to start with.  Same for a few more
+> > spots.
+> 
+> Yup, but in the places where we are working on the log, we should be
+> checking the log state for shutdown, not the mount. They currently
+> mean the same thing, but that doesn't mean we should use mount based
+> checks in the log and vice versa.
 
-No functional changes.
-
-==========================================================================
-UBSAN: Undefined behaviour in fs/iomap.c:1435:9
-signed integer overflow:
-0 - -9223372036854775808 cannot be represented in type 'long long int'
-CPU: 1 PID: 462 Comm: syz-executor852 Tainted: G ---------r-  - 4.18.0+ #1
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS ...
-Call Trace:
- __dump_stack lib/dump_stack.c:77 [inline]
- dump_stack+0xca/0x13e lib/dump_stack.c:113
- ubsan_epilogue+0xe/0x81 lib/ubsan.c:159
- handle_overflow+0x193/0x1e2 lib/ubsan.c:190
- iomap_seek_data+0x128/0x140 fs/iomap.c:1435
- ext4_llseek+0x1e3/0x290 fs/ext4/file.c:494
- vfs_llseek fs/read_write.c:300 [inline]
- ksys_lseek+0xe9/0x160 fs/read_write.c:313
- do_syscall_64+0xca/0x5b0 arch/x86/entry/common.c:293
- entry_SYSCALL_64_after_hwframe+0x6a/0xdf
-==========================================================================
-
-Signed-off-by: Zhen Lei <thunder.leizhen@huawei.com>
----
- fs/iomap/seek.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/fs/iomap/seek.c b/fs/iomap/seek.c
-index dab1b02eba5b..778e3e84c95e 100644
---- a/fs/iomap/seek.c
-+++ b/fs/iomap/seek.c
-@@ -83,13 +83,14 @@ loff_t
- iomap_seek_data(struct inode *inode, loff_t offset, const struct iomap_ops *ops)
- {
- 	loff_t size = i_size_read(inode);
--	loff_t length = size - offset;
-+	loff_t length;
- 	loff_t ret;
- 
- 	/* Nothing to be found before or beyond the end of the file. */
- 	if (offset < 0 || offset >= size)
- 		return -ENXIO;
- 
-+	length = size - offset;
- 	while (length > 0) {
- 		ret = iomap_apply(inode, offset, length, IOMAP_REPORT, ops,
- 				  &offset, iomap_seek_data_actor);
--- 
-2.25.1
-
-
+Need documentation in the changelog, or even better a separate commit.
