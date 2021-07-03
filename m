@@ -7,37 +7,36 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C4E6C07E95
-	for <linux-xfs@archiver.kernel.org>; Sat,  3 Jul 2021 02:57:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF5BDC07E95
+	for <linux-xfs@archiver.kernel.org>; Sat,  3 Jul 2021 02:57:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5D26461416
-	for <linux-xfs@archiver.kernel.org>; Sat,  3 Jul 2021 02:57:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CF86661424
+	for <linux-xfs@archiver.kernel.org>; Sat,  3 Jul 2021 02:57:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230201AbhGCDAX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 2 Jul 2021 23:00:23 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59558 "EHLO mail.kernel.org"
+        id S230215AbhGCDA3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 2 Jul 2021 23:00:29 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59604 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230215AbhGCDAX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 2 Jul 2021 23:00:23 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 7D29261424;
-        Sat,  3 Jul 2021 02:57:50 +0000 (UTC)
+        id S230353AbhGCDA2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 2 Jul 2021 23:00:28 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id EA77E61416;
+        Sat,  3 Jul 2021 02:57:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625281070;
-        bh=H6Lb6O9iKbPEdLhCCXKNfDBzDwLDnc57H1SWKoBIV2s=;
+        s=k20201202; t=1625281076;
+        bh=B5CXjl5gYKzgwNIvy154yNSoTNppk20kiOk2HZw3lyw=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=WJAomKy5YfF8i3cRZacBjXREpOMI5DH/po6g1LqXZhva9OXonCn9II2G3fICRH06p
-         xU6BpjfmsJl6Wh0WpznlSwHjrq4A/MPm455oXF0ktFaIc9YqMyHWZwUIQbOlbfGhja
-         3w3XurYhgyA92SzLoAiLdgYOKRdiV8YrW57pk/p5kIWw0mKv+0T/wDhy4GJ9JaDcSe
-         /iCS42QSotEKW7iBsOlyQgIRnGUAaFJqkitoy1DuH/D8GMEOPIxzmdZZLip8rV5VcN
-         BT4MYC59EgyNp47O9k8JL2BwEyFpcqzJrI+g4UaAIjKO0K+coGW3Y2yjGs+wfTlZ4c
-         4KTn8klYNFKdw==
-Subject: [PATCH 1/2] xfs_repair: validate alignment of inherited rt extent
- hints
+        b=iDOgHODM4FCkVoFadkwW3hwsbuhSPbQ6/lsA5bfIZmZGPC8uuBa9AJ+84g6shSlEi
+         QdNE2RUZACsBSNzlZGFuuxIvoKjZaBoFcqEkrnFOekTsm+vrXJVQO9djJn77r1XaNl
+         tuCS0kOF9PyiE8dMjtDbLXRaiAthxBW5xwbN3V98/fTDzgUHPkE+1wtXWUTQtUasOt
+         XZxXYRH+R9XkB8BTzozNVC5zCLi0JxoGhTdDp/jQyYr5Y5yDSVvkGn8mOI3LsFF/wh
+         QDZC4MxO88RHj11XEe4B1PXI63jafVJqElqO+i6h4cbsLUXqdUkOL9nLgDVOroD9BQ
+         gevyLu/RCrCHQ==
+Subject: [PATCH 2/2] mkfs: validate rt extent size hint when rtinherit is set
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, bfoster@redhat.com, hch@infradead.org
-Date:   Fri, 02 Jul 2021 19:57:50 -0700
-Message-ID: <162528107024.36302.9037961042426880362.stgit@locust>
+Date:   Fri, 02 Jul 2021 19:57:55 -0700
+Message-ID: <162528107571.36302.10688550571764503068.stgit@locust>
 In-Reply-To: <162528106460.36302.18265535074182102487.stgit@locust>
 References: <162528106460.36302.18265535074182102487.stgit@locust>
 User-Agent: StGit/0.19
@@ -50,61 +49,44 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If we encounter a directory that has been configured to pass on an
-extent size hint to a new realtime file and the hint isn't an integer
-multiple of the rt extent size, we should turn off the hint because that
-is a misconfiguration.
+Extent size hints exist to nudge the behavior of the file data block
+allocator towards trying to make aligned allocations.  Therefore, it
+doesn't make sense to allow a hint that isn't a multiple of the
+fundamental allocation unit for a given file.
+
+This means that if the sysadmin is formatting with rtinherit set on the
+root dir, validate_extsize_hint needs to check the hint value on a
+simulated realtime file to make sure that it's correct.  Unfortunately,
+the gate check here was for a nonzero rt extent size, which is wrong
+since we never format with rtextsize==0.  This leads to absurd failures
+such as:
+
+# mkfs.xfs -f /dev/sdf -r extsize=7b -d rtinherit=0,extszinherit=13
+illegal extent size hint 13, must be less than 649088 and a multiple of 7.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- repair/dinode.c |   28 +++++++++++++++++++++++++++-
- 1 file changed, 27 insertions(+), 1 deletion(-)
+ mkfs/xfs_mkfs.c |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
 
-diff --git a/repair/dinode.c b/repair/dinode.c
-index 291c5807..1275c90b 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -2178,6 +2178,31 @@ _("Bad %s nsec %u on inode %" PRIu64 ", "), name, be32_to_cpu(t->t_nsec), lino);
- 		*dirty = 1;
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index f84a42f9..9c14c04e 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -2384,10 +2384,11 @@ _("illegal extent size hint %lld, must be less than %u.\n"),
  	}
- }
-+/*
-+ * Inode verifiers on older kernels don't check that the extent size hint is an
-+ * integer multiple of the rt extent size on a directory with both rtinherit
-+ * and extszinherit flags set.  If we encounter a directory that is
-+ * misconfigured in this way, or a regular file that inherited a bad hint from
-+ * a directory, clear the hint.
-+ */
-+static bool
-+zap_bad_rt_extsize_hint(
-+	struct xfs_mount	*mp,
-+	struct xfs_dinode	*dino)
-+{
-+	uint16_t		diflags = be16_to_cpu(dino->di_flags);
-+
-+	if (!(diflags & XFS_DIFLAG_REALTIME) &&
-+	    !(diflags & XFS_DIFLAG_RTINHERIT))
-+		return false;
-+
-+	if (!(diflags & XFS_DIFLAG_EXTSIZE) &&
-+	    !(diflags & XFS_DIFLAG_EXTSZINHERIT))
-+		return false;
-+
-+	return (be32_to_cpu(dino->di_extsize) % mp->m_sb.sb_rextsize) != 0;
-+}
-+
  
- /*
-  * returns 0 if the inode is ok, 1 if the inode is corrupt
-@@ -2694,7 +2719,8 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
- 	 * only regular files with REALTIME or EXTSIZE flags set can have
- 	 * extsize set, or directories with EXTSZINHERIT.
+ 	/*
+-	 * Now we do it again with a realtime file so that we know the hint and
+-	 * flag that get passed on to realtime files will be correct.
++	 * If the value is to be passed on to realtime files, revalidate with
++	 * a realtime file so that we know the hint and flag that get passed on
++	 * to realtime files will be correct.
  	 */
--	if (libxfs_inode_validate_extsize(mp,
-+	if (zap_bad_rt_extsize_hint(mp, dino) ||
-+	    libxfs_inode_validate_extsize(mp,
- 			be32_to_cpu(dino->di_extsize),
- 			be16_to_cpu(dino->di_mode),
- 			be16_to_cpu(dino->di_flags)) != NULL) {
+-	if (mp->m_sb.sb_rextsize == 0)
++	if (!(cli->fsx.fsx_xflags & FS_XFLAG_RTINHERIT))
+ 		return;
+ 
+ 	flags = XFS_DIFLAG_REALTIME;
 
