@@ -2,91 +2,77 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC3F7C07E96
-	for <linux-xfs@archiver.kernel.org>; Sat,  3 Jul 2021 02:55:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C80AC07E95
+	for <linux-xfs@archiver.kernel.org>; Sat,  3 Jul 2021 02:57:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B973B613EB
-	for <linux-xfs@archiver.kernel.org>; Sat,  3 Jul 2021 02:55:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E57A61429
+	for <linux-xfs@archiver.kernel.org>; Sat,  3 Jul 2021 02:57:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230157AbhGCC6B (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 2 Jul 2021 22:58:01 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59048 "EHLO mail.kernel.org"
+        id S230330AbhGCDAS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 2 Jul 2021 23:00:18 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59514 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230051AbhGCC6B (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 2 Jul 2021 22:58:01 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C34F5613EB;
-        Sat,  3 Jul 2021 02:55:27 +0000 (UTC)
+        id S230215AbhGCDAS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 2 Jul 2021 23:00:18 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0BE1D613EB;
+        Sat,  3 Jul 2021 02:57:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625280927;
-        bh=KdTK+UeMQf79HP2aYkDeRCjrJpwTJT0tuqEScdh1Yms=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=i0DvuIfc2CWeLzJnhJgtO/TkH0/iuO295xgSwcGSDwn4NJzhYqOy9QTEXv9CHGQn0
-         M1Uwt7L6RnsyrW9qIw77JalPZIYAwvl//HhSfD2YP1R4iZCsWKCvTd9Xn5qgJf7sDW
-         Y7lIsmVyVwkupymn2BUXj+pyeI7ew5Rqy1PuMBraTP9zBVjaNyJoOj/ivzriEFhuNC
-         oS9lijNK5Yl1PZ8mp4GvsybLdcuEwV7/JmTYGnFRztako5k6GtO4Stx0cKV2BTOIZm
-         yVHtOfkjUk/1bzKaRGk915UhCHq8JyOwYy/wTwEw/5YuZ3OOEfWl0v26UtG2JJ1ET1
-         VX+B3Pc5iSxGQ==
-Date:   Fri, 2 Jul 2021 19:55:27 -0700
+        s=k20201202; t=1625281065;
+        bh=Pun0rXRtphqHab5Qk4dipgXuVHmzLR/I06CmlTcu1Es=;
+        h=Subject:From:To:Cc:Date:From;
+        b=ohJ8OcsRcU4RTYerzlc1ffLNfQEmETAsctbVVZ7fVmdNV0kVW/a3qlLRw8ZkInKge
+         DCSlvQq3sgfVuhYhS0CMa8+rp61PVDe+M3ILz6EWrVN4NwsVhoKtdAGVYkaDzM/Kdw
+         0SroHCGeAOJCEJnT0TLoeB5O83PTABepXti9Nl2JbaiLPlHH1XWpqFjSoV5QZ25nrK
+         uB9gvjtE/fuNpLXCHf2j1AILQwJQSm+tzD7c5e+eyN3L9A3oNiVybP6N8b91ix6vuh
+         phIMsawJh952WmjDz0+5/W+q5Hu2aQxiv5qbQsYjvvfMBgjW2FDzE07QXH0eAKdl25
+         FG6Qy5XRB4jbw==
+Subject: [PATCHSET 0/2] xfsprogs: strengthen validation of extent size hints
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [GIT PULL] xfs: new code for 5.14
-Message-ID: <20210703025527.GA24788@locust>
-References: <20210702201643.GA13765@locust>
- <CAHk-=wjaCmLbgtSXjVA19HZO6RS8rNePjUf6HuMa3PoDS9VuSQ@mail.gmail.com>
+To:     sandeen@sandeen.net, djwong@kernel.org
+Cc:     linux-xfs@vger.kernel.org, bfoster@redhat.com, hch@infradead.org
+Date:   Fri, 02 Jul 2021 19:57:44 -0700
+Message-ID: <162528106460.36302.18265535074182102487.stgit@locust>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAHk-=wjaCmLbgtSXjVA19HZO6RS8rNePjUf6HuMa3PoDS9VuSQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jul 02, 2021 at 02:39:46PM -0700, Linus Torvalds wrote:
-> On Fri, Jul 2, 2021 at 1:16 PM Darrick J. Wong <djwong@kernel.org> wrote:
-> >
-> > Please let me know if anything else strange happens during the merge
-> > process.  The merge commits I made seem stable enough, but as it's the
-> > first time I've ever accepted a pull request, we'd all be open to
-> > feedback for improvements for next time.
-> 
-> It looks fine to me.
-> 
-> I *would* suggest editing the merge commit messages a bit when doing
-> pull requests from other people.
-> 
-> It's by no means a big deal, but it looks a bit odd to see things like
-> 
->     Hi all,
-> 
->    ...
-> 
->     Questions, comment and feedback appreciated!
-> 
->     Thanks all!
->     Allison
-> 
-> in the merge message. All that text made a ton of sense in Allison's
-> pull request, but as you actually then merge it, it doesn't make a lot
-> of sense in the commit log, if you see what I mean..
+Hi all,
 
-Yep, got it.  I'll strip those out next time, thanks for helping me
-figure these things out. :)
+While playing around with realtime extent sizes and extent size hints, I
+noticed that it was very possible for userspace to trip the inode
+verifiers if they tried to set an extent size hint that wasn't aligned
+to the rt extent size and then create realtime files.  This series
+tightens the existing checks and refactors the ioctls to use the libxfs
+validation functions like the verifiers, mkfs, and repair use.
+
+For v2, we also detect invalid extent size hints on existing filesystems
+and mitigate the problem by (a) not propagating the invalid hints to new
+realtime files and (b) removing invalid hints when set on directories.
+
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
+
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
 
 --D
 
-> 
-> But it's not a problem for this pull request, and I've merged it in my
-> tree (pending my usual build tests etc, and I don't expect any
-> issues).
-> 
->             Linus
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=extsize-fixes
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=extsize-fixes
+---
+ mkfs/xfs_mkfs.c |    7 ++++---
+ repair/dinode.c |   28 +++++++++++++++++++++++++++-
+ 2 files changed, 31 insertions(+), 4 deletions(-)
+
