@@ -2,65 +2,91 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AFCA1C07E95
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Jul 2021 21:47:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC3F7C07E96
+	for <linux-xfs@archiver.kernel.org>; Sat,  3 Jul 2021 02:55:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9D70061405
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Jul 2021 21:47:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B973B613EB
+	for <linux-xfs@archiver.kernel.org>; Sat,  3 Jul 2021 02:55:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230257AbhGBVuR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 2 Jul 2021 17:50:17 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52386 "EHLO mail.kernel.org"
+        id S230157AbhGCC6B (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 2 Jul 2021 22:58:01 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59048 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230095AbhGBVuQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 2 Jul 2021 17:50:16 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPS id AAE06613FE;
-        Fri,  2 Jul 2021 21:47:43 +0000 (UTC)
+        id S230051AbhGCC6B (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 2 Jul 2021 22:58:01 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C34F5613EB;
+        Sat,  3 Jul 2021 02:55:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625262463;
-        bh=H9G+NI6LjzmUjD6zKMMTCHkkfrf4Hsp9Ki2ndNk0r/8=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=lUf9LvPbIxJiYS0z81Ct5/GlHQQwgLReI/y+HAa9X1LTN2WTz6cu2MsaD/YbLB7z7
-         LucSQxv2RairKPQWQK4gn10bgrIzxRKRvMXwZHgNsH2VeV62KVghsg+rW/OlmqYo3q
-         ctRjUuk6uYCG+DCqre+K2XqsJpta3HplRy6P2BifAkaaSpvAX8fLYBXDoNCMaMOf7T
-         XaalNnlfGhAmYbYT6kwZ13xZ5NFvVt3Vr/rF2UJ+oBdBR+0R2mLDr2kUDts4XNBj1o
-         71FfGEXh96MtegOd0GUt0H+omyWkgh1xKKJI8dZ5/rwva1KQfJr732N99GV5t505d7
-         EVFdlcmC6MVlA==
+        s=k20201202; t=1625280927;
+        bh=KdTK+UeMQf79HP2aYkDeRCjrJpwTJT0tuqEScdh1Yms=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=i0DvuIfc2CWeLzJnhJgtO/TkH0/iuO295xgSwcGSDwn4NJzhYqOy9QTEXv9CHGQn0
+         M1Uwt7L6RnsyrW9qIw77JalPZIYAwvl//HhSfD2YP1R4iZCsWKCvTd9Xn5qgJf7sDW
+         Y7lIsmVyVwkupymn2BUXj+pyeI7ew5Rqy1PuMBraTP9zBVjaNyJoOj/ivzriEFhuNC
+         oS9lijNK5Yl1PZ8mp4GvsybLdcuEwV7/JmTYGnFRztako5k6GtO4Stx0cKV2BTOIZm
+         yVHtOfkjUk/1bzKaRGk915UhCHq8JyOwYy/wTwEw/5YuZ3OOEfWl0v26UtG2JJ1ET1
+         VX+B3Pc5iSxGQ==
+Date:   Fri, 2 Jul 2021 19:55:27 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Eric Sandeen <sandeen@sandeen.net>,
+        Christoph Hellwig <hch@lst.de>
 Subject: Re: [GIT PULL] xfs: new code for 5.14
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <20210702201643.GA13765@locust>
+Message-ID: <20210703025527.GA24788@locust>
 References: <20210702201643.GA13765@locust>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20210702201643.GA13765@locust>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.14-merge-6
-X-PR-Tracked-Commit-Id: 1effb72a8179a02c2dd8a268454ccf50bf68aa50
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 9f7b640f001f9781e0803fb60e7b3e7f2f1a1757
-Message-Id: <162526246366.28144.4236351495860897999.pr-tracker-bot@kernel.org>
-Date:   Fri, 02 Jul 2021 21:47:43 +0000
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        david@fromorbit.com, linux-kernel@vger.kernel.org,
-        sandeen@sandeen.net, hch@lst.de
+ <CAHk-=wjaCmLbgtSXjVA19HZO6RS8rNePjUf6HuMa3PoDS9VuSQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAHk-=wjaCmLbgtSXjVA19HZO6RS8rNePjUf6HuMa3PoDS9VuSQ@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The pull request you sent on Fri, 2 Jul 2021 13:16:43 -0700:
+On Fri, Jul 02, 2021 at 02:39:46PM -0700, Linus Torvalds wrote:
+> On Fri, Jul 2, 2021 at 1:16 PM Darrick J. Wong <djwong@kernel.org> wrote:
+> >
+> > Please let me know if anything else strange happens during the merge
+> > process.  The merge commits I made seem stable enough, but as it's the
+> > first time I've ever accepted a pull request, we'd all be open to
+> > feedback for improvements for next time.
+> 
+> It looks fine to me.
+> 
+> I *would* suggest editing the merge commit messages a bit when doing
+> pull requests from other people.
+> 
+> It's by no means a big deal, but it looks a bit odd to see things like
+> 
+>     Hi all,
+> 
+>    ...
+> 
+>     Questions, comment and feedback appreciated!
+> 
+>     Thanks all!
+>     Allison
+> 
+> in the merge message. All that text made a ton of sense in Allison's
+> pull request, but as you actually then merge it, it doesn't make a lot
+> of sense in the commit log, if you see what I mean..
 
-> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.14-merge-6
+Yep, got it.  I'll strip those out next time, thanks for helping me
+figure these things out. :)
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/9f7b640f001f9781e0803fb60e7b3e7f2f1a1757
+--D
 
-Thank you!
-
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+> 
+> But it's not a problem for this pull request, and I've merged it in my
+> tree (pending my usual build tests etc, and I don't expect any
+> issues).
+> 
+>             Linus
