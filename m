@@ -2,57 +2,92 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F19BC07E95
-	for <linux-xfs@archiver.kernel.org>; Sun,  4 Jul 2021 08:55:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61D71C07E95
+	for <linux-xfs@archiver.kernel.org>; Sun,  4 Jul 2021 13:52:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0C99661483
-	for <linux-xfs@archiver.kernel.org>; Sun,  4 Jul 2021 08:55:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3DB6F613C1
+	for <linux-xfs@archiver.kernel.org>; Sun,  4 Jul 2021 13:52:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229503AbhGDI6Q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 4 Jul 2021 04:58:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57910 "EHLO
+        id S229725AbhGDNzM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 4 Jul 2021 09:55:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37960 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229492AbhGDI6P (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 4 Jul 2021 04:58:15 -0400
+        with ESMTP id S229502AbhGDNzM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 4 Jul 2021 09:55:12 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E1636C061762
-        for <linux-xfs@vger.kernel.org>; Sun,  4 Jul 2021 01:55:40 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04BB3C061574;
+        Sun,  4 Jul 2021 06:52:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=l2WBiCb5duYJRA9nKpihqrJOH1Qjg6utSrFiu8qAdtc=; b=RjfIU/gLR06Fs50RjC8Cm6r5jm
-        pKBS/wDnLg21Re5218Wo4qlLlaM4/MAgKiZwPM8thAVKQNurWqhjPPh9zsyFW3rz5y6bqslhz69Bt
-        n5QV0z7KCEqwJtP57KkQOgn4eo/W47gFWKmRR+4xMDnkGKu4qU3+ao8ETRj/aNybEr3869XXrI9i9
-        V3lfqNbuaubxjQqeNp7PHgpVLbQeoAKD8NGJSOGHTVfWyHM5HMuy5fV7z/j1ohV/jd04QT5EOx9oC
-        cYLwthSl344LYq5T0klk9gxw3DThz1AEdeI4HyjOq4vipIfW71TSqWWUIKoyQRnCgkeuN2R7Y6L/m
-        XoauarCg==;
-Received: from hch by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1lzxtH-009BRu-HL; Sun, 04 Jul 2021 08:54:29 +0000
-Date:   Sun, 4 Jul 2021 09:54:15 +0100
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org, bfoster@redhat.com,
-        hch@infradead.org
-Subject: Re: [PATCH 2/2] mkfs: validate rt extent size hint when rtinherit is
- set
-Message-ID: <YOF3N3IAZ/MfBQXt@infradead.org>
-References: <162528106460.36302.18265535074182102487.stgit@locust>
- <162528107571.36302.10688550571764503068.stgit@locust>
+        bh=13OzY+8k/62uCzBeEBMYh/0RrObpn1HoAPOblb6GAXI=; b=MsjA9kCQf/Aox4TEnjsAFZBxFJ
+        gilAT4NgjLMJ+uNAD9wK2j7rEQSj4oXu/K/gV/MTlgxqj7fSFdOPsLsWFEtsXULGLliFCt2jWeGFN
+        DJKyLlVAaqwo1dKGd7u9Q6JoOa+lQMi25UL4Is19hqwcxndivFCUpyzZyRz6Ua9jJ1yfVWvf8e9yT
+        ELoAwMYTjNblMbjtkUNRxXfKqEwqROoMIRZQwAOZZDoXvJu2hr0MpnmrIRrIZHYfBHtnkZ35gS3xc
+        eMTdIJXM8hY6VdVIY2rr5H4wNIFqTb+LUzgYF6FUWxQGotEKCJTYZYFq1TWK/VLNigmYK3r84Tbdo
+        jUX6j8sg==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1m02XB-009LXI-FR; Sun, 04 Jul 2021 13:51:55 +0000
+Date:   Sun, 4 Jul 2021 14:51:45 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Zhen Lei <thunder.leizhen@huawei.com>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH -next 1/1] iomap: Fix a false positive of UBSAN in
+ iomap_seek_data()
+Message-ID: <YOG88dhjfH5PdIfo@casper.infradead.org>
+References: <20210702092109.2601-1-thunder.leizhen@huawei.com>
+ <YN7dn08eeUXfixJ7@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <162528107571.36302.10688550571764503068.stgit@locust>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <YN7dn08eeUXfixJ7@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Looks good,
+On Fri, Jul 02, 2021 at 10:34:23AM +0100, Christoph Hellwig wrote:
+> We might as well just kill off the length variable while we're at it:
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+
+> diff --git a/fs/iomap/seek.c b/fs/iomap/seek.c
+> index dab1b02eba5b7f..942e354e9e13e6 100644
+> --- a/fs/iomap/seek.c
+> +++ b/fs/iomap/seek.c
+> @@ -35,23 +35,21 @@ loff_t
+>  iomap_seek_hole(struct inode *inode, loff_t offset, const struct iomap_ops *ops)
+>  {
+>  	loff_t size = i_size_read(inode);
+> -	loff_t length = size - offset;
+>  	loff_t ret;
+>  
+>  	/* Nothing to be found before or beyond the end of the file. */
+>  	if (offset < 0 || offset >= size)
+>  		return -ENXIO;
+>  
+> -	while (length > 0) {
+> -		ret = iomap_apply(inode, offset, length, IOMAP_REPORT, ops,
+> -				  &offset, iomap_seek_hole_actor);
+> +	while (offset < size) {
+> +		ret = iomap_apply(inode, offset, size - offset, IOMAP_REPORT,
+> +				  ops, &offset, iomap_seek_hole_actor);
+>  		if (ret < 0)
+>  			return ret;
+>  		if (ret == 0)
+>  			break;
+>  
+>  		offset += ret;
+> -		length -= ret;
+>  	}
+>  
+>  	return offset;
