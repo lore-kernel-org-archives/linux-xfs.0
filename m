@@ -2,109 +2,111 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,FAKE_REPLY_A1,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4CA7C07E98
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jul 2021 05:49:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09988C07E9B
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jul 2021 06:58:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7FA0661205
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jul 2021 05:49:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E4820613F7
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jul 2021 06:58:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229785AbhGEFwB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 5 Jul 2021 01:52:01 -0400
-Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:54857 "EHLO
-        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229734AbhGEFwA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jul 2021 01:52:00 -0400
-Received: from dread.disaster.area (pa49-179-204-119.pa.nsw.optusnet.com.au [49.179.204.119])
-        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id BC2D21059E7;
-        Mon,  5 Jul 2021 15:49:20 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1m0HTr-002vDI-Q0; Mon, 05 Jul 2021 15:49:19 +1000
-Date:   Mon, 5 Jul 2021 15:49:19 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/5] xfs: attached iclog callbacks in
- xlog_cil_set_ctx_write_state()
-Message-ID: <20210705054919.GM664593@dread.disaster.area>
-References: <20210630072108.1752073-1-david@fromorbit.com>
- <20210630072108.1752073-5-david@fromorbit.com>
- <YN7ZxfrWoCjNFv3g@infradead.org>
+        id S229895AbhGEHBb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 5 Jul 2021 03:01:31 -0400
+Received: from out30-44.freemail.mail.aliyun.com ([115.124.30.44]:46312 "EHLO
+        out30-44.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229823AbhGEHBb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jul 2021 03:01:31 -0400
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R181e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04423;MF=jefflexu@linux.alibaba.com;NM=1;PH=DS;RN=4;SR=0;TI=SMTPD_---0Uejs0rR_1625468331;
+Received: from admindeMacBook-Pro-2.local(mailfrom:jefflexu@linux.alibaba.com fp:SMTPD_---0Uejs0rR_1625468331)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Mon, 05 Jul 2021 14:58:52 +0800
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Reply-To: 20200427173354.GM6740@magnolia
+From:   JeffleXu <jefflexu@linux.alibaba.com>
+Subject: Re: [RFC,2/2] xfstests: common/rc: add cluster size support for ext4
+Message-ID: <0939cdf0-895c-7287-569a-2a9b4269b1ca@linux.alibaba.com>
+Date:   Mon, 5 Jul 2021 14:58:51 +0800
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.11.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YN7ZxfrWoCjNFv3g@infradead.org>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
-        a=Xomv9RKALs/6j/eO6r2ntA==:117 a=Xomv9RKALs/6j/eO6r2ntA==:17
-        a=kj9zAlcOel0A:10 a=e_q4qTt1xDgA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=HYrEM92qZhgqfVRdgh0A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jul 02, 2021 at 10:17:57AM +0100, Christoph Hellwig wrote:
-> On Wed, Jun 30, 2021 at 05:21:07PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Now that we have a mechanism to guarantee that the callbacks
-> > attached to an iclog are owned by the context that attaches them
-> > until they drop their reference to the iclog via
-> > xlog_state_release_iclog(), we can attach callbacks to the iclog at
-> > any time we have an active reference to the iclog.
-> > 
-> > xlog_state_get_iclog_space() always guarantees that the commit
-> > record will fit in the iclog it returns, so we can move this IO
-> > callback setting to xlog_cil_set_ctx_write_state(), record the
-> > commit iclog in the context and remove the need for the commit iclog
-> > to be returned by xlog_write() altogether.
-> > 
-> > This, in turn, allows us to move the wakeup for ordered commit
-> > recrod writes up into xlog_cil_set_ctx_write_state(), too, because
+
+Sorry for digging this really old post [1]. The overall background is
+that, @offset and @len need to be aligned with cluster size when doing
+fallocate(), or several xfstests cases calling fsx will fail if the
+tested filesystem enabling 'bigalloc' feature.
+
+On April 27, 2020, 5:33 p.m. UTC Darrick J. Wong wrote:
+
+> On Fri, Apr 24, 2020 at 05:33:50PM +0800, Jeffle Xu wrote:
+>> Inserting and collapsing range on ext4 with 'bigalloc' feature will
+>> fail due to the offset and size should be alligned with the cluster
+>> size.
+>> 
+>> The previous patch has add support for cluster size in fsx. Detect and
+>> pass the cluster size parameter to fsx if the underlying filesystem
+>> is ext4 with bigalloc.
+>> 
+>> Signed-off-by: Jeffle Xu <jefflexu@linux.alibaba.com>
+>> ---
+>>  common/rc | 9 +++++++++
+>>  1 file changed, 9 insertions(+)
+>> 
+>> diff --git a/common/rc b/common/rc
+>> index 2000bd9..71dde5f 100644
+>> --- a/common/rc
+>> +++ b/common/rc
+>> @@ -3908,6 +3908,15 @@ run_fsx()
+>>  {
+>>  	echo fsx $@
+>>  	local args=`echo $@ | sed -e "s/ BSIZE / $bsize /g" -e "s/ PSIZE / $psize /g"`
+>> +
+>> +	if [ "$FSTYP" == "ext4" ]; then
+>> +		local cluster_size=$(tune2fs -l $TEST_DEV | grep 'Cluster size' | awk '{print $3}')
+>> +		if [ -n $cluster_size ]; then
+>> +			echo "cluster size: $cluster_size"
+>> +			args="$args -u $cluster_size"
+>> +		fi
+>> +	fi
 > 
-> s/recrod/record/
+> Computing the file allocation block size ought to be a separate helper.
 > 
-> > --- a/fs/xfs/xfs_log_cil.c
-> > +++ b/fs/xfs/xfs_log_cil.c
-> > @@ -646,11 +646,41 @@ xlog_cil_set_ctx_write_state(
-> >  	xfs_lsn_t		lsn = be64_to_cpu(iclog->ic_header.h_lsn);
-> >  
-> >  	ASSERT(!ctx->commit_lsn);
-> > +	if (!ctx->start_lsn) {
-> > +		spin_lock(&cil->xc_push_lock);
-> >  		ctx->start_lsn = lsn;
-> > +		spin_unlock(&cil->xc_push_lock);
-> > +		return;
-> 
-> What does xc_push_lock protect here?  None of the read of
-> ->start_lsn are under xc_push_lock, and this patch moves one of the
-> two readers to be under l_icloglock.
+> I wonder if there's a standard way to report cluster sizes, seeing as
+> fat, ext4, ocfs2, and xfs can all have minimum space allocation units
+> that are larger than the base fs block size.
 
-For this patch - nothing. It just maintains the consistency
-introduced in the previous patch of doing the CIL context updates
-under the xc_push_lock. I did that in the previous patch for
-simplicity: the next patch adds the start record ordering which,
-like the commit record ordering, needs to set ctx->start_lsn and run
-the waiter wakeup under the xc_push_lock.
+In fact only for insert_range and collapse range of ext4 and xfs (in
+realtime mode), @offset and @len need to be aligned with cluster size.
 
-> Also I wonder if the comment about what is done if start_lsn is not
-> set would be better right above the if instead of on top of the function
-> so that it stays closer to the code it documents.
+Though fat and ocfs2 also support cluster size, ocfs2 only supports
+preallocate and punch_hole, and fat only supports preallocate, in which
+case @offset and @len needn't be aligned with cluster size.
 
-I think it's better to document calling conventions at the top of
-the function, rather than having to read the implementation of the
-function to determine how it is supposed to be called. i.e. we
-expect two calls to this function per CIL checkpoint - the first for
-the start record ordering, the second for the commit record
-ordering...
 
-Cheers,
+So we need to align @offset and @len with cluster size only for ext4 and
+xfs (in realtime mode) at a minimum cost, to fix this issue. But the
+question is, there's no standard programming interface exporting cluster
+size. For both ext4 and xfs, it's stored as a binary data in disk
+version superblock, e.g., tune2fs could detect the cluster size of ext4.
 
-Dave.
+
+Any idea on how to query the cluster size?
+
+
+[1]
+https://patchwork.kernel.org/project/fstests/cover/1587720830-11955-1-git-send-email-jefflexu@linux.alibaba.com/
+
 -- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+Jeffle
