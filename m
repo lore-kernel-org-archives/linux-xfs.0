@@ -2,113 +2,109 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EB9FC07E98
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jul 2021 04:05:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4CA7C07E98
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jul 2021 05:49:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 47AF3613C9
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jul 2021 04:05:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7FA0661205
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jul 2021 05:49:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229515AbhGEEIN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 5 Jul 2021 00:08:13 -0400
-Received: from szxga02-in.huawei.com ([45.249.212.188]:6392 "EHLO
-        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229495AbhGEEIM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jul 2021 00:08:12 -0400
-Received: from dggemv703-chm.china.huawei.com (unknown [172.30.72.56])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4GJBpS5YRFz76sn;
-        Mon,  5 Jul 2021 12:02:08 +0800 (CST)
-Received: from dggpemm500006.china.huawei.com (7.185.36.236) by
- dggemv703-chm.china.huawei.com (10.3.19.46) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Mon, 5 Jul 2021 12:05:34 +0800
-Received: from [127.0.0.1] (10.174.179.0) by dggpemm500006.china.huawei.com
- (7.185.36.236) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2; Mon, 5 Jul 2021
- 12:05:33 +0800
-Subject: Re: [PATCH -next 1/1] iomap: Fix a false positive of UBSAN in
- iomap_seek_data()
-To:     Matthew Wilcox <willy@infradead.org>
-CC:     Christoph Hellwig <hch@infradead.org>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-References: <20210702092109.2601-1-thunder.leizhen@huawei.com>
- <YN7dn08eeUXfixJ7@infradead.org>
- <2ce02a7f-4b8b-5a86-13ee-097aff084f82@huawei.com>
- <9a619cb0-e998-83e5-8e42-d3606ab682e0@huawei.com>
- <YOJ/2xrQ75Ttp6R3@casper.infradead.org>
-From:   "Leizhen (ThunderTown)" <thunder.leizhen@huawei.com>
-Message-ID: <a322bf41-f1d0-eac7-20d9-b4273ce122d0@huawei.com>
-Date:   Mon, 5 Jul 2021 12:05:33 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.0
+        id S229785AbhGEFwB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 5 Jul 2021 01:52:01 -0400
+Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:54857 "EHLO
+        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229734AbhGEFwA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jul 2021 01:52:00 -0400
+Received: from dread.disaster.area (pa49-179-204-119.pa.nsw.optusnet.com.au [49.179.204.119])
+        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id BC2D21059E7;
+        Mon,  5 Jul 2021 15:49:20 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1m0HTr-002vDI-Q0; Mon, 05 Jul 2021 15:49:19 +1000
+Date:   Mon, 5 Jul 2021 15:49:19 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/5] xfs: attached iclog callbacks in
+ xlog_cil_set_ctx_write_state()
+Message-ID: <20210705054919.GM664593@dread.disaster.area>
+References: <20210630072108.1752073-1-david@fromorbit.com>
+ <20210630072108.1752073-5-david@fromorbit.com>
+ <YN7ZxfrWoCjNFv3g@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <YOJ/2xrQ75Ttp6R3@casper.infradead.org>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.179.0]
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- dggpemm500006.china.huawei.com (7.185.36.236)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YN7ZxfrWoCjNFv3g@infradead.org>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
+        a=Xomv9RKALs/6j/eO6r2ntA==:117 a=Xomv9RKALs/6j/eO6r2ntA==:17
+        a=kj9zAlcOel0A:10 a=e_q4qTt1xDgA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
+        a=HYrEM92qZhgqfVRdgh0A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Fri, Jul 02, 2021 at 10:17:57AM +0100, Christoph Hellwig wrote:
+> On Wed, Jun 30, 2021 at 05:21:07PM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Now that we have a mechanism to guarantee that the callbacks
+> > attached to an iclog are owned by the context that attaches them
+> > until they drop their reference to the iclog via
+> > xlog_state_release_iclog(), we can attach callbacks to the iclog at
+> > any time we have an active reference to the iclog.
+> > 
+> > xlog_state_get_iclog_space() always guarantees that the commit
+> > record will fit in the iclog it returns, so we can move this IO
+> > callback setting to xlog_cil_set_ctx_write_state(), record the
+> > commit iclog in the context and remove the need for the commit iclog
+> > to be returned by xlog_write() altogether.
+> > 
+> > This, in turn, allows us to move the wakeup for ordered commit
+> > recrod writes up into xlog_cil_set_ctx_write_state(), too, because
+> 
+> s/recrod/record/
+> 
+> > --- a/fs/xfs/xfs_log_cil.c
+> > +++ b/fs/xfs/xfs_log_cil.c
+> > @@ -646,11 +646,41 @@ xlog_cil_set_ctx_write_state(
+> >  	xfs_lsn_t		lsn = be64_to_cpu(iclog->ic_header.h_lsn);
+> >  
+> >  	ASSERT(!ctx->commit_lsn);
+> > +	if (!ctx->start_lsn) {
+> > +		spin_lock(&cil->xc_push_lock);
+> >  		ctx->start_lsn = lsn;
+> > +		spin_unlock(&cil->xc_push_lock);
+> > +		return;
+> 
+> What does xc_push_lock protect here?  None of the read of
+> ->start_lsn are under xc_push_lock, and this patch moves one of the
+> two readers to be under l_icloglock.
 
+For this patch - nothing. It just maintains the consistency
+introduced in the previous patch of doing the CIL context updates
+under the xc_push_lock. I did that in the previous patch for
+simplicity: the next patch adds the start record ordering which,
+like the commit record ordering, needs to set ctx->start_lsn and run
+the waiter wakeup under the xc_push_lock.
 
-On 2021/7/5 11:43, Matthew Wilcox wrote:
-> On Mon, Jul 05, 2021 at 11:29:44AM +0800, Leizhen (ThunderTown) wrote:
->> I've thought about it, and that "if" statement can be removed as follows:
-> 
-> I think this really misses Christoph's point.  He's looking for
-> something more like this:
+> Also I wonder if the comment about what is done if start_lsn is not
+> set would be better right above the if instead of on top of the function
+> so that it stays closer to the code it documents.
 
-Yes, I know that. I need to get rid of the "if" judgment first, and then I can
-modify iomap_seek_data() according to Christoph's point. Otherwise there are too
-many conversions from "length" to "size - offset" and the code doesn't look clear.
+I think it's better to document calling conventions at the top of
+the function, rather than having to read the implementation of the
+function to determine how it is supposed to be called. i.e. we
+expect two calls to this function per CIL checkpoint - the first for
+the start record ordering, the second for the commit record
+ordering...
 
-> 
-> @@ -83,27 +83,23 @@ loff_t
->  iomap_seek_data(struct inode *inode, loff_t offset, const struct iomap_ops *ops)
->  {
->         loff_t size = i_size_read(inode);
-> -       loff_t length = size - offset;
->         loff_t ret;
-> 
->         /* Nothing to be found before or beyond the end of the file. */
->         if (offset < 0 || offset >= size)
->                 return -ENXIO;
-> 
-> -       while (length > 0) {
-> +       while (offset < size) {
->                 ret = iomap_apply(inode, offset, length, IOMAP_REPORT, ops,
->                                   &offset, iomap_seek_data_actor);
->                 if (ret < 0)
->                         return ret;
->                 if (ret == 0)
-> -                       break;
-> +                       return offset;
-> 
->                 offset += ret;
-> -               length -= ret;
->         }
-> 
-> -       if (length <= 0)
-> -               return -ENXIO;
-> -       return offset;
-> +       return -ENXIO;
->  }
->  EXPORT_SYMBOL_GPL(iomap_seek_data);
-> 
-> (not even slightly tested)
-> 
-> .
-> 
+Cheers,
 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
