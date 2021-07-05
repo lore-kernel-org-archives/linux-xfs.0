@@ -2,87 +2,97 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67316C07E95
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jul 2021 03:35:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3CBCC07E95
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jul 2021 03:44:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 42BBE613BD
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jul 2021 03:35:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D9836613BD
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jul 2021 03:44:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229728AbhGEDhs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 4 Jul 2021 23:37:48 -0400
-Received: from szxga08-in.huawei.com ([45.249.212.255]:10252 "EHLO
-        szxga08-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229700AbhGEDhr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 4 Jul 2021 23:37:47 -0400
-Received: from dggemv711-chm.china.huawei.com (unknown [172.30.72.55])
-        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4GJB542Ccsz1CFNh;
-        Mon,  5 Jul 2021 11:29:44 +0800 (CST)
-Received: from dggpemm500006.china.huawei.com (7.185.36.236) by
- dggemv711-chm.china.huawei.com (10.1.198.66) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Mon, 5 Jul 2021 11:35:09 +0800
-Received: from [127.0.0.1] (10.174.179.0) by dggpemm500006.china.huawei.com
- (7.185.36.236) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2; Mon, 5 Jul 2021
- 11:35:09 +0800
-Subject: Re: [PATCH -next 1/1] iomap: Fix a false positive of UBSAN in
- iomap_seek_data()
-To:     Matthew Wilcox <willy@infradead.org>
-CC:     Christoph Hellwig <hch@infradead.org>,
+        id S229734AbhGEDqv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 4 Jul 2021 23:46:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49478 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229652AbhGEDqu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 4 Jul 2021 23:46:50 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8809CC061574;
+        Sun,  4 Jul 2021 20:44:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=4o5tfg2f6wq0QKtKB8wvjOg8+C7xXJHO/n2lfXPHDyU=; b=AqE1/vmAJ6tdS7Ev0ruzPhbZEq
+        YB5VbmK2xN1iLnPdmgkkrbtbuadMyBWgWoWV4OnSSUoo/wFjSqpp/O1PaCwSwQUM9TqtmliRmm78K
+        Ir13iSB7ZhlWQzmd8EKIBeBkjUTACPOnrEaNXrht72b/4p34X41G8i++MjhCjNSnh1XYNQ/qDuR4h
+        FkraGWFwDd/VnspmRx/xYKgucB/7p5tja6ErCeoGwL+8/LvRmOfcw8DFRqzbYOSmjBIsEB/UxsCJO
+        a72k7QkijjFXlq8CKoKPT28OhT7qf9GhZ13R6z7jCXlWTN8qY/rv4lZT/sW/eUrbCOsybDOupPeWO
+        /fyQ1CyQ==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1m0FVz-009rO9-Im; Mon, 05 Jul 2021 03:43:32 +0000
+Date:   Mon, 5 Jul 2021 04:43:23 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     "Leizhen (ThunderTown)" <thunder.leizhen@huawei.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
         "Darrick J . Wong" <djwong@kernel.org>,
         linux-xfs <linux-xfs@vger.kernel.org>,
         linux-fsdevel <linux-fsdevel@vger.kernel.org>,
         linux-kernel <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH -next 1/1] iomap: Fix a false positive of UBSAN in
+ iomap_seek_data()
+Message-ID: <YOJ/2xrQ75Ttp6R3@casper.infradead.org>
 References: <20210702092109.2601-1-thunder.leizhen@huawei.com>
- <YN9vZfo+84gizjtf@casper.infradead.org>
-From:   "Leizhen (ThunderTown)" <thunder.leizhen@huawei.com>
-Message-ID: <492c7a7b-6f2e-de45-c733-51c80422305e@huawei.com>
-Date:   Mon, 5 Jul 2021 11:35:08 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.0
+ <YN7dn08eeUXfixJ7@infradead.org>
+ <2ce02a7f-4b8b-5a86-13ee-097aff084f82@huawei.com>
+ <9a619cb0-e998-83e5-8e42-d3606ab682e0@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <YN9vZfo+84gizjtf@casper.infradead.org>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.179.0]
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- dggpemm500006.china.huawei.com (7.185.36.236)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <9a619cb0-e998-83e5-8e42-d3606ab682e0@huawei.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Mon, Jul 05, 2021 at 11:29:44AM +0800, Leizhen (ThunderTown) wrote:
+> I've thought about it, and that "if" statement can be removed as follows:
 
+I think this really misses Christoph's point.  He's looking for
+something more like this:
 
-On 2021/7/3 3:56, Matthew Wilcox wrote:
-> On Fri, Jul 02, 2021 at 05:21:09PM +0800, Zhen Lei wrote:
->> Move the evaluation expression "size - offset" after the "if (offset < 0)"
->> judgment statement to eliminate a false positive produced by the UBSAN.
->>
->> No functional changes.
->>
->> ==========================================================================
->> UBSAN: Undefined behaviour in fs/iomap.c:1435:9
->> signed integer overflow:
->> 0 - -9223372036854775808 cannot be represented in type 'long long int'
-> 
-> I don't understand.  I thought we defined the behaviour of signed
-> integer overflow in the kernel with whatever-the-gcc-flag-is?
+@@ -83,27 +83,23 @@ loff_t
+ iomap_seek_data(struct inode *inode, loff_t offset, const struct iomap_ops *ops)
+ {
+        loff_t size = i_size_read(inode);
+-       loff_t length = size - offset;
+        loff_t ret;
 
--9223372036854775808 ==> 0x8000000000000000 ==> -0
+        /* Nothing to be found before or beyond the end of the file. */
+        if (offset < 0 || offset >= size)
+                return -ENXIO;
 
-I don't fully understand what you mean. This is triggered by explicit error
-injection '-0' at runtime, which should not be detected by compilation options.
+-       while (length > 0) {
++       while (offset < size) {
+                ret = iomap_apply(inode, offset, length, IOMAP_REPORT, ops,
+                                  &offset, iomap_seek_data_actor);
+                if (ret < 0)
+                        return ret;
+                if (ret == 0)
+-                       break;
++                       return offset;
 
-lseek(r1, 0x8000000000000000, 0x3)
+                offset += ret;
+-               length -= ret;
+        }
 
-> 
-> 
-> .
-> 
+-       if (length <= 0)
+-               return -ENXIO;
+-       return offset;
++       return -ENXIO;
+ }
+ EXPORT_SYMBOL_GPL(iomap_seek_data);
 
+(not even slightly tested)
