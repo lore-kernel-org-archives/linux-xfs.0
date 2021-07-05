@@ -2,53 +2,56 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74531C07E99
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jul 2021 18:18:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A86CC07E9B
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jul 2021 18:18:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4609E6196A
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jul 2021 18:18:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 502326197E
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jul 2021 18:18:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229733AbhGESVL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 5 Jul 2021 14:21:11 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:25915 "EHLO
+        id S229783AbhGESVO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 5 Jul 2021 14:21:14 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:43052 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229725AbhGESVL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jul 2021 14:21:11 -0400
+        by vger.kernel.org with ESMTP id S229734AbhGESVN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jul 2021 14:21:13 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1625509114;
+        s=mimecast20190719; t=1625509116;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=O6aeNK5vFpQ3FyqA48YXzAW2Fvve8m6zFcu2OqMh/kk=;
-        b=G3ov7bcAQSw3dS/pBuQT5q9uzflEU5xh3GAJZPX+//4eC7Op3HLtnSGllvLUsKCB6jhpZy
-        U4OtvZjvMizMKh+/kfE/seT6kh4I2pByHuEMJ26PusaLTyYtvd+wbk+FEElTETNokTct6R
-        RfHQZ+Wv1fZzujirPvbDL4+K4bNc0FQ=
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Cndpowj1nvkXEbH3eUJQQtxOLRPrqhsS1VoAU4zE1Gk=;
+        b=HkS/JNenQVIyn9I0jAnUfl9pz2h+adYOErL3HlvAjYvBS2qGYiebCNyoXAv2nuDPkNcZPD
+        Qslu6w5mVYFF+QopXvD7mt4r4myMYNBMdHnxaCp5NFBJE7Fd/LuLEkB24+KCtkY9oSnPuO
+        LaStSKB9yJIcp2Ns3oXKqWJjHOeBmO0=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-187-PGrzh3bFM9GS-h9hYCTFrg-1; Mon, 05 Jul 2021 14:18:32 -0400
-X-MC-Unique: PGrzh3bFM9GS-h9hYCTFrg-1
+ us-mta-154-Wr1RctLwNZqziJtjy5pIOA-1; Mon, 05 Jul 2021 14:18:34 -0400
+X-MC-Unique: Wr1RctLwNZqziJtjy5pIOA-1
 Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 826811835AC2;
-        Mon,  5 Jul 2021 18:18:31 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B6807800D62;
+        Mon,  5 Jul 2021 18:18:33 +0000 (UTC)
 Received: from max.com (unknown [10.40.193.232])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 686C319D9D;
-        Mon,  5 Jul 2021 18:18:26 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id F341C19D9D;
+        Mon,  5 Jul 2021 18:18:31 +0000 (UTC)
 From:   Andreas Gruenbacher <agruenba@redhat.com>
 To:     Christoph Hellwig <hch@infradead.org>
 Cc:     "Darrick J . Wong" <djwong@kernel.org>,
         Matthew Wilcox <willy@infradead.org>,
         linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         cluster-devel@redhat.com, Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v2 0/2] iomap: small block problems
-Date:   Mon,  5 Jul 2021 20:18:22 +0200
-Message-Id: <20210705181824.2174165-1-agruenba@redhat.com>
+Subject: [PATCH v2 1/2] iomap: Don't create iomap_page objects for inline files
+Date:   Mon,  5 Jul 2021 20:18:23 +0200
+Message-Id: <20210705181824.2174165-2-agruenba@redhat.com>
+In-Reply-To: <20210705181824.2174165-1-agruenba@redhat.com>
+References: <20210705181824.2174165-1-agruenba@redhat.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
@@ -56,27 +59,48 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Here are the two fixes that make sure that iop objects get attached to
-pages eventually (in iomap_writepage_map if not earlier), but not too
-early (before inline inodes are read).  These are the fixes required for
-making gfs2 filesystems with a block size smaller than the page size
-work again.
+In iomap_readpage_actor, don't create iop objects for inline inodes.
+Otherwise, iomap_read_inline_data will set PageUptodate without setting
+iop->uptodate, and iomap_page_release will eventually complain.
 
-As Christoph has pointed out [*], there are several more cases in which
-we can avoid iop creation.  Those improvements are still left to be done.
+To prevent this kind of bug from occurring in the future, make sure the
+page doesn't have private data attached in iomap_read_inline_data.
 
-[*] https://lore.kernel.org/linux-fsdevel/YNqy0E4xFwHDhK32@infradead.org/
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+Reviewed-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+---
+ fs/iomap/buffered-io.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Thanks,
-Andreas
-
-Andreas Gruenbacher (2):
-  iomap: Don't create iomap_page objects for inline files
-  iomap: Permit pages without an iop to enter writeback
-
- fs/iomap/buffered-io.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
-
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 9023717c5188..03537ecb2a94 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -215,6 +215,7 @@ iomap_read_inline_data(struct inode *inode, struct page *page,
+ 	if (PageUptodate(page))
+ 		return;
+ 
++	BUG_ON(page_has_private(page));
+ 	BUG_ON(page->index);
+ 	BUG_ON(size > PAGE_SIZE - offset_in_page(iomap->inline_data));
+ 
+@@ -239,7 +240,7 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ {
+ 	struct iomap_readpage_ctx *ctx = data;
+ 	struct page *page = ctx->cur_page;
+-	struct iomap_page *iop = iomap_page_create(inode, page);
++	struct iomap_page *iop;
+ 	bool same_page = false, is_contig = false;
+ 	loff_t orig_pos = pos;
+ 	unsigned poff, plen;
+@@ -252,6 +253,7 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ 	}
+ 
+ 	/* zero post-eof blocks as the page may be mapped */
++	iop = iomap_page_create(inode, page);
+ 	iomap_adjust_read_range(inode, iop, &pos, length, &poff, &plen);
+ 	if (plen == 0)
+ 		goto done;
 -- 
 2.26.3
 
