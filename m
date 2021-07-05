@@ -2,83 +2,141 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BF4CC07E95
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jul 2021 02:22:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B40CBC07E95
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jul 2021 03:29:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E982F613C2
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jul 2021 02:22:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8FEB86128D
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jul 2021 03:29:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229549AbhGECYl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 4 Jul 2021 22:24:41 -0400
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:60109 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229722AbhGECYl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 4 Jul 2021 22:24:41 -0400
-Received: from dread.disaster.area (pa49-179-204-119.pa.nsw.optusnet.com.au [49.179.204.119])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id C620F687A3;
-        Mon,  5 Jul 2021 12:22:02 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1m0EFF-002rpf-Tc; Mon, 05 Jul 2021 12:22:01 +1000
-Date:   Mon, 5 Jul 2021 12:22:01 +1000
-From:   Dave Chinner <david@fromorbit.com>
+        id S229700AbhGEDcX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 4 Jul 2021 23:32:23 -0400
+Received: from szxga01-in.huawei.com ([45.249.212.187]:13066 "EHLO
+        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229715AbhGEDcX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 4 Jul 2021 23:32:23 -0400
+Received: from dggemv711-chm.china.huawei.com (unknown [172.30.72.56])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4GJB1R38GJzZnFs;
+        Mon,  5 Jul 2021 11:26:35 +0800 (CST)
+Received: from dggpemm500006.china.huawei.com (7.185.36.236) by
+ dggemv711-chm.china.huawei.com (10.1.198.66) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2176.2; Mon, 5 Jul 2021 11:29:45 +0800
+Received: from [127.0.0.1] (10.174.179.0) by dggpemm500006.china.huawei.com
+ (7.185.36.236) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2; Mon, 5 Jul 2021
+ 11:29:45 +0800
+Subject: Re: [PATCH -next 1/1] iomap: Fix a false positive of UBSAN in
+ iomap_seek_data()
+From:   "Leizhen (ThunderTown)" <thunder.leizhen@huawei.com>
 To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 9/9] xfs: log head and tail aren't reliable during
- shutdown
-Message-ID: <20210705022201.GL664593@dread.disaster.area>
-References: <20210630063813.1751007-1-david@fromorbit.com>
- <20210630063813.1751007-10-david@fromorbit.com>
- <YN7T+6ozxZxAvfjZ@infradead.org>
+CC:     "Darrick J . Wong" <djwong@kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+References: <20210702092109.2601-1-thunder.leizhen@huawei.com>
+ <YN7dn08eeUXfixJ7@infradead.org>
+ <2ce02a7f-4b8b-5a86-13ee-097aff084f82@huawei.com>
+Message-ID: <9a619cb0-e998-83e5-8e42-d3606ab682e0@huawei.com>
+Date:   Mon, 5 Jul 2021 11:29:44 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YN7T+6ozxZxAvfjZ@infradead.org>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
-        a=Xomv9RKALs/6j/eO6r2ntA==:117 a=Xomv9RKALs/6j/eO6r2ntA==:17
-        a=kj9zAlcOel0A:10 a=e_q4qTt1xDgA:10 a=7-415B0cAAAA:8
-        a=gfbzYfMUp_Vy8kkQtuYA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <2ce02a7f-4b8b-5a86-13ee-097aff084f82@huawei.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.179.0]
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ dggpemm500006.china.huawei.com (7.185.36.236)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jul 02, 2021 at 09:53:15AM +0100, Christoph Hellwig wrote:
-> > +	if (tail_cycle == head_cycle && head_bytes >= tail_bytes) {
-> > +		return log->l_logsize - (head_bytes - tail_bytes);
-> > +	} else if (tail_cycle + 1 < head_cycle) {
-> >  		return 0;
-> > +	} else if (xlog_is_shutdown(log)) {
-> > +		/* Ignore potential inconsistency when shutdown. */
-> > +		return log->l_logsize;
-> > +	} else if (tail_cycle < head_cycle) {
-> >  		ASSERT(tail_cycle == (head_cycle - 1));
-> > +		return tail_bytes - head_bytes;
-> >  	}
-> 
-> Drop the else after the returns to make this a little easier to follow:
-> 
-> 	if (tail_cycle == head_cycle && head_bytes >= tail_bytes)
-> 		return log->l_logsize - (head_bytes - tail_bytes);
-> 	if (tail_cycle + 1 < head_cycle)
-> 		return 0;
-> 
-> 	/* Ignore potential inconsistency when shutdown. */
-> 	if (xlog_is_shutdown(log)) {
-> 		return log->l_logsize;
-> 
-> 	if (tail_cycle < head_cycle) {
-> 		ASSERT(tail_cycle == (head_cycle - 1));
-> 		return tail_bytes - head_bytes;
-> 	}
 
-Yup, that's better. I'll fix it.
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+On 2021/7/2 19:50, Leizhen (ThunderTown) wrote:
+> 
+> 
+> On 2021/7/2 17:34, Christoph Hellwig wrote:
+>> We might as well just kill off the length variable while we're at it:
+> 
+> Hi, Christoph:
+>   Maybe you need to write a separate patch. Because the patch I sent is
+> to modify function iomap_seek_data(). I didn't look at the other functions.
+> In fact, both iomap_seek_data() and iomap_seek_hole() need to be modified.
+> The iomap_seek_data() may not be intuitive to delete the variable 'length'.
+> 
+> I'm now analyzing if the "if (length <= 0)" statement in iomap_seek_data()
+> is redundant (the condition is never true).
+
+I've thought about it, and that "if" statement can be removed as follows:
+
+diff --git a/fs/iomap/seek.c b/fs/iomap/seek.c
+index dab1b02eba5b..dc55f9ecd948 100644
+--- a/fs/iomap/seek.c
++++ b/fs/iomap/seek.c
+@@ -96,14 +96,13 @@ iomap_seek_data(struct inode *inode, loff_t offset, const struct iomap_ops *ops)
+ 		if (ret < 0)
+ 			return ret;
+ 		if (ret == 0)
+-			break;
++			return offset;
+
+ 		offset += ret;
+ 		length -= ret;
+ 	}
+
+-	if (length <= 0)
+-		return -ENXIO;
+-	return offset;
++	/* The end of the file is reached, and no data is found */
++	return -ENXIO;
+ }
+ EXPORT_SYMBOL_GPL(iomap_seek_data);
+
+
+
+> 
+>>
+>>
+>> diff --git a/fs/iomap/seek.c b/fs/iomap/seek.c
+>> index dab1b02eba5b7f..942e354e9e13e6 100644
+>> --- a/fs/iomap/seek.c
+>> +++ b/fs/iomap/seek.c
+>> @@ -35,23 +35,21 @@ loff_t
+>>  iomap_seek_hole(struct inode *inode, loff_t offset, const struct iomap_ops *ops)
+>>  {
+>>  	loff_t size = i_size_read(inode);
+>> -	loff_t length = size - offset;
+>>  	loff_t ret;
+>>  
+>>  	/* Nothing to be found before or beyond the end of the file. */
+>>  	if (offset < 0 || offset >= size)
+>>  		return -ENXIO;
+>>  
+>> -	while (length > 0) {
+>> -		ret = iomap_apply(inode, offset, length, IOMAP_REPORT, ops,
+>> -				  &offset, iomap_seek_hole_actor);
+>> +	while (offset < size) {
+>> +		ret = iomap_apply(inode, offset, size - offset, IOMAP_REPORT,
+>> +				  ops, &offset, iomap_seek_hole_actor);
+>>  		if (ret < 0)
+>>  			return ret;
+>>  		if (ret == 0)
+>>  			break;
+>>  
+>>  		offset += ret;
+>> -		length -= ret;
+>>  	}
+>>  
+>>  	return offset;
+>>
+>> .
+>>
+
