@@ -2,99 +2,81 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42830C07E95
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jul 2021 02:04:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BF4CC07E95
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jul 2021 02:22:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 26ACC613B9
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jul 2021 02:04:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E982F613C2
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jul 2021 02:22:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229713AbhGECGy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 4 Jul 2021 22:06:54 -0400
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:52025 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229689AbhGECGy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 4 Jul 2021 22:06:54 -0400
+        id S229549AbhGECYl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 4 Jul 2021 22:24:41 -0400
+Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:60109 "EHLO
+        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229722AbhGECYl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 4 Jul 2021 22:24:41 -0400
 Received: from dread.disaster.area (pa49-179-204-119.pa.nsw.optusnet.com.au [49.179.204.119])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 4CD0780B8F3;
-        Mon,  5 Jul 2021 12:04:16 +1000 (AEST)
+        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id C620F687A3;
+        Mon,  5 Jul 2021 12:22:02 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1m0Dy3-002rd8-3m; Mon, 05 Jul 2021 12:04:15 +1000
-Date:   Mon, 5 Jul 2021 12:04:15 +1000
+        id 1m0EFF-002rpf-Tc; Mon, 05 Jul 2021 12:22:01 +1000
+Date:   Mon, 5 Jul 2021 12:22:01 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     Christoph Hellwig <hch@infradead.org>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 8/9] xfs: don't run shutdown callbacks on active iclogs
-Message-ID: <20210705020415.GK664593@dread.disaster.area>
+Subject: Re: [PATCH 9/9] xfs: log head and tail aren't reliable during
+ shutdown
+Message-ID: <20210705022201.GL664593@dread.disaster.area>
 References: <20210630063813.1751007-1-david@fromorbit.com>
- <20210630063813.1751007-9-david@fromorbit.com>
- <YN7S1/ZAd4IwP8aE@infradead.org>
+ <20210630063813.1751007-10-david@fromorbit.com>
+ <YN7T+6ozxZxAvfjZ@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YN7S1/ZAd4IwP8aE@infradead.org>
+In-Reply-To: <YN7T+6ozxZxAvfjZ@infradead.org>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
         a=Xomv9RKALs/6j/eO6r2ntA==:117 a=Xomv9RKALs/6j/eO6r2ntA==:17
         a=kj9zAlcOel0A:10 a=e_q4qTt1xDgA:10 a=7-415B0cAAAA:8
-        a=oS9dJJxzm0Lt3C4JumUA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=gfbzYfMUp_Vy8kkQtuYA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jul 02, 2021 at 09:48:23AM +0100, Christoph Hellwig wrote:
-> On Wed, Jun 30, 2021 at 04:38:12PM +1000, Dave Chinner wrote:
-> > The problem is that xlog_state_release_iclog() aborts before doing
-> > anything if the log is already shut down. It assumes that the
-> > callbacks have already been cleaned up, and it doesn't need to do
-> > any cleanup.
-> > 
-> > Hence the fix is to remove the xlog_is_shutdown() check from
-> > xlog_state_release_iclog() so that reference counts are correctly
-> > released from the iclogs, and when the reference count is zero we
-> > always transition to SYNCING if the log is shut down. Hence we'll
-> > always enter the xlog_sync() path in a shutdown and eventually end
-> > up erroring out the iclog IO and running xlog_state_do_callback() to
-> > process the callbacks attached to the iclog.
+On Fri, Jul 02, 2021 at 09:53:15AM +0100, Christoph Hellwig wrote:
+> > +	if (tail_cycle == head_cycle && head_bytes >= tail_bytes) {
+> > +		return log->l_logsize - (head_bytes - tail_bytes);
+> > +	} else if (tail_cycle + 1 < head_cycle) {
+> >  		return 0;
+> > +	} else if (xlog_is_shutdown(log)) {
+> > +		/* Ignore potential inconsistency when shutdown. */
+> > +		return log->l_logsize;
+> > +	} else if (tail_cycle < head_cycle) {
+> >  		ASSERT(tail_cycle == (head_cycle - 1));
+> > +		return tail_bytes - head_bytes;
+> >  	}
 > 
-> Ok, this answers my question to the previous patch.  Maybe add a little
-> blurb there?
-
-Done.
-
-> > +	if (xlog_is_shutdown(log)) {
-> > +		/*
-> > +		 * No more references to this iclog, so process the pending
-> > +		 * iclog callbacks that were waiting on the release of this
-> > +		 * iclog.
-> > +		 */
-> > +		spin_unlock(&log->l_icloglock);
-> > +		xlog_state_shutdown_callbacks(log);
-> > +		spin_lock(&log->l_icloglock);
-> > +	} else if (xlog_state_want_sync(log, iclog)) {
-> >  		spin_unlock(&log->l_icloglock);
-> >  		xlog_sync(log, iclog);
-> >  		spin_lock(&log->l_icloglock);
+> Drop the else after the returns to make this a little easier to follow:
 > 
-> >  
-> > +out_check_shutdown:
-> > +	if (xlog_is_shutdown(log))
-> > +		return -EIO;
-> >  	return 0;
+> 	if (tail_cycle == head_cycle && head_bytes >= tail_bytes)
+> 		return log->l_logsize - (head_bytes - tail_bytes);
+> 	if (tail_cycle + 1 < head_cycle)
+> 		return 0;
 > 
-> Nit: we can just return -EIO directly in the first xlog_is_shutdown
-> block..  It's not going to make any difference for the CPU, but makes
-> the code a little easier to follow.
+> 	/* Ignore potential inconsistency when shutdown. */
+> 	if (xlog_is_shutdown(log)) {
+> 		return log->l_logsize;
+> 
+> 	if (tail_cycle < head_cycle) {
+> 		ASSERT(tail_cycle == (head_cycle - 1));
+> 		return tail_bytes - head_bytes;
+> 	}
 
-Fixed.
-
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-Thanks.
+Yup, that's better. I'll fix it.
 
 -Dave.
 -- 
