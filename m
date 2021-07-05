@@ -2,96 +2,75 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8918C07E99
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jul 2021 18:18:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45481C07E99
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jul 2021 22:09:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A463E6196C
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jul 2021 18:18:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1991461154
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jul 2021 22:09:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229824AbhGESVS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 5 Jul 2021 14:21:18 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:38104 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229743AbhGESVR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jul 2021 14:21:17 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1625509120;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=OfnbDKVQTNnP9yn/zxhP8slR9Z1sonaiM3CMMk0IhL8=;
-        b=AblZZiLp2E3J/BpTzGng8q7M/WrCo7s17nGL21pfR+MCGawrrnFodofcSTvYR4Jg4D7H8Q
-        UT1kXqTWD3lkacI871dnp8KY+SWx3TTqP+y+PazisyoHZte4uAv3NoRk9aSMpfH8gEWfAK
-        lJSaHs/4RoqB/cwiheSRkpIQ0C5lFgA=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-47-4B9j1xK7N46yOlj6JtQuVw-1; Mon, 05 Jul 2021 14:18:39 -0400
-X-MC-Unique: 4B9j1xK7N46yOlj6JtQuVw-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C9FE8362F9;
-        Mon,  5 Jul 2021 18:18:37 +0000 (UTC)
-Received: from max.com (unknown [10.40.193.232])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 1C95B2EB18;
-        Mon,  5 Jul 2021 18:18:33 +0000 (UTC)
-From:   Andreas Gruenbacher <agruenba@redhat.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     "Darrick J . Wong" <djwong@kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        cluster-devel@redhat.com, Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v2 2/2] iomap: Permit pages without an iop to enter writeback
-Date:   Mon,  5 Jul 2021 20:18:24 +0200
-Message-Id: <20210705181824.2174165-3-agruenba@redhat.com>
-In-Reply-To: <20210705181824.2174165-1-agruenba@redhat.com>
-References: <20210705181824.2174165-1-agruenba@redhat.com>
+        id S230107AbhGEWMG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 5 Jul 2021 18:12:06 -0400
+Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:43860 "EHLO
+        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230086AbhGEWMG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jul 2021 18:12:06 -0400
+Received: from dread.disaster.area (pa49-179-204-119.pa.nsw.optusnet.com.au [49.179.204.119])
+        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id 0A0B51B21E5;
+        Tue,  6 Jul 2021 08:09:26 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1m0WmL-003BJL-Tt; Tue, 06 Jul 2021 08:09:25 +1000
+Date:   Tue, 6 Jul 2021 08:09:25 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: reset child dir '..' entry when unlinking child
+Message-ID: <20210705220925.GN664593@dread.disaster.area>
+References: <20210703030233.GD24788@locust>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210703030233.GD24788@locust>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
+        a=Xomv9RKALs/6j/eO6r2ntA==:117 a=Xomv9RKALs/6j/eO6r2ntA==:17
+        a=kj9zAlcOel0A:10 a=e_q4qTt1xDgA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=9oFb0R6jFBLlYLQk3U8A:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Create an iop in the writeback path if one doesn't exist.  This allows
-us to avoid creating the iop in some cases.  The only current case we
-do that for is pages with inline data, but it can be extended to pages
-which are entirely within an extent.  It also allows for an iop to be
-removed from pages in the future (eg page split).
+On Fri, Jul 02, 2021 at 08:02:33PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> While running xfs/168, I noticed a second source of post-shrink
+> corruption errors causing shutdowns.
+> 
+> Let's say that directory B has a low inode number and is a child of
+> directory A, which has a high number.  If B is empty but open, and
+> unlinked from A, B's dotdot link continues to point to A.  If A is then
+> unlinked and the filesystem shrunk so that A is no longer a valid inode,
+> a subsequent AIL push of B will trip the inode verifiers because the
+> dotdot entry points outside of the filesystem.
 
-Co-developed-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
----
- fs/iomap/buffered-io.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+So we have a directory inode that is empty and unlinked but held
+open, with a back pointer to an invalid inode number? Which can
+never be followed, because the directory has been unlinked.
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 03537ecb2a94..6330dabc451e 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -1336,14 +1336,13 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
- 		struct writeback_control *wbc, struct inode *inode,
- 		struct page *page, u64 end_offset)
- {
--	struct iomap_page *iop = to_iomap_page(page);
-+	struct iomap_page *iop = iomap_page_create(inode, page);
- 	struct iomap_ioend *ioend, *next;
- 	unsigned len = i_blocksize(inode);
- 	u64 file_offset; /* file offset of page */
- 	int error = 0, count = 0, i;
- 	LIST_HEAD(submit_list);
- 
--	WARN_ON_ONCE(i_blocks_per_page(inode, page) > 1 && !iop);
- 	WARN_ON_ONCE(iop && atomic_read(&iop->write_bytes_pending) != 0);
- 
- 	/*
+Can't this be handled in the inode verifier? This seems to me to
+be a pretty clear cut case where the ".." back pointer should
+always be considered invalid (because the parent dir has no
+existence guarantee once the child has been removed from it), not
+just in the situation where the filesystem has been shrunk...
+
+Cheers,
+
+Dave.
 -- 
-2.26.3
-
+Dave Chinner
+david@fromorbit.com
