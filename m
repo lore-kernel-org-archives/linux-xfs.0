@@ -2,71 +2,85 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-7.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4D31C07E96
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jul 2021 18:30:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BABC6C07E96
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jul 2021 18:35:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C2FB461C40
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jul 2021 18:30:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9519961C53
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jul 2021 18:35:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229992AbhGFSdD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 6 Jul 2021 14:33:03 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40550 "EHLO mail.kernel.org"
+        id S231362AbhGFSh7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 6 Jul 2021 14:37:59 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41518 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229954AbhGFSdC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 6 Jul 2021 14:33:02 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8DAF761452;
-        Tue,  6 Jul 2021 18:30:23 +0000 (UTC)
+        id S231231AbhGFSh7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 6 Jul 2021 14:37:59 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 6BE7D61A11;
+        Tue,  6 Jul 2021 18:35:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625596223;
-        bh=yAke+Z/3biPtjopkGn3MKDtcrgrWq3bCgH6uIGeuoPo=;
+        s=k20201202; t=1625596520;
+        bh=H6vYrxaCOFR0sN75BJPkaSnXdaCyjzIzXIQMHMLiXyQ=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=XXMenDTe4ZK18Tj8qzRDle6tylY215vLjNidIBGGpJ+v6WG0IMBOFyV7XNIMnCxov
-         ZHJqGZgmOiiaiJjytNC+aZ2NSvIqVYH6FKo6XCBo1IQ4oruAfbguLeR4tcl/VLVEYG
-         KIQXkmvDJa2jRMFt42ghdlBIFFJO0thilhFewuGkAJfAgdWetuXbTkAtIOkQb6bPCk
-         iERXRmm+dvuKfIKw4S+jjWOovS9rJe8i/cG9jRvC9gjRF4n+ZnBOQu28Z6aJAQQ8Rt
-         AxN4aPtLWBNBA9HHzeOKYp6lcAEaxKIMxku3oVjzYcPNmSgu0/r85wuoW13+VcLXUS
-         IdiAKdBGWvUCg==
-Date:   Tue, 6 Jul 2021 11:30:23 -0700
+        b=Od6/Rl5kLG90IwKhMe3s6hHQhRcy39CFVzctRAY2Fw+bs1rhiF14mSX1wW6+5Lqu/
+         5k5bWlupPvva1Owylbptzi8fmKsOocAZTlDAnAfnfijGM7xRaTtcvLCUZ48tGcxd4D
+         X9soKO457QPcsNeZsGJ+T1ogVNMS9prybP17ZfysfRvuaGHgKtZO8FhVUNlUH+MKYw
+         Nr3hWrpEZ2nDTYFL017jVBk9sEmpNHfQ0qho55E8USZqrSbyRWL9V09blvzW/cfFQ3
+         X8zNhvAuhSs8w+GgCkmp0CaRjtZ+JhjjhUUV9YNWr7LERoFG0OrbbjiucNv1Af2cfP
+         cJB2+SZtUQxYw==
+Date:   Tue, 6 Jul 2021 11:35:19 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Christoph Hellwig <hch@infradead.org>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs_io: don't count fsmaps before querying fsmaps
-Message-ID: <20210706183023.GD11588@locust>
-References: <162528108960.38807.10502298775223215201.stgit@locust>
- <162528110051.38807.5958877066692397152.stgit@locust>
- <YOMkZyxoSJpG+rur@infradead.org>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: reset child dir '..' entry when unlinking child
+Message-ID: <20210706183519.GE11588@locust>
+References: <20210703030233.GD24788@locust>
+ <YOLFnx0F8xHBjvda@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YOMkZyxoSJpG+rur@infradead.org>
+In-Reply-To: <YOLFnx0F8xHBjvda@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jul 05, 2021 at 04:25:27PM +0100, Christoph Hellwig wrote:
-> On Fri, Jul 02, 2021 at 07:58:20PM -0700, Darrick J. Wong wrote:
+On Mon, Jul 05, 2021 at 09:41:03AM +0100, Christoph Hellwig wrote:
+> On Fri, Jul 02, 2021 at 08:02:33PM -0700, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > There's a bunch of code in fsmap.c that tries to count the GETFSMAP
-> > records so that it can size the fsmap array appropriately for the
-> > GETFSMAP call.  It's pointless to iterate the entire result set /twice/
-> > (unlike the bmap command where the extent count is actually stored in
-> > the fs metadata), so get rid of the duplicate walk.
+> > While running xfs/168, I noticed a second source of post-shrink
+> > corruption errors causing shutdowns.
+> > 
+> > Let's say that directory B has a low inode number and is a child of
+> > directory A, which has a high number.  If B is empty but open, and
+> > unlinked from A, B's dotdot link continues to point to A.  If A is then
+> > unlinked and the filesystem shrunk so that A is no longer a valid inode,
+> > a subsequent AIL push of B will trip the inode verifiers because the
+> > dotdot entry points outside of the filesystem.
+> > 
+> > To avoid this problem, reset B's dotdot entry to the root directory when
+> > unlinking directories, since the root directory cannot be removed.
 > 
-> In otherwords:  just keep iterating over the records using the default
-> chunk size instead of doing one call to find the size and then do
-> a giant allocation and GETFSMAP call.
+> Uggh.  This causes extra overhead for every remove.
 
-I'll paste this into the commit log, thanks.
+Not that much overhead.  A child directory can only be unlinked if it's
+empty; empty directories by definition contain only a dotdot entry,
+which meanns they're in shortform format; and we already have to log the
+inode to reflect the i_nlinks change.
+
+> Can't we make
+> the verifieds deal with this situation instead of creating extra
+> overhead?
+
+I'll address that in the other thread suggesting I "just fix the
+verifiers".
+
+> If we can't please at least limit it to file systems that do
+> have parent pointers enabled.
+
+Parent pointers haven't been merged yet; this is the '..' entry that
+has been stored in every directory since the beginning.
 
 --D
-
-> I find the current commit log a little confusing, but the change itself
-> looks good:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
