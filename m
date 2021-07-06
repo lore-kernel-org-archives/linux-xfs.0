@@ -2,96 +2,90 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86AEFC07E96
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jul 2021 05:06:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA3A3C07E96
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jul 2021 11:08:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 64F276197F
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jul 2021 05:06:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A524B61C1A
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jul 2021 11:08:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230004AbhGFFI7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 6 Jul 2021 01:08:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46048 "EHLO
+        id S231216AbhGFLLW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 6 Jul 2021 07:11:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41708 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229963AbhGFFI7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jul 2021 01:08:59 -0400
+        with ESMTP id S229834AbhGFLLV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jul 2021 07:11:21 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 851F3C061574;
-        Mon,  5 Jul 2021 22:06:21 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2EBEDC061574;
+        Tue,  6 Jul 2021 04:08:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-Type:Content-ID:Content-Description;
-        bh=Hrqanaoi/RtO507Oge3AIMRHlYs9d/SsknmqOE9P7tA=; b=l21KwPDhzlExodbHVqnTawkwH7
-        NqTUFWWg/GeGZe9ecrfPxJPtuPaCerNakx8unMN4CrOrzej4pUN3SzYUxaR91MnLEng/YD45LXnyu
-        S5XgvPJn5pOSTWWGYSytVmjRQIQFfwlHQhayRu505Iko6GQaHOxAqaQvHrCsHBJ8vHdduEbsp43Xt
-        M06zsgf7GXV3xT6Cjj4dGVMBNmd6rBLiQfz8bXRIHMiAJkG72zEqIYaiKbfCfZh21Qn2bs4m5CJjc
-        9z+KYVEZkmaPaqnQsyD+ewLr4cuVaFCk1gI5T6Iv7THNOcz5Vgoxr/Lbg4yUpvlPZanDeqvksMLRl
-        STeCVmpQ==;
-Received: from p4fdb05cb.dip0.t-ipconnect.de ([79.219.5.203] helo=localhost)
-        by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1m0dHb-00Aqrv-AW; Tue, 06 Jul 2021 05:06:11 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     linux-xfs@vger.kernel.org
-Cc:     linux-fsdevel@vger.kernel.org, Leizhen <thunder.leizhen@huawei.com>
-Subject: [PATCH 2/2] iomap: remove the length variable in iomap_seek_hole
-Date:   Tue,  6 Jul 2021 07:05:41 +0200
-Message-Id: <20210706050541.1974618-2-hch@lst.de>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210706050541.1974618-1-hch@lst.de>
-References: <20210706050541.1974618-1-hch@lst.de>
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=ujhsZIEffiBU8YDQW2JxEemVJB22hCG0N5jEdqMO6sY=; b=oHTNsFlvR32AIvh3SJZS+oIKYM
+        N/D7UTCrnz4Efptg6IgjxFJNuVX2VsZi7A3VcMx6bXy0bebWiNRzvO2KaS90p4FO1Qo6X+pCW1pRi
+        DX9Uk+MWeLXpIIYqyAr7Id0a5+LVsVefLII4v9w8UX7eQfXKW4LOr+R5/Zgh8CtO3R7LyiZJruzhq
+        fTaDV4JxeCigEKhsRnIA9gGuZmhICV/SRALP2ToY3GPALHUI7tZaVCoNvPeFPY5q1sPYom1YyjUK3
+        yAYq8hLUFi0BP7Oox2P6guqXozOFtzV/yaLDhqYbKtXBZM1RgraQ7udD/VaRolaydb40+hbAFZvd6
+        f2Y9xEWg==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1m0iw2-00BAUP-KO; Tue, 06 Jul 2021 11:08:17 +0000
+Date:   Tue, 6 Jul 2021 12:08:14 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     "Leizhen (ThunderTown)" <thunder.leizhen@huawei.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH -next 1/1] iomap: Fix a false positive of UBSAN in
+ iomap_seek_data()
+Message-ID: <YOQ5nuuoBVHABK1C@casper.infradead.org>
+References: <20210702092109.2601-1-thunder.leizhen@huawei.com>
+ <YN9vZfo+84gizjtf@casper.infradead.org>
+ <492c7a7b-6f2e-de45-c733-51c80422305e@huawei.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <492c7a7b-6f2e-de45-c733-51c80422305e@huawei.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The length variable is rather pointless given that it can be trivially
-deduced from offset and size.  Also the initial calculation can lead
-to KASAN warnings.
+On Mon, Jul 05, 2021 at 11:35:08AM +0800, Leizhen (ThunderTown) wrote:
+> 
+> 
+> On 2021/7/3 3:56, Matthew Wilcox wrote:
+> > On Fri, Jul 02, 2021 at 05:21:09PM +0800, Zhen Lei wrote:
+> >> Move the evaluation expression "size - offset" after the "if (offset < 0)"
+> >> judgment statement to eliminate a false positive produced by the UBSAN.
+> >>
+> >> No functional changes.
+> >>
+> >> ==========================================================================
+> >> UBSAN: Undefined behaviour in fs/iomap.c:1435:9
+> >> signed integer overflow:
+> >> 0 - -9223372036854775808 cannot be represented in type 'long long int'
+> > 
+> > I don't understand.  I thought we defined the behaviour of signed
+> > integer overflow in the kernel with whatever-the-gcc-flag-is?
+> 
+> -9223372036854775808 ==> 0x8000000000000000 ==> -0
+> 
+> I don't fully understand what you mean. This is triggered by explicit error
+> injection '-0' at runtime, which should not be detected by compilation options.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reported-by: Leizhen (ThunderTown) <thunder.leizhen@huawei.com>
----
- fs/iomap/seek.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+We use -fwrapv on the gcc command line:
 
-diff --git a/fs/iomap/seek.c b/fs/iomap/seek.c
-index 50b8f1418f2668..ce6fb810854fec 100644
---- a/fs/iomap/seek.c
-+++ b/fs/iomap/seek.c
-@@ -35,23 +35,20 @@ loff_t
- iomap_seek_hole(struct inode *inode, loff_t offset, const struct iomap_ops *ops)
- {
- 	loff_t size = i_size_read(inode);
--	loff_t length = size - offset;
- 	loff_t ret;
- 
- 	/* Nothing to be found before or beyond the end of the file. */
- 	if (offset < 0 || offset >= size)
- 		return -ENXIO;
- 
--	while (length > 0) {
--		ret = iomap_apply(inode, offset, length, IOMAP_REPORT, ops,
--				  &offset, iomap_seek_hole_actor);
-+	while (offset < size) {
-+		ret = iomap_apply(inode, offset, size - offset, IOMAP_REPORT,
-+				  ops, &offset, iomap_seek_hole_actor);
- 		if (ret < 0)
- 			return ret;
- 		if (ret == 0)
- 			break;
--
- 		offset += ret;
--		length -= ret;
- 	}
- 
- 	return offset;
--- 
-2.30.2
+'-fwrapv'
+     This option instructs the compiler to assume that signed arithmetic
+     overflow of addition, subtraction and multiplication wraps around
+     using twos-complement representation.  This flag enables some
+     optimizations and disables others.
 
+> lseek(r1, 0x8000000000000000, 0x3)
+
+I'll see about adding this to xfstests ...
