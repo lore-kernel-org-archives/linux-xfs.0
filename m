@@ -2,122 +2,69 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7594C07E96
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jul 2021 12:34:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CEF6BC07E96
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jul 2021 14:43:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A2AA36044F
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jul 2021 12:34:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B95ED619BE
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jul 2021 14:43:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233881AbhGFMh1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 6 Jul 2021 08:37:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54992 "EHLO
+        id S233036AbhGFOqI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 6 Jul 2021 10:46:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34208 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245147AbhGFMM3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jul 2021 08:12:29 -0400
+        with ESMTP id S232944AbhGFOqA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jul 2021 10:46:00 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 840FDC061574;
-        Tue,  6 Jul 2021 04:59:50 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B622C0613AC;
+        Tue,  6 Jul 2021 07:26:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=Fz8nF0VvqASVf4DbdzvDOafrQ9TSRbCa0m4+JXcIrn0=; b=SBM+5pSXppWogXeoTfoIyFNkHB
-        XKLpcFUeu4QHdxqUQYpq5/S6lr25MvHybzFvvfwTkwSKIdDzAgOHZfnr2KlLz/2/zR3Lwzb/ikYVx
-        Bdt10jcYODzGKXZQljrIxfTlBPYXB36oZnNwD5Kuvai4a9t3Qoi9bLjrbmTuIJk3I+yAVeX+UO6d7
-        Hbo/86Qsn04ajnJbmi1md9nkse6oxQNQGt+RP9hR3QVEuT5zNkqYDacL1yFi7LCHzn0IPji2lxh51
-        Z7AlbJrtqx9fEpsV8T9Et8TGJKzVqRmMjzituz/jXXLXasiP+QpGt7SSlbE0SyVL+vIGKqstMq967
-        wHIzxW9A==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1m0jjE-00BHHR-Io; Tue, 06 Jul 2021 11:59:08 +0000
-Date:   Tue, 6 Jul 2021 12:59:04 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     "Leizhen (ThunderTown)" <thunder.leizhen@huawei.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH -next 1/1] iomap: Fix a false positive of UBSAN in
- iomap_seek_data()
-Message-ID: <YORFiMS+HD3dg2Su@casper.infradead.org>
-References: <20210702092109.2601-1-thunder.leizhen@huawei.com>
- <YN9vZfo+84gizjtf@casper.infradead.org>
- <492c7a7b-6f2e-de45-c733-51c80422305e@huawei.com>
- <YOQ5nuuoBVHABK1C@casper.infradead.org>
+        bh=YWMgMiz0NSkHLipT1VEThA/f8vA9y3xyiRXKfliC2FQ=; b=eEJjo64t1w7GzXpO1lD11M1r9W
+        WPXSlO2KDH2Ib31wkN3RlL5OYWPdWaCfIEcbv6aUwwRwvyz3FloDabCdqH6JxLfsWDuFdBY2ZJc4T
+        hXdxbvTiMvizZLyP71NAio0S8il8w1mNBOlxBsHPoT5TAuwyQjopHfQWCbqve7XkVrIhvnumyY1g5
+        BClgKyBxQBK582tIev0TvyGSblgulZfmIf5irTzOU4rsWtOKhEf9aQL/+JiM9FwECdCMXdRV+JaIJ
+        HJE5Qykdn8CIfeRDVmEbysxhW8fE/Gurc3ZJ47TEUDi6YORm/yzPsQ8jPTanei8ivUNU4In0eZWDT
+        RPiEPZMw==;
+Received: from hch by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1m0lVI-00BRAt-Cl; Tue, 06 Jul 2021 13:52:50 +0000
+Date:   Tue, 6 Jul 2021 14:52:48 +0100
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Wang Shilong <wangshilong1991@gmail.com>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net
+Subject: Re: [PATCH v3] fs: forbid invalid project ID
+Message-ID: <YORgMAtpCBdc59cN@infradead.org>
+References: <20210702140243.3615-1-wangshilong1991@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YOQ5nuuoBVHABK1C@casper.infradead.org>
+In-Reply-To: <20210702140243.3615-1-wangshilong1991@gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jul 06, 2021 at 12:08:14PM +0100, Matthew Wilcox wrote:
-> On Mon, Jul 05, 2021 at 11:35:08AM +0800, Leizhen (ThunderTown) wrote:
-> > 
-> > 
-> > On 2021/7/3 3:56, Matthew Wilcox wrote:
-> > > On Fri, Jul 02, 2021 at 05:21:09PM +0800, Zhen Lei wrote:
-> > >> Move the evaluation expression "size - offset" after the "if (offset < 0)"
-> > >> judgment statement to eliminate a false positive produced by the UBSAN.
-> > >>
-> > >> No functional changes.
-> > >>
-> > >> ==========================================================================
-> > >> UBSAN: Undefined behaviour in fs/iomap.c:1435:9
-> > >> signed integer overflow:
-> > >> 0 - -9223372036854775808 cannot be represented in type 'long long int'
-> > > 
-> > > I don't understand.  I thought we defined the behaviour of signed
-> > > integer overflow in the kernel with whatever-the-gcc-flag-is?
-> > 
-> > -9223372036854775808 ==> 0x8000000000000000 ==> -0
+> diff --git a/fs/ioctl.c b/fs/ioctl.c
+> index 1e2204fa9963..d7edc92df473 100644
+> --- a/fs/ioctl.c
+> +++ b/fs/ioctl.c
+> @@ -806,6 +806,8 @@ static int fileattr_set_prepare(struct inode *inode,
+>  	if (err)
+>  		return err;
+>  
+> +	if (!projid_valid(make_kprojid(&init_user_ns, fa->fsx_projid)))
+> +		return -EINVAL;
+>  	/*
 
-(actually, this is incorrect.  think about how twos-complement
-arithmetic works.  first you negate every bit, so 8000..000 turns into
-7fff..fff, then you add one, returning to 8000..000, so -LLONG_MIN ==
-LLONG_MIN)
+And empty line before the comment would be nice for readability.
 
-> > I don't fully understand what you mean. This is triggered by explicit error
-> > injection '-0' at runtime, which should not be detected by compilation options.
-> 
-> We use -fwrapv on the gcc command line:
-> 
-> '-fwrapv'
->      This option instructs the compiler to assume that signed arithmetic
->      overflow of addition, subtraction and multiplication wraps around
->      using twos-complement representation.  This flag enables some
->      optimizations and disables others.
-> 
-> > lseek(r1, 0x8000000000000000, 0x3)
-> 
-> I'll see about adding this to xfstests ...
+Otherwise looks good:
 
-I have and it doesn't produce the problem.  My config:
-
-CONFIG_UBSAN=y
-# CONFIG_UBSAN_TRAP is not set
-CONFIG_CC_HAS_UBSAN_BOUNDS=y
-CONFIG_UBSAN_BOUNDS=y
-CONFIG_UBSAN_ONLY_BOUNDS=y
-CONFIG_UBSAN_SHIFT=y
-CONFIG_UBSAN_DIV_ZERO=y
-CONFIG_UBSAN_BOOL=y
-CONFIG_UBSAN_ENUM=y
-# CONFIG_UBSAN_ALIGNMENT is not set
-CONFIG_UBSAN_SANITIZE_ALL=y
-# CONFIG_TEST_UBSAN is not set
-
-I even went as far as adding printks to be sure I'm hitting it:
-
-hole length 0x8000000000000000
-data length 0x8000000000000000
-
-Are you compiling with:
-KBUILD_CFLAGS   += -fno-strict-overflow
-
-Or have you done something weird?  What compiler version are you using?
+Reviewed-by: Christoph Hellwig <hch@lst.de>
