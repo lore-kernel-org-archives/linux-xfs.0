@@ -2,99 +2,64 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29F54C07E96
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jul 2021 16:32:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07A40C07E96
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jul 2021 17:19:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 07F8261C34
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jul 2021 16:32:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D3F8461C5F
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jul 2021 17:19:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230221AbhGFQfg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 6 Jul 2021 12:35:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60086 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230089AbhGFQfg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jul 2021 12:35:36 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F074EC061574;
-        Tue,  6 Jul 2021 09:32:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-Type:Content-ID:Content-Description;
-        bh=8g1rbS4pTPzctrCvZ4zRcoNhzl4NCCSOb3dD7gmNVm4=; b=AeKal7gC3SV9eUl8DIeb48eZ9b
-        +/fvNBYasBBCOjxeewGdUtdzxa4M8Ajc6xJ01jzXCnsdNnlSavPGRnIkkDbqKSb+QIunuD2Uf8mTf
-        pCfLJfCbSH7aIWNtPQTwcBOvovlyMoIOScwqgC9oGYFYGRUYWR9HoFom3sS+frBWCmtzjw7FRg0ar
-        oHhdTUIK4WXoRsHGddPwGCceitYerrsVtsLTe+4OrRhDfhgb4X4e6R3srC7hoyqEQ9LyUm7sl+m1s
-        RYZoSJrLRa5Usyo8X4m8wrjHgOulPh+yjrJjy8x/I+QyTROiB6m1nYgOzY9/hYCvzzWHv31SVsfaI
-        qgk9jVZQ==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1m0nzl-00BZbz-L2; Tue, 06 Jul 2021 16:32:29 +0000
-From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
-To:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-kernel@vger.kernel.org
-Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Zhen Lei <thunder.leizhen@huawei.com>
-Subject: [PATCH 2/2] iomap: Remove length variable in iomap_seek_hole()
-Date:   Tue,  6 Jul 2021 17:31:57 +0100
-Message-Id: <20210706163158.2758223-2-willy@infradead.org>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20210706163158.2758223-1-willy@infradead.org>
-References: <20210706163158.2758223-1-willy@infradead.org>
+        id S230304AbhGFRVy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 6 Jul 2021 13:21:54 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50816 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230141AbhGFRVy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 6 Jul 2021 13:21:54 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id DA33761C5B;
+        Tue,  6 Jul 2021 17:19:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1625591955;
+        bh=sH404mqM7gdychrrefpxi/stNaxEx76o5lay6QyuINA=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=BvvPhojx1bLS/Lakuu2tuDQiZs5E0V+e8y7SipD2g/BnwLJ0DSyfRGqjM/d1zU42D
+         Q1EXZDBgR8h0uxT/oZQqB8qtElEI1F/uxKS8pZ4aS69OtvFbh5GV/BrADAqvlkBNvH
+         4g7/6dD0toiGNSQu/GSLLW9MVc/DC/3FKE9QkbpVnFBbxedY9+4EY9ESUAHybBc5rB
+         cvBTk1bvjFMgXWuKo0+cjcFc2ePx7FjVhRm6H1IrFvADEZ2kEvCp6D4TBHJ6D9msK8
+         91gPTL7sM0Jv5bBmptDA6XPpMzhw/lGSVfpG8EL/0+JwNPEJ0wEX/hBLksLiwMyoN0
+         pqZ0wE04ji+jA==
+Date:   Tue, 6 Jul 2021 10:19:15 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: fix warnings in compat_ioctl code
+Message-ID: <20210706171915.GA11588@locust>
+References: <20210703030120.GB24788@locust>
+ <YOLGKMyrVNMmGX7g@infradead.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YOLGKMyrVNMmGX7g@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-There's no need to calculate and maintain 'length'.  It's shorter and
-simpler code to just calculate size - offset each time around the loop.
+On Mon, Jul 05, 2021 at 09:43:20AM +0100, Christoph Hellwig wrote:
+> On Fri, Jul 02, 2021 at 08:01:20PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Fix some compiler warnings about unused variables.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> 
+> The change looks silly but otherwise ok.  What compiler gives these
+> stupid warnings?
 
-Suggested-by: Christoph Hellwig <hch@lst.de>
-Reported-by: Zhen Lei <thunder.leizhen@huawei.com>
-Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
----
- fs/iomap/seek.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+gcc 10.3, but it doesn't matter because the kbuild robot says this patch
+creates even /more/ silly warnings on other weird architectures, so I'm
+withdrawing this patch because I DGAF^W have decided that chasing unused
+variable warnings is a bad use of anybody's time.
 
-diff --git a/fs/iomap/seek.c b/fs/iomap/seek.c
-index 241169b49af8..4f711e1269e0 100644
---- a/fs/iomap/seek.c
-+++ b/fs/iomap/seek.c
-@@ -35,23 +35,21 @@ loff_t
- iomap_seek_hole(struct inode *inode, loff_t offset, const struct iomap_ops *ops)
- {
- 	loff_t size = i_size_read(inode);
--	loff_t length = size - offset;
- 	loff_t ret;
- 
- 	/* Nothing to be found before or beyond the end of the file. */
- 	if (offset < 0 || offset >= size)
- 		return -ENXIO;
- 
--	while (length > 0) {
--		ret = iomap_apply(inode, offset, length, IOMAP_REPORT, ops,
--				  &offset, iomap_seek_hole_actor);
-+	while (offset < size) {
-+		ret = iomap_apply(inode, offset, size - offset, IOMAP_REPORT,
-+				ops, &offset, iomap_seek_hole_actor);
- 		if (ret < 0)
- 			return ret;
- 		if (ret == 0)
- 			break;
- 
- 		offset += ret;
--		length -= ret;
- 	}
- 
- 	return offset;
--- 
-2.30.2
-
+--D
