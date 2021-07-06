@@ -2,61 +2,136 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-22.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4068C07E96
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jul 2021 17:45:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BE24C07E9B
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jul 2021 18:14:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AD3F061C5B
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jul 2021 17:45:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5C8CD61C6A
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jul 2021 18:14:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230233AbhGFRsV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 6 Jul 2021 13:48:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47868 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230148AbhGFRsV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jul 2021 13:48:21 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E01A1C061574;
-        Tue,  6 Jul 2021 10:45:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=f71s0MO/L7mamKv725cHUlckyYyGdlzB9Ledhycinbs=; b=MS7BD3gEvKuEaV1u7LUAbzoUNr
-        eIuvWkGyDoSAqv91tVEiWck+NCSB6wI9CC9Y1uzGD2k9WVspwuvz+z5HYKO2rZ6t0y+U8HAYqErra
-        v04av2wj3b1P1XAD+7GEyYTF01FwQrh6UWTLixX83mI7DTog9aZFcIOAo7E/SrgDZYsbtl1y12laZ
-        CAX2LQc7ZrLH/mTQO1w5bwTdAQLDSf/X9nS3o617zNxsjzVQSWpYX627ZpFTtLY7UlXyezvI0mSIn
-        5hx4YOPDqePrzESX+W4dVxQGxV+VN8UZUOUwBgGBpU5vgRFBJG8BVQmovZN3X/UYGIw+VewDxGGJX
-        zdjby6IA==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1m0p8Z-00Bcwj-Ly; Tue, 06 Jul 2021 17:45:37 +0000
-Date:   Tue, 6 Jul 2021 18:45:35 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Leizhen <thunder.leizhen@huawei.com>
-Subject: Re: [PATCH 2/2] iomap: remove the length variable in iomap_seek_hole
-Message-ID: <YOSWv8mAt9ynRWMB@casper.infradead.org>
-References: <20210706050541.1974618-1-hch@lst.de>
- <20210706050541.1974618-2-hch@lst.de>
+        id S231237AbhGFSRc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 6 Jul 2021 14:17:32 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37742 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229954AbhGFSRc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 6 Jul 2021 14:17:32 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2590961C20;
+        Tue,  6 Jul 2021 18:14:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1625595293;
+        bh=UZMM8Y8Z6fhjs4wjGHdR3p/4ajEpQpEWWwEDHVieS90=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=hpjdxhsot0KEDIHWVOqJZfWNu0uLjrmHWDWKY9gCvvZzY1ItivT3bP8Z5g+RgGoa2
+         tll5HwtxvxTycXhqUE/7f6/9gEuwh4M1Wtt/0mnSRVNh1Mlr2Ugw4GHW1Kiyv8azlh
+         tcHjZ7ZKjPyST29JhsRlTyhqRBsqgQda4LjYzuRgPmq9tYTtk4XJ2AEyomZ4oHIMN9
+         1v5wiIkFlxPorP3V7uzIVkYwBttPJwf0WerB1LrXw4PUOS247Tvj0cQ4Nw+xV94ZsH
+         O9qnwCGxjT5CRemIHE0M3lZ0+btSeHmR2dtJ2PCLT30g6BhvwseaKE6r/0eB8JcnnY
+         cq1axKw82nOWA==
+Date:   Tue, 6 Jul 2021 11:14:52 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     jefflexu@linux.alibaba.com
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: Re: [RFC,2/2] xfstests: common/rc: add cluster size support for ext4
+Message-ID: <20210706181452.GB11571@locust>
+References: <0939cdf0-895c-7287-569a-2a9b4269b1ca@linux.alibaba.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210706050541.1974618-2-hch@lst.de>
+In-Reply-To: <0939cdf0-895c-7287-569a-2a9b4269b1ca@linux.alibaba.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jul 06, 2021 at 07:05:41AM +0200, Christoph Hellwig wrote:
-> The length variable is rather pointless given that it can be trivially
-> deduced from offset and size.  Also the initial calculation can lead
-> to KASAN warnings.
+On Mon, Jul 05, 2021 at 02:58:51PM +0800, JeffleXu wrote:
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reported-by: Leizhen (ThunderTown) <thunder.leizhen@huawei.com>
+> Sorry for digging this really old post [1]. The overall background is
+> that, @offset and @len need to be aligned with cluster size when doing
+> fallocate(), or several xfstests cases calling fsx will fail if the
+> tested filesystem enabling 'bigalloc' feature.
+> 
+> On April 27, 2020, 5:33 p.m. UTC Darrick J. Wong wrote:
+> 
+> > On Fri, Apr 24, 2020 at 05:33:50PM +0800, Jeffle Xu wrote:
+> >> Inserting and collapsing range on ext4 with 'bigalloc' feature will
+> >> fail due to the offset and size should be alligned with the cluster
+> >> size.
+> >> 
+> >> The previous patch has add support for cluster size in fsx. Detect and
+> >> pass the cluster size parameter to fsx if the underlying filesystem
+> >> is ext4 with bigalloc.
+> >> 
+> >> Signed-off-by: Jeffle Xu <jefflexu@linux.alibaba.com>
+> >> ---
+> >>  common/rc | 9 +++++++++
+> >>  1 file changed, 9 insertions(+)
+> >> 
+> >> diff --git a/common/rc b/common/rc
+> >> index 2000bd9..71dde5f 100644
+> >> --- a/common/rc
+> >> +++ b/common/rc
+> >> @@ -3908,6 +3908,15 @@ run_fsx()
+> >>  {
+> >>  	echo fsx $@
+> >>  	local args=`echo $@ | sed -e "s/ BSIZE / $bsize /g" -e "s/ PSIZE / $psize /g"`
+> >> +
+> >> +	if [ "$FSTYP" == "ext4" ]; then
+> >> +		local cluster_size=$(tune2fs -l $TEST_DEV | grep 'Cluster size' | awk '{print $3}')
+> >> +		if [ -n $cluster_size ]; then
+> >> +			echo "cluster size: $cluster_size"
+> >> +			args="$args -u $cluster_size"
+> >> +		fi
+> >> +	fi
+> > 
+> > Computing the file allocation block size ought to be a separate helper.
+> > 
+> > I wonder if there's a standard way to report cluster sizes, seeing as
+> > fat, ext4, ocfs2, and xfs can all have minimum space allocation units
+> > that are larger than the base fs block size.
+> 
+> In fact only for insert_range and collapse range of ext4 and xfs (in
+> realtime mode), @offset and @len need to be aligned with cluster size.
+> 
+> Though fat and ocfs2 also support cluster size, ocfs2 only supports
+> preallocate and punch_hole, and fat only supports preallocate, in which
+> case @offset and @len needn't be aligned with cluster size.
+> 
+> 
+> So we need to align @offset and @len with cluster size only for ext4 and
+> xfs (in realtime mode) at a minimum cost, to fix this issue. But the
+> question is, there's no standard programming interface exporting cluster
+> size. For both ext4 and xfs, it's stored as a binary data in disk
+> version superblock, e.g., tune2fs could detect the cluster size of ext4.
+> 
+> 
+> Any idea on how to query the cluster size?
 
-Reviewed-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+xfs and ocfs2 return the rt extent size in stat.st_blksize.
+
+In fstestsland you could use _get_file_block_size to figure out the
+allocation unit.
+
+Alternately, I've been testing a more permanent fix for the blocksize
+issues[1]; perhaps that will fix the problem?
+
+(Note that the series is at the end of my dev tree, so it's likely to
+have apply errors for the tests that exist in djwong-dev but aren't
+upstream.)
+
+--D
+
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfstests-dev.git/log/?h=check-blocksize-congruency
+
+> 
+> 
+> [1]
+> https://patchwork.kernel.org/project/fstests/cover/1587720830-11955-1-git-send-email-jefflexu@linux.alibaba.com/
+> 
+> -- 
+> Thanks,
+> Jeffle
