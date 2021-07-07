@@ -4,40 +4,39 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-17.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D549C07E9C
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Jul 2021 00:21:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29DD2C07E9C
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Jul 2021 00:21:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 74E6761CB3
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Jul 2021 00:21:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1163461C91
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Jul 2021 00:21:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230029AbhGGAXw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 6 Jul 2021 20:23:52 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52180 "EHLO mail.kernel.org"
+        id S230020AbhGGAX5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 6 Jul 2021 20:23:57 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52322 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229873AbhGGAXw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 6 Jul 2021 20:23:52 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C027761CAC;
-        Wed,  7 Jul 2021 00:21:12 +0000 (UTC)
+        id S229873AbhGGAX5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 6 Jul 2021 20:23:57 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 3CEBF61CAC;
+        Wed,  7 Jul 2021 00:21:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625617272;
-        bh=LgYaZN4M2MNTfb/b/VqXPJGc/4nMrpa9oSJ5ivd44/c=;
+        s=k20201202; t=1625617278;
+        bh=NO12Tw6QZY5DocZQ9diAFbXa7mcr1ltqynm3BdIKO2I=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=pqX2RzXK6OlQcUx8pokSWw90s8F23HyjeKR0a3l/+knGqXlbfV5dyjlQx8xOFc/cz
-         o5gnWE8tqHIKWCi6qPMhKwVUqU7xvBSAMnFLVkpTGA4c9f5+MFcdpbdWH3ybcHH53r
-         STlc+rZ5ouWb7DECArOFs2R3a5jMovUJcxGkDkQgefZSfLk6+PCxqB4wsLah27yLee
-         dynbNkXLWq4BOzRi+L+lm6xnln9uFewT4RyCC8xastOIky8PkxJYZpinFDyqLUPtJb
-         FYhtL/Iop9KtGeaP5xob2oH6XGErHTNxAFr+5Fw+X1SGCIVbXCqezq33gPg7pJsUzK
-         5Dv19+j0K03ow==
-Subject: [PATCH 1/8] xfs/172: disable test when file writes don't use delayed
- allocation
+        b=bBbnEUmU7hsYQNwcwAum9oBg75rMyU+bqrvsDXzgs14nbBdci9Ku8QA4inj85HfAw
+         NE6DzD1OKBr/2HfXhIeHxgPTRVJgeVWQgZ4rhNblY2XUUH/+X694kU+mnW4gAkucmi
+         /kMikwtyvHRqg1WnQ4U6efH+JB5a23mwAVbYHDhbJ4P7eT3NK6yLpT285YIMOH/3lX
+         ohFqnWIgo4tZTzqlquU+r+LIooFwQgo/h/aFm97/+prBBavKAOHg06BtmqkTN0uesS
+         uZQEv26MGsffmqJuMAUPXtknHgJSO/pJMY/1XwAJsHGa3PcHevHNQefQgrzjiL8958
+         QYa06VVuEh65w==
+Subject: [PATCH 2/8] generic/561: hide assertions when duperemove is killed
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 06 Jul 2021 17:21:12 -0700
-Message-ID: <162561727244.543423.13321546742830675478.stgit@locust>
+Date:   Tue, 06 Jul 2021 17:21:17 -0700
+Message-ID: <162561727795.543423.1496821526582808789.stgit@locust>
 In-Reply-To: <162561726690.543423.15033740972304281407.stgit@locust>
 References: <162561726690.543423.15033740972304281407.stgit@locust>
 User-Agent: StGit/0.19
@@ -50,58 +49,34 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-This test tries to exploit an interaction between delayed allocation and
-writeback on full filesystems to see if it can trip up the filestreams
-allocator.  The behaviors do not present if the filesystem allocates
-space at write time, so disable it under these scenarios.
+Use some bash redirection trickery to capture in $seqres.full all of
+bash's warnings about duperemove being killed due to assertions
+triggering.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/xfs/172 |   30 +++++++++++++++++++++++++++++-
- 1 file changed, 29 insertions(+), 1 deletion(-)
+ tests/generic/561 |    9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
 
-diff --git a/tests/xfs/172 b/tests/xfs/172
-index 0d1b441e..c0495305 100755
---- a/tests/xfs/172
-+++ b/tests/xfs/172
-@@ -16,9 +16,37 @@ _begin_fstest rw filestreams
- 
- # real QA test starts here
- _supported_fs xfs
--
-+_require_command "$FILEFRAG_PROG" filefrag
- _require_scratch
- 
-+# The first _test_streams call sets up the filestreams allocator to fail and
-+# then checks that it actually failed.  It does this by creating a very small
-+# filesystem, writing a lot of data in parallel to separate streams, and then
-+# flushes the dirty data, also in parallel.  To trip the allocator, the test
-+# relies on writeback combining adjacent dirty ranges into large allocation
-+# requests which eventually bleed across AGs.  This happens either because the
-+# big writes are slow enough that filestreams contexts expire between
-+# allocation requests, or because the AGs are so full at allocation time that
-+# the bmapi allocator decides to scan for a less full AG.  Either way, stream
-+# directories share AGs, which is what the test considers a success.
-+#
-+# However, this only happens if writes use the delayed allocation code paths.
-+# If the kernel allocates small amounts of space at the time of each write()
-+# call, the successive small allocations never trip the bmapi allocator's
-+# rescan thresholds and will keep pushing out the expiration time, with the
-+# result that the filestreams allocator succeeds in maintaining the streams.
-+# The test considers this a failure.
-+#
-+# Make sure that a regular buffered write produces delalloc reservations.
-+# This effectively disables the test for files with extent size hints or DAX
-+# mode set.
-+_scratch_mkfs > $seqres.full
-+_scratch_mount
-+$XFS_IO_PROG -f -c 'pwrite 0 64k' $SCRATCH_MNT/testy &> /dev/null
-+$FILEFRAG_PROG -v $SCRATCH_MNT/testy 2>&1 | grep -q delalloc || \
-+	_notrun "test requires delayed allocation buffered writes"
-+_scratch_unmount
-+
- _check_filestreams_support || _notrun "filestreams not available"
- 
- # test reaper works by setting timeout low. Expected to fail
+diff --git a/tests/generic/561 b/tests/generic/561
+index bfd4443d..85037e50 100755
+--- a/tests/generic/561
++++ b/tests/generic/561
+@@ -62,8 +62,13 @@ dupe_run=$TEST_DIR/${seq}-running
+ touch $dupe_run
+ for ((i = 0; i < $((2 * LOAD_FACTOR)); i++)); do
+ 	while [ -e $dupe_run ]; do
+-		$DUPEREMOVE_PROG -dr --dedupe-options=same $testdir \
+-			>>$seqres.full 2>&1
++		# Employ shell trickery here so that the golden output does not
++		# capture assertions that trigger when killall shoots down
++		# dupremove processes in an arbitrary order, which leaves the
++		# memory in an inconsistent state long enough for the assert
++		# to trip.
++		cmd="$DUPEREMOVE_PROG -dr --dedupe-options=same $testdir"
++		bash -c "$cmd" >> $seqres.full 2>&1
+ 	done 2>&1 | sed -e '/Terminated/d' &
+ 	dedup_pids="$! $dedup_pids"
+ done
 
