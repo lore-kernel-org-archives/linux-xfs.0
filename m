@@ -7,36 +7,37 @@ X-Spam-Status: No, score=-17.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF5D7C07E9C
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Jul 2021 00:21:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E416C07E9B
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Jul 2021 00:21:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BAC9161CAD
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Jul 2021 00:21:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2B9B861CB8
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Jul 2021 00:21:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230052AbhGGAYO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 6 Jul 2021 20:24:14 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52724 "EHLO mail.kernel.org"
+        id S230015AbhGGAYT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 6 Jul 2021 20:24:19 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52910 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229919AbhGGAYO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 6 Jul 2021 20:24:14 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C550C61C91;
-        Wed,  7 Jul 2021 00:21:34 +0000 (UTC)
+        id S229919AbhGGAYT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 6 Jul 2021 20:24:19 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 47BF161C91;
+        Wed,  7 Jul 2021 00:21:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625617294;
-        bh=nr9OVZYxHAbfh9voBUxv1+S94pQ3NcNKVzG/jNmUiyk=;
+        s=k20201202; t=1625617300;
+        bh=c785Xk/13yhAfMGqHE1CXfFeAX/U1nwgbLROr3HhVjU=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=A0tXrkzWbDeAOJU25EClO3bfq0yjdZUuuNh8LNWUqggY2vff+OJWC6TFseqwCDtr7
-         +61+06TqTCR/5/yVGKiqJgRb0tdsb8crexO1wFB4FjfrHuETG1BCF77c9xdmqibmTS
-         qvSdkr288v/YIe16q+5NipCDRDXzBW1LOxxDTWh0ZoOabobdzQQjOVOZhFMK3dY5BS
-         zGiAV3nmqlYT2SQQ7julFp1tmGNXd/iBCjmKhlsMn5wdirpjAQEkASYEvY1s7edn5c
-         GFIk1Q/3u91ITN02EvPdK/5sWOVBoKTVNn4TISITVXkG//HctmYkauYXa6N3fj59UE
-         GTzV9tNPxwI+A==
-Subject: [PATCH 5/8] check: run _check_filesystems in an OOM-happy subshell
+        b=JHO7iy5GhGW2kYtWDMqWLFuemIQytBk3c1nnRCtZpoDIvuls0zbQRzblYyNyimxyo
+         aE34P+ny7NHymmH7bscw/aq6199tgHzcmXG+lKNcVcGv25jk59m46nmO/flgv4cKTr
+         RvNQtKXANWcZ1SrW//fA4xegD1FBXs0AEubHpdJYGheQci2TdQ4SdvQ2apULfeFIyx
+         ZxTstdn1bZK1AGoNNInVA4wLvkJ2lQdzwXGc38nCi75DjKBF2g8RUtwmTAoU3jwE6k
+         pImI00OZEYusHj8MyCfGt+/QT3gJvJqi7x6bl/S+p6DSKKkA1vE+BHjFgr38/aLiQz
+         jdeBCIZ9zk2Bw==
+Subject: [PATCH 6/8] xfs/084: fix test program status collection and
+ processing
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 06 Jul 2021 17:21:34 -0700
-Message-ID: <162561729448.543423.13588309966120368094.stgit@locust>
+Date:   Tue, 06 Jul 2021 17:21:39 -0700
+Message-ID: <162561729997.543423.18037428142167687667.stgit@locust>
 In-Reply-To: <162561726690.543423.15033740972304281407.stgit@locust>
 References: <162561726690.543423.15033740972304281407.stgit@locust>
 User-Agent: StGit/0.19
@@ -49,85 +50,43 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-While running fstests one night, I observed that fstests stopped
-abruptly because ./check ran _check_filesystems to run xfs_repair.  In
-turn, repair (which inherited oom_score_adj=-1000 from ./check) consumed
-so much memory that the OOM killer ran around killing other daemons,
-rendering the system nonfunctional.
+On a test VM with 1.2GB memory, I noticed that the test will sometimes
+fail because resvtest leaks too much memory and gets OOM killed.  It
+would be useful to _notrun the test when this happens so that it doesn't
+appear as an intermittent regression.
 
-This is silly -- we set an OOM score adjustment of -1000 on the ./check
-process so that the test framework itself wouldn't get OOM-killed,
-because that aborts the entire run.  Everything else is fair game for
-that, including subprocesses started by _check_filesystems.
-
-Therefore, adapt _check_filesystems (and its children) to run in a
-subshell with a much higher oom score adjustment.
+The exit code processing in this test is incorrect, since "$?" will get
+us the exit status of _filter_resv, not $here/src/resvtest.  Fix that
+as part of learning to detect a SIGKILL and skip the test.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- check |   24 +++++++++++++++++-------
- 1 file changed, 17 insertions(+), 7 deletions(-)
+ tests/xfs/084 |    8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
 
-diff --git a/check b/check
-index de8104d0..bb7e030c 100755
---- a/check
-+++ b/check
-@@ -525,17 +525,20 @@ _summary()
+diff --git a/tests/xfs/084 b/tests/xfs/084
+index 5967fe12..e796fec4 100755
+--- a/tests/xfs/084
++++ b/tests/xfs/084
+@@ -33,13 +33,17 @@ _require_test
+ echo
+ echo "*** First case - I/O blocksize same as pagesize"
+ $here/src/resvtest -i 20 -b $pgsize "$TEST_DIR/resv" | _filter_resv
+-[ $? -eq 0 ] && echo done
++res=${PIPESTATUS[0]}
++[ $res -eq 137 ] && _notrun "resvtest -i 20 -b $pgsize was SIGKILLed (OOM?)"
++[ $res -eq 0 ] && echo done
+ rm -f "$TEST_DIR/mumble"
  
- _check_filesystems()
- {
-+	local ret=0
-+
- 	if [ -f ${RESULT_DIR}/require_test ]; then
--		_check_test_fs || err=true
-+		_check_test_fs || ret=1
- 		rm -f ${RESULT_DIR}/require_test*
- 	else
- 		_test_unmount 2> /dev/null
- 	fi
- 	if [ -f ${RESULT_DIR}/require_scratch ]; then
--		_check_scratch_fs || err=true
-+		_check_scratch_fs || ret=1
- 		rm -f ${RESULT_DIR}/require_scratch*
- 	fi
- 	_scratch_unmount 2> /dev/null
-+	return $ret
- }
+ echo
+ echo "*** Second case - 512 byte I/O blocksize"
+ $here/src/resvtest -i 40 -b 512 "$TEST_DIR/resv" | _filter_resv
+-[ $? -eq 0 ] && echo done
++res=${PIPESTATUS[0]}
++[ $res -eq 137 ] && _notrun "resvtest -i 40 -b 512 was SIGKILLed (OOM?)"
++[ $res -eq 0 ] && echo done
+ rm -f "$TEST_DIR/grumble"
  
- _expunge_test()
-@@ -558,11 +561,15 @@ test $? -eq 77 && HAVE_SYSTEMD_SCOPES=yes
- 
- # Make the check script unattractive to the OOM killer...
- OOM_SCORE_ADJ="/proc/self/oom_score_adj"
--test -w ${OOM_SCORE_ADJ} && echo -1000 > ${OOM_SCORE_ADJ}
-+function _adjust_oom_score() {
-+	test -w "${OOM_SCORE_ADJ}" && echo "$1" > "${OOM_SCORE_ADJ}"
-+}
-+_adjust_oom_score -1000
- 
- # ...and make the tests themselves somewhat more attractive to it, so that if
- # the system runs out of memory it'll be the test that gets killed and not the
--# test framework.
-+# test framework.  The test is run in a separate process without any of our
-+# functions, so we open-code adjusting the OOM score.
- #
- # If systemd is available, run the entire test script in a scope so that we can
- # kill all subprocesses of the test if it fails to clean up after itself.  This
-@@ -875,9 +882,12 @@ function run_section()
- 			rm -f ${RESULT_DIR}/require_scratch*
- 			err=true
- 		else
--			# the test apparently passed, so check for corruption
--			# and log messages that shouldn't be there.
--			_check_filesystems
-+			# The test apparently passed, so check for corruption
-+			# and log messages that shouldn't be there.  Run the
-+			# checking tools from a subshell with adjusted OOM
-+			# score so that the OOM killer will target them instead
-+			# of the check script itself.
-+			(_adjust_oom_score 250; _check_filesystems) || err=true
- 			_check_dmesg || err=true
- 		fi
- 
+ # success, all done
 
