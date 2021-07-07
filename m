@@ -7,78 +7,95 @@ X-Spam-Status: No, score=-17.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12C29C07E96
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Jul 2021 00:23:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EF58C07E96
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Jul 2021 00:26:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E191A61C91
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Jul 2021 00:23:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E212361CB8
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Jul 2021 00:26:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229876AbhGGAZy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 6 Jul 2021 20:25:54 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54516 "EHLO mail.kernel.org"
+        id S229873AbhGGA3M (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 6 Jul 2021 20:29:12 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58864 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229834AbhGGAZx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 6 Jul 2021 20:25:53 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 264B8619B9;
-        Wed,  7 Jul 2021 00:23:14 +0000 (UTC)
+        id S229834AbhGGA3M (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 6 Jul 2021 20:29:12 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 07C2161CAC;
+        Wed,  7 Jul 2021 00:26:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625617394;
-        bh=3jrmtV+AQLPoEkOv3DWPqBqJpx4iZaH7cMUZMpwlmP8=;
-        h=Date:From:To:Cc:Subject:From;
-        b=iKOtzv5vlZs56I1vMShUd05W4wzY+JRTNXi3T1t/DQYhfLjJkbB/wHzDYKP5VxAgo
-         Nzp0Cp2EdSPDsiDZH+YzMKfHz6+gnZspODRHss7hAq2y8/v7lt4fjUV2oeFWGRcvZg
-         5FVyWWrLi0+0o1nwdSKSLFiRkXP4SseLuWRc8Bz5IzgmD3ihQgRzcHDLSiiI6l6sQt
-         J8hHcR+QeR7wTP5UAXdtUhGMYszIEJRUlHFPniph6b90v08FccXednRfc1ndtOhPqO
-         9Kjpa13FLUY0lB6urmR628XrPpGiJGkXBnPudC/zYhyLHgW5MS3NFDixHr0eXcH50w
-         G2PGVsJfN9tHg==
-Date:   Tue, 6 Jul 2021 17:23:13 -0700
+        s=k20201202; t=1625617593;
+        bh=WpTjUkzNrDuxkxbkTdGNf5TrdsK1ERehgHZsQ/4zXOQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=jZb4ZeR0rsjwi1O9kqlGX/5vWWqMdUk3MZ7DqDn8yv72jFuMNpuT2poB34YTGNO50
+         HnPeLVb7A+V5EsIc0zKmstxjGMdNXiRwO3/YVVb2FMbcOTQmVvVlCugAtag+9E0kfT
+         VQgibNFjXAdQQeVj+V8ceSdSf/J+3ZX7YLHzurI14RCPy1hfmf1fl8xBgCuVt8s/QY
+         iCIisnybDm0FVtPcq8S1aoBkAEfCeybiYXhytMVuUzVdQFfFR8DXH2Oe2FG7SR2nZi
+         DMSx+AvYZwU0Sz1flb6S+ROTIGE4A1Sj1owRx1m9bEfcNO5BiMWm53snmmv/0XHW/J
+         3jB+NdajChRLQ==
+Date:   Tue, 6 Jul 2021 17:26:32 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     xfs <linux-xfs@vger.kernel.org>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs: drop experimental warnings for bigtime and inobtcount
-Message-ID: <20210707002313.GG11588@locust>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Leizhen <thunder.leizhen@huawei.com>
+Subject: Re: [PATCH 2/2] iomap: remove the length variable in iomap_seek_hole
+Message-ID: <20210707002632.GH11588@locust>
+References: <20210706050541.1974618-1-hch@lst.de>
+ <20210706050541.1974618-2-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20210706050541.1974618-2-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Jul 06, 2021 at 07:05:41AM +0200, Christoph Hellwig wrote:
+> The length variable is rather pointless given that it can be trivially
+> deduced from offset and size.  Also the initial calculation can lead
+> to KASAN warnings.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reported-by: Leizhen (ThunderTown) <thunder.leizhen@huawei.com>
 
-These two features were merged a year ago, userspace tooling have been
-merged, and no serious errors have been reported by the developers.
-Drop the experimental tag to encourage wider testing.
+Wooot!
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/xfs_super.c |    8 --------
- 1 file changed, 8 deletions(-)
+--D
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index cbc1f0157bcd..321e3590c6fe 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1539,10 +1539,6 @@ xfs_fs_fill_super(
- 	if (XFS_SB_VERSION_NUM(&mp->m_sb) == XFS_SB_VERSION_5)
- 		sb->s_flags |= SB_I_VERSION;
- 
--	if (xfs_sb_version_hasbigtime(&mp->m_sb))
--		xfs_warn(mp,
-- "EXPERIMENTAL big timestamp feature in use. Use at your own risk!");
--
- 	if (mp->m_flags & XFS_MOUNT_DAX_ALWAYS) {
- 		bool rtdev_is_dax = false, datadev_is_dax;
- 
-@@ -1598,10 +1594,6 @@ xfs_fs_fill_super(
- 		goto out_filestream_unmount;
- 	}
- 
--	if (xfs_sb_version_hasinobtcounts(&mp->m_sb))
--		xfs_warn(mp,
-- "EXPERIMENTAL inode btree counters feature in use. Use at your own risk!");
--
- 	error = xfs_mountfs(mp);
- 	if (error)
- 		goto out_filestream_unmount;
+> ---
+>  fs/iomap/seek.c | 9 +++------
+>  1 file changed, 3 insertions(+), 6 deletions(-)
+> 
+> diff --git a/fs/iomap/seek.c b/fs/iomap/seek.c
+> index 50b8f1418f2668..ce6fb810854fec 100644
+> --- a/fs/iomap/seek.c
+> +++ b/fs/iomap/seek.c
+> @@ -35,23 +35,20 @@ loff_t
+>  iomap_seek_hole(struct inode *inode, loff_t offset, const struct iomap_ops *ops)
+>  {
+>  	loff_t size = i_size_read(inode);
+> -	loff_t length = size - offset;
+>  	loff_t ret;
+>  
+>  	/* Nothing to be found before or beyond the end of the file. */
+>  	if (offset < 0 || offset >= size)
+>  		return -ENXIO;
+>  
+> -	while (length > 0) {
+> -		ret = iomap_apply(inode, offset, length, IOMAP_REPORT, ops,
+> -				  &offset, iomap_seek_hole_actor);
+> +	while (offset < size) {
+> +		ret = iomap_apply(inode, offset, size - offset, IOMAP_REPORT,
+> +				  ops, &offset, iomap_seek_hole_actor);
+>  		if (ret < 0)
+>  			return ret;
+>  		if (ret == 0)
+>  			break;
+> -
+>  		offset += ret;
+> -		length -= ret;
+>  	}
+>  
+>  	return offset;
+> -- 
+> 2.30.2
+> 
