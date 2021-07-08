@@ -2,170 +2,109 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A43DBC07E99
-	for <linux-xfs@archiver.kernel.org>; Thu,  8 Jul 2021 21:59:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95C89C07E96
+	for <linux-xfs@archiver.kernel.org>; Thu,  8 Jul 2021 22:31:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 853DF6161F
-	for <linux-xfs@archiver.kernel.org>; Thu,  8 Jul 2021 21:59:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7CBA461876
+	for <linux-xfs@archiver.kernel.org>; Thu,  8 Jul 2021 22:31:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229631AbhGHWC1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 8 Jul 2021 18:02:27 -0400
-Received: from sandeen.net ([63.231.237.45]:44308 "EHLO sandeen.net"
+        id S230238AbhGHWek (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 8 Jul 2021 18:34:40 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45554 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229497AbhGHWC0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 8 Jul 2021 18:02:26 -0400
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 18BB1550;
-        Thu,  8 Jul 2021 16:58:59 -0500 (CDT)
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-References: <162528110904.38981.1853961990457189123.stgit@locust>
- <162528111450.38981.8857321675621059098.stgit@locust>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [PATCH 1/1] xfs_admin: support label queries for mounted
- filesystems
-Message-ID: <ac736821-83de-4bde-a1a1-d0d2711932d7@sandeen.net>
-Date:   Thu, 8 Jul 2021 16:59:43 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.11.0
+        id S230211AbhGHWek (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 8 Jul 2021 18:34:40 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 94882617ED;
+        Thu,  8 Jul 2021 22:31:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1625783517;
+        bh=xukJBS4hmHAAnAvwCR7qAwMSB7S/Vmi6z6oNJgv9kyI=;
+        h=Date:From:To:Subject:References:In-Reply-To:From;
+        b=UdMNFb6/tyNU6oYHalxk6N2xCozDoqceE+im+lLVjWFF1DsbvdGgUMLOljqTQwCE8
+         U1SWa24J4il/g+oJc6nL3m828aQV9z9tursKFupSxYeVU7HVikeb7xon+kc6SM6zn2
+         LXZy9cRU3gzMkh66VuxTKa6PMuEX3ZN0zMO2goEaqe9PgXS+QT6U8UW+EpzLvl8z4G
+         2hgD4IkCA9VkLuSU/ibDWX1Ybej3SbwZ3UU93g2/DJCQI8sERYA4/ZYWeuTVWx870g
+         CSwBAYgi1jzPzQ10p2c55Sqple0w1LvhdS4RelHeA7J40QktUyAywJBYeZsXZYx4NI
+         T9+q84SkrWpTg==
+Date:   Thu, 8 Jul 2021 15:31:57 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Christoph Hellwig <hch@infradead.org>, sandeen@sandeen.net,
+        linux-xfs@vger.kernel.org, bfoster@redhat.com
+Subject: Re: [PATCH 1/2] xfs_repair: validate alignment of inherited rt
+ extent hints
+Message-ID: <20210708223157.GJ11588@locust>
+References: <162528106460.36302.18265535074182102487.stgit@locust>
+ <162528107024.36302.9037961042426880362.stgit@locust>
+ <YOF2n+aIKG/cqhyX@infradead.org>
+ <20210708071116.njicib4zsxkdny3k@omega.lan>
 MIME-Version: 1.0
-In-Reply-To: <162528111450.38981.8857321675621059098.stgit@locust>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210708071116.njicib4zsxkdny3k@omega.lan>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 7/2/21 9:58 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Thu, Jul 08, 2021 at 09:11:16AM +0200, Carlos Maiolino wrote:
+> On Sun, Jul 04, 2021 at 09:51:43AM +0100, Christoph Hellwig wrote:
+> > On Fri, Jul 02, 2021 at 07:57:50PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > > 
+> > > If we encounter a directory that has been configured to pass on an
+> > > extent size hint to a new realtime file and the hint isn't an integer
+> > > multiple of the rt extent size, we should turn off the hint because that
+> > > is a misconfiguration.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > ---
+> > >  repair/dinode.c |   28 +++++++++++++++++++++++++++-
+> > >  1 file changed, 27 insertions(+), 1 deletion(-)
+> > > 
+> > > 
+> > > diff --git a/repair/dinode.c b/repair/dinode.c
+> > > index 291c5807..1275c90b 100644
+> > > --- a/repair/dinode.c
+> > > +++ b/repair/dinode.c
+> > > @@ -2178,6 +2178,31 @@ _("Bad %s nsec %u on inode %" PRIu64 ", "), name, be32_to_cpu(t->t_nsec), lino);
+> > >  		*dirty = 1;
+> > >  	}
+> > >  }
+> > > +/*
+> > > + * Inode verifiers on older kernels don't check that the extent size hint is an
+> > > + * integer multiple of the rt extent size on a directory with both rtinherit
+> > > + * and extszinherit flags set.  If we encounter a directory that is
+> > > + * misconfigured in this way, or a regular file that inherited a bad hint from
+> > > + * a directory, clear the hint.
+> > > + */
+> > > +static bool
+> > > +zap_bad_rt_extsize_hint(
+> > 
+> > The name suggests this function does the zapping itself, while it
+> > actually leaves that to the caller.
 > 
-> Adapt this tool to call xfs_io if the block device in question is
-> mounted.
+> +1 here, I also led me to believe this was actually zeroing the extsize, but the
+> patch's logic is fine.
 > 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  db/xfs_admin.sh |   41 +++++++++++++++++++++++++++++++++++++++--
->  1 file changed, 39 insertions(+), 2 deletions(-)
+> Maybe something like
 > 
+> {is,has}_bad_rt_extsize_hint()?
+
+Renamed to is_misaligned_extsize_hint().
+
+--D
+
 > 
-> diff --git a/db/xfs_admin.sh b/db/xfs_admin.sh
-> index 409975b2..21c9d71b 100755
-> --- a/db/xfs_admin.sh
-> +++ b/db/xfs_admin.sh
-> @@ -8,9 +8,34 @@ status=0
->  DB_OPTS=""
->  REPAIR_OPTS=""
->  REPAIR_DEV_OPTS=""
-> +IO_OPTS=""
->  LOG_OPTS=""
->  USAGE="Usage: xfs_admin [-efjlpuV] [-c 0|1] [-L label] [-O v5_feature] [-r rtdev] [-U uuid] device [logdev]"
->  
-> +# Try to find a loop device associated with a file.  We only want to return
-> +# one loopdev (multiple loop devices can attach to a single file) so we grab
-> +# the last line and return it if it's actually a block device.
-
-Not thrilled about the C&P here from spaceman, but I guess by choosing to
-use bash long ago, that ship has kinda sailed.  (Sourcing another file
-would be possible I guess but ... meh, oh well)
-
-> +try_find_loop_dev_for_file() {
-> +	local x="$(losetup -O NAME -j "$1" 2> /dev/null | tail -n 1)"
-> +	test -b "$x" && echo "$x"
-> +}
-> +
-> +try_find_mount_point_for_bdev() {
-> +	local arg="$1"
-> +
-> +	# See if we can map the arg to a loop device
-> +	loopdev="$(try_find_loop_dev_for_file "${arg}")"
-> +	test -n "${loopdev}" && arg="${loopdev}"
-> +
-> +	if [ ! -b "${arg}" ]; then
-> +		return 1
-> +	fi
-> +
-> +	# If we find a mountpoint for the device, do a live query;
-> +	# otherwise try reading the fs with xfs_db.
-> +	findmnt -t xfs -f -n -o TARGET "${arg}" 2> /dev/null
-> +}
-> +
->  while getopts "c:efjlL:O:pr:uU:V" c
->  do
->  	case $c in
-> @@ -18,8 +43,10 @@ do
->  	e)	DB_OPTS=$DB_OPTS" -c 'version extflg'";;
->  	f)	DB_OPTS=$DB_OPTS" -f";;
->  	j)	DB_OPTS=$DB_OPTS" -c 'version log2'";;
-> -	l)	DB_OPTS=$DB_OPTS" -r -c label";;
-> -	L)	DB_OPTS=$DB_OPTS" -c 'label "$OPTARG"'";;
-> +	l)	DB_OPTS=$DB_OPTS" -r -c label";
-> +		IO_OPTS=$IO_OPTS" -r -c label";;
-> +	L)	DB_OPTS=$DB_OPTS" -c 'label "$OPTARG"'";
-> +		IO_OPTS=$IO_OPTS" -c 'label -s "$OPTARG"'";;
->  	O)	REPAIR_OPTS=$REPAIR_OPTS" -c $OPTARG";;
->  	p)	DB_OPTS=$DB_OPTS" -c 'version projid32bit'";;
->  	r)	REPAIR_DEV_OPTS=" -r '$OPTARG'";;
-> @@ -43,6 +70,16 @@ case $# in
->  			LOG_OPTS=" -l '$2'"
->  		fi
->  
-> +		if [ -n "$IO_OPTS" ]; then
-> +			mntpt="$(try_find_mount_point_for_bdev "$1")"
-> +			if [ $? -eq 0 ]; then
-> +				eval xfs_io -x -p xfs_admin $IO_OPTS "$mntpt"
-> +				status=$?
-> +				DB_OPTS=""
-> +				REPAIR_OPTS=""
-> +			fi
-> +		fi
-
-If I read this correctly, specifying either of "-l" or "-L" will now cause
-the command to stop executing after the label... but only if it's mounted.
-hm yup.
-
-before, when mounted:
-
-# sh db/xfs_admin.sh -lu /dev/pmem0p1
-label = ""
-UUID = 392591da-ca09-4d4d-8c17-eb8e97ec9f9a
-
-after this patch:
-
-# sh db/xfs_admin.sh -lu /dev/pmem0p1
-label = ""
-
-Also, I'm not sure this:
-
-# mount /dev/pmem0p1 /mnt/test
-# sh  db/xfs_admin.sh -lU generate  /dev/pmem0p1
-label = ""
-#
-
-is really desirable; -U is just silently ignored if it's mounted?
-Before the patch, this would have failed with an error.
-
-I wonder if we need to error out on any non-mounted-compliant options, or
-simply go ahead and pass non-label db opts to the next stage so it'll
-error out as it did before.
-
-Also this is fun behavior that exists today :(
-
-# xfs_admin  -l  -U generate  /dev/pmem0p1
-label = "foo"
-xfs_admin: not in expert mode, writing disabled
-# 
-
-('-l' adds -r, overrides the -x and puts it into readonly mode) 
-
->  		if [ -n "$DB_OPTS" ]
->  		then
->  			eval xfs_db -x -p xfs_admin $LOG_OPTS $DB_OPTS "$1"
+> > 
+> > Oterwise looks good:
+> > 
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > 
+> 
+> -- 
+> Carlos
 > 
