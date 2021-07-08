@@ -7,35 +7,36 @@ X-Spam-Status: No, score=-15.5 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E660C07E96
-	for <linux-xfs@archiver.kernel.org>; Thu,  8 Jul 2021 20:58:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A43DBC07E99
+	for <linux-xfs@archiver.kernel.org>; Thu,  8 Jul 2021 21:59:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E2F4D616EA
-	for <linux-xfs@archiver.kernel.org>; Thu,  8 Jul 2021 20:58:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 853DF6161F
+	for <linux-xfs@archiver.kernel.org>; Thu,  8 Jul 2021 21:59:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231215AbhGHVBb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 8 Jul 2021 17:01:31 -0400
-Received: from sandeen.net ([63.231.237.45]:41260 "EHLO sandeen.net"
+        id S229631AbhGHWC1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 8 Jul 2021 18:02:27 -0400
+Received: from sandeen.net ([63.231.237.45]:44308 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230442AbhGHVBb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 8 Jul 2021 17:01:31 -0400
+        id S229497AbhGHWC0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 8 Jul 2021 18:02:26 -0400
 Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 14DE8550;
-        Thu,  8 Jul 2021 15:58:03 -0500 (CDT)
+        by sandeen.net (Postfix) with ESMTPSA id 18BB1550;
+        Thu,  8 Jul 2021 16:58:59 -0500 (CDT)
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org
-References: <162528110197.38907.6647015481710886949.stgit@locust>
- <162528110744.38907.9770913472348824425.stgit@locust>
+References: <162528110904.38981.1853961990457189123.stgit@locust>
+ <162528111450.38981.8857321675621059098.stgit@locust>
 From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [PATCH 1/1] xfs_io: allow callers to dump fs stats individually
-Message-ID: <b85719a6-ffd0-dfcd-431d-12cf4987bcf7@sandeen.net>
-Date:   Thu, 8 Jul 2021 15:58:47 -0500
+Subject: Re: [PATCH 1/1] xfs_admin: support label queries for mounted
+ filesystems
+Message-ID: <ac736821-83de-4bde-a1a1-d0d2711932d7@sandeen.net>
+Date:   Thu, 8 Jul 2021 16:59:43 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
  Gecko/20100101 Thunderbird/78.11.0
 MIME-Version: 1.0
-In-Reply-To: <162528110744.38907.9770913472348824425.stgit@locust>
+In-Reply-To: <162528111450.38981.8857321675621059098.stgit@locust>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -46,260 +47,125 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 7/2/21 9:58 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Enable callers to decide if they want to see statfs, fscounts, or
-> geometry information (or any combination) from the xfs_io statfs
-> command.
+> Adapt this tool to call xfs_io if the block device in question is
+> mounted.
 > 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
->  io/stat.c         |  149 +++++++++++++++++++++++++++++++++++++++--------------
->  man/man8/xfs_io.8 |   17 ++++++
->  2 files changed, 127 insertions(+), 39 deletions(-)
+>  db/xfs_admin.sh |   41 +++++++++++++++++++++++++++++++++++++++--
+>  1 file changed, 39 insertions(+), 2 deletions(-)
 > 
 > 
-> diff --git a/io/stat.c b/io/stat.c
-> index 49c4c27c..1993247c 100644
-> --- a/io/stat.c
-> +++ b/io/stat.c
-> @@ -171,6 +171,26 @@ stat_f(
->  	return 0;
->  }
+> diff --git a/db/xfs_admin.sh b/db/xfs_admin.sh
+> index 409975b2..21c9d71b 100755
+> --- a/db/xfs_admin.sh
+> +++ b/db/xfs_admin.sh
+> @@ -8,9 +8,34 @@ status=0
+>  DB_OPTS=""
+>  REPAIR_OPTS=""
+>  REPAIR_DEV_OPTS=""
+> +IO_OPTS=""
+>  LOG_OPTS=""
+>  USAGE="Usage: xfs_admin [-efjlpuV] [-c 0|1] [-L label] [-O v5_feature] [-r rtdev] [-U uuid] device [logdev]"
 >  
-> +static void
-> +statfs_help(void)
-> +{
-> +        printf(_(
-> +"\n"
-> +" Display file system status.\n"
-> +"\n"
-> +" Options:\n"
-> +" -a -- Print statfs, geometry, and fs summary count data.\n"
-> +" -c -- Print fs summary count data.\n"
-> +" -g -- Print fs geometry data.\n"
-> +" -s -- Print statfs data.\n"
-> +"\n"));
+> +# Try to find a loop device associated with a file.  We only want to return
+> +# one loopdev (multiple loop devices can attach to a single file) so we grab
+> +# the last line and return it if it's actually a block device.
+
+Not thrilled about the C&P here from spaceman, but I guess by choosing to
+use bash long ago, that ship has kinda sailed.  (Sourcing another file
+would be possible I guess but ... meh, oh well)
+
+> +try_find_loop_dev_for_file() {
+> +	local x="$(losetup -O NAME -j "$1" 2> /dev/null | tail -n 1)"
+> +	test -b "$x" && echo "$x"
 > +}
 > +
-> +#define REPORT_STATFS		(1 << 0)
-> +#define REPORT_GEOMETRY		(1 << 1)
-> +#define REPORT_FSCOUNTS		(1 << 2)
-> +#define REPORT_DEFAULT		(1 << 31)
+> +try_find_mount_point_for_bdev() {
+> +	local arg="$1"
 > +
->  static int
->  statfs_f(
->  	int			argc,
-> @@ -179,55 +199,102 @@ statfs_f(
->  	struct xfs_fsop_counts	fscounts;
->  	struct xfs_fsop_geom	fsgeo;
->  	struct statfs		st;
-> +	unsigned int		flags = REPORT_DEFAULT;
-
-Nitpicking this only because the patch will need to be resent anyway ;)
-Why not just "flags = 0" and "if !flags flags = ALL|THREE|FLAGS;" ?
-
-(OTOH I don't really care, just wasn't sure about the need for it)
-
-> +	int			c;
->  	int			ret;
+> +	# See if we can map the arg to a loop device
+> +	loopdev="$(try_find_loop_dev_for_file "${arg}")"
+> +	test -n "${loopdev}" && arg="${loopdev}"
+> +
+> +	if [ ! -b "${arg}" ]; then
+> +		return 1
+> +	fi
+> +
+> +	# If we find a mountpoint for the device, do a live query;
+> +	# otherwise try reading the fs with xfs_db.
+> +	findmnt -t xfs -f -n -o TARGET "${arg}" 2> /dev/null
+> +}
+> +
+>  while getopts "c:efjlL:O:pr:uU:V" c
+>  do
+>  	case $c in
+> @@ -18,8 +43,10 @@ do
+>  	e)	DB_OPTS=$DB_OPTS" -c 'version extflg'";;
+>  	f)	DB_OPTS=$DB_OPTS" -f";;
+>  	j)	DB_OPTS=$DB_OPTS" -c 'version log2'";;
+> -	l)	DB_OPTS=$DB_OPTS" -r -c label";;
+> -	L)	DB_OPTS=$DB_OPTS" -c 'label "$OPTARG"'";;
+> +	l)	DB_OPTS=$DB_OPTS" -r -c label";
+> +		IO_OPTS=$IO_OPTS" -r -c label";;
+> +	L)	DB_OPTS=$DB_OPTS" -c 'label "$OPTARG"'";
+> +		IO_OPTS=$IO_OPTS" -c 'label -s "$OPTARG"'";;
+>  	O)	REPAIR_OPTS=$REPAIR_OPTS" -c $OPTARG";;
+>  	p)	DB_OPTS=$DB_OPTS" -c 'version projid32bit'";;
+>  	r)	REPAIR_DEV_OPTS=" -r '$OPTARG'";;
+> @@ -43,6 +70,16 @@ case $# in
+>  			LOG_OPTS=" -l '$2'"
+>  		fi
 >  
-> +	while ((c = getopt(argc, argv, "acgs")) != EOF) {
-> +		switch (c) {
-> +		case 'a':
-> +			flags = REPORT_STATFS | REPORT_GEOMETRY |
-> +				REPORT_FSCOUNTS;
-> +			break;
-> +		case 'c':
-> +			flags &= ~REPORT_DEFAULT;
-> +			flags |= REPORT_FSCOUNTS;
-> +			break;
-> +		case 'g':
-> +			flags &= ~REPORT_GEOMETRY;
-> +			flags |= REPORT_FSCOUNTS;
+> +		if [ -n "$IO_OPTS" ]; then
+> +			mntpt="$(try_find_mount_point_for_bdev "$1")"
+> +			if [ $? -eq 0 ]; then
+> +				eval xfs_io -x -p xfs_admin $IO_OPTS "$mntpt"
+> +				status=$?
+> +				DB_OPTS=""
+> +				REPAIR_OPTS=""
+> +			fi
+> +		fi
 
-this looks ... wrong. ITYM:
+If I read this correctly, specifying either of "-l" or "-L" will now cause
+the command to stop executing after the label... but only if it's mounted.
+hm yup.
 
-+		case 'g':
-+			flags &= ~REPORT_DEFAULT;
-+			flags |= REPORT_GEOMETRY;
+before, when mounted:
 
-?
+# sh db/xfs_admin.sh -lu /dev/pmem0p1
+label = ""
+UUID = 392591da-ca09-4d4d-8c17-eb8e97ec9f9a
 
-> +			break;
-> +		case 's':
-> +			flags &= ~REPORT_STATFS;
-> +			flags |= REPORT_FSCOUNTS;
+after this patch:
 
-similar here
+# sh db/xfs_admin.sh -lu /dev/pmem0p1
+label = ""
 
-> +			break;
-> +		default:
-> +			exitcode = 1;
-> +			return command_usage(&statfs_cmd);
-> +		}
-> +	}
-> +
-> +	if (flags & REPORT_DEFAULT)
-> +		flags = REPORT_STATFS | REPORT_GEOMETRY | REPORT_FSCOUNTS;
-> +
->  	printf(_("fd.path = \"%s\"\n"), file->name);
-> -	if (platform_fstatfs(file->fd, &st) < 0) {
-> -		perror("fstatfs");
-> -		exitcode = 1;
-> -	} else {
-> -		printf(_("statfs.f_bsize = %lld\n"), (long long) st.f_bsize);
-> -		printf(_("statfs.f_blocks = %lld\n"), (long long) st.f_blocks);
-> -		printf(_("statfs.f_bavail = %lld\n"), (long long) st.f_bavail);
-> -		printf(_("statfs.f_files = %lld\n"), (long long) st.f_files);
-> -		printf(_("statfs.f_ffree = %lld\n"), (long long) st.f_ffree);
-> +	if (flags & REPORT_STATFS) {
-> +		ret = platform_fstatfs(file->fd, &st);
-> +		if (ret < 0) {
-> +			perror("fstatfs");
-> +			exitcode = 1;
-> +		} else {
-> +			printf(_("statfs.f_bsize = %lld\n"),
-> +					(long long) st.f_bsize);
-> +			printf(_("statfs.f_blocks = %lld\n"),
-> +					(long long) st.f_blocks);
-> +			printf(_("statfs.f_bavail = %lld\n"),
-> +					(long long) st.f_bavail);
-> +			printf(_("statfs.f_files = %lld\n"),
-> +					(long long) st.f_files);
-> +			printf(_("statfs.f_ffree = %lld\n"),
-> +					(long long) st.f_ffree);
->  #ifdef HAVE_STATFS_FLAGS
-> -		printf(_("statfs.f_flags = 0x%llx\n"), (long long) st.f_flags);
-> +			printf(_("statfs.f_flags = 0x%llx\n"),
-> +					(long long) st.f_flags);
->  #endif
-> +		}
->  	}
-> +
->  	if (file->flags & IO_FOREIGN)
->  		return 0;
-> -	ret = -xfrog_geometry(file->fd, &fsgeo);
-> -	if (ret) {
-> -		xfrog_perror(ret, "XFS_IOC_FSGEOMETRY");
-> -		exitcode = 1;
-> -	} else {
-> -		printf(_("geom.bsize = %u\n"), fsgeo.blocksize);
-> -		printf(_("geom.agcount = %u\n"), fsgeo.agcount);
-> -		printf(_("geom.agblocks = %u\n"), fsgeo.agblocks);
-> -		printf(_("geom.datablocks = %llu\n"),
-> -			(unsigned long long) fsgeo.datablocks);
-> -		printf(_("geom.rtblocks = %llu\n"),
-> -			(unsigned long long) fsgeo.rtblocks);
-> -		printf(_("geom.rtextents = %llu\n"),
-> -			(unsigned long long) fsgeo.rtextents);
-> -		printf(_("geom.rtextsize = %u\n"), fsgeo.rtextsize);
-> -		printf(_("geom.sunit = %u\n"), fsgeo.sunit);
-> -		printf(_("geom.swidth = %u\n"), fsgeo.swidth);
-> +
-> +	if (flags & REPORT_GEOMETRY) {
-> +		ret = -xfrog_geometry(file->fd, &fsgeo);
-> +		if (ret) {
-> +			xfrog_perror(ret, "XFS_IOC_FSGEOMETRY");
-> +			exitcode = 1;
-> +		} else {
-> +			printf(_("geom.bsize = %u\n"), fsgeo.blocksize);
-> +			printf(_("geom.agcount = %u\n"), fsgeo.agcount);
-> +			printf(_("geom.agblocks = %u\n"), fsgeo.agblocks);
-> +			printf(_("geom.datablocks = %llu\n"),
-> +				(unsigned long long) fsgeo.datablocks);
-> +			printf(_("geom.rtblocks = %llu\n"),
-> +				(unsigned long long) fsgeo.rtblocks);
-> +			printf(_("geom.rtextents = %llu\n"),
-> +				(unsigned long long) fsgeo.rtextents);
-> +			printf(_("geom.rtextsize = %u\n"), fsgeo.rtextsize);
-> +			printf(_("geom.sunit = %u\n"), fsgeo.sunit);
-> +			printf(_("geom.swidth = %u\n"), fsgeo.swidth);
-> +		}
->  	}
-> -	if ((xfsctl(file->name, file->fd, XFS_IOC_FSCOUNTS, &fscounts)) < 0) {
-> -		perror("XFS_IOC_FSCOUNTS");
-> -		exitcode = 1;
-> -	} else {
-> -		printf(_("counts.freedata = %llu\n"),
-> -			(unsigned long long) fscounts.freedata);
-> -		printf(_("counts.freertx = %llu\n"),
-> -			(unsigned long long) fscounts.freertx);
-> -		printf(_("counts.freeino = %llu\n"),
-> -			(unsigned long long) fscounts.freeino);
-> -		printf(_("counts.allocino = %llu\n"),
-> -			(unsigned long long) fscounts.allocino);
-> +
-> +	if (flags & REPORT_FSCOUNTS) {
-> +		ret = ioctl(file->fd, XFS_IOC_FSCOUNTS, &fscounts);
-> +		if (ret < 0) {
-> +			perror("XFS_IOC_FSCOUNTS");
-> +			exitcode = 1;
-> +		} else {
-> +			printf(_("counts.freedata = %llu\n"),
-> +				(unsigned long long) fscounts.freedata);
-> +			printf(_("counts.freertx = %llu\n"),
-> +				(unsigned long long) fscounts.freertx);
-> +			printf(_("counts.freeino = %llu\n"),
-> +				(unsigned long long) fscounts.freeino);
-> +			printf(_("counts.allocino = %llu\n"),
-> +				(unsigned long long) fscounts.allocino);
-> +		}
->  	}
-> +
->  	return 0;
->  }
->  
-> @@ -407,9 +474,13 @@ stat_init(void)
->  
->  	statfs_cmd.name = "statfs";
->  	statfs_cmd.cfunc = statfs_f;
-> +	statfs_cmd.argmin = 0;
-> +	statfs_cmd.argmax = -1;
+Also, I'm not sure this:
 
-Eh, I guess you can do "stats -a -a -a -c -c -c -s -a -a -c -c -c -g -g -g ...." and it works fine, so sure, "-1" ;)
+# mount /dev/pmem0p1 /mnt/test
+# sh  db/xfs_admin.sh -lU generate  /dev/pmem0p1
+label = ""
+#
 
-> +	statfs_cmd.args = _("[-a] [-c] [-g] [-s]");
->  	statfs_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
->  	statfs_cmd.oneline =
->  		_("statistics on the filesystem of the currently open file");
-> +	statfs_cmd.help = statfs_help;
->  
->  	add_command(&stat_cmd);
->  	add_command(&statx_cmd);
-> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-> index 1103dc42..32bdd866 100644
-> --- a/man/man8/xfs_io.8
-> +++ b/man/man8/xfs_io.8
+is really desirable; -U is just silently ignored if it's mounted?
+Before the patch, this would have failed with an error.
 
-Probably want to turn this into:
+I wonder if we need to error out on any non-mounted-compliant options, or
+simply go ahead and pass non-label db opts to the next stage so it'll
+error out as it did before.
 
-statfs [-a] [-c] [-g] [-s]
-	<description, probably updated to add XFS_IOC_FSCOUNTS to the list of $STUFF>
+Also this is fun behavior that exists today :(
 
-> @@ -1240,6 +1240,23 @@ Selected statistics from
->  .BR statfs (2)
->  and the XFS_IOC_FSGEOMETRY
->  system call on the filesystem where the current file resides.
-> +.RS 1.0i
-> +.PD 0
-> +.TP
-> +.BI \-a
-> +Display statfs, geometry, and fs summary counter data.
+# xfs_admin  -l  -U generate  /dev/pmem0p1
+label = "foo"
+xfs_admin: not in expert mode, writing disabled
+# 
 
-Perhaps note that this is the default if no options are specified?
+('-l' adds -r, overrides the -x and puts it into readonly mode) 
 
-> +.TP
-> +.BI \-c
-> +Display fs summary counter data.
-> +.TP
-> +.BI \-g
-> +Display geometry data.
-> +.TP
-> +.BI \-s
-> +Display statfs data.
-> +.TP
-> +.RE
-> +.PD
->  .TP
->  .BI "inode  [ [ -n ] " number " ] [ -v ]"
->  The inode command queries physical information about an inode. With
+>  		if [ -n "$DB_OPTS" ]
+>  		then
+>  			eval xfs_db -x -p xfs_admin $LOG_OPTS $DB_OPTS "$1"
 > 
