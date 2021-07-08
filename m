@@ -2,63 +2,114 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AF69C07E96
-	for <linux-xfs@archiver.kernel.org>; Thu,  8 Jul 2021 23:12:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51F03C07E96
+	for <linux-xfs@archiver.kernel.org>; Thu,  8 Jul 2021 23:16:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 405EC61457
-	for <linux-xfs@archiver.kernel.org>; Thu,  8 Jul 2021 23:12:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2F0C761442
+	for <linux-xfs@archiver.kernel.org>; Thu,  8 Jul 2021 23:16:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230525AbhGHXPA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 8 Jul 2021 19:15:00 -0400
-Received: from sandeen.net ([63.231.237.45]:47958 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229631AbhGHXO5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 8 Jul 2021 19:14:57 -0400
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id B6B3C550;
-        Thu,  8 Jul 2021 18:11:28 -0500 (CDT)
-Subject: Re: [PATCH 1/1] xfs_io: allow callers to dump fs stats individually
+        id S230479AbhGHXT3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 8 Jul 2021 19:19:29 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:52532 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229631AbhGHXT3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Jul 2021 19:19:29 -0400
+Received: from dread.disaster.area (pa49-181-34-10.pa.nsw.optusnet.com.au [49.181.34.10])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 077191044DD7;
+        Fri,  9 Jul 2021 09:16:42 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1m1dG5-004Kod-Un; Fri, 09 Jul 2021 09:16:41 +1000
+Date:   Fri, 9 Jul 2021 09:16:41 +1000
+From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-References: <162528110197.38907.6647015481710886949.stgit@locust>
- <162528110744.38907.9770913472348824425.stgit@locust>
- <b85719a6-ffd0-dfcd-431d-12cf4987bcf7@sandeen.net>
- <20210708224057.GK11588@locust>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <37448098-829a-f706-b7ea-5f5ad7df2109@sandeen.net>
-Date:   Thu, 8 Jul 2021 18:12:12 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.11.0
+Cc:     "ruansy.fnst@fujitsu.com" <ruansy.fnst@fujitsu.com>,
+        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
+        "hch@lst.de" <hch@lst.de>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "nvdimm@lists.linux.dev" <nvdimm@lists.linux.dev>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "rgoldwyn@suse.de" <rgoldwyn@suse.de>,
+        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
+        "willy@infradead.org" <willy@infradead.org>
+Subject: Re: [PATCH v6.1 6/7] fs/xfs: Handle CoW for fsdax write() path
+Message-ID: <20210708231641.GQ664593@dread.disaster.area>
+References: <OSBPR01MB2920A2BCD568364C1363AFA6F4369@OSBPR01MB2920.jpnprd01.prod.outlook.com>
+ <20210615072147.73852-1-ruansy.fnst@fujitsu.com>
+ <OSBPR01MB2920D2D275EB0DB15C37D079F4079@OSBPR01MB2920.jpnprd01.prod.outlook.com>
+ <20210625221855.GG13784@locust>
+ <OSBPR01MB2920922639112230407000E9F4039@OSBPR01MB2920.jpnprd01.prod.outlook.com>
+ <20210628050919.GL13784@locust>
 MIME-Version: 1.0
-In-Reply-To: <20210708224057.GK11588@locust>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210628050919.GL13784@locust>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
+        a=hdaoRb6WoHYrV466vVKEyw==:117 a=hdaoRb6WoHYrV466vVKEyw==:17
+        a=kj9zAlcOel0A:10 a=e_q4qTt1xDgA:10 a=7-415B0cAAAA:8
+        a=_EmLEX5E1_FSfXe-uIgA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 7/8/21 5:40 PM, Darrick J. Wong wrote:
-> I'll change it to:
+On Sun, Jun 27, 2021 at 10:09:19PM -0700, Darrick J. Wong wrote:
+> > > I had imagined that you'd create a struct dax_iomap_ops to wrap all the extra
+> > > functionality that you need for dax operations:
+> > > 
+> > > struct dax_iomap_ops {
+> > > 	struct iomap_ops	iomap_ops;
+> > > 
+> > > 	int			(*end_io)(inode, pos, length...);
+> > > };
+> > > 
+> > > And alter the four functions that you need to take the special dax_iomap_ops.
+> > > I guess the downside is that this makes iomap_truncate_page and
+> > > iomap_zero_range more complicated, but maybe it's just time to split those into
+> > > DAX-specific versions.  Then we'd be rid of the cross-links betwee
+> > > fs/iomap/buffered-io.c and fs/dax.c.
+> > 
+> > This seems to be a better solution.  I'll try in this way.  Thanks for your guidance.
 > 
->        statfs [ -c ] [ -g ] [ -s ]
->               Report selected statistics on the filesystem  where  the
->               current file resides.  The default behavior is to enable
->               all three reporting options:
->                  -c     Display  XFS_IOC_FSCOUNTERS  summary   counter
->                         data.
->                  -g     Display XFS_IOC_FSGEOMETRY filesystem geometry
->                         data.
->                  -s     Display statfs(2) data.
+> I started writing on Friday a patchset to apply this style cleanup both
+> to the directio and dax paths.  The cleanups were pretty straightforward
+> until I started reading the dax code paths again and realized that file
+> writes still have the weird behavior of mapping extents into a file,
+> zeroing them, then issuing the actual write to the extent.  IOWs, a
+> double-write to avoid exposing stale contents if crash.
 > 
-> If that's ok.  I got rid of -a because it's redundant.
+> Apparently the reason for this was that dax (at least 6 years ago) had
+> no concept paralleling the page lock, so it was necessary to do that to
+> avoid page fault handlers racing to map pfns into the file mapping?
+> That would seem to prevent us from doing the more standard behavior of
+> allocate unwritten, write data, convert mapping... but is that still the
+> case?  Or can we get rid of this bad quirk?
 
-sure, sounds good.
+Yeah, so that was the deciding factor in getting rid of unwritten
+extent allocation in DAX similar to the DIO path. However, we were
+already considering getting rid of it for another reason: write
+performance.
 
--Eric
+That is, doing two extent tree manipulation transactions per write
+is way more expensive than the double memory write for small IOs.
+IIRC, for small writes (4kB) the double memroy write version we now
+have was 2-3x faster than the {unwritten allocation, write, convert}
+algorithm we had originally.
+
+I don't think we want to go back to the unwritten allocation
+behaviour - it sucked when it was first done because all DAX write
+IO is synchronous, and it will still suck now because DAX writes are
+still synchronous. What we really want to do here is copy the data
+into the new extent before we commit the allocation transaction....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
