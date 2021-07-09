@@ -8,146 +8,146 @@ X-Spam-Status: No, score=-17.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED990C07E9C
-	for <linux-xfs@archiver.kernel.org>; Fri,  9 Jul 2021 23:38:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7F75C07E9C
+	for <linux-xfs@archiver.kernel.org>; Fri,  9 Jul 2021 23:38:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D34B9613C3
-	for <linux-xfs@archiver.kernel.org>; Fri,  9 Jul 2021 23:38:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A16CD613C3
+	for <linux-xfs@archiver.kernel.org>; Fri,  9 Jul 2021 23:38:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229854AbhGIXl3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 9 Jul 2021 19:41:29 -0400
-Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:46238 "EHLO
+        id S230442AbhGIXlj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 9 Jul 2021 19:41:39 -0400
+Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:55832 "EHLO
         mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230130AbhGIXl2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Jul 2021 19:41:28 -0400
+        by vger.kernel.org with ESMTP id S230428AbhGIXli (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Jul 2021 19:41:38 -0400
 Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 169NUe4c005756;
-        Fri, 9 Jul 2021 23:38:41 GMT
+        by mx0b-00069f02.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 169NUmax005963;
+        Fri, 9 Jul 2021 23:38:51 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
  references : from : message-id : date : in-reply-to : content-type :
  content-transfer-encoding : mime-version; s=corp-2020-01-29;
- bh=eSZ6etavOrFQhJdLPOknxs6aJS0Z1mFuLZkgDeOvx1g=;
- b=ZoKX69JLmCUBJYRARvBGqxfSKIZkV+uNmZseM4VFJBjOv09qtZevK7KLfqerjKLWb9IH
- Fqo9+NLKZOvq4yaqwglqs0KLNeaRsEezgbjtxcbhlqH8lEPzAzGCeLQoboOtWioTa5cy
- auwWMhYU4ndXQ4iTi7Zwik+2g0HYm0OVPHTqOFi2wIXpvMTVCKIaUeKZqnJKaqf7043V
- +mx7YTAIwZnlvlGbJ76fNkyvMI9SrU4YEkl2hrHTu47YSvmVFveXlNP1n2Z6ZhP2aZ/8
- V+cZZJsHAWOxHfZRD9T6ndW1LyWZD0Dg2WQi+4KPJOg/LZi3XF8eTAungT11qDCJBi9T aw== 
+ bh=kwGtB4+TBsx9Ea+US5YwS4BdQgphhkhzBpEregDXLbM=;
+ b=QLOvDxdtqN5Po1mam+Q4nmhNgu/bDGTM8U5S0mEd1DThWBDQccxPebvyBR0y28yhdjEW
+ nGrTngXo02S5rSS19J+QnxfpSx9SnQ0V/xdyFYw/p9DQbFfkyeFuqtmuJ1jdc4qs0n2d
+ gedX54lb7rZ8F+Q3UPZ/Ygswxk7o0ZYG5Hl6CnQMB0znxei+K9FcLNs3qQrR/4LsTdZ1
+ AgaZF8/cJ0eIpjtek/LCu72akNMUpNHrG7FqCm8vGS5Kc+syC376EUUTebFg2i/ul7xE
+ 3KSToZ9o8Q5HiEGGutsdRkuku2/8FiNcnP82WjOJl+Dds3JEEOigK77//iFWYXRYfBML fw== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by mx0b-00069f02.pphosted.com with ESMTP id 39pte5ghse-1
+        by mx0b-00069f02.pphosted.com with ESMTP id 39pte5ghsh-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 09 Jul 2021 23:38:41 +0000
+        Fri, 09 Jul 2021 23:38:51 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 169NUi2L043143;
-        Fri, 9 Jul 2021 23:38:40 GMT
-Received: from nam04-bn8-obe.outbound.protection.outlook.com (mail-bn8nam08lp2042.outbound.protection.outlook.com [104.47.74.42])
-        by userp3020.oracle.com with ESMTP id 39k1p703hk-1
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 169NUjYZ043264;
+        Fri, 9 Jul 2021 23:38:50 GMT
+Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2174.outbound.protection.outlook.com [104.47.57.174])
+        by userp3020.oracle.com with ESMTP id 39k1p7049c-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 09 Jul 2021 23:38:39 +0000
+        Fri, 09 Jul 2021 23:38:49 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=EnJMVPsE5YOVQSUzwI/0E6EH2r2liBkI8pxoiQhff2ZEhUfPDeB2SX+D1/RYqE9ohHq2nFTsXgV6jWoEerxlmvcrga3/q0vEV1LitBSNxsiPd0zsznuWMzWj8WzvoyT21MKNnOUNNt2hHNy2gOxqEfV+YoP1B1DdFn4bZvN2NWHIYuprTC8yZXXdoIOec1fBwRDrrhfZEt2YSi3/UCNlWf+J/d4tvt9Yx4ijs5pz1/1fJvH9i1WxCOZ7GjLp843CSBeh6amdiHHtjisOdRuPX2m60ZMGv4EStWM28EYX62MHT3LHTMgCrddQw6aFONK1A0X5GTzsIwRpeLE84/nIyA==
+ b=g4YmwDOGgCttP5H8xtea3hWHpDC/l8v2dQhE0OMmMlT9JcA9lK0sCMFsIYDlDr8dwUnkELk+qPxBi8WZxBw8srfKecvgw19fOyAQXyJxDf8kV1+t3gT2dosz/H/DayL7YcXIAkLiYt3Lxwg5b6bI4X+S8QfLznvlXbRWh4nA5NHYSxoumNP7bLWQK3dEq785rrgXGGYPGsg4XTgG/o/TBZ2Hh55oCp4jHFTtfSNSsnuRQIFXxkkJgx1IcOX4f2hSo4x/nqUf5js3NC8TS4H9dEEjOCbEHV+W2Cq92SZ12W8qMIoiB9flxEc0MgN8V5eUzX2XVnkZKh+uTBHD7AiQ4w==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=eSZ6etavOrFQhJdLPOknxs6aJS0Z1mFuLZkgDeOvx1g=;
- b=d/6B9v/5rbedneJUEkhp+hIWdK780NtalRtuTLv67Wbp4o4P7p08H+7neBtI0n6ZYyIBgGGXhkF2qVmxb3AAb7GoLZsxtKHiYJL+2R39v9G05Z/BtpfrzhxUt9cOR20hUtQDrr1yFK9k14ma4JbmsU31tJ3oPrAoCS2asKyJvxg+CTF+gfYnT8DjcBXjG4f7xwoMb7SWJ5TcUYMJCB8YuxQRsCdfCq+qDcIrQ1VkOcowq1WOMfVXVxAMUaZ9oDCvwfgSyp8Eo+6Jj56pvwFGnBfzFkY1wChsF6AZ6krtlyOwtK9hQdQrTBvIdTk28mRXc1JRQKX/MW2fi5hrg6vmRQ==
+ bh=kwGtB4+TBsx9Ea+US5YwS4BdQgphhkhzBpEregDXLbM=;
+ b=Ye9uHCcVxxUeS4vGW4oc0hbI9XzjmrKobXDQUyxPA0upupUZMG/awA9HaDvu3E614RyrmEPu3r/1hJYRzVIrJ3zm+WJTANi1hUHwpsOTaIqL0j5wN1WpMOVbqnYAxiBEiwbzTFtyy9F2AU3uDV82U/I6qQIwC8DaS/bxNnRXXBflR2w+ihp090v+fvife75uWu17CBeBNJtdFw0/PlsS1o0t9pQ1FCCf3ZLRt7JH4hF4nwlLo/V72vyoozMjkg0n1ZnxnMRJYeguJW/9fXbFaIwpr00xAoVty8iTWqxiqGltsH5I32LaZSFAdgzdLGh7ifq7WrQfw9MadLzyhkpk/w==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=eSZ6etavOrFQhJdLPOknxs6aJS0Z1mFuLZkgDeOvx1g=;
- b=Mt72BHIEDLfKWpnZj9i4wOzjXSS2lF8amaoOdk8uboC+RDile1C363eNOPdb/z9cfpnggqjbLk+mA7uRKvdyuSEdBZylb+edZFZPPWiRz6Q0UXlS4kE+toVlCMXXsd8CmXpCJIC7OdbBQowxp0rScFlGv6/Nf9QRLKEHXoPbQzY=
+ bh=kwGtB4+TBsx9Ea+US5YwS4BdQgphhkhzBpEregDXLbM=;
+ b=n1kxbUhWc0pFGCZcn+vKRx6L4fr3cUWAipSBX0aKyD6gv1kQY7IWCFH575AT0ubXLaBl99Qq6fUbBocjlCCWS/T2nDWG70C/47TpL2e9dSeB61w2btS7teJjsU9EGpqaqoHAHrJZ24DQCujA2otPVmZ9ysR3aHdO3FjTjuZFQJo=
 Authentication-Results: eryu.me; dkim=none (message not signed)
  header.d=none;eryu.me; dmarc=none action=none header.from=oracle.com;
 Received: from CH2PR10MB4312.namprd10.prod.outlook.com (2603:10b6:610:7b::9)
- by CH2PR10MB4360.namprd10.prod.outlook.com (2603:10b6:610:ac::7) with
+ by CH0PR10MB5100.namprd10.prod.outlook.com (2603:10b6:610:df::6) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4308.21; Fri, 9 Jul
- 2021 23:38:38 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4308.22; Fri, 9 Jul
+ 2021 23:38:48 +0000
 Received: from CH2PR10MB4312.namprd10.prod.outlook.com
  ([fe80::807e:3386:573c:ad06]) by CH2PR10MB4312.namprd10.prod.outlook.com
  ([fe80::807e:3386:573c:ad06%5]) with mapi id 15.20.4308.023; Fri, 9 Jul 2021
- 23:38:37 +0000
-Subject: Re: [PATCH 1/8] xfs/172: disable test when file writes don't use
- delayed allocation
+ 23:38:48 +0000
+Subject: Re: [PATCH 2/8] generic/561: hide assertions when duperemove is
+ killed
 To:     "Darrick J. Wong" <djwong@kernel.org>, guaneryu@gmail.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
 References: <162561726690.543423.15033740972304281407.stgit@locust>
- <162561727244.543423.13321546742830675478.stgit@locust>
+ <162561727795.543423.1496821526582808789.stgit@locust>
 From:   Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <1174710a-d9cb-54a0-993f-e1ed410305be@oracle.com>
-Date:   Fri, 9 Jul 2021 16:38:35 -0700
+Message-ID: <e600bbe5-1914-5f93-aec8-bab97b16c732@oracle.com>
+Date:   Fri, 9 Jul 2021 16:38:46 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.11.0
-In-Reply-To: <162561727244.543423.13321546742830675478.stgit@locust>
+In-Reply-To: <162561727795.543423.1496821526582808789.stgit@locust>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: BY5PR16CA0018.namprd16.prod.outlook.com
- (2603:10b6:a03:1a0::31) To CH2PR10MB4312.namprd10.prod.outlook.com
+X-ClientProxiedBy: BY5PR16CA0023.namprd16.prod.outlook.com
+ (2603:10b6:a03:1a0::36) To CH2PR10MB4312.namprd10.prod.outlook.com
  (2603:10b6:610:7b::9)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from [192.168.1.167] (67.1.112.125) by BY5PR16CA0018.namprd16.prod.outlook.com (2603:10b6:a03:1a0::31) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4308.20 via Frontend Transport; Fri, 9 Jul 2021 23:38:37 +0000
+Received: from [192.168.1.167] (67.1.112.125) by BY5PR16CA0023.namprd16.prod.outlook.com (2603:10b6:a03:1a0::36) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4308.20 via Frontend Transport; Fri, 9 Jul 2021 23:38:47 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 1e7e5bc8-2798-46e4-2d5d-08d94332acc0
-X-MS-TrafficTypeDiagnostic: CH2PR10MB4360:
-X-Microsoft-Antispam-PRVS: <CH2PR10MB43604CABBBFB552E232EB91195189@CH2PR10MB4360.namprd10.prod.outlook.com>
+X-MS-Office365-Filtering-Correlation-Id: 56dffdd1-afc9-4142-a6ef-08d94332b2ef
+X-MS-TrafficTypeDiagnostic: CH0PR10MB5100:
+X-Microsoft-Antispam-PRVS: <CH0PR10MB51005E6B9578EE056C2A798895189@CH0PR10MB5100.namprd10.prod.outlook.com>
 X-MS-Oob-TLC-OOBClassifiers: OLM:5516;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 9Pu4hZskQ8jq6uXdPFaFPpqdMhchZBM6E0YGvYYS16Cgftmm57LvVgopFEv2oMfXARyLf2fbZGuLm0iKJbF5PtyOODMOvN/GoUWBdD/u2/sBFO8ZdXXRUk0gfUg+O43Wd7wzXSilFtZOiO8Jb0BiPhIrv90rCvXgNM1FnQe4/vhfQUHe/MpcNVNevxwgljoZ5BC1siAD2AZRGCytPBnRA0RyaqFo763EwSAn8Q6xoSSPF731omZnVNRah+w5Ypt/gPmwcGUEnmT4mESBBxwBMAeLVengcD01AY/ajGQoe5hylFDMiJB8Eh0dIXbDCpndd7o7SHNvlXjYUxk0GjfLud5txCQiawXtwj3T4rRXNdO8lq7ncOuy9sojXOWjNDYY9X7RYJBlUuIUlxbGEwz53HATmJkhZXQpwmxnrC69rrB487MtuRsbR3qCb03xpDFE2PsyWqdyO1YdtWePXKvKFTPPVJnU1MP6DMog+jzchmxLXwENQ2Jw44TWV4v3UvoOcdAgaPVirxchTxVnQpeKdnaLOimpHeuYbOMyPgPDf3/icZtsbcph8w8UngOCL/6pGhF7aDYV/EoYkBvkrBehoKU6GxshFRoF+m8BL7nxXkrawjyxAmInUuqAsVxLVCuEa4+uQmSX0FcwmfmhZYfsZJdmMYUy8RuM0bCjpYRgpdVWvHCA4lpd/ejUPOLizvCwG03b8/ughe6ydGRG09vxFEcNV48IN6UUNpyGEvV/WzR0kD9F4cYae6XFO6/M+D62q9IrFiX3mZ/4WTic2HOqdw==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH2PR10MB4312.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(376002)(136003)(346002)(366004)(39860400002)(396003)(31696002)(86362001)(52116002)(186003)(38100700002)(5660300002)(4326008)(316002)(16576012)(83380400001)(26005)(53546011)(2906002)(38350700002)(66946007)(478600001)(956004)(66556008)(66476007)(36756003)(8676002)(31686004)(44832011)(8936002)(6486002)(2616005)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: qZlgfPG0b4ygX4BlxTbznJ3gqcTSbZ9Q+BR4Rn9TGlLBb3p5qzBdW6cHh0/m1hLXkXg8YhnwS/HP0zt6Tnowx55sOh1YOZ6hEUNzX/6j3H9VY8d2v14iH+FGJ5VS3vAYCmqPhNhPLuSF8iWlWOMU3VL9loftBbEudRnzOjKar25FdZOzdSPzFNM6ZV1S592a0lmMHYRpoQn7vG0j4lEEaMMhyQPjuUeuChSbq8XxYRj37Zoi9KO1doTPPZGJVhxzpK2XJqyim0CAQjv3EHuJJP2csVizAFPyQwcI7hP2HmLVbgI2Bfmw9fblro562Sp8aaWjjs6+J6Ry9bNiWQKxO/Crclr4KZHa8j2sLCNWowALXhMrYieVdEslGoiZsVf9vJfxOkkjeBrE3dBRWES9amOFgwNtjyxNCx35Uu2c7nb32CZfgoaQ0BnVMde5O7i7mp5tQrcStOkkSOWsU4tSrf7/C4dgL9XUpCT5ZM0GttxYLLSsnvxKu1KHKmHkVXo1CXfKvwhok6h+135PlxW48fXyTEFMg2JNBT04r2b/Gb+14ohtOoW5cyv4HmsULc4dLVOR6daoe4iZaZ4lsZXZVbdVnBaUcb1eejTMVsbbl20GRA+wOqbIJhw20SdJhpl+WayEZCXz8sfhXjdSSi/OUEmP4iHe17MwhKY+pl6iuDPQ0ijA+svdiu2wufg9cY/PLqGgXkSU9TaV8KFvkfTvrajEPO8m9gDJJr3du74J2NrTt6m1S5DfBSUfwHalrPLGnNoXg/KV8CCBKN5v8Nw81Fi+6ZbDrVXsDw97ikfKuVo=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH2PR10MB4312.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(136003)(366004)(346002)(39860400002)(376002)(396003)(83380400001)(316002)(31696002)(8676002)(44832011)(26005)(186003)(86362001)(16576012)(31686004)(36756003)(52116002)(478600001)(66476007)(66556008)(4326008)(956004)(53546011)(6486002)(2616005)(66946007)(38100700002)(38350700002)(5660300002)(2906002)(8936002)(41533002)(43740500002)(45980500001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?Uy9ISExCMktLWFpvaEdJTGdzc0pnVUh4WGk5d3F1QXBGMFRrN21obU5OM3F0?=
- =?utf-8?B?RS82Mmt4T2RJUFRHUmo1aWRvZ21qWDhndUkycGFseGpHdHVuWUN2ZG8xRHNv?=
- =?utf-8?B?TEZhWTI0WVVYTVl0M2FkWVh6Q1lTcE55cm4rN1I1UldYeUI2a3NBNUNSMkUr?=
- =?utf-8?B?MGhCQ1ZSTmFkbE83SnBHK1VXYzVWM3J0b1kyV25NWjhOQ01XWFBxZzl6dnZr?=
- =?utf-8?B?QlRWc3g4N3JXcHoyTzdRNTQ0MUxzVWozb3FjN3lrVmNJdGtPZ0d4MHIrMllE?=
- =?utf-8?B?ZUJvQjZIdnlWWFR6WGMxSHNIY0RqT3JzUDM3Vjc4cmlPYXd3L3FnZVRvWjJ3?=
- =?utf-8?B?K3BrVHUrMVNnRE1TUGR5eVBxd0U0bmRhOVlvMlpGOW80ak5sbW9UbnhuTHJ1?=
- =?utf-8?B?SGhaZ0tRbUVTTlRlT0diMDFJTktYUXpvSWtxSEpMbU9IMVR5cWFqRGFzaVVG?=
- =?utf-8?B?cWQwQkR3ZllueEtrUnRzWXZLVWh2b08vM1BLTmdlRG9lSHRndlFkbmlSZHk3?=
- =?utf-8?B?S21EM294TVRzUW96NTc4UHRwRVZWV3JqV2d1ZUhHR1ZyZGtHZW4yRVlydUox?=
- =?utf-8?B?VkdJYmVTMld2TW4zTE9iUUlJOEM2VUFBNE5SZ2lGODZIQ1BDdTN2VWpYY2pt?=
- =?utf-8?B?OERwN2dHb20wWVdaNDE1L3FuY1hFR3c5eWEwS3RjcFAwVE5QRksrbHdZdGFw?=
- =?utf-8?B?b0I3clNYUlZtNjdMci9hRXlKQm1MMjViZnRnQzk4Ym1TY2NaTkVyZFlPUTR1?=
- =?utf-8?B?S3RBVnI1RTJhUzRERGh3cXFtMC9MTlRhUFFMWmVwOXU4akFKWGdPSVNLSjFs?=
- =?utf-8?B?WFZEUWJzUGgvbGpWeFdZb1NWMm8wSitraHBiZGdQY2Z3NzZlbmQ5Nk9GRWxU?=
- =?utf-8?B?Um4rSllzTzMwaXpyTXg4NWlkcmx5U3dLaGJlYzUyaXU2OFBsUmxXZEM2K0ZF?=
- =?utf-8?B?eEhnOW9Lb3gvelNYVnhMRXRJazdnM2ppaWJCbjdLd0t5Tm4wZmJFZFIrZ1pH?=
- =?utf-8?B?Y0c5R2Qxai9qdjlTSjFlVlhFUVVkMFpYOWVSOGxWR3N2OE9BdndQL1krVWh4?=
- =?utf-8?B?SXZieEE3VnFPejZCRHJ0SWgxQWljcVlTeUhGSWoyTy9vVjM0MnlORXQyRHEr?=
- =?utf-8?B?ZVI2RjNxTWpUMVpLcGFNNkpGellSc3hiUm8rUHRtMURva0tJdi9uWlNxa0c2?=
- =?utf-8?B?VXhkUi9rbDZ4c29MMmJsYXBkTFFLdXlGMDkxSVhlczJZakhOMjUwdmdJcUhV?=
- =?utf-8?B?eDV2S1Z0WTJaYlo0M1EvRjJZbGx5T1dyMEpOY2Z3T2cwcklpT2lZUmxXQzNC?=
- =?utf-8?B?TDM0ZUI5alRKaW5QVE51cDk0TVRWMU9sVHhXUnUvUUdWaWQ0bmk3ZW5uKzJM?=
- =?utf-8?B?OTQ5em5zZHFBQWpYSDhEaUp1eGs2ZnFYZERxUndPZHdqZSs2STlJVFMyT0k5?=
- =?utf-8?B?c2orNncveEtIUG8ydzhIK3FYRFNsWEVjajRLdFRwL0gwa1NaYlgyNEtEMHRq?=
- =?utf-8?B?Lzk1TWNxWjUyaHltRVVPMDNya2hVS0FkQUdSdGZYSm44WUtMeVhSa2kwOXFm?=
- =?utf-8?B?NWNWRUJoWlZNUUtlVTlUb21zWGY4WndmM0NEcURLTEpZS0V3M3lVVUpHK2pw?=
- =?utf-8?B?Qm1SdlRXRzAzMlM0NDVMOUY3RmoyeXRGZFRwTU4vdU8wVTVzME56dk1IK04x?=
- =?utf-8?B?TU9Vd0tROTZjcE9MS0NjNk9mVGRka2NRS1JxVUFjVVdnYWdyYkFMdkw3V1pB?=
- =?utf-8?Q?gyvwl8DzQGh36LatpaUPU7gMVAiAxaEdAwn3q8E?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?aXcxUlJJL0cxSks1WExsbHFNVlk1VHdqd0lDNEl1UGhSYXBZMG5yM0RkK1F6?=
+ =?utf-8?B?UzFwYlpMVUlOSmZJNnBNNFoyN1FpeWN6b0ZFdVRvWTI3cGEyRkI5SDJ1YjEw?=
+ =?utf-8?B?U25jNDdXR081cGpGOWhXa2Z5UWM2MGVnLzFKL2ZmR3NCOGR0Zkxmb2s2M09M?=
+ =?utf-8?B?OXBseGo0bWluOTkwYVI1b1NjN0h2Sy9JeWhEUVYxdzIwWDhSK3BleExBNnhC?=
+ =?utf-8?B?SWIzTzc1T24yV1lPYU54Nkt6V3dZMHE4cy9EdTNqZ0QyOHF2clZxWHNnTENz?=
+ =?utf-8?B?OENhekpPMlA3anJHTkRsbGx2Q0dGeTE4R3pTeEh5ZGE3UEk5M2dKR2VFQTU1?=
+ =?utf-8?B?TFVCTkhOYmU0dk9raGo4VWUzUXArT2NSaUdVUEk2blhWTFFlM0JlcnhHZXVC?=
+ =?utf-8?B?Y3R5T2RIRERhZGVqVlRsYU55YTVHK1o1eWhQOEMrRzZ6VXNLUnBYekw1bWxt?=
+ =?utf-8?B?N25HR1JKWlJ5T3ZjT1g0L3VKaTFyUVNiM2psd2pnV29ERFRMS0czNE8wc3M2?=
+ =?utf-8?B?WXVab21uMitaS3dIZnJCVnVuRjhhVzVGSmxscHMzU2dWWGxOZEZtSXRPV3po?=
+ =?utf-8?B?K2pia29GaE13UEczVXpodEFtQ0lUdVRpTk94amhQY0UyaXZxY1AxSW1HSE5l?=
+ =?utf-8?B?dHVFMnc4NWRmU2xnTWdSWTBiejB4c1hwNWt3Q2ExTDRzdmJKTlo4cVI2NXVZ?=
+ =?utf-8?B?bEJYL1l5SG9rbFd6ZURJdjk5Sk8yRW9GOGJ5TlMyK0FJdjRYTmU0MUZVdmdW?=
+ =?utf-8?B?M3MyZWorNE0rbXV5Smp6cDRXL2c3WEdWaS9ZM09PQStsZllMcmdHKzBINnU1?=
+ =?utf-8?B?Ni9GSEtzamRsSURMUzZlUDY1S0JuNHRXclUwRWxya1pKNkhDRTNYYmJHUzVL?=
+ =?utf-8?B?Y0RNSTc3WFNOYTNDOGtoZXVqZG5YSzMrMUNkdEJmUHNmOHhyQWtsOWd0anQy?=
+ =?utf-8?B?aTYrVWE2VXZpT0ZWV3NOWVVtaEZlYUgvaUdUTHNSK0lSUXhaRk10N1RaMEg3?=
+ =?utf-8?B?dkhoTkx3UzlGODJld1hieSt0RGx2a3VZTVVHRjNxd3ZEKzc2UEM2c1dtMUV6?=
+ =?utf-8?B?a1Zyb1VaVC9jQ3kxTU1vektwSXNYcVNycGUrRllWdXFuNHFVQ1dvOUpQaWto?=
+ =?utf-8?B?bC9CTTRyRk9CM2dJckNmUzJPc04rWjYwdjg3YnQyUVJmQnBmVXlMQlU1UlFO?=
+ =?utf-8?B?cm1aZU4rYXNOUTY1aXZFRVd5MTBHc21TU01EVFFyUURCUVVIYnF3T2hwWkZW?=
+ =?utf-8?B?STE5VzJRY0toSisvNENFZW03N2NPZkZaQ3Q0UThxRnlpM0JjVVloWEJHV3Bo?=
+ =?utf-8?B?a29VWG1Ldy9ZVjBHWTFoOUFaU2xRWm10S2RHZnBhd0p2a3ZybTA3ZWVycGZD?=
+ =?utf-8?B?TjlqYnRHU1h6bTJOUGFCcHlDM3ZibTRvcHkyZFRBajhOY2tncDRJakcvUlc3?=
+ =?utf-8?B?Tm5BNnlqNVp1UTVqaXpMMTJqSmdsRkxucFRNR0F3LzVnSEVyNDlPY1NyY2cr?=
+ =?utf-8?B?djUreUdWRk1RWmlqUUx5c242T1pmVFIrbDAzMkJma0tMZCtKWGl0TDBNUTVK?=
+ =?utf-8?B?VGRqU0o0K2V1MUo5a2NaeThpZDVhYTJrMEdtRlJYNVB0NERDM3hjL05ac2FD?=
+ =?utf-8?B?MStWR0x3WW42b3FVSWMzbWZDelV3YTRudGtoc09IekJwei9QWXhuMzJDWll6?=
+ =?utf-8?B?dE91cytselk4Si8zUWZQSU5hVmlVL2txOElDTUM5bFBNTXBraHFVcnc1Vnh4?=
+ =?utf-8?Q?DT7iNMD+g56/5VnfoAw8zYXXR4Pwe7UDp6gGs0u?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1e7e5bc8-2798-46e4-2d5d-08d94332acc0
+X-MS-Exchange-CrossTenant-Network-Message-Id: 56dffdd1-afc9-4142-a6ef-08d94332b2ef
 X-MS-Exchange-CrossTenant-AuthSource: CH2PR10MB4312.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Jul 2021 23:38:37.8722
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Jul 2021 23:38:48.2228
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 0mymHt+zrP2KtUhkTkBIfyDs+WlxKzxvJGfk81JQUrHLLXCdKFEgr29Hogs7CxXDJ4koAixJtw/LefSCK77gfSvnUk8eQUORcuLnm0aBxOw=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR10MB4360
+X-MS-Exchange-CrossTenant-UserPrincipalName: jbXKFktLpCGR0M4A0Oj4XNM8xkhn7mE/fxS+3hoOEtAGziTiA20b+JOdR6uiPG14NT2J9XdAkH1JYYIJlmRV6/htdfa5m7owiqH3MUZMZjs=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH0PR10MB5100
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=10040 signatures=668682
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 spamscore=0 phishscore=0
  adultscore=0 suspectscore=0 mlxscore=0 mlxlogscore=999 bulkscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2104190000
  definitions=main-2107090122
-X-Proofpoint-GUID: RI24_ZFqqW0v7elA7niu-0J1zQ29tDSJ
-X-Proofpoint-ORIG-GUID: RI24_ZFqqW0v7elA7niu-0J1zQ29tDSJ
+X-Proofpoint-GUID: JHhEI2RVx2nEB8hfS8RvpuPsYDDS-3J6
+X-Proofpoint-ORIG-GUID: JHhEI2RVx2nEB8hfS8RvpuPsYDDS-3J6
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -157,61 +157,40 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 7/6/21 5:21 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> This test tries to exploit an interaction between delayed allocation and
-> writeback on full filesystems to see if it can trip up the filestreams
-> allocator.  The behaviors do not present if the filesystem allocates
-> space at write time, so disable it under these scenarios.
-Ok, makes sense
-Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
-
+> Use some bash redirection trickery to capture in $seqres.full all of
+> bash's warnings about duperemove being killed due to assertions
+> triggering.
 > 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
->   tests/xfs/172 |   30 +++++++++++++++++++++++++++++-
->   1 file changed, 29 insertions(+), 1 deletion(-)
+>   tests/generic/561 |    9 +++++++--
+>   1 file changed, 7 insertions(+), 2 deletions(-)
 > 
 > 
-> diff --git a/tests/xfs/172 b/tests/xfs/172
-> index 0d1b441e..c0495305 100755
-> --- a/tests/xfs/172
-> +++ b/tests/xfs/172
-> @@ -16,9 +16,37 @@ _begin_fstest rw filestreams
->   
->   # real QA test starts here
->   _supported_fs xfs
-> -
-> +_require_command "$FILEFRAG_PROG" filefrag
->   _require_scratch
->   
-> +# The first _test_streams call sets up the filestreams allocator to fail and
-> +# then checks that it actually failed.  It does this by creating a very small
-> +# filesystem, writing a lot of data in parallel to separate streams, and then
-> +# flushes the dirty data, also in parallel.  To trip the allocator, the test
-> +# relies on writeback combining adjacent dirty ranges into large allocation
-> +# requests which eventually bleed across AGs.  This happens either because the
-> +# big writes are slow enough that filestreams contexts expire between
-> +# allocation requests, or because the AGs are so full at allocation time that
-> +# the bmapi allocator decides to scan for a less full AG.  Either way, stream
-> +# directories share AGs, which is what the test considers a success.
-> +#
-> +# However, this only happens if writes use the delayed allocation code paths.
-> +# If the kernel allocates small amounts of space at the time of each write()
-> +# call, the successive small allocations never trip the bmapi allocator's
-> +# rescan thresholds and will keep pushing out the expiration time, with the
-> +# result that the filestreams allocator succeeds in maintaining the streams.
-> +# The test considers this a failure.
-> +#
-> +# Make sure that a regular buffered write produces delalloc reservations.
-> +# This effectively disables the test for files with extent size hints or DAX
-> +# mode set.
-> +_scratch_mkfs > $seqres.full
-> +_scratch_mount
-> +$XFS_IO_PROG -f -c 'pwrite 0 64k' $SCRATCH_MNT/testy &> /dev/null
-> +$FILEFRAG_PROG -v $SCRATCH_MNT/testy 2>&1 | grep -q delalloc || \
-> +	_notrun "test requires delayed allocation buffered writes"
-> +_scratch_unmount
-> +
->   _check_filestreams_support || _notrun "filestreams not available"
->   
->   # test reaper works by setting timeout low. Expected to fail
+> diff --git a/tests/generic/561 b/tests/generic/561
+> index bfd4443d..85037e50 100755
+> --- a/tests/generic/561
+> +++ b/tests/generic/561
+> @@ -62,8 +62,13 @@ dupe_run=$TEST_DIR/${seq}-running
+>   touch $dupe_run
+>   for ((i = 0; i < $((2 * LOAD_FACTOR)); i++)); do
+>   	while [ -e $dupe_run ]; do
+> -		$DUPEREMOVE_PROG -dr --dedupe-options=same $testdir \
+> -			>>$seqres.full 2>&1
+> +		# Employ shell trickery here so that the golden output does not
+nit:
+I think I'd be more more specific with the commentary:
+
+                 # We run cmd in a bash shell so that the golden output ...
+> +		# capture assertions that trigger when killall shoots down
+> +		# dupremove processes in an arbitrary order, which leaves the
+> +		# memory in an inconsistent state long enough for the assert
+> +		# to trip.
+> +		cmd="$DUPEREMOVE_PROG -dr --dedupe-options=same $testdir"
+> +		bash -c "$cmd" >> $seqres.full 2>&1
+>   	done 2>&1 | sed -e '/Terminated/d' &
+>   	dedup_pids="$! $dedup_pids"
+>   done
 > 
+Otherwise looks fine to me
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
