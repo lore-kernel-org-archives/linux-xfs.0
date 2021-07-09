@@ -2,752 +2,325 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEE49C07E9C
-	for <linux-xfs@archiver.kernel.org>; Fri,  9 Jul 2021 12:37:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2433C07E99
+	for <linux-xfs@archiver.kernel.org>; Fri,  9 Jul 2021 19:56:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8CE31613C0
-	for <linux-xfs@archiver.kernel.org>; Fri,  9 Jul 2021 12:37:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C5F05600D3
+	for <linux-xfs@archiver.kernel.org>; Fri,  9 Jul 2021 19:56:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231324AbhGIMkB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 9 Jul 2021 08:40:01 -0400
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:43539 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S230507AbhGIMkB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Jul 2021 08:40:01 -0400
-IronPort-HdrOrdr: =?us-ascii?q?A9a23=3AXH+Rx6pxy2mwrVaGiEUm1xUaV5oXeYIsimQD?=
- =?us-ascii?q?101hICG9E/bo8/xG+c536faaslgssQ4b8+xoVJPgfZq+z+8R3WByB8bAYOCOgg?=
- =?us-ascii?q?LBQ72KhrGSoQEIdRefysdtkY9kc4VbTOb7FEVGi6/BizWQIpINx8am/cmT6dvj?=
- =?us-ascii?q?8w=3D=3D?=
-X-IronPort-AV: E=Sophos;i="5.84,226,1620662400"; 
-   d="scan'208";a="110890181"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 09 Jul 2021 20:37:10 +0800
-Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
-        by cn.fujitsu.com (Postfix) with ESMTP id BCE244C36A09;
-        Fri,  9 Jul 2021 20:37:10 +0800 (CST)
-Received: from G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) by
- G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Fri, 9 Jul 2021 20:37:11 +0800
-Received: from irides.mr.mr.mr (10.167.225.141) by
- G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.2 via Frontend Transport; Fri, 9 Jul 2021 20:36:49 +0800
-From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-To:     <darrick.wong@oracle.com>
-CC:     <ruansy.fnst@fujitsu.com>, <dan.j.williams@intel.com>,
-        <david@fromorbit.com>, <djwong@kernel.org>, <hch@lst.de>,
-        <linux-fsdevel@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <nvdimm@lists.linux.dev>, <linux-xfs@vger.kernel.org>,
-        <rgoldwyn@suse.de>, <viro@zeniv.linux.org.uk>,
-        <willy@infradead.org>
-Subject: [PATCH v6.2 6/7] dax: Introduce dax_iomap_ops for end of reflink
-Date:   Fri, 9 Jul 2021 20:36:45 +0800
-Message-ID: <20210709123645.1202280-1-ruansy.fnst@fujitsu.com>
-X-Mailer: git-send-email 2.32.0
-In-Reply-To: <OSBPR01MB2920922639112230407000E9F4039@OSBPR01MB2920.jpnprd01.prod.outlook.com>
-References: <OSBPR01MB2920922639112230407000E9F4039@OSBPR01MB2920.jpnprd01.prod.outlook.com>
+        id S229499AbhGIT7M (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 9 Jul 2021 15:59:12 -0400
+Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:28554 "EHLO
+        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229459AbhGIT7M (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Jul 2021 15:59:12 -0400
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 169Jqj4L014012;
+        Fri, 9 Jul 2021 19:56:26 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2020-01-29;
+ bh=ufaHmlSkDCz9hHiiQYe3xTWJORS55pf7vdzkR4yKXJ4=;
+ b=brNMPmybDE8Hnnpt55xtdNw/ytd/ocDjS7+C1yMEwyuHn7OD0hVzKElzTl9ly9eeCupe
+ FxL29lAn1GAX3Fa9794Fm2/UtQNfVIsKpryWh2nYgQYIEbigeBZFkJ++XrSJqhJZzNU0
+ sJgYmtCjd2Pu+8zGRHCRkq88o9T3IhWQLCo/htrOw0r5ymqjEEoVMKCqxJKX+KY902Qv
+ QYk3L3OsKqiYKDe5kAGA/bbhkwCg1+tejqWKx96mF3NJuqm7wk8yClL93ON2J3GmUlET
+ 7WXBOUpxA0EMFEVeRbwZ101MOmCEHomlT0OgCTvGb0abuJLm6zqKM+9VVTue/5L05f6Q QQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by mx0b-00069f02.pphosted.com with ESMTP id 39npbym5f0-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 09 Jul 2021 19:56:26 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 169JogcA099814;
+        Fri, 9 Jul 2021 19:56:25 GMT
+Received: from nam02-bn1-obe.outbound.protection.outlook.com (mail-bn1nam07lp2043.outbound.protection.outlook.com [104.47.51.43])
+        by aserp3030.oracle.com with ESMTP id 39nbg9y02k-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 09 Jul 2021 19:56:25 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=NF0xh2jpW1tRISuwRNqIR2RC+P7XPvrxbwmvpHq1xXCbywyhJf1qvFlvNqdohdRQx7CTcUVh8s58seZb/aKdgutE/oelWneixZGBjJL74USM4kQXZ+RfgPnn9NITzuJQN8FJBD+s+MVtexgEtqdKJjLsxzvSGFB5fgKv2sE+bfqJSOfcpIEmRyrs3qroIMnou1Rl5ukg3If/DunBTnkA7nXBnLfiXzIzBPO0R5QriYWNkvsjoS+/pv1V7WZFrszGB6hbr0ZUw3QwmP5ruACx/FAxN3LaacEkNSQh94e48MdSXneIP83rMX2Gs4gRdMQB7DOlQVcw56f6dkVY5GYEbQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ufaHmlSkDCz9hHiiQYe3xTWJORS55pf7vdzkR4yKXJ4=;
+ b=TF/fw5Bd6RgnMaB4lcmWdTTA9D5a+wlTWiCyg4Z5kXzJD38rnjbTFI4crYFEWu/dJGRBHoJVOvqQPAo9SQpeLjtbeBOqGMRJtY9JI4NvmNyZrfW7Imckae0LbMMlkXQfBBRz55tL1pwjolP7xiMHbODKn1SoQ+fRqVvOX4/IpQuKDBT3W7rnOKfn3zOBRPIFIzDtV9TOdV+v5hJhNDnH8L0AADfIIglmjZx+z3Sha4IXVOoD6n7gBdv5l2GWeA/EITMPrYnHUgdwNSLMqEkriz5xe7RzfCXXX7RisoCd27dIZfDkJdL6WC4tMP3Ifun3qyDOYQZsz/KR7AcSLse/rA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ufaHmlSkDCz9hHiiQYe3xTWJORS55pf7vdzkR4yKXJ4=;
+ b=duDM0/oJwQ5WllyugA4Qh0uTTz4lgYrNDS2rb+QQorGyYtSNeoEyTw4kxkunXI0seQbmq7UNQVZo9tq9Z9tgJ8mu/gkcyZei8GekN2sRkeD1xqdtQTlgpUN8FI8qvbHXkFX/qR+gDAviSlA9e/5knXHlXnDTgoZmqVpfHcP+PyM=
+Authentication-Results: vger.kernel.org; dkim=none (message not signed)
+ header.d=none;vger.kernel.org; dmarc=none action=none header.from=oracle.com;
+Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
+ by SJ0PR10MB5471.namprd10.prod.outlook.com (2603:10b6:a03:302::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4308.21; Fri, 9 Jul
+ 2021 19:56:23 +0000
+Received: from BY5PR10MB4306.namprd10.prod.outlook.com
+ ([fe80::20c4:32a4:24ac:df89]) by BY5PR10MB4306.namprd10.prod.outlook.com
+ ([fe80::20c4:32a4:24ac:df89%9]) with mapi id 15.20.4308.023; Fri, 9 Jul 2021
+ 19:56:23 +0000
+Subject: Re: [PATCH v21 13/13] xfs: Add helper function xfs_attr_leaf_addname
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+References: <20210707222111.16339-1-allison.henderson@oracle.com>
+ <20210707222111.16339-14-allison.henderson@oracle.com>
+ <20210709041726.GR11588@locust>
+From:   Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <afd380b1-ddeb-ee1c-8833-9965923e4160@oracle.com>
+Date:   Fri, 9 Jul 2021 12:56:20 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
+In-Reply-To: <20210709041726.GR11588@locust>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: SJ0PR13CA0182.namprd13.prod.outlook.com
+ (2603:10b6:a03:2c3::7) To BY5PR10MB4306.namprd10.prod.outlook.com
+ (2603:10b6:a03:211::7)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: BCE244C36A09.A3E91
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from [192.168.1.167] (67.1.112.125) by SJ0PR13CA0182.namprd13.prod.outlook.com (2603:10b6:a03:2c3::7) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4331.11 via Frontend Transport; Fri, 9 Jul 2021 19:56:22 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 53b844b4-ee3d-488b-71ff-08d94313a0ca
+X-MS-TrafficTypeDiagnostic: SJ0PR10MB5471:
+X-Microsoft-Antispam-PRVS: <SJ0PR10MB5471276A296294E24DF2E82395189@SJ0PR10MB5471.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:10000;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 66hkvm1L9Tfu6nQT/Dlj6GeiKRnHAEYHlJ257P3kI7JxSuzuFVXVFaI5IadXwOgdJ2Ijs7YxcYwCWLgQUYHGwolLl/9VXKwL0OslKoVxndq5isT884dOpR3kChOIEJ9T4zoM1GkUw+PVQgtWKUwGhciPGvdsOVa9IUOXIySPWfp7IYIpNSdabsOoQg4r+TKukueu6uVhe4fummFFhpR+wJfzSD9n80vRvaSpPm3+0sGv1gBwi4qzAlQ8jvoyMVBlMBFQyj0wAb0YQCvwVrl5cllK0KjwW2t/g56chsnqAxNOFv/HzL5PPaAFl120hKt3iz6EYzVgmBJQXzn0oPmpELOi20lZixqicfWPcWVEANPq/bTtXMEYhQC35gz71jHwbe02lSOFqb1zKJQA4z9EoBO2MoCotbePhRHP7Z6dQK36Qxu2EPihJm1t2yng5mu3h4/qAABBjMN48qKxFlLyNEE6He7/boob+6E8atnCAM/IW1Oy0gOb0garR7duKGYM7xLvYQ4QyCYSjRtEq3FK7hAMeX+oXnSePUQfV5JWa9yfGtjYbHD24lZ9epHRK4b8vzCBeCrTY2OV3DNgsqMUW9pPvdRZOK16ZeKw0aJFYP+fxeW/CDl51S/KmmzeGcinJZ2qSuDTg0JHOTgxsKeJYWPZdS44ZFnX6o/zbGWbpYRtf/k8Gh59JdiIZOrlADjtLMO57tsr0/A1ho09L/vYHG3FS1mEZbdAG6cgQaduqtmHOGHeNXSGaatzKxchud8d
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(396003)(376002)(136003)(346002)(39850400004)(366004)(66946007)(66476007)(66556008)(31686004)(2906002)(86362001)(16576012)(186003)(6916009)(316002)(36756003)(52116002)(956004)(83380400001)(2616005)(53546011)(26005)(31696002)(38350700002)(8936002)(4326008)(478600001)(5660300002)(8676002)(6486002)(38100700002)(44832011)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?cm0veHprRnVwRzI4OVBycUtjWUs3TVBrT1l6N2k1S3ZTNHZrcHFGMytXclNo?=
+ =?utf-8?B?L0RDZG5rVVh6VloxRDZJMXFyMHZraEhSREN4d25JTGxLTzNjU3ZRL2ZDUDNS?=
+ =?utf-8?B?WUJaYUxlbUQ0Vll4Ly9UMHhMZ0crdC9tVldtcXFoSTh4YXFkdDJaY0JkakFa?=
+ =?utf-8?B?M2gzRVM1RVhPZDFLV25GenR5clpObEtMZ0ZXazhzUHdVMWdLSU1iODRsaVdu?=
+ =?utf-8?B?SkZ3b2F1dlZZL3EvYmNVcGdONXBVdkxYT20yWTBjRWpuVUkycTJkWXpVbCsw?=
+ =?utf-8?B?WkNJSlROaHJUemlUaDB5RC9GMWJKRVkvWWdIcmJZSGgzS2NXbTZBLzI1NTNm?=
+ =?utf-8?B?WCtpU2V0dS9vNXFtNlpqVzk2bUN0NEF4c0pIc2MxZDdwbEJYa1V5bkFValJz?=
+ =?utf-8?B?SW1aODZ3L0VrdFFIUFhrbS92YVo1UjA3V081ckZMVXNQazFCZjR6VFBBd2po?=
+ =?utf-8?B?Wkk1dVdZVG9LMk0wTkR2Vkc3eEFaYXdqc0RVU1E0TkM0dmxsRjRmaE5JU1pW?=
+ =?utf-8?B?SHgyMEVvWVFZdys3VFZOVS9LNTFPZWxSY3QyTFJTWTNSbE14b3BPRE9JOXJ2?=
+ =?utf-8?B?dVlZSXB1K3V1ay96eXprMUVISHB1bDJ4QkMxc3ZsWGVzRE1KVnZrY2FKMVpu?=
+ =?utf-8?B?bHBRdGxoRGNuTDlpbXdxdWNHQitmUm1KUVQ1VlVuSTUzYkp2aHYwQlRWbGE5?=
+ =?utf-8?B?T3RFZDhmTGoyMGx1WGExdk8xWlRZY1JyeHVsNk9HYjV5cmJTU2M0eEtPYmw4?=
+ =?utf-8?B?cXloWE4xNERodjNuSEE2ZnhvSVpGMTNHc3VIZ042aFdncEVTL0dPMWNHc0gr?=
+ =?utf-8?B?SVQ2Z0U3QmI0cnMzQzZPSlJFY2xld0lPb2VVQ0RGNFVhZ1lDL3EzUEo1V291?=
+ =?utf-8?B?dWp4SE55R29wcE52S3pGL3lucDN3ZnZaRkptcEJnQzJtd1BCSlg0T2dydEJ2?=
+ =?utf-8?B?Q1RHVjl0QlFoR09BWlkzbFZKb3hUS2JQRVFVK2Z6MUtHYzBxanE2bmp6MXM1?=
+ =?utf-8?B?eGFWZnNBRXBEdi8zQXpjWnEyZmVsaDNiOEVXelEvelQ5cEJqZTgxcXNRenVW?=
+ =?utf-8?B?NlY3VDYvdkMxRGJKRmRkelpJM1hXSkVoeGtTdXdLbThCTFM1M0ZkWmErejcy?=
+ =?utf-8?B?czIzcXYyS1hwWjAxZjdPQXhsYWpHZGd3L0sreGZ3d2ZqU3FQbGdMYnc4cCtD?=
+ =?utf-8?B?eDlWc2VCNHlWUVVDRGVSN0RsOUVtZGFaNzJhWHl0b1JJS2ZIK3pZNURsRGtS?=
+ =?utf-8?B?aTJ4bFpheldZbGxXM3pObzlQVjdsR1pYOStHNE1JYXcrZFQwN2E4K2g5T0M1?=
+ =?utf-8?B?R2IxRDZONWpiSkVlNVpMQ0VmSmw0NFFuRVBYZk5oTDRNY2lMWGhtdkFWZkxK?=
+ =?utf-8?B?NWJRRXgxcld3L3hVYkdEUjlBRU9USWhvKy9ZMCtnOFNGZnIxanNmRllQUjl3?=
+ =?utf-8?B?SlNGb21IaTVwNXA2a1RuKzRkWS9aK0tOaHh4czgzTm42Mm1yQ052SG42MlVZ?=
+ =?utf-8?B?WTRmYTM2ZjM3SFdPVklDTTR1RkJkVEtlT21UekZaMGxRc0h4bEdLQmdHZ2Rq?=
+ =?utf-8?B?WktJNmZscWFnQmpRVmVRWHJaMElocVhNWW1ZeUFJOXBiVjlWdkt5SXNwU1R3?=
+ =?utf-8?B?ZkpPZDZJSmF1dFhuVGoxVjc1VS9ncVk0dVU3bDMwZC9xMnUrcFp1L0REM1BP?=
+ =?utf-8?B?TG9DL3RxaDlxWFNKSEE2V1ZKQjFYTlJsRUxML2NjbGtGWlQ2ZDFONkYrUXQ2?=
+ =?utf-8?Q?dfXV2B3XirXPDF811ZY4gbq73QsZQRbHLg9y4Ki?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 53b844b4-ee3d-488b-71ff-08d94313a0ca
+X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Jul 2021 19:56:23.2370
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 2eZuUG7Cjt1XzlnDLDBtDBSpYp5qQ7rgpST0ROyZ8DliImbm7GEnADpAW8Wd5t5jPVhBlB/NrU5k3lqVh5Mk86Ur3gOyMqP/JsLsOrxN+vc=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR10MB5471
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=10040 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxlogscore=999
+ phishscore=0 adultscore=0 suspectscore=0 spamscore=0 malwarescore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2104190000 definitions=main-2107090097
+X-Proofpoint-GUID: 35y5efTBAiUorOvaaqU1Zg-WqeL6Jkly
+X-Proofpoint-ORIG-GUID: 35y5efTBAiUorOvaaqU1Zg-WqeL6Jkly
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-After writing data, reflink requires end operations to remap those new
-allocated extents.  The current ->iomap_end() ignores the error code
-returned from ->actor(), so we need to introduce this dax_iomap_ops and
-change the dax_iomap_* interfaces to do this job.
-
-- the dax_iomap_ops contains the original struct iomap_ops and fsdax
-    specific ->actor_end(), which is for the end operations of reflink
-- also introduce dax specific zero_range, truncate_page
-- create new dax_iomap_ops for ext2 and ext4
-
-Then enable fsdax and reflink together in xfs.
-
-Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
----
- fs/dax.c               | 105 +++++++++++++++++++++++++++++++++++------
- fs/ext2/ext2.h         |   3 ++
- fs/ext2/file.c         |   6 +--
- fs/ext2/inode.c        |  11 ++++-
- fs/ext4/ext4.h         |   3 ++
- fs/ext4/file.c         |   6 +--
- fs/ext4/inode.c        |  13 ++++-
- fs/iomap/buffered-io.c |   6 +--
- fs/xfs/xfs_bmap_util.c |   3 +-
- fs/xfs/xfs_file.c      |   8 ++--
- fs/xfs/xfs_iomap.c     |  36 +++++++++++++-
- fs/xfs/xfs_iomap.h     |  33 +++++++++++++
- fs/xfs/xfs_iops.c      |   7 ++-
- fs/xfs/xfs_reflink.c   |   3 +-
- include/linux/dax.h    |  28 +++++++++--
- include/linux/iomap.h  |   2 +
- 16 files changed, 228 insertions(+), 45 deletions(-)
-
-diff --git a/fs/dax.c b/fs/dax.c
-index 93f16210847b..9285ea796668 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -1240,7 +1240,7 @@ s64 dax_iomap_zero(loff_t pos, u64 length, struct iomap *iomap,
- }
- 
- static loff_t
--dax_iomap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
-+__dax_iomap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 		struct iomap *iomap, struct iomap *srcmap)
- {
- 	struct block_device *bdev = iomap->bdev;
-@@ -1344,11 +1344,25 @@ dax_iomap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 	return done ? done : ret;
- }
- 
-+static loff_t
-+dax_iomap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
-+		struct iomap *iomap, struct iomap *srcmap)
-+{
-+	struct dax_iomap_data *idata = data;
-+	loff_t ret = __dax_iomap_actor(inode, pos, length, idata->data,
-+					iomap, srcmap);
-+
-+	if (idata->ops->actor_end)
-+		ret = idata->ops->actor_end(inode, pos, length, ret);
-+
-+	return ret;
-+}
-+
- /**
-  * dax_iomap_rw - Perform I/O to a DAX file
-  * @iocb:	The control block for this I/O
-  * @iter:	The addresses to do I/O from or to
-- * @ops:	iomap ops passed from the file system
-+ * @ops:	dax iomap ops passed from the file system
-  *
-  * This function performs read and write operations to directly mapped
-  * persistent memory.  The callers needs to take care of read/write exclusion
-@@ -1356,12 +1370,13 @@ dax_iomap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
-  */
- ssize_t
- dax_iomap_rw(struct kiocb *iocb, struct iov_iter *iter,
--		const struct iomap_ops *ops)
-+		const struct dax_iomap_ops *ops)
- {
- 	struct address_space *mapping = iocb->ki_filp->f_mapping;
- 	struct inode *inode = mapping->host;
- 	loff_t pos = iocb->ki_pos, ret = 0, done = 0;
- 	unsigned flags = 0;
-+	struct dax_iomap_data data = { iter, ops };
- 
- 	if (iov_iter_rw(iter) == WRITE) {
- 		lockdep_assert_held_write(&inode->i_rwsem);
-@@ -1374,8 +1389,8 @@ dax_iomap_rw(struct kiocb *iocb, struct iov_iter *iter,
- 		flags |= IOMAP_NOWAIT;
- 
- 	while (iov_iter_count(iter)) {
--		ret = iomap_apply(inode, pos, iov_iter_count(iter), flags, ops,
--				iter, dax_iomap_actor);
-+		ret = iomap_apply(inode, pos, iov_iter_count(iter), flags,
-+				  &ops->iomap_ops, &data, dax_iomap_actor);
- 		if (ret <= 0)
- 			break;
- 		pos += ret;
-@@ -1387,6 +1402,55 @@ dax_iomap_rw(struct kiocb *iocb, struct iov_iter *iter,
- }
- EXPORT_SYMBOL_GPL(dax_iomap_rw);
- 
-+static loff_t
-+dax_iomap_zero_range_actor(struct inode *inode, loff_t pos, loff_t length,
-+		void *data, struct iomap *iomap, struct iomap *srcmap)
-+{
-+	struct dax_iomap_data *idata = data;
-+	loff_t ret = iomap_zero_range_actor(inode, pos, length, idata->data,
-+					    iomap, srcmap);
-+
-+	if (idata->ops->actor_end)
-+		ret = idata->ops->actor_end(inode, pos, length, ret);
-+
-+	return ret;
-+}
-+
-+int
-+dax_iomap_zero_range(struct inode *inode, loff_t pos, loff_t len,
-+		bool *did_zero, const struct dax_iomap_ops *ops)
-+{
-+	struct dax_iomap_data data = { did_zero, ops };
-+	loff_t ret;
-+
-+	while (len > 0) {
-+		ret = iomap_apply(inode, pos, len, IOMAP_ZERO, &ops->iomap_ops,
-+				  &data, dax_iomap_zero_range_actor);
-+		if (ret <= 0)
-+			return ret;
-+
-+		pos += ret;
-+		len -= ret;
-+	}
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(dax_iomap_zero_range);
-+
-+int
-+dax_iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
-+		const struct dax_iomap_ops *ops)
-+{
-+	unsigned int blocksize = i_blocksize(inode);
-+	unsigned int off = pos & (blocksize - 1);
-+
-+	/* Block boundary? Nothing to do */
-+	if (!off)
-+		return 0;
-+	return dax_iomap_zero_range(inode, pos, blocksize - off, did_zero, ops);
-+}
-+EXPORT_SYMBOL_GPL(dax_iomap_truncate_page);
-+
- static vm_fault_t dax_fault_return(int error)
- {
- 	if (error == 0)
-@@ -1527,7 +1591,7 @@ static vm_fault_t dax_fault_actor(struct vm_fault *vmf, pfn_t *pfnp,
- }
- 
- static vm_fault_t dax_iomap_pte_fault(struct vm_fault *vmf, pfn_t *pfnp,
--			       int *iomap_errp, const struct iomap_ops *ops)
-+		int *iomap_errp, const struct dax_iomap_ops *dops)
- {
- 	struct vm_area_struct *vma = vmf->vma;
- 	struct address_space *mapping = vma->vm_file->f_mapping;
-@@ -1536,8 +1600,9 @@ static vm_fault_t dax_iomap_pte_fault(struct vm_fault *vmf, pfn_t *pfnp,
- 	loff_t pos = (loff_t)vmf->pgoff << PAGE_SHIFT;
- 	struct iomap iomap = { .type = IOMAP_HOLE };
- 	struct iomap srcmap = { .type = IOMAP_HOLE };
-+	const struct iomap_ops *ops = &dops->iomap_ops;
- 	unsigned flags = IOMAP_FAULT;
--	int error;
-+	int error, copied = PAGE_SIZE;
- 	bool write = vmf->flags & FAULT_FLAG_WRITE;
- 	vm_fault_t ret = 0, major = 0;
- 	void *entry;
-@@ -1598,7 +1663,7 @@ static vm_fault_t dax_iomap_pte_fault(struct vm_fault *vmf, pfn_t *pfnp,
- 	ret = dax_fault_actor(vmf, pfnp, &xas, &entry, false, flags,
- 			      &iomap, &srcmap);
- 	if (ret == VM_FAULT_SIGBUS)
--		goto finish_iomap;
-+		goto finish_iomap_actor_end;
- 
- 	/* read/write MAPPED, CoW UNWRITTEN */
- 	if (iomap.flags & IOMAP_F_NEW) {
-@@ -1607,10 +1672,15 @@ static vm_fault_t dax_iomap_pte_fault(struct vm_fault *vmf, pfn_t *pfnp,
- 		major = VM_FAULT_MAJOR;
- 	}
- 
-+finish_iomap_actor_end:
-+	if (dops->actor_end) {
-+		if (ret & VM_FAULT_ERROR)
-+			copied = 0;
-+		dops->actor_end(inode, pos, PMD_SIZE, copied);
-+	}
-+
- finish_iomap:
- 	if (ops->iomap_end) {
--		int copied = PAGE_SIZE;
--
- 		if (ret & VM_FAULT_ERROR)
- 			copied = 0;
- 		/*
-@@ -1663,7 +1733,7 @@ static bool dax_fault_check_fallback(struct vm_fault *vmf, struct xa_state *xas,
- }
- 
- static vm_fault_t dax_iomap_pmd_fault(struct vm_fault *vmf, pfn_t *pfnp,
--			       const struct iomap_ops *ops)
-+		const struct dax_iomap_ops *dops)
- {
- 	struct vm_area_struct *vma = vmf->vma;
- 	struct address_space *mapping = vma->vm_file->f_mapping;
-@@ -1674,10 +1744,11 @@ static vm_fault_t dax_iomap_pmd_fault(struct vm_fault *vmf, pfn_t *pfnp,
- 	vm_fault_t ret = VM_FAULT_FALLBACK;
- 	struct iomap iomap = { .type = IOMAP_HOLE };
- 	struct iomap srcmap = { .type = IOMAP_HOLE };
-+	const struct iomap_ops *ops = &dops->iomap_ops;
- 	pgoff_t max_pgoff;
- 	void *entry;
- 	loff_t pos;
--	int error;
-+	int error, copied = PMD_SIZE;
- 
- 	/*
- 	 * Check whether offset isn't beyond end of file now. Caller is
-@@ -1736,10 +1807,14 @@ static vm_fault_t dax_iomap_pmd_fault(struct vm_fault *vmf, pfn_t *pfnp,
- 	ret = dax_fault_actor(vmf, pfnp, &xas, &entry, true, flags,
- 			      &iomap, &srcmap);
- 
-+	if (dops->actor_end) {
-+		if (ret == VM_FAULT_FALLBACK)
-+			copied = 0;
-+		dops->actor_end(inode, pos, PMD_SIZE, copied);
-+	}
-+
- finish_iomap:
- 	if (ops->iomap_end) {
--		int copied = PMD_SIZE;
--
- 		if (ret == VM_FAULT_FALLBACK)
- 			copied = 0;
- 		/*
-@@ -1783,7 +1858,7 @@ static vm_fault_t dax_iomap_pmd_fault(struct vm_fault *vmf, pfn_t *pfnp,
-  * successfully.
-  */
- vm_fault_t dax_iomap_fault(struct vm_fault *vmf, enum page_entry_size pe_size,
--		    pfn_t *pfnp, int *iomap_errp, const struct iomap_ops *ops)
-+		pfn_t *pfnp, int *iomap_errp, const struct dax_iomap_ops *ops)
- {
- 	switch (pe_size) {
- 	case PE_SIZE_PTE:
-diff --git a/fs/ext2/ext2.h b/fs/ext2/ext2.h
-index b0a694820cb7..765269804f83 100644
---- a/fs/ext2/ext2.h
-+++ b/fs/ext2/ext2.h
-@@ -806,6 +806,9 @@ extern void ext2_set_file_ops(struct inode *inode);
- extern const struct address_space_operations ext2_aops;
- extern const struct address_space_operations ext2_nobh_aops;
- extern const struct iomap_ops ext2_iomap_ops;
-+#ifdef CONFIG_FS_DAX
-+extern const struct dax_iomap_ops ext2_dax_iomap_ops;
-+#endif
- 
- /* namei.c */
- extern const struct inode_operations ext2_dir_inode_operations;
-diff --git a/fs/ext2/file.c b/fs/ext2/file.c
-index f98466acc672..d5dd82111128 100644
---- a/fs/ext2/file.c
-+++ b/fs/ext2/file.c
-@@ -39,7 +39,7 @@ static ssize_t ext2_dax_read_iter(struct kiocb *iocb, struct iov_iter *to)
- 		return 0; /* skip atime */
- 
- 	inode_lock_shared(inode);
--	ret = dax_iomap_rw(iocb, to, &ext2_iomap_ops);
-+	ret = dax_iomap_rw(iocb, to, &ext2_dax_iomap_ops);
- 	inode_unlock_shared(inode);
- 
- 	file_accessed(iocb->ki_filp);
-@@ -63,7 +63,7 @@ static ssize_t ext2_dax_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 	if (ret)
- 		goto out_unlock;
- 
--	ret = dax_iomap_rw(iocb, from, &ext2_iomap_ops);
-+	ret = dax_iomap_rw(iocb, from, &ext2_dax_iomap_ops);
- 	if (ret > 0 && iocb->ki_pos > i_size_read(inode)) {
- 		i_size_write(inode, iocb->ki_pos);
- 		mark_inode_dirty(inode);
-@@ -102,7 +102,7 @@ static vm_fault_t ext2_dax_fault(struct vm_fault *vmf)
- 	}
- 	down_read(&ei->dax_sem);
- 
--	ret = dax_iomap_fault(vmf, PE_SIZE_PTE, NULL, NULL, &ext2_iomap_ops);
-+	ret = dax_iomap_fault(vmf, PE_SIZE_PTE, NULL, NULL, &ext2_dax_iomap_ops);
- 
- 	up_read(&ei->dax_sem);
- 	if (write)
-diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
-index 68178b2234bd..a94744bbf82f 100644
---- a/fs/ext2/inode.c
-+++ b/fs/ext2/inode.c
-@@ -852,6 +852,13 @@ const struct iomap_ops ext2_iomap_ops = {
- 	.iomap_begin		= ext2_iomap_begin,
- 	.iomap_end		= ext2_iomap_end,
- };
-+
-+const struct dax_iomap_ops ext2_dax_iomap_ops = {
-+	.iomap_ops	= {
-+		.iomap_begin	= ext2_iomap_begin,
-+		.iomap_end	= ext2_iomap_end,
-+	},
-+};
- #else
- /* Define empty ops for !CONFIG_FS_DAX case to avoid ugly ifdefs */
- const struct iomap_ops ext2_iomap_ops;
-@@ -1294,9 +1301,9 @@ static int ext2_setsize(struct inode *inode, loff_t newsize)
- 	inode_dio_wait(inode);
- 
- 	if (IS_DAX(inode)) {
--		error = iomap_zero_range(inode, newsize,
-+		error = dax_iomap_zero_range(inode, newsize,
- 					 PAGE_ALIGN(newsize) - newsize, NULL,
--					 &ext2_iomap_ops);
-+					 &ext2_dax_iomap_ops);
- 	} else if (test_opt(inode->i_sb, NOBH))
- 		error = nobh_truncate_page(inode->i_mapping,
- 				newsize, ext2_get_block);
-diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
-index 37002663d521..b4e6df93dd82 100644
---- a/fs/ext4/ext4.h
-+++ b/fs/ext4/ext4.h
-@@ -3773,6 +3773,9 @@ static inline void ext4_clear_io_unwritten_flag(ext4_io_end_t *io_end)
- }
- 
- extern const struct iomap_ops ext4_iomap_ops;
-+#ifdef CONFIG_FS_DAX
-+extern const struct dax_iomap_ops ext4_dax_iomap_ops;
-+#endif
- extern const struct iomap_ops ext4_iomap_overwrite_ops;
- extern const struct iomap_ops ext4_iomap_report_ops;
- 
-diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-index 816dedcbd541..a7a3497429ca 100644
---- a/fs/ext4/file.c
-+++ b/fs/ext4/file.c
-@@ -102,7 +102,7 @@ static ssize_t ext4_dax_read_iter(struct kiocb *iocb, struct iov_iter *to)
- 		/* Fallback to buffered IO in case we cannot support DAX */
- 		return generic_file_read_iter(iocb, to);
- 	}
--	ret = dax_iomap_rw(iocb, to, &ext4_iomap_ops);
-+	ret = dax_iomap_rw(iocb, to, &ext4_dax_iomap_ops);
- 	inode_unlock_shared(inode);
- 
- 	file_accessed(iocb->ki_filp);
-@@ -650,7 +650,7 @@ ext4_dax_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 		ext4_journal_stop(handle);
- 	}
- 
--	ret = dax_iomap_rw(iocb, from, &ext4_iomap_ops);
-+	ret = dax_iomap_rw(iocb, from, &ext4_dax_iomap_ops);
- 
- 	if (extend)
- 		ret = ext4_handle_inode_extension(inode, offset, ret, count);
-@@ -721,7 +721,7 @@ static vm_fault_t ext4_dax_huge_fault(struct vm_fault *vmf,
- 	} else {
- 		down_read(&EXT4_I(inode)->i_mmap_sem);
- 	}
--	result = dax_iomap_fault(vmf, pe_size, &pfn, &error, &ext4_iomap_ops);
-+	result = dax_iomap_fault(vmf, pe_size, &pfn, &error, &ext4_dax_iomap_ops);
- 	if (write) {
- 		ext4_journal_stop(handle);
- 
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index fe6045a46599..2310f5cc6cd5 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -3523,6 +3523,15 @@ const struct iomap_ops ext4_iomap_ops = {
- 	.iomap_end		= ext4_iomap_end,
- };
- 
-+#ifdef CONFIG_FS_DAX
-+const struct dax_iomap_ops ext4_dax_iomap_ops = {
-+	.iomap_ops		= {
-+		.iomap_begin = ext4_iomap_begin,
-+		.iomap_end   = ext4_iomap_end,
-+	},
-+};
-+#endif
-+
- const struct iomap_ops ext4_iomap_overwrite_ops = {
- 	.iomap_begin		= ext4_iomap_overwrite_begin,
- 	.iomap_end		= ext4_iomap_end,
-@@ -3840,8 +3849,8 @@ static int ext4_block_zero_page_range(handle_t *handle,
- 		length = max;
- 
- 	if (IS_DAX(inode)) {
--		return iomap_zero_range(inode, from, length, NULL,
--					&ext4_iomap_ops);
-+		return dax_iomap_zero_range(inode, from, length, NULL,
-+					    &ext4_dax_iomap_ops);
- 	}
- 	return __ext4_block_zero_page_range(handle, mapping, from, length);
- }
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index fdaac4ba9b9d..32c6b2ab6251 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -918,9 +918,9 @@ static s64 iomap_zero(struct inode *inode, loff_t pos, u64 length,
- 	return iomap_write_end(inode, pos, bytes, bytes, page, iomap, srcmap);
- }
- 
--static loff_t iomap_zero_range_actor(struct inode *inode, loff_t pos,
--		loff_t length, void *data, struct iomap *iomap,
--		struct iomap *srcmap)
-+loff_t
-+iomap_zero_range_actor(struct inode *inode, loff_t pos, loff_t length,
-+		void *data, struct iomap *iomap, struct iomap *srcmap)
- {
- 	bool *did_zero = data;
- 	loff_t written = 0;
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 0936f3a96fe6..4b0744b5a75f 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1009,8 +1009,7 @@ xfs_free_file_space(
- 		return 0;
- 	if (offset + len > XFS_ISIZE(ip))
- 		len = XFS_ISIZE(ip) - offset;
--	error = iomap_zero_range(VFS_I(ip), offset, len, NULL,
--			&xfs_buffered_write_iomap_ops);
-+	error = xfs_iomap_zero_range(ip, offset, len, NULL);
- 	if (error)
- 		return error;
- 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 396ef36dcd0a..9bca68872242 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -281,7 +281,7 @@ xfs_file_dax_read(
- 	ret = xfs_ilock_iocb(iocb, XFS_IOLOCK_SHARED);
- 	if (ret)
- 		return ret;
--	ret = dax_iomap_rw(iocb, to, &xfs_read_iomap_ops);
-+	ret = dax_iomap_rw(iocb, to, &xfs_dax_read_iomap_ops);
- 	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
- 
- 	file_accessed(iocb->ki_filp);
-@@ -684,7 +684,7 @@ xfs_file_dax_write(
- 	pos = iocb->ki_pos;
- 
- 	trace_xfs_file_dax_write(iocb, from);
--	ret = dax_iomap_rw(iocb, from, &xfs_direct_write_iomap_ops);
-+	ret = dax_iomap_rw(iocb, from, &xfs_dax_write_iomap_ops);
- 	if (ret > 0 && iocb->ki_pos > i_size_read(inode)) {
- 		i_size_write(inode, iocb->ki_pos);
- 		error = xfs_setfilesize(ip, pos, ret);
-@@ -1309,8 +1309,8 @@ __xfs_filemap_fault(
- 
- 		ret = dax_iomap_fault(vmf, pe_size, &pfn, NULL,
- 				(write_fault && !vmf->cow_page) ?
--				 &xfs_direct_write_iomap_ops :
--				 &xfs_read_iomap_ops);
-+				 &xfs_dax_write_iomap_ops :
-+				 &xfs_dax_read_iomap_ops);
- 		if (ret & VM_FAULT_NEEDDSYNC)
- 			ret = dax_finish_sync_fault(vmf, pe_size, pfn);
- 	} else {
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index d154f42e2dc6..48004cf28a88 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -761,7 +761,8 @@ xfs_direct_write_iomap_begin(
- 
- 		/* may drop and re-acquire the ilock */
- 		error = xfs_reflink_allocate_cow(ip, &imap, &cmap, &shared,
--				&lockmode, flags & IOMAP_DIRECT);
-+				&lockmode,
-+				(flags & IOMAP_DIRECT) || IS_DAX(inode));
- 		if (error)
- 			goto out_unlock;
- 		if (shared)
-@@ -854,6 +855,33 @@ const struct iomap_ops xfs_direct_write_iomap_ops = {
- 	.iomap_begin		= xfs_direct_write_iomap_begin,
- };
- 
-+static int
-+xfs_dax_write_iomap_actor_end(
-+	struct inode		*inode,
-+	loff_t			pos,
-+	loff_t			length,
-+	ssize_t			written)
-+{
-+	int			error = 0;
-+	struct xfs_inode	*ip = XFS_I(inode);
-+	bool			cow = xfs_is_cow_inode(ip);
-+
-+	if (cow) {
-+		if (written <= 0)
-+			xfs_reflink_cancel_cow_range(ip, pos, length, true);
-+		else
-+			error = xfs_reflink_end_cow(ip, pos, written);
-+	}
-+	return error ?: written;
-+}
-+
-+const struct dax_iomap_ops xfs_dax_write_iomap_ops = {
-+	.iomap_ops 		= {
-+		.iomap_begin = xfs_direct_write_iomap_begin,
-+	},
-+	.actor_end		= xfs_dax_write_iomap_actor_end,
-+};
-+
- static int
- xfs_buffered_write_iomap_begin(
- 	struct inode		*inode,
-@@ -1184,6 +1212,12 @@ const struct iomap_ops xfs_read_iomap_ops = {
- 	.iomap_begin		= xfs_read_iomap_begin,
- };
- 
-+const struct dax_iomap_ops xfs_dax_read_iomap_ops = {
-+	.iomap_ops		= {
-+		.iomap_begin = xfs_read_iomap_begin,
-+	},
-+};
-+
- static int
- xfs_seek_iomap_begin(
- 	struct inode		*inode,
-diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
-index 7d3703556d0e..5eacb5d8ca88 100644
---- a/fs/xfs/xfs_iomap.h
-+++ b/fs/xfs/xfs_iomap.h
-@@ -45,5 +45,38 @@ extern const struct iomap_ops xfs_direct_write_iomap_ops;
- extern const struct iomap_ops xfs_read_iomap_ops;
- extern const struct iomap_ops xfs_seek_iomap_ops;
- extern const struct iomap_ops xfs_xattr_iomap_ops;
-+extern const struct dax_iomap_ops xfs_dax_write_iomap_ops;
-+extern const struct dax_iomap_ops xfs_dax_read_iomap_ops;
-+
-+static inline int
-+xfs_iomap_zero_range(
-+	struct xfs_inode	*ip,
-+	loff_t			pos,
-+	loff_t			len,
-+	bool			*did_zero)
-+{
-+	struct inode		*inode = VFS_I(ip);
-+
-+	return IS_DAX(inode)
-+			? dax_iomap_zero_range(inode, pos, len, did_zero,
-+					       &xfs_dax_write_iomap_ops)
-+			: iomap_zero_range(inode, pos, len, did_zero,
-+					       &xfs_buffered_write_iomap_ops);
-+}
-+
-+static inline int
-+xfs_iomap_truncate_page(
-+	struct xfs_inode	*ip,
-+	loff_t			pos,
-+	bool			*did_zero)
-+{
-+	struct inode		*inode = VFS_I(ip);
-+
-+	return IS_DAX(inode)
-+			? dax_iomap_truncate_page(inode, pos, did_zero,
-+					       &xfs_dax_write_iomap_ops)
-+			: iomap_truncate_page(inode, pos, did_zero,
-+					       &xfs_buffered_write_iomap_ops);
-+}
- 
- #endif /* __XFS_IOMAP_H__*/
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index dfe24b7f26e5..6d936c3e1a6e 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -911,8 +911,8 @@ xfs_setattr_size(
- 	 */
- 	if (newsize > oldsize) {
- 		trace_xfs_zero_eof(ip, oldsize, newsize - oldsize);
--		error = iomap_zero_range(inode, oldsize, newsize - oldsize,
--				&did_zeroing, &xfs_buffered_write_iomap_ops);
-+		error = xfs_iomap_zero_range(ip, oldsize, newsize - oldsize,
-+				&did_zeroing);
- 	} else {
- 		/*
- 		 * iomap won't detect a dirty page over an unwritten block (or a
-@@ -924,8 +924,7 @@ xfs_setattr_size(
- 						     newsize);
- 		if (error)
- 			return error;
--		error = iomap_truncate_page(inode, newsize, &did_zeroing,
--				&xfs_buffered_write_iomap_ops);
-+		error = xfs_iomap_truncate_page(ip, newsize, &did_zeroing);
- 	}
- 
- 	if (error)
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index d25434f93235..9a780948dbd0 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1266,8 +1266,7 @@ xfs_reflink_zero_posteof(
- 		return 0;
- 
- 	trace_xfs_zero_eof(ip, isize, pos - isize);
--	return iomap_zero_range(VFS_I(ip), isize, pos - isize, NULL,
--			&xfs_buffered_write_iomap_ops);
-+	return xfs_iomap_zero_range(ip, isize, pos - isize, NULL);
- }
- 
- /*
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index 106d1f033a78..64393f6e96cf 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -3,6 +3,7 @@
- #define _LINUX_DAX_H
- 
- #include <linux/fs.h>
-+#include <linux/iomap.h>
- #include <linux/mm.h>
- #include <linux/radix-tree.h>
- 
-@@ -11,8 +12,6 @@
- 
- typedef unsigned long dax_entry_t;
- 
--struct iomap_ops;
--struct iomap;
- struct dax_device;
- struct dax_operations {
- 	/*
-@@ -38,6 +37,23 @@ struct dax_operations {
- 	int (*zero_page_range)(struct dax_device *, pgoff_t, size_t);
- };
- 
-+struct dax_iomap_ops {
-+	/* the original iomap ops */
-+	struct iomap_ops iomap_ops;
-+	/*
-+	 * actor_end: accept error code returned from ->actor(), deal with it
-+	 * before ->iomap_end()
-+	 */
-+	int (*actor_end)(struct inode *, loff_t, loff_t, ssize_t);
-+};
-+
-+/* dax iomap specific data, in order to call ->actor_end() in ->actor() */
-+struct dax_iomap_data {
-+	/* the original data pointer */
-+	void *data;
-+	const struct dax_iomap_ops *ops;
-+};
-+
- extern struct attribute_group dax_attribute_group;
- 
- #if IS_ENABLED(CONFIG_DAX)
-@@ -229,14 +245,18 @@ int dax_zero_page_range(struct dax_device *dax_dev, pgoff_t pgoff,
- void dax_flush(struct dax_device *dax_dev, void *addr, size_t size);
- 
- ssize_t dax_iomap_rw(struct kiocb *iocb, struct iov_iter *iter,
--		const struct iomap_ops *ops);
-+		const struct dax_iomap_ops *ops);
- vm_fault_t dax_iomap_fault(struct vm_fault *vmf, enum page_entry_size pe_size,
--		    pfn_t *pfnp, int *errp, const struct iomap_ops *ops);
-+		pfn_t *pfnp, int *errp, const struct dax_iomap_ops *ops);
- vm_fault_t dax_finish_sync_fault(struct vm_fault *vmf,
- 		enum page_entry_size pe_size, pfn_t pfn);
- int dax_delete_mapping_entry(struct address_space *mapping, pgoff_t index);
- int dax_invalidate_mapping_entry_sync(struct address_space *mapping,
- 				      pgoff_t index);
-+int dax_iomap_zero_range(struct inode *inode, loff_t pos, loff_t len,
-+		bool *did_zero, const struct dax_iomap_ops *ops);
-+int dax_iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
-+		const struct dax_iomap_ops *ops);
- s64 dax_iomap_zero(loff_t pos, u64 length, struct iomap *iomap,
- 		struct iomap *srcmap);
- int dax_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 95562f863ad0..05437fbf5f68 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -178,6 +178,8 @@ int iomap_migrate_page(struct address_space *mapping, struct page *newpage,
- #endif
- int iomap_file_unshare(struct inode *inode, loff_t pos, loff_t len,
- 		const struct iomap_ops *ops);
-+loff_t iomap_zero_range_actor(struct inode *inode, loff_t pos, loff_t length,
-+		void *data, struct iomap *iomap, struct iomap *srcmap);
- int iomap_zero_range(struct inode *inode, loff_t pos, loff_t len,
- 		bool *did_zero, const struct iomap_ops *ops);
- int iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
--- 
-2.32.0
 
 
+On 7/8/21 9:17 PM, Darrick J. Wong wrote:
+> On Wed, Jul 07, 2021 at 03:21:11PM -0700, Allison Henderson wrote:
+>> This patch adds a helper function xfs_attr_leaf_addname.  While this
+>> does help to break down xfs_attr_set_iter, it does also hoist out some
+>> of the state management.  This patch has been moved to the end of the
+>> clean up series for further discussion.
+>>
+>> Suggested-by: Darrick J. Wong <djwong@kernel.org>
+>> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+>> ---
+>>   fs/xfs/libxfs/xfs_attr.c | 107 ++++++++++++++++++++++++++---------------------
+>>   fs/xfs/xfs_trace.h       |   1 +
+>>   2 files changed, 60 insertions(+), 48 deletions(-)
+>>
+>> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+>> index cb7e689..80486b4 100644
+>> --- a/fs/xfs/libxfs/xfs_attr.c
+>> +++ b/fs/xfs/libxfs/xfs_attr.c
+>> @@ -284,6 +284,64 @@ xfs_attr_sf_addname(
+>>   	return -EAGAIN;
+>>   }
+>>   
+>> +STATIC int
+>> +xfs_attr_leaf_addname(
+>> +	struct xfs_attr_item	*attr)
+>> +{
+>> +	struct xfs_da_args	*args = attr->xattri_da_args;
+>> +	struct xfs_buf		*leaf_bp = attr->xattri_leaf_bp;
+>> +	struct xfs_inode	*dp = args->dp;
+>> +	int			error;
+>> +
+>> +	if (xfs_attr_is_leaf(dp)) {
+>> +		error = xfs_attr_leaf_try_add(args, leaf_bp);
+>> +		if (error == -ENOSPC) {
+>> +			error = xfs_attr3_leaf_to_node(args);
+>> +			if (error)
+>> +				return error;
+>> +
+>> +			/*
+>> +			 * Finish any deferred work items and roll the
+>> +			 * transaction once more.  The goal here is to call
+>> +			 * node_addname with the inode and transaction in the
+>> +			 * same state (inode locked and joined, transaction
+>> +			 * clean) no matter how we got to this step.
+>> +			 *
+>> +			 * At this point, we are still in XFS_DAS_UNINIT, but
+>> +			 * when we come back, we'll be a node, so we'll fall
+>> +			 * down into the node handling code below
+>> +			 */
+>> +			trace_xfs_attr_set_iter_return(
+>> +				attr->xattri_dela_state, args->dp);
+>> +			return -EAGAIN;
+>> +		} else if (error) {
+> 
+> Silly nit: No need for else if, regular if works fine here.
+> 
+> Oh, hm, this is just a hoist patch, and we're not supposed to
+> hoist-and-mutate.  But this is a small change, so fmeh rules.
+> 
+> With that tidied,
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
+Alrighty, will do.  Thanks!
+Allison
+
+> 
+> --D
+> 
+>> +			return error;
+>> +		}
+>> +
+>> +		attr->xattri_dela_state = XFS_DAS_FOUND_LBLK;
+>> +	} else {
+>> +		error = xfs_attr_node_addname_find_attr(attr);
+>> +		if (error)
+>> +			return error;
+>> +
+>> +		error = xfs_attr_node_addname(attr);
+>> +		if (error)
+>> +			return error;
+>> +
+>> +		/*
+>> +		 * If addname was successful, and we dont need to alloc or
+>> +		 * remove anymore blks, we're done.
+>> +		 */
+>> +		if (!args->rmtblkno && !args->rmtblkno2)
+>> +			return error;
+>> +
+>> +		attr->xattri_dela_state = XFS_DAS_FOUND_NBLK;
+>> +	}
+>> +
+>> +	trace_xfs_attr_leaf_addname_return(attr->xattri_dela_state, args->dp);
+>> +	return -EAGAIN;
+>> +}
+>> +
+>>   /*
+>>    * Set the attribute specified in @args.
+>>    * This routine is meant to function as a delayed operation, and may return
+>> @@ -319,55 +377,8 @@ xfs_attr_set_iter(
+>>   			*leaf_bp = NULL;
+>>   		}
+>>   
+>> -		if (xfs_attr_is_leaf(dp)) {
+>> -			error = xfs_attr_leaf_try_add(args, *leaf_bp);
+>> -			if (error == -ENOSPC) {
+>> -				error = xfs_attr3_leaf_to_node(args);
+>> -				if (error)
+>> -					return error;
+>> -
+>> -				/*
+>> -				 * Finish any deferred work items and roll the
+>> -				 * transaction once more.  The goal here is to
+>> -				 * call node_addname with the inode and
+>> -				 * transaction in the same state (inode locked
+>> -				 * and joined, transaction clean) no matter how
+>> -				 * we got to this step.
+>> -				 *
+>> -				 * At this point, we are still in
+>> -				 * XFS_DAS_UNINIT, but when we come back, we'll
+>> -				 * be a node, so we'll fall down into the node
+>> -				 * handling code below
+>> -				 */
+>> -				trace_xfs_attr_set_iter_return(
+>> -					attr->xattri_dela_state, args->dp);
+>> -				return -EAGAIN;
+>> -			} else if (error) {
+>> -				return error;
+>> -			}
+>> -
+>> -			attr->xattri_dela_state = XFS_DAS_FOUND_LBLK;
+>> -		} else {
+>> -			error = xfs_attr_node_addname_find_attr(attr);
+>> -			if (error)
+>> -				return error;
+>> +		return xfs_attr_leaf_addname(attr);
+>>   
+>> -			error = xfs_attr_node_addname(attr);
+>> -			if (error)
+>> -				return error;
+>> -
+>> -			/*
+>> -			 * If addname was successful, and we dont need to alloc
+>> -			 * or remove anymore blks, we're done.
+>> -			 */
+>> -			if (!args->rmtblkno && !args->rmtblkno2)
+>> -				return error;
+>> -
+>> -			attr->xattri_dela_state = XFS_DAS_FOUND_NBLK;
+>> -		}
+>> -		trace_xfs_attr_set_iter_return(attr->xattri_dela_state,
+>> -					       args->dp);
+>> -		return -EAGAIN;
+>>   	case XFS_DAS_FOUND_LBLK:
+>>   		/*
+>>   		 * If there was an out-of-line value, allocate the blocks we
+>> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+>> index f9840dd..cf8bd3a 100644
+>> --- a/fs/xfs/xfs_trace.h
+>> +++ b/fs/xfs/xfs_trace.h
+>> @@ -4008,6 +4008,7 @@ DEFINE_EVENT(xfs_das_state_class, name, \
+>>   	TP_ARGS(das, ip))
+>>   DEFINE_DAS_STATE_EVENT(xfs_attr_sf_addname_return);
+>>   DEFINE_DAS_STATE_EVENT(xfs_attr_set_iter_return);
+>> +DEFINE_DAS_STATE_EVENT(xfs_attr_leaf_addname_return);
+>>   DEFINE_DAS_STATE_EVENT(xfs_attr_node_addname_return);
+>>   DEFINE_DAS_STATE_EVENT(xfs_attr_remove_iter_return);
+>>   DEFINE_DAS_STATE_EVENT(xfs_attr_rmtval_remove_return);
+>> -- 
+>> 2.7.4
+>>
