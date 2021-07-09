@@ -7,145 +7,191 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2645C07E99
-	for <linux-xfs@archiver.kernel.org>; Fri,  9 Jul 2021 07:41:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9D8BC07E99
+	for <linux-xfs@archiver.kernel.org>; Fri,  9 Jul 2021 08:33:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9EC7B6139A
-	for <linux-xfs@archiver.kernel.org>; Fri,  9 Jul 2021 07:41:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9078B613C9
+	for <linux-xfs@archiver.kernel.org>; Fri,  9 Jul 2021 08:33:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231146AbhGIHoY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 9 Jul 2021 03:44:24 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:36689 "EHLO
+        id S231553AbhGIIgG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 9 Jul 2021 04:36:06 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:53318 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230505AbhGIHoY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Jul 2021 03:44:24 -0400
+        by vger.kernel.org with ESMTP id S229685AbhGIIgG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Jul 2021 04:36:06 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1625816500;
+        s=mimecast20190719; t=1625819602;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=6DR4yTtcwRwpazxeKBXfiR1UdFqy7iFYDk0DxNqHEpE=;
-        b=Bj59NRQ8mH8RlWAPsFquH77Fjj8FJqVk/4GEg4NvIWguz65QoQ4wTOdMNV5fo3ud0i3vzO
-        hJSDXZRXDJTcz/M5pX6zZ5+lflxoD25kIQXu5Wo31vHwJeMmkkoUKB0dGzB6f29mIblgSq
-        a0/SxSt55nEAjhvy4rDmMh2F4oPp9bo=
-Received: from mail-ej1-f70.google.com (mail-ej1-f70.google.com
- [209.85.218.70]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-567-v0PttGR0MiOPLuhN7eUCqA-1; Fri, 09 Jul 2021 03:41:37 -0400
-X-MC-Unique: v0PttGR0MiOPLuhN7eUCqA-1
-Received: by mail-ej1-f70.google.com with SMTP id d2-20020a1709072722b02904c99c7e6ddfso2750339ejl.15
-        for <linux-xfs@vger.kernel.org>; Fri, 09 Jul 2021 00:41:37 -0700 (PDT)
+        bh=MS+YsjdtkNxq4zORqtX33/ETxzAerhNkn8k+82opvQw=;
+        b=K0+Kr8lP0zf3jMup/jxjrhN9aymPwxC1lqZNPIejHiptZhw4k2QaJU/SoHJ7ey6vc6ubXa
+        MwCP+sxVs1S86yoEHq9+RL3ty8c/tdr2Mq/yAzV+rO8h7SAoCcETXzBYsATtKt9lnUuadL
+        NjUbedkw6/kcjytUgO5AoveZAAGuJ4g=
+Received: from mail-ed1-f69.google.com (mail-ed1-f69.google.com
+ [209.85.208.69]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-167-cCj3_jL4OQiDLYz60xaA5g-1; Fri, 09 Jul 2021 04:33:21 -0400
+X-MC-Unique: cCj3_jL4OQiDLYz60xaA5g-1
+Received: by mail-ed1-f69.google.com with SMTP id w15-20020a05640234cfb02903951279f8f3so4839210edc.11
+        for <linux-xfs@vger.kernel.org>; Fri, 09 Jul 2021 01:33:21 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id
          :mail-followup-to:references:mime-version:content-disposition
          :in-reply-to;
-        bh=6DR4yTtcwRwpazxeKBXfiR1UdFqy7iFYDk0DxNqHEpE=;
-        b=JJgVDZj3lj5TEHuUXwPMdpzfzGfsfolHx/Ekfa8YoJBOilFSo0FXfzQDOC+fXeXI6P
-         lllZXf9GtfhHh/h3GBOlStVgUJv6e6Vl/lnNtjI+uCOzqHW7x4x512s9sNpxEVaVf44X
-         jnidJlEBo2c2fbKYDRQr0MOcmFfzbudorsV1bCpQS9qw470PXMZvoyUsyB/xjrqLpkpQ
-         dtVMTrNPkpiQmzj/MOVLB2LnH0H/d//97fQExUwqGaaUBn1L9sOTTlkeYwTfY7sQBxPu
-         GSCSueq5ei1v5XNJ63o3395EmYvRxUJZKwzAUreUj6ShS9OOKA3J+fSu/Sp93AmvIE8G
-         wiZA==
-X-Gm-Message-State: AOAM533LhkMs5xnSlJB9ZfC0tfSJ/VI+JDL7hC9mtEY5h8WCbCpR7zPp
-        kZH3MdWb2SA/frAS/bfRZX118Izv5vXehezhHKDnFmEb/spyRSTJegR9PK5i6fR1+qDqe3Z+C8X
-        UxTkjBhwzR9lYjD4oeLde
-X-Received: by 2002:aa7:c952:: with SMTP id h18mr43009790edt.18.1625816496391;
-        Fri, 09 Jul 2021 00:41:36 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwmRLsr1Mn+V6wRdImZfm0lhAkSleiFT1ZdPQ/ZEMr0KPl0YWglVX+RNNdaG+epTibvBcKlOA==
-X-Received: by 2002:aa7:c952:: with SMTP id h18mr43009763edt.18.1625816496170;
-        Fri, 09 Jul 2021 00:41:36 -0700 (PDT)
+        bh=MS+YsjdtkNxq4zORqtX33/ETxzAerhNkn8k+82opvQw=;
+        b=SaXrTbf64ZLc/2jmIzjbfVaY//HdHBV4+hYlXP/rMP7mYJpnn4pdYboDbXM8UDmf1/
+         e1LHns5Ho3y6AzeX/Rp0WBZA+SIHwo1WYXC90DoZu4nAShkXBhsqZqvTSFh3NXnl9Adl
+         4/bmgWQNumB/f/xo9fcwcUNiRzT6MLPbUqLfalgpWPKQz3WJFgYGOYv/iHXa8L/YyB26
+         MTdoMX0kKGhWnNtZQB+SOTeSSu6Mlmq/JiaxBzt6oZjToDJ1GVkofdnSa3OXMZRxd1ME
+         KuS9wIVgMCcjSySuSUiq70Op8lFxv/5kxzmIpVjc37fbX6SM8OL2ZaZ5j6hcH2azk1Wd
+         WnxA==
+X-Gm-Message-State: AOAM532Fv2gP0sl/aOyy1sj3La6UWSzXlRJ9PrGeVEYaJHe9+0x7MFDC
+        AHFl8X6ofUka6PpWh8sffqhW2A4MGYli6nDIAvtSS9zD4uGQibW1LXtiK8cw6hqpGQB+DoXMzD9
+        fj+YtA1berl8IMib7UDWT
+X-Received: by 2002:a17:906:38f:: with SMTP id b15mr10427675eja.186.1625819600215;
+        Fri, 09 Jul 2021 01:33:20 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJyd/Q1DFqF/YPG/pEGD3LVVwvVJggn1beq10a6jI6vvRi+Dat8ciRvgCqJtF3AkN2FYDQTI4w==
+X-Received: by 2002:a17:906:38f:: with SMTP id b15mr10427658eja.186.1625819599970;
+        Fri, 09 Jul 2021 01:33:19 -0700 (PDT)
 Received: from omega.lan (ip4-46-39-172-19.cust.nbox.cz. [46.39.172.19])
-        by smtp.gmail.com with ESMTPSA id jx1sm1914451ejc.101.2021.07.09.00.41.35
+        by smtp.gmail.com with ESMTPSA id p23sm2603512edt.71.2021.07.09.01.33.18
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 09 Jul 2021 00:41:35 -0700 (PDT)
-Date:   Fri, 9 Jul 2021 09:41:33 +0200
+        Fri, 09 Jul 2021 01:33:19 -0700 (PDT)
+Date:   Fri, 9 Jul 2021 10:33:17 +0200
 From:   Carlos Maiolino <cmaiolino@redhat.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Christoph Hellwig <hch@infradead.org>, sandeen@sandeen.net,
-        linux-xfs@vger.kernel.org, bfoster@redhat.com
-Subject: Re: [PATCH 1/2] xfs_repair: validate alignment of inherited rt
- extent hints
-Message-ID: <20210709074133.eqplu474pucatihr@omega.lan>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: correct the narrative around misaligned
+ rtinherit/extszinherit dirs
+Message-ID: <20210709083317.rwglsgg5ma7xwxim@omega.lan>
 Mail-Followup-To: "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>, sandeen@sandeen.net,
-        linux-xfs@vger.kernel.org, bfoster@redhat.com
-References: <162528106460.36302.18265535074182102487.stgit@locust>
- <162528107024.36302.9037961042426880362.stgit@locust>
- <YOF2n+aIKG/cqhyX@infradead.org>
- <20210708071116.njicib4zsxkdny3k@omega.lan>
- <20210708223157.GJ11588@locust>
+        xfs <linux-xfs@vger.kernel.org>
+References: <20210709041152.GN11588@locust>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210708223157.GJ11588@locust>
+In-Reply-To: <20210709041152.GN11588@locust>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 08, 2021 at 03:31:57PM -0700, Darrick J. Wong wrote:
-> On Thu, Jul 08, 2021 at 09:11:16AM +0200, Carlos Maiolino wrote:
-> > On Sun, Jul 04, 2021 at 09:51:43AM +0100, Christoph Hellwig wrote:
-> > > On Fri, Jul 02, 2021 at 07:57:50PM -0700, Darrick J. Wong wrote:
-> > > > From: Darrick J. Wong <djwong@kernel.org>
-> > > > 
-> > > > If we encounter a directory that has been configured to pass on an
-> > > > extent size hint to a new realtime file and the hint isn't an integer
-> > > > multiple of the rt extent size, we should turn off the hint because that
-> > > > is a misconfiguration.
-> > > > 
-> > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > > ---
-> > > >  repair/dinode.c |   28 +++++++++++++++++++++++++++-
-> > > >  1 file changed, 27 insertions(+), 1 deletion(-)
-> > > > 
-> > > > 
-> > > > diff --git a/repair/dinode.c b/repair/dinode.c
-> > > > index 291c5807..1275c90b 100644
-> > > > --- a/repair/dinode.c
-> > > > +++ b/repair/dinode.c
-> > > > @@ -2178,6 +2178,31 @@ _("Bad %s nsec %u on inode %" PRIu64 ", "), name, be32_to_cpu(t->t_nsec), lino);
-> > > >  		*dirty = 1;
-> > > >  	}
-> > > >  }
-> > > > +/*
-> > > > + * Inode verifiers on older kernels don't check that the extent size hint is an
-> > > > + * integer multiple of the rt extent size on a directory with both rtinherit
-> > > > + * and extszinherit flags set.  If we encounter a directory that is
-> > > > + * misconfigured in this way, or a regular file that inherited a bad hint from
-> > > > + * a directory, clear the hint.
-> > > > + */
-> > > > +static bool
-> > > > +zap_bad_rt_extsize_hint(
-> > > 
-> > > The name suggests this function does the zapping itself, while it
-> > > actually leaves that to the caller.
-> > 
-> > +1 here, I also led me to believe this was actually zeroing the extsize, but the
-> > patch's logic is fine.
-> > 
-> > Maybe something like
-> > 
-> > {is,has}_bad_rt_extsize_hint()?
+On Thu, Jul 08, 2021 at 09:11:52PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Renamed to is_misaligned_extsize_hint().
-
-Great, thanks Darrick!
+> While auditing the realtime growfs code, I realized that the GROWFSRT
+> ioctl (and by extension xfs_growfs) has always allowed sysadmins to
+> change the realtime extent size when adding a realtime section to the
+> filesystem.  Since we also have always allowed sysadmins to set
+> RTINHERIT and EXTSZINHERIT on directories even if there is no realtime
+> device, this invalidates the premise laid out in the comments added in
+> commit 603f000b15f2.
+> 
+> In other words, this is not a case of inadequate metadata validation.
+> This is a case of nearly forgotten (and apparently untested) but
+> supported functionality.  Update the comments to reflect what we've
+> learned, and remove the log message about correcting the misalignment.
+> 
+> Fixes: 603f000b15f2 ("xfs: validate extsz hints against rt extent size when rtinherit is set")
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
+
+> ---
+>  fs/xfs/libxfs/xfs_inode_buf.c   |   28 ++++++++++++++++------------
+>  fs/xfs/libxfs/xfs_trans_inode.c |   10 ++++------
+>  fs/xfs/xfs_ioctl.c              |    8 ++++----
+>  3 files changed, 24 insertions(+), 22 deletions(-)
 > 
-> --D
-> 
-> > 
-> > > 
-> > > Oterwise looks good:
-> > > 
-> > > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > > 
-> > 
-> > -- 
-> > Carlos
-> > 
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> index 04ce361688f7..84ea2e0af9f0 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> @@ -592,23 +592,27 @@ xfs_inode_validate_extsize(
+>  	/*
+>  	 * This comment describes a historic gap in this verifier function.
+>  	 *
+> -	 * On older kernels, the extent size hint verifier doesn't check that
+> -	 * the extent size hint is an integer multiple of the realtime extent
+> -	 * size on a directory with both RTINHERIT and EXTSZINHERIT flags set.
+> -	 * The verifier has always enforced the alignment rule for regular
+> -	 * files with the REALTIME flag set.
+> +	 * For a directory with both RTINHERIT and EXTSZINHERIT flags set, this
+> +	 * function has never checked that the extent size hint is an integer
+> +	 * multiple of the realtime extent size.  Since we allow users to set
+> +	 * this combination  on non-rt filesystems /and/ to change the rt
+> +	 * extent size when adding a rt device to a filesystem, the net effect
+> +	 * is that users can configure a filesystem anticipating one rt
+> +	 * geometry and change their minds later.  Directories do not use the
+> +	 * extent size hint, so this is harmless for them.
+>  	 *
+>  	 * If a directory with a misaligned extent size hint is allowed to
+>  	 * propagate that hint into a new regular realtime file, the result
+>  	 * is that the inode cluster buffer verifier will trigger a corruption
+> -	 * shutdown the next time it is run.
+> +	 * shutdown the next time it is run, because the verifier has always
+> +	 * enforced the alignment rule for regular files.
+>  	 *
+> -	 * Unfortunately, there could be filesystems with these misconfigured
+> -	 * directories in the wild, so we cannot add a check to this verifier
+> -	 * at this time because that will result a new source of directory
+> -	 * corruption errors when reading an existing filesystem.  Instead, we
+> -	 * permit the misconfiguration to pass through the verifiers so that
+> -	 * callers of this function can correct and mitigate externally.
+> +	 * Because we allow administrators to set a new rt extent size when
+> +	 * adding a rt section, we cannot add a check to this verifier because
+> +	 * that will result a new source of directory corruption errors when
+> +	 * reading an existing filesystem.  Instead, we rely on callers to
+> +	 * decide when alignment checks are appropriate, and fix things up as
+> +	 * needed.
+>  	 */
+>  
+>  	if (rt_flag)
+> diff --git a/fs/xfs/libxfs/xfs_trans_inode.c b/fs/xfs/libxfs/xfs_trans_inode.c
+> index 8d595a5c4abd..16f723ebe8dd 100644
+> --- a/fs/xfs/libxfs/xfs_trans_inode.c
+> +++ b/fs/xfs/libxfs/xfs_trans_inode.c
+> @@ -143,16 +143,14 @@ xfs_trans_log_inode(
+>  	}
+>  
+>  	/*
+> -	 * Inode verifiers on older kernels don't check that the extent size
+> -	 * hint is an integer multiple of the rt extent size on a directory
+> -	 * with both rtinherit and extszinherit flags set.  If we're logging a
+> -	 * directory that is misconfigured in this way, clear the hint.
+> +	 * Inode verifiers do not check that the extent size hint is an integer
+> +	 * multiple of the rt extent size on a directory with both rtinherit
+> +	 * and extszinherit flags set.  If we're logging a directory that is
+> +	 * misconfigured in this way, clear the hint.
+>  	 */
+>  	if ((ip->i_diflags & XFS_DIFLAG_RTINHERIT) &&
+>  	    (ip->i_diflags & XFS_DIFLAG_EXTSZINHERIT) &&
+>  	    (ip->i_extsize % ip->i_mount->m_sb.sb_rextsize) > 0) {
+> -		xfs_info_once(ip->i_mount,
+> -	"Correcting misaligned extent size hint in inode 0x%llx.", ip->i_ino);
+>  		ip->i_diflags &= ~(XFS_DIFLAG_EXTSIZE |
+>  				   XFS_DIFLAG_EXTSZINHERIT);
+>  		ip->i_extsize = 0;
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 0f6794333b01..cfc2e099d558 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -1292,10 +1292,10 @@ xfs_ioctl_setattr_check_extsize(
+>  	new_diflags = xfs_flags2diflags(ip, fa->fsx_xflags);
+>  
+>  	/*
+> -	 * Inode verifiers on older kernels don't check that the extent size
+> -	 * hint is an integer multiple of the rt extent size on a directory
+> -	 * with both rtinherit and extszinherit flags set.  Don't let sysadmins
+> -	 * misconfigure directories.
+> +	 * Inode verifiers do not check that the extent size hint is an integer
+> +	 * multiple of the rt extent size on a directory with both rtinherit
+> +	 * and extszinherit flags set.  Don't let sysadmins misconfigure
+> +	 * directories.
+>  	 */
+>  	if ((new_diflags & XFS_DIFLAG_RTINHERIT) &&
+>  	    (new_diflags & XFS_DIFLAG_EXTSZINHERIT)) {
 > 
 
 -- 
