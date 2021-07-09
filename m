@@ -2,114 +2,91 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51F03C07E96
-	for <linux-xfs@archiver.kernel.org>; Thu,  8 Jul 2021 23:16:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 436CAC07E99
+	for <linux-xfs@archiver.kernel.org>; Fri,  9 Jul 2021 04:05:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2F0C761442
-	for <linux-xfs@archiver.kernel.org>; Thu,  8 Jul 2021 23:16:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1FEF96143C
+	for <linux-xfs@archiver.kernel.org>; Fri,  9 Jul 2021 04:05:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230479AbhGHXT3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 8 Jul 2021 19:19:29 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:52532 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229631AbhGHXT3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Jul 2021 19:19:29 -0400
-Received: from dread.disaster.area (pa49-181-34-10.pa.nsw.optusnet.com.au [49.181.34.10])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 077191044DD7;
-        Fri,  9 Jul 2021 09:16:42 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1m1dG5-004Kod-Un; Fri, 09 Jul 2021 09:16:41 +1000
-Date:   Fri, 9 Jul 2021 09:16:41 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     "ruansy.fnst@fujitsu.com" <ruansy.fnst@fujitsu.com>,
-        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
-        "hch@lst.de" <hch@lst.de>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "nvdimm@lists.linux.dev" <nvdimm@lists.linux.dev>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "rgoldwyn@suse.de" <rgoldwyn@suse.de>,
-        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
-        "willy@infradead.org" <willy@infradead.org>
-Subject: Re: [PATCH v6.1 6/7] fs/xfs: Handle CoW for fsdax write() path
-Message-ID: <20210708231641.GQ664593@dread.disaster.area>
-References: <OSBPR01MB2920A2BCD568364C1363AFA6F4369@OSBPR01MB2920.jpnprd01.prod.outlook.com>
- <20210615072147.73852-1-ruansy.fnst@fujitsu.com>
- <OSBPR01MB2920D2D275EB0DB15C37D079F4079@OSBPR01MB2920.jpnprd01.prod.outlook.com>
- <20210625221855.GG13784@locust>
- <OSBPR01MB2920922639112230407000E9F4039@OSBPR01MB2920.jpnprd01.prod.outlook.com>
- <20210628050919.GL13784@locust>
+        id S229576AbhGIEIh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 9 Jul 2021 00:08:37 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35424 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229441AbhGIEIg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 9 Jul 2021 00:08:36 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0C09061208;
+        Fri,  9 Jul 2021 04:05:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1625803554;
+        bh=O4aXT7TOZqRrZrwccF9nFKSd3wBSdDDilo/55ZDK/tI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=J5GCbuKPo+wQQDuOZNl131dtwdfl0FCDD99iA5bxUd3lbk4mfwGRgiBw3zqbwdPs2
+         hC+7w+6ZPDMcVYltUEC/vTtpq6hxY74NxAuE1DA2V+xJzOlkdvDCmCCKbzkqoivYcQ
+         3wFPCEq5ORkgjA1PeWyNRAJy/B+PqtlyDQ9IDr1+Z7hCPQ+muewsRKFQ3YJJ/9oR57
+         1aJ/b6ifbgU2oKP8AvCuXXmXE9SMmQbX0vxmkxG0g6GYXW5BjC76mweK7QtO9koZbC
+         Wtftj/Is5q2I9UMqvu2Ve1jrGx68LUrtegf/QSWx4ZCX8/qHdYwjnyu+K3K+KrDpkr
+         tjGl99hnsgItw==
+Date:   Thu, 8 Jul 2021 21:05:53 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Allison Henderson <allison.henderson@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v21 01/13] xfs: Return from xfs_attr_set_iter if there
+ are no more rmtblks to process
+Message-ID: <20210709040553.GL11588@locust>
+References: <20210707222111.16339-1-allison.henderson@oracle.com>
+ <20210707222111.16339-2-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210628050919.GL13784@locust>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
-        a=hdaoRb6WoHYrV466vVKEyw==:117 a=hdaoRb6WoHYrV466vVKEyw==:17
-        a=kj9zAlcOel0A:10 a=e_q4qTt1xDgA:10 a=7-415B0cAAAA:8
-        a=_EmLEX5E1_FSfXe-uIgA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20210707222111.16339-2-allison.henderson@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Jun 27, 2021 at 10:09:19PM -0700, Darrick J. Wong wrote:
-> > > I had imagined that you'd create a struct dax_iomap_ops to wrap all the extra
-> > > functionality that you need for dax operations:
-> > > 
-> > > struct dax_iomap_ops {
-> > > 	struct iomap_ops	iomap_ops;
-> > > 
-> > > 	int			(*end_io)(inode, pos, length...);
-> > > };
-> > > 
-> > > And alter the four functions that you need to take the special dax_iomap_ops.
-> > > I guess the downside is that this makes iomap_truncate_page and
-> > > iomap_zero_range more complicated, but maybe it's just time to split those into
-> > > DAX-specific versions.  Then we'd be rid of the cross-links betwee
-> > > fs/iomap/buffered-io.c and fs/dax.c.
-> > 
-> > This seems to be a better solution.  I'll try in this way.  Thanks for your guidance.
+On Wed, Jul 07, 2021 at 03:20:59PM -0700, Allison Henderson wrote:
+> During an attr rename operation, blocks are saved for later removal
+> as rmtblkno2. The rmtblkno is used in the case of needing to alloc
+> more blocks if not enough were available.  However, in the case
+> that neither rmtblkno or rmtblkno2 are set, we can return as soon
+> as xfs_attr_node_addname completes, rather than rolling the transaction
+> with an -EAGAIN return.  This extra loop does not hurt anything right
+> now, but it will be a problem later when we get into log items because
+> we end up with an empty log transaction.  So, add a simple check to
+> cut out the unneeded iteration.
 > 
-> I started writing on Friday a patchset to apply this style cleanup both
-> to the directio and dax paths.  The cleanups were pretty straightforward
-> until I started reading the dax code paths again and realized that file
-> writes still have the weird behavior of mapping extents into a file,
-> zeroing them, then issuing the actual write to the extent.  IOWs, a
-> double-write to avoid exposing stale contents if crash.
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_attr.c | 7 +++++++
+>  1 file changed, 7 insertions(+)
 > 
-> Apparently the reason for this was that dax (at least 6 years ago) had
-> no concept paralleling the page lock, so it was necessary to do that to
-> avoid page fault handlers racing to map pfns into the file mapping?
-> That would seem to prevent us from doing the more standard behavior of
-> allocate unwritten, write data, convert mapping... but is that still the
-> case?  Or can we get rid of this bad quirk?
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index 611dc67..5e81389 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -409,6 +409,13 @@ xfs_attr_set_iter(
+>  			if (error)
+>  				return error;
+>  
+> +			/*
+> +			 * If addname was successful, and we dont need to alloc
+> +			 * or remove anymore blks, we're done.
+> +			 */
+> +			if (!args->rmtblkno && !args->rmtblkno2)
+> +				return error;
 
-Yeah, so that was the deciding factor in getting rid of unwritten
-extent allocation in DAX similar to the DIO path. However, we were
-already considering getting rid of it for another reason: write
-performance.
+Is there actually an error to return here, or could this be a 'return 0;' ?
 
-That is, doing two extent tree manipulation transactions per write
-is way more expensive than the double memory write for small IOs.
-IIRC, for small writes (4kB) the double memroy write version we now
-have was 2-3x faster than the {unwritten allocation, write, convert}
-algorithm we had originally.
+--D
 
-I don't think we want to go back to the unwritten allocation
-behaviour - it sucked when it was first done because all DAX write
-IO is synchronous, and it will still suck now because DAX writes are
-still synchronous. What we really want to do here is copy the data
-into the new extent before we commit the allocation transaction....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> +
+>  			dac->dela_state = XFS_DAS_FOUND_NBLK;
+>  		}
+>  		return -EAGAIN;
+> -- 
+> 2.7.4
+> 
