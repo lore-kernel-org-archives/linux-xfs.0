@@ -7,79 +7,81 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C812AC07E99
-	for <linux-xfs@archiver.kernel.org>; Fri,  9 Jul 2021 04:29:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 503CEC07E99
+	for <linux-xfs@archiver.kernel.org>; Fri,  9 Jul 2021 04:33:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9263B6138C
-	for <linux-xfs@archiver.kernel.org>; Fri,  9 Jul 2021 04:29:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2A56E6144A
+	for <linux-xfs@archiver.kernel.org>; Fri,  9 Jul 2021 04:33:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229610AbhGIEcR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 9 Jul 2021 00:32:17 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33708 "EHLO mail.kernel.org"
+        id S229610AbhGIEgC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 9 Jul 2021 00:36:02 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45878 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229441AbhGIEcR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 9 Jul 2021 00:32:17 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 93C086141A;
-        Fri,  9 Jul 2021 04:29:34 +0000 (UTC)
+        id S229597AbhGIEgB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 9 Jul 2021 00:36:01 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 842956141A;
+        Fri,  9 Jul 2021 04:33:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625804974;
-        bh=3HNn/xpvrZs3tcQEA38VgCXMxppLux+mv+RaiGJT62o=;
+        s=k20201202; t=1625805198;
+        bh=JoETb+qFklac21gmiO+Lqb/tei8RPr0PpbPzWWMMNfM=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=S8NikfcmWmLYq+Tm7M1Flyuykyp8G4aXyYNFZ23Y3tc1Pf3ug0qhLUbg4M4dLRean
-         HdJunqhcBJdDXtvC+KE+k+8JkROEg2rSz7V85mnyzGfFLEHrBrCV9Q8tYTg3cBNrWh
-         P9yOKB/LhfnOzq7yosXNV78BgTCRLqi8apDFYOVv6B48lCeGGDSVACjBfHS4XTkZYW
-         jeaIz8iH+QRf+3vigvmOI+ptxeCHMQCswbxSw79r5WesKlakxE4uWlz6q9AezL6KVX
-         eA/RpHdViYBfh3o+ID6wSgWDfkmfLah98oEF/uS6WVmJubh3sUuyUaUU5w4yDNsr2r
-         lzamKJX/hCMqg==
-Date:   Thu, 8 Jul 2021 21:29:34 -0700
+        b=SvNcUTYZ+sv8KmyMZLQHaf79yGR4lL0J0MGRyZrTfafBoLs2P/aduZiGJH4eSVeC9
+         xisb8VvyDc4dfYOe3v+gtBdjvWPN1neziI2Mo7RQOguu33cZw7024oO6scLkxWLEZb
+         pSmE2Fqx6G+c8nR3vpBpbCQytD/TxNvzerziEm/3peOqZ/xtl0A3dWjWGYfvucSrVD
+         HplBdW2QEt9zTc8enXryqILml2mCVhLBovOuZHPnhXZoc5VyIwy/A23Ym3pewjzzpj
+         U0jPlSrz2SCdr4JI/9bjvYhaiOsoJe2wfBGHhB/9GHCNh+d1KysJEyMIdMnE6rBxIj
+         7dxwjddbDa4VA==
+Date:   Thu, 8 Jul 2021 21:33:18 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Andreas Gruenbacher <agruenba@redhat.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        cluster-devel@redhat.com
-Subject: Re: [PATCH v3 3/3] iomap: Don't create iomap_page objects in
- iomap_page_mkwrite_actor
-Message-ID: <20210709042934.GV11588@locust>
-References: <20210707115524.2242151-1-agruenba@redhat.com>
- <20210707115524.2242151-4-agruenba@redhat.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/9] xfs: convert log flags to an operational state field
+Message-ID: <20210709043318.GW11588@locust>
+References: <20210630063813.1751007-1-david@fromorbit.com>
+ <20210630063813.1751007-5-david@fromorbit.com>
+ <YN7LJ8jc4vjojrbs@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210707115524.2242151-4-agruenba@redhat.com>
+In-Reply-To: <YN7LJ8jc4vjojrbs@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jul 07, 2021 at 01:55:24PM +0200, Andreas Gruenbacher wrote:
-> Now that we create those objects in iomap_writepage_map when needed,
-> there's no need to pre-create them in iomap_page_mkwrite_actor anymore.
+On Fri, Jul 02, 2021 at 09:15:35AM +0100, Christoph Hellwig wrote:
+> > @@ -552,6 +552,7 @@ xfs_log_mount(
+> >  	xfs_daddr_t	blk_offset,
 > 
-> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+> >  {
+> > +	struct xlog	*log;
+> >  	bool		fatal = xfs_sb_version_hascrc(&mp->m_sb);
+> >  	int		error = 0;
+> >  	int		min_logfsbs;
+> > @@ -566,11 +567,12 @@ xfs_log_mount(
+> >  		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
+> >  	}
+> >  
+> > -	mp->m_log = xlog_alloc_log(mp, log_target, blk_offset, num_bblks);
+> > -	if (IS_ERR(mp->m_log)) {
+> > -		error = PTR_ERR(mp->m_log);
+> > +	log = xlog_alloc_log(mp, log_target, blk_offset, num_bblks);
+> > +	if (IS_ERR(log)) {
+> > +		error = PTR_ERR(log);
+> >  		goto out;
+> >  	}
+> > +	mp->m_log = log;
+> 
+> Additition of the local variable here looks rather unrelated, given
+> that the log is only touched twice in relation to the flags.
 
-I'd like to stage this series as a bugfix branch against -rc1 next week,
-if there are no other objections?
+Same comment as Christoph -- if you wanted to split the variable cutout
+into a separate patch, that's fine.  Don't really care that much though.
 
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> ---
->  fs/iomap/buffered-io.c | 1 -
->  1 file changed, 1 deletion(-)
 > 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 6330dabc451e..9f45050b61dd 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -999,7 +999,6 @@ iomap_page_mkwrite_actor(struct inode *inode, loff_t pos, loff_t length,
->  		block_commit_write(page, 0, length);
->  	} else {
->  		WARN_ON_ONCE(!PageUptodate(page));
-> -		iomap_page_create(inode, page);
->  		set_page_dirty(page);
->  	}
->  
-> -- 
-> 2.26.3
+> Otherwise looks good:
 > 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
