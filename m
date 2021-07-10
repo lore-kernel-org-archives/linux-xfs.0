@@ -2,99 +2,82 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AD65C07E9C
-	for <linux-xfs@archiver.kernel.org>; Sat, 10 Jul 2021 01:25:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53D7AC07E95
+	for <linux-xfs@archiver.kernel.org>; Sat, 10 Jul 2021 03:58:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 107A6613D0
-	for <linux-xfs@archiver.kernel.org>; Sat, 10 Jul 2021 01:25:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 267F5613D0
+	for <linux-xfs@archiver.kernel.org>; Sat, 10 Jul 2021 03:58:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231241AbhGJB1x (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 9 Jul 2021 21:27:53 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33534 "EHLO mail.kernel.org"
+        id S229625AbhGJEBQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 10 Jul 2021 00:01:16 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42246 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229703AbhGJB1x (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 9 Jul 2021 21:27:53 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 26C8161261;
-        Sat, 10 Jul 2021 01:25:09 +0000 (UTC)
+        id S229452AbhGJEBQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 10 Jul 2021 00:01:16 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C5C6461242;
+        Sat, 10 Jul 2021 03:58:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625880309;
-        bh=bv/G+g2o3FYnqlYs42+HT7mvywNUHIGlB53nAi3zoN4=;
+        s=k20201202; t=1625889511;
+        bh=a2ap6YqtCzSNC1BFzqUsH7gE/cFHVLYK+AMuns6Fhr0=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=hS7m2UVB89fALNy7sE+73UEJCY/TqmKvITZjuW+BzydXtBmNOrh3JybQjv5cYDrAh
-         EWbRLCnzblXPyX/O5h+7a6mO2iNLIrB9btUGwgs72H2/VHLwNjuWcWuFpPop2DVghx
-         Gd3qHDLKyBHiKzCgEuyXhm1JECc9xs2MxW/ynQdgewJtSpnbylapMgZxmuZGlEWtIf
-         tSK2ZVmIoZnXh+K2w/HOGn2TjjnBE7yLP43m6jLmEp2goGNkE4rVqAwsGB7CAdCooH
-         9BJ4WsY4/+dZj8DcgIZsHS8mSMpPEX9Qkkbkb8WDQpXxdrEdgaVR49YehBBVQGKiOr
-         2+mN1GDz7ZFxQ==
-Date:   Fri, 9 Jul 2021 18:25:08 -0700
+        b=f4z7qOaqYf5I485D9B4JU9NwfCqTU+4PCJF9lh5a2D9Px8ouIGFIuoWYaNB7udMrM
+         IgGb1LBSDj9Pm4cvhN9mnT+F5HI/iuM38cVSEn9vlQuNrL2QElHp1+E2HHU4FQQPVo
+         /0I779lHOhT/llr2//3nZxX4wAdGS10Ns9MV9FH56TDY54JYHHN/Ixb9vP9EwDICbU
+         FheshtElRXhfqivMU30qziyNnOGFZVXh2r0EiyhA5srVttqp9pJoRSUh27YIGY4t7f
+         CoDYgL7jfflVlAG8CKmDul0Xv1fBe3z4wzLKFDSimbLwEcU4KX4ECLOapG/8bFfD8C
+         xWMUfSjm1wQvg==
+Date:   Fri, 9 Jul 2021 20:58:31 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Allison Henderson <allison.henderson@oracle.com>
-Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org, guan@eryu.me
-Subject: Re: [PATCH 2/8] generic/561: hide assertions when duperemove is
- killed
-Message-ID: <20210710012508.GA11588@locust>
-References: <162561726690.543423.15033740972304281407.stgit@locust>
- <162561727795.543423.1496821526582808789.stgit@locust>
- <e600bbe5-1914-5f93-aec8-bab97b16c732@oracle.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: don't expose misaligned extszinherit hints to
+ userspace
+Message-ID: <20210710035831.GB11588@locust>
+References: <20210709041209.GO11588@locust>
+ <YOfrxV9p1Bhrs1jD@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <e600bbe5-1914-5f93-aec8-bab97b16c732@oracle.com>
+In-Reply-To: <YOfrxV9p1Bhrs1jD@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jul 09, 2021 at 04:38:46PM -0700, Allison Henderson wrote:
-> 
-> 
-> On 7/6/21 5:21 PM, Darrick J. Wong wrote:
+On Fri, Jul 09, 2021 at 07:25:09AM +0100, Christoph Hellwig wrote:
+> On Thu, Jul 08, 2021 at 09:12:09PM -0700, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > Use some bash redirection trickery to capture in $seqres.full all of
-> > bash's warnings about duperemove being killed due to assertions
-> > triggering.
+> > Commit 603f000b15f2 changed xfs_ioctl_setattr_check_extsize to reject an
+> > attempt to set an EXTSZINHERIT extent size hint on a directory with
+> > RTINHERIT set if the hint isn't a multiple of the realtime extent size.
+> > However, I have recently discovered that it is possible to change the
+> > realtime extent size when adding a rt device to a filesystem, which
+> > means that the existence of directories with misaligned inherited hints
+> > is not an accident.
 > > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >   tests/generic/561 |    9 +++++++--
-> >   1 file changed, 7 insertions(+), 2 deletions(-)
-> > 
-> > 
-> > diff --git a/tests/generic/561 b/tests/generic/561
-> > index bfd4443d..85037e50 100755
-> > --- a/tests/generic/561
-> > +++ b/tests/generic/561
-> > @@ -62,8 +62,13 @@ dupe_run=$TEST_DIR/${seq}-running
-> >   touch $dupe_run
-> >   for ((i = 0; i < $((2 * LOAD_FACTOR)); i++)); do
-> >   	while [ -e $dupe_run ]; do
-> > -		$DUPEREMOVE_PROG -dr --dedupe-options=same $testdir \
-> > -			>>$seqres.full 2>&1
-> > +		# Employ shell trickery here so that the golden output does not
-> nit:
-> I think I'd be more more specific with the commentary:
+> > As a result, it's possible that someone could have set a valid hint and
+> > added an rt volume with a different rt extent size, which invalidates
+> > the ondisk hints.  After such a sequence, FSGETXATTR will report a
+> > misaligned hint, which FSSETXATTR will trip over, causing confusion if
+> > the user was doing the usual GET/SET sequence to change some other
+> > attribute.  Change xfs_fill_fsxattr to omit the hint if it isn't aligned
+> > properly.
 > 
->                 # We run cmd in a bash shell so that the golden output ...
+> Looks sensible, but maybe we need a pr_info_ratelimited to inform
+> the user of this case?
 
-Ok, fixed.
+Why?  Now that I've established that the system administrator is and
+always has been allowed to invalidate the extent size hints when
+realtime volumes are in play, I don't think we need to spam the kernel
+log about the admin's strange choices.
+
+The only reason I put that xfs_info_once thing in 603f00 is because I
+mistakenly thought that the only way we could end up with a fs like that
+was due to gaps in user input sanitization, i.e. fs isn't supposed to be
+weird, but it is anyway.
 
 --D
-
-> > +		# capture assertions that trigger when killall shoots down
-> > +		# dupremove processes in an arbitrary order, which leaves the
-> > +		# memory in an inconsistent state long enough for the assert
-> > +		# to trip.
-> > +		cmd="$DUPEREMOVE_PROG -dr --dedupe-options=same $testdir"
-> > +		bash -c "$cmd" >> $seqres.full 2>&1
-> >   	done 2>&1 | sed -e '/Terminated/d' &
-> >   	dedup_pids="$! $dedup_pids"
-> >   done
-> > 
-> Otherwise looks fine to me
-> Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
