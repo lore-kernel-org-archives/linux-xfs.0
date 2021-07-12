@@ -2,116 +2,66 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3532C11F72
-	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jul 2021 16:58:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07BD8C07E99
+	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jul 2021 22:07:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B4B3D60C3E
-	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jul 2021 16:58:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E2A4D61353
+	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jul 2021 22:07:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235259AbhGLRAw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 12 Jul 2021 13:00:52 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:34630 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234778AbhGLQ7D (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jul 2021 12:59:03 -0400
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id 4BC5F2212F;
-        Mon, 12 Jul 2021 16:56:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1626108970; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=aHhQqe8KTjBCv9r4mi6xe2At5YRjoevCFxA6zjCOvEc=;
-        b=ZESWo0+jV0zYOW8UBnDvLHP40wD4Mizkdi3GL2a5tQw4l+5H/3r+WCw8lG38ognWMuzAir
-        tcOcmkCMPX37xr1NU0VCTckY3UvvDDj7tTD3Bu1lsU8C3dGjMa8KO/+dkjOoL7uaQvat0m
-        liWED2/F46K5fur5cg9oAjmpvcw++80=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1626108970;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=aHhQqe8KTjBCv9r4mi6xe2At5YRjoevCFxA6zjCOvEc=;
-        b=nwaFUtZvJiGfTCuyP2yCuDyUqORKcbdPqKWTp4GjFiBFK+dHUOfXJaNP2sLvWW4bNywxzi
-        Vs5yDOLGBuV5+AAg==
-Received: from quack2.suse.cz (unknown [10.100.224.230])
-        by relay2.suse.de (Postfix) with ESMTP id 34EB6A3B8C;
-        Mon, 12 Jul 2021 16:56:10 +0000 (UTC)
-Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id EADE31F2CE6; Mon, 12 Jul 2021 18:56:09 +0200 (CEST)
-From:   Jan Kara <jack@suse.cz>
-To:     <linux-fsdevel@vger.kernel.org>
-Cc:     <linux-ext4@vger.kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        "Darrick J. Wong" <djwong@kernel.org>, Ted Tso <tytso@mit.edu>,
-        Dave Chinner <david@fromorbit.com>,
-        Matthew Wilcox <willy@infradead.org>, <linux-mm@kvack.org>,
-        <linux-xfs@vger.kernel.org>,
-        linux-f2fs-devel@lists.sourceforge.net, linux-cifs@vger.kernel.org,
-        ceph-devel@vger.kernel.org, Jan Kara <jack@suse.cz>,
-        Steve French <sfrench@samba.org>
-Subject: [PATCH 14/14] cifs: Fix race between hole punch and page fault
-Date:   Mon, 12 Jul 2021 18:56:05 +0200
-Message-Id: <20210712165609.13215-14-jack@suse.cz>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20210712163901.29514-1-jack@suse.cz>
-References: <20210712163901.29514-1-jack@suse.cz>
+        id S230394AbhGLWKJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 12 Jul 2021 18:10:09 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55128 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230376AbhGLWKJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 12 Jul 2021 18:10:09 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 458EA611C1;
+        Mon, 12 Jul 2021 22:07:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1626127640;
+        bh=UiHLhQjLj4ZcpAbwkngbgvlWCca6AukgPXxfdpSr93M=;
+        h=Subject:From:To:Cc:Date:From;
+        b=LeQCclaoorGg3D7TuziD/00F92SDoeJwY96ntQuKH6jTMLrhitCIxt2FNBlJpX4Gl
+         APKWkrb2RhEUt5IhptC7xR93wpMGLGUNnu2E/cG6bhx/zfxHr+7BLt2+6i669vx/Dt
+         XdMeqMU+AyMbBNknGKiRoDNCjdO5HumXR42wpY+rdUnJb1C1C30x1UYBDes3VQys6U
+         Rq47IjA1cUEN243Mi333PKl8+ALxUChy5rLE20TT12TVW6q+XNgo08KepFosG0dRH8
+         sVXZoBpfNIo9DH7TkzCpSoDIF+q0IQFNUoaswFFM8nHjML7KxhSfgnuPELMWoVeo6J
+         oJimhxuH+yX2A==
+Subject: [PATCHSET 0/2] xfs: small fixes to realtime growfs
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     djwong@kernel.org
+Cc:     linux-xfs@vger.kernel.org
+Date:   Mon, 12 Jul 2021 15:07:19 -0700
+Message-ID: <162612763990.39052.10884597587360249026.stgit@magnolia>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1533; h=from:subject; bh=1e9BARQoajJDSgUdYORenFPF3ecMZ7Jduf79ehs8h7w=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBg7HQkAS6+mJ6okwtt/iRndokM6RsjeRiTUsodrmWd daZifx6JATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCYOx0JAAKCRCcnaoHP2RA2a2dB/ sGPl7L7iNC+Ygp3aaAb8TuC+CK7Fa16RT+41tzwVRlQcnfmi7CVZIqfg9wn8dFg+Rwo985dKOjqKBC Rkbj05bjkHH9zmlZ5YZ+X92bgSHksva5hcdPkI3PM5v6sCXvIMGdeKJvQ7OUyLqoS8vAwHFZCA6FfN oKBhzEjKFekquNo/8GdftAgbDSO70kSs2v1iR2SpAHq/DWr1NsJ0/SUel0YbkYCJVK/t1Jybo0fOS3 hzlpdrYgSafKZV1HZ762tDktI+gjO6r/m5sW8bVZitIHHqVxrctKOIPAGfL2NMRnxMzWVNlMBMdoo7 Y6A0YzNG5g9ezVbk8Vutbf63fL3esc
-X-Developer-Key: i=jack@suse.cz; a=openpgp; fpr=93C6099A142276A28BBE35D815BC833443038D8C
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Cifs has a following race between hole punching and page fault:
+Hi all,
 
-CPU1                                            CPU2
-smb3_fallocate()
-  smb3_punch_hole()
-    truncate_pagecache_range()
-                                                filemap_fault()
-                                                  - loads old data into the
-                                                    page cache
-    SMB2_ioctl(..., FSCTL_SET_ZERO_DATA, ...)
+While auditing the GROWFSRT ioctl, I noticed that there are a few things
+missing in the argument validation code that could lead to invalid fs
+geometry.  Fix the validation and overflow errors.
 
-And now we have stale data in the page cache. Fix the problem by locking
-out faults (as well as reads) using mapping->invalidate_lock while hole
-punch is running.
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
-CC: Steve French <sfrench@samba.org>
-CC: linux-cifs@vger.kernel.org
-Signed-off-by: Jan Kara <jack@suse.cz>
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=growfsrt-fixes
 ---
- fs/cifs/smb2ops.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/fs/cifs/smb2ops.c b/fs/cifs/smb2ops.c
-index e4c8f603dd58..458c546ce8cd 100644
---- a/fs/cifs/smb2ops.c
-+++ b/fs/cifs/smb2ops.c
-@@ -3588,6 +3588,7 @@ static long smb3_punch_hole(struct file *file, struct cifs_tcon *tcon,
- 		return rc;
- 	}
- 
-+	filemap_invalidate_lock(inode->i_mapping);
- 	/*
- 	 * We implement the punch hole through ioctl, so we need remove the page
- 	 * caches first, otherwise the data may be inconsistent with the server.
-@@ -3605,6 +3606,7 @@ static long smb3_punch_hole(struct file *file, struct cifs_tcon *tcon,
- 			sizeof(struct file_zero_data_information),
- 			CIFSMaxBufSize, NULL, NULL);
- 	free_xid(xid);
-+	filemap_invalidate_unlock(inode->i_mapping);
- 	return rc;
- }
- 
--- 
-2.26.2
+ fs/xfs/xfs_rtalloc.c |   22 +++++++++++++++++-----
+ 1 file changed, 17 insertions(+), 5 deletions(-)
 
