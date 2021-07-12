@@ -2,45 +2,50 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D74DCC11F98
-	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jul 2021 16:56:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A055C11F9C
+	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jul 2021 16:56:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B487061260
-	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jul 2021 16:56:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EEC09610FA
+	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jul 2021 16:56:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234725AbhGLQ7Y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 12 Jul 2021 12:59:24 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:34506 "EHLO
+        id S234366AbhGLQ70 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 12 Jul 2021 12:59:26 -0400
+Received: from smtp-out1.suse.de ([195.135.220.28]:34554 "EHLO
         smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234300AbhGLQ7B (ORCPT
+        with ESMTP id S234486AbhGLQ7B (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jul 2021 12:59:01 -0400
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id EDC4B21A75;
-        Mon, 12 Jul 2021 16:56:09 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTP id 2BA3B2211B;
+        Mon, 12 Jul 2021 16:56:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1626108969; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=Xtj0uq/0myKG76i6UCshFGN5FKtbSNJBLWeNEEm5CDI=;
-        b=GjS2IA9SK053DbdzylFNJsY7fStUV8dPVrF7oJWUSr8JYDCbZlHxpna4rF2eACH5+nWrEm
-        wSuLJyVJuTpd9sBxg2lNss9r0EgUDL3428YTNt1iOE8N64TqocZi75BYQtR7BSBBDv87IP
-        6A3ucYc8Cwm6EnGmqbye6sawTQJ8DYc=
+        t=1626108970; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=VgWT5tfqbtBkDrX2L7CznODEgq2BTXfXClIF6lsIWFg=;
+        b=Sm5c7q5vWIleHI665sSlVqnIrmuMub99LSvmLfGEhJccZqjnJXyrAs5+vU7ohfHa6X49lk
+        j5Z1aOGlYv4JgU+r2T/j4S7bic9cq7vsqwGzRucEjnyD56rtZ9vxoByE2FwlqWDJlb7Aaf
+        VJcLT6/yo9sxoeIZzfkVhnm/dYkhVlE=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1626108969;
+        s=susede2_ed25519; t=1626108970;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=Xtj0uq/0myKG76i6UCshFGN5FKtbSNJBLWeNEEm5CDI=;
-        b=5B9eLyhHO+vIbAPuMzJzAB22YkY7v4aEjUn2B2hK46Mclu+15Esnocf6c7/z0YSWpqPuIH
-        hiBGFLy6GTEH/JCw==
+         mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=VgWT5tfqbtBkDrX2L7CznODEgq2BTXfXClIF6lsIWFg=;
+        b=vuGVDsvOKxWoy5sgAZUaacamI2k1MtX0dlMhk/EuWnR85DX4i1myzVVkznWRlIEQiNzrfC
+        j+o+MM6xz4ia+LCw==
 Received: from quack2.suse.cz (unknown [10.100.224.230])
-        by relay2.suse.de (Postfix) with ESMTP id D6C50A3B85;
-        Mon, 12 Jul 2021 16:56:09 +0000 (UTC)
+        by relay2.suse.de (Postfix) with ESMTP id 1A351A3B8F;
+        Mon, 12 Jul 2021 16:56:10 +0000 (UTC)
 Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id B39BB1F2C73; Mon, 12 Jul 2021 18:56:09 +0200 (CEST)
+        id CA7FD1F2CD6; Mon, 12 Jul 2021 18:56:09 +0200 (CEST)
 From:   Jan Kara <jack@suse.cz>
 To:     <linux-fsdevel@vger.kernel.org>
 Cc:     <linux-ext4@vger.kernel.org>,
@@ -50,126 +55,161 @@ Cc:     <linux-ext4@vger.kernel.org>,
         Matthew Wilcox <willy@infradead.org>, <linux-mm@kvack.org>,
         <linux-xfs@vger.kernel.org>,
         linux-f2fs-devel@lists.sourceforge.net, linux-cifs@vger.kernel.org,
-        ceph-devel@vger.kernel.org, Jan Kara <jack@suse.cz>
-Subject: [PATCH 0/14 v9] fs: Hole punch vs page cache filling races
-Date:   Mon, 12 Jul 2021 18:55:51 +0200
-Message-Id: <20210712163901.29514-1-jack@suse.cz>
+        ceph-devel@vger.kernel.org, Jan Kara <jack@suse.cz>,
+        Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 06/14] ext2: Convert to using invalidate_lock
+Date:   Mon, 12 Jul 2021 18:55:57 +0200
+Message-Id: <20210712165609.13215-6-jack@suse.cz>
 X-Mailer: git-send-email 2.26.2
+In-Reply-To: <20210712163901.29514-1-jack@suse.cz>
+References: <20210712163901.29514-1-jack@suse.cz>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=5196; h=from:subject:message-id; bh=XiQmf05nBMDvngHxQWByxd1f92aY+kMKTDoJHofitYs=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBg7HQTZMMdC5sufdgGKIffBj9wwKgqdITv590HLevy Z7sIsGmJATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCYOx0EwAKCRCcnaoHP2RA2aMTB/ 0YTOgw9rZ2dhbmzLjJSc3gKbebvfbU4BCC8HS49Oq6gau26jy4GOmldKR1QLjxYomEwmOSt/EYaDBK uAq/t3ZD4sNEeDSGYAj3dFIWPNtJFLkZ/X091EDAH3DTYOWxDbRSuxtdXOQQ8PSvW1aLbLb5bhCvKr 3o4gkK+g5pCZLQ3a9+DPQ0iNXTJx5bMZT390m6HWyhHGqdoSHS30+vws5GZ8eeGPa4TaveOO0F9/tr h5Dc3/AlGTVWvmF7qUWqh9NKEFnXVCALnQVHVkGLNaAxdPdrtgS4dpt6gZq33krhLnlp/Jvyap4I9R W65IC1Z2kJ/oS+DkSpZ1co4C46fEfQ
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4727; h=from:subject; bh=ym49Iu4QRUik/RZXy3TKmo1SdbNHjClhswakdveozJ4=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBg7HQdXqVppyqhs9Kow3gAlNxylsvMUO1Q8weiZrXk EGLnB5OJATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCYOx0HQAKCRCcnaoHP2RA2UOjB/ 4vizzKQOY3566vzcBx+Oo+EVCYDCp8fWw67wRuEwuKvbkWrtvFa4EL5D3aZd+jpmPZZxmIAnsZsrge TAVfNnOyq7uQPu5FJdfkukZLHHaiuZOyWEzBPvwKOc3mkzuQv+oZDpL+N9i7oyfcYTpZWJhjKZln49 h28u8FRs/Gy4s43hnmXsUcOGmvhjwgWRHOrLOlOSrB/0ui08NuYnuIEj+0JjNzno9wP0c/k0QxseC8 WBN1T3YIhaI3OV7ZLCv+UcIGM3Ezjm4TOkl0ZRxanSejUaZ9Nzg6D/EB7j9MvNZcCmolZUdqK6QCTK lGzG4V/9QFGv3wSLKROh+XLf7n8Ep6
 X-Developer-Key: i=jack@suse.cz; a=openpgp; fpr=93C6099A142276A28BBE35D815BC833443038D8C
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello,
+Ext2 has its private dax_sem used for synchronizing page faults and
+truncation. Use mapping->invalidate_lock instead as it is meant for this
+purpose.
 
-here is another version of my patches to address races between hole punching
-and page cache filling functions for ext4 and other filesystems. The only
-significant change since last time is the change in patch 3/14 requested by
-Linus that we don't acquire invalidate_lock when the page is already in the
-page cache and uptodate. Darrick, Christoph, can you please review that change?
-
-Out of all filesystem supporting hole punching, only GFS2 and OCFS2 remain
-unresolved. GFS2 people are working on their own solution (cluster locking is
-involved), OCFS2 has even bigger issues (maintainers informed, looking into
-it).
-
-Once this series lands, I'd like to actually make sure all calls to
-truncate_inode_pages() happen under mapping->invalidate_lock, add the assert
-and then we can also get rid of i_size checks in some places (truncate can
-use the same serialization scheme as hole punch). But that step is mostly
-a cleanup so I'd like to get these functional fixes in first.
-
-The series can be also pulled from:
-git://git.kernel.org/pub/scm/linux/kernel/git/jack/linux-fs.git hole_punch_fixes
-
-Changes since v8:
-* Rebased on top of 5.14-rc1
-* Fixed up conflict in f2fs
-* Modified filemap_fault() to acquire invalidate lock only when creating page
-  in the page cache or loading it from the disk
-* Added some reviewed-by's
-
-Changes since v7:
-* Rebased on top of 5.13-rc6
-* Added some reviewed-by tags
-* Simplified xfs_isilocked() changes as Dave Chinner suggested
-* Minor documentation formulation improvements
-
-Changes since v6:
-* Added some reviewed-by tags
-* Added wrapper for taking invalidate_lock similar to inode_lock
-* Renamed wrappers for taking invalidate_lock for two inodes
-* Added xfs patch to make xfs_isilocked() work better even without lockdep
-* Some minor documentation fixes
-
-Changes since v5:
-* Added some reviewed-by tags
-* Added functions for locking two mappings and using them from XFS where needed
-* Some minor code style & comment fixes
-
-Changes since v4:
-* Rebased onto 5.13-rc1
-* Removed shmfs conversion patches
-* Fixed up zonefs changelog
-* Fixed up XFS comments
-* Added patch fixing up definition of file_operations in Documentation/vfs/
-* Updated documentation and comments to explain invalidate_lock is used also
-  to prevent changes through memory mappings to existing pages for some VFS
-  operations.
-
-Changes since v3:
-* Renamed and moved lock to struct address_space
-* Added conversions of tmpfs, ceph, cifs, fuse, f2fs
-* Fixed error handling path in filemap_read()
-* Removed .page_mkwrite() cleanup from the series for now
-
-Changes since v2:
-* Added documentation and comments regarding lock ordering and how the lock is
-  supposed to be used
-* Added conversions of ext2, xfs, zonefs
-* Added patch removing i_mapping_sem protection from .page_mkwrite handlers
-
-Changes since v1:
-* Moved to using inode->i_mapping_sem instead of aops handler to acquire
-  appropriate lock
-
+CC: <linux-ext4@vger.kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Jan Kara <jack@suse.cz>
 ---
-Motivation:
+ fs/ext2/ext2.h  | 11 -----------
+ fs/ext2/file.c  |  7 +++----
+ fs/ext2/inode.c | 12 ++++++------
+ fs/ext2/super.c |  3 ---
+ 4 files changed, 9 insertions(+), 24 deletions(-)
 
-Amir has reported [1] a that ext4 has a potential issues when reads can race
-with hole punching possibly exposing stale data from freed blocks or even
-corrupting filesystem when stale mapping data gets used for writeout. The
-problem is that during hole punching, new page cache pages can get instantiated
-and block mapping from the looked up in a punched range after
-truncate_inode_pages() has run but before the filesystem removes blocks from
-the file. In principle any filesystem implementing hole punching thus needs to
-implement a mechanism to block instantiating page cache pages during hole
-punching to avoid this race. This is further complicated by the fact that there
-are multiple places that can instantiate pages in page cache.  We can have
-regular read(2) or page fault doing this but fadvise(2) or madvise(2) can also
-result in reading in page cache pages through force_page_cache_readahead().
+diff --git a/fs/ext2/ext2.h b/fs/ext2/ext2.h
+index b0a694820cb7..81907a041570 100644
+--- a/fs/ext2/ext2.h
++++ b/fs/ext2/ext2.h
+@@ -667,9 +667,6 @@ struct ext2_inode_info {
+ 	struct rw_semaphore xattr_sem;
+ #endif
+ 	rwlock_t i_meta_lock;
+-#ifdef CONFIG_FS_DAX
+-	struct rw_semaphore dax_sem;
+-#endif
+ 
+ 	/*
+ 	 * truncate_mutex is for serialising ext2_truncate() against
+@@ -685,14 +682,6 @@ struct ext2_inode_info {
+ #endif
+ };
+ 
+-#ifdef CONFIG_FS_DAX
+-#define dax_sem_down_write(ext2_inode)	down_write(&(ext2_inode)->dax_sem)
+-#define dax_sem_up_write(ext2_inode)	up_write(&(ext2_inode)->dax_sem)
+-#else
+-#define dax_sem_down_write(ext2_inode)
+-#define dax_sem_up_write(ext2_inode)
+-#endif
+-
+ /*
+  * Inode dynamic state flags
+  */
+diff --git a/fs/ext2/file.c b/fs/ext2/file.c
+index f98466acc672..eb97aa3d700e 100644
+--- a/fs/ext2/file.c
++++ b/fs/ext2/file.c
+@@ -81,7 +81,7 @@ static ssize_t ext2_dax_write_iter(struct kiocb *iocb, struct iov_iter *from)
+  *
+  * mmap_lock (MM)
+  *   sb_start_pagefault (vfs, freeze)
+- *     ext2_inode_info->dax_sem
++ *     address_space->invalidate_lock
+  *       address_space->i_mmap_rwsem or page_lock (mutually exclusive in DAX)
+  *         ext2_inode_info->truncate_mutex
+  *
+@@ -91,7 +91,6 @@ static ssize_t ext2_dax_write_iter(struct kiocb *iocb, struct iov_iter *from)
+ static vm_fault_t ext2_dax_fault(struct vm_fault *vmf)
+ {
+ 	struct inode *inode = file_inode(vmf->vma->vm_file);
+-	struct ext2_inode_info *ei = EXT2_I(inode);
+ 	vm_fault_t ret;
+ 	bool write = (vmf->flags & FAULT_FLAG_WRITE) &&
+ 		(vmf->vma->vm_flags & VM_SHARED);
+@@ -100,11 +99,11 @@ static vm_fault_t ext2_dax_fault(struct vm_fault *vmf)
+ 		sb_start_pagefault(inode->i_sb);
+ 		file_update_time(vmf->vma->vm_file);
+ 	}
+-	down_read(&ei->dax_sem);
++	filemap_invalidate_lock_shared(inode->i_mapping);
+ 
+ 	ret = dax_iomap_fault(vmf, PE_SIZE_PTE, NULL, NULL, &ext2_iomap_ops);
+ 
+-	up_read(&ei->dax_sem);
++	filemap_invalidate_unlock_shared(inode->i_mapping);
+ 	if (write)
+ 		sb_end_pagefault(inode->i_sb);
+ 	return ret;
+diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
+index dadb121beb22..33f874f0fc4a 100644
+--- a/fs/ext2/inode.c
++++ b/fs/ext2/inode.c
+@@ -1177,7 +1177,7 @@ static void ext2_free_branches(struct inode *inode, __le32 *p, __le32 *q, int de
+ 		ext2_free_data(inode, p, q);
+ }
+ 
+-/* dax_sem must be held when calling this function */
++/* mapping->invalidate_lock must be held when calling this function */
+ static void __ext2_truncate_blocks(struct inode *inode, loff_t offset)
+ {
+ 	__le32 *i_data = EXT2_I(inode)->i_data;
+@@ -1194,7 +1194,7 @@ static void __ext2_truncate_blocks(struct inode *inode, loff_t offset)
+ 	iblock = (offset + blocksize-1) >> EXT2_BLOCK_SIZE_BITS(inode->i_sb);
+ 
+ #ifdef CONFIG_FS_DAX
+-	WARN_ON(!rwsem_is_locked(&ei->dax_sem));
++	WARN_ON(!rwsem_is_locked(&inode->i_mapping->invalidate_lock));
+ #endif
+ 
+ 	n = ext2_block_to_path(inode, iblock, offsets, NULL);
+@@ -1276,9 +1276,9 @@ static void ext2_truncate_blocks(struct inode *inode, loff_t offset)
+ 	if (ext2_inode_is_fast_symlink(inode))
+ 		return;
+ 
+-	dax_sem_down_write(EXT2_I(inode));
++	filemap_invalidate_lock(inode->i_mapping);
+ 	__ext2_truncate_blocks(inode, offset);
+-	dax_sem_up_write(EXT2_I(inode));
++	filemap_invalidate_unlock(inode->i_mapping);
+ }
+ 
+ static int ext2_setsize(struct inode *inode, loff_t newsize)
+@@ -1308,10 +1308,10 @@ static int ext2_setsize(struct inode *inode, loff_t newsize)
+ 	if (error)
+ 		return error;
+ 
+-	dax_sem_down_write(EXT2_I(inode));
++	filemap_invalidate_lock(inode->i_mapping);
+ 	truncate_setsize(inode, newsize);
+ 	__ext2_truncate_blocks(inode, newsize);
+-	dax_sem_up_write(EXT2_I(inode));
++	filemap_invalidate_unlock(inode->i_mapping);
+ 
+ 	inode->i_mtime = inode->i_ctime = current_time(inode);
+ 	if (inode_needs_sync(inode)) {
+diff --git a/fs/ext2/super.c b/fs/ext2/super.c
+index 21e09fbaa46f..987bcf32ed46 100644
+--- a/fs/ext2/super.c
++++ b/fs/ext2/super.c
+@@ -206,9 +206,6 @@ static void init_once(void *foo)
+ 	init_rwsem(&ei->xattr_sem);
+ #endif
+ 	mutex_init(&ei->truncate_mutex);
+-#ifdef CONFIG_FS_DAX
+-	init_rwsem(&ei->dax_sem);
+-#endif
+ 	inode_init_once(&ei->vfs_inode);
+ }
+ 
+-- 
+2.26.2
 
-There are couple of ways how to fix this. First way (currently implemented by
-XFS) is to protect read(2) and *advise(2) calls with i_rwsem so that they are
-serialized with hole punching. This is easy to do but as a result all reads
-would then be serialized with writes and thus mixed read-write workloads suffer
-heavily on ext4. Thus this series introduces inode->i_mapping_sem and uses it
-when creating new pages in the page cache and looking up their corresponding
-block mapping. We also replace EXT4_I(inode)->i_mmap_sem with this new rwsem
-which provides necessary serialization with hole punching for ext4.
-
-								Honza
-
-[1] https://lore.kernel.org/linux-fsdevel/CAOQ4uxjQNmxqmtA_VbYW0Su9rKRk2zobJmahcyeaEVOFKVQ5dw@mail.gmail.com/
-
-Previous versions:
-Link: https://lore.kernel.org/linux-fsdevel/20210208163918.7871-1-jack@suse.cz/
-Link: https://lore.kernel.org/r/20210413105205.3093-1-jack@suse.cz
-Link: https://lore.kernel.org/r/20210423171010.12-1-jack@suse.cz
-Link: https://lore.kernel.org/r/20210512101639.22278-1-jack@suse.cz
-Link: https://lore.kernel.org/r/20210525125652.20457-1-jack@suse.cz
-Link: https://lore.kernel.org/r/20210607144631.8717-1-jack@suse.cz
-Link: http://lore.kernel.org/r/20210615090844.6045-1-jack@suse.cz # v8
