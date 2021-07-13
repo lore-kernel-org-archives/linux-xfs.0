@@ -2,128 +2,165 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0CA5C07E95
-	for <linux-xfs@archiver.kernel.org>; Tue, 13 Jul 2021 12:35:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C97F6C07E95
+	for <linux-xfs@archiver.kernel.org>; Tue, 13 Jul 2021 17:18:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9E59F61289
-	for <linux-xfs@archiver.kernel.org>; Tue, 13 Jul 2021 12:35:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AF1FD61249
+	for <linux-xfs@archiver.kernel.org>; Tue, 13 Jul 2021 17:18:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236157AbhGMMik (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 13 Jul 2021 08:38:40 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:33706 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236137AbhGMMij (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Jul 2021 08:38:39 -0400
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id 83C3D22075;
-        Tue, 13 Jul 2021 12:35:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1626179748; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=nlezZmaJGKsn3wThAAqUns1S5039quPyWkLk1BLMszA=;
-        b=L0Ik4SGLKPMprCMpIDZu5I9SJkk6iVnXbqXSILIKOJ1tUsAz+3nm9Fiv2/sQhIhFL9aOmi
-        Xdd54ETzCRoMIv/6ptRzy+K8vp6P0oCs0DxP7fFszUwp7i+yxHOadd6Ea9UosE6mdaj5+9
-        3H6ZtOh5KYeEBpKjmeYcIikKLdDRKL4=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1626179748;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=nlezZmaJGKsn3wThAAqUns1S5039quPyWkLk1BLMszA=;
-        b=k26gwy3dwwIlQyBP4N54gjqPfnfyayfHxU0JZPsEVY6lWzaQ34iMd6jTvkatBxRCs6Y6HK
-        8UfNH2RVTEz7qqDg==
-Received: from quack2.suse.cz (unknown [10.100.224.230])
-        by relay2.suse.de (Postfix) with ESMTP id 6FB26A3BBB;
-        Tue, 13 Jul 2021 12:35:48 +0000 (UTC)
-Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id 4DCC31E0BBC; Tue, 13 Jul 2021 14:35:48 +0200 (CEST)
-Date:   Tue, 13 Jul 2021 14:35:48 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org,
-        linux-ext4@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>,
-        Ted Tso <tytso@mit.edu>, Dave Chinner <david@fromorbit.com>,
-        Matthew Wilcox <willy@infradead.org>, linux-mm@kvack.org,
-        linux-xfs@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        linux-cifs@vger.kernel.org, ceph-devel@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 03/14] mm: Protect operations adding pages to page cache
- with invalidate_lock
-Message-ID: <20210713123548.GA24271@quack2.suse.cz>
-References: <20210712163901.29514-1-jack@suse.cz>
- <20210712165609.13215-3-jack@suse.cz>
- <YO0xwY+q7d8rQE3f@infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YO0xwY+q7d8rQE3f@infradead.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        id S229475AbhGMRVi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 13 Jul 2021 13:21:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55538 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229454AbhGMRVh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Jul 2021 13:21:37 -0400
+Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C196FC0613E9
+        for <linux-xfs@vger.kernel.org>; Tue, 13 Jul 2021 10:18:47 -0700 (PDT)
+Received: by mail-pj1-x1034.google.com with SMTP id i16-20020a17090acf90b02901736d9d2218so2552807pju.1
+        for <linux-xfs@vger.kernel.org>; Tue, 13 Jul 2021 10:18:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=dilger-ca.20150623.gappssmtp.com; s=20150623;
+        h=from:message-id:mime-version:subject:date:in-reply-to:cc:to
+         :references;
+        bh=KmC9PqGKr2ILpbVQwV9g2D6L3OtYrbn8qOnUplZx+iI=;
+        b=njNA0I+6hz9Jfn4Njkxrc7DMg7EOtHvBkOByo6Hzsc/Z80XxlQnso8vAuNJ62cKoUf
+         Aci0lxEMSHBDebLw+3dhkbHEuai798pjsRMiU+c6WeqY2sM9l+gOrGzKw/KQPCILACFc
+         H8m6GVahUKIYz7LQZhITjX7WfbHTp1NGH8GVSwhvGi+6nv+aBEGKjiRqs16vMmpzEqRb
+         nldsSwyhXMVbIEy0F8Q2W89QSQLbQUI647eSp4qUiVWkGTJXWgS86BXQJulwjmFbGWdi
+         dwE/vqIe/2u/NrbYw1G/g8uRL97X+lbMxtIvfVKyPK8dl2WHVmn7zOVD0Mx6JjfMTmT+
+         wPNw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:message-id:mime-version:subject:date
+         :in-reply-to:cc:to:references;
+        bh=KmC9PqGKr2ILpbVQwV9g2D6L3OtYrbn8qOnUplZx+iI=;
+        b=hlaN0g6vvqtg1pKCItVpZ7EGfTU/QnnK06MgBSw/Fs8FPj1MobONFf+uXa4JVTl5ce
+         xAm+SdLW1CuCmhtyt18GKRiuauvqAYa4Pk7SUXNNXAr8A9bVetVDnosAnRs0+ZL0GhbW
+         yD3OR37U34c1Fe6wfcsI+T8EiAKLl54sn/sCT8TGGAB/PZSeNyyQUTmC/dDi5Pd8fIUm
+         +VU4MDWSyyaYrJJML3p7gnKvYmVBP/7I9/YbYh5fSOogqbqBEtWdDFLSea+C8rw+uK7f
+         X7gUy5AcHPZQ5tfsPQhzNCu2xg9mBFurYfPAwvfjI4XjtsN4udtmhABHFl/kRBkX+s0w
+         EBpg==
+X-Gm-Message-State: AOAM532fy5u+1oIA0o23WDSB3sGSG2ekCMGrcx8gfAF2WUFUY8cYZP/+
+        uKzHw9pSl2HO0aHJWXQZtA0wog==
+X-Google-Smtp-Source: ABdhPJzd0wJV/9j7yMcch7NlugW+6N+rCME1YUBxhvoZ01nsstAJVXqNTfhO4oIK1aNIgcUVaw9FDA==
+X-Received: by 2002:a17:90a:688f:: with SMTP id a15mr5367425pjd.84.1626196727189;
+        Tue, 13 Jul 2021 10:18:47 -0700 (PDT)
+Received: from cabot.adilger.int (S01061cabc081bf83.cg.shawcable.net. [70.77.221.9])
+        by smtp.gmail.com with ESMTPSA id t5sm23656606pgb.58.2021.07.13.10.18.45
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 13 Jul 2021 10:18:46 -0700 (PDT)
+From:   Andreas Dilger <adilger@dilger.ca>
+Message-Id: <F9C8FA1E-89ED-4FC5-B343-465459EBD3A0@dilger.ca>
+Content-Type: multipart/signed;
+ boundary="Apple-Mail=_F61A0383-2348-46C0-B7AD-5E1448A97355";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
+Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
+Subject: Re: [PATCH v4] fs: forbid invalid project ID
+Date:   Tue, 13 Jul 2021 11:19:11 -0600
+In-Reply-To: <20210710143959.58077-1-wangshilong1991@gmail.com>
+Cc:     linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        xfs <linux-xfs@vger.kernel.org>,
+        Ext4 Developers List <linux-ext4@vger.kernel.org>,
+        linux-f2fs-devel@lists.sourceforge.net,
+        Wang Shilong <wshilong@ddn.com>
+To:     Wang Shilong <wangshilong1991@gmail.com>
+References: <20210710143959.58077-1-wangshilong1991@gmail.com>
+X-Mailer: Apple Mail (2.3273)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue 13-07-21 07:25:05, Christoph Hellwig wrote:
-> Still looks good.  That being said the additional conditional locking in
-> filemap_fault makes it fall over the readbility cliff for me.  Something
-> like this on top of your series would help:
 
-Yeah, that's better. Applied, thanks. 
+--Apple-Mail=_F61A0383-2348-46C0-B7AD-5E1448A97355
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset=us-ascii
 
-								Honza
-
+On Jul 10, 2021, at 8:39 AM, Wang Shilong <wangshilong1991@gmail.com> wrote:
 > 
-> diff --git a/mm/filemap.c b/mm/filemap.c
-> index fd3f94d36c49..0fad08331cf4 100644
-> --- a/mm/filemap.c
-> +++ b/mm/filemap.c
-> @@ -3040,21 +3040,23 @@ vm_fault_t filemap_fault(struct vm_fault *vmf)
->  	 * Do we have something in the page cache already?
->  	 */
->  	page = find_get_page(mapping, offset);
-> -	if (likely(page) && !(vmf->flags & FAULT_FLAG_TRIED)) {
-> +	if (likely(page)) {
->  		/*
-> -		 * We found the page, so try async readahead before
-> -		 * waiting for the lock.
-> +		 * We found the page, so try async readahead before waiting for
-> +		 * the lock.
->  		 */
-> -		fpin = do_async_mmap_readahead(vmf, page);
-> -	} else if (!page) {
-> +		if (!(vmf->flags & FAULT_FLAG_TRIED))
-> +			fpin = do_async_mmap_readahead(vmf, page);
-> +		if (unlikely(!PageUptodate(page))) {
-> +			filemap_invalidate_lock_shared(mapping);
-> +			mapping_locked = true;
-> +		}
+> From: Wang Shilong <wshilong@ddn.com>
+> 
+> fileattr_set_prepare() should check if project ID
+> is valid, otherwise dqget() will return NULL for
+> such project ID quota.
+> 
+> Signed-off-by: Wang Shilong <wshilong@ddn.com>
+
+Reviewed-by: Andreas Dilger <adilger@dilger.ca>
+
+> ---
+> v3->v3:
+> only check project Id if caller is allowed
+> to change and being changed.
+> 
+> v2->v3: move check before @fsx_projid is accessed
+> and use make_kprojid() helper.
+> 
+> v1->v2: try to fix in the VFS
+> fs/ioctl.c | 8 ++++++++
+> 1 file changed, 8 insertions(+)
+> 
+> diff --git a/fs/ioctl.c b/fs/ioctl.c
+> index 1e2204fa9963..d4fabb5421cd 100644
+> --- a/fs/ioctl.c
+> +++ b/fs/ioctl.c
+> @@ -817,6 +817,14 @@ static int fileattr_set_prepare(struct inode *inode,
+> 		if ((old_ma->fsx_xflags ^ fa->fsx_xflags) &
+> 				FS_XFLAG_PROJINHERIT)
+> 			return -EINVAL;
 > +	} else {
->  		/* No page in the page cache at all */
->  		count_vm_event(PGMAJFAULT);
->  		count_memcg_event_mm(vmf->vma->vm_mm, PGMAJFAULT);
->  		ret = VM_FAULT_MAJOR;
->  		fpin = do_sync_mmap_readahead(vmf);
-> -	}
-> -
-> -	if (!page) {
->  retry_find:
->  		/*
->  		 * See comment in filemap_create_page() why we need
-> @@ -3073,9 +3075,6 @@ vm_fault_t filemap_fault(struct vm_fault *vmf)
->  			filemap_invalidate_unlock_shared(mapping);
->  			return VM_FAULT_OOM;
->  		}
-> -	} else if (unlikely(!PageUptodate(page))) {
-> -		filemap_invalidate_lock_shared(mapping);
-> -		mapping_locked = true;
->  	}
->  
->  	if (!lock_page_maybe_drop_mmap(vmf, page, &fpin))
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+> +		/*
+> +		 * Caller is allowed to change the project ID. If it is being
+> +		 * changed, make sure that the new value is valid.
+> +		 */
+> +		if (old_ma->fsx_projid != fa->fsx_projid &&
+> +		    !projid_valid(make_kprojid(&init_user_ns, fa->fsx_projid)))
+> +			return -EINVAL;
+> 	}
+> 
+> 	/* Check extent size hints. */
+> --
+> 2.27.0
+> 
+
+
+Cheers, Andreas
+
+
+
+
+
+
+--Apple-Mail=_F61A0383-2348-46C0-B7AD-5E1448A97355
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename=signature.asc
+Content-Type: application/pgp-signature;
+	name=signature.asc
+Content-Description: Message signed with OpenPGP
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEEDb73u6ZejP5ZMprvcqXauRfMH+AFAmDtyxAACgkQcqXauRfM
+H+CTzg/+JZyNRieQ1mPAKlUt+HGoz9ZeEvCD+OuorOAxhYFmVoyOVKKpeXzkBDbr
+cTt3eplnVEgwp5qLxX9CHoetTTEiZMv3r6HOG9qv2yYImkYP8vg0FxfvdGVI6uzL
+sYin7lxfjCySdra6CQQ1NWKRVMzDUfQShxf6vAWnK1ltWs9tfBTxri0cuVMawC2T
+y0dzyuGqmu+ALrqgl2bKw+vFR/igLBNKzUrpCF5KwV+VdFGrqgoL7VKbJwToZ8T5
+AxPNUblB98CitSKOoIUL/cygq5IOo6IAAoUtJku18bmhzSwUxb19A/jPpsk35xy5
+XC3dpEadhw0XA8+JefthWWucW7nGcOwUevFB2zHafSyFIdR+JpssFa+1sMHwek8X
+7CYCZiEbj4bv/qmCIKd2W61veKacnD1i2ZLzyTrHbyA0CjmlYolstl3SQS3jLoKC
+RQdkOW5uRU1WpEbT/OMnXnhMKg4oyZFReBMAsL8sSBOYitOHAkTTgxlXj3tLqyKl
+kc6Lmy1cY6y9jrRfiFDcn+648exNDrP/WhzhEQt8RYDns3Sww3hapcye/vC8ksrv
+7I4+pux8Mu1NYrJJ9XOZ5FLDaypGlTA3Uds+HzE5RGXe3wHF19Wb7KlAnoHMOeG2
+A+ArrSOlbMhbPVx+P+5TPyIf4FYbZ691eyzNGde7yPRqT/e1qSc=
+=aEGA
+-----END PGP SIGNATURE-----
+
+--Apple-Mail=_F61A0383-2348-46C0-B7AD-5E1448A97355--
