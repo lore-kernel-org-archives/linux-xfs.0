@@ -7,126 +7,106 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F998C07E9A
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 04:59:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82CD9C07E9A
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 05:00:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EEA66613B2
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 04:59:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 67EB5613B2
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 05:00:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237802AbhGNFCJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Jul 2021 01:02:09 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39268 "EHLO mail.kernel.org"
+        id S237802AbhGNFDX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Jul 2021 01:03:23 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39502 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229451AbhGNFCJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Jul 2021 01:02:09 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2A953613B0;
-        Wed, 14 Jul 2021 04:59:18 +0000 (UTC)
+        id S229451AbhGNFDX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 14 Jul 2021 01:03:23 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 832DB6135A;
+        Wed, 14 Jul 2021 05:00:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1626238758;
-        bh=mTk7aZ1yK40Cc23aDT54tLQ59Nxg5tPJF48j4oIDoC0=;
+        s=k20201202; t=1626238832;
+        bh=g4xMm2vkWMaXK+vU8jj7LWHhNuJ3OmXqqkhsfGJJID8=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=smdOootE77nJOcc21GfMPwPhCq+TK1h/tYpC2ycJgMVR2Tw6gfiUa1leXyF7OT5SP
-         qrpIkodqD8KT8X+vJwfm0KXgl0RqiHwx5lA3YX84JfhDGvf8K16/Z4ZM8LVVWJSOjy
-         /pQrF3FsLmvkmuTklJN9CuLhU+YCBpFEwR+fgP0Rhciqd20ps6r2DAf4+wk2UQWCKI
-         ZmYVS/4kQXHnvup18oOPOnZEdJK11tPN4KY51mBtmhRqdZHkph37Fhm7SqVt4wSECe
-         GSjAEkm7QkvNJay8Wdab8bMIByVm82X/Kt7DLw9YtPz5aB6lu/hEyZP6ItmXo92kyB
-         OCeTnLbx9WMVw==
-Date:   Tue, 13 Jul 2021 21:59:17 -0700
+        b=DVJU1TxArxUHS57dV3y21MAqt3is0jSyBu2FJSBlZAVEYOH1JGQiUrNvBG0OD7PGO
+         8e8bIrvUs2iuVYXr7XpOWaMF2i2w4CCjKEIxJbxvkEo39WCaDsl9EyE8uliat33qX0
+         TfSuj46OCAJa8hEXb9JpSy/wx5bZ96/AGDPAxEcfrELniYAAwNAWYV3oR4yL1NFjBz
+         jMjSg9L4gC1mXwnwuL8hwPu/G8+Chm3HIWOw1UV5BcFJ/tYkRo/S/FG4C2Bvg2J7pJ
+         RXILYH4MqVxNE3fSJeajBr7SFHDUJwMZ9PjnQyTqnmhnO7hpY585IA0cLmH5sKvQkJ
+         JTjb0bI8ZfQSQ==
+Date:   Tue, 13 Jul 2021 22:00:32 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs: improve FSGROWFSRT precondition checking
-Message-ID: <20210714045917.GE22402@magnolia>
+Subject: Re: [PATCH 2/2] xfs: fix an integer overflow error in xfs_growfs_rt
+Message-ID: <20210714050032.GF22402@magnolia>
 References: <162612763990.39052.10884597587360249026.stgit@magnolia>
- <162612764549.39052.13778481530353608889.stgit@magnolia>
- <20210714005850.GT664593@dread.disaster.area>
+ <162612765097.39052.11033534688048926480.stgit@magnolia>
+ <20210714011215.GU664593@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210714005850.GT664593@dread.disaster.area>
+In-Reply-To: <20210714011215.GU664593@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jul 14, 2021 at 10:58:50AM +1000, Dave Chinner wrote:
-> On Mon, Jul 12, 2021 at 03:07:25PM -0700, Darrick J. Wong wrote:
+On Wed, Jul 14, 2021 at 11:12:15AM +1000, Dave Chinner wrote:
+> On Mon, Jul 12, 2021 at 03:07:31PM -0700, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > Improve the checking at the start of a realtime grow operation so that
-> > we avoid accidentally set a new extent size that is too large and avoid
-> > adding an rt volume to a filesystem with rmap or reflink because we
-> > don't support rt rmap or reflink yet.
+> > During a realtime grow operation, we run a single transaction for each
+> > rt bitmap block added to the filesystem.  This means that each step has
+> > to be careful to increase sb_rblocks appropriately.
 > > 
-> > While we're at it, separate the checks so that we're only testing one
-> > aspect at a time.
+> > Fix the integer overflow error in this calculation that can happen when
+> > the extent size is very large.  Found by running growfs to add a rt
+> > volume to a filesystem formatted with a 1g rt extent size.
 > > 
 > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > > ---
-> >  fs/xfs/xfs_rtalloc.c |   20 ++++++++++++++++----
-> >  1 file changed, 16 insertions(+), 4 deletions(-)
+> >  fs/xfs/xfs_rtalloc.c |    2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
 > > 
 > > 
 > > diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-> > index 4e7be6b4ca8e..8920bce4fb0a 100644
+> > index 8920bce4fb0a..a47d43c30283 100644
 > > --- a/fs/xfs/xfs_rtalloc.c
 > > +++ b/fs/xfs/xfs_rtalloc.c
-> > @@ -928,11 +928,23 @@ xfs_growfs_rt(
-> >  	 */
-> >  	if (!capable(CAP_SYS_ADMIN))
-> >  		return -EPERM;
-> > -	if (mp->m_rtdev_targp == NULL || mp->m_rbmip == NULL ||
-> > -	    (nrblocks = in->newblocks) <= sbp->sb_rblocks ||
-> > -	    (sbp->sb_rblocks && (in->extsize != sbp->sb_rextsize)))
-> > +	if (mp->m_rtdev_targp == NULL || !mp->m_rbmip || !mp->m_rsumip)
-> >  		return -EINVAL;
+> > @@ -1019,7 +1019,7 @@ xfs_growfs_rt(
+> >  		nsbp->sb_rbmblocks = bmbno + 1;
+> >  		nsbp->sb_rblocks =
+> >  			XFS_RTMIN(nrblocks,
+> > -				  nsbp->sb_rbmblocks * NBBY *
+> > +				  (xfs_rfsblock_t)nsbp->sb_rbmblocks * NBBY *
+> >  				  nsbp->sb_blocksize * nsbp->sb_rextsize);
+> >  		nsbp->sb_rextents = nsbp->sb_rblocks;
+> >  		do_div(nsbp->sb_rextents, nsbp->sb_rextsize);
 > 
-> Shouldn't this use XFS_IS_REALTIME_MOUNT() so it always fails if
-> CONFIG_XFS_RT=n?
-
-xfs_rtalloc.c isn't even linked into the binary if CONFIG_XFS_RT=n.
-
-> i.e. if we have to check mp->m_rbmip and mp->m_rsumip to determine
-> if this mount is realtime enabled, then doesn't
-> XFS_IS_REALTIME_MOUNT() need to be fixed?
-
-TBH I think technically we could actually drop the m_rbmip/m_rsumip
-checks since the mount will fail if those files cannot be iget'd.
-That said, given how poorly tested realtime is, I figured it doesn't
-hurt to double-check for this infrequent operation.
-
+> Oh, that's just nasty code.  This needs a comment explaining that the
+> cast is to avoid an overflow, otherwise someone will come along
+> later and remove the "unnecessary" cast.
 > 
-> > -	if ((error = xfs_sb_validate_fsb_count(sbp, nrblocks)))
-> > +	if (in->newblocks <= sbp->sb_rblocks)
-> > +		return -EINVAL;
-> > +	if (xfs_sb_version_hasrealtime(&mp->m_sb) &&
-> > +	    in->extsize != sbp->sb_rextsize)
-> > +		return -EINVAL;
+> Alternatively, because we do "nsbp->sb_rbmblocks = bmbno + 1;" a
+> couple of lines above, this could be done differently without the
+> need for a cast. Make bmbno a xfs_rfsblock_t, and simply write the
+> code as:
 > 
-> xfs_sb_version_hasrealtime() checks "sbp->sb_rblocks > 0", it's not
-> an actual version flag check. I think this makes much more sense
-> being open coded rather than masquerading as a feature check....
+> 		nsbp->sb_rblocks = min(nrblocks,
+> 					(bmbno + 1) * NBBY *
+> 					nsbp->sb_blocksize * nsbp->sb_rextsize);
+> 		nsbp->sb_rbmblocks = bmbno + 1;
 
-Ok, I'll change it back.
+I like that, it'll get changed in the next revision.
 
+> Notes for future cleanup:
 > 
-> > +	if (XFS_FSB_TO_B(mp, in->extsize) > XFS_MAX_RTEXTSIZE ||
-> > +	    XFS_FSB_TO_B(mp, in->extsize) < XFS_MIN_RTEXTSIZE)
-> > +		return -EINVAL;
-> > +	if (xfs_sb_version_hasrmapbt(&mp->m_sb) ||
-> > +	    xfs_sb_version_hasreflink(&mp->m_sb))
-> > +		return -EOPNOTSUPP;
-> > +
-> > +	nrblocks = in->newblocks;
-> > +	error = xfs_sb_validate_fsb_count(sbp, nrblocks);
-> > +	if (error)
-> >  		return error;
+> #define XFS_RTMIN(a,b) ((a) < (b) ? (a) : (b))
 > 
-> Otherwise looks like a reasonable set of additional checks.
+> Needs to die.
 
-Cool!  Thanks for the review.
+Heh, yes.
 
 --D
 
+> 
 > Cheers,
 > 
 > Dave.
