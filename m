@@ -4,122 +4,136 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3D7DC12002
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 23:17:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 164C6C12002
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 23:18:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BC0276136E
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 23:17:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F1FBA613CA
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 23:18:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235448AbhGNXTy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Jul 2021 19:19:54 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36318 "EHLO mail.kernel.org"
+        id S230242AbhGNXVE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Jul 2021 19:21:04 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36406 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235225AbhGNXTx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Jul 2021 19:19:53 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 833846136E;
-        Wed, 14 Jul 2021 23:17:01 +0000 (UTC)
+        id S230187AbhGNXVE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 14 Jul 2021 19:21:04 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 248D76136E;
+        Wed, 14 Jul 2021 23:18:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1626304621;
-        bh=RD/fUqd3E+VEuaN4oxSYXwYXtuj87PXeiFD4nF+ERv4=;
+        s=k20201202; t=1626304692;
+        bh=cxtrzu1KRoBKZ81L3dmO3ObtnUfjC1ScS0o+7N9VgvU=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=a56C/I1lORKiOxkMeNv3kFnq/fmOItiVTTZ3G8BJ5qQgtC/j5MpRgLvgkKY/wt6MQ
-         l8Ndub9Xr8/+mKxaDz2TIlT0c+MFs+kDJ3IPGNWXgkKubWynrhveYnMAcQirtmriE9
-         ugLxPTETj72eRdaWjmRoOAHNSfCB0V3eJ9lZX/koT7LGHA56yeZ61OdZEY5dtD/6P3
-         tcL2PTusyvAvt0QPPtWdI0qfFEOCG6lx9KTbmX1B1/7Bs0neX1VK7DQLZTDV62lVJc
-         VUdAguhiRJzSYVSFsdAHNtl49bj+Yyx1rxol2ezf/MOhNA6ryCQSYOoAyYpkWE66kV
-         QAU5cCi40651A==
-Date:   Wed, 14 Jul 2021 16:17:01 -0700
+        b=G2bIP+xB7ebW6qc4P1G3X9pktKgpk+9qWaFuuQ27+n3gVdhctqfSxJSpbt4oKYphC
+         W3VNf3iRIvFA7gulU5K1QiN2ft6Spi3G4Kke7aXRadcDVLKRayOakhSWlqr+zOUzYn
+         50ATlvuZqeCSVMZLavb6u2eyH85OWCfpQ/uX0+ImTNQugQbJZdSCTTZmhAucQMB3WS
+         vXutp5CePIUQIr221a0bfrGF4j/jtIZj9RJCzPWFHpholHl70AzIqVwG5KKSWV3UVa
+         N9EpKig4AqEiNGvRFZSx1ps/aScYGJcEBWhxLj0AlDEntub1EM7VU9wVh149DQXCdQ
+         QAfd1iPqNxJkg==
+Date:   Wed, 14 Jul 2021 16:18:11 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 04/16] xfs: reflect sb features in xfs_mount
-Message-ID: <20210714231701.GE22402@magnolia>
+Subject: Re: [PATCH 12/16] xfs: convert scrub to use mount-based feature
+ checks
+Message-ID: <20210714231811.GF22402@magnolia>
 References: <20210714041912.2625692-1-david@fromorbit.com>
- <20210714041912.2625692-5-david@fromorbit.com>
- <20210714225603.GW22402@magnolia>
- <20210714230731.GB664593@dread.disaster.area>
+ <20210714041912.2625692-13-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210714230731.GB664593@dread.disaster.area>
+In-Reply-To: <20210714041912.2625692-13-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 15, 2021 at 09:07:31AM +1000, Dave Chinner wrote:
-> On Wed, Jul 14, 2021 at 03:56:03PM -0700, Darrick J. Wong wrote:
-> > On Wed, Jul 14, 2021 at 02:19:00PM +1000, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > Currently on-disk feature checks require decoding the superblock
-> > > fileds and so can be non-trivial. We have almost 400 hundred
-> > > individual feature checks in the XFS code, so this is a significant
-> > > amount of code. To reduce runtime check overhead, pre-process all
-> > > the version flags into a features field in the xfs_mount at mount
-> > > time so we can convert all the feature checks to a simple flag
-> > > check.
-> > > 
-> > > There is also a need to convert the dynamic feature flags to update
-> > > the m_features field. This is required for attr, attr2 and quota
-> > > features. New xfs_mount based wrappers are added for this.
-> > > 
-> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ....
-> > > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> > > index 5db3fb184fbe..488f472cedba 100644
-> > > --- a/fs/xfs/xfs_log_recover.c
-> > > +++ b/fs/xfs/xfs_log_recover.c
-> > > @@ -3315,6 +3315,7 @@ xlog_do_recover(
-> > >  	xfs_buf_relse(bp);
-> > >  
-> > >  	/* re-initialise in-core superblock and geometry structures */
-> > > +	mp->m_features |= xfs_sb_version_to_features(sbp);
-> > 
-> > '|=' instead of '=' ?
+On Wed, Jul 14, 2021 at 02:19:08PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Yes, that is intended.
+> THe scrub feature checks are the last place that the superblock
+> feature checks are used. Convert them to mount based feature checks.
 > 
-> > I would have expected assignment, but I guess the assumption here is
-> > that log recovery can process a sb update that adds a feature?  And that
-> > log recovery won't be turning off features?
-> 
-> Right, we can add but we should never remove on-disk feature bits at
-> runtime. Getting rid of the noattr2 shenanigans dropped the only
-> case where we remove feature bits at runtime. Also, see below....
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-<nod>
-
-> > >  	xfs_reinit_percpu_counters(mp);
-> > >  	error = xfs_initialize_perag(mp, sbp->sb_agcount, &mp->m_maxagi);
-> > >  	if (error) {
-> > > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> > > index 6be2a1c5b0f4..0ec463d91cce 100644
-> > > --- a/fs/xfs/xfs_mount.c
-> > > +++ b/fs/xfs/xfs_mount.c
-> > > @@ -225,6 +225,7 @@ xfs_readsb(
-> > >  		goto reread;
-> > >  	}
-> > >  
-> > > +	mp->m_features |= xfs_sb_version_to_features(sbp);
-> > 
-> > Also, can't this be a plain assignment?
-> 
-> Nope, because a couple of patches further down the series,
-> mp->m_features will already contain all the mount features that have
-> been set and we do not want to overwrite them.
-
-Ah, yup, now I saw that.  In that case,
-
+Looks good to me,
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> Cheers,
+> ---
+>  fs/xfs/scrub/scrub.c | 12 ++++++------
+>  fs/xfs/scrub/scrub.h |  2 +-
+>  2 files changed, 7 insertions(+), 7 deletions(-)
 > 
-> Dave.
+> diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+> index a5b1ea9361b3..57ecbc48bbd5 100644
+> --- a/fs/xfs/scrub/scrub.c
+> +++ b/fs/xfs/scrub/scrub.c
+> @@ -239,21 +239,21 @@ static const struct xchk_meta_ops meta_scrub_ops[] = {
+>  		.type	= ST_PERAG,
+>  		.setup	= xchk_setup_ag_iallocbt,
+>  		.scrub	= xchk_finobt,
+> -		.has	= xfs_sb_version_hasfinobt,
+> +		.has	= xfs_has_finobt,
+>  		.repair	= xrep_notsupported,
+>  	},
+>  	[XFS_SCRUB_TYPE_RMAPBT] = {	/* rmapbt */
+>  		.type	= ST_PERAG,
+>  		.setup	= xchk_setup_ag_rmapbt,
+>  		.scrub	= xchk_rmapbt,
+> -		.has	= xfs_sb_version_hasrmapbt,
+> +		.has	= xfs_has_rmapbt,
+>  		.repair	= xrep_notsupported,
+>  	},
+>  	[XFS_SCRUB_TYPE_REFCNTBT] = {	/* refcountbt */
+>  		.type	= ST_PERAG,
+>  		.setup	= xchk_setup_ag_refcountbt,
+>  		.scrub	= xchk_refcountbt,
+> -		.has	= xfs_sb_version_hasreflink,
+> +		.has	= xfs_has_reflink,
+>  		.repair	= xrep_notsupported,
+>  	},
+>  	[XFS_SCRUB_TYPE_INODE] = {	/* inode record */
+> @@ -308,14 +308,14 @@ static const struct xchk_meta_ops meta_scrub_ops[] = {
+>  		.type	= ST_FS,
+>  		.setup	= xchk_setup_rt,
+>  		.scrub	= xchk_rtbitmap,
+> -		.has	= xfs_sb_version_hasrealtime,
+> +		.has	= xfs_has_realtime,
+>  		.repair	= xrep_notsupported,
+>  	},
+>  	[XFS_SCRUB_TYPE_RTSUM] = {	/* realtime summary */
+>  		.type	= ST_FS,
+>  		.setup	= xchk_setup_rt,
+>  		.scrub	= xchk_rtsummary,
+> -		.has	= xfs_sb_version_hasrealtime,
+> +		.has	= xfs_has_realtime,
+>  		.repair	= xrep_notsupported,
+>  	},
+>  	[XFS_SCRUB_TYPE_UQUOTA] = {	/* user quota */
+> @@ -383,7 +383,7 @@ xchk_validate_inputs(
+>  	if (ops->setup == NULL || ops->scrub == NULL)
+>  		goto out;
+>  	/* Does this fs even support this type of metadata? */
+> -	if (ops->has && !ops->has(&mp->m_sb))
+> +	if (ops->has && !ops->has(mp))
+>  		goto out;
+>  
+>  	error = -EINVAL;
+> diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
+> index 08a483cb46e2..b8e7ccc5e6c3 100644
+> --- a/fs/xfs/scrub/scrub.h
+> +++ b/fs/xfs/scrub/scrub.h
+> @@ -27,7 +27,7 @@ struct xchk_meta_ops {
+>  	int		(*repair)(struct xfs_scrub *);
+>  
+>  	/* Decide if we even have this piece of metadata. */
+> -	bool		(*has)(struct xfs_sb *);
+> +	bool		(*has)(struct xfs_mount *);
+>  
+>  	/* type describing required/allowed inputs */
+>  	enum xchk_type	type;
 > -- 
-> Dave Chinner
-> david@fromorbit.com
+> 2.31.1
+> 
