@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DA7EC11F6A
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 04:19:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1EC7C11F6B
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 04:19:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 20648613CC
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 04:19:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 922D7613B0
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 04:19:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229850AbhGNEWQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S229955AbhGNEWQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Wed, 14 Jul 2021 00:22:16 -0400
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:35106 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230161AbhGNEWJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Jul 2021 00:22:09 -0400
+Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:34468 "EHLO
+        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S237486AbhGNEWK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Jul 2021 00:22:10 -0400
 Received: from dread.disaster.area (pa49-181-34-10.pa.nsw.optusnet.com.au [49.181.34.10])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id AB5256A4D4
+        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id D9C5C5E9A
         for <linux-xfs@vger.kernel.org>; Wed, 14 Jul 2021 14:19:16 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1m3WMe-006JJw-6k
+        id 1m3WMe-006JKC-Ev
         for linux-xfs@vger.kernel.org; Wed, 14 Jul 2021 14:19:16 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1m3WMd-00B157-Uv
-        for linux-xfs@vger.kernel.org; Wed, 14 Jul 2021 14:19:15 +1000
+        id 1m3WMe-00B15M-6B
+        for linux-xfs@vger.kernel.org; Wed, 14 Jul 2021 14:19:16 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 08/16] xfs: convert remaining mount flags to state flags
-Date:   Wed, 14 Jul 2021 14:19:04 +1000
-Message-Id: <20210714041912.2625692-9-david@fromorbit.com>
+Subject: [PATCH 13/16] xfs: convert xfs_sb_version_has checks to use mount features
+Date:   Wed, 14 Jul 2021 14:19:09 +1000
+Message-Id: <20210714041912.2625692-14-david@fromorbit.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210714041912.2625692-1-david@fromorbit.com>
 References: <20210714041912.2625692-1-david@fromorbit.com>
@@ -44,567 +44,977 @@ Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
         a=hdaoRb6WoHYrV466vVKEyw==:117 a=hdaoRb6WoHYrV466vVKEyw==:17
-        a=e_q4qTt1xDgA:10 a=20KFwNOVAAAA:8 a=-HOzcxt9b-WFzIGwWZoA:9
+        a=e_q4qTt1xDgA:10 a=20KFwNOVAAAA:8 a=l0_hGK4vAAAA:8
+        a=si-boftwRYcclaHsxq4A:9 a=DUDzE7vO2_nPhTdr:21 a=73a3DfmVTYd-uFUQ:21
+        a=iXasW65n-xxAZI4iijma:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The remaining mount flags kept in m_flags are actually runtime state
-flags. These change dynamically, so they really should be updated
-atomically so we don't potentially lose an update dur to racing
-modifications.
+This is a conversion of the remaining xfs_sb_version_has..(sbp)
+checks to use xfs_has_..(mp) feature checks.
 
-Rename m_flags to m_state, and convert it to use atomic bitops to
-set and clear the flags. This also adds a couple of simple wrappers
-for common state checks - read only and shutdown.
+This was largely done with a vim replacement macro that did:
+
+:0,$s/xfs_sb_version_has\(.*\)&\(.*\)->m_sb/xfs_has_\1\2/g<CR>
+
+A couple of other variants were also used, and the rest touched up
+by hand.
+
+$ size -t fs/xfs/built-in.a
+	   text    data     bss     dec     hex filename
+before	1127533  311352     484 1439369  15f689 (TOTALS)
+after	1125360  311352     484 1437196  15ee0c (TOTALS)
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_alloc.c |  2 +-
- fs/xfs/libxfs/xfs_sb.c    |  2 +-
- fs/xfs/scrub/scrub.c      |  2 +-
- fs/xfs/xfs_buf.c          |  2 +-
- fs/xfs/xfs_export.c       |  4 ++--
- fs/xfs/xfs_filestream.c   |  2 +-
- fs/xfs/xfs_fsops.c        |  7 +------
- fs/xfs/xfs_icache.c       |  2 +-
- fs/xfs/xfs_inode.c        |  4 ++--
- fs/xfs/xfs_ioctl.c        |  6 +++---
- fs/xfs/xfs_iops.c         |  2 +-
- fs/xfs/xfs_log.c          | 31 +++++++++++++++++--------------
- fs/xfs/xfs_log_recover.c  |  2 +-
- fs/xfs/xfs_mount.c        | 15 +++++++--------
- fs/xfs/xfs_mount.h        | 36 +++++++++++++++++++++---------------
- fs/xfs/xfs_super.c        | 28 +++++++++++++---------------
- 16 files changed, 74 insertions(+), 73 deletions(-)
+ fs/xfs/libxfs/xfs_ag.c           |  4 ++--
+ fs/xfs/libxfs/xfs_alloc.c        | 12 ++++++------
+ fs/xfs/libxfs/xfs_alloc.h        |  2 +-
+ fs/xfs/libxfs/xfs_alloc_btree.c  |  2 +-
+ fs/xfs/libxfs/xfs_bmap_btree.c   |  2 +-
+ fs/xfs/libxfs/xfs_btree.c        |  6 +++---
+ fs/xfs/libxfs/xfs_da_btree.c     |  6 +++---
+ fs/xfs/libxfs/xfs_dir2.c         |  6 +++---
+ fs/xfs/libxfs/xfs_dir2_block.c   |  4 ++--
+ fs/xfs/libxfs/xfs_dir2_data.c    | 10 +++++-----
+ fs/xfs/libxfs/xfs_dir2_leaf.c    |  4 ++--
+ fs/xfs/libxfs/xfs_dir2_node.c    |  4 ++--
+ fs/xfs/libxfs/xfs_dir2_priv.h    |  2 +-
+ fs/xfs/libxfs/xfs_dir2_sf.c      | 10 +++++-----
+ fs/xfs/libxfs/xfs_dquot_buf.c    |  2 +-
+ fs/xfs/libxfs/xfs_ialloc.c       | 30 +++++++++++++++---------------
+ fs/xfs/libxfs/xfs_ialloc_btree.c | 10 +++++-----
+ fs/xfs/libxfs/xfs_inode_buf.c    | 10 +++++-----
+ fs/xfs/libxfs/xfs_log_format.h   |  2 +-
+ fs/xfs/libxfs/xfs_refcount.c     |  8 ++++----
+ fs/xfs/libxfs/xfs_sb.c           |  2 +-
+ fs/xfs/libxfs/xfs_trans_inode.c  |  2 +-
+ fs/xfs/libxfs/xfs_trans_resv.c   |  6 +++---
+ fs/xfs/libxfs/xfs_trans_space.h  |  6 ++----
+ fs/xfs/scrub/agheader.c          |  6 +++---
+ fs/xfs/scrub/agheader_repair.c   |  5 ++---
+ fs/xfs/scrub/bmap.c              |  3 +--
+ fs/xfs/scrub/common.c            |  6 +++---
+ fs/xfs/scrub/fscounters.c        |  2 +-
+ fs/xfs/scrub/inode.c             |  3 +--
+ fs/xfs/scrub/quota.c             |  2 +-
+ fs/xfs/xfs_reflink.h             |  3 +--
+ fs/xfs/xfs_super.c               |  2 +-
+ 33 files changed, 89 insertions(+), 95 deletions(-)
 
+diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+index 1eb21912a80c..e3bc40182e16 100644
+--- a/fs/xfs/libxfs/xfs_ag.c
++++ b/fs/xfs/libxfs/xfs_ag.c
+@@ -607,9 +607,9 @@ xfs_agiblock_init(
+ 	}
+ 	for (bucket = 0; bucket < XFS_AGI_UNLINKED_BUCKETS; bucket++)
+ 		agi->agi_unlinked[bucket] = cpu_to_be32(NULLAGINO);
+-	if (xfs_sb_version_hasinobtcounts(&mp->m_sb)) {
++	if (xfs_has_inobtcounts(mp)) {
+ 		agi->agi_iblocks = cpu_to_be32(1);
+-		if (xfs_sb_version_hasfinobt(&mp->m_sb))
++		if (xfs_has_finobt(mp))
+ 			agi->agi_fblocks = cpu_to_be32(1);
+ 	}
+ }
 diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 5f943a804d9e..f408ea68dbd0 100644
+index e40235bc487d..2dd01f034f36 100644
 --- a/fs/xfs/libxfs/xfs_alloc.c
 +++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -3166,7 +3166,7 @@ xfs_alloc_vextent(
- 		 * the first a.g. fails.
+@@ -2264,7 +2264,7 @@ xfs_alloc_min_freelist(
+ 	min_free += min_t(unsigned int, levels[XFS_BTNUM_CNTi] + 1,
+ 				       mp->m_ag_maxlevels);
+ 	/* space needed reverse mapping used space btree */
+-	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
++	if (xfs_has_rmapbt(mp))
+ 		min_free += min_t(unsigned int, levels[XFS_BTNUM_RMAPi] + 1,
+ 						mp->m_rmap_maxlevels);
+ 
+@@ -2912,7 +2912,7 @@ xfs_agf_verify(
+ 	     be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAP]) > mp->m_rmap_maxlevels))
+ 		return __this_address;
+ 
+-	if (xfs_sb_version_hasrmapbt(&mp->m_sb) &&
++	if (xfs_has_rmapbt(mp) &&
+ 	    be32_to_cpu(agf->agf_rmap_blocks) > be32_to_cpu(agf->agf_length))
+ 		return __this_address;
+ 
+@@ -2925,16 +2925,16 @@ xfs_agf_verify(
+ 	if (bp->b_pag && be32_to_cpu(agf->agf_seqno) != bp->b_pag->pag_agno)
+ 		return __this_address;
+ 
+-	if (xfs_sb_version_haslazysbcount(&mp->m_sb) &&
++	if (xfs_has_lazysbcount(mp) &&
+ 	    be32_to_cpu(agf->agf_btreeblks) > be32_to_cpu(agf->agf_length))
+ 		return __this_address;
+ 
+-	if (xfs_sb_version_hasreflink(&mp->m_sb) &&
++	if (xfs_has_reflink(mp) &&
+ 	    be32_to_cpu(agf->agf_refcount_blocks) >
+ 	    be32_to_cpu(agf->agf_length))
+ 		return __this_address;
+ 
+-	if (xfs_sb_version_hasreflink(&mp->m_sb) &&
++	if (xfs_has_reflink(mp) &&
+ 	    (be32_to_cpu(agf->agf_refcount_level) < 1 ||
+ 	     be32_to_cpu(agf->agf_refcount_level) > mp->m_refc_maxlevels))
+ 		return __this_address;
+@@ -3073,7 +3073,7 @@ xfs_alloc_read_agf(
+ 		 * counter only tracks non-root blocks.
  		 */
- 		if ((args->datatype & XFS_ALLOC_INITIAL_USER_DATA) &&
--		    (mp->m_flags & XFS_MOUNT_32BITINODES)) {
-+		    xfs_is_inode32(mp)) {
- 			args->fsbno = XFS_AGB_TO_FSB(mp,
- 					((mp->m_agfrotor / rotorstep) %
- 					mp->m_sb.sb_agcount), 0);
+ 		allocbt_blks = pag->pagf_btreeblks;
+-		if (xfs_sb_version_hasrmapbt(&mp->m_sb))
++		if (xfs_has_rmapbt(mp))
+ 			allocbt_blks -= be32_to_cpu(agf->agf_rmap_blocks) - 1;
+ 		if (allocbt_blks > 0)
+ 			atomic64_add(allocbt_blks, &mp->m_allocbt_blks);
+diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+index e30900b6f8ba..eb9088aff4e7 100644
+--- a/fs/xfs/libxfs/xfs_alloc.h
++++ b/fs/xfs/libxfs/xfs_alloc.h
+@@ -243,7 +243,7 @@ static inline __be32 *
+ xfs_buf_to_agfl_bno(
+ 	struct xfs_buf		*bp)
+ {
+-	if (xfs_sb_version_hascrc(&bp->b_mount->m_sb))
++	if (xfs_has_crc(bp->b_mount))
+ 		return bp->b_addr + sizeof(struct xfs_agfl);
+ 	return bp->b_addr;
+ }
+diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
+index 6dce6a566926..81a8e1d0cd90 100644
+--- a/fs/xfs/libxfs/xfs_alloc_btree.c
++++ b/fs/xfs/libxfs/xfs_alloc_btree.c
+@@ -295,7 +295,7 @@ xfs_allocbt_verify(
+ 	if (!xfs_verify_magic(bp, block->bb_magic))
+ 		return __this_address;
+ 
+-	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++	if (xfs_has_crc(mp)) {
+ 		fa = xfs_btree_sblock_v5hdr_verify(bp);
+ 		if (fa)
+ 			return fa;
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+index 4565e471c55e..c04b2a697b29 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.c
++++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+@@ -428,7 +428,7 @@ xfs_bmbt_verify(
+ 	if (!xfs_verify_magic(bp, block->bb_magic))
+ 		return __this_address;
+ 
+-	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++	if (xfs_has_crc(mp)) {
+ 		/*
+ 		 * XXX: need a better way of verifying the owner here. Right now
+ 		 * just make sure there has been one set.
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 08b58135b424..393c9438d5a7 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -273,7 +273,7 @@ xfs_btree_lblock_calc_crc(
+ 	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
+ 	struct xfs_buf_log_item	*bip = bp->b_log_item;
+ 
+-	if (!xfs_sb_version_hascrc(&bp->b_mount->m_sb))
++	if (!xfs_has_crc(bp->b_mount))
+ 		return;
+ 	if (bip)
+ 		block->bb_u.l.bb_lsn = cpu_to_be64(bip->bli_item.li_lsn);
+@@ -311,7 +311,7 @@ xfs_btree_sblock_calc_crc(
+ 	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
+ 	struct xfs_buf_log_item	*bip = bp->b_log_item;
+ 
+-	if (!xfs_sb_version_hascrc(&bp->b_mount->m_sb))
++	if (!xfs_has_crc(bp->b_mount))
+ 		return;
+ 	if (bip)
+ 		block->bb_u.s.bb_lsn = cpu_to_be64(bip->bli_item.li_lsn);
+@@ -1749,7 +1749,7 @@ xfs_btree_lookup_get_block(
+ 		return error;
+ 
+ 	/* Check the inode owner since the verifiers don't. */
+-	if (xfs_sb_version_hascrc(&cur->bc_mp->m_sb) &&
++	if (xfs_has_crc(cur->bc_mp) &&
+ 	    !(cur->bc_ino.flags & XFS_BTCUR_BMBT_INVALID_OWNER) &&
+ 	    (cur->bc_flags & XFS_BTREE_LONG_PTRS) &&
+ 	    be64_to_cpu((*blkp)->bb_u.l.bb_owner) !=
+diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+index 0a8cde1fbe0d..99f81f6bb306 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.c
++++ b/fs/xfs/libxfs/xfs_da_btree.c
+@@ -129,7 +129,7 @@ xfs_da3_node_hdr_from_disk(
+ 	struct xfs_da3_icnode_hdr	*to,
+ 	struct xfs_da_intnode		*from)
+ {
+-	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++	if (xfs_has_crc(mp)) {
+ 		struct xfs_da3_intnode	*from3 = (struct xfs_da3_intnode *)from;
+ 
+ 		to->forw = be32_to_cpu(from3->hdr.info.hdr.forw);
+@@ -156,7 +156,7 @@ xfs_da3_node_hdr_to_disk(
+ 	struct xfs_da_intnode		*to,
+ 	struct xfs_da3_icnode_hdr	*from)
+ {
+-	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++	if (xfs_has_crc(mp)) {
+ 		struct xfs_da3_intnode	*to3 = (struct xfs_da3_intnode *)to;
+ 
+ 		ASSERT(from->magic == XFS_DA3_NODE_MAGIC);
+@@ -191,7 +191,7 @@ xfs_da3_blkinfo_verify(
+ 	if (!xfs_verify_magic16(bp, hdr->magic))
+ 		return __this_address;
+ 
+-	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++	if (xfs_has_crc(mp)) {
+ 		if (!uuid_equal(&hdr3->uuid, &mp->m_sb.sb_meta_uuid))
+ 			return __this_address;
+ 		if (be64_to_cpu(hdr3->blkno) != bp->b_bn)
+diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+index 050bdcc4fe73..50546eadaae2 100644
+--- a/fs/xfs/libxfs/xfs_dir2.c
++++ b/fs/xfs/libxfs/xfs_dir2.c
+@@ -115,7 +115,7 @@ xfs_da_mount(
+ 	dageo->fsblog = mp->m_sb.sb_blocklog;
+ 	dageo->blksize = xfs_dir2_dirblock_bytes(&mp->m_sb);
+ 	dageo->fsbcount = 1 << mp->m_sb.sb_dirblklog;
+-	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++	if (xfs_has_crc(mp)) {
+ 		dageo->node_hdr_size = sizeof(struct xfs_da3_node_hdr);
+ 		dageo->leaf_hdr_size = sizeof(struct xfs_dir3_leaf_hdr);
+ 		dageo->free_hdr_size = sizeof(struct xfs_dir3_free_hdr);
+@@ -730,7 +730,7 @@ xfs_dir2_hashname(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_name		*name)
+ {
+-	if (unlikely(xfs_sb_version_hasasciici(&mp->m_sb)))
++	if (unlikely(xfs_has_asciici(mp)))
+ 		return xfs_ascii_ci_hashname(name);
+ 	return xfs_da_hashname(name->name, name->len);
+ }
+@@ -741,7 +741,7 @@ xfs_dir2_compname(
+ 	const unsigned char	*name,
+ 	int			len)
+ {
+-	if (unlikely(xfs_sb_version_hasasciici(&args->dp->i_mount->m_sb)))
++	if (unlikely(xfs_has_asciici(args->dp->i_mount)))
+ 		return xfs_ascii_ci_compname(args, name, len);
+ 	return xfs_da_compname(args, name, len);
+ }
+diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
+index 49e61ca1045b..41e406067f91 100644
+--- a/fs/xfs/libxfs/xfs_dir2_block.c
++++ b/fs/xfs/libxfs/xfs_dir2_block.c
+@@ -53,7 +53,7 @@ xfs_dir3_block_verify(
+ 	if (!xfs_verify_magic(bp, hdr3->magic))
+ 		return __this_address;
+ 
+-	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++	if (xfs_has_crc(mp)) {
+ 		if (!uuid_equal(&hdr3->uuid, &mp->m_sb.sb_meta_uuid))
+ 			return __this_address;
+ 		if (be64_to_cpu(hdr3->blkno) != bp->b_bn)
+@@ -121,7 +121,7 @@ xfs_dir3_block_header_check(
+ {
+ 	struct xfs_mount	*mp = dp->i_mount;
+ 
+-	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++	if (xfs_has_crc(mp)) {
+ 		struct xfs_dir3_blk_hdr *hdr3 = bp->b_addr;
+ 
+ 		if (be64_to_cpu(hdr3->owner) != dp->i_ino)
+diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
+index 920bd13512a8..c90180f2ba5c 100644
+--- a/fs/xfs/libxfs/xfs_dir2_data.c
++++ b/fs/xfs/libxfs/xfs_dir2_data.c
+@@ -29,7 +29,7 @@ xfs_dir2_data_bestfree_p(
+ 	struct xfs_mount		*mp,
+ 	struct xfs_dir2_data_hdr	*hdr)
+ {
+-	if (xfs_sb_version_hascrc(&mp->m_sb))
++	if (xfs_has_crc(mp))
+ 		return ((struct xfs_dir3_data_hdr *)hdr)->best_free;
+ 	return hdr->bestfree;
+ }
+@@ -51,7 +51,7 @@ xfs_dir2_data_get_ftype(
+ 	struct xfs_mount		*mp,
+ 	struct xfs_dir2_data_entry	*dep)
+ {
+-	if (xfs_sb_version_hasftype(&mp->m_sb)) {
++	if (xfs_has_ftype(mp)) {
+ 		uint8_t			ftype = dep->name[dep->namelen];
+ 
+ 		if (likely(ftype < XFS_DIR3_FT_MAX))
+@@ -70,7 +70,7 @@ xfs_dir2_data_put_ftype(
+ 	ASSERT(ftype < XFS_DIR3_FT_MAX);
+ 	ASSERT(dep->namelen != 0);
+ 
+-	if (xfs_sb_version_hasftype(&mp->m_sb))
++	if (xfs_has_ftype(mp))
+ 		dep->name[dep->namelen] = ftype;
+ }
+ 
+@@ -297,7 +297,7 @@ xfs_dir3_data_verify(
+ 	if (!xfs_verify_magic(bp, hdr3->magic))
+ 		return __this_address;
+ 
+-	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++	if (xfs_has_crc(mp)) {
+ 		if (!uuid_equal(&hdr3->uuid, &mp->m_sb.sb_meta_uuid))
+ 			return __this_address;
+ 		if (be64_to_cpu(hdr3->blkno) != bp->b_bn)
+@@ -401,7 +401,7 @@ xfs_dir3_data_header_check(
+ {
+ 	struct xfs_mount	*mp = dp->i_mount;
+ 
+-	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++	if (xfs_has_crc(mp)) {
+ 		struct xfs_dir3_data_hdr *hdr3 = bp->b_addr;
+ 
+ 		if (be64_to_cpu(hdr3->hdr.owner) != dp->i_ino)
+diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+index 40ac411acf03..d03db9cde271 100644
+--- a/fs/xfs/libxfs/xfs_dir2_leaf.c
++++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+@@ -37,7 +37,7 @@ xfs_dir2_leaf_hdr_from_disk(
+ 	struct xfs_dir3_icleaf_hdr	*to,
+ 	struct xfs_dir2_leaf		*from)
+ {
+-	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++	if (xfs_has_crc(mp)) {
+ 		struct xfs_dir3_leaf *from3 = (struct xfs_dir3_leaf *)from;
+ 
+ 		to->forw = be32_to_cpu(from3->hdr.info.hdr.forw);
+@@ -68,7 +68,7 @@ xfs_dir2_leaf_hdr_to_disk(
+ 	struct xfs_dir2_leaf		*to,
+ 	struct xfs_dir3_icleaf_hdr	*from)
+ {
+-	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++	if (xfs_has_crc(mp)) {
+ 		struct xfs_dir3_leaf *to3 = (struct xfs_dir3_leaf *)to;
+ 
+ 		ASSERT(from->magic == XFS_DIR3_LEAF1_MAGIC ||
+diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+index a2ee1d48519c..fbd2de8b3cf2 100644
+--- a/fs/xfs/libxfs/xfs_dir2_node.c
++++ b/fs/xfs/libxfs/xfs_dir2_node.c
+@@ -247,7 +247,7 @@ xfs_dir2_free_hdr_from_disk(
+ 	struct xfs_dir3_icfree_hdr	*to,
+ 	struct xfs_dir2_free		*from)
+ {
+-	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++	if (xfs_has_crc(mp)) {
+ 		struct xfs_dir3_free	*from3 = (struct xfs_dir3_free *)from;
+ 
+ 		to->magic = be32_to_cpu(from3->hdr.hdr.magic);
+@@ -274,7 +274,7 @@ xfs_dir2_free_hdr_to_disk(
+ 	struct xfs_dir2_free		*to,
+ 	struct xfs_dir3_icfree_hdr	*from)
+ {
+-	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++	if (xfs_has_crc(mp)) {
+ 		struct xfs_dir3_free	*to3 = (struct xfs_dir3_free *)to;
+ 
+ 		ASSERT(from->magic == XFS_DIR3_FREE_MAGIC);
+diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
+index 94943ce49cab..711709a2aa53 100644
+--- a/fs/xfs/libxfs/xfs_dir2_priv.h
++++ b/fs/xfs/libxfs/xfs_dir2_priv.h
+@@ -196,7 +196,7 @@ xfs_dir2_data_entsize(
+ 
+ 	len = offsetof(struct xfs_dir2_data_entry, name[0]) + namelen +
+ 			sizeof(xfs_dir2_data_off_t) /* tag */;
+-	if (xfs_sb_version_hasftype(&mp->m_sb))
++	if (xfs_has_ftype(mp))
+ 		len += sizeof(uint8_t);
+ 	return round_up(len, XFS_DIR2_DATA_ALIGN);
+ }
+diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
+index 1afe09910bee..5a97a87eaa20 100644
+--- a/fs/xfs/libxfs/xfs_dir2_sf.c
++++ b/fs/xfs/libxfs/xfs_dir2_sf.c
+@@ -48,7 +48,7 @@ xfs_dir2_sf_entsize(
+ 	count += sizeof(struct xfs_dir2_sf_entry);	/* namelen + offset */
+ 	count += hdr->i8count ? XFS_INO64_SIZE : XFS_INO32_SIZE; /* ino # */
+ 
+-	if (xfs_sb_version_hasftype(&mp->m_sb))
++	if (xfs_has_ftype(mp))
+ 		count += sizeof(uint8_t);
+ 	return count;
+ }
+@@ -76,7 +76,7 @@ xfs_dir2_sf_get_ino(
+ {
+ 	uint8_t				*from = sfep->name + sfep->namelen;
+ 
+-	if (xfs_sb_version_hasftype(&mp->m_sb))
++	if (xfs_has_ftype(mp))
+ 		from++;
+ 
+ 	if (!hdr->i8count)
+@@ -95,7 +95,7 @@ xfs_dir2_sf_put_ino(
+ 
+ 	ASSERT(ino <= XFS_MAXINUMBER);
+ 
+-	if (xfs_sb_version_hasftype(&mp->m_sb))
++	if (xfs_has_ftype(mp))
+ 		to++;
+ 
+ 	if (hdr->i8count)
+@@ -135,7 +135,7 @@ xfs_dir2_sf_get_ftype(
+ 	struct xfs_mount		*mp,
+ 	struct xfs_dir2_sf_entry	*sfep)
+ {
+-	if (xfs_sb_version_hasftype(&mp->m_sb)) {
++	if (xfs_has_ftype(mp)) {
+ 		uint8_t			ftype = sfep->name[sfep->namelen];
+ 
+ 		if (ftype < XFS_DIR3_FT_MAX)
+@@ -153,7 +153,7 @@ xfs_dir2_sf_put_ftype(
+ {
+ 	ASSERT(ftype < XFS_DIR3_FT_MAX);
+ 
+-	if (xfs_sb_version_hasftype(&mp->m_sb))
++	if (xfs_has_ftype(mp))
+ 		sfep->name[sfep->namelen] = ftype;
+ }
+ 
+diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
+index edd0f413f030..deeb74becabc 100644
+--- a/fs/xfs/libxfs/xfs_dquot_buf.c
++++ b/fs/xfs/libxfs/xfs_dquot_buf.c
+@@ -70,7 +70,7 @@ xfs_dquot_verify(
+ 		return __this_address;
+ 
+ 	if ((ddq->d_type & XFS_DQTYPE_BIGTIME) &&
+-	    !xfs_sb_version_hasbigtime(&mp->m_sb))
++	    !xfs_has_bigtime(mp))
+ 		return __this_address;
+ 
+ 	if ((ddq->d_type & XFS_DQTYPE_BIGTIME) && !ddq->d_id)
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index 41bc382a91ec..51768f8999e5 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -302,7 +302,7 @@ xfs_ialloc_inode_init(
+ 	 * That means for v3 inode we log the entire buffer rather than just the
+ 	 * inode cores.
+ 	 */
+-	if (xfs_sb_version_has_v3inode(&mp->m_sb)) {
++	if (xfs_has_v3inodes(mp)) {
+ 		version = 3;
+ 		ino = XFS_AGINO_TO_INO(mp, agno, XFS_AGB_TO_AGINO(mp, agbno));
+ 
+@@ -635,7 +635,7 @@ xfs_ialloc_ag_alloc(
+ 
+ #ifdef DEBUG
+ 	/* randomly do sparse inode allocations */
+-	if (xfs_sb_version_hassparseinodes(&tp->t_mountp->m_sb) &&
++	if (xfs_has_sparseinodes(tp->t_mountp) &&
+ 	    igeo->ialloc_min_blks < igeo->ialloc_blks)
+ 		do_sparse = prandom_u32() & 1;
+ #endif
+@@ -754,7 +754,7 @@ xfs_ialloc_ag_alloc(
+ 	 * Finally, try a sparse allocation if the filesystem supports it and
+ 	 * the sparse allocation length is smaller than a full chunk.
+ 	 */
+-	if (xfs_sb_version_hassparseinodes(&args.mp->m_sb) &&
++	if (xfs_has_sparseinodes(args.mp) &&
+ 	    igeo->ialloc_min_blks < igeo->ialloc_blks &&
+ 	    args.fsbno == NULLFSBLOCK) {
+ sparse_alloc:
+@@ -856,7 +856,7 @@ xfs_ialloc_ag_alloc(
+ 		 * from the previous call. Set merge false to replace any
+ 		 * existing record with this one.
+ 		 */
+-		if (xfs_sb_version_hasfinobt(&args.mp->m_sb)) {
++		if (xfs_has_finobt(args.mp)) {
+ 			error = xfs_inobt_insert_sprec(args.mp, tp, agbp, pag,
+ 				       XFS_BTNUM_FINO, &rec, false);
+ 			if (error)
+@@ -869,7 +869,7 @@ xfs_ialloc_ag_alloc(
+ 		if (error)
+ 			return error;
+ 
+-		if (xfs_sb_version_hasfinobt(&args.mp->m_sb)) {
++		if (xfs_has_finobt(args.mp)) {
+ 			error = xfs_inobt_insert(args.mp, tp, agbp, pag, newino,
+ 						 newlen, XFS_BTNUM_FINO);
+ 			if (error)
+@@ -1448,7 +1448,7 @@ xfs_dialloc_ag(
+ 	int				offset;
+ 	int				i;
+ 
+-	if (!xfs_sb_version_hasfinobt(&mp->m_sb))
++	if (!xfs_has_finobt(mp))
+ 		return xfs_dialloc_ag_inobt(tp, agbp, pag, parent, inop);
+ 
+ 	/*
+@@ -2187,7 +2187,7 @@ xfs_difree(
+ 	/*
+ 	 * Fix up the free inode btree.
+ 	 */
+-	if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
++	if (xfs_has_finobt(mp)) {
+ 		error = xfs_difree_finobt(mp, tp, agbp, pag, agino, &rec);
+ 		if (error)
+ 			goto error0;
+@@ -2771,7 +2771,7 @@ xfs_ialloc_setup_geometry(
+ 	uint			inodes;
+ 
+ 	igeo->new_diflags2 = 0;
+-	if (xfs_sb_version_hasbigtime(&mp->m_sb))
++	if (xfs_has_bigtime(mp))
+ 		igeo->new_diflags2 |= XFS_DIFLAG2_BIGTIME;
+ 
+ 	/* Compute inode btree geometry. */
+@@ -2826,7 +2826,7 @@ xfs_ialloc_setup_geometry(
+ 	 * cannot change the behavior.
+ 	 */
+ 	igeo->inode_cluster_size_raw = XFS_INODE_BIG_CLUSTER_SIZE;
+-	if (xfs_sb_version_has_v3inode(&mp->m_sb)) {
++	if (xfs_has_v3inodes(mp)) {
+ 		int	new_size = igeo->inode_cluster_size_raw;
+ 
+ 		new_size *= mp->m_sb.sb_inodesize / XFS_DINODE_MIN_SIZE;
+@@ -2844,7 +2844,7 @@ xfs_ialloc_setup_geometry(
+ 	igeo->inodes_per_cluster = XFS_FSB_TO_INO(mp, igeo->blocks_per_cluster);
+ 
+ 	/* Calculate inode cluster alignment. */
+-	if (xfs_sb_version_hasalign(&mp->m_sb) &&
++	if (xfs_has_align(mp) &&
+ 	    mp->m_sb.sb_inoalignmt >= igeo->blocks_per_cluster)
+ 		igeo->cluster_align = mp->m_sb.sb_inoalignmt;
+ 	else
+@@ -2892,15 +2892,15 @@ xfs_ialloc_calc_rootino(
+ 	first_bno += xfs_alloc_min_freelist(mp, NULL);
+ 
+ 	/* ...the free inode btree root... */
+-	if (xfs_sb_version_hasfinobt(&mp->m_sb))
++	if (xfs_has_finobt(mp))
+ 		first_bno++;
+ 
+ 	/* ...the reverse mapping btree root... */
+-	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
++	if (xfs_has_rmapbt(mp))
+ 		first_bno++;
+ 
+ 	/* ...the reference count btree... */
+-	if (xfs_sb_version_hasreflink(&mp->m_sb))
++	if (xfs_has_reflink(mp))
+ 		first_bno++;
+ 
+ 	/*
+@@ -2918,9 +2918,9 @@ xfs_ialloc_calc_rootino(
+ 	 * Now round first_bno up to whatever allocation alignment is given
+ 	 * by the filesystem or was passed in.
+ 	 */
+-	if (xfs_sb_version_hasdalign(&mp->m_sb) && igeo->ialloc_align > 0)
++	if (xfs_has_dalign(mp) && igeo->ialloc_align > 0)
+ 		first_bno = roundup(first_bno, sunit);
+-	else if (xfs_sb_version_hasalign(&mp->m_sb) &&
++	else if (xfs_has_align(mp) &&
+ 			mp->m_sb.sb_inoalignmt > 1)
+ 		first_bno = roundup(first_bno, mp->m_sb.sb_inoalignmt);
+ 
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+index 4a599c8ca33a..f1384c280059 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.c
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+@@ -76,7 +76,7 @@ xfs_inobt_mod_blockcount(
+ 	struct xfs_buf		*agbp = cur->bc_ag.agbp;
+ 	struct xfs_agi		*agi = agbp->b_addr;
+ 
+-	if (!xfs_sb_version_hasinobtcounts(&cur->bc_mp->m_sb))
++	if (!xfs_has_inobtcounts(cur->bc_mp))
+ 		return;
+ 
+ 	if (cur->bc_btnum == XFS_BTNUM_FINO)
+@@ -292,7 +292,7 @@ xfs_inobt_verify(
+ 	 * but beware of the landmine (i.e. need to check pag->pagi_init) if we
+ 	 * ever do.
+ 	 */
+-	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++	if (xfs_has_crc(mp)) {
+ 		fa = xfs_btree_sblock_v5hdr_verify(bp);
+ 		if (fa)
+ 			return fa;
+@@ -511,7 +511,7 @@ xfs_inobt_commit_staged_btree(
+ 		fields = XFS_AGI_ROOT | XFS_AGI_LEVEL;
+ 		agi->agi_root = cpu_to_be32(afake->af_root);
+ 		agi->agi_level = cpu_to_be32(afake->af_levels);
+-		if (xfs_sb_version_hasinobtcounts(&cur->bc_mp->m_sb)) {
++		if (xfs_has_inobtcounts(cur->bc_mp)) {
+ 			agi->agi_iblocks = cpu_to_be32(afake->af_blocks);
+ 			fields |= XFS_AGI_IBLOCKS;
+ 		}
+@@ -521,7 +521,7 @@ xfs_inobt_commit_staged_btree(
+ 		fields = XFS_AGI_FREE_ROOT | XFS_AGI_FREE_LEVEL;
+ 		agi->agi_free_root = cpu_to_be32(afake->af_root);
+ 		agi->agi_free_level = cpu_to_be32(afake->af_levels);
+-		if (xfs_sb_version_hasinobtcounts(&cur->bc_mp->m_sb)) {
++		if (xfs_has_inobtcounts(cur->bc_mp)) {
+ 			agi->agi_fblocks = cpu_to_be32(afake->af_blocks);
+ 			fields |= XFS_AGI_IBLOCKS;
+ 		}
+@@ -740,7 +740,7 @@ xfs_finobt_calc_reserves(
+ 	if (!xfs_has_finobt(mp))
+ 		return 0;
+ 
+-	if (xfs_sb_version_hasinobtcounts(&mp->m_sb))
++	if (xfs_has_inobtcounts(mp))
+ 		error = xfs_finobt_read_blocks(mp, tp, pag, &tree_len);
+ 	else
+ 		error = xfs_inobt_count_blocks(mp, tp, pag, XFS_BTNUM_FINO,
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index 5ae5011b72ab..08b4413d3ac4 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -192,7 +192,7 @@ xfs_inode_from_disk(
+ 	 * inode. If the inode is unused, mode is zero and we shouldn't mess
+ 	 * with the uninitialized part of it.
+ 	 */
+-	if (!xfs_sb_version_has_v3inode(&ip->i_mount->m_sb))
++	if (!xfs_has_v3inodes(ip->i_mount))
+ 		ip->i_flushiter = be16_to_cpu(from->di_flushiter);
+ 	inode->i_generation = be32_to_cpu(from->di_gen);
+ 	inode->i_mode = be16_to_cpu(from->di_mode);
+@@ -235,7 +235,7 @@ xfs_inode_from_disk(
+ 	if (from->di_dmevmask || from->di_dmstate)
+ 		xfs_iflags_set(ip, XFS_IPRESERVE_DM_FIELDS);
+ 
+-	if (xfs_sb_version_has_v3inode(&ip->i_mount->m_sb)) {
++	if (xfs_has_v3inodes(ip->i_mount)) {
+ 		inode_set_iversion_queried(inode,
+ 					   be64_to_cpu(from->di_changecount));
+ 		ip->i_crtime = xfs_inode_from_disk_ts(from, from->di_crtime);
+@@ -313,7 +313,7 @@ xfs_inode_to_disk(
+ 	to->di_aformat = xfs_ifork_format(ip->i_afp);
+ 	to->di_flags = cpu_to_be16(ip->i_diflags);
+ 
+-	if (xfs_sb_version_has_v3inode(&ip->i_mount->m_sb)) {
++	if (xfs_has_v3inodes(ip->i_mount)) {
+ 		to->di_version = 3;
+ 		to->di_changecount = cpu_to_be64(inode_peek_iversion(inode));
+ 		to->di_crtime = xfs_inode_to_disk_ts(ip, ip->i_crtime);
+@@ -413,7 +413,7 @@ xfs_dinode_verify(
+ 
+ 	/* Verify v3 integrity information first */
+ 	if (dip->di_version >= 3) {
+-		if (!xfs_sb_version_has_v3inode(&mp->m_sb))
++		if (!xfs_has_v3inodes(mp))
+ 			return __this_address;
+ 		if (!xfs_verify_cksum((char *)dip, mp->m_sb.sb_inodesize,
+ 				      XFS_DINODE_CRC_OFF))
+@@ -534,7 +534,7 @@ xfs_dinode_verify(
+ 
+ 	/* bigtime iflag can only happen on bigtime filesystems */
+ 	if (xfs_dinode_has_bigtime(dip) &&
+-	    !xfs_sb_version_hasbigtime(&mp->m_sb))
++	    !xfs_has_bigtime(mp))
+ 		return __this_address;
+ 
+ 	return NULL;
+diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+index c01bd648e5ce..9ffb74ccde79 100644
+--- a/fs/xfs/libxfs/xfs_log_format.h
++++ b/fs/xfs/libxfs/xfs_log_format.h
+@@ -425,7 +425,7 @@ struct xfs_log_dinode {
+ };
+ 
+ #define xfs_log_dinode_size(mp)						\
+-	(xfs_sb_version_has_v3inode(&(mp)->m_sb) ?			\
++	(xfs_has_v3inodes((mp)) ?					\
+ 		sizeof(struct xfs_log_dinode) :				\
+ 		offsetof(struct xfs_log_dinode, di_next_unlinked))
+ 
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index 860a0c9801ba..d48fd879d3d9 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -1253,7 +1253,7 @@ xfs_refcount_increase_extent(
+ 	struct xfs_trans		*tp,
+ 	struct xfs_bmbt_irec		*PREV)
+ {
+-	if (!xfs_sb_version_hasreflink(&tp->t_mountp->m_sb))
++	if (!xfs_has_reflink(tp->t_mountp))
+ 		return;
+ 
+ 	__xfs_refcount_add(tp, XFS_REFCOUNT_INCREASE, PREV->br_startblock,
+@@ -1268,7 +1268,7 @@ xfs_refcount_decrease_extent(
+ 	struct xfs_trans		*tp,
+ 	struct xfs_bmbt_irec		*PREV)
+ {
+-	if (!xfs_sb_version_hasreflink(&tp->t_mountp->m_sb))
++	if (!xfs_has_reflink(tp->t_mountp))
+ 		return;
+ 
+ 	__xfs_refcount_add(tp, XFS_REFCOUNT_DECREASE, PREV->br_startblock,
+@@ -1617,7 +1617,7 @@ xfs_refcount_alloc_cow_extent(
+ {
+ 	struct xfs_mount		*mp = tp->t_mountp;
+ 
+-	if (!xfs_sb_version_hasreflink(&mp->m_sb))
++	if (!xfs_has_reflink(mp))
+ 		return;
+ 
+ 	__xfs_refcount_add(tp, XFS_REFCOUNT_ALLOC_COW, fsb, len);
+@@ -1636,7 +1636,7 @@ xfs_refcount_free_cow_extent(
+ {
+ 	struct xfs_mount		*mp = tp->t_mountp;
+ 
+-	if (!xfs_sb_version_hasreflink(&mp->m_sb))
++	if (!xfs_has_reflink(mp))
+ 		return;
+ 
+ 	/* Remove rmap entry */
 diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index a1e286fb8ac3..baaec7e6a975 100644
+index 2a01769b316a..a4ea6e2a38e2 100644
 --- a/fs/xfs/libxfs/xfs_sb.c
 +++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -122,7 +122,7 @@ xfs_validate_sb_read(
- "Superblock has unknown read-only compatible features (0x%x) enabled.",
- 			(sbp->sb_features_ro_compat &
- 					XFS_SB_FEAT_RO_COMPAT_UNKNOWN));
--		if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
-+		if (!xfs_is_readonly(mp)) {
- 			xfs_warn(mp,
- "Attempted to mount read-only compatible filesystem read-write.");
- 			xfs_warn(mp,
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index d9534fe0c69b..96c623c464f0 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -419,7 +419,7 @@ xchk_validate_inputs(
- 			goto out;
- 
- 		error = -EROFS;
--		if (mp->m_flags & XFS_MOUNT_RDONLY)
-+		if (xfs_is_readonly(mp))
- 			goto out;
+@@ -912,7 +912,7 @@ xfs_log_sb(
+ 	 * unclean shutdown, this will be corrected by log recovery rebuilding
+ 	 * the counters from the AGF block counts.
+ 	 */
+-	if (xfs_sb_version_haslazysbcount(&mp->m_sb)) {
++	if (xfs_has_lazysbcount(mp)) {
+ 		mp->m_sb.sb_icount = percpu_counter_sum(&mp->m_icount);
+ 		mp->m_sb.sb_ifree = percpu_counter_sum(&mp->m_ifree);
+ 		mp->m_sb.sb_fdblocks = percpu_counter_sum(&mp->m_fdblocks);
+diff --git a/fs/xfs/libxfs/xfs_trans_inode.c b/fs/xfs/libxfs/xfs_trans_inode.c
+index 8d595a5c4abd..6ba554c1e532 100644
+--- a/fs/xfs/libxfs/xfs_trans_inode.c
++++ b/fs/xfs/libxfs/xfs_trans_inode.c
+@@ -136,7 +136,7 @@ xfs_trans_log_inode(
+ 	 * to upgrade this inode to bigtime format, do so now.
+ 	 */
+ 	if ((flags & (XFS_ILOG_CORE | XFS_ILOG_TIMESTAMP)) &&
+-	    xfs_sb_version_hasbigtime(&ip->i_mount->m_sb) &&
++	    xfs_has_bigtime(ip->i_mount) &&
+ 	    !xfs_inode_has_bigtime(ip)) {
+ 		ip->i_diflags2 |= XFS_DIFLAG2_BIGTIME;
+ 		flags |= XFS_ILOG_CORE;
+diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+index 8bf7bc09bcaa..fa3a855b7e67 100644
+--- a/fs/xfs/libxfs/xfs_trans_resv.c
++++ b/fs/xfs/libxfs/xfs_trans_resv.c
+@@ -187,7 +187,7 @@ xfs_calc_inode_chunk_res(
+ 			       XFS_FSB_TO_B(mp, 1));
+ 	if (alloc) {
+ 		/* icreate tx uses ordered buffers */
+-		if (xfs_sb_version_has_v3inode(&mp->m_sb))
++		if (xfs_has_v3inodes(mp))
+ 			return res;
+ 		size = XFS_FSB_TO_B(mp, 1);
  	}
+@@ -268,7 +268,7 @@ xfs_calc_write_reservation(
+ 	     xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
+ 	     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 2), blksz);
  
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index f606d4839e6e..49ae68086945 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1145,7 +1145,7 @@ xfs_buf_ioerror_permanent(
- 		return true;
+-	if (xfs_sb_version_hasrealtime(&mp->m_sb)) {
++	if (xfs_has_realtime(mp)) {
+ 		t2 = xfs_calc_inode_res(mp, 1) +
+ 		     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK),
+ 				     blksz) +
+@@ -317,7 +317,7 @@ xfs_calc_itruncate_reservation(
+ 	t2 = xfs_calc_buf_res(9, mp->m_sb.sb_sectsize) +
+ 	     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 4), blksz);
  
- 	/* At unmount we may treat errors differently */
--	if ((mp->m_flags & XFS_MOUNT_UNMOUNTING) && mp->m_fail_unmount)
-+	if (xfs_is_unmounting(mp) && mp->m_fail_unmount)
- 		return true;
+-	if (xfs_sb_version_hasrealtime(&mp->m_sb)) {
++	if (xfs_has_realtime(mp)) {
+ 		t3 = xfs_calc_buf_res(5, mp->m_sb.sb_sectsize) +
+ 		     xfs_calc_buf_res(xfs_rtalloc_log_count(mp, 2), blksz) +
+ 		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 2), blksz);
+diff --git a/fs/xfs/libxfs/xfs_trans_space.h b/fs/xfs/libxfs/xfs_trans_space.h
+index 7ad3659c5d2a..50332be34388 100644
+--- a/fs/xfs/libxfs/xfs_trans_space.h
++++ b/fs/xfs/libxfs/xfs_trans_space.h
+@@ -57,8 +57,7 @@
+ 	XFS_DAREMOVE_SPACE_RES(mp, XFS_DATA_FORK)
+ #define	XFS_IALLOC_SPACE_RES(mp)	\
+ 	(M_IGEO(mp)->ialloc_blks + \
+-	 ((xfs_sb_version_hasfinobt(&mp->m_sb) ? 2 : 1) * \
+-	  M_IGEO(mp)->inobt_maxlevels))
++	 ((xfs_has_finobt(mp) ? 2 : 1) * M_IGEO(mp)->inobt_maxlevels))
  
- 	return false;
-diff --git a/fs/xfs/xfs_export.c b/fs/xfs/xfs_export.c
-index cb359ec3389b..1064c2342876 100644
---- a/fs/xfs/xfs_export.c
-+++ b/fs/xfs/xfs_export.c
-@@ -44,6 +44,7 @@ xfs_fs_encode_fh(
- 	int		*max_len,
- 	struct inode	*parent)
- {
-+	struct xfs_mount	*mp = XFS_M(inode->i_sb);
- 	struct fid		*fid = (struct fid *)fh;
- 	struct xfs_fid64	*fid64 = (struct xfs_fid64 *)fh;
- 	int			fileid_type;
-@@ -63,8 +64,7 @@ xfs_fs_encode_fh(
- 	 * large enough filesystem may contain them, thus the slightly
- 	 * confusing looking conditional below.
- 	 */
--	if (!xfs_has_small_inums(XFS_M(inode->i_sb)) ||
--	    (XFS_M(inode->i_sb)->m_flags & XFS_MOUNT_32BITINODES))
-+	if (!xfs_has_small_inums(mp) || xfs_is_inode32(mp))
- 		fileid_type |= XFS_FILEID_TYPE_64FLAG;
+ /*
+  * Space reservation values for various transactions.
+@@ -94,8 +93,7 @@
+ #define	XFS_SYMLINK_SPACE_RES(mp,nl,b)	\
+ 	(XFS_IALLOC_SPACE_RES(mp) + XFS_DIRENTER_SPACE_RES(mp,nl) + (b))
+ #define XFS_IFREE_SPACE_RES(mp)		\
+-	(xfs_sb_version_hasfinobt(&mp->m_sb) ? \
+-			M_IGEO(mp)->inobt_maxlevels : 0)
++	(xfs_has_finobt(mp) ? M_IGEO(mp)->inobt_maxlevels : 0)
  
- 	/*
-diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
-index eed6ca5f8f91..6a3ce0f6dc9e 100644
---- a/fs/xfs/xfs_filestream.c
-+++ b/fs/xfs/xfs_filestream.c
-@@ -295,7 +295,7 @@ xfs_filestream_lookup_ag(
- 	 * Set the starting AG using the rotor for inode32, otherwise
- 	 * use the directory inode's AG.
- 	 */
--	if (mp->m_flags & XFS_MOUNT_32BITINODES) {
-+	if (xfs_is_inode32(mp)) {
- 		xfs_agnumber_t	 rotorstep = xfs_rotorstep;
- 		startag = (mp->m_agfrotor / rotorstep) % mp->m_sb.sb_agcount;
- 		mp->m_agfrotor = (mp->m_agfrotor + 1) %
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index cbdb9a86edfc..38f714990756 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -527,15 +527,10 @@ xfs_do_force_shutdown(
- 	int		tag;
- 	const char	*why;
  
--	spin_lock(&mp->m_sb_lock);
--	if (XFS_FORCED_SHUTDOWN(mp)) {
--		spin_unlock(&mp->m_sb_lock);
-+	if (test_and_set_bit(XFS_STATE_SHUTDOWN, &mp->m_opstate))
+ #endif	/* __XFS_TRANS_SPACE_H__ */
+diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
+index 417f07d4dfd0..549e6dda16e6 100644
+--- a/fs/xfs/scrub/agheader.c
++++ b/fs/xfs/scrub/agheader.c
+@@ -419,7 +419,7 @@ xchk_agf_xref_btreeblks(
+ 	int			error;
+ 
+ 	/* agf_btreeblks didn't exist before lazysbcount */
+-	if (!xfs_sb_version_haslazysbcount(&sc->mp->m_sb))
++	if (!xfs_has_lazysbcount(sc->mp))
  		return;
--	}
--	mp->m_flags |= XFS_MOUNT_FS_SHUTDOWN;
- 	if (mp->m_sb_bp)
- 		mp->m_sb_bp->b_flags |= XBF_DONE;
--	spin_unlock(&mp->m_sb_lock);
  
- 	if (flags & SHUTDOWN_FORCE_UMOUNT)
- 		xfs_alert(mp, "User initiated shutdown received.");
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 81da0a59a106..8e65cd47a061 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1052,7 +1052,7 @@ static inline bool
- xfs_want_reclaim_sick(
- 	struct xfs_mount	*mp)
- {
--	return (mp->m_flags & XFS_MOUNT_UNMOUNTING) || xfs_has_norecovery(mp) ||
-+	return xfs_is_unmounting(mp) || xfs_has_norecovery(mp) ||
- 	       XFS_FORCED_SHUTDOWN(mp);
- }
- 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 59cea74df9a7..09b4aba8edc5 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1434,7 +1434,7 @@ xfs_release(
- 		return 0;
- 
- 	/* If this is a read-only mount, don't do this (would generate I/O) */
--	if (mp->m_flags & XFS_MOUNT_RDONLY)
-+	if (xfs_is_readonly(mp))
- 		return 0;
- 
- 	if (!XFS_FORCED_SHUTDOWN(mp)) {
-@@ -1682,7 +1682,7 @@ xfs_inactive(
- 	ASSERT(!xfs_iflags_test(ip, XFS_IRECOVERY));
- 
- 	/* If this is a read-only mount, don't do this (would generate I/O) */
--	if (mp->m_flags & XFS_MOUNT_RDONLY)
-+	if (xfs_is_readonly(mp))
- 		goto out;
- 
- 	/* Metadata inodes require explicit resource cleanup. */
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 1c7f01cdba71..d9c2aaad2a4f 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1245,7 +1245,7 @@ xfs_ioctl_setattr_get_trans(
- 	struct xfs_trans	*tp;
- 	int			error = -EROFS;
- 
--	if (mp->m_flags & XFS_MOUNT_RDONLY)
-+	if (xfs_is_readonly(mp))
- 		goto out_error;
- 	error = -EIO;
- 	if (XFS_FORCED_SHUTDOWN(mp))
-@@ -2063,7 +2063,7 @@ xfs_file_ioctl(
- 		if (!capable(CAP_SYS_ADMIN))
- 			return -EPERM;
- 
--		if (mp->m_flags & XFS_MOUNT_RDONLY)
-+		if (xfs_is_readonly(mp))
- 			return -EROFS;
- 
- 		if (copy_from_user(&inout, arg, sizeof(inout)))
-@@ -2180,7 +2180,7 @@ xfs_file_ioctl(
- 		if (!capable(CAP_SYS_ADMIN))
- 			return -EPERM;
- 
--		if (mp->m_flags & XFS_MOUNT_RDONLY)
-+		if (xfs_is_readonly(mp))
- 			return -EROFS;
- 
- 		if (copy_from_user(&eofb, arg, sizeof(eofb)))
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 2208345546c1..6e37d89cdf02 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -673,7 +673,7 @@ xfs_vn_change_ok(
- {
- 	struct xfs_mount	*mp = XFS_I(d_inode(dentry))->i_mount;
- 
--	if (mp->m_flags & XFS_MOUNT_RDONLY)
-+	if (xfs_is_readonly(mp))
- 		return -EROFS;
- 
- 	if (XFS_FORCED_SHUTDOWN(mp))
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index ac18fe03a630..574cb5f84600 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -621,7 +621,7 @@ xfs_log_mount(
- 		xfs_notice(mp,
- "Mounting V%d filesystem in no-recovery mode. Filesystem will be inconsistent.",
- 			   XFS_SB_VERSION_NUM(&mp->m_sb));
--		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
-+		ASSERT(xfs_is_readonly(mp));
- 	}
- 
- 	log = xlog_alloc_log(mp, log_target, blk_offset, num_bblks);
-@@ -701,15 +701,15 @@ xfs_log_mount(
- 	 * just worked.
- 	 */
- 	if (!xfs_has_norecovery(mp)) {
--		bool	readonly = (mp->m_flags & XFS_MOUNT_RDONLY);
--
--		if (readonly)
--			mp->m_flags &= ~XFS_MOUNT_RDONLY;
--
-+		/*
-+		 * log recovery ignores readonly state and so we need to clear
-+		 * mount-based read only state so it can write to disk.
-+		 */
-+		bool	readonly = test_and_clear_bit(XFS_STATE_READONLY,
-+						&mp->m_opstate);
- 		error = xlog_recover(log);
--
- 		if (readonly)
--			mp->m_flags |= XFS_MOUNT_RDONLY;
-+			set_bit(XFS_STATE_READONLY, &mp->m_opstate);
- 		if (error) {
- 			xfs_warn(mp, "log mount/recovery failed: error %d",
- 				error);
-@@ -758,17 +758,20 @@ xfs_log_mount_finish(
- 	struct xfs_mount	*mp)
- {
- 	struct xlog		*log = mp->m_log;
--	bool			readonly = (mp->m_flags & XFS_MOUNT_RDONLY);
-+	bool			readonly;
+ 	/* Check agf_rmap_blocks; set up for agf_btreeblks check */
+@@ -587,7 +587,7 @@ xchk_agf(
+ 		xchk_block_set_corrupt(sc, sc->sa.agf_bp);
+ 	if (pag->pagf_flcount != be32_to_cpu(agf->agf_flcount))
+ 		xchk_block_set_corrupt(sc, sc->sa.agf_bp);
+-	if (xfs_sb_version_haslazysbcount(&sc->mp->m_sb) &&
++	if (xfs_has_lazysbcount(sc->mp) &&
+ 	    pag->pagf_btreeblks != be32_to_cpu(agf->agf_btreeblks))
+ 		xchk_block_set_corrupt(sc, sc->sa.agf_bp);
+ 	xfs_perag_put(pag);
+@@ -787,7 +787,7 @@ xchk_agi_xref_fiblocks(
+ 	xfs_agblock_t		blocks;
  	int			error = 0;
  
- 	if (xfs_has_norecovery(mp)) {
--		ASSERT(readonly);
-+		ASSERT(xfs_is_readonly(mp));
- 		return 0;
--	} else if (readonly) {
--		/* Allow unlinked processing to proceed */
--		mp->m_flags &= ~XFS_MOUNT_RDONLY;
+-	if (!xfs_sb_version_hasinobtcounts(&sc->mp->m_sb))
++	if (!xfs_has_inobtcounts(sc->mp))
+ 		return;
+ 
+ 	if (sc->sa.ino_cur) {
+diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
+index df594cebb319..ae1e9a47e24c 100644
+--- a/fs/xfs/scrub/agheader_repair.c
++++ b/fs/xfs/scrub/agheader_repair.c
+@@ -811,7 +811,7 @@ xrep_agi_calc_from_btrees(
+ 	error = xfs_ialloc_count_inodes(cur, &count, &freecount);
+ 	if (error)
+ 		goto err;
+-	if (xfs_sb_version_hasinobtcounts(&mp->m_sb)) {
++	if (xfs_has_inobtcounts(mp)) {
+ 		xfs_agblock_t	blocks;
+ 
+ 		error = xfs_btree_count_blocks(cur, &blocks);
+@@ -824,8 +824,7 @@ xrep_agi_calc_from_btrees(
+ 	agi->agi_count = cpu_to_be32(count);
+ 	agi->agi_freecount = cpu_to_be32(freecount);
+ 
+-	if (xfs_sb_version_hasfinobt(&mp->m_sb) &&
+-	    xfs_sb_version_hasinobtcounts(&mp->m_sb)) {
++	if (xfs_has_finobt(mp) && xfs_has_inobtcounts(mp)) {
+ 		xfs_agblock_t	blocks;
+ 
+ 		cur = xfs_inobt_init_cursor(mp, sc->tp, agi_bp,
+diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+index 1c7d090f9fd0..aa485b473622 100644
+--- a/fs/xfs/scrub/bmap.c
++++ b/fs/xfs/scrub/bmap.c
+@@ -659,8 +659,7 @@ xchk_bmap(
+ 		}
+ 		break;
+ 	case XFS_ATTR_FORK:
+-		if (!xfs_sb_version_hasattr(&mp->m_sb) &&
+-		    !xfs_sb_version_hasattr2(&mp->m_sb))
++		if (!xfs_has_attr(mp) && !xfs_has_attr2(mp))
+ 			xchk_ino_set_corrupt(sc, sc->ip->i_ino);
+ 		break;
+ 	default:
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index d4599a71a5b2..c1e301bdce68 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -484,21 +484,21 @@ xchk_ag_btcur_init(
  	}
  
-+	/*
-+	 * log recovery ignores readonly state and so we need to clear
-+	 * mount-based read only state so it can write to disk.
-+	 */
-+	readonly = test_and_clear_bit(XFS_STATE_READONLY, &mp->m_opstate);
-+
- 	/*
- 	 * During the second phase of log recovery, we need iget and
- 	 * iput to behave like they do for an active filesystem.
-@@ -820,7 +823,7 @@ xfs_log_mount_finish(
+ 	/* Set up a finobt cursor for cross-referencing. */
+-	if (sa->agi_bp && xfs_sb_version_hasfinobt(&mp->m_sb) &&
++	if (sa->agi_bp && xfs_has_finobt(mp) &&
+ 	    xchk_ag_btree_healthy_enough(sc, sa->pag, XFS_BTNUM_FINO)) {
+ 		sa->fino_cur = xfs_inobt_init_cursor(mp, sc->tp, sa->agi_bp,
+ 				sa->pag, XFS_BTNUM_FINO);
+ 	}
  
- 	clear_bit(XLOG_RECOVERY_NEEDED, &log->l_opstate);
- 	if (readonly)
--		mp->m_flags |= XFS_MOUNT_RDONLY;
-+		set_bit(XFS_STATE_READONLY, &mp->m_opstate);
+ 	/* Set up a rmapbt cursor for cross-referencing. */
+-	if (sa->agf_bp && xfs_sb_version_hasrmapbt(&mp->m_sb) &&
++	if (sa->agf_bp && xfs_has_rmapbt(mp) &&
+ 	    xchk_ag_btree_healthy_enough(sc, sa->pag, XFS_BTNUM_RMAP)) {
+ 		sa->rmap_cur = xfs_rmapbt_init_cursor(mp, sc->tp, sa->agf_bp,
+ 				sa->pag);
+ 	}
  
- 	/* Make sure the log is dead if we're returning failure. */
- 	ASSERT(!error || xlog_is_shutdown(log));
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index accc175987a4..ffa445d24ba4 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -1347,7 +1347,7 @@ xlog_find_tail(
- 	 * headers if we have a filesystem using non-persistent counters.
+ 	/* Set up a refcountbt cursor for cross-referencing. */
+-	if (sa->agf_bp && xfs_sb_version_hasreflink(&mp->m_sb) &&
++	if (sa->agf_bp && xfs_has_reflink(mp) &&
+ 	    xchk_ag_btree_healthy_enough(sc, sa->pag, XFS_BTNUM_REFC)) {
+ 		sa->refc_cur = xfs_refcountbt_init_cursor(mp, sc->tp,
+ 				sa->agf_bp, sa->pag);
+diff --git a/fs/xfs/scrub/fscounters.c b/fs/xfs/scrub/fscounters.c
+index fd7941e04ae1..bd3521e7582b 100644
+--- a/fs/xfs/scrub/fscounters.c
++++ b/fs/xfs/scrub/fscounters.c
+@@ -207,7 +207,7 @@ xchk_fscount_aggregate_agcounts(
+ 		/* Add up the free/freelist/bnobt/cntbt blocks */
+ 		fsc->fdblocks += pag->pagf_freeblks;
+ 		fsc->fdblocks += pag->pagf_flcount;
+-		if (xfs_sb_version_haslazysbcount(&sc->mp->m_sb)) {
++		if (xfs_has_lazysbcount(sc->mp)) {
+ 			fsc->fdblocks += pag->pagf_btreeblks;
+ 		} else {
+ 			error = xchk_fscount_btreeblks(sc, fsc, agno);
+diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
+index 23950e384fda..d4bb36746d22 100644
+--- a/fs/xfs/scrub/inode.c
++++ b/fs/xfs/scrub/inode.c
+@@ -185,8 +185,7 @@ xchk_inode_flags2(
+ 		goto bad;
+ 
+ 	/* no bigtime iflag without the bigtime feature */
+-	if (xfs_dinode_has_bigtime(dip) &&
+-	    !xfs_sb_version_hasbigtime(&mp->m_sb))
++	if (xfs_dinode_has_bigtime(dip) && !xfs_has_bigtime(mp))
+ 		goto bad;
+ 
+ 	return;
+diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
+index acbb9839d42f..c35c8b33fd21 100644
+--- a/fs/xfs/scrub/quota.c
++++ b/fs/xfs/scrub/quota.c
+@@ -127,7 +127,7 @@ xchk_quota_item(
+ 	 * a reflink filesystem we're allowed to exceed physical space
+ 	 * if there are no quota limits.
  	 */
- 	if (clean)
--		log->l_mp->m_flags |= XFS_MOUNT_WAS_CLEAN;
-+		set_bit(XFS_STATE_CLEAN, &log->l_mp->m_opstate);
+-	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
++	if (xfs_has_reflink(mp)) {
+ 		if (mp->m_sb.sb_dblocks < dq->q_blk.count)
+ 			xchk_fblock_set_warning(sc, XFS_DATA_FORK,
+ 					offset);
+diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+index 487b00434b96..bea65f2fe657 100644
+--- a/fs/xfs/xfs_reflink.h
++++ b/fs/xfs/xfs_reflink.h
+@@ -8,8 +8,7 @@
  
- 	/*
- 	 * Make sure that there are no blocks in front of the head
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 0750b2a0a6c5..feb10fa7029a 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -485,7 +485,7 @@ xfs_check_summary_counts(
- 	 * counters.  If any of them are obviously incorrect, we can recompute
- 	 * them from the AGF headers in the next step.
- 	 */
--	if (XFS_LAST_UNMOUNT_WAS_CLEAN(mp) &&
-+	if (xfs_is_clean(mp) &&
- 	    (mp->m_sb.sb_fdblocks > mp->m_sb.sb_dblocks ||
- 	     !xfs_verify_icount(mp, mp->m_sb.sb_icount) ||
- 	     mp->m_sb.sb_ifree > mp->m_sb.sb_icount))
-@@ -502,8 +502,7 @@ xfs_check_summary_counts(
- 	 * superblock to be correct and we don't need to do anything here.
- 	 * Otherwise, recalculate the summary counters.
- 	 */
--	if ((!xfs_has_lazysbcount(mp) ||
--	     XFS_LAST_UNMOUNT_WAS_CLEAN(mp)) &&
-+	if ((!xfs_has_lazysbcount(mp) || xfs_is_clean(mp)) &&
- 	    !xfs_fs_has_sickness(mp, XFS_SICK_FS_COUNTERS))
- 		return 0;
- 
-@@ -543,7 +542,7 @@ xfs_unmount_flush_inodes(
- 	xfs_extent_busy_wait_all(mp);
- 	flush_workqueue(xfs_discard_wq);
- 
--	mp->m_flags |= XFS_MOUNT_UNMOUNTING;
-+	set_bit(XFS_STATE_UNMOUNTING, &mp->m_opstate);
- 
- 	xfs_ail_push_all_sync(mp->m_ail);
- 	cancel_delayed_work_sync(&mp->m_reclaim_work);
-@@ -822,7 +821,7 @@ xfs_mountfs(
- 	 * the next remount into writeable mode.  Otherwise we would never
- 	 * perform the update e.g. for the root filesystem.
- 	 */
--	if (mp->m_update_sb && !(mp->m_flags & XFS_MOUNT_RDONLY)) {
-+	if (mp->m_update_sb && !xfs_is_readonly(mp)) {
- 		error = xfs_sync_sb(mp, false);
- 		if (error) {
- 			xfs_warn(mp, "failed to write sb changes");
-@@ -881,7 +880,7 @@ xfs_mountfs(
- 	 * We use the same quiesce mechanism as the rw->ro remount, as they are
- 	 * semantically identical operations.
- 	 */
--	if ((mp->m_flags & XFS_MOUNT_RDONLY) && !xfs_has_norecovery(mp))
-+	if (xfs_is_readonly(mp) && !xfs_has_norecovery(mp))
- 		xfs_log_clean(mp);
- 
- 	/*
-@@ -905,7 +904,7 @@ xfs_mountfs(
- 	 * This may drive us straight to ENOSPC on mount, but that implies
- 	 * we were already there on the last unmount. Warn if this occurs.
- 	 */
--	if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
-+	if (!xfs_is_readonly(mp)) {
- 		resblks = xfs_default_resblks(mp);
- 		error = xfs_reserve_blocks(mp, &resblks, NULL);
- 		if (error)
-@@ -1044,7 +1043,7 @@ xfs_fs_writable(
+ static inline bool xfs_is_always_cow_inode(struct xfs_inode *ip)
  {
- 	ASSERT(level > SB_UNFROZEN);
- 	if ((mp->m_super->s_writers.frozen >= level) ||
--	    XFS_FORCED_SHUTDOWN(mp) || (mp->m_flags & XFS_MOUNT_RDONLY))
-+	    XFS_FORCED_SHUTDOWN(mp) || xfs_is_readonly(mp))
- 		return false;
+-	return ip->i_mount->m_always_cow &&
+-		xfs_sb_version_hasreflink(&ip->i_mount->m_sb);
++	return ip->i_mount->m_always_cow && xfs_has_reflink(ip->i_mount);
+ }
  
- 	return true;
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 387be1bfb431..0b9b84b31179 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -131,12 +131,12 @@ typedef struct xfs_mount {
- 	uint			m_rsumsize;	/* size of rt summary, bytes */
- 	int			m_fixedfsid[2];	/* unchanged for life of FS */
- 	uint			m_qflags;	/* quota status flags */
--	uint64_t		m_flags;	/* global mount flags */
- 	uint64_t		m_features;	/* active filesystem features */
- 	int64_t			m_low_space[XFS_LOWSP_MAX];
- 	struct xfs_ino_geometry	m_ino_geo;	/* inode geometry */
- 	struct xfs_trans_resv	m_resv;		/* precomputed res values */
- 						/* low free space thresholds */
-+	unsigned long		m_opstate;	/* dynamic state flags */
- 	bool			m_always_cow;
- 	bool			m_fail_unmount;
- 	bool			m_finobt_nores; /* no per-AG finobt resv. */
-@@ -345,18 +345,26 @@ __XFS_HAS_FEAT(norecovery, NORECOVERY)
- __XFS_HAS_FEAT(nouuid, NOUUID)
- 
- /*
-- * Flags for m_flags.
-+ * Operational state flags
-+ * Use these with atomic bit ops only!
-  */
--#define XFS_MOUNT_WSYNC		(1ULL << 0)	/* for nfs - all metadata ops
--						   must be synchronous except
--						   for space allocations */
--#define XFS_MOUNT_UNMOUNTING	(1ULL << 1)	/* filesystem is unmounting */
--#define XFS_MOUNT_WAS_CLEAN	(1ULL << 2)
--#define XFS_MOUNT_FS_SHUTDOWN	(1ULL << 3)	/* atomic stop of all filesystem
--						   operations, typically for
--						   disk errors in metadata */
--#define XFS_MOUNT_32BITINODES	(1ULL << 15)	/* inode32 allocator active */
--#define XFS_MOUNT_RDONLY	(1ULL << 4)	/* read-only fs */
-+#define XFS_STATE_UNMOUNTING	0	/* filesystem is unmounting */
-+#define XFS_STATE_CLEAN		1	/* mount was clean */
-+#define XFS_STATE_SHUTDOWN	2	/* atomic stop of all fs operations */
-+#define XFS_STATE_INODE32	3	/* inode32 allocator active */
-+#define XFS_STATE_READONLY	4	/* read-only fs */
-+
-+#define __XFS_IS_STATE(name, NAME) \
-+static inline bool xfs_is_ ## name (struct xfs_mount *mp) \
-+{ \
-+	return test_bit(XFS_STATE_ ## NAME, &mp->m_opstate); \
-+}
-+
-+__XFS_IS_STATE(unmounting, UNMOUNTING)
-+__XFS_IS_STATE(clean, CLEAN)
-+__XFS_IS_STATE(shutdown, SHUTDOWN)
-+__XFS_IS_STATE(inode32, INODE32)
-+__XFS_IS_STATE(readonly, READONLY)
- 
- /*
-  * Max and min values for mount-option defined I/O
-@@ -365,9 +373,7 @@ __XFS_HAS_FEAT(nouuid, NOUUID)
- #define XFS_MAX_IO_LOG		30	/* 1G */
- #define XFS_MIN_IO_LOG		PAGE_SHIFT
- 
--#define XFS_LAST_UNMOUNT_WAS_CLEAN(mp)	\
--				((mp)->m_flags & XFS_MOUNT_WAS_CLEAN)
--#define XFS_FORCED_SHUTDOWN(mp)	((mp)->m_flags & XFS_MOUNT_FS_SHUTDOWN)
-+#define XFS_FORCED_SHUTDOWN(mp)		xfs_is_shutdown(mp)
- void xfs_do_force_shutdown(struct xfs_mount *mp, int flags, char *fname,
- 		int lnnum);
- #define xfs_force_shutdown(m,f)	\
+ static inline bool xfs_is_cow_inode(struct xfs_inode *ip)
 diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 9c3fc7f5e5ab..cc7eb9a73e85 100644
+index 2463848f92ff..8dd8398846fa 100644
 --- a/fs/xfs/xfs_super.c
 +++ b/fs/xfs/xfs_super.c
-@@ -233,7 +233,7 @@ xfs_fs_show_options(
-  *
-  * Inode allocation patterns are altered only if inode32 is requested
-  * (XFS_FEAT_SMALL_INUMS), and the filesystem is sufficiently large.
-- * If altered, XFS_MOUNT_32BITINODES is set as well.
-+ * If altered, XFS_STATE_INODE32 is set as well.
-  *
-  * An agcount independent of that in the mount structure is provided
-  * because in the growfs case, mp->m_sb.sb_agcount is not yet updated
-@@ -275,13 +275,13 @@ xfs_set_inode_alloc(
- 
- 	/*
- 	 * If user asked for no more than 32-bit inodes, and the fs is
--	 * sufficiently large, set XFS_MOUNT_32BITINODES if we must alter
-+	 * sufficiently large, set XFS_STATE_INODE32 if we must alter
- 	 * the allocator to accommodate the request.
- 	 */
- 	if (xfs_has_small_inums(mp) && ino > XFS_MAXINUMBER_32)
--		mp->m_flags |= XFS_MOUNT_32BITINODES;
-+		set_bit(XFS_STATE_INODE32, &mp->m_opstate);
- 	else
--		mp->m_flags &= ~XFS_MOUNT_32BITINODES;
-+		clear_bit(XFS_STATE_INODE32, &mp->m_opstate);
- 
- 	for (index = 0; index < agcount; index++) {
- 		struct xfs_perag	*pag;
-@@ -290,7 +290,7 @@ xfs_set_inode_alloc(
- 
- 		pag = xfs_perag_get(mp, index);
- 
--		if (mp->m_flags & XFS_MOUNT_32BITINODES) {
-+		if (xfs_is_inode32(mp)) {
- 			if (ino > XFS_MAXINUMBER_32) {
- 				pag->pagi_inodeok = 0;
- 				pag->pagf_metadata = 0;
-@@ -310,7 +310,7 @@ xfs_set_inode_alloc(
- 		xfs_perag_put(pag);
+@@ -1444,7 +1444,7 @@ xfs_fs_fill_super(
  	}
  
--	return (mp->m_flags & XFS_MOUNT_32BITINODES) ? maxagi : agcount;
-+	return xfs_is_inode32(mp) ? maxagi : agcount;
- }
- 
- STATIC int
-@@ -912,8 +912,6 @@ STATIC int
- xfs_finish_flags(
- 	struct xfs_mount	*mp)
- {
--	int			ronly = (mp->m_flags & XFS_MOUNT_RDONLY);
--
- 	/* Fail a mount where the logbuf is smaller than the log stripe */
- 	if (xfs_has_logv2(mp)) {
- 		if (mp->m_logbsize <= 0 &&
-@@ -946,7 +944,7 @@ xfs_finish_flags(
- 	/*
- 	 * prohibit r/w mounts of read-only filesystems
- 	 */
--	if ((mp->m_sb.sb_flags & XFS_SBF_READONLY) && !ronly) {
-+	if ((mp->m_sb.sb_flags & XFS_SBF_READONLY) && !xfs_is_readonly(mp)) {
- 		xfs_warn(mp,
- 			"cannot mount a read-only filesystem as read-write");
- 		return -EROFS;
-@@ -1293,7 +1291,7 @@ xfs_fs_validate_params(
- 	struct xfs_mount	*mp)
- {
- 	/* No recovery flag requires a read-only mount */
--	if (xfs_has_norecovery(mp) && !(mp->m_flags & XFS_MOUNT_RDONLY)) {
-+	if (xfs_has_norecovery(mp) && !xfs_is_readonly(mp)) {
- 		xfs_warn(mp, "no-recovery mounts must be read-only.");
- 		return -EINVAL;
- 	}
-@@ -1666,7 +1664,7 @@ xfs_remount_rw(
- 		return -EINVAL;
- 	}
- 
--	mp->m_flags &= ~XFS_MOUNT_RDONLY;
-+	clear_bit(XFS_STATE_READONLY, &mp->m_opstate);
- 
- 	/*
- 	 * If this is the first remount to writeable state we might have some
-@@ -1742,7 +1740,7 @@ xfs_remount_ro(
- 	xfs_save_resvblks(mp);
- 
- 	xfs_log_clean(mp);
--	mp->m_flags |= XFS_MOUNT_RDONLY;
-+	set_bit(XFS_STATE_READONLY, &mp->m_opstate);
- 
- 	return 0;
- }
-@@ -1792,14 +1790,14 @@ xfs_fs_reconfigure(
- 	}
- 
- 	/* ro -> rw */
--	if ((mp->m_flags & XFS_MOUNT_RDONLY) && !(flags & SB_RDONLY)) {
-+	if (xfs_is_readonly(mp) && !(flags & SB_RDONLY)) {
- 		error = xfs_remount_rw(mp);
- 		if (error)
- 			return error;
- 	}
- 
- 	/* rw -> ro */
--	if (!(mp->m_flags & XFS_MOUNT_RDONLY) && (flags & SB_RDONLY)) {
-+	if (!xfs_is_readonly(mp) && (flags & SB_RDONLY)) {
- 		error = xfs_remount_ro(mp);
- 		if (error)
- 			return error;
-@@ -1866,7 +1864,7 @@ static int xfs_init_fs_context(
- 	 * Copy binary VFS mount flags we are interested in.
- 	 */
- 	if (fc->sb_flags & SB_RDONLY)
--		mp->m_flags |= XFS_MOUNT_RDONLY;
-+		set_bit(XFS_STATE_READONLY, &mp->m_opstate);
- 	if (fc->sb_flags & SB_DIRSYNC)
- 		mp->m_features |= XFS_FEAT_DIRSYNC;
- 	if (fc->sb_flags & SB_SYNCHRONOUS)
+ 	/* Filesystem claims it needs repair, so refuse the mount. */
+-	if (xfs_sb_version_needsrepair(&mp->m_sb)) {
++	if (xfs_has_needsrepair(mp)) {
+ 		xfs_warn(mp, "Filesystem needs repair.  Please run xfs_repair.");
+ 		error = -EFSCORRUPTED;
+ 		goto out_free_sb;
 -- 
 2.31.1
 
