@@ -4,37 +4,37 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 392E9C07E95
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 02:35:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9BBFC07E96
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 02:35:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2020D6135A
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 02:35:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AB86F61370
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 02:35:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237422AbhGNCh5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 13 Jul 2021 22:37:57 -0400
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:59137 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S237375AbhGNCh5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Jul 2021 22:37:57 -0400
+        id S237490AbhGNCh6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 13 Jul 2021 22:37:58 -0400
+Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:40791 "EHLO
+        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S237375AbhGNCh6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Jul 2021 22:37:58 -0400
 Received: from dread.disaster.area (pa49-181-34-10.pa.nsw.optusnet.com.au [49.181.34.10])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id DF95A80CAB4;
+        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id DE0E010A8DC;
         Wed, 14 Jul 2021 12:34:47 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1m3UjW-006Hek-Sx; Wed, 14 Jul 2021 12:34:46 +1000
+        id 1m3UjW-006Heg-Rr; Wed, 14 Jul 2021 12:34:46 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1m3UjW-00Awep-L6; Wed, 14 Jul 2021 12:34:46 +1000
+        id 1m3UjW-00Awem-Jt; Wed, 14 Jul 2021 12:34:46 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     linux-mm@kvack.org
-Subject: [PATCH 3/3] xfs: replace kmem_alloc_large() with kvmalloc()
-Date:   Wed, 14 Jul 2021 12:34:40 +1000
-Message-Id: <20210714023440.2608690-4-david@fromorbit.com>
+Subject: [PATCH 2/3] xfs: remove kmem_alloc_io()
+Date:   Wed, 14 Jul 2021 12:34:39 +1000
+Message-Id: <20210714023440.2608690-3-david@fromorbit.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210714023440.2608690-1-david@fromorbit.com>
 References: <20210714023440.2608690-1-david@fromorbit.com>
@@ -44,234 +44,177 @@ X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
         a=hdaoRb6WoHYrV466vVKEyw==:117 a=hdaoRb6WoHYrV466vVKEyw==:17
         a=e_q4qTt1xDgA:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
-        a=dSPyfIX0mPSTpOhiuKoA:9 a=AjGcO6oz07-iQ99wixmX:22
+        a=4XHAKF2RG0DQCWMB_poA:9 a=AjGcO6oz07-iQ99wixmX:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-There is no reason for this wrapper existing anymore. All the places
-that use KM_NOFS allocation are within transaction contexts and
-hence covered by memalloc_nofs_save/restore contexts. Hence we don't
-need any special handling of vmalloc for large IOs anymore and
-so special casing this code isn't necessary.
+Since commit 59bb47985c1d ("mm, sl[aou]b: guarantee natural alignment
+for kmalloc(power-of-two)"), the core slab code now guarantees slab
+alignment in all situations sufficient for IO purposes (i.e. minimum
+of 512 byte alignment of >= 512 byte sized heap allocations) we no
+longer need the workaround in the XFS code to provide this
+guarantee.
+
+Replace the use of kmem_alloc_io() with kmem_alloc() or
+kmem_alloc_large() appropriately, and remove the kmem_alloc_io()
+interface altogether.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/kmem.c                 | 39 -----------------------------------
- fs/xfs/kmem.h                 |  1 -
- fs/xfs/libxfs/xfs_attr_leaf.c |  2 +-
- fs/xfs/scrub/attr.c           | 14 +++++++------
- fs/xfs/scrub/attr.h           |  3 ---
- fs/xfs/xfs_log.c              |  4 ++--
- fs/xfs/xfs_log_cil.c          | 10 ++++++++-
- fs/xfs/xfs_log_recover.c      |  2 +-
- fs/xfs/xfs_trace.h            |  1 -
- 9 files changed, 21 insertions(+), 55 deletions(-)
+ fs/xfs/kmem.c            | 25 -------------------------
+ fs/xfs/kmem.h            |  1 -
+ fs/xfs/xfs_buf.c         |  3 +--
+ fs/xfs/xfs_buf.h         |  6 ------
+ fs/xfs/xfs_log.c         |  3 +--
+ fs/xfs/xfs_log_recover.c |  4 +---
+ fs/xfs/xfs_trace.h       |  1 -
+ 7 files changed, 3 insertions(+), 40 deletions(-)
 
 diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
-index 3f2979fd2f2b..6f49bf39183c 100644
+index e986b95d94c9..3f2979fd2f2b 100644
 --- a/fs/xfs/kmem.c
 +++ b/fs/xfs/kmem.c
-@@ -29,42 +29,3 @@ kmem_alloc(size_t size, xfs_km_flags_t flags)
- 		congestion_wait(BLK_RW_ASYNC, HZ/50);
- 	} while (1);
+@@ -56,31 +56,6 @@ __kmem_vmalloc(size_t size, xfs_km_flags_t flags)
+ 	return ptr;
  }
--
--
+ 
 -/*
-- * __vmalloc() will allocate data pages and auxiliary structures (e.g.
-- * pagetables) with GFP_KERNEL, yet we may be under GFP_NOFS context here. Hence
-- * we need to tell memory reclaim that we are in such a context via
-- * PF_MEMALLOC_NOFS to prevent memory reclaim re-entering the filesystem here
-- * and potentially deadlocking.
+- * Same as kmem_alloc_large, except we guarantee the buffer returned is aligned
+- * to the @align_mask. We only guarantee alignment up to page size, we'll clamp
+- * alignment at page size if it is larger. vmalloc always returns a PAGE_SIZE
+- * aligned region.
 - */
--static void *
--__kmem_vmalloc(size_t size, xfs_km_flags_t flags)
--{
--	unsigned nofs_flag = 0;
--	void	*ptr;
--	gfp_t	lflags = kmem_flags_convert(flags);
--
--	if (flags & KM_NOFS)
--		nofs_flag = memalloc_nofs_save();
--
--	ptr = __vmalloc(size, lflags);
--
--	if (flags & KM_NOFS)
--		memalloc_nofs_restore(nofs_flag);
--
--	return ptr;
--}
--
 -void *
--kmem_alloc_large(size_t size, xfs_km_flags_t flags)
+-kmem_alloc_io(size_t size, int align_mask, xfs_km_flags_t flags)
 -{
 -	void	*ptr;
 -
--	trace_kmem_alloc_large(size, flags, _RET_IP_);
+-	trace_kmem_alloc_io(size, flags, _RET_IP_);
+-
+-	if (WARN_ON_ONCE(align_mask >= PAGE_SIZE))
+-		align_mask = PAGE_SIZE - 1;
 -
 -	ptr = kmem_alloc(size, flags | KM_MAYFAIL);
--	if (ptr)
--		return ptr;
+-	if (ptr) {
+-		if (!((uintptr_t)ptr & align_mask))
+-			return ptr;
+-		kfree(ptr);
+-	}
 -	return __kmem_vmalloc(size, flags);
 -}
+-
+ void *
+ kmem_alloc_large(size_t size, xfs_km_flags_t flags)
+ {
 diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
-index 9ff20047f8b8..54da6d717a06 100644
+index 38007117697e..9ff20047f8b8 100644
 --- a/fs/xfs/kmem.h
 +++ b/fs/xfs/kmem.h
 @@ -57,7 +57,6 @@ kmem_flags_convert(xfs_km_flags_t flags)
  }
  
  extern void *kmem_alloc(size_t, xfs_km_flags_t);
--extern void *kmem_alloc_large(size_t size, xfs_km_flags_t);
+-extern void *kmem_alloc_io(size_t size, int align_mask, xfs_km_flags_t flags);
+ extern void *kmem_alloc_large(size_t size, xfs_km_flags_t);
  static inline void  kmem_free(const void *ptr)
  {
- 	kvfree(ptr);
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index b910bd209949..16d64872acc0 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -489,7 +489,7 @@ xfs_attr_copy_value(
- 	}
- 
- 	if (!args->value) {
--		args->value = kmem_alloc_large(valuelen, KM_NOLOCKDEP);
-+		args->value = kvmalloc(valuelen, GFP_KERNEL | __GFP_NOLOCKDEP);
- 		if (!args->value)
- 			return -ENOMEM;
- 	}
-diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-index 552af0cf8482..6c36af6dbd35 100644
---- a/fs/xfs/scrub/attr.c
-+++ b/fs/xfs/scrub/attr.c
-@@ -25,11 +25,11 @@
-  * reallocating the buffer if necessary.  Buffer contents are not preserved
-  * across a reallocation.
-  */
--int
-+static int
- xchk_setup_xattr_buf(
- 	struct xfs_scrub	*sc,
- 	size_t			value_size,
--	xfs_km_flags_t		flags)
-+	gfp_t			flags)
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 8ff42b3585e0..a5ef1f9eb622 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -315,7 +315,6 @@ xfs_buf_alloc_kmem(
+ 	struct xfs_buf	*bp,
+ 	xfs_buf_flags_t	flags)
  {
- 	size_t			sz;
- 	struct xchk_xattr_buf	*ab = sc->buf;
-@@ -57,7 +57,7 @@ xchk_setup_xattr_buf(
- 	 * Don't zero the buffer upon allocation to avoid runtime overhead.
- 	 * All users must be careful never to read uninitialized contents.
- 	 */
--	ab = kmem_alloc_large(sizeof(*ab) + sz, flags);
-+	ab = kvmalloc(sizeof(*ab) + sz, flags);
- 	if (!ab)
+-	int		align_mask = xfs_buftarg_dma_alignment(bp->b_target);
+ 	xfs_km_flags_t	kmflag_mask = KM_NOFS;
+ 	size_t		size = BBTOB(bp->b_length);
+ 
+@@ -323,7 +322,7 @@ xfs_buf_alloc_kmem(
+ 	if (!(flags & XBF_READ))
+ 		kmflag_mask |= KM_ZERO;
+ 
+-	bp->b_addr = kmem_alloc_io(size, align_mask, kmflag_mask);
++	bp->b_addr = kmem_alloc(size, kmflag_mask);
+ 	if (!bp->b_addr)
  		return -ENOMEM;
  
-@@ -79,7 +79,7 @@ xchk_setup_xattr(
- 	 * without the inode lock held, which means we can sleep.
- 	 */
- 	if (sc->flags & XCHK_TRY_HARDER) {
--		error = xchk_setup_xattr_buf(sc, XATTR_SIZE_MAX, 0);
-+		error = xchk_setup_xattr_buf(sc, XATTR_SIZE_MAX, GFP_KERNEL);
- 		if (error)
- 			return error;
- 	}
-@@ -138,7 +138,8 @@ xchk_xattr_listent(
- 	 * doesn't work, we overload the seen_enough variable to convey
- 	 * the error message back to the main scrub function.
- 	 */
--	error = xchk_setup_xattr_buf(sx->sc, valuelen, KM_MAYFAIL);
-+	error = xchk_setup_xattr_buf(sx->sc, valuelen,
-+			GFP_KERNEL | __GFP_RETRY_MAYFAIL);
- 	if (error == -ENOMEM)
- 		error = -EDEADLOCK;
- 	if (error) {
-@@ -323,7 +324,8 @@ xchk_xattr_block(
- 		return 0;
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index 464dc548fa23..cfbe37d73293 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -355,12 +355,6 @@ extern int xfs_setsize_buftarg(struct xfs_buftarg *, unsigned int);
+ #define xfs_getsize_buftarg(buftarg)	block_size((buftarg)->bt_bdev)
+ #define xfs_readonly_buftarg(buftarg)	bdev_read_only((buftarg)->bt_bdev)
  
- 	/* Allocate memory for block usage checking. */
--	error = xchk_setup_xattr_buf(ds->sc, 0, KM_MAYFAIL);
-+	error = xchk_setup_xattr_buf(ds->sc, 0,
-+			GFP_KERNEL | __GFP_RETRY_MAYFAIL);
- 	if (error == -ENOMEM)
- 		return -EDEADLOCK;
- 	if (error)
-diff --git a/fs/xfs/scrub/attr.h b/fs/xfs/scrub/attr.h
-index 13a1d2e8424d..1719e1c4da59 100644
---- a/fs/xfs/scrub/attr.h
-+++ b/fs/xfs/scrub/attr.h
-@@ -65,7 +65,4 @@ xchk_xattr_dstmap(
- 			BITS_TO_LONGS(sc->mp->m_attr_geo->blksize);
- }
- 
--int xchk_setup_xattr_buf(struct xfs_scrub *sc, size_t value_size,
--		xfs_km_flags_t flags);
+-static inline int
+-xfs_buftarg_dma_alignment(struct xfs_buftarg *bt)
+-{
+-	return queue_dma_alignment(bt->bt_bdev->bd_disk->queue);
+-}
 -
- #endif	/* __XFS_SCRUB_ATTR_H__ */
+ int xfs_buf_reverify(struct xfs_buf *bp, const struct xfs_buf_ops *ops);
+ bool xfs_verify_magic(struct xfs_buf *bp, __be32 dmagic);
+ bool xfs_verify_magic16(struct xfs_buf *bp, __be16 dmagic);
 diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 826b3cf5fd72..ec3668508acf 100644
+index 36fa2650b081..826b3cf5fd72 100644
 --- a/fs/xfs/xfs_log.c
 +++ b/fs/xfs/xfs_log.c
-@@ -1462,8 +1462,8 @@ xlog_alloc_log(
+@@ -1451,7 +1451,6 @@ xlog_alloc_log(
+ 	 */
+ 	ASSERT(log->l_iclog_size >= 4096);
+ 	for (i = 0; i < log->l_iclog_bufs; i++) {
+-		int align_mask = xfs_buftarg_dma_alignment(mp->m_logdev_targp);
+ 		size_t bvec_size = howmany(log->l_iclog_size, PAGE_SIZE) *
+ 				sizeof(struct bio_vec);
+ 
+@@ -1463,7 +1462,7 @@ xlog_alloc_log(
  		iclog->ic_prev = prev_iclog;
  		prev_iclog = iclog;
  
--		iclog->ic_data = kmem_alloc_large(log->l_iclog_size,
--						KM_MAYFAIL | KM_ZERO);
-+		iclog->ic_data = kvzalloc(log->l_iclog_size,
-+				GFP_KERNEL | __GFP_RETRY_MAYFAIL);
+-		iclog->ic_data = kmem_alloc_io(log->l_iclog_size, align_mask,
++		iclog->ic_data = kmem_alloc_large(log->l_iclog_size,
+ 						KM_MAYFAIL | KM_ZERO);
  		if (!iclog->ic_data)
  			goto out_free_iclog;
- #ifdef DEBUG
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index b128aaa9b870..d162e8b83e90 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -185,7 +185,15 @@ xlog_cil_alloc_shadow_bufs(
- 			 */
- 			kmem_free(lip->li_lv_shadow);
- 
--			lv = kmem_alloc_large(buf_size, KM_NOFS);
-+			/*
-+			 * We are in transaction context, which means this
-+			 * allocation will pick up GFP_NOFS from the
-+			 * memalloc_nofs_save/restore context the transaction
-+			 * holds. This means we can use GFP_KERNEL here so the
-+			 * generic kvmalloc() code will run vmalloc on
-+			 * contiguous page allocation failure as we require.
-+			 */
-+			lv = kvmalloc(buf_size, GFP_KERNEL);
- 			memset(lv, 0, xlog_cil_iovec_space(niovecs));
- 
- 			lv->lv_item = lip;
 diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index d55fc7caa227..16df33f838cc 100644
+index 3c08d495844d..d55fc7caa227 100644
 --- a/fs/xfs/xfs_log_recover.c
 +++ b/fs/xfs/xfs_log_recover.c
-@@ -106,7 +106,7 @@ xlog_alloc_buffer(
+@@ -79,8 +79,6 @@ xlog_alloc_buffer(
+ 	struct xlog	*log,
+ 	int		nbblks)
+ {
+-	int align_mask = xfs_buftarg_dma_alignment(log->l_targ);
+-
+ 	/*
+ 	 * Pass log block 0 since we don't have an addr yet, buffer will be
+ 	 * verified on read.
+@@ -108,7 +106,7 @@ xlog_alloc_buffer(
  	if (nbblks > 1 && log->l_sectBBsize > 1)
  		nbblks += log->l_sectBBsize;
  	nbblks = round_up(nbblks, log->l_sectBBsize);
--	return kmem_alloc_large(BBTOB(nbblks), KM_MAYFAIL | KM_ZERO);
-+	return kvzalloc(BBTOB(nbblks), GFP_KERNEL | __GFP_RETRY_MAYFAIL);
+-	return kmem_alloc_io(BBTOB(nbblks), align_mask, KM_MAYFAIL | KM_ZERO);
++	return kmem_alloc_large(BBTOB(nbblks), KM_MAYFAIL | KM_ZERO);
  }
  
  /*
 diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 6865e838a71b..38f2f67303f7 100644
+index f9d8d605f9b1..6865e838a71b 100644
 --- a/fs/xfs/xfs_trace.h
 +++ b/fs/xfs/xfs_trace.h
 @@ -3689,7 +3689,6 @@ DEFINE_EVENT(xfs_kmem_class, name, \
  	TP_PROTO(ssize_t size, int flags, unsigned long caller_ip), \
  	TP_ARGS(size, flags, caller_ip))
  DEFINE_KMEM_EVENT(kmem_alloc);
--DEFINE_KMEM_EVENT(kmem_alloc_large);
+-DEFINE_KMEM_EVENT(kmem_alloc_io);
+ DEFINE_KMEM_EVENT(kmem_alloc_large);
  
  TRACE_EVENT(xfs_check_new_dalign,
- 	TP_PROTO(struct xfs_mount *mp, int new_dalign, xfs_ino_t calc_rootino),
 -- 
 2.31.1
 
