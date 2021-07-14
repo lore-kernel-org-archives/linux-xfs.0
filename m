@@ -7,264 +7,170 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61454C12002
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 22:09:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4317FC12002
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 22:12:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3FEAF600D4
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 22:09:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 28E44613C5
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 22:12:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231402AbhGNWMQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Jul 2021 18:12:16 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46432 "EHLO mail.kernel.org"
+        id S233414AbhGNWPZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Jul 2021 18:15:25 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46922 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229750AbhGNWMQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Jul 2021 18:12:16 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 5C91C613C5;
-        Wed, 14 Jul 2021 22:09:24 +0000 (UTC)
+        id S231407AbhGNWPZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 14 Jul 2021 18:15:25 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 4CFCE6101B;
+        Wed, 14 Jul 2021 22:12:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1626300564;
-        bh=tfVlx0z0XP9ntEazSvpC6kewlP51oldLKfK8LZc1umI=;
+        s=k20201202; t=1626300753;
+        bh=kN6RSbTIn9glxkPybSiwofPLQkbRtWRQzS7lp9/evQ4=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=f6Z6Jn9MBPwlBE6J6gMWoyjMJF4c6hhgVBiJrWqFO2W3rWKmlaXZyq7tvokdVOXUQ
-         pL0TfrPqk8In6zl8kihWO0VvIf8cwHKcAvD+UU0B2Xy9dl75A4tJtpQmTSWi7PI4g/
-         1RUxFFXxqe5cmQ+/apqBTCn/Y1IWTNuh5LRjtRFtBbcuj37HT36+k0Umno5SEUJXOy
-         GVqRBMxQdB78SwIwK+ZodU7Q8cwBXub+kh6O6a/zObilbbQGDUhy9l1tDUYZm3jQVr
-         AcinifcSsAALqqi6wT+oZYsiTOoM9pOAFBMsXAXUrhIX4YzawnA+7wrGkU0k29WVc7
-         /kSrwYLa+N12A==
-Date:   Wed, 14 Jul 2021 15:09:24 -0700
+        b=oLPq1xyMPE3Zp0il0UHWMOQ8KdlC1NkQU7TL8LN2+nmfY6BEwlategIAHzQmviJvy
+         1dBGPlfPMdDGSZu1BVCz+tKcLqByOeQZV2x4nUviShv8EhBZlG/1WhnZk6bMEgVAcq
+         KvnRIpXgsfLv5U6gZVYFpWY6gI1jYhYAD7FjGFGE63w49KApRghLgUtHGN7BBgNpX4
+         k4QfXmY/mIJujww4PTV2x6QaEazYA/vnm3Rsej/TaeIYwP8sZs9y+Ank3z6N2E/bvE
+         iYTHig8Tjf+52v6zEmsMamHC29XbFTURRcDe29W7/6aga//vKE4X5UXfL4OdrPi9Vg
+         /DvykKgJjuLmg==
+Date:   Wed, 14 Jul 2021 15:12:32 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 8/9] xfs: don't run shutdown callbacks on active iclogs
-Message-ID: <20210714220924.GQ22402@magnolia>
+Subject: Re: [PATCH 9/9] xfs: log head and tail aren't reliable during
+ shutdown
+Message-ID: <20210714221232.GR22402@magnolia>
 References: <20210714031958.2614411-1-david@fromorbit.com>
- <20210714031958.2614411-9-david@fromorbit.com>
+ <20210714031958.2614411-10-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210714031958.2614411-9-david@fromorbit.com>
+In-Reply-To: <20210714031958.2614411-10-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jul 14, 2021 at 01:19:57PM +1000, Dave Chinner wrote:
+On Wed, Jul 14, 2021 at 01:19:58PM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> When the log is shutdown, it currently walks all the iclogs and runs
-> callbacks that are attached to the iclogs, regardless of whether the
-> iclog is queued for IO completion or not. This creates a problem for
-> contexts attaching callbacks to iclogs in that a racing shutdown can
-> run the callbacks even before the attaching context has finished
-> processing the iclog and releasing it for IO submission.
+> I'm seeing assert failures from xlog_space_left() after a shutdown
+> has begun that look like:
 > 
-> If the callback processing of the iclog frees the structure that is
-> attached to the iclog, then this leads to an UAF scenario that can
-> only be protected against by holding the icloglock from the point
-> callbacks are attached through to the release of the iclog. While we
-> currently do this, it is not practical or sustainable.
+> XFS (dm-0): log I/O error -5
+> XFS (dm-0): xfs_do_force_shutdown(0x2) called from line 1338 of file fs/xfs/xfs_log.c. Return address = xlog_ioend_work+0x64/0xc0
+> XFS (dm-0): Log I/O Error Detected.
+> XFS (dm-0): Shutting down filesystem. Please unmount the filesystem and rectify the problem(s)
+> XFS (dm-0): xlog_space_left: head behind tail
+> XFS (dm-0):   tail_cycle = 6, tail_bytes = 2706944
+> XFS (dm-0):   GH   cycle = 6, GH   bytes = 1633867
+> XFS: Assertion failed: 0, file: fs/xfs/xfs_log.c, line: 1310
+> ------------[ cut here ]------------
+> Call Trace:
+>  xlog_space_left+0xc3/0x110
+>  xlog_grant_push_threshold+0x3f/0xf0
+>  xlog_grant_push_ail+0x12/0x40
+>  xfs_log_reserve+0xd2/0x270
+>  ? __might_sleep+0x4b/0x80
+>  xfs_trans_reserve+0x18b/0x260
+> .....
 > 
-> Hence we need to make shutdown processing the responsibility of the
-> context that holds active references to the iclog. We know that the
-> contexts attaching callbacks to the iclog must have active
-> references to the iclog, and that means they must be in either
-> ACTIVE or WANT_SYNC states. xlog_state_do_callback() will skip over
-> iclogs in these states -except- when the log is shut down.
+> There are two things here. Firstly, after a shutdown, the log head
+> and tail can be out of whack as things abort and release (or don't
+> release) resources, so checking them for sanity doesn't make much
+> sense. Secondly, xfs_log_reserve() can race with shutdown and so it
+> can still fail like this even though it has already checked for a
+> log shutdown before calling xlog_grant_push_ail().
 > 
-> xlog_state_do_callback() checks the state of the iclogs while
-> holding the icloglock, therefore the reference count/state change
-> that occurs in xlog_state_release_iclog() after the callbacks are
-> atomic w.r.t. shutdown processing.
-> 
-> We can't push the responsibility of callback cleanup onto the CIL
-> context because we can have ACTIVE iclogs that have callbacks
-> attached that have already been released. Hence we really need to
-> internalise the cleanup of callbacks into xlog_state_release_iclog()
-> processing.
-> 
-> Indeed, we already have that internalisation via:
-> 
-> xlog_state_release_iclog
->   drop last reference
->     ->SYNCING
->   xlog_sync
->     xlog_write_iclog
->       if (log_is_shutdown)
->         xlog_state_done_syncing()
-> 	  xlog_state_do_callback()
-> 	    <process shutdown on iclog that is now in SYNCING state>
-> 
-> The problem is that xlog_state_release_iclog() aborts before doing
-> anything if the log is already shut down. It assumes that the
-> callbacks have already been cleaned up, and it doesn't need to do
-> any cleanup.
-> 
-> Hence the fix is to remove the xlog_is_shutdown() check from
-> xlog_state_release_iclog() so that reference counts are correctly
-> released from the iclogs, and when the reference count is zero we
-> always transition to SYNCING if the log is shut down. Hence we'll
-> always enter the xlog_sync() path in a shutdown and eventually end
-> up erroring out the iclog IO and running xlog_state_do_callback() to
-> process the callbacks attached to the iclog.
-> 
-> This allows us to stop processing referenced ACTIVE/WANT_SYNC iclogs
-> directly in the shutdown code, and in doing so gets rid of the UAF
-> vector that currently exists. This then decouples the adding of
-> callbacks to the iclogs from xlog_state_release_iclog() as we
-> guarantee that xlog_state_release_iclog() will process the callbacks
-> if the log has been shut down before xlog_state_release_iclog() has
-> been called.
+> So, before ASSERT failing in xlog_space_left(), make sure we haven't
+> already shut down....
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Seems reasonable...
+Makes sense,
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/xfs/xfs_log.c     | 43 +++++++++++++++++++++++++++++++++++++------
->  fs/xfs/xfs_log_cil.c | 15 +++++++--------
->  2 files changed, 44 insertions(+), 14 deletions(-)
+>  fs/xfs/xfs_log.c | 51 +++++++++++++++++++++++++-----------------------
+>  1 file changed, 27 insertions(+), 24 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index 4d72d9efed7c..01c20b42b2fc 100644
+> index 01c20b42b2fc..6617cdccaf00 100644
 > --- a/fs/xfs/xfs_log.c
 > +++ b/fs/xfs/xfs_log.c
-> @@ -41,6 +41,8 @@ xlog_dealloc_log(
->  /* local state machine functions */
->  STATIC void xlog_state_done_syncing(
->  	struct xlog_in_core	*iclog);
-> +STATIC void xlog_state_do_callback(
-> +	struct xlog		*log);
->  STATIC int
->  xlog_state_get_iclog_space(
->  	struct xlog		*log,
-> @@ -492,6 +494,11 @@ xfs_log_reserve(
->   * space waiters so they can process the newly set shutdown state. We really
->   * don't care what order we process callbacks here because the log is shut down
->   * and so state cannot change on disk anymore.
+> @@ -1272,16 +1272,18 @@ xlog_assign_tail_lsn(
+>   * wrap the tail, we should blow up.  Rather than catch this case here,
+>   * we depend on other ASSERTions in other parts of the code.   XXXmiken
+>   *
+> - * This code also handles the case where the reservation head is behind
+> - * the tail.  The details of this case are described below, but the end
+> - * result is that we return the size of the log as the amount of space left.
+> + * If reservation head is behind the tail, we have a problem. Warn about it,
+> + * but then treat it as if the log is empty.
 > + *
-> + * We avoid processing actively referenced iclogs so that we don't run callbacks
-> + * while the iclog owner might still be preparing the iclog for IO submssion.
-> + * These will be caught by xlog_state_iclog_release() and call this function
-> + * again to process any callbacks that may have been added to that iclog.
+> + * If the log is shut down, the head and tail may be invalid or out of whack, so
+> + * shortcut invalidity asserts in this case so that we don't trigger them
+> + * falsely.
 >   */
->  static void
->  xlog_state_shutdown_callbacks(
-> @@ -503,7 +510,12 @@ xlog_state_shutdown_callbacks(
->  	spin_lock(&log->l_icloglock);
->  	iclog = log->l_iclog;
->  	do {
-> +		if (atomic_read(&iclog->ic_refcnt)) {
-> +			/* Reference holder will re-run iclog callbacks. */
-> +			continue;
-> +		}
->  		list_splice_init(&iclog->ic_callbacks, &cb_list);
-> +		wake_up_all(&iclog->ic_write_wait);
->  		wake_up_all(&iclog->ic_force_wait);
->  	} while ((iclog = iclog->ic_next) != log->l_iclog);
->  
-> @@ -514,7 +526,7 @@ xlog_state_shutdown_callbacks(
->  }
->  
->  static bool
-> -__xlog_state_release_iclog(
-> +xlog_state_want_sync(
->  	struct xlog		*log,
->  	struct xlog_in_core	*iclog)
+>  STATIC int
+>  xlog_space_left(
+>  	struct xlog	*log,
+>  	atomic64_t	*head)
 >  {
-> @@ -537,27 +549,46 @@ __xlog_state_release_iclog(
->  }
->  
->  /*
-> - * Flush iclog to disk if this is the last reference to the given iclog and the
-> - * it is in the WANT_SYNC state.
-> + * Release the active reference to the iclog. If this is the last reference to
-> + * the iclog being dropped, check if the caller wants to be synced to disk and
-> + * initiate IO submission. If the log has been shut down, then we need to run
-> + * callback processing on this iclog as shutdown callback processing skips
-> + * actively referenced iclogs.
->   */
->  int
->  xlog_state_release_iclog(
->  	struct xlog		*log,
->  	struct xlog_in_core	*iclog)
-> +		__releases(&log->l_icloglock)
-> +		__acquires(&log->l_icloglock)
->  {
->  	lockdep_assert_held(&log->l_icloglock);
->  
->  	trace_xlog_iclog_release(iclog, _RET_IP_);
-> -	if (xlog_is_shutdown(log))
-> +	if (!atomic_dec_and_test(&iclog->ic_refcnt))
-> +		goto out_check_shutdown;
+> -	int		free_bytes;
+>  	int		tail_bytes;
+>  	int		tail_cycle;
+>  	int		head_cycle;
+> @@ -1291,29 +1293,30 @@ xlog_space_left(
+>  	xlog_crack_atomic_lsn(&log->l_tail_lsn, &tail_cycle, &tail_bytes);
+>  	tail_bytes = BBTOB(tail_bytes);
+>  	if (tail_cycle == head_cycle && head_bytes >= tail_bytes)
+> -		free_bytes = log->l_logsize - (head_bytes - tail_bytes);
+> -	else if (tail_cycle + 1 < head_cycle)
+> +		return log->l_logsize - (head_bytes - tail_bytes);
+> +	if (tail_cycle + 1 < head_cycle)
+>  		return 0;
+> -	else if (tail_cycle < head_cycle) {
 > +
-> +	if (xlog_is_shutdown(log)) {
-> +		/*
-> +		 * No more references to this iclog, so process the pending
-> +		 * iclog callbacks that were waiting on the release of this
-> +		 * iclog.
-> +		 */
-> +		spin_unlock(&log->l_icloglock);
-> +		xlog_state_shutdown_callbacks(log);
-> +		spin_lock(&log->l_icloglock);
->  		return -EIO;
-> +	}
->  
-> -	if (atomic_dec_and_test(&iclog->ic_refcnt) &&
-> -	    __xlog_state_release_iclog(log, iclog)) {
-> +	if (xlog_state_want_sync(log, iclog)) {
->  		spin_unlock(&log->l_icloglock);
->  		xlog_sync(log, iclog);
->  		spin_lock(&log->l_icloglock);
->  	}
->  
-> +out_check_shutdown:
+> +	/* Ignore potential inconsistency when shutdown. */
 > +	if (xlog_is_shutdown(log))
-> +		return -EIO;
->  	return 0;
+> +		return log->l_logsize;
+> +
+> +	if (tail_cycle < head_cycle) {
+>  		ASSERT(tail_cycle == (head_cycle - 1));
+> -		free_bytes = tail_bytes - head_bytes;
+> -	} else {
+> -		/*
+> -		 * The reservation head is behind the tail.
+> -		 * In this case we just want to return the size of the
+> -		 * log as the amount of space left.
+> -		 */
+> -		xfs_alert(log->l_mp, "xlog_space_left: head behind tail");
+> -		xfs_alert(log->l_mp,
+> -			  "  tail_cycle = %d, tail_bytes = %d",
+> -			  tail_cycle, tail_bytes);
+> -		xfs_alert(log->l_mp,
+> -			  "  GH   cycle = %d, GH   bytes = %d",
+> -			  head_cycle, head_bytes);
+> -		ASSERT(0);
+> -		free_bytes = log->l_logsize;
+> +		return tail_bytes - head_bytes;
+>  	}
+> -	return free_bytes;
+> +
+> +	/*
+> +	 * The reservation head is behind the tail. In this case we just want to
+> +	 * return the size of the log as the amount of space left.
+> +	 */
+> +	xfs_alert(log->l_mp, "xlog_space_left: head behind tail");
+> +	xfs_alert(log->l_mp, "  tail_cycle = %d, tail_bytes = %d",
+> +		  tail_cycle, tail_bytes);
+> +	xfs_alert(log->l_mp, "  GH   cycle = %d, GH   bytes = %d",
+> +		  head_cycle, head_bytes);
+> +	ASSERT(0);
+> +	return log->l_logsize;
 >  }
 >  
-> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index 2c9d9bcd25cb..62967449fe8c 100644
-> --- a/fs/xfs/xfs_log_cil.c
-> +++ b/fs/xfs/xfs_log_cil.c
-> @@ -874,11 +874,10 @@ xlog_cil_push_work(
->  	xfs_log_ticket_ungrant(log, tic);
->  
->  	/*
-> -	 * Once we attach the ctx to the iclog, a shutdown can process the
-> -	 * iclog, run the callbacks and free the ctx. The only thing preventing
-> -	 * this potential UAF situation here is that we are holding the
-> -	 * icloglock. Hence we cannot access the ctx once we have attached the
-> -	 * callbacks and dropped the icloglock.
-> +	 * Once we attach the ctx to the iclog, it is effectively owned by the
-> +	 * iclog and we can only use it while we still have an active reference
-> +	 * to the iclog. i.e. once we call xlog_state_release_iclog() we can no
-> +	 * longer safely reference the ctx.
->  	 */
->  	spin_lock(&log->l_icloglock);
->  	if (xlog_is_shutdown(log)) {
-> @@ -910,9 +909,6 @@ xlog_cil_push_work(
->  	 * wakeup until this commit_iclog is written to disk.  Hence we use the
->  	 * iclog header lsn and compare it to the commit lsn to determine if we
->  	 * need to wait on iclogs or not.
-> -	 *
-> -	 * NOTE: It is not safe to reference the ctx after this check as we drop
-> -	 * the icloglock if we have to wait for completion of other iclogs.
->  	 */
->  	if (ctx->start_lsn != commit_lsn) {
->  		xfs_lsn_t	plsn;
-> @@ -942,6 +938,9 @@ xlog_cil_push_work(
->  	 */
->  	commit_iclog->ic_flags |= XLOG_ICL_NEED_FUA;
->  	xlog_state_release_iclog(log, commit_iclog);
-> +
-> +	/* Not safe to reference ctx now! */
-> +
->  	spin_unlock(&log->l_icloglock);
->  	return;
 >  
 > -- 
 > 2.31.1
