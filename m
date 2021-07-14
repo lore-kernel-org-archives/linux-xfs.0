@@ -7,246 +7,379 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 134F6C11F67
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 03:37:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBDA7C07E9A
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 03:54:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E82986127C
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 03:37:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C7077613AC
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 03:54:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237729AbhGNDjy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 13 Jul 2021 23:39:54 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:49842 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S237758AbhGNDjw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Jul 2021 23:39:52 -0400
+        id S237655AbhGND5L (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 13 Jul 2021 23:57:11 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:40417 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S237486AbhGND5L (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Jul 2021 23:57:11 -0400
 Received: from dread.disaster.area (pa49-181-34-10.pa.nsw.optusnet.com.au [49.181.34.10])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id CA6C2864373
-        for <linux-xfs@vger.kernel.org>; Wed, 14 Jul 2021 13:36:58 +1000 (AEST)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 6F827104544A
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Jul 2021 13:54:18 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1m3Vhi-006IgD-3m
+        id 1m3Vhi-006IgA-2n
         for linux-xfs@vger.kernel.org; Wed, 14 Jul 2021 13:36:58 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1m3Vhh-00B03J-SK
+        id 1m3Vhh-00B03G-Qw
         for linux-xfs@vger.kernel.org; Wed, 14 Jul 2021 13:36:57 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 5/5] xfs: order CIL checkpoint start records
-Date:   Wed, 14 Jul 2021 13:36:56 +1000
-Message-Id: <20210714033656.2621741-6-david@fromorbit.com>
+Subject: [PATCH 4/5] xfs: attached iclog callbacks in xlog_cil_set_ctx_write_state()
+Date:   Wed, 14 Jul 2021 13:36:55 +1000
+Message-Id: <20210714033656.2621741-5-david@fromorbit.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210714033656.2621741-1-david@fromorbit.com>
 References: <20210714033656.2621741-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
         a=hdaoRb6WoHYrV466vVKEyw==:117 a=hdaoRb6WoHYrV466vVKEyw==:17
-        a=e_q4qTt1xDgA:10 a=20KFwNOVAAAA:8 a=0SoGSWBIiDR9d1GlltwA:9
+        a=e_q4qTt1xDgA:10 a=20KFwNOVAAAA:8 a=Yl4hcIhFekaH0rulqaYA:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Because log recovery depends on strictly ordered start records as
-well as strictly ordered commit records.
+Now that we have a mechanism to guarantee that the callbacks
+attached to an iclog are owned by the context that attaches them
+until they drop their reference to the iclog via
+xlog_state_release_iclog(), we can attach callbacks to the iclog at
+any time we have an active reference to the iclog.
 
-This is a zero day bug in the way XFS writes pipelined transactions
-to the journal which is exposed by fixing the zero day bug that
-prevents the CIL from pipelining checkpoints. This re-introduces
-explicit concurrent commits back into the on-disk journal and hence
-out of order start records.
+xlog_state_get_iclog_space() always guarantees that the commit
+record will fit in the iclog it returns, so we can move this IO
+callback setting to xlog_cil_set_ctx_write_state(), record the
+commit iclog in the context and remove the need for the commit iclog
+to be returned by xlog_write() altogether.
 
-The XFS journal commit code has never ordered start records and we
-have relied on strict commit record ordering for correct recovery
-ordering of concurrently written transactions. Unfortunately, root
-cause analysis uncovered the fact that log recovery uses the LSN of
-the start record for transaction commit processing. Hence, whilst
-the commits are processed in strict order by recovery, the LSNs
-associated with the commits can be out of order and so recovery may
-stamp incorrect LSNs into objects and/or misorder intents in the AIL
-for later processing. This can result in log recovery failures
-and/or on disk corruption, sometimes silent.
+This, in turn, allows us to move the wakeup for ordered commit
+record writes up into xlog_cil_set_ctx_write_state(), too, because
+we have been guaranteed that this commit record will be physically
+located in the iclog before any waiting commit record at a higher
+sequence number will be granted iclog space.
 
-Because this is a long standing log recovery issue, we can't just
-fix log recovery and call it good. This still leaves older kernels
-susceptible to recovery failures and corruption when replaying a log
-from a kernel that pipelines checkpoints. There is also the issue
-that in-memory ordering for AIL pushing and data integrity
-operations are based on checkpoint start LSNs, and if the start LSN
-is incorrect in the journal, it is also incorrect in memory.
-
-Hence there's really only one choice for fixing this zero-day bug:
-we need to strictly order checkpoint start records in ascending
-sequence order in the log, the same way we already strictly order
-commit records.
+This further cleans up the post commit record write processing in
+the CIL push code, especially as xlog_state_release_iclog() will now
+clean up the context when shutdown errors occur.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_log.c      |  1 +
- fs/xfs/xfs_log_cil.c  | 69 +++++++++++++++++++++++++++++++++++--------
- fs/xfs/xfs_log_priv.h |  1 +
- 3 files changed, 58 insertions(+), 13 deletions(-)
+ fs/xfs/xfs_log.c      | 47 ++++++++--------------
+ fs/xfs/xfs_log_cil.c  | 94 ++++++++++++++++++++++++-------------------
+ fs/xfs/xfs_log_priv.h |  3 +-
+ 3 files changed, 70 insertions(+), 74 deletions(-)
 
 diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index f41c6f388456..98d8fea6a83b 100644
+index a190efbbe451..f41c6f388456 100644
 --- a/fs/xfs/xfs_log.c
 +++ b/fs/xfs/xfs_log.c
-@@ -3777,6 +3777,7 @@ xlog_force_shutdown(
- 	 * avoid races.
+@@ -901,7 +901,7 @@ xlog_write_unmount_record(
  	 */
- 	spin_lock(&log->l_cilp->xc_push_lock);
-+	wake_up_all(&log->l_cilp->xc_start_wait);
- 	wake_up_all(&log->l_cilp->xc_commit_wait);
- 	spin_unlock(&log->l_cilp->xc_push_lock);
- 	xlog_state_shutdown_callbacks(log);
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 18a2d6a9f26e..5ef47aed10f9 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -587,6 +587,7 @@ xlog_cil_committed(
- 	 */
- 	if (abort) {
- 		spin_lock(&ctx->cil->xc_push_lock);
-+		wake_up_all(&ctx->cil->xc_start_wait);
- 		wake_up_all(&ctx->cil->xc_commit_wait);
- 		spin_unlock(&ctx->cil->xc_push_lock);
- 	}
-@@ -640,7 +641,14 @@ xlog_cil_set_ctx_write_state(
- 	ASSERT(!ctx->commit_lsn);
- 	if (!ctx->start_lsn) {
- 		spin_lock(&cil->xc_push_lock);
-+		/*
-+		 * The LSN we need to pass to the log items on transaction
-+		 * commit is the LSN reported by the first log vector write, not
-+		 * the commit lsn. If we use the commit record lsn then we can
-+		 * move the tail beyond the grant write head.
-+		 */
- 		ctx->start_lsn = lsn;
-+		wake_up_all(&cil->xc_start_wait);
- 		spin_unlock(&cil->xc_push_lock);
- 		return;
- 	}
-@@ -682,10 +690,16 @@ xlog_cil_set_ctx_write_state(
-  * relies on the context LSN being zero until the log write has guaranteed the
-  * LSN that the log write will start at via xlog_state_get_iclog_space().
-  */
-+enum _record_type {
-+	_START_RECORD,
-+	_COMMIT_RECORD,
-+};
-+
- static int
- xlog_cil_order_write(
- 	struct xfs_cil		*cil,
--	xfs_csn_t		sequence)
-+	xfs_csn_t		sequence,
-+	enum _record_type	record)
- {
- 	struct xfs_cil_ctx	*ctx;
- 
-@@ -708,19 +722,47 @@ xlog_cil_order_write(
- 		 */
- 		if (ctx->sequence >= sequence)
- 			continue;
--		if (!ctx->commit_lsn) {
--			/*
--			 * It is still being pushed! Wait for the push to
--			 * complete, then start again from the beginning.
--			 */
--			xlog_wait(&cil->xc_commit_wait, &cil->xc_push_lock);
--			goto restart;
-+
-+		/* Wait until the LSN for the record has been recorded. */
-+		switch (record) {
-+		case _START_RECORD:
-+			if (!ctx->start_lsn) {
-+				xlog_wait(&cil->xc_start_wait, &cil->xc_push_lock);
-+				goto restart;
-+			}
-+			break;
-+		case _COMMIT_RECORD:
-+			if (!ctx->commit_lsn) {
-+				xlog_wait(&cil->xc_commit_wait, &cil->xc_push_lock);
-+				goto restart;
-+			}
-+			break;
- 		}
- 	}
- 	spin_unlock(&cil->xc_push_lock);
- 	return 0;
+ 	if (log->l_targ != log->l_mp->m_ddev_targp)
+ 		blkdev_issue_flush(log->l_targ->bt_bdev);
+-	return xlog_write(log, NULL, &vec, ticket, NULL, XLOG_UNMOUNT_TRANS);
++	return xlog_write(log, NULL, &vec, ticket, XLOG_UNMOUNT_TRANS);
  }
  
-+/*
-+ * Write out the log vector change now attached to the CIL context. This will
-+ * write a start record that needs to be strictly ordered in ascending CIL
-+ * sequence order so that log recovery will always use in-order start LSNs when
-+ * replaying checkpoints.
-+ */
-+static int
-+xlog_cil_write_chain(
-+	struct xfs_cil_ctx	*ctx,
-+	struct xfs_log_vec	*chain)
-+{
-+	struct xlog		*log = ctx->cil->xc_log;
-+	int			error;
-+
-+	error = xlog_cil_order_write(ctx->cil, ctx->sequence, _START_RECORD);
-+	if (error)
-+		return error;
-+	return xlog_write(log, ctx, chain, ctx->ticket, XLOG_START_TRANS);
-+}
-+
  /*
-  * Write out the commit record of a checkpoint transaction to close off a
-  * running log write. These commit records are strictly ordered in ascending CIL
-@@ -746,6 +788,10 @@ xlog_cil_write_commit_record(
+@@ -2307,8 +2307,7 @@ xlog_write_copy_finish(
+ 	int			*data_cnt,
+ 	int			*partial_copy,
+ 	int			*partial_copy_len,
+-	int			log_offset,
+-	struct xlog_in_core	**commit_iclog)
++	int			log_offset)
+ {
+ 	int			error;
+ 
+@@ -2327,27 +2326,20 @@ xlog_write_copy_finish(
+ 	*partial_copy = 0;
+ 	*partial_copy_len = 0;
+ 
+-	if (iclog->ic_size - log_offset <= sizeof(xlog_op_header_t)) {
+-		/* no more space in this iclog - push it. */
+-		spin_lock(&log->l_icloglock);
+-		xlog_state_finish_copy(log, iclog, *record_cnt, *data_cnt);
+-		*record_cnt = 0;
+-		*data_cnt = 0;
+-
+-		if (iclog->ic_state == XLOG_STATE_ACTIVE)
+-			xlog_state_switch_iclogs(log, iclog, 0);
+-		else
+-			ASSERT(iclog->ic_state == XLOG_STATE_WANT_SYNC ||
+-				xlog_is_shutdown(log));
+-		if (!commit_iclog)
+-			goto release_iclog;
+-		spin_unlock(&log->l_icloglock);
+-		ASSERT(flags & XLOG_COMMIT_TRANS);
+-		*commit_iclog = iclog;
+-	}
++	if (iclog->ic_size - log_offset > sizeof(xlog_op_header_t))
++		return 0;
+ 
+-	return 0;
++	/* no more space in this iclog - push it. */
++	spin_lock(&log->l_icloglock);
++	xlog_state_finish_copy(log, iclog, *record_cnt, *data_cnt);
++	*record_cnt = 0;
++	*data_cnt = 0;
+ 
++	if (iclog->ic_state == XLOG_STATE_ACTIVE)
++		xlog_state_switch_iclogs(log, iclog, 0);
++	else
++		ASSERT(iclog->ic_state == XLOG_STATE_WANT_SYNC ||
++			xlog_is_shutdown(log));
+ release_iclog:
+ 	error = xlog_state_release_iclog(log, iclog);
+ 	spin_unlock(&log->l_icloglock);
+@@ -2400,7 +2392,6 @@ xlog_write(
+ 	struct xfs_cil_ctx	*ctx,
+ 	struct xfs_log_vec	*log_vector,
+ 	struct xlog_ticket	*ticket,
+-	struct xlog_in_core	**commit_iclog,
+ 	uint			optype)
+ {
+ 	struct xlog_in_core	*iclog = NULL;
+@@ -2529,8 +2520,7 @@ xlog_write(
+ 						       &record_cnt, &data_cnt,
+ 						       &partial_copy,
+ 						       &partial_copy_len,
+-						       log_offset,
+-						       commit_iclog);
++						       log_offset);
+ 			if (error)
+ 				return error;
+ 
+@@ -2568,12 +2558,7 @@ xlog_write(
+ 
+ 	spin_lock(&log->l_icloglock);
+ 	xlog_state_finish_copy(log, iclog, record_cnt, data_cnt);
+-	if (commit_iclog) {
+-		ASSERT(optype & XLOG_COMMIT_TRANS);
+-		*commit_iclog = iclog;
+-	} else {
+-		error = xlog_state_release_iclog(log, iclog);
+-	}
++	error = xlog_state_release_iclog(log, iclog);
+ 	spin_unlock(&log->l_icloglock);
+ 
+ 	return error;
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index cac3c9c894e5..18a2d6a9f26e 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -638,11 +638,41 @@ xlog_cil_set_ctx_write_state(
+ 	xfs_lsn_t		lsn = be64_to_cpu(iclog->ic_header.h_lsn);
+ 
+ 	ASSERT(!ctx->commit_lsn);
+-	spin_lock(&cil->xc_push_lock);
+-	if (!ctx->start_lsn)
++	if (!ctx->start_lsn) {
++		spin_lock(&cil->xc_push_lock);
+ 		ctx->start_lsn = lsn;
+-	else
+-		ctx->commit_lsn = lsn;
++		spin_unlock(&cil->xc_push_lock);
++		return;
++	}
++
++	/*
++	 * Take a reference to the iclog for the context so that we still hold
++	 * it when xlog_write is done and has released it. This means the
++	 * context controls when the iclog is released for IO.
++	 */
++	atomic_inc(&iclog->ic_refcnt);
++
++	/*
++	 * xlog_state_get_iclog_space() guarantees there is enough space in the
++	 * iclog for an entire commit record, so we can attach the context
++	 * callbacks now.  This needs to be done before we make the commit_lsn
++	 * visible to waiters so that checkpoints with commit records in the
++	 * same iclog order their IO completion callbacks in the same order that
++	 * the commit records appear in the iclog.
++	 */
++	spin_lock(&cil->xc_log->l_icloglock);
++	list_add_tail(&ctx->iclog_entry, &iclog->ic_callbacks);
++	spin_unlock(&cil->xc_log->l_icloglock);
++
++	/*
++	 * Now we can record the commit LSN and wake anyone waiting for this
++	 * sequence to have the ordered commit record assigned to a physical
++	 * location in the log.
++	 */
++	spin_lock(&cil->xc_push_lock);
++	ctx->commit_iclog = iclog;
++	ctx->commit_lsn = lsn;
++	wake_up_all(&cil->xc_commit_wait);
+ 	spin_unlock(&cil->xc_push_lock);
+ }
+ 
+@@ -699,8 +729,7 @@ xlog_cil_order_write(
+  */
+ static int
+ xlog_cil_write_commit_record(
+-	struct xfs_cil_ctx	*ctx,
+-	struct xlog_in_core	**iclog)
++	struct xfs_cil_ctx	*ctx)
+ {
+ 	struct xlog		*log = ctx->cil->xc_log;
+ 	struct xfs_log_iovec	reg = {
+@@ -717,8 +746,7 @@ xlog_cil_write_commit_record(
  	if (xlog_is_shutdown(log))
  		return -EIO;
  
-+	error = xlog_cil_order_write(ctx->cil, ctx->sequence, _COMMIT_RECORD);
-+	if (error)
-+		return error;
-+
- 	error = xlog_write(log, ctx, &vec, ctx->ticket, XLOG_COMMIT_TRANS);
+-	error = xlog_write(log, ctx, &vec, ctx->ticket, iclog,
+-			XLOG_COMMIT_TRANS);
++	error = xlog_write(log, ctx, &vec, ctx->ticket, XLOG_COMMIT_TRANS);
  	if (error)
  		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
-@@ -955,11 +1001,7 @@ xlog_cil_push_work(
+ 	return error;
+@@ -748,7 +776,6 @@ xlog_cil_push_work(
+ 	struct xfs_log_vec	*lv;
+ 	struct xfs_cil_ctx	*ctx;
+ 	struct xfs_cil_ctx	*new_ctx;
+-	struct xlog_in_core	*commit_iclog;
+ 	struct xlog_ticket	*tic;
+ 	int			num_iovecs;
+ 	int			error = 0;
+@@ -928,7 +955,7 @@ xlog_cil_push_work(
  	 */
  	wait_for_completion(&bdev_flush);
  
--	error = xlog_write(log, ctx, &lvhdr, tic, XLOG_START_TRANS);
--	if (error)
--		goto out_abort_free_ticket;
--
--	error = xlog_cil_order_write(ctx->cil, ctx->sequence);
-+	error = xlog_cil_write_chain(ctx, &lvhdr);
+-	error = xlog_write(log, ctx, &lvhdr, tic, NULL, XLOG_START_TRANS);
++	error = xlog_write(log, ctx, &lvhdr, tic, XLOG_START_TRANS);
  	if (error)
  		goto out_abort_free_ticket;
  
-@@ -1364,6 +1406,7 @@ xlog_cil_init(
- 	spin_lock_init(&cil->xc_push_lock);
- 	init_waitqueue_head(&cil->xc_push_wait);
- 	init_rwsem(&cil->xc_ctx_lock);
-+	init_waitqueue_head(&cil->xc_start_wait);
- 	init_waitqueue_head(&cil->xc_commit_wait);
+@@ -936,36 +963,12 @@ xlog_cil_push_work(
+ 	if (error)
+ 		goto out_abort_free_ticket;
  
- 	INIT_LIST_HEAD(&ctx->committing);
+-	error = xlog_cil_write_commit_record(ctx, &commit_iclog);
++	error = xlog_cil_write_commit_record(ctx);
+ 	if (error)
+ 		goto out_abort_free_ticket;
+ 
+ 	xfs_log_ticket_ungrant(log, tic);
+ 
+-	/*
+-	 * Once we attach the ctx to the iclog, it is effectively owned by the
+-	 * iclog and we can only use it while we still have an active reference
+-	 * to the iclog. i.e. once we call xlog_state_release_iclog() we can no
+-	 * longer safely reference the ctx.
+-	 */
+-	spin_lock(&log->l_icloglock);
+-	if (xlog_is_shutdown(log)) {
+-		spin_unlock(&log->l_icloglock);
+-		goto out_abort;
+-	}
+-	ASSERT_ALWAYS(commit_iclog->ic_state == XLOG_STATE_ACTIVE ||
+-		      commit_iclog->ic_state == XLOG_STATE_WANT_SYNC);
+-	list_add_tail(&ctx->iclog_entry, &commit_iclog->ic_callbacks);
+-
+-	/*
+-	 * now the checkpoint commit is complete and we've attached the
+-	 * callbacks to the iclog we can assign the commit LSN to the context
+-	 * and wake up anyone who is waiting for the commit to complete.
+-	 */
+-	spin_lock(&cil->xc_push_lock);
+-	wake_up_all(&cil->xc_commit_wait);
+-	spin_unlock(&cil->xc_push_lock);
+-
+ 	/*
+ 	 * If the checkpoint spans multiple iclogs, wait for all previous iclogs
+ 	 * to complete before we submit the commit_iclog. We can't use state
+@@ -978,17 +981,18 @@ xlog_cil_push_work(
+ 	 * iclog header lsn and compare it to the commit lsn to determine if we
+ 	 * need to wait on iclogs or not.
+ 	 */
++	spin_lock(&log->l_icloglock);
+ 	if (ctx->start_lsn != ctx->commit_lsn) {
+ 		xfs_lsn_t	plsn;
+ 
+-		plsn = be64_to_cpu(commit_iclog->ic_prev->ic_header.h_lsn);
++		plsn = be64_to_cpu(ctx->commit_iclog->ic_prev->ic_header.h_lsn);
+ 		if (plsn && XFS_LSN_CMP(plsn, ctx->commit_lsn) < 0) {
+ 			/*
+ 			 * Waiting on ic_force_wait orders the completion of
+ 			 * iclogs older than ic_prev. Hence we only need to wait
+ 			 * on the most recent older iclog here.
+ 			 */
+-			xlog_wait_on_iclog(commit_iclog->ic_prev);
++			xlog_wait_on_iclog(ctx->commit_iclog->ic_prev);
+ 			spin_lock(&log->l_icloglock);
+ 		}
+ 
+@@ -996,7 +1000,7 @@ xlog_cil_push_work(
+ 		 * We need to issue a pre-flush so that the ordering for this
+ 		 * checkpoint is correctly preserved down to stable storage.
+ 		 */
+-		commit_iclog->ic_flags |= XLOG_ICL_NEED_FLUSH;
++		ctx->commit_iclog->ic_flags |= XLOG_ICL_NEED_FLUSH;
+ 	}
+ 
+ 	/*
+@@ -1004,8 +1008,8 @@ xlog_cil_push_work(
+ 	 * journal IO vs metadata writeback IO is correctly ordered on stable
+ 	 * storage.
+ 	 */
+-	commit_iclog->ic_flags |= XLOG_ICL_NEED_FUA;
+-	xlog_state_release_iclog(log, commit_iclog);
++	ctx->commit_iclog->ic_flags |= XLOG_ICL_NEED_FUA;
++	xlog_state_release_iclog(log, ctx->commit_iclog);
+ 
+ 	/* Not safe to reference ctx now! */
+ 
+@@ -1020,9 +1024,15 @@ xlog_cil_push_work(
+ 
+ out_abort_free_ticket:
+ 	xfs_log_ticket_ungrant(log, tic);
+-out_abort:
+ 	ASSERT(xlog_is_shutdown(log));
+-	xlog_cil_committed(ctx);
++	if (!ctx->commit_iclog) {
++		xlog_cil_committed(ctx);
++		return;
++	}
++	spin_lock(&log->l_icloglock);
++	xlog_state_release_iclog(log, ctx->commit_iclog);
++	/* Not safe to reference ctx now! */
++	spin_unlock(&log->l_icloglock);
+ }
+ 
+ /*
 diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index f74e3968bb84..400471fa12d2 100644
+index 2a02ce05b649..f74e3968bb84 100644
 --- a/fs/xfs/xfs_log_priv.h
 +++ b/fs/xfs/xfs_log_priv.h
-@@ -271,6 +271,7 @@ struct xfs_cil {
- 	xfs_csn_t		xc_push_seq;
- 	struct list_head	xc_committing;
- 	wait_queue_head_t	xc_commit_wait;
-+	wait_queue_head_t	xc_start_wait;
- 	xfs_csn_t		xc_current_sequence;
- 	struct work_struct	xc_push_work;
- 	wait_queue_head_t	xc_push_wait;	/* background push throttle */
+@@ -232,6 +232,7 @@ struct xfs_cil_ctx {
+ 	xfs_csn_t		sequence;	/* chkpt sequence # */
+ 	xfs_lsn_t		start_lsn;	/* first LSN of chkpt commit */
+ 	xfs_lsn_t		commit_lsn;	/* chkpt commit record lsn */
++	struct xlog_in_core	*commit_iclog;
+ 	struct xlog_ticket	*ticket;	/* chkpt ticket */
+ 	int			nvecs;		/* number of regions */
+ 	int			space_used;	/* aggregate size of regions */
+@@ -503,7 +504,7 @@ void	xlog_print_tic_res(struct xfs_mount *mp, struct xlog_ticket *ticket);
+ void	xlog_print_trans(struct xfs_trans *);
+ int	xlog_write(struct xlog *log, struct xfs_cil_ctx *ctx,
+ 		struct xfs_log_vec *log_vector, struct xlog_ticket *tic,
+-		struct xlog_in_core **commit_iclog, uint optype);
++		uint optype);
+ void	xfs_log_ticket_ungrant(struct xlog *log, struct xlog_ticket *ticket);
+ void	xfs_log_ticket_regrant(struct xlog *log, struct xlog_ticket *ticket);
+ 
 -- 
 2.31.1
 
