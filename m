@@ -2,58 +2,97 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2AFBC07E9A
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 07:19:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B2A7C11F66
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 09:28:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 88FEA613B2
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 07:19:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5FB5561106
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 09:28:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238163AbhGNHWO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Jul 2021 03:22:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46820 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238139AbhGNHWN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Jul 2021 03:22:13 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A6F00C061574
-        for <linux-xfs@vger.kernel.org>; Wed, 14 Jul 2021 00:19:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=GfSgLypsO752Xsgqzu79Qyl1nGX3P2HYG56yatbwQg4=; b=VwrQ5FYf6FU/ayLvl3ee85YV2W
-        zWgSFiWipqJKZwUmTwMGmVR8UODYR8H6xqY3TDqeiIxxu1fAormvPSEqmLD9P9+awUZD5Ksc6TfID
-        +w05fnyYWsabP3lx6AwHRJH8lamPMiNBr/gq6+thViQAHILbEqqODfeunDTLrTKLbSR1Bnu7jm7kA
-        PqzqpCTMobgNrUWE2MG43xP4qxH5Pc//J+j2+lespN8VBeqY6t5Da1MnJ7r6AjU1hoqsJ+zXC4WHb
-        7N7zX/h04ADo07ESoeeYZp+oqgwEwGU4w/oncKZcgVAwJ+4DHSThWfNFbJvcAVJ6fx8iYcOjsrMHq
-        ejYhCDtw==;
-Received: from hch by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1m3ZAd-001xTw-T5; Wed, 14 Jul 2021 07:19:09 +0000
-Date:   Wed, 14 Jul 2021 08:19:03 +0100
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 11/16] xfs: open code sb verifier feature checks
-Message-ID: <YO6P55WO21ou8BwK@infradead.org>
-References: <20210714041912.2625692-1-david@fromorbit.com>
- <20210714041912.2625692-12-david@fromorbit.com>
+        id S238308AbhGNJaw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Jul 2021 05:30:52 -0400
+Received: from mga03.intel.com ([134.134.136.65]:19138 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S238189AbhGNJaw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 14 Jul 2021 05:30:52 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10044"; a="210358873"
+X-IronPort-AV: E=Sophos;i="5.84,238,1620716400"; 
+   d="scan'208";a="210358873"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jul 2021 02:27:58 -0700
+X-IronPort-AV: E=Sophos;i="5.84,238,1620716400"; 
+   d="scan'208";a="494390723"
+Received: from rongch2-mobl.ccr.corp.intel.com (HELO [10.249.169.74]) ([10.249.169.74])
+  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jul 2021 02:27:56 -0700
+Subject: Re: [PATCH v4][next] xfs: Replace one-element arrays with
+ flexible-array members
+To:     Christoph Hellwig <hch@infradead.org>,
+        "Darrick J. Wong" <djwong@kernel.org>
+Cc:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-hardening@vger.kernel.org
+References: <20210412135611.GA183224@embeddedor>
+ <20210412152906.GA1075717@infradead.org> <20210412154808.GA1670408@magnolia>
+ <20210413165313.GA1430582@infradead.org>
+From:   "Chen, Rong A" <rong.a.chen@intel.com>
+Message-ID: <f074c562-774d-fb35-b6a2-01c3873bb6ec@intel.com>
+Date:   Wed, 14 Jul 2021 17:27:54 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Firefox/78.0 Thunderbird/78.11.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210714041912.2625692-12-david@fromorbit.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20210413165313.GA1430582@infradead.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jul 14, 2021 at 02:19:07PM +1000, Dave Chinner wrote:
-> Also, move the good version number check into xfs_sb.c instead of it
-> being an inline function in xfs_format.h
 
-I think we kept it in the header so that repair can use it trivially
-without needing a non-static function without out of file users in the
-kernel.
+
+On 4/14/2021 12:53 AM, Christoph Hellwig wrote:
+> On Mon, Apr 12, 2021 at 08:48:08AM -0700, Darrick J. Wong wrote:
+>> A couple of revisions ago I specifically asked Gustavo to create these
+>> 'silly' sizeof helpers to clean up...
+>>
+>>>> -					(sizeof(struct xfs_efd_log_item) +
+>>>> -					(XFS_EFD_MAX_FAST_EXTENTS - 1) *
+>>>> -					sizeof(struct xfs_extent)),
+>>>> -					0, 0, NULL);
+>>>> +					 struct_size((struct xfs_efd_log_item *)0,
+>>>> +					 efd_format.efd_extents,
+>>>> +					 XFS_EFD_MAX_FAST_EXTENTS),
+>>
+>> ...these even uglier multiline statements.  I was also going to ask for
+>> these kmem cache users to get cleaned up.  I'd much rather look at:
+>>
+>> 	xfs_efi_zone = kmem_cache_create("xfs_efi_item",
+>> 				sizeof_xfs_efi(XFS_EFI_MAX_FAST_EXTENTS), 0);
+>> 	if (!xfs_efi_zone)
+>> 		goto the_drop_zone;
+>>
+>> even if it means another static inline.
+> 
+> Which doesn't really work with struct_size or rather leads to a mess
+> like the above as struct_size really wants a variable and not just a
+> type.  Making it really nasty for both allocations and creating slab
+> caches.  I tried to find a workaround for that, but that makes the
+> compiler unhappy based its inlining heuristics.
+> 
+> Anyway, a lot of the helpers are pretty silly as they duplicate stuff
+> without cleaning up the underlying mess.  I tried to sort much of this
+> out here, still WIP:
+> 
+> http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-array-size
+> 
+
+Hi xfs maintainers,
+
+Kindly ping, is there any new progress on this patch series?
+
+Best Regards,
+Rong Chen
