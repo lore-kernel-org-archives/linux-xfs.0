@@ -2,137 +2,218 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43D62C07E95
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 03:15:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01E2CC11F66
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 03:20:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 290B3613AA
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 03:15:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DB0A6613AB
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 03:20:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237486AbhGNDSb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 13 Jul 2021 23:18:31 -0400
-Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:44831 "EHLO
-        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S237368AbhGNDSb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Jul 2021 23:18:31 -0400
+        id S237722AbhGNDWz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 13 Jul 2021 23:22:55 -0400
+Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:43647 "EHLO
+        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S237503AbhGNDWz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Jul 2021 23:22:55 -0400
 Received: from dread.disaster.area (pa49-181-34-10.pa.nsw.optusnet.com.au [49.181.34.10])
-        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id 726C91B128A;
-        Wed, 14 Jul 2021 13:15:25 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id D0F266BAB5
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Jul 2021 13:20:01 +1000 (AEST)
+Received: from discord.disaster.area ([192.168.253.110])
+        by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1m3VMq-006IG9-NF; Wed, 14 Jul 2021 13:15:24 +1000
-Date:   Wed, 14 Jul 2021 13:15:24 +1000
+        id 1m3VRJ-006IJp-7F
+        for linux-xfs@vger.kernel.org; Wed, 14 Jul 2021 13:20:01 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.94)
+        (envelope-from <david@fromorbit.com>)
+        id 1m3VRI-00Ay8z-Vl
+        for linux-xfs@vger.kernel.org; Wed, 14 Jul 2021 13:20:00 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/9] xfs: make forced shutdown processing atomic
-Message-ID: <20210714031524.GV664593@dread.disaster.area>
-References: <20210630063813.1751007-1-david@fromorbit.com>
- <20210630063813.1751007-6-david@fromorbit.com>
- <20210709044020.GX11588@locust>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH 3/9] xfs: move recovery needed state updates to xfs_log_mount_finish
+Date:   Wed, 14 Jul 2021 13:19:52 +1000
+Message-Id: <20210714031958.2614411-4-david@fromorbit.com>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20210714031958.2614411-1-david@fromorbit.com>
+References: <20210714031958.2614411-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210709044020.GX11588@locust>
+Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
         a=hdaoRb6WoHYrV466vVKEyw==:117 a=hdaoRb6WoHYrV466vVKEyw==:17
-        a=kj9zAlcOel0A:10 a=e_q4qTt1xDgA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=bLZPg2y2iUBQkvzs1M8A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=e_q4qTt1xDgA:10 a=20KFwNOVAAAA:8 a=MU6oyeIEaMzVx_n5NM0A:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 08, 2021 at 09:40:20PM -0700, Darrick J. Wong wrote:
-> On Wed, Jun 30, 2021 at 04:38:09PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > The running of a forced shutdown is a bit of a mess. It does racy
-> > checks for XFS_MOUNT_SHUTDOWN in xfs_do_force_shutdown(), then
-> > does more racy checks in xfs_log_force_unmount() before finally
-> > setting XFS_MOUNT_SHUTDOWN and XLOG_IO_ERROR under the
-> > log->icloglock.
-> > 
-> > Move the checking and setting of XFS_MOUNT_SHUTDOWN into
-> > xfs_do_force_shutdown() so we only process a shutdown once and once
-> > only. Serialise this with the mp->m_sb_lock spinlock so that the
-> > state change is atomic and won't race. Move all the mount specific
-> 
-> Assuming you're working on cleaning /that/ up too, I'll let that go...
+From: Dave Chinner <dchinner@redhat.com>
 
-Yes, a forward ported patch set that does this will be posted soon.
+xfs_log_mount_finish() needs to know if recovery is needed or not to
+make descisions on whether to flush the log and AIL.  Move the
+handling of the NEED_RECOVERY state out to this function rather than
+needing a temporary variable to store this state over the call to
+xlog_recover_finish().
 
-> > +	xfs_alert_tag(mp, tag,
-> > +"%s (0x%x) detected at %pS (%s:%d).  Shutting down filesystem.",
-> > +			why, flags, __return_address, fname, lnnum);
-> >  	xfs_alert(mp,
-> >  		"Please unmount the filesystem and rectify the problem(s)");
-> > +	if (xfs_error_level >= XFS_ERRLEVEL_HIGH)
-> > +		xfs_stack_trace();
-> 
-> Doesn't xfs_alert already drop a stack trace for xfs_error_level >=
-> XFS_ERRLEVEL_HIGH ?
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_log.c         | 24 ++++++++-----
+ fs/xfs/xfs_log_recover.c | 73 +++++++++++++++-------------------------
+ 2 files changed, 43 insertions(+), 54 deletions(-)
 
-It does? I've never seen it do that, and the existing code implies
-it doesn't do this, either, and that's the logic was looking at
-here:
-
-        if (flags & SHUTDOWN_CORRUPT_INCORE) {
-                xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_CORRUPT,
-"Corruption of in-memory data (0x%x) detected at %pS (%s:%d).  Shutting down filesystem",
-                                flags, __return_address, fname, lnnum);
-                if (XFS_ERRLEVEL_HIGH <= xfs_error_level)
-                        xfs_stack_trace();
-	} else if (....)
-
-Yes, xfs_alert_tag() does not trigger a stack trace at all, but
-there's an unconditional xfs_alert() call after this so if that
-issues stack traces then we'd get a double stack trace on all
-SHUTDOWN_CORRUPT_INCORE incidents. AFAICT, that doesn't actually
-happen....
-
-This pattern is repeated in several places - look at
-xfs_inode_verifier_error(), xfs_buf_verifier_error(), and
-xfs_buf_corruption_error(). They all have xfs_alert() calls, then
-follow it up with a specific error level check for a stack dump.
-
-Hmmm, it looks like xfs_alert() was intended to dump stacks, but I
-don't think it works:
-
-        if (!kstrtoint(kern_level, 0, &level) &&                \
-            level <= LOGLEVEL_ERR &&                            \
-            xfs_error_level >= XFS_ERRLEVEL_HIGH)               \
-                xfs_stack_trace();                              \
-
-And kern_level is KERN_ALERT, which is:
-
-#define KERN_SOH        "\001"
-....
-#define KERN_ALERT      KERN_SOH "1"
-
-And:
-
-#define LOGLEVEL_ERR            3       /* error conditions */
-
-So what does kstrtoint() return when passed the string "\0011"? It's
-not actually an integer string...
-
-Hmmm, I think it returns -EINVAL, which means it then uses level
-uninitialised, and the result is .... unpredictable it is likely
-no stack trace is emitted....
-
-Fixing this mess is out of scope for this patchset.  The changes in
-this patchset don't change the existing pattern of the function of
-unconditionally calling xfs_alert() and conditionally and explicitly
-dumping stack traces manually. I'll add it to my ever growing list
-of cleanups that need to be done...
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 75cc487da578..6760608642cc 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -698,9 +698,9 @@ int
+ xfs_log_mount_finish(
+ 	struct xfs_mount	*mp)
+ {
+-	int	error = 0;
+-	bool	readonly = (mp->m_flags & XFS_MOUNT_RDONLY);
+-	bool	recovered = mp->m_log->l_flags & XLOG_RECOVERY_NEEDED;
++	struct xlog		*log = mp->m_log;
++	bool			readonly = (mp->m_flags & XFS_MOUNT_RDONLY);
++	int			error = 0;
+ 
+ 	if (mp->m_flags & XFS_MOUNT_NORECOVERY) {
+ 		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
+@@ -731,7 +731,8 @@ xfs_log_mount_finish(
+ 	 * mount failure occurs.
+ 	 */
+ 	mp->m_super->s_flags |= SB_ACTIVE;
+-	error = xlog_recover_finish(mp->m_log);
++	if (log->l_flags & XLOG_RECOVERY_NEEDED)
++		error = xlog_recover_finish(log);
+ 	if (!error)
+ 		xfs_log_work_queue(mp);
+ 	mp->m_super->s_flags &= ~SB_ACTIVE;
+@@ -746,17 +747,24 @@ xfs_log_mount_finish(
+ 	 * Don't push in the error case because the AIL may have pending intents
+ 	 * that aren't removed until recovery is cancelled.
+ 	 */
+-	if (!error && recovered) {
+-		xfs_log_force(mp, XFS_LOG_SYNC);
+-		xfs_ail_push_all_sync(mp->m_ail);
++	if (log->l_flags & XLOG_RECOVERY_NEEDED) {
++		if (!error) {
++			xfs_log_force(mp, XFS_LOG_SYNC);
++			xfs_ail_push_all_sync(mp->m_ail);
++		}
++		xfs_notice(mp, "Ending recovery (logdev: %s)",
++				mp->m_logname ? mp->m_logname : "internal");
++	} else {
++		xfs_info(mp, "Ending clean mount");
+ 	}
+ 	xfs_buftarg_drain(mp->m_ddev_targp);
+ 
++	log->l_flags &= ~XLOG_RECOVERY_NEEDED;
+ 	if (readonly)
+ 		mp->m_flags |= XFS_MOUNT_RDONLY;
+ 
+ 	/* Make sure the log is dead if we're returning failure. */
+-	ASSERT(!error || (mp->m_log->l_flags & XLOG_IO_ERROR));
++	ASSERT(!error || xlog_is_shutdown(log));
+ 
+ 	return error;
+ }
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 37296f87a435..c384ecdd6389 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -3416,62 +3416,43 @@ xlog_recover(
+ }
+ 
+ /*
+- * In the first part of recovery we replay inodes and buffers and build
+- * up the list of extent free items which need to be processed.  Here
+- * we process the extent free items and clean up the on disk unlinked
+- * inode lists.  This is separated from the first part of recovery so
+- * that the root and real-time bitmap inodes can be read in from disk in
+- * between the two stages.  This is necessary so that we can free space
+- * in the real-time portion of the file system.
++ * In the first part of recovery we replay inodes and buffers and build up the
++ * list of intents which need to be processed.  Here we process the intents  and
++ * clean up the on disk unlinked inode lists.  This is separated from the first
++ * part of recovery so that the root and real-time bitmap inodes can be read in
++ * from disk in between the two stages.  This is necessary so that we can free
++ * space in the real-time portion of the file system.
+  */
+ int
+ xlog_recover_finish(
+ 	struct xlog	*log)
+ {
+-	/*
+-	 * Now we're ready to do the transactions needed for the
+-	 * rest of recovery.  Start with completing all the extent
+-	 * free intent records and then process the unlinked inode
+-	 * lists.  At this point, we essentially run in normal mode
+-	 * except that we're still performing recovery actions
+-	 * rather than accepting new requests.
+-	 */
+-	if (log->l_flags & XLOG_RECOVERY_NEEDED) {
+-		int	error;
+-		error = xlog_recover_process_intents(log);
+-		if (error) {
+-			/*
+-			 * Cancel all the unprocessed intent items now so that
+-			 * we don't leave them pinned in the AIL.  This can
+-			 * cause the AIL to livelock on the pinned item if
+-			 * anyone tries to push the AIL (inode reclaim does
+-			 * this) before we get around to xfs_log_mount_cancel.
+-			 */
+-			xlog_recover_cancel_intents(log);
+-			xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
+-			xfs_alert(log->l_mp, "Failed to recover intents");
+-			return error;
+-		}
++	int	error;
+ 
++	error = xlog_recover_process_intents(log);
++	if (error) {
+ 		/*
+-		 * Sync the log to get all the intents out of the AIL.
+-		 * This isn't absolutely necessary, but it helps in
+-		 * case the unlink transactions would have problems
+-		 * pushing the intents out of the way.
++		 * Cancel all the unprocessed intent items now so that we don't
++		 * leave them pinned in the AIL.  This can cause the AIL to
++		 * livelock on the pinned item if anyone tries to push the AIL
++		 * (inode reclaim does this) before we get around to
++		 * xfs_log_mount_cancel.
+ 		 */
+-		xfs_log_force(log->l_mp, XFS_LOG_SYNC);
+-
+-		xlog_recover_process_iunlinks(log);
++		xlog_recover_cancel_intents(log);
++		xfs_alert(log->l_mp, "Failed to recover intents");
++		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
++		return error;
++	}
+ 
+-		xlog_recover_check_summary(log);
++	/*
++	 * Sync the log to get all the intents out of the AIL.  This isn't
++	 * absolutely necessary, but it helps in case the unlink transactions
++	 * would have problems pushing the intents out of the way.
++	 */
++	xfs_log_force(log->l_mp, XFS_LOG_SYNC);
++	xlog_recover_process_iunlinks(log);
+ 
+-		xfs_notice(log->l_mp, "Ending recovery (logdev: %s)",
+-				log->l_mp->m_logname ? log->l_mp->m_logname
+-						     : "internal");
+-		log->l_flags &= ~XLOG_RECOVERY_NEEDED;
+-	} else {
+-		xfs_info(log->l_mp, "Ending clean mount");
+-	}
++	xlog_recover_check_summary(log);
+ 	return 0;
+ }
+ 
 -- 
-Dave Chinner
-david@fromorbit.com
+2.31.1
+
