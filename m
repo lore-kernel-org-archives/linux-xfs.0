@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DECEC12002
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 21:25:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3B87C12002
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 21:25:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4F5596115B
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 21:25:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A4CED611C0
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 21:25:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231891AbhGNV2P (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Jul 2021 17:28:15 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33218 "EHLO mail.kernel.org"
+        id S235617AbhGNV2V (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Jul 2021 17:28:21 -0400
+Received: from mail.kernel.org ([198.145.29.99]:33248 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235260AbhGNV2P (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Jul 2021 17:28:15 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 85BE461026;
-        Wed, 14 Jul 2021 21:25:23 +0000 (UTC)
+        id S235260AbhGNV2V (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 14 Jul 2021 17:28:21 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0752B61106;
+        Wed, 14 Jul 2021 21:25:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1626297923;
-        bh=B7c2lZyY4V06thrmxP9NWG1L0lQo52yoqPNSfhc436c=;
+        s=k20201202; t=1626297929;
+        bh=V0WtOD1xuAfkQZBtMHAhJtpBjA+7H5k+xHGHj7MVNqg=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=tB1z4lJp14gn8agoOkcUOC1bVnl6HDAdHz9/SmH33lb/Hsiafmpj9nNy/4w2TaSVp
-         43UVVb9vn1mgFThuv2a3Jjqa5VepjKpiwtacl3itPS0YcCFodEOeb2rprrZusQlVfO
-         UK2SVH+oNSoDelhxfh3KLlUtFiLFBatdEUiYzzrZ72cAO2W3okYJEtOMD8kuK7Q7nS
-         MrwztzimnPWkrLVUFL4wLIKeAoQjQl8KgiDuROh1BYO4z9E+qLokgXHD1clqV4JXkC
-         2rcUex4cOKWiLY5lgIUK6jOqgwSLtnp3lcvLpOgVXUtthvfYuCByPg5J8LVKXJewDj
-         cJE3O4ynmIzzw==
-Subject: [PATCH 1/2] xfs: improve FSGROWFSRT precondition checking
+        b=raA5TyNy7qtAnyA+zrLRwnLucufTPy3ILM+0fbtCnnSsGStXTkb2XuuZ+ksw74KyJ
+         vjOKBgyMbOLtq7VI8Lh13CDgmLIS3jaiUVOPVjnX+0iIBnmekdGJCcgMvlMSoKO1vN
+         csoTxi5hJC0gHImGgyR9juK763xhcVbHQrspXshhyxHXljfiPN6vdwnIIVyCUm89uz
+         GbIglwWjTKnvmMiD79ERpIrZ0veiXwqi2e3DJF3UZoI4/z9HJ6wmn+1ImdEFW18BxI
+         2BFbaUk9K1iPD1RdYtNJBQKk8ejdPwWaJmSnxmNwy1j81LXUJmrcNOusi5IBTppVb1
+         EH4IFJckXQE6g==
+Subject: [PATCH 2/2] xfs: fix an integer overflow error in xfs_growfs_rt
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, david@fromorbit.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Wed, 14 Jul 2021 14:25:23 -0700
-Message-ID: <162629792325.487242.1728593976863145148.stgit@magnolia>
+Date:   Wed, 14 Jul 2021 14:25:28 -0700
+Message-ID: <162629792874.487242.7435632593936391745.stgit@magnolia>
 In-Reply-To: <162629791767.487242.2747879614157558075.stgit@magnolia>
 References: <162629791767.487242.2747879614157558075.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,71 +49,46 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Improve the checking at the start of a realtime grow operation so that
-we avoid accidentally set a new extent size that is too large and avoid
-adding an rt volume to a filesystem with rmap or reflink because we
-don't support rt rmap or reflink yet.
+During a realtime grow operation, we run a single transaction for each
+rt bitmap block added to the filesystem.  This means that each step has
+to be careful to increase sb_rblocks appropriately.
 
-While we're at it, separate the checks so that we're only testing one
-aspect at a time.
+Fix the integer overflow error in this calculation that can happen when
+the extent size is very large.  Found by running growfs to add a rt
+volume to a filesystem formatted with a 1g rt extent size.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_rtalloc.c |   39 ++++++++++++++++++++++++++++++++-------
- 1 file changed, 32 insertions(+), 7 deletions(-)
+ fs/xfs/xfs_rtalloc.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
 
 diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 4e7be6b4ca8e..8f6a05db4468 100644
+index 8f6a05db4468..699066fb9052 100644
 --- a/fs/xfs/xfs_rtalloc.c
 +++ b/fs/xfs/xfs_rtalloc.c
-@@ -923,16 +923,41 @@ xfs_growfs_rt(
- 	uint8_t		*rsum_cache;	/* old summary cache */
+@@ -1021,7 +1021,8 @@ xfs_growfs_rt(
+ 		     ((sbp->sb_rextents & ((1 << mp->m_blkbit_log) - 1)) != 0);
+ 	     bmbno < nrbmblocks;
+ 	     bmbno++) {
+-		xfs_trans_t	*tp;
++		struct xfs_trans	*tp;
++		xfs_rfsblock_t		nrblocks_step;
  
- 	sbp = &mp->m_sb;
--	/*
--	 * Initial error checking.
--	 */
-+
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EPERM;
--	if (mp->m_rtdev_targp == NULL || mp->m_rbmip == NULL ||
--	    (nrblocks = in->newblocks) <= sbp->sb_rblocks ||
--	    (sbp->sb_rblocks && (in->extsize != sbp->sb_rextsize)))
-+
-+	/* Needs to have been mounted with an rt device. */
-+	if (!XFS_IS_REALTIME_MOUNT(mp))
- 		return -EINVAL;
--	if ((error = xfs_sb_validate_fsb_count(sbp, nrblocks)))
-+	/*
-+	 * Mount should fail if the rt bitmap/summary files don't load, but
-+	 * we'll check anyway.
-+	 */
-+	if (!mp->m_rbmip || !mp->m_rsumip)
-+		return -EINVAL;
-+
-+	/* Shrink not supported. */
-+	if (in->newblocks <= sbp->sb_rblocks)
-+		return -EINVAL;
-+
-+	/* Can only change rt extent size when adding rt volume. */
-+	if (sbp->sb_rblocks > 0 && in->extsize != sbp->sb_rextsize)
-+		return -EINVAL;
-+
-+	/* Range check the extent size. */
-+	if (XFS_FSB_TO_B(mp, in->extsize) > XFS_MAX_RTEXTSIZE ||
-+	    XFS_FSB_TO_B(mp, in->extsize) < XFS_MIN_RTEXTSIZE)
-+		return -EINVAL;
-+
-+	/* Unsupported realtime features. */
-+	if (xfs_sb_version_hasrmapbt(&mp->m_sb) ||
-+	    xfs_sb_version_hasreflink(&mp->m_sb))
-+		return -EOPNOTSUPP;
-+
-+	nrblocks = in->newblocks;
-+	error = xfs_sb_validate_fsb_count(sbp, nrblocks);
-+	if (error)
- 		return error;
- 	/*
- 	 * Read in the last block of the device, make sure it exists.
+ 		*nmp = *mp;
+ 		nsbp = &nmp->m_sb;
+@@ -1030,10 +1031,9 @@ xfs_growfs_rt(
+ 		 */
+ 		nsbp->sb_rextsize = in->extsize;
+ 		nsbp->sb_rbmblocks = bmbno + 1;
+-		nsbp->sb_rblocks =
+-			XFS_RTMIN(nrblocks,
+-				  nsbp->sb_rbmblocks * NBBY *
+-				  nsbp->sb_blocksize * nsbp->sb_rextsize);
++		nrblocks_step = (bmbno + 1) * NBBY * nsbp->sb_blocksize *
++				nsbp->sb_rextsize;
++		nsbp->sb_rblocks = min(nrblocks, nrblocks_step);
+ 		nsbp->sb_rextents = nsbp->sb_rblocks;
+ 		do_div(nsbp->sb_rextents, nsbp->sb_rextsize);
+ 		ASSERT(nsbp->sb_rextents != 0);
 
