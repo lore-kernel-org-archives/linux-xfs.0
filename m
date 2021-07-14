@@ -7,172 +7,201 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5EA4C12002
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 23:24:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55F9AC12002
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 23:26:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 90D9360E08
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 23:24:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 35781613CF
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 23:26:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229750AbhGNX1h (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Jul 2021 19:27:37 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37718 "EHLO mail.kernel.org"
+        id S230441AbhGNX2w (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Jul 2021 19:28:52 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37834 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229666AbhGNX1g (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Jul 2021 19:27:36 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id A517A613CC;
-        Wed, 14 Jul 2021 23:24:44 +0000 (UTC)
+        id S229666AbhGNX2w (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 14 Jul 2021 19:28:52 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id F1D2B60E08;
+        Wed, 14 Jul 2021 23:25:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1626305084;
-        bh=eUFw4BRfWDCxlIhIOCKDXEfbcDvYSAyMry2c+ObWCe8=;
+        s=k20201202; t=1626305160;
+        bh=iMmL/H8mmEXofwaiJEjXwVW2L1DmJp3QDhGqfhOKbwI=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=IPd5jrIcLckO3IDjxH8gpQ8jTSoejXMgfd+tHY45RGKRtTcbf7PkwQZNJtoybC0h9
-         L2X8sZRDJae5tJl1nali2lq5j7ZK8ABgwATfRkxGId1B7chdOgioy/aXrmMM3rEr6U
-         qz+n9l0EaInyZ9e+0MKgA4BnPoVbxVQQZqorakbPRuEGgwg899XkDV8V54KusoYwcX
-         fj2kVRLtdmFNg3CPFK3Sk9pGGT4+BxlnM2f+ioIMAMdEi/pZk63XISGWsxzMsLRhcJ
-         GAb0hPzGAKXzmpUy3m5FlMQ48ZtXJDfRR3TuGGCoQzgOPGmeQzvHc/OLIoW9ZdL898
-         LGUBkLFyXCITw==
-Date:   Wed, 14 Jul 2021 16:24:44 -0700
+        b=iYlMpGtlbu4nqRuDaTWSNiddscrtr5FC9i225ymbc34fuZkvopYQZHHxKTHQhrExb
+         0n077sU7Tp91BNmDkbUfyZ+/MPqTNP/6OukTiHC4xThZX2SXaXMKmfUZ2QzIeUigd5
+         VhTBF012UrQmnzlNfqmrxBsxx62/GIitXrzzDlb7dBgx9huPf31rho2LBTBwg/A5QR
+         OP6enVGJnHnH8XcelB9MLjFOYareaRRxXSzms5s5tgPmW2xyATsfmqfEtA43Ckh19p
+         J9KrNuvxhq9wGP6IrDlCYy/kwfICBVSYCpfMY3bKFnCOd5z5fOHXWvCwTzSm7YCBlW
+         P1L3lOqdrAjdg==
+Date:   Wed, 14 Jul 2021 16:25:59 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 16/16] xfs: kill xfs_sb_version_has_v3inode()
-Message-ID: <20210714232444.GJ22402@magnolia>
-References: <20210714041912.2625692-1-david@fromorbit.com>
- <20210714041912.2625692-17-david@fromorbit.com>
+Subject: Re: [PATCH 3/3] xfs: move the CIL workqueue to the CIL
+Message-ID: <20210714232559.GK22402@magnolia>
+References: <20210714050600.2632218-1-david@fromorbit.com>
+ <20210714050600.2632218-4-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210714041912.2625692-17-david@fromorbit.com>
+In-Reply-To: <20210714050600.2632218-4-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jul 14, 2021 at 02:19:12PM +1000, Dave Chinner wrote:
+On Wed, Jul 14, 2021 at 03:06:00PM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> All callers to xfs_dinode_good_version() and XFS_DINODE_SIZE() in
-> both the kernel and userspace have a xfs_mount structure available
-> which means they can use mount features checks instead looking
-> directly are the superblock.
-> 
-> Convert these functions to take a mount and use a xfs_has_v3inodes()
-> check and move it out of the libxfs/xfs_format.h file as it really
-> doesn't have anything to do with the definition of the on-disk
-> format.
+> We only use the CIL workqueue in the CIL, so it makes no sense to
+> hang it off the xfs_mount and have to walk multiple pointers back up
+> to the mount when we have the CIL structures right there.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
+I /had/ wondered about that...
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/xfs/libxfs/xfs_format.h    | 18 +++---------------
->  fs/xfs/libxfs/xfs_ialloc.c    |  3 +--
->  fs/xfs/libxfs/xfs_inode_buf.c |  2 +-
->  fs/xfs/libxfs/xfs_inode_buf.h | 11 ++++++++++-
->  4 files changed, 15 insertions(+), 19 deletions(-)
+>  fs/xfs/xfs_log_cil.c  | 20 +++++++++++++++++---
+>  fs/xfs/xfs_log_priv.h |  1 +
+>  fs/xfs/xfs_mount.h    |  1 -
+>  fs/xfs/xfs_super.c    | 15 +--------------
+>  4 files changed, 19 insertions(+), 18 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> index e1ecb3237075..452ae4114c92 100644
-> --- a/fs/xfs/libxfs/xfs_format.h
-> +++ b/fs/xfs/libxfs/xfs_format.h
-> @@ -399,18 +399,6 @@ xfs_sb_has_incompat_log_feature(
+> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> index ea11d0eea9e8..99e24c75788b 100644
+> --- a/fs/xfs/xfs_log_cil.c
+> +++ b/fs/xfs/xfs_log_cil.c
+> @@ -1134,7 +1134,7 @@ xlog_cil_push_background(
+>  	spin_lock(&cil->xc_push_lock);
+>  	if (cil->xc_push_seq < cil->xc_current_sequence) {
+>  		cil->xc_push_seq = cil->xc_current_sequence;
+> -		queue_work(log->l_mp->m_cil_workqueue, &cil->xc_ctx->push_work);
+> +		queue_work(cil->xc_push_wq, &cil->xc_ctx->push_work);
+>  	}
+>  
+>  	/*
+> @@ -1200,7 +1200,7 @@ xlog_cil_push_now(
+>  
+>  	/* start on any pending background push to minimise wait time on it */
+>  	if (!async)
+> -		flush_workqueue(log->l_mp->m_cil_workqueue);
+> +		flush_workqueue(cil->xc_push_wq);
+>  
+>  	/*
+>  	 * If the CIL is empty or we've already pushed the sequence then
+> @@ -1214,7 +1214,7 @@ xlog_cil_push_now(
+>  
+>  	cil->xc_push_seq = push_seq;
+>  	cil->xc_push_commit_stable = async;
+> -	queue_work(log->l_mp->m_cil_workqueue, &cil->xc_ctx->push_work);
+> +	queue_work(cil->xc_push_wq, &cil->xc_ctx->push_work);
+>  	spin_unlock(&cil->xc_push_lock);
 >  }
 >  
+> @@ -1453,6 +1453,15 @@ xlog_cil_init(
+>  	cil = kmem_zalloc(sizeof(*cil), KM_MAYFAIL);
+>  	if (!cil)
+>  		return -ENOMEM;
+> +	/*
+> +	 * Limit the CIL pipeline depth to 4 concurrent works to bound the
+> +	 * concurrency the log spinlocks will be exposed to.
+> +	 */
+> +	cil->xc_push_wq = alloc_workqueue("xfs-cil/%s",
+> +			XFS_WQFLAGS(WQ_FREEZABLE | WQ_MEM_RECLAIM | WQ_UNBOUND),
+> +			4, log->l_mp->m_super->s_id);
+> +	if (!cil->xc_push_wq)
+> +		goto out_destroy_cil;
 >  
-> -/*
-> - * v5 file systems support V3 inodes only, earlier file systems support
-> - * v2 and v1 inodes.
-> - */
-> -static inline bool xfs_dinode_good_version(struct xfs_sb *sbp,
-> -		uint8_t version)
-> -{
-> -	if (xfs_sb_is_v5(sbp))
-> -		return version == 3;
-> -	return version == 1 || version == 2;
-> -}
+>  	INIT_LIST_HEAD(&cil->xc_cil);
+>  	INIT_LIST_HEAD(&cil->xc_committing);
+> @@ -1469,6 +1478,10 @@ xlog_cil_init(
+>  	xlog_cil_ctx_switch(cil, ctx);
+>  
+>  	return 0;
+> +
+> +out_destroy_cil:
+> +	kmem_free(cil);
+> +	return -ENOMEM;
+>  }
+>  
+>  void
+> @@ -1482,6 +1495,7 @@ xlog_cil_destroy(
+>  	}
+>  
+>  	ASSERT(list_empty(&log->l_cilp->xc_cil));
+> +	destroy_workqueue(log->l_cilp->xc_push_wq);
+>  	kmem_free(log->l_cilp);
+>  }
+>  
+> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+> index 6ce3b1eda758..2389b1bc95b2 100644
+> --- a/fs/xfs/xfs_log_priv.h
+> +++ b/fs/xfs/xfs_log_priv.h
+> @@ -264,6 +264,7 @@ struct xfs_cil {
+>  	struct xlog		*xc_log;
+>  	struct list_head	xc_cil;
+>  	spinlock_t		xc_cil_lock;
+> +	struct workqueue_struct	*xc_push_wq;
+>  
+>  	struct rw_semaphore	xc_ctx_lock ____cacheline_aligned_in_smp;
+>  	struct xfs_cil_ctx	*xc_ctx;
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index c78b63fe779a..752cd93cf46f 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -92,7 +92,6 @@ typedef struct xfs_mount {
+>  	struct xfs_mru_cache	*m_filestream;  /* per-mount filestream data */
+>  	struct workqueue_struct *m_buf_workqueue;
+>  	struct workqueue_struct	*m_unwritten_workqueue;
+> -	struct workqueue_struct	*m_cil_workqueue;
+>  	struct workqueue_struct	*m_reclaim_workqueue;
+>  	struct workqueue_struct *m_gc_workqueue;
+>  	struct workqueue_struct	*m_sync_workqueue;
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 10c1b4e43d71..8b7a9895b4a2 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -501,21 +501,11 @@ xfs_init_mount_workqueues(
+>  	if (!mp->m_unwritten_workqueue)
+>  		goto out_destroy_buf;
+>  
+> -	/*
+> -	 * Limit the CIL pipeline depth to 4 concurrent works to bound the
+> -	 * concurrency the log spinlocks will be exposed to.
+> -	 */
+> -	mp->m_cil_workqueue = alloc_workqueue("xfs-cil/%s",
+> -			XFS_WQFLAGS(WQ_FREEZABLE | WQ_MEM_RECLAIM | WQ_UNBOUND),
+> -			4, mp->m_super->s_id);
+> -	if (!mp->m_cil_workqueue)
+> -		goto out_destroy_unwritten;
 > -
->  static inline bool
->  xfs_is_quota_inode(struct xfs_sb *sbp, xfs_ino_t ino)
->  {
-> @@ -877,12 +865,12 @@ enum xfs_dinode_fmt {
->  /*
->   * Inode size for given fs.
->   */
-> -#define XFS_DINODE_SIZE(sbp) \
-> -	(xfs_sb_is_v5(sbp) ? \
-> +#define XFS_DINODE_SIZE(mp) \
-> +	(xfs_has_crc(mp) ? \
->  		sizeof(struct xfs_dinode) : \
->  		offsetof(struct xfs_dinode, di_crc))
->  #define XFS_LITINO(mp) \
-> -	((mp)->m_sb.sb_inodesize - XFS_DINODE_SIZE(&(mp)->m_sb))
-> +	((mp)->m_sb.sb_inodesize - XFS_DINODE_SIZE(mp))
+>  	mp->m_reclaim_workqueue = alloc_workqueue("xfs-reclaim/%s",
+>  			XFS_WQFLAGS(WQ_FREEZABLE | WQ_MEM_RECLAIM),
+>  			0, mp->m_super->s_id);
+>  	if (!mp->m_reclaim_workqueue)
+> -		goto out_destroy_cil;
+> +		goto out_destroy_unwritten;
 >  
->  /*
->   * Inode data & attribute fork sizes, per inode.
-> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-> index 51768f8999e5..702d4e11dd7f 100644
-> --- a/fs/xfs/libxfs/xfs_ialloc.c
-> +++ b/fs/xfs/libxfs/xfs_ialloc.c
-> @@ -337,7 +337,6 @@ xfs_ialloc_inode_init(
->  		xfs_buf_zero(fbuf, 0, BBTOB(fbuf->b_length));
->  		for (i = 0; i < M_IGEO(mp)->inodes_per_cluster; i++) {
->  			int	ioffset = i << mp->m_sb.sb_inodelog;
-> -			uint	isize = XFS_DINODE_SIZE(&mp->m_sb);
->  
->  			free = xfs_make_iptr(mp, fbuf, i);
->  			free->di_magic = cpu_to_be16(XFS_DINODE_MAGIC);
-> @@ -354,7 +353,7 @@ xfs_ialloc_inode_init(
->  			} else if (tp) {
->  				/* just log the inode core */
->  				xfs_trans_log_buf(tp, fbuf, ioffset,
-> -						  ioffset + isize - 1);
-> +					  ioffset + XFS_DINODE_SIZE(mp) - 1);
->  			}
->  		}
->  
-> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> index 08b4413d3ac4..327d05300f24 100644
-> --- a/fs/xfs/libxfs/xfs_inode_buf.c
-> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> @@ -58,7 +58,7 @@ xfs_inode_buf_verify(
->  		dip = xfs_buf_offset(bp, (i << mp->m_sb.sb_inodelog));
->  		unlinked_ino = be32_to_cpu(dip->di_next_unlinked);
->  		di_ok = xfs_verify_magic16(bp, dip->di_magic) &&
-> -			xfs_dinode_good_version(&mp->m_sb, dip->di_version) &&
-> +			xfs_dinode_good_version(mp, dip->di_version) &&
->  			xfs_verify_agino_or_null(mp, agno, unlinked_ino);
->  		if (unlikely(XFS_TEST_ERROR(!di_ok, mp,
->  						XFS_ERRTAG_ITOBP_INOTOBP))) {
-> diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
-> index 7f865bb4df84..585ed5a110af 100644
-> --- a/fs/xfs/libxfs/xfs_inode_buf.h
-> +++ b/fs/xfs/libxfs/xfs_inode_buf.h
-> @@ -21,7 +21,7 @@ struct xfs_imap {
->  
->  int	xfs_imap_to_bp(struct xfs_mount *mp, struct xfs_trans *tp,
->  		       struct xfs_imap *imap, struct xfs_buf **bpp);
-> -void	xfs_dinode_calc_crc(struct xfs_mount *, struct xfs_dinode *);
-> +void	xfs_dinode_calc_crc(struct xfs_mount *mp, struct xfs_dinode *dip);
->  void	xfs_inode_to_disk(struct xfs_inode *ip, struct xfs_dinode *to,
->  			  xfs_lsn_t lsn);
->  int	xfs_inode_from_disk(struct xfs_inode *ip, struct xfs_dinode *from);
-> @@ -42,4 +42,13 @@ static inline uint64_t xfs_inode_encode_bigtime(struct timespec64 tv)
->  struct timespec64 xfs_inode_from_disk_ts(struct xfs_dinode *dip,
->  		const xfs_timestamp_t ts);
->  
-> +static inline bool
-> +xfs_dinode_good_version(struct xfs_mount *mp, uint8_t version)
-> +{
-> +	if (xfs_has_v3inodes(mp))
-> +		return version == 3;
-> +	return version == 1 || version == 2;
-> +}
-> +
-> +
->  #endif	/* __XFS_INODE_BUF_H__ */
+>  	mp->m_gc_workqueue = alloc_workqueue("xfs-gc/%s",
+>  			WQ_SYSFS | WQ_UNBOUND | WQ_FREEZABLE | WQ_MEM_RECLAIM,
+> @@ -534,8 +524,6 @@ xfs_init_mount_workqueues(
+>  	destroy_workqueue(mp->m_gc_workqueue);
+>  out_destroy_reclaim:
+>  	destroy_workqueue(mp->m_reclaim_workqueue);
+> -out_destroy_cil:
+> -	destroy_workqueue(mp->m_cil_workqueue);
+>  out_destroy_unwritten:
+>  	destroy_workqueue(mp->m_unwritten_workqueue);
+>  out_destroy_buf:
+> @@ -551,7 +539,6 @@ xfs_destroy_mount_workqueues(
+>  	destroy_workqueue(mp->m_sync_workqueue);
+>  	destroy_workqueue(mp->m_gc_workqueue);
+>  	destroy_workqueue(mp->m_reclaim_workqueue);
+> -	destroy_workqueue(mp->m_cil_workqueue);
+>  	destroy_workqueue(mp->m_unwritten_workqueue);
+>  	destroy_workqueue(mp->m_buf_workqueue);
+>  }
 > -- 
 > 2.31.1
 > 
