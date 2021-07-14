@@ -4,570 +4,389 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6826C12002
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 21:47:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 730ECC12002
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 21:51:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AB61C61358
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 21:47:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 543746136E
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 21:51:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234561AbhGNVuW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Jul 2021 17:50:22 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37136 "EHLO mail.kernel.org"
+        id S229782AbhGNVyh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Jul 2021 17:54:37 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37716 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233381AbhGNVuV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Jul 2021 17:50:21 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id AFAA66128B;
-        Wed, 14 Jul 2021 21:47:29 +0000 (UTC)
+        id S229498AbhGNVyh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 14 Jul 2021 17:54:37 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 66B5E6136E;
+        Wed, 14 Jul 2021 21:51:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1626299249;
-        bh=ACLCz7REOEfIMMjxMKiRSq6rAqtso72K8pXy1gigLww=;
+        s=k20201202; t=1626299505;
+        bh=a0HarV9490Y0+aZWOEXbwYvvMfPOLxWsCgxHFf4TZIs=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=dbaz+v5DiesrhVGDITxE0bxv/7+jxvwvqNRIvwtWHPX+QSgVMqvdj1Iu0sVS8U1Y0
-         xb5Qc/UycN5qMhpQl2HuM/5rt7gSOFmi8aL4JwxumyeqiKuFuJBp8/Wt7faGEIyg/E
-         Qhc+te1eRIbh7+c28/AhVUYMIQGY6NrDeO5EMx1fVcsm4rQm9Pw1uJuv3SjmnK2clW
-         uI/0+caXw35kdvOXpV4U/4MZ8Bv8v/FZGi40KkT7NH4z79gjbTm3F5oXn96mJYE9JP
-         pCInTYJB/T1MyQ1AfPmmEGYCU8iRIxPLlUUR6BSHX02S4i29qwtVJioDgS56f2VUk5
-         DcPaKfESwm2Qw==
-Date:   Wed, 14 Jul 2021 14:47:29 -0700
+        b=D4XKa7YLN9966Nf3wj9RglNHvvrEH0ErEQvhn2bprre/JaYqGRV8u1dmEF9RhO7eM
+         /KxR4GcoPSRE/AJGYFttlaRuJrhpaEOVJgehonEO+Wsb3rQ780JMWJVLMagcgzQxhE
+         x6AeJEjo2LgaJztlBV9efZeCFsqnI3Gyr4OZbxvxbOU6AA+9vtpgUcaI51DL/rGuo0
+         PPns3PrYg1Sc3ZOnZyDAvGYLylKdfvHIxxzjXN7Sng20aCp9L0u0ge0pDVXYTmcg/M
+         S6xGy0iEdCUxZp7BObM8J4kVLdJxla7wnh5ds0+6hFFAWaEA5zEFjMfLaSk/pMmB1k
+         TMNeqHQEe/BMA==
+Date:   Wed, 14 Jul 2021 14:51:45 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>
+To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/3] xfs: remove the active vs running quota
- differentiation
-Message-ID: <20210714214729.GN22402@magnolia>
-References: <20210712111426.83004-1-hch@lst.de>
- <20210712111426.83004-4-hch@lst.de>
+Subject: Re: [PATCH 2/9] xfs: XLOG_STATE_IOERROR must die
+Message-ID: <20210714215145.GD23236@magnolia>
+References: <20210714031958.2614411-1-david@fromorbit.com>
+ <20210714031958.2614411-3-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210712111426.83004-4-hch@lst.de>
+In-Reply-To: <20210714031958.2614411-3-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jul 12, 2021 at 01:14:26PM +0200, Christoph Hellwig wrote:
-> These only made a difference when quotaoff supported disabling quota
-> accounting on a mounted file system, so we can switch everyone to use
-
-Ugh, I hated that distinction.  Thanks for making it go away.
-
-> a single set of flags and helpers now. Note that the *QUOTA_ON naming
-> for the helpers is kept as it was the much more commonly used one.
+On Wed, Jul 14, 2021 at 01:19:51PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> We don't need an iclog state field to tell us the log has been shut
+> down. We can just check the xlog_is_shutdown() instead. The avoids
+> the need to shutdowns overwriting the current iclog state while
 
-Nice cleanup!
+Nit: "..need to have shutdown overwrite the current iclog state..."
+
+> being active used by the log code and so having to ensure that every
+> iclog state check handles XLOG_STATE_IOERROR appropriately.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+
+With that fixed,
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/xfs/libxfs/xfs_quota_defs.h | 30 +++-----------------
->  fs/xfs/scrub/quota.c           |  2 +-
->  fs/xfs/xfs_dquot.c             |  3 --
->  fs/xfs/xfs_ioctl.c             |  2 +-
->  fs/xfs/xfs_iops.c              |  4 +--
->  fs/xfs/xfs_mount.c             |  4 +--
->  fs/xfs/xfs_qm.c                | 26 ++++++++---------
->  fs/xfs/xfs_qm_syscalls.c       |  2 +-
->  fs/xfs/xfs_quotaops.c          | 30 +++++++-------------
->  fs/xfs/xfs_super.c             | 51 ++++++++++++++--------------------
->  fs/xfs/xfs_trans_dquot.c       | 11 ++++----
->  11 files changed, 58 insertions(+), 107 deletions(-)
+>  fs/xfs/xfs_log.c      | 110 ++++++++++++------------------------------
+>  fs/xfs/xfs_log_cil.c  |   2 +-
+>  fs/xfs/xfs_log_priv.h |   5 +-
+>  fs/xfs/xfs_trace.h    |   1 -
+>  4 files changed, 33 insertions(+), 85 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_quota_defs.h b/fs/xfs/libxfs/xfs_quota_defs.h
-> index 0f0af4e3503293..a02c5062f9b292 100644
-> --- a/fs/xfs/libxfs/xfs_quota_defs.h
-> +++ b/fs/xfs/libxfs/xfs_quota_defs.h
-> @@ -60,36 +60,14 @@ typedef uint8_t		xfs_dqtype_t;
->  #define XFS_DQUOT_LOGRES(mp)	\
->  	((sizeof(struct xfs_dq_logformat) + sizeof(struct xfs_disk_dquot)) * 6)
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index 3596086d0e4d..75cc487da578 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -522,7 +522,7 @@ xlog_state_release_iclog(
+>  	lockdep_assert_held(&log->l_icloglock);
 >  
-> -#define XFS_IS_QUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_ALL_QUOTA_ACCT)
-> -#define XFS_IS_UQUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_UQUOTA_ACCT)
-> -#define XFS_IS_PQUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_PQUOTA_ACCT)
-> -#define XFS_IS_GQUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_GQUOTA_ACCT)
-> +#define XFS_IS_QUOTA_ON(mp)		((mp)->m_qflags & XFS_ALL_QUOTA_ACCT)
-> +#define XFS_IS_UQUOTA_ON(mp)		((mp)->m_qflags & XFS_UQUOTA_ACCT)
-> +#define XFS_IS_PQUOTA_ON(mp)		((mp)->m_qflags & XFS_PQUOTA_ACCT)
-> +#define XFS_IS_GQUOTA_ON(mp)		((mp)->m_qflags & XFS_GQUOTA_ACCT)
->  #define XFS_IS_UQUOTA_ENFORCED(mp)	((mp)->m_qflags & XFS_UQUOTA_ENFD)
->  #define XFS_IS_GQUOTA_ENFORCED(mp)	((mp)->m_qflags & XFS_GQUOTA_ENFD)
->  #define XFS_IS_PQUOTA_ENFORCED(mp)	((mp)->m_qflags & XFS_PQUOTA_ENFD)
+>  	trace_xlog_iclog_release(iclog, _RET_IP_);
+> -	if (iclog->ic_state == XLOG_STATE_IOERROR)
+> +	if (xlog_is_shutdown(log))
+>  		return -EIO;
 >  
-> -/*
-> - * Incore only flags for quotaoff - these bits get cleared when quota(s)
-> - * are in the process of getting turned off. These flags are in m_qflags but
-> - * never in sb_qflags.
-> - */
-> -#define XFS_UQUOTA_ACTIVE	0x1000  /* uquotas are being turned off */
-> -#define XFS_GQUOTA_ACTIVE	0x2000  /* gquotas are being turned off */
-> -#define XFS_PQUOTA_ACTIVE	0x4000  /* pquotas are being turned off */
-> -#define XFS_ALL_QUOTA_ACTIVE	\
-> -	(XFS_UQUOTA_ACTIVE | XFS_GQUOTA_ACTIVE | XFS_PQUOTA_ACTIVE)
+>  	if (atomic_dec_and_test(&iclog->ic_refcnt) &&
+> @@ -857,7 +857,7 @@ xlog_unmount_write(
+>  	error = xlog_write_unmount_record(log, tic);
+>  	/*
+>  	 * At this point, we're umounting anyway, so there's no point in
+> -	 * transitioning log state to IOERROR. Just continue...
+> +	 * transitioning log state to shutdown. Just continue...
+>  	 */
+>  out_err:
+>  	if (error)
+> @@ -870,7 +870,7 @@ xlog_unmount_write(
+>  		xlog_state_switch_iclogs(log, iclog, 0);
+>  	else
+>  		ASSERT(iclog->ic_state == XLOG_STATE_WANT_SYNC ||
+> -		       iclog->ic_state == XLOG_STATE_IOERROR);
+> +			xlog_is_shutdown(log));
+>  	/*
+>  	 * Ensure the journal is fully flushed and on stable storage once the
+>  	 * iclog containing the unmount record is written.
+> @@ -1770,7 +1770,7 @@ xlog_write_iclog(
+>  	 * across the log IO to archieve that.
+>  	 */
+>  	down(&iclog->ic_sema);
+> -	if (unlikely(iclog->ic_state == XLOG_STATE_IOERROR)) {
+> +	if (xlog_is_shutdown(log)) {
+>  		/*
+>  		 * It would seem logical to return EIO here, but we rely on
+>  		 * the log state machine to propagate I/O errors instead of
+> @@ -2299,7 +2299,7 @@ xlog_write_copy_finish(
+>  			xlog_state_switch_iclogs(log, iclog, 0);
+>  		else
+>  			ASSERT(iclog->ic_state == XLOG_STATE_WANT_SYNC ||
+> -			       iclog->ic_state == XLOG_STATE_IOERROR);
+> +				xlog_is_shutdown(log));
+>  		if (!commit_iclog)
+>  			goto release_iclog;
+>  		spin_unlock(&log->l_icloglock);
+> @@ -2715,8 +2715,7 @@ xlog_state_set_callback(
+>  static bool
+>  xlog_state_iodone_process_iclog(
+>  	struct xlog		*log,
+> -	struct xlog_in_core	*iclog,
+> -	bool			*ioerror)
+> +	struct xlog_in_core	*iclog)
+>  {
+>  	xfs_lsn_t		lowest_lsn;
+>  	xfs_lsn_t		header_lsn;
+> @@ -2728,15 +2727,6 @@ xlog_state_iodone_process_iclog(
+>  		 * Skip all iclogs in the ACTIVE & DIRTY states:
+>  		 */
+>  		return false;
+> -	case XLOG_STATE_IOERROR:
+> -		/*
+> -		 * Between marking a filesystem SHUTDOWN and stopping the log,
+> -		 * we do flush all iclogs to disk (if there wasn't a log I/O
+> -		 * error). So, we do want things to go smoothly in case of just
+> -		 * a SHUTDOWN w/o a LOG_IO_ERROR.
+> -		 */
+> -		*ioerror = true;
+> -		return false;
+>  	case XLOG_STATE_DONE_SYNC:
+>  		/*
+>  		 * Now that we have an iclog that is in the DONE_SYNC state, do
+> @@ -2767,7 +2757,6 @@ xlog_state_do_callback(
+>  	struct xlog_in_core	*iclog;
+>  	struct xlog_in_core	*first_iclog;
+>  	bool			cycled_icloglock;
+> -	bool			ioerror;
+>  	int			flushcnt = 0;
+>  	int			repeats = 0;
+>  
+> @@ -2781,23 +2770,20 @@ xlog_state_do_callback(
+>  		 * Keep looping through iclogs until one full pass is made
+>  		 * without running any callbacks.
+>  		 */
+> -		first_iclog = log->l_iclog;
+> -		iclog = log->l_iclog;
+>  		cycled_icloglock = false;
+> -		ioerror = false;
+> -		repeats++;
+> +		first_iclog = log->l_iclog;
+> +		iclog = first_iclog;
+>  
+>  		do {
+>  			LIST_HEAD(cb_list);
+>  
+> -			if (xlog_state_iodone_process_iclog(log, iclog,
+> -							&ioerror))
+> -				break;
 > -
+> -			if (iclog->ic_state != XLOG_STATE_CALLBACK &&
+> -			    iclog->ic_state != XLOG_STATE_IOERROR) {
+> -				iclog = iclog->ic_next;
+> -				continue;
+> +			if (!xlog_is_shutdown(log)) {
+> +				if (xlog_state_iodone_process_iclog(log, iclog))
+> +					break;
+> +				if (iclog->ic_state != XLOG_STATE_CALLBACK) {
+> +					iclog = iclog->ic_next;
+> +					continue;
+> +				}
+>  			}
+>  			list_splice_init(&iclog->ic_callbacks, &cb_list);
+>  			spin_unlock(&log->l_icloglock);
+> @@ -2813,19 +2799,19 @@ xlog_state_do_callback(
+>  			else
+>  				xlog_state_clean_iclog(log, iclog);
+>  			iclog = iclog->ic_next;
+> -		} while (first_iclog != iclog);
+> +		} while (iclog != first_iclog);
+>  
+> -		if (repeats > 5000) {
+> +		if (++repeats > 5000) {
+>  			flushcnt += repeats;
+>  			repeats = 0;
+>  			xfs_warn(log->l_mp,
+>  				"%s: possible infinite loop (%d iterations)",
+>  				__func__, flushcnt);
+>  		}
+> -	} while (!ioerror && cycled_icloglock);
+> +	} while (!xlog_is_shutdown(log) && cycled_icloglock);
+>  
+>  	if (log->l_iclog->ic_state == XLOG_STATE_ACTIVE ||
+> -	    log->l_iclog->ic_state == XLOG_STATE_IOERROR)
+> +	    xlog_is_shutdown(log))
+>  		wake_up_all(&log->l_flush_wait);
+>  
+>  	spin_unlock(&log->l_icloglock);
+> @@ -2835,13 +2821,6 @@ xlog_state_do_callback(
+>  /*
+>   * Finish transitioning this iclog to the dirty state.
+>   *
+> - * Make sure that we completely execute this routine only when this is
+> - * the last call to the iclog.  There is a good chance that iclog flushes,
+> - * when we reach the end of the physical log, get turned into 2 separate
+> - * calls to bwrite.  Hence, one iclog flush could generate two calls to this
+> - * routine.  By using the reference count bwritecnt, we guarantee that only
+> - * the second completion goes through.
+> - *
+>   * Callbacks could take time, so they are done outside the scope of the
+>   * global state machine log lock.
+>   */
+> @@ -3173,10 +3152,10 @@ xfs_log_force(
+>  	xlog_cil_force(log);
+>  
+>  	spin_lock(&log->l_icloglock);
+> -	iclog = log->l_iclog;
+> -	if (iclog->ic_state == XLOG_STATE_IOERROR)
+> +	if (xlog_is_shutdown(log))
+>  		goto out_error;
+>  
+> +	iclog = log->l_iclog;
+>  	trace_xlog_iclog_force(iclog, _RET_IP_);
+>  
+>  	if (iclog->ic_state == XLOG_STATE_DIRTY ||
+> @@ -3247,10 +3226,10 @@ xlog_force_lsn(
+>  	struct xlog_in_core	*iclog;
+>  
+>  	spin_lock(&log->l_icloglock);
+> -	iclog = log->l_iclog;
+> -	if (iclog->ic_state == XLOG_STATE_IOERROR)
+> +	if (xlog_is_shutdown(log))
+>  		goto out_error;
+>  
+> +	iclog = log->l_iclog;
+>  	while (be64_to_cpu(iclog->ic_header.h_lsn) != lsn) {
+>  		trace_xlog_iclog_force_lsn(iclog, _RET_IP_);
+>  		iclog = iclog->ic_next;
+> @@ -3685,34 +3664,6 @@ xlog_verify_iclog(
+>  }
+>  #endif
+>  
 > -/*
-> - * Checking XFS_IS_*QUOTA_ON() while holding any inode lock guarantees
-> - * quota will be not be switched off as long as that inode lock is held.
+> - * Mark all iclogs IOERROR. l_icloglock is held by the caller.
 > - */
-> -#define XFS_IS_QUOTA_ON(mp)	((mp)->m_qflags & (XFS_UQUOTA_ACTIVE | \
-> -						   XFS_GQUOTA_ACTIVE | \
-> -						   XFS_PQUOTA_ACTIVE))
-> -#define XFS_IS_UQUOTA_ON(mp)	((mp)->m_qflags & XFS_UQUOTA_ACTIVE)
-> -#define XFS_IS_GQUOTA_ON(mp)	((mp)->m_qflags & XFS_GQUOTA_ACTIVE)
-> -#define XFS_IS_PQUOTA_ON(mp)	((mp)->m_qflags & XFS_PQUOTA_ACTIVE)
+> -STATIC int
+> -xlog_state_ioerror(
+> -	struct xlog	*log)
+> -{
+> -	xlog_in_core_t	*iclog, *ic;
+> -
+> -	iclog = log->l_iclog;
+> -	if (iclog->ic_state != XLOG_STATE_IOERROR) {
+> -		/*
+> -		 * Mark all the incore logs IOERROR.
+> -		 * From now on, no log flushes will result.
+> -		 */
+> -		ic = iclog;
+> -		do {
+> -			ic->ic_state = XLOG_STATE_IOERROR;
+> -			ic = ic->ic_next;
+> -		} while (ic != iclog);
+> -		return 0;
+> -	}
+> -	/*
+> -	 * Return non-zero, if state transition has already happened.
+> -	 */
+> -	return 1;
+> -}
 > -
 >  /*
->   * Flags to tell various functions what to do. Not all of these are meaningful
->   * to a single function. None of these XFS_QMOPT_* flags are meant to have
-> diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
-> index acbb9839d42fbd..3cccd6d5b57755 100644
-> --- a/fs/xfs/scrub/quota.c
-> +++ b/fs/xfs/scrub/quota.c
-> @@ -42,7 +42,7 @@ xchk_setup_quota(
->  	xfs_dqtype_t		dqtype;
->  	int			error;
->  
-> -	if (!XFS_IS_QUOTA_RUNNING(sc->mp) || !XFS_IS_QUOTA_ON(sc->mp))
-> +	if (!XFS_IS_QUOTA_ON(sc->mp))
->  		return -ENOENT;
->  
->  	dqtype = xchk_quota_to_dqtype(sc);
-> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-> index ecd5059d6928f7..c301b18b7685b1 100644
-> --- a/fs/xfs/xfs_dquot.c
-> +++ b/fs/xfs/xfs_dquot.c
-> @@ -847,9 +847,6 @@ xfs_qm_dqget_checks(
->  	struct xfs_mount	*mp,
->  	xfs_dqtype_t		type)
+>   * This is called from xfs_force_shutdown, when we're forcibly
+>   * shutting down the filesystem, typically because of an IO error.
+> @@ -3728,6 +3679,8 @@ xlog_state_ioerror(
+>   * Note: for the !logerror case we need to flush the regions held in memory out
+>   * to disk first. This needs to be done before the log is marked as shutdown,
+>   * otherwise the iclog writes will fail.
+> + *
+> + * Return non-zero if log shutdown transition had already happened.
+>   */
+>  int
+>  xfs_log_force_umount(
+> @@ -3735,7 +3688,7 @@ xfs_log_force_umount(
+>  	int			logerror)
 >  {
-> -	if (WARN_ON_ONCE(!XFS_IS_QUOTA_RUNNING(mp)))
-> -		return -ESRCH;
-> -
->  	switch (type) {
->  	case XFS_DQTYPE_USER:
->  		if (!XFS_IS_UQUOTA_ON(mp))
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 65270e63c032a0..9f4aa1477e2fca 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -1433,7 +1433,7 @@ xfs_fileattr_set(
+>  	struct xlog	*log;
+> -	int		retval;
+> +	int		retval = 0;
 >  
->  	/* Change the ownerships and register project quota modifications */
->  	if (ip->i_projid != fa->fsx_projid) {
-> -		if (XFS_IS_QUOTA_RUNNING(mp) && XFS_IS_PQUOTA_ON(mp)) {
-> +		if (XFS_IS_PQUOTA_ON(mp)) {
->  			olddquot = xfs_qm_vop_chown(tp, ip,
->  						&ip->i_pdquot, pdqp);
->  		}
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index 93c082db04b78c..327d65ef1e268c 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -778,7 +778,7 @@ xfs_setattr_nonsize(
->  		 * in the transaction.
->  		 */
->  		if (!uid_eq(iuid, uid)) {
-> -			if (XFS_IS_QUOTA_RUNNING(mp) && XFS_IS_UQUOTA_ON(mp)) {
-> +			if (XFS_IS_UQUOTA_ON(mp)) {
->  				ASSERT(mask & ATTR_UID);
->  				ASSERT(udqp);
->  				olddquot1 = xfs_qm_vop_chown(tp, ip,
-> @@ -787,7 +787,7 @@ xfs_setattr_nonsize(
->  			inode->i_uid = uid;
->  		}
->  		if (!gid_eq(igid, gid)) {
-> -			if (XFS_IS_QUOTA_RUNNING(mp) && XFS_IS_GQUOTA_ON(mp)) {
-> +			if (XFS_IS_GQUOTA_ON(mp)) {
->  				ASSERT(xfs_sb_version_has_pquotino(&mp->m_sb) ||
->  				       !XFS_IS_PQUOTA_ON(mp));
->  				ASSERT(mask & ATTR_GID);
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index d0755494597f99..baf7b323cb15eb 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -836,13 +836,11 @@ xfs_mountfs(
->  	/*
->  	 * Initialise the XFS quota management subsystem for this mount
+>  	log = mp->m_log;
+>  
+> @@ -3755,10 +3708,8 @@ xfs_log_force_umount(
+>  	 * Somebody could've already done the hard work for us.
+>  	 * No need to get locks for this.
 >  	 */
-> -	if (XFS_IS_QUOTA_RUNNING(mp)) {
-> +	if (XFS_IS_QUOTA_ON(mp)) {
->  		error = xfs_qm_newmount(mp, &quotamount, &quotaflags);
->  		if (error)
->  			goto out_rtunmount;
->  	} else {
-> -		ASSERT(!XFS_IS_QUOTA_ON(mp));
-> -
->  		/*
->  		 * If a file system had quotas running earlier, but decided to
->  		 * mount without -o uquota/pquota/gquota options, revoke the
-> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> index 2b34273d0405e7..351d99bc52e5f8 100644
-> --- a/fs/xfs/xfs_qm.c
-> +++ b/fs/xfs/xfs_qm.c
-> @@ -295,8 +295,6 @@ xfs_qm_need_dqattach(
->  {
->  	struct xfs_mount	*mp = ip->i_mount;
->  
-> -	if (!XFS_IS_QUOTA_RUNNING(mp))
-> -		return false;
->  	if (!XFS_IS_QUOTA_ON(mp))
->  		return false;
->  	if (!XFS_NOT_DQATTACHED(mp, ip))
-> @@ -631,7 +629,7 @@ xfs_qm_init_quotainfo(
->  	struct xfs_quotainfo	*qinf;
->  	int			error;
->  
-> -	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
-> +	ASSERT(XFS_IS_QUOTA_ON(mp));
->  
->  	qinf = mp->m_quotainfo = kmem_zalloc(sizeof(struct xfs_quotainfo), 0);
->  
-> @@ -676,11 +674,11 @@ xfs_qm_init_quotainfo(
->  	xfs_qm_init_timelimits(mp, XFS_DQTYPE_GROUP);
->  	xfs_qm_init_timelimits(mp, XFS_DQTYPE_PROJ);
->  
-> -	if (XFS_IS_UQUOTA_RUNNING(mp))
-> +	if (XFS_IS_UQUOTA_ON(mp))
->  		xfs_qm_set_defquota(mp, XFS_DQTYPE_USER, qinf);
-> -	if (XFS_IS_GQUOTA_RUNNING(mp))
-> +	if (XFS_IS_GQUOTA_ON(mp))
->  		xfs_qm_set_defquota(mp, XFS_DQTYPE_GROUP, qinf);
-> -	if (XFS_IS_PQUOTA_RUNNING(mp))
-> +	if (XFS_IS_PQUOTA_ON(mp))
->  		xfs_qm_set_defquota(mp, XFS_DQTYPE_PROJ, qinf);
->  
->  	qinf->qi_shrinker.count_objects = xfs_qm_shrink_count;
-> @@ -1143,7 +1141,7 @@ xfs_qm_dqusage_adjust(
->  	xfs_filblks_t		rtblks = 0;	/* total rt blks */
->  	int			error;
->  
-> -	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
-> +	ASSERT(XFS_IS_QUOTA_ON(mp));
+> -	if (logerror && log->l_iclog->ic_state == XLOG_STATE_IOERROR) {
+> -		ASSERT(xlog_is_shutdown(log));
+> +	if (logerror && xlog_is_shutdown(log))
+>  		return 1;
+> -	}
 >  
 >  	/*
->  	 * rootino must have its resources accounted for, not so with the quota
-> @@ -1284,7 +1282,7 @@ xfs_qm_quotacheck(
->  	flags = 0;
->  
->  	ASSERT(uip || gip || pip);
-> -	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
-> +	ASSERT(XFS_IS_QUOTA_ON(mp));
->  
->  	xfs_notice(mp, "Quotacheck needed: Please wait.");
->  
-> @@ -1414,7 +1412,7 @@ xfs_qm_mount_quotas(
->  		goto write_changes;
->  	}
->  
-> -	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
-> +	ASSERT(XFS_IS_QUOTA_ON(mp));
+>  	 * Flush all the completed transactions to disk before marking the log
+> @@ -3783,8 +3734,10 @@ xfs_log_force_umount(
+>  	 * Mark the log and the iclogs with IO error flags to prevent any
+>  	 * further log IO from being issued or completed.
+>  	 */
+> -	log->l_flags |= XLOG_IO_ERROR;
+> -	retval = xlog_state_ioerror(log);
+> +	if (!(log->l_flags & XLOG_IO_ERROR)) {
+> +		log->l_flags |= XLOG_IO_ERROR;
+> +		retval = 1;
+> +	}
+>  	spin_unlock(&log->l_icloglock);
 >  
 >  	/*
->  	 * Allocate the quotainfo structure inside the mount struct, and
-> @@ -1469,7 +1467,7 @@ xfs_qm_mount_quotas(
->  			 * the incore structures are convinced that quotas are
->  			 * off, but the on disk superblock doesn't know that !
->  			 */
-> -			ASSERT(!(XFS_IS_QUOTA_RUNNING(mp)));
-> +			ASSERT(!(XFS_IS_QUOTA_ON(mp)));
->  			xfs_alert(mp, "%s: Superblock update failed!",
->  				__func__);
->  		}
-> @@ -1641,7 +1639,7 @@ xfs_qm_vop_dqalloc(
->  	int			error;
->  	uint			lockflags;
+> @@ -3808,7 +3761,6 @@ xfs_log_force_umount(
+>  	spin_unlock(&log->l_cilp->xc_push_lock);
+>  	xlog_state_do_callback(log);
 >  
-> -	if (!XFS_IS_QUOTA_RUNNING(mp) || !XFS_IS_QUOTA_ON(mp))
-> +	if (!XFS_IS_QUOTA_ON(mp))
->  		return 0;
->  
->  	lockflags = XFS_ILOCK_EXCL;
-> @@ -1772,7 +1770,7 @@ xfs_qm_vop_chown(
->  
->  
->  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-> -	ASSERT(XFS_IS_QUOTA_RUNNING(ip->i_mount));
-> +	ASSERT(XFS_IS_QUOTA_ON(ip->i_mount));
->  
->  	/* old dquot */
->  	prevdq = *IO_olddq;
-> @@ -1825,7 +1823,7 @@ xfs_qm_vop_rename_dqattach(
->  	struct xfs_mount	*mp = i_tab[0]->i_mount;
->  	int			i;
->  
-> -	if (!XFS_IS_QUOTA_RUNNING(mp) || !XFS_IS_QUOTA_ON(mp))
-> +	if (!XFS_IS_QUOTA_ON(mp))
->  		return 0;
->  
->  	for (i = 0; (i < 4 && i_tab[i]); i++) {
-> @@ -1856,7 +1854,7 @@ xfs_qm_vop_create_dqattach(
->  {
->  	struct xfs_mount	*mp = tp->t_mountp;
->  
-> -	if (!XFS_IS_QUOTA_RUNNING(mp) || !XFS_IS_QUOTA_ON(mp))
-> +	if (!XFS_IS_QUOTA_ON(mp))
->  		return;
->  
->  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-> diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-> index e00067a142a094..b5685ce666f70d 100644
-> --- a/fs/xfs/xfs_qm_syscalls.c
-> +++ b/fs/xfs/xfs_qm_syscalls.c
-> @@ -204,7 +204,7 @@ xfs_qm_scall_quotaon(
->  	     (mp->m_qflags & XFS_GQUOTA_ACCT)))
->  		return 0;
->  
-> -	if (! XFS_IS_QUOTA_RUNNING(mp))
-> +	if (!XFS_IS_QUOTA_ON(mp))
->  		return -ESRCH;
->  
->  	/*
-> diff --git a/fs/xfs/xfs_quotaops.c b/fs/xfs/xfs_quotaops.c
-> index 88d70c236a5445..07989bd677289a 100644
-> --- a/fs/xfs/xfs_quotaops.c
-> +++ b/fs/xfs/xfs_quotaops.c
-> @@ -60,18 +60,18 @@ xfs_fs_get_quota_state(
->  	struct xfs_quotainfo *q = mp->m_quotainfo;
->  
->  	memset(state, 0, sizeof(*state));
-> -	if (!XFS_IS_QUOTA_RUNNING(mp))
-> +	if (!XFS_IS_QUOTA_ON(mp))
->  		return 0;
->  	state->s_incoredqs = q->qi_dquots;
-> -	if (XFS_IS_UQUOTA_RUNNING(mp))
-> +	if (XFS_IS_UQUOTA_ON(mp))
->  		state->s_state[USRQUOTA].flags |= QCI_ACCT_ENABLED;
->  	if (XFS_IS_UQUOTA_ENFORCED(mp))
->  		state->s_state[USRQUOTA].flags |= QCI_LIMITS_ENFORCED;
-> -	if (XFS_IS_GQUOTA_RUNNING(mp))
-> +	if (XFS_IS_GQUOTA_ON(mp))
->  		state->s_state[GRPQUOTA].flags |= QCI_ACCT_ENABLED;
->  	if (XFS_IS_GQUOTA_ENFORCED(mp))
->  		state->s_state[GRPQUOTA].flags |= QCI_LIMITS_ENFORCED;
-> -	if (XFS_IS_PQUOTA_RUNNING(mp))
-> +	if (XFS_IS_PQUOTA_ON(mp))
->  		state->s_state[PRJQUOTA].flags |= QCI_ACCT_ENABLED;
->  	if (XFS_IS_PQUOTA_ENFORCED(mp))
->  		state->s_state[PRJQUOTA].flags |= QCI_LIMITS_ENFORCED;
-> @@ -114,10 +114,8 @@ xfs_fs_set_info(
->  
->  	if (sb_rdonly(sb))
->  		return -EROFS;
-> -	if (!XFS_IS_QUOTA_RUNNING(mp))
-> -		return -ENOSYS;
->  	if (!XFS_IS_QUOTA_ON(mp))
-> -		return -ESRCH;
-> +		return -ENOSYS;
->  	if (info->i_fieldmask & ~XFS_QC_SETINFO_MASK)
->  		return -EINVAL;
->  	if ((info->i_fieldmask & XFS_QC_SETINFO_MASK) == 0)
-> @@ -164,7 +162,7 @@ xfs_quota_enable(
->  
->  	if (sb_rdonly(sb))
->  		return -EROFS;
-> -	if (!XFS_IS_QUOTA_RUNNING(mp))
-> +	if (!XFS_IS_QUOTA_ON(mp))
->  		return -ENOSYS;
->  
->  	return xfs_qm_scall_quotaon(mp, xfs_quota_flags(uflags));
-> @@ -179,10 +177,8 @@ xfs_quota_disable(
->  
->  	if (sb_rdonly(sb))
->  		return -EROFS;
-> -	if (!XFS_IS_QUOTA_RUNNING(mp))
-> -		return -ENOSYS;
->  	if (!XFS_IS_QUOTA_ON(mp))
-> -		return -EINVAL;
-> +		return -ENOSYS;
->  
->  	return xfs_qm_scall_quotaoff(mp, xfs_quota_flags(uflags));
+> -	/* return non-zero if log IOERROR transition had already happened */
+>  	return retval;
 >  }
-> @@ -223,10 +219,8 @@ xfs_fs_get_dqblk(
->  	struct xfs_mount	*mp = XFS_M(sb);
->  	xfs_dqid_t		id;
 >  
-> -	if (!XFS_IS_QUOTA_RUNNING(mp))
-> -		return -ENOSYS;
->  	if (!XFS_IS_QUOTA_ON(mp))
-> -		return -ESRCH;
-> +		return -ENOSYS;
->  
->  	id = from_kqid(&init_user_ns, qid);
->  	return xfs_qm_scall_getquota(mp, id, xfs_quota_type(qid.type), qdq);
-> @@ -243,10 +237,8 @@ xfs_fs_get_nextdqblk(
->  	struct xfs_mount	*mp = XFS_M(sb);
->  	xfs_dqid_t		id;
->  
-> -	if (!XFS_IS_QUOTA_RUNNING(mp))
-> -		return -ENOSYS;
->  	if (!XFS_IS_QUOTA_ON(mp))
-> -		return -ESRCH;
-> +		return -ENOSYS;
->  
->  	id = from_kqid(&init_user_ns, *qid);
->  	ret = xfs_qm_scall_getquota_next(mp, &id, xfs_quota_type(qid->type),
-> @@ -269,10 +261,8 @@ xfs_fs_set_dqblk(
->  
->  	if (sb_rdonly(sb))
->  		return -EROFS;
-> -	if (!XFS_IS_QUOTA_RUNNING(mp))
-> -		return -ENOSYS;
->  	if (!XFS_IS_QUOTA_ON(mp))
-> -		return -ESRCH;
-> +		return -ENOSYS;
->  
->  	return xfs_qm_scall_setqlim(mp, from_kqid(&init_user_ns, qid),
->  				     xfs_quota_type(qid.type), qdq);
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 2c9e26a44546b8..36fc81e52dc22a 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -201,25 +201,20 @@ xfs_fs_show_options(
->  		seq_printf(m, ",swidth=%d",
->  				(int)XFS_FSB_TO_BB(mp, mp->m_swidth));
->  
-> -	if (mp->m_qflags & XFS_UQUOTA_ACCT) {
-> -		if (mp->m_qflags & XFS_UQUOTA_ENFD)
-> -			seq_puts(m, ",usrquota");
-> -		else
-> -			seq_puts(m, ",uqnoenforce");
-> -	}
-> +	if (mp->m_qflags & XFS_UQUOTA_ENFD)
-> +		seq_puts(m, ",usrquota");
-> +	else if (mp->m_qflags & XFS_UQUOTA_ACCT)
-> +		seq_puts(m, ",uqnoenforce");
->  
-> -	if (mp->m_qflags & XFS_PQUOTA_ACCT) {
-> -		if (mp->m_qflags & XFS_PQUOTA_ENFD)
-> -			seq_puts(m, ",prjquota");
-> -		else
-> -			seq_puts(m, ",pqnoenforce");
-> -	}
-> -	if (mp->m_qflags & XFS_GQUOTA_ACCT) {
-> -		if (mp->m_qflags & XFS_GQUOTA_ENFD)
-> -			seq_puts(m, ",grpquota");
-> -		else
-> -			seq_puts(m, ",gqnoenforce");
-> -	}
-> +	if (mp->m_qflags & XFS_PQUOTA_ENFD)
-> +		seq_puts(m, ",prjquota");
-> +	else if (mp->m_qflags & XFS_PQUOTA_ACCT)
-> +		seq_puts(m, ",pqnoenforce");
-> +
-> +	if (mp->m_qflags & XFS_GQUOTA_ENFD)
-> +		seq_puts(m, ",grpquota");
-> +	else if (mp->m_qflags & XFS_GQUOTA_ACCT)
-> +		seq_puts(m, ",gqnoenforce");
->  
->  	if (!(mp->m_qflags & XFS_ALL_QUOTA_ACCT))
->  		seq_puts(m, ",noquota");
-> @@ -962,8 +957,8 @@ xfs_finish_flags(
->  		return -EROFS;
+> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> index 8fab7ec1ceb1..2c9d9bcd25cb 100644
+> --- a/fs/xfs/xfs_log_cil.c
+> +++ b/fs/xfs/xfs_log_cil.c
+> @@ -881,7 +881,7 @@ xlog_cil_push_work(
+>  	 * callbacks and dropped the icloglock.
+>  	 */
+>  	spin_lock(&log->l_icloglock);
+> -	if (commit_iclog->ic_state == XLOG_STATE_IOERROR) {
+> +	if (xlog_is_shutdown(log)) {
+>  		spin_unlock(&log->l_icloglock);
+>  		goto out_abort;
 >  	}
+> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+> index 80d4e1325e1d..bf05763ba8df 100644
+> --- a/fs/xfs/xfs_log_priv.h
+> +++ b/fs/xfs/xfs_log_priv.h
+> @@ -47,7 +47,6 @@ enum xlog_iclog_state {
+>  	XLOG_STATE_DONE_SYNC,	/* Done syncing to disk */
+>  	XLOG_STATE_CALLBACK,	/* Callback functions now */
+>  	XLOG_STATE_DIRTY,	/* Dirty IC log, not ready for ACTIVE status */
+> -	XLOG_STATE_IOERROR,	/* IO error happened in sync'ing log */
+>  };
 >  
-> -	if ((mp->m_qflags & (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE)) &&
-> -	    (mp->m_qflags & (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE)) &&
-> +	if ((mp->m_qflags & XFS_GQUOTA_ACCT) &&
-> +	    (mp->m_qflags & XFS_PQUOTA_ACCT) &&
->  	    !xfs_sb_version_has_pquotino(&mp->m_sb)) {
->  		xfs_warn(mp,
->  		  "Super block does not support project and group quota together");
-> @@ -1228,35 +1223,31 @@ xfs_fs_parse_param(
->  	case Opt_noquota:
->  		parsing_mp->m_qflags &= ~XFS_ALL_QUOTA_ACCT;
->  		parsing_mp->m_qflags &= ~XFS_ALL_QUOTA_ENFD;
-> -		parsing_mp->m_qflags &= ~XFS_ALL_QUOTA_ACTIVE;
->  		return 0;
->  	case Opt_quota:
->  	case Opt_uquota:
->  	case Opt_usrquota:
-> -		parsing_mp->m_qflags |= (XFS_UQUOTA_ACCT | XFS_UQUOTA_ACTIVE |
-> -				 XFS_UQUOTA_ENFD);
-> +		parsing_mp->m_qflags |= (XFS_UQUOTA_ACCT | XFS_UQUOTA_ENFD);
->  		return 0;
->  	case Opt_qnoenforce:
->  	case Opt_uqnoenforce:
-> -		parsing_mp->m_qflags |= (XFS_UQUOTA_ACCT | XFS_UQUOTA_ACTIVE);
-> +		parsing_mp->m_qflags |= XFS_UQUOTA_ACCT;
->  		parsing_mp->m_qflags &= ~XFS_UQUOTA_ENFD;
->  		return 0;
->  	case Opt_pquota:
->  	case Opt_prjquota:
-> -		parsing_mp->m_qflags |= (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE |
-> -				 XFS_PQUOTA_ENFD);
-> +		parsing_mp->m_qflags |= (XFS_PQUOTA_ACCT | XFS_PQUOTA_ENFD);
->  		return 0;
->  	case Opt_pqnoenforce:
-> -		parsing_mp->m_qflags |= (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE);
-> +		parsing_mp->m_qflags |= XFS_PQUOTA_ACCT;
->  		parsing_mp->m_qflags &= ~XFS_PQUOTA_ENFD;
->  		return 0;
->  	case Opt_gquota:
->  	case Opt_grpquota:
-> -		parsing_mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE |
-> -				 XFS_GQUOTA_ENFD);
-> +		parsing_mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ENFD);
->  		return 0;
->  	case Opt_gqnoenforce:
-> -		parsing_mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE);
-> +		parsing_mp->m_qflags |= XFS_GQUOTA_ACCT;
->  		parsing_mp->m_qflags &= ~XFS_GQUOTA_ENFD;
->  		return 0;
->  	case Opt_discard:
-> diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-> index b7e4b05a559bdb..eb76bc5bed9d0a 100644
-> --- a/fs/xfs/xfs_trans_dquot.c
-> +++ b/fs/xfs/xfs_trans_dquot.c
-> @@ -132,8 +132,7 @@ xfs_trans_mod_dquot_byino(
->  {
->  	xfs_mount_t	*mp = tp->t_mountp;
+>  #define XLOG_STATE_STRINGS \
+> @@ -56,9 +55,7 @@ enum xlog_iclog_state {
+>  	{ XLOG_STATE_SYNCING,	"XLOG_STATE_SYNCING" }, \
+>  	{ XLOG_STATE_DONE_SYNC,	"XLOG_STATE_DONE_SYNC" }, \
+>  	{ XLOG_STATE_CALLBACK,	"XLOG_STATE_CALLBACK" }, \
+> -	{ XLOG_STATE_DIRTY,	"XLOG_STATE_DIRTY" }, \
+> -	{ XLOG_STATE_IOERROR,	"XLOG_STATE_IOERROR" }
+> -
+> +	{ XLOG_STATE_DIRTY,	"XLOG_STATE_DIRTY" }
 >  
-> -	if (!XFS_IS_QUOTA_RUNNING(mp) ||
-> -	    !XFS_IS_QUOTA_ON(mp) ||
-> +	if (!XFS_IS_QUOTA_ON(mp) ||
->  	    xfs_is_quota_inode(&mp->m_sb, ip->i_ino))
->  		return;
+>  /*
+>   * Log ticket flags
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index f9d8d605f9b1..46be04167cf3 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -3934,7 +3934,6 @@ TRACE_DEFINE_ENUM(XLOG_STATE_SYNCING);
+>  TRACE_DEFINE_ENUM(XLOG_STATE_DONE_SYNC);
+>  TRACE_DEFINE_ENUM(XLOG_STATE_CALLBACK);
+>  TRACE_DEFINE_ENUM(XLOG_STATE_DIRTY);
+> -TRACE_DEFINE_ENUM(XLOG_STATE_IOERROR);
 >  
-> @@ -192,7 +191,7 @@ xfs_trans_mod_dquot(
->  	struct xfs_dqtrx	*qtrx;
->  
->  	ASSERT(tp);
-> -	ASSERT(XFS_IS_QUOTA_RUNNING(tp->t_mountp));
-> +	ASSERT(XFS_IS_QUOTA_ON(tp->t_mountp));
->  	qtrx = NULL;
->  
->  	if (!delta)
-> @@ -738,7 +737,7 @@ xfs_trans_reserve_quota_bydquots(
->  {
->  	int		error;
->  
-> -	if (!XFS_IS_QUOTA_RUNNING(mp) || !XFS_IS_QUOTA_ON(mp))
-> +	if (!XFS_IS_QUOTA_ON(mp))
->  		return 0;
->  
->  	ASSERT(flags & XFS_QMOPT_RESBLK_MASK);
-> @@ -795,7 +794,7 @@ xfs_trans_reserve_quota_nblks(
->  	unsigned int		qflags = 0;
->  	int			error;
->  
-> -	if (!XFS_IS_QUOTA_RUNNING(mp) || !XFS_IS_QUOTA_ON(mp))
-> +	if (!XFS_IS_QUOTA_ON(mp))
->  		return 0;
->  
->  	ASSERT(!xfs_is_quota_inode(&mp->m_sb, ip->i_ino));
-> @@ -836,7 +835,7 @@ xfs_trans_reserve_quota_icreate(
->  {
->  	struct xfs_mount	*mp = tp->t_mountp;
->  
-> -	if (!XFS_IS_QUOTA_RUNNING(mp) || !XFS_IS_QUOTA_ON(mp))
-> +	if (!XFS_IS_QUOTA_ON(mp))
->  		return 0;
->  
->  	return xfs_trans_reserve_quota_bydquots(tp, mp, udqp, gdqp, pdqp,
+>  DECLARE_EVENT_CLASS(xlog_iclog_class,
+>  	TP_PROTO(struct xlog_in_core *iclog, unsigned long caller_ip),
 > -- 
-> 2.30.2
+> 2.31.1
 > 
