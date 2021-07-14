@@ -4,381 +4,394 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76878C11F69
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84F07C11F68
 	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 03:20:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 40485613AF
+	by mail.kernel.org (Postfix) with ESMTP id 5608C613B0
 	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 03:20:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237436AbhGNDW4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S237503AbhGNDW4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Tue, 13 Jul 2021 23:22:56 -0400
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:43615 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S237486AbhGNDWz (ORCPT
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:56840 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S237536AbhGNDWz (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Jul 2021 23:22:55 -0400
 Received: from dread.disaster.area (pa49-181-34-10.pa.nsw.optusnet.com.au [49.181.34.10])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 988F26B4B1
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id D2A1C1045433
         for <linux-xfs@vger.kernel.org>; Wed, 14 Jul 2021 13:20:01 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1m3VRJ-006IJ9-6F
+        id 1m3VRJ-006IJr-8T
         for linux-xfs@vger.kernel.org; Wed, 14 Jul 2021 13:20:01 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1m3VRI-00Ay8w-UK
-        for linux-xfs@vger.kernel.org; Wed, 14 Jul 2021 13:20:00 +1000
+        id 1m3VRJ-00Ay92-0X
+        for linux-xfs@vger.kernel.org; Wed, 14 Jul 2021 13:20:01 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 2/9] xfs: XLOG_STATE_IOERROR must die
-Date:   Wed, 14 Jul 2021 13:19:51 +1000
-Message-Id: <20210714031958.2614411-3-david@fromorbit.com>
+Subject: [PATCH 4/9] xfs: convert log flags to an operational state field
+Date:   Wed, 14 Jul 2021 13:19:53 +1000
+Message-Id: <20210714031958.2614411-5-david@fromorbit.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210714031958.2614411-1-david@fromorbit.com>
 References: <20210714031958.2614411-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
         a=hdaoRb6WoHYrV466vVKEyw==:117 a=hdaoRb6WoHYrV466vVKEyw==:17
-        a=e_q4qTt1xDgA:10 a=20KFwNOVAAAA:8 a=p1n60LeDUcQraZ1cDp0A:9
+        a=e_q4qTt1xDgA:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
+        a=Klpj2nW2cWQEV4EXp2IA:9 a=AjGcO6oz07-iQ99wixmX:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-We don't need an iclog state field to tell us the log has been shut
-down. We can just check the xlog_is_shutdown() instead. The avoids
-the need to shutdowns overwriting the current iclog state while
-being active used by the log code and so having to ensure that every
-iclog state check handles XLOG_STATE_IOERROR appropriately.
+log->l_flags doesn't actually contain "flags" as such, it contains
+operational state information that can change at runtime. For the
+shutdown state, this at least should be an atomic bit because
+it is read without holding locks in many places and so using atomic
+bitops for the state field modifications makes sense.
+
+This allows us to use things like test_and_set_bit() on state
+changes (e.g. setting XLOG_TAIL_WARN) to avoid races in setting the
+state when we aren't holding locks.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_log.c      | 110 ++++++++++++------------------------------
- fs/xfs/xfs_log_cil.c  |   2 +-
- fs/xfs/xfs_log_priv.h |   5 +-
- fs/xfs/xfs_trace.h    |   1 -
- 4 files changed, 33 insertions(+), 85 deletions(-)
+ fs/xfs/xfs_log.c         | 58 ++++++++++++++++------------------------
+ fs/xfs/xfs_log.h         |  1 -
+ fs/xfs/xfs_log_priv.h    | 34 +++++++++++++++--------
+ fs/xfs/xfs_log_recover.c |  6 ++---
+ fs/xfs/xfs_super.c       |  2 +-
+ 5 files changed, 50 insertions(+), 51 deletions(-)
 
 diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 3596086d0e4d..75cc487da578 100644
+index 6760608642cc..54fff0d41fd0 100644
 --- a/fs/xfs/xfs_log.c
 +++ b/fs/xfs/xfs_log.c
-@@ -522,7 +522,7 @@ xlog_state_release_iclog(
- 	lockdep_assert_held(&log->l_icloglock);
+@@ -299,7 +299,7 @@ xlog_grant_head_check(
+ 	int			free_bytes;
+ 	int			error = 0;
  
- 	trace_xlog_iclog_release(iclog, _RET_IP_);
--	if (iclog->ic_state == XLOG_STATE_IOERROR)
-+	if (xlog_is_shutdown(log))
- 		return -EIO;
+-	ASSERT(!(log->l_flags & XLOG_ACTIVE_RECOVERY));
++	ASSERT(!xlog_in_recovery(log));
  
- 	if (atomic_dec_and_test(&iclog->ic_refcnt) &&
-@@ -857,7 +857,7 @@ xlog_unmount_write(
- 	error = xlog_write_unmount_record(log, tic);
  	/*
- 	 * At this point, we're umounting anyway, so there's no point in
--	 * transitioning log state to IOERROR. Just continue...
-+	 * transitioning log state to shutdown. Just continue...
- 	 */
- out_err:
- 	if (error)
-@@ -870,7 +870,7 @@ xlog_unmount_write(
- 		xlog_state_switch_iclogs(log, iclog, 0);
- 	else
- 		ASSERT(iclog->ic_state == XLOG_STATE_WANT_SYNC ||
--		       iclog->ic_state == XLOG_STATE_IOERROR);
-+			xlog_is_shutdown(log));
- 	/*
- 	 * Ensure the journal is fully flushed and on stable storage once the
- 	 * iclog containing the unmount record is written.
-@@ -1770,7 +1770,7 @@ xlog_write_iclog(
- 	 * across the log IO to archieve that.
- 	 */
- 	down(&iclog->ic_sema);
--	if (unlikely(iclog->ic_state == XLOG_STATE_IOERROR)) {
-+	if (xlog_is_shutdown(log)) {
- 		/*
- 		 * It would seem logical to return EIO here, but we rely on
- 		 * the log state machine to propagate I/O errors instead of
-@@ -2299,7 +2299,7 @@ xlog_write_copy_finish(
- 			xlog_state_switch_iclogs(log, iclog, 0);
- 		else
- 			ASSERT(iclog->ic_state == XLOG_STATE_WANT_SYNC ||
--			       iclog->ic_state == XLOG_STATE_IOERROR);
-+				xlog_is_shutdown(log));
- 		if (!commit_iclog)
- 			goto release_iclog;
- 		spin_unlock(&log->l_icloglock);
-@@ -2715,8 +2715,7 @@ xlog_state_set_callback(
- static bool
- xlog_state_iodone_process_iclog(
- 	struct xlog		*log,
--	struct xlog_in_core	*iclog,
--	bool			*ioerror)
-+	struct xlog_in_core	*iclog)
+ 	 * If there are other waiters on the queue then give them a chance at
+@@ -552,6 +552,7 @@ xfs_log_mount(
+ 	xfs_daddr_t	blk_offset,
+ 	int		num_bblks)
  {
- 	xfs_lsn_t		lowest_lsn;
- 	xfs_lsn_t		header_lsn;
-@@ -2728,15 +2727,6 @@ xlog_state_iodone_process_iclog(
- 		 * Skip all iclogs in the ACTIVE & DIRTY states:
- 		 */
- 		return false;
--	case XLOG_STATE_IOERROR:
--		/*
--		 * Between marking a filesystem SHUTDOWN and stopping the log,
--		 * we do flush all iclogs to disk (if there wasn't a log I/O
--		 * error). So, we do want things to go smoothly in case of just
--		 * a SHUTDOWN w/o a LOG_IO_ERROR.
--		 */
--		*ioerror = true;
--		return false;
- 	case XLOG_STATE_DONE_SYNC:
- 		/*
- 		 * Now that we have an iclog that is in the DONE_SYNC state, do
-@@ -2767,7 +2757,6 @@ xlog_state_do_callback(
- 	struct xlog_in_core	*iclog;
- 	struct xlog_in_core	*first_iclog;
- 	bool			cycled_icloglock;
--	bool			ioerror;
- 	int			flushcnt = 0;
- 	int			repeats = 0;
++	struct xlog	*log;
+ 	bool		fatal = xfs_sb_version_hascrc(&mp->m_sb);
+ 	int		error = 0;
+ 	int		min_logfsbs;
+@@ -566,11 +567,12 @@ xfs_log_mount(
+ 		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
+ 	}
  
-@@ -2781,23 +2770,20 @@ xlog_state_do_callback(
- 		 * Keep looping through iclogs until one full pass is made
- 		 * without running any callbacks.
- 		 */
--		first_iclog = log->l_iclog;
--		iclog = log->l_iclog;
- 		cycled_icloglock = false;
--		ioerror = false;
--		repeats++;
-+		first_iclog = log->l_iclog;
-+		iclog = first_iclog;
+-	mp->m_log = xlog_alloc_log(mp, log_target, blk_offset, num_bblks);
+-	if (IS_ERR(mp->m_log)) {
+-		error = PTR_ERR(mp->m_log);
++	log = xlog_alloc_log(mp, log_target, blk_offset, num_bblks);
++	if (IS_ERR(log)) {
++		error = PTR_ERR(log);
+ 		goto out;
+ 	}
++	mp->m_log = log;
  
- 		do {
- 			LIST_HEAD(cb_list);
+ 	/*
+ 	 * Validate the given log space and drop a critical message via syslog
+@@ -635,7 +637,7 @@ xfs_log_mount(
+ 		xfs_warn(mp, "AIL initialisation failed: error %d", error);
+ 		goto out_free_log;
+ 	}
+-	mp->m_log->l_ailp = mp->m_ail;
++	log->l_ailp = mp->m_ail;
  
--			if (xlog_state_iodone_process_iclog(log, iclog,
--							&ioerror))
--				break;
--
--			if (iclog->ic_state != XLOG_STATE_CALLBACK &&
--			    iclog->ic_state != XLOG_STATE_IOERROR) {
--				iclog = iclog->ic_next;
--				continue;
-+			if (!xlog_is_shutdown(log)) {
-+				if (xlog_state_iodone_process_iclog(log, iclog))
-+					break;
-+				if (iclog->ic_state != XLOG_STATE_CALLBACK) {
-+					iclog = iclog->ic_next;
-+					continue;
-+				}
- 			}
- 			list_splice_init(&iclog->ic_callbacks, &cb_list);
- 			spin_unlock(&log->l_icloglock);
-@@ -2813,19 +2799,19 @@ xlog_state_do_callback(
- 			else
- 				xlog_state_clean_iclog(log, iclog);
- 			iclog = iclog->ic_next;
--		} while (first_iclog != iclog);
-+		} while (iclog != first_iclog);
+ 	/*
+ 	 * skip log recovery on a norecovery mount.  pretend it all
+@@ -647,39 +649,39 @@ xfs_log_mount(
+ 		if (readonly)
+ 			mp->m_flags &= ~XFS_MOUNT_RDONLY;
  
--		if (repeats > 5000) {
-+		if (++repeats > 5000) {
- 			flushcnt += repeats;
- 			repeats = 0;
- 			xfs_warn(log->l_mp,
- 				"%s: possible infinite loop (%d iterations)",
- 				__func__, flushcnt);
+-		error = xlog_recover(mp->m_log);
++		error = xlog_recover(log);
+ 
+ 		if (readonly)
+ 			mp->m_flags |= XFS_MOUNT_RDONLY;
+ 		if (error) {
+ 			xfs_warn(mp, "log mount/recovery failed: error %d",
+ 				error);
+-			xlog_recover_cancel(mp->m_log);
++			xlog_recover_cancel(log);
+ 			goto out_destroy_ail;
  		}
--	} while (!ioerror && cycled_icloglock);
-+	} while (!xlog_is_shutdown(log) && cycled_icloglock);
+ 	}
  
- 	if (log->l_iclog->ic_state == XLOG_STATE_ACTIVE ||
--	    log->l_iclog->ic_state == XLOG_STATE_IOERROR)
-+	    xlog_is_shutdown(log))
- 		wake_up_all(&log->l_flush_wait);
+-	error = xfs_sysfs_init(&mp->m_log->l_kobj, &xfs_log_ktype, &mp->m_kobj,
++	error = xfs_sysfs_init(&log->l_kobj, &xfs_log_ktype, &mp->m_kobj,
+ 			       "log");
+ 	if (error)
+ 		goto out_destroy_ail;
  
- 	spin_unlock(&log->l_icloglock);
-@@ -2835,13 +2821,6 @@ xlog_state_do_callback(
- /*
-  * Finish transitioning this iclog to the dirty state.
-  *
-- * Make sure that we completely execute this routine only when this is
-- * the last call to the iclog.  There is a good chance that iclog flushes,
-- * when we reach the end of the physical log, get turned into 2 separate
-- * calls to bwrite.  Hence, one iclog flush could generate two calls to this
-- * routine.  By using the reference count bwritecnt, we guarantee that only
-- * the second completion goes through.
-- *
-  * Callbacks could take time, so they are done outside the scope of the
-  * global state machine log lock.
-  */
-@@ -3173,10 +3152,10 @@ xfs_log_force(
- 	xlog_cil_force(log);
- 
- 	spin_lock(&log->l_icloglock);
--	iclog = log->l_iclog;
--	if (iclog->ic_state == XLOG_STATE_IOERROR)
-+	if (xlog_is_shutdown(log))
- 		goto out_error;
- 
-+	iclog = log->l_iclog;
- 	trace_xlog_iclog_force(iclog, _RET_IP_);
- 
- 	if (iclog->ic_state == XLOG_STATE_DIRTY ||
-@@ -3247,10 +3226,10 @@ xlog_force_lsn(
- 	struct xlog_in_core	*iclog;
- 
- 	spin_lock(&log->l_icloglock);
--	iclog = log->l_iclog;
--	if (iclog->ic_state == XLOG_STATE_IOERROR)
-+	if (xlog_is_shutdown(log))
- 		goto out_error;
- 
-+	iclog = log->l_iclog;
- 	while (be64_to_cpu(iclog->ic_header.h_lsn) != lsn) {
- 		trace_xlog_iclog_force_lsn(iclog, _RET_IP_);
- 		iclog = iclog->ic_next;
-@@ -3685,34 +3664,6 @@ xlog_verify_iclog(
- }
- #endif
- 
--/*
-- * Mark all iclogs IOERROR. l_icloglock is held by the caller.
-- */
--STATIC int
--xlog_state_ioerror(
--	struct xlog	*log)
--{
--	xlog_in_core_t	*iclog, *ic;
--
--	iclog = log->l_iclog;
--	if (iclog->ic_state != XLOG_STATE_IOERROR) {
--		/*
--		 * Mark all the incore logs IOERROR.
--		 * From now on, no log flushes will result.
--		 */
--		ic = iclog;
--		do {
--			ic->ic_state = XLOG_STATE_IOERROR;
--			ic = ic->ic_next;
--		} while (ic != iclog);
--		return 0;
--	}
--	/*
--	 * Return non-zero, if state transition has already happened.
--	 */
--	return 1;
--}
--
- /*
-  * This is called from xfs_force_shutdown, when we're forcibly
-  * shutting down the filesystem, typically because of an IO error.
-@@ -3728,6 +3679,8 @@ xlog_state_ioerror(
-  * Note: for the !logerror case we need to flush the regions held in memory out
-  * to disk first. This needs to be done before the log is marked as shutdown,
-  * otherwise the iclog writes will fail.
-+ *
-+ * Return non-zero if log shutdown transition had already happened.
-  */
- int
- xfs_log_force_umount(
-@@ -3735,7 +3688,7 @@ xfs_log_force_umount(
- 	int			logerror)
- {
- 	struct xlog	*log;
--	int		retval;
-+	int		retval = 0;
- 
- 	log = mp->m_log;
- 
-@@ -3755,10 +3708,8 @@ xfs_log_force_umount(
- 	 * Somebody could've already done the hard work for us.
- 	 * No need to get locks for this.
- 	 */
--	if (logerror && log->l_iclog->ic_state == XLOG_STATE_IOERROR) {
--		ASSERT(xlog_is_shutdown(log));
-+	if (logerror && xlog_is_shutdown(log))
- 		return 1;
--	}
+ 	/* Normal transactions can now occur */
+-	mp->m_log->l_flags &= ~XLOG_ACTIVE_RECOVERY;
++	clear_bit(XLOG_ACTIVE_RECOVERY, &log->l_opstate);
  
  	/*
- 	 * Flush all the completed transactions to disk before marking the log
-@@ -3783,8 +3734,10 @@ xfs_log_force_umount(
+ 	 * Now the log has been fully initialised and we know were our
+ 	 * space grant counters are, we can initialise the permanent ticket
+ 	 * needed for delayed logging to work.
+ 	 */
+-	xlog_cil_init_post_recovery(mp->m_log);
++	xlog_cil_init_post_recovery(log);
+ 
+ 	return 0;
+ 
+ out_destroy_ail:
+ 	xfs_trans_ail_destroy(mp);
+ out_free_log:
+-	xlog_dealloc_log(mp->m_log);
++	xlog_dealloc_log(log);
+ out:
+ 	return error;
+ }
+@@ -731,7 +733,7 @@ xfs_log_mount_finish(
+ 	 * mount failure occurs.
+ 	 */
+ 	mp->m_super->s_flags |= SB_ACTIVE;
+-	if (log->l_flags & XLOG_RECOVERY_NEEDED)
++	if (xlog_recovery_needed(log))
+ 		error = xlog_recover_finish(log);
+ 	if (!error)
+ 		xfs_log_work_queue(mp);
+@@ -747,7 +749,7 @@ xfs_log_mount_finish(
+ 	 * Don't push in the error case because the AIL may have pending intents
+ 	 * that aren't removed until recovery is cancelled.
+ 	 */
+-	if (log->l_flags & XLOG_RECOVERY_NEEDED) {
++	if (xlog_recovery_needed(log)) {
+ 		if (!error) {
+ 			xfs_log_force(mp, XFS_LOG_SYNC);
+ 			xfs_ail_push_all_sync(mp->m_ail);
+@@ -759,7 +761,7 @@ xfs_log_mount_finish(
+ 	}
+ 	xfs_buftarg_drain(mp->m_ddev_targp);
+ 
+-	log->l_flags &= ~XLOG_RECOVERY_NEEDED;
++	clear_bit(XLOG_RECOVERY_NEEDED, &log->l_opstate);
+ 	if (readonly)
+ 		mp->m_flags |= XFS_MOUNT_RDONLY;
+ 
+@@ -1036,7 +1038,7 @@ xfs_log_space_wake(
+ 		return;
+ 
+ 	if (!list_empty_careful(&log->l_write_head.waiters)) {
+-		ASSERT(!(log->l_flags & XLOG_ACTIVE_RECOVERY));
++		ASSERT(!xlog_in_recovery(log));
+ 
+ 		spin_lock(&log->l_write_head.lock);
+ 		free_bytes = xlog_space_left(log, &log->l_write_head.grant);
+@@ -1045,7 +1047,7 @@ xfs_log_space_wake(
+ 	}
+ 
+ 	if (!list_empty_careful(&log->l_reserve_head.waiters)) {
+-		ASSERT(!(log->l_flags & XLOG_ACTIVE_RECOVERY));
++		ASSERT(!xlog_in_recovery(log));
+ 
+ 		spin_lock(&log->l_reserve_head.lock);
+ 		free_bytes = xlog_space_left(log, &log->l_reserve_head.grant);
+@@ -1400,7 +1402,7 @@ xlog_alloc_log(
+ 	log->l_logBBstart  = blk_offset;
+ 	log->l_logBBsize   = num_bblks;
+ 	log->l_covered_state = XLOG_STATE_COVER_IDLE;
+-	log->l_flags	   |= XLOG_ACTIVE_RECOVERY;
++	set_bit(XLOG_ACTIVE_RECOVERY, &log->l_opstate);
+ 	INIT_DELAYED_WORK(&log->l_work, xfs_log_worker);
+ 
+ 	log->l_prev_block  = -1;
+@@ -3527,17 +3529,15 @@ xlog_verify_grant_tail(
+ 	xlog_crack_atomic_lsn(&log->l_tail_lsn, &tail_cycle, &tail_blocks);
+ 	if (tail_cycle != cycle) {
+ 		if (cycle - 1 != tail_cycle &&
+-		    !(log->l_flags & XLOG_TAIL_WARN)) {
++		    !test_and_set_bit(XLOG_TAIL_WARN, &log->l_opstate)) {
+ 			xfs_alert_tag(log->l_mp, XFS_PTAG_LOGRES,
+ 				"%s: cycle - 1 != tail_cycle", __func__);
+-			log->l_flags |= XLOG_TAIL_WARN;
+ 		}
+ 
+ 		if (space > BBTOB(tail_blocks) &&
+-		    !(log->l_flags & XLOG_TAIL_WARN)) {
++		    !test_and_set_bit(XLOG_TAIL_WARN, &log->l_opstate)) {
+ 			xfs_alert_tag(log->l_mp, XFS_PTAG_LOGRES,
+ 				"%s: space > BBTOB(tail_blocks)", __func__);
+-			log->l_flags |= XLOG_TAIL_WARN;
+ 		}
+ 	}
+ }
+@@ -3704,8 +3704,7 @@ xfs_log_force_umount(
+ 	 * If this happens during log recovery, don't worry about
+ 	 * locking; the log isn't open for business yet.
+ 	 */
+-	if (!log ||
+-	    log->l_flags & XLOG_ACTIVE_RECOVERY) {
++	if (!log || xlog_in_recovery(log)) {
+ 		mp->m_flags |= XFS_MOUNT_FS_SHUTDOWN;
+ 		if (mp->m_sb_bp)
+ 			mp->m_sb_bp->b_flags |= XBF_DONE;
+@@ -3742,10 +3741,8 @@ xfs_log_force_umount(
  	 * Mark the log and the iclogs with IO error flags to prevent any
  	 * further log IO from being issued or completed.
  	 */
--	log->l_flags |= XLOG_IO_ERROR;
--	retval = xlog_state_ioerror(log);
-+	if (!(log->l_flags & XLOG_IO_ERROR)) {
-+		log->l_flags |= XLOG_IO_ERROR;
-+		retval = 1;
-+	}
+-	if (!(log->l_flags & XLOG_IO_ERROR)) {
+-		log->l_flags |= XLOG_IO_ERROR;
++	if (!test_and_set_bit(XLOG_IO_ERROR, &log->l_opstate))
+ 		retval = 1;
+-	}
  	spin_unlock(&log->l_icloglock);
  
  	/*
-@@ -3808,7 +3761,6 @@ xfs_log_force_umount(
- 	spin_unlock(&log->l_cilp->xc_push_lock);
- 	xlog_state_do_callback(log);
+@@ -3832,12 +3829,3 @@ xfs_log_check_lsn(
  
--	/* return non-zero if log IOERROR transition had already happened */
- 	return retval;
+ 	return valid;
  }
+-
+-bool
+-xfs_log_in_recovery(
+-	struct xfs_mount	*mp)
+-{
+-	struct xlog		*log = mp->m_log;
+-
+-	return log->l_flags & XLOG_ACTIVE_RECOVERY;
+-}
+diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
+index 813b972e9788..4c5c8a7db1d9 100644
+--- a/fs/xfs/xfs_log.h
++++ b/fs/xfs/xfs_log.h
+@@ -138,7 +138,6 @@ void	xfs_log_work_queue(struct xfs_mount *mp);
+ int	xfs_log_quiesce(struct xfs_mount *mp);
+ void	xfs_log_clean(struct xfs_mount *mp);
+ bool	xfs_log_check_lsn(struct xfs_mount *, xfs_lsn_t);
+-bool	xfs_log_in_recovery(struct xfs_mount *);
  
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 8fab7ec1ceb1..2c9d9bcd25cb 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -881,7 +881,7 @@ xlog_cil_push_work(
- 	 * callbacks and dropped the icloglock.
- 	 */
- 	spin_lock(&log->l_icloglock);
--	if (commit_iclog->ic_state == XLOG_STATE_IOERROR) {
-+	if (xlog_is_shutdown(log)) {
- 		spin_unlock(&log->l_icloglock);
- 		goto out_abort;
- 	}
+ xfs_lsn_t xlog_grant_push_threshold(struct xlog *log, int need_bytes);
+ 
 diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 80d4e1325e1d..bf05763ba8df 100644
+index bf05763ba8df..6c2f88e06ac3 100644
 --- a/fs/xfs/xfs_log_priv.h
 +++ b/fs/xfs/xfs_log_priv.h
-@@ -47,7 +47,6 @@ enum xlog_iclog_state {
- 	XLOG_STATE_DONE_SYNC,	/* Done syncing to disk */
- 	XLOG_STATE_CALLBACK,	/* Callback functions now */
- 	XLOG_STATE_DIRTY,	/* Dirty IC log, not ready for ACTIVE status */
--	XLOG_STATE_IOERROR,	/* IO error happened in sync'ing log */
- };
+@@ -11,15 +11,6 @@ struct xlog;
+ struct xlog_ticket;
+ struct xfs_mount;
  
- #define XLOG_STATE_STRINGS \
-@@ -56,9 +55,7 @@ enum xlog_iclog_state {
- 	{ XLOG_STATE_SYNCING,	"XLOG_STATE_SYNCING" }, \
- 	{ XLOG_STATE_DONE_SYNC,	"XLOG_STATE_DONE_SYNC" }, \
- 	{ XLOG_STATE_CALLBACK,	"XLOG_STATE_CALLBACK" }, \
--	{ XLOG_STATE_DIRTY,	"XLOG_STATE_DIRTY" }, \
--	{ XLOG_STATE_IOERROR,	"XLOG_STATE_IOERROR" }
+-/*
+- * Flags for log structure
+- */
+-#define XLOG_ACTIVE_RECOVERY	0x2	/* in the middle of recovery */
+-#define	XLOG_RECOVERY_NEEDED	0x4	/* log was recovered */
+-#define XLOG_IO_ERROR		0x8	/* log hit an I/O error, and being
+-					   shutdown */
+-#define XLOG_TAIL_WARN		0x10	/* log tail verify warning issued */
 -
-+	{ XLOG_STATE_DIRTY,	"XLOG_STATE_DIRTY" }
- 
  /*
-  * Log ticket flags
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index f9d8d605f9b1..46be04167cf3 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3934,7 +3934,6 @@ TRACE_DEFINE_ENUM(XLOG_STATE_SYNCING);
- TRACE_DEFINE_ENUM(XLOG_STATE_DONE_SYNC);
- TRACE_DEFINE_ENUM(XLOG_STATE_CALLBACK);
- TRACE_DEFINE_ENUM(XLOG_STATE_DIRTY);
--TRACE_DEFINE_ENUM(XLOG_STATE_IOERROR);
+  * get client id from packed copy.
+  *
+@@ -397,7 +388,7 @@ struct xlog {
+ 	struct xfs_buftarg	*l_targ;        /* buftarg of log */
+ 	struct workqueue_struct	*l_ioend_workqueue; /* for I/O completions */
+ 	struct delayed_work	l_work;		/* background flush work */
+-	uint			l_flags;
++	long			l_opstate;	/* operational state */
+ 	uint			l_quotaoffs_flag; /* XFS_DQ_*, for QUOTAOFFs */
+ 	struct list_head	*l_buf_cancel_table;
+ 	int			l_iclog_hsize;  /* size of iclog header */
+@@ -451,10 +442,31 @@ struct xlog {
+ #define XLOG_BUF_CANCEL_BUCKET(log, blkno) \
+ 	((log)->l_buf_cancel_table + ((uint64_t)blkno % XLOG_BC_TABLE_SIZE))
  
- DECLARE_EVENT_CLASS(xlog_iclog_class,
- 	TP_PROTO(struct xlog_in_core *iclog, unsigned long caller_ip),
++/*
++ * Bits for operational state
++ */
++#define XLOG_ACTIVE_RECOVERY	0	/* in the middle of recovery */
++#define XLOG_RECOVERY_NEEDED	1	/* log was recovered */
++#define XLOG_IO_ERROR		2	/* log hit an I/O error, and being
++				   shutdown */
++#define XLOG_TAIL_WARN		3	/* log tail verify warning issued */
++
++static inline bool
++xlog_recovery_needed(struct xlog *log)
++{
++	return test_bit(XLOG_RECOVERY_NEEDED, &log->l_opstate);
++}
++
++static inline bool
++xlog_in_recovery(struct xlog *log)
++{
++	return test_bit(XLOG_ACTIVE_RECOVERY, &log->l_opstate);
++}
++
+ static inline bool
+ xlog_is_shutdown(struct xlog *log)
+ {
+-	return (log->l_flags & XLOG_IO_ERROR);
++	return test_bit(XLOG_IO_ERROR, &log->l_opstate);
+ }
+ 
+ /* common routines */
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index c384ecdd6389..5db3fb184fbe 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -3326,7 +3326,7 @@ xlog_do_recover(
+ 	xlog_recover_check_summary(log);
+ 
+ 	/* Normal transactions can now occur */
+-	log->l_flags &= ~XLOG_ACTIVE_RECOVERY;
++	clear_bit(XLOG_ACTIVE_RECOVERY, &log->l_opstate);
+ 	return 0;
+ }
+ 
+@@ -3410,7 +3410,7 @@ xlog_recover(
+ 						     : "internal");
+ 
+ 		error = xlog_do_recover(log, head_blk, tail_blk);
+-		log->l_flags |= XLOG_RECOVERY_NEEDED;
++		set_bit(XLOG_RECOVERY_NEEDED, &log->l_opstate);
+ 	}
+ 	return error;
+ }
+@@ -3460,7 +3460,7 @@ void
+ xlog_recover_cancel(
+ 	struct xlog	*log)
+ {
+-	if (log->l_flags & XLOG_RECOVERY_NEEDED)
++	if (xlog_recovery_needed(log))
+ 		xlog_recover_cancel_intents(log);
+ }
+ 
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 2c9e26a44546..29bec1f6476e 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -734,7 +734,7 @@ xfs_fs_drop_inode(
+ 	 * that.  See the comment for this inode flag.
+ 	 */
+ 	if (ip->i_flags & XFS_IRECOVERY) {
+-		ASSERT(ip->i_mount->m_log->l_flags & XLOG_RECOVERY_NEEDED);
++		ASSERT(xlog_recovery_needed(ip->i_mount->m_log));
+ 		return 0;
+ 	}
+ 
 -- 
 2.31.1
 
