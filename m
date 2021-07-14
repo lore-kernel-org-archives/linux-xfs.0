@@ -7,88 +7,85 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3B87C12002
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 21:25:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE436C12002
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 21:35:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A4CED611C0
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 21:25:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 99AE06101D
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 21:35:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235617AbhGNV2V (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Jul 2021 17:28:21 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33248 "EHLO mail.kernel.org"
+        id S233916AbhGNVie (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Jul 2021 17:38:34 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34764 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235260AbhGNV2V (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Jul 2021 17:28:21 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 0752B61106;
-        Wed, 14 Jul 2021 21:25:29 +0000 (UTC)
+        id S229657AbhGNVie (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 14 Jul 2021 17:38:34 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 9A5B6613AB;
+        Wed, 14 Jul 2021 21:35:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1626297929;
-        bh=V0WtOD1xuAfkQZBtMHAhJtpBjA+7H5k+xHGHj7MVNqg=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=raA5TyNy7qtAnyA+zrLRwnLucufTPy3ILM+0fbtCnnSsGStXTkb2XuuZ+ksw74KyJ
-         vjOKBgyMbOLtq7VI8Lh13CDgmLIS3jaiUVOPVjnX+0iIBnmekdGJCcgMvlMSoKO1vN
-         csoTxi5hJC0gHImGgyR9juK763xhcVbHQrspXshhyxHXljfiPN6vdwnIIVyCUm89uz
-         GbIglwWjTKnvmMiD79ERpIrZ0veiXwqi2e3DJF3UZoI4/z9HJ6wmn+1ImdEFW18BxI
-         2BFbaUk9K1iPD1RdYtNJBQKk8ejdPwWaJmSnxmNwy1j81LXUJmrcNOusi5IBTppVb1
-         EH4IFJckXQE6g==
-Subject: [PATCH 2/2] xfs: fix an integer overflow error in xfs_growfs_rt
+        s=k20201202; t=1626298542;
+        bh=GX6Wd8q1m2ux0KAI6LHyotHI/ysf2WDiV9oGdocSIl0=;
+        h=Date:From:To:Cc:Subject:From;
+        b=VWYTKoon9BDBg8yX4wPUvik9GteV+8MELFegEBdef6AP2QVSjvnu6dyr/uPlM1bFi
+         /O64fCBZpt3Pf1rP5i0fSlAZX+s5JlEdeWRCXki4TtK5xpYiS3zm0rHSTfq/7gA6iP
+         7UxA+hwJbQy4SzPgHPNRQd3viR5myFKGZcupk6B++8tjqwd72WtUR7Zo0H3E+x2kbZ
+         pEfk6HJxy5hN6WN5h1K8tGuwbDG2U42aDY9ph5Pu282dMZeSeZSS3mAQuvOujnXsHk
+         QmX5OLsbrra8FV9dajZoQLeFQ2T85NzJOsLyx1fLT5PggGb2DHmKLCxxige5APLb20
+         waA+A5su5k89Q==
+Date:   Wed, 14 Jul 2021 14:35:42 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org, david@fromorbit.com
+To:     david@fromorbit.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Wed, 14 Jul 2021 14:25:28 -0700
-Message-ID: <162629792874.487242.7435632593936391745.stgit@magnolia>
-In-Reply-To: <162629791767.487242.2747879614157558075.stgit@magnolia>
-References: <162629791767.487242.2747879614157558075.stgit@magnolia>
-User-Agent: StGit/0.19
+Subject: [PATCH] xfs: detect misaligned rtinherit directory extent size hints
+Message-ID: <20210714213542.GK22402@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-During a realtime grow operation, we run a single transaction for each
-rt bitmap block added to the filesystem.  This means that each step has
-to be careful to increase sb_rblocks appropriately.
-
-Fix the integer overflow error in this calculation that can happen when
-the extent size is very large.  Found by running growfs to add a rt
-volume to a filesystem formatted with a 1g rt extent size.
+If we encounter a directory that has been configured to pass on an
+extent size hint to a new realtime file and the hint isn't an integer
+multiple of the rt extent size, we should flag the hint for
+administrative review because that is a misconfiguration (that other
+parts of the kernel will fix automatically).
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_rtalloc.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ fs/xfs/scrub/inode.c |   18 ++++++++++++++++--
+ 1 file changed, 16 insertions(+), 2 deletions(-)
 
-
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 8f6a05db4468..699066fb9052 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -1021,7 +1021,8 @@ xfs_growfs_rt(
- 		     ((sbp->sb_rextents & ((1 << mp->m_blkbit_log) - 1)) != 0);
- 	     bmbno < nrbmblocks;
- 	     bmbno++) {
--		xfs_trans_t	*tp;
-+		struct xfs_trans	*tp;
-+		xfs_rfsblock_t		nrblocks_step;
+diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
+index 61f90b2c9430..76fbc7ca4cec 100644
+--- a/fs/xfs/scrub/inode.c
++++ b/fs/xfs/scrub/inode.c
+@@ -73,11 +73,25 @@ xchk_inode_extsize(
+ 	uint16_t		flags)
+ {
+ 	xfs_failaddr_t		fa;
++	uint32_t		value = be32_to_cpu(dip->di_extsize);
  
- 		*nmp = *mp;
- 		nsbp = &nmp->m_sb;
-@@ -1030,10 +1031,9 @@ xfs_growfs_rt(
- 		 */
- 		nsbp->sb_rextsize = in->extsize;
- 		nsbp->sb_rbmblocks = bmbno + 1;
--		nsbp->sb_rblocks =
--			XFS_RTMIN(nrblocks,
--				  nsbp->sb_rbmblocks * NBBY *
--				  nsbp->sb_blocksize * nsbp->sb_rextsize);
-+		nrblocks_step = (bmbno + 1) * NBBY * nsbp->sb_blocksize *
-+				nsbp->sb_rextsize;
-+		nsbp->sb_rblocks = min(nrblocks, nrblocks_step);
- 		nsbp->sb_rextents = nsbp->sb_rblocks;
- 		do_div(nsbp->sb_rextents, nsbp->sb_rextsize);
- 		ASSERT(nsbp->sb_rextents != 0);
-
+-	fa = xfs_inode_validate_extsize(sc->mp, be32_to_cpu(dip->di_extsize),
+-			mode, flags);
++	fa = xfs_inode_validate_extsize(sc->mp, value, mode, flags);
+ 	if (fa)
+ 		xchk_ino_set_corrupt(sc, ino);
++
++	/*
++	 * XFS allows a sysadmin to change the rt extent size when adding a rt
++	 * section to a filesystem after formatting.  If there are any
++	 * directories with extszinherit and rtinherit set, the hint could
++	 * become misaligned with the new rextsize.  The verifier doesn't check
++	 * this, because we allow rtinherit directories even without an rt
++	 * device.  Flag this as an administrative warning since we will clean
++	 * this up eventually.
++	 */
++	if ((flags & XFS_DIFLAG_RTINHERIT) &&
++	    (flags & XFS_DIFLAG_EXTSZINHERIT) &&
++	    value % sc->mp->m_sb.sb_rextsize > 0)
++		xchk_ino_set_warning(sc, ino);
+ }
+ 
+ /*
