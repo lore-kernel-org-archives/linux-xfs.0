@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC476C11F66
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 03:20:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9130C07E95
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 03:20:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BD9AF60720
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 03:20:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9DD3C613AC
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jul 2021 03:20:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237729AbhGNDXJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 13 Jul 2021 23:23:09 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:41252 "EHLO
+        id S237718AbhGNDXL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 13 Jul 2021 23:23:11 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:44288 "EHLO
         mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S237718AbhGNDXI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Jul 2021 23:23:08 -0400
+        by vger.kernel.org with ESMTP id S237733AbhGNDXL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Jul 2021 23:23:11 -0400
 Received: from dread.disaster.area (pa49-181-34-10.pa.nsw.optusnet.com.au [49.181.34.10])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id E7F9D86481A
-        for <linux-xfs@vger.kernel.org>; Wed, 14 Jul 2021 13:20:01 +1000 (AEST)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 11C27864827
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Jul 2021 13:20:02 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1m3VRJ-006IJx-Am
+        id 1m3VRJ-006IK7-EH
         for linux-xfs@vger.kernel.org; Wed, 14 Jul 2021 13:20:01 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1m3VRJ-00Ay98-2p
+        id 1m3VRJ-00Ay9H-6D
         for linux-xfs@vger.kernel.org; Wed, 14 Jul 2021 13:20:01 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 6/9] xfs: rework xlog_state_do_callback()
-Date:   Wed, 14 Jul 2021 13:19:55 +1000
-Message-Id: <20210714031958.2614411-7-david@fromorbit.com>
+Subject: [PATCH 9/9] xfs: log head and tail aren't reliable during shutdown
+Date:   Wed, 14 Jul 2021 13:19:58 +1000
+Message-Id: <20210714031958.2614411-10-david@fromorbit.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210714031958.2614411-1-david@fromorbit.com>
 References: <20210714031958.2614411-1-david@fromorbit.com>
@@ -44,145 +44,128 @@ Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
         a=hdaoRb6WoHYrV466vVKEyw==:117 a=hdaoRb6WoHYrV466vVKEyw==:17
-        a=e_q4qTt1xDgA:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
-        a=p1iSVuLfdZg6vMKyjxMA:9 a=AjGcO6oz07-iQ99wixmX:22
+        a=e_q4qTt1xDgA:10 a=20KFwNOVAAAA:8 a=pixFsiyS0xW5W-CbQLwA:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Clean it up a bit by factoring and rearranging some of the code.
+I'm seeing assert failures from xlog_space_left() after a shutdown
+has begun that look like:
+
+XFS (dm-0): log I/O error -5
+XFS (dm-0): xfs_do_force_shutdown(0x2) called from line 1338 of file fs/xfs/xfs_log.c. Return address = xlog_ioend_work+0x64/0xc0
+XFS (dm-0): Log I/O Error Detected.
+XFS (dm-0): Shutting down filesystem. Please unmount the filesystem and rectify the problem(s)
+XFS (dm-0): xlog_space_left: head behind tail
+XFS (dm-0):   tail_cycle = 6, tail_bytes = 2706944
+XFS (dm-0):   GH   cycle = 6, GH   bytes = 1633867
+XFS: Assertion failed: 0, file: fs/xfs/xfs_log.c, line: 1310
+------------[ cut here ]------------
+Call Trace:
+ xlog_space_left+0xc3/0x110
+ xlog_grant_push_threshold+0x3f/0xf0
+ xlog_grant_push_ail+0x12/0x40
+ xfs_log_reserve+0xd2/0x270
+ ? __might_sleep+0x4b/0x80
+ xfs_trans_reserve+0x18b/0x260
+.....
+
+There are two things here. Firstly, after a shutdown, the log head
+and tail can be out of whack as things abort and release (or don't
+release) resources, so checking them for sanity doesn't make much
+sense. Secondly, xfs_log_reserve() can race with shutdown and so it
+can still fail like this even though it has already checked for a
+log shutdown before calling xlog_grant_push_ail().
+
+So, before ASSERT failing in xlog_space_left(), make sure we haven't
+already shut down....
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_log.c | 96 ++++++++++++++++++++++++++----------------------
- 1 file changed, 53 insertions(+), 43 deletions(-)
+ fs/xfs/xfs_log.c | 51 +++++++++++++++++++++++++-----------------------
+ 1 file changed, 27 insertions(+), 24 deletions(-)
 
 diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index f996f51c6cee..302c1ce27974 100644
+index 01c20b42b2fc..6617cdccaf00 100644
 --- a/fs/xfs/xfs_log.c
 +++ b/fs/xfs/xfs_log.c
-@@ -2760,56 +2760,66 @@ xlog_state_iodone_process_iclog(
+@@ -1272,16 +1272,18 @@ xlog_assign_tail_lsn(
+  * wrap the tail, we should blow up.  Rather than catch this case here,
+  * we depend on other ASSERTions in other parts of the code.   XXXmiken
+  *
+- * This code also handles the case where the reservation head is behind
+- * the tail.  The details of this case are described below, but the end
+- * result is that we return the size of the log as the amount of space left.
++ * If reservation head is behind the tail, we have a problem. Warn about it,
++ * but then treat it as if the log is empty.
++ *
++ * If the log is shut down, the head and tail may be invalid or out of whack, so
++ * shortcut invalidity asserts in this case so that we don't trigger them
++ * falsely.
+  */
+ STATIC int
+ xlog_space_left(
+ 	struct xlog	*log,
+ 	atomic64_t	*head)
+ {
+-	int		free_bytes;
+ 	int		tail_bytes;
+ 	int		tail_cycle;
+ 	int		head_cycle;
+@@ -1291,29 +1293,30 @@ xlog_space_left(
+ 	xlog_crack_atomic_lsn(&log->l_tail_lsn, &tail_cycle, &tail_bytes);
+ 	tail_bytes = BBTOB(tail_bytes);
+ 	if (tail_cycle == head_cycle && head_bytes >= tail_bytes)
+-		free_bytes = log->l_logsize - (head_bytes - tail_bytes);
+-	else if (tail_cycle + 1 < head_cycle)
++		return log->l_logsize - (head_bytes - tail_bytes);
++	if (tail_cycle + 1 < head_cycle)
+ 		return 0;
+-	else if (tail_cycle < head_cycle) {
++
++	/* Ignore potential inconsistency when shutdown. */
++	if (xlog_is_shutdown(log))
++		return log->l_logsize;
++
++	if (tail_cycle < head_cycle) {
+ 		ASSERT(tail_cycle == (head_cycle - 1));
+-		free_bytes = tail_bytes - head_bytes;
+-	} else {
+-		/*
+-		 * The reservation head is behind the tail.
+-		 * In this case we just want to return the size of the
+-		 * log as the amount of space left.
+-		 */
+-		xfs_alert(log->l_mp, "xlog_space_left: head behind tail");
+-		xfs_alert(log->l_mp,
+-			  "  tail_cycle = %d, tail_bytes = %d",
+-			  tail_cycle, tail_bytes);
+-		xfs_alert(log->l_mp,
+-			  "  GH   cycle = %d, GH   bytes = %d",
+-			  head_cycle, head_bytes);
+-		ASSERT(0);
+-		free_bytes = log->l_logsize;
++		return tail_bytes - head_bytes;
  	}
+-	return free_bytes;
++
++	/*
++	 * The reservation head is behind the tail. In this case we just want to
++	 * return the size of the log as the amount of space left.
++	 */
++	xfs_alert(log->l_mp, "xlog_space_left: head behind tail");
++	xfs_alert(log->l_mp, "  tail_cycle = %d, tail_bytes = %d",
++		  tail_cycle, tail_bytes);
++	xfs_alert(log->l_mp, "  GH   cycle = %d, GH   bytes = %d",
++		  head_cycle, head_bytes);
++	ASSERT(0);
++	return log->l_logsize;
  }
  
-+/*
-+ * Loop over all the iclogs, running attached callbacks on them. Return true if
-+ * we ran any callbacks, indicating that we dropped the icloglock.
-+ */
-+static bool
-+xlog_state_do_iclog_callbacks(
-+	struct xlog		*log)
-+		__releases(&log->l_icloglock)
-+		__acquires(&log->l_icloglock)
-+{
-+	struct xlog_in_core	*first_iclog = log->l_iclog;
-+	struct xlog_in_core	*iclog = first_iclog;
-+	bool			ran_callback = false;
-+
-+	do {
-+		LIST_HEAD(cb_list);
-+
-+		if (!xlog_is_shutdown(log)) {
-+			if (xlog_state_iodone_process_iclog(log, iclog))
-+				break;
-+			if (iclog->ic_state != XLOG_STATE_CALLBACK) {
-+				iclog = iclog->ic_next;
-+				continue;
-+			}
-+		}
-+		list_splice_init(&iclog->ic_callbacks, &cb_list);
-+		spin_unlock(&log->l_icloglock);
-+
-+		trace_xlog_iclog_callbacks_start(iclog, _RET_IP_);
-+		xlog_cil_process_committed(&cb_list);
-+		trace_xlog_iclog_callbacks_done(iclog, _RET_IP_);
-+		ran_callback = true;
-+
-+		spin_lock(&log->l_icloglock);
-+		if (xlog_is_shutdown(log))
-+			wake_up_all(&iclog->ic_force_wait);
-+		else
-+			xlog_state_clean_iclog(log, iclog);
-+		iclog = iclog->ic_next;
-+	} while (iclog != first_iclog);
-+
-+	return ran_callback;
-+}
-+
-+
-+/*
-+ * Loop running iclog completion callbacks until there are no more iclogs in a
-+ * state that can run callbacks.
-+ */
- STATIC void
- xlog_state_do_callback(
- 	struct xlog		*log)
- {
--	struct xlog_in_core	*iclog;
--	struct xlog_in_core	*first_iclog;
--	bool			cycled_icloglock;
- 	int			flushcnt = 0;
- 	int			repeats = 0;
  
- 	spin_lock(&log->l_icloglock);
--	do {
--		/*
--		 * Scan all iclogs starting with the one pointed to by the
--		 * log.  Reset this starting point each time the log is
--		 * unlocked (during callbacks).
--		 *
--		 * Keep looping through iclogs until one full pass is made
--		 * without running any callbacks.
--		 */
--		cycled_icloglock = false;
--		first_iclog = log->l_iclog;
--		iclog = first_iclog;
--
--		do {
--			LIST_HEAD(cb_list);
--
--			if (!xlog_is_shutdown(log)) {
--				if (xlog_state_iodone_process_iclog(log, iclog))
--					break;
--				if (iclog->ic_state != XLOG_STATE_CALLBACK) {
--					iclog = iclog->ic_next;
--					continue;
--				}
--			}
--			list_splice_init(&iclog->ic_callbacks, &cb_list);
--			spin_unlock(&log->l_icloglock);
--
--			trace_xlog_iclog_callbacks_start(iclog, _RET_IP_);
--			xlog_cil_process_committed(&cb_list);
--			trace_xlog_iclog_callbacks_done(iclog, _RET_IP_);
--			cycled_icloglock = true;
--
--			spin_lock(&log->l_icloglock);
--			if (xlog_is_shutdown(log))
--				wake_up_all(&iclog->ic_force_wait);
--			else
--				xlog_state_clean_iclog(log, iclog);
--			iclog = iclog->ic_next;
--		} while (iclog != first_iclog);
-+	while (xlog_state_do_iclog_callbacks(log)) {
-+		if (xlog_is_shutdown(log))
-+			break;
- 
- 		if (++repeats > 5000) {
- 			flushcnt += repeats;
-@@ -2818,7 +2828,7 @@ xlog_state_do_callback(
- 				"%s: possible infinite loop (%d iterations)",
- 				__func__, flushcnt);
- 		}
--	} while (!xlog_is_shutdown(log) && cycled_icloglock);
-+	}
- 
- 	if (log->l_iclog->ic_state == XLOG_STATE_ACTIVE ||
- 	    xlog_is_shutdown(log))
 -- 
 2.31.1
 
