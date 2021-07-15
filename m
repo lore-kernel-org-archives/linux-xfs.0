@@ -2,85 +2,112 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89E9DC636C8
-	for <linux-xfs@archiver.kernel.org>; Thu, 15 Jul 2021 20:56:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87C9BC636C9
+	for <linux-xfs@archiver.kernel.org>; Thu, 15 Jul 2021 23:43:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 73108613DA
-	for <linux-xfs@archiver.kernel.org>; Thu, 15 Jul 2021 20:56:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6AF86613DA
+	for <linux-xfs@archiver.kernel.org>; Thu, 15 Jul 2021 23:43:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229545AbhGOU7b (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 15 Jul 2021 16:59:31 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35286 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229459AbhGOU7a (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 15 Jul 2021 16:59:30 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id DEA046120A
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Jul 2021 20:56:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1626382597;
-        bh=To/fhRo4LS0M55EPR5Ktj5oMI+GQIZ2SHhda3m6JaNM=;
-        h=Date:From:To:Subject:From;
-        b=MNROp4xmEkntZVe9vTWksyHQI58exd9X3bppLryro92NvgwV3Dr2uZi+YnbK5ofX5
-         wgt+NrwgHMNYh3Se/cpHNqwSwSQX3DMOC3HGSgzpH6LYuBL/wQj6jmbqZM+Rfdewz7
-         ya9mygxdM0VgUi05qhZgTxKM5eX8s+dh962oSZYlSzurIT2vIFTK42GlCGcJYd85/G
-         qRKe8a0gXyAb4/1WIV5iy9e6Yj+MddblN+0R/vZvkFavvYw1lJmkLyjLwBmN6jzVvs
-         IFKnZGifZ6PRv4hX6Su84sQ15psSbiizmAJS6bQv6DwSE+mGYZUY+TdFnRS7PW7PaF
-         nhT08krt0DR6g==
-Date:   Thu, 15 Jul 2021 13:56:36 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     xfs <linux-xfs@vger.kernel.org>
-Subject: [ANNOUNCE] xfs-linux: for-next updated to b102a46ce16f
-Message-ID: <20210715205636.GX22402@magnolia>
+        id S232139AbhGOXqH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 15 Jul 2021 19:46:07 -0400
+Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:53525 "EHLO
+        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229783AbhGOXqH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Jul 2021 19:46:07 -0400
+Received: from dread.disaster.area (pa49-181-34-10.pa.nsw.optusnet.com.au [49.181.34.10])
+        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id 155CC1B127A;
+        Fri, 16 Jul 2021 09:43:11 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1m4B0Y-0070Ih-52; Fri, 16 Jul 2021 09:43:10 +1000
+Date:   Fri, 16 Jul 2021 09:43:10 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 06/16] xfs: consolidate mount option features in
+ m_features
+Message-ID: <20210715234310.GH664593@dread.disaster.area>
+References: <20210714041912.2625692-1-david@fromorbit.com>
+ <20210714041912.2625692-7-david@fromorbit.com>
+ <YO6MxE1VvDYqCc4s@infradead.org>
+ <20210714095507.GZ664593@dread.disaster.area>
+ <YO/Otw6P7UhR5B6I@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <YO/Otw6P7UhR5B6I@infradead.org>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
+        a=hdaoRb6WoHYrV466vVKEyw==:117 a=hdaoRb6WoHYrV466vVKEyw==:17
+        a=kj9zAlcOel0A:10 a=e_q4qTt1xDgA:10 a=7-415B0cAAAA:8
+        a=6vEuCEZc5XIkkFIEHOkA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+On Thu, Jul 15, 2021 at 06:59:19AM +0100, Christoph Hellwig wrote:
+> On Wed, Jul 14, 2021 at 07:55:07PM +1000, Dave Chinner wrote:
+> > > What about using a separate field for these?  With this patch we've used
+> > > up all 64-bits in the features field, which isn't exactly the definition
+> > > of future proof..
+> > 
+> > I've used 16 mount option flags and 26 sb feature flags in this
+> > patch set, so there's still 22 feature flags remaining before we
+> > need to split them. This is all in-memory stuff so it's easy to
+> > modify in future. Given that the flag sets are largely set in only
+> > one place each and the check functions are all macro-ised, splitting
+> > them when we do run out of bits is trivial.
+> > 
+> > I'm more interested in trying to keep the cache footprint of
+> > frequently accessed read-only data down to a minimum right now,
+> > which is why I aggregated them in the first place...
+> 
+> Oh, I missed the hole in the middle.  Still not sure if mixing up mount
+> and on-disk flags entirely is something I'm fully comfortable with.  What
+> do you think of at least marking the mount options in the name?
 
-The for-next branch of the xfs-linux repository at:
+Then stuff like the XFS_FEAT_ATTR2 logic doesn't work - the
+simplifications that this patchset introduces ends up relying on
+both the mount option and the on-disk flag using the same feature
+flag to enable creation of ATTR2 features. That becomes more complex
+and error prone if we go and separate them back out again.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+In reality, how often do you actually care whether a feature was set
+by sb bit, mount option, etc, outside of the actual code that
+manipulates the feature bit? For me, the answer is almost always
+"never".
 
-has just been updated.
+And that is the whole point of this patchset: the code doing the
+feature checking does not care whether a feature is specified by
+on-disk flag, mount option, sysctl or sysfs variable.
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
+This change is intended to unify the feature checking under a single
+consistent API that has minimal runtime overhead and is independent
+of how the feature is managed. Encoded where the feature came from
+into the name is a step sideways from the current code, not a step
+forwards.
 
-The new head of the for-next branch is commit:
+Indeed, what happens when I start adding feature flags for boolean
+features that are currently specified by sysfs or proc variables?
+e.g: mp->m_always_cow should be a feature flag, not a
+boolean variable. This implementation is a third way we specify
+mount features, and while these don't fit into either on-disk or mount
+flags, they are feature flags that should be brought in under the
+unified feature/opstate interfaces.
 
-b102a46ce16f xfs: detect misaligned rtinherit directory extent size hints
+Hence I don't think encoding whether the feature came from into the
+xfs_has_foo() interfaces or the flag names themselves really
+provides any benefit. It's not necessary to use the interfaces, and
+beyond the code that sets/clears the feature, nobody cares how it
+was set/cleared...
 
-New Commits:
+Cheers,
 
-Darrick J. Wong (7):
-      [da062d16a897] xfs: check for sparse inode clusters that cross new EOAG when shrinking
-      [5838d0356bb3] xfs: reset child dir '..' entry when unlinking child
-      [83193e5ebb01] xfs: correct the narrative around misaligned rtinherit/extszinherit dirs
-      [5aa5b278237f] xfs: don't expose misaligned extszinherit hints to userspace
-      [0e2af9296f4f] xfs: improve FSGROWFSRT precondition checking
-      [0925fecc5574] xfs: fix an integer overflow error in xfs_growfs_rt
-      [b102a46ce16f] xfs: detect misaligned rtinherit directory extent size hints
-
-
-Code Diffstat:
-
- fs/xfs/libxfs/xfs_ag.c          |  8 ++++++
- fs/xfs/libxfs/xfs_ialloc.c      | 55 +++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_ialloc.h      |  3 +++
- fs/xfs/libxfs/xfs_inode_buf.c   | 28 ++++++++++++---------
- fs/xfs/libxfs/xfs_trans_inode.c | 10 +++-----
- fs/xfs/scrub/inode.c            | 18 ++++++++++++--
- fs/xfs/xfs_inode.c              | 13 ++++++++++
- fs/xfs/xfs_ioctl.c              | 27 ++++++++++++++++----
- fs/xfs/xfs_rtalloc.c            | 49 +++++++++++++++++++++++++++---------
- 9 files changed, 174 insertions(+), 37 deletions(-)
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
