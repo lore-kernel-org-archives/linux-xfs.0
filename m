@@ -2,283 +2,115 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 257ADC47E4F
-	for <linux-xfs@archiver.kernel.org>; Thu, 15 Jul 2021 13:41:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A13A3C636C7
+	for <linux-xfs@archiver.kernel.org>; Thu, 15 Jul 2021 17:11:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0D578611AB
-	for <linux-xfs@archiver.kernel.org>; Thu, 15 Jul 2021 13:41:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 89FAA613E6
+	for <linux-xfs@archiver.kernel.org>; Thu, 15 Jul 2021 17:11:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238272AbhGONn4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 15 Jul 2021 09:43:56 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:55806 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232769AbhGONnf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Jul 2021 09:43:35 -0400
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id 8437422A7D;
-        Thu, 15 Jul 2021 13:40:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1626356433; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=LsI+catW5RS76O1qdmcY4XnE8ZCUk7oq5voDHQ5HYLE=;
-        b=IiPsrU68bsCNYIZFsI0IPy92N02/349Fg2nPIGYqwLU8+utzhwtQpr/wxz0PiFN17gRtec
-        j8y8pqDsndj6Bw6TtTKQfM2P8vkY6hUBy9CGW4OEEKGl34hepIZtJ14G3TqvZ0iL/5BAlM
-        vAYUeP4u3Szgm5WLbgu9GXzjVff01Bs=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1626356433;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=LsI+catW5RS76O1qdmcY4XnE8ZCUk7oq5voDHQ5HYLE=;
-        b=5w8o+0+hfvSJMcqG+YnxIJBl4hwF8gy2m/jJqCN5z+30xzjge7rBQqh4NLZGvObozauAw0
-        L5d/YmCnOIwSPxDw==
-Received: from quack2.suse.cz (unknown [10.100.200.198])
-        by relay2.suse.de (Postfix) with ESMTP id 6FD7CA3BA4;
-        Thu, 15 Jul 2021 13:40:33 +0000 (UTC)
-Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id 1EE1B1E0CA7; Thu, 15 Jul 2021 15:40:33 +0200 (CEST)
-From:   Jan Kara <jack@suse.cz>
-To:     <linux-fsdevel@vger.kernel.org>
-Cc:     <linux-ext4@vger.kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        "Darrick J. Wong" <djwong@kernel.org>, Ted Tso <tytso@mit.edu>,
-        Dave Chinner <david@fromorbit.com>,
-        Matthew Wilcox <willy@infradead.org>, <linux-mm@kvack.org>,
-        <linux-xfs@vger.kernel.org>,
-        linux-f2fs-devel@lists.sourceforge.net, linux-cifs@vger.kernel.org,
-        ceph-devel@vger.kernel.org, Jan Kara <jack@suse.cz>,
-        Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 08/14] xfs: Convert to use invalidate_lock
-Date:   Thu, 15 Jul 2021 15:40:18 +0200
-Message-Id: <20210715134032.24868-8-jack@suse.cz>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20210715133202.5975-1-jack@suse.cz>
-References: <20210715133202.5975-1-jack@suse.cz>
+        id S232070AbhGOROq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 15 Jul 2021 13:14:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51736 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231977AbhGOROp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Jul 2021 13:14:45 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 298FB613D8;
+        Thu, 15 Jul 2021 17:11:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1626369112;
+        bh=FY4e+oZ1PFtHlMAKa/Bsp5UEp0fB77fsFYJPP2oLU6U=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=KXXddtYDTrm0gSn9hX/wlxWLaGSOhAF0JIE80yuFrp41mSOsycIe5H7/PowCrqoCG
+         H1yFnyrY8gC5fRTpb85ZkSuT7lwhtFww3+uX14gCVnKXGefiPU2E3GybGPHpy3ZYhY
+         rCocgvbdZoYDv/JY60VJRxss50LmwwYTQYhnQjBYumauSRTAd0nkkl6BAjpAPvb1Tu
+         V/JkBneUfyIdkgkQm9JuIuPgK87OUoW05LRCsvffzsEk+KOaEtCfsUA+vu7dJjnG6i
+         y4XvIXDDREY7ocscb3Hk+ks773TBx31HDbXLNT2YHyOM8E8DUB9xNZ/NuTgNroQQor
+         icHAyHi7bL6qw==
+Date:   Thu, 15 Jul 2021 10:11:51 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Jia He <justin.he@arm.com>
+Cc:     linux-kernel@vger.kernel.org,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Christoph Hellwig <hch@infradead.org>, nd@arm.com,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH RFC 07/13] iomap: simplify iomap_swapfile_fail() with
+ '%pD' specifier
+Message-ID: <20210715171151.GU22402@magnolia>
+References: <20210715031533.9553-1-justin.he@arm.com>
+ <20210715031533.9553-8-justin.he@arm.com>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=7925; h=from:subject; bh=mWejkTIDaMc9IxG2WeDXqMcapYxJ9TVU66wpmUCJK/w=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBg8DrC59+SdGq1uy3gFs6NYDzc+OoN+hNXqB+X3E14 ZExEH3GJATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCYPA6wgAKCRCcnaoHP2RA2bVfB/ 9km7hkkB9Q9JhDwD8wU+FUAkBa81LsU7jBZj2pl3UyvHrRc5lqRfLSG/H58JnBmX5Ly03I+ktg2y5d 0c1OgOtH+LzTitmdP8yuYeMCTsqtvdZmaOZ71uXZ6lMrmAMwjObQ+fGbJVER2/fTNv1wFzLBBkWLch Hnt2KL75K79N2NtRJQLwQchkaXeHy/TqMpLU1g4CdmlzlElDkCRg1o7siwHavQxDN5nUR6pqNdKffH 3Ry6izKs87djqcZZzXACKjPAaumd0eKHcWJSGZCi65Pjqai9Iy2AVs8+SFC3thJ4BVfDjrGy/YOHWG EYp72C2zTHclo8Otc0sHxrCUMUlgxp
-X-Developer-Key: i=jack@suse.cz; a=openpgp; fpr=93C6099A142276A28BBE35D815BC833443038D8C
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210715031533.9553-8-justin.he@arm.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Use invalidate_lock instead of XFS internal i_mmap_lock. The intended
-purpose of invalidate_lock is exactly the same. Note that the locking in
-__xfs_filemap_fault() slightly changes as filemap_fault() already takes
-invalidate_lock.
+On Thu, Jul 15, 2021 at 11:15:27AM +0800, Jia He wrote:
+> After the behavior of '%pD' is change to print the full path of file,
+> iomap_swapfile_fail() can be simplified.
+> 
+> Given the space with proper length would be allocated in vprintk_store(),
+> the kmalloc() is not required any more.
+> 
+> Besides, the previous number postfix of '%pD' in format string is
+> pointless.
+> 
+> Cc: Christoph Hellwig <hch@infradead.org>
+> Cc: "Darrick J. Wong" <djwong@kernel.org>
+> Cc: linux-xfs@vger.kernel.org
+> Cc: linux-fsdevel@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> Suggested-by: Christoph Hellwig <hch@infradead.org>
+> Signed-off-by: Jia He <justin.he@arm.com>
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-CC: <linux-xfs@vger.kernel.org>
-CC: "Darrick J. Wong" <djwong@kernel.org>
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/xfs/xfs_file.c  | 13 +++++++-----
- fs/xfs/xfs_inode.c | 50 ++++++++++++++++++++++++----------------------
- fs/xfs/xfs_inode.h |  1 -
- fs/xfs/xfs_super.c |  2 --
- 4 files changed, 34 insertions(+), 32 deletions(-)
+Seems reasonable to me...
+Acked-by: Darrick J. Wong <djwong@kernel.org>
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index cc3cfb12df53..3dfbdcdb0d1c 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1302,7 +1302,7 @@ xfs_file_llseek(
-  *
-  * mmap_lock (MM)
-  *   sb_start_pagefault(vfs, freeze)
-- *     i_mmaplock (XFS - truncate serialisation)
-+ *     invalidate_lock (vfs/XFS_MMAPLOCK - truncate serialisation)
-  *       page_lock (MM)
-  *         i_lock (XFS - extent map serialisation)
-  */
-@@ -1323,24 +1323,27 @@ __xfs_filemap_fault(
- 		file_update_time(vmf->vma->vm_file);
- 	}
- 
--	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
- 	if (IS_DAX(inode)) {
- 		pfn_t pfn;
- 
-+		xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
- 		ret = dax_iomap_fault(vmf, pe_size, &pfn, NULL,
- 				(write_fault && !vmf->cow_page) ?
- 				 &xfs_direct_write_iomap_ops :
- 				 &xfs_read_iomap_ops);
- 		if (ret & VM_FAULT_NEEDDSYNC)
- 			ret = dax_finish_sync_fault(vmf, pe_size, pfn);
-+		xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
- 	} else {
--		if (write_fault)
-+		if (write_fault) {
-+			xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
- 			ret = iomap_page_mkwrite(vmf,
- 					&xfs_buffered_write_iomap_ops);
--		else
-+			xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-+		} else {
- 			ret = filemap_fault(vmf);
-+		}
- 	}
--	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
- 
- 	if (write_fault)
- 		sb_end_pagefault(inode->i_sb);
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 359e2cd44ad7..d6a8ac76b45d 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -132,7 +132,7 @@ xfs_ilock_attr_map_shared(
- 
- /*
-  * In addition to i_rwsem in the VFS inode, the xfs inode contains 2
-- * multi-reader locks: i_mmap_lock and the i_lock.  This routine allows
-+ * multi-reader locks: invalidate_lock and the i_lock.  This routine allows
-  * various combinations of the locks to be obtained.
-  *
-  * The 3 locks should always be ordered so that the IO lock is obtained first,
-@@ -140,23 +140,23 @@ xfs_ilock_attr_map_shared(
-  *
-  * Basic locking order:
-  *
-- * i_rwsem -> i_mmap_lock -> page_lock -> i_ilock
-+ * i_rwsem -> invalidate_lock -> page_lock -> i_ilock
-  *
-  * mmap_lock locking order:
-  *
-  * i_rwsem -> page lock -> mmap_lock
-- * mmap_lock -> i_mmap_lock -> page_lock
-+ * mmap_lock -> invalidate_lock -> page_lock
-  *
-  * The difference in mmap_lock locking order mean that we cannot hold the
-- * i_mmap_lock over syscall based read(2)/write(2) based IO. These IO paths can
-- * fault in pages during copy in/out (for buffered IO) or require the mmap_lock
-- * in get_user_pages() to map the user pages into the kernel address space for
-- * direct IO. Similarly the i_rwsem cannot be taken inside a page fault because
-- * page faults already hold the mmap_lock.
-+ * invalidate_lock over syscall based read(2)/write(2) based IO. These IO paths
-+ * can fault in pages during copy in/out (for buffered IO) or require the
-+ * mmap_lock in get_user_pages() to map the user pages into the kernel address
-+ * space for direct IO. Similarly the i_rwsem cannot be taken inside a page
-+ * fault because page faults already hold the mmap_lock.
-  *
-  * Hence to serialise fully against both syscall and mmap based IO, we need to
-- * take both the i_rwsem and the i_mmap_lock. These locks should *only* be both
-- * taken in places where we need to invalidate the page cache in a race
-+ * take both the i_rwsem and the invalidate_lock. These locks should *only* be
-+ * both taken in places where we need to invalidate the page cache in a race
-  * free manner (e.g. truncate, hole punch and other extent manipulation
-  * functions).
-  */
-@@ -188,10 +188,13 @@ xfs_ilock(
- 				 XFS_IOLOCK_DEP(lock_flags));
- 	}
- 
--	if (lock_flags & XFS_MMAPLOCK_EXCL)
--		mrupdate_nested(&ip->i_mmaplock, XFS_MMAPLOCK_DEP(lock_flags));
--	else if (lock_flags & XFS_MMAPLOCK_SHARED)
--		mraccess_nested(&ip->i_mmaplock, XFS_MMAPLOCK_DEP(lock_flags));
-+	if (lock_flags & XFS_MMAPLOCK_EXCL) {
-+		down_write_nested(&VFS_I(ip)->i_mapping->invalidate_lock,
-+				  XFS_MMAPLOCK_DEP(lock_flags));
-+	} else if (lock_flags & XFS_MMAPLOCK_SHARED) {
-+		down_read_nested(&VFS_I(ip)->i_mapping->invalidate_lock,
-+				 XFS_MMAPLOCK_DEP(lock_flags));
-+	}
- 
- 	if (lock_flags & XFS_ILOCK_EXCL)
- 		mrupdate_nested(&ip->i_lock, XFS_ILOCK_DEP(lock_flags));
-@@ -240,10 +243,10 @@ xfs_ilock_nowait(
- 	}
- 
- 	if (lock_flags & XFS_MMAPLOCK_EXCL) {
--		if (!mrtryupdate(&ip->i_mmaplock))
-+		if (!down_write_trylock(&VFS_I(ip)->i_mapping->invalidate_lock))
- 			goto out_undo_iolock;
- 	} else if (lock_flags & XFS_MMAPLOCK_SHARED) {
--		if (!mrtryaccess(&ip->i_mmaplock))
-+		if (!down_read_trylock(&VFS_I(ip)->i_mapping->invalidate_lock))
- 			goto out_undo_iolock;
- 	}
- 
-@@ -258,9 +261,9 @@ xfs_ilock_nowait(
- 
- out_undo_mmaplock:
- 	if (lock_flags & XFS_MMAPLOCK_EXCL)
--		mrunlock_excl(&ip->i_mmaplock);
-+		up_write(&VFS_I(ip)->i_mapping->invalidate_lock);
- 	else if (lock_flags & XFS_MMAPLOCK_SHARED)
--		mrunlock_shared(&ip->i_mmaplock);
-+		up_read(&VFS_I(ip)->i_mapping->invalidate_lock);
- out_undo_iolock:
- 	if (lock_flags & XFS_IOLOCK_EXCL)
- 		up_write(&VFS_I(ip)->i_rwsem);
-@@ -307,9 +310,9 @@ xfs_iunlock(
- 		up_read(&VFS_I(ip)->i_rwsem);
- 
- 	if (lock_flags & XFS_MMAPLOCK_EXCL)
--		mrunlock_excl(&ip->i_mmaplock);
-+		up_write(&VFS_I(ip)->i_mapping->invalidate_lock);
- 	else if (lock_flags & XFS_MMAPLOCK_SHARED)
--		mrunlock_shared(&ip->i_mmaplock);
-+		up_read(&VFS_I(ip)->i_mapping->invalidate_lock);
- 
- 	if (lock_flags & XFS_ILOCK_EXCL)
- 		mrunlock_excl(&ip->i_lock);
-@@ -335,7 +338,7 @@ xfs_ilock_demote(
- 	if (lock_flags & XFS_ILOCK_EXCL)
- 		mrdemote(&ip->i_lock);
- 	if (lock_flags & XFS_MMAPLOCK_EXCL)
--		mrdemote(&ip->i_mmaplock);
-+		downgrade_write(&VFS_I(ip)->i_mapping->invalidate_lock);
- 	if (lock_flags & XFS_IOLOCK_EXCL)
- 		downgrade_write(&VFS_I(ip)->i_rwsem);
- 
-@@ -375,9 +378,8 @@ xfs_isilocked(
- 	}
- 
- 	if (lock_flags & (XFS_MMAPLOCK_EXCL|XFS_MMAPLOCK_SHARED)) {
--		if (!(lock_flags & XFS_MMAPLOCK_SHARED))
--			return !!ip->i_mmaplock.mr_writer;
--		return rwsem_is_locked(&ip->i_mmaplock.mr_lock);
-+		return __xfs_rwsem_islocked(&VFS_I(ip)->i_rwsem,
-+				(lock_flags & XFS_IOLOCK_SHARED));
- 	}
- 
- 	if (lock_flags & (XFS_IOLOCK_EXCL | XFS_IOLOCK_SHARED)) {
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 4b5202ae8ebb..e0ae905554e2 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -40,7 +40,6 @@ typedef struct xfs_inode {
- 	/* Transaction and locking information. */
- 	struct xfs_inode_log_item *i_itemp;	/* logging information */
- 	mrlock_t		i_lock;		/* inode lock */
--	mrlock_t		i_mmaplock;	/* inode mmap IO lock */
- 	atomic_t		i_pincount;	/* inode pin count */
- 
- 	/*
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 2c9e26a44546..102cbd606633 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -709,8 +709,6 @@ xfs_fs_inode_init_once(
- 	atomic_set(&ip->i_pincount, 0);
- 	spin_lock_init(&ip->i_flags_lock);
- 
--	mrlock_init(&ip->i_mmaplock, MRLOCK_ALLOW_EQUAL_PRI|MRLOCK_BARRIER,
--		     "xfsino", ip->i_ino);
- 	mrlock_init(&ip->i_lock, MRLOCK_ALLOW_EQUAL_PRI|MRLOCK_BARRIER,
- 		     "xfsino", ip->i_ino);
- }
--- 
-2.26.2
+--D
 
+> ---
+>  fs/iomap/direct-io.c | 2 +-
+>  fs/iomap/swapfile.c  | 8 +-------
+>  2 files changed, 2 insertions(+), 8 deletions(-)
+> 
+> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+> index 9398b8c31323..e876a5f9d888 100644
+> --- a/fs/iomap/direct-io.c
+> +++ b/fs/iomap/direct-io.c
+> @@ -426,7 +426,7 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
+>  		 * iomap_apply() call in the DIO path, then it will see the
+>  		 * DELALLOC block that the page-mkwrite allocated.
+>  		 */
+> -		pr_warn_ratelimited("Direct I/O collision with buffered writes! File: %pD4 Comm: %.20s\n",
+> +		pr_warn_ratelimited("Direct I/O collision with buffered writes! File: %pD Comm: %.20s\n",
+>  				    dio->iocb->ki_filp, current->comm);
+>  		return -EIO;
+>  	default:
+> diff --git a/fs/iomap/swapfile.c b/fs/iomap/swapfile.c
+> index 6250ca6a1f85..17032c14e466 100644
+> --- a/fs/iomap/swapfile.c
+> +++ b/fs/iomap/swapfile.c
+> @@ -73,13 +73,7 @@ static int iomap_swapfile_add_extent(struct iomap_swapfile_info *isi)
+>  
+>  static int iomap_swapfile_fail(struct iomap_swapfile_info *isi, const char *str)
+>  {
+> -	char *buf, *p = ERR_PTR(-ENOMEM);
+> -
+> -	buf = kmalloc(PATH_MAX, GFP_KERNEL);
+> -	if (buf)
+> -		p = file_path(isi->file, buf, PATH_MAX);
+> -	pr_err("swapon: file %s %s\n", IS_ERR(p) ? "<unknown>" : p, str);
+> -	kfree(buf);
+> +	pr_err("swapon: file %pD %s\n", isi->file, str);
+>  	return -EINVAL;
+>  }
+>  
+> -- 
+> 2.17.1
+> 
