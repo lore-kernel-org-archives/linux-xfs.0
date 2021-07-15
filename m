@@ -2,114 +2,99 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 973A4C12002
-	for <linux-xfs@archiver.kernel.org>; Thu, 15 Jul 2021 01:12:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD63DC47E48
+	for <linux-xfs@archiver.kernel.org>; Thu, 15 Jul 2021 03:16:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7A06F61005
-	for <linux-xfs@archiver.kernel.org>; Thu, 15 Jul 2021 01:12:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F67361396
+	for <linux-xfs@archiver.kernel.org>; Thu, 15 Jul 2021 03:16:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231324AbhGOBPl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Jul 2021 21:15:41 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34100 "EHLO mail.kernel.org"
+        id S234323AbhGODTQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Jul 2021 23:19:16 -0400
+Received: from foss.arm.com ([217.140.110.172]:46020 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231231AbhGOBPk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Jul 2021 21:15:40 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 940156128C;
-        Thu, 15 Jul 2021 01:12:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1626311568;
-        bh=0RLm80IHIT15SzsQNZ5vGNlS2lPLoctbjkaKpgd0BRg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=BTooOtd4B50zuz/Ok1Kq8HmhrhEG3wXla/5u14F5vEjSNZN+p7K3GlhNy0SJpEmp2
-         g1Rs2Pg6/GRR9zKM3JffFxpxbozQBpqIC43bzRYPxJWwoLOVjMLnsds4lYmTLKlURM
-         nNheiVPcybRxhtUMI8tSZ7+NIsIHd62NEIxxOf21W059D+vLfZ4gx4hZk5IBzuEi3T
-         NV10yo25NTIIYjc/zkhbZBiV679kzjVe/sGBXZltkLwhgV4JuePbJ7P4zAYKkBQT2l
-         17zDeVd0SMW4piYz87HFI/NFFNBZJufqrgA1ovzBi0hRGJCBo84JX2aVtYo83ftrCr
-         3EWWpK1gK/zeQ==
-Date:   Wed, 14 Jul 2021 18:12:48 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: detect misaligned rtinherit directory extent size
- hints
-Message-ID: <20210715011248.GT22402@magnolia>
-References: <20210714213542.GK22402@magnolia>
- <20210714235049.GF664593@dread.disaster.area>
- <20210715000604.GG664593@dread.disaster.area>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210715000604.GG664593@dread.disaster.area>
+        id S234069AbhGODTM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 14 Jul 2021 23:19:12 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 8F34F1042;
+        Wed, 14 Jul 2021 20:16:19 -0700 (PDT)
+Received: from entos-ampere-02.shanghai.arm.com (entos-ampere-02.shanghai.arm.com [10.169.214.103])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPA id F147E3F7D8;
+        Wed, 14 Jul 2021 20:16:16 -0700 (PDT)
+From:   Jia He <justin.he@arm.com>
+To:     linux-kernel@vger.kernel.org
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        Christoph Hellwig <hch@infradead.org>, nd@arm.com,
+        Jia He <justin.he@arm.com>,
+        "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: [PATCH RFC 07/13] iomap: simplify iomap_swapfile_fail() with '%pD' specifier
+Date:   Thu, 15 Jul 2021 11:15:27 +0800
+Message-Id: <20210715031533.9553-8-justin.he@arm.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20210715031533.9553-1-justin.he@arm.com>
+References: <20210715031533.9553-1-justin.he@arm.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 15, 2021 at 10:06:04AM +1000, Dave Chinner wrote:
-> On Thu, Jul 15, 2021 at 09:50:49AM +1000, Dave Chinner wrote:
-> > On Wed, Jul 14, 2021 at 02:35:42PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <djwong@kernel.org>
-> > > 
-> > > If we encounter a directory that has been configured to pass on an
-> > > extent size hint to a new realtime file and the hint isn't an integer
-> > > multiple of the rt extent size, we should flag the hint for
-> > > administrative review because that is a misconfiguration (that other
-> > > parts of the kernel will fix automatically).
-> > > 
-> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > ---
-> > >  fs/xfs/scrub/inode.c |   18 ++++++++++++++++--
-> > >  1 file changed, 16 insertions(+), 2 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
-> > > index 61f90b2c9430..76fbc7ca4cec 100644
-> > > --- a/fs/xfs/scrub/inode.c
-> > > +++ b/fs/xfs/scrub/inode.c
-> > > @@ -73,11 +73,25 @@ xchk_inode_extsize(
-> > >  	uint16_t		flags)
-> > >  {
-> > >  	xfs_failaddr_t		fa;
-> > > +	uint32_t		value = be32_to_cpu(dip->di_extsize);
-> > >  
-> > > -	fa = xfs_inode_validate_extsize(sc->mp, be32_to_cpu(dip->di_extsize),
-> > > -			mode, flags);
-> > > +	fa = xfs_inode_validate_extsize(sc->mp, value, mode, flags);
-> > >  	if (fa)
-> > >  		xchk_ino_set_corrupt(sc, ino);
-> > > +
-> > > +	/*
-> > > +	 * XFS allows a sysadmin to change the rt extent size when adding a rt
-> > > +	 * section to a filesystem after formatting.  If there are any
-> > > +	 * directories with extszinherit and rtinherit set, the hint could
-> > > +	 * become misaligned with the new rextsize.  The verifier doesn't check
-> > > +	 * this, because we allow rtinherit directories even without an rt
-> > > +	 * device.  Flag this as an administrative warning since we will clean
-> > > +	 * this up eventually.
-> > > +	 */
-> > > +	if ((flags & XFS_DIFLAG_RTINHERIT) &&
-> > > +	    (flags & XFS_DIFLAG_EXTSZINHERIT) &&
-> > > +	    value % sc->mp->m_sb.sb_rextsize > 0)
-> > > +		xchk_ino_set_warning(sc, ino);
-> > >  }
-> > >  
-> > >  /*
-> > 
-> > Looks good. A warning seems appropriate for scrub in this corner
-> > case...
-> 
-> so...
-> 
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+After the behavior of '%pD' is change to print the full path of file,
+iomap_swapfile_fail() can be simplified.
 
-Cool, thanks for the review!
+Given the space with proper length would be allocated in vprintk_store(),
+the kmalloc() is not required any more.
 
---D
+Besides, the previous number postfix of '%pD' in format string is
+pointless.
 
-> 
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Cc: Christoph Hellwig <hch@infradead.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Suggested-by: Christoph Hellwig <hch@infradead.org>
+Signed-off-by: Jia He <justin.he@arm.com>
+---
+ fs/iomap/direct-io.c | 2 +-
+ fs/iomap/swapfile.c  | 8 +-------
+ 2 files changed, 2 insertions(+), 8 deletions(-)
+
+diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+index 9398b8c31323..e876a5f9d888 100644
+--- a/fs/iomap/direct-io.c
++++ b/fs/iomap/direct-io.c
+@@ -426,7 +426,7 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
+ 		 * iomap_apply() call in the DIO path, then it will see the
+ 		 * DELALLOC block that the page-mkwrite allocated.
+ 		 */
+-		pr_warn_ratelimited("Direct I/O collision with buffered writes! File: %pD4 Comm: %.20s\n",
++		pr_warn_ratelimited("Direct I/O collision with buffered writes! File: %pD Comm: %.20s\n",
+ 				    dio->iocb->ki_filp, current->comm);
+ 		return -EIO;
+ 	default:
+diff --git a/fs/iomap/swapfile.c b/fs/iomap/swapfile.c
+index 6250ca6a1f85..17032c14e466 100644
+--- a/fs/iomap/swapfile.c
++++ b/fs/iomap/swapfile.c
+@@ -73,13 +73,7 @@ static int iomap_swapfile_add_extent(struct iomap_swapfile_info *isi)
+ 
+ static int iomap_swapfile_fail(struct iomap_swapfile_info *isi, const char *str)
+ {
+-	char *buf, *p = ERR_PTR(-ENOMEM);
+-
+-	buf = kmalloc(PATH_MAX, GFP_KERNEL);
+-	if (buf)
+-		p = file_path(isi->file, buf, PATH_MAX);
+-	pr_err("swapon: file %s %s\n", IS_ERR(p) ? "<unknown>" : p, str);
+-	kfree(buf);
++	pr_err("swapon: file %pD %s\n", isi->file, str);
+ 	return -EINVAL;
+ }
+ 
+-- 
+2.17.1
+
