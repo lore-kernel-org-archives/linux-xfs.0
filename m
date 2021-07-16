@@ -2,176 +2,144 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 383B1C07E95
-	for <linux-xfs@archiver.kernel.org>; Fri, 16 Jul 2021 06:32:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 364BAC12002
+	for <linux-xfs@archiver.kernel.org>; Fri, 16 Jul 2021 07:40:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2072E613ED
-	for <linux-xfs@archiver.kernel.org>; Fri, 16 Jul 2021 06:32:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 25667613ED
+	for <linux-xfs@archiver.kernel.org>; Fri, 16 Jul 2021 07:40:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234815AbhGPGfU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 16 Jul 2021 02:35:20 -0400
-Received: from esa7.fujitsucc.c3s2.iphmx.com ([68.232.159.87]:13707 "EHLO
-        esa7.fujitsucc.c3s2.iphmx.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S234429AbhGPGfT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Jul 2021 02:35:19 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=fujitsu.com; i=@fujitsu.com; q=dns/txt; s=fj1;
-  t=1626417146; x=1657953146;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=6HQa2/Z9WpXWSCAbFS7mapVAEg0O8QQIj3k4eyyMET0=;
-  b=TjMDJeVkD3GF055wBsHNPrRJlLKf5Gy6FyaCQgbxvTen01BeoOwC2plV
-   /vBGFhPJ46w2FBwewzms8b3ykRIbsnawtTPYWVcynZH+qala8Y07PbNRK
-   77A7xrSXMoOuSkLpMKiGAAhxvfap/PcRzFD6gjZCggW0+RItNZGARsn+E
-   s2I4GSJ8yyj6HmU/TG8+0efKEuLY6nA84L4o8uQxr8DbPC/cBJVCDJdd9
-   g9usjJMZ//H5bQaISs0UInGUSfSAeVdBOya8f4+trp36XVT/AOgjYThVb
-   QuexDx2tuzK0/WDosmcVRc9ZaV2JpfwEvDhdLclcK5Re2NXhZcNr+WmNT
-   w==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10046"; a="35021219"
-X-IronPort-AV: E=Sophos;i="5.84,244,1620658800"; 
-   d="scan'208";a="35021219"
-Received: from mail-os2jpn01lp2055.outbound.protection.outlook.com (HELO JPN01-OS2-obe.outbound.protection.outlook.com) ([104.47.92.55])
-  by ob1.fujitsucc.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Jul 2021 15:32:21 +0900
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Y1e4cT5af6vm8Wjv7FJNzJLMaVXwpMqffY6utk2iWhmGHZLYuEHQjgEGirAvwuUchQpHx/pzpF6RhR9zo0gleHXqv/dQhgwtzZU9j+lub1KVfbxCodb8qVeQWvMk1lAP9/56xcFUwaY6eyvKjgDB3L0SjeSVhSmk6l1ki9DlZquADLAeQls9BeSmZu2B3aeLutI0Lz6x/8OdgT8gw1WwjBoeyDfWbzMyxFS5XJysNfsgYnc9W+2glYmsp4I5XS3Nn3gc++xxSPBqsJm/dq+pEWoUGyg5LDi2oylWwtqRu9GppCREZGy5Id5v1jNnsuAA/bgSxLXPAZp5/LhjZaf8Rg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=6HQa2/Z9WpXWSCAbFS7mapVAEg0O8QQIj3k4eyyMET0=;
- b=RpkGVUB/Prs4L+NKB0p8roGJZXgrs1BDYFsMYFw5Y0v3/I2ky/tR4P6UXzKJukJHxSQpb6rXbFSzgBdfE51G6NZw5ENLMk5xqaAyfhSeMXow19FRXrxNoLeLuBAxNW2xOJBNLxQAuhuKOJdiI8sO33Ch3bLONIi3ldkFN24nvC/vssevohfHyQRs0fEClhsFHQ0Fm0Kama+haCvnKlD25eI+Eg748ubEIPGKO4h/JVtjp5hXwTqAMpIIdGy/wDhGEDTdIl0P+Yuf/6AFk0LKHQI+quGJNJFu+FTYpgMPfUwHzK1j/gl4jRoYzuesZC3IMZsHK+r4jfGiptgO+Ksb4A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=fujitsu.com; dmarc=pass action=none header.from=fujitsu.com;
- dkim=pass header.d=fujitsu.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=fujitsu.onmicrosoft.com; s=selector2-fujitsu-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=6HQa2/Z9WpXWSCAbFS7mapVAEg0O8QQIj3k4eyyMET0=;
- b=D9AOIXAZqff2EULMguU/qHJeEyuflP2nZIvohgXeDWa6LK7atymQH69qoabLxA1ubqrs7RC2pLfjE6/gKnA48CHN9mz1y4sifeCXX5ch3eEQ5/TKeDZMuhquXeyl2jVXFU7vKT7/Jq9Din4JgB4dTI/aQNzWWwfRs7Ml1pqBnPo=
-Received: from OSBPR01MB2920.jpnprd01.prod.outlook.com (2603:1096:604:18::16)
- by OSZPR01MB6197.jpnprd01.prod.outlook.com (2603:1096:604:ef::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4331.23; Fri, 16 Jul
- 2021 06:32:18 +0000
-Received: from OSBPR01MB2920.jpnprd01.prod.outlook.com
- ([fe80::b88e:7015:e4a2:3d9a]) by OSBPR01MB2920.jpnprd01.prod.outlook.com
- ([fe80::b88e:7015:e4a2:3d9a%7]) with mapi id 15.20.4308.027; Fri, 16 Jul 2021
- 06:32:18 +0000
-From:   "ruansy.fnst@fujitsu.com" <ruansy.fnst@fujitsu.com>
-To:     Matthew Wilcox <willy@infradead.org>
-CC:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "nvdimm@lists.linux.dev" <nvdimm@lists.linux.dev>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "darrick.wong@oracle.com" <darrick.wong@oracle.com>,
-        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
-        "david@fromorbit.com" <david@fromorbit.com>,
-        "hch@lst.de" <hch@lst.de>, "agk@redhat.com" <agk@redhat.com>,
-        "snitzer@redhat.com" <snitzer@redhat.com>,
-        "rgoldwyn@suse.de" <rgoldwyn@suse.de>
-Subject: RE: [PATCH v5 5/9] mm: Introduce mf_dax_kill_procs() for fsdax case
-Thread-Topic: [PATCH v5 5/9] mm: Introduce mf_dax_kill_procs() for fsdax case
-Thread-Index: AQHXa7EmrHLpSGG2eEOWO38ftnVtTKspT/mAgAFCBXCAAE9xAIAaXSKg
-Date:   Fri, 16 Jul 2021 06:32:17 +0000
-Message-ID: <OSBPR01MB29201EF10FBF32FF8B3A9168F4119@OSBPR01MB2920.jpnprd01.prod.outlook.com>
-References: <20210628000218.387833-1-ruansy.fnst@fujitsu.com>
- <20210628000218.387833-6-ruansy.fnst@fujitsu.com>
- <YNm3VeeWuI0m4Vcx@casper.infradead.org>
- <OSBPR01MB292012F7C264076E9AA645C3F4029@OSBPR01MB2920.jpnprd01.prod.outlook.com>
- <YNsIGid6CwtH/h1Z@casper.infradead.org>
-In-Reply-To: <YNsIGid6CwtH/h1Z@casper.infradead.org>
-Accept-Language: en-US, zh-CN
-Content-Language: zh-CN
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: infradead.org; dkim=none (message not signed)
- header.d=none;infradead.org; dmarc=none action=none header.from=fujitsu.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 0b5045b9-91a2-4d62-98d8-08d94823756a
-x-ms-traffictypediagnostic: OSZPR01MB6197:
-x-microsoft-antispam-prvs: <OSZPR01MB6197E43ED10BFFC2CD2362C8F4119@OSZPR01MB6197.jpnprd01.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:9508;
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: GzS+26NwGxg4d9jZzsN5HTKGfCCu/x9fbpkZvvYP2BETjo6CpicTjGCdL3ebzA7cWui4Qb2G3jcc8we1jApiwNXcnkeQwdo0DyDQNTNrOMX67JYI2swuyYqhN2JZiVzx4mE3jKToowFKK1TV0FEs6qwuCY1KuOD8vvQCuRzfUopSSPtS+J76w5sfsdDNbqp9BGgtjULWATJebNkifi238dPfdjFoYTT8sQ3N8nAs2H1VHR6o85MPizOQ0yuc6CldAaAt34V1wRDiRlrXRk3NP59fn09hVYCdVx+3vU9QKpGeV1YTwlpVeeuN/adwX9VYoK4zANYbowtWn+RPkKlR1nsz1docAUFDqfL3lO0GQKyAYVFlAYGyh2EET54B4g+P1qkTq0UChyfmsdjXIOSqKrFEOq8uhfs8Fxp58j3x7IxCrea0qEui7d0pf/lfF51+kXEsRtXiN0KA5POfZ6U6MzDgU5RQ4zXeUkVFhwuq9uu7hNvzDyfqC7FSHr6WVVLEGKrPDra8+mizy5b2MSVSYadTJ6xtUa+w2R050XsEjTKh44SrCso0GzEshxv/bHBoiWcV1kM4ZtYrkD76dfH6N+noCw7d+T8XieWT+d/IBIiMSCsVn0RGnGueDuxzX8Y31ZNVsOu35ngJhSWlu0p0ShtPa5PMjGuvDHuCWUe2nw87n4327cTdD4yw7mHkmBvnP6vC3LYTFtREZDcOxJQotA==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:OSBPR01MB2920.jpnprd01.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(39860400002)(346002)(376002)(366004)(396003)(136003)(83380400001)(8676002)(85182001)(7416002)(6916009)(71200400001)(122000001)(316002)(76116006)(38100700002)(86362001)(66946007)(8936002)(66446008)(54906003)(33656002)(4326008)(26005)(66476007)(66556008)(64756008)(2906002)(5660300002)(52536014)(7696005)(6506007)(55016002)(478600001)(9686003)(186003)(38070700004);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?gb2312?B?KzJSeWFTMG1tb3hxbFNVb0tJZXdxOUZYY3Y5MGV1TXJ0cmJ1T0VCNHpVVnR3?=
- =?gb2312?B?bDJ4bXhEVy9FMis4Z0RXRndCZHpOWXYxMjlBUFI0cW9sUXhQMWFwc1ViMjVB?=
- =?gb2312?B?ODVHR3p1MHdLYVlEdy91TmFMbVIrTFVGK2NKNTVlRnh1OG1yclB5NVZRWlhz?=
- =?gb2312?B?WTZyK0w1T1RTWkhTV0E0REVyT1l2b0tKYjhnRDF1SmhseUF2dEk1ZmEwY05z?=
- =?gb2312?B?a05vY1hRY2Y1SDNHZ3dyaUhHaUhJc1hTUlNzRW42em5WZlNTcktTYkNNNnAx?=
- =?gb2312?B?VG9LTUtVOEZrck8wcUkzYVMrNjErcUJQcEJkNEFFdHovM3VPb0hyaFNjTDVJ?=
- =?gb2312?B?c2NoeXVRNjc0SStUNnVhdUoxdU9Md1V4cFVPUCtyL1c1V3RXNDhhU2ptZGQz?=
- =?gb2312?B?WGpUVTBwNkFQdXdzMXNrWGRSN0ZmdXh2VytQMG5aSmpMMHp4dnhiYU5lL3JB?=
- =?gb2312?B?bUhJSlZJMGUrSkV5ZVNmMmtIcWtaeWVFZDJMTTJQd0grYVAzV0tTV0E2MXhM?=
- =?gb2312?B?R2ZFZkZzVWpzZXZrL0oyWFdZSlZCSTAzbmttcmdkWGJHVGRlelZQUXpCazhp?=
- =?gb2312?B?NUxGZjh2MFRNNEszTWFiV2ZscmJnNnJ1TDl6RUJVdDZWdlhWWHArUnJvemlq?=
- =?gb2312?B?QXROYnFuZHVkUmdFU1ZHQWErY3Qzem0wZU5sM29lOFB6cldtUC9YMTloek8r?=
- =?gb2312?B?RlY2TTgrTElIOHF4eWVQNnl3cTdHYXg1Rys5MFptdlhLM3hqTUJ2Z1RqUmhw?=
- =?gb2312?B?SmFLRVVHaFNUTS9JV0poeHFzWFBSRGQ3QVNwbUtHQzgvekhhTkNqYld0ZGs0?=
- =?gb2312?B?QUNBUVVrYVUva25taTZleXNtVjBWeEtHcXE4N2RPY0lKSFJXQkh6UU9HWHUv?=
- =?gb2312?B?N3duY0UrZ01RajVHQkw0MVEvM2w5NmFYb2lsdjgrSmZzc2JUMEpmNnNDdVdr?=
- =?gb2312?B?SHhxMUZTMGhEand5c2N6dFo3RU9Hdk85NFdXeUtlUFYxN0kxUkdkbDZXdXRF?=
- =?gb2312?B?SHRpbSsxOW16RHVMSVZRODdoM3grYTRUWmpHNS9XOWJlL3dvVFgrR0pXWHdV?=
- =?gb2312?B?TmZDa3U1Tmxua0pCSTFodmhPYXNsOEV0MW1Td0hLN0JxTlFDOGVzY2wzM3dU?=
- =?gb2312?B?ZnkxNFlzYVU5S1dMV25PUGdhMUIrZ0s3dnJKOUtIbWVVbU1LVDd5dDZqNDRr?=
- =?gb2312?B?ejhjY3RiL3hJTno3M0lYaVhGcmZrWnBlb2wvazhpaEhuOXk5NEdTamdjWHdx?=
- =?gb2312?B?UFIxOXdIVHFramhubnRIZEhLMEZBZHVxNCtESWxxVTVMYTZOSkJyelNFNk9E?=
- =?gb2312?B?Q1lEc0FkWlhQUDFyNHVTS1MyOHdVRFRWQ0l2bFNCcGNjcFJQZ1piaDd6Vjdh?=
- =?gb2312?B?TjJ4a1NoaGFmSDVYeExiNHdDTW5zaVZ4T2tBZ3Npb2szODFJR2Z2d1J5VDVT?=
- =?gb2312?B?VVpEQjVpRmE5QkxMYTRlZm9BZmtPMDNpWkZtN3ErR1VFZ0c5dEp2Z3RzR0J0?=
- =?gb2312?B?NHEwMlk1a0UrUFhVd1ZOd1RhYnBiQmxYQ0lhOGVKSG9CL2I1NWhwMUIya1hH?=
- =?gb2312?B?VERHTWp2akgrQ1FMNjg3aE40WHFNS2ZLMFZuQU9Hc3N5Uk5yUTM3L0JVZWRC?=
- =?gb2312?B?anc4SmZHUFluT1RoUmcwMmoxKzFUMWg5OUxDaUpkRlgwdldjU2tKSFF4eGZo?=
- =?gb2312?B?cmpUeXc3b3VURlVudnpqY0JhR1BtRFlLUFRKTHh2WHJVbWgrZEZRMUJJeWpP?=
- =?gb2312?Q?wc7P+Omjt9VjSkBFFRRx7Q2EkCjjBlSUXlAKPS2?=
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
+        id S235441AbhGPHnZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 16 Jul 2021 03:43:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33120 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231888AbhGPHnZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Jul 2021 03:43:25 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 151CEC06175F;
+        Fri, 16 Jul 2021 00:40:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=0ed4XWJs/YGIMlo3OUkRs+lwUd38dyycltAhImfV3A8=; b=aYH/vqt8s2bvRPeqcgf07IVzgb
+        f1Xs3S4K7P3l6QFakRTIuk0e/mdE6UcIkskhAYSyX9GE8Sg4OAo2BOv+yDmI3fHf4ZfNvkdjKByDv
+        5IHaVGX2wkAjD/2DjaXSY5tj3MTKPshg36RRyGMzC/nrS+Gh2q/IsD/kvEMTxoE/eo31rOd6oiu7p
+        2YXD3qIqZ4BvdPMkVbh2FFTK/QmE7yIWxgoUZmnSPXk06pNL8/9eu3qgDPXOwEZ8X47kntulJvE9L
+        dGX35+SkggR4ZJ00dTrJAdPrgLoRtR+dbzyl6cgBgFkrkd0EEu/efGF3rAhXD87ondqEyUSCs2g4q
+        HvLEFVbw==;
+Received: from hch by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1m4IR5-004GOo-AU; Fri, 16 Jul 2021 07:39:17 +0000
+Date:   Fri, 16 Jul 2021 08:39:03 +0100
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Andrew Morton <akpm@linux-foundation.org>
+Cc:     cl@linux.com, glittao@gmail.com, iamjoonsoo.kim@lge.com,
+        linux-mm@kvack.org, mm-commits@vger.kernel.org, penberg@kernel.org,
+        rdunlap@infradead.org, rientjes@google.com,
+        torvalds@linux-foundation.org, vbabka@suse.cz,
+        linux-xfs@vger.kernel.org
+Subject: Re: [patch 07/54] mm/slub: use stackdepot to save stack trace in
+ objects
+Message-ID: <YPE3l82acwgI2OiV@infradead.org>
+References: <20210707175950.eceddb86c6c555555d4730e2@linux-foundation.org>
+ <20210708010747.zIP9yxsci%akpm@linux-foundation.org>
 MIME-Version: 1.0
-X-OriginatorOrg: fujitsu.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: OSBPR01MB2920.jpnprd01.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0b5045b9-91a2-4d62-98d8-08d94823756a
-X-MS-Exchange-CrossTenant-originalarrivaltime: 16 Jul 2021 06:32:17.9242
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: a19f121d-81e1-4858-a9d8-736e267fd4c7
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 8Ur7kzhuP7Nyf66n+Ap10UBKipaGIxZibiMbF7I88Wb0pAbSrASfOiCD4KONmwckEXMc7fIBESGgG9te4V+PEg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: OSZPR01MB6197
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210708010747.zIP9yxsci%akpm@linux-foundation.org>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-PiBGcm9tOiBNYXR0aGV3IFdpbGNveCA8d2lsbHlAaW5mcmFkZWFkLm9yZz4NCj4gU3ViamVjdDog
-UmU6IFtQQVRDSCB2NSA1LzldIG1tOiBJbnRyb2R1Y2UgbWZfZGF4X2tpbGxfcHJvY3MoKSBmb3Ig
-ZnNkYXggY2FzZQ0KPiANCj4gT24gVHVlLCBKdW4gMjksIDIwMjEgYXQgMDc6NDk6MjRBTSArMDAw
-MCwgcnVhbnN5LmZuc3RAZnVqaXRzdS5jb20gd3JvdGU6DQo+ID4gPiBCdXQgSSB0aGluayB0aGlz
-IGlzIHVubmVjZXNzYXJ5OyB3aHkgbm90IGp1c3QgcGFzcyB0aGUgUEZOIGludG8NCj4gbWZfZGF4
-X2tpbGxfcHJvY3M/DQo+ID4NCj4gPiBCZWNhdXNlIHRoZSBtZl9kYXhfa2lsbF9wcm9jcygpIGlz
-IGNhbGxlZCBpbiBmaWxlc3lzdGVtIHJlY292ZXJ5IGZ1bmN0aW9uLA0KPiB3aGljaCBpcyBhdCB0
-aGUgZW5kIG9mIHRoZSBSTUFQIHJvdXRpbmUuICBBbmQgdGhlIFBGTiBoYXMgYmVlbiB0cmFuc2xh
-dGVkIHRvDQo+IGRpc2sgb2Zmc2V0IGluIHBtZW0gZHJpdmVyIGluIG9yZGVyIHRvIGRvIFJNQVAg
-c2VhcmNoIGluIGZpbGVzeXN0ZW0uICBTbywgaWYgd2UNCj4gaGF2ZSB0byBwYXNzIGl0LCBldmVy
-eSBmdW5jdGlvbiBpbiB0aGlzIHJvdXRpbmUgbmVlZHMgdG8gYWRkIGFuIGFyZ3VtZW50IGZvciB0
-aGlzDQo+IFBGTi4gIEkgd2FzIGhvcGluZyBJIGNhbiBhdm9pZCBwYXNzaW5nIFBGTiB0aHJvdWdo
-IHRoZSB3aG9sZSBzdGFjayB3aXRoIHRoZQ0KPiBoZWxwIG9mIHRoaXMgZGF4X2xvYWRfcGZuKCku
-DQo+IA0KPiBPSywgSSB0aGluayB5b3UgbmVlZCB0byBjcmVhdGU6DQo+IA0KPiBzdHJ1Y3QgbWVt
-b3J5X2ZhaWx1cmUgew0KPiAJcGh5c19hZGRyX3Qgc3RhcnQ7DQo+IAlwaHlzX2FkZHJfdCBlbmQ7
-DQo+IAl1bnNpZ25lZCBsb25nIGZsYWdzOw0KPiB9Ow0KPiANCj4gKGEgbWVtb3J5IGZhaWx1cmUg
-bWlnaHQgbm90IGJlIGFuIGVudGlyZSBwYWdlLCBzbyB3b3JraW5nIGluIHBmbnMgaXNuJ3QgdGhl
-IGJlc3QNCj4gYXBwcm9hY2gpDQoNCkRvIHlvdSBtZWFuIHRoZSByYW5nZSBvZiBtZW1vcnkgZmFp
-bHVyZSBtYXkgbGVzcyB0aGFuIG9uZSBwYWdlIHNpemU/ICBJIGZvdW5kIHRob3NlIG1lbW9yeV9m
-YWlsdXJlKiBmdW5jdGlvbnMgYXJlIHVzaW5nIHBmbiBhcyB0aGVpciBwYXJhbWV0ZXIuICBTbyBp
-biB3aGljaCBjYXNlIGl0IGNvdWxkIGJlIGxlc3MgdGhhbiBvbmUgcGFnZSBzaXplPw0KDQoNCi0t
-DQpUaGFua3MsDQpSdWFuLg0KDQo+IA0KPiBUaGVuIHRoYXQgY2FuIGJlIHBhc3NlZCB0byAtPm1l
-bW9yeV9mYWlsdXJlKCkgYW5kIHRoZW4gZGVlcGVyIHRvDQo+IC0+bm90aWZ5X2ZhaWx1cmUoKSwg
-YW5kIGZpbmFsbHkgaW50byB4ZnNfY29ycnVwdF9oZWxwZXIoKS4NCg==
+This somewhat unexpectedly causes a crash when running the xfs/433 test
+in xfstests for me.  Reverting the commit fixes the problem:
+
+xfs/433 files ... [  138.422742] run fstests xfs/433 at 2021-07-16 07:30:42
+[  140.128145] XFS (vdb): Mounting V5 Filesystem
+[  140.160450] XFS (vdb): Ending clean mount
+[  140.171782] xfs filesystem being mounted at /mnt/test supports timestamps un)
+[  140.966560] XFS (vdc): Mounting V5 Filesystem
+[  140.987911] XFS (vdc): Ending clean mount
+[  141.000104] xfs filesystem being mounted at /mnt/scratch supports timestamps)
+[  145.130156] XFS (vdc): Unmounting Filesystem
+[  145.365230] XFS (vdc): Mounting V5 Filesystem
+[  145.394542] XFS (vdc): Ending clean mount
+[  145.409232] xfs filesystem being mounted at /mnt/scratch supports timestamps)
+[  145.471384] XFS (vdc): Injecting error (false) at file fs/xfs/xfs_buf.c, lin"
+[  145.478561] XFS (vdc): Injecting error (false) at file fs/xfs/xfs_buf.c, lin"
+[  145.486070] XFS (vdc): Injecting error (false) at file fs/xfs/xfs_buf.c, lin"
+[  145.492248] XFS (vdc): Injecting error (false) at file fs/xfs/xfs_buf.c, lin"
+[  145.599964] XFS (vdb): Unmounting Filesystem
+[  145.958340] BUG: kernel NULL pointer dereference, address: 0000000000000020
+[  145.961760] #PF: supervisor read access in kernel mode
+[  145.964278] #PF: error_code(0x0000) - not-present page
+[  145.966758] PGD 0 P4D 0 
+[  145.968041] Oops: 0000 [#1] PREEMPT SMP PTI
+[  145.970077] CPU: 3 PID: 14172 Comm: xfs_scrub Not tainted 5.13.0+ #601
+[  145.973243] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.144
+[  145.977312] RIP: 0010:xfs_inode_hasattr+0x19/0x30
+[  145.979626] Code: 83 c6 05 b2 55 75 02 01 e8 39 40 e4 00 eb b6 66 90 31 c0 80
+[  145.989446] RSP: 0018:ffffc900070eba08 EFLAGS: 00010206
+[  145.992280] RAX: ffffffff00ff0000 RBX: 0000000000000000 RCX: 0000000000000001
+[  145.995970] RDX: 0000000000000000 RSI: ffffffff82fdd33f RDI: ffff88810dbe16c0
+[  145.999945] RBP: ffff88810dbe16c0 R08: ffff888110e14348 R09: ffff888110e14348
+[  146.003932] R10: 0000000000000001 R11: 0000000000000000 R12: 0000000000000000
+[  146.007854] R13: ffff888110d99000 R14: ffff888110d99000 R15: ffffffff834acd60
+[  146.011765] FS:  00007f2bf29d7700(0000) GS:ffff88813bd80000(0000) knlGS:00000
+[  146.016127] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  146.019297] CR2: 0000000000000020 CR3: 0000000110c96000 CR4: 00000000000006e0
+[  146.023315] Call Trace:
+[  146.024726]  xfs_attr_inactive+0x152/0x350
+[  146.027059]  xfs_inactive+0x18a/0x240
+[  146.029141]  xfs_fs_destroy_inode+0xcc/0x2d0
+[  146.031311]  destroy_inode+0x36/0x70
+[  146.033130]  xfs_bulkstat_one_int+0x243/0x340
+[  146.035342]  xfs_bulkstat_iwalk+0x19/0x30
+[  146.037562]  xfs_iwalk_ag_recs+0xef/0x1e0
+[  146.039845]  xfs_iwalk_run_callbacks+0x9f/0x140
+[  146.042550]  xfs_iwalk_ag+0x230/0x2f0
+[  146.044601]  xfs_iwalk+0x139/0x200
+[  146.046505]  ? xfs_bulkstat_one_int+0x340/0x340
+[  146.049151]  xfs_bulkstat+0xc4/0x130
+[  146.050771]  ? xfs_flags2diflags+0xe0/0xe0
+[  146.052309]  xfs_ioc_bulkstat.constprop.0.isra.0+0xbf/0x120
+[  146.054200]  xfs_file_ioctl+0xb6/0xef0
+[  146.055474]  ? lock_is_held_type+0xd5/0x130
+[  146.056867]  ? find_held_lock+0x2b/0x80
+[  146.058241]  ? lock_release+0x13c/0x2e0
+[  146.059385]  ? lock_is_held_type+0xd5/0x130
+[  146.060435]  ? __fget_files+0xce/0x1d0
+[  146.061385]  __x64_sys_ioctl+0x7e/0xb0
+[  146.062333]  do_syscall_64+0x3b/0x90
+[  146.063284]  entry_SYSCALL_64_after_hwframe+0x44/0xae
+[  146.064572] RIP: 0033:0x7f2bf2df5427
+[  146.065600] Code: 00 00 90 48 8b 05 69 aa 0c 00 64 c7 00 26 00 00 00 48 c7 c8
+[  146.070244] RSP: 002b:00007f2bf29d6bd8 EFLAGS: 00000246 ORIG_RAX: 00000000000
+[  146.072015] RAX: ffffffffffffffda RBX: 00007fffe44b8010 RCX: 00007f2bf2df5427
+[  146.073692] RDX: 00007f2be4000b20 RSI: 000000008040587f RDI: 0000000000000003
+[  146.075322] RBP: 00007f2be4000b20 R08: 00007f2be4003b70 R09: 0000000000000077
+[  146.076962] R10: 0000000000000001 R11: 0000000000000246 R12: 00007f2be4003b70
+[  146.078480] R13: 00007fffe44b8010 R14: 00007f2be4000b60 R15: 0000000000000018
+[  146.079803] Modules linked in:
+[  146.080379] CR2: 0000000000000020
+[  146.081196] ---[ end trace 80a6ea90b0ea2a03 ]---
+[  146.082130] RIP: 0010:xfs_inode_hasattr+0x19/0x30
+[  146.083144] Code: 83 c6 05 b2 55 75 02 01 e8 39 40 e4 00 eb b6 66 90 31 c0 80
+[  146.086831] RSP: 0018:ffffc900070eba08 EFLAGS: 00010206
+[  146.087816] RAX: ffffffff00ff0000 RBX: 0000000000000000 RCX: 0000000000000001
+[  146.089122] RDX: 0000000000000000 RSI: ffffffff82fdd33f RDI: ffff88810dbe16c0
+[  146.090477] RBP: ffff88810dbe16c0 R08: ffff888110e14348 R09: ffff888110e14348
+[  146.091794] R10: 0000000000000001 R11: 0000000000000000 R12: 0000000000000000
+[  146.093096] R13: ffff888110d99000 R14: ffff888110d99000 R15: ffffffff834acd60
+[  146.094429] FS:  00007f2bf29d7700(0000) GS:ffff88813bd80000(0000) knlGS:00000
+[  146.096002] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  146.097079] CR2: 0000000000000020 CR3: 0000000110c96000 CR4: 00000000000006e0
+[  146.098479] Kernel panic - not syncing: Fatal exception
+[  146.099677] Kernel Offset: disabled
+[  146.100397] ---[ end Kernel panic - not syncing: Fatal exception ]---
+
+
