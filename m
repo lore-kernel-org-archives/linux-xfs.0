@@ -2,105 +2,90 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-22.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,INCLUDES_PULL_REQUEST,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97F8AC636CB
-	for <linux-xfs@archiver.kernel.org>; Sun, 18 Jul 2021 16:23:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF76BC636CA
+	for <linux-xfs@archiver.kernel.org>; Sun, 18 Jul 2021 16:32:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 62ED8611AF
-	for <linux-xfs@archiver.kernel.org>; Sun, 18 Jul 2021 16:23:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AA4A5611BE
+	for <linux-xfs@archiver.kernel.org>; Sun, 18 Jul 2021 16:32:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229503AbhGRQ0r (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 18 Jul 2021 12:26:47 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40012 "EHLO mail.kernel.org"
+        id S229951AbhGRQfc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 18 Jul 2021 12:35:32 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41158 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229462AbhGRQ0r (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 18 Jul 2021 12:26:47 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 0F8CD60249;
-        Sun, 18 Jul 2021 16:23:49 +0000 (UTC)
+        id S229462AbhGRQfc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 18 Jul 2021 12:35:32 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 21174611AC;
+        Sun, 18 Jul 2021 16:32:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1626625429;
-        bh=tXJr7/BabasvXaOarr67pBHCN1aihmCrWWxT8krj1ao=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=O5jsWd7HvJaJGXpY3pI/BdgP9DAv1Gpi3JokWc0SAb0w3jfpFWrumjNT2aNuVkM/S
-         M778uiHtcYJ9A4QqlWNVnzFWzbGefaptkSn6J3I/QHuR2nX8UpSVez8tbYAt0eF42m
-         scvuobeMr+obvXBEY1k9LffI1Z+8kIZsS0+5edTA7Si8Xy7x6fiQCBdQa+ZSQ5+9q5
-         x8igyppQ1FiBFzToFqBK4uFNUKxlLdo7tR0rMX4Tb0vFaRUQ3CaM1o9Cdb5UW3dO2m
-         aFLmqspGCADz4xIQ0frsjMIwckCz8juyqoubcagA8dqXKGw/FMzPNLpzOLsSvyLBU/
-         qC9CHSp5a7k9Q==
-Date:   Sun, 18 Jul 2021 09:23:47 -0700
+        s=k20201202; t=1626625954;
+        bh=KteUkFc6Ts0P9sNfnFkgGFiQ+Apd+SmR1vU6xCb9vbY=;
+        h=Date:From:To:Cc:Subject:From;
+        b=FKNmS1gASBscktUlWw3KTBIwM7d4DCjtYpSeEr7tfZV2fYWNKfmVk9okcwstFsg7w
+         CHDf6/ysD7Ao06NDsdvQRTPtQIK53Llg9TkbTSOsUbuVsqahYlcalk8ZJRubtiJlbA
+         B1R6yeoKxzXd9fA+eI29ev3yxSHxm6fxEoj89QOLCggstcKzvxvWljcsxyvKdb+50Z
+         K8zBpTaAdAEvFkLpweZ7bQf7SOPi6yqQrPnSDblixD2OxdZpCsAYucRrScADmaq3Sy
+         yoduXesRWFKZxsaQgF5DqtUPkzZXR1E8VaXt5Kq31afxr0wQxV3/9ffBoTTYCZJkhh
+         xgsfawOXfKxFg==
+Date:   Sun, 18 Jul 2021 09:32:32 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Eryu Guan <guan@eryu.me>
-Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org
-Subject: Re: [PATCH 1/1] new: allow users to specify a new test id
-Message-ID: <20210718162347.GZ22402@magnolia>
-References: <162561725931.543346.16210906692072836195.stgit@locust>
- <162561726493.543346.17291318180978776290.stgit@locust>
- <YPQzOiqnugT4MeNq@desktop>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org, hch@lst.de
+Subject: [GIT PULL] iomap: fixes for 5.14-rc2
+Message-ID: <20210718163232.GA22402@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YPQzOiqnugT4MeNq@desktop>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Jul 18, 2021 at 09:57:14PM +0800, Eryu Guan wrote:
-> On Tue, Jul 06, 2021 at 05:21:04PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Alter the ./new script so that one can set the test id explicitly.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> 
-> Looks good to me. Mind updating the usage info as well?
+Hi Linus,
 
-Will do and resubmit.  Thanks for reviewing the rest of the patches. :)
+Please pull this branch containing a handful of bugfixes for the iomap
+code.  There's nothing especially exciting here, just fixes for UBSAN
+(not KASAN as I erroneously wrote in the tag message) warnings about
+undefined behavior in the SEEK_DATA/SEEK_HOLE code, and some reshuffling
+of per-page block state info to fix some problems with gfs2.
+
+The branch merges cleanly against upstream as of a few minutes ago.
+Please let me know if anything else strange happens during the merge
+process.
 
 --D
 
-> 
-> Thanks,
-> Eryu
-> 
-> > ---
-> >  new |   14 ++++++++++++--
-> >  1 file changed, 12 insertions(+), 2 deletions(-)
-> > 
-> > 
-> > diff --git a/new b/new
-> > index 07144399..51111f08 100755
-> > --- a/new
-> > +++ b/new
-> > @@ -26,7 +26,18 @@ usage()
-> >  }
-> >  
-> >  [ $# -eq 0 ] && usage
-> > -tdir=tests/$1
-> > +
-> > +if echo "$1" | grep -q '/'; then
-> > +	if [ -e "tests/$1" ]; then
-> > +		echo "$1: test already exists."
-> > +		exit 1
-> > +	fi
-> > +	tdir="tests/$(echo "$1" | cut -d '/' -f 1)"
-> > +	id="$(echo "$1" | cut -d '/' -f 2)"
-> > +else
-> > +	tdir=tests/$1
-> > +	id="$(basename "$(./tools/nextid "$1")")"
-> > +fi
-> >  
-> >  i=0
-> >  line=0
-> > @@ -36,7 +47,6 @@ eof=1
-> >  export AWK_PROG="$(type -P awk)"
-> >  [ "$AWK_PROG" = "" ] && { echo "awk not found"; exit; }
-> >  
-> > -id="$(basename "$(./tools/nextid "$1")")"
-> >  echo "Next test id is $id"
-> >  shift
-> >  
+The following changes since commit e73f0f0ee7541171d89f2e2491130c7771ba58d3:
+
+  Linux 5.14-rc1 (2021-07-11 15:07:40 -0700)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/iomap-5.14-fixes-1
+
+for you to fetch changes up to 229adf3c64dbeae4e2f45fb561907ada9fcc0d0c:
+
+  iomap: Don't create iomap_page objects in iomap_page_mkwrite_actor (2021-07-15 09:58:06 -0700)
+
+----------------------------------------------------------------
+Fixes for 5.14-rc:
+ * Fix KASAN warnings due to integer overflow in SEEK_DATA/SEEK_HOLE.
+ * Fix assertion errors when using inlinedata files on gfs2.
+
+----------------------------------------------------------------
+Andreas Gruenbacher (3):
+      iomap: Permit pages without an iop to enter writeback
+      iomap: Don't create iomap_page objects for inline files
+      iomap: Don't create iomap_page objects in iomap_page_mkwrite_actor
+
+Christoph Hellwig (2):
+      iomap: remove the length variable in iomap_seek_data
+      iomap: remove the length variable in iomap_seek_hole
+
+ fs/iomap/buffered-io.c |  8 ++++----
+ fs/iomap/seek.c        | 25 +++++++++----------------
+ 2 files changed, 13 insertions(+), 20 deletions(-)
