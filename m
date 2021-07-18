@@ -3,120 +3,79 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE3CEC636CB
-	for <linux-xfs@archiver.kernel.org>; Sun, 18 Jul 2021 14:32:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 495AEC636CA
+	for <linux-xfs@archiver.kernel.org>; Sun, 18 Jul 2021 14:35:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 83DCE611BE
-	for <linux-xfs@archiver.kernel.org>; Sun, 18 Jul 2021 14:32:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 281D261183
+	for <linux-xfs@archiver.kernel.org>; Sun, 18 Jul 2021 14:35:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232895AbhGROfJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 18 Jul 2021 10:35:09 -0400
-Received: from out20-49.mail.aliyun.com ([115.124.20.49]:39269 "EHLO
-        out20-49.mail.aliyun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230307AbhGROfI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 18 Jul 2021 10:35:08 -0400
-X-Alimail-AntiSpam: AC=CONTINUE;BC=0.07501587|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.0237661-0.00541911-0.970815;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047207;MF=guan@eryu.me;NM=1;PH=DS;RN=4;RT=4;SR=0;TI=SMTPD_---.KkrFLCr_1626618728;
-Received: from localhost(mailfrom:guan@eryu.me fp:SMTPD_---.KkrFLCr_1626618728)
-          by smtp.aliyun-inc.com(10.147.41.187);
-          Sun, 18 Jul 2021 22:32:08 +0800
-Date:   Sun, 18 Jul 2021 22:32:08 +0800
+        id S233951AbhGROi3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 18 Jul 2021 10:38:29 -0400
+Received: from out20-61.mail.aliyun.com ([115.124.20.61]:44603 "EHLO
+        out20-61.mail.aliyun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233953AbhGROi2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 18 Jul 2021 10:38:28 -0400
+X-Alimail-AntiSpam: AC=CONTINUE;BC=0.2969857|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.0464452-0.0132664-0.940288;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047206;MF=guan@eryu.me;NM=1;PH=DS;RN=4;RT=4;SR=0;TI=SMTPD_---.KkrxKF3_1626618928;
+Received: from localhost(mailfrom:guan@eryu.me fp:SMTPD_---.KkrxKF3_1626618928)
+          by smtp.aliyun-inc.com(10.147.44.129);
+          Sun, 18 Jul 2021 22:35:28 +0800
+Date:   Sun, 18 Jul 2021 22:35:28 +0800
 From:   Eryu Guan <guan@eryu.me>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
         fstests@vger.kernel.org
-Subject: Re: [PATCH 4/8] dmthin: erase the metadata device properly before
- starting
-Message-ID: <YPQ7aF4//Fzmxma6@desktop>
+Subject: Re: [PATCHSET 0/8] fstests: random fixes
+Message-ID: <YPQ8MDb4u2EE9HVo@desktop>
 References: <162561726690.543423.15033740972304281407.stgit@locust>
- <162561728893.543423.5093723938379703860.stgit@locust>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <162561728893.543423.5093723938379703860.stgit@locust>
+In-Reply-To: <162561726690.543423.15033740972304281407.stgit@locust>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jul 06, 2021 at 05:21:28PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Jul 06, 2021 at 05:21:07PM -0700, Darrick J. Wong wrote:
+> Hi all,
 > 
-> Every now and then I see the following failure when running generic/347:
-> 
-> --- generic/347.out
-> +++ generic/347.out.bad
-> @@ -1,2 +1,2 @@
->  QA output created by 347
-> -=== completed
-> +failed to create dm thin pool device
+> This series fixes a bunch of small problems in the test suite that were
+> causing intermittent test failures.
 
-Note that I have to add space indention to above diff lines, otherwise
-it seems git am will treat lines after "---" as the beginning of patch,
-and failed to apply.
+I've applied all fixes except patch 2/8, apparently it got a new version
+in your local tree.
 
-Thanks,
+Thanks for all the fixes!
+
 Eryu
 
 > 
-> Accompanied by the following dmesg spew:
+> If you're going to start using this mess, you probably ought to just
+> pull from my git trees, which are linked below.
 > 
-> device-mapper: thin metadata: sb_check failed: blocknr 7016996765293437281: wanted 0
-> device-mapper: block manager: superblock validator check failed for block 0
-> device-mapper: thin metadata: couldn't read superblock
-> device-mapper: table: 253:2: thin-pool: Error creating metadata object
-> device-mapper: ioctl: error adding target to table
+> This is an extraordinary way to destroy everything.  Enjoy!
+> Comments and questions are, as always, welcome.
 > 
-> 7016996765293437281 is of course the magic number 0x6161616161616161,
-> which are stale ondisk contents left behind by previous tests that wrote
-> known tests patterns to files on the scratch device.  This is a bit
-> surprising, since _dmthin_init supposedly zeroes the first 4k of the
-> thin pool metadata device before initializing the pool.  Or does it?
+> --D
 > 
-> dd if=/dev/zero of=$DMTHIN_META_DEV bs=4096 count=1 &>/dev/null
+> kernel git tree:
+> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=random-fixes
 > 
-> Herein lies the problem: the dd process writes zeroes into the page
-> cache and exits.  Normally the block layer will flush the page cache
-> after the last file descriptor is closed, but once in a while the
-> terminating dd process won't be the only process in the system with an
-> open file descriptor!
+> xfsprogs git tree:
+> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=random-fixes
 > 
-> That process is of course udev.  The write() call from dd triggers a
-> kernel uevent, which starts udev.  If udev is running particularly
-> slowly, it'll still be running an instant later when dd terminates,
-> thereby preventing the page cache flush.  If udev is still running a
-> moment later when we call dmsetup to set up the thin pool, the pool
-> creation will issue a bio to read the ondisk superblock.  This read
-> isn't coherent with the page cache, so it sees old disk contents and the
-> test fails even though we supposedly formatted the metadata device.
-> 
-> Fix this by explicitly flushing the page cache after writing the zeroes.
-> 
-> Fixes: 4b52fffb ("dm-thinp helpers in common/dmthin")
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> fstests git tree:
+> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=random-fixes
 > ---
->  common/dmthin |    8 ++++++--
->  1 file changed, 6 insertions(+), 2 deletions(-)
-> 
-> 
-> diff --git a/common/dmthin b/common/dmthin
-> index 3b1c7d45..91147e47 100644
-> --- a/common/dmthin
-> +++ b/common/dmthin
-> @@ -113,8 +113,12 @@ _dmthin_init()
->  	_dmsetup_create $DMTHIN_DATA_NAME --table "$DMTHIN_DATA_TABLE" || \
->  		_fatal "failed to create dm thin data device"
->  
-> -	# Zap the pool metadata dev
-> -	dd if=/dev/zero of=$DMTHIN_META_DEV bs=4096 count=1 &>/dev/null
-> +	# Zap the pool metadata dev.  Explicitly fsync the zeroes to disk
-> +	# because a slow-running udev running concurrently with dd can maintain
-> +	# an open file descriptor.  The block layer only flushes the page cache
-> +	# on last close, which means that the thin pool creation below will
-> +	# see the (stale) ondisk contents and fail.
-> +	dd if=/dev/zero of=$DMTHIN_META_DEV bs=4096 count=1 conv=fsync &>/dev/null
->  
->  	# Thin pool
->  	# "start length thin-pool metadata_dev data_dev data_block_size low_water_mark"
+>  check             |   24 +++++++++++++++++-------
+>  common/dmthin     |    8 ++++++--
+>  tests/generic/019 |    3 +++
+>  tests/generic/371 |    8 ++++++++
+>  tests/generic/561 |    9 +++++++--
+>  tests/shared/298  |    2 +-
+>  tests/xfs/084     |    8 ++++++--
+>  tests/xfs/172     |   30 +++++++++++++++++++++++++++++-
+>  8 files changed, 77 insertions(+), 15 deletions(-)
