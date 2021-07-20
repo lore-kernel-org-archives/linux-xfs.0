@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-17.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8269DC12002
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Jul 2021 01:11:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0499C07E9B
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Jul 2021 01:12:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5FB7260FF3
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Jul 2021 01:11:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9BA106108B
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Jul 2021 01:12:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235374AbhGTAat (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 19 Jul 2021 20:30:49 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41484 "EHLO mail.kernel.org"
+        id S1381450AbhGTAbL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 19 Jul 2021 20:31:11 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41680 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1378034AbhGTA1n (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 19 Jul 2021 20:27:43 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 611406108B;
-        Tue, 20 Jul 2021 01:08:22 +0000 (UTC)
+        id S1381041AbhGTA2J (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 19 Jul 2021 20:28:09 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id DF78E6113B;
+        Tue, 20 Jul 2021 01:08:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1626743302;
-        bh=BXPjE561FDFtSFdZ/uwoutkkgt/V2CSQ1ewQnMQ/jRM=;
+        s=k20201202; t=1626743329;
+        bh=LjQS5A/LDnGrwWQVSi1zpBbEHF7ZL70/KpjFdaK85/Y=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=kqXEQ9TvDkiQMN8fOQo4ExhurpLzpOEXqFrCALvfqrVHTVMR6YDgIa3qGNUtc9Lyu
-         O3nAwxEC+ubaInz1yPC4QkaH73iJqGoTtB0rikeX50IjD7DG8VBj+rkM17ID15tjk5
-         8i1wxrff1Nq3uhjDp0b4tEtF++Eu0WNuV+eymL0iVYtzyKQsMUEOXCLAYj5+3qSHyO
-         wOjbOPZzQWFCttZYNw5QGLuZ/7xHFbU7YWH0H+Cl9rhpXeSbWxrNwicJWTj9JH3niT
-         K6lpqCwf+XwrO1bd5kXR2vHSBSezmzhFvpSy7XfSMbs47JlL9JkBfAvcf5KGbtU8dZ
-         c1Wk7NnoqAf5g==
-Subject: [PATCH 1/1] new: allow users to specify a new test id
+        b=a8EyETAn6UK41hZ13VITloqZqg3w40UPyQIMVzJbhmkrXccgb+wUkjXztTJXCQXP3
+         j4A79qZSuoQL6T79N1X9TwyHrNt3MNgx0La00IfTK2kjsS+PrTpkrw4gCcL949k/sf
+         WhPzxa5dVEl4yifuFCpPrpaMy9yRhThNMixIvqFbuP5QJZ5pHnvIJvJgBycihUpVpz
+         TpgHW5o1399/DRES6h9ddY9DF5a7bYZ9RzKbmKPNkz2k1wOqPM+bm/bVwxTMY4Ld3a
+         NSTP3W7luuv5ea2NcyLPXVRf8H9KkDh40jxeckRQxDLiwNeVXPftguVAeS8FT2Q13V
+         Qus4uf+d6pNmA==
+Subject: [PATCH 1/2] generic: test xattr operations only
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Mon, 19 Jul 2021 18:08:22 -0700
-Message-ID: <162674330211.2650678.4087092414669814557.stgit@magnolia>
-In-Reply-To: <162674329655.2650678.3298345419686024312.stgit@magnolia>
-References: <162674329655.2650678.3298345419686024312.stgit@magnolia>
+Date:   Mon, 19 Jul 2021 18:08:48 -0700
+Message-ID: <162674332866.2650898.16916837755915187962.stgit@magnolia>
+In-Reply-To: <162674332320.2650898.17601790625049494810.stgit@magnolia>
+References: <162674332320.2650898.17601790625049494810.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -49,51 +49,86 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Alter the ./new script so that one can set the test id explicitly.
+Exercise extended attribute operations.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- new |   16 +++++++++++++---
- 1 file changed, 13 insertions(+), 3 deletions(-)
+ tests/generic/724     |   57 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/724.out |    2 ++
+ 2 files changed, 59 insertions(+)
+ create mode 100755 tests/generic/724
+ create mode 100644 tests/generic/724.out
 
 
-diff --git a/new b/new
-index 07144399..2097a883 100755
---- a/new
-+++ b/new
-@@ -20,13 +20,24 @@ _cleanup()
- SRC_GROUPS=`find tests -not -path tests -type d -printf "%f "`
- usage()
- {
--    echo "Usage $0 test_dir"
-+    echo "Usage $0 test_dir|test_dir_and_name"
-     echo "Available dirs are: $SRC_GROUPS"
-     exit
- }
- 
- [ $# -eq 0 ] && usage
--tdir=tests/$1
+diff --git a/tests/generic/724 b/tests/generic/724
+new file mode 100755
+index 00000000..f2f4a2ec
+--- /dev/null
++++ b/tests/generic/724
+@@ -0,0 +1,57 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2021 Oracle, Inc.  All Rights Reserved.
++#
++# FS QA Test No. 724
++#
++# Run an extended attributes fsstress run with multiple threads to shake out
++# bugs in the xattr code.
++#
++. ./common/preamble
++_begin_fstest auto attr
 +
-+if echo "$1" | grep -q '/'; then
-+	if [ -e "tests/$1" ]; then
-+		echo "$1: test already exists."
-+		exit 1
-+	fi
-+	tdir="tests/$(echo "$1" | cut -d '/' -f 1)"
-+	id="$(echo "$1" | cut -d '/' -f 2)"
-+else
-+	tdir=tests/$1
-+	id="$(basename "$(./tools/nextid "$1")")"
-+fi
- 
- i=0
- line=0
-@@ -36,7 +47,6 @@ eof=1
- export AWK_PROG="$(type -P awk)"
- [ "$AWK_PROG" = "" ] && { echo "awk not found"; exit; }
- 
--id="$(basename "$(./tools/nextid "$1")")"
- echo "Next test id is $id"
- shift
- 
++_cleanup()
++{
++	$KILLALL_PROG -9 fsstress > /dev/null 2>&1
++	cd /
++	rm -f $tmp.*
++}
++
++# Modify as appropriate.
++_supported_fs generic
++
++_require_scratch
++_require_command "$KILLALL_PROG" "killall"
++
++echo "Silence is golden."
++
++_scratch_mkfs > $seqres.full 2>&1
++_scratch_mount >> $seqres.full 2>&1
++
++nr_cpus=$((LOAD_FACTOR * 4))
++nr_ops=$((700000 * nr_cpus * TIME_FACTOR))
++
++args=('-z' '-S' 'c')
++
++# Do some directory tree modifications, but the bulk of this is geared towards
++# exercising the xattr code, especially attr_set which can do up to 10k values.
++for verb in unlink rmdir; do
++	args+=('-f' "${verb}=1")
++done
++for verb in creat mkdir; do
++	args+=('-f' "${verb}=2")
++done
++for verb in getfattr listfattr; do
++	args+=('-f' "${verb}=3")
++done
++for verb in attr_remove removefattr; do
++	args+=('-f' "${verb}=4")
++done
++args+=('-f' "setfattr=20")
++args+=('-f' "attr_set=60")	# sets larger xattrs
++
++$FSSTRESS_PROG "${args[@]}" $FSSTRESS_AVOID -d $SCRATCH_MNT -n $nr_ops -p $nr_cpus >> $seqres.full
++
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/724.out b/tests/generic/724.out
+new file mode 100644
+index 00000000..164cfffb
+--- /dev/null
++++ b/tests/generic/724.out
+@@ -0,0 +1,2 @@
++QA output created by 724
++Silence is golden.
 
