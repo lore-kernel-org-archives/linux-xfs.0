@@ -4,125 +4,129 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-17.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60029C07E95
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Jul 2021 01:26:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EAC46C07E95
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Jul 2021 02:34:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 43C946113B
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Jul 2021 01:26:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D111861166
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Jul 2021 02:34:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1381524AbhGTAbi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 19 Jul 2021 20:31:38 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41960 "EHLO mail.kernel.org"
+        id S231126AbhGTBxT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 19 Jul 2021 21:53:19 -0400
+Received: from mail.kernel.org ([198.145.29.99]:33036 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1381233AbhGTA3x (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 19 Jul 2021 20:29:53 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id EA3B461181;
-        Tue, 20 Jul 2021 01:09:13 +0000 (UTC)
+        id S1344437AbhGTBju (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 19 Jul 2021 21:39:50 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 5A48260C40;
+        Tue, 20 Jul 2021 02:20:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1626743354;
-        bh=Zprt2tY43kp5tFNaM73vJU/jSBiiiXwPjoDNecZd1Ak=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=DhxCgOxBRWT8Zr/BfmwV+tpT6qZpVyAkxTgtE3Q5uHIuLtobYabaqTtB7hIqHt9C3
-         GhkmXoMKPt6J6o5Y4Bz1llxHM93WLxPn+cYBMVqsLHwrhQs1E5D1mxeo+mlkI2Fyyy
-         2zi1qcbwHO9H47/DIl31u5UA01v7DS5fT8f51QxWFka1bea8lhFbegGFLBf/AcPObd
-         KiRtmjij2EkJGlCV7TRuuS/0n9XZP/lL+wnuv7ToBd4Qpt0Wh400YS/g1oKRD0HJ+D
-         Z5NHujoYcbEG6z6ocivzY6cWINuXvwiy4JjIf+MsuHs5ZLEvoU7QkIPvvqboICaGJD
-         jNK2/TxrHEMmw==
-Subject: [PATCH 2/3] dmerror: export configuration so that subprograms don't
- have to reinit
+        s=k20201202; t=1626747625;
+        bh=wJQJYy19JoNbPgnn5nAMu95up14zFfvr3My3xlcpouQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=g27orC+9SZy5A5AyJwWySl1PbZkF4xBfGEyBSTEUOeFGKG8DWNejQVDq4Um65wCWy
+         q1XwZU5b7s3gk4fAXP2A7OFkWPq12rhBAZp+QAkiUd2QuEx08deGizr21VTaWmDAso
+         5FctEeNmHPZxozCzy7MWEZNfmK4nzesvRzKXU4rsq8knw7iXI1JVuo71GyFHYEsBJI
+         ysi2w0+hRSbDWuiWYmZfR5ZvPGhTRsxZREGO5Y2OTNJXlE7eolLT0G+2KZ56rK1Gvh
+         VNa2BHtw0o/c2Pwi5VC+M93L9rGi3MyvNjvV/oLhXDTrte1NPzkbMVIJw6ioV72t84
+         I++4eraSFOaKw==
+Date:   Mon, 19 Jul 2021 19:20:24 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org, guaneryu@gmail.com
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me,
-        tytso@mit.edu
-Date:   Mon, 19 Jul 2021 18:09:13 -0700
-Message-ID: <162674335368.2651055.3174851724980962325.stgit@magnolia>
-In-Reply-To: <162674334277.2651055.14927938006488444114.stgit@magnolia>
-References: <162674334277.2651055.14927938006488444114.stgit@magnolia>
-User-Agent: StGit/0.19
+To:     Xiyu Yang <xiyuyang19@fudan.edu.cn>
+Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yuanxzhang@fudan.edu.cn, Xin Tan <tanxin.ctf@gmail.com>
+Subject: Re: [PATCH] xfs: Convert from atomic_t to refcount_t on
+ xlog_ticket->t_ref
+Message-ID: <20210720022024.GI23236@magnolia>
+References: <1626517262-42986-1-git-send-email-xiyuyang19@fudan.edu.cn>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1626517262-42986-1-git-send-email-xiyuyang19@fudan.edu.cn>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Sat, Jul 17, 2021 at 06:21:02PM +0800, Xiyu Yang wrote:
+> refcount_t type and corresponding API can protect refcounters from
+> accidental underflow and overflow and further use-after-free situations.
+> 
+> Signed-off-by: Xiyu Yang <xiyuyang19@fudan.edu.cn>
+> Signed-off-by: Xin Tan <tanxin.ctf@gmail.com>
+> ---
+>  fs/xfs/xfs_log.c      | 10 +++++-----
+>  fs/xfs/xfs_log_priv.h |  4 +++-
+>  2 files changed, 8 insertions(+), 6 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index 36fa2650b081..1da711f1a229 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -3347,8 +3347,8 @@ void
+>  xfs_log_ticket_put(
+>  	xlog_ticket_t	*ticket)
+>  {
+> -	ASSERT(atomic_read(&ticket->t_ref) > 0);
+> -	if (atomic_dec_and_test(&ticket->t_ref))
+> +	ASSERT(refcount_read(&ticket->t_ref) > 0);
+> +	if (refcount_dec_and_test(&ticket->t_ref))
 
-Export the dmerror configuration variables so that subprograms don't
-have to reinitialize the configuration in their own subprograms before
-calling the helpers.  In the next patch (where we allow dmerror for log
-and rt devices) it will become important to avoid these
-reinitializations.
+I thought the refcount functions already had code to warn about
+refcounts that get decremented below zero...
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- common/dmerror |    8 +++++---
- src/dmerror    |   13 +++++--------
- 2 files changed, 10 insertions(+), 11 deletions(-)
+>  		kmem_cache_free(xfs_log_ticket_zone, ticket);
+>  }
+>  
+> @@ -3356,8 +3356,8 @@ xlog_ticket_t *
+>  xfs_log_ticket_get(
+>  	xlog_ticket_t	*ticket)
+>  {
+> -	ASSERT(atomic_read(&ticket->t_ref) > 0);
+> -	atomic_inc(&ticket->t_ref);
+> +	ASSERT(refcount_read(&ticket->t_ref) > 0);
 
+...and can't come back from the dead?  Also, how much of a performance
+impact does this have over the atomic_t functions?  The last time anyone
+proposed conversions similar to this, there were concerns about that.
 
-diff --git a/common/dmerror b/common/dmerror
-index 6f1bef09..7f6800c0 100644
---- a/common/dmerror
-+++ b/common/dmerror
-@@ -10,11 +10,11 @@ _dmerror_setup()
- 
- 	local blk_dev_size=`blockdev --getsz $dm_backing_dev`
- 
--	DMERROR_DEV='/dev/mapper/error-test'
-+	export DMERROR_DEV='/dev/mapper/error-test'
- 
--	DMLINEAR_TABLE="0 $blk_dev_size linear $dm_backing_dev 0"
-+	export DMLINEAR_TABLE="0 $blk_dev_size linear $dm_backing_dev 0"
- 
--	DMERROR_TABLE="0 $blk_dev_size error $dm_backing_dev 0"
-+	export DMERROR_TABLE="0 $blk_dev_size error $dm_backing_dev 0"
- }
- 
- _dmerror_init()
-@@ -42,6 +42,8 @@ _dmerror_cleanup()
- 	$DMSETUP_PROG resume error-test > /dev/null 2>&1
- 	$UMOUNT_PROG $SCRATCH_MNT > /dev/null 2>&1
- 	_dmsetup_remove error-test
-+
-+	unset DMERROR_DEV DMLINEAR_TABLE DMERROR_TABLE
- }
- 
- _dmerror_load_error_table()
-diff --git a/src/dmerror b/src/dmerror
-index c34d1a9a..cde2b428 100755
---- a/src/dmerror
-+++ b/src/dmerror
-@@ -5,15 +5,12 @@
- . ./common/config
- . ./common/dmerror
- 
--_dmerror_setup
-+if [ -z "$DMERROR_DEV" ]; then
-+	echo "Caller should have run _dmerror_init."
-+	exit 1
-+fi
- 
- case $1 in
--cleanup)
--	_dmerror_cleanup
--	;;
--init)
--	_dmerror_init
--	;;
- load_error_table)
- 	_dmerror_load_error_table
- 	;;
-@@ -21,7 +18,7 @@ load_working_table)
- 	_dmerror_load_working_table
- 	;;
- *)
--	echo "Usage: $0 {init|cleanup|load_error_table|load_working_table}"
-+	echo "Usage: $0 {load_error_table|load_working_table}"
- 	exit 1
- 	;;
- esac
+--D
 
+> +	refcount_inc(&ticket->t_ref);
+>  	return ticket;
+>  }
+>  
+> @@ -3477,7 +3477,7 @@ xlog_ticket_alloc(
+>  
+>  	unit_res = xlog_calc_unit_res(log, unit_bytes);
+>  
+> -	atomic_set(&tic->t_ref, 1);
+> +	refcount_set(&tic->t_ref, 1);
+>  	tic->t_task		= current;
+>  	INIT_LIST_HEAD(&tic->t_queue);
+>  	tic->t_unit_res		= unit_res;
+> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+> index 4c41bbfa33b0..c4157d87cea4 100644
+> --- a/fs/xfs/xfs_log_priv.h
+> +++ b/fs/xfs/xfs_log_priv.h
+> @@ -6,6 +6,8 @@
+>  #ifndef	__XFS_LOG_PRIV_H__
+>  #define __XFS_LOG_PRIV_H__
+>  
+> +#include <linux/refcount.h>
+> +
+>  struct xfs_buf;
+>  struct xlog;
+>  struct xlog_ticket;
+> @@ -163,7 +165,7 @@ typedef struct xlog_ticket {
+>  	struct list_head   t_queue;	 /* reserve/write queue */
+>  	struct task_struct *t_task;	 /* task that owns this ticket */
+>  	xlog_tid_t	   t_tid;	 /* transaction identifier	 : 4  */
+> -	atomic_t	   t_ref;	 /* ticket reference count       : 4  */
+> +	refcount_t	   t_ref;	 /* ticket reference count       : 4  */
+>  	int		   t_curr_res;	 /* current reservation in bytes : 4  */
+>  	int		   t_unit_res;	 /* unit reservation in bytes    : 4  */
+>  	char		   t_ocnt;	 /* original count		 : 1  */
+> -- 
+> 2.7.4
+> 
