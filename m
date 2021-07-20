@@ -2,101 +2,117 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5ACFC07E95
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Jul 2021 08:57:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1237C07E95
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Jul 2021 09:52:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 94AC261263
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Jul 2021 08:57:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD1D6610A0
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Jul 2021 09:52:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232017AbhGTIQq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Jul 2021 04:16:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51072 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235091AbhGTINR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Jul 2021 04:13:17 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A837C061574;
-        Tue, 20 Jul 2021 01:44:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-Type:Content-ID:Content-Description;
-        bh=0dYGDVY2JB7ti9Ncuy52QnlE4rdjiptmasEfVI80if0=; b=r2i6ADHMQDU76EvTeAFOz7Lzfo
-        gkEgxPGEXDhQ0c1Br6TdK3Mci2u8L+8jRpSKIwgB9vtMJSGkNvbMx3hFK8L3F1wfkUTrAng1JP2gI
-        /RgV8fg2tcPMeMJAdu2vc2xE7IoUGtyLeO98IQmOO3vFc7WHLufH1pi+mrfqUTrSmy0KxEE4yg3rk
-        gxmaoTk6sTfn0O6QOBMSixowowbU+84g+emzHweK7VHsog5px79z/J31tvOhJ1AOf3q3qD2LgYCKK
-        tH5pKrxAmWbhOibAdwv30iAIpxxEg/GojpRxBZbpVUj9vFn4U2y7pfGFhx2Rs0Xnk1UjKZmgqz4Yu
-        U0FB0kRw==;
-Received: from [2001:4bb8:193:7660:5612:5e3c:ba3d:2b3c] (helo=localhost)
-        by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1m5lM4-007vNH-F1; Tue, 20 Jul 2021 08:44:05 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     linux-xfs@vger.kernel.org
-Cc:     linux-fsdevel@vger.kernel.org, willy@infradead.org
-Subject: [PATCH 2/2] iomap: simplify iomap_add_to_ioend
-Date:   Tue, 20 Jul 2021 10:43:20 +0200
-Message-Id: <20210720084320.184877-2-hch@lst.de>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210720084320.184877-1-hch@lst.de>
-References: <20210720084320.184877-1-hch@lst.de>
+        id S233653AbhGTJMC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Jul 2021 05:12:02 -0400
+Received: from smtp-out2.suse.de ([195.135.220.29]:54854 "EHLO
+        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232506AbhGTJMB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Jul 2021 05:12:01 -0400
+Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 0B1DF1FD3E;
+        Tue, 20 Jul 2021 09:52:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1626774756; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=0S3FE71qGo66t31Vxc28Wi9V+Ayx6OZMuHotTPZ+18Y=;
+        b=c2XzEflSX0tIvkoXclpsr1Pe1rwb9SiwUw5Glll8ctmd9TDuRsQwYS1BLW/AjVcFtvH+Rq
+        W6oJgU04IUmXu1L/1wUNyWdN6bOMgy+b6ADzKJW1x0BccrffxjZDSzIduLav2BcOc6NBmk
+        IKBPPCIKUYUO4NmItmpCSt/z+J74vDI=
+Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap1.suse-dmz.suse.de (Postfix) with ESMTPS id 80D2213AA2;
+        Tue, 20 Jul 2021 09:52:35 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap1.suse-dmz.suse.de with ESMTPSA
+        id +x0ZHeOc9mCHKgAAGKfGzw
+        (envelope-from <nborisov@suse.com>); Tue, 20 Jul 2021 09:52:35 +0000
+Subject: Re: [PATCH 03/27] iomap: mark the iomap argument to iomap_sector
+ const
+To:     "Darrick J. Wong" <djwong@kernel.org>,
+        Christoph Hellwig <hch@lst.de>
+Cc:     Dan Williams <dan.j.williams@intel.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Shiyang Ruan <ruansy.fnst@fujitsu.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, nvdimm@lists.linux.dev,
+        cluster-devel@redhat.com
+References: <20210719103520.495450-1-hch@lst.de>
+ <20210719103520.495450-4-hch@lst.de> <20210719160820.GE22402@magnolia>
+From:   Nikolay Borisov <nborisov@suse.com>
+Message-ID: <ab10035a-43ee-8f25-47c0-57321f748abd@suse.com>
+Date:   Tue, 20 Jul 2021 12:52:35 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 MIME-Version: 1.0
+In-Reply-To: <20210719160820.GE22402@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Now that the outstanding writes are counted in bytes, there is no need
-to use the low-level __bio_try_merge_page API, we can switch back to
-always using bio_add_page and simply iomap_add_to_ioend again.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/iomap/buffered-io.c | 17 +++++------------
- 1 file changed, 5 insertions(+), 12 deletions(-)
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 4eaadbd265fcfa..b5f355f3f8ee51 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -1252,7 +1252,6 @@ iomap_add_to_ioend(struct inode *inode, loff_t offset, struct page *page,
- 	sector_t sector = iomap_sector(&wpc->iomap, offset);
- 	unsigned len = i_blocksize(inode);
- 	unsigned poff = offset & (PAGE_SIZE - 1);
--	bool merged, same_page = false;
- 
- 	if (!wpc->ioend || !iomap_can_add_to_ioend(wpc, offset, sector)) {
- 		if (wpc->ioend)
-@@ -1260,19 +1259,13 @@ iomap_add_to_ioend(struct inode *inode, loff_t offset, struct page *page,
- 		wpc->ioend = iomap_alloc_ioend(inode, wpc, offset, sector, wbc);
- 	}
- 
--	merged = __bio_try_merge_page(wpc->ioend->io_bio, page, len, poff,
--			&same_page);
--	if (iop)
--		atomic_add(len, &iop->write_bytes_pending);
--
--	if (!merged) {
--		if (bio_full(wpc->ioend->io_bio, len)) {
--			wpc->ioend->io_bio =
--				iomap_chain_bio(wpc->ioend->io_bio);
--		}
--		bio_add_page(wpc->ioend->io_bio, page, len, poff);
-+	if (bio_add_page(wpc->ioend->io_bio, page, len, poff) != len) {
-+		wpc->ioend->io_bio = iomap_chain_bio(wpc->ioend->io_bio);
-+		__bio_add_page(wpc->ioend->io_bio, page, len, poff);
- 	}
- 
-+	if (iop)
-+		atomic_add(len, &iop->write_bytes_pending);
- 	wpc->ioend->io_size += len;
- 	wbc_account_cgroup_owner(wbc, page, len);
- }
--- 
-2.30.2
+On 19.07.21 г. 19:08, Darrick J. Wong wrote:
+> On Mon, Jul 19, 2021 at 12:34:56PM +0200, Christoph Hellwig wrote:
+>> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> /me wonders, does this have any significant effect on the generated
+> code?
 
+https://theartofmachinery.com/2019/08/12/c_const_isnt_for_performance.html
+
+> 
+> It's probably a good idea to feed the optimizer as much usage info as we
+> can, though I would imagine that for such a simple function it can
+> probably tell that we don't change *iomap.
+> 
+> IMHO, constifiying functions is a good way to signal to /programmers/
+> that they're not intended to touch the arguments, so
+> 
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> 
+> --D
+> 
+>> ---
+>>  include/linux/iomap.h | 3 +--
+>>  1 file changed, 1 insertion(+), 2 deletions(-)
+>>
+>> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+>> index 093519d91cc9cc..f9c36df6a3061b 100644
+>> --- a/include/linux/iomap.h
+>> +++ b/include/linux/iomap.h
+>> @@ -91,8 +91,7 @@ struct iomap {
+>>  	const struct iomap_page_ops *page_ops;
+>>  };
+>>  
+>> -static inline sector_t
+>> -iomap_sector(struct iomap *iomap, loff_t pos)
+>> +static inline sector_t iomap_sector(const struct iomap *iomap, loff_t pos)
+>>  {
+>>  	return (iomap->addr + pos - iomap->offset) >> SECTOR_SHIFT;
+>>  }
+>> -- 
+>> 2.30.2
+>>
+> 
