@@ -2,102 +2,129 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 357A0C07E9B
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Jul 2021 16:08:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C461C6377A
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Jul 2021 23:30:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 19975610FB
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Jul 2021 16:08:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E0C9D61221
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Jul 2021 23:30:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235420AbhGTP1q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Jul 2021 11:27:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34178 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239809AbhGTPSQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Jul 2021 11:18:16 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34CC8C061225;
-        Tue, 20 Jul 2021 08:57:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=xHc3DzHalCTqDobJ5vVOoZ7iaprvb5xHc81pJawU1NY=; b=oQrmeaLyxz9SidxuUn07Z95Stk
-        muyQsxJjF9TDXi5Ml/OyTQSInPDeYVOCeIXrERYZKdOMv8uSaANLYFKXr+wCIx0y5vhMZqXqcMdM3
-        Qy4lgGy/5UAvD8c26Ca3NPDpdLR1NtcxJ8qskgUyVRbqWgl3xdSAWAPfs0fNJDwxd+9kFVRX8xDwm
-        vGJFhU4dFC4vgPa2OSLC5zLrkCPoWAKN6+j5rloh3k/fUuElmtFNuKM90EgWvbg85sfa1J62ILWyl
-        +38+96HaN2FY82HlBPVe+qlaxYmGk1ZNxmbZcOpaXW9ISHDoxAvELuXpTqGOsj0bJugmwLjS+GANj
-        FjSEK9kA==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1m5s6M-008Hf9-VV; Tue, 20 Jul 2021 15:56:21 +0000
-Date:   Tue, 20 Jul 2021 16:56:10 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Andreas Gruenbacher <agruenba@redhat.com>,
-        "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, Gao Xiang <xiang@kernel.org>,
-        linux-erofs@lists.ozlabs.org, stable@vger.kernel.org,
-        Christoph Lameter <cl@linux.com>
-Subject: Re: [PATCH] iomap: Add missing flush_dcache_page
-Message-ID: <YPbyGnpwsaC006Rk@casper.infradead.org>
-References: <20210716150032.1089982-1-willy@infradead.org>
- <YPGf8o7vo6/9iTE5@infradead.org>
- <YPHBqlLJQKQgRHqH@casper.infradead.org>
- <YPU6NVlfIh4PfbPl@infradead.org>
+        id S231132AbhGUWuV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 21 Jul 2021 18:50:21 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56298 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230495AbhGUWuU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Jul 2021 18:50:20 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id AB7736121F;
+        Wed, 21 Jul 2021 23:30:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1626910256;
+        bh=VMOgEl7XFLHAT/9MyUGH631UPK2nLrJgvCVfTC76OXE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=avyfBZd+m2fsiaqVE7LhlJdjZdPSMSSlFazuZF0elabwpN7xyAp35Xyrgyf74TXuM
+         Hpx2hEe7va9UoGiICUmIpKg2RrJf6sFlGjgs0IkxbzMKSv/MeryAzJd/d3wqzXCq//
+         Urxn/91473LXpqbWJV5pj+eFAO7+Ju3G8znaQgIeAftceXIwqKWBOfjoCYZwMmbnn+
+         JNdnRG1oV+NYjJNZo0cyqCzBe5/iK8cY/dODQ98Egm2uZo01iTdJv7LiUCkOly1FYQ
+         lDtIUJ2JTTC6Y7etJYMgLmgqh10B2zpPuBXX6Snr/uQ//FZoD3o/FmDRLL+5pxxACK
+         bvt+tbO6ZaaWg==
+Date:   Wed, 21 Jul 2021 16:30:56 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Xiyu Yang <xiyuyang19@fudan.edu.cn>
+Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yuanxzhang@fudan.edu.cn, Xin Tan <tanxin.ctf@gmail.com>
+Subject: Re: [PATCH] iomap: Convert from atomic_t to refcount_t on
+ iomap_dio->ref
+Message-ID: <20210721233056.GC8639@magnolia>
+References: <1626683544-64155-1-git-send-email-xiyuyang19@fudan.edu.cn>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YPU6NVlfIh4PfbPl@infradead.org>
+In-Reply-To: <1626683544-64155-1-git-send-email-xiyuyang19@fudan.edu.cn>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jul 19, 2021 at 09:39:17AM +0100, Christoph Hellwig wrote:
-> On Fri, Jul 16, 2021 at 06:28:10PM +0100, Matthew Wilcox wrote:
-> > > >  	memcpy(addr, iomap->inline_data, size);
-> > > >  	memset(addr + size, 0, PAGE_SIZE - size);
-> > > >  	kunmap_atomic(addr);
-> > > > +	flush_dcache_page(page);
-> > > 
-> > > .. and all writes into a kmap also need such a flush, so this needs to
-> > > move a line up.  My plan was to add a memcpy_to_page_and_pad helper
-> > > ala memcpy_to_page to get various file systems and drivers out of the
-> > > business of cache flushing as much as we can.
-> > 
-> > hm?  It's absolutely allowed to flush the page after calling kunmap.
-> > Look at zero_user_segments(), for example.
+On Mon, Jul 19, 2021 at 04:32:24PM +0800, Xiyu Yang wrote:
+> refcount_t type and corresponding API can protect refcounters from
+> accidental underflow and overflow and further use-after-free situations.
 > 
-> Documentation/core-api/cachetlb.rst states that any user page obtained
-> using kmap needs a flush_kernel_dcache_page after modification.
-> flush_dcache_page is a strict superset of flush_kernel_dcache_page.
+> Signed-off-by: Xiyu Yang <xiyuyang19@fudan.edu.cn>
+> Signed-off-by: Xin Tan <tanxin.ctf@gmail.com>
+> ---
+>  fs/iomap/direct-io.c | 11 ++++++-----
+>  1 file changed, 6 insertions(+), 5 deletions(-)
+> 
+> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+> index 9398b8c31323..d1393579a954 100644
+> --- a/fs/iomap/direct-io.c
+> +++ b/fs/iomap/direct-io.c
+> @@ -3,6 +3,7 @@
+>   * Copyright (C) 2010 Red Hat, Inc.
+>   * Copyright (c) 2016-2018 Christoph Hellwig.
+>   */
+> +#include <linux/refcount.h>
+>  #include <linux/module.h>
+>  #include <linux/compiler.h>
+>  #include <linux/fs.h>
+> @@ -28,7 +29,7 @@ struct iomap_dio {
+>  	const struct iomap_dio_ops *dops;
+>  	loff_t			i_size;
+>  	loff_t			size;
+> -	atomic_t		ref;
+> +	refcount_t		ref;
+>  	unsigned		flags;
+>  	int			error;
+>  	bool			wait_for_completion;
+> @@ -62,7 +63,7 @@ EXPORT_SYMBOL_GPL(iomap_dio_iopoll);
+>  static void iomap_dio_submit_bio(struct iomap_dio *dio, struct iomap *iomap,
+>  		struct bio *bio, loff_t pos)
+>  {
+> -	atomic_inc(&dio->ref);
+> +	refcount_inc(&dio->ref);
 
-Looks like (the other) Christoph broke this in 2008 with commit
-eebd2aa35569 ("Pagecache zeroing: zero_user_segment, zero_user_segments
-and zero_user"):
+Seems all right to me, though I wonder if any of the more
+performance-minded people have comments about the overhead of refcount_t
+vs. atomic_t?
 
-It has one line about it in the changelog:
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-    Also extract the flushing of the caches to be outside of the kmap.
+--D
 
-... which doesn't even attempt to justify why it's safe to do so.
-
--               memset((char *)kaddr + (offset), 0, (size));    \
--               flush_dcache_page(page);                        \
--               kunmap_atomic(kaddr, (km_type));                \
-+       kunmap_atomic(kaddr, KM_USER0);
-+       flush_dcache_page(page);
-
-Looks like it came from
-https://lore.kernel.org/lkml/20070911060425.472862098@sgi.com/
-but there was no discussion of this ... plenty of discussion about
-other conceptual problems with the entire patchset.
-
-> That beeing said flushing after kmap updates is a complete mess.
-> arm as probably the poster child for dcache challenged plus highmem
-> architectures always flushed caches from kunmap and, and arc has
-> a flush_dcache_page that doesn't work at all on a highmem page that
-> is not kmapped (where kmap_atomic and kmap_local_page don't count as
-> kmapped as they don't set page->virtual).
+>  
+>  	if (dio->iocb->ki_flags & IOCB_HIPRI)
+>  		bio_set_polled(bio, dio->iocb);
+> @@ -158,7 +159,7 @@ static void iomap_dio_bio_end_io(struct bio *bio)
+>  	if (bio->bi_status)
+>  		iomap_dio_set_error(dio, blk_status_to_errno(bio->bi_status));
+>  
+> -	if (atomic_dec_and_test(&dio->ref)) {
+> +	if (refcount_dec_and_test(&dio->ref)) {
+>  		if (dio->wait_for_completion) {
+>  			struct task_struct *waiter = dio->submit.waiter;
+>  			WRITE_ONCE(dio->submit.waiter, NULL);
+> @@ -471,7 +472,7 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+>  		return ERR_PTR(-ENOMEM);
+>  
+>  	dio->iocb = iocb;
+> -	atomic_set(&dio->ref, 1);
+> +	refcount_set(&dio->ref, 1);
+>  	dio->size = 0;
+>  	dio->i_size = i_size_read(inode);
+>  	dio->dops = dops;
+> @@ -611,7 +612,7 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+>  	 *	after we got woken by the I/O completion handler.
+>  	 */
+>  	dio->wait_for_completion = wait_for_completion;
+> -	if (!atomic_dec_and_test(&dio->ref)) {
+> +	if (!refcount_dec_and_test(&dio->ref)) {
+>  		if (!wait_for_completion)
+>  			return ERR_PTR(-EIOCBQUEUED);
+>  
+> -- 
+> 2.7.4
+> 
