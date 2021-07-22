@@ -7,80 +7,50 @@ X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3EC3C63793
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Jul 2021 07:15:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5043C6377D
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Jul 2021 07:16:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B88AA61279
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Jul 2021 07:15:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AED0B61279
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Jul 2021 07:16:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229573AbhGVGeY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Jul 2021 02:34:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58884 "EHLO
+        id S229715AbhGVGfj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Jul 2021 02:35:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59162 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229547AbhGVGeX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Jul 2021 02:34:23 -0400
+        with ESMTP id S229547AbhGVGfi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Jul 2021 02:35:38 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D059C061575
-        for <linux-xfs@vger.kernel.org>; Thu, 22 Jul 2021 00:14:59 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8605C061575
+        for <linux-xfs@vger.kernel.org>; Thu, 22 Jul 2021 00:16:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=gr67rGHRhFdtMPN1v7mefZw4yiZeG4bVzyLnYkFW6aM=; b=AQX8E18hxAKn7+LYo7m2/nhhBw
-        apMxayWoeyxAgjprTWcZ98ATwYTcZdkv+XKShX95Akbx1NCMA2HS6ATzNxNW+rrgrs2lNfrJEhTqz
-        Z8XRMd9ON2UmITPUJYPi9iWpKHLTj8nYlrzr4HwbsDDjmL3YjIvT7TjIB6+2SR7rTahfuoR04c75W
-        BCR61Pr55GZIKh24bfTkpkg0UOIdU0D/4R7kQrzvy+2H9FvxTzOGEZ/rSYEVXryh4xRHsIhi9VbZv
-        9f0/z7K0Gv6MGuQ+9aly4k/RbXxK8FyqlK0qxPiQ5UD2Xkl9actWcbKIRDphd1Vk12Kyxcj0+ECgl
-        MiySIWGA==;
+        bh=l2WBiCb5duYJRA9nKpihqrJOH1Qjg6utSrFiu8qAdtc=; b=d8g1zlNTx0MJf6u8rH2yxJXkdF
+        MOWjzFpD7J+SpwA35RTWLqoO9dcmUlHfCdb1EGQsCZcTNqFWA8+5uZnfVk5M+I6CUw1cO4N8CL9WI
+        Tn6TXX4BUYOM9XjcxCNuf5IZ/MwTAEuXnDiF04PpHXgscn43j9TDIgZoFFcmyAaaI/X28msY21Zmu
+        pKXVAytwMZqa5OYh8vNOUfpHQgYKiCxUvpQf+Nu9U7WdcdOSUbatvNsq2SJ9VbJHimKFEaBTw34HV
+        EHXq8ogfSuFterje3EtsbA0bRJyCC1R23NoSFTsjk8Nj23EnzrwLWC127KrP+7oEWnh9UcGjp5B/t
+        aCwkil/g==;
 Received: from hch by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1m6Sue-009zIh-Ow; Thu, 22 Jul 2021 07:14:37 +0000
-Date:   Thu, 22 Jul 2021 08:14:32 +0100
+        id 1m6Sw2-009zLa-Q2; Thu, 22 Jul 2021 07:16:04 +0000
+Date:   Thu, 22 Jul 2021 08:15:58 +0100
 From:   Christoph Hellwig <hch@infradead.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/5] xfs: log forces imply data device cache flushes
-Message-ID: <YPka2FRJAC38RbU+@infradead.org>
+Subject: Re: [PATCH 5/5] xfs: avoid unnecessary waits in xfs_log_force_lsn()
+Message-ID: <YPkbLncYt4Gld7hf@infradead.org>
 References: <20210722015335.3063274-1-david@fromorbit.com>
- <20210722015335.3063274-5-david@fromorbit.com>
+ <20210722015335.3063274-6-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210722015335.3063274-5-david@fromorbit.com>
+In-Reply-To: <20210722015335.3063274-6-david@fromorbit.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 22, 2021 at 11:53:34AM +1000, Dave Chinner wrote:
-> +static inline int
-> +xlog_force_iclog(
-> +	struct xlog_in_core	*iclog)
-> +{
-> +	atomic_inc(&iclog->ic_refcnt);
-> +	iclog->ic_flags |= XLOG_ICL_NEED_FLUSH | XLOG_ICL_NEED_FUA;
-> +	if (iclog->ic_state == XLOG_STATE_ACTIVE)
-> +		xlog_state_switch_iclogs(iclog->ic_log, iclog, 0);
-> +	return xlog_state_release_iclog(iclog->ic_log, iclog, 0);
-> +}
-
-This also combines code move with technical changes.  At least it is
-small enough to be reviewable.
-
->  out_err:
-> -	if (error)
-> -		xfs_alert(mp, "%s: unmount record failed", __func__);
-> -
->  
-
-> +	if (error)
-> +		xfs_alert(mp, "%s: unmount record failed", __func__);
-> +
->  }
-
-This now doesn't print an error when the log reservation or log write
-fails, but only one when the log force fails.  Also there i a spurious
-empty line at the end.
-
-Otherwise looks good:
+Looks good,
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
