@@ -7,246 +7,439 @@ X-Spam-Status: No, score=-17.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6E7AC4338F
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Jul 2021 19:08:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5B32C4338F
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Jul 2021 19:12:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A043C60EB9
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Jul 2021 19:07:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A77E860EB2
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Jul 2021 19:12:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230341AbhGVS0a (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Jul 2021 14:26:30 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50660 "EHLO mail.kernel.org"
+        id S229556AbhGVScH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Jul 2021 14:32:07 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51520 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229979AbhGVS02 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 22 Jul 2021 14:26:28 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 91D4160EB6;
-        Thu, 22 Jul 2021 19:07:03 +0000 (UTC)
+        id S229545AbhGVScG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 22 Jul 2021 14:32:06 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 924AD60C41;
+        Thu, 22 Jul 2021 19:12:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1626980823;
-        bh=QyarhmzAOZ0mqM+owtpYHIuFxqDvJXRWldbz/9HYBAo=;
+        s=k20201202; t=1626981161;
+        bh=PD8aSKUNZgziwFd0qmdcELD55EADVNJTviLGBTmJOHQ=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=MmHbh1Azu2yjzBmJixc7DeAS0nq1IoLMQPtSaOUVJGG4YG6/LkJ25b1gK8ru+tdT4
-         9SN8RnlH0urMQ/N5OGXebx+NF9XqlRT12IFXA4SyAUHOMIlImR+2kfuKAaKOey9nFF
-         JORaRQgjzqYnoQ+Ucb1v8kQO90B0sDu1uF0eJF8YP/18lJ/+obSgvcW1LgmnmO0Ias
-         mYftntsvBYC/iZKWC/KauBzsrbH6W0lYHu7jJrZHR/J/BoVulXvNN2CxBe+EhpcC0w
-         iywTTuvBzebmT2LdQGkNZDtuGR/IOi/75xz9MtsmcwqmcsUVQ5rrI/zWqkvWjRX3G7
-         zpf4hwEM6Mz2A==
-Date:   Thu, 22 Jul 2021 12:07:03 -0700
+        b=qyQyuvUSYIlfOf27p8NA68du2kYK8JQVVnQfawYBAvcR0Gl3jHlGuFDI59YxLXOAT
+         jPCSPs8a6t1AGZ3P6JgoS36Hy9K7rZqBn9I1N0g3Ff8iYPgv2M93um/5GhpB5FNCsA
+         JDQr6On7PV5BurPEsHEwtXFBWfyv3ZDK9XbadOFjsIMe+rtL7qd8M5uGeaXXRpo4Dx
+         k6/LiBC/I44OaDSH/zXwVPgfFNbzD5y05xFpHcGtrmRKmBFcrQzzh71mzPccmUqZNl
+         39KAY9O7Z/IrgHceAyjXQkhLudeav0sdRLpshYNeiH5n+zxckKux+ruQoT7B+WMJla
+         Ct4PW47WRFjXg==
+Date:   Thu, 22 Jul 2021 12:12:41 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org, Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 1/3] xfs: remove support for disabling quota accounting
- on a mounted file system
-Message-ID: <20210722190703.GI559212@magnolia>
-References: <20210722072610.975281-1-hch@lst.de>
- <20210722072610.975281-2-hch@lst.de>
- <20210722182254.GB559212@magnolia>
- <20210722190307.GA14569@lst.de>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/5] xfs: fix ordering violation between cache flushes
+ and tail updates
+Message-ID: <20210722191241.GJ559212@magnolia>
+References: <20210722015335.3063274-1-david@fromorbit.com>
+ <20210722015335.3063274-4-david@fromorbit.com>
+ <YPkZB7aY3foxa594@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210722190307.GA14569@lst.de>
+In-Reply-To: <YPkZB7aY3foxa594@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 22, 2021 at 09:03:07PM +0200, Christoph Hellwig wrote:
-> On Thu, Jul 22, 2021 at 11:22:54AM -0700, Darrick J. Wong wrote:
-> > <snip> I think you could delete more...
+On Thu, Jul 22, 2021 at 08:06:47AM +0100, Christoph Hellwig wrote:
+> Due the combination of the code move and the actual change I had
+> a really hard time reviewing this.
 > 
-> > ...because I think xfs_dqrele_all_inodes has lost all of its callers.
-> > Can you please remove it and XFS_ICWALK_DQRELE from xfs_icache.[ch]?
+> > -		trace_xlog_iclog_syncing(iclog, _RET_IP_);
 > 
-> ---
-> From e8d07e55103636ce3207788e430eeff12b9ef153 Mon Sep 17 00:00:00 2001
-> From: Christoph Hellwig <hch@lst.de>
-> Date: Thu, 22 Jul 2021 20:58:55 +0200
-> Subject: xfs: remove xfs_dqrele_all_inodes
+> This tracepoint got lost.
 > 
-> xfs_dqrele_all_inodes is unused now, remove it and all supporting code.
+> Otherwise this looks good.
 > 
+> As I had to split the move from the technical changes to follow
+> the change I might as well share my split, attached below as two
+> patches:
+> 
+
+> From 6f8ff7f10b25986518ff76e9a6ef61edb629a97f Mon Sep 17 00:00:00 2001
+> From: Dave Chinner <dchinner@redhat.com>
+> Date: Thu, 22 Jul 2021 08:58:49 +0200
+> Subject: xfs: fold __xlog_state_release_iclog into xlog_state_release_iclog
+> 
+> Fold __xlog_state_release_iclog intos it's only caller to prepare
+> make an upcomding fix easier.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> [hch: split from a larger patch]
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-For this patch (which I guess is now patch 4?) and the original patch 1,
+I like this split out as a refactoring patch, it /does/ make things
+easier to read.  For this patch,
+
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
---D
-
 > ---
->  fs/xfs/xfs_icache.c | 107 +-------------------------------------------
->  fs/xfs/xfs_icache.h |   6 ---
->  2 files changed, 1 insertion(+), 112 deletions(-)
+>  fs/xfs/xfs_log.c | 46 ++++++++++++++++++----------------------------
+>  1 file changed, 18 insertions(+), 28 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 6007683482c625..086a88b8dfdb39 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -38,9 +38,6 @@
->   * radix tree tags when convenient.  Avoid existing XFS_IWALK namespace.
->   */
->  enum xfs_icwalk_goal {
-> -	/* Goals that are not related to tags; these must be < 0. */
-> -	XFS_ICWALK_DQRELE	= -1,
-> -
->  	/* Goals directly associated with tagged inodes. */
->  	XFS_ICWALK_BLOCKGC	= XFS_ICI_BLOCKGC_TAG,
->  	XFS_ICWALK_RECLAIM	= XFS_ICI_RECLAIM_TAG,
-> @@ -64,9 +61,6 @@ static int xfs_icwalk_ag(struct xfs_perag *pag,
->   * Private inode cache walk flags for struct xfs_icwalk.  Must not
->   * coincide with XFS_ICWALK_FLAGS_VALID.
->   */
-> -#define XFS_ICWALK_FLAG_DROP_UDQUOT	(1U << 31)
-> -#define XFS_ICWALK_FLAG_DROP_GDQUOT	(1U << 30)
-> -#define XFS_ICWALK_FLAG_DROP_PDQUOT	(1U << 29)
->  
->  /* Stop scanning after icw_scan_limit inodes. */
->  #define XFS_ICWALK_FLAG_SCAN_LIMIT	(1U << 28)
-> @@ -74,10 +68,7 @@ static int xfs_icwalk_ag(struct xfs_perag *pag,
->  #define XFS_ICWALK_FLAG_RECLAIM_SICK	(1U << 27)
->  #define XFS_ICWALK_FLAG_UNION		(1U << 26) /* union filter algorithm */
->  
-> -#define XFS_ICWALK_PRIVATE_FLAGS	(XFS_ICWALK_FLAG_DROP_UDQUOT | \
-> -					 XFS_ICWALK_FLAG_DROP_GDQUOT | \
-> -					 XFS_ICWALK_FLAG_DROP_PDQUOT | \
-> -					 XFS_ICWALK_FLAG_SCAN_LIMIT | \
-> +#define XFS_ICWALK_PRIVATE_FLAGS	(XFS_ICWALK_FLAG_SCAN_LIMIT | \
->  					 XFS_ICWALK_FLAG_RECLAIM_SICK | \
->  					 XFS_ICWALK_FLAG_UNION)
->  
-> @@ -817,97 +808,6 @@ xfs_icache_inode_is_allocated(
->  	return 0;
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index a3c4d48195d98a..d7ab9d0814c2c6 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -487,29 +487,6 @@ xfs_log_reserve(
+>  	return error;
 >  }
 >  
-> -#ifdef CONFIG_XFS_QUOTA
-> -/* Decide if we want to grab this inode to drop its dquots. */
 > -static bool
-> -xfs_dqrele_igrab(
-> -	struct xfs_inode	*ip)
+> -__xlog_state_release_iclog(
+> -	struct xlog		*log,
+> -	struct xlog_in_core	*iclog)
 > -{
-> -	bool			ret = false;
+> -	lockdep_assert_held(&log->l_icloglock);
 > -
-> -	ASSERT(rcu_read_lock_held());
+> -	if (iclog->ic_state == XLOG_STATE_WANT_SYNC) {
+> -		/* update tail before writing to iclog */
+> -		xfs_lsn_t tail_lsn = xlog_assign_tail_lsn(log->l_mp);
 > -
-> -	/* Check for stale RCU freed inode */
-> -	spin_lock(&ip->i_flags_lock);
-> -	if (!ip->i_ino)
-> -		goto out_unlock;
-> -
-> -	/*
-> -	 * Skip inodes that are anywhere in the reclaim machinery because we
-> -	 * drop dquots before tagging an inode for reclamation.
-> -	 */
-> -	if (ip->i_flags & (XFS_IRECLAIM | XFS_IRECLAIMABLE))
-> -		goto out_unlock;
-> -
-> -	/*
-> -	 * The inode looks alive; try to grab a VFS reference so that it won't
-> -	 * get destroyed.  If we got the reference, return true to say that
-> -	 * we grabbed the inode.
-> -	 *
-> -	 * If we can't get the reference, then we know the inode had its VFS
-> -	 * state torn down and hasn't yet entered the reclaim machinery.  Since
-> -	 * we also know that dquots are detached from an inode before it enters
-> -	 * reclaim, we can skip the inode.
-> -	 */
-> -	ret = igrab(VFS_I(ip)) != NULL;
-> -
-> -out_unlock:
-> -	spin_unlock(&ip->i_flags_lock);
-> -	return ret;
-> -}
-> -
-> -/* Drop this inode's dquots. */
-> -static void
-> -xfs_dqrele_inode(
-> -	struct xfs_inode	*ip,
-> -	struct xfs_icwalk	*icw)
-> -{
-> -	if (xfs_iflags_test(ip, XFS_INEW))
-> -		xfs_inew_wait(ip);
-> -
-> -	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> -	if (icw->icw_flags & XFS_ICWALK_FLAG_DROP_UDQUOT) {
-> -		xfs_qm_dqrele(ip->i_udquot);
-> -		ip->i_udquot = NULL;
+> -		iclog->ic_state = XLOG_STATE_SYNCING;
+> -		iclog->ic_header.h_tail_lsn = cpu_to_be64(tail_lsn);
+> -		xlog_verify_tail_lsn(log, iclog, tail_lsn);
+> -		/* cycle incremented when incrementing curr_block */
+> -		trace_xlog_iclog_syncing(iclog, _RET_IP_);
+> -		return true;
 > -	}
-> -	if (icw->icw_flags & XFS_ICWALK_FLAG_DROP_GDQUOT) {
-> -		xfs_qm_dqrele(ip->i_gdquot);
-> -		ip->i_gdquot = NULL;
-> -	}
-> -	if (icw->icw_flags & XFS_ICWALK_FLAG_DROP_PDQUOT) {
-> -		xfs_qm_dqrele(ip->i_pdquot);
-> -		ip->i_pdquot = NULL;
-> -	}
-> -	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> -	xfs_irele(ip);
+> -
+> -	ASSERT(iclog->ic_state == XLOG_STATE_ACTIVE);
+> -	return false;
 > -}
-> -
-> -/*
-> - * Detach all dquots from incore inodes if we can.  The caller must already
-> - * have dropped the relevant XFS_[UGP]QUOTA_ACTIVE flags so that dquots will
-> - * not get reattached.
-> - */
-> -int
-> -xfs_dqrele_all_inodes(
-> -	struct xfs_mount	*mp,
-> -	unsigned int		qflags)
-> -{
-> -	struct xfs_icwalk	icw = { .icw_flags = 0 };
-> -
-> -	if (qflags & XFS_UQUOTA_ACCT)
-> -		icw.icw_flags |= XFS_ICWALK_FLAG_DROP_UDQUOT;
-> -	if (qflags & XFS_GQUOTA_ACCT)
-> -		icw.icw_flags |= XFS_ICWALK_FLAG_DROP_GDQUOT;
-> -	if (qflags & XFS_PQUOTA_ACCT)
-> -		icw.icw_flags |= XFS_ICWALK_FLAG_DROP_PDQUOT;
-> -
-> -	return xfs_icwalk(mp, XFS_ICWALK_DQRELE, &icw);
-> -}
-> -#else
-> -# define xfs_dqrele_igrab(ip)		(false)
-> -# define xfs_dqrele_inode(ip, priv)	((void)0)
-> -#endif /* CONFIG_XFS_QUOTA */
 > -
 >  /*
->   * Grab the inode for reclaim exclusively.
->   *
-> @@ -1647,8 +1547,6 @@ xfs_icwalk_igrab(
->  	struct xfs_icwalk	*icw)
+>   * Flush iclog to disk if this is the last reference to the given iclog and the
+>   * it is in the WANT_SYNC state.
+> @@ -519,19 +496,32 @@ xlog_state_release_iclog(
+>  	struct xlog		*log,
+>  	struct xlog_in_core	*iclog)
 >  {
->  	switch (goal) {
-> -	case XFS_ICWALK_DQRELE:
-> -		return xfs_dqrele_igrab(ip);
->  	case XFS_ICWALK_BLOCKGC:
->  		return xfs_blockgc_igrab(ip);
->  	case XFS_ICWALK_RECLAIM:
-> @@ -1672,9 +1570,6 @@ xfs_icwalk_process_inode(
->  	int			error = 0;
+> +	xfs_lsn_t		tail_lsn;
+> +
+>  	lockdep_assert_held(&log->l_icloglock);
 >  
->  	switch (goal) {
-> -	case XFS_ICWALK_DQRELE:
-> -		xfs_dqrele_inode(ip, icw);
-> -		break;
->  	case XFS_ICWALK_BLOCKGC:
->  		error = xfs_blockgc_scan_inode(ip, icw);
->  		break;
-> diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-> index c751cc32dc4634..d0062ebb3f7ac8 100644
-> --- a/fs/xfs/xfs_icache.h
-> +++ b/fs/xfs/xfs_icache.h
-> @@ -68,12 +68,6 @@ void xfs_inode_clear_cowblocks_tag(struct xfs_inode *ip);
+>  	trace_xlog_iclog_release(iclog, _RET_IP_);
+>  	if (iclog->ic_state == XLOG_STATE_IOERROR)
+>  		return -EIO;
 >  
->  void xfs_blockgc_worker(struct work_struct *work);
+> -	if (atomic_dec_and_test(&iclog->ic_refcnt) &&
+> -	    __xlog_state_release_iclog(log, iclog)) {
+> -		spin_unlock(&log->l_icloglock);
+> -		xlog_sync(log, iclog);
+> -		spin_lock(&log->l_icloglock);
+> +	if (!atomic_dec_and_test(&iclog->ic_refcnt))
+> +		return 0;
+> +
+> +	if (iclog->ic_state != XLOG_STATE_WANT_SYNC) {
+> +		ASSERT(iclog->ic_state == XLOG_STATE_ACTIVE);
+> +		return 0;
+>  	}
 >  
-> -#ifdef CONFIG_XFS_QUOTA
-> -int xfs_dqrele_all_inodes(struct xfs_mount *mp, unsigned int qflags);
-> -#else
-> -# define xfs_dqrele_all_inodes(mp, qflags)	(0)
-> -#endif
-> -
->  int xfs_icache_inode_is_allocated(struct xfs_mount *mp, struct xfs_trans *tp,
->  				  xfs_ino_t ino, bool *inuse);
+> +	/* update tail before writing to iclog */
+> +	tail_lsn = xlog_assign_tail_lsn(log->l_mp);
+> +	iclog->ic_state = XLOG_STATE_SYNCING;
+> +	iclog->ic_header.h_tail_lsn = cpu_to_be64(tail_lsn);
+> +	xlog_verify_tail_lsn(log, iclog, tail_lsn);
+> +	trace_xlog_iclog_syncing(iclog, _RET_IP_);
+> +
+> +	spin_unlock(&log->l_icloglock);
+> +	xlog_sync(log, iclog);
+> +	spin_lock(&log->l_icloglock);
+>  	return 0;
+>  }
 >  
 > -- 
 > 2.30.2
 > 
+
+> From 7a592dfeef83ca61ae001d612b8932027e0080cf Mon Sep 17 00:00:00 2001
+> From: Dave Chinner <dchinner@redhat.com>
+> Date: Thu, 22 Jul 2021 09:00:08 +0200
+> Subject: xfs: fix ordering violation between cache flushes and tail updates
+> 
+> There is a race between the new CIL async data device metadata IO
+> completion cache flush and the log tail in the iclog the flush
+> covers being updated. This can be seen by repeating generic/482 in a
+> loop and eventually log recovery fails with a failures such as this:
+> 
+> XFS (dm-3): Starting recovery (logdev: internal)
+> XFS (dm-3): bad inode magic/vsn daddr 228352 #0 (magic=0)
+> XFS (dm-3): Metadata corruption detected at xfs_inode_buf_verify+0x180/0x190, xfs_inode block 0x37c00 xfs_inode_buf_verify
+> XFS (dm-3): Unmount and run xfs_repair
+> XFS (dm-3): First 128 bytes of corrupted metadata buffer:
+> 00000000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> 00000010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> 00000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> 00000030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> 00000040: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> 00000050: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> 00000060: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> 00000070: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> XFS (dm-3): metadata I/O error in "xlog_recover_items_pass2+0x55/0xc0" at daddr 0x37c00 len 32 error 117
+> 
+> Analysis of the logwrite replay shows that there were no writes to
+> the data device between the FUA @ write 124 and the FUA at write @
+> 125, but log recovery @ 125 failed. The difference was the one log
+> write @ 125 moved the tail of the log forwards from (1,8) to (1,32)
+> and so the inode create intent in (1,8) was not replayed and so the
+> inode cluster was zero on disk when replay of the first inode item
+> in (1,32) was attempted.
+> 
+> What this meant was that the journal write that occurred at @ 125
+> did not ensure that metadata completed before the iclog was written
+> was correctly on stable storage. The tail of the log moved forward,
+> so IO must have been completed between the two iclog writes. This
+> means that there is a race condition between the unconditional async
+> cache flush in the CIL push work and the tail LSN that is written to
+> the iclog. This happens like so:
+> 
+> CIL push work				AIL push work
+> -------------				-------------
+> Add to committing list
+> start async data dev cache flush
+> .....
+> <flush completes>
+> <all writes to old tail lsn are stable>
+> xlog_write
+>   ....					push inode create buffer
+> 					<start IO>
+> 					.....
+> xlog_write(commit record)
+>   ....					<IO completes>
+>   					log tail moves
+>   					  xlog_assign_tail_lsn()
+> start_lsn == commit_lsn
+>   <no iclog preflush!>
+> xlog_state_release_iclog
+>   __xlog_state_release_iclog()
+>     <writes *new* tail_lsn into iclog>
+>   xlog_sync()
+>     ....
+>     submit_bio()
+> <tail in log moves forward without flushing written metadata>
+> 
+> Essentially, this can only occur if the commit iclog is issued
+> without a cache flush. If the iclog bio is submitted with
+> REQ_PREFLUSH, then it will guarantee that all the completed IO is
+> one stable storage before the iclog bio with the new tail LSN in it
+> is written to the log.
+> 
+> IOWs, the tail lsn that is written to the iclog needs to be sampled
+> *before* we issue the cache flush that guarantees all IO up to that
+> LSN has been completed.
+> 
+> To fix this without giving up the performance advantage of the
+> flush/FUA optimisations (e.g. g/482 runtime halves with 5.14-rc1
+> compared to 5.13), we need to ensure that we always issue a cache
+> flush if the tail LSN changes between the initial async flush and
+> the commit record being written. This requires sampling the tail_lsn
+> before we start the flush, and then passing the sampled tail LSN to
+> xlog_state_release_iclog() so it can determine if the the tail LSN
+> has changed while writing the checkpoint. If the tail LSN has
+> changed, then it needs to set the NEED_FLUSH flag on the iclog and
+> we'll issue another cache flush before writing the iclog.
+> 
+> Fixes: eef983ffeae7 ("xfs: journal IO cache flush reductions")
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_log.c      | 38 +++++++++++++++++++++++++++++---------
+>  fs/xfs/xfs_log_cil.c  | 13 +++++++++++--
+>  fs/xfs/xfs_log_priv.h |  3 ++-
+>  3 files changed, 42 insertions(+), 12 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index d7ab9d0814c2c6..5767fd3ab90555 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -489,12 +489,20 @@ xfs_log_reserve(
+>  
+>  /*
+>   * Flush iclog to disk if this is the last reference to the given iclog and the
+> - * it is in the WANT_SYNC state.
+> + * it is in the WANT_SYNC state. If the caller passes in a non-zero
+> + * @old_tail_lsn, then we need to check if the log tail is different to the
+
+Nit: NULLCOMMITLSN instead of zero?
+
+> + * caller's value. If it is different, this indicates that the log tail has
+> + * moved since the caller sampled the log tail and issued a cache flush and so
+
+"...sampled the log tail as part of issuing a data device cache flush, so..."
+
+> + * there may be metadata on disk taht we need to flush before this iclog is
+
+s/taht/that/
+
+> + * written. In that case, set the XLOG_ICL_NEED_FLUSH flag so taht when the
+
+s/taht/that/
+
+> + * iclog is synced we correctly issue a cache flush before the iclog is
+
+"...issue a cache flush to the log and data devices before the iclog..."
+
+With those issues addressed I think this look decent, modulo my
+question in the previous patch.
+
+--D
+
+> + * submitted.
+>   */
+>  int
+>  xlog_state_release_iclog(
+>  	struct xlog		*log,
+> -	struct xlog_in_core	*iclog)
+> +	struct xlog_in_core	*iclog,
+> +	xfs_lsn_t		old_tail_lsn)
+>  {
+>  	xfs_lsn_t		tail_lsn;
+>  
+> @@ -504,6 +512,19 @@ xlog_state_release_iclog(
+>  	if (iclog->ic_state == XLOG_STATE_IOERROR)
+>  		return -EIO;
+>  
+> +	/*
+> +	 * Grabbing the current log tail needs to be atomic w.r.t. the writing
+> +	 * of the tail LSN into the iclog so we guarantee that the log tail does
+> +	 * not move between deciding if a cache flush is required and writing
+> +	 * the LSN into the iclog below.
+> +	 */
+> +	if (old_tail_lsn || iclog->ic_state == XLOG_STATE_WANT_SYNC) {
+> +		tail_lsn = xlog_assign_tail_lsn(log->l_mp);
+> +
+> +		if (old_tail_lsn && tail_lsn != old_tail_lsn)
+> +			iclog->ic_flags |= XLOG_ICL_NEED_FLUSH;
+> +	}
+> +
+>  	if (!atomic_dec_and_test(&iclog->ic_refcnt))
+>  		return 0;
+>  
+> @@ -513,7 +534,6 @@ xlog_state_release_iclog(
+>  	}
+>  
+>  	/* update tail before writing to iclog */
+> -	tail_lsn = xlog_assign_tail_lsn(log->l_mp);
+>  	iclog->ic_state = XLOG_STATE_SYNCING;
+>  	iclog->ic_header.h_tail_lsn = cpu_to_be64(tail_lsn);
+>  	xlog_verify_tail_lsn(log, iclog, tail_lsn);
+> @@ -859,7 +879,7 @@ xlog_unmount_write(
+>  	 * iclog containing the unmount record is written.
+>  	 */
+>  	iclog->ic_flags |= (XLOG_ICL_NEED_FLUSH | XLOG_ICL_NEED_FUA);
+> -	error = xlog_state_release_iclog(log, iclog);
+> +	error = xlog_state_release_iclog(log, iclog, 0);
+>  	xlog_wait_on_iclog(iclog);
+>  
+>  	if (tic) {
+> @@ -2303,7 +2323,7 @@ xlog_write_copy_finish(
+>  	return 0;
+>  
+>  release_iclog:
+> -	error = xlog_state_release_iclog(log, iclog);
+> +	error = xlog_state_release_iclog(log, iclog, 0);
+>  	spin_unlock(&log->l_icloglock);
+>  	return error;
+>  }
+> @@ -2522,7 +2542,7 @@ xlog_write(
+>  		ASSERT(optype & XLOG_COMMIT_TRANS);
+>  		*commit_iclog = iclog;
+>  	} else {
+> -		error = xlog_state_release_iclog(log, iclog);
+> +		error = xlog_state_release_iclog(log, iclog, 0);
+>  	}
+>  	spin_unlock(&log->l_icloglock);
+>  
+> @@ -2960,7 +2980,7 @@ xlog_state_get_iclog_space(
+>  		 * reference to the iclog.
+>  		 */
+>  		if (!atomic_add_unless(&iclog->ic_refcnt, -1, 1))
+> -			error = xlog_state_release_iclog(log, iclog);
+> +			error = xlog_state_release_iclog(log, iclog, 0);
+>  		spin_unlock(&log->l_icloglock);
+>  		if (error)
+>  			return error;
+> @@ -3196,7 +3216,7 @@ xfs_log_force(
+>  			atomic_inc(&iclog->ic_refcnt);
+>  			lsn = be64_to_cpu(iclog->ic_header.h_lsn);
+>  			xlog_state_switch_iclogs(log, iclog, 0);
+> -			if (xlog_state_release_iclog(log, iclog))
+> +			if (xlog_state_release_iclog(log, iclog, 0))
+>  				goto out_error;
+>  
+>  			if (be64_to_cpu(iclog->ic_header.h_lsn) != lsn)
+> @@ -3276,7 +3296,7 @@ xlog_force_lsn(
+>  		}
+>  		atomic_inc(&iclog->ic_refcnt);
+>  		xlog_state_switch_iclogs(log, iclog, 0);
+> -		if (xlog_state_release_iclog(log, iclog))
+> +		if (xlog_state_release_iclog(log, iclog, 0))
+>  			goto out_error;
+>  		if (log_flushed)
+>  			*log_flushed = 1;
+> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> index b128aaa9b870d5..4c44bc3786c0f0 100644
+> --- a/fs/xfs/xfs_log_cil.c
+> +++ b/fs/xfs/xfs_log_cil.c
+> @@ -654,8 +654,9 @@ xlog_cil_push_work(
+>  	struct xfs_trans_header thdr;
+>  	struct xfs_log_iovec	lhdr;
+>  	struct xfs_log_vec	lvhdr = { NULL };
+> +	xfs_lsn_t		preflush_tail_lsn;
+>  	xfs_lsn_t		commit_lsn;
+> -	xfs_lsn_t		push_seq;
+> +	xfs_csn_t		push_seq;
+>  	struct bio		bio;
+>  	DECLARE_COMPLETION_ONSTACK(bdev_flush);
+>  
+> @@ -730,7 +731,15 @@ xlog_cil_push_work(
+>  	 * because we hold the flush lock exclusively. Hence we can now issue
+>  	 * a cache flush to ensure all the completed metadata in the journal we
+>  	 * are about to overwrite is on stable storage.
+> +	 *
+> +	 * Because we are issuing this cache flush before we've written the
+> +	 * tail lsn to the iclog, we can have metadata IO completions move the
+> +	 * tail forwards between the completion of this flush and the iclog
+> +	 * being written. In this case, we need to re-issue the cache flush
+> +	 * before the iclog write. To detect whether the log tail moves, sample
+> +	 * the tail LSN *before* we issue the flush.
+>  	 */
+> +	preflush_tail_lsn = atomic64_read(&log->l_tail_lsn);
+>  	xfs_flush_bdev_async(&bio, log->l_mp->m_ddev_targp->bt_bdev,
+>  				&bdev_flush);
+>  
+> @@ -941,7 +950,7 @@ xlog_cil_push_work(
+>  	 * storage.
+>  	 */
+>  	commit_iclog->ic_flags |= XLOG_ICL_NEED_FUA;
+> -	xlog_state_release_iclog(log, commit_iclog);
+> +	xlog_state_release_iclog(log, commit_iclog, preflush_tail_lsn);
+>  	spin_unlock(&log->l_icloglock);
+>  	return;
+>  
+> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+> index 4c41bbfa33b0df..7cbde0b4f9901d 100644
+> --- a/fs/xfs/xfs_log_priv.h
+> +++ b/fs/xfs/xfs_log_priv.h
+> @@ -497,7 +497,8 @@ int	xlog_commit_record(struct xlog *log, struct xlog_ticket *ticket,
+>  void	xfs_log_ticket_ungrant(struct xlog *log, struct xlog_ticket *ticket);
+>  void	xfs_log_ticket_regrant(struct xlog *log, struct xlog_ticket *ticket);
+>  
+> -int xlog_state_release_iclog(struct xlog *log, struct xlog_in_core *iclog);
+> +int xlog_state_release_iclog(struct xlog *log, struct xlog_in_core *iclog,
+> +		xfs_lsn_t log_tail_lsn);
+>  
+>  /*
+>   * When we crack an atomic LSN, we sample it first so that the value will not
+> -- 
+> 2.30.2
+> 
+
