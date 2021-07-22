@@ -2,250 +2,131 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4B65C6377D
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Jul 2021 11:02:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C24C2C63799
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Jul 2021 12:23:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B69EE61222
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Jul 2021 11:02:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A22B261369
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Jul 2021 12:23:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231381AbhGVKWO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Jul 2021 06:22:14 -0400
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:39577 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231286AbhGVKWO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Jul 2021 06:22:14 -0400
-Received: from dread.disaster.area (pa49-181-34-10.pa.nsw.optusnet.com.au [49.181.34.10])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id E63FB80B95B
-        for <linux-xfs@vger.kernel.org>; Thu, 22 Jul 2021 21:02:47 +1000 (AEST)
-Received: from discord.disaster.area ([192.168.253.110])
-        by dread.disaster.area with esmtp (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1m6WTX-009SQZ-C2
-        for linux-xfs@vger.kernel.org; Thu, 22 Jul 2021 21:02:47 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.94)
-        (envelope-from <david@fromorbit.com>)
-        id 1m6WTX-00Cx3w-4D
-        for linux-xfs@vger.kernel.org; Thu, 22 Jul 2021 21:02:47 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH] [RFC] xfs: logging the on disk inode LSN can make it go backwards
-Date:   Thu, 22 Jul 2021 21:02:47 +1000
-Message-Id: <20210722110247.3086929-1-david@fromorbit.com>
-X-Mailer: git-send-email 2.31.1
+        id S231770AbhGVLnR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Jul 2021 07:43:17 -0400
+Received: from mail-co1nam11on2071.outbound.protection.outlook.com ([40.107.220.71]:21693
+        "EHLO NAM11-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S231738AbhGVLnQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 22 Jul 2021 07:43:16 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=mJ5dWGy4FbDJAKN5gyHsx4h2D0rrVHfbUlpbbjhl82SczwZ7mK47EcQSkZ91IPwHjU/AB67Ff6AWuEai4KvkL+Eb3qNR+SKHLsrIq2PwtpjXj6FDwtdMXUAvUYBXeXxO3cQBrzlHsNGkLkfGO9NJq8DQnFEfqwnFbaPOpoULUh4AzVdAcrffzS8hZDHBWeaA7y1wd5YlBr0ukGJGaMqO079IflNEiBj264o+9NHSlgy7upOV+xjJSY+azndcfDyePQggbdbcLGxKXZkPM0FbQOtgb+ZsTB3VlxQ51NPfsOplPn7wzy26v80hAk73b0qgWSCag9q5fX6Sl79X9j6S4A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=tLakAfoZN582Um+x1ADB0s4C4IFGXPwPnDury2nEzAk=;
+ b=McBuZUQ4NUYmGMrBect19oL8SrAbgY8ud5Ty1JZwDF3DriPTTrWaThLv/dPshj8CJWjrq4jd8P2lZ2ftRLuYku2QZovn8cWOv99qzlnqsNg0nXbjQnheB8xbquCoA7LyjMAe8PbT1qCwvToZlBynfydAHGtkqc0y5ty/yk9z7wKSblKRz7Z8BvMRp22x4lpCI8IIEm/UgzTDOj3gsPSNICutdGPDDHPw2KtLg+SDczm++JfSENAhZkWn900TkyemzYz/G3ftVInly3vhNBoCyQdomUoAQ8dvJDOvyJo6FHzKnwBfI/swhKB6VgPYcmsFDi0srIYKC4QRDKPzbyMUTA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=tLakAfoZN582Um+x1ADB0s4C4IFGXPwPnDury2nEzAk=;
+ b=TWXSjx5Xtnh6SyqFgCBfUaz5R/OfzeMQRlj8xmitgLzlzKhiQOhPrWWkw2+seO9Tpvu9GnswfMR6RaeZZy5TRuClU84p2ISyKXKablkKUB4RWapB9wKyeQs3QyMsG64nc7WpMmyjCDkBgwzssQS+Y+z5whEPe8LVz5w3tjAJwAftxNb7PJyJZ9BpRcwzndIwtbChxlRAEuzYbosogRr1SaJit686js3dXYIEVd0GtPWLczdBl8vixUG7UN5Ch/S/KCGczsIwH8844HTGjQeZj1OhEJ9w7wc+Cv7JmhynJYrclvbWXIozxNE83p6lMLWFe5Mo1G6GyNFSij5FqyjXGA==
+Authentication-Results: amd.com; dkim=none (message not signed)
+ header.d=none;amd.com; dmarc=none action=none header.from=nvidia.com;
+Received: from BL0PR12MB5506.namprd12.prod.outlook.com (2603:10b6:208:1cb::22)
+ by BL1PR12MB5221.namprd12.prod.outlook.com (2603:10b6:208:30b::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4352.26; Thu, 22 Jul
+ 2021 12:23:49 +0000
+Received: from BL0PR12MB5506.namprd12.prod.outlook.com
+ ([fe80::d017:af2f:7049:5482]) by BL0PR12MB5506.namprd12.prod.outlook.com
+ ([fe80::d017:af2f:7049:5482%4]) with mapi id 15.20.4352.026; Thu, 22 Jul 2021
+ 12:23:49 +0000
+Date:   Thu, 22 Jul 2021 09:23:48 -0300
+From:   Jason Gunthorpe <jgg@nvidia.com>
+To:     Alex Sierra <alex.sierra@amd.com>
+Cc:     akpm@linux-foundation.org, Felix.Kuehling@amd.com,
+        linux-mm@kvack.org, rcampbell@nvidia.com,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        hch@lst.de, jglisse@redhat.com
+Subject: Re: [PATCH v4 10/13] lib: test_hmm add module param for zone device
+ type
+Message-ID: <20210722122348.GG1117491@nvidia.com>
+References: <20210717192135.9030-1-alex.sierra@amd.com>
+ <20210717192135.9030-11-alex.sierra@amd.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210717192135.9030-11-alex.sierra@amd.com>
+X-ClientProxiedBy: BLAPR03CA0146.namprd03.prod.outlook.com
+ (2603:10b6:208:32e::31) To BL0PR12MB5506.namprd12.prod.outlook.com
+ (2603:10b6:208:1cb::22)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
-        a=hdaoRb6WoHYrV466vVKEyw==:117 a=hdaoRb6WoHYrV466vVKEyw==:17
-        a=e_q4qTt1xDgA:10 a=20KFwNOVAAAA:8 a=6GLGnJkjBDfX_BJIvb0A:9
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from mlx.ziepe.ca (142.162.113.129) by BLAPR03CA0146.namprd03.prod.outlook.com (2603:10b6:208:32e::31) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4352.24 via Frontend Transport; Thu, 22 Jul 2021 12:23:49 +0000
+Received: from jgg by mlx with local (Exim 4.94)        (envelope-from <jgg@nvidia.com>)        id 1m6Xjw-00640D-1g; Thu, 22 Jul 2021 09:23:48 -0300
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: f4293262-8a16-49cc-2f83-08d94d0b8f50
+X-MS-TrafficTypeDiagnostic: BL1PR12MB5221:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <BL1PR12MB522184BD90E471A59E8118FBC2E49@BL1PR12MB5221.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:7219;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: /EkGDFyHc4Zfm4q7XkPCizWxxTgopd+4MqRzka2TDeY3JXLJ/+RUWrXWLZMgbG/5DsWbHf4WxSd4hNk+6HsMkYxjYXIiYCQ0gg4HxMG2S0Gj5+bs/jdhLu/N9n+rouvJX85/Ox7dz3VbHfE5fFfTCy+VSXPlo4brnzCcccQLPpDXumdYmQMzXS8PZzmlKFtEImbh3oVe5srH9SmRNteNdcow0QCIGFE2505v6aJGcKvVrCqDNgH3i8YHjYL9RmsMEZ3smEP07OvqVTAx2/6TRXm58jH/0EA3xO1V9K5qjsr7a/RwVHGeyvp+DLqDFLLqOBVWFVonZo42T46+HDCjGJbM0ohy7sTnM0AetwsmP9zDoXPyYJTMde1pXPJRzBKgUwuZEqNAHbzaMi9s0Qtcag/XgSx6U2gM0sqEDcsaM22rYp+JPbwfjbG1cTn0cKrag1ffwN8nTzbtoPkqa4RdOZDSnUmXh0RWp5g8If533bWqZvUUXFRkl8z9A3zeUOcY08cOq0W7oQlFKfRW9o4tN4NbGFm12XXC4Sk3Mq4QcQXVqGL0AaGO03X7dJm/N3SaHAlZpM+GykxzuwoMXBrNxKU834TPlh8wfKyHzCu39Bogk9Z4PNvTFqdx5oqYWuhIzUNu8rRZs3LpVSyFijX9Xw==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL0PR12MB5506.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(508600001)(8676002)(83380400001)(316002)(66946007)(86362001)(7416002)(66476007)(5660300002)(66556008)(4326008)(1076003)(4744005)(2906002)(186003)(9786002)(8936002)(33656002)(9746002)(2616005)(26005)(426003)(36756003)(6916009)(38100700002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?DszwdCXRlvTS6LGf8078Isg2cavORjrZfSjlKwoIh2f/6PkrxCa016pcPYRx?=
+ =?us-ascii?Q?P+PGoaSTC5wIjF2q9j5UVMjCOI5YfRv2a0puZ2WTOn0WkQnQ8C2+jM9JPFWz?=
+ =?us-ascii?Q?tKJ+aopic+9QeFfBDGB7lvQlZRRM/hnhhF0o9269QIKsr8hYzvIG1zKtY2ce?=
+ =?us-ascii?Q?k34Tzhmi/5hBhkadLcVEEF6RqwTtj/Z7OPmGxxUlV+sLnWz8KBNDytZ6atFr?=
+ =?us-ascii?Q?wZT23DsuJhZEXVXfW+FY+SYnG6tTy60napg9dOz32SqwkWzc628hAdrKpcSh?=
+ =?us-ascii?Q?m4bGAMcgzfUjZQ1ve2dRKtyM/q9ypMOTUa8pFhI7bmqWppMEBQCkFYwNSY+4?=
+ =?us-ascii?Q?8aoCV9/BHsRW1OcpJ0GHtJq8VWc5/f0rKMN5SUvYkvnAljBaaj11OTXw9DhK?=
+ =?us-ascii?Q?tBRRkx+DR1F5cJFZnAxzRlJFw+CfRoQWAmdGOZHxlICxuhYreqQc9OO24AY+?=
+ =?us-ascii?Q?SVH2oAY3Pq5lW1kCD/uhSwy4WXKzUs+nDlRgSgoWzbKe8zPf4pMU5ARfdgpQ?=
+ =?us-ascii?Q?XqO6e+mzvIJtDm3/5wz5KRKLtexFZpxVoAgad6WhQSnAm0w9cMXpF9MrmbgN?=
+ =?us-ascii?Q?QgW7cxuVhx5DUuL3Y5IpN6s/kG/c4SR/b42kKMnPkkaTUHhyyccWaO6cjFjb?=
+ =?us-ascii?Q?t4rWCfd921jTaBzblB/JTN72g6ufUObrJYqajV/szQAcy5h046ylMX5lcA+H?=
+ =?us-ascii?Q?q/o4orow8O95sfyvcC1/QSywWJeEgyT4xq6DZb0WlfDgj1S4xPCBEt6llzpU?=
+ =?us-ascii?Q?AIUieEFT4mHI1Vtlryj9JT+fRbUYfe6f+Vqh1QksAQPRXavCoo2iFHdRoQ2F?=
+ =?us-ascii?Q?n4G/RytES9XvIoKFY+gGa/TMqrn91nG3lz1TuG/nlel7tgR9MuvyfXnnSGhD?=
+ =?us-ascii?Q?FPyWUO8uIL7oeXfDRX2MdZu30zRnK2n4PseLOD7PNft3SFbxYeDdhALoK5Yz?=
+ =?us-ascii?Q?fW3wwhZYcqrMvPAr98pWVwM+s7f1eZdpPM71yAg87ao/2JF/uso4El5/XLuG?=
+ =?us-ascii?Q?bi9Ch1FRGM7U/8l/jw9IVRJ9iBwihZbOQGDSVhibOXfCev3hgZxPTIdYRPTM?=
+ =?us-ascii?Q?i60cpqeSqcOzfsbpow4AW8afAt1RVLCyuVsL7+BDYOtJTaUuplm8n/jf2r4C?=
+ =?us-ascii?Q?ZwpEoZGVyS3HqGxjdtFNF7qSkeaZnxulf/9Nn+3i1ptme2ylLiek9iXge44L?=
+ =?us-ascii?Q?DJNretc4a9yEuj1bRcXrEw6aEJe3oBOVydi0TteShKbV4laxf69b60KEYGD2?=
+ =?us-ascii?Q?gMSUHhp/Desixk3JqhaEoW7bZpsTcRtK/7FftZlhnMPHi3S8DfXDCv1WSDbk?=
+ =?us-ascii?Q?7vflVPXXv3vXd4M3VOjLB/cf?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f4293262-8a16-49cc-2f83-08d94d0b8f50
+X-MS-Exchange-CrossTenant-AuthSource: BL0PR12MB5506.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Jul 2021 12:23:49.5395
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: xuEWV+dw/8MftmOWv5ynvaCHjvKfc75IWj0XQ0MJfFKLavrGC2IaItRbllB5s8Qu
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL1PR12MB5221
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Sat, Jul 17, 2021 at 02:21:32PM -0500, Alex Sierra wrote:
+> In order to configure device generic in test_hmm, two
+> module parameters should be passed, which correspon to the
+> SP start address of each device (2) spm_addr_dev0 &
+> spm_addr_dev1. If no parameters are passed, private device
+> type is configured.
 
-When we log an inode, we format the "log inode" core and set an LSN
-in that inode core. We do that via xfs_inode_item_format_core(),
-which calls:
+I don't think tests should need configuration like this, is it really
+necessary? How can people with normal HW run this test?
 
-	xfs_inode_to_log_dinode(ip, dic, ip->i_itemp->ili_item.li_lsn);
-
-to format the log inode. It writes the LSN from the inode item into
-the log inode, and if recovery decides the inode item needs to be
-replayed, it recovers the log inode LSN field and writes it into the
-on disk inode LSN field.
-
-Now this might seem like a reasonable thing to do, but it is wrong
-on multiple levels. Firstly, if the item is not yet in the AIL,
-item->li_lsn is zero. i.e. the first time the inode it is logged and
-formatted, the LSN we write into the log inode will be zero. If we
-only log it once, recovery will run and can write this zero LSN into
-the inode.
-
-This means that the next time the inode is logged and log recovery
-runs, it will *always* replay changes to the inode regardless of
-whether the inode is newer on disk than the version in the log and
-that violates the entire purpose of recording the LSN in the inode
-at writeback time (i.e. to stop it going backwards in time on disk
-during recovery).
-
-Secondly, if we commit the CIL to the journal so the inode item
-moves to the AIL, and then relog the inode, the LSN that gets
-stamped into the log inode will be the LSN of the inode's current
-location in the AIL, not it's age on disk. And it's not the LSN that
-will be associated with the current change. That means when log
-recovery replays this inode item, the LSN that ends up on disk is
-the LSN for the previous changes in the log, not the current
-changes being replayed. IOWs, after recovery the LSN on disk is not
-in sync with the LSN of the modifications that were replayed into
-the inode. This, again, violates the recovery ordering semantics
-that on-disk writeback LSNs provide.
-
-Hence the inode LSN in the log dinode is -always- invalid.
-
-Thirdly, recovery actually has the LSN of the log transaction it is
-replaying right at hand - it uses it to determine if it should
-replay the inode by comparing it to the on-disk inode's LSN. But it
-doesn't use that LSN to stamp the LSN into the inode which will be
-written back when the transaction is fully replayed. It uses the one
-in the log dinode, which we know is always going to be incorrect.
-
-Looking back at the change history, the inode logging was broken by
-commit 93f958f9c41f ("xfs: cull unnecessary icdinode fields") way
-back in 2016 by a stupid idiot who thought he knew how this code
-worked. i.e. me. That commit replaced an in memory di_lsn field that
-was updated only at inode writeback time from the inode item.li_lsn
-value - and hence always contained the same LSN that appeared in the
-on-disk inode - with a read of the inode item LSN at inode format
-time. CLearly these are not the same thing.
-
-Before 93f958f9c41f, the log recovery behaviour was irrelevant,
-because the LSN in the log inode always matched the on-disk LSN at
-the time the inode was logged, hence recovery of the transaction
-would never make the on-disk LSN in the inode go backwards or get
-out of sync.
-
-A symptom of the problem is this, caught from a failure of
-generic/482. Before log recovery, the inode has been allocated but
-never used:
-
-xfs_db> inode 393388
-xfs_db> p
-core.magic = 0x494e
-core.mode = 0
-....
-v3.crc = 0x99126961 (correct)
-v3.change_count = 0
-v3.lsn = 0
-v3.flags2 = 0
-v3.cowextsize = 0
-v3.crtime.sec = Thu Jan  1 10:00:00 1970
-v3.crtime.nsec = 0
-
-After log recovery:
-
-xfs_db> p
-core.magic = 0x494e
-core.mode = 020444
-....
-v3.crc = 0x23e68f23 (correct)
-v3.change_count = 2
-v3.lsn = 0
-v3.flags2 = 0
-v3.cowextsize = 0
-v3.crtime.sec = Thu Jul 22 17:03:03 2021
-v3.crtime.nsec = 751000000
-...
-
-You can see that the LSN of the on-disk inode is 0, even though it
-clearly has been written to disk. I point out this inode, because
-the generic/482 failure occurred because several adjacent inodes in
-this specific inode cluster were not replayed correctly and still
-appeared to be zero on disk when all the other metadata (inobt,
-finobt, directories, etc) indicated they should be allocated and
-written back.
-
-The Fix for this is two-fold. The first is that we need to either
-revert the LSN changes in 93f958f9c41f or stop logging the inode LSN
-altogether. If we do the former, log recovery does not need to
-change but we add 8 bytes of memory per inode to store what is
-largely a write-only inode field. If we do the latter, log recovery
-needs to stamp the on-disk inode in the same manner that inode
-writeback does.
-
-I prefer the latter, because we shouldn't really be trying to log
-and replay changes to the on disk LSN as the on-disk value is the
-canonical source of the on-disk version of the inode. It also
-matches the way we recover buffer items - we create a buf_log_item
-that carries the current recovery transaction LSN that gets stamped
-into the buffer by the write verifier when it gets written back
-when the transaction is fully recovered.
-
-However, this might break log recovery on older kernels even more,
-so I'm going to simply ignore the logged value in recovery and stamp
-the on-disk inode with the LSN of the transaction being recovered
-that will trigger writeback on transaction recovery completion. This
-will ensure that the on-disk inode LSN always reflects the LSN of
-the last change that was written to disk, regardless of whether it
-comes from log recovery or runtime writeback.
-
-Fixes: 93f958f9c41f ("xfs: cull unnecessary icdinode fields")
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_inode_item_recover.c | 33 ++++++++++++++++++++++++---------
- 1 file changed, 24 insertions(+), 9 deletions(-)
-
-diff --git a/fs/xfs/xfs_inode_item_recover.c b/fs/xfs/xfs_inode_item_recover.c
-index 7b79518b6c20..5747ef052b4e 100644
---- a/fs/xfs/xfs_inode_item_recover.c
-+++ b/fs/xfs/xfs_inode_item_recover.c
-@@ -145,7 +145,8 @@ xfs_log_dinode_to_disk_ts(
- STATIC void
- xfs_log_dinode_to_disk(
- 	struct xfs_log_dinode	*from,
--	struct xfs_dinode	*to)
-+	struct xfs_dinode	*to,
-+	xfs_lsn_t		lsn)
- {
- 	to->di_magic = cpu_to_be16(from->di_magic);
- 	to->di_mode = cpu_to_be16(from->di_mode);
-@@ -182,7 +183,7 @@ xfs_log_dinode_to_disk(
- 		to->di_flags2 = cpu_to_be64(from->di_flags2);
- 		to->di_cowextsize = cpu_to_be32(from->di_cowextsize);
- 		to->di_ino = cpu_to_be64(from->di_ino);
--		to->di_lsn = cpu_to_be64(from->di_lsn);
-+		to->di_lsn = cpu_to_be64(lsn);
- 		memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
- 		uuid_copy(&to->di_uuid, &from->di_uuid);
- 		to->di_flushiter = 0;
-@@ -261,12 +262,17 @@ xlog_recover_inode_commit_pass2(
- 	}
- 
- 	/*
--	 * If the inode has an LSN in it, recover the inode only if it's less
--	 * than the lsn of the transaction we are replaying. Note: we still
--	 * need to replay an owner change even though the inode is more recent
--	 * than the transaction as there is no guarantee that all the btree
--	 * blocks are more recent than this transaction, too.
-+	 * If the inode has an LSN in it, recover the inode only if the on-disk
-+	 * inode's LSN is older than the lsn of the transaction we are
-+	 * replaying. We must check the current_lsn against the on-disk inode
-+	 * here because the we can't trust the log dinode to contain a valid LSN
-+	 * (see comment below before replaying the log dinode for details).
-+	 *
-+	 * Note: we still need to replay an owner change even though the inode
-+	 * is more recent than the transaction as there is no guarantee that all
-+	 * the btree blocks are more recent than this transaction, too.
- 	 */
-+
- 	if (dip->di_version >= 3) {
- 		xfs_lsn_t	lsn = be64_to_cpu(dip->di_lsn);
- 
-@@ -368,8 +374,17 @@ xlog_recover_inode_commit_pass2(
- 		goto out_release;
- 	}
- 
--	/* recover the log dinode inode into the on disk inode */
--	xfs_log_dinode_to_disk(ldip, dip);
-+	/*
-+	 * Recover the log dinode inode into the on disk inode.
-+	 *
-+	 * The LSN in the log dinode is garbage - it can be zero or reflect
-+	 * stale in-memory runtime state that isn't coherent with the changes
-+	 * logged in this transaction or the changes written to the on-disk
-+	 * inode.  Hence we write the current lSN into the inode because that
-+	 * matches what xfs_iflush() would write inode the inode when flushing
-+	 * the changes in this transaction.
-+	 */
-+	xfs_log_dinode_to_disk(ldip, dip, current_lsn);
- 
- 	fields = in_f->ilf_fields;
- 	if (fields & XFS_ILOG_DEV)
--- 
-2.31.1
-
+Jason
