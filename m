@@ -2,110 +2,113 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-20.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EBB9BC4338F
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Jul 2021 01:52:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 717B6C4338F
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Jul 2021 03:58:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CB15A60EBE
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Jul 2021 01:52:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5C21060C41
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Jul 2021 03:58:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233134AbhGWBMA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Jul 2021 21:12:00 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58554 "EHLO mail.kernel.org"
+        id S233990AbhGWDRa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Jul 2021 23:17:30 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37534 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230318AbhGWBMA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 22 Jul 2021 21:12:00 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 9D60160E9A;
-        Fri, 23 Jul 2021 01:52:34 +0000 (UTC)
+        id S233743AbhGWDRL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 22 Jul 2021 23:17:11 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 30B6760F36;
+        Fri, 23 Jul 2021 03:57:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627005154;
-        bh=dubo8niTm2fAph2AV70T+l7jUyaRlEBWVCODXsuymHs=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=c8rOmcNFq6dVUMpNu9SxM6DzJMyst3LN3ufi73N+zsM7d12ZgHatlfR7cgZ/fy0i6
-         UkMx1ZSt2deeQV/WhcR3DmQ1tFmA88bh+/5HsYEUO0L/tKgbq4e6h1vdz6cHl6Sg4Y
-         UByeKuoFIh2LBpzC40H7E8cedR/pY8VLEbmWPQajXI5cJU7TbYNSb5fEfWRIAOXCu5
-         4B4AtgfcgElSc+jmbP1Ru4A9jvHlT+sEvOXG1Up4bKSCww3RphljdQeES5GWl9h401
-         Mi+4O0r6VI4rlaFlY/bu7iGQtLRd/rXRLsqJzof8eGgNg1u8d843jzSDIm9nAlr/Ev
-         cJqgvM0mTz49Q==
-Date:   Thu, 22 Jul 2021 18:52:33 -0700
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-f2fs-devel@lists.sourceforge.net,
-        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Satya Tangirala <satyaprateek2357@gmail.com>,
-        Changheun Lee <nanich.lee@samsung.com>,
-        Matthew Bobrowski <mbobrowski@mbobrowski.org>
-Subject: Re: [PATCH 6/9] f2fs: implement iomap operations
-Message-ID: <YPog4SDY3nNC78sK@sol.localdomain>
-References: <20210716143919.44373-1-ebiggers@kernel.org>
- <20210716143919.44373-7-ebiggers@kernel.org>
- <YPU+3inGclUtcSpJ@infradead.org>
+        s=k20201202; t=1627012665;
+        bh=NBwycyZpcWFpXMuqm52Myl7XVI6DIA0P1rTPJSPJshM=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=ic2nJKIrCBwu3sfucijcpkEErlDZrR//hMefpeHrlWl4CI1cAQwW0iYJGL80rbU4q
+         sze5ctQpWDJR47y/GrjdBjcS0vaYg4nXDj7XR3hW4YcsGMrR4Vr8WKgz64e2awIsr/
+         /i44iKTd8D9o8UEE9b9GzM3aoEncJq3WmrYoWQO7j5KVHgDdGb7FskPmscO+IwL8Qx
+         qS7IHAlqOfffgGqk3D5RTJlHrjUnSD4C5buEfkc+SdG5VbKg8ygwGdZtoxVXmjvW7G
+         PW0VfVvenMbpG+EY6i5yGxuVjYwwbosB5ChoYscD6M4EkVy7tcvnvpiYusRsXmURb7
+         CD17QKXMUBHGw==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Leizhen <thunder.leizhen@huawei.com>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Sasha Levin <sashal@kernel.org>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.13 17/19] iomap: remove the length variable in iomap_seek_data
+Date:   Thu, 22 Jul 2021 23:57:18 -0400
+Message-Id: <20210723035721.531372-17-sashal@kernel.org>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20210723035721.531372-1-sashal@kernel.org>
+References: <20210723035721.531372-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YPU+3inGclUtcSpJ@infradead.org>
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Christoph,
+From: Christoph Hellwig <hch@lst.de>
 
-On Mon, Jul 19, 2021 at 10:59:10AM +0200, Christoph Hellwig wrote:
-> On Fri, Jul 16, 2021 at 09:39:16AM -0500, Eric Biggers wrote:
-> > +static blk_qc_t f2fs_dio_submit_bio(struct inode *inode, struct iomap *iomap,
-> > +				    struct bio *bio, loff_t file_offset)
-> > +{
-> > +	struct f2fs_private_dio *dio;
-> > +	bool write = (bio_op(bio) == REQ_OP_WRITE);
-> > +
-> > +	dio = f2fs_kzalloc(F2FS_I_SB(inode),
-> > +			sizeof(struct f2fs_private_dio), GFP_NOFS);
-> > +	if (!dio)
-> > +		goto out;
-> > +
-> > +	dio->inode = inode;
-> > +	dio->orig_end_io = bio->bi_end_io;
-> > +	dio->orig_private = bio->bi_private;
-> > +	dio->write = write;
-> > +
-> > +	bio->bi_end_io = f2fs_dio_end_io;
-> > +	bio->bi_private = dio;
-> > +
-> > +	inc_page_count(F2FS_I_SB(inode),
-> > +			write ? F2FS_DIO_WRITE : F2FS_DIO_READ);
-> > +
-> > +	return submit_bio(bio);
-> 
-> I don't think there is any need for this mess.  The F2FS_DIO_WRITE /
-> F2FS_DIO_READ counts are only used to check if there is any inflight
-> I/O at all.  So instead we can increment them once before calling
-> iomap_dio_rw, and decrement them in ->end_io or for a failure/noop
-> exit from iomap_dio_rw.  Untested patch below.  Note that all this
-> would be much simpler to review if the last three patches were folded
-> into a single one.
-> 
+[ Upstream commit 3ac1d426510f97ace05093ae9f2f710d9cbe6215 ]
 
-I am trying to do this, but unfortunately I don't see a way to make it work
-correctly in all cases.
+The length variable is rather pointless given that it can be trivially
+deduced from offset and size.  Also the initial calculation can lead
+to KASAN warnings.
 
-The main problem is that when iomap_dio_rw() returns an error (other than
--EIOCBQUEUED), there is no way to know whether ->end_io() has been called or
-not.  This is because iomap_dio_rw() can fail either early, before "starting"
-the I/O (in which case ->end_io() won't have been called), or later, after
-"starting" the I/O (in which case ->end_io() will have been called).  Note that
-this can't be worked around by checking whether the iov_iter has been advanced
-or not, since a failure could occur between "starting" the I/O and the iov_iter
-being advanced for the first time.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reported-by: Leizhen (ThunderTown) <thunder.leizhen@huawei.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ fs/iomap/seek.c | 16 ++++++----------
+ 1 file changed, 6 insertions(+), 10 deletions(-)
 
-Would you be receptive to adding a ->begin_io() callback to struct iomap_dio_ops
-in order to allow filesystems to maintain counters like this?
+diff --git a/fs/iomap/seek.c b/fs/iomap/seek.c
+index dab1b02eba5b..50b8f1418f26 100644
+--- a/fs/iomap/seek.c
++++ b/fs/iomap/seek.c
+@@ -83,27 +83,23 @@ loff_t
+ iomap_seek_data(struct inode *inode, loff_t offset, const struct iomap_ops *ops)
+ {
+ 	loff_t size = i_size_read(inode);
+-	loff_t length = size - offset;
+ 	loff_t ret;
+ 
+ 	/* Nothing to be found before or beyond the end of the file. */
+ 	if (offset < 0 || offset >= size)
+ 		return -ENXIO;
+ 
+-	while (length > 0) {
+-		ret = iomap_apply(inode, offset, length, IOMAP_REPORT, ops,
+-				  &offset, iomap_seek_data_actor);
++	while (offset < size) {
++		ret = iomap_apply(inode, offset, size - offset, IOMAP_REPORT,
++				  ops, &offset, iomap_seek_data_actor);
+ 		if (ret < 0)
+ 			return ret;
+ 		if (ret == 0)
+-			break;
+-
++			return offset;
+ 		offset += ret;
+-		length -= ret;
+ 	}
+ 
+-	if (length <= 0)
+-		return -ENXIO;
+-	return offset;
++	/* We've reached the end of the file without finding data */
++	return -ENXIO;
+ }
+ EXPORT_SYMBOL_GPL(iomap_seek_data);
+-- 
+2.30.2
 
-Either way, given the problem here, I think I should leave this out of the
-initial conversion and just do a dumb translation of the existing f2fs logic to
-start with, like I have in this patch.
-
-- Eric
