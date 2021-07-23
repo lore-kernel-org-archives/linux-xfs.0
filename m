@@ -2,113 +2,110 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19467C4338F
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Jul 2021 23:17:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBB9BC4338F
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Jul 2021 01:52:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DB20560EB6
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Jul 2021 23:17:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB15A60EBE
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Jul 2021 01:52:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232463AbhGVWgd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Jul 2021 18:36:33 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34016 "EHLO mail.kernel.org"
+        id S233134AbhGWBMA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Jul 2021 21:12:00 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58554 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232024AbhGVWgd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 22 Jul 2021 18:36:33 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 97D9A60E8F;
-        Thu, 22 Jul 2021 23:17:07 +0000 (UTC)
+        id S230318AbhGWBMA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 22 Jul 2021 21:12:00 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 9D60160E9A;
+        Fri, 23 Jul 2021 01:52:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1626995827;
-        bh=VDT6CE/ocFpJnwX/7ZMqhTJy5zy3h3rbipVZOdNkKcI=;
+        s=k20201202; t=1627005154;
+        bh=dubo8niTm2fAph2AV70T+l7jUyaRlEBWVCODXsuymHs=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=fY71zypO1tX3Put+nV+ROZjv5CxmTRCrEYyokVQExQbPoq45Ynz1LqjD7gfsq6CiV
-         JB51dqmwxwnPi2mCyC4QsD3snvwrTEp2gZ0EHKm6qzyT+MiYDlsJ//eifHY1PFIP6T
-         9jHmxhvz5xyk8JJPHbnqGr7r7+9+/dGDmBLR50OLWrDHQ7nBnmtI9gl2z+60XoaGYx
-         L0suYUpVKRAmWVwz1V5XawRUqwqgSZFbZY/xjIBSISl70TKOK+dShEJbOhzeihHS61
-         j4MBqz5o7x04SOmRcEKZyav1H8BtPE7mjBtNBkQrOj0N0hkepp8Dfs5ldpwlxFl50N
-         j5h4PzulEYx+Q==
-Date:   Thu, 22 Jul 2021 16:17:07 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 7/7] xfs: use $XFS_QUOTA_PROG instead of hardcoding
- xfs_quota
-Message-ID: <20210722231707.GQ559212@magnolia>
-References: <20210722073832.976547-1-hch@lst.de>
- <20210722073832.976547-8-hch@lst.de>
- <20210722182514.GE559212@magnolia>
+        b=c8rOmcNFq6dVUMpNu9SxM6DzJMyst3LN3ufi73N+zsM7d12ZgHatlfR7cgZ/fy0i6
+         UkMx1ZSt2deeQV/WhcR3DmQ1tFmA88bh+/5HsYEUO0L/tKgbq4e6h1vdz6cHl6Sg4Y
+         UByeKuoFIh2LBpzC40H7E8cedR/pY8VLEbmWPQajXI5cJU7TbYNSb5fEfWRIAOXCu5
+         4B4AtgfcgElSc+jmbP1Ru4A9jvHlT+sEvOXG1Up4bKSCww3RphljdQeES5GWl9h401
+         Mi+4O0r6VI4rlaFlY/bu7iGQtLRd/rXRLsqJzof8eGgNg1u8d843jzSDIm9nAlr/Ev
+         cJqgvM0mTz49Q==
+Date:   Thu, 22 Jul 2021 18:52:33 -0700
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-f2fs-devel@lists.sourceforge.net,
+        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        Satya Tangirala <satyaprateek2357@gmail.com>,
+        Changheun Lee <nanich.lee@samsung.com>,
+        Matthew Bobrowski <mbobrowski@mbobrowski.org>
+Subject: Re: [PATCH 6/9] f2fs: implement iomap operations
+Message-ID: <YPog4SDY3nNC78sK@sol.localdomain>
+References: <20210716143919.44373-1-ebiggers@kernel.org>
+ <20210716143919.44373-7-ebiggers@kernel.org>
+ <YPU+3inGclUtcSpJ@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210722182514.GE559212@magnolia>
+In-Reply-To: <YPU+3inGclUtcSpJ@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 22, 2021 at 11:25:14AM -0700, Darrick J. Wong wrote:
-> On Thu, Jul 22, 2021 at 09:38:32AM +0200, Christoph Hellwig wrote:
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+Hi Christoph,
+
+On Mon, Jul 19, 2021 at 10:59:10AM +0200, Christoph Hellwig wrote:
+> On Fri, Jul 16, 2021 at 09:39:16AM -0500, Eric Biggers wrote:
+> > +static blk_qc_t f2fs_dio_submit_bio(struct inode *inode, struct iomap *iomap,
+> > +				    struct bio *bio, loff_t file_offset)
+> > +{
+> > +	struct f2fs_private_dio *dio;
+> > +	bool write = (bio_op(bio) == REQ_OP_WRITE);
+> > +
+> > +	dio = f2fs_kzalloc(F2FS_I_SB(inode),
+> > +			sizeof(struct f2fs_private_dio), GFP_NOFS);
+> > +	if (!dio)
+> > +		goto out;
+> > +
+> > +	dio->inode = inode;
+> > +	dio->orig_end_io = bio->bi_end_io;
+> > +	dio->orig_private = bio->bi_private;
+> > +	dio->write = write;
+> > +
+> > +	bio->bi_end_io = f2fs_dio_end_io;
+> > +	bio->bi_private = dio;
+> > +
+> > +	inc_page_count(F2FS_I_SB(inode),
+> > +			write ? F2FS_DIO_WRITE : F2FS_DIO_READ);
+> > +
+> > +	return submit_bio(bio);
 > 
-> Nice!!
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> I don't think there is any need for this mess.  The F2FS_DIO_WRITE /
+> F2FS_DIO_READ counts are only used to check if there is any inflight
+> I/O at all.  So instead we can increment them once before calling
+> iomap_dio_rw, and decrement them in ->end_io or for a failure/noop
+> exit from iomap_dio_rw.  Untested patch below.  Note that all this
+> would be much simpler to review if the last three patches were folded
+> into a single one.
+> 
 
-OFC now that I applied it I noticed that you forgot xfs/107.
+I am trying to do this, but unfortunately I don't see a way to make it work
+correctly in all cases.
 
---D
+The main problem is that when iomap_dio_rw() returns an error (other than
+-EIOCBQUEUED), there is no way to know whether ->end_io() has been called or
+not.  This is because iomap_dio_rw() can fail either early, before "starting"
+the I/O (in which case ->end_io() won't have been called), or later, after
+"starting" the I/O (in which case ->end_io() will have been called).  Note that
+this can't be worked around by checking whether the iov_iter has been advanced
+or not, since a failure could occur between "starting" the I/O and the iov_iter
+being advanced for the first time.
 
-diff --git a/tests/xfs/107 b/tests/xfs/107
-index ce131a77..da052290 100755
---- a/tests/xfs/107
-+++ b/tests/xfs/107
-@@ -85,17 +85,17 @@ $FSSTRESS_PROG -z -s 47806 -m 8 -n 500 -p 4 \
- QARGS="-x -D $tmp.projects -P /dev/null $SCRATCH_MNT"
- 
- echo "### initial report"
--xfs_quota -c 'quot -p' -c 'quota -ip 6' $QARGS | filter_xfs_quota
-+$XFS_QUOTA_PROG -c 'quot -p' -c 'quota -ip 6' $QARGS | filter_xfs_quota
- 
- echo "### check the project, should give warnings"
--xfs_quota -c 'project -c 6' $QARGS | LC_COLLATE=POSIX sort | filter_xfs_quota
-+$XFS_QUOTA_PROG -c 'project -c 6' $QARGS | LC_COLLATE=POSIX sort | filter_xfs_quota
- 
- echo "### recursively setup the project"
--xfs_quota -c 'project -s 6' $QARGS | LC_COLLATE=POSIX sort | filter_xfs_quota
--xfs_quota -c 'quota -ip 6' $QARGS | filter_xfs_quota
-+$XFS_QUOTA_PROG -c 'project -s 6' $QARGS | LC_COLLATE=POSIX sort | filter_xfs_quota
-+$XFS_QUOTA_PROG -c 'quota -ip 6' $QARGS | filter_xfs_quota
- 
- echo "### check the project, should give no warnings now"
--xfs_quota -c 'project -c 6' $QARGS | LC_COLLATE=POSIX sort | filter_xfs_quota
-+$XFS_QUOTA_PROG -c 'project -c 6' $QARGS | LC_COLLATE=POSIX sort | filter_xfs_quota
- 
- echo "### deny a hard link - wrong project ID"
- rm -f $SCRATCH_MNT/outer $target/inner
-@@ -107,7 +107,7 @@ if [ $? -eq 0 ]; then
- else
- 	echo hard link failed
- fi
--xfs_quota -c 'quota -ip 6' $QARGS | filter_xfs_quota
-+$XFS_QUOTA_PROG -c 'quota -ip 6' $QARGS | filter_xfs_quota
- 
- echo "### allow a hard link - right project ID"
- $XFS_IO_PROG -c 'chproj 6' $SCRATCH_MNT/outer
-@@ -118,12 +118,12 @@ else
- 	echo hard link failed
- 	ls -ld $SCRATCH_MNT/outer $target/inner
- fi
--xfs_quota -c 'quota -ip 6' $QARGS | filter_xfs_quota
-+$XFS_QUOTA_PROG -c 'quota -ip 6' $QARGS | filter_xfs_quota
- 
- echo "### recursively clear the project"
--xfs_quota -c 'project -C 6' $QARGS | LC_COLLATE=POSIX sort | filter_xfs_quota
-+$XFS_QUOTA_PROG -c 'project -C 6' $QARGS | LC_COLLATE=POSIX sort | filter_xfs_quota
- #no output...
--xfs_quota -c 'quota -ip 6' $QARGS | filter_xfs_quota
-+$XFS_QUOTA_PROG -c 'quota -ip 6' $QARGS | filter_xfs_quota
- 
- status=0
- exit
+Would you be receptive to adding a ->begin_io() callback to struct iomap_dio_ops
+in order to allow filesystems to maintain counters like this?
+
+Either way, given the problem here, I think I should leave this out of the
+initial conversion and just do a dumb translation of the existing f2fs logic to
+start with, like I have in this patch.
+
+- Eric
