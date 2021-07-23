@@ -2,106 +2,116 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-20.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6561BC4320E
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Jul 2021 04:01:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99015C4338F
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Jul 2021 05:00:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4BA8C60E53
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Jul 2021 04:01:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B28760E99
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Jul 2021 05:00:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233855AbhGWDVQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Jul 2021 23:21:16 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37168 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233858AbhGWDRM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 22 Jul 2021 23:17:12 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8F09760C41;
-        Fri, 23 Jul 2021 03:57:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627012666;
-        bh=+tUf8UsEFsnhIbkN1zSKvp4omNtzqg1OVxJOYm4VOpw=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=IxLpHrh43oPPOI6xIj7CieJok+Q1+fyjOaLPOd61wH6L21I9YI9tCUE5lmll3LbIg
-         r62UY6h0531Q03gE8yddJDVa6rwQU0kN51blqUIEZcv0GTm13U9s7SwF/tawVf1VPd
-         6XYc4KPncZ3WoqrkVp7X0CpeQvbBkzvzbUPOYJ9aTYrkMgxOIzaHLO/jmgUPT3O3XZ
-         esx2x8qK6S+mg9VBWmLELtAmNnXBQpZINtF+NY/cXUlyOFOC9KGGtQMlJ7I7xtKs/o
-         awfjyo1GTGxe7/DuzFWJCKFHsDznHRAiBUkpFEqNs+qIfRe3CJ+nazg+T+xD9h9BN6
-         Tq5lr0lIYsIlg==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Christoph Hellwig <hch@lst.de>,
-        Leizhen <thunder.leizhen@huawei.com>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Sasha Levin <sashal@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.13 18/19] iomap: remove the length variable in iomap_seek_hole
-Date:   Thu, 22 Jul 2021 23:57:19 -0400
-Message-Id: <20210723035721.531372-18-sashal@kernel.org>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210723035721.531372-1-sashal@kernel.org>
-References: <20210723035721.531372-1-sashal@kernel.org>
+        id S229698AbhGWEUG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 23 Jul 2021 00:20:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45742 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229447AbhGWEUF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Jul 2021 00:20:05 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 24A6FC061575;
+        Thu, 22 Jul 2021 22:00:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=4qd4HWfR62CNOrkSwzE6Doa+rbZvUu2MnV3xCDp5M6Y=; b=orkv4g04AUQYr+HMgYoF/k5xSF
+        wIdA3/lfQnnkeZqpQRN75Xh2QRWa0OHn2w5cMNuhefHq2T7eT6wphEyIpPkm8ftUuhv6ygSb2R1nu
+        bTMqM/sH5ZEWpdDuXPcgLLCbgsntwtmLFQMWWoTp/P4XgG2tgfE/Q75+yuHf/NVtSuo8EB8QXHC52
+        q9xKUGz4TBsm/bxZSshhcrfalVECQxd+P7M5la3+x9/Be4KYvOQxdEpzwa65DFJiSZgUM3o+DXzrQ
+        B59eYqiOYgmSVhuHk0X8G55Dc6Pbre/XuAwcW5teQg9aT6V2PleCQHnDUsIBuCt+mL8Cw6LdMX2tC
+        tzKVwQBA==;
+Received: from hch by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1m6nI3-00B0JI-MH; Fri, 23 Jul 2021 05:00:10 +0000
+Date:   Fri, 23 Jul 2021 06:00:03 +0100
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        linux-f2fs-devel@lists.sourceforge.net,
+        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        Satya Tangirala <satyaprateek2357@gmail.com>,
+        Changheun Lee <nanich.lee@samsung.com>,
+        Matthew Bobrowski <mbobrowski@mbobrowski.org>
+Subject: Re: [PATCH 6/9] f2fs: implement iomap operations
+Message-ID: <YPpM09DLTB28obqQ@infradead.org>
+References: <20210716143919.44373-1-ebiggers@kernel.org>
+ <20210716143919.44373-7-ebiggers@kernel.org>
+ <YPU+3inGclUtcSpJ@infradead.org>
+ <YPog4SDY3nNC78sK@sol.localdomain>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YPog4SDY3nNC78sK@sol.localdomain>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Christoph Hellwig <hch@lst.de>
+On Thu, Jul 22, 2021 at 06:52:33PM -0700, Eric Biggers wrote:
+> I am trying to do this, but unfortunately I don't see a way to make it work
+> correctly in all cases.
+> 
+> The main problem is that when iomap_dio_rw() returns an error (other than
+> -EIOCBQUEUED), there is no way to know whether ->end_io() has been called or
+> not.  This is because iomap_dio_rw() can fail either early, before "starting"
+> the I/O (in which case ->end_io() won't have been called), or later, after
+> "starting" the I/O (in which case ->end_io() will have been called).  Note that
+> this can't be worked around by checking whether the iov_iter has been advanced
+> or not, since a failure could occur between "starting" the I/O and the iov_iter
+> being advanced for the first time.
+> 
+> Would you be receptive to adding a ->begin_io() callback to struct iomap_dio_ops
+> in order to allow filesystems to maintain counters like this?
 
-[ Upstream commit 49694d14ff68fa4b5f86019dbcfb44a8bd213e58 ]
+I think we can triviall fix this by using the slightly lower level
+__iomap_dio_rw API.  Incremental patch to my previous one below:
 
-The length variable is rather pointless given that it can be trivially
-deduced from offset and size.  Also the initial calculation can lead
-to KASAN warnings.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reported-by: Leizhen (ThunderTown) <thunder.leizhen@huawei.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- fs/iomap/seek.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
-
-diff --git a/fs/iomap/seek.c b/fs/iomap/seek.c
-index 50b8f1418f26..ce6fb810854f 100644
---- a/fs/iomap/seek.c
-+++ b/fs/iomap/seek.c
-@@ -35,23 +35,20 @@ loff_t
- iomap_seek_hole(struct inode *inode, loff_t offset, const struct iomap_ops *ops)
- {
- 	loff_t size = i_size_read(inode);
--	loff_t length = size - offset;
- 	loff_t ret;
+diff --git a/fs/f2fs/file.c b/fs/f2fs/file.c
+index 4fed90cc1462..11844bd0cb7a 100644
+--- a/fs/f2fs/file.c
++++ b/fs/f2fs/file.c
+@@ -4243,6 +4243,7 @@ static ssize_t f2fs_dio_read_iter(struct kiocb *iocb, struct iov_iter *to)
+ 	struct f2fs_inode_info *fi = F2FS_I(inode);
+ 	const loff_t pos = iocb->ki_pos;
+ 	const size_t count = iov_iter_count(to);
++	struct iomap_dio *dio;
+ 	ssize_t ret;
  
- 	/* Nothing to be found before or beyond the end of the file. */
- 	if (offset < 0 || offset >= size)
- 		return -ENXIO;
- 
--	while (length > 0) {
--		ret = iomap_apply(inode, offset, length, IOMAP_REPORT, ops,
--				  &offset, iomap_seek_hole_actor);
-+	while (offset < size) {
-+		ret = iomap_apply(inode, offset, size - offset, IOMAP_REPORT,
-+				  ops, &offset, iomap_seek_hole_actor);
- 		if (ret < 0)
- 			return ret;
- 		if (ret == 0)
- 			break;
--
- 		offset += ret;
--		length -= ret;
+ 	if (count == 0)
+@@ -4260,8 +4261,13 @@ static ssize_t f2fs_dio_read_iter(struct kiocb *iocb, struct iov_iter *to)
  	}
  
- 	return offset;
--- 
-2.30.2
-
+ 	inc_page_count(F2FS_I_SB(inode), F2FS_DIO_READ);
+-	ret = iomap_dio_rw(iocb, to, &f2fs_iomap_ops, &f2fs_iomap_dio_ops, 0);
+-
++	dio = __iomap_dio_rw(iocb, to, &f2fs_iomap_ops, &f2fs_iomap_dio_ops, 0);
++	if (IS_ERR_OR_NULL(dio)) {
++		dec_page_count(F2FS_I_SB(inode), F2FS_DIO_READ);
++		ret = PTR_ERR_OR_ZERO(dio);
++	} else {
++		ret = iomap_dio_complete(dio);
++	}
+ 	up_read(&fi->i_gc_rwsem[READ]);
+ 
+ 	file_accessed(file);
+@@ -4271,8 +4277,6 @@ static ssize_t f2fs_dio_read_iter(struct kiocb *iocb, struct iov_iter *to)
+ 	else if (ret == -EIOCBQUEUED)
+ 		f2fs_update_iostat(F2FS_I_SB(inode), APP_DIRECT_READ_IO,
+ 				   count - iov_iter_count(to));
+-	else
+-		dec_page_count(F2FS_I_SB(inode), F2FS_DIO_READ);
+ out:
+ 	trace_f2fs_direct_IO_exit(inode, pos, count, READ, ret);
+ 	return ret;
