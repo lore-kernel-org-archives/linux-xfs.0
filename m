@@ -2,143 +2,82 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EEFD4C4338F
-	for <linux-xfs@archiver.kernel.org>; Sat, 24 Jul 2021 05:11:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AE0DC4320E
+	for <linux-xfs@archiver.kernel.org>; Sat, 24 Jul 2021 07:19:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B81CF60EB4
-	for <linux-xfs@archiver.kernel.org>; Sat, 24 Jul 2021 05:11:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA4CA60EB5
+	for <linux-xfs@archiver.kernel.org>; Sat, 24 Jul 2021 07:19:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229807AbhGXEak (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 24 Jul 2021 00:30:40 -0400
-Received: from out30-43.freemail.mail.aliyun.com ([115.124.30.43]:59259 "EHLO
-        out30-43.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229730AbhGXEak (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 24 Jul 2021 00:30:40 -0400
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R951e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04420;MF=hsiangkao@linux.alibaba.com;NM=1;PH=DS;RN=4;SR=0;TI=SMTPD_---0Uglz-Zg_1627103469;
-Received: from B-P7TQMD6M-0146.local(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0Uglz-Zg_1627103469)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Sat, 24 Jul 2021 13:11:11 +0800
-Date:   Sat, 24 Jul 2021 13:11:09 +0800
-From:   Gao Xiang <hsiangkao@linux.alibaba.com>
-To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>
-Cc:     linux-fsdevel@vger.kernel.org, linux-erofs@lists.ozlabs.org,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] iomap: Support inline data with block size < page
- size
-Message-ID: <YPug7VUMZboQu4QW@B-P7TQMD6M-0146.local>
-Mail-Followup-To: "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        linux-fsdevel@vger.kernel.org, linux-erofs@lists.ozlabs.org,
-        linux-xfs@vger.kernel.org
-References: <20210724034435.2854295-1-willy@infradead.org>
- <20210724034435.2854295-3-willy@infradead.org>
- <YPubNbDS0KgUALtt@B-P7TQMD6M-0146.local>
+        id S234250AbhGXGjM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 24 Jul 2021 02:39:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34592 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234085AbhGXGjK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 24 Jul 2021 02:39:10 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76EB9C061575;
+        Sat, 24 Jul 2021 00:19:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=O/XU7BaOJ1uvC1EkMCQUlQz3U2U8xvRd2MbfcwD2IpA=; b=MDgreUOWODAfOvefRAPYEl3Oia
+        dHU4LYmu8cbdWaaqhowrU9J6cLhO6rLSUkrKQy0hsdL3ePEwcProggNMwZU75a92cRzyw6YUByyPQ
+        5Y9tgXQqRw4Dlqh6wGhbGvJGcbVMxiFloSSZdc4WjU1y9Z0a0eStaG+OMLSPdiTV1bn6NuTRM9ZDF
+        xUDXHwdc8arrh21Zj74m9ppkAhoqn0v6yJpyIxNTnNmDMOjsSClzfb7I+oUFSrsBHY15IW2yzWR66
+        XSg8y9K9nagTX9+/MW2gvdnz6aUoY0TbQxc1iUbHC92XmfQd0Tym2t+KeBL/HI4T3iAfcR6zWo6OI
+        ElGynbeA==;
+Received: from hch by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1m7BwJ-00C4tG-OZ; Sat, 24 Jul 2021 07:19:17 +0000
+Date:   Sat, 24 Jul 2021 08:19:15 +0100
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     Satya Tangirala <satyat@google.com>,
+        "Theodore Y . Ts'o" <tytso@mit.edu>,
+        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        linux-kernel@vger.kernel.org, linux-fscrypt@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-ext4@vger.kernel.org
+Subject: Re: [PATCH v9 5/9] block: Make bio_iov_iter_get_pages() respect
+ bio_required_sector_alignment()
+Message-ID: <YPu+88KReGlt94o3@infradead.org>
+References: <20210604210908.2105870-1-satyat@google.com>
+ <20210604210908.2105870-6-satyat@google.com>
+ <YPs1jlAsvXLomSJJ@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YPubNbDS0KgUALtt@B-P7TQMD6M-0146.local>
+In-Reply-To: <YPs1jlAsvXLomSJJ@gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Jul 24, 2021 at 12:46:45PM +0800, Gao Xiang wrote:
-> Hi Matthew,
+On Fri, Jul 23, 2021 at 02:33:02PM -0700, Eric Biggers wrote:
+> I do still wonder if we should just not support that...  Dave is the only person
+> who has asked for it, and it's a lot of trouble to support.
 > 
-> On Sat, Jul 24, 2021 at 04:44:35AM +0100, Matthew Wilcox (Oracle) wrote:
-> > Remove the restriction that inline data must start on a page boundary
-> > in a file.  This allows, for example, the first 2KiB to be stored out
-> > of line and the trailing 30 bytes to be stored inline.
-> > 
-> > Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-> > ---
-> >  fs/iomap/buffered-io.c | 18 ++++++++----------
-> >  1 file changed, 8 insertions(+), 10 deletions(-)
-> > 
-> > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> > index 7bd8e5de996d..d7d6af29af7f 100644
-> > --- a/fs/iomap/buffered-io.c
-> > +++ b/fs/iomap/buffered-io.c
-> > @@ -209,25 +209,23 @@ static int iomap_read_inline_data(struct inode *inode, struct page *page,
-> >  		struct iomap *iomap, loff_t pos)
-> >  {
-> >  	size_t size = iomap->length + iomap->offset - pos;
-> > +	size_t poff = offset_in_page(pos);
-> >  	void *addr;
-> >  
-> >  	if (PageUptodate(page))
-> > -		return PAGE_SIZE;
-> > +		return PAGE_SIZE - poff;
-> >  
-> > -	/* inline data must start page aligned in the file */
-> > -	if (WARN_ON_ONCE(offset_in_page(pos)))
-> > -		return -EIO;
-> >  	if (WARN_ON_ONCE(!iomap_inline_data_size_valid(iomap)))
-> >  		return -EIO;
-> > -	if (WARN_ON_ONCE(page_has_private(page)))
-> > -		return -EIO;
-> > +	if (poff > 0)
-> > +		iomap_page_create(inode, page);
+> I also noticed that f2fs has always only supported direct I/O that is *fully*
+> fs-block aligned (including the I/O segments) anyway.  So presumably that
+> limitation is not really that important after all...
 > 
-> Thanks for the patch!
-> 
-> Previously I'd like to skip the leading uptodate blocks and update the
-> extent it covers that is due to already exist iop. If we get rid of the
-> offset_in_page(pos) restriction like this, I'm not sure if we (or some
-> other fs users) could face something like below (due to somewhat buggy
-> fs users likewise):
-> 
->  [0 - 4096)    plain block
-> 
->  [4096 - 4608)  tail INLINE 1 (e.g. by mistake or just splitted
->                                     .iomap_begin() report.)
->  [4608 - 5120]  tail INLINE 2
-> 
+> Does anyone else have thoughts on this?
 
-(cont.)
+There are some use cases that really like sector aligned direct I/O,
+what comes to mind is some data bases, and file system repair tools
+(the latter on the raw block device).  So it is nice to support, but not
+really required.
 
-So I think without the !offset_in_page(pos) restriction, at least we
-may need to add something like:
+So for now I'd much prefer to initially support inline encryption for
+direct I/O without that if that simplifies the support.  We can revisit
+the additional complexity later.
 
-if (WARN_ON_ONCE(size != i_size_read(inode) - iomap->offset))
-	return -EIO;
-
-to the approach to detect such cases at least but that is no need with
-page-sized and !offset_in_page(pos) restriction.
-
-> with this code iomap_set_range_uptodate() wouldn't behave correctly.
-> 
-> In addition, currently EROFS cannot test such path (since EROFS is
-> page-sized block only for now) as Darrick said in the previous reply,
-> so I think it would be better together with the folio patchset and
-> targeted for the corresponding merge window, so I can test iomap
-> supported EROFS with the new folio support together (That also give
-> me some time to support sub-pagesized uncompressed blocks...)
-> 
-> >  
-> > -	addr = kmap_atomic(page);
-> > +	addr = kmap_atomic(page) + poff;
-> >  	memcpy(addr, iomap_inline_buf(iomap, pos), size);
-> > -	memset(addr + size, 0, PAGE_SIZE - size);
-> > +	memset(addr + size, 0, PAGE_SIZE - poff - size);
-> >  	kunmap_atomic(addr);
-> 
-> As my limited understanding, this may need to be fixed, since it
-> doesn't match kmap_atomic(page)...
-> 
-> Thanks,
-> Gao Xiang
-> 
-> > -	SetPageUptodate(page);
-> > -	return PAGE_SIZE;
-> > +	iomap_set_range_uptodate(page, poff, PAGE_SIZE - poff);
-> > +	return PAGE_SIZE - poff;
-> >  }
-> >  
-> >  static inline bool iomap_block_needs_zeroing(struct inode *inode,
-> > -- 
-> > 2.30.2
-> > 
+Also note that for cheap flash media pretending support for 512 byte
+blocks is actually a bit awwkward, so just presenting the media as
+having 4096 sectors in these setups would be the better choice anyway.
