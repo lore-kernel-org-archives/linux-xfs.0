@@ -2,36 +2,36 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89B85C432BE
-	for <linux-xfs@archiver.kernel.org>; Sun, 25 Jul 2021 10:00:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AA47C4338F
+	for <linux-xfs@archiver.kernel.org>; Sun, 25 Jul 2021 10:50:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6C96160F35
-	for <linux-xfs@archiver.kernel.org>; Sun, 25 Jul 2021 10:00:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4D1BD600EF
+	for <linux-xfs@archiver.kernel.org>; Sun, 25 Jul 2021 10:50:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230393AbhGYJTz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 25 Jul 2021 05:19:55 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58190 "EHLO mail.kernel.org"
+        id S230192AbhGYKKY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 25 Jul 2021 06:10:24 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52728 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230370AbhGYJTz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 25 Jul 2021 05:19:55 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 39F4560C51;
-        Sun, 25 Jul 2021 10:00:24 +0000 (UTC)
+        id S229538AbhGYKKY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 25 Jul 2021 06:10:24 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B169260E09;
+        Sun, 25 Jul 2021 10:50:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627207225;
-        bh=x7k4bz7Y7uiJ9HuwIGC00aa9QqIdMDVb+kj05Oe8caQ=;
+        s=k20201202; t=1627210254;
+        bh=yQbrkcDM1yJmK+PftQjYegtYQ1gnnfPgYmC1lw0cjwo=;
         h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
-        b=K9xh3UjE9h8p4mNba4tJb72qMolVr5FH3ck2XHfJC3Nq04ce2eNk/tWZvYXz09Xa4
-         +iI6mJ90H2NO+S//WQjEpIA7XrQYfP831fQ0DmDfswAZvUdfBVU3UVjkxpgYhxTvi5
-         lZhDdEBVy61QSDHoJGEAc1B2kXpVIzulRFjasgiCNcKoGPiYDkI1fgZsMQjI8YgeDl
-         TtQPELL26wKbWqPPLasBDRNXpx4fiZPjnA2J3xmL4mlkQpsuerCiCsRR6l4Y9MmGya
-         rogIhPCQ1fgY+drq8dJVV4V/uBQH8/2i/YE78Ibc15+7mq+hGPP8xBm5m+vyyIGoa0
-         ZW9XoygA98WSw==
-Subject: Re: [PATCH 1/9] f2fs: make f2fs_write_failed() take struct inode
+        b=pN7HlkVX4xMxq6PYGr86ouHgYPN4BM2tSJa5oUD15kkgc1b+9w8Y2sEy6SEHKzr81
+         +uZkRPeeqTE8Z+QH7n9Ty/zswhUrPB46PhIpL0nA+bczwBPF+m62Z9bj+oAscjeUGd
+         KY7YQfzXlPBozAkQh6fhM/IP7HhTUJDEpADa3XbKr1hxLdG5cOmimsafF7eQYe+YqY
+         VHxvo3u5L0SOsrJjdG0ozEX3uQtxqFG5bAUtHHzgBvCPmXZw7vd2RDUQDfbJYcXtHu
+         TzhkWQv8pNLZvbj+xmyFcvqAqMt+eicbMHJPPeFqL+CqOxodBVe7E5MWtRXiJP7HML
+         0+9q4Z73B0gWg==
+Subject: Re: [PATCH 3/9] f2fs: rework write preallocations
 To:     Eric Biggers <ebiggers@kernel.org>,
         linux-f2fs-devel@lists.sourceforge.net,
         Jaegeuk Kim <jaegeuk@kernel.org>
@@ -40,14 +40,14 @@ Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
         Changheun Lee <nanich.lee@samsung.com>,
         Matthew Bobrowski <mbobrowski@mbobrowski.org>
 References: <20210716143919.44373-1-ebiggers@kernel.org>
- <20210716143919.44373-2-ebiggers@kernel.org>
+ <20210716143919.44373-4-ebiggers@kernel.org>
 From:   Chao Yu <chao@kernel.org>
-Message-ID: <7bc676f9-dbaf-5c8d-2b6e-67c75383d02d@kernel.org>
-Date:   Sun, 25 Jul 2021 18:00:23 +0800
+Message-ID: <14782036-f6a5-878a-d21f-e7dd7008a285@kernel.org>
+Date:   Sun, 25 Jul 2021 18:50:51 +0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
  Thunderbird/78.12.0
 MIME-Version: 1.0
-In-Reply-To: <20210716143919.44373-2-ebiggers@kernel.org>
+In-Reply-To: <20210716143919.44373-4-ebiggers@kernel.org>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -58,11 +58,38 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 2021/7/16 22:39, Eric Biggers wrote:
 > From: Eric Biggers <ebiggers@google.com>
 > 
-> Make f2fs_write_failed() take a 'struct inode' directly rather than a
-> 'struct address_space', as this simplifies it slightly.
-> 
-> Signed-off-by: Eric Biggers <ebiggers@google.com>
+> f2fs_write_begin() assumes that all blocks were preallocated by
+> default unless FI_NO_PREALLOC is explicitly set.  This invites data
+> corruption, as there are cases in which not all blocks are preallocated.
+> Commit 47501f87c61a ("f2fs: preallocate DIO blocks when forcing
+> buffered_io") fixed one case, but there are others remaining.
 
-Reviewed-by: Chao Yu <chao@kernel.org>
+Could you please explain which cases we missed to handle previously?
+then I can check those related logic before and after the rework.
+
+> -			/*
+> -			 * If force_buffere_io() is true, we have to allocate
+> -			 * blocks all the time, since f2fs_direct_IO will fall
+> -			 * back to buffered IO.
+> -			 */
+> -			if (!f2fs_force_buffered_io(inode, iocb, from) &&
+> -					f2fs_lfs_mode(F2FS_I_SB(inode)))
+
+We should keep this OPU DIO logic, otherwise, in lfs mode, write dio
+will always allocate two block addresses for each 4k append IO.
+
+I jsut test based on codes of last f2fs dev-test branch.
+
+rm /mnt/f2fs/dio
+dd if=/dev/zero  of=/mnt/f2fs/dio bs=4k count=4 oflag=direct
+
+           <...>-763176  [001] ...1 177258.793370: f2fs_map_blocks: dev = (259,1), ino = 6, file offset = 0, start blkaddr = 0xe1a2e, len = 0x1, flags = 48,seg_type = 1, may_create = 1, err = 0
+            <...>-763176  [001] ...1 177258.793462: f2fs_map_blocks: dev = (259,1), ino = 6, file offset = 0, start blkaddr = 0xe1a2f, len = 0x1, flags = 16,seg_type = 1, may_create = 1, err = 0
+               dd-763176  [001] ...1 177258.793575: f2fs_map_blocks: dev = (259,1), ino = 6, file offset = 1, start blkaddr = 0xe1a30, len = 0x1, flags = 48,seg_type = 1, may_create = 1, err = 0
+               dd-763176  [001] ...1 177258.793599: f2fs_map_blocks: dev = (259,1), ino = 6, file offset = 1, start blkaddr = 0xe1a31, len = 0x1, flags = 16,seg_type = 1, may_create = 1, err = 0
+               dd-763176  [001] ...1 177258.793735: f2fs_map_blocks: dev = (259,1), ino = 6, file offset = 2, start blkaddr = 0xe1a32, len = 0x1, flags = 48,seg_type = 1, may_create = 1, err = 0
+               dd-763176  [001] ...1 177258.793769: f2fs_map_blocks: dev = (259,1), ino = 6, file offset = 2, start blkaddr = 0xe1a33, len = 0x1, flags = 16,seg_type = 1, may_create = 1, err = 0
+               dd-763176  [001] ...1 177258.793859: f2fs_map_blocks: dev = (259,1), ino = 6, file offset = 3, start blkaddr = 0xe1a34, len = 0x1, flags = 48,seg_type = 1, may_create = 1, err = 0
+               dd-763176  [001] ...1 177258.793885: f2fs_map_blocks: dev = (259,1), ino = 6, file offset = 3, start blkaddr = 0xe1a35, len = 0x1, flags = 16,seg_type = 1, may_create = 1, err = 0
 
 Thanks,
