@@ -2,94 +2,114 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AA47C4338F
-	for <linux-xfs@archiver.kernel.org>; Sun, 25 Jul 2021 10:50:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D970BC4320A
+	for <linux-xfs@archiver.kernel.org>; Sun, 25 Jul 2021 15:02:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4D1BD600EF
-	for <linux-xfs@archiver.kernel.org>; Sun, 25 Jul 2021 10:50:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BE8FD60E09
+	for <linux-xfs@archiver.kernel.org>; Sun, 25 Jul 2021 15:02:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230192AbhGYKKY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 25 Jul 2021 06:10:24 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52728 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229538AbhGYKKY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 25 Jul 2021 06:10:24 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id B169260E09;
-        Sun, 25 Jul 2021 10:50:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627210254;
-        bh=yQbrkcDM1yJmK+PftQjYegtYQ1gnnfPgYmC1lw0cjwo=;
-        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
-        b=pN7HlkVX4xMxq6PYGr86ouHgYPN4BM2tSJa5oUD15kkgc1b+9w8Y2sEy6SEHKzr81
-         +uZkRPeeqTE8Z+QH7n9Ty/zswhUrPB46PhIpL0nA+bczwBPF+m62Z9bj+oAscjeUGd
-         KY7YQfzXlPBozAkQh6fhM/IP7HhTUJDEpADa3XbKr1hxLdG5cOmimsafF7eQYe+YqY
-         VHxvo3u5L0SOsrJjdG0ozEX3uQtxqFG5bAUtHHzgBvCPmXZw7vd2RDUQDfbJYcXtHu
-         TzhkWQv8pNLZvbj+xmyFcvqAqMt+eicbMHJPPeFqL+CqOxodBVe7E5MWtRXiJP7HML
-         0+9q4Z73B0gWg==
-Subject: Re: [PATCH 3/9] f2fs: rework write preallocations
-To:     Eric Biggers <ebiggers@kernel.org>,
-        linux-f2fs-devel@lists.sourceforge.net,
-        Jaegeuk Kim <jaegeuk@kernel.org>
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Satya Tangirala <satyaprateek2357@gmail.com>,
-        Changheun Lee <nanich.lee@samsung.com>,
-        Matthew Bobrowski <mbobrowski@mbobrowski.org>
-References: <20210716143919.44373-1-ebiggers@kernel.org>
- <20210716143919.44373-4-ebiggers@kernel.org>
-From:   Chao Yu <chao@kernel.org>
-Message-ID: <14782036-f6a5-878a-d21f-e7dd7008a285@kernel.org>
-Date:   Sun, 25 Jul 2021 18:50:51 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        id S231239AbhGYOWC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 25 Jul 2021 10:22:02 -0400
+Received: from out20-1.mail.aliyun.com ([115.124.20.1]:53674 "EHLO
+        out20-1.mail.aliyun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231208AbhGYOWA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 25 Jul 2021 10:22:00 -0400
+X-Alimail-AntiSpam: AC=CONTINUE;BC=0.07570033|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.637282-0.000114646-0.362603;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047194;MF=guan@eryu.me;NM=1;PH=DS;RN=4;RT=4;SR=0;TI=SMTPD_---.KqjFUkr_1627225348;
+Received: from localhost(mailfrom:guan@eryu.me fp:SMTPD_---.KqjFUkr_1627225348)
+          by smtp.aliyun-inc.com(10.147.41.199);
+          Sun, 25 Jul 2021 23:02:28 +0800
+Date:   Sun, 25 Jul 2021 23:02:28 +0800
+From:   Eryu Guan <guan@eryu.me>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Christoph Hellwig <hch@lst.de>, fstests@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 7/7] xfs: use $XFS_QUOTA_PROG instead of hardcoding
+ xfs_quota
+Message-ID: <YP19BK83JkDYI9iv@desktop>
+References: <20210722073832.976547-1-hch@lst.de>
+ <20210722073832.976547-8-hch@lst.de>
+ <20210722182514.GE559212@magnolia>
+ <20210722231707.GQ559212@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20210716143919.44373-4-ebiggers@kernel.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210722231707.GQ559212@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2021/7/16 22:39, Eric Biggers wrote:
-> From: Eric Biggers <ebiggers@google.com>
+On Thu, Jul 22, 2021 at 04:17:07PM -0700, Darrick J. Wong wrote:
+> On Thu, Jul 22, 2021 at 11:25:14AM -0700, Darrick J. Wong wrote:
+> > On Thu, Jul 22, 2021 at 09:38:32AM +0200, Christoph Hellwig wrote:
+> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > 
+> > Nice!!
+> > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 > 
-> f2fs_write_begin() assumes that all blocks were preallocated by
-> default unless FI_NO_PREALLOC is explicitly set.  This invites data
-> corruption, as there are cases in which not all blocks are preallocated.
-> Commit 47501f87c61a ("f2fs: preallocate DIO blocks when forcing
-> buffered_io") fixed one case, but there are others remaining.
+> OFC now that I applied it I noticed that you forgot xfs/107.
 
-Could you please explain which cases we missed to handle previously?
-then I can check those related logic before and after the rework.
+I updated xfs/107 and folded it into this patch. Thanks for all the
+reviews!
 
-> -			/*
-> -			 * If force_buffere_io() is true, we have to allocate
-> -			 * blocks all the time, since f2fs_direct_IO will fall
-> -			 * back to buffered IO.
-> -			 */
-> -			if (!f2fs_force_buffered_io(inode, iocb, from) &&
-> -					f2fs_lfs_mode(F2FS_I_SB(inode)))
+Eryu
 
-We should keep this OPU DIO logic, otherwise, in lfs mode, write dio
-will always allocate two block addresses for each 4k append IO.
-
-I jsut test based on codes of last f2fs dev-test branch.
-
-rm /mnt/f2fs/dio
-dd if=/dev/zero  of=/mnt/f2fs/dio bs=4k count=4 oflag=direct
-
-           <...>-763176  [001] ...1 177258.793370: f2fs_map_blocks: dev = (259,1), ino = 6, file offset = 0, start blkaddr = 0xe1a2e, len = 0x1, flags = 48,seg_type = 1, may_create = 1, err = 0
-            <...>-763176  [001] ...1 177258.793462: f2fs_map_blocks: dev = (259,1), ino = 6, file offset = 0, start blkaddr = 0xe1a2f, len = 0x1, flags = 16,seg_type = 1, may_create = 1, err = 0
-               dd-763176  [001] ...1 177258.793575: f2fs_map_blocks: dev = (259,1), ino = 6, file offset = 1, start blkaddr = 0xe1a30, len = 0x1, flags = 48,seg_type = 1, may_create = 1, err = 0
-               dd-763176  [001] ...1 177258.793599: f2fs_map_blocks: dev = (259,1), ino = 6, file offset = 1, start blkaddr = 0xe1a31, len = 0x1, flags = 16,seg_type = 1, may_create = 1, err = 0
-               dd-763176  [001] ...1 177258.793735: f2fs_map_blocks: dev = (259,1), ino = 6, file offset = 2, start blkaddr = 0xe1a32, len = 0x1, flags = 48,seg_type = 1, may_create = 1, err = 0
-               dd-763176  [001] ...1 177258.793769: f2fs_map_blocks: dev = (259,1), ino = 6, file offset = 2, start blkaddr = 0xe1a33, len = 0x1, flags = 16,seg_type = 1, may_create = 1, err = 0
-               dd-763176  [001] ...1 177258.793859: f2fs_map_blocks: dev = (259,1), ino = 6, file offset = 3, start blkaddr = 0xe1a34, len = 0x1, flags = 48,seg_type = 1, may_create = 1, err = 0
-               dd-763176  [001] ...1 177258.793885: f2fs_map_blocks: dev = (259,1), ino = 6, file offset = 3, start blkaddr = 0xe1a35, len = 0x1, flags = 16,seg_type = 1, may_create = 1, err = 0
-
-Thanks,
+> 
+> --D
+> 
+> diff --git a/tests/xfs/107 b/tests/xfs/107
+> index ce131a77..da052290 100755
+> --- a/tests/xfs/107
+> +++ b/tests/xfs/107
+> @@ -85,17 +85,17 @@ $FSSTRESS_PROG -z -s 47806 -m 8 -n 500 -p 4 \
+>  QARGS="-x -D $tmp.projects -P /dev/null $SCRATCH_MNT"
+>  
+>  echo "### initial report"
+> -xfs_quota -c 'quot -p' -c 'quota -ip 6' $QARGS | filter_xfs_quota
+> +$XFS_QUOTA_PROG -c 'quot -p' -c 'quota -ip 6' $QARGS | filter_xfs_quota
+>  
+>  echo "### check the project, should give warnings"
+> -xfs_quota -c 'project -c 6' $QARGS | LC_COLLATE=POSIX sort | filter_xfs_quota
+> +$XFS_QUOTA_PROG -c 'project -c 6' $QARGS | LC_COLLATE=POSIX sort | filter_xfs_quota
+>  
+>  echo "### recursively setup the project"
+> -xfs_quota -c 'project -s 6' $QARGS | LC_COLLATE=POSIX sort | filter_xfs_quota
+> -xfs_quota -c 'quota -ip 6' $QARGS | filter_xfs_quota
+> +$XFS_QUOTA_PROG -c 'project -s 6' $QARGS | LC_COLLATE=POSIX sort | filter_xfs_quota
+> +$XFS_QUOTA_PROG -c 'quota -ip 6' $QARGS | filter_xfs_quota
+>  
+>  echo "### check the project, should give no warnings now"
+> -xfs_quota -c 'project -c 6' $QARGS | LC_COLLATE=POSIX sort | filter_xfs_quota
+> +$XFS_QUOTA_PROG -c 'project -c 6' $QARGS | LC_COLLATE=POSIX sort | filter_xfs_quota
+>  
+>  echo "### deny a hard link - wrong project ID"
+>  rm -f $SCRATCH_MNT/outer $target/inner
+> @@ -107,7 +107,7 @@ if [ $? -eq 0 ]; then
+>  else
+>  	echo hard link failed
+>  fi
+> -xfs_quota -c 'quota -ip 6' $QARGS | filter_xfs_quota
+> +$XFS_QUOTA_PROG -c 'quota -ip 6' $QARGS | filter_xfs_quota
+>  
+>  echo "### allow a hard link - right project ID"
+>  $XFS_IO_PROG -c 'chproj 6' $SCRATCH_MNT/outer
+> @@ -118,12 +118,12 @@ else
+>  	echo hard link failed
+>  	ls -ld $SCRATCH_MNT/outer $target/inner
+>  fi
+> -xfs_quota -c 'quota -ip 6' $QARGS | filter_xfs_quota
+> +$XFS_QUOTA_PROG -c 'quota -ip 6' $QARGS | filter_xfs_quota
+>  
+>  echo "### recursively clear the project"
+> -xfs_quota -c 'project -C 6' $QARGS | LC_COLLATE=POSIX sort | filter_xfs_quota
+> +$XFS_QUOTA_PROG -c 'project -C 6' $QARGS | LC_COLLATE=POSIX sort | filter_xfs_quota
+>  #no output...
+> -xfs_quota -c 'quota -ip 6' $QARGS | filter_xfs_quota
+> +$XFS_QUOTA_PROG -c 'quota -ip 6' $QARGS | filter_xfs_quota
+>  
+>  status=0
+>  exit
