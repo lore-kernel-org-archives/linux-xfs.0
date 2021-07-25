@@ -2,145 +2,67 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6AC1C43214
-	for <linux-xfs@archiver.kernel.org>; Sat, 24 Jul 2021 15:14:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89B85C432BE
+	for <linux-xfs@archiver.kernel.org>; Sun, 25 Jul 2021 10:00:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 86CB060EB6
-	for <linux-xfs@archiver.kernel.org>; Sat, 24 Jul 2021 15:14:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6C96160F35
+	for <linux-xfs@archiver.kernel.org>; Sun, 25 Jul 2021 10:00:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229984AbhGXOeF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 24 Jul 2021 10:34:05 -0400
-Received: from out30-131.freemail.mail.aliyun.com ([115.124.30.131]:50944 "EHLO
-        out30-131.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229944AbhGXOdx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 24 Jul 2021 10:33:53 -0400
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R381e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04400;MF=hsiangkao@linux.alibaba.com;NM=1;PH=DS;RN=4;SR=0;TI=SMTPD_---0Ugohg-R_1627139662;
-Received: from B-P7TQMD6M-0146.local(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0Ugohg-R_1627139662)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Sat, 24 Jul 2021 23:14:23 +0800
-Date:   Sat, 24 Jul 2021 23:14:22 +0800
-From:   Gao Xiang <hsiangkao@linux.alibaba.com>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     linux-fsdevel@vger.kernel.org, linux-erofs@lists.ozlabs.org,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] iomap: Support inline data with block size < page
- size
-Message-ID: <YPwuTsBAsUSSOIvo@B-P7TQMD6M-0146.local>
-Mail-Followup-To: Matthew Wilcox <willy@infradead.org>,
-        linux-fsdevel@vger.kernel.org, linux-erofs@lists.ozlabs.org,
-        linux-xfs@vger.kernel.org
-References: <20210724034435.2854295-1-willy@infradead.org>
- <20210724034435.2854295-3-willy@infradead.org>
- <YPubNbDS0KgUALtt@B-P7TQMD6M-0146.local>
- <YPwdzD+nf9rStDI3@casper.infradead.org>
+        id S230393AbhGYJTz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 25 Jul 2021 05:19:55 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58190 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230370AbhGYJTz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 25 Jul 2021 05:19:55 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 39F4560C51;
+        Sun, 25 Jul 2021 10:00:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1627207225;
+        bh=x7k4bz7Y7uiJ9HuwIGC00aa9QqIdMDVb+kj05Oe8caQ=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=K9xh3UjE9h8p4mNba4tJb72qMolVr5FH3ck2XHfJC3Nq04ce2eNk/tWZvYXz09Xa4
+         +iI6mJ90H2NO+S//WQjEpIA7XrQYfP831fQ0DmDfswAZvUdfBVU3UVjkxpgYhxTvi5
+         lZhDdEBVy61QSDHoJGEAc1B2kXpVIzulRFjasgiCNcKoGPiYDkI1fgZsMQjI8YgeDl
+         TtQPELL26wKbWqPPLasBDRNXpx4fiZPjnA2J3xmL4mlkQpsuerCiCsRR6l4Y9MmGya
+         rogIhPCQ1fgY+drq8dJVV4V/uBQH8/2i/YE78Ibc15+7mq+hGPP8xBm5m+vyyIGoa0
+         ZW9XoygA98WSw==
+Subject: Re: [PATCH 1/9] f2fs: make f2fs_write_failed() take struct inode
+To:     Eric Biggers <ebiggers@kernel.org>,
+        linux-f2fs-devel@lists.sourceforge.net,
+        Jaegeuk Kim <jaegeuk@kernel.org>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        Satya Tangirala <satyaprateek2357@gmail.com>,
+        Changheun Lee <nanich.lee@samsung.com>,
+        Matthew Bobrowski <mbobrowski@mbobrowski.org>
+References: <20210716143919.44373-1-ebiggers@kernel.org>
+ <20210716143919.44373-2-ebiggers@kernel.org>
+From:   Chao Yu <chao@kernel.org>
+Message-ID: <7bc676f9-dbaf-5c8d-2b6e-67c75383d02d@kernel.org>
+Date:   Sun, 25 Jul 2021 18:00:23 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <YPwdzD+nf9rStDI3@casper.infradead.org>
+In-Reply-To: <20210716143919.44373-2-ebiggers@kernel.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Jul 24, 2021 at 03:03:56PM +0100, Matthew Wilcox wrote:
-> On Sat, Jul 24, 2021 at 12:46:45PM +0800, Gao Xiang wrote:
-> > Hi Matthew,
-> > 
-> > On Sat, Jul 24, 2021 at 04:44:35AM +0100, Matthew Wilcox (Oracle) wrote:
-> > > Remove the restriction that inline data must start on a page boundary
-> > > in a file.  This allows, for example, the first 2KiB to be stored out
-> > > of line and the trailing 30 bytes to be stored inline.
-> > > 
-> > > Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-> > > ---
-> > >  fs/iomap/buffered-io.c | 18 ++++++++----------
-> > >  1 file changed, 8 insertions(+), 10 deletions(-)
-> > > 
-> > > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> > > index 7bd8e5de996d..d7d6af29af7f 100644
-> > > --- a/fs/iomap/buffered-io.c
-> > > +++ b/fs/iomap/buffered-io.c
-> > > @@ -209,25 +209,23 @@ static int iomap_read_inline_data(struct inode *inode, struct page *page,
-> > >  		struct iomap *iomap, loff_t pos)
-> > >  {
-> > >  	size_t size = iomap->length + iomap->offset - pos;
-> > > +	size_t poff = offset_in_page(pos);
-> > >  	void *addr;
-> > >  
-> > >  	if (PageUptodate(page))
-> > > -		return PAGE_SIZE;
-> > > +		return PAGE_SIZE - poff;
-> > >  
-> > > -	/* inline data must start page aligned in the file */
-> > > -	if (WARN_ON_ONCE(offset_in_page(pos)))
-> > > -		return -EIO;
-> > >  	if (WARN_ON_ONCE(!iomap_inline_data_size_valid(iomap)))
-> > >  		return -EIO;
-> > > -	if (WARN_ON_ONCE(page_has_private(page)))
-> > > -		return -EIO;
-> > > +	if (poff > 0)
-> > > +		iomap_page_create(inode, page);
-> > 
-> > Thanks for the patch!
-> > 
-> > Previously I'd like to skip the leading uptodate blocks and update the
-> > extent it covers that is due to already exist iop. If we get rid of the
-> > offset_in_page(pos) restriction like this, I'm not sure if we (or some
-> > other fs users) could face something like below (due to somewhat buggy
-> > fs users likewise):
-> > 
-> >  [0 - 4096)    plain block
-> > 
-> >  [4096 - 4608)  tail INLINE 1 (e.g. by mistake or just splitted
-> >                                     .iomap_begin() report.)
-> >  [4608 - 5120]  tail INLINE 2
+On 2021/7/16 22:39, Eric Biggers wrote:
+> From: Eric Biggers <ebiggers@google.com>
 > 
-> My assumption is that an INLINE extent is <= block_size.  Otherwise
-> the first part of the extent would be not-inline.  So this would be
-> a bug in the filesystem; [4096-4608) should not be an inline extent.
+> Make f2fs_write_failed() take a 'struct inode' directly rather than a
+> 'struct address_space', as this simplifies it slightly.
+> 
+> Signed-off-by: Eric Biggers <ebiggers@google.com>
 
-Yes, never mind. Sorry about again.
-
-> 
-> > with this code iomap_set_range_uptodate() wouldn't behave correctly.
-> > 
-> > In addition, currently EROFS cannot test such path (since EROFS is
-> > page-sized block only for now) as Darrick said in the previous reply,
-> > so I think it would be better together with the folio patchset and
-> > targeted for the corresponding merge window, so I can test iomap
-> > supported EROFS with the new folio support together (That also give
-> > me some time to support sub-pagesized uncompressed blocks...)
-> 
-> Do you want to test erofs with multi-page folios?  That might be
-> even more interesting than block size < page size.
-
-Hmm.. I'm busy in developing for some new scenario. Will look into
-that after the current busy period.
-
-> 
-> > > -	addr = kmap_atomic(page);
-> > > +	addr = kmap_atomic(page) + poff;
-> > >  	memcpy(addr, iomap_inline_buf(iomap, pos), size);
-> > > -	memset(addr + size, 0, PAGE_SIZE - size);
-> > > +	memset(addr + size, 0, PAGE_SIZE - poff - size);
-> > >  	kunmap_atomic(addr);
-> > 
-> > As my limited understanding, this may need to be fixed, since it
-> > doesn't match kmap_atomic(page)...
-> 
-> void kunmap_local_indexed(void *vaddr)
-> {
->         unsigned long addr = (unsigned long) vaddr & PAGE_MASK;
-> 
-> so it's fine to unmap any address in the page.
-
-I already checked this (in practice it has no problem due to the
-current implementation), yet I'm not quite sure if it matches the
-API usage, and not quite sure how many in-kernel users use like this.
+Reviewed-by: Chao Yu <chao@kernel.org>
 
 Thanks,
-Gao Xiang
