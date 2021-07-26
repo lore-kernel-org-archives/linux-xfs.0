@@ -8,60 +8,60 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04E8FC4338F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D27CFC432BE
 	for <linux-xfs@archiver.kernel.org>; Mon, 26 Jul 2021 11:47:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D6DAB60F37
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Jul 2021 11:47:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BC00F601FD
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Jul 2021 11:47:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233616AbhGZLHJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S233651AbhGZLHJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Mon, 26 Jul 2021 07:07:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48390 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48398 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233463AbhGZLHI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Jul 2021 07:07:08 -0400
-Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF14BC061764
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Jul 2021 04:47:36 -0700 (PDT)
-Received: by mail-pj1-x1033.google.com with SMTP id mz5-20020a17090b3785b0290176ecf64922so3473429pjb.3
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Jul 2021 04:47:36 -0700 (PDT)
+        with ESMTP id S233463AbhGZLHJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Jul 2021 07:07:09 -0400
+Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9300DC061757
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Jul 2021 04:47:38 -0700 (PDT)
+Received: by mail-pj1-x102a.google.com with SMTP id mz5-20020a17090b3785b0290176ecf64922so3473517pjb.3
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Jul 2021 04:47:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=TaGlgI/19FC6KZUGDzzcYsr4gYxU9CrV0gr47YVo+PY=;
-        b=AhtSqnJWXFZNLkApKBIu34irgGy2YjCV4az1rJMCfTP0eWhXJQLsPyhVkfSSy5E79Q
-         biXaaGPkiPBhMxAoBg/r4afwIcBDl0ncdTgxKXyg3CdDqDUWltU8J6bz0OkVmbnsYP6V
-         8Uh2UdexlwbrEZyjRzgV1AK7R6d7tNKjgHV/yjYCPZY7XiVBfX1w9Z/TzZfnBWTulMS1
-         RRskMkic0OZ3/0DEjhdlINYn8BN4ch6ezSXd0wz755hHABQM+0PrQKiEVNxQLhH510zu
-         NVZxmjzGkNvhpkHl82UD9Pq2IeRC/jkElfc0jA3Kzvz845oI+ATFR6Sfr/NIq/8NFV5J
-         +YHA==
+        bh=Q32+ueAsxoCUwty4kn7/uAewrzSzmE4JscZMCaCi6Bg=;
+        b=ktn1MZhj5CcFosMdNZDD3BybwbMN3zekOgFMCpMYZVbwkNFTvSkPJS1TjQ3lqQIIEs
+         ehOs/pxi2CIv/n4o+HE3BiJZb8MlrhdDM/wHRHFroNETQQhaGIzuV0o1mv3srtr2Chuh
+         JQCbFOHx2HhXutKOiU1Dwbsc/w9l93yeIjy1k4cJhdR8JTUR07A5IUgeKIC6UU3oKdp5
+         LXrEzw5FoVTIPyaJINHFBI38endPxxAGyCrMSxyusR7WUHPCAt1vBhLicDVFa6xQCegK
+         DSKo7pYaVIt5UTYM1rWcyR0QqeI9wZoMAv9beMHg4oW90R2HFtUD1Y4HLlMILtogVDKD
+         0DmA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=TaGlgI/19FC6KZUGDzzcYsr4gYxU9CrV0gr47YVo+PY=;
-        b=piZXpkB23p/vsH3KiEUOciqXgq5ln1TY/rzcDjEo0eoz5HIkw0p0BtQyeahw+3sVUM
-         aOI6bS15sBziSx3YTvjbJoVM5iOYPZnzv/BRdZSN9CvBFpk1YPZ32vE2HBhs/VTjsGwQ
-         4PA51OY4cHhW7sRE/45TmMX/2OkU1ktoqXIX+RHOnV3L3F98rFJ2DS9L59tINLWU357y
-         nMrPuY0h7O8rRz6Lo6I7nJuekbKMRkvDAFQmo/rBYPapBbjG+LwnC52+BZsnVyprwpy7
-         mxcOzIjGHnnLX372U0FDVrDd6X+P7h0hfaGVprpUBy8880/v9NFJ09HXlstqqUFLRN1r
-         5yAw==
-X-Gm-Message-State: AOAM5339m6FXwEzOvLKBUYgwLrgOZcZUj0STX1FF0lTL7a37tLmr88uA
-        CPdfA2BPuAbpcXng3mkwMorGS54/VnQ=
-X-Google-Smtp-Source: ABdhPJyhItVl6PFRE3GV+TFUFUgyCwvrdrZ2v2rv2r7Lqf8jwPgMmmiw8Llg0FAFyFvv2K7kI8SJfQ==
-X-Received: by 2002:a62:ee0f:0:b029:335:a681:34f6 with SMTP id e15-20020a62ee0f0000b0290335a68134f6mr17503602pfi.55.1627300056426;
-        Mon, 26 Jul 2021 04:47:36 -0700 (PDT)
+        bh=Q32+ueAsxoCUwty4kn7/uAewrzSzmE4JscZMCaCi6Bg=;
+        b=N57Jaqyx0gucpd6hRTvkh9pnbUgjKuXOVBz+xfUWsn7dczD2JXMBTGoKLp+vuDmRBs
+         dcUuM0BYCw8yyckrzWKUjFx+9f9Kw0K8Efu+YpFu1EVERyd8gqYARYXIaVQ/CPlI06Ov
+         ZvEqKk8lzNI+jmUYL7mspa+NyNDAxx/9+MdsG+RYJqRy4IfzZgAZHuOIIihGoMU2/cfX
+         bFX0mCARxeZTx7g3i6UPiF9nj643Lw+isRFowjQspzvGOJiWnpiLnAW4I5NrPGiVnXd6
+         KIzNl9tDUxYGcGWeIC8tXKBbR9gIbHQODbYKWQ8OuZ2XlO8Bl6HBMHj+n7KXm62H7Cj9
+         5ujg==
+X-Gm-Message-State: AOAM5313SexGHnGaqFycTLIT2PvrOXegHVSc/HJNyFrpZpiWbVt8BmiA
+        w76uNvkV5ePQ0LK6s/B5GOgZpgKDR7Q=
+X-Google-Smtp-Source: ABdhPJyUS+1ERbF3dO6DLxkT2Y2SQuC87KUTvS4Gv3j1+BNT3PIANX/ZKwagqzow/1ZqRk4CxT6hWg==
+X-Received: by 2002:a05:6a00:d6f:b029:398:74ba:4cdc with SMTP id n47-20020a056a000d6fb029039874ba4cdcmr5321116pfv.49.1627300058008;
+        Mon, 26 Jul 2021 04:47:38 -0700 (PDT)
 Received: from localhost.localdomain ([122.179.41.55])
-        by smtp.gmail.com with ESMTPSA id y10sm35936900pjy.18.2021.07.26.04.47.35
+        by smtp.gmail.com with ESMTPSA id y10sm35936900pjy.18.2021.07.26.04.47.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Jul 2021 04:47:36 -0700 (PDT)
+        Mon, 26 Jul 2021 04:47:37 -0700 (PDT)
 From:   Chandan Babu R <chandanrlinux@gmail.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     Chandan Babu R <chandanrlinux@gmail.com>, djwong@kernel.org
-Subject: [PATCH V2 01/12] xfsprogs: Move extent count limits to xfs_format.h
-Date:   Mon, 26 Jul 2021 17:17:13 +0530
-Message-Id: <20210726114724.24956-2-chandanrlinux@gmail.com>
+Subject: [PATCH V2 02/12] xfsprogs: Rename MAXEXTNUM, MAXAEXTNUM to XFS_IFORK_EXTCNT_MAXS32, XFS_IFORK_EXTCNT_MAXS16
+Date:   Mon, 26 Jul 2021 17:17:14 +0530
+Message-Id: <20210726114724.24956-3-chandanrlinux@gmail.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210726114724.24956-1-chandanrlinux@gmail.com>
 References: <20210726114724.24956-1-chandanrlinux@gmail.com>
@@ -71,52 +71,107 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Maximum values associated with extent counters i.e. Maximum extent length,
-Maximum data extents and Maximum xattr extents are dictated by the on-disk
-format. Hence move these definitions over to xfs_format.h.
+In preparation for introducing larger extent count limits, this commit renames
+existing extent count limits based on their signedness and width.
 
 Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
 ---
- libxfs/xfs_format.h | 7 +++++++
- libxfs/xfs_types.h  | 7 -------
- 2 files changed, 7 insertions(+), 7 deletions(-)
+ libxfs/xfs_bmap.c       | 4 ++--
+ libxfs/xfs_format.h     | 8 ++++----
+ libxfs/xfs_inode_buf.c  | 4 ++--
+ libxfs/xfs_inode_fork.c | 3 ++-
+ repair/dinode.c         | 4 ++--
+ 5 files changed, 12 insertions(+), 11 deletions(-)
 
+diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+index 277727a1a..7927e2712 100644
+--- a/libxfs/xfs_bmap.c
++++ b/libxfs/xfs_bmap.c
+@@ -69,10 +69,10 @@ xfs_bmap_compute_maxlevels(
+ 	 * available.
+ 	 */
+ 	if (whichfork == XFS_DATA_FORK) {
+-		maxleafents = MAXEXTNUM;
++		maxleafents = XFS_IFORK_EXTCNT_MAXS32;
+ 		sz = xfs_bmdr_space_calc(MINDBTPTRS);
+ 	} else {
+-		maxleafents = MAXAEXTNUM;
++		maxleafents = XFS_IFORK_EXTCNT_MAXS16;
+ 		sz = xfs_bmdr_space_calc(MINABTPTRS);
+ 	}
+ 	maxrootrecs = xfs_bmdr_maxrecs(sz, 0);
 diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
-index b7704620c..24277f45a 100644
+index 24277f45a..84b3aefe2 100644
 --- a/libxfs/xfs_format.h
 +++ b/libxfs/xfs_format.h
-@@ -1109,6 +1109,13 @@ enum xfs_dinode_fmt {
- 	{ XFS_DINODE_FMT_BTREE,		"btree" }, \
+@@ -1110,11 +1110,11 @@ enum xfs_dinode_fmt {
  	{ XFS_DINODE_FMT_UUID,		"uuid" }
  
-+/*
-+ * Max values for extlen, extnum, aextnum.
-+ */
-+#define	MAXEXTLEN	((uint32_t)0x001fffff)	/* 21 bits */
-+#define	MAXEXTNUM	((int32_t)0x7fffffff)	/* signed int */
-+#define	MAXAEXTNUM	((int16_t)0x7fff)	/* signed short */
-+
+ /*
+- * Max values for extlen, extnum, aextnum.
++ * Max values for extlen, disk inode's extent counters.
+  */
+-#define	MAXEXTLEN	((uint32_t)0x001fffff)	/* 21 bits */
+-#define	MAXEXTNUM	((int32_t)0x7fffffff)	/* signed int */
+-#define	MAXAEXTNUM	((int16_t)0x7fff)	/* signed short */
++#define	MAXEXTLEN		((uint32_t)0x1fffff) /* 21 bits */
++#define XFS_IFORK_EXTCNT_MAXS32 ((int32_t)0x7fffffff)  /* Signed 32-bits */
++#define XFS_IFORK_EXTCNT_MAXS16 ((int16_t)0x7fff)      /* Signed 16-bits */
+ 
  /*
   * Inode minimum and maximum sizes.
-  */
-diff --git a/libxfs/xfs_types.h b/libxfs/xfs_types.h
-index 5c0cc8060..8908346b1 100644
---- a/libxfs/xfs_types.h
-+++ b/libxfs/xfs_types.h
-@@ -56,13 +56,6 @@ typedef void *		xfs_failaddr_t;
- #define	NULLFSINO	((xfs_ino_t)-1)
- #define	NULLAGINO	((xfs_agino_t)-1)
+diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
+index 3d1805e4c..855cb0b85 100644
+--- a/libxfs/xfs_inode_buf.c
++++ b/libxfs/xfs_inode_buf.c
+@@ -362,9 +362,9 @@ xfs_dinode_verify_fork(
+ 		break;
+ 	case XFS_DINODE_FMT_BTREE:
+ 		if (whichfork == XFS_ATTR_FORK) {
+-			if (di_nextents > MAXAEXTNUM)
++			if (di_nextents > XFS_IFORK_EXTCNT_MAXS16)
+ 				return __this_address;
+-		} else if (di_nextents > MAXEXTNUM) {
++		} else if (di_nextents > XFS_IFORK_EXTCNT_MAXS32) {
+ 			return __this_address;
+ 		}
+ 		break;
+diff --git a/libxfs/xfs_inode_fork.c b/libxfs/xfs_inode_fork.c
+index e3979ceef..36e8bf702 100644
+--- a/libxfs/xfs_inode_fork.c
++++ b/libxfs/xfs_inode_fork.c
+@@ -734,7 +734,8 @@ xfs_iext_count_may_overflow(
+ 	if (whichfork == XFS_COW_FORK)
+ 		return 0;
  
--/*
-- * Max values for extlen, extnum, aextnum.
-- */
--#define	MAXEXTLEN	((xfs_extlen_t)0x001fffff)	/* 21 bits */
--#define	MAXEXTNUM	((xfs_extnum_t)0x7fffffff)	/* signed int */
--#define	MAXAEXTNUM	((xfs_aextnum_t)0x7fff)		/* signed short */
--
- /*
-  * Minimum and maximum blocksize and sectorsize.
-  * The blocksize upper limit is pretty much arbitrary.
+-	max_exts = (whichfork == XFS_ATTR_FORK) ? MAXAEXTNUM : MAXEXTNUM;
++	max_exts = (whichfork == XFS_ATTR_FORK) ?
++		XFS_IFORK_EXTCNT_MAXS16 : XFS_IFORK_EXTCNT_MAXS32;
+ 
+ 	if (XFS_TEST_ERROR(false, ip->i_mount, XFS_ERRTAG_REDUCE_MAX_IEXTENTS))
+ 		max_exts = 10;
+diff --git a/repair/dinode.c b/repair/dinode.c
+index ffd409646..45c8174cf 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -1831,7 +1831,7 @@ _("bad nblocks %llu for inode %" PRIu64 ", would reset to %" PRIu64 "\n"),
+ 		}
+ 	}
+ 
+-	if (nextents > MAXEXTNUM)  {
++	if (nextents > XFS_IFORK_EXTCNT_MAXS32)  {
+ 		do_warn(
+ _("too many data fork extents (%" PRIu64 ") in inode %" PRIu64 "\n"),
+ 			nextents, lino);
+@@ -1854,7 +1854,7 @@ _("bad nextents %d for inode %" PRIu64 ", would reset to %" PRIu64 "\n"),
+ 		}
+ 	}
+ 
+-	if (anextents > MAXAEXTNUM)  {
++	if (anextents > XFS_IFORK_EXTCNT_MAXS16)  {
+ 		do_warn(
+ _("too many attr fork extents (%" PRIu64 ") in inode %" PRIu64 "\n"),
+ 			anextents, lino);
 -- 
 2.30.2
 
