@@ -7,149 +7,86 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3429C4338F
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Jul 2021 17:09:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A889C432BE
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Jul 2021 17:09:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BD1B360F44
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Jul 2021 17:09:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8876460F44
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Jul 2021 17:09:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237930AbhGZQ2f (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 26 Jul 2021 12:28:35 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51764 "EHLO mail.kernel.org"
+        id S236168AbhGZQ2h (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 26 Jul 2021 12:28:37 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53580 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S240417AbhGZQVh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 26 Jul 2021 12:21:37 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 78A4660F37;
-        Mon, 26 Jul 2021 17:01:53 +0000 (UTC)
+        id S243465AbhGZQ17 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 26 Jul 2021 12:27:59 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E49E960F44;
+        Mon, 26 Jul 2021 17:08:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627318913;
-        bh=dlBCmGaytFioU+IzHg/7V5rT4gMrDW4dQ6geZyza8k0=;
+        s=k20201202; t=1627319308;
+        bh=U0DYVQba8m26zqgBmoaH6I6tpYtnXeEJjBWHK6VHXYw=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Mk73q9jKczWo6Q46WDxrNTLCdY0dnUgPakINxc++lQ8PPGdh3gX6a0SCkSNtxskxa
-         WDyJOpgNBlAzVB41uNBvmBkciRiyUVjjSihv7cEVW4CIsmJGO9T5FgcPozxMTnpPuH
-         rGgF1pOQ5Uugvylh/Q+/AkS/fKaD/mHm2fQtvbwU/wacdNs7IJIw9UivqLvcpfPXm1
-         jwvAzYqTXXepyv3fqMtNJ/iqLUz9T3lIyDJ/vwPgt843i6OuTVN+0/XVyZPSgBrR8N
-         mtvlXOI5ykc4owlEYrGsu80IPATJUDZjDEquaf3OLt2I6M0RFk5ogY8bO4sj/nv064
-         3TWqyNLKhL5/A==
-Date:   Mon, 26 Jul 2021 10:01:52 -0700
+        b=iaX3JQwHOJ9RccebjIztaUZq5RigapioqJrxzu7z5lTyF6r6Pv8eD7lY3P5vIPtvA
+         KLGNI4ZEvKHhsjtHGZJHMmRrf71OqYLtisq6gP/SNHpGMbttBdbnofYkQXEo1ROdXd
+         dP8jPbb5FBg90yD7+5vV7PDVg8XsMYGaqjeYQLsSLdA+Xfk39bV2Ne8BF0pnluUZDZ
+         mTG6EiSpfSoYXxsg6X06yo2UjcCdmjL1mxdfspGtjVT42olZJ4rYhSj4uGDInfz3nf
+         0aeRh0FsIQTHwUqw1eSsk8CVq3yscTfeyGiNM2dSj4417x+Ozjc+XQn7LEQG5wjnxa
+         dYtXmNpfZYU+A==
+Date:   Mon, 26 Jul 2021 10:08:27 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Eryu Guan <guan@eryu.me>
-Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org
-Subject: Re: [PATCH 1/2] generic: test xattr operations only
-Message-ID: <20210726170152.GT559212@magnolia>
-References: <162674332320.2650898.17601790625049494810.stgit@magnolia>
- <162674332866.2650898.16916837755915187962.stgit@magnolia>
- <YP2LJTF7mL9ooKxf@desktop>
+To:     Chandan Babu R <chandanrlinux@gmail.com>
+Cc:     fstests@vger.kernel.org, guaneryu@gmail.com,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/3] xfs/530: Do not pass block size argument to
+ _scratch_mkfs
+Message-ID: <20210726170827.GU559212@magnolia>
+References: <20210726064313.19153-1-chandanrlinux@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YP2LJTF7mL9ooKxf@desktop>
+In-Reply-To: <20210726064313.19153-1-chandanrlinux@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jul 26, 2021 at 12:02:45AM +0800, Eryu Guan wrote:
-> On Mon, Jul 19, 2021 at 06:08:48PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Exercise extended attribute operations.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  tests/generic/724     |   57 +++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/generic/724.out |    2 ++
-> >  2 files changed, 59 insertions(+)
-> >  create mode 100755 tests/generic/724
-> >  create mode 100644 tests/generic/724.out
-> > 
-> > 
-> > diff --git a/tests/generic/724 b/tests/generic/724
-> > new file mode 100755
-> > index 00000000..f2f4a2ec
-> > --- /dev/null
-> > +++ b/tests/generic/724
-> > @@ -0,0 +1,57 @@
-> > +#! /bin/bash
-> > +# SPDX-License-Identifier: GPL-2.0
-> > +# Copyright (c) 2021 Oracle, Inc.  All Rights Reserved.
-> > +#
-> > +# FS QA Test No. 724
-> > +#
-> > +# Run an extended attributes fsstress run with multiple threads to shake out
-> > +# bugs in the xattr code.
-> > +#
-> > +. ./common/preamble
-> > +_begin_fstest auto attr
-> > +
-> > +_cleanup()
-> > +{
-> > +	$KILLALL_PROG -9 fsstress > /dev/null 2>&1
-> > +	cd /
-> > +	rm -f $tmp.*
-> > +}
-> > +
-> > +# Modify as appropriate.
-> > +_supported_fs generic
-> > +
-> > +_require_scratch
-> > +_require_command "$KILLALL_PROG" "killall"
-> > +
-> > +echo "Silence is golden."
-> > +
-> > +_scratch_mkfs > $seqres.full 2>&1
-> > +_scratch_mount >> $seqres.full 2>&1
-> > +
-> > +nr_cpus=$((LOAD_FACTOR * 4))
-> > +nr_ops=$((700000 * nr_cpus * TIME_FACTOR))
+On Mon, Jul 26, 2021 at 12:13:11PM +0530, Chandan Babu R wrote:
+> _scratch_do_mkfs constructs a mkfs command line by concatenating the values of
+> 1. $mkfs_cmd
+> 2. $MKFS_OPTIONS
+> 3. $extra_mkfs_options
 > 
-> This takes too long time to be an 'auto' test, it runs for 20min on my
-> test vm and is still running, I think I have to kill it manually.
+> The block size argument passed by xfs/530 to _scratch_mkfs() will cause
+> mkfs.xfs to fail if $MKFS_OPTIONS also has a block size specified. In such a
+> case, _scratch_do_mkfs() will construct and invoke an mkfs command line
+> without including the value of $MKFS_OPTIONS.
 > 
-> I noticed that generic/52[12] run long time fsx tests, and they are in
-> 'soak long_rw' groups, perhaps this one fits there as well? And maybe
-> 'stress' group too.
+> To prevent such silent failures, this commit removes the block size option
+> that was being explicitly passed to _scratch_mkfs().
 
-Oh, yikes, I sent this out configured for 700,000 xattr ops.  Let me
-lower that to 70k.
+Yes, that makes sense.
+
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > 
-> Thanks,
-> Eryu
+> Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
+> ---
+>  tests/xfs/530 | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> > +
-> > +args=('-z' '-S' 'c')
-> > +
-> > +# Do some directory tree modifications, but the bulk of this is geared towards
-> > +# exercising the xattr code, especially attr_set which can do up to 10k values.
-> > +for verb in unlink rmdir; do
-> > +	args+=('-f' "${verb}=1")
-> > +done
-> > +for verb in creat mkdir; do
-> > +	args+=('-f' "${verb}=2")
-> > +done
-> > +for verb in getfattr listfattr; do
-> > +	args+=('-f' "${verb}=3")
-> > +done
-> > +for verb in attr_remove removefattr; do
-> > +	args+=('-f' "${verb}=4")
-> > +done
-> > +args+=('-f' "setfattr=20")
-> > +args+=('-f' "attr_set=60")	# sets larger xattrs
-> > +
-> > +$FSSTRESS_PROG "${args[@]}" $FSSTRESS_AVOID -d $SCRATCH_MNT -n $nr_ops -p $nr_cpus >> $seqres.full
-> > +
-> > +# success, all done
-> > +status=0
-> > +exit
-> > diff --git a/tests/generic/724.out b/tests/generic/724.out
-> > new file mode 100644
-> > index 00000000..164cfffb
-> > --- /dev/null
-> > +++ b/tests/generic/724.out
-> > @@ -0,0 +1,2 @@
-> > +QA output created by 724
-> > +Silence is golden.
-> > 
+> diff --git a/tests/xfs/530 b/tests/xfs/530
+> index 4d168ac5..16dc426c 100755
+> --- a/tests/xfs/530
+> +++ b/tests/xfs/530
+> @@ -60,7 +60,7 @@ echo "Format and mount rt volume"
+>  
+>  export USE_EXTERNAL=yes
+>  export SCRATCH_RTDEV=$rtdev
+> -_scratch_mkfs -d size=$((1024 * 1024 * 1024)) -b size=${dbsize} \
+> +_scratch_mkfs -d size=$((1024 * 1024 * 1024)) \
+>  	      -r size=${rtextsz},extsize=${rtextsz} >> $seqres.full
+>  _try_scratch_mount || _notrun "Couldn't mount fs with synthetic rt volume"
+>  
+> -- 
+> 2.30.2
+> 
