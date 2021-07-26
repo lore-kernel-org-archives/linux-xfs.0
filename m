@@ -7,45 +7,45 @@ X-Spam-Status: No, score=-10.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B176C4320A
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Jul 2021 07:35:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE4BBC4338F
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Jul 2021 07:41:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 09227600D0
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Jul 2021 07:35:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 96D7E60F4B
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Jul 2021 07:41:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232524AbhGZGzZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 26 Jul 2021 02:55:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46878 "EHLO
+        id S232087AbhGZHBM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 26 Jul 2021 03:01:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48206 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232087AbhGZGzY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Jul 2021 02:55:24 -0400
+        with ESMTP id S231774AbhGZHBM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Jul 2021 03:01:12 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A7B0BC061757
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Jul 2021 00:35:53 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 96ADAC061757
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Jul 2021 00:41:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=l2WBiCb5duYJRA9nKpihqrJOH1Qjg6utSrFiu8qAdtc=; b=ALaFJq2FWCNB5ue8WSL0Le16Zi
-        XS8bPabPnn7r/SWN+1CuGrn5vWQx3zJ+0XWoXESN4p1otChBTB7jHnZ2XTPVJhYZibrJm32Ijql+3
-        Bz4KoH8HQrwh7YLOZ81nKeqpptFcHX0pP8KtAvp+JAt9h34cV6iphrIzsVeS5CklLWOj31zUJhI/t
-        VBOjcS6YALCAvjWyJjP/geyTOZc2WsgdzBdz4vKsN2qerktSZL6KAJSUZJb4cNays+gbHyD0296xL
-        s5XEd72FpWcBoVxhdAZCoFF6ozX5cfy7J1SyX1C92fGKHkOK9ESvwsYB+knu7oCYa8MM6J0leUGhn
-        1YQOaeuw==;
+        bh=l2WBiCb5duYJRA9nKpihqrJOH1Qjg6utSrFiu8qAdtc=; b=Gzta3hF/uDAp5GjS/dJlysKRaB
+        TxpoUQr51dQysHVCN7oV1pu+VmtGvo6NzoCyiYDSpJgA5SpNFAAEyyx6XjFfUtB/4gc5htHy75D6l
+        UJj7m2KP0+pfeqkXBgea2Kq3Ck7ARo8Ev7PCpoNJ8dd7wyTfT5Fin75HY6HHCusvY8Jj0iGo1n277
+        hi1lszrdhTqd5PwVud5UddZmIz1DK1j6Fz3LT6yAxYVr1fAjsWmhWroDaGALcQsAGcAWC5+fp4mOb
+        LswdA8BlyW7pvfuag3bwetVaJyCqC9stY8NTcHWgzFSvkwyw95Ixqy12KOZ7mh09WCkkre1F9JTiL
+        BUtERTqA==;
 Received: from hch by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1m7v94-00Dhyh-VG; Mon, 26 Jul 2021 07:35:33 +0000
-Date:   Mon, 26 Jul 2021 08:35:26 +0100
+        id 1m7vA4-00Di6k-A9; Mon, 26 Jul 2021 07:36:32 +0000
+Date:   Mon, 26 Jul 2021 08:36:28 +0100
 From:   Christoph Hellwig <hch@infradead.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 09/10] xfs: Enforce attr3 buffer recovery order
-Message-ID: <YP5lvtMtYcqnu4A5@infradead.org>
+Subject: Re: [PATCH 10/10] xfs: need to see iclog flags in tracing
+Message-ID: <YP5l/DuoD+kPsHzI@infradead.org>
 References: <20210726060716.3295008-1-david@fromorbit.com>
- <20210726060716.3295008-10-david@fromorbit.com>
+ <20210726060716.3295008-11-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210726060716.3295008-10-david@fromorbit.com>
+In-Reply-To: <20210726060716.3295008-11-david@fromorbit.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
