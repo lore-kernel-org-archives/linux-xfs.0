@@ -2,71 +2,103 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E31E3C4338F
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Jul 2021 19:04:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D72D5C4338F
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Jul 2021 20:40:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C37BB60F6E
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Jul 2021 19:04:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BE7E060F6E
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Jul 2021 20:40:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231990AbhGZSX6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 26 Jul 2021 14:23:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58268 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232202AbhGZSX6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 26 Jul 2021 14:23:58 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3C2EE60F5D;
-        Mon, 26 Jul 2021 19:04:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627326266;
-        bh=kzsXWrwCi9RWE6Q9bwL1m2kT7wU3EGNRLs3PcijJLeQ=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=p+2KgCyWvbGQIoSDUecB02vvD07XptxRslfwV63L3kKSv0UrbN5oB2xrHAZKdwje7
-         WrfowmN1LQaJT+GLZbz4myvuFjQmlNiqvR6SLHKMilU+z2X3fXBJceOqDY55xnjyVx
-         6JSCHDc/r9fPie1T6IBnvZcrT3rxzo2rEI7/8kbSky6joTs5gdI3wkMvAc576R/gv2
-         47FdGxFnsLzaYoMWpKH/2aFWXJeMxexBkmlW+qn0W7EOI5scsJVneQN2V/CALfbBYj
-         H+bawPsyfh+2vyp9Vdweh+ACtV6CAs+TsTg8ou6MqH7gl9LK+YGcGovesWN9Cip0Mi
-         Mfg2FcfH2CnfQ==
-Date:   Mon, 26 Jul 2021 12:04:24 -0700
-From:   Jaegeuk Kim <jaegeuk@kernel.org>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     linux-f2fs-devel@lists.sourceforge.net, Chao Yu <chao@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Satya Tangirala <satyaprateek2357@gmail.com>,
-        Changheun Lee <nanich.lee@samsung.com>,
-        Matthew Bobrowski <mbobrowski@mbobrowski.org>
-Subject: Re: [PATCH 3/9] f2fs: rework write preallocations
-Message-ID: <YP8HOOkA0wlyMYMf@google.com>
-References: <20210716143919.44373-1-ebiggers@kernel.org>
- <20210716143919.44373-4-ebiggers@kernel.org>
- <YP2Ew57ptGgYsD1Y@google.com>
- <YP2Hp5RcZfhKipfG@google.com>
- <YP2m7lSqvenvxYIY@sol.localdomain>
+        id S232738AbhGZUAW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 26 Jul 2021 16:00:22 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:60494 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232571AbhGZUAW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Jul 2021 16:00:22 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1627332050;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=ADCPaVvnRwM6Nak3K92MMA+rOpDRZVyCIa8Kmkf4sAE=;
+        b=CLk2bAVqg+EKdW7g7JM+mVtPYHde1Vs9wsAcAEzJjTDWBkjn/LGoWa+W7k5akB37hDg65a
+        B0sZulBfl8HoPRnL/uUA/08P4t2okmop2gy2InFXZDACsfcEkazUgYhgXQiVyoFaKsxPLP
+        lXqFPKgHl5i3DonD1k8MAQRuGlL/ghY=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-156-j09i6x8hNNC_WKLl4DlH_g-1; Mon, 26 Jul 2021 16:40:48 -0400
+X-MC-Unique: j09i6x8hNNC_WKLl4DlH_g-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 070B13639F;
+        Mon, 26 Jul 2021 20:40:48 +0000 (UTC)
+Received: from redhat.com (unknown [10.22.17.239])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id A4A1A19C59;
+        Mon, 26 Jul 2021 20:40:43 +0000 (UTC)
+Date:   Mon, 26 Jul 2021 15:40:41 -0500
+From:   Bill O'Donnell <billodo@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     xfs <linux-xfs@vger.kernel.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Eric Sandeen <sandeen@redhat.com>
+Subject: Re: [PATCH] xfs: drop experimental warnings for bigtime and
+ inobtcount
+Message-ID: <20210726204041.dufnxm66qtvek2zw@redhat.com>
+References: <20210707002313.GG11588@locust>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YP2m7lSqvenvxYIY@sol.localdomain>
+In-Reply-To: <20210707002313.GG11588@locust>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 07/25, Eric Biggers wrote:
-> On Sun, Jul 25, 2021 at 08:47:51AM -0700, Jaegeuk Kim wrote:
-> > On 07/25, Jaegeuk Kim wrote:
-> > > Note that, this patch is failing generic/250.
-> > 
-> > correction: it's failing in 4.14 and 4.19 after simple cherry-pick, but
-> > giving no failure on 5.4, 5.10, and mainline.
-> > 
+On Tue, Jul 06, 2021 at 05:23:13PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> For me, generic/250 fails on both mainline and f2fs/dev without my changes.
-> So it isn't a regression.
-
-fyi; I had to change 250 to pass like this. I'm digging the patch.
-https://github.com/jaegeuk/xfstests-f2fs/commit/99c11b6550a2a24f831018d2e019eed86e517d44.
-
+> These two features were merged a year ago, userspace tooling have been
+> merged, and no serious errors have been reported by the developers.
+> Drop the experimental tag to encourage wider testing.
 > 
-> - Eric
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+
+Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+
+> ---
+>  fs/xfs/xfs_super.c |    8 --------
+>  1 file changed, 8 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index cbc1f0157bcd..321e3590c6fe 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1539,10 +1539,6 @@ xfs_fs_fill_super(
+>  	if (XFS_SB_VERSION_NUM(&mp->m_sb) == XFS_SB_VERSION_5)
+>  		sb->s_flags |= SB_I_VERSION;
+>  
+> -	if (xfs_sb_version_hasbigtime(&mp->m_sb))
+> -		xfs_warn(mp,
+> - "EXPERIMENTAL big timestamp feature in use. Use at your own risk!");
+> -
+>  	if (mp->m_flags & XFS_MOUNT_DAX_ALWAYS) {
+>  		bool rtdev_is_dax = false, datadev_is_dax;
+>  
+> @@ -1598,10 +1594,6 @@ xfs_fs_fill_super(
+>  		goto out_filestream_unmount;
+>  	}
+>  
+> -	if (xfs_sb_version_hasinobtcounts(&mp->m_sb))
+> -		xfs_warn(mp,
+> - "EXPERIMENTAL inode btree counters feature in use. Use at your own risk!");
+> -
+>  	error = xfs_mountfs(mp);
+>  	if (error)
+>  		goto out_filestream_unmount;
+> 
+
