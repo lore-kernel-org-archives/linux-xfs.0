@@ -2,147 +2,142 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B95C4C19F35
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 931B6C19F34
 	for <linux-xfs@archiver.kernel.org>; Mon, 26 Jul 2021 06:07:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A05B860F48
+	by mail.kernel.org (Postfix) with ESMTP id 724A860F53
 	for <linux-xfs@archiver.kernel.org>; Mon, 26 Jul 2021 06:07:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231664AbhGZF04 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S231707AbhGZF04 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Mon, 26 Jul 2021 01:26:56 -0400
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:52867 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231640AbhGZF0z (ORCPT
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:36543 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231664AbhGZF0z (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Jul 2021 01:26:55 -0400
 Received: from dread.disaster.area (pa49-181-34-10.pa.nsw.optusnet.com.au [49.181.34.10])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 14EC080C376
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Jul 2021 16:07:19 +1000 (AEST)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 13B851045C45
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Jul 2021 16:07:20 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1m7tlm-00AtQ0-JF
+        id 1m7tlm-00AtQQ-Rt
         for linux-xfs@vger.kernel.org; Mon, 26 Jul 2021 16:07:18 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1m7tlm-00DpC9-BG
+        id 1m7tlm-00DpCZ-KB
         for linux-xfs@vger.kernel.org; Mon, 26 Jul 2021 16:07:18 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 0/10 v2] xfs: fix log cache flush regressions and bugs
-Date:   Mon, 26 Jul 2021 16:07:06 +1000
-Message-Id: <20210726060716.3295008-1-david@fromorbit.com>
+Subject: [PATCH 09/10] xfs: Enforce attr3 buffer recovery order
+Date:   Mon, 26 Jul 2021 16:07:15 +1000
+Message-Id: <20210726060716.3295008-10-david@fromorbit.com>
 X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20210726060716.3295008-1-david@fromorbit.com>
+References: <20210726060716.3295008-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
         a=hdaoRb6WoHYrV466vVKEyw==:117 a=hdaoRb6WoHYrV466vVKEyw==:17
-        a=e_q4qTt1xDgA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=m-B9G8uOmJ6nOEA8dm0A:9 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+        a=e_q4qTt1xDgA:10 a=20KFwNOVAAAA:8 a=l0_hGK4vAAAA:8
+        a=GQI1gN7cFB_rTw0HXYgA:9 a=iXasW65n-xxAZI4iijma:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-tl;dr: I have not found all the problems that I'm reproducing with
-generic/482 yet. The last two failures I've RCA'd have been
-long standing, fundamental log recovery bugs, not regressions. I
-just saw another failure I haven't yet begun to analyse, so I can't
-say yet that I've found all the regressions. But there's obvious
-bugs this patchset fixes and we're now at -rc3....
+From: Dave Chinner <dchinner@redhat.com>
 
-The first seven patches in this series fix regressions introduced by
-commit eef983ffeae7 ("xfs: journal IO cache flush reductions") and
-exposed by generic/482. I have one test machine that reproduces
-the failures, and in general a failure occurs 1 in every 30 test
-iterations.
+From the department of "WTAF? How did we miss that!?"...
 
-The first two patches are related to external logs. These were found
-by code inspection while looking for the cause of the generic/482
-failures.
+When we are recovering a buffer, the first thing we do is check the
+buffer magic number and extract the LSN from the buffer. If the LSN
+is older than the current LSN, we replay the modification to it. If
+the metadata on disk is newer than the transaction in the log, we
+skip it. This is a fundamental v5 filesystem metadata recovery
+behaviour.
 
-The third and fourth patch addresses a race condition between the
-new unconditional async data device cache flush run by the CIL push
-and the log tail changing between that flush completing and the
-commit iclog being synced. In this situation, if the commit_iclog
-doesn't issue a REQ_PREFLUSH, we fail to guarantee that the metadata
-IO completions that moved the log tail are on stable storage. The
-fix for this issue is to sample the log tail before we issue the
-async cache flush, and if the log tail has changed when we release
-the commit_iclog we set the XLOG_ICL_NEED_FLUSH flag on the iclog to
-guarantee a cache flush is issued before the commit record that
-moves the tail of the log forward is written to the log.
+generic/482 failed with an attribute writeback failure during log
+recovery. The write verifier caught the corruption before it got
+written to disk, and the attr buffer dump looked like:
 
-The fifth and sixth patches address an oversight about log forces.
-Log forces imply a cache flush if they result in iclog IO being
-issued, allowing the caller to elide cache flushes that they might
-require for data integrity. The change to requiring the iclog owner
-to signal that a cache flush is required completely missed the log
-force code. This patch ensures that all ACTIVE and WANT_SYNC iclogs
-that we either flush or wait on issue cache flushes and so guarantee
-that they are on stable storage at IO completion before they signal
-completion to log force waiters.
+XFS (dm-3): Metadata corruption detected at xfs_attr3_leaf_verify+0x275/0x2e0, xfs_attr3_leaf block 0x19be8
+XFS (dm-3): Unmount and run xfs_repair
+XFS (dm-3): First 128 bytes of corrupted metadata buffer:
+00000000: 00 00 00 00 00 00 00 00 3b ee 00 00 4d 2a 01 e1  ........;...M*..
+00000010: 00 00 00 00 00 01 9b e8 00 00 00 01 00 00 05 38  ...............8
+                                  ^^^^^^^^^^^^^^^^^^^^^^^
+00000020: df 39 5e 51 58 ac 44 b6 8d c5 e7 10 44 09 bc 17  .9^QX.D.....D...
+00000030: 00 00 00 00 00 02 00 83 00 03 00 cc 0f 24 01 00  .............$..
+00000040: 00 68 0e bc 0f c8 00 10 00 00 00 00 00 00 00 00  .h..............
+00000050: 00 00 3c 31 0f 24 01 00 00 00 3c 32 0f 88 01 00  ..<1.$....<2....
+00000060: 00 00 3c 33 0f d8 01 00 00 00 00 00 00 00 00 00  ..<3............
+00000070: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+.....
 
-The seventh patch is not a regression, but a fix for another log
-force iclog related flush problem I noticed and found while triaging
-the above problems. Occasionally the tests would sit idle doing
-nothing for up to 30s waiting on a xfs_log_force_seq() call to
-complete. The trigger for them to wake up was the background log
-worker issuing a new log force. This appears to be another
-"incorrectly wait on future iclog state changes" situation, and it's
-notable that xfs_log_force() specifically handles this situation
-while xfs_log_force_seq() does not. Changing xfs_log_force_seq() to
-use the same "iclog IO already completed" detection as
-xfs_log_force() made those random delays go away.
+The highlighted bytes are the LSN that was replayed into the
+buffer: 0x100000538. This is cycle 1, block 0x538. Prior to replay,
+that block on disk looks like this:
 
-The eighth patch is a fix for inode logging being able to make the
-on-disk LSN in the inode go backwards in time. This is a regression
-from 2016 when we shrunk the inode by not tracking the on-disk inode
-LSN in memory any more. This can cause inodes to be replayed
-incorrectly, leading to silent corruption during log recovery.
+$ sudo xfs_db -c "fsb 0x417d" -c "type attr3" -c p /dev/mapper/thin-vol
+hdr.info.hdr.forw = 0
+hdr.info.hdr.back = 0
+hdr.info.hdr.magic = 0x3bee
+hdr.info.crc = 0xb5af0bc6 (correct)
+hdr.info.bno = 105448
+hdr.info.lsn = 0x100000900
+               ^^^^^^^^^^^
+hdr.info.uuid = df395e51-58ac-44b6-8dc5-e7104409bc17
+hdr.info.owner = 131203
+hdr.count = 2
+hdr.usedbytes = 120
+hdr.firstused = 3796
+hdr.holes = 1
+hdr.freemap[0-2] = [base,size]
 
-The ninth patch is a fix for a zero-day bug in the on-disk LSN log
-recovery ordering for attribute leaf blocks. We fail to recognise
-them and extract their LSN, so they are always recovered
-immediately. This can result in recovery taking them backwards in
-time, leading to silent corruption during log recovery. This has
-been around since recovery ordering was introduced for v5
-filesystems way back in 2013....
+Note the LSN stamped into the buffer on disk: 1/0x900. The version
+on disk is much newer than the log transaction that was being
+replayed. That's a bug, and should -never- happen.
 
-The last patch is an addition to the iclog state tracing that dumps
-the iclog flags which tells me whether the NEED_FLUSH/NEED_FUA flags
-are set on the iclog as it is released for IO. This helps validate
-whether the iclog flushing is doing the right thing when a g/482
-failure occurs with a suspected cache flushing issue.
+So I immediately went to look at xlog_recover_get_buf_lsn() to check
+that we handled the LSN correctly. I was wondering if there was a
+similar "two commits with the same start LSN skips the second
+replay" problem with buffers. I didn't get that far, because I found
+a much more basic, rudimentary bug: xlog_recover_get_buf_lsn()
+doesn't recognise buffers with XFS_ATTR3_LEAF_MAGIC set in them!!!
 
-Please consider this patchset for a 5.14-rc4 merge, because we need
-to get the obvious failures and regressions fixed sooner rather
-later.
+IOWs, attr3 leaf buffers fall through the magic number checks
+unrecognised, so trigger the "recover immediately" behaviour instead
+of undergoing an LSN check. IOWs, we incorrectly replay ATTR3 leaf
+buffers and that causes silent on disk corruption of inode attribute
+forks and potentially other things....
 
-Version 2:
-- rebased on 5.14-rc3
-- split __xlog_state_release_iclog() folding into separate patch (Christoph)
-- Reinstated lost trace_xlog_iclog_syncing tracepoint.
-- split xlog_force_iclog() helper into separate patch.
-- In xlog_force_lsn(), don't set log_flushed for the WANT_SYNC case as there is
-  no guarantee that the log has been flushed when we return if we are not
-  waiting.
-- appended inode LSN logging fix to series from
-  https://lore.kernel.org/linux-xfs/20210722015335.3063274-1-david@fromorbit.com/T/#t
-- Fixed inode recovery failure when two checkpoints have the same recovery LSN
-  (start records in the same iclog) and an inode is logged in both checkpoints.
-  The second transaction would see an equal LSN to the inode on disk and skip
-  replay, even though it was required.
-- added more comments to indicate the LSN in the xfs_log_dinode is never valid
-  for recovery or replay purposes
-- added new patch for ATTR3_LEAF magic number detection and recovery (yet
-  another zero day!).
+Git history shows this is *another* zero day bug, this time
+introduced in commit 50d5c8d8e938 ("xfs: check LSN ordering for v5
+superblocks during recovery") which failed to handle the attr3 leaf
+buffers in recovery. And we've failed to handle them ever since...
 
-Version 1:
-- based on 5.14-rc1
-- https://lore.kernel.org/linux-xfs/20210722015335.3063274-1-david@fromorbit.com/T/#t
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_buf_item_recover.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
+index d44e8b4a3391..05fd816edf59 100644
+--- a/fs/xfs/xfs_buf_item_recover.c
++++ b/fs/xfs/xfs_buf_item_recover.c
+@@ -796,6 +796,7 @@ xlog_recover_get_buf_lsn(
+ 	switch (magicda) {
+ 	case XFS_DIR3_LEAF1_MAGIC:
+ 	case XFS_DIR3_LEAFN_MAGIC:
++	case XFS_ATTR3_LEAF_MAGIC:
+ 	case XFS_DA3_NODE_MAGIC:
+ 		lsn = be64_to_cpu(((struct xfs_da3_blkinfo *)blk)->lsn);
+ 		uuid = &((struct xfs_da3_blkinfo *)blk)->uuid;
+-- 
+2.31.1
 
