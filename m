@@ -2,188 +2,153 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13C25C432BE
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Jul 2021 11:47:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD5C7C43216
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Jul 2021 16:40:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F1AD260C51
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Jul 2021 11:47:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A204660C41
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Jul 2021 16:40:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233691AbhGZLH2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 26 Jul 2021 07:07:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48482 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233699AbhGZLH2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Jul 2021 07:07:28 -0400
-Received: from mail-pl1-x631.google.com (mail-pl1-x631.google.com [IPv6:2607:f8b0:4864:20::631])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79F3AC061757
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Jul 2021 04:47:56 -0700 (PDT)
-Received: by mail-pl1-x631.google.com with SMTP id c16so5652451plh.7
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Jul 2021 04:47:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=ojahhnDJds3W1B3s9c/VjZnIsirQaZ3K/2NRG0oOKOs=;
-        b=K5eQcD7jZhUbPDj0unqRiysPYchPaPaZNYvh85CSgV6vvROrPyoBRnyYfzOM2EmG36
-         IQmdl9XaJvpiP8dqBZXn+02YNp9MiV69a+zQf4/Puh0Pe3eHl1pPLlJXa5toLhs/DTBT
-         OotnrpJMhRjwQ+Ta+5QIZhnSL5jmtcR3L/mEuo3HCQd+IFAHnJcOGUblYI2Tn3cTEvUE
-         SH1FHo36ecbvwDglVE0zh3woyDRmTmUHHliHZ6MXnd/l5QxuWSW5CRvDYANrDu6Hyoa5
-         GvrFqLSES8kBjHHAigBCKLAI1GFbdljW5ytVZuSMbpzeTAIkVUF8UkOaa7toitw0H91/
-         XXFQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=ojahhnDJds3W1B3s9c/VjZnIsirQaZ3K/2NRG0oOKOs=;
-        b=MHocJ1NnL7igABmbcsy54mySbJ8yFKT9CEDAdLtQJjeF1J7v4F/IqNu3h5kOyhvIVs
-         sBueh/Y82eQLhBJoy3FXJH8KjKl65U0oUthfK3qVfy+ypBdq4GngPIaowDtzONw3wDKM
-         IITDMjl6IpkFC6i1W26WFbgt1gfdN0KAZGEgGD4FjsqZ3h8TmrTIfwLvrq3DNOxHhgar
-         6OUa/KrAyEbW+lrWjAbJwv5Oi0hIGEQ69qsuTf24likyNB+k1HYbp2ktw5lahPjiwsGz
-         TOj5wgQZ2R8XsTfCSxJypOeSVL3KGnbbXhNULFUDSGTymFfx8w+nEuEshhWrSxnuXlOa
-         ThlA==
-X-Gm-Message-State: AOAM531wNnZafefEEWIN+H/kxRUgAyNaaQmZSWYoAr8YlrxSwS/qyoAT
-        axlD4o0tqN+BjEzAHZkZRbT0B8w1Yws=
-X-Google-Smtp-Source: ABdhPJzgqkXYQwvxhy9NQfWk526C6Zxwhfv6i/NHchTx0T87DeL0+3yO5qBIK3FFzgzWdJDn0leUog==
-X-Received: by 2002:a17:90a:74c5:: with SMTP id p5mr16645861pjl.117.1627300075964;
-        Mon, 26 Jul 2021 04:47:55 -0700 (PDT)
-Received: from localhost.localdomain ([122.179.41.55])
-        by smtp.gmail.com with ESMTPSA id y10sm35936900pjy.18.2021.07.26.04.47.54
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Jul 2021 04:47:55 -0700 (PDT)
-From:   Chandan Babu R <chandanrlinux@gmail.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     Chandan Babu R <chandanrlinux@gmail.com>, djwong@kernel.org
-Subject: [PATCH V2 12/12] xfsprogs: Add extcnt64bit mkfs option
-Date:   Mon, 26 Jul 2021 17:17:24 +0530
-Message-Id: <20210726114724.24956-13-chandanrlinux@gmail.com>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210726114724.24956-1-chandanrlinux@gmail.com>
-References: <20210726114724.24956-1-chandanrlinux@gmail.com>
+        id S239833AbhGZQAB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 26 Jul 2021 12:00:01 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44316 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S239874AbhGZP6y (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 26 Jul 2021 11:58:54 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 9B84460F11;
+        Mon, 26 Jul 2021 16:39:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1627317562;
+        bh=2V+n70BOKIV4yKlANEh8mr0Ca45xZl/Lan3YYFb5GQ4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=aN+kq03AaV0oDH0WPR5uFmK9Lx76YUVi9n6+UXyT04etfzep9HCnNGQZtCxh3SP04
+         1Rj8TJPGAhgzqDeiJsmv528NBDiXrZIR/3b7C/btCDidvxL+Vr1qRaTFpwpD4Q0A0C
+         jlc0xlcHJprfaiXdkZ14vNsvdNWUJGhd0eoinfsGuMW1+rTBmDlMzhchdOcI5nPyeo
+         AUqdSrRWtsjw7CLFoup0OXFMy4fWNQ/cbnebcPTDwP8Rg53hv5tnhHtYDgVqDJxh1y
+         el2j7hTZekOQDhHiqFskE/A4hwrR6hzcEapR0ENx5hXqQ2mMg0+3dv2IlBJ4/9R7vm
+         TDT0e3fwRGfyg==
+Date:   Mon, 26 Jul 2021 09:39:22 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Dan Williams <dan.j.williams@intel.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Shiyang Ruan <ruansy.fnst@fujitsu.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, nvdimm@lists.linux.dev,
+        cluster-devel@redhat.com
+Subject: Re: [PATCH 16/27] iomap: switch iomap_bmap to use iomap_iter
+Message-ID: <20210726163922.GA559142@magnolia>
+References: <20210719103520.495450-1-hch@lst.de>
+ <20210719103520.495450-17-hch@lst.de>
+ <20210719170545.GF22402@magnolia>
+ <20210726081942.GD14853@lst.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210726081942.GD14853@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Enabling extcnt64bit option on mkfs.xfs command line extends the maximum
-values of inode data and attr fork extent counters to 2^48 - 1 and 2^32 - 1
-respectively.  This also sets the XFS_SB_FEAT_INCOMPAT_EXTCOUNT_64BIT incompat
-flag on the superblock preventing older kernels from mounting such a
-filesystem.
+On Mon, Jul 26, 2021 at 10:19:42AM +0200, Christoph Hellwig wrote:
+> On Mon, Jul 19, 2021 at 10:05:45AM -0700, Darrick J. Wong wrote:
+> > >  	bno = 0;
+> > > -	ret = iomap_apply(inode, pos, blocksize, 0, ops, &bno,
+> > > -			  iomap_bmap_actor);
+> > > +	while ((ret = iomap_iter(&iter, ops)) > 0) {
+> > > +		if (iter.iomap.type != IOMAP_MAPPED)
+> > > +			continue;
+> > 
+> > There isn't a mapped extent, so return 0 here, right?
+> 
+> We can't just return 0, we always need the final iomap_iter() call
+> to clean up in case a ->iomap_end method is supplied.  No for bmap
+> having and needing one is rather theoretical, but people will copy
+> and paste that once we start breaking the rules.
 
-Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
----
- man/man8/mkfs.xfs.8 |  7 +++++++
- mkfs/xfs_mkfs.c     | 23 +++++++++++++++++++++++
- 2 files changed, 30 insertions(+)
+Oh, right, I forgot that someone might want to ->iomap_end.  The
+"continue" works because we only asked for one block, therefore we know
+that we'll never get to the loop body a second time; and we ignore
+iter.processed, which also means we never revisit the loop body.
 
-diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
-index 0e06e5bea..e20f6f475 100644
---- a/man/man8/mkfs.xfs.8
-+++ b/man/man8/mkfs.xfs.8
-@@ -650,6 +650,13 @@ space over time such that no free extents are large enough to
- accommodate a chunk of 64 inodes. Without this feature enabled, inode
- allocations can fail with out of space errors under severe fragmented
- free space conditions.
-+.TP
-+.BI extcnt64bit[= value]
-+Extend maximum values of inode data and attr fork extent counters from 2^31 -
-+1 and 2^15 - 1 to 2^48 - 1 and 2^32 - 1 respectively. If the value is
-+omitted, 1 is assumed. This feature is disabled by default. This feature is
-+only available for filesystems formatted with -m crc=1.
-+.TP
- .RE
- .PP
- .PD 0
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 33b27b1f5..ac2b43188 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -78,6 +78,7 @@ enum {
- 	I_ATTR,
- 	I_PROJID32BIT,
- 	I_SPINODES,
-+	I_EXTCNT_64BIT,
- 	I_MAX_OPTS,
- };
- 
-@@ -433,6 +434,7 @@ static struct opt_params iopts = {
- 		[I_ATTR] = "attr",
- 		[I_PROJID32BIT] = "projid32bit",
- 		[I_SPINODES] = "sparse",
-+		[I_EXTCNT_64BIT] = "extcnt64bit",
- 	},
- 	.subopt_params = {
- 		{ .index = I_ALIGN,
-@@ -481,6 +483,12 @@ static struct opt_params iopts = {
- 		  .maxval = 1,
- 		  .defaultval = 1,
- 		},
-+		{ .index = I_EXTCNT_64BIT,
-+		  .conflicts = { { NULL, LAST_CONFLICT } },
-+		  .minval = 0,
-+		  .maxval = 1,
-+		  .defaultval = 1,
-+		}
- 	},
- };
- 
-@@ -813,6 +821,7 @@ struct sb_feat_args {
- 	bool	metadir;		/* XFS_SB_FEAT_INCOMPAT_METADIR */
- 	bool	nodalign;
- 	bool	nortalign;
-+	bool	extcnt64bit;
- };
- 
- struct cli_params {
-@@ -1594,6 +1603,9 @@ inode_opts_parser(
- 	case I_SPINODES:
- 		cli->sb_feat.spinodes = getnum(value, opts, subopt);
- 		break;
-+	case I_EXTCNT_64BIT:
-+		cli->sb_feat.extcnt64bit = getnum(value, opts, subopt);
-+		break;
- 	default:
- 		return -EINVAL;
- 	}
-@@ -2172,6 +2184,14 @@ _("metadata directory not supported without CRC support\n"));
- 			usage();
- 		}
- 		cli->sb_feat.metadir = false;
-+
-+		if (cli->sb_feat.extcnt64bit &&
-+			cli_opt_set(&iopts, I_EXTCNT_64BIT)) {
-+			fprintf(stderr,
-+_("64 bit extent count not supported without CRC support\n"));
-+			usage();
-+		}
-+		cli->sb_feat.extcnt64bit = false;
- 	}
- 
- 	if (!cli->sb_feat.finobt) {
-@@ -3166,6 +3186,8 @@ sb_set_features(
- 		sbp->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_SPINODES;
- 	}
- 
-+	if (fp->extcnt64bit)
-+		sbp->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_EXTCOUNT_64BIT;
- }
- 
- /*
-@@ -3876,6 +3898,7 @@ main(
- 			.nodalign = false,
- 			.nortalign = false,
- 			.bigtime = false,
-+			.extcnt64bit = false,
- 		},
- 	};
- 
--- 
-2.30.2
+This "continue without setting iter.processed to break out of loop"
+pattern is a rather indirect subtlety, since C programmers are taught
+that they can break out of a loop using break;.  This new iomap_iter
+pattern fubars that longstanding language feature, and the language
+around it is soft:
 
+> /**
+>  * iomap_iter - iterate over a ranges in a file
+>  * @iter: iteration structue
+>  * @ops: iomap ops provided by the file system
+>  *
+>  * Iterate over file system provided contiguous ranges of blocks with the same
+>  * state.  Should be called in a loop that continues as long as this function
+>  * returns a positive value.  If 0 or a negative value is returned the caller
+>  * should break out of the loop - a negative value is an error either from the
+>  * file system or from the last iteration stored in @iter.copied.
+>  */
+
+The documentation needs to be much more explicit about the fact that you
+cannot "break;" your way out of an iomap_iter loop.  I think the comment
+should be rewritten along these lines:
+
+"Iterate over filesystem-provided space mappings for the provided file
+range.  This function handles cleanup of resources acquired for
+iteration when the filesystem indicates there are no more space
+mappings, which means that this function must be called in a loop that
+continues as long it returns a positive value.  If 0 or a negative value
+is returned, the caller must not return to the loop body.  Within a loop
+body, there are two ways to break out of the loop body: leave
+@iter.processed unchanged, or set it to the usual negative errno."
+
+Hm.
+
+What if we provide an explicit loop break function?  That would be clear
+overkill for bmap, but somebody else wanting to break out of a more
+complex loop body ought to be able to say "break" to do that, not
+"continue with subtleties".
+
+static inline int
+iomap_iter_break(struct iomap_iter *iter, int ret)
+{
+	int ret2;
+
+	if (!iter->iomap.length || !ops->iomap_end)
+		return ret;
+
+	ret2 = ops->iomap_end(iter->inode, iter->pos, iomap_length(iter),
+			0, iter->flags, &iter->iomap);
+	return ret ? ret : ret2;
+}
+
+And then then theoretical loop body becomes:
+
+	while ((ret = iomap_iter(&iter, ops)) > 0) {
+		if (iter.iomap.type != WHAT_I_WANT) {
+			ret = iomap_iter_break(&iter, 0);
+			break;
+		}
+
+		<large blob of code here>
+
+		ret = vfs_do_some_risky_thing(...);
+		if (ret) {
+			ret = iomap_iter_break(&iter, ret);
+			break;
+		}
+
+		<more loop body here>
+
+		iter.processed = iter.iomap.length;
+	}
+	return ret;
+
+Clunky, for sure, but at least we still get to use break as the language
+designers intended.
+
+--D
