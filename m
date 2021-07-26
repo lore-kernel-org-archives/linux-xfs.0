@@ -8,60 +8,60 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FFA7C4338F
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Jul 2021 11:47:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8120C4320A
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Jul 2021 11:47:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 65E8C601FD
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Jul 2021 11:47:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C21E660F38
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Jul 2021 11:47:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233645AbhGZLHL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 26 Jul 2021 07:07:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48404 "EHLO
+        id S233682AbhGZLHN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 26 Jul 2021 07:07:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48414 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233463AbhGZLHL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Jul 2021 07:07:11 -0400
-Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37217C061757
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Jul 2021 04:47:40 -0700 (PDT)
-Received: by mail-pj1-x102d.google.com with SMTP id u9-20020a17090a1f09b029017554809f35so19309156pja.5
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Jul 2021 04:47:40 -0700 (PDT)
+        with ESMTP id S233463AbhGZLHM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Jul 2021 07:07:12 -0400
+Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B910DC061757
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Jul 2021 04:47:41 -0700 (PDT)
+Received: by mail-pj1-x102c.google.com with SMTP id q17-20020a17090a2e11b02901757deaf2c8so13921085pjd.0
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Jul 2021 04:47:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=S3NFASGKszQVhoyC3m93WoCw4T5yG75LfYNmQlaMiJQ=;
-        b=qJOIIHkdCKsXKg++/ciAZP2Un9lxIKwmz/QcHPxy0k9naydouxsGTQSyGGRfer+1lh
-         N+3pVoELXOvCzjpWDKcZppIxbvvg5NALRFuh1Q4anxETkaCX5eAJbYtcNetMtvtTkNN/
-         fFBoVKRs65C364Vm815l20i3JfjiRy2R3VHIOeSrVel6ZZGVyWT3oADUTi5xNFTYib+i
-         /vvaSXg9VQv/u1QOt7MiNi4A1aV/F1LV1GyAGi83uxI4iaS7lGnfBNlwDe4YKPXpnEDH
-         iQw9kS81sKfvFaf+3ARRGK0HLiuo3VlCbK6srYApLZUWM7EWalERc8gJ4RJw+cR06htZ
-         VRlg==
+        bh=cb0C/N7rzztA8FbrAmysDpDCe8obSpkpE98jtL7+GAE=;
+        b=Q5lhaK+mQOSBPPVshzcN76LGFCvAiMwxmaLhX3xZKpn1bWwLFeBtCMyT9SOci3ktcG
+         G1/7NZcFlvDrRZOlx1N4x4n6Ji+I8ZqC6HbTRp9pAk1PYkop0yLK3sB+sXapW4YWaP1v
+         Zb1VHPWoIniZraGdLQkB6RD+smEiEkMP54senmtHaJDd71i7I4cHMrsf8i3DRdlliDbf
+         iCJwSrz9a554H3PFrXTuKT85TtcA1nsbPtT17ndvefzq6foNvdibjgWK1BCSxufeVNgK
+         XH1YpF+4B15hjC/ev3wQXi428pZPi1w9tweshJ8YCD7X7fJh0LtJHG6HbS4PqtusSzPa
+         QZQA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=S3NFASGKszQVhoyC3m93WoCw4T5yG75LfYNmQlaMiJQ=;
-        b=oHj+g7lQSqdWgk4iPFsG4yxitwjJ4Gsr8mLZIBzOm9cHGvszFLjWwPRBt3KwL/t/eR
-         N5s2udauK07E/BWlYRkTYcrGaCXQylCq0x2yTHifEd99c+NDYNTkx1749lfAnRbtotLE
-         JTDDQsoGb6BxX4HBN5Fs4USu3TwVaZlUZ8SVI7fXsK847KVXytm0UW6i/DX3Qty7LyrV
-         2MYc2ixlbr7ermrlEO17rDSNqFAiEp+mj4CTknzp1nF6SN0T1dh9nMsMm0aIpn/i9gr7
-         D+btqfNaCMb10jerN1NGi5iiIFRwgu2AUT6yarcN7H+7Ti8ydViXOD/f4KNcle3iv471
-         1pRQ==
-X-Gm-Message-State: AOAM532oV53CuErpexL6mVmaivLCzqhatbFE4FoTUuUGVXlE2x2ID2m/
-        O19fahFwtgABvZ5shbKvmbBoyLoNoLI=
-X-Google-Smtp-Source: ABdhPJwV8XVKik3t5GKTBJNRzlKVv65mkU60VSq3VgDZ/X9+GYaQi13cXM96UQVSB2HVp90fvmrMOA==
-X-Received: by 2002:a63:4c03:: with SMTP id z3mr17661792pga.130.1627300059661;
-        Mon, 26 Jul 2021 04:47:39 -0700 (PDT)
+        bh=cb0C/N7rzztA8FbrAmysDpDCe8obSpkpE98jtL7+GAE=;
+        b=ZPDpv3duENl91t+ouDCGUiPy33hRyTFwepu5aL5aTJ4VjlgzI3yfwxIJBOZ5d5I/0U
+         VEwKjzvf8TvATyawi0Uq0461ntwlrttSJCKtg/WsJI++8ONoAiuhaUoTwIyXNpcnwp45
+         nXE0b3y9L4DJ4Kd7dudHmaQUAAxmy+ho6JnpqDYurM3MW6mrT5wzXzPsH5f8NxKj6D/z
+         zikggVPof29daJNjxdFKX1Aq0wQnn6qH+3YsBsBm3dqnKZeDK2mcB/I0UpnYumTOUtNO
+         vZIKco7/QuF0gGoze02wdyLaD/pXt3Ztd1OEEnLkGY9mHOq+TeL1xaFDuvIYQfHlJ/Ch
+         BSpg==
+X-Gm-Message-State: AOAM531HpVrTXi+WmzX5Rjn8NaV0791zxXEMNfFiBH1jyACNjqHNJTUS
+        1TmyVQ0cIL7SIdvcP2QNzGW4+NgP8BU=
+X-Google-Smtp-Source: ABdhPJwciqhFtNZUKnxwq3Op3bBF0uNmBmQIdKP2Nok6NJ9QJ4pvKEsjz3VZlxeWGfey39ww2KJeLA==
+X-Received: by 2002:a63:4a43:: with SMTP id j3mr17910826pgl.302.1627300061232;
+        Mon, 26 Jul 2021 04:47:41 -0700 (PDT)
 Received: from localhost.localdomain ([122.179.41.55])
-        by smtp.gmail.com with ESMTPSA id y10sm35936900pjy.18.2021.07.26.04.47.38
+        by smtp.gmail.com with ESMTPSA id y10sm35936900pjy.18.2021.07.26.04.47.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Jul 2021 04:47:39 -0700 (PDT)
+        Mon, 26 Jul 2021 04:47:41 -0700 (PDT)
 From:   Chandan Babu R <chandanrlinux@gmail.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     Chandan Babu R <chandanrlinux@gmail.com>, djwong@kernel.org
-Subject: [PATCH V2 03/12] xfsprogs: Introduce xfs_iext_max() helper
-Date:   Mon, 26 Jul 2021 17:17:15 +0530
-Message-Id: <20210726114724.24956-4-chandanrlinux@gmail.com>
+Subject: [PATCH V2 04/12] xfsprogs: Use xfs_extnum_t instead of basic data types
+Date:   Mon, 26 Jul 2021 17:17:16 +0530
+Message-Id: <20210726114724.24956-5-chandanrlinux@gmail.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210726114724.24956-1-chandanrlinux@gmail.com>
 References: <20210726114724.24956-1-chandanrlinux@gmail.com>
@@ -71,152 +71,100 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-xfs_iext_max() returns the maximum number of extents possible for one of
-data, cow or attribute fork. This helper will be extended further in a
-future commit when maximum extent counts associated with data/attribute
-forks are increased.
+xfs_extnum_t is the type to use to declare variables which have values
+obtained from xfs_dinode->di_[a]nextents. This commit replaces basic
+types (e.g. uint32_t) with xfs_extnum_t for such variables.
 
 Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
 ---
- libxfs/xfs_bmap.c       | 9 ++++-----
- libxfs/xfs_inode_buf.c  | 8 +++-----
- libxfs/xfs_inode_fork.c | 6 +++---
- libxfs/xfs_inode_fork.h | 8 ++++++++
- repair/dinode.c         | 7 ++++---
- 5 files changed, 22 insertions(+), 16 deletions(-)
+ db/bmap.c               | 2 +-
+ db/frag.c               | 2 +-
+ libxfs/xfs_bmap.c       | 2 +-
+ libxfs/xfs_inode_buf.c  | 2 +-
+ libxfs/xfs_inode_fork.c | 2 +-
+ repair/dinode.c         | 2 +-
+ 6 files changed, 6 insertions(+), 6 deletions(-)
 
+diff --git a/db/bmap.c b/db/bmap.c
+index 5f81d2b52..50f0474bc 100644
+--- a/db/bmap.c
++++ b/db/bmap.c
+@@ -47,7 +47,7 @@ bmap(
+ 	int			n;
+ 	int			nex;
+ 	xfs_fsblock_t		nextbno;
+-	int			nextents;
++	xfs_extnum_t		nextents;
+ 	xfs_bmbt_ptr_t		*pp;
+ 	xfs_bmdr_block_t	*rblock;
+ 	typnm_t			typ;
+diff --git a/db/frag.c b/db/frag.c
+index 570ad3b74..90fa2131c 100644
+--- a/db/frag.c
++++ b/db/frag.c
+@@ -273,7 +273,7 @@ process_fork(
+ 	int		whichfork)
+ {
+ 	extmap_t	*extmap;
+-	int		nex;
++	xfs_extnum_t	nex;
+ 
+ 	nex = XFS_DFORK_NEXTENTS(dip, whichfork);
+ 	if (!nex)
 diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index 7927e2712..608ae5b83 100644
+index 608ae5b83..dd60d8105 100644
 --- a/libxfs/xfs_bmap.c
 +++ b/libxfs/xfs_bmap.c
-@@ -68,13 +68,12 @@ xfs_bmap_compute_maxlevels(
- 	 * ATTR2 we have to assume the worst case scenario of a minimum size
- 	 * available.
- 	 */
--	if (whichfork == XFS_DATA_FORK) {
--		maxleafents = XFS_IFORK_EXTCNT_MAXS32;
-+	maxleafents = xfs_iext_max(mp, whichfork);
-+	if (whichfork == XFS_DATA_FORK)
- 		sz = xfs_bmdr_space_calc(MINDBTPTRS);
--	} else {
--		maxleafents = XFS_IFORK_EXTCNT_MAXS16;
-+	else
- 		sz = xfs_bmdr_space_calc(MINABTPTRS);
--	}
-+
- 	maxrootrecs = xfs_bmdr_maxrecs(sz, 0);
- 	minleafrecs = mp->m_bmap_dmnr[0];
- 	minnoderecs = mp->m_bmap_dmnr[1];
+@@ -46,9 +46,9 @@ xfs_bmap_compute_maxlevels(
+ 	xfs_mount_t	*mp,		/* file system mount structure */
+ 	int		whichfork)	/* data or attr fork */
+ {
++	xfs_extnum_t	maxleafents;	/* max leaf entries possible */
+ 	int		level;		/* btree level */
+ 	uint		maxblocks;	/* max blocks at this level */
+-	uint		maxleafents;	/* max leaf entries possible */
+ 	int		maxrootrecs;	/* max records in root block */
+ 	int		minleafrecs;	/* min records in leaf block */
+ 	int		minnoderecs;	/* min records in node block */
 diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
-index 855cb0b85..056fe252b 100644
+index 056fe252b..b2e8e431a 100644
 --- a/libxfs/xfs_inode_buf.c
 +++ b/libxfs/xfs_inode_buf.c
-@@ -340,6 +340,7 @@ xfs_dinode_verify_fork(
+@@ -339,7 +339,7 @@ xfs_dinode_verify_fork(
+ 	struct xfs_mount	*mp,
  	int			whichfork)
  {
- 	uint32_t		di_nextents = XFS_DFORK_NEXTENTS(dip, whichfork);
-+	xfs_extnum_t		max_extents;
+-	uint32_t		di_nextents = XFS_DFORK_NEXTENTS(dip, whichfork);
++	xfs_extnum_t		di_nextents = XFS_DFORK_NEXTENTS(dip, whichfork);
+ 	xfs_extnum_t		max_extents;
  
  	switch (XFS_DFORK_FORMAT(dip, whichfork)) {
- 	case XFS_DINODE_FMT_LOCAL:
-@@ -361,12 +362,9 @@ xfs_dinode_verify_fork(
- 			return __this_address;
- 		break;
- 	case XFS_DINODE_FMT_BTREE:
--		if (whichfork == XFS_ATTR_FORK) {
--			if (di_nextents > XFS_IFORK_EXTCNT_MAXS16)
--				return __this_address;
--		} else if (di_nextents > XFS_IFORK_EXTCNT_MAXS32) {
-+		max_extents = xfs_iext_max(mp, whichfork);
-+		if (di_nextents > max_extents)
- 			return __this_address;
--		}
- 		break;
- 	default:
- 		return __this_address;
 diff --git a/libxfs/xfs_inode_fork.c b/libxfs/xfs_inode_fork.c
-index 36e8bf702..4cd117382 100644
+index 4cd117382..48afaaeec 100644
 --- a/libxfs/xfs_inode_fork.c
 +++ b/libxfs/xfs_inode_fork.c
-@@ -727,6 +727,7 @@ xfs_iext_count_may_overflow(
- 	int			whichfork,
- 	int			nr_to_add)
- {
-+	struct xfs_mount	*mp = ip->i_mount;
+@@ -105,7 +105,7 @@ xfs_iformat_extents(
+ 	struct xfs_mount	*mp = ip->i_mount;
  	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
- 	uint64_t		max_exts;
- 	uint64_t		nr_exts;
-@@ -734,10 +735,9 @@ xfs_iext_count_may_overflow(
- 	if (whichfork == XFS_COW_FORK)
- 		return 0;
- 
--	max_exts = (whichfork == XFS_ATTR_FORK) ?
--		XFS_IFORK_EXTCNT_MAXS16 : XFS_IFORK_EXTCNT_MAXS32;
-+	max_exts = xfs_iext_max(mp, whichfork);
- 
--	if (XFS_TEST_ERROR(false, ip->i_mount, XFS_ERRTAG_REDUCE_MAX_IEXTENTS))
-+	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_REDUCE_MAX_IEXTENTS))
- 		max_exts = 10;
- 
- 	nr_exts = ifp->if_nextents + nr_to_add;
-diff --git a/libxfs/xfs_inode_fork.h b/libxfs/xfs_inode_fork.h
-index cf82be263..1eda21636 100644
---- a/libxfs/xfs_inode_fork.h
-+++ b/libxfs/xfs_inode_fork.h
-@@ -133,6 +133,14 @@ static inline int8_t xfs_ifork_format(struct xfs_ifork *ifp)
- 	return ifp->if_format;
- }
- 
-+static inline xfs_extnum_t xfs_iext_max(struct xfs_mount *mp, int whichfork)
-+{
-+	if (whichfork == XFS_DATA_FORK || whichfork == XFS_COW_FORK)
-+		return XFS_IFORK_EXTCNT_MAXS32;
-+	else
-+		return XFS_IFORK_EXTCNT_MAXS16;
-+}
-+
- struct xfs_ifork *xfs_ifork_alloc(enum xfs_dinode_fmt format,
- 				xfs_extnum_t nextents);
- struct xfs_ifork *xfs_iext_state_to_fork(struct xfs_inode *ip, int state);
+ 	int			state = xfs_bmap_fork_to_state(whichfork);
+-	int			nex = XFS_DFORK_NEXTENTS(dip, whichfork);
++	xfs_extnum_t		nex = XFS_DFORK_NEXTENTS(dip, whichfork);
+ 	int			size = nex * sizeof(xfs_bmbt_rec_t);
+ 	struct xfs_iext_cursor	icur;
+ 	struct xfs_bmbt_rec	*dp;
 diff --git a/repair/dinode.c b/repair/dinode.c
-index 45c8174cf..a0c5be7c3 100644
+index a0c5be7c3..a034b5e86 100644
 --- a/repair/dinode.c
 +++ b/repair/dinode.c
-@@ -1808,6 +1808,7 @@ _("bad attr fork offset %d in inode %" PRIu64 ", max=%zu\n"),
-  */
- static int
- process_inode_blocks_and_extents(
-+	struct xfs_mount *mp,
- 	xfs_dinode_t	*dino,
- 	xfs_rfsblock_t	nblocks,
- 	uint64_t	nextents,
-@@ -1831,7 +1832,7 @@ _("bad nblocks %llu for inode %" PRIu64 ", would reset to %" PRIu64 "\n"),
- 		}
- 	}
+@@ -967,7 +967,7 @@ process_exinode(
+ 	xfs_bmbt_rec_t		*rp;
+ 	xfs_fileoff_t		first_key;
+ 	xfs_fileoff_t		last_key;
+-	int32_t			numrecs;
++	xfs_extnum_t		numrecs;
+ 	int			ret;
  
--	if (nextents > XFS_IFORK_EXTCNT_MAXS32)  {
-+	if (nextents > xfs_iext_max(mp, XFS_DATA_FORK)) {
- 		do_warn(
- _("too many data fork extents (%" PRIu64 ") in inode %" PRIu64 "\n"),
- 			nextents, lino);
-@@ -1854,7 +1855,7 @@ _("bad nextents %d for inode %" PRIu64 ", would reset to %" PRIu64 "\n"),
- 		}
- 	}
- 
--	if (anextents > XFS_IFORK_EXTCNT_MAXS16)  {
-+	if (anextents > xfs_iext_max(mp, XFS_ATTR_FORK))  {
- 		do_warn(
- _("too many attr fork extents (%" PRIu64 ") in inode %" PRIu64 "\n"),
- 			anextents, lino);
-@@ -2961,7 +2962,7 @@ _("Bad CoW extent size %u on inode %" PRIu64 ", "),
- 	/*
- 	 * correct space counters if required
- 	 */
--	if (process_inode_blocks_and_extents(dino, totblocks + atotblocks,
-+	if (process_inode_blocks_and_extents(mp, dino, totblocks + atotblocks,
- 			nextents, anextents, lino, dirty) != 0)
- 		goto clear_bad_out;
- 
+ 	lino = XFS_AGINO_TO_INO(mp, agno, ino);
 -- 
 2.30.2
 
