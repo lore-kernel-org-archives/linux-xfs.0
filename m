@@ -2,114 +2,100 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69A0FC4338F
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Jul 2021 22:16:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 658EFC432BE
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Jul 2021 22:34:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 45C5560527
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Jul 2021 22:16:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4668660F6C
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Jul 2021 22:34:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233333AbhGZVfk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 26 Jul 2021 17:35:40 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54104 "EHLO mail.kernel.org"
+        id S233643AbhGZVyF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 26 Jul 2021 17:54:05 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58130 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232875AbhGZVfh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 26 Jul 2021 17:35:37 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id BCE8E6044F;
-        Mon, 26 Jul 2021 22:16:05 +0000 (UTC)
+        id S232876AbhGZVyE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 26 Jul 2021 17:54:04 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0667060F58;
+        Mon, 26 Jul 2021 22:34:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627337765;
-        bh=TYqT0zZ1rTVdL7hjWVKy690jA7WQwmtfDCOAq/bW4no=;
+        s=k20201202; t=1627338873;
+        bh=KJgOQ5/38jNECQmXUAcN/EXM7LvaLOqtbOaIWil4FjY=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=LTaLs8T+qffO7NeA/Ub0OGr2yI34CWSs3ubnsVBD1g81gsO9/XJmaIf1/RIUrof6z
-         VGcKLRL6z0ON+JFV01vh5plikR+952EmBvAxT+duPC8cA49zlQGTsED57q3Oe+DUNY
-         aP0S3RQPLfqZyUilkyc7UFVtrAPSoW3HSuXWVyYDz9Qpd2xK5mDmcxcSiUsPry+rAm
-         xOiGb4iCDL0Tn8S82HfoYHZqahgcSCOOzt7LZNomszc9wU9uzmfzXigCfpxIDzhpgq
-         C//UrvFiZyk2fb9L04pe5b3YE3byN6/fElAopjB9h67y4MD4kxJe3t4kf67wSl4z7i
-         WETEU2Jc8YtLQ==
-Date:   Mon, 26 Jul 2021 15:16:05 -0700
+        b=RvHggZZmdrUsOnzCYp9CcmAXeAR+PJVSPS9Yb7huwgVKDQGnsw8tcOlpUs3zUmmLh
+         PqhYOW1vTHDkN90ZIu9gfT/aT2veo2HteqFCg6crAqp7ZTivSdBvvVDeknbg4dwvjv
+         T7xt7/E1yS/0iZg9LblcEhPdC5ybTw44qvm+8xxJ51RqrEyD3oHc7Hx9hi/Qeo7qxV
+         yXAqAbjiB8RLLH1ZAtk00PaUU2B9DMcpEP+AzcWFSj5ae9N8Ux11FyDI+MlmVi7nNr
+         YcrzUBqYz9719nY58nwMawnCo4PGI5uAbH9xslJZBrEESrFr9TOnvyFFBmH7LTQ0iL
+         f1RcqUGFF17QQ==
+Date:   Mon, 26 Jul 2021 15:34:32 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 04/10] xfs: fix ordering violation between cache flushes
- and tail updates
-Message-ID: <20210726221605.GC559212@magnolia>
+Subject: Re: [PATCH 09/10] xfs: Enforce attr3 buffer recovery order
+Message-ID: <20210726223432.GD559212@magnolia>
 References: <20210726060716.3295008-1-david@fromorbit.com>
- <20210726060716.3295008-5-david@fromorbit.com>
- <20210726173521.GB559142@magnolia>
- <20210726214449.GR664593@dread.disaster.area>
+ <20210726060716.3295008-10-david@fromorbit.com>
+ <20210726175701.GY559212@magnolia>
+ <20210726215221.GT664593@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210726214449.GR664593@dread.disaster.area>
+In-Reply-To: <20210726215221.GT664593@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jul 27, 2021 at 07:44:49AM +1000, Dave Chinner wrote:
-> On Mon, Jul 26, 2021 at 10:35:21AM -0700, Darrick J. Wong wrote:
-> > On Mon, Jul 26, 2021 at 04:07:10PM +1000, Dave Chinner wrote:
-> > > --- a/fs/xfs/xfs_log.c
-> > > +++ b/fs/xfs/xfs_log.c
-> > > @@ -489,12 +489,20 @@ xfs_log_reserve(
-> > >  
-> > >  /*
-> > >   * Flush iclog to disk if this is the last reference to the given iclog and the
-> > > - * it is in the WANT_SYNC state.
-> > > + * it is in the WANT_SYNC state. If the caller passes in a non-zero
+On Tue, Jul 27, 2021 at 07:52:21AM +1000, Dave Chinner wrote:
+> On Mon, Jul 26, 2021 at 10:57:01AM -0700, Darrick J. Wong wrote:
+> > On Mon, Jul 26, 2021 at 04:07:15PM +1000, Dave Chinner wrote:
+> > > IOWs, attr3 leaf buffers fall through the magic number checks
+> > > unrecognised, so trigger the "recover immediately" behaviour instead
+> > > of undergoing an LSN check. IOWs, we incorrectly replay ATTR3 leaf
+> > > buffers and that causes silent on disk corruption of inode attribute
+> > > forks and potentially other things....
+> > > 
+> > > Git history shows this is *another* zero day bug, this time
+> > > introduced in commit 50d5c8d8e938 ("xfs: check LSN ordering for v5
+> > > superblocks during recovery") which failed to handle the attr3 leaf
+> > > buffers in recovery. And we've failed to handle them ever since...
 > > 
-> > I've noticed that the log code isn't always consistent about special
-> > looking LSNs -- some places use NULLCOMMITLSN, some places opencode
-> > (xfs_lsn_t)-1, and other code uses zero.  Is there some historical
-> > reason for having these distinct values?  Or do they actually mean
-> > separate things?
+> > I wonder, what happens if we happen to have a rt bitmap block where a
+> > sparse allocation pattern at the start of the rt device just happens to
+> > match one of these magic numbers + fs UUID?  Does that imply that log
+> > recovery can be tricked into forgetting to replay rtbitmap blocks?
 > 
-> If depends on the use case. I resisted converting the (xfs_lsn_t)-1s
-> in and around this patchset to NULLCOMMITLSN just to keep the noise
-> down. Where-ever we use -1 as a LSN, we should really use
-> NULLCOMMITLSN.
+> Possibly. RT bitmap/summary buffers are marked by type in the
+> xfs_buf_log_format type field so log recovery can recognise these
+> and do the right thing with them. So it really comes down to whether
+> log recovery handles XFS_BLFT_RTBITMAP_BUF types differently to any
+> other buffers. Which, without looking at the code, I doubt it does,
+> so there's probably fixes needed there, too...
 
-<nod> The -1 conversion is a pretty trivial cleanup that can go on the
-end...
+It handles them the same as every other buffer, which is to say that I
+think we've found another recovery zeroday.
 
-> As for comparing to zero, that works because we the LSN is largely
-> unlikely to have 64 bit overflow in the lifetime of the journal. And
-> if it does overflow, it's unlikely that we'll overflow exactly to
-> (0,0) as a meaningful LSN.
-> 
-> However, I think we've probably got bigger problems around xfs_lsn_t
-> overflowing, such as it being defined as signed rather than
-> unsigned and I suspect that XFS_LSN_CMP() fails if we overflow LSNs
-> back to zero and compare high cycle (old) with low cycle (new) LSNs.
+xlog_recover_buf_commit_pass2 reads the ondisk buffer, and then calls
+xlog_recover_get_buf_lsn to fish the LSN out of the ondisk buffer.  That
+second function doesn't corroborate the ondisk magic with the XFS_BLFT_*
+flags recovered from the buffer item, so if the log item was for an rt
+bitmap block and the user controls the rt layout as I describe above,
+they can totally screw up log recovery.
 
-Yes, I think so.
+Only after we return a garbage LSN do we call xlog_recover_do_reg_buffer
+-> xlog_recover_validate_buf_type and look at the buf_f flags to attach
+verifier ops, but by then it's too late to undo the damage.
 
-> So, really, right now I've ostriched this issue because I'm still
-> trying to work throw g/482 failures and I suspect we need to change
-> the definition of a LSN to fix these issues...
-
-<nod> Ok.  I figured that this 0 vs. -1 stuff was most likely just
-inconsistent usage, but thought I should ask just in case there was
-some real functional reason that I wasn't aware of.
+I think the answer is to combine the two functions so that we check the
+BLFT and the ondisk magic.  If they match, we can set b_ops and return
+the ondisk LSN and then decide if we're really going to replay the bli
+contents.  If they don't match, I guess we recover the whole bli?  Or
+abort?  I'll try to get to that after $meetings.
 
 --D
 
-> > > + * @old_tail_lsn, then we need to check if the log tail is different to the
-> > > + * caller's value. If it is different, this indicates that the log tail has
-> > > + * moved since the caller sampled the log tail and issued a cache flush and so
-> > > + * there may be metadata on disk that we need to flush before this iclog is
-> > 
-> > "If the caller passes in a non-zero @old_tail_lsn and the current log
-> > tail does not match, there may be metadata on disk that must be
-> > persisted before this iclog is written.  To satisfy that requirement,
-> > set the XLOG_ICL_NEED_FLUSH flag as a condition for writing this iclog
-> > with the new log tail value." ?
-> 
-> Ok.
 > 
 > Cheers,
 > 
