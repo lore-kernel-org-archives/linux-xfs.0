@@ -2,212 +2,151 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A8B7C4338F
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Jul 2021 21:25:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6AB9C4338F
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Jul 2021 21:46:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 30B4260FDB
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Jul 2021 21:25:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD87A60F91
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Jul 2021 21:46:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231599AbhG0VZc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 27 Jul 2021 17:25:32 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39440 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231417AbhG0VZc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 27 Jul 2021 17:25:32 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id EAC6560FC4;
-        Tue, 27 Jul 2021 21:25:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627421132;
-        bh=4nnsJLzIC7NUyW6RgZ9eBEQLWtdtrng9IMWsHqi1Y0Y=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=u3C8NRcqKAScE43JDh1ZxQ6xxlwnu4rUp/3+B3ja7wAUcd1Aw1EASIYxGUrutZARJ
-         vQM6X+C7w7q4GqQWKAyoJEbg7KDtH8MqcaTwimIo16vI6ZrU5dKeTuNHw5O2Z/OFtI
-         7cz0jsR/O7Qn48skZM/xyqjVsfl8hGiBuSIEKLmdTAMM8nUiP8Trbxj3po1xR1bY3u
-         Baj/87tCTDiIRZCz11X6VDmV9uDZXfOjaMPDSNWbJNmrghvuxftJj4s6yFk3YPovWa
-         3k5w66o4vGK2FRphH3qzyp3cajdItw2DoFf3hVt+sI9nv3UikFbDqhe87ZbSfSIRmj
-         9gSg3AWXrfGLg==
-Date:   Tue, 27 Jul 2021 14:25:31 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
+        id S232227AbhG0Vqt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 27 Jul 2021 17:46:49 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:44996 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231445AbhG0Vqt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Jul 2021 17:46:49 -0400
+Received: from dread.disaster.area (pa49-181-34-10.pa.nsw.optusnet.com.au [49.181.34.10])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id AA5DF1045876;
+        Wed, 28 Jul 2021 07:46:46 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1m8UuT-00BWS6-8e; Wed, 28 Jul 2021 07:46:45 +1000
+Date:   Wed, 28 Jul 2021 07:46:45 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 11/11] xfs: limit iclog tail updates
-Message-ID: <20210727212531.GJ559212@magnolia>
-References: <20210727071012.3358033-1-david@fromorbit.com>
- <20210727071012.3358033-12-david@fromorbit.com>
+Subject: Re: [RFC PATCH] xfs: prevent spoofing of rtbitmap blocks when
+ recovering buffers
+Message-ID: <20210727214645.GU664593@dread.disaster.area>
+References: <20210727191502.GH559212@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210727071012.3358033-12-david@fromorbit.com>
+In-Reply-To: <20210727191502.GH559212@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
+        a=hdaoRb6WoHYrV466vVKEyw==:117 a=hdaoRb6WoHYrV466vVKEyw==:17
+        a=kj9zAlcOel0A:10 a=e_q4qTt1xDgA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=MfXNflaBLaviXcaL3n8A:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jul 27, 2021 at 05:10:12PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Tue, Jul 27, 2021 at 12:15:02PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> From the department of "generic/482 keeps giving", we bring you
-> another tail update race condition:
+> While reviewing the buffer item recovery code, the thought occurred to
+> me: in V5 filesystems we use log sequence number (LSN) tracking to avoid
+> replaying older metadata updates against newer log items.  However, we
+> use the magic number of the ondisk buffer to find the LSN of the ondisk
+> metadata, which means that if an attacker can control the layout of the
+> realtime device precisely enough that the start of an rt bitmap block
+> matches the magic and UUID of some other kind of block, they can control
+> the purported LSN of that spoofed block and thereby break log replay.
+
+That'd take some effort, especially to crash the system at the point
+where it is active in the log...
+
+> Since realtime bitmap and summary blocks don't have headers at all, we
+> have no way to tell if a block really should be replayed.  The best we
+> can do is replay unconditionally and hope for the best.
 > 
-> iclog:
-> 	S1			C1
-> 	+-----------------------+-----------------------+
-> 				 S2			EOIC
-> 
-> Two checkpoints in a single iclog. One is complete, the other just
-> contains the start record and overruns into a new iclog.
-> 
-> Timeline:
-> 
-> Before S1:	Cache flush, log tail = X
-> At S1:		Metadata stable, write start record and checkpoint
-> At C1:		Write commit record, set NEED_FUA
-> 		Single iclog checkpoint, so no need for NEED_FLUSH
-> 		Log tail still = X, so no need for NEED_FLUSH
-> 
-> After C1,
-> Before S2:	Cache flush, log tail = X
-> At S2:		Metadata stable, write start record and checkpoint
-> After S2:	Log tail moves to X+1
-> At EOIC:	End of iclog, more journal data to write
-> 		Releases iclog
-> 		Not a commit iclog, so no need for NEED_FLUSH
-> 		Writes log tail X+1 into iclog.
-> 
-> At this point, the iclog has tail X+1 and NEED_FUA set. There has
-> been no cache flush for the metadata between X and X+1, and the
-> iclog writes the new tail permanently to the log. THis is sufficient
-> to violate on disk metadata/journal ordering.
-> 
-> We have two options here. The first is to detect this case in some
-> manner and ensure that the partial checkpoint write sets NEED_FLUSH
-> when the iclog is already marked NEED_FUA and the log tail changes.
-> This seems somewhat fragile and quite complex to get right, and it
-> doesn't actually make it obvious what underlying problem it is
-> actually addressing from reading the code.
-> 
-> The second option seems much cleaner to me, because it is derived
-> directly from the requirements of the C1 commit record in the iclog.
-> That is, when we write this commit record to the iclog, we've
-> guaranteed that the metadata/data ordering is correct for tail
-> update purposes. Hence if we only write the log tail into the iclog
-> for the *first* commit record rather than the log tail at the last
-> release, we guarantee that the log tail does not move past where the
-> the first commit record in the log expects it to be.
-> 
-> IOWs, taking the first option means that replay of C1 becomes
-> dependent on future operations doing the right thing, not just the
-> C1 checkpoint itself doing the right thing. This makes log recovery
-> almost impossible to reason about because now we have to take into
-> account what might or might not have happened in the future when
-> looking at checkpoints in the log rather than just having to
-> reconstruct the past...
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> XXX: Won't this leave us with a corrupt rtbitmap if recovery also fails?
+> In other words, the usual problems that happen when you /don't/ track
+> buffer age with LSNs?  I've noticed that the recoveryloop tests get hung
+> up on incorrect frextents after a few iterations, but have not had time
+> to figure out if the rtbitmap recovery is wrong, or if there's something
+> broken with the old-style summary updates for rt counters.
+
+If we don't track the age of the buffers then replay will always
+replay over the top of newer metadata. In general, this isn't a huge
+problem for buffer replay as long as recovery always completes
+fully.  If recovery always completes fully, the result should be the
+same or newer metadata on disk than was previously on disk, even if
+we started from older metadata in the journal. Speaking generally,
+the LSN ordering really only makes recovery a bit more efficient by
+allowing it to elide writeback of modifications that are already on
+disk.
+
+That said there some complex interactions between different types of
+objects and the recovery of them that LSN ordering addresses. Such
+as inodes being logged by buffer at allocation and unlink, but by
+log_dinodes for all other modifications. replacing the flush
+iteration in inodes because they can be logged and written back at
+the same time. And there were some rare, subtle recovery corruptions
+around these interactions that were solved by ensuring LSN ordering
+was enforced.
+
+The LSN ordering allows us to do fault analysis across log
+recovery when we have inconsistencies between related objects such
+as inodes, BMBT blocks and free space. I've been using this latter
+relationship between log recovery and metadata writeback a *lot*
+over the past couple of weeks.
+
+So, really, the LSN order tracking largely doesn't matter when
+everything is working as it should, and so always recovering a
+RT bitmap buffer should not actually introduce any corruptions
+except when log recoveyr fails. In which case, we already have an
+inconsistent filesystem and need to reapir it...
+
+> XXXX: Maybe someone should fix the ondisk format to track the (magic,
+> blkno, lsn, uuid) like we do everything else in V5?  That's gonna suck
+> for 64-bit divisions...
+
+I largely avoided changing the rt bitmap format to add headers and
+CRCs largely because it requires expensive rework of the extent to
+bitmap indexing mechanism. I'm still not sure if we gain anything
+from adding it now.
+
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
->  fs/xfs/xfs_log.c | 37 +++++++++++++++++++++++++++++++------
->  1 file changed, 31 insertions(+), 6 deletions(-)
+>  fs/xfs/xfs_buf_item_recover.c |   32 +++++++++++++++++++++++++-------
+>  1 file changed, 25 insertions(+), 7 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index 1c328efdca66..1b20fb479ebc 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -489,12 +489,31 @@ xfs_log_reserve(
->  
->  /*
->   * Flush iclog to disk if this is the last reference to the given iclog and the
-> - * it is in the WANT_SYNC state.  If the caller passes in a non-zero
-> - * @old_tail_lsn and the current log tail does not match, there may be metadata
-> - * on disk that must be persisted before this iclog is written.  To satisfy that
-> - * requirement, set the XLOG_ICL_NEED_FLUSH flag as a condition for writing this
-> - * iclog with the new log tail value.
-> + * it is in the WANT_SYNC state.
-> + *
-> + * If the caller passes in a non-zero @old_tail_lsn and the current log tail
-> + * does not match, there may be metadata on disk that must be persisted before
-> + * this iclog is written.  To satisfy that requirement, set the
-> + * XLOG_ICL_NEED_FLUSH flag as a condition for writing this iclog with the new
-> + * log tail value.
-> + *
-> + * If XLOG_ICL_NEED_FUA is already set on the iclog, we need to ensure that the
-> + * log tail is updated correctly. NEED_FUA indicates that the iclog will be
-> + * written to stable storage, and implies that a commit record is contained
-> + * within the iclog. We need to ensure that the log tail does not move beyond
-> + * the tail that the first commit record in the iclog ordered against, otherwise
-> + * correct recovery of that checkpoint becomes dependent on future operations
-> + * performed on this iclog.
-> + *
-> + * Hence if NEED_FUA is set and the current iclog tail lsn is empty, write the
-> + * current tail into iclog. Once the iclog tail is set, future operations must
-> + * not modify it, otherwise they potentially violate ordering constraints for
-> + * the checkpoint commit that wrote the initial tail lsn value. The tail lsn in
-> + * the iclog will get zeroed on activation of the iclog after sync, so we
-> + * always capture the tail lsn on the iclog on the first NEED_FUA release
-> + * regardless of the number of active reference counts on this iclog.
->   */
-> +
->  int
->  xlog_state_release_iclog(
->  	struct xlog		*log,
-> @@ -519,6 +538,10 @@ xlog_state_release_iclog(
->  
->  		if (old_tail_lsn && tail_lsn != old_tail_lsn)
->  			iclog->ic_flags |= XLOG_ICL_NEED_FLUSH;
-> +
-> +		if ((iclog->ic_flags & XLOG_ICL_NEED_FUA) &&
-> +		    !iclog->ic_header.h_tail_lsn)
-> +			iclog->ic_header.h_tail_lsn = cpu_to_be64(tail_lsn);
->  	}
->  
->  	if (!atomic_dec_and_test(&iclog->ic_refcnt))
-> @@ -530,7 +553,8 @@ xlog_state_release_iclog(
->  	}
->  
->  	iclog->ic_state = XLOG_STATE_SYNCING;
-> -	iclog->ic_header.h_tail_lsn = cpu_to_be64(tail_lsn);
-> +	if (!iclog->ic_header.h_tail_lsn)
-> +		iclog->ic_header.h_tail_lsn = cpu_to_be64(tail_lsn);
->  	xlog_verify_tail_lsn(log, iclog, tail_lsn);
+> diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
+> index 05fd816edf59..a776bcfdf0c1 100644
+> --- a/fs/xfs/xfs_buf_item_recover.c
+> +++ b/fs/xfs/xfs_buf_item_recover.c
+> @@ -698,19 +698,29 @@ xlog_recover_do_inode_buffer(
+>  static xfs_lsn_t
+>  xlog_recover_get_buf_lsn(
+>  	struct xfs_mount	*mp,
+> -	struct xfs_buf		*bp)
+> +	struct xfs_buf		*bp,
+> +	struct xfs_buf_log_format *buf_f)
+>  {
+>  	uint32_t		magic32;
+>  	uint16_t		magic16;
+>  	uint16_t		magicda;
+>  	void			*blk = bp->b_addr;
+>  	uuid_t			*uuid;
+> -	xfs_lsn_t		lsn = -1;
+> +	uint16_t		blft;
+> +	xfs_lsn_t		lsn = NULLCOMMITLSN;
 
-What is xlog_verify_tail_lsn protecting against?  I /think/ it is a
-debug check that makes sure that there's enough space between the head
-and the tail (i.e. the space that hasn't been written to yet) to write
-the iclog that we're releasing, right?
+I'd drop the -1 to NULLCOMMITLSN from the patch - it's not really
+part of the bug fix...
 
-I think that means that we're indirectly checking that if this iclog is
-persisted then recovery will be able to find complete log records
-between h_tail_lsn and h_lsn for replay, right?
+Otherwise I think the change looks OK.
 
-Before this patch we'd write out this iclog with h_tail_lsn set to
-wherever the log tail is /now/, but now we write out the iclog with
-h_tail_lsn set to wherever the tail was when the first commit record was
-added to this iclog.  That implies that recovery will now have to do
-more work, but at least the flushes will be in order, right?
+Cheers,
 
-So then, the question is this: should this call be:
-
-	xlog_verify_tail_lsn(log, iclog,
-			be64_to_cpu(iclog->ic_header.h_tail_lsn));
-
-since we need to guarantee that recovery will be able to start reading
-in log records starting at h_tail_lsn?
-
---D
-
->  	trace_xlog_iclog_syncing(iclog, _RET_IP_);
->  
-> @@ -2579,6 +2603,7 @@ xlog_state_activate_iclog(
->  	memset(iclog->ic_header.h_cycle_data, 0,
->  		sizeof(iclog->ic_header.h_cycle_data));
->  	iclog->ic_header.h_lsn = 0;
-> +	iclog->ic_header.h_tail_lsn = 0;
->  }
->  
->  /*
-> -- 
-> 2.31.1
-> 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
