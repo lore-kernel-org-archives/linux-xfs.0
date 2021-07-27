@@ -2,151 +2,170 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6AB9C4338F
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Jul 2021 21:46:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C567CC4338F
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Jul 2021 21:56:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CD87A60F91
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Jul 2021 21:46:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A514C60E78
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Jul 2021 21:56:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232227AbhG0Vqt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 27 Jul 2021 17:46:49 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:44996 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231445AbhG0Vqt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Jul 2021 17:46:49 -0400
-Received: from dread.disaster.area (pa49-181-34-10.pa.nsw.optusnet.com.au [49.181.34.10])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id AA5DF1045876;
-        Wed, 28 Jul 2021 07:46:46 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1m8UuT-00BWS6-8e; Wed, 28 Jul 2021 07:46:45 +1000
-Date:   Wed, 28 Jul 2021 07:46:45 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
+        id S232134AbhG0V4N (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 27 Jul 2021 17:56:13 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48668 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232022AbhG0V4M (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 27 Jul 2021 17:56:12 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 3198360E78;
+        Tue, 27 Jul 2021 21:56:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1627422972;
+        bh=muytySc6rL35qm4Ob1t2SONKYh0eAQ2oYOHmd83ZBvY=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=jisuDCiGJq2SLkCGKvLE3hD/u0n8W+BZifo6eyKfoMOR6z6caKNKrKfhLP5kS9FNe
+         6QimEgl4YU3M3X6yLTzh0NpV8mtuAZ2DVIYFJjIh6SdCQSwcB7fzNUjmDpyeDSKTlQ
+         hMwYhICdJ1tOUt+nryVrbuzWW0focfFyGgeYfCSWBkM7wwTLAqrPWHBzRl+egaJnYs
+         N6Q2Ip1zx1VfZdmP+ELN6pmCyjNvrSr1k52ACw8wg8KTdoNoUBpHXxjeM98MNTj8Y6
+         4dLn2UCUT7GU7cR0TEpZnIisuygelb3vKfkVkjNUkW2YKogQuezyPc5SyqbiJkkswf
+         xMhqkxEzEeU3g==
+Date:   Tue, 27 Jul 2021 14:56:11 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Chandan Babu R <chandanrlinux@gmail.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [RFC PATCH] xfs: prevent spoofing of rtbitmap blocks when
- recovering buffers
-Message-ID: <20210727214645.GU664593@dread.disaster.area>
-References: <20210727191502.GH559212@magnolia>
+Subject: Re: [PATCH V2 02/12] xfs: Rename MAXEXTNUM, MAXAEXTNUM to
+ XFS_IFORK_EXTCNT_MAXS32, XFS_IFORK_EXTCNT_MAXS16
+Message-ID: <20210727215611.GK559212@magnolia>
+References: <20210726114541.24898-1-chandanrlinux@gmail.com>
+ <20210726114541.24898-3-chandanrlinux@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210727191502.GH559212@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
-        a=hdaoRb6WoHYrV466vVKEyw==:117 a=hdaoRb6WoHYrV466vVKEyw==:17
-        a=kj9zAlcOel0A:10 a=e_q4qTt1xDgA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=MfXNflaBLaviXcaL3n8A:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20210726114541.24898-3-chandanrlinux@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jul 27, 2021 at 12:15:02PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Mon, Jul 26, 2021 at 05:15:31PM +0530, Chandan Babu R wrote:
+> In preparation for introducing larger extent count limits, this commit renames
+> existing extent count limits based on their signedness and width.
 > 
-> While reviewing the buffer item recovery code, the thought occurred to
-> me: in V5 filesystems we use log sequence number (LSN) tracking to avoid
-> replaying older metadata updates against newer log items.  However, we
-> use the magic number of the ondisk buffer to find the LSN of the ondisk
-> metadata, which means that if an attacker can control the layout of the
-> realtime device precisely enough that the start of an rt bitmap block
-> matches the magic and UUID of some other kind of block, they can control
-> the purported LSN of that spoofed block and thereby break log replay.
-
-That'd take some effort, especially to crash the system at the point
-where it is active in the log...
-
-> Since realtime bitmap and summary blocks don't have headers at all, we
-> have no way to tell if a block really should be replayed.  The best we
-> can do is replay unconditionally and hope for the best.
-> 
-> XXX: Won't this leave us with a corrupt rtbitmap if recovery also fails?
-> In other words, the usual problems that happen when you /don't/ track
-> buffer age with LSNs?  I've noticed that the recoveryloop tests get hung
-> up on incorrect frextents after a few iterations, but have not had time
-> to figure out if the rtbitmap recovery is wrong, or if there's something
-> broken with the old-style summary updates for rt counters.
-
-If we don't track the age of the buffers then replay will always
-replay over the top of newer metadata. In general, this isn't a huge
-problem for buffer replay as long as recovery always completes
-fully.  If recovery always completes fully, the result should be the
-same or newer metadata on disk than was previously on disk, even if
-we started from older metadata in the journal. Speaking generally,
-the LSN ordering really only makes recovery a bit more efficient by
-allowing it to elide writeback of modifications that are already on
-disk.
-
-That said there some complex interactions between different types of
-objects and the recovery of them that LSN ordering addresses. Such
-as inodes being logged by buffer at allocation and unlink, but by
-log_dinodes for all other modifications. replacing the flush
-iteration in inodes because they can be logged and written back at
-the same time. And there were some rare, subtle recovery corruptions
-around these interactions that were solved by ensuring LSN ordering
-was enforced.
-
-The LSN ordering allows us to do fault analysis across log
-recovery when we have inconsistencies between related objects such
-as inodes, BMBT blocks and free space. I've been using this latter
-relationship between log recovery and metadata writeback a *lot*
-over the past couple of weeks.
-
-So, really, the LSN order tracking largely doesn't matter when
-everything is working as it should, and so always recovering a
-RT bitmap buffer should not actually introduce any corruptions
-except when log recoveyr fails. In which case, we already have an
-inconsistent filesystem and need to reapir it...
-
-> XXXX: Maybe someone should fix the ondisk format to track the (magic,
-> blkno, lsn, uuid) like we do everything else in V5?  That's gonna suck
-> for 64-bit divisions...
-
-I largely avoided changing the rt bitmap format to add headers and
-CRCs largely because it requires expensive rework of the extent to
-bitmap indexing mechanism. I'm still not sure if we gain anything
-from adding it now.
-
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
 > ---
->  fs/xfs/xfs_buf_item_recover.c |   32 +++++++++++++++++++++++++-------
->  1 file changed, 25 insertions(+), 7 deletions(-)
+>  fs/xfs/libxfs/xfs_bmap.c       | 4 ++--
+>  fs/xfs/libxfs/xfs_format.h     | 8 ++++----
+>  fs/xfs/libxfs/xfs_inode_buf.c  | 4 ++--
+>  fs/xfs/libxfs/xfs_inode_fork.c | 3 ++-
+>  fs/xfs/scrub/inode_repair.c    | 2 +-
+>  5 files changed, 11 insertions(+), 10 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
-> index 05fd816edf59..a776bcfdf0c1 100644
-> --- a/fs/xfs/xfs_buf_item_recover.c
-> +++ b/fs/xfs/xfs_buf_item_recover.c
-> @@ -698,19 +698,29 @@ xlog_recover_do_inode_buffer(
->  static xfs_lsn_t
->  xlog_recover_get_buf_lsn(
->  	struct xfs_mount	*mp,
-> -	struct xfs_buf		*bp)
-> +	struct xfs_buf		*bp,
-> +	struct xfs_buf_log_format *buf_f)
->  {
->  	uint32_t		magic32;
->  	uint16_t		magic16;
->  	uint16_t		magicda;
->  	void			*blk = bp->b_addr;
->  	uuid_t			*uuid;
-> -	xfs_lsn_t		lsn = -1;
-> +	uint16_t		blft;
-> +	xfs_lsn_t		lsn = NULLCOMMITLSN;
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index f3c9a0ebb0a5..8f262405a5b5 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -76,10 +76,10 @@ xfs_bmap_compute_maxlevels(
+>  	 * available.
+>  	 */
+>  	if (whichfork == XFS_DATA_FORK) {
+> -		maxleafents = MAXEXTNUM;
+> +		maxleafents = XFS_IFORK_EXTCNT_MAXS32;
 
-I'd drop the -1 to NULLCOMMITLSN from the patch - it's not really
-part of the bug fix...
+I'm not in love with these names, since they tell me roughly about the
+size of the constant (which I could glean from the definition) but less
+about when I would expect to find them.  How about:
 
-Otherwise I think the change looks OK.
+#define XFS_MAX_DFORK_NEXTENTS    ((xfs_extnum_t) 0x7FFFFFFF)
+#define XFS_MAX_AFORK_NEXTENTS    ((xfs_aextnum_t)0x00007FFF)
 
-Cheers,
+and when we get to the iext64 feature (or whatever we end up calling it)
+then we can define new ones:
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+#define XFS_MAX_DFORK_NEXTENTS64  ((xfs_extnum_t) 0xFFFFFFFFFFFF)
+#define XFS_MAX_AFORK_NEXTENTS64  ((xfs_aextnum_t)0x0000FFFFFFFF)
+
+or something like that.
+
+>  		sz = xfs_bmdr_space_calc(MINDBTPTRS);
+>  	} else {
+> -		maxleafents = MAXAEXTNUM;
+> +		maxleafents = XFS_IFORK_EXTCNT_MAXS16;
+>  		sz = xfs_bmdr_space_calc(MINABTPTRS);
+>  	}
+>  	maxrootrecs = xfs_bmdr_maxrecs(sz, 0);
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index 37cca918d2ba..920e3f9c418f 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -1110,11 +1110,11 @@ enum xfs_dinode_fmt {
+>  	{ XFS_DINODE_FMT_UUID,		"uuid" }
+>  
+>  /*
+> - * Max values for extlen, extnum, aextnum.
+> + * Max values for extlen and disk inode's extent counters.
+>   */
+> -#define	MAXEXTLEN	((uint32_t)0x001fffff)	/* 21 bits */
+
+As for MAXEXTLEN... would you mind tacking a new patch on the end to fix
+its definition as well?  It /really/ ought to be based on the disk
+format definitions and not open-coded.
+
+#define XFS_MAX_EXTLEN		((xfs_extlen_t)(1 << BMBT_BLOCKCOUNT_BITLEN) - 1)
+
+--D
+
+> -#define	MAXEXTNUM	((int32_t)0x7fffffff)	/* signed int */
+> -#define	MAXAEXTNUM	((int16_t)0x7fff)	/* signed short */
+> +#define	MAXEXTLEN		((uint32_t)0x1fffff) /* 21 bits */
+> +#define XFS_IFORK_EXTCNT_MAXS32 ((int32_t)0x7fffffff)  /* Signed 32-bits */
+> +#define XFS_IFORK_EXTCNT_MAXS16 ((int16_t)0x7fff)      /* Signed 16-bits */
+>  
+>  /*
+>   * Inode minimum and maximum sizes.
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> index 5625df1ddd95..66d13e8fa420 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> @@ -365,9 +365,9 @@ xfs_dinode_verify_fork(
+>  		break;
+>  	case XFS_DINODE_FMT_BTREE:
+>  		if (whichfork == XFS_ATTR_FORK) {
+> -			if (di_nextents > MAXAEXTNUM)
+> +			if (di_nextents > XFS_IFORK_EXTCNT_MAXS16)
+>  				return __this_address;
+> -		} else if (di_nextents > MAXEXTNUM) {
+> +		} else if (di_nextents > XFS_IFORK_EXTCNT_MAXS32) {
+>  			return __this_address;
+>  		}
+>  		break;
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> index 801a6f7dbd0c..6f4b14d3d381 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+> @@ -736,7 +736,8 @@ xfs_iext_count_may_overflow(
+>  	if (whichfork == XFS_COW_FORK)
+>  		return 0;
+>  
+> -	max_exts = (whichfork == XFS_ATTR_FORK) ? MAXAEXTNUM : MAXEXTNUM;
+> +	max_exts = (whichfork == XFS_ATTR_FORK) ?
+> +		XFS_IFORK_EXTCNT_MAXS16 : XFS_IFORK_EXTCNT_MAXS32;
+>  
+>  	if (XFS_TEST_ERROR(false, ip->i_mount, XFS_ERRTAG_REDUCE_MAX_IEXTENTS))
+>  		max_exts = 10;
+> diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
+> index a80cd633fe59..c44f8d06939b 100644
+> --- a/fs/xfs/scrub/inode_repair.c
+> +++ b/fs/xfs/scrub/inode_repair.c
+> @@ -1198,7 +1198,7 @@ xrep_inode_blockcounts(
+>  			return error;
+>  		if (count >= sc->mp->m_sb.sb_dblocks)
+>  			return -EFSCORRUPTED;
+> -		if (nextents >= MAXAEXTNUM)
+> +		if (nextents >= XFS_IFORK_EXTCNT_MAXS16)
+>  			return -EFSCORRUPTED;
+>  		ifp->if_nextents = nextents;
+>  	} else {
+> -- 
+> 2.30.2
+> 
