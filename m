@@ -2,95 +2,152 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 842C2C432BE
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Jul 2021 15:35:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8C1DC4320A
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Jul 2021 18:37:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6658F61B55
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Jul 2021 15:35:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A2A6960F9F
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Jul 2021 18:37:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232656AbhG0PfA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 27 Jul 2021 11:35:00 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49704 "EHLO mail.kernel.org"
+        id S229727AbhG0Shf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 27 Jul 2021 14:37:35 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36530 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236974AbhG0Pen (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 27 Jul 2021 11:34:43 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 1F65161B30;
-        Tue, 27 Jul 2021 15:33:36 +0000 (UTC)
+        id S229581AbhG0She (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 27 Jul 2021 14:37:34 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 7846360F9F;
+        Tue, 27 Jul 2021 18:37:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627400016;
-        bh=4PZARTzEx+NyszsOAu6lbi7w9h8FOGeHdmwe6pE+9NE=;
+        s=k20201202; t=1627411054;
+        bh=5KgL07cUeD9zdSgHT/80N+z7O5y38qmDJWOfnnPbOzM=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=jMfiwaUj6xWzdeDehxp1Kzifwu3wYRSTIGzv9URGKhVGQ7a5oKrqU5xwTPvM8rNx8
-         pL33hpdBVSGbU0eDKRD5kdDDGpSsg07OudM+eVRisgp4MLTvCbY68gt6AFwrlEaWeL
-         aopLejmyoFelH+9R0wF/F8FIhMojSeOMTZFJVWxqpP5Rgqa4t4zjqH2VX+AdH5XtWu
-         uSZlHgfJSee0K/66CiOCohm2St51HvN8o1LX6E39pR4NUcaFuF7YLB9uTQuObrvHCe
-         87yYD/bifuFjreteUYJGN6RMd5ynEbjBdzoY0CxjBKru8RyTZKG4/VRSpIqcus1Gg1
-         6rq0L0f6sjiKQ==
-Date:   Tue, 27 Jul 2021 08:33:35 -0700
+        b=LSacCqgZ8rZhSooG8iVk2j5WC+rYmta0SL8VkNOe+bV4to6jEbIp4M39GWGs0Ia8K
+         vbx6fnfAwHFH2/MDxhZvNvucHPIoLunYGJgCP1P3lRykasU5f+PxfpxbPaKXaoyidR
+         yR30QGqXcQTG9SkkCl/hTAWP4olDr+Hko3ZPaKcxJXstr5uGrlG1ACBCe1oiPZf4NJ
+         QD6WEPLfgVnoa/TiayaDyUWPjlRjdTjJzBsv2HUwkvX83eSclpKgqPn8TR753k3Njj
+         h2TFPoerJGVEkPzSrYGNvQcqMmNk9bAEHMlcedoXc5Jp8bntAcEucfa95IBE5KXFf0
+         1RkFCZEFG33pg==
+Date:   Tue, 27 Jul 2021 11:37:34 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Chao Yu <chao@kernel.org>
-Cc:     Eric Biggers <ebiggers@kernel.org>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        linux-f2fs-devel@lists.sourceforge.net,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Satya Tangirala <satyaprateek2357@gmail.com>,
-        Changheun Lee <nanich.lee@samsung.com>,
-        Matthew Bobrowski <mbobrowski@mbobrowski.org>
-Subject: Re: [PATCH 3/9] f2fs: rework write preallocations
-Message-ID: <20210727153335.GE559212@magnolia>
-References: <20210716143919.44373-1-ebiggers@kernel.org>
- <20210716143919.44373-4-ebiggers@kernel.org>
- <14782036-f6a5-878a-d21f-e7dd7008a285@kernel.org>
- <YP2l+1umf9ct/4Sp@sol.localdomain>
- <YP9oou9sx4oJF1sc@google.com>
- <70f16fec-02f6-cb19-c407-856101cacc23@kernel.org>
- <YP+38QzXS6kpLGn0@sol.localdomain>
- <70d9c954-d7f0-bbe2-f078-62273229342f@kernel.org>
+To:     Chandan Babu R <chandanrlinux@gmail.com>
+Cc:     fstests@vger.kernel.org, guaneryu@gmail.com,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/3] xfs/530: Bail out if either of reflink or rmapbt is
+ enabled
+Message-ID: <20210727183734.GD559142@magnolia>
+References: <20210726064313.19153-1-chandanrlinux@gmail.com>
+ <20210726064313.19153-3-chandanrlinux@gmail.com>
+ <20210726171916.GV559212@magnolia>
+ <87fsw0fjq0.fsf@garuda>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <70d9c954-d7f0-bbe2-f078-62273229342f@kernel.org>
+In-Reply-To: <87fsw0fjq0.fsf@garuda>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jul 27, 2021 at 04:30:16PM +0800, Chao Yu wrote:
-> On 2021/7/27 15:38, Eric Biggers wrote:
-> > That's somewhat helpful, but I've been doing some more investigation and now I'm
-> > even more confused.  How can f2fs support non-overwrite DIO writes at all
-> > (meaning DIO writes in LFS mode as well as DIO writes to holes in non-LFS mode),
-> > given that it has no support for unwritten extents?  AFAICS, as-is users can
+On Tue, Jul 27, 2021 at 10:15:27AM +0530, Chandan Babu R wrote:
+> On 26 Jul 2021 at 22:49, Darrick J. Wong wrote:
+> > On Mon, Jul 26, 2021 at 12:13:13PM +0530, Chandan Babu R wrote:
+> >> _scratch_do_mkfs constructs a mkfs command line by concatenating the values of
+> >> 1. $mkfs_cmd
+> >> 2. $MKFS_OPTIONS
+> >> 3. $extra_mkfs_options
+> >>
+> >> The corresponding mkfs command line fails if $MKFS_OPTIONS enables either
+> >> reflink or rmapbt feature. The failure occurs because the test tries to create
+> >> a filesystem with realtime device enabled. In such a case, _scratch_do_mkfs()
+> >> will construct and invoke an mkfs command line without including the value of
+> >> $MKFS_OPTIONS.
+> >>
+> >> To prevent such silent failures, this commit causes the test to exit if it
+> >> detects either reflink or rmapbt feature being enabled.
+> >
+> > Er, what combinations of mkfs.xfs and MKFS_OPTIONS cause this result?
+> > What kind of fs configuration comes out of that?
 > 
-> I'm trying to pick up DAX support patch created by Qiuyang from huawei, and it
-> looks it faces the same issue, so it tries to fix this by calling sb_issue_zeroout()
-> in f2fs_map_blocks() before it returns.
+> With MKFS_OPTIONS set as shown below,
+> 
+> export MKFS_OPTIONS="-m reflink=1 -b size=1k"
+> 
+> _scratch_do_mkfs() invokes mkfs.xfs with both realtime and reflink options
+> enabled. Such an invocation of mkfs.xfs fails causing _scratch_do_mkfs() to
+> ignore the contents of $MKFS_OPTIONS while constructing and invoking mkfs.xfs
+> once again.
+> 
+> This time, the fs block size will however be set to 4k (the default block
+> size). At the beginning of the test we would have obtained the block size of
+> the filesystem as 1k and used it to compute the size of the realtime device
+> required to overflow realtime bitmap inode's max pseudo extent count.
+> 
+> Invocation of xfs_growfs (made later in the test) ends up succeeding since a
+> 4k fs block can accommodate more bits than a 1k fs block.
 
-I really hope you don't, because zeroing the region before memcpy'ing it
-is absurd.  I don't know if f2fs can do that (xfs can't really) without
-pinning resources during a potentially lengthy memcpy operation, but you
-/could/ allocate the space in ->iomap_begin, attach some record of that
-to iomap->private, and only commit the mapping update in ->iomap_end.
+OK, now I think I've finally put all the pieces together.  Both of these
+patches are fixing weirdness when MKFS_OPTIONS="-m reflink=1 -b size=1k".
+
+With current HEAD, we try to mkfs.xfs with double "-b size" arguments.
+That fails with 'option respecified', so fstests tries again without
+MKFS_OPTIONS, which means you don't get the filesystem that you want.
+If, say, MKFS_OPTIONS also contained bigtime=1, you won't get a bigtime
+filesystem.
+
+So the first patch removes the double -bsize arguments.  But you still
+have the problem that the reflink=1 in MKFS_OPTIONS still causes
+mkfs.xfs to fail (because we don't do rt and reflink yet), so fstests
+again drops MKFS_OPTIONS, and now you're testing the fs without a block
+size option at all.  The test still regresses because the special rt
+geometry depends on the blocksize, and we didn't get all the geometry
+elements that we need to trip the growfs failure.
+
+Does the following patch fix all that for you?
 
 --D
 
-> > easily leak uninitialized disk contents on f2fs by issuing a DIO write that
-> > won't complete fully (or might not complete fully), then reading back the blocks
-> > that got allocated but not written to.
-> > 
-> > I think that f2fs will have to take the ext2 approach of not allowing
-> > non-overwrite DIO writes at all...
-> Yes,
+diff --git a/tests/xfs/530 b/tests/xfs/530
+index 4d168ac5..9c6f44d7 100755
+--- a/tests/xfs/530
++++ b/tests/xfs/530
+@@ -60,10 +60,22 @@ echo "Format and mount rt volume"
+ 
+ export USE_EXTERNAL=yes
+ export SCRATCH_RTDEV=$rtdev
+-_scratch_mkfs -d size=$((1024 * 1024 * 1024)) -b size=${dbsize} \
++_scratch_mkfs -d size=$((1024 * 1024 * 1024)) \
+ 	      -r size=${rtextsz},extsize=${rtextsz} >> $seqres.full
+ _try_scratch_mount || _notrun "Couldn't mount fs with synthetic rt volume"
+ 
++# If we didn't get the desired realtime volume and the same blocksize as the
++# first format (which we used to compute a specific rt geometry), skip the
++# test.  This can happen if the MKFS_OPTIONS conflict with the ones we passed
++# to _scratch_mkfs or do not result in a valid rt fs geometry.  In this case,
++# _scratch_mkfs will try to "succeed" at formatting by dropping MKFS_OPTIONS,
++# giving us the wrong geometry.
++formatted_blksz="$(_get_block_size $SCRATCH_MNT)"
++test "$formatted_blksz" -ne "$dbsize" && \
++	_notrun "Tried to format with $dbsize blocksize, got $formatted_blksz."
++$XFS_INFO_PROG $SCRATCH_MNT | egrep -q 'realtime.*blocks=0' && \
++	_notrun "Filesystem should have a realtime volume"
++
+ echo "Consume free space"
+ fillerdir=$SCRATCH_MNT/fillerdir
+ nr_free_blks=$(stat -f -c '%f' $SCRATCH_MNT)
+
+> >
+> > Eventually, the plan is to support rmap[1] and reflink[2] on the
+> > realtime device, at which point this will have to be torn out and a
+> > better solution found.
+> >
+> > --D
+> >
+> > [1] https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=realtime-rmap
+> > [2] https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=realtime-reflink
+> >
 > 
-> Another option is to enhance f2fs metadata's scalability which needs to update layout
-> of dnode block or SSA block, after that we can record the status of unwritten data block
-> there... it's a big change though...
-> 
-> Thanks,
-> 
-> > 
-> > - Eric
-> > 
+> --
+> chandan
