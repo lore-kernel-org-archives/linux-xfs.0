@@ -2,104 +2,141 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 658EFC432BE
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Jul 2021 22:34:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1429EC4338F
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Jul 2021 02:00:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4668660F6C
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Jul 2021 22:34:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D7F6660F55
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Jul 2021 02:00:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233643AbhGZVyF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 26 Jul 2021 17:54:05 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58130 "EHLO mail.kernel.org"
+        id S233843AbhG0BTh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 26 Jul 2021 21:19:37 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51610 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232876AbhGZVyE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 26 Jul 2021 17:54:04 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 0667060F58;
-        Mon, 26 Jul 2021 22:34:32 +0000 (UTC)
+        id S233249AbhG0BTg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 26 Jul 2021 21:19:36 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id AF4396044F;
+        Tue, 27 Jul 2021 02:00:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627338873;
-        bh=KJgOQ5/38jNECQmXUAcN/EXM7LvaLOqtbOaIWil4FjY=;
+        s=k20201202; t=1627351203;
+        bh=CYY5a6sXIUbXvvfmh1fGeu1HRzHcSsYfC7Nc5x16e70=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=RvHggZZmdrUsOnzCYp9CcmAXeAR+PJVSPS9Yb7huwgVKDQGnsw8tcOlpUs3zUmmLh
-         PqhYOW1vTHDkN90ZIu9gfT/aT2veo2HteqFCg6crAqp7ZTivSdBvvVDeknbg4dwvjv
-         T7xt7/E1yS/0iZg9LblcEhPdC5ybTw44qvm+8xxJ51RqrEyD3oHc7Hx9hi/Qeo7qxV
-         yXAqAbjiB8RLLH1ZAtk00PaUU2B9DMcpEP+AzcWFSj5ae9N8Ux11FyDI+MlmVi7nNr
-         YcrzUBqYz9719nY58nwMawnCo4PGI5uAbH9xslJZBrEESrFr9TOnvyFFBmH7LTQ0iL
-         f1RcqUGFF17QQ==
-Date:   Mon, 26 Jul 2021 15:34:32 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 09/10] xfs: Enforce attr3 buffer recovery order
-Message-ID: <20210726223432.GD559212@magnolia>
-References: <20210726060716.3295008-1-david@fromorbit.com>
- <20210726060716.3295008-10-david@fromorbit.com>
- <20210726175701.GY559212@magnolia>
- <20210726215221.GT664593@dread.disaster.area>
+        b=pItbtAATkfk4wHGbbuFmHFmL9idsCNcWp3oQZtLKut2gzqJ3yKMVfusToCb1jnPl3
+         dIAVq7L0wtLtmbmKAhFso9RFDQyE2phgvh1YvDGOdh2d42gX1Hhoay+UN+uRruMXP2
+         tH1BlMXGrEcmrN3e8Luks14d6Dk4Q5B684dNC6wHArjXcH1xspCOgacuX9nS1NuLB6
+         aYQFWgqkA966lhvCyvzdWgKwnS8BWTQAN+1sC1TGGkOArU3gLYN/c2CvOB9wO59/In
+         obrTifawxMcYLOYfNa24jOekdgZqLgjazIGA5dFItMMFkxOoeyGBxRU8m651lU6kWa
+         luJ38w87JD5hg==
+Date:   Mon, 26 Jul 2021 19:00:02 -0700
+From:   Jaegeuk Kim <jaegeuk@kernel.org>
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     Chao Yu <chao@kernel.org>, linux-f2fs-devel@lists.sourceforge.net,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        Satya Tangirala <satyaprateek2357@gmail.com>,
+        Changheun Lee <nanich.lee@samsung.com>,
+        Matthew Bobrowski <mbobrowski@mbobrowski.org>
+Subject: Re: [PATCH 3/9] f2fs: rework write preallocations
+Message-ID: <YP9oou9sx4oJF1sc@google.com>
+References: <20210716143919.44373-1-ebiggers@kernel.org>
+ <20210716143919.44373-4-ebiggers@kernel.org>
+ <14782036-f6a5-878a-d21f-e7dd7008a285@kernel.org>
+ <YP2l+1umf9ct/4Sp@sol.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20210726215221.GT664593@dread.disaster.area>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <YP2l+1umf9ct/4Sp@sol.localdomain>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jul 27, 2021 at 07:52:21AM +1000, Dave Chinner wrote:
-> On Mon, Jul 26, 2021 at 10:57:01AM -0700, Darrick J. Wong wrote:
-> > On Mon, Jul 26, 2021 at 04:07:15PM +1000, Dave Chinner wrote:
-> > > IOWs, attr3 leaf buffers fall through the magic number checks
-> > > unrecognised, so trigger the "recover immediately" behaviour instead
-> > > of undergoing an LSN check. IOWs, we incorrectly replay ATTR3 leaf
-> > > buffers and that causes silent on disk corruption of inode attribute
-> > > forks and potentially other things....
+On 07/25, Eric Biggers wrote:
+> On Sun, Jul 25, 2021 at 06:50:51PM +0800, Chao Yu wrote:
+> > On 2021/7/16 22:39, Eric Biggers wrote:
+> > > From: Eric Biggers <ebiggers@google.com>
 > > > 
-> > > Git history shows this is *another* zero day bug, this time
-> > > introduced in commit 50d5c8d8e938 ("xfs: check LSN ordering for v5
-> > > superblocks during recovery") which failed to handle the attr3 leaf
-> > > buffers in recovery. And we've failed to handle them ever since...
+> > > f2fs_write_begin() assumes that all blocks were preallocated by
+> > > default unless FI_NO_PREALLOC is explicitly set.  This invites data
+> > > corruption, as there are cases in which not all blocks are preallocated.
+> > > Commit 47501f87c61a ("f2fs: preallocate DIO blocks when forcing
+> > > buffered_io") fixed one case, but there are others remaining.
 > > 
-> > I wonder, what happens if we happen to have a rt bitmap block where a
-> > sparse allocation pattern at the start of the rt device just happens to
-> > match one of these magic numbers + fs UUID?  Does that imply that log
-> > recovery can be tricked into forgetting to replay rtbitmap blocks?
+> > Could you please explain which cases we missed to handle previously?
+> > then I can check those related logic before and after the rework.
 > 
-> Possibly. RT bitmap/summary buffers are marked by type in the
-> xfs_buf_log_format type field so log recovery can recognise these
-> and do the right thing with them. So it really comes down to whether
-> log recovery handles XFS_BLFT_RTBITMAP_BUF types differently to any
-> other buffers. Which, without looking at the code, I doubt it does,
-> so there's probably fixes needed there, too...
+> Any case where a buffered write happens while not all blocks were preallocated
+> but FI_NO_PREALLOC wasn't set.  For example when ENOSPC was hit in the middle of
+> the preallocations for a direct write that will fall back to a buffered write,
+> e.g. due to f2fs_force_buffered_io() or page cache invalidation failure.
+> 
+> > 
+> > > -			/*
+> > > -			 * If force_buffere_io() is true, we have to allocate
+> > > -			 * blocks all the time, since f2fs_direct_IO will fall
+> > > -			 * back to buffered IO.
+> > > -			 */
+> > > -			if (!f2fs_force_buffered_io(inode, iocb, from) &&
+> > > -					f2fs_lfs_mode(F2FS_I_SB(inode)))
+> > > -				goto write;
+> > 
+> > We should keep this OPU DIO logic, otherwise, in lfs mode, write dio
+> > will always allocate two block addresses for each 4k append IO.
+> > 
+> > I jsut test based on codes of last f2fs dev-test branch.
+> 
+> Yes, I had misread that due to the weird goto and misleading comment and
+> translated it into:
+> 
+>         /* If it will be an in-place direct write, don't bother. */
+>         if (dio && !f2fs_lfs_mode(sbi))
+>                 return 0;
+> 
+> It should be:
+> 
+>         if (dio && f2fs_lfs_mode(sbi))
+>                 return 0;
 
-It handles them the same as every other buffer, which is to say that I
-think we've found another recovery zeroday.
+Hmm, this addresses my 250 failure. And, I think the below commit can explain
+the case.
 
-xlog_recover_buf_commit_pass2 reads the ondisk buffer, and then calls
-xlog_recover_get_buf_lsn to fish the LSN out of the ondisk buffer.  That
-second function doesn't corroborate the ondisk magic with the XFS_BLFT_*
-flags recovered from the buffer item, so if the log item was for an rt
-bitmap block and the user controls the rt layout as I describe above,
-they can totally screw up log recovery.
+commit 47501f87c61ad2aa234add63e1ae231521dbc3f5
+Author: Jaegeuk Kim <jaegeuk@kernel.org>
+Date:   Tue Nov 26 15:01:42 2019 -0800
 
-Only after we return a garbage LSN do we call xlog_recover_do_reg_buffer
--> xlog_recover_validate_buf_type and look at the buf_f flags to attach
-verifier ops, but by then it's too late to undo the damage.
+    f2fs: preallocate DIO blocks when forcing buffered_io
 
-I think the answer is to combine the two functions so that we check the
-BLFT and the ondisk magic.  If they match, we can set b_ops and return
-the ondisk LSN and then decide if we're really going to replay the bli
-contents.  If they don't match, I guess we recover the whole bli?  Or
-abort?  I'll try to get to that after $meetings.
+    The previous preallocation and DIO decision like below.
 
---D
+                             allow_outplace_dio              !allow_outplace_dio
+    f2fs_force_buffered_io   (*) No_Prealloc / Buffered_IO   Prealloc / Buffered_IO
+    !f2fs_force_buffered_io  No_Prealloc / DIO               Prealloc / DIO
+
+    But, Javier reported Case (*) where zoned device bypassed preallocation but
+    fell back to buffered writes in f2fs_direct_IO(), resulting in stale data
+    being read.
+
+    In order to fix the issue, actually we need to preallocate blocks whenever
+    we fall back to buffered IO like this. No change is made in the other cases.
+
+                             allow_outplace_dio              !allow_outplace_dio
+    f2fs_force_buffered_io   (*) Prealloc / Buffered_IO      Prealloc / Buffered_IO
+    !f2fs_force_buffered_io  No_Prealloc / DIO               Prealloc / DIO
+
+    Reported-and-tested-by: Javier Gonzalez <javier@javigon.com>
+    Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+    Tested-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+    Reviewed-by: Chao Yu <yuchao0@huawei.com>
+    Reviewed-by: Javier González <javier@javigon.com>
+    Signed-off-by: Jaegeuk Kim <jaegeuk@kernel.org>
+
 
 > 
-> Cheers,
+> Do you have a proper explanation for why preallocations shouldn't be done in
+> this case?  Note that preallocations are still done for buffered writes, which
+> may be out-of-place as well; how are those different?
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> - Eric
