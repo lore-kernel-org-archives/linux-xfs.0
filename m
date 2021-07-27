@@ -7,143 +7,148 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 587BCC4338F
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Jul 2021 23:10:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EC90C4338F
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Jul 2021 23:11:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 30F7160F90
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Jul 2021 23:10:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 34E5260F9B
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Jul 2021 23:11:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232556AbhG0XK4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 27 Jul 2021 19:10:56 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56296 "EHLO mail.kernel.org"
+        id S232556AbhG0XLp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 27 Jul 2021 19:11:45 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56492 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232198AbhG0XK4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 27 Jul 2021 19:10:56 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id AD9E560249;
-        Tue, 27 Jul 2021 23:10:55 +0000 (UTC)
+        id S232198AbhG0XLo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 27 Jul 2021 19:11:44 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 10E0C60249;
+        Tue, 27 Jul 2021 23:11:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627427455;
-        bh=PwznqRpjuvcITV9gYMaHGfEvfIOvuHya6/cxf+DFPtk=;
+        s=k20201202; t=1627427504;
+        bh=S/MjT7vZ7TfIoaq2Nm0rZHsC6YCErDs+A7t51vHT4Cw=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=HCuFPsBiE3bg7ALjTnygQ+bkk1VvzvMbW6vdk1aLDljrui4cpqHzer8q3JNpPCtZT
-         hn3pKJlsYzI5FA+ZKuc9tQuVH94iYElJwBM2Jti/dRXYqC1uC0MD2kkifL0mh3qQgJ
-         jjVCvNdd7Lv9IPS5o5rHXRNQt1tGCzVqNWLoFulmD9hcq8S5zncb+nSotfD77Wh21B
-         ii611CL7F7mzdsT3e4CTEY9GEBMLLlvx7qNKh8YcYdAhsUCjAMcz/HEqfhfNY213ip
-         vGnVhWiaj5hd22r2MFs+JyFgStvlbGcPEgUtcB+dDni9ati3AZn2uZ1MT5hgmTuz89
-         1Z7uNOMjpNV6A==
-Date:   Tue, 27 Jul 2021 16:10:55 -0700
+        b=JozsGill3K8tEHt7flzS3VBN3aLDhcTNEje4sPINjlwWFnhlmRxIuTBXCy7e/TGIS
+         zSwVZ9DcL2da086LoE5IbvvYxlgX3CkFpqkkgp4DGuDntqDQbDVEjMhEdga2r/CM7L
+         8gth9F5SxGFyxUeXKEP7hoEyWNPShtyOeiv5ex0iGchynugVcdJZQs3JeCeRPr0+y5
+         i8ci/RGXM5HsYyPNaJdtWviZYqI0LvAUbOg/6e+5JMG+Q5Ptwp1Zgt8SNPVEkdmIZp
+         X1A/oGRNbLny+zZRSxwNeKpDocUryY7WxrsVoBAyesXIE/uL7Qiu3agngD60/UEowt
+         FjKswsykmfp1A==
+Date:   Tue, 27 Jul 2021 16:11:43 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Chandan Babu R <chandanrlinux@gmail.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH V2 12/12] xfs: Error tag to test if v5 bulkstat skips
- inodes with large extent count
-Message-ID: <20210727231055.GV559212@magnolia>
-References: <20210726114541.24898-1-chandanrlinux@gmail.com>
- <20210726114541.24898-13-chandanrlinux@gmail.com>
+Subject: Re: [PATCH V2 04/12] xfsprogs: Use xfs_extnum_t instead of basic
+ data types
+Message-ID: <20210727231143.GW559212@magnolia>
+References: <20210726114724.24956-1-chandanrlinux@gmail.com>
+ <20210726114724.24956-5-chandanrlinux@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210726114541.24898-13-chandanrlinux@gmail.com>
+In-Reply-To: <20210726114724.24956-5-chandanrlinux@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jul 26, 2021 at 05:15:41PM +0530, Chandan Babu R wrote:
-> This commit adds a new error tag to allow user space tests to check if V5
-> bulkstat ioctl skips reporting inodes with large extent count.
+On Mon, Jul 26, 2021 at 05:17:16PM +0530, Chandan Babu R wrote:
+> xfs_extnum_t is the type to use to declare variables which have values
+> obtained from xfs_dinode->di_[a]nextents. This commit replaces basic
+> types (e.g. uint32_t) with xfs_extnum_t for such variables.
 > 
 > Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
+> ---
+>  db/bmap.c               | 2 +-
+>  db/frag.c               | 2 +-
 
-Keep in mind that each of these injection knobs costs us 4 bytes per
-mount.  No particular objections, but I don't know how urgently we need
-to do that to test a corner case...
-
+For the db and repair parts,
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> ---
->  fs/xfs/libxfs/xfs_errortag.h | 4 +++-
->  fs/xfs/xfs_error.c           | 3 +++
->  fs/xfs/xfs_itable.c          | 9 ++++++++-
->  3 files changed, 14 insertions(+), 2 deletions(-)
+>  libxfs/xfs_bmap.c       | 2 +-
+>  libxfs/xfs_inode_buf.c  | 2 +-
+>  libxfs/xfs_inode_fork.c | 2 +-
+>  repair/dinode.c         | 2 +-
+>  6 files changed, 6 insertions(+), 6 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
-> index f5fa2151e05d..b2c533153737 100644
-> --- a/fs/xfs/libxfs/xfs_errortag.h
-> +++ b/fs/xfs/libxfs/xfs_errortag.h
-> @@ -60,7 +60,8 @@
->  #define XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT		37
->  #define XFS_ERRTAG_AG_RESV_FAIL				38
->  #define XFS_ERRTAG_SWAPEXT_FINISH_ONE			39
-> -#define XFS_ERRTAG_MAX					40
-> +#define XFS_ERRTAG_BULKSTAT_REDUCE_MAX_IEXTENTS		40
-> +#define XFS_ERRTAG_MAX					41
+> diff --git a/db/bmap.c b/db/bmap.c
+> index 5f81d2b52..50f0474bc 100644
+> --- a/db/bmap.c
+> +++ b/db/bmap.c
+> @@ -47,7 +47,7 @@ bmap(
+>  	int			n;
+>  	int			nex;
+>  	xfs_fsblock_t		nextbno;
+> -	int			nextents;
+> +	xfs_extnum_t		nextents;
+>  	xfs_bmbt_ptr_t		*pp;
+>  	xfs_bmdr_block_t	*rblock;
+>  	typnm_t			typ;
+> diff --git a/db/frag.c b/db/frag.c
+> index 570ad3b74..90fa2131c 100644
+> --- a/db/frag.c
+> +++ b/db/frag.c
+> @@ -273,7 +273,7 @@ process_fork(
+>  	int		whichfork)
+>  {
+>  	extmap_t	*extmap;
+> -	int		nex;
+> +	xfs_extnum_t	nex;
 >  
->  /*
->   * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
-> @@ -105,5 +106,6 @@
->  #define XFS_RANDOM_BMAP_ALLOC_MINLEN_EXTENT		1
->  #define XFS_RANDOM_AG_RESV_FAIL				1
->  #define XFS_RANDOM_SWAPEXT_FINISH_ONE			1
-> +#define XFS_RANDOM_BULKSTAT_REDUCE_MAX_IEXTENTS		1
+>  	nex = XFS_DFORK_NEXTENTS(dip, whichfork);
+>  	if (!nex)
+> diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+> index 608ae5b83..dd60d8105 100644
+> --- a/libxfs/xfs_bmap.c
+> +++ b/libxfs/xfs_bmap.c
+> @@ -46,9 +46,9 @@ xfs_bmap_compute_maxlevels(
+>  	xfs_mount_t	*mp,		/* file system mount structure */
+>  	int		whichfork)	/* data or attr fork */
+>  {
+> +	xfs_extnum_t	maxleafents;	/* max leaf entries possible */
+>  	int		level;		/* btree level */
+>  	uint		maxblocks;	/* max blocks at this level */
+> -	uint		maxleafents;	/* max leaf entries possible */
+>  	int		maxrootrecs;	/* max records in root block */
+>  	int		minleafrecs;	/* min records in leaf block */
+>  	int		minnoderecs;	/* min records in node block */
+> diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
+> index 056fe252b..b2e8e431a 100644
+> --- a/libxfs/xfs_inode_buf.c
+> +++ b/libxfs/xfs_inode_buf.c
+> @@ -339,7 +339,7 @@ xfs_dinode_verify_fork(
+>  	struct xfs_mount	*mp,
+>  	int			whichfork)
+>  {
+> -	uint32_t		di_nextents = XFS_DFORK_NEXTENTS(dip, whichfork);
+> +	xfs_extnum_t		di_nextents = XFS_DFORK_NEXTENTS(dip, whichfork);
+>  	xfs_extnum_t		max_extents;
 >  
->  #endif /* __XFS_ERRORTAG_H_ */
-> diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-> index e25b440cbfd3..e2a9446fb025 100644
-> --- a/fs/xfs/xfs_error.c
-> +++ b/fs/xfs/xfs_error.c
-> @@ -58,6 +58,7 @@ static unsigned int xfs_errortag_random_default[] = {
->  	XFS_RANDOM_BMAP_ALLOC_MINLEN_EXTENT,
->  	XFS_RANDOM_AG_RESV_FAIL,
->  	XFS_RANDOM_SWAPEXT_FINISH_ONE,
-> +	XFS_RANDOM_BULKSTAT_REDUCE_MAX_IEXTENTS,
->  };
+>  	switch (XFS_DFORK_FORMAT(dip, whichfork)) {
+> diff --git a/libxfs/xfs_inode_fork.c b/libxfs/xfs_inode_fork.c
+> index 4cd117382..48afaaeec 100644
+> --- a/libxfs/xfs_inode_fork.c
+> +++ b/libxfs/xfs_inode_fork.c
+> @@ -105,7 +105,7 @@ xfs_iformat_extents(
+>  	struct xfs_mount	*mp = ip->i_mount;
+>  	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
+>  	int			state = xfs_bmap_fork_to_state(whichfork);
+> -	int			nex = XFS_DFORK_NEXTENTS(dip, whichfork);
+> +	xfs_extnum_t		nex = XFS_DFORK_NEXTENTS(dip, whichfork);
+>  	int			size = nex * sizeof(xfs_bmbt_rec_t);
+>  	struct xfs_iext_cursor	icur;
+>  	struct xfs_bmbt_rec	*dp;
+> diff --git a/repair/dinode.c b/repair/dinode.c
+> index a0c5be7c3..a034b5e86 100644
+> --- a/repair/dinode.c
+> +++ b/repair/dinode.c
+> @@ -967,7 +967,7 @@ process_exinode(
+>  	xfs_bmbt_rec_t		*rp;
+>  	xfs_fileoff_t		first_key;
+>  	xfs_fileoff_t		last_key;
+> -	int32_t			numrecs;
+> +	xfs_extnum_t		numrecs;
+>  	int			ret;
 >  
->  struct xfs_errortag_attr {
-> @@ -172,6 +173,7 @@ XFS_ERRORTAG_ATTR_RW(reduce_max_iextents,	XFS_ERRTAG_REDUCE_MAX_IEXTENTS);
->  XFS_ERRORTAG_ATTR_RW(bmap_alloc_minlen_extent,	XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT);
->  XFS_ERRORTAG_ATTR_RW(ag_resv_fail, XFS_ERRTAG_AG_RESV_FAIL);
->  XFS_ERRORTAG_ATTR_RW(swapext_finish_one, XFS_RANDOM_SWAPEXT_FINISH_ONE);
-> +XFS_ERRORTAG_ATTR_RW(bulkstat_reduce_max_iextents, XFS_ERRTAG_BULKSTAT_REDUCE_MAX_IEXTENTS);
->  
->  static struct attribute *xfs_errortag_attrs[] = {
->  	XFS_ERRORTAG_ATTR_LIST(noerror),
-> @@ -214,6 +216,7 @@ static struct attribute *xfs_errortag_attrs[] = {
->  	XFS_ERRORTAG_ATTR_LIST(bmap_alloc_minlen_extent),
->  	XFS_ERRORTAG_ATTR_LIST(ag_resv_fail),
->  	XFS_ERRORTAG_ATTR_LIST(swapext_finish_one),
-> +	XFS_ERRORTAG_ATTR_LIST(bulkstat_reduce_max_iextents),
->  	NULL,
->  };
->  
-> diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-> index 8493870a0a87..1b252d1cda9d 100644
-> --- a/fs/xfs/xfs_itable.c
-> +++ b/fs/xfs/xfs_itable.c
-> @@ -20,6 +20,7 @@
->  #include "xfs_icache.h"
->  #include "xfs_health.h"
->  #include "xfs_trans.h"
-> +#include "xfs_errortag.h"
->  
->  /*
->   * Bulk Stat
-> @@ -143,7 +144,13 @@ xfs_bulkstat_one_int(
->  
->  	nextents = xfs_ifork_nextents(&ip->i_df);
->  	if (bc->breq->version != XFS_BULKSTAT_VERSION_V6) {
-> -		if (nextents > XFS_IFORK_EXTCNT_MAXS32) {
-> +		xfs_extnum_t max_nextents = XFS_IFORK_EXTCNT_MAXS32;
-> +
-> +		if (unlikely(XFS_TEST_ERROR(false, mp,
-> +				XFS_ERRTAG_BULKSTAT_REDUCE_MAX_IEXTENTS)))
-> +			max_nextents = 10;
-> +
-> +		if (nextents > max_nextents) {
->  			xfs_iunlock(ip, XFS_ILOCK_SHARED);
->  			xfs_irele(ip);
->  			error = -EINVAL;
+>  	lino = XFS_AGINO_TO_INO(mp, agno, ino);
 > -- 
 > 2.30.2
 > 
