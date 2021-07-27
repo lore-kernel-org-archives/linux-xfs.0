@@ -2,69 +2,81 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22E18C4338F
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Jul 2021 06:31:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA0D9C4338F
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Jul 2021 07:10:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 02AEE60F4F
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Jul 2021 06:31:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A34D161163
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Jul 2021 07:10:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235633AbhG0Gbl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 27 Jul 2021 02:31:41 -0400
-Received: from verein.lst.de ([213.95.11.211]:48591 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234803AbhG0Gbl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 27 Jul 2021 02:31:41 -0400
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 0300B67373; Tue, 27 Jul 2021 08:31:39 +0200 (CEST)
-Date:   Tue, 27 Jul 2021 08:31:38 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Shiyang Ruan <ruansy.fnst@fujitsu.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, nvdimm@lists.linux.dev,
-        cluster-devel@redhat.com
-Subject: Re: [PATCH 16/27] iomap: switch iomap_bmap to use iomap_iter
-Message-ID: <20210727063138.GA10143@lst.de>
-References: <20210719103520.495450-1-hch@lst.de> <20210719103520.495450-17-hch@lst.de> <20210719170545.GF22402@magnolia> <20210726081942.GD14853@lst.de> <20210726163922.GA559142@magnolia>
+        id S235762AbhG0HKV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 27 Jul 2021 03:10:21 -0400
+Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:56885 "EHLO
+        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S235745AbhG0HKU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Jul 2021 03:10:20 -0400
+Received: from dread.disaster.area (pa49-181-34-10.pa.nsw.optusnet.com.au [49.181.34.10])
+        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id ED7F063A1
+        for <linux-xfs@vger.kernel.org>; Tue, 27 Jul 2021 17:10:17 +1000 (AEST)
+Received: from discord.disaster.area ([192.168.253.110])
+        by dread.disaster.area with esmtp (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1m8HEG-00BI3e-Mk
+        for linux-xfs@vger.kernel.org; Tue, 27 Jul 2021 17:10:16 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.94)
+        (envelope-from <david@fromorbit.com>)
+        id 1m8HEG-00E5aj-Eu
+        for linux-xfs@vger.kernel.org; Tue, 27 Jul 2021 17:10:16 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH 01/11] xfs: flush data dev on external log write
+Date:   Tue, 27 Jul 2021 17:10:02 +1000
+Message-Id: <20210727071012.3358033-2-david@fromorbit.com>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20210727071012.3358033-1-david@fromorbit.com>
+References: <20210727071012.3358033-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210726163922.GA559142@magnolia>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
+        a=hdaoRb6WoHYrV466vVKEyw==:117 a=hdaoRb6WoHYrV466vVKEyw==:17
+        a=e_q4qTt1xDgA:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
+        a=r_EzLFMmjEd-lPC6gHAA:9 a=AjGcO6oz07-iQ99wixmX:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jul 26, 2021 at 09:39:22AM -0700, Darrick J. Wong wrote:
-> The documentation needs to be much more explicit about the fact that you
-> cannot "break;" your way out of an iomap_iter loop.  I think the comment
-> should be rewritten along these lines:
-> 
-> "Iterate over filesystem-provided space mappings for the provided file
-> range.  This function handles cleanup of resources acquired for
-> iteration when the filesystem indicates there are no more space
-> mappings, which means that this function must be called in a loop that
-> continues as long it returns a positive value.  If 0 or a negative value
-> is returned, the caller must not return to the loop body.  Within a loop
-> body, there are two ways to break out of the loop body: leave
-> @iter.processed unchanged, or set it to the usual negative errno."
-> 
-> Hm.
+From: Dave Chinner <dchinner@redhat.com>
 
-Yes, I'll update the documentation.
+We incorrectly flush the log device instead of the data device when
+trying to ensure metadata is correctly on disk before writing the
+unmount record.
 
-> Clunky, for sure, but at least we still get to use break as the language
-> designers intended.
+Fixes: eef983ffeae7 ("xfs: journal IO cache flush reductions")
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_log.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I can't see any advantage there over just proper documentation.  If you
-are totally attached to a working break we might have to come up with
-a nasty for_each macro that ensures we have a final iomap_apply, but I
-doubt it is worth the effort.
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 36fa2650b081..96434cc4df6e 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -833,7 +833,7 @@ xlog_write_unmount_record(
+ 	 * stamp the tail LSN into the unmount record.
+ 	 */
+ 	if (log->l_targ != log->l_mp->m_ddev_targp)
+-		blkdev_issue_flush(log->l_targ->bt_bdev);
++		blkdev_issue_flush(log->l_mp->m_ddev_targp->bt_bdev);
+ 	return xlog_write(log, &vec, ticket, NULL, NULL, XLOG_UNMOUNT_TRANS);
+ }
+ 
+-- 
+2.31.1
+
