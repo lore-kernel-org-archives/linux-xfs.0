@@ -7,152 +7,177 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BECCC4338F
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Jul 2021 21:59:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B0CCC4338F
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Jul 2021 22:03:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4E7E560F57
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Jul 2021 21:59:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 326D960F57
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Jul 2021 22:03:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231599AbhG0V70 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 27 Jul 2021 17:59:26 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49920 "EHLO mail.kernel.org"
+        id S231706AbhG0WDV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 27 Jul 2021 18:03:21 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51886 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231135AbhG0V7Z (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 27 Jul 2021 17:59:25 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 256DB60D07;
-        Tue, 27 Jul 2021 21:59:25 +0000 (UTC)
+        id S231599AbhG0WDT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 27 Jul 2021 18:03:19 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 4833760D07;
+        Tue, 27 Jul 2021 22:03:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627423165;
-        bh=3rgs8pwK6nVFsHB/Sd5fAchR0QmIzHbrbs2azyHtxfg=;
+        s=k20201202; t=1627423399;
+        bh=i2cuDhYZWMiAStNMdzdhS9U0rtFWlkHqvkkmY6oG2rs=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Se/tUapt76DuUMJg6IXo0o+K0jQzTjxNfgYpT9gW1XyMOihOaJaB63pnd2WI3vD3N
-         x+1ZF5QTFl25iSeJOgbspuScfhyJ6R3eZyNdtUSONz9XfJZROO3vxg/ZJR3jIfjSW6
-         9vcvYqvWA3MPlx15Uqv08olDqv4sDah6wNYIC5/W6XGPfJ3jyuozcpEVfG4GKj5unR
-         Q8STB3eneCkT5RJC+z+UFZiwfs748ONFR/XMFrANHmQDYCXe53QkjsRrblLy8HFqKh
-         4ydAl/Dm8uXkL4AwGzKNRfvrVs1Ao92qLvk8wfnmXi9RBjhhX9ect9r5iuAYOXuS2o
-         7fzr/5qTfTl3A==
-Date:   Tue, 27 Jul 2021 14:59:24 -0700
+        b=GeEO/6hqKOOAGOHZPT8vV8XQytof/Tzw26hRvrJDQhyVqrWz8PKmTAWEw27UR5q14
+         G24gOQi6A7QmaTSu2NP/vy19bMI2ddKN8lbdQwgLiiBelmb6I44oKXqdpPbr7ffN/b
+         K0yt7yxgN9X5T/jVj+d7CZB1VOpl9JY55pVPZplBO+QAaf5OBJYSgUvDmDmjU4j+ww
+         Gb+7BH1DY486+peocZJr5wwlNrAqgr/VU2EgjM/MndNFo334XXJosxPE0XYyd30GZc
+         AvKh0TbtsRKx0eFN0dkh12ZpOU3ors0JWCIBjFDLDlDJpaYgcXbkvA7BcsLvbdOx1J
+         h5mgp7cC1rzBQ==
+Date:   Tue, 27 Jul 2021 15:03:18 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Chandan Babu R <chandanrlinux@gmail.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH V2 04/12] xfs: Use xfs_extnum_t instead of basic data
- types
-Message-ID: <20210727215924.GM559212@magnolia>
+Subject: Re: [PATCH V2 02/12] xfs: Rename MAXEXTNUM, MAXAEXTNUM to
+ XFS_IFORK_EXTCNT_MAXS32, XFS_IFORK_EXTCNT_MAXS16
+Message-ID: <20210727220318.GN559212@magnolia>
 References: <20210726114541.24898-1-chandanrlinux@gmail.com>
- <20210726114541.24898-5-chandanrlinux@gmail.com>
+ <20210726114541.24898-3-chandanrlinux@gmail.com>
+ <20210727215611.GK559212@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210726114541.24898-5-chandanrlinux@gmail.com>
+In-Reply-To: <20210727215611.GK559212@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jul 26, 2021 at 05:15:33PM +0530, Chandan Babu R wrote:
-> xfs_extnum_t is the type to use to declare variables which have values
-> obtained from xfs_dinode->di_[a]nextents. This commit replaces basic
-> types (e.g. uint32_t) with xfs_extnum_t for such variables.
+On Tue, Jul 27, 2021 at 02:56:11PM -0700, Darrick J. Wong wrote:
+> On Mon, Jul 26, 2021 at 05:15:31PM +0530, Chandan Babu R wrote:
+> > In preparation for introducing larger extent count limits, this commit renames
+> > existing extent count limits based on their signedness and width.
+> > 
+> > Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_bmap.c       | 4 ++--
+> >  fs/xfs/libxfs/xfs_format.h     | 8 ++++----
+> >  fs/xfs/libxfs/xfs_inode_buf.c  | 4 ++--
+> >  fs/xfs/libxfs/xfs_inode_fork.c | 3 ++-
+> >  fs/xfs/scrub/inode_repair.c    | 2 +-
+> >  5 files changed, 11 insertions(+), 10 deletions(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> > index f3c9a0ebb0a5..8f262405a5b5 100644
+> > --- a/fs/xfs/libxfs/xfs_bmap.c
+> > +++ b/fs/xfs/libxfs/xfs_bmap.c
+> > @@ -76,10 +76,10 @@ xfs_bmap_compute_maxlevels(
+> >  	 * available.
+> >  	 */
+> >  	if (whichfork == XFS_DATA_FORK) {
+> > -		maxleafents = MAXEXTNUM;
+> > +		maxleafents = XFS_IFORK_EXTCNT_MAXS32;
 > 
-> Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
+> I'm not in love with these names, since they tell me roughly about the
+> size of the constant (which I could glean from the definition) but less
+> about when I would expect to find them.  How about:
+> 
+> #define XFS_MAX_DFORK_NEXTENTS    ((xfs_extnum_t) 0x7FFFFFFF)
+> #define XFS_MAX_AFORK_NEXTENTS    ((xfs_aextnum_t)0x00007FFF)
 
-Not sure why the structure members change places, but otherwise LGTM.
+Or, given that 'DFORK' already means 'ondisk fork', how about:
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+XFS_MAX_DATA_NEXTENTS
+XFS_MAX_ATTR_NEXTENTS
+
+?
 
 --D
 
-
-> ---
->  fs/xfs/libxfs/xfs_bmap.c       | 2 +-
->  fs/xfs/libxfs/xfs_inode_buf.c  | 2 +-
->  fs/xfs/libxfs/xfs_inode_fork.c | 2 +-
->  fs/xfs/scrub/inode.c           | 2 +-
->  fs/xfs/scrub/inode_repair.c    | 2 +-
->  fs/xfs/xfs_trace.h             | 2 +-
->  6 files changed, 6 insertions(+), 6 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 282aeb3c0e49..e5d243fd187d 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -53,9 +53,9 @@ xfs_bmap_compute_maxlevels(
->  	xfs_mount_t	*mp,		/* file system mount structure */
->  	int		whichfork)	/* data or attr fork */
->  {
-> +	xfs_extnum_t	maxleafents;	/* max leaf entries possible */
->  	int		level;		/* btree level */
->  	uint		maxblocks;	/* max blocks at this level */
-> -	uint		maxleafents;	/* max leaf entries possible */
->  	int		maxrootrecs;	/* max records in root block */
->  	int		minleafrecs;	/* min records in leaf block */
->  	int		minnoderecs;	/* min records in node block */
-> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> index 419b92dc6ac8..cba9a38f3270 100644
-> --- a/fs/xfs/libxfs/xfs_inode_buf.c
-> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> @@ -342,7 +342,7 @@ xfs_dinode_verify_fork(
->  	struct xfs_mount	*mp,
->  	int			whichfork)
->  {
-> -	uint32_t		di_nextents = XFS_DFORK_NEXTENTS(dip, whichfork);
-> +	xfs_extnum_t		di_nextents = XFS_DFORK_NEXTENTS(dip, whichfork);
->  	xfs_extnum_t		max_extents;
->  
->  	switch (XFS_DFORK_FORMAT(dip, whichfork)) {
-> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-> index c6856ec95335..a1e40df585a3 100644
-> --- a/fs/xfs/libxfs/xfs_inode_fork.c
-> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
-> @@ -107,7 +107,7 @@ xfs_iformat_extents(
->  	struct xfs_mount	*mp = ip->i_mount;
->  	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
->  	int			state = xfs_bmap_fork_to_state(whichfork);
-> -	int			nex = XFS_DFORK_NEXTENTS(dip, whichfork);
-> +	xfs_extnum_t		nex = XFS_DFORK_NEXTENTS(dip, whichfork);
->  	int			size = nex * sizeof(xfs_bmbt_rec_t);
->  	struct xfs_iext_cursor	icur;
->  	struct xfs_bmbt_rec	*dp;
-> diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
-> index e6068590484b..246d11ca133f 100644
-> --- a/fs/xfs/scrub/inode.c
-> +++ b/fs/xfs/scrub/inode.c
-> @@ -219,7 +219,7 @@ xchk_dinode(
->  	size_t			fork_recs;
->  	unsigned long long	isize;
->  	uint64_t		flags2;
-> -	uint32_t		nextents;
-> +	xfs_extnum_t		nextents;
->  	prid_t			prid;
->  	uint16_t		flags;
->  	uint16_t		mode;
-> diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
-> index a44d7b48c374..042c7d0bc0f5 100644
-> --- a/fs/xfs/scrub/inode_repair.c
-> +++ b/fs/xfs/scrub/inode_repair.c
-> @@ -597,9 +597,9 @@ xrep_dinode_bad_extents_fork(
->  {
->  	struct xfs_bmbt_irec	new;
->  	struct xfs_bmbt_rec	*dp;
-> +	xfs_extnum_t		nex;
->  	bool			isrt;
->  	int			i;
-> -	int			nex;
->  	int			fork_size;
->  
->  	nex = XFS_DFORK_NEXTENTS(dip, whichfork);
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index affc9b5834fb..5ed11f894f79 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -2338,7 +2338,7 @@ DECLARE_EVENT_CLASS(xfs_swap_extent_class,
->  		__field(int, which)
->  		__field(xfs_ino_t, ino)
->  		__field(int, format)
-> -		__field(int, nex)
-> +		__field(xfs_extnum_t, nex)
->  		__field(int, broot_size)
->  		__field(int, fork_off)
->  	),
-> -- 
-> 2.30.2
+> and when we get to the iext64 feature (or whatever we end up calling it)
+> then we can define new ones:
 > 
+> #define XFS_MAX_DFORK_NEXTENTS64  ((xfs_extnum_t) 0xFFFFFFFFFFFF)
+> #define XFS_MAX_AFORK_NEXTENTS64  ((xfs_aextnum_t)0x0000FFFFFFFF)
+> 
+> or something like that.
+> 
+> >  		sz = xfs_bmdr_space_calc(MINDBTPTRS);
+> >  	} else {
+> > -		maxleafents = MAXAEXTNUM;
+> > +		maxleafents = XFS_IFORK_EXTCNT_MAXS16;
+> >  		sz = xfs_bmdr_space_calc(MINABTPTRS);
+> >  	}
+> >  	maxrootrecs = xfs_bmdr_maxrecs(sz, 0);
+> > diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> > index 37cca918d2ba..920e3f9c418f 100644
+> > --- a/fs/xfs/libxfs/xfs_format.h
+> > +++ b/fs/xfs/libxfs/xfs_format.h
+> > @@ -1110,11 +1110,11 @@ enum xfs_dinode_fmt {
+> >  	{ XFS_DINODE_FMT_UUID,		"uuid" }
+> >  
+> >  /*
+> > - * Max values for extlen, extnum, aextnum.
+> > + * Max values for extlen and disk inode's extent counters.
+> >   */
+> > -#define	MAXEXTLEN	((uint32_t)0x001fffff)	/* 21 bits */
+> 
+> As for MAXEXTLEN... would you mind tacking a new patch on the end to fix
+> its definition as well?  It /really/ ought to be based on the disk
+> format definitions and not open-coded.
+> 
+> #define XFS_MAX_EXTLEN		((xfs_extlen_t)(1 << BMBT_BLOCKCOUNT_BITLEN) - 1)
+> 
+> --D
+> 
+> > -#define	MAXEXTNUM	((int32_t)0x7fffffff)	/* signed int */
+> > -#define	MAXAEXTNUM	((int16_t)0x7fff)	/* signed short */
+> > +#define	MAXEXTLEN		((uint32_t)0x1fffff) /* 21 bits */
+> > +#define XFS_IFORK_EXTCNT_MAXS32 ((int32_t)0x7fffffff)  /* Signed 32-bits */
+> > +#define XFS_IFORK_EXTCNT_MAXS16 ((int16_t)0x7fff)      /* Signed 16-bits */
+> >  
+> >  /*
+> >   * Inode minimum and maximum sizes.
+> > diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> > index 5625df1ddd95..66d13e8fa420 100644
+> > --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> > +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> > @@ -365,9 +365,9 @@ xfs_dinode_verify_fork(
+> >  		break;
+> >  	case XFS_DINODE_FMT_BTREE:
+> >  		if (whichfork == XFS_ATTR_FORK) {
+> > -			if (di_nextents > MAXAEXTNUM)
+> > +			if (di_nextents > XFS_IFORK_EXTCNT_MAXS16)
+> >  				return __this_address;
+> > -		} else if (di_nextents > MAXEXTNUM) {
+> > +		} else if (di_nextents > XFS_IFORK_EXTCNT_MAXS32) {
+> >  			return __this_address;
+> >  		}
+> >  		break;
+> > diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> > index 801a6f7dbd0c..6f4b14d3d381 100644
+> > --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> > +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+> > @@ -736,7 +736,8 @@ xfs_iext_count_may_overflow(
+> >  	if (whichfork == XFS_COW_FORK)
+> >  		return 0;
+> >  
+> > -	max_exts = (whichfork == XFS_ATTR_FORK) ? MAXAEXTNUM : MAXEXTNUM;
+> > +	max_exts = (whichfork == XFS_ATTR_FORK) ?
+> > +		XFS_IFORK_EXTCNT_MAXS16 : XFS_IFORK_EXTCNT_MAXS32;
+> >  
+> >  	if (XFS_TEST_ERROR(false, ip->i_mount, XFS_ERRTAG_REDUCE_MAX_IEXTENTS))
+> >  		max_exts = 10;
+> > diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
+> > index a80cd633fe59..c44f8d06939b 100644
+> > --- a/fs/xfs/scrub/inode_repair.c
+> > +++ b/fs/xfs/scrub/inode_repair.c
+> > @@ -1198,7 +1198,7 @@ xrep_inode_blockcounts(
+> >  			return error;
+> >  		if (count >= sc->mp->m_sb.sb_dblocks)
+> >  			return -EFSCORRUPTED;
+> > -		if (nextents >= MAXAEXTNUM)
+> > +		if (nextents >= XFS_IFORK_EXTCNT_MAXS16)
+> >  			return -EFSCORRUPTED;
+> >  		ifp->if_nextents = nextents;
+> >  	} else {
+> > -- 
+> > 2.30.2
+> > 
