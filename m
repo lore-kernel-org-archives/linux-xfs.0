@@ -2,266 +2,209 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB737C4338F
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 13:42:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A584C432BE
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 16:45:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 99BED60EC0
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 13:42:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 61E4D60249
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 16:45:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236609AbhG1Nmm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Jul 2021 09:42:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56328 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236503AbhG1Nml (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Jul 2021 09:42:41 -0400
-Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C8E1C061757
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Jul 2021 06:42:39 -0700 (PDT)
-Received: by mail-pj1-x102c.google.com with SMTP id pf12-20020a17090b1d8cb0290175c085e7a5so10112233pjb.0
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Jul 2021 06:42:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=references:user-agent:from:to:cc:subject:in-reply-to:date
-         :message-id:mime-version;
-        bh=0O0m2ZRYRa03nC9EEqJmZ36venICWNtxP70xn49cbxk=;
-        b=tAyiWX2HE0PZim29EbkbzeiKfFgnb9SXArd0d1MAqViBQi24bz+UYgtIoIH/+xSCwB
-         pZ36HFLXm3d5mS+1W4YxLU0LXU1pMUbD6r5sYlzQDOK5Nu5C/q+1Lvk8rQjP+IyEjmtE
-         NwWa5s5z1qW1JA2lzgraaeg/5rehupBXVVA4oI3tQPC+SuAO1wcIx5rm4g47MNkDXZDY
-         2n5ir5GLfHubrhDLZIgJ+KiIG4f79ARoItu+wBwNAOWjJrmpT/Z8w9fVk083qj14H+iv
-         NOixt27yFblGKRA/21k+9+wPTOyzB3777OptQzakV1rVMlL2TTwMzSdYLGP9QmsJUzBq
-         c2HQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:references:user-agent:from:to:cc:subject
-         :in-reply-to:date:message-id:mime-version;
-        bh=0O0m2ZRYRa03nC9EEqJmZ36venICWNtxP70xn49cbxk=;
-        b=bEGjHxhRirqHzofdiwYIffhLJDgZ8pjX37kOL28NDYHQaky3x1hpJ2ti2RNATmnW79
-         2sW/se8YsRBxQnBR2pPdrEheCrqtYUefzLOUxoxjt6lCYBxcWAVZUxCQg9xQYnpo46j/
-         MGIR5wCU885OmDtsgatCfhNa3wjLDFpLllq5aky8yufuWtohfPvRHlZeNX+jEz/7yDnC
-         4Suq1BNQS1UjLzS/dLiHh8or9WXrKrmnmacuoToF32vB2lP9twyEJweAa4Pupkwc93n2
-         uB+FFwFmSjC5fOcKdCWgEXBeegL7lgXNwSmTt5fVPE5HEy1mLqi4woExLTUCZDNfRgFv
-         0DEQ==
-X-Gm-Message-State: AOAM530AAOEWMvzgbplzQJS/YQd3VMHiujfuRNu6o4wSVlbF2G5/Dp4a
-        d6EbYpV7E0rvfnQMFBjod1h8IwWD2bogtw==
-X-Google-Smtp-Source: ABdhPJzurx5aOGKI6r4NAoz4JR2u993endkLa8ngnLG/l9cj9kshtDWKV2xclbPwQM4D4kyAL2vYrw==
-X-Received: by 2002:a63:134e:: with SMTP id 14mr28771445pgt.312.1627479758918;
-        Wed, 28 Jul 2021 06:42:38 -0700 (PDT)
-Received: from garuda ([122.171.208.125])
-        by smtp.gmail.com with ESMTPSA id x9sm26341pfd.100.2021.07.28.06.42.37
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Wed, 28 Jul 2021 06:42:38 -0700 (PDT)
-References: <20210727062053.11129-1-allison.henderson@oracle.com> <20210727062053.11129-6-allison.henderson@oracle.com>
-User-agent: mu4e 1.0; emacs 26.1
-From:   Chandan Babu R <chandanrlinux@gmail.com>
-To:     Allison Henderson <allison.henderson@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v22 05/16] xfs: Add state machine tracepoints
-In-reply-to: <20210727062053.11129-6-allison.henderson@oracle.com>
-Date:   Wed, 28 Jul 2021 19:12:36 +0530
-Message-ID: <87v94uv9kj.fsf@garuda>
+        id S230190AbhG1Qpz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Jul 2021 12:45:55 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41812 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229574AbhG1Qpz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 28 Jul 2021 12:45:55 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id BFFCB60F01;
+        Wed, 28 Jul 2021 16:45:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1627490753;
+        bh=xNJ6yIi2LKXpRYErf+n/zT5V05RgR15B0Kzd8PUSZcc=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=qLFoTn5dStBi15YZN3pXM8rJTjjoEU45wHN4YV2HcFiCVHuI7NNRkIUTUDEa7eyeA
+         89ZMMID8SCpE6m8T8bh2yOb36yZbNYdiotWbr/5Pi/kPWXbgzMT7rErRjRV+R3qjhO
+         e4CEikEdtsxbhpzvY21jnCbutycDXShUq4VE3EWV4UvqN/nGWRlmGJVtAtSfiN2Ter
+         GDbIdQjrUMLTEMRqB4iyQ1ze4Idlh/9TyAhWzZYIm9lN5BNaaNltBfP27oRW0NOLsC
+         wa5wb2rYKn4FyiCQYjzbZ/lWsfyUyaLfHsRJQj8Qsj77W8Hgf1EgeQMDKgpPAAmikO
+         cO9BWoFre0f1A==
+Date:   Wed, 28 Jul 2021 09:45:53 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Filipe Manana <fdmanana@gmail.com>
+Cc:     Eryu Guan <guaneryu@gmail.com>, xfs <linux-xfs@vger.kernel.org>,
+        fstests <fstests@vger.kernel.org>, Eryu Guan <guan@eryu.me>
+Subject: Re: [PATCH 1/1] misc: tag all tests that examine crash recovery in a
+ loop
+Message-ID: <20210728164553.GA3601443@magnolia>
+References: <162743103739.3429001.16912087881683869606.stgit@magnolia>
+ <162743104288.3429001.18145781236429703996.stgit@magnolia>
+ <CAL3q7H511wY0nHvTuqfnp0ttvvGuFt9Eke2B6cXy_4+JDyJVRw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAL3q7H511wY0nHvTuqfnp0ttvvGuFt9Eke2B6cXy_4+JDyJVRw@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 27 Jul 2021 at 11:50, Allison Henderson wrote:
-> This is a quick patch to add a new xfs_attr_*_return tracepoints.  We
-> use these to track when ever a new state is set or -EAGAIN is returned
->
-> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  fs/xfs/libxfs/xfs_attr.c        | 28 ++++++++++++++++++++++++++--
->  fs/xfs/libxfs/xfs_attr_remote.c |  1 +
->  fs/xfs/xfs_trace.h              | 24 ++++++++++++++++++++++++
->  3 files changed, 51 insertions(+), 2 deletions(-)
->
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index 5040fc1..b0c6c62 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -335,6 +335,7 @@ xfs_attr_sf_addname(
->  	 * the attr fork to leaf format and will restart with the leaf
->  	 * add.
->  	 */
-> +	trace_xfs_attr_sf_addname_return(XFS_DAS_UNINIT, args->dp);
->  	dac->flags |= XFS_DAC_DEFER_FINISH;
->  	return -EAGAIN;
->  }
-> @@ -394,6 +395,8 @@ xfs_attr_set_iter(
->  				 * handling code below
->  				 */
->  				dac->flags |= XFS_DAC_DEFER_FINISH;
-> +				trace_xfs_attr_set_iter_return(
-> +					dac->dela_state, args->dp);
->  				return -EAGAIN;
->  			} else if (error) {
->  				return error;
-> @@ -418,6 +421,7 @@ xfs_attr_set_iter(
->  
->  			dac->dela_state = XFS_DAS_FOUND_NBLK;
->  		}
-> +		trace_xfs_attr_set_iter_return(dac->dela_state,	args->dp);
->  		return -EAGAIN;
->  	case XFS_DAS_FOUND_LBLK:
->  		/*
-> @@ -445,6 +449,8 @@ xfs_attr_set_iter(
->  			error = xfs_attr_rmtval_set_blk(dac);
->  			if (error)
->  				return error;
-> +			trace_xfs_attr_set_iter_return(dac->dela_state,
-> +						       args->dp);
->  			return -EAGAIN;
->  		}
->  
-> @@ -479,6 +485,7 @@ xfs_attr_set_iter(
->  		 * series.
->  		 */
->  		dac->dela_state = XFS_DAS_FLIP_LFLAG;
-> +		trace_xfs_attr_set_iter_return(dac->dela_state, args->dp);
->  		return -EAGAIN;
->  	case XFS_DAS_FLIP_LFLAG:
->  		/*
-> @@ -496,6 +503,9 @@ xfs_attr_set_iter(
->  		dac->dela_state = XFS_DAS_RM_LBLK;
->  		if (args->rmtblkno) {
->  			error = __xfs_attr_rmtval_remove(dac);
-> +			if (error == -EAGAIN)
-> +				trace_xfs_attr_set_iter_return(
-> +					dac->dela_state, args->dp);
->  			if (error)
->  				return error;
+On Wed, Jul 28, 2021 at 10:40:29AM +0100, Filipe Manana wrote:
+> On Wed, Jul 28, 2021 at 1:10 AM Darrick J. Wong <djwong@kernel.org> wrote:
+> >
+> > From: Darrick J. Wong <djwong@kernel.org>
+> >
+> > Given all the recent problems that we've been finding with log recovery,
+> > I think it would be useful to create a 'recoveryloop' group so that
+> > developers have a convenient way to run every single test that rolls
+> > around in a fs shutdown loop looking for subtle errors in recovery.
+> >
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  tests/btrfs/190   |    2 +-
+> >  tests/generic/019 |    2 +-
+> >  tests/generic/388 |    2 +-
+> >  tests/generic/455 |    2 +-
+> >  tests/generic/457 |    2 +-
+> >  tests/generic/475 |    2 +-
+> >  tests/generic/482 |    2 +-
+> >  tests/generic/725 |    2 +-
+> >  tests/xfs/057     |    2 +-
+> >  9 files changed, 9 insertions(+), 9 deletions(-)
+> >
+> >
+> > diff --git a/tests/btrfs/190 b/tests/btrfs/190
+> > index 3aa718e2..974438c1 100755
+> > --- a/tests/btrfs/190
+> > +++ b/tests/btrfs/190
+> > @@ -8,7 +8,7 @@
+> >  # balance needs to be resumed on mount.
+> >  #
+> >  . ./common/preamble
+> > -_begin_fstest auto quick replay balance qgroup
+> > +_begin_fstest auto quick replay balance qgroup recoveryloop
+> 
+> For btrfs, there are more tests like this: btrfs/172, btrfs/192 and btrfs/206.
 
-if __xfs_attr_rmtval_remove() successfully removes all the remote blocks, we
-transition over to XFS_DAS_RD_LEAF state and return -EAGAIN. A tracepoint
-is probably required for this as well?
+I saw those when I was collecting tests for the new group.  I couldn't
+tell if they were looping recovery tests, though if you'd like me to add
+them to the group I certain will?
 
->  
-> @@ -549,6 +559,8 @@ xfs_attr_set_iter(
->  				error = xfs_attr_rmtval_set_blk(dac);
->  				if (error)
->  					return error;
-> +				trace_xfs_attr_set_iter_return(
-> +					dac->dela_state, args->dp);
->  				return -EAGAIN;
->  			}
->  
-> @@ -584,6 +596,7 @@ xfs_attr_set_iter(
->  		 * series
->  		 */
->  		dac->dela_state = XFS_DAS_FLIP_NFLAG;
-> +		trace_xfs_attr_set_iter_return(dac->dela_state, args->dp);
->  		return -EAGAIN;
->  
->  	case XFS_DAS_FLIP_NFLAG:
-> @@ -603,6 +616,10 @@ xfs_attr_set_iter(
->  		dac->dela_state = XFS_DAS_RM_NBLK;
->  		if (args->rmtblkno) {
->  			error = __xfs_attr_rmtval_remove(dac);
-> +			if (error == -EAGAIN)
-> +				trace_xfs_attr_set_iter_return(
-> +					dac->dela_state, args->dp);
-> +
->  			if (error)
->  				return error;
+--D
 
-A transition to XFS_DAS_CLR_FLAG state probably requires a tracepoint call.
-
->  
-> @@ -1183,6 +1200,8 @@ xfs_attr_node_addname(
->  			 * this point.
->  			 */
->  			dac->flags |= XFS_DAC_DEFER_FINISH;
-> +			trace_xfs_attr_node_addname_return(
-> +					dac->dela_state, args->dp);
->  			return -EAGAIN;
->  		}
->  
-> @@ -1429,10 +1448,13 @@ xfs_attr_remove_iter(
->  			 * blocks are removed.
->  			 */
->  			error = __xfs_attr_rmtval_remove(dac);
-> -			if (error == -EAGAIN)
-> +			if (error == -EAGAIN) {
-> +				trace_xfs_attr_remove_iter_return(
-> +						dac->dela_state, args->dp);
->  				return error;
-> -			else if (error)
-> +			} else if (error) {
->  				goto out;
-> +			}
->
-
-if the call to __xfs_attr_rmtval_remove() is successful, we transition over to
-XFS_DAS_RM_NAME state and return -EAGAIN. Maybe tracepoint is required here as
-well?
-
->  			/*
->  			 * Refill the state structure with buffers (the prior
-> @@ -1473,6 +1495,8 @@ xfs_attr_remove_iter(
->  
->  			dac->flags |= XFS_DAC_DEFER_FINISH;
->  			dac->dela_state = XFS_DAS_RM_SHRINK;
-> +			trace_xfs_attr_remove_iter_return(
-> +					dac->dela_state, args->dp);
->  			return -EAGAIN;
->  		}
->  
-> diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
-> index 0c8bee3..70f880d 100644
-> --- a/fs/xfs/libxfs/xfs_attr_remote.c
-> +++ b/fs/xfs/libxfs/xfs_attr_remote.c
-> @@ -696,6 +696,7 @@ __xfs_attr_rmtval_remove(
->  	 */
->  	if (!done) {
->  		dac->flags |= XFS_DAC_DEFER_FINISH;
-> +		trace_xfs_attr_rmtval_remove_return(dac->dela_state, args->dp);
->  		return -EAGAIN;
->  	}
->  
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index f9d8d60..f9840dd 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -3987,6 +3987,30 @@ DEFINE_ICLOG_EVENT(xlog_iclog_want_sync);
->  DEFINE_ICLOG_EVENT(xlog_iclog_wait_on);
->  DEFINE_ICLOG_EVENT(xlog_iclog_write);
->  
-> +DECLARE_EVENT_CLASS(xfs_das_state_class,
-> +	TP_PROTO(int das, struct xfs_inode *ip),
-> +	TP_ARGS(das, ip),
-> +	TP_STRUCT__entry(
-> +		__field(int, das)
-> +		__field(xfs_ino_t, ino)
-> +	),
-> +	TP_fast_assign(
-> +		__entry->das = das;
-> +		__entry->ino = ip->i_ino;
-> +	),
-> +	TP_printk("state change %d ino 0x%llx",
-> +		  __entry->das, __entry->ino)
-> +)
-> +
-> +#define DEFINE_DAS_STATE_EVENT(name) \
-> +DEFINE_EVENT(xfs_das_state_class, name, \
-> +	TP_PROTO(int das, struct xfs_inode *ip), \
-> +	TP_ARGS(das, ip))
-> +DEFINE_DAS_STATE_EVENT(xfs_attr_sf_addname_return);
-> +DEFINE_DAS_STATE_EVENT(xfs_attr_set_iter_return);
-> +DEFINE_DAS_STATE_EVENT(xfs_attr_node_addname_return);
-> +DEFINE_DAS_STATE_EVENT(xfs_attr_remove_iter_return);
-> +DEFINE_DAS_STATE_EVENT(xfs_attr_rmtval_remove_return);
->  #endif /* _TRACE_XFS_H */
->  
->  #undef TRACE_INCLUDE_PATH
-
-
--- 
-chandan
+> >
+> >  # Import common functions.
+> >  . ./common/filter
+> > diff --git a/tests/generic/019 b/tests/generic/019
+> > index b8d025d6..db56dac1 100755
+> > --- a/tests/generic/019
+> > +++ b/tests/generic/019
+> > @@ -8,7 +8,7 @@
+> >  # check filesystem consistency at the end.
+> >  #
+> >  . ./common/preamble
+> > -_begin_fstest aio dangerous enospc rw stress
+> > +_begin_fstest aio dangerous enospc rw stress recoveryloop
+> >
+> >  fio_config=$tmp.fio
+> >
+> > diff --git a/tests/generic/388 b/tests/generic/388
+> > index e41712af..9cd737e8 100755
+> > --- a/tests/generic/388
+> > +++ b/tests/generic/388
+> > @@ -15,7 +15,7 @@
+> >  # spurious corruption reports and/or mount failures.
+> >  #
+> >  . ./common/preamble
+> > -_begin_fstest shutdown auto log metadata
+> > +_begin_fstest shutdown auto log metadata recoveryloop
+> >
+> >  # Override the default cleanup function.
+> >  _cleanup()
+> > diff --git a/tests/generic/455 b/tests/generic/455
+> > index 62788798..13d326e7 100755
+> > --- a/tests/generic/455
+> > +++ b/tests/generic/455
+> > @@ -7,7 +7,7 @@
+> >  # Run fsx with log writes to verify power fail safeness.
+> >  #
+> >  . ./common/preamble
+> > -_begin_fstest auto log replay
+> > +_begin_fstest auto log replay recoveryloop
+> >
+> >  # Override the default cleanup function.
+> >  _cleanup()
+> > diff --git a/tests/generic/457 b/tests/generic/457
+> > index d9e38268..f4fdd81d 100755
+> > --- a/tests/generic/457
+> > +++ b/tests/generic/457
+> > @@ -7,7 +7,7 @@
+> >  # Run fsx with log writes on cloned files to verify power fail safeness.
+> >  #
+> >  . ./common/preamble
+> > -_begin_fstest auto log replay clone
+> > +_begin_fstest auto log replay clone recoveryloop
+> >
+> >  # Override the default cleanup function.
+> >  _cleanup()
+> > diff --git a/tests/generic/475 b/tests/generic/475
+> > index 62894491..c426402e 100755
+> > --- a/tests/generic/475
+> > +++ b/tests/generic/475
+> > @@ -12,7 +12,7 @@
+> >  # testing efforts.
+> >  #
+> >  . ./common/preamble
+> > -_begin_fstest shutdown auto log metadata eio
+> > +_begin_fstest shutdown auto log metadata eio recoveryloop
+> >
+> >  # Override the default cleanup function.
+> >  _cleanup()
+> > diff --git a/tests/generic/482 b/tests/generic/482
+> > index f26e6fc4..0fadf795 100755
+> > --- a/tests/generic/482
+> > +++ b/tests/generic/482
+> > @@ -9,7 +9,7 @@
+> >  # Will do log replay and check the filesystem.
+> >  #
+> >  . ./common/preamble
+> > -_begin_fstest auto metadata replay thin
+> > +_begin_fstest auto metadata replay thin recoveryloop
+> >
+> >  # Override the default cleanup function.
+> >  _cleanup()
+> > diff --git a/tests/generic/725 b/tests/generic/725
+> > index f43bcb37..8bd724e3 100755
+> > --- a/tests/generic/725
+> > +++ b/tests/generic/725
+> > @@ -12,7 +12,7 @@
+> >  # in writeback on the host that cause VM guests to fail to recover.
+> >  #
+> >  . ./common/preamble
+> > -_begin_fstest shutdown auto log metadata eio
+> > +_begin_fstest shutdown auto log metadata eio recoveryloop
+> >
+> >  _cleanup()
+> >  {
+> > diff --git a/tests/xfs/057 b/tests/xfs/057
+> > index d4cfa8dc..9fb3f406 100755
+> > --- a/tests/xfs/057
+> > +++ b/tests/xfs/057
+> > @@ -21,7 +21,7 @@
+> >  # Note that this test requires a DEBUG mode kernel.
+> >  #
+> >  . ./common/preamble
+> > -_begin_fstest auto log
+> > +_begin_fstest auto log recoveryloop
+> >
+> >  # Override the default cleanup function.
+> >  _cleanup()
+> >
+> 
+> 
+> -- 
+> Filipe David Manana,
+> 
+> “Whether you think you can, or you think you can't — you're right.”
