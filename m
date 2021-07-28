@@ -3,43 +3,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49835C4338F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 939FCC43214
 	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 00:10:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2C76C60F6B
+	by mail.kernel.org (Postfix) with ESMTP id 7B2A4601FC
 	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 00:10:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232891AbhG1AKi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 27 Jul 2021 20:10:38 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56542 "EHLO mail.kernel.org"
+        id S232840AbhG1AKj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 27 Jul 2021 20:10:39 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56564 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232796AbhG1AKg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 27 Jul 2021 20:10:36 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 09A7660F23;
-        Wed, 28 Jul 2021 00:10:36 +0000 (UTC)
+        id S232853AbhG1AKi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 27 Jul 2021 20:10:38 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id AB65F601FC;
+        Wed, 28 Jul 2021 00:10:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627431036;
-        bh=c/7I5gfXqCmAVPnfS0vNQwopigF6M5QOrVR6h4QKs5g=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=XZ0xn6efkZ5OU9ePVdrn9TVnVBr9TbyRJtJZ4MR5TXuv3xe4Ksv0/SDlvM4NYir3O
-         vSTc3VChKaRx1kOG3egi15YYnDoR4pnBqFoQbNEncaf9sJ1UtBX+i4Va0Q8+Qtenup
-         52OEMxueeuxHWQdQZ1Y+c2ZOhkDp3XF7fLJXTux90JNHRRZMAzLjr7j+za/QdwPvIQ
-         V8YzCITYuhTV7KST7STvZ7kUPV7KlF7X9c2gsFudzhVM3BIvq7H92pVRxNAaa4WqUq
-         pAObr4qpw+jn/lZBZd9oKNJKQUP/Jy4cg+0FpUIdZlnXYawbE8adSqqu6s7b9bsLEh
-         4MTKXALFluqjA==
-Subject: [PATCH 3/3] xfs: test regression in shrink when the new EOFS splits a
- sparse inode cluster
+        s=k20201202; t=1627431037;
+        bh=uWF7nIdD2Oo99RmCZZvzBziyzR3p7MFnu8FYlrpUqTs=;
+        h=Subject:From:To:Cc:Date:From;
+        b=iQ3LvWwDE9pxhZ5NBpJ6vipC3KH3TG6bZa8Txw/Py/4ID/VVjeo/siHV+e9mkpqdL
+         4EJHpdhwb6LgH7SvMPEiTh7Sg6j1RSj/1RYJtdPihBL47TItV8jkgItxCqzoCyC83/
+         heatvIEPMoRtsaKGZ7X4RVes+QtJnofuMFN55ZHcQQTDVMsjDZdmvy5rCvkVOMaYy7
+         FKSh5KIt94SEHy6op0Zd/9c6dir9vHYfYqgumqnFy4tFo2AKUGmQUIji0A8fSOW9v+
+         qOmbPX2aUI+wPckjh2zM8aYpksl8/8BhcCyIIP3C5a55VaH2L7Hk2bp4HblfXofA1E
+         3yTpVKkYrcoDg==
+Subject: [PATCHSET 0/1] fstests: tag recovery loop tests
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 27 Jul 2021 17:10:35 -0700
-Message-ID: <162743103574.3428896.5902517991928414065.stgit@magnolia>
-In-Reply-To: <162743101932.3428896.8510279402246446036.stgit@magnolia>
-References: <162743101932.3428896.8510279402246446036.stgit@magnolia>
+Date:   Tue, 27 Jul 2021 17:10:37 -0700
+Message-ID: <162743103739.3429001.16912087881683869606.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -48,233 +45,31 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hi all,
 
-This is a targeted regression test for the patch "xfs: check for sparse
-inode clusters that cross new EOAG when shrinking", which was found by
-running the random-loopy shrink stresser xfs/168.
+The single test in this series tags all the tests that perform looping
+filesystem crash recovery tests with the same 'recoveryloop' tag so that
+maintainers can run them over and over again.
 
-The original shrink implementation assumed that if we could allocate the
-last free extent in the filesystem, it was ok to proceed with the fs
-shrink.  Unfortunately, this isn't quite the case -- if there's a sparse
-inode cluster such that the blocks at the end of the cluster are free,
-it is not ok to shrink the fs to the point that part of the cluster
-hangs off the end of the filesystem.  Doing so results in repair and
-scrub marking the filesystem corrupt, so we must not.
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
-(EOFS == "end of filesystem"; EOAG == "end of allocation group")
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+--D
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=recovery-loop-tagging
 ---
- tests/xfs/778     |  190 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/778.out |    2 +
- 2 files changed, 192 insertions(+)
- create mode 100755 tests/xfs/778
- create mode 100644 tests/xfs/778.out
-
-
-diff --git a/tests/xfs/778 b/tests/xfs/778
-new file mode 100755
-index 00000000..73cebaf1
---- /dev/null
-+++ b/tests/xfs/778
-@@ -0,0 +1,190 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2021 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test 778
-+#
-+# Ensure that online shrink does not let us shrink the fs such that the end
-+# of the filesystem is now in the middle of a sparse inode cluster.
-+#
-+. ./common/preamble
-+_begin_fstest auto quick shrink
-+
-+# Import common functions.
-+. ./common/filter
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs generic
-+_require_scratch
-+_require_xfs_sparse_inodes
-+_require_scratch_xfs_shrink
-+_require_xfs_io_command "falloc"
-+_require_xfs_io_command "fpunch"
-+
-+_scratch_mkfs "-d size=50m -m crc=1 -i sparse" |
-+	_filter_mkfs > /dev/null 2> $tmp.mkfs
-+. $tmp.mkfs	# for isize
-+cat $tmp.mkfs >> $seqres.full
-+
-+daddr_to_fsblocks=$((dbsize / 512))
-+
-+convert_units() {
-+	_scratch_xfs_db -f -c "$@" | sed -e 's/^.*(\([0-9]*\)).*$/\1/g'
-+}
-+
-+# Figure out the next possible inode number after the log, since we can't
-+# shrink or relocate the log
-+logstart=$(_scratch_xfs_get_metadata_field 'logstart' 'sb')
-+if [ $logstart -gt 0 ]; then
-+	logblocks=$(_scratch_xfs_get_metadata_field 'logblocks' 'sb')
-+	logend=$((logstart + logblocks))
-+	logend_agno=$(convert_units "convert fsb $logend agno")
-+	logend_agino=$(convert_units "convert fsb $logend agino")
-+else
-+	logend_agno=0
-+	logend_agino=0
-+fi
-+
-+_scratch_mount
-+_xfs_force_bdev data $SCRATCH_MNT
-+old_dblocks=$($XFS_IO_PROG -c 'statfs' $SCRATCH_MNT | grep geom.datablocks)
-+
-+mkdir $SCRATCH_MNT/save/
-+sino=$(stat -c '%i' $SCRATCH_MNT/save)
-+
-+_consume_freesp()
-+{
-+	file=$1
-+
-+	# consume nearly all available space (leave ~1MB)
-+	avail=`_get_available_space $SCRATCH_MNT`
-+	filesizemb=$((avail / 1024 / 1024 - 1))
-+	$XFS_IO_PROG -fc "falloc 0 ${filesizemb}m" $file
-+}
-+
-+# Allocate inodes in a directory until failure.
-+_alloc_inodes()
-+{
-+	dir=$1
-+
-+	i=0
-+	while [ true ]; do
-+		touch $dir/$i 2>> $seqres.full || break
-+		i=$((i + 1))
-+	done
-+}
-+
-+# Find a sparse inode cluster after logend_agno/logend_agino.
-+find_sparse_clusters()
-+{
-+	for ((agno = agcount - 1; agno >= logend_agno; agno--)); do
-+		_scratch_xfs_db -c "agi $agno" -c "addr root" -c "btdump" | \
-+			tr ':[,]' '    ' | \
-+			awk -v "agno=$agno" \
-+			    -v "agino=$logend_agino" \
-+'{if ($2 >= agino && and(strtonum($3), 0x8000)) {printf("%s %s %s\n", agno, $2, $3);}}' | \
-+			tac
-+	done
-+}
-+
-+# Calculate the fs inode chunk size based on the inode size and fixed 64-inode
-+# record. This value is used as the target level of free space fragmentation
-+# induced by the test (i.e., max size of free extents). We don't need to go
-+# smaller than a full chunk because the XFS block allocator tacks on alignment
-+# requirements to the size of the requested allocation. In other words, a chunk
-+# sized free chunk is not enough to guarantee a successful chunk sized
-+# allocation.
-+XFS_INODES_PER_CHUNK=64
-+CHUNK_SIZE=$((isize * XFS_INODES_PER_CHUNK))
-+
-+_consume_freesp $SCRATCH_MNT/spc
-+
-+# Now that the fs is nearly full, punch holes in every other $CHUNK_SIZE range
-+# of the space consumer file.  The goal here is to end up with a sparse cluster
-+# at the end of the fs (and past any internal log), where the chunks at the end
-+# of the cluster are sparse.
-+
-+offset=`_get_filesize $SCRATCH_MNT/spc`
-+offset=$((offset - $CHUNK_SIZE * 2))
-+nr=0
-+while [ $offset -ge 0 ]; do
-+	$XFS_IO_PROG -c "fpunch $offset $CHUNK_SIZE" $SCRATCH_MNT/spc \
-+		2>> $seqres.full || _fail "fpunch failed"
-+
-+	# allocate as many inodes as possible
-+	mkdir -p $SCRATCH_MNT/urk/offset.$offset > /dev/null 2>&1
-+	_alloc_inodes $SCRATCH_MNT/urk/offset.$offset
-+
-+	offset=$((offset - $CHUNK_SIZE * 2))
-+
-+	# Every five times through the loop, see if we got a sparse cluster
-+	nr=$((nr + 1))
-+	if [ $((nr % 5)) -eq 4 ]; then
-+		_scratch_unmount
-+		find_sparse_clusters > $tmp.clusters
-+		if [ -s $tmp.clusters ]; then
-+			break;
-+		fi
-+		_scratch_mount
-+	fi
-+done
-+
-+test -s $tmp.clusters || _notrun "Could not create a sparse inode cluster"
-+
-+echo clusters >> $seqres.full
-+cat $tmp.clusters >> $seqres.full
-+
-+# Figure out which inode numbers are in that last cluster.  We need to preserve
-+# that cluster but delete everything else ahead of shrinking.
-+icluster_agno=$(head -n 1 $tmp.clusters | cut -d ' ' -f 1)
-+icluster_agino=$(head -n 1 $tmp.clusters | cut -d ' ' -f 2)
-+icluster_ino=$(convert_units "convert agno $icluster_agno agino $icluster_agino ino")
-+
-+# Check that the save directory isn't going to prevent us from shrinking
-+test $sino -lt $icluster_ino || \
-+	echo "/save inode comes after target cluster, test may fail"
-+
-+# Save the inodes in the last cluster and delete everything else
-+_scratch_mount
-+rm -r $SCRATCH_MNT/spc
-+for ((ino = icluster_ino; ino < icluster_ino + XFS_INODES_PER_CHUNK; ino++)); do
-+	find $SCRATCH_MNT/urk/ -inum "$ino" -print0 | xargs -r -0 mv -t $SCRATCH_MNT/save/
-+done
-+rm -rf $SCRATCH_MNT/urk/ $SCRATCH_MNT/save/*/*
-+sync
-+$XFS_IO_PROG -c 'fsmap -vvvvv' $SCRATCH_MNT &>> $seqres.full
-+
-+# Propose shrinking the filesystem such that the end of the fs ends up in the
-+# sparse part of our sparse cluster.  Remember, the last block of that cluster
-+# ought to be free.
-+target_ino=$((icluster_ino + XFS_INODES_PER_CHUNK - 1))
-+for ((ino = target_ino; ino >= icluster_ino; ino--)); do
-+	found=$(find $SCRATCH_MNT/save/ -inum "$ino" | wc -l)
-+	test $found -gt 0 && break
-+
-+	ino_daddr=$(convert_units "convert ino $ino daddr")
-+	new_size=$((ino_daddr / daddr_to_fsblocks))
-+
-+	echo "Hope to fail at shrinking to $new_size" >> $seqres.full
-+	$XFS_GROWFS_PROG -D $new_size $SCRATCH_MNT &>> $seqres.full
-+	res=$?
-+
-+	# Make sure shrink did not work
-+	new_dblocks=$($XFS_IO_PROG -c 'statfs' $SCRATCH_MNT | grep geom.datablocks)
-+	if [ "$new_dblocks" != "$old_dblocks" ]; then
-+		echo "should not have shrank $old_dblocks -> $new_dblocks"
-+		break
-+	fi
-+
-+	if [ $res -eq 0 ]; then
-+		echo "shrink to $new_size (ino $ino) should have failed"
-+		break
-+	fi
-+done
-+
-+# success, all done
-+echo Silence is golden
-+status=0
-+exit
-diff --git a/tests/xfs/778.out b/tests/xfs/778.out
-new file mode 100644
-index 00000000..e80f72a3
---- /dev/null
-+++ b/tests/xfs/778.out
-@@ -0,0 +1,2 @@
-+QA output created by 778
-+Silence is golden
+ tests/btrfs/190   |    2 +-
+ tests/generic/019 |    2 +-
+ tests/generic/388 |    2 +-
+ tests/generic/455 |    2 +-
+ tests/generic/457 |    2 +-
+ tests/generic/475 |    2 +-
+ tests/generic/482 |    2 +-
+ tests/generic/725 |    2 +-
+ tests/xfs/057     |    2 +-
+ 9 files changed, 9 insertions(+), 9 deletions(-)
 
