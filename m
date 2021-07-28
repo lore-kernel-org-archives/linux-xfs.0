@@ -2,187 +2,76 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55D51C4320A
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 00:10:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F431C4338F
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 00:14:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3D72660F41
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 00:10:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 761B060F6B
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 00:14:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232853AbhG1AKo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 27 Jul 2021 20:10:44 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56604 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232731AbhG1AKn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 27 Jul 2021 20:10:43 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2CEAA601FC;
-        Wed, 28 Jul 2021 00:10:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627431043;
-        bh=pzcrRVDACGXFIwCHlnfomQ4hZwsHcRrOKPYvZJUxA8s=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=W/5RM6fSSdS435utZ+tHvLxqS/KMwaeFOyFJ+or/kxK9vjW5jq+SbvXTVmvyDelJ+
-         FDryP71qh+vCsi+XWUB7v3zzxKjIfoA6UBnoZ+IsQn4m3dUpRr8IPHyMYVplVbxO4Y
-         HUwo/dQFEiEjwfzrSP8lrUj3zSq2mzAEyYzci9YznPPxuWaBJgEbKuyi1NhDMgmBOm
-         eSePD52e7MU/nSwO+4j2+uElWZIys73SvzTf5FSn5OucL9mnNf11syzCEXCM3uYY8x
-         IaQoeQ741kjz90d71oWwiWjXUv3N87Z/verRr+AFJ8TLLkCmfrXMzsEevUtLaYTrzd
-         G3Ezwn2qN9cng==
-Subject: [PATCH 1/1] misc: tag all tests that examine crash recovery in a loop
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org, guaneryu@gmail.com
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 27 Jul 2021 17:10:42 -0700
-Message-ID: <162743104288.3429001.18145781236429703996.stgit@magnolia>
-In-Reply-To: <162743103739.3429001.16912087881683869606.stgit@magnolia>
-References: <162743103739.3429001.16912087881683869606.stgit@magnolia>
-User-Agent: StGit/0.19
+        id S233013AbhG1AOV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 27 Jul 2021 20:14:21 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:47063 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232840AbhG1AOU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Jul 2021 20:14:20 -0400
+Received: from dread.disaster.area (pa49-181-34-10.pa.nsw.optusnet.com.au [49.181.34.10])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id EF12C866471;
+        Wed, 28 Jul 2021 10:14:17 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1m8XDE-00BYvZ-NP; Wed, 28 Jul 2021 10:14:16 +1000
+Date:   Wed, 28 Jul 2021 10:14:16 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: prevent spoofing of rtbitmap blocks when recovering
+ buffers
+Message-ID: <20210728001416.GZ664593@dread.disaster.area>
+References: <20210727235641.GA559212@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210727235641.GA559212@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
+        a=hdaoRb6WoHYrV466vVKEyw==:117 a=hdaoRb6WoHYrV466vVKEyw==:17
+        a=kj9zAlcOel0A:10 a=e_q4qTt1xDgA:10 a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8
+        a=7-415B0cAAAA:8 a=INUbKBrS-Noq345VPZ0A:9 a=CjuIK1q_8ugA:10
+        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Jul 27, 2021 at 04:56:41PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> While reviewing the buffer item recovery code, the thought occurred to
+> me: in V5 filesystems we use log sequence number (LSN) tracking to avoid
+> replaying older metadata updates against newer log items.  However, we
+> use the magic number of the ondisk buffer to find the LSN of the ondisk
+> metadata, which means that if an attacker can control the layout of the
+> realtime device precisely enough that the start of an rt bitmap block
+> matches the magic and UUID of some other kind of block, they can control
+> the purported LSN of that spoofed block and thereby break log replay.
+> 
+> Since realtime bitmap and summary blocks don't have headers at all, we
+> have no way to tell if a block really should be replayed.  The best we
+> can do is replay unconditionally and hope for the best.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  fs/xfs/xfs_buf_item_recover.c |   14 ++++++++++++--
+>  1 file changed, 12 insertions(+), 2 deletions(-)
 
-Given all the recent problems that we've been finding with log recovery,
-I think it would be useful to create a 'recoveryloop' group so that
-developers have a convenient way to run every single test that rolls
-around in a fs shutdown loop looking for subtle errors in recovery.
+Looks good now.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- tests/btrfs/190   |    2 +-
- tests/generic/019 |    2 +-
- tests/generic/388 |    2 +-
- tests/generic/455 |    2 +-
- tests/generic/457 |    2 +-
- tests/generic/475 |    2 +-
- tests/generic/482 |    2 +-
- tests/generic/725 |    2 +-
- tests/xfs/057     |    2 +-
- 9 files changed, 9 insertions(+), 9 deletions(-)
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-
-diff --git a/tests/btrfs/190 b/tests/btrfs/190
-index 3aa718e2..974438c1 100755
---- a/tests/btrfs/190
-+++ b/tests/btrfs/190
-@@ -8,7 +8,7 @@
- # balance needs to be resumed on mount.
- #
- . ./common/preamble
--_begin_fstest auto quick replay balance qgroup
-+_begin_fstest auto quick replay balance qgroup recoveryloop
- 
- # Import common functions.
- . ./common/filter
-diff --git a/tests/generic/019 b/tests/generic/019
-index b8d025d6..db56dac1 100755
---- a/tests/generic/019
-+++ b/tests/generic/019
-@@ -8,7 +8,7 @@
- # check filesystem consistency at the end.
- #
- . ./common/preamble
--_begin_fstest aio dangerous enospc rw stress
-+_begin_fstest aio dangerous enospc rw stress recoveryloop
- 
- fio_config=$tmp.fio
- 
-diff --git a/tests/generic/388 b/tests/generic/388
-index e41712af..9cd737e8 100755
---- a/tests/generic/388
-+++ b/tests/generic/388
-@@ -15,7 +15,7 @@
- # spurious corruption reports and/or mount failures.
- #
- . ./common/preamble
--_begin_fstest shutdown auto log metadata
-+_begin_fstest shutdown auto log metadata recoveryloop
- 
- # Override the default cleanup function.
- _cleanup()
-diff --git a/tests/generic/455 b/tests/generic/455
-index 62788798..13d326e7 100755
---- a/tests/generic/455
-+++ b/tests/generic/455
-@@ -7,7 +7,7 @@
- # Run fsx with log writes to verify power fail safeness.
- #
- . ./common/preamble
--_begin_fstest auto log replay
-+_begin_fstest auto log replay recoveryloop
- 
- # Override the default cleanup function.
- _cleanup()
-diff --git a/tests/generic/457 b/tests/generic/457
-index d9e38268..f4fdd81d 100755
---- a/tests/generic/457
-+++ b/tests/generic/457
-@@ -7,7 +7,7 @@
- # Run fsx with log writes on cloned files to verify power fail safeness.
- #
- . ./common/preamble
--_begin_fstest auto log replay clone
-+_begin_fstest auto log replay clone recoveryloop
- 
- # Override the default cleanup function.
- _cleanup()
-diff --git a/tests/generic/475 b/tests/generic/475
-index 62894491..c426402e 100755
---- a/tests/generic/475
-+++ b/tests/generic/475
-@@ -12,7 +12,7 @@
- # testing efforts.
- #
- . ./common/preamble
--_begin_fstest shutdown auto log metadata eio
-+_begin_fstest shutdown auto log metadata eio recoveryloop
- 
- # Override the default cleanup function.
- _cleanup()
-diff --git a/tests/generic/482 b/tests/generic/482
-index f26e6fc4..0fadf795 100755
---- a/tests/generic/482
-+++ b/tests/generic/482
-@@ -9,7 +9,7 @@
- # Will do log replay and check the filesystem.
- #
- . ./common/preamble
--_begin_fstest auto metadata replay thin
-+_begin_fstest auto metadata replay thin recoveryloop
- 
- # Override the default cleanup function.
- _cleanup()
-diff --git a/tests/generic/725 b/tests/generic/725
-index f43bcb37..8bd724e3 100755
---- a/tests/generic/725
-+++ b/tests/generic/725
-@@ -12,7 +12,7 @@
- # in writeback on the host that cause VM guests to fail to recover.
- #
- . ./common/preamble
--_begin_fstest shutdown auto log metadata eio
-+_begin_fstest shutdown auto log metadata eio recoveryloop
- 
- _cleanup()
- {
-diff --git a/tests/xfs/057 b/tests/xfs/057
-index d4cfa8dc..9fb3f406 100755
---- a/tests/xfs/057
-+++ b/tests/xfs/057
-@@ -21,7 +21,7 @@
- # Note that this test requires a DEBUG mode kernel.
- #
- . ./common/preamble
--_begin_fstest auto log
-+_begin_fstest auto log recoveryloop
- 
- # Override the default cleanup function.
- _cleanup()
-
+-- 
+Dave Chinner
+david@fromorbit.com
