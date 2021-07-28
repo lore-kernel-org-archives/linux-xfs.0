@@ -4,40 +4,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2187C4320A
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 00:10:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA0ECC4320E
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 00:10:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9A6E960FA0
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 00:10:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8DB0660F41
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 00:10:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232989AbhG1AKI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 27 Jul 2021 20:10:08 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56328 "EHLO mail.kernel.org"
+        id S233132AbhG1AKN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 27 Jul 2021 20:10:13 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56378 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233081AbhG1AKI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 27 Jul 2021 20:10:08 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 12CB760F23;
-        Wed, 28 Jul 2021 00:10:07 +0000 (UTC)
+        id S232778AbhG1AKN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 27 Jul 2021 20:10:13 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8A9FC601FC;
+        Wed, 28 Jul 2021 00:10:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627431007;
-        bh=1Ye9+Itf7W9gAZBRh6ivtNyhZsWEi5+BWWPGG8bKghY=;
+        s=k20201202; t=1627431012;
+        bh=AuR85YKR+y31aj11AazCi0U+RStN5jamOKR4SE4U2gk=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=X2Igjez/5BajlQZuPpWo16lKd6CmJ+XRqZcH3S/IDCVvUH9/FSsqsjzf/88zyDy7Z
-         Yc8t5uhtaxJI3Z19Pj6rwqc9t71ESmwM/v0U5y/extugVkOOYQTORWFVrncQlmebOo
-         ITU8pA2+PzSAQB/RcYoA7K/8EE+BHvcdAcyqtwp/wfk3sn9OU604Xwg9fXKv9V8Tf5
-         CyvfqvJar93kca08zT8u3n3leVMSaiyjVi7vcCLU1TB8GMOd1vTukKYYVlnolbSUbk
-         yVbdYBwWSwb/CIQH+hjGX1lrMLpc8pHrwocO8Y92iMqmdixrcIl79v0xZnw8jWlvTL
-         AyKEPtkh7gIQg==
-Subject: [PATCH 1/3] xfs: test fsx with extent size hints set on a realtime
- file
+        b=Hx88k2yoBZSZRD4aSgkrjj2nRywzn8J81uSr3VY0LRvloFZ85hSL7WxNgrX9KpM+h
+         MsDf2eqLcvVWxY3tqO6y6d/rmCovScRVWKwQjOBT6RRL15b4HiedEagYfYKI0p5Dqc
+         tTDWlMbj2cv9xWv9YK/8mOta/PKWh+1Q7q3QFYjQT8NPCfPje5bOE8e0x9oM57p4qY
+         21odOU0wTR9DQhcd+eaH4PAII8S8uVmOf16Xji7j/5MZee0NY6Aw/aD5a9OpqdujMI
+         2OvKH+1jy42+uLjLqk8u6H6lWJ5a7jZfmGGAW6aJVqvjmfG9ebwFLMewH8XhYSTo+Q
+         GHdcAU5KgdGNQ==
+Subject: [PATCH 2/3] xfs: test correct propagation of rt extent size hints on
+ rtinherit dirs
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 27 Jul 2021 17:10:06 -0700
-Message-ID: <162743100676.3428143.17165888203831983767.stgit@magnolia>
+Date:   Tue, 27 Jul 2021 17:10:12 -0700
+Message-ID: <162743101226.3428143.14376579634636499281.stgit@magnolia>
 In-Reply-To: <162743100128.3428143.7362558731136046380.stgit@magnolia>
 References: <162743100128.3428143.7362558731136046380.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,198 +50,196 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-This is a regression test for the two realtime allocator bug fixes:
+This is a regression test for the following fixes:
 
-xfs: adjust rt allocation minlen when extszhint > rtextsize
-xfs: retry allocations when locality-based search fails
+ xfs: standardize extent size hint validation
+ xfs: don't propagate invalid extent size hints to new files
+ xfs: validate extsz hints against rt extent size when rtinherit is set
+ mkfs: validate rt extent size hint when rtinherit is set
+
+These patches fix inadequate rtextsize alignment validation of extent
+size hints on directories with the rtinherit and extszinherit flags set.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/xfs/775     |  165 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/775.out |    3 +
- 2 files changed, 168 insertions(+)
- create mode 100755 tests/xfs/775
- create mode 100644 tests/xfs/775.out
+ tests/xfs/774     |   78 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/774.out |    5 +++
+ tests/xfs/776     |   57 +++++++++++++++++++++++++++++++++++++++
+ tests/xfs/776.out |    5 +++
+ 4 files changed, 145 insertions(+)
+ create mode 100755 tests/xfs/774
+ create mode 100644 tests/xfs/774.out
+ create mode 100755 tests/xfs/776
+ create mode 100644 tests/xfs/776.out
 
 
-diff --git a/tests/xfs/775 b/tests/xfs/775
+diff --git a/tests/xfs/774 b/tests/xfs/774
 new file mode 100755
-index 00000000..e6a4c28b
+index 00000000..65a26c46
 --- /dev/null
-+++ b/tests/xfs/775
-@@ -0,0 +1,165 @@
++++ b/tests/xfs/774
+@@ -0,0 +1,78 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2021 Oracle.  All Rights Reserved.
++#
++# FS QA Test 774
++#
++# Regression test for:
++#
++# xfs: standardize extent size hint validation
++# xfs: don't propagate invalid extent size hints to new files
++# xfs: validate extsz hints against rt extent size when rtinherit is set
++# mkfs: validate rt extent size hint when rtinherit is set
++#
++# Collectively, these patches ensure that we cannot set the extent size hint on
++# a directory when the directory is configured to propagate its realtime and
++# extent size hint to newly created files when the hint size isn't aligned to
++# the size of a realtime extent.  If the patches aren't applied, the write will
++# fail and xfs_repair will say that the fs is corrupt.
++#
++. ./common/preamble
++_begin_fstest auto quick realtime
++
++# Import common functions.
++. ./common/filter
++
++# real QA test starts here
++_supported_fs generic
++_require_realtime
++_require_scratch
++
++# Check mkfs.xfs option parsing with regards to rtinherit.  XFS doesn't require
++# the realtime volume to be present to set rtinherit, so it's safe to call the
++# mkfs binary directly, in dry run mode, with exactly the parameters we want to
++# check.
++mkfs_args=(-f -N -r extsize=7b -d extszinherit=15 $SCRATCH_DEV)
++$MKFS_XFS_PROG -d rtinherit=1 "${mkfs_args[@]}" &>> $seqres.full && \
++	echo "mkfs should not succeed with heritable rtext-unaligned extent hint"
++$MKFS_XFS_PROG -d rtinherit=0 "${mkfs_args[@]}" &>> $seqres.full || \
++	echo "mkfs should succeed with uninheritable rtext-unaligned extent hint"
++
++# Move on to checking the kernel's behavior
++_scratch_mkfs -r extsize=7b | _filter_mkfs >> $seqres.full 2> $tmp.mkfs
++cat $tmp.mkfs >> $seqres.full
++. $tmp.mkfs
++_scratch_mount
++
++test $rtextsz -ne $dbsize || _notrun "failed to set large rt extent size"
++
++# Ensure there's no extent size hint set on the directory, then set the
++# rtinherit bit on the directory to test propagation.
++$XFS_IO_PROG -c 'extsize 0' -c 'chattr +t' $SCRATCH_MNT
++
++# Now try to set an extent size hint on the directory that isn't aligned to
++# the rt extent size.
++$XFS_IO_PROG -c "extsize $((rtextsz + dbsize))" $SCRATCH_MNT 2>&1 | _filter_scratch
++$XFS_IO_PROG -c 'stat -v' $SCRATCH_MNT > $tmp.stat
++cat $tmp.stat >> $seqres.full
++grep -q 'fsxattr.xflags.*rt-inherit' $tmp.stat || \
++	echo "rtinherit didn't get set on the directory?"
++grep 'fsxattr.extsize' $tmp.stat
++
++# Propagate the hint from directory to file
++echo moo > $SCRATCH_MNT/dummy
++$XFS_IO_PROG -c 'stat -v' $SCRATCH_MNT/dummy > $tmp.stat
++cat $tmp.stat >> $seqres.full
++grep -q 'fsxattr.xflags.*realtime' $tmp.stat || \
++	echo "realtime didnt' get set on the file?"
++grep 'fsxattr.extsize' $tmp.stat
++
++# Cycle the mount to force the inode verifier to run.
++_scratch_cycle_mount
++
++# Can we still access the dummy file?
++cat $SCRATCH_MNT/dummy
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/774.out b/tests/xfs/774.out
+new file mode 100644
+index 00000000..767a504e
+--- /dev/null
++++ b/tests/xfs/774.out
+@@ -0,0 +1,5 @@
++QA output created by 774
++xfs_io: FS_IOC_FSSETXATTR SCRATCH_MNT: Invalid argument
++fsxattr.extsize = 0
++fsxattr.extsize = 0
++moo
+diff --git a/tests/xfs/776 b/tests/xfs/776
+new file mode 100755
+index 00000000..b4b98a49
+--- /dev/null
++++ b/tests/xfs/776
+@@ -0,0 +1,57 @@
 +#! /bin/bash
 +# SPDX-License-Identifier: GPL-2.0
 +# Copyright (c) 2021, Oracle.  All Rights Reserved.
 +#
-+# FS QA Test No. 775
++# FS QA Test No. 776
 +#
-+# Regression test for two fixes in the realtime allocator:
++# Functional test for:
 +#
-+# xfs: adjust rt allocation minlen when extszhint > rtextsize
-+# xfs: retry allocations when locality-based search fails
++# xfs_repair: validate alignment of inherited rt extent hints
 +#
-+# The first bug occurs when an extent size hint is set on a realtime file.
-+# xfs_bmapi_rtalloc adjusts the offset and length of the allocation request to
-+# try to satisfy the hint, but doesn't adjust minlen to match.  If the
-+# allocator finds free space that isn't large enough to map even a single block
-+# of the original request, bmapi_write will return ENOSPC and the write fails
-+# even though there's plenty of space.
++# This xfs_repair patch detects directories that are configured to propagate
++# their realtime and extent size hints to newly created realtime files when the
++# hint size isn't aligned to the size of a realtime extent.
 +#
-+# The second bug occurs when an extent size hint is set on a file, we ask to
-+# allocate blocks in an empty region immediately adjacent to a previous
-+# allocation, and the nearest available free space isn't anywhere near the
-+# previous allocation, the near allocator will give up and return ENOSPC, even
-+# if there's sufficient free realtime extents to satisfy the allocation
-+# request.
-+#
-+# Both bugs can be exploited by the same user call sequence, so here's a
-+# targeted test that runs in less time than the reproducers that are listed in
-+# the fix patches themselves.
++# Since this is a test of userspace tool functionality, we don't need kernel
++# support, which in turn means that we omit _require_realtime.  Note that XFS
++# allows users to configure realtime extent size geometry and set RTINHERIT
++# flags even if the filesystem itself does not have a realtime volume attached.
 +#
 +. ./common/preamble
-+_begin_fstest auto quick rw realtime
-+
-+# Override the default cleanup function.
-+_cleanup()
-+{
-+	cd /
-+}
++_begin_fstest auto repair fuzz
 +
 +# Import common functions.
 +. ./common/filter
 +
 +# real QA test starts here
 +_require_scratch
-+_require_realtime
-+_require_xfs_io_command "falloc"
-+_require_xfs_io_command "fpunch"
-+_require_test_program "punch-alternating"
-+
-+fill_rtdev()
-+{
-+	file=$1
-+
-+	filesize=`_get_available_space $SCRATCH_MNT`
-+	$XFS_IO_PROG -f -c "truncate $filesize" -c "falloc 0 $filesize" $file
-+
-+	chunks=20
-+	chunksizemb=$((filesize / chunks / 1048576))
-+	seq 1 $chunks | while read f; do
-+		echo "$((f * chunksizemb)) file size $f / 20"
-+		$XFS_IO_PROG -fc "falloc -k $(( (f - 1) * chunksizemb))m ${chunksizemb}m" $file
-+	done
-+
-+	chunks=100
-+	chunksizemb=$((filesize / chunks / 1048576))
-+	seq 80 $chunks | while read f; do
-+		echo "$((f * chunksizemb)) file size $f / $chunks"
-+		$XFS_IO_PROG -fc "falloc -k $(( (f - 1) * chunksizemb))m ${chunksizemb}m" $file
-+	done
-+
-+	filesizemb=$((filesize / 1048576))
-+	$XFS_IO_PROG -fc "falloc -k 0 ${filesizemb}m" $file
-+
-+	# Try again anyway
-+	avail=`_get_available_space $SCRATCH_MNT`
-+	$XFS_IO_PROG -fc "pwrite -S 0x65 0 $avail" ${file}
-+}
 +
 +echo "Format and mount"
-+_scratch_mkfs > $seqres.full 2>&1
++_scratch_mkfs -r extsize=7b | _filter_mkfs > $seqres.full 2>$tmp.mkfs
++cat $tmp.mkfs >> $seqres.full
++. $tmp.mkfs
++
++test $rtextsz -ne $dbsize || _notrun "failed to set large rt extent size"
++
 +_scratch_mount >> $seqres.full 2>&1
++rootino=$(stat -c '%i' $SCRATCH_MNT)
++_scratch_unmount
 +
-+# This is a test of the rt allocator; force all files to be created realtime
-+_xfs_force_bdev realtime $SCRATCH_MNT
++echo "Misconfigure the root directory"
++rtextsz_blks=$((rtextsz / dbsize))
++_scratch_xfs_db -x -c "inode $rootino" \
++	-c "write -d core.extsize $((rtextsz_blks + 1))" \
++	-c 'write -d core.rtinherit 1' \
++	-c 'write -d core.extszinherit 1' \
++	-c 'print' >> $seqres.full
 +
-+# Set the extent size hint larger than the realtime extent size.  This is
-+# necessary to exercise the minlen constraints on the realtime allocator.
-+fsbsize=$($XFS_IO_PROG -c 'statfs' $SCRATCH_MNT | grep geom.bsize | awk '{print $3}')
-+rtextsize_blks=$($XFS_IO_PROG -c 'statfs' $SCRATCH_MNT | grep geom.rtextsize | awk '{print $3}')
-+extsize=$((2 * rtextsize_blks * fsbsize))
++echo "Detect misconfigured directory"
++_scratch_xfs_repair -n >> $seqres.full 2>&1 && \
++	echo "repair did not catch error?"
 +
-+echo "rtextsize_blks=$rtextsize_blks extsize=$extsize" >> $seqres.full
-+_xfs_force_bdev realtime $SCRATCH_MNT
-+$XFS_IO_PROG -c "extsize $extsize" $SCRATCH_MNT
-+
-+# Compute the geometry of the test files we're going to create.  Realtime
-+# volumes are simple, which means that we can control the space allocations
-+# exactly to exploit bugs!
-+#
-+# Since this is a test of the near rt allocator, we need to set up the test to
-+# have a victim file with at least one rt extent allocated to it and enough
-+# free space to allocate at least one more rt extent at an adjacent file
-+# offset.  The free space must not be immediately adjacent to the the first
-+# extent that we allocate to the victim file, and it must not be large enough
-+# to satisfy the entire allocation request all at once.
-+#
-+# Our free space fragmentation strategy is the usual fallocate-and-punch swiss
-+# cheese file, which means the free space is split into five sections:
-+#
-+# The first will be remapped into the victim file.
-+#
-+# The second section exists to prevent the free extents from being adjacent to
-+# the first section.  It will be very large, since we allocate all the rt
-+# space.
-+#
-+# The last three sections will have every other rt extent punched out to create
-+# some free space.
-+remap_sz=$((extsize * 2))
-+required_sz=$((5 * remap_sz))
-+free_rtspace=$(_get_available_space $SCRATCH_MNT)
-+if [ $free_rtspace -lt $required_sz ]; then
-+	_notrun "Insufficient free space on rt volume.  Needed $required_sz, saw $free_rtspace."
-+fi
-+
-+# Allocate all the space on the rt volume so that we can control space
-+# allocations exactly.
-+fill_rtdev $SCRATCH_MNT/bigfile &>> $seqres.full
-+
-+# We need at least 4 remap sections to proceed
-+bigfile_sz=$(stat -c '%s' $SCRATCH_MNT/bigfile)
-+if [ $bigfile_sz -lt $required_sz ]; then
-+	_notrun "Free space control file needed $required_sz bytes, got $bigfile_sz."
-+fi
-+
-+# Remap the first remap section to a victim file.
-+$XFS_IO_PROG -c "fpunch 0 $remap_sz" $SCRATCH_MNT/bigfile
-+$XFS_IO_PROG -f -c "truncate $required_sz" -c "falloc 0 $remap_sz" $SCRATCH_MNT/victim
-+
-+# Punch out every other extent of the last two sections, to fragment free space.
-+frag_sz=$((remap_sz * 3))
-+punch_off=$((bigfile_sz - frag_sz))
-+$here/src/punch-alternating $SCRATCH_MNT/bigfile -o $((punch_off / fsbsize)) -i $((rtextsize_blks * 2)) -s $rtextsize_blks
-+
-+# Make sure we have some free rtextents.
-+free_rtx=$($XFS_IO_PROG -c 'statfs' $SCRATCH_MNT | grep counts.freertx | awk '{print $3}')
-+if [ $free_rtx -eq 0 ]; then
-+	echo "Expected fragmented free rt space, found none."
-+fi
-+
-+# Try to double the amount of blocks in the victim file.  On a buggy kernel,
-+# the rt allocator will fail immediately with ENOSPC even though we left enough
-+# free space for the write will complete fully.
-+echo "Try to write a bunch of stuff to the fragmented rt space"
-+$XFS_IO_PROG -c "pwrite -S 0x63 -b $remap_sz $remap_sz $remap_sz" -c stat $SCRATCH_MNT/victim >> $seqres.full
-+
-+# The victim file should own at least two sections' worth of blocks.
-+victim_sectors=$(stat -c '%b' $SCRATCH_MNT/victim)
-+victim_space_usage=$((victim_sectors * 512))
-+expected_usage=$((remap_sz * 2))
-+
-+if [ $victim_space_usage -lt $expected_usage ]; then
-+	echo "Victim file should be using at least $expected_usage bytes, saw $victim_space_usage."
-+fi
++echo "Repair misconfigured directory"
++_scratch_xfs_repair >> $seqres.full 2>&1 || \
++	echo "repair did not fix error?"
 +
 +status=0
 +exit
-diff --git a/tests/xfs/775.out b/tests/xfs/775.out
+diff --git a/tests/xfs/776.out b/tests/xfs/776.out
 new file mode 100644
-index 00000000..f5a72156
+index 00000000..05ea73b2
 --- /dev/null
-+++ b/tests/xfs/775.out
-@@ -0,0 +1,3 @@
-+QA output created by 775
++++ b/tests/xfs/776.out
+@@ -0,0 +1,5 @@
++QA output created by 776
 +Format and mount
-+Try to write a bunch of stuff to the fragmented rt space
++Misconfigure the root directory
++Detect misconfigured directory
++Repair misconfigured directory
 
