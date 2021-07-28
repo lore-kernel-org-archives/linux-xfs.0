@@ -8,409 +8,208 @@ X-Spam-Status: No, score=-17.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98262C4338F
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 09:01:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 479C9C4338F
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 09:02:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 73F2D60F91
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 09:01:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 29B3560F91
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 09:02:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235296AbhG1JBy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Jul 2021 05:01:54 -0400
-Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:42162 "EHLO
+        id S229574AbhG1JCD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Jul 2021 05:02:03 -0400
+Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:55528 "EHLO
         mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S234963AbhG1JBy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Jul 2021 05:01:54 -0400
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 16S8qds2004091;
-        Wed, 28 Jul 2021 09:01:52 GMT
+        by vger.kernel.org with ESMTP id S234963AbhG1JCC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Jul 2021 05:02:02 -0400
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 16S8qrOw012328;
+        Wed, 28 Jul 2021 09:02:00 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
  references : from : message-id : date : in-reply-to : content-type :
  content-transfer-encoding : mime-version; s=corp-2021-07-09;
- bh=ToMvpdg4l+YmmubqdGpfSNO1USw2mmNsfrt47s0cob4=;
- b=GKTGGDIgb957TkR1Y57c1ujZAAUdk0XCk3cx7KviPjaDhUhZWKVFCVYE5t7bEJQoyvS1
- /BMJpBv3t6bNMW9fJu0OoCqoNcTzbCbpiNn6atGHmr/nylHvdDIEOKUZKH/+hprTpriR
- w0aG4c39kYPoGzkEXtePYGXFB/ZNSF3ucUr9oSbdOb2fXqBIwr7I7Xn3OO86ww5ZdpRF
- JrrtHOSGTigOn6AG7Z54pKE9riYprn0Y5ObYvxVrwseNYJZsaIYxAD06soHQFPaPH7w9
- 3ou+66yPN5O5DgYBNLusHixTqVoQJgAX1x33tC7y5dsLXcwzCP9mggo+4O6wZSYXlApX CA== 
+ bh=iMeK10yGaGoF5zI/2hzGsB7rZWWm735xT+9d9yYXO3Y=;
+ b=FNFES6bgF7Wzt8c+bkUwLpFzI1YRPje2VSZ9MgGj+Jd73lE0k0gkKgHzVk6uDmALd9V2
+ i1yU4DA5sZjWP4PPI7S5k427Hi5oDd+t1V6e3sXwEqar3iHsHqJPR+xZx9gSRUyde02g
+ 8YogpaQNrg5gm+uRvI51sti6UVXz43VAOMnr+0qn5Rqz8H5H5IshFwaaNwriTWnCs4hL
+ iDN7obFHRqLtIp2bJZWke/qJGrnZouIot9mcRZMAliVNEdN7d0W/cttBoai0+HXOC67+
+ p5DoD+HtdZBu8ORyrSihQQPWOp5krwjlM8WN269vcBeRTC4eUxq5L9xUaVx1HxJvRZNq 4A== 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
  references : from : message-id : date : in-reply-to : content-type :
  content-transfer-encoding : mime-version; s=corp-2020-01-29;
- bh=ToMvpdg4l+YmmubqdGpfSNO1USw2mmNsfrt47s0cob4=;
- b=h7Lae+iK5DzI/uu/N77qAUN2oawuQ9vQQajm6Bk67aWURwY27rtaNWtr1UgEZ0LchetN
- l0x/Ta5Ed9llUmjNyPkH0Atfq7FkORdHdUn9ij4rnSKVN4fHlN/jE35iH1yx6J70ipKG
- IHqSslbB/H76XHuuJ89QkSRFQLKuyXf6QlsBd/7JMtttc3KHTYIALy6Ikk95Hnhqdzel
- 8JgT7MTms74Wd2+SN2a5toWjmC8M3tR2N7y9P9HpXjImD9UIdxdKCnB5/RxgpTsVeGL9
- uBLCkfq2bRlxEPVJzX0z/PAm/xyr+8x+rgYwp0n89yGKn6FzBgGoa6rJS2dbEp4ZagrR aQ== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3a2jkfa6y3-1
+ bh=iMeK10yGaGoF5zI/2hzGsB7rZWWm735xT+9d9yYXO3Y=;
+ b=Jatoo+AmE9NkZEFNkOw3n+Tr310vSizWvymto1Tw5EI29Ix4eNsATv+LKfeDIiO7NMPi
+ rRl40Jx/allq4lsGBGXu9H149U8kzZivuWBLskq06hML8zufqPlZjv5Opp/koIxnCDiV
+ MniCmmEcH3G+FAQqhBwqRuStQqcSWH8YRclEyFUCtFTQB/QeBU64EPSsZpQn28EgzRYu
+ pNnN4t+ZHYllGND21PZS5IQ71l72lJLEeuhNHJn3VhwhaJqf9GiIUps145iXHVlcMYMq
+ rCgzvjp9C9OhTRXApW0Pk0cDkyrYZa9Fu7vjywlRaWDMfc09PmMhqafs6yCocx3pdQl/ Og== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3a234n3u2d-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 28 Jul 2021 09:01:51 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 16S90vOI167335;
-        Wed, 28 Jul 2021 09:01:50 GMT
-Received: from nam10-bn7-obe.outbound.protection.outlook.com (mail-bn7nam10lp2109.outbound.protection.outlook.com [104.47.70.109])
-        by userp3030.oracle.com with ESMTP id 3a2354rjs7-1
+        Wed, 28 Jul 2021 09:01:59 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 16S8xkik131183;
+        Wed, 28 Jul 2021 09:01:59 GMT
+Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2040.outbound.protection.outlook.com [104.47.66.40])
+        by aserp3030.oracle.com with ESMTP id 3a234c15hu-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 28 Jul 2021 09:01:49 +0000
+        Wed, 28 Jul 2021 09:01:59 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=RSHSknkvsCxHvcg+cfTCkG6xd4sA7d4AT2I/a6RUNCN0qXH9l5hH5iXnC6bwa6lAvbHdmyT+Xy4q2sBfv27D9RqBNgY41EiPDVnWc7Z7/JZVwWLra3+J1QJJ9ARfvn0ja/syFvnDZHRL8psoYyxa1GAj1QvjICnTCfU5HyaMcLQzrLJsN4CGtFRQIrcRofnGV2UIGslZAvCExc8p4RYxlNQtf0qlcG4/BPucl8Nsik+WcCjcgIGC0mXhuubhVExoBkaDztgseKPZODLjFDroCUyYAmuq4Mku2Ye+VcXCGsM/XgEM8BHJbR4zJzL2uJArC1oaww3wFW3efaM6cOIO4g==
+ b=IJ0on46Be4mfkcF7lMyMChGNnbj5G2WmLuDvm8gLYE07bF13rire9DZFxwrNEGcFaGaKnsEduizCconORleF08Dy5x0Vv1pIE3vJoBqh0ndPhnMKPeDXxZ5rUS7VOTWJp58czdS0C3IzJ06Pf3eQ2x6tAlYaYjUmqb4am801wsy6gV6+lmFqzHD+SlzYKXJKPGlzicF205b/LFml45FfoVItTrHkDMEEAYh9kDYEGthcVCsZTZv7Kf6KL1OYFk5kVKrJ6Hc50QX2d2eqdEKQIB3YDsZzAALbePDJi8cIFtzdl1hzjT3aJ1fIeKBXdORK9F7gSgKjZYEjM69wNnge3g==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ToMvpdg4l+YmmubqdGpfSNO1USw2mmNsfrt47s0cob4=;
- b=Bcpgro5cHx7dZY58o/pKDR1ftfXM74dRYxQrZmea+h/PvPMe6ismyUXy8kR9te9TnUyyhVzXMqyQ+37iFcXJrKR/T9e30Lxe1DFrnOqVoFaF8WRaopz/mu06jDpvvQoqLcJxZpC8je4k5tBDgg00mMvs2gXECk7G5dam3jh8J8+OOHNeXjbPe4vNhuU221AhWPsK0/9p9S69xyBrnfgsMhcZnJu3SU2Tc+Cc+pb2+5MKfE/2L+eNHnzbaaSIOeW1NMQRqZojGAjL83eYFP27CExzeGZ/YxitsOlkVJECZPFmPg3WoRyySh/gXQWVQA6yJLxqYaRO0xfTh/4+84yNdw==
+ bh=iMeK10yGaGoF5zI/2hzGsB7rZWWm735xT+9d9yYXO3Y=;
+ b=mG47in6jfBhqA9e8HTDAasxTD5C91j7So/rtoWVBa6EbKlQ7RBYUavevuPWk0zANUsH3cUVozgpmqWJSscCmmPPTzJiJBy7gKbv6ttfVz1wzRuvelvJcJ9sqB9yAnn0/p0KKqz4ZlgvsP4qpZ414w2lOyyulcZBpZB/dwkbPnMaqGKqccH50scV+EeXe+Rk4BOXSC/vdArf9QJkhKnYNJg1f5rTBlqdtO+FkTMYPOxc+N9I1Q4q8VtgsW9QUHcEY9mcbWCn25Awukswfo94Geb8u37M8uPw1d/+2EICgy1OihZTTTjkYi9HJi42DKKqnrG6ZUAJqnwRleEbnm3PTLw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ToMvpdg4l+YmmubqdGpfSNO1USw2mmNsfrt47s0cob4=;
- b=MNVVV61o/Fxgbn6Oa1q5y1PVRmoABH+UMtj55FksBtbrSPHPRVfR9NbUjo5nb8gUXw9cgcLbTIwEvSU77ZQgJ3bWfybhYkQODBMPQobZKPeH4upU4FH531DHLfAUdSIRgYmJQoXIUngdnzJi/JmDb6Z9T27gCfOooYqL6VXIF4g=
+ bh=iMeK10yGaGoF5zI/2hzGsB7rZWWm735xT+9d9yYXO3Y=;
+ b=qclSKfohRUOzb2t0qUUUEAWLmE++5A8RrMjBQs0V/DYpvqEJdWUSRXM+XnOy+3eDT/nAGy74wyUTO1XwVoZIm0pNAe+9PiGqKvMpzHy3fiYW5oI0YBnB0ZpEgc3BDr1jRQAcOjsjclJVa6s1HUBAsD60HVFrUMtRkaQa0368dVk=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=oracle.com;
 Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
  by BYAPR10MB2792.namprd10.prod.outlook.com (2603:10b6:a03:87::22) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4352.29; Wed, 28 Jul
- 2021 09:01:48 +0000
+ 2021 09:01:57 +0000
 Received: from BY5PR10MB4306.namprd10.prod.outlook.com
  ([fe80::20c4:32a4:24ac:df89]) by BY5PR10MB4306.namprd10.prod.outlook.com
  ([fe80::20c4:32a4:24ac:df89%9]) with mapi id 15.20.4373.019; Wed, 28 Jul 2021
- 09:01:47 +0000
-Subject: Re: [PATCH v22 01/16] xfs: allow setting and clearing of log incompat
- feature flags
-To:     Chandan Babu R <chandanrlinux@gmail.com>
+ 09:01:57 +0000
+Subject: Re: [PATCH v22 04/16] xfs: Return from xfs_attr_set_iter if there are
+ no more rmtblks to process
+To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org
 References: <20210727062053.11129-1-allison.henderson@oracle.com>
- <20210727062053.11129-2-allison.henderson@oracle.com> <87bl6oeyh4.fsf@garuda>
+ <20210727062053.11129-5-allison.henderson@oracle.com>
+ <20210727233022.GZ559212@magnolia>
 From:   Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <c094d50f-d836-8ae5-3dae-0b301789319c@oracle.com>
-Date:   Wed, 28 Jul 2021 02:01:46 -0700
+Message-ID: <6180e7d4-bc38-fe01-a031-8b4853cc356d@oracle.com>
+Date:   Wed, 28 Jul 2021 02:01:55 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.12.0
-In-Reply-To: <87bl6oeyh4.fsf@garuda>
+In-Reply-To: <20210727233022.GZ559212@magnolia>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: BY5PR17CA0015.namprd17.prod.outlook.com
- (2603:10b6:a03:1b8::28) To BY5PR10MB4306.namprd10.prod.outlook.com
+X-ClientProxiedBy: BY5PR17CA0029.namprd17.prod.outlook.com
+ (2603:10b6:a03:1b8::42) To BY5PR10MB4306.namprd10.prod.outlook.com
  (2603:10b6:a03:211::7)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from [192.168.1.166] (67.1.112.125) by BY5PR17CA0015.namprd17.prod.outlook.com (2603:10b6:a03:1b8::28) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4373.18 via Frontend Transport; Wed, 28 Jul 2021 09:01:47 +0000
+Received: from [192.168.1.166] (67.1.112.125) by BY5PR17CA0029.namprd17.prod.outlook.com (2603:10b6:a03:1b8::42) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4373.17 via Frontend Transport; Wed, 28 Jul 2021 09:01:56 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 959824d6-5b18-4a87-4af2-08d951a654cc
+X-MS-Office365-Filtering-Correlation-Id: 5a8ad86a-a8db-4b51-0e1f-08d951a65a41
 X-MS-TrafficTypeDiagnostic: BYAPR10MB2792:
-X-Microsoft-Antispam-PRVS: <BYAPR10MB2792E1334D5C4DB0758E7E9B95EA9@BYAPR10MB2792.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:519;
+X-Microsoft-Antispam-PRVS: <BYAPR10MB279242228AD93B730B7EC8AA95EA9@BYAPR10MB2792.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:9508;
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: G1E42UZRN3tsyjE2FVZh+WgtsRHa1150CjFcuyE9wqMQ9SN0bGsm2XEj02z1+Z86ynV9yAAU9xbXlySWjFnGSc0l1RQxfVdWg4oO+wXbg9LjnIjW+6nGkDXobh+OgnSvJy8Vt+3dDyA+cXh6AR3767wLoUdNpHahUJI2vUhsa9fNwYuY811TRFCBHz9lNxGp01NWQtDwkXuBUV4RJ1yBVf2t6jOp7cy/9l/U485p3rkMv8488bqRwU4ZzQqnBlQN7+DlXL8wzqxH1O40L0f+U7ygH/Lk4zUAHFzPdUiH91KNhP2SgHz20FDmgldv0l1Chaeek0itKJs8p5RZUr5Z+QwkUSKPJwMnIYtLB7bxMWx7/Ken/3uqP5mseBBLu8BzAdRE2fsLdJlb8VbnYzkrgqJG4/sfINVrxNgV1vp9fPtjg8HfZ8qoCnwDppncV1qovhU6NywdReDdofUqxykoQXxw3syrqM8Vy9bUWrWhx3si4y7N/P9z/6o8tIPducoyJkKihOTIyCjmF5y3NLlVqmgNE13nnraxl2DbFRnf+StRjCGBjVUlAsMFwmblU5fD78Q2IfE8MdCZQfVpNLcFZZgucNwMPC889llgmQBqSTf0GnuwRkMEDRQHkivEO0zBowanQvlVHToiuOzG4MQNb7fqZVyhxot+OADIYd39SgDCzO5q5CpwtCHrDsOuRl289SIQBYDgpgJA5D+Ztrv9n0YZOSry+EuAOqdhBvVFhoJ3/IcrKLboNWg95vqUqnhcgNRs0BFjO933IaQ2suYr+g==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(376002)(39860400002)(396003)(366004)(346002)(136003)(66946007)(36756003)(31686004)(66556008)(66476007)(16576012)(6486002)(316002)(44832011)(4326008)(6916009)(2616005)(956004)(8676002)(478600001)(8936002)(2906002)(5660300002)(26005)(83380400001)(31696002)(53546011)(186003)(86362001)(38350700002)(52116002)(38100700002)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: 2BH5IVmmqfpOHZ3e7GhhU5uh2YQdYCEu0L7hWvY4Z0cAD+jc+PMlVQvIygKuy+G1bG8J9hq87zYyyK+nSFxOG5wpIGzf16hTEiSIUlVEnuM6AVZL/9CNiowqkOFtr5XnKCo1jaKX+wm1QkU7mBNJy4K8jflvgHVwrgrpAfLM7gs3SL7Cb0+rCFGHhBpTUU+g1q9sPkdliA2Nt7+dHSA3XepoyEiyy8loHCiI4KUVwIvTOBjFuxp8WkaMVWzpwYT9xYLH0iunzuGnjdSwQjrPBjKVqpyyfezTN51JaYBU4yYOppfc4lR9Q4IElS8a4qJnwbV18w0ZwjkUfbUaN4c9MwkgoaFkWtb9AiyYKkdApmj+gAlwv6TQNudBPWoKL+L0+wgFJdTUwQ3Twrfg3CZFzxnQ1i+v9l18HgP5AzEXn52eEjGo4hY5R+vQdiy+QlZgEY7lHuWINyMZDqrg040PlN1nznUeIvTTFEBufIs9gJ5UoMb7g5nUjyTqQlxgvJYmu6ArWvIXTsM3jex1l4Uh9IWf9p9TH08FxGtjWti4qza9RA1foX1gzLvqolySmpUCdIus8jEAcdZ5/ZAxUVb5HkrtTJR7pH19HEnVCuucPKxyaOipNMX+qjV6obIjvw+wElyqoTbabOUMWutBSKnLETfU51EfWap3gVDB0ntyMWAg2HycKvGHFSv63h4sgzrk0muggQRtcC6SxdDNY1c2TsjBI0J5SslHXHcAAr0xJ5/Sy34boOe6Ko9tV6azFO56MDfTLNPzM8QwWR4ySgatCkJwziEu2b30VZfRZRTHFG4TDvkbWWQNdFLtUb7/U2z+3e3mt+L7IKwIVjJIDFAm4g==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(376002)(39860400002)(396003)(366004)(346002)(136003)(66946007)(36756003)(31686004)(66556008)(66476007)(16576012)(6486002)(316002)(44832011)(4326008)(6916009)(2616005)(956004)(8676002)(478600001)(8936002)(2906002)(5660300002)(26005)(83380400001)(31696002)(53546011)(186003)(86362001)(38350700002)(52116002)(38100700002)(29513003)(40753002)(133343001)(43740500002)(45980500001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?QnlvZm9EMVg4RXYxUEN4ZlU3ZS9ST1BOT1NRbXRIMzVKMEJ3UUltZDA5dmFo?=
- =?utf-8?B?elhyQlR4NXVXTzU5K0xzNzZBeWtqUElvU2xvYThjTXZXODV1LzBQaXpjQklh?=
- =?utf-8?B?RFZLZlhEU2N2UHYwb1haclRQU2ZzalpjN0NMayttL0RBNk1UMzV1NmE0UUtY?=
- =?utf-8?B?TTRIeHRRbWx2SmtqcnNMWFFwdzhiN0F4U0VDaElrdm54aDljRSs4YU9Nb0RS?=
- =?utf-8?B?eFNGSUV1NUpGYkdqNDU1MUVkc2hGVVFKWkVray9OU3gyeGthck12LytQYStR?=
- =?utf-8?B?TzJNTzY2WlgyL1lWS3RvWEJoT3daRmd5cEMwSW53N2xhYTZ6TmZpa0NxY0RY?=
- =?utf-8?B?dW5QZGQrTkRWcVQyVisvbjJ5MWFtK1Y3MDNod0ptRFZRaE1Xa1pjNExCdTZB?=
- =?utf-8?B?Wmhjam1HcTF4TE15b05DeGFOcDR1cU9PZnA2Z04vbUplaGF5N1BBQ3IvdDB3?=
- =?utf-8?B?TjhvVTBjc1FrV1RkTWg4aVR4aFo4Y0MyVE85Q0plY1FBaWxnVnZzOW9peUhS?=
- =?utf-8?B?WGZyUU1ZRVcrcUVjcTFjamFaS25kR1FvRmZOYWxNNnRFQytxRUU5Y2UwYm9w?=
- =?utf-8?B?eHJtajhnS0hIalpkTW1Ma3Q1Q1lFbDlPYlBMZkwrUjhYaG8yUTRUOXBjbC9n?=
- =?utf-8?B?eXRYRDhtTElrTXFvZ1JEaGdwdTY0U0l2SXM2WHd0cU5VVTBCNzhjN1NZNmlM?=
- =?utf-8?B?ZWxRdjVqWnhncFBsTzU5RlZzblU2cjZrNERTRjAvNmFsa25qdU1aWERIMTJO?=
- =?utf-8?B?eS84dFBJV0dtaDNLaEJzOTBDdks1a2QrZ2hKTTVNS2xXa2Z5U0I0V2gzd2pD?=
- =?utf-8?B?S1VuTjgraGtaMGQ5Wm50aFRISzB5K09wMTM0RitHd3JzL2dZRFljbzFFbE9W?=
- =?utf-8?B?a0NhQUxJSkNwNHExWEozMXM1ZG5TUDF0MS9MeXJaWVBpcWFnTlRyNDMrclZO?=
- =?utf-8?B?cG12bzdZSUFCQmdaQXdYeEptTDJ0TU9ZcndmSkkvekVua0lMZEd3b3BMV1R2?=
- =?utf-8?B?K0ROM0h2M2RaRXpEUzRpRkxObGVjdlNybUFESmExTk4xM1ZPdTRhKzFqNTFC?=
- =?utf-8?B?dGpMQnpTb1FJUEVEdzZ6S09vUmhtZzdOMk5kMXV0K0szWWRTbUNNME8vcDRo?=
- =?utf-8?B?VmJyb3RWbkx3ZGViMVB2VU5CckFuSXJkK2tITDVSNWpyQ3dDajRFb2VjTHoy?=
- =?utf-8?B?cmlEd2lMMFF0Qlc2dGFqOXFqS040djFLdnpYbHJMeXV1R2VoRUtSenR6TG5j?=
- =?utf-8?B?bktGYkZaVXVqSmNGeThhSm42dGpKMHB1UmRCcWEzQ1hOY01lOU00YkVLRGNo?=
- =?utf-8?B?TCtyTmZnWncvT2svd0pRbmpicW5lYlBMd2ZvNUJDdWE0Q1Yva0Y4cnE5UU41?=
- =?utf-8?B?djR4Qnozb1RmVDlVTWppRjNselpnVzNzYUlKdmVuTE5GYkVCd1NBRHd6R0hF?=
- =?utf-8?B?bCtzUEVUdWhVY0xyYlptNGJFME9tQ2tCTjdoWjFmcG0yaTF2V3FNVjNnOHNX?=
- =?utf-8?B?UG1RNW8xV0p0MlhoSC9iL3N4Yy80RnhjQnFoZXpUaGVabVhvUWx3MXA1NDB6?=
- =?utf-8?B?MkNXZENEdm1Pd3gwWUhydWQraGprRTFodzZONVNSOHUvSmhmVXRmaStMbFp2?=
- =?utf-8?B?c2dsOGZJTkxxb3ZFY0dHTUt2U0U1SWRrSzQ5MXp0V1RoY2JXUG1wUE5nMVgy?=
- =?utf-8?B?UUZYS1k2SThBeEMzNjhDdWRsUjMvRzV6MFk4UmprbUtwWG9jUDNUY2JCYUVi?=
- =?utf-8?Q?pnpSGSM2I96aPYf3shi6UnMwwKPdbclbNv5WrrM?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?cGI0aDYwblFWQ3NsOWNuZGVFOG54aThDb3d3dE9haFFPSm45Q2lJOVo1amxT?=
+ =?utf-8?B?c016bW5pQUp5Ymk0Y3FJY3lsWVphc1RFTjNlV090MjFyR3N6M1p0MjhJaGJW?=
+ =?utf-8?B?eVhYM0JnTlplWUd4NElnRVl4NnpPdW1kOXZvazdnZ2tmelFzRmFVQnRocUEx?=
+ =?utf-8?B?bytpQVc2VWJlWVJ1cmRoTVpLTWlOYWtYUnZ5RGhMZ0pKUzRzN3hIb3cvMCs3?=
+ =?utf-8?B?U0R3OHNJbXRQaEh4WlZMQTBYZ1lLd2JCTzBDTlNtUmJoMXZlalpORkUrRXBE?=
+ =?utf-8?B?aHY0dm5pclV4empVU0J4OFZkRzRVSEhkK3h4SlgxQ1V3Nm5NVEtnT1pXUGJE?=
+ =?utf-8?B?VjY4angvb0taOGZpd1QvRk9yRFVUcmxOTm13bEc5Unc0OHI1Zk45NksxdGpI?=
+ =?utf-8?B?ajB4WXZOVlBSWks4SmoxVnI2S3ZXV01zS0pJeXlLVkxSNENvSC9VeFVEYURq?=
+ =?utf-8?B?dnhRNXNBdmFScFV6SjIyd0kzekdyQjNobFhMV3JjZVg0UUFNUVhpNU5oOHBk?=
+ =?utf-8?B?anh0M2djdGJoSEJIV2l5b2hqWjhPSzNCQXRja3pMVXFDQ1NtUWhncEkvdklo?=
+ =?utf-8?B?YjJOcVYyZXdyV3UyWnFBNWE3U0l5Tlk4TURrelU3clZkSCtwbytZcXFhV1V4?=
+ =?utf-8?B?dWJGYWlBSlhET0k0VVd4NGRheTRhVnZBRWc2SHVXc3FoN3p3Y3VCKzFiakZN?=
+ =?utf-8?B?RnMrV1B4MUlQa3ZvdkJUKzJEVzB6Y0lUeURENzUvNFE3WmlMMzRxTHZiWFN2?=
+ =?utf-8?B?QUh2QlN4eExlYTB5eEtwTkJjTWJPMUJML2lrWG5Xc3FhK01CcDlKaWk3ZndE?=
+ =?utf-8?B?NWR0V3NiNzVpWllqVnJNT1hMbmVxZTYyVnlsWHNkbzRDcW14aWQ2Nk4yN0Y3?=
+ =?utf-8?B?V3NOWWFiY3N2Rm5Oajg5ZXVmZUhFVFdHdGdnUkZPYmVTNyt3WTNkc1EzSXNq?=
+ =?utf-8?B?dHpTQXVLcFhGa1RCVXB2RjVUR3ludVkwMVJpeU9yRGlTTXg5WURUTGJPNEF3?=
+ =?utf-8?B?aDlVdmw3SVdoV3ZGRFdiMkc5aG1lZnR0TWdMR2t0cmM5S0dLTUVVOGozR2xU?=
+ =?utf-8?B?SzRPeUNGQVpxYWtHVnBSampjUy81RTdseVNXTG5NRzhNcGVKZFVtaWZRT09Y?=
+ =?utf-8?B?SFBWQ1hHSlNUNmxVNURVVHR5L1NyZ3VEaXFZdk9pbVJkcEI5TTB5dzM4SkV4?=
+ =?utf-8?B?ZzdEdkt6K21DZ0d4ZGd0T1dSOVVSSURTeEpFMWQ0ODNhK1ZtQWxJamdESkVm?=
+ =?utf-8?B?eEljSUVuVU1wa2NWc1FuUGh4WUUzRlF1NWR0TFlBNGczaTdlTG1DK0cxa3Ro?=
+ =?utf-8?B?SW5SODVjYzRjWm1OdDV2Ym9WWGNZZ0EwYVNGU28rb2E0WW90OUpzVmhRNm10?=
+ =?utf-8?B?T2FuOXN6bldXNVczMFl6SlZKTFFQSi90M25tbDlmYlpnNGk3U0ZsODBlZVJO?=
+ =?utf-8?B?SUFJRWVEcEFNNnpvZ0ZRa1E2eUUrc2x4SkRPaHhWc0oxak93NWxyT0JHYWNz?=
+ =?utf-8?B?WTAzVXAxd2VuR0JqUXNHeEp4VGQ5dXNxdEc5a0ZGOENYa0xoaFM0S3g2MjU4?=
+ =?utf-8?B?UE0vcGM4TjVtNExQUFg1R0twQTVlQU9jK0N5Zlc5VjVGZjh3d1kyTmthZVFh?=
+ =?utf-8?B?MXRpdThhNkVkZ0lrb3hXZHpJV2NZdTB6WGliRjFyS0VkVHZGNGJLZ3lBMGY2?=
+ =?utf-8?B?VE52N2FUbkhVenQ3UTlhVjNpWjFnY3JrWUNXMVp6blZaRkpMbE85NG9jT1oy?=
+ =?utf-8?Q?2jjyskmzRASdN7HO3brOeXfH5fvk16x6kas6ykp?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 959824d6-5b18-4a87-4af2-08d951a654cc
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5a8ad86a-a8db-4b51-0e1f-08d951a65a41
 X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Jul 2021 09:01:47.9328
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Jul 2021 09:01:57.0946
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: uYcFCoE9FNgnx39yqud+ciq+3e/Z0U4YEi8Uy6wyuzmijQe9jqblLEKGyi2BTpKP3vXVtrbK7Th8z5Z9U/3eQBMryKXben13mzeL/y9OKz0=
+X-MS-Exchange-CrossTenant-UserPrincipalName: xd1X988fUeAFv6FvC2AvOcj+qA65tpUaiGjk3vvNf1apUYkamFVy9bBZH3DHMO2qOdDbPQ54N2eHfr7U9V0j9/W+gNnki5/Xcy/KtfAtitw=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR10MB2792
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=10058 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0
- suspectscore=0 phishscore=0 mlxscore=0 bulkscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0
+ suspectscore=0 mlxlogscore=999 bulkscore=0 spamscore=0 mlxscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2107140000 definitions=main-2107280051
-X-Proofpoint-GUID: dLAZunDUcdsV2uIbcn-8kxOaIQGPorx0
-X-Proofpoint-ORIG-GUID: dLAZunDUcdsV2uIbcn-8kxOaIQGPorx0
+X-Proofpoint-ORIG-GUID: YwlOPH3tm66mJCX_U9CWtupse6gIQgzo
+X-Proofpoint-GUID: YwlOPH3tm66mJCX_U9CWtupse6gIQgzo
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 
 
-On 7/27/21 5:24 AM, Chandan Babu R wrote:
-> On 27 Jul 2021 at 11:50, Allison Henderson wrote:
->> From: "Darrick J. Wong" <djwong@kernel.org>
+On 7/27/21 4:30 PM, Darrick J. Wong wrote:
+> On Mon, Jul 26, 2021 at 11:20:41PM -0700, Allison Henderson wrote:
+>> During an attr rename operation, blocks are saved for later removal
+>> as rmtblkno2. The rmtblkno is used in the case of needing to alloc
+>> more blocks if not enough were available.  However, in the case
+>> that neither rmtblkno or rmtblkno2 are set, we can return as soon
+>> as xfs_attr_node_addname completes, rather than rolling the transaction
+>> with an -EAGAIN return.  This extra loop does not hurt anything right
+>> now, but it will be a problem later when we get into log items because
+>> we end up with an empty log transaction.  So, add a simple check to
+>> cut out the unneeded iteration.
 >>
->> Log incompat feature flags in the superblock exist for one purpose: to
->> protect the contents of a dirty log from replay on a kernel that isn't
->> prepared to handle those dirty contents.  This means that they can be
->> cleared if (a) we know the log is clean and (b) we know that there
->> aren't any other threads in the system that might be setting or relying
->> upon a log incompat flag.
->>
->> Therefore, clear the log incompat flags when we've finished recovering
->> the log, when we're unmounting cleanly, remounting read-only, or
->> freezing; and provide a function so that subsequent patches can start
->> using this.
+>> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 > 
-> The changes look good to me.
-> 
-> Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
-Alrighty, thanks!
+> Looks good,
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Great, thanks!
 
 Allison
 
 > 
->>
->> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
->> Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
->>
+> --D
+> 
 >> ---
->>   fs/xfs/libxfs/xfs_format.h |  15 +++++++
->>   fs/xfs/xfs_log.c           |  14 ++++++
->>   fs/xfs/xfs_log_recover.c   |  16 +++++++
->>   fs/xfs/xfs_mount.c         | 110 +++++++++++++++++++++++++++++++++++++++++++++
->>   fs/xfs/xfs_mount.h         |   2 +
->>   5 files changed, 157 insertions(+)
+>>   fs/xfs/libxfs/xfs_attr.c | 7 +++++++
+>>   1 file changed, 7 insertions(+)
 >>
->> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
->> index 76e2461..3a4da111 100644
->> --- a/fs/xfs/libxfs/xfs_format.h
->> +++ b/fs/xfs/libxfs/xfs_format.h
->> @@ -495,6 +495,21 @@ xfs_sb_has_incompat_log_feature(
->>   	return (sbp->sb_features_log_incompat & feature) != 0;
->>   }
+>> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+>> index d9d7d51..5040fc1 100644
+>> --- a/fs/xfs/libxfs/xfs_attr.c
+>> +++ b/fs/xfs/libxfs/xfs_attr.c
+>> @@ -409,6 +409,13 @@ xfs_attr_set_iter(
+>>   			if (error)
+>>   				return error;
 >>   
->> +static inline void
->> +xfs_sb_remove_incompat_log_features(
->> +	struct xfs_sb	*sbp)
->> +{
->> +	sbp->sb_features_log_incompat &= ~XFS_SB_FEAT_INCOMPAT_LOG_ALL;
->> +}
+>> +			/*
+>> +			 * If addname was successful, and we dont need to alloc
+>> +			 * or remove anymore blks, we're done.
+>> +			 */
+>> +			if (!args->rmtblkno && !args->rmtblkno2)
+>> +				return 0;
 >> +
->> +static inline void
->> +xfs_sb_add_incompat_log_features(
->> +	struct xfs_sb	*sbp,
->> +	unsigned int	features)
->> +{
->> +	sbp->sb_features_log_incompat |= features;
->> +}
->> +
->>   /*
->>    * V5 superblock specific feature checks
->>    */
->> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
->> index 36fa265..9254405 100644
->> --- a/fs/xfs/xfs_log.c
->> +++ b/fs/xfs/xfs_log.c
->> @@ -947,6 +947,20 @@ int
->>   xfs_log_quiesce(
->>   	struct xfs_mount	*mp)
->>   {
->> +	/*
->> +	 * Clear log incompat features since we're quiescing the log.  Report
->> +	 * failures, though it's not fatal to have a higher log feature
->> +	 * protection level than the log contents actually require.
->> +	 */
->> +	if (xfs_clear_incompat_log_features(mp)) {
->> +		int error;
->> +
->> +		error = xfs_sync_sb(mp, false);
->> +		if (error)
->> +			xfs_warn(mp,
->> +	"Failed to clear log incompat features on quiesce");
->> +	}
->> +
->>   	cancel_delayed_work_sync(&mp->m_log->l_work);
->>   	xfs_log_force(mp, XFS_LOG_SYNC);
->>   
->> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
->> index 1721fce..ec4ccae 100644
->> --- a/fs/xfs/xfs_log_recover.c
->> +++ b/fs/xfs/xfs_log_recover.c
->> @@ -3464,6 +3464,22 @@ xlog_recover_finish(
->>   		 */
->>   		xfs_log_force(log->l_mp, XFS_LOG_SYNC);
->>   
->> +		/*
->> +		 * Now that we've recovered the log and all the intents, we can
->> +		 * clear the log incompat feature bits in the superblock
->> +		 * because there's no longer anything to protect.  We rely on
->> +		 * the AIL push to write out the updated superblock after
->> +		 * everything else.
->> +		 */
->> +		if (xfs_clear_incompat_log_features(log->l_mp)) {
->> +			error = xfs_sync_sb(log->l_mp, false);
->> +			if (error < 0) {
->> +				xfs_alert(log->l_mp,
->> +	"Failed to clear log incompat features on recovery");
->> +				return error;
->> +			}
->> +		}
->> +
->>   		xlog_recover_process_iunlinks(log);
->>   
->>   		xlog_recover_check_summary(log);
->> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
->> index d075549..d2c40ae 100644
->> --- a/fs/xfs/xfs_mount.c
->> +++ b/fs/xfs/xfs_mount.c
->> @@ -1217,6 +1217,116 @@ xfs_force_summary_recalc(
->>   }
->>   
->>   /*
->> + * Enable a log incompat feature flag in the primary superblock.  The caller
->> + * cannot have any other transactions in progress.
->> + */
->> +int
->> +xfs_add_incompat_log_feature(
->> +	struct xfs_mount	*mp,
->> +	uint32_t		feature)
->> +{
->> +	struct xfs_dsb		*dsb;
->> +	int			error;
->> +
->> +	ASSERT(hweight32(feature) == 1);
->> +	ASSERT(!(feature & XFS_SB_FEAT_INCOMPAT_LOG_UNKNOWN));
->> +
->> +	/*
->> +	 * Force the log to disk and kick the background AIL thread to reduce
->> +	 * the chances that the bwrite will stall waiting for the AIL to unpin
->> +	 * the primary superblock buffer.  This isn't a data integrity
->> +	 * operation, so we don't need a synchronous push.
->> +	 */
->> +	error = xfs_log_force(mp, XFS_LOG_SYNC);
->> +	if (error)
->> +		return error;
->> +	xfs_ail_push_all(mp->m_ail);
->> +
->> +	/*
->> +	 * Lock the primary superblock buffer to serialize all callers that
->> +	 * are trying to set feature bits.
->> +	 */
->> +	xfs_buf_lock(mp->m_sb_bp);
->> +	xfs_buf_hold(mp->m_sb_bp);
->> +
->> +	if (XFS_FORCED_SHUTDOWN(mp)) {
->> +		error = -EIO;
->> +		goto rele;
->> +	}
->> +
->> +	if (xfs_sb_has_incompat_log_feature(&mp->m_sb, feature))
->> +		goto rele;
->> +
->> +	/*
->> +	 * Write the primary superblock to disk immediately, because we need
->> +	 * the log_incompat bit to be set in the primary super now to protect
->> +	 * the log items that we're going to commit later.
->> +	 */
->> +	dsb = mp->m_sb_bp->b_addr;
->> +	xfs_sb_to_disk(dsb, &mp->m_sb);
->> +	dsb->sb_features_log_incompat |= cpu_to_be32(feature);
->> +	error = xfs_bwrite(mp->m_sb_bp);
->> +	if (error)
->> +		goto shutdown;
->> +
->> +	/*
->> +	 * Add the feature bits to the incore superblock before we unlock the
->> +	 * buffer.
->> +	 */
->> +	xfs_sb_add_incompat_log_features(&mp->m_sb, feature);
->> +	xfs_buf_relse(mp->m_sb_bp);
->> +
->> +	/* Log the superblock to disk. */
->> +	return xfs_sync_sb(mp, false);
->> +shutdown:
->> +	xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
->> +rele:
->> +	xfs_buf_relse(mp->m_sb_bp);
->> +	return error;
->> +}
->> +
->> +/*
->> + * Clear all the log incompat flags from the superblock.
->> + *
->> + * The caller cannot be in a transaction, must ensure that the log does not
->> + * contain any log items protected by any log incompat bit, and must ensure
->> + * that there are no other threads that depend on the state of the log incompat
->> + * feature flags in the primary super.
->> + *
->> + * Returns true if the superblock is dirty.
->> + */
->> +bool
->> +xfs_clear_incompat_log_features(
->> +	struct xfs_mount	*mp)
->> +{
->> +	bool			ret = false;
->> +
->> +	if (!xfs_sb_version_hascrc(&mp->m_sb) ||
->> +	    !xfs_sb_has_incompat_log_feature(&mp->m_sb,
->> +				XFS_SB_FEAT_INCOMPAT_LOG_ALL) ||
->> +	    XFS_FORCED_SHUTDOWN(mp))
->> +		return false;
->> +
->> +	/*
->> +	 * Update the incore superblock.  We synchronize on the primary super
->> +	 * buffer lock to be consistent with the add function, though at least
->> +	 * in theory this shouldn't be necessary.
->> +	 */
->> +	xfs_buf_lock(mp->m_sb_bp);
->> +	xfs_buf_hold(mp->m_sb_bp);
->> +
->> +	if (xfs_sb_has_incompat_log_feature(&mp->m_sb,
->> +				XFS_SB_FEAT_INCOMPAT_LOG_ALL)) {
->> +		xfs_info(mp, "Clearing log incompat feature flags.");
->> +		xfs_sb_remove_incompat_log_features(&mp->m_sb);
->> +		ret = true;
->> +	}
->> +
->> +	xfs_buf_relse(mp->m_sb_bp);
->> +	return ret;
->> +}
->> +
->> +/*
->>    * Update the in-core delayed block counter.
->>    *
->>    * We prefer to update the counter without having to take a spinlock for every
->> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
->> index c78b63f..66a47f5 100644
->> --- a/fs/xfs/xfs_mount.h
->> +++ b/fs/xfs/xfs_mount.h
->> @@ -325,6 +325,8 @@ int	xfs_zero_extent(struct xfs_inode *ip, xfs_fsblock_t start_fsb,
->>   struct xfs_error_cfg * xfs_error_get_cfg(struct xfs_mount *mp,
->>   		int error_class, int error);
->>   void xfs_force_summary_recalc(struct xfs_mount *mp);
->> +int xfs_add_incompat_log_feature(struct xfs_mount *mp, uint32_t feature);
->> +bool xfs_clear_incompat_log_features(struct xfs_mount *mp);
->>   void xfs_mod_delalloc(struct xfs_mount *mp, int64_t delta);
->>   
->>   #endif	/* __XFS_MOUNT_H__ */
-> 
-> 
+>>   			dac->dela_state = XFS_DAS_FOUND_NBLK;
+>>   		}
+>>   		return -EAGAIN;
+>> -- 
+>> 2.7.4
+>>
