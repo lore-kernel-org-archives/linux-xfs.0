@@ -5,219 +5,181 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75291C4320A
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 09:40:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E62FCC43214
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 11:54:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6161A60FC0
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 09:40:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D15CF60FEA
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 11:54:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231701AbhG1Jkn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Jul 2021 05:40:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56768 "EHLO
+        id S236071AbhG1Lyg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Jul 2021 07:54:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59478 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231408AbhG1Jkm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Jul 2021 05:40:42 -0400
-Received: from mail-qt1-x833.google.com (mail-qt1-x833.google.com [IPv6:2607:f8b0:4864:20::833])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64879C061757;
-        Wed, 28 Jul 2021 02:40:41 -0700 (PDT)
-Received: by mail-qt1-x833.google.com with SMTP id m11so895757qtx.7;
-        Wed, 28 Jul 2021 02:40:41 -0700 (PDT)
+        with ESMTP id S236185AbhG1Lye (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Jul 2021 07:54:34 -0400
+Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79900C061757
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Jul 2021 04:54:32 -0700 (PDT)
+Received: by mail-pl1-x634.google.com with SMTP id c16so2348420plh.7
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Jul 2021 04:54:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:reply-to:from:date:message-id
-         :subject:to:cc:content-transfer-encoding;
-        bh=dktCwlTObwFG+2Ta9NrZzHxiFTXSIiqKgkliRATZihc=;
-        b=hC6HIDzS/kMo8HwBoSMfkwBNNGFafrPcaYrK2m1Z7hs6tWPj80j44IDEKRAScQRPdg
-         QysyxqmtA3x/jBjk9/It1kxIpqMjyloTxk0S3WV7NZyJ/a63xGTYf5/RptV+56rQZ6va
-         kh6hscbuIAcxaKzlGScjpNa2Ylf67Sm+Drxn54E0YVj7iFg7pqorUhwJY8S1Cel0KcNB
-         xGWvymH/q+Mn1cWM0kLt7WJyzSIWlrDC4T9XzBDkAmiMtk+789smcOXgDxdBKUqeAeGo
-         5G6T6p5eiQlJe9v8sAFNLKbxz1uilgBqtrnx3aREdn7pSF0cq2A0IfBuZSN3T/VMU1Wp
-         OrLw==
+        h=references:user-agent:from:to:cc:subject:in-reply-to:date
+         :message-id:mime-version;
+        bh=HA8GdWCK1zl+zTW3sRATrhHcL1osF75RThRNnRzaPfA=;
+        b=ovi6eSbfhbNC9zq9y8gKEPm0Gsb9P36sdj5fIzpJR7A8Lsk1MR89n5EIGWfhCAdn3F
+         bzrDCgpcJoMuK2oSrrnTMDpSsLSw9mrBVzQuC7u2c24GVnl7BtUdNWT4SiYE2HTc+O2g
+         B7yYmpNntD0k1Yfqk1hs9H79J6yltLbbcqL+Bpb19AHfh0UQQVt5o/bNoOrLUc5Gzyue
+         6BDlP3adZUA1YVVmb7qRDPcUa9CaOoWDrLmI9zikLn3q1YigjbN3yENr+9h6zQZsZe/6
+         a73EB+MvdwUyId0W81/HCyvNYMpymoEPsF5hfpsmQjuANu9h2LaENBPSZ8B9p0lqqfhd
+         wnDQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:reply-to
-         :from:date:message-id:subject:to:cc:content-transfer-encoding;
-        bh=dktCwlTObwFG+2Ta9NrZzHxiFTXSIiqKgkliRATZihc=;
-        b=tFuGL86R3pcc8OOWgyT2Yai5x78QSwfEERyz2LM/eB82NebhTuiGVhmnsy6oYtDSxb
-         N+UDYezTFW39Ey+By7UFgZm1qlc6JZiBC8sWD2Uw8u88PZYRV4kbGkt8tYxLKNL7WEqZ
-         w+4PAlc5eERB72ruNO2Sc6+ej/OTzu2VJI01ZgXN12b1FbTRS1sHFtBs3gFMHq4WmTk3
-         Mz8PwxoXDOiGFmGHITgOXsxe9CDj5OcWPy8SA+ckx5mZKSyhQURVzO2ojaFiNJHIFLRm
-         mX52LaAkWiR6GmQKSFKTHvs1eXYwNqUnkI8XV+Z+LxBWk9u5ZiikVXVNwrMN40G0LHv3
-         8tRQ==
-X-Gm-Message-State: AOAM530hSycqHL5soVOkXB/yYf9yIsXJ+fGnfbEsfaJzImvENFBCt6LQ
-        SVnP8jqrgTn05jsaSSaOG8ov0GXImEGMFZ5lfZs=
-X-Google-Smtp-Source: ABdhPJxL/VOD6efZw6khhVS5q84iFPfNWK1p0FKu/+OfqLi9cqQsC9bbLugROe4FWdhLYdOCRHCJFK6s/g69hTMC9G8=
-X-Received: by 2002:ac8:76da:: with SMTP id q26mr23074954qtr.183.1627465240571;
- Wed, 28 Jul 2021 02:40:40 -0700 (PDT)
+        h=x-gm-message-state:references:user-agent:from:to:cc:subject
+         :in-reply-to:date:message-id:mime-version;
+        bh=HA8GdWCK1zl+zTW3sRATrhHcL1osF75RThRNnRzaPfA=;
+        b=NIRlX1NwcKPzN+I8JSchufxG/Yncz151yGXrP3lA18lfYwK53/yJ1ukAWKSU6IKrE7
+         L2YFFATdoRDKq71IpIA5TSQXy0lATmCFnN2ysLVyiBE4xuVNX2jfQuzEkmaBchLZ1uZC
+         ENVPf3jV7+KafargzpjjOOSWkafS5+4IYfphHKA+UJU5BRI3CXaSBj9381CkrkWkDMHW
+         lDCjriOmdNeqBZu4H3kZd0HoFVwYJJdGgxC8JmeH21/om6/kTwaOHGN3VO6fgHbKvTCk
+         kOmSjCjDGDTpjyq2QBU6Hmp+TL77SwyWat5tv4Te3Rp/wFBsn0M3+hqH3Yx4SRZaHi95
+         UfGA==
+X-Gm-Message-State: AOAM532xfFhuqIyhyDz/hH/YosRTRCLQq9MoG39pJmUTtz+vk6wqUY4I
+        rHGh0Cb78xfzWSYBWL8b+EYgimPi0IGy/A==
+X-Google-Smtp-Source: ABdhPJwPGyhG1gD/O02fmU/4Gh7B9/F0Nxjz7JQd4baSYLaI60d++SOEgI2Llq9oaT8gDdJxB/1kNA==
+X-Received: by 2002:aa7:8284:0:b029:312:1c62:cc0f with SMTP id s4-20020aa782840000b02903121c62cc0fmr28586540pfm.75.1627473271828;
+        Wed, 28 Jul 2021 04:54:31 -0700 (PDT)
+Received: from garuda ([122.171.208.125])
+        by smtp.gmail.com with ESMTPSA id s36sm8330143pgk.64.2021.07.28.04.54.30
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Wed, 28 Jul 2021 04:54:31 -0700 (PDT)
+References: <20210727062053.11129-1-allison.henderson@oracle.com> <20210727062053.11129-4-allison.henderson@oracle.com>
+User-agent: mu4e 1.0; emacs 26.1
+From:   Chandan Babu R <chandanrlinux@gmail.com>
+To:     Allison Henderson <allison.henderson@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v22 03/16] xfs: refactor xfs_iget calls from log intent recovery
+In-reply-to: <20210727062053.11129-4-allison.henderson@oracle.com>
+Date:   Wed, 28 Jul 2021 17:24:28 +0530
+Message-ID: <87y29qvekr.fsf@garuda>
 MIME-Version: 1.0
-References: <162743103739.3429001.16912087881683869606.stgit@magnolia> <162743104288.3429001.18145781236429703996.stgit@magnolia>
-In-Reply-To: <162743104288.3429001.18145781236429703996.stgit@magnolia>
-Reply-To: fdmanana@gmail.com
-From:   Filipe Manana <fdmanana@gmail.com>
-Date:   Wed, 28 Jul 2021 10:40:29 +0100
-Message-ID: <CAL3q7H511wY0nHvTuqfnp0ttvvGuFt9Eke2B6cXy_4+JDyJVRw@mail.gmail.com>
-Subject: Re: [PATCH 1/1] misc: tag all tests that examine crash recovery in a loop
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Eryu Guan <guaneryu@gmail.com>, xfs <linux-xfs@vger.kernel.org>,
-        fstests <fstests@vger.kernel.org>, Eryu Guan <guan@eryu.me>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jul 28, 2021 at 1:10 AM Darrick J. Wong <djwong@kernel.org> wrote:
->
-> From: Darrick J. Wong <djwong@kernel.org>
->
-> Given all the recent problems that we've been finding with log recovery,
-> I think it would be useful to create a 'recoveryloop' group so that
-> developers have a convenient way to run every single test that rolls
-> around in a fs shutdown loop looking for subtle errors in recovery.
+On 27 Jul 2021 at 11:50, Allison Henderson wrote:
+> Hoist the code from xfs_bui_item_recover that igets an inode and marks
+> it as being part of log intent recovery.  The next patch will want a
+> common function.
+
+A straight forward hoist.
+
+Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
+
 >
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 > ---
->  tests/btrfs/190   |    2 +-
->  tests/generic/019 |    2 +-
->  tests/generic/388 |    2 +-
->  tests/generic/455 |    2 +-
->  tests/generic/457 |    2 +-
->  tests/generic/475 |    2 +-
->  tests/generic/482 |    2 +-
->  tests/generic/725 |    2 +-
->  tests/xfs/057     |    2 +-
->  9 files changed, 9 insertions(+), 9 deletions(-)
+>  fs/xfs/libxfs/xfs_log_recover.h |  2 ++
+>  fs/xfs/xfs_bmap_item.c          | 11 +----------
+>  fs/xfs/xfs_log_recover.c        | 26 ++++++++++++++++++++++++++
+>  3 files changed, 29 insertions(+), 10 deletions(-)
 >
->
-> diff --git a/tests/btrfs/190 b/tests/btrfs/190
-> index 3aa718e2..974438c1 100755
-> --- a/tests/btrfs/190
-> +++ b/tests/btrfs/190
-> @@ -8,7 +8,7 @@
->  # balance needs to be resumed on mount.
->  #
->  . ./common/preamble
-> -_begin_fstest auto quick replay balance qgroup
-> +_begin_fstest auto quick replay balance qgroup recoveryloop
-
-For btrfs, there are more tests like this: btrfs/172, btrfs/192 and btrfs/2=
-06.
-
->
->  # Import common functions.
->  . ./common/filter
-> diff --git a/tests/generic/019 b/tests/generic/019
-> index b8d025d6..db56dac1 100755
-> --- a/tests/generic/019
-> +++ b/tests/generic/019
-> @@ -8,7 +8,7 @@
->  # check filesystem consistency at the end.
->  #
->  . ./common/preamble
-> -_begin_fstest aio dangerous enospc rw stress
-> +_begin_fstest aio dangerous enospc rw stress recoveryloop
->
->  fio_config=3D$tmp.fio
->
-> diff --git a/tests/generic/388 b/tests/generic/388
-> index e41712af..9cd737e8 100755
-> --- a/tests/generic/388
-> +++ b/tests/generic/388
-> @@ -15,7 +15,7 @@
->  # spurious corruption reports and/or mount failures.
->  #
->  . ./common/preamble
-> -_begin_fstest shutdown auto log metadata
-> +_begin_fstest shutdown auto log metadata recoveryloop
->
->  # Override the default cleanup function.
->  _cleanup()
-> diff --git a/tests/generic/455 b/tests/generic/455
-> index 62788798..13d326e7 100755
-> --- a/tests/generic/455
-> +++ b/tests/generic/455
-> @@ -7,7 +7,7 @@
->  # Run fsx with log writes to verify power fail safeness.
->  #
->  . ./common/preamble
-> -_begin_fstest auto log replay
-> +_begin_fstest auto log replay recoveryloop
->
->  # Override the default cleanup function.
->  _cleanup()
-> diff --git a/tests/generic/457 b/tests/generic/457
-> index d9e38268..f4fdd81d 100755
-> --- a/tests/generic/457
-> +++ b/tests/generic/457
-> @@ -7,7 +7,7 @@
->  # Run fsx with log writes on cloned files to verify power fail safeness.
->  #
->  . ./common/preamble
-> -_begin_fstest auto log replay clone
-> +_begin_fstest auto log replay clone recoveryloop
->
->  # Override the default cleanup function.
->  _cleanup()
-> diff --git a/tests/generic/475 b/tests/generic/475
-> index 62894491..c426402e 100755
-> --- a/tests/generic/475
-> +++ b/tests/generic/475
-> @@ -12,7 +12,7 @@
->  # testing efforts.
->  #
->  . ./common/preamble
-> -_begin_fstest shutdown auto log metadata eio
-> +_begin_fstest shutdown auto log metadata eio recoveryloop
->
->  # Override the default cleanup function.
->  _cleanup()
-> diff --git a/tests/generic/482 b/tests/generic/482
-> index f26e6fc4..0fadf795 100755
-> --- a/tests/generic/482
-> +++ b/tests/generic/482
-> @@ -9,7 +9,7 @@
->  # Will do log replay and check the filesystem.
->  #
->  . ./common/preamble
-> -_begin_fstest auto metadata replay thin
-> +_begin_fstest auto metadata replay thin recoveryloop
->
->  # Override the default cleanup function.
->  _cleanup()
-> diff --git a/tests/generic/725 b/tests/generic/725
-> index f43bcb37..8bd724e3 100755
-> --- a/tests/generic/725
-> +++ b/tests/generic/725
-> @@ -12,7 +12,7 @@
->  # in writeback on the host that cause VM guests to fail to recover.
->  #
->  . ./common/preamble
-> -_begin_fstest shutdown auto log metadata eio
-> +_begin_fstest shutdown auto log metadata eio recoveryloop
->
->  _cleanup()
->  {
-> diff --git a/tests/xfs/057 b/tests/xfs/057
-> index d4cfa8dc..9fb3f406 100755
-> --- a/tests/xfs/057
-> +++ b/tests/xfs/057
-> @@ -21,7 +21,7 @@
->  # Note that this test requires a DEBUG mode kernel.
->  #
->  . ./common/preamble
-> -_begin_fstest auto log
-> +_begin_fstest auto log recoveryloop
->
->  # Override the default cleanup function.
->  _cleanup()
->
+> diff --git a/fs/xfs/libxfs/xfs_log_recover.h b/fs/xfs/libxfs/xfs_log_recover.h
+> index 3cca2bf..ff69a00 100644
+> --- a/fs/xfs/libxfs/xfs_log_recover.h
+> +++ b/fs/xfs/libxfs/xfs_log_recover.h
+> @@ -122,6 +122,8 @@ void xlog_buf_readahead(struct xlog *log, xfs_daddr_t blkno, uint len,
+>  		const struct xfs_buf_ops *ops);
+>  bool xlog_is_buffer_cancelled(struct xlog *log, xfs_daddr_t blkno, uint len);
+>  
+> +int xlog_recover_iget(struct xfs_mount *mp, xfs_ino_t ino,
+> +		struct xfs_inode **ipp);
+>  void xlog_recover_release_intent(struct xlog *log, unsigned short intent_type,
+>  		uint64_t intent_id);
+>  
+> diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+> index e3a6919..e587a00 100644
+> --- a/fs/xfs/xfs_bmap_item.c
+> +++ b/fs/xfs/xfs_bmap_item.c
+> @@ -24,7 +24,6 @@
+>  #include "xfs_error.h"
+>  #include "xfs_log_priv.h"
+>  #include "xfs_log_recover.h"
+> -#include "xfs_quota.h"
+>  
+>  kmem_zone_t	*xfs_bui_zone;
+>  kmem_zone_t	*xfs_bud_zone;
+> @@ -487,18 +486,10 @@ xfs_bui_item_recover(
+>  			XFS_ATTR_FORK : XFS_DATA_FORK;
+>  	bui_type = bmap->me_flags & XFS_BMAP_EXTENT_TYPE_MASK;
+>  
+> -	/* Grab the inode. */
+> -	error = xfs_iget(mp, NULL, bmap->me_owner, 0, 0, &ip);
+> +	error = xlog_recover_iget(mp, bmap->me_owner, &ip);
+>  	if (error)
+>  		return error;
+>  
+> -	error = xfs_qm_dqattach(ip);
+> -	if (error)
+> -		goto err_rele;
+> -
+> -	if (VFS_I(ip)->i_nlink == 0)
+> -		xfs_iflags_set(ip, XFS_IRECOVERY);
+> -
+>  	/* Allocate transaction and do the work. */
+>  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate,
+>  			XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK), 0, 0, &tp);
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index ec4ccae..12118d5 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -26,6 +26,8 @@
+>  #include "xfs_error.h"
+>  #include "xfs_buf_item.h"
+>  #include "xfs_ag.h"
+> +#include "xfs_quota.h"
+> +
+>  
+>  #define BLK_AVG(blk1, blk2)	((blk1+blk2) >> 1)
+>  
+> @@ -1756,6 +1758,30 @@ xlog_recover_release_intent(
+>  	spin_unlock(&ailp->ail_lock);
+>  }
+>  
+> +int
+> +xlog_recover_iget(
+> +	struct xfs_mount	*mp,
+> +	xfs_ino_t		ino,
+> +	struct xfs_inode	**ipp)
+> +{
+> +	int			error;
+> +
+> +	error = xfs_iget(mp, NULL, ino, 0, 0, ipp);
+> +	if (error)
+> +		return error;
+> +
+> +	error = xfs_qm_dqattach(*ipp);
+> +	if (error) {
+> +		xfs_irele(*ipp);
+> +		return error;
+> +	}
+> +
+> +	if (VFS_I(*ipp)->i_nlink == 0)
+> +		xfs_iflags_set(*ipp, XFS_IRECOVERY);
+> +
+> +	return 0;
+> +}
+> +
+>  /******************************************************************************
+>   *
+>   *		Log recover routines
 
 
---=20
-Filipe David Manana,
-
-=E2=80=9CWhether you think you can, or you think you can't =E2=80=94 you're=
- right.=E2=80=9D
+-- 
+chandan
