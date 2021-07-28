@@ -7,279 +7,339 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97B44C4338F
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 19:24:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EAA0AC4338F
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 19:31:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 72D376103A
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 19:24:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C2BAB6023D
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 19:31:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229542AbhG1TYV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Jul 2021 15:24:21 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46692 "EHLO mail.kernel.org"
+        id S230164AbhG1Tb2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Jul 2021 15:31:28 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58970 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230444AbhG1TYV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 28 Jul 2021 15:24:21 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 47D496101E;
-        Wed, 28 Jul 2021 19:24:19 +0000 (UTC)
+        id S229690AbhG1Tb2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 28 Jul 2021 15:31:28 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 9686B6101B;
+        Wed, 28 Jul 2021 19:31:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627500259;
-        bh=IAQs1uGu5PADLRfG/89bw9Mkbb1/QwRdgz00jWMBs5k=;
+        s=k20201202; t=1627500686;
+        bh=H5yc1SWQODO0mmI7VVekNJcDwu7Ebppmq2OlIsGHg/s=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ilzbN5vRrbkKGZQVDLl4LSTpr+eGOu7nMZIa9+xrD4Sb5UWnGwFqYZDSQnfQTn7pu
-         0aHMlC09xX3Ep+rCmDIUfiDRKk2C2yZob7d9zUcTsBdX9ftOrWvZhAFN6uVLJJnajS
-         q8bsREXhpsGiUV2MP5nDqSN5ZGudlPT3bvNAaF5BtzHSixJfKkg0zlq3a+/MK/Cwqd
-         f4f8G3D0ouYqrCJAuJ2/i3RU4eP3VymDyA/7SR/yZRO8DwZdMGeBSK1IkA74DFt80L
-         67TfRL3rKBQpGPHo5Z9vlvswObpdQqsXeOLbI4hn94hP7nlfdqryywHv8/IgsNvE4q
-         Vysx01PfyW62w==
-Date:   Wed, 28 Jul 2021 12:24:18 -0700
+        b=PfRY4QBpFBB9sGNSHkDbUG2zrRL5YekLMLlOdUcB5Ee2lsPy0Ohabhg0Vn7IN4T2Q
+         Y9TBllmeabOLNG4+JtIkkDFweDUdlz4XuoG9qUyNYmr9sAYtmIqSkd1lvBVIWksUjz
+         LnmK07fHI9kWzwqXbg0Hlr3dhV4vMdUJq4noujCJXL281ke8ZSd8fU7nhkLpAjJ8IG
+         rW1TAnFmzJO7n+thCI/5bH5Jnd7pArtRWjPNHiEAhcreCp7BtUULPymXwhxwCFtmnC
+         BlHc93jtGM+3kgS6EClDJGq1N5OBFTgupOOtC0RXjSf/fLoduv8V617SpHGA2MNU/M
+         /DBfLOiCuA7Cw==
+Date:   Wed, 28 Jul 2021 12:31:26 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Allison Henderson <allison.henderson@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v22 11/16] xfs: Add xfs_attr_set_deferred and
- xfs_attr_remove_deferred
-Message-ID: <20210728192418.GE3601443@magnolia>
+Subject: Re: [PATCH v22 12/16] xfs: Remove unused xfs_attr_*_args
+Message-ID: <20210728193126.GB3601466@magnolia>
 References: <20210727062053.11129-1-allison.henderson@oracle.com>
- <20210727062053.11129-12-allison.henderson@oracle.com>
+ <20210727062053.11129-13-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210727062053.11129-12-allison.henderson@oracle.com>
+In-Reply-To: <20210727062053.11129-13-allison.henderson@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jul 26, 2021 at 11:20:48PM -0700, Allison Henderson wrote:
-> From: Allison Collins <allison.henderson@oracle.com>
+On Mon, Jul 26, 2021 at 11:20:49PM -0700, Allison Henderson wrote:
+> Remove xfs_attr_set_args, xfs_attr_remove_args, and xfs_attr_trans_roll.
+> These high level loops are now driven by the delayed operations code,
+> and can be removed.
 > 
-> These routines set up and queue a new deferred attribute operations.
-> These functions are meant to be called by any routine needing to
-> initiate a deferred attribute operation as opposed to the existing
-> inline operations. New helper function xfs_attr_item_init also added.
-> 
-> Finally enable delayed attributes in xfs_attr_set and xfs_attr_remove.
+> Additionally collapse in the leaf_bp parameter of xfs_attr_set_iter
+> since we only have one caller that passes dac->leaf_bp
 > 
 > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+
+More random ideas for cleanups, sorry...
+
 > ---
->  fs/xfs/libxfs/xfs_attr.c | 70 +++++++++++++++++++++++++++++++++++++++++++++---
->  fs/xfs/libxfs/xfs_attr.h |  2 ++
->  fs/xfs/xfs_log.c         | 41 ++++++++++++++++++++++++++++
->  fs/xfs/xfs_log.h         |  1 +
->  4 files changed, 111 insertions(+), 3 deletions(-)
+>  fs/xfs/libxfs/xfs_attr.c        | 96 +++--------------------------------------
+>  fs/xfs/libxfs/xfs_attr.h        | 10 ++---
+>  fs/xfs/libxfs/xfs_attr_remote.c |  1 -
+>  fs/xfs/xfs_attr_item.c          |  6 +--
+>  4 files changed, 10 insertions(+), 103 deletions(-)
 > 
 > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index eee219c6..c447c21 100644
+> index c447c21..ec03a7b 100644
 > --- a/fs/xfs/libxfs/xfs_attr.c
 > +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -25,6 +25,8 @@
->  #include "xfs_trans_space.h"
->  #include "xfs_trace.h"
->  #include "xfs_attr_item.h"
-> +#include "xfs_attr.h"
-> +#include "xfs_log.h"
->  
->  /*
->   * xfs_attr.c
-> @@ -779,13 +781,19 @@ xfs_attr_set(
->  		rmt_blks = xfs_attr3_rmt_blocks(mp, XFS_XATTR_SIZE_MAX);
->  	}
->  
-> +	if (xfs_hasdelattr(mp)) {
-> +		error = xfs_attr_use_log_assist(mp);
-> +		if (error)
-> +			return error;
-> +	}
-> +
->  	/*
->  	 * Root fork attributes can use reserved data blocks for this
->  	 * operation if necessary
->  	 */
->  	error = xfs_trans_alloc_inode(dp, &tres, total, 0, rsvd, &args->trans);
->  	if (error)
-> -		return error;
-> +		goto drop_incompat;
->  
->  	if (args->value || xfs_inode_hasattr(dp)) {
->  		error = xfs_iext_count_may_overflow(dp, XFS_ATTR_FORK,
-> @@ -803,9 +811,10 @@ xfs_attr_set(
->  		if (error != -ENOATTR && error != -EEXIST)
->  			goto out_trans_cancel;
->  
-> -		error = xfs_attr_set_args(args);
-> +		error = xfs_attr_set_deferred(args);
->  		if (error)
->  			goto out_trans_cancel;
-> +
->  		/* shortform attribute has already been committed */
->  		if (!args->trans)
->  			goto out_unlock;
-> @@ -814,7 +823,7 @@ xfs_attr_set(
->  		if (error != -EEXIST)
->  			goto out_trans_cancel;
->  
-> -		error = xfs_attr_remove_args(args);
-> +		error = xfs_attr_remove_deferred(args);
->  		if (error)
->  			goto out_trans_cancel;
->  	}
-> @@ -836,6 +845,9 @@ xfs_attr_set(
->  	error = xfs_trans_commit(args->trans);
->  out_unlock:
->  	xfs_iunlock(dp, XFS_ILOCK_EXCL);
-> +drop_incompat:
-> +	if (xfs_hasdelattr(mp))
-
-Subtle race here: if you turn this into a debug option and someone
-changes the value from 1 to 0 while this function is running, we'll fail
-to call _drop_incompat here.  You should sample the value at the start
-of the function into a local variable and use that throughout.
-
-> +		xlog_drop_incompat_feat(mp->m_log);
->  	return error;
->  
->  out_trans_cancel:
-> @@ -844,6 +856,58 @@ xfs_attr_set(
->  	goto out_unlock;
+> @@ -244,67 +244,13 @@ xfs_attr_is_shortform(
+>  		ip->i_afp->if_nextents == 0);
 >  }
 >  
-> +STATIC int
-> +xfs_attr_item_init(
-> +	struct xfs_da_args	*args,
-> +	unsigned int		op_flags,	/* op flag (set or remove) */
-> +	struct xfs_attr_item	**attr)		/* new xfs_attr_item */
-> +{
-> +
-> +	struct xfs_attr_item	*new;
-> +
-> +	new = kmem_zalloc(sizeof(struct xfs_attr_item), KM_NOFS);
-> +	new->xattri_op_flags = op_flags;
-> +	new->xattri_dac.da_args = args;
-> +
-> +	*attr = new;
-> +	return 0;
-> +}
-> +
-> +/* Sets an attribute for an inode as a deferred operation */
-> +int
-> +xfs_attr_set_deferred(
-> +	struct xfs_da_args	*args)
-> +{
-> +	struct xfs_attr_item	*new;
-> +	int			error = 0;
-> +
-> +	error = xfs_attr_item_init(args, XFS_ATTR_OP_FLAGS_SET, &new);
-> +	if (error)
-> +		return error;
-> +
-> +	xfs_defer_add(args->trans, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
-> +
-> +	return 0;
-> +}
-> +
-> +/* Removes an attribute for an inode as a deferred operation */
-> +int
-> +xfs_attr_remove_deferred(
-> +	struct xfs_da_args	*args)
-> +{
-> +
-> +	struct xfs_attr_item	*new;
-> +	int			error;
-> +
-> +	error  = xfs_attr_item_init(args, XFS_ATTR_OP_FLAGS_REMOVE, &new);
-> +	if (error)
-> +		return error;
-> +
-> +	xfs_defer_add(args->trans, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
-> +
-> +	return 0;
-> +}
-> +
->  /*========================================================================
->   * External routines when attribute list is inside the inode
->   *========================================================================*/
-> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-> index 463b2be..72b0ea5 100644
-> --- a/fs/xfs/libxfs/xfs_attr.h
-> +++ b/fs/xfs/libxfs/xfs_attr.h
-> @@ -527,5 +527,7 @@ bool xfs_attr_namecheck(const void *name, size_t length);
->  void xfs_delattr_context_init(struct xfs_delattr_context *dac,
->  			      struct xfs_da_args *args);
->  int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
-> +int xfs_attr_set_deferred(struct xfs_da_args *args);
-> +int xfs_attr_remove_deferred(struct xfs_da_args *args);
->  
->  #endif	/* __XFS_ATTR_H__ */
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index 7c593d9..216de6c 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -3948,3 +3948,44 @@ xlog_drop_incompat_feat(
+> -/*
+> - * Checks to see if a delayed attribute transaction should be rolled.  If so,
+> - * transaction is finished or rolled as needed.
+> - */
+> -STATIC int
+> -xfs_attr_trans_roll(
+> -	struct xfs_delattr_context	*dac)
+> -{
+> -	struct xfs_da_args		*args = dac->da_args;
+> -	int				error;
+> -
+> -	if (dac->flags & XFS_DAC_DEFER_FINISH) {
+> -		/*
+> -		 * The caller wants us to finish all the deferred ops so that we
+> -		 * avoid pinning the log tail with a large number of deferred
+> -		 * ops.
+> -		 */
+> -		dac->flags &= ~XFS_DAC_DEFER_FINISH;
+> -		error = xfs_defer_finish(&args->trans);
+> -	} else
+> -		error = xfs_trans_roll_inode(&args->trans, args->dp);
+> -
+> -	return error;
+> -}
+> -
+> -/*
+> - * Set the attribute specified in @args.
+> - */
+> -int
+> -xfs_attr_set_args(
+> -	struct xfs_da_args		*args)
+> -{
+> -	struct xfs_buf			*leaf_bp = NULL;
+> -	int				error = 0;
+> -	struct xfs_delattr_context	dac = {
+> -		.da_args	= args,
+> -	};
+> -
+> -	do {
+> -		error = xfs_attr_set_iter(&dac, &leaf_bp);
+> -		if (error != -EAGAIN)
+> -			break;
+> -
+> -		error = xfs_attr_trans_roll(&dac);
+> -		if (error) {
+> -			if (leaf_bp)
+> -				xfs_trans_brelse(args->trans, leaf_bp);
+> -			return error;
+> -		}
+> -	} while (true);
+> -
+> -	return error;
+> -}
+> -
+>  STATIC int
+>  xfs_attr_sf_addname(
+> -	struct xfs_delattr_context	*dac,
+> -	struct xfs_buf			**leaf_bp)
+> +	struct xfs_delattr_context	*dac)
 >  {
->  	up_read(&log->l_incompat_users);
+>  	struct xfs_da_args		*args = dac->da_args;
+>  	struct xfs_inode		*dp = args->dp;
+> +	struct xfs_buf			**leaf_bp = &dac->leaf_bp;
+
+Can you remove this local variable from this function completely?
+
+>  	int				error = 0;
+>  
+>  	/*
+> @@ -337,7 +283,6 @@ xfs_attr_sf_addname(
+>  	 * add.
+>  	 */
+>  	trace_xfs_attr_sf_addname_return(XFS_DAS_UNINIT, args->dp);
+> -	dac->flags |= XFS_DAC_DEFER_FINISH;
+>  	return -EAGAIN;
 >  }
-> +
-> +/*
-> + * Get permission to use log-assisted atomic exchange of file extents.
-> + *
-> + * Callers must not be running any transactions or hold any inode locks, and
-> + * they must release the permission by calling xlog_drop_incompat_feat
-> + * when they're done.
-> + */
-> +int
-> +xfs_attr_use_log_assist(
-> +	struct xfs_mount	*mp)
-> +{
-> +	int			error = 0;
-> +
-> +	/*
-> +	 * Protect ourselves from an idle log clearing the logged xattrs log
-> +	 * incompat feature bit.
-> +	 */
-> +	xlog_use_incompat_feat(mp->m_log);
-> +
-> +	/*
-> +	 * If log-assisted xattrs are already enabled, the caller can use the
-> +	 * log assisted swap functions with the log-incompat reference we got.
-> +	 */
-> +	if (xfs_sb_version_hasdelattr(&mp->m_sb))
-> +		return 0;
-> +
-> +	/* Enable log-assisted xattrs. */
-> +	xfs_warn_once(mp,
-> +"EXPERIMENTAL logged extended attributes feature added. Use at your own risk!");
-> +
-> +	error = xfs_add_incompat_log_feature(mp,
-> +			XFS_SB_FEAT_INCOMPAT_LOG_DELATTR);
-> +	if (error)
-> +		goto drop_incompat;
+>  
+> @@ -350,10 +295,10 @@ xfs_attr_sf_addname(
+>   */
+>  int
+>  xfs_attr_set_iter(
+> -	struct xfs_delattr_context	*dac,
+> -	struct xfs_buf			**leaf_bp)
+> +	struct xfs_delattr_context	*dac)
+>  {
+>  	struct xfs_da_args              *args = dac->da_args;
+> +	struct xfs_buf			**leaf_bp = &dac->leaf_bp;
 
-Minor bug here (and yes, it's also in the swapext code that I pointed
-you to; apologies for that): We shouldn't print the warning unless the
-feature addition actually succeeds.  IOWs, move the xfs_warn_once()
-here.
+And here too?  It's easier to figure out what the code is doing if I
+don't have to reparse through a double pointer.
 
-(That said, if the feature add fails then the fs is probably going to
-crash soon anyway so it probably doesn't matter...)
+>  	struct xfs_inode		*dp = args->dp;
+>  	struct xfs_buf			*bp = NULL;
+>  	int				forkoff, error = 0;
+> @@ -370,7 +315,7 @@ xfs_attr_set_iter(
+>  		 * release the hold once we return with a clean transaction.
+>  		 */
+>  		if (xfs_attr_is_shortform(dp))
+> -			return xfs_attr_sf_addname(dac, leaf_bp);
+> +			return xfs_attr_sf_addname(dac);
+>  		if (*leaf_bp != NULL) {
+>  			xfs_trans_bhold_release(args->trans, *leaf_bp);
+>  			*leaf_bp = NULL;
+
+	if (dac->leaf_bp != NULL) {
+		xfs_trans_bhold_release(args->trans,  dac->leaf_bp);
+		dac->leaf_bp = NULL;
+	}
+
+etc.
 
 --D
 
-> +
-> +	return 0;
-> +drop_incompat:
-> +	xlog_drop_incompat_feat(mp->m_log);
-> +	return error;
-> +}
-> diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
-> index b274fb9..1e461671 100644
-> --- a/fs/xfs/xfs_log.h
-> +++ b/fs/xfs/xfs_log.h
-> @@ -144,5 +144,6 @@ xfs_lsn_t xlog_grant_push_threshold(struct xlog *log, int need_bytes);
+> @@ -396,7 +341,6 @@ xfs_attr_set_iter(
+>  				 * be a node, so we'll fall down into the node
+>  				 * handling code below
+>  				 */
+> -				dac->flags |= XFS_DAC_DEFER_FINISH;
+>  				trace_xfs_attr_set_iter_return(
+>  					dac->dela_state, args->dp);
+>  				return -EAGAIN;
+> @@ -685,32 +629,6 @@ xfs_has_attr(
+>  }
 >  
->  void xlog_use_incompat_feat(struct xlog *log);
->  void xlog_drop_incompat_feat(struct xlog *log);
-> +int xfs_attr_use_log_assist(struct xfs_mount *mp);
+>  /*
+> - * Remove the attribute specified in @args.
+> - */
+> -int
+> -xfs_attr_remove_args(
+> -	struct xfs_da_args	*args)
+> -{
+> -	int				error;
+> -	struct xfs_delattr_context	dac = {
+> -		.da_args	= args,
+> -	};
+> -
+> -	do {
+> -		error = xfs_attr_remove_iter(&dac);
+> -		if (error != -EAGAIN)
+> -			break;
+> -
+> -		error = xfs_attr_trans_roll(&dac);
+> -		if (error)
+> -			return error;
+> -
+> -	} while (true);
+> -
+> -	return error;
+> -}
+> -
+> -/*
+>   * Note: If args->value is NULL the attribute will be removed, just like the
+>   * Linux ->setattr API.
+>   */
+> @@ -1272,7 +1190,6 @@ xfs_attr_node_addname(
+>  			 * this. dela_state is still unset by this function at
+>  			 * this point.
+>  			 */
+> -			dac->flags |= XFS_DAC_DEFER_FINISH;
+>  			trace_xfs_attr_node_addname_return(
+>  					dac->dela_state, args->dp);
+>  			return -EAGAIN;
+> @@ -1287,7 +1204,6 @@ xfs_attr_node_addname(
+>  		error = xfs_da3_split(state);
+>  		if (error)
+>  			goto out;
+> -		dac->flags |= XFS_DAC_DEFER_FINISH;
+>  	} else {
+>  		/*
+>  		 * Addition succeeded, update Btree hashvals.
+> @@ -1538,7 +1454,6 @@ xfs_attr_remove_iter(
+>  			if (error)
+>  				goto out;
+>  			dac->dela_state = XFS_DAS_RM_NAME;
+> -			dac->flags |= XFS_DAC_DEFER_FINISH;
+>  			return -EAGAIN;
+>  		}
 >  
->  #endif	/* __XFS_LOG_H__ */
+> @@ -1565,7 +1480,6 @@ xfs_attr_remove_iter(
+>  			if (error)
+>  				goto out;
+>  
+> -			dac->flags |= XFS_DAC_DEFER_FINISH;
+>  			dac->dela_state = XFS_DAS_RM_SHRINK;
+>  			trace_xfs_attr_remove_iter_return(
+>  					dac->dela_state, args->dp);
+> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+> index 72b0ea5..c0c92bd3 100644
+> --- a/fs/xfs/libxfs/xfs_attr.h
+> +++ b/fs/xfs/libxfs/xfs_attr.h
+> @@ -457,9 +457,8 @@ enum xfs_delattr_state {
+>  /*
+>   * Defines for xfs_delattr_context.flags
+>   */
+> -#define XFS_DAC_DEFER_FINISH		0x01 /* finish the transaction */
+> -#define XFS_DAC_LEAF_ADDNAME_INIT	0x02 /* xfs_attr_leaf_addname init*/
+> -#define XFS_DAC_DELAYED_OP_INIT		0x04 /* delayed operations init*/
+> +#define XFS_DAC_LEAF_ADDNAME_INIT	0x01 /* xfs_attr_leaf_addname init*/
+> +#define XFS_DAC_DELAYED_OP_INIT		0x02 /* delayed operations init*/
+>  
+>  /*
+>   * Context used for keeping track of delayed attribute operations
+> @@ -517,11 +516,8 @@ bool xfs_attr_is_leaf(struct xfs_inode *ip);
+>  int xfs_attr_get_ilocked(struct xfs_da_args *args);
+>  int xfs_attr_get(struct xfs_da_args *args);
+>  int xfs_attr_set(struct xfs_da_args *args);
+> -int xfs_attr_set_args(struct xfs_da_args *args);
+> -int xfs_attr_set_iter(struct xfs_delattr_context *dac,
+> -		      struct xfs_buf **leaf_bp);
+> +int xfs_attr_set_iter(struct xfs_delattr_context *dac);
+>  int xfs_has_attr(struct xfs_da_args *args);
+> -int xfs_attr_remove_args(struct xfs_da_args *args);
+>  int xfs_attr_remove_iter(struct xfs_delattr_context *dac);
+>  bool xfs_attr_namecheck(const void *name, size_t length);
+>  void xfs_delattr_context_init(struct xfs_delattr_context *dac,
+> diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+> index 1669043..e29c2b9 100644
+> --- a/fs/xfs/libxfs/xfs_attr_remote.c
+> +++ b/fs/xfs/libxfs/xfs_attr_remote.c
+> @@ -695,7 +695,6 @@ xfs_attr_rmtval_remove(
+>  	 * the parent
+>  	 */
+>  	if (!done) {
+> -		dac->flags |= XFS_DAC_DEFER_FINISH;
+>  		trace_xfs_attr_rmtval_remove_return(dac->dela_state, args->dp);
+>  		return -EAGAIN;
+>  	}
+> diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
+> index 44c44d9..12a0151 100644
+> --- a/fs/xfs/xfs_attr_item.c
+> +++ b/fs/xfs/xfs_attr_item.c
+> @@ -285,7 +285,6 @@ STATIC int
+>  xfs_trans_attr_finish_update(
+>  	struct xfs_delattr_context	*dac,
+>  	struct xfs_attrd_log_item	*attrdp,
+> -	struct xfs_buf			**leaf_bp,
+>  	uint32_t			op_flags)
+>  {
+>  	struct xfs_da_args		*args = dac->da_args;
+> @@ -300,7 +299,7 @@ xfs_trans_attr_finish_update(
+>  	switch (op) {
+>  	case XFS_ATTR_OP_FLAGS_SET:
+>  		args->op_flags |= XFS_DA_OP_ADDNAME;
+> -		error = xfs_attr_set_iter(dac, leaf_bp);
+> +		error = xfs_attr_set_iter(dac);
+>  		break;
+>  	case XFS_ATTR_OP_FLAGS_REMOVE:
+>  		ASSERT(XFS_IFORK_Q(args->dp));
+> @@ -424,7 +423,7 @@ xfs_attr_finish_item(
+>  	 */
+>  	dac->da_args->trans = tp;
+>  
+> -	error = xfs_trans_attr_finish_update(dac, done_item, &dac->leaf_bp,
+> +	error = xfs_trans_attr_finish_update(dac, done_item,
+>  					     attr->xattri_op_flags);
+>  	if (error != -EAGAIN)
+>  		kmem_free(attr);
+> @@ -640,7 +639,6 @@ xfs_attri_item_recover(
+>  	xfs_trans_ijoin(tp, ip, 0);
+>  
+>  	ret = xfs_trans_attr_finish_update(&attr->xattri_dac, done_item,
+> -					   &attr->xattri_dac.leaf_bp,
+>  					   attrp->alfi_op_flags);
+>  	if (ret == -EAGAIN) {
+>  		/* There's more work to do, so add it to this transaction */
 > -- 
 > 2.7.4
 > 
