@@ -4,110 +4,82 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 455BEC4320A
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 20:00:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FD67C4338F
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 20:02:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 29F6361040
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 20:00:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 42E1260F5E
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 20:02:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230526AbhG1UAs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Jul 2021 16:00:48 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48048 "EHLO mail.kernel.org"
+        id S230351AbhG1UCL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Jul 2021 16:02:11 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48442 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230125AbhG1UAs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 28 Jul 2021 16:00:48 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3BBC761038;
-        Wed, 28 Jul 2021 20:00:46 +0000 (UTC)
+        id S230289AbhG1UCL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 28 Jul 2021 16:02:11 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2A79861038;
+        Wed, 28 Jul 2021 20:02:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627502446;
-        bh=vgthiiJorC0JS1GUWSVhqMCItufbfTh0HlZC9e3yJZQ=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=L5nmZn6FtlHOWqx/5nHvLYCq1P7tvucSw+jxR/cQB/IE0XoLCzds5xJ+pIpMco4Q2
-         pAf3Aw2dFHiupslxrKHg/9gQB7yYk7aYyEsFwLWynGUKwsXvRCxrMapUgb/TRZcQ8L
-         oIHgrWhypZ8byERlILSoH5eMgd+JBUY3rtKKq8RPzsnwS5S2sdetAXYeJIV88jX7pr
-         DcEczoFSt3FKwzkUQlEOlEY9UBunSGpyXAbdQXjlGIt2HrobHg4NvyaKS0PHnh2yRe
-         4aHuGQ9gJYcjuqgPX5ILNa4EtneXL3NpiRpsPP3Vok9L3m4VJJlSsZz1M8I7+2kYL1
-         bUW/lr3Ag0LLg==
-Date:   Wed, 28 Jul 2021 13:00:45 -0700
+        s=k20201202; t=1627502529;
+        bh=OxxpsPSoKkRP2ZZG546a5hxDKSbzWGP+9IGfRAP0D+M=;
+        h=Date:From:To:Cc:Subject:From;
+        b=dv6ovOFr3q3MebyXoDW/cAKiL+M2SqkA/LfI4cyXFkZNR8nGZsYOWdfKb5KRxK/M+
+         neujhZyfuvwGOr3xYBKfPHJFcI/zfgEpFmIL0uu+kOwZ1uU+bVnYh28d37JvnxNAdS
+         5ZjBaxIqj9o5fFPQOI8JErLo+ngV8WSnb6rGTgFWd/vbij7YZn+PNN/k7R+J/lE/Gg
+         pEfSIYZGkk4dRv4qcL8B+707rWH7msp0dOf905U7j5DvQXQCizLo4HlOb/+wS9AJbs
+         dtXKWEYKXpkTlrFY2BFa84ca7Wr0X200owlEzffbu0lCFxbMLgDnlEs6CSai5/RENC
+         MAsqdheSR7veQ==
+Date:   Wed, 28 Jul 2021 13:02:08 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     guaneryu@gmail.com
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me,
-        Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 6/4] xfs/007: fix regressions on V4 filesystems
-Message-ID: <20210728200045.GB3601425@magnolia>
-References: <162743097757.3427426.8734776553736535870.stgit@magnolia>
+To:     Eric Sandeen <sandeen@redhat.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH] quota: allow users to truncate group and project quota files
+Message-ID: <20210728200208.GH3601443@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <162743097757.3427426.8734776553736535870.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Following commit eae40404, I noticed the following regression when
-running a V4 fstests run on an 5.13 kernel:
+In commit 79ac1ae4, I /think/ xfsprogs gained the ability to deal with
+project or group quotas.  For some reason, the quota remove command was
+structured so that if the user passes both -g and -p, it will only ask
+the kernel truncate the group quota file.  This is a strange behavior
+since -ug results in truncation requests for both user and group quota
+files, and the kernel is smart enough to return 0 if asked to truncate a
+quota file that doesn't exist.
 
---- /tmp/fstests/tests/xfs/007.out      2021-05-13 11:47:55.793859995 -0700
-+++ /var/tmp/fstests/xfs/007.out.bad    2021-07-28 09:23:42.856000000 -0700
-@@ -16,4 +16,4 @@
- *** umount
- *** Usage after quotarm ***
- core.nblocks = 0
--core.nblocks = 0
-+core.nblocks = 1
+In other words, this is a seemingly arbitrary limitation of the command.
+It's an unexpected behavior since we don't do any sort of parameter
+validation to warn users when -p is silently ignored.  Modern V5
+filesystems support both group and project quotas, so it's all the more
+surprising that you can't do group and project all at once.  Remove this
+pointless restriction.
 
-The underlying cause of this problem is the fact that we now remount the
-filesystem with no quota options because that will (soon) become the
-only means to turn off quota accounting on XFS.  Because V4 filesystems
-don't support simultaneous project and group quotas and play weird
-remapping games with the incore superblock field, we actually have to
-issue a remove command for the group quota file if we're trying to
-truncate the project quota file on a V4 filesystem.
+Found while triaging xfs/007 regressions.
 
-Due to stupid limitations in xfs_quota we actually have to issue a
-separate 'remove' command.
-
-Fixes: eae40404 ("xfs/007: unmount after disabling quota")
+Fixes: 79ac1ae4 ("Fix xfs_quota disable, enable, off and remove commands Merge of master-melb:xfs-cmds:29395a by kenmcd.")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/xfs/007 |   19 ++++++++++++++++++-
- 1 file changed, 18 insertions(+), 1 deletion(-)
+ quota/state.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/tests/xfs/007 b/tests/xfs/007
-index 796db960..6d6d828b 100755
---- a/tests/xfs/007
-+++ b/tests/xfs/007
-@@ -43,10 +43,27 @@ do_test()
- 	_qmount
- 	echo "*** turn off $off_opts quotas"
- 	$XFS_QUOTA_PROG -x -c "off -$off_opts" $SCRATCH_MNT
-+
-+	# Remount the filesystem with no quota options to force quotas off.
-+	# This takes care of newer kernels where quotaoff clears the superblock
-+	# quota enforcement flags but doesn't shut down accounting.
- 	_scratch_unmount
- 	_qmount_option ""
- 	_scratch_mount
--	$XFS_QUOTA_PROG -x -c "remove -$off_opts" $SCRATCH_MNT
-+
-+	rm_commands=(-x -c "remove -$off_opts")
-+
-+	# Remounting a V4 fs with no quota options means that the internal
-+	# gquotino -> pquotino remapping does not happen.  If we want to
-+	# truncate the "project" quota file we must run remove -g.  However,
-+	# xfs_quota has a nasty sharp edge wherein passing '-g' and '-p' only
-+	# results in a QUOTARM call for the group quota file, so we must make
-+	# a separate remove call.
-+	[ $_fs_has_crcs == 0 ] && [ "$off_opts" = "up" ] && \
-+		rm_commands+=(-c "remove -g")
-+
-+	$XFS_QUOTA_PROG "${rm_commands[@]}" $SCRATCH_MNT
-+
- 	echo "*** umount"
- 	_scratch_unmount
- 
+diff --git a/quota/state.c b/quota/state.c
+index 3ffb2c88..43fb700f 100644
+--- a/quota/state.c
++++ b/quota/state.c
+@@ -463,7 +463,8 @@ remove_extents(
+ 	if (type & XFS_GROUP_QUOTA) {
+ 		if (remove_qtype_extents(dir, XFS_GROUP_QUOTA) < 0)
+ 			return;
+-	} else if (type & XFS_PROJ_QUOTA) {
++	}
++	if (type & XFS_PROJ_QUOTA) {
+ 		if (remove_qtype_extents(dir, XFS_PROJ_QUOTA) < 0)
+ 			return;
+ 	}
