@@ -2,130 +2,122 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C3C6C4338F
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 02:13:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 195B2C4338F
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 02:29:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 161A960FBF
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 02:13:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DC33660FA0
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 02:29:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233384AbhG1CNH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 27 Jul 2021 22:13:07 -0400
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:43899 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233256AbhG1CNH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Jul 2021 22:13:07 -0400
-Received: from dread.disaster.area (pa49-181-34-10.pa.nsw.optusnet.com.au [49.181.34.10])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 24F4280B462;
-        Wed, 28 Jul 2021 12:13:05 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1m8Z4B-00BasK-VO; Wed, 28 Jul 2021 12:13:03 +1000
-Date:   Wed, 28 Jul 2021 12:13:03 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Allison Henderson <allison.henderson@oracle.com>,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v22 14/16] xfs: Add delattr mount option
-Message-ID: <20210728021303.GA2757197@dread.disaster.area>
-References: <20210727062053.11129-1-allison.henderson@oracle.com>
- <20210727062053.11129-15-allison.henderson@oracle.com>
- <20210728004757.GB559212@magnolia>
+        id S233374AbhG1C3Z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 27 Jul 2021 22:29:25 -0400
+Received: from mail.kernel.org ([198.145.29.99]:33884 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233223AbhG1C3Z (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 27 Jul 2021 22:29:25 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 7069F60F9D;
+        Wed, 28 Jul 2021 02:29:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1627439364;
+        bh=92/QU5E2eSQ6Mi3MNPH50dd6V05Hb7i5VrQtXsDNLTo=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=sngqlEFdZ1mpdSmM5PMlNOmlefHphaw0iNtvYJjbHzNcP7420wr+CKetnrlksePur
+         aejSQgZbvhFwgqUm6+p1O054oZMR+q6GVxJzE+RiSgaJiP1Z87znO7NMDCVXBtANAT
+         oWEL9N7F5jY+1NJ9qwJthdTmYyMvnhD3CX9CXBS60bn8k7UPy+BwFzXyI6s7JdxBue
+         mN+YTqXdHR5rDvjH3CuS7qsjthNPZPeTpCs4GCtSpaBbG8sWzyEvUupdBjkUpsoLCe
+         GZzHTlnLkHEbDv9iUKo+0likZYp16Bs2oyrEJkd+nJEs1vbL4e9NfKyTi3+KHBzb0V
+         fvfy9XVBs+gYw==
+Date:   Tue, 27 Jul 2021 19:29:23 -0700
+From:   Jaegeuk Kim <jaegeuk@kernel.org>
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     Chao Yu <chao@kernel.org>, linux-f2fs-devel@lists.sourceforge.net,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        Satya Tangirala <satyaprateek2357@gmail.com>,
+        Changheun Lee <nanich.lee@samsung.com>,
+        Matthew Bobrowski <mbobrowski@mbobrowski.org>
+Subject: Re: [PATCH 3/9] f2fs: rework write preallocations
+Message-ID: <YQDBA2xqbIQPPivQ@google.com>
+References: <20210716143919.44373-1-ebiggers@kernel.org>
+ <20210716143919.44373-4-ebiggers@kernel.org>
+ <14782036-f6a5-878a-d21f-e7dd7008a285@kernel.org>
+ <YP2l+1umf9ct/4Sp@sol.localdomain>
+ <YP9oou9sx4oJF1sc@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210728004757.GB559212@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
-        a=hdaoRb6WoHYrV466vVKEyw==:117 a=hdaoRb6WoHYrV466vVKEyw==:17
-        a=kj9zAlcOel0A:10 a=e_q4qTt1xDgA:10 a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8
-        a=e3T0hG8cuRK7unx8Y6kA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <YP9oou9sx4oJF1sc@google.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jul 27, 2021 at 05:47:57PM -0700, Darrick J. Wong wrote:
-> On Mon, Jul 26, 2021 at 11:20:51PM -0700, Allison Henderson wrote:
-> > This patch adds a mount option to enable delayed attributes. Eventually
-> > this can be removed when delayed attrs becomes permanent.
+On 07/26, Jaegeuk Kim wrote:
+> On 07/25, Eric Biggers wrote:
+> > On Sun, Jul 25, 2021 at 06:50:51PM +0800, Chao Yu wrote:
+> > > On 2021/7/16 22:39, Eric Biggers wrote:
+> > > > From: Eric Biggers <ebiggers@google.com>
+> > > > 
+> > > > f2fs_write_begin() assumes that all blocks were preallocated by
+> > > > default unless FI_NO_PREALLOC is explicitly set.  This invites data
+> > > > corruption, as there are cases in which not all blocks are preallocated.
+> > > > Commit 47501f87c61a ("f2fs: preallocate DIO blocks when forcing
+> > > > buffered_io") fixed one case, but there are others remaining.
+> > > 
+> > > Could you please explain which cases we missed to handle previously?
+> > > then I can check those related logic before and after the rework.
 > > 
-> > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_attr.h |  2 +-
-> >  fs/xfs/xfs_mount.h       |  1 +
-> >  fs/xfs/xfs_super.c       | 11 ++++++++++-
-> >  fs/xfs/xfs_xattr.c       |  2 ++
-> >  4 files changed, 14 insertions(+), 2 deletions(-)
+> > Any case where a buffered write happens while not all blocks were preallocated
+> > but FI_NO_PREALLOC wasn't set.  For example when ENOSPC was hit in the middle of
+> > the preallocations for a direct write that will fall back to a buffered write,
+> > e.g. due to f2fs_force_buffered_io() or page cache invalidation failure.
 > > 
-> > diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-> > index c0c92bd3..d4e7521 100644
-> > --- a/fs/xfs/libxfs/xfs_attr.h
-> > +++ b/fs/xfs/libxfs/xfs_attr.h
-> > @@ -30,7 +30,7 @@ struct xfs_attr_list_context;
-> >  
-> >  static inline bool xfs_hasdelattr(struct xfs_mount *mp)
-> >  {
-> > -	return false;
-> > +	return mp->m_flags & XFS_MOUNT_DELATTR;
-> >  }
-> >  
-> >  /*
-> > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> > index 66a47f5..2945868 100644
-> > --- a/fs/xfs/xfs_mount.h
-> > +++ b/fs/xfs/xfs_mount.h
-> > @@ -257,6 +257,7 @@ typedef struct xfs_mount {
-> >  #define XFS_MOUNT_NOATTR2	(1ULL << 25)	/* disable use of attr2 format */
-> >  #define XFS_MOUNT_DAX_ALWAYS	(1ULL << 26)
-> >  #define XFS_MOUNT_DAX_NEVER	(1ULL << 27)
-> > +#define XFS_MOUNT_DELATTR	(1ULL << 28)	/* enable delayed attributes */
+> > > 
+> > > > -			/*
+> > > > -			 * If force_buffere_io() is true, we have to allocate
+> > > > -			 * blocks all the time, since f2fs_direct_IO will fall
+> > > > -			 * back to buffered IO.
+> > > > -			 */
+> > > > -			if (!f2fs_force_buffered_io(inode, iocb, from) &&
+> > > > -					f2fs_lfs_mode(F2FS_I_SB(inode)))
+> > > > -				goto write;
+> > > 
+> > > We should keep this OPU DIO logic, otherwise, in lfs mode, write dio
+> > > will always allocate two block addresses for each 4k append IO.
+> > > 
+> > > I jsut test based on codes of last f2fs dev-test branch.
+> > 
+> > Yes, I had misread that due to the weird goto and misleading comment and
+> > translated it into:
+> > 
+> >         /* If it will be an in-place direct write, don't bother. */
+> >         if (dio && !f2fs_lfs_mode(sbi))
+> >                 return 0;
+> > 
+> > It should be:
+> > 
+> >         if (dio && f2fs_lfs_mode(sbi))
+> >                 return 0;
 > 
-> So uh while we're renaming things away from "delattr", maybe this ...
-> 
-> 	LOGGED ATTRIBUTE RE PLAY
-> 
-> ... really should become the "larp" debug-only mount option.
-> 
-> 	XFS_MOUNT_LARP
-> 
-> Yeah.  Do it!!!
-> 
-> >  /*
-> >   * Max and min values for mount-option defined I/O
-> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > index 2c9e26a..39d6645 100644
-> > --- a/fs/xfs/xfs_super.c
-> > +++ b/fs/xfs/xfs_super.c
-> > @@ -94,7 +94,7 @@ enum {
-> >  	Opt_filestreams, Opt_quota, Opt_noquota, Opt_usrquota, Opt_grpquota,
-> >  	Opt_prjquota, Opt_uquota, Opt_gquota, Opt_pquota,
-> >  	Opt_uqnoenforce, Opt_gqnoenforce, Opt_pqnoenforce, Opt_qnoenforce,
-> > -	Opt_discard, Opt_nodiscard, Opt_dax, Opt_dax_enum,
-> > +	Opt_discard, Opt_nodiscard, Opt_dax, Opt_dax_enum, Opt_delattr
-> >  };
-> >  
-> >  static const struct fs_parameter_spec xfs_fs_parameters[] = {
-> > @@ -139,6 +139,7 @@ static const struct fs_parameter_spec xfs_fs_parameters[] = {
-> >  	fsparam_flag("nodiscard",	Opt_nodiscard),
-> >  	fsparam_flag("dax",		Opt_dax),
-> >  	fsparam_enum("dax",		Opt_dax_enum, dax_param_enums),
-> > +	fsparam_flag("delattr",		Opt_delattr),
-> 
-> I think you need this line to be guarded by #ifdefs so that the mount
-> options parsing code will reject -o larp on non-debug kernels.
+> Hmm, this addresses my 250 failure. And, I think the below commit can explain
+> the case.
 
-As i mentioned on #xfs, this really should be like the "always_cow"
-debug option - access it via /sys/fs/xfs/debug/larping_with_larts -
-rather than being a mount option that users might accidentally
-discover and start using...
+In addition to this, I got failure on generic/263, and the below change fixes
+it. (I didn't take a look at deeply tho.)
 
-Cheers,
+--- a/fs/f2fs/file.c
++++ b/fs/f2fs/file.c
+@@ -4344,8 +4344,13 @@ static int f2fs_preallocate_blocks(struct kiocb *iocb, struct iov_iter *iter)
+                        return ret;
+        }
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+-       map.m_lblk = (pos >> inode->i_blkbits);
+-       map.m_len = ((pos + count - 1) >> inode->i_blkbits) - map.m_lblk + 1;
++       map.m_lblk = F2FS_BLK_ALIGN(pos);
++       map.m_len = F2FS_BYTES_TO_BLK(pos + count);
++       if (map.m_len > map.m_lblk)
++               map.m_len -= map.m_lblk;
++       else
++               map.m_len = 0;
++
