@@ -4,276 +4,105 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E89E1C4338F
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 19:52:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1128CC4338F
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 20:00:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CD46D61040
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 19:52:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E6E886103C
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 20:00:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231126AbhG1Tw3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Jul 2021 15:52:29 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46324 "EHLO mail.kernel.org"
+        id S230314AbhG1UAW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Jul 2021 16:00:22 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47974 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230527AbhG1Tw2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 28 Jul 2021 15:52:28 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 0355660E9B;
-        Wed, 28 Jul 2021 19:52:26 +0000 (UTC)
+        id S230125AbhG1UAW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 28 Jul 2021 16:00:22 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 7E01C61038;
+        Wed, 28 Jul 2021 20:00:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627501947;
-        bh=14nTrobk4NQYUM3gFdeiqW8kbjigzsb46SQf1AOAApQ=;
+        s=k20201202; t=1627502420;
+        bh=hEMHdCa2sZ3N0F5WKnDb6naLlwS4erOTjOuNqGKDpoE=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=gHsIhU+6aKuoRYvrRvT2b6kMBpLtf/+0TkQiSdrwP87wOouIgw9F+vD48Vm/ioQhl
-         RfisTYlyNHQAUxl2VTzG/sPHzubl1tLBH4yqE6wnCY/obORRlYoNLbxi+yDEYhycsc
-         fIUX1L5d2UY8OEwpdkETRDMX9qjqFdzlwCzYFKAjWhf9YNpkaACFrJJqurizJpGlYs
-         GkO/cj4MNzEaHTu4sEUQvrpuJA7Vqm6zTzH0uCFg3uNgniQyyqLNPOmXAFx9RLGSSX
-         L92BwY9ygSd+o2tVl8r9BsJRbHGyA+c9/966gpjybT6QVlJg8O7IdRSKH7fG6AL40r
-         0ksFyZfKBrIqw==
-Date:   Wed, 28 Jul 2021 12:52:26 -0700
+        b=Kg9UjLVXAjVsvW9WLUhU8H3LS1DBK1dtDJkQwIb6n3Ss6eMoUMxWVW08iHG3pWdDc
+         Nv/tRhnZY2cjvbgd5Ltt8zbWDmA4pyPwchv+QHHfZUyoZ5eR5dLb85LJK9lyiP6mqW
+         K9/rYlgg1XwAA+esijqYC2oDWbNM69sJAd5uE1hbvzhXj0fb8Kfa9Z8swJr18OEvT/
+         Sb9Y6Jw4apJdqrZJWXSXjpyPGqdUJkOuqVcDD5K0rRdbtWUh7IPgfjx1d+wbDW56Gy
+         OcOwdf0TPsiwLHj9ugr3SY6F9tMdCJb+AnyrNIlIJEGNOnjbyt31N/oE/ZFQBWsCcK
+         4BabOc+yUfvsQ==
+Date:   Wed, 28 Jul 2021 13:00:20 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Allison Henderson <allison.henderson@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v22 16/16] xfs: Add helper function xfs_attr_leaf_addname
-Message-ID: <20210728195226.GG3601443@magnolia>
-References: <20210727062053.11129-1-allison.henderson@oracle.com>
- <20210727062053.11129-17-allison.henderson@oracle.com>
+To:     guaneryu@gmail.com
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me,
+        chandanrlinux@gmail.com
+Subject: [PATCH 5/4] xfs/530: skip test if user MKFS_OPTIONS screw up
+ formatting
+Message-ID: <20210728200020.GA3601425@magnolia>
+References: <162743097757.3427426.8734776553736535870.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210727062053.11129-17-allison.henderson@oracle.com>
+In-Reply-To: <162743097757.3427426.8734776553736535870.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jul 26, 2021 at 11:20:53PM -0700, Allison Henderson wrote:
-> This patch adds a helper function xfs_attr_leaf_addname.  While this
-> does help to break down xfs_attr_set_iter, it does also hoist out some
-> of the state management.  This patch has been moved to the end of the
-> clean up series for further discussion.
-> 
-> Suggested-by: Darrick J. Wong <djwong@kernel.org>
-> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  fs/xfs/libxfs/xfs_attr.c | 108 ++++++++++++++++++++++++++---------------------
->  fs/xfs/xfs_trace.h       |   1 +
->  2 files changed, 61 insertions(+), 48 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index 811288d..acb995b 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -285,6 +285,65 @@ xfs_attr_sf_addname(
->  	return -EAGAIN;
->  }
->  
-> +STATIC int
-> +xfs_attr_leaf_addname(
-> +	struct xfs_attr_item	*attr)
-> +{
-> +	struct xfs_da_args	*args = attr->xattri_da_args;
-> +	struct xfs_buf		*leaf_bp = attr->xattri_leaf_bp;
-> +	struct xfs_inode	*dp = args->dp;
-> +	int			error;
-> +
-> +	if (xfs_attr_is_leaf(dp)) {
-> +		error = xfs_attr_leaf_try_add(args, leaf_bp);
-> +		if (error == -ENOSPC) {
-> +			error = xfs_attr3_leaf_to_node(args);
-> +			if (error)
-> +				return error;
-> +
-> +			/*
-> +			 * Finish any deferred work items and roll the
-> +			 * transaction once more.  The goal here is to call
-> +			 * node_addname with the inode and transaction in the
-> +			 * same state (inode locked and joined, transaction
-> +			 * clean) no matter how we got to this step.
-> +			 *
-> +			 * At this point, we are still in XFS_DAS_UNINIT, but
-> +			 * when we come back, we'll be a node, so we'll fall
-> +			 * down into the node handling code below
-> +			 */
-> +			trace_xfs_attr_set_iter_return(
-> +				attr->xattri_dela_state, args->dp);
-> +			return -EAGAIN;
-> +		}
-> +
-> +		if (error)
-> +			return error;
-> +
-> +		attr->xattri_dela_state = XFS_DAS_FOUND_LBLK;
+From: Darrick J. Wong <djwong@kernel.org>
 
-Hmm.  I know I reviewed this once before, but on second thought it's a
-little strange to be calling the node addname function from the leaf
-addname function.  Can you reduce the leaf addname function's scope like
-this:
+Skip this test if the user's MKFS_OPTIONS are not compatible with the
+realtime parameters that we're injecting in order to test growfs bugs.
+Because this test is trying to trigger a specific kernel bug, we need
+mkfs to format a filesystem with very specific geometry parameters.
 
-STATIC int
-xfs_attr_leaf_addname(
-	struct xfs_attr_item	*attr)
+The first problem stems from the fact that the test performs a default
+mkfs, computes a suitable realtime geometry from that filesystem, and
+then formats a second time with an explicit blocksize option to mkfs.
+If the original MKFS_OPTS contained a blocksize directive, the mkfs will
+fail because the option was respecified.  The two blocksize options will
+be the same, so we drop the explicit blocksize option.
 
-	struct xfs_da_args	*args = attr->xattri_da_args;
-	struct xfs_buf		*leaf_bp = attr->xattri_leaf_bp;
-	struct xfs_inode	*dp = args->dp;
-	int			error;
+However, this exposes a second problem: MKFS_OPTIONS might contain
+options that are not compatible with any realtime filesystem.  If that
+happens, _scratch_do_mkfs will "helpfully" drop MKFS_OPTIONS and try
+again with only the options specified by the test.  This gets us a
+filesystem with the given rt geometry, but it could be missing critical
+parameters from MKFS_OPTIONS (like blocksize).  The test will then fail
+to exercise the growfs bugfix, so the second part of the fix is to check
+that the filesystem we're going to test actually has the geometry
+parameters that we require.
 
-	error = xfs_attr_leaf_try_add(args, leaf_bp);
-	if (error == 0) {
-		attr->xattri_dela_state = XFS_DAS_FOUND_LBLK;
-		trace_xfs_attr_leaf_addname_return(attr->xattri_dela_state,
-				args->dp);
-		return -EAGAIN;
-	}
-	if (error != -ENOSPC)
-		return error;
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
+---
+ tests/xfs/530 |   14 +++++++++++++-
+ 1 file changed, 13 insertions(+), 1 deletion(-)
 
-	/* No room in leaf; convert to node format and try again. */
-	error = xfs_attr3_leaf_to_node(args);
-	if (error)
-		return error;
-
-	/*
-	 * Finish any deferred work items and roll the transaction once
-	 * more.  The goal here is to call node_addname with the inode
-	 * and transaction in the same state (inode locked and joined,
-	 * transaction clean) no matter how we got to this step.
-	 *
-	 * At this point, we are still in XFS_DAS_UNINIT, but when we
-	 * come back, we'll be a node, so we'll fall down into the node
-	 * handling code below
-	 */
-	trace_xfs_attr_set_iter_return(attr->xattri_dela_state,
-			args->dp);
-	return -EAGAIN;
-}
-
-Then the callsite up in xfs_attr_set_iter looks like:
-
-	case XFS_DAS_UNINIT:
-		if (xfs_attr_is_shortform(dp))
-			return xfs_attr_sf_addname(dac, leaf_bp);
-		if (*leaf_bp != NULL) {
-			xfs_trans_bhold_release(args->trans, *leaf_bp);
-			*leaf_bp = NULL;
-		}
-
-		if (xfs_attr_is_leaf(dp))
-			return xfs_attr_leaf_addname(...);
-
-		/* node format */
-		error = xfs_attr_node_addname_find_attr(attr);
-		if (error)
-			return error;
-
-		error = xfs_attr_node_addname(attr);
-		if (error)
-			return error;
-
-		dac->dela_state = XFS_DAS_FOUND_NBLK;
-		return -EAGAIN;
-
-	case XFS_DAS_FOUND_LBLK:
-
---D
-
-> +	} else {
-> +		error = xfs_attr_node_addname_find_attr(attr);
-> +		if (error)
-> +			return error;
-> +
-> +		error = xfs_attr_node_addname(attr);
-> +		if (error)
-> +			return error;
-> +
-> +		/*
-> +		 * If addname was successful, and we dont need to alloc or
-> +		 * remove anymore blks, we're done.
-> +		 */
-> +		if (!args->rmtblkno && !args->rmtblkno2)
-> +			return 0;
-> +
-> +		attr->xattri_dela_state = XFS_DAS_FOUND_NBLK;
-> +	}
-> +
-> +	trace_xfs_attr_leaf_addname_return(attr->xattri_dela_state, args->dp);
-> +	return -EAGAIN;
-> +}
-> +
->  /*
->   * Set the attribute specified in @args.
->   * This routine is meant to function as a delayed operation, and may return
-> @@ -320,55 +379,8 @@ xfs_attr_set_iter(
->  			*leaf_bp = NULL;
->  		}
->  
-> -		if (xfs_attr_is_leaf(dp)) {
-> -			error = xfs_attr_leaf_try_add(args, *leaf_bp);
-> -			if (error == -ENOSPC) {
-> -				error = xfs_attr3_leaf_to_node(args);
-> -				if (error)
-> -					return error;
-> -
-> -				/*
-> -				 * Finish any deferred work items and roll the
-> -				 * transaction once more.  The goal here is to
-> -				 * call node_addname with the inode and
-> -				 * transaction in the same state (inode locked
-> -				 * and joined, transaction clean) no matter how
-> -				 * we got to this step.
-> -				 *
-> -				 * At this point, we are still in
-> -				 * XFS_DAS_UNINIT, but when we come back, we'll
-> -				 * be a node, so we'll fall down into the node
-> -				 * handling code below
-> -				 */
-> -				trace_xfs_attr_set_iter_return(
-> -					attr->xattri_dela_state, args->dp);
-> -				return -EAGAIN;
-> -			} else if (error) {
-> -				return error;
-> -			}
-> -
-> -			attr->xattri_dela_state = XFS_DAS_FOUND_LBLK;
-> -		} else {
-> -			error = xfs_attr_node_addname_find_attr(attr);
-> -			if (error)
-> -				return error;
-> +		return xfs_attr_leaf_addname(attr);
->  
-> -			error = xfs_attr_node_addname(attr);
-> -			if (error)
-> -				return error;
-> -
-> -			/*
-> -			 * If addname was successful, and we dont need to alloc
-> -			 * or remove anymore blks, we're done.
-> -			 */
-> -			if (!args->rmtblkno && !args->rmtblkno2)
-> -				return 0;
-> -
-> -			attr->xattri_dela_state = XFS_DAS_FOUND_NBLK;
-> -		}
-> -		trace_xfs_attr_set_iter_return(attr->xattri_dela_state,
-> -					       args->dp);
-> -		return -EAGAIN;
->  	case XFS_DAS_FOUND_LBLK:
->  		/*
->  		 * If there was an out-of-line value, allocate the blocks we
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index f9840dd..cf8bd3a 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -4008,6 +4008,7 @@ DEFINE_EVENT(xfs_das_state_class, name, \
->  	TP_ARGS(das, ip))
->  DEFINE_DAS_STATE_EVENT(xfs_attr_sf_addname_return);
->  DEFINE_DAS_STATE_EVENT(xfs_attr_set_iter_return);
-> +DEFINE_DAS_STATE_EVENT(xfs_attr_leaf_addname_return);
->  DEFINE_DAS_STATE_EVENT(xfs_attr_node_addname_return);
->  DEFINE_DAS_STATE_EVENT(xfs_attr_remove_iter_return);
->  DEFINE_DAS_STATE_EVENT(xfs_attr_rmtval_remove_return);
-> -- 
-> 2.7.4
-> 
+diff --git a/tests/xfs/530 b/tests/xfs/530
+index 99a4d33b..0e12422d 100755
+--- a/tests/xfs/530
++++ b/tests/xfs/530
+@@ -60,10 +60,22 @@ echo "Format and mount rt volume"
+ 
+ export USE_EXTERNAL=yes
+ export SCRATCH_RTDEV=$rtdev
+-_scratch_mkfs -d size=$((1024 * 1024 * 1024)) -b size=${dbsize} \
++_scratch_mkfs -d size=$((1024 * 1024 * 1024)) \
+ 	      -r size=${rtextsz},extsize=${rtextsz} >> $seqres.full
+ _try_scratch_mount || _notrun "Couldn't mount fs with synthetic rt volume"
+ 
++# If we didn't get the desired realtime volume and the same blocksize as the
++# first format (which we used to compute a specific rt geometry), skip the
++# test.  This can happen if the MKFS_OPTIONS conflict with the ones we passed
++# to _scratch_mkfs or do not result in a valid rt fs geometry.  In this case,
++# _scratch_mkfs will try to "succeed" at formatting by dropping MKFS_OPTIONS,
++# giving us the wrong geometry.
++formatted_blksz="$(_get_block_size $SCRATCH_MNT)"
++test "$formatted_blksz" -ne "$dbsize" && \
++	_notrun "Tried to format with $dbsize blocksize, got $formatted_blksz."
++$XFS_INFO_PROG $SCRATCH_MNT | egrep -q 'realtime.*blocks=0' && \
++	_notrun "Filesystem should have a realtime volume"
++
+ echo "Consume free space"
+ fillerdir=$SCRATCH_MNT/fillerdir
+ nr_free_blks=$(stat -f -c '%f' $SCRATCH_MNT)
