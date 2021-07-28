@@ -7,36 +7,37 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE2F0C432BE
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 00:09:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32D23C4320A
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 00:09:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AAF5B60F9C
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 00:09:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 145A760F9E
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 00:09:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232853AbhG1AJo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 27 Jul 2021 20:09:44 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56156 "EHLO mail.kernel.org"
+        id S232956AbhG1AJu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 27 Jul 2021 20:09:50 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56188 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232731AbhG1AJo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 27 Jul 2021 20:09:44 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 846F960F23;
-        Wed, 28 Jul 2021 00:09:43 +0000 (UTC)
+        id S232731AbhG1AJt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 27 Jul 2021 20:09:49 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0A5A160F23;
+        Wed, 28 Jul 2021 00:09:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627430983;
-        bh=l25hCtwPmaZVMKa26qzIVvFnfRrLE3HV4QrZjUsSPRs=;
+        s=k20201202; t=1627430989;
+        bh=sUl+vwkzYrngHgPfrD1QGpBmluw9ukUuKF2ryaErny0=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=gFqPaDBtCThepG5KEOdPmOTJA33q0e7zs6LmHErIxRlxhFkgbX4POhXVEt3dcgd3l
-         q65bweWKGh8mx5mENe/xirCsUJliV7g+C9pemt0yIE7dciiPHhr5rVfKzQaucwrjjB
-         zfz7tah9Todhk6iE2G+n6YDmHxdxFffxEY8KC/yt4pNu4kRDHsfna8T43NfSo7wOWR
-         q09RIvQO4qEs2z56NocqzBMqw0pr/VfVbgHYBS9Tj9O6ia70/uoI+3nD0Hm0725zSL
-         K1KQCblVIMdznIiAu1V3z7wbiqm1/OTMFQYk4HpvSR195i8M27vHffRr7X/22Tb1s9
-         2rQKcsRVKq9IQ==
-Subject: [PATCH 1/4] xfs/106: fix golden output regression in quota off test
+        b=KmYoPkyA3sPN1qA3WtWxkpQ3LtKMdydbTGKRbqA6T2FbSE9ox0qRtz4+CmeeHLbAm
+         gYnUyjTBesKCm0MmsYQb9ikmXY1kNyA4ZB1+PNBQqwkGecRE9RxN8P/49WQUOeel+R
+         8EGDrq+WupuLrZpbWdgkVKhktCNkDrSyrHnz3QAV3u2j2vGshrFK9fLxpawm+jLGLJ
+         55ZzdZdmUGIoePlbgf87V2sQlW7omztDoSFGxVvMCv6+dz6CI1+OBdODaeU6AMTSiy
+         2CtmuOJJzj4NDq9GadKlslkfqgqscMd86OH9/aX3tcRyQDeKFcBhz9qd/8YCkUdRCj
+         Uo8UT4Fy3Uhcg==
+Subject: [PATCH 2/4] check: don't leave the scratch filesystem mounted after
+ _notrun
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 27 Jul 2021 17:09:43 -0700
-Message-ID: <162743098324.3427426.13889210606647869531.stgit@magnolia>
+Date:   Tue, 27 Jul 2021 17:09:48 -0700
+Message-ID: <162743098874.3427426.3383033227839715899.stgit@magnolia>
 In-Reply-To: <162743097757.3427426.8734776553736535870.stgit@magnolia>
 References: <162743097757.3427426.8734776553736535870.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,64 +50,31 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-In commit 4c5df338, we reshuffled this test a bit in preparation to
-disable quotaoff by rearranging the test to testing disabling of quota
-by remounting the filesystem.  Unfortunately, extra blank lines were
-added to the golden output, leading to test regressions.
+Unmount the scratch filesystem if a test decides to _notrun itself
+because _try_wipe_scratch_devs will not be able to wipe the scratch
+device prior to the next test run.  We don't want to let scratch state
+from one test leak into subsequent tests if we can help it.
 
-The "extra" blank lines are a result of the "echo ; test_off";
-test_off() itself doesn't print anything.  Make it print /something/ so
-that we know what the test was trying to do when a particular line of
-golden output appears, then fix the blank lines.
-
-Fixes: 4c5df338 ("xfs/106: don't test disabling quota accounting")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/xfs/106     |    1 +
- tests/xfs/106.out |    5 +++++
- 2 files changed, 6 insertions(+)
+ check |    5 +++++
+ 1 file changed, 5 insertions(+)
 
 
-diff --git a/tests/xfs/106 b/tests/xfs/106
-index d8f55441..fc2281af 100755
---- a/tests/xfs/106
-+++ b/tests/xfs/106
-@@ -155,6 +155,7 @@ test_enable()
- 
- test_off()
- {
-+	echo "turning quota off by remounting"
- 	_scratch_unmount
- 	_qmount_option ""
- 	_qmount
-diff --git a/tests/xfs/106.out b/tests/xfs/106.out
-index 3e6805a6..7c7be6b1 100644
---- a/tests/xfs/106.out
-+++ b/tests/xfs/106.out
-@@ -149,6 +149,7 @@ Blocks grace time: [3 days]
- Inodes grace time: [3 days]
- Realtime Blocks grace time: [7 days]
- 
-+turning quota off by remounting
- 
- checking remove command (type=u)
- User quota are not enabled on SCRATCH_DEV
-@@ -327,6 +328,8 @@ Blocks grace time: [3 days]
- Inodes grace time: [3 days]
- Realtime Blocks grace time: [7 days]
- 
-+turning quota off by remounting
+diff --git a/check b/check
+index bb7e030c..5d71b74c 100755
+--- a/check
++++ b/check
+@@ -871,6 +871,11 @@ function run_section()
+ 			notrun="$notrun $seqnum"
+ 			n_notrun=`expr $n_notrun + 1`
+ 			tc_status="notrun"
 +
- checking remove command (type=g)
- Group quota are not enabled on SCRATCH_DEV
- 
-@@ -504,6 +507,8 @@ Blocks grace time: [3 days]
- Inodes grace time: [3 days]
- Realtime Blocks grace time: [7 days]
- 
-+turning quota off by remounting
-+
- checking remove command (type=p)
- Project quota are not enabled on SCRATCH_DEV
++			# Unmount the scratch fs so that we can wipe the scratch
++			# dev state prior to the next test run.
++			_scratch_unmount 2> /dev/null
++			rm -f ${RESULT_DIR}/require_scratch*
+ 			continue;
+ 		fi
  
 
