@@ -7,401 +7,273 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FF69C4320E
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 19:41:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E89E1C4338F
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 19:52:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 79E4F61050
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 19:41:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD46D61040
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 19:52:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231310AbhG1Tl7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Jul 2021 15:41:59 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45010 "EHLO mail.kernel.org"
+        id S231126AbhG1Tw3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Jul 2021 15:52:29 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46324 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229542AbhG1Tl7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 28 Jul 2021 15:41:59 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 5BC2D6103B;
-        Wed, 28 Jul 2021 19:41:57 +0000 (UTC)
+        id S230527AbhG1Tw2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 28 Jul 2021 15:52:28 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0355660E9B;
+        Wed, 28 Jul 2021 19:52:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627501317;
-        bh=XJLTl2cChB28wpbLOnZL+lM/pVbTYkYDswsI6RuiJF4=;
+        s=k20201202; t=1627501947;
+        bh=14nTrobk4NQYUM3gFdeiqW8kbjigzsb46SQf1AOAApQ=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=b5ta8XtQj5xRzt7hnpBYZOVHa8e0rkrAem+M9aV0tZ1n4JKbM+/mAaYzK712u0jRH
-         JUeN18xwMB8zbP8yIkwcFcnpHHdzlmxM4XEF3o9JgMfDVr56p2zMX9IDlnWGWCLc+y
-         TDX2x7+iRgTXvooA94WgMfaGWGWifmFNk8vb/2DvX6VTv5mvuSQcOAPEuqqw0hwpLp
-         t7+VvP570qAzKeuaJbhhYnxwX1GUCocDXv3Oux7LxwpfizZ6bqoioIvF8ea+yIti1x
-         RVFAVQ0S7JnWWOD6gNtnE+GI78uZE7+ASHNWRfAsnoZl3UoFrRLsrXU35TULlM7Cmb
-         nFcG+sWyj/x5Q==
-Date:   Wed, 28 Jul 2021 12:41:56 -0700
+        b=gHsIhU+6aKuoRYvrRvT2b6kMBpLtf/+0TkQiSdrwP87wOouIgw9F+vD48Vm/ioQhl
+         RfisTYlyNHQAUxl2VTzG/sPHzubl1tLBH4yqE6wnCY/obORRlYoNLbxi+yDEYhycsc
+         fIUX1L5d2UY8OEwpdkETRDMX9qjqFdzlwCzYFKAjWhf9YNpkaACFrJJqurizJpGlYs
+         GkO/cj4MNzEaHTu4sEUQvrpuJA7Vqm6zTzH0uCFg3uNgniQyyqLNPOmXAFx9RLGSSX
+         L92BwY9ygSd+o2tVl8r9BsJRbHGyA+c9/966gpjybT6QVlJg8O7IdRSKH7fG6AL40r
+         0ksFyZfKBrIqw==
+Date:   Wed, 28 Jul 2021 12:52:26 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Allison Henderson <allison.henderson@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v22 27/27] xfsprogs: Add log item printing for ATTRI and
- ATTRD
-Message-ID: <20210728194156.GF3601443@magnolia>
-References: <20210727061904.11084-1-allison.henderson@oracle.com>
- <20210727061904.11084-28-allison.henderson@oracle.com>
+Subject: Re: [PATCH v22 16/16] xfs: Add helper function xfs_attr_leaf_addname
+Message-ID: <20210728195226.GG3601443@magnolia>
+References: <20210727062053.11129-1-allison.henderson@oracle.com>
+ <20210727062053.11129-17-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210727061904.11084-28-allison.henderson@oracle.com>
+In-Reply-To: <20210727062053.11129-17-allison.henderson@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jul 26, 2021 at 11:19:04PM -0700, Allison Henderson wrote:
-> This patch implements a new set of log printing functions to print the
-> ATTRI and ATTRD items and vectors in the log.  These will be used during
-> log dump and log recover operations.
+On Mon, Jul 26, 2021 at 11:20:53PM -0700, Allison Henderson wrote:
+> This patch adds a helper function xfs_attr_leaf_addname.  While this
+> does help to break down xfs_attr_set_iter, it does also hoist out some
+> of the state management.  This patch has been moved to the end of the
+> clean up series for further discussion.
 > 
+> Suggested-by: Darrick J. Wong <djwong@kernel.org>
 > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  fs/xfs/libxfs/xfs_attr.c | 108 ++++++++++++++++++++++++++---------------------
+>  fs/xfs/xfs_trace.h       |   1 +
+>  2 files changed, 61 insertions(+), 48 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index 811288d..acb995b 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -285,6 +285,65 @@ xfs_attr_sf_addname(
+>  	return -EAGAIN;
+>  }
+>  
+> +STATIC int
+> +xfs_attr_leaf_addname(
+> +	struct xfs_attr_item	*attr)
+> +{
+> +	struct xfs_da_args	*args = attr->xattri_da_args;
+> +	struct xfs_buf		*leaf_bp = attr->xattri_leaf_bp;
+> +	struct xfs_inode	*dp = args->dp;
+> +	int			error;
+> +
+> +	if (xfs_attr_is_leaf(dp)) {
+> +		error = xfs_attr_leaf_try_add(args, leaf_bp);
+> +		if (error == -ENOSPC) {
+> +			error = xfs_attr3_leaf_to_node(args);
+> +			if (error)
+> +				return error;
+> +
+> +			/*
+> +			 * Finish any deferred work items and roll the
+> +			 * transaction once more.  The goal here is to call
+> +			 * node_addname with the inode and transaction in the
+> +			 * same state (inode locked and joined, transaction
+> +			 * clean) no matter how we got to this step.
+> +			 *
+> +			 * At this point, we are still in XFS_DAS_UNINIT, but
+> +			 * when we come back, we'll be a node, so we'll fall
+> +			 * down into the node handling code below
+> +			 */
+> +			trace_xfs_attr_set_iter_return(
+> +				attr->xattri_dela_state, args->dp);
+> +			return -EAGAIN;
+> +		}
+> +
+> +		if (error)
+> +			return error;
+> +
+> +		attr->xattri_dela_state = XFS_DAS_FOUND_LBLK;
 
-/me thinks this looks ok, though I admit I'm relying on you to have
-exercised logprint and made sure that the output looks right.
+Hmm.  I know I reviewed this once before, but on second thought it's a
+little strange to be calling the node addname function from the leaf
+addname function.  Can you reduce the leaf addname function's scope like
+this:
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+STATIC int
+xfs_attr_leaf_addname(
+	struct xfs_attr_item	*attr)
+
+	struct xfs_da_args	*args = attr->xattri_da_args;
+	struct xfs_buf		*leaf_bp = attr->xattri_leaf_bp;
+	struct xfs_inode	*dp = args->dp;
+	int			error;
+
+	error = xfs_attr_leaf_try_add(args, leaf_bp);
+	if (error == 0) {
+		attr->xattri_dela_state = XFS_DAS_FOUND_LBLK;
+		trace_xfs_attr_leaf_addname_return(attr->xattri_dela_state,
+				args->dp);
+		return -EAGAIN;
+	}
+	if (error != -ENOSPC)
+		return error;
+
+	/* No room in leaf; convert to node format and try again. */
+	error = xfs_attr3_leaf_to_node(args);
+	if (error)
+		return error;
+
+	/*
+	 * Finish any deferred work items and roll the transaction once
+	 * more.  The goal here is to call node_addname with the inode
+	 * and transaction in the same state (inode locked and joined,
+	 * transaction clean) no matter how we got to this step.
+	 *
+	 * At this point, we are still in XFS_DAS_UNINIT, but when we
+	 * come back, we'll be a node, so we'll fall down into the node
+	 * handling code below
+	 */
+	trace_xfs_attr_set_iter_return(attr->xattri_dela_state,
+			args->dp);
+	return -EAGAIN;
+}
+
+Then the callsite up in xfs_attr_set_iter looks like:
+
+	case XFS_DAS_UNINIT:
+		if (xfs_attr_is_shortform(dp))
+			return xfs_attr_sf_addname(dac, leaf_bp);
+		if (*leaf_bp != NULL) {
+			xfs_trans_bhold_release(args->trans, *leaf_bp);
+			*leaf_bp = NULL;
+		}
+
+		if (xfs_attr_is_leaf(dp))
+			return xfs_attr_leaf_addname(...);
+
+		/* node format */
+		error = xfs_attr_node_addname_find_attr(attr);
+		if (error)
+			return error;
+
+		error = xfs_attr_node_addname(attr);
+		if (error)
+			return error;
+
+		dac->dela_state = XFS_DAS_FOUND_NBLK;
+		return -EAGAIN;
+
+	case XFS_DAS_FOUND_LBLK:
 
 --D
 
-> ---
->  logprint/log_misc.c      |  48 +++++++++++-
->  logprint/log_print_all.c |  12 +++
->  logprint/log_redo.c      | 197 +++++++++++++++++++++++++++++++++++++++++++++++
->  logprint/logprint.h      |  12 +++
->  4 files changed, 268 insertions(+), 1 deletion(-)
-> 
-> diff --git a/logprint/log_misc.c b/logprint/log_misc.c
-> index 35e926a..d8c6038 100644
-> --- a/logprint/log_misc.c
-> +++ b/logprint/log_misc.c
-> @@ -54,11 +54,46 @@ print_stars(void)
->  	   "***********************************\n");
->  }	/* print_stars */
->  
-> +void
-> +print_hex_dump(char *ptr, int len) {
-> +	int i = 0;
+> +	} else {
+> +		error = xfs_attr_node_addname_find_attr(attr);
+> +		if (error)
+> +			return error;
 > +
-> +	for (i = 0; i < len; i++) {
-> +		if (i % 16 == 0)
-> +			printf("%08x ", i);
+> +		error = xfs_attr_node_addname(attr);
+> +		if (error)
+> +			return error;
 > +
-> +		printf("%02x", ptr[i]);
+> +		/*
+> +		 * If addname was successful, and we dont need to alloc or
+> +		 * remove anymore blks, we're done.
+> +		 */
+> +		if (!args->rmtblkno && !args->rmtblkno2)
+> +			return 0;
 > +
-> +		if ((i+1)%16 == 0)
-> +			printf("\n");
-> +		else if ((i+1)%2 == 0)
-> +			printf(" ");
+> +		attr->xattri_dela_state = XFS_DAS_FOUND_NBLK;
 > +	}
-> +	printf("\n");
-> +}
 > +
-> +bool
-> +is_printable(char *ptr, int len) {
-> +	int i = 0;
-> +
-> +	for (i = 0; i < len; i++)
-> +		if (!isprint(ptr[i]) )
-> +			return false;
-> +	return true;
-> +}
-> +
-> +void print_or_dump(char *ptr, int len) {
-> +	if (is_printable(ptr, len))
-> +		printf("%.*s\n", len, ptr);
-> +	else
-> +		print_hex_dump(ptr, len);
+> +	trace_xfs_attr_leaf_addname_return(attr->xattri_dela_state, args->dp);
+> +	return -EAGAIN;
 > +}
 > +
 >  /*
->   * Given a pointer to a data segment, print out the data as if it were
->   * a log operation header.
->   */
-> -static void
-> +void
->  xlog_print_op_header(xlog_op_header_t	*op_head,
->  		     int		i,
->  		     char		**ptr)
-> @@ -961,6 +996,17 @@ xlog_print_record(
->  					be32_to_cpu(op_head->oh_len));
->  			break;
->  		    }
-> +		    case XFS_LI_ATTRI: {
-> +			skip = xlog_print_trans_attri(&ptr,
-> +					be32_to_cpu(op_head->oh_len),
-> +					&i);
-> +			break;
-> +		    }
-> +		    case XFS_LI_ATTRD: {
-> +			skip = xlog_print_trans_attrd(&ptr,
-> +					be32_to_cpu(op_head->oh_len));
-> +			break;
-> +		    }
->  		    case XFS_LI_RUI: {
->  			skip = xlog_print_trans_rui(&ptr,
->  					be32_to_cpu(op_head->oh_len),
-> diff --git a/logprint/log_print_all.c b/logprint/log_print_all.c
-> index c9c453f..89cb649 100644
-> --- a/logprint/log_print_all.c
-> +++ b/logprint/log_print_all.c
-> @@ -404,6 +404,12 @@ xlog_recover_print_logitem(
->  	case XFS_LI_EFI:
->  		xlog_recover_print_efi(item);
->  		break;
-> +	case XFS_LI_ATTRD:
-> +		xlog_recover_print_attrd(item);
-> +		break;
-> +	case XFS_LI_ATTRI:
-> +		xlog_recover_print_attri(item);
-> +		break;
->  	case XFS_LI_RUD:
->  		xlog_recover_print_rud(item);
->  		break;
-> @@ -456,6 +462,12 @@ xlog_recover_print_item(
->  	case XFS_LI_EFI:
->  		printf("EFI");
->  		break;
-> +	case XFS_LI_ATTRD:
-> +		printf("ATTRD");
-> +		break;
-> +	case XFS_LI_ATTRI:
-> +		printf("ATTRI");
-> +		break;
->  	case XFS_LI_RUD:
->  		printf("RUD");
->  		break;
-> diff --git a/logprint/log_redo.c b/logprint/log_redo.c
-> index 297e203..502345d 100644
-> --- a/logprint/log_redo.c
-> +++ b/logprint/log_redo.c
-> @@ -653,3 +653,200 @@ xlog_recover_print_bud(
->  	f = item->ri_buf[0].i_addr;
->  	xlog_print_trans_bud(&f, sizeof(struct xfs_bud_log_format));
->  }
-> +
-> +/* Attr Items */
-> +
-> +static int
-> +xfs_attri_copy_log_format(
-> +	char				*buf,
-> +	uint				len,
-> +	struct xfs_attri_log_format	*dst_attri_fmt)
-> +{
-> +	uint dst_len = sizeof(struct xfs_attri_log_format);
-> +
-> +	if (len == dst_len) {
-> +		memcpy((char *)dst_attri_fmt, buf, len);
-> +		return 0;
-> +	}
-> +
-> +	fprintf(stderr, _("%s: bad size of attri format: %u; expected %u\n"),
-> +		progname, len, dst_len);
-> +	return 1;
-> +}
-> +
-> +int
-> +xlog_print_trans_attri(
-> +	char				**ptr,
-> +	uint				src_len,
-> +	int				*i)
-> +{
-> +	struct xfs_attri_log_format	*src_f = NULL;
-> +	xlog_op_header_t		*head = NULL;
-> +	uint				dst_len;
-> +	int				error = 0;
-> +
-> +	dst_len = sizeof(struct xfs_attri_log_format);
-> +	if (src_len != dst_len) {
-> +		fprintf(stderr, _("%s: bad size of attri format: %u; expected %u\n"),
-> +				progname, src_len, dst_len);
-> +		return 1;
-> +	}
-> +
-> +	/*
-> +	 * memmove to ensure 8-byte alignment for the long longs in
-> +	 * xfs_attri_log_format_t structure
-> +	 */
-> +	src_f = malloc(src_len);
-> +	if (!src_f) {
-> +		fprintf(stderr, _("%s: xlog_print_trans_attri: malloc failed\n"),
-> +				progname);
-> +		exit(1);
-> +	}
-> +	memmove((char*)src_f, *ptr, src_len);
-> +	*ptr += src_len;
-> +
-> +	printf(_("ATTRI:  #regs: %d	name_len: %d, value_len: %d  id: 0x%llx\n"),
-> +		src_f->alfi_size, src_f->alfi_name_len, src_f->alfi_value_len,
-> +				(unsigned long long)src_f->alfi_id);
-> +
-> +	if (src_f->alfi_name_len > 0) {
-> +		printf(_("\n"));
-> +		(*i)++;
-> +		head = (xlog_op_header_t *)*ptr;
-> +		xlog_print_op_header(head, *i, ptr);
-> +		error = xlog_print_trans_attri_name(ptr, be32_to_cpu(head->oh_len));
-> +		if (error)
-> +			goto error;
-> +	}
-> +
-> +	if (src_f->alfi_value_len > 0) {
-> +		printf(_("\n"));
-> +		(*i)++;
-> +		head = (xlog_op_header_t *)*ptr;
-> +		xlog_print_op_header(head, *i, ptr);
-> +		error = xlog_print_trans_attri_value(ptr, be32_to_cpu(head->oh_len),
-> +				src_f->alfi_value_len);
-> +	}
-> +error:
-> +	free(src_f);
-> +
-> +	return error;
-> +}	/* xlog_print_trans_attri */
-> +
-> +int
-> +xlog_print_trans_attri_name(
-> +	char				**ptr,
-> +	uint				src_len)
-> +{
-> +	printf(_("ATTRI:  name len:%u\n"), src_len);
-> +	print_or_dump(*ptr, src_len);
-> +
-> +	*ptr += src_len;
-> +
-> +	return 0;
-> +}	/* xlog_print_trans_attri */
-> +
-> +int
-> +xlog_print_trans_attri_value(
-> +	char				**ptr,
-> +	uint				src_len,
-> +	int				value_len)
-> +{
-> +	int len = value_len;
-> +
-> +	if (len > MAX_ATTR_VAL_PRINT)
-> +		len = MAX_ATTR_VAL_PRINT;
-> +
-> +	printf(_("ATTRI:  value len:%u\n"), value_len);
-> +	print_or_dump(*ptr, len);
-> +
-> +	*ptr += src_len;
-> +
-> +	return 0;
-> +}	/* xlog_print_trans_attri_value */
-> +
-> +void
-> +xlog_recover_print_attri(
-> +	struct xlog_recover_item	*item)
-> +{
-> +	struct xfs_attri_log_format	*f, *src_f = NULL;
-> +	uint				src_len, dst_len;
-> +
-> +	int				region = 0;
-> +
-> +	src_f = (struct xfs_attri_log_format *)item->ri_buf[0].i_addr;
-> +	src_len = item->ri_buf[region].i_len;
-> +
-> +	/*
-> +	 * An xfs_attri_log_format structure contains a attribute name and
-> +	 * variable length value  as the last field.
-> +	 */
-> +	dst_len = sizeof(struct xfs_attri_log_format);
-> +
-> +	if ((f = ((struct xfs_attri_log_format *)malloc(dst_len))) == NULL) {
-> +		fprintf(stderr, _("%s: xlog_recover_print_attri: malloc failed\n"),
-> +			progname);
-> +		exit(1);
-> +	}
-> +	if (xfs_attri_copy_log_format((char*)src_f, src_len, f))
-> +		goto out;
-> +
-> +	printf(_("ATTRI:  #regs: %d	name_len: %d, value_len: %d  id: 0x%llx\n"),
-> +		f->alfi_size, f->alfi_name_len, f->alfi_value_len, (unsigned long long)f->alfi_id);
-> +
-> +	if (f->alfi_name_len > 0) {
-> +		region++;
-> +		printf(_("ATTRI:  name len:%u\n"), f->alfi_name_len);
-> +		print_or_dump((char *)item->ri_buf[region].i_addr,
-> +			       f->alfi_name_len);
-> +	}
-> +
-> +	if (f->alfi_value_len > 0) {
-> +		int len = f->alfi_value_len;
-> +
-> +		if (len > MAX_ATTR_VAL_PRINT)
-> +			len = MAX_ATTR_VAL_PRINT;
-> +
-> +		region++;
-> +		printf(_("ATTRI:  value len:%u\n"), f->alfi_value_len);
-> +		print_or_dump((char *)item->ri_buf[region].i_addr, len);
-> +	}
-> +
-> +out:
-> +	free(f);
-> +
-> +}
-> +
-> +int
-> +xlog_print_trans_attrd(char **ptr, uint len)
-> +{
-> +	struct xfs_attrd_log_format *f;
-> +	struct xfs_attrd_log_format lbuf;
-> +	uint core_size = sizeof(struct xfs_attrd_log_format);
-> +
-> +	memcpy(&lbuf, *ptr, MIN(core_size, len));
-> +	f = &lbuf;
-> +	*ptr += len;
-> +	if (len >= core_size) {
-> +		printf(_("ATTRD:  #regs: %d	id: 0x%llx\n"),
-> +			f->alfd_size,
-> +			(unsigned long long)f->alfd_alf_id);
-> +		return 0;
-> +	} else {
-> +		printf(_("ATTRD: Not enough data to decode further\n"));
-> +		return 1;
-> +	}
-> +}	/* xlog_print_trans_attrd */
-> +
-> +void
-> +xlog_recover_print_attrd(
-> +	struct xlog_recover_item		*item)
-> +{
-> +	struct xfs_attrd_log_format	*f;
-> +
-> +	f = (struct xfs_attrd_log_format *)item->ri_buf[0].i_addr;
-> +
-> +	printf(_("	ATTRD:  #regs: %d	id: 0x%llx\n"),
-> +		f->alfd_size,
-> +		(unsigned long long)f->alfd_alf_id);
-> +}
-> diff --git a/logprint/logprint.h b/logprint/logprint.h
-> index 38a7d3f..b4479c2 100644
-> --- a/logprint/logprint.h
-> +++ b/logprint/logprint.h
-> @@ -29,6 +29,9 @@ extern void xfs_log_print_trans(struct xlog *, int);
->  extern void print_xlog_record_line(void);
->  extern void print_xlog_op_line(void);
->  extern void print_stars(void);
-> +extern void print_hex_dump(char* ptr, int len);
-> +extern bool is_printable(char* ptr, int len);
-> +extern void print_or_dump(char* ptr, int len);
+>   * Set the attribute specified in @args.
+>   * This routine is meant to function as a delayed operation, and may return
+> @@ -320,55 +379,8 @@ xfs_attr_set_iter(
+>  			*leaf_bp = NULL;
+>  		}
 >  
->  extern struct xfs_inode_log_format *
->  	xfs_inode_item_format_convert(char *, uint, struct xfs_inode_log_format *);
-> @@ -53,4 +56,13 @@ extern void xlog_recover_print_bui(struct xlog_recover_item *item);
->  extern int xlog_print_trans_bud(char **ptr, uint len);
->  extern void xlog_recover_print_bud(struct xlog_recover_item *item);
+> -		if (xfs_attr_is_leaf(dp)) {
+> -			error = xfs_attr_leaf_try_add(args, *leaf_bp);
+> -			if (error == -ENOSPC) {
+> -				error = xfs_attr3_leaf_to_node(args);
+> -				if (error)
+> -					return error;
+> -
+> -				/*
+> -				 * Finish any deferred work items and roll the
+> -				 * transaction once more.  The goal here is to
+> -				 * call node_addname with the inode and
+> -				 * transaction in the same state (inode locked
+> -				 * and joined, transaction clean) no matter how
+> -				 * we got to this step.
+> -				 *
+> -				 * At this point, we are still in
+> -				 * XFS_DAS_UNINIT, but when we come back, we'll
+> -				 * be a node, so we'll fall down into the node
+> -				 * handling code below
+> -				 */
+> -				trace_xfs_attr_set_iter_return(
+> -					attr->xattri_dela_state, args->dp);
+> -				return -EAGAIN;
+> -			} else if (error) {
+> -				return error;
+> -			}
+> -
+> -			attr->xattri_dela_state = XFS_DAS_FOUND_LBLK;
+> -		} else {
+> -			error = xfs_attr_node_addname_find_attr(attr);
+> -			if (error)
+> -				return error;
+> +		return xfs_attr_leaf_addname(attr);
 >  
-> +#define MAX_ATTR_VAL_PRINT	128
-> +
-> +extern int xlog_print_trans_attri(char **ptr, uint src_len, int *i);
-> +extern int xlog_print_trans_attri_name(char **ptr, uint src_len);
-> +extern int xlog_print_trans_attri_value(char **ptr, uint src_len, int value_len);
-> +extern void xlog_recover_print_attri(struct xlog_recover_item *item);
-> +extern int xlog_print_trans_attrd(char **ptr, uint len);
-> +extern void xlog_recover_print_attrd(struct xlog_recover_item *item);
-> +extern void xlog_print_op_header(xlog_op_header_t *op_head, int i, char **ptr);
->  #endif	/* LOGPRINT_H */
+> -			error = xfs_attr_node_addname(attr);
+> -			if (error)
+> -				return error;
+> -
+> -			/*
+> -			 * If addname was successful, and we dont need to alloc
+> -			 * or remove anymore blks, we're done.
+> -			 */
+> -			if (!args->rmtblkno && !args->rmtblkno2)
+> -				return 0;
+> -
+> -			attr->xattri_dela_state = XFS_DAS_FOUND_NBLK;
+> -		}
+> -		trace_xfs_attr_set_iter_return(attr->xattri_dela_state,
+> -					       args->dp);
+> -		return -EAGAIN;
+>  	case XFS_DAS_FOUND_LBLK:
+>  		/*
+>  		 * If there was an out-of-line value, allocate the blocks we
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index f9840dd..cf8bd3a 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -4008,6 +4008,7 @@ DEFINE_EVENT(xfs_das_state_class, name, \
+>  	TP_ARGS(das, ip))
+>  DEFINE_DAS_STATE_EVENT(xfs_attr_sf_addname_return);
+>  DEFINE_DAS_STATE_EVENT(xfs_attr_set_iter_return);
+> +DEFINE_DAS_STATE_EVENT(xfs_attr_leaf_addname_return);
+>  DEFINE_DAS_STATE_EVENT(xfs_attr_node_addname_return);
+>  DEFINE_DAS_STATE_EVENT(xfs_attr_remove_iter_return);
+>  DEFINE_DAS_STATE_EVENT(xfs_attr_rmtval_remove_return);
 > -- 
 > 2.7.4
 > 
