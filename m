@@ -2,170 +2,106 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MSGID_FROM_MTA_HEADER,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D30A9C4338F
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 23:45:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34F38C4338F
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Jul 2021 00:26:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AC4FE61039
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jul 2021 23:45:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0BACE60F5E
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Jul 2021 00:26:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232671AbhG1Xpa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Jul 2021 19:45:30 -0400
-Received: from mail-dm6nam08on2059.outbound.protection.outlook.com ([40.107.102.59]:37088
-        "EHLO NAM04-DM6-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S232641AbhG1Xp3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 28 Jul 2021 19:45:29 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=WwD6p6kfUqrKBN/B2G6EZVG7YgAMuO3W+HD8Ms4jj5Fr2ptUyVu+4IU0rGa6O2wHiVtgFEmZx7t3ohPlQ5Zz2vOTc3XRBt2eLSa/2NLpmjAA/2GjnMkmTCcm3M/abt9dCdizE8Vkug53wFFN4Us5xsdUMCRwzNJjcD3e8QFilJAZIg5OZQBzrms0OFsEH2bXwYUImk1vxOQ6Jti96QYgVyDLuFncFAj4QWD8TLyEwrSgNIIVMotlYiOM3rPVTxYmaoXVcde+WLMCxjdRtWpiC8CTF1wo/E6SP3lEjYq/5wagZfdDw2hUJpeB+f2ZAP+naLnX8Bw+uBwMSBpf2pqNMQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=pYwKUphUAfwYBiBR1PiD/B5khVNkrzb7WtXJwZap1Gk=;
- b=QHIO7+FAJyu/x5qyalULbE3oTcuIjiUJsAybapWzwLlY6GCg5rkO9MCCOxsbixJzNGTS3fCO1edQJOFeY/CvRWUN7Z6pydLkfzJYrJmQ43Pn7gMp/VlpE8iowDXJRCH8Saa+lTvVd2eM+y/cxV4q/NMAONmbbBeIklpfCuzLPxB300ScKFStCux9p7P3Y1jQyaV/Qb1vOEDIaSRTLxFbCPK7WDASGG05gUwYvRLHwxgbFQi1m6O5qnZ61JDjNWCmi/AUte3VgRQM1Z1mVWb4hhV0D/uMqyp8Km6LijPRuPFJpzhsNh6E2iODttBW35oZA+LEtL+Abz15MQI66hfZkA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=pYwKUphUAfwYBiBR1PiD/B5khVNkrzb7WtXJwZap1Gk=;
- b=eUBjqiiAjBd6iOJonwi4qvmdS/3zBe/v4ZBCj98laCsn1htwhRR/XmxTi0NUPhovi4BHHJmEgV2Ot3J2qY4O9DxZQcPQbhh/P7PXwWQFAEtdS7RT3GMAt4yzJJg0DFD9Uj9HDpTFG8I1isUAuQmOevHLhtn/2jNlTwKH8pGU1VE=
-Authentication-Results: redhat.com; dkim=none (message not signed)
- header.d=none;redhat.com; dmarc=none action=none header.from=amd.com;
-Received: from SA0PR12MB4430.namprd12.prod.outlook.com (2603:10b6:806:70::20)
- by SN1PR12MB2543.namprd12.prod.outlook.com (2603:10b6:802:2a::16) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4373.18; Wed, 28 Jul
- 2021 23:45:25 +0000
-Received: from SA0PR12MB4430.namprd12.prod.outlook.com
- ([fe80::d0d3:a97e:6b7f:ab39]) by SA0PR12MB4430.namprd12.prod.outlook.com
- ([fe80::d0d3:a97e:6b7f:ab39%6]) with mapi id 15.20.4373.018; Wed, 28 Jul 2021
- 23:45:25 +0000
-Subject: Re: [PATCH v4 10/13] lib: test_hmm add module param for zone device
- type
-To:     Jason Gunthorpe <jgg@nvidia.com>
-Cc:     akpm@linux-foundation.org, Felix.Kuehling@amd.com,
-        linux-mm@kvack.org, rcampbell@nvidia.com,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        hch@lst.de, jglisse@redhat.com
-References: <20210717192135.9030-1-alex.sierra@amd.com>
- <20210717192135.9030-11-alex.sierra@amd.com>
- <20210722122348.GG1117491@nvidia.com>
- <4ee9e946-d380-ba84-d6ac-5ad337afc835@amd.com>
- <20210722172648.GN1117491@nvidia.com>
-From:   "Sierra Guiza, Alejandro (Alex)" <alex.sierra@amd.com>
-Message-ID: <596f4387-a896-acdf-acfa-7ddba947b58f@amd.com>
-Date:   Wed, 28 Jul 2021 18:45:22 -0500
+        id S232869AbhG2A01 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Jul 2021 20:26:27 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42104 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232727AbhG2A01 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 28 Jul 2021 20:26:27 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2465E60F59;
+        Thu, 29 Jul 2021 00:26:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1627518384;
+        bh=uludeyf3+zGf2YO7V7UPfU6EFXH4cySzsy2ac4vsqZg=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=uc+72srOYR120uKGl7ZxsAJO2p0AMdqnnbO8mDXLYzC3n8ZaPT0qkoi/GV9IVP1l4
+         ZrAfzKwfU3hfAOrONYnqYPgHd/TnafG4/K9DAwHy3hO8MXHsRDFDB7pFClWg+3M/7Z
+         BNTpulDwWjsDj9yXPrafyLei5OXfAXPV2yg+brRzltg7lyONSFwSlS0k9Rtt7h2sVj
+         Ci/rZW1yQR/LSdLe1jRlUY4nsk9b3YXPAMeu9h94UPw15RdQjzOwEiGnYrpoCSOibp
+         NzqUm9sTByxPYnLI1sSwefdqgKAfpdajK78xOVOUxykWCO6pPP+BHgnjYelPo75Qw8
+         ofqXEcTdeS8yA==
+Subject: Re: [PATCH 3/9] f2fs: rework write preallocations
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Eric Biggers <ebiggers@kernel.org>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        linux-f2fs-devel@lists.sourceforge.net,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        Satya Tangirala <satyaprateek2357@gmail.com>,
+        Changheun Lee <nanich.lee@samsung.com>,
+        Matthew Bobrowski <mbobrowski@mbobrowski.org>
+References: <20210716143919.44373-1-ebiggers@kernel.org>
+ <20210716143919.44373-4-ebiggers@kernel.org>
+ <14782036-f6a5-878a-d21f-e7dd7008a285@kernel.org>
+ <YP2l+1umf9ct/4Sp@sol.localdomain> <YP9oou9sx4oJF1sc@google.com>
+ <70f16fec-02f6-cb19-c407-856101cacc23@kernel.org>
+ <YP+38QzXS6kpLGn0@sol.localdomain>
+ <70d9c954-d7f0-bbe2-f078-62273229342f@kernel.org>
+ <20210727153335.GE559212@magnolia>
+From:   Chao Yu <chao@kernel.org>
+Message-ID: <e237ab66-82dd-254d-7be2-aee8cb2b1c85@kernel.org>
+Date:   Thu, 29 Jul 2021 08:26:18 +0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
  Thunderbird/78.12.0
-In-Reply-To: <20210722172648.GN1117491@nvidia.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
-X-ClientProxiedBy: SA9PR13CA0069.namprd13.prod.outlook.com
- (2603:10b6:806:23::14) To SA0PR12MB4430.namprd12.prod.outlook.com
- (2603:10b6:806:70::20)
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from [172.31.130.82] (165.204.78.25) by SA9PR13CA0069.namprd13.prod.outlook.com (2603:10b6:806:23::14) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4373.7 via Frontend Transport; Wed, 28 Jul 2021 23:45:24 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 4b8359a8-ae8a-45f0-e9de-08d95221c5bf
-X-MS-TrafficTypeDiagnostic: SN1PR12MB2543:
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <SN1PR12MB2543767A44CC8CBFF5640E7EFDEA9@SN1PR12MB2543.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:4941;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: MaeQGfalrISF3FFWPESpVHBi8v4xoJOioRFAEgLg9836+ADDNc2MmnvHGOJjlNZLl5sRj1Gn9EzgYb/EizieRTGppR+LcuPWqRU51J6ggtb+UPaBEkixfO69lmPYEaNtFDZM+3Y1Tm0UZ+LFWEyV1LrbxrP5NWSo/7coISKEV5JUCHIbNvVK6RyQtz49GPl45qf+SJg1DOAgVbhHBgC1CSoDuFn6Gz8OuvBbASTNDsKczh/72iq0eS7OPCAUPBL3I6MEeB4aPU8ynquKFvRA0bb5ez0BAgLm4KTDMEmJFhZeE6sTp/2r2l2kGYtHBRSxvK8EqCiBm1SuCc0RBcJdA7Vrb1AeDhUXLnHIWTjZPdJoLH52UV7646rQV/kMQmEyN/NlH6IjD9X3e+4tB8AkMPCtqw2QupB1tt1IY2IOmhR3zGW1pijOaGMIjTcZ32G9V8JTcG9XPiM/qhSdd0NN0taY55bwqDlwDEuiKCKqFsCvlc8DNCrKDNIoM+g/m/9Zqrsf5JNQrqFH9OyU5RZrSuX91l/4zAplR8BxZgIRKUSbaR88ymjkntnPhhL935e0aU8X0i81E2+38ncXcSvD8TRkR054M8pPApPEgC9i6lckEQvKLhorGQRWdNjHsREp9Lje/N21MSk7qqB4VdbkJJZ9hlO+63zrfH+b1E6puwIhC6ci0FhlmaDNKd+a8JUnDxl9R16Fh0aXRptd4EAhef7IpTVvycCfI64maPjA7FcEZ2Kh326SSfLwgERyFAGuMPD+ACepvcG/Ny8RS+Msxg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA0PR12MB4430.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(186003)(36756003)(5660300002)(8676002)(8936002)(4326008)(26005)(6916009)(956004)(38350700002)(38100700002)(2616005)(508600001)(66946007)(83380400001)(31696002)(6486002)(31686004)(52116002)(53546011)(86362001)(16576012)(66476007)(7416002)(66556008)(2906002)(316002)(43740500002)(45980500001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?czN1bHAxUW52UXBoM0NDYytYVGhqcWVIcTA0Szhqa2MzU3c1VVRQVDJoeDNO?=
- =?utf-8?B?NnBQUytJWjJ6UXlmNEdnYmZ0cHM1NlhSbU96NGFJdFVaemZCMEpZdGQ4ZERP?=
- =?utf-8?B?WExpUGZYdXpISkdYelpiUWIzMjNGV3c4UnhYQnJsV0tqeXh1RWp4RWdsNThy?=
- =?utf-8?B?U011YUFyS3FSSlVOV0NUM25FR2hYOCtRZGljbFJydzE2ZTM4RG9Qb1R1T0tk?=
- =?utf-8?B?Ym91MkZLcWl1Y0sweWRYTEMzL3Evd21TaXJuVzBseTlnd3pXWHFPZWpKWS9m?=
- =?utf-8?B?VXk4NDRtZkY5L20rczBwL2ZIYVRFbW8rUmExajlETVdVc3JaNDJrVFpVdWRH?=
- =?utf-8?B?V3pRWkd5Qk1JaEd1ZUlSbDBvTXpicGc0OTY1enEzVmNRQ3F0KzBBTTlPMndT?=
- =?utf-8?B?OXBGWXp3VzRBRjRIWTRMakJzdmk2UUwvVUpiZll0bW83cXE4NGc2M2Y2a1NK?=
- =?utf-8?B?OGxwazJsVm8vZlh0aUlYdFZZc3ZBM09RWEVVSEhmaFovRUJnMWQvZWVQOTNZ?=
- =?utf-8?B?MjhtcVl1U0RxNDRCMnBCU042YnM5SEVoRGN4aWx2a2NsZFJ4a1FZS2FPOHk4?=
- =?utf-8?B?Z1NmbEt1ajcvMDBZU2ZMMktqUGtQcVVDMzBxeS9Jc2dlVFp6d1QwYWZkSGZo?=
- =?utf-8?B?KzI0dHloMTh1QWFYWm1DRnpoT2VIRVpucENKZllKSUpKaU54cSthem56elQr?=
- =?utf-8?B?SWt2a1BGOXNGbnNqT0hJY2lOcXRDRjlBVDBPdG5aRzkrZnVXMHlSdWNGdWpR?=
- =?utf-8?B?akg1Snk5SStXV3hEczA2SGdsWEszZ0l6RE80NXVYS3NxaHlEcWZ4Z1kzc0Mr?=
- =?utf-8?B?UDRnMzhPOXVmejA4M3hnczhmS1NqRnZza2VydGdZa1gvNUd4aGFmdlhYbTYz?=
- =?utf-8?B?UmRQS2FUTHhUL0hPNnBlV3VuUml0SUdMcjRkUlNUZVZMUFQ3MHIwTXFiREdN?=
- =?utf-8?B?SFJOb2xMekRKMFh2QVNzN240dE5lVEU1bW44Ky9vaVlqcWNzU3l1dnlrOFVq?=
- =?utf-8?B?eERDQTBxVElyMG5id296OVF3dnVHY3d0dlRDTDF6MG04RjZLOEwwSFo4L1JX?=
- =?utf-8?B?dTlZUEg1dlV5SkdkYW1OOHpWSzBBRlZlVEhjQjBFVk5wdXpoU2prMmd3WTlW?=
- =?utf-8?B?RS9nWHhiTE9wenNXOFUyajRTbjdoYnUyVUhpbEs3V2dOYUdIYmJVNG9TNnZ3?=
- =?utf-8?B?cmlJaUllRzFUYXZOb2lIOEtwbzRHaHpzMTFxZm0rOEhid2doNkg4S2t4SDFX?=
- =?utf-8?B?THhHcm40cnQ1ZjNxdi82c1UvTU15UTByeDdoTEQvU2dDY0haQng2c3o3c3Qz?=
- =?utf-8?B?WTV1Y2cxK0ZzUUhWZ2N4anI1NFlFMW1Fc3FSQjlHTGowVlVrLzFhSG1DeHRh?=
- =?utf-8?B?dDEzTmFYNUpvdWFzR1BhZFNYRmJES2FlQVR2MTZRQzFUeGhid0RUcWwwVUZM?=
- =?utf-8?B?S25na1FxVXlpWWoxOEd4Y0VXaFZpa21wVlp4Sk5GM0cwYVZGSE1VVXFCS2dj?=
- =?utf-8?B?azVvTDBPYWlGTkZLajUwUnVydnVXSWUvbVZTMlZ6eHM1RkFEYzBIbXlVcTJL?=
- =?utf-8?B?QnhwOThQREcxZ3FpdGEyZlNMd25zUWxzemNIMGhCY2JJWnQ5MFdjSUhiVHJE?=
- =?utf-8?B?dUdRbkVpTGZFVUlRcUt2ajJwS0EveG4rbC8vMEwyQjBVN3BZOURMNWYzcXp0?=
- =?utf-8?B?WUFWQ3lnTzE0RFIrTC92QjlEUnFpRk4zNjd4eStJRVd4TThOaXhucGk1QTVL?=
- =?utf-8?Q?lrEchzrXtPwHKNQt8nCPplCtnz4Jj58OhxE3Brv?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4b8359a8-ae8a-45f0-e9de-08d95221c5bf
-X-MS-Exchange-CrossTenant-AuthSource: SA0PR12MB4430.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Jul 2021 23:45:25.6644
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: uaAAOi/eVgfO/RmIq/ufNV4+xCbA9vql6aoQTcyDX1BHaU8ODKcMK4sWenPTHSsZTc8wMSaAFaqAfTR2AzS8Fg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN1PR12MB2543
+In-Reply-To: <20210727153335.GE559212@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On 2021/7/27 23:33, Darrick J. Wong wrote:
+> On Tue, Jul 27, 2021 at 04:30:16PM +0800, Chao Yu wrote:
+>> On 2021/7/27 15:38, Eric Biggers wrote:
+>>> That's somewhat helpful, but I've been doing some more investigation and now I'm
+>>> even more confused.  How can f2fs support non-overwrite DIO writes at all
+>>> (meaning DIO writes in LFS mode as well as DIO writes to holes in non-LFS mode),
+>>> given that it has no support for unwritten extents?  AFAICS, as-is users can
+>>
+>> I'm trying to pick up DAX support patch created by Qiuyang from huawei, and it
+>> looks it faces the same issue, so it tries to fix this by calling sb_issue_zeroout()
+>> in f2fs_map_blocks() before it returns.
+> 
+> I really hope you don't, because zeroing the region before memcpy'ing it
+> is absurd.  I don't know if f2fs can do that (xfs can't really) without
+> pinning resources during a potentially lengthy memcpy operation, but you
+> /could/ allocate the space in ->iomap_begin, attach some record of that
+> to iomap->private, and only commit the mapping update in ->iomap_end.
 
-On 7/22/2021 12:26 PM, Jason Gunthorpe wrote:
-> On Thu, Jul 22, 2021 at 11:59:17AM -0500, Sierra Guiza, Alejandro (Alex) wrote:
->> On 7/22/2021 7:23 AM, Jason Gunthorpe wrote:
->>> On Sat, Jul 17, 2021 at 02:21:32PM -0500, Alex Sierra wrote:
->>>> In order to configure device generic in test_hmm, two
->>>> module parameters should be passed, which correspon to the
->>>> SP start address of each device (2) spm_addr_dev0 &
->>>> spm_addr_dev1. If no parameters are passed, private device
->>>> type is configured.
->>> I don't think tests should need configuration like this, is it really
->>> necessary? How can people with normal HW run this test?
->> Hi Jason,
->> The idea was to add an easy way to validate the codepaths touched by this
->> patch series, which make modifications to the migration helpers for device
->> generic type pages. We're using CONFIG_EFI_FAKE_MEMMAP to create fake SPM
->> devices inside system memory. No special HW needed. And passing the kernel
->> parameter efi_fake_mem. Ex. efi_fake_mem=1G@0x100000000:0x40000. I should
->> probably need to include a small example of how to set this in the
->> test_hmm.sh
->> usage().
-> I don't think anything about hmm is sensitive to how the pages are
-> acquired - you can't create device generic pages without relying on
-> FAKE_MEMMAP?
-The reason we used fake SPM approach was to have a "special memory"
-not managed by Linux (NOT registered as normal system memory). But
-also accessible by the CPU.
+Thanks for the suggestion, let me check this a little bit later, since now I
+just try to stabilize the codes...
 
-For device_generic we cannot allocate new physical addresses.
-We need the physical address to match the actual system memory
-physical address, so that CPU mappings work as expected.
+Thanks,
 
-Would you recommend to use a different approach?
-
-Regards,
-Alex Sierra
-
->
-> Jason
+> 
+> --D
+> 
+>>> easily leak uninitialized disk contents on f2fs by issuing a DIO write that
+>>> won't complete fully (or might not complete fully), then reading back the blocks
+>>> that got allocated but not written to.
+>>>
+>>> I think that f2fs will have to take the ext2 approach of not allowing
+>>> non-overwrite DIO writes at all...
+>> Yes,
+>>
+>> Another option is to enhance f2fs metadata's scalability which needs to update layout
+>> of dnode block or SSA block, after that we can record the status of unwritten data block
+>> there... it's a big change though...
+>>
+>> Thanks,
+>>
+>>>
+>>> - Eric
+>>>
