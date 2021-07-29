@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7DD1C4338F
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Jul 2021 18:44:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 540E2C4338F
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Jul 2021 18:44:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9996860249
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Jul 2021 18:44:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3F0ED60F5C
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Jul 2021 18:44:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230085AbhG2Sor (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Jul 2021 14:44:47 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48872 "EHLO mail.kernel.org"
+        id S229961AbhG2Sow (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Jul 2021 14:44:52 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48936 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229807AbhG2Soq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 29 Jul 2021 14:44:46 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 7733A60F4B;
-        Thu, 29 Jul 2021 18:44:43 +0000 (UTC)
+        id S231469AbhG2Sow (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 29 Jul 2021 14:44:52 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id F059B60249;
+        Thu, 29 Jul 2021 18:44:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627584283;
-        bh=RD5Ly8BlmxSqcwAUkz4SXDG/aW738l8wL3a1ZnheI0E=;
+        s=k20201202; t=1627584289;
+        bh=zgNjZ6aqbKS1GYyy2VCWf5WuraCfD/WejfW1+0Y2wvI=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=qmUfRnZt8gx+ht1t+oViF7pWlIwsDgBrBwGrzvRZqhs55ZT2EsguHNhvm8ilWmUeH
-         A8jnacI25H2zvOZXjxDhxyodV8I/l6/GI7aZUYHim1vMvhShf+3UN962iTdfzjKIqh
-         UsrWyA64/g+8y2QQJHdriqjlYC/ztS8NsmW+CrGFw58Wj/K7TeWU5dO+D74V33Iqw4
-         sdkhsZDzrc78WE07rZitJSNzZyQ75sy4LT+6tt5u6sm0jPN44wlguxRkVXnywpsV+i
-         OeVs6xDUEuNF5Kj5X/HeqWln8ZPaai+2kHZdpzwvQhUlxvPdMs6zP2Ya/sl5j07Bao
-         99Eka2NPdfnhQ==
-Subject: [PATCH 09/20] xfs: reduce inactivation delay when free space is tight
+        b=RvcIc/CdLXjn4Onssh7fq7TDrS2wCamS4oUyZ8mtqI9c175oJO2ZO7jxtIRwBu3mc
+         HpOdDXm1H4DQo1m2xkxlK3hP/LeKF3vWpT1C/X/+nvo0mxgz6+sUe2B2S5Y6S/205E
+         EKcDLtbwMdY55XqDXXhaVCYc6bsLoJTF8pYsif7iY1FsmYO1rs4DlRYANxfRNN42bV
+         1jjFfd4sbdvJsPkiyCjV2NxFvZBtagmnfC1//XP7GPW8fJC6AIZzaswfbognLV5AQN
+         FozADHmMxCtaQ7WWvk80jekCk/x25IdL76nycWwWZqs3F54HZWNi2wfYNPxO5yKZm6
+         MXHHgwEEI3tOA==
+Subject: [PATCH 10/20] xfs: reduce inactivation delay when quota are tight
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@infradead.org
-Date:   Thu, 29 Jul 2021 11:44:43 -0700
-Message-ID: <162758428318.332903.10268108408219495793.stgit@magnolia>
+Date:   Thu, 29 Jul 2021 11:44:48 -0700
+Message-ID: <162758428867.332903.757283672300988786.stgit@magnolia>
 In-Reply-To: <162758423315.332903.16799817941903734904.stgit@magnolia>
 References: <162758423315.332903.16799817941903734904.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,262 +49,227 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Now that we have made the inactivation of unlinked inodes a background
-task to increase the throughput of file deletions, we need to be a
-little more careful about how long of a delay we can tolerate.
-
-On a mostly empty filesystem, the risk of the allocator making poor
-decisions due to fragmentation of the free space on account a lengthy
-delay in background updates is minimal because there's plenty of space.
-However, if free space is tight, we want to deallocate unlinked inodes
-as quickly as possible to avoid fallocate ENOSPC and to give the
-allocator the best shot at optimal allocations for new writes.
-
-Therefore, use the same free space thresholds that we use to limit
-preallocation to scale down the delay between an AG being tagged for
-needing inodgc work and the inodegc worker being executed.  This follows
-the same principle that XFS becomes less aggressive about allocations
-(and more precise about accounting) when nearing full.
+Implement the same scaling down of inodegc delays when we're tight on
+quota.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_icache.c |   96 ++++++++++++++++++++++++++++++++++++++++++++++-----
- fs/xfs/xfs_trace.h  |   38 ++++++++++++++++++++
- 2 files changed, 124 insertions(+), 10 deletions(-)
+ fs/xfs/xfs_dquot.h  |   10 ++++++
+ fs/xfs/xfs_icache.c |   86 ++++++++++++++++++++++++++++++++++++++++++++++++---
+ fs/xfs/xfs_trace.h  |   34 ++++++++++++++++++++
+ 3 files changed, 125 insertions(+), 5 deletions(-)
 
 
+diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
+index f642884a6834..6b5e3cf40c8b 100644
+--- a/fs/xfs/xfs_dquot.h
++++ b/fs/xfs/xfs_dquot.h
+@@ -54,6 +54,16 @@ struct xfs_dquot_res {
+ 	xfs_qwarncnt_t		warnings;
+ };
+ 
++static inline bool
++xfs_dquot_res_over_limits(
++	const struct xfs_dquot_res	*qres)
++{
++	if ((qres->softlimit && qres->softlimit < qres->reserved) ||
++	    (qres->hardlimit && qres->hardlimit < qres->reserved))
++		return true;
++	return false;
++}
++
+ /*
+  * The incore dquot structure
+  */
 diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 69f7fb048116..6418e50518f8 100644
+index 6418e50518f8..7ba80d7bff41 100644
 --- a/fs/xfs/xfs_icache.c
 +++ b/fs/xfs/xfs_icache.c
-@@ -212,6 +212,39 @@ xfs_reclaim_work_queue(
+@@ -212,6 +212,73 @@ xfs_reclaim_work_queue(
  	rcu_read_unlock();
  }
  
 +/*
-+ * Scale down the background work delay if we're low on free space.  Similar to
-+ * the way that we throttle preallocations, we halve the delay time for every
-+ * low free space threshold that isn't met.  Return value is in ms.
++ * Scale down the background work delay if we're close to a quota limit.
++ * Similar to the way that we throttle preallocations, we halve the delay time
++ * for every low free space threshold that isn't met, and we zero it if we're
++ * over the hard limit.  Return value is in ms.
 + */
 +static inline unsigned int
-+xfs_gc_delay_freesp(
-+	struct xfs_mount	*mp,
++xfs_gc_delay_dquot(
++	struct xfs_inode	*ip,
++	xfs_dqtype_t		type,
 +	unsigned int		tag,
 +	unsigned int		delay_ms)
 +{
++	struct xfs_dquot	*dqp;
 +	int64_t			freesp;
 +	unsigned int		shift = 0;
 +
-+	freesp = percpu_counter_read_positive(&mp->m_fdblocks);
-+	if (freesp < mp->m_low_space[XFS_LOWSP_5_PCNT]) {
++	if (!ip)
++		goto out;
++
++	/*
++	 * Leave the delay untouched if there are no quota limits to enforce.
++	 * These comparisons are done locklessly because at worst we schedule
++	 * background work sooner than necessary.
++	 */
++	dqp = xfs_inode_dquot(ip, type);
++	if (!dqp || !xfs_dquot_is_enforced(dqp))
++		goto out;
++
++	if (xfs_dquot_res_over_limits(&dqp->q_ino) ||
++	    xfs_dquot_res_over_limits(&dqp->q_rtb)) {
++		trace_xfs_gc_delay_dquot(dqp, tag, 32);
++		return 0;
++	}
++
++	/* no hi watermark, no throttle */
++	if (!dqp->q_prealloc_hi_wmark)
++		goto out;
++
++	/* under the lo watermark, no throttle */
++	if (dqp->q_blk.reserved < dqp->q_prealloc_lo_wmark)
++		goto out;
++
++	/* If we're over the hard limit, run immediately. */
++	if (dqp->q_blk.reserved >= dqp->q_prealloc_hi_wmark) {
++		trace_xfs_gc_delay_dquot(dqp, tag, 32);
++		return 0;
++	}
++
++	/* Scale down the delay if we're close to the soft limits. */
++	freesp = dqp->q_prealloc_hi_wmark - dqp->q_blk.reserved;
++	if (freesp < dqp->q_low_space[XFS_QLOWSP_5_PCNT]) {
 +		shift = 2;
-+		if (freesp < mp->m_low_space[XFS_LOWSP_4_PCNT])
-+			shift++;
-+		if (freesp < mp->m_low_space[XFS_LOWSP_3_PCNT])
-+			shift++;
-+		if (freesp < mp->m_low_space[XFS_LOWSP_2_PCNT])
-+			shift++;
-+		if (freesp < mp->m_low_space[XFS_LOWSP_1_PCNT])
-+			shift++;
++		if (freesp < dqp->q_low_space[XFS_QLOWSP_3_PCNT])
++			shift += 2;
++		if (freesp < dqp->q_low_space[XFS_QLOWSP_1_PCNT])
++			shift += 2;
 +	}
 +
 +	if (shift)
-+		trace_xfs_gc_delay_fdblocks(mp, tag, shift);
++		trace_xfs_gc_delay_dquot(dqp, tag, shift);
 +
-+	return delay_ms >> shift;
++	delay_ms >>= shift;
++out:
++	return delay_ms;
 +}
 +
+ /*
+  * Scale down the background work delay if we're low on free space.  Similar to
+  * the way that we throttle preallocations, we halve the delay time for every
+@@ -247,14 +314,17 @@ xfs_gc_delay_freesp(
+ 
  /*
   * Compute the lag between scheduling and executing some kind of background
-  * garbage collection work.  Return value is in ms.
-@@ -239,7 +272,7 @@ xfs_gc_delay_ms(
- 		return 0;
- 	}
- 
--	return default_ms;
-+	return xfs_gc_delay_freesp(mp, tag, default_ms);
- }
- 
- /*
-@@ -265,7 +298,8 @@ xfs_blockgc_queue(
+- * garbage collection work.  Return value is in ms.
++ * garbage collection work.  Return value is in ms.  If an inode is passed in,
++ * its dquots will be considered in the lag computation.
   */
- static void
- xfs_inodegc_queue(
--	struct xfs_mount        *mp)
-+	struct xfs_mount        *mp,
-+	struct xfs_inode	*ip)
- {
- 	if (!test_bit(XFS_OPFLAG_INODEGC_RUNNING_BIT, &mp->m_opflags))
- 		return;
-@@ -282,14 +316,55 @@ xfs_inodegc_queue(
- 	rcu_read_unlock();
- }
- 
-+/*
-+ * Reschedule the background inactivation worker immediately if space is
-+ * getting tight and the worker hasn't started running yet.
-+ */
-+static void
-+xfs_gc_requeue_now(
-+	struct xfs_mount	*mp,
-+	unsigned int		tag)
-+{
-+	struct delayed_work	*dwork;
-+	unsigned int		opflag_bit;
-+	unsigned int		default_ms;
-+
-+	switch (tag) {
-+	case XFS_ICI_INODEGC_TAG:
-+		dwork = &mp->m_inodegc_work;
-+		default_ms = xfs_inodegc_ms;
-+		opflag_bit = XFS_OPFLAG_INODEGC_RUNNING_BIT;
-+		break;
-+	default:
-+		return;
-+	}
-+
-+	if (!delayed_work_pending(dwork) ||
-+	    !test_bit(opflag_bit, &mp->m_opflags))
-+		return;
-+
-+	rcu_read_lock();
-+	if (!radix_tree_tagged(&mp->m_perag_tree, tag))
-+		goto unlock;
-+
-+	if (xfs_gc_delay_ms(mp, tag) == default_ms)
-+		goto unlock;
-+
-+	trace_xfs_gc_requeue_now(mp, tag);
-+	queue_delayed_work(mp->m_gc_workqueue, dwork, 0);
-+unlock:
-+	rcu_read_unlock();
-+}
-+
- /* Set a tag on both the AG incore inode tree and the AG radix tree. */
- static void
- xfs_perag_set_inode_tag(
- 	struct xfs_perag	*pag,
--	xfs_agino_t		agino,
+ static inline unsigned int
+ xfs_gc_delay_ms(
+ 	struct xfs_mount	*mp,
 +	struct xfs_inode	*ip,
  	unsigned int		tag)
  {
- 	struct xfs_mount	*mp = pag->pag_mount;
-+	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
- 	bool			was_tagged;
+ 	unsigned int		default_ms;
++	unsigned int		udelay, gdelay, pdelay, fdelay;
  
- 	lockdep_assert_held(&pag->pag_ici_lock);
-@@ -302,8 +377,10 @@ xfs_perag_set_inode_tag(
- 	else if (tag == XFS_ICI_INODEGC_TAG)
- 		pag->pag_ici_needs_inactive++;
- 
--	if (was_tagged)
-+	if (was_tagged) {
-+		xfs_gc_requeue_now(mp, tag);
- 		return;
-+	}
- 
- 	/* propagate the tag up into the perag radix tree */
- 	spin_lock(&mp->m_perag_lock);
-@@ -319,7 +396,7 @@ xfs_perag_set_inode_tag(
- 		xfs_blockgc_queue(pag);
- 		break;
+ 	switch (tag) {
  	case XFS_ICI_INODEGC_TAG:
--		xfs_inodegc_queue(mp);
-+		xfs_inodegc_queue(mp, ip);
- 		break;
+@@ -272,7 +342,12 @@ xfs_gc_delay_ms(
+ 		return 0;
  	}
  
-@@ -479,7 +556,7 @@ xfs_inode_mark_reclaimable(
- 		tag = XFS_ICI_RECLAIM_TAG;
- 	}
- 
--	xfs_perag_set_inode_tag(pag, XFS_INO_TO_AGINO(mp, ip->i_ino), tag);
-+	xfs_perag_set_inode_tag(pag, ip, tag);
- 
- 	spin_unlock(&ip->i_flags_lock);
- 	spin_unlock(&pag->pag_ici_lock);
-@@ -1367,8 +1444,7 @@ xfs_blockgc_set_iflag(
- 	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
- 	spin_lock(&pag->pag_ici_lock);
- 
--	xfs_perag_set_inode_tag(pag, XFS_INO_TO_AGINO(mp, ip->i_ino),
--			XFS_ICI_BLOCKGC_TAG);
-+	xfs_perag_set_inode_tag(pag, ip, XFS_ICI_BLOCKGC_TAG);
- 
- 	spin_unlock(&pag->pag_ici_lock);
- 	xfs_perag_put(pag);
-@@ -1849,7 +1925,7 @@ xfs_inodegc_inactivate(
- 	ip->i_flags |= XFS_IRECLAIMABLE;
- 
- 	xfs_perag_clear_inode_tag(pag, agino, XFS_ICI_INODEGC_TAG);
--	xfs_perag_set_inode_tag(pag, agino, XFS_ICI_RECLAIM_TAG);
-+	xfs_perag_set_inode_tag(pag, ip, XFS_ICI_RECLAIM_TAG);
- 
- 	spin_unlock(&ip->i_flags_lock);
- 	spin_unlock(&pag->pag_ici_lock);
-@@ -1915,7 +1991,7 @@ xfs_inodegc_start(
- 		return;
- 
- 	trace_xfs_inodegc_start(mp, __return_address);
--	xfs_inodegc_queue(mp);
-+	xfs_inodegc_queue(mp, NULL);
+-	return xfs_gc_delay_freesp(mp, tag, default_ms);
++	udelay = xfs_gc_delay_dquot(ip, XFS_DQTYPE_USER, tag, default_ms);
++	gdelay = xfs_gc_delay_dquot(ip, XFS_DQTYPE_GROUP, tag, default_ms);
++	pdelay = xfs_gc_delay_dquot(ip, XFS_DQTYPE_PROJ, tag, default_ms);
++	fdelay = xfs_gc_delay_freesp(mp, tag, default_ms);
++
++	return min(min(udelay, gdelay), min(pdelay, fdelay));
  }
  
  /*
+@@ -308,7 +383,7 @@ xfs_inodegc_queue(
+ 	if (radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_INODEGC_TAG)) {
+ 		unsigned int	delay;
+ 
+-		delay = xfs_gc_delay_ms(mp, XFS_ICI_INODEGC_TAG);
++		delay = xfs_gc_delay_ms(mp, ip, XFS_ICI_INODEGC_TAG);
+ 		trace_xfs_inodegc_queue(mp, delay);
+ 		queue_delayed_work(mp->m_gc_workqueue, &mp->m_inodegc_work,
+ 				msecs_to_jiffies(delay));
+@@ -323,6 +398,7 @@ xfs_inodegc_queue(
+ static void
+ xfs_gc_requeue_now(
+ 	struct xfs_mount	*mp,
++	struct xfs_inode	*ip,
+ 	unsigned int		tag)
+ {
+ 	struct delayed_work	*dwork;
+@@ -347,7 +423,7 @@ xfs_gc_requeue_now(
+ 	if (!radix_tree_tagged(&mp->m_perag_tree, tag))
+ 		goto unlock;
+ 
+-	if (xfs_gc_delay_ms(mp, tag) == default_ms)
++	if (xfs_gc_delay_ms(mp, ip, tag) == default_ms)
+ 		goto unlock;
+ 
+ 	trace_xfs_gc_requeue_now(mp, tag);
+@@ -378,7 +454,7 @@ xfs_perag_set_inode_tag(
+ 		pag->pag_ici_needs_inactive++;
+ 
+ 	if (was_tagged) {
+-		xfs_gc_requeue_now(mp, tag);
++		xfs_gc_requeue_now(mp, ip, tag);
+ 		return;
+ 	}
+ 
 diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index d3f3f6a32872..2092a8542862 100644
+index 2092a8542862..001fd202dbfb 100644
 --- a/fs/xfs/xfs_trace.h
 +++ b/fs/xfs/xfs_trace.h
-@@ -213,6 +213,28 @@ TRACE_EVENT(xfs_inodegc_requeue_mempressure,
+@@ -213,6 +213,40 @@ TRACE_EVENT(xfs_inodegc_requeue_mempressure,
  		  __entry->caller_ip)
  );
  
-+TRACE_EVENT(xfs_gc_delay_fdblocks,
-+	TP_PROTO(struct xfs_mount *mp, unsigned int tag, unsigned int shift),
-+	TP_ARGS(mp, tag, shift),
++TRACE_EVENT(xfs_gc_delay_dquot,
++	TP_PROTO(struct xfs_dquot *dqp, unsigned int tag, unsigned int shift),
++	TP_ARGS(dqp, tag, shift),
 +	TP_STRUCT__entry(
 +		__field(dev_t, dev)
-+		__field(unsigned long long, fdblocks)
++		__field(u32, id)
++		__field(xfs_dqtype_t, type)
 +		__field(unsigned int, tag)
 +		__field(unsigned int, shift)
++		__field(unsigned long long, reserved)
++		__field(unsigned long long, hi_mark)
++		__field(unsigned long long, lo_mark)
 +	),
 +	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->fdblocks = percpu_counter_read(&mp->m_fdblocks);
++		__entry->dev = dqp->q_mount->m_super->s_dev;
++		__entry->id = dqp->q_id;
++		__entry->type = dqp->q_type;
++		__entry->reserved = dqp->q_blk.reserved;
++		__entry->hi_mark = dqp->q_prealloc_hi_wmark;
++		__entry->lo_mark = dqp->q_prealloc_lo_wmark;
 +		__entry->tag = tag;
 +		__entry->shift = shift;
 +	),
-+	TP_printk("dev %d:%d tag %u shift %u fdblocks %llu",
++	TP_printk("dev %d:%d tag %u shift %u dqid 0x%x dqtype %s reserved %llu hi %llu lo %llu",
 +		  MAJOR(__entry->dev), MINOR(__entry->dev),
 +		  __entry->tag,
 +		  __entry->shift,
-+		  __entry->fdblocks)
++		  __entry->id,
++		  __print_flags(__entry->type, "|", XFS_DQTYPE_STRINGS),
++		  __entry->reserved,
++		  __entry->hi_mark,
++		  __entry->lo_mark)
 +);
 +
- DECLARE_EVENT_CLASS(xfs_gc_queue_class,
- 	TP_PROTO(struct xfs_mount *mp, unsigned int delay_ms),
- 	TP_ARGS(mp, delay_ms),
-@@ -234,6 +256,22 @@ DEFINE_EVENT(xfs_gc_queue_class, name,	\
- 	TP_ARGS(mp, delay_ms))
- DEFINE_GC_QUEUE_EVENT(xfs_inodegc_queue);
- 
-+TRACE_EVENT(xfs_gc_requeue_now,
-+	TP_PROTO(struct xfs_mount *mp, unsigned int tag),
-+	TP_ARGS(mp, tag),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(unsigned int, tag)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->tag = tag;
-+	),
-+	TP_printk("dev %d:%d tag %u",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->tag)
-+);
-+
- TRACE_EVENT(xfs_inodegc_throttle_mempressure,
- 	TP_PROTO(struct xfs_mount *mp),
- 	TP_ARGS(mp),
+ TRACE_EVENT(xfs_gc_delay_fdblocks,
+ 	TP_PROTO(struct xfs_mount *mp, unsigned int tag, unsigned int shift),
+ 	TP_ARGS(mp, tag, shift),
 
