@@ -2,106 +2,140 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34F38C4338F
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Jul 2021 00:26:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 345BDC4338F
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Jul 2021 03:25:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0BACE60F5E
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Jul 2021 00:26:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1244C6103E
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Jul 2021 03:25:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232869AbhG2A01 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Jul 2021 20:26:27 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42104 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232727AbhG2A01 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 28 Jul 2021 20:26:27 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2465E60F59;
-        Thu, 29 Jul 2021 00:26:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627518384;
-        bh=uludeyf3+zGf2YO7V7UPfU6EFXH4cySzsy2ac4vsqZg=;
-        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
-        b=uc+72srOYR120uKGl7ZxsAJO2p0AMdqnnbO8mDXLYzC3n8ZaPT0qkoi/GV9IVP1l4
-         ZrAfzKwfU3hfAOrONYnqYPgHd/TnafG4/K9DAwHy3hO8MXHsRDFDB7pFClWg+3M/7Z
-         BNTpulDwWjsDj9yXPrafyLei5OXfAXPV2yg+brRzltg7lyONSFwSlS0k9Rtt7h2sVj
-         Ci/rZW1yQR/LSdLe1jRlUY4nsk9b3YXPAMeu9h94UPw15RdQjzOwEiGnYrpoCSOibp
-         NzqUm9sTByxPYnLI1sSwefdqgKAfpdajK78xOVOUxykWCO6pPP+BHgnjYelPo75Qw8
-         ofqXEcTdeS8yA==
-Subject: Re: [PATCH 3/9] f2fs: rework write preallocations
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Eric Biggers <ebiggers@kernel.org>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        linux-f2fs-devel@lists.sourceforge.net,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Satya Tangirala <satyaprateek2357@gmail.com>,
-        Changheun Lee <nanich.lee@samsung.com>,
-        Matthew Bobrowski <mbobrowski@mbobrowski.org>
-References: <20210716143919.44373-1-ebiggers@kernel.org>
- <20210716143919.44373-4-ebiggers@kernel.org>
- <14782036-f6a5-878a-d21f-e7dd7008a285@kernel.org>
- <YP2l+1umf9ct/4Sp@sol.localdomain> <YP9oou9sx4oJF1sc@google.com>
- <70f16fec-02f6-cb19-c407-856101cacc23@kernel.org>
- <YP+38QzXS6kpLGn0@sol.localdomain>
- <70d9c954-d7f0-bbe2-f078-62273229342f@kernel.org>
- <20210727153335.GE559212@magnolia>
-From:   Chao Yu <chao@kernel.org>
-Message-ID: <e237ab66-82dd-254d-7be2-aee8cb2b1c85@kernel.org>
-Date:   Thu, 29 Jul 2021 08:26:18 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        id S233488AbhG2DZD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Jul 2021 23:25:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45996 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233297AbhG2DZC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Jul 2021 23:25:02 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E658C061757;
+        Wed, 28 Jul 2021 20:25:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:In-Reply-To:References;
+        bh=Zx24Tdms2CAcVL+Y0xOOs/yG6aW6xTMzubnm9RhAPcs=; b=CmQJQH43AEoXaW6IJUt9izAtX1
+        nkDtCr++9IelU/oLypXAuC4T4bx4cGCi9ychlZmYlTz5n3DMVxN5w7aQdahPJA4R+eggkUzB8PF+1
+        UlsPalGGzI0z8qrMs66jk2fASWKfU8cdnOJULDzBMGKHA+oQn1J/Ddag8hGwY+LO9g7vgUtiuxVg0
+        J06bxwWImi5fyAnx5TpHOgTnKSt+3g4e553AEsxoMwFIRkfLDbXys3Ht/ENgNyh80l05luVzjIStH
+        Zbc6ZbAqhDPTOZkssqqzYxOqpSiV7/WdLM85limjNXxnqoBC6WHFZYYnTeWtCJjA349EqIKx/tqTN
+        CAQKsHEg==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1m8weA-00GgCH-Gr; Thu, 29 Jul 2021 03:24:08 +0000
+From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
+To:     linux-erofs@lists.ozlabs.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        hsiangkao@linux.alibaba.com, djwong@kernel.org, hch@lst.de,
+        agruenba@redhat.com
+Subject: [PATCH v2] iomap: Support inline data with block size < page size
+Date:   Thu, 29 Jul 2021 04:23:44 +0100
+Message-Id: <20210729032344.3975412-1-willy@infradead.org>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-In-Reply-To: <20210727153335.GE559212@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2021/7/27 23:33, Darrick J. Wong wrote:
-> On Tue, Jul 27, 2021 at 04:30:16PM +0800, Chao Yu wrote:
->> On 2021/7/27 15:38, Eric Biggers wrote:
->>> That's somewhat helpful, but I've been doing some more investigation and now I'm
->>> even more confused.  How can f2fs support non-overwrite DIO writes at all
->>> (meaning DIO writes in LFS mode as well as DIO writes to holes in non-LFS mode),
->>> given that it has no support for unwritten extents?  AFAICS, as-is users can
->>
->> I'm trying to pick up DAX support patch created by Qiuyang from huawei, and it
->> looks it faces the same issue, so it tries to fix this by calling sb_issue_zeroout()
->> in f2fs_map_blocks() before it returns.
-> 
-> I really hope you don't, because zeroing the region before memcpy'ing it
-> is absurd.  I don't know if f2fs can do that (xfs can't really) without
-> pinning resources during a potentially lengthy memcpy operation, but you
-> /could/ allocate the space in ->iomap_begin, attach some record of that
-> to iomap->private, and only commit the mapping update in ->iomap_end.
+Remove the restriction that inline data must start on a page boundary
+in a file.  This allows, for example, the first 2KiB to be stored out
+of line and the trailing 30 bytes to be stored inline.
 
-Thanks for the suggestion, let me check this a little bit later, since now I
-just try to stabilize the codes...
+Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+---
+v2:
+ - Rebase on top of iomap: Support file tail packing v9
 
-Thanks,
+ fs/iomap/buffered-io.c | 34 ++++++++++++++++------------------
+ 1 file changed, 16 insertions(+), 18 deletions(-)
 
-> 
-> --D
-> 
->>> easily leak uninitialized disk contents on f2fs by issuing a DIO write that
->>> won't complete fully (or might not complete fully), then reading back the blocks
->>> that got allocated but not written to.
->>>
->>> I think that f2fs will have to take the ext2 approach of not allowing
->>> non-overwrite DIO writes at all...
->> Yes,
->>
->> Another option is to enhance f2fs metadata's scalability which needs to update layout
->> of dnode block or SSA block, after that we can record the status of unwritten data block
->> there... it's a big change though...
->>
->> Thanks,
->>
->>>
->>> - Eric
->>>
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 66b733537c46..50f18985ed13 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -209,28 +209,26 @@ static int iomap_read_inline_data(struct inode *inode, struct page *page,
+ 		struct iomap *iomap)
+ {
+ 	size_t size = i_size_read(inode) - iomap->offset;
++	size_t poff = offset_in_page(iomap->offset);
+ 	void *addr;
+ 
+ 	if (PageUptodate(page))
+-		return 0;
++		return PAGE_SIZE - poff;
+ 
+-	/* inline data must start page aligned in the file */
+-	if (WARN_ON_ONCE(offset_in_page(iomap->offset)))
+-		return -EIO;
+ 	if (WARN_ON_ONCE(size > PAGE_SIZE -
+ 			 offset_in_page(iomap->inline_data)))
+ 		return -EIO;
+ 	if (WARN_ON_ONCE(size > iomap->length))
+ 		return -EIO;
+-	if (WARN_ON_ONCE(page_has_private(page)))
+-		return -EIO;
++	if (poff > 0)
++		iomap_page_create(inode, page);
+ 
+-	addr = kmap_atomic(page);
++	addr = kmap_atomic(page) + poff;
+ 	memcpy(addr, iomap->inline_data, size);
+-	memset(addr + size, 0, PAGE_SIZE - size);
++	memset(addr + size, 0, PAGE_SIZE - poff - size);
+ 	kunmap_atomic(addr);
+-	SetPageUptodate(page);
+-	return 0;
++	iomap_set_range_uptodate(page, poff, PAGE_SIZE - poff);
++	return PAGE_SIZE - poff;
+ }
+ 
+ static inline bool iomap_block_needs_zeroing(struct inode *inode,
+@@ -252,13 +250,8 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ 	unsigned poff, plen;
+ 	sector_t sector;
+ 
+-	if (iomap->type == IOMAP_INLINE) {
+-		int ret = iomap_read_inline_data(inode, page, iomap);
+-
+-		if (ret)
+-			return ret;
+-		return PAGE_SIZE;
+-	}
++	if (iomap->type == IOMAP_INLINE)
++		return iomap_read_inline_data(inode, page, iomap);
+ 
+ 	/* zero post-eof blocks as the page may be mapped */
+ 	iop = iomap_page_create(inode, page);
+@@ -593,10 +586,15 @@ __iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, int flags,
+ static int iomap_write_begin_inline(struct inode *inode,
+ 		struct page *page, struct iomap *srcmap)
+ {
++	int ret;
++
+ 	/* needs more work for the tailpacking case, disable for now */
+ 	if (WARN_ON_ONCE(srcmap->offset != 0))
+ 		return -EIO;
+-	return iomap_read_inline_data(inode, page, srcmap);
++	ret = iomap_read_inline_data(inode, page, srcmap);
++	if (ret < 0)
++		return ret;
++	return 0;
+ }
+ 
+ static int
+-- 
+2.30.2
+
