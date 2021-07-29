@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FDB9C4338F
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Jul 2021 18:45:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B68A5C4338F
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Jul 2021 18:45:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5956F60F5C
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Jul 2021 18:45:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 96A5B60F4B
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Jul 2021 18:45:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229758AbhG2SpE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Jul 2021 14:45:04 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49076 "EHLO mail.kernel.org"
+        id S229672AbhG2SpJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Jul 2021 14:45:09 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49168 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229672AbhG2SpD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 29 Jul 2021 14:45:03 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id F07C460F4B;
-        Thu, 29 Jul 2021 18:44:59 +0000 (UTC)
+        id S229620AbhG2SpJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 29 Jul 2021 14:45:09 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 86E0C60249;
+        Thu, 29 Jul 2021 18:45:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627584300;
-        bh=59IjRXR3dE7tCYB5uvPPbqbUMuH/da6gnIZKSjoljrQ=;
+        s=k20201202; t=1627584305;
+        bh=5dRdYuhZFWv0aEbiwime3hjro4i/rifAXqHYC4hfY5w=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=h1BVj5yGwdun11aJ9WMte83S5R+CcLMRY6mkVbZRfozD/kWX9nhLVU+GSOMFtfuHe
-         OHDyzQovfjhO5Fjt6S6sMsl3Q7dxXDYPtnqEIWK2vrbeE5Cgc3UjgvDjuisew8NcDc
-         pwMAmgxzmDqHsXnUUzs8DpL4vAauUPD+CwwO2g/QSaiA/3K9kiJjKvxnVoi9fG5I0F
-         V4Nc+fAlKo0skAZ3n5QSJnqK13CavPBeJ0RhLINemMmpJN98VoR7okDC674Uxn7awL
-         QElLJ/PISV8X91aOiNBYffFkiopYGGZddP762m1P38tesVWrIpD2fP1j7IKDGoLSGh
-         A55oETA/bRLcg==
-Subject: [PATCH 12/20] xfs: inactivate inodes any time we try to free
- speculative preallocations
+        b=oQLpXohiNSEG6yjgQECpdh2382F6nkXxGPdrSt7+ABzr+nt62NtrpCHg2SKkHQekw
+         pIi+NBNs3lRer9gNYPzedHMEotxfkDuOihd9JgEqY/t8xGf4A7iHdRvNFg8ACAgWWS
+         UstiQUFlvs5+vnnG+bQ8qdOGTMGKuy7GRZsZxs+kXJEZdnLTTmnZVMkeupMGLesIEg
+         XzP9Fjr97FkDnSpOVs7uMxbSyHAhRxhGn/71J630cGowvip9EYK1elo/B1ZwwHRrWy
+         f5kyhvW+mQH/UjJ9hAbpbFNu+zgGB5OvCiHvCf19mzjY/QCsD93do838IcfAhIRv+f
+         k62XilgT4b3mA==
+Subject: [PATCH 13/20] xfs: flush inode inactivation work when compiling usage
+ statistics
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@infradead.org
-Date:   Thu, 29 Jul 2021 11:44:59 -0700
-Message-ID: <162758429967.332903.1341972104802367229.stgit@magnolia>
+Date:   Thu, 29 Jul 2021 11:45:05 -0700
+Message-ID: <162758430518.332903.4841716756724944511.stgit@magnolia>
 In-Reply-To: <162758423315.332903.16799817941903734904.stgit@magnolia>
 References: <162758423315.332903.16799817941903734904.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,51 +50,57 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Other parts of XFS have learned to call xfs_blockgc_free_{space,quota}
-to try to free speculative preallocations when space is tight.  This
-means that file writes, transaction reservation failures, quota limit
-enforcement, and the EOFBLOCKS ioctl all call this function to free
-space when things are tight.
-
-Since inode inactivation is now a background task, this means that the
-filesystem can be hanging on to unlinked but not yet freed space.  Add
-this to the list of things that xfs_blockgc_free_* makes writer threads
-scan for when they cannot reserve space.
+Users have come to expect that the space accounting information in
+statfs and getquota reports are fairly accurate.  Now that we inactivate
+inodes from a background queue, these numbers can be thrown off by
+whatever resources are singly-owned by the inodes in the queue.  Flush
+the pending inactivations when userspace asks for a space usage report.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_icache.c |   11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_qm_syscalls.c |    8 ++++++++
+ fs/xfs/xfs_super.c       |    3 +++
+ 2 files changed, 11 insertions(+)
 
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 91a1dc7eb352..3501f04d0914 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1836,16 +1836,23 @@ xfs_blockgc_worker(
- }
+diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+index 982cd6613a4c..c6902f9d064c 100644
+--- a/fs/xfs/xfs_qm_syscalls.c
++++ b/fs/xfs/xfs_qm_syscalls.c
+@@ -481,6 +481,10 @@ xfs_qm_scall_getquota(
+ 	struct xfs_dquot	*dqp;
+ 	int			error;
  
- /*
-- * Try to free space in the filesystem by purging eofblocks and cowblocks.
-+ * Try to free space in the filesystem by purging inactive inodes, eofblocks
-+ * and cowblocks.
-  */
- int
- xfs_blockgc_free_space(
- 	struct xfs_mount	*mp,
- 	struct xfs_icwalk	*icw)
- {
-+	int			error;
++	/* Flush inodegc work at the start of a quota reporting scan. */
++	if (id == 0)
++		xfs_inodegc_flush(mp);
 +
- 	trace_xfs_blockgc_free_space(mp, icw, _RET_IP_);
+ 	/*
+ 	 * Try to get the dquot. We don't want it allocated on disk, so don't
+ 	 * set doalloc. If it doesn't exist, we'll get ENOENT back.
+@@ -519,6 +523,10 @@ xfs_qm_scall_getquota_next(
+ 	struct xfs_dquot	*dqp;
+ 	int			error;
  
--	return xfs_icwalk(mp, XFS_ICWALK_BLOCKGC, icw);
-+	error = xfs_icwalk(mp, XFS_ICWALK_BLOCKGC, icw);
-+	if (error)
-+		return error;
++	/* Flush inodegc work at the start of a quota reporting scan. */
++	if (*id == 0)
++		xfs_inodegc_flush(mp);
 +
-+	return xfs_icwalk(mp, XFS_ICWALK_INODEGC, icw);
- }
+ 	error = xfs_qm_dqget_next(mp, *id, type, &dqp);
+ 	if (error)
+ 		return error;
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index c8207da0bb38..1f82726d6265 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -757,6 +757,9 @@ xfs_fs_statfs(
+ 	xfs_extlen_t		lsize;
+ 	int64_t			ffree;
  
- /*
++	/* Wait for whatever inactivations are in progress. */
++	xfs_inodegc_flush(mp);
++
+ 	statp->f_type = XFS_SUPER_MAGIC;
+ 	statp->f_namelen = MAXNAMELEN - 1;
+ 
 
