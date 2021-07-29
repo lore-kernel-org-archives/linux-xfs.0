@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08889C4338F
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Jul 2021 18:44:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FDB9C4338F
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Jul 2021 18:45:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E481D60F4B
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Jul 2021 18:44:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5956F60F5C
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Jul 2021 18:45:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230197AbhG2So6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Jul 2021 14:44:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49016 "EHLO mail.kernel.org"
+        id S229758AbhG2SpE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Jul 2021 14:45:04 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49076 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229676AbhG2So5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 29 Jul 2021 14:44:57 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 767E760249;
-        Thu, 29 Jul 2021 18:44:54 +0000 (UTC)
+        id S229672AbhG2SpD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 29 Jul 2021 14:45:03 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id F07C460F4B;
+        Thu, 29 Jul 2021 18:44:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627584294;
-        bh=RGeNKyFUdxtLDOS/2l9Pc4k6g6iFKMIZGHDYl4iGpLc=;
+        s=k20201202; t=1627584300;
+        bh=59IjRXR3dE7tCYB5uvPPbqbUMuH/da6gnIZKSjoljrQ=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=N/HuLJ6cDVzbyOhIWydG6RE+NgSsCwBZHzJeenpG+5506KuMTxCtHaELWRP2X6tyg
-         tI9CQHzBzRnpXbdV06NSWnsa3G6oAHkWgN+FpM6FL2MA2UoF53lnKVkdDT1feOIsLK
-         qwsL0azTpqpeL6VKtBpx1C/UxQa0mBGz4G5H6/NYOmHP7GL3UOIgfK7RTbc9E1330K
-         CpfDtoDd7hO518VMjyRnqzzcWw1G7eQZhwV0oASeS7/NKiBbLhZ0LFVp4EksuxcmLY
-         OotsCb8FSpDXIzzKPpRmTSJaTG/FzxN5gCCBhyZg5i0T+eOEx52HvMc3d0OzQ0I7ay
-         rh4SL693ftuYw==
-Subject: [PATCH 11/20] xfs: reduce inactivation delay when realtime extents
- are tight
+        b=h1BVj5yGwdun11aJ9WMte83S5R+CcLMRY6mkVbZRfozD/kWX9nhLVU+GSOMFtfuHe
+         OHDyzQovfjhO5Fjt6S6sMsl3Q7dxXDYPtnqEIWK2vrbeE5Cgc3UjgvDjuisew8NcDc
+         pwMAmgxzmDqHsXnUUzs8DpL4vAauUPD+CwwO2g/QSaiA/3K9kiJjKvxnVoi9fG5I0F
+         V4Nc+fAlKo0skAZ3n5QSJnqK13CavPBeJ0RhLINemMmpJN98VoR7okDC674Uxn7awL
+         QElLJ/PISV8X91aOiNBYffFkiopYGGZddP762m1P38tesVWrIpD2fP1j7IKDGoLSGh
+         A55oETA/bRLcg==
+Subject: [PATCH 12/20] xfs: inactivate inodes any time we try to free
+ speculative preallocations
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@infradead.org
-Date:   Thu, 29 Jul 2021 11:44:54 -0700
-Message-ID: <162758429418.332903.3457822685619578961.stgit@magnolia>
+Date:   Thu, 29 Jul 2021 11:44:59 -0700
+Message-ID: <162758429967.332903.1341972104802367229.stgit@magnolia>
 In-Reply-To: <162758423315.332903.16799817941903734904.stgit@magnolia>
 References: <162758423315.332903.16799817941903734904.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,164 +50,51 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Implement the same scaling down of inodegc delays when we're tight on
-realtime extents that we do for free blocks on the data device.
+Other parts of XFS have learned to call xfs_blockgc_free_{space,quota}
+to try to free speculative preallocations when space is tight.  This
+means that file writes, transaction reservation failures, quota limit
+enforcement, and the EOFBLOCKS ioctl all call this function to free
+space when things are tight.
+
+Since inode inactivation is now a background task, this means that the
+filesystem can be hanging on to unlinked but not yet freed space.  Add
+this to the list of things that xfs_blockgc_free_* makes writer threads
+scan for when they cannot reserve space.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_icache.c |   51 +++++++++++++++++++++++++++++++++++++++++++++++++--
- fs/xfs/xfs_mount.c  |   13 ++++++++-----
- fs/xfs/xfs_mount.h  |    1 +
- fs/xfs/xfs_trace.h  |   22 ++++++++++++++++++++++
- 4 files changed, 80 insertions(+), 7 deletions(-)
+ fs/xfs/xfs_icache.c |   11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
 
 diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 7ba80d7bff41..91a1dc7eb352 100644
+index 91a1dc7eb352..3501f04d0914 100644
 --- a/fs/xfs/xfs_icache.c
 +++ b/fs/xfs/xfs_icache.c
-@@ -279,6 +279,47 @@ xfs_gc_delay_dquot(
- 	return delay_ms;
- }
- 
-+/*
-+ * Scale down the background work delay if we're low on free rt extents.
-+ * Return value is in ms.
-+ */
-+static inline unsigned int
-+xfs_gc_delay_freertx(
-+	struct xfs_mount	*mp,
-+	struct xfs_inode	*ip,
-+	unsigned int		tag,
-+	unsigned int		delay_ms)
-+{
-+	int64_t			freertx;
-+	unsigned int		shift = 0;
-+
-+	if (ip && !XFS_IS_REALTIME_INODE(ip))
-+		return delay_ms;
-+	if (!xfs_sb_version_hasrealtime(&mp->m_sb))
-+		return delay_ms;
-+
-+	spin_lock(&mp->m_sb_lock);
-+	freertx = mp->m_sb.sb_rextents;
-+	spin_unlock(&mp->m_sb_lock);
-+
-+	if (freertx < mp->m_low_rtexts[XFS_LOWSP_5_PCNT]) {
-+		shift = 2;
-+		if (freertx < mp->m_low_rtexts[XFS_LOWSP_4_PCNT])
-+			shift++;
-+		if (freertx < mp->m_low_rtexts[XFS_LOWSP_3_PCNT])
-+			shift++;
-+		if (freertx < mp->m_low_rtexts[XFS_LOWSP_2_PCNT])
-+			shift++;
-+		if (freertx < mp->m_low_rtexts[XFS_LOWSP_1_PCNT])
-+			shift++;
-+	}
-+
-+	if (shift)
-+		trace_xfs_gc_delay_frextents(mp, tag, shift);
-+
-+	return delay_ms >> shift;
-+}
-+
- /*
-  * Scale down the background work delay if we're low on free space.  Similar to
-  * the way that we throttle preallocations, we halve the delay time for every
-@@ -324,7 +365,7 @@ xfs_gc_delay_ms(
- 	unsigned int		tag)
- {
- 	unsigned int		default_ms;
--	unsigned int		udelay, gdelay, pdelay, fdelay;
-+	unsigned int		udelay, gdelay, pdelay, fdelay, rdelay;
- 
- 	switch (tag) {
- 	case XFS_ICI_INODEGC_TAG:
-@@ -346,8 +387,14 @@ xfs_gc_delay_ms(
- 	gdelay = xfs_gc_delay_dquot(ip, XFS_DQTYPE_GROUP, tag, default_ms);
- 	pdelay = xfs_gc_delay_dquot(ip, XFS_DQTYPE_PROJ, tag, default_ms);
- 	fdelay = xfs_gc_delay_freesp(mp, tag, default_ms);
-+	rdelay = xfs_gc_delay_freertx(mp, ip, tag, default_ms);
- 
--	return min(min(udelay, gdelay), min(pdelay, fdelay));
-+	udelay = min(udelay, gdelay);
-+	pdelay = min(pdelay, fdelay);
-+
-+	udelay = min(udelay, pdelay);
-+
-+	return min(udelay, rdelay);
+@@ -1836,16 +1836,23 @@ xfs_blockgc_worker(
  }
  
  /*
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index ac953c486b9f..32b46593a169 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -365,13 +365,16 @@ void
- xfs_set_low_space_thresholds(
- 	struct xfs_mount	*mp)
+- * Try to free space in the filesystem by purging eofblocks and cowblocks.
++ * Try to free space in the filesystem by purging inactive inodes, eofblocks
++ * and cowblocks.
+  */
+ int
+ xfs_blockgc_free_space(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_icwalk	*icw)
  {
--	int i;
-+	uint64_t		dblocks = mp->m_sb.sb_dblocks;
-+	uint64_t		rtexts = mp->m_sb.sb_rextents;
-+	int			i;
++	int			error;
 +
-+	do_div(dblocks, 100);
-+	do_div(rtexts, 100);
+ 	trace_xfs_blockgc_free_space(mp, icw, _RET_IP_);
  
- 	for (i = 0; i < XFS_LOWSP_MAX; i++) {
--		uint64_t space = mp->m_sb.sb_dblocks;
--
--		do_div(space, 100);
--		mp->m_low_space[i] = space * (i + 1);
-+		mp->m_low_space[i] = dblocks * (i + 1);
-+		mp->m_low_rtexts[i] = rtexts * (i + 1);
- 	}
+-	return xfs_icwalk(mp, XFS_ICWALK_BLOCKGC, icw);
++	error = xfs_icwalk(mp, XFS_ICWALK_BLOCKGC, icw);
++	if (error)
++		return error;
++
++	return xfs_icwalk(mp, XFS_ICWALK_INODEGC, icw);
  }
  
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 7844b44d45ea..225b3d289336 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -133,6 +133,7 @@ typedef struct xfs_mount {
- 	uint			m_qflags;	/* quota status flags */
- 	uint64_t		m_flags;	/* global mount flags */
- 	int64_t			m_low_space[XFS_LOWSP_MAX];
-+	int64_t			m_low_rtexts[XFS_LOWSP_MAX];
- 	struct xfs_ino_geometry	m_ino_geo;	/* inode geometry */
- 	struct xfs_trans_resv	m_resv;		/* precomputed res values */
- 						/* low free space thresholds */
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 001fd202dbfb..0579775e1e15 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -269,6 +269,28 @@ TRACE_EVENT(xfs_gc_delay_fdblocks,
- 		  __entry->fdblocks)
- );
- 
-+TRACE_EVENT(xfs_gc_delay_frextents,
-+	TP_PROTO(struct xfs_mount *mp, unsigned int tag, unsigned int shift),
-+	TP_ARGS(mp, tag, shift),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(unsigned long long, frextents)
-+		__field(unsigned int, tag)
-+		__field(unsigned int, shift)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->frextents = mp->m_sb.sb_frextents;
-+		__entry->tag = tag;
-+		__entry->shift = shift;
-+	),
-+	TP_printk("dev %d:%d tag %u shift %u frextents %llu",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->tag,
-+		  __entry->shift,
-+		  __entry->frextents)
-+);
-+
- DECLARE_EVENT_CLASS(xfs_gc_queue_class,
- 	TP_PROTO(struct xfs_mount *mp, unsigned int delay_ms),
- 	TP_ARGS(mp, delay_ms),
+ /*
 
