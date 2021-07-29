@@ -7,37 +7,36 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D70BC4338F
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Jul 2021 18:44:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B04EDC4338F
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Jul 2021 18:44:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 76F5E60F5C
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Jul 2021 18:44:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9A83960F4B
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Jul 2021 18:44:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229676AbhG2SoZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Jul 2021 14:44:25 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48570 "EHLO mail.kernel.org"
+        id S229620AbhG2Sod (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Jul 2021 14:44:33 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48646 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229620AbhG2SoY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 29 Jul 2021 14:44:24 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 798A960F4B;
-        Thu, 29 Jul 2021 18:44:21 +0000 (UTC)
+        id S229807AbhG2Soa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 29 Jul 2021 14:44:30 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 024DB60249;
+        Thu, 29 Jul 2021 18:44:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627584261;
-        bh=t+aC/V1yMvyMzNISw+jhpHjqNCc7aIDzdaQZV1NqIWM=;
+        s=k20201202; t=1627584267;
+        bh=ttGyJmTEIdyynRdCZASYxB4BgIxqS/f/oQgcp8sSabY=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=NF7acc+HbHCNdqUPme1D4jfMrSbhb2GdkncAVJ6RSP7bPtgn+v1X4etlIdywl7zy2
-         wTqcNeS02nn3NHjK0+RX/WOjyj26sABzDn+WC/QK38rFv5lx6cATYMQ5hiYTleErKG
-         YRc7pXWwy602/Guq5tln8E35DL3JHKPmeilDBcl79KPpvOoDUPtlDjZ8KgibtVekvp
-         QGXHQ+La4DevAZanE6owYz1Rk6cszwT72V/U6zfz/6f74umUgUeZgAtaOMBvpnqL3J
-         xgBuHU7XSTM5ia26i55wTTFE1X/UxUpAOsn4WF1m/EuTr5VhhgMkvgV2NKfTemLdKI
-         H+wwauuTsxvZA==
-Subject: [PATCH 05/20] xfs: don't throttle memory reclaim trying to queue
- inactive inodes
+        b=ZbU73AVSKlOuch4jq9QiZcd0XfC2zWg2Xrom5pss82hUGA951iRq5emEFa1pWFPCn
+         OUzau0xipYs1dnv6yQHPw6EcIw65arFfCrGlDKO63aeHwtZuaTmUVl2Rhmeimk5wjI
+         i0TxLXABdwp7bGysFEg/ZI7oufN+naPO1DxBogxf1B9ZqNuUyvIrTp15KJ7dqpyNPS
+         bLrCxCdqjpqk4X3h+ThcNA8AM+XimXpcPURHuUrt41IZfyJ53db7273mFagN0Sfe+B
+         XV3HrBEZnXctB34k6AWtEgDVMZnap83iwYsD94408flsBS80ASefHABidJPc3dt/L8
+         9xRShlxDqvlOg==
+Subject: [PATCH 06/20] xfs: throttle inodegc queuing on backlog
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@infradead.org
-Date:   Thu, 29 Jul 2021 11:44:21 -0700
-Message-ID: <162758426119.332903.15684757078028586033.stgit@magnolia>
+Date:   Thu, 29 Jul 2021 11:44:26 -0700
+Message-ID: <162758426670.332903.7504844999802581902.stgit@magnolia>
 In-Reply-To: <162758423315.332903.16799817941903734904.stgit@magnolia>
 References: <162758423315.332903.16799817941903734904.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,41 +49,128 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Now that we have the means to throttle queueing of inactive inodes and
-push the background workers when memory gets tight, stop forcing tasks
-that are evicting inodes from a memory reclaim context to wait for the
-inodes to inactivate.
-
-There's not much reason to make reclaimers wait, because it can take
-quite a long time to inactivate an inode (particularly deleted ones) and
-wait for the metadata updates to push through the logs until the incore
-inode can be reclaimed.  In other words, memory allocations will no
-longer stall on XFS when inode eviction requires metadata updates.
+Track the number of inodes in each AG that are queued for inactivation,
+then use that information to decide if we're going to make threads that
+has queued an inode for inactivation wait for the background thread.
+The purpose of this high water mark is to establish a maximum bound on
+the backlog of work that can accumulate on a non-frozen filesystem.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_icache.c |    9 +++++++++
- 1 file changed, 9 insertions(+)
+ fs/xfs/libxfs/xfs_ag.c |    1 +
+ fs/xfs/libxfs/xfs_ag.h |    3 ++-
+ fs/xfs/xfs_icache.c    |   16 ++++++++++++++++
+ fs/xfs/xfs_trace.h     |   24 ++++++++++++++++++++++++
+ 4 files changed, 43 insertions(+), 1 deletion(-)
 
 
+diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+index ee9ec0c50bec..125a4b1f5be5 100644
+--- a/fs/xfs/libxfs/xfs_ag.c
++++ b/fs/xfs/libxfs/xfs_ag.c
+@@ -193,6 +193,7 @@ xfs_free_perag(
+ 		spin_unlock(&mp->m_perag_lock);
+ 		ASSERT(pag);
+ 		ASSERT(atomic_read(&pag->pag_ref) == 0);
++		ASSERT(pag->pag_ici_needs_inactive == 0);
+ 
+ 		cancel_delayed_work_sync(&pag->pag_blockgc_work);
+ 		xfs_iunlink_destroy(pag);
+diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
+index 4c6f9045baca..ad0d3480a4a2 100644
+--- a/fs/xfs/libxfs/xfs_ag.h
++++ b/fs/xfs/libxfs/xfs_ag.h
+@@ -83,7 +83,8 @@ struct xfs_perag {
+ 
+ 	spinlock_t	pag_ici_lock;	/* incore inode cache lock */
+ 	struct radix_tree_root pag_ici_root;	/* incore inode cache root */
+-	int		pag_ici_reclaimable;	/* reclaimable inodes */
++	unsigned int	pag_ici_needs_inactive;	/* inodes queued for inactivation */
++	unsigned int	pag_ici_reclaimable;	/* reclaimable inodes */
+ 	unsigned long	pag_ici_reclaim_cursor;	/* reclaim restart point */
+ 
+ 	/* buffer cache index */
 diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 3e2302a44c69..82f0db311ef9 100644
+index 82f0db311ef9..abd95f16b697 100644
 --- a/fs/xfs/xfs_icache.c
 +++ b/fs/xfs/xfs_icache.c
-@@ -355,6 +355,15 @@ xfs_inodegc_want_throttle(
- {
- 	struct xfs_mount	*mp = pag->pag_mount;
+@@ -35,6 +35,12 @@
+ /* Inode can be inactivated. */
+ #define XFS_ICI_INODEGC_TAG	2
  
-+	/*
-+	 * If we're in memory reclaim context, we don't want to wait for inode
-+	 * inactivation to finish because it can take a very long time to
-+	 * commit all the metadata updates and push the inodes through memory
-+	 * reclamation.  Also, we might be the background inodegc thread.
-+	 */
-+	if (current->reclaim_state != NULL)
-+		return false;
++/*
++ * Upper bound on the number of inodes in each AG that can be queued for
++ * inactivation at any given time, to avoid monopolizing the workqueue.
++ */
++#define XFS_INODEGC_MAX_BACKLOG	(1024 * XFS_INODES_PER_CHUNK)
++
+ /*
+  * The goal for walking incore inodes.  These can correspond with incore inode
+  * radix tree tags when convenient.  Avoid existing XFS_IWALK namespace.
+@@ -259,6 +265,8 @@ xfs_perag_set_inode_tag(
+ 
+ 	if (tag == XFS_ICI_RECLAIM_TAG)
+ 		pag->pag_ici_reclaimable++;
++	else if (tag == XFS_ICI_INODEGC_TAG)
++		pag->pag_ici_needs_inactive++;
+ 
+ 	if (was_tagged)
+ 		return;
+@@ -306,6 +314,8 @@ xfs_perag_clear_inode_tag(
+ 
+ 	if (tag == XFS_ICI_RECLAIM_TAG)
+ 		pag->pag_ici_reclaimable--;
++	else if (tag == XFS_ICI_INODEGC_TAG)
++		pag->pag_ici_needs_inactive--;
+ 
+ 	if (radix_tree_tagged(&pag->pag_ici_root, tag))
+ 		return;
+@@ -364,6 +374,12 @@ xfs_inodegc_want_throttle(
+ 	if (current->reclaim_state != NULL)
+ 		return false;
+ 
++	/* Enforce an upper bound on how many inodes can queue up. */
++	if (pag->pag_ici_needs_inactive > XFS_INODEGC_MAX_BACKLOG) {
++		trace_xfs_inodegc_throttle_backlog(pag);
++		return true;
++	}
 +
  	/* Throttle if memory reclaim anywhere has triggered us. */
  	if (atomic_read(&mp->m_inodegc_reclaim) > 0) {
  		trace_xfs_inodegc_throttle_mempressure(mp);
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index eaebb070d859..b4dfa7e7e700 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -249,6 +249,30 @@ TRACE_EVENT(xfs_inodegc_throttle_mempressure,
+ 		  __entry->votes)
+ );
+ 
++DECLARE_EVENT_CLASS(xfs_inodegc_backlog_class,
++	TP_PROTO(struct xfs_perag *pag),
++	TP_ARGS(pag),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(unsigned int, needs_inactive)
++	),
++	TP_fast_assign(
++		__entry->dev = pag->pag_mount->m_super->s_dev;
++		__entry->agno = pag->pag_agno;
++		__entry->needs_inactive = pag->pag_ici_needs_inactive;
++	),
++	TP_printk("dev %d:%d agno %u needs_inactive %u",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->needs_inactive)
++);
++#define DEFINE_INODEGC_BACKLOG_EVENT(name)	\
++DEFINE_EVENT(xfs_inodegc_backlog_class, name,	\
++	TP_PROTO(struct xfs_perag *pag),	\
++	TP_ARGS(pag))
++DEFINE_INODEGC_BACKLOG_EVENT(xfs_inodegc_throttle_backlog);
++
+ DECLARE_EVENT_CLASS(xfs_ag_class,
+ 	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno),
+ 	TP_ARGS(mp, agno),
 
