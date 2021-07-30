@@ -7,39 +7,36 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5FDDC4338F
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Jul 2021 10:04:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91B51C43214
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Jul 2021 10:04:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CC5CE60F5C
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Jul 2021 10:04:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 74D7761040
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Jul 2021 10:04:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238459AbhG3KEE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Jul 2021 06:04:04 -0400
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:36456 "EHLO
+        id S238473AbhG3KEF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Jul 2021 06:04:05 -0400
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:32041 "EHLO
         heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S238419AbhG3KD4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Jul 2021 06:03:56 -0400
-IronPort-HdrOrdr: =?us-ascii?q?A9a23=3ATLULHaxol51Ut6bUyMQBKrPwyr1zdoMgy1kn?=
- =?us-ascii?q?xilNoRw8SK2lfqeV7Y0mPH7P+U4ssR4b6LO90cW7Lk80sKQFhbX5Xo3SOjUO2l?=
- =?us-ascii?q?HYTr2KhLGKq1aLdkHDH6xmpMBdmsNFaOEYY2IVsS+D2njcLz8/+qj6zImYwffZ?=
- =?us-ascii?q?02x2TRxnL4Vp7wJCAA6dFUFsLTM2f6YRJd6N4NZdvTq8dTAyZsS/PHMMWO/OvJ?=
- =?us-ascii?q?nlj5TjCCR2eiIP2U2fiy+y8r7mH1y91hcaaTlGxrAv6izkvmXCl96ej80=3D?=
+        with ESMTP id S238383AbhG3KED (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Jul 2021 06:04:03 -0400
+IronPort-HdrOrdr: =?us-ascii?q?A9a23=3A194Hb6pUDpcpucPFU3ZF6PQaV5rPeYIsimQD?=
+ =?us-ascii?q?101hICG8cqSj+fxG+85rsyMc6QxhIU3I9urhBEDtex/hHNtOkOws1NSZLW7bUQ?=
+ =?us-ascii?q?mTXeJfBOLZqlWKcUDDH6xmpMNdmsNFaeEYY2IUsS+D2njbLz8/+qj7zImYwffZ?=
+ =?us-ascii?q?02x2TRxnL4Vp7wJCAA6dFUFsLTM2fqYRJd6N4NZdvTq8dTAyZsS/PHMMWO/OvJ?=
+ =?us-ascii?q?nlj5TjCCR2fSIP2U2fiy+y8r7mH1y91hcaaTlGxrAv6izkvmXCl92ej80=3D?=
 X-IronPort-AV: E=Sophos;i="5.84,281,1620662400"; 
-   d="scan'208";a="112074009"
+   d="scan'208";a="112074018"
 Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 30 Jul 2021 18:02:12 +0800
-Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
-        by cn.fujitsu.com (Postfix) with ESMTP id 479004D0D49E;
-        Fri, 30 Jul 2021 18:02:11 +0800 (CST)
-Received: from G08CNEXJMPEKD02.g08.fujitsu.local (10.167.33.202) by
- G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
- (TLS) id 15.0.1497.23; Fri, 30 Jul 2021 18:02:06 +0800
+  by heian.cn.fujitsu.com with ESMTP; 30 Jul 2021 18:02:19 +0800
+Received: from G08CNEXMBPEKD06.g08.fujitsu.local (unknown [10.167.33.206])
+        by cn.fujitsu.com (Postfix) with ESMTP id 13A174D0D4A3;
+        Fri, 30 Jul 2021 18:02:17 +0800 (CST)
 Received: from G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.85) by
- G08CNEXJMPEKD02.g08.fujitsu.local (10.167.33.202) with Microsoft SMTP Server
- (TLS) id 15.0.1497.23; Fri, 30 Jul 2021 18:02:03 +0800
+ G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.23; Fri, 30 Jul 2021 18:02:16 +0800
 Received: from irides.mr.mr.mr (10.167.225.141) by
  G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.23 via Frontend Transport; Fri, 30 Jul 2021 18:02:01 +0800
+ id 15.0.1497.23 via Frontend Transport; Fri, 30 Jul 2021 18:02:15 +0800
 From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
 To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
         <nvdimm@lists.linux.dev>, <linux-mm@kvack.org>,
@@ -47,55 +44,65 @@ To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
 CC:     <djwong@kernel.org>, <dan.j.williams@intel.com>,
         <david@fromorbit.com>, <hch@lst.de>, <agk@redhat.com>,
         <snitzer@redhat.com>
-Subject: [PATCH RESEND v6 1/9] pagemap: Introduce ->memory_failure()
-Date:   Fri, 30 Jul 2021 18:01:50 +0800
-Message-ID: <20210730100158.3117319-2-ruansy.fnst@fujitsu.com>
+Subject: [PATCH RESEND v6 9/9] fsdax: add exception for reflinked files
+Date:   Fri, 30 Jul 2021 18:01:58 +0800
+Message-ID: <20210730100158.3117319-10-ruansy.fnst@fujitsu.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20210730100158.3117319-1-ruansy.fnst@fujitsu.com>
 References: <20210730100158.3117319-1-ruansy.fnst@fujitsu.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: 479004D0D49E.A0288
+X-yoursite-MailScanner-ID: 13A174D0D4A3.A33E4
 X-yoursite-MailScanner: Found to be clean
 X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-When memory-failure occurs, we call this function which is implemented
-by each kind of devices.  For the fsdax case, pmem device driver
-implements it.  Pmem device driver will find out the filesystem in which
-the corrupted page located in.  And finally call filesystem handler to
-deal with this error.
-
-The filesystem will try to recover the corrupted data if necessary.
+For reflinked files, one dax page may be associated more than once with
+different fime mapping and index.  It will report warning.  Now, since
+we have introduced dax-RMAP for this case and also have to keep its
+functionality for other filesystems who are not support rmap, I add this
+exception here.
 
 Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
 ---
- include/linux/memremap.h | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ fs/dax.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/include/linux/memremap.h b/include/linux/memremap.h
-index c0e9d35889e8..ed6980087db5 100644
---- a/include/linux/memremap.h
-+++ b/include/linux/memremap.h
-@@ -87,6 +87,15 @@ struct dev_pagemap_ops {
- 	 * the page back to a CPU accessible page.
- 	 */
- 	vm_fault_t (*migrate_to_ram)(struct vm_fault *vmf);
-+
-+	/*
-+	 * Handle the memory failure happens on a range of pfns.  Notify the
-+	 * processes who are using these pfns, and try to recover the data on
-+	 * them if necessary.  The flag is finally passed to the recover
-+	 * function through the whole notify routine.
-+	 */
-+	int (*memory_failure)(struct dev_pagemap *pgmap, unsigned long pfn,
-+			      unsigned long nr_pfns, int flags);
- };
+diff --git a/fs/dax.c b/fs/dax.c
+index dce6307a12eb..f5910d178695 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -352,9 +352,10 @@ static void dax_associate_entry(void *entry, struct address_space *mapping,
+ 	for_each_mapped_pfn(entry, pfn) {
+ 		struct page *page = pfn_to_page(pfn);
  
- #define PGMAP_ALTMAP_VALID	(1 << 0)
+-		WARN_ON_ONCE(page->mapping);
+-		page->mapping = mapping;
+-		page->index = index + i++;
++		if (!page->mapping) {
++			page->mapping = mapping;
++			page->index = index + i++;
++		}
+ 	}
+ }
+ 
+@@ -370,9 +371,10 @@ static void dax_disassociate_entry(void *entry, struct address_space *mapping,
+ 		struct page *page = pfn_to_page(pfn);
+ 
+ 		WARN_ON_ONCE(trunc && page_ref_count(page) > 1);
+-		WARN_ON_ONCE(page->mapping && page->mapping != mapping);
+-		page->mapping = NULL;
+-		page->index = 0;
++		if (page->mapping == mapping) {
++			page->mapping = NULL;
++			page->index = 0;
++		}
+ 	}
+ }
+ 
 -- 
 2.32.0
 
