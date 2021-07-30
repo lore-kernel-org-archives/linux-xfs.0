@@ -2,362 +2,560 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C644AC19F35
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Jul 2021 10:04:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 535B7C4338F
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Jul 2021 12:22:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A783B61008
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Jul 2021 10:04:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3B1BC60230
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Jul 2021 12:22:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238534AbhG3KEL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Jul 2021 06:04:11 -0400
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:36456 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S238410AbhG3KED (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Jul 2021 06:04:03 -0400
-IronPort-HdrOrdr: =?us-ascii?q?A9a23=3A075swKH1jGovkDZbpLqE1MeALOsnbusQ8zAX?=
- =?us-ascii?q?PiFKOHhom6mj+vxG88506faKslwssR0b+OxoW5PwJE80l6QFgrX5VI3KNGbbUQ?=
- =?us-ascii?q?CTXeNfBOXZowHIKmnX8+5x8eNaebFiNduYNzNHpPe/zA6mM9tI+rW6zJw=3D?=
-X-IronPort-AV: E=Sophos;i="5.84,281,1620662400"; 
-   d="scan'208";a="112074019"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 30 Jul 2021 18:02:19 +0800
-Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
-        by cn.fujitsu.com (Postfix) with ESMTP id CA90D4D0D4A1;
-        Fri, 30 Jul 2021 18:02:13 +0800 (CST)
-Received: from G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.85) by
- G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
- (TLS) id 15.0.1497.23; Fri, 30 Jul 2021 18:02:14 +0800
-Received: from irides.mr.mr.mr (10.167.225.141) by
- G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.23 via Frontend Transport; Fri, 30 Jul 2021 18:02:12 +0800
-From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        <nvdimm@lists.linux.dev>, <linux-mm@kvack.org>,
-        <linux-fsdevel@vger.kernel.org>, <dm-devel@redhat.com>
-CC:     <djwong@kernel.org>, <dan.j.williams@intel.com>,
-        <david@fromorbit.com>, <hch@lst.de>, <agk@redhat.com>,
-        <snitzer@redhat.com>
-Subject: [PATCH RESEND v6 6/9] xfs: Implement ->notify_failure() for XFS
-Date:   Fri, 30 Jul 2021 18:01:55 +0800
-Message-ID: <20210730100158.3117319-7-ruansy.fnst@fujitsu.com>
-X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20210730100158.3117319-1-ruansy.fnst@fujitsu.com>
-References: <20210730100158.3117319-1-ruansy.fnst@fujitsu.com>
+        id S230350AbhG3MWJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Jul 2021 08:22:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36504 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230325AbhG3MWI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Jul 2021 08:22:08 -0400
+Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02CA1C061765
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Jul 2021 05:22:03 -0700 (PDT)
+Received: by mail-pj1-x1031.google.com with SMTP id ds11-20020a17090b08cbb0290172f971883bso20565138pjb.1
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Jul 2021 05:22:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=references:user-agent:from:to:cc:subject:in-reply-to:date
+         :message-id:mime-version;
+        bh=wGgLy2rB0YVz+xAIN1Kz37cus9xJQ3iWclJmoMO4BFU=;
+        b=agFsIm71Fep4lx98tqta+c1wtbWZZlQoe5GTMLpZN/a/sXkE6JjaAjhCd5lLmFTN3g
+         2lxtPDBG49fxPeMGMVamIGrrNW1hm77QW9E7KVfvJQ27LrerFqXJBZhbmTKnCThOA+2i
+         JK584CiA+jg0qu+6sJORfaNVbjQLh/weDQMzeubFdnRYRf7N6NebQqPX4M0x+48h2r5P
+         Qcyry8Z5kn9HsQIC7rU7PDC1/Du6Og928NJ05EEHq6ZZxZCSx+gjhwaT7P7r2sCTGeaE
+         DEpNPHH6idhkLvzkOZJDzo0fXGTHxRTVxtXsdrIoR6opmAx3pOev/7BfvLPu9Ev7J347
+         Wovg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:references:user-agent:from:to:cc:subject
+         :in-reply-to:date:message-id:mime-version;
+        bh=wGgLy2rB0YVz+xAIN1Kz37cus9xJQ3iWclJmoMO4BFU=;
+        b=Xz8/QBC/zGm2uTpxsQQNEyZnoNzX3BlQxXpKER1SzUlDXFdVLjAXtBrURWCJ0PgAAD
+         2CwLxKZZ+7QdTm6k7+/8OWnbEzlo5Xf4qmG/EG9/I7Y0IK5xj3BEvb8RWRPtD0zsx/0i
+         I+E9Cye0gr1V0hYhdzVPU5KZPefK+yE0l3lFdod4kefdjVSWPkbpd8i3SpahhyP+kdvR
+         lBaI332361Hx6AbugkpT1HKsHVFQy9tGruPkk7OKIDTLXQP6t/kaAW7gZ6fm0rDK3oR9
+         3q/nT7KsWPxkdlepdps+dD0c1Mw9ScxlofT+8rqP7hmLUYs96ZVgyXrykIRLTHJQFO2o
+         oBIg==
+X-Gm-Message-State: AOAM530nMHhyz5HTKuhyJ1WHzNV9tg/mrE40OkDOrN4TCZJuv7z1GX0E
+        5Wd+a/tWPMG30fEwQP1j87bSh6Ral99V5g==
+X-Google-Smtp-Source: ABdhPJxhodb/yQTt6RgkAdkhZHodc2MsNESZLTXB4vrIdH9TvvZrW2FbqcgpF1PX10KayVYvHmWFBw==
+X-Received: by 2002:a17:902:d501:b029:12c:3386:96ed with SMTP id b1-20020a170902d501b029012c338696edmr2370850plg.39.1627647722360;
+        Fri, 30 Jul 2021 05:22:02 -0700 (PDT)
+Received: from garuda ([122.171.174.228])
+        by smtp.gmail.com with ESMTPSA id r10sm2210386pff.7.2021.07.30.05.22.00
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Fri, 30 Jul 2021 05:22:02 -0700 (PDT)
+References: <20210727062053.11129-1-allison.henderson@oracle.com> <20210727062053.11129-10-allison.henderson@oracle.com>
+User-agent: mu4e 1.0; emacs 26.1
+From:   Chandan Babu R <chandanrlinux@gmail.com>
+To:     Allison Henderson <allison.henderson@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v22 09/16] xfs: Implement attr logging and replay
+In-reply-to: <20210727062053.11129-10-allison.henderson@oracle.com>
+Date:   Fri, 30 Jul 2021 17:51:57 +0530
+Message-ID: <87v94s800q.fsf@garuda>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: CA90D4D0D4A1.A4774
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This function is used to handle errors which may cause data lost in
-filesystem.  Such as memory failure in fsdax mode.
+On 27 Jul 2021 at 11:50, Allison Henderson wrote:
+> This patch adds the needed routines to create, log and recover logged
+> extended attribute intents.
+>
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_defer.c  |   1 +
+>  fs/xfs/libxfs/xfs_defer.h  |   1 +
+>  fs/xfs/libxfs/xfs_format.h |  10 +-
+>  fs/xfs/xfs_attr_item.c     | 377 +++++++++++++++++++++++++++++++++++++++++++++
+>  4 files changed, 388 insertions(+), 1 deletion(-)
+>
+> diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+> index eff4a12..e9caff7 100644
+> --- a/fs/xfs/libxfs/xfs_defer.c
+> +++ b/fs/xfs/libxfs/xfs_defer.c
+> @@ -178,6 +178,7 @@ static const struct xfs_defer_op_type *defer_op_types[] = {
+>  	[XFS_DEFER_OPS_TYPE_RMAP]	= &xfs_rmap_update_defer_type,
+>  	[XFS_DEFER_OPS_TYPE_FREE]	= &xfs_extent_free_defer_type,
+>  	[XFS_DEFER_OPS_TYPE_AGFL_FREE]	= &xfs_agfl_free_defer_type,
+> +	[XFS_DEFER_OPS_TYPE_ATTR]	= &xfs_attr_defer_type,
+>  };
+>  
+>  static void
+> diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
+> index 0ed9dfa..72a5789 100644
+> --- a/fs/xfs/libxfs/xfs_defer.h
+> +++ b/fs/xfs/libxfs/xfs_defer.h
+> @@ -19,6 +19,7 @@ enum xfs_defer_ops_type {
+>  	XFS_DEFER_OPS_TYPE_RMAP,
+>  	XFS_DEFER_OPS_TYPE_FREE,
+>  	XFS_DEFER_OPS_TYPE_AGFL_FREE,
+> +	XFS_DEFER_OPS_TYPE_ATTR,
+>  	XFS_DEFER_OPS_TYPE_MAX,
+>  };
+>  
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index 3a4da111..93c1263 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -485,7 +485,9 @@ xfs_sb_has_incompat_feature(
+>  	return (sbp->sb_features_incompat & feature) != 0;
+>  }
+>  
+> -#define XFS_SB_FEAT_INCOMPAT_LOG_ALL 0
+> +#define XFS_SB_FEAT_INCOMPAT_LOG_DELATTR   (1 << 0)	/* Delayed Attributes */
+> +#define XFS_SB_FEAT_INCOMPAT_LOG_ALL \
+> +	(XFS_SB_FEAT_INCOMPAT_LOG_DELATTR)
+>  #define XFS_SB_FEAT_INCOMPAT_LOG_UNKNOWN	~XFS_SB_FEAT_INCOMPAT_LOG_ALL
+>  static inline bool
+>  xfs_sb_has_incompat_log_feature(
+> @@ -590,6 +592,12 @@ static inline bool xfs_sb_version_hasbigtime(struct xfs_sb *sbp)
+>  		(sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_BIGTIME);
+>  }
+>  
+> +static inline bool xfs_sb_version_hasdelattr(struct xfs_sb *sbp)
+> +{
+> +	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
+> +		(sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_LOG_DELATTR);
+> +}
+> +
+>  /*
+>   * Inode btree block counter.  We record the number of inobt and finobt blocks
+>   * in the AGI header so that we can skip the finobt walk at mount time when
+> diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
+> index a810c2a..44c44d9 100644
+> --- a/fs/xfs/xfs_attr_item.c
+> +++ b/fs/xfs/xfs_attr_item.c
+> @@ -275,6 +275,182 @@ xfs_attrd_item_release(
+>  	xfs_attrd_item_free(attrdp);
+>  }
+>  
+> +/*
+> + * Performs one step of an attribute update intent and marks the attrd item
+> + * dirty..  An attr operation may be a set or a remove.  Note that the
+> + * transaction is marked dirty regardless of whether the operation succeeds or
+> + * fails to support the ATTRI/ATTRD lifecycle rules.
+> + */
+> +STATIC int
+> +xfs_trans_attr_finish_update(
+> +	struct xfs_delattr_context	*dac,
+> +	struct xfs_attrd_log_item	*attrdp,
+> +	struct xfs_buf			**leaf_bp,
+> +	uint32_t			op_flags)
+> +{
+> +	struct xfs_da_args		*args = dac->da_args;
+> +	unsigned int			op = op_flags &
+> +					     XFS_ATTR_OP_FLAGS_TYPE_MASK;
+> +	int				error;
+> +
+> +	error = xfs_qm_dqattach_locked(args->dp, 0);
+> +	if (error)
+> +		return error;
+> +
+> +	switch (op) {
+> +	case XFS_ATTR_OP_FLAGS_SET:
+> +		args->op_flags |= XFS_DA_OP_ADDNAME;
 
-If the rmap feature of XFS enabled, we can query it to find files and
-metadata which are associated with the corrupt data.  For now all we do
-is kill processes with that file mapped into their address spaces, but
-future patches could actually do something about corrupt metadata.
+One nit: XFS_DA_OP_ADDNAME was already set by xfs_attr_set().
 
-After that, the memory failure needs to notify the processes who are
-using those files.
+I don't see any other issues apart from the above nit and those pointed out by
+Darrick.
 
-Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
----
- drivers/dax/super.c |  12 ++++
- fs/xfs/xfs_fsops.c  |   5 ++
- fs/xfs/xfs_mount.h  |   1 +
- fs/xfs/xfs_super.c  | 135 ++++++++++++++++++++++++++++++++++++++++++++
- include/linux/dax.h |  13 +++++
- 5 files changed, 166 insertions(+)
+> +		error = xfs_attr_set_iter(dac, leaf_bp);
+> +		break;
+> +	case XFS_ATTR_OP_FLAGS_REMOVE:
+> +		ASSERT(XFS_IFORK_Q(args->dp));
+> +		error = xfs_attr_remove_iter(dac);
+> +		break;
+> +	default:
+> +		error = -EFSCORRUPTED;
+> +		break;
+> +	}
+> +
+> +	/*
+> +	 * Mark the transaction dirty, even on error. This ensures the
+> +	 * transaction is aborted, which:
+> +	 *
+> +	 * 1.) releases the ATTRI and frees the ATTRD
+> +	 * 2.) shuts down the filesystem
+> +	 */
+> +	args->trans->t_flags |= XFS_TRANS_DIRTY;
+> +
+> +	/*
+> +	 * attr intent/done items are null when delayed attributes are disabled
+> +	 */
+> +	if (attrdp)
+> +		set_bit(XFS_LI_DIRTY, &attrdp->attrd_item.li_flags);
+> +
+> +	return error;
+> +}
+> +
+> +/* Log an attr to the intent item. */
+> +STATIC void
+> +xfs_attr_log_item(
+> +	struct xfs_trans		*tp,
+> +	struct xfs_attri_log_item	*attrip,
+> +	struct xfs_attr_item		*attr)
+> +{
+> +	struct xfs_attri_log_format	*attrp;
+> +
+> +	tp->t_flags |= XFS_TRANS_DIRTY;
+> +	set_bit(XFS_LI_DIRTY, &attrip->attri_item.li_flags);
+> +
+> +	/*
+> +	 * At this point the xfs_attr_item has been constructed, and we've
+> +	 * created the log intent. Fill in the attri log item and log format
+> +	 * structure with fields from this xfs_attr_item
+> +	 */
+> +	attrp = &attrip->attri_format;
+> +	attrp->alfi_ino = attr->xattri_dac.da_args->dp->i_ino;
+> +	attrp->alfi_op_flags = attr->xattri_op_flags;
+> +	attrp->alfi_value_len = attr->xattri_dac.da_args->valuelen;
+> +	attrp->alfi_name_len = attr->xattri_dac.da_args->namelen;
+> +	attrp->alfi_attr_flags = attr->xattri_dac.da_args->attr_filter;
+> +
+> +	attrip->attri_name = (void *)attr->xattri_dac.da_args->name;
+> +	attrip->attri_value = attr->xattri_dac.da_args->value;
+> +	attrip->attri_name_len = attr->xattri_dac.da_args->namelen;
+> +	attrip->attri_value_len = attr->xattri_dac.da_args->valuelen;
+> +}
+> +
+> +/* Get an ATTRI. */
+> +static struct xfs_log_item *
+> +xfs_attr_create_intent(
+> +	struct xfs_trans		*tp,
+> +	struct list_head		*items,
+> +	unsigned int			count,
+> +	bool				sort)
+> +{
+> +	struct xfs_mount		*mp = tp->t_mountp;
+> +	struct xfs_attri_log_item	*attrip;
+> +	struct xfs_attr_item		*attr;
+> +
+> +	ASSERT(count == 1);
+> +
+> +	if (!xfs_hasdelattr(mp))
+> +		return NULL;
+> +
+> +	attrip = xfs_attri_init(mp, 0);
+> +	if (attrip == NULL)
+> +		return NULL;
+> +
+> +	xfs_trans_add_item(tp, &attrip->attri_item);
+> +	list_for_each_entry(attr, items, xattri_list)
+> +		xfs_attr_log_item(tp, attrip, attr);
+> +	return &attrip->attri_item;
+> +}
+> +
+> +/* Process an attr. */
+> +STATIC int
+> +xfs_attr_finish_item(
+> +	struct xfs_trans		*tp,
+> +	struct xfs_log_item		*done,
+> +	struct list_head		*item,
+> +	struct xfs_btree_cur		**state)
+> +{
+> +	struct xfs_attr_item		*attr;
+> +	struct xfs_attrd_log_item	*done_item = NULL;
+> +	int				error;
+> +	struct xfs_delattr_context	*dac;
+> +
+> +	attr = container_of(item, struct xfs_attr_item, xattri_list);
+> +	dac = &attr->xattri_dac;
+> +	if (done)
+> +		done_item = ATTRD_ITEM(done);
+> +
+> +	/*
+> +	 * Corner case that can happen during a recovery.  Because the first
+> +	 * iteration of a multi part delay op happens in xfs_attri_item_recover
+> +	 * to maintain the order of the log replay items.  But the new
+> +	 * transactions do not automatically rejoin during a recovery as they do
+> +	 * in a standard delay op, so we need to catch this here and rejoin the
+> +	 * leaf to the new transaction
+> +	 */
+> +	if (attr->xattri_dac.leaf_bp &&
+> +	    attr->xattri_dac.leaf_bp->b_transp != tp) {
+> +		xfs_trans_bjoin(tp, attr->xattri_dac.leaf_bp);
+> +		xfs_trans_bhold(tp, attr->xattri_dac.leaf_bp);
+> +	}
+> +
+> +	/*
+> +	 * Always reset trans after EAGAIN cycle
+> +	 * since the transaction is new
+> +	 */
+> +	dac->da_args->trans = tp;
+> +
+> +	error = xfs_trans_attr_finish_update(dac, done_item, &dac->leaf_bp,
+> +					     attr->xattri_op_flags);
+> +	if (error != -EAGAIN)
+> +		kmem_free(attr);
+> +
+> +	return error;
+> +}
+> +
+> +/* Abort all pending ATTRs. */
+> +STATIC void
+> +xfs_attr_abort_intent(
+> +	struct xfs_log_item		*intent)
+> +{
+> +	xfs_attri_release(ATTRI_ITEM(intent));
+> +}
+> +
+> +/* Cancel an attr */
+> +STATIC void
+> +xfs_attr_cancel_item(
+> +	struct list_head		*item)
+> +{
+> +	struct xfs_attr_item		*attr;
+> +
+> +	attr = container_of(item, struct xfs_attr_item, xattri_list);
+> +	kmem_free(attr);
+> +}
+> +
+>  STATIC xfs_lsn_t
+>  xfs_attri_item_committed(
+>  	struct xfs_log_item		*lip,
+> @@ -306,6 +482,30 @@ xfs_attri_item_match(
+>  	return ATTRI_ITEM(lip)->attri_format.alfi_id == intent_id;
+>  }
+>  
+> +/*
+> + * This routine is called to allocate an "attr free done" log item.
+> + */
+> +static struct xfs_attrd_log_item *
+> +xfs_trans_get_attrd(struct xfs_trans		*tp,
+> +		  struct xfs_attri_log_item	*attrip)
+> +{
+> +	struct xfs_attrd_log_item		*attrdp;
+> +	uint					size;
+> +
+> +	ASSERT(tp != NULL);
+> +
+> +	size = sizeof(struct xfs_attrd_log_item);
+> +	attrdp = kmem_zalloc(size, 0);
+> +
+> +	xfs_log_item_init(tp->t_mountp, &attrdp->attrd_item, XFS_LI_ATTRD,
+> +			  &xfs_attrd_item_ops);
+> +	attrdp->attrd_attrip = attrip;
+> +	attrdp->attrd_format.alfd_alf_id = attrip->attri_format.alfi_id;
+> +
+> +	xfs_trans_add_item(tp, &attrdp->attrd_item);
+> +	return attrdp;
+> +}
+> +
+>  static const struct xfs_item_ops xfs_attrd_item_ops = {
+>  	.flags		= XFS_ITEM_RELEASE_WHEN_COMMITTED,
+>  	.iop_size	= xfs_attrd_item_size,
+> @@ -313,6 +513,29 @@ static const struct xfs_item_ops xfs_attrd_item_ops = {
+>  	.iop_release    = xfs_attrd_item_release,
+>  };
+>  
+> +
+> +/* Get an ATTRD so we can process all the attrs. */
+> +static struct xfs_log_item *
+> +xfs_attr_create_done(
+> +	struct xfs_trans		*tp,
+> +	struct xfs_log_item		*intent,
+> +	unsigned int			count)
+> +{
+> +	if (!intent)
+> +		return NULL;
+> +
+> +	return &xfs_trans_get_attrd(tp, ATTRI_ITEM(intent))->attrd_item;
+> +}
+> +
+> +const struct xfs_defer_op_type xfs_attr_defer_type = {
+> +	.max_items	= 1,
+> +	.create_intent	= xfs_attr_create_intent,
+> +	.abort_intent	= xfs_attr_abort_intent,
+> +	.create_done	= xfs_attr_create_done,
+> +	.finish_item	= xfs_attr_finish_item,
+> +	.cancel_item	= xfs_attr_cancel_item,
+> +};
+> +
+>  /* Is this recovered ATTRI ok? */
+>  static inline bool
+>  xfs_attri_validate(
+> @@ -340,13 +563,167 @@ xfs_attri_validate(
+>  	return xfs_hasdelattr(mp);
+>  }
+>  
+> +/*
+> + * Process an attr intent item that was recovered from the log.  We need to
+> + * delete the attr that it describes.
+> + */
+> +STATIC int
+> +xfs_attri_item_recover(
+> +	struct xfs_log_item		*lip,
+> +	struct list_head		*capture_list)
+> +{
+> +	struct xfs_attri_log_item	*attrip = ATTRI_ITEM(lip);
+> +	struct xfs_attr_item		*attr;
+> +	struct xfs_mount		*mp = lip->li_mountp;
+> +	struct xfs_inode		*ip;
+> +	struct xfs_da_args		*args;
+> +	struct xfs_trans		*tp;
+> +	struct xfs_trans_res		tres;
+> +	struct xfs_attri_log_format	*attrp;
+> +	int				error, ret = 0;
+> +	int				total;
+> +	int				local;
+> +	struct xfs_attrd_log_item	*done_item = NULL;
+> +
+> +	/*
+> +	 * First check the validity of the attr described by the ATTRI.  If any
+> +	 * are bad, then assume that all are bad and just toss the ATTRI.
+> +	 */
+> +	attrp = &attrip->attri_format;
+> +	if (!xfs_attri_validate(mp, attrip))
+> +		return -EFSCORRUPTED;
+> +
+> +	error = xlog_recover_iget(mp,  attrp->alfi_ino, &ip);
+> +	if (error)
+> +		return error;
+> +
+> +	attr = kmem_zalloc(sizeof(struct xfs_attr_item) +
+> +			   sizeof(struct xfs_da_args), KM_NOFS);
+> +	args = (struct xfs_da_args *)((char *)attr +
+> +		   sizeof(struct xfs_attr_item));
+> +
+> +	attr->xattri_dac.da_args = args;
+> +	attr->xattri_op_flags = attrp->alfi_op_flags;
+> +
+> +	args->dp = ip;
+> +	args->geo = mp->m_attr_geo;
+> +	args->op_flags = attrp->alfi_op_flags;
+> +	args->whichfork = XFS_ATTR_FORK;
+> +	args->name = attrip->attri_name;
+> +	args->namelen = attrp->alfi_name_len;
+> +	args->hashval = xfs_da_hashname(args->name, args->namelen);
+> +	args->attr_filter = attrp->alfi_attr_flags;
+> +
+> +	if (attrp->alfi_op_flags == XFS_ATTR_OP_FLAGS_SET) {
+> +		args->value = attrip->attri_value;
+> +		args->valuelen = attrp->alfi_value_len;
+> +		args->total = xfs_attr_calc_size(args, &local);
+> +
+> +		tres.tr_logres = M_RES(mp)->tr_attrsetm.tr_logres +
+> +				 M_RES(mp)->tr_attrsetrt.tr_logres *
+> +					args->total;
+> +		tres.tr_logcount = XFS_ATTRSET_LOG_COUNT;
+> +		tres.tr_logflags = XFS_TRANS_PERM_LOG_RES;
+> +		total = args->total;
+> +	} else {
+> +		tres = M_RES(mp)->tr_attrrm;
+> +		total = XFS_ATTRRM_SPACE_RES(mp);
+> +	}
+> +	error = xfs_trans_alloc(mp, &tres, total, 0, XFS_TRANS_RESERVE, &tp);
+> +	if (error)
+> +		goto out;
+> +
+> +	args->trans = tp;
+> +	done_item = xfs_trans_get_attrd(tp, attrip);
+> +
+> +	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> +	xfs_trans_ijoin(tp, ip, 0);
+> +
+> +	ret = xfs_trans_attr_finish_update(&attr->xattri_dac, done_item,
+> +					   &attr->xattri_dac.leaf_bp,
+> +					   attrp->alfi_op_flags);
+> +	if (ret == -EAGAIN) {
+> +		/* There's more work to do, so add it to this transaction */
+> +		xfs_defer_add(tp, XFS_DEFER_OPS_TYPE_ATTR, &attr->xattri_list);
+> +	} else
+> +		error = ret;
+> +
+> +	if (error) {
+> +		xfs_trans_cancel(tp);
+> +		goto out_unlock;
+> +	}
+> +
+> +	error = xfs_defer_ops_capture_and_commit(tp, ip, capture_list);
+> +
+> +out_unlock:
+> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> +	xfs_irele(ip);
+> +out:
+> +	if (ret != -EAGAIN)
+> +		kmem_free(attr);
+> +	return error;
+> +}
+> +
+> +/* Re-log an intent item to push the log tail forward. */
+> +static struct xfs_log_item *
+> +xfs_attri_item_relog(
+> +	struct xfs_log_item		*intent,
+> +	struct xfs_trans		*tp)
+> +{
+> +	struct xfs_attrd_log_item	*attrdp;
+> +	struct xfs_attri_log_item	*old_attrip;
+> +	struct xfs_attri_log_item	*new_attrip;
+> +	struct xfs_attri_log_format	*new_attrp;
+> +	struct xfs_attri_log_format	*old_attrp;
+> +	int				buffer_size;
+> +
+> +	old_attrip = ATTRI_ITEM(intent);
+> +	old_attrp = &old_attrip->attri_format;
+> +	buffer_size = old_attrp->alfi_value_len + old_attrp->alfi_name_len;
+> +
+> +	tp->t_flags |= XFS_TRANS_DIRTY;
+> +	attrdp = xfs_trans_get_attrd(tp, old_attrip);
+> +	set_bit(XFS_LI_DIRTY, &attrdp->attrd_item.li_flags);
+> +
+> +	new_attrip = xfs_attri_init(tp->t_mountp, buffer_size);
+> +	new_attrp = &new_attrip->attri_format;
+> +
+> +	new_attrp->alfi_ino = old_attrp->alfi_ino;
+> +	new_attrp->alfi_op_flags = old_attrp->alfi_op_flags;
+> +	new_attrp->alfi_value_len = old_attrp->alfi_value_len;
+> +	new_attrp->alfi_name_len = old_attrp->alfi_name_len;
+> +	new_attrp->alfi_attr_flags = old_attrp->alfi_attr_flags;
+> +
+> +	new_attrip->attri_name_len = old_attrip->attri_name_len;
+> +	new_attrip->attri_name = ((char *)new_attrip) +
+> +				 sizeof(struct xfs_attri_log_item);
+> +	memcpy(new_attrip->attri_name, old_attrip->attri_name,
+> +		new_attrip->attri_name_len);
+> +
+> +	new_attrip->attri_value_len = old_attrip->attri_value_len;
+> +	if (new_attrip->attri_value_len > 0) {
+> +		new_attrip->attri_value = new_attrip->attri_name +
+> +					  new_attrip->attri_name_len;
+> +
+> +		memcpy(new_attrip->attri_value, old_attrip->attri_value,
+> +		       new_attrip->attri_value_len);
+> +	}
+> +
+> +	xfs_trans_add_item(tp, &new_attrip->attri_item);
+> +	set_bit(XFS_LI_DIRTY, &new_attrip->attri_item.li_flags);
+> +
+> +	return &new_attrip->attri_item;
+> +}
+> +
+>  static const struct xfs_item_ops xfs_attri_item_ops = {
+>  	.iop_size	= xfs_attri_item_size,
+>  	.iop_format	= xfs_attri_item_format,
+>  	.iop_unpin	= xfs_attri_item_unpin,
+>  	.iop_committed	= xfs_attri_item_committed,
+>  	.iop_release    = xfs_attri_item_release,
+> +	.iop_recover	= xfs_attri_item_recover,
+>  	.iop_match	= xfs_attri_item_match,
+> +	.iop_relog	= xfs_attri_item_relog,
+>  };
 
-diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-index 00c32dfa5665..63f7b63d078d 100644
---- a/drivers/dax/super.c
-+++ b/drivers/dax/super.c
-@@ -65,6 +65,18 @@ struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev)
- 	return dax_get_by_host(bdev->bd_disk->disk_name);
- }
- EXPORT_SYMBOL_GPL(fs_dax_get_by_bdev);
-+
-+void fs_dax_set_holder(struct dax_device *dax_dev, void *holder,
-+		const struct dax_holder_operations *ops)
-+{
-+	dax_set_holder(dax_dev, holder, ops);
-+}
-+EXPORT_SYMBOL_GPL(fs_dax_set_holder);
-+void *fs_dax_get_holder(struct dax_device *dax_dev)
-+{
-+	return dax_get_holder(dax_dev);
-+}
-+EXPORT_SYMBOL_GPL(fs_dax_get_holder);
- #endif
- 
- bool __generic_fsdax_supported(struct dax_device *dax_dev,
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 6ed29b158312..e96ddb5c28bc 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -549,6 +549,11 @@ xfs_do_force_shutdown(
- 				flags, __return_address, fname, lnnum);
- 		if (XFS_ERRLEVEL_HIGH <= xfs_error_level)
- 			xfs_stack_trace();
-+	} else if (flags & SHUTDOWN_CORRUPT_META) {
-+		xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_CORRUPT,
-+"Corruption of on-disk metadata detected.  Shutting down filesystem");
-+		if (XFS_ERRLEVEL_HIGH <= xfs_error_level)
-+			xfs_stack_trace();
- 	} else if (logerror) {
- 		xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_LOGERROR,
- "Log I/O error (0x%x) detected at %pS (%s:%d). Shutting down filesystem",
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index c78b63fe779a..203eb62d16d0 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -277,6 +277,7 @@ void xfs_do_force_shutdown(struct xfs_mount *mp, int flags, char *fname,
- #define SHUTDOWN_LOG_IO_ERROR	0x0002	/* write attempt to the log failed */
- #define SHUTDOWN_FORCE_UMOUNT	0x0004	/* shutdown from a forced unmount */
- #define SHUTDOWN_CORRUPT_INCORE	0x0008	/* corrupt in-memory data structures */
-+#define SHUTDOWN_CORRUPT_META	0x0010  /* corrupt metadata on device */
- 
- /*
-  * Flags for xfs_mountfs
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 2c9e26a44546..4a362e14318d 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -37,11 +37,19 @@
- #include "xfs_reflink.h"
- #include "xfs_pwork.h"
- #include "xfs_ag.h"
-+#include "xfs_alloc.h"
-+#include "xfs_rmap.h"
-+#include "xfs_rmap_btree.h"
-+#include "xfs_rtalloc.h"
-+#include "xfs_bit.h"
- 
- #include <linux/magic.h>
- #include <linux/fs_context.h>
- #include <linux/fs_parser.h>
-+#include <linux/mm.h>
-+#include <linux/dax.h>
- 
-+static const struct dax_holder_operations xfs_dax_holder_operations;
- static const struct super_operations xfs_super_operations;
- 
- static struct kset *xfs_kset;		/* top-level xfs sysfs dir */
-@@ -352,6 +360,7 @@ xfs_close_devices(
- 
- 		xfs_free_buftarg(mp->m_logdev_targp);
- 		xfs_blkdev_put(logdev);
-+		fs_dax_set_holder(dax_logdev, NULL, NULL);
- 		fs_put_dax(dax_logdev);
- 	}
- 	if (mp->m_rtdev_targp) {
-@@ -360,9 +369,11 @@ xfs_close_devices(
- 
- 		xfs_free_buftarg(mp->m_rtdev_targp);
- 		xfs_blkdev_put(rtdev);
-+		fs_dax_set_holder(dax_rtdev, NULL, NULL);
- 		fs_put_dax(dax_rtdev);
- 	}
- 	xfs_free_buftarg(mp->m_ddev_targp);
-+	fs_dax_set_holder(dax_ddev, NULL, NULL);
- 	fs_put_dax(dax_ddev);
- }
- 
-@@ -386,6 +397,7 @@ xfs_open_devices(
- 	struct block_device	*logdev = NULL, *rtdev = NULL;
- 	int			error;
- 
-+	fs_dax_set_holder(dax_ddev, mp, &xfs_dax_holder_operations);
- 	/*
- 	 * Open real time and log devices - order is important.
- 	 */
-@@ -394,6 +406,9 @@ xfs_open_devices(
- 		if (error)
- 			goto out;
- 		dax_logdev = fs_dax_get_by_bdev(logdev);
-+		if (dax_logdev != dax_ddev)
-+			fs_dax_set_holder(dax_logdev, mp,
-+				       &xfs_dax_holder_operations);
- 	}
- 
- 	if (mp->m_rtname) {
-@@ -408,6 +423,7 @@ xfs_open_devices(
- 			goto out_close_rtdev;
- 		}
- 		dax_rtdev = fs_dax_get_by_bdev(rtdev);
-+		fs_dax_set_holder(dax_rtdev, mp, &xfs_dax_holder_operations);
- 	}
- 
- 	/*
-@@ -1070,6 +1086,125 @@ xfs_fs_free_cached_objects(
- 	return xfs_reclaim_inodes_nr(XFS_M(sb), sc->nr_to_scan);
- }
- 
-+static int
-+xfs_corrupt_helper(
-+	struct xfs_btree_cur		*cur,
-+	struct xfs_rmap_irec		*rec,
-+	void				*data)
-+{
-+	struct xfs_inode		*ip;
-+	struct address_space		*mapping;
-+	int				error = 0, *flags = data, i;
-+
-+	if (XFS_RMAP_NON_INODE_OWNER(rec->rm_owner) ||
-+	    (rec->rm_flags & (XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK))) {
-+		// TODO check and try to fix metadata
-+		xfs_force_shutdown(cur->bc_mp, SHUTDOWN_CORRUPT_META);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	/* Get files that incore, filter out others that are not in use. */
-+	error = xfs_iget(cur->bc_mp, cur->bc_tp, rec->rm_owner, XFS_IGET_INCORE,
-+			 0, &ip);
-+	if (error)
-+		return error;
-+
-+	mapping = VFS_I(ip)->i_mapping;
-+	if (IS_ENABLED(CONFIG_MEMORY_FAILURE)) {
-+		for (i = 0; i < rec->rm_blockcount; i++) {
-+			error = mf_dax_kill_procs(mapping, rec->rm_offset + i,
-+						  *flags);
-+			if (error)
-+				break;
-+		}
-+	}
-+	// TODO try to fix data
-+	xfs_irele(ip);
-+
-+	return error;
-+}
-+
-+static loff_t
-+xfs_dax_bdev_offset(
-+	struct xfs_mount *mp,
-+	struct dax_device *dax_dev,
-+	loff_t disk_offset)
-+{
-+	struct block_device *bdev;
-+
-+	if (mp->m_ddev_targp->bt_daxdev == dax_dev)
-+		bdev = mp->m_ddev_targp->bt_bdev;
-+	else if (mp->m_logdev_targp->bt_daxdev == dax_dev)
-+		bdev = mp->m_logdev_targp->bt_bdev;
-+	else
-+		bdev = mp->m_rtdev_targp->bt_bdev;
-+
-+	return disk_offset - (get_start_sect(bdev) << SECTOR_SHIFT);
-+}
-+
-+static int
-+xfs_dax_notify_failure(
-+	struct dax_device	*dax_dev,
-+	loff_t			offset,
-+	size_t			len,
-+	void			*data)
-+{
-+	struct xfs_mount	*mp = fs_dax_get_holder(dax_dev);
-+	struct xfs_trans	*tp = NULL;
-+	struct xfs_btree_cur	*cur = NULL;
-+	struct xfs_buf		*agf_bp = NULL;
-+	struct xfs_rmap_irec	rmap_low, rmap_high;
-+	loff_t 			bdev_offset = xfs_dax_bdev_offset(mp, dax_dev,
-+								  offset);
-+	xfs_fsblock_t		fsbno = XFS_B_TO_FSB(mp, bdev_offset);
-+	xfs_filblks_t		bcnt = XFS_B_TO_FSB(mp, len);
-+	xfs_agnumber_t		agno = XFS_FSB_TO_AGNO(mp, fsbno);
-+	xfs_agblock_t		agbno = XFS_FSB_TO_AGBNO(mp, fsbno);
-+	int			error = 0;
-+
-+	if (mp->m_logdev_targp && mp->m_logdev_targp->bt_daxdev == dax_dev &&
-+	    mp->m_logdev_targp != mp->m_ddev_targp) {
-+		xfs_err(mp, "ondisk log corrupt, shutting down fs!");
-+		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_META);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	if (!xfs_sb_version_hasrmapbt(&mp->m_sb)) {
-+		xfs_warn(mp, "notify_failure() needs rmapbt enabled!");
-+		return -EOPNOTSUPP;
-+	}
-+
-+	error = xfs_trans_alloc_empty(mp, &tp);
-+	if (error)
-+		return error;
-+
-+	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agf_bp);
-+	if (error)
-+		goto out_cancel_tp;
-+
-+	cur = xfs_rmapbt_init_cursor(mp, tp, agf_bp, agf_bp->b_pag);
-+
-+	/* Construct a range for rmap query */
-+	memset(&rmap_low, 0, sizeof(rmap_low));
-+	memset(&rmap_high, 0xFF, sizeof(rmap_high));
-+	rmap_low.rm_startblock = rmap_high.rm_startblock = agbno;
-+	rmap_low.rm_blockcount = rmap_high.rm_blockcount = bcnt;
-+
-+	error = xfs_rmap_query_range(cur, &rmap_low, &rmap_high,
-+				     xfs_corrupt_helper, data);
-+
-+	xfs_btree_del_cursor(cur, error);
-+	xfs_trans_brelse(tp, agf_bp);
-+
-+out_cancel_tp:
-+	xfs_trans_cancel(tp);
-+	return error;
-+}
-+
-+static const struct dax_holder_operations xfs_dax_holder_operations = {
-+	.notify_failure = xfs_dax_notify_failure,
-+};
-+
- static const struct super_operations xfs_super_operations = {
- 	.alloc_inode		= xfs_fs_alloc_inode,
- 	.destroy_inode		= xfs_fs_destroy_inode,
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index 359e809516b8..c8a188b76031 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -160,6 +160,9 @@ static inline void fs_put_dax(struct dax_device *dax_dev)
- }
- 
- struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev);
-+void fs_dax_set_holder(struct dax_device *dax_dev, void *holder,
-+		const struct dax_holder_operations *ops);
-+void *fs_dax_get_holder(struct dax_device *dax_dev);
- int dax_writeback_mapping_range(struct address_space *mapping,
- 		struct dax_device *dax_dev, struct writeback_control *wbc);
- 
-@@ -191,6 +194,16 @@ static inline struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev)
- 	return NULL;
- }
- 
-+static inline void fs_dax_set_holder(struct dax_device *dax_dev, void *holder,
-+		const struct dax_holder_operations *ops)
-+{
-+}
-+
-+static inline void *fs_dax_get_holder(struct dax_device *dax_dev)
-+{
-+	return NULL;
-+}
-+
- static inline struct page *dax_layout_busy_page(struct address_space *mapping)
- {
- 	return NULL;
+
 -- 
-2.32.0
-
-
-
+chandan
