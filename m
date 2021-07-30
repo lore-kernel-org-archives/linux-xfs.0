@@ -2,396 +2,279 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.4 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9039CC4338F
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Jul 2021 09:16:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BCF3C4338F
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Jul 2021 09:17:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6779061019
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Jul 2021 09:16:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 01D2961019
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Jul 2021 09:17:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237992AbhG3JQI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Jul 2021 05:16:08 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:59977 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S238138AbhG3JP7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Jul 2021 05:15:59 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1627636549;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=2G6YqzVccvwwc7B9va0puf2bDyrJ3NwGJeOcoTuePQc=;
-        b=O29Xnh27ZKSOzUOeyOHRWY1n5pjA13gJIP5nbz2L101OODECrluU7xOxoim6DmWkz8kjbX
-        h/9oht7TP/uJpML8mpzdyR4ra2FRskptiJWoTMXMhQ+gnAd4jrnY22tmoKX+rlbyxDMvEg
-        KzQTpHFS9PHtN5U/dD9e0T0IZfFLK6k=
-Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
- [209.85.221.71]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-103-PqREG4IIN76k325XMEz3EQ-1; Fri, 30 Jul 2021 05:15:48 -0400
-X-MC-Unique: PqREG4IIN76k325XMEz3EQ-1
-Received: by mail-wr1-f71.google.com with SMTP id p12-20020a5d68cc0000b02901426384855aso3013865wrw.11
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Jul 2021 02:15:48 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:organization
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=2G6YqzVccvwwc7B9va0puf2bDyrJ3NwGJeOcoTuePQc=;
-        b=Pnf4rba3CyU4W0zDYZcsfRaop5WyI52yl1640UJOkq7w7OBnNSTOdoQZR8rzPJRd1v
-         LcD9qpfWXTx4kZ6XLOz2DROX8Zk28vU5iPwHMB7+Q6hqZwQGk6zi/UHztObbNKzp5gdb
-         rMBC3U8zBFEZcFOyTsxg0CjZ1DyocYT8NTFcXmyAsWYVQ0zSeZBS7WZ1WYDVF/yOPGMX
-         cYLQ6vW/WNtiSWLJZzM0AcIe5ysTWykGlSZpGJ89tvcn4O28Pr5ZNbEVu1iU2VKpt2wo
-         mrlvD0wT2RHrMFciTIHf1TtfBT0jIRUnI1vNcEvVE/c0lY7tcvX3qtEmkHqN0MPQ30hF
-         sfRA==
-X-Gm-Message-State: AOAM532/A32zTLn3caVGxgfWJUf76tCCjkT6RqgcIdSvn8e4nNUy2XaL
-        i8ffgUoWUyOb0UDBE1gTY3yWupI/8xQFUprJnabpBdaMIkj+Sgy9OEmeOtJnta2rvfKOFH+SjFX
-        /ZoPV1wwcVSElq+zjSbFi
-X-Received: by 2002:a05:600c:ac4:: with SMTP id c4mr1967709wmr.10.1627636547167;
-        Fri, 30 Jul 2021 02:15:47 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzG+H96dDTWqQcuJ+RbEY9tKITJ8Afuww7GOPOiwc5dZwIDUsqt9sDMj8Sm9FxLdUz+h5MzYQ==
-X-Received: by 2002:a05:600c:ac4:: with SMTP id c4mr1967663wmr.10.1627636546757;
-        Fri, 30 Jul 2021 02:15:46 -0700 (PDT)
-Received: from ?IPv6:2003:d8:2f0a:7f00:fad7:3bc9:69d:31f? (p200300d82f0a7f00fad73bc9069d031f.dip0.t-ipconnect.de. [2003:d8:2f0a:7f00:fad7:3bc9:69d:31f])
-        by smtp.gmail.com with ESMTPSA id c204sm1176741wme.15.2021.07.30.02.15.45
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 30 Jul 2021 02:15:46 -0700 (PDT)
-Subject: Re: [PATCH v6 6/9] xfs: Implement ->corrupted_range() for XFS
-To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        nvdimm@lists.linux.dev, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org, dm-devel@redhat.com
-Cc:     djwong@kernel.com, dan.j.williams@intel.com, david@fromorbit.com,
-        hch@lst.de, agk@redhat.com, snitzer@redhat.com
-References: <20210730085245.3069812-1-ruansy.fnst@fujitsu.com>
- <20210730085245.3069812-7-ruansy.fnst@fujitsu.com>
-From:   David Hildenbrand <david@redhat.com>
-Organization: Red Hat
-Message-ID: <f0037d29-9402-6357-ce91-ef6e2e5b7c04@redhat.com>
-Date:   Fri, 30 Jul 2021 11:15:45 +0200
+        id S230513AbhG3JRt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Jul 2021 05:17:49 -0400
+Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:30190 "EHLO
+        mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230359AbhG3JRt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Jul 2021 05:17:49 -0400
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 16U9Bjce007780;
+        Fri, 30 Jul 2021 09:17:43 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2021-07-09;
+ bh=Lq9i2XT3V5zUHs6CZVPu/vV6b3ygKGAHYPZ/nLDT/SI=;
+ b=0hwj3MEudHlYO9Ttk4edhiYXAyk5XBqpXQrTn6ViZv3DAY3rYyvmHncrUdNHtOnTwHKt
+ I1gL6VmCsD39MWyYAJOTrgcUS4I4SnAEq0Nb7EZwe1/LhGQlVyF+JNGflZNsY9Drnw4h
+ UNxkEcMr1+utfVJe4clI+RuvXNK9YP7eDJkmGgJ8juwOuOBRb+UyhawOEyuEyotejknm
+ /6FexwR+pe9B0ICkm0bQcYY0C66k7VlTpcaMRrJbYefoeqHYIy2oCZ6c6DpBDrogEgIP
+ 35UBAzfMkv3NLox2/83GOhYpvWZro6gMREiTaW2BscPjIMiNsDlKeg4iVRuUpRB0JQxj aQ== 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2020-01-29;
+ bh=Lq9i2XT3V5zUHs6CZVPu/vV6b3ygKGAHYPZ/nLDT/SI=;
+ b=KVHjugdEo7UK1ujabftcvFW/Hn75zcN1i7ftX/SaygaSsXG/Vuu8km1bVCuyNnh+sfKl
+ 3n1SyQDZK7/txON4Mtrq7q8qwQhqHkTRdehF9/ivNICLE3v25WRXIRrYktN3MJqMR5iA
+ VJ+goXZx6QaT/9i2Qdo+MbQDNP8dFI7ten4mSsj/Ehup9a/pYpQzkD3JZbgV0YJJ9vav
+ OBNIf0uzF1/u3lCYA8EQYv/7/hecLhlYeiBxlM9c10urc9ENZ1wOpdZLZ1+TTqy6u7d+
+ WkA2Gb1cssB03+TyzWlEz7kfZhjP5genPlc9dK+P6IB28T5ruFYNd4xBFEsHjoeVWvcM 1A== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3a3uujacg2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 30 Jul 2021 09:17:43 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 16U9FNUm078497;
+        Fri, 30 Jul 2021 09:17:42 GMT
+Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2046.outbound.protection.outlook.com [104.47.66.46])
+        by userp3020.oracle.com with ESMTP id 3a2352p0e7-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 30 Jul 2021 09:17:42 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=KD24h5PxNDQf0LCIe2ksu5y96Ryv/WFdCENgwDSn1kK7JJsgsqaU15d2VT+Ec+PnKjsJoBtrwr9+UeI8rYNARxzHM64fmgBJyIwrIf0zRgHfHuBmF/9JO7CdXskWVh/zrObL1RXD7d7vm1ZGXEJSxpQCCvOu3h1aoXnPTRKHuJMQ2bZE0CSt96aCZNEg6oJ/kKQbCvSfzqTPg//ENbUKYArjYHCuY6k6EyRhLzFcJfQp3EEdaQ6Uro7zkso/SH3TELM16JTuyQIm8aSy+/O8lZmgNuG06sRl7R7qrmtO5ZYaFEpeI0LBIoH0DoOWh6Ws6crYD0kVK5WENqAefEQ9Fw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Lq9i2XT3V5zUHs6CZVPu/vV6b3ygKGAHYPZ/nLDT/SI=;
+ b=jmEUiM+87+QWFnkK+zU0r+7gitci8bjbhxKFdgLwpWow2849W9ZMTUE2zd012DxmMLvDc3Qp3FBl+Kh17byxAnY4m/77LHUUhJTDXUfWPGqf5dt9d401S3lo+UylfepYx61/o2yrP9h3zUS6+YGS42hBo3A6hjj5t33yynqwrE1D3K2WVLBDNA5D2anz0DOT5HQ9NcnKjF3yerPqYFrgn7IcNN5dNc0HYE04IbsHoe6q5Wxmlv/xx5qDNurKr+JtDxh6Knly6bhjw7i4qjEVPgXCRZJ8O1oH9yVoXhcbRU4v0bdp2OtN3OgqWY2y0jE5GpClg3IByKh1oYkeTnBWjw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Lq9i2XT3V5zUHs6CZVPu/vV6b3ygKGAHYPZ/nLDT/SI=;
+ b=tGz1xn82pS/XLMXTxIaMeFk73aWBRDI28GWrs/72BahC/2b4D8sEn//Vvvx8+c4otzhGl5wEs58rWAKG9aeECljXn6X9lx8Nj/pizCHKdyx2iqjnK6H8paHECoPQ3P0/hAGWfmtqkWVm1sdyvCJ+M9nqop4cBo0VcM2wchA2h+c=
+Authentication-Results: vger.kernel.org; dkim=none (message not signed)
+ header.d=none;vger.kernel.org; dmarc=none action=none header.from=oracle.com;
+Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
+ by BYAPR10MB3384.namprd10.prod.outlook.com (2603:10b6:a03:14e::33) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4373.17; Fri, 30 Jul
+ 2021 09:17:38 +0000
+Received: from BY5PR10MB4306.namprd10.prod.outlook.com
+ ([fe80::20c4:32a4:24ac:df89]) by BY5PR10MB4306.namprd10.prod.outlook.com
+ ([fe80::20c4:32a4:24ac:df89%9]) with mapi id 15.20.4373.025; Fri, 30 Jul 2021
+ 09:17:38 +0000
+Subject: Re: [PATCH v22 03/16] xfs: refactor xfs_iget calls from log intent
+ recovery
+To:     Chandan Babu R <chandanrlinux@gmail.com>
+Cc:     linux-xfs@vger.kernel.org
+References: <20210727062053.11129-1-allison.henderson@oracle.com>
+ <20210727062053.11129-4-allison.henderson@oracle.com> <87y29qvekr.fsf@garuda>
+From:   Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <fcb8fef9-cb8a-1f51-590b-9ffa9a20b090@oracle.com>
+Date:   Fri, 30 Jul 2021 02:17:36 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
-MIME-Version: 1.0
-In-Reply-To: <20210730085245.3069812-7-ruansy.fnst@fujitsu.com>
+ Thunderbird/78.12.0
+In-Reply-To: <87y29qvekr.fsf@garuda>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: BYAPR08CA0061.namprd08.prod.outlook.com
+ (2603:10b6:a03:117::38) To BY5PR10MB4306.namprd10.prod.outlook.com
+ (2603:10b6:a03:211::7)
+MIME-Version: 1.0
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from [192.168.1.166] (67.1.112.125) by BYAPR08CA0061.namprd08.prod.outlook.com (2603:10b6:a03:117::38) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4373.18 via Frontend Transport; Fri, 30 Jul 2021 09:17:38 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: bb7f2bb1-785b-4fa1-a84a-08d9533ae012
+X-MS-TrafficTypeDiagnostic: BYAPR10MB3384:
+X-Microsoft-Antispam-PRVS: <BYAPR10MB33847BFE228643016714145195EC9@BYAPR10MB3384.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:565;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: IyCtaGYC3NWhiMUxZRU58NCrMjtNDsbUIJEl3HrszyKZduMMkj0Npelltr6HtrtRQz/UW36OLrg2nJbBE2qh8VKtbspz7ZUz+rDceyPH+8POWPJn76txp4DCNozDPzTtbKKiCsPu2zv7goCfIe2w1QfQORKr8gPjBUTSjlmtC0Kc8ZjtXFfcTc2CLxjeLx4lMbRVbQxBL3QwRsK2jETaZ2RxnAGzWsXFapawSF9RjZGBK3Jo/D5pmKlLMf4gDixNoS8BH9qMc9RAgXcNXmGH7rCXxWJ8cPG6vQJRzQaQLdrBI5T8v9xMlREJani8rxuscLw321DDv6O59y0FZXSJxBksoI98LkRjd27ORBK2x8rQV8D0p/4bhvIM9snuQuo2Ptk/Y/3QuihHs+ROi0fuPXsz/duGnXrrBvzK3Vyt46WBqojaVj5IIKHoCP1iU+eqUEO0KsbbMR2LVspDuqiu4ZfkW/DaSE4DBgPQE9g75s4f9hmB7XcF6yzNvYlQQuC6uDhfCAtkML16cIGsfSeg7eHsPoYyJz5X+IE3w6cTC1In3ZJIUxI15aywY4fw0YDIXl0+4bnF4oCQBSMZx4hUnEiNLtDVI07yG41uzpRNN5iz16ZATpsGUsosYc0HnqUN2epqS6M46r7WThubr6z39DtsKAQ3mXNFeRaE2821MOa8qyZTk1Uz2ELQqjQ2Ldr2p0ZiikHPO/Lbp48ZnhrpBumJDrO2GhN7JF3PGOWBfgFWDeFTJm/81IYaK43DpGrOfaVd2ctsOF1h1kmJheEfqA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(39860400002)(346002)(366004)(376002)(136003)(396003)(316002)(36756003)(4326008)(16576012)(8676002)(186003)(31696002)(66476007)(31686004)(478600001)(26005)(66556008)(8936002)(52116002)(66946007)(86362001)(44832011)(5660300002)(2906002)(6916009)(53546011)(38350700002)(38100700002)(2616005)(83380400001)(956004)(6486002)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?b1FST3M1enFqeVhkNWpVU3JiZnlGWEpGMWJudnQvMktQTlRaN2JabEIyK29B?=
+ =?utf-8?B?Mkp5MlpUTXI4dEVtRmN1UVBXaGdlVEdqMlp3cG9FRTNNN2FLSFUzT0xQb0g5?=
+ =?utf-8?B?M2R3a2RJMEN2VFFPMlNZdjg5Z2xKWlN1ZVc4Zk5VVDlURVQvdE1jTjFFMEUw?=
+ =?utf-8?B?ZTNVVmtEU1FWMGhNbXpTZmwwUCt2RHJxNjk5UG1mUXdqdldNcmp1TDVDdXlu?=
+ =?utf-8?B?SGJTU3FKcUpRWHpySDJFRkU3eEV0N3c1SngwZjY4RFZtZHYrTHBkR0xJaWZE?=
+ =?utf-8?B?TFJsU1NsTEliNlNzYWs2ZkJyYzk0Sk1kam9sRi8xVmg4eUJGdVJKZ3V3Vktu?=
+ =?utf-8?B?SjhFRVlhbGlGSFkxTmhpb1dxTEd1ZTJNU2Yydk5Tc0pQYVMwOUN2T1dEWHVG?=
+ =?utf-8?B?eGZkQnFENHNLVE56dnpxamJpZi9Tbi9iZjhRZTRNYkZCSHZNdXp6TjBZN3JI?=
+ =?utf-8?B?K2VZQ2tab0I5cmdXb0xrQTlkNmduQS8rejJDSlZteng3c2dQQzdzVzk4YlpS?=
+ =?utf-8?B?N0ZWMmZ1UlR1eFkvaEVLWE4wOHhGcEFVM3B5R0ZsN3V5MVZIY2d1ZWVNM0M3?=
+ =?utf-8?B?NEgxTnpFSmFQN29tUjZFVHUvTVpzMlFJYkQybHlPWk1UeEdRMXNOOXZGZklz?=
+ =?utf-8?B?UkQ2ZEVFaSttNHZaeWRrR0JDT2NuaS9TNkVWNFR0eUo0MkF4QklaSktLeGJP?=
+ =?utf-8?B?Qi9QeVkybDB6RFBMcXB1QWQ5Znh5YWRIMEpqT0daWVBqbGdnTWpqNDdiVHA3?=
+ =?utf-8?B?VlBWL20vVjRXZXR6VllCNUtWZ2FWRC9yQXNHMEdZc0lLN1lML00yNXJBNng4?=
+ =?utf-8?B?Zm1LOFdVcTZUTVZCdEZsZXNsV1F0V1lmeUNIbXlrV0tkWFFsYjg0UHhwUFV4?=
+ =?utf-8?B?dERvemZUQmlrY2hQLzE5V0ZseEo4Q0xvV1NFUjg0V2U5WmRXVWZpRXB0Zk5I?=
+ =?utf-8?B?dXFEQXhBV1dFNlFkUVVrZG1mdGNhL29waFFKK0ZsWmJSZURpdys0SmNWY2ow?=
+ =?utf-8?B?M005TXRPZ0phYVc0Y0dhR3lnY3BpblEwakFFSkRIWi9tRHBWMUgrVFA5SUZG?=
+ =?utf-8?B?RjIrVGJnaklNZjU2TnZuK1JUenlidDRGODlSejNkRGdPR3d4eDU5Yng2dDVq?=
+ =?utf-8?B?R3JIb2lOekhtYlpoa0ZGUEpqQVIzKy91VGkwYjFqNzAvbW5MVXlFTU9VUlQw?=
+ =?utf-8?B?Rjc4bnRlWjhaUHN1elVoZ0hZUjJPbnRtUzRycjBObjNWUythZjNvRHVKdE9W?=
+ =?utf-8?B?Zk51d2R5Q2F2Z1pGak5kcElqaWlKYS93S1NTazdIWFNaTnN5SUl2THdXUmNO?=
+ =?utf-8?B?eTJGd2pIaXFvRnRzSTdUY3VOQVNEcDhuUWsvYlBqUGxUQ1FyMHg2bkxieURs?=
+ =?utf-8?B?VW5JUVM1RGJ3SWNYb2IzamhySTA4MjcyZWVEaXNaOTBISmhSMnZkYnVLNzJu?=
+ =?utf-8?B?eHZkZWlzMHB3U3d5MU9SYzhSM2lUS29keis3N25LdWxOVjZYcTUwTVIvbFZM?=
+ =?utf-8?B?VEpXdEErajVMZ29aajV1TEsrUXhGTUVOT0hkenBHSWFmcE5JVWRNVHMxWEFh?=
+ =?utf-8?B?Q2ZjTDBVamlLTzFhK1BFS1hZckhBL3pFYTJKajVBTDE5QzJZNjNEckJhNlFJ?=
+ =?utf-8?B?VFREUDFUOVhXT1VWV3JsdEErSWQ0cmtoWUNHMCtBaHFBYTBYQ0w5RjRlT3hO?=
+ =?utf-8?B?WEppV3lxNFJxQVZVRlFYZUMxMllFSGpmU2xMOFJ2Y3paZUdjWVpVc09SbWZ6?=
+ =?utf-8?Q?06p2XtOOCehPa72mH3sQW7JHiNlqW7/WtcN6Ps+?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: bb7f2bb1-785b-4fa1-a84a-08d9533ae012
+X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Jul 2021 09:17:38.3278
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: Qg548Au9H6JD+4F+0aAo2/MNxLPDBcVtkKAHZ3wY1HxlFLjAGgesx2wN1wDMa+F4OFp953Fm+VPcko0dIJifWy2XKQibkz6v3LUpi5Ex20Y=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR10MB3384
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=10060 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 spamscore=0
+ mlxlogscore=999 bulkscore=0 mlxscore=0 phishscore=0 suspectscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2107140000 definitions=main-2107300056
+X-Proofpoint-ORIG-GUID: L7NcnFnzVr1LEsucnHK8MBegeXzkK-X6
+X-Proofpoint-GUID: L7NcnFnzVr1LEsucnHK8MBegeXzkK-X6
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-There is no ocurrence of "corrupted_range" in this patch. Does the patch 
-subject need updating?
 
 
-On 30.07.21 10:52, Shiyang Ruan wrote:
-> This function is used to handle errors which may cause data lost in
-> filesystem.  Such as memory failure in fsdax mode.
+On 7/28/21 4:54 AM, Chandan Babu R wrote:
+> On 27 Jul 2021 at 11:50, Allison Henderson wrote:
+>> Hoist the code from xfs_bui_item_recover that igets an inode and marks
+>> it as being part of log intent recovery.  The next patch will want a
+>> common function.
 > 
-> If the rmap feature of XFS enabled, we can query it to find files and
-> metadata which are associated with the corrupt data.  For now all we do
-> is kill processes with that file mapped into their address spaces, but
-> future patches could actually do something about corrupt metadata.
+> A straight forward hoist.
 > 
-> After that, the memory failure needs to notify the processes who are
-> using those files.
+> Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
+Great, thank you!
+Allison
+
 > 
-> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
-> ---
->   drivers/dax/super.c |  12 ++++
->   fs/xfs/xfs_fsops.c  |   5 ++
->   fs/xfs/xfs_mount.h  |   1 +
->   fs/xfs/xfs_super.c  | 135 ++++++++++++++++++++++++++++++++++++++++++++
->   include/linux/dax.h |  13 +++++
->   5 files changed, 166 insertions(+)
+>>
+>> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+>> Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+>> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+>> ---
+>>   fs/xfs/libxfs/xfs_log_recover.h |  2 ++
+>>   fs/xfs/xfs_bmap_item.c          | 11 +----------
+>>   fs/xfs/xfs_log_recover.c        | 26 ++++++++++++++++++++++++++
+>>   3 files changed, 29 insertions(+), 10 deletions(-)
+>>
+>> diff --git a/fs/xfs/libxfs/xfs_log_recover.h b/fs/xfs/libxfs/xfs_log_recover.h
+>> index 3cca2bf..ff69a00 100644
+>> --- a/fs/xfs/libxfs/xfs_log_recover.h
+>> +++ b/fs/xfs/libxfs/xfs_log_recover.h
+>> @@ -122,6 +122,8 @@ void xlog_buf_readahead(struct xlog *log, xfs_daddr_t blkno, uint len,
+>>   		const struct xfs_buf_ops *ops);
+>>   bool xlog_is_buffer_cancelled(struct xlog *log, xfs_daddr_t blkno, uint len);
+>>   
+>> +int xlog_recover_iget(struct xfs_mount *mp, xfs_ino_t ino,
+>> +		struct xfs_inode **ipp);
+>>   void xlog_recover_release_intent(struct xlog *log, unsigned short intent_type,
+>>   		uint64_t intent_id);
+>>   
+>> diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+>> index e3a6919..e587a00 100644
+>> --- a/fs/xfs/xfs_bmap_item.c
+>> +++ b/fs/xfs/xfs_bmap_item.c
+>> @@ -24,7 +24,6 @@
+>>   #include "xfs_error.h"
+>>   #include "xfs_log_priv.h"
+>>   #include "xfs_log_recover.h"
+>> -#include "xfs_quota.h"
+>>   
+>>   kmem_zone_t	*xfs_bui_zone;
+>>   kmem_zone_t	*xfs_bud_zone;
+>> @@ -487,18 +486,10 @@ xfs_bui_item_recover(
+>>   			XFS_ATTR_FORK : XFS_DATA_FORK;
+>>   	bui_type = bmap->me_flags & XFS_BMAP_EXTENT_TYPE_MASK;
+>>   
+>> -	/* Grab the inode. */
+>> -	error = xfs_iget(mp, NULL, bmap->me_owner, 0, 0, &ip);
+>> +	error = xlog_recover_iget(mp, bmap->me_owner, &ip);
+>>   	if (error)
+>>   		return error;
+>>   
+>> -	error = xfs_qm_dqattach(ip);
+>> -	if (error)
+>> -		goto err_rele;
+>> -
+>> -	if (VFS_I(ip)->i_nlink == 0)
+>> -		xfs_iflags_set(ip, XFS_IRECOVERY);
+>> -
+>>   	/* Allocate transaction and do the work. */
+>>   	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate,
+>>   			XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK), 0, 0, &tp);
+>> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+>> index ec4ccae..12118d5 100644
+>> --- a/fs/xfs/xfs_log_recover.c
+>> +++ b/fs/xfs/xfs_log_recover.c
+>> @@ -26,6 +26,8 @@
+>>   #include "xfs_error.h"
+>>   #include "xfs_buf_item.h"
+>>   #include "xfs_ag.h"
+>> +#include "xfs_quota.h"
+>> +
+>>   
+>>   #define BLK_AVG(blk1, blk2)	((blk1+blk2) >> 1)
+>>   
+>> @@ -1756,6 +1758,30 @@ xlog_recover_release_intent(
+>>   	spin_unlock(&ailp->ail_lock);
+>>   }
+>>   
+>> +int
+>> +xlog_recover_iget(
+>> +	struct xfs_mount	*mp,
+>> +	xfs_ino_t		ino,
+>> +	struct xfs_inode	**ipp)
+>> +{
+>> +	int			error;
+>> +
+>> +	error = xfs_iget(mp, NULL, ino, 0, 0, ipp);
+>> +	if (error)
+>> +		return error;
+>> +
+>> +	error = xfs_qm_dqattach(*ipp);
+>> +	if (error) {
+>> +		xfs_irele(*ipp);
+>> +		return error;
+>> +	}
+>> +
+>> +	if (VFS_I(*ipp)->i_nlink == 0)
+>> +		xfs_iflags_set(*ipp, XFS_IRECOVERY);
+>> +
+>> +	return 0;
+>> +}
+>> +
+>>   /******************************************************************************
+>>    *
+>>    *		Log recover routines
 > 
-> diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-> index 00c32dfa5665..63f7b63d078d 100644
-> --- a/drivers/dax/super.c
-> +++ b/drivers/dax/super.c
-> @@ -65,6 +65,18 @@ struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev)
->   	return dax_get_by_host(bdev->bd_disk->disk_name);
->   }
->   EXPORT_SYMBOL_GPL(fs_dax_get_by_bdev);
-> +
-> +void fs_dax_set_holder(struct dax_device *dax_dev, void *holder,
-> +		const struct dax_holder_operations *ops)
-> +{
-> +	dax_set_holder(dax_dev, holder, ops);
-> +}
-> +EXPORT_SYMBOL_GPL(fs_dax_set_holder);
-> +void *fs_dax_get_holder(struct dax_device *dax_dev)
-> +{
-> +	return dax_get_holder(dax_dev);
-> +}
-> +EXPORT_SYMBOL_GPL(fs_dax_get_holder);
->   #endif
->   
->   bool __generic_fsdax_supported(struct dax_device *dax_dev,
-> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> index 6ed29b158312..e96ddb5c28bc 100644
-> --- a/fs/xfs/xfs_fsops.c
-> +++ b/fs/xfs/xfs_fsops.c
-> @@ -549,6 +549,11 @@ xfs_do_force_shutdown(
->   				flags, __return_address, fname, lnnum);
->   		if (XFS_ERRLEVEL_HIGH <= xfs_error_level)
->   			xfs_stack_trace();
-> +	} else if (flags & SHUTDOWN_CORRUPT_META) {
-> +		xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_CORRUPT,
-> +"Corruption of on-disk metadata detected.  Shutting down filesystem");
-> +		if (XFS_ERRLEVEL_HIGH <= xfs_error_level)
-> +			xfs_stack_trace();
->   	} else if (logerror) {
->   		xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_LOGERROR,
->   "Log I/O error (0x%x) detected at %pS (%s:%d). Shutting down filesystem",
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index c78b63fe779a..203eb62d16d0 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -277,6 +277,7 @@ void xfs_do_force_shutdown(struct xfs_mount *mp, int flags, char *fname,
->   #define SHUTDOWN_LOG_IO_ERROR	0x0002	/* write attempt to the log failed */
->   #define SHUTDOWN_FORCE_UMOUNT	0x0004	/* shutdown from a forced unmount */
->   #define SHUTDOWN_CORRUPT_INCORE	0x0008	/* corrupt in-memory data structures */
-> +#define SHUTDOWN_CORRUPT_META	0x0010  /* corrupt metadata on device */
->   
->   /*
->    * Flags for xfs_mountfs
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 2c9e26a44546..4a362e14318d 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -37,11 +37,19 @@
->   #include "xfs_reflink.h"
->   #include "xfs_pwork.h"
->   #include "xfs_ag.h"
-> +#include "xfs_alloc.h"
-> +#include "xfs_rmap.h"
-> +#include "xfs_rmap_btree.h"
-> +#include "xfs_rtalloc.h"
-> +#include "xfs_bit.h"
->   
->   #include <linux/magic.h>
->   #include <linux/fs_context.h>
->   #include <linux/fs_parser.h>
-> +#include <linux/mm.h>
-> +#include <linux/dax.h>
->   
-> +static const struct dax_holder_operations xfs_dax_holder_operations;
->   static const struct super_operations xfs_super_operations;
->   
->   static struct kset *xfs_kset;		/* top-level xfs sysfs dir */
-> @@ -352,6 +360,7 @@ xfs_close_devices(
->   
->   		xfs_free_buftarg(mp->m_logdev_targp);
->   		xfs_blkdev_put(logdev);
-> +		fs_dax_set_holder(dax_logdev, NULL, NULL);
->   		fs_put_dax(dax_logdev);
->   	}
->   	if (mp->m_rtdev_targp) {
-> @@ -360,9 +369,11 @@ xfs_close_devices(
->   
->   		xfs_free_buftarg(mp->m_rtdev_targp);
->   		xfs_blkdev_put(rtdev);
-> +		fs_dax_set_holder(dax_rtdev, NULL, NULL);
->   		fs_put_dax(dax_rtdev);
->   	}
->   	xfs_free_buftarg(mp->m_ddev_targp);
-> +	fs_dax_set_holder(dax_ddev, NULL, NULL);
->   	fs_put_dax(dax_ddev);
->   }
->   
-> @@ -386,6 +397,7 @@ xfs_open_devices(
->   	struct block_device	*logdev = NULL, *rtdev = NULL;
->   	int			error;
->   
-> +	fs_dax_set_holder(dax_ddev, mp, &xfs_dax_holder_operations);
->   	/*
->   	 * Open real time and log devices - order is important.
->   	 */
-> @@ -394,6 +406,9 @@ xfs_open_devices(
->   		if (error)
->   			goto out;
->   		dax_logdev = fs_dax_get_by_bdev(logdev);
-> +		if (dax_logdev != dax_ddev)
-> +			fs_dax_set_holder(dax_logdev, mp,
-> +				       &xfs_dax_holder_operations);
->   	}
->   
->   	if (mp->m_rtname) {
-> @@ -408,6 +423,7 @@ xfs_open_devices(
->   			goto out_close_rtdev;
->   		}
->   		dax_rtdev = fs_dax_get_by_bdev(rtdev);
-> +		fs_dax_set_holder(dax_rtdev, mp, &xfs_dax_holder_operations);
->   	}
->   
->   	/*
-> @@ -1070,6 +1086,125 @@ xfs_fs_free_cached_objects(
->   	return xfs_reclaim_inodes_nr(XFS_M(sb), sc->nr_to_scan);
->   }
->   
-> +static int
-> +xfs_corrupt_helper(
-> +	struct xfs_btree_cur		*cur,
-> +	struct xfs_rmap_irec		*rec,
-> +	void				*data)
-> +{
-> +	struct xfs_inode		*ip;
-> +	struct address_space		*mapping;
-> +	int				error = 0, *flags = data, i;
-> +
-> +	if (XFS_RMAP_NON_INODE_OWNER(rec->rm_owner) ||
-> +	    (rec->rm_flags & (XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK))) {
-> +		// TODO check and try to fix metadata
-> +		xfs_force_shutdown(cur->bc_mp, SHUTDOWN_CORRUPT_META);
-> +		return -EFSCORRUPTED;
-> +	}
-> +
-> +	/* Get files that incore, filter out others that are not in use. */
-> +	error = xfs_iget(cur->bc_mp, cur->bc_tp, rec->rm_owner, XFS_IGET_INCORE,
-> +			 0, &ip);
-> +	if (error)
-> +		return error;
-> +
-> +	mapping = VFS_I(ip)->i_mapping;
-> +	if (IS_ENABLED(CONFIG_MEMORY_FAILURE)) {
-> +		for (i = 0; i < rec->rm_blockcount; i++) {
-> +			error = mf_dax_kill_procs(mapping, rec->rm_offset + i,
-> +						  *flags);
-> +			if (error)
-> +				break;
-> +		}
-> +	}
-> +	// TODO try to fix data
-> +	xfs_irele(ip);
-> +
-> +	return error;
-> +}
-> +
-> +static loff_t
-> +xfs_dax_bdev_offset(
-> +	struct xfs_mount *mp,
-> +	struct dax_device *dax_dev,
-> +	loff_t disk_offset)
-> +{
-> +	struct block_device *bdev;
-> +
-> +	if (mp->m_ddev_targp->bt_daxdev == dax_dev)
-> +		bdev = mp->m_ddev_targp->bt_bdev;
-> +	else if (mp->m_logdev_targp->bt_daxdev == dax_dev)
-> +		bdev = mp->m_logdev_targp->bt_bdev;
-> +	else
-> +		bdev = mp->m_rtdev_targp->bt_bdev;
-> +
-> +	return disk_offset - (get_start_sect(bdev) << SECTOR_SHIFT);
-> +}
-> +
-> +static int
-> +xfs_dax_notify_failure(
-> +	struct dax_device	*dax_dev,
-> +	loff_t			offset,
-> +	size_t			len,
-> +	void			*data)
-> +{
-> +	struct xfs_mount	*mp = fs_dax_get_holder(dax_dev);
-> +	struct xfs_trans	*tp = NULL;
-> +	struct xfs_btree_cur	*cur = NULL;
-> +	struct xfs_buf		*agf_bp = NULL;
-> +	struct xfs_rmap_irec	rmap_low, rmap_high;
-> +	loff_t 			bdev_offset = xfs_dax_bdev_offset(mp, dax_dev,
-> +								  offset);
-> +	xfs_fsblock_t		fsbno = XFS_B_TO_FSB(mp, bdev_offset);
-> +	xfs_filblks_t		bcnt = XFS_B_TO_FSB(mp, len);
-> +	xfs_agnumber_t		agno = XFS_FSB_TO_AGNO(mp, fsbno);
-> +	xfs_agblock_t		agbno = XFS_FSB_TO_AGBNO(mp, fsbno);
-> +	int			error = 0;
-> +
-> +	if (mp->m_logdev_targp && mp->m_logdev_targp->bt_daxdev == dax_dev &&
-> +	    mp->m_logdev_targp != mp->m_ddev_targp) {
-> +		xfs_err(mp, "ondisk log corrupt, shutting down fs!");
-> +		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_META);
-> +		return -EFSCORRUPTED;
-> +	}
-> +
-> +	if (!xfs_sb_version_hasrmapbt(&mp->m_sb)) {
-> +		xfs_warn(mp, "notify_failure() needs rmapbt enabled!");
-> +		return -EOPNOTSUPP;
-> +	}
-> +
-> +	error = xfs_trans_alloc_empty(mp, &tp);
-> +	if (error)
-> +		return error;
-> +
-> +	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agf_bp);
-> +	if (error)
-> +		goto out_cancel_tp;
-> +
-> +	cur = xfs_rmapbt_init_cursor(mp, tp, agf_bp, agf_bp->b_pag);
-> +
-> +	/* Construct a range for rmap query */
-> +	memset(&rmap_low, 0, sizeof(rmap_low));
-> +	memset(&rmap_high, 0xFF, sizeof(rmap_high));
-> +	rmap_low.rm_startblock = rmap_high.rm_startblock = agbno;
-> +	rmap_low.rm_blockcount = rmap_high.rm_blockcount = bcnt;
-> +
-> +	error = xfs_rmap_query_range(cur, &rmap_low, &rmap_high,
-> +				     xfs_corrupt_helper, data);
-> +
-> +	xfs_btree_del_cursor(cur, error);
-> +	xfs_trans_brelse(tp, agf_bp);
-> +
-> +out_cancel_tp:
-> +	xfs_trans_cancel(tp);
-> +	return error;
-> +}
-> +
-> +static const struct dax_holder_operations xfs_dax_holder_operations = {
-> +	.notify_failure = xfs_dax_notify_failure,
-> +};
-> +
->   static const struct super_operations xfs_super_operations = {
->   	.alloc_inode		= xfs_fs_alloc_inode,
->   	.destroy_inode		= xfs_fs_destroy_inode,
-> diff --git a/include/linux/dax.h b/include/linux/dax.h
-> index 359e809516b8..c8a188b76031 100644
-> --- a/include/linux/dax.h
-> +++ b/include/linux/dax.h
-> @@ -160,6 +160,9 @@ static inline void fs_put_dax(struct dax_device *dax_dev)
->   }
->   
->   struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev);
-> +void fs_dax_set_holder(struct dax_device *dax_dev, void *holder,
-> +		const struct dax_holder_operations *ops);
-> +void *fs_dax_get_holder(struct dax_device *dax_dev);
->   int dax_writeback_mapping_range(struct address_space *mapping,
->   		struct dax_device *dax_dev, struct writeback_control *wbc);
->   
-> @@ -191,6 +194,16 @@ static inline struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev)
->   	return NULL;
->   }
->   
-> +static inline void fs_dax_set_holder(struct dax_device *dax_dev, void *holder,
-> +		const struct dax_holder_operations *ops)
-> +{
-> +}
-> +
-> +static inline void *fs_dax_get_holder(struct dax_device *dax_dev)
-> +{
-> +	return NULL;
-> +}
-> +
->   static inline struct page *dax_layout_busy_page(struct address_space *mapping)
->   {
->   	return NULL;
 > 
-
-
--- 
-Thanks,
-
-David / dhildenb
-
