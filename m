@@ -2,134 +2,110 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17C66C4338F
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Jul 2021 20:33:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 472F5C4338F
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Jul 2021 04:24:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DB9946054E
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Jul 2021 20:33:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 236CC61008
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Jul 2021 04:24:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232982AbhG2UdU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Jul 2021 16:33:20 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56368 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229707AbhG2UdU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 29 Jul 2021 16:33:20 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8B5F960F4A;
-        Thu, 29 Jul 2021 20:33:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627590796;
-        bh=GTe1YaWlZ3f8sinXX6wYwfDdFtcugLHScE88pGkRVC4=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=rYZJ+S4lX0VUutKB2sA2VoK5v6J7gyvPu3LQIBktomqb7U0z4KKIpRLkR8bRNEHxX
-         E706+T9JV9eGDe8m0c2eZHB8QrMERLUdlgPJOm318SyWZ1QBwocP0+wJ2QwozY9I28
-         8cjOP0TlhwDf3bj3D3W+bOBvTJ8JHoKYP0jJzGI2xquxbSfs8mlJIvfpG6d8oLsiYA
-         HiJ5PdLyBUEk1iR4jqmFZ00iXyEuLUv7VE58pa5IVLvqKtZZCZ8VrVVrZWbF99tJR7
-         myljnOHGA6odf5JByOMg7MzhujiGyzop26Fu9p/7ptcM64LRIDWI8dvSExOH6rPuYE
-         O/U92+T++nB4w==
-Date:   Thu, 29 Jul 2021 13:33:16 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Dan Williams <dan.j.williams@intel.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Shiyang Ruan <ruansy.fnst@fujitsu.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, nvdimm@lists.linux.dev,
-        cluster-devel@redhat.com, Jan Kara <jack@suse.cz>
-Subject: Re: RFC: switch iomap to an iterator model
-Message-ID: <20210729203316.GF3601466@magnolia>
-References: <20210719103520.495450-1-hch@lst.de>
+        id S229644AbhG3EYJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Jul 2021 00:24:09 -0400
+Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:42248 "EHLO
+        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229465AbhG3EYJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Jul 2021 00:24:09 -0400
+Received: from dread.disaster.area (pa49-181-34-10.pa.nsw.optusnet.com.au [49.181.34.10])
+        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id 27D041B161E;
+        Fri, 30 Jul 2021 14:24:02 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1m9K40-00CNwE-Km; Fri, 30 Jul 2021 14:24:00 +1000
+Date:   Fri, 30 Jul 2021 14:24:00 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, hch@infradead.org
+Subject: Re: [PATCH 03/20] xfs: defer inode inactivation to a workqueue
+Message-ID: <20210730042400.GB2757197@dread.disaster.area>
+References: <162758423315.332903.16799817941903734904.stgit@magnolia>
+ <162758425012.332903.3784529658243630550.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210719103520.495450-1-hch@lst.de>
+In-Reply-To: <162758425012.332903.3784529658243630550.stgit@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
+        a=hdaoRb6WoHYrV466vVKEyw==:117 a=hdaoRb6WoHYrV466vVKEyw==:17
+        a=kj9zAlcOel0A:10 a=e_q4qTt1xDgA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=EB9kwkj8bIxfFFwXR3oA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jul 19, 2021 at 12:34:53PM +0200, Christoph Hellwig wrote:
-> Hi all,
+On Thu, Jul 29, 2021 at 11:44:10AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> this series replies the existing callback-based iomap_apply to an iter based
-> model.  The prime aim here is to simply the DAX reflink support, which
+> Instead of calling xfs_inactive directly from xfs_fs_destroy_inode,
+> defer the inactivation phase to a separate workqueue.  With this change,
+> we can speed up directory tree deletions by reducing the duration of
+> unlink() calls to the directory and unlinked list updates.
+> 
+> By moving the inactivation work to the background, we can reduce the
+> total cost of deleting a lot of files by performing the file deletions
+> in disk order instead of directory entry order, which can be arbitrary.
+> 
+> We introduce two new inode flags -- NEEDS_INACTIVE and INACTIVATING.
+> The first flag helps our worker find inodes needing inactivation, and
+> the second flag marks inodes that are in the process of being
+> inactivated.  A concurrent xfs_iget on the inode can still resurrect the
+> inode by clearing NEEDS_INACTIVE (or bailing if INACTIVATING is set).
+> 
+> Unfortunately, deferring the inactivation has one huge downside --
+> eventual consistency.  Since all the freeing is deferred to a worker
+> thread, one can rm a file but the space doesn't come back immediately.
+> This can cause some odd side effects with quota accounting and statfs,
+> so we flush inactivation work during syncfs in order to maintain the
+> existing behaviors, at least for callers that unlink() and sync().
+> 
+> For this patch we'll set the delay to zero to mimic the old timing as
+> much as possible; in the next patch we'll play with different delay
+> settings.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+.....
+> +
+> +/* Disable the inode inactivation background worker and wait for it to stop. */
+> +void
+> +xfs_inodegc_stop(
+> +	struct xfs_mount	*mp)
+> +{
+> +	if (!test_and_clear_bit(XFS_OPFLAG_INODEGC_RUNNING_BIT, &mp->m_opflags))
+> +		return;
+> +
+> +	cancel_delayed_work_sync(&mp->m_inodegc_work);
+> +	trace_xfs_inodegc_stop(mp, __return_address);
+> +}
 
-Jan Kara pointed out that recent gcc and clang support a magic attribute
-that causes a cleanup function to be called when an automatic variable
-goes out of scope.  I've ported the XFS for_each_perag* macros to use
-it, but I think this would be roughly (totally untested) what you'd do
-for iomap iterators:
+FWIW, this introduces a new mount field that does the same thing as the
+m_opstate field I added in my feature flag cleanup series (i.e.
+atomic operational state changes).  Personally I much prefer my
+opstate stuff because this is state, not flags, and the namespace is
+much less verbose...
 
-/* automatic iteration cleanup via macro hell */
-struct iomap_iter_cleanup {
-	struct iomap_ops	*ops;
-	struct iomap_iter	*iter;
-	loff_t			*ret;
-};
+THere's also conflicts all over the place because of that. All the
+RO checks are busted, lots of the quota mods in your tree conflict
+with the sb_version_hasfeat -> has_feat conversion, etc.
 
-static inline void iomap_iter_cleanup(struct iomap_iter_cleanup *ic)
-{
-	struct iomap_iter *iter = ic->iter;
-	int ret2 = 0;
+We're going to have to reconcile this at some point soon...
 
-	if (!iter->iomap.length || !ic->ops->iomap_end)
-		return;
+Cheers,
 
-	ret2 = ops->iomap_end(iter->inode, iter->pos,
-			iomap_length(iter), 0, iter->flags,
-			&iter->iomap);
-
-	if (ret2 && *ic->ret == 0)
-		*ic->ret = ret2;
-
-	iter->iomap.length = 0;
-}
-
-#define IOMAP_ITER_CLEANUP(pag)	\
-	struct iomap_iter_cleanup __iomap_iter_cleanup \
-			__attribute__((__cleanup__(iomap_iter_cleanup))) = \
-			{ .iter = (iter), .ops = (ops), .ret = &(ret) }
-
-#define for_each_iomap(iter, ops, ret) \
-	(ret) = iomap_iter((iter), (ops)); \
-	for (IOMAP_ITER_CLEANUP(iter, ops, ret); \
-		(ret) > 0; \
-		(ret) = iomap_iter((iter), (ops)) \
-
-Then we actually /can/ write our iteration loops in the normal C style:
-
-	struct iomap_iter iter = {
-		.inode = ...,
-		.pos = 0,
-		.length = 32768,
-	};
-	loff_t ret = 0;
-
-	for_each_iomap(&iter, ops, ret) {
-		if (iter.iomap.type != WHAT_I_WANT)
-                        break;
-
-		ret = am_i_pissed_off(...);
-		if (ret)
-			return ret;
-	}
-
-	return ret;
-
-and ->iomap_end will always get called.  There are a few sharp edges:
-
-I can't figure out how far back clang and gcc support this attribute.
-The gcc docs mention it at least far back as 3.3.6.  clang (afaict) docs
-don't reference it directly, but the clang 4 docs claim that it can be
-as pedantic as gcc w.r.t. attribute use.  That's more than new enough
-for upstream, which requires gcc 4.9 or clang 10.
-
-The /other/ problem is that gcc gets fussy about defining variables
-inside the for loop parentheses, which means that any code using it has
-to compile with -std=gnu99, which is /not/ the usual c89 that the kernel
-uses.  OTOH, it's been 22 years since C99 was ratified, c'mon...
-
---D
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
