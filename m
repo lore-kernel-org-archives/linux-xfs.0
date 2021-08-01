@@ -2,106 +2,100 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-21.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,INCLUDES_PULL_REQUEST,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B36FC432BE
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Jul 2021 21:37:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77B4BC432BE
+	for <linux-xfs@archiver.kernel.org>; Sun,  1 Aug 2021 11:18:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0EDF660FE7
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Jul 2021 21:37:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4CBBB610CE
+	for <linux-xfs@archiver.kernel.org>; Sun,  1 Aug 2021 11:18:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231684AbhGaVhs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 31 Jul 2021 17:37:48 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36234 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230350AbhGaVhs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 31 Jul 2021 17:37:48 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2B4E860F36;
-        Sat, 31 Jul 2021 21:37:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627767461;
-        bh=Yd5XUjuiBpfqxyAPMe2PIfadrpz9l3nlrb8X0WLM248=;
-        h=Date:From:To:Cc:Subject:From;
-        b=j7O1JBSCtALt0j83k76J13KXmjbeYHnWIz3PdhECRxtepy2iobBVxqMLwNE3vbjVz
-         jxZo27sgAxjJZp1QWwUO53ttLCnf7mRCIxAPPnSGJdUu2+5EZH/ldbalD0RYbW1ZQO
-         hm5WYSruR+hI+EEYU/yX9urWM0xBjSvIMFaA+W1O6EQZ5/y26K4z2AHnCctQtT52E0
-         NQGpN+sAGQP9TossUVXDg8zS1CmGfJmztVoMwhqIaB16cYg53lBtP/a6oEIN3vvZra
-         6n+LO1obT9tdAQ1bpXmpExy62XStc5CI5YVWY+SW1/13X44eSeWm2B+PgMtuhFLViM
-         64C2086r7S5NA==
-Date:   Sat, 31 Jul 2021 14:37:40 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        david@fromorbit.com, linux-kernel@vger.kernel.org,
-        sandeen@sandeen.net, hch@lst.de
-Subject: [GIT PULL] xfs: bug fixes for 5.14-rc4
-Message-ID: <20210731213740.GN3601443@magnolia>
+        id S231470AbhHALSU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 1 Aug 2021 07:18:20 -0400
+Received: from out20-49.mail.aliyun.com ([115.124.20.49]:56753 "EHLO
+        out20-49.mail.aliyun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231461AbhHALST (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 1 Aug 2021 07:18:19 -0400
+X-Alimail-AntiSpam: AC=CONTINUE;BC=0.07652099|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_regular_dialog|0.0589589-0.00576045-0.935281;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047194;MF=guan@eryu.me;NM=1;PH=DS;RN=5;RT=5;SR=0;TI=SMTPD_---.KtpL9V7_1627816690;
+Received: from localhost(mailfrom:guan@eryu.me fp:SMTPD_---.KtpL9V7_1627816690)
+          by smtp.aliyun-inc.com(10.147.40.44);
+          Sun, 01 Aug 2021 19:18:10 +0800
+Date:   Sun, 1 Aug 2021 19:18:09 +0800
+From:   Eryu Guan <guan@eryu.me>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Chandan Babu R <chandanrlinux@gmail.com>, fstests@vger.kernel.org,
+        guaneryu@gmail.com, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/3] xfs/530: Do not pass block size argument to
+ _scratch_mkfs
+Message-ID: <YQaC8SrE/pWwu47O@desktop>
+References: <20210726064313.19153-1-chandanrlinux@gmail.com>
+ <20210726170827.GU559212@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20210726170827.GU559212@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Linus,
+On Mon, Jul 26, 2021 at 10:08:27AM -0700, Darrick J. Wong wrote:
+> On Mon, Jul 26, 2021 at 12:13:11PM +0530, Chandan Babu R wrote:
+> > _scratch_do_mkfs constructs a mkfs command line by concatenating the values of
+> > 1. $mkfs_cmd
+> > 2. $MKFS_OPTIONS
+> > 3. $extra_mkfs_options
+> > 
+> > The block size argument passed by xfs/530 to _scratch_mkfs() will cause
+> > mkfs.xfs to fail if $MKFS_OPTIONS also has a block size specified. In such a
+> > case, _scratch_do_mkfs() will construct and invoke an mkfs command line
+> > without including the value of $MKFS_OPTIONS.
+> > 
+> > To prevent such silent failures, this commit removes the block size option
+> > that was being explicitly passed to _scratch_mkfs().
 
-Please pull this branch containing a bunch of bug fixes in XFS.  Dave
-and I have been busy the last couple of weeks to find and fix as many
-log recovery bugs as we can find; here are the results so far.  Go
-fstests -g recoveryloop! ;)
+Patch looks fine to me, and queued for update.
 
-The branch merges cleanly against upstream as of a few minutes ago.
-Please let me know if anything else strange happens during the merge
-process.
+> 
+> Yes, that makes sense.
+> 
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
---D
+I'm wondering if mkfs.xfs could restore the behavior that allows
+re-specified options, and the last specified wins, e.g.
 
-The following changes since commit b102a46ce16fd5550aed882c3c5b95f50da7992c:
+mkfs -t xfs -b 1k -b 2k -f /dev/sda2
 
-  xfs: detect misaligned rtinherit directory extent size hints (2021-07-15 09:58:42 -0700)
+and mkfs.xfs didn't report failure but created xfs with 2k blocksize.
+This may cause less problems like this patch resolved.
 
-are available in the Git repository at:
+Thanks,
+Eryu
 
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.14-fixes-2
-
-for you to fetch changes up to 81a448d7b0668ae39c08e6f34a54cc7eafb844f1:
-
-  xfs: prevent spoofing of rtbitmap blocks when recovering buffers (2021-07-29 09:27:29 -0700)
-
-----------------------------------------------------------------
-Fixes for 5.14-rc4:
- * Fix a number of coordination bugs relating to cache flushes for
-   metadata writeback, cache flushes for multi-buffer log writes, and
-   FUA writes for single-buffer log writes.
- * Fix a bug with incorrect replay of attr3 blocks.
- * Fix unnecessary stalls when flushing logs to disk.
- * Fix spoofing problems when recovering realtime bitmap blocks.
-
-----------------------------------------------------------------
-Darrick J. Wong (1):
-      xfs: prevent spoofing of rtbitmap blocks when recovering buffers
-
-Dave Chinner (11):
-      xfs: flush data dev on external log write
-      xfs: external logs need to flush data device
-      xfs: fold __xlog_state_release_iclog into xlog_state_release_iclog
-      xfs: fix ordering violation between cache flushes and tail updates
-      xfs: factor out forced iclog flushes
-      xfs: log forces imply data device cache flushes
-      xfs: avoid unnecessary waits in xfs_log_force_lsn()
-      xfs: logging the on disk inode LSN can make it go backwards
-      xfs: Enforce attr3 buffer recovery order
-      xfs: need to see iclog flags in tracing
-      xfs: limit iclog tail updates
-
- fs/xfs/libxfs/xfs_log_format.h  |  11 +-
- fs/xfs/xfs_buf_item_recover.c   |  15 ++-
- fs/xfs/xfs_inode_item_recover.c |  39 +++++--
- fs/xfs/xfs_log.c                | 251 ++++++++++++++++++++++++++--------------
- fs/xfs/xfs_log_cil.c            |  13 ++-
- fs/xfs/xfs_log_priv.h           |  16 ++-
- fs/xfs/xfs_trace.h              |   5 +-
- 7 files changed, 244 insertions(+), 106 deletions(-)
+> 
+> --D
+> 
+> > 
+> > Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
+> > ---
+> >  tests/xfs/530 | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/tests/xfs/530 b/tests/xfs/530
+> > index 4d168ac5..16dc426c 100755
+> > --- a/tests/xfs/530
+> > +++ b/tests/xfs/530
+> > @@ -60,7 +60,7 @@ echo "Format and mount rt volume"
+> >  
+> >  export USE_EXTERNAL=yes
+> >  export SCRATCH_RTDEV=$rtdev
+> > -_scratch_mkfs -d size=$((1024 * 1024 * 1024)) -b size=${dbsize} \
+> > +_scratch_mkfs -d size=$((1024 * 1024 * 1024)) \
+> >  	      -r size=${rtextsz},extsize=${rtextsz} >> $seqres.full
+> >  _try_scratch_mount || _notrun "Couldn't mount fs with synthetic rt volume"
+> >  
+> > -- 
+> > 2.30.2
+> > 
