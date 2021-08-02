@@ -8,63 +8,63 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 989E4C4338F
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Aug 2021 03:26:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6B5AC4338F
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Aug 2021 03:27:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7D0E860BD3
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Aug 2021 03:26:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 89D0260BD3
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Aug 2021 03:27:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232062AbhHBD1G (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 1 Aug 2021 23:27:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58728 "EHLO
+        id S232043AbhHBD1Q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 1 Aug 2021 23:27:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58766 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231432AbhHBD1F (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 1 Aug 2021 23:27:05 -0400
-Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 25380C06175F
-        for <linux-xfs@vger.kernel.org>; Sun,  1 Aug 2021 20:26:57 -0700 (PDT)
-Received: by mail-pj1-x102e.google.com with SMTP id j18-20020a17090aeb12b029017737e6c349so14450457pjz.0
-        for <linux-xfs@vger.kernel.org>; Sun, 01 Aug 2021 20:26:57 -0700 (PDT)
+        with ESMTP id S231432AbhHBD1P (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 1 Aug 2021 23:27:15 -0400
+Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0FE8C06175F
+        for <linux-xfs@vger.kernel.org>; Sun,  1 Aug 2021 20:27:06 -0700 (PDT)
+Received: by mail-pl1-x62f.google.com with SMTP id u16so9591511ple.2
+        for <linux-xfs@vger.kernel.org>; Sun, 01 Aug 2021 20:27:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=references:user-agent:from:to:cc:subject:in-reply-to:date
          :message-id:mime-version;
-        bh=QGJBx3rneAUs4HZY/L0FzDKcXt6y8SaArvsEM6NGOEc=;
-        b=GMAPnJEg6IYlGaPf9gfrI1rEDZwFtd6IUsICdw42r8e/5n3mIYRAzKQTW0HKUPoQEx
-         qiavv8syd+F4/3xqRui+ic4Uv1pVg6cfmWveljdDcEinrYy5uVv6fU+zOBzyB/7HKSS9
-         zqeCMblIHlNViT04aQP5JySrU5v0o7ZsAOfF0Ont3GfouFfrOgoPkQvoNDEnqzeiJCe6
-         eAGt37Oc37vZge02qLyP36WE//wQJRt12MEm3cPeBe8TsiinAfoHyvKMx//HLXZav7Xa
-         qF3IKFgw1leGi1tiGToPoRBMXMI9ZwXBsTsBzhmPi9k9aSPEtYOEa+6Cey0R3OyHFDOQ
-         Y7oQ==
+        bh=n8pHZwJMvaunt3vjmGkjK0wb5HSBQFaZeLHBqclFZIs=;
+        b=GZUu9AiPc4ggZfhrDZKgJbPFSNaK5xTytQqPDXxUUU3sAbEQtu25KyWSc1CUsVWSSM
+         Ez6LpTw9hP1NGsoJyv5tRTehj1oxMAuVGs8my0W/yaPLWNehxiyf+Y287cPIpJeAaf26
+         UOQ6YLuu8R6PyjzeH0RSIWadhNy/fufgXM8gMk+nDZBL3R07zx+9XB2cb48Dnv5YqJfc
+         cMPM609zSvGAGT6EFaePRcW7waaUoXzJLe+4P/mEW2p6LY0uctChYxuUuX6cvBy1q7Qw
+         6qSEcqSAaLboVDqWBUE3d/jLf678/xq85ipVt80E8xvHKxByPmtH/kAIpLo7guR9kgmE
+         ddPA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:references:user-agent:from:to:cc:subject
          :in-reply-to:date:message-id:mime-version;
-        bh=QGJBx3rneAUs4HZY/L0FzDKcXt6y8SaArvsEM6NGOEc=;
-        b=MhTLDJ6578qONaMcCCWwODvwwoQGPDP08vVVFIWv+m/9twCu3LNwpBDYqoL5OLHIyc
-         6JO2UeRXCCvnMM4Z8aERVEwDl2f42g4J3Vc0Cougx7soAwoYVo8vZcDfXmihiyu41hVx
-         bD0PoorPfuEK1syyD9YZuqQVh5IAaAudEdkYEuPC3jJ+Ziz8EI4vLslRg0UbxOKEf6nT
-         09S+MP0S5u2QY3yjIyRwqj5lrx26CUVDl+b98NoFVCpoNMUpLOvZS2X8svDTBG5zRHUG
-         x4C/IMTl9W5jYmUg7xeWqFZktq9dMiSZ5leEDQnYxoKwDbXuWy0v2KjIeH6KzD9wFOgY
-         mBKQ==
-X-Gm-Message-State: AOAM533oHKvoc3/WMBFdt1HiTAeePf0HhAkCDPqS1NmWQJMyGvmGlm64
-        hwp6RAMbpmcCb4bHYIFw+r+87Bi93uqQZA==
-X-Google-Smtp-Source: ABdhPJzqlKgebI4vF2PANuXohhUP8USkL+6CONh22PiJ5aZd246LEgHt/botCr/j6t8DWllPsBGokQ==
-X-Received: by 2002:a17:90a:a389:: with SMTP id x9mr5912700pjp.167.1627874816436;
-        Sun, 01 Aug 2021 20:26:56 -0700 (PDT)
+        bh=n8pHZwJMvaunt3vjmGkjK0wb5HSBQFaZeLHBqclFZIs=;
+        b=Mhe0c+m3KoRhtETwa/FxtS+Na7e+ROJWR8tdPpVeh3tLeENXM8HTmZnXsJgpmSFNhh
+         RD16oHWqdT0i1EF80Z3GEfaEKo8uZ/Nd2WE95YiAz1UhoDdBsTK0R41M1R0eWGw/DbLm
+         0OWzcLIN2dxeLORcwkpu5yUoJgWwtsnZL4NtD7IAUiFyIXrY8Dj+mMU1XXcrx3pEOnCI
+         /8/29epApf+Kc5+rVkd/X0qOaBFagtgEj0rBCeaqmMDFJzvoXqJC0fkNQ2XHh3gXFPIZ
+         klN1bhRB7rbWAv/AdI3NFzMAoq2dpURgjYfVAlJnZ06al65iUpEHT3Gy1i8wShHqeYi0
+         QEYA==
+X-Gm-Message-State: AOAM531BbCp0BrSyWCfiYqyafvquBC6ZI2jgScETJRlA4Kl2pqaXGgjE
+        1PUDSOxSVxbULUOlH6oDKlDAkV74uaB69Q==
+X-Google-Smtp-Source: ABdhPJzALJuC1lRShszD18xo1SzzokxvFvouq/XQnFla9vSuUo70aJujb/aes1jesefWO9CTpdsu2Q==
+X-Received: by 2002:a17:90a:c206:: with SMTP id e6mr15513229pjt.159.1627874826136;
+        Sun, 01 Aug 2021 20:27:06 -0700 (PDT)
 Received: from garuda ([122.172.177.63])
-        by smtp.gmail.com with ESMTPSA id l1sm8571993pjq.1.2021.08.01.20.26.54
+        by smtp.gmail.com with ESMTPSA id n123sm10964304pga.69.2021.08.01.20.27.04
         (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Sun, 01 Aug 2021 20:26:56 -0700 (PDT)
-References: <20210727062053.11129-1-allison.henderson@oracle.com> <20210727062053.11129-13-allison.henderson@oracle.com>
+        Sun, 01 Aug 2021 20:27:05 -0700 (PDT)
+References: <20210727062053.11129-1-allison.henderson@oracle.com> <20210727062053.11129-14-allison.henderson@oracle.com>
 User-agent: mu4e 1.0; emacs 26.1
 From:   Chandan Babu R <chandanrlinux@gmail.com>
 To:     Allison Henderson <allison.henderson@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v22 12/16] xfs: Remove unused xfs_attr_*_args
-In-reply-to: <20210727062053.11129-13-allison.henderson@oracle.com>
-Date:   Mon, 02 Aug 2021 08:56:53 +0530
-Message-ID: <8735rso7b6.fsf@garuda>
+Subject: Re: [PATCH v22 13/16] xfs: Add delayed attributes error tag
+In-reply-to: <20210727062053.11129-14-allison.henderson@oracle.com>
+Date:   Mon, 02 Aug 2021 08:57:03 +0530
+Message-ID: <871r7co7aw.fsf@garuda>
 MIME-Version: 1.0
 Content-Type: text/plain
 Precedence: bulk
@@ -72,283 +72,102 @@ List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 On 27 Jul 2021 at 11:50, Allison Henderson wrote:
-> Remove xfs_attr_set_args, xfs_attr_remove_args, and xfs_attr_trans_roll.
-> These high level loops are now driven by the delayed operations code,
-> and can be removed.
+> This patch adds an error tag that we can use to test delayed attribute
+> recovery and replay
 >
-> Additionally collapse in the leaf_bp parameter of xfs_attr_set_iter
-> since we only have one caller that passes dac->leaf_bp
 
 Looks good to me.
 
 Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 
->
 > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/libxfs/xfs_attr.c        | 96 +++--------------------------------------
->  fs/xfs/libxfs/xfs_attr.h        | 10 ++---
->  fs/xfs/libxfs/xfs_attr_remote.c |  1 -
->  fs/xfs/xfs_attr_item.c          |  6 +--
->  4 files changed, 10 insertions(+), 103 deletions(-)
+>  fs/xfs/libxfs/xfs_errortag.h | 4 +++-
+>  fs/xfs/xfs_attr_item.c       | 7 +++++++
+>  fs/xfs/xfs_error.c           | 3 +++
+>  3 files changed, 13 insertions(+), 1 deletion(-)
 >
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index c447c21..ec03a7b 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -244,67 +244,13 @@ xfs_attr_is_shortform(
->  		ip->i_afp->if_nextents == 0);
->  }
->  
-> -/*
-> - * Checks to see if a delayed attribute transaction should be rolled.  If so,
-> - * transaction is finished or rolled as needed.
-> - */
-> -STATIC int
-> -xfs_attr_trans_roll(
-> -	struct xfs_delattr_context	*dac)
-> -{
-> -	struct xfs_da_args		*args = dac->da_args;
-> -	int				error;
-> -
-> -	if (dac->flags & XFS_DAC_DEFER_FINISH) {
-> -		/*
-> -		 * The caller wants us to finish all the deferred ops so that we
-> -		 * avoid pinning the log tail with a large number of deferred
-> -		 * ops.
-> -		 */
-> -		dac->flags &= ~XFS_DAC_DEFER_FINISH;
-> -		error = xfs_defer_finish(&args->trans);
-> -	} else
-> -		error = xfs_trans_roll_inode(&args->trans, args->dp);
-> -
-> -	return error;
-> -}
-> -
-> -/*
-> - * Set the attribute specified in @args.
-> - */
-> -int
-> -xfs_attr_set_args(
-> -	struct xfs_da_args		*args)
-> -{
-> -	struct xfs_buf			*leaf_bp = NULL;
-> -	int				error = 0;
-> -	struct xfs_delattr_context	dac = {
-> -		.da_args	= args,
-> -	};
-> -
-> -	do {
-> -		error = xfs_attr_set_iter(&dac, &leaf_bp);
-> -		if (error != -EAGAIN)
-> -			break;
-> -
-> -		error = xfs_attr_trans_roll(&dac);
-> -		if (error) {
-> -			if (leaf_bp)
-> -				xfs_trans_brelse(args->trans, leaf_bp);
-> -			return error;
-> -		}
-> -	} while (true);
-> -
-> -	return error;
-> -}
-> -
->  STATIC int
->  xfs_attr_sf_addname(
-> -	struct xfs_delattr_context	*dac,
-> -	struct xfs_buf			**leaf_bp)
-> +	struct xfs_delattr_context	*dac)
->  {
->  	struct xfs_da_args		*args = dac->da_args;
->  	struct xfs_inode		*dp = args->dp;
-> +	struct xfs_buf			**leaf_bp = &dac->leaf_bp;
->  	int				error = 0;
->  
->  	/*
-> @@ -337,7 +283,6 @@ xfs_attr_sf_addname(
->  	 * add.
->  	 */
->  	trace_xfs_attr_sf_addname_return(XFS_DAS_UNINIT, args->dp);
-> -	dac->flags |= XFS_DAC_DEFER_FINISH;
->  	return -EAGAIN;
->  }
->  
-> @@ -350,10 +295,10 @@ xfs_attr_sf_addname(
->   */
->  int
->  xfs_attr_set_iter(
-> -	struct xfs_delattr_context	*dac,
-> -	struct xfs_buf			**leaf_bp)
-> +	struct xfs_delattr_context	*dac)
->  {
->  	struct xfs_da_args              *args = dac->da_args;
-> +	struct xfs_buf			**leaf_bp = &dac->leaf_bp;
->  	struct xfs_inode		*dp = args->dp;
->  	struct xfs_buf			*bp = NULL;
->  	int				forkoff, error = 0;
-> @@ -370,7 +315,7 @@ xfs_attr_set_iter(
->  		 * release the hold once we return with a clean transaction.
->  		 */
->  		if (xfs_attr_is_shortform(dp))
-> -			return xfs_attr_sf_addname(dac, leaf_bp);
-> +			return xfs_attr_sf_addname(dac);
->  		if (*leaf_bp != NULL) {
->  			xfs_trans_bhold_release(args->trans, *leaf_bp);
->  			*leaf_bp = NULL;
-> @@ -396,7 +341,6 @@ xfs_attr_set_iter(
->  				 * be a node, so we'll fall down into the node
->  				 * handling code below
->  				 */
-> -				dac->flags |= XFS_DAC_DEFER_FINISH;
->  				trace_xfs_attr_set_iter_return(
->  					dac->dela_state, args->dp);
->  				return -EAGAIN;
-> @@ -685,32 +629,6 @@ xfs_has_attr(
->  }
+> diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
+> index a23a52e..46f359c 100644
+> --- a/fs/xfs/libxfs/xfs_errortag.h
+> +++ b/fs/xfs/libxfs/xfs_errortag.h
+> @@ -59,7 +59,8 @@
+>  #define XFS_ERRTAG_REDUCE_MAX_IEXTENTS			36
+>  #define XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT		37
+>  #define XFS_ERRTAG_AG_RESV_FAIL				38
+> -#define XFS_ERRTAG_MAX					39
+> +#define XFS_ERRTAG_DELAYED_ATTR				39
+> +#define XFS_ERRTAG_MAX					40
 >  
 >  /*
-> - * Remove the attribute specified in @args.
-> - */
-> -int
-> -xfs_attr_remove_args(
-> -	struct xfs_da_args	*args)
-> -{
-> -	int				error;
-> -	struct xfs_delattr_context	dac = {
-> -		.da_args	= args,
-> -	};
-> -
-> -	do {
-> -		error = xfs_attr_remove_iter(&dac);
-> -		if (error != -EAGAIN)
-> -			break;
-> -
-> -		error = xfs_attr_trans_roll(&dac);
-> -		if (error)
-> -			return error;
-> -
-> -	} while (true);
-> -
-> -	return error;
-> -}
-> -
-> -/*
->   * Note: If args->value is NULL the attribute will be removed, just like the
->   * Linux ->setattr API.
->   */
-> @@ -1272,7 +1190,6 @@ xfs_attr_node_addname(
->  			 * this. dela_state is still unset by this function at
->  			 * this point.
->  			 */
-> -			dac->flags |= XFS_DAC_DEFER_FINISH;
->  			trace_xfs_attr_node_addname_return(
->  					dac->dela_state, args->dp);
->  			return -EAGAIN;
-> @@ -1287,7 +1204,6 @@ xfs_attr_node_addname(
->  		error = xfs_da3_split(state);
->  		if (error)
->  			goto out;
-> -		dac->flags |= XFS_DAC_DEFER_FINISH;
->  	} else {
->  		/*
->  		 * Addition succeeded, update Btree hashvals.
-> @@ -1538,7 +1454,6 @@ xfs_attr_remove_iter(
->  			if (error)
->  				goto out;
->  			dac->dela_state = XFS_DAS_RM_NAME;
-> -			dac->flags |= XFS_DAC_DEFER_FINISH;
->  			return -EAGAIN;
->  		}
+>   * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
+> @@ -103,5 +104,6 @@
+>  #define XFS_RANDOM_REDUCE_MAX_IEXTENTS			1
+>  #define XFS_RANDOM_BMAP_ALLOC_MINLEN_EXTENT		1
+>  #define XFS_RANDOM_AG_RESV_FAIL				1
+> +#define XFS_RANDOM_DELAYED_ATTR				1
 >  
-> @@ -1565,7 +1480,6 @@ xfs_attr_remove_iter(
->  			if (error)
->  				goto out;
->  
-> -			dac->flags |= XFS_DAC_DEFER_FINISH;
->  			dac->dela_state = XFS_DAS_RM_SHRINK;
->  			trace_xfs_attr_remove_iter_return(
->  					dac->dela_state, args->dp);
-> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-> index 72b0ea5..c0c92bd3 100644
-> --- a/fs/xfs/libxfs/xfs_attr.h
-> +++ b/fs/xfs/libxfs/xfs_attr.h
-> @@ -457,9 +457,8 @@ enum xfs_delattr_state {
->  /*
->   * Defines for xfs_delattr_context.flags
->   */
-> -#define XFS_DAC_DEFER_FINISH		0x01 /* finish the transaction */
-> -#define XFS_DAC_LEAF_ADDNAME_INIT	0x02 /* xfs_attr_leaf_addname init*/
-> -#define XFS_DAC_DELAYED_OP_INIT		0x04 /* delayed operations init*/
-> +#define XFS_DAC_LEAF_ADDNAME_INIT	0x01 /* xfs_attr_leaf_addname init*/
-> +#define XFS_DAC_DELAYED_OP_INIT		0x02 /* delayed operations init*/
->  
->  /*
->   * Context used for keeping track of delayed attribute operations
-> @@ -517,11 +516,8 @@ bool xfs_attr_is_leaf(struct xfs_inode *ip);
->  int xfs_attr_get_ilocked(struct xfs_da_args *args);
->  int xfs_attr_get(struct xfs_da_args *args);
->  int xfs_attr_set(struct xfs_da_args *args);
-> -int xfs_attr_set_args(struct xfs_da_args *args);
-> -int xfs_attr_set_iter(struct xfs_delattr_context *dac,
-> -		      struct xfs_buf **leaf_bp);
-> +int xfs_attr_set_iter(struct xfs_delattr_context *dac);
->  int xfs_has_attr(struct xfs_da_args *args);
-> -int xfs_attr_remove_args(struct xfs_da_args *args);
->  int xfs_attr_remove_iter(struct xfs_delattr_context *dac);
->  bool xfs_attr_namecheck(const void *name, size_t length);
->  void xfs_delattr_context_init(struct xfs_delattr_context *dac,
-> diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
-> index 1669043..e29c2b9 100644
-> --- a/fs/xfs/libxfs/xfs_attr_remote.c
-> +++ b/fs/xfs/libxfs/xfs_attr_remote.c
-> @@ -695,7 +695,6 @@ xfs_attr_rmtval_remove(
->  	 * the parent
->  	 */
->  	if (!done) {
-> -		dac->flags |= XFS_DAC_DEFER_FINISH;
->  		trace_xfs_attr_rmtval_remove_return(dac->dela_state, args->dp);
->  		return -EAGAIN;
->  	}
+>  #endif /* __XFS_ERRORTAG_H_ */
 > diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-> index 44c44d9..12a0151 100644
+> index 12a0151..2efd94f 100644
 > --- a/fs/xfs/xfs_attr_item.c
 > +++ b/fs/xfs/xfs_attr_item.c
-> @@ -285,7 +285,6 @@ STATIC int
->  xfs_trans_attr_finish_update(
->  	struct xfs_delattr_context	*dac,
->  	struct xfs_attrd_log_item	*attrdp,
-> -	struct xfs_buf			**leaf_bp,
->  	uint32_t			op_flags)
->  {
->  	struct xfs_da_args		*args = dac->da_args;
-> @@ -300,7 +299,7 @@ xfs_trans_attr_finish_update(
+> @@ -34,6 +34,7 @@
+>  #include "xfs_inode.h"
+>  #include "xfs_quota.h"
+>  #include "xfs_trans_space.h"
+> +#include "xfs_errortag.h"
+>  #include "xfs_error.h"
+>  #include "xfs_log_priv.h"
+>  #include "xfs_log_recover.h"
+> @@ -296,6 +297,11 @@ xfs_trans_attr_finish_update(
+>  	if (error)
+>  		return error;
+>  
+> +	if (XFS_TEST_ERROR(false, args->dp->i_mount, XFS_ERRTAG_DELAYED_ATTR)) {
+> +		error = -EIO;
+> +		goto out;
+> +	}
+> +
 >  	switch (op) {
 >  	case XFS_ATTR_OP_FLAGS_SET:
 >  		args->op_flags |= XFS_DA_OP_ADDNAME;
-> -		error = xfs_attr_set_iter(dac, leaf_bp);
-> +		error = xfs_attr_set_iter(dac);
+> @@ -310,6 +316,7 @@ xfs_trans_attr_finish_update(
 >  		break;
->  	case XFS_ATTR_OP_FLAGS_REMOVE:
->  		ASSERT(XFS_IFORK_Q(args->dp));
-> @@ -424,7 +423,7 @@ xfs_attr_finish_item(
->  	 */
->  	dac->da_args->trans = tp;
+>  	}
 >  
-> -	error = xfs_trans_attr_finish_update(dac, done_item, &dac->leaf_bp,
-> +	error = xfs_trans_attr_finish_update(dac, done_item,
->  					     attr->xattri_op_flags);
->  	if (error != -EAGAIN)
->  		kmem_free(attr);
-> @@ -640,7 +639,6 @@ xfs_attri_item_recover(
->  	xfs_trans_ijoin(tp, ip, 0);
+> +out:
+>  	/*
+>  	 * Mark the transaction dirty, even on error. This ensures the
+>  	 * transaction is aborted, which:
+> diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+> index ce3bc1b..eca5e34 100644
+> --- a/fs/xfs/xfs_error.c
+> +++ b/fs/xfs/xfs_error.c
+> @@ -57,6 +57,7 @@ static unsigned int xfs_errortag_random_default[] = {
+>  	XFS_RANDOM_REDUCE_MAX_IEXTENTS,
+>  	XFS_RANDOM_BMAP_ALLOC_MINLEN_EXTENT,
+>  	XFS_RANDOM_AG_RESV_FAIL,
+> +	XFS_RANDOM_DELAYED_ATTR,
+>  };
 >  
->  	ret = xfs_trans_attr_finish_update(&attr->xattri_dac, done_item,
-> -					   &attr->xattri_dac.leaf_bp,
->  					   attrp->alfi_op_flags);
->  	if (ret == -EAGAIN) {
->  		/* There's more work to do, so add it to this transaction */
+>  struct xfs_errortag_attr {
+> @@ -170,6 +171,7 @@ XFS_ERRORTAG_ATTR_RW(buf_ioerror,	XFS_ERRTAG_BUF_IOERROR);
+>  XFS_ERRORTAG_ATTR_RW(reduce_max_iextents,	XFS_ERRTAG_REDUCE_MAX_IEXTENTS);
+>  XFS_ERRORTAG_ATTR_RW(bmap_alloc_minlen_extent,	XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT);
+>  XFS_ERRORTAG_ATTR_RW(ag_resv_fail, XFS_ERRTAG_AG_RESV_FAIL);
+> +XFS_ERRORTAG_ATTR_RW(delayed_attr,	XFS_ERRTAG_DELAYED_ATTR);
+>  
+>  static struct attribute *xfs_errortag_attrs[] = {
+>  	XFS_ERRORTAG_ATTR_LIST(noerror),
+> @@ -211,6 +213,7 @@ static struct attribute *xfs_errortag_attrs[] = {
+>  	XFS_ERRORTAG_ATTR_LIST(reduce_max_iextents),
+>  	XFS_ERRORTAG_ATTR_LIST(bmap_alloc_minlen_extent),
+>  	XFS_ERRORTAG_ATTR_LIST(ag_resv_fail),
+> +	XFS_ERRORTAG_ATTR_LIST(delayed_attr),
+>  	NULL,
+>  };
 
 
 -- 
