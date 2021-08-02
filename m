@@ -2,86 +2,207 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57D73C4338F
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Aug 2021 22:16:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 833AAC4338F
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Aug 2021 22:24:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 349D360EBC
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Aug 2021 22:16:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 595A360F93
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Aug 2021 22:24:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232078AbhHBWQj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 2 Aug 2021 18:16:39 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:58416 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231126AbhHBWQj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Aug 2021 18:16:39 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1627942588;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=bREK9zy4MDrqGtjS0pSsWU8oAG+CWsA5oDR3x7mbPSI=;
-        b=QB/bDxDlvPg82l9xKBMWv2y22OoPWiNxXqvSEZCrFkFLrBT01Dq3ajsP8vcL6lEXo8mT0+
-        aN+0Qr6IGVcyKts+rrSKq+7iBfhRlZwJHoksTyBG41pMSj6cra4rQrD9AgI8CjAD4Bsjgv
-        NozMghUXzzxk5XqA8ibkrNYWq1QQws4=
-Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
- [209.85.128.71]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-262-vm2Ofz8kNaewFTj_WTMqfw-1; Mon, 02 Aug 2021 18:16:27 -0400
-X-MC-Unique: vm2Ofz8kNaewFTj_WTMqfw-1
-Received: by mail-wm1-f71.google.com with SMTP id a18-20020a05600c2252b02902531dcdc68fso191030wmm.6
-        for <linux-xfs@vger.kernel.org>; Mon, 02 Aug 2021 15:16:27 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=bREK9zy4MDrqGtjS0pSsWU8oAG+CWsA5oDR3x7mbPSI=;
-        b=tAE2wDvejbhbqC9SW3cFdF3Xs4GlIK/GZIkqgLViQtt/W6yt3oDw1CIZm5slsjgoLK
-         UMF7uibvYWi5AjzWLA38d7oG1XKAiMGAEMyvXfDEWPx4ExRh4W4vmc1YPBoe6PSLIKGH
-         abQLZg8wQQbYCPhJfq49+8CBS4aY63fdGLzDnJztlpezuwn/B+U+DJHRyB+8V5mnQsq2
-         iqKBy0r+K0Gf/tyC9OR1pO38CpGOhF7nmRW04+BKhRiSP4frI3pe1vPZ0CglnB8TU6U1
-         KEPg9k8P6SYKG8aWEV+mV2eZNBrM9xhOxpt+4BjSoCaiZW6E7qf34eVmGL5sIPv7gt1X
-         Crqg==
-X-Gm-Message-State: AOAM530HgqaGwuQd5XNCym07C0lI28l7oOiw559Qv2fS0SbWJZbaNsZw
-        N2+4m7xoxBZGscKdG8zeTebxOopQ7WyPDb69+CQfcUChmPZbbInT+vJEvpAXO/DdgFrblzvLT/4
-        kAEMe9P1isj054URFRT2oLRnd+9Oa+zaST1pp
-X-Received: by 2002:adf:f584:: with SMTP id f4mr19665666wro.211.1627942586403;
-        Mon, 02 Aug 2021 15:16:26 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJx0I9UcTRdpE8V808zLwZ0ppUehGsLFatZfcJjH0DRbpsdYTHYnfj1IfGIBU85XZ6MC679Jrj8bqU6dL6tCw10=
-X-Received: by 2002:adf:f584:: with SMTP id f4mr19665658wro.211.1627942586272;
- Mon, 02 Aug 2021 15:16:26 -0700 (PDT)
+        id S231126AbhHBWYw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 2 Aug 2021 18:24:52 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37516 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230156AbhHBWYw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 2 Aug 2021 18:24:52 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 3A2C660F36;
+        Mon,  2 Aug 2021 22:24:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1627943082;
+        bh=7j0+cEy0rKhjs8TADBoaHmMp2ovslCTM+ZtkvCMMzcI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=cmIGhUOgeZzHJrI3fwRXE2/pMbJwKAENq33ZWMS2R1AKHnh9b1PldCy2FamuNZJr2
+         uporgODMPamuVcmJePxFEAYW+6vfVCoydorEGV+aeGX2GwcugCei5HII6asEefygZj
+         VCTN+9B3QoOHUIzC9NsSQUff7rKASMsehyEqW5NG7pwXW0AqUJ1gETzT/33M/BVJzE
+         N43MuZmL32HKwEG9Ei1i5zLs0JbaPaL6p53KUAVUufYsdw1ZjjMEjgcITltV0T6y7A
+         jgp9bU54Ppvu6moxRI9XFzWVj9uasY26/j/chF4pxRBzwJFCmzxux9zqw9hhDCSv3c
+         gzbiyN7pQXZ5g==
+Date:   Mon, 2 Aug 2021 15:24:41 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Pavel Reichl <preichl@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 0/8] xfsprogs: Drop the 'platform_' prefix
+Message-ID: <20210802222441.GP3601443@magnolia>
+References: <20210802215024.949616-1-preichl@redhat.com>
 MIME-Version: 1.0
-References: <20210801120058.839839-1-agruenba@redhat.com> <20210802221339.GH3601466@magnolia>
-In-Reply-To: <20210802221339.GH3601466@magnolia>
-From:   Andreas Gruenbacher <agruenba@redhat.com>
-Date:   Tue, 3 Aug 2021 00:16:15 +0200
-Message-ID: <CAHc6FU66B9VJFu6tPvDMJZYPbgGoytf3zR1yxRfg92Zw1=vaCQ@mail.gmail.com>
-Subject: Re: [PATCH] iomap: Fix some typos and bad grammar
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210802215024.949616-1-preichl@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 3, 2021 at 12:13 AM Darrick J. Wong <djwong@kernel.org> wrote:
-> On Sun, Aug 01, 2021 at 02:00:58PM +0200, Andreas Gruenbacher wrote:
-> > Fix some typos and bad grammar in buffered-io.c to make the comments
-> > easier to read.
-> >
-> > Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
->
-> Looks good to me, though I'm less enthused about the parts of the diff
-> that combine words into contractions.
+On Mon, Aug 02, 2021 at 11:50:16PM +0200, Pavel Reichl wrote:
+> Hi,
+> 
+> Eric recently suggested that removing prefix 'platform_' from function
+> names in xfsprogs could be a good idea.
 
-Feel free to adjust as you see fit.
+Please turn on column wrapping for email...
 
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> It seems to be a relict from times when support from other OSes was
+> expected. Since it does not seem to happen it might be a good idea to
+> remove the prefix and thus simplify the codebase a bit.
+> 
+> The core of the changes is in removing 'platform' wrappers around
+> standard linux calls and fixing the passed parameters from pointers to
+> actual values (if appropriate) e.g.
+> 
+> -static __inline__ void platform_uuid_copy(uuid_t *dst, uuid_t *src)
+> -{
+> -	uuid_copy(*dst, *src);
+> -}
+> ... 
+> -		platform_uuid_copy(&hdr3->uuid, &mp->m_sb.sb_meta_uuid);
+> +		uuid_copy(hdr3->uuid, mp->m_sb.sb_meta_uuid);
+> 
+> 
+> 
+> I attached first WIP version (that builds and passes my limited
+> testing) to show the scope of changes and find consensus about some
+> choices that need to be done:
+> 
+>  * Is renaming platform_defs.h.in -> defs.h.in OK?
+>  * is renaming libfrog/platform.h -> libfrog/common.h OK, maybe
+>  libfrog/libfrog.h is better?
+>  * Wrapper platform_nproc() defined in/libfrog/linux.c slightly
+>  changes the behavior of nproc() is renaming it to libfrog_nproc() OK?
 
-Thanks,
-Andreas
+Not sure what "nproc()" is?  Are you asking if it's ok to rename
+platform_nproc to libfrog_nproc because it's not just a straight wrapper
+of "sysconf(_SC_NPROCESSORS_ONLN)"?
 
+>  * What would be best for the reviewer - should I prepare a separate
+>  patch for every function rename or should I squash the changes into
+>  one huge patch?
+
+One patch per function, please.
+
+--D
+
+>  
+> Thanks! 
+> 
+> Pavel Reichl (8):
+>   xfsprogs: Rename platform_defs.h.in -> defs.h.in
+>   xfsprogs: Rename platform.h -> common.h
+>   xfsprogs: remove platform_uuid_compare()
+>   xfsprogs: remove platform_{test_xfs_fd,path,fstatfs}
+>   xfsprogs: Rename platform_getoptreset -> getoptreset
+>   xfsprogs: remove all platform_ prefixes in linux.h
+>   xfsprogs: Remove platform_ prefixes in libfrog/common.h
+>   xfsprogs: remove platform_ from man xfsctl man page
+> 
+>  .gitignore                                |  2 +-
+>  Makefile                                  | 10 ++--
+>  configure.ac                              |  2 +-
+>  copy/xfs_copy.c                           | 26 +++++-----
+>  db/command.c                              |  2 +-
+>  db/fprint.c                               |  2 +-
+>  db/sb.c                                   | 14 ++---
+>  debian/rules                              |  4 +-
+>  fsr/xfs_fsr.c                             |  8 +--
+>  growfs/xfs_growfs.c                       |  2 +-
+>  include/Makefile                          |  4 +-
+>  include/{platform_defs.h.in => defs.h.in} |  8 +--
+>  include/libxfs.h                          |  2 +-
+>  include/linux.h                           | 62 ++++-------------------
+>  io/bmap.c                                 |  2 +-
+>  io/bulkstat.c                             |  2 +-
+>  io/cowextsize.c                           |  2 +-
+>  io/crc32cselftest.c                       |  2 +-
+>  io/encrypt.c                              |  2 +-
+>  io/fiemap.c                               |  2 +-
+>  io/fsmap.c                                |  2 +-
+>  io/fsync.c                                |  2 +-
+>  io/init.c                                 |  4 +-
+>  io/label.c                                |  2 +-
+>  io/log_writes.c                           |  2 +-
+>  io/open.c                                 |  4 +-
+>  io/stat.c                                 |  2 +-
+>  io/sync.c                                 |  2 +-
+>  libfrog/avl64.c                           |  2 +-
+>  libfrog/bitmap.c                          |  2 +-
+>  libfrog/common.h                          | 26 ++++++++++
+>  libfrog/convert.c                         |  2 +-
+>  libfrog/crc32.c                           |  2 +-
+>  libfrog/fsgeom.c                          |  2 +-
+>  libfrog/linux.c                           | 30 +++++------
+>  libfrog/paths.c                           |  2 +-
+>  libfrog/paths.h                           |  2 +-
+>  libfrog/platform.h                        | 26 ----------
+>  libfrog/projects.h                        |  2 +-
+>  libfrog/ptvar.c                           |  2 +-
+>  libfrog/radix-tree.c                      |  2 +-
+>  libfrog/topology.c                        |  8 +--
+>  libfrog/util.c                            |  2 +-
+>  libhandle/handle.c                        |  2 +-
+>  libhandle/jdm.c                           |  2 +-
+>  libxcmd/command.c                         |  4 +-
+>  libxcmd/help.c                            |  2 +-
+>  libxcmd/input.c                           |  2 +-
+>  libxcmd/quit.c                            |  2 +-
+>  libxfs/init.c                             | 34 ++++++-------
+>  libxfs/libxfs_io.h                        |  2 +-
+>  libxfs/libxfs_priv.h                      |  5 +-
+>  libxfs/rdwr.c                             |  6 +--
+>  libxfs/xfs_ag.c                           |  6 +--
+>  libxfs/xfs_attr_leaf.c                    |  2 +-
+>  libxfs/xfs_attr_remote.c                  |  2 +-
+>  libxfs/xfs_btree.c                        |  4 +-
+>  libxfs/xfs_da_btree.c                     |  2 +-
+>  libxfs/xfs_dir2_block.c                   |  2 +-
+>  libxfs/xfs_dir2_data.c                    |  2 +-
+>  libxfs/xfs_dir2_leaf.c                    |  2 +-
+>  libxfs/xfs_dir2_node.c                    |  2 +-
+>  libxfs/xfs_dquot_buf.c                    |  2 +-
+>  libxfs/xfs_ialloc.c                       |  4 +-
+>  libxfs/xfs_inode_buf.c                    |  2 +-
+>  libxfs/xfs_sb.c                           |  6 +--
+>  libxfs/xfs_symlink_remote.c               |  2 +-
+>  libxlog/util.c                            |  8 +--
+>  logprint/log_misc.c                       |  2 +-
+>  man/man3/xfsctl.3                         |  9 +---
+>  mdrestore/xfs_mdrestore.c                 |  4 +-
+>  mkfs/xfs_mkfs.c                           | 22 ++++----
+>  quota/free.c                              |  2 +-
+>  repair/agheader.c                         | 16 +++---
+>  repair/attr_repair.c                      |  2 +-
+>  repair/dinode.c                           |  8 +--
+>  repair/phase4.c                           |  6 +--
+>  repair/phase5.c                           |  6 +--
+>  repair/phase6.c                           |  2 +-
+>  repair/prefetch.c                         |  2 +-
+>  repair/scan.c                             |  4 +-
+>  repair/slab.c                             |  2 +-
+>  repair/xfs_repair.c                       |  8 +--
+>  scrub/common.c                            |  2 +-
+>  scrub/descr.c                             |  2 +-
+>  scrub/disk.c                              |  6 +--
+>  scrub/fscounters.c                        |  2 +-
+>  scrub/inodes.c                            |  2 +-
+>  scrub/xfs_scrub.c                         |  2 +-
+>  spaceman/health.c                         |  2 +-
+>  spaceman/init.c                           |  2 +-
+>  91 files changed, 235 insertions(+), 281 deletions(-)
+>  rename include/{platform_defs.h.in => defs.h.in} (95%)
+>  create mode 100644 libfrog/common.h
+>  delete mode 100644 libfrog/platform.h
+> 
+> -- 
+> 2.31.1
+> 
