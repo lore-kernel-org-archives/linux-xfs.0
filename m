@@ -2,240 +2,142 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3143DC4338F
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Aug 2021 22:31:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA064C4338F
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Aug 2021 22:31:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 04E0960EE6
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Aug 2021 22:31:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9DCA860EC0
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Aug 2021 22:31:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232006AbhHBWbn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 2 Aug 2021 18:31:43 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39658 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231126AbhHBWbl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 2 Aug 2021 18:31:41 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 9B23F60EC0;
-        Mon,  2 Aug 2021 22:31:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627943491;
-        bh=8GAwEB8ER4s/6XkhiMeCtZqm3G2th5x26Eu6R3dBMiY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=U1IC7Q9EStMgFE6YTJbOZZVwyoIVbhsuO36yhv/xzH6WRWdYNRyUVELnsbMiqxAqN
-         WIX/IsZFKzD4s5JmiAsrkZgNcfI0AoJmEKRE3nUjusLRapFgyFV5rPxesMYuQ/Mfgx
-         mHgClFtiXDUc+bStoPjn8m28zVb9yO5qVWvf1EjNvZ5C0DU8j5Un6GfPJ4R2W7yakM
-         RVA4U6vGwT/f94ZwniA2QlOR/9z7CO4tm0CfOV/ot41RcPZVE22z60X3cMroxg0yI7
-         FeH+wlgV3x+xsIFK4iw1GdjgRIDKTDWBBHvslHWEItQJoepehY3dg6qe6QS+eGmczW
-         8bx7taVMq5c9w==
-Date:   Mon, 2 Aug 2021 15:31:31 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Pavel Reichl <preichl@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/8] xfsprogs: remove platform_{test_xfs_fd,path,fstatfs}
-Message-ID: <20210802223131.GQ3601443@magnolia>
-References: <20210802215024.949616-1-preichl@redhat.com>
- <20210802215024.949616-5-preichl@redhat.com>
+        id S232094AbhHBWcE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 2 Aug 2021 18:32:04 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:56943 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231920AbhHBWcD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Aug 2021 18:32:03 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1627943513;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=4EVhT6i3eXXJjz3ahLl3R5UmsaRKu+vDRCucrxfPbqs=;
+        b=g+h9mZQYkhEdz2dCkF2WuvNswyV5l8GeIPgllm6d/pZKzjGSP7p6QLW9xQQ//uqzM3FQwx
+        IK2hxRVvi5raz9jEZLkaWSyD2m3xWNel9SKDmSFEsnlc2Btz8yLBpFp9zjK5NQFfBs0D+X
+        3QSObk3kK2N9y5Vpaq0sDtvdDT27m2k=
+Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
+ [209.85.128.72]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-259--PIR41ZrNfCnpXreWbOy3g-1; Mon, 02 Aug 2021 18:31:51 -0400
+X-MC-Unique: -PIR41ZrNfCnpXreWbOy3g-1
+Received: by mail-wm1-f72.google.com with SMTP id k13-20020a05600c1c8db029025018ac4f7dso292376wms.2
+        for <linux-xfs@vger.kernel.org>; Mon, 02 Aug 2021 15:31:51 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=4EVhT6i3eXXJjz3ahLl3R5UmsaRKu+vDRCucrxfPbqs=;
+        b=fiT3RTVltIa0yl7cLxGTuKAe5R3EBvOnl4MEXiiC6C5VZ+UWFmykjBFnYBGGHia/II
+         PTQI+P+a0wBOSzUpcJAjQEnJ0DlA/3LWU2Yp6fchMNdjbKGR6Fw1AFXdh5e52XEkODCs
+         FkUsVk8y7UD5tYdFJNC1vqj+1mS1XX8sXo1XQ3EReEDypQ/G+uI46jwC+xK9hHkeXqDX
+         T1IYItG/svMVMfNOdx4i3YT2pr2D85i/6mzW4CN8keLOTbcx5G/Q9LSouZhJmyj2uzAD
+         BZt4HTIa8jsMe+Kgly1X20o0qRz19p3PPZe+S6AO5JeBLVI+QtvQxL4oThjNNnARSGK5
+         +34A==
+X-Gm-Message-State: AOAM533y6S2E1FAB9m7rJ9rmrihrPA1FTMr3GgIsftrIXHlNJjAhTsgR
+        O11jKM/aajtEOE18V443ZkiT31AmYK1GJyRBEM+7ktvSEp3Opc922l1BJhkyBYhImk6ZzJrCaaj
+        q8lNLv5U6G1G1HejEx05MJJN7R4IQjchX0sv7
+X-Received: by 2002:adf:dd07:: with SMTP id a7mr19254657wrm.377.1627943510794;
+        Mon, 02 Aug 2021 15:31:50 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzUHr36B5P/mt6E/dLhCWXX9iYzqcwuvGX7I402J27W+nWBdib/Y2RF3iSckApfuxD0i+HWk/ODRlxb6VjoIok=
+X-Received: by 2002:adf:dd07:: with SMTP id a7mr19254644wrm.377.1627943510642;
+ Mon, 02 Aug 2021 15:31:50 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210802215024.949616-5-preichl@redhat.com>
+References: <20210802221114.GG3601466@magnolia>
+In-Reply-To: <20210802221114.GG3601466@magnolia>
+From:   Andreas Gruenbacher <agruenba@redhat.com>
+Date:   Tue, 3 Aug 2021 00:31:39 +0200
+Message-ID: <CAHc6FU5YAs-8HZAVeP-ZWRmvZ3mXDs37SgWXXOJC+uS=6hTVgw@mail.gmail.com>
+Subject: Re: iomap 5.15 branch construction ...
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Matthew Wilcox <willy@infradead.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Gao Xiang <hsiangkao@linux.alibaba.com>,
+        Eric Biggers <ebiggers@kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        xfs <linux-xfs@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Aug 02, 2021 at 11:50:20PM +0200, Pavel Reichl wrote:
-> ---
->  copy/xfs_copy.c     | 4 ++--
->  fsr/xfs_fsr.c       | 2 +-
->  growfs/xfs_growfs.c | 2 +-
->  include/linux.h     | 9 ++-------
->  io/init.c           | 2 +-
->  io/open.c           | 4 ++--
->  io/stat.c           | 2 +-
->  libfrog/paths.c     | 2 +-
->  quota/free.c        | 2 +-
->  spaceman/init.c     | 2 +-
->  10 files changed, 13 insertions(+), 18 deletions(-)
-> 
-> diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
-> index 2a17bf38..4872621d 100644
-> --- a/copy/xfs_copy.c
-> +++ b/copy/xfs_copy.c
-> @@ -670,7 +670,7 @@ main(int argc, char **argv)
->  	if (S_ISREG(statbuf.st_mode))
->  		source_is_file = 1;
->  
-> -	if (source_is_file && platform_test_xfs_fd(source_fd))  {
-> +	if (source_is_file && test_xfs_fd(source_fd))  {
->  		if (fcntl(source_fd, F_SETFL, open_flags | O_DIRECT) < 0)  {
->  			do_log(_("%s: Cannot set direct I/O flag on \"%s\".\n"),
->  				progname, source_name);
-> @@ -869,7 +869,7 @@ main(int argc, char **argv)
->  					progname);
->  				die_perror();
->  			}
-> -			if (platform_test_xfs_fd(target[i].fd))  {
-> +			if (test_xfs_fd(target[i].fd))  {
->  				if (xfsctl(target[i].name, target[i].fd,
->  						XFS_IOC_DIOINFO, &d) < 0)  {
->  					do_log(
-> diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-> index 6cf8bfb7..25eb2e12 100644
-> --- a/fsr/xfs_fsr.c
-> +++ b/fsr/xfs_fsr.c
-> @@ -248,7 +248,7 @@ main(int argc, char **argv)
->  				        progname, argname);
->  				exit(1);
->  			} else if (S_ISDIR(sb.st_mode) || S_ISREG(sb.st_mode)) {
-> -				if (!platform_test_xfs_path(argname)) {
-> +				if (!test_xfs_path(argname)) {
->  					fprintf(stderr, _(
->  				        "%s: cannot defragment: %s: Not XFS\n"),
->  				        progname, argname);
-> diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
-> index d45ba703..dc01dfe8 100644
-> --- a/growfs/xfs_growfs.c
-> +++ b/growfs/xfs_growfs.c
-> @@ -160,7 +160,7 @@ main(int argc, char **argv)
->  		return 1;
->  	}
->  
-> -	if (!platform_test_xfs_fd(ffd)) {
-> +	if (!test_xfs_fd(ffd)) {
->  		fprintf(stderr, _("%s: specified file "
->  			"[\"%s\"] is not on an XFS filesystem\n"),
->  			progname, fname);
-> diff --git a/include/linux.h b/include/linux.h
-> index 9c7ea189..bef4ea00 100644
-> --- a/include/linux.h
-> +++ b/include/linux.h
-> @@ -46,7 +46,7 @@ static __inline__ int xfsctl(const char *path, int fd, int cmd, void *p)
->   * so return 0 for those
->   */
->  
-> -static __inline__ int platform_test_xfs_fd(int fd)
-> +static __inline__ int test_xfs_fd(int fd)
->  {
->  	struct statfs statfsbuf;
->  	struct stat statbuf;
-> @@ -60,7 +60,7 @@ static __inline__ int platform_test_xfs_fd(int fd)
->  	return (statfsbuf.f_type == 0x58465342);	/* XFSB */
->  }
->  
-> -static __inline__ int platform_test_xfs_path(const char *path)
-> +static __inline__ int test_xfs_path(const char *path)
+On Tue, Aug 3, 2021 at 12:11 AM Darrick J. Wong <djwong@kernel.org> wrote:
+>
+> Hi everyone!
+>
+> iomap has become very popular for this cycle, with seemingly a lot of
+> overlapping patches and whatnot.  Does this accurately reflect all the
+> stuff that people are trying to send for 5.15?
+>
+> 1. So far, I think these v2 patches from Christoph are ready to go:
+>
+>         iomap: simplify iomap_readpage_actor
+>         iomap: simplify iomap_add_to_ioend
+>
+> 2. This is the v9 "iomap: Support file tail packing" patch from Gao,
+> with a rather heavily edited commit:
+>
+>         iomap: support reading inline data from non-zero pos
+>
+> Should I wait for a v10 patch with spelling fixes as requested by
+> Andreas?  And if there is a v10 submission, please update the commit
+> message.
+>
+> 3. Matthew also threw in a patch:
+>
+>         iomap: Support inline data with block size < page size
+>
+> for which Andreas also sent some suggestions, so I guess I'm waiting for
+> a v2 of that patch?  It looks to me like the last time he sent that
+> series (on 24 July) he incorporated Gao's patch as patch 1 of the
+> series?
+>
+> 4. Andreas has a patch:
+>
+>         iomap: Fix some typos and bad grammar
+>
+> which looks more or less ready to go.
+>
+> 5. Christoph also had a series:
+>
+>         RFC: switch iomap to an iterator model
+>
+> Which I reviewed and sent some comments for, but (AFAICT) haven't seen a
+> non-RFC resubmission yet.  Is that still coming for 5.15?
+>
+> 6. Earlier, Eric Biggers had a patchset that made some iomap changes
+> ahead of porting f2fs to use directio.  I /think/ those changes were
+> dropped in the latest submission because the intended use of those
+> changes (counters of the number of pages undergoing reads or writes,
+> iirc?) has been replaced with something simpler.  IOWs, f2fs doesn't
+> need any iomap changes for 5.15, right?
+>
+> 7. Andreas also had a patchset:
+>
+>         gfs2: Fix mmap + page fault deadlocks
+>
+> That I've left unread because Linus started complaining about patch 1.
+> Is that not going forward, then?
 
-These ship in the userspace development headers package (xfslibs-dev),
-which means they're part of userspace ABI and cannot be renamed without
-breaking userspace programs such as xfsdump.
+Still working on it; it's way nastier than expected.
 
---D
+> So, I /think/ that's all I've received for this next cycle.  Did I miss
+> anything?  Matthew said he might roll some of these up and send me a
+> pull request, which would be nice... :)
+>
+> --D
+>
 
->  {
->  	struct statfs statfsbuf;
->  	struct stat statbuf;
-> @@ -74,11 +74,6 @@ static __inline__ int platform_test_xfs_path(const char *path)
->  	return (statfsbuf.f_type == 0x58465342);	/* XFSB */
->  }
->  
-> -static __inline__ int platform_fstatfs(int fd, struct statfs *buf)
-> -{
-> -	return fstatfs(fd, buf);
-> -}
-> -
->  static __inline__ void platform_getoptreset(void)
->  {
->  	extern int optind;
-> diff --git a/io/init.c b/io/init.c
-> index 0fbc703e..15df0c03 100644
-> --- a/io/init.c
-> +++ b/io/init.c
-> @@ -219,7 +219,7 @@ init(
->  		c = openfile(argv[optind], &geometry, flags, mode, &fsp);
->  		if (c < 0)
->  			exit(1);
-> -		if (!platform_test_xfs_fd(c))
-> +		if (!test_xfs_fd(c))
->  			flags |= IO_FOREIGN;
->  		if (addfile(argv[optind], c, &geometry, flags, &fsp) < 0)
->  			exit(1);
-> diff --git a/io/open.c b/io/open.c
-> index d8072664..498e6163 100644
-> --- a/io/open.c
-> +++ b/io/open.c
-> @@ -115,7 +115,7 @@ openfile(
->  		}
->  	}
->  
-> -	if (!geom || !platform_test_xfs_fd(fd))
-> +	if (!geom || !test_xfs_fd(fd))
->  		return fd;
->  
->  	if (flags & IO_PATH) {
-> @@ -326,7 +326,7 @@ open_f(
->  		return 0;
->  	}
->  
-> -	if (!platform_test_xfs_fd(fd))
-> +	if (!test_xfs_fd(fd))
->  		flags |= IO_FOREIGN;
->  
->  	if (addfile(argv[optind], fd, &geometry, flags, &fsp) != 0) {
-> diff --git a/io/stat.c b/io/stat.c
-> index 49c4c27c..78f7d7f8 100644
-> --- a/io/stat.c
-> +++ b/io/stat.c
-> @@ -182,7 +182,7 @@ statfs_f(
->  	int			ret;
->  
->  	printf(_("fd.path = \"%s\"\n"), file->name);
-> -	if (platform_fstatfs(file->fd, &st) < 0) {
-> +	if (fstatfs(file->fd, &st) < 0) {
->  		perror("fstatfs");
->  		exitcode = 1;
->  	} else {
-> diff --git a/libfrog/paths.c b/libfrog/paths.c
-> index d6793764..c86f258e 100644
-> --- a/libfrog/paths.c
-> +++ b/libfrog/paths.c
-> @@ -161,7 +161,7 @@ fs_table_insert(
->  			goto out_nodev;
->  	}
->  
-> -	if (!platform_test_xfs_path(dir))
-> +	if (!test_xfs_path(dir))
->  		flags |= FS_FOREIGN;
->  
->  	/*
-> diff --git a/quota/free.c b/quota/free.c
-> index ea9c112f..8fcb6b93 100644
-> --- a/quota/free.c
-> +++ b/quota/free.c
-> @@ -62,7 +62,7 @@ mount_free_space_data(
->  		return 0;
->  	}
->  
-> -	if (platform_fstatfs(fd, &st) < 0) {
-> +	if (fstatfs(fd, &st) < 0) {
->  		perror("fstatfs");
->  		close(fd);
->  		return 0;
-> diff --git a/spaceman/init.c b/spaceman/init.c
-> index cf1ff3cb..8ad70929 100644
-> --- a/spaceman/init.c
-> +++ b/spaceman/init.c
-> @@ -93,7 +93,7 @@ init(
->  	c = openfile(argv[optind], &xfd, &fsp);
->  	if (c < 0)
->  		exit(1);
-> -	if (!platform_test_xfs_fd(xfd.fd))
-> +	if (!test_xfs_fd(xfd.fd))
->  		printf(_("Not an XFS filesystem!\n"));
->  	c = addfile(argv[optind], &xfd, &fsp);
->  	if (c < 0)
-> -- 
-> 2.31.1
-> 
+Andreas
+
