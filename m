@@ -2,134 +2,110 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D3ECC4338F
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Aug 2021 22:09:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68620C4338F
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Aug 2021 22:11:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 58DBF60EBC
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Aug 2021 22:09:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F17460EBC
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Aug 2021 22:11:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232006AbhHBWKC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 2 Aug 2021 18:10:02 -0400
-Received: from sandeen.net ([63.231.237.45]:57726 "EHLO sandeen.net"
+        id S231651AbhHBWLZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 2 Aug 2021 18:11:25 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58390 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231987AbhHBWJ6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 2 Aug 2021 18:09:58 -0400
-Received: from [192.168.1.28] (unknown [137.118.193.77])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id C53454433
-        for <linux-xfs@vger.kernel.org>; Mon,  2 Aug 2021 17:08:14 -0500 (CDT)
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs 5.13.0-rc1 released
-To:     xfs <linux-xfs@vger.kernel.org>
-Message-ID: <751421e5-705b-311a-dfa6-e0be700f49d4@sandeen.net>
-Date:   Mon, 2 Aug 2021 15:09:45 -0700
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.12.0
+        id S230156AbhHBWLZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 2 Aug 2021 18:11:25 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 3F9476054F;
+        Mon,  2 Aug 2021 22:11:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1627942275;
+        bh=MNUeBv9ft0RetGTZOlxcl7eTzXfcUZrSdI1kZW4bs8Q=;
+        h=Date:From:To:Cc:Subject:From;
+        b=lNeRU9LWMtuPdcxfrzLFogG8H0lDUaXVUqfKVdYP8ESHS9VlNn0nRQYzjojXFiuJL
+         zmuhtVZO0hsZ2ZXEwyweI5Y8QfBW1qGqFI3tXRr1d7gThfj18O4eEo7US+gR2zsV4p
+         YWjFiBDqwVFyZ+O6VxgGW9ptpvgJyJ747+BZko1CEkirHM9SqjnbTcVxo6nOtZy5y3
+         /aH/m4Ab5O8aL7UYigGUtX4NoKKWOobckHhhkarGa/ptFA+zI7TqdaApKPPdRjZhQM
+         a+V5Xaaxx8QS1z+cdhYYwfcia3IErl4H2VM6Z54Ck8e/j0xyL/4pin3VJmtAazIH1w
+         dPKtTTReJr5Wg==
+Date:   Mon, 2 Aug 2021 15:11:14 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Matthew Wilcox <willy@infradead.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Gao Xiang <hsiangkao@linux.alibaba.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Eric Biggers <ebiggers@kernel.org>
+Cc:     linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        xfs <linux-xfs@vger.kernel.org>
+Subject: iomap 5.15 branch construction ...
+Message-ID: <20210802221114.GG3601466@magnolia>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="sYFQarhRGNU2UfuA4eQNQgKyeNrSLtPyG"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---sYFQarhRGNU2UfuA4eQNQgKyeNrSLtPyG
-Content-Type: multipart/mixed; boundary="btpSuAurKupvRG8ITclVv563HBr56ADWE";
- protected-headers="v1"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: xfs <linux-xfs@vger.kernel.org>
-Message-ID: <751421e5-705b-311a-dfa6-e0be700f49d4@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs 5.13.0-rc1 released
+Hi everyone!
 
---btpSuAurKupvRG8ITclVv563HBr56ADWE
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+iomap has become very popular for this cycle, with seemingly a lot of
+overlapping patches and whatnot.  Does this accurately reflect all the
+stuff that people are trying to send for 5.15?
 
-Hi folks,
+1. So far, I think these v2 patches from Christoph are ready to go:
 
-The xfsprogs repository at:
+	iomap: simplify iomap_readpage_actor
+	iomap: simplify iomap_add_to_ioend
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+2. This is the v9 "iomap: Support file tail packing" patch from Gao,
+with a rather heavily edited commit:
 
-has just been updated and tagged with 5.13.0-rc1
+	iomap: support reading inline data from non-zero pos
 
-Patches often get missed, so please check if your outstanding
-patches were in this update. If they have not been in this update,
-please resubmit them to linux-xfs@vger.kernel.org so they can be
-picked up in the next update.
+Should I wait for a v10 patch with spelling fixes as requested by
+Andreas?  And if there is a v10 submission, please update the commit
+message.
 
-The new head of the master branch is commit:
+3. Matthew also threw in a patch:
 
-102c0a9f xfsprogs: Release v5.13.0-rc1
+	iomap: Support inline data with block size < page size
 
-New Commits:
+for which Andreas also sent some suggestions, so I guess I'm waiting for
+a v2 of that patch?  It looks to me like the last time he sent that
+series (on 24 July) he incorporated Gao's patch as patch 1 of the
+series?
 
-Darrick J. Wong (9):
-      [ce61e74a] xfs_io: fix broken funshare_cmd usage
-      [d87ec7f2] xfs_io: clean up the funshare command a bit
-      [e264ca71] xfs_io: only print the header once when dumping fsmap in=
- csv format
-      [5c0da2c0] xfs_io: don't count fsmaps before querying fsmaps
-      [5f062427] xfs_repair: validate alignment of inherited rt extent hi=
-nts
-      [1e8afffb] mkfs: validate rt extent size hint when rtinherit is set=
+4. Andreas has a patch:
 
-      [4130bb62] xfs_io: allow callers to dump fs stats individually
-      [f1ea06d0] xfs_repair: invalidate dirhash entry when junking dirent=
+	iomap: Fix some typos and bad grammar
 
-      [610ec295] xfs_quota: allow users to truncate group and project quo=
-ta files
+which looks more or less ready to go.
 
-Eric Sandeen (1):
-      [102c0a9f] xfsprogs: Release v5.13.0-rc1
+5. Christoph also had a series:
 
+	RFC: switch iomap to an iterator model
 
-Code Diffstat:
+Which I reviewed and sent some comments for, but (AFAICT) haven't seen a
+non-RFC resubmission yet.  Is that still coming for 5.15?
 
- VERSION           |   2 +-
- configure.ac      |   2 +-
- doc/CHANGES       |  13 ++++-
- io/fsmap.c        |  33 +------------
- io/prealloc.c     |  33 ++++++++-----
- io/stat.c         | 140 +++++++++++++++++++++++++++++++++++++++---------=
-------
- man/man8/xfs_io.8 |  26 ++++++++--
- mkfs/xfs_mkfs.c   |   7 +--
- quota/state.c     |   3 +-
- repair/dinode.c   |  71 +++++++++++++++++++--------
- repair/phase6.c   |  18 +++++++
- 11 files changed, 235 insertions(+), 113 deletions(-)
+6. Earlier, Eric Biggers had a patchset that made some iomap changes
+ahead of porting f2fs to use directio.  I /think/ those changes were
+dropped in the latest submission because the intended use of those
+changes (counters of the number of pages undergoing reads or writes,
+iirc?) has been replaced with something simpler.  IOWs, f2fs doesn't
+need any iomap changes for 5.15, right?
 
+7. Andreas also had a patchset:
 
---btpSuAurKupvRG8ITclVv563HBr56ADWE--
+	gfs2: Fix mmap + page fault deadlocks
 
---sYFQarhRGNU2UfuA4eQNQgKyeNrSLtPyG
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature"
+That I've left unread because Linus started complaining about patch 1.
+Is that not going forward, then?
 
------BEGIN PGP SIGNATURE-----
+So, I /think/ that's all I've received for this next cycle.  Did I miss
+anything?  Matthew said he might roll some of these up and send me a
+pull request, which would be nice... :)
 
-wsF5BAABCAAjFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAmEIbSkFAwAAAAAACgkQIK4WkuE93uBS
-dBAAn/PmEjvwPYyHyQXJmygP00Nl/X/yRFaJGJK42myhvDVMfa6qLfAbl2JEM84BnkzU7m6sXwDn
-2yq8oFpBUCp64JJSf7/c3PYbjSrqyNI/Qqtk7osWdhZ+hk1E4Eiil3skYhLrk5u3f9PXuObgp7DN
-C06PD9cHm+iVWz2ZKxMewTAiMWG2kSzeBi4Fn30weZUapUUlEEBOH+f2ltHR9Hp1buFWHP9BOfaP
-AIzvQjwIVyvY4W7dhZrJH4FRs7r5nzi7NnX8/fZPWu98KXTWnLZCGRzg4pITus7WZMkVYvQpOQ6f
-x0+/2u3DFB/051AC1psb03xSpqyHFfoNHAHtOXqEHnXIFbsfw/A3mI/aXNCliU5fk8EbSQPFn5Rt
-Jkss5UC2Jph0egYDH0J3wabVBG/Ch23b2b3J2AsnTv1VPqSKgQaosJ3FWB7uUXOitr+gbT4hOp7/
-iEcz8O1j3kLKKLxHxC6u/hFPIrArhwjWOWD4TSUJRJ7jDddaGmcb5UcSbtpKesF5cUpyWN6BMV71
-huGHzyXLE+bzigwoxNfEikpeXnejqCTfomdlAIHgkrqvwD8rByYNR37Dd29YD29PK7v60q7Xm1nR
-OAxvbq2Jy1g8E1++LW+dWPp/7ApqX0WT51WGljfAZ7PO4DXATdyUJz0CXVIzpYsJj+pA5I/w2Vx0
-Jrk=
-=VtTw
------END PGP SIGNATURE-----
-
---sYFQarhRGNU2UfuA4eQNQgKyeNrSLtPyG--
+--D
