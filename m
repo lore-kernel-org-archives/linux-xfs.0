@@ -2,107 +2,86 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36DC7C4320A
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Aug 2021 22:15:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57D73C4338F
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Aug 2021 22:16:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 199DD6054F
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Aug 2021 22:15:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 349D360EBC
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Aug 2021 22:16:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232419AbhHBWP3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 2 Aug 2021 18:15:29 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33102 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231875AbhHBWPY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 2 Aug 2021 18:15:24 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id A8F566054F;
-        Mon,  2 Aug 2021 22:15:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627942513;
-        bh=2ZvbvWhK+KSmhDEFN3Z0gKZ1OLvE1zEi/p9SVqNGpDw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=G3Y6kWeBY4REDACg0Qjpq9qTp7BOsg6tMXtYGvTeo5gdW3IuU9EJN8AAz0SCy+VEc
-         M5u9gzyg0j6w5tu59zJdiTbg+6mufXAXIZpxU6XxSdu5qL6il+pi1B3cnGtM6rxX/A
-         f4UYoBG/7yNX+UdKyFdaiKRci25TQS/Ms799Ved+eoWIfzQYh9vnEI0tI6Am8G8BpL
-         n1OrNIRdDijagqd7Rwcs6OSFnkGDNmkg+BuTYEAdfPcTDKhFKe+SLOdHbok8Sn8MEc
-         zRnlhmdYlpi/a6FxjLWRt6VOBKm2yQ4j4NJugA5sNkxs8nN5MtsnhEMfbKl/TEK2Z9
-         uEiGQWOtJ9CCg==
-Date:   Mon, 2 Aug 2021 15:15:13 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Eryu Guan <guan@eryu.me>
-Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org
-Subject: Re: [PATCH 3/4] generic/570: fix regression when SCRATCH_DEV is
- still formatted
-Message-ID: <20210802221513.GJ3601466@magnolia>
-References: <162743097757.3427426.8734776553736535870.stgit@magnolia>
- <162743099423.3427426.15112820532966726474.stgit@magnolia>
- <YQac0CPbZrVDEjrT@desktop>
+        id S232078AbhHBWQj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 2 Aug 2021 18:16:39 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:58416 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231126AbhHBWQj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Aug 2021 18:16:39 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1627942588;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=bREK9zy4MDrqGtjS0pSsWU8oAG+CWsA5oDR3x7mbPSI=;
+        b=QB/bDxDlvPg82l9xKBMWv2y22OoPWiNxXqvSEZCrFkFLrBT01Dq3ajsP8vcL6lEXo8mT0+
+        aN+0Qr6IGVcyKts+rrSKq+7iBfhRlZwJHoksTyBG41pMSj6cra4rQrD9AgI8CjAD4Bsjgv
+        NozMghUXzzxk5XqA8ibkrNYWq1QQws4=
+Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
+ [209.85.128.71]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-262-vm2Ofz8kNaewFTj_WTMqfw-1; Mon, 02 Aug 2021 18:16:27 -0400
+X-MC-Unique: vm2Ofz8kNaewFTj_WTMqfw-1
+Received: by mail-wm1-f71.google.com with SMTP id a18-20020a05600c2252b02902531dcdc68fso191030wmm.6
+        for <linux-xfs@vger.kernel.org>; Mon, 02 Aug 2021 15:16:27 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=bREK9zy4MDrqGtjS0pSsWU8oAG+CWsA5oDR3x7mbPSI=;
+        b=tAE2wDvejbhbqC9SW3cFdF3Xs4GlIK/GZIkqgLViQtt/W6yt3oDw1CIZm5slsjgoLK
+         UMF7uibvYWi5AjzWLA38d7oG1XKAiMGAEMyvXfDEWPx4ExRh4W4vmc1YPBoe6PSLIKGH
+         abQLZg8wQQbYCPhJfq49+8CBS4aY63fdGLzDnJztlpezuwn/B+U+DJHRyB+8V5mnQsq2
+         iqKBy0r+K0Gf/tyC9OR1pO38CpGOhF7nmRW04+BKhRiSP4frI3pe1vPZ0CglnB8TU6U1
+         KEPg9k8P6SYKG8aWEV+mV2eZNBrM9xhOxpt+4BjSoCaiZW6E7qf34eVmGL5sIPv7gt1X
+         Crqg==
+X-Gm-Message-State: AOAM530HgqaGwuQd5XNCym07C0lI28l7oOiw559Qv2fS0SbWJZbaNsZw
+        N2+4m7xoxBZGscKdG8zeTebxOopQ7WyPDb69+CQfcUChmPZbbInT+vJEvpAXO/DdgFrblzvLT/4
+        kAEMe9P1isj054URFRT2oLRnd+9Oa+zaST1pp
+X-Received: by 2002:adf:f584:: with SMTP id f4mr19665666wro.211.1627942586403;
+        Mon, 02 Aug 2021 15:16:26 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJx0I9UcTRdpE8V808zLwZ0ppUehGsLFatZfcJjH0DRbpsdYTHYnfj1IfGIBU85XZ6MC679Jrj8bqU6dL6tCw10=
+X-Received: by 2002:adf:f584:: with SMTP id f4mr19665658wro.211.1627942586272;
+ Mon, 02 Aug 2021 15:16:26 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YQac0CPbZrVDEjrT@desktop>
+References: <20210801120058.839839-1-agruenba@redhat.com> <20210802221339.GH3601466@magnolia>
+In-Reply-To: <20210802221339.GH3601466@magnolia>
+From:   Andreas Gruenbacher <agruenba@redhat.com>
+Date:   Tue, 3 Aug 2021 00:16:15 +0200
+Message-ID: <CAHc6FU66B9VJFu6tPvDMJZYPbgGoytf3zR1yxRfg92Zw1=vaCQ@mail.gmail.com>
+Subject: Re: [PATCH] iomap: Fix some typos and bad grammar
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Aug 01, 2021 at 09:08:32PM +0800, Eryu Guan wrote:
-> On Tue, Jul 27, 2021 at 05:09:54PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Newer versions of mkswap (or at least the one in util-linux 2.34)
-> > complain to stderr when they're formatting over a device that seems to
-> > contain existing data:
-> > 
-> >     mkswap: /dev/sdf: warning: wiping old btrfs signature.
-> > 
-> > This is harmless (since the swap image does get written!) but the extra
-> > golden output is flagged as a regression.  Update the mkswap usage in
-> > this test to dump the stderr output to $seqres.full, and complain if the
-> > exit code is nonzero.
-> > 
-> > This fixes a regression that the author noticed when testing btrfs and
-> > generic/507 and generic/570 run sequentially.  generic/507 calls
-> > _require_scratch_shutdown to see if the shutdown call is supported.
-> > btrfs does not support that, so the test is _notrun.  This leaves the
-> > scratch filesystem mounted, causing the _try_wipe_scratch_devs between
-> > tests to fail.  When g/570 starts up, the scratch device still contains
-> 
-> Won't your previous patch "check: don't leave the scratch filesystem
-> mounted after _notrun" fix this issue as well? As _notrun won't leaves
-> scratch dev mounted & unwiped after that patch. Would you please confirm?
+On Tue, Aug 3, 2021 at 12:13 AM Darrick J. Wong <djwong@kernel.org> wrote:
+> On Sun, Aug 01, 2021 at 02:00:58PM +0200, Andreas Gruenbacher wrote:
+> > Fix some typos and bad grammar in buffered-io.c to make the comments
+> > easier to read.
+> >
+> > Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+>
+> Looks good to me, though I'm less enthused about the parts of the diff
+> that combine words into contractions.
 
-Yes.  In the end this patch becomes more about failing the test if
-mkswap fails than anything else.
+Feel free to adjust as you see fit.
 
---D
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-> Thanks,
-> Eryu
-> 
-> > leftovers from the failed attempt to run g/507, which is why the mkswap
-> > command outputs the above warning.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  tests/generic/570 |    2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > 
-> > diff --git a/tests/generic/570 b/tests/generic/570
-> > index 7d03acfe..02c1d333 100755
-> > --- a/tests/generic/570
-> > +++ b/tests/generic/570
-> > @@ -27,7 +27,7 @@ _require_scratch_nocheck
-> >  _require_block_device $SCRATCH_DEV
-> >  test -e /dev/snapshot && _notrun "userspace hibernation to swap is enabled"
-> >  
-> > -$MKSWAP_PROG "$SCRATCH_DEV" >> $seqres.full
-> > +$MKSWAP_PROG -f "$SCRATCH_DEV" &>> $seqres.full || echo "mkswap failed?"
-> >  
-> >  # Can you modify the swap dev via previously open file descriptors?
-> >  for verb in 1 2 3 4; do
+Thanks,
+Andreas
+
