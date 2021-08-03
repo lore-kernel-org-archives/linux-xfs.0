@@ -2,47 +2,51 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE0F6C4338F
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Aug 2021 00:21:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E657C4338F
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Aug 2021 03:21:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A25D260E76
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Aug 2021 00:21:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F0E1560F9C
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Aug 2021 03:21:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232540AbhHCAV4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 2 Aug 2021 20:21:56 -0400
-Received: from out30-132.freemail.mail.aliyun.com ([115.124.30.132]:57288 "EHLO
-        out30-132.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232311AbhHCAVz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Aug 2021 20:21:55 -0400
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R101e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04395;MF=hsiangkao@linux.alibaba.com;NM=1;PH=DS;RN=7;SR=0;TI=SMTPD_---0UhorE70_1627950102;
-Received: from B-P7TQMD6M-0146.local(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0UhorE70_1627950102)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Tue, 03 Aug 2021 08:21:44 +0800
-Date:   Tue, 3 Aug 2021 08:21:42 +0800
-From:   Gao Xiang <hsiangkao@linux.alibaba.com>
+        id S233484AbhHCDWH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 2 Aug 2021 23:22:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38416 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233436AbhHCDWH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Aug 2021 23:22:07 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9D97C06175F;
+        Mon,  2 Aug 2021 20:21:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=ttKeZ0AwoZ2xt7fmwfbVjwk8DclE1a0iPb+yr/d+Jg8=; b=tdz3wpHKqHIgGhHcb0WEMA090j
+        qPv9b3z9r3jWc38djh0cSG4mEaoSvc6DYGuMC5+ikxJdE+XM7ESi5MgWQvth3w34qvoo78MPDvgpz
+        /Pex+2sUOcRNhQnD/y8Cc0jhPnKTfnjYu14g4xI9gZPDQinf5IaCNJL9B6M6672EnnwyAJLHm13Bj
+        YR5bHCQ7jltNEvcppjfvsTMTnvhdEf2lIR8A+AYHoQaub60MtuhFQa423VtoJdV/46YjAp5y/0+xv
+        RPSjLwsutvnpJLGuF23C3/71HXDgYdac9mczLrt1GrQvtTurIXFBB7TxoC+hEzq5FU9HKeXd2AgmX
+        F9+a1YVA==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1mAkzb-004Avv-1z; Tue, 03 Aug 2021 03:21:30 +0000
+Date:   Tue, 3 Aug 2021 04:21:23 +0100
+From:   Matthew Wilcox <willy@infradead.org>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Matthew Wilcox <willy@infradead.org>,
-        Christoph Hellwig <hch@infradead.org>,
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Gao Xiang <hsiangkao@linux.alibaba.com>,
         Andreas Gruenbacher <agruenba@redhat.com>,
         Eric Biggers <ebiggers@kernel.org>,
         linux-fsdevel <linux-fsdevel@vger.kernel.org>,
         xfs <linux-xfs@vger.kernel.org>
 Subject: Re: iomap 5.15 branch construction ...
-Message-ID: <YQiMFsO5DQouSPs/@B-P7TQMD6M-0146.local>
-Mail-Followup-To: "Darrick J. Wong" <djwong@kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Eric Biggers <ebiggers@kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        xfs <linux-xfs@vger.kernel.org>
+Message-ID: <YQi2M8BXVLaBgrn6@casper.infradead.org>
 References: <20210802221114.GG3601466@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <20210802221114.GG3601466@magnolia>
 Precedence: bulk
@@ -69,9 +73,24 @@ On Mon, Aug 02, 2021 at 03:11:14PM -0700, Darrick J. Wong wrote:
 > Should I wait for a v10 patch with spelling fixes as requested by
 > Andreas?  And if there is a v10 submission, please update the commit
 > message.
+> 
+> 3. Matthew also threw in a patch:
+> 
+> 	iomap: Support inline data with block size < page size
+> 
+> for which Andreas also sent some suggestions, so I guess I'm waiting for
+> a v2 of that patch?  It looks to me like the last time he sent that
+> series (on 24 July) he incorporated Gao's patch as patch 1 of the
+> series?
 
-I've already sent out v10 with these changes:
-https://lore.kernel.org/r/20210803001727.50281-1-hsiangkao@linux.alibaba.com
+These four patches are at the base of my 'devel' branch of folios, ie
+they're basically the next in the series after for-next.  So I've built
+the rest of the iomap-folios patches on top of them.  I'll pull in Gao's
+v10 tomorrow, retest and send you a git pull for those four?
 
-Thanks,
-Gao Xiang
+> So, I /think/ that's all I've received for this next cycle.  Did I miss
+> anything?  Matthew said he might roll some of these up and send me a
+> pull request, which would be nice... :)
+
+I ran out of time on Friday, and I took today (+ the weekend) off.
+I'll catch up tomorrow.
