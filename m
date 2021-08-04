@@ -2,179 +2,142 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36AC7C4320A
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Aug 2021 12:37:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F00C7C4338F
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Aug 2021 15:59:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2012460E8D
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Aug 2021 12:37:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D3A6360ED6
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Aug 2021 15:59:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236068AbhHDMha (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 Aug 2021 08:37:30 -0400
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:44011 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230436AbhHDMha (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Aug 2021 08:37:30 -0400
-Received: from dread.disaster.area (pa49-195-182-146.pa.nsw.optusnet.com.au [49.195.182.146])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 3853F84A35;
-        Wed,  4 Aug 2021 22:37:15 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1mBG94-00EPuA-83; Wed, 04 Aug 2021 22:37:14 +1000
-Date:   Wed, 4 Aug 2021 22:37:14 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
+        id S239253AbhHDQAH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 4 Aug 2021 12:00:07 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58164 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S239291AbhHDQAF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 4 Aug 2021 12:00:05 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 9311860ED6;
+        Wed,  4 Aug 2021 15:59:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1628092792;
+        bh=6XLzMssljuCwoHd0ZFZy8l8RlLsPc7UVSyWHOBOTvf0=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Ke4dJ8mi/mya6myaB/SXTkKRf6FFMY+Hod8p4gL5EbnoIbZ95PKw9r9fsl64ChJd+
+         rbyVXQXSZ6ty7LK22DCQPs5vww8/xEg2YP2XeB+KuCWUT7iykiUNGhsWGzJLL5F+NV
+         Ubk4Z/4rGBLPXEchWndoiLJNeaNGVTvYEuw5EOotT0gc3lMuZ88LA9WZDQ36Cwn9/h
+         kq72nQ4VjQhV7RwBvOf7ATwVrIJtVwNKqid8ZpUzFHshyKHVYWzvqvwb1QuJ8RqOke
+         8NSlwu3EfFrgcsNne1O/f8ysBmOUB83BZHV4R1Q49a49D6yt5Qo7IrAGYlTXBWtbXR
+         t2XMRMUKovyWw==
+Date:   Wed, 4 Aug 2021 08:59:52 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org, hch@infradead.org
-Subject: Re: [PATCH] xfs: inodegc needs to stop before freeze
-Message-ID: <20210804123714.GQ2757197@dread.disaster.area>
+Subject: Re: [PATCH, alternative v2] xfs: per-cpu deferred inode inactivation
+ queues
+Message-ID: <20210804155952.GN3601466@magnolia>
 References: <162758423315.332903.16799817941903734904.stgit@magnolia>
  <162758425012.332903.3784529658243630550.stgit@magnolia>
  <20210803083403.GI2757197@dread.disaster.area>
  <20210804032030.GT3601443@magnolia>
- <20210804100328.GK2757197@dread.disaster.area>
+ <20210804110916.GM2757197@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210804100328.GK2757197@dread.disaster.area>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
-        a=QpfB3wCSrn/dqEBSktpwZQ==:117 a=QpfB3wCSrn/dqEBSktpwZQ==:17
-        a=kj9zAlcOel0A:10 a=MhDmnRu9jo8A:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=QfC-DXSB2V09ypwxJwMA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20210804110916.GM2757197@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 04, 2021 at 08:03:28PM +1000, Dave Chinner wrote:
+On Wed, Aug 04, 2021 at 09:09:16PM +1000, Dave Chinner wrote:
 > On Tue, Aug 03, 2021 at 08:20:30PM -0700, Darrick J. Wong wrote:
 > > For everyone else following along at home, I've posted the current draft
 > > version of this whole thing in:
 > > 
 > > https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=deferred-inactivation-5.15
-> > 
-> > Here's Dave's patch reworked slightly to fix a deadlock between icreate
-> > and inactivation; conversion to use m_opstate and related macro stamping
-> > goodness; and some code reorganization to make it easier to add the
-> > throttling bits in the back two thirds of the series.
-> > 
-> > IOWs, I like this patch.  The runtime for my crazy deltree benchmark
-> > dropped from ~27 minutes to ~17 when the VM has 560M of RAM, and there's
-> > no observable drop in performance when the VM has 16G of RAM.  I also
-> > finally got it to run with 512M of RAM, whereas current TOT OOMs.
-> > 
-> > (Note: My crazy deltree benchmark is: I have a mdrestored sparse image
-> > with 10m files that I use dm-snapshot so that I can repeatedly write to
-> > it without needing to restore the image.  Then I mount the dm snapshot,
-> > and try to delete every file in the fs.)
-> ....
 > 
-> Ok, so xfs/517 fails with a freeze assert:
+> Overall looks good - fixes to freeze problems I hit are found
+> in other replies to this.
 > 
-> XFS: Assertion failed: mp->m_super->s_writers.frozen < SB_FREEZE_FS, file: fs/xfs/xfs_icache.c, line: 1861
+> I omitted the commits:
 > 
-> > @@ -718,6 +729,25 @@ xfs_fs_sync_fs(
-> >  		flush_delayed_work(&mp->m_log->l_work);
-> >  	}
-> >  
-> > +	/*
-> > +	 * Flush all deferred inode inactivation work so that the free space
-> > +	 * counters will reflect recent deletions.  Do not force the log again
-> > +	 * because log recovery can restart the inactivation from the info that
-> > +	 * we just wrote into the ondisk log.
-> > +	 *
-> > +	 * For regular operation this isn't strictly necessary since we aren't
-> > +	 * required to guarantee that unlinking frees space immediately, but
-> > +	 * that is how XFS historically behaved.
-> > +	 *
-> > +	 * If, however, the filesystem is at FREEZE_PAGEFAULTS, this is our
-> > +	 * last chance to complete the inactivation work before the filesystem
-> > +	 * freezes and the log is quiesced.  The background worker will not
-> > +	 * activate again until the fs is thawed because the VFS won't evict
-> > +	 * any more inodes until freeze_super drops s_umount and we disable the
-> > +	 * worker in xfs_fs_freeze.
-> > +	 */
-> > +	xfs_inodegc_flush(mp);
+> xfs: queue inodegc worker immediately when memory is tight
+> xfs: throttle inode inactivation queuing on memory reclaim
 > 
-> How does s_umount prevent __fput() from dropping the last reference
-> to an unlinked inode and putting it through evict() and hence adding
-> it to the deferred list that way?
+> in my test kernel because I think they are unnecessary.
 > 
-> Remember that the flush does not guarantee the per-cpu queues are
-> empty when it returns, just that whatever is in each percpu queue at
-> the time the per-cpu work is run has been completed.  We haven't yet
-> gone to SB_FREEZE_FS, so the transaction subsystem won't be frozen
-> at this point. Hence I can't see anything that would prevent unlinks
-> racing with this flush and queueing work after the flush work drains
-> the queues and starts processing the inodes it drained.
-> 
-> > +
-> >  	return 0;
-> >  }
-> >  
-> > @@ -832,6 +862,17 @@ xfs_fs_freeze(
-> >  	 */
-> >  	flags = memalloc_nofs_save();
-> >  	xfs_blockgc_stop(mp);
-> > +
-> > +	/*
-> > +	 * Stop the inodegc background worker.  freeze_super already flushed
-> > +	 * all pending inodegc work when it sync'd the filesystem after setting
-> > +	 * SB_FREEZE_PAGEFAULTS, and it holds s_umount, so we know that inodes
-> > +	 * cannot enter xfs_fs_destroy_inode until the freeze is complete.
-> > +	 * If the filesystem is read-write, inactivated inodes will queue but
-> > +	 * the worker will not run until the filesystem thaws or unmounts.
-> > +	 */
-> > +	xfs_inodegc_stop(mp);
-> 
-> .... and so we end up with this flush blocked on the background work
-> that assert failed and BUG()d:
-> 
-> [  219.511172] task:xfs_io          state:D stack:14208 pid:10238 ppid:  9089 flags:0x00004004
-> [  219.513126] Call Trace:
-> [  219.513768]  __schedule+0x310/0x9f0
-> [  219.514628]  schedule+0x67/0xe0
-> [  219.515405]  schedule_timeout+0x114/0x160
-> [  219.516404]  ? _raw_spin_unlock_irqrestore+0x12/0x40
-> [  219.517622]  ? do_raw_spin_unlock+0x57/0xb0
-> [  219.518655]  __wait_for_common+0xc0/0x160
-> [  219.519638]  ? usleep_range+0xa0/0xa0
-> [  219.520545]  wait_for_completion+0x24/0x30
-> [  219.521544]  flush_work+0x58/0x70
-> [  219.522357]  ? flush_workqueue_prep_pwqs+0x140/0x140
-> [  219.523553]  xfs_inodegc_flush+0x88/0x100
-> [  219.524524]  xfs_inodegc_stop+0x28/0xb0
-> [  219.525514]  xfs_fs_freeze+0x40/0x70
-> [  219.526401]  freeze_super+0xd8/0x140
-> [  219.527277]  do_vfs_ioctl+0x784/0x890
-> [  219.528146]  __x64_sys_ioctl+0x6f/0xc0
-> [  219.529062]  do_syscall_64+0x35/0x80
-> [  219.529974]  entry_SYSCALL_64_after_hwframe+0x44/0xae
-> 
-> At this point, we are at SB_FREEZE_FS and the transaction system it
-> shut down, so this is a hard fail.
-> 
-> ISTR a discussion about this in the past - I think we need to hook
-> ->freeze_super() and run xfs_inodegc_stop() before we run
-> freeze_super(). That way we end up just queuing pending
-> inactivations while the freeze runs and completes.
-> 
-> The patch below does this (applied on top of you entire stack) and
-> it seems to fix the 517 failure (0 failures in 50 runs vs 100% fail
-> rate without the patch).
+> I think the first is unnecessary because reclaim of inodes from the
+> VFS is usually in large batches and so early triggers aren't
+> desirable when we're getting thousands of inodes being evicted by
+> the superblock shrinker at a time. If we've only got a handful of
+> inodes queued, then inactivating them early isn't going to make much
+> of an impact on free memory. I could be wrong, but so far I have no
+> evidence that expediting inactivation is necessary.
 
-This doesn't work. g/390 does nested, racing freeze/thaw and so we
-can have a start from an unfreeze racing with a stop for a freeze
-about to run. IOWs, we can't stop the inodegc work until s_umount is
-held and we know that there isn't another freeze in progress....
+I think this was a lot more necessary under the old design because I let
+the number of tagged inodes grow quite large before triggering gc work,
+much less throttling anything.  256 is low enough that it should be
+manageable.
 
-Back to the drawing board for this one.
+Does it matter that we no longer inactivate inodes in inode number
+order?  I guess it could be nice to be able to dump inode cluster
+buffers as soon as practicable, but OTOH I suspect that only matters for
+the case of mass deletion, in which case we'll probably catch up soon
+enough?
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Anyway, I'll try turning both of these off with my silly deltree
+exerciser and see what happens.
+
+> The second patch is the custom shrinker. Again, I just don't think
+> this is necessary because if there is any amount of inactivation of
+> evicted inodes needed due to reclaim, we'll already be triggering it
+> to run via the deferred queue flush thresholds. Hence we don't
+> really need any mechanism to tell us that there is memory pressure;
+> the deferred work reacts to eviction from reclaim in exactly the
+> same way it reacts to eviction from unlink....
+
+Yep.  I came to the same conclusion last night; it looks like my fast
+fstests setup for that passed.
+
+> I've been running the patchset without these two patches on my 512MB
+> test VM, and the only OOM kill I get from fstests is g/531. This is
+> the "many open-but-unlinked" test, which creates 50,000 open
+> unlinked files per CPU. So for this test VM which has 4 CPUs, that's
+> 200,000 open, dirty iunlinked inodes and a lot of pinned inode
+> cluster buffers. At ~2kB of memory per unlinked inode (ignoring the
+> cluster buffers) this would consume about 400MB of the 512MB of RAM
+> the VM has. It OOM kills the test programs that hold the open files
+> long before it gets to 200,000 files, so this test never passed
+> before this patchset on this machine...
+
+Yeah... I actually tried running fstests on a 512M VM and whooeee did I
+see a lot of OOM kills.  Clearly we've all gotten spoiled by cheap DRAM.
+
+> I have a couple of extra patches to set up per-cpu hotplug
+> infrastructure before the deferred inode inactivation patch - I'll
+> post them after I finish this email. I'm going to leave it running
+> tests overnight.
+
+Ok, I'll jam those on the front end of the series.
+
+> Darrick, I'm pretty happy with the way the patchset is behaving now.
+> If you want to fold in the bug fixes I've posted and add in
+> the hotplug patches, then I think it's ready to be posted in full
+> again (if it all passes your testing) for review.
+
+It's probably about time for that.  Now that we do percpu thingies, I
+think it might also be time for a test that runs fstests while plugging
+and unplugging the non-bsp processors.
+
+[narrator: ...and thus he unleashed another terrifying bug mountain]
+
+--D
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
