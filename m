@@ -2,35 +2,36 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1BF2C4338F
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Aug 2021 10:46:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75398C4338F
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Aug 2021 11:09:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AE85960EE5
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Aug 2021 10:46:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4FFCC61029
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Aug 2021 11:09:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235750AbhHDKqx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 Aug 2021 06:46:53 -0400
-Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:34664 "EHLO
-        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S237091AbhHDKqv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Aug 2021 06:46:51 -0400
+        id S236068AbhHDLJd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 4 Aug 2021 07:09:33 -0400
+Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:35121 "EHLO
+        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S235606AbhHDLJc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Aug 2021 07:09:32 -0400
 Received: from dread.disaster.area (pa49-195-182-146.pa.nsw.optusnet.com.au [49.195.182.146])
-        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id 7C9A21B313A;
-        Wed,  4 Aug 2021 20:46:17 +1000 (AEST)
+        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id DAF321140F2E;
+        Wed,  4 Aug 2021 21:09:17 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1mBEPg-00EO33-Dc; Wed, 04 Aug 2021 20:46:16 +1000
-Date:   Wed, 4 Aug 2021 20:46:16 +1000
+        id 1mBElw-00EORo-LC; Wed, 04 Aug 2021 21:09:16 +1000
+Date:   Wed, 4 Aug 2021 21:09:16 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org, hch@infradead.org
-Subject: [PATCH] xfs: don't run inodegc flushes when inodegc is not active
-Message-ID: <20210804104616.GL2757197@dread.disaster.area>
+Subject: Re: [PATCH, alternative v2] xfs: per-cpu deferred inode inactivation
+ queues
+Message-ID: <20210804110916.GM2757197@dread.disaster.area>
 References: <162758423315.332903.16799817941903734904.stgit@magnolia>
  <162758425012.332903.3784529658243630550.stgit@magnolia>
  <20210803083403.GI2757197@dread.disaster.area>
@@ -42,63 +43,69 @@ In-Reply-To: <20210804032030.GT3601443@magnolia>
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
         a=QpfB3wCSrn/dqEBSktpwZQ==:117 a=QpfB3wCSrn/dqEBSktpwZQ==:17
-        a=kj9zAlcOel0A:10 a=MhDmnRu9jo8A:10 a=20KFwNOVAAAA:8
-        a=ccHITOwOUxjkRM4rX4gA:9 a=CjuIK1q_8ugA:10
+        a=kj9zAlcOel0A:10 a=MhDmnRu9jo8A:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=AGRJVN0mAXMDKxER9ZQA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Tue, Aug 03, 2021 at 08:20:30PM -0700, Darrick J. Wong wrote:
+> For everyone else following along at home, I've posted the current draft
+> version of this whole thing in:
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=deferred-inactivation-5.15
 
-From: Dave Chinner <dchinner@redhat.com>
+Overall looks good - fixes to freeze problems I hit are found
+in other replies to this.
 
-A flush trigger on a frozen filesystem (e.g. from statfs)
-will run queued inactivations and assert fail like this:
+I omitted the commits:
 
-XFS: Assertion failed: mp->m_super->s_writers.frozen < SB_FREEZE_FS, file: fs/xfs/xfs_icache.c, line: 1861
+xfs: queue inodegc worker immediately when memory is tight
+xfs: throttle inode inactivation queuing on memory reclaim
 
-Bug exposed by xfs/011.
+in my test kernel because I think they are unnecessary.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_icache.c | 14 +++++++++++---
- 1 file changed, 11 insertions(+), 3 deletions(-)
+I think the first is unnecessary because reclaim of inodes from the
+VFS is usually in large batches and so early triggers aren't
+desirable when we're getting thousands of inodes being evicted by
+the superblock shrinker at a time. If we've only got a handful of
+inodes queued, then inactivating them early isn't going to make much
+of an impact on free memory. I could be wrong, but so far I have no
+evidence that expediting inactivation is necessary.
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 92006260fe90..f772f2a67a8b 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1893,8 +1893,8 @@ xfs_inodegc_worker(
-  * wait for the work to finish. Two pass - queue all the work first pass, wait
-  * for it in a second pass.
-  */
--void
--xfs_inodegc_flush(
-+static void
-+__xfs_inodegc_flush(
- 	struct xfs_mount	*mp)
- {
- 	struct xfs_inodegc	*gc;
-@@ -1913,6 +1913,14 @@ xfs_inodegc_flush(
- 	}
- }
- 
-+void
-+xfs_inodegc_flush(
-+	struct xfs_mount	*mp)
-+{
-+	if (xfs_is_inodegc_enabled(mp))
-+		__xfs_inodegc_flush(mp);
-+}
-+
- /*
-  * Flush all the pending work and then disable the inode inactivation background
-  * workers and wait for them to stop.
-@@ -1927,7 +1935,7 @@ xfs_inodegc_stop(
- 	if (!xfs_clear_inodegc_enabled(mp))
- 		return;
- 
--	xfs_inodegc_flush(mp);
-+	__xfs_inodegc_flush(mp);
- 
- 	for_each_online_cpu(cpu) {
- 		gc = per_cpu_ptr(mp->m_inodegc, cpu);
+The second patch is the custom shrinker. Again, I just don't think
+this is necessary because if there is any amount of inactivation of
+evicted inodes needed due to reclaim, we'll already be triggering it
+to run via the deferred queue flush thresholds. Hence we don't
+really need any mechanism to tell us that there is memory pressure;
+the deferred work reacts to eviction from reclaim in exactly the
+same way it reacts to eviction from unlink....
+
+I've been running the patchset without these two patches on my 512MB
+test VM, and the only OOM kill I get from fstests is g/531. This is
+the "many open-but-unlinked" test, which creates 50,000 open
+unlinked files per CPU. So for this test VM which has 4 CPUs, that's
+200,000 open, dirty iunlinked inodes and a lot of pinned inode
+cluster buffers. At ~2kB of memory per unlinked inode (ignoring the
+cluster buffers) this would consume about 400MB of the 512MB of RAM
+the VM has. It OOM kills the test programs that hold the open files
+long before it gets to 200,000 files, so this test never passed
+before this patchset on this machine...
+
+I have a couple of extra patches to set up per-cpu hotplug
+infrastructure before the deferred inode inactivation patch - I'll
+post them after I finish this email. I'm going to leave it running
+tests overnight.
+
+Darrick, I'm pretty happy with the way the patchset is behaving now.
+If you want to fold in the bug fixes I've posted and add in
+the hotplug patches, then I think it's ready to be posted in full
+again (if it all passes your testing) for review.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
