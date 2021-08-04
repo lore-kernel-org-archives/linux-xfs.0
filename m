@@ -2,142 +2,187 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F00C7C4338F
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Aug 2021 15:59:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7006C4338F
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Aug 2021 16:06:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D3A6360ED6
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Aug 2021 15:59:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A05F8601FC
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Aug 2021 16:06:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239253AbhHDQAH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 Aug 2021 12:00:07 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58164 "EHLO mail.kernel.org"
+        id S231261AbhHDQGP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 4 Aug 2021 12:06:15 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60064 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S239291AbhHDQAF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 4 Aug 2021 12:00:05 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 9311860ED6;
-        Wed,  4 Aug 2021 15:59:52 +0000 (UTC)
+        id S229721AbhHDQGO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 4 Aug 2021 12:06:14 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 7CBFB601FC;
+        Wed,  4 Aug 2021 16:06:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1628092792;
-        bh=6XLzMssljuCwoHd0ZFZy8l8RlLsPc7UVSyWHOBOTvf0=;
+        s=k20201202; t=1628093161;
+        bh=L0p+s0QxwB7QoF7xuabdM3JjwjDiUWMyVNGJaGLbINM=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Ke4dJ8mi/mya6myaB/SXTkKRf6FFMY+Hod8p4gL5EbnoIbZ95PKw9r9fsl64ChJd+
-         rbyVXQXSZ6ty7LK22DCQPs5vww8/xEg2YP2XeB+KuCWUT7iykiUNGhsWGzJLL5F+NV
-         Ubk4Z/4rGBLPXEchWndoiLJNeaNGVTvYEuw5EOotT0gc3lMuZ88LA9WZDQ36Cwn9/h
-         kq72nQ4VjQhV7RwBvOf7ATwVrIJtVwNKqid8ZpUzFHshyKHVYWzvqvwb1QuJ8RqOke
-         8NSlwu3EfFrgcsNne1O/f8ysBmOUB83BZHV4R1Q49a49D6yt5Qo7IrAGYlTXBWtbXR
-         t2XMRMUKovyWw==
-Date:   Wed, 4 Aug 2021 08:59:52 -0700
+        b=dQuDY5EgueR88vi/tElioALg9SLVCjyzKogmizxLlwBXYxEE91zbOQpxClBkCx1Dy
+         CKA2jZANbgmnO0BtAVfgphYBvo2g5aZijCTcrjq0YmtrpJFaQoH/KTkUzaojldKG36
+         zxgc7qZ3wKrCMxqnIHZhUVaVgdR6k4OGYpmCnMoA0PP94zLrZpuW9QSKGIUFmkiz3V
+         +UZEvMOFaqcNDUlX/vYbtcUdwMIkn7BF6mhGHlPmMJaI2zJRDmg36YucDyBhzoxPNB
+         HxPyC5WIrjQK3z72vvaj0YPrs7gaOWLhnDRyUMpvyDlLN0GFwErt9ir3NdY6G6D94+
+         vkSiI9ENUJs8A==
+Date:   Wed, 4 Aug 2021 09:06:01 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org, hch@infradead.org
-Subject: Re: [PATCH, alternative v2] xfs: per-cpu deferred inode inactivation
- queues
-Message-ID: <20210804155952.GN3601466@magnolia>
+Subject: Re: [PATCH, pre-03/20 #2] xfs: introduce all-mounts list for cpu
+ hotplug notifications
+Message-ID: <20210804160601.GO3601466@magnolia>
 References: <162758423315.332903.16799817941903734904.stgit@magnolia>
  <162758425012.332903.3784529658243630550.stgit@magnolia>
  <20210803083403.GI2757197@dread.disaster.area>
  <20210804032030.GT3601443@magnolia>
- <20210804110916.GM2757197@dread.disaster.area>
+ <20210804115051.GO2757197@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210804110916.GM2757197@dread.disaster.area>
+In-Reply-To: <20210804115051.GO2757197@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 04, 2021 at 09:09:16PM +1000, Dave Chinner wrote:
-> On Tue, Aug 03, 2021 at 08:20:30PM -0700, Darrick J. Wong wrote:
-> > For everyone else following along at home, I've posted the current draft
-> > version of this whole thing in:
-> > 
-> > https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=deferred-inactivation-5.15
+On Wed, Aug 04, 2021 at 09:50:51PM +1000, Dave Chinner wrote:
 > 
-> Overall looks good - fixes to freeze problems I hit are found
-> in other replies to this.
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> I omitted the commits:
+> The inode inactivation and CIL tracking percpu structures are
+> per-xfs_mount structures. That means when we get a CPU dead
+> notification, we need to then iterate all the per-cpu structure
+> instances to process them. Rather than keeping linked lists of
+> per-cpu structures in each subsystem, add a list of all xfs_mounts
+> that the generic xfs_cpu_dead() function will iterate and call into
+> each subsystem appropriately.
 > 
-> xfs: queue inodegc worker immediately when memory is tight
-> xfs: throttle inode inactivation queuing on memory reclaim
+> This allows us to handle both per-mount and global XFS percpu state
+> from xfs_cpu_dead(), and avoids the need to link subsystem
+> structures that can be easily found from the xfs_mount into their
+> own global lists.
 > 
-> in my test kernel because I think they are unnecessary.
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_mount.h |  1 +
+>  fs/xfs/xfs_super.c | 41 +++++++++++++++++++++++++++++++++++++++++
+>  2 files changed, 42 insertions(+)
 > 
-> I think the first is unnecessary because reclaim of inodes from the
-> VFS is usually in large batches and so early triggers aren't
-> desirable when we're getting thousands of inodes being evicted by
-> the superblock shrinker at a time. If we've only got a handful of
-> inodes queued, then inactivating them early isn't going to make much
-> of an impact on free memory. I could be wrong, but so far I have no
-> evidence that expediting inactivation is necessary.
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index c78b63fe779a..ed7064596f94 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -82,6 +82,7 @@ typedef struct xfs_mount {
+>  	xfs_buftarg_t		*m_ddev_targp;	/* saves taking the address */
+>  	xfs_buftarg_t		*m_logdev_targp;/* ptr to log device */
+>  	xfs_buftarg_t		*m_rtdev_targp;	/* ptr to rt device */
+> +	struct list_head	m_mount_list;	/* global mount list */
+>  	/*
+>  	 * Optional cache of rt summary level per bitmap block with the
+>  	 * invariant that m_rsum_cache[bbno] <= the minimum i for which
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index ffe1ecd048db..c27df85212d4 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -49,6 +49,28 @@ static struct kset *xfs_kset;		/* top-level xfs sysfs dir */
+>  static struct xfs_kobj xfs_dbg_kobj;	/* global debug sysfs attrs */
+>  #endif
+>  
+> +#ifdef CONFIG_HOTPLUG_CPU
+> +static LIST_HEAD(xfs_mount_list);
+> +static DEFINE_SPINLOCK(xfs_mount_list_lock);
+> +
+> +static inline void xfs_mount_list_add(struct xfs_mount *mp)
+> +{
+> +	spin_lock(&xfs_mount_list_lock);
+> +	list_add(&mp->m_mount_list, &xfs_mount_list);
+> +	spin_unlock(&xfs_mount_list_lock);
+> +}
+> +
+> +static inline void xfs_mount_list_del(struct xfs_mount *mp)
+> +{
+> +	spin_lock(&xfs_mount_list_lock);
+> +	list_del(&mp->m_mount_list);
+> +	spin_unlock(&xfs_mount_list_lock);
+> +}
+> +#else /* !CONFIG_HOTPLUG_CPU */
+> +static inline void xfs_mount_list_add(struct xfs_mount *mp) {}
+> +static inline void xfs_mount_list_del(struct xfs_mount *mp) {}
+> +#endif
+> +
+>  enum xfs_dax_mode {
+>  	XFS_DAX_INODE = 0,
+>  	XFS_DAX_ALWAYS = 1,
+> @@ -988,6 +1010,7 @@ xfs_fs_put_super(
+>  
+>  	xfs_freesb(mp);
+>  	free_percpu(mp->m_stats.xs_stats);
+> +	xfs_mount_list_del(mp);
+>  	xfs_destroy_percpu_counters(mp);
+>  	xfs_destroy_mount_workqueues(mp);
+>  	xfs_close_devices(mp);
+> @@ -1359,6 +1382,8 @@ xfs_fs_fill_super(
+>  	if (error)
+>  		goto out_destroy_workqueues;
+>  
+> +	xfs_mount_list_add(mp);
+> +
+>  	/* Allocate stats memory before we do operations that might use it */
+>  	mp->m_stats.xs_stats = alloc_percpu(struct xfsstats);
+>  	if (!mp->m_stats.xs_stats) {
+> @@ -1567,6 +1592,7 @@ xfs_fs_fill_super(
+>   out_free_stats:
+>  	free_percpu(mp->m_stats.xs_stats);
+>   out_destroy_counters:
+> +	xfs_mount_list_del(mp);
+>  	xfs_destroy_percpu_counters(mp);
+>   out_destroy_workqueues:
+>  	xfs_destroy_mount_workqueues(mp);
+> @@ -2061,10 +2087,20 @@ xfs_destroy_workqueues(void)
+>  	destroy_workqueue(xfs_alloc_wq);
+>  }
+>  
+> +#ifdef CONFIG_HOTPLUG_CPU
+>  static int
+>  xfs_cpu_dead(
+>  	unsigned int		cpu)
+>  {
+> +	struct xfs_mount	*mp, *n;
+> +
+> +	spin_lock(&xfs_mount_list_lock);
+> +	list_for_each_entry_safe(mp, n, &xfs_mount_list, m_mount_list) {
+> +		spin_unlock(&xfs_mount_list_lock);
+> +		/* xfs_subsys_dead(mp, cpu); */
+> +		spin_lock(&xfs_mount_list_lock);
+> +	}
+> +	spin_unlock(&xfs_mount_list_lock);
+>  	return 0;
+>  }
+>  
+> @@ -2090,6 +2126,11 @@ xfs_cpu_hotplug_destroy(void)
+>  	cpuhp_remove_state_nocalls(CPUHP_XFS_DEAD);
+>  }
+>  
+> +#else /* !CONFIG_HOTPLUG_CPU */
+> +static inline int xfs_cpu_hotplug_init(struct xfs_cil *cil) { return 0; }
+> +static inline void xfs_cpu_hotplug_destroy(struct xfs_cil *cil) {}
 
-I think this was a lot more necessary under the old design because I let
-the number of tagged inodes grow quite large before triggering gc work,
-much less throttling anything.  256 is low enough that it should be
-manageable.
+void arguments here, right?
 
-Does it matter that we no longer inactivate inodes in inode number
-order?  I guess it could be nice to be able to dump inode cluster
-buffers as soon as practicable, but OTOH I suspect that only matters for
-the case of mass deletion, in which case we'll probably catch up soon
-enough?
+> +#endif
 
-Anyway, I'll try turning both of these off with my silly deltree
-exerciser and see what happens.
-
-> The second patch is the custom shrinker. Again, I just don't think
-> this is necessary because if there is any amount of inactivation of
-> evicted inodes needed due to reclaim, we'll already be triggering it
-> to run via the deferred queue flush thresholds. Hence we don't
-> really need any mechanism to tell us that there is memory pressure;
-> the deferred work reacts to eviction from reclaim in exactly the
-> same way it reacts to eviction from unlink....
-
-Yep.  I came to the same conclusion last night; it looks like my fast
-fstests setup for that passed.
-
-> I've been running the patchset without these two patches on my 512MB
-> test VM, and the only OOM kill I get from fstests is g/531. This is
-> the "many open-but-unlinked" test, which creates 50,000 open
-> unlinked files per CPU. So for this test VM which has 4 CPUs, that's
-> 200,000 open, dirty iunlinked inodes and a lot of pinned inode
-> cluster buffers. At ~2kB of memory per unlinked inode (ignoring the
-> cluster buffers) this would consume about 400MB of the 512MB of RAM
-> the VM has. It OOM kills the test programs that hold the open files
-> long before it gets to 200,000 files, so this test never passed
-> before this patchset on this machine...
-
-Yeah... I actually tried running fstests on a 512M VM and whooeee did I
-see a lot of OOM kills.  Clearly we've all gotten spoiled by cheap DRAM.
-
-> I have a couple of extra patches to set up per-cpu hotplug
-> infrastructure before the deferred inode inactivation patch - I'll
-> post them after I finish this email. I'm going to leave it running
-> tests overnight.
-
-Ok, I'll jam those on the front end of the series.
-
-> Darrick, I'm pretty happy with the way the patchset is behaving now.
-> If you want to fold in the bug fixes I've posted and add in
-> the hotplug patches, then I think it's ready to be posted in full
-> again (if it all passes your testing) for review.
-
-It's probably about time for that.  Now that we do percpu thingies, I
-think it might also be time for a test that runs fstests while plugging
-and unplugging the non-bsp processors.
-
-[narrator: ...and thus he unleashed another terrifying bug mountain]
+Nit: I think this ifdef stuff belongs in the previous patch.  Will fix
+it when I drag this into my tree.
 
 --D
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> +
+>  STATIC int __init
+>  init_xfs_fs(void)
+>  {
