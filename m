@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D48D8C4338F
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Aug 2021 02:07:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31DD6C4338F
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Aug 2021 02:07:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B811B61078
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Aug 2021 02:07:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 127FE6105A
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Aug 2021 02:07:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235192AbhHECHP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 Aug 2021 22:07:15 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56116 "EHLO mail.kernel.org"
+        id S238097AbhHECHW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 4 Aug 2021 22:07:22 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56228 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S238097AbhHECHP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 4 Aug 2021 22:07:15 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id B1EA16105A;
-        Thu,  5 Aug 2021 02:07:01 +0000 (UTC)
+        id S238148AbhHECHU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 4 Aug 2021 22:07:20 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 3582E6105A;
+        Thu,  5 Aug 2021 02:07:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1628129221;
-        bh=/87HWDdI+42icW1eQ5KDpPAI2ge94eeUQul9mS+whV8=;
+        s=k20201202; t=1628129227;
+        bh=P4rG1V5ihlqi/nk5QbukDBEdn3JlATsyoq4IosZatvg=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=vL9LvN11yz9+NfkEZE5sjoNO8dupO7EA6c+FkhHVau26B3012PqKo1qaRhpRbr6hN
-         3LrjwUeyiaMRZSXwo8yez8Mu6f9MXNxRLpffyYzFIWVfFta+rPeFOY0YwE3KrHMmR7
-         rX2ZrmGT06UVyHhcA5gF52NIysQW/yzHeOZV3en3UmK5elmfY/uCVbRoRQU0ALGcsY
-         CrY8qpmf9LL3uqF6ONMPxIhBp4k5qlFQ8dcc5o2J6Skgy2r+BXzdpDUe4Jso3qeei1
-         gXlQWOT5PGZF0cSCDCVCNjeqkp0L03NRuu83ZJe37aZDSy+MfX2G9HofldpB7Mlr3v
-         RQTIFRdyiK15A==
-Subject: [PATCH 07/14] xfs: queue inactivation immediately when quota is
- nearing enforcement
+        b=fBNbiU28+9tlnOfd71e8BRQQkqO74VtCj+Hp+IgNe7a10Kn9GAIeUrL7x2RaYtvWF
+         8SAn5S1BQv2mgkUqnKg9TjYCocMDfq76IIevGtdrR4SSKtl2WUWWgAXQDej++zKuq+
+         NvhwWjDqc2Yi6bm0mK7Kj9oKCPvzBdDToE6u7s52IUP6XGuOxLyRWKT/uz/UiQSv+z
+         MWWQ8AWDZ5q6ejeKgzkoQFOVbBHNxCoqHDc+/t2Z2Dg0UddOkopmuOQeWojl+C4wgw
+         xvDwzA/Z/KLhqTr9fr7hj3z4OMIc7a86Dbqstdipn5cSSIwUjCH/CHMd11dX42MY4V
+         EG9QuYs+4NbuA==
+Subject: [PATCH 08/14] xfs: queue inactivation immediately when free realtime
+ extents are tight
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@infradead.org
-Date:   Wed, 04 Aug 2021 19:07:01 -0700
-Message-ID: <162812922142.2589546.1431900603501424659.stgit@magnolia>
+Date:   Wed, 04 Aug 2021 19:07:06 -0700
+Message-ID: <162812922691.2589546.7668598169022490963.stgit@magnolia>
 In-Reply-To: <162812918259.2589546.16599271324044986858.stgit@magnolia>
 References: <162812918259.2589546.16599271324044986858.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -54,129 +54,99 @@ Now that we have made the inactivation of unlinked inodes a background
 task to increase the throughput of file deletions, we need to be a
 little more careful about how long of a delay we can tolerate.
 
-Specifically, if the dquots attached to the inode being inactivated are
-nearing any kind of enforcement boundary, we want to queue that
-inactivation work immediately so that users don't get EDQUOT/ENOSPC
-errors even after they deleted a bunch of files to stay within quota.
+Similar to the patch doing this for free space on the data device, if
+the file being inactivated is a realtime file and the realtime volume is
+running low on free extents, we want to run the worker ASAP so that the
+realtime allocator can make better decisions.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_dquot.h  |   10 ++++++++++
- fs/xfs/xfs_icache.c |   10 ++++++++++
- fs/xfs/xfs_qm.c     |   34 ++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_quota.h  |    2 ++
- 4 files changed, 56 insertions(+)
+ fs/xfs/xfs_icache.c |   24 ++++++++++++++++++++++++
+ fs/xfs/xfs_mount.c  |   13 ++++++++-----
+ fs/xfs/xfs_mount.h  |    3 ++-
+ 3 files changed, 34 insertions(+), 6 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
-index f642884a6834..6b5e3cf40c8b 100644
---- a/fs/xfs/xfs_dquot.h
-+++ b/fs/xfs/xfs_dquot.h
-@@ -54,6 +54,16 @@ struct xfs_dquot_res {
- 	xfs_qwarncnt_t		warnings;
- };
- 
-+static inline bool
-+xfs_dquot_res_over_limits(
-+	const struct xfs_dquot_res	*qres)
-+{
-+	if ((qres->softlimit && qres->softlimit < qres->reserved) ||
-+	    (qres->hardlimit && qres->hardlimit < qres->reserved))
-+		return true;
-+	return false;
-+}
-+
- /*
-  * The incore dquot structure
-  */
 diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 0332acaad6f3..e5e90f09bcc6 100644
+index e5e90f09bcc6..4a062cf689c3 100644
 --- a/fs/xfs/xfs_icache.c
 +++ b/fs/xfs/xfs_icache.c
-@@ -1929,6 +1929,7 @@ xfs_inodegc_start(
+@@ -1924,6 +1924,27 @@ xfs_inodegc_start(
+ 	xfs_inodegc_queue_all(mp);
+ }
+ 
++#ifdef CONFIG_XFS_RT
++static inline bool
++xfs_inodegc_want_queue_rt_file(
++	struct xfs_inode	*ip)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	uint64_t		freertx;
++
++	if (!XFS_IS_REALTIME_INODE(ip))
++		return false;
++
++	spin_lock(&mp->m_sb_lock);
++	freertx = mp->m_sb.sb_frextents;
++	spin_unlock(&mp->m_sb_lock);
++
++	return freertx < mp->m_low_rtexts[XFS_LOWSP_5_PCNT];
++}
++#else
++# define xfs_inodegc_want_queue_rt_file(ip)	(false)
++#endif /* CONFIG_XFS_RT */
++
+ /*
+  * Schedule the inactivation worker when:
   *
-  *  - We've accumulated more than one inode cluster buffer's worth of inodes.
-  *  - There is less than 5% free space left.
-+ *  - Any of the quotas for this inode are near an enforcement limit.
-  */
- static inline bool
- xfs_inodegc_want_queue_work(
-@@ -1945,6 +1946,15 @@ xfs_inodegc_want_queue_work(
+@@ -1946,6 +1967,9 @@ xfs_inodegc_want_queue_work(
  				XFS_FDBLOCKS_BATCH) < 0)
  		return true;
  
-+	if (xfs_inode_near_dquot_enforcement(ip, XFS_DQTYPE_USER))
++	if (xfs_inodegc_want_queue_rt_file(ip))
 +		return true;
 +
-+	if (xfs_inode_near_dquot_enforcement(ip, XFS_DQTYPE_GROUP))
-+		return true;
-+
-+	if (xfs_inode_near_dquot_enforcement(ip, XFS_DQTYPE_PROJ))
-+		return true;
-+
- 	return false;
- }
+ 	if (xfs_inode_near_dquot_enforcement(ip, XFS_DQTYPE_USER))
+ 		return true;
  
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 351d99bc52e5..2bef4735d030 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -1882,3 +1882,37 @@ xfs_qm_vop_create_dqattach(
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 5fe6f1db4fe9..ed1e7e3dce7e 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -365,13 +365,16 @@ void
+ xfs_set_low_space_thresholds(
+ 	struct xfs_mount	*mp)
+ {
+-	int i;
++	uint64_t		dblocks = mp->m_sb.sb_dblocks;
++	uint64_t		rtexts = mp->m_sb.sb_rextents;
++	int			i;
++
++	do_div(dblocks, 100);
++	do_div(rtexts, 100);
+ 
+ 	for (i = 0; i < XFS_LOWSP_MAX; i++) {
+-		uint64_t space = mp->m_sb.sb_dblocks;
+-
+-		do_div(space, 100);
+-		mp->m_low_space[i] = space * (i + 1);
++		mp->m_low_space[i] = dblocks * (i + 1);
++		mp->m_low_rtexts[i] = rtexts * (i + 1);
  	}
  }
  
-+/* Decide if this inode's dquot is near an enforcement boundary. */
-+bool
-+xfs_inode_near_dquot_enforcement(
-+	struct xfs_inode	*ip,
-+	xfs_dqtype_t		type)
-+{
-+	struct xfs_dquot	*dqp;
-+	int64_t			freesp;
-+
-+	/* We only care for quotas that are enabled and enforced. */
-+	dqp = xfs_inode_dquot(ip, type);
-+	if (!dqp || !xfs_dquot_is_enforced(dqp))
-+		return false;
-+
-+	if (xfs_dquot_res_over_limits(&dqp->q_ino) ||
-+	    xfs_dquot_res_over_limits(&dqp->q_rtb))
-+		return true;
-+
-+	/* For space on the data device, check the various thresholds. */
-+	if (!dqp->q_prealloc_hi_wmark)
-+		return false;
-+
-+	if (dqp->q_blk.reserved < dqp->q_prealloc_lo_wmark)
-+		return false;
-+
-+	if (dqp->q_blk.reserved >= dqp->q_prealloc_hi_wmark)
-+		return true;
-+
-+	freesp = dqp->q_prealloc_hi_wmark - dqp->q_blk.reserved;
-+	if (freesp < dqp->q_low_space[XFS_QLOWSP_5_PCNT])
-+		return true;
-+
-+	return false;
-+}
-diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
-index d00d01302545..dcc785fdd345 100644
---- a/fs/xfs/xfs_quota.h
-+++ b/fs/xfs/xfs_quota.h
-@@ -113,6 +113,7 @@ xfs_quota_reserve_blkres(struct xfs_inode *ip, int64_t blocks)
- {
- 	return xfs_trans_reserve_quota_nblks(NULL, ip, blocks, 0, false);
- }
-+bool xfs_inode_near_dquot_enforcement(struct xfs_inode *ip, xfs_dqtype_t type);
- #else
- static inline int
- xfs_qm_vop_dqalloc(struct xfs_inode *ip, kuid_t kuid, kgid_t kgid,
-@@ -168,6 +169,7 @@ xfs_trans_reserve_quota_icreate(struct xfs_trans *tp, struct xfs_dquot *udqp,
- #define xfs_qm_mount_quotas(mp)
- #define xfs_qm_unmount(mp)
- #define xfs_qm_unmount_quotas(mp)
-+#define xfs_inode_near_dquot_enforcement(ip, type)			(false)
- #endif /* CONFIG_XFS_QUOTA */
- 
- static inline int
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 750297498a09..1061ac985c18 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -145,7 +145,8 @@ typedef struct xfs_mount {
+ 	int			m_fixedfsid[2];	/* unchanged for life of FS */
+ 	uint			m_qflags;	/* quota status flags */
+ 	uint64_t		m_flags;	/* global mount flags */
+-	int64_t			m_low_space[XFS_LOWSP_MAX];
++	uint64_t		m_low_space[XFS_LOWSP_MAX];
++	uint64_t		m_low_rtexts[XFS_LOWSP_MAX];
+ 	struct xfs_ino_geometry	m_ino_geo;	/* inode geometry */
+ 	struct xfs_trans_resv	m_resv;		/* precomputed res values */
+ 						/* low free space thresholds */
 
