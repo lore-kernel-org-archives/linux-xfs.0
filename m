@@ -2,170 +2,155 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 696ECC4338F
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Aug 2021 21:49:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87B0AC432BE
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Aug 2021 02:06:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 465216105A
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Aug 2021 21:49:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 673B860187
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Aug 2021 02:06:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234992AbhHDVt0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 Aug 2021 17:49:26 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:54871 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S234785AbhHDVtQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Aug 2021 17:49:16 -0400
-Received: from dread.disaster.area (pa49-195-182-146.pa.nsw.optusnet.com.au [49.195.182.146])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 23A231047842;
-        Thu,  5 Aug 2021 07:49:00 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1mBOl1-00EZ0q-LI; Thu, 05 Aug 2021 07:48:59 +1000
-Date:   Thu, 5 Aug 2021 07:48:59 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, hch@infradead.org
-Subject: Re: [PATCH, post-03/20 1/1] xfs: hook up inodegc to CPU dead
- notification
-Message-ID: <20210804214859.GT2757197@dread.disaster.area>
-References: <162758423315.332903.16799817941903734904.stgit@magnolia>
- <162758425012.332903.3784529658243630550.stgit@magnolia>
- <20210803083403.GI2757197@dread.disaster.area>
- <20210804032030.GT3601443@magnolia>
- <20210804115225.GP2757197@dread.disaster.area>
- <20210804161918.GU3601443@magnolia>
+        id S238127AbhHECGh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 4 Aug 2021 22:06:37 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55232 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S238097AbhHECGg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 4 Aug 2021 22:06:36 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 3CF31610A2;
+        Thu,  5 Aug 2021 02:06:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1628129183;
+        bh=XNekPUKfzw6lpTP0Eo1Od53qF0rjO1L+f3u/R20bNvc=;
+        h=Subject:From:To:Cc:Date:From;
+        b=Ny96wE81RucwPCFuLrzDCX5kzAnXFgZIVF3melqMYMXlxplfdMslsvRH6gDZtu8yQ
+         1i5Omy5NNC8cbMdedqDR0YpBInMKcdgqR0n9/U8ZPNg9lfMAr+veuyhXqFtbrHaC6z
+         jX0zreMXRZQIBE5LpHoNH2LxD4B2hMlPmdTXQECWJuvTdUp7PBGeXLCepqcERA1rgQ
+         s51PC6n8Zbeo8qKjlx2l8WjyjcgK6OffDbH3iNX86a0v0iflbg/9IDdb9coZGB+klx
+         9Av18bpBewH+iN0NN0z89g1uJXDjelpJ2p0j2aD7tpb8iElMQdEd8pAp3hjN69AtaO
+         7NE7NfTI5i5bA==
+Subject: [PATCHSET v9 00/14] xfs: deferred inode inactivation
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     djwong@kernel.org
+Cc:     Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>,
+        linux-xfs@vger.kernel.org, david@fromorbit.com, hch@infradead.org
+Date:   Wed, 04 Aug 2021 19:06:22 -0700
+Message-ID: <162812918259.2589546.16599271324044986858.stgit@magnolia>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210804161918.GU3601443@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
-        a=QpfB3wCSrn/dqEBSktpwZQ==:117 a=QpfB3wCSrn/dqEBSktpwZQ==:17
-        a=kj9zAlcOel0A:10 a=MhDmnRu9jo8A:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=9fj9NPbgXuutkcrZkfgA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 04, 2021 at 09:19:18AM -0700, Darrick J. Wong wrote:
-> On Wed, Aug 04, 2021 at 09:52:25PM +1000, Dave Chinner wrote:
-> > 
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > So we don't leave queued inodes on a CPU we won't ever flush.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  fs/xfs/xfs_icache.c | 36 ++++++++++++++++++++++++++++++++++++
-> >  fs/xfs/xfs_icache.h |  1 +
-> >  fs/xfs/xfs_super.c  |  2 +-
-> >  3 files changed, 38 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> > index f772f2a67a8b..9e2c95903c68 100644
-> > --- a/fs/xfs/xfs_icache.c
-> > +++ b/fs/xfs/xfs_icache.c
-> > @@ -1966,6 +1966,42 @@ xfs_inodegc_start(
-> >  	}
-> >  }
-> >  
-> > +/*
-> > + * Fold the dead CPU inodegc queue into the current CPUs queue.
-> > + */
-> > +void
-> > +xfs_inodegc_cpu_dead(
-> > +	struct xfs_mount	*mp,
-> > +	int			dead_cpu)
-> 
-> unsigned int, since that's the caller's type.
+Hi all,
 
-*nod*
+This patch series implements deferred inode inactivation.  Inactivation
+is what happens when an open file loses its last incore reference: if
+the file has speculative preallocations, they must be freed, and if the
+file is unlinked, all forks must be truncated, and the inode marked
+freed in the inode chunk and the inode btrees.
 
-> > +{
-> > +	struct xfs_inodegc	*dead_gc, *gc;
-> > +	struct llist_node	*first, *last;
-> > +	int			count = 0;
-> > +
-> > +	dead_gc = per_cpu_ptr(mp->m_inodegc, dead_cpu);
-> > +	cancel_work_sync(&dead_gc->work);
-> > +
-> > +	if (llist_empty(&dead_gc->list))
-> > +		return;
-> > +
-> > +	first = dead_gc->list.first;
-> > +	last = first;
-> > +	while (last->next) {
-> > +		last = last->next;
-> > +		count++;
-> > +	}
-> > +	dead_gc->list.first = NULL;
-> > +	dead_gc->items = 0;
-> > +
-> > +	/* Add pending work to current CPU */
-> > +	gc = get_cpu_ptr(mp->m_inodegc);
-> > +	llist_add_batch(first, last, &gc->list);
-> > +	count += READ_ONCE(gc->items);
-> > +	WRITE_ONCE(gc->items, count);
-> 
-> I was wondering about the READ/WRITE_ONCE pattern for gc->items: it's
-> meant to be an accurate count of the list items, right?  But there's no
-> hard synchronization (e.g. spinlock) around them, which means that the
-> only CPU that can access that variable at all is the one that the percpu
-> structure belongs to, right?  And I think that's ok here, because the
-> only accessors are _queue() and _worker(), which both are supposed to
-> run on the same CPU since they're percpu lists, right?
+Currently, all of this activity is performed in frontend threads when
+the last in-memory reference is lost and/or the vfs decides to drop the
+inode.  Three complaints stem from this behavior: first, that the time
+to unlink (in the worst case) depends on both the complexity of the
+directory as well as the the number of extents in that file; second,
+that deleting a directory tree is inefficient and seeky because we free
+the inodes in readdir order, not disk order; and third, the upcoming
+online repair feature needs to be able to xfs_irele while scanning a
+filesystem in transaction context.  It cannot perform inode inactivation
+in this context because xfs does not support nested transactions.
 
-For items that are per-cpu, we only need to guarantee that the
-normal case is access by that CPU only and that dependent accesses
-within an algorithm occur within a preempt disabled region. THe use
-of get_cpu_ptr()/put_cpu_ptr() creates a critital region where
-preemption is disabled on that CPU. Hence we can read, modify and
-write a per-cpu variable without locking, knowing that nothing else
-will be attempting to run the same modification at the same time on
-a different CPU, because they will be accessing percpu stuff local
-to that CPU, not this one.
+The implementation will be familiar to those who have studied how XFS
+scans for reclaimable in-core inodes -- we create a couple more inode
+state flags to mark an inode as needing inactivation and being in the
+middle of inactivation.  When inodes need inactivation, we set
+NEED_INACTIVE in iflags and add it to a percpu work list.  Eventually, a
+bounded percpu workqueue item will be scheduled to perform all the
+on-disk metadata updates.  Once the inode has been inactivated, it is
+left in the reclaim state and the background reclaim worker (or direct
+reclaim) will get to it eventually.
 
-The reason for using READ_ONCE/WRITE_ONCE is largely to ensure that
-we fetch and store the variable appropriately, as the work that
-zeros the count can sometimes run on a different CPU. And it will
-shut up the data race detector thing...
+Doing the inactivations from kernel threads solves the first problem by
+constraining the amount of work done by the unlink() call to removing
+the directory entry.  It solves the third problem by moving inactivation
+to a separate process.  Performing the inactivations in batches
+decreases the amount of time it takes to let go of an inode cluster if
+we're deleting entire directory trees.
 
-As it is, the count of items is rough, and doesn't need to be
-accurate. If we race with a zeroing of the count, we'll set the
-count to be higher (as if the zeroing didn't occur) and that just
-causes the work to be rescheduled sooner than it otherwise would. A
-race with zeroing is not the end of the world...
+There are three big warts I can think of in this series: first, because
+the actual freeing of nlink==0 inodes is now done in the background,
+this means that the system will be busy making metadata updates for some
+time after the unlink() call returns.  This temporarily reduces
+available iops.  Second, in order to retain the behavior that deleting
+100TB of unshared data should result in a free space gain of 100TB, the
+statvfs and quota reporting ioctls wait for inactivation to finish,
+which increases the long tail latency of those calls.  This behavior is,
+unfortunately, key to not introducing regressions in fstests.  The third
+problem is that the deferrals keep memory usage higher for longer.  The
+final patch in the series (clumsily) addresses this by forcing the
+inodegc workers to run when memory shrinkers get called and by
+throttling the frontend xfs_inodegc_queue callers to wait for the
+worker.
 
-> In which case: why can't we just say count = dead_gc->items;?  @dead_cpu
-> is being offlined, which implies that nothing will get scheduled on it,
-> right?
+v1-v2: NYE patchbombs
+v3: rebase against 5.12-rc2 for submission.
+v4: combine the can/has eofblocks predicates, clean up incore inode tree
+    walks, fix inobt deadlock
+v5: actually freeze the inode gc threads when we freeze the filesystem,
+    consolidate the code that deals with inode tagging, and use
+    foreground inactivation during quotaoff to avoid cycling dquots
+v6: rebase to 5.13-rc4, fix quotaoff not to require foreground inactivation,
+    refactor to use inode walk goals, use atomic bitflags to control the
+    scheduling of gc workers
+v7: simplify the inodegc worker, which simplifies how flushes work, break
+    up the patch into smaller pieces, flush inactive inodes on syncfs to
+    simplify freeze/ro-remount handling, separate inode selection filtering
+    in iget, refactor inode recycling further, change gc delay to 100ms,
+    decrease the gc delay when space or quota are low, move most of the
+    destroy_inode logic to mark_reclaimable, get rid of the fallocate flush
+    scan thing, get rid of polled flush mode
+v8: rebase against 5.14-rc2, hook the memory shrinkers so that we requeue
+    inactivation immediately when memory starts to get tight and force
+    callers queueing inodes for inactivation to wait for the inactivation
+    workers to run (i.e. throttling the frontend) to reduce memory storms,
+    add hch's quotaoff removal series as a dependency to shut down arguments
+    about quota walks
+v9: replace the entire mechanism with percpu lists and workers, clean out
+    a ton of ratty code that nobody liked anyway :P
 
-The local CPU might already have items queued, so the count should
-include them, too.
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
-> > +	put_cpu_ptr(gc);
-> > +	queue_work(mp->m_inodegc_wq, &gc->work);
-> 
-> Should this be thresholded like we do for _inodegc_queue?
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
 
-I thought about that, then thought "this is slow path stuff, we just
-want to clear out the backlog so we don't care about batching.."
+--D
 
-> In the old days I would have imagined that cpu offlining should be rare
-> enough <cough> that it probably doesn't make any real difference.  OTOH
-> my cloudic colleague reminds me that they aggressively offline cpus to
-> reduce licensing cost(!).
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=deferred-inactivation-5.15
+---
+ fs/xfs/scrub/common.c      |   10 +
+ fs/xfs/xfs_dquot.h         |   10 +
+ fs/xfs/xfs_icache.c        |  592 ++++++++++++++++++++++++++++++++++++++++++--
+ fs/xfs/xfs_icache.h        |    8 +
+ fs/xfs/xfs_inode.c         |   53 ++++
+ fs/xfs/xfs_inode.h         |   22 ++
+ fs/xfs/xfs_itable.c        |   42 +++
+ fs/xfs/xfs_iwalk.c         |   33 ++
+ fs/xfs/xfs_log_recover.c   |    7 +
+ fs/xfs/xfs_mount.c         |   57 +++-
+ fs/xfs/xfs_mount.h         |   62 ++++-
+ fs/xfs/xfs_qm.c            |   34 +++
+ fs/xfs/xfs_qm_syscalls.c   |    8 +
+ fs/xfs/xfs_quota.h         |    2 
+ fs/xfs/xfs_super.c         |  253 ++++++++++++++-----
+ fs/xfs/xfs_trace.h         |   93 +++++++
+ fs/xfs/xfs_trans.c         |    5 
+ include/linux/cpuhotplug.h |    1 
+ 18 files changed, 1164 insertions(+), 128 deletions(-)
 
-Yeah, CPU hotplug is very rare, except in those rare environments
-where it is very common....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
