@@ -2,121 +2,95 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-13.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B61B5C4338F
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Aug 2021 07:01:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 825ABC4338F
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Aug 2021 17:31:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 911AC60F58
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Aug 2021 07:01:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5899B610A2
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Aug 2021 17:31:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237010AbhHEHBZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Aug 2021 03:01:25 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43472 "EHLO mail.kernel.org"
+        id S230385AbhHERbT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Aug 2021 13:31:19 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55558 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234448AbhHEHBZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 5 Aug 2021 03:01:25 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 4520560F58;
-        Thu,  5 Aug 2021 07:01:11 +0000 (UTC)
+        id S230004AbhHERbT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 5 Aug 2021 13:31:19 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0098460F42;
+        Thu,  5 Aug 2021 17:31:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1628146871;
-        bh=jAltqYrDNqmTUYoNWzUoGyKqIMK5nsFH+8LKpeuHV00=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=ji33TB5i3tSaiS1zz/ZCoRkW9YSJqfWmU96ysA+mJRzUKRlqkR5kajmvkPKaBRlbV
-         qvhGLvapTspMWA5aAaJjbmstD7U3yxk70xce0mr3Wov+l+Tukes1O2Vjuu9S687tAb
-         4KzA1326pyMtaiwcu0Pzwynigb/N2vOnme3Sbt21hIO/fGT9Nsk2QLQfzGubYpwowh
-         +UlBy/gNV/18VUNragikNUwFQsTnNWKTQCcQPIRowD8UC5wO4QO2zINWKy9sDQUvxZ
-         AbDJ/6Cp1PU6mU9uk3XURyFPBbIeJ8Qa8Au55yKUo1iFGqMLZedIxi2syHyoPc9Y0K
-         IQF/kIiUNvgJA==
-Subject: [PATCH 5/5] xfs: dump log intent items that cannot be recovered due
- to corruption
+        s=k20201202; t=1628184665;
+        bh=MoFgSn3KWSScKi/BuebgAcN0GTgylIPN8NwZe4LfwiI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Gt/rRgIF0YR8b8yYG8cXDUIv7FCCUeplyvwl/9lmRBOKuuw9Uo8ks5g+UQS/JIWos
+         9PqN8R8mHP/E15SDN03bac3Tz3czxBa71QupTjZL54gm1QNtUc2EPu43oF4wkR3oKu
+         q+8WgXSCLMAxTY2UFBFQTr3Rq8wI2QvOGSFNqIOQ5ACKdU9uH0ziPNC0L/66Xl02dx
+         eydwuMV1XvVGCCS9PgXp+MhgC2NkVuwgs5Gfnzt8J53OLEN8w4wEUZBVf0gbHn43vJ
+         ArCx/7ZhuVg+0yRAve7VRU2zdAUlXO25qYrkXHHw0D8VjMYoaPpkx2MjPxp325liXg
+         4gXpPXsyXLXCA==
+Date:   Thu, 5 Aug 2021 10:31:04 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Date:   Thu, 05 Aug 2021 00:01:11 -0700
-Message-ID: <162814687097.2777088.3937845877884086271.stgit@magnolia>
-In-Reply-To: <162814684332.2777088.14593133806068529811.stgit@magnolia>
-References: <162814684332.2777088.14593133806068529811.stgit@magnolia>
-User-Agent: StGit/0.19
+To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 1/2] iomap: Use kmap_local_page instead of kmap_atomic
+Message-ID: <20210805173104.GF3601405@magnolia>
+References: <20210803193134.1198733-1-willy@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210803193134.1198733-1-willy@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Aug 03, 2021 at 08:31:33PM +0100, Matthew Wilcox (Oracle) wrote:
+> kmap_atomic() has the side-effect of disabling pagefaults and
+> preemption.  kmap_local_page() does not do this and is preferred.
+> 
+> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 
-If we try to recover a log intent item and the operation fails due to
-filesystem corruption, dump the contents of the item to the log for
-further analysis.
+Pretty straightforward.
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/xfs_bmap_item.c     |    3 +++
- fs/xfs/xfs_extfree_item.c  |    3 +++
- fs/xfs/xfs_refcount_item.c |    3 +++
- fs/xfs/xfs_rmap_item.c     |    3 +++
- 4 files changed, 12 insertions(+)
+--D
 
-
-diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-index e3a691937e92..3d6f70da8820 100644
---- a/fs/xfs/xfs_bmap_item.c
-+++ b/fs/xfs/xfs_bmap_item.c
-@@ -522,6 +522,9 @@ xfs_bui_item_recover(
- 	error = xfs_trans_log_finish_bmap_update(tp, budp, bui_type, ip,
- 			whichfork, bmap->me_startoff, bmap->me_startblock,
- 			&count, state);
-+	if (error == -EFSCORRUPTED)
-+		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bmap,
-+				sizeof(*bmap));
- 	if (error)
- 		goto err_cancel;
- 
-diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-index 2424230ca2c3..3f8a0713573a 100644
---- a/fs/xfs/xfs_extfree_item.c
-+++ b/fs/xfs/xfs_extfree_item.c
-@@ -629,6 +629,9 @@ xfs_efi_item_recover(
- 		error = xfs_trans_free_extent(tp, efdp, extp->ext_start,
- 					      extp->ext_len,
- 					      &XFS_RMAP_OINFO_ANY_OWNER, false);
-+		if (error == -EFSCORRUPTED)
-+			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
-+					extp, sizeof(*extp));
- 		if (error)
- 			goto abort_error;
- 
-diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-index 746f4eda724c..163615285b18 100644
---- a/fs/xfs/xfs_refcount_item.c
-+++ b/fs/xfs/xfs_refcount_item.c
-@@ -522,6 +522,9 @@ xfs_cui_item_recover(
- 			error = xfs_trans_log_finish_refcount_update(tp, cudp,
- 				type, refc->pe_startblock, refc->pe_len,
- 				&new_fsb, &new_len, &rcur);
-+		if (error == -EFSCORRUPTED)
-+			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
-+					refc, sizeof(*refc));
- 		if (error)
- 			goto abort_error;
- 
-diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-index dc4f0c9f0897..9b91a788722a 100644
---- a/fs/xfs/xfs_rmap_item.c
-+++ b/fs/xfs/xfs_rmap_item.c
-@@ -578,6 +578,9 @@ xfs_rui_item_recover(
- 				rmap->me_owner, whichfork,
- 				rmap->me_startoff, rmap->me_startblock,
- 				rmap->me_len, state, &rcur);
-+		if (error == -EFSCORRUPTED)
-+			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
-+					rmap, sizeof(*rmap));
- 		if (error)
- 			goto abort_error;
- 
-
+> ---
+>  fs/iomap/buffered-io.c | 10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
+> 
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index c1c8cd41ea81..8ee0211bea86 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -223,10 +223,10 @@ static int iomap_read_inline_data(struct inode *inode, struct page *page,
+>  	if (poff > 0)
+>  		iomap_page_create(inode, page);
+>  
+> -	addr = kmap_atomic(page) + poff;
+> +	addr = kmap_local_page(page) + poff;
+>  	memcpy(addr, iomap->inline_data, size);
+>  	memset(addr + size, 0, PAGE_SIZE - poff - size);
+> -	kunmap_atomic(addr);
+> +	kunmap_local(addr);
+>  	iomap_set_range_uptodate(page, poff, PAGE_SIZE - poff);
+>  	return PAGE_SIZE - poff;
+>  }
+> @@ -682,9 +682,9 @@ static size_t iomap_write_end_inline(struct inode *inode, struct page *page,
+>  	BUG_ON(!iomap_inline_data_valid(iomap));
+>  
+>  	flush_dcache_page(page);
+> -	addr = kmap_atomic(page);
+> -	memcpy(iomap_inline_data(iomap, pos), addr + pos, copied);
+> -	kunmap_atomic(addr);
+> +	addr = kmap_local_page(page) + pos;
+> +	memcpy(iomap_inline_data(iomap, pos), addr, copied);
+> +	kunmap_local(addr);
+>  
+>  	mark_inode_dirty(inode);
+>  	return copied;
+> -- 
+> 2.30.2
+> 
