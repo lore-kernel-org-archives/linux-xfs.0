@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5846DC4338F
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Aug 2021 02:06:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 580A3C4338F
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Aug 2021 02:06:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 393EB61073
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Aug 2021 02:06:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3BC736109F
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Aug 2021 02:06:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238128AbhHECGx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 Aug 2021 22:06:53 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55652 "EHLO mail.kernel.org"
+        id S238126AbhHECG6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 4 Aug 2021 22:06:58 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55770 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S238126AbhHECGx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 4 Aug 2021 22:06:53 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id B2C9C6105A;
-        Thu,  5 Aug 2021 02:06:39 +0000 (UTC)
+        id S238097AbhHECG6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 4 Aug 2021 22:06:58 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 335676105A;
+        Thu,  5 Aug 2021 02:06:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1628129199;
-        bh=lbMM39HqcVF3LwMDAxD4zYbAgwErU5qsXFmUfYTrO3s=;
+        s=k20201202; t=1628129205;
+        bh=MfV2N9Il/FGapu/d/XhrjVq4VLJ1DNZ4Boz98YuRTbk=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=k9g36ljs3yIsmDs4mMCCyKgYWRUJx+rg59KKT+D1GAemorxD3SXU1VdwLKYtYqL2t
-         lVFFtizKOwPpthO97NxG6DzbAlhuQQfU8L4J6NVN1tJZxBlMLpoC05XzpdzIzlI/vZ
-         PMMK68eSZ3Ct45BAGbzNov2r4CmnU38q5tbYhGwbjc47pF1D00iy9IqmWX/YP7/yu1
-         25WsnCY/1YLYr5lK2SpE88v0PG/84I/aMsmhnjZ+tIKPomfsqfst/uVHtzC44Qn/7R
-         Athg2BNPT63+QYYFcFOzKQjLdNLNgKoTshfmRfVWTry7oUM/25AuyUPiCwC2tApFP/
-         8+SSdWFRrh9Yg==
-Subject: [PATCH 03/14] xfs: move xfs_inactive call to
- xfs_inode_mark_reclaimable
+        b=OHHv8YgitOOsOjwhzqnRsmH0y+OGARNOpWPiMS79dLpVWl8eQRfgPk9gvdHLoVUtY
+         wturKJKPYgjp2LdULBxBtE7TFs7wC/EUB8wPAoixVZfDpgPUGsYluK6Ig8vb5LI/ij
+         ITutGFKfTHXtrjs/Nwtc2aUy2Ep3W7EUkTRASdtPlH9sF8U9dspX62Gsk/HjxuBx0d
+         9feVJub8CDMvQMkHGAsHRPbddzmr9ilCYn2eDkhSeFCakJkM8NzAqooI2ZecCdBuXJ
+         UjW91crpiAd6hw5Z+C2Kgi2JK0yRIU3/7eZlymk8MJOKaso6Sr8JekankqvCWXndsv
+         5pWB/KPR5U4bA==
+Subject: [PATCH 04/14] xfs: detach dquots from inode if we don't need to
+ inactivate it
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@infradead.org
-Date:   Wed, 04 Aug 2021 19:06:39 -0700
-Message-ID: <162812919945.2589546.4625391576029057535.stgit@magnolia>
+Date:   Wed, 04 Aug 2021 19:06:44 -0700
+Message-ID: <162812920492.2589546.4151674542483312030.stgit@magnolia>
 In-Reply-To: <162812918259.2589546.16599271324044986858.stgit@magnolia>
 References: <162812918259.2589546.16599271324044986858.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,199 +50,118 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Move the xfs_inactive call and all the other debugging checks and stats
-updates into xfs_inode_mark_reclaimable because most of that are
-implementation details about the inode cache.  This is preparation for
-deferred inactivation that is coming up.  We also move it around
-xfs_icache.c in preparation for deferred inactivation.
+If we don't need to inactivate an inode, we can detach the dquots and
+move on to reclamation.  This isn't strictly required here; it's a
+preparation patch for deferred inactivation per reviewer request[1] to
+move the creation of xfs_inode_needs_inactivation into a separate
+change.  Eventually this !need_inactive chunk will turn into the code
+path for inodes that skip xfs_inactive and go straight to memory
+reclaim.
 
+[1] https://lore.kernel.org/linux-xfs/20210609012838.GW2945738@locust/T/#mca6d958521cb88bbc1bfe1a30767203328d410b5
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_icache.c |   99 ++++++++++++++++++++++++++++++++++++++-------------
- fs/xfs/xfs_super.c  |   50 --------------------------
- 2 files changed, 74 insertions(+), 75 deletions(-)
+ fs/xfs/xfs_icache.c |    8 +++++++-
+ fs/xfs/xfs_inode.c  |   53 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_inode.h  |    2 ++
+ 3 files changed, 62 insertions(+), 1 deletion(-)
 
 
 diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 086a88b8dfdb..f0e77ed0b8bb 100644
+index f0e77ed0b8bb..b9214733d0c3 100644
 --- a/fs/xfs/xfs_icache.c
 +++ b/fs/xfs/xfs_icache.c
-@@ -292,31 +292,6 @@ xfs_perag_clear_inode_tag(
- 	trace_xfs_perag_clear_inode_tag(mp, pag->pag_agno, tag, _RET_IP_);
+@@ -1752,8 +1752,14 @@ xfs_inode_mark_reclaimable(
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	struct xfs_perag	*pag;
++	bool			need_inactive = xfs_inode_needs_inactive(ip);
+ 
+-	xfs_inactive(ip);
++	if (!need_inactive) {
++		/* Going straight to reclaim, so drop the dquots. */
++		xfs_qm_dqdetach(ip);
++	} else {
++		xfs_inactive(ip);
++	}
+ 
+ 	if (!XFS_FORCED_SHUTDOWN(mp) && ip->i_delayed_blks) {
+ 		xfs_check_delalloc(ip, XFS_DATA_FORK);
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 990b72ae3635..3c6ce1f6f643 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1654,6 +1654,59 @@ xfs_inactive_ifree(
+ 	return 0;
  }
  
--/*
-- * We set the inode flag atomically with the radix tree tag.
-- * Once we get tag lookups on the radix tree, this inode flag
-- * can go away.
-- */
--void
--xfs_inode_mark_reclaimable(
--	struct xfs_inode	*ip)
--{
--	struct xfs_mount	*mp = ip->i_mount;
--	struct xfs_perag	*pag;
--
--	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
--	spin_lock(&pag->pag_ici_lock);
--	spin_lock(&ip->i_flags_lock);
--
--	xfs_perag_set_inode_tag(pag, XFS_INO_TO_AGINO(mp, ip->i_ino),
--			XFS_ICI_RECLAIM_TAG);
--	__xfs_iflags_set(ip, XFS_IRECLAIMABLE);
--
--	spin_unlock(&ip->i_flags_lock);
--	spin_unlock(&pag->pag_ici_lock);
--	xfs_perag_put(pag);
--}
--
- static inline void
- xfs_inew_wait(
- 	struct xfs_inode	*ip)
-@@ -1739,3 +1714,77 @@ xfs_icwalk(
- 	return last_error;
- 	BUILD_BUG_ON(XFS_ICWALK_PRIVATE_FLAGS & XFS_ICWALK_FLAGS_VALID);
- }
-+
-+#ifdef DEBUG
-+static void
-+xfs_check_delalloc(
-+	struct xfs_inode	*ip,
-+	int			whichfork)
-+{
-+	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
-+	struct xfs_bmbt_irec	got;
-+	struct xfs_iext_cursor	icur;
-+
-+	if (!ifp || !xfs_iext_lookup_extent(ip, ifp, 0, &icur, &got))
-+		return;
-+	do {
-+		if (isnullstartblock(got.br_startblock)) {
-+			xfs_warn(ip->i_mount,
-+	"ino %llx %s fork has delalloc extent at [0x%llx:0x%llx]",
-+				ip->i_ino,
-+				whichfork == XFS_DATA_FORK ? "data" : "cow",
-+				got.br_startoff, got.br_blockcount);
-+		}
-+	} while (xfs_iext_next_extent(ifp, &icur, &got));
-+}
-+#else
-+#define xfs_check_delalloc(ip, whichfork)	do { } while (0)
-+#endif
-+
 +/*
-+ * We set the inode flag atomically with the radix tree tag.
-+ * Once we get tag lookups on the radix tree, this inode flag
-+ * can go away.
++ * Returns true if we need to update the on-disk metadata before we can free
++ * the memory used by this inode.  Updates include freeing post-eof
++ * preallocations; freeing COW staging extents; and marking the inode free in
++ * the inobt if it is on the unlinked list.
 + */
-+void
-+xfs_inode_mark_reclaimable(
++bool
++xfs_inode_needs_inactive(
 +	struct xfs_inode	*ip)
 +{
 +	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_perag	*pag;
-+
-+	xfs_inactive(ip);
-+
-+	if (!XFS_FORCED_SHUTDOWN(mp) && ip->i_delayed_blks) {
-+		xfs_check_delalloc(ip, XFS_DATA_FORK);
-+		xfs_check_delalloc(ip, XFS_COW_FORK);
-+		ASSERT(0);
-+	}
-+
-+	XFS_STATS_INC(mp, vn_reclaim);
++	struct xfs_ifork	*cow_ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
 +
 +	/*
-+	 * We should never get here with one of the reclaim flags already set.
++	 * If the inode is already free, then there can be nothing
++	 * to clean up here.
 +	 */
-+	ASSERT_ALWAYS(!xfs_iflags_test(ip, XFS_IRECLAIMABLE));
-+	ASSERT_ALWAYS(!xfs_iflags_test(ip, XFS_IRECLAIM));
++	if (VFS_I(ip)->i_mode == 0)
++		return false;
++
++	/* If this is a read-only mount, don't do this (would generate I/O) */
++	if (mp->m_flags & XFS_MOUNT_RDONLY)
++		return false;
++
++	/* If the log isn't running, push inodes straight to reclaim. */
++	if (XFS_FORCED_SHUTDOWN(mp) || (mp->m_flags & XFS_MOUNT_NORECOVERY))
++		return false;
++
++	/* Metadata inodes require explicit resource cleanup. */
++	if (xfs_is_metadata_inode(ip))
++		return false;
++
++	/* Want to clean out the cow blocks if there are any. */
++	if (cow_ifp && cow_ifp->if_bytes > 0)
++		return true;
++
++	/* Unlinked files must be freed. */
++	if (VFS_I(ip)->i_nlink == 0)
++		return true;
 +
 +	/*
-+	 * We always use background reclaim here because even if the inode is
-+	 * clean, it still may be under IO and hence we have wait for IO
-+	 * completion to occur before we can reclaim the inode. The background
-+	 * reclaim path handles this more efficiently than we can here, so
-+	 * simply let background reclaim tear down all inodes.
++	 * This file isn't being freed, so check if there are post-eof blocks
++	 * to free.  @force is true because we are evicting an inode from the
++	 * cache.  Post-eof blocks must be freed, lest we end up with broken
++	 * free space accounting.
++	 *
++	 * Note: don't bother with iolock here since lockdep complains about
++	 * acquiring it in reclaim context. We have the only reference to the
++	 * inode at this point anyways.
 +	 */
-+	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
-+	spin_lock(&pag->pag_ici_lock);
-+	spin_lock(&ip->i_flags_lock);
-+
-+	xfs_perag_set_inode_tag(pag, XFS_INO_TO_AGINO(mp, ip->i_ino),
-+			XFS_ICI_RECLAIM_TAG);
-+	__xfs_iflags_set(ip, XFS_IRECLAIMABLE);
-+
-+	spin_unlock(&ip->i_flags_lock);
-+	spin_unlock(&pag->pag_ici_lock);
-+	xfs_perag_put(pag);
++	return xfs_can_free_eofblocks(ip, true);
 +}
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index c2c9c02b9d62..e0b97e4c8e16 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -613,32 +613,6 @@ xfs_fs_alloc_inode(
- 	return NULL;
- }
- 
--#ifdef DEBUG
--static void
--xfs_check_delalloc(
--	struct xfs_inode	*ip,
--	int			whichfork)
--{
--	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
--	struct xfs_bmbt_irec	got;
--	struct xfs_iext_cursor	icur;
--
--	if (!ifp || !xfs_iext_lookup_extent(ip, ifp, 0, &icur, &got))
--		return;
--	do {
--		if (isnullstartblock(got.br_startblock)) {
--			xfs_warn(ip->i_mount,
--	"ino %llx %s fork has delalloc extent at [0x%llx:0x%llx]",
--				ip->i_ino,
--				whichfork == XFS_DATA_FORK ? "data" : "cow",
--				got.br_startoff, got.br_blockcount);
--		}
--	} while (xfs_iext_next_extent(ifp, &icur, &got));
--}
--#else
--#define xfs_check_delalloc(ip, whichfork)	do { } while (0)
--#endif
--
++
  /*
-  * Now that the generic code is guaranteed not to be accessing
-  * the linux inode, we can inactivate and reclaim the inode.
-@@ -654,30 +628,6 @@ xfs_fs_destroy_inode(
- 	ASSERT(!rwsem_is_locked(&inode->i_rwsem));
- 	XFS_STATS_INC(ip->i_mount, vn_rele);
- 	XFS_STATS_INC(ip->i_mount, vn_remove);
--
--	xfs_inactive(ip);
--
--	if (!XFS_FORCED_SHUTDOWN(ip->i_mount) && ip->i_delayed_blks) {
--		xfs_check_delalloc(ip, XFS_DATA_FORK);
--		xfs_check_delalloc(ip, XFS_COW_FORK);
--		ASSERT(0);
--	}
--
--	XFS_STATS_INC(ip->i_mount, vn_reclaim);
--
--	/*
--	 * We should never get here with one of the reclaim flags already set.
--	 */
--	ASSERT_ALWAYS(!xfs_iflags_test(ip, XFS_IRECLAIMABLE));
--	ASSERT_ALWAYS(!xfs_iflags_test(ip, XFS_IRECLAIM));
--
--	/*
--	 * We always use background reclaim here because even if the inode is
--	 * clean, it still may be under IO and hence we have wait for IO
--	 * completion to occur before we can reclaim the inode. The background
--	 * reclaim path handles this more efficiently than we can here, so
--	 * simply let background reclaim tear down all inodes.
--	 */
- 	xfs_inode_mark_reclaimable(ip);
- }
+  * xfs_inactive
+  *
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 4b6703dbffb8..e3137bbc7b14 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -493,6 +493,8 @@ extern struct kmem_zone	*xfs_inode_zone;
+ /* The default CoW extent size hint. */
+ #define XFS_DEFAULT_COWEXTSZ_HINT 32
+ 
++bool xfs_inode_needs_inactive(struct xfs_inode *ip);
++
+ int xfs_iunlink_init(struct xfs_perag *pag);
+ void xfs_iunlink_destroy(struct xfs_perag *pag);
  
 
