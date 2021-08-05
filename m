@@ -1,114 +1,158 @@
 Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
-X-Spam-Level: **
-X-Spam-Status: No, score=2.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,LOTS_OF_MONEY,MAILING_LIST_MULTI,
-	MONEY_FREEMAIL_REPTO,MONEY_NOHTML,SPF_HELO_NONE,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Level: 
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B355C4338F
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Aug 2021 22:04:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE37EC4338F
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Aug 2021 22:15:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EB0F261157
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Aug 2021 22:04:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8E8DE6113C
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Aug 2021 22:15:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237379AbhHEWEi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Aug 2021 18:04:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33784 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236676AbhHEWEe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Aug 2021 18:04:34 -0400
-Received: from server.example.com (unknown [IPv6:2001:41d0:8:808d::])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF688C0613D5
-        for <linux-xfs@vger.kernel.org>; Thu,  5 Aug 2021 15:04:18 -0700 (PDT)
-Received: by server.example.com (Postfix, from userid 1023)
-        id 361E7D45ACB; Thu,  5 Aug 2021 21:15:14 +0000 (UTC)
-To:     linux-xfs@vger.kernel.org
-Subject: {Spam?} =?UTF-8?Q?Z._HD,Sehr_geehrte_/_r_Fondsempf=C3=A4nger?=
-Date:   Thu, 5 Aug 2021 21:15:14 +0000
-From:   "ANWALT BILBAO &EMMA ASSOZIIERT & CO..." 
-        <support@quali.speed.hebergement-com4design.fr>
-Reply-To: buroLotto.es@spainmail.com
-Message-ID: <60cd6b2c73feadbe1b12ea46c21ff090@www.quali.speed.hebergement-com4design.fr>
+        id S231337AbhHEWPZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Aug 2021 18:15:25 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:46329 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229729AbhHEWPZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Aug 2021 18:15:25 -0400
+Received: from dread.disaster.area (pa49-195-182-146.pa.nsw.optusnet.com.au [49.195.182.146])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 5F04A8683FF;
+        Fri,  6 Aug 2021 08:15:04 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1mBldm-00EwzX-N8; Fri, 06 Aug 2021 08:15:02 +1000
+Date:   Fri, 6 Aug 2021 08:15:02 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
+        hch@infradead.org
+Subject: Re: [PATCH 05/14] xfs: per-cpu deferred inode inactivation queues
+Message-ID: <20210805221502.GF2757197@dread.disaster.area>
+References: <162812918259.2589546.16599271324044986858.stgit@magnolia>
+ <162812921040.2589546.137433781469727121.stgit@magnolia>
+ <20210805064324.GE2757197@dread.disaster.area>
+ <20210805070032.GW3601443@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-yoursite-MailScanner-Information: Please contact the ISP for more information
-X-yoursite-MailScanner-ID: 361E7D45ACB.AB1E0
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-SpamCheck: spam, SpamAssassin (cached, score=7.061,
-        required 6, ADVANCE_FEE_2_NEW_MONEY 0.15,
-        FREEMAIL_FORGED_REPLYTO 2.50, FREEMAIL_REPLYTO 1.00,
-        LOTS_OF_MONEY 0.00, MONEY_FREEMAIL_REPTO 2.43, MONEY_NOHTML 0.97,
-        NO_RELAYS -0.00, T_FILL_THIS_FORM_SHORT 0.01, XFER_LOTSA_MONEY 0.00)
-X-yoursite-MailScanner-SpamScore: sssssss
-X-yoursite-MailScanner-From: support@quali.speed.hebergement-com4design.fr
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210805070032.GW3601443@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
+        a=QpfB3wCSrn/dqEBSktpwZQ==:117 a=QpfB3wCSrn/dqEBSktpwZQ==:17
+        a=kj9zAlcOel0A:10 a=MhDmnRu9jo8A:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
+        a=sj4wurPj8jadtsRafW8A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Rechtsanwältin BILBAO &EMMA ASSOZIIERT & CO...
-#########################################
-AV/DE GRAN VIA NO.38k, 28008 MADRID.   SPAIN 
-TEL. ( 34) 602 810 185 FAX: ( 34) 931-702-120
-Eingetragener Fall NR: GY/Q3J63753 / SQQ/93000XS10.
+On Thu, Aug 05, 2021 at 12:00:32AM -0700, Darrick J. Wong wrote:
+> On Thu, Aug 05, 2021 at 04:43:24PM +1000, Dave Chinner wrote:
+> > On Wed, Aug 04, 2021 at 07:06:50PM -0700, Darrick J. Wong wrote:
+> > > From: Dave Chinner <dchinner@redhat.com>
+> > > 
+> > > Move inode inactivation to background work contexts so that it no
+> > > longer runs in the context that releases the final reference to an
+> > > inode. This will allow process work that ends up blocking on
+> > > inactivation to continue doing work while the filesytem processes
+> > > the inactivation in the background.
+....
+> > > @@ -854,6 +884,17 @@ xfs_fs_freeze(
+> > >  	 */
+> > >  	flags = memalloc_nofs_save();
+> > >  	xfs_blockgc_stop(mp);
+> > > +
+> > > +	/*
+> > > +	 * Stop the inodegc background worker.  freeze_super already flushed
+> > > +	 * all pending inodegc work when it sync'd the filesystem after setting
+> > > +	 * SB_FREEZE_PAGEFAULTS, and it holds s_umount, so we know that inodes
+> > > +	 * cannot enter xfs_fs_destroy_inode until the freeze is complete.
+> > > +	 * If the filesystem is read-write, inactivated inodes will queue but
+> > > +	 * the worker will not run until the filesystem thaws or unmounts.
+> > > +	 */
+> > > +	xfs_inodegc_stop(mp);
+> > > +
+> > >  	xfs_save_resvblks(mp);
+> > >  	ret = xfs_log_quiesce(mp);
+> > >  	memalloc_nofs_restore(flags);
+> > 
+> > I still think this freeze handling is problematic. While I can't easily trigger
+> > the problem I saw, I still don't really see what makes the flush in
+> > xfs_fs_sync_fs() prevent races with the final stage of freeze before
+> > inactivation is stopped......
+> > 
+> > .... and ....
+> > 
+> > as I write this the xfs/517 loop goes boom on my pmem test setup (but no DAX):
+> > 
+> > SECTION       -- xfs
+> > FSTYP         -- xfs (debug)
+> > PLATFORM      -- Linux/x86_64 test3 5.14.0-rc4-dgc #506 SMP PREEMPT Thu Aug 5 15:49:49 AEST 2021
+> > MKFS_OPTIONS  -- -f -m rmapbt=1 /dev/pmem1
+> > MOUNT_OPTIONS -- -o dax=never -o context=system_u:object_r:root_t:s0 /dev/pmem1 /mnt/scratch
+> > 
+> > generic/390 3s ...  3s
+> > xfs/517 43s ... 
+> > Message from syslogd@test3 at Aug  5 15:56:24 ...
+> > kernel:[  162.849634] XFS: Assertion failed: mp->m_super->s_writers.frozen < SB_FREEZE_FS, file: fs/xfs/xfs_icache.c, line: 1889
+> > 
+> > I suspect that we could actually target this better and close the
+> > race by doing something like:
+> > 
+> > xfs_fs_sync_fs()
+> > {
+> > 	....
+> > 
+> > 	/*
+> > 	 * If we are called with page faults frozen out, it means we are about
+> > 	 * to freeze the transaction subsystem. Take the opportunity to shut
+> > 	 * down inodegc because once SB_FREEZE_FS is set it's too late to
+> > 	 * prevent inactivation races with freeze. The fs doesn't get called
+> > 	 * again by the freezing process until after SB_FREEZE_FS has been set,
+> > 	 * so it's now or never.
+> > 	 *
+> > 	 * We don't care if this is a normal syncfs call that does this or
+> > 	 * freeze that does this - we can run this multiple times without issue
+> > 	 * and we won't race with a restart because a restart can only occur when
+> > 	 * the state is either SB_FREEZE_FS or SB_FREEZE_COMPLETE.
+> > 	 */
+> > 	if (sb->s_writers.frozen == SB_FREEZE_PAGEFAULT)
+> > 		xfs_inodegc_stop(mp);
+> 
+> LOL, a previous version of this series actually did this part this way,
+> but...
+> 
+> > }
+> > 
+> > xfs_fs_freeze()
+> > {
+> > .....
+> > error:
+> > 	/*
+> > 	 * We need to restart the inodegc on error because we stopped it at
+> > 	 * SB_FREEZE_PAGEFAULT level and a thaw is not going to be run to
+> > 	 * restart it now. We are at SB_FREEZE_FS level here, so we can restart
+> > 	 * safely without racing with a stop in xfs_fs_sync_fs().
+> > 	 */
+> > 	if (error)
+> > 		xfs_inodegc_start(mp);
+> 
+> ...missed this part.  If this fixes x517 and doesn't break g390 for you,
+> I'll meld it into the series.  I think the reasoning here makes sense.
 
-Ihnen wird empfohlen, die folgenden Informationen an Ihre Bevollmächtigte zu senden. Rechtsanwältin  BILBAO & EMMA  ASSOZIIERT CO ERMÖGLICHT IHNEN DIE FREIGABE IHRES FONDS:Wir bitten dringend, Ihre E-Mails an unsere Büro-E-Mail zu beantworten, buroLotto.es@spainmail.com, 
+Nope, both x517 and g390 still fire this assert, so there's
+something else we're missing here.
 
-Wir gratulieren und informieren Sie über die Auswahl des Geldpreises €935.470,00 EUROS, SOMMERBONANZA, EL GORDO DE LA PRIMITIVA LOTTERIE IN VERBINDUNG MIT EUROMILLIONS ESPAÑA INTERNATIONAL LOTTERIE BEFÖRDERUNG  PROGRAMM Madrid Spanien
+I keep wondering if we should be wrapping the entire flush mechanism
+in a rwsem - read for flush, write for start/stop - so that we
+aren't ever still processing a stop while a concurrent start runs or
+vice versa...
 
- Sehr Geehrter  Begünstigten, 
-Wir möchten Sie informieren, dass das Büro des nicht Beanspruchten Preisgeldes in Spanien,unsere Anwaltskanzlei ernannt hat, als gesetzliche Berater zu handeln, in der Verarbeitung und der Zahlung eines Preisgeldes, das auf Ihrem Namen gutgeschrieben wurde, und nun seit über zwei Jahren nicht beansprucht wurde.
+Cheers,
 
- Der Gesamtbetrag der ihnen zusteht beträgt momentan €935, 470, 15, cent.
-
-Der Gesamtbetrag der ihnen zusteht beträgt momentan  €935, 470, 15, neunhundert fünfunddreißigtausend, vierhundertsiebzig und fünfzehn Cent, Das ursprüngliche Preisgeld bertug €785.810, 15.00 EUROS. Siebenhundert Fünfundachtzigtausend Acht Hundertzehn Euro und fünfzehn Cent Diese Summe wurde fuer nun mehr als zwei Jahre,Gewinnbringend  angelegt,daher die aufstockung auf die oben genannte Gesamtsumme.Entsprechend dem Büros des nicht Beanspruchten  Preisgeldes,wurde dieses Geld als nicht beanspruchten Gewinn einer Lotterie Firma bei ihnen zum verwalten niedergelegt und  in ihrem namen versichert. Nach Ansicht der Lotterie Firma wurde ihnen das Geld nach einer Weihnachts Förderung Lotterie  zugesprochen. 
-
- Die Kupons wurden von einer Investmentgesellschaft gekauft.Nach Ansicht der Lotterie Firma wurden sie damals Angeschrieben um Sie über dieses Geld zu informieren es hat sich aber leider bis zum Ablauf  der  gesetzten  Frist  keiner gemeldet um den Gewinn zu Beanspruchen. Dieses war der Grund weshalb das Geld zum verwalten niedergelegt wurde. Gemab des Spanischen Gesetzes muss der inhaber alle zwei Jahre ueber seinen vorhanden Gewinn informiert werden.Sollte dass Geld wieder nicht beansprucht werden,.wird der Gewinn abermals ueber eine Investierung gesellschaft fur eine weitere Periode von zwei Jahren angelegt werden.Wir sind daher, durch das Buro des nicht Beanspruchten Preisgelds beauftragt worden sie anzuschreiben.Dies ist eine Notifikation für das Beanspruchen dieses Gelds.
-
-Wir möchten sie darauf hinweisen, dass die Lotteriegesellschaft überprüfen und bestätigen wird ob ihre Identität  übereinstimmt bevor ihnen ihr Geld ausbezahlt wird.Wir werden sie beraten wie sie ihren Anspruch geltend machen.Bitte  setzen sie sich dafuer mit unserer Deutsch Spanisch oder Englisch Sprachigen Rechtsanwalt in Verbindung Rechtsanwältin: Bilbao & Emma ASSOZIIERT & CO.., TEL( 34) 602 810 185 & email,( Ihre Antwort sollte an diese E-MAIL-Adresse gerichtet, (promolottooffice@spainmail.com  )ist zustaendig fuer  Auszahlungen ins Ausland und wird ihnen in dieser sache zur seite stehen. Der Anspruch sollte vor den 30 August 2021 geltend  gemacht werden,da sonst dass Geld wieder angelegt werden wuerde.Wir freuen uns, von Ihnen zu hören, während wir Ihnen  unsere Rechtshilfe Versichern.
-
-Nachdem Sie die von Ihnen geforderten Daten bereitgestellt haben, können Sie davon ausgehen, dass Sie innerhalb weniger  Stunden direkt von diesem Büro erfahren werden. Bis dahin müssen wir Ihre Informationen verarbeitet und Ihre Fonds Akte für  die Zustellung vorbereitet haben, um Verzögerungen zu vermeiden. 
-Wir gehen davon aus, dass Sie die erläuternden Anweisungen und Anweisungen für den Erhalt Ihrer Prämien (935 €, 470, 15 Cent) verstehen, die Ihnen von der spanischen Euro Millones /El Gordo de la Primitiva International lotterie Madrid Spain legal zugesprochen werden.
-
-HINWEIS: Um unnötige Verzögerungen zu vermeiden, wenn es eine Änderung Ihrer Adresse oder Komplikationen geben, informieren Sie Ihren Agenten so schnell wie möglich, Ihr Agent wird 10% des Premium Preises bezahlt, da die Provision NACH Dem, was Sie Ihr Geld auf Ihr kostenpflichtiges Konto erhalten haben. Das Zahlungsbearbeitung Formular ist mit einer Fotokopie Ihres Ausweises auszufüllen und zur Überprüfung per Faxnummer zu senden: ( 34) 935457490 & E-Mail: Wir bitten dringend, Ihre E-Mails an unsere Büro-E-Mail zu beantworten  promolottooffice@spainmail.com
-
-Mit Freundlichen Grüßen
-Rechtsanwältin Bilbao & Emma ASSOZIIERT & CO..
-
-ANMELDEFORMULAR FÜR DEN GEWINNANSPRUCH Vom 28. Juni bis 30. August 2021
-Hinweis bitte geben Sie die folgenden Informationen, wie unten gefordert, faxen   34935457490 oder e mail: promolottooffice@spainmail.com ,es zurück in mein Büro sofort für uns in der Lage zu sein die Legalisierung Prozess Ihrer  Persönliche investiertes Preisgeld zu vervollständigen, und das Geld wird Ihnen von Zentralbank spain Int  ausgezahlt.  Alle Prozess Überprüfung durch unsere Kanzlei ist für Sie kostenlos, weil unsere Kosten werden von der internationalen  Lotto Kommission am Ende des Prozesses zu zahlen, wenn Sie Ihr Geld erhalten.Wenn Sie nicht die erforderlichen  Informationen vor der Zeit gegeben hat, können ist Anwaltskanzlei nicht haftbar gemacht werden, wenn Ihr Geld reinvestiert  wurde.
-
-Ein Bestätigungsschreiben wird Ihnen gefaxt werden sofort wenn wir komplette Überprüfung der Informationen die Sie uns zur  Verfügung stellen habe, Ich werde die Investmentbank unverzüglich über die von Ihnen angegebene Informationen zu kommen,  bevor sie werden mit Ihnen Kontakt aufnehmen für die ausZahlung von Ihrem Geld . Ihre Daten werden vertraulich gehalten  nach der Europäischen Union Datenschutzrecht.
-
-"Antworten Sie nicht auf die Absenderadresse oder die Quell-E-Mail-Adresse, es wird über den Computer gesendet virtuelle  Hilfe für die Antwort wird  nicht meine menschliche sondern Computer" Daher müssen Sie die Treuhänder über Telefon und E- Mail-Adresse oben" (ACHTUNG Wir (bitten Sie, auf diese E-Mail-Adresse zu antworten, (promolottooffice@spainmail.com )
-########################################################
-
-REF.NR:………………………………STAPELN Sie NR:…………………………
-Vorname:……………………Vor-NACHNAME…………………………………
-GEBURTSDATUM:……………………………BERUF:……………………………
-STRASSE:………………………………………PLZ/ORT…………………………
-ADRESSE:……………………………………………………………………………
-TELEFON:(___)……………………HANDY:(__)………………FAX (__)………
-EMAIL:…………………………………………………………Nationalitit:……
-
-HINWEIS: BANKVERBINDUNG IST NUR ERFORDERLICH, WENN SIE BESCHLIEßEN, IHREN GEWINN ZU ERHALTEN PER ÜBERWEISUNG
-
-Nachdem Sie die von Ihnen geforderten Daten bereitgestellt haben, können Sie davon ausgehen, dass Sie innerhalb weniger  Stunden direkt von diesem Büro erfahren werden. Bis dahin müssen wir Ihre Informationen verarbeitet und Ihre Fonds Akte für  die Zustellung vorbereitet haben, um Verzögerungen zu vermeiden. Wir gehen davon aus, dass Sie die erklärenden Anweisungen  und Anweisungen zum Einholen und Einholen Ihrer Auszeichnungen (€935,470,15 EUROS) verstehen, die Ihnen vom spanischen Euro Millones de La Primitiva International Madrid legal zugesprochen wurden
-
-BANK ZAHLUNGSOPTIONEN: A / BANKÜBERWEISUNG Oder BANK CERTIFIED CHECK (BANKDATEN SIND NUR NOTWENDIG, WENN SIE SICH FÜR EINE  BANKÜBERWEISUNG ENTSCHIEDEN HABEN)
-ZAHLUNGSOPTION: (A) BESTÄTIGTER SCHECK (BEZAHLEN Sie ÜBERTRAGUNG EIN
-
-BETRÄGE GEWONNEN: ……………………………………………………
-NAME DER BANK:……………………………………………………………
-KONTONUMMER:…………………………SWIFT-CODE:…………………
-ADRESSE DER BANK …………………………………………………………
-GEB-DATUM:…………Unterschrift …………(Erst bei hmeAbna)
-
-Rechtsanwältin  Bilbao & Emma Asociados, Abogados, Fiscal Y Accesorios horario de consultas Lunes.bis Samstag De. 09 - 16.30 Uhr  654280 / MLA & (Seien Sie informiert, dass Ihr Vertreter 10% des Preises als Provision erhält, wenn Sie Ihr Geld auf Ihrem  angegebenen Konto erhalten haben) Mitglied des Consejo de Constitucional de España, (ACHTUNG Wir bitten Sie, auf diese E-Mail-Adresse zu antworten (promolottooffice@spainmail.com) BÜRO-KONTOINFORMATIONEN- BANK NAME: P.F.S.SPAIN SL SWIFT CODE: PFSSESM1 IBAN: ES17 6713   0002 5700 0584 3906)COPYRIGHT 2019.LOTERIA SPANIEN. Alle Rechte vorbehalten. NUTZUNGSBEDINGUNGEN HANDELSPOLITIK DATENSCHUTZ VON BESCHWERDEN....
- 
-Diese E-Mail ist für den vorgesehenen Empfänger bestimmt und enthält Informationen, die vertraulich sein können. Wenn Sie nicht der beabsichtigte Empfänger sind, benachrichtigen Sie bitte den Absender per E-Mail und löschen Sie diese E-Mail aus Ihrem Posteingang. Jede unbefugte Nutzung oder Verbreitung dieser E-Mail, ganz oder teilweise, ist strengstens untersagt und kann rechtswidrig sein. Alle in dieser E-Mail enthaltenen Preisangebote sind nur indikativ und führen zu keiner rechtlich bindenden oder durchsetzbaren Verpflichtung. Sofern nicht ausdrücklich als beabsichtigter E-Vertrag bezeichnet, stellt diese E-Mail kein Vertragsangebot, keine Vertragsänderung oder eine Annahme eines Vertragsangebots dar.
-WWW.GORDO/ EUROMILLIONS ESPAÑA  Sitz der Gesellschaft: Torre Europa Paseo de la Barcelona 15. Planta 16 28006 • Madrid. (Spanien)
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
