@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8986AC4338F
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Aug 2021 02:06:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D48D8C4338F
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Aug 2021 02:07:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6F36B61078
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Aug 2021 02:06:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B811B61078
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Aug 2021 02:07:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238143AbhHECHJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 Aug 2021 22:07:09 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56004 "EHLO mail.kernel.org"
+        id S235192AbhHECHP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 4 Aug 2021 22:07:15 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56116 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S238097AbhHECHJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 4 Aug 2021 22:07:09 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 39A2B6105A;
-        Thu,  5 Aug 2021 02:06:56 +0000 (UTC)
+        id S238097AbhHECHP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 4 Aug 2021 22:07:15 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B1EA16105A;
+        Thu,  5 Aug 2021 02:07:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1628129216;
-        bh=Z5KP3H8wowaJAPs3hCDEwyo78OVcUSwanwVAqmoVPVU=;
+        s=k20201202; t=1628129221;
+        bh=/87HWDdI+42icW1eQ5KDpPAI2ge94eeUQul9mS+whV8=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=uXv/juroFUicFfsCr+Eb/tAsmYO32wYgNm51RCRoI0BDp8VcOj/DTbKflNpU654Wr
-         Q80g/GWw9cd3qhArWlZRH/aAYbfXhcOTbABMb6/xTLrQmxMB5n3EKyc38qParegfmX
-         hDAkqpxgYpH37URNl+lkVCHad/4ryb1zuKu9TaOBLChfglR5ZeQwN223IE65mK9SDi
-         lPuwO3QeJoBi5/DU4sLTMQJDQqH+DZuPUhyHroJqVv43W3t7dN759a5HlS3IwrGxQY
-         ePWDsd97eFtB+PGW7zJsGm81DM600vdvM5s53Zl7IwbVmbPeQTNrccY8Dye043+jGP
-         hEipc264C/nsQ==
-Subject: [PATCH 06/14] xfs: queue inactivation immediately when free space is
- tight
+        b=vL9LvN11yz9+NfkEZE5sjoNO8dupO7EA6c+FkhHVau26B3012PqKo1qaRhpRbr6hN
+         3LrjwUeyiaMRZSXwo8yez8Mu6f9MXNxRLpffyYzFIWVfFta+rPeFOY0YwE3KrHMmR7
+         rX2ZrmGT06UVyHhcA5gF52NIysQW/yzHeOZV3en3UmK5elmfY/uCVbRoRQU0ALGcsY
+         CrY8qpmf9LL3uqF6ONMPxIhBp4k5qlFQ8dcc5o2J6Skgy2r+BXzdpDUe4Jso3qeei1
+         gXlQWOT5PGZF0cSCDCVCNjeqkp0L03NRuu83ZJe37aZDSy+MfX2G9HofldpB7Mlr3v
+         RQTIFRdyiK15A==
+Subject: [PATCH 07/14] xfs: queue inactivation immediately when quota is
+ nearing enforcement
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@infradead.org
-Date:   Wed, 04 Aug 2021 19:06:55 -0700
-Message-ID: <162812921593.2589546.139493086066282940.stgit@magnolia>
+Date:   Wed, 04 Aug 2021 19:07:01 -0700
+Message-ID: <162812922142.2589546.1431900603501424659.stgit@magnolia>
 In-Reply-To: <162812918259.2589546.16599271324044986858.stgit@magnolia>
 References: <162812918259.2589546.16599271324044986858.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -54,87 +54,129 @@ Now that we have made the inactivation of unlinked inodes a background
 task to increase the throughput of file deletions, we need to be a
 little more careful about how long of a delay we can tolerate.
 
-On a mostly empty filesystem, the risk of the allocator making poor
-decisions due to fragmentation of the free space on account a lengthy
-delay in background updates is minimal because there's plenty of space.
-However, if free space is tight, we want to deallocate unlinked inodes
-as quickly as possible to avoid fallocate ENOSPC and to give the
-allocator the best shot at optimal allocations for new writes.
-
-Therefore, queue the percpu worker immediately if the filesystem is more
-than 95% full.  This follows the same principle that XFS becomes less
-aggressive about speculative allocations and lazy cleanup (and more
-precise about accounting) when nearing full.
+Specifically, if the dquots attached to the inode being inactivated are
+nearing any kind of enforcement boundary, we want to queue that
+inactivation work immediately so that users don't get EDQUOT/ENOSPC
+errors even after they deleted a bunch of files to stay within quota.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_icache.c |    6 ++++++
- fs/xfs/xfs_mount.c  |    8 --------
- fs/xfs/xfs_mount.h  |    9 +++++++++
- 3 files changed, 15 insertions(+), 8 deletions(-)
+ fs/xfs/xfs_dquot.h  |   10 ++++++++++
+ fs/xfs/xfs_icache.c |   10 ++++++++++
+ fs/xfs/xfs_qm.c     |   34 ++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_quota.h  |    2 ++
+ 4 files changed, 56 insertions(+)
 
 
+diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
+index f642884a6834..6b5e3cf40c8b 100644
+--- a/fs/xfs/xfs_dquot.h
++++ b/fs/xfs/xfs_dquot.h
+@@ -54,6 +54,16 @@ struct xfs_dquot_res {
+ 	xfs_qwarncnt_t		warnings;
+ };
+ 
++static inline bool
++xfs_dquot_res_over_limits(
++	const struct xfs_dquot_res	*qres)
++{
++	if ((qres->softlimit && qres->softlimit < qres->reserved) ||
++	    (qres->hardlimit && qres->hardlimit < qres->reserved))
++		return true;
++	return false;
++}
++
+ /*
+  * The incore dquot structure
+  */
 diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index fedfa40e3cd6..0332acaad6f3 100644
+index 0332acaad6f3..e5e90f09bcc6 100644
 --- a/fs/xfs/xfs_icache.c
 +++ b/fs/xfs/xfs_icache.c
-@@ -1928,6 +1928,7 @@ xfs_inodegc_start(
-  * Schedule the inactivation worker when:
+@@ -1929,6 +1929,7 @@ xfs_inodegc_start(
   *
   *  - We've accumulated more than one inode cluster buffer's worth of inodes.
-+ *  - There is less than 5% free space left.
+  *  - There is less than 5% free space left.
++ *  - Any of the quotas for this inode are near an enforcement limit.
   */
  static inline bool
  xfs_inodegc_want_queue_work(
-@@ -1939,6 +1940,11 @@ xfs_inodegc_want_queue_work(
- 	if (items > mp->m_ino_geo.inodes_per_cluster)
+@@ -1945,6 +1946,15 @@ xfs_inodegc_want_queue_work(
+ 				XFS_FDBLOCKS_BATCH) < 0)
  		return true;
  
-+	if (__percpu_counter_compare(&mp->m_fdblocks,
-+				mp->m_low_space[XFS_LOWSP_5_PCNT],
-+				XFS_FDBLOCKS_BATCH) < 0)
++	if (xfs_inode_near_dquot_enforcement(ip, XFS_DQTYPE_USER))
++		return true;
++
++	if (xfs_inode_near_dquot_enforcement(ip, XFS_DQTYPE_GROUP))
++		return true;
++
++	if (xfs_inode_near_dquot_enforcement(ip, XFS_DQTYPE_PROJ))
 +		return true;
 +
  	return false;
  }
  
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 1f7e9a608f38..5fe6f1db4fe9 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -1077,14 +1077,6 @@ xfs_fs_writable(
- 	return true;
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 351d99bc52e5..2bef4735d030 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -1882,3 +1882,37 @@ xfs_qm_vop_create_dqattach(
+ 	}
  }
  
--/*
-- * Deltas for the block count can vary from 1 to very large, but lock contention
-- * only occurs on frequent small block count updates such as in the delayed
-- * allocation path for buffered writes (page a time updates). Hence we set
-- * a large batch count (1024) to minimise global counter updates except when
-- * we get near to ENOSPC and we have to be very accurate with our updates.
-- */
--#define XFS_FDBLOCKS_BATCH	1024
- int
- xfs_mod_fdblocks(
- 	struct xfs_mount	*mp,
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 03d59a023bbb..750297498a09 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -343,6 +343,15 @@ extern uint64_t xfs_default_resblks(xfs_mount_t *mp);
- extern int	xfs_mountfs(xfs_mount_t *mp);
- extern void	xfs_unmountfs(xfs_mount_t *);
- 
-+/*
-+ * Deltas for the block count can vary from 1 to very large, but lock contention
-+ * only occurs on frequent small block count updates such as in the delayed
-+ * allocation path for buffered writes (page a time updates). Hence we set
-+ * a large batch count (1024) to minimise global counter updates except when
-+ * we get near to ENOSPC and we have to be very accurate with our updates.
-+ */
-+#define XFS_FDBLOCKS_BATCH	1024
++/* Decide if this inode's dquot is near an enforcement boundary. */
++bool
++xfs_inode_near_dquot_enforcement(
++	struct xfs_inode	*ip,
++	xfs_dqtype_t		type)
++{
++	struct xfs_dquot	*dqp;
++	int64_t			freesp;
 +
- extern int	xfs_mod_fdblocks(struct xfs_mount *mp, int64_t delta,
- 				 bool reserved);
- extern int	xfs_mod_frextents(struct xfs_mount *mp, int64_t delta);
++	/* We only care for quotas that are enabled and enforced. */
++	dqp = xfs_inode_dquot(ip, type);
++	if (!dqp || !xfs_dquot_is_enforced(dqp))
++		return false;
++
++	if (xfs_dquot_res_over_limits(&dqp->q_ino) ||
++	    xfs_dquot_res_over_limits(&dqp->q_rtb))
++		return true;
++
++	/* For space on the data device, check the various thresholds. */
++	if (!dqp->q_prealloc_hi_wmark)
++		return false;
++
++	if (dqp->q_blk.reserved < dqp->q_prealloc_lo_wmark)
++		return false;
++
++	if (dqp->q_blk.reserved >= dqp->q_prealloc_hi_wmark)
++		return true;
++
++	freesp = dqp->q_prealloc_hi_wmark - dqp->q_blk.reserved;
++	if (freesp < dqp->q_low_space[XFS_QLOWSP_5_PCNT])
++		return true;
++
++	return false;
++}
+diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
+index d00d01302545..dcc785fdd345 100644
+--- a/fs/xfs/xfs_quota.h
++++ b/fs/xfs/xfs_quota.h
+@@ -113,6 +113,7 @@ xfs_quota_reserve_blkres(struct xfs_inode *ip, int64_t blocks)
+ {
+ 	return xfs_trans_reserve_quota_nblks(NULL, ip, blocks, 0, false);
+ }
++bool xfs_inode_near_dquot_enforcement(struct xfs_inode *ip, xfs_dqtype_t type);
+ #else
+ static inline int
+ xfs_qm_vop_dqalloc(struct xfs_inode *ip, kuid_t kuid, kgid_t kgid,
+@@ -168,6 +169,7 @@ xfs_trans_reserve_quota_icreate(struct xfs_trans *tp, struct xfs_dquot *udqp,
+ #define xfs_qm_mount_quotas(mp)
+ #define xfs_qm_unmount(mp)
+ #define xfs_qm_unmount_quotas(mp)
++#define xfs_inode_near_dquot_enforcement(ip, type)			(false)
+ #endif /* CONFIG_XFS_QUOTA */
+ 
+ static inline int
 
