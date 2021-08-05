@@ -3,103 +3,92 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9062C4338F
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Aug 2021 17:39:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E072C4338F
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Aug 2021 18:22:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A5DC261104
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Aug 2021 17:39:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3DE0861151
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Aug 2021 18:22:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239498AbhHERjS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Aug 2021 13:39:18 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58478 "EHLO mail.kernel.org"
+        id S239749AbhHESWz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Aug 2021 14:22:55 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47162 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233039AbhHERjR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 5 Aug 2021 13:39:17 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 72FBD60F42;
-        Thu,  5 Aug 2021 17:39:03 +0000 (UTC)
+        id S237370AbhHESWz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 5 Aug 2021 14:22:55 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 16FF761104;
+        Thu,  5 Aug 2021 18:22:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1628185143;
-        bh=mpOGezB+SXuAsFVVC6lA3bwptRrmzQF001+TM4vmdWc=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=E4QaeFt7YNA89dhbokWqs7ATP7Bj82GlnLNx+wA6LzxkM82xHT+Gaz8dFXwAGiNc2
-         hFoeWzLsIX7QCVOuY2bfl+FzVv0Nw7pZhBmebhbRxAW4cbCw5kD1wPflm2BVQ3RIv7
-         gLz5yq/Nq3mZlZZn0xTDrvTrIvMFQ2YMzZbXq8qchCnNpR4B2xI0ZSdJwhP63P9a9b
-         1+K2C2qALwsm1SUwWvD2OBwEgeE6iTeKAV5hu6zqpTafqN0a3w+eEb5EKxuOcSp09B
-         RUkjjWo0avlBGuKVhJ3jwP6gFRmPQ8LsP6e33F4dDJUU3rMZgQUET9pioKaChkYjIC
-         mO5wNW5NB0Q7w==
-Date:   Thu, 5 Aug 2021 10:39:03 -0700
+        s=k20201202; t=1628187761;
+        bh=xf1EO6vpWlDvbR3GGuw/iY2BzuNM81ziHAaiegMS7QA=;
+        h=Date:From:To:Cc:Subject:From;
+        b=a2nOBjG3epNarvvavygK8sprmQtC9CE1KQmigYTgKCn/PbxM2BZ1aT+wHLo3l5Siz
+         /B6+5gKz92rtfDoC1FPtksRpcQ+k6Dev733h+9700UmG2v2+Mkp8kUk7Tc22eFI0c/
+         FvZCVw0wdicoGCH55+vp0HupMS0QChFdCYJje+ogDAMyM8gwkl9Z65dTGE+I9P0iL2
+         gTXCZYQ3ket7UU+6g/S7CEisLlVpvPTYB1gOI0Lpr7RNLmsbONCn3wR+p70JCnxKXr
+         J6mAHKJSigkVGOccACYUQSQ2ezfhoEFezp56i0AhRAxuKO25FXFgJ03c68CFpzHL7S
+         icqCvCPJWhqEQ==
+Date:   Thu, 5 Aug 2021 11:22:40 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 1/2] iomap: Use kmap_local_page instead of kmap_atomic
-Message-ID: <20210805173903.GH3601405@magnolia>
-References: <20210803193134.1198733-1-willy@infradead.org>
- <20210805173104.GF3601405@magnolia>
+To:     linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        xfs <linux-xfs@vger.kernel.org>
+Cc:     Matthew Wilcox <willy@infradead.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Gao Xiang <hsiangkao@linux.alibaba.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Eric Biggers <ebiggers@kernel.org>
+Subject: [ANNOUNCE] xfs-linux: iomap-5.15-merge updated to ae44f9c286da
+Message-ID: <20210805182240.GX3601443@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210805173104.GF3601405@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 05, 2021 at 10:31:04AM -0700, Darrick J. Wong wrote:
-> On Tue, Aug 03, 2021 at 08:31:33PM +0100, Matthew Wilcox (Oracle) wrote:
-> > kmap_atomic() has the side-effect of disabling pagefaults and
-> > preemption.  kmap_local_page() does not do this and is preferred.
-> > 
-> > Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-> 
-> Pretty straightforward.
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> 
-> --D
-> 
-> > ---
-> >  fs/iomap/buffered-io.c | 10 +++++-----
-> >  1 file changed, 5 insertions(+), 5 deletions(-)
-> > 
-> > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> > index c1c8cd41ea81..8ee0211bea86 100644
-> > --- a/fs/iomap/buffered-io.c
-> > +++ b/fs/iomap/buffered-io.c
-> > @@ -223,10 +223,10 @@ static int iomap_read_inline_data(struct inode *inode, struct page *page,
-> >  	if (poff > 0)
-> >  		iomap_page_create(inode, page);
-> >  
-> > -	addr = kmap_atomic(page) + poff;
-> > +	addr = kmap_local_page(page) + poff;
+Hi folks,
 
-Though now that I think about it: Why does iomap_write_actor still use
-copy_page_from_iter_atomic?  Can that be converted to use regular
-copy_page_from_iter, which at least sometimes uses kmap_local_page?
+The iomap-5.15-merge branch of the xfs-linux repository at:
 
---D
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-> >  	memcpy(addr, iomap->inline_data, size);
-> >  	memset(addr + size, 0, PAGE_SIZE - poff - size);
-> > -	kunmap_atomic(addr);
-> > +	kunmap_local(addr);
-> >  	iomap_set_range_uptodate(page, poff, PAGE_SIZE - poff);
-> >  	return PAGE_SIZE - poff;
-> >  }
-> > @@ -682,9 +682,9 @@ static size_t iomap_write_end_inline(struct inode *inode, struct page *page,
-> >  	BUG_ON(!iomap_inline_data_valid(iomap));
-> >  
-> >  	flush_dcache_page(page);
-> > -	addr = kmap_atomic(page);
-> > -	memcpy(iomap_inline_data(iomap, pos), addr + pos, copied);
-> > -	kunmap_atomic(addr);
-> > +	addr = kmap_local_page(page) + pos;
-> > +	memcpy(iomap_inline_data(iomap, pos), addr, copied);
-> > +	kunmap_local(addr);
-> >  
-> >  	mark_inode_dirty(inode);
-> >  	return copied;
-> > -- 
-> > 2.30.2
-> > 
+has just been updated.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.  Just sneaking in a couple more patches from Matthew
+Wilcox so that (presumably) Christoph has a stable place to rebase the
+iomap_iter series.
+
+The new head of the iomap-5.15-merge branch is commit:
+
+ae44f9c286da iomap: Add another assertion to inline data handling
+
+New Commits:
+
+Andreas Gruenbacher (1):
+      [f1f264b4c134] iomap: Fix some typos and bad grammar
+
+Christoph Hellwig (2):
+      [d0364f9490d7] iomap: simplify iomap_readpage_actor
+      [c1b79f11f4ec] iomap: simplify iomap_add_to_ioend
+
+Gao Xiang (1):
+      [69f4a26c1e0c] iomap: support reading inline data from non-zero pos
+
+Matthew Wilcox (Oracle) (3):
+      [b405435b419c] iomap: Support inline data with block size < page size
+      [ab069d5fdcd1] iomap: Use kmap_local_page instead of kmap_atomic
+      [ae44f9c286da] iomap: Add another assertion to inline data handling
+
+
+Code Diffstat:
+
+ fs/iomap/buffered-io.c | 165 +++++++++++++++++++++++++------------------------
+ fs/iomap/direct-io.c   |  10 +--
+ include/linux/iomap.h  |  18 ++++++
+ 3 files changed, 108 insertions(+), 85 deletions(-)
