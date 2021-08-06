@@ -7,63 +7,63 @@ X-Spam-Status: No, score=-14.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50151C4338F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D548CC3F6A3
 	for <linux-xfs@archiver.kernel.org>; Fri,  6 Aug 2021 21:23:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2E1CF60EE8
+	by mail.kernel.org (Postfix) with ESMTP id B47E060EE8
 	for <linux-xfs@archiver.kernel.org>; Fri,  6 Aug 2021 21:23:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239972AbhHFVXz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 6 Aug 2021 17:23:55 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:56220 "EHLO
+        id S239974AbhHFVX4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 6 Aug 2021 17:23:56 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:49857 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S239974AbhHFVXy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Aug 2021 17:23:54 -0400
+        by vger.kernel.org with ESMTP id S240131AbhHFVXz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Aug 2021 17:23:55 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1628285018;
+        s=mimecast20190719; t=1628285019;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=c+90aBKoFjing+Q2LzT4bHGkCfiXxZm6K2cxe+pfpMk=;
-        b=E2sIQYGm6lorZ/HPvsTdLLu0FleyRPJmaw95nGwYmWcM9Kv5CgwdP/x6G3lFJpyVbVP88S
-        zivfyUizp1VKPknaITdbBQJ2rto1316ffR1GJdsaRWAU1euh/teecB1nUrBeL6hbkV2SG1
-        5r8ZShzaDqmCe7RMuRnvr7sc6pXK4aY=
-Received: from mail-ej1-f72.google.com (mail-ej1-f72.google.com
- [209.85.218.72]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-481-L0YNGjlBPTOOy92ZheAliw-1; Fri, 06 Aug 2021 17:23:37 -0400
-X-MC-Unique: L0YNGjlBPTOOy92ZheAliw-1
-Received: by mail-ej1-f72.google.com with SMTP id rv22-20020a17090710d6b029058c69e3adbbso3514176ejb.6
-        for <linux-xfs@vger.kernel.org>; Fri, 06 Aug 2021 14:23:36 -0700 (PDT)
+        bh=gj+Nvb7yWn3UFpYSZkmPbcjY8ebgd6IpQLXA6HhhpQY=;
+        b=JxUZ+cpMa+XECSOJx4dUXW2mEJDta+U5w3wVoOfNZ2ja4CYsuN3sT0eXHGUNpBF5r+2hc6
+        UTl7Dk1pFMVBO55HhYimhM0MMKQE7PBAVFcII/kE3ZH3YIOHOfsOVhz1jTLhdc5z2OYfQy
+        Yj93GnLtMpI7xCXcnD04mLWRPT/NZaM=
+Received: from mail-ed1-f71.google.com (mail-ed1-f71.google.com
+ [209.85.208.71]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-383-j8VQbahhNKSxMSqWQjArMw-1; Fri, 06 Aug 2021 17:23:38 -0400
+X-MC-Unique: j8VQbahhNKSxMSqWQjArMw-1
+Received: by mail-ed1-f71.google.com with SMTP id s8-20020a0564025208b02903bd8539e1caso5567019edd.22
+        for <linux-xfs@vger.kernel.org>; Fri, 06 Aug 2021 14:23:37 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=c+90aBKoFjing+Q2LzT4bHGkCfiXxZm6K2cxe+pfpMk=;
-        b=lmAT0O6Od8qn5/5vhlUEuvVtiD8qc7QwGdsrZ1DfAxLtW+1TtMe6ufGQM2OyS+h+6c
-         uKMX4Le5TcaE1JBCjQwdRaY+o3X8lDXzKELVzRvDw2ujdJSJGfNNEFmS1f8Yi4faXEGo
-         f8BbdU4et5HDFHCJptF5SBdsUiSnAPWA5tOG6lciKL0leEbhF2SqffVMKWbVxmpprX7o
-         oqG8Dsa12DcoPE0KcKCliqSNRpkQywmatah7TF2fFRSNYJttykMeCsuP8K0d28uuoJQd
-         D4NRclgfm5RfzZDtx0jbgPLJnptpFSXJycvn+Hp7RXmT21BICS7M9Jeyb33iKw+OgeJK
-         0Gew==
-X-Gm-Message-State: AOAM532D89X7ybgkTetXyhYgfZiL5yp1Rg9sYJdzA9w9zNxugLDiZw+I
-        yX+N7ul6br95zMzA+yQJIflpITBkYj9P6YAUQ2DSR4nMcuM2WWEZXqRnNdeFwlvdGttppJK2COe
-        6moeOT+SXHmYiyEg0uVOZ1H4w3pkDxzTPtoXLo7wnwuhppxnUk1WKx87DuZaYHwovwCviGj0=
-X-Received: by 2002:aa7:c542:: with SMTP id s2mr15971429edr.41.1628285015729;
-        Fri, 06 Aug 2021 14:23:35 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwYqiooJuyPwJMbH6rqR08vYwApFkUgfCp0zrT5pl3dt4JOA7OdAfy45fyOsQQumv83K8qsWg==
-X-Received: by 2002:aa7:c542:: with SMTP id s2mr15971414edr.41.1628285015511;
-        Fri, 06 Aug 2021 14:23:35 -0700 (PDT)
+        bh=gj+Nvb7yWn3UFpYSZkmPbcjY8ebgd6IpQLXA6HhhpQY=;
+        b=J9G0K3kJfhil3c1+tQNRUH9Ra5bn4lw2PLPCmI00lP8c/XswdbaqUu/RwF5JM0ckZw
+         58Sc+tRzUdl7NmyNRIe02xOlCCZQPcfVdtMX8wift9ZqWafJf6BEpwdBcJtlsMNsE9E5
+         P3lPWIEcXW03yfPzUAK2Ol0Bo00U0DGSAz/TMhl1JLe7XgBVJtBO9aXLzJMTS9hZ30Bp
+         +OUCjhWEUz+Ir5gvLVhMAaec5y4oWvhPFcwOm1bKkpOcEt0RmffEJF5BWybPPSs7z2LO
+         XKP6U4b37Oxr2JXbcPIHTKpxFGYxwV2CazZae5LSCHBWUPTn9lMNMff7L4zcUVieUn9p
+         gdqA==
+X-Gm-Message-State: AOAM531utu3u1p2mhCHzX9polux8P2ncBpw8IEiLGihOLyBlqLtF8BuD
+        zwgWKp4cWrLJsrR23Sjsctzuna4v58wstrkz+Nkt6yQDH7zi/TqfhlllynlDL7FQemRHQWM6AQz
+        XuRzBmWyN9hryEwOVz/1NXBdQXbbNoMOXV2Q6ZkxQtQ/Mi2K8iVj/vLcdzdbGXy1w8LuUzN0=
+X-Received: by 2002:a50:d548:: with SMTP id f8mr15882559edj.357.1628285016704;
+        Fri, 06 Aug 2021 14:23:36 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzaZUmQAgZl+0hyRxtJPJSwYTyga9bijni+PwM1vEjc8Ob0mHa4p2761zyWJsXwY3j7sPAN6g==
+X-Received: by 2002:a50:d548:: with SMTP id f8mr15882551edj.357.1628285016543;
+        Fri, 06 Aug 2021 14:23:36 -0700 (PDT)
 Received: from localhost.localdomain ([84.19.91.9])
-        by smtp.gmail.com with ESMTPSA id og35sm3256741ejc.28.2021.08.06.14.23.34
+        by smtp.gmail.com with ESMTPSA id og35sm3256741ejc.28.2021.08.06.14.23.35
         for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 06 Aug 2021 14:23:34 -0700 (PDT)
+        Fri, 06 Aug 2021 14:23:35 -0700 (PDT)
 From:   Pavel Reichl <preichl@redhat.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v2 11/29] xfsprogs: Stop using platform_uuid_is_null()
-Date:   Fri,  6 Aug 2021 23:23:00 +0200
-Message-Id: <20210806212318.440144-12-preichl@redhat.com>
+Subject: [PATCH v2 12/29] xfsprogs: Stop using platform_check_mount()
+Date:   Fri,  6 Aug 2021 23:23:01 +0200
+Message-Id: <20210806212318.440144-13-preichl@redhat.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210806212318.440144-1-preichl@redhat.com>
 References: <20210806212318.440144-1-preichl@redhat.com>
@@ -74,36 +74,52 @@ List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 ---
- libxlog/util.c  | 2 +-
- mkfs/xfs_mkfs.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ libfrog/linux.c | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
 
-diff --git a/libxlog/util.c b/libxlog/util.c
-index 7c10474b..84c6f99a 100644
---- a/libxlog/util.c
-+++ b/libxlog/util.c
-@@ -130,7 +130,7 @@ xlog_header_check_recover(xfs_mount_t *mp, xlog_rec_header_t *head)
- int
- xlog_header_check_mount(xfs_mount_t *mp, xlog_rec_header_t *head)
+diff --git a/libfrog/linux.c b/libfrog/linux.c
+index a45d99ab..f7fac2c8 100644
+--- a/libfrog/linux.c
++++ b/libfrog/linux.c
+@@ -40,7 +40,7 @@ static int max_block_alignment;
+ #define	CHECK_MOUNT_WRITABLE	0x2
+ 
+ static int
+-platform_check_mount(char *name, char *block, struct stat *s, int flags)
++check_mount(char *name, char *block, struct stat *s, int flags)
  {
--    if (platform_uuid_is_null(&head->h_fs_uuid)) return 0;
-+    if (uuid_is_null(head->h_fs_uuid)) return 0;
-     if (header_check_uuid(mp, head)) {
- 	/* bail out now or just carry on regardless */
- 	if (print_exit)
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 2771a641..c6929a83 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -2191,7 +2191,7 @@ _("cowextsize not supported without reflink support\n"));
- 	 * Copy features across to config structure now.
- 	 */
- 	cfg->sb_feat = cli->sb_feat;
--	if (!platform_uuid_is_null(&cli->uuid))
-+	if (!uuid_is_null(cli->uuid))
- 		uuid_copy(cfg->uuid, cli->uuid);
+ 	FILE		*f;
+ 	struct stat	st, mst;
+@@ -107,13 +107,19 @@ _("%s: %s contains a mounted filesystem\n"),
+ 	return 1;
  }
  
++static int
++platform_check_mount(char *name, char *block, struct stat *s, int flags)
++{
++	return check_mount(name, block, s, flags);
++}
++
+ int
+ platform_check_ismounted(char *name, char *block, struct stat *s, int verbose)
+ {
+ 	int flags;
+ 
+ 	flags = verbose ? CHECK_MOUNT_VERBOSE : 0;
+-	return platform_check_mount(name, block, s, flags);
++	return check_mount(name, block, s, flags);
+ }
+ 
+ int
+@@ -123,7 +129,7 @@ platform_check_iswritable(char *name, char *block, struct stat *s)
+ 
+ 	/* Writable checks are always verbose */
+ 	flags = CHECK_MOUNT_WRITABLE | CHECK_MOUNT_VERBOSE;
+-	return platform_check_mount(name, block, s, flags);
++	return check_mount(name, block, s, flags);
+ }
+ 
+ int
 -- 
 2.31.1
 
