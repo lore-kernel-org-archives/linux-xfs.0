@@ -2,166 +2,214 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.4 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01974C4338F
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Aug 2021 22:38:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F05B7C4338F
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Aug 2021 00:47:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DBCF860EBB
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Aug 2021 22:38:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD3ED61179
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Aug 2021 00:47:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232445AbhHEWiU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Aug 2021 18:38:20 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52962 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232319AbhHEWiQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 5 Aug 2021 18:38:16 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 9C78E60EBB;
-        Thu,  5 Aug 2021 22:38:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1628203081;
-        bh=BV76XWXyudjzDdWH/guZUTrBniL4nuXL6wmVrvqeKJw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Cor4YG/8CI5whlvObgObN9kbfgYzIlkvQgwrLn/WsHlkO0uEykebrnonZ5nFGYhXW
-         A3T4mRFfb348Tx+J+XbFPB0+15n9TXkxdD+74eE7u4jJG/Z9qU3g5wJ2mWeeGbYkeP
-         a99QXi7RvMRkGX+tRNyl6xFgZmd7zRhfQbgeuwMFl8bDvd1g0dQy/Kt3RmnkB+zaPp
-         KGHBhtq2KFUOocjdcL7vw9R2Kmq0bygT/l1TiQa/SUkmSkGvM0tzJQGGAnDXLdxqYI
-         zOTLh7XtpUnis+AF8rOePko6xMzez0PGUt1jjEB1VeS4PP27i96X2rW54AT5ZF3ZrO
-         9ndGiIoPKgpjw==
-Date:   Thu, 5 Aug 2021 15:38:01 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
-        hch@infradead.org
-Subject: Re: [PATCH 05/14] xfs: per-cpu deferred inode inactivation queues
-Message-ID: <20210805223801.GA3601443@magnolia>
-References: <162812918259.2589546.16599271324044986858.stgit@magnolia>
- <162812921040.2589546.137433781469727121.stgit@magnolia>
- <20210805064324.GE2757197@dread.disaster.area>
- <20210805070032.GW3601443@magnolia>
- <20210805221502.GF2757197@dread.disaster.area>
+        id S241314AbhHFAra (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Aug 2021 20:47:30 -0400
+Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:46928 "EHLO
+        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229735AbhHFAra (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Aug 2021 20:47:30 -0400
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 1760l10s007584;
+        Fri, 6 Aug 2021 00:47:01 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2021-07-09;
+ bh=FQAQqsQJdxcHZjmZgeAD9YBt2jhXCBpWhzXiiGMuSVQ=;
+ b=TRz+YGB7mj3wWlnTgV6QvgsLB7eTU4IIKACDA6fvGGzNvfFCx4AYmkMfbPwOM7h6s9K5
+ xbHvB7/F6TCucwJ3AaR2HqNfqzZRHK2ce4ekCqzZmq+IPRsNQ8u1o9OJMswS3nmE3jju
+ /ExdQLtQ63/TGLIwj2JkVAkM4xypOAEVapN3E5FIgZhz7dZmmjJmlHhsYVhyyYUYYjsh
+ mBu+FYeqL+GlNMkKxHz3FiHj/OxA01mInK5CazwkNwlETUVooXVMjpAgO4MVJifzfPln
+ BrMW0HEueEtQSO5DAVQPLznGdDlLMLwXydANcrNF7BP5wmwAZMFf5ODWvKGJRnFO6HSi qw== 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2020-01-29;
+ bh=FQAQqsQJdxcHZjmZgeAD9YBt2jhXCBpWhzXiiGMuSVQ=;
+ b=tf5TCrJKHOq9dYoaDU0qb5tEugFwQUz7Go9I68eowDLcp8GAnw8FuiGjV8RYnaVEgZd7
+ Eh3dF/GK7hNzmljFW6mIsz51pAnJag/sy5QtLIvAvn2WizEClvLxferyFwM2Xbe1/joI
+ lH8tlkOTISItxxfRNFmVXDsTvnjqbv3F40rerhk5xCAQdQhuGXnUG+NvgU0KuR7Sl4yn
+ OpFIzlOuRswMo2hfdXX7QD2mxTlOa3zEp4Xn7MUaIxw1wqGgCeoVlUDlukkdIp5hQQWL
+ 5v9z6parYPDORcjMctnA+3XhH6nbgwIjHdiSUrBuRyxUjdmJkqzthMHuHJYW1KsIbrZk Nw== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3a7wqubpf2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 06 Aug 2021 00:47:00 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 1760k7GZ154538;
+        Fri, 6 Aug 2021 00:46:59 GMT
+Received: from nam04-bn8-obe.outbound.protection.outlook.com (mail-bn8nam08lp2044.outbound.protection.outlook.com [104.47.74.44])
+        by aserp3020.oracle.com with ESMTP id 3a7r4apeyx-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 06 Aug 2021 00:46:59 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=MPqrYQDLZ/nzIhMUUUFLUjuUAok3hmvjPd5NpDkguxC2/sMR+JVFowe4rDAn2/dtDzvQtkUzWDltUYuSBErLRQgPLUP7OP4nYGgqYimFKSeqky61I+AwNSQOUgVvdWECMISnAqRaGX8BcZCT4vLJnT6soyXvEvnpv0P4RhQZ+UMtg4oaoqqJyE97XODda3aM5p0qLQT490R34jX4W/7IUGeXWUS2QTaYrpJ1ZlQJGfBfD+ZIoq31tsSIOgO13qjn4yP/scHqUvTyDLnD7sohJ1ZQADahtc/Yf8MIfQh0t0c0DI94UpQ9NhfI66eWMV0LHjMA2nboPb5hzRPyW0khWw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=FQAQqsQJdxcHZjmZgeAD9YBt2jhXCBpWhzXiiGMuSVQ=;
+ b=PdKiAUMPtNLdJZpcgOXCOa9oLpoTW4NLp7HizHeKf9clsamKEvlUAm1430kU3NbmfnZEH4B/E/Ci7RkQq/AqNxtE0xMJpazOcD4nBrAdKapmAKVzNgvcmflRbsuaSFXPCEM/TBc/jnQFDM8o+9EVD3NS0iovyxyhU6SeR7F6kD82vuCRAa/h37fh1M9frXh7JIVrqH0B01UNuHNTRBvLhMrdcGG0imi7loN96xehz/lmWk18Q14hPBHB4nKwlO+1mJ4Dt/vwFTr3Pss7GhdDbAvcXQunBb+szNbIEyY6McgM+1kxAtxB5dYRhUlcVdBSEDozM7o8fhIPrirQKqsafw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=FQAQqsQJdxcHZjmZgeAD9YBt2jhXCBpWhzXiiGMuSVQ=;
+ b=npCTpFX48NozK2Firx2C6Mpnj+yGIjCi1Qg0C0ufWsgAnukrtDHYDhKUw3WA8sh4FzOvey3/wULPyXhV4T7KH8osfjkYzjgWwe54xRZtO9WTZ2/eLrJL4r+MruCXyjObxYekmshcAFampfEATDCOfLajsTFm9aZwyZQ8antAxjM=
+Authentication-Results: redhat.com; dkim=none (message not signed)
+ header.d=none;redhat.com; dmarc=none action=none header.from=oracle.com;
+Received: from SJ0PR10MB4429.namprd10.prod.outlook.com (2603:10b6:a03:2d1::14)
+ by BYAPR10MB2758.namprd10.prod.outlook.com (2603:10b6:a02:ba::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4373.26; Fri, 6 Aug
+ 2021 00:46:57 +0000
+Received: from SJ0PR10MB4429.namprd10.prod.outlook.com
+ ([fe80::51f7:787e:80e5:6434]) by SJ0PR10MB4429.namprd10.prod.outlook.com
+ ([fe80::51f7:787e:80e5:6434%3]) with mapi id 15.20.4373.027; Fri, 6 Aug 2021
+ 00:46:57 +0000
+Subject: Re: [PATCH RESEND v6 9/9] fsdax: add exception for reflinked files
+To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        nvdimm@lists.linux.dev, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org, dm-devel@redhat.com
+Cc:     djwong@kernel.org, dan.j.williams@intel.com, david@fromorbit.com,
+        hch@lst.de, agk@redhat.com, snitzer@redhat.com
+References: <20210730100158.3117319-1-ruansy.fnst@fujitsu.com>
+ <20210730100158.3117319-10-ruansy.fnst@fujitsu.com>
+From:   Jane Chu <jane.chu@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <7e9589cc-92a6-ad57-edd9-fdcdc4e49150@oracle.com>
+Date:   Thu, 5 Aug 2021 17:46:52 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
+In-Reply-To: <20210730100158.3117319-10-ruansy.fnst@fujitsu.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: SN7PR04CA0075.namprd04.prod.outlook.com
+ (2603:10b6:806:121::20) To SJ0PR10MB4429.namprd10.prod.outlook.com
+ (2603:10b6:a03:2d1::14)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210805221502.GF2757197@dread.disaster.area>
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from [192.168.1.70] (108.226.113.12) by SN7PR04CA0075.namprd04.prod.outlook.com (2603:10b6:806:121::20) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4394.15 via Frontend Transport; Fri, 6 Aug 2021 00:46:55 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 7d7cf042-ede8-470b-d4c8-08d95873b1ae
+X-MS-TrafficTypeDiagnostic: BYAPR10MB2758:
+X-Microsoft-Antispam-PRVS: <BYAPR10MB2758DC99686C2B3E04B03033F3F39@BYAPR10MB2758.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:1247;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: rbC95OAcFTuydXBbVC5QIE9/7AUHhL6ZLjgfOBMT1y7KJr4DwPq3jW1PvYUo39A9iOrplV4MRiZxSyWjZDVyUqt/mTk7xBqtKDEZjni33jZwK6yyq3hQrcn0DfatDDatq+r5LeH3uf2+s0BJMixD/02c+ZQxqcQZk/vcpclUHBO3U9jdIxObblWLCmGXsKSxYcwlVjn7edUAKuGJultSEb53b/qjxxAQ8iD5U+1MqJYbovPcBzonHzP6hYSz15xDoo4pfg6JqOtzrthEQJiBboS0PcS/xcexLB4rhgumqFbbjEZptzqbfUmxlK1sM/09/KLx8FDJXmwfxVcfnQpwAxxSZXXKvHTbqdEpvRzopLtC6qPKylqYu5N//fBe5Hb61+KP5bRG6weps6cR5hUr95q53ubn6uTVaWrtShtcRd4XskeB/I2qdUddFhkgYRVcm2YAInv1UEnGb4W+yyb211WSxUX1XtW4NkjBZUYWGVZzZzkTxCkZAjD8O/N7OMDwwWFrs7JJoQDpYeYD76nQVKc832NO1qZ2OdmsdzGOPvJ+1d4ar+m4jjIxHAvdatnUcl5ek7lQQX75MjZU24nxQ5c6nwNrAOcpj4cQxkm3S0HySy/NnefwZQqLG+hmwctb3TM6nKaxdN+iZ8NhH+S8Og8CnE5bjaqroAzc84Vb4DDi7zUiotxjDLsY6Vit+MMHMr5SJB8LpQBoBcBS6nmxFBggKhUFXuFHUofUdTNENIQ=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ0PR10MB4429.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(136003)(39860400002)(366004)(396003)(346002)(376002)(66946007)(66476007)(66556008)(36916002)(186003)(956004)(5660300002)(2616005)(31686004)(36756003)(44832011)(8676002)(53546011)(26005)(8936002)(31696002)(6486002)(86362001)(2906002)(4326008)(7416002)(16576012)(316002)(478600001)(38100700002)(6666004)(83380400001)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?bGJUTHJBVGJyN2pCc1ZyWGR0SDZSRkcyYmN2VnRzMTc2NWxIc01TeExDY0Rq?=
+ =?utf-8?B?YTRxVE1WaDVXNDgvMW9OYXpFY2ZMckpjVTB0NXppNldWM2t0STlnQkVCU28z?=
+ =?utf-8?B?eVYvRERkbHFIc0VTK2V3TlNmWnVWajFldGJmWmpEVTBYaXIwRWVmdFNaZnVy?=
+ =?utf-8?B?T2ZGVHhnOFVac0taOHphZExsV3VYa1kwdWtldkhYVXc5T1BRZ0RXZVVTMFZH?=
+ =?utf-8?B?UzdjNGtVdGRLdEg3OGhoY1lwRFlqNndOTEdWZ2d5aUhjVysxK1FpUzE4L012?=
+ =?utf-8?B?WnEvMGFveUNHYjJMU2FxK3RkOW9lczd3MkRiSGJBR2hxdzRlSTZPdUJUMUwy?=
+ =?utf-8?B?czd1cDlrU2dwT1FvK0JvTUFzbXphdDI4bzRnTzZYTGl1RHdIVFVjS2dBdFo4?=
+ =?utf-8?B?eEN6aE9ncEFzaDIxeEVvWTJvSmpDakJVSktEdXpLT3ZDL1ZGanVmR3IwVTI5?=
+ =?utf-8?B?R2hDcGJSNjNWUHV4WjgxeGU2cUtkQUlOWjdTZGYwK2MrMWVWTlV5Z1pQMllE?=
+ =?utf-8?B?OVBsMCtJdk4yTTVSb2d2RjA1VWNVTlByRVhPVjdxSkM2M2pURzlZbnJWVlBq?=
+ =?utf-8?B?ZnFnUTlKWkYvUGpFNU1OejBTakE2dWFqSkx4Y1FsK1FvZmp6YjkrZXA2UkhD?=
+ =?utf-8?B?aThZd3dXbzF0cUxaSG1HcjVYbXVXRkNKY0VvVGdrdjEwMzdGdCtHZlpzcU5x?=
+ =?utf-8?B?OThtL0dtaUMrYkZkZjRGWDJJTjU3OWYyVnJPc1B1TzNKcXZVdmtRQkt3RkEy?=
+ =?utf-8?B?bExVWVpSRWZ3TWtzTlc1aG5uYWpsRGErUG9lMDdpcjZXdHBxMzE2eU9ERFZl?=
+ =?utf-8?B?bENUSDdhNVk3VlR2NEJMM3NNcHB0NmthTTFKK0JucjRtd1ptZWdzTzhIbzdz?=
+ =?utf-8?B?SlNwMmxMNVFlMU5EZW8ra3dlYldGY0lVeVdvbVQ1U28vaWR3YWlZb1VVVlJ1?=
+ =?utf-8?B?OHRQdllJczhTbC94eDVSd0tBNmpxQ0FwR2Nva0J5UFV4cENNT3E4ak0wTXZR?=
+ =?utf-8?B?dTcwUm85RDhIZ3JZakJuZ3E2RVA2c0FMUU4rdXZvbkRpZWR1a3FzN20rOFly?=
+ =?utf-8?B?Qlo5YWh6S0d6b2pLc0RlVUx6TldXRk1LVG9aMUhPNDlkZXFjRW8xcXhENkEy?=
+ =?utf-8?B?bklCcS8vcTZMb3R2S1JrR1NqdVJZbVVGbDB4Z0o5dWVLNFEzNmVmVy9VRWh3?=
+ =?utf-8?B?U3ZDY09qY2F3QjVOMDFxdTEvWHdWMFI1MitUTjBiQ0ZkelhxTmdFTTh0TXA2?=
+ =?utf-8?B?ZU0xNHU1ZE94WkhGcWIxSThWdFkvUmpjUUR4RG5IZWhzTjdVU0pLUFUrMnhE?=
+ =?utf-8?B?VW5BZjhDYmh2VUxVYzRsdjZBWGQ5NjVsMmUvRDBESVVDNTVFS1VTMkYwTzlJ?=
+ =?utf-8?B?ZzloYkZWNUpDWXlaV092ZmRUbW9WSDNlQTZUeVdJL2NLK1d2UmJBUWY3MXB6?=
+ =?utf-8?B?MjZJeUNUaTdvc1pRWXlMWGRuUlEwamt5L09SV01NZ2czam8relhZMTdDdGVN?=
+ =?utf-8?B?VlRhSm4yT0pBdEI1WlJDMEtPRGN0VlFSQkxYOFlxbnJTeGN0UHgwMGI0Qmxq?=
+ =?utf-8?B?S0MreWhXWVpaMFdpTVlvZlh0TS9BaWUyajMzR3ZOODhtRG5rT2dDMEFBRDRF?=
+ =?utf-8?B?Y0xoREU5M05kOFlyaFZqSDJCUFhnb0lPKzBZTUVVbzJvTkxzaTBVaVN4ZXE2?=
+ =?utf-8?B?bExzaU0vZ3NTYktCRXFIUHk0Mm5EZTdxNUZwVHhlSGI1NmtkOGxpNjh4a3Ja?=
+ =?utf-8?Q?EfBSiUEkTK4bN3dCr0u9E4I9zgUkLuI31FrgyZ5?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7d7cf042-ede8-470b-d4c8-08d95873b1ae
+X-MS-Exchange-CrossTenant-AuthSource: SJ0PR10MB4429.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Aug 2021 00:46:57.7503
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: GQEKJdzXiDabJXSF9j1zigYnyZ1ySqlWFuZbQdLyu2uSIwu7irI9Yq5M8Rmszi+tWODrmIYwm76QnuxPDa4XQA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR10MB2758
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=10067 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwarescore=0 adultscore=0
+ suspectscore=0 mlxlogscore=999 phishscore=0 spamscore=0 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2107140000
+ definitions=main-2108060002
+X-Proofpoint-GUID: AjUiWNE9JeFKRj0fEdGLPzokYNoWB0qO
+X-Proofpoint-ORIG-GUID: AjUiWNE9JeFKRj0fEdGLPzokYNoWB0qO
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Aug 06, 2021 at 08:15:02AM +1000, Dave Chinner wrote:
-> On Thu, Aug 05, 2021 at 12:00:32AM -0700, Darrick J. Wong wrote:
-> > On Thu, Aug 05, 2021 at 04:43:24PM +1000, Dave Chinner wrote:
-> > > On Wed, Aug 04, 2021 at 07:06:50PM -0700, Darrick J. Wong wrote:
-> > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > 
-> > > > Move inode inactivation to background work contexts so that it no
-> > > > longer runs in the context that releases the final reference to an
-> > > > inode. This will allow process work that ends up blocking on
-> > > > inactivation to continue doing work while the filesytem processes
-> > > > the inactivation in the background.
-> ....
-> > > > @@ -854,6 +884,17 @@ xfs_fs_freeze(
-> > > >  	 */
-> > > >  	flags = memalloc_nofs_save();
-> > > >  	xfs_blockgc_stop(mp);
-> > > > +
-> > > > +	/*
-> > > > +	 * Stop the inodegc background worker.  freeze_super already flushed
-> > > > +	 * all pending inodegc work when it sync'd the filesystem after setting
-> > > > +	 * SB_FREEZE_PAGEFAULTS, and it holds s_umount, so we know that inodes
-> > > > +	 * cannot enter xfs_fs_destroy_inode until the freeze is complete.
-> > > > +	 * If the filesystem is read-write, inactivated inodes will queue but
-> > > > +	 * the worker will not run until the filesystem thaws or unmounts.
-> > > > +	 */
-> > > > +	xfs_inodegc_stop(mp);
-> > > > +
-> > > >  	xfs_save_resvblks(mp);
-> > > >  	ret = xfs_log_quiesce(mp);
-> > > >  	memalloc_nofs_restore(flags);
-> > > 
-> > > I still think this freeze handling is problematic. While I can't easily trigger
-> > > the problem I saw, I still don't really see what makes the flush in
-> > > xfs_fs_sync_fs() prevent races with the final stage of freeze before
-> > > inactivation is stopped......
-> > > 
-> > > .... and ....
-> > > 
-> > > as I write this the xfs/517 loop goes boom on my pmem test setup (but no DAX):
-> > > 
-> > > SECTION       -- xfs
-> > > FSTYP         -- xfs (debug)
-> > > PLATFORM      -- Linux/x86_64 test3 5.14.0-rc4-dgc #506 SMP PREEMPT Thu Aug 5 15:49:49 AEST 2021
-> > > MKFS_OPTIONS  -- -f -m rmapbt=1 /dev/pmem1
-> > > MOUNT_OPTIONS -- -o dax=never -o context=system_u:object_r:root_t:s0 /dev/pmem1 /mnt/scratch
-> > > 
-> > > generic/390 3s ...  3s
-> > > xfs/517 43s ... 
-> > > Message from syslogd@test3 at Aug  5 15:56:24 ...
-> > > kernel:[  162.849634] XFS: Assertion failed: mp->m_super->s_writers.frozen < SB_FREEZE_FS, file: fs/xfs/xfs_icache.c, line: 1889
-> > > 
-> > > I suspect that we could actually target this better and close the
-> > > race by doing something like:
-> > > 
-> > > xfs_fs_sync_fs()
-> > > {
-> > > 	....
-> > > 
-> > > 	/*
-> > > 	 * If we are called with page faults frozen out, it means we are about
-> > > 	 * to freeze the transaction subsystem. Take the opportunity to shut
-> > > 	 * down inodegc because once SB_FREEZE_FS is set it's too late to
-> > > 	 * prevent inactivation races with freeze. The fs doesn't get called
-> > > 	 * again by the freezing process until after SB_FREEZE_FS has been set,
-> > > 	 * so it's now or never.
-> > > 	 *
-> > > 	 * We don't care if this is a normal syncfs call that does this or
-> > > 	 * freeze that does this - we can run this multiple times without issue
-> > > 	 * and we won't race with a restart because a restart can only occur when
-> > > 	 * the state is either SB_FREEZE_FS or SB_FREEZE_COMPLETE.
-> > > 	 */
-> > > 	if (sb->s_writers.frozen == SB_FREEZE_PAGEFAULT)
-> > > 		xfs_inodegc_stop(mp);
-> > 
-> > LOL, a previous version of this series actually did this part this way,
-> > but...
-> > 
-> > > }
-> > > 
-> > > xfs_fs_freeze()
-> > > {
-> > > .....
-> > > error:
-> > > 	/*
-> > > 	 * We need to restart the inodegc on error because we stopped it at
-> > > 	 * SB_FREEZE_PAGEFAULT level and a thaw is not going to be run to
-> > > 	 * restart it now. We are at SB_FREEZE_FS level here, so we can restart
-> > > 	 * safely without racing with a stop in xfs_fs_sync_fs().
-> > > 	 */
-> > > 	if (error)
-> > > 		xfs_inodegc_start(mp);
-> > 
-> > ...missed this part.  If this fixes x517 and doesn't break g390 for you,
-> > I'll meld it into the series.  I think the reasoning here makes sense.
-> 
-> Nope, both x517 and g390 still fire this assert, so there's
-> something else we're missing here.
-> 
-> I keep wondering if we should be wrapping the entire flush mechanism
-> in a rwsem - read for flush, write for start/stop - so that we
-> aren't ever still processing a stop while a concurrent start runs or
-> vice versa...
 
-Funny you should mention that, I /do/ have a patch in djwong-dev adding
-such a rwsem, though for different purposes (permitting scrub to lock
-out freeze requests from userspace).
+On 7/30/2021 3:01 AM, Shiyang Ruan wrote:
+> For reflinked files, one dax page may be associated more than once with
+> different fime mapping and index.  It will report warning.  Now, since             ^^^typo here?
 
---D
-
-> Cheers,
+> we have introduced dax-RMAP for this case and also have to keep its
+> functionality for other filesystems who are not support rmap, I add this
+> exception here.
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+> ---
+>   fs/dax.c | 14 ++++++++------
+>   1 file changed, 8 insertions(+), 6 deletions(-)
+> 
+> diff --git a/fs/dax.c b/fs/dax.c
+> index dce6307a12eb..f5910d178695 100644
+> --- a/fs/dax.c
+> +++ b/fs/dax.c
+> @@ -352,9 +352,10 @@ static void dax_associate_entry(void *entry, struct address_space *mapping,
+>   	for_each_mapped_pfn(entry, pfn) {
+>   		struct page *page = pfn_to_page(pfn);
+>   
+> -		WARN_ON_ONCE(page->mapping);
+> -		page->mapping = mapping;
+> -		page->index = index + i++;
+> +		if (!page->mapping) {
+> +			page->mapping = mapping;
+> +			page->index = index + i++;
+> +		}
+>   	}
+>   }
+>   
+> @@ -370,9 +371,10 @@ static void dax_disassociate_entry(void *entry, struct address_space *mapping,
+>   		struct page *page = pfn_to_page(pfn);
+>   
+>   		WARN_ON_ONCE(trunc && page_ref_count(page) > 1);
+> -		WARN_ON_ONCE(page->mapping && page->mapping != mapping);
+> -		page->mapping = NULL;
+> -		page->index = 0;
+> +		if (page->mapping == mapping) {
+> +			page->mapping = NULL;
+> +			page->index = 0;
+> +		}
+>   	}
+>   }
+>   
+> 
