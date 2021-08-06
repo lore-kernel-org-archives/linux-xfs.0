@@ -7,63 +7,63 @@ X-Spam-Status: No, score=-14.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93BA2C432BE
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Aug 2021 21:23:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC96BC43216
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Aug 2021 21:23:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7813860E78
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Aug 2021 21:23:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C72A160E78
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Aug 2021 21:23:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239864AbhHFVXy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 6 Aug 2021 17:23:54 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:34698 "EHLO
+        id S240001AbhHFVXz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 6 Aug 2021 17:23:55 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:51163 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S239884AbhHFVXu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Aug 2021 17:23:50 -0400
+        by vger.kernel.org with ESMTP id S239972AbhHFVXx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Aug 2021 17:23:53 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1628285012;
+        s=mimecast20190719; t=1628285016;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=ycdEAcjYD7TREmMlSkOnxVpezsUxM4WrBcwKIA80d2Y=;
-        b=FAmJh+4LWyR7yz9mwqjtfSQfM1pfNBSMc3CLVAUMfnjCU+6HG5UnQJyzPERxn9gDH0t5n3
-        SdILbwAz345QOKZjxgxDVntjBHDE9nrZ53RN77MgxssRlDfARruFKsenOExy18+dIILGyU
-        tB0CjpTOsojHwjVKQ/SfON2xpb7FBnY=
-Received: from mail-ej1-f72.google.com (mail-ej1-f72.google.com
- [209.85.218.72]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-319-5wTgvLEmOsOdbvae7MqVCg-1; Fri, 06 Aug 2021 17:23:31 -0400
-X-MC-Unique: 5wTgvLEmOsOdbvae7MqVCg-1
-Received: by mail-ej1-f72.google.com with SMTP id zp23-20020a17090684f7b02905a13980d522so3526765ejb.2
-        for <linux-xfs@vger.kernel.org>; Fri, 06 Aug 2021 14:23:31 -0700 (PDT)
+        bh=cqbp0ZIa5NXSHA2pzyu71VgWdqvhXbdjxzvZc2LLOyk=;
+        b=N68+i8pVLMzABlftW5bcsgnkXntAKp5eNJQ8iN+rF5Hxda5TJRtgbmAF9zd30DNPL7gZo7
+        +28cVetK93IYSr5OXdctqhnPyXR/mnWLyLD7sRbbaLq1CdY9EuRTpvtHf+Pk7p+KgyUc06
+        dcPNFb/a9IMqMEUIOmn1p28yoaA9i1c=
+Received: from mail-ej1-f71.google.com (mail-ej1-f71.google.com
+ [209.85.218.71]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-498-OtjGsE98PJGpaibU_Ndgmw-1; Fri, 06 Aug 2021 17:23:35 -0400
+X-MC-Unique: OtjGsE98PJGpaibU_Ndgmw-1
+Received: by mail-ej1-f71.google.com with SMTP id zp23-20020a17090684f7b02905a13980d522so3526796ejb.2
+        for <linux-xfs@vger.kernel.org>; Fri, 06 Aug 2021 14:23:35 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=ycdEAcjYD7TREmMlSkOnxVpezsUxM4WrBcwKIA80d2Y=;
-        b=DJ4WVm5SYMqqMKgCCjD5GPSrQMYglH8KMKRtNzhZyu0FmQnWYX5opBkPyMwNReQfGj
-         hh3QbQI2mE2dfkrCmkLJgztmYpU8m4GjQXWqE7aDUINHeUBi1HwSZoUnJVm9NEHUpI31
-         CUDytc4RlPKIiGT1ge5HunSzPgDggXH6PkLwBJolTkRCsE2qD1SLYfkPYkOVucQqcUSc
-         sU31m9FPKYHYlq3t2ARUbgoQtQjoQ8hpf2NlPxIpPomAkklhukzN1r0RM3TpwQjbdoq4
-         BwsmOJqDqjjE2KWgDiO4vD2z01imi64Ed7YwUis8vOm7S4RaBWRzgVv36lfTRBTrJsQy
-         uzvg==
-X-Gm-Message-State: AOAM531qo5x19Dv3qiqowhRxVPZbWOxv3HfYNPhJNxZdQlIzIvrsK8+n
-        ki72SFI9kEXxGU8KZUQx6UeTbRcqtNDP8I2aTLh3Yf1pLyEn32flI/5bRrl27JjtaZd5th7xHZa
-        X4zSi/qWhkgFgyycB1T5J/5mRyMP6+Rfj1iCNySEOQgkSUajZxE1tQHypQMx0TjVPkCBlMvQ=
-X-Received: by 2002:a17:906:3b97:: with SMTP id u23mr11794534ejf.437.1628285010363;
-        Fri, 06 Aug 2021 14:23:30 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwYNTC9iFI9WbND7qlQRpzqAiJ+MLhdpDERXNEv2frnhjaC8bQ84HrtSeJWeJZyGhbsu4rjmw==
-X-Received: by 2002:a17:906:3b97:: with SMTP id u23mr11794527ejf.437.1628285010153;
-        Fri, 06 Aug 2021 14:23:30 -0700 (PDT)
+        bh=cqbp0ZIa5NXSHA2pzyu71VgWdqvhXbdjxzvZc2LLOyk=;
+        b=FrTR1UG782BomCAIYDbp+LFkxoGPz/MFYmyeRi0fbMaQ6krS0quryzYfIc7VkLiCP1
+         U0OSFd2Da5XIZcoR049GqIPe9vU7qqzTzgoOJ9XfaXT1478UD6QT/Tg3/acwG0f0Z48r
+         GO1ZCAPuYKEcn8oDES0MFAq2tutq6sPDc+WqNAyr7DqFtefUuVVVCSytDHGocVtosuT5
+         a33hIfArn0oooRt54UbU/E/qDHk9Vacce6VeyWhA9VydL8fOnT/XPIHsePMSKwGOIhrm
+         fL4IZ8CgKu5k/ctf4YcUsuV7PvO8YsaiiGdiIKq3BpVkGOhRWL7q3nZJ3yafR8CsWn4Z
+         EBGQ==
+X-Gm-Message-State: AOAM533dtU05KODOweVVqErazsHLZ7L4ww4eLJ+wOIKmLT5lBznnbvf5
+        DDz2D6ChbhxMQrtRFaLQTkkzKgWOIPvnDBpDianRFLmoC7bmyOGVVYmCIGCbzNp2ohisyBJ05Ig
+        2Oui3rA/UFOUyOcis4l4iwt7nQWQwtX88YPxSVxnHGnXkh0Ql28aNZ4ImsPLpFXuFlQdh2qA=
+X-Received: by 2002:a05:6402:220d:: with SMTP id cq13mr15759245edb.318.1628285014238;
+        Fri, 06 Aug 2021 14:23:34 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzGdyG3pvp+L1ylwrD/CugutFA5JsO/P46YEOsty8UGWqZE1yZwEKEfdj7ztL+NoQu3YTVFng==
+X-Received: by 2002:a05:6402:220d:: with SMTP id cq13mr15759240edb.318.1628285014101;
+        Fri, 06 Aug 2021 14:23:34 -0700 (PDT)
 Received: from localhost.localdomain ([84.19.91.9])
-        by smtp.gmail.com with ESMTPSA id og35sm3256741ejc.28.2021.08.06.14.23.29
+        by smtp.gmail.com with ESMTPSA id og35sm3256741ejc.28.2021.08.06.14.23.32
         for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 06 Aug 2021 14:23:29 -0700 (PDT)
+        Fri, 06 Aug 2021 14:23:33 -0700 (PDT)
 From:   Pavel Reichl <preichl@redhat.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v2 07/29] xfsprogs: Stop using platform_uuid_generate()
-Date:   Fri,  6 Aug 2021 23:22:56 +0200
-Message-Id: <20210806212318.440144-8-preichl@redhat.com>
+Subject: [PATCH v2 10/29] xfsprogs: Stop using platform_uuid_parse()
+Date:   Fri,  6 Aug 2021 23:22:59 +0200
+Message-Id: <20210806212318.440144-11-preichl@redhat.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210806212318.440144-1-preichl@redhat.com>
 References: <20210806212318.440144-1-preichl@redhat.com>
@@ -74,50 +74,36 @@ List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 ---
- copy/xfs_copy.c | 2 +-
  db/sb.c         | 2 +-
  mkfs/xfs_mkfs.c | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
-index 1f57399a..5f8b5c57 100644
---- a/copy/xfs_copy.c
-+++ b/copy/xfs_copy.c
-@@ -946,7 +946,7 @@ main(int argc, char **argv)
- 
- 	for (i = 0, tcarg = targ; i < num_targets; i++, tcarg++)  {
- 		if (!duplicate)
--			platform_uuid_generate(&tcarg->uuid);
-+			uuid_generate(tcarg->uuid);
- 		else
- 			uuid_copy(tcarg->uuid, mp->m_sb.sb_uuid);
- 
 diff --git a/db/sb.c b/db/sb.c
-index 7017e1e5..b668fc68 100644
+index 36c7db39..63f43ea4 100644
 --- a/db/sb.c
 +++ b/db/sb.c
-@@ -386,7 +386,7 @@ uuid_f(
- 		}
+@@ -410,7 +410,7 @@ uuid_f(
  
- 		if (!strcasecmp(argv[1], "generate")) {
--			platform_uuid_generate(&uu);
-+			uuid_generate(uu);
- 		} else if (!strcasecmp(argv[1], "nil")) {
- 			platform_uuid_clear(&uu);
- 		} else if (!strcasecmp(argv[1], "rewrite")) {
+ 			memcpy(&uu, mp->m_sb.sb_meta_uuid, sizeof(uuid_t));
+ 		} else {
+-			if (platform_uuid_parse(argv[1], &uu)) {
++			if (uuid_parse(argv[1], uu)) {
+ 				dbprintf(_("invalid UUID\n"));
+ 				return 0;
+ 			}
 diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index c4e3e054..dd7849fd 100644
+index dd7849fd..2771a641 100644
 --- a/mkfs/xfs_mkfs.c
 +++ b/mkfs/xfs_mkfs.c
-@@ -3859,7 +3859,7 @@ main(
- 	struct list_head	buffer_list;
- 	int			error;
- 
--	platform_uuid_generate(&cli.uuid);
-+	uuid_generate(cli.uuid);
- 	progname = basename(argv[0]);
- 	setlocale(LC_ALL, "");
- 	bindtextdomain(PACKAGE, LOCALEDIR);
+@@ -1656,7 +1656,7 @@ meta_opts_parser(
+ 	case M_UUID:
+ 		if (!value || *value == '\0')
+ 			reqval('m', opts->subopts, subopt);
+-		if (platform_uuid_parse(value, &cli->uuid))
++		if (uuid_parse(value, cli->uuid))
+ 			illegal(value, "m uuid");
+ 		break;
+ 	case M_RMAPBT:
 -- 
 2.31.1
 
