@@ -7,63 +7,63 @@ X-Spam-Status: No, score=-14.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D757C4320A
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Aug 2021 21:23:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58671C4338F
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Aug 2021 21:23:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 35CCB60E78
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Aug 2021 21:23:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 407CA60EE8
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Aug 2021 21:23:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240131AbhHFVX5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 6 Aug 2021 17:23:57 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:59092 "EHLO
+        id S240154AbhHFVX6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 6 Aug 2021 17:23:58 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:28603 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S239884AbhHFVX5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Aug 2021 17:23:57 -0400
+        by vger.kernel.org with ESMTP id S239884AbhHFVX6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Aug 2021 17:23:58 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1628285020;
+        s=mimecast20190719; t=1628285021;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=gdZXVpj+kCd9MQa16294BDxZ0QeZQFpgACiyZUzRuNE=;
-        b=asxe9HeNHY1de9APDbVs+4yrHH+RyG7TzOPL7w9/AIV74sAd6xI66rY78r4Qx+80+1pRaJ
-        9WsQNOkWTIMbjKVup72pCcPhCLr/w9zvvY8cHUFl0Q9SOTuj/AANAGIeJSIB9XWf/Bd8eZ
-        JQN0Ymlg6PTXsrCt+0irV3iIsRYQlbo=
-Received: from mail-ej1-f69.google.com (mail-ej1-f69.google.com
- [209.85.218.69]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-315-q_VYor1yMQWCwwQA0UWF0A-1; Fri, 06 Aug 2021 17:23:39 -0400
-X-MC-Unique: q_VYor1yMQWCwwQA0UWF0A-1
-Received: by mail-ej1-f69.google.com with SMTP id a19-20020a1709063e93b0290551ea218ea2so93234ejj.5
-        for <linux-xfs@vger.kernel.org>; Fri, 06 Aug 2021 14:23:39 -0700 (PDT)
+        bh=UOjw3119lCzSE/An947N4FLDVj64tH3egfYV/12xPkk=;
+        b=GupBUoJ+CTLnA8c5S4GavQjIk3bM0Yh3ItYGayYjLtRpIXP8nNm6YGBYg7bs+cQ0e2xvOt
+        NvOBjkKfHSoOLfi3ZYkJBVCe8aT+r8L5LjUbyJGojY7LGbNK4ANED5qnYkAutHzX2Q7Not
+        /+L9XQHHiW4c5VM/KRkKy84IDekb/S8=
+Received: from mail-ed1-f71.google.com (mail-ed1-f71.google.com
+ [209.85.208.71]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-386-gRKh2XHiO-KpUI4sd7KmMg-1; Fri, 06 Aug 2021 17:23:40 -0400
+X-MC-Unique: gRKh2XHiO-KpUI4sd7KmMg-1
+Received: by mail-ed1-f71.google.com with SMTP id k14-20020a05640212ceb02903bc50d32c17so5623475edx.12
+        for <linux-xfs@vger.kernel.org>; Fri, 06 Aug 2021 14:23:40 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=gdZXVpj+kCd9MQa16294BDxZ0QeZQFpgACiyZUzRuNE=;
-        b=kMFRhzMjwAuRQtbXfhzpdkLAVv7yGRcGa+OhIfjYRT3br+kCTeomH6W8Bfn7XMuCwk
-         13wLgilLP5nk+g32E4e05T4vfDUl914+MK1IPAot34jWw5YvRl1dE+DdJLkTfIlE/AvA
-         BHbmPSDL+2RrKQfspC8KY6mQEMkaz334823QWFFy0xyGnxSRLTLMXduFpMqZysFaPOoy
-         NEpZr7pWOViq9i07AE6A9ZQt7kXk0ucNcQu3znAa4Ww82/dnAMMZFnc7fWfRixI7e3Zg
-         weLW134wJeiyS2bAHZ8JXkzv6sNq5SAMk3zSThH8jhw9W+7Nf5G/l2tTfVlczBVTQlrF
-         Gi8w==
-X-Gm-Message-State: AOAM531WV5TbsCwWpykPGN25V3f8clUtZlAvjMWZjxktymf1uPQPyXN6
-        Ps5SoSJFgp6Q9FwaMZ73o7BY8ujFtdIua4HKb5vc2oo4357YQZeXOkm9N45s0hSXQI/ujyfnZyk
-        sK2JYsNDLHAmu3gS8vrhZ+Td1rzEsqwOTSBda30b88Wg76BZ5pHP+6dOhaME8Cf/S872cg9A=
-X-Received: by 2002:a05:6402:3507:: with SMTP id b7mr15722036edd.293.1628285017898;
-        Fri, 06 Aug 2021 14:23:37 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJx436InHQF+rhR6tgd08gi0mDSLJmwGXvp7Q+XIw/8hW1HptFFHqbjX97CjVoqSgQqZ3LmB7w==
-X-Received: by 2002:a05:6402:3507:: with SMTP id b7mr15722019edd.293.1628285017736;
-        Fri, 06 Aug 2021 14:23:37 -0700 (PDT)
+        bh=UOjw3119lCzSE/An947N4FLDVj64tH3egfYV/12xPkk=;
+        b=tZpMHIZr98/eZZAR8T55JjHfV+1T/pOM+KQEyzImBQr/sINtCmKscin2rZOBQuvyfY
+         505HFf5lX9JwROpVHQcHtXa/GVBmx9IEjBHwnrZvPGTpq5Kw012fKLG+JVM8+J4cMXDP
+         V0lwVkVOiOZ2YOAckD9U6/TGYwWAwBiRrbzDoO6uu5jJgBPUlP8s1P2hPGE8iXQu0vHM
+         TlBfyLjndSylctw8rCosd3poPBYfsiEUfVftczwEFEMfQZhyvSj1DDbl/nRvmxc3PzWX
+         q/HwMFVoAH9/Ar26G3ErnqIC7IbLu6PPqm35eGcn57u5Q/2GRsNGQl541n9bG01P1uMe
+         yNbQ==
+X-Gm-Message-State: AOAM533e5/HbB2bS3svKhtg423hpsTT44DSpS4Q7ZUwo0RIcFtfOuWl7
+        njYI7N3QeMQzUAnyCIV7HOwOJ2FO1Dku3sEQWGh/Ojr2SW2RlEuAJxKalqxd9RsU8kdN4hq9FZM
+        5j4q998W0jm10evbjzp7z9zxu+GfqeJ1Si0joj2gXldEqs0u9ZCeAvzQhVHHMnOtti9zPWlo=
+X-Received: by 2002:a17:906:b0c8:: with SMTP id bk8mr11671424ejb.412.1628285019225;
+        Fri, 06 Aug 2021 14:23:39 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJyFeGO876Zrya1qcNK9d6WWevDoIkwDVKk7dsDrRZZshgCbTTMcCmlUy3oRb2S2yzhPYX/Elg==
+X-Received: by 2002:a17:906:b0c8:: with SMTP id bk8mr11671414ejb.412.1628285019069;
+        Fri, 06 Aug 2021 14:23:39 -0700 (PDT)
 Received: from localhost.localdomain ([84.19.91.9])
-        by smtp.gmail.com with ESMTPSA id og35sm3256741ejc.28.2021.08.06.14.23.36
+        by smtp.gmail.com with ESMTPSA id og35sm3256741ejc.28.2021.08.06.14.23.37
         for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 06 Aug 2021 14:23:37 -0700 (PDT)
+        Fri, 06 Aug 2021 14:23:38 -0700 (PDT)
 From:   Pavel Reichl <preichl@redhat.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v2 13/29] xfsprogs: Stop using platform_check_ismounted()
-Date:   Fri,  6 Aug 2021 23:23:02 +0200
-Message-Id: <20210806212318.440144-14-preichl@redhat.com>
+Subject: [PATCH v2 14/29] xfsprogs: Stop using platform_flush_device()
+Date:   Fri,  6 Aug 2021 23:23:03 +0200
+Message-Id: <20210806212318.440144-15-preichl@redhat.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210806212318.440144-1-preichl@redhat.com>
 References: <20210806212318.440144-1-preichl@redhat.com>
@@ -74,126 +74,92 @@ List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 ---
- copy/xfs_copy.c           | 6 +++---
- libfrog/linux.c           | 8 +++++++-
- libfrog/platform.h        | 1 +
- libxfs/init.c             | 4 ++--
- mdrestore/xfs_mdrestore.c | 4 ++--
- 5 files changed, 15 insertions(+), 8 deletions(-)
+ copy/xfs_copy.c    |  2 +-
+ libfrog/linux.c    | 10 +++++++++-
+ libfrog/platform.h |  1 +
+ libxfs/init.c      |  2 +-
+ libxfs/rdwr.c      |  2 +-
+ 5 files changed, 13 insertions(+), 4 deletions(-)
 
 diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
-index 5f8b5c57..f864bc31 100644
+index f864bc31..4b22e290 100644
 --- a/copy/xfs_copy.c
 +++ b/copy/xfs_copy.c
-@@ -17,7 +17,7 @@
- #define	rounddown(x, y)	(((x)/(y))*(y))
- #define uuid_equal(s,d) (uuid_compare((*s),(*d)) == 0)
+@@ -140,7 +140,7 @@ check_errors(void)
  
--extern int	platform_check_ismounted(char *, char *, struct stat *, int);
-+extern int	check_ismounted(char *, char *, struct stat *, int);
- 
- static char 		*logfile_name;
- static FILE		*logerr;
-@@ -698,7 +698,7 @@ main(int argc, char **argv)
- 		 * check to make sure a filesystem isn't mounted
- 		 * on the device
- 		 */
--		if (platform_check_ismounted(source_name, NULL, &statbuf, 0))  {
-+		if (check_ismounted(source_name, NULL, &statbuf, 0))  {
- 			do_log(
- 	_("%s:  Warning -- a filesystem is mounted on the source device.\n"),
- 				progname);
-@@ -842,7 +842,7 @@ main(int argc, char **argv)
- 			 * check to make sure a filesystem isn't mounted
- 			 * on the device
- 			 */
--			if (platform_check_ismounted(target[i].name,
-+			if (check_ismounted(target[i].name,
- 							NULL, &statbuf, 0))  {
- 				do_log(_("%s:  a filesystem is mounted "
- 					"on target device \"%s\".\n"
+ 	for (i = 0; i < num_targets; i++)  {
+ 		if (target[i].state != INACTIVE) {
+-			if (platform_flush_device(target[i].fd, 0)) {
++			if (flush_device(target[i].fd, 0)) {
+ 				target[i].error = errno;
+ 				target[i].state = INACTIVE;
+ 				target[i].err_type = 2;
 diff --git a/libfrog/linux.c b/libfrog/linux.c
-index f7fac2c8..6a933b85 100644
+index 6a933b85..3e4f2291 100644
 --- a/libfrog/linux.c
 +++ b/libfrog/linux.c
-@@ -114,7 +114,7 @@ platform_check_mount(char *name, char *block, struct stat *s, int flags)
- }
- 
+@@ -159,7 +159,7 @@ platform_set_blocksize(int fd, char *path, dev_t device, int blocksize, int fata
+  * success or -1 (with errno set) for failure.
+  */
  int
--platform_check_ismounted(char *name, char *block, struct stat *s, int verbose)
-+check_ismounted(char *name, char *block, struct stat *s, int verbose)
+-platform_flush_device(
++flush_device(
+ 	int		fd,
+ 	dev_t		device)
  {
- 	int flags;
- 
-@@ -122,6 +122,12 @@ platform_check_ismounted(char *name, char *block, struct stat *s, int verbose)
- 	return check_mount(name, block, s, flags);
+@@ -183,6 +183,14 @@ platform_flush_device(
+ 	return 0;
  }
  
 +int
-+platform_check_ismounted(char *name, char *block, struct stat *s, int verbose)
++platform_flush_device(
++	int		fd,
++	dev_t		device)
 +{
-+	return check_ismounted(name, block, s, verbose);
++	return flush_device(fd, device);
 +}
 +
- int
- platform_check_iswritable(char *name, char *block, struct stat *s)
+ void
+ platform_findsizes(char *path, int fd, long long *sz, int *bsz)
  {
 diff --git a/libfrog/platform.h b/libfrog/platform.h
-index 0aef318a..8a38aa45 100644
+index 8a38aa45..1705c1c9 100644
 --- a/libfrog/platform.h
 +++ b/libfrog/platform.h
-@@ -9,6 +9,7 @@
- 
- int platform_check_ismounted(char *path, char *block, struct stat *sptr,
- 		int verbose);
-+int check_ismounted(char *path, char *block, struct stat *sptr, int verbose);
- int platform_check_iswritable(char *path, char *block, struct stat *sptr);
+@@ -14,6 +14,7 @@ int platform_check_iswritable(char *path, char *block, struct stat *sptr);
  int platform_set_blocksize(int fd, char *path, dev_t device, int bsz,
  		int fatal);
+ int platform_flush_device(int fd, dev_t device);
++int flush_device(int fd, dev_t device);
+ char *platform_findrawpath(char *path);
+ char *platform_findblockpath(char *path);
+ int platform_direct_blockdev(void);
 diff --git a/libxfs/init.c b/libxfs/init.c
-index 1ec83791..0d833ab6 100644
+index 0d833ab6..784f15e2 100644
 --- a/libxfs/init.c
 +++ b/libxfs/init.c
-@@ -59,7 +59,7 @@ check_isactive(char *name, char *block, int fatal)
- 		return 0;
- 	if ((st.st_mode & S_IFMT) != S_IFBLK)
- 		return 0;
--	if (platform_check_ismounted(name, block, &st, 0) == 0)
-+	if (check_ismounted(name, block, &st, 0) == 0)
- 		return 0;
- 	if (platform_check_iswritable(name, block, &st))
- 		return fatal ? 1 : 0;
-@@ -212,7 +212,7 @@ check_open(char *path, int flags, char **rawfile, char **blockfile)
- 			progname, path);
- 		return 0;
- 	}
--	if (!readonly && !inactive && platform_check_ismounted(path, *blockfile, NULL, 1))
-+	if (!readonly && !inactive && check_ismounted(path, *blockfile, NULL, 1))
+@@ -171,7 +171,7 @@ libxfs_device_close(dev_t dev)
+ 			fd = dev_map[d].fd;
+ 			dev_map[d].dev = dev_map[d].fd = 0;
+ 
+-			ret = platform_flush_device(fd, dev);
++			ret = flush_device(fd, dev);
+ 			if (ret) {
+ 				ret = -errno;
+ 				fprintf(stderr,
+diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+index fd456d6b..022da518 100644
+--- a/libxfs/rdwr.c
++++ b/libxfs/rdwr.c
+@@ -1143,7 +1143,7 @@ libxfs_blkdev_issue_flush(
  		return 0;
  
- 	if (inactive && check_isactive(path, *blockfile, ((readonly|dangerously)?1:0)))
-diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
-index 1cd399db..4a894f3b 100644
---- a/mdrestore/xfs_mdrestore.c
-+++ b/mdrestore/xfs_mdrestore.c
-@@ -182,7 +182,7 @@ usage(void)
- 	exit(1);
+ 	fd = libxfs_device_to_fd(btp->bt_bdev);
+-	ret = platform_flush_device(fd, btp->bt_bdev);
++	ret = flush_device(fd, btp->bt_bdev);
+ 	return ret ? -errno : 0;
  }
  
--extern int	platform_check_ismounted(char *, char *, struct stat *, int);
-+extern int	check_ismounted(char *, char *, struct stat *, int);
- 
- int
- main(
-@@ -275,7 +275,7 @@ main(
- 		/*
- 		 * check to make sure a filesystem isn't mounted on the device
- 		 */
--		if (platform_check_ismounted(argv[optind], NULL, &statbuf, 0))
-+		if (check_ismounted(argv[optind], NULL, &statbuf, 0))
- 			fatal("a filesystem is mounted on target device \"%s\","
- 				" cannot restore to a mounted filesystem.\n",
- 				argv[optind]);
 -- 
 2.31.1
 
