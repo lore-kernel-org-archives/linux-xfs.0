@@ -2,131 +2,118 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C0CAC4338F
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Aug 2021 21:24:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6F62C4338F
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Aug 2021 23:05:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7772860E78
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Aug 2021 21:24:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7E89B60EE9
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Aug 2021 23:05:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240509AbhHFVYV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 6 Aug 2021 17:24:21 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:43239 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S240338AbhHFVYV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Aug 2021 17:24:21 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1628285044;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=1w+P82Tvwhwr5BqTiweZKyZhEfP6JktMBQ5MU886dMM=;
-        b=EBYL7GrA4IX2OKLQv2Cmn/h9gUsMiCZ3DsXuQCtwrc6gDRs9EMsJR1ia4DcIbLpolu+Re1
-        Pxj2xGjoxD8ZbPlpjtfW0HGyzLlgjdBPvOP2NUj98VNBVUXn+R9pimS14JxZLZ79iZEn5M
-        Baj8DPzyr+1/Bx0wavkQCiVqCm5/Pyw=
-Received: from mail-ed1-f70.google.com (mail-ed1-f70.google.com
- [209.85.208.70]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-117-aKGhxRrCOlelScQCfPtmqA-1; Fri, 06 Aug 2021 17:24:03 -0400
-X-MC-Unique: aKGhxRrCOlelScQCfPtmqA-1
-Received: by mail-ed1-f70.google.com with SMTP id a23-20020a50ff170000b02903b85a16b672so5601947edu.1
-        for <linux-xfs@vger.kernel.org>; Fri, 06 Aug 2021 14:24:03 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=1w+P82Tvwhwr5BqTiweZKyZhEfP6JktMBQ5MU886dMM=;
-        b=SH3IU0sm3WyJ1GtWSg7fd5QkRIlND5+ww+92FEg0h3K4+5U8w6/HtbFW0ZizjnaZHa
-         +R5umKWx+B9jbd053Z12205NHumvHjwc8YJc1g9wiPUO9QyyCFRiBW5etKWe3VJHckoc
-         3nnCS0P9JPrHOQtWJvMOptVs+6/V9ChI7pekYqq+twwWuLDum98I8kipcCDkDLh5rk6y
-         FA/KbLCcmBFXvK1h4jZk2oFeLVzRLvxyo0CmRGuc9Dl6xkqI3J2/8Au4AxIIVj94if/y
-         NJ1mVl1XGCAlg5tGfNQzBZECVqfdfBFyKVq+i7fhYdfsT55rPKib7V0jX6B88TRWnPUv
-         k36Q==
-X-Gm-Message-State: AOAM530oKbXxD/yHCAfLWKQUQtgTBjw+U4lNvzI6sdu25HYMgWKYeHpc
-        tWNamIRM/lDTWvQPX+INpPCUVznv43QX2luKcg5cxKuwol3rbBheKLiFjSuPVdPi+7gB5XM0SB/
-        PQK0b23G+OMI4FAAADGBb0w+UuoXZ6NunGbslMOf2itFUtUZ8htNlZGG2nf1JrF1IDo9QKeA=
-X-Received: by 2002:aa7:c40b:: with SMTP id j11mr6480865edq.253.1628285042374;
-        Fri, 06 Aug 2021 14:24:02 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJynv8xJD6ckiQv3zGjeFJIfstSsDqihXf4/Ifg2K2WkniEekOuk5m68ZTVu1zdGqF8zHk3cUg==
-X-Received: by 2002:aa7:c40b:: with SMTP id j11mr6480855edq.253.1628285042187;
-        Fri, 06 Aug 2021 14:24:02 -0700 (PDT)
-Received: from localhost.localdomain ([84.19.91.9])
-        by smtp.gmail.com with ESMTPSA id og35sm3256741ejc.28.2021.08.06.14.24.00
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 06 Aug 2021 14:24:01 -0700 (PDT)
-From:   Pavel Reichl <preichl@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v2 29/29] xfsprogs: Stop using platform_physmem()
-Date:   Fri,  6 Aug 2021 23:23:18 +0200
-Message-Id: <20210806212318.440144-30-preichl@redhat.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20210806212318.440144-1-preichl@redhat.com>
+        id S237450AbhHFXFV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 6 Aug 2021 19:05:21 -0400
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:53691 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230280AbhHFXFV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Aug 2021 19:05:21 -0400
+Received: from dread.disaster.area (pa49-195-182-146.pa.nsw.optusnet.com.au [49.195.182.146])
+        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 7F04380BD69;
+        Sat,  7 Aug 2021 09:05:02 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1mC8th-00FLLP-G1; Sat, 07 Aug 2021 09:05:01 +1000
+Date:   Sat, 7 Aug 2021 09:05:01 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Pavel Reichl <preichl@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2 00/29] xfsprogs: Drop the 'platform_' prefix
+Message-ID: <20210806230501.GG2757197@dread.disaster.area>
 References: <20210806212318.440144-1-preichl@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210806212318.440144-1-preichl@redhat.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
+        a=QpfB3wCSrn/dqEBSktpwZQ==:117 a=QpfB3wCSrn/dqEBSktpwZQ==:17
+        a=kj9zAlcOel0A:10 a=MhDmnRu9jo8A:10 a=7-415B0cAAAA:8
+        a=oTah5r6sZWEs-UvQSI4A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
----
- libfrog/linux.c     | 8 +++++++-
- libfrog/platform.h  | 1 +
- repair/xfs_repair.c | 2 +-
- 3 files changed, 9 insertions(+), 2 deletions(-)
+On Fri, Aug 06, 2021 at 11:22:49PM +0200, Pavel Reichl wrote:
+> Stop using commands with 'platform_' prefix. Either use directly linux
+> standard command or drop the prefix from the function name.
 
-diff --git a/libfrog/linux.c b/libfrog/linux.c
-index 43ca1e7d..9b99d1a7 100644
---- a/libfrog/linux.c
-+++ b/libfrog/linux.c
-@@ -338,7 +338,7 @@ platform_nproc(void)
- }
- 
- unsigned long
--platform_physmem(void)
-+physmem(void)
- {
- 	struct sysinfo  si;
- 
-@@ -349,3 +349,9 @@ platform_physmem(void)
- 	}
- 	return (si.totalram >> 10) * si.mem_unit;	/* kilobytes */
- }
-+
-+unsigned long
-+platform_physmem(void)
-+{
-+	return physmem();
-+}
-diff --git a/libfrog/platform.h b/libfrog/platform.h
-index 42b0d753..b034d652 100644
---- a/libfrog/platform.h
-+++ b/libfrog/platform.h
-@@ -26,6 +26,7 @@ int direct_blockdev(void);
- int platform_align_blockdev(void);
- int align_blockdev(void);
- unsigned long platform_physmem(void);	/* in kilobytes */
-+unsigned long physmem(void);	/* in kilobytes */
- void platform_findsizes(char *path, int fd, long long *sz, int *bsz);
- void findsizes(char *path, int fd, long long *sz, int *bsz);
- int platform_nproc(void);
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index fbbc8c6f..b8d56d9d 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -1081,7 +1081,7 @@ main(int argc, char **argv)
- 					(mp->m_sb.sb_dblocks >> (10 + 1)) +
- 					50000;	/* rough estimate of 50MB overhead */
- 		max_mem = max_mem_specified ? max_mem_specified * 1024 :
--					      platform_physmem() * 3 / 4;
-+					      physmem() * 3 / 4;
- 
- 		if (getrlimit(RLIMIT_AS, &rlim) != -1 &&
- 					rlim.rlim_cur != RLIM_INFINITY) {
+Looks like all of the patches in this series are missing
+signed-off-by lines.  Most of them have empty commit messages, too,
+which we don't tend to do very often.
+
+>  51 files changed, 284 insertions(+), 151 deletions(-)
+
+IMO, 29 patches for such a small change is way too fine grained for
+working through efficiently.  Empty commit messages tend to be a
+sign that you can aggregate patches together.... i.e.  One patch for
+all the uuid changes (currently 7 patches) with a description of why
+you're changing the platform_uuid interface, one for all the mount
+related stuff (at least 5 patches now), one for all the block device
+stuff (8 or so patches), one for all the path bits, and then one for
+whatever is left over.
+
+Every patch has overhead, be it to produce, maintain, review, test,
+merge, etc. Breaking stuff down unnecessarily just increases the
+amount of work everyone has to do at every step. So if you find that
+you are writing dozens of patches that each have a trivial change in
+them that you are boiler-plating commit messages, you've probably
+made the overall changeset too fine grained.
+
+Also....
+
+>  libxfs/init.c               | 32 ++++++------
+>  libxfs/libxfs_io.h          |  2 +-
+>  libxfs/libxfs_priv.h        |  3 +-
+>  libxfs/rdwr.c               |  4 +-
+>  libxfs/xfs_ag.c             |  6 +--
+>  libxfs/xfs_attr_leaf.c      |  2 +-
+>  libxfs/xfs_attr_remote.c    |  2 +-
+>  libxfs/xfs_btree.c          |  4 +-
+>  libxfs/xfs_da_btree.c       |  2 +-
+>  libxfs/xfs_dir2_block.c     |  2 +-
+>  libxfs/xfs_dir2_data.c      |  2 +-
+>  libxfs/xfs_dir2_leaf.c      |  2 +-
+>  libxfs/xfs_dir2_node.c      |  2 +-
+>  libxfs/xfs_dquot_buf.c      |  2 +-
+>  libxfs/xfs_ialloc.c         |  4 +-
+>  libxfs/xfs_inode_buf.c      |  2 +-
+>  libxfs/xfs_sb.c             |  6 +--
+>  libxfs/xfs_symlink_remote.c |  2 +-
+
+Why are all these libxfs files being changed?
+
+$ git grep -l platform libxfs/
+libxfs/init.c
+libxfs/libxfs_io.h
+libxfs/libxfs_priv.h
+libxfs/rdwr.c
+libxfs/xfs_log_format.h
+$
+
+IOWs, there are calls to platform_*() functions in most of these
+libxfs files, so what is being changed here? If these are code
+changes, then they will end up needed to be ported across to the
+kernel libxfs, too.
+
+I did a quick scan of a few of the patches but I didn't land on the
+one that had these changes in it; another reason for not doing stuff
+in such fine grained ways. Hence it's not clear to me why renaming
+platform_*() functions would touch these files.
+
+Cheers,
+
+Dave.
 -- 
-2.31.1
-
+Dave Chinner
+david@fromorbit.com
