@@ -7,63 +7,63 @@ X-Spam-Status: No, score=-14.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46234C432BE
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA722C4338F
 	for <linux-xfs@archiver.kernel.org>; Fri,  6 Aug 2021 21:23:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 22F4C61184
+	by mail.kernel.org (Postfix) with ESMTP id C603060E78
 	for <linux-xfs@archiver.kernel.org>; Fri,  6 Aug 2021 21:23:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240279AbhHFVYI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 6 Aug 2021 17:24:08 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:46710 "EHLO
+        id S239884AbhHFVYJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 6 Aug 2021 17:24:09 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:51764 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S240308AbhHFVYH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Aug 2021 17:24:07 -0400
+        by vger.kernel.org with ESMTP id S240308AbhHFVYJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Aug 2021 17:24:09 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1628285031;
+        s=mimecast20190719; t=1628285032;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=cUGEXRCzb6w2Ws2sS1zDgMNCuH/1F4t27JjerpAaI+k=;
-        b=e9PdY35PuOhc345DgTI4Q7+3Dtx+YcvwDrXPuOJp4ehOouzMwa4w6WHiZJ2g/5DS7v/ocJ
-        /0lO4D69uT+Y3xGKvjUvqr4igkNSF0I0TinVer2fFPlX9q0KLc7tQdqB9zbULgF0YjZ78u
-        sf1YxDohBbVi+NafI6bT1r78PUqFHm8=
-Received: from mail-ed1-f70.google.com (mail-ed1-f70.google.com
- [209.85.208.70]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-550-1O6s2V2kNtGQwQBu8D0nVQ-1; Fri, 06 Aug 2021 17:23:50 -0400
-X-MC-Unique: 1O6s2V2kNtGQwQBu8D0nVQ-1
-Received: by mail-ed1-f70.google.com with SMTP id x1-20020a05640218c1b02903bc7f97f858so5578158edy.2
-        for <linux-xfs@vger.kernel.org>; Fri, 06 Aug 2021 14:23:50 -0700 (PDT)
+        bh=BHosT4ai/RSb3peV1ycUzHP+d1QOR1DbAUILujJwPKw=;
+        b=LYq2ZZmHX0aoQp9ehFLIy748wJR7l76wzG6Arl3vnuckOn5yfjI6NpbGKAacq4ArHU7htG
+        aAyFKrv8PCJnTSW7kHimf6D3uK6m8CIEuP4nCnhFrNJ/xwdR/3Feozg1pmPyd04gDPcOPN
+        lZSpFRDYdwcliW7tLVP5/qURx9sz9qU=
+Received: from mail-ed1-f71.google.com (mail-ed1-f71.google.com
+ [209.85.208.71]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-495-ig3nwGakN66v8ybY039r0g-1; Fri, 06 Aug 2021 17:23:51 -0400
+X-MC-Unique: ig3nwGakN66v8ybY039r0g-1
+Received: by mail-ed1-f71.google.com with SMTP id c16-20020aa7d6100000b02903bc4c2a387bso1115825edr.21
+        for <linux-xfs@vger.kernel.org>; Fri, 06 Aug 2021 14:23:51 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=cUGEXRCzb6w2Ws2sS1zDgMNCuH/1F4t27JjerpAaI+k=;
-        b=UPYbahvOVZ2yWWN3UkGVRT4EpC8Yyv0x/EgoSzmviPH9V+rLaJvFH6h+SgKBxEqLaa
-         Ve6Is85A1xkd4xPExAvy9LqQvlAUQimbp1rmd1so4oxjKr8kr43YPDgJFoHkkuEacdPW
-         BlOoFpnepYOkQEmC9OP4E7aLok7CjbbzgneNrVPVhm3KUVPzHHYMI8TK/bBcH3t3994S
-         +N7rJ1+w1V4n1xF+cJjHMVqykmlWf4XabbxVRDKcMAt3+rhsySlm1mRYXBxbyt3502Ac
-         axzR4+JIOpJcx2c7eD3AcUXG/5D7J4bweyRwqJrG6seNYmsJ306fLDCGvlktOhO2eWty
-         FRjg==
-X-Gm-Message-State: AOAM532ls1mGEx9tf3jeHcePgbYjXgafukeeMUP8G8uEkC2jaCNSxyIP
-        m8dW95KnylvmsxSDrRIx7FArxgm4Z8MVzDUP83miJd8ZcPkqfp4TqEh3yi8dxq8/IxMq9CjX4DF
-        yqbb+zpSPZfM5F4DpVDzxRsQjbWCy0Y1DzRBz8P3FWaNP6jUoTQxHmZgUq/YNgdOoIDJh3rQ=
-X-Received: by 2002:a17:906:405:: with SMTP id d5mr11555422eja.189.1628285028841;
-        Fri, 06 Aug 2021 14:23:48 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJx6psWm60i+I6XbsgDfWZ33dXgJQVM+Y0nG4/CuvqA8RD/HRbHKhUcvkQsuX3CRzGnL10oKMw==
-X-Received: by 2002:a17:906:405:: with SMTP id d5mr11555412eja.189.1628285028681;
-        Fri, 06 Aug 2021 14:23:48 -0700 (PDT)
+        bh=BHosT4ai/RSb3peV1ycUzHP+d1QOR1DbAUILujJwPKw=;
+        b=kHZ6OzDqF+vgre9hnyret9UugjY1Mn147UzvbnM0lcDrS/HtJTv7EaPFLxHomwHUtk
+         ss0S0504tvh7qU+KPG8I4z0SVJVI7CN3NhGsUOnBx3GWmf9lJ34az4/Vux3qGuoAAGHi
+         Un96a3kZyLRt1BW0I29NxSk3TA9hiC7JKe8FhaUga/oAnGt1dNfDXlWGYTN/0rGh6u77
+         ERWFlJ2fsTu2hRfP8lOqRley7RcaCnlYvNdv03H1jPI9YYu0NvP7U1vxCXYHrq93tCTR
+         to6tslwAmCDCmx5Ps6v9WEzjakpoAZ0thQyrfrx9yNd78LPGgh6GQzLutYgg8AGo4JrO
+         aR9g==
+X-Gm-Message-State: AOAM5324V+HAFHZn2CjhRCUveaQZbd1AuDZEEM+5KZ0vfv7kbkrPfMAy
+        LSxnRfsD59EWIXvZP1n0YqBsU5GpPzWRl62AqBx7LUVh6B53pKq8e0pOsnynJSiDVOovpz0aAKr
+        ZdHMRxq/V0v5jQIWAdFW2tjZL5TkGd80Ym7f32YthG1ZD53lhRaKY92hW8HyA/A87Zzepynk=
+X-Received: by 2002:aa7:db94:: with SMTP id u20mr15441690edt.381.1628285030081;
+        Fri, 06 Aug 2021 14:23:50 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJwSGgDozczmD4cSUR1tw57KgA+O7smV1i5+tAuehGZAKbCefZ4W9q+GLloD78ZSrDPlRsxEuA==
+X-Received: by 2002:aa7:db94:: with SMTP id u20mr15441679edt.381.1628285029957;
+        Fri, 06 Aug 2021 14:23:49 -0700 (PDT)
 Received: from localhost.localdomain ([84.19.91.9])
-        by smtp.gmail.com with ESMTPSA id og35sm3256741ejc.28.2021.08.06.14.23.47
+        by smtp.gmail.com with ESMTPSA id og35sm3256741ejc.28.2021.08.06.14.23.48
         for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 06 Aug 2021 14:23:47 -0700 (PDT)
+        Fri, 06 Aug 2021 14:23:49 -0700 (PDT)
 From:   Pavel Reichl <preichl@redhat.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v2 19/29] xfsprogs: Stop using platform_discard_blocks
-Date:   Fri,  6 Aug 2021 23:23:08 +0200
-Message-Id: <20210806212318.440144-20-preichl@redhat.com>
+Subject: [PATCH v2 20/29] xfsprogs: Stop using platform_zero_range()
+Date:   Fri,  6 Aug 2021 23:23:09 +0200
+Message-Id: <20210806212318.440144-21-preichl@redhat.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210806212318.440144-1-preichl@redhat.com>
 References: <20210806212318.440144-1-preichl@redhat.com>
@@ -74,72 +74,56 @@ List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 ---
- include/linux.h |  7 ++++++-
- mkfs/xfs_mkfs.c | 10 +++++-----
- 2 files changed, 11 insertions(+), 6 deletions(-)
+ include/linux.h | 14 ++++++++++++--
+ libxfs/rdwr.c   |  2 +-
+ 2 files changed, 13 insertions(+), 3 deletions(-)
 
 diff --git a/include/linux.h b/include/linux.h
-index 7940fe8c..97882161 100644
+index 97882161..4ee4288f 100644
 --- a/include/linux.h
 +++ b/include/linux.h
-@@ -140,7 +140,7 @@ static __inline__ void platform_uuid_copy(uuid_t *dst, uuid_t *src)
+@@ -208,7 +208,7 @@ static inline void platform_mntent_close(struct mntent_cursor * cursor)
+ 
+ #if defined(FALLOC_FL_ZERO_RANGE)
+ static inline int
+-platform_zero_range(
++zero_range(
+ 	int		fd,
+ 	xfs_off_t	start,
+ 	size_t		len)
+@@ -220,8 +220,18 @@ platform_zero_range(
+ 		return 0;
+ 	return -errno;
+ }
++
++static inline int
++platform_zero_range(
++	int		fd,
++	xfs_off_t	start,
++	size_t		len)
++{
++	return zero_range(fd, start, len);
++}
+ #else
+-#define platform_zero_range(fd, s, l)	(-EOPNOTSUPP)
++#define zero_range(fd, s, l)	(-EOPNOTSUPP)
++#define platform_zero_range(fs, s, l) zero_range(fd, s, l)
  #endif
  
- static __inline__ int
--platform_discard_blocks(int fd, uint64_t start, uint64_t len)
-+discard_blocks(int fd, uint64_t start, uint64_t len)
- {
- 	uint64_t range[2] = { start, len };
+ /*
+diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+index 022da518..a92c909e 100644
+--- a/libxfs/rdwr.c
++++ b/libxfs/rdwr.c
+@@ -73,7 +73,7 @@ libxfs_device_zero(struct xfs_buftarg *btp, xfs_daddr_t start, uint len)
  
-@@ -149,6 +149,11 @@ platform_discard_blocks(int fd, uint64_t start, uint64_t len)
- 	return 0;
- }
- 
-+static __inline__ int
-+platform_discard_blocks(int fd, uint64_t start, uint64_t len)
-+{
-+	return discard_blocks(fd, start, len);
-+}
- #define ENOATTR		ENODATA	/* Attribute not found */
- #define EFSCORRUPTED	EUCLEAN	/* Filesystem is corrupted */
- #define EFSBADCRC	EBADMSG	/* Bad CRC detected */
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index c6929a83..fc672a10 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -1263,7 +1263,7 @@ done:
- }
- 
- static void
--discard_blocks(dev_t dev, uint64_t nsectors, int quiet)
-+discard_batch_of_blocks(dev_t dev, uint64_t nsectors, int quiet)
- {
- 	int		fd;
- 	uint64_t	offset = 0;
-@@ -1286,7 +1286,7 @@ discard_blocks(dev_t dev, uint64_t nsectors, int quiet)
- 		 * not necessary for the mkfs functionality but just an
- 		 * optimization. However we should stop on error.
- 		 */
--		if (platform_discard_blocks(fd, offset, tmp_step) == 0) {
-+		if (discard_blocks(fd, offset, tmp_step) == 0) {
- 			if (offset == 0 && !quiet) {
- 				printf("Discarding blocks...");
- 				fflush(stdout);
-@@ -2664,11 +2664,11 @@ discard_devices(
- 	 */
- 
- 	if (!xi->disfile)
--		discard_blocks(xi->ddev, xi->dsize, quiet);
-+		discard_batch_of_blocks(xi->ddev, xi->dsize, quiet);
- 	if (xi->rtdev && !xi->risfile)
--		discard_blocks(xi->rtdev, xi->rtsize, quiet);
-+		discard_batch_of_blocks(xi->rtdev, xi->rtsize, quiet);
- 	if (xi->logdev && xi->logdev != xi->ddev && !xi->lisfile)
--		discard_blocks(xi->logdev, xi->logBBsize, quiet);
-+		discard_batch_of_blocks(xi->logdev, xi->logBBsize, quiet);
- }
- 
- static void
+ 	/* try to use special zeroing methods, fall back to writes if needed */
+ 	len_bytes = LIBXFS_BBTOOFF64(len);
+-	error = platform_zero_range(fd, start_offset, len_bytes);
++	error = zero_range(fd, start_offset, len_bytes);
+ 	if (!error) {
+ 		xfs_buftarg_trip_write(btp);
+ 		return 0;
 -- 
 2.31.1
 
