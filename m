@@ -7,63 +7,63 @@ X-Spam-Status: No, score=-14.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC96BC43216
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Aug 2021 21:23:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50151C4338F
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Aug 2021 21:23:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C72A160E78
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Aug 2021 21:23:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2E1CF60EE8
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Aug 2021 21:23:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240001AbhHFVXz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S239972AbhHFVXz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Fri, 6 Aug 2021 17:23:55 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:51163 "EHLO
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:56220 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S239972AbhHFVXx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Aug 2021 17:23:53 -0400
+        by vger.kernel.org with ESMTP id S239974AbhHFVXy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Aug 2021 17:23:54 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1628285016;
+        s=mimecast20190719; t=1628285018;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=cqbp0ZIa5NXSHA2pzyu71VgWdqvhXbdjxzvZc2LLOyk=;
-        b=N68+i8pVLMzABlftW5bcsgnkXntAKp5eNJQ8iN+rF5Hxda5TJRtgbmAF9zd30DNPL7gZo7
-        +28cVetK93IYSr5OXdctqhnPyXR/mnWLyLD7sRbbaLq1CdY9EuRTpvtHf+Pk7p+KgyUc06
-        dcPNFb/a9IMqMEUIOmn1p28yoaA9i1c=
-Received: from mail-ej1-f71.google.com (mail-ej1-f71.google.com
- [209.85.218.71]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-498-OtjGsE98PJGpaibU_Ndgmw-1; Fri, 06 Aug 2021 17:23:35 -0400
-X-MC-Unique: OtjGsE98PJGpaibU_Ndgmw-1
-Received: by mail-ej1-f71.google.com with SMTP id zp23-20020a17090684f7b02905a13980d522so3526796ejb.2
-        for <linux-xfs@vger.kernel.org>; Fri, 06 Aug 2021 14:23:35 -0700 (PDT)
+        bh=c+90aBKoFjing+Q2LzT4bHGkCfiXxZm6K2cxe+pfpMk=;
+        b=E2sIQYGm6lorZ/HPvsTdLLu0FleyRPJmaw95nGwYmWcM9Kv5CgwdP/x6G3lFJpyVbVP88S
+        zivfyUizp1VKPknaITdbBQJ2rto1316ffR1GJdsaRWAU1euh/teecB1nUrBeL6hbkV2SG1
+        5r8ZShzaDqmCe7RMuRnvr7sc6pXK4aY=
+Received: from mail-ej1-f72.google.com (mail-ej1-f72.google.com
+ [209.85.218.72]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-481-L0YNGjlBPTOOy92ZheAliw-1; Fri, 06 Aug 2021 17:23:37 -0400
+X-MC-Unique: L0YNGjlBPTOOy92ZheAliw-1
+Received: by mail-ej1-f72.google.com with SMTP id rv22-20020a17090710d6b029058c69e3adbbso3514176ejb.6
+        for <linux-xfs@vger.kernel.org>; Fri, 06 Aug 2021 14:23:36 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=cqbp0ZIa5NXSHA2pzyu71VgWdqvhXbdjxzvZc2LLOyk=;
-        b=FrTR1UG782BomCAIYDbp+LFkxoGPz/MFYmyeRi0fbMaQ6krS0quryzYfIc7VkLiCP1
-         U0OSFd2Da5XIZcoR049GqIPe9vU7qqzTzgoOJ9XfaXT1478UD6QT/Tg3/acwG0f0Z48r
-         GO1ZCAPuYKEcn8oDES0MFAq2tutq6sPDc+WqNAyr7DqFtefUuVVVCSytDHGocVtosuT5
-         a33hIfArn0oooRt54UbU/E/qDHk9Vacce6VeyWhA9VydL8fOnT/XPIHsePMSKwGOIhrm
-         fL4IZ8CgKu5k/ctf4YcUsuV7PvO8YsaiiGdiIKq3BpVkGOhRWL7q3nZJ3yafR8CsWn4Z
-         EBGQ==
-X-Gm-Message-State: AOAM533dtU05KODOweVVqErazsHLZ7L4ww4eLJ+wOIKmLT5lBznnbvf5
-        DDz2D6ChbhxMQrtRFaLQTkkzKgWOIPvnDBpDianRFLmoC7bmyOGVVYmCIGCbzNp2ohisyBJ05Ig
-        2Oui3rA/UFOUyOcis4l4iwt7nQWQwtX88YPxSVxnHGnXkh0Ql28aNZ4ImsPLpFXuFlQdh2qA=
-X-Received: by 2002:a05:6402:220d:: with SMTP id cq13mr15759245edb.318.1628285014238;
-        Fri, 06 Aug 2021 14:23:34 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzGdyG3pvp+L1ylwrD/CugutFA5JsO/P46YEOsty8UGWqZE1yZwEKEfdj7ztL+NoQu3YTVFng==
-X-Received: by 2002:a05:6402:220d:: with SMTP id cq13mr15759240edb.318.1628285014101;
-        Fri, 06 Aug 2021 14:23:34 -0700 (PDT)
+        bh=c+90aBKoFjing+Q2LzT4bHGkCfiXxZm6K2cxe+pfpMk=;
+        b=lmAT0O6Od8qn5/5vhlUEuvVtiD8qc7QwGdsrZ1DfAxLtW+1TtMe6ufGQM2OyS+h+6c
+         uKMX4Le5TcaE1JBCjQwdRaY+o3X8lDXzKELVzRvDw2ujdJSJGfNNEFmS1f8Yi4faXEGo
+         f8BbdU4et5HDFHCJptF5SBdsUiSnAPWA5tOG6lciKL0leEbhF2SqffVMKWbVxmpprX7o
+         oqG8Dsa12DcoPE0KcKCliqSNRpkQywmatah7TF2fFRSNYJttykMeCsuP8K0d28uuoJQd
+         D4NRclgfm5RfzZDtx0jbgPLJnptpFSXJycvn+Hp7RXmT21BICS7M9Jeyb33iKw+OgeJK
+         0Gew==
+X-Gm-Message-State: AOAM532D89X7ybgkTetXyhYgfZiL5yp1Rg9sYJdzA9w9zNxugLDiZw+I
+        yX+N7ul6br95zMzA+yQJIflpITBkYj9P6YAUQ2DSR4nMcuM2WWEZXqRnNdeFwlvdGttppJK2COe
+        6moeOT+SXHmYiyEg0uVOZ1H4w3pkDxzTPtoXLo7wnwuhppxnUk1WKx87DuZaYHwovwCviGj0=
+X-Received: by 2002:aa7:c542:: with SMTP id s2mr15971429edr.41.1628285015729;
+        Fri, 06 Aug 2021 14:23:35 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJwYqiooJuyPwJMbH6rqR08vYwApFkUgfCp0zrT5pl3dt4JOA7OdAfy45fyOsQQumv83K8qsWg==
+X-Received: by 2002:aa7:c542:: with SMTP id s2mr15971414edr.41.1628285015511;
+        Fri, 06 Aug 2021 14:23:35 -0700 (PDT)
 Received: from localhost.localdomain ([84.19.91.9])
-        by smtp.gmail.com with ESMTPSA id og35sm3256741ejc.28.2021.08.06.14.23.32
+        by smtp.gmail.com with ESMTPSA id og35sm3256741ejc.28.2021.08.06.14.23.34
         for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 06 Aug 2021 14:23:33 -0700 (PDT)
+        Fri, 06 Aug 2021 14:23:34 -0700 (PDT)
 From:   Pavel Reichl <preichl@redhat.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v2 10/29] xfsprogs: Stop using platform_uuid_parse()
-Date:   Fri,  6 Aug 2021 23:22:59 +0200
-Message-Id: <20210806212318.440144-11-preichl@redhat.com>
+Subject: [PATCH v2 11/29] xfsprogs: Stop using platform_uuid_is_null()
+Date:   Fri,  6 Aug 2021 23:23:00 +0200
+Message-Id: <20210806212318.440144-12-preichl@redhat.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210806212318.440144-1-preichl@redhat.com>
 References: <20210806212318.440144-1-preichl@redhat.com>
@@ -74,36 +74,36 @@ List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 ---
- db/sb.c         | 2 +-
+ libxlog/util.c  | 2 +-
  mkfs/xfs_mkfs.c | 2 +-
  2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/db/sb.c b/db/sb.c
-index 36c7db39..63f43ea4 100644
---- a/db/sb.c
-+++ b/db/sb.c
-@@ -410,7 +410,7 @@ uuid_f(
- 
- 			memcpy(&uu, mp->m_sb.sb_meta_uuid, sizeof(uuid_t));
- 		} else {
--			if (platform_uuid_parse(argv[1], &uu)) {
-+			if (uuid_parse(argv[1], uu)) {
- 				dbprintf(_("invalid UUID\n"));
- 				return 0;
- 			}
+diff --git a/libxlog/util.c b/libxlog/util.c
+index 7c10474b..84c6f99a 100644
+--- a/libxlog/util.c
++++ b/libxlog/util.c
+@@ -130,7 +130,7 @@ xlog_header_check_recover(xfs_mount_t *mp, xlog_rec_header_t *head)
+ int
+ xlog_header_check_mount(xfs_mount_t *mp, xlog_rec_header_t *head)
+ {
+-    if (platform_uuid_is_null(&head->h_fs_uuid)) return 0;
++    if (uuid_is_null(head->h_fs_uuid)) return 0;
+     if (header_check_uuid(mp, head)) {
+ 	/* bail out now or just carry on regardless */
+ 	if (print_exit)
 diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index dd7849fd..2771a641 100644
+index 2771a641..c6929a83 100644
 --- a/mkfs/xfs_mkfs.c
 +++ b/mkfs/xfs_mkfs.c
-@@ -1656,7 +1656,7 @@ meta_opts_parser(
- 	case M_UUID:
- 		if (!value || *value == '\0')
- 			reqval('m', opts->subopts, subopt);
--		if (platform_uuid_parse(value, &cli->uuid))
-+		if (uuid_parse(value, cli->uuid))
- 			illegal(value, "m uuid");
- 		break;
- 	case M_RMAPBT:
+@@ -2191,7 +2191,7 @@ _("cowextsize not supported without reflink support\n"));
+ 	 * Copy features across to config structure now.
+ 	 */
+ 	cfg->sb_feat = cli->sb_feat;
+-	if (!platform_uuid_is_null(&cli->uuid))
++	if (!uuid_is_null(cli->uuid))
+ 		uuid_copy(cfg->uuid, cli->uuid);
+ }
+ 
 -- 
 2.31.1
 
