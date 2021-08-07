@@ -2,118 +2,191 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6F62C4338F
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Aug 2021 23:05:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6883C4338F
+	for <linux-xfs@archiver.kernel.org>; Sat,  7 Aug 2021 00:21:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7E89B60EE9
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Aug 2021 23:05:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 78297610FD
+	for <linux-xfs@archiver.kernel.org>; Sat,  7 Aug 2021 00:21:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237450AbhHFXFV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 6 Aug 2021 19:05:21 -0400
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:53691 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230280AbhHFXFV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Aug 2021 19:05:21 -0400
-Received: from dread.disaster.area (pa49-195-182-146.pa.nsw.optusnet.com.au [49.195.182.146])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 7F04380BD69;
-        Sat,  7 Aug 2021 09:05:02 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1mC8th-00FLLP-G1; Sat, 07 Aug 2021 09:05:01 +1000
-Date:   Sat, 7 Aug 2021 09:05:01 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Pavel Reichl <preichl@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2 00/29] xfsprogs: Drop the 'platform_' prefix
-Message-ID: <20210806230501.GG2757197@dread.disaster.area>
-References: <20210806212318.440144-1-preichl@redhat.com>
+        id S230222AbhHGAVW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 6 Aug 2021 20:21:22 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56248 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229581AbhHGAVV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 6 Aug 2021 20:21:21 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 46DF3603E7;
+        Sat,  7 Aug 2021 00:21:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1628295665;
+        bh=xH4xyX2CspgpVQ2GuoDsfdW5ErpC5I1/X+IpafBVLb4=;
+        h=Date:From:To:Subject:References:In-Reply-To:From;
+        b=H808Y2q3BF27tzeA3wfA5UJbReR9709sikaHDJTgiO6Wj1B6zd/YBm0hym3ChETvc
+         LeAFlTsWU4PPAmwDLugiSjOetCzyHEkxBPmJxZTpat+jH63GkTTe624uHbx00QSl0y
+         zkOw8JPqbXpUNBdi1mV7qMaIighqIAl4CF83H6nNWNJCvv6ip8G7NGipC1IgqraNSD
+         Kbb/FKxqyzrYTzfFjRIiW5HMi2VZ5URmp45Fg2eY0Zw49MS6U3udlblIKVgkiWZut1
+         CpyvwHur5KXYMLHxjDTJ0JxsKYvk2h5eNt8Ey9h6JWUfVTRwPKF9PlG5DJ5YK9Szbq
+         oXCt0ynPMf04w==
+Date:   Fri, 6 Aug 2021 17:21:04 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
+        david@fromorbit.com, hch@infradead.org
+Subject: Re: [PATCH 05/14] xfs: per-cpu deferred inode inactivation queues
+Message-ID: <20210807002104.GB3601443@magnolia>
+References: <162812918259.2589546.16599271324044986858.stgit@magnolia>
+ <162812921040.2589546.137433781469727121.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210806212318.440144-1-preichl@redhat.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
-        a=QpfB3wCSrn/dqEBSktpwZQ==:117 a=QpfB3wCSrn/dqEBSktpwZQ==:17
-        a=kj9zAlcOel0A:10 a=MhDmnRu9jo8A:10 a=7-415B0cAAAA:8
-        a=oTah5r6sZWEs-UvQSI4A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <162812921040.2589546.137433781469727121.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Aug 06, 2021 at 11:22:49PM +0200, Pavel Reichl wrote:
-> Stop using commands with 'platform_' prefix. Either use directly linux
-> standard command or drop the prefix from the function name.
+On Wed, Aug 04, 2021 at 07:06:50PM -0700, Darrick J. Wong wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 
-Looks like all of the patches in this series are missing
-signed-off-by lines.  Most of them have empty commit messages, too,
-which we don't tend to do very often.
+<megasnip> A couple of minor changes that aren't worth reposting the
+entire series:
 
->  51 files changed, 284 insertions(+), 151 deletions(-)
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index b9214733d0c3..fedfa40e3cd6 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
 
-IMO, 29 patches for such a small change is way too fine grained for
-working through efficiently.  Empty commit messages tend to be a
-sign that you can aggregate patches together.... i.e.  One patch for
-all the uuid changes (currently 7 patches) with a description of why
-you're changing the platform_uuid interface, one for all the mount
-related stuff (at least 5 patches now), one for all the block device
-stuff (8 or so patches), one for all the path bits, and then one for
-whatever is left over.
+<snip>
 
-Every patch has overhead, be it to produce, maintain, review, test,
-merge, etc. Breaking stuff down unnecessarily just increases the
-amount of work everyone has to do at every step. So if you find that
-you are writing dozens of patches that each have a trivial change in
-them that you are boiler-plating commit messages, you've probably
-made the overall changeset too fine grained.
+> @@ -1767,30 +1801,276 @@ xfs_inode_mark_reclaimable(
+>  		ASSERT(0);
+>  	}
+>  
+> +	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
+> +	spin_lock(&pag->pag_ici_lock);
+> +	spin_lock(&ip->i_flags_lock);
+> +
+> +	trace_xfs_inode_set_reclaimable(ip);
+> +	ip->i_flags &= ~(XFS_NEED_INACTIVE | XFS_INACTIVATING);
+> +	ip->i_flags |= XFS_IRECLAIMABLE;
+> +	xfs_perag_set_inode_tag(pag, XFS_INO_TO_AGINO(mp, ip->i_ino),
+> +			XFS_ICI_RECLAIM_TAG);
+> +
+> +	spin_unlock(&ip->i_flags_lock);
+> +	spin_unlock(&pag->pag_ici_lock);
+> +	xfs_perag_put(pag);
+> +}
+> +
+> +/*
+> + * Free all speculative preallocations and possibly even the inode itself.
+> + * This is the last chance to make changes to an otherwise unreferenced file
+> + * before incore reclamation happens.
+> + */
+> +static void
+> +xfs_inodegc_inactivate(
+> +	struct xfs_inode	*ip)
+> +{
+> +	struct xfs_mount        *mp = ip->i_mount;
+> +
+> +	/*
+> +	* Inactivation isn't supposed to run when the fs is frozen because
+> +	* we don't want kernel threads to block on transaction allocation.
+> +	*/
+> +	ASSERT(mp->m_super->s_writers.frozen < SB_FREEZE_FS);
+> +
 
-Also....
+I solved the problems Dave was complaining about (g/390, x/517) by
+removing this ASSERT.
 
->  libxfs/init.c               | 32 ++++++------
->  libxfs/libxfs_io.h          |  2 +-
->  libxfs/libxfs_priv.h        |  3 +-
->  libxfs/rdwr.c               |  4 +-
->  libxfs/xfs_ag.c             |  6 +--
->  libxfs/xfs_attr_leaf.c      |  2 +-
->  libxfs/xfs_attr_remote.c    |  2 +-
->  libxfs/xfs_btree.c          |  4 +-
->  libxfs/xfs_da_btree.c       |  2 +-
->  libxfs/xfs_dir2_block.c     |  2 +-
->  libxfs/xfs_dir2_data.c      |  2 +-
->  libxfs/xfs_dir2_leaf.c      |  2 +-
->  libxfs/xfs_dir2_node.c      |  2 +-
->  libxfs/xfs_dquot_buf.c      |  2 +-
->  libxfs/xfs_ialloc.c         |  4 +-
->  libxfs/xfs_inode_buf.c      |  2 +-
->  libxfs/xfs_sb.c             |  6 +--
->  libxfs/xfs_symlink_remote.c |  2 +-
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 19260291ff8b..bd8abb50b33a 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -157,6 +157,48 @@ DEFINE_PERAG_REF_EVENT(xfs_perag_put);
+>  DEFINE_PERAG_REF_EVENT(xfs_perag_set_inode_tag);
+>  DEFINE_PERAG_REF_EVENT(xfs_perag_clear_inode_tag);
+>  
+> +#define XFS_STATE_FLAGS \
+> +	{ (1UL << XFS_STATE_INODEGC_ENABLED),		"inodegc" }
 
-Why are all these libxfs files being changed?
+I've also changed the name of this to XFS_OPSTATE_STRINGS because we use
+_STRINGS everywhere else in this file.
 
-$ git grep -l platform libxfs/
-libxfs/init.c
-libxfs/libxfs_io.h
-libxfs/libxfs_priv.h
-libxfs/rdwr.c
-libxfs/xfs_log_format.h
-$
+--D
 
-IOWs, there are calls to platform_*() functions in most of these
-libxfs files, so what is being changed here? If these are code
-changes, then they will end up needed to be ported across to the
-kernel libxfs, too.
-
-I did a quick scan of a few of the patches but I didn't land on the
-one that had these changes in it; another reason for not doing stuff
-in such fine grained ways. Hence it's not clear to me why renaming
-platform_*() functions would touch these files.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> +
+> +DECLARE_EVENT_CLASS(xfs_fs_class,
+> +	TP_PROTO(struct xfs_mount *mp, void *caller_ip),
+> +	TP_ARGS(mp, caller_ip),
+> +	TP_STRUCT__entry(
+> +		__field(dev_t, dev)
+> +		__field(unsigned long long, mflags)
+> +		__field(unsigned long, opstate)
+> +		__field(unsigned long, sbflags)
+> +		__field(void *, caller_ip)
+> +	),
+> +	TP_fast_assign(
+> +		if (mp) {
+> +			__entry->dev = mp->m_super->s_dev;
+> +			__entry->mflags = mp->m_flags;
+> +			__entry->opstate = mp->m_opstate;
+> +			__entry->sbflags = mp->m_super->s_flags;
+> +		}
+> +		__entry->caller_ip = caller_ip;
+> +	),
+> +	TP_printk("dev %d:%d m_flags 0x%llx opstate (%s) s_flags 0x%lx caller %pS",
+> +		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> +		  __entry->mflags,
+> +		  __print_flags(__entry->opstate, "|", XFS_STATE_FLAGS),
+> +		  __entry->sbflags,
+> +		  __entry->caller_ip)
+> +);
+> +
+> +#define DEFINE_FS_EVENT(name)	\
+> +DEFINE_EVENT(xfs_fs_class, name,					\
+> +	TP_PROTO(struct xfs_mount *mp, void *caller_ip), \
+> +	TP_ARGS(mp, caller_ip))
+> +DEFINE_FS_EVENT(xfs_inodegc_flush);
+> +DEFINE_FS_EVENT(xfs_inodegc_start);
+> +DEFINE_FS_EVENT(xfs_inodegc_stop);
+> +DEFINE_FS_EVENT(xfs_inodegc_worker);
+> +DEFINE_FS_EVENT(xfs_inodegc_queue);
+> +DEFINE_FS_EVENT(xfs_inodegc_throttle);
+> +DEFINE_FS_EVENT(xfs_fs_sync_fs);
+> +
+>  DECLARE_EVENT_CLASS(xfs_ag_class,
+>  	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno),
+>  	TP_ARGS(mp, agno),
+> @@ -616,14 +658,17 @@ DECLARE_EVENT_CLASS(xfs_inode_class,
+>  	TP_STRUCT__entry(
+>  		__field(dev_t, dev)
+>  		__field(xfs_ino_t, ino)
+> +		__field(unsigned long, iflags)
+>  	),
+>  	TP_fast_assign(
+>  		__entry->dev = VFS_I(ip)->i_sb->s_dev;
+>  		__entry->ino = ip->i_ino;
+> +		__entry->iflags = ip->i_flags;
+>  	),
+> -	TP_printk("dev %d:%d ino 0x%llx",
+> +	TP_printk("dev %d:%d ino 0x%llx iflags 0x%lx",
+>  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> -		  __entry->ino)
+> +		  __entry->ino,
+> +		  __entry->iflags)
+>  )
+>  
+>  #define DEFINE_INODE_EVENT(name) \
+> @@ -667,6 +712,10 @@ DEFINE_INODE_EVENT(xfs_inode_free_eofblocks_invalid);
+>  DEFINE_INODE_EVENT(xfs_inode_set_cowblocks_tag);
+>  DEFINE_INODE_EVENT(xfs_inode_clear_cowblocks_tag);
+>  DEFINE_INODE_EVENT(xfs_inode_free_cowblocks_invalid);
+> +DEFINE_INODE_EVENT(xfs_inode_set_reclaimable);
+> +DEFINE_INODE_EVENT(xfs_inode_reclaiming);
+> +DEFINE_INODE_EVENT(xfs_inode_set_need_inactive);
+> +DEFINE_INODE_EVENT(xfs_inode_inactivating);
+>  
+>  /*
+>   * ftrace's __print_symbolic requires that all enum values be wrapped in the
+> 
