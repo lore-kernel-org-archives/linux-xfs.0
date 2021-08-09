@@ -2,102 +2,173 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B40D3C4338F
-	for <linux-xfs@archiver.kernel.org>; Mon,  9 Aug 2021 22:10:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A40E1C4338F
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 Aug 2021 23:21:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 96C8D601FD
-	for <linux-xfs@archiver.kernel.org>; Mon,  9 Aug 2021 22:10:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 726DA60FE3
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 Aug 2021 23:21:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235105AbhHIWLO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 9 Aug 2021 18:11:14 -0400
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:45800 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232683AbhHIWLO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Aug 2021 18:11:14 -0400
-Received: from dread.disaster.area (pa49-195-182-146.pa.nsw.optusnet.com.au [49.195.182.146])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 919098552B;
-        Tue, 10 Aug 2021 08:10:49 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1mDDTr-00GSfc-Td; Tue, 10 Aug 2021 08:10:47 +1000
-Date:   Tue, 10 Aug 2021 08:10:47 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Shiyang Ruan <ruansy.fnst@fujitsu.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, nvdimm@lists.linux.dev,
-        cluster-devel@redhat.com
-Subject: Re: [PATCH 11/30] iomap: add the new iomap_iter model
-Message-ID: <20210809221047.GC3657114@dread.disaster.area>
-References: <20210809061244.1196573-1-hch@lst.de>
- <20210809061244.1196573-12-hch@lst.de>
+        id S233833AbhHIXWS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 9 Aug 2021 19:22:18 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41034 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233112AbhHIXWS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 9 Aug 2021 19:22:18 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 33D7260F55;
+        Mon,  9 Aug 2021 23:21:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1628551317;
+        bh=htjUS84Bjwkgr2O7m+hJovqCWlfo9mGE8WafzK9DnpU=;
+        h=Date:From:To:Cc:Subject:From;
+        b=CeQqzBytVm0Ku+AJBZRo5vRYhSq0JTn12VZtyf+hQXDcIx16HUBSg9RT73mv7OB4h
+         UdEo5uFhW7CBdJr2QqJliCbnmUaPzATtaC+Ytl7WVAPGNEETrK2zE0r7VloJD5eq1o
+         dn9R61iGjjMflc7E85bjssezjb7vySI9/hxcMaeC8+EeX0sHq3iKjECcKnLpUcgR0w
+         bhPGgoEjHdIe9asKtgeHdizSLT4maUGmDjVZgM2UF/bIMvS/Zg8O2wpGjTcuy7W9oH
+         W1Oyuu7if7h4yKQp1ob3LXszD3gcIJKuvAWGWBYoqHRovn5Px0k+rcob9RNAJ53cig
+         ZYwrn2/IFM5Kw==
+Date:   Mon, 9 Aug 2021 16:21:56 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     xfs <linux-xfs@vger.kernel.org>
+Cc:     Dave Chinner <david@fromorbit.com>
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 130916145229
+Message-ID: <20210809232156.GG3601443@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210809061244.1196573-12-hch@lst.de>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
-        a=QpfB3wCSrn/dqEBSktpwZQ==:117 a=QpfB3wCSrn/dqEBSktpwZQ==:17
-        a=kj9zAlcOel0A:10 a=MhDmnRu9jo8A:10 a=JfrnYn6hAAAA:8 a=7-415B0cAAAA:8
-        a=c-sO9qzMkAf5MM67-4kA:9 a=CjuIK1q_8ugA:10 a=1CNFftbPRP8L7MoqJWF3:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Aug 09, 2021 at 08:12:25AM +0200, Christoph Hellwig wrote:
-> The iomap_iter struct provides a convenient way to package up and
-> maintain all the arguments to the various mapping and operation
-> functions.  It is operated on using the iomap_iter() function that
-> is called in loop until the whole range has been processed.  Compared
-> to the existing iomap_apply() function this avoid an indirect call
-> for each iteration.
-> 
-> For now iomap_iter() calls back into the existing ->iomap_begin and
-> ->iomap_end methods, but in the future this could be further optimized
-> to avoid indirect calls entirely.
-> 
-> Based on an earlier patch from Matthew Wilcox <willy@infradead.org>.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/iomap/Makefile     |  1 +
->  fs/iomap/core.c       | 79 +++++++++++++++++++++++++++++++++++++++++++
->  fs/iomap/trace.h      | 37 +++++++++++++++++++-
->  include/linux/iomap.h | 56 ++++++++++++++++++++++++++++++
->  4 files changed, 172 insertions(+), 1 deletion(-)
->  create mode 100644 fs/iomap/core.c
-> 
-> diff --git a/fs/iomap/Makefile b/fs/iomap/Makefile
-> index eef2722d93a183..6b56b10ded347a 100644
-> --- a/fs/iomap/Makefile
-> +++ b/fs/iomap/Makefile
-> @@ -10,6 +10,7 @@ obj-$(CONFIG_FS_IOMAP)		+= iomap.o
->  
->  iomap-y				+= trace.o \
->  				   apply.o \
-> +				   core.o \
+Hi folks,
 
-This creates a discontinuity in the iomap git history. Can you add
-these new functions to iomap/apply.c, then when the old apply code
-is removed later in the series rename the file to core.c? At least
-that way 'git log --follow fs/iomap/core.c' will walk back into the
-current history of fs/iomap/apply.c and the older pre-disaggregation
-fs/iomap.c without having to take the tree back in time to find
-those files...
+The for-next branch of the xfs-linux repository at:
 
-Cheers,
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+has just been updated.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.  I /think/ the next batch of incoming patches are going
+to be the next round of Dave's CIL scalability patches; if that is true,
+please let's everyone try to concentrate on reviewing that.
+
+The new head of the for-next branch is commit:
+
+130916145229 xfs: cleanup __FUNCTION__ usage
+
+New Commits:
+
+Allison Henderson (2):
+      [da8ca45da62e] xfs: add attr state machine tracepoints
+      [0f3901673631] xfs: Rename __xfs_attr_rmtval_remove
+
+Christoph Hellwig (4):
+      [40b52225e58c] xfs: remove support for disabling quota accounting on a mounted file system
+      [777eb1fa857e] xfs: remove xfs_dqrele_all_inodes
+      [e497dfba6bd7] xfs: remove the flags argument to xfs_qm_dquot_walk
+      [149e53afc851] xfs: remove the active vs running quota differentiation
+
+Darrick J. Wong (18):
+      [c6c2066db396] xfs: move xfs_inactive call to xfs_inode_mark_reclaimable
+      [62af7d54a0ec] xfs: detach dquots from inode if we don't need to inactivate it
+      [7d6f07d2c5ad] xfs: queue inactivation immediately when free space is tight
+      [108523b8de67] xfs: queue inactivation immediately when quota is nearing enforcement
+      [65f03d8652b2] xfs: queue inactivation immediately when free realtime extents are tight
+      [2eb665027b65] xfs: inactivate inodes any time we try to free speculative preallocations
+      [01e8f379a489] xfs: flush inode inactivation work when compiling usage statistics
+      [6f6490914d9b] xfs: don't run speculative preallocation gc when fs is frozen
+      [e8d04c2abceb] xfs: use background worker pool when transactions can't get free space
+      [a6343e4d9278] xfs: avoid buffer deadlocks when walking fs inodes
+      [40b1de007aca] xfs: throttle inode inactivation queuing on memory reclaim
+      [b7df7630cccd] xfs: fix silly whitespace problems with kernel libxfs
+      [f19ee6bb1a72] xfs: drop experimental warnings for bigtime and inobtcount
+      [48c6615cc557] xfs: grab active perag ref when reading AG headers
+      [43059d5416c9] xfs: dump log intent items that cannot be recovered due to corruption
+      [908ce71e54f8] xfs: allow setting and clearing of log incompat feature flags
+      [2b73a2c817be] xfs: clear log incompat feature bits when the log is idle
+      [4bc619833f73] xfs: refactor xfs_iget calls from log intent recovery
+
+Dave Chinner (6):
+      [f1653c2e2831] xfs: introduce CPU hotplug infrastructure
+      [0ed17f01c854] xfs: introduce all-mounts list for cpu hotplug notifications
+      [ab23a7768739] xfs: per-cpu deferred inode inactivation queues
+      [de2860f46362] mm: Add kvrealloc()
+      [98fe2c3cef21] xfs: remove kmem_alloc_io()
+      [d634525db63e] xfs: replace kmem_alloc_large() with kvmalloc()
+
+Dwaipayan Ray (1):
+      [130916145229] xfs: cleanup __FUNCTION__ usage
+
+
+Code Diffstat:
+
+ fs/xfs/kmem.c                   |  64 ----
+ fs/xfs/kmem.h                   |   2 -
+ fs/xfs/libxfs/xfs_attr.c        |  37 ++-
+ fs/xfs/libxfs/xfs_attr_leaf.c   |   4 +-
+ fs/xfs/libxfs/xfs_attr_remote.c |   3 +-
+ fs/xfs/libxfs/xfs_attr_remote.h |   2 +-
+ fs/xfs/libxfs/xfs_format.h      |  17 +-
+ fs/xfs/libxfs/xfs_ialloc.c      |   2 +-
+ fs/xfs/libxfs/xfs_log_recover.h |   2 +
+ fs/xfs/libxfs/xfs_quota_defs.h  |  30 +-
+ fs/xfs/libxfs/xfs_rmap_btree.h  |   2 +-
+ fs/xfs/libxfs/xfs_trans_resv.c  |  30 --
+ fs/xfs/libxfs/xfs_trans_resv.h  |   2 -
+ fs/xfs/scrub/agheader.c         |  23 +-
+ fs/xfs/scrub/agheader_repair.c  |   3 -
+ fs/xfs/scrub/attr.c             |  14 +-
+ fs/xfs/scrub/attr.h             |   3 -
+ fs/xfs/scrub/bmap.c             |   2 +-
+ fs/xfs/scrub/btree.c            |   2 +-
+ fs/xfs/scrub/common.c           |  58 ++--
+ fs/xfs/scrub/common.h           |  18 +-
+ fs/xfs/scrub/fscounters.c       |   2 +-
+ fs/xfs/scrub/inode.c            |   2 +-
+ fs/xfs/scrub/quota.c            |   2 +-
+ fs/xfs/xfs_bmap_item.c          |  14 +-
+ fs/xfs/xfs_buf.c                |   3 +-
+ fs/xfs/xfs_buf.h                |   6 -
+ fs/xfs/xfs_dquot.c              |   3 -
+ fs/xfs/xfs_dquot.h              |  10 +
+ fs/xfs/xfs_dquot_item.c         | 134 --------
+ fs/xfs/xfs_dquot_item.h         |  17 -
+ fs/xfs/xfs_extfree_item.c       |   3 +
+ fs/xfs/xfs_icache.c             | 689 ++++++++++++++++++++++++++++++++--------
+ fs/xfs/xfs_icache.h             |  14 +-
+ fs/xfs/xfs_icreate_item.c       |   4 +-
+ fs/xfs/xfs_inode.c              |  53 ++++
+ fs/xfs/xfs_inode.h              |  22 +-
+ fs/xfs/xfs_ioctl.c              |   2 +-
+ fs/xfs/xfs_iops.c               |   4 +-
+ fs/xfs/xfs_itable.c             |  42 ++-
+ fs/xfs/xfs_iwalk.c              |  33 +-
+ fs/xfs/xfs_log.c                |  68 +++-
+ fs/xfs/xfs_log.h                |   3 +
+ fs/xfs/xfs_log_cil.c            |  10 +-
+ fs/xfs/xfs_log_priv.h           |   3 +
+ fs/xfs/xfs_log_recover.c        |  57 +++-
+ fs/xfs/xfs_mount.c              | 171 ++++++++--
+ fs/xfs/xfs_mount.h              |  69 +++-
+ fs/xfs/xfs_qm.c                 |  78 +++--
+ fs/xfs/xfs_qm.h                 |   3 -
+ fs/xfs/xfs_qm_syscalls.c        | 251 ++-------------
+ fs/xfs/xfs_quota.h              |   2 +
+ fs/xfs/xfs_quotaops.c           |  30 +-
+ fs/xfs/xfs_refcount_item.c      |   3 +
+ fs/xfs/xfs_rmap_item.c          |   3 +
+ fs/xfs/xfs_super.c              | 315 ++++++++++++------
+ fs/xfs/xfs_trace.h              | 115 ++++++-
+ fs/xfs/xfs_trans.c              |   5 +-
+ fs/xfs/xfs_trans_dquot.c        |  49 +--
+ include/linux/cpuhotplug.h      |   1 +
+ include/linux/mm.h              |   2 +
+ mm/util.c                       |  15 +
+ 62 files changed, 1651 insertions(+), 981 deletions(-)
