@@ -4,81 +4,101 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60CC4C432BE
-	for <linux-xfs@archiver.kernel.org>; Mon,  9 Aug 2021 16:17:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9144C4338F
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 Aug 2021 17:24:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4240C61002
-	for <linux-xfs@archiver.kernel.org>; Mon,  9 Aug 2021 16:17:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BDC69601FD
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 Aug 2021 17:24:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232697AbhHIQRk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 9 Aug 2021 12:17:40 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36184 "EHLO mail.kernel.org"
+        id S233979AbhHIRZE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 9 Aug 2021 13:25:04 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60810 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231675AbhHIQRc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 9 Aug 2021 12:17:32 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 6C89A60F56;
-        Mon,  9 Aug 2021 16:17:11 +0000 (UTC)
+        id S233819AbhHIRZE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 9 Aug 2021 13:25:04 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A1A1861058;
+        Mon,  9 Aug 2021 17:24:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1628525831;
-        bh=m7vz8d21YvgM97Zc8xDXGqr8lxsPtm8hfHCZhKbGpCI=;
+        s=k20201202; t=1628529883;
+        bh=mIqqdZ+gFu28zevTWFk8XiuUw1/RN1AX3p1/Of6ckf8=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=egKA3KD7B6v1ERvonhRjVesfgBDvdO2MhAem4ByYiMIzs3uwHP8qjIl6OfBg7CCUv
-         DbNYINxgKfJK7L1ZvfgtpagYBjvsGqpSJ8MbpT7v50JVPdbJIB5CFL7tbZ+DQaTOZV
-         0ptnZDZKvakvEJ7243AD2B3YtcNdmB3ZGmVuGqhuObkcBaP5WeXY1mx789JDbHzWDO
-         qu2D/oGSJ29q6QKK8Hl25me6geokS7GuFdaipDHayaj6zIIHU41qMWxjGvM4ILFs8q
-         m16i6ci9QnBYBCyvs42HTvcZu3t3s65xCMSxsy5+MeX/Ugwwb8DKthRipqqkwFAq1B
-         2HZuAO+jLU/hA==
-Date:   Mon, 9 Aug 2021 09:17:11 -0700
+        b=hHPSV3Zea/y1AcuUHMRQs1Krkkpo2oDPVYyPOmp8h27Vda1l8S/KgaGWPVnoG7beH
+         uXFtKo9qMQID3Sx/ende2gbsO7qaJ+32m7Ocv4rSnUUCKrvwu52NQuEAHu8Wp/MtnJ
+         utkGRgiQDcy5vRu/TAvPQ+EJIKpSx63P2Tomkv08HsUCHg2yRWhNLI0OVD+zULseR3
+         8RSKOUB5DnBgQMkZ+h5/UfOskHiA1mMN66yrC8IFwkife1zP/FIPyMb1aIZEgWBGZE
+         XMo+bkTavevN8Z+2pD27iwNkNzo0a7yI7y7nWF7Aw9O4k1xfY+kgVKdv6Nrw/Rz9TW
+         3GybjIYk8+euA==
+Date:   Mon, 9 Aug 2021 10:24:43 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Dan Williams <dan.j.williams@intel.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Shiyang Ruan <ruansy.fnst@fujitsu.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, nvdimm@lists.linux.dev,
-        cluster-devel@redhat.com
-Subject: Re: [PATCH 05/30] iomap: mark the iomap argument to
- iomap_inline_data_valid const
-Message-ID: <20210809161711.GE3601443@magnolia>
-References: <20210809061244.1196573-1-hch@lst.de>
- <20210809061244.1196573-6-hch@lst.de>
+To:     Allison Henderson <allison.henderson@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v22 04/16] xfs: Return from xfs_attr_set_iter if there
+ are no more rmtblks to process
+Message-ID: <20210809172443.GF3601443@magnolia>
+References: <20210727062053.11129-1-allison.henderson@oracle.com>
+ <20210727062053.11129-5-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210809061244.1196573-6-hch@lst.de>
+In-Reply-To: <20210727062053.11129-5-allison.henderson@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Aug 09, 2021 at 08:12:19AM +0200, Christoph Hellwig wrote:
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Mon, Jul 26, 2021 at 11:20:41PM -0700, Allison Henderson wrote:
+> During an attr rename operation, blocks are saved for later removal
+> as rmtblkno2. The rmtblkno is used in the case of needing to alloc
+> more blocks if not enough were available.  However, in the case
+> that neither rmtblkno or rmtblkno2 are set, we can return as soon
+> as xfs_attr_node_addname completes, rather than rolling the transaction
+> with an -EAGAIN return.  This extra loop does not hurt anything right
+> now, but it will be a problem later when we get into log items because
+> we end up with an empty log transaction.  So, add a simple check to
+> cut out the unneeded iteration.
+> 
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_attr.c | 7 +++++++
+>  1 file changed, 7 insertions(+)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index d9d7d51..5040fc1 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -409,6 +409,13 @@ xfs_attr_set_iter(
+>  			if (error)
+>  				return error;
+>  
+> +			/*
+> +			 * If addname was successful, and we dont need to alloc
+> +			 * or remove anymore blks, we're done.
+> +			 */
+> +			if (!args->rmtblkno && !args->rmtblkno2)
+> +				return 0;
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Hmm.  I applied this patch and saw a regression in xfs/125:
+
+--- /tmp/fstests/tests/xfs/125.out      2021-05-13 11:47:55.824859905 -0700
++++ /var/tmp/fstests/xfs/125.out.bad    2021-08-09 09:50:23.839261469 -0700
+@@ -11,3 +11,5 @@
+ + chattr -R -i
+ + modify xattr (2)
+ + check fs (2)
++xfs_repair should not fail
++(see /var/tmp/fstests/xfs/125.full for details)
+
+Which turned out to be repair tripping over an INCOMPLETE xattr key
+after the fs unmounts cleanly in "+ modify xattr (2)".
 
 --D
 
-> ---
->  include/linux/iomap.h | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> index 560247130357b5..76bfc5d16ef49d 100644
-> --- a/include/linux/iomap.h
-> +++ b/include/linux/iomap.h
-> @@ -109,7 +109,7 @@ static inline void *iomap_inline_data(const struct iomap *iomap, loff_t pos)
->   * This is used to guard against accessing data beyond the page inline_data
->   * points at.
->   */
-> -static inline bool iomap_inline_data_valid(struct iomap *iomap)
-> +static inline bool iomap_inline_data_valid(const struct iomap *iomap)
->  {
->  	return iomap->length <= PAGE_SIZE - offset_in_page(iomap->inline_data);
->  }
+> +
+>  			dac->dela_state = XFS_DAS_FOUND_NBLK;
+>  		}
+>  		return -EAGAIN;
 > -- 
-> 2.30.2
+> 2.7.4
 > 
