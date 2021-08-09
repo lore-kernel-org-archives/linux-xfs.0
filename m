@@ -6,79 +6,112 @@ X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
 	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53F8FC432BE
-	for <linux-xfs@archiver.kernel.org>; Mon,  9 Aug 2021 15:08:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D85DEC4338F
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 Aug 2021 15:33:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 33CC260F11
-	for <linux-xfs@archiver.kernel.org>; Mon,  9 Aug 2021 15:08:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B62076101E
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 Aug 2021 15:33:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235256AbhHIPIk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 9 Aug 2021 11:08:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53780 "EHLO
+        id S235541AbhHIPdo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 9 Aug 2021 11:33:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59426 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235196AbhHIPIj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Aug 2021 11:08:39 -0400
+        with ESMTP id S235579AbhHIPda (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Aug 2021 11:33:30 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87C27C0613D3;
-        Mon,  9 Aug 2021 08:08:18 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5287BC0613D3;
+        Mon,  9 Aug 2021 08:31:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=lVisPR5KYrIvMXDw9TO9BYr5cUWzTK5uEBjREsWaDZw=; b=FZAC+JOHKOolQ0tQy9niwPLdJY
-        ZPBp2OAOsqp/iUYEibb87Zogf2D10l8lnVlSq/lwCZAwZi/mphoKiVWRGKVoKhIKlq3bfSu568mFa
-        moyOiJGlg0B/Ha9fNfYWhsdXSfoUKvWXD02eLBsgHv3pGg2BMwWw91GpvmeLmifT5JzzpRpw5iKk6
-        ZLuDMXg42FiE4YsZOcsMPDLHQkTWSSXFNwSAN4x0XxnROurFGseOV1SX48PHp0m1dUS9b4XG3jpNa
-        Z7KcNSFFGkqitSX3e9Ik35/qWyXPKLhtRkJhSbUw3MKzWiy7t5tKei8p7Q+irVo5IbFWEMNux+L/0
-        NAW9/boQ==;
-Received: from hch by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mD6sG-00B6dW-2h; Mon, 09 Aug 2021 15:07:43 +0000
-Date:   Mon, 9 Aug 2021 16:07:32 +0100
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ojeda@kernel.org, nathan@kernel.org, ndesaulniers@google.com,
-        arnd@arndb.de
-Subject: Re: [PATCH 3/5] xfs: automatic resource cleanup of for_each_perag*
-Message-ID: <YRFEtK1CNr0Q+4nz@infradead.org>
-References: <162814684332.2777088.14593133806068529811.stgit@magnolia>
- <162814685996.2777088.11268635137040103857.stgit@magnolia>
+        bh=C5tc5j1r9B9Lim2QeeQmwl+B6gR1QYx07S9Mr910Nfg=; b=RaEuVIGLD/UzYXuU10S+nuv94P
+        TbJyuyTZqiWX7JePYEdXVmezJP0JxUlxFuQ0aB339sb+4kxj4ZJRa6W1ZxlBvs/bTdATReXjQPfpK
+        5zMB9GA2wzi6q5p7Bqkm1/41dUQKFxoD2ACuSWv2bNYQJZ+CcckH5IJr2f/hJmSaeVsA+bK6p1FIf
+        aBUJarv4te3pYvNZyTgx3RlTT9pr1qSRrct32x0H9rzs9NgHVB8cPW72ilFfhDl2KoQBAXsC61ZHY
+        WaPaIp/frQHV71aC3uU+2IxAYuPn2y5hbv0FH4xQY6GZ6vWUaII+F4YRIdvs9fvcRPz/sS/2I7LwZ
+        qSbMHV1A==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1mD7EF-00B81n-3J; Mon, 09 Aug 2021 15:30:20 +0000
+Date:   Mon, 9 Aug 2021 16:30:15 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-fsdevel@vger.kernel.org,
+        Zhengyuan Liu <liuzhengyuang521@gmail.com>, yukuai3@huawei.com,
+        Dave Chinner <david@fromorbit.com>,
+        David Howells <dhowells@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: Dirty bits and sync writes
+Message-ID: <YRFKB0rBU51O1YpD@casper.infradead.org>
+References: <YQlgjh2R8OzJkFoB@casper.infradead.org>
+ <YRFAWPdMHp8Wpds/@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <162814685996.2777088.11268635137040103857.stgit@magnolia>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <YRFAWPdMHp8Wpds/@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> +# Required for for_each_perag*
-> +ccflags-y += -std=gnu99
+On Mon, Aug 09, 2021 at 03:48:56PM +0100, Christoph Hellwig wrote:
+> On Tue, Aug 03, 2021 at 04:28:14PM +0100, Matthew Wilcox wrote:
+> > Solution 1: Add an array of dirty bits to the iomap_page
+> > data structure.  This patch already exists; would need
+> > to be adjusted slightly to apply to the current tree.
+> > https://lore.kernel.org/linux-xfs/7fb4bb5a-adc7-5914-3aae-179dd8f3adb1@huawei.com/
+> 
+> > Solution 2a: Replace the array of uptodate bits with an array of
+> > dirty bits.  It is not often useful to know which parts of the page are
+> > uptodate; usually the entire page is uptodate.  We can actually use the
+> > dirty bits for the same purpose as uptodate bits; if a block is dirty, it
+> > is definitely uptodate.  If a block is !dirty, and the page is !uptodate,
+> > the block may or may not be uptodate, but it can be safely re-read from
+> > storage without losing any data.
+> 
+> 1 or 2a seems like something we should do once we have lage folio
+> support.
+> 
+> 
+> > Solution 2b: Lose the concept of partially uptodate pages.  If we're
+> > going to write to a partial page, just bring the entire page uptodate
+> > first, then write to it.  It's not clear to me that partially-uptodate
+> > pages are really useful.  I don't know of any network filesystems that
+> > support partially-uptodate pages, for example.  It seems to have been
+> > something we did for buffer_head based filesystems "because we could"
+> > rather than finding a workload that actually cares.
+> 
+> The uptodate bit is important for the use case of a smaller than page
+> size buffered write into a page that hasn't been read in already, which
+> is fairly common for things like log writes.  So I'd hate to lose this
+> optimization.
+> 
+> > (it occurs to me that solution 3 actually allows us to do IOs at storage
+> > block size instead of filesystem block size, potentially reducing write
+> > amplification even more, although we will need to be a bit careful if
+> > we're doing a CoW.)
+> 
+> number 3 might be nice optimization.  The even better version would
+> be a disk format change to just log those updates in the log and
+> otherwise use the normal dirty mechanism.  I once had a crude prototype
+> for that.
 
-I don't think it is up to an individual subsystem to pick a specific C
-dialect.
+That's a bit beyond my scope at this point.  I'm currently working on
+write-through.  Once I have that working, I think the next step is:
 
-I think the most important reason why the kernel sticks with gnu89 is
-to avoid the misfeature of variable declarations in the middle of
-blocks, and this change would lose it.
+ - Replace the ->uptodate array with a ->dirty array
+ - If the entire page is Uptodate, drop the iomap_page.  That means that
+   writebacks will write back the entire folio, not just the dirty
+   pieces.
+ - If doing a partial page write
+   - If the write is block-aligned (offset & length), leave the page
+     !Uptodate and mark the dirty blocks
+   - Otherwise bring the entire page Uptodate first, then mark it dirty
 
-> +	xfs_agnumber_t		last_agno = 0;
->  	int			saved_error = 0;
->  	int			error = 0;
->  	LIST_HEAD		(buffer_list);
->  
->  	/* update secondary superblocks. */
-> -	for_each_perag_from(mp, agno, pag) {
-> +	for_each_perag_from(mp, iter, 1) {
->  		struct xfs_buf		*bp;
->  
-> +		last_agno = iter.pag->pag_agno;
+To take an example of a 512-byte block size file accepting a 520 byte
+write at offset 500, we currently submit two reads, one for bytes 0-511
+and the second for 1024-1535.  We're better off submitting a read for
+bytes 0-4095 and then overwriting the entire thing.
 
-This is a really horrible API as it magically injects a local variable
-in a macro.  It also leads to worse code generation and a small but
-noticable increase in .text sie:
+But it's still better to do no reads at all if someone submits a write
+for bytes 512-1023, or 512-N where N is past EOF.  And I'd preserve
+that behaviour.
 
-hch@brick:~/work/xfs$ size xfs.o.*
-   text	   data	    bss	    dec	    hex	filename
-1521421	 301161	   1880	1824462	 1bd6ce	xfs.o.old
-1521516	 301161	   1880	1824557	 1bd72d	xfs.o.new
