@@ -2,185 +2,141 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AC7AC4338F
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Aug 2021 05:29:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23C6BC4338F
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Aug 2021 06:39:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5643A60295
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Aug 2021 05:29:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 01DB661058
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Aug 2021 06:39:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237638AbhHJF3X (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Aug 2021 01:29:23 -0400
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:55996 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S237143AbhHJF3V (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Aug 2021 01:29:21 -0400
-Received: from dread.disaster.area (pa49-195-182-146.pa.nsw.optusnet.com.au [49.195.182.146])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id EB4A784C63
-        for <linux-xfs@vger.kernel.org>; Tue, 10 Aug 2021 15:28:58 +1000 (AEST)
-Received: from discord.disaster.area ([192.168.253.110])
-        by dread.disaster.area with esmtp (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1mDKJq-00GZtF-6n
-        for linux-xfs@vger.kernel.org; Tue, 10 Aug 2021 15:28:54 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.94)
-        (envelope-from <david@fromorbit.com>)
-        id 1mDKJp-000B4M-VT
-        for linux-xfs@vger.kernel.org; Tue, 10 Aug 2021 15:28:53 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 3/3] xfs: rename buffer cache index variable b_bn
-Date:   Tue, 10 Aug 2021 15:28:51 +1000
-Message-Id: <20210810052851.42312-4-david@fromorbit.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20210810052851.42312-1-david@fromorbit.com>
-References: <20210810052851.42312-1-david@fromorbit.com>
+        id S236499AbhHJGkN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Aug 2021 02:40:13 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42190 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231229AbhHJGkN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 10 Aug 2021 02:40:13 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B50DD60238;
+        Tue, 10 Aug 2021 06:39:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1628577591;
+        bh=Rt8OufpkIbsLyiXRCpS3gkfeWehc9wTsVDBkYN0Fyqw=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Yjvl1922O0SS+tM6M/cH/Wh4ac8k7jnNBYQI3W7s14ozjpLmppXWgCgcwDZmjlBLM
+         o+MaylInt6EJVnKD3CsZrxrFU3sPk6A+SW5cQEVZkEspbXEbfD5f4dZe9MSMq6BHla
+         A3XuxUgpFM2zg8w5+tyHXXyAV6QREHdO/ehKjJ2t+dAwYvaYaNW8cUyDdsyuJWWFJV
+         w61ks7bG17YL0r48We5YJMifOo7sO+ZcnZDyPladHWOYABbCHRR4MPW9Bf/9SyuVHn
+         3Dn1LvlTmCYKzxbPAeYKZO2r1r+rG2JozMzYUzO/QJjzzAMq6Di8Gkv50b5sSfCZ1Y
+         6hKVXKdBIY4Mw==
+Date:   Mon, 9 Aug 2021 23:39:51 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Dan Williams <dan.j.williams@intel.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Shiyang Ruan <ruansy.fnst@fujitsu.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, nvdimm@lists.linux.dev,
+        cluster-devel@redhat.com
+Subject: Re: [PATCH 19/30] iomap: switch iomap_bmap to use iomap_iter
+Message-ID: <20210810063951.GH3601443@magnolia>
+References: <20210809061244.1196573-1-hch@lst.de>
+ <20210809061244.1196573-20-hch@lst.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
-        a=QpfB3wCSrn/dqEBSktpwZQ==:117 a=QpfB3wCSrn/dqEBSktpwZQ==:17
-        a=MhDmnRu9jo8A:10 a=20KFwNOVAAAA:8 a=t0MN_ZO9zPffNZN11lIA:9
-        a=Yz0A3Ip3R_EK7mjM:21 a=Tit6Z0zlIZaA1n66:21
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210809061244.1196573-20-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Mon, Aug 09, 2021 at 08:12:33AM +0200, Christoph Hellwig wrote:
+> Rewrite the ->bmap implementation based on iomap_iter.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/iomap/fiemap.c | 31 +++++++++++++------------------
+>  1 file changed, 13 insertions(+), 18 deletions(-)
+> 
+> diff --git a/fs/iomap/fiemap.c b/fs/iomap/fiemap.c
+> index acad09a8c188df..60daadba16c149 100644
+> --- a/fs/iomap/fiemap.c
+> +++ b/fs/iomap/fiemap.c
+> @@ -92,35 +92,30 @@ int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
+>  }
+>  EXPORT_SYMBOL_GPL(iomap_fiemap);
+>  
+> -static loff_t
+> -iomap_bmap_actor(struct inode *inode, loff_t pos, loff_t length,
+> -		void *data, struct iomap *iomap, struct iomap *srcmap)
+> -{
+> -	sector_t *bno = data, addr;
+> -
+> -	if (iomap->type == IOMAP_MAPPED) {
+> -		addr = (pos - iomap->offset + iomap->addr) >> inode->i_blkbits;
+> -		*bno = addr;
+> -	}
+> -	return 0;
+> -}
+> -
+>  /* legacy ->bmap interface.  0 is the error return (!) */
+>  sector_t
+>  iomap_bmap(struct address_space *mapping, sector_t bno,
+>  		const struct iomap_ops *ops)
+>  {
+> -	struct inode *inode = mapping->host;
+> -	loff_t pos = bno << inode->i_blkbits;
+> -	unsigned blocksize = i_blocksize(inode);
+> +	struct iomap_iter iter = {
+> +		.inode	= mapping->host,
+> +		.pos	= (loff_t)bno << mapping->host->i_blkbits,
+> +		.len	= i_blocksize(mapping->host),
+> +		.flags	= IOMAP_REPORT,
+> +	};
+>  	int ret;
+>  
+>  	if (filemap_write_and_wait(mapping))
+>  		return 0;
+>  
+>  	bno = 0;
+> -	ret = iomap_apply(inode, pos, blocksize, 0, ops, &bno,
+> -			  iomap_bmap_actor);
+> +	while ((ret = iomap_iter(&iter, ops)) > 0) {
+> +		if (iter.iomap.type != IOMAP_MAPPED)
+> +			continue;
 
-TO stop external users from using b_bn as the disk address of the
-buffer, rename it to b_index to indicate that it is the buffer cache
-index, not the block number of the buffer. Code that needs the disk
-address should use xfs_buf_daddr() to obtain it.
+I still feel uncomfortable about this use of "continue" here, because it
+really means "call iomap_iter again to clean up and exit even though we
+know it won't even look for more iomaps to iterate".
 
-Do the rename and clean up any of the remaining b_bn cruft that is
-left over and is now unused.
+To me that feels subtly broken (I usually associate 'continue' with
+'go run the loop body again'), and even though bmap has been a quirky
+hot mess for 45 years, we don't need to make it even moreso.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_buf.c | 19 +++++++++++--------
- fs/xfs/xfs_buf.h | 18 +-----------------
- 2 files changed, 12 insertions(+), 25 deletions(-)
+Can't this at least be rephrased as:
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index c1bb6e41595b..6f6c6937baaa 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -251,7 +251,7 @@ _xfs_buf_alloc(
- 		return error;
- 	}
- 
--	bp->b_bn = map[0].bm_bn;
-+	bp->b_index = map[0].bm_bn;
- 	bp->b_length = 0;
- 	for (i = 0; i < nmaps; i++) {
- 		bp->b_maps[i].bm_bn = map[i].bm_bn;
-@@ -459,7 +459,7 @@ _xfs_buf_obj_cmp(
- 	 */
- 	BUILD_BUG_ON(offsetof(struct xfs_buf_map, bm_bn) != 0);
- 
--	if (bp->b_bn != map->bm_bn)
-+	if (bp->b_index != map->bm_bn)
- 		return 1;
- 
- 	if (unlikely(bp->b_length != map->bm_len)) {
-@@ -481,7 +481,7 @@ static const struct rhashtable_params xfs_buf_hash_params = {
- 	.min_size		= 32,	/* empty AGs have minimal footprint */
- 	.nelem_hint		= 16,
- 	.key_len		= sizeof(xfs_daddr_t),
--	.key_offset		= offsetof(struct xfs_buf, b_bn),
-+	.key_offset		= offsetof(struct xfs_buf, b_index),
- 	.head_offset		= offsetof(struct xfs_buf, b_rhash_head),
- 	.automatic_shrinking	= true,
- 	.obj_cmpfn		= _xfs_buf_obj_cmp,
-@@ -853,7 +853,9 @@ xfs_buf_readahead_map(
- 
- /*
-  * Read an uncached buffer from disk. Allocates and returns a locked
-- * buffer containing the disk contents or nothing.
-+ * buffer containing the disk contents or nothing. Uncached buffers always have
-+ * a cache index of XFS_BUF_DADDR_NULL so we can easily determine if the buffer
-+ * is cached or uncached during fault diagnosis.
-  */
- int
- xfs_buf_read_uncached(
-@@ -875,7 +877,7 @@ xfs_buf_read_uncached(
- 
- 	/* set up the buffer for a read IO */
- 	ASSERT(bp->b_map_count == 1);
--	bp->b_bn = XFS_BUF_DADDR_NULL;  /* always null for uncached buffers */
-+	bp->b_index = XFS_BUF_DADDR_NULL;
- 	bp->b_maps[0].bm_bn = daddr;
- 	bp->b_flags |= XBF_READ;
- 	bp->b_ops = ops;
-@@ -1513,7 +1515,7 @@ _xfs_buf_ioapply(
- 						   SHUTDOWN_CORRUPT_INCORE);
- 				return;
- 			}
--		} else if (bp->b_bn != XFS_BUF_DADDR_NULL) {
-+		} else if (bp->b_index != XFS_BUF_DADDR_NULL) {
- 			struct xfs_mount *mp = bp->b_mount;
- 
- 			/*
-@@ -1523,7 +1525,8 @@ _xfs_buf_ioapply(
- 			if (xfs_has_crc(mp)) {
- 				xfs_warn(mp,
- 					"%s: no buf ops on daddr 0x%llx len %d",
--					__func__, bp->b_bn, bp->b_length);
-+					__func__, xfs_buf_daddr(bp),
-+					bp->b_length);
- 				xfs_hex_dump(bp->b_addr,
- 						XFS_CORRUPTION_DUMP_LEN);
- 				dump_stack();
-@@ -1793,7 +1796,7 @@ xfs_buftarg_drain(
- 				xfs_buf_alert_ratelimited(bp,
- 					"XFS: Corruption Alert",
- "Corruption Alert: Buffer at daddr 0x%llx had permanent write failures!",
--					(long long)bp->b_bn);
-+					(long long)xfs_buf_daddr(bp));
- 			}
- 			xfs_buf_rele(bp);
- 		}
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 6db2fba44b46..7e408c416607 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -134,11 +134,7 @@ struct xfs_buf {
- 	 */
- 	struct rhash_head	b_rhash_head;	/* pag buffer hash node */
- 
--	/*
--	 * b_bn is the cache index. Do not use directly, use b_maps[0].bm_bn
--	 * for the buffer disk address instead.
--	 */
--	xfs_daddr_t		b_bn;
-+	xfs_daddr_t		b_index;	/* buffer cache index */
- 	int			b_length;	/* size of buffer in BBs */
- 	atomic_t		b_hold;		/* reference count */
- 	atomic_t		b_lru_ref;	/* lru reclaim ref count */
-@@ -301,18 +297,6 @@ extern int xfs_buf_delwri_pushbuf(struct xfs_buf *, struct list_head *);
- extern int xfs_buf_init(void);
- extern void xfs_buf_terminate(void);
- 
--/*
-- * These macros use the IO block map rather than b_bn. b_bn is now really
-- * just for the buffer cache index for cached buffers. As IO does not use b_bn
-- * anymore, uncached buffers do not use b_bn at all and hence must modify the IO
-- * map directly. Uncached buffers are not allowed to be discontiguous, so this
-- * is safe to do.
-- *
-- * In future, uncached buffers will pass the block number directly to the io
-- * request function and hence these macros will go away at that point.
-- */
--#define XFS_BUF_SET_ADDR(bp, bno)	((bp)->b_maps[0].bm_bn = (xfs_daddr_t)(bno))
--
- static inline xfs_daddr_t xfs_buf_daddr(struct xfs_buf *bp)
- {
- 	return bp->b_maps[0].bm_bn;
--- 
-2.31.1
+	const uint bno_shift = (mapping->host->i_blkbits - SECTOR_SHIFT);
 
+	while ((ret = iomap_iter(&iter, ops)) > 0) {
+		if (iter.iomap.type == IOMAP_MAPPED)
+			bno = iomap_sector(iomap, iter.pos) << bno_shift;
+		/* leave iter.processed unset to stop iteration */
+	}
+
+to make the loop exit more explicit?
+
+--D
+
+> +		bno = (iter.pos - iter.iomap.offset + iter.iomap.addr) >>
+> +				mapping->host->i_blkbits;
+> +	}
+> +
+>  	if (ret)
+>  		return 0;
+>  	return bno;
+> -- 
+> 2.30.2
+> 
