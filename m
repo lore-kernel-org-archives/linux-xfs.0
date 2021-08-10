@@ -7,243 +7,240 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA2DEC04FE3
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6A3AC4320A
 	for <linux-xfs@archiver.kernel.org>; Tue, 10 Aug 2021 05:18:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CA97360551
+	by mail.kernel.org (Postfix) with ESMTP id 8631A6101D
 	for <linux-xfs@archiver.kernel.org>; Tue, 10 Aug 2021 05:18:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237236AbhHJFS5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Aug 2021 01:18:57 -0400
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:47973 "EHLO
+        id S236743AbhHJFS4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Aug 2021 01:18:56 -0400
+Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:47923 "EHLO
         mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S236791AbhHJFSz (ORCPT
+        by vger.kernel.org with ESMTP id S237236AbhHJFSz (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Aug 2021 01:18:55 -0400
 Received: from dread.disaster.area (pa49-195-182-146.pa.nsw.optusnet.com.au [49.195.182.146])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id B107A83E07
+        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 5EA6084596
         for <linux-xfs@vger.kernel.org>; Tue, 10 Aug 2021 15:18:32 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1mDK9k-00GZYp-Uk
-        for linux-xfs@vger.kernel.org; Tue, 10 Aug 2021 15:18:28 +1000
+        id 1mDK9l-00GZZ8-3P
+        for linux-xfs@vger.kernel.org; Tue, 10 Aug 2021 15:18:29 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1mDK9k-000Abo-NF
+        id 1mDK9k-000Ac3-Rz
         for linux-xfs@vger.kernel.org; Tue, 10 Aug 2021 15:18:28 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 3/9] xfs: move recovery needed state updates to xfs_log_mount_finish
-Date:   Tue, 10 Aug 2021 15:18:19 +1000
-Message-Id: <20210810051825.40715-4-david@fromorbit.com>
+Subject: [PATCH 8/9] xfs: don't run shutdown callbacks on active iclogs
+Date:   Tue, 10 Aug 2021 15:18:24 +1000
+Message-Id: <20210810051825.40715-9-david@fromorbit.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210810051825.40715-1-david@fromorbit.com>
 References: <20210810051825.40715-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
         a=QpfB3wCSrn/dqEBSktpwZQ==:117 a=QpfB3wCSrn/dqEBSktpwZQ==:17
         a=MhDmnRu9jo8A:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
-        a=98wzqbPVxKU9PDynaaQA:9 a=AjGcO6oz07-iQ99wixmX:22
+        a=TwccxBiVExJpV-d7L8IA:9 a=AjGcO6oz07-iQ99wixmX:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-xfs_log_mount_finish() needs to know if recovery is needed or not to
-make decisions on whether to flush the log and AIL.  Move the
-handling of the NEED_RECOVERY state out to this function rather than
-needing a temporary variable to store this state over the call to
-xlog_recover_finish().
+When the log is shutdown, it currently walks all the iclogs and runs
+callbacks that are attached to the iclogs, regardless of whether the
+iclog is queued for IO completion or not. This creates a problem for
+contexts attaching callbacks to iclogs in that a racing shutdown can
+run the callbacks even before the attaching context has finished
+processing the iclog and releasing it for IO submission.
+
+If the callback processing of the iclog frees the structure that is
+attached to the iclog, then this leads to an UAF scenario that can
+only be protected against by holding the icloglock from the point
+callbacks are attached through to the release of the iclog. While we
+currently do this, it is not practical or sustainable.
+
+Hence we need to make shutdown processing the responsibility of the
+context that holds active references to the iclog. We know that the
+contexts attaching callbacks to the iclog must have active
+references to the iclog, and that means they must be in either
+ACTIVE or WANT_SYNC states. xlog_state_do_callback() will skip over
+iclogs in these states -except- when the log is shut down.
+
+xlog_state_do_callback() checks the state of the iclogs while
+holding the icloglock, therefore the reference count/state change
+that occurs in xlog_state_release_iclog() after the callbacks are
+atomic w.r.t. shutdown processing.
+
+We can't push the responsibility of callback cleanup onto the CIL
+context because we can have ACTIVE iclogs that have callbacks
+attached that have already been released. Hence we really need to
+internalise the cleanup of callbacks into xlog_state_release_iclog()
+processing.
+
+Indeed, we already have that internalisation via:
+
+xlog_state_release_iclog
+  drop last reference
+    ->SYNCING
+  xlog_sync
+    xlog_write_iclog
+      if (log_is_shutdown)
+        xlog_state_done_syncing()
+	  xlog_state_do_callback()
+	    <process shutdown on iclog that is now in SYNCING state>
+
+The problem is that xlog_state_release_iclog() aborts before doing
+anything if the log is already shut down. It assumes that the
+callbacks have already been cleaned up, and it doesn't need to do
+any cleanup.
+
+Hence the fix is to remove the xlog_is_shutdown() check from
+xlog_state_release_iclog() so that reference counts are correctly
+released from the iclogs, and when the reference count is zero we
+always transition to SYNCING if the log is shut down. Hence we'll
+always enter the xlog_sync() path in a shutdown and eventually end
+up erroring out the iclog IO and running xlog_state_do_callback() to
+process the callbacks attached to the iclog.
+
+This allows us to stop processing referenced ACTIVE/WANT_SYNC iclogs
+directly in the shutdown code, and in doing so gets rid of the UAF
+vector that currently exists. This then decouples the adding of
+callbacks to the iclogs from xlog_state_release_iclog() as we
+guarantee that xlog_state_release_iclog() will process the callbacks
+if the log has been shut down before xlog_state_release_iclog() has
+been called.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_log.c         |  24 ++++++----
- fs/xfs/xfs_log_recover.c | 100 ++++++++++++++++-----------------------
- 2 files changed, 56 insertions(+), 68 deletions(-)
+ fs/xfs/xfs_log.c     | 35 +++++++++++++++++++++++++++++++----
+ fs/xfs/xfs_log_cil.c | 15 +++++++--------
+ 2 files changed, 38 insertions(+), 12 deletions(-)
 
 diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 08fef1e998ea..8edfd35317d1 100644
+index 38add7bb64e3..a4ec23b5c459 100644
 --- a/fs/xfs/xfs_log.c
 +++ b/fs/xfs/xfs_log.c
-@@ -726,9 +726,9 @@ int
- xfs_log_mount_finish(
- 	struct xfs_mount	*mp)
- {
--	int	error = 0;
--	bool	readonly = (mp->m_flags & XFS_MOUNT_RDONLY);
--	bool	recovered = mp->m_log->l_flags & XLOG_RECOVERY_NEEDED;
-+	struct xlog		*log = mp->m_log;
-+	bool			readonly = (mp->m_flags & XFS_MOUNT_RDONLY);
-+	int			error = 0;
- 
- 	if (mp->m_flags & XFS_MOUNT_NORECOVERY) {
- 		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
-@@ -759,7 +759,8 @@ xfs_log_mount_finish(
- 	 * mount failure occurs.
- 	 */
- 	mp->m_super->s_flags |= SB_ACTIVE;
--	error = xlog_recover_finish(mp->m_log);
-+	if (log->l_flags & XLOG_RECOVERY_NEEDED)
-+		error = xlog_recover_finish(log);
- 	if (!error)
- 		xfs_log_work_queue(mp);
- 	mp->m_super->s_flags &= ~SB_ACTIVE;
-@@ -774,17 +775,24 @@ xfs_log_mount_finish(
- 	 * Don't push in the error case because the AIL may have pending intents
- 	 * that aren't removed until recovery is cancelled.
- 	 */
--	if (!error && recovered) {
--		xfs_log_force(mp, XFS_LOG_SYNC);
--		xfs_ail_push_all_sync(mp->m_ail);
-+	if (log->l_flags & XLOG_RECOVERY_NEEDED) {
-+		if (!error) {
-+			xfs_log_force(mp, XFS_LOG_SYNC);
-+			xfs_ail_push_all_sync(mp->m_ail);
-+		}
-+		xfs_notice(mp, "Ending recovery (logdev: %s)",
-+				mp->m_logname ? mp->m_logname : "internal");
-+	} else {
-+		xfs_info(mp, "Ending clean mount");
- 	}
- 	xfs_buftarg_drain(mp->m_ddev_targp);
- 
-+	log->l_flags &= ~XLOG_RECOVERY_NEEDED;
- 	if (readonly)
- 		mp->m_flags |= XFS_MOUNT_RDONLY;
- 
- 	/* Make sure the log is dead if we're returning failure. */
--	ASSERT(!error || (mp->m_log->l_flags & XLOG_IO_ERROR));
-+	ASSERT(!error || xlog_is_shutdown(log));
- 
- 	return error;
- }
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index e6589cf4d09f..53006e923a8c 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -3449,78 +3449,58 @@ xlog_recover(
- }
- 
- /*
-- * In the first part of recovery we replay inodes and buffers and build
-- * up the list of extent free items which need to be processed.  Here
-- * we process the extent free items and clean up the on disk unlinked
-- * inode lists.  This is separated from the first part of recovery so
-- * that the root and real-time bitmap inodes can be read in from disk in
-- * between the two stages.  This is necessary so that we can free space
-- * in the real-time portion of the file system.
-+ * In the first part of recovery we replay inodes and buffers and build up the
-+ * list of intents which need to be processed. Here we process the intents and
-+ * clean up the on disk unlinked inode lists. This is separated from the first
-+ * part of recovery so that the root and real-time bitmap inodes can be read in
-+ * from disk in between the two stages.  This is necessary so that we can free
-+ * space in the real-time portion of the file system.
+@@ -41,6 +41,8 @@ xlog_dealloc_log(
+ /* local state machine functions */
+ STATIC void xlog_state_done_syncing(
+ 	struct xlog_in_core	*iclog);
++STATIC void xlog_state_do_callback(
++	struct xlog		*log);
+ STATIC int
+ xlog_state_get_iclog_space(
+ 	struct xlog		*log,
+@@ -491,6 +493,11 @@ xfs_log_reserve(
+  * space waiters so they can process the newly set shutdown state. We really
+  * don't care what order we process callbacks here because the log is shut down
+  * and so state cannot change on disk anymore.
++ *
++ * We avoid processing actively referenced iclogs so that we don't run callbacks
++ * while the iclog owner might still be preparing the iclog for IO submssion.
++ * These will be caught by xlog_state_iclog_release() and call this function
++ * again to process any callbacks that may have been added to that iclog.
   */
- int
- xlog_recover_finish(
- 	struct xlog	*log)
+ static void
+ xlog_state_shutdown_callbacks(
+@@ -502,7 +509,12 @@ xlog_state_shutdown_callbacks(
+ 	spin_lock(&log->l_icloglock);
+ 	iclog = log->l_iclog;
+ 	do {
++		if (atomic_read(&iclog->ic_refcnt)) {
++			/* Reference holder will re-run iclog callbacks. */
++			continue;
++		}
+ 		list_splice_init(&iclog->ic_callbacks, &cb_list);
++		wake_up_all(&iclog->ic_write_wait);
+ 		wake_up_all(&iclog->ic_force_wait);
+ 	} while ((iclog = iclog->ic_next) != log->l_iclog);
+ 
+@@ -546,12 +558,11 @@ xlog_state_release_iclog(
+ 	xfs_lsn_t		old_tail_lsn)
  {
--	/*
--	 * Now we're ready to do the transactions needed for the
--	 * rest of recovery.  Start with completing all the extent
--	 * free intent records and then process the unlinked inode
--	 * lists.  At this point, we essentially run in normal mode
--	 * except that we're still performing recovery actions
--	 * rather than accepting new requests.
--	 */
--	if (log->l_flags & XLOG_RECOVERY_NEEDED) {
--		int	error;
--		error = xlog_recover_process_intents(log);
--		if (error) {
--			/*
--			 * Cancel all the unprocessed intent items now so that
--			 * we don't leave them pinned in the AIL.  This can
--			 * cause the AIL to livelock on the pinned item if
--			 * anyone tries to push the AIL (inode reclaim does
--			 * this) before we get around to xfs_log_mount_cancel.
--			 */
--			xlog_recover_cancel_intents(log);
--			xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
--			xfs_alert(log->l_mp, "Failed to recover intents");
--			return error;
--		}
-+	int	error;
- 
-+	error = xlog_recover_process_intents(log);
-+	if (error) {
- 		/*
--		 * Sync the log to get all the intents out of the AIL.
--		 * This isn't absolutely necessary, but it helps in
--		 * case the unlink transactions would have problems
--		 * pushing the intents out of the way.
-+		 * Cancel all the unprocessed intent items now so that we don't
-+		 * leave them pinned in the AIL.  This can cause the AIL to
-+		 * livelock on the pinned item if anyone tries to push the AIL
-+		 * (inode reclaim does this) before we get around to
-+		 * xfs_log_mount_cancel.
- 		 */
--		xfs_log_force(log->l_mp, XFS_LOG_SYNC);
-+		xlog_recover_cancel_intents(log);
-+		xfs_alert(log->l_mp, "Failed to recover intents");
-+		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
-+		return error;
-+	}
- 
--		/*
--		 * Now that we've recovered the log and all the intents, we can
--		 * clear the log incompat feature bits in the superblock
--		 * because there's no longer anything to protect.  We rely on
--		 * the AIL push to write out the updated superblock after
--		 * everything else.
--		 */
--		if (xfs_clear_incompat_log_features(log->l_mp)) {
--			error = xfs_sync_sb(log->l_mp, false);
--			if (error < 0) {
--				xfs_alert(log->l_mp,
-+	/*
-+	 * Sync the log to get all the intents out of the AIL.  This isn't
-+	 * absolutely necessary, but it helps in case the unlink transactions
-+	 * would have problems pushing the intents out of the way.
-+	 */
-+	xfs_log_force(log->l_mp, XFS_LOG_SYNC);
+ 	xfs_lsn_t		tail_lsn;
++	bool			last_ref;
 +
-+	/*
-+	 * Now that we've recovered the log and all the intents, we can clear
-+	 * the log incompat feature bits in the superblock because there's no
-+	 * longer anything to protect.  We rely on the AIL push to write out the
-+	 * updated superblock after everything else.
-+	 */
-+	if (xfs_clear_incompat_log_features(log->l_mp)) {
-+		error = xfs_sync_sb(log->l_mp, false);
-+		if (error < 0) {
-+			xfs_alert(log->l_mp,
- 	"Failed to clear log incompat features on recovery");
--				return error;
--			}
-+			return error;
- 		}
+ 	lockdep_assert_held(&log->l_icloglock);
+ 
+ 	trace_xlog_iclog_release(iclog, _RET_IP_);
+-	if (xlog_is_shutdown(log))
+-		return -EIO;
 -
--		xlog_recover_process_iunlinks(log);
--
--		xlog_recover_check_summary(log);
--
--		xfs_notice(log->l_mp, "Ending recovery (logdev: %s)",
--				log->l_mp->m_logname ? log->l_mp->m_logname
--						     : "internal");
--		log->l_flags &= ~XLOG_RECOVERY_NEEDED;
--	} else {
--		xfs_info(log->l_mp, "Ending clean mount");
+ 	/*
+ 	 * Grabbing the current log tail needs to be atomic w.r.t. the writing
+ 	 * of the tail LSN into the iclog so we guarantee that the log tail does
+@@ -569,7 +580,23 @@ xlog_state_release_iclog(
+ 			iclog->ic_header.h_tail_lsn = cpu_to_be64(tail_lsn);
  	}
+ 
+-	if (!atomic_dec_and_test(&iclog->ic_refcnt))
++	last_ref = atomic_dec_and_test(&iclog->ic_refcnt);
 +
-+	xlog_recover_process_iunlinks(log);
-+	xlog_recover_check_summary(log);
- 	return 0;
- }
++	if (xlog_is_shutdown(log)) {
++		/*
++		 * If there are no more references to this iclog, process the
++		 * pending iclog callbacks that were waiting on the release of
++		 * this iclog.
++		 */
++		if (last_ref) {
++			spin_unlock(&log->l_icloglock);
++			xlog_state_shutdown_callbacks(log);
++			spin_lock(&log->l_icloglock);
++		}
++		return -EIO;
++	}
++
++	if (!last_ref)
+ 		return 0;
+ 
+ 	if (iclog->ic_state != XLOG_STATE_WANT_SYNC) {
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index cd7b58f7f13e..e18b539d26fb 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -891,11 +891,10 @@ xlog_cil_push_work(
+ 	xfs_log_ticket_ungrant(log, tic);
+ 
+ 	/*
+-	 * Once we attach the ctx to the iclog, a shutdown can process the
+-	 * iclog, run the callbacks and free the ctx. The only thing preventing
+-	 * this potential UAF situation here is that we are holding the
+-	 * icloglock. Hence we cannot access the ctx once we have attached the
+-	 * callbacks and dropped the icloglock.
++	 * Once we attach the ctx to the iclog, it is effectively owned by the
++	 * iclog and we can only use it while we still have an active reference
++	 * to the iclog. i.e. once we call xlog_state_release_iclog() we can no
++	 * longer safely reference the ctx.
+ 	 */
+ 	spin_lock(&log->l_icloglock);
+ 	if (xlog_is_shutdown(log)) {
+@@ -927,9 +926,6 @@ xlog_cil_push_work(
+ 	 * wakeup until this commit_iclog is written to disk.  Hence we use the
+ 	 * iclog header lsn and compare it to the commit lsn to determine if we
+ 	 * need to wait on iclogs or not.
+-	 *
+-	 * NOTE: It is not safe to reference the ctx after this check as we drop
+-	 * the icloglock if we have to wait for completion of other iclogs.
+ 	 */
+ 	if (ctx->start_lsn != commit_lsn) {
+ 		xfs_lsn_t	plsn;
+@@ -959,6 +955,9 @@ xlog_cil_push_work(
+ 	 */
+ 	commit_iclog->ic_flags |= XLOG_ICL_NEED_FUA;
+ 	xlog_state_release_iclog(log, commit_iclog, preflush_tail_lsn);
++
++	/* Not safe to reference ctx now! */
++
+ 	spin_unlock(&log->l_icloglock);
+ 	return;
  
 -- 
 2.31.1
