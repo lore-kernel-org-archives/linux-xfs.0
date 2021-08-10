@@ -6,112 +6,115 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EDEBC4338F
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Aug 2021 05:18:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75685C4338F
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Aug 2021 05:21:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 40E7460551
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Aug 2021 05:18:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 57E196101D
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Aug 2021 05:21:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237591AbhHJFTE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Aug 2021 01:19:04 -0400
-Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:43752 "EHLO
-        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S237571AbhHJFTD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Aug 2021 01:19:03 -0400
+        id S237639AbhHJFVv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Aug 2021 01:21:51 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:42685 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S237614AbhHJFVp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Aug 2021 01:21:45 -0400
 Received: from dread.disaster.area (pa49-195-182-146.pa.nsw.optusnet.com.au [49.195.182.146])
-        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id E98C61143C15
-        for <linux-xfs@vger.kernel.org>; Tue, 10 Aug 2021 15:18:37 +1000 (AEST)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 54A07867624
+        for <linux-xfs@vger.kernel.org>; Tue, 10 Aug 2021 15:21:23 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1mDK9k-00GZYl-Rf
-        for linux-xfs@vger.kernel.org; Tue, 10 Aug 2021 15:18:28 +1000
+        id 1mDKCY-00GZcD-NZ
+        for linux-xfs@vger.kernel.org; Tue, 10 Aug 2021 15:21:22 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1mDK9k-000Abg-K4
-        for linux-xfs@vger.kernel.org; Tue, 10 Aug 2021 15:18:28 +1000
+        id 1mDKCY-000Ago-D9
+        for linux-xfs@vger.kernel.org; Tue, 10 Aug 2021 15:21:22 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 0/9 v3] xfs: shutdown is a racy mess
-Date:   Tue, 10 Aug 2021 15:18:16 +1000
-Message-Id: <20210810051825.40715-1-david@fromorbit.com>
+Subject: [PATCH 0/5 v3] xfs: strictly order log start records
+Date:   Tue, 10 Aug 2021 15:21:15 +1000
+Message-Id: <20210810052120.41019-1-david@fromorbit.com>
 X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
         a=QpfB3wCSrn/dqEBSktpwZQ==:117 a=QpfB3wCSrn/dqEBSktpwZQ==:17
         a=MhDmnRu9jo8A:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=Gw3JTCxDVW9RoVmuXrcA:9 a=AjGcO6oz07-iQ99wixmX:22
+        a=IGfJWdSb32bzu4Gr1ucA:9 a=AjGcO6oz07-iQ99wixmX:22
         a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-With the recent log problems we've uncovered, it's clear that the
-way we shut down filesystems and the log is a chaotic mess. We can
-have multiple filesystem shutdown executions being in progress at
-once, all competing to run shutdown processing and emit log messages
-saying the filesystem has been shut down and why. Further, shutdown
-changes the log state and runs log IO completion callbacks without
-any co-ordination with ongoing log operations.
+We recently found a zero-day log recovery issue where overlapping
+log transactions used the wrong LSN for recovery operations despite
+being replayed in the correct commit record order. The issue is that
+the log recovery code uses the LSN of the start record of the log
+transaction for ordering and metadata stamping, while the actual
+order of transaction replay is determined by the commit record.
+Hence if we pipeline CIL commits we can end up with overlapping
+transactions in the log like:
 
-This results in shutdowns running unpredictably, running multiple
-times, racing with the iclog state machine transitions and exposing
-us to use-after-free situations and unexpected state changes within
-the log itself.
+Start A .. Start C .. Start B .... Commit A .. Commit B .. Commit C
 
-This patch series tries to address the chaotic nature of shutdowns
-by making shutdown execution consistent and predictable. This is
-achieved by:
+The issue is that the "start B" lsn is later than the "start C" lsn.
+When the same metadata block is modified in both transaction B and
+C, writeback from "commit B" will correctly stamp "start B" into the
+metadata.
 
-- making the mount shutdown state transistion atomic and not
-  dependent on log state.
-- making operational log state transitions atomic
-- making the log shutdown check be based entirely on the operational
-  XLOG_IO_ERROR log state rather than a combination of log flags and
-  iclog XLOG_STATE_IOERROR checks.
-- Getting rid of XLOG_STATE_IOERROR means shutdown doesn't perturb
-  iclog state in the middle of operations that are expecting iclogs
-  to be in specific state(s).
-- shutdown doesn't process iclogs that are actively referenced.
-  This avoids use-after-free situations where shutdown runs
-  callbacks and frees objects that own the reference to the iclog
-  and are still in use by the iclog reference owner.
-- Run shutdown processing when the last active reference to an iclog
-  goes away. This guarantees that shutdown processing occurs on all
-  iclogs, but it only occurs when it is safe to do so.
-- acknowledge that log state is not consistent once shutdown has
-  been entered and so don't try to apply consistency checking during
-  a shutdown...
+However, when "commit C" runs, it will see the LSN in that metadata
+block is "start B", which is *more recent than "Start C" and so
+will, incorrectly, fail to recover that change into the metadata
+block. This results in silent metadata corruption, which can then be
+exposed by future recovery operations failing, runtime
+inconsistencies causing shutdowns and/or xfs_scrub/xfs_repair check
+failures.
 
-At the end of this patch series, shutdown runs once and once only at
-the first trigger, iclog state is not modified by shutdown, and
-iclog callbacks and wakeups are not processed until all active
-references to the iclog(s) are dropped. Hence we now have
-deterministic shutdown behaviour for both the mount and the log and
-a consistent iclog lifecycle framework that we can build more
-complex functionality on top of safely.
+We could fix log recovery to avoid this problem, but there's a
+runtime problem as well: the AIL is ordered by start record LSN. We
+cannot order the AIL by commit LSN as we cannot allow the tail of
+the log to overwrite -any- of the log transaction until the entire
+transaction has been written. As the lowest LSN of the items in the
+AIL defines the current log tail, the same metadata writeback
+ordering issues apply as with log recovery.
+
+In this case, we run the callbacks for commit B first, which place
+all the items at the head of the log at "start B". Then we run
+callbacks for "commit C", which then do not insert at the head -
+they get inserted before "start B". If the item was modified in both
+B and C, then it moves *backwards* in the AIL and this screws up all
+manner of things that assume relogging can only move objects
+forwards in the log. One of these things it can screw up is the tail
+lsn of the log. Nothing good comes from this...
+
+Because we have both runtime and journal-based ordering requirements
+for the start_lsn, we have multiple places where there is an
+implicit assumption that transaction start records are strictly
+ordered. Rather than play whack-a-mole with such assumptions, and to
+avoid the eternal "are you running a fixed kernel" question, it's
+better just to strictly order the start records in the same way we
+strictly order the commit records.
+
+This patch series takes the mechanisms of the strict commit record
+ordering and utilises them for strict start record ordering. It
+builds upon the shutdown rework patchset to guarantee that the CIL
+context structure will not get freed from under it by a racing
+shutdown, and so moves the LSN recording for ordering up into a
+callback from xlog_write() once we have a guaranteed iclog write
+location. This means we have one mechanism for both start and commit
+record ordering, and they both work in exactly the same way.
 
 Version 3:
-- rebase on 5.14-rc4 + for-next @ 130916145229
-- Fixed typos in commit messages
+- rebase on 5.14-rc4 + for-next + "xfs: shutdown is a racy mess"
+- fixed typos in subject line
 
 Version 2:
-- https://lore.kernel.org/linux-xfs/20210714031958.2614411-1-david@fromorbit.com/
-- rebase on 5.14-rc1
-- added comment about XFS_FORCED_SHUTDOWN -> xlog_is_shutdown in commit message.
-- fix spurious semi-colon at end of for loop.
+- https://lore.kernel.org/linux-xfs/20210714033656.2621741-1-david@fromorbit.com/
+- rebase on 5.14-rc1 + "xfs: shutdown is a racy mess"
 - fixed typos in commit messages
-- undid the do {} while -> for {} conversion in xlog_state_do_callbacks()
-- removed spurious blank lines in xfs_do_force_shutdown()
-- added comment to commit description explaining the unconditional stack dump on
-  shutdown if the error level is high enough.
-- added comment about iclog IO completion avoiding shutdown races with
-  referenced iclogs that haven't yet been submitted to commit description.
-- cleaned up xlog_state_release_iclog() structure for better readability.
-- cleaned up xlog_space_left() structure for better readability.
 
 Version 1:
-- https://lore.kernel.org/linux-xfs/20210630063813.1751007-1-david@fromorbit.com/
+- https://lore.kernel.org/linux-xfs/20210630072108.1752073-1-david@fromorbit.com/
 
