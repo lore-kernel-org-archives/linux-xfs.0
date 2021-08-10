@@ -2,84 +2,98 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BEACC4320A
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Aug 2021 21:49:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF8A7C4338F
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Aug 2021 23:31:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 08C7660EE9
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Aug 2021 21:49:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A965260C51
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Aug 2021 23:31:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234146AbhHJVtj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Aug 2021 17:49:39 -0400
-Received: from ozlabs.org ([203.11.71.1]:52985 "EHLO ozlabs.org"
+        id S232057AbhHJXb7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Aug 2021 19:31:59 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53794 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233555AbhHJVtj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 10 Aug 2021 17:49:39 -0400
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mail.ozlabs.org (Postfix) with ESMTPSA id 4Gkmn65ZWTz9sCD;
-        Wed, 11 Aug 2021 07:49:14 +1000 (AEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canb.auug.org.au;
-        s=201702; t=1628632154;
-        bh=Jot/mNfUg1oqahi9OGSBbSIjW4z0xFOCMjQ6BWNFSFM=;
-        h=Date:From:To:Cc:Subject:From;
-        b=mDzNld9onKZTAD1P+lPDFe5oUn/uoYCWm61qJH/OBxsAL1kCGTZy13yhEpQGlDhvk
-         wpnCgN6RrA2WuGWq0hobaSNV0EALndScNuRpXMN7a435lfHmSV6v84KR3AykHzRy2A
-         uKh3UsFfH87wgF4IwGPAItyuSomx3QwWqanWUxgEUil+eruW8ap2198EGA2iNOMPOz
-         xc8XSOdmq2DQZChDltvxnhAHtN3epnt+wXbDiS6IzCosSWnsPHHjDgmBhf7eXSMSFr
-         EEV5bH4/gc0V/E5XAI+hGYAtDRRFzOP+udtRuTI1FJoFlB+5ZyotbwUsCdolNeT0qo
-         TPnobaYXGRysg==
-Date:   Wed, 11 Aug 2021 07:49:13 +1000
-From:   Stephen Rothwell <sfr@canb.auug.org.au>
-To:     "Darrick J. Wong" <djwong@kernel.org>,
-        David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Next Mailing List <linux-next@vger.kernel.org>
-Subject: linux-next: Signed-off-by missing for commits in the xfs tree
-Message-ID: <20210811074913.48605817@canb.auug.org.au>
+        id S235456AbhHJXb6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 10 Aug 2021 19:31:58 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 1977C60FDA;
+        Tue, 10 Aug 2021 23:31:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1628638296;
+        bh=FSj08AAW3P9O++pzNdzS3oQBdehBQ/2Enk0U0D8H4u0=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=r3ByM0IXWzKuftFGqKcUgnsHAJtTMQzrbXKsUPUzERT/dKkvvEUL4hN6lbuGtyNXR
+         3MpQdFKh/2aReHr8i51DmiVXL9Lslec4LmUKH8eWJhMcK6sjzi0ILG4GEPfrD5c4UK
+         xi6w+9w6JjNIuA6tAzTgrvLeYlomrV/gHgNfDU2H6aIyVlVOFnayVlemAn0X1PuR+y
+         bAlQ9QrfHi8ua+h/dTSEhLhDJfjBZLJx1YpPMOIdRw1aS4HYULeXPzb1kJ3p1G0BUe
+         GOC4rSlDwHn4vsZyC8MekyIiBcuvqyyN28lddFLr87z/iTaOPMvQoKRimPBiTZHWPV
+         BXQuLQPbonTOg==
+Date:   Tue, 10 Aug 2021 16:31:35 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Dan Williams <dan.j.williams@intel.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Shiyang Ruan <ruansy.fnst@fujitsu.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, nvdimm@lists.linux.dev,
+        cluster-devel@redhat.com
+Subject: Re: [PATCH 10/30] iomap: fix the iomap_readpage_actor return value
+ for inline data
+Message-ID: <20210810233135.GJ3601443@magnolia>
+References: <20210809061244.1196573-1-hch@lst.de>
+ <20210809061244.1196573-11-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/dUdzsoZRBY.BwB3HuWpTv6x";
- protocol="application/pgp-signature"; micalg=pgp-sha256
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210809061244.1196573-11-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
---Sig_/dUdzsoZRBY.BwB3HuWpTv6x
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Mon, Aug 09, 2021 at 08:12:24AM +0200, Christoph Hellwig wrote:
+> The actor should never return a larger value than the length that was
+> passed in.  The current code handles this gracefully, but the opcoming
+> iter model will be more picky.
 
-Hi all,
+s/opcoming/upcoming/
 
-Commits
+With that fixed,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-  0f3901673631 ("xfs: Rename __xfs_attr_rmtval_remove")
-  da8ca45da62e ("xfs: add attr state machine tracepoints")
+--D
 
-are missing a Signed-off-by from their committer.
-
---=20
-Cheers,
-Stephen Rothwell
-
---Sig_/dUdzsoZRBY.BwB3HuWpTv6x
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAmES9FkACgkQAVBC80lX
-0Gz4+gf+IkfFu5UawSW8+7o+jivyVS9zWJrBogXXPsHQWtwygkjLrW3A0nfjcT7a
-qKQW21p8b1xhxnbLPH758BAFiQOYwvnmyjXy5zJDTHIZlAEoLOMLn92uSTg6EYUx
-4r5TmQh9LtXcgJyPdTmZVu+HxgvrhoIrAh63brQ6R1gN2VywhbhLL5FjQr/W1JsB
-510MRRrB0ZOsGJoL58p7uy5U7nJl6TNMT2i4/mcDw9zanZ1rlgnmf472Qven08y+
-alm0RbEjfLyaLyytLZmjsie07sATtMbI78YfqWgkJg9L0trwMsncnLT95FRflVnz
-B51Bu8NEWSHl0FaPkZnncUl3L7Vm3Q==
-=ihqQ
------END PGP SIGNATURE-----
-
---Sig_/dUdzsoZRBY.BwB3HuWpTv6x--
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/iomap/buffered-io.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 44587209e6d7c7..26e16cc9d44931 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -205,7 +205,7 @@ struct iomap_readpage_ctx {
+>  	struct readahead_control *rac;
+>  };
+>  
+> -static int iomap_read_inline_data(struct inode *inode, struct page *page,
+> +static loff_t iomap_read_inline_data(struct inode *inode, struct page *page,
+>  		const struct iomap *iomap)
+>  {
+>  	size_t size = i_size_read(inode) - iomap->offset;
+> @@ -253,7 +253,7 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+>  	sector_t sector;
+>  
+>  	if (iomap->type == IOMAP_INLINE)
+> -		return iomap_read_inline_data(inode, page, iomap);
+> +		return min(iomap_read_inline_data(inode, page, iomap), length);
+>  
+>  	/* zero post-eof blocks as the page may be mapped */
+>  	iop = iomap_page_create(inode, page);
+> -- 
+> 2.30.2
+> 
