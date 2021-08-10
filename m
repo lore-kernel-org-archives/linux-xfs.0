@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 790E0C19F3C
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8686AC19F3B
 	for <linux-xfs@archiver.kernel.org>; Tue, 10 Aug 2021 05:25:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4F27161075
+	by mail.kernel.org (Postfix) with ESMTP id 623ED610E9
 	for <linux-xfs@archiver.kernel.org>; Tue, 10 Aug 2021 05:25:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237640AbhHJFZY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S237662AbhHJFZY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Tue, 10 Aug 2021 01:25:24 -0400
-Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:54840 "EHLO
-        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S237638AbhHJFZW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Aug 2021 01:25:22 -0400
+Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:50850 "EHLO
+        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S237640AbhHJFZV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Aug 2021 01:25:21 -0400
 Received: from dread.disaster.area (pa49-195-182-146.pa.nsw.optusnet.com.au [49.195.182.146])
-        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id EAF0A1B3E70
-        for <linux-xfs@vger.kernel.org>; Tue, 10 Aug 2021 15:24:58 +1000 (AEST)
+        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 185DD1093F5
+        for <linux-xfs@vger.kernel.org>; Tue, 10 Aug 2021 15:24:59 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1mDKFy-00GZfv-V2
-        for linux-xfs@vger.kernel.org; Tue, 10 Aug 2021 15:24:54 +1000
+        id 1mDKFz-00GZgA-6G
+        for linux-xfs@vger.kernel.org; Tue, 10 Aug 2021 15:24:55 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1mDKFy-000Aq1-Mf
+        id 1mDKFy-000AqG-Uj
         for linux-xfs@vger.kernel.org; Tue, 10 Aug 2021 15:24:54 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 10/16] xfs: convert xfs_fs_geometry to use mount feature checks
-Date:   Tue, 10 Aug 2021 15:24:45 +1000
-Message-Id: <20210810052451.41578-11-david@fromorbit.com>
+Subject: [PATCH 15/16] xfs: introduce xfs_sb_is_v5 helper
+Date:   Tue, 10 Aug 2021 15:24:50 +1000
+Message-Id: <20210810052451.41578-16-david@fromorbit.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210810052451.41578-1-david@fromorbit.com>
 References: <20210810052451.41578-1-david@fromorbit.com>
@@ -44,162 +44,285 @@ Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
         a=QpfB3wCSrn/dqEBSktpwZQ==:117 a=QpfB3wCSrn/dqEBSktpwZQ==:17
-        a=MhDmnRu9jo8A:10 a=20KFwNOVAAAA:8 a=QzJ7RRMRbXgQee3RgIYA:9
+        a=MhDmnRu9jo8A:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
+        a=njKZKf6otGJW6kSs9yYA:9 a=i8kd-j3wIw2eCQ3F:21 a=ixUmjp0-4QAcfMYr:21
+        a=AjGcO6oz07-iQ99wixmX:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Reporting filesystem features to userspace is currently superblock
-based. Now we have a general mount-based feature infrastructure,
-switch to using the xfs_mount rather than the superblock directly.
+Rather than open coding XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5
+checks everywhere, add a simple wrapper to encapsulate this and make
+the code easier to read.
 
-This reduces the size of the function by over 300 bytes.
+This allows us to remove the xfs_sb_version_has_v3inode() wrapper
+which is only used in xfs_format.h now and is just a version number
+check.
 
-$ size -t fs/xfs/built-in.a
-	text    data     bss     dec     hex filename
-before	1127855  311352     484 1439691  15f7cb (TOTALS)
-after	1127535  311352     484 1439371  15f68b (TOTALS)
+There are a couple of places where we should be checking the mount
+feature bits rather than the superblock version (e.g. remount), so
+those are converted to use xfs_has_crc(mp) instead.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_sb.c | 46 ++++++++++++++++++++++--------------------
- fs/xfs/libxfs/xfs_sb.h |  2 +-
- fs/xfs/xfs_ioctl.c     |  2 +-
- fs/xfs/xfs_ioctl32.c   |  2 +-
- 4 files changed, 27 insertions(+), 25 deletions(-)
+ fs/xfs/libxfs/xfs_format.h | 16 +++++++-------
+ fs/xfs/libxfs/xfs_sb.c     | 45 +++++++++++++++++++-------------------
+ fs/xfs/scrub/agheader.c    |  2 +-
+ fs/xfs/xfs_log_recover.c   |  2 +-
+ fs/xfs/xfs_super.c         | 11 +++++-----
+ 5 files changed, 38 insertions(+), 38 deletions(-)
 
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 00d19d18a2d1..ee479feb32b5 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -279,6 +279,11 @@ typedef struct xfs_dsb {
+ 
+ #define	XFS_SB_VERSION_NUM(sbp)	((sbp)->sb_versionnum & XFS_SB_VERSION_NUMBITS)
+ 
++static inline bool xfs_sb_is_v5(struct xfs_sb *sbp)
++{
++	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5;
++}
++
+ /*
+  * Detect a mismatched features2 field.  Older kernels read/wrote
+  * this into the wrong slot, so to be safe we keep them in sync.
+@@ -290,7 +295,7 @@ static inline bool xfs_sb_has_mismatched_features2(struct xfs_sb *sbp)
+ 
+ static inline bool xfs_sb_version_hasmorebits(struct xfs_sb *sbp)
+ {
+-	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 ||
++	return xfs_sb_is_v5(sbp) ||
+ 	       (sbp->sb_versionnum & XFS_SB_VERSION_MOREBITSBIT);
+ }
+ 
+@@ -413,15 +418,10 @@ xfs_sb_add_incompat_log_features(
+  * v5 file systems support V3 inodes only, earlier file systems support
+  * v2 and v1 inodes.
+  */
+-static inline bool xfs_sb_version_has_v3inode(struct xfs_sb *sbp)
+-{
+-	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5;
+-}
+-
+ static inline bool xfs_dinode_good_version(struct xfs_sb *sbp,
+ 		uint8_t version)
+ {
+-	if (xfs_sb_version_has_v3inode(sbp))
++	if (xfs_sb_is_v5(sbp))
+ 		return version == 3;
+ 	return version == 1 || version == 2;
+ }
+@@ -893,7 +893,7 @@ enum xfs_dinode_fmt {
+  * Inode size for given fs.
+  */
+ #define XFS_DINODE_SIZE(sbp) \
+-	(xfs_sb_version_has_v3inode(sbp) ? \
++	(xfs_sb_is_v5(sbp) ? \
+ 		sizeof(struct xfs_dinode) : \
+ 		offsetof(struct xfs_dinode, di_crc))
+ #define XFS_LITINO(mp) \
 diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index baaec7e6a975..5eaf14b6fe3c 100644
+index e2b50f5e9f35..197093acb828 100644
 --- a/fs/xfs/libxfs/xfs_sb.c
 +++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -1016,10 +1016,12 @@ xfs_sync_sb_buf(
- 
- void
- xfs_fs_geometry(
--	struct xfs_sb		*sbp,
-+	struct xfs_mount	*mp,
- 	struct xfs_fsop_geom	*geo,
- 	int			struct_version)
+@@ -38,7 +38,7 @@ xfs_sb_good_version(
+ 	struct xfs_sb	*sbp)
  {
-+	struct xfs_sb		*sbp = &mp->m_sb;
-+
- 	memset(geo, 0, sizeof(struct xfs_fsop_geom));
+ 	/* all v5 filesystems are supported */
+-	if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5)
++	if (xfs_sb_is_v5(sbp))
+ 		return true;
  
- 	geo->blocksize = sbp->sb_blocksize;
-@@ -1050,51 +1052,51 @@ xfs_fs_geometry(
- 	geo->flags = XFS_FSOP_GEOM_FLAGS_NLINK |
- 		     XFS_FSOP_GEOM_FLAGS_DIRV2 |
- 		     XFS_FSOP_GEOM_FLAGS_EXTFLG;
--	if (xfs_sb_version_hasattr(sbp))
-+	if (xfs_has_attr(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_ATTR;
--	if (xfs_sb_version_hasquota(sbp))
-+	if (xfs_has_quota(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_QUOTA;
--	if (xfs_sb_version_hasalign(sbp))
-+	if (xfs_has_align(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_IALIGN;
--	if (xfs_sb_version_hasdalign(sbp))
-+	if (xfs_has_dalign(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_DALIGN;
--	if (xfs_sb_version_hassector(sbp))
--		geo->flags |= XFS_FSOP_GEOM_FLAGS_SECTOR;
--	if (xfs_sb_version_hasasciici(sbp))
-+	if (xfs_has_asciici(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_DIRV2CI;
--	if (xfs_sb_version_haslazysbcount(sbp))
-+	if (xfs_has_lazysbcount(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_LAZYSB;
--	if (xfs_sb_version_hasattr2(sbp))
-+	if (xfs_has_attr2(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_ATTR2;
--	if (xfs_sb_version_hasprojid32(sbp))
-+	if (xfs_has_projid32(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_PROJID32;
--	if (xfs_sb_version_hascrc(sbp))
-+	if (xfs_has_crc(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_V5SB;
--	if (xfs_sb_version_hasftype(sbp))
-+	if (xfs_has_ftype(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_FTYPE;
--	if (xfs_sb_version_hasfinobt(sbp))
-+	if (xfs_has_finobt(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_FINOBT;
--	if (xfs_sb_version_hassparseinodes(sbp))
-+	if (xfs_has_sparseinodes(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_SPINODES;
--	if (xfs_sb_version_hasrmapbt(sbp))
-+	if (xfs_has_rmapbt(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_RMAPBT;
--	if (xfs_sb_version_hasreflink(sbp))
-+	if (xfs_has_reflink(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_REFLINK;
--	if (xfs_sb_version_hasbigtime(sbp))
-+	if (xfs_has_bigtime(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_BIGTIME;
--	if (xfs_sb_version_hasinobtcounts(sbp))
-+	if (xfs_has_inobtcounts(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_INOBTCNT;
--	if (xfs_sb_version_hassector(sbp))
-+	if (xfs_has_sector(mp)) {
-+		geo->flags |= XFS_FSOP_GEOM_FLAGS_SECTOR;
- 		geo->logsectsize = sbp->sb_logsectsize;
--	else
-+	} else {
- 		geo->logsectsize = BBSIZE;
-+	}
- 	geo->rtsectsize = sbp->sb_blocksize;
- 	geo->dirblocksize = xfs_dir2_dirblock_bytes(sbp);
+ 	/* versions prior to v4 are not supported */
+@@ -97,7 +97,7 @@ xfs_sb_version_to_features(
+ 			features |= XFS_FEAT_FTYPE;
+ 	}
  
- 	if (struct_version < 4)
+-	if (XFS_SB_VERSION_NUM(sbp) != XFS_SB_VERSION_5)
++	if (!xfs_sb_is_v5(sbp))
+ 		return features;
+ 
+ 	/* Always on V5 features */
+@@ -133,7 +133,7 @@ xfs_validate_sb_read(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_sb		*sbp)
+ {
+-	if (XFS_SB_VERSION_NUM(sbp) != XFS_SB_VERSION_5)
++	if (!xfs_sb_is_v5(sbp))
+ 		return 0;
+ 
+ 	/*
+@@ -200,7 +200,7 @@ xfs_validate_sb_write(
+ 		return -EFSCORRUPTED;
+ 	}
+ 
+-	if (XFS_SB_VERSION_NUM(sbp) != XFS_SB_VERSION_5)
++	if (!xfs_sb_is_v5(sbp))
+ 		return 0;
+ 
+ 	/*
+@@ -274,7 +274,7 @@ xfs_validate_sb_common(
+ 	/*
+ 	 * Validate feature flags and state
+ 	 */
+-	if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) {
++	if (xfs_sb_is_v5(sbp)) {
+ 		if (sbp->sb_blocksize < XFS_MIN_CRC_BLOCKSIZE) {
+ 			xfs_notice(mp,
+ "Block size (%u bytes) too small for Version 5 superblock (minimum %d bytes)",
+@@ -465,7 +465,7 @@ xfs_sb_quota_from_disk(struct xfs_sb *sbp)
+ 	 * We need to do these manipilations only if we are working
+ 	 * with an older version of on-disk superblock.
+ 	 */
+-	if (XFS_SB_VERSION_NUM(sbp) >= XFS_SB_VERSION_5)
++	if (xfs_sb_is_v5(sbp))
  		return;
  
--	if (xfs_sb_version_haslogv2(sbp))
-+	if (xfs_has_logv2(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_LOGV2;
+ 	if (sbp->sb_qflags & XFS_OQUOTA_ENFD)
+@@ -558,7 +558,7 @@ __xfs_sb_from_disk(
+ 	 * sb_meta_uuid is only on disk if it differs from sb_uuid and the
+ 	 * feature flag is set; if not set we keep it only in memory.
+ 	 */
+-	if (XFS_SB_VERSION_NUM(to) == XFS_SB_VERSION_5 &&
++	if (xfs_sb_is_v5(to) &&
+ 	    (to->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_META_UUID))
+ 		uuid_copy(&to->sb_meta_uuid, &from->sb_meta_uuid);
+ 	else
+@@ -589,7 +589,7 @@ xfs_sb_quota_to_disk(
+ 	 * The in-memory superblock quota state matches the v5 on-disk format so
+ 	 * just write them out and return
+ 	 */
+-	if (XFS_SB_VERSION_NUM(from) == XFS_SB_VERSION_5) {
++	if (xfs_sb_is_v5(from)) {
+ 		to->sb_qflags = cpu_to_be16(from->sb_qflags);
+ 		to->sb_gquotino = cpu_to_be64(from->sb_gquotino);
+ 		to->sb_pquotino = cpu_to_be64(from->sb_pquotino);
+@@ -699,19 +699,20 @@ xfs_sb_to_disk(
+ 	to->sb_features2 = cpu_to_be32(from->sb_features2);
+ 	to->sb_bad_features2 = cpu_to_be32(from->sb_bad_features2);
  
- 	geo->logsunit = sbp->sb_logsunit;
-diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
-index d2dd99cb6921..8902f4bfa5df 100644
---- a/fs/xfs/libxfs/xfs_sb.h
-+++ b/fs/xfs/libxfs/xfs_sb.h
-@@ -25,7 +25,7 @@ extern uint64_t	xfs_sb_version_to_features(struct xfs_sb *sbp);
- extern int	xfs_update_secondary_sbs(struct xfs_mount *mp);
+-	if (XFS_SB_VERSION_NUM(from) == XFS_SB_VERSION_5) {
+-		to->sb_features_compat = cpu_to_be32(from->sb_features_compat);
+-		to->sb_features_ro_compat =
+-				cpu_to_be32(from->sb_features_ro_compat);
+-		to->sb_features_incompat =
+-				cpu_to_be32(from->sb_features_incompat);
+-		to->sb_features_log_incompat =
+-				cpu_to_be32(from->sb_features_log_incompat);
+-		to->sb_spino_align = cpu_to_be32(from->sb_spino_align);
+-		to->sb_lsn = cpu_to_be64(from->sb_lsn);
+-		if (from->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_META_UUID)
+-			uuid_copy(&to->sb_meta_uuid, &from->sb_meta_uuid);
+-	}
++	if (!xfs_sb_is_v5(from))
++		return;
++
++	to->sb_features_compat = cpu_to_be32(from->sb_features_compat);
++	to->sb_features_ro_compat =
++			cpu_to_be32(from->sb_features_ro_compat);
++	to->sb_features_incompat =
++			cpu_to_be32(from->sb_features_incompat);
++	to->sb_features_log_incompat =
++			cpu_to_be32(from->sb_features_log_incompat);
++	to->sb_spino_align = cpu_to_be32(from->sb_spino_align);
++	to->sb_lsn = cpu_to_be64(from->sb_lsn);
++	if (from->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_META_UUID)
++		uuid_copy(&to->sb_meta_uuid, &from->sb_meta_uuid);
+ }
  
- #define XFS_FS_GEOM_MAX_STRUCT_VER	(4)
--extern void	xfs_fs_geometry(struct xfs_sb *sbp, struct xfs_fsop_geom *geo,
-+extern void	xfs_fs_geometry(struct xfs_mount *mp, struct xfs_fsop_geom *geo,
- 				int struct_version);
- extern int	xfs_sb_read_secondary(struct xfs_mount *mp,
- 				struct xfs_trans *tp, xfs_agnumber_t agno,
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 2f526e3319a4..0c795dc093ef 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1010,7 +1010,7 @@ xfs_ioc_fsgeometry(
- 	struct xfs_fsop_geom	fsgeo;
- 	size_t			len;
+ /*
+@@ -814,7 +815,7 @@ xfs_sb_write_verify(
+ 	if (error)
+ 		goto out_error;
  
--	xfs_fs_geometry(&mp->m_sb, &fsgeo, struct_version);
-+	xfs_fs_geometry(mp, &fsgeo, struct_version);
+-	if (XFS_SB_VERSION_NUM(&sb) != XFS_SB_VERSION_5)
++	if (!xfs_sb_is_v5(&sb))
+ 		return;
  
- 	if (struct_version <= 3)
- 		len = sizeof(struct xfs_fsop_geom_v1);
-diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index 20adf35aa37b..8783af203cfc 100644
---- a/fs/xfs/xfs_ioctl32.c
-+++ b/fs/xfs/xfs_ioctl32.c
-@@ -50,7 +50,7 @@ xfs_compat_ioc_fsgeometry_v1(
+ 	if (bip)
+diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
+index 0f6051d1854a..8c403eca5c2d 100644
+--- a/fs/xfs/scrub/agheader.c
++++ b/fs/xfs/scrub/agheader.c
+@@ -258,7 +258,7 @@ xchk_superblock(
+ 			xchk_block_set_corrupt(sc, bp);
+ 	} else {
+ 		v2_ok = XFS_SB_VERSION2_OKBITS;
+-		if (XFS_SB_VERSION_NUM(&mp->m_sb) >= XFS_SB_VERSION_5)
++		if (xfs_sb_is_v5(&mp->m_sb))
+ 			v2_ok |= XFS_SB_VERSION2_CRCBIT;
+ 
+ 		if (!!(sb->sb_features2 & cpu_to_be32(~v2_ok)))
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index a985aa1a721c..10562ecbd9ea 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -3413,7 +3413,7 @@ xlog_recover(
+ 		 * (e.g. unsupported transactions, then simply reject the
+ 		 * attempt at recovery before touching anything.
+ 		 */
+-		if (XFS_SB_VERSION_NUM(&log->l_mp->m_sb) == XFS_SB_VERSION_5 &&
++		if (xfs_sb_is_v5(&log->l_mp->m_sb) &&
+ 		    xfs_sb_has_incompat_log_feature(&log->l_mp->m_sb,
+ 					XFS_SB_FEAT_INCOMPAT_LOG_UNKNOWN)) {
+ 			xfs_warn(log->l_mp,
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 8f8029e6048f..6f2562a2ea62 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1590,7 +1590,7 @@ xfs_fs_fill_super(
+ 	set_posix_acl_flag(sb);
+ 
+ 	/* version 5 superblocks support inode version counters. */
+-	if (XFS_SB_VERSION_NUM(&mp->m_sb) == XFS_SB_VERSION_5)
++	if (xfs_has_crc(mp))
+ 		sb->s_flags |= SB_I_VERSION;
+ 
+ 	if (xfs_has_dax_always(mp)) {
+@@ -1711,7 +1711,7 @@ xfs_remount_rw(
+ 		return -EINVAL;
+ 	}
+ 
+-	if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
++	if (xfs_sb_is_v5(sbp) &&
+ 	    xfs_sb_has_ro_compat_feature(sbp, XFS_SB_FEAT_RO_COMPAT_UNKNOWN)) {
+ 		xfs_warn(mp,
+ 	"ro->rw transition prohibited on unknown (0x%x) ro-compat filesystem",
+@@ -1831,12 +1831,11 @@ xfs_fs_reconfigure(
  {
- 	struct xfs_fsop_geom	  fsgeo;
+ 	struct xfs_mount	*mp = XFS_M(fc->root->d_sb);
+ 	struct xfs_mount        *new_mp = fc->s_fs_info;
+-	xfs_sb_t		*sbp = &mp->m_sb;
+ 	int			flags = fc->sb_flags;
+ 	int			error;
  
--	xfs_fs_geometry(&mp->m_sb, &fsgeo, 3);
-+	xfs_fs_geometry(mp, &fsgeo, 3);
- 	/* The 32-bit variant simply has some padding at the end */
- 	if (copy_to_user(arg32, &fsgeo, sizeof(struct compat_xfs_fsop_geom_v1)))
- 		return -EFAULT;
+ 	/* version 5 superblocks always support version counters. */
+-	if (XFS_SB_VERSION_NUM(&mp->m_sb) == XFS_SB_VERSION_5)
++	if (xfs_has_crc(mp))
+ 		fc->sb_flags |= SB_I_VERSION;
+ 
+ 	error = xfs_fs_validate_params(new_mp);
+@@ -1848,13 +1847,13 @@ xfs_fs_reconfigure(
+ 	/* inode32 -> inode64 */
+ 	if (xfs_has_small_inums(mp) && !xfs_has_small_inums(new_mp)) {
+ 		mp->m_features &= ~XFS_FEAT_SMALL_INUMS;
+-		mp->m_maxagi = xfs_set_inode_alloc(mp, sbp->sb_agcount);
++		mp->m_maxagi = xfs_set_inode_alloc(mp, mp->m_sb.sb_agcount);
+ 	}
+ 
+ 	/* inode64 -> inode32 */
+ 	if (!xfs_has_small_inums(mp) && xfs_has_small_inums(new_mp)) {
+ 		mp->m_features |= XFS_FEAT_SMALL_INUMS;
+-		mp->m_maxagi = xfs_set_inode_alloc(mp, sbp->sb_agcount);
++		mp->m_maxagi = xfs_set_inode_alloc(mp, mp->m_sb.sb_agcount);
+ 	}
+ 
+ 	/* ro -> rw */
 -- 
 2.31.1
 
