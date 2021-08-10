@@ -7,132 +7,170 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F35BC4320E
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70FD7C43214
 	for <linux-xfs@archiver.kernel.org>; Tue, 10 Aug 2021 05:24:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DA58D60F35
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Aug 2021 05:24:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5245960F35
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Aug 2021 05:24:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236038AbhHJFZS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S236330AbhHJFZS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Tue, 10 Aug 2021 01:25:18 -0400
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:43732 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S236330AbhHJFZS (ORCPT
+Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:46519 "EHLO
+        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S236364AbhHJFZS (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Aug 2021 01:25:18 -0400
 Received: from dread.disaster.area (pa49-195-182-146.pa.nsw.optusnet.com.au [49.195.182.146])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 420B980BB96
+        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id AFB2984AF1
         for <linux-xfs@vger.kernel.org>; Tue, 10 Aug 2021 15:24:55 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1mDKFy-00GZfh-OO
-        for linux-xfs@vger.kernel.org; Tue, 10 Aug 2021 15:24:54 +1000
+        id 1mDKFz-00GZgB-73
+        for linux-xfs@vger.kernel.org; Tue, 10 Aug 2021 15:24:55 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1mDKFy-000App-GV
+        id 1mDKFy-000AqJ-Vq
         for linux-xfs@vger.kernel.org; Tue, 10 Aug 2021 15:24:54 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 06/16] xfs: consolidate mount option features in m_features
-Date:   Tue, 10 Aug 2021 15:24:41 +1000
-Message-Id: <20210810052451.41578-7-david@fromorbit.com>
+Subject: [PATCH 16/16] xfs: kill xfs_sb_version_has_v3inode()
+Date:   Tue, 10 Aug 2021 15:24:51 +1000
+Message-Id: <20210810052451.41578-17-david@fromorbit.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210810052451.41578-1-david@fromorbit.com>
 References: <20210810052451.41578-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
         a=QpfB3wCSrn/dqEBSktpwZQ==:117 a=QpfB3wCSrn/dqEBSktpwZQ==:17
         a=MhDmnRu9jo8A:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
-        a=ccDssqCNqLZjo417zBQA:9 a=AjGcO6oz07-iQ99wixmX:22
+        a=9cW39zbgiq67NevJaTUA:9 a=AjGcO6oz07-iQ99wixmX:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-This provides separation of mount time feature flags from runtime
-mount flags and mount option state. It also makes the feature
-checks use the same interface as the superblock features. i.e. we
-don't care if the feature is enabled by superblock flags or mount
-options, we just care if it's enabled or not.
+All callers to xfs_dinode_good_version() and XFS_DINODE_SIZE() in
+both the kernel and userspace have a xfs_mount structure available
+which means they can use mount features checks instead looking
+directly are the superblock.
+
+Convert these functions to take a mount and use a xfs_has_v3inodes()
+check and move it out of the libxfs/xfs_format.h file as it really
+doesn't have anything to do with the definition of the on-disk
+format.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_mount.h | 44 ++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 44 insertions(+)
+ fs/xfs/libxfs/xfs_format.h    | 18 +++---------------
+ fs/xfs/libxfs/xfs_ialloc.c    |  3 +--
+ fs/xfs/libxfs/xfs_inode_buf.c |  2 +-
+ fs/xfs/libxfs/xfs_inode_buf.h | 11 ++++++++++-
+ 4 files changed, 15 insertions(+), 19 deletions(-)
 
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index e44ac7a870df..a8a3a73749cf 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -278,6 +278,25 @@ typedef struct xfs_mount {
- #define XFS_FEAT_BIGTIME	(1ULL << 24)	/* large timestamps */
- #define XFS_FEAT_NEEDSREPAIR	(1ULL << 25)	/* needs xfs_repair */
- 
-+/* Mount features */
-+#define XFS_FEAT_NOATTR2	(1ULL << 48)	/* disable attr2 creation */
-+#define XFS_FEAT_NOALIGN	(1ULL << 49)	/* ignore alignment */
-+#define XFS_FEAT_ALLOCSIZE	(1ULL << 50)	/* user specified allocation size */
-+#define XFS_FEAT_LARGE_IOSIZE	(1ULL << 51)	/* report large preferred
-+						 * I/O size in stat() */
-+#define XFS_FEAT_WSYNC		(1ULL << 52)	/* synchronous metadata ops */
-+#define XFS_FEAT_DIRSYNC	(1ULL << 53)	/* synchronous directory ops */
-+#define XFS_FEAT_DISCARD	(1ULL << 54)	/* discard unused blocks */
-+#define XFS_FEAT_GRPID		(1ULL << 55)	/* group-ID assigned from directory */
-+#define XFS_FEAT_SMALL_INUMS	(1ULL << 56)	/* user wants 32bit inodes */
-+#define XFS_FEAT_IKEEP		(1ULL << 57)	/* keep empty inode clusters*/
-+#define XFS_FEAT_SWALLOC	(1ULL << 58)	/* stripe width allocation */
-+#define XFS_FEAT_FILESTREAMS	(1ULL << 59)	/* use filestreams allocator */
-+#define XFS_FEAT_DAX_ALWAYS	(1ULL << 60)	/* DAX always enabled */
-+#define XFS_FEAT_DAX_NEVER	(1ULL << 61)	/* DAX never enabled */
-+#define XFS_FEAT_NORECOVERY	(1ULL << 62)	/* no recovery - dirty fs */
-+#define XFS_FEAT_NOUUID		(1ULL << 63)	/* ignore uuid during mount */
-+
- #define __XFS_HAS_FEAT(name, NAME) \
- static inline bool xfs_has_ ## name (struct xfs_mount *mp) \
- { \
-@@ -293,6 +312,7 @@ static inline void xfs_add_ ## name (struct xfs_mount *mp) \
- 	xfs_sb_version_add ## name(&mp->m_sb); \
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index ee479feb32b5..2d7057b7984b 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -414,18 +414,6 @@ xfs_sb_add_incompat_log_features(
  }
  
-+/* Superblock features */
- __XFS_ADD_FEAT(attr, ATTR)
- __XFS_HAS_FEAT(nlink, NLINK)
- __XFS_ADD_FEAT(quota, QUOTA)
-@@ -320,6 +340,30 @@ __XFS_HAS_FEAT(inobtcounts, INOBTCNT)
- __XFS_HAS_FEAT(bigtime, BIGTIME)
- __XFS_HAS_FEAT(needsrepair, NEEDSREPAIR)
  
-+/*
-+ * Mount features
-+ *
-+ * These do not change dynamically - features that can come and go,
-+ * such as 32 bit inodes and read-only state, are kept as flags rather than
-+ * features.
-+ */
-+__XFS_HAS_FEAT(noattr2, NOATTR2)
-+__XFS_HAS_FEAT(noalign, NOALIGN)
-+__XFS_HAS_FEAT(allocsize, ALLOCSIZE)
-+__XFS_HAS_FEAT(large_iosize, LARGE_IOSIZE)
-+__XFS_HAS_FEAT(wsync, WSYNC)
-+__XFS_HAS_FEAT(dirsync, DIRSYNC)
-+__XFS_HAS_FEAT(discard, DISCARD)
-+__XFS_HAS_FEAT(grpid, GRPID)
-+__XFS_HAS_FEAT(small_inums, SMALL_INUMS)
-+__XFS_HAS_FEAT(ikeep, IKEEP)
-+__XFS_HAS_FEAT(swalloc, SWALLOC)
-+__XFS_HAS_FEAT(filestreams, FILESTREAMS)
-+__XFS_HAS_FEAT(dax_always, DAX_ALWAYS)
-+__XFS_HAS_FEAT(dax_never, DAX_NEVER)
-+__XFS_HAS_FEAT(norecovery, NORECOVERY)
-+__XFS_HAS_FEAT(nouuid, NOUUID)
-+
+-/*
+- * v5 file systems support V3 inodes only, earlier file systems support
+- * v2 and v1 inodes.
+- */
+-static inline bool xfs_dinode_good_version(struct xfs_sb *sbp,
+-		uint8_t version)
+-{
+-	if (xfs_sb_is_v5(sbp))
+-		return version == 3;
+-	return version == 1 || version == 2;
+-}
+-
+ static inline bool
+ xfs_is_quota_inode(struct xfs_sb *sbp, xfs_ino_t ino)
+ {
+@@ -892,12 +880,12 @@ enum xfs_dinode_fmt {
  /*
-  * Flags for m_flags.
+  * Inode size for given fs.
   */
+-#define XFS_DINODE_SIZE(sbp) \
+-	(xfs_sb_is_v5(sbp) ? \
++#define XFS_DINODE_SIZE(mp) \
++	(xfs_has_v3inodes(mp) ? \
+ 		sizeof(struct xfs_dinode) : \
+ 		offsetof(struct xfs_dinode, di_crc))
+ #define XFS_LITINO(mp) \
+-	((mp)->m_sb.sb_inodesize - XFS_DINODE_SIZE(&(mp)->m_sb))
++	((mp)->m_sb.sb_inodesize - XFS_DINODE_SIZE(mp))
+ 
+ /*
+  * Inode data & attribute fork sizes, per inode.
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index d2f436c1bf40..d943847c40c5 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -337,7 +337,6 @@ xfs_ialloc_inode_init(
+ 		xfs_buf_zero(fbuf, 0, BBTOB(fbuf->b_length));
+ 		for (i = 0; i < M_IGEO(mp)->inodes_per_cluster; i++) {
+ 			int	ioffset = i << mp->m_sb.sb_inodelog;
+-			uint	isize = XFS_DINODE_SIZE(&mp->m_sb);
+ 
+ 			free = xfs_make_iptr(mp, fbuf, i);
+ 			free->di_magic = cpu_to_be16(XFS_DINODE_MAGIC);
+@@ -354,7 +353,7 @@ xfs_ialloc_inode_init(
+ 			} else if (tp) {
+ 				/* just log the inode core */
+ 				xfs_trans_log_buf(tp, fbuf, ioffset,
+-						  ioffset + isize - 1);
++					  ioffset + XFS_DINODE_SIZE(mp) - 1);
+ 			}
+ 		}
+ 
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index fefecdf3f632..036f909ff7a6 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -58,7 +58,7 @@ xfs_inode_buf_verify(
+ 		dip = xfs_buf_offset(bp, (i << mp->m_sb.sb_inodelog));
+ 		unlinked_ino = be32_to_cpu(dip->di_next_unlinked);
+ 		di_ok = xfs_verify_magic16(bp, dip->di_magic) &&
+-			xfs_dinode_good_version(&mp->m_sb, dip->di_version) &&
++			xfs_dinode_good_version(mp, dip->di_version) &&
+ 			xfs_verify_agino_or_null(mp, agno, unlinked_ino);
+ 		if (unlikely(XFS_TEST_ERROR(!di_ok, mp,
+ 						XFS_ERRTAG_ITOBP_INOTOBP))) {
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
+index 7f865bb4df84..585ed5a110af 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.h
++++ b/fs/xfs/libxfs/xfs_inode_buf.h
+@@ -21,7 +21,7 @@ struct xfs_imap {
+ 
+ int	xfs_imap_to_bp(struct xfs_mount *mp, struct xfs_trans *tp,
+ 		       struct xfs_imap *imap, struct xfs_buf **bpp);
+-void	xfs_dinode_calc_crc(struct xfs_mount *, struct xfs_dinode *);
++void	xfs_dinode_calc_crc(struct xfs_mount *mp, struct xfs_dinode *dip);
+ void	xfs_inode_to_disk(struct xfs_inode *ip, struct xfs_dinode *to,
+ 			  xfs_lsn_t lsn);
+ int	xfs_inode_from_disk(struct xfs_inode *ip, struct xfs_dinode *from);
+@@ -42,4 +42,13 @@ static inline uint64_t xfs_inode_encode_bigtime(struct timespec64 tv)
+ struct timespec64 xfs_inode_from_disk_ts(struct xfs_dinode *dip,
+ 		const xfs_timestamp_t ts);
+ 
++static inline bool
++xfs_dinode_good_version(struct xfs_mount *mp, uint8_t version)
++{
++	if (xfs_has_v3inodes(mp))
++		return version == 3;
++	return version == 1 || version == 2;
++}
++
++
+ #endif	/* __XFS_INODE_BUF_H__ */
 -- 
 2.31.1
 
