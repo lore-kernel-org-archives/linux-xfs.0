@@ -2,88 +2,84 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 051C1C4320A
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Aug 2021 21:18:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BEACC4320A
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Aug 2021 21:49:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D666160F55
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Aug 2021 21:18:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 08C7660EE9
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Aug 2021 21:49:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233785AbhHJVTE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Aug 2021 17:19:04 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:46010 "EHLO
-        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233410AbhHJVTD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Aug 2021 17:19:03 -0400
-From:   Thomas Gleixner <tglx@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1628630319;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=6HvQmuAr7zH8MRjkD0GpzlB1BXRdBBbNp7feKrK3i+U=;
-        b=hOzvYeGsi0KBYeat3TbMXKfpVjhUQPZ0eVcYjCW2NyjygELL7lLoL9IQp9IftaCHXCip3i
-        GIjgyHRumkpaONHfD+TKNmOlYLUeYLGGEw8FFyAcAFq+aUTAWIAIeIwNH2/aI2dVJS9+zp
-        t7Gf/v1aqTTFnWpQvZVMwQjXX5Wje3oCuaRtdnNy3z6uy8mLapsmMLiVv9R6mxOa8k0ZBu
-        N3umWNQXi4xX/L1XFrnFNGSogAWkLkkrz5KDqCRfnOOIoFcfGYUyLtuFUJZkWSFnvkxl7+
-        pFhpGKaYzZNkrp17B6yxAGOA5quZyEWhCwGO2bEd0750OCJgp9nUfvQWpdiYfw==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1628630319;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=6HvQmuAr7zH8MRjkD0GpzlB1BXRdBBbNp7feKrK3i+U=;
-        b=feDyEsBeq6VikFaGcfDfIUhKH6CHLmS+nXHbyAEWCtD30w2Lcl/ICDaJKbz3KfyhOGDGpv
-        AZ+zgQ8NSvUi/KAg==
-To:     Matthew Wilcox <willy@infradead.org>,
-        "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 1/2] iomap: Use kmap_local_page instead of kmap_atomic
-In-Reply-To: <YQws3DQyk6pnyiBY@casper.infradead.org>
-References: <20210803193134.1198733-1-willy@infradead.org>
- <20210805173104.GF3601405@magnolia> <20210805173903.GH3601405@magnolia>
- <YQws3DQyk6pnyiBY@casper.infradead.org>
-Date:   Tue, 10 Aug 2021 23:18:38 +0200
-Message-ID: <87mtppov69.ffs@tglx>
+        id S234146AbhHJVtj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Aug 2021 17:49:39 -0400
+Received: from ozlabs.org ([203.11.71.1]:52985 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233555AbhHJVtj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 10 Aug 2021 17:49:39 -0400
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mail.ozlabs.org (Postfix) with ESMTPSA id 4Gkmn65ZWTz9sCD;
+        Wed, 11 Aug 2021 07:49:14 +1000 (AEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canb.auug.org.au;
+        s=201702; t=1628632154;
+        bh=Jot/mNfUg1oqahi9OGSBbSIjW4z0xFOCMjQ6BWNFSFM=;
+        h=Date:From:To:Cc:Subject:From;
+        b=mDzNld9onKZTAD1P+lPDFe5oUn/uoYCWm61qJH/OBxsAL1kCGTZy13yhEpQGlDhvk
+         wpnCgN6RrA2WuGWq0hobaSNV0EALndScNuRpXMN7a435lfHmSV6v84KR3AykHzRy2A
+         uKh3UsFfH87wgF4IwGPAItyuSomx3QwWqanWUxgEUil+eruW8ap2198EGA2iNOMPOz
+         xc8XSOdmq2DQZChDltvxnhAHtN3epnt+wXbDiS6IzCosSWnsPHHjDgmBhf7eXSMSFr
+         EEV5bH4/gc0V/E5XAI+hGYAtDRRFzOP+udtRuTI1FJoFlB+5ZyotbwUsCdolNeT0qo
+         TPnobaYXGRysg==
+Date:   Wed, 11 Aug 2021 07:49:13 +1000
+From:   Stephen Rothwell <sfr@canb.auug.org.au>
+To:     "Darrick J. Wong" <djwong@kernel.org>,
+        David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Next Mailing List <linux-next@vger.kernel.org>
+Subject: linux-next: Signed-off-by missing for commits in the xfs tree
+Message-ID: <20210811074913.48605817@canb.auug.org.au>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; boundary="Sig_/dUdzsoZRBY.BwB3HuWpTv6x";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 05 2021 at 19:24, Matthew Wilcox wrote:
-> On Thu, Aug 05, 2021 at 10:39:03AM -0700, Darrick J. Wong wrote:
->> Though now that I think about it: Why does iomap_write_actor still use
->> copy_page_from_iter_atomic?  Can that be converted to use regular
->> copy_page_from_iter, which at least sometimes uses kmap_local_page?
->
-> I suspect copy_page_from_iter_atomic() should be converted to use
-> kmap_local_page(), but I don't know.  generic_perform_write() uses
-> the _atomic() version, so I'm not doing anything different without
-> understanding more than I currently do.
+--Sig_/dUdzsoZRBY.BwB3HuWpTv6x
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Most of the kmap_atomic() usage can be converted to kmap_local(). There
-are only a few usage sites which really depend on the implicit preempt
-disable.
+Hi all,
 
-The reason why we cannot convert the bulk blindly is that quite some
-usage sites have user memory access nested inside. As kmap_atomic()
-disables preemption and page faults the error handling needs to be
-outside the atomic section, i.e. after kunmap_atomic(). So if you
-convert that you have to get rid of that extra error handling and just
-use the regular user memory accessors.
+Commits
 
-IIRC there are a few places which really want pagefaults disabled, but
-those do not necessarily need preemption disabled. So they need to be
-converted to kmap_local(); pagefault_disable(); err = dostuff(); ....
+  0f3901673631 ("xfs: Rename __xfs_attr_rmtval_remove")
+  da8ca45da62e ("xfs: add attr state machine tracepoints")
 
-Hope that helps.
+are missing a Signed-off-by from their committer.
 
-Thanks
+--=20
+Cheers,
+Stephen Rothwell
 
-        tglx
+--Sig_/dUdzsoZRBY.BwB3HuWpTv6x
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAmES9FkACgkQAVBC80lX
+0Gz4+gf+IkfFu5UawSW8+7o+jivyVS9zWJrBogXXPsHQWtwygkjLrW3A0nfjcT7a
+qKQW21p8b1xhxnbLPH758BAFiQOYwvnmyjXy5zJDTHIZlAEoLOMLn92uSTg6EYUx
+4r5TmQh9LtXcgJyPdTmZVu+HxgvrhoIrAh63brQ6R1gN2VywhbhLL5FjQr/W1JsB
+510MRRrB0ZOsGJoL58p7uy5U7nJl6TNMT2i4/mcDw9zanZ1rlgnmf472Qven08y+
+alm0RbEjfLyaLyytLZmjsie07sATtMbI78YfqWgkJg9L0trwMsncnLT95FRflVnz
+B51Bu8NEWSHl0FaPkZnncUl3L7Vm3Q==
+=ihqQ
+-----END PGP SIGNATURE-----
+
+--Sig_/dUdzsoZRBY.BwB3HuWpTv6x--
