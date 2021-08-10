@@ -2,39 +2,28 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DB5DC4338F
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Aug 2021 06:45:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB75DC4338F
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Aug 2021 07:13:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4F13C61051
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Aug 2021 06:45:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B840161051
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Aug 2021 07:13:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236974AbhHJGpd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Aug 2021 02:45:33 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42884 "EHLO mail.kernel.org"
+        id S230214AbhHJHNj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Aug 2021 03:13:39 -0400
+Received: from verein.lst.de ([213.95.11.211]:34880 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236783AbhHJGpb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 10 Aug 2021 02:45:31 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 08FC161051;
-        Tue, 10 Aug 2021 06:45:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1628577910;
-        bh=RihM3RABZmtn7Il17pSYaqOqh9/sxVWCnBL30iutPmY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=SKrsQI2eIw9IUPVB1RsHIgu6uSnb4gU5KpLZP8rtfqVjBV8CixZEiIaHb4vs8AMas
-         GT0R3ZenArX54wC57txe6nL+yCxzI7HjpE+NUh9tj5wrtRFMBrz8Qx1hqIMiwsVSvT
-         Sq8N07oUa9bsO38lE2pIkwzRosXfbbz+Xs342fW1qyt8uqF0l/RxxT+C60fy+dj1Qm
-         ShMHoYwVZaQk7kXM3z1OwtQnqL2tGKJqXC55jZ+DoZ9bSBCjyoFoR32IzLX0vIKzG/
-         9zpz4+/IBoBxUNYFMD7vP+chEh2OVccjEZK3YezTqYyUHFFtsbz2JDraMsOH95eV2H
-         TItJ3xdNBB/gA==
-Date:   Mon, 9 Aug 2021 23:45:09 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
+        id S229484AbhHJHNj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 10 Aug 2021 03:13:39 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 2FFD467373; Tue, 10 Aug 2021 09:13:13 +0200 (CEST)
+Date:   Tue, 10 Aug 2021 09:13:12 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>,
         Dan Williams <dan.j.williams@intel.com>,
         Matthew Wilcox <willy@infradead.org>,
         Andreas Gruenbacher <agruenba@redhat.com>,
@@ -43,76 +32,30 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         linux-btrfs@vger.kernel.org, nvdimm@lists.linux.dev,
         cluster-devel@redhat.com
 Subject: Re: [PATCH 11/30] iomap: add the new iomap_iter model
-Message-ID: <20210810064509.GI3601443@magnolia>
-References: <20210809061244.1196573-1-hch@lst.de>
- <20210809061244.1196573-12-hch@lst.de>
- <20210809221047.GC3657114@dread.disaster.area>
+Message-ID: <20210810071312.GA16590@lst.de>
+References: <20210809061244.1196573-1-hch@lst.de> <20210809061244.1196573-12-hch@lst.de> <20210809221047.GC3657114@dread.disaster.area> <20210810064509.GI3601443@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210809221047.GC3657114@dread.disaster.area>
+In-Reply-To: <20210810064509.GI3601443@magnolia>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 10, 2021 at 08:10:47AM +1000, Dave Chinner wrote:
-> On Mon, Aug 09, 2021 at 08:12:25AM +0200, Christoph Hellwig wrote:
-> > The iomap_iter struct provides a convenient way to package up and
-> > maintain all the arguments to the various mapping and operation
-> > functions.  It is operated on using the iomap_iter() function that
-> > is called in loop until the whole range has been processed.  Compared
-> > to the existing iomap_apply() function this avoid an indirect call
-> > for each iteration.
-> > 
-> > For now iomap_iter() calls back into the existing ->iomap_begin and
-> > ->iomap_end methods, but in the future this could be further optimized
-> > to avoid indirect calls entirely.
-> > 
-> > Based on an earlier patch from Matthew Wilcox <willy@infradead.org>.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > ---
-> >  fs/iomap/Makefile     |  1 +
-> >  fs/iomap/core.c       | 79 +++++++++++++++++++++++++++++++++++++++++++
-> >  fs/iomap/trace.h      | 37 +++++++++++++++++++-
-> >  include/linux/iomap.h | 56 ++++++++++++++++++++++++++++++
-> >  4 files changed, 172 insertions(+), 1 deletion(-)
-> >  create mode 100644 fs/iomap/core.c
-> > 
-> > diff --git a/fs/iomap/Makefile b/fs/iomap/Makefile
-> > index eef2722d93a183..6b56b10ded347a 100644
-> > --- a/fs/iomap/Makefile
-> > +++ b/fs/iomap/Makefile
-> > @@ -10,6 +10,7 @@ obj-$(CONFIG_FS_IOMAP)		+= iomap.o
-> >  
-> >  iomap-y				+= trace.o \
-> >  				   apply.o \
-> > +				   core.o \
+On Mon, Aug 09, 2021 at 11:45:09PM -0700, Darrick J. Wong wrote:
+> > fs/iomap.c without having to take the tree back in time to find
+> > those files...
 > 
-> This creates a discontinuity in the iomap git history. Can you add
-> these new functions to iomap/apply.c, then when the old apply code
-> is removed later in the series rename the file to core.c? At least
-> that way 'git log --follow fs/iomap/core.c' will walk back into the
-> current history of fs/iomap/apply.c and the older pre-disaggregation
-> fs/iomap.c without having to take the tree back in time to find
-> those files...
-
-...or put the new code in apply.c, remove iomap_apply, and don't bother
-with the renaming at all?
-
-I don't see much reason to break the git history.  This is effectively a
-new epoch in iomap, but that is plainly obvious from the function
-declarations.
-
-I'll wander through the rest of the unreviewed patches tomorrow morning,
-these are merely my off-the-cuff impressions.
-
---D
-
+> ...or put the new code in apply.c, remove iomap_apply, and don't bother
+> with the renaming at all?
 > 
-> Cheers,
+> I don't see much reason to break the git history.  This is effectively a
+> new epoch in iomap, but that is plainly obvious from the function
+> declarations.
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> I'll wander through the rest of the unreviewed patches tomorrow morning,
+> these are merely my off-the-cuff impressions.
+
+We could do all that, but why?  There is no code even left from the
+apply area.
