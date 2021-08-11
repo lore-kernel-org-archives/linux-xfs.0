@@ -2,214 +2,66 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A62E3C4338F
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Aug 2021 02:54:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E843AC43214
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Aug 2021 05:39:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7C7FD60230
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Aug 2021 02:54:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C78FD60FA0
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Aug 2021 05:39:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232169AbhHKCya (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Aug 2021 22:54:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37566 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232411AbhHKCy3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Aug 2021 22:54:29 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5638AC061765;
-        Tue, 10 Aug 2021 19:54:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-Type:Content-ID:Content-Description;
-        bh=iwzzerqMwO0iARK6ivjyqoH0sPMbU6DdjS1W/L65Gw4=; b=dl4Idaw9os9wRyASw7lpS62HOc
-        uKMrpUoq04IeDgqBDLyq7mdsf7JH8Vx/+ozDbo7kG6T3O2Lzl/w/cw40mvsC3f4PFlcRsUkMVX74M
-        AEcDlY6tGRRRqZolxggI1XFJu2c7lY+nLzvvaP+3MAhQx7EVpDmJUFtObw1lwMeLKcPCgUtz01T7P
-        CaSRY+bnjrUxaZfXOWAHSDBszlChtAWPrlYzqfqz3B6pgY/rhDn/5/Qbfwd97JFjDtHi+icgZ6YOF
-        joPXDLfwdob5DByPLCPhWGSkPfQb2nugWT8agM7A5JMAQrmrLL8cAJy5y6Hrq+dAcd4tJAGem6X0n
-        ibjDPxYw==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mDeMH-00CsUv-Bk; Wed, 11 Aug 2021 02:53:05 +0000
-From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
-To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>
-Subject: [PATCH 8/8] iomap: Add writethrough for O_SYNC
-Date:   Wed, 11 Aug 2021 03:46:47 +0100
-Message-Id: <20210811024647.3067739-9-willy@infradead.org>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20210811024647.3067739-1-willy@infradead.org>
-References: <20210811024647.3067739-1-willy@infradead.org>
+        id S234265AbhHKFjX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 11 Aug 2021 01:39:23 -0400
+Received: from verein.lst.de ([213.95.11.211]:39147 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S234285AbhHKFjW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 11 Aug 2021 01:39:22 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 66E0A6736F; Wed, 11 Aug 2021 07:38:56 +0200 (CEST)
+Date:   Wed, 11 Aug 2021 07:38:56 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Shiyang Ruan <ruansy.fnst@fujitsu.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, nvdimm@lists.linux.dev,
+        cluster-devel@redhat.com
+Subject: Re: [PATCH 11/30] iomap: add the new iomap_iter model
+Message-ID: <20210811053856.GA1934@lst.de>
+References: <20210809061244.1196573-1-hch@lst.de> <20210809061244.1196573-12-hch@lst.de> <20210811003118.GT3601466@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210811003118.GT3601466@magnolia>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-For O_SYNC writes, if the filesystem has already allocated blocks for
-the range, we can avoid marking the page as dirty and skip straight to
-marking the page as writeback.
+On Tue, Aug 10, 2021 at 05:31:18PM -0700, Darrick J. Wong wrote:
+> > +static inline void iomap_iter_done(struct iomap_iter *iter)
+> 
+> I wonder why this is a separate function, since it only has debugging
+> warnings and tracepoints?
 
-Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
----
- fs/iomap/buffered-io.c | 78 +++++++++++++++++++++++++++++++++++-------
- 1 file changed, 66 insertions(+), 12 deletions(-)
+The reason for these two sub-helpers was to force me to structure the
+code so that Matthews original idea of replacing ->iomap_begin and
+->iomap_end with a single next callback so that iomap_iter could
+be inlined into callers and the indirect calls could be elided is
+still possible.  This would only be useful for a few specific
+methods (probably dax and direct I/O) where we care so much, but it
+seemed like a nice idea conceptually so I would not want to break it.
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index eb068e21d3bb..93b889338172 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -657,8 +657,45 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
- 	return status;
- }
- 
--static size_t __iomap_write_end(struct inode *inode, loff_t pos, size_t len,
--		size_t copied, struct page *page)
-+/* Rearrange file so we don't need this forward declaration */
-+static struct iomap_ioend *iomap_add_to_ioend(struct inode *inode,
-+		loff_t pos, size_t len, struct page *page,
-+		struct iomap_page *iop, struct iomap *iomap,
-+		struct iomap_ioend *ioend, struct writeback_control *wbc,
-+		struct list_head *iolist);
-+
-+/* Returns true if we can skip dirtying the page */
-+static bool iomap_write_through(struct iomap_write_ctx *iwc,
-+		struct iomap *iomap, struct inode *inode, struct page *page,
-+		loff_t pos, size_t len)
-+{
-+	unsigned int blksize = i_blocksize(inode);
-+
-+	if (!iwc || !iwc->write_through)
-+		return false;
-+	if (PageDirty(page))
-+		return true;
-+	if (PageWriteback(page))
-+		return false;
-+
-+	/* Can't allocate blocks here because we don't have ->prepare_ioend */
-+	if (iomap->type != IOMAP_MAPPED || iomap->type != IOMAP_UNWRITTEN ||
-+	    iomap->flags & IOMAP_F_SHARED)
-+		return false;
-+
-+	len = round_up(pos + len - 1, blksize);
-+	pos = round_down(pos, blksize);
-+	len -= pos;
-+	iwc->ioend = iomap_add_to_ioend(inode, pos, len, page,
-+			iomap_page_create(inode, page), iomap, iwc->ioend, NULL,
-+			&iwc->iolist);
-+	set_page_writeback(page);
-+	return true;
-+}
-+
-+static size_t __iomap_write_end(struct iomap_write_ctx *iwc,
-+		struct iomap *iomap, struct inode *inode, loff_t pos,
-+		size_t len, size_t copied, struct page *page)
- {
- 	flush_dcache_page(page);
- 
-@@ -676,7 +713,8 @@ static size_t __iomap_write_end(struct inode *inode, loff_t pos, size_t len,
- 	if (unlikely(copied < len && !PageUptodate(page)))
- 		return 0;
- 	iomap_set_range_uptodate(page, offset_in_page(pos), len);
--	__set_page_dirty_nobuffers(page);
-+	if (!iomap_write_through(iwc, iomap, inode, page, pos, len))
-+		__set_page_dirty_nobuffers(page);
- 	return copied;
- }
- 
-@@ -698,9 +736,9 @@ static size_t iomap_write_end_inline(struct inode *inode, struct page *page,
- }
- 
- /* Returns the number of bytes copied.  May be 0.  Cannot be an errno. */
--static size_t iomap_write_end(struct inode *inode, loff_t pos, size_t len,
--		size_t copied, struct page *page, struct iomap *iomap,
--		struct iomap *srcmap)
-+static size_t iomap_write_end(struct iomap_write_ctx *iwc, struct inode *inode,
-+		loff_t pos, size_t len, size_t copied, struct page *page,
-+		struct iomap *iomap, struct iomap *srcmap)
- {
- 	const struct iomap_page_ops *page_ops = iomap->page_ops;
- 	loff_t old_size = inode->i_size;
-@@ -712,7 +750,8 @@ static size_t iomap_write_end(struct inode *inode, loff_t pos, size_t len,
- 		ret = block_write_end(NULL, inode->i_mapping, pos, len, copied,
- 				page, NULL);
- 	} else {
--		ret = __iomap_write_end(inode, pos, len, copied, page);
-+		ret = __iomap_write_end(iwc, iomap, inode, pos, len, copied,
-+				page);
- 	}
- 
- 	/*
-@@ -780,8 +819,8 @@ iomap_write_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 
- 		copied = copy_page_from_iter_atomic(page, offset, bytes, i);
- 
--		status = iomap_write_end(inode, pos, bytes, copied, page, iomap,
--				srcmap);
-+		status = iomap_write_end(iwc, inode, pos, bytes, copied, page,
-+				iomap, srcmap);
- 
- 		if (unlikely(copied != status))
- 			iov_iter_revert(i, copied - status);
-@@ -808,6 +847,10 @@ iomap_write_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 	return written ? written : status;
- }
- 
-+/* Also rearrange */
-+static int iomap_submit_ioend(struct iomap_writepage_ctx *wpc,
-+		struct iomap_ioend *ioend, int error);
-+
- ssize_t
- iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *iter,
- 		const struct iomap_ops *ops)
-@@ -817,6 +860,7 @@ iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *iter,
- 		.iolist = LIST_HEAD_INIT(iwc.iolist),
- 		.write_through = iocb->ki_flags & IOCB_SYNC,
- 	};
-+	struct iomap_ioend *ioend, *next;
- 	struct inode *inode = iocb->ki_filp->f_mapping->host;
- 	loff_t pos = iocb->ki_pos, ret = 0, written = 0;
- 
-@@ -829,6 +873,15 @@ iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *iter,
- 		written += ret;
- 	}
- 
-+	if (ret > 0)
-+		ret = 0;
-+
-+	list_for_each_entry_safe(ioend, next, &iwc.iolist, io_list) {
-+		list_del_init(&ioend->io_list);
-+		ret = iomap_submit_ioend(NULL, ioend, ret);
-+	}
-+	if (iwc.ioend)
-+		ret = iomap_submit_ioend(NULL, iwc.ioend, ret);
- 	return written ? written : ret;
- }
- EXPORT_SYMBOL_GPL(iomap_file_buffered_write);
-@@ -857,8 +910,8 @@ iomap_unshare_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 		if (unlikely(status))
- 			return status;
- 
--		status = iomap_write_end(inode, pos, bytes, bytes, page, iomap,
--				srcmap);
-+		status = iomap_write_end(NULL, inode, pos, bytes, bytes, page,
-+				iomap, srcmap);
- 		if (WARN_ON_ONCE(status == 0))
- 			return -EIO;
- 
-@@ -908,7 +961,8 @@ static s64 iomap_zero(struct inode *inode, loff_t pos, u64 length,
- 	zero_user(page, offset, bytes);
- 	mark_page_accessed(page);
- 
--	return iomap_write_end(inode, pos, bytes, bytes, page, iomap, srcmap);
-+	return iomap_write_end(NULL, inode, pos, bytes, bytes, page, iomap,
-+			srcmap);
- }
- 
- static loff_t iomap_zero_range_actor(struct inode *inode, loff_t pos,
--- 
-2.30.2
+OTOH we could just remove this function for now and do that once needed.
+
+> Modulo the question about iomap_iter_done, I guess this looks all right
+> to me.  As far as apply.c vs. core.c, I'm not wildly passionate about
+> either naming choice (I would have called it iter.c) but ... fmeh.
+
+iter.c is also my preference, but in the end I don't care too much.
 
