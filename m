@@ -2,173 +2,138 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD700C4338F
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Aug 2021 16:37:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE49AC4338F
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Aug 2021 19:04:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 85FFC60551
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Aug 2021 16:37:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C760C610A4
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Aug 2021 19:04:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229613AbhHKQhX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 11 Aug 2021 12:37:23 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59700 "EHLO mail.kernel.org"
+        id S229946AbhHKTEd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 11 Aug 2021 15:04:33 -0400
+Received: from mail.kernel.org ([198.145.29.99]:32942 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229484AbhHKQhX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 11 Aug 2021 12:37:23 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3234561019
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Aug 2021 16:36:59 +0000 (UTC)
+        id S229802AbhHKTEd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 11 Aug 2021 15:04:33 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C2C3461077;
+        Wed, 11 Aug 2021 19:04:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1628699819;
-        bh=63jqUcuQ4XhrSifPq9IqmhC3kuERj43pNEdvEPEbqeY=;
-        h=Date:From:To:Subject:From;
-        b=oQ2Mrt88/FpaxWSoByWuz9KyZaqXfhKtkxlkC8pqDW7nqRdlFyG31AdhxMlRK+dlb
-         oAlr9fNNcs14BqQXNjPdiBW+5k5Am8Omu0y5UaYoCM9ZBxjCY/ODwp6V21a2tQF6tv
-         UbCLTi04iaGA55ZKrzq/J/NfEtPqhAnC1Cyn4yw7g4HqA1BP7mwuYQv+8jUMAtwk2K
-         VbmdmP6rfQFqK2GIdTFygO44lDlSR4ArjIXv+oHcZbdnCvCJrOngRZNUcHYuCdhJhK
-         GDtNt7oaxeDCmYznPsAspeJ33Br6P136pRdRpFf+834Ast81CVWI3jnI8ljG2zKo/A
-         +gtOsK0mHTrHg==
-Date:   Wed, 11 Aug 2021 09:36:58 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     xfs <linux-xfs@vger.kernel.org>
-Subject: [ANNOUNCE] xfs-linux: for-next **REBASED** to edf27485eb56
-Message-ID: <20210811163658.GE3601443@magnolia>
+        s=k20201202; t=1628708649;
+        bh=jScylGJuwjKMORyLGXSXMDTyjRrlSYsq/C10m9K+XeM=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=KexzI3E1dNjTjZieeWppa1roWWQuXrcbEo3FYd8LpBIKXMJ27Y9yKR8YFn4D7JvTE
+         KCRywyT9P1WLLDONixgy4eZpi8jejoyWFXoRkGe69muLJLQqmX4kNKdJV8Tu4B5VMz
+         3XdHtfx8HJckJu9o+ergU++8RYYWqppYf13jGp50CKQ4xGYXVqjTcNxjaKIOZztk40
+         O1SVqYvu4Ov3gteWLKbJ1q24+I2Lgx+r1H/GdTUQ3JC6JoiQcfEAFlB2X1uGrwwMHx
+         sKD5J9u7OScJyHP9HKg4XAQJamhvXX///PkslLxq5fzeobPBun3keHuFMkvJaHqfY3
+         nzkvzE74+qLhQ==
+Message-ID: <68817121af70e4c370c541b6d5cc48fe0f11e312.camel@kernel.org>
+Subject: Re: Dirty bits and sync writes
+From:   Jeff Layton <jlayton@kernel.org>
+To:     Matthew Wilcox <willy@infradead.org>,
+        Christoph Hellwig <hch@infradead.org>
+Cc:     linux-fsdevel@vger.kernel.org,
+        Zhengyuan Liu <liuzhengyuang521@gmail.com>, yukuai3@huawei.com,
+        Dave Chinner <david@fromorbit.com>,
+        David Howells <dhowells@redhat.com>, linux-xfs@vger.kernel.org
+Date:   Wed, 11 Aug 2021 15:04:07 -0400
+In-Reply-To: <YRFKB0rBU51O1YpD@casper.infradead.org>
+References: <YQlgjh2R8OzJkFoB@casper.infradead.org>
+         <YRFAWPdMHp8Wpds/@infradead.org> <YRFKB0rBU51O1YpD@casper.infradead.org>
+Content-Type: text/plain; charset="ISO-8859-15"
+User-Agent: Evolution 3.40.3 (3.40.3-1.fc34) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+On Mon, 2021-08-09 at 16:30 +0100, Matthew Wilcox wrote:
+> On Mon, Aug 09, 2021 at 03:48:56PM +0100, Christoph Hellwig wrote:
+> > On Tue, Aug 03, 2021 at 04:28:14PM +0100, Matthew Wilcox wrote:
+> > > Solution 1: Add an array of dirty bits to the iomap_page
+> > > data structure.  This patch already exists; would need
+> > > to be adjusted slightly to apply to the current tree.
+> > > https://lore.kernel.org/linux-xfs/7fb4bb5a-adc7-5914-3aae-179dd8f3adb1@huawei.com/
+> > 
+> > > Solution 2a: Replace the array of uptodate bits with an array of
+> > > dirty bits.  It is not often useful to know which parts of the page are
+> > > uptodate; usually the entire page is uptodate.  We can actually use the
+> > > dirty bits for the same purpose as uptodate bits; if a block is dirty, it
+> > > is definitely uptodate.  If a block is !dirty, and the page is !uptodate,
+> > > the block may or may not be uptodate, but it can be safely re-read from
+> > > storage without losing any data.
+> > 
+> > 1 or 2a seems like something we should do once we have lage folio
+> > support.
+> > 
+> > 
+> > > Solution 2b: Lose the concept of partially uptodate pages.  If we're
+> > > going to write to a partial page, just bring the entire page uptodate
+> > > first, then write to it.  It's not clear to me that partially-uptodate
+> > > pages are really useful.  I don't know of any network filesystems that
+> > > support partially-uptodate pages, for example.  It seems to have been
+> > > something we did for buffer_head based filesystems "because we could"
+> > > rather than finding a workload that actually cares.
+> > 
 
-The for-next branch of the xfs-linux repository at:
+I may be wrong, but I thought NFS actually could deal with partially
+uptodate pages. In some cases it can opt to just do a write to a page
+w/o reading first and flush just that section when the time comes.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+I think the heuristics are in nfs_want_read_modify_write(). #3 may be a
+better way though.
 
-has just been rebased to fix a couple of missing SOB tags.  There have
-not been any changes to the code itself.
+> > The uptodate bit is important for the use case of a smaller than page
+> > size buffered write into a page that hasn't been read in already, which
+> > is fairly common for things like log writes.  So I'd hate to lose this
+> > optimization.
+> > 
+> > > (it occurs to me that solution 3 actually allows us to do IOs at storage
+> > > block size instead of filesystem block size, potentially reducing write
+> > > amplification even more, although we will need to be a bit careful if
+> > > we're doing a CoW.)
+> > 
+> > number 3 might be nice optimization.  The even better version would
+> > be a disk format change to just log those updates in the log and
+> > otherwise use the normal dirty mechanism.  I once had a crude prototype
+> > for that.
+> 
+> That's a bit beyond my scope at this point.  I'm currently working on
+> write-through.  Once I have that working, I think the next step is:
+> 
+>  - Replace the ->uptodate array with a ->dirty array
+>  - If the entire page is Uptodate, drop the iomap_page.  That means that
+>    writebacks will write back the entire folio, not just the dirty
+>    pieces.
+>  - If doing a partial page write
+>    - If the write is block-aligned (offset & length), leave the page
+>      !Uptodate and mark the dirty blocks
+>    - Otherwise bring the entire page Uptodate first, then mark it dirty
+> 
+> To take an example of a 512-byte block size file accepting a 520 byte
+> write at offset 500, we currently submit two reads, one for bytes 0-511
+> and the second for 1024-1535.  We're better off submitting a read for
+> bytes 0-4095 and then overwriting the entire thing.
+> 
+> But it's still better to do no reads at all if someone submits a write
+> for bytes 512-1023, or 512-N where N is past EOF.  And I'd preserve
+> that behaviour.
+> 
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.  Dave's logging changes, flag handling changes, and
-buffer cleanups are still out for review, and I will be sending some
-bugfixes and cleanups of my own later this afternoon.
+I like this idea too.
 
-The new head of the for-next branch is commit:
+I'd also point out that both cifs and ceph (at least) can read and write
+"around" the cache in some cases (using non-pagecache pages) when they
+can't get the proper oplock/lease/caps from the server. Both of them
+have completely separate "uncached" codepaths, that are distinct from
+the O_DIRECT cases.
 
-edf27485eb56 xfs: cleanup __FUNCTION__ usage
+This scheme could potentially be a saner method of dealing with those
+situations too.
+-- 
+Jeff Layton <jlayton@kernel.org>
 
-New Commits:
-
-Allison Henderson (2):
-      [df0826312a23] xfs: add attr state machine tracepoints
-      [5e68b4c7fb64] xfs: Rename __xfs_attr_rmtval_remove
-
-Christoph Hellwig (4):
-      [40b52225e58c] xfs: remove support for disabling quota accounting on a mounted file system
-      [777eb1fa857e] xfs: remove xfs_dqrele_all_inodes
-      [e497dfba6bd7] xfs: remove the flags argument to xfs_qm_dquot_walk
-      [149e53afc851] xfs: remove the active vs running quota differentiation
-
-Darrick J. Wong (18):
-      [c6c2066db396] xfs: move xfs_inactive call to xfs_inode_mark_reclaimable
-      [62af7d54a0ec] xfs: detach dquots from inode if we don't need to inactivate it
-      [7d6f07d2c5ad] xfs: queue inactivation immediately when free space is tight
-      [108523b8de67] xfs: queue inactivation immediately when quota is nearing enforcement
-      [65f03d8652b2] xfs: queue inactivation immediately when free realtime extents are tight
-      [2eb665027b65] xfs: inactivate inodes any time we try to free speculative preallocations
-      [01e8f379a489] xfs: flush inode inactivation work when compiling usage statistics
-      [6f6490914d9b] xfs: don't run speculative preallocation gc when fs is frozen
-      [e8d04c2abceb] xfs: use background worker pool when transactions can't get free space
-      [a6343e4d9278] xfs: avoid buffer deadlocks when walking fs inodes
-      [40b1de007aca] xfs: throttle inode inactivation queuing on memory reclaim
-      [b7df7630cccd] xfs: fix silly whitespace problems with kernel libxfs
-      [f19ee6bb1a72] xfs: drop experimental warnings for bigtime and inobtcount
-      [48c6615cc557] xfs: grab active perag ref when reading AG headers
-      [43059d5416c9] xfs: dump log intent items that cannot be recovered due to corruption
-      [908ce71e54f8] xfs: allow setting and clearing of log incompat feature flags
-      [2b73a2c817be] xfs: clear log incompat feature bits when the log is idle
-      [4bc619833f73] xfs: refactor xfs_iget calls from log intent recovery
-
-Dave Chinner (6):
-      [f1653c2e2831] xfs: introduce CPU hotplug infrastructure
-      [0ed17f01c854] xfs: introduce all-mounts list for cpu hotplug notifications
-      [ab23a7768739] xfs: per-cpu deferred inode inactivation queues
-      [de2860f46362] mm: Add kvrealloc()
-      [98fe2c3cef21] xfs: remove kmem_alloc_io()
-      [d634525db63e] xfs: replace kmem_alloc_large() with kvmalloc()
-
-Dwaipayan Ray (1):
-      [edf27485eb56] xfs: cleanup __FUNCTION__ usage
-
-
-Code Diffstat:
-
- fs/xfs/kmem.c                   |  64 ----
- fs/xfs/kmem.h                   |   2 -
- fs/xfs/libxfs/xfs_attr.c        |  37 ++-
- fs/xfs/libxfs/xfs_attr_leaf.c   |   4 +-
- fs/xfs/libxfs/xfs_attr_remote.c |   3 +-
- fs/xfs/libxfs/xfs_attr_remote.h |   2 +-
- fs/xfs/libxfs/xfs_format.h      |  17 +-
- fs/xfs/libxfs/xfs_ialloc.c      |   2 +-
- fs/xfs/libxfs/xfs_log_recover.h |   2 +
- fs/xfs/libxfs/xfs_quota_defs.h  |  30 +-
- fs/xfs/libxfs/xfs_rmap_btree.h  |   2 +-
- fs/xfs/libxfs/xfs_trans_resv.c  |  30 --
- fs/xfs/libxfs/xfs_trans_resv.h  |   2 -
- fs/xfs/scrub/agheader.c         |  23 +-
- fs/xfs/scrub/agheader_repair.c  |   3 -
- fs/xfs/scrub/attr.c             |  14 +-
- fs/xfs/scrub/attr.h             |   3 -
- fs/xfs/scrub/bmap.c             |   2 +-
- fs/xfs/scrub/btree.c            |   2 +-
- fs/xfs/scrub/common.c           |  58 ++--
- fs/xfs/scrub/common.h           |  18 +-
- fs/xfs/scrub/fscounters.c       |   2 +-
- fs/xfs/scrub/inode.c            |   2 +-
- fs/xfs/scrub/quota.c            |   2 +-
- fs/xfs/xfs_bmap_item.c          |  14 +-
- fs/xfs/xfs_buf.c                |   3 +-
- fs/xfs/xfs_buf.h                |   6 -
- fs/xfs/xfs_dquot.c              |   3 -
- fs/xfs/xfs_dquot.h              |  10 +
- fs/xfs/xfs_dquot_item.c         | 134 --------
- fs/xfs/xfs_dquot_item.h         |  17 -
- fs/xfs/xfs_extfree_item.c       |   3 +
- fs/xfs/xfs_icache.c             | 689 ++++++++++++++++++++++++++++++++--------
- fs/xfs/xfs_icache.h             |  14 +-
- fs/xfs/xfs_icreate_item.c       |   4 +-
- fs/xfs/xfs_inode.c              |  53 ++++
- fs/xfs/xfs_inode.h              |  22 +-
- fs/xfs/xfs_ioctl.c              |   2 +-
- fs/xfs/xfs_iops.c               |   4 +-
- fs/xfs/xfs_itable.c             |  42 ++-
- fs/xfs/xfs_iwalk.c              |  33 +-
- fs/xfs/xfs_log.c                |  68 +++-
- fs/xfs/xfs_log.h                |   3 +
- fs/xfs/xfs_log_cil.c            |  10 +-
- fs/xfs/xfs_log_priv.h           |   3 +
- fs/xfs/xfs_log_recover.c        |  57 +++-
- fs/xfs/xfs_mount.c              | 171 ++++++++--
- fs/xfs/xfs_mount.h              |  69 +++-
- fs/xfs/xfs_qm.c                 |  78 +++--
- fs/xfs/xfs_qm.h                 |   3 -
- fs/xfs/xfs_qm_syscalls.c        | 251 ++-------------
- fs/xfs/xfs_quota.h              |   2 +
- fs/xfs/xfs_quotaops.c           |  30 +-
- fs/xfs/xfs_refcount_item.c      |   3 +
- fs/xfs/xfs_rmap_item.c          |   3 +
- fs/xfs/xfs_super.c              | 315 ++++++++++++------
- fs/xfs/xfs_trace.h              | 115 ++++++-
- fs/xfs/xfs_trans.c              |   5 +-
- fs/xfs/xfs_trans_dquot.c        |  49 +--
- include/linux/cpuhotplug.h      |   1 +
- include/linux/mm.h              |   2 +
- mm/util.c                       |  15 +
- 62 files changed, 1651 insertions(+), 981 deletions(-)
