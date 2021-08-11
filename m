@@ -7,1077 +7,206 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D01FC4338F
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Aug 2021 00:38:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8421CC4338F
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Aug 2021 00:39:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6CA9A6023B
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Aug 2021 00:38:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 60AA96023B
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Aug 2021 00:39:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235608AbhHKAiY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Aug 2021 20:38:24 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37882 "EHLO mail.kernel.org"
+        id S235724AbhHKAj1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Aug 2021 20:39:27 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38044 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231423AbhHKAiY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 10 Aug 2021 20:38:24 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2A8606023B;
-        Wed, 11 Aug 2021 00:38:01 +0000 (UTC)
+        id S235608AbhHKAj1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 10 Aug 2021 20:39:27 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 404EA6052B;
+        Wed, 11 Aug 2021 00:39:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1628642281;
-        bh=rQLVBFsMYoggWsUAFK9xu4Cb0eVgX0q+Ga30yctR5xk=;
+        s=k20201202; t=1628642344;
+        bh=Vi0OYx3CffpxcxOpx3NhIb456jMSiEysLeVqM9XQSgU=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=rh2o0NqocmUt/m10qiPkV92cMegpmviHumue2avogmY/nwDlt3+z5KIAJDvIcBdta
-         MaUxqRDi84l9vz2+3sZ7bhTBWCwMrI4Z08kt2uI86FGwDC9DEhl7CoxmR1QMsoPRPF
-         GUi0lAqNz2iGAgqGaj4JKpmmbYLulqhIxtGwI8ecQWEuBYX9pmeMoODskQO9S1PoGf
-         plPKT14W7JtspDKQIddwIcKBH1ZVIn5kngxIacuVdqkij8QZMNQqTlcYHVQ3pjBUud
-         4yyimx0ddIUyGo99ORjRB4OzH+4s045lrlRcA2rqQgEKberwIM8sGchk7RBod2n1rX
-         CwMENv1W81WMw==
-Date:   Tue, 10 Aug 2021 17:38:00 -0700
+        b=p+/3M91VxAw8PoYAUcP2ZzrFfuAoF7Yu6/afaQi9C+6EroUCSBP8zNGJftX9xdFCR
+         khx/XOHpFmu4a0gQa+hpeFlDBqW7ubM3uspY75Evy6q+TDEQ/svRhpfNN2VSAbhDJT
+         zeRS4xYFq8YBNCAeF0PoZz4/2j8xnZ/Jsxoh2uU625VxREDwoDiHVveFQwqz/tufQI
+         VtKqBWDNabA47eAQbp0UK8SqAZ0+OeYfrtB+CgSGORs3Wm3HxgAX1Geh69tWUbop4z
+         lww5f1Az5RE9zuKfpfur5gQkWRCVCfBawdVsom7j2lL4v+EBIzgtbnP3HWI98SW+9S
+         eEn+LmzKUNvtQ==
+Date:   Tue, 10 Aug 2021 17:39:03 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 07/16] xfs: convert mount flags to features
-Message-ID: <20210811003800.GW3601443@magnolia>
+Subject: Re: [PATCH 10/16] xfs: convert xfs_fs_geometry to use mount feature
+ checks
+Message-ID: <20210811003903.GX3601443@magnolia>
 References: <20210810052451.41578-1-david@fromorbit.com>
- <20210810052451.41578-8-david@fromorbit.com>
+ <20210810052451.41578-11-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210810052451.41578-8-david@fromorbit.com>
+In-Reply-To: <20210810052451.41578-11-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 10, 2021 at 03:24:42PM +1000, Dave Chinner wrote:
+On Tue, Aug 10, 2021 at 03:24:45PM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Replace m_flags feature checks with xfs_has_<feature>() calls and
-> rework the setup code to set flags in m_features.
+> Reporting filesystem features to userspace is currently superblock
+> based. Now we have a general mount-based feature infrastructure,
+> switch to using the xfs_mount rather than the superblock directly.
+> 
+> This reduces the size of the function by over 300 bytes.
+> 
+> $ size -t fs/xfs/built-in.a
+> 	text    data     bss     dec     hex filename
+> before	1127855  311352     484 1439691  15f7cb (TOTALS)
+> after	1127535  311352     484 1439371  15f68b (TOTALS)
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-AFAICT the only change since last time is in xfs_inode.c, right?
+Didn't hch and I review this last time?
 
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/xfs/libxfs/xfs_attr.c      |   4 +-
->  fs/xfs/libxfs/xfs_attr_leaf.c |  36 +++++----
->  fs/xfs/libxfs/xfs_bmap.c      |   4 +-
->  fs/xfs/libxfs/xfs_ialloc.c    |  10 +--
->  fs/xfs/scrub/scrub.c          |   2 +-
->  fs/xfs/xfs_acl.c              |   2 +-
->  fs/xfs/xfs_bmap_util.c        |   2 +-
->  fs/xfs/xfs_discard.c          |   2 +-
->  fs/xfs/xfs_export.c           |   2 +-
->  fs/xfs/xfs_file.c             |   2 +-
->  fs/xfs/xfs_filestream.h       |   2 +-
->  fs/xfs/xfs_icache.c           |   7 +-
->  fs/xfs/xfs_inode.c            |  15 ++--
->  fs/xfs/xfs_inode.h            |   3 +-
->  fs/xfs/xfs_ioctl.c            |   5 +-
->  fs/xfs/xfs_iomap.c            |   4 +-
->  fs/xfs/xfs_iops.c             |  12 +--
->  fs/xfs/xfs_log.c              |  14 ++--
->  fs/xfs/xfs_log_cil.c          |   4 +-
->  fs/xfs/xfs_mount.c            |  24 +++---
->  fs/xfs/xfs_mount.h            |  26 +------
->  fs/xfs/xfs_super.c            | 141 ++++++++++++++++------------------
->  fs/xfs/xfs_symlink.c          |   3 +-
->  23 files changed, 149 insertions(+), 177 deletions(-)
+>  fs/xfs/libxfs/xfs_sb.c | 46 ++++++++++++++++++++++--------------------
+>  fs/xfs/libxfs/xfs_sb.h |  2 +-
+>  fs/xfs/xfs_ioctl.c     |  2 +-
+>  fs/xfs/xfs_ioctl32.c   |  2 +-
+>  4 files changed, 27 insertions(+), 25 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index 6771bd700770..f3d57ca10826 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -224,7 +224,7 @@ xfs_attr_try_sf_addname(
->  	if (!error && !(args->op_flags & XFS_DA_OP_NOTIME))
->  		xfs_trans_ichgtime(args->trans, dp, XFS_ICHGTIME_CHG);
+> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> index baaec7e6a975..5eaf14b6fe3c 100644
+> --- a/fs/xfs/libxfs/xfs_sb.c
+> +++ b/fs/xfs/libxfs/xfs_sb.c
+> @@ -1016,10 +1016,12 @@ xfs_sync_sb_buf(
 >  
-> -	if (dp->i_mount->m_flags & XFS_MOUNT_WSYNC)
-> +	if (xfs_has_wsync(dp->i_mount))
->  		xfs_trans_set_sync(args->trans);
->  
->  	return error;
-> @@ -809,7 +809,7 @@ xfs_attr_set(
->  	 * If this is a synchronous mount, make sure that the
->  	 * transaction goes to disk before returning to the user.
->  	 */
-> -	if (mp->m_flags & XFS_MOUNT_WSYNC)
-> +	if (xfs_has_wsync(mp))
->  		xfs_trans_set_sync(args->trans);
->  
->  	if (!(args->op_flags & XFS_DA_OP_NOTIME))
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> index 4ed6196bb73e..caaecb11df93 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> @@ -568,7 +568,7 @@ xfs_attr_shortform_bytesfit(
->  	 * literal area, but for the old format we are done if there is no
->  	 * space in the fixed attribute fork.
->  	 */
-> -	if (!(mp->m_flags & XFS_MOUNT_ATTR2))
-> +	if (!xfs_has_attr2(mp))
->  		return 0;
->  
->  	dsize = dp->i_df.if_bytes;
-> @@ -621,21 +621,26 @@ xfs_attr_shortform_bytesfit(
->  }
->  
->  /*
-> - * Switch on the ATTR2 superblock bit (implies also FEATURES2)
-> + * Switch on the ATTR2 superblock bit (implies also FEATURES2) by default unless
-> + * we've explicitly been told not to use attr2 (i.e. noattr2 mount option).
->   */
->  STATIC void
->  xfs_sbversion_add_attr2(xfs_mount_t *mp, xfs_trans_t *tp)
+>  void
+>  xfs_fs_geometry(
+> -	struct xfs_sb		*sbp,
+> +	struct xfs_mount	*mp,
+>  	struct xfs_fsop_geom	*geo,
+>  	int			struct_version)
 >  {
-> -	if ((mp->m_flags & XFS_MOUNT_ATTR2) &&
-> -	    !(xfs_has_attr2(mp))) {
-> -		spin_lock(&mp->m_sb_lock);
-> -		if (!xfs_has_attr2(mp)) {
-> -			xfs_add_attr2(mp);
-> -			spin_unlock(&mp->m_sb_lock);
-> -			xfs_log_sb(tp);
-> -		} else
-> -			spin_unlock(&mp->m_sb_lock);
+> +	struct xfs_sb		*sbp = &mp->m_sb;
+> +
+>  	memset(geo, 0, sizeof(struct xfs_fsop_geom));
+>  
+>  	geo->blocksize = sbp->sb_blocksize;
+> @@ -1050,51 +1052,51 @@ xfs_fs_geometry(
+>  	geo->flags = XFS_FSOP_GEOM_FLAGS_NLINK |
+>  		     XFS_FSOP_GEOM_FLAGS_DIRV2 |
+>  		     XFS_FSOP_GEOM_FLAGS_EXTFLG;
+> -	if (xfs_sb_version_hasattr(sbp))
+> +	if (xfs_has_attr(mp))
+>  		geo->flags |= XFS_FSOP_GEOM_FLAGS_ATTR;
+> -	if (xfs_sb_version_hasquota(sbp))
+> +	if (xfs_has_quota(mp))
+>  		geo->flags |= XFS_FSOP_GEOM_FLAGS_QUOTA;
+> -	if (xfs_sb_version_hasalign(sbp))
+> +	if (xfs_has_align(mp))
+>  		geo->flags |= XFS_FSOP_GEOM_FLAGS_IALIGN;
+> -	if (xfs_sb_version_hasdalign(sbp))
+> +	if (xfs_has_dalign(mp))
+>  		geo->flags |= XFS_FSOP_GEOM_FLAGS_DALIGN;
+> -	if (xfs_sb_version_hassector(sbp))
+> -		geo->flags |= XFS_FSOP_GEOM_FLAGS_SECTOR;
+> -	if (xfs_sb_version_hasasciici(sbp))
+> +	if (xfs_has_asciici(mp))
+>  		geo->flags |= XFS_FSOP_GEOM_FLAGS_DIRV2CI;
+> -	if (xfs_sb_version_haslazysbcount(sbp))
+> +	if (xfs_has_lazysbcount(mp))
+>  		geo->flags |= XFS_FSOP_GEOM_FLAGS_LAZYSB;
+> -	if (xfs_sb_version_hasattr2(sbp))
 > +	if (xfs_has_attr2(mp))
-> +		return;
-> +	if (xfs_has_noattr2(mp))
-> +		return;
-> +
-> +	spin_lock(&mp->m_sb_lock);
-> +	if (xfs_has_attr2(mp)) {
-> +		spin_unlock(&mp->m_sb_lock);
-> +		return;
->  	}
-> +
-> +	xfs_add_attr2(mp);
-> +	spin_unlock(&mp->m_sb_lock);
-> +	xfs_log_sb(tp);
->  }
+>  		geo->flags |= XFS_FSOP_GEOM_FLAGS_ATTR2;
+> -	if (xfs_sb_version_hasprojid32(sbp))
+> +	if (xfs_has_projid32(mp))
+>  		geo->flags |= XFS_FSOP_GEOM_FLAGS_PROJID32;
+> -	if (xfs_sb_version_hascrc(sbp))
+> +	if (xfs_has_crc(mp))
+>  		geo->flags |= XFS_FSOP_GEOM_FLAGS_V5SB;
+> -	if (xfs_sb_version_hasftype(sbp))
+> +	if (xfs_has_ftype(mp))
+>  		geo->flags |= XFS_FSOP_GEOM_FLAGS_FTYPE;
+> -	if (xfs_sb_version_hasfinobt(sbp))
+> +	if (xfs_has_finobt(mp))
+>  		geo->flags |= XFS_FSOP_GEOM_FLAGS_FINOBT;
+> -	if (xfs_sb_version_hassparseinodes(sbp))
+> +	if (xfs_has_sparseinodes(mp))
+>  		geo->flags |= XFS_FSOP_GEOM_FLAGS_SPINODES;
+> -	if (xfs_sb_version_hasrmapbt(sbp))
+> +	if (xfs_has_rmapbt(mp))
+>  		geo->flags |= XFS_FSOP_GEOM_FLAGS_RMAPBT;
+> -	if (xfs_sb_version_hasreflink(sbp))
+> +	if (xfs_has_reflink(mp))
+>  		geo->flags |= XFS_FSOP_GEOM_FLAGS_REFLINK;
+> -	if (xfs_sb_version_hasbigtime(sbp))
+> +	if (xfs_has_bigtime(mp))
+>  		geo->flags |= XFS_FSOP_GEOM_FLAGS_BIGTIME;
+> -	if (xfs_sb_version_hasinobtcounts(sbp))
+> +	if (xfs_has_inobtcounts(mp))
+>  		geo->flags |= XFS_FSOP_GEOM_FLAGS_INOBTCNT;
+> -	if (xfs_sb_version_hassector(sbp))
+> +	if (xfs_has_sector(mp)) {
+> +		geo->flags |= XFS_FSOP_GEOM_FLAGS_SECTOR;
+>  		geo->logsectsize = sbp->sb_logsectsize;
+> -	else
+> +	} else {
+>  		geo->logsectsize = BBSIZE;
+> +	}
+>  	geo->rtsectsize = sbp->sb_blocksize;
+>  	geo->dirblocksize = xfs_dir2_dirblock_bytes(sbp);
 >  
->  /*
-> @@ -810,8 +815,7 @@ xfs_attr_sf_removename(
->  	 * Fix up the start offset of the attribute fork
->  	 */
->  	totsize -= size;
-> -	if (totsize == sizeof(xfs_attr_sf_hdr_t) &&
-> -	    (mp->m_flags & XFS_MOUNT_ATTR2) &&
-> +	if (totsize == sizeof(xfs_attr_sf_hdr_t) && xfs_has_attr2(mp) &&
->  	    (dp->i_df.if_format != XFS_DINODE_FMT_BTREE) &&
->  	    !(args->op_flags & XFS_DA_OP_ADDNAME)) {
->  		xfs_attr_fork_remove(dp, args->trans);
-> @@ -821,7 +825,7 @@ xfs_attr_sf_removename(
->  		ASSERT(dp->i_forkoff);
->  		ASSERT(totsize > sizeof(xfs_attr_sf_hdr_t) ||
->  				(args->op_flags & XFS_DA_OP_ADDNAME) ||
-> -				!(mp->m_flags & XFS_MOUNT_ATTR2) ||
-> +				!xfs_has_attr2(mp) ||
->  				dp->i_df.if_format == XFS_DINODE_FMT_BTREE);
->  		xfs_trans_log_inode(args->trans, dp,
->  					XFS_ILOG_CORE | XFS_ILOG_ADATA);
-> @@ -997,7 +1001,7 @@ xfs_attr_shortform_allfit(
->  		bytes += xfs_attr_sf_entsize_byname(name_loc->namelen,
->  					be16_to_cpu(name_loc->valuelen));
->  	}
-> -	if ((dp->i_mount->m_flags & XFS_MOUNT_ATTR2) &&
-> +	if (xfs_has_attr2(dp->i_mount) &&
->  	    (dp->i_df.if_format != XFS_DINODE_FMT_BTREE) &&
->  	    (bytes == sizeof(struct xfs_attr_sf_hdr)))
->  		return -1;
-> @@ -1122,7 +1126,7 @@ xfs_attr3_leaf_to_shortform(
->  		goto out;
+>  	if (struct_version < 4)
+>  		return;
 >  
->  	if (forkoff == -1) {
-> -		ASSERT(dp->i_mount->m_flags & XFS_MOUNT_ATTR2);
-> +		ASSERT(xfs_has_attr2(dp->i_mount));
->  		ASSERT(dp->i_df.if_format != XFS_DINODE_FMT_BTREE);
->  		xfs_attr_fork_remove(dp, args->trans);
->  		goto out;
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index e806f8517012..51f091108a20 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -1047,7 +1047,7 @@ xfs_bmap_set_attrforkoff(
->  		ip->i_forkoff = xfs_attr_shortform_bytesfit(ip, size);
->  		if (!ip->i_forkoff)
->  			ip->i_forkoff = default_size;
-> -		else if ((ip->i_mount->m_flags & XFS_MOUNT_ATTR2) && version)
-> +		else if (xfs_has_attr2(ip->i_mount) && version)
->  			*version = 2;
->  		break;
->  	default:
-> @@ -3422,7 +3422,7 @@ xfs_bmap_compute_alignments(
->  	int			stripe_align = 0;
+> -	if (xfs_sb_version_haslogv2(sbp))
+> +	if (xfs_has_logv2(mp))
+>  		geo->flags |= XFS_FSOP_GEOM_FLAGS_LOGV2;
 >  
->  	/* stripe alignment for allocation is determined by mount parameters */
-> -	if (mp->m_swidth && (mp->m_flags & XFS_MOUNT_SWALLOC))
-> +	if (mp->m_swidth && xfs_has_swalloc(mp))
->  		stripe_align = mp->m_swidth;
->  	else if (mp->m_dalign)
->  		stripe_align = mp->m_dalign;
-> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-> index 86a5ff66b220..52f0e8c21d93 100644
-> --- a/fs/xfs/libxfs/xfs_ialloc.c
-> +++ b/fs/xfs/libxfs/xfs_ialloc.c
-> @@ -712,7 +712,7 @@ xfs_ialloc_ag_alloc(
->  		 */
->  		isaligned = 0;
->  		if (igeo->ialloc_align) {
-> -			ASSERT(!(args.mp->m_flags & XFS_MOUNT_NOALIGN));
-> +			ASSERT(!xfs_has_noalign(args.mp));
->  			args.alignment = args.mp->m_dalign;
->  			isaligned = 1;
->  		} else
-> @@ -1953,8 +1953,7 @@ xfs_difree_inobt(
->  	 * remove the chunk if the block size is large enough for multiple inode
->  	 * chunks (that might not be free).
->  	 */
-> -	if (!(mp->m_flags & XFS_MOUNT_IKEEP) &&
-> -	    rec.ir_free == XFS_INOBT_ALL_FREE &&
-> +	if (!xfs_has_ikeep(mp) && rec.ir_free == XFS_INOBT_ALL_FREE &&
->  	    mp->m_sb.sb_inopblock <= XFS_INODES_PER_CHUNK) {
->  		struct xfs_perag	*pag = agbp->b_pag;
+>  	geo->logsunit = sbp->sb_logsunit;
+> diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
+> index d2dd99cb6921..8902f4bfa5df 100644
+> --- a/fs/xfs/libxfs/xfs_sb.h
+> +++ b/fs/xfs/libxfs/xfs_sb.h
+> @@ -25,7 +25,7 @@ extern uint64_t	xfs_sb_version_to_features(struct xfs_sb *sbp);
+>  extern int	xfs_update_secondary_sbs(struct xfs_mount *mp);
 >  
-> @@ -2098,9 +2097,8 @@ xfs_difree_finobt(
->  	 * enough for multiple chunks. Leave the finobt record to remain in sync
->  	 * with the inobt.
->  	 */
-> -	if (rec.ir_free == XFS_INOBT_ALL_FREE &&
-> -	    mp->m_sb.sb_inopblock <= XFS_INODES_PER_CHUNK &&
-> -	    !(mp->m_flags & XFS_MOUNT_IKEEP)) {
-> +	if (!xfs_has_ikeep(mp) && rec.ir_free == XFS_INOBT_ALL_FREE &&
-> +	    mp->m_sb.sb_inopblock <= XFS_INODES_PER_CHUNK) {
->  		error = xfs_btree_delete(cur, &i);
->  		if (error)
->  			goto error;
-> diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-> index 2bed6bc573da..d9534fe0c69b 100644
-> --- a/fs/xfs/scrub/scrub.c
-> +++ b/fs/xfs/scrub/scrub.c
-> @@ -483,7 +483,7 @@ xfs_scrub_metadata(
->  	if (XFS_FORCED_SHUTDOWN(mp))
->  		goto out;
->  	error = -ENOTRECOVERABLE;
-> -	if (mp->m_flags & XFS_MOUNT_NORECOVERY)
-> +	if (xfs_has_norecovery(mp))
->  		goto out;
->  
->  	error = xchk_validate_inputs(mp, sm);
-> diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-> index d02bef24b32b..f7fc1d25b058 100644
-> --- a/fs/xfs/xfs_acl.c
-> +++ b/fs/xfs/xfs_acl.c
-> @@ -232,7 +232,7 @@ xfs_acl_set_mode(
->  	inode->i_ctime = current_time(inode);
->  	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
->  
-> -	if (mp->m_flags & XFS_MOUNT_WSYNC)
-> +	if (xfs_has_wsync(mp))
->  		xfs_trans_set_sync(tp);
->  	return xfs_trans_commit(tp);
->  }
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index af0a61134d1f..a43220dba739 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -1822,7 +1822,7 @@ xfs_swap_extents(
->  	 * If this is a synchronous mount, make sure that the
->  	 * transaction goes to disk before returning to the user.
->  	 */
-> -	if (mp->m_flags & XFS_MOUNT_WSYNC)
-> +	if (xfs_has_wsync(mp))
->  		xfs_trans_set_sync(tp);
->  
->  	error = xfs_trans_commit(tp);
-> diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-> index 736df5660f1f..0191de8ce9ce 100644
-> --- a/fs/xfs/xfs_discard.c
-> +++ b/fs/xfs/xfs_discard.c
-> @@ -169,7 +169,7 @@ xfs_ioc_trim(
->  	 * We haven't recovered the log, so we cannot use our bnobt-guided
->  	 * storage zapping commands.
->  	 */
-> -	if (mp->m_flags & XFS_MOUNT_NORECOVERY)
-> +	if (xfs_has_norecovery(mp))
->  		return -EROFS;
->  
->  	if (copy_from_user(&range, urange, sizeof(range)))
-> diff --git a/fs/xfs/xfs_export.c b/fs/xfs/xfs_export.c
-> index 1da59bdff245..cb359ec3389b 100644
-> --- a/fs/xfs/xfs_export.c
-> +++ b/fs/xfs/xfs_export.c
-> @@ -63,7 +63,7 @@ xfs_fs_encode_fh(
->  	 * large enough filesystem may contain them, thus the slightly
->  	 * confusing looking conditional below.
->  	 */
-> -	if (!(XFS_M(inode->i_sb)->m_flags & XFS_MOUNT_SMALL_INUMS) ||
-> +	if (!xfs_has_small_inums(XFS_M(inode->i_sb)) ||
->  	    (XFS_M(inode->i_sb)->m_flags & XFS_MOUNT_32BITINODES))
->  		fileid_type |= XFS_FILEID_TYPE_64FLAG;
->  
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index fe31b53274ce..0fa02ea21ade 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1122,7 +1122,7 @@ static inline bool xfs_file_sync_writes(struct file *filp)
->  {
->  	struct xfs_inode	*ip = XFS_I(file_inode(filp));
->  
-> -	if (ip->i_mount->m_flags & XFS_MOUNT_WSYNC)
-> +	if (xfs_has_wsync(ip->i_mount))
->  		return true;
->  	if (filp->f_flags & (__O_SYNC | O_DSYNC))
->  		return true;
-> diff --git a/fs/xfs/xfs_filestream.h b/fs/xfs/xfs_filestream.h
-> index 3af963743e4d..403226ebb80b 100644
-> --- a/fs/xfs/xfs_filestream.h
-> +++ b/fs/xfs/xfs_filestream.h
-> @@ -21,7 +21,7 @@ static inline int
->  xfs_inode_is_filestream(
->  	struct xfs_inode	*ip)
->  {
-> -	return (ip->i_mount->m_flags & XFS_MOUNT_FILESTREAMS) ||
-> +	return xfs_has_filestreams(ip->i_mount) ||
->  		(ip->i_diflags & XFS_DIFLAG_FILESTREAM);
->  }
->  
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index ccc4df4b6b27..35fec850af69 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -611,7 +611,7 @@ xfs_iget_cache_miss(
->  
->  	/*
->  	 * For version 5 superblocks, if we are initialising a new inode and we
-> -	 * are not utilising the XFS_MOUNT_IKEEP inode cluster mode, we can
-> +	 * are not utilising the XFS_FEAT_IKEEP inode cluster mode, we can
->  	 * simply build the new inode core with a random generation number.
->  	 *
->  	 * For version 4 (and older) superblocks, log recovery is dependent on
-> @@ -620,7 +620,7 @@ xfs_iget_cache_miss(
->  	 * initializing new inodes.
->  	 */
->  	if (xfs_has_v3inodes(mp) &&
-> -	    (flags & XFS_IGET_CREATE) && !(mp->m_flags & XFS_MOUNT_IKEEP)) {
-> +	    (flags & XFS_IGET_CREATE) && !xfs_has_ikeep(mp)) {
->  		VFS_I(ip)->i_generation = prandom_u32();
->  	} else {
->  		struct xfs_buf		*bp;
-> @@ -976,8 +976,7 @@ static inline bool
->  xfs_want_reclaim_sick(
->  	struct xfs_mount	*mp)
->  {
-> -	return (mp->m_flags & XFS_MOUNT_UNMOUNTING) ||
-> -	       (mp->m_flags & XFS_MOUNT_NORECOVERY) ||
-> +	return (mp->m_flags & XFS_MOUNT_UNMOUNTING) || xfs_has_norecovery(mp) ||
->  	       XFS_FORCED_SHUTDOWN(mp);
->  }
->  
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 3d6e566146de..822f73d60f92 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -826,8 +826,7 @@ xfs_init_new_inode(
->  	inode->i_rdev = rdev;
->  	ip->i_projid = prid;
->  
-> -	if (dir && !(dir->i_mode & S_ISGID) &&
-> -	    (mp->m_flags & XFS_MOUNT_GRPID)) {
-> +	if (dir && !(dir->i_mode & S_ISGID) && xfs_has_grpid(mp)) {
->  		inode_fsuid_set(inode, mnt_userns);
->  		inode->i_gid = dir->i_gid;
->  		inode->i_mode = mode;
-> @@ -1068,7 +1067,7 @@ xfs_create(
->  	 * create transaction goes to disk before returning to
->  	 * the user.
->  	 */
-> -	if (mp->m_flags & (XFS_MOUNT_WSYNC|XFS_MOUNT_DIRSYNC))
-> +	if (xfs_has_wsync(mp) || xfs_has_dirsync(mp))
->  		xfs_trans_set_sync(tp);
->  
->  	/*
-> @@ -1160,7 +1159,7 @@ xfs_create_tmpfile(
->  	if (error)
->  		goto out_trans_cancel;
->  
-> -	if (mp->m_flags & XFS_MOUNT_WSYNC)
-> +	if (xfs_has_wsync(mp))
->  		xfs_trans_set_sync(tp);
->  
->  	/*
-> @@ -1294,7 +1293,7 @@ xfs_link(
->  	 * link transaction goes to disk before returning to
->  	 * the user.
->  	 */
-> -	if (mp->m_flags & (XFS_MOUNT_WSYNC|XFS_MOUNT_DIRSYNC))
-> +	if (xfs_has_wsync(mp) || xfs_has_dirsync(mp))
->  		xfs_trans_set_sync(tp);
->  
->  	return xfs_trans_commit(tp);
-> @@ -1679,7 +1678,7 @@ xfs_inode_needs_inactive(
->  		return false;
->  
->  	/* If the log isn't running, push inodes straight to reclaim. */
-> -	if (XFS_FORCED_SHUTDOWN(mp) || (mp->m_flags & XFS_MOUNT_NORECOVERY))
-> +	if (XFS_FORCED_SHUTDOWN(mp) || xfs_has_norecovery(mp))
->  		return false;
->  
->  	/* Metadata inodes require explicit resource cleanup. */
-> @@ -2855,7 +2854,7 @@ xfs_remove(
->  	 * remove transaction goes to disk before returning to
->  	 * the user.
->  	 */
-> -	if (mp->m_flags & (XFS_MOUNT_WSYNC|XFS_MOUNT_DIRSYNC))
-> +	if (xfs_has_wsync(mp) || xfs_has_dirsync(mp))
->  		xfs_trans_set_sync(tp);
->  
->  	error = xfs_trans_commit(tp);
-> @@ -2932,7 +2931,7 @@ xfs_finish_rename(
->  	 * If this is a synchronous mount, make sure that the rename transaction
->  	 * goes to disk before returning to the user.
->  	 */
-> -	if (tp->t_mountp->m_flags & (XFS_MOUNT_WSYNC|XFS_MOUNT_DIRSYNC))
-> +	if (xfs_has_wsync(tp->t_mountp) || xfs_has_dirsync(tp->t_mountp))
->  		xfs_trans_set_sync(tp);
->  
->  	return xfs_trans_commit(tp);
-> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-> index 1f62b481d8c5..768f0d743158 100644
-> --- a/fs/xfs/xfs_inode.h
-> +++ b/fs/xfs/xfs_inode.h
-> @@ -400,8 +400,7 @@ enum layout_break_reason {
->   * new subdirectory gets S_ISGID bit from parent.
->   */
->  #define XFS_INHERIT_GID(pip)	\
-> -	(((pip)->i_mount->m_flags & XFS_MOUNT_GRPID) || \
-> -	 (VFS_I(pip)->i_mode & S_ISGID))
-> +	(xfs_has_grpid((pip)->i_mount) || (VFS_I(pip)->i_mode & S_ISGID))
->  
->  int		xfs_release(struct xfs_inode *ip);
->  void		xfs_inactive(struct xfs_inode *ip);
+>  #define XFS_FS_GEOM_MAX_STRUCT_VER	(4)
+> -extern void	xfs_fs_geometry(struct xfs_sb *sbp, struct xfs_fsop_geom *geo,
+> +extern void	xfs_fs_geometry(struct xfs_mount *mp, struct xfs_fsop_geom *geo,
+>  				int struct_version);
+>  extern int	xfs_sb_read_secondary(struct xfs_mount *mp,
+>  				struct xfs_trans *tp, xfs_agnumber_t agno,
 > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 86150e0206cf..e42f09a2bee3 100644
+> index 2f526e3319a4..0c795dc093ef 100644
 > --- a/fs/xfs/xfs_ioctl.c
 > +++ b/fs/xfs/xfs_ioctl.c
-> @@ -1237,8 +1237,7 @@ xfs_ioctl_setattr_prepare_dax(
->  	if (S_ISDIR(inode->i_mode))
->  		return;
+> @@ -1010,7 +1010,7 @@ xfs_ioc_fsgeometry(
+>  	struct xfs_fsop_geom	fsgeo;
+>  	size_t			len;
 >  
-> -	if ((mp->m_flags & XFS_MOUNT_DAX_ALWAYS) ||
-> -	    (mp->m_flags & XFS_MOUNT_DAX_NEVER))
-> +	if (xfs_has_dax_always(mp) || xfs_has_dax_never(mp))
->  		return;
+> -	xfs_fs_geometry(&mp->m_sb, &fsgeo, struct_version);
+> +	xfs_fs_geometry(mp, &fsgeo, struct_version);
 >  
->  	if (((fa->fsx_xflags & FS_XFLAG_DAX) &&
-> @@ -1274,7 +1273,7 @@ xfs_ioctl_setattr_get_trans(
->  	if (error)
->  		goto out_error;
->  
-> -	if (mp->m_flags & XFS_MOUNT_WSYNC)
-> +	if (xfs_has_wsync(mp))
->  		xfs_trans_set_sync(tp);
->  
->  	return tp;
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index d8cd2583dedb..3e46ad99dd63 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -132,7 +132,7 @@ xfs_eof_alignment(
->  		 * If mounted with the "-o swalloc" option the alignment is
->  		 * increased from the strip unit size to the stripe width.
->  		 */
-> -		if (mp->m_swidth && (mp->m_flags & XFS_MOUNT_SWALLOC))
-> +		if (mp->m_swidth && xfs_has_swalloc(mp))
->  			align = mp->m_swidth;
->  		else if (mp->m_dalign)
->  			align = mp->m_dalign;
-> @@ -994,7 +994,7 @@ xfs_buffered_write_iomap_begin(
->  		 * Determine the initial size of the preallocation.
->  		 * We clean up any extra preallocation when the file is closed.
->  		 */
-> -		if (mp->m_flags & XFS_MOUNT_ALLOCSIZE)
-> +		if (xfs_has_allocsize(mp))
->  			prealloc_blocks = mp->m_allocsize_blocks;
->  		else
->  			prealloc_blocks = xfs_iomap_prealloc_size(ip, allocfork,
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index fd9a13381491..ff7ba534415c 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -558,10 +558,10 @@ xfs_stat_blksize(
->  	 * default buffered I/O size, return that, otherwise return the compat
->  	 * default.
->  	 */
-> -	if (mp->m_flags & XFS_MOUNT_LARGEIO) {
-> +	if (xfs_has_large_iosize(mp)) {
->  		if (mp->m_swidth)
->  			return XFS_FSB_TO_B(mp, mp->m_swidth);
-> -		if (mp->m_flags & XFS_MOUNT_ALLOCSIZE)
-> +		if (xfs_has_allocsize(mp))
->  			return 1U << mp->m_allocsize_log;
->  	}
->  
-> @@ -808,7 +808,7 @@ xfs_setattr_nonsize(
->  
->  	XFS_STATS_INC(mp, xs_ig_attrchg);
->  
-> -	if (mp->m_flags & XFS_MOUNT_WSYNC)
-> +	if (xfs_has_wsync(mp))
->  		xfs_trans_set_sync(tp);
->  	error = xfs_trans_commit(tp);
->  
-> @@ -1037,7 +1037,7 @@ xfs_setattr_size(
->  
->  	XFS_STATS_INC(mp, xs_ig_attrchg);
->  
-> -	if (mp->m_flags & XFS_MOUNT_WSYNC)
-> +	if (xfs_has_wsync(mp))
->  		xfs_trans_set_sync(tp);
->  
->  	error = xfs_trans_commit(tp);
-> @@ -1287,11 +1287,11 @@ xfs_inode_should_enable_dax(
+>  	if (struct_version <= 3)
+>  		len = sizeof(struct xfs_fsop_geom_v1);
+> diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+> index 20adf35aa37b..8783af203cfc 100644
+> --- a/fs/xfs/xfs_ioctl32.c
+> +++ b/fs/xfs/xfs_ioctl32.c
+> @@ -50,7 +50,7 @@ xfs_compat_ioc_fsgeometry_v1(
 >  {
->  	if (!IS_ENABLED(CONFIG_FS_DAX))
->  		return false;
-> -	if (ip->i_mount->m_flags & XFS_MOUNT_DAX_NEVER)
-> +	if (xfs_has_dax_never(ip->i_mount))
->  		return false;
->  	if (!xfs_inode_supports_dax(ip))
->  		return false;
-> -	if (ip->i_mount->m_flags & XFS_MOUNT_DAX_ALWAYS)
-> +	if (xfs_has_dax_always(ip->i_mount))
->  		return true;
->  	if (ip->i_diflags2 & XFS_DIFLAG2_DAX)
->  		return true;
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index c927ad6d3eb7..fa59be56ee46 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -361,7 +361,7 @@ xfs_log_writable(
->  	 * mounts allow internal writes for log recovery and unmount purposes,
->  	 * so don't restrict that case.
->  	 */
-> -	if (mp->m_flags & XFS_MOUNT_NORECOVERY)
-> +	if (xfs_has_norecovery(mp))
->  		return false;
->  	if (xfs_readonly_buftarg(mp->m_ddev_targp))
->  		return false;
-> @@ -638,7 +638,7 @@ xfs_log_mount(
->  	int		error = 0;
->  	int		min_logfsbs;
+>  	struct xfs_fsop_geom	  fsgeo;
 >  
-> -	if (!(mp->m_flags & XFS_MOUNT_NORECOVERY)) {
-> +	if (!xfs_has_norecovery(mp)) {
->  		xfs_notice(mp, "Mounting V%d Filesystem",
->  			   XFS_SB_VERSION_NUM(&mp->m_sb));
->  	} else {
-> @@ -724,8 +724,8 @@ xfs_log_mount(
->  	 * skip log recovery on a norecovery mount.  pretend it all
->  	 * just worked.
->  	 */
-> -	if (!(mp->m_flags & XFS_MOUNT_NORECOVERY)) {
-> -		int	readonly = (mp->m_flags & XFS_MOUNT_RDONLY);
-> +	if (!xfs_has_norecovery(mp)) {
-> +		bool	readonly = (mp->m_flags & XFS_MOUNT_RDONLY);
->  
->  		if (readonly)
->  			mp->m_flags &= ~XFS_MOUNT_RDONLY;
-> @@ -785,8 +785,8 @@ xfs_log_mount_finish(
->  	bool			readonly = (mp->m_flags & XFS_MOUNT_RDONLY);
->  	int			error = 0;
->  
-> -	if (mp->m_flags & XFS_MOUNT_NORECOVERY) {
-> -		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
-> +	if (xfs_has_norecovery(mp)) {
-> +		ASSERT(readonly);
->  		return 0;
->  	} else if (readonly) {
->  		/* Allow unlinked processing to proceed */
-> @@ -3937,7 +3937,7 @@ xfs_log_check_lsn(
->  	 * resets the in-core LSN. We can't validate in this mode, but
->  	 * modifications are not allowed anyways so just return true.
->  	 */
-> -	if (mp->m_flags & XFS_MOUNT_NORECOVERY)
-> +	if (xfs_has_norecovery(mp))
->  		return true;
->  
->  	/*
-> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index f6c4e4e8f112..d69ea3cc51cb 100644
-> --- a/fs/xfs/xfs_log_cil.c
-> +++ b/fs/xfs/xfs_log_cil.c
-> @@ -543,7 +543,7 @@ xlog_discard_busy_extents(
->  	struct blk_plug		plug;
->  	int			error = 0;
->  
-> -	ASSERT(mp->m_flags & XFS_MOUNT_DISCARD);
-> +	ASSERT(xfs_has_discard(mp));
->  
->  	blk_start_plug(&plug);
->  	list_for_each_entry(busyp, list, list) {
-> @@ -605,7 +605,7 @@ xlog_cil_committed(
->  
->  	xfs_extent_busy_sort(&ctx->busy_extents);
->  	xfs_extent_busy_clear(mp, &ctx->busy_extents,
-> -			     (mp->m_flags & XFS_MOUNT_DISCARD) && !abort);
-> +			      xfs_has_discard(mp) && !abort);
->  
->  	spin_lock(&ctx->cil->xc_push_lock);
->  	list_del(&ctx->committing);
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index 8c14a2b3c1e4..3fc53c082aa2 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -62,7 +62,7 @@ xfs_uuid_mount(
->  	/* Publish UUID in struct super_block */
->  	uuid_copy(&mp->m_super->s_uuid, uuid);
->  
-> -	if (mp->m_flags & XFS_MOUNT_NOUUID)
-> +	if (xfs_has_nouuid(mp))
->  		return 0;
->  
->  	if (uuid_is_null(uuid)) {
-> @@ -104,7 +104,7 @@ xfs_uuid_unmount(
->  	uuid_t			*uuid = &mp->m_sb.sb_uuid;
->  	int			i;
->  
-> -	if (mp->m_flags & XFS_MOUNT_NOUUID)
-> +	if (xfs_has_nouuid(mp))
->  		return;
->  
->  	mutex_lock(&xfs_uuid_table_mutex);
-> @@ -350,8 +350,7 @@ xfs_update_alignment(
->  		sbp->sb_unit = mp->m_dalign;
->  		sbp->sb_width = mp->m_swidth;
->  		mp->m_update_sb = true;
-> -	} else if ((mp->m_flags & XFS_MOUNT_NOALIGN) != XFS_MOUNT_NOALIGN &&
-> -		    xfs_has_dalign(mp)) {
-> +	} else if (!xfs_has_noalign(mp) && xfs_has_dalign(mp)) {
->  		mp->m_dalign = sbp->sb_unit;
->  		mp->m_swidth = sbp->sb_width;
->  	}
-> @@ -761,12 +760,15 @@ xfs_mountfs(
->  	/*
->  	 * Now that we've recovered any pending superblock feature bit
->  	 * additions, we can finish setting up the attr2 behaviour for the
-> -	 * mount. If no attr2 mount options were specified, the we use the
-> -	 * behaviour specified by the superblock feature bit.
-> +	 * mount. The noattr2 option overrides the superblock flag, so only
-> +	 * check the superblock feature flag if the mount option is not set.
->  	 */
-> -	if (!(mp->m_flags & (XFS_MOUNT_ATTR2|XFS_MOUNT_NOATTR2)) &&
-> -	    xfs_has_attr2(mp))
-> -		mp->m_flags |= XFS_MOUNT_ATTR2;
-> +	if (xfs_has_noattr2(mp)) {
-> +		mp->m_features &= ~XFS_FEAT_ATTR2;
-> +	} else if (!xfs_has_attr2(mp) &&
-> +		   (mp->m_sb.sb_features2 & XFS_SB_VERSION2_ATTR2BIT)) {
-> +		mp->m_features |= XFS_FEAT_ATTR2;
-> +	}
->  
->  	/*
->  	 * Log's mount-time initialization. The first part of recovery can place
-> @@ -890,10 +892,8 @@ xfs_mountfs(
->  	 * We use the same quiesce mechanism as the rw->ro remount, as they are
->  	 * semantically identical operations.
->  	 */
-> -	if ((mp->m_flags & (XFS_MOUNT_RDONLY|XFS_MOUNT_NORECOVERY)) ==
-> -							XFS_MOUNT_RDONLY) {
-> +	if ((mp->m_flags & XFS_MOUNT_RDONLY) && !xfs_has_norecovery(mp))
->  		xfs_log_clean(mp);
-> -	}
->  
->  	/*
->  	 * Complete the quota initialisation, post-log-replay component.
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index a8a3a73749cf..47fb8008f0e3 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -371,32 +371,12 @@ __XFS_HAS_FEAT(nouuid, NOUUID)
->  						   must be synchronous except
->  						   for space allocations */
->  #define XFS_MOUNT_UNMOUNTING	(1ULL << 1)	/* filesystem is unmounting */
-> -#define XFS_MOUNT_WAS_CLEAN	(1ULL << 3)
-> -#define XFS_MOUNT_FS_SHUTDOWN	(1ULL << 4)	/* atomic stop of all filesystem
-> +#define XFS_MOUNT_WAS_CLEAN	(1ULL << 2)
-> +#define XFS_MOUNT_FS_SHUTDOWN	(1ULL << 3)	/* atomic stop of all filesystem
->  						   operations, typically for
->  						   disk errors in metadata */
-> -#define XFS_MOUNT_DISCARD	(1ULL << 5)	/* discard unused blocks */
-> -#define XFS_MOUNT_NOALIGN	(1ULL << 7)	/* turn off stripe alignment
-> -						   allocations */
-> -#define XFS_MOUNT_ATTR2		(1ULL << 8)	/* allow use of attr2 format */
-> -#define XFS_MOUNT_GRPID		(1ULL << 9)	/* group-ID assigned from directory */
-> -#define XFS_MOUNT_NORECOVERY	(1ULL << 10)	/* no recovery - dirty fs */
-> -#define XFS_MOUNT_ALLOCSIZE	(1ULL << 12)	/* specified allocation size */
-> -#define XFS_MOUNT_SMALL_INUMS	(1ULL << 14)	/* user wants 32bit inodes */
->  #define XFS_MOUNT_32BITINODES	(1ULL << 15)	/* inode32 allocator active */
-> -#define XFS_MOUNT_NOUUID	(1ULL << 16)	/* ignore uuid during mount */
-> -#define XFS_MOUNT_IKEEP		(1ULL << 18)	/* keep empty inode clusters*/
-> -#define XFS_MOUNT_SWALLOC	(1ULL << 19)	/* turn on stripe width
-> -						 * allocation */
-> -#define XFS_MOUNT_RDONLY	(1ULL << 20)	/* read-only fs */
-> -#define XFS_MOUNT_DIRSYNC	(1ULL << 21)	/* synchronous directory ops */
-> -#define XFS_MOUNT_LARGEIO	(1ULL << 22)	/* report large preferred
-> -						 * I/O size in stat() */
-> -#define XFS_MOUNT_FILESTREAMS	(1ULL << 24)	/* enable the filestreams
-> -						   allocator */
-> -#define XFS_MOUNT_NOATTR2	(1ULL << 25)	/* disable use of attr2 format */
-> -#define XFS_MOUNT_DAX_ALWAYS	(1ULL << 26)
-> -#define XFS_MOUNT_DAX_NEVER	(1ULL << 27)
-> +#define XFS_MOUNT_RDONLY	(1ULL << 4)	/* read-only fs */
->  
->  /*
->   * If set, inactivation worker threads will be scheduled to process queued
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index bf9ca921ebed..21d3257404f1 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -84,15 +84,15 @@ xfs_mount_set_dax_mode(
->  {
->  	switch (mode) {
->  	case XFS_DAX_INODE:
-> -		mp->m_flags &= ~(XFS_MOUNT_DAX_ALWAYS | XFS_MOUNT_DAX_NEVER);
-> +		mp->m_features &= ~(XFS_FEAT_DAX_ALWAYS | XFS_FEAT_DAX_NEVER);
->  		break;
->  	case XFS_DAX_ALWAYS:
-> -		mp->m_flags |= XFS_MOUNT_DAX_ALWAYS;
-> -		mp->m_flags &= ~XFS_MOUNT_DAX_NEVER;
-> +		mp->m_features |= XFS_FEAT_DAX_ALWAYS;
-> +		mp->m_features &= ~XFS_FEAT_DAX_NEVER;
->  		break;
->  	case XFS_DAX_NEVER:
-> -		mp->m_flags |= XFS_MOUNT_DAX_NEVER;
-> -		mp->m_flags &= ~XFS_MOUNT_DAX_ALWAYS;
-> +		mp->m_features |= XFS_FEAT_DAX_NEVER;
-> +		mp->m_features &= ~XFS_FEAT_DAX_ALWAYS;
->  		break;
->  	}
->  }
-> @@ -176,33 +176,32 @@ xfs_fs_show_options(
->  {
->  	static struct proc_xfs_info xfs_info_set[] = {
->  		/* the few simple ones we can get from the mount struct */
-> -		{ XFS_MOUNT_IKEEP,		",ikeep" },
-> -		{ XFS_MOUNT_WSYNC,		",wsync" },
-> -		{ XFS_MOUNT_NOALIGN,		",noalign" },
-> -		{ XFS_MOUNT_SWALLOC,		",swalloc" },
-> -		{ XFS_MOUNT_NOUUID,		",nouuid" },
-> -		{ XFS_MOUNT_NORECOVERY,		",norecovery" },
-> -		{ XFS_MOUNT_ATTR2,		",attr2" },
-> -		{ XFS_MOUNT_FILESTREAMS,	",filestreams" },
-> -		{ XFS_MOUNT_GRPID,		",grpid" },
-> -		{ XFS_MOUNT_DISCARD,		",discard" },
-> -		{ XFS_MOUNT_LARGEIO,		",largeio" },
-> -		{ XFS_MOUNT_DAX_ALWAYS,		",dax=always" },
-> -		{ XFS_MOUNT_DAX_NEVER,		",dax=never" },
-> +		{ XFS_FEAT_IKEEP,		",ikeep" },
-> +		{ XFS_FEAT_WSYNC,		",wsync" },
-> +		{ XFS_FEAT_NOALIGN,		",noalign" },
-> +		{ XFS_FEAT_SWALLOC,		",swalloc" },
-> +		{ XFS_FEAT_NOUUID,		",nouuid" },
-> +		{ XFS_FEAT_NORECOVERY,		",norecovery" },
-> +		{ XFS_FEAT_ATTR2,		",attr2" },
-> +		{ XFS_FEAT_FILESTREAMS,		",filestreams" },
-> +		{ XFS_FEAT_GRPID,		",grpid" },
-> +		{ XFS_FEAT_DISCARD,		",discard" },
-> +		{ XFS_FEAT_LARGE_IOSIZE,	",largeio" },
-> +		{ XFS_FEAT_DAX_ALWAYS,		",dax=always" },
-> +		{ XFS_FEAT_DAX_NEVER,		",dax=never" },
->  		{ 0, NULL }
->  	};
->  	struct xfs_mount	*mp = XFS_M(root->d_sb);
->  	struct proc_xfs_info	*xfs_infop;
->  
->  	for (xfs_infop = xfs_info_set; xfs_infop->flag; xfs_infop++) {
-> -		if (mp->m_flags & xfs_infop->flag)
-> +		if (mp->m_features & xfs_infop->flag)
->  			seq_puts(m, xfs_infop->str);
->  	}
->  
-> -	seq_printf(m, ",inode%d",
-> -		(mp->m_flags & XFS_MOUNT_SMALL_INUMS) ? 32 : 64);
-> +	seq_printf(m, ",inode%d", xfs_has_small_inums(mp) ? 32 : 64);
->  
-> -	if (mp->m_flags & XFS_MOUNT_ALLOCSIZE)
-> +	if (xfs_has_allocsize(mp))
->  		seq_printf(m, ",allocsize=%dk",
->  			   (1 << mp->m_allocsize_log) >> 10);
->  
-> @@ -247,10 +246,10 @@ xfs_fs_show_options(
->  /*
->   * Set parameters for inode allocation heuristics, taking into account
->   * filesystem size and inode32/inode64 mount options; i.e. specifically
-> - * whether or not XFS_MOUNT_SMALL_INUMS is set.
-> + * whether or not XFS_FEAT_SMALL_INUMS is set.
->   *
->   * Inode allocation patterns are altered only if inode32 is requested
-> - * (XFS_MOUNT_SMALL_INUMS), and the filesystem is sufficiently large.
-> + * (XFS_FEAT_SMALL_INUMS), and the filesystem is sufficiently large.
->   * If altered, XFS_MOUNT_32BITINODES is set as well.
->   *
->   * An agcount independent of that in the mount structure is provided
-> @@ -296,7 +295,7 @@ xfs_set_inode_alloc(
->  	 * sufficiently large, set XFS_MOUNT_32BITINODES if we must alter
->  	 * the allocator to accommodate the request.
->  	 */
-> -	if ((mp->m_flags & XFS_MOUNT_SMALL_INUMS) && ino > XFS_MAXINUMBER_32)
-> +	if (xfs_has_small_inums(mp) && ino > XFS_MAXINUMBER_32)
->  		mp->m_flags |= XFS_MOUNT_32BITINODES;
->  	else
->  		mp->m_flags &= ~XFS_MOUNT_32BITINODES;
-> @@ -961,8 +960,7 @@ xfs_finish_flags(
->  	/*
->  	 * V5 filesystems always use attr2 format for attributes.
->  	 */
-> -	if (xfs_has_crc(mp) &&
-> -	    (mp->m_flags & XFS_MOUNT_NOATTR2)) {
-> +	if (xfs_has_crc(mp) && xfs_has_noattr2(mp)) {
->  		xfs_warn(mp, "Cannot mount a V5 filesystem as noattr2. "
->  			     "attr2 is always enabled for V5 filesystems.");
->  		return -EINVAL;
-> @@ -1177,7 +1175,7 @@ xfs_fs_warn_deprecated(
->  	 * already had the flag set
->  	 */
->  	if ((fc->purpose & FS_CONTEXT_FOR_RECONFIGURE) &&
-> -			!!(XFS_M(fc->root->d_sb)->m_flags & flag) == value)
-> +            !!(XFS_M(fc->root->d_sb)->m_features & flag) == value)
->  		return;
->  	xfs_warn(fc->s_fs_info, "%s mount option is deprecated.", param->key);
->  }
-> @@ -1225,27 +1223,27 @@ xfs_fs_parse_param(
->  		if (suffix_kstrtoint(param->string, 10, &size))
->  			return -EINVAL;
->  		parsing_mp->m_allocsize_log = ffs(size) - 1;
-> -		parsing_mp->m_flags |= XFS_MOUNT_ALLOCSIZE;
-> +		parsing_mp->m_features |= XFS_FEAT_ALLOCSIZE;
->  		return 0;
->  	case Opt_grpid:
->  	case Opt_bsdgroups:
-> -		parsing_mp->m_flags |= XFS_MOUNT_GRPID;
-> +		parsing_mp->m_features |= XFS_FEAT_GRPID;
->  		return 0;
->  	case Opt_nogrpid:
->  	case Opt_sysvgroups:
-> -		parsing_mp->m_flags &= ~XFS_MOUNT_GRPID;
-> +		parsing_mp->m_features &= ~XFS_FEAT_GRPID;
->  		return 0;
->  	case Opt_wsync:
-> -		parsing_mp->m_flags |= XFS_MOUNT_WSYNC;
-> +		parsing_mp->m_features |= XFS_FEAT_WSYNC;
->  		return 0;
->  	case Opt_norecovery:
-> -		parsing_mp->m_flags |= XFS_MOUNT_NORECOVERY;
-> +		parsing_mp->m_features |= XFS_FEAT_NORECOVERY;
->  		return 0;
->  	case Opt_noalign:
-> -		parsing_mp->m_flags |= XFS_MOUNT_NOALIGN;
-> +		parsing_mp->m_features |= XFS_FEAT_NOALIGN;
->  		return 0;
->  	case Opt_swalloc:
-> -		parsing_mp->m_flags |= XFS_MOUNT_SWALLOC;
-> +		parsing_mp->m_features |= XFS_FEAT_SWALLOC;
->  		return 0;
->  	case Opt_sunit:
->  		parsing_mp->m_dalign = result.uint_32;
-> @@ -1254,22 +1252,22 @@ xfs_fs_parse_param(
->  		parsing_mp->m_swidth = result.uint_32;
->  		return 0;
->  	case Opt_inode32:
-> -		parsing_mp->m_flags |= XFS_MOUNT_SMALL_INUMS;
-> +		parsing_mp->m_features |= XFS_FEAT_SMALL_INUMS;
->  		return 0;
->  	case Opt_inode64:
-> -		parsing_mp->m_flags &= ~XFS_MOUNT_SMALL_INUMS;
-> +		parsing_mp->m_features &= ~XFS_FEAT_SMALL_INUMS;
->  		return 0;
->  	case Opt_nouuid:
-> -		parsing_mp->m_flags |= XFS_MOUNT_NOUUID;
-> +		parsing_mp->m_features |= XFS_FEAT_NOUUID;
->  		return 0;
->  	case Opt_largeio:
-> -		parsing_mp->m_flags |= XFS_MOUNT_LARGEIO;
-> +		parsing_mp->m_features |= XFS_FEAT_LARGE_IOSIZE;
->  		return 0;
->  	case Opt_nolargeio:
-> -		parsing_mp->m_flags &= ~XFS_MOUNT_LARGEIO;
-> +		parsing_mp->m_features &= ~XFS_FEAT_LARGE_IOSIZE;
->  		return 0;
->  	case Opt_filestreams:
-> -		parsing_mp->m_flags |= XFS_MOUNT_FILESTREAMS;
-> +		parsing_mp->m_features |= XFS_FEAT_FILESTREAMS;
->  		return 0;
->  	case Opt_noquota:
->  		parsing_mp->m_qflags &= ~XFS_ALL_QUOTA_ACCT;
-> @@ -1302,10 +1300,10 @@ xfs_fs_parse_param(
->  		parsing_mp->m_qflags &= ~XFS_GQUOTA_ENFD;
->  		return 0;
->  	case Opt_discard:
-> -		parsing_mp->m_flags |= XFS_MOUNT_DISCARD;
-> +		parsing_mp->m_features |= XFS_FEAT_DISCARD;
->  		return 0;
->  	case Opt_nodiscard:
-> -		parsing_mp->m_flags &= ~XFS_MOUNT_DISCARD;
-> +		parsing_mp->m_features &= ~XFS_FEAT_DISCARD;
->  		return 0;
->  #ifdef CONFIG_FS_DAX
->  	case Opt_dax:
-> @@ -1317,20 +1315,20 @@ xfs_fs_parse_param(
->  #endif
->  	/* Following mount options will be removed in September 2025 */
->  	case Opt_ikeep:
-> -		xfs_fs_warn_deprecated(fc, param, XFS_MOUNT_IKEEP, true);
-> -		parsing_mp->m_flags |= XFS_MOUNT_IKEEP;
-> +		xfs_fs_warn_deprecated(fc, param, XFS_FEAT_IKEEP, true);
-> +		parsing_mp->m_features |= XFS_FEAT_IKEEP;
->  		return 0;
->  	case Opt_noikeep:
-> -		xfs_fs_warn_deprecated(fc, param, XFS_MOUNT_IKEEP, false);
-> -		parsing_mp->m_flags &= ~XFS_MOUNT_IKEEP;
-> +		xfs_fs_warn_deprecated(fc, param, XFS_FEAT_IKEEP, false);
-> +		parsing_mp->m_features &= ~XFS_FEAT_IKEEP;
->  		return 0;
->  	case Opt_attr2:
-> -		xfs_fs_warn_deprecated(fc, param, XFS_MOUNT_ATTR2, true);
-> -		parsing_mp->m_flags |= XFS_MOUNT_ATTR2;
-> +		xfs_fs_warn_deprecated(fc, param, XFS_FEAT_ATTR2, true);
-> +		parsing_mp->m_features |= XFS_FEAT_ATTR2;
->  		return 0;
->  	case Opt_noattr2:
-> -		xfs_fs_warn_deprecated(fc, param, XFS_MOUNT_NOATTR2, true);
-> -		parsing_mp->m_flags |= XFS_MOUNT_NOATTR2;
-> +		xfs_fs_warn_deprecated(fc, param, XFS_FEAT_NOATTR2, true);
-> +		parsing_mp->m_features |= XFS_FEAT_NOATTR2;
->  		return 0;
->  	default:
->  		xfs_warn(parsing_mp, "unknown mount option [%s].", param->key);
-> @@ -1344,24 +1342,23 @@ static int
->  xfs_fs_validate_params(
->  	struct xfs_mount	*mp)
->  {
-> -	/*
-> -	 * no recovery flag requires a read-only mount
-> -	 */
-> -	if ((mp->m_flags & XFS_MOUNT_NORECOVERY) &&
-> -	    !(mp->m_flags & XFS_MOUNT_RDONLY)) {
-> +	/* No recovery flag requires a read-only mount */
-> +	if (xfs_has_norecovery(mp) && !(mp->m_flags & XFS_MOUNT_RDONLY)) {
->  		xfs_warn(mp, "no-recovery mounts must be read-only.");
->  		return -EINVAL;
->  	}
->  
-> -	if ((mp->m_flags & (XFS_MOUNT_ATTR2|XFS_MOUNT_NOATTR2)) ==
-> -			  (XFS_MOUNT_ATTR2|XFS_MOUNT_NOATTR2)) {
-> +	/*
-> +	 * We have not read the superblock at this point, so only the attr2
-> +	 * mount option can set the attr2 feature by this stage.
-> +	 */
-> +	if (xfs_has_attr2(mp) && xfs_has_noattr2(mp)) {
->  		xfs_warn(mp, "attr2 and noattr2 cannot both be specified.");
->  		return -EINVAL;
->  	}
->  
->  
-> -	if ((mp->m_flags & XFS_MOUNT_NOALIGN) &&
-> -	    (mp->m_dalign || mp->m_swidth)) {
-> +	if (xfs_has_noalign(mp) && (mp->m_dalign || mp->m_swidth)) {
->  		xfs_warn(mp,
->  	"sunit and swidth options incompatible with the noalign option");
->  		return -EINVAL;
-> @@ -1405,7 +1402,7 @@ xfs_fs_validate_params(
->  		return -EINVAL;
->  	}
->  
-> -	if ((mp->m_flags & XFS_MOUNT_ALLOCSIZE) &&
-> +	if (xfs_has_allocsize(mp) &&
->  	    (mp->m_allocsize_log > XFS_MAX_IO_LOG ||
->  	     mp->m_allocsize_log < XFS_MIN_IO_LOG)) {
->  		xfs_warn(mp, "invalid log iosize: %d [not %d-%d]",
-> @@ -1598,7 +1595,7 @@ xfs_fs_fill_super(
->  	if (XFS_SB_VERSION_NUM(&mp->m_sb) == XFS_SB_VERSION_5)
->  		sb->s_flags |= SB_I_VERSION;
->  
-> -	if (mp->m_flags & XFS_MOUNT_DAX_ALWAYS) {
-> +	if (xfs_has_dax_always(mp)) {
->  		bool rtdev_is_dax = false, datadev_is_dax;
->  
->  		xfs_warn(mp,
-> @@ -1622,13 +1619,13 @@ xfs_fs_fill_super(
->  		}
->  	}
->  
-> -	if (mp->m_flags & XFS_MOUNT_DISCARD) {
-> +	if (xfs_has_discard(mp)) {
->  		struct request_queue *q = bdev_get_queue(sb->s_bdev);
->  
->  		if (!blk_queue_discard(q)) {
->  			xfs_warn(mp, "mounting with \"discard\" option, but "
->  					"the device does not support discard");
-> -			mp->m_flags &= ~XFS_MOUNT_DISCARD;
-> +			mp->m_features &= ~XFS_FEAT_DISCARD;
->  		}
->  	}
->  
-> @@ -1710,7 +1707,7 @@ xfs_remount_rw(
->  	struct xfs_sb		*sbp = &mp->m_sb;
->  	int error;
->  
-> -	if (mp->m_flags & XFS_MOUNT_NORECOVERY) {
-> +	if (xfs_has_norecovery(mp)) {
->  		xfs_warn(mp,
->  			"ro->rw transition prohibited on norecovery mount");
->  		return -EINVAL;
-> @@ -1851,16 +1848,14 @@ xfs_fs_reconfigure(
->  	sync_filesystem(mp->m_super);
->  
->  	/* inode32 -> inode64 */
-> -	if ((mp->m_flags & XFS_MOUNT_SMALL_INUMS) &&
-> -	    !(new_mp->m_flags & XFS_MOUNT_SMALL_INUMS)) {
-> -		mp->m_flags &= ~XFS_MOUNT_SMALL_INUMS;
-> +	if (xfs_has_small_inums(mp) && !xfs_has_small_inums(new_mp)) {
-> +		mp->m_features &= ~XFS_FEAT_SMALL_INUMS;
->  		mp->m_maxagi = xfs_set_inode_alloc(mp, sbp->sb_agcount);
->  	}
->  
->  	/* inode64 -> inode32 */
-> -	if (!(mp->m_flags & XFS_MOUNT_SMALL_INUMS) &&
-> -	    (new_mp->m_flags & XFS_MOUNT_SMALL_INUMS)) {
-> -		mp->m_flags |= XFS_MOUNT_SMALL_INUMS;
-> +	if (!xfs_has_small_inums(mp) && xfs_has_small_inums(new_mp)) {
-> +		mp->m_features |= XFS_FEAT_SMALL_INUMS;
->  		mp->m_maxagi = xfs_set_inode_alloc(mp, sbp->sb_agcount);
->  	}
->  
-> @@ -1941,9 +1936,9 @@ static int xfs_init_fs_context(
->  	if (fc->sb_flags & SB_RDONLY)
->  		mp->m_flags |= XFS_MOUNT_RDONLY;
->  	if (fc->sb_flags & SB_DIRSYNC)
-> -		mp->m_flags |= XFS_MOUNT_DIRSYNC;
-> +		mp->m_features |= XFS_FEAT_DIRSYNC;
->  	if (fc->sb_flags & SB_SYNCHRONOUS)
-> -		mp->m_flags |= XFS_MOUNT_WSYNC;
-> +		mp->m_features |= XFS_FEAT_WSYNC;
->  
->  	fc->s_fs_info = mp;
->  	fc->ops = &xfs_context_ops;
-> diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-> index 707d36556bc5..701a78fbf7a9 100644
-> --- a/fs/xfs/xfs_symlink.c
-> +++ b/fs/xfs/xfs_symlink.c
-> @@ -321,9 +321,8 @@ xfs_symlink(
->  	 * symlink transaction goes to disk before returning to
->  	 * the user.
->  	 */
-> -	if (mp->m_flags & (XFS_MOUNT_WSYNC|XFS_MOUNT_DIRSYNC)) {
-> +	if (xfs_has_wsync(mp) || xfs_has_dirsync(mp))
->  		xfs_trans_set_sync(tp);
-> -	}
->  
->  	error = xfs_trans_commit(tp);
->  	if (error)
+> -	xfs_fs_geometry(&mp->m_sb, &fsgeo, 3);
+> +	xfs_fs_geometry(mp, &fsgeo, 3);
+>  	/* The 32-bit variant simply has some padding at the end */
+>  	if (copy_to_user(arg32, &fsgeo, sizeof(struct compat_xfs_fsop_geom_v1)))
+>  		return -EFAULT;
 > -- 
 > 2.31.1
 > 
