@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78088C4338F
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 23:31:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFCDDC4338F
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 23:31:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 536936103E
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 23:31:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B06EA6103E
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 23:31:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230244AbhHLXcM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 12 Aug 2021 19:32:12 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47532 "EHLO mail.kernel.org"
+        id S237901AbhHLXcR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 12 Aug 2021 19:32:17 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47556 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237883AbhHLXcL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 12 Aug 2021 19:32:11 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C1E9F6103E;
-        Thu, 12 Aug 2021 23:31:45 +0000 (UTC)
+        id S237883AbhHLXcR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 12 Aug 2021 19:32:17 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 56FC260C3E;
+        Thu, 12 Aug 2021 23:31:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1628811105;
-        bh=XHsjON4S84CstW5brXfjd6ZTLr6QOeF1eNy4bq5Tp0s=;
+        s=k20201202; t=1628811111;
+        bh=y+mS3TAQN0YnIHx22Wp5LMLw0fbDqeGVI4k1eEP8wTs=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=WtXF+CbBwpSK6n+Oo6eI62a8s9SmMSzWIwNa4sHBp8mgMk8ien7ujAgflZFIA5l9r
-         AGykq+Vw66ajaTelqymLL97/FB8GaSB7C9WBPvV7eexOOgoP0GYdQPTjGft5tG9Ilp
-         1dbTkVsmXnJ/3x18DhZyu/7pSX2rWQAeldkk0YVI/eaVUlrjL0vvuAy5aOcY6vaQfE
-         j9M1Ro4Kj7J2np3T8X9bMStu0Kqgj4GMF9z/yFh7V+rpNNsb8Eo77Bk6+OcNwj1LdA
-         2E6aLG1SvsKZ9A40Fywk0ZFlzxSgJT7Hmj1bdxTupzhSqgdxZI/tXYcIHMCJIj571V
-         WcQSmGjdyMh/Q==
-Subject: [PATCH 04/10] xfs: mark the record passed into btree init_key
- functions as const
+        b=nZ/SYQHGti1/BNbTC63xWxUrpwrMHQ6Wta3LuRg8lNyS9MehKlNQkQ3DUR0PSQukj
+         nyQh/Khr2yKPB3vuL9yqlnEJFy07peeJQPc+7OxUwNxkR2P9XyfoWmtoDpFDIvn4aO
+         RTjpqLEgOs4iMn5ij/xQ0FvvSmGnNpQsMdY9iHpfUAFc8rqvlebW9ci3W1qCWajdcX
+         V6lbAkinfPRN5BugY/5NJxvVIn42itwl9BdhKGBBfOD68B95B75n9leVExV89WcGTC
+         MwiFdBBUIKUuGVOtYQk9QB/1hMq5I8y27B/6YzDg3LvxG0U0jiOk9V94Nue8qle/4+
+         pt19qolBtvhag==
+Subject: [PATCH 05/10] xfs: make the keys and records passed to btree inorder
+ functions const
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Thu, 12 Aug 2021 16:31:45 -0700
-Message-ID: <162881110548.1695493.18089688856522736997.stgit@magnolia>
+Date:   Thu, 12 Aug 2021 16:31:51 -0700
+Message-ID: <162881111103.1695493.15030145852356555847.stgit@magnolia>
 In-Reply-To: <162881108307.1695493.3416792932772498160.stgit@magnolia>
 References: <162881108307.1695493.3416792932772498160.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,225 +50,216 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-These functions initialize a key from a record, but they aren't supposed
-to modify the record.  Mark it const.
+The inorder functions are simple predicates, which means that they don't
+modify the parameters.  Mark them all const.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_alloc_btree.c    |   14 +++++++-------
+ fs/xfs/libxfs/xfs_alloc_btree.c    |   24 ++++++++++++------------
  fs/xfs/libxfs/xfs_bmap_btree.c     |   12 ++++++------
- fs/xfs/libxfs/xfs_bmap_btree.h     |    4 ++--
- fs/xfs/libxfs/xfs_btree.h          |    4 ++--
- fs/xfs/libxfs/xfs_ialloc_btree.c   |   10 +++++-----
- fs/xfs/libxfs/xfs_refcount_btree.c |   10 +++++-----
+ fs/xfs/libxfs/xfs_btree.h          |    8 ++++----
+ fs/xfs/libxfs/xfs_ialloc_btree.c   |   12 ++++++------
+ fs/xfs/libxfs/xfs_refcount_btree.c |   12 ++++++------
  fs/xfs/libxfs/xfs_rmap_btree.c     |   12 ++++++------
- 7 files changed, 33 insertions(+), 33 deletions(-)
+ 6 files changed, 40 insertions(+), 40 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
-index f2ee982ca4f7..576b3ba3f27b 100644
+index 576b3ba3f27b..c2d2a0be56d8 100644
 --- a/fs/xfs/libxfs/xfs_alloc_btree.c
 +++ b/fs/xfs/libxfs/xfs_alloc_btree.c
-@@ -177,8 +177,8 @@ xfs_allocbt_get_maxrecs(
+@@ -376,9 +376,9 @@ const struct xfs_buf_ops xfs_cntbt_buf_ops = {
  
- STATIC void
- xfs_allocbt_init_key_from_rec(
--	union xfs_btree_key	*key,
--	union xfs_btree_rec	*rec)
-+	union xfs_btree_key		*key,
-+	const union xfs_btree_rec	*rec)
+ STATIC int
+ xfs_bnobt_keys_inorder(
+-	struct xfs_btree_cur	*cur,
+-	union xfs_btree_key	*k1,
+-	union xfs_btree_key	*k2)
++	struct xfs_btree_cur		*cur,
++	const union xfs_btree_key	*k1,
++	const union xfs_btree_key	*k2)
  {
- 	key->alloc.ar_startblock = rec->alloc.ar_startblock;
- 	key->alloc.ar_blockcount = rec->alloc.ar_blockcount;
-@@ -186,10 +186,10 @@ xfs_allocbt_init_key_from_rec(
+ 	return be32_to_cpu(k1->alloc.ar_startblock) <
+ 	       be32_to_cpu(k2->alloc.ar_startblock);
+@@ -386,9 +386,9 @@ xfs_bnobt_keys_inorder(
  
- STATIC void
- xfs_bnobt_init_high_key_from_rec(
--	union xfs_btree_key	*key,
--	union xfs_btree_rec	*rec)
-+	union xfs_btree_key		*key,
-+	const union xfs_btree_rec	*rec)
+ STATIC int
+ xfs_bnobt_recs_inorder(
+-	struct xfs_btree_cur	*cur,
+-	union xfs_btree_rec	*r1,
+-	union xfs_btree_rec	*r2)
++	struct xfs_btree_cur		*cur,
++	const union xfs_btree_rec	*r1,
++	const union xfs_btree_rec	*r2)
  {
--	__u32			x;
-+	__u32				x;
+ 	return be32_to_cpu(r1->alloc.ar_startblock) +
+ 		be32_to_cpu(r1->alloc.ar_blockcount) <=
+@@ -397,9 +397,9 @@ xfs_bnobt_recs_inorder(
  
- 	x = be32_to_cpu(rec->alloc.ar_startblock);
- 	x += be32_to_cpu(rec->alloc.ar_blockcount) - 1;
-@@ -199,8 +199,8 @@ xfs_bnobt_init_high_key_from_rec(
- 
- STATIC void
- xfs_cntbt_init_high_key_from_rec(
--	union xfs_btree_key	*key,
--	union xfs_btree_rec	*rec)
-+	union xfs_btree_key		*key,
-+	const union xfs_btree_rec	*rec)
+ STATIC int
+ xfs_cntbt_keys_inorder(
+-	struct xfs_btree_cur	*cur,
+-	union xfs_btree_key	*k1,
+-	union xfs_btree_key	*k2)
++	struct xfs_btree_cur		*cur,
++	const union xfs_btree_key	*k1,
++	const union xfs_btree_key	*k2)
  {
- 	key->alloc.ar_blockcount = rec->alloc.ar_blockcount;
- 	key->alloc.ar_startblock = 0;
+ 	return be32_to_cpu(k1->alloc.ar_blockcount) <
+ 		be32_to_cpu(k2->alloc.ar_blockcount) ||
+@@ -410,9 +410,9 @@ xfs_cntbt_keys_inorder(
+ 
+ STATIC int
+ xfs_cntbt_recs_inorder(
+-	struct xfs_btree_cur	*cur,
+-	union xfs_btree_rec	*r1,
+-	union xfs_btree_rec	*r2)
++	struct xfs_btree_cur		*cur,
++	const union xfs_btree_rec	*r1,
++	const union xfs_btree_rec	*r2)
+ {
+ 	return be32_to_cpu(r1->alloc.ar_blockcount) <
+ 		be32_to_cpu(r2->alloc.ar_blockcount) ||
 diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-index e6c8865eee5f..00a1104d9823 100644
+index 00a1104d9823..cd8fefc9019f 100644
 --- a/fs/xfs/libxfs/xfs_bmap_btree.c
 +++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-@@ -78,7 +78,7 @@ xfs_bmbt_disk_get_all(
-  */
- xfs_filblks_t
- xfs_bmbt_disk_get_blockcount(
--	xfs_bmbt_rec_t	*r)
-+	const struct xfs_bmbt_rec	*r)
- {
- 	return (xfs_filblks_t)(be64_to_cpu(r->l1) & xfs_mask64lo(21));
- }
-@@ -88,7 +88,7 @@ xfs_bmbt_disk_get_blockcount(
-  */
- xfs_fileoff_t
- xfs_bmbt_disk_get_startoff(
--	xfs_bmbt_rec_t	*r)
-+	const struct xfs_bmbt_rec	*r)
- {
- 	return ((xfs_fileoff_t)be64_to_cpu(r->l0) &
- 		 xfs_mask64lo(64 - BMBT_EXNTFLAG_BITLEN)) >> 9;
-@@ -352,8 +352,8 @@ xfs_bmbt_get_dmaxrecs(
+@@ -497,9 +497,9 @@ const struct xfs_buf_ops xfs_bmbt_buf_ops = {
  
- STATIC void
- xfs_bmbt_init_key_from_rec(
--	union xfs_btree_key	*key,
--	union xfs_btree_rec	*rec)
-+	union xfs_btree_key		*key,
-+	const union xfs_btree_rec	*rec)
+ STATIC int
+ xfs_bmbt_keys_inorder(
+-	struct xfs_btree_cur	*cur,
+-	union xfs_btree_key	*k1,
+-	union xfs_btree_key	*k2)
++	struct xfs_btree_cur		*cur,
++	const union xfs_btree_key	*k1,
++	const union xfs_btree_key	*k2)
  {
- 	key->bmbt.br_startoff =
- 		cpu_to_be64(xfs_bmbt_disk_get_startoff(&rec->bmbt));
-@@ -361,8 +361,8 @@ xfs_bmbt_init_key_from_rec(
+ 	return be64_to_cpu(k1->bmbt.br_startoff) <
+ 		be64_to_cpu(k2->bmbt.br_startoff);
+@@ -507,9 +507,9 @@ xfs_bmbt_keys_inorder(
  
- STATIC void
- xfs_bmbt_init_high_key_from_rec(
--	union xfs_btree_key	*key,
--	union xfs_btree_rec	*rec)
-+	union xfs_btree_key		*key,
-+	const union xfs_btree_rec	*rec)
+ STATIC int
+ xfs_bmbt_recs_inorder(
+-	struct xfs_btree_cur	*cur,
+-	union xfs_btree_rec	*r1,
+-	union xfs_btree_rec	*r2)
++	struct xfs_btree_cur		*cur,
++	const union xfs_btree_rec	*r1,
++	const union xfs_btree_rec	*r2)
  {
- 	key->bmbt.br_startoff = cpu_to_be64(
- 			xfs_bmbt_disk_get_startoff(&rec->bmbt) +
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
-index 72bf74c79fb9..209ded1eefd1 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.h
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.h
-@@ -88,8 +88,8 @@ extern void xfs_bmdr_to_bmbt(struct xfs_inode *, xfs_bmdr_block_t *, int,
- 			struct xfs_btree_block *, int);
- 
- void xfs_bmbt_disk_set_all(struct xfs_bmbt_rec *r, struct xfs_bmbt_irec *s);
--extern xfs_filblks_t xfs_bmbt_disk_get_blockcount(xfs_bmbt_rec_t *r);
--extern xfs_fileoff_t xfs_bmbt_disk_get_startoff(xfs_bmbt_rec_t *r);
-+extern xfs_filblks_t xfs_bmbt_disk_get_blockcount(const struct xfs_bmbt_rec *r);
-+extern xfs_fileoff_t xfs_bmbt_disk_get_startoff(const struct xfs_bmbt_rec *r);
- extern void xfs_bmbt_disk_get_all(xfs_bmbt_rec_t *r, xfs_bmbt_irec_t *s);
- 
- extern void xfs_bmbt_to_bmdr(struct xfs_mount *, struct xfs_btree_block *, int,
+ 	return xfs_bmbt_disk_get_startoff(&r1->bmbt) +
+ 		xfs_bmbt_disk_get_blockcount(&r1->bmbt) <=
 diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index e83836a984e4..c4c701fd1077 100644
+index c4c701fd1077..4b95373c6d23 100644
 --- a/fs/xfs/libxfs/xfs_btree.h
 +++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -130,13 +130,13 @@ struct xfs_btree_ops {
+@@ -154,13 +154,13 @@ struct xfs_btree_ops {
  
- 	/* init values of btree structures */
- 	void	(*init_key_from_rec)(union xfs_btree_key *key,
--				     union xfs_btree_rec *rec);
-+				     const union xfs_btree_rec *rec);
- 	void	(*init_rec_from_cur)(struct xfs_btree_cur *cur,
- 				     union xfs_btree_rec *rec);
- 	void	(*init_ptr_from_cur)(struct xfs_btree_cur *cur,
- 				     union xfs_btree_ptr *ptr);
- 	void	(*init_high_key_from_rec)(union xfs_btree_key *key,
--					  union xfs_btree_rec *rec);
-+					  const union xfs_btree_rec *rec);
+ 	/* check that k1 is lower than k2 */
+ 	int	(*keys_inorder)(struct xfs_btree_cur *cur,
+-				union xfs_btree_key *k1,
+-				union xfs_btree_key *k2);
++				const union xfs_btree_key *k1,
++				const union xfs_btree_key *k2);
  
- 	/* difference between key value and cursor value */
- 	int64_t (*key_diff)(struct xfs_btree_cur *cur,
+ 	/* check that r1 is lower than r2 */
+ 	int	(*recs_inorder)(struct xfs_btree_cur *cur,
+-				union xfs_btree_rec *r1,
+-				union xfs_btree_rec *r2);
++				const union xfs_btree_rec *r1,
++				const union xfs_btree_rec *r2);
+ };
+ 
+ /*
 diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
-index ecae2067c986..a583928cc810 100644
+index a583928cc810..a6ba08bb9bfe 100644
 --- a/fs/xfs/libxfs/xfs_ialloc_btree.c
 +++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
-@@ -188,18 +188,18 @@ xfs_inobt_get_maxrecs(
+@@ -360,9 +360,9 @@ const struct xfs_buf_ops xfs_finobt_buf_ops = {
  
- STATIC void
- xfs_inobt_init_key_from_rec(
--	union xfs_btree_key	*key,
--	union xfs_btree_rec	*rec)
-+	union xfs_btree_key		*key,
-+	const union xfs_btree_rec	*rec)
+ STATIC int
+ xfs_inobt_keys_inorder(
+-	struct xfs_btree_cur	*cur,
+-	union xfs_btree_key	*k1,
+-	union xfs_btree_key	*k2)
++	struct xfs_btree_cur		*cur,
++	const union xfs_btree_key	*k1,
++	const union xfs_btree_key	*k2)
  {
- 	key->inobt.ir_startino = rec->inobt.ir_startino;
- }
+ 	return be32_to_cpu(k1->inobt.ir_startino) <
+ 		be32_to_cpu(k2->inobt.ir_startino);
+@@ -370,9 +370,9 @@ xfs_inobt_keys_inorder(
  
- STATIC void
- xfs_inobt_init_high_key_from_rec(
--	union xfs_btree_key	*key,
--	union xfs_btree_rec	*rec)
-+	union xfs_btree_key		*key,
-+	const union xfs_btree_rec	*rec)
+ STATIC int
+ xfs_inobt_recs_inorder(
+-	struct xfs_btree_cur	*cur,
+-	union xfs_btree_rec	*r1,
+-	union xfs_btree_rec	*r2)
++	struct xfs_btree_cur		*cur,
++	const union xfs_btree_rec	*r1,
++	const union xfs_btree_rec	*r2)
  {
--	__u32			x;
-+	__u32				x;
- 
- 	x = be32_to_cpu(rec->inobt.ir_startino);
- 	x += XFS_INODES_PER_CHUNK - 1;
+ 	return be32_to_cpu(r1->inobt.ir_startino) + XFS_INODES_PER_CHUNK <=
+ 		be32_to_cpu(r2->inobt.ir_startino);
 diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
-index beb40f279abb..094afa264aa7 100644
+index 094afa264aa7..907869014a99 100644
 --- a/fs/xfs/libxfs/xfs_refcount_btree.c
 +++ b/fs/xfs/libxfs/xfs_refcount_btree.c
-@@ -135,18 +135,18 @@ xfs_refcountbt_get_maxrecs(
+@@ -269,9 +269,9 @@ const struct xfs_buf_ops xfs_refcountbt_buf_ops = {
  
- STATIC void
- xfs_refcountbt_init_key_from_rec(
--	union xfs_btree_key	*key,
--	union xfs_btree_rec	*rec)
-+	union xfs_btree_key		*key,
-+	const union xfs_btree_rec	*rec)
+ STATIC int
+ xfs_refcountbt_keys_inorder(
+-	struct xfs_btree_cur	*cur,
+-	union xfs_btree_key	*k1,
+-	union xfs_btree_key	*k2)
++	struct xfs_btree_cur		*cur,
++	const union xfs_btree_key	*k1,
++	const union xfs_btree_key	*k2)
  {
- 	key->refc.rc_startblock = rec->refc.rc_startblock;
- }
+ 	return be32_to_cpu(k1->refc.rc_startblock) <
+ 	       be32_to_cpu(k2->refc.rc_startblock);
+@@ -279,9 +279,9 @@ xfs_refcountbt_keys_inorder(
  
- STATIC void
- xfs_refcountbt_init_high_key_from_rec(
--	union xfs_btree_key	*key,
--	union xfs_btree_rec	*rec)
-+	union xfs_btree_key		*key,
-+	const union xfs_btree_rec	*rec)
+ STATIC int
+ xfs_refcountbt_recs_inorder(
+-	struct xfs_btree_cur	*cur,
+-	union xfs_btree_rec	*r1,
+-	union xfs_btree_rec	*r2)
++	struct xfs_btree_cur		*cur,
++	const union xfs_btree_rec	*r1,
++	const union xfs_btree_rec	*r2)
  {
--	__u32			x;
-+	__u32				x;
- 
- 	x = be32_to_cpu(rec->refc.rc_startblock);
- 	x += be32_to_cpu(rec->refc.rc_blockcount) - 1;
+ 	return  be32_to_cpu(r1->refc.rc_startblock) +
+ 		be32_to_cpu(r1->refc.rc_blockcount) <=
 diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
-index f6571c06ce04..df57b40d001f 100644
+index df57b40d001f..3c3cf4971bd7 100644
 --- a/fs/xfs/libxfs/xfs_rmap_btree.c
 +++ b/fs/xfs/libxfs/xfs_rmap_btree.c
-@@ -156,8 +156,8 @@ xfs_rmapbt_get_maxrecs(
+@@ -364,9 +364,9 @@ const struct xfs_buf_ops xfs_rmapbt_buf_ops = {
  
- STATIC void
- xfs_rmapbt_init_key_from_rec(
--	union xfs_btree_key	*key,
--	union xfs_btree_rec	*rec)
-+	union xfs_btree_key		*key,
-+	const union xfs_btree_rec	*rec)
+ STATIC int
+ xfs_rmapbt_keys_inorder(
+-	struct xfs_btree_cur	*cur,
+-	union xfs_btree_key	*k1,
+-	union xfs_btree_key	*k2)
++	struct xfs_btree_cur		*cur,
++	const union xfs_btree_key	*k1,
++	const union xfs_btree_key	*k2)
  {
- 	key->rmap.rm_startblock = rec->rmap.rm_startblock;
- 	key->rmap.rm_owner = rec->rmap.rm_owner;
-@@ -173,11 +173,11 @@ xfs_rmapbt_init_key_from_rec(
-  */
- STATIC void
- xfs_rmapbt_init_high_key_from_rec(
--	union xfs_btree_key	*key,
--	union xfs_btree_rec	*rec)
-+	union xfs_btree_key		*key,
-+	const union xfs_btree_rec	*rec)
+ 	uint32_t		x;
+ 	uint32_t		y;
+@@ -394,9 +394,9 @@ xfs_rmapbt_keys_inorder(
+ 
+ STATIC int
+ xfs_rmapbt_recs_inorder(
+-	struct xfs_btree_cur	*cur,
+-	union xfs_btree_rec	*r1,
+-	union xfs_btree_rec	*r2)
++	struct xfs_btree_cur		*cur,
++	const union xfs_btree_rec	*r1,
++	const union xfs_btree_rec	*r2)
  {
--	uint64_t		off;
--	int			adj;
-+	uint64_t			off;
-+	int				adj;
- 
- 	adj = be32_to_cpu(rec->rmap.rm_blockcount) - 1;
- 
+ 	uint32_t		x;
+ 	uint32_t		y;
 
