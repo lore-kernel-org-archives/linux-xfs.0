@@ -7,69 +7,69 @@ X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35364C4338F
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 09:25:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34A17C4338F
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 09:26:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1961B60EB9
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 09:25:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F2BF260C3F
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 09:26:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234677AbhHLJZv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 12 Aug 2021 05:25:51 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:47014 "EHLO
+        id S231392AbhHLJ0k (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 12 Aug 2021 05:26:40 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:23956 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231392AbhHLJZu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Aug 2021 05:25:50 -0400
+        by vger.kernel.org with ESMTP id S234975AbhHLJ02 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Aug 2021 05:26:28 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1628760324;
+        s=mimecast20190719; t=1628760363;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
         bh=Z4zx7GFzbSPRt4FB62AW4ORZKhBgNfHE8kl/I1y14lA=;
-        b=CnymYPzYcmv8dAVxSz+7F83SH709a4x8TJfXG1rQ/3NzHFYp4KPQLgoJesiXPNpciLvo36
-        TSEDe5DVS3D8xPQg9Y6FIsv6fMiWekudN/6AKzYmhy1TA6HT8frFSbS/IX81YeSqlL3KpC
-        0cwU6Ht6HpoXx+Wq6z7cwpBUb441HRo=
-Received: from mail-ed1-f70.google.com (mail-ed1-f70.google.com
- [209.85.208.70]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-501-dNoorEg1NVCgJjSHI2_NWg-1; Thu, 12 Aug 2021 05:25:23 -0400
-X-MC-Unique: dNoorEg1NVCgJjSHI2_NWg-1
-Received: by mail-ed1-f70.google.com with SMTP id e3-20020a50ec830000b02903be5be2fc73so2731662edr.16
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Aug 2021 02:25:23 -0700 (PDT)
+        b=RhWeiptqMV67bQm+UlMZ9Q/EKaZgclWiYWsSeHM8gSHMOOQBiCBL0bzGmwT0fkUC1jKEoJ
+        Dm9r0s1gOpS3im2UiiJfe8qH5W4zk+khO9lwilyz6vff3IvCFKyAlNxPSDXIZXeLTUuhSj
+        4U2K1/B9eetnobtiCxfQ/3/SWib/Ce4=
+Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com
+ [209.85.208.72]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-549-R3Mx9tzIMG68EdKK98r05Q-1; Thu, 12 Aug 2021 05:26:02 -0400
+X-MC-Unique: R3Mx9tzIMG68EdKK98r05Q-1
+Received: by mail-ed1-f72.google.com with SMTP id v20-20020aa7d9d40000b02903be68450bf3so2757968eds.23
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Aug 2021 02:26:01 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-transfer-encoding
          :content-language;
         bh=Z4zx7GFzbSPRt4FB62AW4ORZKhBgNfHE8kl/I1y14lA=;
-        b=c8xNWiBX0MRJ7LkEt9RNWAAwwgtuzBCjoPgc+QGsBCL3VVv9mP3BlcgFbeoXgr61RP
-         PTh14DiPnuFozcxkvZjFvveVlFlaKbaI5eBtZStxXIBAK+dUR44ONiXrG7criIQB4SMB
-         VMIygAFxvq/sUc3UntxHBXUrDhsWmHsysimcMyhVLmpvUgjRu3kSoz1JmyR9Dz2nqSj4
-         yxnOQQKxQvSNYUt/8PpH3iV/OIJkJjFuSLeGm6xZ+Ed5OCo6qRrYGzieQcbvtYuujhif
-         6eVATktQbn2OlQ0ongPyGHVCYwUeBlGMDFOGQtguuaFjMp5nBg2zDSRrH2JybKcJXTo2
-         qLOg==
-X-Gm-Message-State: AOAM532DkeUwmfCiJbAhB6vd0lecuubnLaFgqqI4LqRW92d0JB36zPAN
-        k3JOEGZ9y3xeHOtL/DOczN8A5Psj5t7RGC0q5sr7Qv4R0YVQZG2dxE6KSdvW4GQwe4PNENZiXWD
-        zPa0zg1RovRYP2nXD17qvtDlr1zFf6FSL/eqdW2oGjiXyJUs3Dq1lHSfKmW5guz0xrTvon2M=
-X-Received: by 2002:a17:906:2ad5:: with SMTP id m21mr2782047eje.88.1628760322262;
-        Thu, 12 Aug 2021 02:25:22 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJyKI9GnUJgsOh5k+HLvhnTn47HUEW77OUYEXqnpK+r9TGAeTHNj8qtIsxteEDQUl3j2G44bJQ==
-X-Received: by 2002:a17:906:2ad5:: with SMTP id m21mr2782033eje.88.1628760322041;
-        Thu, 12 Aug 2021 02:25:22 -0700 (PDT)
+        b=nakLB0SazhBVHVTh3rqB1rL2Kl3B1p8jhOlwuFcyvH0mbud7irdT3xJFoVFRujIJMD
+         Db+EH9GiRVdXoR1db2P6iQmEAq+l/sF7LGS2MmgmNbI+cxvSfZTi2911OsKB+cDzq7qZ
+         DUWii0hiGls6BapY6kLMNr+xR0AJkzRgAqPePDI1IgsXdqAc2Y0pB4pOQZK0rx/ghoz5
+         6XOUvtzlzfKfeNG3AKvvy3iYcvFUoR1yf3xfKtbPpbk9NHb9fCCBjE4bdVmVboguiNtm
+         DgVZNLFZDaHjvajPgMaOlZkX+yB2vvw5yhsj+o2Qd/9R/sW0mKPEORMeXqAjTc8y8QGA
+         P8Ug==
+X-Gm-Message-State: AOAM532SE1+Q/OnnbzlWAPEAaK9qZ7IB5g1K2rEZ+ZUx2Du8pANh9Dlt
+        rw89taW8TWyO4H0NpzLwU9JePFJXnQOKFlzLDF4O/JWAQW+2tYWnhyS4G4W6PRwtIvhX/PQ6DWA
+        TSTRrJoV/BCSS9jtx6pG96ew2asP9lo3rA0dsBcJ7teOsuLX3zygGxxw5hKUMbw1xTMeON1c=
+X-Received: by 2002:aa7:ccc1:: with SMTP id y1mr4298859edt.321.1628760359375;
+        Thu, 12 Aug 2021 02:25:59 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzEBq9oFMKPHKC0VVR66AW0femrTFVzF3KVdtJ7+wr139TGR8+oT8sIuuAXze7KXGjYaHg3dA==
+X-Received: by 2002:aa7:ccc1:: with SMTP id y1mr4298842edt.321.1628760359188;
+        Thu, 12 Aug 2021 02:25:59 -0700 (PDT)
 Received: from localhost.localdomain ([84.19.91.9])
-        by smtp.gmail.com with ESMTPSA id qa34sm572133ejc.120.2021.08.12.02.25.21
+        by smtp.gmail.com with ESMTPSA id d3sm107040edv.48.2021.08.12.02.25.58
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 12 Aug 2021 02:25:21 -0700 (PDT)
-Subject: Re: [PATCH 2/3] xfs: remove the xfs_dsb_t typedef
+        Thu, 12 Aug 2021 02:25:58 -0700 (PDT)
+Subject: Re: [PATCH 3/3] xfs: remove the xfs_dqblk_t typedef
 To:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 References: <20210812084343.27934-1-hch@lst.de>
- <20210812084343.27934-3-hch@lst.de>
+ <20210812084343.27934-4-hch@lst.de>
 From:   Pavel Reichl <preichl@redhat.com>
-Message-ID: <075ca66f-d72c-4ffc-d840-89e9c1974755@redhat.com>
-Date:   Thu, 12 Aug 2021 11:25:20 +0200
+Message-ID: <cdca9ee2-4b5d-835c-da32-e24cb5a148be@redhat.com>
+Date:   Thu, 12 Aug 2021 11:25:58 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.11.0
 MIME-Version: 1.0
-In-Reply-To: <20210812084343.27934-3-hch@lst.de>
+In-Reply-To: <20210812084343.27934-4-hch@lst.de>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Content-Language: en-US
