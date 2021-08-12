@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFE72C4338F
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 23:31:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1FF7C4338F
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 23:32:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B6BAC60C3E
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 23:31:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8F9AD6103E
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 23:32:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237914AbhHLXcY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 12 Aug 2021 19:32:24 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47600 "EHLO mail.kernel.org"
+        id S237883AbhHLXc2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 12 Aug 2021 19:32:28 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47636 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237906AbhHLXcW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 12 Aug 2021 19:32:22 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D32E760C3E;
-        Thu, 12 Aug 2021 23:31:56 +0000 (UTC)
+        id S237906AbhHLXc2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 12 Aug 2021 19:32:28 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 5D5896103E;
+        Thu, 12 Aug 2021 23:32:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1628811116;
-        bh=yTux2YMNqCKV+jFByus8x6FViYDqKnoAAwjJmRvaddQ=;
+        s=k20201202; t=1628811122;
+        bh=IPcOg8KgJ2LM1/LFxbsktfe3n8ryzT0269BL5lkYwm4=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=kUfi+105bzC+1puyBEwYp98U8un8Ijj/qwTvc25r/hj1GDz0VqIX41PxP3JdZPfdg
-         Xc+AmYmFN6rJaF0g65MDklC6HRo4ulM846gzQBevkiUdS3zztLgUkLtLvkcfN4Zh0D
-         GKkWnDwwIq70mCcWUOi3R90XdgBuuiGZsgqV162aW0ebO+AfJD4I8pNUcX4hyivN1Z
-         9MjP1m6t+1od0qSfk3f+7X9N74p/XlDqHb8bWAdKltOJL9vm90SSN1FdppoJZf+sQ3
-         k5qqSUh2JJjqV+TEw+76uD3XWQwCVsPnho6HKd+1QPl4Kcug4Hoz0EBA7LeCOhPYSa
-         rAgxgB3u5ahSQ==
-Subject: [PATCH 06/10] xfs: mark the record passed into xchk_btree functions
- as const
+        b=T5Y4JMkQ2cDnBQO/wH2dApvGM5fTk6W0Yv0iKmeRRSyDTpTnIetwiiaU6xGlA6ATL
+         kQIj0pOjg4lC8r3wwtA1XeTw79xxjGNEsuJCIGdvZOgV0eTXJjAbJn51tz0qQRtCdz
+         PLJRZm0MOB0VBwqqYFhd6B6oNrailasMy6q0sw9rhDCSQWcji2UAckDYQaFllIh26a
+         xozVqNSFPid6t399n+DXhh8GLxCYFC58qJhUFfYddd1FAwy3WQrkp0KChYt2Dx6Ern
+         bPcqgl2gHtjQ/14ZWWeqAAx7ykNZag4+NFuUpVFY+a/7AxC9CsB10vIuFVzEOCMsM2
+         THWcPL5YO09ow==
+Subject: [PATCH 07/10] xfs: make the pointer passed to btree set_root
+ functions const
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Thu, 12 Aug 2021 16:31:56 -0700
-Message-ID: <162881111657.1695493.2646352717736011507.stgit@magnolia>
+Date:   Thu, 12 Aug 2021 16:32:02 -0700
+Message-ID: <162881112205.1695493.15576454755917300007.stgit@magnolia>
 In-Reply-To: <162881108307.1695493.3416792932772498160.stgit@magnolia>
 References: <162881108307.1695493.3416792932772498160.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,128 +50,130 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-xchk_btree calls a user-supplied function to validate each btree record
-that it finds.  Those functions are not supposed to change the record
-data, so mark the parameter const.
+The pointer passed to each per-AG btree type's ->set_root function isn't
+supposed to be modified (that function sets an external pointer to the
+root block) so mark them const.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_bmap_btree.c |    2 +-
- fs/xfs/libxfs/xfs_bmap_btree.h |    3 ++-
- fs/xfs/scrub/alloc.c           |    2 +-
- fs/xfs/scrub/bmap.c            |    2 +-
- fs/xfs/scrub/btree.h           |    4 ++--
- fs/xfs/scrub/ialloc.c          |    2 +-
- fs/xfs/scrub/refcount.c        |    2 +-
- fs/xfs/scrub/rmap.c            |    2 +-
- 8 files changed, 10 insertions(+), 9 deletions(-)
+ fs/xfs/libxfs/xfs_alloc_btree.c    |    6 +++---
+ fs/xfs/libxfs/xfs_btree.h          |    2 +-
+ fs/xfs/libxfs/xfs_btree_staging.c  |    6 +++---
+ fs/xfs/libxfs/xfs_ialloc_btree.c   |   12 ++++++------
+ fs/xfs/libxfs/xfs_refcount_btree.c |    6 +++---
+ fs/xfs/libxfs/xfs_rmap_btree.c     |    6 +++---
+ 6 files changed, 19 insertions(+), 19 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-index cd8fefc9019f..961f0193b058 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-@@ -58,7 +58,7 @@ xfs_bmdr_to_bmbt(
+diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
+index c2d2a0be56d8..87f7f9f27449 100644
+--- a/fs/xfs/libxfs/xfs_alloc_btree.c
++++ b/fs/xfs/libxfs/xfs_alloc_btree.c
+@@ -31,9 +31,9 @@ xfs_allocbt_dup_cursor(
  
- void
- xfs_bmbt_disk_get_all(
--	struct xfs_bmbt_rec	*rec,
-+	const struct xfs_bmbt_rec *rec,
- 	struct xfs_bmbt_irec	*irec)
+ STATIC void
+ xfs_allocbt_set_root(
+-	struct xfs_btree_cur	*cur,
+-	union xfs_btree_ptr	*ptr,
+-	int			inc)
++	struct xfs_btree_cur		*cur,
++	const union xfs_btree_ptr	*ptr,
++	int				inc)
  {
- 	uint64_t		l0 = get_unaligned_be64(&rec->l0);
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
-index 209ded1eefd1..16c2b53bbac3 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.h
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.h
-@@ -90,7 +90,8 @@ extern void xfs_bmdr_to_bmbt(struct xfs_inode *, xfs_bmdr_block_t *, int,
- void xfs_bmbt_disk_set_all(struct xfs_bmbt_rec *r, struct xfs_bmbt_irec *s);
- extern xfs_filblks_t xfs_bmbt_disk_get_blockcount(const struct xfs_bmbt_rec *r);
- extern xfs_fileoff_t xfs_bmbt_disk_get_startoff(const struct xfs_bmbt_rec *r);
--extern void xfs_bmbt_disk_get_all(xfs_bmbt_rec_t *r, xfs_bmbt_irec_t *s);
-+extern void xfs_bmbt_disk_get_all(const struct xfs_bmbt_rec *r,
-+		struct xfs_bmbt_irec *s);
+ 	struct xfs_buf		*agbp = cur->bc_ag.agbp;
+ 	struct xfs_agf		*agf = agbp->b_addr;
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index 4b95373c6d23..504032d91a0a 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -106,7 +106,7 @@ struct xfs_btree_ops {
  
- extern void xfs_bmbt_to_bmdr(struct xfs_mount *, struct xfs_btree_block *, int,
- 			xfs_bmdr_block_t *, int);
-diff --git a/fs/xfs/scrub/alloc.c b/fs/xfs/scrub/alloc.c
-index d5741980094a..87518e1292f8 100644
---- a/fs/xfs/scrub/alloc.c
-+++ b/fs/xfs/scrub/alloc.c
-@@ -91,7 +91,7 @@ xchk_allocbt_xref(
- STATIC int
- xchk_allocbt_rec(
- 	struct xchk_btree	*bs,
--	union xfs_btree_rec	*rec)
-+	const union xfs_btree_rec *rec)
- {
- 	struct xfs_mount	*mp = bs->cur->bc_mp;
- 	xfs_agnumber_t		agno = bs->cur->bc_ag.pag->pag_agno;
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index ea701f5ca32b..7f7ac8ca1610 100644
---- a/fs/xfs/scrub/bmap.c
-+++ b/fs/xfs/scrub/bmap.c
-@@ -383,7 +383,7 @@ xchk_bmap_iextent(
- STATIC int
- xchk_bmapbt_rec(
- 	struct xchk_btree	*bs,
--	union xfs_btree_rec	*rec)
-+	const union xfs_btree_rec *rec)
- {
- 	struct xfs_bmbt_irec	irec;
- 	struct xfs_bmbt_irec	iext_irec;
-diff --git a/fs/xfs/scrub/btree.h b/fs/xfs/scrub/btree.h
-index 5572e475f8ed..b7d2fc01fbf9 100644
---- a/fs/xfs/scrub/btree.h
-+++ b/fs/xfs/scrub/btree.h
-@@ -26,8 +26,8 @@ void xchk_btree_xref_set_corrupt(struct xfs_scrub *sc,
+ 	/* update btree root pointer */
+ 	void	(*set_root)(struct xfs_btree_cur *cur,
+-			    union xfs_btree_ptr *nptr, int level_change);
++			    const union xfs_btree_ptr *nptr, int level_change);
  
- struct xchk_btree;
- typedef int (*xchk_btree_rec_fn)(
--	struct xchk_btree	*bs,
--	union xfs_btree_rec	*rec);
-+	struct xchk_btree		*bs,
-+	const union xfs_btree_rec	*rec);
+ 	/* block allocation / freeing */
+ 	int	(*alloc_block)(struct xfs_btree_cur *cur,
+diff --git a/fs/xfs/libxfs/xfs_btree_staging.c b/fs/xfs/libxfs/xfs_btree_staging.c
+index aa8dc9521c39..bce6a3da9865 100644
+--- a/fs/xfs/libxfs/xfs_btree_staging.c
++++ b/fs/xfs/libxfs/xfs_btree_staging.c
+@@ -112,9 +112,9 @@ xfs_btree_fakeroot_init_ptr_from_cur(
+ /* Update the btree root information for a per-AG fake root. */
+ STATIC void
+ xfs_btree_afakeroot_set_root(
+-	struct xfs_btree_cur	*cur,
+-	union xfs_btree_ptr	*ptr,
+-	int			inc)
++	struct xfs_btree_cur		*cur,
++	const union xfs_btree_ptr	*ptr,
++	int				inc)
+ {
+ 	struct xbtree_afakeroot	*afake = cur->bc_ag.afake;
  
- struct xchk_btree {
- 	/* caller-provided scrub state */
-diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-index 30e568596b79..db42eb0a32f2 100644
---- a/fs/xfs/scrub/ialloc.c
-+++ b/fs/xfs/scrub/ialloc.c
-@@ -418,7 +418,7 @@ xchk_iallocbt_rec_alignment(
- STATIC int
- xchk_iallocbt_rec(
- 	struct xchk_btree		*bs,
--	union xfs_btree_rec		*rec)
-+	const union xfs_btree_rec	*rec)
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+index a6ba08bb9bfe..903537a08c8e 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.c
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+@@ -40,9 +40,9 @@ xfs_inobt_dup_cursor(
+ 
+ STATIC void
+ xfs_inobt_set_root(
+-	struct xfs_btree_cur	*cur,
+-	union xfs_btree_ptr	*nptr,
+-	int			inc)	/* level change */
++	struct xfs_btree_cur		*cur,
++	const union xfs_btree_ptr	*nptr,
++	int				inc)	/* level change */
  {
- 	struct xfs_mount		*mp = bs->cur->bc_mp;
- 	struct xchk_iallocbt		*iabt = bs->private;
-diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
-index c547e5ca3207..2744eecdbaf0 100644
---- a/fs/xfs/scrub/refcount.c
-+++ b/fs/xfs/scrub/refcount.c
-@@ -330,7 +330,7 @@ xchk_refcountbt_xref(
- STATIC int
- xchk_refcountbt_rec(
- 	struct xchk_btree	*bs,
--	union xfs_btree_rec	*rec)
-+	const union xfs_btree_rec *rec)
+ 	struct xfs_buf		*agbp = cur->bc_ag.agbp;
+ 	struct xfs_agi		*agi = agbp->b_addr;
+@@ -54,9 +54,9 @@ xfs_inobt_set_root(
+ 
+ STATIC void
+ xfs_finobt_set_root(
+-	struct xfs_btree_cur	*cur,
+-	union xfs_btree_ptr	*nptr,
+-	int			inc)	/* level change */
++	struct xfs_btree_cur		*cur,
++	const union xfs_btree_ptr	*nptr,
++	int				inc)	/* level change */
  {
- 	struct xfs_mount	*mp = bs->cur->bc_mp;
- 	xfs_agblock_t		*cow_blocks = bs->private;
-diff --git a/fs/xfs/scrub/rmap.c b/fs/xfs/scrub/rmap.c
-index fc306573f0ac..8dae0345c7df 100644
---- a/fs/xfs/scrub/rmap.c
-+++ b/fs/xfs/scrub/rmap.c
-@@ -88,7 +88,7 @@ xchk_rmapbt_xref(
- STATIC int
- xchk_rmapbt_rec(
- 	struct xchk_btree	*bs,
--	union xfs_btree_rec	*rec)
-+	const union xfs_btree_rec *rec)
+ 	struct xfs_buf		*agbp = cur->bc_ag.agbp;
+ 	struct xfs_agi		*agi = agbp->b_addr;
+diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
+index 907869014a99..ec4b7195c371 100644
+--- a/fs/xfs/libxfs/xfs_refcount_btree.c
++++ b/fs/xfs/libxfs/xfs_refcount_btree.c
+@@ -31,9 +31,9 @@ xfs_refcountbt_dup_cursor(
+ 
+ STATIC void
+ xfs_refcountbt_set_root(
+-	struct xfs_btree_cur	*cur,
+-	union xfs_btree_ptr	*ptr,
+-	int			inc)
++	struct xfs_btree_cur		*cur,
++	const union xfs_btree_ptr	*ptr,
++	int				inc)
  {
- 	struct xfs_mount	*mp = bs->cur->bc_mp;
- 	struct xfs_rmap_irec	irec;
+ 	struct xfs_buf		*agbp = cur->bc_ag.agbp;
+ 	struct xfs_agf		*agf = agbp->b_addr;
+diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
+index 3c3cf4971bd7..4b62064d0baa 100644
+--- a/fs/xfs/libxfs/xfs_rmap_btree.c
++++ b/fs/xfs/libxfs/xfs_rmap_btree.c
+@@ -57,9 +57,9 @@ xfs_rmapbt_dup_cursor(
+ 
+ STATIC void
+ xfs_rmapbt_set_root(
+-	struct xfs_btree_cur	*cur,
+-	union xfs_btree_ptr	*ptr,
+-	int			inc)
++	struct xfs_btree_cur		*cur,
++	const union xfs_btree_ptr	*ptr,
++	int				inc)
+ {
+ 	struct xfs_buf		*agbp = cur->bc_ag.agbp;
+ 	struct xfs_agf		*agf = agbp->b_addr;
 
