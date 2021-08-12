@@ -2,173 +2,176 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0CECC4338F
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 00:59:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AF5FC4338F
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 05:15:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 94878601FD
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 00:59:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 073CA61038
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 05:15:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233166AbhHLA7b (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 11 Aug 2021 20:59:31 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36520 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233141AbhHLA7a (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 11 Aug 2021 20:59:30 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 86D3B60FE6;
-        Thu, 12 Aug 2021 00:59:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1628729946;
-        bh=Fx6B9y9rUdFzkb9RgI/twYjs6X+U71F6fJFdey5YjL4=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=dR9JiP4WnUP8Tn3GfCLimf4sBdpL3Tfb/nxO/j+QdFV+FA8JsexYib2lbTWLrNqOU
-         wSytVEFOSpNMDn8wCN9jXs9ueUjTCmpbz2vcnepb6zQWxcmCz/lEX52YZZgxamuhrO
-         Jqrxw/tcYkY5XmaSXH6+aFzkybuXoUC/2yqtpQZnvPt8fK5e1QaqxQJlLINnymPAMl
-         YL01e5l7s0F6P+tw3AdiSpeC5K1xmMws3w4APVTyoSwuGx+31F0fdx6cOruDRe5lBp
-         GPXRX55UMhYKuGQDlTpwXNTjX5cpQs4Z1lglQDxvJ1vFkg9wll9Pz+RUoBVtmIdT/K
-         /R2EgMoGHjIsA==
-Subject: [PATCH 2/2] xfs: add trace point for fs shutdown
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Date:   Wed, 11 Aug 2021 17:59:06 -0700
-Message-ID: <162872994625.1220748.12679533833955140333.stgit@magnolia>
-In-Reply-To: <162872993519.1220748.15526308019664551101.stgit@magnolia>
-References: <162872993519.1220748.15526308019664551101.stgit@magnolia>
-User-Agent: StGit/0.19
+        id S233769AbhHLFQF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 12 Aug 2021 01:16:05 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:29804 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231250AbhHLFQF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Aug 2021 01:16:05 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1628745340;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=16AuHIc1bmCXRfuNPgiSwAfN/GfDROQFYiJHXcAW1mg=;
+        b=ApGbORi+K5FRQTuf11mcyYy4JofPUAoVp2Hp7zEMeuEVhWeQ74pAwweJP7Bx7gN3OHpWYv
+        O598iroQDMTEfiLcbm6Vr9SkMdD8aR3TjzGF7EBO7vpUHlZTopfqRT0BtlJD6sYg7+5xuo
+        4mnf+TmTCdrr6xrwCGhuVqldDRiShpo=
+Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com
+ [209.85.214.198]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-490-Y6MWo_udNB2st0kZ_wHtqg-1; Thu, 12 Aug 2021 01:15:38 -0400
+X-MC-Unique: Y6MWo_udNB2st0kZ_wHtqg-1
+Received: by mail-pl1-f198.google.com with SMTP id k16-20020a170902ba90b029012c06f217cdso2951109pls.14
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Aug 2021 22:15:38 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id
+         :mail-followup-to:references:mime-version:content-disposition
+         :in-reply-to;
+        bh=16AuHIc1bmCXRfuNPgiSwAfN/GfDROQFYiJHXcAW1mg=;
+        b=KMfnGfc387q148NsxOE6pb6+0fnB21jxa8oJUeSdMwPsTtV68SRgh+TGHmJAJJTd9z
+         XcjdeDPXDGSgLwFI7Ab1SEyXDd7zZyqFhwFF676Tnm82ZnYqkO5UnzcnqSl3BkQDNlje
+         yy8xLUiQDy4orkegLpFBvLel+/fnchubf42/NedxKv+eqO+ze+9mvyZ3MncIwnmquTkU
+         swG2OfepU+DBOyyjyDTxSD4nK/8H+TkeB4FwsqW7S45uEfE1W9yRLkOD3bqeWx3hyL3k
+         QOsyfXSDDwS23CNWdATRlSJq4hvrjJENH66/0uF4bu0NtLXyn0eZIoYzzxcjnB5djIB1
+         eU9Q==
+X-Gm-Message-State: AOAM532lVig+7oMxjNsWuTlQiLFAV9bIxpYzWowibs0ZxFJYEThyzub6
+        bVbvY8l9P82FwKurJ66nO+f8ix14EqY0mUS29UGWlYfBKppLXMqFjto0utecVFJ+sgr5WbOD1SG
+        TmjZeAZ2Mfe7za+h1L/Rs
+X-Received: by 2002:a17:90a:7848:: with SMTP id y8mr2374957pjl.223.1628745337702;
+        Wed, 11 Aug 2021 22:15:37 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJwnKlbDDTcsbKGAYT1CJ31uy3bBooP2Q5c4Bdmf7TjKWiQThJ+t7g4TwKfD7k+UJcJp//WwRA==
+X-Received: by 2002:a17:90a:7848:: with SMTP id y8mr2374934pjl.223.1628745337444;
+        Wed, 11 Aug 2021 22:15:37 -0700 (PDT)
+Received: from fedora ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id l11sm1479689pfd.187.2021.08.11.22.15.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 11 Aug 2021 22:15:36 -0700 (PDT)
+Date:   Thu, 12 Aug 2021 13:34:52 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org, guan@eryu.me
+Subject: Re: [PATCH 1/3] generic: test xattr operations only
+Message-ID: <20210812053452.7bz2qgnuhhgj7gl3@fedora>
+Mail-Followup-To: "Darrick J. Wong" <djwong@kernel.org>, guaneryu@gmail.com,
+        linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
+References: <162743101932.3428896.8510279402246446036.stgit@magnolia>
+ <162743102476.3428896.4543035331031604848.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <162743102476.3428896.4543035331031604848.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Jul 27, 2021 at 05:10:24PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Exercise extended attribute operations.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  tests/generic/724     |   57 +++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/724.out |    2 ++
+>  2 files changed, 59 insertions(+)
+>  create mode 100755 tests/generic/724
+>  create mode 100644 tests/generic/724.out
+> 
+> 
+> diff --git a/tests/generic/724 b/tests/generic/724
+> new file mode 100755
+> index 00000000..b19f8f73
+> --- /dev/null
+> +++ b/tests/generic/724
+> @@ -0,0 +1,57 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2021 Oracle, Inc.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 724
+> +#
+> +# Run an extended attributes fsstress run with multiple threads to shake out
+> +# bugs in the xattr code.
+> +#
+> +. ./common/preamble
+> +_begin_fstest soak attr long_rw stress
 
-Add a tracepoint for fs shutdowns so we can capture that in ftrace
-output.
+Should we add this test into 'auto' group too?
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/xfs_error.h |   12 ++++++++++++
- fs/xfs/xfs_fsops.c |    3 +++
- fs/xfs/xfs_mount.h |    6 ++++++
- fs/xfs/xfs_trace.c |    1 +
- fs/xfs/xfs_trace.h |   27 +++++++++++++++++++++++++++
- 5 files changed, 49 insertions(+)
+> +
+> +_cleanup()
+> +{
+> +	$KILLALL_PROG -9 fsstress > /dev/null 2>&1
 
+Can a "wait" command help more at here?
 
-diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
-index 1717b7508356..5735d5ea87ee 100644
---- a/fs/xfs/xfs_error.h
-+++ b/fs/xfs/xfs_error.h
-@@ -75,4 +75,16 @@ extern int xfs_errortag_clearall(struct xfs_mount *mp);
- #define		XFS_PTAG_FSBLOCK_ZERO		0x00000080
- #define		XFS_PTAG_VERIFIER_ERROR		0x00000100
- 
-+#define XFS_PTAG_STRINGS \
-+	{ XFS_NO_PTAG,			"none" }, \
-+	{ XFS_PTAG_IFLUSH,		"iflush" }, \
-+	{ XFS_PTAG_LOGRES,		"logres" }, \
-+	{ XFS_PTAG_AILDELETE,		"aildelete" }, \
-+	{ XFS_PTAG_ERROR_REPORT	,	"error_report" }, \
-+	{ XFS_PTAG_SHUTDOWN_CORRUPT,	"corrupt" }, \
-+	{ XFS_PTAG_SHUTDOWN_IOERROR,	"ioerror" }, \
-+	{ XFS_PTAG_SHUTDOWN_LOGERROR,	"logerror" }, \
-+	{ XFS_PTAG_FSBLOCK_ZERO,	"fsb_zero" }, \
-+	{ XFS_PTAG_VERIFIER_ERROR,	"verifier" }
-+
- #endif	/* __XFS_ERROR_H__ */
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 7a2f4feacc35..0ef0aad7ddc9 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -19,6 +19,7 @@
- #include "xfs_log.h"
- #include "xfs_ag.h"
- #include "xfs_ag_resv.h"
-+#include "xfs_trace.h"
- 
- /*
-  * Write new AG headers to disk. Non-transactional, but need to be
-@@ -551,6 +552,8 @@ xfs_do_force_shutdown(
- 		why = "Metadata I/O Error";
- 	}
- 
-+	trace_xfs_force_shutdown(mp, tag, flags, fname, lnnum);
-+
- 	xfs_alert_tag(mp, tag,
- "%s (0x%x) detected at %pS (%s:%d).  Shutting down filesystem.",
- 			why, flags, __return_address, fname, lnnum);
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 2266c6a668cf..57f2ea398832 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -331,6 +331,12 @@ void xfs_do_force_shutdown(struct xfs_mount *mp, int flags, char *fname,
- #define SHUTDOWN_FORCE_UMOUNT	0x0004	/* shutdown from a forced unmount */
- #define SHUTDOWN_CORRUPT_INCORE	0x0008	/* corrupt in-memory data structures */
- 
-+#define XFS_SHUTDOWN_STRINGS \
-+	{ SHUTDOWN_META_IO_ERROR,	"metadata_io" }, \
-+	{ SHUTDOWN_LOG_IO_ERROR,	"log_io" }, \
-+	{ SHUTDOWN_FORCE_UMOUNT,	"force_umount" }, \
-+	{ SHUTDOWN_CORRUPT_INCORE,	"corruption" }
-+
- /*
-  * Flags for xfs_mountfs
-  */
-diff --git a/fs/xfs/xfs_trace.c b/fs/xfs/xfs_trace.c
-index 4c86afad1617..d269ef57ff01 100644
---- a/fs/xfs/xfs_trace.c
-+++ b/fs/xfs/xfs_trace.c
-@@ -33,6 +33,7 @@
- #include "xfs_icache.h"
- #include "xfs_ag.h"
- #include "xfs_ag_resv.h"
-+#include "xfs_error.h"
- 
- /*
-  * We include this last to have the helpers above available for the trace
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 70c142f6aeb2..84199e29845d 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -4096,6 +4096,33 @@ DEFINE_DAS_STATE_EVENT(xfs_attr_set_iter_return);
- DEFINE_DAS_STATE_EVENT(xfs_attr_node_addname_return);
- DEFINE_DAS_STATE_EVENT(xfs_attr_remove_iter_return);
- DEFINE_DAS_STATE_EVENT(xfs_attr_rmtval_remove_return);
-+
-+TRACE_EVENT(xfs_force_shutdown,
-+	TP_PROTO(struct xfs_mount *mp, int ptag, int flags, const char *fname,
-+		 int line_num),
-+	TP_ARGS(mp, ptag, flags, fname, line_num),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(int, ptag)
-+		__field(int, flags)
-+		__string(fname, fname)
-+		__field(int, line_num)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->ptag = ptag;
-+		__entry->flags = flags;
-+		__assign_str(fname, fname);
-+		__entry->line_num = line_num;
-+	),
-+	TP_printk("dev %d:%d tag %s flags %s file %s line_num %d",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		__print_flags(__entry->ptag, "|", XFS_PTAG_STRINGS),
-+		__print_flags(__entry->flags, "|", XFS_SHUTDOWN_STRINGS),
-+		__get_str(fname),
-+		__entry->line_num)
-+);
-+
- #endif /* _TRACE_XFS_H */
- 
- #undef TRACE_INCLUDE_PATH
+Others looks good to me.
+
+Thanks,
+Zorro
+
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +# Modify as appropriate.
+> +_supported_fs generic
+> +
+> +_require_scratch
+> +_require_command "$KILLALL_PROG" "killall"
+> +
+> +echo "Silence is golden."
+> +
+> +_scratch_mkfs > $seqres.full 2>&1
+> +_scratch_mount >> $seqres.full 2>&1
+> +
+> +nr_cpus=$((LOAD_FACTOR * 4))
+> +nr_ops=$((70000 * nr_cpus * TIME_FACTOR))
+> +
+> +args=('-z' '-S' 'c')
+> +
+> +# Do some directory tree modifications, but the bulk of this is geared towards
+> +# exercising the xattr code, especially attr_set which can do up to 10k values.
+> +for verb in unlink rmdir; do
+> +	args+=('-f' "${verb}=1")
+> +done
+> +for verb in creat mkdir; do
+> +	args+=('-f' "${verb}=2")
+> +done
+> +for verb in getfattr listfattr; do
+> +	args+=('-f' "${verb}=3")
+> +done
+> +for verb in attr_remove removefattr; do
+> +	args+=('-f' "${verb}=4")
+> +done
+> +args+=('-f' "setfattr=20")
+> +args+=('-f' "attr_set=60")	# sets larger xattrs
+> +
+> +$FSSTRESS_PROG "${args[@]}" $FSSTRESS_AVOID -d $SCRATCH_MNT -n $nr_ops -p $nr_cpus >> $seqres.full
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/generic/724.out b/tests/generic/724.out
+> new file mode 100644
+> index 00000000..164cfffb
+> --- /dev/null
+> +++ b/tests/generic/724.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 724
+> +Silence is golden.
+> 
 
