@@ -6,21 +6,21 @@ X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC012C4338F
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 06:49:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D1CAC4338F
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 06:50:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AE2D560EB9
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 06:49:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 512C260EB9
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 06:50:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234596AbhHLGtn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 12 Aug 2021 02:49:43 -0400
-Received: from verein.lst.de ([213.95.11.211]:43083 "EHLO verein.lst.de"
+        id S234652AbhHLGu5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 12 Aug 2021 02:50:57 -0400
+Received: from verein.lst.de ([213.95.11.211]:43099 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233567AbhHLGtm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 12 Aug 2021 02:49:42 -0400
+        id S232459AbhHLGu5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 12 Aug 2021 02:50:57 -0400
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id 39FE567373; Thu, 12 Aug 2021 08:49:15 +0200 (CEST)
-Date:   Thu, 12 Aug 2021 08:49:14 +0200
+        id 53CFE68AFE; Thu, 12 Aug 2021 08:50:30 +0200 (CEST)
+Date:   Thu, 12 Aug 2021 08:50:29 +0200
 From:   Christoph Hellwig <hch@lst.de>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     Christoph Hellwig <hch@lst.de>,
@@ -31,32 +31,23 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-btrfs@vger.kernel.org, nvdimm@lists.linux.dev,
         cluster-devel@redhat.com
-Subject: Re: [PATCH 11/30] iomap: add the new iomap_iter model
-Message-ID: <20210812064914.GA27145@lst.de>
-References: <20210809061244.1196573-1-hch@lst.de> <20210809061244.1196573-12-hch@lst.de> <20210811003118.GT3601466@magnolia> <20210811053856.GA1934@lst.de> <20210811191708.GF3601443@magnolia>
+Subject: Re: [PATCH v2.1 19/30] iomap: switch iomap_bmap to use iomap_iter
+Message-ID: <20210812065029.GB27145@lst.de>
+References: <20210809061244.1196573-1-hch@lst.de> <20210809061244.1196573-20-hch@lst.de> <20210811191800.GH3601443@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210811191708.GF3601443@magnolia>
+In-Reply-To: <20210811191800.GH3601443@magnolia>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 11, 2021 at 12:17:08PM -0700, Darrick J. Wong wrote:
-> > iter.c is also my preference, but in the end I don't care too much.
-> 
-> Ok.  My plan for this is to change this patch to add the new iter code
-> to apply.c, and change patch 24 to remove iomap_apply.  I'll add a patch
-> on the end to rename apply.c to iter.c, which will avoid breaking the
-> history.
+On Wed, Aug 11, 2021 at 12:18:00PM -0700, Darrick J. Wong wrote:
+> +	while ((ret = iomap_iter(&iter, ops)) > 0) {
+> +		if (iter.iomap.type == IOMAP_MAPPED)
+> +			bno = iomap_sector(&iter.iomap, iter.pos) >> blkshift;
+> +		/* leave iter.processed unset to abort loop */
+> +	}
 
-What history?  There is no shared code, so no shared history and.
-
-> 
-> I'll send the updated patches as replies to this series to avoid
-> spamming the list, since I also have a patchset of bugfixes to send out
-> and don't want to overwhelm everyone.
-
-Just as a clear statement:  I think this dance is obsfucation and doesn't
-help in any way.  But if that's what it takes..
+This looks ok, thanks.
