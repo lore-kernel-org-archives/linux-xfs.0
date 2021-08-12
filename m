@@ -2,198 +2,171 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A047C4320A
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 06:34:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A00DC4338F
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 06:42:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5DFAC60FC4
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 06:34:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2752C60FED
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 06:42:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234226AbhHLGeq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 12 Aug 2021 02:34:46 -0400
-Received: from verein.lst.de ([213.95.11.211]:43060 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229956AbhHLGep (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 12 Aug 2021 02:34:45 -0400
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id CF00D67373; Thu, 12 Aug 2021 08:34:17 +0200 (CEST)
-Date:   Thu, 12 Aug 2021 08:34:17 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     Alex Sierra <alex.sierra@amd.com>
-Cc:     akpm@linux-foundation.org, Felix.Kuehling@amd.com,
-        linux-mm@kvack.org, rcampbell@nvidia.com,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        hch@lst.de, jgg@nvidia.com, jglisse@redhat.com
-Subject: Re: [PATCH v5 00/13] Support DEVICE_GENERIC memory in migrate_vma_*
-Message-ID: <20210812063417.GA26938@lst.de>
-References: <20210812063100.31997-1-alex.sierra@amd.com>
-MIME-Version: 1.0
+        id S234307AbhHLGnE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 12 Aug 2021 02:43:04 -0400
+Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:34734 "EHLO
+        mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231253AbhHLGnC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Aug 2021 02:43:02 -0400
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 17C6b6bE029171;
+        Thu, 12 Aug 2021 06:42:37 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : content-type : mime-version; s=corp-2021-07-09;
+ bh=6W5wlEfher5+3EbaI9iQcZ3se4axIwAf0qiX2Wvrsto=;
+ b=J5q5EXt+yxm65Bi745FIaNni80chC54FjFFRe7LgoxX6BtOg6TxZ2mrdpaY/xtT2FNYj
+ uvRw7P0D7BmYsaTrknx2O32SgdbnD5nKR2D+zHHPMgz693lINJfNpOJg+RxRsljOu8No
+ hPJvvxVRbT+uibmUnMTJktscSn4fP13839EHBGmAlRbJeRZaqDLgucTUsaDGT2HbCwuu
+ pMGK6BiSoN07t8fjD8SuEh20QX1AoZQhKkcvYS2HFFNxbAf+rRArX3Xq8/t7W7XdKHqe
+ jJvNV8Eqrxe4v3wrga1CQ9suSdN+S3OQiWT8tHrVhXfN3hZgiLGP65OlPHAhH0Ss41N8 jQ== 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : content-type : mime-version; s=corp-2020-01-29;
+ bh=6W5wlEfher5+3EbaI9iQcZ3se4axIwAf0qiX2Wvrsto=;
+ b=eSeOj6m4YNKTp7L54G7uUT1NfslU28uOliGBgOCGIdEf+OG0/7hT4GiJek+CtaKyKsgo
+ mp40sUThuAFIDsBcRi3NYFVtN9WTxZZWlltWtc78t935gqfdsw1PkXnqGV9rCa5Zx0Wm
+ AJQ3lVoRmCFDG6vPRQF+trS9Qnk+ZmTDBx9UOA5our25d7qCJl05bzFKV6N4cdB5kmsr
+ WVx9W9aQD0h/ISgH8pUOnMSte0wZpILvJQSKPdhPw6zd55SAQdCgS5xtPSRWOJTVBHXV
+ zBDlJUB8jZBTlfsliQyMI3A1VZZ6md4T0wWNxb0x8LSpFF8c1A0m+fcTQQFHEhy6BfIM WQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3acd64a793-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 12 Aug 2021 06:42:36 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 17C6ea81104691;
+        Thu, 12 Aug 2021 06:42:35 GMT
+Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2168.outbound.protection.outlook.com [104.47.55.168])
+        by aserp3030.oracle.com with ESMTP id 3abx3x9sh7-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 12 Aug 2021 06:42:35 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=LghbXmUeUK5Ly0qSzJN0y9XoRRTbf8FkTrf283V+534Ei4EzunulMneVsRwgGYCjUzhDCBBlqllRax4ulJBmOMBVtbdIYhhglqAyFEojXkTY7hZ2vWUVnBlS4UDG8SZlpu4fkw3Ty+HeIzNGbqPMd9m0GOViqkE8y4RVFD4y9BbRSDVKytQtxGpEfs6ctx3PTsrHowuidhqqfHCjn0CYlvqw7SGoQYeZH1xgUC9GH95yo9+IkmsMyAbOv4UjzIRpTgHWzl43Ckg9+44HxuW8mzqeAXmavh7hK9Tgd5aavDDP4zYH7MSczP95r5/H7ZOKgohR6HDW3ds+uBOS3+qDnA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=6W5wlEfher5+3EbaI9iQcZ3se4axIwAf0qiX2Wvrsto=;
+ b=hi6oZ2YUhKJ2CROJo+gura9G4apPXbu20rjud/m7H8l6qZLhsbVoMWksNVi49LF/GRENstiMovhpEib+s3vVTZOCw44nrEMo1MdoL+c+d21G/eLNu9CaUlo80dMyP+gUqA+BgnIuOkj6/Rbmkm/Ate+IE3zhfeCMK8Mf3GQk/oTN1TwEVNNw4qqaf7lsfqnV7rZVzxh5VhUR2UQcE9m3CIpw6ZZ9jtikjPDsjQMZidpJIN8TWlim3x5kwyOabbHdAXSR2rSR+Fs8Tf7AlEyT2EQk1K/Z8jhNXs07gB6fYPZGmRDtqrpQ+G5x1HP7Q9AgHyYxB4qt5aPHIaNrycdjQg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=6W5wlEfher5+3EbaI9iQcZ3se4axIwAf0qiX2Wvrsto=;
+ b=SJDZr+RT01m2posXJEPceK4T9M3wnYdE3vGeicDYiT0vZYkXZq/kH9i8EFehXFPXLduEElHxXSsLLrOSAsZSzTji65kAxZPaLcdxiltETNhHWJgbIWFLYf7WJPpjCFp81GSrNc0xUzpgc3muSEc2GZpADyaTAn6dwt+Qy1+UmdI=
+Authentication-Results: kernel.org; dkim=none (message not signed)
+ header.d=none;kernel.org; dmarc=none action=none header.from=oracle.com;
+Received: from MWHPR1001MB2365.namprd10.prod.outlook.com
+ (2603:10b6:301:2d::28) by CO1PR10MB4500.namprd10.prod.outlook.com
+ (2603:10b6:303:98::18) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4415.14; Thu, 12 Aug
+ 2021 06:42:34 +0000
+Received: from MWHPR1001MB2365.namprd10.prod.outlook.com
+ ([fe80::5820:e42b:73d7:4268]) by MWHPR1001MB2365.namprd10.prod.outlook.com
+ ([fe80::5820:e42b:73d7:4268%7]) with mapi id 15.20.4415.016; Thu, 12 Aug 2021
+ 06:42:33 +0000
+Date:   Thu, 12 Aug 2021 09:42:22 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     djwong@kernel.org
+Cc:     linux-xfs@vger.kernel.org
+Subject: [bug report] xfs: pass the goal of the incore inode walk to
+ xfs_inode_walk()
+Message-ID: <20210812064222.GA20009@kili>
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210812063100.31997-1-alex.sierra@amd.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-ClientProxiedBy: ZR0P278CA0077.CHEP278.PROD.OUTLOOK.COM
+ (2603:10a6:910:22::10) To MWHPR1001MB2365.namprd10.prod.outlook.com
+ (2603:10b6:301:2d::28)
+MIME-Version: 1.0
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from kili (62.8.83.99) by ZR0P278CA0077.CHEP278.PROD.OUTLOOK.COM (2603:10a6:910:22::10) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4415.15 via Frontend Transport; Thu, 12 Aug 2021 06:42:31 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: aa6f2cb9-4def-481c-ae3a-08d95d5c5d55
+X-MS-TrafficTypeDiagnostic: CO1PR10MB4500:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <CO1PR10MB45000BC5135DB10E6C2A6E1A8EF99@CO1PR10MB4500.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: uw501X1OoY+wrWx9s7Zb7rdbBxD+ltgLV818WVgBpxRE3zjwYlD1czm4tVnqPiXL/ZtOOncsoc+6R5dCrnBUvG3Ap4N0fAAr2w2We6LpMPTke2r4tZIde6e3ut7St2dA214n84u+IxaqYfuH1SGuewi0M3r1SdO/l6JP5P9a59MrCxxlaLkEpb4n5lA5zer3evRpIH1IpfqL2uvnyE04D88Fm8htVOi9/8WTkdZHowGkRGV+i+IzU/ldHCUNzQjmxEYFCjvCHOFiEXDUH8pLcVFvGRmvUPzlcIUwRpOju2PS+Ie/H63nN1UApjuz/Ei8TP1fs2yEFdzX7YSch8qxY9mdcVinewTMfFJ2EEHRAuXkOwYA+COWzPQgTaO3PkvDsnHxm6oXJPx51EisJxSNnNMTzABMlPDnBDCsUjcOimF+8ui3YPcriaJ5n6zN7DwMES1LKTYPpS94eycvzC5BkJ5CSc/dQzxTpep4Mrmr5aPII5t4gQ2bHotNpDvy834bUA0JJ/XIIJIRv+05mm++TBvqCU+Pd/YWU5nhK3axlEmVSa0StGizfxDhFfnV60WInlpIX/miPp5CybqJGU0u4GvbL7C9juseOWlG6YIo1RGUEKMS82zfdPOMNK4d1um/6DiSLsfR01lKE8uNNCnaXqBUfT/KR3P+4z3nmVugIaEGM1+Kc7sa1gxh+QKa7CZxbWRV1A/tGOo5eccRtlRYkw==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MWHPR1001MB2365.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(346002)(136003)(39860400002)(376002)(396003)(366004)(6666004)(956004)(38100700002)(38350700002)(86362001)(9686003)(5660300002)(8936002)(478600001)(33716001)(2906002)(186003)(83380400001)(55016002)(33656002)(66946007)(4744005)(6916009)(52116002)(66556008)(9576002)(4326008)(8676002)(66476007)(6496006)(44832011)(316002)(26005)(1076003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?n9b5JhXgrtLdPppLPcRdIAlukUfzDp6PAZwSpCkgnj0WfnteCMdVLH/HswfF?=
+ =?us-ascii?Q?Nm59Duw2M20U53XjikuC19jnFG9u1WL8iCfSAIEhtbi7vdubcTkHrHTzPbuS?=
+ =?us-ascii?Q?vxx9fGkvBXiQhMcmf5FZoid4Vkqpm4szW3+WaFM1w+wluLObiA24LP2+LGPc?=
+ =?us-ascii?Q?2n7kA3cGVOX3r8u9QlFZX0GusHogINVWzkRU43z+KsJaD7mw/S/Nif+Sw8KR?=
+ =?us-ascii?Q?yLe7IutMfcJYBGRjyF+uWUlrz9pcYti8BNPcdffLgz2fg82Kx1EpMyBeX691?=
+ =?us-ascii?Q?ninRHKnAvCMBaF+A2TtXp9T9CiJGXDMN3dfQBLou6+7uMiFIDFzFqYTvEowc?=
+ =?us-ascii?Q?D49O6chLjBPmKGFloT+UzXehMEfH/A9oJFe0scV9mo0AjCS7DS31x7utp6XE?=
+ =?us-ascii?Q?2oHtWbws/TdPBx6g04pOERDKtIRlwe5rrqvlIqUwYwGAqrnaAuUAaCj/rXsn?=
+ =?us-ascii?Q?psPhsKwmFGS5sTEK2d2iELetEvssoIfKboQ8JUenhtITH5NfLbCeFBckt1Mc?=
+ =?us-ascii?Q?57adwHKTo3wCjcPWAll9QxoefuRyvWBRKqQHGIzJKOMbsq2P2LAAc+I5jeAO?=
+ =?us-ascii?Q?RlXSYIqeX4C06uJjhV2P3KNu98xglX8zY/We4bD8QJOjLb9tE8ddglOogadi?=
+ =?us-ascii?Q?R3cc+MFxViTQTO/7Qow+earsVJsTJrVKQQmmSR/Xl+VBvAlOioe5q6o4EOew?=
+ =?us-ascii?Q?rP6hWxxgy2XEwHPT2sVCEgWokxg7SaZnskarK/kkQAUP0txPy4iXqwvnl6ny?=
+ =?us-ascii?Q?b1AZbuGYimEHr+2i7xM1DxhPBTheOlgH2AjiM9fyMA67hHCDZJNKZVTcfCdc?=
+ =?us-ascii?Q?9d65Y2etr0W2HMENvz/xkPW7nsMQmPMnSe7sZISyVrFMzR3zf1WiSxs2CWNX?=
+ =?us-ascii?Q?b27x6BpCFU71dMjK3vhJgkOeB2mCM3/kE8nbwLxk4PZNIFXM3AkTr3EsG3lg?=
+ =?us-ascii?Q?H06ChD+yZoXySwx621jkNoBrOhzkcWTiWr57S1Uk1fkH21COIsBQvpSDb8GZ?=
+ =?us-ascii?Q?G7O0heB9PpcOqxnt+L5Sao6BVCUEo1nah2ZuZ3EBZV4euboVV4LF/wT53Qyy?=
+ =?us-ascii?Q?mRFfzN9c7Y5lbDBPOCG/UsOdeafuIYctd3kaC7ucSKSQS1dcycTvtZ12ePd8?=
+ =?us-ascii?Q?lbOwAQkaSrN2yiPnIMcEbkKJWEMzeIGLHcU5JGzThxT8KW5T8fXcV3bwB9MB?=
+ =?us-ascii?Q?vf2TN0r46zHArtl3Pnm9u/pl9wVbV3ZboHyjDBa2lhlqhIZKCKE2ej8pvEJo?=
+ =?us-ascii?Q?Qx+LHfc1fsitKnzdixG10sMLx7K0GE6jXej98uphw5SiA+W3u/h3cNoHLNTd?=
+ =?us-ascii?Q?BIT1ZVd8CKpihiM9gpioTW6p?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: aa6f2cb9-4def-481c-ae3a-08d95d5c5d55
+X-MS-Exchange-CrossTenant-AuthSource: MWHPR1001MB2365.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Aug 2021 06:42:33.7104
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 8coS8DpBK0S+sI4UaQ71qbxjxMvDx9AaaXZW4Y7MPTQpQL32BK79A+K8X0cwDFUfpuL5HpktWyhhYGeHiugjYDJqT0sQWjjxV5xZY1fbt+M=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO1PR10MB4500
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=10073 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxscore=0 bulkscore=0
+ spamscore=0 phishscore=0 mlxlogscore=713 suspectscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2107140000
+ definitions=main-2108120042
+X-Proofpoint-GUID: 3QFi5J2uyXyFci_zBKIcwfD2Z154LuuD
+X-Proofpoint-ORIG-GUID: 3QFi5J2uyXyFci_zBKIcwfD2Z154LuuD
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Do you have a pointer to a git branch with this series and all dependencies
-to ease testing?
+Hello Darrick J. Wong,
 
-On Thu, Aug 12, 2021 at 01:30:47AM -0500, Alex Sierra wrote:
-> v1:
-> AMD is building a system architecture for the Frontier supercomputer with a
-> coherent interconnect between CPUs and GPUs. This hardware architecture allows
-> the CPUs to coherently access GPU device memory. We have hardware in our labs
-> and we are working with our partner HPE on the BIOS, firmware and software
-> for delivery to the DOE.
-> 
-> The system BIOS advertises the GPU device memory (aka VRAM) as SPM
-> (special purpose memory) in the UEFI system address map. The amdgpu driver looks
-> it up with lookup_resource and registers it with devmap as MEMORY_DEVICE_GENERIC
-> using devm_memremap_pages.
-> 
-> Now we're trying to migrate data to and from that memory using the migrate_vma_*
-> helpers so we can support page-based migration in our unified memory allocations,
-> while also supporting CPU access to those pages.
-> 
-> This patch series makes a few changes to make MEMORY_DEVICE_GENERIC pages behave
-> correctly in the migrate_vma_* helpers. We are looking for feedback about this
-> approach. If we're close, what's needed to make our patches acceptable upstream?
-> If we're not close, any suggestions how else to achieve what we are trying to do
-> (i.e. page migration and coherent CPU access to VRAM)?
-> 
-> This work is based on HMM and our SVM memory manager that was recently upstreamed
-> to Dave Airlie's drm-next branch
-> https://cgit.freedesktop.org/drm/drm/log/?h=drm-next
-> On top of that we did some rework of our VRAM management for migrations to remove
-> some incorrect assumptions, allow partially successful migrations and GPU memory
-> mappings that mix pages in VRAM and system memory.
-> https://lore.kernel.org/dri-devel/20210527205606.2660-6-Felix.Kuehling@amd.com/T/#r996356015e295780eb50453e7dbd5d0d68b47cbc
-> 
-> v2:
-> This patch series version has merged "[RFC PATCH v3 0/2]
-> mm: remove extra ZONE_DEVICE struct page refcount" patch series made by
-> Ralph Campbell. It also applies at the top of these series, our changes
-> to support device generic type in migration_vma helpers.
-> This has been tested in systems with device memory that has coherent
-> access by CPU.
-> 
-> Also addresses the following feedback made in v1:
-> - Isolate in one patch kernel/resource.c modification, based
-> on Christoph's feedback.
-> - Add helpers check for generic and private type to avoid
-> duplicated long lines.
-> 
-> v3:
-> - Include cover letter from v1.
-> - Rename dax_layout_is_idle_page func to dax_page_unused in patch
-> ext4/xfs: add page refcount helper.
-> 
-> v4:
-> - Add support for zone device generic type in lib/test_hmm and
-> tool/testing/selftest/vm/hmm-tests.
-> - Add missing page refcount helper to fuse/dax.c. This was included in
-> one of Ralph Campbell's patches.
-> 
-> v5:
-> - Cosmetic changes on patches 3, 5 and 13
-> - Bug founded at test_hmm, remove devmem->pagemap.type = MEMORY_DEVICE_PRIVATE
-> at dmirror_allocate_chunk that was forcing to configure pagemap.type to
-> MEMORY_DEVICE_PRIVATE.
-> - A bug was found while running one of the xfstest (generic/413) used to
-> validate fs_dax device type. This was first introduced by patch: "mm: remove
-> extra ZONE_DEVICE struct page refcount" whic is part of these patch series.
-> The bug was showed as WARNING message at try_grab_page function call, due to
-> a page refcounter equal to zero. Part of "mm: remove extra ZONE_DEVICE struct
-> page refcount" changes, was to initialize page refcounter to zero. Therefore,
-> a special condition was added to try_grab_page on this v5, were it checks for
-> device zone pages too. It is included in the same patch.
-> 
-> This is how mm changes from these patch series have been validated:
-> - hmm-tests were run using device private and device generic types. This last,
-> just added in these patch series. efi_fake_mem was used to mimic SPM memory
-> for device generic.
-> - xfstests tool was used to validate fs-dax device type and page refcounter
-> changes. DAX configuration was used along with emulated Persisten Memory set as
-> memmap=4G!4G memmap=4G!9G. xfstests were run from ext4 and generic lists. Some
-> of them, did not run due to limitations in configuration. Ex. test not
-> supporting specific file system or DAX mode.
-> Only three tests failed, generic/356/357 and ext4/049. However, these failures
-> were consistent before and after applying these patch series.
-> xfstest configuration:
-> TEST_DEV=/dev/pmem0
-> TEST_DIR=/mnt/ram0
-> SCRATCH_DEV=/dev/pmem1
-> SCRATCH_MNT=/mnt/ram1
-> TEST_FS_MOUNT_OPTS="-o dax"
-> EXT_MOUNT_OPTIONS="-o dax"
-> MKFS_OPTIONS="-b4096"
-> xfstest passed list:
-> Ext4:
-> 001,003,005,021,022,023,025,026,030,031,032,036,037,038,042,043,044,271,306
-> Generic:
-> 1,2,3,4,5,6,7,8,9,11,12,13,14,15,16,20,21,22,23,24,25,28,29,30,31,32,33,35,37,
-> 50,52,53,58,60,61,62,63,64,67,69,70,71,75,76,78,79,80,82,84,86,87,88,91,92,94,
-> 96,97,98,99,103,105,112,113,114,117,120,124,126,129,130,131,135,141,169,184,
-> 198,207,210,211,212,213,214,215,221,223,225,228,236,237,240,244,245,246,247,
-> 248,249,255,257,258,263,277,286,294,306,307,308,309,313,315,316,318,319,337,
-> 346,360,361,371,375,377,379,380,383,384,385,386,389,391,392,393,394,400,401,
-> 403,404,406,409,410,411,412,413,417,420,422,423,424,425,426,427,428
-> 
-> Patches 1-2 Rebased Ralph Campbell's ZONE_DEVICE page refcounting patches.
-> 
-> Patches 4-5 are for context to show how we are looking up the SPM 
-> memory and registering it with devmap.
-> 
-> Patches 3,6-8 are the changes we are trying to upstream or rework to 
-> make them acceptable upstream.
-> 
-> Patches 9-13 add ZONE_DEVICE Generic type support into the hmm test.
-> 
-> Alex Sierra (11):
->   kernel: resource: lookup_resource as exported symbol
->   drm/amdkfd: add SPM support for SVM
->   drm/amdkfd: generic type as sys mem on migration to ram
->   include/linux/mm.h: helpers to check zone device generic type
->   mm: add generic type support to migrate_vma helpers
->   mm: call pgmap->ops->page_free for DEVICE_GENERIC pages
->   lib: test_hmm add ioctl to get zone device type
->   lib: test_hmm add module param for zone device type
->   lib: add support for device generic type in test_hmm
->   tools: update hmm-test to support device generic type
->   tools: update test_hmm script to support SP config
-> 
-> Ralph Campbell (2):
->   ext4/xfs: add page refcount helper
->   mm: remove extra ZONE_DEVICE struct page refcount
-> 
->  arch/powerpc/kvm/book3s_hv_uvmem.c       |   2 +-
->  drivers/gpu/drm/amd/amdkfd/kfd_migrate.c |  22 ++-
->  drivers/gpu/drm/nouveau/nouveau_dmem.c   |   2 +-
->  fs/dax.c                                 |   8 +-
->  fs/ext4/inode.c                          |   5 +-
->  fs/fuse/dax.c                            |   4 +-
->  fs/xfs/xfs_file.c                        |   4 +-
->  include/linux/dax.h                      |  10 +
->  include/linux/memremap.h                 |   7 +-
->  include/linux/mm.h                       |  54 +-----
->  kernel/resource.c                        |   1 +
->  lib/test_hmm.c                           | 231 +++++++++++++++--------
->  lib/test_hmm_uapi.h                      |  16 ++
->  mm/internal.h                            |   8 +
->  mm/memremap.c                            |  69 ++-----
->  mm/migrate.c                             |  25 +--
->  mm/page_alloc.c                          |   3 +
->  mm/swap.c                                |  45 +----
->  tools/testing/selftests/vm/hmm-tests.c   | 142 ++++++++++++--
->  tools/testing/selftests/vm/test_hmm.sh   |  20 +-
->  20 files changed, 405 insertions(+), 273 deletions(-)
-> 
-> -- 
-> 2.32.0
----end quoted text---
+The patch c809d7e948a1: "xfs: pass the goal of the incore inode walk
+to xfs_inode_walk()" from Jun 1, 2021, leads to the following
+Smatch static checker warning:
+
+	fs/xfs/xfs_icache.c:52 xfs_icwalk_tag()
+	warn: unsigned 'goal' is never less than zero.
+
+fs/xfs/xfs_icache.c
+    49 static inline unsigned int
+    50 xfs_icwalk_tag(enum xfs_icwalk_goal goal)
+    51 {
+--> 52 	return goal < 0 ? XFS_ICWALK_NULL_TAG : goal;
+
+This enum will be unsigned in GCC, so "goal" can't be negative.  Plus
+we only pass 0-1 for goal (as far as Smatch can tell).
+
+    53 }
+
+regards,
+dan carpenter
