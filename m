@@ -7,229 +7,155 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DA21C4338F
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 17:07:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7AE2C4338F
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 17:14:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7F71F60E78
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 17:07:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B354360FC0
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 17:14:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234668AbhHLRIQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 12 Aug 2021 13:08:16 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40486 "EHLO mail.kernel.org"
+        id S235047AbhHLROi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 12 Aug 2021 13:14:38 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41542 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234570AbhHLRIM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 12 Aug 2021 13:08:12 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 9CA27610A4;
-        Thu, 12 Aug 2021 17:07:46 +0000 (UTC)
+        id S235003AbhHLROh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 12 Aug 2021 13:14:37 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 4F9E860FD7;
+        Thu, 12 Aug 2021 17:14:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1628788066;
-        bh=r9gVOP3McD7Jouul5dypOYBEXPk56djOIJ/FkLQeO74=;
-        h=Date:From:To:Subject:References:In-Reply-To:From;
-        b=tvNblqBLCwD3DfqXYqSUHEYw2LGeWiOh1joOk7OPYzRlcRlRx2rmfbtszR/TTlGiY
-         Nr1PDIoVGqMBr57C+vQ0Anhxhw1YbvqfZbTgGgT6CMWv7GXc0k6Kdew/iTLm3c3f5T
-         AmjHMgBNqGbsSpbTM/p/2SE80w99brkEBrBevejxG2LBsyTr4YkfqDrnMbdHSGUAV2
-         ugpWhqYlhoNvknPgH5z5p9RoxlLGcmGciuw1ZcPF9bKb2gZ7df58C0S+q4UmAnot2a
-         LfLVOJ0kDVssEmpasfN7XmBSLcll3J0Jbaxu1Owit3e/J5fR+kYpf+Zt5EtpXqnGD0
-         bIyOvn+15+x/w==
-Date:   Thu, 12 Aug 2021 10:07:46 -0700
+        s=k20201202; t=1628788452;
+        bh=xkYMXuAxrh3C5/YCsNDckEvOwgZ4MY85JaB3Lc3q8UY=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=MAVIP+fAJlDHTgL5AJUd/69j0lXWdiH/NZRo4pSLO4BKtUC/Qmo/2Kl+fzgs9Zr8k
+         skEbL9dm14OLyMLWJjXrYzJH+lNhtzLShlrYgIRJ8Zu7KSQZW0IJS4dTyw4vAt4wM9
+         4KogUFy8G3cc6eowI1CKgw/0JXrMomSU8KKWIw86ZJ2rjuQ+A2qDD+9bIzWmscV3Ut
+         Wjj3jMOc7u4i0Rt5LdK4WL036BD52Na8VVRl5m/SbpK76sEdnAHO9PsIzk5t0Bwlwj
+         ffGsKl8KGQzteLpGbylAxVXG5MSESBpy49N147m14/iTIVlbWAfV6H8OMv+Ifi3aJ6
+         aEivHiN6RyEOg==
+Date:   Thu, 12 Aug 2021 10:14:11 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org, guan@eryu.me
-Subject: Re: [PATCH 2/3] generic: test shutdowns of a nested filesystem
-Message-ID: <20210812170746.GQ3601443@magnolia>
-References: <162743101932.3428896.8510279402246446036.stgit@magnolia>
- <162743103024.3428896.8525632218517299015.stgit@magnolia>
- <20210812054421.gpeaoccgz26riwxz@fedora>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/3] xfs: remove the xfs_dinode_t typedef
+Message-ID: <20210812171411.GR3601443@magnolia>
+References: <20210812084343.27934-1-hch@lst.de>
+ <20210812084343.27934-2-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210812054421.gpeaoccgz26riwxz@fedora>
+In-Reply-To: <20210812084343.27934-2-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 12, 2021 at 01:44:21PM +0800, Zorro Lang wrote:
-> On Tue, Jul 27, 2021 at 05:10:30PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > generic/475, but we're running fsstress on a disk image inside the
-> > scratch filesystem
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  tests/generic/725     |  136 +++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/generic/725.out |    2 +
-> >  2 files changed, 138 insertions(+)
-> >  create mode 100755 tests/generic/725
-> >  create mode 100644 tests/generic/725.out
-> > 
-> > 
-> > diff --git a/tests/generic/725 b/tests/generic/725
-> > new file mode 100755
-> > index 00000000..f43bcb37
-> > --- /dev/null
-> > +++ b/tests/generic/725
-> > @@ -0,0 +1,136 @@
-> > +#! /bin/bash
-> > +# SPDX-License-Identifier: GPL-2.0
-> > +# Copyright (c) 2021 Oracle, Inc.  All Rights Reserved.
-> > +#
-> > +# FS QA Test No. 725
-> > +#
-> > +# Test nested log recovery with repeated (simulated) disk failures.  We kick
-> > +# off fsstress on a loopback filesystem mounted on the scratch fs, then switch
-> > +# out the underlying scratch device with dm-error to see what happens when the
-> > +# disk goes down.  Having taken down both fses in this manner, remount them and
-> > +# repeat.  This test simulates VM hosts crashing to try to shake out CoW bugs
-> > +# in writeback on the host that cause VM guests to fail to recover.
-> > +#
-> > +. ./common/preamble
-> > +_begin_fstest shutdown auto log metadata eio
-> > +
-> > +_cleanup()
-> > +{
-> > +	cd /
-> > +	$KILLALL_PROG -9 fsstress > /dev/null 2>&1
-> > +	wait
-> > +	if [ -n "$loopmnt" ]; then
-> > +		umount $loopmnt 2>/dev/null
-> > +		rm -r -f $loopmnt
-> > +	fi
-> > +	rm -f $tmp.*
-> > +	_dmerror_unmount
-> > +	_dmerror_cleanup
-> > +}
-> > +
-> > +# Import common functions.
-> > +. ./common/dmerror
-> > +. ./common/reflink
-> > +
-> > +# Modify as appropriate.
-> > +_supported_fs generic
-> > +
-> > +_require_scratch_reflink
-> > +_require_cp_reflink
-> > +_require_dm_target error
-> > +_require_command "$KILLALL_PROG" "killall"
-> > +
-> > +echo "Silence is golden."
-> > +
-> > +_scratch_mkfs >> $seqres.full 2>&1
-> > +_require_metadata_journaling $SCRATCH_DEV
-> > +_dmerror_init
-> > +_dmerror_mount
-> > +
-> > +# Create a fs image consuming 1/3 of the scratch fs
-> > +scratch_freesp_bytes=$(stat -f -c '%a * %S' $SCRATCH_MNT | bc)
-> > +loopimg_bytes=$((scratch_freesp_bytes / 3))
-> > +
-> > +loopimg=$SCRATCH_MNT/testfs
-> > +truncate -s $loopimg_bytes $loopimg
-> > +_mkfs_dev $loopimg
+On Thu, Aug 12, 2021 at 10:43:41AM +0200, Christoph Hellwig wrote:
+> Remove the few leftover instances of the xfs_dinode_t typedef.
 > 
-> I must say this's a nice test as generic/475, I'd like to have it ASAP :)
-> Just one question: if the FSTYP is nfs, cifs or virtiofs and so on ... [see below]
-> 
-> > +
-> > +loopmnt=$tmp.mount
-> > +mkdir -p $loopmnt
-> > +
-> > +scratch_aliveflag=$tmp.runsnap
-> > +snap_aliveflag=$tmp.snapping
-> > +
-> > +snap_loop_fs() {
-> > +	touch "$snap_aliveflag"
-> > +	while [ -e "$scratch_aliveflag" ]; do
-> > +		rm -f $loopimg.a
-> > +		_cp_reflink $loopimg $loopimg.a
-> > +		sleep 1
-> > +	done
-> > +	rm -f "$snap_aliveflag"
-> > +}
-> > +
-> > +fsstress=($FSSTRESS_PROG $FSSTRESS_AVOID -d "$loopmnt" -n 999999 -p "$((LOAD_FACTOR * 4))")
-> > +
-> > +for i in $(seq 1 $((25 * TIME_FACTOR)) ); do
-> > +	touch $scratch_aliveflag
-> > +	snap_loop_fs >> $seqres.full 2>&1 &
-> > +
-> > +	if ! _mount $loopimg $loopmnt -o loop; then
-> 
-> ... This test will fail directly at here
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-It won't, because this test doesn't run if SCRATCH_DEV isn't a block
-device.  _require_dm_target calls _require_block_device, which should
-prevent that, right?
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
+> ---
+>  fs/xfs/libxfs/xfs_format.h     |  4 ++--
+>  fs/xfs/libxfs/xfs_inode_buf.c  |  6 +++---
+>  fs/xfs/libxfs/xfs_inode_fork.c | 16 ++++++++--------
+>  fs/xfs/xfs_buf_item_recover.c  |  2 +-
+>  4 files changed, 14 insertions(+), 14 deletions(-)
 > 
-> Thanks,
-> Zorro
-> 
-> > +		rm -f $scratch_aliveflag
-> > +		_fail "loop mount failed"
-> > +		break
-> > +	fi
-> > +
-> > +	("${fsstress[@]}" >> $seqres.full &) > /dev/null 2>&1
-> > +
-> > +	# purposely include 0 second sleeps to test shutdown immediately after
-> > +	# recovery
-> > +	sleep $((RANDOM % (3 * TIME_FACTOR) ))
-> > +	rm -f $scratch_aliveflag
-> > +
-> > +	# This test aims to simulate sudden disk failure, which means that we
-> > +	# do not want to quiesce the filesystem or otherwise give it a chance
-> > +	# to flush its logs.  Therefore we want to call dmsetup with the
-> > +	# --nolockfs parameter; to make this happen we must call the load
-> > +	# error table helper *without* 'lockfs'.
-> > +	_dmerror_load_error_table
-> > +
-> > +	ps -e | grep fsstress > /dev/null 2>&1
-> > +	while [ $? -eq 0 ]; do
-> > +		$KILLALL_PROG -9 fsstress > /dev/null 2>&1
-> > +		wait > /dev/null 2>&1
-> > +		ps -e | grep fsstress > /dev/null 2>&1
-> > +	done
-> > +	for ((i = 0; i < 10; i++)); do
-> > +		test -e "$snap_aliveflag" || break
-> > +		sleep 1
-> > +	done
-> > +
-> > +	# Mount again to replay log after loading working table, so we have a
-> > +	# consistent XFS after test.
-> > +	$UMOUNT_PROG $loopmnt
-> > +	_dmerror_unmount || _fail "unmount failed"
-> > +	_dmerror_load_working_table
-> > +	if ! _dmerror_mount; then
-> > +		dmsetup table | tee -a /dev/ttyprintk
-> > +		lsblk | tee -a /dev/ttyprintk
-> > +		$XFS_METADUMP_PROG -a -g -o $DMERROR_DEV $seqres.dmfail.md
-> > +		_fail "mount failed"
-> > +	fi
-> > +done
-> > +
-> > +# Make sure the fs image file is ok
-> > +if [ -f "$loopimg" ]; then
-> > +	if _mount $loopimg $loopmnt -o loop; then
-> > +		$UMOUNT_PROG $loopmnt &> /dev/null
-> > +	else
-> > +		echo "final loop mount failed"
-> > +	fi
-> > +	_check_xfs_filesystem $loopimg none none
-> > +fi
-> > +
-> > +# success, all done
-> > +status=0
-> > +exit
-> > diff --git a/tests/generic/725.out b/tests/generic/725.out
-> > new file mode 100644
-> > index 00000000..ed73a9fc
-> > --- /dev/null
-> > +++ b/tests/generic/725.out
-> > @@ -0,0 +1,2 @@
-> > +QA output created by 725
-> > +Silence is golden.
-> > 
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index 5d8a129150d547..f601049b65f465 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -977,7 +977,7 @@ static inline time64_t xfs_bigtime_to_unix(uint64_t ondisk_seconds)
+>   * padding field for v3 inodes.
+>   */
+>  #define	XFS_DINODE_MAGIC		0x494e	/* 'IN' */
+> -typedef struct xfs_dinode {
+> +struct xfs_dinode {
+>  	__be16		di_magic;	/* inode magic # = XFS_DINODE_MAGIC */
+>  	__be16		di_mode;	/* mode and type of file */
+>  	__u8		di_version;	/* inode version */
+> @@ -1022,7 +1022,7 @@ typedef struct xfs_dinode {
+>  	uuid_t		di_uuid;	/* UUID of the filesystem */
+>  
+>  	/* structure must be padded to 64 bit alignment */
+> -} xfs_dinode_t;
+> +};
+>  
+>  #define XFS_DINODE_CRC_OFF	offsetof(struct xfs_dinode, di_crc)
+>  
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> index 84ea2e0af9f026..891940cc16f905 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> @@ -51,9 +51,9 @@ xfs_inode_buf_verify(
+>  	agno = xfs_daddr_to_agno(mp, XFS_BUF_ADDR(bp));
+>  	ni = XFS_BB_TO_FSB(mp, bp->b_length) * mp->m_sb.sb_inopblock;
+>  	for (i = 0; i < ni; i++) {
+> -		int		di_ok;
+> -		xfs_dinode_t	*dip;
+> -		xfs_agino_t	unlinked_ino;
+> +		struct xfs_dinode	*dip;
+> +		xfs_agino_t		unlinked_ino;
+> +		int			di_ok;
+>  
+>  		dip = xfs_buf_offset(bp, (i << mp->m_sb.sb_inodelog));
+>  		unlinked_ino = be32_to_cpu(dip->di_next_unlinked);
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> index 1d174909f9bdf5..08a390a259491c 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+> @@ -67,10 +67,10 @@ xfs_init_local_fork(
+>   */
+>  STATIC int
+>  xfs_iformat_local(
+> -	xfs_inode_t	*ip,
+> -	xfs_dinode_t	*dip,
+> -	int		whichfork,
+> -	int		size)
+> +	struct xfs_inode	*ip,
+> +	struct xfs_dinode	*dip,
+> +	int			whichfork,
+> +	int			size)
+>  {
+>  	/*
+>  	 * If the size is unreasonable, then something
+> @@ -162,8 +162,8 @@ xfs_iformat_extents(
+>   */
+>  STATIC int
+>  xfs_iformat_btree(
+> -	xfs_inode_t		*ip,
+> -	xfs_dinode_t		*dip,
+> +	struct xfs_inode	*ip,
+> +	struct xfs_dinode	*dip,
+>  	int			whichfork)
+>  {
+>  	struct xfs_mount	*mp = ip->i_mount;
+> @@ -580,8 +580,8 @@ xfs_iextents_copy(
+>   */
+>  void
+>  xfs_iflush_fork(
+> -	xfs_inode_t		*ip,
+> -	xfs_dinode_t		*dip,
+> +	struct xfs_inode	*ip,
+> +	struct xfs_dinode	*dip,
+>  	struct xfs_inode_log_item *iip,
+>  	int			whichfork)
+>  {
+> diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
+> index 4775485b406233..55ee89a88f5549 100644
+> --- a/fs/xfs/xfs_buf_item_recover.c
+> +++ b/fs/xfs/xfs_buf_item_recover.c
+> @@ -603,7 +603,7 @@ xlog_recover_do_inode_buffer(
+>  	inodes_per_buf = BBTOB(bp->b_length) >> mp->m_sb.sb_inodelog;
+>  	for (i = 0; i < inodes_per_buf; i++) {
+>  		next_unlinked_offset = (i * mp->m_sb.sb_inodesize) +
+> -			offsetof(xfs_dinode_t, di_next_unlinked);
+> +			offsetof(struct xfs_dinode, di_next_unlinked);
+>  
+>  		while (next_unlinked_offset >=
+>  		       (reg_buf_offset + reg_buf_bytes)) {
+> -- 
+> 2.30.2
 > 
