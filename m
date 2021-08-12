@@ -2,74 +2,86 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1195C4338F
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 13:29:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96ACEC4338F
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 15:07:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8FF67610A4
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 13:29:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 73629610A3
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 15:07:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232356AbhHLNaR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 12 Aug 2021 09:30:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34578 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232081AbhHLNaR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Aug 2021 09:30:17 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5E6DC061756;
-        Thu, 12 Aug 2021 06:29:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=n3uGT6TuiZ+IureAJFuqNJpYzye9DlC/CR/MXpjpxJc=; b=bsSlLQ58RC0af8sYZ1HdLl+NGr
-        LgBiJt6uTA6r/q4LkEnLqAIR8aT8kmsUJGHP6PJ76xz76cOjhDysZNVvUnI3m+oEFsgzMsNmlmxHG
-        PheuAnTNIywrGLOedtEguU55zUd3ZmBaKAkl+sdAivIi30utO9GIQOVfdeqKiU/0n4IyHrqeb8cFy
-        CGrZFXZO6OJq6RP77p2Vxa4TPdCo+9IXeCj7ZekmRH55B+7nyIQGYe/L42KYVGZkb95X6QWWutdca
-        0GrhpiAd7+GlZFKgq97JGBEFEPi9LKvltjZrxEXJBDSkpmRMHLMKp/LeQALUOBXMbD2yeALx7x6bI
-        SmJL4+/g==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mEAl0-00EbbJ-US; Thu, 12 Aug 2021 13:28:47 +0000
-Date:   Thu, 12 Aug 2021 14:28:26 +0100
-From:   Matthew Wilcox <willy@infradead.org>
+        id S237830AbhHLPIF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 12 Aug 2021 11:08:05 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35782 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232351AbhHLPIF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 12 Aug 2021 11:08:05 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 398906044F;
+        Thu, 12 Aug 2021 15:07:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1628780860;
+        bh=D+AE1MKE15hkAZjWKIVlKGyrILbUxIihZBxVt7gH6fc=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ikcsmZCKK/PRujjwj0qABwQx8NiR/sdZDfUXIEM5vjdVxbWNHYVZuK93zLgVzl5uK
+         sKAN3RmO6mp0rmoDGESxYjtBC9k3dLVwnm66ag61nmlYlgD7zQPGT66N6MdDMUtSc6
+         E3n1tgC3ir/vwbYqwx20m45IdMpd3lP4QVWjZYDAbHqoFUlBArt8cbYSlKjOFdg5oS
+         wZlq0H3WIfY+A+rj7eBYobtls4FbgKjaiVXxnhC5kUIInoJoJCV9X+lIJuqutYrE7v
+         ijoovseeG3RvqAgeDcPHco0uHXviJWpIyBmXSxUJ9/aOeHxqcVaLsX+9FASV0A1Fkh
+         pcrTLf9DFImnQ==
+Date:   Thu, 12 Aug 2021 08:07:39 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 8/8] iomap: Add writethrough for O_SYNC
-Message-ID: <YRUh+tKuGI192qpc@casper.infradead.org>
-References: <20210811024647.3067739-1-willy@infradead.org>
- <20210811024647.3067739-9-willy@infradead.org>
- <YRUfE5GH7LbyBnSM@infradead.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/3] xfs: make xfs_rtalloc_query_range input parameters
+ const
+Message-ID: <20210812150739.GN3601443@magnolia>
+References: <162872991654.1220643.136984377220187940.stgit@magnolia>
+ <162872992222.1220643.2988115020171417694.stgit@magnolia>
+ <YRTcKcK1z430Y+Lg@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YRUfE5GH7LbyBnSM@infradead.org>
+In-Reply-To: <YRTcKcK1z430Y+Lg@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 12, 2021 at 02:16:03PM +0100, Christoph Hellwig wrote:
-> On Wed, Aug 11, 2021 at 03:46:47AM +0100, Matthew Wilcox (Oracle) wrote:
-> > For O_SYNC writes, if the filesystem has already allocated blocks for
-> > the range, we can avoid marking the page as dirty and skip straight to
-> > marking the page as writeback.
+On Thu, Aug 12, 2021 at 09:30:33AM +0100, Christoph Hellwig wrote:
+> On Wed, Aug 11, 2021 at 05:58:42PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > In commit 8ad560d2565e, we changed xfs_rtalloc_query_range to constrain
+> > the range of bits in the realtime bitmap file that would actually be
+> > searched.  In commit a3a374bf1889, we changed the range again
+> > (incorrectly), leading to the fix in commit d88850bd5516, which finally
+> > corrected the range check code.  Unfortunately, the author never noticed
+> > that the function modifies its input parameters, which is a totaly no-no
+> > since none of the other range query functions change their input
+> > parameters.
+> > 
+> > So, fix this function yet again to stash the upper end of the query
+> > range (i.e. the high key) in a local variable and hope this is the last
+> > time I have to fix my own function.  While we're at it, mark the key
+> > inputs const so nobody makes this mistake again. :(
 > 
-> So this just optimizes O_SYNC overwrites.  How common are those for
-> bufered I/O?  I know databases use them a lot with direct I/O, but for
-> buffere I/O this seems like an odd I/O pattern.
+> Heh.
+> 
+> Looks good:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> > Not-fixed-by: a3a374bf1889 ("xfs: fix off-by-one error in xfs_rtalloc_query_range")
+> > Not-fixed-by: d88850bd5516 ("xfs: fix high key handling in the rt allocator's query_range function")
+> 
+> Are these tags a thing now or is this just a grumpy Darrick?
 
-As the comment says:
+Just grumpy me.  If you click on the commits in gitk you can see the
+long stream of me trying to wrap his head around the weirdness of
+rtbitmap. :/
 
-+       /* Can't allocate blocks here because we don't have ->prepare_ioend */
+Thanks for the review though. :)
 
-Give me a way to allocate blocks and it can do better!  I didn't realise
-this was going to be a problem when I embarked on this, but attempting
-to do IO to wild addresses made me realise that most appending O_SYNC
-writes are IOMAP_DELALLOC and so don't have allocated blocks.
-
-And it's not just overwrites.  If you open(O_SYNC|O_TRUNC) and then
-write ten bytes at a time, the first write to each block will cause us
-to fall back to writeback pages, but subsequent writes to a block will
-writethrough.
+--D
