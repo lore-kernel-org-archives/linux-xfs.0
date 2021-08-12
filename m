@@ -2,255 +2,130 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09838C4338F
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 23:32:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F619C4338F
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 23:57:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DDD8460C3E
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 23:32:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4A1706109F
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 23:57:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237919AbhHLXcp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 12 Aug 2021 19:32:45 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47738 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237906AbhHLXco (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 12 Aug 2021 19:32:44 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D230A60C3E;
-        Thu, 12 Aug 2021 23:32:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1628811138;
-        bh=PCk0mtdnCFrnDRg1ZNbr1QhIl88ZcTddDKbJTpmfBHQ=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=rrwzeS/LpSbyfHJGrGYqNfn43gcci7i455Xnkq3FUVeW6Kbldx0tps+8+K9nbPEPQ
-         XHbXBVUPCNP2GME+jqbXBJPza29ja/m4+w4QpSgCqIpzlgaGSnX01bNnDMl0DpYoum
-         JUrYwmH7Ql7UEEiP53pvDbB766SREWVRAFZMQQ9ZLnShQgMb5rwdJhshAJ0ztcjxSR
-         kSPXvlciaJfsWwKO7+wf72qoG2125b2n4lCyrwGFOB2iMbvh6SuZoL27g3Oquuh1xa
-         3RoPX/9hBNcoLvA92vCw5xizNKGeki/LVybSw8g7PEZ+l0auXvFnssfsgqPkuDESvN
-         +ILI2dOnhU9+w==
-Subject: [PATCH 10/10] xfs: constify btree function parameters that are not
- modified
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Date:   Thu, 12 Aug 2021 16:32:18 -0700
-Message-ID: <162881113855.1695493.8066313723197135778.stgit@magnolia>
-In-Reply-To: <162881108307.1695493.3416792932772498160.stgit@magnolia>
-References: <162881108307.1695493.3416792932772498160.stgit@magnolia>
-User-Agent: StGit/0.19
+        id S229919AbhHLX5n (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 12 Aug 2021 19:57:43 -0400
+Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:41300 "EHLO
+        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229601AbhHLX5m (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Aug 2021 19:57:42 -0400
+Received: from dread.disaster.area (pa49-195-182-146.pa.nsw.optusnet.com.au [49.195.182.146])
+        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id 589601B4A8D;
+        Fri, 13 Aug 2021 09:57:15 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1mEKZW-0002JZ-Fl; Fri, 13 Aug 2021 09:57:14 +1000
+Date:   Fri, 13 Aug 2021 09:57:14 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Dan Carpenter <dan.carpenter@oracle.com>, linux-xfs@vger.kernel.org
+Subject: Re: [bug report] xfs: pass the goal of the incore inode walk to
+ xfs_inode_walk()
+Message-ID: <20210812235714.GF3657114@dread.disaster.area>
+References: <20210812064222.GA20009@kili>
+ <20210812214048.GE3657114@dread.disaster.area>
+ <20210812224133.GY3601466@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210812224133.GY3601466@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
+        a=QpfB3wCSrn/dqEBSktpwZQ==:117 a=QpfB3wCSrn/dqEBSktpwZQ==:17
+        a=iovoapXEdvDWmHL4:21 a=kj9zAlcOel0A:10 a=MhDmnRu9jo8A:10 a=7-415B0cAAAA:8
+        a=2RqmLUb-O6GAleDFyNMA:9 a=CjuIK1q_8ugA:10 a=5XSRGvUTWXORsQhOJJ0S:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Thu, Aug 12, 2021 at 03:41:33PM -0700, Darrick J. Wong wrote:
+> On Fri, Aug 13, 2021 at 07:40:48AM +1000, Dave Chinner wrote:
+> > On Thu, Aug 12, 2021 at 09:42:22AM +0300, Dan Carpenter wrote:
+> > > Hello Darrick J. Wong,
+> > > 
+> > > The patch c809d7e948a1: "xfs: pass the goal of the incore inode walk
+> > > to xfs_inode_walk()" from Jun 1, 2021, leads to the following
+> > > Smatch static checker warning:
+> > > 
+> > > 	fs/xfs/xfs_icache.c:52 xfs_icwalk_tag()
+> > > 	warn: unsigned 'goal' is never less than zero.
+> > > 
+> > > fs/xfs/xfs_icache.c
+> > >     49 static inline unsigned int
+> > >     50 xfs_icwalk_tag(enum xfs_icwalk_goal goal)
+> > >     51 {
+> > > --> 52 	return goal < 0 ? XFS_ICWALK_NULL_TAG : goal;
+> > > 
+> > > This enum will be unsigned in GCC, so "goal" can't be negative.
+> > 
+> > I think this is incorrect. The original C standard defines enums as
+> > signed integers, not unsigned. And according to the GCC manual
+> > (section 4.9 Structures, Unions, Enumerations, and Bit-Fields)
+> > indicates that C90 first defines the enum type to be compatible with
+> > the declared values. IOWs, for a build using C89 like the kernel
+> > does, enums should always be signed.
+> > 
+> > This enum is defined as:
+> > 
+> > enum xfs_icwalk_goal {
+> >         /* Goals that are not related to tags; these must be < 0. */
+> >         XFS_ICWALK_DQRELE       = -1,
+> > 
+> >         /* Goals directly associated with tagged inodes. */
+> >         XFS_ICWALK_BLOCKGC      = XFS_ICI_BLOCKGC_TAG,
+> >         XFS_ICWALK_RECLAIM      = XFS_ICI_RECLAIM_TAG,
+> > };
+> > 
+> > i.e. the enum is defined to clearly contain negative values and so
+> > GCC should be defining it as a signed integer regardless of the
+> > version of C being used...
+> > 
+> > > Plus
+> > > we only pass 0-1 for goal (as far as Smatch can tell).
+> > 
+> > Yup, smatch has definitely got that one wrong:
+> > 
+> > xfs_dqrele_all_inodes()
+> >   xfs_icwalk(mp, XFS_ICWALK_DQRELE, &icw);
+> >     xfs_icwalk_get_perag(.... XFS_ICWALK_DQRELE)
+> >       xfs_icwalk_tag(... XFS_ICWALK_DQRELE, ...)
+> > 
+> > So this warning looks like an issue with smatch, not a bug in the
+> > code...
+> 
+> ...unless Dan is running smatch against for-next, which removes
+> XFS_ICWALK_DQRELE and thus allows for an unsigned type to back the enum?
 
-Constify the rest of the btree functions that take structure and union
-pointers and are not supposed to modify them.
+Ah, I didn't realise that had gone away in the quotaoff removal -
+I've kinda had my head stuck in fixing the journal/log recovery
+problems recently.  Thanks for pointing out something I missed.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/libxfs/xfs_btree.c |   70 +++++++++++++++++++++++----------------------
- fs/xfs/libxfs/xfs_btree.h |   21 ++++++++------
- 2 files changed, 47 insertions(+), 44 deletions(-)
+FWIW, I just assumed it was a current TOT being checked because
+c809d7e948a1 was introduced in 5.14-rc1 and that's the commit smatch
+is, IMO, incorrectly blaming.  Commit 777eb1fa857e ("xfs: remove
+xfs_dqrele_all_inodes") which is the one in for-next that removed
+the XFS_ICWALK_DQRELE definition from the enum and so, under C90,
+gcc will turn the enum from from signed to unsigned. But we still
+build the kernel under C89, so it's not clear to me that the smatch
+assertion is correct...
 
+Perhaps there might be some improvements that can be made to smatch
+to handle this better. Knowing what tree was being checked would
+also help us here.
 
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index bc15d90ff7a2..758f3dc9c1ff 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -225,10 +225,10 @@ xfs_btree_check_sptr(
-  */
- static int
- xfs_btree_check_ptr(
--	struct xfs_btree_cur	*cur,
--	union xfs_btree_ptr	*ptr,
--	int			index,
--	int			level)
-+	struct xfs_btree_cur		*cur,
-+	const union xfs_btree_ptr	*ptr,
-+	int				index,
-+	int				level)
- {
- 	if (cur->bc_flags & XFS_BTREE_LONG_PTRS) {
- 		if (xfs_btree_check_lptr(cur, be64_to_cpu((&ptr->l)[index]),
-@@ -935,9 +935,9 @@ xfs_btree_readahead(
- 
- STATIC int
- xfs_btree_ptr_to_daddr(
--	struct xfs_btree_cur	*cur,
--	union xfs_btree_ptr	*ptr,
--	xfs_daddr_t		*daddr)
-+	struct xfs_btree_cur		*cur,
-+	const union xfs_btree_ptr	*ptr,
-+	xfs_daddr_t			*daddr)
- {
- 	xfs_fsblock_t		fsbno;
- 	xfs_agblock_t		agbno;
-@@ -1012,8 +1012,8 @@ xfs_btree_setbuf(
- 
- bool
- xfs_btree_ptr_is_null(
--	struct xfs_btree_cur	*cur,
--	union xfs_btree_ptr	*ptr)
-+	struct xfs_btree_cur		*cur,
-+	const union xfs_btree_ptr	*ptr)
- {
- 	if (cur->bc_flags & XFS_BTREE_LONG_PTRS)
- 		return ptr->l == cpu_to_be64(NULLFSBLOCK);
-@@ -1059,10 +1059,10 @@ xfs_btree_get_sibling(
- 
- void
- xfs_btree_set_sibling(
--	struct xfs_btree_cur	*cur,
--	struct xfs_btree_block	*block,
--	union xfs_btree_ptr	*ptr,
--	int			lr)
-+	struct xfs_btree_cur		*cur,
-+	struct xfs_btree_block		*block,
-+	const union xfs_btree_ptr	*ptr,
-+	int				lr)
- {
- 	ASSERT(lr == XFS_BB_LEFTSIB || lr == XFS_BB_RIGHTSIB);
- 
-@@ -1229,10 +1229,10 @@ xfs_btree_set_refs(
- 
- int
- xfs_btree_get_buf_block(
--	struct xfs_btree_cur	*cur,
--	union xfs_btree_ptr	*ptr,
--	struct xfs_btree_block	**block,
--	struct xfs_buf		**bpp)
-+	struct xfs_btree_cur		*cur,
-+	const union xfs_btree_ptr	*ptr,
-+	struct xfs_btree_block		**block,
-+	struct xfs_buf			**bpp)
- {
- 	struct xfs_mount	*mp = cur->bc_mp;
- 	xfs_daddr_t		d;
-@@ -1257,11 +1257,11 @@ xfs_btree_get_buf_block(
-  */
- STATIC int
- xfs_btree_read_buf_block(
--	struct xfs_btree_cur	*cur,
--	union xfs_btree_ptr	*ptr,
--	int			flags,
--	struct xfs_btree_block	**block,
--	struct xfs_buf		**bpp)
-+	struct xfs_btree_cur		*cur,
-+	const union xfs_btree_ptr	*ptr,
-+	int				flags,
-+	struct xfs_btree_block		**block,
-+	struct xfs_buf			**bpp)
- {
- 	struct xfs_mount	*mp = cur->bc_mp;
- 	xfs_daddr_t		d;
-@@ -1289,10 +1289,10 @@ xfs_btree_read_buf_block(
-  */
- void
- xfs_btree_copy_keys(
--	struct xfs_btree_cur	*cur,
--	union xfs_btree_key	*dst_key,
--	union xfs_btree_key	*src_key,
--	int			numkeys)
-+	struct xfs_btree_cur		*cur,
-+	union xfs_btree_key		*dst_key,
-+	const union xfs_btree_key	*src_key,
-+	int				numkeys)
- {
- 	ASSERT(numkeys >= 0);
- 	memcpy(dst_key, src_key, numkeys * cur->bc_ops->key_len);
-@@ -1713,10 +1713,10 @@ xfs_btree_decrement(
- 
- int
- xfs_btree_lookup_get_block(
--	struct xfs_btree_cur	*cur,	/* btree cursor */
--	int			level,	/* level in the btree */
--	union xfs_btree_ptr	*pp,	/* ptr to btree block */
--	struct xfs_btree_block	**blkp) /* return btree block */
-+	struct xfs_btree_cur		*cur,	/* btree cursor */
-+	int				level,	/* level in the btree */
-+	const union xfs_btree_ptr	*pp,	/* ptr to btree block */
-+	struct xfs_btree_block		**blkp) /* return btree block */
- {
- 	struct xfs_buf		*bp;	/* buffer pointer for btree block */
- 	xfs_daddr_t		daddr;
-@@ -4886,12 +4886,12 @@ xfs_btree_has_record_helper(
- /* Is there a record covering a given range of keys? */
- int
- xfs_btree_has_record(
--	struct xfs_btree_cur	*cur,
--	union xfs_btree_irec	*low,
--	union xfs_btree_irec	*high,
--	bool			*exists)
-+	struct xfs_btree_cur		*cur,
-+	const union xfs_btree_irec	*low,
-+	const union xfs_btree_irec	*high,
-+	bool				*exists)
- {
--	int			error;
-+	int				error;
- 
- 	error = xfs_btree_query_range(cur, low, high,
- 			&xfs_btree_has_record_helper, NULL);
-diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index 830702bdd6d6..4eaf8517f850 100644
---- a/fs/xfs/libxfs/xfs_btree.h
-+++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -503,10 +503,11 @@ union xfs_btree_key *xfs_btree_high_key_addr(struct xfs_btree_cur *cur, int n,
- union xfs_btree_ptr *xfs_btree_ptr_addr(struct xfs_btree_cur *cur, int n,
- 		struct xfs_btree_block *block);
- int xfs_btree_lookup_get_block(struct xfs_btree_cur *cur, int level,
--		union xfs_btree_ptr *pp, struct xfs_btree_block **blkp);
-+		const union xfs_btree_ptr *pp, struct xfs_btree_block **blkp);
- struct xfs_btree_block *xfs_btree_get_block(struct xfs_btree_cur *cur,
- 		int level, struct xfs_buf **bpp);
--bool xfs_btree_ptr_is_null(struct xfs_btree_cur *cur, union xfs_btree_ptr *ptr);
-+bool xfs_btree_ptr_is_null(struct xfs_btree_cur *cur,
-+		const union xfs_btree_ptr *ptr);
- int64_t xfs_btree_diff_two_ptrs(struct xfs_btree_cur *cur,
- 				const union xfs_btree_ptr *a,
- 				const union xfs_btree_ptr *b);
-@@ -517,8 +518,9 @@ void xfs_btree_get_keys(struct xfs_btree_cur *cur,
- 		struct xfs_btree_block *block, union xfs_btree_key *key);
- union xfs_btree_key *xfs_btree_high_key_from_key(struct xfs_btree_cur *cur,
- 		union xfs_btree_key *key);
--int xfs_btree_has_record(struct xfs_btree_cur *cur, union xfs_btree_irec *low,
--		union xfs_btree_irec *high, bool *exists);
-+int xfs_btree_has_record(struct xfs_btree_cur *cur,
-+		const union xfs_btree_irec *low,
-+		const union xfs_btree_irec *high, bool *exists);
- bool xfs_btree_has_more_records(struct xfs_btree_cur *cur);
- struct xfs_ifork *xfs_btree_ifork_ptr(struct xfs_btree_cur *cur);
- 
-@@ -541,10 +543,11 @@ xfs_btree_islastblock(
- 
- void xfs_btree_set_ptr_null(struct xfs_btree_cur *cur,
- 		union xfs_btree_ptr *ptr);
--int xfs_btree_get_buf_block(struct xfs_btree_cur *cur, union xfs_btree_ptr *ptr,
--		struct xfs_btree_block **block, struct xfs_buf **bpp);
-+int xfs_btree_get_buf_block(struct xfs_btree_cur *cur,
-+		const union xfs_btree_ptr *ptr, struct xfs_btree_block **block,
-+		struct xfs_buf **bpp);
- void xfs_btree_set_sibling(struct xfs_btree_cur *cur,
--		struct xfs_btree_block *block, union xfs_btree_ptr *ptr,
-+		struct xfs_btree_block *block, const union xfs_btree_ptr *ptr,
- 		int lr);
- void xfs_btree_init_block_cur(struct xfs_btree_cur *cur,
- 		struct xfs_buf *bp, int level, int numrecs);
-@@ -552,7 +555,7 @@ void xfs_btree_copy_ptrs(struct xfs_btree_cur *cur,
- 		union xfs_btree_ptr *dst_ptr,
- 		const union xfs_btree_ptr *src_ptr, int numptrs);
- void xfs_btree_copy_keys(struct xfs_btree_cur *cur,
--		union xfs_btree_key *dst_key, union xfs_btree_key *src_key,
--		int numkeys);
-+		union xfs_btree_key *dst_key,
-+		const union xfs_btree_key *src_key, int numkeys);
- 
- #endif	/* __XFS_BTREE_H__ */
+Cheers,
 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
