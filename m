@@ -4,39 +4,39 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 908BDC4338F
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 00:59:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0CECC4338F
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 00:59:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6FB0D60FE6
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 00:59:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 94878601FD
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 00:59:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233128AbhHLA70 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 11 Aug 2021 20:59:26 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36502 "EHLO mail.kernel.org"
+        id S233166AbhHLA7b (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 11 Aug 2021 20:59:31 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36520 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232704AbhHLA7Z (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 11 Aug 2021 20:59:25 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 0D775601FD;
-        Thu, 12 Aug 2021 00:59:01 +0000 (UTC)
+        id S233141AbhHLA7a (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 11 Aug 2021 20:59:30 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 86D3B60FE6;
+        Thu, 12 Aug 2021 00:59:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1628729941;
-        bh=oBfToJxgfkYG7xSu0IGuRElWY9nTdSCkShB4sPcEsuE=;
+        s=k20201202; t=1628729946;
+        bh=Fx6B9y9rUdFzkb9RgI/twYjs6X+U71F6fJFdey5YjL4=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=O4tchlBcZ9RjHWScnIR25sY0N7VEyBCvhx9Knx6gecqJXXmPu7Nvgwh4HaiJPawx4
-         wkzX4OQfaRvGvokLSPOBpCv5PN5j/m4SJ2XXuXelxNjP4dzxOis8CNfadtqpEEV8Lj
-         NizxQ13SA1p1dfd3kv8lC+J0BbG4/5xMhSRe0SADevJhBUizjFc78YYXNhlQpWNhbE
-         T+EWkDWHjg9/rX3GwSj8ZR6eH9O7REXQYGVctvLllKouDupRN/69sUStLmUAyAp0+c
-         MJnNlCo6RFtvFBqJymP7+GYfozhX3k+bdvxVb9GXIGk/l2uaEpsb5nft71JbcJaLAX
-         C3YBBCeuu/Z7Q==
-Subject: [PATCH 1/2] xfs: remove unnecessary agno variable from struct xchk_ag
+        b=dR9JiP4WnUP8Tn3GfCLimf4sBdpL3Tfb/nxO/j+QdFV+FA8JsexYib2lbTWLrNqOU
+         wSytVEFOSpNMDn8wCN9jXs9ueUjTCmpbz2vcnepb6zQWxcmCz/lEX52YZZgxamuhrO
+         Jqrxw/tcYkY5XmaSXH6+aFzkybuXoUC/2yqtpQZnvPt8fK5e1QaqxQJlLINnymPAMl
+         YL01e5l7s0F6P+tw3AdiSpeC5K1xmMws3w4APVTyoSwuGx+31F0fdx6cOruDRe5lBp
+         GPXRX55UMhYKuGQDlTpwXNTjX5cpQs4Z1lglQDxvJ1vFkg9wll9Pz+RUoBVtmIdT/K
+         /R2EgMoGHjIsA==
+Subject: [PATCH 2/2] xfs: add trace point for fs shutdown
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Wed, 11 Aug 2021 17:59:00 -0700
-Message-ID: <162872994071.1220748.13299032445442241616.stgit@magnolia>
+Date:   Wed, 11 Aug 2021 17:59:06 -0700
+Message-ID: <162872994625.1220748.12679533833955140333.stgit@magnolia>
 In-Reply-To: <162872993519.1220748.15526308019664551101.stgit@magnolia>
 References: <162872993519.1220748.15526308019664551101.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,271 +49,126 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Now that we always grab an active reference to a perag structure when
-dealing with perag metadata, we can remove this unnecessary variable.
+Add a tracepoint for fs shutdowns so we can capture that in ftrace
+output.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/agheader.c        |    2 +-
- fs/xfs/scrub/agheader_repair.c |   34 +++++++++++++++++++++-------------
- fs/xfs/scrub/common.c          |    3 ---
- fs/xfs/scrub/repair.c          |   18 +++++++++---------
- fs/xfs/scrub/scrub.c           |    3 ---
- fs/xfs/scrub/scrub.h           |    1 -
- 6 files changed, 31 insertions(+), 30 deletions(-)
+ fs/xfs/xfs_error.h |   12 ++++++++++++
+ fs/xfs/xfs_fsops.c |    3 +++
+ fs/xfs/xfs_mount.h |    6 ++++++
+ fs/xfs/xfs_trace.c |    1 +
+ fs/xfs/xfs_trace.h |   27 +++++++++++++++++++++++++++
+ 5 files changed, 49 insertions(+)
 
 
-diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-index 6152ce01c057..efd8b5a9f6b2 100644
---- a/fs/xfs/scrub/agheader.c
-+++ b/fs/xfs/scrub/agheader.c
-@@ -640,7 +640,7 @@ xchk_agfl_block(
- {
- 	struct xchk_agfl_info	*sai = priv;
- 	struct xfs_scrub	*sc = sai->sc;
--	xfs_agnumber_t		agno = sc->sa.agno;
-+	xfs_agnumber_t		agno = sc->sa.pag->pag_agno;
+diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
+index 1717b7508356..5735d5ea87ee 100644
+--- a/fs/xfs/xfs_error.h
++++ b/fs/xfs/xfs_error.h
+@@ -75,4 +75,16 @@ extern int xfs_errortag_clearall(struct xfs_mount *mp);
+ #define		XFS_PTAG_FSBLOCK_ZERO		0x00000080
+ #define		XFS_PTAG_VERIFIER_ERROR		0x00000100
  
- 	if (xfs_verify_agbno(mp, agno, agbno) &&
- 	    sai->nr_entries < sai->sz_entries)
-diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
-index f122f2e20e79..87da9bca8e57 100644
---- a/fs/xfs/scrub/agheader_repair.c
-+++ b/fs/xfs/scrub/agheader_repair.c
-@@ -94,7 +94,7 @@ xrep_agf_check_agfl_block(
- {
- 	struct xfs_scrub	*sc = priv;
- 
--	if (!xfs_verify_agbno(mp, sc->sa.agno, agbno))
-+	if (!xfs_verify_agbno(mp, sc->sa.pag->pag_agno, agbno))
- 		return -EFSCORRUPTED;
- 	return 0;
- }
-@@ -188,8 +188,9 @@ xrep_agf_init_header(
- 	memset(agf, 0, BBTOB(agf_bp->b_length));
- 	agf->agf_magicnum = cpu_to_be32(XFS_AGF_MAGIC);
- 	agf->agf_versionnum = cpu_to_be32(XFS_AGF_VERSION);
--	agf->agf_seqno = cpu_to_be32(sc->sa.agno);
--	agf->agf_length = cpu_to_be32(xfs_ag_block_count(mp, sc->sa.agno));
-+	agf->agf_seqno = cpu_to_be32(sc->sa.pag->pag_agno);
-+	agf->agf_length = cpu_to_be32(xfs_ag_block_count(mp,
-+							sc->sa.pag->pag_agno));
- 	agf->agf_flfirst = old_agf->agf_flfirst;
- 	agf->agf_fllast = old_agf->agf_fllast;
- 	agf->agf_flcount = old_agf->agf_flcount;
-@@ -371,7 +372,8 @@ xrep_agf(
- 	 * was corrupt after xfs_alloc_read_agf failed with -EFSCORRUPTED.
- 	 */
- 	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
--			XFS_AG_DADDR(mp, sc->sa.agno, XFS_AGF_DADDR(mp)),
-+			XFS_AG_DADDR(mp, sc->sa.pag->pag_agno,
-+						XFS_AGF_DADDR(mp)),
- 			XFS_FSS_TO_BB(mp, 1), 0, &agf_bp, NULL);
- 	if (error)
- 		return error;
-@@ -387,7 +389,7 @@ xrep_agf(
- 	 * btrees rooted in the AGF.  If the AGFL contents are obviously bad
- 	 * then we'll bail out.
- 	 */
--	error = xfs_alloc_read_agfl(mp, sc->tp, sc->sa.agno, &agfl_bp);
-+	error = xfs_alloc_read_agfl(mp, sc->tp, sc->sa.pag->pag_agno, &agfl_bp);
- 	if (error)
- 		return error;
- 
-@@ -585,7 +587,7 @@ xrep_agfl_init_header(
- 	agfl = XFS_BUF_TO_AGFL(agfl_bp);
- 	memset(agfl, 0xFF, BBTOB(agfl_bp->b_length));
- 	agfl->agfl_magicnum = cpu_to_be32(XFS_AGFL_MAGIC);
--	agfl->agfl_seqno = cpu_to_be32(sc->sa.agno);
-+	agfl->agfl_seqno = cpu_to_be32(sc->sa.pag->pag_agno);
- 	uuid_copy(&agfl->agfl_uuid, &mp->m_sb.sb_meta_uuid);
- 
- 	/*
-@@ -598,7 +600,8 @@ xrep_agfl_init_header(
- 	for_each_xbitmap_extent(br, n, agfl_extents) {
- 		agbno = XFS_FSB_TO_AGBNO(mp, br->start);
- 
--		trace_xrep_agfl_insert(mp, sc->sa.agno, agbno, br->len);
-+		trace_xrep_agfl_insert(mp, sc->sa.pag->pag_agno, agbno,
-+				br->len);
- 
- 		while (br->len > 0 && fl_off < flcount) {
- 			agfl_bno[fl_off] = cpu_to_be32(agbno);
-@@ -647,7 +650,8 @@ xrep_agfl(
- 	 * nothing wrong with the AGF, but all the AG header repair functions
- 	 * have this chicken-and-egg problem.
- 	 */
--	error = xfs_alloc_read_agf(mp, sc->tp, sc->sa.agno, 0, &agf_bp);
-+	error = xfs_alloc_read_agf(mp, sc->tp, sc->sa.pag->pag_agno, 0,
-+			&agf_bp);
- 	if (error)
- 		return error;
- 
-@@ -656,7 +660,8 @@ xrep_agfl(
- 	 * was corrupt after xfs_alloc_read_agfl failed with -EFSCORRUPTED.
- 	 */
- 	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
--			XFS_AG_DADDR(mp, sc->sa.agno, XFS_AGFL_DADDR(mp)),
-+			XFS_AG_DADDR(mp, sc->sa.pag->pag_agno,
-+						XFS_AGFL_DADDR(mp)),
- 			XFS_FSS_TO_BB(mp, 1), 0, &agfl_bp, NULL);
- 	if (error)
- 		return error;
-@@ -721,7 +726,8 @@ xrep_agi_find_btrees(
- 	int				error;
- 
- 	/* Read the AGF. */
--	error = xfs_alloc_read_agf(mp, sc->tp, sc->sa.agno, 0, &agf_bp);
-+	error = xfs_alloc_read_agf(mp, sc->tp, sc->sa.pag->pag_agno, 0,
-+			&agf_bp);
- 	if (error)
- 		return error;
- 
-@@ -759,8 +765,9 @@ xrep_agi_init_header(
- 	memset(agi, 0, BBTOB(agi_bp->b_length));
- 	agi->agi_magicnum = cpu_to_be32(XFS_AGI_MAGIC);
- 	agi->agi_versionnum = cpu_to_be32(XFS_AGI_VERSION);
--	agi->agi_seqno = cpu_to_be32(sc->sa.agno);
--	agi->agi_length = cpu_to_be32(xfs_ag_block_count(mp, sc->sa.agno));
-+	agi->agi_seqno = cpu_to_be32(sc->sa.pag->pag_agno);
-+	agi->agi_length = cpu_to_be32(xfs_ag_block_count(mp,
-+							sc->sa.pag->pag_agno));
- 	agi->agi_newino = cpu_to_be32(NULLAGINO);
- 	agi->agi_dirino = cpu_to_be32(NULLAGINO);
- 	if (xfs_sb_version_hascrc(&mp->m_sb))
-@@ -899,7 +906,8 @@ xrep_agi(
- 	 * was corrupt after xfs_ialloc_read_agi failed with -EFSCORRUPTED.
- 	 */
- 	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
--			XFS_AG_DADDR(mp, sc->sa.agno, XFS_AGI_DADDR(mp)),
-+			XFS_AG_DADDR(mp, sc->sa.pag->pag_agno,
-+						XFS_AGI_DADDR(mp)),
- 			XFS_FSS_TO_BB(mp, 1), 0, &agi_bp, NULL);
- 	if (error)
- 		return error;
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 0ef96ed71017..691cf243c2c9 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -414,8 +414,6 @@ xchk_ag_read_headers(
- 	if (!sa->pag)
- 		return -ENOENT;
- 
--	sa->agno = agno;
--
- 	error = xfs_ialloc_read_agi(mp, sc->tp, agno, &sa->agi_bp);
- 	if (error && want_ag_read_header_failure(sc, XFS_SCRUB_TYPE_AGI))
- 		return error;
-@@ -531,7 +529,6 @@ xchk_ag_free(
- 		xfs_perag_put(sa->pag);
- 		sa->pag = NULL;
- 	}
--	sa->agno = NULLAGNUMBER;
- }
++#define XFS_PTAG_STRINGS \
++	{ XFS_NO_PTAG,			"none" }, \
++	{ XFS_PTAG_IFLUSH,		"iflush" }, \
++	{ XFS_PTAG_LOGRES,		"logres" }, \
++	{ XFS_PTAG_AILDELETE,		"aildelete" }, \
++	{ XFS_PTAG_ERROR_REPORT	,	"error_report" }, \
++	{ XFS_PTAG_SHUTDOWN_CORRUPT,	"corrupt" }, \
++	{ XFS_PTAG_SHUTDOWN_IOERROR,	"ioerror" }, \
++	{ XFS_PTAG_SHUTDOWN_LOGERROR,	"logerror" }, \
++	{ XFS_PTAG_FSBLOCK_ZERO,	"fsb_zero" }, \
++	{ XFS_PTAG_VERIFIER_ERROR,	"verifier" }
++
+ #endif	/* __XFS_ERROR_H__ */
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 7a2f4feacc35..0ef0aad7ddc9 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -19,6 +19,7 @@
+ #include "xfs_log.h"
+ #include "xfs_ag.h"
+ #include "xfs_ag_resv.h"
++#include "xfs_trace.h"
  
  /*
-diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-index ebb0e245aa72..7431e181d001 100644
---- a/fs/xfs/scrub/repair.c
-+++ b/fs/xfs/scrub/repair.c
-@@ -306,9 +306,9 @@ xrep_alloc_ag_block(
- 			return -ENOSPC;
- 		xfs_extent_busy_reuse(sc->mp, sc->sa.pag, bno,
- 				1, false);
--		*fsbno = XFS_AGB_TO_FSB(sc->mp, sc->sa.agno, bno);
-+		*fsbno = XFS_AGB_TO_FSB(sc->mp, sc->sa.pag->pag_agno, bno);
- 		if (resv == XFS_AG_RESV_RMAPBT)
--			xfs_ag_resv_rmapbt_alloc(sc->mp, sc->sa.agno);
-+			xfs_ag_resv_rmapbt_alloc(sc->mp, sc->sa.pag->pag_agno);
- 		return 0;
- 	default:
- 		break;
-@@ -317,7 +317,7 @@ xrep_alloc_ag_block(
- 	args.tp = sc->tp;
- 	args.mp = sc->mp;
- 	args.oinfo = *oinfo;
--	args.fsbno = XFS_AGB_TO_FSB(args.mp, sc->sa.agno, 0);
-+	args.fsbno = XFS_AGB_TO_FSB(args.mp, sc->sa.pag->pag_agno, 0);
- 	args.minlen = 1;
- 	args.maxlen = 1;
- 	args.prod = 1;
-@@ -352,14 +352,14 @@ xrep_init_btblock(
- 	trace_xrep_init_btblock(mp, XFS_FSB_TO_AGNO(mp, fsb),
- 			XFS_FSB_TO_AGBNO(mp, fsb), btnum);
+  * Write new AG headers to disk. Non-transactional, but need to be
+@@ -551,6 +552,8 @@ xfs_do_force_shutdown(
+ 		why = "Metadata I/O Error";
+ 	}
  
--	ASSERT(XFS_FSB_TO_AGNO(mp, fsb) == sc->sa.agno);
-+	ASSERT(XFS_FSB_TO_AGNO(mp, fsb) == sc->sa.pag->pag_agno);
- 	error = xfs_trans_get_buf(tp, mp->m_ddev_targp,
- 			XFS_FSB_TO_DADDR(mp, fsb), XFS_FSB_TO_BB(mp, 1), 0,
- 			&bp);
- 	if (error)
- 		return error;
- 	xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
--	xfs_btree_init_block(mp, bp, btnum, 0, 0, sc->sa.agno);
-+	xfs_btree_init_block(mp, bp, btnum, 0, 0, sc->sa.pag->pag_agno);
- 	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_BTREE_BUF);
- 	xfs_trans_log_buf(tp, bp, 0, BBTOB(bp->b_length) - 1);
- 	bp->b_ops = ops;
-@@ -481,7 +481,7 @@ xrep_fix_freelist(
++	trace_xfs_force_shutdown(mp, tag, flags, fname, lnnum);
++
+ 	xfs_alert_tag(mp, tag,
+ "%s (0x%x) detected at %pS (%s:%d).  Shutting down filesystem.",
+ 			why, flags, __return_address, fname, lnnum);
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 2266c6a668cf..57f2ea398832 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -331,6 +331,12 @@ void xfs_do_force_shutdown(struct xfs_mount *mp, int flags, char *fname,
+ #define SHUTDOWN_FORCE_UMOUNT	0x0004	/* shutdown from a forced unmount */
+ #define SHUTDOWN_CORRUPT_INCORE	0x0008	/* corrupt in-memory data structures */
  
- 	args.mp = sc->mp;
- 	args.tp = sc->tp;
--	args.agno = sc->sa.agno;
-+	args.agno = sc->sa.pag->pag_agno;
- 	args.alignment = 1;
- 	args.pag = sc->sa.pag;
++#define XFS_SHUTDOWN_STRINGS \
++	{ SHUTDOWN_META_IO_ERROR,	"metadata_io" }, \
++	{ SHUTDOWN_LOG_IO_ERROR,	"log_io" }, \
++	{ SHUTDOWN_FORCE_UMOUNT,	"force_umount" }, \
++	{ SHUTDOWN_CORRUPT_INCORE,	"corruption" }
++
+ /*
+  * Flags for xfs_mountfs
+  */
+diff --git a/fs/xfs/xfs_trace.c b/fs/xfs/xfs_trace.c
+index 4c86afad1617..d269ef57ff01 100644
+--- a/fs/xfs/xfs_trace.c
++++ b/fs/xfs/xfs_trace.c
+@@ -33,6 +33,7 @@
+ #include "xfs_icache.h"
+ #include "xfs_ag.h"
+ #include "xfs_ag_resv.h"
++#include "xfs_error.h"
  
-@@ -615,7 +615,7 @@ xrep_reap_extents(
+ /*
+  * We include this last to have the helpers above available for the trace
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 70c142f6aeb2..84199e29845d 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -4096,6 +4096,33 @@ DEFINE_DAS_STATE_EVENT(xfs_attr_set_iter_return);
+ DEFINE_DAS_STATE_EVENT(xfs_attr_node_addname_return);
+ DEFINE_DAS_STATE_EVENT(xfs_attr_remove_iter_return);
+ DEFINE_DAS_STATE_EVENT(xfs_attr_rmtval_remove_return);
++
++TRACE_EVENT(xfs_force_shutdown,
++	TP_PROTO(struct xfs_mount *mp, int ptag, int flags, const char *fname,
++		 int line_num),
++	TP_ARGS(mp, ptag, flags, fname, line_num),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(int, ptag)
++		__field(int, flags)
++		__string(fname, fname)
++		__field(int, line_num)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->ptag = ptag;
++		__entry->flags = flags;
++		__assign_str(fname, fname);
++		__entry->line_num = line_num;
++	),
++	TP_printk("dev %d:%d tag %s flags %s file %s line_num %d",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		__print_flags(__entry->ptag, "|", XFS_PTAG_STRINGS),
++		__print_flags(__entry->flags, "|", XFS_SHUTDOWN_STRINGS),
++		__get_str(fname),
++		__entry->line_num)
++);
++
+ #endif /* _TRACE_XFS_H */
  
- 	for_each_xbitmap_block(fsbno, bmr, n, bitmap) {
- 		ASSERT(sc->ip != NULL ||
--		       XFS_FSB_TO_AGNO(sc->mp, fsbno) == sc->sa.agno);
-+		       XFS_FSB_TO_AGNO(sc->mp, fsbno) == sc->sa.pag->pag_agno);
- 		trace_xrep_dispose_btree_extent(sc->mp,
- 				XFS_FSB_TO_AGNO(sc->mp, fsbno),
- 				XFS_FSB_TO_AGBNO(sc->mp, fsbno), 1);
-@@ -690,7 +690,7 @@ xrep_findroot_block(
- 	int				block_level;
- 	int				error = 0;
- 
--	daddr = XFS_AGB_TO_DADDR(mp, ri->sc->sa.agno, agbno);
-+	daddr = XFS_AGB_TO_DADDR(mp, ri->sc->sa.pag->pag_agno, agbno);
- 
- 	/*
- 	 * Blocks in the AGFL have stale contents that might just happen to
-@@ -819,7 +819,7 @@ xrep_findroot_block(
- 	else
- 		fab->root = NULLAGBLOCK;
- 
--	trace_xrep_findroot_block(mp, ri->sc->sa.agno, agbno,
-+	trace_xrep_findroot_block(mp, ri->sc->sa.pag->pag_agno, agbno,
- 			be32_to_cpu(btblock->bb_magic), fab->height - 1);
- out:
- 	xfs_trans_brelse(ri->sc->tp, bp);
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 0e542636227c..1c65df8628ad 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -464,9 +464,6 @@ xfs_scrub_metadata(
- 	struct xfs_scrub		sc = {
- 		.file			= file,
- 		.sm			= sm,
--		.sa			= {
--			.agno		= NULLAGNUMBER,
--		},
- 	};
- 	struct xfs_mount		*mp = XFS_I(file_inode(file))->i_mount;
- 	int				error = 0;
-diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index 08a483cb46e2..c711637d0d06 100644
---- a/fs/xfs/scrub/scrub.h
-+++ b/fs/xfs/scrub/scrub.h
-@@ -35,7 +35,6 @@ struct xchk_meta_ops {
- 
- /* Buffer pointers and btree cursors for an entire AG. */
- struct xchk_ag {
--	xfs_agnumber_t		agno;
- 	struct xfs_perag	*pag;
- 
- 	/* AG btree roots */
+ #undef TRACE_INCLUDE_PATH
 
