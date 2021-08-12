@@ -7,64 +7,76 @@ X-Spam-Status: No, score=-10.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F6D2C4338F
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 08:25:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6ABB1C4338F
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 08:32:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 392F761058
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 08:25:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3D41C61058
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 08:32:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234605AbhHLIZi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 12 Aug 2021 04:25:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48546 "EHLO
+        id S234808AbhHLIdV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 12 Aug 2021 04:33:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50288 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233921AbhHLIZg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Aug 2021 04:25:36 -0400
+        with ESMTP id S229956AbhHLIdU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Aug 2021 04:33:20 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50F50C061765
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Aug 2021 01:25:08 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71B6DC061765
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Aug 2021 01:32:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=zKP64c3na4ZKC1rJduK92QN3dH7iyL2eMyDImOUlxNg=; b=u+UP6WELPogH8yw8tgvaAOmSBc
-        /FRTGkaAz0d9DQDDvK7JD16qt5+/LSORrNlHSyyjc0KyqAPWMO2uaKqEdbt7rfnVjhShJCkjRaYBM
-        jqLF7SY4YJmj/Z60YFwuVlHv44T6WADZqTZT2glC54I59d8ypIBBlWVIeJRJaV6G+l4DbGsS/2BW4
-        +HWYML7iPRWJHeisHdEzWndz5ybBQ9doearHmPzkjAlMidC/LQz8mzgsePVQgJiaPayQOiq/uPIVw
-        2ZokFGuV7/WHDPmIifOs3kCUGI+nhoTzqzFgr7b39DbgcEZG4pN883EoWyWeSkjC1/uYuEsjGXoSH
-        TKVQV82g==;
+        bh=oBXME2WVZ8NHMgRsLLgbbEicFNDhWwHe+498Eqox48Q=; b=YeqhvVh+aMm6bHE2y24Bfn59hw
+        4tJ2K90O2wrxmu0BxVRII3v9AM9WR79DhUYa4Oik+QkzYqNwyghvTxJOW3jmQvf25feXopxSrUXYy
+        e78sI6bDlnY8pYMhEXyKVbVAnzaIZoNJi7KAO9Zb5uRCo1ndeZhLow+pqcVMjumBTB8D74zEKnb5N
+        5N0MZpZ+SZCNNBinqvFYlNZ2kOAdoNNoquPGM1GOLNsj8dZR0qkwqHL/OgTtMn8lbUYSazv9rgVx2
+        sQhqkw70u/2J0sXzh0xer4KSRTmWG3dXIq7mKu9tmqv7S/OK3tpHPPABiWANKqmst5l+xulNG3HpD
+        g2KOBeUw==;
 Received: from hch by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mE60F-00ELCa-GK; Thu, 12 Aug 2021 08:24:21 +0000
-Date:   Thu, 12 Aug 2021 09:23:51 +0100
+        id 1mE66j-00ELSI-Pq; Thu, 12 Aug 2021 08:31:15 +0000
+Date:   Thu, 12 Aug 2021 09:30:33 +0100
 From:   Christoph Hellwig <hch@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/3] xfs: rename buffer cache index variable b_bn
-Message-ID: <YRTal4x6M21Nc7Dz@infradead.org>
-References: <20210810052851.42312-1-david@fromorbit.com>
- <20210810052851.42312-4-david@fromorbit.com>
+Subject: Re: [PATCH 1/3] xfs: make xfs_rtalloc_query_range input parameters
+ const
+Message-ID: <YRTcKcK1z430Y+Lg@infradead.org>
+References: <162872991654.1220643.136984377220187940.stgit@magnolia>
+ <162872992222.1220643.2988115020171417694.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210810052851.42312-4-david@fromorbit.com>
+In-Reply-To: <162872992222.1220643.2988115020171417694.stgit@magnolia>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 10, 2021 at 03:28:51PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Wed, Aug 11, 2021 at 05:58:42PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> TO stop external users from using b_bn as the disk address of the
-> buffer, rename it to b_index to indicate that it is the buffer cache
-> index, not the block number of the buffer. Code that needs the disk
-> address should use xfs_buf_daddr() to obtain it.
+> In commit 8ad560d2565e, we changed xfs_rtalloc_query_range to constrain
+> the range of bits in the realtime bitmap file that would actually be
+> searched.  In commit a3a374bf1889, we changed the range again
+> (incorrectly), leading to the fix in commit d88850bd5516, which finally
+> corrected the range check code.  Unfortunately, the author never noticed
+> that the function modifies its input parameters, which is a totaly no-no
+> since none of the other range query functions change their input
+> parameters.
 > 
-> Do the rename and clean up any of the remaining b_bn cruft that is
-> left over and is now unused.
+> So, fix this function yet again to stash the upper end of the query
+> range (i.e. the high key) in a local variable and hope this is the last
+> time I have to fix my own function.  While we're at it, mark the key
+> inputs const so nobody makes this mistake again. :(
+
+Heh.
 
 Looks good:
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Although the XFS_BUF_SET_ADDR really is a separate thing and should
-probably have been a separate patch.
+> Not-fixed-by: a3a374bf1889 ("xfs: fix off-by-one error in xfs_rtalloc_query_range")
+> Not-fixed-by: d88850bd5516 ("xfs: fix high key handling in the rt allocator's query_range function")
+
+Are these tags a thing now or is this just a grumpy Darrick?
+
