@@ -2,138 +2,88 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0550C4338F
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 17:16:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6080CC4338F
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 18:20:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9B05A60724
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 17:16:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 36A946103A
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Aug 2021 18:20:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235348AbhHLRQ7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 12 Aug 2021 13:16:59 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42174 "EHLO mail.kernel.org"
+        id S232124AbhHLSUn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 12 Aug 2021 14:20:43 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39060 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235044AbhHLRQ6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 12 Aug 2021 13:16:58 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 5BD7160724;
-        Thu, 12 Aug 2021 17:16:33 +0000 (UTC)
+        id S230110AbhHLSUn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 12 Aug 2021 14:20:43 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id EFF3C6101E;
+        Thu, 12 Aug 2021 18:20:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1628788593;
-        bh=sjUQV9xtVqqh1HINKoYu4kxCkmUs65SxUnMpDMTjXPo=;
+        s=k20201202; t=1628792418;
+        bh=JybdGtheLHN3Mj/Zwakwlx9WQpCJZ2NuJAvWParHJto=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=KOCBHAdss1DoW92/2Zqyw36wxkPEytGChy3U/5jyzZKpH/A/7vfqmHgtFbjNOBUI1
-         QdYoqzHzaGy/03JB8GgpWYXAt9lwvU/VyqyjskETNih5+042IbddRecjU3Vm9f6HKv
-         F83PX/ythbf2gaC8/KjbvMx8EoMGrUw6XUbrvY31hPQOSDqPJqF36sJB5Nf+/bHnQF
-         WAnzDAFrBfEw+tIdRCw7uLf63YvEEo+j0U7Rt10o0IAsCJtD5XMT4nKuTce+Ae0OrP
-         a6hJIhyyrBW1YO84RLh2b6vfXk62oQK8F0Ur00JOr8vs0G2nGSzf1FoWch1xH2oo52
-         /M341aQt48Xdw==
-Date:   Thu, 12 Aug 2021 10:16:33 -0700
+        b=sFH2rvwIoIIyxoMUpG0SEHMNKtZWT90znpawNzy+LcqrnnvxZyloXVsddWvzunBNe
+         lRLQfbTu5pA3ON6dfVoaAwUtL4wu5CL3YQlGIlcuJ1guXlLKmGjl4mg/YTJZDa9CO2
+         rCQQ7A/ip6oZM912DmWf8QPms534KD6KUMzPulUlrBvkf2ZbFYuruORMVPpL4soor3
+         kw3tkhe/17TY17pmISITlT99RBuVV1CkAF/Yu1KYOu4F00/Io8kj763H9E/4Pe9oaH
+         J2nt4EYV091LTCNdXMhE5xEA1r/vmUAMYx/6P3FIwDqkuVkewpcVEI4qjOgUmTpJGY
+         jYYHMyXNRMn+A==
+Date:   Thu, 12 Aug 2021 11:20:17 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/3] xfs: remove the xfs_dqblk_t typedef
-Message-ID: <20210812171633.GU3601443@magnolia>
-References: <20210812084343.27934-1-hch@lst.de>
- <20210812084343.27934-4-hch@lst.de>
+Cc:     Dan Williams <dan.j.williams@intel.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Shiyang Ruan <ruansy.fnst@fujitsu.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, nvdimm@lists.linux.dev,
+        cluster-devel@redhat.com
+Subject: Re: [PATCH 11/30] iomap: add the new iomap_iter model
+Message-ID: <20210812182017.GX3601466@magnolia>
+References: <20210809061244.1196573-1-hch@lst.de>
+ <20210809061244.1196573-12-hch@lst.de>
+ <20210811003118.GT3601466@magnolia>
+ <20210811053856.GA1934@lst.de>
+ <20210811191708.GF3601443@magnolia>
+ <20210812064914.GA27145@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210812084343.27934-4-hch@lst.de>
+In-Reply-To: <20210812064914.GA27145@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 12, 2021 at 10:43:43AM +0200, Christoph Hellwig wrote:
-> Remove the few leftover instances of the xfs_dinode_t typedef.
+On Thu, Aug 12, 2021 at 08:49:14AM +0200, Christoph Hellwig wrote:
+> On Wed, Aug 11, 2021 at 12:17:08PM -0700, Darrick J. Wong wrote:
+> > > iter.c is also my preference, but in the end I don't care too much.
+> > 
+> > Ok.  My plan for this is to change this patch to add the new iter code
+> > to apply.c, and change patch 24 to remove iomap_apply.  I'll add a patch
+> > on the end to rename apply.c to iter.c, which will avoid breaking the
+> > history.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> What history?  There is no shared code, so no shared history and.
 
-With the commit message fixed,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+The history of the gluecode that enables us to walk a bunch of extent
+mappings.  In the beginning it was the _apply function, but now in our
+spectre-weary world, you've switched it to a direct loop to reduce the
+number of indirect calls in the hot path by 30-50%.
+
+As you correctly point out, there's no /code/ shared by the two
+implementations, but Dave and I would like to preserve the continuity
+from one to the next.
+
+> > I'll send the updated patches as replies to this series to avoid
+> > spamming the list, since I also have a patchset of bugfixes to send out
+> > and don't want to overwhelm everyone.
+> 
+> Just as a clear statement:  I think this dance is obsfucation and doesn't
+> help in any way.  But if that's what it takes..
+
+I /would/ appreciate it if you'd rvb (or at least ack) patch 31 so I can
+get the 5.15 iomap changes finalized next week.  Pretty please? :)
 
 --D
-
-> ---
->  fs/xfs/libxfs/xfs_dquot_buf.c | 4 ++--
->  fs/xfs/libxfs/xfs_format.h    | 4 ++--
->  fs/xfs/xfs_dquot.c            | 2 +-
->  fs/xfs/xfs_qm.c               | 2 +-
->  4 files changed, 6 insertions(+), 6 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
-> index 6766417d5ba448..7691e44d38b9ac 100644
-> --- a/fs/xfs/libxfs/xfs_dquot_buf.c
-> +++ b/fs/xfs/libxfs/xfs_dquot_buf.c
-> @@ -22,7 +22,7 @@ xfs_calc_dquots_per_chunk(
->  	unsigned int		nbblks)	/* basic block units */
->  {
->  	ASSERT(nbblks > 0);
-> -	return BBTOB(nbblks) / sizeof(xfs_dqblk_t);
-> +	return BBTOB(nbblks) / sizeof(struct xfs_dqblk);
->  }
->  
->  /*
-> @@ -127,7 +127,7 @@ xfs_dqblk_repair(
->  	 * Typically, a repair is only requested by quotacheck.
->  	 */
->  	ASSERT(id != -1);
-> -	memset(dqb, 0, sizeof(xfs_dqblk_t));
-> +	memset(dqb, 0, sizeof(struct xfs_dqblk));
->  
->  	dqb->dd_diskdq.d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
->  	dqb->dd_diskdq.d_version = XFS_DQUOT_VERSION;
-> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> index 5819c25c1478d0..61e454e4381e42 100644
-> --- a/fs/xfs/libxfs/xfs_format.h
-> +++ b/fs/xfs/libxfs/xfs_format.h
-> @@ -1411,7 +1411,7 @@ struct xfs_disk_dquot {
->   * This is what goes on disk. This is separated from the xfs_disk_dquot because
->   * carrying the unnecessary padding would be a waste of memory.
->   */
-> -typedef struct xfs_dqblk {
-> +struct xfs_dqblk {
->  	struct xfs_disk_dquot	dd_diskdq; /* portion living incore as well */
->  	char			dd_fill[4];/* filling for posterity */
->  
-> @@ -1421,7 +1421,7 @@ typedef struct xfs_dqblk {
->  	__be32		  dd_crc;	/* checksum */
->  	__be64		  dd_lsn;	/* last modification in log */
->  	uuid_t		  dd_uuid;	/* location information */
-> -} xfs_dqblk_t;
-> +};
->  
->  #define XFS_DQUOT_CRC_OFF	offsetof(struct xfs_dqblk, dd_crc)
->  
-> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-> index c301b18b7685b1..a86665bdd4afb5 100644
-> --- a/fs/xfs/xfs_dquot.c
-> +++ b/fs/xfs/xfs_dquot.c
-> @@ -471,7 +471,7 @@ xfs_dquot_alloc(
->  	 * Offset of dquot in the (fixed sized) dquot chunk.
->  	 */
->  	dqp->q_bufoffset = (id % mp->m_quotainfo->qi_dqperchunk) *
-> -			sizeof(xfs_dqblk_t);
-> +			sizeof(struct xfs_dqblk);
->  
->  	/*
->  	 * Because we want to use a counting completion, complete
-> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> index 2bef4735d03031..95fdbe1b7016da 100644
-> --- a/fs/xfs/xfs_qm.c
-> +++ b/fs/xfs/xfs_qm.c
-> @@ -850,7 +850,7 @@ xfs_qm_reset_dqcounts(
->  	 */
->  #ifdef DEBUG
->  	j = (int)XFS_FSB_TO_B(mp, XFS_DQUOT_CLUSTER_SIZE_FSB) /
-> -		sizeof(xfs_dqblk_t);
-> +		sizeof(struct xfs_dqblk);
->  	ASSERT(mp->m_quotainfo->qi_dqperchunk == j);
->  #endif
->  	dqb = bp->b_addr;
-> -- 
-> 2.30.2
-> 
