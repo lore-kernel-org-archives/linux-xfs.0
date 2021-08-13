@@ -4,139 +4,169 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56E36C4338F
-	for <linux-xfs@archiver.kernel.org>; Fri, 13 Aug 2021 16:16:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF09BC4338F
+	for <linux-xfs@archiver.kernel.org>; Fri, 13 Aug 2021 16:26:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3111A610CC
-	for <linux-xfs@archiver.kernel.org>; Fri, 13 Aug 2021 16:16:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B61BB60EB2
+	for <linux-xfs@archiver.kernel.org>; Fri, 13 Aug 2021 16:26:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232611AbhHMQQt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 13 Aug 2021 12:16:49 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45320 "EHLO mail.kernel.org"
+        id S229471AbhHMQ1E (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 13 Aug 2021 12:27:04 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49982 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232602AbhHMQQs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 13 Aug 2021 12:16:48 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id ED88C601FA;
-        Fri, 13 Aug 2021 16:16:21 +0000 (UTC)
+        id S234309AbhHMQ1D (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 13 Aug 2021 12:27:03 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B03F5610A4;
+        Fri, 13 Aug 2021 16:26:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1628871382;
-        bh=80phKlIywnBAWok3CEUnZINoEWdAUB937Tg87OJYNUk=;
+        s=k20201202; t=1628871996;
+        bh=f6CeVft/lEe9k+7VQRrspkKiwwAdf8DMs+X0a23/Pew=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=jxdTIzfaj4eJa5b0/Ssih7C6oSOywZ6D+6vl5ttcLyIJ96DbVRMRNOtxoZyPFFAZv
-         zm1tiXOCUAI82hI6RxEdz9VScUnfOQ6KJgxJvZvXzrIDW0iSKT1ByOjoUSuKjPY6XF
-         5XcNVyly9oXd890v8E4IXDsPWLj7bSNbTH+qfLb3AgKgCbOCH7mOYQRXbDiOgeC3EV
-         NP2EBAYhlsV7DlG8KKZg70TXBpGeNGhGvA7hdt+cT/kKdaAy2Zp9WBv3YDyPg+mTuw
-         cq0+MDRmUd70aKu4Z3eO1aTSs/rvt0FqvA4filLYOkPWUC8AIZZciCoW+iW9LpWEQ5
-         6W9VaqUqImMeA==
-Date:   Fri, 13 Aug 2021 09:16:21 -0700
+        b=AjJvCJjZlooVpvlwmKBumF2PNo8m84epIV4txrBF+AUJ+uIToFGUfAgDMXABs6Oux
+         4JIkOrPEju9z+ynMmbqj7dHlmzS1dyyBxZ9Xl4CJ4M5Mawm7cWo4jM6tGEG54La5YZ
+         imHyCiiPqSIeQNSAuGG9cY3f67izx5q6xNbL2HNzXq50KzPJ0TCY5fsqSjgAKfhwbJ
+         oT4rdlrB92pURS7yG6f7ejOH8108xlMjN3LHiP/tUQieUC9uhTthyv3Dv8T29DFerQ
+         ojNsNlT11teizGZTnmEpAKVhNmcH1qijUcUmGlUkqKUkKPXoK7Z9M0sE1PFI93xgnL
+         l77yHhroyiFEw==
+Date:   Fri, 13 Aug 2021 09:26:36 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Chandan Babu R <chandanrlinux@gmail.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs: fix off-by-one error when the last rt extent is
- in use
-Message-ID: <20210813161621.GW3601443@magnolia>
-References: <162872991654.1220643.136984377220187940.stgit@magnolia>
- <162872992772.1220643.10308054638747493338.stgit@magnolia>
- <87fsvdlijp.fsf@garuda>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org, Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [PATCH] xfs: remove support for untagged lookups in xfs_icwalk*
+Message-ID: <20210813162636.GX3601443@magnolia>
+References: <20210813081623.83323-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <87fsvdlijp.fsf@garuda>
+In-Reply-To: <20210813081623.83323-1-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Aug 13, 2021 at 04:20:34PM +0530, Chandan Babu R wrote:
-> On 11 Aug 2021 at 17:58, "Darrick J. Wong" <djwong@kernel.org> wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> >
-> > The fsmap implementation for realtime devices uses the gap between
-> > info->next_daddr and a free rtextent reported by xfs_rtalloc_query_range
-> > to feed userspace fsmap records with an "unknown" owner.  We use this
-> > trick to report to userspace when the last rtextent in the filesystem is
-> > in use by synthesizing a null rmap record starting at the next block
-> > after the query range.
-> >
-> > Unfortunately, there's a minor accounting bug in the way that we
-> > construct the null rmap record.  Originally, ahigh.ar_startext contains
-> > the last rtextent for which the user wants records.  It's entirely
-> > possible that number is beyond the end of the rt volume, so the location
-> > synthesized rmap record /must/ be constrained to the minimum of the high
-> > key and the number of extents in the rt volume.
-> >
+On Fri, Aug 13, 2021 at 10:16:23AM +0200, Christoph Hellwig wrote:
+> With quotaoff not allowing disabling of accounting there is no need
+> for untagged lookups in this code, so remove the dead leftovers.
 > 
-> When the number of blocks on the realtime device is not an integral multiple
-> of xfs_sb->sb_rextsize, ahigh.ar_startext can contain a value which is one
-> more than the highest valid rtextent. Hence, without this patch, the last
-> record reported to the userpace might contain an invalid upper bound. Assuming
-> that my understanding is indeed correct,
+> Repoted-by: Dan Carpenter <dan.carpenter@oracle.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_icache.c | 39 ++++-----------------------------------
+>  1 file changed, 4 insertions(+), 35 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index e7e69e55b7680a..f5a52ec084842d 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+> @@ -43,15 +43,6 @@ enum xfs_icwalk_goal {
 
-Correct.  Thanks for reviewing this!
+The patch itself looks fine, so
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+
+But you might as well convert the ag walk to use the foreach macros
+like everywhere else:
 
 --D
 
-> 
-> Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
-> 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  fs/xfs/xfs_fsmap.c |   22 +++++++++++++++++-----
-> >  1 file changed, 17 insertions(+), 5 deletions(-)
-> >
-> >
-> > diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-> > index 7d0b09c1366e..a0e8ab58124b 100644
-> > --- a/fs/xfs/xfs_fsmap.c
-> > +++ b/fs/xfs/xfs_fsmap.c
-> > @@ -523,27 +523,39 @@ xfs_getfsmap_rtdev_rtbitmap_query(
-> >  {
-> >  	struct xfs_rtalloc_rec		alow = { 0 };
-> >  	struct xfs_rtalloc_rec		ahigh = { 0 };
-> > +	struct xfs_mount		*mp = tp->t_mountp;
-> >  	int				error;
-> >  
-> > -	xfs_ilock(tp->t_mountp->m_rbmip, XFS_ILOCK_SHARED);
-> > +	xfs_ilock(mp->m_rbmip, XFS_ILOCK_SHARED);
-> >  
-> > +	/*
-> > +	 * Set up query parameters to return free extents covering the range we
-> > +	 * want.
-> > +	 */
-> >  	alow.ar_startext = info->low.rm_startblock;
-> > +	do_div(alow.ar_startext, mp->m_sb.sb_rextsize);
-> > +
-> >  	ahigh.ar_startext = info->high.rm_startblock;
-> > -	do_div(alow.ar_startext, tp->t_mountp->m_sb.sb_rextsize);
-> > -	if (do_div(ahigh.ar_startext, tp->t_mountp->m_sb.sb_rextsize))
-> > +	if (do_div(ahigh.ar_startext, mp->m_sb.sb_rextsize))
-> >  		ahigh.ar_startext++;
-> > +
-> >  	error = xfs_rtalloc_query_range(tp, &alow, &ahigh,
-> >  			xfs_getfsmap_rtdev_rtbitmap_helper, info);
-> >  	if (error)
-> >  		goto err;
-> >  
-> > -	/* Report any gaps at the end of the rtbitmap */
-> > +	/*
-> > +	 * Report any gaps at the end of the rtbitmap by simulating a null
-> > +	 * rmap starting at the block after the end of the query range.
-> > +	 */
-> >  	info->last = true;
-> > +	ahigh.ar_startext = min(mp->m_sb.sb_rextents, ahigh.ar_startext);
-> > +
-> >  	error = xfs_getfsmap_rtdev_rtbitmap_helper(tp, &ahigh, info);
-> >  	if (error)
-> >  		goto err;
-> >  err:
-> > -	xfs_iunlock(tp->t_mountp->m_rbmip, XFS_ILOCK_SHARED);
-> > +	xfs_iunlock(mp->m_rbmip, XFS_ILOCK_SHARED);
-> >  	return error;
-> >  }
-> >  
-> 
-> 
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index f5a52ec08484..b7ffdc03e0f7 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -1762,16 +1762,16 @@ xfs_icwalk(
+ 	struct xfs_perag	*pag;
+ 	int			error = 0;
+ 	int			last_error = 0;
+-	xfs_agnumber_t		agno = 0;
++	xfs_agnumber_t		agno;
+ 
+-	while ((pag = xfs_perag_get_tag(mp, agno, goal))) {
+-		agno = pag->pag_agno + 1;
++	for_each_perag_tag(mp, agno, pag, goal) {
+ 		error = xfs_icwalk_ag(pag, goal, icw);
+-		xfs_perag_put(pag);
+ 		if (error) {
+ 			last_error = error;
+-			if (error == -EFSCORRUPTED)
++			if (error == -EFSCORRUPTED) {
++				xfs_perag_put(pag);
+ 				break;
++			}
+ 		}
+ 	}
+ 	return last_error;
+>  	XFS_ICWALK_RECLAIM	= XFS_ICI_RECLAIM_TAG,
+>  };
+>  
+> -#define XFS_ICWALK_NULL_TAG	(-1U)
+> -
+> -/* Compute the inode radix tree tag for this goal. */
+> -static inline unsigned int
+> -xfs_icwalk_tag(enum xfs_icwalk_goal goal)
+> -{
+> -	return goal < 0 ? XFS_ICWALK_NULL_TAG : goal;
+> -}
+> -
+>  static int xfs_icwalk(struct xfs_mount *mp,
+>  		enum xfs_icwalk_goal goal, struct xfs_icwalk *icw);
+>  static int xfs_icwalk_ag(struct xfs_perag *pag,
+> @@ -1676,22 +1667,14 @@ xfs_icwalk_ag(
+>  	nr_found = 0;
+>  	do {
+>  		struct xfs_inode *batch[XFS_LOOKUP_BATCH];
+> -		unsigned int	tag = xfs_icwalk_tag(goal);
+>  		int		error = 0;
+>  		int		i;
+>  
+>  		rcu_read_lock();
+>  
+> -		if (tag == XFS_ICWALK_NULL_TAG)
+> -			nr_found = radix_tree_gang_lookup(&pag->pag_ici_root,
+> -					(void **)batch, first_index,
+> -					XFS_LOOKUP_BATCH);
+> -		else
+> -			nr_found = radix_tree_gang_lookup_tag(
+> -					&pag->pag_ici_root,
+> -					(void **) batch, first_index,
+> -					XFS_LOOKUP_BATCH, tag);
+> -
+> +		nr_found = radix_tree_gang_lookup_tag(&pag->pag_ici_root,
+> +				(void **) batch, first_index,
+> +				XFS_LOOKUP_BATCH, goal);
+>  		if (!nr_found) {
+>  			done = true;
+>  			rcu_read_unlock();
+> @@ -1769,20 +1752,6 @@ xfs_icwalk_ag(
+>  	return last_error;
+>  }
+>  
+> -/* Fetch the next (possibly tagged) per-AG structure. */
+> -static inline struct xfs_perag *
+> -xfs_icwalk_get_perag(
+> -	struct xfs_mount	*mp,
+> -	xfs_agnumber_t		agno,
+> -	enum xfs_icwalk_goal	goal)
+> -{
+> -	unsigned int		tag = xfs_icwalk_tag(goal);
+> -
+> -	if (tag == XFS_ICWALK_NULL_TAG)
+> -		return xfs_perag_get(mp, agno);
+> -	return xfs_perag_get_tag(mp, agno, tag);
+> -}
+> -
+>  /* Walk all incore inodes to achieve a given goal. */
+>  static int
+>  xfs_icwalk(
+> @@ -1795,7 +1764,7 @@ xfs_icwalk(
+>  	int			last_error = 0;
+>  	xfs_agnumber_t		agno = 0;
+>  
+> -	while ((pag = xfs_icwalk_get_perag(mp, agno, goal))) {
+> +	while ((pag = xfs_perag_get_tag(mp, agno, goal))) {
+>  		agno = pag->pag_agno + 1;
+>  		error = xfs_icwalk_ag(pag, goal, icw);
+>  		xfs_perag_put(pag);
 > -- 
-> chandan
+> 2.30.2
+> 
