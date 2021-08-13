@@ -8,33 +8,33 @@ X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53059C4320A
-	for <linux-xfs@archiver.kernel.org>; Fri, 13 Aug 2021 06:32:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD688C4320A
+	for <linux-xfs@archiver.kernel.org>; Fri, 13 Aug 2021 06:32:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 36BA7610CC
-	for <linux-xfs@archiver.kernel.org>; Fri, 13 Aug 2021 06:32:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C5406610E9
+	for <linux-xfs@archiver.kernel.org>; Fri, 13 Aug 2021 06:32:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238881AbhHMGdS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 13 Aug 2021 02:33:18 -0400
+        id S238998AbhHMGdW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 13 Aug 2021 02:33:22 -0400
 Received: from mail-co1nam11on2089.outbound.protection.outlook.com ([40.107.220.89]:28373
         "EHLO NAM11-CO1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S238996AbhHMGdJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 13 Aug 2021 02:33:09 -0400
+        id S238980AbhHMGdR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 13 Aug 2021 02:33:17 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Kdq/7hh996NUYmjU+DIwV9AwdY8A0QX1rAX7P7QSdlJDs2HOFaNXYeWMEqylLduG9HtDXrpyxL54jmI91oLF7potepRViFqPuix/2haaDW+6k4DmvUnHxvTFDdkEp2wWAxmZfm7S0A/cFHevy0mFnvpjkkd8LXXzuvf/mp2cjvBjyVYxbg5OpP97ugRe/EKzcYrfz5VACzV2+zpaOWPs177B2pakxc/NhY55XPLfRQ59rsw+pDV4XAZCkbMFUHk7aIwSNSKlvIlR4k+68we2HiOPNZARDAVGTjnf+F4dEP9npejmPrUapkW/QB6kJQqrkmxSdLL6IA4wcNmDFk1KHA==
+ b=eE5Ryv4CshcTDh/2mu2RwARicpDS9iVn2BDyLzcj/vOLE9hFLOxejH/iPlow6B51h85ax0zWRQCH9K/ZzJfuN27HNSM9QDdSt34UNl5SQiyJGIHVMkg6yWzsslQPlCDlMjgsRXeH6Zjt5/B0xNJgA4WCOFcIWug9+vlTsW76Ct1PaeQH9p92NyM52K/iVlOYH40eMKE19JOxdyBrDAqswcr8N0fPN2CVxf35at486BgHsFwzLhplM2d0mWQ5yDhqWf85MCn/pQmUtTjxNsUBnWLAnkZgr5orP52fAR/Cuq6qijZZYlzgl2DhWmx+/y2E8Gbj1CBJlEITDksZDCBkuw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=JsBEIybxLlWQ1DvvPR9uO9H1ffiY515x5QP2dx6aNZI=;
- b=IkmUV+jFm6EvaOZUXH594FrlKrOtc5iejyBc87H335kPRVtSwtUIwoVD4c6typOaKF67i4GP3ildiYkWHmdC8iMwSPGC4vqkYZ7LXclDpueD7T6zm4tOpXAT9whPp8CNCmZ/JlV4lBN6/IRHKgf1RzNVJK2x7An4IR4CuSNUVUz/Kve1iS7FipUpLohJyICV7PPJmH6U898ldkTMqNQ9RGhv8+GxjxjWPW0LgJjP2K5+L6xLMC8UcRZlOPVrBAA0aajlXJVN1KXBkNEssICPDMUemdF4sTL7KnMk9oGjXiNOSdjQ5EUDnvNRdFBk7ZbhqWkXyR/12pQMxCEeJuBrCQ==
+ bh=m750G1HruRY8e0UdQp9kGzjlljIQJX1uEk9lQNpHmcQ=;
+ b=kCcC2qeQ1nDWdxXi6puRkBe3NpSTd942PvDSaKnz/KI4c+17nD6e+BCy5FBmBTxFhwxLs+E3ZJwdMZiSHqwUgNO69ivLqM+RWQnSTJRlaG6o8gwtbUIjjZLlwc79EYgMeB7k8RUVQFHytDfTqJU/yuS/NMo7xp724ELJCt/0vZssYHwf8LFCcFLx/Hr/hOnxiVVbU4V9eBlY3wD10q6oFKCTKbE+3nldgE82LQwhBqptu5cwOTo9yD39cSylqL5OlXDThe/xClNjCowz+eT6WeuYLJ1r3yUs1FtSyFMYjSqVqoOspIr3sr1VOFcdAmleh/5h5zLZEtex/I2nCzB5hQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
  header.d=amd.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=JsBEIybxLlWQ1DvvPR9uO9H1ffiY515x5QP2dx6aNZI=;
- b=Aff3Km2+yPEv8lQyBgURpfX0gY84b6jq7Dv4VTZRCOMvXs1brNNfVebm2b4rr911EHj81YxF9BbTCa7GhEWMVziJ77pUhv5o7cFbNXwCtpNLxgVFH+xoBiX2DoPomM4avQkFgNjimh2sRa6S0XeLklcZlkLz5r6t/wMJaW6X5+M=
+ bh=m750G1HruRY8e0UdQp9kGzjlljIQJX1uEk9lQNpHmcQ=;
+ b=foVTs7QmpNnxpET8ycMpM/ZY+WH7jCYMzabqh54Rg6EnNhuJ+muDKy/ZcmK8OkEZdlvyxOIKGxJ+JWBFr6MfRIxRNhBeBKohDe4p2RxvKiaLzyB52nXfpTfK3usOwH+PX51h9tafTmj8RkOTSJUO2mi23tFFo+XTnOuf2YOSXO8=
 Authentication-Results: linux-foundation.org; dkim=none (message not signed)
  header.d=none;linux-foundation.org; dmarc=none action=none
  header.from=amd.com;
@@ -42,20 +42,20 @@ Received: from SA0PR12MB4430.namprd12.prod.outlook.com (2603:10b6:806:70::20)
  by SN6PR12MB2782.namprd12.prod.outlook.com (2603:10b6:805:73::19) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4394.19; Fri, 13 Aug
- 2021 06:32:10 +0000
+ 2021 06:32:11 +0000
 Received: from SA0PR12MB4430.namprd12.prod.outlook.com
  ([fe80::e828:5445:a5aa:94cb]) by SA0PR12MB4430.namprd12.prod.outlook.com
  ([fe80::e828:5445:a5aa:94cb%5]) with mapi id 15.20.4415.019; Fri, 13 Aug 2021
- 06:32:10 +0000
+ 06:32:11 +0000
 From:   Alex Sierra <alex.sierra@amd.com>
 To:     akpm@linux-foundation.org, Felix.Kuehling@amd.com,
         linux-mm@kvack.org, rcampbell@nvidia.com,
         linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
 Cc:     amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
         hch@lst.de, jgg@nvidia.com, jglisse@redhat.com
-Subject: [PATCH v6 10/13] lib: test_hmm add module param for zone device type
-Date:   Fri, 13 Aug 2021 01:31:47 -0500
-Message-Id: <20210813063150.2938-11-alex.sierra@amd.com>
+Subject: [PATCH v6 12/13] tools: update hmm-test to support device generic type
+Date:   Fri, 13 Aug 2021 01:31:49 -0500
+Message-Id: <20210813063150.2938-13-alex.sierra@amd.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20210813063150.2938-1-alex.sierra@amd.com>
 References: <20210813063150.2938-1-alex.sierra@amd.com>
@@ -66,200 +66,368 @@ X-ClientProxiedBy: SN7PR18CA0026.namprd18.prod.outlook.com
  (2603:10b6:806:70::20)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from alex-MS-7B09.amd.com (165.204.78.1) by SN7PR18CA0026.namprd18.prod.outlook.com (2603:10b6:806:f3::18) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4415.17 via Frontend Transport; Fri, 13 Aug 2021 06:32:09 +0000
+Received: from alex-MS-7B09.amd.com (165.204.78.1) by SN7PR18CA0026.namprd18.prod.outlook.com (2603:10b6:806:f3::18) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4415.17 via Frontend Transport; Fri, 13 Aug 2021 06:32:11 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 7d37b7bb-2d1d-43bf-74f2-08d95e24140d
+X-MS-Office365-Filtering-Correlation-Id: ac1d92a4-c959-4f47-5e33-08d95e241507
 X-MS-TrafficTypeDiagnostic: SN6PR12MB2782:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <SN6PR12MB278287D76F3F1D6C8ED2F883FDFA9@SN6PR12MB2782.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:3173;
+X-Microsoft-Antispam-PRVS: <SN6PR12MB2782B02A21A95E428BD36458FDFA9@SN6PR12MB2782.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:5797;
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: ZAGYzmakKvvJk2m3v8GkmMj9aifzCiTHgLxu+/w1olG6eI5wK2+O5N+49sNwuH5mG3vGxg4/r9dQdqoKKlQxzsDNxdQIomEfhVblFsrgX1VZhCtSpp3pZInZMAY6o5X+QMrIo2rrz7gLGv6Mchc+M8Fgr/R0du7eB41HvqfFX1M5rouxPFwHDsFgwzQmaZGgIfEcl8dfSFd40ZpUN/uonf+kdw4xtPYVOFSDoOyk+lF9o/sCSxXsVueyy9deN9oOnHPJWIUeV7I7fiCXI378FIkly3EGIUsb6pSb0sMkNgfl1S1U481XFV9jFEwHnMKHYJRlGKgsRfW03AdPUIoEw6AOme1p6G0QLCu/2bK878k5hgB/VJww6xVb2PWC7APbNhm3a8c4T4tXXOoRb4YqJ8txNSG5kSygCaLC85TKreVU9LBeAQAIag37CJ5JP9GrShRD7+1kreBpjb4RTb5164vcrU0vcaQWr7uMqTKf0ql8Kpvudqnf6hZD+3D+v+TrMu9BwCxcsHydteGQDVhDYS6WuivpOP/emD6dl+kSwYVa7DIfR3Ve8zVnoRRh5HIrp6oLcP722MCgaPlpEPWYFKWASmFJ5FZJfZCO1S9cZHHK+P69Z0k/nq1jG4xyRCttWtwJjgLegpPHD68JHs1utvMQZ47LpPBtxzGb2Y16yexRk/hlPr/QAFfekPboWB798sy6g/NI09IF4lkg4AosKQ==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA0PR12MB4430.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(376002)(346002)(396003)(39860400002)(136003)(316002)(2616005)(956004)(7416002)(38350700002)(7696005)(38100700002)(66946007)(66556008)(4326008)(52116002)(36756003)(6666004)(66476007)(1076003)(8936002)(5660300002)(83380400001)(44832011)(2906002)(478600001)(26005)(6486002)(186003)(8676002)(86362001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: TO05hNAd8tssUOjdOgS6ZyFCOZe44ZmMao6sHWbNYbbqX+tTX207wQskE9x9JZ+LpsiNfenQpUK3B6DQSqkHsCWTe2An6aQZHgdfTO5qF2bj+MZun94H84gHM40HkZEc/y4E5tAPJD9s41Tv1D1tYFZio8nLbC3TLfet4+uyennJ8hrxmhRQXdWJu9VJWDAQ/evm33G6JtGrl3dHdhhAyDAUWCN6W3fMDWAzXrfRtoqeTf1D/8Nmai7BnVKVAJXa/i9lMB+euY1bIJgpIzbJC2RMHq77e+9rzaK+ZEB9QrB8xl4Cyglx8Pm7Tiqgs8+L59ilyEG1AiNZ9yt5+cc1ZmmAMNwqcUPyBlkPBATI5EgTG215UTE0NN0laQuuuUQLdIY/FnS5rPfKkNLQ+9YtM6ktZ0cxCxs7MhW3bj7UvbDJhINiA4M0RzAYP4VVXV5p5vaq1DzVDatBz6W7xzlUpwvMut4+fpnuzh9SmNigD4uogLjepbXgD+MejS7d2DZsL4e3VGDv8kPsZAYDhKnwHy0B/aMuGMskaPXsOrNr4kqLs5+b+nCD+g+aL/C0xrJ/Us+usOK8NVNj8m0Zd2tGdhiIBvufIMQVjym67KKzIn8EO1lD0R4sKM1z6E7Byzpbaphy1b0K/lmJuPG8uzkAcNlUG5Ka85cmZdq61VmJhWALHS9CLXf8fIyyMro7uwl7MNMh3SQa85MLKm1/vipS3VxWHDew4qwYhcTTdI3Dfdo=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA0PR12MB4430.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(376002)(346002)(396003)(39860400002)(136003)(316002)(2616005)(956004)(7416002)(38350700002)(7696005)(38100700002)(66946007)(66556008)(4326008)(52116002)(36756003)(6666004)(15650500001)(66476007)(1076003)(8936002)(5660300002)(83380400001)(44832011)(2906002)(478600001)(26005)(6486002)(186003)(8676002)(86362001)(41533002);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?wnDOf6PA8Kd4Y6Nx/ouIhCZkKUjds6ONup73Mw2PI1TpIrYUZ4K0XKL9FdQq?=
- =?us-ascii?Q?PI71gRCMH2EUHtRcmR11tOJltTHyOCSDYjFooo8k80cZTwbPBzEBweFaMp4R?=
- =?us-ascii?Q?tdEXHqlekjsAunLk+k2akiRq/Hfgn7a+4VY2fuTpL2BZ92tT86Dxo+fBUiTm?=
- =?us-ascii?Q?FetoW02f6X5FrGT1N8+Pg0/zKE5RHxWGYdiQNzcUWo4AwoOBKSuKQquxOs30?=
- =?us-ascii?Q?O4eBnyW7wwbiHWb8LwOpasoMmpE78w1DZksRAXyqddi/EMHTKFEz2qYTLUFk?=
- =?us-ascii?Q?wRjZszQ16eCGOkh5q7nS3Xg7eZKRGRJOoJ5Ie5deY3ZGev1xdW+9+uA8105U?=
- =?us-ascii?Q?LNwUW59Fs5a3QMeBhdYwKX9/G90sgnJcNGPYJGos5NFEtcYA+LY48LnsD1Vx?=
- =?us-ascii?Q?4zgohdMOoS7Dm7OA++IFcjMbviLNg68ThXKSB7cyJrUira14NqTRG4x8iqje?=
- =?us-ascii?Q?STNj+l4EMtS9TuthEalf5VsLdReCqMZRrGbLrwDqfrkY8c8QU4l22DAzry9A?=
- =?us-ascii?Q?2cAcayezOdcyMiefIQgKkdT7OhO7SW+CfG6HDrR5mByKNVPyPgu+udBYyedz?=
- =?us-ascii?Q?GBnpN8ctRXoIZZjYLHD9+8l6AXpcP8udU9x+z94IXVSCbTZXvTkbJ5qyoSFI?=
- =?us-ascii?Q?MvoEOQQoTqjUkIVZvHMnQJQRUat/37Cg6kEemPwuZ4jn+oc45eReEQ9FN9r2?=
- =?us-ascii?Q?1WndRcvdSJmczD8WYCmuMhL7zqX3vdaOhNVQC0FcvPqTuTabAiG4BHDK3vxj?=
- =?us-ascii?Q?v/MSdwwP70hEFK7npLB+jUddYQHFdvg4Me96YiulhHzJsEOL9llZz4jnxfjc?=
- =?us-ascii?Q?t2+SibpISQxJH8Hpwm1lM1ghY+GtffkFyvhn0P9W7I9jKy+whamWHqwE5ebc?=
- =?us-ascii?Q?oQ0Q961LSxl3zcu9azBpvzTXCKBzQyjwfpelC4uJcEmnH484x1p95urtQhkg?=
- =?us-ascii?Q?hDSzqHh9UM6x07uPKUCa7Omxuzn1AIQLTi9Uq76214EYSEPRttK/1izvNSAi?=
- =?us-ascii?Q?bkF/G+DzyMwHPwGuKGMhErdHXpVgUYgV9XHxeHB3dWZcr9nf5W3zYGKFJ/F1?=
- =?us-ascii?Q?i3Zm4PxKAyaGDsD1O4UajQMNltmgdMsmk6hKezob+X0CK/L19LP4tfOI3NQA?=
- =?us-ascii?Q?UjkUhRQfKf6ogwJyvifmm4IocWBd/EZQiX1MFI/BsZ3JFtsvioh2/Pi7ZyR6?=
- =?us-ascii?Q?BankQlOHHd47DuzYAq5rlyyaUQyxprGktoW/i4Lp7teXPl8rzYB68IVcNKHQ?=
- =?us-ascii?Q?SK9YBD6KOXzfDdxVPJlu1uQRcH6SuBNSpHorJ5zP9jpPSaphXgxOa42DpjJw?=
- =?us-ascii?Q?IcDCyzsmzzT6Um27rgORkP6x?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?GOuBv7XINGGgrKbJ8VA9PhrTAKPYYe2lFBGWy9LmrOn4EmWolM6+Y54aXry8?=
+ =?us-ascii?Q?lQR+Gsy/+sSzF/xApLFHnb0fDzgIg0/ArKW7uXAlBHtSmnptqPByuHg48snd?=
+ =?us-ascii?Q?IRL3REhAVM3ZboxHRntXPn/yyBLHWovuyjPWobCd+qar+R35tcCZKcxaNuyM?=
+ =?us-ascii?Q?JGJFbl99pbu9UWajtABxKfDjbECk/LuLz1lMEcG8AxhORDMvayggEi+WeZFS?=
+ =?us-ascii?Q?SZGqWn8gNIl9sTpGaP4C/m6Rm0FYyxrGPiH80oGbayR+igBXJrakAiYYsOE6?=
+ =?us-ascii?Q?0cyqMTXe8DU0kYqATClUIrNyhhOYWgTGa5DdSimElPvdbdpG2oHExIWh3kio?=
+ =?us-ascii?Q?SLzg6W/s8WY0eKTg8WqvL9bZAx59oBEiqa6m1POgEnePZUwJQ67rhx5T8Kog?=
+ =?us-ascii?Q?xNdArcq8H1FmbmKGBDxFlWRCav2u0j2dWmg29XQevs/TR7ffQl3hlz5Kvz+s?=
+ =?us-ascii?Q?dPqTrk7TWBFdOC89txSsG+npYJUwOVwKLtDvSNR3PI73Zkce1GlOMNuoWFEA?=
+ =?us-ascii?Q?8A3jzPK5NlbamKhw0PGRrgvNpQkGUVrkWg07A70f3P/SfCeKUn5vBbHFk/DZ?=
+ =?us-ascii?Q?+bOhXP5EpTemnKhfZ+/1BtRm4YVTCP4Sg1ji3jA1wccj8UeHP+7EHI5h8NLn?=
+ =?us-ascii?Q?Yo7jKCROg3YEDvWipVu0tkM8c+0Wz+6AQxpcg6Z38vixAlTMY8pbMIPFKQzV?=
+ =?us-ascii?Q?L49eKdnHfxV5Jp3Ti9XEPck1LUm2XA0nxdOXIfOYhd679qTTJsGWzZBfoaU8?=
+ =?us-ascii?Q?LpgrIkXCzs4sCSJifVb/95BJT/VJFx7dcVwbw/MVAyqe10ckYheQn+6ZmmVn?=
+ =?us-ascii?Q?rG33V+pAv5H+4aUDYX00O/cxNfo9Ks5s5Zh59+bSbbRTpY3hCWUyJblUnSLn?=
+ =?us-ascii?Q?LWl5RnU3F5tkxaATek5g6LHeurGN4NdC06bDF/zN3aq5WUWBSzU3hryQqhu6?=
+ =?us-ascii?Q?kvIcEoNIJLp1TNGghvX+OTmCpE7MvMgMin/+QiHmV5OMApp/GislkNl6Nm6p?=
+ =?us-ascii?Q?nTkkZsUZv9orPwpHYnePM9TNXULSLCrvyyqeH3fcx2B3rw/eDIGrRbN7pOUW?=
+ =?us-ascii?Q?C3p6bUhJFSVcwCzpA8HvvFRzd0rI0eTTzoRPqdbJZ+qYFyoOwgUIf2XTyL7m?=
+ =?us-ascii?Q?txdEJ7dIuEX8dCYxtwtmylhScaFMPUaTjigblFHHmTb+GPl282f40+F/9pUM?=
+ =?us-ascii?Q?D9puj8EaO4o+gB9dMFFjt9wXnnIQU9xnggqbEfjCGr2UhX/azGhxlfAdvSWp?=
+ =?us-ascii?Q?azWpKlfWVUU4mMLwG1aElXg6Hnfdy/nesJeIjM9Cl20+eKIdy8115C31wgrL?=
+ =?us-ascii?Q?r3ao4zbBFezl2j5zarYlQQKU?=
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7d37b7bb-2d1d-43bf-74f2-08d95e24140d
+X-MS-Exchange-CrossTenant-Network-Message-Id: ac1d92a4-c959-4f47-5e33-08d95e241507
 X-MS-Exchange-CrossTenant-AuthSource: SA0PR12MB4430.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Aug 2021 06:32:09.9339
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Aug 2021 06:32:11.5822
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 3g/BXQhqIqEXqZSBmnSZVI8/WZv3RNJp8djrJB+Ml7/ZGsLI+/GsLz8843NDjFL88G3+CI/g73+5EP/oAYyXEw==
+X-MS-Exchange-CrossTenant-UserPrincipalName: NeLxZSkiyHywc92j0VTKmTBPj8ZPJesHRybBUCpLrrkOhG2dTeuj2hNaeHyMF6jxhWCJpSQZEHrDEAlzJn8KGg==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR12MB2782
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-In order to configure device generic in test_hmm, two
-module parameters should be passed, which correspon to the
-SP start address of each device (2) spm_addr_dev0 &
-spm_addr_dev1. If no parameters are passed, private device
-type is configured.
+Test cases such as migrate_fault and migrate_multiple,
+were modified to explicit migrate from device to sys memory
+without the need of page faults, when using device generic
+type.
 
-v5:
-Remove devmem->pagemap.type = MEMORY_DEVICE_PRIVATE at
-dmirror_allocate_chunk that was forcing to configure pagemap.type
-to MEMORY_DEVICE_PRIVATE
+Snapshot test case updated to read memory device type
+first and based on that, get the proper returned results
+migrate_ping_pong test case added to test explicit migration
+from device to sys memory for both private and generic
+zone types.
 
-v6:
-Check for null pointers for resource and memremap references
-at dmirror_allocate_chunk
+Helpers to migrate from device to sys memory and vicerversa
+were also added.
 
 Signed-off-by: Alex Sierra <alex.sierra@amd.com>
 ---
- lib/test_hmm.c      | 56 ++++++++++++++++++++++++++++++++-------------
- lib/test_hmm_uapi.h |  1 +
- 2 files changed, 41 insertions(+), 16 deletions(-)
+ tools/testing/selftests/vm/hmm-tests.c | 142 +++++++++++++++++++++----
+ 1 file changed, 124 insertions(+), 18 deletions(-)
 
-diff --git a/lib/test_hmm.c b/lib/test_hmm.c
-index 3cd91ca31dd7..b4f885c6c6ae 100644
---- a/lib/test_hmm.c
-+++ b/lib/test_hmm.c
-@@ -33,6 +33,16 @@
- #define DEVMEM_CHUNK_SIZE		(256 * 1024 * 1024U)
- #define DEVMEM_CHUNKS_RESERVE		16
- 
-+static unsigned long spm_addr_dev0;
-+module_param(spm_addr_dev0, long, 0644);
-+MODULE_PARM_DESC(spm_addr_dev0,
-+		"Specify start address for SPM (special purpose memory) used for device 0. By setting this Generic device type will be used. Make sure spm_addr_dev1 is set too");
-+
-+static unsigned long spm_addr_dev1;
-+module_param(spm_addr_dev1, long, 0644);
-+MODULE_PARM_DESC(spm_addr_dev1,
-+		"Specify start address for SPM (special purpose memory) used for device 1. By setting this Generic device type will be used. Make sure spm_addr_dev0 is set too");
-+
- static const struct dev_pagemap_ops dmirror_devmem_ops;
- static const struct mmu_interval_notifier_ops dmirror_min_ops;
- static dev_t dmirror_dev;
-@@ -450,11 +460,11 @@ static int dmirror_write(struct dmirror *dmirror, struct hmm_dmirror_cmd *cmd)
- 	return ret;
- }
- 
--static bool dmirror_allocate_chunk(struct dmirror_device *mdevice,
-+static int dmirror_allocate_chunk(struct dmirror_device *mdevice,
- 				   struct page **ppage)
- {
- 	struct dmirror_chunk *devmem;
--	struct resource *res;
-+	struct resource *res = NULL;
- 	unsigned long pfn;
- 	unsigned long pfn_first;
- 	unsigned long pfn_last;
-@@ -462,15 +472,26 @@ static bool dmirror_allocate_chunk(struct dmirror_device *mdevice,
- 
- 	devmem = kzalloc(sizeof(*devmem), GFP_KERNEL);
- 	if (!devmem)
--		return false;
-+		return -ENOMEM;
-+
-+	if (!spm_addr_dev0 && !spm_addr_dev1) {
-+		res = request_free_mem_region(&iomem_resource, DEVMEM_CHUNK_SIZE,
-+					      "hmm_dmirror");
-+		devmem->pagemap.type = MEMORY_DEVICE_PRIVATE;
-+		mdevice->zone_device_type = HMM_DMIRROR_MEMORY_DEVICE_PRIVATE;
-+	} else if (spm_addr_dev0 && spm_addr_dev1) {
-+		res = lookup_resource(&iomem_resource, MINOR(mdevice->cdevice.dev) ?
-+							spm_addr_dev0 :
-+							spm_addr_dev1);
-+		devmem->pagemap.type = MEMORY_DEVICE_GENERIC;
-+		mdevice->zone_device_type = HMM_DMIRROR_MEMORY_DEVICE_GENERIC;
-+	} else {
-+		pr_err("Both spm_addr_dev parameters should be set\n");
-+	}
- 
--	res = request_free_mem_region(&iomem_resource, DEVMEM_CHUNK_SIZE,
--				      "hmm_dmirror");
--	if (IS_ERR(res))
-+	if (IS_ERR_OR_NULL(res))
- 		goto err_devmem;
- 
--	mdevice->zone_device_type = HMM_DMIRROR_MEMORY_DEVICE_PRIVATE;
--	devmem->pagemap.type = MEMORY_DEVICE_PRIVATE;
- 	devmem->pagemap.range.start = res->start;
- 	devmem->pagemap.range.end = res->end;
- 	devmem->pagemap.nr_range = 1;
-@@ -493,10 +514,14 @@ static bool dmirror_allocate_chunk(struct dmirror_device *mdevice,
- 		mdevice->devmem_capacity = new_capacity;
- 		mdevice->devmem_chunks = new_chunks;
- 	}
--
- 	ptr = memremap_pages(&devmem->pagemap, numa_node_id());
--	if (IS_ERR(ptr))
-+	if (IS_ERR_OR_NULL(ptr)) {
-+		if (ptr)
-+			ret = PTR_ERR(ptr);
-+		else
-+			ret = -EFAULT;
- 		goto err_release;
-+	}
- 
- 	devmem->mdevice = mdevice;
- 	pfn_first = devmem->pagemap.range.start >> PAGE_SHIFT;
-@@ -1097,10 +1122,8 @@ static int dmirror_device_init(struct dmirror_device *mdevice, int id)
- 	if (ret)
- 		return ret;
- 
--	/* Build a list of free ZONE_DEVICE private struct pages */
--	dmirror_allocate_chunk(mdevice, NULL);
--
--	return 0;
-+	/* Build a list of free ZONE_DEVICE struct pages */
-+	return dmirror_allocate_chunk(mdevice, NULL);
- }
- 
- static void dmirror_device_remove(struct dmirror_device *mdevice)
-@@ -1113,8 +1136,9 @@ static void dmirror_device_remove(struct dmirror_device *mdevice)
- 				mdevice->devmem_chunks[i];
- 
- 			memunmap_pages(&devmem->pagemap);
--			release_mem_region(devmem->pagemap.range.start,
--					   range_len(&devmem->pagemap.range));
-+			if (devmem->pagemap.type == MEMORY_DEVICE_PRIVATE)
-+				release_mem_region(devmem->pagemap.range.start,
-+						   range_len(&devmem->pagemap.range));
- 			kfree(devmem);
- 		}
- 		kfree(mdevice->devmem_chunks);
-diff --git a/lib/test_hmm_uapi.h b/lib/test_hmm_uapi.h
-index ee88701793d5..17a6b5059871 100644
---- a/lib/test_hmm_uapi.h
-+++ b/lib/test_hmm_uapi.h
-@@ -65,6 +65,7 @@ enum {
- enum {
- 	/* 0 is reserved to catch uninitialized type fields */
- 	HMM_DMIRROR_MEMORY_DEVICE_PRIVATE = 1,
-+	HMM_DMIRROR_MEMORY_DEVICE_GENERIC,
+diff --git a/tools/testing/selftests/vm/hmm-tests.c b/tools/testing/selftests/vm/hmm-tests.c
+index 5d1ac691b9f4..70632b195497 100644
+--- a/tools/testing/selftests/vm/hmm-tests.c
++++ b/tools/testing/selftests/vm/hmm-tests.c
+@@ -44,6 +44,8 @@ struct hmm_buffer {
+ 	int		fd;
+ 	uint64_t	cpages;
+ 	uint64_t	faults;
++	int		zone_device_type;
++	bool		alloc_to_devmem;
  };
  
- #endif /* _LIB_TEST_HMM_UAPI_H */
+ #define TWOMEG		(1 << 21)
+@@ -133,6 +135,7 @@ static int hmm_dmirror_cmd(int fd,
+ 	cmd.addr = (__u64)buffer->ptr;
+ 	cmd.ptr = (__u64)buffer->mirror;
+ 	cmd.npages = npages;
++	cmd.alloc_to_devmem = buffer->alloc_to_devmem;
+ 
+ 	for (;;) {
+ 		ret = ioctl(fd, request, &cmd);
+@@ -144,6 +147,7 @@ static int hmm_dmirror_cmd(int fd,
+ 	}
+ 	buffer->cpages = cmd.cpages;
+ 	buffer->faults = cmd.faults;
++	buffer->zone_device_type = cmd.zone_device_type;
+ 
+ 	return 0;
+ }
+@@ -211,6 +215,34 @@ static void hmm_nanosleep(unsigned int n)
+ 	nanosleep(&t, NULL);
+ }
+ 
++static int hmm_migrate_sys_to_dev(int fd,
++				   struct hmm_buffer *buffer,
++				   unsigned long npages)
++{
++	buffer->alloc_to_devmem = true;
++	return hmm_dmirror_cmd(fd, HMM_DMIRROR_MIGRATE, buffer, npages);
++}
++
++static int hmm_migrate_dev_to_sys(int fd,
++				   struct hmm_buffer *buffer,
++				   unsigned long npages)
++{
++	buffer->alloc_to_devmem = false;
++	return hmm_dmirror_cmd(fd, HMM_DMIRROR_MIGRATE, buffer, npages);
++}
++
++static int hmm_is_private_device(int fd, bool *res)
++{
++	struct hmm_buffer buffer;
++	int ret;
++
++	buffer.ptr = 0;
++	ret = hmm_dmirror_cmd(fd, HMM_DMIRROR_GET_MEM_DEV_TYPE, &buffer, 1);
++	*res = (buffer.zone_device_type == HMM_DMIRROR_MEMORY_DEVICE_PRIVATE);
++
++	return ret;
++}
++
+ /*
+  * Simple NULL test of device open/close.
+  */
+@@ -875,7 +907,7 @@ TEST_F(hmm, migrate)
+ 		ptr[i] = i;
+ 
+ 	/* Migrate memory to device. */
+-	ret = hmm_dmirror_cmd(self->fd, HMM_DMIRROR_MIGRATE, buffer, npages);
++	ret = hmm_migrate_sys_to_dev(self->fd, buffer, npages);
+ 	ASSERT_EQ(ret, 0);
+ 	ASSERT_EQ(buffer->cpages, npages);
+ 
+@@ -923,7 +955,7 @@ TEST_F(hmm, migrate_fault)
+ 		ptr[i] = i;
+ 
+ 	/* Migrate memory to device. */
+-	ret = hmm_dmirror_cmd(self->fd, HMM_DMIRROR_MIGRATE, buffer, npages);
++	ret = hmm_migrate_sys_to_dev(self->fd, buffer, npages);
+ 	ASSERT_EQ(ret, 0);
+ 	ASSERT_EQ(buffer->cpages, npages);
+ 
+@@ -936,7 +968,7 @@ TEST_F(hmm, migrate_fault)
+ 		ASSERT_EQ(ptr[i], i);
+ 
+ 	/* Migrate memory to the device again. */
+-	ret = hmm_dmirror_cmd(self->fd, HMM_DMIRROR_MIGRATE, buffer, npages);
++	ret = hmm_migrate_sys_to_dev(self->fd, buffer, npages);
+ 	ASSERT_EQ(ret, 0);
+ 	ASSERT_EQ(buffer->cpages, npages);
+ 
+@@ -976,7 +1008,7 @@ TEST_F(hmm, migrate_shared)
+ 	ASSERT_NE(buffer->ptr, MAP_FAILED);
+ 
+ 	/* Migrate memory to device. */
+-	ret = hmm_dmirror_cmd(self->fd, HMM_DMIRROR_MIGRATE, buffer, npages);
++	ret = hmm_migrate_sys_to_dev(self->fd, buffer, npages);
+ 	ASSERT_EQ(ret, -ENOENT);
+ 
+ 	hmm_buffer_free(buffer);
+@@ -1015,7 +1047,7 @@ TEST_F(hmm2, migrate_mixed)
+ 	p = buffer->ptr;
+ 
+ 	/* Migrating a protected area should be an error. */
+-	ret = hmm_dmirror_cmd(self->fd1, HMM_DMIRROR_MIGRATE, buffer, npages);
++	ret = hmm_migrate_sys_to_dev(self->fd1, buffer, npages);
+ 	ASSERT_EQ(ret, -EINVAL);
+ 
+ 	/* Punch a hole after the first page address. */
+@@ -1023,7 +1055,7 @@ TEST_F(hmm2, migrate_mixed)
+ 	ASSERT_EQ(ret, 0);
+ 
+ 	/* We expect an error if the vma doesn't cover the range. */
+-	ret = hmm_dmirror_cmd(self->fd1, HMM_DMIRROR_MIGRATE, buffer, 3);
++	ret = hmm_migrate_sys_to_dev(self->fd1, buffer, 3);
+ 	ASSERT_EQ(ret, -EINVAL);
+ 
+ 	/* Page 2 will be a read-only zero page. */
+@@ -1055,13 +1087,13 @@ TEST_F(hmm2, migrate_mixed)
+ 
+ 	/* Now try to migrate pages 2-5 to device 1. */
+ 	buffer->ptr = p + 2 * self->page_size;
+-	ret = hmm_dmirror_cmd(self->fd1, HMM_DMIRROR_MIGRATE, buffer, 4);
++	ret = hmm_migrate_sys_to_dev(self->fd1, buffer, 4);
+ 	ASSERT_EQ(ret, 0);
+ 	ASSERT_EQ(buffer->cpages, 4);
+ 
+ 	/* Page 5 won't be migrated to device 0 because it's on device 1. */
+ 	buffer->ptr = p + 5 * self->page_size;
+-	ret = hmm_dmirror_cmd(self->fd0, HMM_DMIRROR_MIGRATE, buffer, 1);
++	ret = hmm_migrate_sys_to_dev(self->fd0, buffer, 1);
+ 	ASSERT_EQ(ret, -ENOENT);
+ 	buffer->ptr = p;
+ 
+@@ -1070,8 +1102,12 @@ TEST_F(hmm2, migrate_mixed)
+ }
+ 
+ /*
+- * Migrate anonymous memory to device private memory and fault it back to system
+- * memory multiple times.
++ * Migrate anonymous memory to device memory and back to system memory
++ * multiple times. In case of private zone configuration, this is done
++ * through fault pages accessed by CPU. In case of generic zone configuration,
++ * the pages from the device should be explicitly migrated back to system memory.
++ * The reason is Generic device zone has coherent access to CPU, therefore
++ * it will not generate any page fault.
+  */
+ TEST_F(hmm, migrate_multiple)
+ {
+@@ -1082,7 +1118,9 @@ TEST_F(hmm, migrate_multiple)
+ 	unsigned long c;
+ 	int *ptr;
+ 	int ret;
++	bool is_private;
+ 
++	ASSERT_EQ(hmm_is_private_device(self->fd, &is_private), 0);
+ 	npages = ALIGN(HMM_BUFFER_SIZE, self->page_size) >> self->page_shift;
+ 	ASSERT_NE(npages, 0);
+ 	size = npages << self->page_shift;
+@@ -1107,8 +1145,7 @@ TEST_F(hmm, migrate_multiple)
+ 			ptr[i] = i;
+ 
+ 		/* Migrate memory to device. */
+-		ret = hmm_dmirror_cmd(self->fd, HMM_DMIRROR_MIGRATE, buffer,
+-				      npages);
++		ret = hmm_migrate_sys_to_dev(self->fd, buffer, npages);
+ 		ASSERT_EQ(ret, 0);
+ 		ASSERT_EQ(buffer->cpages, npages);
+ 
+@@ -1116,7 +1153,12 @@ TEST_F(hmm, migrate_multiple)
+ 		for (i = 0, ptr = buffer->mirror; i < size / sizeof(*ptr); ++i)
+ 			ASSERT_EQ(ptr[i], i);
+ 
+-		/* Fault pages back to system memory and check them. */
++		/* Migrate back to system memory and check them. */
++		if (!is_private) {
++			ret = hmm_migrate_dev_to_sys(self->fd, buffer, npages);
++			ASSERT_EQ(ret, 0);
++		}
++
+ 		for (i = 0, ptr = buffer->ptr; i < size / sizeof(*ptr); ++i)
+ 			ASSERT_EQ(ptr[i], i);
+ 
+@@ -1261,10 +1303,12 @@ TEST_F(hmm2, snapshot)
+ 	unsigned char *m;
+ 	int ret;
+ 	int val;
++	bool is_private;
+ 
+ 	npages = 7;
+ 	size = npages << self->page_shift;
+ 
++	ASSERT_EQ(hmm_is_private_device(self->fd0, &is_private), 0);
+ 	buffer = malloc(sizeof(*buffer));
+ 	ASSERT_NE(buffer, NULL);
+ 
+@@ -1312,13 +1356,13 @@ TEST_F(hmm2, snapshot)
+ 
+ 	/* Page 5 will be migrated to device 0. */
+ 	buffer->ptr = p + 5 * self->page_size;
+-	ret = hmm_dmirror_cmd(self->fd0, HMM_DMIRROR_MIGRATE, buffer, 1);
++	ret = hmm_migrate_sys_to_dev(self->fd0, buffer, 1);
+ 	ASSERT_EQ(ret, 0);
+ 	ASSERT_EQ(buffer->cpages, 1);
+ 
+ 	/* Page 6 will be migrated to device 1. */
+ 	buffer->ptr = p + 6 * self->page_size;
+-	ret = hmm_dmirror_cmd(self->fd1, HMM_DMIRROR_MIGRATE, buffer, 1);
++	ret = hmm_migrate_sys_to_dev(self->fd1, buffer, 1);
+ 	ASSERT_EQ(ret, 0);
+ 	ASSERT_EQ(buffer->cpages, 1);
+ 
+@@ -1335,9 +1379,16 @@ TEST_F(hmm2, snapshot)
+ 	ASSERT_EQ(m[2], HMM_DMIRROR_PROT_ZERO | HMM_DMIRROR_PROT_READ);
+ 	ASSERT_EQ(m[3], HMM_DMIRROR_PROT_READ);
+ 	ASSERT_EQ(m[4], HMM_DMIRROR_PROT_WRITE);
+-	ASSERT_EQ(m[5], HMM_DMIRROR_PROT_DEV_PRIVATE_LOCAL |
+-			HMM_DMIRROR_PROT_WRITE);
+-	ASSERT_EQ(m[6], HMM_DMIRROR_PROT_NONE);
++	if (is_private) {
++		ASSERT_EQ(m[5], HMM_DMIRROR_PROT_DEV_PRIVATE_LOCAL |
++				HMM_DMIRROR_PROT_WRITE);
++		ASSERT_EQ(m[6], HMM_DMIRROR_PROT_NONE);
++	} else {
++		ASSERT_EQ(m[5], HMM_DMIRROR_PROT_DEV_GENERIC |
++				HMM_DMIRROR_PROT_WRITE);
++		ASSERT_EQ(m[6], HMM_DMIRROR_PROT_DEV_GENERIC |
++				HMM_DMIRROR_PROT_WRITE);
++	}
+ 
+ 	hmm_buffer_free(buffer);
+ }
+@@ -1485,4 +1536,59 @@ TEST_F(hmm2, double_map)
+ 	hmm_buffer_free(buffer);
+ }
+ 
++/*
++ * Migrate anonymous memory to device memory and migrate back to system memory
++ * explicitly, without generating a page fault.
++ */
++TEST_F(hmm, migrate_ping_pong)
++{
++	struct hmm_buffer *buffer;
++	unsigned long npages;
++	unsigned long size;
++	unsigned long i;
++	int *ptr;
++	int ret;
++
++	npages = ALIGN(HMM_BUFFER_SIZE, self->page_size) >> self->page_shift;
++	ASSERT_NE(npages, 0);
++	size = npages << self->page_shift;
++
++	buffer = malloc(sizeof(*buffer));
++	ASSERT_NE(buffer, NULL);
++
++	buffer->fd = -1;
++	buffer->size = size;
++	buffer->mirror = malloc(size);
++	buffer->alloc_to_devmem = true;
++	ASSERT_NE(buffer->mirror, NULL);
++
++	buffer->ptr = mmap(NULL, size,
++			   PROT_READ | PROT_WRITE,
++			   MAP_PRIVATE | MAP_ANONYMOUS,
++			   buffer->fd, 0);
++	ASSERT_NE(buffer->ptr, MAP_FAILED);
++
++	/* Initialize buffer in system memory. */
++	for (i = 0, ptr = buffer->ptr; i < size / sizeof(*ptr); ++i)
++		ptr[i] = i;
++
++	/* Migrate memory to device. */
++	ret = hmm_migrate_sys_to_dev(self->fd, buffer, npages);
++	ASSERT_EQ(ret, 0);
++	ASSERT_EQ(buffer->cpages, npages);
++	/* Check what the device read. */
++	for (i = 0, ptr = buffer->mirror; i < size / sizeof(*ptr); ++i)
++		ASSERT_EQ(ptr[i], i);
++
++	/* Migrate memory back to system mem. */
++	ret = hmm_migrate_dev_to_sys(self->fd, buffer, npages);
++	ASSERT_EQ(ret, 0);
++
++	/* Check the buffer migrated back to system memory. */
++	for (i = 0, ptr = buffer->ptr; i < size / sizeof(*ptr); ++i)
++		ASSERT_EQ(ptr[i], i);
++
++	hmm_buffer_free(buffer);
++}
++
+ TEST_HARNESS_MAIN
 -- 
 2.32.0
 
