@@ -7,154 +7,228 @@ X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05BC6C4320A
-	for <linux-xfs@archiver.kernel.org>; Sun, 15 Aug 2021 15:46:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3EE7C4320A
+	for <linux-xfs@archiver.kernel.org>; Sun, 15 Aug 2021 16:28:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DA5C86120F
-	for <linux-xfs@archiver.kernel.org>; Sun, 15 Aug 2021 15:46:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BF31661179
+	for <linux-xfs@archiver.kernel.org>; Sun, 15 Aug 2021 16:28:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238040AbhHOPq4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 15 Aug 2021 11:46:56 -0400
-Received: from out20-110.mail.aliyun.com ([115.124.20.110]:54553 "EHLO
-        out20-110.mail.aliyun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229603AbhHOPqz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 Aug 2021 11:46:55 -0400
-X-Alimail-AntiSpam: AC=CONTINUE;BC=0.09703767|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.0139779-0.000313177-0.985709;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047209;MF=guan@eryu.me;NM=1;PH=DS;RN=5;RT=5;SR=0;TI=SMTPD_---.L.mBWsc_1629042383;
-Received: from localhost(mailfrom:guan@eryu.me fp:SMTPD_---.L.mBWsc_1629042383)
-          by smtp.aliyun-inc.com(10.147.42.135);
-          Sun, 15 Aug 2021 23:46:24 +0800
-Date:   Sun, 15 Aug 2021 23:46:23 +0800
+        id S230450AbhHOQ2x (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 15 Aug 2021 12:28:53 -0400
+Received: from out20-97.mail.aliyun.com ([115.124.20.97]:36005 "EHLO
+        out20-97.mail.aliyun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229490AbhHOQ2x (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 Aug 2021 12:28:53 -0400
+X-Alimail-AntiSpam: AC=CONTINUE;BC=0.07515237|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_regular_dialog|0.0639916-0.00287951-0.933129;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047211;MF=guan@eryu.me;NM=1;PH=DS;RN=4;RT=4;SR=0;TI=SMTPD_---.L.n6q-K_1629044900;
+Received: from localhost(mailfrom:guan@eryu.me fp:SMTPD_---.L.n6q-K_1629044900)
+          by smtp.aliyun-inc.com(10.147.42.241);
+          Mon, 16 Aug 2021 00:28:21 +0800
+Date:   Mon, 16 Aug 2021 00:28:20 +0800
 From:   Eryu Guan <guan@eryu.me>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org, zlang@redhat.com
-Subject: Re: [PATCH 1/3] generic: test xattr operations only
-Message-ID: <YRk2zwCZ9YqgeyjG@desktop>
+        fstests@vger.kernel.org
+Subject: Re: [PATCH 2/3] generic: test shutdowns of a nested filesystem
+Message-ID: <YRlApOTms4XPbwke@desktop>
 References: <162743101932.3428896.8510279402246446036.stgit@magnolia>
- <162743102476.3428896.4543035331031604848.stgit@magnolia>
- <20210812053452.7bz2qgnuhhgj7gl3@fedora>
- <20210812170453.GP3601443@magnolia>
+ <162743103024.3428896.8525632218517299015.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210812170453.GP3601443@magnolia>
+In-Reply-To: <162743103024.3428896.8525632218517299015.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 12, 2021 at 10:04:53AM -0700, Darrick J. Wong wrote:
-> On Thu, Aug 12, 2021 at 01:34:52PM +0800, Zorro Lang wrote:
-> > On Tue, Jul 27, 2021 at 05:10:24PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <djwong@kernel.org>
-> > > 
-> > > Exercise extended attribute operations.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > ---
-> > >  tests/generic/724     |   57 +++++++++++++++++++++++++++++++++++++++++++++++++
-> > >  tests/generic/724.out |    2 ++
-> > >  2 files changed, 59 insertions(+)
-> > >  create mode 100755 tests/generic/724
-> > >  create mode 100644 tests/generic/724.out
-> > > 
-> > > 
-> > > diff --git a/tests/generic/724 b/tests/generic/724
-> > > new file mode 100755
-> > > index 00000000..b19f8f73
-> > > --- /dev/null
-> > > +++ b/tests/generic/724
-> > > @@ -0,0 +1,57 @@
-> > > +#! /bin/bash
-> > > +# SPDX-License-Identifier: GPL-2.0
-> > > +# Copyright (c) 2021 Oracle, Inc.  All Rights Reserved.
-> > > +#
-> > > +# FS QA Test No. 724
-> > > +#
-> > > +# Run an extended attributes fsstress run with multiple threads to shake out
-> > > +# bugs in the xattr code.
-> > > +#
-> > > +. ./common/preamble
-> > > +_begin_fstest soak attr long_rw stress
-> > 
-> > Should we add this test into 'auto' group too?
+On Tue, Jul 27, 2021 at 05:10:30PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Yes, fixed.
-
-I can fix that on commit.
-
+> generic/475, but we're running fsstress on a disk image inside the
+> scratch filesystem
 > 
-> > > +
-> > > +_cleanup()
-> > > +{
-> > > +	$KILLALL_PROG -9 fsstress > /dev/null 2>&1
-> > 
-> > Can a "wait" command help more at here?
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  tests/generic/725     |  136 +++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/725.out |    2 +
+>  2 files changed, 138 insertions(+)
+>  create mode 100755 tests/generic/725
+>  create mode 100644 tests/generic/725.out
+> 
+> 
+> diff --git a/tests/generic/725 b/tests/generic/725
+> new file mode 100755
+> index 00000000..f43bcb37
+> --- /dev/null
+> +++ b/tests/generic/725
+> @@ -0,0 +1,136 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2021 Oracle, Inc.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 725
+> +#
+> +# Test nested log recovery with repeated (simulated) disk failures.  We kick
+> +# off fsstress on a loopback filesystem mounted on the scratch fs, then switch
+> +# out the underlying scratch device with dm-error to see what happens when the
+> +# disk goes down.  Having taken down both fses in this manner, remount them and
+> +# repeat.  This test simulates VM hosts crashing to try to shake out CoW bugs
+> +# in writeback on the host that cause VM guests to fail to recover.
 
-There's no background process in this test, so it seems 'wait' won't
-do anything.
+It currently fails for me on btrfs, the loop mount failed in 2nd
+iteration, seems like a bug in btrfs.
+
+> +#
+> +. ./common/preamble
+> +_begin_fstest shutdown auto log metadata eio
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	$KILLALL_PROG -9 fsstress > /dev/null 2>&1
+> +	wait
+> +	if [ -n "$loopmnt" ]; then
+> +		umount $loopmnt 2>/dev/null
+
+$UMOUNT_PROG
+
+> +		rm -r -f $loopmnt
+> +	fi
+> +	rm -f $tmp.*
+> +	_dmerror_unmount
+> +	_dmerror_cleanup
+> +}
+> +
+> +# Import common functions.
+> +. ./common/dmerror
+> +. ./common/reflink
+> +
+> +# Modify as appropriate.
+> +_supported_fs generic
+> +
+> +_require_scratch_reflink
+> +_require_cp_reflink
+> +_require_dm_target error
+> +_require_command "$KILLALL_PROG" "killall"
+> +
+> +echo "Silence is golden."
+> +
+> +_scratch_mkfs >> $seqres.full 2>&1
+> +_require_metadata_journaling $SCRATCH_DEV
+> +_dmerror_init
+> +_dmerror_mount
+> +
+> +# Create a fs image consuming 1/3 of the scratch fs
+> +scratch_freesp_bytes=$(stat -f -c '%a * %S' $SCRATCH_MNT | bc)
+
+_get_available_space $SCRATCH_MNT ?
+
+> +loopimg_bytes=$((scratch_freesp_bytes / 3))
+> +
+> +loopimg=$SCRATCH_MNT/testfs
+> +truncate -s $loopimg_bytes $loopimg
+> +_mkfs_dev $loopimg
+> +
+> +loopmnt=$tmp.mount
+> +mkdir -p $loopmnt
+> +
+> +scratch_aliveflag=$tmp.runsnap
+> +snap_aliveflag=$tmp.snapping
+> +
+> +snap_loop_fs() {
+> +	touch "$snap_aliveflag"
+> +	while [ -e "$scratch_aliveflag" ]; do
+> +		rm -f $loopimg.a
+> +		_cp_reflink $loopimg $loopimg.a
+> +		sleep 1
+> +	done
+> +	rm -f "$snap_aliveflag"
+> +}
+> +
+> +fsstress=($FSSTRESS_PROG $FSSTRESS_AVOID -d "$loopmnt" -n 999999 -p "$((LOAD_FACTOR * 4))")
+> +
+> +for i in $(seq 1 $((25 * TIME_FACTOR)) ); do
+> +	touch $scratch_aliveflag
+> +	snap_loop_fs >> $seqres.full 2>&1 &
+> +
+> +	if ! _mount $loopimg $loopmnt -o loop; then
+> +		rm -f $scratch_aliveflag
+> +		_fail "loop mount failed"
+
+I found it a bit easier to debug if print $i here.
+
+> +		break
+> +	fi
+> +
+> +	("${fsstress[@]}" >> $seqres.full &) > /dev/null 2>&1
+> +
+> +	# purposely include 0 second sleeps to test shutdown immediately after
+> +	# recovery
+> +	sleep $((RANDOM % (3 * TIME_FACTOR) ))
+> +	rm -f $scratch_aliveflag
+> +
+> +	# This test aims to simulate sudden disk failure, which means that we
+> +	# do not want to quiesce the filesystem or otherwise give it a chance
+> +	# to flush its logs.  Therefore we want to call dmsetup with the
+> +	# --nolockfs parameter; to make this happen we must call the load
+> +	# error table helper *without* 'lockfs'.
+> +	_dmerror_load_error_table
+> +
+> +	ps -e | grep fsstress > /dev/null 2>&1
+> +	while [ $? -eq 0 ]; do
+> +		$KILLALL_PROG -9 fsstress > /dev/null 2>&1
+> +		wait > /dev/null 2>&1
+> +		ps -e | grep fsstress > /dev/null 2>&1
+> +	done
+> +	for ((i = 0; i < 10; i++)); do
+> +		test -e "$snap_aliveflag" || break
+> +		sleep 1
+> +	done
+> +
+> +	# Mount again to replay log after loading working table, so we have a
+> +	# consistent XFS after test.
+
+This is a generic test, fix the XFS specific comments?
+
+> +	$UMOUNT_PROG $loopmnt
+> +	_dmerror_unmount || _fail "unmount failed"
+> +	_dmerror_load_working_table
+> +	if ! _dmerror_mount; then
+> +		dmsetup table | tee -a /dev/ttyprintk
+> +		lsblk | tee -a /dev/ttyprintk
+> +		$XFS_METADUMP_PROG -a -g -o $DMERROR_DEV $seqres.dmfail.md
+
+Above logs all should go to $seqres.full ?
+
+And $XFS_METADUMP_PROG is not suitable for a generic test.
+
+> +		_fail "mount failed"
+> +	fi
+> +done
+> +
+> +# Make sure the fs image file is ok
+> +if [ -f "$loopimg" ]; then
+> +	if _mount $loopimg $loopmnt -o loop; then
+> +		$UMOUNT_PROG $loopmnt &> /dev/null
+> +	else
+> +		echo "final loop mount failed"
+> +	fi
+> +	_check_xfs_filesystem $loopimg none none
+
+Same here, use _check_scratch_fs?
 
 Thanks,
 Eryu
 
-> 
-> Ok, I"ll add that.
-> 
-> --D
-> 
-> > Others looks good to me.
-> > 
-> > Thanks,
-> > Zorro
-> > 
-> > > +	cd /
-> > > +	rm -f $tmp.*
-> > > +}
-> > > +
-> > > +# Modify as appropriate.
-> > > +_supported_fs generic
-> > > +
-> > > +_require_scratch
-> > > +_require_command "$KILLALL_PROG" "killall"
-> > > +
-> > > +echo "Silence is golden."
-> > > +
-> > > +_scratch_mkfs > $seqres.full 2>&1
-> > > +_scratch_mount >> $seqres.full 2>&1
-> > > +
-> > > +nr_cpus=$((LOAD_FACTOR * 4))
-> > > +nr_ops=$((70000 * nr_cpus * TIME_FACTOR))
-> > > +
-> > > +args=('-z' '-S' 'c')
-> > > +
-> > > +# Do some directory tree modifications, but the bulk of this is geared towards
-> > > +# exercising the xattr code, especially attr_set which can do up to 10k values.
-> > > +for verb in unlink rmdir; do
-> > > +	args+=('-f' "${verb}=1")
-> > > +done
-> > > +for verb in creat mkdir; do
-> > > +	args+=('-f' "${verb}=2")
-> > > +done
-> > > +for verb in getfattr listfattr; do
-> > > +	args+=('-f' "${verb}=3")
-> > > +done
-> > > +for verb in attr_remove removefattr; do
-> > > +	args+=('-f' "${verb}=4")
-> > > +done
-> > > +args+=('-f' "setfattr=20")
-> > > +args+=('-f' "attr_set=60")	# sets larger xattrs
-> > > +
-> > > +$FSSTRESS_PROG "${args[@]}" $FSSTRESS_AVOID -d $SCRATCH_MNT -n $nr_ops -p $nr_cpus >> $seqres.full
-> > > +
-> > > +# success, all done
-> > > +status=0
-> > > +exit
-> > > diff --git a/tests/generic/724.out b/tests/generic/724.out
-> > > new file mode 100644
-> > > index 00000000..164cfffb
-> > > --- /dev/null
-> > > +++ b/tests/generic/724.out
-> > > @@ -0,0 +1,2 @@
-> > > +QA output created by 724
-> > > +Silence is golden.
-> > > 
-> > 
+> +fi
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/generic/725.out b/tests/generic/725.out
+> new file mode 100644
+> index 00000000..ed73a9fc
+> --- /dev/null
+> +++ b/tests/generic/725.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 725
+> +Silence is golden.
