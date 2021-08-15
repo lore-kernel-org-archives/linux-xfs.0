@@ -2,86 +2,159 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2479CC4320A
-	for <linux-xfs@archiver.kernel.org>; Sun, 15 Aug 2021 15:40:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05BC6C4320A
+	for <linux-xfs@archiver.kernel.org>; Sun, 15 Aug 2021 15:46:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EC16561212
-	for <linux-xfs@archiver.kernel.org>; Sun, 15 Aug 2021 15:40:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DA5C86120F
+	for <linux-xfs@archiver.kernel.org>; Sun, 15 Aug 2021 15:46:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237917AbhHOPlV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 15 Aug 2021 11:41:21 -0400
-Received: from verein.lst.de ([213.95.11.211]:51956 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229603AbhHOPlU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 15 Aug 2021 11:41:20 -0400
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id A1BF167357; Sun, 15 Aug 2021 17:40:47 +0200 (CEST)
-Date:   Sun, 15 Aug 2021 17:40:47 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     Alex Sierra <alex.sierra@amd.com>
-Cc:     akpm@linux-foundation.org, Felix.Kuehling@amd.com,
-        linux-mm@kvack.org, rcampbell@nvidia.com,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        hch@lst.de, jgg@nvidia.com, jglisse@redhat.com,
-        Roger Pau Monne <roger.pau@citrix.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Subject: Re: [PATCH v6 08/13] mm: call pgmap->ops->page_free for
- DEVICE_GENERIC pages
-Message-ID: <20210815154047.GC32384@lst.de>
-References: <20210813063150.2938-1-alex.sierra@amd.com> <20210813063150.2938-9-alex.sierra@amd.com>
+        id S238040AbhHOPq4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 15 Aug 2021 11:46:56 -0400
+Received: from out20-110.mail.aliyun.com ([115.124.20.110]:54553 "EHLO
+        out20-110.mail.aliyun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229603AbhHOPqz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 Aug 2021 11:46:55 -0400
+X-Alimail-AntiSpam: AC=CONTINUE;BC=0.09703767|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.0139779-0.000313177-0.985709;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047209;MF=guan@eryu.me;NM=1;PH=DS;RN=5;RT=5;SR=0;TI=SMTPD_---.L.mBWsc_1629042383;
+Received: from localhost(mailfrom:guan@eryu.me fp:SMTPD_---.L.mBWsc_1629042383)
+          by smtp.aliyun-inc.com(10.147.42.135);
+          Sun, 15 Aug 2021 23:46:24 +0800
+Date:   Sun, 15 Aug 2021 23:46:23 +0800
+From:   Eryu Guan <guan@eryu.me>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org, zlang@redhat.com
+Subject: Re: [PATCH 1/3] generic: test xattr operations only
+Message-ID: <YRk2zwCZ9YqgeyjG@desktop>
+References: <162743101932.3428896.8510279402246446036.stgit@magnolia>
+ <162743102476.3428896.4543035331031604848.stgit@magnolia>
+ <20210812053452.7bz2qgnuhhgj7gl3@fedora>
+ <20210812170453.GP3601443@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210813063150.2938-9-alex.sierra@amd.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20210812170453.GP3601443@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Aug 13, 2021 at 01:31:45AM -0500, Alex Sierra wrote:
-> Add MEMORY_DEVICE_GENERIC case to free_zone_device_page callback.
-> Device generic type memory case is now able to free its pages properly.
+On Thu, Aug 12, 2021 at 10:04:53AM -0700, Darrick J. Wong wrote:
+> On Thu, Aug 12, 2021 at 01:34:52PM +0800, Zorro Lang wrote:
+> > On Tue, Jul 27, 2021 at 05:10:24PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > > 
+> > > Exercise extended attribute operations.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > ---
+> > >  tests/generic/724     |   57 +++++++++++++++++++++++++++++++++++++++++++++++++
+> > >  tests/generic/724.out |    2 ++
+> > >  2 files changed, 59 insertions(+)
+> > >  create mode 100755 tests/generic/724
+> > >  create mode 100644 tests/generic/724.out
+> > > 
+> > > 
+> > > diff --git a/tests/generic/724 b/tests/generic/724
+> > > new file mode 100755
+> > > index 00000000..b19f8f73
+> > > --- /dev/null
+> > > +++ b/tests/generic/724
+> > > @@ -0,0 +1,57 @@
+> > > +#! /bin/bash
+> > > +# SPDX-License-Identifier: GPL-2.0
+> > > +# Copyright (c) 2021 Oracle, Inc.  All Rights Reserved.
+> > > +#
+> > > +# FS QA Test No. 724
+> > > +#
+> > > +# Run an extended attributes fsstress run with multiple threads to shake out
+> > > +# bugs in the xattr code.
+> > > +#
+> > > +. ./common/preamble
+> > > +_begin_fstest soak attr long_rw stress
+> > 
+> > Should we add this test into 'auto' group too?
+> 
+> Yes, fixed.
 
-How is this going to work for the two existing MEMORY_DEVICE_GENERIC
-that now change behavior?  And which don't have a ->page_free callback
-at all?
+I can fix that on commit.
 
 > 
-> Signed-off-by: Alex Sierra <alex.sierra@amd.com>
-> ---
->  mm/memremap.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
+> > > +
+> > > +_cleanup()
+> > > +{
+> > > +	$KILLALL_PROG -9 fsstress > /dev/null 2>&1
+> > 
+> > Can a "wait" command help more at here?
+
+There's no background process in this test, so it seems 'wait' won't
+do anything.
+
+Thanks,
+Eryu
+
 > 
-> diff --git a/mm/memremap.c b/mm/memremap.c
-> index 5aa8163fd948..5773e15b6ac9 100644
-> --- a/mm/memremap.c
-> +++ b/mm/memremap.c
-> @@ -459,7 +459,7 @@ struct dev_pagemap *get_dev_pagemap(unsigned long pfn,
->  EXPORT_SYMBOL_GPL(get_dev_pagemap);
->  
->  #ifdef CONFIG_DEV_PAGEMAP_OPS
-> -static void free_device_private_page(struct page *page)
-> +static void free_device_page(struct page *page)
->  {
->  
->  	__ClearPageWaiters(page);
-> @@ -498,7 +498,8 @@ void free_zone_device_page(struct page *page)
->  		wake_up_var(&page->_refcount);
->  		return;
->  	case MEMORY_DEVICE_PRIVATE:
-> -		free_device_private_page(page);
-> +	case MEMORY_DEVICE_GENERIC:
-> +		free_device_page(page);
->  		return;
->  	default:
->  		return;
-> -- 
-> 2.32.0
----end quoted text---
+> Ok, I"ll add that.
+> 
+> --D
+> 
+> > Others looks good to me.
+> > 
+> > Thanks,
+> > Zorro
+> > 
+> > > +	cd /
+> > > +	rm -f $tmp.*
+> > > +}
+> > > +
+> > > +# Modify as appropriate.
+> > > +_supported_fs generic
+> > > +
+> > > +_require_scratch
+> > > +_require_command "$KILLALL_PROG" "killall"
+> > > +
+> > > +echo "Silence is golden."
+> > > +
+> > > +_scratch_mkfs > $seqres.full 2>&1
+> > > +_scratch_mount >> $seqres.full 2>&1
+> > > +
+> > > +nr_cpus=$((LOAD_FACTOR * 4))
+> > > +nr_ops=$((70000 * nr_cpus * TIME_FACTOR))
+> > > +
+> > > +args=('-z' '-S' 'c')
+> > > +
+> > > +# Do some directory tree modifications, but the bulk of this is geared towards
+> > > +# exercising the xattr code, especially attr_set which can do up to 10k values.
+> > > +for verb in unlink rmdir; do
+> > > +	args+=('-f' "${verb}=1")
+> > > +done
+> > > +for verb in creat mkdir; do
+> > > +	args+=('-f' "${verb}=2")
+> > > +done
+> > > +for verb in getfattr listfattr; do
+> > > +	args+=('-f' "${verb}=3")
+> > > +done
+> > > +for verb in attr_remove removefattr; do
+> > > +	args+=('-f' "${verb}=4")
+> > > +done
+> > > +args+=('-f' "setfattr=20")
+> > > +args+=('-f' "attr_set=60")	# sets larger xattrs
+> > > +
+> > > +$FSSTRESS_PROG "${args[@]}" $FSSTRESS_AVOID -d $SCRATCH_MNT -n $nr_ops -p $nr_cpus >> $seqres.full
+> > > +
+> > > +# success, all done
+> > > +status=0
+> > > +exit
+> > > diff --git a/tests/generic/724.out b/tests/generic/724.out
+> > > new file mode 100644
+> > > index 00000000..164cfffb
+> > > --- /dev/null
+> > > +++ b/tests/generic/724.out
+> > > @@ -0,0 +1,2 @@
+> > > +QA output created by 724
+> > > +Silence is golden.
+> > > 
+> > 
