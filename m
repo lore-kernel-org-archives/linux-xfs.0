@@ -2,56 +2,62 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19442C4338F
-	for <linux-xfs@archiver.kernel.org>; Sun, 15 Aug 2021 09:00:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1607FC432BE
+	for <linux-xfs@archiver.kernel.org>; Sun, 15 Aug 2021 09:01:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CAD1F60F4B
-	for <linux-xfs@archiver.kernel.org>; Sun, 15 Aug 2021 09:00:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DFF006109D
+	for <linux-xfs@archiver.kernel.org>; Sun, 15 Aug 2021 09:01:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231295AbhHOJBT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 15 Aug 2021 05:01:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37978 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231194AbhHOJBT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 Aug 2021 05:01:19 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74824C061764
-        for <linux-xfs@vger.kernel.org>; Sun, 15 Aug 2021 02:00:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=l2WBiCb5duYJRA9nKpihqrJOH1Qjg6utSrFiu8qAdtc=; b=mnulZBYdBff2+BD8VM8vzL2eHQ
-        IduRd+MehjRNb5p11Xy48Evg0xTkwaf08WAG27mB5qxdfP5YJj2DBCAGne7lEekPknK8rbL1fLxTO
-        YmfTs2L+r9Mtw52G+hzepcmSY03N5yTPgn4gQY1+RdIwUpfn1ivoIxo32WRll6bSUjp9zqiUYblgc
-        771xFmmxG+7kMMpSKDeimtMQYNy8i0+ui8VEUT2Jq8lOHk2UO7nug8/av4Nyvvud4xNgoCC+CPLwQ
-        nxgsFKv2phM9Z8hMuWkaWJO0RjajjPMVo2w87r6tePWgp9u7vGcwePM5G64QDFuQNtyJnBZk77ZlE
-        H27R8bjA==;
-Received: from hch by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mFC0D-00HZSz-Sb; Sun, 15 Aug 2021 09:00:35 +0000
-Date:   Sun, 15 Aug 2021 10:00:21 +0100
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 02/10] xfs: make the key parameters to all btree query
- range functions const
-Message-ID: <YRjXpQogeGycZrwV@infradead.org>
-References: <162881108307.1695493.3416792932772498160.stgit@magnolia>
- <162881109443.1695493.6458037403329160173.stgit@magnolia>
+        id S231321AbhHOJBe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 15 Aug 2021 05:01:34 -0400
+Received: from verein.lst.de ([213.95.11.211]:51372 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231194AbhHOJBe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 15 Aug 2021 05:01:34 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 686D56736F; Sun, 15 Aug 2021 11:01:01 +0200 (CEST)
+Date:   Sun, 15 Aug 2021 11:01:00 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Alex Sierra <alex.sierra@amd.com>
+Cc:     akpm@linux-foundation.org, Felix.Kuehling@amd.com,
+        linux-mm@kvack.org, rcampbell@nvidia.com,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        hch@lst.de, jgg@nvidia.com, jglisse@redhat.com
+Subject: Re: [PATCH v6 01/13] ext4/xfs: add page refcount helper
+Message-ID: <20210815090100.GA25067@lst.de>
+References: <20210813063150.2938-1-alex.sierra@amd.com> <20210813063150.2938-2-alex.sierra@amd.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <162881109443.1695493.6458037403329160173.stgit@magnolia>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20210813063150.2938-2-alex.sierra@amd.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Looks good,
+On Fri, Aug 13, 2021 at 01:31:38AM -0500, Alex Sierra wrote:
+> From: Ralph Campbell <rcampbell@nvidia.com>
+> 
+> There are several places where ZONE_DEVICE struct pages assume a reference
+> count == 1 means the page is idle and free. Instead of open coding this,
+> add a helper function to hide this detail.
+> 
+> v3:
+> [AS]: rename dax_layout_is_idle_page func to dax_page_unused
+> 
+> v4:
+> [AS]: This ref count functionality was missing on fuse/dax.c.
+
+These per-patch changelog goes under the "---", otherwise they totally
+mess up the logs when commited to git.  Same for the other patches in
+this series.
+
+But the changes itself looks good:
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
