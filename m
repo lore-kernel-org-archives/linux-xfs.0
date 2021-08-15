@@ -2,233 +2,137 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3EE7C4320A
-	for <linux-xfs@archiver.kernel.org>; Sun, 15 Aug 2021 16:28:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 489D2C4320A
+	for <linux-xfs@archiver.kernel.org>; Sun, 15 Aug 2021 20:40:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BF31661179
-	for <linux-xfs@archiver.kernel.org>; Sun, 15 Aug 2021 16:28:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E8EB61373
+	for <linux-xfs@archiver.kernel.org>; Sun, 15 Aug 2021 20:40:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230450AbhHOQ2x (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 15 Aug 2021 12:28:53 -0400
-Received: from out20-97.mail.aliyun.com ([115.124.20.97]:36005 "EHLO
-        out20-97.mail.aliyun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229490AbhHOQ2x (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 Aug 2021 12:28:53 -0400
-X-Alimail-AntiSpam: AC=CONTINUE;BC=0.07515237|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_regular_dialog|0.0639916-0.00287951-0.933129;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047211;MF=guan@eryu.me;NM=1;PH=DS;RN=4;RT=4;SR=0;TI=SMTPD_---.L.n6q-K_1629044900;
-Received: from localhost(mailfrom:guan@eryu.me fp:SMTPD_---.L.n6q-K_1629044900)
-          by smtp.aliyun-inc.com(10.147.42.241);
-          Mon, 16 Aug 2021 00:28:21 +0800
-Date:   Mon, 16 Aug 2021 00:28:20 +0800
-From:   Eryu Guan <guan@eryu.me>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org
-Subject: Re: [PATCH 2/3] generic: test shutdowns of a nested filesystem
-Message-ID: <YRlApOTms4XPbwke@desktop>
-References: <162743101932.3428896.8510279402246446036.stgit@magnolia>
- <162743103024.3428896.8525632218517299015.stgit@magnolia>
+        id S230019AbhHOUlE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 15 Aug 2021 16:41:04 -0400
+Received: from mail-bn8nam12on2051.outbound.protection.outlook.com ([40.107.237.51]:61696
+        "EHLO NAM12-BN8-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S229582AbhHOUlD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 15 Aug 2021 16:41:03 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=ablOIq9P29MoZEoXbLHAv66EuSUy52jKJLSw1alArs6pr227WhfFBEZVTaoH7wuMOpHug4XApw1rPs4aJUjBkpWOkXX1LKlgPGQ+X1cIo4NxeUxHciffcxjG8amiiepMjvaXb3Yxt53Ee1NsqptHSbPFJxBbWppIVHeyqylxRGMSrVgTBMCHHuOqxJIMr92ri7OnoO5UgkLqzt63qJEWJJa7KQe70eEuqVBd5J80VJdNIILawRst22lK+NRQNSs0vF7Gk4YCTkBPhAR2HYEpFDoUQ9aG0SUnnS1ucfq82yXkXl/X65PdcMmrY3I4TT7RafG/pZ4tOL/rVska+rHbOg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=mjoGSoAVlvydt0Jv/Y5YjpYAlAZSs7uQpx+HqxTaA+0=;
+ b=TOFz+RwHez4vrI5xMazAWyKcqerqzSCFZh5stI4iULBSuqrUGjtu1vLU84OhGCi9DN8KtkXtWZHtVDSB/meSm6fGpHXlGjHbaQqVelwMIeGOgdbobtaZjeRLlzOwgVk5lZc38WQhAOLsCOyOplmCEY7xQCXbmKHuON41ko62+LELYtynlDYLil9UV9Msj46p/lVgW0t95nBJP6of9B95CwhXrDFnN9zxF5Azy/Md3jq/nJYiAqlYC6xXK6I3FpSGQ8Nt3WmP6g8e85HMKtDsGl5l9dtLS7pA2kBdNclskvjvdGhR7GAb1CL07n60ZD1Q4/mIFBkgcqvaihpQf4EFxQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.112.34) smtp.rcpttodomain=amd.com smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=quarantine sp=none pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=mjoGSoAVlvydt0Jv/Y5YjpYAlAZSs7uQpx+HqxTaA+0=;
+ b=Kz6O3VF1wdJuFea6jnIOMX3le5+onW/nh7bUy9eKWODsavZCzFXAgCig8tqsZm2g06tm/vJPrO+J41x0nypweyT21nXb8/JYVSNSSJvtW8wkgYwcA72/pLEV1u4crhlGoHrZpDjTg+qJ/E5qk94NGbWCwu6O0tnZmvncZjEShRFuA217VQVSPtzEfknAIFN2fki9qMpDW3WoPwXVZ8qO72sVultwBwTZYEat79bLmrTz9wlP3cHXhNMQxH3ZuGkeExOrsFc+4RTPyVb8NXdJK0k5WOO9s+CrKe3RM6WVBWljds0ihOvMH9VGebvDGi08dy8aAZlgwfPgi8zLOuzIQw==
+Received: from DM3PR11CA0019.namprd11.prod.outlook.com (2603:10b6:0:54::29) by
+ CH2PR12MB3701.namprd12.prod.outlook.com (2603:10b6:610:23::27) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.4415.15; Sun, 15 Aug 2021 20:40:31 +0000
+Received: from DM6NAM11FT065.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:0:54:cafe::92) by DM3PR11CA0019.outlook.office365.com
+ (2603:10b6:0:54::29) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4415.14 via Frontend
+ Transport; Sun, 15 Aug 2021 20:40:31 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.112.34)
+ smtp.mailfrom=nvidia.com; amd.com; dkim=none (message not signed)
+ header.d=none;amd.com; dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.112.34 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.112.34; helo=mail.nvidia.com;
+Received: from mail.nvidia.com (216.228.112.34) by
+ DM6NAM11FT065.mail.protection.outlook.com (10.13.172.109) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ 15.20.4415.14 via Frontend Transport; Sun, 15 Aug 2021 20:40:30 +0000
+Received: from [10.2.50.190] (172.20.187.6) by HQMAIL107.nvidia.com
+ (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Sun, 15 Aug
+ 2021 20:40:29 +0000
+Subject: Re: [PATCH v6 02/13] mm: remove extra ZONE_DEVICE struct page
+ refcount
+To:     Christoph Hellwig <hch@lst.de>, Alex Sierra <alex.sierra@amd.com>
+CC:     <akpm@linux-foundation.org>, <Felix.Kuehling@amd.com>,
+        <linux-mm@kvack.org>, <rcampbell@nvidia.com>,
+        <linux-ext4@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <amd-gfx@lists.freedesktop.org>, <dri-devel@lists.freedesktop.org>,
+        <jgg@nvidia.com>, <jglisse@redhat.com>
+References: <20210813063150.2938-1-alex.sierra@amd.com>
+ <20210813063150.2938-3-alex.sierra@amd.com> <20210815153713.GA32384@lst.de>
+From:   John Hubbard <jhubbard@nvidia.com>
+Message-ID: <387d5f85-3d15-9a9e-2382-6ce3c14bc6d5@nvidia.com>
+Date:   Sun, 15 Aug 2021 13:40:29 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.13.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <162743103024.3428896.8525632218517299015.stgit@magnolia>
+In-Reply-To: <20210815153713.GA32384@lst.de>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [172.20.187.6]
+X-ClientProxiedBy: HQMAIL111.nvidia.com (172.20.187.18) To
+ HQMAIL107.nvidia.com (172.20.187.13)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 7afafabb-95a6-41a5-703e-08d9602cec5e
+X-MS-TrafficTypeDiagnostic: CH2PR12MB3701:
+X-Microsoft-Antispam-PRVS: <CH2PR12MB37012AA330D0F1F8563B44C9A8FC9@CH2PR12MB3701.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:3383;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 0RARcpln7oKj8Vg1g9hXUW4o7bPattvQSInxnh/FzID4QSjx0ujr0/EO786yo54VQ0icGm9ixwwbkn9M2ZeMgqHed4cbfoPmycPITsQdbb1WJ1sIOjbAR0+kwSUoy5wk8xT09NOaByiw7m69ZJlVkutZMsubKXw2Oma6IQdvUIHd/mctRDZqflKApMrWGy/ZeSWoSaZItTuCnQ9+z1tHjt9HV2urSpUYoU6SFxo8hXzez+peTVDBSMZWWksi6ZFAp69Nf8tBZGh4ezOAKf/qRAPEkw6cyaq7Z0DOS+A6GkQ0Px3N2NHin4hGREXCdYuH6f9YjWFSWtFhM2zOOnu1dxJ+5fhw8I4+uC1k/aU6QKVSNfSOtXKAzuc4HOZMyl7K80k5rhnZ3XonGuILBG0IqSUfYHikZ1XFcwMvM8ppMAmwvrRP56/PhWUm2GgeRggWFJ/X3In6lXwOgasn+i8tRRGOg33U+dvH6Vn2MDCvKcQQyYZ+G+Ex/2tiDYtPWP8lJvPuUQGWln3obrk7C9lTZokyUl23HsEdED3YJ72LfcXk70WSlAtgZ93hATCOWGSp6yhcE0iSOxgWo/+DeuVFuEidMNM7JRdJTw4H4BnojzkgRadrAm2iLmlkx0f2YIxEgBz3hIzPyTsJw3Y0rKRYkOLdIqQyHw5CKuq10ZNMxySOkvuUT0jObD52rRV+CQbqToa9RBcPgk5BsB53VLeSx/S1nJkulB7ytn1ogeNt5MQyONXzYfDB5R6du5C7j4Zbv5P7qLIcPuf1w8p8pQSCJ8fOp1p+LedlMS5D89/lm+5OCrKC4/Vw6TimR9O3NtKA
+X-Forefront-Antispam-Report: CIP:216.228.112.34;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:schybrid03.nvidia.com;CAT:NONE;SFS:(4636009)(39860400002)(396003)(376002)(346002)(136003)(46966006)(36840700001)(478600001)(54906003)(336012)(356005)(426003)(316002)(2616005)(966005)(110136005)(47076005)(31686004)(82310400003)(36860700001)(16576012)(8676002)(8936002)(53546011)(82740400003)(70206006)(186003)(16526019)(26005)(86362001)(31696002)(7416002)(4326008)(70586007)(5660300002)(7636003)(2906002)(36756003)(43740500002);DIR:OUT;SFP:1101;
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Aug 2021 20:40:30.9026
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7afafabb-95a6-41a5-703e-08d9602cec5e
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.112.34];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT065.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR12MB3701
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jul 27, 2021 at 05:10:30PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On 8/15/21 8:37 AM, Christoph Hellwig wrote:
+>> diff --git a/include/linux/mm.h b/include/linux/mm.h
+>> index 8ae31622deef..d48a1f0889d1 100644
+>> --- a/include/linux/mm.h
+>> +++ b/include/linux/mm.h
+>> @@ -1218,7 +1218,7 @@ __maybe_unused struct page *try_grab_compound_head(struct page *page, int refs,
+>>   static inline __must_check bool try_get_page(struct page *page)
+>>   {
+>>   	page = compound_head(page);
+>> -	if (WARN_ON_ONCE(page_ref_count(page) <= 0))
+>> +	if (WARN_ON_ONCE(page_ref_count(page) < (int)!is_zone_device_page(page)))
 > 
-> generic/475, but we're running fsstress on a disk image inside the
-> scratch filesystem
+> Please avoid the overly long line.  In fact I'd be tempted to just not
+> bother here and keep the old, more lose check.  Especially given that
+> John has a patch ready that removes try_get_page entirely.
 > 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  tests/generic/725     |  136 +++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/725.out |    2 +
->  2 files changed, 138 insertions(+)
->  create mode 100755 tests/generic/725
->  create mode 100644 tests/generic/725.out
-> 
-> 
-> diff --git a/tests/generic/725 b/tests/generic/725
-> new file mode 100755
-> index 00000000..f43bcb37
-> --- /dev/null
-> +++ b/tests/generic/725
-> @@ -0,0 +1,136 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2021 Oracle, Inc.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 725
-> +#
-> +# Test nested log recovery with repeated (simulated) disk failures.  We kick
-> +# off fsstress on a loopback filesystem mounted on the scratch fs, then switch
-> +# out the underlying scratch device with dm-error to see what happens when the
-> +# disk goes down.  Having taken down both fses in this manner, remount them and
-> +# repeat.  This test simulates VM hosts crashing to try to shake out CoW bugs
-> +# in writeback on the host that cause VM guests to fail to recover.
 
-It currently fails for me on btrfs, the loop mount failed in 2nd
-iteration, seems like a bug in btrfs.
+Yes. Andrew has accepted it into mmotm.
 
-> +#
-> +. ./common/preamble
-> +_begin_fstest shutdown auto log metadata eio
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	$KILLALL_PROG -9 fsstress > /dev/null 2>&1
-> +	wait
-> +	if [ -n "$loopmnt" ]; then
-> +		umount $loopmnt 2>/dev/null
+Ralph's patch here was written well before my cleanup that removed
+try_grab_page() [1]. But now that we're here, if you drop this hunk then
+it will make merging easier, I think.
 
-$UMOUNT_PROG
 
-> +		rm -r -f $loopmnt
-> +	fi
-> +	rm -f $tmp.*
-> +	_dmerror_unmount
-> +	_dmerror_cleanup
-> +}
-> +
-> +# Import common functions.
-> +. ./common/dmerror
-> +. ./common/reflink
-> +
-> +# Modify as appropriate.
-> +_supported_fs generic
-> +
-> +_require_scratch_reflink
-> +_require_cp_reflink
-> +_require_dm_target error
-> +_require_command "$KILLALL_PROG" "killall"
-> +
-> +echo "Silence is golden."
-> +
-> +_scratch_mkfs >> $seqres.full 2>&1
-> +_require_metadata_journaling $SCRATCH_DEV
-> +_dmerror_init
-> +_dmerror_mount
-> +
-> +# Create a fs image consuming 1/3 of the scratch fs
-> +scratch_freesp_bytes=$(stat -f -c '%a * %S' $SCRATCH_MNT | bc)
+[1] https://lore.kernel.org/r/20210813044133.1536842-4-jhubbard@nvidia.com
 
-_get_available_space $SCRATCH_MNT ?
-
-> +loopimg_bytes=$((scratch_freesp_bytes / 3))
-> +
-> +loopimg=$SCRATCH_MNT/testfs
-> +truncate -s $loopimg_bytes $loopimg
-> +_mkfs_dev $loopimg
-> +
-> +loopmnt=$tmp.mount
-> +mkdir -p $loopmnt
-> +
-> +scratch_aliveflag=$tmp.runsnap
-> +snap_aliveflag=$tmp.snapping
-> +
-> +snap_loop_fs() {
-> +	touch "$snap_aliveflag"
-> +	while [ -e "$scratch_aliveflag" ]; do
-> +		rm -f $loopimg.a
-> +		_cp_reflink $loopimg $loopimg.a
-> +		sleep 1
-> +	done
-> +	rm -f "$snap_aliveflag"
-> +}
-> +
-> +fsstress=($FSSTRESS_PROG $FSSTRESS_AVOID -d "$loopmnt" -n 999999 -p "$((LOAD_FACTOR * 4))")
-> +
-> +for i in $(seq 1 $((25 * TIME_FACTOR)) ); do
-> +	touch $scratch_aliveflag
-> +	snap_loop_fs >> $seqres.full 2>&1 &
-> +
-> +	if ! _mount $loopimg $loopmnt -o loop; then
-> +		rm -f $scratch_aliveflag
-> +		_fail "loop mount failed"
-
-I found it a bit easier to debug if print $i here.
-
-> +		break
-> +	fi
-> +
-> +	("${fsstress[@]}" >> $seqres.full &) > /dev/null 2>&1
-> +
-> +	# purposely include 0 second sleeps to test shutdown immediately after
-> +	# recovery
-> +	sleep $((RANDOM % (3 * TIME_FACTOR) ))
-> +	rm -f $scratch_aliveflag
-> +
-> +	# This test aims to simulate sudden disk failure, which means that we
-> +	# do not want to quiesce the filesystem or otherwise give it a chance
-> +	# to flush its logs.  Therefore we want to call dmsetup with the
-> +	# --nolockfs parameter; to make this happen we must call the load
-> +	# error table helper *without* 'lockfs'.
-> +	_dmerror_load_error_table
-> +
-> +	ps -e | grep fsstress > /dev/null 2>&1
-> +	while [ $? -eq 0 ]; do
-> +		$KILLALL_PROG -9 fsstress > /dev/null 2>&1
-> +		wait > /dev/null 2>&1
-> +		ps -e | grep fsstress > /dev/null 2>&1
-> +	done
-> +	for ((i = 0; i < 10; i++)); do
-> +		test -e "$snap_aliveflag" || break
-> +		sleep 1
-> +	done
-> +
-> +	# Mount again to replay log after loading working table, so we have a
-> +	# consistent XFS after test.
-
-This is a generic test, fix the XFS specific comments?
-
-> +	$UMOUNT_PROG $loopmnt
-> +	_dmerror_unmount || _fail "unmount failed"
-> +	_dmerror_load_working_table
-> +	if ! _dmerror_mount; then
-> +		dmsetup table | tee -a /dev/ttyprintk
-> +		lsblk | tee -a /dev/ttyprintk
-> +		$XFS_METADUMP_PROG -a -g -o $DMERROR_DEV $seqres.dmfail.md
-
-Above logs all should go to $seqres.full ?
-
-And $XFS_METADUMP_PROG is not suitable for a generic test.
-
-> +		_fail "mount failed"
-> +	fi
-> +done
-> +
-> +# Make sure the fs image file is ok
-> +if [ -f "$loopimg" ]; then
-> +	if _mount $loopimg $loopmnt -o loop; then
-> +		$UMOUNT_PROG $loopmnt &> /dev/null
-> +	else
-> +		echo "final loop mount failed"
-> +	fi
-> +	_check_xfs_filesystem $loopimg none none
-
-Same here, use _check_scratch_fs?
-
-Thanks,
-Eryu
-
-> +fi
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/generic/725.out b/tests/generic/725.out
-> new file mode 100644
-> index 00000000..ed73a9fc
-> --- /dev/null
-> +++ b/tests/generic/725.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 725
-> +Silence is golden.
+thanks,
+--
+John Hubbard
+NVIDIA
