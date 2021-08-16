@@ -7,144 +7,180 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12684C4338F
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 Aug 2021 06:04:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70470C432BE
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 Aug 2021 06:04:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F0F4461A0A
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 Aug 2021 06:04:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5C89B61A2C
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 Aug 2021 06:04:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233446AbhHPGFN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 16 Aug 2021 02:05:13 -0400
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:38862 "EHLO
+        id S233527AbhHPGFO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 16 Aug 2021 02:05:14 -0400
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:38875 "EHLO
         heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S233497AbhHPGFN (ORCPT
+        with ESMTP id S233459AbhHPGFN (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Aug 2021 02:05:13 -0400
-IronPort-HdrOrdr: =?us-ascii?q?A9a23=3AFwGloqpC1aVYApE6Xo4ThpkaV5oXeYIsimQD?=
- =?us-ascii?q?101hICG9E/bo8/xG+c536faaslgssQ4b8+xoVJPgfZq+z+8R3WByB8bAYOCOgg?=
- =?us-ascii?q?LBQ72KhrGSoQEIdRefysdtkY9kc4VbTOb7FEVGi6/BizWQIpINx8am/cmT6dvj?=
- =?us-ascii?q?8w=3D=3D?=
+IronPort-HdrOrdr: =?us-ascii?q?A9a23=3AbwXmpKCae25mMHLlHemQ55DYdb4zR+YMi2TD?=
+ =?us-ascii?q?tnoBLSC9F/b0qynAppomPGDP4gr5NEtApTniAtjkfZq/z+8X3WB5B97LMzUO01?=
+ =?us-ascii?q?HYTr2Kg7GD/xTQXwX69sN4kZxrarVCDrTLZmRSvILX5xaZHr8brOW6zA=3D=3D?=
 X-IronPort-AV: E=Sophos;i="5.84,324,1620662400"; 
-   d="scan'208";a="112944870"
+   d="scan'208";a="112944872"
 Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
   by heian.cn.fujitsu.com with ESMTP; 16 Aug 2021 14:04:35 +0800
 Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
-        by cn.fujitsu.com (Postfix) with ESMTP id 767A74D0D4BF;
-        Mon, 16 Aug 2021 14:04:33 +0800 (CST)
+        by cn.fujitsu.com (Postfix) with ESMTP id E15804D0D829;
+        Mon, 16 Aug 2021 14:04:32 +0800 (CST)
 Received: from G08CNEXJMPEKD02.g08.fujitsu.local (10.167.33.202) by
  G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
- (TLS) id 15.0.1497.23; Mon, 16 Aug 2021 14:04:35 +0800
+ (TLS) id 15.0.1497.23; Mon, 16 Aug 2021 14:04:24 +0800
 Received: from G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.85) by
  G08CNEXJMPEKD02.g08.fujitsu.local (10.167.33.202) with Microsoft SMTP Server
- (TLS) id 15.0.1497.23; Mon, 16 Aug 2021 14:04:31 +0800
+ (TLS) id 15.0.1497.23; Mon, 16 Aug 2021 14:04:23 +0800
 Received: from irides.mr.mr.mr (10.167.225.141) by
  G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.23 via Frontend Transport; Mon, 16 Aug 2021 14:04:28 +0800
+ id 15.0.1497.23 via Frontend Transport; Mon, 16 Aug 2021 14:04:20 +0800
 From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
 To:     <djwong@kernel.org>, <hch@lst.de>, <linux-xfs@vger.kernel.org>
 CC:     <ruansy.fnst@fujitsu.com>, <dan.j.williams@intel.com>,
         <david@fromorbit.com>, <linux-fsdevel@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <nvdimm@lists.linux.dev>,
         <rgoldwyn@suse.de>, <viro@zeniv.linux.org.uk>,
-        <willy@infradead.org>
-Subject: [PATCH v7 5/8] iomap: Introduce iomap_iter2 for two files
-Date:   Mon, 16 Aug 2021 14:03:56 +0800
-Message-ID: <20210816060359.1442450-6-ruansy.fnst@fujitsu.com>
+        <willy@infradead.org>, Goldwyn Rodrigues <rgoldwyn@suse.com>,
+        Ritesh Harjani <riteshh@linux.ibm.com>
+Subject: [PATCH v7 3/8] fsdax: Replace mmap entry in case of CoW
+Date:   Mon, 16 Aug 2021 14:03:54 +0800
+Message-ID: <20210816060359.1442450-4-ruansy.fnst@fujitsu.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20210816060359.1442450-1-ruansy.fnst@fujitsu.com>
 References: <20210816060359.1442450-1-ruansy.fnst@fujitsu.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: 767A74D0D4BF.A1610
+X-yoursite-MailScanner-ID: E15804D0D829.A0B84
 X-yoursite-MailScanner: Found to be clean
 X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Some operations, such as comparing a range of data in two files under
-fsdax mode, requires nested iomap_begin()/iomap_end() on two files.
-Thus, we introduce iomap_iter2() to accept two iteraters to operate
-action on two files.
+We replace the existing entry to the newly allocated one in case of CoW.
+Also, we mark the entry as PAGECACHE_TAG_TOWRITE so writeback marks this
+entry as writeprotected.  This helps us snapshots so new write
+pagefaults after snapshots trigger a CoW.
 
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Ritesh Harjani <riteshh@linux.ibm.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/iomap/core.c       | 51 +++++++++++++++++++++++++++++++++++++++++++
- include/linux/iomap.h |  2 ++
- 2 files changed, 53 insertions(+)
+ fs/dax.c | 39 ++++++++++++++++++++++++++++-----------
+ 1 file changed, 28 insertions(+), 11 deletions(-)
 
-diff --git a/fs/iomap/core.c b/fs/iomap/core.c
-index 89a87a1654e8..214538a25110 100644
---- a/fs/iomap/core.c
-+++ b/fs/iomap/core.c
-@@ -77,3 +77,54 @@ int iomap_iter(struct iomap_iter *iter, const struct iomap_ops *ops)
- 	iomap_iter_done(iter);
- 	return 1;
+diff --git a/fs/dax.c b/fs/dax.c
+index 697a7b7bb96f..e49ba68cc7e4 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -734,6 +734,10 @@ static int copy_cow_page_dax(struct block_device *bdev, struct dax_device *dax_d
+ 	return 0;
  }
+ 
++/* DAX Insert Flag: The state of the entry we insert */
++#define DAX_IF_DIRTY		(1 << 0)
++#define DAX_IF_COW		(1 << 1)
 +
-+/**
-+ * iomap_iter2 - iterate over a ranges in two files
-+ * @iter1:  the first iteration structure
-+ * @iter2: the second iteration structure
-+ * @ops:   iomap ops provided by the file system
-+ *
-+ * Iterate two files once.
-+ */
-+int iomap_iter2(struct iomap_iter *iter1, struct iomap_iter *iter2,
-+		const struct iomap_ops *ops)
-+{
-+	int ret;
+ /*
+  * By this point grab_mapping_entry() has ensured that we have a locked entry
+  * of the appropriate size so we don't have to worry about downgrading PMDs to
+@@ -741,16 +745,19 @@ static int copy_cow_page_dax(struct block_device *bdev, struct dax_device *dax_d
+  * already in the tree, we will skip the insertion and just dirty the PMD as
+  * appropriate.
+  */
+-static void *dax_insert_entry(struct xa_state *xas,
+-		struct address_space *mapping, struct vm_fault *vmf,
+-		void *entry, pfn_t pfn, unsigned long flags, bool dirty)
++static void *dax_insert_entry(struct xa_state *xas, struct vm_fault *vmf,
++		void *entry, pfn_t pfn, unsigned long flags,
++		unsigned int insert_flags)
+ {
++	struct address_space *mapping = vmf->vma->vm_file->f_mapping;
+ 	void *new_entry = dax_make_entry(pfn, flags);
++	bool dirty = insert_flags & DAX_IF_DIRTY;
++	bool cow = insert_flags & DAX_IF_COW;
+ 
+ 	if (dirty)
+ 		__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
+ 
+-	if (dax_is_zero_entry(entry) && !(flags & DAX_ZERO_PAGE)) {
++	if (cow || (dax_is_zero_entry(entry) && !(flags & DAX_ZERO_PAGE))) {
+ 		unsigned long index = xas->xa_index;
+ 		/* we are replacing a zero page with block mapping */
+ 		if (dax_is_pmd_entry(entry))
+@@ -762,7 +769,7 @@ static void *dax_insert_entry(struct xa_state *xas,
+ 
+ 	xas_reset(xas);
+ 	xas_lock_irq(xas);
+-	if (dax_is_zero_entry(entry) || dax_is_empty_entry(entry)) {
++	if (cow || dax_is_zero_entry(entry) || dax_is_empty_entry(entry)) {
+ 		void *old;
+ 
+ 		dax_disassociate_entry(entry, mapping, false);
+@@ -786,6 +793,9 @@ static void *dax_insert_entry(struct xa_state *xas,
+ 	if (dirty)
+ 		xas_set_mark(xas, PAGECACHE_TAG_DIRTY);
+ 
++	if (cow)
++		xas_set_mark(xas, PAGECACHE_TAG_TOWRITE);
 +
-+	if (iter2->iomap.length && ops->iomap_end) {
-+		ret = ops->iomap_end(iter2->inode, iter2->pos, iomap_length(iter2),
-+				iter2->processed > 0 ? iter2->processed : 0,
-+				iter2->flags, &iter2->iomap);
-+		if (ret < 0 && !iter2->processed)
-+			return ret;
+ 	xas_unlock_irq(xas);
+ 	return entry;
+ }
+@@ -1121,8 +1131,7 @@ static vm_fault_t dax_load_hole(struct xa_state *xas,
+ 	pfn_t pfn = pfn_to_pfn_t(my_zero_pfn(vaddr));
+ 	vm_fault_t ret;
+ 
+-	*entry = dax_insert_entry(xas, mapping, vmf, *entry, pfn,
+-			DAX_ZERO_PAGE, false);
++	*entry = dax_insert_entry(xas, vmf, *entry, pfn, DAX_ZERO_PAGE, 0);
+ 
+ 	ret = vmf_insert_mixed(vmf->vma, vaddr, pfn);
+ 	trace_dax_load_hole(inode, vmf, ret);
+@@ -1149,8 +1158,8 @@ static vm_fault_t dax_pmd_load_hole(struct xa_state *xas, struct vm_fault *vmf,
+ 		goto fallback;
+ 
+ 	pfn = page_to_pfn_t(zero_page);
+-	*entry = dax_insert_entry(xas, mapping, vmf, *entry, pfn,
+-			DAX_PMD | DAX_ZERO_PAGE, false);
++	*entry = dax_insert_entry(xas, vmf, *entry, pfn,
++				  DAX_PMD | DAX_ZERO_PAGE, 0);
+ 
+ 	if (arch_needs_pgtable_deposit()) {
+ 		pgtable = pte_alloc_one(vma->vm_mm);
+@@ -1461,6 +1470,7 @@ static vm_fault_t dax_fault_iter(struct vm_fault *vmf,
+ 	bool write = vmf->flags & FAULT_FLAG_WRITE;
+ 	bool sync = dax_fault_is_synchronous(iter->flags, vmf->vma, iomap);
+ 	unsigned long entry_flags = pmd ? DAX_PMD : 0;
++	unsigned int insert_flags = 0;
+ 	int err = 0;
+ 	pfn_t pfn;
+ 	void *kaddr;
+@@ -1485,8 +1495,15 @@ static vm_fault_t dax_fault_iter(struct vm_fault *vmf,
+ 	if (err)
+ 		return pmd ? VM_FAULT_FALLBACK : dax_fault_return(err);
+ 
+-	*entry = dax_insert_entry(xas, mapping, vmf, *entry, pfn, entry_flags,
+-				  write && !sync);
++	if (write) {
++		if (!sync)
++			insert_flags |= DAX_IF_DIRTY;
++		if (iomap->flags & IOMAP_F_SHARED)
++			insert_flags |= DAX_IF_COW;
 +	}
 +
-+	if (iter1->iomap.length && ops->iomap_end) {
-+		ret = ops->iomap_end(iter1->inode, iter1->pos, iomap_length(iter1),
-+				iter1->processed > 0 ? iter1->processed : 0,
-+				iter1->flags, &iter1->iomap);
-+		if (ret < 0 && !iter1->processed)
-+			return ret;
-+	}
-+
-+	trace_iomap_iter(iter1, ops, _RET_IP_);
-+	ret = iomap_iter_advance(iter1);
-+	if (ret <= 0)
-+		return ret;
-+	ret = iomap_iter_advance(iter2);
-+	if (ret <= 0)
-+		return ret;
-+
-+	ret = ops->iomap_begin(iter1->inode, iter1->pos, iter1->len, iter1->flags,
-+			       &iter1->iomap, &iter1->srcmap);
-+	if (ret < 0)
-+		return ret;
-+	iomap_iter_done(iter1);
-+
-+	ret = ops->iomap_begin(iter2->inode, iter2->pos, iter2->len, iter2->flags,
-+			       &iter2->iomap, &iter2->srcmap);
-+	if (ret < 0)
-+		return ret;
-+	iomap_iter_done(iter2);
-+	return 1;
-+}
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 24f8489583ca..ebef060c65cd 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -186,6 +186,8 @@ struct iomap_iter {
- };
++	*entry = dax_insert_entry(xas, vmf, *entry, pfn, entry_flags,
++				  insert_flags);
  
- int iomap_iter(struct iomap_iter *iter, const struct iomap_ops *ops);
-+int iomap_iter2(struct iomap_iter *iter, struct iomap_iter *iter2,
-+		const struct iomap_ops *ops);
- 
- /**
-  * iomap_length - length of the current iomap iteration
+ 	if (write &&
+ 	    srcmap->addr != IOMAP_HOLE && srcmap->addr != iomap->addr) {
 -- 
 2.32.0
 
