@@ -6,35 +6,35 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
 	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1BFBC4338F
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 Aug 2021 12:43:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2CE5C4338F
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 Aug 2021 12:45:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C8C2D63272
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 Aug 2021 12:43:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AC8DA63272
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 Aug 2021 12:45:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229801AbhHPMo0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 16 Aug 2021 08:44:26 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49720 "EHLO mail.kernel.org"
+        id S230195AbhHPMqU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 16 Aug 2021 08:46:20 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50192 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229643AbhHPMoZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 16 Aug 2021 08:44:25 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPS id 790076327A
-        for <linux-xfs@vger.kernel.org>; Mon, 16 Aug 2021 12:43:54 +0000 (UTC)
+        id S229643AbhHPMqT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 16 Aug 2021 08:46:19 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPS id 85B006327A
+        for <linux-xfs@vger.kernel.org>; Mon, 16 Aug 2021 12:45:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1629117834;
-        bh=ot9O6z1e9eyHdS3MOvBL9Zu9TyIA6X0pNgYy5xv/rTM=;
+        s=k20201202; t=1629117948;
+        bh=xwgJZr2JSn7dD3yuerkcS/cG+c/R9fol7sHHf4+a5XY=;
         h=From:To:Subject:Date:From;
-        b=XJqfkpb4BnQLLP4zs247qvxWU8E5dT3XGfX2ySiu1wwGSC1WUg/5Wh8wF0fPeSQdT
-         zY6sE0VPXnlG16i9zKAT859CnqACWmR96aZuhxvwhaH2YBbLwgLYWH/3NytIcn5gIs
-         XUn8d43WAVQzw3yZOxMd+yX6s83Hoh2UJGtMdzdsH69geoX/gBmGnssUGdYykDuLHX
-         03volVV0CGjYKbTSxdcAaEjLQC2vyGPZnSTzWToUUq4ZHG3whN2JDSXxeVVGHfuACX
-         nNpA4Kg5pTsDRXmbR7yK0x0jmXwifTAoEtTWwSeZMC/zPlQjcowHU1KyrGJRW2SJkl
-         O/znJSwY5OqUw==
+        b=UZmTPYGrnfQ1Uw4iAR0HPh5D3QjpCIdEA36tX+czhLzwc7JWgEPieDTH5vv/Z3bcf
+         C2HVK7i++vAfdkUFBbjQVUs5wxg7WiELzrNsOa6a0PFbZrpaWo3/d5pPVNFXS+FgM8
+         q/Fc34TRpOe4jT3sP684ozqckfPCcDLDBJfYJtxEEgQHBqfqVCtWykm3YpWFMXbdUS
+         gq9yR1OHVYnXF4C57m7HQAmDIu2lNhtOwwhcOr/niLtEaBfW5FLSv2TaTeOTIZctJ9
+         l91LHuU9ldGrX8OUyFd3fHSSOPEvTEsrDri115ZXRnPk26AzdkcZ5KHW8LCbaTVDXW
+         X0eHEJFKBqeLg==
 From:   bugzilla-daemon@bugzilla.kernel.org
 To:     linux-xfs@vger.kernel.org
-Subject: [Bug 214077] New: [xfstests xfs/168] xfs_repair failed with
+Subject: [Bug 214079] New: [xfstests xfs/168] xfs_repair failed with
  shrinking 776672
-Date:   Mon, 16 Aug 2021 12:43:53 +0000
+Date:   Mon, 16 Aug 2021 12:45:48 +0000
 X-Bugzilla-Reason: None
 X-Bugzilla-Type: new
 X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
@@ -51,8 +51,8 @@ X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
 X-Bugzilla-Flags: 
 X-Bugzilla-Changed-Fields: bug_id short_desc product version
  cf_kernel_version rep_platform op_sys cf_tree bug_status bug_severity
- priority component assigned_to reporter cf_regression attachments.created
-Message-ID: <bug-214077-201763@https.bugzilla.kernel.org/>
+ priority component assigned_to reporter cf_regression
+Message-ID: <bug-214079-201763@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 X-Bugzilla-URL: https://bugzilla.kernel.org/
@@ -62,9 +62,9 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D214077
+https://bugzilla.kernel.org/show_bug.cgi?id=3D214079
 
-            Bug ID: 214077
+            Bug ID: 214079
            Summary: [xfstests xfs/168] xfs_repair failed with shrinking
                     776672
            Product: File System
@@ -80,10 +80,6 @@ https://bugzilla.kernel.org/show_bug.cgi?id=3D214077
           Assignee: filesystem_xfs@kernel-bugs.kernel.org
           Reporter: zlang@redhat.com
         Regression: No
-
-Created attachment 298333
-  --> https://bugzilla.kernel.org/attachment.cgi?id=3D298333&action=3Dedit
-xfs-168.full
 
 xfstests xfs/168 fails on ppc64le with xfs-linux kernel xfs-5.15-merge-1:
 
