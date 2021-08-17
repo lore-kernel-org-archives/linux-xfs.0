@@ -2,94 +2,245 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7730EC4338F
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Aug 2021 02:37:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 430E3C4320A
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Aug 2021 03:16:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5E7AC60F55
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Aug 2021 02:37:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1950E60FC3
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Aug 2021 03:16:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236550AbhHQChj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 16 Aug 2021 22:37:39 -0400
-Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:48692 "EHLO
-        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233656AbhHQChj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Aug 2021 22:37:39 -0400
-Received: from dread.disaster.area (pa49-195-182-146.pa.nsw.optusnet.com.au [49.195.182.146])
-        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id F26771B4722;
-        Tue, 17 Aug 2021 12:37:03 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1mFoyN-001amD-2Z; Tue, 17 Aug 2021 12:37:03 +1000
-Date:   Tue, 17 Aug 2021 12:37:02 +1000
-From:   Dave Chinner <david@fromorbit.com>
+        id S234014AbhHQDRY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 16 Aug 2021 23:17:24 -0400
+Received: from out30-45.freemail.mail.aliyun.com ([115.124.30.45]:54038 "EHLO
+        out30-45.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S233585AbhHQDRY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Aug 2021 23:17:24 -0400
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R881e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04420;MF=eguan@linux.alibaba.com;NM=1;PH=DS;RN=6;SR=0;TI=SMTPD_---0UjHerta_1629170209;
+Received: from localhost(mailfrom:eguan@linux.alibaba.com fp:SMTPD_---0UjHerta_1629170209)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Tue, 17 Aug 2021 11:16:49 +0800
+Date:   Tue, 17 Aug 2021 11:16:49 +0800
+From:   Eryu Guan <eguan@linux.alibaba.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Shiyang Ruan <ruansy.fnst@fujitsu.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, nvdimm@lists.linux.dev,
-        cluster-devel@redhat.com
-Subject: Re: [PATCH 31/30] iomap: move iomap iteration code to iter.c
-Message-ID: <20210817023702.GJ3657114@dread.disaster.area>
-References: <20210809061244.1196573-1-hch@lst.de>
- <20210811191926.GJ3601443@magnolia>
+Cc:     Eryu Guan <guan@eryu.me>, guaneryu@gmail.com,
+        linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 2/3] generic: test shutdowns of a nested filesystem
+Message-ID: <20210817031649.GO60846@e18g06458.et15sqa>
+References: <162743101932.3428896.8510279402246446036.stgit@magnolia>
+ <162743103024.3428896.8525632218517299015.stgit@magnolia>
+ <YRlApOTms4XPbwke@desktop>
+ <20210816163524.GA12640@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210811191926.GJ3601443@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
-        a=QpfB3wCSrn/dqEBSktpwZQ==:117 a=QpfB3wCSrn/dqEBSktpwZQ==:17
-        a=kj9zAlcOel0A:10 a=MhDmnRu9jo8A:10 a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8
-        a=7-415B0cAAAA:8 a=q_jVzwUvvCIIwZNgioUA:9 a=CjuIK1q_8ugA:10
-        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20210816163524.GA12640@magnolia>
+User-Agent: Mutt/1.5.21 (2010-09-15)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 11, 2021 at 12:19:26PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Mon, Aug 16, 2021 at 09:35:24AM -0700, Darrick J. Wong wrote:
+> On Mon, Aug 16, 2021 at 12:28:20AM +0800, Eryu Guan wrote:
+> > On Tue, Jul 27, 2021 at 05:10:30PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > > 
+> > > generic/475, but we're running fsstress on a disk image inside the
+> > > scratch filesystem
+> > > 
+> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > ---
+> > >  tests/generic/725     |  136 +++++++++++++++++++++++++++++++++++++++++++++++++
+> > >  tests/generic/725.out |    2 +
+> > >  2 files changed, 138 insertions(+)
+> > >  create mode 100755 tests/generic/725
+> > >  create mode 100644 tests/generic/725.out
+> > > 
+> > > 
+> > > diff --git a/tests/generic/725 b/tests/generic/725
+> > > new file mode 100755
+> > > index 00000000..f43bcb37
+> > > --- /dev/null
+> > > +++ b/tests/generic/725
+> > > @@ -0,0 +1,136 @@
+> > > +#! /bin/bash
+> > > +# SPDX-License-Identifier: GPL-2.0
+> > > +# Copyright (c) 2021 Oracle, Inc.  All Rights Reserved.
+> > > +#
+> > > +# FS QA Test No. 725
+> > > +#
+> > > +# Test nested log recovery with repeated (simulated) disk failures.  We kick
+> > > +# off fsstress on a loopback filesystem mounted on the scratch fs, then switch
+> > > +# out the underlying scratch device with dm-error to see what happens when the
+> > > +# disk goes down.  Having taken down both fses in this manner, remount them and
+> > > +# repeat.  This test simulates VM hosts crashing to try to shake out CoW bugs
+> > > +# in writeback on the host that cause VM guests to fail to recover.
+> > 
+> > It currently fails for me on btrfs, the loop mount failed in 2nd
+> > iteration, seems like a bug in btrfs.
 > 
-> Now that we've moved iomap to the iterator model, rename this file to be
-> in sync with the functions contained inside of it.
+> Yep.  Until recently (aka the Big Xfs Log Recovery Bughunt of 2021) it
+> wouldn't pass xfs either. :/
 > 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  fs/iomap/Makefile |    2 +-
->  fs/iomap/iter.c   |    0 
->  2 files changed, 1 insertion(+), 1 deletion(-)
->  rename fs/iomap/{apply.c => iter.c} (100%)
+> > > +#
+> > > +. ./common/preamble
+> > > +_begin_fstest shutdown auto log metadata eio
+> > > +
+> > > +_cleanup()
+> > > +{
+> > > +	cd /
+> > > +	$KILLALL_PROG -9 fsstress > /dev/null 2>&1
+> > > +	wait
+> > > +	if [ -n "$loopmnt" ]; then
+> > > +		umount $loopmnt 2>/dev/null
+> > 
+> > $UMOUNT_PROG
+> > 
+> > > +		rm -r -f $loopmnt
+> > > +	fi
+> > > +	rm -f $tmp.*
+> > > +	_dmerror_unmount
+> > > +	_dmerror_cleanup
+> > > +}
+> > > +
+> > > +# Import common functions.
+> > > +. ./common/dmerror
+> > > +. ./common/reflink
+> > > +
+> > > +# Modify as appropriate.
+> > > +_supported_fs generic
+> > > +
+> > > +_require_scratch_reflink
+> > > +_require_cp_reflink
+> > > +_require_dm_target error
+> > > +_require_command "$KILLALL_PROG" "killall"
+> > > +
+> > > +echo "Silence is golden."
+> > > +
+> > > +_scratch_mkfs >> $seqres.full 2>&1
+> > > +_require_metadata_journaling $SCRATCH_DEV
+> > > +_dmerror_init
+> > > +_dmerror_mount
+> > > +
+> > > +# Create a fs image consuming 1/3 of the scratch fs
+> > > +scratch_freesp_bytes=$(stat -f -c '%a * %S' $SCRATCH_MNT | bc)
+> > 
+> > _get_available_space $SCRATCH_MNT ?
+> > 
+> > > +loopimg_bytes=$((scratch_freesp_bytes / 3))
+> > > +
+> > > +loopimg=$SCRATCH_MNT/testfs
+> > > +truncate -s $loopimg_bytes $loopimg
+> > > +_mkfs_dev $loopimg
+> > > +
+> > > +loopmnt=$tmp.mount
+> > > +mkdir -p $loopmnt
+> > > +
+> > > +scratch_aliveflag=$tmp.runsnap
+> > > +snap_aliveflag=$tmp.snapping
+> > > +
+> > > +snap_loop_fs() {
+> > > +	touch "$snap_aliveflag"
+> > > +	while [ -e "$scratch_aliveflag" ]; do
+> > > +		rm -f $loopimg.a
+> > > +		_cp_reflink $loopimg $loopimg.a
+> > > +		sleep 1
+> > > +	done
+> > > +	rm -f "$snap_aliveflag"
+> > > +}
+> > > +
+> > > +fsstress=($FSSTRESS_PROG $FSSTRESS_AVOID -d "$loopmnt" -n 999999 -p "$((LOAD_FACTOR * 4))")
+> > > +
+> > > +for i in $(seq 1 $((25 * TIME_FACTOR)) ); do
+> > > +	touch $scratch_aliveflag
+> > > +	snap_loop_fs >> $seqres.full 2>&1 &
+> > > +
+> > > +	if ! _mount $loopimg $loopmnt -o loop; then
+> > > +		rm -f $scratch_aliveflag
+> > > +		_fail "loop mount failed"
+> > 
+> > I found it a bit easier to debug if print $i here.
 > 
-> diff --git a/fs/iomap/Makefile b/fs/iomap/Makefile
-> index e46f936dde81..bb64215ae256 100644
-> --- a/fs/iomap/Makefile
-> +++ b/fs/iomap/Makefile
-> @@ -26,9 +26,9 @@ ccflags-y += -I $(srctree)/$(src)		# needed for trace events
->  obj-$(CONFIG_FS_IOMAP)		+= iomap.o
->  
->  iomap-y				+= trace.o \
-> -				   apply.o \
->  				   buffered-io.o \
->  				   direct-io.o \
->  				   fiemap.o \
-> +				   iter.o \
->  				   seek.o
->  iomap-$(CONFIG_SWAP)		+= swapfile.o
-> diff --git a/fs/iomap/apply.c b/fs/iomap/iter.c
-> similarity index 100%
-> rename from fs/iomap/apply.c
-> rename to fs/iomap/iter.c
+> Ok, I'll change it to "loop $i mount failed".
+> 
+> > > +		break
+> > > +	fi
+> > > +
+> > > +	("${fsstress[@]}" >> $seqres.full &) > /dev/null 2>&1
+> > > +
+> > > +	# purposely include 0 second sleeps to test shutdown immediately after
+> > > +	# recovery
+> > > +	sleep $((RANDOM % (3 * TIME_FACTOR) ))
+> > > +	rm -f $scratch_aliveflag
+> > > +
+> > > +	# This test aims to simulate sudden disk failure, which means that we
+> > > +	# do not want to quiesce the filesystem or otherwise give it a chance
+> > > +	# to flush its logs.  Therefore we want to call dmsetup with the
+> > > +	# --nolockfs parameter; to make this happen we must call the load
+> > > +	# error table helper *without* 'lockfs'.
+> > > +	_dmerror_load_error_table
+> > > +
+> > > +	ps -e | grep fsstress > /dev/null 2>&1
+> > > +	while [ $? -eq 0 ]; do
+> > > +		$KILLALL_PROG -9 fsstress > /dev/null 2>&1
+> > > +		wait > /dev/null 2>&1
+> > > +		ps -e | grep fsstress > /dev/null 2>&1
+> > > +	done
+> > > +	for ((i = 0; i < 10; i++)); do
+> > > +		test -e "$snap_aliveflag" || break
+> > > +		sleep 1
+> > > +	done
+> > > +
+> > > +	# Mount again to replay log after loading working table, so we have a
+> > > +	# consistent XFS after test.
+> > 
+> > This is a generic test, fix the XFS specific comments?
+> 
+> Oops.  "...a consistent fs after test."
+> 
+> > > +	$UMOUNT_PROG $loopmnt
+> > > +	_dmerror_unmount || _fail "unmount failed"
+> > > +	_dmerror_load_working_table
+> > > +	if ! _dmerror_mount; then
+> > > +		dmsetup table | tee -a /dev/ttyprintk
+> > > +		lsblk | tee -a /dev/ttyprintk
+> > > +		$XFS_METADUMP_PROG -a -g -o $DMERROR_DEV $seqres.dmfail.md
+> > 
+> > Above logs all should go to $seqres.full ?
+> 
+> Oops, yeah.  I'll remove them since I was only using them to check the
+> system state.
+> 
+> > And $XFS_METADUMP_PROG is not suitable for a generic test.
+> 
+> I'll create _metadump_dev so that this at least works for the two
+> filesystems for which we have dump creation helpers (ext* and xfs).
 
-LGTM,
+Sounds great!
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> > > +		_fail "mount failed"
+> > > +	fi
+> > > +done
+> > > +
+> > > +# Make sure the fs image file is ok
+> > > +if [ -f "$loopimg" ]; then
+> > > +	if _mount $loopimg $loopmnt -o loop; then
+> > > +		$UMOUNT_PROG $loopmnt &> /dev/null
+> > > +	else
+> > > +		echo "final loop mount failed"
+> > > +	fi
+> > > +	_check_xfs_filesystem $loopimg none none
+> > 
+> > Same here, use _check_scratch_fs?
+> 
+> $loopimg is a file within the scratch fs.
+
+_check_scratch_fs can take dev as argument, and default to $SCRATCH_DEV,
+I think that works in this case?
+
+Thanks,
+Eryu
