@@ -7,37 +7,36 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95B23C4338F
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Aug 2021 23:43:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22B17C4338F
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Aug 2021 23:43:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7BB4C61038
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Aug 2021 23:43:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA3336102A
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Aug 2021 23:43:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236526AbhHQXnl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 17 Aug 2021 19:43:41 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38172 "EHLO mail.kernel.org"
+        id S236543AbhHQXnr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 17 Aug 2021 19:43:47 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38280 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236443AbhHQXnl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 17 Aug 2021 19:43:41 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 6DD80604AC;
-        Tue, 17 Aug 2021 23:43:07 +0000 (UTC)
+        id S236443AbhHQXnq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 17 Aug 2021 19:43:46 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E9ADC61008;
+        Tue, 17 Aug 2021 23:43:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1629243787;
-        bh=eVWsWm23Oc5Qk+zkPqSn4iboWoTH1fXVzHWlyEuRKC8=;
+        s=k20201202; t=1629243793;
+        bh=6qYxnrYM2UmDgEl0ESQ75xG95w456zqU5RIVsxnqB/s=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=Gnifzww7Z7qWluNPPel9cD/blJInxvulcdNkT4z1bArAAwMy6fYZ8Pl83DjbOtKod
-         OihsYHLI6IlvmtJ98PA0Jo5HSxcJeocEE3Yx9S3d/iQMAb+hC1MA0ExYbTmVNpZqoG
-         iMeBDdJ5BcZq36D2z1MyrvIKEdDksE8xC3v4lJFNBfIPVaf3aagN79BAH2Emu7iumr
-         wGbtUTlbrNwircxCcDY8zlG9HVclcQ2HO25EQGXQEJJqbTueEIkdNBHfUE+JfxueG6
-         7H/BGg2wE4wKlnF7CXEVRm6IxoU2vafayNRhwblVSeq0ta8LiyqXULMj6wbmLQxgh6
-         4k4T0P6wpBNmg==
-Subject: [PATCH 10/15] xfs: disambiguate units for ftrace fields tagged
- "count"
+        b=sL4HP5T/8o01DfIxmfN0s3NcFtdyBq9KwF7NwLaefrn8evti1PFUWRhNlSHlARJ42
+         43DWpbwDd9GoxxT5MAK1fOpAYHOnu8k3k2TMqitbBQH6rRZ95NH9017qYg3mEacvNC
+         9qoKXFKNMaL4MNuQaKoJjVq6eESmW0It09kFU0A8PqsJFRPFrUQ4emrVhEokeqXnUA
+         SyXxkmY7EVMYzvmhkN3MQNRH7dF/Hxc/JDOpQe/YogTxYdJEDtnUYthYJoUWpquPNG
+         OGnC0HUlVMKraB8FwLdmLQq2rsYW5NgE1d7M8n2Aa+0jkJQQM/DsaWv9JxafroBV4l
+         JxXJrgJCaBH2A==
+Subject: [PATCH 11/15] xfs: rename i_disk_size fields in ftrace output
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, david@fromorbit.com, sandeen@sandeen.net
 Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 17 Aug 2021 16:43:07 -0700
-Message-ID: <162924378705.761813.11309968953103960937.stgit@magnolia>
+Date:   Tue, 17 Aug 2021 16:43:12 -0700
+Message-ID: <162924379266.761813.11427424580864028418.stgit@magnolia>
 In-Reply-To: <162924373176.761813.10896002154570305865.stgit@magnolia>
 References: <162924373176.761813.10896002154570305865.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,49 +49,25 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Some of our tracepoints have a field known as "count".  That name
-doesn't describe any units, which makes the fields not very useful.
-Rename the fields to capture units and ensure the format is hexadecimal
-when we're referring to blocks, extents, or IO operations.
-
-"blockcount" are in units of fs blocks
-"bytecount" are in units of bytes
-"icount" are in units of inode records
+Whenever we record i_disk_size (i.e. the ondisk file size), use the
+"disize" tag and hexadecimal format consistently.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_trace.h |   14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ fs/xfs/xfs_trace.h |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
 
 diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 7ae654f7ae82..07da753588d5 100644
+index 07da753588d5..29bf5fbfa71b 100644
 --- a/fs/xfs/xfs_trace.h
 +++ b/fs/xfs/xfs_trace.h
-@@ -346,7 +346,7 @@ DECLARE_EVENT_CLASS(xfs_bmap_class,
- 		__entry->caller_ip = caller_ip;
- 	),
- 	TP_printk("dev %d:%d ino 0x%llx state %s cur %p/%d "
--		  "fileoff 0x%llx startblock 0x%llx count %lld flag %d caller %pS",
-+		  "fileoff 0x%llx startblock 0x%llx blockcount 0x%llx flag %d caller %pS",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
- 		  __entry->ino,
- 		  __print_flags(__entry->bmap_state, "|", XFS_BMAP_EXT_FLAGS),
-@@ -806,7 +806,7 @@ DECLARE_EVENT_CLASS(xfs_iref_class,
- 		__entry->pincount = atomic_read(&ip->i_pincount);
- 		__entry->caller_ip = caller_ip;
- 	),
--	TP_printk("dev %d:%d ino 0x%llx count %d pincount %d caller %pS",
-+	TP_printk("dev %d:%d ino 0x%llx icount %d pincount %d caller %pS",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
- 		  __entry->ino,
- 		  __entry->count,
 @@ -1386,7 +1386,7 @@ DECLARE_EVENT_CLASS(xfs_file_class,
  		__entry->offset = iocb->ki_pos;
  		__entry->count = iov_iter_count(iter);
  	),
--	TP_printk("dev %d:%d ino 0x%llx size 0x%llx pos 0x%llx count 0x%zx",
-+	TP_printk("dev %d:%d ino 0x%llx size 0x%llx pos 0x%llx bytecount 0x%zx",
+-	TP_printk("dev %d:%d ino 0x%llx size 0x%llx pos 0x%llx bytecount 0x%zx",
++	TP_printk("dev %d:%d ino 0x%llx disize 0x%llx pos 0x%llx bytecount 0x%zx",
  		  MAJOR(__entry->dev), MINOR(__entry->dev),
  		  __entry->ino,
  		  __entry->size,
@@ -100,36 +75,36 @@ index 7ae654f7ae82..07da753588d5 100644
  		__entry->startblock = irec ? irec->br_startblock : 0;
  		__entry->blockcount = irec ? irec->br_blockcount : 0;
  	),
--	TP_printk("dev %d:%d ino 0x%llx size 0x%llx pos 0x%llx count %zd "
-+	TP_printk("dev %d:%d ino 0x%llx size 0x%llx pos 0x%llx bytecount 0x%zx "
+-	TP_printk("dev %d:%d ino 0x%llx size 0x%llx pos 0x%llx bytecount 0x%zx "
++	TP_printk("dev %d:%d ino 0x%llx disize 0x%llx pos 0x%llx bytecount 0x%zx "
  		  "fork %s startoff 0x%llx startblock 0x%llx blockcount 0x%llx",
  		  MAJOR(__entry->dev), MINOR(__entry->dev),
  		  __entry->ino,
-@@ -1476,7 +1476,7 @@ DECLARE_EVENT_CLASS(xfs_simple_io_class,
- 		__entry->count = count;
+@@ -1512,7 +1512,7 @@ DECLARE_EVENT_CLASS(xfs_itrunc_class,
+ 		__entry->size = ip->i_disk_size;
+ 		__entry->new_size = new_size;
  	),
- 	TP_printk("dev %d:%d ino 0x%llx isize 0x%llx disize 0x%llx "
--		  "pos 0x%llx count %zd",
-+		  "pos 0x%llx bytecount 0x%zx",
+-	TP_printk("dev %d:%d ino 0x%llx size 0x%llx new_size 0x%llx",
++	TP_printk("dev %d:%d ino 0x%llx disize 0x%llx new_size 0x%llx",
  		  MAJOR(__entry->dev), MINOR(__entry->dev),
  		  __entry->ino,
- 		  __entry->isize,
-@@ -3217,7 +3217,7 @@ DECLARE_EVENT_CLASS(xfs_double_io_class,
- 		__field(loff_t, src_isize)
- 		__field(loff_t, src_disize)
- 		__field(loff_t, src_offset)
--		__field(size_t, len)
-+		__field(long long, len)
- 		__field(xfs_ino_t, dest_ino)
- 		__field(loff_t, dest_isize)
- 		__field(loff_t, dest_disize)
-@@ -3235,7 +3235,7 @@ DECLARE_EVENT_CLASS(xfs_double_io_class,
- 		__entry->dest_disize = dest->i_disk_size;
- 		__entry->dest_offset = doffset;
+ 		  __entry->size,
+@@ -1543,7 +1543,7 @@ TRACE_EVENT(xfs_pagecache_inval,
+ 		__entry->start = start;
+ 		__entry->finish = finish;
  	),
--	TP_printk("dev %d:%d count %zd "
-+	TP_printk("dev %d:%d bytecount 0x%llx "
- 		  "ino 0x%llx isize 0x%llx disize 0x%llx pos 0x%llx -> "
- 		  "ino 0x%llx isize 0x%llx disize 0x%llx pos 0x%llx",
+-	TP_printk("dev %d:%d ino 0x%llx size 0x%llx start 0x%llx finish 0x%llx",
++	TP_printk("dev %d:%d ino 0x%llx disize 0x%llx start 0x%llx finish 0x%llx",
  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->ino,
+ 		  __entry->size,
+@@ -1573,7 +1573,7 @@ TRACE_EVENT(xfs_bunmap,
+ 		__entry->caller_ip = caller_ip;
+ 		__entry->flags = flags;
+ 	),
+-	TP_printk("dev %d:%d ino 0x%llx size 0x%llx fileoff 0x%llx blockcount 0x%llx"
++	TP_printk("dev %d:%d ino 0x%llx disize 0x%llx fileoff 0x%llx blockcount 0x%llx"
+ 		  "flags %s caller %pS",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->ino,
 
