@@ -2,272 +2,73 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DF1BC4320A
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Aug 2021 04:16:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 646DFC4320A
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Aug 2021 05:47:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3823260FC3
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Aug 2021 04:16:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 414C560F5E
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Aug 2021 05:47:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229738AbhHQEQt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 17 Aug 2021 00:16:49 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60714 "EHLO mail.kernel.org"
+        id S234139AbhHQFsX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 17 Aug 2021 01:48:23 -0400
+Received: from verein.lst.de ([213.95.11.211]:57146 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229545AbhHQEQt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 17 Aug 2021 00:16:49 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id B7CE760F11;
-        Tue, 17 Aug 2021 04:16:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1629173776;
-        bh=osYLrryYAK4R6nyKDagrh3nGfl3jcsKFuZ2OvZkJR9U=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ikK5UQDuXb6ga2EICCpIEcngAJMoHJFGcaAJseZ+u7nXtzm2ib6s14ZmwXXoblZzJ
-         HBWYbkMAg3tqIZT1e323sIsk27tI5Ah30c5Co6thysJoWRa4Liy4fDFT5YCTzpPcC7
-         YgTWw0Wlv2uYZggcuik/u1Mg2QzijGh6nT9rSQe7oIPQIXj9zW6MsSlP0GvEhw3X4W
-         VIzwn+kOWk5jkDZvsBxezHgW1iTtIDRCQuw28zqABf+C6QLeKAmV+AalsAW9YGVE0d
-         pDp3DJ4ehm5VCgcLGNG/9DOyJff2M7RH/o44QBuACk0cHQSuh4B6ys/I75GLLCCqyh
-         aUnwmGgI7VElA==
-Date:   Mon, 16 Aug 2021 21:16:16 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Eryu Guan <eguan@linux.alibaba.com>
-Cc:     Eryu Guan <guan@eryu.me>, guaneryu@gmail.com,
-        linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 2/3] generic: test shutdowns of a nested filesystem
-Message-ID: <20210817041616.GC12640@magnolia>
-References: <162743101932.3428896.8510279402246446036.stgit@magnolia>
- <162743103024.3428896.8525632218517299015.stgit@magnolia>
- <YRlApOTms4XPbwke@desktop>
- <20210816163524.GA12640@magnolia>
- <20210817031649.GO60846@e18g06458.et15sqa>
+        id S233928AbhHQFsX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 17 Aug 2021 01:48:23 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id C7A586736F; Tue, 17 Aug 2021 07:47:47 +0200 (CEST)
+Date:   Tue, 17 Aug 2021 07:47:47 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Felix Kuehling <felix.kuehling@amd.com>
+Cc:     Christoph Hellwig <hch@lst.de>, Alex Sierra <alex.sierra@amd.com>,
+        akpm@linux-foundation.org, linux-mm@kvack.org,
+        rcampbell@nvidia.com, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org, amd-gfx@lists.freedesktop.org,
+        dri-devel@lists.freedesktop.org, jgg@nvidia.com, jglisse@redhat.com
+Subject: Re: [PATCH v6 04/13] drm/amdkfd: add SPM support for SVM
+Message-ID: <20210817054747.GA4895@lst.de>
+References: <20210813063150.2938-1-alex.sierra@amd.com> <20210813063150.2938-5-alex.sierra@amd.com> <20210815091000.GB25067@lst.de> <0ecf3253-5c77-e982-981a-b340ff705838@amd.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210817031649.GO60846@e18g06458.et15sqa>
+In-Reply-To: <0ecf3253-5c77-e982-981a-b340ff705838@amd.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 17, 2021 at 11:16:49AM +0800, Eryu Guan wrote:
-> On Mon, Aug 16, 2021 at 09:35:24AM -0700, Darrick J. Wong wrote:
-> > On Mon, Aug 16, 2021 at 12:28:20AM +0800, Eryu Guan wrote:
-> > > On Tue, Jul 27, 2021 at 05:10:30PM -0700, Darrick J. Wong wrote:
-> > > > From: Darrick J. Wong <djwong@kernel.org>
-> > > > 
-> > > > generic/475, but we're running fsstress on a disk image inside the
-> > > > scratch filesystem
-> > > > 
-> > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > > ---
-> > > >  tests/generic/725     |  136 +++++++++++++++++++++++++++++++++++++++++++++++++
-> > > >  tests/generic/725.out |    2 +
-> > > >  2 files changed, 138 insertions(+)
-> > > >  create mode 100755 tests/generic/725
-> > > >  create mode 100644 tests/generic/725.out
-> > > > 
-> > > > 
-> > > > diff --git a/tests/generic/725 b/tests/generic/725
-> > > > new file mode 100755
-> > > > index 00000000..f43bcb37
-> > > > --- /dev/null
-> > > > +++ b/tests/generic/725
-> > > > @@ -0,0 +1,136 @@
-> > > > +#! /bin/bash
-> > > > +# SPDX-License-Identifier: GPL-2.0
-> > > > +# Copyright (c) 2021 Oracle, Inc.  All Rights Reserved.
-> > > > +#
-> > > > +# FS QA Test No. 725
-> > > > +#
-> > > > +# Test nested log recovery with repeated (simulated) disk failures.  We kick
-> > > > +# off fsstress on a loopback filesystem mounted on the scratch fs, then switch
-> > > > +# out the underlying scratch device with dm-error to see what happens when the
-> > > > +# disk goes down.  Having taken down both fses in this manner, remount them and
-> > > > +# repeat.  This test simulates VM hosts crashing to try to shake out CoW bugs
-> > > > +# in writeback on the host that cause VM guests to fail to recover.
-> > > 
-> > > It currently fails for me on btrfs, the loop mount failed in 2nd
-> > > iteration, seems like a bug in btrfs.
-> > 
-> > Yep.  Until recently (aka the Big Xfs Log Recovery Bughunt of 2021) it
-> > wouldn't pass xfs either. :/
-> > 
-> > > > +#
-> > > > +. ./common/preamble
-> > > > +_begin_fstest shutdown auto log metadata eio
-> > > > +
-> > > > +_cleanup()
-> > > > +{
-> > > > +	cd /
-> > > > +	$KILLALL_PROG -9 fsstress > /dev/null 2>&1
-> > > > +	wait
-> > > > +	if [ -n "$loopmnt" ]; then
-> > > > +		umount $loopmnt 2>/dev/null
-> > > 
-> > > $UMOUNT_PROG
-> > > 
-> > > > +		rm -r -f $loopmnt
-> > > > +	fi
-> > > > +	rm -f $tmp.*
-> > > > +	_dmerror_unmount
-> > > > +	_dmerror_cleanup
-> > > > +}
-> > > > +
-> > > > +# Import common functions.
-> > > > +. ./common/dmerror
-> > > > +. ./common/reflink
-> > > > +
-> > > > +# Modify as appropriate.
-> > > > +_supported_fs generic
-> > > > +
-> > > > +_require_scratch_reflink
-> > > > +_require_cp_reflink
-> > > > +_require_dm_target error
-> > > > +_require_command "$KILLALL_PROG" "killall"
-> > > > +
-> > > > +echo "Silence is golden."
-> > > > +
-> > > > +_scratch_mkfs >> $seqres.full 2>&1
-> > > > +_require_metadata_journaling $SCRATCH_DEV
-> > > > +_dmerror_init
-> > > > +_dmerror_mount
-> > > > +
-> > > > +# Create a fs image consuming 1/3 of the scratch fs
-> > > > +scratch_freesp_bytes=$(stat -f -c '%a * %S' $SCRATCH_MNT | bc)
-> > > 
-> > > _get_available_space $SCRATCH_MNT ?
-> > > 
-> > > > +loopimg_bytes=$((scratch_freesp_bytes / 3))
-> > > > +
-> > > > +loopimg=$SCRATCH_MNT/testfs
-> > > > +truncate -s $loopimg_bytes $loopimg
-> > > > +_mkfs_dev $loopimg
-> > > > +
-> > > > +loopmnt=$tmp.mount
-> > > > +mkdir -p $loopmnt
-> > > > +
-> > > > +scratch_aliveflag=$tmp.runsnap
-> > > > +snap_aliveflag=$tmp.snapping
-> > > > +
-> > > > +snap_loop_fs() {
-> > > > +	touch "$snap_aliveflag"
-> > > > +	while [ -e "$scratch_aliveflag" ]; do
-> > > > +		rm -f $loopimg.a
-> > > > +		_cp_reflink $loopimg $loopimg.a
-> > > > +		sleep 1
-> > > > +	done
-> > > > +	rm -f "$snap_aliveflag"
-> > > > +}
-> > > > +
-> > > > +fsstress=($FSSTRESS_PROG $FSSTRESS_AVOID -d "$loopmnt" -n 999999 -p "$((LOAD_FACTOR * 4))")
-> > > > +
-> > > > +for i in $(seq 1 $((25 * TIME_FACTOR)) ); do
-> > > > +	touch $scratch_aliveflag
-> > > > +	snap_loop_fs >> $seqres.full 2>&1 &
-> > > > +
-> > > > +	if ! _mount $loopimg $loopmnt -o loop; then
-> > > > +		rm -f $scratch_aliveflag
-> > > > +		_fail "loop mount failed"
-> > > 
-> > > I found it a bit easier to debug if print $i here.
-> > 
-> > Ok, I'll change it to "loop $i mount failed".
-> > 
-> > > > +		break
-> > > > +	fi
-> > > > +
-> > > > +	("${fsstress[@]}" >> $seqres.full &) > /dev/null 2>&1
-> > > > +
-> > > > +	# purposely include 0 second sleeps to test shutdown immediately after
-> > > > +	# recovery
-> > > > +	sleep $((RANDOM % (3 * TIME_FACTOR) ))
-> > > > +	rm -f $scratch_aliveflag
-> > > > +
-> > > > +	# This test aims to simulate sudden disk failure, which means that we
-> > > > +	# do not want to quiesce the filesystem or otherwise give it a chance
-> > > > +	# to flush its logs.  Therefore we want to call dmsetup with the
-> > > > +	# --nolockfs parameter; to make this happen we must call the load
-> > > > +	# error table helper *without* 'lockfs'.
-> > > > +	_dmerror_load_error_table
-> > > > +
-> > > > +	ps -e | grep fsstress > /dev/null 2>&1
-> > > > +	while [ $? -eq 0 ]; do
-> > > > +		$KILLALL_PROG -9 fsstress > /dev/null 2>&1
-> > > > +		wait > /dev/null 2>&1
-> > > > +		ps -e | grep fsstress > /dev/null 2>&1
-> > > > +	done
-> > > > +	for ((i = 0; i < 10; i++)); do
-> > > > +		test -e "$snap_aliveflag" || break
-> > > > +		sleep 1
-> > > > +	done
-> > > > +
-> > > > +	# Mount again to replay log after loading working table, so we have a
-> > > > +	# consistent XFS after test.
-> > > 
-> > > This is a generic test, fix the XFS specific comments?
-> > 
-> > Oops.  "...a consistent fs after test."
-> > 
-> > > > +	$UMOUNT_PROG $loopmnt
-> > > > +	_dmerror_unmount || _fail "unmount failed"
-> > > > +	_dmerror_load_working_table
-> > > > +	if ! _dmerror_mount; then
-> > > > +		dmsetup table | tee -a /dev/ttyprintk
-> > > > +		lsblk | tee -a /dev/ttyprintk
-> > > > +		$XFS_METADUMP_PROG -a -g -o $DMERROR_DEV $seqres.dmfail.md
-> > > 
-> > > Above logs all should go to $seqres.full ?
-> > 
-> > Oops, yeah.  I'll remove them since I was only using them to check the
-> > system state.
-> > 
-> > > And $XFS_METADUMP_PROG is not suitable for a generic test.
-> > 
-> > I'll create _metadump_dev so that this at least works for the two
-> > filesystems for which we have dump creation helpers (ext* and xfs).
+On Mon, Aug 16, 2021 at 02:54:30PM -0400, Felix Kuehling wrote:
+> I think you're right. We only need the start and end address from
+> lookup_resource and we already know that anyway. It means we can drop
+> patch 3 from the series.
 > 
-> Sounds great!
+> Just to be sure, we'll confirm that the end address determined by our
+> driver matches the one from lookup_resource (coming from the system
+> address map in the system BIOS). If there were a mismatch, it would
+> probably be a bug (in the driver or the BIOS) that we'd need to fix anyway.
+
+Or rather that the driver claimed area is smaller or the same as the
+bios range.  No harm (except for potential peformance implications) when
+you don't use all of it.
+
+> I don't really see the "mess" you're talking about. Including the above,
+> there are only 3 conditional statements in that function that are not
+> error-handling related:
 > 
-> > 
-> > > > +		_fail "mount failed"
-> > > > +	fi
-> > > > +done
-> > > > +
-> > > > +# Make sure the fs image file is ok
-> > > > +if [ -f "$loopimg" ]; then
-> > > > +	if _mount $loopimg $loopmnt -o loop; then
-> > > > +		$UMOUNT_PROG $loopmnt &> /dev/null
-> > > > +	else
-> > > > +		echo "final loop mount failed"
-> > > > +	fi
-> > > > +	_check_xfs_filesystem $loopimg none none
-> > > 
-> > > Same here, use _check_scratch_fs?
-> > 
-> > $loopimg is a file within the scratch fs.
+>         /* Page migration works on Vega10 or newer */
+>         if (kfddev->device_info->asic_family < CHIP_VEGA10)
+>                 return -EINVAL;
+> ...
+>         if (xgmi_connected_to_cpu)
+>                 res = lookup_resource(&iomem_resource, adev->gmc.aper_base);
+>         else
+>                 res = devm_request_free_mem_region(adev->dev, &iomem_resource, size);
+> ...
+>         pgmap->type = xgmi_connected_to_cpu ?
+>                                 MEMORY_DEVICE_GENERIC : MEMORY_DEVICE_PRIVATE;
 > 
-> _check_scratch_fs can take dev as argument, and default to $SCRATCH_DEV,
-> I think that works in this case?
 
-It could be made to work with a large enough crowbar, but that's
-seriously overkill because $loopimg is a file *within* the scratch
-filesystem.  The $loopimg fs gets formatted without the
-SCRATCH_LOGDEV/SCRATCH_RTDEV options (because it is not itself the
-scratch filesystem), which means that in order to (ab)use
-_check_scratch_fs to do the same thing as _check_xfs_filesystem, you
-have to exclude those options.  So yes, this:
-
-	SCRATCH_RTDEV= SCRATCH_LOGDEV= _check_scratch_fs $loopimg
-
-is the equivalent of this:
-
-	_check_xfs_filesystem $loopimg none none
-
-But the first is longer and pointless.
-
---D
-
-> Thanks,
-> Eryu
+Plus the devm_release_mem_region error handling that is currently missing.
