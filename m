@@ -2,274 +2,146 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 615B9C4320E
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE1EAC43216
 	for <linux-xfs@archiver.kernel.org>; Wed, 18 Aug 2021 23:59:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4B23A6104F
+	by mail.kernel.org (Postfix) with ESMTP id C99F96104F
 	for <linux-xfs@archiver.kernel.org>; Wed, 18 Aug 2021 23:59:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235366AbhHSAAR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Aug 2021 20:00:17 -0400
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:59234 "EHLO
+        id S234931AbhHSAAS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Aug 2021 20:00:18 -0400
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:59232 "EHLO
         mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235348AbhHSAAQ (ORCPT
+        by vger.kernel.org with ESMTP id S235345AbhHSAAQ (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Aug 2021 20:00:16 -0400
 Received: from dread.disaster.area (pa49-195-182-146.pa.nsw.optusnet.com.au [49.195.182.146])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 4DBEB80C347
+        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 421CF80C343
         for <linux-xfs@vger.kernel.org>; Thu, 19 Aug 2021 09:59:39 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1mGVT8-002JQ2-QU
+        id 1mGVT8-002JPN-5i
         for linux-xfs@vger.kernel.org; Thu, 19 Aug 2021 09:59:38 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1mGVT8-000cwf-II
-        for linux-xfs@vger.kernel.org; Thu, 19 Aug 2021 09:59:38 +1000
+        id 1mGVT7-000cw0-Tq
+        for linux-xfs@vger.kernel.org; Thu, 19 Aug 2021 09:59:37 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 14/16] xfs: remove unused xfs_sb_version_has wrappers
-Date:   Thu, 19 Aug 2021 09:59:33 +1000
-Message-Id: <20210818235935.149431-15-david@fromorbit.com>
+Subject: [PATCH 00/16 v3] xfs: rework feature flags
+Date:   Thu, 19 Aug 2021 09:59:19 +1000
+Message-Id: <20210818235935.149431-1-david@fromorbit.com>
 X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20210818235935.149431-1-david@fromorbit.com>
-References: <20210818235935.149431-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
         a=QpfB3wCSrn/dqEBSktpwZQ==:117 a=QpfB3wCSrn/dqEBSktpwZQ==:17
-        a=MhDmnRu9jo8A:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
-        a=AtFtvA5u-Mc6ogw4Wj0A:9 a=5lVadre077bsVrLA:21 a=eeCfdHGDk6O7JwMX:21
-        a=AjGcO6oz07-iQ99wixmX:22
+        a=MhDmnRu9jo8A:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=Ejrl2BXn8bQHwYoJSLEA:9 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+With the shutdown rework, it became very clear that we needed to
+make atomic state changes to the mount so that shutdown would be run
+once and once only. To do this, we used the mp->m_sb_lock as a
+serialisation mechanism rather than introduce a new single use
+spinlock for this purpose.
 
-The vast majority of these wrappers are now unused. Remove them
-leaving just the small subset of wrappers that are used to either
-add feature bits or make the mount features field setup code
-simpler.
+However, what we really need to is to separate the operational state
+changes from static feature flag information kept in the mp->m_flags
+field. This would allow the m_flags field to remain largely
+read-only, and we can make the operational state use atomic bit
+operations to set, check and clear the current state.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/libxfs/xfs_format.h | 155 +------------------------------------
- 1 file changed, 3 insertions(+), 152 deletions(-)
+This separation between state and features was done for the log as
+part of the shutdown cleanup work. Reworking the way the xfs mount
+feature flags are used is a much bigger undertaking, hence this
+separate patchset.
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 242bf251b5bd..00d19d18a2d1 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -279,11 +279,6 @@ typedef struct xfs_dsb {
- 
- #define	XFS_SB_VERSION_NUM(sbp)	((sbp)->sb_versionnum & XFS_SB_VERSION_NUMBITS)
- 
--static inline bool xfs_sb_version_hasrealtime(struct xfs_sb *sbp)
--{
--	return sbp->sb_rblocks > 0;
--}
--
- /*
-  * Detect a mismatched features2 field.  Older kernels read/wrote
-  * this into the wrong slot, so to be safe we keep them in sync.
-@@ -293,9 +288,10 @@ static inline bool xfs_sb_has_mismatched_features2(struct xfs_sb *sbp)
- 	return sbp->sb_bad_features2 != sbp->sb_features2;
- }
- 
--static inline bool xfs_sb_version_hasattr(struct xfs_sb *sbp)
-+static inline bool xfs_sb_version_hasmorebits(struct xfs_sb *sbp)
- {
--	return (sbp->sb_versionnum & XFS_SB_VERSION_ATTRBIT);
-+	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 ||
-+	       (sbp->sb_versionnum & XFS_SB_VERSION_MOREBITSBIT);
- }
- 
- static inline void xfs_sb_version_addattr(struct xfs_sb *sbp)
-@@ -303,79 +299,17 @@ static inline void xfs_sb_version_addattr(struct xfs_sb *sbp)
- 	sbp->sb_versionnum |= XFS_SB_VERSION_ATTRBIT;
- }
- 
--static inline bool xfs_sb_version_hasquota(struct xfs_sb *sbp)
--{
--	return (sbp->sb_versionnum & XFS_SB_VERSION_QUOTABIT);
--}
--
- static inline void xfs_sb_version_addquota(struct xfs_sb *sbp)
- {
- 	sbp->sb_versionnum |= XFS_SB_VERSION_QUOTABIT;
- }
- 
--static inline bool xfs_sb_version_hasalign(struct xfs_sb *sbp)
--{
--	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 ||
--		(sbp->sb_versionnum & XFS_SB_VERSION_ALIGNBIT));
--}
--
--static inline bool xfs_sb_version_hasdalign(struct xfs_sb *sbp)
--{
--	return (sbp->sb_versionnum & XFS_SB_VERSION_DALIGNBIT);
--}
--
--static inline bool xfs_sb_version_haslogv2(struct xfs_sb *sbp)
--{
--	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 ||
--	       (sbp->sb_versionnum & XFS_SB_VERSION_LOGV2BIT);
--}
--
--static inline bool xfs_sb_version_hassector(struct xfs_sb *sbp)
--{
--	return (sbp->sb_versionnum & XFS_SB_VERSION_SECTORBIT);
--}
--
--static inline bool xfs_sb_version_hasasciici(struct xfs_sb *sbp)
--{
--	return (sbp->sb_versionnum & XFS_SB_VERSION_BORGBIT);
--}
--
--static inline bool xfs_sb_version_hasmorebits(struct xfs_sb *sbp)
--{
--	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 ||
--	       (sbp->sb_versionnum & XFS_SB_VERSION_MOREBITSBIT);
--}
--
--/*
-- * sb_features2 bit version macros.
-- */
--static inline bool xfs_sb_version_haslazysbcount(struct xfs_sb *sbp)
--{
--	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) ||
--	       (xfs_sb_version_hasmorebits(sbp) &&
--		(sbp->sb_features2 & XFS_SB_VERSION2_LAZYSBCOUNTBIT));
--}
--
--static inline bool xfs_sb_version_hasattr2(struct xfs_sb *sbp)
--{
--	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) ||
--	       (xfs_sb_version_hasmorebits(sbp) &&
--		(sbp->sb_features2 & XFS_SB_VERSION2_ATTR2BIT));
--}
--
- static inline void xfs_sb_version_addattr2(struct xfs_sb *sbp)
- {
- 	sbp->sb_versionnum |= XFS_SB_VERSION_MOREBITSBIT;
- 	sbp->sb_features2 |= XFS_SB_VERSION2_ATTR2BIT;
- }
- 
--static inline bool xfs_sb_version_hasprojid32(struct xfs_sb *sbp)
--{
--	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) ||
--	       (xfs_sb_version_hasmorebits(sbp) &&
--		(sbp->sb_features2 & XFS_SB_VERSION2_PROJID32BIT));
--}
--
- static inline void xfs_sb_version_addprojid32(struct xfs_sb *sbp)
- {
- 	sbp->sb_versionnum |= XFS_SB_VERSION_MOREBITSBIT;
-@@ -474,13 +408,6 @@ xfs_sb_add_incompat_log_features(
- 	sbp->sb_features_log_incompat |= features;
- }
- 
--/*
-- * V5 superblock specific feature checks
-- */
--static inline bool xfs_sb_version_hascrc(struct xfs_sb *sbp)
--{
--	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5;
--}
- 
- /*
-  * v5 file systems support V3 inodes only, earlier file systems support
-@@ -499,82 +426,6 @@ static inline bool xfs_dinode_good_version(struct xfs_sb *sbp,
- 	return version == 1 || version == 2;
- }
- 
--static inline bool xfs_sb_version_haspquotino(struct xfs_sb *sbp)
--{
--	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5;
--}
--
--static inline int xfs_sb_version_hasftype(struct xfs_sb *sbp)
--{
--	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
--		xfs_sb_has_incompat_feature(sbp, XFS_SB_FEAT_INCOMPAT_FTYPE)) ||
--	       (xfs_sb_version_hasmorebits(sbp) &&
--		 (sbp->sb_features2 & XFS_SB_VERSION2_FTYPE));
--}
--
--static inline bool xfs_sb_version_hasfinobt(xfs_sb_t *sbp)
--{
--	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) &&
--		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_FINOBT);
--}
--
--static inline bool xfs_sb_version_hassparseinodes(struct xfs_sb *sbp)
--{
--	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
--		xfs_sb_has_incompat_feature(sbp, XFS_SB_FEAT_INCOMPAT_SPINODES);
--}
--
--/*
-- * XFS_SB_FEAT_INCOMPAT_META_UUID indicates that the metadata UUID
-- * is stored separately from the user-visible UUID; this allows the
-- * user-visible UUID to be changed on V5 filesystems which have a
-- * filesystem UUID stamped into every piece of metadata.
-- */
--static inline bool xfs_sb_version_hasmetauuid(struct xfs_sb *sbp)
--{
--	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) &&
--		(sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_META_UUID);
--}
--
--static inline bool xfs_sb_version_hasrmapbt(struct xfs_sb *sbp)
--{
--	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) &&
--		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_RMAPBT);
--}
--
--static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
--{
--	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
--		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_REFLINK);
--}
--
--static inline bool xfs_sb_version_hasbigtime(struct xfs_sb *sbp)
--{
--	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
--		(sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_BIGTIME);
--}
--
--/*
-- * Inode btree block counter.  We record the number of inobt and finobt blocks
-- * in the AGI header so that we can skip the finobt walk at mount time when
-- * setting up per-AG reservations.
-- */
--static inline bool xfs_sb_version_hasinobtcounts(struct xfs_sb *sbp)
--{
--	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
--		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_INOBTCNT);
--}
--
--static inline bool xfs_sb_version_needsrepair(struct xfs_sb *sbp)
--{
--	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
--		(sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR);
--}
--
--/*
-- * end of superblock version macros
-- */
--
- static inline bool
- xfs_is_quota_inode(struct xfs_sb *sbp, xfs_ino_t ino)
- {
--- 
-2.31.1
+One of the big things we need to address is that features for the
+xfs mount can come from multiple sources. They can come from on-disk
+state via flags in the superblock, mount options, proc and sysfs
+variables, and so on. Each different mechanism has it's own special
+way of setting what is effectively read-only boolean state in the
+xfs mount that is then checked at runtime by executing code.
+
+In some cases, these boolean checks can be expensive because we have
+to do multiple cheaks and mask variables in the superblock to get
+the flag information. The naming can be verbose, and the combination
+of open coded flag checks vs wrapper based flag checks does little
+to improve the readability of the code. 
+
+To clean all this up, introduce a m_features field and a m_opstate
+field. The m_features field holds all the features the filesysetm
+has enabled or disabled, and the m_opstate field holds all the
+atomic operational state. m_features is currently a 64 bit variable
+with on-disk features starting at bit 0 counting up and mount
+features starting at bit 63 and counting down. At the end of the
+series, we have roughly 26 on-disk and 16 mount feature flags used,
+so there's still plenty of flag space available for future
+additions.
+
+The result of moving all the feature flags to the mount is that we
+get rid of all the xfs_sb_version_has() wrappers in
+libxfs/xfs_format.h. We really want this file to contain the on-disk
+format defintion, not code used to access or interpret it. This gets
+rid of a large amount of boiler plate wrappers from this file and
+replaces them with mount features checks which are much simpler and
+lower overhead.
+
+Getting rid of all the sueprblock feature checks reduces the code
+size by about 5kB on x86-64. There are about 400
+xfs_sb_version_has() feature checks in the code, so saving a few
+instructions on every check ends up making a substantial difference
+to code size. It also means this patchset is rather large....
+
+There are a few cleanups needed before the patch set starts. We need
+to fix up the attr2/noattr2 mount option/superblock bit issues, as
+well as properly namespace some internal attribute code so we can
+use the global "xfs_" namespace for global feature and operational
+state functions.
+
+There are many further cleanups that can be done following on from
+this patch set. e.g the xfs_mount has several boolean state/flag
+fields that can be moved into the m_opstate and/or m_features
+variables, we can shadow state and or features into the log fields
+so the log doesn't need to access the xfs_mount to check current
+state, runtime quota state can move into the m_opstate field instead
+of needing separate flags, etc.
+
+This passes fstests for all the simple configurations (defaults,
+quotas, different directory block sizes, etc) without regressions,
+so nothing has been obviously broken. The only obvious issue is
+xfs/187, which expects "-o noattr2" to remove feature bits from the
+superblock and this behaviour is explicitly removed during this
+patchset. It is not clear if xfs/187 is a valid test to perform
+anymore now that noattr2 behaves this way.
+
+Version 3:
+- only need a single call to xfs_attr_lookup()
+- fix rebase mis-merge of attr2 mount flag setting.
+- set the realtime feature flag correctly when adding a rt device via growfs
+- fixed attr2 upgrade behaviour regressions.
+
+Version 2:
+- https://lore.kernel.org/linux-xfs/20210810052451.41578-1-david@fromorbit.com/
+- rebased on 5.14-rc4 + for-next + "xfs: strictly order log start records"
+- added comment about not using bp->b_bn directly for the buffer disk address.
+- fix typos in commit messages
+- Fixed incorrect feature flag macro definitions in original introduction patch
+  rather than fixing them in a subsequent patch.
+- Updated open coded superblock checks to check sparse inodes directly instead
+  of via xfs_sb_has_incompat_feature().
+- use xfs_has_v3inodes() consistently in inode size/version checks.
+
+Version 1:
+- https://lore.kernel.org/linux-xfs/20210714041912.2625692-1-david@fromorbit.com/
+- based on 5.14-rc1 + "xfs: strictly order log start records"
 
