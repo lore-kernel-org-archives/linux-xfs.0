@@ -2,159 +2,259 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1241EC432BE
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Aug 2021 15:52:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46F50C432BE
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Aug 2021 15:55:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F16186103E
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Aug 2021 15:52:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 22FAC6103E
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Aug 2021 15:55:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240053AbhHRPxY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Aug 2021 11:53:24 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33390 "EHLO mail.kernel.org"
+        id S240038AbhHRP4C (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Aug 2021 11:56:02 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34378 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S240179AbhHRPxU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 18 Aug 2021 11:53:20 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id A8C8F6103E;
-        Wed, 18 Aug 2021 15:52:45 +0000 (UTC)
+        id S239990AbhHRP4B (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 18 Aug 2021 11:56:01 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C5C836103E;
+        Wed, 18 Aug 2021 15:55:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1629301965;
-        bh=vVeI3LiscroXKFqNQkaexJy8prZzkKcFh8YHE/6KTXU=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=qqA52zUDP1nh1QBVinxNq5599/7V41rnCUSxB8fXnl2F6SQp3hF4BNkVVIOSTz+UB
-         9O/A8TqvdzhqohgNxF0N77HVbgUI/bX9DSFk+/rS9lrfLrUJvJ8DzydTeST7RAQCnN
-         5p14ag/i6XR09m0rBz+Ek/r9xYAJkFXR/7TrjXQekKmR0Mpny1qAacSawqqZ0ThlgF
-         svZSvvvg3YPXxNEHirQW1zj/2HRsM94qIxO+wygxRX7JHrbVnbZhsVPrTe/Xd3Lu3f
-         KX9ve16noIoU322Atbm+cdYDPMjUSPY5s7ncO8ITgXseiCCRgsp57z0YKWkZLyomma
-         UTDxvSrCsmEAA==
-Date:   Wed, 18 Aug 2021 08:52:45 -0700
+        s=k20201202; t=1629302126;
+        bh=PZAmhWywQpSAcyawhcUKAEdKY5gMnbv8yVFrQ7N9Hk4=;
+        h=Date:From:To:Subject:References:In-Reply-To:From;
+        b=V2k+jNb7HxNCZ4P1f/7ZK3e5sxIESyX2FW9vfAhPdTq6TU+8foFxEZwDEbRWhluJF
+         NDiL/AD4ONGV6pucVi6cnePHfUQfgDP6XNRshtl0whzIPTP4FcuKYwie3Yet3Mxszp
+         TURQKqWrk/86Ws+TnF4TYuQNz+9qkUnBK2dMRmnQPDs7sO0DHG9/mqte8AmjkpCgM9
+         UE0UxSYeYpZeQuoACkZ5H6+EqeN+0UYaWszmie9NXcpOaBvqhG6x6RWSXSTNBMF9Ci
+         GpSdoODAdGrF57GriBhDCE/8LH6B1JntpaOJ848s+f7JVHhh1W21QqoaFqugFp1iRJ
+         Pd3kq1E+qxxqQ==
+Date:   Wed, 18 Aug 2021 08:55:26 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Jane Chu <jane.chu@oracle.com>
-Cc:     Shiyang Ruan <ruansy.fnst@fujitsu.com>,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        nvdimm@lists.linux.dev, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org, dm-devel@redhat.com,
-        dan.j.williams@intel.com, david@fromorbit.com, hch@lst.de,
-        agk@redhat.com, snitzer@redhat.com
-Subject: Re: [PATCH RESEND v6 1/9] pagemap: Introduce ->memory_failure()
-Message-ID: <20210818155245.GE12664@magnolia>
-References: <20210730100158.3117319-1-ruansy.fnst@fujitsu.com>
- <20210730100158.3117319-2-ruansy.fnst@fujitsu.com>
- <1d286104-28f4-d442-efed-4344eb8fa5a1@oracle.com>
- <de19af2a-e9e6-0d43-8b14-c13b9ec38a9d@oracle.com>
- <beee643c-0fd9-b0f7-5330-0d64bde499d3@oracle.com>
- <78c22960-3f6d-8e5d-890a-72915236bedc@oracle.com>
+To:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org, guan@eryu.me
+Subject: Re: [PATCH 2/2] generic: test shutdowns of a nested filesystem
+Message-ID: <20210818155526.GH12640@magnolia>
+References: <162924439425.779465.16029390956507261795.stgit@magnolia>
+ <162924440518.779465.6907507760500586987.stgit@magnolia>
+ <20210818070654.hmhq7g5t4u3xueaj@fedora>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <78c22960-3f6d-8e5d-890a-72915236bedc@oracle.com>
+In-Reply-To: <20210818070654.hmhq7g5t4u3xueaj@fedora>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 17, 2021 at 11:08:40PM -0700, Jane Chu wrote:
+On Wed, Aug 18, 2021 at 03:06:54PM +0800, Zorro Lang wrote:
+> On Tue, Aug 17, 2021 at 04:53:25PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > generic/475, but we're running fsstress on a disk image inside the
+> > scratch filesystem
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
 > 
-> On 8/17/2021 10:43 PM, Jane Chu wrote:
-> > More information -
-> > 
-> > On 8/16/2021 10:20 AM, Jane Chu wrote:
-> > > Hi, ShiYang,
-> > > 
-> > > So I applied the v6 patch series to my 5.14-rc3 as it's what you
-> > > indicated is what v6 was based at, and injected a hardware poison.
-> > > 
-> > > I'm seeing the same problem that was reported a while ago after the
-> > > poison was consumed - in the SIGBUS payload, the si_addr is missing:
-> > > 
-> > > ** SIGBUS(7): canjmp=1, whichstep=0, **
-> > > ** si_addr(0x(nil)), si_lsb(0xC), si_code(0x4, BUS_MCEERR_AR) **
-> > > 
-> > > The si_addr ought to be 0x7f6568000000 - the vaddr of the first page
-> > > in this case.
-> > 
-> > The failure came from here :
-> > 
-> > [PATCH RESEND v6 6/9] xfs: Implement ->notify_failure() for XFS
-> > 
-> > +static int
-> > +xfs_dax_notify_failure(
-> > ...
-> > +    if (!xfs_sb_version_hasrmapbt(&mp->m_sb)) {
-> > +        xfs_warn(mp, "notify_failure() needs rmapbt enabled!");
-> > +        return -EOPNOTSUPP;
-> > +    }
-> > 
-> > I am not familiar with XFS, but I have a few questions I hope to get
-> > answers -
-> > 
-> > 1) What does it take and cost to make
-> >     xfs_sb_version_hasrmapbt(&mp->m_sb) to return true?
+> Good to me, thanks for this helpful test case. Just one question,
+> is it better to use xfs_metadump with "-o" option by default?
 
-mkfs.xfs -m rmapbt=1
-
-> > 2) For a running environment that fails the above check, is it
-> >     okay to leave the poison handle in limbo and why?
-> > 
-> > 3) If the above regression is not acceptable, any potential remedy?
-> 
-> How about moving the check to prior to the notifier registration?
-> And register only if the check is passed?  This seems better
-> than an alternative which is to fall back to the legacy memory_failure
-> handling in case the filesystem returns -EOPNOTSUPP.
-
-"return -EOPNOTSUPP;" is the branching point where a future patch could
-probe the (DRAM) buffer cache to bwrite the contents to restore the pmem
-contents.  Right now the focus should be on landing the core code
-changes without drawing any more NAKs from Dan.
+_xfs_metadump already passes -a and -o.
 
 --D
 
-> thanks,
-> -jane
+> Reviewed-by: Zorro Lang <zlang@redhat.com>
 > 
+> >  common/rc             |   20 +++++++
+> >  tests/generic/725     |  136 +++++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/generic/725.out |    2 +
+> >  3 files changed, 158 insertions(+)
+> >  create mode 100755 tests/generic/725
+> >  create mode 100644 tests/generic/725.out
 > > 
-> > thanks!
-> > -jane
 > > 
+> > diff --git a/common/rc b/common/rc
+> > index 84757fc1..473bfb0a 100644
+> > --- a/common/rc
+> > +++ b/common/rc
+> > @@ -631,6 +631,26 @@ _ext4_metadump()
+> >  		$DUMP_COMPRESSOR -f "$dumpfile" &>> "$seqres.full"
+> >  }
+> >  
+> > +# Capture the metadata of a filesystem in a dump file for offline analysis
+> > +_metadump_dev() {
+> > +	local device="$1"
+> > +	local dumpfile="$2"
+> > +	local compressopt="$3"
+> > +
+> > +	case "$FSTYP" in
+> > +	ext*)
+> > +		_ext4_metadump $device $dumpfile $compressopt
+> > +		;;
+> > +	xfs)
+> > +		_xfs_metadump $dumpfile $device none $compressopt
+> > +		;;
+> > +	*)
+> > +		echo "Don't know how to metadump $FSTYP"
+> > +		return 1
+> > +		;;
+> > +	esac
+> > +}
+> > +
+> >  _test_mkfs()
+> >  {
+> >      case $FSTYP in
+> > diff --git a/tests/generic/725 b/tests/generic/725
+> > new file mode 100755
+> > index 00000000..ac008fdb
+> > --- /dev/null
+> > +++ b/tests/generic/725
+> > @@ -0,0 +1,136 @@
+> > +#! /bin/bash
+> > +# SPDX-License-Identifier: GPL-2.0
+> > +# Copyright (c) 2021 Oracle, Inc.  All Rights Reserved.
+> > +#
+> > +# FS QA Test No. 725
+> > +#
+> > +# Test nested log recovery with repeated (simulated) disk failures.  We kick
+> > +# off fsstress on a loopback filesystem mounted on the scratch fs, then switch
+> > +# out the underlying scratch device with dm-error to see what happens when the
+> > +# disk goes down.  Having taken down both fses in this manner, remount them and
+> > +# repeat.  This test simulates VM hosts crashing to try to shake out CoW bugs
+> > +# in writeback on the host that cause VM guests to fail to recover.
+> > +#
+> > +. ./common/preamble
+> > +_begin_fstest shutdown auto log metadata eio recoveryloop
+> > +
+> > +_cleanup()
+> > +{
+> > +	cd /
+> > +	$KILLALL_PROG -9 fsstress > /dev/null 2>&1
+> > +	wait
+> > +	if [ -n "$loopmnt" ]; then
+> > +		$UMOUNT_PROG $loopmnt 2>/dev/null
+> > +		rm -r -f $loopmnt
+> > +	fi
+> > +	rm -f $tmp.*
+> > +	_dmerror_unmount
+> > +	_dmerror_cleanup
+> > +}
+> > +
+> > +# Import common functions.
+> > +. ./common/dmerror
+> > +. ./common/reflink
+> > +
+> > +# Modify as appropriate.
+> > +_supported_fs generic
+> > +
+> > +_require_scratch_reflink
+> > +_require_cp_reflink
+> > +_require_dm_target error
+> > +_require_command "$KILLALL_PROG" "killall"
+> > +
+> > +echo "Silence is golden."
+> > +
+> > +_scratch_mkfs >> $seqres.full 2>&1
+> > +_require_metadata_journaling $SCRATCH_DEV
+> > +_dmerror_init
+> > +_dmerror_mount
+> > +
+> > +# Create a fs image consuming 1/3 of the scratch fs
+> > +scratch_freesp_bytes=$(_get_available_space $SCRATCH_MNT)
+> > +loopimg_bytes=$((scratch_freesp_bytes / 3))
+> > +
+> > +loopimg=$SCRATCH_MNT/testfs
+> > +truncate -s $loopimg_bytes $loopimg
+> > +_mkfs_dev $loopimg
+> > +
+> > +loopmnt=$tmp.mount
+> > +mkdir -p $loopmnt
+> > +
+> > +scratch_aliveflag=$tmp.runsnap
+> > +snap_aliveflag=$tmp.snapping
+> > +
+> > +snap_loop_fs() {
+> > +	touch "$snap_aliveflag"
+> > +	while [ -e "$scratch_aliveflag" ]; do
+> > +		rm -f $loopimg.a
+> > +		_cp_reflink $loopimg $loopimg.a
+> > +		sleep 1
+> > +	done
+> > +	rm -f "$snap_aliveflag"
+> > +}
+> > +
+> > +fsstress=($FSSTRESS_PROG $FSSTRESS_AVOID -d "$loopmnt" -n 999999 -p "$((LOAD_FACTOR * 4))")
+> > +
+> > +for i in $(seq 1 $((25 * TIME_FACTOR)) ); do
+> > +	touch $scratch_aliveflag
+> > +	snap_loop_fs >> $seqres.full 2>&1 &
+> > +
+> > +	if ! _mount $loopimg $loopmnt -o loop; then
+> > +		rm -f $scratch_aliveflag
+> > +		_metadump_dev $loopimg $seqres.loop.$i.md
+> > +		_fail "iteration $i loopimg mount failed"
+> > +		break
+> > +	fi
+> > +
+> > +	("${fsstress[@]}" >> $seqres.full &) > /dev/null 2>&1
+> > +
+> > +	# purposely include 0 second sleeps to test shutdown immediately after
+> > +	# recovery
+> > +	sleep $((RANDOM % (3 * TIME_FACTOR) ))
+> > +	rm -f $scratch_aliveflag
+> > +
+> > +	# This test aims to simulate sudden disk failure, which means that we
+> > +	# do not want to quiesce the filesystem or otherwise give it a chance
+> > +	# to flush its logs.  Therefore we want to call dmsetup with the
+> > +	# --nolockfs parameter; to make this happen we must call the load
+> > +	# error table helper *without* 'lockfs'.
+> > +	_dmerror_load_error_table
+> > +
+> > +	ps -e | grep fsstress > /dev/null 2>&1
+> > +	while [ $? -eq 0 ]; do
+> > +		$KILLALL_PROG -9 fsstress > /dev/null 2>&1
+> > +		wait > /dev/null 2>&1
+> > +		ps -e | grep fsstress > /dev/null 2>&1
+> > +	done
+> > +	for ((i = 0; i < 10; i++)); do
+> > +		test -e "$snap_aliveflag" || break
+> > +		sleep 1
+> > +	done
+> > +
+> > +	# Mount again to replay log after loading working table, so we have a
+> > +	# consistent fs after test.
+> > +	$UMOUNT_PROG $loopmnt
+> > +	_dmerror_unmount || _fail "iteration $i scratch unmount failed"
+> > +	_dmerror_load_working_table
+> > +	if ! _dmerror_mount; then
+> > +		_metadump_dev $DMERROR_DEV $seqres.scratch.$i.md
+> > +		_fail "iteration $i scratch mount failed"
+> > +	fi
+> > +done
+> > +
+> > +# Make sure the fs image file is ok
+> > +if [ -f "$loopimg" ]; then
+> > +	if _mount $loopimg $loopmnt -o loop; then
+> > +		$UMOUNT_PROG $loopmnt &> /dev/null
+> > +	else
+> > +		_metadump_dev $DMERROR_DEV $seqres.scratch.final.md
+> > +		echo "final scratch mount failed"
+> > +	fi
+> > +	SCRATCH_RTDEV= SCRATCH_LOGDEV= _check_scratch_fs $loopimg
+> > +fi
+> > +
+> > +# success, all done; let the test harness check the scratch fs
+> > +status=0
+> > +exit
+> > diff --git a/tests/generic/725.out b/tests/generic/725.out
+> > new file mode 100644
+> > index 00000000..ed73a9fc
+> > --- /dev/null
+> > +++ b/tests/generic/725.out
+> > @@ -0,0 +1,2 @@
+> > +QA output created by 725
+> > +Silence is golden.
 > > 
-> > > 
-> > > Something is not right...
-> > > 
-> > > thanks,
-> > > -jane
-> > > 
-> > > 
-> > > On 8/5/2021 6:17 PM, Jane Chu wrote:
-> > > > The filesystem part of the pmem failure handling is at minimum built
-> > > > on PAGE_SIZE granularity - an inheritance from general
-> > > > memory_failure handling.  However, with Intel's DCPMEM
-> > > > technology, the error blast
-> > > > radius is no more than 256bytes, and might get smaller with future
-> > > > hardware generation, also advanced atomic 64B write to clear the poison.
-> > > > But I don't see any of that could be incorporated in, given that the
-> > > > filesystem is notified a corruption with pfn, rather than an exact
-> > > > address.
-> > > > 
-> > > > So I guess this question is also for Dan: how to avoid unnecessarily
-> > > > repairing a PMD range for a 256B corrupt range going forward?
-> > > > 
-> > > > thanks,
-> > > > -jane
-> > > > 
-> > > > 
-> > > > On 7/30/2021 3:01 AM, Shiyang Ruan wrote:
-> > > > > When memory-failure occurs, we call this function which is implemented
-> > > > > by each kind of devices.  For the fsdax case, pmem device driver
-> > > > > implements it.  Pmem device driver will find out the
-> > > > > filesystem in which
-> > > > > the corrupted page located in.  And finally call filesystem handler to
-> > > > > deal with this error.
-> > > > > 
-> > > > > The filesystem will try to recover the corrupted data if necessary.
-> > > > 
-> > > 
-> > 
+> 
