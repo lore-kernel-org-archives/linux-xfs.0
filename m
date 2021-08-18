@@ -2,159 +2,147 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-19.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 394C7C4338F
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Aug 2021 23:56:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36D5EC432BE
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Aug 2021 00:01:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0F6FF600D4
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Aug 2021 23:56:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1B90061026
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Aug 2021 00:01:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236871AbhHQX4o (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 17 Aug 2021 19:56:44 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47288 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236831AbhHQX4n (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 17 Aug 2021 19:56:43 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id DA57A600D4;
-        Tue, 17 Aug 2021 23:56:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1629244569;
-        bh=+TBE+Ra4CSJMZoZ1LSQckuicRLbC3IHUR6GYCKeVpTY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=uAam8PGqGkAe+9LHDLtrlEtBLbGjdMYd7suApKXJvDdoQqK89BFPSPe8/EI7Jih89
-         2l9+q3cWzOM0OePm5hj0sjfE8ypy5rFJYT9Mfc9KVsZccieqUGICSqj+ZbEhsxFyje
-         4cUArjpzZNMcwHTH2SYiTBvARikoNcLEDczcg6VgmuPYHTg7eT0F1N8nF7G3O5wQcZ
-         heti0faUVHvc5QDFKq4FsdJ/BEM2yS3qb5vUUi5KowRLypu59ps8/pEpxzIk7dC4QC
-         ub5q5TuxTONLTF1bhnGS+Tsr73avtcsBHhql3ZZUh2NmHYQEH9oU9cnlob+2Bn0NCd
-         toXYCxVADaU8A==
-Date:   Tue, 17 Aug 2021 16:56:09 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/3] xfs: rename buffer cache index variable b_bn
-Message-ID: <20210817235609.GF12640@magnolia>
-References: <20210810052851.42312-1-david@fromorbit.com>
- <20210810052851.42312-4-david@fromorbit.com>
- <20210811004632.GA3601443@magnolia>
- <20210817234827.GK3657114@dread.disaster.area>
+        id S233605AbhHRACJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 17 Aug 2021 20:02:09 -0400
+Received: from mail-dm6nam11on2076.outbound.protection.outlook.com ([40.107.223.76]:16759
+        "EHLO NAM11-DM6-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S232706AbhHRACI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 17 Aug 2021 20:02:08 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=QaTLhUtlbFhUitQOYzwzR6RCAWkqILoVQJ+wS13+Xa4+CcmUSSHoQFzOLwiwbRZb/4ZCAija5/PjMVfxvM1XkeF7PsEjkCIi5r5x+YKy0kvRst8cTPdhv+MGPIkGBwGEBFmiE0nrRwcrYzVW0u1PlQbrTjM1dDBrCODfzM/zJ2fuotebhSyDJIQlsQ+5NaqJ6yT1oB34OaL2EiYKGI32LMLoD4/HzrKLn4WjXaEdX8S9oK/Oeqo1ZUwBpYLao51Mx1VM6g5yoCBrY5lvvF6sT9M7GRwhzotkNBSmWT3pIjv1ylwsp5Rs88RlxpEbjLieh3YT5PsTDSju5KVxhrE6kA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=EQrqjshl3TDhb0gF90eaA5dFabAR2Kiv++gmORsuswE=;
+ b=kv30LowLmi4tkYYSh5slCRJ20rplURbw3PPZGuBf3K8VLAuhaIA7KBFHZvnXZ3k0TMs86C9f1sNCGseI+hooQfQS5a1btBNEHgVGABUSlGSr+SgvHFaB6H1+ZStTfVx+IQFIpejsWKSOGIAc5hBvvWhjUFEl7o5HpLe7EnS8q8jMOnKAWuQOGhtY/H5/n3FQgq0+Uf1+9L6VjDdPsm16nuGdDYdbaY1vnNktnxFyBt2P8o3Y2sZLba3ss84fczSyusKWBWfDElpY4pf2Vcmfxxyl4x3u0+Ci4XBESzWfez3OJvXNTn5mntHiiuiXWP76CxlHAyr+8X+a8qhUFQJYKA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.112.34) smtp.rcpttodomain=kvack.org smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=quarantine sp=none pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=EQrqjshl3TDhb0gF90eaA5dFabAR2Kiv++gmORsuswE=;
+ b=DH5avyc0tHzRTTmqhutMviAfQPEUFWwansuP5xHONbf0Epko8xthfDvMMlZXXTJ2DIBWYiPPrQDf+veCP2YcJDC3ugGq/QZaLbx8Nu9K6HPiFNuo/o64a3h9xQEatBLcTtyZfcst7/ulziQJzyLWZ2M+78l6aDGIVta81Qset7bjkGfbR3CZt9/sm+YngUTOF1sDgb45malfs9q0HwbrhvHeq6Z7whLQ/gW4I4Q37gSA46GMnwc2dyf7lyhhneGDxI+Xg3h+U5dLpTLjg6mdMG5jn1Mh+CmQZCbYP1f+VXj4LvqsBo7D5V9tSow0HWyKJsBGioyY6opDqsm/8TX8zg==
+Received: from BN6PR16CA0019.namprd16.prod.outlook.com (2603:10b6:404:f5::29)
+ by CH2PR12MB3749.namprd12.prod.outlook.com (2603:10b6:610:2a::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4415.19; Wed, 18 Aug
+ 2021 00:01:32 +0000
+Received: from BN8NAM11FT044.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:404:f5:cafe::60) by BN6PR16CA0019.outlook.office365.com
+ (2603:10b6:404:f5::29) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4436.19 via Frontend
+ Transport; Wed, 18 Aug 2021 00:01:31 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.112.34)
+ smtp.mailfrom=nvidia.com; kvack.org; dkim=none (message not signed)
+ header.d=none;kvack.org; dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.112.34 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.112.34; helo=mail.nvidia.com;
+Received: from mail.nvidia.com (216.228.112.34) by
+ BN8NAM11FT044.mail.protection.outlook.com (10.13.177.219) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ 15.20.4415.16 via Frontend Transport; Wed, 18 Aug 2021 00:01:30 +0000
+Received: from HQMAIL107.nvidia.com (172.20.187.13) by HQMAIL107.nvidia.com
+ (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 18 Aug
+ 2021 00:01:10 +0000
+Received: from rcampbell-test.nvidia.com (172.20.187.5) by mail.nvidia.com
+ (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1497.2 via Frontend
+ Transport; Wed, 18 Aug 2021 00:01:10 +0000
+Subject: Re: [PATCH v6 02/13] mm: remove extra ZONE_DEVICE struct page
+ refcount
+To:     Alex Sierra <alex.sierra@amd.com>, <akpm@linux-foundation.org>,
+        <Felix.Kuehling@amd.com>, <linux-mm@kvack.org>,
+        <linux-ext4@vger.kernel.org>, <linux-xfs@vger.kernel.org>
+CC:     <amd-gfx@lists.freedesktop.org>, <dri-devel@lists.freedesktop.org>,
+        <hch@lst.de>, <jgg@nvidia.com>, <jglisse@redhat.com>
+References: <20210813063150.2938-1-alex.sierra@amd.com>
+ <20210813063150.2938-3-alex.sierra@amd.com>
+From:   Ralph Campbell <rcampbell@nvidia.com>
+Message-ID: <7b821150-af18-f786-e419-ec245b8cfb1e@nvidia.com>
+Date:   Tue, 17 Aug 2021 17:01:09 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210817234827.GK3657114@dread.disaster.area>
+In-Reply-To: <20210813063150.2938-3-alex.sierra@amd.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: f962c3bd-3e5c-4b7a-ced7-08d961db5599
+X-MS-TrafficTypeDiagnostic: CH2PR12MB3749:
+X-Microsoft-Antispam-PRVS: <CH2PR12MB374903EF1A56A6083C995D32C2FF9@CH2PR12MB3749.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:7691;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: fwChlIYPpG0iK0obEr7ZB+dYf72S3W4MrVhaxObO8BCV7Cvb/iIB1K7yXzylBNUBWP7ESVSrJiOOjbj/i9Qb7O49mtmcMCka2dOUxnY+GGBz/WRGMOAXYZbSEnAXpVLtL2DnmezYL1Ol/OshvrOEU/5jBMVuJwQoHuk+Le/Xqo543zKox5Tcy9nsb5NI+uKNyYra7Pge8wCmjK7I5X3MdMzCFZkyI9w8iCrTj2I3dZH0yJMiXgqEhLmAuD37OflR4id5rbLvdaKrQxrvLa7G+U4cwJjtRgRvfrIBGX8Hua5dHfptqlqRPZnjikBRrqMq03cwLmXa69HbRQ/AORMkqMsb3jplZ5pw453QgW7SNJdjXTqyvIxPc4H3VcOEV9pRVWFi7CakdBRaUaGbzvWwzjYoMkPbX8CISf5uUC9t/Gbrfr5RKigkMpu+JVUGMn+34Ef3VCCjUgYNWSdFYrQhKu3AUa+9YrGbkun7ceq5NPorFCun+SfyGFNtmKKTuapwfJvq/QEAr8CveY8cAvI/mloXwD0aI/X5hwlY/vf55vzgDWqdxnfSWZKulms5KA0Jkj1bbGEGwwhLTCuex4UQB8x6vlvpZY0FA50rFQ1kpwp5aDYCt6ng8+MYyq34bqDAxBZh1TyHfuiVss9hlrO0rB8p0JfJLFdVqXYc+lwzVDylj7uPmTwaAD4sGDvurxqEyh9fdGlwsKh9lKqvlU2/M1GBDbqZP7+Sog6ZQvRAAhyAmmMxkSRpu+Dk4WyzB+zkv8rCs6HcBt7FnLXtgsVx44Iw785Wktp2V2LyLabsyBjMAIf94N6fzu2pXg1yM1+53ZNDqdR4YrVMeSTHIeqRIw==
+X-Forefront-Antispam-Report: CIP:216.228.112.34;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:schybrid03.nvidia.com;CAT:NONE;SFS:(4636009)(36840700001)(46966006)(86362001)(54906003)(26005)(31686004)(36756003)(2906002)(31696002)(7416002)(426003)(83380400001)(336012)(186003)(70586007)(47076005)(70206006)(508600001)(5660300002)(36860700001)(8936002)(8676002)(316002)(36906005)(82310400003)(356005)(7636003)(2616005)(966005)(110136005)(4326008)(7696005)(53546011)(2101003)(43740500002);DIR:OUT;SFP:1101;
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Aug 2021 00:01:30.9842
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: f962c3bd-3e5c-4b7a-ced7-08d961db5599
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.112.34];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT044.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR12MB3749
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 18, 2021 at 09:48:27AM +1000, Dave Chinner wrote:
-> On Tue, Aug 10, 2021 at 05:46:32PM -0700, Darrick J. Wong wrote:
-> > On Tue, Aug 10, 2021 at 03:28:51PM +1000, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > TO stop external users from using b_bn as the disk address of the
-> > > buffer, rename it to b_index to indicate that it is the buffer cache
-> > > index, not the block number of the buffer. Code that needs the disk
-> > > address should use xfs_buf_daddr() to obtain it.
-> > > 
-> > > Do the rename and clean up any of the remaining b_bn cruft that is
-> > > left over and is now unused.
-> > > 
-> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > ---
-> > >  fs/xfs/xfs_buf.c | 19 +++++++++++--------
-> > >  fs/xfs/xfs_buf.h | 18 +-----------------
-> > >  2 files changed, 12 insertions(+), 25 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> > > index c1bb6e41595b..6f6c6937baaa 100644
-> > > --- a/fs/xfs/xfs_buf.c
-> > > +++ b/fs/xfs/xfs_buf.c
-> > > @@ -251,7 +251,7 @@ _xfs_buf_alloc(
-> > >  		return error;
-> > >  	}
-> > >  
-> > > -	bp->b_bn = map[0].bm_bn;
-> > > +	bp->b_index = map[0].bm_bn;
-> > >  	bp->b_length = 0;
-> > >  	for (i = 0; i < nmaps; i++) {
-> > >  		bp->b_maps[i].bm_bn = map[i].bm_bn;
-> > > @@ -459,7 +459,7 @@ _xfs_buf_obj_cmp(
-> > >  	 */
-> > >  	BUILD_BUG_ON(offsetof(struct xfs_buf_map, bm_bn) != 0);
-> > >  
-> > > -	if (bp->b_bn != map->bm_bn)
-> > > +	if (bp->b_index != map->bm_bn)
-> > >  		return 1;
-> > >  
-> > >  	if (unlikely(bp->b_length != map->bm_len)) {
-> > > @@ -481,7 +481,7 @@ static const struct rhashtable_params xfs_buf_hash_params = {
-> > >  	.min_size		= 32,	/* empty AGs have minimal footprint */
-> > >  	.nelem_hint		= 16,
-> > >  	.key_len		= sizeof(xfs_daddr_t),
-> > > -	.key_offset		= offsetof(struct xfs_buf, b_bn),
-> > > +	.key_offset		= offsetof(struct xfs_buf, b_index),
-> > 
-> > I would've called this field b_rhash_key, since "index" is a kind of
-> > vague.
-> 
-> Ok.
-> 
-> > > @@ -875,7 +877,7 @@ xfs_buf_read_uncached(
-> > >  
-> > >  	/* set up the buffer for a read IO */
-> > >  	ASSERT(bp->b_map_count == 1);
-> > > -	bp->b_bn = XFS_BUF_DADDR_NULL;  /* always null for uncached buffers */
-> > > +	bp->b_index = XFS_BUF_DADDR_NULL;
-> > >  	bp->b_maps[0].bm_bn = daddr;
-> > >  	bp->b_flags |= XBF_READ;
-> > >  	bp->b_ops = ops;
-> > > @@ -1513,7 +1515,7 @@ _xfs_buf_ioapply(
-> > >  						   SHUTDOWN_CORRUPT_INCORE);
-> > >  				return;
-> > >  			}
-> > > -		} else if (bp->b_bn != XFS_BUF_DADDR_NULL) {
-> > > +		} else if (bp->b_index != XFS_BUF_DADDR_NULL) {
-> > >  			struct xfs_mount *mp = bp->b_mount;
-> > >  
-> > >  			/*
-> > > @@ -1523,7 +1525,8 @@ _xfs_buf_ioapply(
-> > >  			if (xfs_has_crc(mp)) {
-> > >  				xfs_warn(mp,
-> > >  					"%s: no buf ops on daddr 0x%llx len %d",
-> > > -					__func__, bp->b_bn, bp->b_length);
-> > > +					__func__, xfs_buf_daddr(bp),
-> > > +					bp->b_length);
-> > >  				xfs_hex_dump(bp->b_addr,
-> > >  						XFS_CORRUPTION_DUMP_LEN);
-> > >  				dump_stack();
-> > > @@ -1793,7 +1796,7 @@ xfs_buftarg_drain(
-> > >  				xfs_buf_alert_ratelimited(bp,
-> > >  					"XFS: Corruption Alert",
-> > >  "Corruption Alert: Buffer at daddr 0x%llx had permanent write failures!",
-> > > -					(long long)bp->b_bn);
-> > > +					(long long)xfs_buf_daddr(bp));
-> > 
-> > These belong in the previous patch, right?
-> 
-> Depends on your POV. This patch cleans up all the internal (mis)uses of
-> b_bn, while the previous patches addressed all the external uses.
-> The mods could be in either, I just chose to split internal/external
-> modification based on the file rather than on the specific (ab)use
-> being corrected....
+On 8/12/21 11:31 PM, Alex Sierra wrote:
+> From: Ralph Campbell <rcampbell@nvidia.com>
+>
+> ZONE_DEVICE struct pages have an extra reference count that complicates the
+> code for put_page() and several places in the kernel that need to check the
+> reference count to see that a page is not being used (gup, compaction,
+> migration, etc.). Clean up the code so the reference count doesn't need to
+> be treated specially for ZONE_DEVICE.
+>
+> v2:
+> AS: merged this patch in linux 5.11 version
+>
+> v5:
+> AS: add condition at try_grab_page to check for the zone device type, while
+> page ref counter is checked less/equal to zero. In case of device zone, pages
+> ref counter are initialized to zero.
+>
+> Signed-off-by: Ralph Campbell <rcampbell@nvidia.com>
+> Signed-off-by: Alex Sierra <alex.sierra@amd.com>
+> ---
+>   arch/powerpc/kvm/book3s_hv_uvmem.c     |  2 +-
+>   drivers/gpu/drm/nouveau/nouveau_dmem.c |  2 +-
+>   fs/dax.c                               |  4 +-
+>   include/linux/dax.h                    |  2 +-
+>   include/linux/memremap.h               |  7 +--
+>   include/linux/mm.h                     | 13 +----
+>   lib/test_hmm.c                         |  2 +-
+>   mm/internal.h                          |  8 +++
+>   mm/memremap.c                          | 68 +++++++-------------------
+>   mm/migrate.c                           |  5 --
+>   mm/page_alloc.c                        |  3 ++
+>   mm/swap.c                              | 45 ++---------------
+>   12 files changed, 46 insertions(+), 115 deletions(-)
+>
+I haven't seen a response to the issues I raised back at v3 of this series.
+https://lore.kernel.org/linux-mm/4f6dd918-d79b-1aa7-3a4c-caa67ddc29bc@nvidia.com/
 
-<nod> Ok then.  Would you mind noting that in the commit message with
-something along the lines of "...and convert internal users."?  My brain
-is likely to fall out before you repost this patch. :/
+Did I miss something?
 
---D
-
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
