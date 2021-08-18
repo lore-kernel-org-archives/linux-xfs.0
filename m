@@ -2,163 +2,193 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 345A6C4338F
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Aug 2021 00:07:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 399CEC4320E
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Aug 2021 00:35:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1266A601FA
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Aug 2021 00:07:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 19ED160551
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Aug 2021 00:35:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234090AbhHRAIK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 17 Aug 2021 20:08:10 -0400
-Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:44218 "EHLO
-        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232706AbhHRAIJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Aug 2021 20:08:09 -0400
-Received: from dread.disaster.area (pa49-195-182-146.pa.nsw.optusnet.com.au [49.195.182.146])
-        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id 326331145FD3;
-        Wed, 18 Aug 2021 10:07:34 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1mG97B-001vwv-8z; Wed, 18 Aug 2021 10:07:29 +1000
-Date:   Wed, 18 Aug 2021 10:07:29 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/3] xfs: rename buffer cache index variable b_bn
-Message-ID: <20210818000729.GL3657114@dread.disaster.area>
-References: <20210810052851.42312-1-david@fromorbit.com>
- <20210810052851.42312-4-david@fromorbit.com>
- <20210811004632.GA3601443@magnolia>
- <20210817234827.GK3657114@dread.disaster.area>
- <20210817235609.GF12640@magnolia>
+        id S234477AbhHRAgC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 17 Aug 2021 20:36:02 -0400
+Received: from mail-bn8nam12on2054.outbound.protection.outlook.com ([40.107.237.54]:30020
+        "EHLO NAM12-BN8-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S232410AbhHRAgB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 17 Aug 2021 20:36:01 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=dByYGdzKU5MF4cEt5HVZPbmlEGIjVngVoH/EoXPPQOKF4CVpzC0aJxSvAeltlx17MseLu2RBR93ufpeq0llSZUlezkteqgm7TZgCtot1HXJvQU64jzvR/8b3iK/zPvFAWP4lSJ5uHTys2td/ul6DynqFWLq/msg7BoCVJ296GTdCdKyJ5ArqRUQkMRGDWI4Psl7WhdgbGvw51k5QbqoDqRFxnetzTlQnBv+4Ll6/loFpmJD7BJL7ncnJqHYI3Esof9bL2gCahMO43FHf+SXUgg+dWbcKVLupHRaZrkcyqLqTl2+5aTTh4j+LeDqHYRiF5DiiI8euCg72c12JZCclOw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=hzOvNKempSaYMhzraH53SUoQWUB+wJ5jmIhnfA6t3fE=;
+ b=AcynHHhbz/EOY/o3R0uq8wbJWLDptS52P1GdUNU5mZ73pQ7jm7GM7csKE63EhRpiSdg/Eg+Y8sbZnP34/91w8wktQk+Q3whTKYV4d5HsBrbvHJxSzQviCbhbpD11hyNN3dOO9nrBKryYFxWCOA+UygSDrZ1/OHo80eRWwjTmrlO8Dgpp+Y8aXAf91Bcy8Dh4QVVgnA3h+LJuB1gAJcNlO6JCVomFpAQ4Gm8mQEKXMan2QQDyHpVWXvICEF/ivN3K4ivZjOA+r7Bv6nLoiYs34H4FLxoDR45xM1N+y7Dx1nkkNGdzUqFXgCfTDGXgKI5Kad9+bAlyNCUl20V0i/f53w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=hzOvNKempSaYMhzraH53SUoQWUB+wJ5jmIhnfA6t3fE=;
+ b=f7gKcQP/+9qh4Hx3cl7IaVxFzXAwqTZaxMY3MRo4T7hLkenb+6Ud3sJyP5BYG4gKSdrexD4aa9/722P46dYGCuBOmMUXWAQlWyXxAOPRCod1oP8Zp3j9SGurUzW14QMhB62uLbU3B30dR2cPM1ZNIT2emgGCT6EP3wVn2N1WgVk=
+Authentication-Results: redhat.com; dkim=none (message not signed)
+ header.d=none;redhat.com; dmarc=none action=none header.from=amd.com;
+Received: from BN9PR12MB5129.namprd12.prod.outlook.com (2603:10b6:408:136::12)
+ by BN9PR12MB5180.namprd12.prod.outlook.com (2603:10b6:408:11d::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4415.17; Wed, 18 Aug
+ 2021 00:35:24 +0000
+Received: from BN9PR12MB5129.namprd12.prod.outlook.com
+ ([fe80::b891:a906:28f0:fdb]) by BN9PR12MB5129.namprd12.prod.outlook.com
+ ([fe80::b891:a906:28f0:fdb%4]) with mapi id 15.20.4415.023; Wed, 18 Aug 2021
+ 00:35:24 +0000
+Subject: Re: [PATCH v6 02/13] mm: remove extra ZONE_DEVICE struct page
+ refcount
+To:     Ralph Campbell <rcampbell@nvidia.com>,
+        Alex Sierra <alex.sierra@amd.com>, akpm@linux-foundation.org,
+        linux-mm@kvack.org, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Cc:     amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        hch@lst.de, jgg@nvidia.com, jglisse@redhat.com
+References: <20210813063150.2938-1-alex.sierra@amd.com>
+ <20210813063150.2938-3-alex.sierra@amd.com>
+ <7b821150-af18-f786-e419-ec245b8cfb1e@nvidia.com>
+From:   Felix Kuehling <felix.kuehling@amd.com>
+Message-ID: <393e9815-838d-5fe6-d6ab-bfe7b543fef6@amd.com>
+Date:   Tue, 17 Aug 2021 20:35:22 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
+In-Reply-To: <7b821150-af18-f786-e419-ec245b8cfb1e@nvidia.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
+X-ClientProxiedBy: YT3PR01CA0025.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:b01:86::29) To BN9PR12MB5129.namprd12.prod.outlook.com
+ (2603:10b6:408:136::12)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210817235609.GF12640@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
-        a=QpfB3wCSrn/dqEBSktpwZQ==:117 a=QpfB3wCSrn/dqEBSktpwZQ==:17
-        a=kj9zAlcOel0A:10 a=MhDmnRu9jo8A:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=EXns9mbz2a-Rd76DZ1wA:9 a=QKGu5k3Wk_WS9xGK:21 a=wohshYAYA48IVkDh:21
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from [192.168.2.100] (142.186.47.3) by YT3PR01CA0025.CANPRD01.PROD.OUTLOOK.COM (2603:10b6:b01:86::29) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4436.19 via Frontend Transport; Wed, 18 Aug 2021 00:35:23 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 1d8e2769-2812-4023-9c68-08d961e01194
+X-MS-TrafficTypeDiagnostic: BN9PR12MB5180:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <BN9PR12MB51800F4FD7EAC20516E5B16F92FF9@BN9PR12MB5180.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:8273;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: ZSCPBaAgLwJwO35L5e7MI4LVrXn/StgT9M/MuxbNu5uyLiQ0p2AOVQPkaIhLB9PHpPjgP1UhsiYWhnAIe75oJB7OQb2dzp6GeX2Dm/f/MwxjcDlZHG94bQ/TR3ZyMIHvMogFAr+J45hqeSTZYIA4yx0g2p/V67E1NmB5Yf5nSA7zwnbD8e5m+yqsZqKlrNu8OjIGVRMVDFiuPkiPZP+X7Vzh5Wdv2i1hHpiOgtAQbzY1vKYdJtDwE4n5fTO/oOVhtHkfROZzYntpbNMndSNMVCNzuTgpX9oqUhQZwND15ysDG754/qQ3QWzvFfRy+/6F7xY8XrNoe9w3hqHqqKKVyRU6h7Jdjiy2NnWgAIiYQicVzWh0G+0alZDLyhcpyUh8o1XZlw79qSf4RXVwzC4pcYxUzYLaIhuTH1kOO67F8RPc6IC2XQD+UckABxNNH6c6KnKKdIcW8E2MxnrIGrDmpfI4rCZyIZnhntcJCntgCLdTYUo4no/dnr51wmLblBsevLy5SGhg04QREqnUlF4oWusQ4ltjOulvL/bZBE0TZLIP2CckHVceWxqiCT4gQBhaXrDVoUWqV+2GbK+SCcouTBuSk+GviHnWR0pQgwIuAC6omgHnAfwjDavgkTfWSOEHF0bFUPqyENIKTrAwj98oSWsJDrRUxiTtj/y7gMYndl1SKjZTqlZdJ3i8tGio/Ds63q/PdBaJW5TI2sLn3Ecx/2Yrp2FORivJbu4d4WIEfDS//0kbUDpXtcWXujZ0mSrK0WdUdAkNM/gni2l56t/a7LUsEy8JAGwoPzJJTPflIehcDJFBsy2GdB0O5yA8XX4z
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN9PR12MB5129.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(376002)(366004)(136003)(346002)(39860400002)(396003)(966005)(2906002)(31686004)(53546011)(478600001)(110136005)(66946007)(66476007)(66556008)(16576012)(5660300002)(83380400001)(86362001)(8936002)(316002)(2616005)(36756003)(38100700002)(6486002)(31696002)(7416002)(956004)(8676002)(4326008)(186003)(44832011)(26005)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?aDRrS0Q5elBLUUtHMDM4aHI3RWFDdkpZODhzQnphWmIzZjFLYXRNbi9ONXN5?=
+ =?utf-8?B?bGIwWVdaWkRwazc3b2s3TG9BWlVYQmptditKUHFWL0RCbUg2MWdqM3N2ajBw?=
+ =?utf-8?B?OGRGcHdtQkJXWGtLbE43NGF6T3gza0VQUEkveTNFV0Z3ZlVCQnpYOUJMaHNt?=
+ =?utf-8?B?RGNRTlp0VUZPM29Va2xwZVZaVXRRMHhvN3Y1MDlSQlJJUlZhY3AreTlTa0dN?=
+ =?utf-8?B?SUxkV3hwNlkwNEtZZ2M1Vm92SjNPZStNL1dBTVZObjFRUkJOT3Uxek15aENW?=
+ =?utf-8?B?bXdzeW5mTjduRFc3d3Jna29CSnZMZnNoTWdsd2I1NTRhOTNCSElYdzN0bThm?=
+ =?utf-8?B?bGVYUDQ3R3k4QWFGdWw2ZEFnZnRFd004OG8xeUNOU0NsQlV1d2l5dGNOYkdo?=
+ =?utf-8?B?SVF5NjRYOUpMWDRNaWFZTVZzdWlzSzlvaFdkS0lhV1lUR2RkbUVIcU80MmpM?=
+ =?utf-8?B?SldGNWI5ZjlhbVdaV2gxM3c0Vm90aVV5TE9wMlZsYU1JYjVxOUxUUnYwTmhY?=
+ =?utf-8?B?MFVKWlRDak9hcmRVYUY5aXpOVjl0ZHY1bVFOQXhicWRzU044anhYNVR1dHdZ?=
+ =?utf-8?B?VThUTmlsU1FBcXQ1ekFaM0k2MVpybjdXUkdFbUZ6cXdFeW5YeGc4NllsWEU3?=
+ =?utf-8?B?TUR3RVBPWXdPTjJFZkZBR3hQRStUa29CZVlXQUtDaEpIMmZGR0ZVWHVvUlNz?=
+ =?utf-8?B?Z1F4ZFVDUGNKZ0tRaVo4Z1RlMHpKTThVUiswN3RWQXFCbFl0czNrQ2dXOVNj?=
+ =?utf-8?B?aW1TVTJmRFlpbnRFdTYyeEhxdFM1V0xoUE1wMmMyYVgydFpwSGtqSGNnT3dz?=
+ =?utf-8?B?RXh1Q3RFa1VwU0xmeHRYcXJmR1VEMXQ3ZS84T1YwaFJ6dWRnd3kyQzF1YW1p?=
+ =?utf-8?B?RXlnYUJpaEFoNFNzMXp5MFJoamxIVTQzSUtjZS90M1V2R1IzeEhVc0o2SGVl?=
+ =?utf-8?B?ZDhTNGxxc1lOVndTMzUzcEZPeUx3WGY0a0d1eGpFVWpTL2JlOWFZNllrNDkz?=
+ =?utf-8?B?VkJPalRHNFVneWpoYmJEZ0RNTWY2d3pHK2JOSTZ6a2NBQ1NKYlZDdlhyTHhv?=
+ =?utf-8?B?NTJwWTRPVUpkY1BKbHVycGFKR2tNcXpuU3JtSW13TEJnVGFnbkp2YzFtVnJv?=
+ =?utf-8?B?ZEt1ZUFCOWdJd0hTYUJXbTZvN2ZzRis5NXlkRFM1ZlpRbEJjamVHanlWQzY5?=
+ =?utf-8?B?NFgwYUh6QTNORGFmUkJvMWlkRE5pT1pxajBQVk1nU3lqeHhCMmFlLytHNEx4?=
+ =?utf-8?B?K09WdjYzcW9uakFwRlRldXhSbjZwUzhjUEpxUGd0dzNZNG91b1FpWWZzSkhY?=
+ =?utf-8?B?bkZRcnlHWmUwNU0wdzVxbGlhdUcwb050N0JMa25saUtEQkdubHF0STd5RW9v?=
+ =?utf-8?B?S1UwckFaQUxSQlZrU1l5clptL2t2QWlnTkFDMHljQnM2ZWk4T25hTWtWRVN3?=
+ =?utf-8?B?QndySjZrSmN4N3p1ZC9EWTdWdTFxVllNTGZNS0dzaGFhTHFHRHZ0MmxESHRC?=
+ =?utf-8?B?ZVc2V3JPUGx6SzIwR245NjBXZFc2SEkyT3NHeXBsUXZuZFluTHIyS3dHVEN1?=
+ =?utf-8?B?cmdHdnFzVXAvWHdXbWtlS3NEa29Dci9oaUdqc3h3eVB5WFVNdzNLeVJ6M1pZ?=
+ =?utf-8?B?TmxtbXVxUXFDNXFPaHEwNEpqNFM2ZFBkZDRSMWQxeitvNjVwUlE0M2pKcGNa?=
+ =?utf-8?B?eUlHUUlCWExaMVROSHBHdjBFS0Y5NmdiaUFJcy9tR2pMV05xZEg3UmhPU0xF?=
+ =?utf-8?Q?ormf2GUV8NSetp4L2zOCqsCpIsHtDkfu4URjPqf?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1d8e2769-2812-4023-9c68-08d961e01194
+X-MS-Exchange-CrossTenant-AuthSource: BN9PR12MB5129.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Aug 2021 00:35:24.5893
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: +kWSSSsw8drnbwIwcjGLROjNj/5eLrNwYQEQf/s1r5100GjIHM7eX6x6dvU/ZPCNPCeKybYxLzkXUudFlcgkig==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN9PR12MB5180
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 17, 2021 at 04:56:09PM -0700, Darrick J. Wong wrote:
-> On Wed, Aug 18, 2021 at 09:48:27AM +1000, Dave Chinner wrote:
-> > On Tue, Aug 10, 2021 at 05:46:32PM -0700, Darrick J. Wong wrote:
-> > > On Tue, Aug 10, 2021 at 03:28:51PM +1000, Dave Chinner wrote:
-> > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > 
-> > > > TO stop external users from using b_bn as the disk address of the
-> > > > buffer, rename it to b_index to indicate that it is the buffer cache
-> > > > index, not the block number of the buffer. Code that needs the disk
-> > > > address should use xfs_buf_daddr() to obtain it.
-> > > > 
-> > > > Do the rename and clean up any of the remaining b_bn cruft that is
-> > > > left over and is now unused.
-> > > > 
-> > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > > ---
-> > > >  fs/xfs/xfs_buf.c | 19 +++++++++++--------
-> > > >  fs/xfs/xfs_buf.h | 18 +-----------------
-> > > >  2 files changed, 12 insertions(+), 25 deletions(-)
-> > > > 
-> > > > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> > > > index c1bb6e41595b..6f6c6937baaa 100644
-> > > > --- a/fs/xfs/xfs_buf.c
-> > > > +++ b/fs/xfs/xfs_buf.c
-> > > > @@ -251,7 +251,7 @@ _xfs_buf_alloc(
-> > > >  		return error;
-> > > >  	}
-> > > >  
-> > > > -	bp->b_bn = map[0].bm_bn;
-> > > > +	bp->b_index = map[0].bm_bn;
-> > > >  	bp->b_length = 0;
-> > > >  	for (i = 0; i < nmaps; i++) {
-> > > >  		bp->b_maps[i].bm_bn = map[i].bm_bn;
-> > > > @@ -459,7 +459,7 @@ _xfs_buf_obj_cmp(
-> > > >  	 */
-> > > >  	BUILD_BUG_ON(offsetof(struct xfs_buf_map, bm_bn) != 0);
-> > > >  
-> > > > -	if (bp->b_bn != map->bm_bn)
-> > > > +	if (bp->b_index != map->bm_bn)
-> > > >  		return 1;
-> > > >  
-> > > >  	if (unlikely(bp->b_length != map->bm_len)) {
-> > > > @@ -481,7 +481,7 @@ static const struct rhashtable_params xfs_buf_hash_params = {
-> > > >  	.min_size		= 32,	/* empty AGs have minimal footprint */
-> > > >  	.nelem_hint		= 16,
-> > > >  	.key_len		= sizeof(xfs_daddr_t),
-> > > > -	.key_offset		= offsetof(struct xfs_buf, b_bn),
-> > > > +	.key_offset		= offsetof(struct xfs_buf, b_index),
-> > > 
-> > > I would've called this field b_rhash_key, since "index" is a kind of
-> > > vague.
-> > 
-> > Ok.
-> > 
-> > > > @@ -875,7 +877,7 @@ xfs_buf_read_uncached(
-> > > >  
-> > > >  	/* set up the buffer for a read IO */
-> > > >  	ASSERT(bp->b_map_count == 1);
-> > > > -	bp->b_bn = XFS_BUF_DADDR_NULL;  /* always null for uncached buffers */
-> > > > +	bp->b_index = XFS_BUF_DADDR_NULL;
-> > > >  	bp->b_maps[0].bm_bn = daddr;
-> > > >  	bp->b_flags |= XBF_READ;
-> > > >  	bp->b_ops = ops;
-> > > > @@ -1513,7 +1515,7 @@ _xfs_buf_ioapply(
-> > > >  						   SHUTDOWN_CORRUPT_INCORE);
-> > > >  				return;
-> > > >  			}
-> > > > -		} else if (bp->b_bn != XFS_BUF_DADDR_NULL) {
-> > > > +		} else if (bp->b_index != XFS_BUF_DADDR_NULL) {
-> > > >  			struct xfs_mount *mp = bp->b_mount;
-> > > >  
-> > > >  			/*
-> > > > @@ -1523,7 +1525,8 @@ _xfs_buf_ioapply(
-> > > >  			if (xfs_has_crc(mp)) {
-> > > >  				xfs_warn(mp,
-> > > >  					"%s: no buf ops on daddr 0x%llx len %d",
-> > > > -					__func__, bp->b_bn, bp->b_length);
-> > > > +					__func__, xfs_buf_daddr(bp),
-> > > > +					bp->b_length);
-> > > >  				xfs_hex_dump(bp->b_addr,
-> > > >  						XFS_CORRUPTION_DUMP_LEN);
-> > > >  				dump_stack();
-> > > > @@ -1793,7 +1796,7 @@ xfs_buftarg_drain(
-> > > >  				xfs_buf_alert_ratelimited(bp,
-> > > >  					"XFS: Corruption Alert",
-> > > >  "Corruption Alert: Buffer at daddr 0x%llx had permanent write failures!",
-> > > > -					(long long)bp->b_bn);
-> > > > +					(long long)xfs_buf_daddr(bp));
-> > > 
-> > > These belong in the previous patch, right?
-> > 
-> > Depends on your POV. This patch cleans up all the internal (mis)uses of
-> > b_bn, while the previous patches addressed all the external uses.
-> > The mods could be in either, I just chose to split internal/external
-> > modification based on the file rather than on the specific (ab)use
-> > being corrected....
-> 
-> <nod> Ok then.  Would you mind noting that in the commit message with
-> something along the lines of "...and convert internal users."?  My brain
-> is likely to fall out before you repost this patch. :/
 
-Already done. The previous patch already said "Stop directly
-referencing b_bn in code outside the buffer cache, [...]", this one
-now says "Do the rename and clean up any of the remaining internal
-b_bn users. [...]".
+Am 2021-08-17 um 8:01 p.m. schrieb Ralph Campbell:
+> On 8/12/21 11:31 PM, Alex Sierra wrote:
+>> From: Ralph Campbell <rcampbell@nvidia.com>
+>>
+>> ZONE_DEVICE struct pages have an extra reference count that
+>> complicates the
+>> code for put_page() and several places in the kernel that need to
+>> check the
+>> reference count to see that a page is not being used (gup, compaction,
+>> migration, etc.). Clean up the code so the reference count doesn't
+>> need to
+>> be treated specially for ZONE_DEVICE.
+>>
+>> v2:
+>> AS: merged this patch in linux 5.11 version
+>>
+>> v5:
+>> AS: add condition at try_grab_page to check for the zone device type,
+>> while
+>> page ref counter is checked less/equal to zero. In case of device
+>> zone, pages
+>> ref counter are initialized to zero.
+>>
+>> Signed-off-by: Ralph Campbell <rcampbell@nvidia.com>
+>> Signed-off-by: Alex Sierra <alex.sierra@amd.com>
+>> ---
+>>   arch/powerpc/kvm/book3s_hv_uvmem.c     |  2 +-
+>>   drivers/gpu/drm/nouveau/nouveau_dmem.c |  2 +-
+>>   fs/dax.c                               |  4 +-
+>>   include/linux/dax.h                    |  2 +-
+>>   include/linux/memremap.h               |  7 +--
+>>   include/linux/mm.h                     | 13 +----
+>>   lib/test_hmm.c                         |  2 +-
+>>   mm/internal.h                          |  8 +++
+>>   mm/memremap.c                          | 68 +++++++-------------------
+>>   mm/migrate.c                           |  5 --
+>>   mm/page_alloc.c                        |  3 ++
+>>   mm/swap.c                              | 45 ++---------------
+>>   12 files changed, 46 insertions(+), 115 deletions(-)
+>>
+> I haven't seen a response to the issues I raised back at v3 of this
+> series.
+> https://lore.kernel.org/linux-mm/4f6dd918-d79b-1aa7-3a4c-caa67ddc29bc@nvidia.com/
+>
+>
+> Did I miss something?
 
-Cheers,
+I think part of the response was that we did more testing. Alex added
+support for DEVICE_GENERIC pages to test_hmm and he ran DAX tests
+recommended by Theodore Tso. In that testing he ran into a WARN_ON_ONCE
+about a zero page refcount in try_get_page. The fix is in the latest
+version of patch 2. But it's already obsolete because John Hubbard is
+about to remove that function altogether.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I think the issues you raised were more uncertainty than known bugs. It
+seems the fact that you can have DAX pages with 0 refcount is a feature
+more than a bug.
+
+Regards,
+  Felix
+
+
