@@ -2,200 +2,90 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F091C4338F
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Aug 2021 19:28:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDAE9C432BE
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Aug 2021 21:01:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7D4E560F4C
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Aug 2021 19:28:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CA19B610E7
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Aug 2021 21:01:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233305AbhHRT3O (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Aug 2021 15:29:14 -0400
-Received: from mail-bn1nam07on2059.outbound.protection.outlook.com ([40.107.212.59]:24067
-        "EHLO NAM02-BN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S229965AbhHRT3I (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 18 Aug 2021 15:29:08 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=OmqAQXEpdPdb56bWQLnHNSLDQOMGxN8VS/P7Yt77DbI+5YYFwp0KU1atRqRD1TnaRH5CVZ1lNfSBAOZXIJz8h2rSmYT0cOl6/BSHvJccyOJTzOEuCSI8YCXCqn9pRrFUZ3RcktSO+fkGKrxVCQx/MSIoYPBvAk8jfCMibKgaJppWWaD1nRkw1+RrCLUXwJFFjXGCt+SkgMigkKVjKIH9IP/03u8+hlvJC9DCkwR9cdOcgdPyNcDLRCbnAX61Z559KG7m6MH6OQWdp71b4I8OzTzoGWFgsbtXBqaNHvCR5jQvh/z8cbSkVbEix+R2b6E7YAmC380XHkoRxkYCP+nQLQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=P0dxBB+gTPgn6xtJRTWooXg5Ofo2P3zOE2xwaHUAyrQ=;
- b=J2qUs7VWgvBw2jNN1Th68X+biEN4JshjW8F7UcXQp222K9sJDBIZILqXFwXHk1CTXubyf3AD8ouUUXpt6zolx3OpPZTzyqU13urlZ0giXb3CdS3c2YovxST6jhwEat8G5nCjPb7vdTzC1jAdbbZwcwgpKdlGbTB+WNUZ99DmpV+PUnIbMJCYHH4VDpD2sb+7twAHTw6wy7ckyR7QvG5ci2HK+mkt3EP06hGzm/utcbdMTjvs8mwz5hBRg4UbEtCXlNEmRwCORSZPUbQqfRkWJQNvxBk8wZEBSdQ4IrNsFJ2t0/YmbvsM25RovSIYxaC91UDQfhOCd9B+Et9Jpq10Cg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.112.32) smtp.rcpttodomain=redhat.com smtp.mailfrom=nvidia.com;
- dmarc=pass (p=quarantine sp=none pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=P0dxBB+gTPgn6xtJRTWooXg5Ofo2P3zOE2xwaHUAyrQ=;
- b=pt4FulzCGAi6z3RnU1HIgF/giSn4aJ4+QiNKT99IQN+2FcFVNWdQskycy5R1vzxhx3k24TIbYTHIxCNDsm8HdjFOgos7bKyilPZOVC7kmMxH0dTIlUKAKFItG1bl8nwYoCveSj4u7OZM9Y/MA0cn8QbWjvxg3ZU0p82WMo5BfQpqZ2i0lySiVqZceiIOCIVovSvMq5rEKwnXORjNJQUvQS+DJAhUw92jRpvkUVPAGIGNWi8p7iSAY9CpWIMU+r35L2rb83u/bRCB8aAMBYDJ3/jWVNSjb7f+o0rdT6X+bdRMV2auGIYnLvoX5SerzauujmEGWWTMOxJCc1aKneEGag==
-Received: from MWHPR02CA0018.namprd02.prod.outlook.com (2603:10b6:300:4b::28)
- by DM5PR12MB1609.namprd12.prod.outlook.com (2603:10b6:4:10::15) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4415.24; Wed, 18 Aug
- 2021 19:28:31 +0000
-Received: from CO1NAM11FT031.eop-nam11.prod.protection.outlook.com
- (2603:10b6:300:4b::4) by MWHPR02CA0018.outlook.office365.com
- (2603:10b6:300:4b::28) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4436.19 via Frontend
- Transport; Wed, 18 Aug 2021 19:28:31 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.112.32)
- smtp.mailfrom=nvidia.com; redhat.com; dkim=none (message not signed)
- header.d=none;redhat.com; dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.112.32 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.112.32; helo=mail.nvidia.com;
-Received: from mail.nvidia.com (216.228.112.32) by
- CO1NAM11FT031.mail.protection.outlook.com (10.13.174.118) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.20.4415.16 via Frontend Transport; Wed, 18 Aug 2021 19:28:31 +0000
-Received: from HQMAIL105.nvidia.com (172.20.187.12) by HQMAIL109.nvidia.com
- (172.20.187.15) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 18 Aug
- 2021 12:28:31 -0700
-Received: from HQMAIL111.nvidia.com (172.20.187.18) by HQMAIL105.nvidia.com
- (172.20.187.12) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 18 Aug
- 2021 19:28:31 +0000
-Received: from rcampbell-test.nvidia.com (172.20.187.5) by mail.nvidia.com
- (172.20.187.18) with Microsoft SMTP Server (TLS) id 15.0.1497.2 via Frontend
- Transport; Wed, 18 Aug 2021 19:28:31 +0000
-Subject: Re: [PATCH v6 02/13] mm: remove extra ZONE_DEVICE struct page
- refcount
-To:     Felix Kuehling <felix.kuehling@amd.com>,
-        Alex Sierra <alex.sierra@amd.com>, <akpm@linux-foundation.org>,
-        <linux-mm@kvack.org>, <linux-ext4@vger.kernel.org>,
-        <linux-xfs@vger.kernel.org>
-CC:     <amd-gfx@lists.freedesktop.org>, <dri-devel@lists.freedesktop.org>,
-        <hch@lst.de>, <jgg@nvidia.com>, <jglisse@redhat.com>
-References: <20210813063150.2938-1-alex.sierra@amd.com>
- <20210813063150.2938-3-alex.sierra@amd.com>
- <7b821150-af18-f786-e419-ec245b8cfb1e@nvidia.com>
- <393e9815-838d-5fe6-d6ab-bfe7b543fef6@amd.com>
-From:   Ralph Campbell <rcampbell@nvidia.com>
-Message-ID: <e155ed59-8c3c-4046-e731-f082ee4b10bb@nvidia.com>
-Date:   Wed, 18 Aug 2021 12:28:30 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
+        id S233770AbhHRVCC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Aug 2021 17:02:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57306 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233719AbhHRVCB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Aug 2021 17:02:01 -0400
+Received: from mail-pf1-x42b.google.com (mail-pf1-x42b.google.com [IPv6:2607:f8b0:4864:20::42b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4A23C0613D9
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Aug 2021 14:01:26 -0700 (PDT)
+Received: by mail-pf1-x42b.google.com with SMTP id 7so3450667pfl.10
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Aug 2021 14:01:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=tsxhBVRZlO9and7DhCBUruAlzXa20bXVaKImjY48c7o=;
+        b=zGGJKW23TpE7PPFJ4/n391OFSE+ePfB6XhKYr42xqQdacaGLoy/MLGcJOB9KJclibB
+         29yQ1DLoZOq7YUGzImZJ1hjNXdcN4bUgBPPOpNCAUpQuExc321UUpjfAEZalmz/yrEmp
+         QMBCgYswdRECqSZZszyKnB1/zOj6k9++ko8k9sPqN4YI0mQ+MpWE8w90ykG4GHsvonXj
+         +NKnoDJPWaGnOUjnABohDzuGK/EN0y6cm+wAyrcNscAwRna0z/xgPtNqS+mR4HhFrKCd
+         yR/73F6u/b1hWv+BHa6yM7WRf5HOfuotX6pcWtI2uqTJ6KkhqyfixiY4MEVxCLYod6oS
+         Jj2Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=tsxhBVRZlO9and7DhCBUruAlzXa20bXVaKImjY48c7o=;
+        b=hqk4jzqNB9rdTPiN6vpCvGS09gAh+mgw5kfQe5AGGLHWM5M/HaOVzfmbZUj0sd13vP
+         9D54IRg5jPBjzAAclD2hea/QRNHQsBL6fS6Gs+lFSIZuuKcyjft9YJH5UQK12w8Qsj4q
+         j9Xh20jPf7hBej37OBcieq+bei/A8nR0DGQEhOz9ly3eIHB6kfBQtXRBUCmZjyu51YNN
+         XimAMIPDeJMilxIrPFg51krLx0aeg2TSFyyKZvwsRXxuKAfwwOSHFUmpXO5RwNBRc+O/
+         rpyn/2fqnU3C6b2uj0uYZKSf1UpcBhrTtcxUBbtD1iducRFJ/1RWsgCR92bLPBQ8fTGM
+         ShbA==
+X-Gm-Message-State: AOAM532Fs4Q2NIJL36dir1cNltrhgA8cCNMI4QP/QVW5pO1pVsmHun03
+        nKkiEuREBeK/mlH3+L6Dh/A1PdzQlxlqpCA5lxTlWA==
+X-Google-Smtp-Source: ABdhPJyC7TVzou7MS10S9DHd4c6rf2rdDWgmDabraG+KHQy+8QVQinJv59B8c4LqBnwh3oILNYKei6BontbTyhivPwk=
+X-Received: by 2002:a63:dd0e:: with SMTP id t14mr9090412pgg.279.1629320486279;
+ Wed, 18 Aug 2021 14:01:26 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <393e9815-838d-5fe6-d6ab-bfe7b543fef6@amd.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 0ca49a3a-3231-4322-e250-08d9627e5d0b
-X-MS-TrafficTypeDiagnostic: DM5PR12MB1609:
-X-Microsoft-Antispam-PRVS: <DM5PR12MB16092220E81E2EBBCE5A66FEC2FF9@DM5PR12MB1609.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:9508;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: VpQvXu9STTWL62aQ9sm3SiAiAuc7renl76Gf3apCxC6dfqMz5ba7e337onDgTTnp97GB6WdCZXzpLTUzFVkO7wIdTa6wceM9aeNi1k3xZAiYsRQ/WiTRaKJb6mXWuWM4qns+A5pBsgYB0Nve2Vrsp8V2AiiRkNQUckVKxahydna4r20JsxRkk/2KEbZnKLN13Q/sWfbUDQc9Vm/eoZhtklqfhlK7pMn2u9QDwBUuSNHEKsYy8lggMK9vbLpXxMLG5+si9n/jJgZ5fa1lV34GZ5bOPewkMDlt32p8KJ+JWZF7SPmKi++LZ6RxBXpVrs3ySuodvPgr9V+M7xatUiilVZnE1upsrmFe6cnWCKHnufKWF7zAju4K75Dg4FT6NHeNZNs7Be8NqWr4M+aDclW0EmC3Mc9gzoRD/mtc7Sa9sPRJvYrPkwzjsk2oJhK4boNuH36VJtmRAoaGxBq3eC2yNxqjoaV0k3Uz3fFdPumDWn+2BCuUVoKGDNhnFN1LKt4YRcHRWFVbVmmErydJE+rKWyvTnPQLu1dYWVPsb3w5ayMfuz44G++oEE5Mu++xJdCWkulT6bClScEWRzuWUsZ2QkxngNQ7+ypLmDVWRU89nK1rwO+i/uHn4D2zbMdJyLsSh6SSdzDPjEYHsSlbNwQ4OTmRJgCkrdZdzN6J13xeW4AoEuOpX4j4/E/hZH0RLZpJ0uqRqI7Pu1GmT0k5mQx6E2/sEEB/sK5u/naXP2yGvx1e17fzoXR0Kcn4Z72I3d5gghms4FTzNAWRt+REDg9B6iJAX6/dBj225YerKItxDrFwCnxL8nkJRMda7DBzcOf2kxgku6+l2rslz/YaFEvoJ2MISmngxtSuTNe49jQmtEU+py2uBL7FPhL94iT9CM0D
-X-Forefront-Antispam-Report: CIP:216.228.112.32;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:schybrid01.nvidia.com;CAT:NONE;SFS:(4636009)(396003)(39860400002)(136003)(346002)(376002)(46966006)(36840700001)(2906002)(54906003)(83380400001)(110136005)(86362001)(8676002)(316002)(82310400003)(8936002)(47076005)(31686004)(82740400003)(36860700001)(36756003)(356005)(7636003)(53546011)(70586007)(70206006)(186003)(478600001)(336012)(7416002)(26005)(5660300002)(2616005)(31696002)(7696005)(4326008)(966005)(426003)(2101003)(43740500002);DIR:OUT;SFP:1101;
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Aug 2021 19:28:31.4867
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0ca49a3a-3231-4322-e250-08d9627e5d0b
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.112.32];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT031.eop-nam11.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR12MB1609
+References: <20210816060359.1442450-1-ruansy.fnst@fujitsu.com> <20210816060359.1442450-2-ruansy.fnst@fujitsu.com>
+In-Reply-To: <20210816060359.1442450-2-ruansy.fnst@fujitsu.com>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Wed, 18 Aug 2021 14:01:15 -0700
+Message-ID: <CAPcyv4jUDGDK5nXiVhEgw_Pwkjf8D=O4Nbw0Gd1YdWUJEoifpQ@mail.gmail.com>
+Subject: Re: [PATCH v7 1/8] fsdax: Output address in dax_iomap_pfn() and
+ rename it
+To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        david <david@fromorbit.com>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux NVDIMM <nvdimm@lists.linux.dev>,
+        Goldwyn Rodrigues <rgoldwyn@suse.de>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Matthew Wilcox <willy@infradead.org>,
+        Ritesh Harjani <riteshh@linux.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 8/17/21 5:35 PM, Felix Kuehling wrote:
-> Am 2021-08-17 um 8:01 p.m. schrieb Ralph Campbell:
->> On 8/12/21 11:31 PM, Alex Sierra wrote:
->>> From: Ralph Campbell <rcampbell@nvidia.com>
->>>
->>> ZONE_DEVICE struct pages have an extra reference count that
->>> complicates the
->>> code for put_page() and several places in the kernel that need to
->>> check the
->>> reference count to see that a page is not being used (gup, compaction,
->>> migration, etc.). Clean up the code so the reference count doesn't
->>> need to
->>> be treated specially for ZONE_DEVICE.
->>>
->>> v2:
->>> AS: merged this patch in linux 5.11 version
->>>
->>> v5:
->>> AS: add condition at try_grab_page to check for the zone device type,
->>> while
->>> page ref counter is checked less/equal to zero. In case of device
->>> zone, pages
->>> ref counter are initialized to zero.
->>>
->>> Signed-off-by: Ralph Campbell <rcampbell@nvidia.com>
->>> Signed-off-by: Alex Sierra <alex.sierra@amd.com>
->>> ---
->>>    arch/powerpc/kvm/book3s_hv_uvmem.c     |  2 +-
->>>    drivers/gpu/drm/nouveau/nouveau_dmem.c |  2 +-
->>>    fs/dax.c                               |  4 +-
->>>    include/linux/dax.h                    |  2 +-
->>>    include/linux/memremap.h               |  7 +--
->>>    include/linux/mm.h                     | 13 +----
->>>    lib/test_hmm.c                         |  2 +-
->>>    mm/internal.h                          |  8 +++
->>>    mm/memremap.c                          | 68 +++++++-------------------
->>>    mm/migrate.c                           |  5 --
->>>    mm/page_alloc.c                        |  3 ++
->>>    mm/swap.c                              | 45 ++---------------
->>>    12 files changed, 46 insertions(+), 115 deletions(-)
->>>
->> I haven't seen a response to the issues I raised back at v3 of this
->> series.
->> https://lore.kernel.org/linux-mm/4f6dd918-d79b-1aa7-3a4c-caa67ddc29bc@nvidia.com/
->>
->>
->> Did I miss something?
-> I think part of the response was that we did more testing. Alex added
-> support for DEVICE_GENERIC pages to test_hmm and he ran DAX tests
-> recommended by Theodore Tso. In that testing he ran into a WARN_ON_ONCE
-> about a zero page refcount in try_get_page. The fix is in the latest
-> version of patch 2. But it's already obsolete because John Hubbard is
-> about to remove that function altogether.
+On Sun, Aug 15, 2021 at 11:04 PM Shiyang Ruan <ruansy.fnst@fujitsu.com> wrote:
 >
-> I think the issues you raised were more uncertainty than known bugs. It
-> seems the fact that you can have DAX pages with 0 refcount is a feature
-> more than a bug.
+> Add address output in dax_iomap_pfn() in order to perform a memcpy() in
+> CoW case.  Since this function both output address and pfn, rename it to
+> dax_iomap_direct_access().
 >
-> Regards,
->    Felix
+> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Ritesh Harjani <riteshh@linux.ibm.com>
 
-Did you test on a system without CONFIG_ARCH_HAS_PTE_SPECIAL defined?
-In that case, mmap() of a DAX device will call insert_page() which calls
-get_page() which would trigger VM_BUG_ON_PAGE().
+Looks good to me:
 
-I can believe it is OK for PTE_SPECIAL page table entries to have no
-struct page or that MEMORY_DEVICE_GENERIC struct pages be mapped with
-a zero reference count using insert_pfn().
-
-I find it hard to believe that other MM developers don't see an issue
-with a struct page with refcount == 0 and mapcount == 1.
-
-I don't see where init_page_count() is being called for the
-MEMORY_DEVICE_GENERIC or MEMORY_DEVICE_PRIVATE struct pages the AMD
-driver allocates and passes to migrate_vma_setup().
-Looks like svm_migrate_get_vram_page() needs to call init_page_count()
-instead of get_page(). (I'm looking at branch origin/alexsierrag/device_generic
-https://github.com/RadeonOpenCompute/ROCK-Kernel-Driver.git)
-
-Also, what about the other places where is_device_private_page() is called?
-Don't they need to be updated to call is_device_page() instead?
-One of my goals for this patch was to remove special casing reference counts
-for ZONE_DEVICE pages in rmap.c, etc.
-
-I still think this patch needs an ACK from a FS/DAX maintainer.
-
+Reviewed-by: Dan Williams <dan.j.williams@intel.com>
