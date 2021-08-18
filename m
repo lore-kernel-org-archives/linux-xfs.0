@@ -4,134 +4,115 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D7BDC4338F
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Aug 2021 01:33:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 861CFC4338F
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Aug 2021 02:25:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4F42C61051
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Aug 2021 01:33:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 65E1F60FE6
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Aug 2021 02:25:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235124AbhHRBeS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 17 Aug 2021 21:34:18 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:45852 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235093AbhHRBeS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Aug 2021 21:34:18 -0400
+        id S236585AbhHRC0B (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 17 Aug 2021 22:26:01 -0400
+Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:45935 "EHLO
+        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S236471AbhHRC0A (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Aug 2021 22:26:00 -0400
 Received: from dread.disaster.area (pa49-195-182-146.pa.nsw.optusnet.com.au [49.195.182.146])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 9EF25104A25F;
-        Wed, 18 Aug 2021 11:33:42 +1000 (AEST)
+        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 28C1A106040;
+        Wed, 18 Aug 2021 12:25:21 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1mGASb-001xNq-KK; Wed, 18 Aug 2021 11:33:41 +1000
-Date:   Wed, 18 Aug 2021 11:33:41 +1000
+        id 1mGBGZ-001yCg-9J; Wed, 18 Aug 2021 12:25:19 +1000
+Date:   Wed, 18 Aug 2021 12:25:19 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 05/16] xfs: replace xfs_sb_version checks with feature
- flag checks
-Message-ID: <20210818013341.GP3657114@dread.disaster.area>
+Subject: Re: [PATCH 07/16] xfs: convert mount flags to features
+Message-ID: <20210818022519.GQ3657114@dread.disaster.area>
 References: <20210810052451.41578-1-david@fromorbit.com>
- <20210810052451.41578-6-david@fromorbit.com>
- <20210811221329.GK3601443@magnolia>
+ <20210810052451.41578-8-david@fromorbit.com>
+ <20210811003800.GW3601443@magnolia>
+ <20210811232856.GM3601443@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210811221329.GK3601443@magnolia>
+In-Reply-To: <20210811232856.GM3601443@magnolia>
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
         a=QpfB3wCSrn/dqEBSktpwZQ==:117 a=QpfB3wCSrn/dqEBSktpwZQ==:17
         a=kj9zAlcOel0A:10 a=MhDmnRu9jo8A:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
-        a=7-415B0cAAAA:8 a=GfEYSm-wLwr3SNRR96UA:9 a=CjuIK1q_8ugA:10
+        a=7-415B0cAAAA:8 a=lsTls220AJqLQ3KEhqYA:9 a=CjuIK1q_8ugA:10
         a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 11, 2021 at 03:13:29PM -0700, Darrick J. Wong wrote:
-> On Tue, Aug 10, 2021 at 03:24:40PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
+On Wed, Aug 11, 2021 at 04:28:56PM -0700, Darrick J. Wong wrote:
+> On Tue, Aug 10, 2021 at 05:38:00PM -0700, Darrick J. Wong wrote:
+> > On Tue, Aug 10, 2021 at 03:24:42PM +1000, Dave Chinner wrote:
+> > > From: Dave Chinner <dchinner@redhat.com>
+> > > 
+> > > Replace m_flags feature checks with xfs_has_<feature>() calls and
+> > > rework the setup code to set flags in m_features.
+> > > 
+> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > > 
-> > Convert the xfs_sb_version_hasfoo() to checks against
-> > mp->m_features. Checks of the superblock itself during disk
-> > operations (e.g. in the read/write verifiers and the to/from disk
-> > formatters) are not converted - they operate purely on the
-> > superblock state. Everything else should use the mount features.
+> > AFAICT the only change since last time is in xfs_inode.c, right?
 > > 
-> > Large parts of this conversion were done with sed with commands like
-> > this:
-> > 
-> > for f in `git grep -l xfs_sb_version_has fs/xfs/*.c`; do
-> > 	sed -i -e 's/xfs_sb_version_has\(.*\)(&\(.*\)->m_sb)/xfs_has_\1(\2)/' $f
-> > done
-> > 
-> > With manual cleanups for things like "xfs_has_extflgbit" and other
-> > little inconsistencies in naming.
-> > 
-> > The result is ia lot less typing to check features and an XFS binary
-> > size reduced by a bit over 3kB:
-> > 
-> > $ size -t fs/xfs/built-in.a
-> > 	text	   data	    bss	    dec	    hex	filenam
-> > before	1130866  311352     484 1442702  16038e (TOTALS)
-> > after	1127727  311352     484 1439563  15f74b (TOTALS)
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > Reviewed-by: Christoph Hellwig <hch@lst.de>
 > > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
 > 
-> <snip>
+> I'm having some second thoughts about the attr2 handling in this patch.
+> xfs/186 regresses like so:
 > 
-> > diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-> > index 699066fb9052..7361830163d7 100644
-> > --- a/fs/xfs/xfs_rtalloc.c
-> > +++ b/fs/xfs/xfs_rtalloc.c
-> > @@ -951,8 +951,7 @@ xfs_growfs_rt(
-> >  		return -EINVAL;
-> >  
-> >  	/* Unsupported realtime features. */
-> > -	if (xfs_sb_version_hasrmapbt(&mp->m_sb) ||
-> > -	    xfs_sb_version_hasreflink(&mp->m_sb))
-> > +	if (xfs_has_rmapbt(mp) || xfs_has_reflink(mp))
+> --- /tmp/fstests/tests/xfs/186.out      2021-05-13 11:47:55.849859833 -0700
+> +++ /var/tmp/fstests/xfs/186.out.bad    2021-08-11 15:36:38.892735511 -0700
+> @@ -195,6 +195,7 @@
+>  
+>  =================================
+>  ATTR
+> +ATTR2
+>  forkoff = 47
+>  u.sfdir2.hdr.count = 25
+>  u.sfdir2.hdr.i8count = 0
+>
+> AFAICT, prior to this patch, if a V4 fs did not have attr2 set in the
+> ondisk superblock and the user did not mount with -oattr2, the fs would
+> continue to use attr1 format.  Indeed, xfs_sbversion_add_attr2 did:
 > 
-> A regression test that I developed to test the act of adding a realtime
-> volume to an existing filesystem exposed the following failure:
+> 	if ((mp->m_flags & XFS_MOUNT_ATTR2) &&
+> 	    !(xfs_sb_version_hasattr2(&mp->m_sb))) {
+> 		/* try to add feature to ondisk super */
+> 	}
 > 
-> --- /tmp/fstests/tests/xfs/779.out      2021-08-08 08:47:08.535033170 -0700
-> +++ /var/tmp/fstests/xfs/779.out.bad    2021-08-11 14:54:18.389346401 -0700
-> @@ -1,2 +1,4 @@
->  QA output created by 779
-> +/opt/a is not a realtime file?
-> +expected file extszhint 0, got 12288
->  Silence is golden
+> Now, however, we mix the two together -- if the ondisk super has attr2
+> set, XFS_FEAT_ATTR2 will be set, and if the mount options include
+> -oattr2, XFS_FEAT_ATTR2 will also be set.  Now that function does:
 > 
-> Since this test is not yet upstream, I will describe the sequence of
-> events:
+> 	if (xfs_has_attr2(mp))
+> 		return;
+> 	if (xfs_has_noattr2(mp))
+> 		return;
 > 
-> 1. Suppress SCRATCH_RTDEV when invoking _scratch_mkfs.  This creates a
->    filesystem with no realtime volume attached.
-> 2. Mount the fs with SCRATCH_RTDEV in the mount options.  The rt volume
->    still has not been attached.
-> 3. Set RTINHERIT (and EXTSZINHERIT) on the root directory.  Make sure
->    the extent size hint is not a multiple of the rt extent size.
-> 4. Call xfs_growfs -r to add the rt volume into the filesystem.
-> 5. Create a file.  Due to RTINHERIT, the new file should be a realtime
->    file.
-> 6. Check that the file is actually a realtime file and does not have an
->    extent size hint.
+> 	/* try to add feature to ondisk super */
 > 
-> The regression of course happens in step 6, because xfs_growfs_rt can
-> add a realtime volume to an existing filesystem.  Prior to this patch,
-> the "has realtime?" predicate always looked at the mp->m_sb.  Now that
-> the feature state has been turned into a separate xfs_mount state, we
-> must set the REALTIME m_feature flag explicitly.
-> 
-> The following patch solves the regression:
+> The behavior is not the same here -- if neither the ondisk sb nor the
+> mount options have attr2, we upgrade an attr1 fs to attr2.  I think this
+> is why xfs/186 has this regression.
 
-I've added a variant of this to the patch - it just sets
-XFS_FEAT_REALTIME directly without the "xfs_add_realtime()" wrapper.
+Hmmm - I think I changed it to do that explicitly at one point, then
+didn't remove it when splitting out attr2 specific stuff. e.g. the
+comment now says:
+
+/*
+ * Switch on the ATTR2 superblock bit (implies also FEATURES2) by default unless
+ * we've explicitly been told not to use attr2 (i.e. noattr2 mount option).
+ */
+
+Which is how it's behaving.  I'll just revert then "upgrade by
+default" behaviour and go back to the way it used to work. That'll
+also fix the other problem you mention, too.
 
 Cheers,
 
