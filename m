@@ -2,283 +2,217 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0496EC4320A
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Aug 2021 06:54:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9F3AC432BE
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Aug 2021 07:52:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CCD7F6108F
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Aug 2021 06:54:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C0E1560E78
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Aug 2021 07:52:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238005AbhHRGyy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Aug 2021 02:54:54 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:42317 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S238538AbhHRGyx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Aug 2021 02:54:53 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1629269657;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=kSyVRRLdTaR5BnmqQkrKDGZgg2FPj3zsseALNyKWYTc=;
-        b=VI+0rK08WEMa0wxeoKCS/CVDX9HJZNfC2RQ0OB/79eQdCFEWmjKhFHu42ljJ2zzw8+3kUB
-        KhHvt8lSIYNiDFh85YP6kIaOgg7qRzJNSIw0eIKkHzNvu9O+i/Gi2F5WZuQGNpMOmpYeUC
-        XpvoAcUb5dIC/m8Mrn5DsVdmqafaNyI=
-Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com
- [209.85.215.197]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-439-i5-ylr4OOhqHN482mqVJOw-1; Wed, 18 Aug 2021 02:54:15 -0400
-X-MC-Unique: i5-ylr4OOhqHN482mqVJOw-1
-Received: by mail-pg1-f197.google.com with SMTP id v21-20020a63d5550000b029023c8042ce63so875338pgi.8
-        for <linux-xfs@vger.kernel.org>; Tue, 17 Aug 2021 23:54:15 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id
-         :mail-followup-to:references:mime-version:content-disposition
-         :in-reply-to;
-        bh=kSyVRRLdTaR5BnmqQkrKDGZgg2FPj3zsseALNyKWYTc=;
-        b=pm5ud3Pip30ov264XvIb4RuhhYEY1sJMw4QG7lzD/frvLdcbqb0folPnUbNcR2TTpm
-         lwjbh6PMFPKMhO7LQsK/PvQuRXowKHdm18oGGOLuikQRl3rLPtTjEIX6tsnZ0pnhlJFL
-         tmvf5Sn62BZfzwdQvQ5ogfYXyAXhqQL6BYfSf+a4Qz10ZI5KKrrfbh5H4VsDTadQAphr
-         YV10Zc99BBE1uy3ILgn4Lnuubrudz7tHrS/+p8Z30ip3ze8lH+ve6bwBMUjLHKDaRvPJ
-         xoDMxEn81quBflX6S+ZxonRHv5HTDtjT2A7weW8NIhclzicwS7zmfQu54Afn80+t68ay
-         nr8Q==
-X-Gm-Message-State: AOAM5339l0YR8uukyy8aSRpdzOExPFbmc7y0jXtKCw4C8mKxLzHmxPTY
-        hU707RIFNG+w8ztp9vuadYy/BgKyxM7/YKuacoNqw/+6BOvn9yuaruLdKJlt762Au8QfCpSOlgc
-        imDZ5G8zIEJJTyp0D7meL
-X-Received: by 2002:a63:170d:: with SMTP id x13mr7232277pgl.216.1629269654769;
-        Tue, 17 Aug 2021 23:54:14 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJyz2KVAiFRNRxO4yKiokn0A7iKB9VpLE0b2C2xsw+YMJpFeaSPN96/U8+ygxA5gi8kYTORFmQ==
-X-Received: by 2002:a63:170d:: with SMTP id x13mr7232257pgl.216.1629269654413;
-        Tue, 17 Aug 2021 23:54:14 -0700 (PDT)
-Received: from fedora ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id oj2sm3818685pjb.33.2021.08.17.23.54.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 17 Aug 2021 23:54:14 -0700 (PDT)
-Date:   Wed, 18 Aug 2021 15:06:54 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org, guan@eryu.me
-Subject: Re: [PATCH 2/2] generic: test shutdowns of a nested filesystem
-Message-ID: <20210818070654.hmhq7g5t4u3xueaj@fedora>
-Mail-Followup-To: "Darrick J. Wong" <djwong@kernel.org>, guaneryu@gmail.com,
-        linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-References: <162924439425.779465.16029390956507261795.stgit@magnolia>
- <162924440518.779465.6907507760500586987.stgit@magnolia>
+        id S239228AbhHRHwt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Aug 2021 03:52:49 -0400
+Received: from esa20.fujitsucc.c3s2.iphmx.com ([216.71.158.65]:31957 "EHLO
+        esa20.fujitsucc.c3s2.iphmx.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S237962AbhHRHws (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Aug 2021 03:52:48 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=fujitsu.com; i=@fujitsu.com; q=dns/txt; s=fj1;
+  t=1629273135; x=1660809135;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=PGR6CB6ZNYnGacwIWhKZ73aFX1wKUb9dMDervZ1ElcM=;
+  b=wPjwr/tOYd7mwvUc76BegkzLI7+LsU1RlppGeDELQ6id5AWyswwlx9Rt
+   vTsQyIU0KNpaCpoRjzcO/YTdka3XC+I6VBJNqmTA/aLOpTXcr6szZkOSj
+   p88y03VwJ9AsD4IhvQZoGgt2iLcAm8BiTGd8B1K+dECCrF3HrXVA3mJ9W
+   /ObrfaDBv13YavYL5OsrgAU2UAPDhW8f/XOJJiit5uuGxpWI6as9JTZto
+   i9d5RtmjUgdtirSVhn56herbydLrdPnP+X0UbNWp4C6wOVYqgqfqWcKmC
+   hY4uybwp2oMpED2uzpr+iBMuR82AESAiO8FQ3n0P+fbRDE/8j5LNBhx6A
+   g==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10079"; a="36840440"
+X-IronPort-AV: E=Sophos;i="5.84,330,1620658800"; 
+   d="scan'208";a="36840440"
+Received: from mail-ty1jpn01lp2053.outbound.protection.outlook.com (HELO JPN01-TY1-obe.outbound.protection.outlook.com) ([104.47.93.53])
+  by ob1.fujitsucc.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Aug 2021 16:52:05 +0900
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=GCeWowJdBC5sPu5dz76p7ammzfiYY/2HMv/xNVB8AmoyMk1KreiYzVaEg5lMbgPpihpj8cc41Fsxk0nPVGN2XDoceRLdNpAyr4futZibmaGhf3fInzI2hReaSNdUfJTWTXzchzRdPVt3ZRyRLWeTfvIlcPvv7tC4tqYcd2STynR+g8sAQsqvHH7gb41NDUcsCC3B2OXkToUh3mntVeVv1U9K8nKJFQWZzk715etFrmvWvQcI+NPm6l419kPsuMdPnKn4cnfy6oGDNHKxR4qtyRaLso9VXc499qwOvDKNz6fQm/b3Uq0zI7858MSx+2MrT+bpQz+DJUw/F6SaqilrwA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=PGR6CB6ZNYnGacwIWhKZ73aFX1wKUb9dMDervZ1ElcM=;
+ b=UNVeeW7tpNvBIm/BVinSLsxHZGesXJX/7WnPbKsLzorlgIvNZusLhHyKXDAefL6t3sz8nN1BubiO8/K0gvXmMH2xHfBJXM9UZT7E4/CZV9+ZB8E1EFYX0Utm+gQpHKd7llmzEzCcowU3OlnoEolQxIl2gWc2IdKJChDwdn/MeKzkS7wXFYFZdIBekbWLsqs2tY9/ZjThlniwGXIwI3CyWL7YJxRcK9YvVJatIY8LRP82suCpcT23JH4LxcTN5JlrqZOsgI+XYF12l9cbHBimkyavMPqDE3VKOIwOSLQ4oLsZSWCQi1dI50LMn0ZNEUIehhoAsdms4B8lA4UmNdp0BQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=fujitsu.com; dmarc=pass action=none header.from=fujitsu.com;
+ dkim=pass header.d=fujitsu.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=fujitsu.onmicrosoft.com; s=selector2-fujitsu-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=PGR6CB6ZNYnGacwIWhKZ73aFX1wKUb9dMDervZ1ElcM=;
+ b=HBDieYFTg8G6sCPDLKxITZQyybFnuH0TIr20D+i3dp9mZPe9EJHg16Tu11uuVHyOt4OnJENcha49eh/aBGapJe8UAxNEB8t3VSY3JTToNLbPd/tBo4bFUzLrDdY469he4DeTJzMobgjRZuItDpQzkHxBIFE5WOx39TKTo+eP8Zs=
+Received: from OSBPR01MB2920.jpnprd01.prod.outlook.com (2603:1096:604:18::16)
+ by OSBPR01MB2440.jpnprd01.prod.outlook.com (2603:1096:604:1c::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4415.16; Wed, 18 Aug
+ 2021 07:52:01 +0000
+Received: from OSBPR01MB2920.jpnprd01.prod.outlook.com
+ ([fe80::6db8:ebd7:8ee4:62bb]) by OSBPR01MB2920.jpnprd01.prod.outlook.com
+ ([fe80::6db8:ebd7:8ee4:62bb%6]) with mapi id 15.20.4415.024; Wed, 18 Aug 2021
+ 07:52:01 +0000
+From:   "ruansy.fnst@fujitsu.com" <ruansy.fnst@fujitsu.com>
+To:     Jane Chu <jane.chu@oracle.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "nvdimm@lists.linux.dev" <nvdimm@lists.linux.dev>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>
+CC:     "djwong@kernel.org" <djwong@kernel.org>,
+        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
+        "david@fromorbit.com" <david@fromorbit.com>,
+        "hch@lst.de" <hch@lst.de>, "agk@redhat.com" <agk@redhat.com>,
+        "snitzer@redhat.com" <snitzer@redhat.com>
+Subject: RE: [PATCH RESEND v6 1/9] pagemap: Introduce ->memory_failure()
+Thread-Topic: [PATCH RESEND v6 1/9] pagemap: Introduce ->memory_failure()
+Thread-Index: AQHXhSoSnS/qStIblEyff+FzJU/rBqtlt1aAgBDEPoCAAmInAIAABusAgAAV9MA=
+Date:   Wed, 18 Aug 2021 07:52:01 +0000
+Message-ID: <OSBPR01MB2920AD0C7FD02E238D0C387AF4FF9@OSBPR01MB2920.jpnprd01.prod.outlook.com>
+References: <20210730100158.3117319-1-ruansy.fnst@fujitsu.com>
+ <20210730100158.3117319-2-ruansy.fnst@fujitsu.com>
+ <1d286104-28f4-d442-efed-4344eb8fa5a1@oracle.com>
+ <de19af2a-e9e6-0d43-8b14-c13b9ec38a9d@oracle.com>
+ <beee643c-0fd9-b0f7-5330-0d64bde499d3@oracle.com>
+ <78c22960-3f6d-8e5d-890a-72915236bedc@oracle.com>
+In-Reply-To: <78c22960-3f6d-8e5d-890a-72915236bedc@oracle.com>
+Accept-Language: en-US, zh-CN
+Content-Language: zh-CN
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: oracle.com; dkim=none (message not signed)
+ header.d=none;oracle.com; dmarc=none action=none header.from=fujitsu.com;
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: a2d6932f-759b-402a-27a1-08d9621d1012
+x-ms-traffictypediagnostic: OSBPR01MB2440:
+x-microsoft-antispam-prvs: <OSBPR01MB24408F37010CA07023F9080BF4FF9@OSBPR01MB2440.jpnprd01.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:10000;
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: 7jeu27v+L1+azmocnchPNcGK75Qm52Xx2HtpoIOau6mI3iAhe8ox8S4z/af9Mg1CxMrDj+97xyDKzRSVBWdCZD18DU38Gr5vQ119ATUI4CHDcQWLrJdzN54WFQEP4IfHh75xsakCcppNKoyfrY7/RL1vPVsO0nnJ1m6CNAo5dPtpGcR+vtA2EJBUnG/Q75AGin5SgTje1YxfS4LXAeDAO17Bhavg4wG7rgDrfMZu7FpaE+fj69u/poAum1oKkLpKeEfZ6SPVLUH16UmYr4brO8Ag2xhSWQuQH+hNMapZ/7mcQFLWq7tEGIp32JTweOBIVIHnTISjgXE2zytCwFVpesCt+uALX2XVmR1nyTJBR61DOnadbgQjccD1vGeZlpCHaD6Y0gKb8NcVgccaPR66BHJg3HWYiERw9axFPkHX5CyaTkCEmhobIPa6c6yeregBU0AqAGrWLVmU64gjkRSC3HBBymdRWTmPpRrC7yaoV0bpZLhwvt874yVfAZJkfJw74MkARADPBgfEhl485bJwWS+9e2WzpTLJmoNUm6QTKq3EnQquA7ttPItK3eP9GLIvl0U/HncjQV08ulQioVcFPIEu8eNYQsYiEw2VBKe+PY6dCjs9aQCXpU4b1Bm7dIvapvC/dCyJdJ9Ac+Hj/HhYwXyQEIcdDV71f8A+FI5GwQrRbzHku8Ma/7vaYbj1DVlk00sKDauugRmTCOeek1JOkQ==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:OSBPR01MB2920.jpnprd01.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(38100700002)(55016002)(83380400001)(85182001)(86362001)(76116006)(66946007)(122000001)(9686003)(66556008)(4326008)(2906002)(186003)(7416002)(52536014)(64756008)(66476007)(66446008)(54906003)(7696005)(508600001)(26005)(8936002)(8676002)(33656002)(6506007)(53546011)(71200400001)(5660300002)(316002)(110136005)(38070700005);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?a3dNbkxvUXpweHJoRXFsclUvazFER1hDdFFoRks3MjlBY2lDSXF3U3JJZjV6?=
+ =?utf-8?B?TzI4ejdoaFhMOUxwNlE2eThib2tYcWNwZUlNUXFMTHRIbVlxT05oVnhoTFRY?=
+ =?utf-8?B?dFJPaitFU3JsOTdYaW9pRkhDdFdTcW9FMWNhUVo2K0xodXRTWE8zWEt4a1Bw?=
+ =?utf-8?B?NXRIWE5CQjRXaGNZRHFvVU1YUzhMcjc4Z25rK0JSTUF2UjJNb0Q2b3JYSmxI?=
+ =?utf-8?B?SXVIMjRCTk1MSkpKQllUVS9mUjNtMlQ1bmd2N1FLWlphdmt1U0h4RklabUpE?=
+ =?utf-8?B?UVZCMnlyR2czMzI4a2Yya0JyZ1YrYk1IWDFBZTZLY3MyT2xUMXNCWlFvOFJj?=
+ =?utf-8?B?eWdLV0k4ZkZIdkl5dDBuR3pnSVg5NDg2cStEd0tmV3c4WVR0eGc0MUoyRjBk?=
+ =?utf-8?B?U3FTdkdtbTVJekczYmNLbnU0enNFd3QvZEtqSkVJS1lZQkV1UXF2TlNXdlpG?=
+ =?utf-8?B?MFFEQTkycVVHMTMySDQyYS9EWCt0T0VIRXYzNmdSemJKRnhTL3lDZm1HRDBT?=
+ =?utf-8?B?ZEF4TjlwL01jajE1QXU5UWJrMW9hZXBuK3RmVmZtOFdXQ0JvK3JmYzlDZisz?=
+ =?utf-8?B?WnNWVCs0RnJCZkZDMGhHQUpvVnAzSXVUSkhHL1NOVG51OUV2cHUzR2gzOUxD?=
+ =?utf-8?B?dkJtamUrQkJSN0plWEFGTnRxbDRhTU8ybzdEYklFNWxhUGZRS0RjMkFpclQv?=
+ =?utf-8?B?MVdrR0F1cVVjWUFTTHRnVm16RlM0eVlOVmZVNzFuVnlEZTdtL1Bqb1UrNmxW?=
+ =?utf-8?B?MFlTVGRGcW01ZVFHWWZyR1VKdFhYSEIwaGZrUEFxYkw5Q1lZY2NUZTNXRU51?=
+ =?utf-8?B?QVptZUIweU5kaDZXL1ltbzJwNDVUNUI3TUZDbjFSRXRORjZ4N2VDZVZuWnBF?=
+ =?utf-8?B?UGFyd1BrUGVrR2hzcXZoMjFZcWlUTDhIWHVyMEJYQUthcENKUU8reEdBRDFj?=
+ =?utf-8?B?MGhvSThDMURhWGh4Z0ZXdWxtYkZUYzBKc0RGNlRJR0YwbnJVMDRwcFpYQXpE?=
+ =?utf-8?B?SVF2V1owY050d0ZVWGR5eHJzR3FTbVgwU1liZzI4WjdvcFgzSzB5MmxvdTJz?=
+ =?utf-8?B?NmZwS0tWVWZySzVvNW0vYjBYSmN1QnpqTE1oZWJXaDhoaHhZc3dSMU1pL1A4?=
+ =?utf-8?B?QU41dUNaNytZaDBLYm9HRGtSUHkyazlVNlhPUW4zbE5oM0VUMEhGN0hmd2ZW?=
+ =?utf-8?B?ZGJTcVE1ajRNV2VXNCszZTJ3cVFZSVJMNTVuQVpwZmphQkhJd0ZlRmFTS3dk?=
+ =?utf-8?B?elJYd1hqMXBvVnJHNVdsN2xUQ0U2OEZFazc0RytCM2htNmFNb2JxdWRXUllP?=
+ =?utf-8?B?bzNPRWZPTHdKcVV4TWZmeXBEKzVtRTJoRlJtL0FRdDNGMFhzZ1h1UnhJbW5z?=
+ =?utf-8?B?My9oUEVBNUlsS3pjYkE5RnZsbDZ0cVBONjVDZW9ZUkF6WGMrSm1CQ3NKUnY4?=
+ =?utf-8?B?QXN0SlVLSFFaM204L1lQYUdLRUxQeGxCYW4zWGMxZ0hlMlJvL1NzNnJpNHlw?=
+ =?utf-8?B?aTkxYTA0S3QrTG5USitiSmRydUxnSmZZcUpPckxlZHUxSVpLYXQxTmc0STc4?=
+ =?utf-8?B?R2hwWlRqNVVUc0JaYkhyTTNEeGJ5ZlFTRUFiVDZBZUo4NFRQaXpWVG1LbUxK?=
+ =?utf-8?B?SFkra2hyQ0VXVWx4MVlmM1NoYjRHNmJHWnlwd0pGZFRwNHJZZ3M2ZS94Y0dO?=
+ =?utf-8?B?bk1wdDJmL284RmlQc1h1eU9za1BDazFPZHVhbkE2R2sxd01UQXhQcDhxdk9M?=
+ =?utf-8?Q?Gle6mgo2hgKD/8sjdPWVM8rzE3Q1EH3CW7/qFfd?=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <162924440518.779465.6907507760500586987.stgit@magnolia>
+X-OriginatorOrg: fujitsu.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: OSBPR01MB2920.jpnprd01.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a2d6932f-759b-402a-27a1-08d9621d1012
+X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Aug 2021 07:52:01.2105
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: a19f121d-81e1-4858-a9d8-736e267fd4c7
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: seWqVN6YtlIgfrCNeO5V1QrPyhM6HKt0tiPVVsybjf10CKdLfgG7ba5qWfKV5eyj1/L3PHogW8EY4EzOEWrCGA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: OSBPR01MB2440
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 17, 2021 at 04:53:25PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> generic/475, but we're running fsstress on a disk image inside the
-> scratch filesystem
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
-
-Good to me, thanks for this helpful test case. Just one question,
-is it better to use xfs_metadump with "-o" option by default?
-
-Reviewed-by: Zorro Lang <zlang@redhat.com>
-
->  common/rc             |   20 +++++++
->  tests/generic/725     |  136 +++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/725.out |    2 +
->  3 files changed, 158 insertions(+)
->  create mode 100755 tests/generic/725
->  create mode 100644 tests/generic/725.out
-> 
-> 
-> diff --git a/common/rc b/common/rc
-> index 84757fc1..473bfb0a 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -631,6 +631,26 @@ _ext4_metadump()
->  		$DUMP_COMPRESSOR -f "$dumpfile" &>> "$seqres.full"
->  }
->  
-> +# Capture the metadata of a filesystem in a dump file for offline analysis
-> +_metadump_dev() {
-> +	local device="$1"
-> +	local dumpfile="$2"
-> +	local compressopt="$3"
-> +
-> +	case "$FSTYP" in
-> +	ext*)
-> +		_ext4_metadump $device $dumpfile $compressopt
-> +		;;
-> +	xfs)
-> +		_xfs_metadump $dumpfile $device none $compressopt
-> +		;;
-> +	*)
-> +		echo "Don't know how to metadump $FSTYP"
-> +		return 1
-> +		;;
-> +	esac
-> +}
-> +
->  _test_mkfs()
->  {
->      case $FSTYP in
-> diff --git a/tests/generic/725 b/tests/generic/725
-> new file mode 100755
-> index 00000000..ac008fdb
-> --- /dev/null
-> +++ b/tests/generic/725
-> @@ -0,0 +1,136 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2021 Oracle, Inc.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 725
-> +#
-> +# Test nested log recovery with repeated (simulated) disk failures.  We kick
-> +# off fsstress on a loopback filesystem mounted on the scratch fs, then switch
-> +# out the underlying scratch device with dm-error to see what happens when the
-> +# disk goes down.  Having taken down both fses in this manner, remount them and
-> +# repeat.  This test simulates VM hosts crashing to try to shake out CoW bugs
-> +# in writeback on the host that cause VM guests to fail to recover.
-> +#
-> +. ./common/preamble
-> +_begin_fstest shutdown auto log metadata eio recoveryloop
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	$KILLALL_PROG -9 fsstress > /dev/null 2>&1
-> +	wait
-> +	if [ -n "$loopmnt" ]; then
-> +		$UMOUNT_PROG $loopmnt 2>/dev/null
-> +		rm -r -f $loopmnt
-> +	fi
-> +	rm -f $tmp.*
-> +	_dmerror_unmount
-> +	_dmerror_cleanup
-> +}
-> +
-> +# Import common functions.
-> +. ./common/dmerror
-> +. ./common/reflink
-> +
-> +# Modify as appropriate.
-> +_supported_fs generic
-> +
-> +_require_scratch_reflink
-> +_require_cp_reflink
-> +_require_dm_target error
-> +_require_command "$KILLALL_PROG" "killall"
-> +
-> +echo "Silence is golden."
-> +
-> +_scratch_mkfs >> $seqres.full 2>&1
-> +_require_metadata_journaling $SCRATCH_DEV
-> +_dmerror_init
-> +_dmerror_mount
-> +
-> +# Create a fs image consuming 1/3 of the scratch fs
-> +scratch_freesp_bytes=$(_get_available_space $SCRATCH_MNT)
-> +loopimg_bytes=$((scratch_freesp_bytes / 3))
-> +
-> +loopimg=$SCRATCH_MNT/testfs
-> +truncate -s $loopimg_bytes $loopimg
-> +_mkfs_dev $loopimg
-> +
-> +loopmnt=$tmp.mount
-> +mkdir -p $loopmnt
-> +
-> +scratch_aliveflag=$tmp.runsnap
-> +snap_aliveflag=$tmp.snapping
-> +
-> +snap_loop_fs() {
-> +	touch "$snap_aliveflag"
-> +	while [ -e "$scratch_aliveflag" ]; do
-> +		rm -f $loopimg.a
-> +		_cp_reflink $loopimg $loopimg.a
-> +		sleep 1
-> +	done
-> +	rm -f "$snap_aliveflag"
-> +}
-> +
-> +fsstress=($FSSTRESS_PROG $FSSTRESS_AVOID -d "$loopmnt" -n 999999 -p "$((LOAD_FACTOR * 4))")
-> +
-> +for i in $(seq 1 $((25 * TIME_FACTOR)) ); do
-> +	touch $scratch_aliveflag
-> +	snap_loop_fs >> $seqres.full 2>&1 &
-> +
-> +	if ! _mount $loopimg $loopmnt -o loop; then
-> +		rm -f $scratch_aliveflag
-> +		_metadump_dev $loopimg $seqres.loop.$i.md
-> +		_fail "iteration $i loopimg mount failed"
-> +		break
-> +	fi
-> +
-> +	("${fsstress[@]}" >> $seqres.full &) > /dev/null 2>&1
-> +
-> +	# purposely include 0 second sleeps to test shutdown immediately after
-> +	# recovery
-> +	sleep $((RANDOM % (3 * TIME_FACTOR) ))
-> +	rm -f $scratch_aliveflag
-> +
-> +	# This test aims to simulate sudden disk failure, which means that we
-> +	# do not want to quiesce the filesystem or otherwise give it a chance
-> +	# to flush its logs.  Therefore we want to call dmsetup with the
-> +	# --nolockfs parameter; to make this happen we must call the load
-> +	# error table helper *without* 'lockfs'.
-> +	_dmerror_load_error_table
-> +
-> +	ps -e | grep fsstress > /dev/null 2>&1
-> +	while [ $? -eq 0 ]; do
-> +		$KILLALL_PROG -9 fsstress > /dev/null 2>&1
-> +		wait > /dev/null 2>&1
-> +		ps -e | grep fsstress > /dev/null 2>&1
-> +	done
-> +	for ((i = 0; i < 10; i++)); do
-> +		test -e "$snap_aliveflag" || break
-> +		sleep 1
-> +	done
-> +
-> +	# Mount again to replay log after loading working table, so we have a
-> +	# consistent fs after test.
-> +	$UMOUNT_PROG $loopmnt
-> +	_dmerror_unmount || _fail "iteration $i scratch unmount failed"
-> +	_dmerror_load_working_table
-> +	if ! _dmerror_mount; then
-> +		_metadump_dev $DMERROR_DEV $seqres.scratch.$i.md
-> +		_fail "iteration $i scratch mount failed"
-> +	fi
-> +done
-> +
-> +# Make sure the fs image file is ok
-> +if [ -f "$loopimg" ]; then
-> +	if _mount $loopimg $loopmnt -o loop; then
-> +		$UMOUNT_PROG $loopmnt &> /dev/null
-> +	else
-> +		_metadump_dev $DMERROR_DEV $seqres.scratch.final.md
-> +		echo "final scratch mount failed"
-> +	fi
-> +	SCRATCH_RTDEV= SCRATCH_LOGDEV= _check_scratch_fs $loopimg
-> +fi
-> +
-> +# success, all done; let the test harness check the scratch fs
-> +status=0
-> +exit
-> diff --git a/tests/generic/725.out b/tests/generic/725.out
-> new file mode 100644
-> index 00000000..ed73a9fc
-> --- /dev/null
-> +++ b/tests/generic/725.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 725
-> +Silence is golden.
-> 
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFuZSBDaHUgPGphbmUu
+Y2h1QG9yYWNsZS5jb20+DQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggUkVTRU5EIHY2IDEvOV0gcGFn
+ZW1hcDogSW50cm9kdWNlIC0+bWVtb3J5X2ZhaWx1cmUoKQ0KPiANCj4gDQo+IE9uIDgvMTcvMjAy
+MSAxMDo0MyBQTSwgSmFuZSBDaHUgd3JvdGU6DQo+ID4gTW9yZSBpbmZvcm1hdGlvbiAtDQo+ID4N
+Cj4gPiBPbiA4LzE2LzIwMjEgMTA6MjAgQU0sIEphbmUgQ2h1IHdyb3RlOg0KPiA+PiBIaSwgU2hp
+WWFuZywNCj4gPj4NCj4gPj4gU28gSSBhcHBsaWVkIHRoZSB2NiBwYXRjaCBzZXJpZXMgdG8gbXkg
+NS4xNC1yYzMgYXMgaXQncyB3aGF0IHlvdQ0KPiA+PiBpbmRpY2F0ZWQgaXMgd2hhdCB2NiB3YXMg
+YmFzZWQgYXQsIGFuZCBpbmplY3RlZCBhIGhhcmR3YXJlIHBvaXNvbi4NCj4gPj4NCj4gPj4gSSdt
+IHNlZWluZyB0aGUgc2FtZSBwcm9ibGVtIHRoYXQgd2FzIHJlcG9ydGVkIGEgd2hpbGUgYWdvIGFm
+dGVyIHRoZQ0KPiA+PiBwb2lzb24gd2FzIGNvbnN1bWVkIC0gaW4gdGhlIFNJR0JVUyBwYXlsb2Fk
+LCB0aGUgc2lfYWRkciBpcyBtaXNzaW5nOg0KPiA+Pg0KPiA+PiAqKiBTSUdCVVMoNyk6IGNhbmpt
+cD0xLCB3aGljaHN0ZXA9MCwgKioNCj4gPj4gKiogc2lfYWRkcigweChuaWwpKSwgc2lfbHNiKDB4
+QyksIHNpX2NvZGUoMHg0LCBCVVNfTUNFRVJSX0FSKSAqKg0KPiA+Pg0KPiA+PiBUaGUgc2lfYWRk
+ciBvdWdodCB0byBiZSAweDdmNjU2ODAwMDAwMCAtIHRoZSB2YWRkciBvZiB0aGUgZmlyc3QgcGFn
+ZQ0KPiA+PiBpbiB0aGlzIGNhc2UuDQo+ID4NCj4gPiBUaGUgZmFpbHVyZSBjYW1lIGZyb20gaGVy
+ZSA6DQo+ID4NCj4gPiBbUEFUQ0ggUkVTRU5EIHY2IDYvOV0geGZzOiBJbXBsZW1lbnQgLT5ub3Rp
+ZnlfZmFpbHVyZSgpIGZvciBYRlMNCj4gPg0KPiA+ICtzdGF0aWMgaW50DQo+ID4gK3hmc19kYXhf
+bm90aWZ5X2ZhaWx1cmUoDQo+ID4gLi4uDQo+ID4gK8KgwqDCoCBpZiAoIXhmc19zYl92ZXJzaW9u
+X2hhc3JtYXBidCgmbXAtPm1fc2IpKSB7DQo+ID4gK8KgwqDCoMKgwqDCoMKgIHhmc193YXJuKG1w
+LCAibm90aWZ5X2ZhaWx1cmUoKSBuZWVkcyBybWFwYnQgZW5hYmxlZCEiKTsNCj4gPiArwqDCoMKg
+wqDCoMKgwqAgcmV0dXJuIC1FT1BOT1RTVVBQOw0KPiA+ICvCoMKgwqAgfQ0KPiA+DQo+ID4gSSBh
+bSBub3QgZmFtaWxpYXIgd2l0aCBYRlMsIGJ1dCBJIGhhdmUgYSBmZXcgcXVlc3Rpb25zIEkgaG9w
+ZSB0byBnZXQNCj4gPiBhbnN3ZXJzIC0NCj4gPg0KPiA+IDEpIFdoYXQgZG9lcyBpdCB0YWtlIGFu
+ZCBjb3N0IHRvIG1ha2UNCj4gPiAgwqDCoCB4ZnNfc2JfdmVyc2lvbl9oYXNybWFwYnQoJm1wLT5t
+X3NiKSB0byByZXR1cm4gdHJ1ZT8NCg0KRW5hYmxlIHJtcGFidCBmZWF0dXJlIHdoZW4gbWFraW5n
+IHhmcyBmaWxlc3lzdGVtDQogICBgbWtmcy54ZnMgLW0gcm1hcGJ0PTEgL3BhdGgvdG8vZGV2aWNl
+YA0KQlRXLCByZWZsaW5rIGlzIGVuYWJsZWQgYnkgZGVmYXVsdC4NCg0KPiA+DQo+ID4gMikgRm9y
+IGEgcnVubmluZyBlbnZpcm9ubWVudCB0aGF0IGZhaWxzIHRoZSBhYm92ZSBjaGVjaywgaXMgaXQN
+Cj4gPiAgwqDCoCBva2F5IHRvIGxlYXZlIHRoZSBwb2lzb24gaGFuZGxlIGluIGxpbWJvIGFuZCB3
+aHk/DQpJdCB3aWxsIGZhbGwgYmFjayB0byB0aGUgb2xkIGhhbmRsZXIuICBJIHRoaW5rIHlvdSBo
+YXZlIGFscmVhZHkga25vd24gaXQuDQoNCj4gPg0KPiA+IDMpIElmIHRoZSBhYm92ZSByZWdyZXNz
+aW9uIGlzIG5vdCBhY2NlcHRhYmxlLCBhbnkgcG90ZW50aWFsIHJlbWVkeT8NCj4gDQo+IEhvdyBh
+Ym91dCBtb3ZpbmcgdGhlIGNoZWNrIHRvIHByaW9yIHRvIHRoZSBub3RpZmllciByZWdpc3RyYXRp
+b24/DQo+IEFuZCByZWdpc3RlciBvbmx5IGlmIHRoZSBjaGVjayBpcyBwYXNzZWQ/ICBUaGlzIHNl
+ZW1zIGJldHRlciB0aGFuIGFuDQo+IGFsdGVybmF0aXZlIHdoaWNoIGlzIHRvIGZhbGwgYmFjayB0
+byB0aGUgbGVnYWN5IG1lbW9yeV9mYWlsdXJlIGhhbmRsaW5nIGluIGNhc2UNCj4gdGhlIGZpbGVz
+eXN0ZW0gcmV0dXJucyAtRU9QTk9UU1VQUC4NCg0KU291bmRzIGxpa2UgYSBuaWNlIHNvbHV0aW9u
+LiAgSSB0aGluayBJIGNhbiBhZGQgYW4gaXNfbm90aWZ5X3N1cHBvcnRlZCgpIGludGVyZmFjZSBp
+biBkYXhfaG9sZGVyX29wcyBhbmQgY2hlY2sgaXQgd2hlbiByZWdpc3RlciBkYXhfaG9sZGVyLg0K
+DQotLQ0KVGhhbmtzLA0KUnVhbi4NCj4gDQo+IHRoYW5rcywNCj4gLWphbmUNCj4gDQo+ID4NCj4g
+PiB0aGFua3MhDQo+ID4gLWphbmUNCj4gPg0KPiA+DQo+ID4+DQo+ID4+IFNvbWV0aGluZyBpcyBu
+b3QgcmlnaHQuLi4NCj4gPj4NCj4gPj4gdGhhbmtzLA0KPiA+PiAtamFuZQ0KPiA+Pg0KPiA+Pg0K
+PiA+PiBPbiA4LzUvMjAyMSA2OjE3IFBNLCBKYW5lIENodSB3cm90ZToNCj4gPj4+IFRoZSBmaWxl
+c3lzdGVtIHBhcnQgb2YgdGhlIHBtZW0gZmFpbHVyZSBoYW5kbGluZyBpcyBhdCBtaW5pbXVtIGJ1
+aWx0DQo+ID4+PiBvbiBQQUdFX1NJWkUgZ3JhbnVsYXJpdHkgLSBhbiBpbmhlcml0YW5jZSBmcm9t
+IGdlbmVyYWwNCj4gPj4+IG1lbW9yeV9mYWlsdXJlIGhhbmRsaW5nLsKgIEhvd2V2ZXIsIHdpdGgg
+SW50ZWwncyBEQ1BNRU0gdGVjaG5vbG9neSwNCj4gPj4+IHRoZSBlcnJvciBibGFzdCByYWRpdXMg
+aXMgbm8gbW9yZSB0aGFuIDI1NmJ5dGVzLCBhbmQgbWlnaHQgZ2V0DQo+ID4+PiBzbWFsbGVyIHdp
+dGggZnV0dXJlIGhhcmR3YXJlIGdlbmVyYXRpb24sIGFsc28gYWR2YW5jZWQgYXRvbWljIDY0QiB3
+cml0ZQ0KPiB0byBjbGVhciB0aGUgcG9pc29uLg0KPiA+Pj4gQnV0IEkgZG9uJ3Qgc2VlIGFueSBv
+ZiB0aGF0IGNvdWxkIGJlIGluY29ycG9yYXRlZCBpbiwgZ2l2ZW4gdGhhdCB0aGUNCj4gPj4+IGZp
+bGVzeXN0ZW0gaXMgbm90aWZpZWQgYSBjb3JydXB0aW9uIHdpdGggcGZuLCByYXRoZXIgdGhhbiBh
+biBleGFjdA0KPiA+Pj4gYWRkcmVzcy4NCj4gPj4+DQo+ID4+PiBTbyBJIGd1ZXNzIHRoaXMgcXVl
+c3Rpb24gaXMgYWxzbyBmb3IgRGFuOiBob3cgdG8gYXZvaWQgdW5uZWNlc3NhcmlseQ0KPiA+Pj4g
+cmVwYWlyaW5nIGEgUE1EIHJhbmdlIGZvciBhIDI1NkIgY29ycnVwdCByYW5nZSBnb2luZyBmb3J3
+YXJkPw0KPiA+Pj4NCj4gPj4+IHRoYW5rcywNCj4gPj4+IC1qYW5lDQo+ID4+Pg0KPiA+Pj4NCj4g
+Pj4+IE9uIDcvMzAvMjAyMSAzOjAxIEFNLCBTaGl5YW5nIFJ1YW4gd3JvdGU6DQo+ID4+Pj4gV2hl
+biBtZW1vcnktZmFpbHVyZSBvY2N1cnMsIHdlIGNhbGwgdGhpcyBmdW5jdGlvbiB3aGljaCBpcw0K
+PiA+Pj4+IGltcGxlbWVudGVkIGJ5IGVhY2gga2luZCBvZiBkZXZpY2VzLsKgIEZvciB0aGUgZnNk
+YXggY2FzZSwgcG1lbQ0KPiA+Pj4+IGRldmljZSBkcml2ZXIgaW1wbGVtZW50cyBpdC7CoCBQbWVt
+IGRldmljZSBkcml2ZXIgd2lsbCBmaW5kIG91dCB0aGUNCj4gPj4+PiBmaWxlc3lzdGVtIGluIHdo
+aWNoIHRoZSBjb3JydXB0ZWQgcGFnZSBsb2NhdGVkIGluLsKgIEFuZCBmaW5hbGx5DQo+ID4+Pj4g
+Y2FsbCBmaWxlc3lzdGVtIGhhbmRsZXIgdG8gZGVhbCB3aXRoIHRoaXMgZXJyb3IuDQo+ID4+Pj4N
+Cj4gPj4+PiBUaGUgZmlsZXN5c3RlbSB3aWxsIHRyeSB0byByZWNvdmVyIHRoZSBjb3JydXB0ZWQg
+ZGF0YSBpZiBuZWNlc3NhcnkuDQo+ID4+Pg0KPiA+Pg0KPiA+DQo=
