@@ -2,243 +2,266 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-19.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,MSGID_FROM_MTA_HEADER,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B629C4338F
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Aug 2021 17:35:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2004C43214
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Aug 2021 18:00:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5CF3F6109E
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Aug 2021 17:35:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B20A1610A0
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Aug 2021 18:00:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230136AbhHSRga (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 19 Aug 2021 13:36:30 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46602 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229465AbhHSRg3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 19 Aug 2021 13:36:29 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2D788610A1
-        for <linux-xfs@vger.kernel.org>; Thu, 19 Aug 2021 17:35:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1629394553;
-        bh=8NwaSFZ01odmbdsej92yDoxIW3xjs/hu5sBv5qQqmoI=;
-        h=Date:From:To:Subject:From;
-        b=DFeI62GSqksF3q11cSj0Tt0k6N83suZmHZiyCTHa1wGGsXxJ5NPXt3CUGnZrb2Fpl
-         OHFMSddED6ADy6Y/Zb3WAioi7XCnlgqBk+MBGEN+k00+VcvN0fX+h25VewY3F/48yV
-         OAsiws1dTpRZp4cjV2Ua1oKfCBD35LcrZSptd18guSC45DwDoU94N5PzMalNbNGDiX
-         ORdYgUJfGB95CVVQISQMEuUk0H6x22KfR9HPLuC/hR6nHI/gE6c5jWnEpKo9MeRgBq
-         1ZBpoLOTh7ZUA0PgAIwhMoPDNyBLkob8DSJP8/28Q8WYQPwa0GLDGJ0p0Cdn9Z9g+w
-         b1cPqw067t8ig==
-Date:   Thu, 19 Aug 2021 10:35:52 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     xfs <linux-xfs@vger.kernel.org>
-Subject: [ANNOUNCE] xfs-linux: for-next updated to a437b9b488e3
-Message-ID: <20210819173552.GV12640@magnolia>
+        id S231196AbhHSSBR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 19 Aug 2021 14:01:17 -0400
+Received: from mail-mw2nam08on2062.outbound.protection.outlook.com ([40.107.101.62]:32032
+        "EHLO NAM04-MW2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S229549AbhHSSBP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 19 Aug 2021 14:01:15 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=eFBSLXGc3AXYiB2o3sT87sP1zO/Oa+7VizQ4v0JiBV+Dp6AzUXWjSDl4c6mTM0A90doZSdz6I07/LoJHLyR00AlJJXbTehWCDsqkSQ7IE5SSpPbc4NNZPcWAFKPT4mUMUs/Izmg7q4u9s5oskz4OOKtd3DdUpvLc9kboBxGLvV+tryInBRYMS+ynZtqinyXqoDTP5wfsf0Djv542Pj3YEkYUhkmMJZdWCquzqPaakWtQ/XGEIoHCcciIw+yzXb5nzbdteBMrZRIFoksigMgiv3FSou3VZSZPr5s0yPUf0+amaNXMtEIoNoL2r+zerEuEFRs7UcuxnQAN4qIF8y3zlQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=yFc7qdDUgQq4K971TROI2d9CFYyaLY55LxcsvRtC2Xg=;
+ b=E9WDEg82S5urOYI/UcJs2QyeEjE33uH+kWyISgo+e30st8F0P7TK5/umoeVdNPVy3bH/hJXyqadYrNV6dgweFyQYOgAZWrhOz7MaJN+Q/DGmG5BlrgGhiQWjcZ6qEhBWpVApN7/kgFzdaE++ydIbcycQhYUgjmgP8e55jWUZX6upblV31ozPBBvuIIKeWIa5yehhVjdgDaQpy7MOA/T1fGrSIepTY+8N9h2qi85Beyz6IFftkBpDZtbELypXqEI/pdG+MESJEyM4k67BzNMREw+5VUinPS66F01aQpOCSsRvfMDTqDWniVK0qnC1nY0SJoTV9QLkLtiOnzodXqi7hw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=yFc7qdDUgQq4K971TROI2d9CFYyaLY55LxcsvRtC2Xg=;
+ b=XvYTgtDJ83eRuJdc8CBZXnnOaL1jrqgSa0Mrkqr9sJ+A8do1Gj6ubZVgckW0aRJGtiEWSMQ0LVdFFtNrSJI8uFLAUiXGc0UbH/FWO2AGBYsUdWqbZx9JLz89JKm30uql6lqziT2dFfzrDMSuL9imoqwFegp+VQAwboz1CwNTxxQ=
+Authentication-Results: redhat.com; dkim=none (message not signed)
+ header.d=none;redhat.com; dmarc=none action=none header.from=amd.com;
+Received: from SA0PR12MB4430.namprd12.prod.outlook.com (2603:10b6:806:70::20)
+ by SA0PR12MB4429.namprd12.prod.outlook.com (2603:10b6:806:73::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4436.19; Thu, 19 Aug
+ 2021 18:00:36 +0000
+Received: from SA0PR12MB4430.namprd12.prod.outlook.com
+ ([fe80::e828:5445:a5aa:94cb]) by SA0PR12MB4430.namprd12.prod.outlook.com
+ ([fe80::e828:5445:a5aa:94cb%5]) with mapi id 15.20.4436.019; Thu, 19 Aug 2021
+ 18:00:36 +0000
+Subject: Re: [PATCH v6 02/13] mm: remove extra ZONE_DEVICE struct page
+ refcount
+To:     Ralph Campbell <rcampbell@nvidia.com>,
+        Felix Kuehling <felix.kuehling@amd.com>,
+        akpm@linux-foundation.org, linux-mm@kvack.org,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc:     amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        hch@lst.de, jgg@nvidia.com, jglisse@redhat.com
+References: <20210813063150.2938-1-alex.sierra@amd.com>
+ <20210813063150.2938-3-alex.sierra@amd.com>
+ <7b821150-af18-f786-e419-ec245b8cfb1e@nvidia.com>
+ <393e9815-838d-5fe6-d6ab-bfe7b543fef6@amd.com>
+ <e155ed59-8c3c-4046-e731-f082ee4b10bb@nvidia.com>
+From:   "Sierra Guiza, Alejandro (Alex)" <alex.sierra@amd.com>
+Message-ID: <600a4c43-271d-df98-d3e0-301af0e8d0fe@amd.com>
+Date:   Thu, 19 Aug 2021 13:00:34 -0500
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.13.0
+In-Reply-To: <e155ed59-8c3c-4046-e731-f082ee4b10bb@nvidia.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
+X-ClientProxiedBy: SN4PR0801CA0005.namprd08.prod.outlook.com
+ (2603:10b6:803:29::15) To SA0PR12MB4430.namprd12.prod.outlook.com
+ (2603:10b6:806:70::20)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from [172.31.9.47] (165.204.77.11) by SN4PR0801CA0005.namprd08.prod.outlook.com (2603:10b6:803:29::15) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4436.19 via Frontend Transport; Thu, 19 Aug 2021 18:00:35 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: abe5aca7-f0f2-4737-8211-08d9633b3f44
+X-MS-TrafficTypeDiagnostic: SA0PR12MB4429:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <SA0PR12MB4429B7BDE45814044F917DF8FDC09@SA0PR12MB4429.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:10000;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: ZHNjHeR9+SH74tLlUx7aDxu+biaeaPW53mxXrg4ONXfP3JyNYhMDD0rhk3TBBiDqQHvbih8VpeOVDFrzpmE0mLOUVYhKl20IlQeQ/wiZtvEzEOkDcwt1cIsq27PWlUR2+oSID/NdrzXrm9wNZbzmhu/EvQOADAUIsPmdbc6MS3dxoDgsGrYDH/3Ox+PuLtDoiAzSp74Ax9In+0mFSRXWJQKOcUeCQscApgtnlx87wWiM9t7Cih5vRpYis9IokeRXm0dQF1G9YiWkeskPy1brM8bodm/AcguWyS3m8sMxyjIG18FOOy6LbiOIwqHTL6HQt8eZPQye9NL1UFJ8xFdm+vuNFuMnVf2P0vHWioqjTmbsIZJ7OQ0BsptvpPy/sdH3bMKwlYXh7fU/vHmSofWN0dVYw/JPrjSvnDzKRhNPuVAV2u00+p3Foh0NJHJtdWKn2VUX5lkEYppi321FugUMEBLxf9edQpRHIddmQ8JumuGOgAZ+rZbhe467wjMP5NglCe/t5skpgdo/J1EVsvcZ5MeRJFpg/XN1Q5NV13OLfuXTKTb6JIS7OD8raqd1k59xbyOUlL7p2fqrKwykak+WWzczxmJ8iaLQ9OzygdtDG9hXign/nF4O5KPl28suuyqXi+OB+CUcwXkbtiqhi6EsdAaaAMkk6kcRc76FOZqOFQjmAN95alnrI8CJZ5TuYRjuKioGqUBivM9fbhtCcsx4UWhGruSuHSOMVwZYKI3ARiTYZy2mJrlWjXKezW/mf0pofm4TKIshmE8ybw0OP+7lsUHlIXZ4x/8egQ2PRP9CZ05qQzj8tWNTHMxsPxtSszy5qYu1Caip6vYDWc1nuFVze9AOdxtAZnM8uaWdw62+Q7vr+D6eebOc34TEFuYbRguA
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA0PR12MB4430.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(346002)(396003)(366004)(376002)(136003)(39860400002)(31696002)(36756003)(2906002)(66946007)(83380400001)(38350700002)(110136005)(86362001)(38100700002)(31686004)(16576012)(7416002)(316002)(5660300002)(52116002)(8936002)(478600001)(45080400002)(956004)(4326008)(53546011)(186003)(966005)(6486002)(66476007)(66556008)(26005)(8676002)(2616005)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?TGZqeXVWcGR0VmhVenhSYW1FNWt6SzZiNkp5Y2JiQ2I0emlJR2pQT1JSZUpm?=
+ =?utf-8?B?a1REbzBCdFlrME4ycENITUlaQkdCc2t2TzBzSGo3UStQbjZFUDlpWnRzbHNh?=
+ =?utf-8?B?QUt4aGIwc1lFdmZRWXJQOW1iRFVqR25NcmJNZ3FHTmhiZzhnSHk1Mk10RE5x?=
+ =?utf-8?B?bHU2eHBmQktCcFFWUWZJYnpQSnFjWUxCeVhxODFWeXovZ3R4djhmYUE5WFZq?=
+ =?utf-8?B?a04zY0l0ZS9XQ3ZCcGNKYWQxd3RPRlNFRWN3d1NsdU5hUDJtMGh5NzB1RnpN?=
+ =?utf-8?B?VjgzWEpIamtheG44bVQvemYzS1RxWmpEOWlxMlZ0K0tBY2xZMUlORW1XSkQr?=
+ =?utf-8?B?aEE2N0xEWEVJSE5kK0xJNmdVd2pnazd4VHNFWUlXQVpFdVdhcHMwQXN6eGRB?=
+ =?utf-8?B?a1FZNXJwWEN2WXNRQ0c3YitqWU9McHQ1YVJYNXpDTzFpVHJyM2svQkxJS3A4?=
+ =?utf-8?B?bG1FTUF5M3lwY1BacjVJOWtHV0VlcEJvOGRqQ3hnMjdJd01HSmhzL3llM3BM?=
+ =?utf-8?B?ZWV2RXY5YVFHQzJQKzVLYlgwODBBdzRJeE1NL2ltRy9RbzNsdlVaRmRMVndq?=
+ =?utf-8?B?V3JlMXVQbDhra0FTSlV4d2sxblB3YmZYVTZqUi9laU1FYndDbS9wS1psaWxP?=
+ =?utf-8?B?UkhESlhEU2lqNkwxbktLZEMyeXRralBGNzQwRzlKS0ZIL1FJMVY0Vm9YNGVP?=
+ =?utf-8?B?WWUvWmR5SFhBdkhvOG5GTWZaK2w3OVRaMWNVRmdhdGJDM0Z6SGVLTVZDZVJ1?=
+ =?utf-8?B?UlNoRllPRFVkVFJnMWowSUdEaldsR0VTd1FUd0JyWEtEbnRoSEg3R1Q0NTd2?=
+ =?utf-8?B?c1l4d2o3a1lVTGlDZHdzWDFnYzhRbytQRVE4ZlFvMGU3MG52Unlad29nVFVS?=
+ =?utf-8?B?akdRY0lIRHZvdktLdUt0OUFZOTV0dFhCdXhaY3NORWlDL1h2ZTQwdXFIVGVo?=
+ =?utf-8?B?OXFrcW1vdFNjejBuOWZIc2RMYWt2ZS9TdVowZHNZM2xqSmJrR1NSa2FZT1Jx?=
+ =?utf-8?B?dUQwVDg0MmdRYnVsSHdYUVRCQVhlN2xhTUE0ZzFTZ0t3dGZsQzhmKzBZKzJp?=
+ =?utf-8?B?MlNTVDRWYmgwWk5jQ3I5QmREZGpMNXVpVjBwK3Rjb21yc2lkQ1hucEdXMjFn?=
+ =?utf-8?B?ZlpVelJSUk9HVW4raGp5WkQvS09SdHJGc2o1RW82eld5SDN5UmQ3eGxQWmRu?=
+ =?utf-8?B?YjFmUmhxREtYcHN6Y002Y2tkRWJURUN3SGZyVmlPaWgwY1hiYlk0L2QzbGlj?=
+ =?utf-8?B?eHJyaVhIZmx0Y0N4M2ZQL0xKNE1zOHBXSjVzYitSM2ZKL1JJN1hBZWZwRmkr?=
+ =?utf-8?B?TE1xVjlVdUhJMGJFMHkrVWpuOVF6MGtyQkt5QkU3NytTV08vODlGSk00VGl5?=
+ =?utf-8?B?d3dVNmdEd1c3K2NlL1I1MW84TEorVGNFOU1xTDArUlY1aC9SdWRqWWlGanEz?=
+ =?utf-8?B?RFNSWDc3TldDcEtCSXk0ZVd5U3hIUEtyM01yTzF5TUQ5akpQWjVubVg2aS95?=
+ =?utf-8?B?cVdRL3NMKzY5ZGlGZTVHZTJFcTNJT2NJdEE3Q2swY2lEamg1ZnhXUXdkUU02?=
+ =?utf-8?B?VVd1ajJETDhET1ZmSUxqTW9xVzkyV2hiTy8wUkRkaHZSN2lJT04rS09RcGJM?=
+ =?utf-8?B?b0pTK1p0T0JZeTExNmtwUDZmNDZXbWxYTnpJd2YwcFJoNnFoajRzN05GNU5N?=
+ =?utf-8?B?VGZrNldibExuRjBERldKZzVGY1hjOG01VXBOdUprQS9HUC8xaFdGN1lGazJu?=
+ =?utf-8?Q?QmRo8UOWBzrnvaJJGmHiFkHx493URTEIQviqvu4?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: abe5aca7-f0f2-4737-8211-08d9633b3f44
+X-MS-Exchange-CrossTenant-AuthSource: SA0PR12MB4430.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Aug 2021 18:00:36.7610
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: Be7zvYpmkKN2Gcmap1vRnE5hHjBENfT3IYsvMZI4g4lWK++LZiCMFKX6fzahDcZ0nB1nZF3KQbc9CryHCpAMbw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA0PR12MB4429
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
 
-The for-next branch of the xfs-linux repository at:
+On 8/18/2021 2:28 PM, Ralph Campbell wrote:
+> On 8/17/21 5:35 PM, Felix Kuehling wrote:
+>> Am 2021-08-17 um 8:01 p.m. schrieb Ralph Campbell:
+>>> On 8/12/21 11:31 PM, Alex Sierra wrote:
+>>>> From: Ralph Campbell <rcampbell@nvidia.com>
+>>>>
+>>>> ZONE_DEVICE struct pages have an extra reference count that
+>>>> complicates the
+>>>> code for put_page() and several places in the kernel that need to
+>>>> check the
+>>>> reference count to see that a page is not being used (gup, compaction,
+>>>> migration, etc.). Clean up the code so the reference count doesn't
+>>>> need to
+>>>> be treated specially for ZONE_DEVICE.
+>>>>
+>>>> v2:
+>>>> AS: merged this patch in linux 5.11 version
+>>>>
+>>>> v5:
+>>>> AS: add condition at try_grab_page to check for the zone device type,
+>>>> while
+>>>> page ref counter is checked less/equal to zero. In case of device
+>>>> zone, pages
+>>>> ref counter are initialized to zero.
+>>>>
+>>>> Signed-off-by: Ralph Campbell <rcampbell@nvidia.com>
+>>>> Signed-off-by: Alex Sierra <alex.sierra@amd.com>
+>>>> ---
+>>>>    arch/powerpc/kvm/book3s_hv_uvmem.c     |  2 +-
+>>>>    drivers/gpu/drm/nouveau/nouveau_dmem.c |  2 +-
+>>>>    fs/dax.c                               |  4 +-
+>>>>    include/linux/dax.h                    |  2 +-
+>>>>    include/linux/memremap.h               |  7 +--
+>>>>    include/linux/mm.h                     | 13 +----
+>>>>    lib/test_hmm.c                         |  2 +-
+>>>>    mm/internal.h                          |  8 +++
+>>>>    mm/memremap.c                          | 68 
+>>>> +++++++-------------------
+>>>>    mm/migrate.c                           |  5 --
+>>>>    mm/page_alloc.c                        |  3 ++
+>>>>    mm/swap.c                              | 45 ++---------------
+>>>>    12 files changed, 46 insertions(+), 115 deletions(-)
+>>>>
+>>> I haven't seen a response to the issues I raised back at v3 of this
+>>> series.
+>>> https://nam11.safelinks.protection.outlook.com/?url=https%3A%2F%2Flore.kernel.org%2Flinux-mm%2F4f6dd918-d79b-1aa7-3a4c-caa67ddc29bc%40nvidia.com%2F&amp;data=04%7C01%7Calex.sierra%40amd.com%7Cd2bd2d4fbf764528540908d9627e5dcd%7C3dd8961fe4884e608e11a82d994e183d%7C0%7C0%7C637649117156919772%7CUnknown%7CTWFpbGZsb3d8eyJWIjoiMC4wLjAwMDAiLCJQIjoiV2luMzIiLCJBTiI6Ik1haWwiLCJXVCI6Mn0%3D%7C1000&amp;sdata=P7FxYm%2BkJaCkMFa3OHtuKrPOn7SvytFRmYQdIzq7rN4%3D&amp;reserved=0 
+>>>
+>>>
+>>>
+>>> Did I miss something?
+>> I think part of the response was that we did more testing. Alex added
+>> support for DEVICE_GENERIC pages to test_hmm and he ran DAX tests
+>> recommended by Theodore Tso. In that testing he ran into a WARN_ON_ONCE
+>> about a zero page refcount in try_get_page. The fix is in the latest
+>> version of patch 2. But it's already obsolete because John Hubbard is
+>> about to remove that function altogether.
+>>
+>> I think the issues you raised were more uncertainty than known bugs. It
+>> seems the fact that you can have DAX pages with 0 refcount is a feature
+>> more than a bug.
+>>
+>> Regards,
+>>    Felix
+>
+> Did you test on a system without CONFIG_ARCH_HAS_PTE_SPECIAL defined?
+> In that case, mmap() of a DAX device will call insert_page() which calls
+> get_page() which would trigger VM_BUG_ON_PAGE().
+>
+> I can believe it is OK for PTE_SPECIAL page table entries to have no
+> struct page or that MEMORY_DEVICE_GENERIC struct pages be mapped with
+> a zero reference count using insert_pfn().
+Hi Ralph,
+We have tried the DAX tests with and without CONFIG_ARCH_HAS_PTE_SPECIAL 
+defined.
+Apparently none of the tests touches that condition for a DAX device. Of 
+course,
+that doesn't mean it could happen.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+Regards,
+Alex S.
 
-has just been updated.
+>
+>
+> I find it hard to believe that other MM developers don't see an issue
+> with a struct page with refcount == 0 and mapcount == 1.
+>
+> I don't see where init_page_count() is being called for the
+> MEMORY_DEVICE_GENERIC or MEMORY_DEVICE_PRIVATE struct pages the AMD
+> driver allocates and passes to migrate_vma_setup().
+> Looks like svm_migrate_get_vram_page() needs to call init_page_count()
+> instead of get_page(). (I'm looking at branch 
+> origin/alexsierrag/device_generic
+> https://nam11.safelinks.protection.outlook.com/?url=https%3A%2F%2Fgithub.com%2FRadeonOpenCompute%2FROCK-Kernel-Driver.git&amp;data=04%7C01%7Calex.sierra%40amd.com%7Cd2bd2d4fbf764528540908d9627e5dcd%7C3dd8961fe4884e608e11a82d994e183d%7C0%7C0%7C637649117156919772%7CUnknown%7CTWFpbGZsb3d8eyJWIjoiMC4wLjAwMDAiLCJQIjoiV2luMzIiLCJBTiI6Ik1haWwiLCJXVCI6Mn0%3D%7C1000&amp;sdata=IXe8HP2s8x5OdJdERBkGOYJCQk3iqCu5AYkwpDL8zec%3D&amp;reserved=0)
+Yes, you're right. My bad. Thanks for catching this up. I didn't realize 
+I was missing
+to define CONFIG_DEBUG_VM on my build. Therefore this BUG was never caught.
+It worked after I replaced get_pages by init_page_count at
+svm_migrate_get_vram_page. However, I don't think this is the best way 
+to fix it.
+Ideally, get_pages call should work for device pages with ref count 
+equal to 0
+too. Otherwise, we could overwrite refcounter if someone else is 
+grabbing the page
+concurrently.
+I was thinking to add a special condition in get_pages for dev pages. 
+This could
+also fix the insert_page -> get_page call from a DAX device.
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
+Regards,
+Alex S.
+>
+>
+> Also, what about the other places where is_device_private_page() is 
+> called?
+> Don't they need to be updated to call is_device_page() instead?
+> One of my goals for this patch was to remove special casing reference 
+> counts
+> for ZONE_DEVICE pages in rmap.c, etc.
+Correct, is_device_private_page is still used in rmap, memcontrol and 
+migrate.c files
+Looks like rmap and memcontrol should be replaced by is_device_page 
+function. However,
+I still need test to validate this. For migrate.c is used in 
+remove_migration_pte and
+migrate_vma_insert_page, however these are specific conditions for 
+private device type
+Thanks for raise these questions, I think we're getting close.
 
-This isn't the final branch push for 5.15 (the tracepoint and opstate
-cleanups are still in review) but I wanted to get the last of Dave's
-logging fixes and performance improvements out for testing in for-next
-this week.
-
-The new head of the for-next branch is commit:
-
-a437b9b488e3 xfs: remove support for untagged lookups in xfs_icwalk*
-
-New Commits:
-
-Allison Henderson (2):
-      [df0826312a23] xfs: add attr state machine tracepoints
-      [5e68b4c7fb64] xfs: Rename __xfs_attr_rmtval_remove
-
-Christoph Hellwig (5):
-      [40b52225e58c] xfs: remove support for disabling quota accounting on a mounted file system
-      [777eb1fa857e] xfs: remove xfs_dqrele_all_inodes
-      [e497dfba6bd7] xfs: remove the flags argument to xfs_qm_dquot_walk
-      [149e53afc851] xfs: remove the active vs running quota differentiation
-      [a437b9b488e3] xfs: remove support for untagged lookups in xfs_icwalk*
-
-Darrick J. Wong (33):
-      [c6c2066db396] xfs: move xfs_inactive call to xfs_inode_mark_reclaimable
-      [62af7d54a0ec] xfs: detach dquots from inode if we don't need to inactivate it
-      [7d6f07d2c5ad] xfs: queue inactivation immediately when free space is tight
-      [108523b8de67] xfs: queue inactivation immediately when quota is nearing enforcement
-      [65f03d8652b2] xfs: queue inactivation immediately when free realtime extents are tight
-      [2eb665027b65] xfs: inactivate inodes any time we try to free speculative preallocations
-      [01e8f379a489] xfs: flush inode inactivation work when compiling usage statistics
-      [6f6490914d9b] xfs: don't run speculative preallocation gc when fs is frozen
-      [e8d04c2abceb] xfs: use background worker pool when transactions can't get free space
-      [a6343e4d9278] xfs: avoid buffer deadlocks when walking fs inodes
-      [40b1de007aca] xfs: throttle inode inactivation queuing on memory reclaim
-      [b7df7630cccd] xfs: fix silly whitespace problems with kernel libxfs
-      [f19ee6bb1a72] xfs: drop experimental warnings for bigtime and inobtcount
-      [48c6615cc557] xfs: grab active perag ref when reading AG headers
-      [43059d5416c9] xfs: dump log intent items that cannot be recovered due to corruption
-      [908ce71e54f8] xfs: allow setting and clearing of log incompat feature flags
-      [2b73a2c817be] xfs: clear log incompat feature bits when the log is idle
-      [4bc619833f73] xfs: refactor xfs_iget calls from log intent recovery
-      [c02f6529864a] xfs: make xfs_rtalloc_query_range input parameters const
-      [9ab72f222774] xfs: fix off-by-one error when the last rt extent is in use
-      [7e1826e05ba6] xfs: make fsmap backend function key parameters const
-      [54406764c6a6] xfs: remove unnecessary agno variable from struct xchk_ag
-      [7f89c838396e] xfs: add trace point for fs shutdown
-      [d29d5577774d] xfs: make the key parameters to all btree key comparison functions const
-      [04dcb47482a9] xfs: make the key parameters to all btree query range functions const
-      [159eb69dba8b] xfs: make the record pointer passed to query_range functions const
-      [23825cd14876] xfs: mark the record passed into btree init_key functions as const
-      [8e38dc88a67b] xfs: make the keys and records passed to btree inorder functions const
-      [22ece4e836be] xfs: mark the record passed into xchk_btree functions as const
-      [b5a6e5fe0e68] xfs: make the pointer passed to btree set_root functions const
-      [deb06b9ab6df] xfs: make the start pointer passed to btree alloc_block functions const
-      [60e265f7f85a] xfs: make the start pointer passed to btree update_lastrec functions const
-      [32816fd7920b] xfs: constify btree function parameters that are not modified
-
-Dave Chinner (24):
-      [f1653c2e2831] xfs: introduce CPU hotplug infrastructure
-      [0ed17f01c854] xfs: introduce all-mounts list for cpu hotplug notifications
-      [ab23a7768739] xfs: per-cpu deferred inode inactivation queues
-      [de2860f46362] mm: Add kvrealloc()
-      [98fe2c3cef21] xfs: remove kmem_alloc_io()
-      [d634525db63e] xfs: replace kmem_alloc_large() with kvmalloc()
-      [2039a272300b] xfs: convert XLOG_FORCED_SHUTDOWN() to xlog_is_shutdown()
-      [5112e2067bd9] xfs: XLOG_STATE_IOERROR must die
-      [fd67d8a07208] xfs: move recovery needed state updates to xfs_log_mount_finish
-      [e1d06e5f668a] xfs: convert log flags to an operational state field
-      [b36d4651e165] xfs: make forced shutdown processing atomic
-      [8bb92005b0e4] xfs: rework xlog_state_do_callback()
-      [aad7272a9208] xfs: separate out log shutdown callback processing
-      [502a01fac098] xfs: don't run shutdown callbacks on active iclogs
-      [2562c322404d] xfs: log head and tail aren't reliable during shutdown
-      [2ce82b722de9] xfs: move xlog_commit_record to xfs_log_cil.c
-      [c45aba40cf5b] xfs: pass a CIL context to xlog_write()
-      [bf034bc82780] xfs: factor out log write ordering from xlog_cil_push_work()
-      [caa80090d17c] xfs: attach iclog callbacks in xlog_cil_set_ctx_write_state()
-      [68a74dcae673] xfs: order CIL checkpoint start records
-      [0020a190cf3e] xfs: AIL needs asynchronous CIL forcing
-      [39823d0fac94] xfs: CIL work is serialised, not pipelined
-      [33c0dd7898a1] xfs: move the CIL workqueue to the CIL
-      [21b4ee7029c9] xfs: drop ->writepage completely
-
-Dwaipayan Ray (1):
-      [edf27485eb56] xfs: cleanup __FUNCTION__ usage
-
-
-Code Diffstat:
-
- fs/xfs/kmem.c                      |  64 ----
- fs/xfs/kmem.h                      |   2 -
- fs/xfs/libxfs/xfs_alloc.c          |   6 +-
- fs/xfs/libxfs/xfs_alloc.h          |  10 +-
- fs/xfs/libxfs/xfs_alloc_btree.c    |  94 ++---
- fs/xfs/libxfs/xfs_attr.c           |  37 +-
- fs/xfs/libxfs/xfs_attr_leaf.c      |   4 +-
- fs/xfs/libxfs/xfs_attr_remote.c    |   3 +-
- fs/xfs/libxfs/xfs_attr_remote.h    |   2 +-
- fs/xfs/libxfs/xfs_bmap_btree.c     |  48 +--
- fs/xfs/libxfs/xfs_bmap_btree.h     |   7 +-
- fs/xfs/libxfs/xfs_btree.c          |  84 ++---
- fs/xfs/libxfs/xfs_btree.h          |  56 +--
- fs/xfs/libxfs/xfs_btree_staging.c  |  14 +-
- fs/xfs/libxfs/xfs_format.h         |  17 +-
- fs/xfs/libxfs/xfs_ialloc.c         |   6 +-
- fs/xfs/libxfs/xfs_ialloc.h         |   3 +-
- fs/xfs/libxfs/xfs_ialloc_btree.c   |  70 ++--
- fs/xfs/libxfs/xfs_log_recover.h    |   2 +
- fs/xfs/libxfs/xfs_quota_defs.h     |  30 +-
- fs/xfs/libxfs/xfs_refcount.c       |   4 +-
- fs/xfs/libxfs/xfs_refcount.h       |   2 +-
- fs/xfs/libxfs/xfs_refcount_btree.c |  48 +--
- fs/xfs/libxfs/xfs_rmap.c           |  28 +-
- fs/xfs/libxfs/xfs_rmap.h           |  11 +-
- fs/xfs/libxfs/xfs_rmap_btree.c     |  64 ++--
- fs/xfs/libxfs/xfs_rmap_btree.h     |   2 +-
- fs/xfs/libxfs/xfs_rtbitmap.c       |  14 +-
- fs/xfs/libxfs/xfs_trans_resv.c     |  30 --
- fs/xfs/libxfs/xfs_trans_resv.h     |   2 -
- fs/xfs/scrub/agheader.c            |  27 +-
- fs/xfs/scrub/agheader_repair.c     |  41 ++-
- fs/xfs/scrub/alloc.c               |   2 +-
- fs/xfs/scrub/attr.c                |  14 +-
- fs/xfs/scrub/attr.h                |   3 -
- fs/xfs/scrub/bmap.c                |  31 +-
- fs/xfs/scrub/btree.c               |   2 +-
- fs/xfs/scrub/btree.h               |   4 +-
- fs/xfs/scrub/common.c              |  61 ++-
- fs/xfs/scrub/common.h              |  18 +-
- fs/xfs/scrub/fscounters.c          |   2 +-
- fs/xfs/scrub/ialloc.c              |   2 +-
- fs/xfs/scrub/inode.c               |   2 +-
- fs/xfs/scrub/quota.c               |   2 +-
- fs/xfs/scrub/refcount.c            |   4 +-
- fs/xfs/scrub/repair.c              |  20 +-
- fs/xfs/scrub/rmap.c                |   2 +-
- fs/xfs/scrub/rtbitmap.c            |   2 +-
- fs/xfs/scrub/scrub.c               |   3 -
- fs/xfs/scrub/scrub.h               |   1 -
- fs/xfs/xfs_aops.c                  |  17 -
- fs/xfs/xfs_bmap_item.c             |  14 +-
- fs/xfs/xfs_buf.c                   |   3 +-
- fs/xfs/xfs_buf.h                   |   6 -
- fs/xfs/xfs_dquot.c                 |   3 -
- fs/xfs/xfs_dquot.h                 |  10 +
- fs/xfs/xfs_dquot_item.c            | 134 -------
- fs/xfs/xfs_dquot_item.h            |  17 -
- fs/xfs/xfs_error.h                 |  12 +
- fs/xfs/xfs_extfree_item.c          |   3 +
- fs/xfs/xfs_fsmap.c                 |  64 ++--
- fs/xfs/xfs_fsops.c                 |  66 ++--
- fs/xfs/xfs_icache.c                | 736 ++++++++++++++++++++++++++++---------
- fs/xfs/xfs_icache.h                |  14 +-
- fs/xfs/xfs_icreate_item.c          |   4 +-
- fs/xfs/xfs_inode.c                 |  53 +++
- fs/xfs/xfs_inode.h                 |  22 +-
- fs/xfs/xfs_ioctl.c                 |   2 +-
- fs/xfs/xfs_iops.c                  |   4 +-
- fs/xfs/xfs_itable.c                |  42 ++-
- fs/xfs/xfs_iwalk.c                 |  33 +-
- fs/xfs/xfs_log.c                   | 666 +++++++++++++++++----------------
- fs/xfs/xfs_log.h                   |   7 +-
- fs/xfs/xfs_log_cil.c               | 446 +++++++++++++++-------
- fs/xfs/xfs_log_priv.h              |  66 ++--
- fs/xfs/xfs_log_recover.c           | 142 ++++---
- fs/xfs/xfs_mount.c                 | 171 ++++++++-
- fs/xfs/xfs_mount.h                 |  76 +++-
- fs/xfs/xfs_qm.c                    |  78 ++--
- fs/xfs/xfs_qm.h                    |   3 -
- fs/xfs/xfs_qm_syscalls.c           | 251 ++-----------
- fs/xfs/xfs_quota.h                 |   2 +
- fs/xfs/xfs_quotaops.c              |  30 +-
- fs/xfs/xfs_refcount_item.c         |   3 +
- fs/xfs/xfs_rmap_item.c             |   3 +
- fs/xfs/xfs_rtalloc.h               |  13 +-
- fs/xfs/xfs_super.c                 | 328 +++++++++++------
- fs/xfs/xfs_sysfs.c                 |   1 +
- fs/xfs/xfs_trace.c                 |   2 +
- fs/xfs/xfs_trace.h                 | 147 +++++++-
- fs/xfs/xfs_trans.c                 |   9 +-
- fs/xfs/xfs_trans_ail.c             |  11 +-
- fs/xfs/xfs_trans_dquot.c           |  49 +--
- include/linux/cpuhotplug.h         |   1 +
- include/linux/mm.h                 |   2 +
- mm/util.c                          |  15 +
- 96 files changed, 2807 insertions(+), 1981 deletions(-)
+Regards,
+Alex S.
+>
+> I still think this patch needs an ACK from a FS/DAX maintainer.
+>
