@@ -7,194 +7,195 @@ X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7C3BC4338F
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Aug 2021 12:43:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51F40C4338F
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Aug 2021 12:48:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9C0106023D
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Aug 2021 12:43:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3074B6112D
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Aug 2021 12:48:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230505AbhHSMno (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 19 Aug 2021 08:43:44 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:56377 "EHLO
+        id S230505AbhHSMtY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 19 Aug 2021 08:49:24 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:22969 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230292AbhHSMno (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Aug 2021 08:43:44 -0400
+        by vger.kernel.org with ESMTP id S229577AbhHSMtY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Aug 2021 08:49:24 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1629376987;
+        s=mimecast20190719; t=1629377327;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=rG7f8VvV1A3zcELQKsHG6MY/UvwL4DFm5DxuSX+vunw=;
-        b=eUAQPE0BwqBcQuc3IJchxgTJAmnNvaTVxTAgKMdMy3+XSICGvMtX4SzQ1AWruQM2PGHd+9
-        7J14idsxE/kwU3/q43zjGXYS+UT6REMJ8Jed4KukR4MRVgw442avK/LbIQ/JpLJMNNQGK+
-        4cZhH6T4mOhUpYeS62xrfIiDdGwMMK4=
-Received: from mail-ej1-f69.google.com (mail-ej1-f69.google.com
- [209.85.218.69]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-484-VhEdt6vpNZ2c-1f40dmmBA-1; Thu, 19 Aug 2021 08:43:06 -0400
-X-MC-Unique: VhEdt6vpNZ2c-1f40dmmBA-1
-Received: by mail-ej1-f69.google.com with SMTP id ne21-20020a1709077b95b029057eb61c6fdfso2181657ejc.22
-        for <linux-xfs@vger.kernel.org>; Thu, 19 Aug 2021 05:43:05 -0700 (PDT)
+        bh=w5KlRz+E1Ug1+yqih4cATS6Spj7KN7M23UGqpGY2yF8=;
+        b=OXaNCH6PXEPAD8JfWEAPqjoygTIRVhvrAvPGNw+b/Mh/TQfhqyQLbz1fY3gndXxe+g7Av4
+        qhIN5J8TVUc4nIMzTjyg2au+gBoQATKlCeHuHbaUbiUgRG5+IHNxpIbpVSYFogqQvD2DbR
+        CdvrVIjwttIK7wb50QeLCtFyBPMrNOA=
+Received: from mail-ed1-f70.google.com (mail-ed1-f70.google.com
+ [209.85.208.70]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-468-JR1wWyzVNOqBbJBWhnPeVg-1; Thu, 19 Aug 2021 08:48:46 -0400
+X-MC-Unique: JR1wWyzVNOqBbJBWhnPeVg-1
+Received: by mail-ed1-f70.google.com with SMTP id p2-20020a50c9420000b02903a12bbba1ebso2758577edh.6
+        for <linux-xfs@vger.kernel.org>; Thu, 19 Aug 2021 05:48:45 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id
          :mail-followup-to:references:mime-version:content-disposition
          :in-reply-to;
-        bh=rG7f8VvV1A3zcELQKsHG6MY/UvwL4DFm5DxuSX+vunw=;
-        b=Yp3OCS9/GjA3XcO2GEP2glVyV9qPjVU8sfRTzS6+8MewrLUdw5Wdc6MBKYmI/foMKH
-         giU2Qz5J+b09pqHvClsSxeC9DmRWPC2MRsFY4FLpA4c9rcYrpFGft0BM3wkeO3xyaD02
-         l+0l9LwRQfPMixjxwKS2tqT+4eIxsc0UfkGDV12UmtubfZoK1K9i62vEz7cwzxy8XkK1
-         LBQjjGEg3Pj3dtrujn8s/85HxCz6oh8MffLiF/Fb6zhmBG/tNf9odhzcd1xtHATRrBgv
-         FClcgIHj2E/O3wuqgytlqZpIJZp91ITExHci4rr15cptSMCkkcq+hRx0oiAsH/vcSs0H
-         9HAg==
-X-Gm-Message-State: AOAM531UloW0E0nIe1N8KMqK4kZdaTx72NUHEN+loIJEbOXG0YLJGxIc
-        GKNAYod/+a6H+ht/+PNtaQQdsuZ7iIK29Lohy1snKvgje5xLj46TbYjWX6IRy2qLvqasp3kFNCH
-        oa1fe7OO8MBciNpTrD7rb
-X-Received: by 2002:a05:6402:1912:: with SMTP id e18mr16059517edz.135.1629376984962;
-        Thu, 19 Aug 2021 05:43:04 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzqD0TsJZnUNZYhhm4hhgkw0Y3o5IYk/AmYWl8/cZJ3/EKHOlgSJv8K0mTeyRZQH9uj/tYE4w==
-X-Received: by 2002:a05:6402:1912:: with SMTP id e18mr16059504edz.135.1629376984790;
-        Thu, 19 Aug 2021 05:43:04 -0700 (PDT)
+        bh=w5KlRz+E1Ug1+yqih4cATS6Spj7KN7M23UGqpGY2yF8=;
+        b=jScYLxQ1/QW+917zI7jP78fQspn+iU3lCxp9hmZJO27FLoOgCgDBmfWmGBBeq4zyIU
+         vjQUyf34Bp9FTtwbJymHWAAoZjCH28GwWg5gcrbgDblHMi9XC8kb3Q/KOkxeSWXghiPD
+         y+kTzo7SmKCwaej/0D/QNcY9aUhF7+D2sKkDWyCDEi1huzfG6zEyzGX/4nq0WbS9d5jg
+         w5WBJneZ/hx5xQonts/QqHTwcuMZ/qV0hTNjWzzgDHHw2r/XWmhEz3ZxYLsYaSixA3bG
+         kMG7sX4zg3qNVi24OeSzX8jc68m73JeW3NrJAXolIx1cyOTdnmonW1qSMLR+f1WccLvg
+         H54Q==
+X-Gm-Message-State: AOAM531GDYaLxq1iE9Y6RvOpG0AgeSLD4rvQSoyPIDsK/Jc479WSkrlG
+        Z2WrKnidGfmtGj/LbxtcdaVgs48JjkM2Nkg3RDRD9thNI8r5s96BppCBhhKs3XMveYQ7NCiz6o3
+        trTuDXXwCSQTKNivt0IX3
+X-Received: by 2002:a17:906:a044:: with SMTP id bg4mr15593447ejb.312.1629377324923;
+        Thu, 19 Aug 2021 05:48:44 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJwoa1p20H9jpViixq6HB7y8+e2HhI02iuZRKzOZo3cB0U/TMFpMBG1px/q5fxU/PqBY6NNsyQ==
+X-Received: by 2002:a17:906:a044:: with SMTP id bg4mr15593440ejb.312.1629377324722;
+        Thu, 19 Aug 2021 05:48:44 -0700 (PDT)
 Received: from omega.lan (ip4-46-39-172-19.cust.nbox.cz. [46.39.172.19])
-        by smtp.gmail.com with ESMTPSA id kv4sm1268252ejc.35.2021.08.19.05.43.03
+        by smtp.gmail.com with ESMTPSA id dv8sm1219337ejb.93.2021.08.19.05.48.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 19 Aug 2021 05:43:04 -0700 (PDT)
-Date:   Thu, 19 Aug 2021 14:43:02 +0200
+        Thu, 19 Aug 2021 05:48:44 -0700 (PDT)
+Date:   Thu, 19 Aug 2021 14:48:42 +0200
 From:   Carlos Maiolino <cmaiolino@redhat.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     david@fromorbit.com, sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 12/15] xfs: resolve fork names in trace output
-Message-ID: <20210819124302.qc2uwyaocb2wunyv@omega.lan>
+Subject: Re: [PATCH 13/15] xfs: standardize remaining xfs_buf length
+ tracepoints
+Message-ID: <20210819124842.zz3bgmn5z4wyo2zj@omega.lan>
 Mail-Followup-To: "Darrick J. Wong" <djwong@kernel.org>,
         david@fromorbit.com, sandeen@sandeen.net, linux-xfs@vger.kernel.org
 References: <162924373176.761813.10896002154570305865.stgit@magnolia>
- <162924379815.761813.4507794744090240998.stgit@magnolia>
+ <162924380364.761813.15066686718183338281.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <162924379815.761813.4507794744090240998.stgit@magnolia>
+In-Reply-To: <162924380364.761813.15066686718183338281.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 17, 2021 at 04:43:18PM -0700, Darrick J. Wong wrote:
+On Tue, Aug 17, 2021 at 04:43:23PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Emit whichfork values as text strings in the ftrace output.
+> For the remaining xfs_buf tracepoints, convert all the tags to
+> xfs_daddr_t units and retag them 'daddrcount' to match everything else.
 > 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
 
+I agree with Dave on s/daddrcount/bbcount/, other than that:
+
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
->  fs/xfs/libxfs/xfs_types.h |    5 +++++
->  fs/xfs/scrub/trace.h      |   16 ++++++++--------
->  fs/xfs/xfs_trace.h        |    6 +++---
->  3 files changed, 16 insertions(+), 11 deletions(-)
+>  fs/xfs/xfs_trace.h |   24 ++++++++++++------------
+>  1 file changed, 12 insertions(+), 12 deletions(-)
 > 
 > 
-> diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
-> index 0870ef6f933d..b6da06b40989 100644
-> --- a/fs/xfs/libxfs/xfs_types.h
-> +++ b/fs/xfs/libxfs/xfs_types.h
-> @@ -87,6 +87,11 @@ typedef void *		xfs_failaddr_t;
->  #define	XFS_ATTR_FORK	1
->  #define	XFS_COW_FORK	2
->  
-> +#define XFS_WHICHFORK_STRINGS \
-> +	{ XFS_DATA_FORK, 	"data" }, \
-> +	{ XFS_ATTR_FORK,	"attr" }, \
-> +	{ XFS_COW_FORK,		"cow" }
-> +
->  /*
->   * Min numbers of data/attr fork btree root pointers.
->   */
-> diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-> index cb5a74028b63..36f86b1497f4 100644
-> --- a/fs/xfs/scrub/trace.h
-> +++ b/fs/xfs/scrub/trace.h
-> @@ -176,10 +176,10 @@ TRACE_EVENT(xchk_file_op_error,
->  		__entry->error = error;
->  		__entry->ret_ip = ret_ip;
->  	),
-> -	TP_printk("dev %d:%d ino 0x%llx fork %d type %s fileoff 0x%llx error %d ret_ip %pS",
-> +	TP_printk("dev %d:%d ino 0x%llx fork %s type %s fileoff 0x%llx error %d ret_ip %pS",
->  		  MAJOR(__entry->dev), MINOR(__entry->dev),
->  		  __entry->ino,
-> -		  __entry->whichfork,
-> +		  __print_symbolic(__entry->whichfork, XFS_WHICHFORK_STRINGS),
->  		  __print_symbolic(__entry->type, XFS_SCRUB_TYPE_STRINGS),
->  		  __entry->offset,
->  		  __entry->error,
-> @@ -273,10 +273,10 @@ DECLARE_EVENT_CLASS(xchk_fblock_error_class,
->  		__entry->offset = offset;
->  		__entry->ret_ip = ret_ip;
->  	),
-> -	TP_printk("dev %d:%d ino 0x%llx fork %d type %s fileoff 0x%llx ret_ip %pS",
-> +	TP_printk("dev %d:%d ino 0x%llx fork %s type %s fileoff 0x%llx ret_ip %pS",
->  		  MAJOR(__entry->dev), MINOR(__entry->dev),
->  		  __entry->ino,
-> -		  __entry->whichfork,
-> +		  __print_symbolic(__entry->whichfork, XFS_WHICHFORK_STRINGS),
->  		  __print_symbolic(__entry->type, XFS_SCRUB_TYPE_STRINGS),
->  		  __entry->offset,
->  		  __entry->ret_ip)
-> @@ -381,10 +381,10 @@ TRACE_EVENT(xchk_ifork_btree_op_error,
->  		__entry->error = error;
->  		__entry->ret_ip = ret_ip;
->  	),
-> -	TP_printk("dev %d:%d ino 0x%llx fork %d type %s btree %s level %d ptr %d agno 0x%x agbno 0x%x error %d ret_ip %pS",
-> +	TP_printk("dev %d:%d ino 0x%llx fork %s type %s btree %s level %d ptr %d agno 0x%x agbno 0x%x error %d ret_ip %pS",
->  		  MAJOR(__entry->dev), MINOR(__entry->dev),
->  		  __entry->ino,
-> -		  __entry->whichfork,
-> +		  __print_symbolic(__entry->whichfork, XFS_WHICHFORK_STRINGS),
->  		  __print_symbolic(__entry->type, XFS_SCRUB_TYPE_STRINGS),
->  		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
->  		  __entry->level,
-> @@ -460,10 +460,10 @@ TRACE_EVENT(xchk_ifork_btree_error,
->  		__entry->ptr = cur->bc_ptrs[level];
->  		__entry->ret_ip = ret_ip;
->  	),
-> -	TP_printk("dev %d:%d ino 0x%llx fork %d type %s btree %s level %d ptr %d agno 0x%x agbno 0x%x ret_ip %pS",
-> +	TP_printk("dev %d:%d ino 0x%llx fork %s type %s btree %s level %d ptr %d agno 0x%x agbno 0x%x ret_ip %pS",
->  		  MAJOR(__entry->dev), MINOR(__entry->dev),
->  		  __entry->ino,
-> -		  __entry->whichfork,
-> +		  __print_symbolic(__entry->whichfork, XFS_WHICHFORK_STRINGS),
->  		  __print_symbolic(__entry->type, XFS_SCRUB_TYPE_STRINGS),
->  		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
->  		  __entry->level,
 > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 29bf5fbfa71b..474fdaffdccf 100644
+> index 474fdaffdccf..3b53fd681ce7 100644
 > --- a/fs/xfs/xfs_trace.h
 > +++ b/fs/xfs/xfs_trace.h
-> @@ -1440,7 +1440,7 @@ DECLARE_EVENT_CLASS(xfs_imap_class,
->  		  __entry->size,
->  		  __entry->offset,
->  		  __entry->count,
-> -		  __entry->whichfork == XFS_COW_FORK ? "cow" : "data",
-> +		  __print_symbolic(__entry->whichfork, XFS_WHICHFORK_STRINGS),
->  		  __entry->startoff,
->  		  (int64_t)__entry->startblock,
->  		  __entry->blockcount)
-> @@ -2604,7 +2604,7 @@ DECLARE_EVENT_CLASS(xfs_map_extent_deferred_class,
->  		  __entry->agno,
->  		  __entry->agbno,
->  		  __entry->ino,
-> -		  __entry->whichfork == XFS_ATTR_FORK ? "attr" : "data",
-> +		  __print_symbolic(__entry->whichfork, XFS_WHICHFORK_STRINGS),
->  		  __entry->l_loff,
->  		  __entry->l_len,
->  		  __entry->l_state)
-> @@ -3851,7 +3851,7 @@ TRACE_EVENT(xfs_btree_commit_ifakeroot,
->  		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
->  		  __entry->agno,
->  		  __entry->agino,
-> -		  __entry->whichfork == XFS_ATTR_FORK ? "attr" : "data",
-> +		  __print_symbolic(__entry->whichfork, XFS_WHICHFORK_STRINGS),
->  		  __entry->levels,
->  		  __entry->blocks)
->  )
+> @@ -397,7 +397,7 @@ DECLARE_EVENT_CLASS(xfs_buf_class,
+>  		__entry->flags = bp->b_flags;
+>  		__entry->caller_ip = caller_ip;
+>  	),
+> -	TP_printk("dev %d:%d daddr 0x%llx nblks 0x%x hold %d pincount %d "
+> +	TP_printk("dev %d:%d daddr 0x%llx daddrcount 0x%x hold %d pincount %d "
+>  		  "lock %d flags %s caller %pS",
+>  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+>  		  (unsigned long long)__entry->bno,
+> @@ -448,7 +448,7 @@ DECLARE_EVENT_CLASS(xfs_buf_flags_class,
+>  	TP_STRUCT__entry(
+>  		__field(dev_t, dev)
+>  		__field(xfs_daddr_t, bno)
+> -		__field(size_t, buffer_length)
+> +		__field(unsigned int, length)
+>  		__field(int, hold)
+>  		__field(int, pincount)
+>  		__field(unsigned, lockval)
+> @@ -458,18 +458,18 @@ DECLARE_EVENT_CLASS(xfs_buf_flags_class,
+>  	TP_fast_assign(
+>  		__entry->dev = bp->b_target->bt_dev;
+>  		__entry->bno = bp->b_bn;
+> -		__entry->buffer_length = BBTOB(bp->b_length);
+> +		__entry->length = bp->b_length;
+>  		__entry->flags = flags;
+>  		__entry->hold = atomic_read(&bp->b_hold);
+>  		__entry->pincount = atomic_read(&bp->b_pin_count);
+>  		__entry->lockval = bp->b_sema.count;
+>  		__entry->caller_ip = caller_ip;
+>  	),
+> -	TP_printk("dev %d:%d daddr 0x%llx len 0x%zx hold %d pincount %d "
+> +	TP_printk("dev %d:%d daddr 0x%llx daddrcount 0x%x hold %d pincount %d "
+>  		  "lock %d flags %s caller %pS",
+>  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+>  		  (unsigned long long)__entry->bno,
+> -		  __entry->buffer_length,
+> +		  __entry->length,
+>  		  __entry->hold,
+>  		  __entry->pincount,
+>  		  __entry->lockval,
+> @@ -491,7 +491,7 @@ TRACE_EVENT(xfs_buf_ioerror,
+>  	TP_STRUCT__entry(
+>  		__field(dev_t, dev)
+>  		__field(xfs_daddr_t, bno)
+> -		__field(size_t, buffer_length)
+> +		__field(unsigned int, length)
+>  		__field(unsigned, flags)
+>  		__field(int, hold)
+>  		__field(int, pincount)
+> @@ -502,7 +502,7 @@ TRACE_EVENT(xfs_buf_ioerror,
+>  	TP_fast_assign(
+>  		__entry->dev = bp->b_target->bt_dev;
+>  		__entry->bno = bp->b_bn;
+> -		__entry->buffer_length = BBTOB(bp->b_length);
+> +		__entry->length = bp->b_length;
+>  		__entry->hold = atomic_read(&bp->b_hold);
+>  		__entry->pincount = atomic_read(&bp->b_pin_count);
+>  		__entry->lockval = bp->b_sema.count;
+> @@ -510,11 +510,11 @@ TRACE_EVENT(xfs_buf_ioerror,
+>  		__entry->flags = bp->b_flags;
+>  		__entry->caller_ip = caller_ip;
+>  	),
+> -	TP_printk("dev %d:%d daddr 0x%llx len 0x%zx hold %d pincount %d "
+> +	TP_printk("dev %d:%d daddr 0x%llx daddrcount 0x%x hold %d pincount %d "
+>  		  "lock %d error %d flags %s caller %pS",
+>  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+>  		  (unsigned long long)__entry->bno,
+> -		  __entry->buffer_length,
+> +		  __entry->length,
+>  		  __entry->hold,
+>  		  __entry->pincount,
+>  		  __entry->lockval,
+> @@ -529,7 +529,7 @@ DECLARE_EVENT_CLASS(xfs_buf_item_class,
+>  	TP_STRUCT__entry(
+>  		__field(dev_t, dev)
+>  		__field(xfs_daddr_t, buf_bno)
+> -		__field(size_t, buf_len)
+> +		__field(unsigned int, buf_len)
+>  		__field(int, buf_hold)
+>  		__field(int, buf_pincount)
+>  		__field(int, buf_lockval)
+> @@ -545,14 +545,14 @@ DECLARE_EVENT_CLASS(xfs_buf_item_class,
+>  		__entry->bli_recur = bip->bli_recur;
+>  		__entry->bli_refcount = atomic_read(&bip->bli_refcount);
+>  		__entry->buf_bno = bip->bli_buf->b_bn;
+> -		__entry->buf_len = BBTOB(bip->bli_buf->b_length);
+> +		__entry->buf_len = bip->bli_buf->b_length;
+>  		__entry->buf_flags = bip->bli_buf->b_flags;
+>  		__entry->buf_hold = atomic_read(&bip->bli_buf->b_hold);
+>  		__entry->buf_pincount = atomic_read(&bip->bli_buf->b_pin_count);
+>  		__entry->buf_lockval = bip->bli_buf->b_sema.count;
+>  		__entry->li_flags = bip->bli_item.li_flags;
+>  	),
+> -	TP_printk("dev %d:%d daddr 0x%llx len 0x%zx hold %d pincount %d "
+> +	TP_printk("dev %d:%d daddr 0x%llx daddrcount 0x%x hold %d pincount %d "
+>  		  "lock %d flags %s recur %d refcount %d bliflags %s "
+>  		  "liflags %s",
+>  		  MAJOR(__entry->dev), MINOR(__entry->dev),
 > 
 
 -- 
