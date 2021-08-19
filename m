@@ -2,97 +2,110 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE713C4338F
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Aug 2021 03:06:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 768B6C4338F
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Aug 2021 03:07:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D906F600CC
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Aug 2021 03:06:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5107961100
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Aug 2021 03:07:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235911AbhHSDH3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Aug 2021 23:07:29 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34118 "EHLO mail.kernel.org"
+        id S235932AbhHSDIE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Aug 2021 23:08:04 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34324 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236285AbhHSDH1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 18 Aug 2021 23:07:27 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 6DB016108E;
-        Thu, 19 Aug 2021 03:06:50 +0000 (UTC)
+        id S235792AbhHSDIE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 18 Aug 2021 23:08:04 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C956A6108E;
+        Thu, 19 Aug 2021 03:07:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1629342410;
-        bh=Pym+vsXaAu78PZnp917GuaEdY/oR5TzGwH8h0wya0c0=;
+        s=k20201202; t=1629342448;
+        bh=p1EkUZIGt95UkDXU6noKmy5akcDqZXySnPXHdxWKsCc=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=mn6vX+8B2urK8UIRuGDz22dn8vdFNQUmhXV0il3esqvYxy+D4Dcp2SPsZups2pOaR
-         MCosnToyMNI4Pox439L3oGqjz10Ab2aEXPw5E/OP+ZLunbEU9OvObfO4iTph9wMLUf
-         SyvUObdaTCHTxNV3uP66izXaji6Ja8zdg/0CTQU0S/oORUz7rykJIrcJrvINGmipc+
-         8vHMjPM+44qOGX4dt+/iR+ThdF+1zUUa7JiRWYzrKJNm6Du76LBMcEzQLpMQjZlFTI
-         Euj4KzRzP2D6su1W4Wnm+FFXpOtIsxknCg+2HuTVfDciD+fTN77lGXRyXQPKDHRBEh
-         AYQ26lGUb3hPg==
-Date:   Wed, 18 Aug 2021 20:06:49 -0700
+        b=cRdbuOIEgia5Kw0EBK83qosnUEwXYNT5WOkFrm4ibhhA7QceuUHzw7v3Bp6bFHhi9
+         bt9Zs42izWljXwq6Lh1bvIm6fnCKEk5gJ+v0vRr0t7CexK48YONbsL7eAVP0V3P1vU
+         8aH3ef8xE3PebA/H6lGToqXSeL8HcKpfThmK4quJjbXRuoPlMzWOGiCw6nzr6Xm2HB
+         +13EM6euaOuv8L4H8O2Orx/QuWLX/aXjCWyftGIEjm5oYLeny+gvXZJ2/ufNxzihbd
+         7jK138+vEy+Mzc46d5lAKQ3wq+q+vy+ySGXLOoaOFPrBNMcrI/StutHzmTIJ+CXYli
+         BrwKAnBBOsuPQ==
+Date:   Wed, 18 Aug 2021 20:07:28 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 09/15] xfs: disambiguate units for ftrace fields tagged
- "len"
-Message-ID: <20210819030649.GM12640@magnolia>
+To:     david@fromorbit.com, sandeen@sandeen.net
+Cc:     linux-xfs@vger.kernel.org
+Subject: [PATCH 16/15] xfs: start documenting common units and tags used in
+ tracepoints
+Message-ID: <20210819030728.GN12640@magnolia>
 References: <162924373176.761813.10896002154570305865.stgit@magnolia>
- <162924378154.761813.12918362378497157448.stgit@magnolia>
- <20210819030147.GZ3657114@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210819030147.GZ3657114@dread.disaster.area>
+In-Reply-To: <162924373176.761813.10896002154570305865.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 19, 2021 at 01:01:47PM +1000, Dave Chinner wrote:
-> On Tue, Aug 17, 2021 at 04:43:01PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Some of our tracepoints have a field known as "len".  That name doesn't
-> > describe any units, which makes the fields not very useful.  Rename the
-> > fields to capture units and ensure the format is hexadecimal.
-> > 
-> > "blockcount" are in units of fs blocks
-> > "daddrcount" are in units of 512b blocks
-> 
-> Hmmm. This is the first set of units I'll consider suggesting a
-> change in naming - "blockcount" seems ambiguous and easily mistaken,
-> while "daddrcount" just seems a bit wierd. Perhaps:
-> 
-> "fsbcount" is a length in units of fs blocks
-> "bbcount" is a length in units of basic (512b) blocks
+From: Darrick J. Wong <djwong@kernel.org>
 
-I like that suggestion.  Will update.
+Because there are a lot of tracepoints that express numeric data with
+an associated unit and tag, document what they are to help everyone else
+keep these thigns straight.
 
---D
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+ fs/xfs/scrub/trace.h |    4 ++++
+ fs/xfs/xfs_trace.h   |   24 ++++++++++++++++++++++++
+ 2 files changed, 28 insertions(+)
 
-> .....
-> > @@ -2363,7 +2363,7 @@ DECLARE_EVENT_CLASS(xfs_log_recover_icreate_item_class,
-> >  		__entry->length = be32_to_cpu(in_f->icl_length);
-> >  		__entry->gen = be32_to_cpu(in_f->icl_gen);
-> >  	),
-> > -	TP_printk("dev %d:%d agno 0x%x agbno 0x%x count %u isize %u length %u "
-> > +	TP_printk("dev %d:%d agno 0x%x agbno 0x%x count %u isize %u blockcount 0x%x "
-> >  		  "gen %u", MAJOR(__entry->dev), MINOR(__entry->dev),
-> >  		  __entry->agno, __entry->agbno, __entry->count, __entry->isize,
-> >  		  __entry->length, __entry->gen)
-> 
-> THis one could probably do with a bit of help - count is the number
-> of inodes, so the order of the tracepoint probably should be
-> reworked to put the fsbcount directly after the agbno. i.e.
-> 
-> TP_printk("dev %d:%d agno 0x%x agbno 0x%x fsbcount 0x%x isize %u count %u gen %u",
-> ....
-> 
-> The rest of the conversions look good, though.
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+index e9b81b7645c1..20f34548bfe5 100644
+--- a/fs/xfs/scrub/trace.h
++++ b/fs/xfs/scrub/trace.h
+@@ -2,6 +2,10 @@
+ /*
+  * Copyright (C) 2017 Oracle.  All Rights Reserved.
+  * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * NOTE: none of these tracepoints shall be considered a stable kernel ABI
++ * as they can change at any time.  See xfs_trace.h for documentation of
++ * specific units found in tracepoint output.
+  */
+ #undef TRACE_SYSTEM
+ #define TRACE_SYSTEM xfs_scrub
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index a72cd56afc8c..c46dd4fea3e3 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -2,6 +2,30 @@
+ /*
+  * Copyright (c) 2009, Christoph Hellwig
+  * All Rights Reserved.
++ *
++ * NOTE: none of these tracepoints shall be considered a stable kernel ABI
++ * as they can change at any time.
++ *
++ * Current conventions for printing numbers measuring specific units:
++ *
++ * ino: filesystem inode number
++ * agino: per-AG inode number
++ * agno: allocation group number
++ * agbno: per-AG block number in fs blocks
++ * owner: reverse-mapping owner, usually inodes
++ * daddr: physical block number in 512b blocks
++ * startblock: physical block number for file mappings.  This is either a
++ *             segmented fsblock for data device mappings, or a rfsblock
++ *             for realtime device mappings
++ * fileoff: file offset, in fs blocks
++ * pos: file offset, in bytes
++ * forkoff: inode fork offset, in bytes
++ * icount: number of inode records
++ * disize: ondisk file size, in bytes
++ * isize: incore file size, in bytes
++ * fsbcount: number of blocks in an extent, in fs blocks
++ * bbcount: number of blocks in a physical extent, in 512b blocks
++ * bytecount: number of bytes
+  */
+ #undef TRACE_SYSTEM
+ #define TRACE_SYSTEM xfs
