@@ -7,154 +7,130 @@ X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10FE2C4338F
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Aug 2021 09:57:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0456C4320A
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Aug 2021 11:02:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E29016112E
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Aug 2021 09:57:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D93B6109E
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Aug 2021 11:02:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237662AbhHSJ6N (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 19 Aug 2021 05:58:13 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:35340 "EHLO
+        id S238283AbhHSLDY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 19 Aug 2021 07:03:24 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:27793 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S237547AbhHSJ6M (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Aug 2021 05:58:12 -0400
+        by vger.kernel.org with ESMTP id S237843AbhHSLDY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Aug 2021 07:03:24 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1629367056;
+        s=mimecast20190719; t=1629370967;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=x3EniS7kl2Jp9Q2Eke6ucdAo+7CenNCdbOIwLio/oAQ=;
-        b=fVcARwpqc/r/nKLnuyVwuZn92xnc4PL1rufXXXoN4z47NB30ZEvuBoPmCDF3a5rZ5hZBsW
-        SXtI73xVaTeftUGpGc/LXilgLHIjd+EMaWsDs+C0Z1QF7a5cNMr4QbuGO2+XDmmmrPpYIe
-        dbgPhGxTPzekrn5fg1dhZ527csfLORg=
-Received: from mail-ej1-f70.google.com (mail-ej1-f70.google.com
- [209.85.218.70]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-246-VghYVRDQPfWeJStfr9rDRg-1; Thu, 19 Aug 2021 05:57:35 -0400
-X-MC-Unique: VghYVRDQPfWeJStfr9rDRg-1
-Received: by mail-ej1-f70.google.com with SMTP id ja25-20020a1709079899b02905b2a2bf1a62so2043735ejc.4
-        for <linux-xfs@vger.kernel.org>; Thu, 19 Aug 2021 02:57:35 -0700 (PDT)
+        bh=P+sn6BHudmxXf3+xd6nzXvHqS/xiyGwX4qj31M7lhs0=;
+        b=PgkLoursuzQbIxdZnR98T3eX9xMh6/V99Qc7vJhPTmVNpocTfMJJg1aZvZSIekB2pM62hc
+        DQH0KKGKBxrHXjuoaUZ/2rvcYxQPBhTzcSoAR8ohFfpB91leUpLabhRf5riuuB2THZh0fW
+        QJvAMpx1hmVrulK1ZZYdm2ak9GVDH+c=
+Received: from mail-ed1-f70.google.com (mail-ed1-f70.google.com
+ [209.85.208.70]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-140-4TRZNEEDOpee0LuRY776fQ-1; Thu, 19 Aug 2021 07:02:46 -0400
+X-MC-Unique: 4TRZNEEDOpee0LuRY776fQ-1
+Received: by mail-ed1-f70.google.com with SMTP id x4-20020a50d9c4000000b003bed5199871so2619433edj.14
+        for <linux-xfs@vger.kernel.org>; Thu, 19 Aug 2021 04:02:46 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id
          :mail-followup-to:references:mime-version:content-disposition
          :in-reply-to;
-        bh=x3EniS7kl2Jp9Q2Eke6ucdAo+7CenNCdbOIwLio/oAQ=;
-        b=E9uxIY7xGmM/7t5t1U7B2tMLsBD825weS833lpfMJoiWuc3lhXxp4n31EyXd76sxUX
-         w0yhkFo7jE76KvMHUh4KIOx4tqLk6UEtfkTB28BfMNaULCclVAkTtaBP6qCSzGTWLcVb
-         JpIakLIYzHOA7csd10WKYPKODcKix+u0ZBlzAKaWaKw+WecElg/L8tiqdml2d4oMuodC
-         X0hTcwEjEmZLKTegOqXfZd9lj9zAtVxH4v0uZcfwQKozCFlOtERyAuUHrXWNNLi5pOYE
-         S6tfNUfPj7D9CP6SmHNRwYiETzIFfr7ZwVM/PZE6sKAaGN3MBXgo+UFXe0kuS9wlBrtp
-         r84Q==
-X-Gm-Message-State: AOAM533lwp71wHJInJmr63cbygl/f2Ic+DSD4YTH6iS1XpNTNmEHDlpk
-        1bXcdXQ+9CGFaSvz175+zPGN9DvGzsL1N+FNVv6RhXgvRbmhMJ/pQsuX3fnOAOlNk9iQVuaTMec
-        41CpG/CxQO0qJU7HBUKww
-X-Received: by 2002:a17:906:184e:: with SMTP id w14mr14867388eje.526.1629367054008;
-        Thu, 19 Aug 2021 02:57:34 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJxVi0cDRuYBi+XGB6D8Ddw4hxPgUHTndlGVOm+Rt1ReOsM+r0qZVGGP2vQwyq7RQhNBkDOUcA==
-X-Received: by 2002:a17:906:184e:: with SMTP id w14mr14867374eje.526.1629367053785;
-        Thu, 19 Aug 2021 02:57:33 -0700 (PDT)
+        bh=P+sn6BHudmxXf3+xd6nzXvHqS/xiyGwX4qj31M7lhs0=;
+        b=MB5qjva7gGRGVQz8UP1ENzwZkSs7InsVjYLiZhZmPpWZyHAYi/ManwZ4INezH1Jmej
+         0FngP5ZbjpYeW917haxxKDwzrb6XdmIkZo2Xx4SlMibTXW3YVhI1NiNi53pGrF2H55SS
+         FIlQGHTXmOfyqoOYR2o/BYTxwSX5sVJXvErnnmFZe7RK/UAcMiJz1890tmf1Y/jIpSat
+         S6eHPpPvYDiraufVDOwRm72LtWR1ZcjyuNNfGq+FOjXsPKiYC4YWqXkAW4B2AqU7zZEi
+         1ZAzrh0bcDN82lf1SBRAOAk9C+N9fWJ54huIboQUh5rKM5eTRN22z33WqGExNz5B4+zC
+         Bbvg==
+X-Gm-Message-State: AOAM533kUDj43bXyqV4bPeNwVY13YQq514payGFTx8WOG3X1xxtCmnaJ
+        PwNZBug8iiJ3Oc8Y/JtBnRWDbAamN3kqv6BxadBehcy+CVCu8wmxgDELodE0NIDPoG1iVlM44g2
+        M01Rc9iBd7cSA4/eiQmfL
+X-Received: by 2002:a17:906:6b0c:: with SMTP id q12mr15297116ejr.0.1629370965093;
+        Thu, 19 Aug 2021 04:02:45 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzGYYgPM5MF6LACOTYNuVkjTV0fGIM0csbWniXG4sTF4KU8lMrCPfurq694JjNK+6bSCzDLjg==
+X-Received: by 2002:a17:906:6b0c:: with SMTP id q12mr15297096ejr.0.1629370964889;
+        Thu, 19 Aug 2021 04:02:44 -0700 (PDT)
 Received: from omega.lan (ip4-46-39-172-19.cust.nbox.cz. [46.39.172.19])
-        by smtp.gmail.com with ESMTPSA id da1sm1476993edb.26.2021.08.19.02.57.33
+        by smtp.gmail.com with ESMTPSA id m19sm1545874edd.38.2021.08.19.04.02.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 19 Aug 2021 02:57:33 -0700 (PDT)
-Date:   Thu, 19 Aug 2021 11:57:31 +0200
+        Thu, 19 Aug 2021 04:02:44 -0700 (PDT)
+Date:   Thu, 19 Aug 2021 13:02:42 +0200
 From:   Carlos Maiolino <cmaiolino@redhat.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     david@fromorbit.com, sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 05/15] xfs: standardize rmap owner number formatting in
- ftrace output
-Message-ID: <20210819095731.e52fo4bmpby2fxde@omega.lan>
+Subject: Re: [PATCH 06/15] xfs: standardize daddr formatting in ftrace output
+Message-ID: <20210819110242.yggbbtq2qeklhfct@omega.lan>
 Mail-Followup-To: "Darrick J. Wong" <djwong@kernel.org>,
         david@fromorbit.com, sandeen@sandeen.net, linux-xfs@vger.kernel.org
 References: <162924373176.761813.10896002154570305865.stgit@magnolia>
- <162924375953.761813.2443716298245181301.stgit@magnolia>
+ <162924376504.761813.17237311452402341703.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <162924375953.761813.2443716298245181301.stgit@magnolia>
+In-Reply-To: <162924376504.761813.17237311452402341703.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 17, 2021 at 04:42:39PM -0700, Darrick J. Wong wrote:
+On Tue, Aug 17, 2021 at 04:42:45PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Always print rmap owner number in hexadecimal and preceded with the unit
-> "owner".
+> Always print disk addr (i.e. 512 byte block) numbers in hexadecimal and
+> preceded with the unit "daddr".
 > 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
 > ---
->  fs/xfs/scrub/trace.h |    2 +-
->  fs/xfs/xfs_trace.h   |   10 +++++-----
->  2 files changed, 6 insertions(+), 6 deletions(-)
+>  fs/xfs/xfs_trace.h |    8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
 > 
 > 
-> diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-> index 49822589a4ae..486e6f3c0ea2 100644
-> --- a/fs/xfs/scrub/trace.h
-> +++ b/fs/xfs/scrub/trace.h
-> @@ -699,7 +699,7 @@ DECLARE_EVENT_CLASS(xrep_rmap_class,
->  		__entry->offset = offset;
->  		__entry->flags = flags;
->  	),
-> -	TP_printk("dev %d:%d agno 0x%x agbno 0x%x len %u owner %lld offset %llu flags 0x%x",
-> +	TP_printk("dev %d:%d agno 0x%x agbno 0x%x len %u owner 0x%llx offset %llu flags 0x%x",
->  		  MAJOR(__entry->dev), MINOR(__entry->dev),
->  		  __entry->agno,
->  		  __entry->agbno,
 > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index a780b1752ede..d6365a0ee0ff 100644
+> index d6365a0ee0ff..3944373ad2f6 100644
 > --- a/fs/xfs/xfs_trace.h
 > +++ b/fs/xfs/xfs_trace.h
-> @@ -2598,7 +2598,7 @@ DECLARE_EVENT_CLASS(xfs_map_extent_deferred_class,
->  		__entry->l_state = state;
->  		__entry->op = op;
+> @@ -397,7 +397,7 @@ DECLARE_EVENT_CLASS(xfs_buf_class,
+>  		__entry->flags = bp->b_flags;
+>  		__entry->caller_ip = caller_ip;
 >  	),
-> -	TP_printk("dev %d:%d op %d agno 0x%x agbno 0x%x owner %lld %s offset %llu len %llu state %d",
-> +	TP_printk("dev %d:%d op %d agno 0x%x agbno 0x%x owner 0x%llx %s offset %llu len %llu state %d",
+> -	TP_printk("dev %d:%d bno 0x%llx nblks 0x%x hold %d pincount %d "
+> +	TP_printk("dev %d:%d daddr 0x%llx nblks 0x%x hold %d pincount %d "
+>  		  "lock %d flags %s caller %pS",
 >  		  MAJOR(__entry->dev), MINOR(__entry->dev),
->  		  __entry->op,
->  		  __entry->agno,
-> @@ -2668,7 +2668,7 @@ DECLARE_EVENT_CLASS(xfs_rmap_class,
->  		if (unwritten)
->  			__entry->flags |= XFS_RMAP_UNWRITTEN;
+>  		  (unsigned long long)__entry->bno,
+> @@ -465,7 +465,7 @@ DECLARE_EVENT_CLASS(xfs_buf_flags_class,
+>  		__entry->lockval = bp->b_sema.count;
+>  		__entry->caller_ip = caller_ip;
 >  	),
-> -	TP_printk("dev %d:%d agno 0x%x agbno 0x%x len %u owner %lld offset %llu flags 0x%lx",
-> +	TP_printk("dev %d:%d agno 0x%x agbno 0x%x len %u owner 0x%llx offset %llu flags 0x%lx",
+> -	TP_printk("dev %d:%d bno 0x%llx len 0x%zx hold %d pincount %d "
+> +	TP_printk("dev %d:%d daddr 0x%llx len 0x%zx hold %d pincount %d "
+>  		  "lock %d flags %s caller %pS",
 >  		  MAJOR(__entry->dev), MINOR(__entry->dev),
->  		  __entry->agno,
->  		  __entry->agbno,
-> @@ -2748,7 +2748,7 @@ DECLARE_EVENT_CLASS(xfs_rmapbt_class,
->  		__entry->offset = offset;
->  		__entry->flags = flags;
+>  		  (unsigned long long)__entry->bno,
+> @@ -510,7 +510,7 @@ TRACE_EVENT(xfs_buf_ioerror,
+>  		__entry->flags = bp->b_flags;
+>  		__entry->caller_ip = caller_ip;
 >  	),
-> -	TP_printk("dev %d:%d agno 0x%x agbno 0x%x len %u owner %lld offset %llu flags 0x%x",
-> +	TP_printk("dev %d:%d agno 0x%x agbno 0x%x len %u owner 0x%llx offset %llu flags 0x%x",
+> -	TP_printk("dev %d:%d bno 0x%llx len 0x%zx hold %d pincount %d "
+> +	TP_printk("dev %d:%d daddr 0x%llx len 0x%zx hold %d pincount %d "
+>  		  "lock %d error %d flags %s caller %pS",
 >  		  MAJOR(__entry->dev), MINOR(__entry->dev),
->  		  __entry->agno,
->  		  __entry->agbno,
-> @@ -3417,7 +3417,7 @@ DECLARE_EVENT_CLASS(xfs_fsmap_class,
->  		__entry->offset = rmap->rm_offset;
->  		__entry->flags = rmap->rm_flags;
+>  		  (unsigned long long)__entry->bno,
+> @@ -552,7 +552,7 @@ DECLARE_EVENT_CLASS(xfs_buf_item_class,
+>  		__entry->buf_lockval = bip->bli_buf->b_sema.count;
+>  		__entry->li_flags = bip->bli_item.li_flags;
 >  	),
-> -	TP_printk("dev %d:%d keydev %d:%d agno 0x%x bno %llu len %llu owner %lld offset %llu flags 0x%x",
-> +	TP_printk("dev %d:%d keydev %d:%d agno 0x%x bno %llu len %llu owner 0x%llx offset %llu flags 0x%x",
+> -	TP_printk("dev %d:%d bno 0x%llx len 0x%zx hold %d pincount %d "
+> +	TP_printk("dev %d:%d daddr 0x%llx len 0x%zx hold %d pincount %d "
+>  		  "lock %d flags %s recur %d refcount %d bliflags %s "
+>  		  "liflags %s",
 >  		  MAJOR(__entry->dev), MINOR(__entry->dev),
->  		  MAJOR(__entry->keydev), MINOR(__entry->keydev),
->  		  __entry->agno,
-> @@ -3457,7 +3457,7 @@ DECLARE_EVENT_CLASS(xfs_getfsmap_class,
->  		__entry->offset = fsmap->fmr_offset;
->  		__entry->flags = fsmap->fmr_flags;
->  	),
-> -	TP_printk("dev %d:%d keydev %d:%d block %llu len %llu owner %lld offset %llu flags 0x%llx",
-> +	TP_printk("dev %d:%d keydev %d:%d block %llu len %llu owner 0x%llx offset %llu flags 0x%llx",
->  		  MAJOR(__entry->dev), MINOR(__entry->dev),
->  		  MAJOR(__entry->keydev), MINOR(__entry->keydev),
->  		  __entry->block,
 > 
 
 -- 
