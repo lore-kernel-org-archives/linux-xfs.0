@@ -4,340 +4,184 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BABD8C432BE
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Aug 2021 00:01:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA0ABC43214
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Aug 2021 00:01:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9F0B560ED3
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Aug 2021 00:01:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB59461051
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Aug 2021 00:01:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235155AbhHSABf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Aug 2021 20:01:35 -0400
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:40603 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235041AbhHSABf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Aug 2021 20:01:35 -0400
+        id S235041AbhHSABh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Aug 2021 20:01:37 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:44510 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S234986AbhHSABg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Aug 2021 20:01:36 -0400
 Received: from dread.disaster.area (pa49-195-182-146.pa.nsw.optusnet.com.au [49.195.182.146])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 9D25786261
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id E23CE104A544
         for <linux-xfs@vger.kernel.org>; Thu, 19 Aug 2021 10:00:58 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1mGVUQ-002JS2-39
+        id 1mGVUQ-002JSA-5r
         for linux-xfs@vger.kernel.org; Thu, 19 Aug 2021 10:00:58 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1mGVUP-000d1V-Qy
+        id 1mGVUP-000d1b-Tt
         for linux-xfs@vger.kernel.org; Thu, 19 Aug 2021 10:00:57 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 1/3] xfs: introduce xfs_buf_daddr()
-Date:   Thu, 19 Aug 2021 10:00:53 +1000
-Message-Id: <20210819000055.149955-2-david@fromorbit.com>
+Subject: [PATCH 3/3] xfs: rename buffer cache index variable b_bn
+Date:   Thu, 19 Aug 2021 10:00:55 +1000
+Message-Id: <20210819000055.149955-4-david@fromorbit.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210819000055.149955-1-david@fromorbit.com>
 References: <20210819000055.149955-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
         a=QpfB3wCSrn/dqEBSktpwZQ==:117 a=QpfB3wCSrn/dqEBSktpwZQ==:17
-        a=MhDmnRu9jo8A:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
-        a=LZ-cIWIJuhyqz1JogpcA:9 a=Hm8iFDS7H7ePBO5m:21 a=L4vRXgMs-06yCLWg:21
-        a=AjGcO6oz07-iQ99wixmX:22
+        a=MhDmnRu9jo8A:10 a=20KFwNOVAAAA:8 a=t0MN_ZO9zPffNZN11lIA:9
+        a=nxKHTeQCLbDLIkZB:21 a=-Yni5f4vD_2Esc7K:21
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Introduce a helper function xfs_buf_daddr() to extract the disk
-address of the buffer from the struct xfs_buf. This will replace
-direct accesses to bp->b_bn and bp->b_maps[0].bm_bn, as well as
-the XFS_BUF_ADDR() macro.
+To stop external users from using b_bn as the disk address of the
+buffer, rename it to b_rhash_key to indicate that it is the buffer
+cache index, not the block number of the buffer. Code that needs the
+disk address should use xfs_buf_daddr() to obtain it.
 
-This patch introduces the helper function and replaces all uses of
-XFS_BUF_ADDR() as this is just a simple sed replacement.
+Do the rename and clean up any of the remaining internal b_bn users.
+Also clean up any remaining b_bn cruft that is now unused.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_alloc_btree.c    |  2 +-
- fs/xfs/libxfs/xfs_attr.c           |  4 ++--
- fs/xfs/libxfs/xfs_bmap.c           |  4 ++--
- fs/xfs/libxfs/xfs_bmap_btree.c     |  2 +-
- fs/xfs/libxfs/xfs_btree.c          | 10 +++++-----
- fs/xfs/libxfs/xfs_ialloc_btree.c   |  2 +-
- fs/xfs/libxfs/xfs_inode_buf.c      |  2 +-
- fs/xfs/libxfs/xfs_refcount_btree.c |  2 +-
- fs/xfs/libxfs/xfs_rmap_btree.c     |  2 +-
- fs/xfs/libxfs/xfs_sb.c             |  2 +-
- fs/xfs/scrub/btree.c               |  4 ++--
- fs/xfs/xfs_attr_inactive.c         |  2 +-
- fs/xfs/xfs_buf.c                   |  2 +-
- fs/xfs/xfs_buf.h                   |  6 +++++-
- fs/xfs/xfs_trans_buf.c             |  2 +-
- 15 files changed, 26 insertions(+), 22 deletions(-)
+ fs/xfs/xfs_buf.c | 19 +++++++++++--------
+ fs/xfs/xfs_buf.h | 18 +-----------------
+ 2 files changed, 12 insertions(+), 25 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
-index 81a8e1d0cd90..7f69387609d3 100644
---- a/fs/xfs/libxfs/xfs_alloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_alloc_btree.c
-@@ -87,7 +87,7 @@ xfs_allocbt_free_block(
- 	xfs_agblock_t		bno;
- 	int			error;
- 
--	bno = xfs_daddr_to_agbno(cur->bc_mp, XFS_BUF_ADDR(bp));
-+	bno = xfs_daddr_to_agbno(cur->bc_mp, xfs_buf_daddr(bp));
- 	error = xfs_alloc_put_freelist(cur->bc_tp, agbp, NULL, bno, 1);
- 	if (error)
- 		return error;
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 23b50bcb5e7f..fbc9d816882c 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -1540,7 +1540,7 @@ xfs_attr_fillstate(xfs_da_state_t *state)
- 	ASSERT((path->active >= 0) && (path->active < XFS_DA_NODE_MAXDEPTH));
- 	for (blk = path->blk, level = 0; level < path->active; blk++, level++) {
- 		if (blk->bp) {
--			blk->disk_blkno = XFS_BUF_ADDR(blk->bp);
-+			blk->disk_blkno = xfs_buf_daddr(blk->bp);
- 			blk->bp = NULL;
- 		} else {
- 			blk->disk_blkno = 0;
-@@ -1555,7 +1555,7 @@ xfs_attr_fillstate(xfs_da_state_t *state)
- 	ASSERT((path->active >= 0) && (path->active < XFS_DA_NODE_MAXDEPTH));
- 	for (blk = path->blk, level = 0; level < path->active; blk++, level++) {
- 		if (blk->bp) {
--			blk->disk_blkno = XFS_BUF_ADDR(blk->bp);
-+			blk->disk_blkno = xfs_buf_daddr(blk->bp);
- 			blk->bp = NULL;
- 		} else {
- 			blk->disk_blkno = 0;
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 75354023cea7..d0bfa9a1f549 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -242,7 +242,7 @@ xfs_bmap_get_bp(
- 	for (i = 0; i < XFS_BTREE_MAXLEVELS; i++) {
- 		if (!cur->bc_bufs[i])
- 			break;
--		if (XFS_BUF_ADDR(cur->bc_bufs[i]) == bno)
-+		if (xfs_buf_daddr(cur->bc_bufs[i]) == bno)
- 			return cur->bc_bufs[i];
- 	}
- 
-@@ -251,7 +251,7 @@ xfs_bmap_get_bp(
- 		struct xfs_buf_log_item	*bip = (struct xfs_buf_log_item *)lip;
- 
- 		if (bip->bli_item.li_type == XFS_LI_BUF &&
--		    XFS_BUF_ADDR(bip->bli_buf) == bno)
-+		    xfs_buf_daddr(bip->bli_buf) == bno)
- 			return bip->bli_buf;
- 	}
- 
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-index c04b2a697b29..e0ae95c7b379 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-@@ -282,7 +282,7 @@ xfs_bmbt_free_block(
- 	struct xfs_mount	*mp = cur->bc_mp;
- 	struct xfs_inode	*ip = cur->bc_ino.ip;
- 	struct xfs_trans	*tp = cur->bc_tp;
--	xfs_fsblock_t		fsbno = XFS_DADDR_TO_FSB(mp, XFS_BUF_ADDR(bp));
-+	xfs_fsblock_t		fsbno = XFS_DADDR_TO_FSB(mp, xfs_buf_daddr(bp));
- 	struct xfs_owner_info	oinfo;
- 
- 	xfs_rmap_ino_bmbt_owner(&oinfo, ip->i_ino, cur->bc_ino.whichfork);
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 393c9438d5a7..dc704c2b22cb 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -420,7 +420,7 @@ xfs_btree_dup_cursor(
- 		bp = cur->bc_bufs[i];
- 		if (bp) {
- 			error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp,
--						   XFS_BUF_ADDR(bp), mp->m_bsize,
-+						   xfs_buf_daddr(bp), mp->m_bsize,
- 						   0, &bp,
- 						   cur->bc_ops->buf_ops);
- 			if (error) {
-@@ -1192,10 +1192,10 @@ xfs_btree_buf_to_ptr(
- {
- 	if (cur->bc_flags & XFS_BTREE_LONG_PTRS)
- 		ptr->l = cpu_to_be64(XFS_DADDR_TO_FSB(cur->bc_mp,
--					XFS_BUF_ADDR(bp)));
-+					xfs_buf_daddr(bp)));
- 	else {
- 		ptr->s = cpu_to_be32(xfs_daddr_to_agbno(cur->bc_mp,
--					XFS_BUF_ADDR(bp)));
-+					xfs_buf_daddr(bp)));
- 	}
- }
- 
-@@ -1739,7 +1739,7 @@ xfs_btree_lookup_get_block(
- 	error = xfs_btree_ptr_to_daddr(cur, pp, &daddr);
- 	if (error)
- 		return error;
--	if (bp && XFS_BUF_ADDR(bp) == daddr) {
-+	if (bp && xfs_buf_daddr(bp) == daddr) {
- 		*blkp = XFS_BUF_TO_BLOCK(bp);
- 		return 0;
- 	}
-@@ -4499,7 +4499,7 @@ xfs_btree_sblock_verify(
- 		return __this_address;
- 
- 	/* sibling pointer verification */
--	agno = xfs_daddr_to_agno(mp, XFS_BUF_ADDR(bp));
-+	agno = xfs_daddr_to_agno(mp, xfs_buf_daddr(bp));
- 	if (block->bb_u.s.bb_leftsib != cpu_to_be32(NULLAGBLOCK) &&
- 	    !xfs_verify_agbno(mp, agno, be32_to_cpu(block->bb_u.s.bb_leftsib)))
- 		return __this_address;
-diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
-index f1384c280059..65a94741ce16 100644
---- a/fs/xfs/libxfs/xfs_ialloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
-@@ -156,7 +156,7 @@ __xfs_inobt_free_block(
- {
- 	xfs_inobt_mod_blockcount(cur, -1);
- 	return xfs_free_extent(cur->bc_tp,
--			XFS_DADDR_TO_FSB(cur->bc_mp, XFS_BUF_ADDR(bp)), 1,
-+			XFS_DADDR_TO_FSB(cur->bc_mp, xfs_buf_daddr(bp)), 1,
- 			&XFS_RMAP_OINFO_INOBT, resv);
- }
- 
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index 036f909ff7a6..83ba63b4ace4 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -48,7 +48,7 @@ xfs_inode_buf_verify(
- 	/*
- 	 * Validate the magic number and version of every inode in the buffer
- 	 */
--	agno = xfs_daddr_to_agno(mp, XFS_BUF_ADDR(bp));
-+	agno = xfs_daddr_to_agno(mp, xfs_buf_daddr(bp));
- 	ni = XFS_BB_TO_FSB(mp, bp->b_length) * mp->m_sb.sb_inopblock;
- 	for (i = 0; i < ni; i++) {
- 		int		di_ok;
-diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
-index 31ce9d2d45e1..fd47dc934dae 100644
---- a/fs/xfs/libxfs/xfs_refcount_btree.c
-+++ b/fs/xfs/libxfs/xfs_refcount_btree.c
-@@ -102,7 +102,7 @@ xfs_refcountbt_free_block(
- 	struct xfs_mount	*mp = cur->bc_mp;
- 	struct xfs_buf		*agbp = cur->bc_ag.agbp;
- 	struct xfs_agf		*agf = agbp->b_addr;
--	xfs_fsblock_t		fsbno = XFS_DADDR_TO_FSB(mp, XFS_BUF_ADDR(bp));
-+	xfs_fsblock_t		fsbno = XFS_DADDR_TO_FSB(mp, xfs_buf_daddr(bp));
- 	int			error;
- 
- 	trace_xfs_refcountbt_free_block(cur->bc_mp, cur->bc_ag.pag->pag_agno,
-diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
-index 921651fb4b1b..f0fe7aa09a43 100644
---- a/fs/xfs/libxfs/xfs_rmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_rmap_btree.c
-@@ -122,7 +122,7 @@ xfs_rmapbt_free_block(
- 	xfs_agblock_t		bno;
- 	int			error;
- 
--	bno = xfs_daddr_to_agbno(cur->bc_mp, XFS_BUF_ADDR(bp));
-+	bno = xfs_daddr_to_agbno(cur->bc_mp, xfs_buf_daddr(bp));
- 	trace_xfs_rmapbt_free_block(cur->bc_mp, pag->pag_agno,
- 			bno, 1);
- 	be32_add_cpu(&agf->agf_rmap_blocks, -1);
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index 197093acb828..b1c5ec1bd200 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -192,7 +192,7 @@ xfs_validate_sb_write(
- 	 * secondary superblocks, so allow this usage to continue because
- 	 * we never read counters from such superblocks.
- 	 */
--	if (XFS_BUF_ADDR(bp) == XFS_SB_DADDR && !sbp->sb_inprogress &&
-+	if (xfs_buf_daddr(bp) == XFS_SB_DADDR && !sbp->sb_inprogress &&
- 	    (sbp->sb_fdblocks > sbp->sb_dblocks ||
- 	     !xfs_verify_icount(mp, sbp->sb_icount) ||
- 	     sbp->sb_ifree > sbp->sb_icount)) {
-diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
-index c044e0a8da7f..fd832f103fa4 100644
---- a/fs/xfs/scrub/btree.c
-+++ b/fs/xfs/scrub/btree.c
-@@ -435,12 +435,12 @@ xchk_btree_check_owner(
- 		if (!co)
- 			return -ENOMEM;
- 		co->level = level;
--		co->daddr = XFS_BUF_ADDR(bp);
-+		co->daddr = xfs_buf_daddr(bp);
- 		list_add_tail(&co->list, &bs->to_check);
- 		return 0;
- 	}
- 
--	return xchk_btree_check_block_owner(bs, level, XFS_BUF_ADDR(bp));
-+	return xchk_btree_check_block_owner(bs, level, xfs_buf_daddr(bp));
- }
- 
- /* Decide if we want to check minrecs of a btree block in the inode root. */
-diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
-index aaa7e66c42d7..d8fdde206867 100644
---- a/fs/xfs/xfs_attr_inactive.c
-+++ b/fs/xfs/xfs_attr_inactive.c
-@@ -177,7 +177,7 @@ xfs_attr3_node_inactive(
- 			return error;
- 
- 		/* save for re-read later */
--		child_blkno = XFS_BUF_ADDR(child_bp);
-+		child_blkno = xfs_buf_daddr(child_bp);
- 
- 		/*
- 		 * Invalidate the subtree, however we have to.
 diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 82dd9bfa4265..c1bb6e41595b 100644
+index c1bb6e41595b..047bd6e3f389 100644
 --- a/fs/xfs/xfs_buf.c
 +++ b/fs/xfs/xfs_buf.c
-@@ -1335,7 +1335,7 @@ xfs_buf_ioerror_alert(
- {
- 	xfs_buf_alert_ratelimited(bp, "XFS: metadata IO error",
- 		"metadata I/O error in \"%pS\" at daddr 0x%llx len %d error %d",
--				  func, (uint64_t)XFS_BUF_ADDR(bp),
-+				  func, (uint64_t)xfs_buf_daddr(bp),
- 				  bp->b_length, -bp->b_error);
- }
+@@ -251,7 +251,7 @@ _xfs_buf_alloc(
+ 		return error;
+ 	}
  
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 37c9004f11de..6db2fba44b46 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -311,9 +311,13 @@ extern void xfs_buf_terminate(void);
-  * In future, uncached buffers will pass the block number directly to the io
-  * request function and hence these macros will go away at that point.
-  */
--#define XFS_BUF_ADDR(bp)		((bp)->b_maps[0].bm_bn)
- #define XFS_BUF_SET_ADDR(bp, bno)	((bp)->b_maps[0].bm_bn = (xfs_daddr_t)(bno))
+-	bp->b_bn = map[0].bm_bn;
++	bp->b_rhash_key = map[0].bm_bn;
+ 	bp->b_length = 0;
+ 	for (i = 0; i < nmaps; i++) {
+ 		bp->b_maps[i].bm_bn = map[i].bm_bn;
+@@ -459,7 +459,7 @@ _xfs_buf_obj_cmp(
+ 	 */
+ 	BUILD_BUG_ON(offsetof(struct xfs_buf_map, bm_bn) != 0);
  
-+static inline xfs_daddr_t xfs_buf_daddr(struct xfs_buf *bp)
-+{
-+	return bp->b_maps[0].bm_bn;
-+}
-+
- void xfs_buf_set_ref(struct xfs_buf *bp, int lru_ref);
+-	if (bp->b_bn != map->bm_bn)
++	if (bp->b_rhash_key != map->bm_bn)
+ 		return 1;
+ 
+ 	if (unlikely(bp->b_length != map->bm_len)) {
+@@ -481,7 +481,7 @@ static const struct rhashtable_params xfs_buf_hash_params = {
+ 	.min_size		= 32,	/* empty AGs have minimal footprint */
+ 	.nelem_hint		= 16,
+ 	.key_len		= sizeof(xfs_daddr_t),
+-	.key_offset		= offsetof(struct xfs_buf, b_bn),
++	.key_offset		= offsetof(struct xfs_buf, b_rhash_key),
+ 	.head_offset		= offsetof(struct xfs_buf, b_rhash_head),
+ 	.automatic_shrinking	= true,
+ 	.obj_cmpfn		= _xfs_buf_obj_cmp,
+@@ -853,7 +853,9 @@ xfs_buf_readahead_map(
  
  /*
-diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-index 4ff274ce31c4..6549e50d852c 100644
---- a/fs/xfs/xfs_trans_buf.c
-+++ b/fs/xfs/xfs_trans_buf.c
-@@ -38,7 +38,7 @@ xfs_trans_buf_item_match(
- 		blip = (struct xfs_buf_log_item *)lip;
- 		if (blip->bli_item.li_type == XFS_LI_BUF &&
- 		    blip->bli_buf->b_target == target &&
--		    XFS_BUF_ADDR(blip->bli_buf) == map[0].bm_bn &&
-+		    xfs_buf_daddr(blip->bli_buf) == map[0].bm_bn &&
- 		    blip->bli_buf->b_length == len) {
- 			ASSERT(blip->bli_buf->b_map_count == nmaps);
- 			return blip->bli_buf;
+  * Read an uncached buffer from disk. Allocates and returns a locked
+- * buffer containing the disk contents or nothing.
++ * buffer containing the disk contents or nothing. Uncached buffers always have
++ * a cache index of XFS_BUF_DADDR_NULL so we can easily determine if the buffer
++ * is cached or uncached during fault diagnosis.
+  */
+ int
+ xfs_buf_read_uncached(
+@@ -875,7 +877,7 @@ xfs_buf_read_uncached(
+ 
+ 	/* set up the buffer for a read IO */
+ 	ASSERT(bp->b_map_count == 1);
+-	bp->b_bn = XFS_BUF_DADDR_NULL;  /* always null for uncached buffers */
++	bp->b_rhash_key = XFS_BUF_DADDR_NULL;
+ 	bp->b_maps[0].bm_bn = daddr;
+ 	bp->b_flags |= XBF_READ;
+ 	bp->b_ops = ops;
+@@ -1513,7 +1515,7 @@ _xfs_buf_ioapply(
+ 						   SHUTDOWN_CORRUPT_INCORE);
+ 				return;
+ 			}
+-		} else if (bp->b_bn != XFS_BUF_DADDR_NULL) {
++		} else if (bp->b_rhash_key != XFS_BUF_DADDR_NULL) {
+ 			struct xfs_mount *mp = bp->b_mount;
+ 
+ 			/*
+@@ -1523,7 +1525,8 @@ _xfs_buf_ioapply(
+ 			if (xfs_has_crc(mp)) {
+ 				xfs_warn(mp,
+ 					"%s: no buf ops on daddr 0x%llx len %d",
+-					__func__, bp->b_bn, bp->b_length);
++					__func__, xfs_buf_daddr(bp),
++					bp->b_length);
+ 				xfs_hex_dump(bp->b_addr,
+ 						XFS_CORRUPTION_DUMP_LEN);
+ 				dump_stack();
+@@ -1793,7 +1796,7 @@ xfs_buftarg_drain(
+ 				xfs_buf_alert_ratelimited(bp,
+ 					"XFS: Corruption Alert",
+ "Corruption Alert: Buffer at daddr 0x%llx had permanent write failures!",
+-					(long long)bp->b_bn);
++					(long long)xfs_buf_daddr(bp));
+ 			}
+ 			xfs_buf_rele(bp);
+ 		}
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index 6db2fba44b46..6b0200b8007d 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -134,11 +134,7 @@ struct xfs_buf {
+ 	 */
+ 	struct rhash_head	b_rhash_head;	/* pag buffer hash node */
+ 
+-	/*
+-	 * b_bn is the cache index. Do not use directly, use b_maps[0].bm_bn
+-	 * for the buffer disk address instead.
+-	 */
+-	xfs_daddr_t		b_bn;
++	xfs_daddr_t		b_rhash_key;	/* buffer cache index */
+ 	int			b_length;	/* size of buffer in BBs */
+ 	atomic_t		b_hold;		/* reference count */
+ 	atomic_t		b_lru_ref;	/* lru reclaim ref count */
+@@ -301,18 +297,6 @@ extern int xfs_buf_delwri_pushbuf(struct xfs_buf *, struct list_head *);
+ extern int xfs_buf_init(void);
+ extern void xfs_buf_terminate(void);
+ 
+-/*
+- * These macros use the IO block map rather than b_bn. b_bn is now really
+- * just for the buffer cache index for cached buffers. As IO does not use b_bn
+- * anymore, uncached buffers do not use b_bn at all and hence must modify the IO
+- * map directly. Uncached buffers are not allowed to be discontiguous, so this
+- * is safe to do.
+- *
+- * In future, uncached buffers will pass the block number directly to the io
+- * request function and hence these macros will go away at that point.
+- */
+-#define XFS_BUF_SET_ADDR(bp, bno)	((bp)->b_maps[0].bm_bn = (xfs_daddr_t)(bno))
+-
+ static inline xfs_daddr_t xfs_buf_daddr(struct xfs_buf *bp)
+ {
+ 	return bp->b_maps[0].bm_bn;
 -- 
 2.31.1
 
