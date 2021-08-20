@@ -2,85 +2,258 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F337C4338F
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Aug 2021 15:27:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF3E2C4338F
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Aug 2021 16:11:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E552D61242
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Aug 2021 15:27:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D71E261040
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Aug 2021 16:11:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241003AbhHTP2E (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 20 Aug 2021 11:28:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48174 "EHLO
+        id S231232AbhHTQMZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 20 Aug 2021 12:12:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58938 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240961AbhHTP2D (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Aug 2021 11:28:03 -0400
-Received: from mail-pj1-x1035.google.com (mail-pj1-x1035.google.com [IPv6:2607:f8b0:4864:20::1035])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B658DC061575
-        for <linux-xfs@vger.kernel.org>; Fri, 20 Aug 2021 08:27:25 -0700 (PDT)
-Received: by mail-pj1-x1035.google.com with SMTP id n13-20020a17090a4e0d00b0017946980d8dso13981821pjh.5
-        for <linux-xfs@vger.kernel.org>; Fri, 20 Aug 2021 08:27:25 -0700 (PDT)
+        with ESMTP id S230505AbhHTQMS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Aug 2021 12:12:18 -0400
+Received: from mail-pf1-x42d.google.com (mail-pf1-x42d.google.com [IPv6:2607:f8b0:4864:20::42d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19B39C08ED6E
+        for <linux-xfs@vger.kernel.org>; Fri, 20 Aug 2021 09:06:34 -0700 (PDT)
+Received: by mail-pf1-x42d.google.com with SMTP id y11so8990571pfl.13
+        for <linux-xfs@vger.kernel.org>; Fri, 20 Aug 2021 09:06:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=intel-com.20150623.gappssmtp.com; s=20150623;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=s+pZady9bZxuI5ZV217HLh19NePVUH4NtT4PhDASe8A=;
-        b=mxA9ryU8JJCE6xg91cuNIqjrL1JDkONo6P8+DLklfSN2yE7omlUTGVGqGsV1LSrJxc
-         u4r8m32maq75ln8QSnsVjt9XX5dmqle4XU1My+eIZsS0jOx+vYDBuXsJbjmri79tSozC
-         LWc4QxAU/S3MEO/w8soRt9iUyt6bsc+zdf16d1u6kn3PvO2WLVhSEOlzuAnzSFLZhcfH
-         B7xmSABvYCijcB2WMf1CsVQQjTsozoby0hS/2FmN81TbxQ2/AsTb9+zM7cG/0oG/6pPx
-         LBPeMmPGI0E0s2HAI/mpmtk5cMbx6dWGUpQvnNfM89CcP9e/Z3/7W8Y34lCUC92JOBNm
-         UWnQ==
+        bh=SE1PBWc7mAk6yXDwwX3HHPm6R0g9oeMCDvjQB1FSRU4=;
+        b=qYalQzoW2Ggwdbv3kEUgyzgEYSvY12zzfUROr1+BzqCFxig1iNFSX1WjFq9gGf8qwb
+         RLSCrRhomWIzKnh9gEpB6S+i3uPQYcDisaRNTg1c6SZvnnC8rCRCfumKRT6L7fH/1P37
+         +zW0nAHwXhnhLpUFFCPDuTHWmlUXf+4CnmFxja9S4eBXm6oRYFHW4+GcrVo4fVlT7yjw
+         Y0n63ldEWM68CSxELu9A6tHjrShCuAjb5kkOm7v4dtrVpJ6G1MvoNXZhrHbSNZPol3FU
+         2lyLCf9JfLM5anzTGAgvT2ovm2qtdFPG9BrPN8aF3hnxb5CodCg/svyxL8kbWdXo7Okb
+         T5Ow==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=s+pZady9bZxuI5ZV217HLh19NePVUH4NtT4PhDASe8A=;
-        b=O9GM6xV3xa2YVwLqoWhsfz4SllfWqSAC73GVTUKpyWn4OzvHx1bYwS8bjeiS4ERS1B
-         y+re1VtYbHiFPMCVBcTqNXrH8kWHHfIrHCwmJ3y7YsV+uuqcrgBgigUGtbImpXN574KT
-         PUNxlumclIV51rmvVMRtlIwWiJTb/7+BKxIfPMyB3Z23QlcJMW0jfawu7qFPJzH9p/Ha
-         hUmUz+DiRPpc3uCNVy2IN25TjXdnW7GZJ7mFSRcn8ZY8wdy5Hfe+PzjqRIN6Eo7Hr3SR
-         FCoRkesiD/Cg5nYZHlUlia6f8uC8KnpbdGOr/V+1BhHj0sMe3WQnuUu1HldhewCiw3Wr
-         KLGw==
-X-Gm-Message-State: AOAM532bhR6BER4x+pOhMUqPwM9q5QupHyfFPPBnJESzRpWSPpLTbYo/
-        Be3Gxe5OGP8xuFUdhjRkfOgnyQFUhGt+pJZOnNCNkA==
-X-Google-Smtp-Source: ABdhPJxF0RCYcUVUBwMvZeOpqalPa/B9+Q+bapkBeipJxdjltc3i6RXJVl+F7zMaJbsIi20VC25awiuka6Iizvicc98=
-X-Received: by 2002:a17:90b:23d6:: with SMTP id md22mr4951556pjb.149.1629473245264;
- Fri, 20 Aug 2021 08:27:25 -0700 (PDT)
+        bh=SE1PBWc7mAk6yXDwwX3HHPm6R0g9oeMCDvjQB1FSRU4=;
+        b=RRe/5MtW2NSFPFmjxYISSFlTLobpbWbTlCn+Etx5yARZwhdt3G1iHXtIXmpnMd46d0
+         4jLwthe7GIiq4m6qTuYM3BOiOH5AfUt3ibAoOm4uuz2/G99Vqp8EX0WLQIX3lW49+jQe
+         kZnGgf7FYgxL/5Avylo9gxYnaLx/SAK839DURQE+Sh7PlkLSYTTrB9OlhTs6kRb+OhjK
+         DS1iyzdgmfeydt7/LLDKfPW+LBa3RLYXPijVQtaTQA1Ob7Vfo/tERNk879D2pJ2N3hyq
+         juPrwINOyvNviGGkBev96qVUv+CO3OjMTRxCf/K5wKeBwVB+TRNdSGeXv16FsXqTAj46
+         ErNA==
+X-Gm-Message-State: AOAM532C9m/4T4kpmdGxNOlGhNod/fLQLDuL2Cgt5DUx8b3u71ilbdg6
+        m8Y4XN250F/B6I07UFkEaXZYa8VTj6bQ+mgldPlKsA==
+X-Google-Smtp-Source: ABdhPJzZwGSABeBQxV85uUQDyE877kBWKar9nuSTal+efpWConcEcwK48D/jgozGf+NtNUk6MXi23elgGDtpJtSZv9s=
+X-Received: by 2002:a05:6a00:16c6:b029:32d:e190:9dd0 with SMTP id
+ l6-20020a056a0016c6b029032de1909dd0mr20235683pfc.70.1629475593581; Fri, 20
+ Aug 2021 09:06:33 -0700 (PDT)
 MIME-Version: 1.0
-References: <20210809061244.1196573-1-hch@lst.de> <20210809061244.1196573-12-hch@lst.de>
- <CAPcyv4hbSYnOC6Pdi1QShRxGjBAteig7nN1h-5cEvsFDX9SuAQ@mail.gmail.com> <20210820041158.GA26417@lst.de>
-In-Reply-To: <20210820041158.GA26417@lst.de>
+References: <20210730100158.3117319-1-ruansy.fnst@fujitsu.com> <20210730100158.3117319-3-ruansy.fnst@fujitsu.com>
+In-Reply-To: <20210730100158.3117319-3-ruansy.fnst@fujitsu.com>
 From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Fri, 20 Aug 2021 08:27:14 -0700
-Message-ID: <CAPcyv4iQgyPgQhjCwWv9JkA+kx18nRjOucVm+z79uw1zcAbhPg@mail.gmail.com>
-Subject: Re: [PATCH 11/30] iomap: add the new iomap_iter model
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Shiyang Ruan <ruansy.fnst@fujitsu.com>,
+Date:   Fri, 20 Aug 2021 09:06:22 -0700
+Message-ID: <CAPcyv4gVpK2US=-FhZYccKN-9sVa9WC4k5TD+WNH0bBkjwhE2w@mail.gmail.com>
+Subject: Re: [PATCH RESEND v6 2/9] dax: Introduce holder for dax_device
+To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
+Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         linux-xfs <linux-xfs@vger.kernel.org>,
+        Linux NVDIMM <nvdimm@lists.linux.dev>,
+        Linux MM <linux-mm@kvack.org>,
         linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-btrfs <linux-btrfs@vger.kernel.org>,
-        Linux NVDIMM <nvdimm@lists.linux.dev>, cluster-devel@redhat.com
+        device-mapper development <dm-devel@redhat.com>,
+        "Darrick J. Wong" <djwong@kernel.org>, david <david@fromorbit.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@redhat.com>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 19, 2021 at 9:12 PM Christoph Hellwig <hch@lst.de> wrote:
+On Fri, Jul 30, 2021 at 3:02 AM Shiyang Ruan <ruansy.fnst@fujitsu.com> wrote:
 >
-> On Thu, Aug 19, 2021 at 02:25:52PM -0700, Dan Williams wrote:
-> > Given most of the iomap_iter users don't care about srcmap, i.e. are
-> > not COW cases, they are leaving srcmap zero initialized. Should the
-> > IOMAP types be incremented by one so that there is no IOMAP_HOLE
-> > confusion? In other words, fold something like this?
+> To easily track filesystem from a pmem device, we introduce a holder for
+> dax_device structure, and also its operation.  This holder is used to
+> remember who is using this dax_device:
+>  - When it is the backend of a filesystem, the holder will be the
+>    superblock of this filesystem.
+>  - When this pmem device is one of the targets in a mapped device, the
+>    holder will be this mapped device.  In this case, the mapped device
+>    has its own dax_device and it will follow the first rule.  So that we
+>    can finally track to the filesystem we needed.
 >
-> A hole really means nothing to read from the source.  The existing code
-> also relies on that.
+> The holder and holder_ops will be set when filesystem is being mounted,
+> or an target device is being activated.
+>
+> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+> ---
+>  drivers/dax/super.c | 46 +++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/dax.h | 17 +++++++++++++++++
+>  2 files changed, 63 insertions(+)
+>
+> diff --git a/drivers/dax/super.c b/drivers/dax/super.c
+> index 5fa6ae9dbc8b..00c32dfa5665 100644
+> --- a/drivers/dax/super.c
+> +++ b/drivers/dax/super.c
+> @@ -214,6 +214,8 @@ enum dax_device_flags {
+>   * @cdev: optional character interface for "device dax"
+>   * @host: optional name for lookups where the device path is not available
+>   * @private: dax driver private data
+> + * @holder_rwsem: prevent unregistration while holder_ops is in progress
+> + * @holder_data: holder of a dax_device: could be filesystem or mapped device
+>   * @flags: state and boolean properties
+>   */
+>  struct dax_device {
+> @@ -222,8 +224,11 @@ struct dax_device {
+>         struct cdev cdev;
+>         const char *host;
+>         void *private;
+> +       struct rw_semaphore holder_rwsem;
 
-Ok, I've since found iomap_iter_srcmap(). Sorry for the noise.
+Given the rarity of notification failures and the infrequency of
+registration events I think it would be ok for this to be a global
+lock rather than per-device. In fact there is already a global dax
+lock, see dax_read_lock(). Let's convert that from srcu to rwsem and
+add a dax_write_lock().
+
+> +       void *holder_data;
+>         unsigned long flags;
+>         const struct dax_operations *ops;
+> +       const struct dax_holder_operations *holder_ops;
+>  };
+>
+>  static ssize_t write_cache_show(struct device *dev,
+> @@ -373,6 +378,25 @@ int dax_zero_page_range(struct dax_device *dax_dev, pgoff_t pgoff,
+>  }
+>  EXPORT_SYMBOL_GPL(dax_zero_page_range);
+>
+> +int dax_holder_notify_failure(struct dax_device *dax_dev, loff_t offset,
+> +                             size_t size, void *data)
+> +{
+> +       int rc;
+> +
+> +       if (!dax_dev)
+> +               return -ENXIO;
+
+There also needs to be a dax_dev->alive check, which is only valid to
+be checked under dax_read_lock().
+
+Who would ever pass NULL to this function?
+
+> +
+> +       if (!dax_dev->holder_data)
+> +               return -EOPNOTSUPP;
+> +
+> +       down_read(&dax_dev->holder_rwsem);
+> +       rc = dax_dev->holder_ops->notify_failure(dax_dev, offset,
+> +                                                        size, data);
+> +       up_read(&dax_dev->holder_rwsem);
+
+
+
+> +       return rc;
+> +}
+> +EXPORT_SYMBOL_GPL(dax_holder_notify_failure);
+> +
+>  #ifdef CONFIG_ARCH_HAS_PMEM_API
+>  void arch_wb_cache_pmem(void *addr, size_t size);
+>  void dax_flush(struct dax_device *dax_dev, void *addr, size_t size)
+> @@ -603,6 +627,7 @@ struct dax_device *alloc_dax(void *private, const char *__host,
+>         dax_add_host(dax_dev, host);
+>         dax_dev->ops = ops;
+>         dax_dev->private = private;
+> +       init_rwsem(&dax_dev->holder_rwsem);
+>         if (flags & DAXDEV_F_SYNC)
+>                 set_dax_synchronous(dax_dev);
+>
+> @@ -624,6 +649,27 @@ void put_dax(struct dax_device *dax_dev)
+>  }
+>  EXPORT_SYMBOL_GPL(put_dax);
+>
+> +void dax_set_holder(struct dax_device *dax_dev, void *holder,
+> +               const struct dax_holder_operations *ops)
+> +{
+> +       if (!dax_dev)
+
+Same questions about NULL dax dev and ->alive checking.
+
+> +               return;
+> +       down_write(&dax_dev->holder_rwsem);
+> +       dax_dev->holder_data = holder;
+> +       dax_dev->holder_ops = ops;
+> +       up_write(&dax_dev->holder_rwsem);
+> +}
+> +EXPORT_SYMBOL_GPL(dax_set_holder);
+> +
+> +void *dax_get_holder(struct dax_device *dax_dev)
+> +{
+> +       if (!dax_dev)
+> +               return NULL;
+
+Where is this API used? This result is not valid unless the caller is
+holding the read lock.
+
+> +
+> +       return dax_dev->holder_data;
+> +}
+> +EXPORT_SYMBOL_GPL(dax_get_holder);
+> +
+>  /**
+>   * dax_get_by_host() - temporary lookup mechanism for filesystem-dax
+>   * @host: alternate name for the device registered by a dax driver
+> diff --git a/include/linux/dax.h b/include/linux/dax.h
+> index b52f084aa643..6f4b5c97ceb0 100644
+> --- a/include/linux/dax.h
+> +++ b/include/linux/dax.h
+> @@ -38,10 +38,17 @@ struct dax_operations {
+>         int (*zero_page_range)(struct dax_device *, pgoff_t, size_t);
+>  };
+>
+> +struct dax_holder_operations {
+> +       int (*notify_failure)(struct dax_device *, loff_t, size_t, void *);
+> +};
+> +
+>  extern struct attribute_group dax_attribute_group;
+>
+>  #if IS_ENABLED(CONFIG_DAX)
+>  struct dax_device *dax_get_by_host(const char *host);
+> +void dax_set_holder(struct dax_device *dax_dev, void *holder,
+> +               const struct dax_holder_operations *ops);
+> +void *dax_get_holder(struct dax_device *dax_dev);
+>  struct dax_device *alloc_dax(void *private, const char *host,
+>                 const struct dax_operations *ops, unsigned long flags);
+>  void put_dax(struct dax_device *dax_dev);
+> @@ -77,6 +84,14 @@ static inline struct dax_device *dax_get_by_host(const char *host)
+>  {
+>         return NULL;
+>  }
+> +static inline void dax_set_holder(struct dax_device *dax_dev, void *holder,
+> +               const struct dax_holder_operations *ops)
+> +{
+> +}
+> +static inline void *dax_get_holder(struct dax_device *dax_dev)
+> +{
+> +       return NULL;
+> +}
+>  static inline struct dax_device *alloc_dax(void *private, const char *host,
+>                 const struct dax_operations *ops, unsigned long flags)
+>  {
+> @@ -226,6 +241,8 @@ size_t dax_copy_to_iter(struct dax_device *dax_dev, pgoff_t pgoff, void *addr,
+>                 size_t bytes, struct iov_iter *i);
+>  int dax_zero_page_range(struct dax_device *dax_dev, pgoff_t pgoff,
+>                         size_t nr_pages);
+> +int dax_holder_notify_failure(struct dax_device *dax_dev, loff_t offset,
+> +               size_t size, void *data);
+>  void dax_flush(struct dax_device *dax_dev, void *addr, size_t size);
+>
+>  ssize_t dax_iomap_rw(struct kiocb *iocb, struct iov_iter *iter,
+> --
+> 2.32.0
+>
+>
+>
