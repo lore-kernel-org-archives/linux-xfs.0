@@ -4,61 +4,60 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58EF8C4338F
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Aug 2021 22:54:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E50FC4338F
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Aug 2021 02:39:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 30B0560F91
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Aug 2021 22:54:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 59DFF610CB
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Aug 2021 02:39:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233391AbhHSWyu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 19 Aug 2021 18:54:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47956 "EHLO
+        id S237677AbhHTCjt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 19 Aug 2021 22:39:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41940 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229533AbhHSWyu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Aug 2021 18:54:50 -0400
-Received: from mail-pg1-x52a.google.com (mail-pg1-x52a.google.com [IPv6:2607:f8b0:4864:20::52a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53642C061756
-        for <linux-xfs@vger.kernel.org>; Thu, 19 Aug 2021 15:54:13 -0700 (PDT)
-Received: by mail-pg1-x52a.google.com with SMTP id q2so7301161pgt.6
-        for <linux-xfs@vger.kernel.org>; Thu, 19 Aug 2021 15:54:13 -0700 (PDT)
+        with ESMTP id S234797AbhHTCjt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Aug 2021 22:39:49 -0400
+Received: from mail-pg1-x52c.google.com (mail-pg1-x52c.google.com [IPv6:2607:f8b0:4864:20::52c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94767C061757
+        for <linux-xfs@vger.kernel.org>; Thu, 19 Aug 2021 19:39:11 -0700 (PDT)
+Received: by mail-pg1-x52c.google.com with SMTP id c17so7769642pgc.0
+        for <linux-xfs@vger.kernel.org>; Thu, 19 Aug 2021 19:39:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=intel-com.20150623.gappssmtp.com; s=20150623;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=Lv2BeH4bgVl/il3tYjXjqwuIZSwlS9CtCv+JW+Pfbnk=;
-        b=dEJPorhN3VxbZejMS9q6PqBKwfMxKo1HPdf3+5BUH3dfXPgs88YSbj05k1hkBef+nM
-         7vvU9XbId6WFv2lSIWSM6XXy2UPxLdeQ01Wfso2qKlbUco0zvIots/ul6DKzQ3DZcYNi
-         P23cHa+p9+b2jIJWKtu1dQDl7lc5qIeAeuXdBKWusDgdFF5Zj6LRxzv+LIlIsEDHbKIC
-         bA+OW2FTcspqya2PhtHxAy1glalU05anLkdQRHMAOe/TGgzUsBpfY3vrr6LgE6ZRnpxT
-         PRy9SHdri/5ppUNRZwQkgaG+JzE/XBJi92LOIl7cj7phiuPVPAc4PUoOZ9875GEsDMjs
-         SlKA==
+        bh=B1IPaWShRHO+S25ine4LYsuzUXNhBul7A3bHVmcZDqE=;
+        b=0gwRYHEqYWePuJCzO2svmy0/lNuaBmSffRSw1ZofYgxmAU/rssfc+J1MepkcG6/okN
+         7V8fqOUyi+1+K8GqJ1GgeDmO8mORGRYMVNU9mnG2b171m9Hy/3u4njWDORMDsh5hJ06V
+         LNMSW1mDL9CaYbJXLwxx2k2tgtvsz/1cBki1zgdzoCq799wzfIPJLoJLsR2geNBdRzzf
+         iVkedpOQXO0SHka0x3RqsLVCzVRDc/tYrK3D43xKZQF5ffMDIRRJNy2q2wz9+86t64aD
+         IHOgNhxcPwN8gOBwQFkQTUCj/xQ3XX3FMqILbPVk5NnmdwWtZqv6AkcT3rUl3YWu9d47
+         NkTw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=Lv2BeH4bgVl/il3tYjXjqwuIZSwlS9CtCv+JW+Pfbnk=;
-        b=WBjX/kCBfB4JyfSTcWUgFcVq1RRD1qmd7C8db+pRTuHq7Bop3RJ0sjXwm4WMY7ekcA
-         a7aa7DADo/BErojm1cn6fp9uVesBeZ/QmroeJZwH420DfIvk4N4mZBMitlKyhGxJFNHW
-         NrAL7Y5x6XJd8R7CBbRV+jQGnfh4Mfd0mY6pns2SAzG0kYFs2VUivdKDfV6Nh4eO3nBz
-         8AYc9JdbhQrWB1ckrxUTHLcs/AJb7t3ZM0mhmI/6wPzhMf9fxehFSifRiNPJH9cdg6QR
-         Mc8GgDhDBOWjgO3N+iFWmf4MVInr+VJrBKfOw3Eyrz/vlUjiduITmL71eNOvIZQPFSQr
-         XV2w==
-X-Gm-Message-State: AOAM5308WGKNudILiM8+qtdFvUUnJ4e5dLJfFz/vG5TM9mvn9xMS/fV/
-        g2B3V7dDOO/KN/4ZPsLAF2BghwyK9OTdXc0ZHZ3ENA==
-X-Google-Smtp-Source: ABdhPJy6c4gZ53hpbV6ORkyR2hmtHChkZnjGtdS6jdctPV28zWH0Y9aOAbm0cOMMyjXm7vkX87wjxDLfz1NQUUNKdrQ=
-X-Received: by 2002:a05:6a00:16c6:b029:32d:e190:9dd0 with SMTP id
- l6-20020a056a0016c6b029032de1909dd0mr16584327pfc.70.1629413652651; Thu, 19
- Aug 2021 15:54:12 -0700 (PDT)
+        bh=B1IPaWShRHO+S25ine4LYsuzUXNhBul7A3bHVmcZDqE=;
+        b=FbOjz4pkueE/59fuar1mK4ekrN7IgMvLckRHjw4jm5pKZo2qw0mlWkP3hlDJgjN+iC
+         i58HIpMyrMQ7+YYIAuwqhwZXrJ+u+Zuu4cQQ2bOQr/ZTvBWaNORTirlE4jnDRVBpwZne
+         RL+FRkXR7Z99m3TQWAs8AgqMCl+ENcn9tIThplvNSLc+e7Ou+37cTQmCd9fODUKacQBO
+         K8rsgc4aofZPgtILkehCnFH1XqGf5/4PBeNUNm4t1+D/RJ0uM/VYck1BycPWImPufTGh
+         bORdCv9D8GXanlGZj4wn6U7zhcrJWk8RXvkx+82XopqZMzGEz/C2tKVs6IF/MVx17VX8
+         GyYw==
+X-Gm-Message-State: AOAM532ljI2kZnJhqRXo/Gf1G+AC+5xFAKPkSj7znB6zIYdyvxiO7kpb
+        gpt9+yy5EV39q6jC0aFDsqlK90QOJdalpZpOqN877Q==
+X-Google-Smtp-Source: ABdhPJwc+o+M3KzvmYCuetm2zFZXHE5MraYO1ybETeCPb1awpwHv4HohqKP5JpPREoXBHHDM7lWNAj4l1bsIBGP++Fw=
+X-Received: by 2002:a63:311:: with SMTP id 17mr16548751pgd.450.1629427151147;
+ Thu, 19 Aug 2021 19:39:11 -0700 (PDT)
 MIME-Version: 1.0
-References: <20210816060359.1442450-1-ruansy.fnst@fujitsu.com> <20210816060359.1442450-4-ruansy.fnst@fujitsu.com>
-In-Reply-To: <20210816060359.1442450-4-ruansy.fnst@fujitsu.com>
+References: <20210816060359.1442450-1-ruansy.fnst@fujitsu.com> <20210816060359.1442450-5-ruansy.fnst@fujitsu.com>
+In-Reply-To: <20210816060359.1442450-5-ruansy.fnst@fujitsu.com>
 From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Thu, 19 Aug 2021 15:54:01 -0700
-Message-ID: <CAPcyv4iOSxoy-qGfAd3i4uzwfDX0t1xTmyM0pNd+-euVMDUwrQ@mail.gmail.com>
-Subject: Re: [PATCH v7 3/8] fsdax: Replace mmap entry in case of CoW
+Date:   Thu, 19 Aug 2021 19:39:00 -0700
+Message-ID: <CAPcyv4gFDyXqu5NyrWQ9Y_JqjLmCb8pWQgPZVBYE=dOir2KdzA@mail.gmail.com>
+Subject: Re: [PATCH v7 4/8] fsdax: Add dax_iomap_cow_copy() for dax_iomap_zero
 To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
 Cc:     "Darrick J. Wong" <djwong@kernel.org>,
         Christoph Hellwig <hch@lst.de>,
@@ -70,73 +69,59 @@ Cc:     "Darrick J. Wong" <djwong@kernel.org>,
         Goldwyn Rodrigues <rgoldwyn@suse.de>,
         Al Viro <viro@zeniv.linux.org.uk>,
         Matthew Wilcox <willy@infradead.org>,
-        Goldwyn Rodrigues <rgoldwyn@suse.com>,
         Ritesh Harjani <riteshh@linux.ibm.com>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Aug 15, 2021 at 11:05 PM Shiyang Ruan <ruansy.fnst@fujitsu.com> wrote:
+On Sun, Aug 15, 2021 at 11:04 PM Shiyang Ruan <ruansy.fnst@fujitsu.com> wrote:
 >
-> We replace the existing entry to the newly allocated one in case of CoW.
-> Also, we mark the entry as PAGECACHE_TAG_TOWRITE so writeback marks this
-> entry as writeprotected.  This helps us snapshots so new write
-> pagefaults after snapshots trigger a CoW.
+> Punch hole on a reflinked file needs dax_iomap_cow_copy() too.
+> Otherwise, data in not aligned area will be not correct.  So, add the
+> srcmap to dax_iomap_zero() and replace memset() as dax_iomap_cow_copy().
 >
-> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 > Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
 > Reviewed-by: Ritesh Harjani <riteshh@linux.ibm.com>
 > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 > ---
->  fs/dax.c | 39 ++++++++++++++++++++++++++++-----------
->  1 file changed, 28 insertions(+), 11 deletions(-)
+>  fs/dax.c               | 25 +++++++++++++++----------
+>  fs/iomap/buffered-io.c |  4 ++--
+>  include/linux/dax.h    |  3 ++-
+>  3 files changed, 19 insertions(+), 13 deletions(-)
 >
 > diff --git a/fs/dax.c b/fs/dax.c
-> index 697a7b7bb96f..e49ba68cc7e4 100644
+> index e49ba68cc7e4..91ceb518f66a 100644
 > --- a/fs/dax.c
 > +++ b/fs/dax.c
-> @@ -734,6 +734,10 @@ static int copy_cow_page_dax(struct block_device *bdev, struct dax_device *dax_d
->         return 0;
+> @@ -1198,7 +1198,8 @@ static vm_fault_t dax_pmd_load_hole(struct xa_state *xas, struct vm_fault *vmf,
 >  }
+>  #endif /* CONFIG_FS_DAX_PMD */
 >
-> +/* DAX Insert Flag: The state of the entry we insert */
-> +#define DAX_IF_DIRTY           (1 << 0)
-> +#define DAX_IF_COW             (1 << 1)
-> +
->  /*
->   * By this point grab_mapping_entry() has ensured that we have a locked entry
->   * of the appropriate size so we don't have to worry about downgrading PMDs to
-> @@ -741,16 +745,19 @@ static int copy_cow_page_dax(struct block_device *bdev, struct dax_device *dax_d
->   * already in the tree, we will skip the insertion and just dirty the PMD as
->   * appropriate.
->   */
-> -static void *dax_insert_entry(struct xa_state *xas,
-> -               struct address_space *mapping, struct vm_fault *vmf,
-> -               void *entry, pfn_t pfn, unsigned long flags, bool dirty)
-> +static void *dax_insert_entry(struct xa_state *xas, struct vm_fault *vmf,
-> +               void *entry, pfn_t pfn, unsigned long flags,
-> +               unsigned int insert_flags)
-
-I'm late, so feel free to ignore this style feedback, but what about
-changing the signature to:
-
-static void *dax_insert_entry(struct xa_state *xas, struct vm_fault *vmf,
-                              const struct iomap_iter *iter, void
-*entry, pfn_t pfn,
-                              unsigned long flags)
-
-
+> -s64 dax_iomap_zero(loff_t pos, u64 length, struct iomap *iomap)
+> +s64 dax_iomap_zero(loff_t pos, u64 length, const struct iomap *iomap,
+> +               const struct iomap *srcmap)
 >  {
-> +       struct address_space *mapping = vmf->vma->vm_file->f_mapping;
->         void *new_entry = dax_make_entry(pfn, flags);
-> +       bool dirty = insert_flags & DAX_IF_DIRTY;
-> +       bool cow = insert_flags & DAX_IF_COW;
+>         sector_t sector = iomap_sector(iomap, pos & PAGE_MASK);
+>         pgoff_t pgoff;
+> @@ -1220,19 +1221,23 @@ s64 dax_iomap_zero(loff_t pos, u64 length, struct iomap *iomap)
+>
+>         if (page_aligned)
+>                 rc = dax_zero_page_range(iomap->dax_dev, pgoff, 1);
+> -       else
+> +       else {
+>                 rc = dax_direct_access(iomap->dax_dev, pgoff, 1, &kaddr, NULL);
+> -       if (rc < 0) {
+> -               dax_read_unlock(id);
+> -               return rc;
+> -       }
+> -
+> -       if (!page_aligned) {
+> -               memset(kaddr + offset, 0, size);
+> +               if (rc < 0)
+> +                       goto out;
+> +               if (iomap->addr != srcmap->addr) {
+> +                       rc = dax_iomap_cow_copy(pos, size, PAGE_SIZE, srcmap,
+> +                                               kaddr);
 
-...and then calculate these flags from the source data. I'm just
-reacting to "yet more flags".
-
-So, take it or leave it,
-
-Reviewed-by: Dan Williams <dan.j.williams@intel.com>
+Apologies, I'm confused, why is it ok to skip zeroing here?
