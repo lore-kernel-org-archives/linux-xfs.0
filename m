@@ -2,131 +2,236 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62508C432BE
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Aug 2021 07:24:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C516C4338F
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Aug 2021 10:12:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 48DF9610A3
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Aug 2021 07:24:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 26F2360F4A
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Aug 2021 10:12:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238808AbhHTHZO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 20 Aug 2021 03:25:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49496 "EHLO
+        id S238065AbhHTKNN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 20 Aug 2021 06:13:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60278 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238617AbhHTHZN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Aug 2021 03:25:13 -0400
-Received: from mail-ej1-x62e.google.com (mail-ej1-x62e.google.com [IPv6:2a00:1450:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36FAEC061575;
-        Fri, 20 Aug 2021 00:24:36 -0700 (PDT)
-Received: by mail-ej1-x62e.google.com with SMTP id d11so18207308eja.8;
-        Fri, 20 Aug 2021 00:24:36 -0700 (PDT)
+        with ESMTP id S232659AbhHTKNM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Aug 2021 06:13:12 -0400
+Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33539C061575
+        for <linux-xfs@vger.kernel.org>; Fri, 20 Aug 2021 03:12:35 -0700 (PDT)
+Received: by mail-pf1-x430.google.com with SMTP id 18so8171198pfh.9
+        for <linux-xfs@vger.kernel.org>; Fri, 20 Aug 2021 03:12:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:reply-to:from:date:message-id
-         :subject:to:cc;
-        bh=hackIAZ3S1L343gFXtpY/gtSDJbx92UQ+Z1VIutr7Q4=;
-        b=g5yqqWSA4TLqINjr1gWlzC3DhuGDPMwW2AAzRfYhxUb7bYXOzF6Ib490yt1JaYTU8T
-         wfHDhznvJ+7YGogl+Sr1RkAbH5LSmuosTtBFlIlSDkdHsWxZtrD6kYgUtggf7S8rl9AM
-         ka2pLHFhvIHXWAZcVD7XlOPLd2OrUwFosIHlUdvYbrPxmhm+uQJA7Xj2NCNxfY9MYQ5Z
-         ZOKMbyArtXZtYfDk1czutDEhL16nNZe5pKW+p53gCX82RVV2iOV2SqswhJh23xq5e3nF
-         wU4wK8uBSSbIrY1ConUJzP2LMLH8Fp5TlfbQBZFyqmgyeCGyg0bpWlovZmKfY9073clk
-         uSVQ==
+        h=references:user-agent:from:to:cc:subject:in-reply-to:message-id
+         :date:mime-version;
+        bh=PGiPK+BE2IhWPV4JtIdF5RjBVy+Hmm6oG3huqD6BSmc=;
+        b=kyhVgrRuuhmyt4LXBQCP9FR+Lcsy26TVoxzAlMqO5ukSk3gVudReODBWMjLzGlSy7Z
+         6alIRRjxUIZki5uWZuyBSttM+/gaRTG+tYDai0gsX3utxlUV8OFQ2bb323V57j0neRth
+         29RmCdMF638JqZm9u0jD/cFBq5i0Lw0NA5X/rKY/r/sOfzo3FmOa607LB0o5Rdxk20ac
+         O9wcs8rTvqO3yF3DzeUTn4bvEhNXLpfaTku6sdq/70YVuU4/CmRTer+m8Q4rhr+L1Efo
+         MvxC0rFqKXKk87ae69T+Kkp2VjvPEFSDAsDMnr8tjTcCjX9GotlpGPJX3D9mm8BpZ7ca
+         garQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:reply-to
-         :from:date:message-id:subject:to:cc;
-        bh=hackIAZ3S1L343gFXtpY/gtSDJbx92UQ+Z1VIutr7Q4=;
-        b=mJAyWPZEmX1EOFgXm8QofDAClzFVvgtmL2hd3Sucxtly3YQLpqIrxYxMUI5iv9qqAJ
-         wPhiypxRPpryjCB9bC+2+g8pe24PCA3xwHl4fY/DdryrleiUrcHhCmbKkB8a0KcveRWS
-         oD+w4qU2YIH0mUclE8OBtkck//lBpFA9Mj2sxSHURQPps09RIUrE6ynaJtfhxG7CBP+s
-         ZJO3TT1JchUZfBTRprVmHU3GzXSf+3kkPK9B3HdxA2a4X3ZDnc7fQoivoyUNNNLyFCJb
-         maS8q3fsy2aReOtU1wMHz6Odz/DVFLOFMWjPNl0uPUtpX0okoO0maFRlCeMzT7Bo97RV
-         LB9A==
-X-Gm-Message-State: AOAM532I+CgUOyYzMyHL5I9b4BnIgwiwbJ2t/I7C1Ytx2D3GuIBxHGp8
-        oQUzoZKFokmx2vMFbMMq21Zm9cz+GnWsVLNhdxM=
-X-Google-Smtp-Source: ABdhPJwyKQMVEx7L/ikxtW82X48PcfARrIBCnNbsdgDsW8gvfmgcYX6kBNSV0Omk/D8TyPfB2pw1wTOxxepwKUL87Yw=
-X-Received: by 2002:a17:906:c1c9:: with SMTP id bw9mr20251460ejb.3.1629444274765;
- Fri, 20 Aug 2021 00:24:34 -0700 (PDT)
+        h=x-gm-message-state:references:user-agent:from:to:cc:subject
+         :in-reply-to:message-id:date:mime-version;
+        bh=PGiPK+BE2IhWPV4JtIdF5RjBVy+Hmm6oG3huqD6BSmc=;
+        b=qpo1LMsvh0ds1cAjmnEhw3N5n5eHeYRrOh1QUq/wXwhPB4Cgl5AXiNnp+mJVMdkKJz
+         WF0mwihXarPVaHpKYktTb6mS415KTsOqHSmnU26qE25FupeO1LXwAYgukH/yo5DkgE5X
+         qG9KLZWiTLkZJ1bQToK2taX5kk/g0fFRql/FWwpY1k+nG/0tj7so2EcDSlFKEbmOEu1g
+         9yeHfaWzPDR8jk6N9OxV4LP6FgRQxu9qOTpN5SGd+8I4kgSaIrP/HMAZtJ3fsYr5Og3e
+         MGQ9QC6it/VTYkkEOpxO20y+q2rq7SjFUpJKOrPVfF4lLHg1WO7qFZlsmzz3I53PZAI4
+         5TpA==
+X-Gm-Message-State: AOAM530i7JKe4U9hNJY/zj3uC7h57mSjlI+2V8SR0h0CieO4HF5M4rn7
+        ZnhRjyfiZn2ShW2t+BWeT2g=
+X-Google-Smtp-Source: ABdhPJyOpymMJx8itr85af10PhcuzXzeXy7OBiQ//P6F4+CdVVoYbO9y7t9POaOTboe8GhZsyH1VSA==
+X-Received: by 2002:a05:6a00:1626:b029:3e0:99b6:b320 with SMTP id e6-20020a056a001626b02903e099b6b320mr18982169pfc.25.1629454354717;
+        Fri, 20 Aug 2021 03:12:34 -0700 (PDT)
+Received: from garuda ([122.179.118.216])
+        by smtp.gmail.com with ESMTPSA id s188sm6388997pfb.4.2021.08.20.03.12.33
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Fri, 20 Aug 2021 03:12:34 -0700 (PDT)
+References: <20210820050647.GW12640@magnolia>
+User-agent: mu4e 1.4.15; emacs 27.1
+From:   Chandan Babu R <chandanrlinux@gmail.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     xfs <linux-xfs@vger.kernel.org>, oliver.sang@intel.com
+Subject: Re: [PATCH] xfs: fix perag structure refcounting error when scrub
+ fails
+In-reply-to: <20210820050647.GW12640@magnolia>
+Message-ID: <87a6lcpgq8.fsf@debian-BULLSEYE-live-builder-AMD64>
+Date:   Fri, 20 Aug 2021 15:42:31 +0530
 MIME-Version: 1.0
-References: <20210813063150.2938-1-alex.sierra@amd.com> <20210813063150.2938-9-alex.sierra@amd.com>
- <20210815154047.GC32384@lst.de> <7a55366f-bd65-7ab9-be9e-3bfd3aea3ea1@amd.com>
- <20210817055031.GC4895@lst.de> <e5eb53f9-c52a-52e1-5fa0-bb468c0c9c85@amd.com> <20210820050504.GB27083@lst.de>
-In-Reply-To: <20210820050504.GB27083@lst.de>
-Reply-To: j.glisse@gmail.com
-From:   Jerome Glisse <j.glisse@gmail.com>
-Date:   Fri, 20 Aug 2021 00:24:22 -0700
-Message-ID: <CAH3drwbWPFESOGEOFXQKjkhUPmwDEB3nKwcV=S64FPuTimN_Yw@mail.gmail.com>
-Subject: Re: [PATCH v6 08/13] mm: call pgmap->ops->page_free for
- DEVICE_GENERIC pages
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Felix Kuehling <felix.kuehling@amd.com>,
-        Alex Sierra <alex.sierra@amd.com>,
-        Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org,
-        Ralph Campbell <rcampbell@nvidia.com>,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        amd-gfx list <amd-gfx@lists.freedesktop.org>,
-        Maling list - DRI developers 
-        <dri-devel@lists.freedesktop.org>, jgg@nvidia.com,
-        Jerome Glisse <jglisse@redhat.com>,
-        Roger Pau Monne <roger.pau@citrix.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 19, 2021 at 10:05 PM Christoph Hellwig <hch@lst.de> wrote:
+On 20 Aug 2021 at 10:36, Darrick J. Wong wrote:
+> The kernel test robot found the following bug when running xfs/355 to
+> scrub a bmap btree:
 >
-> On Tue, Aug 17, 2021 at 11:44:54AM -0400, Felix Kuehling wrote:
-> > >> That's a good catch. Existing drivers shouldn't need a page_free
-> > >> callback if they didn't have one before. That means we need to add a
-> > >> NULL-pointer check in free_device_page.
-> > > Also the other state clearing (__ClearPageWaiters/mem_cgroup_uncharge/
-> > > ->mapping = NULL).
-> > >
-> > > In many ways this seems like you want to bring back the DEVICE_PUBLIC
-> > > pgmap type that was removed a while ago due to the lack of users
-> > > instead of overloading the generic type.
-> >
-> > I think so. I'm not clear about how DEVICE_PUBLIC differed from what
-> > DEVICE_GENERIC is today. As I understand it, DEVICE_PUBLIC was removed
-> > because it was unused and also known to be broken in some ways.
-> > DEVICE_GENERIC seemed close enough to what we need, other than not being
-> > supported in the migration helpers.
-> >
-> > Would you see benefit in re-introducing DEVICE_PUBLIC as a distinct
-> > memory type from DEVICE_GENERIC? What would be the benefits of making
-> > that distinction?
+> XFS: Assertion failed: !sa->pag, file: fs/xfs/scrub/common.c, line: 412
+> ------------[ cut here ]------------
+> kernel BUG at fs/xfs/xfs_message.c:110!
+> invalid opcode: 0000 [#1] SMP PTI
+> CPU: 2 PID: 1415 Comm: xfs_scrub Not tainted 5.14.0-rc4-00021-g48c6615cc557 #1
+> Hardware name: Hewlett-Packard p6-1451cx/2ADA, BIOS 8.15 02/05/2013
+> RIP: 0010:assfail+0x23/0x28 [xfs]
+> RSP: 0018:ffffc9000aacb890 EFLAGS: 00010202
+> RAX: 0000000000000000 RBX: ffffc9000aacbcc8 RCX: 0000000000000000
+> RDX: 00000000ffffffc0 RSI: 000000000000000a RDI: ffffffffc09e7dcd
+> RBP: ffffc9000aacbc80 R08: ffff8881fdf17d50 R09: 0000000000000000
+> R10: 000000000000000a R11: f000000000000000 R12: 0000000000000000
+> R13: ffff88820c7ed000 R14: 0000000000000001 R15: ffffc9000aacb980
+> FS:  00007f185b955700(0000) GS:ffff8881fdf00000(0000) knlGS:0000000000000000
+> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> CR2: 00007f7f6ef43000 CR3: 000000020de38002 CR4: 00000000001706e0
+> Call Trace:
+>  xchk_ag_read_headers+0xda/0x100 [xfs]
+>  xchk_ag_init+0x15/0x40 [xfs]
+>  xchk_btree_check_block_owner+0x76/0x180 [xfs]
+>  xchk_btree_get_block+0xd0/0x140 [xfs]
+>  xchk_btree+0x32e/0x440 [xfs]
+>  xchk_bmap_btree+0xd4/0x140 [xfs]
+>  xchk_bmap+0x1eb/0x3c0 [xfs]
+>  xfs_scrub_metadata+0x227/0x4c0 [xfs]
+>  xfs_ioc_scrub_metadata+0x50/0xc0 [xfs]
+>  xfs_file_ioctl+0x90c/0xc40 [xfs]
+>  __x64_sys_ioctl+0x83/0xc0
+>  do_syscall_64+0x3b/0xc0
 >
-> The old DEVICE_PUBLIC mostly different in that it allowed the page
-> to be returned from vm_normal_page, which I think was horribly buggy.
+> The unusual handling of errors while initializing struct xchk_ag is the
+> root cause here.  Since the beginning of xfs_scrub, the goal of
+> xchk_ag_read_headers has been to read all three AG header buffers and
+> attach them both to the xchk_ag structure and the scrub transaction.
+> Corruption errors on any of the three headers doesn't necessarily
+> trigger an immediate return to userspace, because xfs_scrub can also
+> tell us to /fix/ the problem.
+>
+> In other words, it's possible for the xchk_ag init functions to return
+> an error code and a partially filled out structure so that scrub can use
+> however much information it managed to pull.  Before 5.15, it was
+> sufficient to cancel (or commit) the scrub transaction on the way out of
+> the scrub code to release the buffers.
+>
+> Ccommit 48c6615cc557 added a reference to the perag structure to struct
+> xchk_ag.  Since perag structures are not attached to transactions like
+> buffers are, this adds the requirement that the perag ref be released
+> explicitly.  The scrub teardown function xchk_teardown was amended to do
+> this for the xchk_ag embedded in struct xfs_scrub.
+>
+> Unfortunately, I forgot that certain parts of the scrub code probe
+> multiple AGs and therefore handle the initialization and cleanup on
+> their own.  Specifically, the bmbt scrubber will initialize it long
+> enough to cross-reference AG metadata for btree blocks and for the
+> extent mappings in the bmbt.
+>
+> If one of the AG headers is corrupt, the init function returns with a
+> live perag structure reference and some of the AG header buffers.  If an
+> error occurs, the cross referencing will be noted as XCORRUPTion and
+> skipped, but the main scrub process will move on to the next record.
+> It is now necessary to release the perag reference before we try to
+> analyze something from a different AG, or else we'll trip over the
+> assertion noted above.
 
-Why was that buggy ? If I were to do it now, i would return
-DEVICE_PUBLIC page from vm_normal_page but i would ban pinning as
-pinning is exceptionally wrong for GPU. If you migrate some random
-anonymous/file back to your GPU memory and it gets pinned there then
-there is no way for the GPU to migrate the page out. Quickly you will
-run out of physically contiguous memory and things like big graphic
-buffer allocation (anything that needs physically contiguous memory)
-will fail. It is less of an issue on some hardware that rely less and
-less on physically contiguous memory but i do not think it is
-completely gone from all hw.
+Looks good to me.
 
-> But the point is not to bring back these old semantics.  The idea
-> is to be able to differeniate between your new coherent on-device
-> memory and the existing DEVICE_GENERIC.  That is call the
-> code in free_devmap_managed_page that is currently only used
-> for device private pages also for your new public device pages without
-> affecting the devdax and xen use cases.
+Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 
-Yes, I would rather bring back DEVICE_PUBLIC then try to use
-DEVICE_GENERIC, the GENERIC change was done for users that closely
-matched DAX semantics and it is not the case here, at least not from
-my point of view.
+>
+> Fixes: 48c6615cc557 ("xfs: grab active perag ref when reading AG headers")
+> Reported-by: kernel test robot <oliver.sang@intel.com>
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  fs/xfs/scrub/bmap.c       |    3 ++-
+>  fs/xfs/scrub/btree.c      |    3 ++-
+>  fs/xfs/scrub/fscounters.c |    2 +-
+>  fs/xfs/scrub/inode.c      |    3 ++-
+>  4 files changed, 7 insertions(+), 4 deletions(-)
+>
+> diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+> index 2df5e5a51cbd..017da9ceaee9 100644
+> --- a/fs/xfs/scrub/bmap.c
+> +++ b/fs/xfs/scrub/bmap.c
+> @@ -263,7 +263,7 @@ xchk_bmap_iextent_xref(
+>  	error = xchk_ag_init_existing(info->sc, agno, &info->sc->sa);
+>  	if (!xchk_fblock_process_error(info->sc, info->whichfork,
+>  			irec->br_startoff, &error))
+> -		return;
+> +		goto out_free;
+>  
+>  	xchk_xref_is_used_space(info->sc, agbno, len);
+>  	xchk_xref_is_not_inode_chunk(info->sc, agbno, len);
+> @@ -283,6 +283,7 @@ xchk_bmap_iextent_xref(
+>  		break;
+>  	}
+>  
+> +out_free:
+>  	xchk_ag_free(info->sc, &info->sc->sa);
+>  }
+>  
+> diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
+> index fd832f103fa4..eccb855dc904 100644
+> --- a/fs/xfs/scrub/btree.c
+> +++ b/fs/xfs/scrub/btree.c
+> @@ -377,7 +377,7 @@ xchk_btree_check_block_owner(
+>  		error = xchk_ag_init_existing(bs->sc, agno, &bs->sc->sa);
+>  		if (!xchk_btree_xref_process_error(bs->sc, bs->cur,
+>  				level, &error))
+> -			return error;
+> +			goto out_free;
+>  	}
+>  
+>  	xchk_xref_is_used_space(bs->sc, agbno, 1);
+> @@ -393,6 +393,7 @@ xchk_btree_check_block_owner(
+>  	if (!bs->sc->sa.rmap_cur && btnum == XFS_BTNUM_RMAP)
+>  		bs->cur = NULL;
+>  
+> +out_free:
+>  	if (init_sa)
+>  		xchk_ag_free(bs->sc, &bs->sc->sa);
+>  
+> diff --git a/fs/xfs/scrub/fscounters.c b/fs/xfs/scrub/fscounters.c
+> index 737aa5b39d5e..48a6cbdf95d0 100644
+> --- a/fs/xfs/scrub/fscounters.c
+> +++ b/fs/xfs/scrub/fscounters.c
+> @@ -150,7 +150,7 @@ xchk_fscount_btreeblks(
+>  
+>  	error = xchk_ag_init_existing(sc, agno, &sc->sa);
+>  	if (error)
+> -		return error;
+> +		goto out_free;
+>  
+>  	error = xfs_btree_count_blocks(sc->sa.bno_cur, &blocks);
+>  	if (error)
+> diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
+> index d6e0e3a11fbc..2405b09d03d0 100644
+> --- a/fs/xfs/scrub/inode.c
+> +++ b/fs/xfs/scrub/inode.c
+> @@ -533,7 +533,7 @@ xchk_inode_xref(
+>  
+>  	error = xchk_ag_init_existing(sc, agno, &sc->sa);
+>  	if (!xchk_xref_process_error(sc, agno, agbno, &error))
+> -		return;
+> +		goto out_free;
+>  
+>  	xchk_xref_is_used_space(sc, agbno, 1);
+>  	xchk_inode_xref_finobt(sc, ino);
+> @@ -541,6 +541,7 @@ xchk_inode_xref(
+>  	xchk_xref_is_not_shared(sc, agbno, 1);
+>  	xchk_inode_xref_bmap(sc, dip);
+>  
+> +out_free:
+>  	xchk_ag_free(sc, &sc->sa);
+>  }
+>  
 
-Jerome
+
+-- 
+chandan
