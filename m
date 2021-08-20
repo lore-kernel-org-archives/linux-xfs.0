@@ -2,179 +2,205 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64A83C4338F
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Aug 2021 14:39:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57573C4338F
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Aug 2021 15:19:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 43B6560F39
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Aug 2021 14:39:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4116960ED6
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Aug 2021 15:19:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240819AbhHTOjv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 20 Aug 2021 10:39:51 -0400
-Received: from mx3.molgen.mpg.de ([141.14.17.11]:44589 "EHLO mx1.molgen.mpg.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S231706AbhHTOju (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 20 Aug 2021 10:39:50 -0400
-Received: from [192.168.0.7] (ip5f5aeb6c.dynamic.kabel-deutschland.de [95.90.235.108])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 3DF5E61E5FE02;
-        Fri, 20 Aug 2021 16:39:12 +0200 (CEST)
-Subject: Re: Slow file operations on file server with 10 TB hardware RAID and
- 100 TB software RAID
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
-To:     linux-xfs@vger.kernel.org
-Cc:     it+linux-xfs@molgen.mpg.de
-References: <dcc07afa-08c3-d2d3-7900-75adb290a1bc@molgen.mpg.de>
-Message-ID: <3e380495-5f85-3226-f0cf-4452e2b77ccb@molgen.mpg.de>
-Date:   Fri, 20 Aug 2021 16:39:11 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.13.0
+        id S234323AbhHTPTp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 20 Aug 2021 11:19:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46190 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S240956AbhHTPTk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Aug 2021 11:19:40 -0400
+Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40BDEC061757
+        for <linux-xfs@vger.kernel.org>; Fri, 20 Aug 2021 08:18:56 -0700 (PDT)
+Received: by mail-pj1-x102b.google.com with SMTP id qe12-20020a17090b4f8c00b00179321cbae7so7483572pjb.2
+        for <linux-xfs@vger.kernel.org>; Fri, 20 Aug 2021 08:18:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=e7Os9VAnizBXv51HC/2jWtdqVC6IT3MX2PEly7Hzllc=;
+        b=M+ibRtOTQAZRmC0FnL3AMilGRh2mUgMJmWUfg9JNOtAKXFs9lFLPXucpaO7ELUpNDb
+         EGbzGydfkHCtIjzQLeNz+1/fIOA2rFhRJv3yC4ZhYvpISJH4iNfkhazi5Hz/Nq0fpYXO
+         QpGdn8L+8PdTFb0E+p78qZDHRXkUnXo7JNSYlGQecnF0IhE5VtdC/Y+7Y9yUsL+y7PV3
+         5x4ObvPPy0AxrVohJG1gL8vPnbME69k1gCKAA1GyMrEqgR+PWW/PMthly7voCniXVW59
+         FcwvvH0AWzl2X+1XFpdijT2XoPDvNcAXBc2pyggbrImBdT+vil40sbH7g0dNEEtf0bPA
+         hjMA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=e7Os9VAnizBXv51HC/2jWtdqVC6IT3MX2PEly7Hzllc=;
+        b=rz1YtarG2j7gzIIxnR6jTzE+cWnIOtoy58TmV8VTx+VdAnuse87oKI58iaOae1oT0K
+         /HFq/lZeUsxs6/oFxkZKYSPXHYl7SjdYVwDar9v8wt+Xuzo59o6CxX9ALUou0GclZafE
+         cpr1IyatX4ZB1GTSfSHAVZO1w0AZF64LFaaqxG97fgpIg58Gi/NHhUkTH1ZaAI9Ykwwt
+         KG6Y7t7aajx8fZNMVS+eg41vZYRcJiR43xjxsWQk3JAnnS3ToXFPC84zkZBipVhLsjGc
+         xFR6iQqWNLCAUGe6+cyOFVjeBqyrAW7zPRbbuMzzjSoEA4s4r9ueAjM6dxkb/pOlV1CN
+         Lmvw==
+X-Gm-Message-State: AOAM5308dybEgtrWTm0gFkFO2CFgEKWO7RTnWP0XYXK8n+xRNoxAIe40
+        U6R9hihwPcU5Jg+S5p2YZhGYcMMSsTwBa09TnZ5HGA==
+X-Google-Smtp-Source: ABdhPJzh0Gic3915Mh1iFhrG9Et6Tc2pawPckB/akGEtXtIixYmIi3AnAExi5rU0t9vJgG3HUdy+9gqyxaTkb99WGQ0=
+X-Received: by 2002:a17:90a:708c:: with SMTP id g12mr5224172pjk.13.1629472735668;
+ Fri, 20 Aug 2021 08:18:55 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <dcc07afa-08c3-d2d3-7900-75adb290a1bc@molgen.mpg.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+References: <20210816060359.1442450-1-ruansy.fnst@fujitsu.com>
+ <20210816060359.1442450-8-ruansy.fnst@fujitsu.com> <CAPcyv4jbi=p=SjFYZcHnEAu+KY821pW_k_yA5u6hya4jEfrTUg@mail.gmail.com>
+ <c7e68dc8-5a43-f727-c262-58dcf244c711@fujitsu.com>
+In-Reply-To: <c7e68dc8-5a43-f727-c262-58dcf244c711@fujitsu.com>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Fri, 20 Aug 2021 08:18:44 -0700
+Message-ID: <CAPcyv4jM86gy-T5EEZf6M2m44v4MiGqYDhxisX59M5QJii6DVg@mail.gmail.com>
+Subject: Re: [PATCH v7 7/8] fsdax: Introduce dax_iomap_ops for end of reflink
+To:     "ruansy.fnst" <ruansy.fnst@fujitsu.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        david <david@fromorbit.com>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux NVDIMM <nvdimm@lists.linux.dev>,
+        Goldwyn Rodrigues <rgoldwyn@suse.de>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Matthew Wilcox <willy@infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Dear Linux folks,
-
-
-Am 20.08.21 um 16:31 schrieb Paul Menzel:
-
-> Short problem statement: Sometimes changing into a directory on a file 
-> server wit 30 TB hardware RAID and 100 TB software RAID both formatted 
-> with XFS takes several seconds.
-> 
-> 
-> On a Dell PowerEdge T630 with two Xeon CPU E5-2603 v4 @ 1.70GHz and 96 
-> GB RAM a 30 TB hardware RAID is served by the hardware RAID controller 
-> and a 100 TB MDRAID software RAID connected to a Microchip 1100-8e both 
-> formatted using XFS. Currently, Linux 5.4.39 runs on it.
-> 
+On Thu, Aug 19, 2021 at 11:13 PM ruansy.fnst <ruansy.fnst@fujitsu.com> wrot=
+e:
+>
+>
+>
+> On 2021/8/20 =E4=B8=8A=E5=8D=8811:01, Dan Williams wrote:
+> > On Sun, Aug 15, 2021 at 11:05 PM Shiyang Ruan <ruansy.fnst@fujitsu.com>=
+ wrote:
+> >>
+> >> After writing data, reflink requires end operations to remap those new
+> >> allocated extents.  The current ->iomap_end() ignores the error code
+> >> returned from ->actor(), so we introduce this dax_iomap_ops and change
+> >> the dax_iomap_*() interfaces to do this job.
+> >>
+> >> - the dax_iomap_ops contains the original struct iomap_ops and fsdax
+> >>      specific ->actor_end(), which is for the end operations of reflin=
+k
+> >> - also introduce dax specific zero_range, truncate_page
+> >> - create new dax_iomap_ops for ext2 and ext4
+> >>
+> >> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+> >> ---
+> >>   fs/dax.c               | 68 +++++++++++++++++++++++++++++++++++++---=
+--
+> >>   fs/ext2/ext2.h         |  3 ++
+> >>   fs/ext2/file.c         |  6 ++--
+> >>   fs/ext2/inode.c        | 11 +++++--
+> >>   fs/ext4/ext4.h         |  3 ++
+> >>   fs/ext4/file.c         |  6 ++--
+> >>   fs/ext4/inode.c        | 13 ++++++--
+> >>   fs/iomap/buffered-io.c |  3 +-
+> >>   fs/xfs/xfs_bmap_util.c |  3 +-
+> >>   fs/xfs/xfs_file.c      |  8 ++---
+> >>   fs/xfs/xfs_iomap.c     | 36 +++++++++++++++++++++-
+> >>   fs/xfs/xfs_iomap.h     | 33 ++++++++++++++++++++
+> >>   fs/xfs/xfs_iops.c      |  7 ++---
+> >>   fs/xfs/xfs_reflink.c   |  3 +-
+> >>   include/linux/dax.h    | 21 ++++++++++---
+> >>   include/linux/iomap.h  |  1 +
+> >>   16 files changed, 189 insertions(+), 36 deletions(-)
+> >>
+> >> diff --git a/fs/dax.c b/fs/dax.c
+> >> index 74dd918cff1f..0e0536765a7e 100644
+> >> --- a/fs/dax.c
+> >> +++ b/fs/dax.c
+> >> @@ -1348,11 +1348,30 @@ static loff_t dax_iomap_iter(const struct ioma=
+p_iter *iomi,
+> >>          return done ? done : ret;
+> >>   }
+> >>
+> >> +static inline int
+> >> +__dax_iomap_iter(struct iomap_iter *iter, const struct dax_iomap_ops =
+*ops)
+> >> +{
+> >> +       int ret;
+> >> +
+> >> +       /*
+> >> +        * Call dax_iomap_ops->actor_end() before iomap_ops->iomap_end=
+() in
+> >> +        * each iteration.
+> >> +        */
+> >> +       if (iter->iomap.length && ops->actor_end) {
+> >> +               ret =3D ops->actor_end(iter->inode, iter->pos, iter->l=
+en,
+> >> +                                    iter->processed);
+> >> +               if (ret < 0)
+> >> +                       return ret;
+> >> +       }
+> >> +
+> >> +       return iomap_iter(iter, &ops->iomap_ops);
+> >
+> > This reorganization looks needlessly noisy. Why not require the
+> > iomap_end operation to perform the actor_end work. I.e. why can't
+> > xfs_dax_write_iomap_actor_end() just be the passed in iomap_end? I am
+> > not seeing where the ->iomap_end() result is ignored?
+> >
+>
+> The V6 patch[1] was did in this way.
+> [1]https://lore.kernel.org/linux-xfs/20210526005159.GF202144@locust/T/#m7=
+9a66a928da2d089e2458c1a97c0516dbfde2f7f
+>
+> But Darrick reminded me that ->iomap_end() will always take zero or
+> positive 'written' because iomap_apply() handles this argument.
+>
 > ```
-> $ more /proc/version
-> Linux version 5.4.39.mx64.334 (root@lol.molgen.mpg.de) (gcc version 7.5.0 (GCC)) #1 SMP Thu May 7 14:27:50 CEST 2020
-> $ dmesg | grep megar
-> [   10.322823] megaraid cmm: 2.20.2.7 (Release Date: Sun Jul 16 00:01:03 EST 2006)
-> [   10.331910] megaraid: 2.20.5.1 (Release Date: Thu Nov 16 15:32:35 EST 2006)
-> [   10.345055] megaraid_sas 0000:03:00.0: BAR:0x1  BAR's base_addr(phys):0x0000000092100000  mapped virt_addr:0x0000000059ea5995
-> [   10.345057] megaraid_sas 0000:03:00.0: FW now in Ready state
-> [   10.351868] megaraid_sas 0000:03:00.0: 63 bit DMA mask and 32 bit consistent mask
-> [   10.361655] megaraid_sas 0000:03:00.0: firmware supports msix    : (96)
-> [   10.369433] megaraid_sas 0000:03:00.0: requested/available msix 13/13
-> [   10.377113] megaraid_sas 0000:03:00.0: current msix/online cpus    : (13/12)
-> [   10.385190] megaraid_sas 0000:03:00.0: RDPQ mode    : (disabled)
-> [   10.392092] megaraid_sas 0000:03:00.0: Current firmware supports maximum commands: 928     LDIO threshold: 0
-> [   10.403895] megaraid_sas 0000:03:00.0: Configured max firmware commands: 927
-> [   10.416840] megaraid_sas 0000:03:00.0: Performance mode :Latency
-> [   10.424029] megaraid_sas 0000:03:00.0: FW supports sync cache    : No
-> [   10.431417] megaraid_sas 0000:03:00.0: megasas_disable_intr_fusion is called outbound_intr_mask:0x40000009
-> [   10.486158] megaraid_sas 0000:03:00.0: FW provided supportMaxExtLDs: 1    max_lds: 64
-> [   10.495502] megaraid_sas 0000:03:00.0: controller type    : MR(2048MB)
-> [   10.502988] megaraid_sas 0000:03:00.0: Online Controller Reset(OCR)    : Enabled
-> [   10.511445] megaraid_sas 0000:03:00.0: Secure JBOD support    : No
-> [   10.518543] megaraid_sas 0000:03:00.0: NVMe passthru support    : No
-> [   10.525834] megaraid_sas 0000:03:00.0: FW provided TM TaskAbort/Reset timeout: 0 secs/0 secs
-> [   10.536251] megaraid_sas 0000:03:00.0: JBOD sequence map support    : No
-> [   10.543931] megaraid_sas 0000:03:00.0: PCI Lane Margining support    : No
-> [   10.574406] megaraid_sas 0000:03:00.0: megasas_enable_intr_fusion is called outbound_intr_mask:0x40000000
-> [   10.585995] megaraid_sas 0000:03:00.0: INIT adapter done
-> [   10.592409] megaraid_sas 0000:03:00.0: JBOD sequence map is disabled megasas_setup_jbod_map 5660
-> [   10.603273] megaraid_sas 0000:03:00.0: pci id        : (0x1000)/(0x005d)/(0x1028)/(0x1f42)
-> [   10.612815] megaraid_sas 0000:03:00.0: unevenspan support    : yes
-> [   10.619919] megaraid_sas 0000:03:00.0: firmware crash dump    : no
-> [   10.627013] megaraid_sas 0000:03:00.0: JBOD sequence map    : disabled
-> $ dmesg | grep 1100-8e
-> [   25.853170] smartpqi 0000:84:00.0: added 11:2:0:0 0000000000000000 RAID              Adaptec  1100-8e
-> [   25.867069] scsi 11:2:0:0: RAID              Adaptec  1100-8e  2.93 PQ: 0 ANSI: 5
-> $ xfs_info /dev/sdc
-> meta-data=/dev/sdc               isize=512    agcount=28, agsize=268435455 blks
->           =                       sectsz=512   attr=2, projid32bit=1
->           =                       crc=1        finobt=1, sparse=0, rmapbt=0
->           =                       reflink=0
-> data     =                       bsize=4096   blocks=7323648000, imaxpct=5
->           =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-> log      =internal log           bsize=4096   blocks=521728, version=2
->           =                       sectsz=512   sunit=0 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> $ xfs_info /dev/md0
-> meta-data=/dev/md0               isize=512    agcount=102, agsize=268435328 blks
->           =                       sectsz=4096  attr=2, projid32bit=1
->           =                       crc=1        finobt=1, sparse=0, rmapbt=0
->           =                       reflink=0
-> data     =                       bsize=4096   blocks=27348633088, imaxpct=1
->           =                       sunit=128    swidth=1792 blks
-> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-> log      =internal log           bsize=4096   blocks=521728, version=2
->           =                       sectsz=4096  sunit=1 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> $ df -i /dev/sdc
-> Filesystem         Inodes   IUsed      IFree IUse% Mounted on
-> /dev/sdc       2929459200 4985849 2924473351    1% /home/pmenzel
-> $ df -i /dev/md0
-> Filesystem         Inodes   IUsed      IFree IUse% Mounted on
-> /dev/md0       2187890624 5331603 2182559021    1% /jbod/M8015
+>         if (ops->iomap_end) {
+>                 ret =3D ops->iomap_end(inode, pos, length,
+>                                      written > 0 ? written : 0,
+>                                      flags, &iomap);
+>         }
 > ```
-> 
-> After not using a directory for a while (over 24 hours), changing into 
-> it (locally) takes over five seconds or doing some git operations. For 
-> example the Linux kernel source git tree located in my home directory. 
-> (My shell has some git integration showing the branch name in the prompt 
-> (`/usr/share/git-contrib/completion/git-prompt.sh`.) Once in that 
-> directory, everything reacts instantly again. When waiting the Linux 
-> pressure stall information (PSI) shows IO resource contention.
-> 
-> Before:
-> 
->      $ grep -R . /proc/pressure/
->      /proc/pressure/io:some avg10=0.40 avg60=0.10 avg300=0.10 total=48330841502
->      /proc/pressure/io:full avg10=0.40 avg60=0.10 avg300=0.10 total=48067233340
->      /proc/pressure/cpu:some avg10=0.00 avg60=0.00 avg300=0.00 total=755842910
->      /proc/pressure/memory:some avg10=0.00 avg60=0.00 avg300=0.00 total=2530206336
->      /proc/pressure/memory:full avg10=0.00 avg60=0.00 avg300=0.00 total=2318140732
-> 
-> During `git log stable/linux-5.10.y`:
-> 
->      $ grep -R . /proc/pressure/
->      /proc/pressure/io:some avg10=26.20 avg60=9.72 avg300=2.37 total=48337351849
->      /proc/pressure/io:full avg10=26.20 avg60=9.72 avg300=2.37 total=48073742033
->      /proc/pressure/cpu:some avg10=0.00 avg60=0.00 avg300=0.00 total=755843898
->      /proc/pressure/memory:some avg10=0.00 avg60=0.00 avg300=0.00 total=2530209046
->      /proc/pressure/memory:full avg10=0.00 avg60=0.00 avg300=0.00 total=2318143440
-> 
-> The current explanation is, that over night several maintenance scripts 
-> like backup/mirroring and accounting scripts are run, which touch all 
-> files on the devices. Additionally sometimes other users run cluster 
-> jobs with millions of files on the software RAID. Such things invalidate 
-> the inode cache, and “my” are thrown out. When I use it afterward it’s 
-> slow in the beginning. There is still free memory during these times 
-> according to `top`.
+>
+> So, we cannot get actual return code from CoW in ->actor(), and as a
+> result, we cannot handle the xfs end_cow correctly in ->iomap_end().
+> That's where the result of CoW was ignored.
 
-     $ free -h
-                   total        used        free      shared  buff/cache 
-   available
-     Mem:            94G        8.3G        5.3G        2.3M         80G 
-         83G
-     Swap:            0B          0B          0B
+Ah, thank you for the explanation.
 
-> Does that sound reasonable with ten million inodes? Is that easily 
-> verifiable?
+However, this still seems like too much code thrash just to get back
+to the original value of iter->processed. I notice you are talking
+about iomap_apply(), but that routine is now gone in Darrick's latest
+iomap-for-next branch. Instead iomap_iter() does this:
 
-If an inode consume 512 bytes with ten million inodes, that would be 
-around 500 MB, which should easily fit into the cache, so it does not 
-need to be invalidated?
+        if (iter->iomap.length && ops->iomap_end) {
+                ret =3D ops->iomap_end(iter->inode, iter->pos, iomap_length=
+(iter),
+                                iter->processed > 0 ? iter->processed : 0,
+                                iter->flags, &iter->iomap);
+                if (ret < 0 && !iter->processed)
+                        return ret;
+        }
 
 
-Kind regards,
+I notice that the @iomap argument to ->iomap_end() is reliably coming
+from @iter. So you could do the following in your iomap_end()
+callback:
 
-Paul
+        struct iomap_iter *iter =3D container_of(iomap, typeof(*iter), ioma=
+p);
+        struct xfs_inode *ip =3D XFS_I(inode);
+        ssize_t written =3D iter->processed;
+        bool cow =3D xfs_is_cow_inode(ip);
+
+        if (cow) {
+                if (written <=3D 0)
+                        xfs_reflink_cancel_cow_range(ip, pos, length, true)
+        }
