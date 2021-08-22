@@ -2,90 +2,112 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3239C4338F
-	for <linux-xfs@archiver.kernel.org>; Sun, 22 Aug 2021 12:19:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6AA1C4338F
+	for <linux-xfs@archiver.kernel.org>; Sun, 22 Aug 2021 17:20:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C3F5D6128A
-	for <linux-xfs@archiver.kernel.org>; Sun, 22 Aug 2021 12:19:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9E58A6127B
+	for <linux-xfs@archiver.kernel.org>; Sun, 22 Aug 2021 17:20:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231414AbhHVMUB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 22 Aug 2021 08:20:01 -0400
-Received: from out20-74.mail.aliyun.com ([115.124.20.74]:48610 "EHLO
-        out20-74.mail.aliyun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231305AbhHVMUB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Aug 2021 08:20:01 -0400
-X-Alimail-AntiSpam: AC=CONTINUE;BC=0.08467039|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_regular_dialog|0.00598008-0.00460133-0.989419;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047204;MF=guan@eryu.me;NM=1;PH=DS;RN=4;RT=4;SR=0;TI=SMTPD_---.L60tP5C_1629634758;
-Received: from localhost(mailfrom:guan@eryu.me fp:SMTPD_---.L60tP5C_1629634758)
-          by smtp.aliyun-inc.com(10.147.42.241);
-          Sun, 22 Aug 2021 20:19:18 +0800
-Date:   Sun, 22 Aug 2021 20:19:18 +0800
-From:   Eryu Guan <guan@eryu.me>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org
-Subject: Re: [PATCH 2/2] scsi_debug: fix module removal loop
-Message-ID: <YSJAxsay/y/1Bk5u@desktop>
-References: <162924437987.779373.1973564511078951065.stgit@magnolia>
- <162924439095.779373.7171773658755331729.stgit@magnolia>
+        id S229802AbhHVRVH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 22 Aug 2021 13:21:07 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56498 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229460AbhHVRVE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 22 Aug 2021 13:21:04 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 7C85F6124B;
+        Sun, 22 Aug 2021 17:20:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1629652823;
+        bh=953HepCQhlZjrVqmaZ9RVa/BsY9OJ/Z54dvDmcsyMdQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=KNKbOArThMZ52ow17srczakH4jFCRqJB11K6RF1SNaH4wSlQne0oknRKS3jNOYVmb
+         ft4Gw2dThpuc09NO5Iw50MUJT+9AVXisYy3a/FQWzi5xT/vaFFOgm7z5h4UN0zHi0b
+         CuCcweB6A7QYk8ge6+EJDUy2eYyDs2yj1AX8EM4dgDx5U8azjrOv/MWjTqM2ZHM/jg
+         Saodg9ucd4W/HUwrUYOGb+mMoF7/hf7cf2G9K8Cxr/xo7XxgTLmZYE8gAgdeAGWM0I
+         1B0u25WNzGCn4Xel4Qv81IJeobfPW3xwEfzb8Ln5QIBzAtMZctmklVff9Pu+Z56d9o
+         LUS+uZpxj/b6g==
+Date:   Sun, 22 Aug 2021 10:20:23 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Dave Chinner <david@fromorbit.com>,
+        xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Subject: Re: [PATCH] iomap: standardize tracepoint formatting and storage
+Message-ID: <20210822172023.GZ12640@magnolia>
+References: <20210822023223.GY12640@magnolia>
+ <YSHE0MwgIugfkAzf@casper.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <162924439095.779373.7171773658755331729.stgit@magnolia>
+In-Reply-To: <YSHE0MwgIugfkAzf@casper.infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 17, 2021 at 04:53:10PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Sun, Aug 22, 2021 at 04:30:24AM +0100, Matthew Wilcox wrote:
+> On Sat, Aug 21, 2021 at 07:32:23PM -0700, Darrick J. Wong wrote:
+> > @@ -58,8 +58,7 @@ DECLARE_EVENT_CLASS(iomap_range_class,
+> >  		__entry->offset = off;
+> >  		__entry->length = len;
+> >  	),
+> > -	TP_printk("dev %d:%d ino 0x%llx size 0x%llx offset %lx "
+> > -		  "length %x",
+> > +	TP_printk("dev %d:%d ino 0x%llx size 0x%llx offset 0x%llx length 0x%llx",
 > 
-> Luis' recent patch changing the "sleep 1" to a "udevadm settle"
-> invocation exposed some race conditions in _put_scsi_debug_dev that
-> caused regressions in generic/108 on my machine.  Looking at tracing
-> data, it looks like the udisks daemon will try to open the device at
-> some point after the filesystem unmounts; if this coincides with the
-> final 'rmmod scsi_debug', the test fails.
-> 
-> Examining the function, it is odd to me that the loop condition is
-> predicated only on whether or not modprobe /thinks/ it can remove the
-> module.  Why not actually try (twice) actually to remove the module,
-> and then complain if a third attempt fails?
-> 
-> Also switch the final removal attempt to modprobe -r, since it returns
-> zero if the module isn't loaded.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  common/scsi_debug |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> 
-> diff --git a/common/scsi_debug b/common/scsi_debug
-> index e7988469..abaf6798 100644
-> --- a/common/scsi_debug
-> +++ b/common/scsi_debug
-> @@ -49,9 +49,9 @@ _put_scsi_debug_dev()
->  	# use redirection not -q option of modprobe here, because -q of old
->  	# modprobe is only quiet when the module is not found, not when the
->  	# module is in use.
-> -	while [ $n -ge 0 ] && ! modprobe -nr scsi_debug >/dev/null 2>&1; do
-> +	while [ $n -ge 0 ] && ! modprobe -r scsi_debug >/dev/null 2>&1; do
->  		$UDEV_SETTLE_PROG
->  		n=$((n-1))
+> %#llx is one character shorter than 0x%llx ;-)
 
-Luis' new patch removed this while loop completely, and
+...and since you declined to add even a conditional review tag, this
+patch will now sit in limbo for 2-3 days while I agonize over whether 1)
+I should send a v2 patch with this minor stylistic thing changed and
+hope that nobody objects to the v2, or worse, tells me I should go back
+to v1; 2) hope that someone else won't be as picky and send a review; 3)
+prepare myself for the inevitable DM that's coming about how I'm too
+soft on reviewers; 4) wait the other inevitable DM about how I really
+could exercise maintainer's prerogative to ignore the trivial style
+complaints; and 5) brace for the other inevitable DM about how I really
+shouldn't abandon the review process to ram code into the kernel just
+because of stylistic complaints.
 
->  	done
-> -	rmmod scsi_debug || _fail "Could not remove scsi_debug module"
-> +	modprobe -r scsi_debug || _fail "Could not remove scsi_debug module"
+Yeah, I'm not going to abandon the established public process.
+Requiring RVB even for maintainer patches is a useful check against
+maintainers committing garbage to the repo.
 
-Replaced this rmmod with _patient_rmmod helper, which uses modprobe -r
-to remove mod internally.
+But.  All five of these things keep happening every kernel cycle, and
+it's dragging down my mental health.  To say nothing of the worldwide
+disease, political unrest, and hostile weather.
 
-So I'd drop this patch. Thanks for the fix anyway!
+**This** is the reason why I want to quit and never come back.
 
-Eryu
+I enjoy every part of the process from requirements to implementation.
+I enjoy discussing the design of algorithms, and I find it satisfying
+even to rip things out to try other suggestions.
+
+I don't enjoy revving patchsets repeatedly to try to find the magic
+combination of printf formatting strings, comment massage, and helper
+function placement golf that will get every patch through review.  This
+is why I'm constantly stressed out about not being able to keep up with
+all the demands being placed on me.  Experts' time should be spent on
+solving tough problems, debugging the really nasty bugs, and coaching
+less familiar people as they get up to speed.  Not this.
+
+So I'm putting everyone on notice: If you care about stylistic problems
+(and while I'm on my soapbox: cleaning up other parts of the codebase
+that a patch touches only briefly) so strongly, then change my patch and
+send it back to me.  Or change the snippets you want in the reply, and
+state that you ack/review the patch on condition that the snippets are
+applied.
+
+Once I'm done with 5.15 merge patches, I would like to have a broader
+discussion about xfs/iomap review policies, and have requested a session
+at LPC for this purpose.
+
+(And in case it wasn't clear: If you think a piece of code is so poorly
+fitted to a problem that you want me to go back to the drawing board, I
+am still completely happy to do that.)
+
+--D
