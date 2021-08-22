@@ -7,85 +7,85 @@ X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DAAD8C4320A
-	for <linux-xfs@archiver.kernel.org>; Sun, 22 Aug 2021 11:18:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3239C4338F
+	for <linux-xfs@archiver.kernel.org>; Sun, 22 Aug 2021 12:19:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BB7316103C
-	for <linux-xfs@archiver.kernel.org>; Sun, 22 Aug 2021 11:18:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C3F5D6128A
+	for <linux-xfs@archiver.kernel.org>; Sun, 22 Aug 2021 12:19:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233344AbhHVLTd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 22 Aug 2021 07:19:33 -0400
-Received: from out20-99.mail.aliyun.com ([115.124.20.99]:38173 "EHLO
-        out20-99.mail.aliyun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232822AbhHVLTd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Aug 2021 07:19:33 -0400
-X-Alimail-AntiSpam: AC=CONTINUE;BC=0.1204478|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_regular_dialog|0.0310233-0.00253036-0.966446;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047209;MF=guan@eryu.me;NM=1;PH=DS;RN=4;RT=4;SR=0;TI=SMTPD_---.L6.2AJ3_1629631129;
-Received: from localhost(mailfrom:guan@eryu.me fp:SMTPD_---.L6.2AJ3_1629631129)
-          by smtp.aliyun-inc.com(10.147.42.22);
-          Sun, 22 Aug 2021 19:18:50 +0800
-Date:   Sun, 22 Aug 2021 19:18:49 +0800
+        id S231414AbhHVMUB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 22 Aug 2021 08:20:01 -0400
+Received: from out20-74.mail.aliyun.com ([115.124.20.74]:48610 "EHLO
+        out20-74.mail.aliyun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231305AbhHVMUB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Aug 2021 08:20:01 -0400
+X-Alimail-AntiSpam: AC=CONTINUE;BC=0.08467039|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_regular_dialog|0.00598008-0.00460133-0.989419;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047204;MF=guan@eryu.me;NM=1;PH=DS;RN=4;RT=4;SR=0;TI=SMTPD_---.L60tP5C_1629634758;
+Received: from localhost(mailfrom:guan@eryu.me fp:SMTPD_---.L60tP5C_1629634758)
+          by smtp.aliyun-inc.com(10.147.42.241);
+          Sun, 22 Aug 2021 20:19:18 +0800
+Date:   Sun, 22 Aug 2021 20:19:18 +0800
 From:   Eryu Guan <guan@eryu.me>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
         fstests@vger.kernel.org
-Subject: Re: [PATCH 2/2] generic: test shutdowns of a nested filesystem
-Message-ID: <YSIymUFbWA9xNcIK@desktop>
-References: <162924439425.779465.16029390956507261795.stgit@magnolia>
- <162924440518.779465.6907507760500586987.stgit@magnolia>
+Subject: Re: [PATCH 2/2] scsi_debug: fix module removal loop
+Message-ID: <YSJAxsay/y/1Bk5u@desktop>
+References: <162924437987.779373.1973564511078951065.stgit@magnolia>
+ <162924439095.779373.7171773658755331729.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <162924440518.779465.6907507760500586987.stgit@magnolia>
+In-Reply-To: <162924439095.779373.7171773658755331729.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 17, 2021 at 04:53:25PM -0700, Darrick J. Wong wrote:
+On Tue, Aug 17, 2021 at 04:53:10PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> generic/475, but we're running fsstress on a disk image inside the
-> scratch filesystem
+> Luis' recent patch changing the "sleep 1" to a "udevadm settle"
+> invocation exposed some race conditions in _put_scsi_debug_dev that
+> caused regressions in generic/108 on my machine.  Looking at tracing
+> data, it looks like the udisks daemon will try to open the device at
+> some point after the filesystem unmounts; if this coincides with the
+> final 'rmmod scsi_debug', the test fails.
+> 
+> Examining the function, it is odd to me that the loop condition is
+> predicated only on whether or not modprobe /thinks/ it can remove the
+> module.  Why not actually try (twice) actually to remove the module,
+> and then complain if a third attempt fails?
+> 
+> Also switch the final removal attempt to modprobe -r, since it returns
+> zero if the module isn't loaded.
 > 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
->  common/rc             |   20 +++++++
->  tests/generic/725     |  136 +++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/725.out |    2 +
->  3 files changed, 158 insertions(+)
->  create mode 100755 tests/generic/725
->  create mode 100644 tests/generic/725.out
+>  common/scsi_debug |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
 > 
-> diff --git a/common/rc b/common/rc
-> index 84757fc1..473bfb0a 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -631,6 +631,26 @@ _ext4_metadump()
->  		$DUMP_COMPRESSOR -f "$dumpfile" &>> "$seqres.full"
->  }
->  
-> +# Capture the metadata of a filesystem in a dump file for offline analysis
-> +_metadump_dev() {
-> +	local device="$1"
-> +	local dumpfile="$2"
-> +	local compressopt="$3"
-> +
-> +	case "$FSTYP" in
-> +	ext*)
-> +		_ext4_metadump $device $dumpfile $compressopt
-> +		;;
-> +	xfs)
-> +		_xfs_metadump $dumpfile $device none $compressopt
-> +		;;
-> +	*)
-> +		echo "Don't know how to metadump $FSTYP"
+> diff --git a/common/scsi_debug b/common/scsi_debug
+> index e7988469..abaf6798 100644
+> --- a/common/scsi_debug
+> +++ b/common/scsi_debug
+> @@ -49,9 +49,9 @@ _put_scsi_debug_dev()
+>  	# use redirection not -q option of modprobe here, because -q of old
+>  	# modprobe is only quiet when the module is not found, not when the
+>  	# module is in use.
+> -	while [ $n -ge 0 ] && ! modprobe -nr scsi_debug >/dev/null 2>&1; do
+> +	while [ $n -ge 0 ] && ! modprobe -r scsi_debug >/dev/null 2>&1; do
+>  		$UDEV_SETTLE_PROG
+>  		n=$((n-1))
 
-This breaks tests on filesystems other than ext* and xfs. I think it's
-OK if we only want to use it in failure path, but it's better to
-describe the use case in comments.
+Luis' new patch removed this while loop completely, and
 
-And Im' wondering if should honor DUMP_CORRUPT_FS, and only do the dump
-when it's set.
+>  	done
+> -	rmmod scsi_debug || _fail "Could not remove scsi_debug module"
+> +	modprobe -r scsi_debug || _fail "Could not remove scsi_debug module"
 
-Thanks,
+Replaced this rmmod with _patient_rmmod helper, which uses modprobe -r
+to remove mod internally.
+
+So I'd drop this patch. Thanks for the fix anyway!
+
 Eryu
