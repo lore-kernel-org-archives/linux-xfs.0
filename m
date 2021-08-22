@@ -2,112 +2,110 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6AA1C4338F
-	for <linux-xfs@archiver.kernel.org>; Sun, 22 Aug 2021 17:20:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2523C4338F
+	for <linux-xfs@archiver.kernel.org>; Sun, 22 Aug 2021 17:23:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9E58A6127B
-	for <linux-xfs@archiver.kernel.org>; Sun, 22 Aug 2021 17:20:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 781F461220
+	for <linux-xfs@archiver.kernel.org>; Sun, 22 Aug 2021 17:23:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229802AbhHVRVH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 22 Aug 2021 13:21:07 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56498 "EHLO mail.kernel.org"
+        id S229920AbhHVRYD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 22 Aug 2021 13:24:03 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58634 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229460AbhHVRVE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 22 Aug 2021 13:21:04 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 7C85F6124B;
-        Sun, 22 Aug 2021 17:20:23 +0000 (UTC)
+        id S229460AbhHVRYD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 22 Aug 2021 13:24:03 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 04AA861261;
+        Sun, 22 Aug 2021 17:23:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1629652823;
-        bh=953HepCQhlZjrVqmaZ9RVa/BsY9OJ/Z54dvDmcsyMdQ=;
+        s=k20201202; t=1629653002;
+        bh=qkYaRmTdTGq+8O0P+wz9ZakfjOb2/oaIYm5cKC1CmKQ=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=KNKbOArThMZ52ow17srczakH4jFCRqJB11K6RF1SNaH4wSlQne0oknRKS3jNOYVmb
-         ft4Gw2dThpuc09NO5Iw50MUJT+9AVXisYy3a/FQWzi5xT/vaFFOgm7z5h4UN0zHi0b
-         CuCcweB6A7QYk8ge6+EJDUy2eYyDs2yj1AX8EM4dgDx5U8azjrOv/MWjTqM2ZHM/jg
-         Saodg9ucd4W/HUwrUYOGb+mMoF7/hf7cf2G9K8Cxr/xo7XxgTLmZYE8gAgdeAGWM0I
-         1B0u25WNzGCn4Xel4Qv81IJeobfPW3xwEfzb8Ln5QIBzAtMZctmklVff9Pu+Z56d9o
-         LUS+uZpxj/b6g==
-Date:   Sun, 22 Aug 2021 10:20:23 -0700
+        b=m+NhmpBed2Uz7Hled24LDz1rLnwteQqTt6gtPm0Wsgk+B6RKWqACn+XzT5xLwaNVu
+         h1HJ4I34pG4Ap2F+MSwvSsSBXwadGjG8hkLS4LiwltbDMw6S98UA1up3C8bj4A05N2
+         6+JIpoKOCnS0H3t4WwIdGOvzm0qAOs53DB4of8ZKQ44lTaM+NN22NQCKqhgBTHE7Vn
+         Q0mg9TtY81h7szD0ab5KGU0SMQ2sfMkdliGBCI8IKc1EDAq1I0qnd+egCOSM0z36wy
+         8+8Wy60YKlD4PQUmTf25komtE4Y4ZIeBJFD2gCwtl9z7FiysvD4eIt4cLyyr86AGJf
+         UR/JE8ergQEaA==
+Date:   Sun, 22 Aug 2021 10:23:21 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Dave Chinner <david@fromorbit.com>,
-        xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Subject: Re: [PATCH] iomap: standardize tracepoint formatting and storage
-Message-ID: <20210822172023.GZ12640@magnolia>
-References: <20210822023223.GY12640@magnolia>
- <YSHE0MwgIugfkAzf@casper.infradead.org>
+To:     Eryu Guan <guan@eryu.me>
+Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org
+Subject: Re: [PATCH 2/2] generic: test shutdowns of a nested filesystem
+Message-ID: <20210822172321.GA12640@magnolia>
+References: <162924439425.779465.16029390956507261795.stgit@magnolia>
+ <162924440518.779465.6907507760500586987.stgit@magnolia>
+ <YSIymUFbWA9xNcIK@desktop>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YSHE0MwgIugfkAzf@casper.infradead.org>
+In-Reply-To: <YSIymUFbWA9xNcIK@desktop>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Aug 22, 2021 at 04:30:24AM +0100, Matthew Wilcox wrote:
-> On Sat, Aug 21, 2021 at 07:32:23PM -0700, Darrick J. Wong wrote:
-> > @@ -58,8 +58,7 @@ DECLARE_EVENT_CLASS(iomap_range_class,
-> >  		__entry->offset = off;
-> >  		__entry->length = len;
-> >  	),
-> > -	TP_printk("dev %d:%d ino 0x%llx size 0x%llx offset %lx "
-> > -		  "length %x",
-> > +	TP_printk("dev %d:%d ino 0x%llx size 0x%llx offset 0x%llx length 0x%llx",
+On Sun, Aug 22, 2021 at 07:18:49PM +0800, Eryu Guan wrote:
+> On Tue, Aug 17, 2021 at 04:53:25PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > generic/475, but we're running fsstress on a disk image inside the
+> > scratch filesystem
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  common/rc             |   20 +++++++
+> >  tests/generic/725     |  136 +++++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/generic/725.out |    2 +
+> >  3 files changed, 158 insertions(+)
+> >  create mode 100755 tests/generic/725
+> >  create mode 100644 tests/generic/725.out
+> > 
+> > 
+> > diff --git a/common/rc b/common/rc
+> > index 84757fc1..473bfb0a 100644
+> > --- a/common/rc
+> > +++ b/common/rc
+> > @@ -631,6 +631,26 @@ _ext4_metadump()
+> >  		$DUMP_COMPRESSOR -f "$dumpfile" &>> "$seqres.full"
+> >  }
+> >  
+> > +# Capture the metadata of a filesystem in a dump file for offline analysis
+> > +_metadump_dev() {
+> > +	local device="$1"
+> > +	local dumpfile="$2"
+> > +	local compressopt="$3"
+> > +
+> > +	case "$FSTYP" in
+> > +	ext*)
+> > +		_ext4_metadump $device $dumpfile $compressopt
+> > +		;;
+> > +	xfs)
+> > +		_xfs_metadump $dumpfile $device none $compressopt
+> > +		;;
+> > +	*)
+> > +		echo "Don't know how to metadump $FSTYP"
 > 
-> %#llx is one character shorter than 0x%llx ;-)
+> This breaks tests on filesystems other than ext* and xfs. I think it's
+> OK if we only want to use it in failure path, but it's better to
+> describe the use case in comments.
 
-...and since you declined to add even a conditional review tag, this
-patch will now sit in limbo for 2-3 days while I agonize over whether 1)
-I should send a v2 patch with this minor stylistic thing changed and
-hope that nobody objects to the v2, or worse, tells me I should go back
-to v1; 2) hope that someone else won't be as picky and send a review; 3)
-prepare myself for the inevitable DM that's coming about how I'm too
-soft on reviewers; 4) wait the other inevitable DM about how I really
-could exercise maintainer's prerogative to ignore the trivial style
-complaints; and 5) brace for the other inevitable DM about how I really
-shouldn't abandon the review process to ram code into the kernel just
-because of stylistic complaints.
+Ok, I'll make a note of that in the comment.
 
-Yeah, I'm not going to abandon the established public process.
-Requiring RVB even for maintainer patches is a useful check against
-maintainers committing garbage to the repo.
+"Capture the metadata of a filesystem in a dump file for offline
+analysis.  Not all filesystems support this, so this function should
+only be used to capture information about a previous test failure."
 
-But.  All five of these things keep happening every kernel cycle, and
-it's dragging down my mental health.  To say nothing of the worldwide
-disease, political unrest, and hostile weather.
+> And Im' wondering if should honor DUMP_CORRUPT_FS, and only do the dump
+> when it's set.
 
-**This** is the reason why I want to quit and never come back.
-
-I enjoy every part of the process from requirements to implementation.
-I enjoy discussing the design of algorithms, and I find it satisfying
-even to rip things out to try other suggestions.
-
-I don't enjoy revving patchsets repeatedly to try to find the magic
-combination of printf formatting strings, comment massage, and helper
-function placement golf that will get every patch through review.  This
-is why I'm constantly stressed out about not being able to keep up with
-all the demands being placed on me.  Experts' time should be spent on
-solving tough problems, debugging the really nasty bugs, and coaching
-less familiar people as they get up to speed.  Not this.
-
-So I'm putting everyone on notice: If you care about stylistic problems
-(and while I'm on my soapbox: cleaning up other parts of the codebase
-that a patch touches only briefly) so strongly, then change my patch and
-send it back to me.  Or change the snippets you want in the reply, and
-state that you ack/review the patch on condition that the snippets are
-applied.
-
-Once I'm done with 5.15 merge patches, I would like to have a broader
-discussion about xfs/iomap review policies, and have requested a session
-at LPC for this purpose.
-
-(And in case it wasn't clear: If you think a piece of code is so poorly
-fitted to a problem that you want me to go back to the drawing board, I
-am still completely happy to do that.)
+Yes.  Will fix that in the next release.
 
 --D
+
+> Thanks,
+> Eryu
