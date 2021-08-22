@@ -2,64 +2,90 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE391C4338F
-	for <linux-xfs@archiver.kernel.org>; Sun, 22 Aug 2021 03:32:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DAAD8C4320A
+	for <linux-xfs@archiver.kernel.org>; Sun, 22 Aug 2021 11:18:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9D64660EB1
-	for <linux-xfs@archiver.kernel.org>; Sun, 22 Aug 2021 03:32:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BB7316103C
+	for <linux-xfs@archiver.kernel.org>; Sun, 22 Aug 2021 11:18:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232251AbhHVDcu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 21 Aug 2021 23:32:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45312 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232241AbhHVDcu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Aug 2021 23:32:50 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E50C6C061575;
-        Sat, 21 Aug 2021 20:32:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=F3EUlb3R/Jkd83ODBtsIny7A4msWrAlpyjp5NKlJHP0=; b=XPKz3sMtd1ZsLY003mry3sF2zf
-        XiwazOIRt2825xKagpLkvJ5AWVQVQ/LWr1w0hTeTkUHb8WiGA9VxpcKMQAeGzlmdgj/3U+wfuT8p1
-        cd9zN3pWfQmPyR+9cVcKargExQNQN/ShukVXh0VK1uZqXR5RqIZD66VgWJ53pim66JTeHxbqvn7qG
-        rxii3qRQu0iPlgEx/mmyAJR4eqGhOvYNSu/tIKHys4lAlKwlQWU63/j7M+yfzSS8g49eXWn8Kaaei
-        qcnZWLS+YY0yKmcG6BqNDCe1OEAcnZh6aDGQRLAcENWF9piAwAKv3zcnwh1d0BVeuU4d5lfhoRuZF
-        LN6EniVQ==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mHeBk-008ARv-8l; Sun, 22 Aug 2021 03:30:46 +0000
-Date:   Sun, 22 Aug 2021 04:30:24 +0100
-From:   Matthew Wilcox <willy@infradead.org>
+        id S233344AbhHVLTd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 22 Aug 2021 07:19:33 -0400
+Received: from out20-99.mail.aliyun.com ([115.124.20.99]:38173 "EHLO
+        out20-99.mail.aliyun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232822AbhHVLTd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Aug 2021 07:19:33 -0400
+X-Alimail-AntiSpam: AC=CONTINUE;BC=0.1204478|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_regular_dialog|0.0310233-0.00253036-0.966446;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047209;MF=guan@eryu.me;NM=1;PH=DS;RN=4;RT=4;SR=0;TI=SMTPD_---.L6.2AJ3_1629631129;
+Received: from localhost(mailfrom:guan@eryu.me fp:SMTPD_---.L6.2AJ3_1629631129)
+          by smtp.aliyun-inc.com(10.147.42.22);
+          Sun, 22 Aug 2021 19:18:50 +0800
+Date:   Sun, 22 Aug 2021 19:18:49 +0800
+From:   Eryu Guan <guan@eryu.me>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Dave Chinner <david@fromorbit.com>,
-        xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Subject: Re: [PATCH] iomap: standardize tracepoint formatting and storage
-Message-ID: <YSHE0MwgIugfkAzf@casper.infradead.org>
-References: <20210822023223.GY12640@magnolia>
+Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org
+Subject: Re: [PATCH 2/2] generic: test shutdowns of a nested filesystem
+Message-ID: <YSIymUFbWA9xNcIK@desktop>
+References: <162924439425.779465.16029390956507261795.stgit@magnolia>
+ <162924440518.779465.6907507760500586987.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210822023223.GY12640@magnolia>
+In-Reply-To: <162924440518.779465.6907507760500586987.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Aug 21, 2021 at 07:32:23PM -0700, Darrick J. Wong wrote:
-> @@ -58,8 +58,7 @@ DECLARE_EVENT_CLASS(iomap_range_class,
->  		__entry->offset = off;
->  		__entry->length = len;
->  	),
-> -	TP_printk("dev %d:%d ino 0x%llx size 0x%llx offset %lx "
-> -		  "length %x",
-> +	TP_printk("dev %d:%d ino 0x%llx size 0x%llx offset 0x%llx length 0x%llx",
+On Tue, Aug 17, 2021 at 04:53:25PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> generic/475, but we're running fsstress on a disk image inside the
+> scratch filesystem
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  common/rc             |   20 +++++++
+>  tests/generic/725     |  136 +++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/725.out |    2 +
+>  3 files changed, 158 insertions(+)
+>  create mode 100755 tests/generic/725
+>  create mode 100644 tests/generic/725.out
+> 
+> 
+> diff --git a/common/rc b/common/rc
+> index 84757fc1..473bfb0a 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -631,6 +631,26 @@ _ext4_metadump()
+>  		$DUMP_COMPRESSOR -f "$dumpfile" &>> "$seqres.full"
+>  }
+>  
+> +# Capture the metadata of a filesystem in a dump file for offline analysis
+> +_metadump_dev() {
+> +	local device="$1"
+> +	local dumpfile="$2"
+> +	local compressopt="$3"
+> +
+> +	case "$FSTYP" in
+> +	ext*)
+> +		_ext4_metadump $device $dumpfile $compressopt
+> +		;;
+> +	xfs)
+> +		_xfs_metadump $dumpfile $device none $compressopt
+> +		;;
+> +	*)
+> +		echo "Don't know how to metadump $FSTYP"
 
-%#llx is one character shorter than 0x%llx ;-)
+This breaks tests on filesystems other than ext* and xfs. I think it's
+OK if we only want to use it in failure path, but it's better to
+describe the use case in comments.
 
+And Im' wondering if should honor DUMP_CORRUPT_FS, and only do the dump
+when it's set.
+
+Thanks,
+Eryu
