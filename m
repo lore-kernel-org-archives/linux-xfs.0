@@ -2,62 +2,57 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8756C4338F
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 Aug 2021 05:04:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB908C4338F
+	for <linux-xfs@archiver.kernel.org>; Mon, 23 Aug 2021 07:05:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A362B61242
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 Aug 2021 05:04:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B26F61222
+	for <linux-xfs@archiver.kernel.org>; Mon, 23 Aug 2021 07:05:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232283AbhHWFFT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 23 Aug 2021 01:05:19 -0400
-Received: from smtp1.onthe.net.au ([203.22.196.249]:55281 "EHLO
-        smtp1.onthe.net.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229462AbhHWFFT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Aug 2021 01:05:19 -0400
-X-Greylist: delayed 449 seconds by postgrey-1.27 at vger.kernel.org; Mon, 23 Aug 2021 01:05:18 EDT
-Received: from localhost (smtp2.private.onthe.net.au [10.200.63.13])
-        by smtp1.onthe.net.au (Postfix) with ESMTP id E43C661C4D;
-        Mon, 23 Aug 2021 14:57:03 +1000 (EST)
-Received: from smtp1.onthe.net.au ([10.200.63.11])
-        by localhost (smtp.onthe.net.au [10.200.63.13]) (amavisd-new, port 10028)
-        with ESMTP id 2W1j5WUOCGRa; Mon, 23 Aug 2021 14:57:03 +1000 (AEST)
-Received: from athena.private.onthe.net.au (chris-gw2-vpn.private.onthe.net.au [10.9.3.2])
-        by smtp1.onthe.net.au (Postfix) with ESMTP id 87B9761C39;
-        Mon, 23 Aug 2021 14:57:02 +1000 (EST)
-Received: by athena.private.onthe.net.au (Postfix, from userid 1026)
-        id 0CB94680468; Mon, 23 Aug 2021 14:57:02 +1000 (AEST)
-Date:   Mon, 23 Aug 2021 14:57:01 +1000
-From:   Chris Dunlop <chris@onthe.net.au>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [RFD] XFS: Subvolumes and snapshots....
-Message-ID: <20210823045701.GA2186939@onthe.net.au>
-References: <20180125055144.qztiqeakw4u3pvqf@destitution>
+        id S235136AbhHWHF6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 23 Aug 2021 03:05:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39528 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234258AbhHWHF6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Aug 2021 03:05:58 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04EBBC061575;
+        Mon, 23 Aug 2021 00:05:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=l2WBiCb5duYJRA9nKpihqrJOH1Qjg6utSrFiu8qAdtc=; b=rH7TUlJiCube3aHCyMv6G8vYp9
+        Kmt7mLR2//9FY8fyNqUqF3d4elZZIID71HbIUAZZjLingFEfhWVK7u0nGDOKUzxJCOhs4vybBnpbV
+        376rqfQ7hKr1QmKUWbNKqBow6rFFuUW0OASExBcd+k7C5otqKLgv0eOC6XM5e6B2VIfb4Lyb9O0Mg
+        I+3G1R3pT9CuLhgYd5SKdHERxo8hiRCzAkgi1Nl9NM7PwvqEGcM34371rmVW9tzCdCXADr7PkPZZb
+        FiKstDrG8ikQHbM0mezum/qQ89o23XVeQRXSz7Lsw/121qI1w9RjEAk9tugyaJAeT9GRGYvi11sy4
+        Spg3AVcQ==;
+Received: from hch by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1mI3ze-009P3v-Vc; Mon, 23 Aug 2021 07:03:47 +0000
+Date:   Mon, 23 Aug 2021 08:03:38 +0100
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Dave Chinner <david@fromorbit.com>,
+        xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Subject: Re: [PATCH] iomap: standardize tracepoint formatting and storage
+Message-ID: <YSNISnsgGPBUpt+4@infradead.org>
+References: <20210822023223.GY12640@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180125055144.qztiqeakw4u3pvqf@destitution>
+In-Reply-To: <20210822023223.GY12640@magnolia>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi,
+Looks good,
 
-On Thu, Jan 25, 2018 at 04:51:44PM +1100, Dave Chinner wrote:
-> The video from my talk at LCA 2018 yesterday about the XFS subvolume and
-> snapshot support I'm working on has been uploaded and can be found
-> here:
->
-> https://www.youtube.com/watch?v=wG8FUvSGROw
-
-Just out of curiosity... is anything still happening in this area, and if 
-so, is there anywhere we can look to get a feel for the current state of 
-affairs?
-
-Cheers,
-
-Chris
+Reviewed-by: Christoph Hellwig <hch@lst.de>
