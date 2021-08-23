@@ -2,122 +2,133 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2517AC4320A
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 Aug 2021 18:16:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 370E8C4338F
+	for <linux-xfs@archiver.kernel.org>; Mon, 23 Aug 2021 18:46:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0837361262
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 Aug 2021 18:16:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 198AD613BD
+	for <linux-xfs@archiver.kernel.org>; Mon, 23 Aug 2021 18:46:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231959AbhHWSQ4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 23 Aug 2021 14:16:56 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57278 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229837AbhHWSQz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 23 Aug 2021 14:16:55 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id B9F93611CB;
-        Mon, 23 Aug 2021 18:16:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1629742572;
-        bh=ebt8d5hUo2Hne7AlOeoX6nY9Dd7tk3qWVNzI39fns1E=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=mUrOVPcW5rVslYcZX2az2fIajYE/NPpageHF0C6ylVJh2q8w6ddlDYY18kh/9Z/B+
-         Tg9gGM5oKNb0btVvtpqr1wBSHD3akdnomeMA0XkBlSjP+ZwVjd8WRJRhzU3DuiUvpY
-         o8kkgSIS29b902fNJOALEc5jXXNs9d1k18PhzD2JSsni/Xh0uQ1zN/u3mK3W4nHmYZ
-         +UtLjmrTCMK3elA8dkt6APb14P/ml10FwUBbWLo+l++W43OIldO61bVtnJFYgHyZeK
-         P+/qn5i+g+E9x/t+mWpFgcfozZi75e6+cLjnyDb0HlIQFg5k7m7BbDl/iVgzd8ZaWu
-         /MGyTEsAGhgag==
-Date:   Mon, 23 Aug 2021 11:16:12 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Chandan Babu R <chandanrlinux@gmail.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH V2 02/12] xfs: Rename MAXEXTNUM, MAXAEXTNUM to
- XFS_IFORK_EXTCNT_MAXS32, XFS_IFORK_EXTCNT_MAXS16
-Message-ID: <20210823181612.GB12640@magnolia>
-References: <20210726114541.24898-1-chandanrlinux@gmail.com>
- <20210726114541.24898-3-chandanrlinux@gmail.com>
- <20210727215611.GK559212@magnolia>
- <20210727220318.GN559212@magnolia>
- <87eebjw2lj.fsf@garuda>
- <87y28sg5e5.fsf@debian-BULLSEYE-live-builder-AMD64>
- <87v93wfx48.fsf@debian-BULLSEYE-live-builder-AMD64>
+        id S231817AbhHWSqr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 23 Aug 2021 14:46:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33372 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229969AbhHWSqq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Aug 2021 14:46:46 -0400
+Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF544C061757
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Aug 2021 11:46:03 -0700 (PDT)
+Received: by mail-pf1-x436.google.com with SMTP id t42so13573416pfg.12
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Aug 2021 11:46:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=bsWLS5Lsvli6/G6DR+M0//W1oeoCxpbroaiM0AweC2U=;
+        b=cJwve58u1e5m7sq1m17LOxCx1TWZxIV225n3TyUIWLcuS7wiK3So1eEBRuWJuVlR2f
+         ZLXuzA8sLPpwGnGe2Yk1AyXRJZDBWlRISfYsJ8gv6749D39kIF8KnvTCK3EbCOxUaxlp
+         LGmfd7P1T4eH9WLpW17RKt0hIP2I/Vhp5q00KhjRS7FCdn/BvKP+nFi/hJKqAUpSBmBQ
+         ahmtxdhOeKhEeHJ6iEJJFl9MgIYiM+ZU9UmBohE35lPT+s38Y12qHJ/Yq7JJTx4WQoaB
+         L/OYBbRTy1crtTWqUvFh5XbJQGNjKDLPiSiYFz84weHUGmtIs3wik5fXRuL2uugwYOeE
+         pLiQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=bsWLS5Lsvli6/G6DR+M0//W1oeoCxpbroaiM0AweC2U=;
+        b=QfQCQ6pUxehoxMZGGwLgu5B8vLyUhCvCHwR1QVF4BgSc23mCSqv72MnimIdaC7N+hF
+         DhspXU7G4tYUS55xtQ9f2uebZmV9WQro+punB9QaG4Hvsg0Ol8GTSfoCAzg3M07I2hTL
+         JbxvhrSq6k80HWlSu2xVxfhVYPCoYTzRnFTd7PWrI72H9r6Qv7WUUyOyzrnznHKqUZKr
+         T5YhZ9GNnF8CI2oZlHz/dhl+4bfgznMSXjRUvT9RFeVTyPf0MykfDPEbCWU93WeJqHMN
+         BtOiQNRJbDIIuFSuHHzbgGWtugqifWKcH19Onj8qStzOqfCg0rJl5oKo99NWmv8mnEfw
+         jKyw==
+X-Gm-Message-State: AOAM532GK9xokMREtjryDWpyELrZrmke+yLAlGdsV/QfT4TroFQ6nxcu
+        6bf9bD/vdyPN8d5XE+HNc26GvzOStg8/0o75pEf4zQ==
+X-Google-Smtp-Source: ABdhPJxpo0+vyQ+xK7UvVGbCGg974A5JaeqyO5j1qTLhfDJa9Ok2iMc/TS0rPaPh8KlGL59bGBG0Nq+rOhg4vkr2vRw=
+X-Received: by 2002:a63:dd0e:: with SMTP id t14mr32040633pgg.279.1629744363336;
+ Mon, 23 Aug 2021 11:46:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <87v93wfx48.fsf@debian-BULLSEYE-live-builder-AMD64>
+References: <20210823123516.969486-1-hch@lst.de> <20210823123516.969486-2-hch@lst.de>
+In-Reply-To: <20210823123516.969486-2-hch@lst.de>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Mon, 23 Aug 2021 11:45:52 -0700
+Message-ID: <CAPcyv4h0QdHi10ngaXtuisxeZ+66wd-oy0F7r9C0FjJmyXBOFg@mail.gmail.com>
+Subject: Re: [PATCH 1/9] fsdax: improve the FS_DAX Kconfig description and
+ help text
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Vishal Verma <vishal.l.verma@intel.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Mike Snitzer <snitzer@redhat.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Linux NVDIMM <nvdimm@lists.linux.dev>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-ext4 <linux-ext4@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Aug 23, 2021 at 12:47:43PM +0530, Chandan Babu R wrote:
-> On 23 Aug 2021 at 09:48, Chandan Babu R wrote:
-> > On 28 Jul 2021 at 08:45, Chandan Babu R wrote:
-> >> On 28 Jul 2021 at 03:33, Darrick J. Wong wrote:
-> >>> On Tue, Jul 27, 2021 at 02:56:11PM -0700, Darrick J. Wong wrote:
-> >>>> On Mon, Jul 26, 2021 at 05:15:31PM +0530, Chandan Babu R wrote:
-> >>>> > In preparation for introducing larger extent count limits, this commit renames
-> >>>> > existing extent count limits based on their signedness and width.
-> >>>> > 
-> >>>> > Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
-> >>>> > ---
-> >>>> >  fs/xfs/libxfs/xfs_bmap.c       | 4 ++--
-> >>>> >  fs/xfs/libxfs/xfs_format.h     | 8 ++++----
-> >>>> >  fs/xfs/libxfs/xfs_inode_buf.c  | 4 ++--
-> >>>> >  fs/xfs/libxfs/xfs_inode_fork.c | 3 ++-
-> >>>> >  fs/xfs/scrub/inode_repair.c    | 2 +-
-> >>>> >  5 files changed, 11 insertions(+), 10 deletions(-)
-> >>>> > 
-> >>>> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> >>>> > index f3c9a0ebb0a5..8f262405a5b5 100644
-> >>>> > --- a/fs/xfs/libxfs/xfs_bmap.c
-> >>>> > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> >>>> > @@ -76,10 +76,10 @@ xfs_bmap_compute_maxlevels(
-> >>>> >  	 * available.
-> >>>> >  	 */
-> >>>> >  	if (whichfork == XFS_DATA_FORK) {
-> >>>> > -		maxleafents = MAXEXTNUM;
-> >>>> > +		maxleafents = XFS_IFORK_EXTCNT_MAXS32;
-> >>>> 
-> >>>> I'm not in love with these names, since they tell me roughly about the
-> >>>> size of the constant (which I could glean from the definition) but less
-> >>>> about when I would expect to find them.  How about:
-> >>>> 
-> >>>> #define XFS_MAX_DFORK_NEXTENTS    ((xfs_extnum_t) 0x7FFFFFFF)
-> >>>> #define XFS_MAX_AFORK_NEXTENTS    ((xfs_aextnum_t)0x00007FFF)
-> >>>
-> >>> Or, given that 'DFORK' already means 'ondisk fork', how about:
-> >>>
-> >>> XFS_MAX_DATA_NEXTENTS
-> >>> XFS_MAX_ATTR_NEXTENTS
-> >>
-> >> Yes, I agree. These names are better. I will incorporate your suggestions
-> >> before posting V3.
-> >>
-> >
-> > Using XFS_MAX_[ATTR|DATA]_NEXTENTS won't be feasible later in the patch series
-> > since the maximum extent count for the two inode forks depend on whether
-> > XFS_SB_FEAT_INCOMPAT_NREXT64 feature bit is set or not. With the incompat
-> > feature bit set, extent counts for attr and data forks can have maximum values
-> > of (2^32 - 1) and (2^48 - 1) respectively. With the incompat feature bit not
-> > set, extent counts for attr and data forks can have maximum values of (2^15 -
-> > 1) and (2^31 - 1) respectively.
-> >
-> > Also, xfs_iext_max_nextents() (an inline function introduced in the next patch
-> > in this series) abstracts away the logic of determining the maximum extent
-> > count for an inode fork.
-> 
-> I think introducing xfs_iext_max_nextents() before renaming the max extent
-> counter macros would reduce proliferation of XFS_IFORK_EXTCNT_MAX* macros
-> across the source code. If you are ok with it, I will reorder the current
-> patch and the next patch.
+On Mon, Aug 23, 2021 at 5:37 AM Christoph Hellwig <hch@lst.de> wrote:
+>
+> Rename the main option text to clarify it is for file system access,
+> and add a bit of text that explains how to actually switch a nvdimm
+> to a fsdax capable state.
+>
 
-Sounds good to me. :)
+Looks good, nice improvement. A couple suggestions below.
 
---D
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/Kconfig | 17 ++++++++++++++---
+>  1 file changed, 14 insertions(+), 3 deletions(-)
+>
+> diff --git a/fs/Kconfig b/fs/Kconfig
+> index a7749c126b8e..37e4441119cf 100644
+> --- a/fs/Kconfig
+> +++ b/fs/Kconfig
+> @@ -43,7 +43,7 @@ source "fs/f2fs/Kconfig"
+>  source "fs/zonefs/Kconfig"
+>
+>  config FS_DAX
+> -       bool "Direct Access (DAX) support"
+> +       bool "File system based Direct Access (DAX) support"
+>         depends on MMU
+>         depends on !(ARM || MIPS || SPARC)
+>         select DEV_PAGEMAP_OPS if (ZONE_DEVICE && !FS_DAX_LIMITED)
+> @@ -53,8 +53,19 @@ config FS_DAX
+>           Direct Access (DAX) can be used on memory-backed block devices.
+>           If the block device supports DAX and the filesystem supports DAX,
+>           then you can avoid using the pagecache to buffer I/Os.  Turning
+> -         on this option will compile in support for DAX; you will need to
+> -         mount the filesystem using the -o dax option.
+> +         on this option will compile in support for DAX.
+> +
+> +         For a DAX device to support file system access it needs to have
+> +         struct pages.  For the nfit based NVDIMMs this can be enabled
+> +         using the ndctl utility:
+> +
+> +               # ndctl create-namespace --force --reconfig=namespace0.0 \
+> +                       --mode=fsdax --map=mem
 
-> -- 
-> chandan
+There's still the concern that on systems with small amount of DRAM
+relative to large amounts of PMEM that --map=mem might consume all
+available memory for 'struct page'. Perhaps just add:
+
+"See the 'create-namespace' man page for details on the overhead of
+--map=mem: https://docs.pmem.io/ndctl-user-guide/ndctl-man-pages/ndctl-create-namespace"
+
+> +
+> +          For ndctl to work CONFIG_DEV_DAX needs to be enabled as well.
+> +         For most file systems DAX support needs to be manually enable
+> +         globally or per-inode using a mount option as well.  See the
+> +         file system documentation for details.
+
+How about include the link?
+
+"See the file system documentation for details:
+https://www.kernel.org/doc/html/latest/filesystems/dax.html"
