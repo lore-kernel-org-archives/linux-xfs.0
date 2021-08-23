@@ -4,60 +4,61 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 488C0C4320A
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 Aug 2021 21:20:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00807C4338F
+	for <linux-xfs@archiver.kernel.org>; Mon, 23 Aug 2021 21:23:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2E3C86127B
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 Aug 2021 21:20:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D96E4613CD
+	for <linux-xfs@archiver.kernel.org>; Mon, 23 Aug 2021 21:23:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232724AbhHWVVG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 23 Aug 2021 17:21:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40584 "EHLO
+        id S232748AbhHWVXs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 23 Aug 2021 17:23:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41302 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232834AbhHWVVE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Aug 2021 17:21:04 -0400
-Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62EBCC061575
-        for <linux-xfs@vger.kernel.org>; Mon, 23 Aug 2021 14:20:21 -0700 (PDT)
-Received: by mail-pl1-x629.google.com with SMTP id a5so10956652plh.5
-        for <linux-xfs@vger.kernel.org>; Mon, 23 Aug 2021 14:20:21 -0700 (PDT)
+        with ESMTP id S232724AbhHWVXs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Aug 2021 17:23:48 -0400
+Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C198CC06175F
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Aug 2021 14:23:04 -0700 (PDT)
+Received: by mail-pj1-x102b.google.com with SMTP id oc2-20020a17090b1c0200b00179e56772d6so357858pjb.4
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Aug 2021 14:23:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=intel-com.20150623.gappssmtp.com; s=20150623;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=6Tta22g6TzCbS8+A5F3hRnTInZTNETaE2nytspmuyiI=;
-        b=WmkNeRi7tFECQpCdiAmGDL4hHYzV9+5I3fYvoUDlepLk2e1dCoJMI6zB/qrgiW/KA8
-         tjlG4bLQMDL/lTTTfR20oVNEgEEZ9SZi71LCMKYLmB9l7o0IKWQV3x99rHH9jrOdt/aQ
-         KvCTbbVrru40KnJ4Ss45A2n6Y2tle0h2j1Fyp9R/qhfGrgpEmPMaySRW6/mu3K7iVXr5
-         PxzRBeLG0yaFZc9b/9i/1w066LgdKUZn7jriSCoN6lLiH0EHg9NWUBuRKhMrDkvqUavH
-         1ra/FqSzDumL4aMl8uZzZVoN/2mdgv0SPsnRwIrftWCnmVtCvSYcmYp/HvEhrMhW4u3g
-         nk6A==
+        bh=ShErwyspG88Bo4yVlFpB0fmc1BjfRh8zuGfu0CGRDeA=;
+        b=rHIKZbBUCGl81JJDCGO2jSGr728UIVVQ13KxyIxc5kP6Wg5oWA9rRVWif9iIao5pL4
+         L8JX62XyKt1eePLQ2AwBJuJrwPwVawP5zim6ZdRWmHiKv2kKR3fko7lTmbKjyT/aQtzo
+         MEdxWwqwa1yVZo9MHkLO9AqBKKOAaM2gOsmwCUlHxgSNIJ8uSbFInX867fUxouhXCXBK
+         gKKCWO53t3zw6Z8NYQly+wmZgIqWldfA/074D115o3Qsil+IMBtncqlvsQq8DAEwET7c
+         V12Srx4AvkF0ONhtcsEFOppkKM7yNRBoaPdKFKb4agsQdX7D6hUMAsWrwA5FtIt/Kyou
+         eNlQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=6Tta22g6TzCbS8+A5F3hRnTInZTNETaE2nytspmuyiI=;
-        b=OFL8Aexso9fMvUOWnW7IxUu8LGFmL0mrpfq8yfHBvvSrcoATv98ykhVdrZfdRtNBdh
-         kD8R0hrAFGCbsTGXCJSRGcK2ltTLmMpZLMw47JB7XfiZXD+ltl4/mtRuxLBCC/oOmuuW
-         +8kcazaPMod060hxspvsgaIw2x7Ef4gYhqXg9qsoyeOQiqZ0fE0tBph77FXqnzGTZlxJ
-         eBWROPNJcW5t5U03ofd18prb35SeTRJ/fW5KS83eweP6pnRd3O4kaxVCuimY2JLoV/5C
-         mTyDAjJFSN3vZhO3puuVzQ3XaEpYbGMg/2s6VXP3pXSZRWZHjNLWj0lApoRr32z+MAGy
-         hl/A==
-X-Gm-Message-State: AOAM53141Txwh/tezWsSSlg4Nsiy/h/RUEarCh6aEHeD1V5qi460mQGi
-        x5pb7FnlTy/8md+iomgXxA7V0uVTiLPVOU+i6fvUBw==
-X-Google-Smtp-Source: ABdhPJzdZDOlIEIUdEe/koFlzTPnIhrvJ+LvlXLPoKCXM8QxzZFIYVnDFkM1MxM7I34jVCC/VnQMg8JkpWiv08lsQpo=
-X-Received: by 2002:a17:90b:23d6:: with SMTP id md22mr532829pjb.149.1629753620957;
- Mon, 23 Aug 2021 14:20:20 -0700 (PDT)
+        bh=ShErwyspG88Bo4yVlFpB0fmc1BjfRh8zuGfu0CGRDeA=;
+        b=Ji/dFDAudAKkcK5xoBom+m7uDpa9iOeCQujE4TxjlLQdX6kaYQRtOrUqUP1o2seRmV
+         OyeZYnc7QHpc8PuoUACOd5tIdV6kowTTd0ozOO5EdpAWDtMbeWQu6zNGooUVYHfEUIbT
+         0XdjUV9MZ/uulP5mwd3/MlIsbdI5HYCPFLnky6vs30fOEBqBJr+FUmwvV2yO2PL7zasv
+         aavLTmTYWbShvsOEFdjufGfLe+WcEHXWcn+oRMy5cH5YSxiUkXPkfBUrUqp3EDPW3Mr2
+         ShuGOXRF5Mw36A1pMIKMJNwtOG27GbWUXXDULpX9+BxSbtRCMDvdZON3xrkH9BUPqbBf
+         rV3A==
+X-Gm-Message-State: AOAM530YTUwTybDK+BJXuzvQRjTRDaarXA2iJNMqA5fD2TXfCBUjeBaw
+        lKFPVH6mPOP5BesQLlkaw+0arhVk6flGt7ERYNZkYg==
+X-Google-Smtp-Source: ABdhPJx42nu034KgnU+n5z3pwJcpAAmVm/tyH+LAY8tSKD1qwe5mGvbj3AXhqEGCH92DHgFtK8TvIT3ZBlghdPmQxgY=
+X-Received: by 2002:a17:902:edd0:b0:135:b351:bd5a with SMTP id
+ q16-20020a170902edd000b00135b351bd5amr2141894plk.52.1629753782818; Mon, 23
+ Aug 2021 14:23:02 -0700 (PDT)
 MIME-Version: 1.0
-References: <20210823123516.969486-1-hch@lst.de> <20210823123516.969486-9-hch@lst.de>
-In-Reply-To: <20210823123516.969486-9-hch@lst.de>
+References: <20210823123516.969486-1-hch@lst.de> <20210823123516.969486-10-hch@lst.de>
+In-Reply-To: <20210823123516.969486-10-hch@lst.de>
 From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Mon, 23 Aug 2021 14:20:10 -0700
-Message-ID: <CAPcyv4jR7U2N0-fFE8FUL+fNdY+6f=FNs7ex56F5tsLztA_GJA@mail.gmail.com>
-Subject: Re: [PATCH 8/9] xfs: factor out a xfs_buftarg_is_dax helper
+Date:   Mon, 23 Aug 2021 14:22:52 -0700
+Message-ID: <CAPcyv4hNL+ohvTP7VK9zrPDhyVTbUZSD74=z2H2uveudaqi+=w@mail.gmail.com>
+Subject: Re: [PATCH 9/9] dax: remove bdev_dax_supported
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     Vishal Verma <vishal.l.verma@intel.com>,
         Dave Jiang <dave.jiang@intel.com>,
@@ -72,14 +73,15 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Aug 23, 2021 at 5:44 AM Christoph Hellwig <hch@lst.de> wrote:
+On Mon, Aug 23, 2021 at 5:45 AM Christoph Hellwig <hch@lst.de> wrote:
 >
+> All callers already have a dax_device obtained from fs_dax_get_by_bdev
+> at hand, so just pass that to dax_supported() insted of doing another
+> lookup.
 
-I wouldn't mind adding:
-
-"In support of a future change to kill bdev_dax_supported() first move
-its usage to a helper."
-
-...but either way:
+Looks good, series passes regression tests:
 
 Reviewed-by: Dan Williams <dan.j.williams@intel.com>
+
+I can take this with an XFS ack, or if Darrick wants to carry it to
+make Ruan's life easier that's ok with me.
