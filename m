@@ -6,33 +6,33 @@ X-Spam-Status: No, score=-4.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23689C4338F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DBC8C432BE
 	for <linux-xfs@archiver.kernel.org>; Tue, 24 Aug 2021 09:02:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 085A860F6F
+	by mail.kernel.org (Postfix) with ESMTP id 66DB561373
 	for <linux-xfs@archiver.kernel.org>; Tue, 24 Aug 2021 09:02:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235307AbhHXJDD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S234214AbhHXJDD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Tue, 24 Aug 2021 05:03:03 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35764 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:35794 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234214AbhHXJDC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S235264AbhHXJDC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Tue, 24 Aug 2021 05:03:02 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPS id AE6EA613AB
-        for <linux-xfs@vger.kernel.org>; Tue, 24 Aug 2021 09:02:18 +0000 (UTC)
+Received: by mail.kernel.org (Postfix) with ESMTPS id 18E99613B1
+        for <linux-xfs@vger.kernel.org>; Tue, 24 Aug 2021 09:02:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1629795738;
-        bh=Spd/WYYsc85Lo8x0CPqtUKtIIe6a/TCyVQRGMumjzs4=;
+        s=k20201202; t=1629795739;
+        bh=tx/OtuWg7GJgwDLa6RXkkBuRu7BVe1t77uoCNgvQFvE=;
         h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=TtxJusxs8AuVN7grbNR4NIsbkpXK1asm7Glbnpn0myXFex7lAoR+QhZAjzozJARC9
-         u6nyOqaHTSz16xqLHTIPn9s6Ib3pBHMvKztw+lUl7xz94GbUcQATvxMJ9++73ESC3B
-         qdbUGySlQQKobQHb8yawgDScEip8V6MxyFpD7wvXjxE970Vldt+HK37FbD88Zw6df0
-         KtcdauhjtZCdwF4s1aKAa1hj+uY0bQ277wra7V5M3PVFUFc58TUZr9H43SCbM6PpNA
-         WapgU+WSZcfNgFbVEHtTCmLsbLpEdKvRMyo+zTIfAFYHhJVFukNZ6IQ1Z/Q5aKIa3F
-         xOsFCJ12+9F0g==
+        b=d32iZHaXNpPSzO32EBq9kYiW+edrUH/jrq9M7ehIKracAOoibOjCk02z3fcxW59o3
+         2f9czka0SJYPUbrKPyWQlcK+1rPZJVpapNzYnKk4NTnthQCf0rM1d0cr44hOZMTXxF
+         AR24iTm2dkSOmkRXLMDXU/BSLWswA8o1JQRb8GSm5iuQrP3FPE+VhfemY3NjV+BCe4
+         jeD5FHTNdh8tb61aOSvrS78jiBBoE6Y+vVMPUmLZ46t5rshEbYyP8NgFmnGdY5rcvT
+         h6Rt/u0TTXa0fIPaIdo2/7Sfq7miXcKJE7yCh2H1WnqJQN611+AWmQ0jIfaBVxiLZI
+         VSkdZS6NH9v2Q==
 From:   bugzilla-daemon@bugzilla.kernel.org
 To:     linux-xfs@vger.kernel.org
-Subject: [Bug 213941] [xfstests xfs/104] XFS: Assertion failed: agno <
+Subject: [Bug 213625] [xfstests xfs/104] XFS: Assertion failed: agno <
  mp->m_sb.sb_agcount, file: fs/xfs/libxfs/xfs_types.c, line: 22
 Date:   Tue, 24 Aug 2021 09:02:18 +0000
 X-Bugzilla-Reason: None
@@ -44,15 +44,15 @@ X-Bugzilla-Version: 2.5
 X-Bugzilla-Keywords: 
 X-Bugzilla-Severity: normal
 X-Bugzilla-Who: zlang@redhat.com
-X-Bugzilla-Status: RESOLVED
-X-Bugzilla-Resolution: DUPLICATE
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
 X-Bugzilla-Priority: P1
 X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
 X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: bug_status resolution
-Message-ID: <bug-213941-201763-cIxHqmnBRZ@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-213941-201763@https.bugzilla.kernel.org/>
-References: <bug-213941-201763@https.bugzilla.kernel.org/>
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-213625-201763-plhIgMp3g6@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-213625-201763@https.bugzilla.kernel.org/>
+References: <bug-213625-201763@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 X-Bugzilla-URL: https://bugzilla.kernel.org/
@@ -62,19 +62,10 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D213941
-
-Zorro Lang (zlang@redhat.com) changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |RESOLVED
-         Resolution|---                         |DUPLICATE
+https://bugzilla.kernel.org/show_bug.cgi?id=3D213625
 
 --- Comment #2 from Zorro Lang (zlang@redhat.com) ---
-
-
-*** This bug has been marked as a duplicate of bug 213625 ***
+*** Bug 213941 has been marked as a duplicate of this bug. ***
 
 --=20
 You may reply to this email to add a comment.
