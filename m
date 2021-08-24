@@ -7,139 +7,142 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D654C4338F
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Aug 2021 00:37:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4280C4338F
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Aug 2021 00:38:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4672E61183
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Aug 2021 00:37:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C367A61284
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Aug 2021 00:38:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233330AbhHXAiX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 23 Aug 2021 20:38:23 -0400
-Received: from mail.kernel.org ([198.145.29.99]:44918 "EHLO mail.kernel.org"
+        id S233360AbhHXAjT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 23 Aug 2021 20:39:19 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45054 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233260AbhHXAiX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 23 Aug 2021 20:38:23 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id ECAF161183
-        for <linux-xfs@vger.kernel.org>; Tue, 24 Aug 2021 00:37:39 +0000 (UTC)
+        id S233330AbhHXAjS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 23 Aug 2021 20:39:18 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 7054A613A7
+        for <linux-xfs@vger.kernel.org>; Tue, 24 Aug 2021 00:38:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1629765460;
-        bh=OThu3QykomBI7rqh4es9ZzmM0DNwYc1IZZ8aTYiiD7I=;
-        h=Date:From:To:Subject:From;
-        b=aANeVX/fjW+Q54WdTwWUXPXDet4aKj0jTT4GJWMt+4vGcdTmVxBSbb70XXdA6iEEP
-         EaJJVQW9y8FybMkiEuLTWFmodjvqF4nQ8SJgTomC24Ptdqnjg5451neNt8vPeG5w0j
-         hFLJQmlCZA7mJ33G3KX72V9j13cmsUmfBzyTt50lSrI3oIyGin7wgORNjV1u/zp/ZJ
-         xd7qgZcV+UB2iOgfN1WmxNt1axyX3frWKoc6DnqWKnpd4IOoqNw5Bji1YLo+NDt6Vf
-         o9MwNZwPgiVMp8mX16d2giaob3Y7MJhJF0IzavqjisuYM+PxGCuQnKPoK8CaLndt3D
-         eRpMdlKtjrM/g==
-Date:   Mon, 23 Aug 2021 17:37:39 -0700
+        s=k20201202; t=1629765515;
+        bh=pe+emmB8fZNdbnnyGKTE/kZbGr9qZ6tjc48qGXxK93A=;
+        h=Date:From:To:Subject:References:In-Reply-To:From;
+        b=m5k8TidZkabr27S/OSVxPCVpVZdzgSuVFWQrxC+LoiD7rc//XeHlixZ1YnVDynXTY
+         SnKTQVl1AepW+928sfn/oB+T5ZzCqMmNICaCUx7FeBXvt8+ERGqJGATYamF1H6j4Dd
+         BbdXsXOYZXRNzpPcQ8/rJt7NOWRdVsChnBSpD2XkCYOqRbOgZ6ERBIf5Z+2ShECS0V
+         4v162Xj3Pv0EpagVufzTV5/2WhhIgl+Mj2mbCQI9iuE2eG8C1f4N1eIEE9ruuPv4Wh
+         RMCBUe7qesh+doxwrfr2ZwX8Wdb+sHWqaxFmcklCYpWkzJrnQAy/tj8Tutp8QekDGp
+         x/SRkA2VfS89g==
+Date:   Mon, 23 Aug 2021 17:38:35 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     xfs <linux-xfs@vger.kernel.org>
-Subject: [PATCH] xfs: only set IOMAP_F_SHARED when providing a srcmap to a
- write
-Message-ID: <20210824003739.GC12640@magnolia>
+Subject: [RFC PATCH] generic: regression test for a FALLOC_FL_UNSHARE bug in
+ XFS
+Message-ID: <20210824003835.GD12640@magnolia>
+References: <20210824003739.GC12640@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20210824003739.GC12640@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-While prototyping a free space defragmentation tool, I observed an
-unexpected IO error while running a sequence of commands that can be
-recreated by the following sequence of commands:
-
-# xfs_io -f -c "pwrite -S 0x58 -b 10m 0 10m" file1
-# cp --reflink=always file1 file2
-# punch-alternating -o 1 file2
-# xfs_io -c "funshare 0 10m" file2
-fallocate: Input/output error
-
-I then scraped this (abbreviated) stack trace from dmesg:
-
-WARNING: CPU: 0 PID: 30788 at fs/iomap/buffered-io.c:577 iomap_write_begin+0x376/0x450
-CPU: 0 PID: 30788 Comm: xfs_io Not tainted 5.14.0-rc6-xfsx #rc6 5ef57b62a900814b3e4d885c755e9014541c8732
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.13.0-1ubuntu1.1 04/01/2014
-RIP: 0010:iomap_write_begin+0x376/0x450
-RSP: 0018:ffffc90000c0fc20 EFLAGS: 00010297
-RAX: 0000000000000001 RBX: ffffc90000c0fd10 RCX: 0000000000001000
-RDX: ffffc90000c0fc54 RSI: 000000000000000c RDI: 000000000000000c
-RBP: ffff888005d5dbd8 R08: 0000000000102000 R09: ffffc90000c0fc50
-R10: 0000000000b00000 R11: 0000000000101000 R12: ffffea0000336c40
-R13: 0000000000001000 R14: ffffc90000c0fd10 R15: 0000000000101000
-FS:  00007f4b8f62fe40(0000) GS:ffff88803ec00000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 000056361c554108 CR3: 000000000524e004 CR4: 00000000001706f0
-Call Trace:
- iomap_unshare_actor+0x95/0x140
- iomap_apply+0xfa/0x300
- iomap_file_unshare+0x44/0x60
- xfs_reflink_unshare+0x50/0x140 [xfs 61947ea9b3a73e79d747dbc1b90205e7987e4195]
- xfs_file_fallocate+0x27c/0x610 [xfs 61947ea9b3a73e79d747dbc1b90205e7987e4195]
- vfs_fallocate+0x133/0x330
- __x64_sys_fallocate+0x3e/0x70
- do_syscall_64+0x35/0x80
- entry_SYSCALL_64_after_hwframe+0x44/0xae
-RIP: 0033:0x7f4b8f79140a
-
-Looking at the iomap tracepoints, I saw this:
-
-iomap_iter:           dev 8:64 ino 0x100 pos 0 length 0 flags WRITE|0x80 (0x81) ops xfs_buffered_write_iomap_ops caller iomap_file_unshare
-iomap_iter_dstmap:    dev 8:64 ino 0x100 bdev 8:64 addr -1 offset 0 length 131072 type DELALLOC flags SHARED
-iomap_iter_srcmap:    dev 8:64 ino 0x100 bdev 8:64 addr 147456 offset 0 length 4096 type MAPPED flags
-iomap_iter:           dev 8:64 ino 0x100 pos 0 length 4096 flags WRITE|0x80 (0x81) ops xfs_buffered_write_iomap_ops caller iomap_file_unshare
-iomap_iter_dstmap:    dev 8:64 ino 0x100 bdev 8:64 addr -1 offset 4096 length 4096 type DELALLOC flags SHARED
-console:              WARNING: CPU: 0 PID: 30788 at fs/iomap/buffered-io.c:577 iomap_write_begin+0x376/0x450
-
-The first time funshare calls ->iomap_begin, xfs sees that the first
-block is shared and creates a 128k delalloc reservation in the COW fork.
-The delalloc reservation is returned as dstmap, and the shared block is
-returned as srcmap.  So far so good.
-
-funshare calls ->iomap_begin to try the second block.  This time there's
-no srcmap (punch-alternating punched it out!) but we still have the
-delalloc reservation in the COW fork.  Therefore, we again return the
-reservation as dstmap and the hole as srcmap.  iomap_unshare_iter
-incorrectly tries to unshare the hole, which __iomap_write_begin rejects
-because shared regions must be fully written and therefore cannot
-require zeroing.
-
-Therefore, change the buffered write iomap_begin function not to set
-IOMAP_F_SHARED when there isn't a source mapping to read from for the
-unsharing.
+This is a regression test for "xfs: only set IOMAP_F_SHARED when
+providing a srcmap to a write".
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_iomap.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ tests/generic/729     |   73 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/729.out |    2 +
+ 2 files changed, 75 insertions(+)
+ create mode 100755 tests/generic/729
+ create mode 100644 tests/generic/729.out
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 7c69b124a475..abf6d60945ab 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -870,6 +870,7 @@ xfs_buffered_write_iomap_begin(
- 	struct xfs_bmbt_irec	imap, cmap;
- 	struct xfs_iext_cursor	icur, ccur;
- 	xfs_fsblock_t		prealloc_blocks = 0;
-+	u16			cflags = 0;
- 	bool			eof = false, cow_eof = false, shared = false;
- 	int			allocfork = XFS_DATA_FORK;
- 	int			error = 0;
-@@ -1061,6 +1062,7 @@ xfs_buffered_write_iomap_begin(
- found_cow:
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	if (imap.br_startoff <= offset_fsb) {
-+		cflags = IOMAP_F_SHARED;
- 		error = xfs_bmbt_to_iomap(ip, srcmap, &imap, 0);
- 		if (error)
- 			return error;
-@@ -1068,7 +1070,7 @@ xfs_buffered_write_iomap_begin(
- 		xfs_trim_extent(&cmap, offset_fsb,
- 				imap.br_startoff - offset_fsb);
- 	}
--	return xfs_bmbt_to_iomap(ip, iomap, &cmap, IOMAP_F_SHARED);
-+	return xfs_bmbt_to_iomap(ip, iomap, &cmap, cflags);
- 
- out_unlock:
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+diff --git a/tests/generic/729 b/tests/generic/729
+new file mode 100755
+index 00000000..269aed65
+--- /dev/null
++++ b/tests/generic/729
+@@ -0,0 +1,73 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2021 Oracle.  All Rights Reserved.
++#
++# FS QA Test 729
++#
++# This is a regression test for "xfs: only set IOMAP_F_SHARED when providing a
++# srcmap to a write".  If a user creates a sparse shared region in a file,
++# convinces XFS to create a copy-on-write delayed allocation reservation
++# spanning both the shared blocks and the holes, and then calls the fallocate
++# unshare command to unshare the entire sparse region, XFS incorrectly tells
++# iomap that the delalloc blocks for the holes are shared, which causes it to
++# error out while trying to unshare a hole.
++#
++. ./common/preamble
++_begin_fstest auto clone unshare
++
++# Override the default cleanup function.
++_cleanup()
++{
++	cd /
++	rm -r -f $tmp.* $TEST_DIR/$seq
++}
++
++# Import common functions.
++. ./common/reflink
++. ./common/filter
++
++# real QA test starts here
++
++# Modify as appropriate.
++_supported_fs generic
++_require_cp_reflink
++_require_test_reflink
++_require_test_program "punch-alternating"
++_require_xfs_io_command "fpunch"
++_require_xfs_io_command "funshare"
++
++mkdir $TEST_DIR/$seq
++file1=$TEST_DIR/$seq/a
++file2=$TEST_DIR/$seq/b
++
++$XFS_IO_PROG -f -c "pwrite -S 0x58 -b 10m 0 10m" $file1 >> $seqres.full
++
++f1sum0="$(md5sum $file1 | _filter_test_dir)"
++
++_cp_reflink $file1 $file2
++$here/src/punch-alternating -o 1 $file2
++
++f2sum0="$(md5sum $file2 | _filter_test_dir)"
++
++# set cowextsize to the defaults (128k) to force delalloc cow preallocations
++test "$FSTYP" = "xfs" && $XFS_IO_PROG -c 'cowextsize 0' $file2
++$XFS_IO_PROG -c "funshare 0 10m" $file2
++
++f1sum1="$(md5sum $file1 | _filter_test_dir)"
++f2sum1="$(md5sum $file2 | _filter_test_dir)"
++
++test "${f1sum0}" = "${f1sum1}" || echo "file1 should not have changed"
++test "${f2sum0}" = "${f2sum1}" || echo "file2 should not have changed"
++
++_test_cycle_mount
++
++f1sum2="$(md5sum $file1 | _filter_test_dir)"
++f2sum2="$(md5sum $file2 | _filter_test_dir)"
++
++test "${f1sum2}" = "${f1sum1}" || echo "file1 should not have changed ondisk"
++test "${f2sum2}" = "${f2sum1}" || echo "file2 should not have changed ondisk"
++
++# success, all done
++echo Silence is golden
++status=0
++exit
+diff --git a/tests/generic/729.out b/tests/generic/729.out
+new file mode 100644
+index 00000000..0f175ae2
+--- /dev/null
++++ b/tests/generic/729.out
+@@ -0,0 +1,2 @@
++QA output created by 729
++Silence is golden
