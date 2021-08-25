@@ -4,338 +4,371 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59EA6C4320E
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Aug 2021 22:28:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9883C432BE
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Aug 2021 23:07:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 451786109D
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Aug 2021 22:28:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 95793610CB
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Aug 2021 23:07:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232179AbhHYW2y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Aug 2021 18:28:54 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58278 "EHLO mail.kernel.org"
+        id S233067AbhHYXHv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 Aug 2021 19:07:51 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39962 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230406AbhHYW2y (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 25 Aug 2021 18:28:54 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 33EB0610A6;
-        Wed, 25 Aug 2021 22:28:08 +0000 (UTC)
+        id S231535AbhHYXHu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 25 Aug 2021 19:07:50 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 4A049610C7;
+        Wed, 25 Aug 2021 23:07:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1629930488;
-        bh=juH3IcJXivtrExzFBZKv8TjfhpGQ2ljLQuIgqM1wx4M=;
+        s=k20201202; t=1629932824;
+        bh=mGQ67LM4p4PgUFzhPHjFcZhbot55XXEW3sJuDLcJhaQ=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=RoFyPJKNY30cexViUCBqyt21a6Jl8jfQnBQKJdgtv02Sy3cdsdWUySRKAOiLki53E
-         1MfY+fwgnZALaLmSydybJpFYkvCJAcnMywldiDFYe8znT5Mj5a9aQ8yOtQ1AO0wRoA
-         eslyfuHKYLJvOUDwWFogoZFAF81ZND8pzi7lZsyGnQ61RX0ArEUN4H3Gv8phpywmPS
-         UCsJjEwK69twMupYoa/TKFkwVDg6jbPuC2LL5aIOcneY56nKjpNDVXqKiFb6XIKK6y
-         fmyFMoxD5ztKzy8E+TAV4533DebRTk9hOiheJh/EqF0llHU2vaWIy0ADAfV+V3g5HW
-         KTm6w315Jb5EQ==
-Date:   Wed, 25 Aug 2021 15:28:07 -0700
+        b=eHJpSg+azAfs2VlTDFdqWfCfwcvE81PhfvPYU9ThzX3AB8oWT4FCvKEdRRW7fjHvH
+         sLlOc271YxbcsTui6OAaJ2ShVUGrMnCMAXUoM+nEQrVwewdzSsvX5ZrkDqCfBausK9
+         zQvMpDQA6UqVjXFFLTMBtbQrQ8siJbg2foG3DGUMayKrUOaNdhFoL6Fx5zMouXNfX6
+         dDRvb6Tc5/cdTXEZagZGxvfY8WfVpfUkSLJ7cPGnu4eQJL06kzRXnA/Gzs2IEiuFqi
+         bihBUib8NWQBf2DXWdT8cCl6hXZC64rOLAzg+9jJEWSATjsCFT75d9+/SD58N/UUZr
+         t3BZjZmBI7VOA==
+Date:   Wed, 25 Aug 2021 16:07:03 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Catherine Hoang <catherine.hoang@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 1/1] xfstests: Add Log Attribute Replay test
-Message-ID: <20210825222807.GG12640@magnolia>
-References: <20210825195144.2283-1-catherine.hoang@oracle.com>
- <20210825195144.2283-2-catherine.hoang@oracle.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org, fstests <fstests@vger.kernel.org>
+Subject: [RFC PATCH] xfs: test DONTCACHE behavior with the inode cache
+Message-ID: <20210825230703.GH12640@magnolia>
+References: <20210824023208.392670-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210825195144.2283-2-catherine.hoang@oracle.com>
+In-Reply-To: <20210824023208.392670-1-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 25, 2021 at 12:51:44PM -0700, Catherine Hoang wrote:
-> From: Allison Henderson <allison.henderson@oracle.com>
-> 
-> This patch adds a test to exercise the log attribute error
-> inject and log replay.  Attributes are added in increaseing
-> sizes up to 64k, and the error inject is used to replay them
-> from the log
-> 
-> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
+From: Darrick J. Wong <djwong@kernel.org>
 
-Yay, [your] first post! :D
+Basic testing that DONTCACHE affects the XFS inode cache in the manner
+that we expect.  The only way we can do that (for XFS, anyway) is to
+play around with the BULKSTAT ioctl.
 
-> ---
->  tests/xfs/540     |  96 ++++++++++++++++++++++++++++++++++
->  tests/xfs/540.out | 130 ++++++++++++++++++++++++++++++++++++++++++++++
->  2 files changed, 226 insertions(+)
->  create mode 100755 tests/xfs/540
->  create mode 100644 tests/xfs/540.out
-> 
-> diff --git a/tests/xfs/540 b/tests/xfs/540
-> new file mode 100755
-> index 00000000..3b05b38b
-> --- /dev/null
-> +++ b/tests/xfs/540
-> @@ -0,0 +1,96 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2021, Oracle and/or its affiliates.  All Rights Reserved.
-> +#
-> +# FS QA Test 540
-> +#
-> +# Log attribute replay test
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto quick attr
-> +
-> +# get standard environment, filters and checks
-> +. ./common/filter
-> +. ./common/attr
-> +. ./common/inject
-> +
-> +_cleanup()
-> +{
-> +	echo "*** unmount"
-> +	_scratch_unmount 2>/dev/null
-> +	rm -f $tmp.*
-> +	echo 0 > /sys/fs/xfs/debug/larp
-> +}
-> +
-> +_test_attr_replay()
-> +{
-> +	attr_name=$1
-> +	attr_value=$2
-> +	touch $testfile.1
-> +
-> +	echo "Inject error"
-> +	_scratch_inject_error "larp"
-> +
-> +	echo "Set attribute"
-> +	echo "$attr_value" | ${ATTR_PROG} -s "$attr_name" $testfile.1 | \
-> +			    _filter_scratch
-> +
-> +	echo "FS should be shut down, touch will fail"
-> +	touch $testfile.1
-> +
-> +	echo "Remount to replay log"
-> +	_scratch_inject_logprint >> $seqres.full
-> +
-> +	echo "FS should be online, touch should succeed"
-> +	touch $testfile.1
-> +
-> +	echo "Verify attr recovery"
-> +	_getfattr --absolute-names $testfile.1 | _filter_scratch
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+ tests/xfs/780     |  293 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/780.out |    7 +
+ 2 files changed, 300 insertions(+)
+ create mode 100755 tests/xfs/780
+ create mode 100644 tests/xfs/780.out
 
-Shouldn't we check the value of the extended attrs too?
-
-> +}
-> +
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-> +
-> +_require_scratch
-> +_require_attrs
-> +_require_xfs_io_error_injection "larp"
-> +_require_xfs_sysfs debug/larp
-> +
-> +# turn on log attributes
-> +echo 1 > /sys/fs/xfs/debug/larp
-> +
-> +rm -f $seqres.full
-
-No need to do this anymore; _begin_fstest takes care of this now.
-
-> +_scratch_unmount >/dev/null 2>&1
-> +
-> +#attributes of increaseing sizes
-> +attr16="0123456789ABCDEFG"
-
-"attr16" is seventeen bytes long.
-
-> +attr64="$attr16$attr16$attr16$attr16"
-> +attr256="$attr64$attr64$attr64$attr64"
-> +attr1k="$attr256$attr256$attr256$attr256"
-> +attr4k="$attr1k$attr1k$attr1k$attr1k"
-> +attr8k="$attr4k$attr4k$attr4k$attr4k"
-
-This is 17k long...
-
-> +attr32k="$attr8k$attr8k$attr8k$attr8k"
-
-...which makes this 68k long...
-
-> +attr64k="$attr32k$attr32k"
-
-...and this 136K long?
-
-I'm curious, what are the contents of user.attr_name8?
-
-OH, I see, attr clamps the value length to 64k, so I guess the oversize
-buffers don't matter.
-
---D
-
-> +
-> +echo "*** mkfs"
-> +_scratch_mkfs_xfs >/dev/null
-> +
-> +echo "*** mount FS"
-> +_scratch_mount
-> +
-> +testfile=$SCRATCH_MNT/testfile
-> +echo "*** make test file 1"
-> +
-> +_test_attr_replay "attr_name1" $attr16
-> +_test_attr_replay "attr_name2" $attr64
-> +_test_attr_replay "attr_name3" $attr256
-> +_test_attr_replay "attr_name4" $attr1k
-> +_test_attr_replay "attr_name5" $attr4k
-> +_test_attr_replay "attr_name6" $attr8k
-> +_test_attr_replay "attr_name7" $attr32k
-> +_test_attr_replay "attr_name8" $attr64k
-> +
-> +echo "*** done"
-> +status=0
-> +exit
-> diff --git a/tests/xfs/540.out b/tests/xfs/540.out
-> new file mode 100644
-> index 00000000..c1b178a0
-> --- /dev/null
-> +++ b/tests/xfs/540.out
-> @@ -0,0 +1,130 @@
-> +QA output created by 540
-> +*** mkfs
-> +*** mount FS
-> +*** make test file 1
-> +Inject error
-> +Set attribute
-> +attr_set: Input/output error
-> +Could not set "attr_name1" for /mnt/scratch/testfile.1
-> +FS should be shut down, touch will fail
-> +touch: cannot touch '/mnt/scratch/testfile.1': Input/output error
-
-The error messages need to be filtered too, because SCRATCH_MNT is
-definitely not /mnt/scratch here. ;)
-
---D
-
-> +Remount to replay log
-> +FS should be online, touch should succeed
-> +Verify attr recovery
-> +# file: SCRATCH_MNT/testfile.1
-> +user.attr_name1
-> +
-> +Inject error
-> +Set attribute
-> +attr_set: Input/output error
-> +Could not set "attr_name2" for /mnt/scratch/testfile.1
-> +FS should be shut down, touch will fail
-> +touch: cannot touch '/mnt/scratch/testfile.1': Input/output error
-> +Remount to replay log
-> +FS should be online, touch should succeed
-> +Verify attr recovery
-> +# file: SCRATCH_MNT/testfile.1
-> +user.attr_name1
-> +user.attr_name2
-> +
-> +Inject error
-> +Set attribute
-> +attr_set: Input/output error
-> +Could not set "attr_name3" for /mnt/scratch/testfile.1
-> +FS should be shut down, touch will fail
-> +touch: cannot touch '/mnt/scratch/testfile.1': Input/output error
-> +Remount to replay log
-> +FS should be online, touch should succeed
-> +Verify attr recovery
-> +# file: SCRATCH_MNT/testfile.1
-> +user.attr_name1
-> +user.attr_name2
-> +user.attr_name3
-> +
-> +Inject error
-> +Set attribute
-> +attr_set: Input/output error
-> +Could not set "attr_name4" for /mnt/scratch/testfile.1
-> +FS should be shut down, touch will fail
-> +touch: cannot touch '/mnt/scratch/testfile.1': Input/output error
-> +Remount to replay log
-> +FS should be online, touch should succeed
-> +Verify attr recovery
-> +# file: SCRATCH_MNT/testfile.1
-> +user.attr_name1
-> +user.attr_name2
-> +user.attr_name3
-> +user.attr_name4
-> +
-> +Inject error
-> +Set attribute
-> +attr_set: Input/output error
-> +Could not set "attr_name5" for /mnt/scratch/testfile.1
-> +FS should be shut down, touch will fail
-> +touch: cannot touch '/mnt/scratch/testfile.1': Input/output error
-> +Remount to replay log
-> +FS should be online, touch should succeed
-> +Verify attr recovery
-> +# file: SCRATCH_MNT/testfile.1
-> +user.attr_name1
-> +user.attr_name2
-> +user.attr_name3
-> +user.attr_name4
-> +user.attr_name5
-> +
-> +Inject error
-> +Set attribute
-> +attr_set: Input/output error
-> +Could not set "attr_name6" for /mnt/scratch/testfile.1
-> +FS should be shut down, touch will fail
-> +touch: cannot touch '/mnt/scratch/testfile.1': Input/output error
-> +Remount to replay log
-> +FS should be online, touch should succeed
-> +Verify attr recovery
-> +# file: SCRATCH_MNT/testfile.1
-> +user.attr_name1
-> +user.attr_name2
-> +user.attr_name3
-> +user.attr_name4
-> +user.attr_name5
-> +user.attr_name6
-> +
-> +Inject error
-> +Set attribute
-> +attr_set: Input/output error
-> +Could not set "attr_name7" for /mnt/scratch/testfile.1
-> +FS should be shut down, touch will fail
-> +touch: cannot touch '/mnt/scratch/testfile.1': Input/output error
-> +Remount to replay log
-> +FS should be online, touch should succeed
-> +Verify attr recovery
-> +# file: SCRATCH_MNT/testfile.1
-> +user.attr_name1
-> +user.attr_name2
-> +user.attr_name3
-> +user.attr_name4
-> +user.attr_name5
-> +user.attr_name6
-> +user.attr_name7
-> +
-> +Inject error
-> +Set attribute
-> +attr_set: Input/output error
-> +Could not set "attr_name8" for /mnt/scratch/testfile.1
-> +FS should be shut down, touch will fail
-> +touch: cannot touch '/mnt/scratch/testfile.1': Input/output error
-> +Remount to replay log
-> +FS should be online, touch should succeed
-> +Verify attr recovery
-> +# file: SCRATCH_MNT/testfile.1
-> +user.attr_name1
-> +user.attr_name2
-> +user.attr_name3
-> +user.attr_name4
-> +user.attr_name5
-> +user.attr_name6
-> +user.attr_name7
-> +user.attr_name8
-> +
-> +*** done
-> +*** unmount
-> -- 
-> 2.25.1
-> 
+diff --git a/tests/xfs/780 b/tests/xfs/780
+new file mode 100755
+index 00000000..9bf1f482
+--- /dev/null
++++ b/tests/xfs/780
+@@ -0,0 +1,293 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2021 Oracle.  All Rights Reserved.
++#
++# FS QA Test 780
++#
++# Functional testing for the I_DONTCACHE inode flag, as set by the BULKSTAT
++# ioctl.  This flag neuters the inode cache's tendency to try to hang on to
++# incore inodes for a while after the last program closes the file, which
++# is helpful for filesystem scanners to avoid trashing the inode cache.
++#
++# However, the inode cache doesn't always honor the DONTCACHE behavior -- the
++# only time it really applies is to cache misses from a bulkstat scan.  If
++# any other threads accessed the inode before or immediately after the scan,
++# the DONTCACHE flag is ignored.  This includes other scans.
++#
++# Regrettably, there is no way to poke /only/ XFS inode reclamation directly,
++# so we're stuck with setting xfssyncd_centisecs to a low value and watching
++# the slab counters.
++#
++. ./common/preamble
++_begin_fstest auto ioctl
++
++_cleanup()
++{
++	cd /
++	rm -r -f $tmp.*
++	test -n "$junkdir" && rm -r -f "$junkdir"
++	test -n "$old_centisecs" && echo "$old_centisecs" > "$xfs_centisecs_file"
++}
++
++# Import common functions.
++# . ./common/filter
++
++# real QA test starts here
++
++# Modify as appropriate.
++_supported_fs generic
++_require_test
++
++# Either of these need to be available to monitor slab usage
++xfs_ino_objcount_file=/sys/kernel/slab/xfs_inode/objects
++slabinfo_file=/proc/slabinfo
++if [ ! -r "$xfs_ino_objcount_file" ] && [ ! -r "$slabinfo_file" ]; then
++	_notrun "Cannot find xfs_inode slab count?"
++fi
++
++# Background reclamation of disused xfs inodes is scheduled for $xfssyncd
++# centiseconds after the first inode is tagged for reclamation.  It's not great
++# to encode this implementation detail in a test like this, but there isn't
++# any means to trigger *only* inode cache reclaim -- actual memory pressure
++# can trigger the VFS to drop non-DONTCACHE inodes, which is not what we want.
++xfs_centisecs_file=/proc/sys/fs/xfs/xfssyncd_centisecs
++test -w "$xfs_centisecs_file" || _notrun "Cannot find xfssyncd_centisecs?"
++
++# Set the syncd knob to the minimum value 100cs (aka 1s) 
++old_centisecs="$(cat "$xfs_centisecs_file")"
++echo 100 > "$xfs_centisecs_file" || _notrun "Cannot adjust xfssyncd_centisecs?"
++delay_centisecs="$(cat "$xfs_centisecs_file")"
++
++# Sleep one second more than the xfssyncd delay to give background inode
++# reclaim enough time to run.
++sleep_seconds=$(( ( (99 + delay_centisecs) / 100) + 1))
++
++count_xfs_inode_objs() {
++	if [ -r "$xfs_ino_objcount_file" ]; then
++		cat "$xfs_ino_objcount_file" | cut -d ' ' -f 1
++	elif [ -r "$slabinfo_file" ]; then
++		grep -w '^xfs_inode' "$slabinfo_file" | awk '{print $2}'
++	else
++		echo "ERROR"
++	fi
++}
++
++junkdir=$TEST_DIR/$seq.junk
++nr_cpus=$(getconf _NPROCESSORS_ONLN)
++
++# Sample the baseline count of cached inodes after a fresh remount.
++_test_cycle_mount
++baseline_count=$(count_xfs_inode_objs)
++
++# Create a junk directory with about a thousand files.
++nr_files=1024
++mkdir -p $junkdir
++for ((i = 0; i < nr_files; i++)); do
++	touch "$junkdir/$i"
++done
++new_files=$(find $junkdir | wc -l)
++echo "created $new_files files" >> $seqres.full
++test "$new_files" -gt "$nr_files" || \
++	echo "created $new_files files, expected $nr_files"
++
++# Sanity check: Make sure that all those new inodes are still in the cache.
++# We assume that memory limits are not so low that reclaim started for a bunch
++# of empty files.
++work_count=$(count_xfs_inode_objs)
++test "$work_count" -ge "$new_files" || \
++	echo "found $work_count cached inodes after creating $new_files files?"
++
++# Round 1: Check the DONTCACHE behavior when it is invoked once per inode.
++# The inodes should be reclaimed if we wait long enough.
++echo "Round 1"
++
++# Sample again to see if we're still within the baseline.
++_test_cycle_mount
++fresh_count=$(count_xfs_inode_objs)
++
++# Run bulkstat to exercise DONTCACHE behavior, and sample again.
++$here/src/bstat -q $junkdir
++post_count=$(count_xfs_inode_objs)
++
++# Let background reclaim run
++sleep $sleep_seconds
++end_count=$(count_xfs_inode_objs)
++
++# Even with our greatly reduced syncd value, the inodes should still be in
++# memory immediately after the second bulkstat concludes.
++test "$post_count" -ge "$new_files" || \
++	echo "found $post_count cached inodes after bulkstat $new_files files?"
++
++# After we've let memory reclaim run, the inodes should no longer be cached
++# in memory.
++test "$end_count" -le "$new_files" || \
++	echo "found $end_count cached inodes after letting $new_files DONTCACHE files expire?"
++
++# Dump full results for debugging
++cat >> $seqres.full << ENDL
++round1 baseline: $baseline_count
++work: $work_count
++fresh: $fresh_count
++post: $post_count
++end: $end_count
++ENDL
++
++# Round 2: Check the DONTCACHE behavior when it is invoked multiple times per
++# inode in rapid succession.  The inodes should remain in memory even after
++# reclaim because the cache gets wise to repeated scans.
++echo "Round 2"
++
++# Sample again to see if we're still within the baseline.
++_test_cycle_mount
++fresh_count=$(count_xfs_inode_objs)
++
++# Run bulkstat twice in rapid succession to exercise DONTCACHE behavior.
++# The first bulkstat run will bring the inodes into memory (marked DONTCACHE).
++# The second bulkstat causes cache hits before the inodes can reclaimed, which
++# means that they should stay in memory.  Sample again afterwards.
++$here/src/bstat -q $junkdir
++$here/src/bstat -q $junkdir
++post_count=$(count_xfs_inode_objs)
++
++# Let background reclaim run
++sleep $sleep_seconds
++end_count=$(count_xfs_inode_objs)
++
++# Even with our greatly reduced syncd value, the inodes should still be in
++# memory immediately after the second bulkstat concludes.
++test "$post_count" -ge "$new_files" || \
++	echo "found $post_count cached inodes after bulkstat $new_files files?"
++
++# After we've let memory reclaim run and cache hits happen, the inodes should
++# still be cached in memory.
++test "$end_count" -ge "$new_files" || \
++	echo "found $end_count cached inodes after letting $new_files DONTCACHE files expire?"
++
++# Dump full results for debugging
++cat >> $seqres.full << ENDL
++round2 baseline: $baseline_count
++work: $work_count
++fresh: $fresh_count
++post: $post_count
++end: $end_count
++ENDL
++
++# Round 3: Check that DONTCACHE results in inode evictions when it is invoked
++# multiple times per inode but there's enough time between each bulkstat for
++# reclaim to kill the inodes.
++echo "Round 3"
++
++# Sample again to see if we're still within the baseline.
++_test_cycle_mount
++fresh_count=$(count_xfs_inode_objs)
++
++# Run bulkstat twice in slow succession to exercise DONTCACHE behavior.
++# The first bulkstat run will bring the inodes into memory (marked DONTCACHE).
++# Pause long enough for reclaim to tear down the inodes so that the second
++# bulkstat brings them back into memory (again marked DONTCACHE).
++# Sample again afterwards.
++$here/src/bstat -q $junkdir
++sleep $sleep_seconds
++post_count=$(count_xfs_inode_objs)
++
++$here/src/bstat -q $junkdir
++sleep $sleep_seconds
++end_count=$(count_xfs_inode_objs)
++
++# Even with our greatly reduced syncd value, the inodes should still be in
++# memory immediately after the second bulkstat concludes.
++test "$post_count" -le "$new_files" || \
++	echo "found $post_count cached inodes after bulkstat $new_files files?"
++
++# After we've let memory reclaim run, the inodes should no longer be cached
++# in memory.
++test "$end_count" -le "$new_files" || \
++	echo "found $end_count cached inodes after letting $new_files DONTCACHE files expire?"
++
++# Dump full results for debugging
++cat >> $seqres.full << ENDL
++round3 baseline: $baseline_count
++work: $work_count
++fresh: $fresh_count
++post: $post_count
++end: $end_count
++ENDL
++
++# Round 4: Check that DONTCACHE doesn't do much when all the files are accessed
++# immediately after a bulkstat.
++echo "Round 4"
++
++# Sample again to see if we're still within the baseline.
++_test_cycle_mount
++fresh_count=$(count_xfs_inode_objs)
++
++# Run bulkstat and then cat every file in the junkdir so that the new inode
++# grabs will clear DONTCACHE off the inodes.  Sample again afterwards.
++$here/src/bstat -q $junkdir
++find $junkdir -type f -print0 | xargs -0 cat
++post_count=$(count_xfs_inode_objs)
++
++# Let background reclaim run
++sleep $sleep_seconds
++end_count=$(count_xfs_inode_objs)
++
++# Even with our greatly reduced syncd value, the inodes should still be in
++# memory immediately after the second bulkstat concludes.
++test "$post_count" -ge "$new_files" || \
++	echo "found $post_count cached inodes after bulkstat $new_files files?"
++
++# After we've let memory reclaim run, the inodes should stll be cached in
++# memory because we opened everything.
++test "$end_count" -ge "$new_files" || \
++	echo "found $end_count cached inodes after letting $new_files DONTCACHE files expire?"
++
++# Dump full results for debugging
++cat >> $seqres.full << ENDL
++round4 baseline: $baseline_count
++work: $work_count
++fresh: $fresh_count
++post: $post_count
++end: $end_count
++ENDL
++
++# Round 5: Check that DONTCACHE has no effect if the inodes were already in
++# cache due to reader programs.
++echo "Round 5"
++
++# Sample again to see if we're still within the baseline.
++_test_cycle_mount
++fresh_count=$(count_xfs_inode_objs)
++
++# cat every file in the junkdir and then run BULKSTAT so that the DONTCACHE
++# flags passed to iget by bulkstat will be ignored for already-cached inodes.
++# Sample again afterwards.
++find $junkdir -type f -print0 | xargs -0 cat
++$here/src/bstat -q $junkdir
++post_count=$(count_xfs_inode_objs)
++
++# Let background reclaim run
++sleep $sleep_seconds
++end_count=$(count_xfs_inode_objs)
++
++# Even with our greatly reduced syncd value, the inodes should still be in
++# memory immediately after the second bulkstat concludes.
++test "$post_count" -ge "$new_files" || \
++	echo "found $post_count cached inodes after bulkstat $new_files files?"
++
++# After we've let memory reclaim run, the inodes should stll be cached in
++# memory because we opened everything.
++test "$end_count" -ge "$new_files" || \
++	echo "found $end_count cached inodes after letting $new_files DONTCACHE files expire?"
++
++# Dump full results for debugging
++cat >> $seqres.full << ENDL
++round5 baseline: $baseline_count
++work: $work_count
++fresh: $fresh_count
++post: $post_count
++end: $end_count
++ENDL
++
++echo Silence is golden
++status=0
++exit
+diff --git a/tests/xfs/780.out b/tests/xfs/780.out
+new file mode 100644
+index 00000000..7366678c
+--- /dev/null
++++ b/tests/xfs/780.out
+@@ -0,0 +1,7 @@
++QA output created by 780
++Round 1
++Round 2
++Round 3
++Round 4
++Round 5
++Silence is golden
