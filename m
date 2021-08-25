@@ -2,212 +2,140 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,FROM_LOCAL_HEX,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C0F3C4338F
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Aug 2021 17:22:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC9EAC4320E
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Aug 2021 17:49:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DC1D46109E
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Aug 2021 17:22:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A43EE610E8
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Aug 2021 17:49:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242299AbhHYRXK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Aug 2021 13:23:10 -0400
-Received: from mail-io1-f70.google.com ([209.85.166.70]:39488 "EHLO
-        mail-io1-f70.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242194AbhHYRXH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Aug 2021 13:23:07 -0400
-Received: by mail-io1-f70.google.com with SMTP id u22-20020a5d9f560000b02905058dc6c376so11309306iot.6
-        for <linux-xfs@vger.kernel.org>; Wed, 25 Aug 2021 10:22:21 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:date:message-id:subject:from:to;
-        bh=UafuiKZgAuV2PQ23F5jJQAl5WEpSCaM94FX2b+wQ71o=;
-        b=cNHkudYQbdFVnawL7ZiiDbWWONY76OWHbYgPqIW04zdYFR7kUd84HizzpA4Y2gWZBc
-         zjhFEKxlppcjv+pcbypP8DfM22BsE/qAPsxoB/RqKhM+cYoHT51zW16U8r+0UTbn9VQ0
-         +hzpbqPQU7XCZGfpVLT2prM69jLL0nSvH7AsgpgORSH8kBMIKcab1enp942h0olk4DN2
-         gsC/XhV+VJ7bziSRX4fsZeOzBJsEqKTlZaQDQ4ZKLEEeRS3LPidTa5lU7wGpJ44ggpnv
-         syPMDQA4/oO/ZnAPJ7MpcL25LQjj26wjEO69ULd1a7XU/h0wob3C+WYimlrjoQ/rj1pb
-         vnYQ==
-X-Gm-Message-State: AOAM530o3syizO0iFF+kncoSBSK5wGtmGnDtfh9cky4/O3H6atTVJUce
-        +4LMZr6A1aUd400Ua4I25h8CtpHBanVKF3KhyTPpT7sIS5TB
-X-Google-Smtp-Source: ABdhPJwEXsMo0bYz1m5FQ1xc1aqLAAroEoH/9OO8P9HYsfI7jGUGXbN+nX5oCGWycS6uQ/df7lD0MsfMC/Xtx1zj/8pBEKmuHC1B
+        id S242258AbhHYRtx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 Aug 2021 13:49:53 -0400
+Received: from mail-bn8nam08on2067.outbound.protection.outlook.com ([40.107.100.67]:3809
+        "EHLO NAM04-BN8-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S231602AbhHYRtu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 25 Aug 2021 13:49:50 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=L94HSvLZfRi6AQzrzB8rHeSlzSUiP86AbnjH1OOvgpKk65tUc6rs8QtBNDOdoZ62BnJyUPOzMdX67B0kV7y3kNKW/c6yICdKixeEEgHq1vDbjZjJzv0OiGIf1Q/nab+Od9Od5ZE1EmEBsFKBXO3Lx1RgsU9Mf2oqjzxjSCPDOuJrDaRiHo9FxTOKon4JcjkvS7Glm/BrcCdmHPM9Hzrtcq262vQ0bY4BbEuQSLTV4Q5AIzco1Ogi8f4Xa/XtjUeMjdWmfMjvcIeQrThHkXpu54ut+kytfMpNsuPCDs9e6JvK/zt/jprIa941O4286GFsqUdKGyS5JjRe1lgIB55izQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=836XBpZH3d+fdvKEqzLZQ9K3DZDuUGf5MVN4Xajae/U=;
+ b=iQ3DEJe1rgZMRiobhuAx8RpzIQL5zb2yhwZtj0Enw9hmSzw0gag6v49qZX/ILzWTUuRdDN4erF9Qn1lS83507THQJo5y9oQyE02tVdrfabwLl9KthsX+hxCeYnrhJ4cOt7XCoSF2EBzgupQbUWpcKsbNhR2ehYpyPWOFGmsUZOTrz47LwiY1a2SsM7jLEDUvhhrOmVX3+ZbFP2TF4G2kWuug3fXilvylcgKIXDR7rIhqoSTL/dsT/4SE+XzU+rreANhEbSnwhJzVwa2pli6VXQFdEFqF5K/envRa6KZdGalb9APSjp5PcgB08QCKOyiKk6GVFzmvE3qlS/XVpr7efQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.112.36) smtp.rcpttodomain=amd.com smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=quarantine sp=none pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=836XBpZH3d+fdvKEqzLZQ9K3DZDuUGf5MVN4Xajae/U=;
+ b=Uf5FX7oqFx5m4K3QumLMI8Sc6QROdZUFouqpra7HvUCKDSG3HEA+icbSISQTT9JSoS3A0ljBJDniydPv3njc/8IhDpOEI25e6kCB6N0cV1FdaJ5QyZ2Mw8w5kZRje4eXTGwT8Y7O9wwX6wT3g93MyLeKD2PiAHDgnrGv2z+COSSwilDNirsvPmZAzffaVTXyIdN4mPhVaVnVERyssXDGgsW2wZG4fof5SWvKU+Lr+a/A67I5WN0KwVEFjT8jDvdr/+UieNwRNy7HGoK2zN4VkwTrHV0hpH0QPrS0mRxk+pHpEEcU05SYv2BjV3aN+pNp1nbg0tapYNwDqkEZinaQSg==
+Received: from DM5PR07CA0156.namprd07.prod.outlook.com (2603:10b6:3:ee::22) by
+ DM8PR12MB5495.namprd12.prod.outlook.com (2603:10b6:8:33::12) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.4436.22; Wed, 25 Aug 2021 17:49:03 +0000
+Received: from DM6NAM11FT034.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:3:ee:cafe::eb) by DM5PR07CA0156.outlook.office365.com
+ (2603:10b6:3:ee::22) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4457.17 via Frontend
+ Transport; Wed, 25 Aug 2021 17:49:03 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.112.36)
+ smtp.mailfrom=nvidia.com; amd.com; dkim=none (message not signed)
+ header.d=none;amd.com; dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.112.36 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.112.36; helo=mail.nvidia.com;
+Received: from mail.nvidia.com (216.228.112.36) by
+ DM6NAM11FT034.mail.protection.outlook.com (10.13.173.47) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ 15.20.4457.17 via Frontend Transport; Wed, 25 Aug 2021 17:49:02 +0000
+Received: from HQMAIL111.nvidia.com (172.20.187.18) by HQMAIL101.nvidia.com
+ (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 25 Aug
+ 2021 17:49:02 +0000
+Received: from rcampbell-test.nvidia.com (172.20.187.6) by mail.nvidia.com
+ (172.20.187.18) with Microsoft SMTP Server (TLS) id 15.0.1497.2 via Frontend
+ Transport; Wed, 25 Aug 2021 17:49:02 +0000
+Subject: Re: [PATCH v1 02/14] mm: remove extra ZONE_DEVICE struct page
+ refcount
+To:     Vlastimil Babka <vbabka@suse.cz>,
+        Alex Sierra <alex.sierra@amd.com>, <akpm@linux-foundation.org>,
+        <Felix.Kuehling@amd.com>, <linux-mm@kvack.org>,
+        <linux-ext4@vger.kernel.org>, <linux-xfs@vger.kernel.org>
+CC:     <amd-gfx@lists.freedesktop.org>, <dri-devel@lists.freedesktop.org>,
+        <hch@lst.de>, <jgg@nvidia.com>, <jglisse@redhat.com>
+References: <20210825034828.12927-1-alex.sierra@amd.com>
+ <20210825034828.12927-3-alex.sierra@amd.com>
+ <dbd0f54a-ad6c-97a2-17d7-826247424c97@suse.cz>
+From:   Ralph Campbell <rcampbell@nvidia.com>
+Message-ID: <505e4fe4-241a-8205-d2ef-f603e9cc46c6@nvidia.com>
+Date:   Wed, 25 Aug 2021 10:49:01 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 MIME-Version: 1.0
-X-Received: by 2002:a05:6638:13d6:: with SMTP id i22mr40383008jaj.13.1629912141118;
- Wed, 25 Aug 2021 10:22:21 -0700 (PDT)
-Date:   Wed, 25 Aug 2021 10:22:21 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <0000000000002fc21105ca657edf@google.com>
-Subject: [syzbot] INFO: task hung in __xfs_buf_submit (2)
-From:   syzbot <syzbot+4bb1622c9a583bb6f9f2@syzkaller.appspotmail.com>
-To:     a@unstable.cc, axboe@kernel.dk, b.a.t.m.a.n@lists.open-mesh.org,
-        davem@davemloft.net, djwong@kernel.org, josef@toxicpanda.com,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        mareklindner@neomailbox.ch, mchristi@redhat.com,
-        netdev@vger.kernel.org, sw@simonwunderlich.de,
-        syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <dbd0f54a-ad6c-97a2-17d7-826247424c97@suse.cz>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: f60f875c-00f9-4d75-cfc8-08d967f0a062
+X-MS-TrafficTypeDiagnostic: DM8PR12MB5495:
+X-Microsoft-Antispam-PRVS: <DM8PR12MB5495C64B7D3FBA3447A5AAF3C2C69@DM8PR12MB5495.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:6790;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: EUD9gLnj84NJTkTFCk9HSdNz/cRUsi1KSKwCAoDcNO3QWfBp6CawHcI3WLkRtFDJAzmZjFcCBSdCSgtPspHuPgtg4Q0Oo1g319KIjspMISuKp9sUN+7dzDIvVgDSuKQFlsCKAYniRMrzVYMj+UbC6e2q7vPakMS+wv+ok9XcAWzYdAa1q7pN1qN/sklbMADA/MzHzlpfZEoQ6M7JQwfJ3EsrUlhGJ9gLZN9ejit5ZqXb7EJKefpFCAwrJ3AMe2MoiNnXHdd/Dao6bJcR0P27rOf22wNRqGgCLCQn40dmk7+u4oi5V2bf2jmMW94PaueOvIu3d/EbmjKhDx/dIy6SU8YEm5r7Jv0YXgOkToTa2AhS8gBHocb0NPWYfl79egMkbeDVV5T5i6c1tUGWcsgadBwqOBJC78YIlwcibpas49utWk8k2c1Gtxh86wgMPid9qkepvhACzI79kUhjzhPHLvDKNEijoXn6D25j5tByC8z407BINNW5op+HKznbzSBQhbItHs+bu1V/lwDwbuGaqzWVbezMdpQ28JIn38YypNIe8OnTTb3gXZnH90LLs4oKDCkGh2hGpZWg5lI0ELZEiiVcAKoudZ+uCCJMll3cFAfUe+UusE4MD41BlNHIb5QKNQhor4a/c9hDGTR23lo5OQtBka6KjHlnzuIKLAE6X6OGdPqwcwupnTQlCkXah+aAqq9/Tjij1s/2SPQrjyE55sTMZmr3vamrxnSrOtBzV3jcRtewF1gZ7/s1PAUN3+ug
+X-Forefront-Antispam-Report: CIP:216.228.112.36;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:schybrid05.nvidia.com;CAT:NONE;SFS:(4636009)(376002)(346002)(39860400002)(136003)(396003)(36840700001)(46966006)(7636003)(478600001)(316002)(26005)(54906003)(110136005)(36906005)(82740400003)(31686004)(2616005)(53546011)(36756003)(336012)(86362001)(426003)(31696002)(70206006)(47076005)(7416002)(36860700001)(5660300002)(186003)(4326008)(8676002)(82310400003)(356005)(70586007)(2906002)(7696005)(8936002)(43740500002)(2101003);DIR:OUT;SFP:1101;
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Aug 2021 17:49:02.9178
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: f60f875c-00f9-4d75-cfc8-08d967f0a062
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.112.36];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT034.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM8PR12MB5495
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello,
 
-syzbot found the following issue on:
+On 8/25/21 4:15 AM, Vlastimil Babka wrote:
+> On 8/25/21 05:48, Alex Sierra wrote:
+>> From: Ralph Campbell <rcampbell@nvidia.com>
+>>
+>> ZONE_DEVICE struct pages have an extra reference count that complicates the
+>> code for put_page() and several places in the kernel that need to check the
+>> reference count to see that a page is not being used (gup, compaction,
+>> migration, etc.). Clean up the code so the reference count doesn't need to
+>> be treated specially for ZONE_DEVICE.
+> That's certainly welcome. I just wonder what was the reason to use 1 in the
+> first place and why it's no longer necessary?
 
-HEAD commit:    6e764bcd1cf7 Merge tag 'for-linus' of git://git.kernel.org..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=10504885300000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=2fd902af77ff1e56
-dashboard link: https://syzkaller.appspot.com/bug?extid=4bb1622c9a583bb6f9f2
-compiler:       Debian clang version 11.0.1-2, GNU ld (GNU Binutils for Debian) 2.35.1
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=14427606300000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=149b3cce300000
+I'm sure this is a long story that I don't know most of the history.
+I'm guessing that ZONE_DEVICE started out with a reference count of
+one since that is what most "normal" struct page pages start with.
+Then put_page() is used to free newly initialized struct pages to the
+slab/slob/slub page allocator.
+This made it easy to call get_page()/put_page() on ZONE_DEVICE pages
+since get_page() asserts that the caller has a reference.
+However, most drivers that create ZONE_DEVICE struct pages just insert
+a PTE into the user page tables and don't increment/decrement the
+reference count. MEMORY_DEVICE_FS_DAX used the >1 to 1 reference count
+transition to signal that a page was idle so that made put_page() a
+bit more complex. Then MEMORY_DEVICE_PRIVATE pages were added and this
+special casing of what "idle" meant got more complicated and more parts
+of mm had to check for is_device_private_page().
+My goal was to make ZONE_DEVICE struct pages reference counts be zero
+based and allocated/freed similar to the page allocator so that more
+of the mm code could be used, like THP ZONE_DEVICE pages, without special
+casing ZONE_DEVICE.
 
-The issue was bisected to:
-
-commit 887e975c4172d0d5670c39ead2f18ba1e4ec8133
-Author: Mike Christie <mchristi@redhat.com>
-Date:   Tue Aug 13 16:39:51 2019 +0000
-
-    nbd: add missing config put
-
-bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=11980ad5300000
-final oops:     https://syzkaller.appspot.com/x/report.txt?x=13980ad5300000
-console output: https://syzkaller.appspot.com/x/log.txt?x=15980ad5300000
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+4bb1622c9a583bb6f9f2@syzkaller.appspotmail.com
-Fixes: 887e975c4172 ("nbd: add missing config put")
-
-INFO: task syz-executor519:8442 blocked for more than 143 seconds.
-      Not tainted 5.14.0-rc7-syzkaller #0
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-task:syz-executor519 state:D stack:22808 pid: 8442 ppid:  8441 flags:0x00004004
-Call Trace:
- context_switch kernel/sched/core.c:4681 [inline]
- __schedule+0xc07/0x11f0 kernel/sched/core.c:5938
- schedule+0x14b/0x210 kernel/sched/core.c:6017
- schedule_timeout+0x98/0x2f0 kernel/time/timer.c:1857
- do_wait_for_common+0x2da/0x480 kernel/sched/completion.c:85
- __wait_for_common kernel/sched/completion.c:106 [inline]
- wait_for_common kernel/sched/completion.c:117 [inline]
- wait_for_completion+0x48/0x60 kernel/sched/completion.c:138
- xfs_buf_iowait fs/xfs/xfs_buf.c:1571 [inline]
- __xfs_buf_submit+0x39d/0x6d0 fs/xfs/xfs_buf.c:1636
- xfs_buf_submit fs/xfs/xfs_buf.c:58 [inline]
- xfs_buf_read_uncached+0x1fa/0x390 fs/xfs/xfs_buf.c:884
- xfs_readsb+0x1dc/0x670 fs/xfs/xfs_mount.c:178
- xfs_fs_fill_super+0x483/0x1780 fs/xfs/xfs_super.c:1428
- get_tree_bdev+0x406/0x630 fs/super.c:1293
- vfs_get_tree+0x86/0x270 fs/super.c:1498
- do_new_mount fs/namespace.c:2923 [inline]
- path_mount+0x1981/0x2c10 fs/namespace.c:3253
- do_mount fs/namespace.c:3266 [inline]
- __do_sys_mount fs/namespace.c:3474 [inline]
- __se_sys_mount+0x2f9/0x3b0 fs/namespace.c:3451
- do_syscall_x64 arch/x86/entry/common.c:50 [inline]
- do_syscall_64+0x3d/0xb0 arch/x86/entry/common.c:80
- entry_SYSCALL_64_after_hwframe+0x44/0xae
-RIP: 0033:0x444239
-RSP: 002b:00007ffd4feb56f8 EFLAGS: 00000246 ORIG_RAX: 00000000000000a5
-RAX: ffffffffffffffda RBX: 0030656c69662f2e RCX: 0000000000444239
-RDX: 0000000020000140 RSI: 0000000020000000 RDI: 00000000200000c0
-RBP: 0000000000000000 R08: 0000000000000000 R09: 00007ffd4feb5898
-R10: 0000000000008002 R11: 0000000000000246 R12: 0000000000403550
-R13: 431bde82d7b634db R14: 00000000004b2018 R15: 00000000004004a0
-
-Showing all locks held in the system:
-1 lock held by khungtaskd/1644:
- #0: ffffffff8c717ec0 (rcu_read_lock){....}-{1:2}, at: rcu_lock_acquire+0x0/0x30 arch/x86/pci/mmconfig_64.c:151
-2 locks held by in:imklog/8141:
- #0: ffff888023be8870 (&f->f_pos_lock){+.+.}-{3:3}, at: __fdget_pos+0x24e/0x2f0 fs/file.c:974
- #1: ffffffff8c717ec0 (rcu_read_lock){....}-{1:2}, at: rcu_lock_acquire+0x5/0x30 include/linux/rcupdate.h:266
-1 lock held by syz-executor519/8442:
- #0: ffff888030e060e0 (&type->s_umount_key#49/1){+.+.}-{3:3}, at: alloc_super+0x1c8/0x860 fs/super.c:229
-
-=============================================
-
-NMI backtrace for cpu 1
-CPU: 1 PID: 1644 Comm: khungtaskd Not tainted 5.14.0-rc7-syzkaller #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
-Call Trace:
- __dump_stack lib/dump_stack.c:88 [inline]
- dump_stack_lvl+0x1d3/0x29f lib/dump_stack.c:105
- nmi_cpu_backtrace+0x16c/0x190 lib/nmi_backtrace.c:105
- nmi_trigger_cpumask_backtrace+0x191/0x2f0 lib/nmi_backtrace.c:62
- trigger_all_cpu_backtrace include/linux/nmi.h:146 [inline]
- check_hung_uninterruptible_tasks kernel/hung_task.c:210 [inline]
- watchdog+0xd06/0xd50 kernel/hung_task.c:295
- kthread+0x453/0x480 kernel/kthread.c:319
- ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:295
-Sending NMI from CPU 1 to CPUs 0:
-NMI backtrace for cpu 0
-CPU: 0 PID: 4862 Comm: systemd-journal Not tainted 5.14.0-rc7-syzkaller #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
-RIP: 0010:check_wait_context kernel/locking/lockdep.c:4688 [inline]
-RIP: 0010:__lock_acquire+0x5fc/0x6100 kernel/locking/lockdep.c:4965
-Code: 00 fc ff df 4c 8b 7c 24 58 4c 8b 64 24 50 48 81 c3 b8 00 00 00 48 89 d8 48 c1 e8 03 8a 04 10 84 c0 0f 85 c1 25 00 00 44 8a 33 <48> 8b 44 24 60 8a 04 10 84 c0 0f 85 d2 25 00 00 41 8b 1c 24 81 e3
-RSP: 0018:ffffc9000162f940 EFLAGS: 00000046
-RAX: 1ffffffff1f10400 RBX: ffffffff8f882478 RCX: ffffffff816219b8
-RDX: dffffc0000000000 RSI: 0000000000000008 RDI: ffffffff8faf3dd0
-RBP: ffffc9000162fcd0 R08: dffffc0000000000 R09: fffffbfff1f5e7bb
-R10: fffffbfff1f5e7bb R11: 0000000000000000 R12: ffff888015bc5ed0
-R13: ffff888015bc5eb8 R14: 00000000000c0000 R15: ffff888015bc54c0
-FS:  00007f6e3c3a48c0(0000) GS:ffff8880b9c00000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007f6e39776000 CR3: 00000000213b3000 CR4: 00000000001506f0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-Call Trace:
- lock_acquire+0x182/0x4a0 kernel/locking/lockdep.c:5625
- do_write_seqcount_begin_nested include/linux/seqlock.h:520 [inline]
- do_write_seqcount_begin include/linux/seqlock.h:545 [inline]
- vtime_user_exit+0xb9/0x3e0 kernel/sched/cputime.c:719
- __context_tracking_exit+0x7a/0xd0 kernel/context_tracking.c:160
- user_exit_irqoff include/linux/context_tracking.h:47 [inline]
- __enter_from_user_mode kernel/entry/common.c:22 [inline]
- syscall_enter_from_user_mode+0x199/0x1b0 kernel/entry/common.c:104
- do_syscall_64+0x1e/0xb0 arch/x86/entry/common.c:76
- entry_SYSCALL_64_after_hwframe+0x44/0xae
-RIP: 0033:0x7f6e3b65f9c7
-Code: 83 c4 08 48 3d 01 f0 ff ff 73 01 c3 48 8b 0d c8 d4 2b 00 f7 d8 64 89 01 48 83 c8 ff c3 66 0f 1f 44 00 00 b8 15 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d a1 d4 2b 00 f7 d8 64 89 01 48
-RSP: 002b:00007ffebb868098 EFLAGS: 00000246 ORIG_RAX: 0000000000000015
-RAX: ffffffffffffffda RBX: 00007ffebb86b0c0 RCX: 00007f6e3b65f9c7
-RDX: 0000000000000000 RSI: 0000000000000000 RDI: 000055c77e4df9a3
-RBP: 00007ffebb8681e0 R08: 000055c77e4d53e5 R09: 0000000000000018
-R10: 0000000000000069 R11: 0000000000000246 R12: 0000000000000000
-R13: 0000000000000000 R14: 000055c77fce98a0 R15: 00007ffebb8686d0
-----------------
-Code disassembly (best guess), 3 bytes skipped:
-   0:	df 4c 8b 7c          	fisttps 0x7c(%rbx,%rcx,4)
-   4:	24 58                	and    $0x58,%al
-   6:	4c 8b 64 24 50       	mov    0x50(%rsp),%r12
-   b:	48 81 c3 b8 00 00 00 	add    $0xb8,%rbx
-  12:	48 89 d8             	mov    %rbx,%rax
-  15:	48 c1 e8 03          	shr    $0x3,%rax
-  19:	8a 04 10             	mov    (%rax,%rdx,1),%al
-  1c:	84 c0                	test   %al,%al
-  1e:	0f 85 c1 25 00 00    	jne    0x25e5
-  24:	44 8a 33             	mov    (%rbx),%r14b
-* 27:	48 8b 44 24 60       	mov    0x60(%rsp),%rax <-- trapping instruction
-  2c:	8a 04 10             	mov    (%rax,%rdx,1),%al
-  2f:	84 c0                	test   %al,%al
-  31:	0f 85 d2 25 00 00    	jne    0x2609
-  37:	41 8b 1c 24          	mov    (%r12),%ebx
-  3b:	81                   	.byte 0x81
-  3c:	e3                   	.byte 0xe3
-
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-For information about bisection process see: https://goo.gl/tpsmEJ#bisection
-syzbot can test patches for this issue, for details see:
-https://goo.gl/tpsmEJ#testing-patches
