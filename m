@@ -5,56 +5,56 @@ X-Spam-Level:
 X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F50DC43214
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Aug 2021 03:48:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14478C4338F
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Aug 2021 03:49:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EB1FC61371
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Aug 2021 03:48:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F0BD36128A
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Aug 2021 03:49:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237967AbhHYDtd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 24 Aug 2021 23:49:33 -0400
-Received: from mail-bn8nam12on2087.outbound.protection.outlook.com ([40.107.237.87]:25347
-        "EHLO NAM12-BN8-obe.outbound.protection.outlook.com"
+        id S238038AbhHYDti (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 Aug 2021 23:49:38 -0400
+Received: from mail-dm6nam10on2071.outbound.protection.outlook.com ([40.107.93.71]:42464
+        "EHLO NAM10-DM6-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S236643AbhHYDtc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S233162AbhHYDtc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Tue, 24 Aug 2021 23:49:32 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=PZMpd4rgl0KXCAAyYmzjCI+n6EAS39WmezbyQ1AZaaTN4uITXoAcTvoSwu/DJWVNy+29cKJvbjyAbA2FkE3iJ7sWRIWiCglNpXCznxOC220xl4jKDkMth1PJ/kF0lG17YARtM2e7eOuc2St/fczoDah1j7RKiy1wYKZjc0KAIpq3hKZoamtwJYffaT0+hf8JG0zsXVIv9E9L7Wa/0+AqnvTawSq+5s4uEAfGAjRVTREBOA70wAvuPYMmMqfRi5UMw+RMSrxBpPwSj9S8yk/nFC04vZxjZuE0LtQHQ6DjuPmoDiGg4QWDz4gv9TF6qabOmxuiWaj/jblOR1wzYgTNNw==
+ b=GXrfV66KJq8DhU3zYbsdN7/FpcMye13axAap6z47/+IgK9G7jjlyLlGo+AQ7RSrH6xgJepdsbdezsv/Z5/CAbMHoQeK8T7U/OQRg7KaYFhwcPyVdaQTdW9MMHUaS0TVB3Fo1NOil4H7AeyldjmwWstAPrLOh4vvVOiBJcVe2QAN+TzxRquUsQLRvSkF4pCEUUljFORA/cBGhItH4JlJiNbFkARY1BQMG/IjG1+/Px7wh6orh24DlxqyW1rICt51ejM3fQfZb7mZG1svKha+Nac5q+RR2QH/bOGKA+Kw99KcVBULLlmZ9bNry+M6lAs3HdlJwAgohrkWA2Ox5Lo1ntQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=KPRUxG7tsWqwxFr1dU65ZHijp00minGf5doPgxOlbi0=;
- b=AK/lbu4rEGWSae1mX5FHY/vg26+lu+/4uU5IyycDh4r+7h6d7d5sz2VV63ETHs9pSNitQ1UMNoMOJH/J9eYZOKrxPYhh7hcl+VFDvfDTf8dTOIhggAaDb9+a0AmzIXsobxdWyA/x9XAbcqqWPYJC6va6KSlJpyXUvMAP7VPzSd25Onz+hL3mz80ac6QFLylewMZxHDsjGr/otXyJHSxfwAykNgo3tQoqUzi2EcJww6CCK97LvzGb/dOVpR9gZsY6YslwOAjQEcuG4dQ3pOklx5KeE78OiYFGbPMncOKWWQPsZgQry2wadDxoQyLJbuckb1EbQ/7zmE0ulniCBhjNDQ==
+ bh=oEZda3N0gN3l94uCMFd4GDGKH3IDMGBhCvf/mWWcE6w=;
+ b=Ja/ZDYA8QkE2QSJLUYssOeAX1Paog6/r3NiT8o93N1F8mGmBYju9Rs8M9WfZQfJZjrNYSE5UCeM8Np1yp/3kU9MJHw/VpIreekJ2L6kKlN5UHqEBrzqSKuUX7RIaLGF+L8DbpeIkvJqdngESHDdozC2dPQp2l6yEB6pwpT+T5Rxp9gwEXtBaWNORaJuUnS041E9kAJ0Ie90UkQsmfyfYuTEaCZIaH6WjmrgQWMx/PPEu5U1DO0ZKB5O+Jf+S6lyZI1zNNYwQ7RAJVhIuyzK0JWk7hvqAeoHAZvYn9ah+TeVTXIY5+po/VwzBtlHPZCWgFNKVLknFjCP4Aj+tZOTkug==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
  header.d=amd.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=KPRUxG7tsWqwxFr1dU65ZHijp00minGf5doPgxOlbi0=;
- b=AVY2QlNs8hW9u2ijZjqlfyoMtCKB0zmB6vvd0XlqX1PbOrXFPEC0qweOLxc+wOan199ALqdF/JYpFSKR4sDYUi6oWzei1Xjf/JQMd3svi3mlvRktZ/aKoNOV2RGvikzWAoUMLy1V98kfMp9IvGLiRpNFODG96jurIocSuBJBxqA=
+ bh=oEZda3N0gN3l94uCMFd4GDGKH3IDMGBhCvf/mWWcE6w=;
+ b=olhA0fC0Z90j3XpSV3yzP0lVoR0w0ixpyEXdiV6zNTf4E78oQFd8Nt7QDMCFcjA3KYCHwg0cN36kr8/b0TK8fJljNQJq3Lw3YYfJFYJe5M7FgajjU9tG9yaKyX4Wvayv0HSZ8+R9nuJZgRRdQ/mMwrwhMr3XdhWH6jA1g/1pIjQ=
 Authentication-Results: linux-foundation.org; dkim=none (message not signed)
  header.d=none;linux-foundation.org; dmarc=none action=none
  header.from=amd.com;
 Received: from SA0PR12MB4430.namprd12.prod.outlook.com (2603:10b6:806:70::20)
- by SN6PR12MB4750.namprd12.prod.outlook.com (2603:10b6:805:e3::25) with
+ by SA0PR12MB4511.namprd12.prod.outlook.com (2603:10b6:806:95::9) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4436.22; Wed, 25 Aug
- 2021 03:48:45 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4436.19; Wed, 25 Aug
+ 2021 03:48:40 +0000
 Received: from SA0PR12MB4430.namprd12.prod.outlook.com
  ([fe80::855b:1f8c:c5d1:331f]) by SA0PR12MB4430.namprd12.prod.outlook.com
  ([fe80::855b:1f8c:c5d1:331f%7]) with mapi id 15.20.4457.017; Wed, 25 Aug 2021
- 03:48:45 +0000
+ 03:48:40 +0000
 From:   Alex Sierra <alex.sierra@amd.com>
 To:     akpm@linux-foundation.org, Felix.Kuehling@amd.com,
         linux-mm@kvack.org, rcampbell@nvidia.com,
         linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
 Cc:     amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
         hch@lst.de, jgg@nvidia.com, jglisse@redhat.com
-Subject: [PATCH v1 06/14] drm/amdkfd: add SPM support for SVM
-Date:   Tue, 24 Aug 2021 22:48:20 -0500
-Message-Id: <20210825034828.12927-7-alex.sierra@amd.com>
+Subject: [PATCH v1 01/14] ext4/xfs: add page refcount helper
+Date:   Tue, 24 Aug 2021 22:48:15 -0500
+Message-Id: <20210825034828.12927-2-alex.sierra@amd.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20210825034828.12927-1-alex.sierra@amd.com>
 References: <20210825034828.12927-1-alex.sierra@amd.com>
@@ -65,132 +65,169 @@ X-ClientProxiedBy: SN7PR04CA0190.namprd04.prod.outlook.com
  (2603:10b6:806:70::20)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from alex-MS-7B09.amd.com (165.204.78.1) by SN7PR04CA0190.namprd04.prod.outlook.com (2603:10b6:806:126::15) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4436.19 via Frontend Transport; Wed, 25 Aug 2021 03:48:44 +0000
+Received: from alex-MS-7B09.amd.com (165.204.78.1) by SN7PR04CA0190.namprd04.prod.outlook.com (2603:10b6:806:126::15) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4436.19 via Frontend Transport; Wed, 25 Aug 2021 03:48:39 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 78952a3f-647f-46ef-5800-08d9677b3cf9
-X-MS-TrafficTypeDiagnostic: SN6PR12MB4750:
+X-MS-Office365-Filtering-Correlation-Id: 580deff8-bd94-4055-3207-08d9677b3a02
+X-MS-TrafficTypeDiagnostic: SA0PR12MB4511:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <SN6PR12MB47501E161102E3E0E7DDDC86FDC69@SN6PR12MB4750.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:5797;
+X-Microsoft-Antispam-PRVS: <SA0PR12MB4511E2E1783D75EA5006AF82FDC69@SA0PR12MB4511.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:3044;
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: uv0opxK7utGT4jsfZ/aFThVWwEtHI6OKBCtVymX002hYq6bkTM4KzJqeXLSWBPfzykA6zQ16wX9jOnCLz2AGhodGlSLotESfhjJfVN2mF4LPRjygl6rCIT9NJ6i/ipPAtfgCledRaY7YMi/QPxmCsDLU/Il1j01cBhda5IF6yx04zjii08a7xTzoIq+vQLk3vcgMZ7XsxPLDj1hozXNtecdjYuKiD9BP0PYh1ke0Nju7OW1mkKbayMbvjIBvEFANijSfbFzZofB7CRh47v1XkY5kT5J9u4TXexXdUe1tdQQNxdMngCUBXOMFc9AM7pxcTFFt2/r84SL4Us0JaQqmCXpKjozgQEIfvr/1iRh9XkU2XticNIrrehlQ9f+7As6wWGCIJCD7SxhtF0btGc3Z+ZTWdll5rNmFVVC2hp2wABm0Ru70/P6SS6WctvewGX4KLEKPgzo6EnGrU1UbUh8+XechxA7oUb933yRW9wpAH5e67jZhYqx5PLhw5ezzqAMz+UaBeLQp6UbnonrFki1h0jWziyX/u9UoInAndTT7KmOa9epFKSihNFa/2+mf81ePNfLXNxZXi44BswxZBpcevHIpw8fAwuOlJMlsRmZRU1dGuee4yevL/TlNUwuqIjwOPDKAhHFy2WAvtNLIDxvWoL/uB2pPo2rymwL4YlrEzf5WIoYGyxt2AWwbRHE1/KVRUPNdsTRbMCR4sRIAvqJoyg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA0PR12MB4430.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(39860400002)(376002)(346002)(136003)(396003)(366004)(7416002)(6486002)(1076003)(4326008)(86362001)(7696005)(44832011)(52116002)(186003)(2616005)(956004)(38350700002)(38100700002)(478600001)(66476007)(66556008)(6666004)(316002)(26005)(36756003)(8936002)(5660300002)(8676002)(66946007)(83380400001)(2906002);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: 6JQ3OkvkN5ttynpL/dLf3nB1tfSJwIJWvBL4vEijhy1WJA1JtIKdyc0El6V7uDQdG1Dbwyari2S9/QURpdU73rkl7BngIE/IsVzHCaB2ba9v9cdjQITSU6oF26ecZA+cQFv6yIcHxED3fb1C+cm6s5yf6Mmh5knKzEPeiLIT6iUTJBaewZC9XyZQ9bkE+APzTcEab7vjrCywGFVTV7KhT2u6hKxgXpWBvY/EsSsLzzKn0Sbs1Ocr22TMvrghDbfMuvsLe898TdDqJOmSLU8Wqt4XLwNF403UYCVjwTh7i2u0o/8XnRyqiFmcV/H8h/ndFJ7L8158MMGEvqmVwsp6jVPogJP5VXy94D7EyCFoCHg/PZWG9MxAs4Y660XP9lgMT8PcCFk0KL15QscMQpiUxhyRdNtmL2MRyWkCoY5r2NSChZOzxCa3LwxzE2EyoA8jlqfDPp4k8E5dKuy2xRgnfZDMvlxRbsRChrmkor46g3DwLOCAMSpNIPcc8y9cJoPHnQJ5v8/rTkKGQN9HjitkAaQMytp+4eqytAaVacuUpms5jAvC6XdR8lhDU9S1uClRw2/ixOCQslKj3F1qZuUbII72EeytpKOBcQmmVPctzXxwIgGuW0IGK4W0IUu9+AMkZfPHi8yZaAWCKlYIOr9sM6q+laZifHUv24WeJ1wXK86Z/Xs2Q21IhFeS51HQEDiBXqRWTdbh9L642BrFUzVf7g==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA0PR12MB4430.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(136003)(346002)(376002)(396003)(39860400002)(316002)(478600001)(186003)(1076003)(83380400001)(8936002)(38100700002)(7696005)(66556008)(8676002)(66476007)(66946007)(6666004)(956004)(36756003)(52116002)(2616005)(4326008)(44832011)(7416002)(2906002)(6486002)(5660300002)(38350700002)(86362001)(26005);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?sY01+sCG6RGFaXDkx/uH5UoNYH8CLyi4tyt5/ZBHOIUMM5sKEOUTM4uQDmBQ?=
- =?us-ascii?Q?r0tapLevWnXChZeXMXL1xjh6g0i8mthF+qgDKGE8QD7h7e5V9z0ZwKUNmnMI?=
- =?us-ascii?Q?FfzMj8LBgJDvDVhyGiVImpBm2M6+JhzsiFYm3RdlLzi/siAuVaqy3YA+urCz?=
- =?us-ascii?Q?1E8GsyGbdd6L+aknRCV3H+p+zM5DpysiUBu5b06VHzyXJXMdp1EROBucgApV?=
- =?us-ascii?Q?pUZEbMYTDKS0GFTKrOyUhQRKP+lhXjh9UzuJ0hPV4tnFRhv+SY4H9EvNospm?=
- =?us-ascii?Q?RgFgOMWSaYqyRRS/xYJ0eh4eO23MQSpsUdB8sp3O3KVzvzrk5LxMs/jJlSl9?=
- =?us-ascii?Q?lgenDa9A3bccJlgqBHr8OzqSdl5ZKwIWa8RSrldTjwd5tq7DyHEUxQ6b+Rfs?=
- =?us-ascii?Q?IMsnXmbFPsq9IHyVKJatSeQstAmruEuVkZRdMIyMSqCTMLnrR+9LjYEdwnpp?=
- =?us-ascii?Q?ZKfhq+AQ9l2xX+NhDf/7pqh7KcGgpBxdwRvo61dwBogVtDaXomOMfyy7SPih?=
- =?us-ascii?Q?24bFxyoOsWxDMJsf2cwnGdMQp8Gzk9WMEt61Z4llHJYjSq9PRl7A0h3/3RcN?=
- =?us-ascii?Q?u/X7kYpT44P61hMLcxPolNlchCIEu+pKWOmYiG5YEbmaKrF+PhHV9DyGJ4U+?=
- =?us-ascii?Q?toTxPP3DK4fLXfgBZtElyRyzU4ZhXqX2bMPFt71Uka7NbHVrFTsCmTEec6Sw?=
- =?us-ascii?Q?9cec9WoI1pDbohm8jEjWKYPTSqEtq8l97Jg/6suSNthuMGBtZnfv5FjjYjpv?=
- =?us-ascii?Q?k2ViAynnF9mKrrq4OlIZIcWuVichmqaL18zSgINFDsVKfdV5xZO3Bfv7OtTh?=
- =?us-ascii?Q?SuSJziWfHb87HdbdHBEOh5PZ2vqOFRjCdW0+I2kkY+0PNLQvxz50UlqrGMZR?=
- =?us-ascii?Q?zYv7wdL+WpNw7pUNvmeqmqA7kzrVYzvwIKLqFcBOUx0c2BXg9JT8hJ9Mscsw?=
- =?us-ascii?Q?T55raBYrITM3p637d00z065i8qO+AyiZswDGU+pKPDVbirHjQzxCKgsULiDd?=
- =?us-ascii?Q?VI2X6CxWPqxCk5NoOBEee3sKoYtNEdzXDQNpn5Hk2vWRK2JtJKBVuT9ITCT4?=
- =?us-ascii?Q?p1nk1dWkmVSH7u46v37MhIRpHA76wUHSa3p3CzlcAf2i84oRp9oN6Ns/zKg6?=
- =?us-ascii?Q?7KmEgFS5gorURQc872oaRoMuZ0vDa5V4Q1TZP3J6tgC347DB4RM0d6vBIw8i?=
- =?us-ascii?Q?ehsMpK9WnIPrEzZkY1KOYzdAqFRKpnIqzhhj/qAXA9Gd1P6bxvl8jfqQiQeo?=
- =?us-ascii?Q?N1+7s4uEOAVgVKrclAwHEi0mxoLBq+OEcnm8rlUzcC0Z8sH7yZeNPjvXWXpu?=
- =?us-ascii?Q?6ZE/mPQthS2ZkhFC9neCmg5T?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?xSB3rLv9V0FjYEooDrWLrCd9eSMnHu+6o7T0g3w34payI9Hv1dz93XcIIopA?=
+ =?us-ascii?Q?ncV24rsr5QSjov/fqS6N8AMekXxEhSQOIzOBDppSGkZ3sdDxSr9oVRIQukTL?=
+ =?us-ascii?Q?AzTdE0ssl5woejI8vllbBJmYMuAltD+rJISgRNRBpV0hzvg/7HXChGli7cGB?=
+ =?us-ascii?Q?LBchXmmozDv9/A0swoTgkSxxINYXTwvGx7OnjhkJXmcvLgWtV5WovdjEYLnl?=
+ =?us-ascii?Q?cRype+PCfd/f+oO/T4PM6PFlN5wGNYaBOoX+26cHThMhiVkY9GySFItVMUeI?=
+ =?us-ascii?Q?Z8T+kdxzbey7xGer1JmnBVWsWC0oiA1hldCkl3h3IcRpe8ma0BYAt8/y6dr3?=
+ =?us-ascii?Q?27ydlvPbGbT5VfXEZ43aHBQTOAPl2OTJeTt9/Dj8vUjTZGXqTc169pCG04K0?=
+ =?us-ascii?Q?8cBf07Xxl9Gd62Z7mu18j8HFEnIuGXDb0ov5DXUKEV81QEwYD/leGv963Mfk?=
+ =?us-ascii?Q?U6mUPaMPj4bJCWeWJXACK93gWuiCizp55sjyFmLW6NAN3O1D4pQ+ApZaOixc?=
+ =?us-ascii?Q?rlQR9ooEcYcFUVKc2XSitN0RMKF8QhPuVUgtRGapCwxXdr3fXMqjMe6qpY/O?=
+ =?us-ascii?Q?ijqH6vIVQibKMS6odWxUBrxwo5PBrfSBaGV9+yJY7Nt3Gk2AMHALWB+Lsf3Z?=
+ =?us-ascii?Q?e2kAcWjmidyqBcq4UEs789+y6YNW8sROho1O4CnzjhJfUnJA6ZNX8pWMENQd?=
+ =?us-ascii?Q?Vs6iEWpZWP2fmPOHwbhh2wnldwJK7Hy1ZVbANK0ow2SaWD0x/LGMTSh/DpBU?=
+ =?us-ascii?Q?buHrBvZ78Ce3z9IK/t0kk45qvQNijoaTNSyzYVZWcZRpTc/k9YBcgv74FvkS?=
+ =?us-ascii?Q?EmXmo0iKbZxYZ6IXC3mgKIvc34xvCb4QckVhFbcTuqZ2IhpHWRRvYU9t2TRz?=
+ =?us-ascii?Q?S/ThlD8u9G/nE2x0bQViIgBpYc7MMTTqHDckoAPYyzZQe0qlKrTQHEVVwHVH?=
+ =?us-ascii?Q?VvkhMk0dNxTmiucF063ZYJbjtTt1jx0qsd2v1d9VHNS1Hu0S+orcY7VuAXJv?=
+ =?us-ascii?Q?BIcjUgc883csH1OW4GE8FA+YHYWoscZkS1KtoVAWsn8aW6vMyTXgHEdsbQbg?=
+ =?us-ascii?Q?j9GrkvatCstD61X3H+nK8g1hamO7VQNYPNjzJSqsciHA9rvICRdDB9lLzqyX?=
+ =?us-ascii?Q?KpQSzQTxlUASJ5tXG5PDNkIxav/oCaiCq/w3BGc6+0o5EEA8vFzFHYTLW63W?=
+ =?us-ascii?Q?nmAgvKb37/zEr2xFZvJo17RrsGITVoPjXga1VEVk8xw/VHs2xZLoSp3vqXko?=
+ =?us-ascii?Q?rpK98pURq0d3Vk8uQUMq46/IBEankmlX85t9/iK5CE+xCIduSAy90d4ky8NT?=
+ =?us-ascii?Q?y3zEGfVfaaCrj6s49SKH4xr6?=
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 78952a3f-647f-46ef-5800-08d9677b3cf9
+X-MS-Exchange-CrossTenant-Network-Message-Id: 580deff8-bd94-4055-3207-08d9677b3a02
 X-MS-Exchange-CrossTenant-AuthSource: SA0PR12MB4430.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Aug 2021 03:48:45.3647
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Aug 2021 03:48:40.3149
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: QsxScR9YWkhESqAW23pCsBnmqSYYD5J7RqeTU+k2Zz7JfhCFtuEC9pu4NiXWg2A7F5AOWqDG0wVk7PdZwG089A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR12MB4750
+X-MS-Exchange-CrossTenant-UserPrincipalName: w6RlHS+Wlx5EiwUMDxCbbiCDHOGud3g+1NOlLASg0UFhhxw0jXym9/GECkmblZkMpk0H8zldczHFRwGAi6nPNg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA0PR12MB4511
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-When CPU is connected throug XGMI, it has coherent
-access to VRAM resource. In this case that resource
-is taken from a table in the device gmc aperture base.
-This resource is used along with the device type, which could
-be DEVICE_PRIVATE or DEVICE_PUBLIC to create the device
-page map region.
+From: Ralph Campbell <rcampbell@nvidia.com>
 
+There are several places where ZONE_DEVICE struct pages assume a reference
+count == 1 means the page is idle and free. Instead of open coding this,
+add a helper function to hide this detail.
+
+Signed-off-by: Ralph Campbell <rcampbell@nvidia.com>
 Signed-off-by: Alex Sierra <alex.sierra@amd.com>
-Reviewed-by: Felix Kuehling <Felix.Kuehling@amd.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
-v7:
-Remove lookup_resource call, so export symbol for this function
-is not longer required. Patch dropped "kernel: resource:
-lookup_resource as exported symbol"
----
- drivers/gpu/drm/amd/amdkfd/kfd_migrate.c | 29 +++++++++++++++---------
- 1 file changed, 18 insertions(+), 11 deletions(-)
+v3:
+[AS]: rename dax_layout_is_idle_page func to dax_page_unused
 
-diff --git a/drivers/gpu/drm/amd/amdkfd/kfd_migrate.c b/drivers/gpu/drm/amd/amdkfd/kfd_migrate.c
-index 47ee9a895cd2..dd245699479f 100644
---- a/drivers/gpu/drm/amd/amdkfd/kfd_migrate.c
-+++ b/drivers/gpu/drm/amd/amdkfd/kfd_migrate.c
-@@ -865,7 +865,7 @@ int svm_migrate_init(struct amdgpu_device *adev)
- {
- 	struct kfd_dev *kfddev = adev->kfd.dev;
- 	struct dev_pagemap *pgmap;
--	struct resource *res;
-+	struct resource *res = NULL;
- 	unsigned long size;
- 	void *r;
+v4:
+[AS]: This ref count functionality was missing on fuse/dax.c.
+---
+ fs/dax.c            |  4 ++--
+ fs/ext4/inode.c     |  5 +----
+ fs/fuse/dax.c       |  4 +---
+ fs/xfs/xfs_file.c   |  4 +---
+ include/linux/dax.h | 10 ++++++++++
+ 5 files changed, 15 insertions(+), 12 deletions(-)
+
+diff --git a/fs/dax.c b/fs/dax.c
+index 62352cbcf0f4..c387d09e3e5a 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -369,7 +369,7 @@ static void dax_disassociate_entry(void *entry, struct address_space *mapping,
+ 	for_each_mapped_pfn(entry, pfn) {
+ 		struct page *page = pfn_to_page(pfn);
  
-@@ -880,19 +880,25 @@ int svm_migrate_init(struct amdgpu_device *adev)
- 	 * should remove reserved size
- 	 */
- 	size = ALIGN(adev->gmc.real_vram_size, 2ULL << 20);
--	res = devm_request_free_mem_region(adev->dev, &iomem_resource, size);
--	if (IS_ERR(res))
--		return -ENOMEM;
-+	if (adev->gmc.xgmi.connected_to_cpu) {
-+		pgmap->range.start = adev->gmc.aper_base;
-+		pgmap->range.end = adev->gmc.aper_base + adev->gmc.aper_size - 1;
-+		pgmap->type = MEMORY_DEVICE_PUBLIC;
-+	} else {
-+		res = devm_request_free_mem_region(adev->dev, &iomem_resource, size);
-+		if (IS_ERR(res))
-+			return -ENOMEM;
-+		pgmap->range.start = res->start;
-+		pgmap->range.end = res->end;
-+		pgmap->type = MEMORY_DEVICE_PRIVATE;
-+	}
+-		WARN_ON_ONCE(trunc && page_ref_count(page) > 1);
++		WARN_ON_ONCE(trunc && !dax_page_unused(page));
+ 		WARN_ON_ONCE(page->mapping && page->mapping != mapping);
+ 		page->mapping = NULL;
+ 		page->index = 0;
+@@ -383,7 +383,7 @@ static struct page *dax_busy_page(void *entry)
+ 	for_each_mapped_pfn(entry, pfn) {
+ 		struct page *page = pfn_to_page(pfn);
  
--	pgmap->type = MEMORY_DEVICE_PRIVATE;
- 	pgmap->nr_range = 1;
--	pgmap->range.start = res->start;
--	pgmap->range.end = res->end;
- 	pgmap->ops = &svm_migrate_pgmap_ops;
- 	pgmap->owner = SVM_ADEV_PGMAP_OWNER(adev);
--	pgmap->flags = MIGRATE_VMA_SELECT_DEVICE_PRIVATE;
-+	pgmap->flags = 0;
- 	r = devm_memremap_pages(adev->dev, pgmap);
--	if (IS_ERR(r)) {
-+	if (res && IS_ERR(r)) {
- 		pr_err("failed to register HMM device memory\n");
- 		devm_release_mem_region(adev->dev, res->start,
- 					res->end - res->start + 1);
-@@ -914,6 +920,7 @@ void svm_migrate_fini(struct amdgpu_device *adev)
- 	struct dev_pagemap *pgmap = &adev->kfd.dev->pgmap;
+-		if (page_ref_count(page) > 1)
++		if (!dax_page_unused(page))
+ 			return page;
+ 	}
+ 	return NULL;
+diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+index fe6045a46599..05ffe6875cb1 100644
+--- a/fs/ext4/inode.c
++++ b/fs/ext4/inode.c
+@@ -3971,10 +3971,7 @@ int ext4_break_layouts(struct inode *inode)
+ 		if (!page)
+ 			return 0;
  
- 	devm_memunmap_pages(adev->dev, pgmap);
--	devm_release_mem_region(adev->dev, pgmap->range.start,
--				pgmap->range.end - pgmap->range.start + 1);
-+	if (pgmap->type == MEMORY_DEVICE_PRIVATE)
-+		devm_release_mem_region(adev->dev, pgmap->range.start,
-+					pgmap->range.end - pgmap->range.start + 1);
+-		error = ___wait_var_event(&page->_refcount,
+-				atomic_read(&page->_refcount) == 1,
+-				TASK_INTERRUPTIBLE, 0, 0,
+-				ext4_wait_dax_page(ei));
++		error = dax_wait_page(ei, page, ext4_wait_dax_page);
+ 	} while (error == 0);
+ 
+ 	return error;
+diff --git a/fs/fuse/dax.c b/fs/fuse/dax.c
+index ff99ab2a3c43..2b1f190ba78a 100644
+--- a/fs/fuse/dax.c
++++ b/fs/fuse/dax.c
+@@ -677,9 +677,7 @@ static int __fuse_dax_break_layouts(struct inode *inode, bool *retry,
+ 		return 0;
+ 
+ 	*retry = true;
+-	return ___wait_var_event(&page->_refcount,
+-			atomic_read(&page->_refcount) == 1, TASK_INTERRUPTIBLE,
+-			0, 0, fuse_wait_dax_page(inode));
++	return dax_wait_page(inode, page, fuse_wait_dax_page);
  }
+ 
+ /* dmap_end == 0 leads to unmapping of whole file */
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 396ef36dcd0a..182057281086 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -840,9 +840,7 @@ xfs_break_dax_layouts(
+ 		return 0;
+ 
+ 	*retry = true;
+-	return ___wait_var_event(&page->_refcount,
+-			atomic_read(&page->_refcount) == 1, TASK_INTERRUPTIBLE,
+-			0, 0, xfs_wait_dax_page(inode));
++	return dax_wait_page(inode, page, xfs_wait_dax_page);
+ }
+ 
+ int
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index b52f084aa643..8b5da1d60dbc 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -243,6 +243,16 @@ static inline bool dax_mapping(struct address_space *mapping)
+ 	return mapping->host && IS_DAX(mapping->host);
+ }
+ 
++static inline bool dax_page_unused(struct page *page)
++{
++	return page_ref_count(page) == 1;
++}
++
++#define dax_wait_page(_inode, _page, _wait_cb)				\
++	___wait_var_event(&(_page)->_refcount,				\
++		dax_page_unused(_page),				\
++		TASK_INTERRUPTIBLE, 0, 0, _wait_cb(_inode))
++
+ #ifdef CONFIG_DEV_DAX_HMEM_DEVICES
+ void hmem_register_device(int target_nid, struct resource *r);
+ #else
 -- 
 2.32.0
 
