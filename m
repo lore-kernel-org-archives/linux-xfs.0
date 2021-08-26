@@ -2,148 +2,188 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E16E6C432BE
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Aug 2021 21:19:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3887DC432BE
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Aug 2021 21:53:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C6657604D7
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Aug 2021 21:19:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1E21A60F92
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Aug 2021 21:53:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243674AbhHZVUV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 26 Aug 2021 17:20:21 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46216 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230182AbhHZVUV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 26 Aug 2021 17:20:21 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 718B160232;
-        Thu, 26 Aug 2021 21:19:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1630012773;
-        bh=tkgFwhR90RM93LJzzErz1kkTlM3Dy4ib5MuEEStEd7c=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=JXglTw3KchVe159QdkKn35kWyZwawN4x87zI+Lmaodv4zkQnvbGNhY3sPlVtT+b57
-         sg6obg/E4faOTLg5+SyYDmNNC9eApXcxDPryS7UoRNSScpp8mSk0BUfma1Y8gAc7fG
-         O5mDFsDDjREI9zKyQSdNXF/niNlYAeGKVm72g5HyjUo07E1uSCbM/nHDQyEWnLcbNH
-         sW+4TTMirc2u6YG4Xd16dDytwA8oKybluyv8dQ59pHfeE3qoTOcHsrsgSxDUE8mrem
-         ZDarHOQTUgZtZ8MeOTu0yTApnVc7TpBnaAAQcG+xqQn4t/QiuEmPRznmwnXuUvyraF
-         fIQspmnopJwug==
-Date:   Thu, 26 Aug 2021 14:19:33 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        xfs <linux-xfs@vger.kernel.org>
-Cc:     Matthew Wilcox <willy@infradead.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Gao Xiang <hsiangkao@linux.alibaba.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Eric Biggers <ebiggers@kernel.org>, xuyu@linux.alibaba.com
-Subject: [ANNOUNCE] xfs-linux: iomap-for-next updated to 03b8df8d43ec
-Message-ID: <20210826211933.GN12640@magnolia>
-References: <20210819170034.GS12640@magnolia>
+        id S243685AbhHZVyR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 26 Aug 2021 17:54:17 -0400
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:38607 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S243662AbhHZVyP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Aug 2021 17:54:15 -0400
+Received: from dread.disaster.area (pa49-195-182-146.pa.nsw.optusnet.com.au [49.195.182.146])
+        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 7A65180C18D;
+        Fri, 27 Aug 2021 07:53:21 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1mJNJI-005K8B-D9; Fri, 27 Aug 2021 07:53:20 +1000
+Date:   Fri, 27 Aug 2021 07:53:20 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Paul Menzel <pmenzel@molgen.mpg.de>
+Cc:     LKML <linux-kernel@vger.kernel.org>, it+linux-xfs@molgen.mpg.de,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-mm@kvack.org
+Subject: Re: Minimum inode cache size? (was: Slow file operations on file
+ server with 30 TB hardware RAID and 100 TB software RAID)
+Message-ID: <20210826215320.GO3657114@dread.disaster.area>
+References: <dcc07afa-08c3-d2d3-7900-75adb290a1bc@molgen.mpg.de>
+ <3e380495-5f85-3226-f0cf-4452e2b77ccb@molgen.mpg.de>
+ <58e701f4-6af1-d47a-7b3e-5cadf9e27296@molgen.mpg.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20210819170034.GS12640@magnolia>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <58e701f4-6af1-d47a-7b3e-5cadf9e27296@molgen.mpg.de>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
+        a=QpfB3wCSrn/dqEBSktpwZQ==:117 a=QpfB3wCSrn/dqEBSktpwZQ==:17
+        a=IkcTkHD0fZMA:10 a=MhDmnRu9jo8A:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=LmiyH4qz7PP4_n44nj0A:9 a=QEXdDO2ut3YA:10 a=q5j3cmb3fbAA:10
+        a=2Q4jQssJKWwA:10 a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+On Thu, Aug 26, 2021 at 12:41:25PM +0200, Paul Menzel wrote:
+> Dear Linux folks,
+> > > The current explanation is, that over night several maintenance
+> > > scripts like backup/mirroring and accounting scripts are run, which
+> > > touch all files on the devices. Additionally sometimes other users
+> > > run cluster jobs with millions of files on the software RAID. Such
+> > > things invalidate the inode cache, and “my” are thrown out. When I
+> > > use it afterward it’s slow in the beginning. There is still free
+> > > memory during these times according to `top`.
 
-The iomap-for-next branch of the xfs-linux repository at:
+Yup. Your inodes are not in use, so they get cycled out of memory
+for other inodes that are in active use.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+> >      $ free -h
+> >                    total        used        free      shared  buff/cache available
+> >      Mem:            94G        8.3G        5.3G        2.3M         80G       83G
+> >      Swap:            0B          0B          0B
+> > 
+> > > Does that sound reasonable with ten million inodes? Is that easily
+> > > verifiable?
+> > 
+> > If an inode consume 512 bytes with ten million inodes, that would be
+> > around 500 MB, which should easily fit into the cache, so it does not
+> > need to be invalidated?
+> 
+> Something is wrong with that calculation, and the cache size is much bigger.
 
-has just been updated.
+Inode size on disk != inode size in memory. Typically a clean XFS
+inode in memory takes up ~1.1kB, regardless of on-disk size. An
+inode that has been dirtied takes about 1.7kB.
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.  This force-push fixes a bad Fixes tag in the swapfile
-bugfix and adds the patch that standardizees the tracepoint formats.
+> Looking into `/proc/slabinfo` and XFS’ runtime/internal statistics [1], it
+> turns out that the inode cache is likely the problem.
+> 
+> XFS’ internal stats show that only one third of the inodes requests are
+> answered from cache.
+> 
+>     $ grep ^ig /sys/fs/xfs/stats/stats
+>     ig 1791207386 647353522 20111 1143854223 394 1142080045 10683174
 
-The new head of the iomap-for-next branch is commit:
+Pretty normal for a machine that has diverse worklaods, large data
+sets and fairly constant memory pressure...
 
-03b8df8d43ec iomap: standardize tracepoint formatting and storage
+> During the problematic time, the SLAB size is around 4 GB and, according to
+> slabinfo, the inode cache only has around 200.000 (sometimes even as low as
+> 50.000).
 
-New Commits:
+Yup, that indicates the workload that has been running has been
+generating either user space or page cache memory pressure, not
+inode cache memory pressure. As a result, memory reclaim has
+reclaimed the unused inode caches. This is how things are supposed
+to work - the kernel adjusts it's memory usage according what is
+consuming memory at the time there is memory demand.
 
-Andreas Gruenbacher (1):
-      [f1f264b4c134] iomap: Fix some typos and bad grammar
+>     $ sudo grep inode /proc/slabinfo
+>     nfs_inode_cache       16     24   1064    3    1 : tunables   24 12    8
+> : slabdata      8      8      0
+>     rpc_inode_cache       94    138    640    6    1 : tunables   54 27    8
+> : slabdata     23     23      0
+>     mqueue_inode_cache      1      4    896    4    1 : tunables   54  27
+> 8 : slabdata      1      1      0
+>     xfs_inode         1693683 1722284    960    4    1 : tunables   54   27
+> 8 : slabdata 430571 430571      0
+>     ext2_inode_cache       0      0    768    5    1 : tunables   54 27    8
+> : slabdata      0      0      0
+>     reiser_inode_cache      0      0    760    5    1 : tunables   54  27
+> 8 : slabdata      0      0      0
+>     hugetlbfs_inode_cache      2     12    608    6    1 : tunables 54   27
+> 8 : slabdata      2      2      0
+>     sock_inode_cache     346    670    768    5    1 : tunables   54 27    8
+> : slabdata    134    134      0
+>     proc_inode_cache     121    288    656    6    1 : tunables   54 27    8
+> : slabdata     48     48      0
+>     shmem_inode_cache   2249   2827    696   11    2 : tunables   54 27    8
+> : slabdata    257    257      0
+>     inode_cache       209098 209482    584    7    1 : tunables   54 27    8
+> : slabdata  29926  29926      0
+> 
+> (What is the difference between `xfs_inode` and `inode_cache`?)
 
-Christoph Hellwig (30):
-      [d0364f9490d7] iomap: simplify iomap_readpage_actor
-      [c1b79f11f4ec] iomap: simplify iomap_add_to_ioend
-      [d9d381f3ef5b] iomap: fix a trivial comment typo in trace.h
-      [1d25d0aecfcd] iomap: remove the iomap arguments to ->page_{prepare,done}
-      [66b8165ed4b5] iomap: mark the iomap argument to iomap_sector const
-      [4495c33e4d30] iomap: mark the iomap argument to iomap_inline_data const
-      [e3c4ffb0c221] iomap: mark the iomap argument to iomap_inline_data_valid const
-      [6d49cc8545e9] fs: mark the iomap argument to __block_write_begin_int const
-      [7e4f4b2d689d] fsdax: mark the iomap argument to dax_iomap_sector as const
-      [78c64b00f842] iomap: mark the iomap argument to iomap_read_inline_data const
-      [1acd9e9c015b] iomap: mark the iomap argument to iomap_read_page_sync const
-      [740499c78408] iomap: fix the iomap_readpage_actor return value for inline data
-      [f4b896c213f0] iomap: add the new iomap_iter model
-      [f6d480006cea] iomap: switch readahead and readpage to use iomap_iter
-      [ce83a0251c6e] iomap: switch iomap_file_buffered_write to use iomap_iter
-      [8fc274d1f4b4] iomap: switch iomap_file_unshare to use iomap_iter
-      [2aa3048e03d3] iomap: switch iomap_zero_range to use iomap_iter
-      [253564bafff3] iomap: switch iomap_page_mkwrite to use iomap_iter
-      [a6d3d49587d1] iomap: switch __iomap_dio_rw to use iomap_iter
-      [7892386d3571] iomap: switch iomap_fiemap to use iomap_iter
-      [6d8a1287a489] iomap: switch iomap_bmap to use iomap_iter
-      [40670d18e878] iomap: switch iomap_seek_hole to use iomap_iter
-      [c4740bf1edad] iomap: switch iomap_seek_data to use iomap_iter
-      [3d99a1ce3854] iomap: switch iomap_swapfile_activate to use iomap_iter
-      [ca289e0b95af] fsdax: switch dax_iomap_rw to use iomap_iter
-      [57320a01fe1f] iomap: remove iomap_apply
-      [1b5c1e36dc0e] iomap: pass an iomap_iter to various buffered I/O helpers
-      [b74b1293e6ca] iomap: rework unshare flag
-      [65dd814a6187] fsdax: switch the fault handlers to use iomap_iter
-      [fad0a1ab34f7] iomap: constify iomap_iter_srcmap
+"inode_cache" is the generic inode slab cache used for things like
+/proc and other VFS level psuedo filesytems. "xfs_inode_cache" is
+the inodes used by XFS.
 
-Darrick J. Wong (3):
-      [b69eea82d37d] iomap: pass writeback errors to the mapping
-      [8d04fbe71fa0] iomap: move loop control code to iter.c
-      [03b8df8d43ec] iomap: standardize tracepoint formatting and storage
+> Then going through all the files with `find -ls`, the inode cache grows to
+> four to five million and the SLAB size grows to around 8 GB. Over night it
+> shrinks back to the numbers above and the page cache grows back.
 
-Gao Xiang (1):
-      [69f4a26c1e0c] iomap: support reading inline data from non-zero pos
+Yup, that's caching all the inodes the find traverses because it is
+accessing the inodes and not just reading the directory structure.
+There's likely 4-5 million inodes in that directory structure.
 
-Matthew Wilcox (Oracle) (3):
-      [b405435b419c] iomap: Support inline data with block size < page size
-      [ab069d5fdcd1] iomap: Use kmap_local_page instead of kmap_atomic
-      [ae44f9c286da] iomap: Add another assertion to inline data handling
+This is normal - the kernel is adjusting it's memory usage according
+to the workload that is currently running. However, if you don't
+access those inodes again, and the system is put under memory
+pressure, they'll get reclaimed and the memory used for whatever is
+demanding memory at that point in time.
 
-Shiyang Ruan (2):
-      [55f81639a715] fsdax: factor out helpers to simplify the dax fault code
-      [c2436190e492] fsdax: factor out a dax_fault_actor() helper
+Again, this is normal behaviour for machines with mulitple discrete,
+diverse workloads with individual data sets and memory demand that,
+in aggregate, are larger than the machine has the memory to hold. At
+some point, we have to give back kernel memory so the current
+application and data set can run efficiently from RAM...
 
-Xu Yu (1):
-      [36ca7943ac18] mm/swap: consider max pages in iomap_swapfile_add_extent
+> In the discussions [2], adji`vfs_cache_pressure` is recommended, but –
+> besides setting it to 0 – it only seems to delay the shrinking of the cache.
+> (As it’s an integer 1 is the lowest non-zero (positive) number, which would
+> delay it by a factor of 100.
 
+That's exactly what vfs_cache_pressure is intended to do - you can
+slow down the reclaim of inodes and dentries, but if you have enough
+memory demand for long enough, it will not prevent indoes that have
+not been accessed for hours from being reclaimed.
 
-Code Diffstat:
+Of course, setting it so zero is also behaving as expected - that
+prevents memory reclaim from reclaiming dentries and inodes and
+other filesystem caches. This is absolutely not recommended as it
+can result in all of memory being filled with filesystem caches and
+the system can then OOM in unrecoverable ways because the memory
+held in VFS caches cannot be reclaimed.
 
- fs/btrfs/inode.c       |   5 +-
- fs/buffer.c            |   4 +-
- fs/dax.c               | 606 +++++++++++++++++++++++--------------------------
- fs/gfs2/bmap.c         |   5 +-
- fs/internal.h          |   4 +-
- fs/iomap/Makefile      |   2 +-
- fs/iomap/apply.c       |  99 --------
- fs/iomap/buffered-io.c | 508 ++++++++++++++++++++---------------------
- fs/iomap/direct-io.c   | 172 +++++++-------
- fs/iomap/fiemap.c      | 101 ++++-----
- fs/iomap/iter.c        |  80 +++++++
- fs/iomap/seek.c        |  98 ++++----
- fs/iomap/swapfile.c    |  44 ++--
- fs/iomap/trace.h       |  61 ++---
- include/linux/iomap.h  |  91 ++++++--
- 15 files changed, 934 insertions(+), 946 deletions(-)
- delete mode 100644 fs/iomap/apply.c
- create mode 100644 fs/iomap/iter.c
+> Is there a way to specify the minimum numbers of entries in the inode cache,
+> or a minimum SLAB size up to that the caches should not be decreased?
+
+You have a workload resource control problem, not an inode cache
+problem. This is a problem control groups are intended to solve. For
+controlling memory usage behaviour of workloads, see:
+
+https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html#memory
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
