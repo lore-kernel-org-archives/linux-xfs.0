@@ -2,78 +2,120 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03E32C432BE
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Aug 2021 15:05:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21792C432BE
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Aug 2021 15:11:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D112560F4C
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Aug 2021 15:05:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0470860F4C
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Aug 2021 15:11:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242911AbhHZPFt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 26 Aug 2021 11:05:49 -0400
-Received: from sandeen.net ([63.231.237.45]:49334 "EHLO sandeen.net"
+        id S240532AbhHZPMD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 26 Aug 2021 11:12:03 -0400
+Received: from mail.kernel.org ([198.145.29.99]:57350 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231793AbhHZPFs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 26 Aug 2021 11:05:48 -0400
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.147])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 91E0779F9;
-        Thu, 26 Aug 2021 10:04:39 -0500 (CDT)
-To:     Chris Dunlop <chris@onthe.net.au>, linux-xfs@vger.kernel.org
-References: <20210826020637.GA2402680@onthe.net.au>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: XFS fallocate implementation incorrectly reports ENOSPC
-Message-ID: <335ae292-cb09-6e6e-9673-68cfae666fc0@sandeen.net>
-Date:   Thu, 26 Aug 2021 10:05:00 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.13.0
+        id S237317AbhHZPMD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 26 Aug 2021 11:12:03 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E333B60F21;
+        Thu, 26 Aug 2021 15:11:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1629990676;
+        bh=YIVjWXw8f+ZBPD7zdaxiLaLkxWEJo/Ev3bHAZJpMGGE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=nwIQ3u4HypRcZ0l2pi/CUVTLmWvNM+eWTq/XyYEfj4FurR5GlzGNOubvbYnDD3yRL
+         N3mmB0NhI3n1SwAEl54C7mR6cEgPDf3MgDNv6tK09pzOgviTRnL8yQ0XvlNPDAi7Jt
+         7A8/HL3tD0tZ3QXVcgdleoHaGCXYVEjvTmaP4OhnSI98AiXaPbwHzmAo9WzADNmKY2
+         At+wezzks80f03wkv4tH6F+Z9IZGP3GAW5zlNZ/8QDJiMj7DPKQCAISt+mx1DBjTps
+         v8Wn5aTnm2Fg7ipKZlcBBTlwKrSYYXJ9vWeervl40kMwdHW8uEZzqaaRBGDGhqVu8E
+         jWIgH5T22HYaA==
+Date:   Thu, 26 Aug 2021 08:11:15 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dan Williams <dan.j.williams@intel.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Mike Snitzer <snitzer@redhat.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Linux NVDIMM <nvdimm@lists.linux.dev>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-ext4 <linux-ext4@vger.kernel.org>
+Subject: Re: [PATCH 8/9] xfs: factor out a xfs_buftarg_is_dax helper
+Message-ID: <20210826151115.GK12640@magnolia>
+References: <20210826135510.6293-1-hch@lst.de>
+ <20210826135510.6293-9-hch@lst.de>
+ <CAPcyv4jXAxSABiZ543xDWOnx0xGAq+LqjbQdqjs+6wbFgsqYyg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20210826020637.GA2402680@onthe.net.au>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4jXAxSABiZ543xDWOnx0xGAq+LqjbQdqjs+6wbFgsqYyg@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Thu, Aug 26, 2021 at 07:37:29AM -0700, Dan Williams wrote:
+> [ add Darrick ]
+> 
+> 
+> On Thu, Aug 26, 2021 at 7:07 AM Christoph Hellwig <hch@lst.de> wrote:
+> >
+> > Refactor the DAX setup code in preparation of removing
+> > bdev_dax_supported.
+> >
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > Reviewed-by: Dan Williams <dan.j.williams@intel.com>
+> > ---
+> >  fs/xfs/xfs_super.c | 15 +++++++++++----
+> >  1 file changed, 11 insertions(+), 4 deletions(-)
+> 
+> Darrick, any concerns with me taking this through the dax tree?
 
+Nope.
 
-On 8/25/21 9:06 PM, Chris Dunlop wrote:
-> Hi,
-> 
-> As reported by Charles Hathaway here (with no resolution):
-> 
-> XFS fallocate implementation incorrectly reports ENOSPC
-> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1791323
-> 
-> Given this sequence:
-> 
-> fallocate -l 1GB image.img
-> mkfs.xfs -f image.img
-> mkdir mnt
-> mount -o loop ./image.img mnt
-> fallocate -o 0 -l 700mb mnt/image.img
-> fallocate -o 0 -l 700mb mnt/image.img
-> 
-> Why does the second fallocate fail with ENOSPC, and is that considered an XFS bug?
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-Interesting.  Off the top of my head, I assume that xfs is not looking at
-current file space usage when deciding how much is needed to satisfy the
-fallocate request.  While filesystems can return ENOSPC at any time for
-any reason, this does seem a bit suboptimal.
-  
-> Ext4 is happy to do the second fallocate without error.
-> 
-> Tested on linux-5.10.60
-> 
-> Background: I'm chasing a mysterious ENOSPC error on an XFS filesystem with way more space than the app should be asking for. There are no quotas on the fs. Unfortunately it's a third party app and I can't tell what sequence is producing the error, but this fallocate issue is a possibility.
+--D
 
-Presumably you've tried stracing it and looking for ENOSPC returns from
-syscalls?
-
--Eric
+> 
+> >
+> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> > index 2c9e26a44546..5a89bf601d97 100644
+> > --- a/fs/xfs/xfs_super.c
+> > +++ b/fs/xfs/xfs_super.c
+> > @@ -314,6 +314,14 @@ xfs_set_inode_alloc(
+> >         return (mp->m_flags & XFS_MOUNT_32BITINODES) ? maxagi : agcount;
+> >  }
+> >
+> > +static bool
+> > +xfs_buftarg_is_dax(
+> > +       struct super_block      *sb,
+> > +       struct xfs_buftarg      *bt)
+> > +{
+> > +       return bdev_dax_supported(bt->bt_bdev, sb->s_blocksize);
+> > +}
+> > +
+> >  STATIC int
+> >  xfs_blkdev_get(
+> >         xfs_mount_t             *mp,
+> > @@ -1549,11 +1557,10 @@ xfs_fs_fill_super(
+> >                 xfs_warn(mp,
+> >                 "DAX enabled. Warning: EXPERIMENTAL, use at your own risk");
+> >
+> > -               datadev_is_dax = bdev_dax_supported(mp->m_ddev_targp->bt_bdev,
+> > -                       sb->s_blocksize);
+> > +               datadev_is_dax = xfs_buftarg_is_dax(sb, mp->m_ddev_targp);
+> >                 if (mp->m_rtdev_targp)
+> > -                       rtdev_is_dax = bdev_dax_supported(
+> > -                               mp->m_rtdev_targp->bt_bdev, sb->s_blocksize);
+> > +                       rtdev_is_dax = xfs_buftarg_is_dax(sb,
+> > +                                               mp->m_rtdev_targp);
+> >                 if (!rtdev_is_dax && !datadev_is_dax) {
+> >                         xfs_alert(mp,
+> >                         "DAX unsupported by block device. Turning off DAX.");
+> > --
+> > 2.30.2
+> >
+> >
