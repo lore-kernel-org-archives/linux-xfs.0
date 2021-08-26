@@ -4,60 +4,61 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61326C432BE
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Aug 2021 14:37:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76814C432BE
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Aug 2021 14:42:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3F8A460FD8
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Aug 2021 14:37:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4BF3C61053
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Aug 2021 14:42:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242883AbhHZOi2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 26 Aug 2021 10:38:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33826 "EHLO
+        id S242840AbhHZOnL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 26 Aug 2021 10:43:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34920 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231718AbhHZOi2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Aug 2021 10:38:28 -0400
-Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0B3EC061757
-        for <linux-xfs@vger.kernel.org>; Thu, 26 Aug 2021 07:37:40 -0700 (PDT)
-Received: by mail-pf1-x436.google.com with SMTP id x16so2963182pfh.2
-        for <linux-xfs@vger.kernel.org>; Thu, 26 Aug 2021 07:37:40 -0700 (PDT)
+        with ESMTP id S242829AbhHZOnI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Aug 2021 10:43:08 -0400
+Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92A8FC061757
+        for <linux-xfs@vger.kernel.org>; Thu, 26 Aug 2021 07:42:21 -0700 (PDT)
+Received: by mail-pl1-x636.google.com with SMTP id u15so1922383plg.13
+        for <linux-xfs@vger.kernel.org>; Thu, 26 Aug 2021 07:42:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=intel-com.20150623.gappssmtp.com; s=20150623;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=V2HF2Xls84jUZ7suMHbKiqQQLoSKjQ0Sp55OfKg/g+s=;
-        b=Dco0Ve1HsF5HR6fQPSDcbsON7RovI6+GXbCjwy05Qf/MIvb+uEReb2jP0tUbbZNBUc
-         RDLIpbZxUIgA2DcUbnEPUcoa+gAsV3xXBk0QJbhyJ6AN0mBlTsAOZgRyAYEF+kjGHOUq
-         LAYslifFUXbJ5Kk6yi/lbXXokRTgOPv+Y5EQ3uNcweWCWEqgB8Z5VtwNKT+Yx9Jeg74V
-         NSoDfvU5VDppT5xzPl0U17d/zETFIEcB8wplMdGZiW+W4bQDUs4XrknFSI+mRn3FrAoY
-         ffP5hmJ6LWFsNAaXH9PegEQu0nH284g/XB2yoZc81qwEmGJMYlrhSyIHm3yufqyzLf7N
-         vRHA==
+        bh=ABTfU8gxdjv5n74FbYsyCDi8X7MNpO1jIxZ8zrk/JGc=;
+        b=RnM+EalWmI3PqG7GROErhErzyPvDbZCl0KTyuEsZ8rvwaXbCmLGYFo0yra0yZXKsar
+         gK732TMBNazrj5DR9ByMd3UdZOzjU1wCyhqFo++Dz5dnNmiau+yIflCs68+Qtk0bLvmD
+         WU1qzs7I1dCdU4qAnLydv3o+dt60dwm1PpLP6xm8EaBkpVmN7pzNVF0vda5VBS3dKner
+         IhF1jpU2gcPXjHxcJXA2tfQz0eUeS8yYMY+eKVIyig67TB1zvew32ziVngCOkemv3QEj
+         yppNGbWtyBRoXelyhp6VliZ0pKhRgYBRfs19XpiXUpK4P59cmR42IxfV7c+kphMG8VWg
+         3BCA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=V2HF2Xls84jUZ7suMHbKiqQQLoSKjQ0Sp55OfKg/g+s=;
-        b=GuCChTTwyO9M3EPyb3+u0cq0BB/CD9tnO25wBtVS82NXA9iucoTN82Y55NaWVpsfj7
-         71zv4IejOlCb3lJjT5C+8ad5OSbeQi+dvRwOXg9K4H02qQGjqBgjOi+gzdn+U+vRXLKb
-         isky4i8esdPpiNsF/DIMFOhMZB4jxcKaS2Xl3dpaSZSPGvN2VRQpv+/Enqn5nhdJXkZJ
-         vxWtyPKOH4dcH9+XIs3ha0IUNA2IE4jZ7rOFiRbqfE9VA8aX7D/Qh0es8w5iLZYz4xp6
-         w89LB7KiwAw/87x+3M+A1Jkrs/qh8zS3oF1T6rwsegmFnp/I1qpjpiI8mnqkRU15g+IS
-         /KQQ==
-X-Gm-Message-State: AOAM533C3wfDaEvRGAdg6hKebqwAunGP3+eHGbgyErjfZ4xcb91XkH0s
-        0QCab7AEHLYtUo9Q4UkRKaqKkOjcasfXkvDGNLlXQA==
-X-Google-Smtp-Source: ABdhPJxMKI6O3/cUhf97XeZzMtCS61IH/s/SfH2Ap1H+km08WqpkwpkZUAqzW4rOPcMFxINeVXaRQxmOOQTgAbmdNrE=
-X-Received: by 2002:a65:47c6:: with SMTP id f6mr3651187pgs.450.1629988660383;
- Thu, 26 Aug 2021 07:37:40 -0700 (PDT)
+        bh=ABTfU8gxdjv5n74FbYsyCDi8X7MNpO1jIxZ8zrk/JGc=;
+        b=h+TB+lkUnljJNSoP6t+XvP1GjiNRIlAWpwBDXI68LnC4SVcgPziHHYDFl+r7OugT7u
+         M26MZopiCIt7Yo5UKtkx+EcxtjqrtN37ex1vZ0+hgkzq2wMvwyZKnm38UpOYLD8JRdoV
+         4WcQKxKSqKtgMmPhGxpBf2wmTZG0+Z2KO8wNa2chUGH1x1VsTeaK0MWaoyH2+bJpMG3N
+         fadfZzuL+p4lyNyXGRDSiTyKLpNXx43nsj0mdIcB20/Z/+dI5TL/ltfUdN6HUTqYRS0A
+         KY2bnnZiLBTFtueAxcmyfMyK41sudL5ptzUw9MTjsnqhXWwCpzlRNpwaHojsMRd9EoUR
+         zgOg==
+X-Gm-Message-State: AOAM5312muqzllkb71bg6Ka5lpjHm2dFgI7fJVTplPnro/JnF3jwIlcp
+        HEKUE/v6OluiwRfNRgnxQ3ODX39iholpAXlzxBQZDw==
+X-Google-Smtp-Source: ABdhPJzO1UFjPYxjHHDbPPyTeWuvMW2jYmROew+jJbFtaVcDFYVCU8mx/aezSMbrIMNKUs0Szwc4PU9+n1E6cYIivVo=
+X-Received: by 2002:a17:902:ba90:b0:135:6709:705 with SMTP id
+ k16-20020a170902ba9000b0013567090705mr3869473pls.79.1629988941096; Thu, 26
+ Aug 2021 07:42:21 -0700 (PDT)
 MIME-Version: 1.0
-References: <20210826135510.6293-1-hch@lst.de> <20210826135510.6293-9-hch@lst.de>
-In-Reply-To: <20210826135510.6293-9-hch@lst.de>
+References: <20210826135510.6293-1-hch@lst.de> <20210826135510.6293-4-hch@lst.de>
+In-Reply-To: <20210826135510.6293-4-hch@lst.de>
 From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Thu, 26 Aug 2021 07:37:29 -0700
-Message-ID: <CAPcyv4jXAxSABiZ543xDWOnx0xGAq+LqjbQdqjs+6wbFgsqYyg@mail.gmail.com>
-Subject: Re: [PATCH 8/9] xfs: factor out a xfs_buftarg_is_dax helper
+Date:   Thu, 26 Aug 2021 07:42:10 -0700
+Message-ID: <CAPcyv4ieXdjgxE+PkcUjuL7vdcnQfXhb_1aG2YeLtX9BZWVQfQ@mail.gmail.com>
+Subject: Re: [PATCH 3/9] dm: use fs_dax_get_by_bdev instead of dax_get_by_host
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     Vishal Verma <vishal.l.verma@intel.com>,
         Dave Jiang <dave.jiang@intel.com>,
@@ -66,65 +67,40 @@ Cc:     Vishal Verma <vishal.l.verma@intel.com>,
         linux-xfs <linux-xfs@vger.kernel.org>,
         Linux NVDIMM <nvdimm@lists.linux.dev>,
         linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-ext4 <linux-ext4@vger.kernel.org>,
-        "Darrick J. Wong" <djwong@kernel.org>
+        linux-ext4 <linux-ext4@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-[ add Darrick ]
-
-
-On Thu, Aug 26, 2021 at 7:07 AM Christoph Hellwig <hch@lst.de> wrote:
+On Thu, Aug 26, 2021 at 6:59 AM Christoph Hellwig <hch@lst.de> wrote:
 >
-> Refactor the DAX setup code in preparation of removing
-> bdev_dax_supported.
+> There is no point in trying to finding the dax device if the DAX flag is
+> not set on the queue as none of the users of the device mapper exported
+> block devices could make use of the DAX capability.
 >
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > Reviewed-by: Dan Williams <dan.j.williams@intel.com>
 > ---
->  fs/xfs/xfs_super.c | 15 +++++++++++----
->  1 file changed, 11 insertions(+), 4 deletions(-)
+>  drivers/md/dm.c | 2 +-
 
-Darrick, any concerns with me taking this through the dax tree?
+Mike, any objections to me taking this through a dax branch?
 
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 >
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 2c9e26a44546..5a89bf601d97 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -314,6 +314,14 @@ xfs_set_inode_alloc(
->         return (mp->m_flags & XFS_MOUNT_32BITINODES) ? maxagi : agcount;
+> diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+> index 2c5f9e585211..465714341300 100644
+> --- a/drivers/md/dm.c
+> +++ b/drivers/md/dm.c
+> @@ -650,7 +650,7 @@ static int open_table_device(struct table_device *td, dev_t dev,
+>         }
+>
+>         td->dm_dev.bdev = bdev;
+> -       td->dm_dev.dax_dev = dax_get_by_host(bdev->bd_disk->disk_name);
+> +       td->dm_dev.dax_dev = fs_dax_get_by_bdev(bdev);
+>         return 0;
 >  }
 >
-> +static bool
-> +xfs_buftarg_is_dax(
-> +       struct super_block      *sb,
-> +       struct xfs_buftarg      *bt)
-> +{
-> +       return bdev_dax_supported(bt->bt_bdev, sb->s_blocksize);
-> +}
-> +
->  STATIC int
->  xfs_blkdev_get(
->         xfs_mount_t             *mp,
-> @@ -1549,11 +1557,10 @@ xfs_fs_fill_super(
->                 xfs_warn(mp,
->                 "DAX enabled. Warning: EXPERIMENTAL, use at your own risk");
->
-> -               datadev_is_dax = bdev_dax_supported(mp->m_ddev_targp->bt_bdev,
-> -                       sb->s_blocksize);
-> +               datadev_is_dax = xfs_buftarg_is_dax(sb, mp->m_ddev_targp);
->                 if (mp->m_rtdev_targp)
-> -                       rtdev_is_dax = bdev_dax_supported(
-> -                               mp->m_rtdev_targp->bt_bdev, sb->s_blocksize);
-> +                       rtdev_is_dax = xfs_buftarg_is_dax(sb,
-> +                                               mp->m_rtdev_targp);
->                 if (!rtdev_is_dax && !datadev_is_dax) {
->                         xfs_alert(mp,
->                         "DAX unsupported by block device. Turning off DAX.");
 > --
 > 2.30.2
->
 >
