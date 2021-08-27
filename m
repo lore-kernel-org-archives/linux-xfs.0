@@ -2,209 +2,134 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FAF9C432BE
-	for <linux-xfs@archiver.kernel.org>; Fri, 27 Aug 2021 05:28:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C960C432BE
+	for <linux-xfs@archiver.kernel.org>; Fri, 27 Aug 2021 05:50:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1B60560FE7
-	for <linux-xfs@archiver.kernel.org>; Fri, 27 Aug 2021 05:28:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 62F7B60F6C
+	for <linux-xfs@archiver.kernel.org>; Fri, 27 Aug 2021 05:50:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234949AbhH0F3F (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 27 Aug 2021 01:29:05 -0400
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:32169 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S244225AbhH0F3E (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Aug 2021 01:29:04 -0400
-IronPort-HdrOrdr: =?us-ascii?q?A9a23=3Atei45Kg/Y8j9xKYkcrbfWQ3753BQXuYji2hC?=
- =?us-ascii?q?6mlwRA09TyX4rbHLoB1/73LJYVkqNk3I5urrBEDtexLhHP1OkOws1NWZLWrbUQ?=
- =?us-ascii?q?KTRekM0WKI+UyDJ8SRzI5g/JYlW61/Jfm1NlJikPv9iTPSL/8QhPWB74Ck7N2z?=
- =?us-ascii?q?80tQ?=
-X-IronPort-AV: E=Sophos;i="5.84,355,1620662400"; 
-   d="scan'208";a="113551417"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 27 Aug 2021 13:28:14 +0800
-Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
-        by cn.fujitsu.com (Postfix) with ESMTP id C83874D0D4BD;
-        Fri, 27 Aug 2021 13:28:07 +0800 (CST)
-Received: from G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.85) by
- G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
- (TLS) id 15.0.1497.23; Fri, 27 Aug 2021 13:27:58 +0800
-Received: from [192.168.22.65] (10.167.225.141) by
- G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.23 via Frontend Transport; Fri, 27 Aug 2021 13:27:56 +0800
-Subject: Re: [PATCH v7 7/8] fsdax: Introduce dax_iomap_ops for end of reflink
-To:     Dan Williams <dan.j.williams@intel.com>
-CC:     "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        david <david@fromorbit.com>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux NVDIMM <nvdimm@lists.linux.dev>,
-        Goldwyn Rodrigues <rgoldwyn@suse.de>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        Matthew Wilcox <willy@infradead.org>
-References: <20210816060359.1442450-1-ruansy.fnst@fujitsu.com>
- <20210816060359.1442450-8-ruansy.fnst@fujitsu.com>
- <CAPcyv4jbi=p=SjFYZcHnEAu+KY821pW_k_yA5u6hya4jEfrTUg@mail.gmail.com>
- <c7e68dc8-5a43-f727-c262-58dcf244c711@fujitsu.com>
- <CAPcyv4jM86gy-T5EEZf6M2m44v4MiGqYDhxisX59M5QJii6DVg@mail.gmail.com>
- <32fa5333-b14e-2060-d659-d77f6c75ff16@fujitsu.com>
- <CAPcyv4h801eipbvOpzSnw_GnUcuSxcm6eUfJdoHNW2ZmZgzW=Q@mail.gmail.com>
-From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Message-ID: <2489af0c-ef3c-a293-c652-e1c2b7bd4164@fujitsu.com>
-Date:   Fri, 27 Aug 2021 13:27:55 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.13.0
+        id S234948AbhH0Fus (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 27 Aug 2021 01:50:48 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:47465 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229645AbhH0Fus (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Aug 2021 01:50:48 -0400
+Received: from dread.disaster.area (pa49-195-182-146.pa.nsw.optusnet.com.au [49.195.182.146])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 3A4A0104C37B;
+        Fri, 27 Aug 2021 15:49:57 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1mJUkW-005RpL-FI; Fri, 27 Aug 2021 15:49:56 +1000
+Date:   Fri, 27 Aug 2021 15:49:56 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Chris Dunlop <chris@onthe.net.au>
+Cc:     Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
+Subject: Re: XFS fallocate implementation incorrectly reports ENOSPC
+Message-ID: <20210827054956.GP3657114@dread.disaster.area>
+References: <20210826020637.GA2402680@onthe.net.au>
+ <335ae292-cb09-6e6e-9673-68cfae666fc0@sandeen.net>
+ <20210826205635.GA2453892@onthe.net.au>
+ <20210827025539.GA3583175@onthe.net.au>
 MIME-Version: 1.0
-In-Reply-To: <CAPcyv4h801eipbvOpzSnw_GnUcuSxcm6eUfJdoHNW2ZmZgzW=Q@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-yoursite-MailScanner-ID: C83874D0D4BD.A227B
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210827025539.GA3583175@onthe.net.au>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
+        a=QpfB3wCSrn/dqEBSktpwZQ==:117 a=QpfB3wCSrn/dqEBSktpwZQ==:17
+        a=kj9zAlcOel0A:10 a=MhDmnRu9jo8A:10 a=7-415B0cAAAA:8
+        a=3troFyTL9SjXjzNIr18A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 2021/8/27 13:04, Dan Williams wrote:
-> On Thu, Aug 26, 2021 at 8:30 PM Shiyang Ruan <ruansy.fnst@fujitsu.com> wrote:
->>
->>
->>
->> On 2021/8/20 23:18, Dan Williams wrote:
->>> On Thu, Aug 19, 2021 at 11:13 PM ruansy.fnst <ruansy.fnst@fujitsu.com> wrote:
->>>>
->>>>
->>>>
->>>> On 2021/8/20 上午11:01, Dan Williams wrote:
->>>>> On Sun, Aug 15, 2021 at 11:05 PM Shiyang Ruan <ruansy.fnst@fujitsu.com> wrote:
->>>>>>
->>>>>> After writing data, reflink requires end operations to remap those new
->>>>>> allocated extents.  The current ->iomap_end() ignores the error code
->>>>>> returned from ->actor(), so we introduce this dax_iomap_ops and change
->>>>>> the dax_iomap_*() interfaces to do this job.
->>>>>>
->>>>>> - the dax_iomap_ops contains the original struct iomap_ops and fsdax
->>>>>>        specific ->actor_end(), which is for the end operations of reflink
->>>>>> - also introduce dax specific zero_range, truncate_page
->>>>>> - create new dax_iomap_ops for ext2 and ext4
->>>>>>
->>>>>> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
->>>>>> ---
->>>>>>     fs/dax.c               | 68 +++++++++++++++++++++++++++++++++++++-----
->>>>>>     fs/ext2/ext2.h         |  3 ++
->>>>>>     fs/ext2/file.c         |  6 ++--
->>>>>>     fs/ext2/inode.c        | 11 +++++--
->>>>>>     fs/ext4/ext4.h         |  3 ++
->>>>>>     fs/ext4/file.c         |  6 ++--
->>>>>>     fs/ext4/inode.c        | 13 ++++++--
->>>>>>     fs/iomap/buffered-io.c |  3 +-
->>>>>>     fs/xfs/xfs_bmap_util.c |  3 +-
->>>>>>     fs/xfs/xfs_file.c      |  8 ++---
->>>>>>     fs/xfs/xfs_iomap.c     | 36 +++++++++++++++++++++-
->>>>>>     fs/xfs/xfs_iomap.h     | 33 ++++++++++++++++++++
->>>>>>     fs/xfs/xfs_iops.c      |  7 ++---
->>>>>>     fs/xfs/xfs_reflink.c   |  3 +-
->>>>>>     include/linux/dax.h    | 21 ++++++++++---
->>>>>>     include/linux/iomap.h  |  1 +
->>>>>>     16 files changed, 189 insertions(+), 36 deletions(-)
->>>>>>
->>>>>> diff --git a/fs/dax.c b/fs/dax.c
->>>>>> index 74dd918cff1f..0e0536765a7e 100644
->>>>>> --- a/fs/dax.c
->>>>>> +++ b/fs/dax.c
->>>>>> @@ -1348,11 +1348,30 @@ static loff_t dax_iomap_iter(const struct iomap_iter *iomi,
->>>>>>            return done ? done : ret;
->>>>>>     }
->>>>>>
->>>>>> +static inline int
->>>>>> +__dax_iomap_iter(struct iomap_iter *iter, const struct dax_iomap_ops *ops)
->>>>>> +{
->>>>>> +       int ret;
->>>>>> +
->>>>>> +       /*
->>>>>> +        * Call dax_iomap_ops->actor_end() before iomap_ops->iomap_end() in
->>>>>> +        * each iteration.
->>>>>> +        */
->>>>>> +       if (iter->iomap.length && ops->actor_end) {
->>>>>> +               ret = ops->actor_end(iter->inode, iter->pos, iter->len,
->>>>>> +                                    iter->processed);
->>>>>> +               if (ret < 0)
->>>>>> +                       return ret;
->>>>>> +       }
->>>>>> +
->>>>>> +       return iomap_iter(iter, &ops->iomap_ops);
->>>>>
->>>>> This reorganization looks needlessly noisy. Why not require the
->>>>> iomap_end operation to perform the actor_end work. I.e. why can't
->>>>> xfs_dax_write_iomap_actor_end() just be the passed in iomap_end? I am
->>>>> not seeing where the ->iomap_end() result is ignored?
->>>>>
->>>>
->>>> The V6 patch[1] was did in this way.
->>>> [1]https://lore.kernel.org/linux-xfs/20210526005159.GF202144@locust/T/#m79a66a928da2d089e2458c1a97c0516dbfde2f7f
->>>>
->>>> But Darrick reminded me that ->iomap_end() will always take zero or
->>>> positive 'written' because iomap_apply() handles this argument.
->>>>
->>>> ```
->>>>           if (ops->iomap_end) {
->>>>                   ret = ops->iomap_end(inode, pos, length,
->>>>                                        written > 0 ? written : 0,
->>>>                                        flags, &iomap);
->>>>           }
->>>> ```
->>>>
->>>> So, we cannot get actual return code from CoW in ->actor(), and as a
->>>> result, we cannot handle the xfs end_cow correctly in ->iomap_end().
->>>> That's where the result of CoW was ignored.
->>>
->>> Ah, thank you for the explanation.
->>>
->>> However, this still seems like too much code thrash just to get back
->>> to the original value of iter->processed. I notice you are talking
->>> about iomap_apply(), but that routine is now gone in Darrick's latest
->>> iomap-for-next branch. Instead iomap_iter() does this:
->>>
->>>           if (iter->iomap.length && ops->iomap_end) {
->>>                   ret = ops->iomap_end(iter->inode, iter->pos, iomap_length(iter),
->>>                                   iter->processed > 0 ? iter->processed : 0,
->>
->> As you can see, here is the same logic as the old iomap_apply(): the
->> negative iter->processed won't be passed into ->iomap_end().
->>
->>>                                   iter->flags, &iter->iomap);
->>>                   if (ret < 0 && !iter->processed)
->>>                           return ret;
->>>           }
->>>
->>>
->>> I notice that the @iomap argument to ->iomap_end() is reliably coming
->>> from @iter. So you could do the following in your iomap_end()
->>> callback:
->>>
->>>           struct iomap_iter *iter = container_of(iomap, typeof(*iter), iomap);
->>>           struct xfs_inode *ip = XFS_I(inode);
->>>           ssize_t written = iter->processed;
->>
->> The written will be 0 or positive.  The original error code is ingnored.
+On Fri, Aug 27, 2021 at 12:55:39PM +1000, Chris Dunlop wrote:
+> On Fri, Aug 27, 2021 at 06:56:35AM +1000, Chris Dunlop wrote:
+> > On Thu, Aug 26, 2021 at 10:05:00AM -0500, Eric Sandeen wrote:
+> > > On 8/25/21 9:06 PM, Chris Dunlop wrote:
+> > > > 
+> > > > fallocate -l 1GB image.img
+> > > > mkfs.xfs -f image.img
+> > > > mkdir mnt
+> > > > mount -o loop ./image.img mnt
+> > > > fallocate -o 0 -l 700mb mnt/image.img
+> > > > fallocate -o 0 -l 700mb mnt/image.img
+> > > > 
+> > > > Why does the second fallocate fail with ENOSPC, and is that considered an XFS bug?
+> > > 
+> > > Interesting.  Off the top of my head, I assume that xfs is not looking at
+> > > current file space usage when deciding how much is needed to satisfy the
+> > > fallocate request.  While filesystems can return ENOSPC at any time for
+> > > any reason, this does seem a bit suboptimal.
+> > 
+> > Yes, I would have thought the second fallocate should be a noop.
 > 
-> Correct, but you can use container_of() to get back to the iter and
-> consider the raw untranslated value of iter->processed. As Christoph
-> mentioned this needs a comment explaining the layering violation, but
-> that's a cleaner change than the dax_iomap_ops approach.
+> On further reflection, "filesystems can return ENOSPC at any time" is
+> certainly something apps need to be prepared for (and in this case, it's
+> doing the right thing, by logging the error and aborting), but it's not
+> really a "not a bug" excuse for the filesystem in all circumstances (or this
+> one?), is it? E.g. a write(fd, buf, 1) returning ENOSPC on an fresh
+> filesystem would be considered a bug, no?
+
+Sure, but the fallocate case here is different. You're asking to
+preallocate up to 700MB of space on a filesystem that only has 300MB
+of space free. Up front, without knowing anything about the layout
+of the file we might need to allocate 700MB of space into, there's a
+very good chance that we'll get ENOSPC partially through the
+operation.
+
+The real problem with preallocation failing part way through due to
+overcommit of space is that we can't go back an undo the
+allocation(s) made by fallocate because when we get ENOSPC we have
+lost all the state of the previous allocations made. If fallocate is
+filling holes between unwritten extents already in the file, then we
+have no way of knowing where the holes we filled were and hence
+cannot reliably free the space we've allocated before ENOSPC was
+hit.
+
+Hence if we allow the fallocate to go ahead and preallocate space
+until we hit ENOSPC, we still end up returning to userspace with
+ENOSPC, but we've also consumed all the remaining space in the
+filesystem.
+
+So there's a very good argument for simply rejecting any attempt to
+preallocate space that has the possibility of over-committing space
+and hence hitting ENOSPC part way through. Given that we spend a lot
+of effort in XFS to avoid over-committing resources so that ENOSPC
+is reliable and not prone to deadlocks, the choice to make fallocate
+avoid a potential over-commit is at least internally consistent with
+the XFS ENOSPC architecture.
+
+IOWs, either behaviour could be considered a "bug" because it is
+sub-optimal behaviour, but at some point you've got to choose what
+is the least worst behaviour and run with it.
+
+> ...or maybe your "suboptimal" was entirely tongue in cheek?
 > 
+> > > > Background: I'm chasing a mysterious ENOSPC error on an XFS
+> > > > filesystem with way more space than the app should be asking
+> > > > for. There are no quotas on the fs. Unfortunately it's a third
+> > > > party app and I can't tell what sequence is producing the error,
+> > > > but this fallocate issue is a possibility.
 
-Understood.  Thanks.
+More likely speculative preallocation is causing this than
+fallocate. However, we've had a background worker that cleans up
+speculative prealloc before reporting ENOSPC for a while now - what
+kernel version are seeing this on?
 
---
-Ruan.
+Also, it might not even be data allocation that is the issue - if
+the filesystem is full and free space is fragmented, you could be
+getting ENOSPC because inodes cannot be allocated. In which case,
+the output of xfs-info would be useful so we can see if sparse inode
+clusters are enabled or not....
 
+Cheers,
 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
