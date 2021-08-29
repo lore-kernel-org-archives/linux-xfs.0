@@ -2,111 +2,160 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB473C432BE
-	for <linux-xfs@archiver.kernel.org>; Sun, 29 Aug 2021 12:25:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73459C43216
+	for <linux-xfs@archiver.kernel.org>; Sun, 29 Aug 2021 12:25:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8C6D560C51
-	for <linux-xfs@archiver.kernel.org>; Sun, 29 Aug 2021 12:25:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5B35860F3A
+	for <linux-xfs@archiver.kernel.org>; Sun, 29 Aug 2021 12:25:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235346AbhH2M0f (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 29 Aug 2021 08:26:35 -0400
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:57118 "EHLO
+        id S235350AbhH2M0h (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 29 Aug 2021 08:26:37 -0400
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:56537 "EHLO
         heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S234988AbhH2M02 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 29 Aug 2021 08:26:28 -0400
-IronPort-HdrOrdr: =?us-ascii?q?A9a23=3AhtUtwa27tAqbjRTnawv0fAqjBI4kLtp133Aq?=
- =?us-ascii?q?2lEZdPU1SL39qynKppkmPHDP5gr5J0tLpTntAsi9qBDnhPtICOsqTNSftWDd0Q?=
- =?us-ascii?q?PGEGgI1/qB/9SPIU3D398Y/aJhXow7M9foEGV95PyQ3CCIV/om3/mLmZrFudvj?=
+        with ESMTP id S235331AbhH2M0b (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 29 Aug 2021 08:26:31 -0400
+IronPort-HdrOrdr: =?us-ascii?q?A9a23=3AP/GwVajJOW7yQGzQc4r5mzTSLnBQXuYji2hC?=
+ =?us-ascii?q?6mlwRA09TyX4rbHLoB1/73LJYVkqNk3I5urrBEDtexLhHP1OkOws1NWZLWrbUQ?=
+ =?us-ascii?q?KTRekM0WKI+UyDJ8SRzI5g/JYlW61/Jfm1NlJikPv9iTPSL/8QhPWB74Ck7N2z?=
+ =?us-ascii?q?80tQ?=
 X-IronPort-AV: E=Sophos;i="5.84,361,1620662400"; 
-   d="scan'208";a="113656446"
+   d="scan'208";a="113656448"
 Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 29 Aug 2021 20:25:31 +0800
+  by heian.cn.fujitsu.com with ESMTP; 29 Aug 2021 20:25:37 +0800
 Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
-        by cn.fujitsu.com (Postfix) with ESMTP id 6759A4D0D4A1;
-        Sun, 29 Aug 2021 20:25:27 +0800 (CST)
+        by cn.fujitsu.com (Postfix) with ESMTP id 29FEA4D0D9D0;
+        Sun, 29 Aug 2021 20:25:37 +0800 (CST)
 Received: from G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.85) by
  G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
- (TLS) id 15.0.1497.23; Sun, 29 Aug 2021 20:25:23 +0800
+ (TLS) id 15.0.1497.23; Sun, 29 Aug 2021 20:25:38 +0800
 Received: from irides.mr.mr.mr (10.167.225.141) by
  G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.23 via Frontend Transport; Sun, 29 Aug 2021 20:25:21 +0800
+ id 15.0.1497.23 via Frontend Transport; Sun, 29 Aug 2021 20:25:36 +0800
 From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
 To:     <djwong@kernel.org>, <hch@lst.de>, <linux-xfs@vger.kernel.org>
 CC:     <ruansy.fnst@fujitsu.com>, <dan.j.williams@intel.com>,
         <david@fromorbit.com>, <linux-fsdevel@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <nvdimm@lists.linux.dev>,
         <rgoldwyn@suse.de>, <viro@zeniv.linux.org.uk>,
-        <willy@infradead.org>
-Subject: [PATCH v8 0/7] fsdax,xfs: Add reflink&dedupe support for fsdax
-Date:   Sun, 29 Aug 2021 20:25:10 +0800
-Message-ID: <20210829122517.1648171-1-ruansy.fnst@fujitsu.com>
+        <willy@infradead.org>, Ritesh Harjani <riteshh@linux.ibm.com>
+Subject: [PATCH v8 4/7] fsdax: Add dax_iomap_cow_copy() for dax_iomap_zero
+Date:   Sun, 29 Aug 2021 20:25:14 +0800
+Message-ID: <20210829122517.1648171-5-ruansy.fnst@fujitsu.com>
 X-Mailer: git-send-email 2.32.0
+In-Reply-To: <20210829122517.1648171-1-ruansy.fnst@fujitsu.com>
+References: <20210829122517.1648171-1-ruansy.fnst@fujitsu.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: 6759A4D0D4A1.A01A4
+X-yoursite-MailScanner-ID: 29FEA4D0D9D0.A371E
 X-yoursite-MailScanner: Found to be clean
 X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This patchset is attempt to add CoW support for fsdax, and take XFS,
-which has both reflink and fsdax feature, as an example.
+Punch hole on a reflinked file needs dax_iomap_cow_copy() too.
+Otherwise, data in not aligned area will be not correct.  So, add the
+srcmap to dax_iomap_zero() and replace memset() as dax_iomap_cow_copy().
 
-Changes from V7:
- - Patch 3: Update to iter model[1]
- - Patch 4: Add the missing memset() in CoW case
- - Remove iomap_iter2(), use 2 nested iomap_iter() instead
- - Patch 6: Remove dax_iomap_ops, handle end CoW operations in
-      ->iomap_end()
- - Update docs, comments
+Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+Reviewed-by: Ritesh Harjani <riteshh@linux.ibm.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+---
+ fs/dax.c               | 26 ++++++++++++++++----------
+ fs/iomap/buffered-io.c |  4 ++--
+ include/linux/dax.h    |  3 ++-
+ 3 files changed, 20 insertions(+), 13 deletions(-)
 
-One of the key mechanism need to be implemented in fsdax is CoW.  Copy
-the data from srcmap before we actually write data to the destance
-iomap.  And we just copy range in which data won't be changed.
-
-Another mechanism is range comparison.  In page cache case, readpage()
-is used to load data on disk to page cache in order to be able to
-compare data.  In fsdax case, readpage() does not work.  So, we need
-another compare data with direct access support.
-
-With the two mechanisms implemented in fsdax, we are able to make reflink
-and fsdax work together in XFS.
-
-(Rebased on v5.14-rc4 and Christoph's "switch iomap to an iterator model v2"[1])
-[1]: https://lore.kernel.org/linux-xfs/20210809061244.1196573-1-hch@lst.de/
-==
-
-Shiyang Ruan (7):
-  fsdax: Output address in dax_iomap_pfn() and rename it
-  fsdax: Introduce dax_iomap_cow_copy()
-  fsdax: Replace mmap entry in case of CoW
-  fsdax: Add dax_iomap_cow_copy() for dax_iomap_zero
-  fsdax: Dedup file range to use a compare function
-  xfs: support CoW in fsdax mode
-  xfs: Add dax dedupe support
-
- fs/dax.c               | 319 ++++++++++++++++++++++++++++++++++-------
- fs/iomap/buffered-io.c |   7 +-
- fs/remap_range.c       |  39 +++--
- fs/xfs/xfs_bmap_util.c |   3 +-
- fs/xfs/xfs_file.c      |   6 +-
- fs/xfs/xfs_inode.c     |  57 ++++++++
- fs/xfs/xfs_inode.h     |   1 +
- fs/xfs/xfs_iomap.c     |  32 ++++-
- fs/xfs/xfs_iomap.h     |  32 +++++
- fs/xfs/xfs_iops.c      |   7 +-
- fs/xfs/xfs_reflink.c   |  15 +-
- include/linux/dax.h    |  15 +-
- include/linux/fs.h     |  12 +-
- include/linux/iomap.h  |   1 +
- 14 files changed, 460 insertions(+), 86 deletions(-)
-
+diff --git a/fs/dax.c b/fs/dax.c
+index f4acb79cb811..b294900e574e 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -1209,7 +1209,8 @@ static vm_fault_t dax_pmd_load_hole(struct xa_state *xas, struct vm_fault *vmf,
+ }
+ #endif /* CONFIG_FS_DAX_PMD */
+ 
+-s64 dax_iomap_zero(loff_t pos, u64 length, struct iomap *iomap)
++s64 dax_iomap_zero(loff_t pos, u64 length, const struct iomap *iomap,
++		const struct iomap *srcmap)
+ {
+ 	sector_t sector = iomap_sector(iomap, pos & PAGE_MASK);
+ 	pgoff_t pgoff;
+@@ -1231,19 +1232,24 @@ s64 dax_iomap_zero(loff_t pos, u64 length, struct iomap *iomap)
+ 
+ 	if (page_aligned)
+ 		rc = dax_zero_page_range(iomap->dax_dev, pgoff, 1);
+-	else
++	else {
+ 		rc = dax_direct_access(iomap->dax_dev, pgoff, 1, &kaddr, NULL);
+-	if (rc < 0) {
+-		dax_read_unlock(id);
+-		return rc;
+-	}
+-
+-	if (!page_aligned) {
++		if (rc < 0)
++			goto out;
+ 		memset(kaddr + offset, 0, size);
+-		dax_flush(iomap->dax_dev, kaddr + offset, size);
++		if (iomap->addr != srcmap->addr) {
++			rc = dax_iomap_cow_copy(pos, size, PAGE_SIZE, srcmap,
++						kaddr);
++			if (rc < 0)
++				goto out;
++			dax_flush(iomap->dax_dev, kaddr, PAGE_SIZE);
++		} else
++			dax_flush(iomap->dax_dev, kaddr + offset, size);
+ 	}
++
++out:
+ 	dax_read_unlock(id);
+-	return size;
++	return rc < 0 ? rc : size;
+ }
+ 
+ static loff_t dax_iomap_iter(const struct iomap_iter *iomi,
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 71b4806266d7..6e8d40877d01 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -889,7 +889,7 @@ static s64 __iomap_zero_iter(struct iomap_iter *iter, loff_t pos, u64 length)
+ 
+ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
+ {
+-	struct iomap *iomap = &iter->iomap;
++	const struct iomap *iomap = &iter->iomap;
+ 	const struct iomap *srcmap = iomap_iter_srcmap(iter);
+ 	loff_t pos = iter->pos;
+ 	loff_t length = iomap_length(iter);
+@@ -903,7 +903,7 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
+ 		s64 bytes;
+ 
+ 		if (IS_DAX(iter->inode))
+-			bytes = dax_iomap_zero(pos, length, iomap);
++			bytes = dax_iomap_zero(pos, length, iomap, srcmap);
+ 		else
+ 			bytes = __iomap_zero_iter(iter, pos, length);
+ 		if (bytes < 0)
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index b52f084aa643..c63559605369 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -237,7 +237,8 @@ vm_fault_t dax_finish_sync_fault(struct vm_fault *vmf,
+ int dax_delete_mapping_entry(struct address_space *mapping, pgoff_t index);
+ int dax_invalidate_mapping_entry_sync(struct address_space *mapping,
+ 				      pgoff_t index);
+-s64 dax_iomap_zero(loff_t pos, u64 length, struct iomap *iomap);
++s64 dax_iomap_zero(loff_t pos, u64 length, const struct iomap *iomap,
++		const struct iomap *srcmap);
+ static inline bool dax_mapping(struct address_space *mapping)
+ {
+ 	return mapping->host && IS_DAX(mapping->host);
 -- 
 2.32.0
 
