@@ -2,72 +2,132 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_05,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7436C432BE
-	for <linux-xfs@archiver.kernel.org>; Sat, 28 Aug 2021 10:36:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D7B5C4320E
+	for <linux-xfs@archiver.kernel.org>; Sun, 29 Aug 2021 12:25:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BE7B060C41
-	for <linux-xfs@archiver.kernel.org>; Sat, 28 Aug 2021 10:36:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E346A60F39
+	for <linux-xfs@archiver.kernel.org>; Sun, 29 Aug 2021 12:25:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233732AbhH1KhT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 28 Aug 2021 06:37:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36452 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230428AbhH1KhS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 28 Aug 2021 06:37:18 -0400
-X-Greylist: delayed 1281 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sat, 28 Aug 2021 03:36:28 PDT
-Received: from buxtehude.debian.org (buxtehude.debian.org [IPv6:2607:f8f0:614:1::1274:39])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC246C061756
-        for <linux-xfs@vger.kernel.org>; Sat, 28 Aug 2021 03:36:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=bugs.debian.org; s=smtpauto.buxtehude; h=Date:References:Message-ID:Subject
-        :CC:To:From:Content-Type:MIME-Version:Content-Transfer-Encoding:Reply-To:
-        Content-ID:Content-Description:In-Reply-To;
-        bh=6Hcc6/VsVxF8a36M7IPPBgoNdZOVe7pUdxdBVBsYg1A=; b=DoZV/2BnVOziXUhlw2KERgDCoC
-        Og9ACv1ecLTDX1JMpMInXSwwDhsenyPhkbc7ZJmhay56StUgh8YgnVuYQsEOZbOGj7l1HlxQihYVG
-        ncA8lAPRHcLMF37ynPVXsloiLXLWPAV4Nk22d6IImYhPARPFl0MLkbsapqL1uEv2Wfy8Ams8gSu/p
-        uTub3hJau5qkU/jTh/3Fc9kThXxgO4acd8Tb6Nmi6J4jQIwVgiZGcvBKNsKlgHAElqKkQqJvLa1aJ
-        aezyEA2VD0EayXiWXfGVTfwl4iZmO/SpPFvtYyO0ZNl+5ltMwrkU7xyAiJ6FmaGK2Clem+QI5cXhx
-        VdKsbx9w==;
-Received: from debbugs by buxtehude.debian.org with local (Exim 4.92)
-        (envelope-from <debbugs@buxtehude.debian.org>)
-        id 1mJvMe-0006w3-BF; Sat, 28 Aug 2021 10:15:04 +0000
-X-Loop: owner@bugs.debian.org
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+        id S235329AbhH2M0a (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 29 Aug 2021 08:26:30 -0400
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:57118 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S235255AbhH2M00 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 29 Aug 2021 08:26:26 -0400
+IronPort-HdrOrdr: =?us-ascii?q?A9a23=3ApYVjQ69v+m6hu8mGYMhuk+DkI+orL9Y04lQ7?=
+ =?us-ascii?q?vn2ZKCYlFvBw8vrCoB1173HJYUkqMk3I9ergBEDiewK4yXcW2/hzAV7KZmCP11?=
+ =?us-ascii?q?dAR7sSj7cKrQeBJwTOssZZ1YpFN5N1EcDMCzFB5vrS0U2VFMkBzbC8nJyVuQ?=
+ =?us-ascii?q?=3D=3D?=
+X-IronPort-AV: E=Sophos;i="5.84,361,1620662400"; 
+   d="scan'208";a="113656444"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 29 Aug 2021 20:25:31 +0800
+Received: from G08CNEXMBPEKD06.g08.fujitsu.local (unknown [10.167.33.206])
+        by cn.fujitsu.com (Postfix) with ESMTP id 2221E4D0D9D0;
+        Sun, 29 Aug 2021 20:25:29 +0800 (CST)
+Received: from G08CNEXJMPEKD02.g08.fujitsu.local (10.167.33.202) by
+ G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.23; Sun, 29 Aug 2021 20:25:28 +0800
+Received: from G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.85) by
+ G08CNEXJMPEKD02.g08.fujitsu.local (10.167.33.202) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.23; Sun, 29 Aug 2021 20:25:30 +0800
+Received: from irides.mr.mr.mr (10.167.225.141) by
+ G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
+ id 15.0.1497.23 via Frontend Transport; Sun, 29 Aug 2021 20:25:27 +0800
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+To:     <djwong@kernel.org>, <hch@lst.de>, <linux-xfs@vger.kernel.org>
+CC:     <ruansy.fnst@fujitsu.com>, <dan.j.williams@intel.com>,
+        <david@fromorbit.com>, <linux-fsdevel@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <nvdimm@lists.linux.dev>,
+        <rgoldwyn@suse.de>, <viro@zeniv.linux.org.uk>,
+        <willy@infradead.org>, Ritesh Harjani <riteshh@linux.ibm.com>
+Subject: [PATCH v8 1/7] fsdax: Output address in dax_iomap_pfn() and rename it
+Date:   Sun, 29 Aug 2021 20:25:11 +0800
+Message-ID: <20210829122517.1648171-2-ruansy.fnst@fujitsu.com>
+X-Mailer: git-send-email 2.32.0
+In-Reply-To: <20210829122517.1648171-1-ruansy.fnst@fujitsu.com>
+References: <20210829122517.1648171-1-ruansy.fnst@fujitsu.com>
 MIME-Version: 1.0
-X-Mailer: MIME-tools 5.509 (Entity 5.509)
-Content-Type: text/plain; charset=utf-8
-From:   "Debian Bug Tracking System" <owner@bugs.debian.org>
-To:     Bastian Germann <bastiangermann@fishpost.de>
-CC:     linux-xfs@vger.kernel.org
-Subject: Processed: 981662 severity
-Message-ID: <handler.s.C.163014558624663.transcript@bugs.debian.org>
-References: <adbff455-e70a-6354-dc08-db3c2765ce7d@fishpost.de>
-X-Debian-PR-Package: src:xfsprogs
-X-Debian-PR-Source: xfsprogs
-X-Debian-PR-Message: transcript
-X-Loop: owner@bugs.debian.org
-Date:   Sat, 28 Aug 2021 10:15:04 +0000
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-yoursite-MailScanner-ID: 2221E4D0D9D0.A0D76
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Processing commands for control@bugs.debian.org:
+Add address output in dax_iomap_pfn() in order to perform a memcpy() in
+CoW case.  Since this function both output address and pfn, rename it to
+dax_iomap_direct_access().
 
-> severity 981662 important
-Bug #981662 {Done: Bastian Germann <bastiangermann@fishpost.de>} [src:xfspr=
-ogs] xfsprogs-udeb depends on libinih1, not libinih1-udeb
-Severity set to 'important' from 'serious'
->
-End of message, stopping processing here.
+Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Ritesh Harjani <riteshh@linux.ibm.com>
+Reviewed-by: Dan Williams <dan.j.williams@intel.com>
+---
+ fs/dax.c | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
 
-Please contact me if you need assistance.
---=20
-981662: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D981662
-Debian Bug Tracking System
-Contact owner@bugs.debian.org with problems
+diff --git a/fs/dax.c b/fs/dax.c
+index 118c9e2923f5..9fb6218f42be 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -1010,8 +1010,8 @@ static sector_t dax_iomap_sector(const struct iomap *iomap, loff_t pos)
+ 	return (iomap->addr + (pos & PAGE_MASK) - iomap->offset) >> 9;
+ }
+ 
+-static int dax_iomap_pfn(const struct iomap *iomap, loff_t pos, size_t size,
+-			 pfn_t *pfnp)
++static int dax_iomap_direct_access(const struct iomap *iomap, loff_t pos,
++		size_t size, void **kaddr, pfn_t *pfnp)
+ {
+ 	const sector_t sector = dax_iomap_sector(iomap, pos);
+ 	pgoff_t pgoff;
+@@ -1023,11 +1023,13 @@ static int dax_iomap_pfn(const struct iomap *iomap, loff_t pos, size_t size,
+ 		return rc;
+ 	id = dax_read_lock();
+ 	length = dax_direct_access(iomap->dax_dev, pgoff, PHYS_PFN(size),
+-				   NULL, pfnp);
++				   kaddr, pfnp);
+ 	if (length < 0) {
+ 		rc = length;
+ 		goto out;
+ 	}
++	if (!pfnp)
++		goto out_check_addr;
+ 	rc = -EINVAL;
+ 	if (PFN_PHYS(length) < size)
+ 		goto out;
+@@ -1037,6 +1039,12 @@ static int dax_iomap_pfn(const struct iomap *iomap, loff_t pos, size_t size,
+ 	if (length > 1 && !pfn_t_devmap(*pfnp))
+ 		goto out;
+ 	rc = 0;
++
++out_check_addr:
++	if (!kaddr)
++		goto out;
++	if (!*kaddr)
++		rc = -EFAULT;
+ out:
+ 	dax_read_unlock(id);
+ 	return rc;
+@@ -1401,7 +1409,7 @@ static vm_fault_t dax_fault_iter(struct vm_fault *vmf,
+ 		return pmd ? VM_FAULT_FALLBACK : VM_FAULT_SIGBUS;
+ 	}
+ 
+-	err = dax_iomap_pfn(&iter->iomap, pos, size, &pfn);
++	err = dax_iomap_direct_access(&iter->iomap, pos, size, NULL, &pfn);
+ 	if (err)
+ 		return pmd ? VM_FAULT_FALLBACK : dax_fault_return(err);
+ 
+-- 
+2.32.0
+
+
+
