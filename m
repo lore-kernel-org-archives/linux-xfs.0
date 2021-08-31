@@ -8,264 +8,326 @@ X-Spam-Status: No, score=-18.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C066C432BE
-	for <linux-xfs@archiver.kernel.org>; Tue, 31 Aug 2021 18:12:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F76AC432BE
+	for <linux-xfs@archiver.kernel.org>; Tue, 31 Aug 2021 18:13:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7FD9660F12
-	for <linux-xfs@archiver.kernel.org>; Tue, 31 Aug 2021 18:12:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1056D60F6C
+	for <linux-xfs@archiver.kernel.org>; Tue, 31 Aug 2021 18:13:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234077AbhHaSNt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 Aug 2021 14:13:49 -0400
-Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:46858 "EHLO
+        id S234807AbhHaSOZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 Aug 2021 14:14:25 -0400
+Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:43648 "EHLO
         mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230200AbhHaSNs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Aug 2021 14:13:48 -0400
+        by vger.kernel.org with ESMTP id S238033AbhHaSOV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Aug 2021 14:14:21 -0400
 Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 17VFgUNI004082;
-        Tue, 31 Aug 2021 18:12:52 GMT
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 17VFi4Zw004092;
+        Tue, 31 Aug 2021 18:13:25 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
  references : from : message-id : date : in-reply-to : content-type :
  content-transfer-encoding : mime-version; s=corp-2021-07-09;
- bh=WKtb0iuXfTQ3RzYg4zvkk3jqBAglbwH3wQ+4aIgBVWw=;
- b=GOTHM0MRKLoZ1kwdQG26E1H8M9uPB3Vy7LSaePyo9xBOsI+uwRzvfrh8WYGcdnvFka/L
- NidVHlToBqEto6NRDZp6pUv2YwemkFNt3FM3iH+CqwyXZgI7Sj7N4dymGmx1xOgqe2FN
- 3+nKowaQwcVvgN3GAhwcPOCi6o+mWDYrSW7sLvrP2xwzWa2jPHbZ+bIheSUZ8j4WrQl4
- kR50QOsX+WxbQexlmA0pVKFI/XofmSlPeChLAR1uV9xUiO2X4paTFV4/AN9A9UhIuc1Y
- 4kU4RvB7oo7iTs5lWRnqUvu/UEy2Qxtnfyltj0UcaLAaZUsNU82mIveARHO43C9bvuRQ bw== 
+ bh=N2KhfhitPZFImFo0bOs0mIUy7PSGIrL8iM40vVtZx9w=;
+ b=tZjZV3+u0ftqbPVovBDlf9NDUx/LhVsOd6EP6TSdDqAL6WDqsCXYPLTRv6EnPTyvo3q9
+ Capglfkx0StR4bvnBgs/+sNu4ELjPESIOg0E921w2i1U2XIuaUb3RRrx5Q7dVI62f91F
+ V+dbxmRes+Vs+h0RvkgNKEoNUq1RJ/NfTM4lQelUymBYsrnFRv+80IWUfjr0Ntf4TUiS
+ m1ugCzU67yZKG4awpoaM1DXSxcHbcUoz+no5HsXIgKntubQLIN0/MovQPJGA9vcAvHyv
+ iwzGUDvAYrcb6aY58JNOtDKFtRoaoGtCi4NGmr+uqXeAGVh7OtfMB0DHRMyHvOypSXfj Tw== 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
  references : from : message-id : date : in-reply-to : content-type :
  content-transfer-encoding : mime-version; s=corp-2020-01-29;
- bh=WKtb0iuXfTQ3RzYg4zvkk3jqBAglbwH3wQ+4aIgBVWw=;
- b=s2Z4M6QYfQ3niRcfW75OU8P+0zqlEym4wOxpkn+aFjzJFBdTN+l6tKJy/HovKWNccNM8
- bb5mHczSd/CLNOtbtKb5B9crVKpNq6ul5fNVLR1sTND7F0yyWgJqggTIHhbdJ0qzzJLK
- Hj0hUh+Kp9YA3LDAUrVR1g+7a4xVXVLDXN4crGfW493jCKCDC9R2RtoP8VAEmzpHXEQd
- DkXNgehJV6pXPDcf2q4DqfCvndi2gwF6Gy0WRB0TW1OCV4aEGTeuHOb8XhkDMUfspq67
- dP61p+sCinLS8q1WRGXXbuTnS5KLhwWWWSnLCMkrNbp6w666m8dO6xA/CbxveSQNatNE 3g== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3asf66hw45-1
+ bh=N2KhfhitPZFImFo0bOs0mIUy7PSGIrL8iM40vVtZx9w=;
+ b=JBRW17V92Ncv/yo6n5HA16BBfBM0bJbDAtJ+HRW9SWCUeVRXTy178fGz5ervQACN2sz5
+ WX4B6tI/NSdIYo6PRxAxG18Qi5/zOGC3JUKBL5lvDwFKNz6aNSM4RdmBhPcb5jLHvwvP
+ Wjpkkbut6saS5pFGuyWox11qa5/DoUmpMUo0kNSCoFR3j5ab0wkTCTXFSJdE3zxHA51V
+ CwFl2oipzmhdACh40fYp6fIZsOQAqg5lOUAHAwK2BHWm8L/BqSfcNQgkUT/YWML6QWsO
+ AlCBx7uMZmGASIv1BW+X6c4L0f+WUYVRMdc+AKrgPgBtQNKhft5Zg+QSc/ALznFW/AAn +A== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3asf66hw5y-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 31 Aug 2021 18:12:51 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 17VI9nuP146489;
-        Tue, 31 Aug 2021 18:12:50 GMT
-Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2168.outbound.protection.outlook.com [104.47.58.168])
-        by aserp3030.oracle.com with ESMTP id 3aqb6eax9f-1
+        Tue, 31 Aug 2021 18:13:24 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 17VI9phm092326;
+        Tue, 31 Aug 2021 18:13:23 GMT
+Received: from nam10-bn7-obe.outbound.protection.outlook.com (mail-bn7nam10lp2103.outbound.protection.outlook.com [104.47.70.103])
+        by userp3020.oracle.com with ESMTP id 3aqxwu0mah-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 31 Aug 2021 18:12:50 +0000
+        Tue, 31 Aug 2021 18:13:23 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=AK6ALfBrWFnEjkBQswKARwZUXXoytIVJB/TAIqzKW5TOLff+KgFWoaQ5ZJ79MRJW9sXHpEeWuqgYR1J8zFIgMV+9eMovdEVbt7b4IBigq3ikCCMWnN1Q1YgsIwWuf6OPyILUr9GcgZ3+TR68joTQjRPt2eaOLFk5U833KmkVegJudRsD81K+1weQwwVSRrnp3km22Zz1dLne8h0c+WGcTqCYsClgdOk07WJL/SRX3ao3pXOuDjEUcYz55igHTwtNWo5l2RAaRbERUf8SmCZK8DYUM/5C1pNTuty/RDHfcHYBIn5iwTUyzMOfp+c/ZA1Iw/GZxu2jJIcVDngf7sfBbQ==
+ b=LaW3dNmUInCwlECH999J3VzTurmaa5CjVLadTcUuqQKBPjDC1elAvnmSQ8pZeY8AJGJtHX05PotqsRzgdjeIOQ0KrUwfcz7JuPki2GosRllMMYyVQmSq3u2ty4av8D+WIt81gi8cBsEat1sUa3IF/GK+Tgps/MIVRJrHe+TkT0hKyRCwI0zHLnmNah071biAdLUeuPvzakr4zT9rxrzimecODDNz8Ons7J9iiDF9VCKZmxJo7zt9LigsK8E1UeOJvU2iGdH9wDZrVvofzL++lGFX2vW9IlOAjP26UeYOQtZEiH85sqSCX5oBoO8ap/CeUnaG6uVYIceSUjOhhXyINw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=WKtb0iuXfTQ3RzYg4zvkk3jqBAglbwH3wQ+4aIgBVWw=;
- b=eVpb/DxWwQmE4HEqidSIxpRblqrCqoge5q15dGCPhTJkGKId0gheyQ6HJMEL9azJAoZv1WrGU8yRIdYPss83xTbklXArMkZObUfkh3AEXMB4lQWvN7H8GuwidEP2qyirS0weI9zFXQC6JJTAV0JbfHQJjF1ajRzoYeFhQs3WZX7vzM9ZDHzQsKtip7h6gNa5aVYzf6ZLpIh4kZk79Bm2rGUyZ6JACQT6en+kVFyCBHFVuyEdW++C1Nopuf12Qibrydfho1D20amBlGfHe4MRqqm2RW+9s/nbUUv/uRjXjS5SiU1ANxP3r1ySsbuj7rU0jjQM3qJQuxLWfSkMPF2Ppw==
+ bh=N2KhfhitPZFImFo0bOs0mIUy7PSGIrL8iM40vVtZx9w=;
+ b=nxgJjdohmAlVBRtFh2ioQEn0uNMKxhkt37kApqNH3wZxegCneevGn9GA7Fq2QpV5H1cGQ2GkxQSRChsjyqtbPCk+4WmbjdqXVw/ryaUqtfO1VObZU4eYm0FoEsLsGFvxM+6KelFYt/YakVL/oaEP8YEwuAshzZfeLgiIg0X41XwmY5uYog+bgAYcFxwH8GIvjYe3Uk0oXIwp5KVpO7Hh56eCbdnAnyDY0tz3yJOpA9YHOC/yP8lZv4gJQQKQkUnhQOcKXz4cG9LDVD5dDZi6qA/CdCcRz/duTicTSH21qt4V3BN7xLuMbmNmcHL9RnRhF6oXah953j8obemXJwMnBQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=WKtb0iuXfTQ3RzYg4zvkk3jqBAglbwH3wQ+4aIgBVWw=;
- b=xsMV7pV/cDSmwyeQdgrK91+Xo7vSTeLoy/Ky7ZxF/KhoTAMe/6Box0ARoJklz96zPqWWEfDcnRQS92MaTizzOCD4xD7fd8waTXKc/Qw750HVLvdpL9xbjRGvnjq9G0dkO8t9qkuK4Rmo0wwPHX5j8a5BlVWBRNDP9pHQnwzTf6w=
+ bh=N2KhfhitPZFImFo0bOs0mIUy7PSGIrL8iM40vVtZx9w=;
+ b=gpN30EGu0bAdQnvLtZxE0JTIU1Yp73NvTmSXvnulq6xSI/Kh4Yx2wsaui4bssddURwfD86yjjG2zrV8WOM6lpicUJag2WR+oOkvX5kjyJz1ZlG89GfCOCc3NnfCjqSRb7YgoO1D5MR+2hyzal62hSr6KIpzeNHYQ00cAAr20hKY=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=oracle.com;
 Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
- by BY5PR10MB4386.namprd10.prod.outlook.com (2603:10b6:a03:20d::11) with
+ by SJ0PR10MB5533.namprd10.prod.outlook.com (2603:10b6:a03:3f7::24) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4457.24; Tue, 31 Aug
- 2021 18:12:48 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4457.23; Tue, 31 Aug
+ 2021 18:13:21 +0000
 Received: from BY5PR10MB4306.namprd10.prod.outlook.com
  ([fe80::7878:545b:f037:e6f]) by BY5PR10MB4306.namprd10.prod.outlook.com
  ([fe80::7878:545b:f037:e6f%9]) with mapi id 15.20.4478.019; Tue, 31 Aug 2021
- 18:12:48 +0000
-Subject: Re: [PATCH v24 09/11] xfs: Add larp debug option
+ 18:13:21 +0000
+Subject: Re: [PATCH v24 11/11] xfs: Add helper function xfs_attr_leaf_addname
 To:     Chandan Babu R <chandanrlinux@gmail.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <20210824224434.968720-1-allison.henderson@oracle.com>
- <20210824224434.968720-10-allison.henderson@oracle.com>
- <875yvn9m1g.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <20210824224434.968720-12-allison.henderson@oracle.com>
+ <8735qr9fu9.fsf@debian-BULLSEYE-live-builder-AMD64>
 From:   Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <ed95e826-9367-c1e2-a6f9-190838c43e4a@oracle.com>
-Date:   Tue, 31 Aug 2021 11:12:47 -0700
+Message-ID: <8bf7a438-2ec2-b699-0753-2564c5dc06fd@oracle.com>
+Date:   Tue, 31 Aug 2021 11:13:19 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.13.0
-In-Reply-To: <875yvn9m1g.fsf@debian-BULLSEYE-live-builder-AMD64>
+In-Reply-To: <8735qr9fu9.fsf@debian-BULLSEYE-live-builder-AMD64>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SJ0PR13CA0131.namprd13.prod.outlook.com
- (2603:10b6:a03:2c6::16) To BY5PR10MB4306.namprd10.prod.outlook.com
+X-ClientProxiedBy: SJ0PR13CA0152.namprd13.prod.outlook.com
+ (2603:10b6:a03:2c7::7) To BY5PR10MB4306.namprd10.prod.outlook.com
  (2603:10b6:a03:211::7)
 MIME-Version: 1.0
-Received: from [192.168.1.167] (67.1.112.125) by SJ0PR13CA0131.namprd13.prod.outlook.com (2603:10b6:a03:2c6::16) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4478.11 via Frontend Transport; Tue, 31 Aug 2021 18:12:48 +0000
+Received: from [192.168.1.167] (67.1.112.125) by SJ0PR13CA0152.namprd13.prod.outlook.com (2603:10b6:a03:2c7::7) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4478.10 via Frontend Transport; Tue, 31 Aug 2021 18:13:20 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 4fc586b2-2259-490f-4ff6-08d96caaf0a8
-X-MS-TrafficTypeDiagnostic: BY5PR10MB4386:
-X-Microsoft-Antispam-PRVS: <BY5PR10MB438697F7488DEE39C1AA9FD495CC9@BY5PR10MB4386.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:483;
+X-MS-Office365-Filtering-Correlation-Id: 754f70fb-5e10-4504-bf08-08d96cab03d2
+X-MS-TrafficTypeDiagnostic: SJ0PR10MB5533:
+X-Microsoft-Antispam-PRVS: <SJ0PR10MB5533CEDADDB4D688075DF6A595CC9@SJ0PR10MB5533.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: POhRS0b+BvXFcpOiXTL75pLDfyHreWs7BkjATgAd1FM39KZRrfCZL5pbdnsNRdA1mFvhgh9JlCE2kwAuNzzILZ0j3wWxIG/yLqBVk7gf6FptvBi17FcbFdehFc+wm1C4TzS2eVLRM1W5NwnmDtviJjG7g0gd2TwZQ1FqkZvaOcC9DsE/Eo+wYfD14jgJvEQK9C/NFcyouWLFo/NL3rf2jJ5UPAkIwGHvqSYHBbeBozBsXsjNhrICqKe4x8wMjNYAhCLDqFiiyPNibA6SWpny4gk7tyj4zw/R9ZWQ6Y9hEf/gNnlW9quePIdLwFT/ih8rzd9VWkOhs9M3FaxmEZLaN7IqEgU0Jl9Egmaq4nilUvA/YUtpnL3kv2E0oXlci/NUTFcKEJaQ6+67Kb949fHjeI7+kspzNSI9o8Ke+/ZxTUIUOndpszX6elTVCxUY9AsjdW9RX3qxmeSUsH3NDCtvSwQqPl2vtErsgyiB2ebSOvDPm+Tjzv6EUYz8BWaIx//MsvBXOIikiW7e8Xqs0Xz8aNw9rk4GNGLlF1y5Xyue11uPXzZBcToJEz3DcEZbakAfW1deu0FjQr7uDyoaUvBYJlAqYPPp15q7uZnsT1AlyiAzB1F4tvt+1YYNvHtWtP/NbpNy8l1atkZNCJMWniUyAEY3iXOoQvZ26UyFOo5Mm68TSp8RerCgTLlYimzsYgEp0aLipqe4HuTyuf+HuvIGrc+vnZM5uAIavJ+p/+WvI3KPLwCwyB2pbp0ZcKGjgRdljiA8ZyDqseHm5AFaxxYd3g==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(136003)(396003)(346002)(39860400002)(376002)(38350700002)(956004)(38100700002)(4326008)(2616005)(31686004)(478600001)(5660300002)(2906002)(53546011)(26005)(186003)(66946007)(8676002)(31696002)(52116002)(316002)(44832011)(6486002)(66556008)(83380400001)(66476007)(8936002)(86362001)(6916009)(16576012)(36756003)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: 6YdihJSxQG5rKit6kb6S/LUYtxW6jwFBpVs27Z2PoCz4elwk81F7SYEPeVxb6gT+WbilsbJMOSEUUonU8aTg8/BWz6F4rV8XcfXZY90e5ksOEOZA6UidE76vbxZXheGAw5zJntsU40LSqYBiMb9ErrYW4nPLaZ/2MQ5upFgkvXTNOAWnctuC5NP9wXYFzGHxsSJlQkjpsASiQiPQFCmHsk0joMXrWkWIszwIvJPrnyD06KFeKrQCQEQ+6O2WHUX/R/tnkHpgRRb2qKyYIeu+ssQPIw+Q2/KFhd0IbDabUUoypfmOj4qhp7mLste2io7rx0Y3JD0KK6+BsEGVsl/Gf4tJVWwHZrOnEIZkQOb9H3z1lxnN+byIiLoQcYVAoO3OvC04ozmZ2wwbJVZtxPJqUG88fzbvThfbRIEriXg1jOSMveau7ba7mLm7i09ERwVdpICShtjBPhg1LK/I3hOJQNBc7lVpGaKUy+koc8kkKxG4kr0M7xOgaX+Zzu37oIueKDGxXlJ1uKUMJyo6rAtfhp3tYN+gMIgvFqLyxe3kNkzSlA1szEATrP1PTr6DJwZupu9UlqPflT3zY2/ilyN6coD1ChDHCIc+yEUml7uOFC2PuNtqN1e+AWS6hn6cd89U4A8LTwyFFMlWLhG8SR/GJKzY+BUjn0ytL/QE/xmBzFMBD0OMp6y1mIYH8KLrYMRURpzbgjTytjNf7vASZ30QcYU+6rrbgdC6gyUI13z78y4fUFn0+5AVNPD60IQLnumb
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(136003)(39860400002)(396003)(346002)(376002)(366004)(5660300002)(16576012)(6916009)(8676002)(31686004)(31696002)(26005)(316002)(66946007)(66556008)(52116002)(6486002)(186003)(86362001)(44832011)(8936002)(38100700002)(83380400001)(53546011)(66476007)(36756003)(38350700002)(478600001)(956004)(2906002)(4326008)(2616005)(43740500002)(45980500001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?OE5tUU5RNXdhbThrVHA5WGJXV09meVN4L2dMMndIQ0tIemtQSzkzbTU3QzIx?=
- =?utf-8?B?alVJMTY4QmZIWmJFYVFPRWtnQklwaHRhUVRQV1FKc042NXlYT0ZXMzI4ZHo4?=
- =?utf-8?B?d1Bmd0ZYcUxTUUlzZmV2cFFRV25XRGVVS2FaaU9qbG9tK0lWei9kb3JqZTdO?=
- =?utf-8?B?aGkzSHJEbmFJM2FyODJUNUt2WUVqVG96MGtHME1nZ1N4cUlhaTIvNHhibFNt?=
- =?utf-8?B?L3g0dDF3cUJ5QjlLMGg2cFA5VjB6V2drUXNYckxndW9CZ2p3QklVd3FIaDZF?=
- =?utf-8?B?RUJRNHB3ckFsZnN6MkNxdksveEdxelNXN3R1dUtFNWtHazBDVHp3dFI5aGdi?=
- =?utf-8?B?cXVHeXB4MkE4aWk0ZEVNNkV1dEhUMXNCNkY3QzU3ajNKUTU3QkZSZFMvcjE4?=
- =?utf-8?B?UUhSZzc2SlFmRHVkb2IzMGFjVUdyZUY2VzdBREhoVFAwL1JqdHl4SmV3T2gv?=
- =?utf-8?B?S3hDRjBiZ0p6NUZqMmd6NEJzTFBQRXZpOE9IUkU0bndXQzc5dXJTemtVNURE?=
- =?utf-8?B?UWZqUnpuZlBONVRFdHhPaEFmNFZmQkp3Q0dKdFpZYSsxcTZxTmV6dEo2THFM?=
- =?utf-8?B?aGh4L0UzNTlpNFRBdjJXVm1hajNpZjBxVnRKd2xxRFV6bmhKOXkyYUJlcHNv?=
- =?utf-8?B?cVZ0MnJibWNYVU51eTFqRnM0WmE4NllxdisyNCtPOUJGOWpvdnF3MGN2MXFZ?=
- =?utf-8?B?dlFWci81R2dQYmorb2paYUxQVndSQ0gweVZyQUNqYkhLRmNtOGh6bFJvQThy?=
- =?utf-8?B?T0trV2hJczFMWXk3S215RUlTU0RKU2x6NERWRVc5dXVDZ2NYM2JVbjQ2RlM0?=
- =?utf-8?B?Ylh5K01pbVh3aW9SVXpnM0hMRjhKalJKZHkzRmsydDEyUlpRMldLc3pQbGZu?=
- =?utf-8?B?RWNSSktYMlgwWE9OUzhvbGY3OVkxQlFndFIzTFlIMCs0SmJMM3pRVGsrZGJR?=
- =?utf-8?B?dFdzZUZ5YWRBMFlkNUk2UDd5UnNLOEdEVlowbXl3Ui8vc1lHdER2Y2VXNnhC?=
- =?utf-8?B?eDAwMDd3WWdtaW8zMHdnbWxLc3Nib28zcDVUQlRyZytYMUEya1pHaUxyN25V?=
- =?utf-8?B?WWJLVmJUdVRzZDcyN1VNbHBGS0lPTGNPUzI4RUpHaE9DdWQ4N1N4U1lTZ2Ja?=
- =?utf-8?B?eFB4bUQyeVM3THpURTdHMFhqcmg2NGMyQnIzRzhHdGpkMXI4WEpWMDNWaVRB?=
- =?utf-8?B?Q3JqVm1FUEZkT2J3WGJMVjloYlN5VEt0OTVVY0o3SzB4VUhiMG9TWFE0MkFC?=
- =?utf-8?B?UHRjaVRyNjg2c2RJN29QVVFyWU85aTlaTFV0VnlrNHZuWC9qLzJEcU42Zkt1?=
- =?utf-8?B?U0p5MWdDdkVYZTZzbDhUWDY1M0k1Ym41bmY3STVnbWwvWU4rdGZibjZaM2Zy?=
- =?utf-8?B?N2JyQjRxSXdVWHMzdkpkMURqUTA1b0xaNS9SZE5KK09wcXp0a3pPVGVUcE42?=
- =?utf-8?B?YWtxUWFsY3IwMHJBbXRvVWlEcllFS1BZbDlPMk56MTlrNWk3Vmo1dzgzOXZ0?=
- =?utf-8?B?OC9MUm9iRkFpU2xlMkJMTE9MUG9uQmhIZktHSTJEektpVy9YanZNMTB0U2xM?=
- =?utf-8?B?d2xiODVKdzZmQUZQYkhDK1VwYklUMkRGNEtVaWJpa0s1RjBaYXZTUlBGUXhX?=
- =?utf-8?B?bXg0d1FCT29zNWRCcUdPV2VDSEdDaHE2V2lYdng0SGJNYnJ3ZTZZSVFaeVFi?=
- =?utf-8?B?Vm5mU0JncXhJMFIxUnlmTzR3RGVnWWFtcUVyQkMwdTFYMlJiSDF1QzVEQXhq?=
- =?utf-8?Q?AMSAcB36m3QApGTpV5pD8eUMzLKx+YVTlkMDiSN?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?emtqY1VPemxTbDRSbHhIWHhxYW1LWk1GN0pXY2JyNHhBdFYrWkZxVGRocCs1?=
+ =?utf-8?B?eElNd3RTc0lSTXhRbGRVenR1RXc4K3Y3cnpIaEFBbVRzTDRTcXVHbkFTSjdV?=
+ =?utf-8?B?ZEFvTEpzSHUrRWZMQkFmWmxXRkJyTm4ydXRsVWpiNEtoYjVhTjVWTS9qYU92?=
+ =?utf-8?B?NG5ocWxXVkhOWlNlL0JaK3hhTzVwVE1wejd4YVB5Ni9vR0xYTzdBSGtEY1E5?=
+ =?utf-8?B?MERkM20wR1ptS21STm8xaFJMMWI0SUNxdTc4aDhQZFNtS1Y4dE1JVUJ3cFF0?=
+ =?utf-8?B?TUNrTVlpYnJJUlErQmM3eVFsbHkxOEM0ZEJuNXlGQW5kU3liWFgxektBSVVj?=
+ =?utf-8?B?WDBPQlJkZzhTTEE5TG5wR1FoSEllakwvUkZ2a011UzRqWU9DUkJuSW84bm4x?=
+ =?utf-8?B?MktWbWJwMXkxdi9odEIwYVlYMDI5bkhoeXMxRjBaL056d004T01qVURRczJK?=
+ =?utf-8?B?TVNEMzlqUGJocnl2VWczMTA1V0RWK1UrRDRNZjN5YUNudGZjRStOakhMd0RB?=
+ =?utf-8?B?OUtGNURGd0U4cFFlMEFlSVVHS2QvUGF5MGU1QXQrbTg2WW1sZml3RkpiV0Nz?=
+ =?utf-8?B?R25wU0Zjd2N3dlRIdmwrblA0aGJjdHRmQWtKc25LWU53K1FpbDg0bzZqN203?=
+ =?utf-8?B?VFFkY295MFYwOVhadE9xQm5kcVd6bCtZaFM0aDNiWnI3N0I1U0Yxc2NrMitD?=
+ =?utf-8?B?eG9aeTdIRURwQjkzSVRUa1VvZU44WGF1Qkw0bHo4S0pWSlRJTVFIclZaN1hG?=
+ =?utf-8?B?QTN4a0NJdVZZWjBvRWJxaGdVZHNtbDlwVzZYMjMrTFJrQWRFSDFtUGxPUlZw?=
+ =?utf-8?B?LzVTMzNBMXJhbkhZZkNRMnRmV3lWS0NiRkp4R08zc1duQko1cFZkTWxDOVNF?=
+ =?utf-8?B?dkVyRG1SVFRBdDBhNlB1c0YzSC81dE5TaE04L09UK1VOSTJDbzE0TUsxd2Nm?=
+ =?utf-8?B?cGRQUU9Dd0pJaUR0ODVGdkRhWkpObDhzblNUeS9pUWVFNXcxZ0ZnOGEvdWhF?=
+ =?utf-8?B?QndOUTAzUjFhNVF0RUpkcHV0RHdsRUpTUmdqbHZmMndhSUo4NDFLc2pOdE9v?=
+ =?utf-8?B?TFhuU1NSUzNPaUdDV04vRHRTYk1uV2VCY1dYN0VKdzQrUzZSaXZCUlg5WDRw?=
+ =?utf-8?B?ZC9ydWhFV1VnWGJJTytleUtUMVpjOGRWTlFDSGVxcm1zNVVJeUZmOEcraGVa?=
+ =?utf-8?B?U3RPQTV4RmRjTVk4MjRsY3Q0eFBEdTdjWEJRYks4NHBYak42YmlIUTd4NlIw?=
+ =?utf-8?B?cWlOLzlqOGxiWWt4dkhUSjlqRzg0VW1wT3pjd1htekpuUitDcEU5Ry9XRnpw?=
+ =?utf-8?B?Rkd5VW9zMUVPNjN1Z3ZETm5pK0NHbGl0SUdHM1VwT05CbFZNa09nYXNyRjcv?=
+ =?utf-8?B?Wkp1d3cvbjlZNHdWTXpwVk1Zdy9NU01VbzVNc1VmTTNHUTZTZnFRcGxDMklG?=
+ =?utf-8?B?QWFtSkx2dHlab3FPNGY4TU1idEEwWStlQ0ttOE1BdmZPSDB6NU80b282Zm9q?=
+ =?utf-8?B?bzVnMmZFTVpldG9POUtHT1hBZk55SG5taVREMHh5dnhaenc4V0ZhdW1NQ2tn?=
+ =?utf-8?B?RjFJcTEyeWZVNkpidEhwWjJkaHdsVXRKTTg5R1c3eUI3ZkdQRWlBREIzUENw?=
+ =?utf-8?B?b1huN2p6UVdsMnlzUTNoTnBHMDEwdzBmc3pDTWFuVWJXa1ZlNmZucjRVcHhQ?=
+ =?utf-8?B?RzF5QW1HTXFkRWJQaC9wNDFFMG10elhxWVBJSFloZjFQM1ZsdTFzNGs1ZzBW?=
+ =?utf-8?Q?L5Ta45Vg58fNSI/c3xTXiMVQImugX+CITkHl7gn?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4fc586b2-2259-490f-4ff6-08d96caaf0a8
+X-MS-Exchange-CrossTenant-Network-Message-Id: 754f70fb-5e10-4504-bf08-08d96cab03d2
 X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 31 Aug 2021 18:12:48.8882
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 31 Aug 2021 18:13:21.0439
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: xzOc8swK6grJfu2TKHF1LsJce6qMQuOBIrOAjYRh+Eh2MLiYVx3G9MzPVQE1zuzalVB102IBfnVIibCia0QJagWHncITyUAPh7MOmpEHPRo=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR10MB4386
+X-MS-Exchange-CrossTenant-UserPrincipalName: P5W3fXe/TqO/pYS6lrs1WvNk6jtam8V1GXo+41vx+ps8ES4szqrYjwNDssqlqs6xeTqqab21XkoaWRXoAT3FOtEjXo55DtcBoKia4mYXMJw=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR10MB5533
 X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10093 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0 suspectscore=0
- adultscore=0 mlxscore=0 mlxlogscore=999 malwarescore=0 spamscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxlogscore=999 mlxscore=0
+ malwarescore=0 suspectscore=0 spamscore=0 adultscore=0 phishscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2107140000
  definitions=main-2108310101
-X-Proofpoint-GUID: -0JE7GRvbn1byh0H32LuOqv234qLvwsd
-X-Proofpoint-ORIG-GUID: -0JE7GRvbn1byh0H32LuOqv234qLvwsd
+X-Proofpoint-GUID: i70hVDBN56LLqvQBFrFWMlhbGosQ8CZe
+X-Proofpoint-ORIG-GUID: i70hVDBN56LLqvQBFrFWMlhbGosQ8CZe
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 
 
-On 8/30/21 5:03 AM, Chandan Babu R wrote:
+On 8/30/21 7:17 AM, Chandan Babu R wrote:
 > On 25 Aug 2021 at 04:14, Allison Henderson wrote:
->> This patch adds a mount option to enable log attribute replay. Eventually
+>> This patch adds a helper function xfs_attr_leaf_addname.  While this
+>> does help to break down xfs_attr_set_iter, it does also hoist out some
+>> of the state management.  This patch has been moved to the end of the
+>> clean up series for further discussion.
+>>
 > 
-> s/mount option/debug option//
-Ok, will fix.
-
-> 
->> this can be removed when delayed attrs becomes permanent.
-> 
-> The rest looks good to me.
+> Looks good to me.
 > 
 > Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
-Thanks!
+
+Great, thankyou!
+
 Allison
 
 > 
->>
+>> Suggested-by: Darrick J. Wong <djwong@kernel.org>
 >> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+>> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 >> ---
->>   fs/xfs/libxfs/xfs_attr.h |  2 +-
->>   fs/xfs/xfs_globals.c     |  1 +
->>   fs/xfs/xfs_sysctl.h      |  1 +
->>   fs/xfs/xfs_sysfs.c       | 24 ++++++++++++++++++++++++
->>   4 files changed, 27 insertions(+), 1 deletion(-)
+>>   fs/xfs/libxfs/xfs_attr.c | 110 +++++++++++++++++++++------------------
+>>   fs/xfs/xfs_trace.h       |   1 +
+>>   2 files changed, 61 insertions(+), 50 deletions(-)
 >>
->> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
->> index efb7ac4fc41c..492762541174 100644
->> --- a/fs/xfs/libxfs/xfs_attr.h
->> +++ b/fs/xfs/libxfs/xfs_attr.h
->> @@ -30,7 +30,7 @@ struct xfs_attr_list_context;
->>   
->>   static inline bool xfs_has_larp(struct xfs_mount *mp)
->>   {
->> -	return false;
->> +	return xfs_globals.larp;
+>> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+>> index c3fdf232cd51..7150f0e051a0 100644
+>> --- a/fs/xfs/libxfs/xfs_attr.c
+>> +++ b/fs/xfs/libxfs/xfs_attr.c
+>> @@ -284,6 +284,65 @@ xfs_attr_sf_addname(
+>>   	return -EAGAIN;
 >>   }
 >>   
+>> +STATIC int
+>> +xfs_attr_leaf_addname(
+>> +	struct xfs_attr_item	*attr)
+>> +{
+>> +	struct xfs_da_args	*args = attr->xattri_da_args;
+>> +	struct xfs_inode	*dp = args->dp;
+>> +	int			error;
+>> +
+>> +	if (xfs_attr_is_leaf(dp)) {
+>> +		error = xfs_attr_leaf_try_add(args, attr->xattri_leaf_bp);
+>> +		if (error == -ENOSPC) {
+>> +			error = xfs_attr3_leaf_to_node(args);
+>> +			if (error)
+>> +				return error;
+>> +
+>> +			/*
+>> +			 * Finish any deferred work items and roll the
+>> +			 * transaction once more.  The goal here is to call
+>> +			 * node_addname with the inode and transaction in the
+>> +			 * same state (inode locked and joined, transaction
+>> +			 * clean) no matter how we got to this step.
+>> +			 *
+>> +			 * At this point, we are still in XFS_DAS_UNINIT, but
+>> +			 * when we come back, we'll be a node, so we'll fall
+>> +			 * down into the node handling code below
+>> +			 */
+>> +			trace_xfs_attr_set_iter_return(
+>> +				attr->xattri_dela_state, args->dp);
+>> +			return -EAGAIN;
+>> +		}
+>> +
+>> +		if (error)
+>> +			return error;
+>> +
+>> +		attr->xattri_dela_state = XFS_DAS_FOUND_LBLK;
+>> +	} else {
+>> +		error = xfs_attr_node_addname_find_attr(attr);
+>> +		if (error)
+>> +			return error;
+>> +
+>> +		error = xfs_attr_node_addname(attr);
+>> +		if (error)
+>> +			return error;
+>> +
+>> +		/*
+>> +		 * If addname was successful, and we dont need to alloc or
+>> +		 * remove anymore blks, we're done.
+>> +		 */
+>> +		if (!args->rmtblkno &&
+>> +		    !(args->op_flags & XFS_DA_OP_RENAME))
+>> +			return 0;
+>> +
+>> +		attr->xattri_dela_state = XFS_DAS_FOUND_NBLK;
+>> +	}
+>> +
+>> +	trace_xfs_attr_leaf_addname_return(attr->xattri_dela_state, args->dp);
+>> +	return -EAGAIN;
+>> +}
+>> +
 >>   /*
->> diff --git a/fs/xfs/xfs_globals.c b/fs/xfs/xfs_globals.c
->> index f62fa652c2fd..4d0a98f920ca 100644
->> --- a/fs/xfs/xfs_globals.c
->> +++ b/fs/xfs/xfs_globals.c
->> @@ -41,5 +41,6 @@ struct xfs_globals xfs_globals = {
->>   #endif
->>   #ifdef DEBUG
->>   	.pwork_threads		=	-1,	/* automatic thread detection */
->> +	.larp			=	false,	/* log attribute replay */
->>   #endif
->>   };
->> diff --git a/fs/xfs/xfs_sysctl.h b/fs/xfs/xfs_sysctl.h
->> index 7692e76ead33..f78ad6b10ea5 100644
->> --- a/fs/xfs/xfs_sysctl.h
->> +++ b/fs/xfs/xfs_sysctl.h
->> @@ -83,6 +83,7 @@ extern xfs_param_t	xfs_params;
->>   struct xfs_globals {
->>   #ifdef DEBUG
->>   	int	pwork_threads;		/* parallel workqueue threads */
->> +	bool	larp;			/* log attribute replay */
->>   #endif
->>   	int	log_recovery_delay;	/* log recovery delay (secs) */
->>   	int	mount_delay;		/* mount setup delay (secs) */
->> diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
->> index 18dc5eca6c04..74180e05e8ed 100644
->> --- a/fs/xfs/xfs_sysfs.c
->> +++ b/fs/xfs/xfs_sysfs.c
->> @@ -227,6 +227,29 @@ pwork_threads_show(
->>   	return snprintf(buf, PAGE_SIZE, "%d\n", xfs_globals.pwork_threads);
->>   }
->>   XFS_SYSFS_ATTR_RW(pwork_threads);
->> +
->> +static ssize_t
->> +larp_store(
->> +	struct kobject	*kobject,
->> +	const char	*buf,
->> +	size_t		count)
->> +{
->> +	ssize_t		ret;
->> +
->> +	ret = kstrtobool(buf, &xfs_globals.larp);
->> +	if (ret < 0)
->> +		return ret;
->> +	return count;
->> +}
->> +
->> +STATIC ssize_t
->> +larp_show(
->> +	struct kobject	*kobject,
->> +	char		*buf)
->> +{
->> +	return snprintf(buf, PAGE_SIZE, "%d\n", xfs_globals.larp);
->> +}
->> +XFS_SYSFS_ATTR_RW(larp);
->>   #endif /* DEBUG */
+>>    * Set the attribute specified in @args.
+>>    * This routine is meant to function as a delayed operation, and may return
+>> @@ -319,57 +378,8 @@ xfs_attr_set_iter(
+>>   			attr->xattri_leaf_bp = NULL;
+>>   		}
 >>   
->>   static struct attribute *xfs_dbg_attrs[] = {
->> @@ -236,6 +259,7 @@ static struct attribute *xfs_dbg_attrs[] = {
->>   	ATTR_LIST(always_cow),
->>   #ifdef DEBUG
->>   	ATTR_LIST(pwork_threads),
->> +	ATTR_LIST(larp),
->>   #endif
->>   	NULL,
->>   };
+>> -		if (xfs_attr_is_leaf(dp)) {
+>> -			error = xfs_attr_leaf_try_add(args,
+>> -						      attr->xattri_leaf_bp);
+>> -			if (error == -ENOSPC) {
+>> -				error = xfs_attr3_leaf_to_node(args);
+>> -				if (error)
+>> -					return error;
+>> -
+>> -				/*
+>> -				 * Finish any deferred work items and roll the
+>> -				 * transaction once more.  The goal here is to
+>> -				 * call node_addname with the inode and
+>> -				 * transaction in the same state (inode locked
+>> -				 * and joined, transaction clean) no matter how
+>> -				 * we got to this step.
+>> -				 *
+>> -				 * At this point, we are still in
+>> -				 * XFS_DAS_UNINIT, but when we come back, we'll
+>> -				 * be a node, so we'll fall down into the node
+>> -				 * handling code below
+>> -				 */
+>> -				trace_xfs_attr_set_iter_return(
+>> -					attr->xattri_dela_state, args->dp);
+>> -				return -EAGAIN;
+>> -			} else if (error) {
+>> -				return error;
+>> -			}
+>> -
+>> -			attr->xattri_dela_state = XFS_DAS_FOUND_LBLK;
+>> -		} else {
+>> -			error = xfs_attr_node_addname_find_attr(attr);
+>> -			if (error)
+>> -				return error;
+>> +		return xfs_attr_leaf_addname(attr);
+>>   
+>> -			error = xfs_attr_node_addname(attr);
+>> -			if (error)
+>> -				return error;
+>> -
+>> -			/*
+>> -			 * If addname was successful, and we dont need to alloc
+>> -			 * or remove anymore blks, we're done.
+>> -			 */
+>> -			if (!args->rmtblkno &&
+>> -			    !(args->op_flags & XFS_DA_OP_RENAME))
+>> -				return 0;
+>> -
+>> -			attr->xattri_dela_state = XFS_DAS_FOUND_NBLK;
+>> -		}
+>> -		trace_xfs_attr_set_iter_return(attr->xattri_dela_state,
+>> -					       args->dp);
+>> -		return -EAGAIN;
+>>   	case XFS_DAS_FOUND_LBLK:
+>>   		/*
+>>   		 * If there was an out-of-line value, allocate the blocks we
+>> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+>> index 1033a95fbf8e..77a78b5b1a29 100644
+>> --- a/fs/xfs/xfs_trace.h
+>> +++ b/fs/xfs/xfs_trace.h
+>> @@ -4132,6 +4132,7 @@ DEFINE_EVENT(xfs_das_state_class, name, \
+>>   	TP_ARGS(das, ip))
+>>   DEFINE_DAS_STATE_EVENT(xfs_attr_sf_addname_return);
+>>   DEFINE_DAS_STATE_EVENT(xfs_attr_set_iter_return);
+>> +DEFINE_DAS_STATE_EVENT(xfs_attr_leaf_addname_return);
+>>   DEFINE_DAS_STATE_EVENT(xfs_attr_node_addname_return);
+>>   DEFINE_DAS_STATE_EVENT(xfs_attr_remove_iter_return);
+>>   DEFINE_DAS_STATE_EVENT(xfs_attr_rmtval_remove_return);
 > 
 > 
