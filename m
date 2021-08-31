@@ -2,241 +2,419 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MSGID_FROM_MTA_HEADER,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-21.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,INCLUDES_PULL_REQUEST,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20EFDC432BE
-	for <linux-xfs@archiver.kernel.org>; Tue, 31 Aug 2021 19:03:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D476FC432BE
+	for <linux-xfs@archiver.kernel.org>; Tue, 31 Aug 2021 21:18:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0494261074
-	for <linux-xfs@archiver.kernel.org>; Tue, 31 Aug 2021 19:03:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AB79F6102A
+	for <linux-xfs@archiver.kernel.org>; Tue, 31 Aug 2021 21:18:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238733AbhHaTEH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 Aug 2021 15:04:07 -0400
-Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:26506 "EHLO
-        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233231AbhHaTEH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Aug 2021 15:04:07 -0400
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 17VIiRVQ002296;
-        Tue, 31 Aug 2021 19:03:11 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2021-07-09;
- bh=IUkT7K1znp8R2Zyrqbu/0dmb2uJyWhiAZjhuNnIGRVA=;
- b=h451knqDaSv040CBHM3IQ+OrntMFh0xxEVQrg0A/1qyT02b6anoovA0Q/CYKC6nLOAWO
- 9TkZrxkdO+xLbvAmLSOH4X876tj1TIfDa4IR6xOxR/GposbmhGs0+Qz2OPqB1cHCGFS1
- bEcpDtlprzGztuEnNY9wJMpu5rTAlFDsq+l+4mEmB9BtPye8JALOEMkljjlDbmtmWk3e
- vm65c+3kswvimNp9hIHOYsFF7Rlqh39aK7jrjWrZ0eqMB+lPCtGr64S8JMuu8TAg6Vt9
- r8t4+ZUCPoxad+7nFTPIeCSdb8UjpHJNbi08qjiOiQuahpHyyxD/U2PULCXmNOSP1EFB 2A== 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2020-01-29;
- bh=IUkT7K1znp8R2Zyrqbu/0dmb2uJyWhiAZjhuNnIGRVA=;
- b=xhCzFQ6c+iFll5w84z4iPYohMo9E3Vmk2ZOSs5iwzsSwnyJ0TyVS6TVxZPp9xRHsoBQX
- 9M8uVspHtNouR60FmHvbcS8TSsz55U4BlmMJVLFqgARKmWNavRy9kv33c5W01JVGV2AT
- e4oFdUDEDI+ARBg+BewYgH9rc81lO2IzslP4xSvQ4JTdq+tDbsfjgSwDMrn+JiJ1HpZ1
- POHUi2Azy1pHlqM24/5iGpqdXpk2+J/WTQc28zZyJhc1NQoS92n/APaKFz11b641pqzF
- B9O/299jsirdKVrRxtsXJpTUihgq/YsxW5LtUYs7/KpWwAf1ZZJtxjDg055HT0uf8wQH VA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3asf2mj0vg-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 31 Aug 2021 19:03:10 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 17VIpcDH127126;
-        Tue, 31 Aug 2021 19:03:10 GMT
-Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2169.outbound.protection.outlook.com [104.47.57.169])
-        by aserp3020.oracle.com with ESMTP id 3aqcy5979t-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 31 Aug 2021 19:03:09 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=NXqn4PHL+cocYU0Eu+Jhm6Hqam+Moiowo6ta5aWGH6fGqyOJQ8+HGF/jFGZa1mqWlBqDmtUSdg1pvjix9GbWf3yZ9hUeepAaHh/tqi7jNjJerq1wOUwpgKsoIfO0MVGa2EvLw2Mts75rESU+u9udHGwOmVMnbrMej9CKgyCt+NMTcUBC/Cs3zeMouISSkG8iaZa/wq7B2Tis7Bdjdlw8rtSYpPhHU2UpdrqSbj16U7VlRh1OQ0+hof5VZzdlu0Cux4fCQDVKPQgM30EGouB7rtGxvRNCfmPLvcuAHUTGojwYnljbjrfSjVR5R9lHS1jjkAZCuGzzbvEBkiKDQvf2AQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=IUkT7K1znp8R2Zyrqbu/0dmb2uJyWhiAZjhuNnIGRVA=;
- b=JwAJgys8q4NPlQhpxRcOHjwHVb0w3grYmo3wwbynEbhcEGDtWHvQ5cnySEMGSPYtx0DfB/EN3M5Qv4m+AEDjE88sGv8K108khUBf336FpIV/iSvuSv2acbRPm0OlICEDVhGOH52gmXJzfIwBka549XJJe1Af8Uc1VAK4XVXAe8zP07aJc/NnzOKgsbjIVNu9aTqi+PyU7h2X8lVrtW9UMMzNiVc5OaINh1vIQBtknbcbLl1/28jfSUul6CumrMvwqzP6OXTOxISO23Y3UuEdle9UdVo5wsCJQ3tI29+hcbWFuruyMGh6B16tZ7bG9EWelaIDcU1O39vAtN1cRvkqAg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=IUkT7K1znp8R2Zyrqbu/0dmb2uJyWhiAZjhuNnIGRVA=;
- b=k0MkLOigS296mwjUT9rHaMPglOsY3SKnI9Zhd0ddEY7anX7eLseB0rrTRVZHsFehyqYpg/GDNledLgsHmfMiXOmrUlyqZzRvW1WnqJ8FAGobSRbUOYDs0ztjv6m4f6K2/sGniQ/AZI1mFb+aKoI46ObK5QblwiAu+53lyr0fjWE=
-Authentication-Results: vger.kernel.org; dkim=none (message not signed)
- header.d=none;vger.kernel.org; dmarc=none action=none header.from=oracle.com;
-Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
- by BYAPR10MB3669.namprd10.prod.outlook.com (2603:10b6:a03:119::31) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4457.23; Tue, 31 Aug
- 2021 19:03:08 +0000
-Received: from BY5PR10MB4306.namprd10.prod.outlook.com
- ([fe80::7878:545b:f037:e6f]) by BY5PR10MB4306.namprd10.prod.outlook.com
- ([fe80::7878:545b:f037:e6f%9]) with mapi id 15.20.4478.019; Tue, 31 Aug 2021
- 19:03:08 +0000
-Subject: Re: [PATCH v24 03/11] xfs: Set up infrastructure for log atrribute
- replay
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-References: <20210824224434.968720-1-allison.henderson@oracle.com>
- <20210824224434.968720-4-allison.henderson@oracle.com>
- <20210831004851.GT3657114@dread.disaster.area>
-From:   Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <2bc0d0a8-a6c9-0d1d-fb7c-89b6fc549907@oracle.com>
-Date:   Tue, 31 Aug 2021 12:03:07 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.13.0
-In-Reply-To: <20210831004851.GT3657114@dread.disaster.area>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SJ0PR13CA0057.namprd13.prod.outlook.com
- (2603:10b6:a03:2c2::32) To BY5PR10MB4306.namprd10.prod.outlook.com
- (2603:10b6:a03:211::7)
+        id S232236AbhHaVTo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 Aug 2021 17:19:44 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46458 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230125AbhHaVTn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 31 Aug 2021 17:19:43 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0BB7261051;
+        Tue, 31 Aug 2021 21:18:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1630444728;
+        bh=dFEDS3+0M1vTd7keLgv5QlXuXI/WLE3Zf/ksR1oquB4=;
+        h=Date:From:To:Cc:Subject:From;
+        b=h9G0OjLMsNoEqdUeAzrKnJ9A3krbhzmYI/qYu8E86zdpewuKEKBgsa566Fsha4exq
+         8yYU7AXN4S2jxii19XxszDyNtQIxoyQe81OD64cKmcO2UTkG8Ox6p5glYKAkBapfGx
+         O8R7wmR/a6XQ/cFq6vt3i2pwl+K5M70nPqNH1sC+GsEO185b4jg13/uvd8DXkH5+GU
+         2P5+TXBwdLqq+b8kFFSC3sIoR20px4iMormPAoBFnSmxa6kL1R7BgabZahpPkIQymY
+         2NARjUtU0WxtJaF53W6C1rdmTF5yZSMs60Rk56PpuVqnJDbU/OzL+iKnmN5EXALKZ4
+         vxfQr11lEg5vg==
+Date:   Tue, 31 Aug 2021 14:18:47 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        david@fromorbit.com, linux-kernel@vger.kernel.org,
+        sandeen@sandeen.net, hch@lst.de
+Subject: [GIT PULL] xfs: new code for 5.15
+Message-ID: <20210831211847.GC9959@magnolia>
 MIME-Version: 1.0
-Received: from [192.168.1.167] (67.1.112.125) by SJ0PR13CA0057.namprd13.prod.outlook.com (2603:10b6:a03:2c2::32) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4478.10 via Frontend Transport; Tue, 31 Aug 2021 19:03:08 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 7e03db96-324f-4bb3-bc93-08d96cb1f872
-X-MS-TrafficTypeDiagnostic: BYAPR10MB3669:
-X-Microsoft-Antispam-PRVS: <BYAPR10MB36690E496545728710C4201795CC9@BYAPR10MB3669.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:949;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: +1WPQ1BExGLBOwQKW5AejtwvDku6n+230YmxWyiH5HXyB3op3BXXRYT7r12Y9JbMMH4ttw8eE4u6iQSNEreGS91oiS6OtGOCuaitH8XTIhr/soiDeRrAQ17QfO7jkWgkFvFQW5gQ48P0wf2XqFPUvTL7WcH0soMwZZtBfZ0TrbvMqDJ6hu9pD+l2f4sz82gdvP03/GSJOErqpC2BS6a2niew7VDuZ8qe3WMTuF5gRU4S6XDSotoo1Yr2TH5+PFvPAxvFbqJWVoy3THERV1tDN5gdqN3V0ArY5WMbgzPYQm40bard6X26I5Opbv6aGOLNy4lWFhjwdOTIJi4hdDCrX+VxfGoDmqOqOcO/U28PpquAauGsUiZ1OWL+Xh1C8QtRynMlmFI/bQBwzFI2AdGRKQcGfi5SN4RP+IrglxaXdrp6MUTFvLgAAi9weFPPbgmBX6PJocwjS8nmLxI4RhgWqoBFxN/4i4svEj3spZLcNkcV0VkeFjxXUN5nwkIVx3Ui4mU93BA3EOSFfpaeskudbgDYjVk1B7XsvMX0DXckcqlK0jtpdZQ7XfgXQdBS9RdXXKyN8ndRYxbq/4g7/0/lpQtraoprzg6R3etyLrsOeO1O16S6lxtImARK8+MApf/iRrvAk0mHabFLbbe9+YGNvvflyenLzX6z9wbTtk5iwWLsMk4JQMxG1/sN9RNPe0iBgImVHYcQoNanqUD8kMEedYuF9by0DunRyvNNhLbgkBt4k+5relYvJVgdulV0rMgaJXYzzEjmHcrpMo5aPZHWAQ==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(396003)(39860400002)(346002)(136003)(376002)(6486002)(66476007)(31686004)(2906002)(8676002)(4326008)(38100700002)(38350700002)(86362001)(8936002)(316002)(5660300002)(956004)(6916009)(66946007)(36756003)(478600001)(2616005)(52116002)(31696002)(186003)(16576012)(44832011)(26005)(83380400001)(53546011)(66556008)(43740500002)(45980500001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?dGtOL1ZHeVNpd21zbTc4M0l5ZzJJRjFTTjR4aGZ2RElWaDAzUUtCdWRaYkVW?=
- =?utf-8?B?eGZmSUlORjQySU5CQUNjWkVnMXE0VjVxQjFIa292SERzaWJheXZrUHlFOEY0?=
- =?utf-8?B?ckVONWUzUG5iRUowYnpVSGpGdlpqekh4MmtFcHh3WEp0K21ZeVhCVFVjc3J6?=
- =?utf-8?B?NGVIZ2R5TmF3Q0dWODlEdUdVejBpZHBuTlhNd1g2UTc2M1cxNFc0azA2azZv?=
- =?utf-8?B?ejFQL056aG14RDhwTzJmWDdObUVsNWdpQUthSFVxWVhqL3FhMlpyUFI3ZVpH?=
- =?utf-8?B?cXRueXJ0UU1mdEliUUpTQ1lRanduTldmWUc4bUhsWVAzTFdBTWNnblF3eWtn?=
- =?utf-8?B?cVc1b1ZMVzZ5WTh0TnJQcnROWjdFMmhMeGRndlVIQTlBSUVrc1FCYytTZnZZ?=
- =?utf-8?B?TFdOMmZDQkhYbVRsMyt1M0txVzVQWmNTaytJakRnTEdCeXc5ZDI5cjUxemFw?=
- =?utf-8?B?TUltemVkSHZMY1o2SjNSV2xTeHBBenhXSTY5TFluc3VuQVU1ZzRQQmZkV1o4?=
- =?utf-8?B?MVZWYUhzNlova1dZaVRVbTYxRGtnRTVWMk5OMkZtbTQ3Vk1HUEtJMnBNVjNy?=
- =?utf-8?B?aitWekkwdVZyckpuQWpVYkR6NCtvcnRxazNRSzF0Q0tHV3VyNWJ6d2piWVZa?=
- =?utf-8?B?TnRrUk9vY0NDMXg5dFFHUU5QY28wQWRiZSsxNzlBQXVVb1A5WEVNS3JwbERz?=
- =?utf-8?B?MllYWHN1ZHptR2hKNzAxVTg0bTlMMEZ4U0x6M3NwMXA1YzVDdTdtdUFhZi8v?=
- =?utf-8?B?dUgrUTNqOXUvWmkrVHFDYXZHY0hiNCtQQ05iL2E5U09TRlU1Y1RnbmxISnFn?=
- =?utf-8?B?UTN1UTlTZkYxbDh3dnpNWVRwekhUcGZ1U2Y2dlNFWWpld3p5dFpYVEpGTkRW?=
- =?utf-8?B?R1A1bzNIUjJBS2gvVjE1NVFwQWJNZXFIRzBFZ1VndXVUR2dpcjZ1aWp5SFMv?=
- =?utf-8?B?aExnd2tuNGNueGpaeCtoUWlYZXUweGFPa3R2ZlY4N0tCelRzck8wdnJUTVlh?=
- =?utf-8?B?U2NLS05OUzR6YldPUzN2a2cvSU11Z0F2ck40MVFmSzFrMDdVK0swbDMvUTNV?=
- =?utf-8?B?RGY5Q2FZcFpMWVN3S3FFQmdoUkN5a0NOSVovTk1aOFJ4Q3Z4emdzeUdXRHlZ?=
- =?utf-8?B?S3hGM3Q3Sk5ZeG5kL1o5d0VVcHZHWjgrVGlIUXFuSGU2V1lRMlplczJSMnJG?=
- =?utf-8?B?TGFTSzRRMkxucURIWTVFK2c2QU5CREFxWG5kd2srZFJjM2N3K3Z4eno5cGxq?=
- =?utf-8?B?NnVna1Eva1RNb09iNjJHVDEweUwrcVYzN2ZiUis3Y1dLVFpPVk55amtVMHlq?=
- =?utf-8?B?ZzFQa2ZqQkNMdVJ6QkEvOElwUmVDQ3EvZWc2c0tVR0pCbjNEb2dOZXZvRmxP?=
- =?utf-8?B?RzJZS01GbEpUSGsrVjNjVmQ3T1JlbU1UT2YxZXV1ZURORVZMWlVyM0NmTStz?=
- =?utf-8?B?K2kwWTRUeWNxN29SMTEwVUdhU3VGMVorWU53dTJ4eU1WTUtNKzdiMHhzUWNm?=
- =?utf-8?B?LzhUSEdLM1NZQzNsRytVR2ZCeFFqc3IwaFBScDFzb1ZBcXhEb2RDVnZaaTVD?=
- =?utf-8?B?WkNHczIxTWh1WVA1YTAvZ3d5eFI3YXZ6WnlBVnl2bk9yOGk1U0pGSlQ3S1pB?=
- =?utf-8?B?N2VuK0JQSmtrdTdzcHBacTRNZGlua3BxSUx4cERlMmlyV1FDVUtFUktkRGQ0?=
- =?utf-8?B?STRBUEZpWk5aMUYrK1M1eG9rRXFRdHZBbFRVbGk4L2hsd3dPMC9ycnVwbVA3?=
- =?utf-8?Q?W5u5injvTMDxIPRWOGwlP+n7TdQbKqRHU6N/NKf?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7e03db96-324f-4bb3-bc93-08d96cb1f872
-X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 31 Aug 2021 19:03:08.4250
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: s6xqwmS2DhbqgW/ohUhMIasd0JU03Bbc0Uo8kn+hBKeHnOkBD6XaW7tXj4ClHtzetHudwKFSZ/e7H6o5Uf8E1X3M5ty2yX2Wp7eLZ6YNT34=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR10MB3669
-X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10093 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=0
- phishscore=0 mlxscore=0 malwarescore=0 mlxlogscore=999 bulkscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2107140000 definitions=main-2108310104
-X-Proofpoint-GUID: KA1eK2QBJ2gOOBfWlE32YeuzcegJ4JqJ
-X-Proofpoint-ORIG-GUID: KA1eK2QBJ2gOOBfWlE32YeuzcegJ4JqJ
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+Hi Linus,
 
+Please pull this branch containing new code for 5.15.  There's a lot in
+this cycle.
 
-On 8/30/21 5:48 PM, Dave Chinner wrote:
-> On Tue, Aug 24, 2021 at 03:44:26PM -0700, Allison Henderson wrote:
->> +/*
->> + * Allocate and initialize an attri item.  Caller may allocate an additional
->> + * trailing buffer of the specified size
->> + */
->> +STATIC struct xfs_attri_log_item *
->> +xfs_attri_init(
->> +	struct xfs_mount		*mp,
->> +	int				buffer_size)
->> +
->> +{
->> +	struct xfs_attri_log_item	*attrip;
->> +	uint				size;
->> +
->> +	size = sizeof(struct xfs_attri_log_item) + buffer_size;
->> +	attrip = kvmalloc(size, KM_ZERO);
->> +	if (attrip == NULL)
->> +		return NULL;
-> 
-> kvmalloc() takes GFP flags. I think you want GFP_KERNEL | __GFP_ZERO
-> here.
-> 
-> Also, buffer size is taken directly from on-disk without bounds/length
-> validation, meaning this could end up being an attacker controlled
-> memory allocation, so .....
-> 
-Ok, will fix
+Starting with bug fixes: To avoid livelocks between the logging code and
+the quota code, we've disabled the ability of quotaoff to turn off quota
+accounting.  (Admins can still disable quota enforcement, but truly
+turning off accounting requires a remount.)  We've tried to do this in a
+careful enough way that there shouldn't be any user visible effects
+aside from quotaoff no longer randomly hanging the system.
 
->> +STATIC int
->> +xlog_recover_attri_commit_pass2(
->> +	struct xlog                     *log,
->> +	struct list_head		*buffer_list,
->> +	struct xlog_recover_item        *item,
->> +	xfs_lsn_t                       lsn)
->> +{
->> +	int                             error;
->> +	struct xfs_mount                *mp = log->l_mp;
->> +	struct xfs_attri_log_item       *attrip;
->> +	struct xfs_attri_log_format     *attri_formatp;
->> +	char				*name = NULL;
->> +	char				*value = NULL;
->> +	int				region = 0;
->> +	int				buffer_size;
->> +
->> +	attri_formatp = item->ri_buf[region].i_addr;
->> +
->> +	/* Validate xfs_attri_log_format */
->> +	if (attri_formatp->__pad != 0 || attri_formatp->alfi_name_len == 0 ||
->> +	    (attri_formatp->alfi_op_flags == XFS_ATTR_OP_FLAGS_REMOVE &&
->> +	    attri_formatp->alfi_value_len != 0)) {
->> +		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, mp);
->> +		return -EFSCORRUPTED;
->> +	}
->> +
->> +	buffer_size = attri_formatp->alfi_name_len +
->> +		      attri_formatp->alfi_value_len;
->> +
->> +	attrip = xfs_attri_init(mp, buffer_size);
->> +	if (attrip == NULL)
->> +		return -ENOMEM;
-> 
-> There needs to be a lot better validation of the attribute
-> name/value lengths here.  Also, memory allocation failure here will
-> abort recovery, so it might be worth adding a comment here....
-Maybe we can add a call to xfs_attri_validate here?  I think we can just 
-modify it to directly check the xfs_attri_log_format.
+We've also fixed some bugs in runtime log behavior that could trip up
+log recovery if (otherwise unrelated) transactions manage to start and
+commit concurrently; some bugs in the GETFSMAP ioctl where we would
+incorrectly restrict the range of records output if the two xfs devices
+are of different sizes; a bug that resulted in fallocate funshare
+failing unnecessarily; and broken behavior in the xfs inode cache when
+DONTCACHE is in play.
 
-Thanks!
-Allison
+As for new features: we now batch inode inactivations in percpu
+background threads, which sharply decreases frontend thread wait time
+when performing file deletions and should improve overall directory tree
+deletion times.  This eliminates both the problem where closing an
+unlinked file (especially on a frozen fs) can stall for a long time,
+and should also ease complaints about direct reclaim bogging down on
+unlinked file cleanup.
 
-> 
-> Cheers,
-> 
-> Dave.
-> 
+Starting with this release, we've enabled pipelining of the XFS log.  On
+workloads with high rates of metadata updates to different shards of the
+filesystem, multiple threads can be used to format committed log updates
+into log checkpoints.
 
+Lastly, with this release, two new features have graduated to supported
+status: inode btree counters (for faster mounts), and support for dates
+beyond Y2038.  Expect these to be enabled by default in a future release
+of xfsprogs.
+
+The branch merges cleanly against upstream as of a few minutes ago.
+Please let me know if anything else strange happens during the merge
+process.
+
+--D
+
+The following changes since commit c500bee1c5b2f1d59b1081ac879d73268ab0ff17:
+
+  Linux 5.14-rc4 (2021-08-01 17:04:17 -0700)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.15-merge-6
+
+for you to fetch changes up to f38a032b165d812b0ba8378a5cd237c0888ff65f:
+
+  xfs: fix I_DONTCACHE (2021-08-24 19:13:04 -0700)
+
+----------------------------------------------------------------
+New code for 5.15:
+ - Fix a potential log livelock on busy filesystems when there's so much
+   work going on that we can't finish a quotaoff before filling up the log
+   by removing the ability to disable quota accounting.
+ - Introduce the ability to use per-CPU data structures in XFS so that
+   we can do a better job of maintaining CPU locality for certain
+   operations.
+ - Defer inode inactivation work to per-CPU lists, which will help us
+   batch that processing.  Deletions of large sparse files will *appear*
+   to run faster, but all that means is that we've moved the work to the
+   backend.
+ - Drop the EXPERIMENTAL warnings from the y2038+ support and the inode
+   btree counters, since it's been nearly a year and no complaints have
+   come in.
+ - Remove more of our bespoke kmem* variants in favor of using the
+   standard Linux calls.
+ - Prepare for the addition of log incompat features in upcoming cycles
+   by actually adding code to support this.
+ - Small cleanups of the xattr code in preparation for landing support
+   for full logging of extended attribute updates in a future cycle.
+ - Replace the various log shutdown state and flag code all over xfs
+   with a single atomic bit flag.
+ - Fix a serious log recovery bug where log item replay can be skipped
+   based on the start lsn of a transaction even though the transaction
+   commit lsn is the key data point for that by enforcing start lsns to
+   appear in the log in the same order as commit lsns.
+ - Enable pipelining in the code that pushes log items to disk.
+ - Drop ->writepage.
+ - Fix some bugs in GETFSMAP where the last fsmap record reported for a
+   device could extend beyond the end of the device, and a separate bug
+   where query keys for one device could be applied to another.
+ - Don't let GETFSMAP query functions edit their input parameters.
+ - Small cleanups to the scrub code's handling of perag structures.
+ - Small cleanups to the incore inode tree walk code.
+ - Constify btree function parameters that aren't changed, so that there
+   will never again be confusion about range query functions changing
+   their input parameters.
+ - Standardize the format and names of tracepoint data attributes.
+ - Clean up all the mount state and feature flags to use wrapped bitset
+   functions instead of inconsistently open-coded flag checks.
+ - Fix some confusion between xfs_buf hash table key variable vs. block
+   number.
+ - Fix a mis-interaction with iomap where we reported shared delalloc
+   cow fork extents to iomap, which would cause the iomap unshare
+   operation to return IO errors unnecessarily.
+ - Fix DONTCACHE behavior.
+
+----------------------------------------------------------------
+Allison Henderson (2):
+      xfs: add attr state machine tracepoints
+      xfs: Rename __xfs_attr_rmtval_remove
+
+Christoph Hellwig (5):
+      xfs: remove support for disabling quota accounting on a mounted file system
+      xfs: remove xfs_dqrele_all_inodes
+      xfs: remove the flags argument to xfs_qm_dquot_walk
+      xfs: remove the active vs running quota differentiation
+      xfs: remove support for untagged lookups in xfs_icwalk*
+
+Darrick J. Wong (51):
+      xfs: move xfs_inactive call to xfs_inode_mark_reclaimable
+      xfs: detach dquots from inode if we don't need to inactivate it
+      xfs: queue inactivation immediately when free space is tight
+      xfs: queue inactivation immediately when quota is nearing enforcement
+      xfs: queue inactivation immediately when free realtime extents are tight
+      xfs: inactivate inodes any time we try to free speculative preallocations
+      xfs: flush inode inactivation work when compiling usage statistics
+      xfs: don't run speculative preallocation gc when fs is frozen
+      xfs: use background worker pool when transactions can't get free space
+      xfs: avoid buffer deadlocks when walking fs inodes
+      xfs: throttle inode inactivation queuing on memory reclaim
+      xfs: fix silly whitespace problems with kernel libxfs
+      xfs: drop experimental warnings for bigtime and inobtcount
+      xfs: grab active perag ref when reading AG headers
+      xfs: dump log intent items that cannot be recovered due to corruption
+      xfs: allow setting and clearing of log incompat feature flags
+      xfs: clear log incompat feature bits when the log is idle
+      xfs: refactor xfs_iget calls from log intent recovery
+      xfs: make xfs_rtalloc_query_range input parameters const
+      xfs: fix off-by-one error when the last rt extent is in use
+      xfs: make fsmap backend function key parameters const
+      xfs: remove unnecessary agno variable from struct xchk_ag
+      xfs: add trace point for fs shutdown
+      xfs: make the key parameters to all btree key comparison functions const
+      xfs: make the key parameters to all btree query range functions const
+      xfs: make the record pointer passed to query_range functions const
+      xfs: mark the record passed into btree init_key functions as const
+      xfs: make the keys and records passed to btree inorder functions const
+      xfs: mark the record passed into xchk_btree functions as const
+      xfs: make the pointer passed to btree set_root functions const
+      xfs: make the start pointer passed to btree alloc_block functions const
+      xfs: make the start pointer passed to btree update_lastrec functions const
+      xfs: constify btree function parameters that are not modified
+      xfs: fix incorrect unit conversion in scrub tracepoint
+      xfs: standardize inode number formatting in ftrace output
+      xfs: standardize AG number formatting in ftrace output
+      xfs: standardize AG block number formatting in ftrace output
+      xfs: standardize rmap owner number formatting in ftrace output
+      xfs: standardize daddr formatting in ftrace output
+      xfs: disambiguate units for ftrace fields tagged "blkno", "block", or "bno"
+      xfs: disambiguate units for ftrace fields tagged "offset"
+      xfs: disambiguate units for ftrace fields tagged "len"
+      xfs: disambiguate units for ftrace fields tagged "count"
+      xfs: rename i_disk_size fields in ftrace output
+      xfs: resolve fork names in trace output
+      xfs: standardize remaining xfs_buf length tracepoints
+      xfs: standardize inode generation formatting in ftrace output
+      xfs: decode scrub flags in ftrace output
+      xfs: start documenting common units and tags used in tracepoints
+      xfs: fix perag structure refcounting error when scrub fails
+      xfs: only set IOMAP_F_SHARED when providing a srcmap to a write
+
+Dave Chinner (44):
+      xfs: introduce CPU hotplug infrastructure
+      xfs: introduce all-mounts list for cpu hotplug notifications
+      xfs: per-cpu deferred inode inactivation queues
+      mm: Add kvrealloc()
+      xfs: remove kmem_alloc_io()
+      xfs: replace kmem_alloc_large() with kvmalloc()
+      xfs: convert XLOG_FORCED_SHUTDOWN() to xlog_is_shutdown()
+      xfs: XLOG_STATE_IOERROR must die
+      xfs: move recovery needed state updates to xfs_log_mount_finish
+      xfs: convert log flags to an operational state field
+      xfs: make forced shutdown processing atomic
+      xfs: rework xlog_state_do_callback()
+      xfs: separate out log shutdown callback processing
+      xfs: don't run shutdown callbacks on active iclogs
+      xfs: log head and tail aren't reliable during shutdown
+      xfs: move xlog_commit_record to xfs_log_cil.c
+      xfs: pass a CIL context to xlog_write()
+      xfs: factor out log write ordering from xlog_cil_push_work()
+      xfs: attach iclog callbacks in xlog_cil_set_ctx_write_state()
+      xfs: order CIL checkpoint start records
+      xfs: AIL needs asynchronous CIL forcing
+      xfs: CIL work is serialised, not pipelined
+      xfs: move the CIL workqueue to the CIL
+      xfs: drop ->writepage completely
+      xfs: sb verifier doesn't handle uncached sb buffer
+      xfs: rename xfs_has_attr()
+      xfs: rework attr2 feature and mount options
+      xfs: reflect sb features in xfs_mount
+      xfs: replace xfs_sb_version checks with feature flag checks
+      xfs: consolidate mount option features in m_features
+      xfs: convert mount flags to features
+      xfs: convert remaining mount flags to state flags
+      xfs: replace XFS_FORCED_SHUTDOWN with xfs_is_shutdown
+      xfs: convert xfs_fs_geometry to use mount feature checks
+      xfs: open code sb verifier feature checks
+      xfs: convert scrub to use mount-based feature checks
+      xfs: convert xfs_sb_version_has checks to use mount features
+      xfs: remove unused xfs_sb_version_has wrappers
+      xfs: introduce xfs_sb_is_v5 helper
+      xfs: kill xfs_sb_version_has_v3inode()
+      xfs: introduce xfs_buf_daddr()
+      xfs: convert bp->b_bn references to xfs_buf_daddr()
+      xfs: rename buffer cache index variable b_bn
+      xfs: fix I_DONTCACHE
+
+Dwaipayan Ray (1):
+      xfs: cleanup __FUNCTION__ usage
+
+ fs/xfs/kmem.c                      |  64 ----
+ fs/xfs/kmem.h                      |   2 -
+ fs/xfs/libxfs/xfs_ag.c             |  25 +-
+ fs/xfs/libxfs/xfs_alloc.c          |  56 +--
+ fs/xfs/libxfs/xfs_alloc.h          |  12 +-
+ fs/xfs/libxfs/xfs_alloc_btree.c    | 100 ++---
+ fs/xfs/libxfs/xfs_alloc_btree.h    |   2 +-
+ fs/xfs/libxfs/xfs_attr.c           |  56 ++-
+ fs/xfs/libxfs/xfs_attr.h           |   1 -
+ fs/xfs/libxfs/xfs_attr_leaf.c      |  57 +--
+ fs/xfs/libxfs/xfs_attr_remote.c    |  21 +-
+ fs/xfs/libxfs/xfs_attr_remote.h    |   2 +-
+ fs/xfs/libxfs/xfs_bmap.c           |  38 +-
+ fs/xfs/libxfs/xfs_bmap_btree.c     |  56 +--
+ fs/xfs/libxfs/xfs_bmap_btree.h     |   9 +-
+ fs/xfs/libxfs/xfs_btree.c          | 141 +++----
+ fs/xfs/libxfs/xfs_btree.h          |  56 +--
+ fs/xfs/libxfs/xfs_btree_staging.c  |  14 +-
+ fs/xfs/libxfs/xfs_da_btree.c       |  18 +-
+ fs/xfs/libxfs/xfs_da_format.h      |   2 +-
+ fs/xfs/libxfs/xfs_dir2.c           |   6 +-
+ fs/xfs/libxfs/xfs_dir2_block.c     |  14 +-
+ fs/xfs/libxfs/xfs_dir2_data.c      |  20 +-
+ fs/xfs/libxfs/xfs_dir2_leaf.c      |  14 +-
+ fs/xfs/libxfs/xfs_dir2_node.c      |  20 +-
+ fs/xfs/libxfs/xfs_dir2_priv.h      |   2 +-
+ fs/xfs/libxfs/xfs_dir2_sf.c        |  12 +-
+ fs/xfs/libxfs/xfs_dquot_buf.c      |   8 +-
+ fs/xfs/libxfs/xfs_format.h         | 226 ++---------
+ fs/xfs/libxfs/xfs_ialloc.c         |  69 ++--
+ fs/xfs/libxfs/xfs_ialloc.h         |   3 +-
+ fs/xfs/libxfs/xfs_ialloc_btree.c   |  88 ++---
+ fs/xfs/libxfs/xfs_ialloc_btree.h   |   2 +-
+ fs/xfs/libxfs/xfs_inode_buf.c      |  22 +-
+ fs/xfs/libxfs/xfs_inode_buf.h      |  11 +-
+ fs/xfs/libxfs/xfs_log_format.h     |   6 +-
+ fs/xfs/libxfs/xfs_log_recover.h    |   2 +
+ fs/xfs/libxfs/xfs_log_rlimit.c     |   2 +-
+ fs/xfs/libxfs/xfs_quota_defs.h     |  30 +-
+ fs/xfs/libxfs/xfs_refcount.c       |  12 +-
+ fs/xfs/libxfs/xfs_refcount.h       |   2 +-
+ fs/xfs/libxfs/xfs_refcount_btree.c |  54 +--
+ fs/xfs/libxfs/xfs_rmap.c           |  34 +-
+ fs/xfs/libxfs/xfs_rmap.h           |  11 +-
+ fs/xfs/libxfs/xfs_rmap_btree.c     |  72 ++--
+ fs/xfs/libxfs/xfs_rmap_btree.h     |   2 +-
+ fs/xfs/libxfs/xfs_rtbitmap.c       |  14 +-
+ fs/xfs/libxfs/xfs_sb.c             | 263 +++++++++----
+ fs/xfs/libxfs/xfs_sb.h             |   4 +-
+ fs/xfs/libxfs/xfs_symlink_remote.c |  14 +-
+ fs/xfs/libxfs/xfs_trans_inode.c    |   2 +-
+ fs/xfs/libxfs/xfs_trans_resv.c     |  48 +--
+ fs/xfs/libxfs/xfs_trans_resv.h     |   2 -
+ fs/xfs/libxfs/xfs_trans_space.h    |   6 +-
+ fs/xfs/libxfs/xfs_types.c          |   2 +-
+ fs/xfs/libxfs/xfs_types.h          |   5 +
+ fs/xfs/scrub/agheader.c            |  47 ++-
+ fs/xfs/scrub/agheader_repair.c     |  66 ++--
+ fs/xfs/scrub/alloc.c               |   2 +-
+ fs/xfs/scrub/attr.c                |  16 +-
+ fs/xfs/scrub/attr.h                |   3 -
+ fs/xfs/scrub/bitmap.c              |   4 +-
+ fs/xfs/scrub/bmap.c                |  41 +-
+ fs/xfs/scrub/btree.c               |   9 +-
+ fs/xfs/scrub/btree.h               |   4 +-
+ fs/xfs/scrub/common.c              |  77 ++--
+ fs/xfs/scrub/common.h              |  18 +-
+ fs/xfs/scrub/dabtree.c             |   4 +-
+ fs/xfs/scrub/dir.c                 |  10 +-
+ fs/xfs/scrub/fscounters.c          |   6 +-
+ fs/xfs/scrub/ialloc.c              |   4 +-
+ fs/xfs/scrub/inode.c               |  14 +-
+ fs/xfs/scrub/quota.c               |   4 +-
+ fs/xfs/scrub/refcount.c            |   4 +-
+ fs/xfs/scrub/repair.c              |  32 +-
+ fs/xfs/scrub/rmap.c                |   2 +-
+ fs/xfs/scrub/rtbitmap.c            |   2 +-
+ fs/xfs/scrub/scrub.c               |  23 +-
+ fs/xfs/scrub/scrub.h               |   3 +-
+ fs/xfs/scrub/trace.c               |   8 +-
+ fs/xfs/scrub/trace.h               |  78 ++--
+ fs/xfs/xfs_acl.c                   |   2 +-
+ fs/xfs/xfs_aops.c                  |  25 +-
+ fs/xfs/xfs_attr_inactive.c         |   6 +-
+ fs/xfs/xfs_attr_list.c             |   2 +-
+ fs/xfs/xfs_bmap_item.c             |  14 +-
+ fs/xfs/xfs_bmap_util.c             |  20 +-
+ fs/xfs/xfs_buf.c                   |  40 +-
+ fs/xfs/xfs_buf.h                   |  25 +-
+ fs/xfs/xfs_buf_item.c              |   6 +-
+ fs/xfs/xfs_buf_item_recover.c      |  10 +-
+ fs/xfs/xfs_dir2_readdir.c          |   4 +-
+ fs/xfs/xfs_discard.c               |   2 +-
+ fs/xfs/xfs_dquot.c                 |  13 +-
+ fs/xfs/xfs_dquot.h                 |  10 +
+ fs/xfs/xfs_dquot_item.c            | 134 -------
+ fs/xfs/xfs_dquot_item.h            |  17 -
+ fs/xfs/xfs_dquot_item_recover.c    |   4 +-
+ fs/xfs/xfs_error.c                 |   4 +-
+ fs/xfs/xfs_error.h                 |  12 +
+ fs/xfs/xfs_export.c                |   4 +-
+ fs/xfs/xfs_extfree_item.c          |   3 +
+ fs/xfs/xfs_file.c                  |  18 +-
+ fs/xfs/xfs_filestream.c            |   2 +-
+ fs/xfs/xfs_filestream.h            |   2 +-
+ fs/xfs/xfs_fsmap.c                 |  68 ++--
+ fs/xfs/xfs_fsops.c                 |  63 ++--
+ fs/xfs/xfs_health.c                |   2 +-
+ fs/xfs/xfs_icache.c                | 754 ++++++++++++++++++++++++++++---------
+ fs/xfs/xfs_icache.h                |  14 +-
+ fs/xfs/xfs_icreate_item.c          |   4 +-
+ fs/xfs/xfs_inode.c                 | 102 +++--
+ fs/xfs/xfs_inode.h                 |  25 +-
+ fs/xfs/xfs_inode_item.c            |   2 +-
+ fs/xfs/xfs_inode_item_recover.c    |   2 +-
+ fs/xfs/xfs_ioctl.c                 |  33 +-
+ fs/xfs/xfs_ioctl32.c               |   4 +-
+ fs/xfs/xfs_iomap.c                 |  24 +-
+ fs/xfs/xfs_iops.c                  |  32 +-
+ fs/xfs/xfs_itable.c                |  44 ++-
+ fs/xfs/xfs_iwalk.c                 |  33 +-
+ fs/xfs/xfs_log.c                   | 723 ++++++++++++++++++-----------------
+ fs/xfs/xfs_log.h                   |   7 +-
+ fs/xfs/xfs_log_cil.c               | 450 +++++++++++++++-------
+ fs/xfs/xfs_log_priv.h              |  66 ++--
+ fs/xfs/xfs_log_recover.c           | 161 ++++----
+ fs/xfs/xfs_mount.c                 | 233 +++++++++---
+ fs/xfs/xfs_mount.h                 | 248 ++++++++++--
+ fs/xfs/xfs_pnfs.c                  |   2 +-
+ fs/xfs/xfs_qm.c                    |  96 +++--
+ fs/xfs/xfs_qm.h                    |   3 -
+ fs/xfs/xfs_qm_bhv.c                |   2 +-
+ fs/xfs/xfs_qm_syscalls.c           | 253 ++-----------
+ fs/xfs/xfs_quota.h                 |   2 +
+ fs/xfs/xfs_quotaops.c              |  30 +-
+ fs/xfs/xfs_refcount_item.c         |   5 +-
+ fs/xfs/xfs_reflink.c               |   4 +-
+ fs/xfs/xfs_reflink.h               |   3 +-
+ fs/xfs/xfs_rmap_item.c             |   5 +-
+ fs/xfs/xfs_rtalloc.c               |   6 +-
+ fs/xfs/xfs_rtalloc.h               |  13 +-
+ fs/xfs/xfs_super.c                 | 538 +++++++++++++++-----------
+ fs/xfs/xfs_symlink.c               |  13 +-
+ fs/xfs/xfs_sysfs.c                 |   1 +
+ fs/xfs/xfs_trace.c                 |   2 +
+ fs/xfs/xfs_trace.h                 | 386 +++++++++++++------
+ fs/xfs/xfs_trans.c                 |  33 +-
+ fs/xfs/xfs_trans_ail.c             |  19 +-
+ fs/xfs/xfs_trans_buf.c             |   8 +-
+ fs/xfs/xfs_trans_dquot.c           |  51 +--
+ include/linux/cpuhotplug.h         |   1 +
+ include/linux/mm.h                 |   2 +
+ mm/util.c                          |  15 +
+ 153 files changed, 4082 insertions(+), 3201 deletions(-)
