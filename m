@@ -2,116 +2,82 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-21.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,INCLUDES_PULL_REQUEST,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 334E6C432BE
-	for <linux-xfs@archiver.kernel.org>; Tue, 31 Aug 2021 00:48:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F260C432BE
+	for <linux-xfs@archiver.kernel.org>; Tue, 31 Aug 2021 16:23:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0F53F600AA
-	for <linux-xfs@archiver.kernel.org>; Tue, 31 Aug 2021 00:48:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 70963610D1
+	for <linux-xfs@archiver.kernel.org>; Tue, 31 Aug 2021 16:23:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231297AbhHaAtv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 30 Aug 2021 20:49:51 -0400
-Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:46090 "EHLO
-        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S236374AbhHaAtu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Aug 2021 20:49:50 -0400
-Received: from dread.disaster.area (pa49-195-182-146.pa.nsw.optusnet.com.au [49.195.182.146])
-        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 2173F10C066;
-        Tue, 31 Aug 2021 10:48:53 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1mKrxL-006tCr-2u; Tue, 31 Aug 2021 10:48:51 +1000
-Date:   Tue, 31 Aug 2021 10:48:51 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Allison Henderson <allison.henderson@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v24 03/11] xfs: Set up infrastructure for log atrribute
- replay
-Message-ID: <20210831004851.GT3657114@dread.disaster.area>
-References: <20210824224434.968720-1-allison.henderson@oracle.com>
- <20210824224434.968720-4-allison.henderson@oracle.com>
+        id S239996AbhHaQYv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 Aug 2021 12:24:51 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48864 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S239964AbhHaQYv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 31 Aug 2021 12:24:51 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id DD886610CC;
+        Tue, 31 Aug 2021 16:23:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1630427036;
+        bh=3CBp1rvnjRLq+ik6Z1JLX8BGifdRSVjyPCQ/sJLco80=;
+        h=Date:From:To:Cc:Subject:From;
+        b=GJDt8FZiuX6BwPq8ZneIBQYR7/55jsZG3CALHsYjMPVq62nclr45gyns+NNlAa8Qq
+         tnSATmOv1NJ9M+ylEXUMCGciXq5sWAQX3qXP6SO6VsImSo3KAAh/8V3YLRd6efOylv
+         TBNZU3nIi9Xk94jVOmVqByqQ8nOiWAVqXgEu3e0t4VnTa6M46N8nzidH7sDzGxlnun
+         TTGkZicia1PDQA+cECjev18ns/N1BhkJATV7IlUkK5m/VFQ1W5Rh39+vTzR2WbVxSQ
+         7dPlBOIE3YAY6M+R6iG2Jqgv2ToDR8g15q+YgogsjBR2rSEhP4Us6nqGi9yv+2Q0Nn
+         NMlL3Y+mRJeMg==
+Date:   Tue, 31 Aug 2021 09:23:55 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     Wang Shilong <wangshilong1991@gmail.com>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        Ext4 Developers List <linux-ext4@vger.kernel.org>,
+        linux-f2fs-devel@lists.sourceforge.net,
+        Wang Shilong <wshilong@ddn.com>
+Subject: [GIT PULL] vfs: new code for 5.15
+Message-ID: <20210831162355.GA9959@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210824224434.968720-4-allison.henderson@oracle.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
-        a=QpfB3wCSrn/dqEBSktpwZQ==:117 a=QpfB3wCSrn/dqEBSktpwZQ==:17
-        a=kj9zAlcOel0A:10 a=MhDmnRu9jo8A:10 a=7-415B0cAAAA:8
-        a=0-oJNXjUqvzmqmRTwqwA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 24, 2021 at 03:44:26PM -0700, Allison Henderson wrote:
-> +/*
-> + * Allocate and initialize an attri item.  Caller may allocate an additional
-> + * trailing buffer of the specified size
-> + */
-> +STATIC struct xfs_attri_log_item *
-> +xfs_attri_init(
-> +	struct xfs_mount		*mp,
-> +	int				buffer_size)
-> +
-> +{
-> +	struct xfs_attri_log_item	*attrip;
-> +	uint				size;
-> +
-> +	size = sizeof(struct xfs_attri_log_item) + buffer_size;
-> +	attrip = kvmalloc(size, KM_ZERO);
-> +	if (attrip == NULL)
-> +		return NULL;
+Hi Linus,
 
-kvmalloc() takes GFP flags. I think you want GFP_KERNEL | __GFP_ZERO
-here.
+Please pull this single VFS patch that prevents userspace from setting
+project quota ids on files that the VFS considers invalid.
 
-Also, buffer size is taken directly from on-disk without bounds/length
-validation, meaning this could end up being an attacker controlled
-memory allocation, so .....
+This branch merges cleanly against your upstream branch as of a few
+minutes ago, and does not introduce any fstests regressions for ext4 or
+xfs.
 
-> +STATIC int
-> +xlog_recover_attri_commit_pass2(
-> +	struct xlog                     *log,
-> +	struct list_head		*buffer_list,
-> +	struct xlog_recover_item        *item,
-> +	xfs_lsn_t                       lsn)
-> +{
-> +	int                             error;
-> +	struct xfs_mount                *mp = log->l_mp;
-> +	struct xfs_attri_log_item       *attrip;
-> +	struct xfs_attri_log_format     *attri_formatp;
-> +	char				*name = NULL;
-> +	char				*value = NULL;
-> +	int				region = 0;
-> +	int				buffer_size;
-> +
-> +	attri_formatp = item->ri_buf[region].i_addr;
-> +
-> +	/* Validate xfs_attri_log_format */
-> +	if (attri_formatp->__pad != 0 || attri_formatp->alfi_name_len == 0 ||
-> +	    (attri_formatp->alfi_op_flags == XFS_ATTR_OP_FLAGS_REMOVE &&
-> +	    attri_formatp->alfi_value_len != 0)) {
-> +		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, mp);
-> +		return -EFSCORRUPTED;
-> +	}
-> +
-> +	buffer_size = attri_formatp->alfi_name_len +
-> +		      attri_formatp->alfi_value_len;
-> +
-> +	attrip = xfs_attri_init(mp, buffer_size);
-> +	if (attrip == NULL)
-> +		return -ENOMEM;
+--D
 
-There needs to be a lot better validation of the attribute
-name/value lengths here.  Also, memory allocation failure here will
-abort recovery, so it might be worth adding a comment here....
+The following changes since commit c500bee1c5b2f1d59b1081ac879d73268ab0ff17:
 
-Cheers,
+  Linux 5.14-rc4 (2021-08-01 17:04:17 -0700)
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/vfs-5.15-merge-1
+
+for you to fetch changes up to d03ef4daf33a33da8d7c397102fff8ae87d04a93:
+
+  fs: forbid invalid project ID (2021-08-03 09:48:04 -0700)
+
+----------------------------------------------------------------
+New code for 5.15:
+ - Strengthen parameter checking for project quota ids.
+
+----------------------------------------------------------------
+Wang Shilong (1):
+      fs: forbid invalid project ID
+
+ fs/ioctl.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
