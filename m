@@ -2,118 +2,79 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 433ECC432BE
-	for <linux-xfs@archiver.kernel.org>; Tue, 31 Aug 2021 21:52:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D355C432BE
+	for <linux-xfs@archiver.kernel.org>; Tue, 31 Aug 2021 22:44:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1BE8C6103D
-	for <linux-xfs@archiver.kernel.org>; Tue, 31 Aug 2021 21:52:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3AD0360FE6
+	for <linux-xfs@archiver.kernel.org>; Tue, 31 Aug 2021 22:44:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230182AbhHaVxd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 Aug 2021 17:53:33 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:53191 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230085AbhHaVxd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Aug 2021 17:53:33 -0400
-Received: from dread.disaster.area (pa49-195-182-146.pa.nsw.optusnet.com.au [49.195.182.146])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id B77DE82AA72;
-        Wed,  1 Sep 2021 07:52:35 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1mLBgI-007Dp3-8X; Wed, 01 Sep 2021 07:52:34 +1000
-Date:   Wed, 1 Sep 2021 07:52:34 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Allison Henderson <allison.henderson@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v24 03/11] xfs: Set up infrastructure for log atrribute
- replay
-Message-ID: <20210831215234.GU3657114@dread.disaster.area>
-References: <20210824224434.968720-1-allison.henderson@oracle.com>
- <20210824224434.968720-4-allison.henderson@oracle.com>
+        id S239509AbhHaWpf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 Aug 2021 18:45:35 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43584 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229602AbhHaWpe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 31 Aug 2021 18:45:34 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id DF84E60FF2;
+        Tue, 31 Aug 2021 22:44:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1630449879;
+        bh=B05HRiZtGhLpkyYRP9i0O1OVRE3wU80JjIJ6RKO1gEA=;
+        h=Date:From:To:Cc:Subject:From;
+        b=aHCDDcOK1YCxaSvjqfKW/itDsSAmY7zojYCue1b5pBIB7lftqJUElOcfPQDjzMX+j
+         TsvnwlpgCPYfZgLJ7KQ1yD17xOstMD8XeGWZL3jWaJMYJY5ahFIAH1n6CVy9mh/P8C
+         eL0BOoWR/9hddFh57nOFhZFr+E9JOTYYcjLzn6//kgkjDDXCJ95ABQh4V+mEebjp5g
+         AFlaUJ9kz3mhS6QXZPQMdqaht/sLTf9mQnugSEsd39gl69hwzFRXyQMKNhNYu70xc8
+         EyiwB3Y+Y9FFXU2LvCUVMHXWcrew9avVA/5q/kHpbdjKDhJcqe5SpCfAP80h9pAVuq
+         Z4ftxG71NGeWA==
+Date:   Tue, 31 Aug 2021 15:44:38 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Eric Sandeen <sandeen@redhat.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH] mkfs: warn about V4 deprecation when creating new V4
+ filesystems
+Message-ID: <20210831224438.GB9942@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210824224434.968720-4-allison.henderson@oracle.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
-        a=QpfB3wCSrn/dqEBSktpwZQ==:117 a=QpfB3wCSrn/dqEBSktpwZQ==:17
-        a=kj9zAlcOel0A:10 a=7QKq2e-ADPsA:10 a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8
-        a=VuuVpTwVnpFNGkkUZeIA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 24, 2021 at 03:44:26PM -0700, Allison Henderson wrote:
-> Currently attributes are modified directly across one or more
-> transactions. But they are not logged or replayed in the event of an
-> error. The goal of log attr replay is to enable logging and replaying
-> of attribute operations using the existing delayed operations
-> infrastructure.  This will later enable the attributes to become part of
-> larger multi part operations that also must first be recorded to the
-> log.  This is mostly of interest in the scheme of parent pointers which
-> would need to maintain an attribute containing parent inode information
-> any time an inode is moved, created, or removed.  Parent pointers would
-> then be of interest to any feature that would need to quickly derive an
-> inode path from the mount point. Online scrub, nfs lookups and fs grow
-> or shrink operations are all features that could take advantage of this.
-> 
-> This patch adds two new log item types for setting or removing
-> attributes as deferred operations.  The xfs_attri_log_item will log an
-> intent to set or remove an attribute.  The corresponding
-> xfs_attrd_log_item holds a reference to the xfs_attri_log_item and is
-> freed once the transaction is done.  Both log items use a generic
-> xfs_attr_log_format structure that contains the attribute name, value,
-> flags, inode, and an op_flag that indicates if the operations is a set
-> or remove.
-> 
-> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> ---
->  fs/xfs/Makefile                 |   1 +
->  fs/xfs/libxfs/xfs_attr.c        |   5 +-
->  fs/xfs/libxfs/xfs_attr.h        |  31 +++
->  fs/xfs/libxfs/xfs_defer.h       |   2 +
->  fs/xfs/libxfs/xfs_log_format.h  |  44 +++-
->  fs/xfs/libxfs/xfs_log_recover.h |   2 +
->  fs/xfs/scrub/common.c           |   2 +
->  fs/xfs/xfs_attr_item.c          | 453 ++++++++++++++++++++++++++++++++
+From: Darrick J. Wong <djwong@kernel.org>
 
-Comment on the overall structure of this file now I've been trying
-to navigate through it for a little while. It is structured like:
+The V4 filesystem format is deprecated in the upstream Linux kernel.  In
+September 2025 it will be turned off by default in the kernel and five
+years after that, support will be removed entirely.  Warn people
+formatting new filesystems with the old format, particularly since V4 is
+not the default.
 
-<some attri stuff>
-<some attrd stuff>
-static const struct xfs_item_ops xfs_attrd_item_ops = {...}
-<some more attri stuff>
-static const struct xfs_item_ops xfs_attri_item_ops = {...}
-<some attri log recovery stuff>
-<some attrd log recovery stuff>
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+ mkfs/xfs_mkfs.c |    9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-IOWs, the attri and attrd functions are interleaved non-obvious
-ways and that makes it hard to navigate around when trying to find
-related information. It would make more sense to me to structure
-this as:
-
-<attri stuff>
-<attri log recovery stuff>
-<some attrd stuff>
-<attrd log recovery stuff>
-static const struct xfs_item_ops xfs_attri_item_ops = {...}
-const struct xlog_recover_item_ops xlog_attri_item_ops = {...}
-static const struct xfs_item_ops xfs_attrd_item_ops = {...}
-const struct xlog_recover_item_ops xlog_attrd_item_ops = {...}
-
-because then all the related functionality is grouped together. It
-also puts all the ops structures together in the one place, so we
-don't have to jump around all over the file when just looking at
-what ops the items run at different times...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 53904677..b8c11ce9 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -2103,6 +2103,15 @@ _("Directory ftype field always enabled on CRC enabled filesystems\n"));
+ 		}
+ 
+ 	} else {	/* !crcs_enabled */
++		/*
++		 * The V4 filesystem format is deprecated in the upstream Linux
++		 * kernel.  In September 2025 it will be turned off by default
++		 * in the kernel and in September 2030 support will be removed
++		 * entirely.
++		 */
++		fprintf(stdout,
++_("V4 filesystems are deprecated and will not be supported by future versions.\n"));
++
+ 		/*
+ 		 * The kernel doesn't support crc=0,finobt=1 filesystems.
+ 		 * If crcs are not enabled and the user has not explicitly
