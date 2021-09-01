@@ -3,42 +3,41 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06960C4320E
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 00:12:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E989C4320A
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 00:12:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E59C661054
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 00:12:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5F39A61008
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 00:12:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241143AbhIAAM5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 Aug 2021 20:12:57 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46866 "EHLO mail.kernel.org"
+        id S243201AbhIAANE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 Aug 2021 20:13:04 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46898 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S243020AbhIAAM5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 31 Aug 2021 20:12:57 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 6E99761008;
-        Wed,  1 Sep 2021 00:12:01 +0000 (UTC)
+        id S243134AbhIAANA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 31 Aug 2021 20:13:00 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C4B8E6103D;
+        Wed,  1 Sep 2021 00:12:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1630455121;
-        bh=Iy6YC+wp04goI3E2mJ6CbMEeoJKPs3qFh946YNhlQ0U=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=kPuj+obGbQcWKVJe5483O2zRAOVS7IU0bmOwWZrmwPDp54IRENI6aMFkqnTKClsfn
-         VF3NGJVodpy0jFqADL1D9XR25tgKBnE+jSUjpSYyHh4cACMJcVQNXIMakdP89cFAO2
-         naRBHGr9lVg0gGAfQE0NXbufDfbDSxWPRPI6MdCpb9sHgVmXiRAlPLyIgUF6mErLp+
-         c2eRfAl+ooxcGlzhRXr6ibozYe6tMMYSR77Dxlt5kRFLwO9MBPKIdIT9gu/tDiJiDF
-         lr/Mv4TuyGBHmoEPicSzQJoVL1gowAsVWb4fG4QzcqqkIGAhjptmVDe9cDuDvcEHgC
-         yxzc20gc3ycig==
-Subject: [PATCH 3/3] xfs/449: filter out deprecation warnings from mkfs
+        s=k20201202; t=1630455124;
+        bh=bRtBTsxOp+S3Xph+SBFEf6SsWCKi+EYHVW+KYdf5J9U=;
+        h=Subject:From:To:Cc:Date:From;
+        b=JDmhsu473ZAI5zUADbSKnNKZ+QO3o+2CuALFIT4TbrjlAmoSEIZ9XAwgCP8Fe15wC
+         nz8DndTmvjgSmn10rbh0HZaUmlmBE/T5ETwyJxt4Lo369fsE4P0DhAx1G15XkxeMHS
+         VSFvFnmQ34ZxkSNYjiwTnSR/ZxV8iYAgdF0TMuMGgm2blT/srwLPf4ho5XStJ7Vc3V
+         1XN9F24ih+WEoGqYJtuStnw9MPEmCUZZv1KccXM9PlVErYIOLM6LIHPQx7+XArqcfH
+         cjKXjFu+lwbZEsJKjXJAPA1tXpf/qp6DubpnECpro1u3AaazqL1AAbxzLWK/6DjNxL
+         B8xtSXCp2V4rQ==
+Subject: [PATCHSET 0/4] fstests: exercise code changes in 5.15
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 31 Aug 2021 17:12:01 -0700
-Message-ID: <163045512113.770026.14089523911790151666.stgit@magnolia>
-In-Reply-To: <163045510470.770026.14067376159951420121.stgit@magnolia>
-References: <163045510470.770026.14067376159951420121.stgit@magnolia>
+Cc:     Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org, guan@eryu.me
+Date:   Tue, 31 Aug 2021 17:12:04 -0700
+Message-ID: <163045512451.771394.12554760323831932499.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -47,29 +46,33 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hi all,
 
-To avoid regressing this test when testing XFS v4 when mkfs is new
-enough to whine about creating new deprecated filesystems, filter out
-the deprecation warning.
+Add new tests to exercise bug fixes appearing in 5.15.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
+
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=new-tests-for-5.15
 ---
- tests/xfs/449 |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-
-diff --git a/tests/xfs/449 b/tests/xfs/449
-index a3fcd78e..5374bf2f 100755
---- a/tests/xfs/449
-+++ b/tests/xfs/449
-@@ -23,7 +23,7 @@ _require_scratch_nocheck
- _require_xfs_spaceman_command "info"
- _require_command "$XFS_GROWFS_PROG" xfs_growfs
- 
--_scratch_mkfs | sed -e '/Discarding/d' > $tmp.mkfs
-+_scratch_mkfs | sed -e '/Discarding/d' -e '/deprecated/d' > $tmp.mkfs
- echo MKFS >> $seqres.full
- cat $tmp.mkfs >> $seqres.full
- 
+ tests/generic/729     |   77 ++++++++++++++++++
+ tests/generic/729.out |    2 
+ tests/xfs/108         |    1 
+ tests/xfs/780         |  207 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/780.out     |   18 ++++
+ tests/xfs/922         |  183 +++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/922.out     |    2 
+ 7 files changed, 490 insertions(+)
+ create mode 100755 tests/generic/729
+ create mode 100644 tests/generic/729.out
+ create mode 100755 tests/xfs/780
+ create mode 100644 tests/xfs/780.out
+ create mode 100755 tests/xfs/922
+ create mode 100644 tests/xfs/922.out
 
