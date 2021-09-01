@@ -7,34 +7,34 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0A0BC432BE
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 07:30:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27440C4320E
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 07:30:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BDFB361075
+	by mail.kernel.org (Postfix) with ESMTP id F3C5E61074
 	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 07:30:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231739AbhIAHbl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S242502AbhIAHbl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Wed, 1 Sep 2021 03:31:41 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:35928 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S242502AbhIAHbk (ORCPT
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:54880 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S242568AbhIAHbk (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Sep 2021 03:31:40 -0400
 Received: from dread.disaster.area (pa49-195-182-146.pa.nsw.optusnet.com.au [49.195.182.146])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 2D92C82AB08;
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 30939104E3C3;
         Wed,  1 Sep 2021 17:30:43 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1mLKhm-007NLU-LS; Wed, 01 Sep 2021 17:30:42 +1000
+        id 1mLKhm-007NLX-ME; Wed, 01 Sep 2021 17:30:42 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1mLKhm-003Xo5-DN; Wed, 01 Sep 2021 17:30:42 +1000
+        id 1mLKhm-003Xo8-EG; Wed, 01 Sep 2021 17:30:42 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     allison.henderson@oracle.com
-Subject: [PATCH 4/5] xfs: fix attribute log iovec sizing
-Date:   Wed,  1 Sep 2021 17:30:38 +1000
-Message-Id: <20210901073039.844617-5-david@fromorbit.com>
+Subject: [PATCH 5/5] [RFC] xfs: don't commit the first deferred transaction without intents
+Date:   Wed,  1 Sep 2021 17:30:39 +1000
+Message-Id: <20210901073039.844617-6-david@fromorbit.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210901073039.844617-1-david@fromorbit.com>
 References: <20210824224434.968720-1-allison.henderson@oracle.com>
@@ -42,87 +42,108 @@ References: <20210824224434.968720-1-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
         a=QpfB3wCSrn/dqEBSktpwZQ==:117 a=QpfB3wCSrn/dqEBSktpwZQ==:17
-        a=7QKq2e-ADPsA:10 a=20KFwNOVAAAA:8 a=IoOFiFtFkgiQdHSVYkQA:9
+        a=7QKq2e-ADPsA:10 a=20KFwNOVAAAA:8 a=D7YTRf8iRGDD4oG3zsQA:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The sizing of the attri name and value log iovecs is incorrect.
-This results in memory corruption and crashes on a kernel with
-the current CIL scalability patchset applied as it relies on the
-callers playing by slightly different alignment rules.
+If the first operation in a string of defer ops has no intents,
+then there is no reason to commit it before running the first call
+to xfs_defer_finish_one(). This allows the defer ops to be used
+effectively for non-intent based operations without requiring an
+unnecessary extra transaction commit when first called.
 
-Convert the attri code to the new xlog_calc_iovec_size() API to
-fix these issues.
+This fixes a regression in per-attribute modification transaction
+count when delayed attributes are not being used.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_attr_item.c | 29 ++++++++---------------------
- 1 file changed, 8 insertions(+), 21 deletions(-)
+ fs/xfs/libxfs/xfs_defer.c | 29 +++++++++++++++++------------
+ 1 file changed, 17 insertions(+), 12 deletions(-)
 
-diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-index 4072972a2ed8..bd4089eb8087 100644
---- a/fs/xfs/xfs_attr_item.c
-+++ b/fs/xfs/xfs_attr_item.c
-@@ -42,13 +42,6 @@
- static const struct xfs_item_ops xfs_attri_item_ops;
- static const struct xfs_item_ops xfs_attrd_item_ops;
+diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+index 01fcf5e93be5..05983a4a4f91 100644
+--- a/fs/xfs/libxfs/xfs_defer.c
++++ b/fs/xfs/libxfs/xfs_defer.c
+@@ -181,7 +181,7 @@ static const struct xfs_defer_op_type *defer_op_types[] = {
+ 	[XFS_DEFER_OPS_TYPE_ATTR]	= &xfs_attr_defer_type,
+ };
  
--/* iovec length must be 32-bit aligned */
--static inline size_t ATTR_NVEC_SIZE(size_t size)
--{
--	return size == sizeof(int32_t) ? size :
--	       sizeof(int32_t) + round_up(size, sizeof(int32_t));
--}
--
- static inline struct xfs_attri_log_item *ATTRI_ITEM(struct xfs_log_item *lip)
- {
- 	return container_of(lip, struct xfs_attri_log_item, attri_item);
-@@ -89,19 +82,15 @@ xfs_attri_item_size(
- {
- 	struct xfs_attri_log_item       *attrip = ATTRI_ITEM(lip);
- 
--	*nvecs += 1;
--	*nbytes += sizeof(struct xfs_attri_log_format);
-+	*nvecs += 2;
-+	*nbytes += sizeof(struct xfs_attri_log_format) +
-+			xlog_calc_iovec_len(attrip->attri_name_len);
- 
--	/* Attr set and remove operations require a name */
--	ASSERT(attrip->attri_name_len > 0);
-+	if (!attrip->attri_value_len)
-+		return;
- 
- 	*nvecs += 1;
--	*nbytes += ATTR_NVEC_SIZE(attrip->attri_name_len);
--
--	if (attrip->attri_value_len > 0) {
--		*nvecs += 1;
--		*nbytes += ATTR_NVEC_SIZE(attrip->attri_value_len);
--	}
-+	*nbytes += xlog_calc_iovec_len(attrip->attri_value_len);
+-static void
++static bool
+ xfs_defer_create_intent(
+ 	struct xfs_trans		*tp,
+ 	struct xfs_defer_pending	*dfp,
+@@ -192,6 +192,7 @@ xfs_defer_create_intent(
+ 	if (!dfp->dfp_intent)
+ 		dfp->dfp_intent = ops->create_intent(tp, &dfp->dfp_work,
+ 						     dfp->dfp_count, sort);
++	return dfp->dfp_intent;
  }
  
  /*
-@@ -137,12 +126,10 @@ xfs_attri_item_format(
- 			&attrip->attri_format,
- 			sizeof(struct xfs_attri_log_format));
- 	xlog_copy_iovec(lv, &vecp, XLOG_REG_TYPE_ATTR_NAME,
--			attrip->attri_name,
--			ATTR_NVEC_SIZE(attrip->attri_name_len));
-+			attrip->attri_name, attrip->attri_name_len);
- 	if (attrip->attri_value_len > 0)
- 		xlog_copy_iovec(lv, &vecp, XLOG_REG_TYPE_ATTR_VALUE,
--				attrip->attri_value,
--				ATTR_NVEC_SIZE(attrip->attri_value_len));
-+				attrip->attri_value, attrip->attri_value_len);
+@@ -199,16 +200,18 @@ xfs_defer_create_intent(
+  * associated extents, then add the entire intake list to the end of
+  * the pending list.
+  */
+-STATIC void
++STATIC bool
+ xfs_defer_create_intents(
+ 	struct xfs_trans		*tp)
+ {
+ 	struct xfs_defer_pending	*dfp;
++	bool				ret = false;
+ 
+ 	list_for_each_entry(dfp, &tp->t_dfops, dfp_list) {
+ 		trace_xfs_defer_create_intent(tp->t_mountp, dfp);
+-		xfs_defer_create_intent(tp, dfp, true);
++		ret |= xfs_defer_create_intent(tp, dfp, true);
+ 	}
++	return ret;
  }
  
- /*
+ /* Abort all the intents that were committed. */
+@@ -459,7 +462,7 @@ int
+ xfs_defer_finish_noroll(
+ 	struct xfs_trans		**tp)
+ {
+-	struct xfs_defer_pending	*dfp;
++	struct xfs_defer_pending	*dfp = NULL;
+ 	int				error = 0;
+ 	LIST_HEAD(dop_pending);
+ 
+@@ -478,17 +481,19 @@ xfs_defer_finish_noroll(
+ 		 * of time that any one intent item can stick around in memory,
+ 		 * pinning the log tail.
+ 		 */
+-		xfs_defer_create_intents(*tp);
++		bool has_intents = xfs_defer_create_intents(*tp);
+ 		list_splice_init(&(*tp)->t_dfops, &dop_pending);
+ 
+-		error = xfs_defer_trans_roll(tp);
+-		if (error)
+-			goto out_shutdown;
++		if (has_intents || dfp) {
++			error = xfs_defer_trans_roll(tp);
++			if (error)
++				goto out_shutdown;
+ 
+-		/* Possibly relog intent items to keep the log moving. */
+-		error = xfs_defer_relog(tp, &dop_pending);
+-		if (error)
+-			goto out_shutdown;
++			/* Possibly relog intent items to keep the log moving. */
++			error = xfs_defer_relog(tp, &dop_pending);
++			if (error)
++				goto out_shutdown;
++		}
+ 
+ 		dfp = list_first_entry(&dop_pending, struct xfs_defer_pending,
+ 				       dfp_list);
 -- 
 2.31.1
 
