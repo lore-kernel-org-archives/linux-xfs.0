@@ -4,39 +4,39 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ADAB4C432BE
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 00:11:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B9F9C4320A
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 00:12:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 910546102A
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 00:11:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6408E6102A
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 00:12:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242228AbhIAAMx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 Aug 2021 20:12:53 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46782 "EHLO mail.kernel.org"
+        id S242998AbhIAAMz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 Aug 2021 20:12:55 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46812 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S243020AbhIAAMq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 31 Aug 2021 20:12:46 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 700E06102A;
-        Wed,  1 Sep 2021 00:11:50 +0000 (UTC)
+        id S243026AbhIAAMv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 31 Aug 2021 20:12:51 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E354C61008;
+        Wed,  1 Sep 2021 00:11:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1630455110;
-        bh=rG/2e+3GY4VVp4lQsfUoZ4Ta1YMzSMdrJFbP4iwhAjs=;
+        s=k20201202; t=1630455116;
+        bh=sC6PTG4ek4/QRwPorslrPDk9HBxUXKLbjFN0/62aMVE=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=A3ft3nW8944ziF6JjB+f0NfIGSuBlFW8wRZk5izGuDtzkvFrmg7W3BhoALSQr3/gg
-         pg/ZURojqBwsE2zbYr4xO/BONCKQSs56yhguNYy3rxWZJYN5Vy4tpkhfAebPM0drrY
-         /YuLiVDsQDmLsyqZnIJ57z389TrP1iBO6IfEfcMVj0/3WylrLaXe8HbMi5AMI9/EyC
-         rbpJ9Su/BpWS4PaForU8GMUpiQQhWDI9Djo8h6T5wXtKj9/Vkmx8tw/saifvWJr7Xi
-         +HCVTKxd0B88VL9djsumQD9VFI6WC9Egx61Z7Nc236wPmr2xGQO2XLJnbf6t5p3wX2
-         5JcocVzlnRXcQ==
-Subject: [PATCH 1/3] generic: fsstress with cpu offlining
+        b=V1STgHB/6+ltVtgf8YSZHdVZzLn1DxjroTVus7UeF5SPvxn3F0+ACJ6E6zsBj13Im
+         1QOGbOFYIS6CS/LhjFmL+zHBcAl2Xw6mSpTWrPD/1mE4w6U51sjWuiqvOSqUHXVl6z
+         W6K2Z7YXHwdvaeYx0xfF38iBGCEWMmfBs/oumu9lAND+xTd5EEEaao/QW/ygScmeVP
+         2XO+LeWfmnDW0l+QKZ438PfMeoDXykPI2+z0Nto1h6T7ZuIe2J7NIp9Wxtpdafrzis
+         cw8j58SmwH3Q2HY/0TyMeZcTG6nfbKpSqI1Ulqad9BKbKV+EdNa6AVmfYLOgctB+tc
+         nVQCpA5qq56MQ==
+Subject: [PATCH 2/3] generic: test shutdowns of a nested filesystem
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 31 Aug 2021 17:11:50 -0700
-Message-ID: <163045511017.770026.7524779302645203861.stgit@magnolia>
+Date:   Tue, 31 Aug 2021 17:11:55 -0700
+Message-ID: <163045511565.770026.4042733663837802604.stgit@magnolia>
 In-Reply-To: <163045510470.770026.14067376159951420121.stgit@magnolia>
 References: <163045510470.770026.14067376159951420121.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,99 +49,202 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Exercise filesystem operations when we're taking CPUs online and offline
-throughout the test.
+generic/475, but we're running fsstress on a disk image inside the
+scratch filesystem
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/generic/726     |   69 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/726.out |    2 +
- 2 files changed, 71 insertions(+)
- create mode 100755 tests/generic/726
- create mode 100644 tests/generic/726.out
+ common/rc             |   24 +++++++++
+ tests/generic/725     |  136 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/725.out |    2 +
+ 3 files changed, 162 insertions(+)
+ create mode 100755 tests/generic/725
+ create mode 100644 tests/generic/725.out
 
 
-diff --git a/tests/generic/726 b/tests/generic/726
+diff --git a/common/rc b/common/rc
+index 46b6b220..05c87332 100644
+--- a/common/rc
++++ b/common/rc
+@@ -631,6 +631,30 @@ _ext4_metadump()
+ 		$DUMP_COMPRESSOR -f "$dumpfile" &>> "$seqres.full"
+ }
+ 
++# Capture the metadata of a filesystem in a dump file for offline analysis.
++# This is not supported by all filesystem types, so this function should only
++# be used after a test has already failed.
++_metadump_dev() {
++	local device="$1"
++	local dumpfile="$2"
++	local compressopt="$3"
++
++	test "$DUMP_CORRUPT_FS" = 1 || return 0
++
++	case "$FSTYP" in
++	ext*)
++		_ext4_metadump $device $dumpfile $compressopt
++		;;
++	xfs)
++		_xfs_metadump $dumpfile $device none $compressopt
++		;;
++	*)
++		echo "Don't know how to metadump $FSTYP"
++		return 1
++		;;
++	esac
++}
++
+ _test_mkfs()
+ {
+     case $FSTYP in
+diff --git a/tests/generic/725 b/tests/generic/725
 new file mode 100755
-index 00000000..cb709795
+index 00000000..ac008fdb
 --- /dev/null
-+++ b/tests/generic/726
-@@ -0,0 +1,69 @@
++++ b/tests/generic/725
+@@ -0,0 +1,136 @@
 +#! /bin/bash
 +# SPDX-License-Identifier: GPL-2.0
 +# Copyright (c) 2021 Oracle, Inc.  All Rights Reserved.
 +#
-+# FS QA Test No. 726
++# FS QA Test No. 725
 +#
-+# Run an all-writes fsstress run with multiple threads while exercising CPU
-+# hotplugging to shake out bugs in the write path.
++# Test nested log recovery with repeated (simulated) disk failures.  We kick
++# off fsstress on a loopback filesystem mounted on the scratch fs, then switch
++# out the underlying scratch device with dm-error to see what happens when the
++# disk goes down.  Having taken down both fses in this manner, remount them and
++# repeat.  This test simulates VM hosts crashing to try to shake out CoW bugs
++# in writeback on the host that cause VM guests to fail to recover.
 +#
 +. ./common/preamble
-+_begin_fstest auto rw stress
++_begin_fstest shutdown auto log metadata eio recoveryloop
 +
-+# Override the default cleanup function.
 +_cleanup()
 +{
 +	cd /
-+	rm -f $tmp.*
 +	$KILLALL_PROG -9 fsstress > /dev/null 2>&1
-+	wait	# for exercise_cpu_hotplug subprocess
-+	for i in "$sysfs_cpu_dir/"cpu*/online; do
-+		echo 1 > "$i" 2>/dev/null
-+	done
++	wait
++	if [ -n "$loopmnt" ]; then
++		$UMOUNT_PROG $loopmnt 2>/dev/null
++		rm -r -f $loopmnt
++	fi
++	rm -f $tmp.*
++	_dmerror_unmount
++	_dmerror_cleanup
 +}
 +
-+exercise_cpu_hotplug()
-+{
-+	while [ -e $sentinel_file ]; do
-+		local idx=$(( RANDOM % nr_hotplug_cpus ))
-+		local cpu="${hotplug_cpus[idx]}"
-+		local action=$(( RANDOM % 2 ))
++# Import common functions.
++. ./common/dmerror
++. ./common/reflink
 +
-+		echo "$action" > "$sysfs_cpu_dir/cpu$cpu/online" 2>/dev/null
-+		sleep 0.5
-+	done
-+}
-+
++# Modify as appropriate.
 +_supported_fs generic
 +
-+sysfs_cpu_dir="/sys/devices/system/cpu"
-+
-+# Figure out which CPU(s) support hotplug.
-+nrcpus=$(getconf _NPROCESSORS_CONF)
-+hotplug_cpus=()
-+for ((i = 0; i < nrcpus; i++ )); do
-+	test -e "$sysfs_cpu_dir/cpu$i/online" && hotplug_cpus+=("$i")
-+done
-+nr_hotplug_cpus="${#hotplug_cpus[@]}"
-+test "$nr_hotplug_cpus" -gt 0 || _notrun "CPU hotplugging not supported"
-+
-+_require_scratch
++_require_scratch_reflink
++_require_cp_reflink
++_require_dm_target error
 +_require_command "$KILLALL_PROG" "killall"
 +
 +echo "Silence is golden."
 +
-+_scratch_mkfs > $seqres.full 2>&1
-+_scratch_mount >> $seqres.full 2>&1
++_scratch_mkfs >> $seqres.full 2>&1
++_require_metadata_journaling $SCRATCH_DEV
++_dmerror_init
++_dmerror_mount
 +
-+sentinel_file=$tmp.hotplug
-+touch $sentinel_file
-+exercise_cpu_hotplug &
++# Create a fs image consuming 1/3 of the scratch fs
++scratch_freesp_bytes=$(_get_available_space $SCRATCH_MNT)
++loopimg_bytes=$((scratch_freesp_bytes / 3))
 +
-+nr_cpus=$((LOAD_FACTOR * nr_hotplug_cpus))
-+nr_ops=$((25000 * TIME_FACTOR))
-+$FSSTRESS_PROG $FSSTRESS_AVOID -w -d $SCRATCH_MNT -n $nr_ops -p $nr_cpus >> $seqres.full
-+rm -f $sentinel_file
++loopimg=$SCRATCH_MNT/testfs
++truncate -s $loopimg_bytes $loopimg
++_mkfs_dev $loopimg
 +
-+# success, all done
++loopmnt=$tmp.mount
++mkdir -p $loopmnt
++
++scratch_aliveflag=$tmp.runsnap
++snap_aliveflag=$tmp.snapping
++
++snap_loop_fs() {
++	touch "$snap_aliveflag"
++	while [ -e "$scratch_aliveflag" ]; do
++		rm -f $loopimg.a
++		_cp_reflink $loopimg $loopimg.a
++		sleep 1
++	done
++	rm -f "$snap_aliveflag"
++}
++
++fsstress=($FSSTRESS_PROG $FSSTRESS_AVOID -d "$loopmnt" -n 999999 -p "$((LOAD_FACTOR * 4))")
++
++for i in $(seq 1 $((25 * TIME_FACTOR)) ); do
++	touch $scratch_aliveflag
++	snap_loop_fs >> $seqres.full 2>&1 &
++
++	if ! _mount $loopimg $loopmnt -o loop; then
++		rm -f $scratch_aliveflag
++		_metadump_dev $loopimg $seqres.loop.$i.md
++		_fail "iteration $i loopimg mount failed"
++		break
++	fi
++
++	("${fsstress[@]}" >> $seqres.full &) > /dev/null 2>&1
++
++	# purposely include 0 second sleeps to test shutdown immediately after
++	# recovery
++	sleep $((RANDOM % (3 * TIME_FACTOR) ))
++	rm -f $scratch_aliveflag
++
++	# This test aims to simulate sudden disk failure, which means that we
++	# do not want to quiesce the filesystem or otherwise give it a chance
++	# to flush its logs.  Therefore we want to call dmsetup with the
++	# --nolockfs parameter; to make this happen we must call the load
++	# error table helper *without* 'lockfs'.
++	_dmerror_load_error_table
++
++	ps -e | grep fsstress > /dev/null 2>&1
++	while [ $? -eq 0 ]; do
++		$KILLALL_PROG -9 fsstress > /dev/null 2>&1
++		wait > /dev/null 2>&1
++		ps -e | grep fsstress > /dev/null 2>&1
++	done
++	for ((i = 0; i < 10; i++)); do
++		test -e "$snap_aliveflag" || break
++		sleep 1
++	done
++
++	# Mount again to replay log after loading working table, so we have a
++	# consistent fs after test.
++	$UMOUNT_PROG $loopmnt
++	_dmerror_unmount || _fail "iteration $i scratch unmount failed"
++	_dmerror_load_working_table
++	if ! _dmerror_mount; then
++		_metadump_dev $DMERROR_DEV $seqres.scratch.$i.md
++		_fail "iteration $i scratch mount failed"
++	fi
++done
++
++# Make sure the fs image file is ok
++if [ -f "$loopimg" ]; then
++	if _mount $loopimg $loopmnt -o loop; then
++		$UMOUNT_PROG $loopmnt &> /dev/null
++	else
++		_metadump_dev $DMERROR_DEV $seqres.scratch.final.md
++		echo "final scratch mount failed"
++	fi
++	SCRATCH_RTDEV= SCRATCH_LOGDEV= _check_scratch_fs $loopimg
++fi
++
++# success, all done; let the test harness check the scratch fs
 +status=0
 +exit
-diff --git a/tests/generic/726.out b/tests/generic/726.out
+diff --git a/tests/generic/725.out b/tests/generic/725.out
 new file mode 100644
-index 00000000..6839f8ce
+index 00000000..ed73a9fc
 --- /dev/null
-+++ b/tests/generic/726.out
++++ b/tests/generic/725.out
 @@ -0,0 +1,2 @@
-+QA output created by 726
++QA output created by 725
 +Silence is golden.
 
