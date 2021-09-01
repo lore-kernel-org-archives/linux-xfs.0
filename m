@@ -2,453 +2,205 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43839C4320E
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 22:10:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E197AC432BE
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 23:07:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 272EB610A2
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 22:10:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C52986109E
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 23:07:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344607AbhIAWLb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 1 Sep 2021 18:11:31 -0400
-Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:44686 "EHLO
-        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1344881AbhIAWL3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Sep 2021 18:11:29 -0400
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 181M6kBT004466;
-        Wed, 1 Sep 2021 22:10:31 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
- date : message-id : in-reply-to : references : content-transfer-encoding :
- content-type : mime-version; s=corp-2021-07-09;
- bh=1/QxVcyJIVFvXXdx6X7zm9muhzXK0zjb86ie4vZksuw=;
- b=woussWWwXN+zTXq0Z4apjZce3ytEK9rGvtb8at/aSuFTj3HszxxyAk2EE2vgBpGKqt0j
- AUCn0uPPqDBnYWTdEnrNPF+eNBiIei9b8piXwC1aPhUqGy5rCZHMzlcnS5vBpvXX+ZgZ
- V13tQ9Gp1vK7VYz4KPrZ1vkX9YFiTqsvhVW0nqrlmOxEY3NgjCL3jKhPZvnhbib7yCn8
- r6nlDEcl3gIeBiFjyGrhGic1ymaybVcAtiMV6phag2GUWBQFoYuKN8EXWtmACl63tcm2
- dRPO+Y9smjyx3DohhgIS9BLM+OB9OlhXQrZHBq519TA7+Pfo0F+z/zkwt0SriFmkDQ9M Tw== 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
- date : message-id : in-reply-to : references : content-transfer-encoding :
- content-type : mime-version; s=corp-2020-01-29;
- bh=1/QxVcyJIVFvXXdx6X7zm9muhzXK0zjb86ie4vZksuw=;
- b=XnGaorz/Bhda/aeBaTISPNZUjxbwo4YJWv6Nmusqlm32IEcqeda1Zpd9xOYq28HSTBud
- Y1oSjnAMSOGiEvgsE9XLcf6Gc2pUUETrKjy6l1hhJPt1hKbhESW4HRRtzfn6OaJdsMcs
- /FKnVBRWp62r2BGmZ1kir3tDbAlPKpqr7p8WUna5aFdPONthSgy4l1BoIRM10WaTnZmN
- GlEd+AtLDUaVbGrdkOQZZCPUzhbYXHRyjWQj9SGol3HMOJ0EjlBxvPLZVpr0PDUtaCSZ
- /jID/Le4HA+l3ztFdEGxUst6B2IBTfj6Rpy+DMK06/PnVkOQOCYs2syu1sOqOw2yde65 MA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3atdw18q79-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 01 Sep 2021 22:10:31 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 181MAS1H044096;
-        Wed, 1 Sep 2021 22:10:30 GMT
-Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2176.outbound.protection.outlook.com [104.47.57.176])
-        by userp3030.oracle.com with ESMTP id 3ate04u7q9-2
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 01 Sep 2021 22:10:30 +0000
+        id S232406AbhIAXIh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 1 Sep 2021 19:08:37 -0400
+Received: from mail-co1nam11on2074.outbound.protection.outlook.com ([40.107.220.74]:44641
+        "EHLO NAM11-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S229948AbhIAXIg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 1 Sep 2021 19:08:36 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=fIXh4fGeDSVLboukIgPd6GFE6DRG2rEIZQrNwNXZpYyCoN8gXeFvN8xs0PdVhr6OUbWnmN3NMzWvOh+6WxkDfO7zHMBeo/y+KGQiEsjrNfY1henCT90X9sRwoXo7X3+MWX+/v09/DkdAv0i8EXLMRqPNsMmRZVKx2nKPIb+WPOhoJSOh4sWMS7P1hyzAYQPjRA/8pFmUoTLhFT5yJV8A5qNQ1PzMBBVrZUxqjGgWLYgtu+jIf8lgkUF1R+aVFmnWokoaQVJRmENt72zx0DjbMYpH8iHSJAiryK8GOo6rk1+TJpoXlgWjerCpF7tmp3w0tJU1mipQjJT35guhEXlA1g==
+ b=kuk3o8nf9D/AQOQGmXVbmlTbMu9k8Fre/PMveLnQdqnRH3yJHU0M84PZT9Fg2R290VsC5rT9djutyocjHZM79iiwpl+Ahw7biZbnwX9eKeEbHuoxP+m+iHer2x7/cxgbQrenPIL/tfKRSYudUomZ63rXlhu7Es2M+0ifoqcBu1ANMeN7NTUipggjqD66zQHeMwXFT+jnZSLGQmu4p7bnuh27ibV8pI7r8KQt7eaxQ8LWnefGId0UnDFo5semlZyfUAZ5tQ10hhRpUipNhWFDGWQs3u2HtN+pJbMLay2DOY8h9m4GboXJMxrChWaJfsxC8BN2djbbkOVMQnq7cpSL9A==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=1/QxVcyJIVFvXXdx6X7zm9muhzXK0zjb86ie4vZksuw=;
- b=izak2vZhiwVpEXyysveNLXWS68Y+ndpV2pSOZgC55rQ0ZcBDVqzE7/PyIvQXQy0lAGw2A0nvaUAsBhbkU8HyaT28ZQj0ZPm1Jo3kAjHgXD3FChpQ/oCrr2qeiQeOiGixTXBLftRx/ecqJGKnqqsgKXFHyFWHRd79GTf4AeEwlRUlJIYX7oMnRDYgkBghqBEY31Tx7He907ABReZmisgDeMF6CtU/WauEIXpBNpAeM3+X7OetlKntXOEE4Xib38UkCYTzXYlix7dbgT8zuO2sCyCHkeu7MBPzH22IH6L2nebjmZsdh1mrrBZX6lOoCXjRtL7SLM0b6WuewWLh1abc2w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=1/QxVcyJIVFvXXdx6X7zm9muhzXK0zjb86ie4vZksuw=;
- b=psIHIxmEuUdjUJOJi00+dwJcmB8u4JSew9dWyiDQXGQvP45qt44CaPfQHWShZBvSvB2kS+fKgCg3lAiZaR3QwKxAbew5UdMcMbSxar2hT3OVo705Q4F3i2Vz17ZfY7XjIFPHeTuX3OU1WvGQODji5clOf1LB4woys+o8eCrCGRc=
-Authentication-Results: vger.kernel.org; dkim=none (message not signed)
- header.d=none;vger.kernel.org; dmarc=none action=none header.from=oracle.com;
-Received: from DM6PR10MB2795.namprd10.prod.outlook.com (2603:10b6:5:70::21) by
- DM6PR10MB3211.namprd10.prod.outlook.com (2603:10b6:5:1a6::16) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.4478.17; Wed, 1 Sep 2021 22:10:14 +0000
-Received: from DM6PR10MB2795.namprd10.prod.outlook.com
- ([fe80::a59b:518a:8dc9:4f72]) by DM6PR10MB2795.namprd10.prod.outlook.com
- ([fe80::a59b:518a:8dc9:4f72%6]) with mapi id 15.20.4457.024; Wed, 1 Sep 2021
- 22:10:14 +0000
-From:   Catherine Hoang <catherine.hoang@oracle.com>
-To:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: [PATCH v2 1/1] xfstests: Add Log Attribute Replay test
-Date:   Wed,  1 Sep 2021 22:10:06 +0000
-Message-Id: <20210901221006.125888-2-catherine.hoang@oracle.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20210901221006.125888-1-catherine.hoang@oracle.com>
-References: <20210901221006.125888-1-catherine.hoang@oracle.com>
+ bh=9mGnP4zcvqLblZBTKeRNvjAwGkvdqYqhhLc3UMhixts=;
+ b=oOl7o4jYf0xk7M0hDJ/CKbi9YEUQE73I6Grq3E6ka2VQXeiAtcxrO1g9qBe1WzDwI9VBbNmOyyovrumHElhyldwiMui7BZze2a52McMEaxNnoAMhp5ViqBX3tDWwnoh7eBblvZ5R1BYYqvrVUCfQtu4cYhELAff+3D+vQSPkSEkGQjaqMdCOrOo5OagRbihXl4I5e6J8kwQ1LLbkfyfRGFG6cvDnrF8RgAG63vme0ZOih/8j1sdlvOedGHCovGyPt2h3RKoiDwTlIorwSXiwZ6gmskCfbkj8H5F8jxwKON4l9UryzK5zS+udB5+ZWbQGIM3LG6mFhsTbuEiii6D3cA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=9mGnP4zcvqLblZBTKeRNvjAwGkvdqYqhhLc3UMhixts=;
+ b=AgprL/yNd4KvPXIPkEbFqZGR/4u0mTcSeYe+orFxzdPlJ6r/037PbMuhRIaKa8iS3ARDDCVGcbGjMZSJSp4ffbAogeyGzFgba+KB2UIxJyZ9ff4nAZDR2GCWZ9rypaUh8gAiDxZyR2qGkvTIFtyfbXdoSAfjvEmji6sQDcQJFqs=
+Authentication-Results: redhat.com; dkim=none (message not signed)
+ header.d=none;redhat.com; dmarc=none action=none header.from=amd.com;
+Received: from BN9PR12MB5129.namprd12.prod.outlook.com (2603:10b6:408:136::12)
+ by BN9PR12MB5083.namprd12.prod.outlook.com (2603:10b6:408:134::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4457.23; Wed, 1 Sep
+ 2021 23:07:37 +0000
+Received: from BN9PR12MB5129.namprd12.prod.outlook.com
+ ([fe80::b891:a906:28f0:fdb]) by BN9PR12MB5129.namprd12.prod.outlook.com
+ ([fe80::b891:a906:28f0:fdb%3]) with mapi id 15.20.4457.024; Wed, 1 Sep 2021
+ 23:07:36 +0000
+Subject: Re: [PATCH v1 03/14] mm: add iomem vma selection for memory migration
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        "Sierra Guiza, Alejandro (Alex)" <alex.sierra@amd.com>,
+        akpm@linux-foundation.org, linux-mm@kvack.org,
+        rcampbell@nvidia.com, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org, amd-gfx@lists.freedesktop.org,
+        dri-devel@lists.freedesktop.org, jgg@nvidia.com, jglisse@redhat.com
+References: <20210825034828.12927-1-alex.sierra@amd.com>
+ <20210825034828.12927-4-alex.sierra@amd.com> <20210825074602.GA29620@lst.de>
+ <c4241eb3-07d2-c85b-0f48-cce4b8369381@amd.com>
+ <a9eb2c4a-d8cc-9553-57b7-fd1622679aaa@amd.com> <20210830082800.GA6836@lst.de>
+ <e40b3b79-f548-b87b-7a85-f654f25ed8dd@amd.com>
+ <20210901082925.GA21961@lst.de>
+ <11d64457-9d61-f82d-6c98-d68762dce85d@amd.com>
+ <20210901220308.GL2566745@dread.disaster.area>
+From:   Felix Kuehling <felix.kuehling@amd.com>
+Organization: AMD Inc.
+Message-ID: <e6a9e3cc-9dca-946a-c3fc-f86753fe8fd4@amd.com>
+Date:   Wed, 1 Sep 2021 19:07:34 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.13.0
+In-Reply-To: <20210901220308.GL2566745@dread.disaster.area>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: SA0PR11CA0069.namprd11.prod.outlook.com
- (2603:10b6:806:d2::14) To DM6PR10MB2795.namprd10.prod.outlook.com
- (2603:10b6:5:70::21)
+Content-Language: en-US
+X-ClientProxiedBy: YT2PR01CA0019.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:b01:38::24) To BN9PR12MB5129.namprd12.prod.outlook.com
+ (2603:10b6:408:136::12)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from instance-20210819-1300.osdevelopmeniad.oraclevcn.com (209.17.40.39) by SA0PR11CA0069.namprd11.prod.outlook.com (2603:10b6:806:d2::14) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4478.19 via Frontend Transport; Wed, 1 Sep 2021 22:10:14 +0000
+Received: from [172.27.226.80] (165.204.55.251) by YT2PR01CA0019.CANPRD01.PROD.OUTLOOK.COM (2603:10b6:b01:38::24) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4478.20 via Frontend Transport; Wed, 1 Sep 2021 23:07:36 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: a10362c9-0760-42c2-24cb-08d96d954618
-X-MS-TrafficTypeDiagnostic: DM6PR10MB3211:
-X-Microsoft-Antispam-PRVS: <DM6PR10MB3211F10DD7E27F3601F23D2189CD9@DM6PR10MB3211.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:6430;
+X-MS-Office365-Filtering-Correlation-Id: e3fbcfa1-7f8b-45b6-0577-08d96d9d49d3
+X-MS-TrafficTypeDiagnostic: BN9PR12MB5083:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <BN9PR12MB508320C1751AE4078A3E36C692CD9@BN9PR12MB5083.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: NDfvluDXHnVdEotTMg46F/9GOonkVXUHy7PWFGp6u0MDoeyOVliZr2kVPwBWWY0r7Z+WkNwwE4Ym0yAXi6ImeN2fdvjAY49E99l4NAgqr4xWU6vS898wsf0sSaASWqMaYAk8HXz0hTr19N+xuwdkqCn42haH/cHHIzlba3ajpy4LFJ4xOxdW7kye0hs6gQiuJev6Ur4ooGfRL9arlOjz/7PhdES79yR40z00qMUdKijUHTK7rNq5NRGL7QmilFzP5Ndatf2MHC96ybSPUbycL4p9nQM2jgMynayCdT2gP+mhs5jO79riyLXqrqPzXHVt/98ZOhV41dhaUgeesANjd0zgD3oyNTnA++1IUBQ2xBfpBSgJYDkIlJu2Dbrm7Pbglt16THzMtrogVSyMxu7xkIeVPUpqwmfN1+vKPQKliPtwRSM29IC/y3nyawInMCoPOSL71ie+JUbcxb66Y4dv23f1Hi9laJi25E6f7VRYxFZ8O5lVoEzVxuFXU+LRvlsqfZFcS+zfQljYdefPHFyMxcW2PWSfS8Gpm5zNVvdv/inFcgUyTm3aPPLG3J1LN1qSPFT9MFoK8pB+WkDbqI8eQBk8N+hxLRH2mI8BNWIPHhX4/pL9MirHOfJW9fH3/k9hL/LZN1u7voY2fJjz1m8qLJQrZKtFQWqrEu4CGNS9IImg1/DECZTF4BZTgvt2SLUtLeTx3JpacN69vDW3CNMXcqU+eE+xODvlygwZ72NhQBA=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB2795.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(396003)(136003)(376002)(366004)(39860400002)(346002)(6486002)(956004)(38100700002)(38350700002)(6512007)(44832011)(316002)(2616005)(86362001)(66476007)(83380400001)(5660300002)(478600001)(36756003)(6506007)(6666004)(2906002)(8676002)(66946007)(186003)(26005)(66556008)(450100002)(8936002)(1076003)(52116002)(357404004);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: k1HZSz8Ti7gi74ZFW7OlmI3RJSNuFs7s5jvzEF0VzfZUcyfRynhkUjaR/l08BypQoLBllu+/iZAc3KKnVAlizdzl0+JusVc0YwmFHB3EFziEV84dSF1ZzxyPTGb4gUnxEpH4Q3/UPKlEQpf5at/XRzzgHPO4mAcjP1p5uVa8Cgk1qNrjDLdQ9x9iBzPkLDLGnASpn1ECpNm65oh9g83aJS6ypV3YVuTOxbBIH6bOKZOZuAgEf5Lo0laYTb93TzKsQhweCaiChHeG/ko0lQgUAMeQ1QqWgkhcvuVhd9TJ6qwicCyJV0lD4Fs+GOHZ4VoS8CEfKJ8hcQFjaS0IJtv+WoOA0xac9imZfu9SKhKfYJfMt5V1VJCM4IXPmKtU0rTc1NDl3G4oViC4WvhG8pZ6X/F3gnmHOVM6cxCDXjsSPYBKDugPyey1XYlK3I6AfdOxGY4yZQEcBN3KykgJdLD2eiHMCaXL4RceRrPwAPpzeaRNXXLIdLA4yvqDVYkNBjqJuLkkAyuuSBuqOp1x2uQ9S+kcun8Jy/geFpDZjeljyezWxiBnunektQm/pdDPuk3icaw++oUIdIQDRN3JXR5sq2B3Gw797S4KXH5SrnF/S8uSNjf6aMYoYki3X/XZvb16fSuQrrTtm2ZbaTSG14MdnofpOjy/P+qI79dtZErhJDAgAjX3fA0rI7cFobPYHRfAGunkT0rR7FG8fp8RT1PEDk++P4OYK3wHalfi7uzUcfI=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN9PR12MB5129.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(136003)(376002)(39860400002)(346002)(366004)(396003)(5660300002)(38100700002)(316002)(4326008)(6486002)(16576012)(31686004)(66946007)(66476007)(54906003)(66556008)(83380400001)(86362001)(2906002)(6916009)(36756003)(8936002)(31696002)(44832011)(7416002)(36916002)(2616005)(956004)(8676002)(26005)(186003)(53546011)(478600001)(43740500002)(45980500001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?8wRUmxjGvWBx0f0pLSegqZ+fFm/haNI64Hl4KTkfzjJDtuRPcEyteeB81N3v?=
- =?us-ascii?Q?8Z3zDWzRB3Fe6PjS+Ba3tgtIECtlB43P7MndaxVm4WtFCY+regEYLh4Wgu5U?=
- =?us-ascii?Q?xEQS8G5sactldxaEprSobJBpaoOhgNjIossEzvgUynvHxqXB6HeHlsul+97m?=
- =?us-ascii?Q?BvS9TlcMKjn6O5yzvnY5i25w+WuKQjCdRh255e0Pv8xy+lF4vJ9+QjJYkk1g?=
- =?us-ascii?Q?VbVfbSA725ejO9CXuask8AfqeeDdwWC6XlizWGz/qSLBeTRzzgYYO3b0RKXD?=
- =?us-ascii?Q?TDY3CV8o60KNmkX2WZwQ7gP0FKoQ2n8B1yvKm7QcYFOAGckxgMsgU1/SMYCI?=
- =?us-ascii?Q?Fxd5df+3CIMNWpCVU97fnuY/lySgjW0tfBg/GQxQI/lmtXq8m7CtK1VAmcuB?=
- =?us-ascii?Q?gA9NRXx8SvYPYDZVhtUqZ8Vc11VxmFxv168DvWvh1NzcOhBWh6iWxrgv2D/w?=
- =?us-ascii?Q?V5EbFOXPB7UyGiUF4DmK9f7Cb2F1Ei2DGfpRo5jZZc1HtIZGQdqrHcF+KGFP?=
- =?us-ascii?Q?ZERyJC16L/doLZM4nTPOzFC29XoF/atKVsiOnA/p0Fr2IMd10iQmsDOWw1Uk?=
- =?us-ascii?Q?Dx131MK9yBSPuD1cJy2mumt/feuKagEvWvLBeDF8ncjpoCaoZFzNeSbiGIop?=
- =?us-ascii?Q?3ybchjJ1HlMcCiYoR20v3wAlX281s9ai0dF1MxXGGS/8+17YPitpZ6e90FH4?=
- =?us-ascii?Q?4nw0uiXULy+XJzOFVq8ThTh5I3iaU/vY26d3Z6yK72Oh5WWxFqXAmAsGHbKB?=
- =?us-ascii?Q?6X6hPSl1u87P+GVLQ3JlMu45M+ZqD+wHN7mHnE7b51emLwTvvLG+0cn5seOp?=
- =?us-ascii?Q?pbKxERr+gtVFhI8kvRF3Lqsfdj9Fh6MqsXY7RW+38cAJAr82bFtz9+g3DQdP?=
- =?us-ascii?Q?tt2b4NM/rh0/P9qWg+an74mg41lkyAbjIJcpFn25WZLzOHuFuETnqW5LQl5I?=
- =?us-ascii?Q?IL4iLZ4EYQavm/G7d0o8hKeiKsrjLgIGjl4wSdQd7TAI5DncBf4lCiayoBMn?=
- =?us-ascii?Q?94Z2LNLoQ2wU3JrTllGAEkRQ7nd8Z3y0B9kU8xcRMxyo7oEY+qVB3ji3Iu9l?=
- =?us-ascii?Q?yrjembG+uNGOTkssTRCVqTQi3/GYoFs2xz2NHzJmdg7ahlhb4mawyjg9ZHaq?=
- =?us-ascii?Q?+NLZiMJ9eLB10o90FrgRAzgsYncy2FaifJTnYzSvJK1jJwTXTGYHAZdNULKA?=
- =?us-ascii?Q?tAZ+XnvL5pLhVF+Rg7GHfpIem2un/o5CSgTVOvYQGPAb15iVztXTuPLngIt+?=
- =?us-ascii?Q?uZ8xdf5UveEgyv99WcWw+YQvqy3PpLAlrptbEAk0J+7VsfQwEps9+Kt13nID?=
- =?us-ascii?Q?/gB+Po1KvDjh+L9U5YRsnf2M?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: a10362c9-0760-42c2-24cb-08d96d954618
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB2795.namprd10.prod.outlook.com
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?VS9tejh3bUhRc2tQNUUrRGN1MWx4VzZwc0xObU0zWW9aWC9MSHQvd01ML2V5?=
+ =?utf-8?B?S2o0aURQbktDUmZPdmNlZUxDUlpGWEQ5Q0U2MVhVd3JoVit3eUFsdGgzK25o?=
+ =?utf-8?B?Z2Nic0pZUTFFWFZseTlZaWhPTFJ6bkdyREN2SVVVYmhqU2xrMkNETThZSVpG?=
+ =?utf-8?B?Q3ZjbE5UNVAzS2M5VDJSc21YcER4b25WMFA0dnhVc1ZMSlVpYnVmNHFuYTl1?=
+ =?utf-8?B?bWhsK3pnV0RZdnR0OHdvWHZvRGd4ZzBCU1ltNktTT3hzalo4MVRQZnVLMzVI?=
+ =?utf-8?B?UmljRkh5OHIzSVVVMHI1dFgwZUdjdE53bWFXMEZXUDRHOXQwN3A0ajRzc1BS?=
+ =?utf-8?B?TUdHWXFhVVd2Y0tuRkdSOXpQZFY3RmZaN0N1Z0ZuSVB4NHRMc3p5RGE2MGN2?=
+ =?utf-8?B?azlxSGZuZnBxblFkWWZWWmxJaWxGTFZ0OE44Wmord3VZTXhSQS9yK0FCUXhU?=
+ =?utf-8?B?dnVkNnRkd0ZkRE1HUnM5dzBDSkF0VlA4LzVaOEptYVphN2hqcW5xemRyeG8z?=
+ =?utf-8?B?RE5oZEMyVUJqRWFpSjU1Zkk3Q0gzV1lZT1RGLzh3VEdKTWRQVkVvU3hYQTZ6?=
+ =?utf-8?B?alloZWdVYWMwYUVxOXVMQ0pQd1ppQm9aOUxOeWFvTEwzbk1MQlVGYzM3T1lz?=
+ =?utf-8?B?ZmdOc3NHWmk2a2I4dTNRMFBTNjZmUG1OQnNCdGtDemVZVzltUStETkVYYzAr?=
+ =?utf-8?B?S0RsQ3FxL016OStuR1ZRVEV6MzBlYmRHRVU4WEdoV09kN0VjUGNEV1NEQlF3?=
+ =?utf-8?B?TlpjNElLcUNmUm9LR2IveUZmb01wNjNFbi83aStFaFh6NXNlWndvVjZ6SGF2?=
+ =?utf-8?B?RXJLWjA2RjE1QUhZRFNpS2c4cTYrUkJnRU9JajJ2cGNMbk5XUURXOFFDNjE1?=
+ =?utf-8?B?NFBQQ253VDc3ejBtM0E4WUxaOGFHZ3loV1YvbENFVmh5Ym90d050Ly8rMjdv?=
+ =?utf-8?B?TjhLa2VYODRqakNTelBOVldWOENxWE1uSWpLNGh0REdXWEZEZzVBcWUwKzBh?=
+ =?utf-8?B?NzRUNFNraWhFN25mbk1ic1NvekRBOHBzQmFnc28vbU96dHhoc3YzenpNMkl6?=
+ =?utf-8?B?Nm91SElPdmF5QXlEd1B6RlZ3ZzJSb0NiWUNQQWw4SWF1ZEp6Slh2ZDducUhw?=
+ =?utf-8?B?RWxtZFp5VXVLMCtVTS9Gei9jWExXQitnYlJ0dnZCM2tmVHdpaFhvSVh3NWFY?=
+ =?utf-8?B?NDlnNHJUbHJiTUs2SkFEbFRVZ09SS1Z1dkRrcE1TTHhkM0RVdXJaVnNjYkUz?=
+ =?utf-8?B?d2hUaDJvUkhHT3BWWXNYejlCVXFKWXZRNzNjTDdtb1ZtVzZLN0FINi90clg4?=
+ =?utf-8?B?RllIcjIxWkZIRzJwamtYZDlDYkxseHZGM2ZWRUVZQ3JSVnpjUEV1czVhUDYx?=
+ =?utf-8?B?WGdQdkZlcVNXMU9FYmZPd2JkTk5kTy93ZU1iRGNTTlVPV1prUm5FUks5dWli?=
+ =?utf-8?B?Z1hiVXlKM3phdkJRdnBCc1NCTkoyUWhrTHU1TTIra2IyRUp1bUhpSExObXYv?=
+ =?utf-8?B?MWd0bXFCL1kybXA5aDJWUE1iL05HNUxXTkh4QllqdStnWlRlTU53RkRrbWty?=
+ =?utf-8?B?cEM0U1J0RVJoVURiZzNhME9UZzlQb29pK0hUcUd0Vkl3dUEvL2RnRlIyWmNR?=
+ =?utf-8?B?SDYwbmJVUFhqZ3lQYWNyNnZad0ZYZERnbnNQaWg4bGo4c0hTRHNqUDE0c2hM?=
+ =?utf-8?B?TmFvMDVNQ3RoUUtudzVCT3dFdllGN0F6OUFFSWJBQWZSTUxRbmhuWTN5WjFu?=
+ =?utf-8?Q?4zPBnBy4R8t/7PLGqQAyliCpUbx9h640URFJXbd?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: e3fbcfa1-7f8b-45b6-0577-08d96d9d49d3
+X-MS-Exchange-CrossTenant-AuthSource: BN9PR12MB5129.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Sep 2021 22:10:14.4687
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Sep 2021 23:07:36.7556
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Q/VrUvs5HlhgeTLxpfAQc09F9ZV7I+XrF2/Ml97ze3D++1HAGd05wLr2h2SvS08NCm097RO0kU+sxt03andbfD5nd7jxHH/ixPqRQ8AOQSY=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR10MB3211
-X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10094 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adultscore=0 mlxscore=0
- phishscore=0 malwarescore=0 suspectscore=0 bulkscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2108310000
- definitions=main-2109010130
-X-Proofpoint-GUID: FQdbybkcVU_5s_i4cAkjJfS6yiir99rj
-X-Proofpoint-ORIG-GUID: FQdbybkcVU_5s_i4cAkjJfS6yiir99rj
+X-MS-Exchange-CrossTenant-UserPrincipalName: e5xkqkg1ANOhzyGwalAUh3b3mUkszVtNmr58wxdRXxEjx20SeogdfunsGQJPS0zkzy+olaHFeR6l48vNRblz6g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN9PR12MB5083
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Allison Henderson <allison.henderson@oracle.com>
+On 2021-09-01 6:03 p.m., Dave Chinner wrote:
+> On Wed, Sep 01, 2021 at 11:40:43AM -0400, Felix Kuehling wrote:
+>> Am 2021-09-01 um 4:29 a.m. schrieb Christoph Hellwig:
+>>> On Mon, Aug 30, 2021 at 01:04:43PM -0400, Felix Kuehling wrote:
+>>>>>> driver code is not really involved in updating the CPU mappings. Maybe
+>>>>>> it's something we need to do in the migration helpers.
+>>>>> It looks like I'm totally misunderstanding what you are adding here
+>>>>> then.  Why do we need any special treatment at all for memory that
+>>>>> has normal struct pages and is part of the direct kernel map?
+>>>> The pages are like normal memory for purposes of mapping them in CPU
+>>>> page tables and for coherent access from the CPU.
+>>> That's the user page tables.  What about the kernel direct map?
+>>> If there is a normal kernel struct page backing there really should
+>>> be no need for the pgmap.
+>> I'm not sure. The physical address ranges are in the UEFI system address
+>> map as special-purpose memory. Does Linux create the struct pages and
+>> kernel direct map for that without a pgmap call? I didn't see that last
+>> time I went digging through that code.
+>>
+>>
+>>>>  From an application
+>>>> perspective, we want file-backed and anonymous mappings to be able to
+>>>> use DEVICE_PUBLIC pages with coherent CPU access. The goal is to
+>>>> optimize performance for GPU heavy workloads while minimizing the need
+>>>> to migrate data back-and-forth between system memory and device memory.
+>>> I don't really understand that part.  file backed pages are always
+>>> allocated by the file system using the pagecache helpers, that is
+>>> using the page allocator.  Anonymouns memory also always comes from
+>>> the page allocator.
+>> I'm coming at this from my experience with DEVICE_PRIVATE. Both
+>> anonymous and file-backed pages should be migrateable to DEVICE_PRIVATE
+>> memory by the migrate_vma_* helpers for more efficient access by our
+>> GPU. (*) It's part of the basic premise of HMM as I understand it. I
+>> would expect the same thing to work for DEVICE_PUBLIC memory.
+>>
+>> (*) I believe migrating file-backed pages to DEVICE_PRIVATE doesn't
+>> currently work, but that's something I'm hoping to fix at some point.
+> FWIW, I'd love to see the architecture documents that define how
+> filesystems are supposed to interact with this device private
+> memory. This whole "hand filesystem controlled memory to other
+> devices" is a minefield that is trivial to get wrong iand very
+> difficult to fix - just look at the historical mess that RDMA
+> to/from file backed and/or DAX pages has been.
+>
+> So, really, from my perspective as a filesystem engineer, I want to
+> see an actual specification for how this new memory type is going to
+> interact with filesystem and the page cache so everyone has some
+> idea of how this is going to work and can point out how it doesn't
+> work before code that simply doesn't work is pushed out into
+> production systems and then merged....
 
-This patch adds a test to exercise the log attribute error
-inject and log replay.  Attributes are added in increaseing
-sizes up to 64k, and the error inject is used to replay them
-from the log
+OK. To be clear, that's not part of this patch series. And I have no 
+authority to push anything in this part of the kernel, so you have 
+nothing to fear. ;)
 
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
----
-V2: Updated attr sizes
-   Added attr16k test
-   Removed rm -f $seqres.full
-   Added filtering for SCRATCH_MNT
----
- tests/xfs/540     | 101 ++++++++++++++++++++++++++++
- tests/xfs/540.out | 168 ++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 269 insertions(+)
- create mode 100755 tests/xfs/540
- create mode 100755 tests/xfs/540.out
+FWIW, we already have the ability to map file-backed system memory pages 
+into device page tables with HMM and interval notifiers. But we cannot 
+currently migrate them to ZONE_DEVICE pages. Beyond that, my 
+understanding of how filesystems and page cache work is rather 
+superficial at this point. I'll keep your name in mind for when I am 
+ready to discuss this in more detail.
 
-diff --git a/tests/xfs/540 b/tests/xfs/540
-new file mode 100755
-index 00000000..b2fdc153
---- /dev/null
-+++ b/tests/xfs/540
-@@ -0,0 +1,101 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2021, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# FS QA Test 540
-+#
-+# Log attribute replay test
-+#
-+. ./common/preamble
-+_begin_fstest auto quick attr
-+
-+# get standard environment, filters and checks
-+. ./common/filter
-+. ./common/attr
-+. ./common/inject
-+
-+_cleanup()
-+{
-+	echo "*** unmount"
-+	_scratch_unmount 2>/dev/null
-+	rm -f $tmp.*
-+	echo 0 > /sys/fs/xfs/debug/larp
-+}
-+
-+_test_attr_replay()
-+{
-+	attr_name=$1
-+	attr_value=$2
-+	touch $testfile.1
-+
-+	echo "Inject error"
-+	_scratch_inject_error "larp"
-+
-+	echo "Set attribute"
-+	echo "$attr_value" | ${ATTR_PROG} -s "$attr_name" $testfile.1 2>&1 | \
-+			    _filter_scratch
-+
-+	echo "FS should be shut down, touch will fail"
-+	touch $testfile.1 2>&1 | _filter_scratch
-+
-+	echo "Remount to replay log"
-+	_scratch_inject_logprint >> $seqres.full
-+
-+	echo "FS should be online, touch should succeed"
-+	touch $testfile.1
-+
-+	echo "Verify attr recovery"
-+	_getfattr --absolute-names $testfile.1 | _filter_scratch
-+	$ATTR_PROG -g $attr_name $testfile.1 | md5sum
-+
-+	echo ""
-+}
-+
-+
-+# real QA test starts here
-+_supported_fs xfs
-+
-+_require_scratch
-+_require_attrs
-+_require_xfs_io_error_injection "larp"
-+_require_xfs_sysfs debug/larp
-+
-+# turn on log attributes
-+echo 1 > /sys/fs/xfs/debug/larp
-+
-+_scratch_unmount >/dev/null 2>&1
-+
-+#attributes of increaseing sizes
-+attr16="0123456789ABCDEF"
-+attr64="$attr16$attr16$attr16$attr16"
-+attr256="$attr64$attr64$attr64$attr64"
-+attr1k="$attr256$attr256$attr256$attr256"
-+attr4k="$attr1k$attr1k$attr1k$attr1k"
-+attr8k="$attr4k$attr4k"
-+attr16k="$attr8k$attr8k"
-+attr32k="$attr16k$attr16k"
-+attr64k="$attr32k$attr32k"
-+
-+echo "*** mkfs"
-+_scratch_mkfs_xfs >/dev/null
-+
-+echo "*** mount FS"
-+_scratch_mount
-+
-+testfile=$SCRATCH_MNT/testfile
-+echo "*** make test file 1"
-+
-+_test_attr_replay "attr_name1" $attr16
-+_test_attr_replay "attr_name2" $attr64
-+_test_attr_replay "attr_name3" $attr256
-+_test_attr_replay "attr_name4" $attr1k
-+_test_attr_replay "attr_name5" $attr4k
-+_test_attr_replay "attr_name6" $attr8k
-+_test_attr_replay "attr_name7" $attr16k
-+_test_attr_replay "attr_name8" $attr32k
-+_test_attr_replay "attr_name9" $attr64k
-+
-+
-+echo "*** done"
-+status=0
-+exit
-diff --git a/tests/xfs/540.out b/tests/xfs/540.out
-new file mode 100755
-index 00000000..e5f39ccf
---- /dev/null
-+++ b/tests/xfs/540.out
-@@ -0,0 +1,168 @@
-+QA output created by 540
-+*** mkfs
-+*** mount FS
-+*** make test file 1
-+Inject error
-+Set attribute
-+attr_set: Input/output error
-+Could not set "attr_name1" for SCRATCH_MNT/testfile.1
-+FS should be shut down, touch will fail
-+touch: cannot touch 'SCRATCH_MNT/testfile.1': Input/output error
-+Remount to replay log
-+FS should be online, touch should succeed
-+Verify attr recovery
-+# file: SCRATCH_MNT/testfile.1
-+user.attr_name1
-+
-+5a5e91e29ed5e8aa7a30547754b9e1ee  -
-+
-+Inject error
-+Set attribute
-+attr_set: Input/output error
-+Could not set "attr_name2" for SCRATCH_MNT/testfile.1
-+FS should be shut down, touch will fail
-+touch: cannot touch 'SCRATCH_MNT/testfile.1': Input/output error
-+Remount to replay log
-+FS should be online, touch should succeed
-+Verify attr recovery
-+# file: SCRATCH_MNT/testfile.1
-+user.attr_name1
-+user.attr_name2
-+
-+1d61ccb38292dc01ebe9ea93bbd2564f  -
-+
-+Inject error
-+Set attribute
-+attr_set: Input/output error
-+Could not set "attr_name3" for SCRATCH_MNT/testfile.1
-+FS should be shut down, touch will fail
-+touch: cannot touch 'SCRATCH_MNT/testfile.1': Input/output error
-+Remount to replay log
-+FS should be online, touch should succeed
-+Verify attr recovery
-+# file: SCRATCH_MNT/testfile.1
-+user.attr_name1
-+user.attr_name2
-+user.attr_name3
-+
-+f513471cb87436a3df3fb930d5babb9f  -
-+
-+Inject error
-+Set attribute
-+attr_set: Input/output error
-+Could not set "attr_name4" for SCRATCH_MNT/testfile.1
-+FS should be shut down, touch will fail
-+touch: cannot touch 'SCRATCH_MNT/testfile.1': Input/output error
-+Remount to replay log
-+FS should be online, touch should succeed
-+Verify attr recovery
-+# file: SCRATCH_MNT/testfile.1
-+user.attr_name1
-+user.attr_name2
-+user.attr_name3
-+user.attr_name4
-+
-+0bc08fada39bf76dc83c856ee2a7d7d5  -
-+
-+Inject error
-+Set attribute
-+attr_set: Input/output error
-+Could not set "attr_name5" for SCRATCH_MNT/testfile.1
-+FS should be shut down, touch will fail
-+touch: cannot touch 'SCRATCH_MNT/testfile.1': Input/output error
-+Remount to replay log
-+FS should be online, touch should succeed
-+Verify attr recovery
-+# file: SCRATCH_MNT/testfile.1
-+user.attr_name1
-+user.attr_name2
-+user.attr_name3
-+user.attr_name4
-+user.attr_name5
-+
-+258b2457eed1ce94e61168c734948198  -
-+
-+Inject error
-+Set attribute
-+attr_set: Input/output error
-+Could not set "attr_name6" for SCRATCH_MNT/testfile.1
-+FS should be shut down, touch will fail
-+touch: cannot touch 'SCRATCH_MNT/testfile.1': Input/output error
-+Remount to replay log
-+FS should be online, touch should succeed
-+Verify attr recovery
-+# file: SCRATCH_MNT/testfile.1
-+user.attr_name1
-+user.attr_name2
-+user.attr_name3
-+user.attr_name4
-+user.attr_name5
-+user.attr_name6
-+
-+507b6ac60f89d347160ddc1be73193ad  -
-+
-+Inject error
-+Set attribute
-+attr_set: Input/output error
-+Could not set "attr_name7" for SCRATCH_MNT/testfile.1
-+FS should be shut down, touch will fail
-+touch: cannot touch 'SCRATCH_MNT/testfile.1': Input/output error
-+Remount to replay log
-+FS should be online, touch should succeed
-+Verify attr recovery
-+# file: SCRATCH_MNT/testfile.1
-+user.attr_name1
-+user.attr_name2
-+user.attr_name3
-+user.attr_name4
-+user.attr_name5
-+user.attr_name6
-+user.attr_name7
-+
-+a856751ea45e3c121b7b4f1fa423defc  -
-+
-+Inject error
-+Set attribute
-+attr_set: Input/output error
-+Could not set "attr_name8" for SCRATCH_MNT/testfile.1
-+FS should be shut down, touch will fail
-+touch: cannot touch 'SCRATCH_MNT/testfile.1': Input/output error
-+Remount to replay log
-+FS should be online, touch should succeed
-+Verify attr recovery
-+# file: SCRATCH_MNT/testfile.1
-+user.attr_name1
-+user.attr_name2
-+user.attr_name3
-+user.attr_name4
-+user.attr_name5
-+user.attr_name6
-+user.attr_name7
-+user.attr_name8
-+
-+150bffbd81292b5f239923f6a54c0c1a  -
-+
-+Inject error
-+Set attribute
-+attr_set: Input/output error
-+Could not set "attr_name9" for SCRATCH_MNT/testfile.1
-+FS should be shut down, touch will fail
-+touch: cannot touch 'SCRATCH_MNT/testfile.1': Input/output error
-+Remount to replay log
-+FS should be online, touch should succeed
-+Verify attr recovery
-+# file: SCRATCH_MNT/testfile.1
-+user.attr_name1
-+user.attr_name2
-+user.attr_name3
-+user.attr_name4
-+user.attr_name5
-+user.attr_name6
-+user.attr_name7
-+user.attr_name8
-+user.attr_name9
-+
-+29133253befceb131c3b736f2687cff9  -
-+
-+*** done
-+*** unmount
--- 
-2.25.1
+Cheers,
+   Felix
 
+
+>
+> Cheers,
+>
+> Dave.
