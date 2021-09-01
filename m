@@ -2,210 +2,254 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MSGID_FROM_MTA_HEADER,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99747C432BE
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 15:40:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1DFCC432BE
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 16:43:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7D8AB600EF
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 15:40:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B885161074
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 16:43:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343743AbhIAPlo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 1 Sep 2021 11:41:44 -0400
-Received: from mail-dm6nam12on2084.outbound.protection.outlook.com ([40.107.243.84]:56673
-        "EHLO NAM12-DM6-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S244612AbhIAPlo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 1 Sep 2021 11:41:44 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=VnG99YxyMFxQdRra+pxl+qv+CZLseKmWUybQUS7Tb0qsQmahRL3I8vflUWfogjNF7zvuiHbiyr6faLwDZgTOgDJ2/crs/CKtDJVITWig3eXEi1S9bGZHzDDpJSHKcPJOKMc7iCm73A39UZj7qsSwUOthNVeddKfPsDtPHk8SjySahPpqbbf0MdqRaAyjACj/VlxixsNhDZQ6Yy8ueX+OPXuX/hp3Me/zib2Z32JkJa4ZkzOGENPWrynn+S/VnImiTXDjXIe0Vi5OpJO5FFnrRFh1khu/LMuOXtBtoEunlOppM2kull88ToGH48caMGnsoIDdk+kmm2x3yniCNZ7w7A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=eq1A3hWQGXYX+bVwQ4HYkoqrw6bW+rc4zaooUDnZbHE=;
- b=Wm/juQiepYSRXCWBW/sqbjp84IacURH/I+t4xhSBpQLfZuzkdCIAAc3j4AwkfW8+xKKRtOrj6Dbrmbl7zNaYsOAcOXZEc0Ou8bbsWS95PdkLECzupPcWPBkaw/XXIjrPkXk2958EqpCkO/o2Plm6d5NDGfm75ZkZ/22G8UrUAzBfcUqdz/Q6gXBqNMXMTzwNyMCSYur9EvwAeEuUlaA7PholNBOi+d4/Pif+aAOnsiXb4b2BHjzb73MqVeTnT1qAWfaU3OxGfAe5OrRILDMmQET/w1jntWnoqHdvwHS04UrhN6PUTSjchAGeMgLGIHQcV78yRP28juF3qx2oRmXGCQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=eq1A3hWQGXYX+bVwQ4HYkoqrw6bW+rc4zaooUDnZbHE=;
- b=GFkFkqV1OtE0lzDy6l/bdMqcyCAicDb8JATd+Jepwf5zZMCfyHu8uy5kxhb5gOfjWnxM9nk1Dk/EVwO5FCl9VEvTXTFefyZ6WiTggz+xrUlenyZilPzQF2vk9cz6rHAoFrI8Shuft9rha8mMRTzEp97SGLdU8nwh5D4uxth+iWU=
-Authentication-Results: redhat.com; dkim=none (message not signed)
- header.d=none;redhat.com; dmarc=none action=none header.from=amd.com;
-Received: from BN9PR12MB5129.namprd12.prod.outlook.com (2603:10b6:408:136::12)
- by BN9PR12MB5258.namprd12.prod.outlook.com (2603:10b6:408:11f::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4457.17; Wed, 1 Sep
- 2021 15:40:46 +0000
-Received: from BN9PR12MB5129.namprd12.prod.outlook.com
- ([fe80::b891:a906:28f0:fdb]) by BN9PR12MB5129.namprd12.prod.outlook.com
- ([fe80::b891:a906:28f0:fdb%3]) with mapi id 15.20.4457.024; Wed, 1 Sep 2021
- 15:40:46 +0000
-Subject: Re: [PATCH v1 03/14] mm: add iomem vma selection for memory migration
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     "Sierra Guiza, Alejandro (Alex)" <alex.sierra@amd.com>,
-        akpm@linux-foundation.org, linux-mm@kvack.org,
-        rcampbell@nvidia.com, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org, amd-gfx@lists.freedesktop.org,
-        dri-devel@lists.freedesktop.org, jgg@nvidia.com, jglisse@redhat.com
-References: <20210825034828.12927-1-alex.sierra@amd.com>
- <20210825034828.12927-4-alex.sierra@amd.com> <20210825074602.GA29620@lst.de>
- <c4241eb3-07d2-c85b-0f48-cce4b8369381@amd.com>
- <a9eb2c4a-d8cc-9553-57b7-fd1622679aaa@amd.com> <20210830082800.GA6836@lst.de>
- <e40b3b79-f548-b87b-7a85-f654f25ed8dd@amd.com>
- <20210901082925.GA21961@lst.de>
-From:   Felix Kuehling <felix.kuehling@amd.com>
-Message-ID: <11d64457-9d61-f82d-6c98-d68762dce85d@amd.com>
-Date:   Wed, 1 Sep 2021 11:40:43 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.13.0
-In-Reply-To: <20210901082925.GA21961@lst.de>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
-X-ClientProxiedBy: YTOPR0101CA0023.CANPRD01.PROD.OUTLOOK.COM
- (2603:10b6:b00:15::36) To BN9PR12MB5129.namprd12.prod.outlook.com
- (2603:10b6:408:136::12)
+        id S245578AbhIAQoJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 1 Sep 2021 12:44:09 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60372 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1344156AbhIAQoI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 1 Sep 2021 12:44:08 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 9E9D161059;
+        Wed,  1 Sep 2021 16:43:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1630514591;
+        bh=EsBrb5ltlCJQoHJ8BGbpofVbVtPrr6R36M79JfOPrK8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=N7kjFSdHHZg9PVmZ3nsio5tELnkj/f0KVXrs0+jCdAzkTDAh8R3MHIxrDFER9XwB3
+         QJIu++rc2Wei2t5/BiNxGmDxtsFfuGbXrUjhEKzyaBLBeCL3/ygzp1aXCDdfVG/u3t
+         Hn4Km8RnHfDSi1vM6588OaEbYy/SgOwAQ21/2klDvGeZV2zyMVumnSupM9FIx/X9z2
+         0/ZTN8C/cHZdqyMaqMtuzvM0upC+zQV0MHIpS5I2BbtTHXTT13X+UwKb1Ppt9Mk+qj
+         xyZsRWjl45pY6eslJJzq1RL9Ah/8qhiXV7ldwRbCgtOciokOeqP2p9dbm7Ks+i0OAv
+         s1YTNIyOGdnuQ==
+Date:   Wed, 1 Sep 2021 09:43:11 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Amir Goldstein <amir73il@gmail.com>
+Cc:     Eryu Guan <guaneryu@gmail.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        fstests <fstests@vger.kernel.org>, Eryu Guan <guan@eryu.me>
+Subject: Re: [PATCH 4/5] tools: make sure that test groups are described in
+ the documentation
+Message-ID: <20210901164311.GB9911@magnolia>
+References: <163045514980.771564.6282165259140399788.stgit@magnolia>
+ <163045517173.771564.1524162806861567173.stgit@magnolia>
+ <CAOQ4uxi7205Ae+un1w4C4Dzh9-SykL=ogHQSBH=nnVGDkPfkhw@mail.gmail.com>
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from [192.168.2.100] (142.186.47.3) by YTOPR0101CA0023.CANPRD01.PROD.OUTLOOK.COM (2603:10b6:b00:15::36) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4457.20 via Frontend Transport; Wed, 1 Sep 2021 15:40:45 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 5c19172f-e664-4cda-8893-08d96d5edd4a
-X-MS-TrafficTypeDiagnostic: BN9PR12MB5258:
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <BN9PR12MB5258594B9DB97C0D912E976692CD9@BN9PR12MB5258.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:10000;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: Qtmr2r15kQFgb2D0iAxixnwQpA1HK2JD9AN7CeW6qxI1r8SYEGCYjY1KsvIK7Zn6UxPmfrVkl+6PCPWoh3Ke5az8juPjJU9JPHwUI6ZbpFmmrBkGLhdk5ATZIMMyCa/aJ+vw7mN5SIqfl6qOsUSmgKHRcLtqjGYXPZjb2DawmhBKl2IIC4kWtZ3mmGRvCfGwKA1qXoVswUFR47vHG5sPKauJUxljEQYi8KxVf5OyuYDc7rqeu6klW4tT6Uw9Psm6hXq5khsh2mTIevGs3PbM9kaetPKswX1lXV0ZB+fk78KCFwkVQDZss8/hqIBpTVSFOXc2faMMPsFdzZwLqkGDXdy+AXiANTVGEJNc35hvWPGM0ZyhcT0JGwMY/YdOWmu+EGMMxkmxP1RukGgAQWsiFILG8Km+6swJ7T90HIlbgFzMG9QqUg8dT9AAZkTZf8Xlj2CJG8SGUuC0BschrKgfHorkEcdhmWZnL1Omnrw2WkvHjByjTW+2Jal5hrC648e0r22Qxpx0jPLfI3amELBB3B6TZ5GBopz0XAo/7oUyn/rhuXXTembyL2NL68BFoBOupwQA9/yRDteO/kL2R5TdlE5n12dMAWJj06Oh+v8zuGkIaUnku256M03LeAC0yNZ3YfYq4Nx9n2qMJxhy4HsqALxEzlH7YTl6quQ3CpdEy1BrbunqONCeFNTGqF4u9LomRNMBQTcf+IrrV9Dn8EJZD46QOcPmqPu9JcvuG/PW/Hc=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN9PR12MB5129.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(316002)(6486002)(508600001)(2906002)(7416002)(26005)(8676002)(38100700002)(8936002)(44832011)(16576012)(5660300002)(86362001)(31696002)(956004)(4326008)(83380400001)(31686004)(66476007)(36756003)(6916009)(186003)(66556008)(2616005)(66946007)(45980500001)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?WitlZ1RyN21yeXQ2SFdSU0hhbTFqR2xhZCtXKzRUMjRPZ2RyV0J3ZWZqeHZ4?=
- =?utf-8?B?Q2xzRXdmNWlCWFd4REFrZGpod1N5V2VCYWhIUUo3TDEyekRuT3V3N05zOVpO?=
- =?utf-8?B?UmxMVGN3ZDlhYzlNQnNiUWVxc2Y4QmNMNkdNM0dNNllWU0VQKzI4UFJBQlp2?=
- =?utf-8?B?eXJhQkwzZHM3YytPcHhSRUNmTWUybWdQWTlBMVBUemplOFptWFhBc1RNWHo1?=
- =?utf-8?B?TUltM2VjOHh4VHQ0WnBYTVMwdWd6QUhtVVI3VXVWcVQ4M2cwQXFuNVp0NkI2?=
- =?utf-8?B?d25sS1JwRGlxOEh4Z3VHMzFQNFArcmJyM29vby85dVVJcjNFNm1WTktENjZZ?=
- =?utf-8?B?U1NYY29xODUwS1BVR2dkS2NpKzRDcUJkUjUzUWpxOHp1RVBJU2lkMThTYkRE?=
- =?utf-8?B?ekNoUXBwSEdUMVIwL25IelJROFJybHV1aTlFak5HU1dFWmNmTTczdmpvZ1VL?=
- =?utf-8?B?dTZ5NFhBaFhudTdqb3dyZDhzQW1qZy9UWnp3M2VxcFVuTVpXUW54R000R3gr?=
- =?utf-8?B?Z2thRjdpQjJ1SlpJK3VRREJ0VVdIa2R4MTdlZm41ZzQ4Ujhzek1tK2xTYW5Q?=
- =?utf-8?B?TUJBcmJKOTVxUFF5TTlkUDJteU9HUC9kUEw1dFdZY3UvcGF4cVZmK3QxWDJQ?=
- =?utf-8?B?KzQrK0pmZHpXQWhEUU9FRzdWT0lQSEw4ZEk4dFM2VGhCU20yR05MQ0sySTRU?=
- =?utf-8?B?NUJqOUF1YkZhd2x2T1lMcWp3bFBUd3RONk1EamdEakYrTDcrcTdzVExhbFJK?=
- =?utf-8?B?aFpqTE1XQ0VQNWxQNDdNZldGRDAyV2hIM2V2Y3hMTFEycUd0N0F2bWZjZ1VJ?=
- =?utf-8?B?ZzErOGpnOTNkNWk1Ylg4eEVxSVVvUFZYc0RlcE51a2Iwei90V1NnU2IybGwy?=
- =?utf-8?B?N2M1ZjFEcTAxZTJ3dVFiaFJlcG5PK3J2OUxyeFdYaVh2RldoalNYRzVKODFT?=
- =?utf-8?B?YzJ0SkJBSTBzUXRseGJlekFMbnc1SnVKdDJqc0syU0hpMEZIa0J3aDRTVEVO?=
- =?utf-8?B?S2ZQcGp4LzEvV0x4MzU1b09TV0pVeis1eXFtWmhkVUxpVmtOL3NpYy9HN1Ey?=
- =?utf-8?B?MmhDQlMyajZ5dDB6WlNYbC91eDBRZU5GNjlWZVExZUNVM2FKY0pwLzZvQ2Jx?=
- =?utf-8?B?MHJINkVndDZrak5zNHVMUTdZZ2dlVjdUM1VSSFlBODlwY04xOHE0Nm1WYU1V?=
- =?utf-8?B?VzFFMk5DSmF4eE5QWkQ5Y1lWZ1VXOUw4Ymw0NU1yOXRDNUFKZ1Q3ZktUUkoy?=
- =?utf-8?B?TmlZYXNYR2RKTUdMRjhOSmxQWnVGd1R1SldsUjRkQk5WZVJaYUJMSlpJVEIy?=
- =?utf-8?B?ajlsd1MrY0FJc2s4Qkp3YnNGSkpTZUlaMjNuaXVDbGN1YTg3V1dEYUFkdjNl?=
- =?utf-8?B?bm42ZEZEaXNWVkhpa3dMYmdESG9VY1FCRUNxaXQ2K3ZyaXVMVksrMDFGZVZa?=
- =?utf-8?B?ZHVxbWZtS3VHT3RFK3ZqbGFoN01ic1JlUnJyM2UxNmtLeTNBSktpWEMxYkxy?=
- =?utf-8?B?U0FMWXM3VVZ1N3hobDQwVThIU3pCdDlscVNtYzBQMXByU1hncUQ4MlBYeXZG?=
- =?utf-8?B?Y3V4MnJ5cmhGMFFyZ2tSMW4rODZLKy9lVldJNm5WdWVydUNCYlZ0ckd2a25X?=
- =?utf-8?B?WlNoKy84SDZCeEZSeDloTWNwYlZLMDFOYmtpdUdHRHB5WG1GaGE4ZFdHOXNN?=
- =?utf-8?B?cDZhdk5DZ3NMSlp1TWNxMmQrRGhsL3BUVkw4MC9jTXhvWVBaQUEzSUdwVlpa?=
- =?utf-8?Q?gOOUlcuRYyxVqzPra6WlWuvbv/WMk0B8ndhzfIy?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5c19172f-e664-4cda-8893-08d96d5edd4a
-X-MS-Exchange-CrossTenant-AuthSource: BN9PR12MB5129.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Sep 2021 15:40:46.0003
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: ZCpbIeEXW0ZMPL1fMdQvlgdM6IItpVBTzCRQpsd5sE8NplK18EHO73h5OlZGXnSrVxXvArIjVsTJt4F9N7aqOA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN9PR12MB5258
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxi7205Ae+un1w4C4Dzh9-SykL=ogHQSBH=nnVGDkPfkhw@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Wed, Sep 01, 2021 at 07:46:01AM +0300, Amir Goldstein wrote:
+> On Wed, Sep 1, 2021 at 3:37 AM Darrick J. Wong <djwong@kernel.org> wrote:
+> >
+> > From: Darrick J. Wong <djwong@kernel.org>
+> >
+> > Create a file to document the purpose of each test group that is
+> > currently defined in fstests, and add a build script to check that every
+> > group mentioned in the tests is also mentioned in the documentation.
+> >
+> 
+> This is awesome and long due.
+> Thanks for doing that!
+> 
+> Minor nits about overlayfs groups below...
 
-Am 2021-09-01 um 4:29 a.m. schrieb Christoph Hellwig:
-> On Mon, Aug 30, 2021 at 01:04:43PM -0400, Felix Kuehling wrote:
->>>> driver code is not really involved in updating the CPU mappings. Maybe
->>>> it's something we need to do in the migration helpers.
->>> It looks like I'm totally misunderstanding what you are adding here
->>> then.  Why do we need any special treatment at all for memory that
->>> has normal struct pages and is part of the direct kernel map?
->> The pages are like normal memory for purposes of mapping them in CPU
->> page tables and for coherent access from the CPU.
-> That's the user page tables.  What about the kernel direct map?
-> If there is a normal kernel struct page backing there really should
-> be no need for the pgmap.
+Heh, yeah, thanks for making corrections. :)
 
-I'm not sure. The physical address ranges are in the UEFI system address
-map as special-purpose memory. Does Linux create the struct pages and
-kernel direct map for that without a pgmap call? I didn't see that last
-time I went digging through that code.
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  doc/group-names.txt    |  136 ++++++++++++++++++++++++++++++++++++++++++++++++
+> >  include/buildgrouplist |    1
+> >  tools/check-groups     |   33 ++++++++++++
+> >  3 files changed, 170 insertions(+)
+> >  create mode 100644 doc/group-names.txt
+> >  create mode 100755 tools/check-groups
+> >
+> >
+> > diff --git a/doc/group-names.txt b/doc/group-names.txt
+> > new file mode 100644
+> > index 00000000..ae517328
+> > --- /dev/null
+> > +++ b/doc/group-names.txt
+> > @@ -0,0 +1,136 @@
+> > +======================= =======================================================
+> > +Group Name:            Description:
+> > +======================= =======================================================
+> > +all                    All known tests, automatically generated by ./check at
+> > +                       runtime
+> > +auto                   Tests that should be run automatically.  These should
+> > +                       not require more than ~5 minutes to run.
+> > +quick                  Tests that should run in under 30 seconds.
+> > +deprecated             Old tests that should not be run.
+> > +
+> > +acl                    Access Control Lists
+> > +admin                  xfs_admin functionality
+> > +aio                    general libaio async io tests
+> > +atime                  file access time
+> > +attr                   extended attributes
+> > +attr2                  xfs v2 extended aributes
+> > +balance                        btrfs tree rebalance
+> > +bigtime                        timestamps beyond the year 2038
+> > +blockdev               block device functionality
+> > +broken                 broken tests
+> > +cap                    Linux capabilities
+> > +casefold               directory name casefolding
+> > +ci                     ASCII case-insensitive directory name lookups
+> > +clone                  FICLONE/FICLONERANGE ioctls
+> > +clone_stress           stress testing FICLONE/FICLONERANGE
+> > +collapse               fallocate collapse_range
+> > +compress               file compression
+> > +convert                        btrfs ext[34] conversion tool
+> > +copy                   xfs_copy functionality
+> > +copy_range             copy_file_range syscall
+> > +copyup                 overlayfs copyup support
+> 
+> The tests in this group exercise copy up.
+> There is no such thing as overlayfs without "copyup support",
+> so guess my point is - remove the word "support"
 
+OK.
 
->
->> From an application
->> perspective, we want file-backed and anonymous mappings to be able to
->> use DEVICE_PUBLIC pages with coherent CPU access. The goal is to
->> optimize performance for GPU heavy workloads while minimizing the need
->> to migrate data back-and-forth between system memory and device memory.
-> I don't really understand that part.  file backed pages are always
-> allocated by the file system using the pagecache helpers, that is
-> using the page allocator.  Anonymouns memory also always comes from
-> the page allocator.
+> > +dangerous              dangerous test that can crash the system
+> > +dangerous_bothrepair   fuzzers to evaluate xfs_scrub + xfs_repair repair
+> > +dangerous_fuzzers      fuzzers that can crash your computer
+> > +dangerous_norepair     fuzzers to evaluate kernel metadata verifiers
+> > +dangerous_online_repair        fuzzers to evaluate xfs_scrub online repair
+> > +dangerous_repair       fuzzers to evaluate xfs_repair offline repair
+> > +dangerous_scrub                fuzzers to evaluate xfs_scrub checking
+> > +data                   data loss checkers
+> > +dax                    direct access mode for persistent memory files
+> > +db                     xfs_db functional tests
+> > +dedupe                 FIEDEDUPERANGE ioctl
+> > +defrag                 filesystem defragmenters
+> > +dir                    directory test functions
+> > +dump                   dump and restore utilities
+> > +eio                    IO error reporting
+> > +encrypt                        encrypted file contents
+> > +enospc                 ENOSPC error reporting
+> > +exportfs               file handles
+> > +filestreams            XFS filestreams allocator
+> > +freeze                 filesystem freeze tests
+> > +fsck                   general fsck tests
+> > +fsmap                  FS_IOC_GETFSMAP ioctl
+> > +fsr                    XFS free space reorganizer
+> > +fuzzers                        filesystem fuzz tests
+> > +growfs                 increasing the size of a filesystem
+> > +hardlink               hardlinks
+> > +health                 XFS health reporting
+> > +idmapped               idmapped mount functionality
+> > +inobtcount             XFS inode btree count tests
+> > +insert                 fallocate insert_range
+> > +ioctl                  general ioctl tests
+> > +io_uring               general io_uring async io tests
+> > +label                  filesystem labelling
+> > +limit                  resource limits
+> > +locks                  file locking
+> > +log                    metadata logging
+> > +logprint               xfs_logprint functional tests
+> > +long_rw                        long-soak read write IO path exercisers
+> > +metacopy               overlayfs metadata-only copy-up
+> > +metadata               filesystem metadata update exercisers
+> > +metadump               xfs_metadump/xfs_mdrestore functionality
+> > +mkfs                   filesystem formatting tools
+> > +mount                  mount option and functionality checks
+> > +nested                 nested overlayfs instances
+> > +nfs4_acl               NFSv4 access control lists
+> > +nonsamefs              overlayfs layers on different filesystems
+> > +online_repair          online repair functionality tests
+> > +other                  dumping ground, do not add more tests to this group
+> > +overlay                        using overlayfs on top of FSTYP
+> 
+> This description is a bit confusing, because the recommended
+> way to run overlayfs tests as described in README.overlay is
+> to set FSTYP=xfs and run ./check -overlay
+> 
+> I'm struggling for a better description but perhaps:
+> "using overlayfs regardless of ./check -overlay flag"?
 
-I'm coming at this from my experience with DEVICE_PRIVATE. Both
-anonymous and file-backed pages should be migrateable to DEVICE_PRIVATE
-memory by the migrate_vma_* helpers for more efficient access by our
-GPU. (*) It's part of the basic premise of HMM as I understand it. I
-would expect the same thing to work for DEVICE_PUBLIC memory.
+Hmm.  Since I'm the author of the only test that uses this tag, I guess
+I'm the authority (ha!) on what the name actually means.
 
-(*) I believe migrating file-backed pages to DEVICE_PRIVATE doesn't
-currently work, but that's something I'm hoping to fix at some point.
+That test (generic/631) is a regression test for a XFS whiteout handling
+bug that can only be reproduced by layering overlayfs atop xfs.
+Overlayfs is incidental to reproducing the XFS bug, but AFAIK overlayfs
+is the only in-kernel user of whiteout, which is why it's critical here.
 
+It's not right to make it "_supported_fs overlay" because we're not
+testing overlayfs functionality; we're merely using it as a stick to
+poke another filesystem.
 
->
->> The pages are special in two ways:
->>
->>  1. The memory is managed not by the Linux buddy allocator, but by the
->>     GPU driver's TTM memory manager
-> Why?
+How about: "regression tests that require the use of overlayfs in a
+targetted configuration" ?
 
-It's a system architectural decision based on the access latency to the
-memory and the expected use cases that we do not want the GPU driver and
-the Linux buddy allocator and VM subsystem competing for the same device
-memory.
+> > +pattern                        specific IO pattern tests
+> > +perms                  access control and permission checking
+> > +pipe                   pipe functionality
+> > +pnfs                   PNFS
+> > +posix                  POSIX behavior conformance
+> > +prealloc               fallocate
+> > +preallocrw             fallocate, then read and write
+> > +punch                  fallocate punch_hole
+> > +qgroup                 btrfs qgroup feature
+> > +quota                  filesystem usage quotas
+> > +raid                   btrfs RAID
+> > +realtime               XFS realtime volumes
+> > +recoveryloop           crash recovery loops
+> > +redirect               overlayfs redirect_dir feature
+> > +remote                 dump and restore with a remote tape
+> > +remount                        remounting filesystems
+> > +rename                 rename system call
+> > +repair                 xfs_repair functional tests
+> > +replace                        btrfs device replace
+> > +replay                 dm-logwrites replays
+> > +resize                 resize2fs functionality tests
+> > +richacl                        rich ACL feature
+> > +rmap                   XFS reverse mapping exercisers
+> > +rotate                 overlayfs feature of some sort"
+> 
+> I guess that works :-D
+> but to be accurate, this is actually a unionmount testsuite feature -
+> at selected test points in the workload, a new upper layer is stacked
+> on to overlayfs, so maybe:
+> "upper layer rotate tests from the unionmount test suite"?
 
+I've changed it to 'overlayfs upper layer rotate tests from the
+unionmount test suite'.
 
->
->>  2. We want to migrate data in response to GPU page faults and
->>     application hints using the migrate_vma helpers
-> Why? 
+> > +rw                     read/write IO tests
+> > +samefs                 overlayfs when all layers are on the same fs
+> > +scrub                  filesystem metadata scrubbers
+> > +seed                   btrfs seeded filesystems
+> > +seek                   llseek functionality
+> > +send                   btrfs send/receive
+> > +shrinkfs               decreasing the size of a filesystem
+> > +shutdown               FS_IOC_SHUTDOWN ioctl
+> > +snapshot               btrfs snapshots
+> > +soak                   long soak tests of any kind
+> > +spaceman               xfs_spaceman functional tests
+> > +splice                 splice system call
+> > +stress                 fsstress filesystem exerciser
+> > +subvol                 btrfs subvolumes
+> > +subvolume              btrfs subvolumes (again?)
+> 
+> A cleanup patch to fix this typo in btrfs/233?
 
-Device memory has much higher bandwidth and much lower latency than
-regular system memory for the GPU to access. It's essential for enabling
-good GPU application performance. Page-based memory migration enables
-good performance with more intuitive programming models such as
-managed/unified memory in HIP or unified shared memory in OpenMP. We do
-this on our discrete GPUs with DEVICE_PRIVATE memory.
+Will do.
 
-I see DEVICE_PUBLIC as an improved version of DEVICE_PRIVATE that allows
-the CPU to map the device memory coherently to minimize the need for
-migrations when CPU and GPU access the same memory concurrently or
-alternatingly. But we're not going as far as putting that memory
-entirely under the management of the Linux memory manager and VM
-subsystem. Our (and HPE's) system architects decided that this memory is
-not suitable to be used like regular NUMA system memory by the Linux
-memory manager.
+--D
 
-Regards,
-  Felix
-
-
+> 
+> Thanks,
+> Amir.
