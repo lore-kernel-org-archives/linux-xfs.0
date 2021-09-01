@@ -3,40 +3,43 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 597A5C43214
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 00:12:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 402D2C4320A
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 00:12:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3781A6102A
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 00:12:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2929661056
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 00:12:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243225AbhIAAN0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 Aug 2021 20:13:26 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47086 "EHLO mail.kernel.org"
+        id S243219AbhIAANb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 Aug 2021 20:13:31 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47142 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S243221AbhIAANZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 31 Aug 2021 20:13:25 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 189A361008;
-        Wed,  1 Sep 2021 00:12:30 +0000 (UTC)
+        id S243242AbhIAANb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 31 Aug 2021 20:13:31 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8D0E261008;
+        Wed,  1 Sep 2021 00:12:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1630455150;
-        bh=vx7hNoAu33jMPpHhwdyfLz3T+7GRM5xPXBN1Vj35EwE=;
-        h=Subject:From:To:Cc:Date:From;
-        b=ju6fdPB2YeYWb52t+SqRqpJ/6Hcz9CL6lfHP3bUwrkFNEq6/ye7OWtQPBzbawg0Am
-         F/iWrFl/ij15+A878xfKsciYHIvZEkFrLW7Kj9Gz6atkrjHYw2nRH7t3TnioDdD5sv
-         3UETBtCjddYV5HQd0TVGyHoSz2h0Pg6EWpN4vaNp2YnLRpoEBqU3rM4/cYI9EoTfHF
-         e17RKcFhGMxhyNT4IguBlOHiUZDRmL2ZWqA9BYZXamjUHBS87sRuNbnN9FYFaxiyjy
-         1AO3RyIP7KfLfKoDYfPO60hGtHg1l1JFEpEZKXZrHOBDbox/7akfqMsK36B9+OXg2M
-         P8RTmGuYiM/dQ==
-Subject: [PATCHSET 0/5] fstests: document all test groups
+        s=k20201202; t=1630455155;
+        bh=5zEHfJY16KIaUJlnHuFtMeQ8taovR8wySqvC4DeuyN8=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=f1/NkFb+ex7p2pAEFGhG+cub4S1pgbYUsTX0oF9Twyk/MfjtvXU+OiIHAn5VkKaoe
+         JpSsOacx58ZzoM/SRcb8syi6jbk8SQAWPHktackiShxYmcV5kEgxK+8dUw6OB03hYE
+         t8pZJpjd14Dg7uwMx6sSb0lxPjAy3A/M3a1e2owAfeDue8u2KLIdEv49+AvSrnQh6E
+         +CFYc/Bxk3SQbY6s9BnQhs5DTy2+27+oRMycVVtPG+2SDAqv49PSWrkKOFwqwn1qSd
+         lRx/x+1j848FmfCuK+Dhph7TPuRbrZODGOJUoHO1dNQyg7pV8syuIf/hI8IblOi+dK
+         mx8eESeS5jXNg==
+Subject: [PATCH 1/5] ceph: re-tag copy_file_range as being in the copy_range
+ group
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 31 Aug 2021 17:12:29 -0700
-Message-ID: <163045514980.771564.6282165259140399788.stgit@magnolia>
+Date:   Tue, 31 Aug 2021 17:12:35 -0700
+Message-ID: <163045515529.771564.6600748735943731783.stgit@magnolia>
+In-Reply-To: <163045514980.771564.6282165259140399788.stgit@magnolia>
+References: <163045514980.771564.6282165259140399788.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -45,43 +48,56 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-I've noticed that fstests doesn't document what the test groups mean.  I
-attempted to document what each group seems to symbolize, to reduce the
-amount of confusion for new contributors.  While doing so, I noticed
-that there were a handful of tests that aren't in the right group.  The
-first three patches dix that problem.  The next test adds a build-time
-check to ensure that all groups are listed in the documentation file so
-that we don't lose track of things.  The last patch updates ./new to use
-the documentation file instead of having to build group.list files.
+copy_range is the group name for copy_file_range tests, so reclassify
+these tests.
 
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
-
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=document-test-groups
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- doc/group-names.txt    |  136 ++++++++++++++++++++++++++++++++++++++++++++++++
- include/buildgrouplist |    1 
- new                    |   24 ++++----
- tests/ceph/001         |    2 -
- tests/ceph/002         |    2 -
- tests/ceph/003         |    2 -
- tests/xfs/491          |    2 -
- tests/xfs/492          |    2 -
- tests/xfs/493          |    2 -
- tests/xfs/519          |    2 -
- tests/xfs/520          |    2 -
- tests/xfs/535          |    2 -
- tests/xfs/536          |    2 -
- tools/check-groups     |   33 ++++++++++++
- 14 files changed, 191 insertions(+), 23 deletions(-)
- create mode 100644 doc/group-names.txt
- create mode 100755 tools/check-groups
+ tests/ceph/001 |    2 +-
+ tests/ceph/002 |    2 +-
+ tests/ceph/003 |    2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+
+diff --git a/tests/ceph/001 b/tests/ceph/001
+index aca77168..c00de308 100755
+--- a/tests/ceph/001
++++ b/tests/ceph/001
+@@ -11,7 +11,7 @@
+ # file and 3) the middle of the dst file.
+ #
+ . ./common/preamble
+-_begin_fstest auto quick copy
++_begin_fstest auto quick copy_range
+ 
+ # get standard environment
+ . common/filter
+diff --git a/tests/ceph/002 b/tests/ceph/002
+index 428f23a9..9bc728fd 100755
+--- a/tests/ceph/002
++++ b/tests/ceph/002
+@@ -20,7 +20,7 @@
+ #   linux kernel: 78beb0ff2fec ("ceph: use copy-from2 op in copy_file_range")
+ #
+ . ./common/preamble
+-_begin_fstest auto quick copy
++_begin_fstest auto quick copy_range
+ 
+ # get standard environment
+ . common/filter
+diff --git a/tests/ceph/003 b/tests/ceph/003
+index 9f8c6068..faedb48c 100755
+--- a/tests/ceph/003
++++ b/tests/ceph/003
+@@ -7,7 +7,7 @@
+ # Test copy_file_range with infile = outfile
+ #
+ . ./common/preamble
+-_begin_fstest auto quick copy
++_begin_fstest auto quick copy_range
+ 
+ # get standard environment
+ . common/filter
 
