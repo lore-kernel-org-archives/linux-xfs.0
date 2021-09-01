@@ -3,110 +3,81 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48C97C4320E
-	for <linux-xfs@archiver.kernel.org>; Tue, 31 Aug 2021 23:53:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C09DC4320A
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 00:11:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2573160FC3
-	for <linux-xfs@archiver.kernel.org>; Tue, 31 Aug 2021 23:53:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 84CC36102A
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 00:11:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235977AbhHaXyW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 Aug 2021 19:54:22 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39608 "EHLO mail.kernel.org"
+        id S242783AbhIAAMJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 Aug 2021 20:12:09 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46532 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231511AbhHaXyV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 31 Aug 2021 19:54:21 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D640D60EE3;
-        Tue, 31 Aug 2021 23:53:25 +0000 (UTC)
+        id S242522AbhIAAMI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 31 Aug 2021 20:12:08 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id F2CE361008;
+        Wed,  1 Sep 2021 00:11:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1630454005;
-        bh=mGa9nWBkpI4cIMM24BPtoJF4ZDvxmJOUPyy3Sn6BHos=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ko4CyNLE2t89tSKPwhGRO1Ir2gbJKaaZvOFyL8443MyNii0T60znpFrZXRMcIijxO
-         AbBAJV+84RnNpec/IpW/xWRGpUEW4aQbCN5+2krulwY8Ln1Nhy+eSvgshFfzSchL7Y
-         JNsnxqis0XelQ00hWCLZsUiD4Kbqv8dh3zY1cMXRmjn2WIJ4U2DZnOWTj06lUTPDME
-         9oVECjGy38oA0ueU/ACYxnht/lYo53eVMys5jbxUoaf6jj2qyGZyo9nbE9Bt1usB93
-         bCrMBmcwJRZh1aD5rxPcCyxv5Vajd6h7BgAyT+nDNOk2fEPBwMpJOFXzlqJ7h05SBn
-         Zsl7vbtaJuhRQ==
-Date:   Tue, 31 Aug 2021 16:53:25 -0700
+        s=k20201202; t=1630455071;
+        bh=L0OyvSfeQqTJaVD4/Nx3k0FQp3vn7GwZcVWeqgTnSPI=;
+        h=Subject:From:To:Cc:Date:From;
+        b=Omt7sr9fZNrUHBXLdWfmso3Ftj5Agupe635arrldnnrfKResy2iYcudzTxxWK+B/9
+         0K4ROaSK0KgwoXb/LCKz5QbXmQ+QnVpnecd+M72oNgN0JfmEoGeBftzugtbCvAP4GH
+         AcdCA4rIFsEN3otLuybq/jdLDvqw6bAe2WzZCJl2AEJI9ERduNj46t8wkZFSgSlGUA
+         cUw7du2eA1vBSGp2cHY2o2psq0CoVYxzWWebY4eFuPQGtyeZc4ycd+sHpAH64D5PYd
+         0mfAGad266GhtE2kbsB3o3MMPPcSE3jkRvyjq+Xz+mqJGNuainCRcKppl7itsnG/S5
+         NdmiqyxJxow6Q==
+Subject: [PATCHSET 0/2] fstests: random fixes
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] mkfs: warn about V4 deprecation when creating new V4
- filesystems
-Message-ID: <20210831235325.GD9942@magnolia>
-References: <20210831224438.GB9942@magnolia>
- <20210831232927.GV3657114@dread.disaster.area>
- <20210831233300.GC9942@magnolia>
+To:     djwong@kernel.org, guaneryu@gmail.com
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
+Date:   Tue, 31 Aug 2021 17:11:10 -0700
+Message-ID: <163045507051.769821.5924414818977330640.stgit@magnolia>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210831233300.GC9942@magnolia>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 31, 2021 at 04:33:00PM -0700, Darrick J. Wong wrote:
-> On Wed, Sep 01, 2021 at 09:29:27AM +1000, Dave Chinner wrote:
-> > On Tue, Aug 31, 2021 at 03:44:38PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <djwong@kernel.org>
-> > > 
-> > > The V4 filesystem format is deprecated in the upstream Linux kernel.  In
-> > > September 2025 it will be turned off by default in the kernel and five
-> > > years after that, support will be removed entirely.  Warn people
-> > > formatting new filesystems with the old format, particularly since V4 is
-> > > not the default.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > ---
-> > >  mkfs/xfs_mkfs.c |    9 +++++++++
-> > >  1 file changed, 9 insertions(+)
-> > > 
-> > > diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> > > index 53904677..b8c11ce9 100644
-> > > --- a/mkfs/xfs_mkfs.c
-> > > +++ b/mkfs/xfs_mkfs.c
-> > > @@ -2103,6 +2103,15 @@ _("Directory ftype field always enabled on CRC enabled filesystems\n"));
-> > >  		}
-> > >  
-> > >  	} else {	/* !crcs_enabled */
-> > > +		/*
-> > > +		 * The V4 filesystem format is deprecated in the upstream Linux
-> > > +		 * kernel.  In September 2025 it will be turned off by default
-> > > +		 * in the kernel and in September 2030 support will be removed
-> > > +		 * entirely.
-> > > +		 */
-> > > +		fprintf(stdout,
-> > > +_("V4 filesystems are deprecated and will not be supported by future versions.\n"));
-> > > +
-> > >  		/*
-> > >  		 * The kernel doesn't support crc=0,finobt=1 filesystems.
-> > >  		 * If crcs are not enabled and the user has not explicitly
-> > > 
-> > 
-> > Looks good to me.
-> > 
-> > Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Do we need to update the mkfs filter in fstests now?
-> 
-> AFAICT, no, because (so far) the only fstests that care about mkfs
-> output only look for messages on stderr, and dump stdout to $seqres.full
-> or /dev/null.
+Hi all,
 
-So I'll immediately put my foot in my mouth; there /was/ a patch in my
-fstests tree to fix the one test that broke: xfs/449.
+This week I have two random fixes:
+
+The first update removes xfs_check from the default test configuration,
+as I have finally completed my quest to make sure that xfs_repair (5.13)
+catches all the corruption errors that xfs_check does.  Since xfs_check
+has a tendency to OOM, let's remove the redundant code to save everyone
+some run time.
+
+The other is an update to the swapfile corruption test to add the commit
+id for the kernel fix and fix some problems on arm64.
+
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
+
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
 
 --D
 
-> --D
-> 
-> > Cheers,
-> > 
-> > Dave.
-> > -- 
-> > Dave Chinner
-> > david@fromorbit.com
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=random-fixes
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=random-fixes
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=random-fixes
+---
+ README                |    4 ++++
+ common/xfs            |   12 ++++++++----
+ tests/generic/643     |   33 ++++++++++++++++++++++-----------
+ tests/generic/643.out |    2 +-
+ 4 files changed, 35 insertions(+), 16 deletions(-)
+
