@@ -3,42 +3,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E63EAC432BE
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 00:11:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11D1FC432BE
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 00:11:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CEF946103D
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 00:11:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E58146103D
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 00:11:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242999AbhIAAMp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 Aug 2021 20:12:45 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46738 "EHLO mail.kernel.org"
+        id S243021AbhIAAMu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 Aug 2021 20:12:50 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46762 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S242978AbhIAAMh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 31 Aug 2021 20:12:37 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id AD1EE61008;
-        Wed,  1 Sep 2021 00:11:41 +0000 (UTC)
+        id S242976AbhIAAMk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 31 Aug 2021 20:12:40 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id F24D06103D;
+        Wed,  1 Sep 2021 00:11:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1630455101;
-        bh=SE2vvoqQLvXPIYlN7dlqt+4lP6hI4EgxTfWRjftnTFo=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=RoOJDdfUSMZdFkZu3lk/OM/NxhMBW5WjPsLu4I06I87p8O85qdtsOAkolhJ3j7dQi
-         v8iC6R4iEdqS6BcBu8lFH622cPx3K+arrB+vI9eBHI+BcEoPRLFamj6zTBBr8kpFOw
-         qy4m6vBNSB7p4lBz6E5lPWyweM3jwrXydbt8Nu+0V63gx0d+REiYXFUftORQffFWZZ
-         wizhEUikR9e2r8I2p6r08CFfh8BVYeucQ1C0aNVJn+EV+U+Kcnt8P1tf4GC0zg5LjD
-         LeHiTqRbVxGWS8Bb794N1pX1sZTLwRQGcrW6uuYqHRJY3TxpzAK6H0rZ/bkc+0iwNR
-         8bV98Ml+mCwlQ==
-Subject: [PATCH 3/3] xfs: test adding realtime sections to filesystem
+        s=k20201202; t=1630455105;
+        bh=5Mzr3KkNCQkEBBDDNvmN4YFc9/754PodPWHeAK221N0=;
+        h=Subject:From:To:Cc:Date:From;
+        b=Xc6zZg80mL6NpZGP86+r/hLhlN1iLr33BaGuwcBiQ2z26UqXrV1qf8mZZhbRmwxAj
+         22sVvJPGZ4hcrRL136KF9HcI6VKjuXXLQJwMyTMbhUfxnFYWznPhFmn7TsJW7pq5F6
+         ICJudGqk8B7lFls3Ml7TXsz8ehIEiL6LYQekLrhhtNbdyL0vjN4eU0fT87bcvSXlkE
+         CoBT2pTyREcgIRjnGVDJAegjW+76HqGABNDFmBEcnzcBxMKIbXWfjcSLahI/bP6R0o
+         dESXe+6o9RMPpE9mCsXH+bNc8w0WKv8ArVkuuI9z/c8VqjXw6KLSgAcK9cse6/GWR/
+         8O05AcroMwEYA==
+Subject: [PATCHSET v2 0/3] fstests: exercise code refactored in 5.14
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 31 Aug 2021 17:11:41 -0700
-Message-ID: <163045510141.769915.9334618845276733225.stgit@magnolia>
-In-Reply-To: <163045508495.769915.4859353445119566326.stgit@magnolia>
-References: <163045508495.769915.4859353445119566326.stgit@magnolia>
+Date:   Tue, 31 Aug 2021 17:11:44 -0700
+Message-ID: <163045510470.770026.14067376159951420121.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -47,144 +45,34 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hi all,
 
-Add a functional test to exercise using "xfs_growfs -e XXX -r" to add a
-realtime section to a filesystem while changing the extent size.
+Add new tests to exercise code that got refactored in 5.14.  The
+nested shutdown test simulates the process of recovering after a VM host
+filesystem goes down and the guests have to recover.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+v2: fix some bugs pointed out by the maintainer, add cpu offlining stress test
+
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
+
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=new-tests-for-5.14
 ---
- tests/xfs/779     |  112 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/779.out |    2 +
- 2 files changed, 114 insertions(+)
- create mode 100755 tests/xfs/779
- create mode 100644 tests/xfs/779.out
-
-
-diff --git a/tests/xfs/779 b/tests/xfs/779
-new file mode 100755
-index 00000000..f064879c
---- /dev/null
-+++ b/tests/xfs/779
-@@ -0,0 +1,112 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2021 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test 779
-+#
-+# Test for xfs_growfs to make sure that we can add a realtime device and set
-+# its extent size hint at the same time.  This also checks for the presence of
-+# these patches:
-+#
-+#	xfs: improve FSGROWFSRT precondition checking
-+#	xfs: fix an integer overflow error in xfs_growfs_rt
-+#	xfs: correct the narrative around misaligned rtinherit/extszinherit dirs
-+#	xfs: don't expose misaligned extszinherit hints to userspace
-+#
-+. ./common/preamble
-+_begin_fstest auto quick realtime growfs
-+
-+# Import common functions.
-+. ./common/filter
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs generic
-+_require_realtime
-+_require_scratch
-+
-+# Format scratch fs with no realtime section.
-+SCRATCH_RTDEV="" _scratch_mkfs | _filter_mkfs 2> $tmp.mkfs >> $seqres.full
-+_scratch_mount
-+
-+# Check that there's no realtime section.
-+source $tmp.mkfs
-+test $rtblocks -eq 0 || echo "expected 0 rtblocks, got $rtblocks"
-+
-+# Compute a new rt extent size and a separate rt extent size hint to exercise
-+# the code that ignores hints that aren't a multiple of the extent size.
-+XFS_MAX_RTEXTSIZE=$((1024 * 1024 * 1024))
-+new_rtextsz=$((rtextsz + dbsize))
-+if [ $new_rtextsz -gt $XFS_MAX_RTEXTSIZE ]; then
-+	new_rtextsz=$((rtextsz - dbsize))
-+fi
-+new_rtextsz_blocks=$(( new_rtextsz / dbsize ))
-+
-+new_extszhint=$((rtextsz * 2))
-+if [ $new_extszhint -eq $new_rtextsz ]; then
-+	new_extszhint=$((rtextsz * 3))
-+fi
-+
-+# Set the inheritable extent size hint and rt status.
-+$XFS_IO_PROG -c 'chattr +t' -c "extsize $new_extszhint" $SCRATCH_MNT
-+
-+# Check that the hint was set correctly
-+after_extszhint=$($XFS_IO_PROG -c 'stat' $SCRATCH_MNT | \
-+	grep 'fsxattr.extsize' | cut -d ' ' -f 3)
-+test $after_extszhint -eq $new_extszhint || \
-+	echo "expected extszhint $new_extszhint, got $after_extszhint"
-+
-+# Add a realtime section and change the extent size.
-+echo $XFS_GROWFS_PROG -e $new_rtextsz_blocks -r $SCRATCH_MNT >> $seqres.full
-+$XFS_GROWFS_PROG -e $new_rtextsz_blocks -r $SCRATCH_MNT >> $seqres.full 2> $tmp.growfs
-+res=$?
-+cat $tmp.growfs
-+
-+# If the growfs failed, skip the post-test check because the scratch fs does
-+# not have SCRATCH_RTDEV configured.  If the kernel didn't support adding the
-+# rt volume, skip everything else.
-+if [ $res -ne 0 ]; then
-+	rm -f ${RESULT_DIR}/require_scratch
-+	if grep -q "Operation not supported" $tmp.growfs; then
-+		_notrun "growfs not supported on rt volume"
-+	fi
-+fi
-+
-+# Now that the root directory's extsize hint is no longer aligned to the rt
-+# extent size, check that we don't report it to userspace any more.
-+grow_extszhint=$($XFS_IO_PROG -c 'stat' $SCRATCH_MNT | \
-+	grep 'fsxattr.extsize' | cut -d ' ' -f 3)
-+test $grow_extszhint -eq 0 || \
-+	echo "expected post-grow extszhint 0, got $grow_extszhint"
-+
-+# Check that we now have rt extents.
-+rtextents=$($XFS_IO_PROG -c 'statfs' $SCRATCH_MNT | \
-+	grep 'geom.rtextents' | cut -d ' ' -f 3)
-+test $rtextents -gt 0 || echo "expected rtextents > 0"
-+
-+# Check the new rt extent size.
-+after_rtextsz_blocks=$($XFS_IO_PROG -c 'statfs' $SCRATCH_MNT | \
-+	grep 'geom.rtextsize' | cut -d ' ' -f 3)
-+test $after_rtextsz_blocks -eq $new_rtextsz_blocks || \
-+	echo "expected rtextsize $new_rtextsz_blocks, got $after_rtextsz_blocks"
-+
-+# Create a new realtime file to prove that we can.
-+echo moo > $SCRATCH_MNT/a
-+sync
-+$XFS_IO_PROG -c 'lsattr -v' $SCRATCH_MNT/a | \
-+	cut -d ' ' -f 1 | \
-+	grep -q realtime || \
-+	echo "$SCRATCH_MNT/a is not a realtime file?"
-+
-+# Check that the root directory's hint (which was aligned before the grow and
-+# misaligned after) did not propagate to the new realtime file.
-+file_extszhint=$($XFS_IO_PROG -c 'stat' $SCRATCH_MNT/a | \
-+	grep 'fsxattr.extsize' | cut -d ' ' -f 3)
-+test $file_extszhint -eq 0 || \
-+	echo "expected file extszhint 0, got $file_extszhint"
-+
-+# success, all done
-+echo Silence is golden
-+status=0
-+exit
-diff --git a/tests/xfs/779.out b/tests/xfs/779.out
-new file mode 100644
-index 00000000..1f79fae2
---- /dev/null
-+++ b/tests/xfs/779.out
-@@ -0,0 +1,2 @@
-+QA output created by 779
-+Silence is golden
+ common/rc             |   24 +++++++++
+ tests/generic/725     |  136 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/725.out |    2 +
+ tests/generic/726     |   69 +++++++++++++++++++++++++
+ tests/generic/726.out |    2 +
+ tests/xfs/449         |    2 -
+ 6 files changed, 234 insertions(+), 1 deletion(-)
+ create mode 100755 tests/generic/725
+ create mode 100644 tests/generic/725.out
+ create mode 100755 tests/generic/726
+ create mode 100644 tests/generic/726.out
 
