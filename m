@@ -7,37 +7,36 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 402D2C4320A
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 00:12:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7DF9C4320E
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 00:12:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2929661056
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 00:12:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BF8586103D
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 00:12:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243219AbhIAANb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 Aug 2021 20:13:31 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47142 "EHLO mail.kernel.org"
+        id S243252AbhIAANj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 Aug 2021 20:13:39 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47174 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S243242AbhIAANb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 31 Aug 2021 20:13:31 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8D0E261008;
-        Wed,  1 Sep 2021 00:12:35 +0000 (UTC)
+        id S243245AbhIAANg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 31 Aug 2021 20:13:36 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0C4D56102A;
+        Wed,  1 Sep 2021 00:12:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1630455155;
-        bh=5zEHfJY16KIaUJlnHuFtMeQ8taovR8wySqvC4DeuyN8=;
+        s=k20201202; t=1630455161;
+        bh=UTa46hKvumgBDKbs3/0GuZY6WwZqlrceo2oBhIUCyR8=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=f1/NkFb+ex7p2pAEFGhG+cub4S1pgbYUsTX0oF9Twyk/MfjtvXU+OiIHAn5VkKaoe
-         JpSsOacx58ZzoM/SRcb8syi6jbk8SQAWPHktackiShxYmcV5kEgxK+8dUw6OB03hYE
-         t8pZJpjd14Dg7uwMx6sSb0lxPjAy3A/M3a1e2owAfeDue8u2KLIdEv49+AvSrnQh6E
-         +CFYc/Bxk3SQbY6s9BnQhs5DTy2+27+oRMycVVtPG+2SDAqv49PSWrkKOFwqwn1qSd
-         lRx/x+1j848FmfCuK+Dhph7TPuRbrZODGOJUoHO1dNQyg7pV8syuIf/hI8IblOi+dK
-         mx8eESeS5jXNg==
-Subject: [PATCH 1/5] ceph: re-tag copy_file_range as being in the copy_range
- group
+        b=JkvE5XoFfZgRzsc8QqS6NMfDiEeW15mNWFjWarRNDaPcRYkN9i8cXlUGdvRbaYo5y
+         XP7BOSwNC92xcpHNZBeSpbe2bPxjVGFzl2PZiYfynRJlZ5d1rseh2dhxdqB2d7bcBO
+         lyyGObWX8NTBU4rjbgmMG8EMDfRF8GK99Q+kSGc/apzxqNBllO5tmcHON58UWM5UmZ
+         5nHSV1T01jKY0MlZPz61/chMpP29tJLvV1OQ/Y/EPKqjs8O2Sks9oZsf40ecKQbDG8
+         4B/7rymBoeT4dEO6g15/eVEx3qxMFeJSHftj0Jb/5Xk0P62IOy6UN4b9HsdZn6ozZT
+         T4BKzv60wBATw==
+Subject: [PATCH 2/5] xfs: move reflink tests into the clone group
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 31 Aug 2021 17:12:35 -0700
-Message-ID: <163045515529.771564.6600748735943731783.stgit@magnolia>
+Date:   Tue, 31 Aug 2021 17:12:40 -0700
+Message-ID: <163045516076.771564.422157391342318386.stgit@magnolia>
 In-Reply-To: <163045514980.771564.6282165259140399788.stgit@magnolia>
 References: <163045514980.771564.6282165259140399788.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,54 +49,68 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-copy_range is the group name for copy_file_range tests, so reclassify
-these tests.
+"clone" is the group for tests that exercise FICLONERANGE, so move these
+tests.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/ceph/001 |    2 +-
- tests/ceph/002 |    2 +-
- tests/ceph/003 |    2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+ tests/xfs/519 |    2 +-
+ tests/xfs/520 |    2 +-
+ tests/xfs/535 |    2 +-
+ tests/xfs/536 |    2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
 
 
-diff --git a/tests/ceph/001 b/tests/ceph/001
-index aca77168..c00de308 100755
---- a/tests/ceph/001
-+++ b/tests/ceph/001
-@@ -11,7 +11,7 @@
- # file and 3) the middle of the dst file.
+diff --git a/tests/xfs/519 b/tests/xfs/519
+index 675ec07e..49c62b56 100755
+--- a/tests/xfs/519
++++ b/tests/xfs/519
+@@ -9,7 +9,7 @@
+ # flushing the log and then remounting to check file contents.
+ 
+ . ./common/preamble
+-_begin_fstest auto quick reflink
++_begin_fstest auto quick clone
+ 
+ # Import common functions.
+ . ./common/filter
+diff --git a/tests/xfs/520 b/tests/xfs/520
+index 8410f2ba..2fceb07c 100755
+--- a/tests/xfs/520
++++ b/tests/xfs/520
+@@ -12,7 +12,7 @@
+ # is included in the current kernel.
  #
  . ./common/preamble
--_begin_fstest auto quick copy
-+_begin_fstest auto quick copy_range
+-_begin_fstest auto quick reflink
++_begin_fstest auto quick clone
  
- # get standard environment
- . common/filter
-diff --git a/tests/ceph/002 b/tests/ceph/002
-index 428f23a9..9bc728fd 100755
---- a/tests/ceph/002
-+++ b/tests/ceph/002
-@@ -20,7 +20,7 @@
- #   linux kernel: 78beb0ff2fec ("ceph: use copy-from2 op in copy_file_range")
- #
- . ./common/preamble
--_begin_fstest auto quick copy
-+_begin_fstest auto quick copy_range
- 
- # get standard environment
- . common/filter
-diff --git a/tests/ceph/003 b/tests/ceph/003
-index 9f8c6068..faedb48c 100755
---- a/tests/ceph/003
-+++ b/tests/ceph/003
+ # Override the default cleanup function.
+ _cleanup()
+diff --git a/tests/xfs/535 b/tests/xfs/535
+index 4c883675..1a5da61b 100755
+--- a/tests/xfs/535
++++ b/tests/xfs/535
 @@ -7,7 +7,7 @@
- # Test copy_file_range with infile = outfile
- #
+ # Verify that XFS does not cause inode fork's extent count to overflow when
+ # writing to a shared extent.
  . ./common/preamble
--_begin_fstest auto quick copy
-+_begin_fstest auto quick copy_range
+-_begin_fstest auto quick reflink
++_begin_fstest auto quick clone
  
- # get standard environment
- . common/filter
+ # Import common functions.
+ . ./common/filter
+diff --git a/tests/xfs/536 b/tests/xfs/536
+index e5f904f5..64fa4fbf 100755
+--- a/tests/xfs/536
++++ b/tests/xfs/536
+@@ -7,7 +7,7 @@
+ # Verify that XFS does not cause inode fork's extent count to overflow when
+ # remapping extents from one file's inode fork to another.
+ . ./common/preamble
+-_begin_fstest auto quick reflink
++_begin_fstest auto quick clone
+ 
+ # Import common functions.
+ . ./common/filter
 
