@@ -7,36 +7,37 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD38CC4320E
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 00:12:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B2C9C4320A
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 00:12:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9302061041
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 00:12:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2F7346102A
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Sep 2021 00:12:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243220AbhIAANm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 Aug 2021 20:13:42 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47204 "EHLO mail.kernel.org"
+        id S243254AbhIAANs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 Aug 2021 20:13:48 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47234 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S243241AbhIAANm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 31 Aug 2021 20:13:42 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 846406102A;
-        Wed,  1 Sep 2021 00:12:46 +0000 (UTC)
+        id S243244AbhIAANr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 31 Aug 2021 20:13:47 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0522761008;
+        Wed,  1 Sep 2021 00:12:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1630455166;
-        bh=vv3taoie8ul1L8HHj2xb8VOfSmARQrFndjaLNn81Orc=;
+        s=k20201202; t=1630455172;
+        bh=tbZVqxzdmFSJ8lgQEcy0hJJjpblBK8GAtB+wuD26C9w=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=ELaIR7cnZtHTDpFtrXChK18wPXLy20ObW0DnTjQjR1QKCZYTS9XUB9D+B2Iy2Q09j
-         b3s7Qo2PBJ4M23ycKklUWDtZ/IeSgJs4GrpL27rKKCWSdPG+3HzB7pEn1yVgqg7Rvq
-         CeIevDxFwf3lD0WlU+fNn/M0OJ6gb36ambdTintEKWk7O6xEHU8aUkULu2Oz/t2ii2
-         IAZPeKry331XHpWdmsfFMEefW+5JCCg/SVYPnIYrZMJe9W74AJk8cEtYiLk7sIZnOO
-         t7LT9vz2YJlbYyP+gL5kB79JuxQrDSTfS4Eph0zayeFer8rNB7uJydWIW3xjCcockZ
-         Br2xpsWC1Cq+A==
-Subject: [PATCH 3/5] xfs: fix incorrect fuzz test group name
+        b=gHR2L+7wl8Rh2uVcVUq92Badklqb5a8mdJehZeuRobUa9/gz/tSNCu6fWAu9o9ZQA
+         6sC/nMu0aHomSlYQDWJrjeDAoZSNOVd/DgFItt1XP0ZmxMkNalmxfbOUeyUagPtWhr
+         KAgsG8pR3w0aXjFcprlPFwl+ApcEmRBz0WYz4ntGlNvjJgcr0Je0gdScmfW2tFoX53
+         oVi2+CsXhD0SFHqb8NtIWNbVZ95QuG9Dk0PApOUvBNAOjwtmUmedrS2DhoxtAEUsUO
+         83lsSpEQmT5eoAGDnwIW4KuVy9S++rPyvlOQ7Mh4xiSJYmQhR2bByjMWRqAtXP9olO
+         2iZcendNLLQmQ==
+Subject: [PATCH 4/5] tools: make sure that test groups are described in the
+ documentation
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 31 Aug 2021 17:12:46 -0700
-Message-ID: <163045516624.771564.3811466819215120895.stgit@magnolia>
+Date:   Tue, 31 Aug 2021 17:12:51 -0700
+Message-ID: <163045517173.771564.1524162806861567173.stgit@magnolia>
 In-Reply-To: <163045514980.771564.6282165259140399788.stgit@magnolia>
 References: <163045514980.771564.6282165259140399788.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,53 +50,208 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-The group name for fuzz tests is 'fuzzers'.
+Create a file to document the purpose of each test group that is
+currently defined in fstests, and add a build script to check that every
+group mentioned in the tests is also mentioned in the documentation.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/xfs/491 |    2 +-
- tests/xfs/492 |    2 +-
- tests/xfs/493 |    2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+ doc/group-names.txt    |  136 ++++++++++++++++++++++++++++++++++++++++++++++++
+ include/buildgrouplist |    1 
+ tools/check-groups     |   33 ++++++++++++
+ 3 files changed, 170 insertions(+)
+ create mode 100644 doc/group-names.txt
+ create mode 100755 tools/check-groups
 
 
-diff --git a/tests/xfs/491 b/tests/xfs/491
-index 5c7c5d1f..7402b09a 100755
---- a/tests/xfs/491
-+++ b/tests/xfs/491
-@@ -7,7 +7,7 @@
- # Test detection & fixing of bad summary block counts at mount time.
- #
- . ./common/preamble
--_begin_fstest auto quick fuzz
-+_begin_fstest auto quick fuzzers
- 
- # Import common functions.
- . ./common/filter
-diff --git a/tests/xfs/492 b/tests/xfs/492
-index 8258e5d8..514ac1e4 100755
---- a/tests/xfs/492
-+++ b/tests/xfs/492
-@@ -7,7 +7,7 @@
- # Test detection & fixing of bad summary inode counts at mount time.
- #
- . ./common/preamble
--_begin_fstest auto quick fuzz
-+_begin_fstest auto quick fuzzers
- 
- # Import common functions.
- . ./common/filter
-diff --git a/tests/xfs/493 b/tests/xfs/493
-index 58fd9c99..58091ad7 100755
---- a/tests/xfs/493
-+++ b/tests/xfs/493
-@@ -8,7 +8,7 @@
- # Corrupt the AGFs to test mount failure when mount-fixing fails.
- #
- . ./common/preamble
--_begin_fstest auto quick fuzz
-+_begin_fstest auto quick fuzzers
- 
- # Import common functions.
- . ./common/filter
+diff --git a/doc/group-names.txt b/doc/group-names.txt
+new file mode 100644
+index 00000000..ae517328
+--- /dev/null
++++ b/doc/group-names.txt
+@@ -0,0 +1,136 @@
++======================= =======================================================
++Group Name:		Description:
++======================= =======================================================
++all			All known tests, automatically generated by ./check at
++			runtime
++auto			Tests that should be run automatically.  These should
++			not require more than ~5 minutes to run.
++quick			Tests that should run in under 30 seconds.
++deprecated		Old tests that should not be run.
++
++acl			Access Control Lists
++admin			xfs_admin functionality
++aio			general libaio async io tests
++atime			file access time
++attr			extended attributes
++attr2			xfs v2 extended aributes
++balance			btrfs tree rebalance
++bigtime			timestamps beyond the year 2038
++blockdev		block device functionality
++broken			broken tests
++cap			Linux capabilities
++casefold		directory name casefolding
++ci			ASCII case-insensitive directory name lookups
++clone			FICLONE/FICLONERANGE ioctls
++clone_stress		stress testing FICLONE/FICLONERANGE
++collapse		fallocate collapse_range
++compress		file compression
++convert			btrfs ext[34] conversion tool
++copy			xfs_copy functionality
++copy_range		copy_file_range syscall
++copyup			overlayfs copyup support
++dangerous		dangerous test that can crash the system
++dangerous_bothrepair	fuzzers to evaluate xfs_scrub + xfs_repair repair
++dangerous_fuzzers	fuzzers that can crash your computer
++dangerous_norepair	fuzzers to evaluate kernel metadata verifiers
++dangerous_online_repair	fuzzers to evaluate xfs_scrub online repair
++dangerous_repair	fuzzers to evaluate xfs_repair offline repair
++dangerous_scrub		fuzzers to evaluate xfs_scrub checking
++data			data loss checkers
++dax			direct access mode for persistent memory files
++db			xfs_db functional tests
++dedupe			FIEDEDUPERANGE ioctl
++defrag			filesystem defragmenters
++dir			directory test functions
++dump			dump and restore utilities
++eio			IO error reporting
++encrypt			encrypted file contents
++enospc			ENOSPC error reporting
++exportfs		file handles
++filestreams		XFS filestreams allocator
++freeze			filesystem freeze tests
++fsck			general fsck tests
++fsmap			FS_IOC_GETFSMAP ioctl
++fsr			XFS free space reorganizer
++fuzzers			filesystem fuzz tests
++growfs			increasing the size of a filesystem
++hardlink		hardlinks
++health			XFS health reporting
++idmapped		idmapped mount functionality
++inobtcount		XFS inode btree count tests
++insert			fallocate insert_range
++ioctl			general ioctl tests
++io_uring		general io_uring async io tests
++label			filesystem labelling
++limit			resource limits
++locks			file locking
++log			metadata logging
++logprint		xfs_logprint functional tests
++long_rw			long-soak read write IO path exercisers
++metacopy		overlayfs metadata-only copy-up
++metadata		filesystem metadata update exercisers
++metadump		xfs_metadump/xfs_mdrestore functionality
++mkfs			filesystem formatting tools
++mount			mount option and functionality checks
++nested			nested overlayfs instances
++nfs4_acl		NFSv4 access control lists
++nonsamefs		overlayfs layers on different filesystems
++online_repair		online repair functionality tests
++other			dumping ground, do not add more tests to this group
++overlay			using overlayfs on top of FSTYP
++pattern			specific IO pattern tests
++perms			access control and permission checking
++pipe			pipe functionality
++pnfs			PNFS
++posix			POSIX behavior conformance
++prealloc		fallocate
++preallocrw		fallocate, then read and write
++punch			fallocate punch_hole
++qgroup			btrfs qgroup feature
++quota			filesystem usage quotas
++raid			btrfs RAID
++realtime		XFS realtime volumes
++recoveryloop		crash recovery loops
++redirect		overlayfs redirect_dir feature
++remote			dump and restore with a remote tape
++remount			remounting filesystems
++rename			rename system call
++repair			xfs_repair functional tests
++replace			btrfs device replace
++replay			dm-logwrites replays
++resize			resize2fs functionality tests
++richacl			rich ACL feature
++rmap			XFS reverse mapping exercisers
++rotate			overlayfs feature of some sort
++rw			read/write IO tests
++samefs			overlayfs when all layers are on the same fs
++scrub			filesystem metadata scrubbers
++seed			btrfs seeded filesystems
++seek			llseek functionality
++send			btrfs send/receive
++shrinkfs		decreasing the size of a filesystem
++shutdown		FS_IOC_SHUTDOWN ioctl
++snapshot		btrfs snapshots
++soak			long soak tests of any kind
++spaceman		xfs_spaceman functional tests
++splice			splice system call
++stress			fsstress filesystem exerciser
++subvol			btrfs subvolumes
++subvolume		btrfs subvolumes (again?)
++swap			swap files
++symlink			symbolic links
++tape			dump and restore with a tape
++thin			thin provisioning
++trim			FITRIM ioctl
++udf			UDF functionality tests
++union			tests from the unionmount test suite
++unlink			O_TMPFILE unlinked files
++unshare			fallocate unshare_range
++v2log			XFS v2 log format tests
++verity			fsverity
++volume			btrfs volume management
++whiteout		overlayfs whiteout functionality
++xino			overlayfs xino feature
++zero			fallocate zero_range
++zone			zoned (SMR) device support
++======================= =======================================================
+diff --git a/include/buildgrouplist b/include/buildgrouplist
+index d898efa3..489de965 100644
+--- a/include/buildgrouplist
++++ b/include/buildgrouplist
+@@ -6,3 +6,4 @@
+ group.list:
+ 	@echo " [GROUP] $$PWD/$@"
+ 	$(Q)$(TOPDIR)/tools/mkgroupfile $@
++	$(Q)$(TOPDIR)/tools/check-groups $(TOPDIR)/doc/group-names.txt $@
+diff --git a/tools/check-groups b/tools/check-groups
+new file mode 100755
+index 00000000..bac45bbd
+--- /dev/null
++++ b/tools/check-groups
+@@ -0,0 +1,33 @@
++#!/bin/bash
++
++# Make sure that all groups listed in a group.list file are mentioned in the
++# group description file.
++
++if [ -z "$1" ] || [ "$1" = "--help" ]; then
++	echo "Usage: $0 path_to_group_names [group.list files...]"
++	exit 1
++fi
++
++groups_doc_file="$1"
++shift
++
++get_group_list() {
++	for file in "$@"; do
++		while read testname groups; do
++			test -z "${testname}" && continue
++			test "${testname:0:1}" = "#" && continue
++
++			echo "${groups}" | tr ' ' '\n'
++		done < "${file}"
++	done | sort | uniq
++}
++
++ret=0
++while read group; do
++	if ! grep -q "^${group}[[:space:]]" "${groups_doc_file}"; then
++		echo "${group}: group not mentioned in documentation." 1>&2
++		ret=1
++	fi
++done < <(get_group_list "$@")
++
++exit "${ret}"
 
