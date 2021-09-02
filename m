@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69701C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Sep 2021 23:53:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AEB20C433FE
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Sep 2021 23:53:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 51C2760E74
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Sep 2021 23:53:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9D3C460555
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Sep 2021 23:53:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345754AbhIBXx6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 2 Sep 2021 19:53:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59318 "EHLO mail.kernel.org"
+        id S1345767AbhIBXyC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 2 Sep 2021 19:54:02 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59394 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231311AbhIBXxz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 2 Sep 2021 19:53:55 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 5B1D26103A;
-        Thu,  2 Sep 2021 23:52:56 +0000 (UTC)
+        id S231311AbhIBXyB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 2 Sep 2021 19:54:01 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id D6C2A61053;
+        Thu,  2 Sep 2021 23:53:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1630626776;
-        bh=Gut70laiUsx11y1hK3FjS3zSptarBo95OmkyOHo16dY=;
+        s=k20201202; t=1630626782;
+        bh=G/0214a0FH7oreO4gdlFAoKtbUDmmt0eT/23qQKvu5E=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=rNlWfbnOCDgv4BFQsa5OSjMsULh/j2QzSf0TdGDDCUc+dh8yXFZO095jX5ymU0s/s
-         lWCcDMJr6QxBg5rLtIv5QsM6jhN46IfohlcBdMrvLb/gineGs5n+G5ieOvAq+TSk8B
-         a3VApHS/6KL2ZMCXOeW5pV1xvLk5mI/h0exWT+btfiNZ5mKlmyYxpZFJQP4DWLvuKP
-         vZblojxsnBO06uC6OdWZrVQX6dzf8sKILY0gIYtIlN22UOS1NEOLnTYWbBj7iOKwp8
-         6b0qIdbLSki2rqMN2hGJ42ydMrO+Kir5sSYrbsSdZub7k70nhZLwK5zYDQVDVdN3K2
-         z7poI8jT1SK8w==
-Subject: [PATCH 6/8] tools: make sure that test groups are described in the
- documentation
+        b=dOqP0j8bBqHNdSWaZe9iLSx0ahoawguxy3m6GtYgRuo1HbMXhmmfq8hjufdDWJwIZ
+         ohwz3UD0TtS/6DQaHWIS6wDse/oj4rsFnzXosxVQDXFnMtgwqkGGxhUrxjT5dLCo54
+         0ce+VdegJwp3m6dr2v5tJstsfXVl3EV7uOX/jXKeVPkhnnXbR9r7oiA+ysksQZ4HlA
+         FZzjSTyngcnt62D6e/rh6r6bmlbtTcfhPdNexi3pnNoTxdu7wOZiR5FOzsntF9MBMi
+         m42jBiRNrNFMf/scV/HIoX5Nms2rP4YOqyGEKD7QdYAjHW+8KFlBjxJm5DGgvYCiZp
+         hr1+YwvFHQ68g==
+Subject: [PATCH 7/8] tools: add missing license tags to my scripts
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Thu, 02 Sep 2021 16:52:56 -0700
-Message-ID: <163062677608.1579659.1360826362143203767.stgit@magnolia>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
+Date:   Thu, 02 Sep 2021 16:53:01 -0700
+Message-ID: <163062678156.1579659.15593490978411091202.stgit@magnolia>
 In-Reply-To: <163062674313.1579659.11141504872576317846.stgit@magnolia>
 References: <163062674313.1579659.11141504872576317846.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,209 +50,57 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create a file to document the purpose of each test group that is
-currently defined in fstests, and add a build script to check that every
-group mentioned in the tests is also mentioned in the documentation.
+I forgot to add spdx license tags and copyright statements to some of
+the tools that I've contributed to fstests.  Fix this to be explicit.
 
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- doc/group-names.txt    |  135 ++++++++++++++++++++++++++++++++++++++++++++++++
- include/buildgrouplist |    1 
- tools/check-groups     |   35 ++++++++++++
- 3 files changed, 171 insertions(+)
- create mode 100644 doc/group-names.txt
- create mode 100755 tools/check-groups
+ tools/mkgroupfile |    4 +++-
+ tools/mvtest      |    5 ++++-
+ tools/nextid      |    4 +++-
+ 3 files changed, 10 insertions(+), 3 deletions(-)
 
 
-diff --git a/doc/group-names.txt b/doc/group-names.txt
-new file mode 100644
-index 00000000..e8e3477e
---- /dev/null
-+++ b/doc/group-names.txt
-@@ -0,0 +1,135 @@
-+======================= =======================================================
-+Group Name:		Description:
-+======================= =======================================================
-+all			All known tests, automatically generated by ./check at
-+			runtime
-+auto			Tests that should be run automatically.  These should
-+			not require more than ~5 minutes to run.
-+quick			Tests that should run in under 30 seconds.
-+deprecated		Old tests that should not be run.
-+
-+acl			Access Control Lists
-+admin			xfs_admin functionality
-+aio			general libaio async io tests
-+atime			file access time
-+attr			extended attributes
-+attr2			xfs v2 extended aributes
-+balance			btrfs tree rebalance
-+bigtime			timestamps beyond the year 2038
-+blockdev		block device functionality
-+broken			broken tests
-+cap			Linux capabilities
-+casefold		directory name casefolding
-+ci			ASCII case-insensitive directory name lookups
-+clone			FICLONE/FICLONERANGE ioctls
-+clone_stress		stress testing FICLONE/FICLONERANGE
-+collapse		fallocate FALLOC_FL_COLLAPSE_RANGE
-+compress		file compression
-+convert			btrfs ext[34] conversion tool
-+copy			xfs_copy functionality
-+copy_range		copy_file_range syscall
-+copyup			overlayfs copyup
-+dangerous		dangerous test that can crash the system
-+dangerous_bothrepair	fuzzers to evaluate xfs_scrub + xfs_repair repair
-+dangerous_fuzzers	fuzzers that can crash your computer
-+dangerous_norepair	fuzzers to evaluate kernel metadata verifiers
-+dangerous_online_repair	fuzzers to evaluate xfs_scrub online repair
-+dangerous_repair	fuzzers to evaluate xfs_repair offline repair
-+dangerous_scrub		fuzzers to evaluate xfs_scrub checking
-+data			data loss checkers
-+dax			direct access mode for persistent memory files
-+db			xfs_db functional tests
-+dedupe			FIEDEDUPERANGE ioctl
-+defrag			filesystem defragmenters
-+dir			directory test functions
-+dump			dump and restore utilities
-+eio			IO error reporting
-+encrypt			encrypted file contents
-+enospc			ENOSPC error reporting
-+exportfs		file handles
-+filestreams		XFS filestreams allocator
-+freeze			filesystem freeze tests
-+fsck			general fsck tests
-+fsmap			FS_IOC_GETFSMAP ioctl
-+fsr			XFS free space reorganizer
-+fuzzers			filesystem fuzz tests
-+growfs			increasing the size of a filesystem
-+hardlink		hardlinks
-+health			XFS health reporting
-+idmapped		idmapped mount functionality
-+inobtcount		XFS inode btree count tests
-+insert			fallocate FALLOC_FL_INSERT_RANGE
-+ioctl			general ioctl tests
-+io_uring		general io_uring async io tests
-+label			filesystem labelling
-+limit			resource limits
-+locks			file locking
-+log			metadata logging
-+logprint		xfs_logprint functional tests
-+long_rw			long-soak read write IO path exercisers
-+metacopy		overlayfs metadata-only copy-up
-+metadata		filesystem metadata update exercisers
-+metadump		xfs_metadump/xfs_mdrestore functionality
-+mkfs			filesystem formatting tools
-+mount			mount option and functionality checks
-+nested			nested overlayfs instances
-+nfs4_acl		NFSv4 access control lists
-+nonsamefs		overlayfs layers on different filesystems
-+online_repair		online repair functionality tests
-+other			dumping ground, do not add more tests to this group
-+pattern			specific IO pattern tests
-+perms			access control and permission checking
-+pipe			pipe functionality
-+pnfs			PNFS
-+posix			POSIX behavior conformance
-+prealloc		fallocate for preallocating unwritten space
-+preallocrw		fallocate, then read and write
-+punch			fallocate FALLOC_FL_PUNCH_HOLE
-+qgroup			btrfs qgroup feature
-+quota			filesystem usage quotas
-+raid			btrfs RAID
-+realtime		XFS realtime volumes
-+recoveryloop		crash recovery loops
-+redirect		overlayfs redirect_dir feature
-+remote			dump and restore with a remote tape
-+remount			remounting filesystems
-+rename			rename system call
-+repair			xfs_repair functional tests
-+replace			btrfs device replace
-+replay			dm-logwrites replays
-+resize			resize2fs functionality tests
-+richacl			rich ACL feature
-+rmap			XFS reverse mapping exercisers
-+rotate			overlayfs upper layer rotate tests from the unionmount
-+			test suite
-+rw			read/write IO tests
-+samefs			overlayfs when all layers are on the same fs
-+scrub			filesystem metadata scrubbers
-+seed			btrfs seeded filesystems
-+seek			llseek functionality
-+send			btrfs send/receive
-+shrinkfs		decreasing the size of a filesystem
-+shutdown		FS_IOC_SHUTDOWN ioctl
-+snapshot		btrfs snapshots
-+soak			long running soak tests of any kind
-+spaceman		xfs_spaceman functional tests
-+splice			splice system call
-+stress			fsstress filesystem exerciser
-+subvol			btrfs subvolumes
-+swap			swap files
-+symlink			symbolic links
-+tape			dump and restore with a tape
-+thin			thin provisioning
-+trim			FITRIM ioctl
-+udf			UDF functionality tests
-+union			tests from the unionmount test suite
-+unlink			O_TMPFILE unlinked files
-+unshare			fallocate FALLOC_FL_UNSHARE_RANGE
-+v2log			XFS v2 log format tests
-+verity			fsverity
-+volume			btrfs volume management
-+whiteout		overlayfs whiteout functionality
-+xino			overlayfs xino feature
-+zero			fallocate FALLOC_FL_ZERO_RANGE
-+zone			zoned (SMR) device support
-+======================= =======================================================
-diff --git a/include/buildgrouplist b/include/buildgrouplist
-index d898efa3..489de965 100644
---- a/include/buildgrouplist
-+++ b/include/buildgrouplist
-@@ -6,3 +6,4 @@
- group.list:
- 	@echo " [GROUP] $$PWD/$@"
- 	$(Q)$(TOPDIR)/tools/mkgroupfile $@
-+	$(Q)$(TOPDIR)/tools/check-groups $(TOPDIR)/doc/group-names.txt $@
-diff --git a/tools/check-groups b/tools/check-groups
-new file mode 100755
-index 00000000..0d193615
---- /dev/null
-+++ b/tools/check-groups
-@@ -0,0 +1,35 @@
-+#!/bin/bash
+diff --git a/tools/mkgroupfile b/tools/mkgroupfile
+index 0681e5d2..f96c329b 100755
+--- a/tools/mkgroupfile
++++ b/tools/mkgroupfile
+@@ -1,5 +1,7 @@
+ #!/bin/bash
+-
 +# SPDX-License-Identifier: GPL-2.0
 +# Copyright (c) 2021 Oracle.  All Rights Reserved.
 +#
-+# Make sure that all groups listed in a group.list file are mentioned in the
-+# group description file.
-+
-+if [ -z "$1" ] || [ "$1" = "--help" ]; then
-+	echo "Usage: $0 path_to_group_names [group.list files...]"
-+	exit 1
-+fi
-+
-+groups_doc_file="$1"
-+shift
-+
-+get_group_list() {
-+	for file in "$@"; do
-+		while read testname groups; do
-+			test -z "${testname}" && continue
-+			test "${testname:0:1}" = "#" && continue
-+
-+			echo "${groups}" | tr ' ' '\n'
-+		done < "${file}"
-+	done | sort | uniq
-+}
-+
-+ret=0
-+while read group; do
-+	if ! grep -q "^${group}[[:space:]]" "${groups_doc_file}"; then
-+		echo "${group}: group not mentioned in documentation." 1>&2
-+		ret=1
-+	fi
-+done < <(get_group_list "$@")
-+
-+exit "${ret}"
+ # Generate a group file from the _begin_fstest call in each test.
+ 
+ if [ "$1" = "--help" ]; then
+diff --git a/tools/mvtest b/tools/mvtest
+index 5088b45f..99b15414 100755
+--- a/tools/mvtest
++++ b/tools/mvtest
+@@ -1,6 +1,9 @@
+ #!/bin/sh
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2015 Oracle.  All Rights Reserved.
++#
++# Move a test and update the golden output file.
+ 
+-# Renumber a test
+ dir="$(dirname "$0")"
+ 
+ if [ -z "$1" ] || [ "$1" = "--help" ]; then
+diff --git a/tools/nextid b/tools/nextid
+index 9507de29..9e31718c 100755
+--- a/tools/nextid
++++ b/tools/nextid
+@@ -1,5 +1,7 @@
+ #!/bin/bash
+-
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2015 Oracle.  All Rights Reserved.
++#
+ # Compute the next available test id in a given test directory.
+ 
+ if [ $# != 1 ] || [ "$1" = "--help" ] || [ ! -d "tests/$1/" ]; then
 
