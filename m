@@ -2,234 +2,182 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE23EC4320A
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Sep 2021 15:03:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCEA9C4320E
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Sep 2021 15:33:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C7D40610A4
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Sep 2021 15:03:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A1C5E61074
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Sep 2021 15:33:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345655AbhIBPEG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 2 Sep 2021 11:04:06 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48272 "EHLO mail.kernel.org"
+        id S1345844AbhIBPeJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 2 Sep 2021 11:34:09 -0400
+Received: from mail.kernel.org ([198.145.29.99]:57312 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229941AbhIBPEG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 2 Sep 2021 11:04:06 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 958B060BD3;
-        Thu,  2 Sep 2021 15:03:07 +0000 (UTC)
+        id S234465AbhIBPeI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 2 Sep 2021 11:34:08 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 52A8E610CD;
+        Thu,  2 Sep 2021 15:33:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1630594987;
-        bh=Tjt0PHy0qq37NTeabGyPABBmpSbllYCUDPs9hhZQadU=;
+        s=k20201202; t=1630596790;
+        bh=WwYdTWP6eNm+J5Il2EKANSs5L/HmsnHp5e3hmUJfBUg=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=B0t0/qK6WPrqjE/bKYYIOuS2FgpDethbqV3mmXlBkOFm+4etMj5fqNN3rzx+PM6Xj
-         acaMt5KBrREtNOpVlRrnIdVdN12JgGhutFQk9LGBnu0nv5a1UXtq2CUAYF8Z2a1pzP
-         6ARvwsx4soZxLAJtPhCU1WV7S/aLbbUmFDqfzTcR7L7XDjrF+lYmwvHOaO+52ZH+rR
-         ajRx2y0e/w/DdJ1wh/3bu4EtJpuxjMQ2Jfo4WnmlLq7Qn8cT1eIl6y4DOcJqOUEsJH
-         QxaFOprMic/QBm1PXG5885h/8IZZ7o1OJUDmUb+sB7ZuqrtOECRbp0wRHdJMLaIApC
-         Yq2B293x4vWSw==
-Date:   Thu, 2 Sep 2021 08:03:07 -0700
+        b=A4dHS+sw0sVgMoOs4ab8XO8E1JWv1xdOpnvBUhIGkzrIgp/Vrxy8AO6lFMvOdJ2VN
+         uqUDpGALQTD51UZivGlUovONCe/bL16WwCOMEV6oyDeX9ob3pjohfGLQIriwHVw3zC
+         astHWlG++5QQnQXWEQlUvZ+6xlZKULakXzuDEhFuOxoBdyjOPqwbbc/p6sov2ZeGmg
+         PoG/UScH30YwdA/4XhG1Ql2uG90sufLtmm1Ec58x1ugVLt5nt26uF4Aw8EnMxnPKzB
+         nmiGnXdbovq9NWIZDPZ6glaw8XaC46cjuXICGx58o/YbdKxhNkKQ3P8cfE62Z32Et1
+         VgnrIt3Y2sBjQ==
+Date:   Thu, 2 Sep 2021 08:33:09 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     Eryu Guan <guaneryu@gmail.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        fstests <fstests@vger.kernel.org>, Eryu Guan <guan@eryu.me>
-Subject: Re: [PATCH 4/5] tools: make sure that test groups are described in
- the documentation
-Message-ID: <20210902150307.GF9942@magnolia>
-References: <163045514980.771564.6282165259140399788.stgit@magnolia>
- <163045517173.771564.1524162806861567173.stgit@magnolia>
- <CAOQ4uxi7205Ae+un1w4C4Dzh9-SykL=ogHQSBH=nnVGDkPfkhw@mail.gmail.com>
- <20210901164311.GB9911@magnolia>
- <CAOQ4uxgJz6OBmV=SD1fp9tkCAfiAhxjdCr+fxGd4ko4Y6NUscA@mail.gmail.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Shiyang Ruan <ruansy.fnst@fujitsu.com>, linux-xfs@vger.kernel.org,
+        dan.j.williams@intel.com, david@fromorbit.com,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        nvdimm@lists.linux.dev, rgoldwyn@suse.de, viro@zeniv.linux.org.uk,
+        willy@infradead.org
+Subject: Re: [PATCH v8 6/7] xfs: support CoW in fsdax mode
+Message-ID: <20210902153309.GB9892@magnolia>
+References: <20210829122517.1648171-1-ruansy.fnst@fujitsu.com>
+ <20210829122517.1648171-7-ruansy.fnst@fujitsu.com>
+ <20210902074308.GE13867@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxgJz6OBmV=SD1fp9tkCAfiAhxjdCr+fxGd4ko4Y6NUscA@mail.gmail.com>
+In-Reply-To: <20210902074308.GE13867@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 02, 2021 at 07:49:51AM +0300, Amir Goldstein wrote:
-> On Wed, Sep 1, 2021 at 7:43 PM Darrick J. Wong <djwong@kernel.org> wrote:
-> >
-> > On Wed, Sep 01, 2021 at 07:46:01AM +0300, Amir Goldstein wrote:
-> > > On Wed, Sep 1, 2021 at 3:37 AM Darrick J. Wong <djwong@kernel.org> wrote:
-> > > >
-> > > > From: Darrick J. Wong <djwong@kernel.org>
-> > > >
-> > > > Create a file to document the purpose of each test group that is
-> > > > currently defined in fstests, and add a build script to check that every
-> > > > group mentioned in the tests is also mentioned in the documentation.
-> > > >
-> > >
-> > > This is awesome and long due.
-> > > Thanks for doing that!
-> > >
-> > > Minor nits about overlayfs groups below...
-> >
-> > Heh, yeah, thanks for making corrections. :)
-> >
-> > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > > ---
-> > > >  doc/group-names.txt    |  136 ++++++++++++++++++++++++++++++++++++++++++++++++
-> > > >  include/buildgrouplist |    1
-> > > >  tools/check-groups     |   33 ++++++++++++
-> > > >  3 files changed, 170 insertions(+)
-> > > >  create mode 100644 doc/group-names.txt
-> > > >  create mode 100755 tools/check-groups
-> > > >
-> > > >
-> > > > diff --git a/doc/group-names.txt b/doc/group-names.txt
-> > > > new file mode 100644
-> > > > index 00000000..ae517328
-> > > > --- /dev/null
-> > > > +++ b/doc/group-names.txt
-> > > > @@ -0,0 +1,136 @@
-> > > > +======================= =======================================================
-> > > > +Group Name:            Description:
-> > > > +======================= =======================================================
-> > > > +all                    All known tests, automatically generated by ./check at
-> > > > +                       runtime
-> > > > +auto                   Tests that should be run automatically.  These should
-> > > > +                       not require more than ~5 minutes to run.
-> > > > +quick                  Tests that should run in under 30 seconds.
-> > > > +deprecated             Old tests that should not be run.
-> > > > +
-> > > > +acl                    Access Control Lists
-> > > > +admin                  xfs_admin functionality
-> > > > +aio                    general libaio async io tests
-> > > > +atime                  file access time
-> > > > +attr                   extended attributes
-> > > > +attr2                  xfs v2 extended aributes
-> > > > +balance                        btrfs tree rebalance
-> > > > +bigtime                        timestamps beyond the year 2038
-> > > > +blockdev               block device functionality
-> > > > +broken                 broken tests
-> > > > +cap                    Linux capabilities
-> > > > +casefold               directory name casefolding
-> > > > +ci                     ASCII case-insensitive directory name lookups
-> > > > +clone                  FICLONE/FICLONERANGE ioctls
-> > > > +clone_stress           stress testing FICLONE/FICLONERANGE
-> > > > +collapse               fallocate collapse_range
-> > > > +compress               file compression
-> > > > +convert                        btrfs ext[34] conversion tool
-> > > > +copy                   xfs_copy functionality
-> > > > +copy_range             copy_file_range syscall
-> > > > +copyup                 overlayfs copyup support
-> > >
-> > > The tests in this group exercise copy up.
-> > > There is no such thing as overlayfs without "copyup support",
-> > > so guess my point is - remove the word "support"
-> >
-> > OK.
-> >
-> > > > +dangerous              dangerous test that can crash the system
-> > > > +dangerous_bothrepair   fuzzers to evaluate xfs_scrub + xfs_repair repair
-> > > > +dangerous_fuzzers      fuzzers that can crash your computer
-> > > > +dangerous_norepair     fuzzers to evaluate kernel metadata verifiers
-> > > > +dangerous_online_repair        fuzzers to evaluate xfs_scrub online repair
-> > > > +dangerous_repair       fuzzers to evaluate xfs_repair offline repair
-> > > > +dangerous_scrub                fuzzers to evaluate xfs_scrub checking
-> > > > +data                   data loss checkers
-> > > > +dax                    direct access mode for persistent memory files
-> > > > +db                     xfs_db functional tests
-> > > > +dedupe                 FIEDEDUPERANGE ioctl
-> > > > +defrag                 filesystem defragmenters
-> > > > +dir                    directory test functions
-> > > > +dump                   dump and restore utilities
-> > > > +eio                    IO error reporting
-> > > > +encrypt                        encrypted file contents
-> > > > +enospc                 ENOSPC error reporting
-> > > > +exportfs               file handles
-> > > > +filestreams            XFS filestreams allocator
-> > > > +freeze                 filesystem freeze tests
-> > > > +fsck                   general fsck tests
-> > > > +fsmap                  FS_IOC_GETFSMAP ioctl
-> > > > +fsr                    XFS free space reorganizer
-> > > > +fuzzers                        filesystem fuzz tests
-> > > > +growfs                 increasing the size of a filesystem
-> > > > +hardlink               hardlinks
-> > > > +health                 XFS health reporting
-> > > > +idmapped               idmapped mount functionality
-> > > > +inobtcount             XFS inode btree count tests
-> > > > +insert                 fallocate insert_range
-> > > > +ioctl                  general ioctl tests
-> > > > +io_uring               general io_uring async io tests
-> > > > +label                  filesystem labelling
-> > > > +limit                  resource limits
-> > > > +locks                  file locking
-> > > > +log                    metadata logging
-> > > > +logprint               xfs_logprint functional tests
-> > > > +long_rw                        long-soak read write IO path exercisers
-> > > > +metacopy               overlayfs metadata-only copy-up
-> > > > +metadata               filesystem metadata update exercisers
-> > > > +metadump               xfs_metadump/xfs_mdrestore functionality
-> > > > +mkfs                   filesystem formatting tools
-> > > > +mount                  mount option and functionality checks
-> > > > +nested                 nested overlayfs instances
-> > > > +nfs4_acl               NFSv4 access control lists
-> > > > +nonsamefs              overlayfs layers on different filesystems
-> > > > +online_repair          online repair functionality tests
-> > > > +other                  dumping ground, do not add more tests to this group
-> > > > +overlay                        using overlayfs on top of FSTYP
-> > >
-> > > This description is a bit confusing, because the recommended
-> > > way to run overlayfs tests as described in README.overlay is
-> > > to set FSTYP=xfs and run ./check -overlay
-> > >
-> > > I'm struggling for a better description but perhaps:
-> > > "using overlayfs regardless of ./check -overlay flag"?
-> >
-> > Hmm.  Since I'm the author of the only test that uses this tag, I guess
-> > I'm the authority (ha!) on what the name actually means.
-> >
-> > That test (generic/631) is a regression test for a XFS whiteout handling
-> > bug that can only be reproduced by layering overlayfs atop xfs.
-> > Overlayfs is incidental to reproducing the XFS bug, but AFAIK overlayfs
-> > is the only in-kernel user of whiteout, which is why it's critical here.
-> >
-> > It's not right to make it "_supported_fs overlay" because we're not
-> > testing overlayfs functionality; we're merely using it as a stick to
-> > poke another filesystem.
+On Thu, Sep 02, 2021 at 09:43:08AM +0200, Christoph Hellwig wrote:
+> On Sun, Aug 29, 2021 at 08:25:16PM +0800, Shiyang Ruan wrote:
+> > In fsdax mode, WRITE and ZERO on a shared extent need CoW performed.
+> > After that, new allocated extents needs to be remapped to the file.  Add
+> > an implementation of ->iomap_end() for dax write ops to do the remapping
+> > work.
 > 
-> Yes. I know.
-> Note that while this is the only case of _require_extra_fs overaly
-> there is another case of _require_extra_fs ext2 (xfs/049)
+> Please split the new dax infrastructure from the XFS changes.
 > 
-> >
-> > How about: "regression tests that require the use of overlayfs in a
-> > targetted configuration" ?
-> >
+> >  static vm_fault_t dax_iomap_pte_fault(struct vm_fault *vmf, pfn_t *pfnp,
+> > -			       int *iomap_errp, const struct iomap_ops *ops)
+> > +		int *iomap_errp, const struct iomap_ops *ops)
+> >  {
+> >  	struct address_space *mapping = vmf->vma->vm_file->f_mapping;
+> >  	XA_STATE(xas, &mapping->i_pages, vmf->pgoff);
+> > @@ -1631,7 +1664,7 @@ static bool dax_fault_check_fallback(struct vm_fault *vmf, struct xa_state *xas,
+> >  }
+> >  
+> >  static vm_fault_t dax_iomap_pmd_fault(struct vm_fault *vmf, pfn_t *pfnp,
+> > -			       const struct iomap_ops *ops)
+> > +		const struct iomap_ops *ops)
 > 
-> TBH, I do not think it is wise to tag the test by the test method
-> rather than the tested functionality.
-
-<nod> It seemed kinda awkward to me.
-
-> What is more likely?
-> that a tester wants to run all tests that use overlay over FSTYP?
-> Or that a tester wants to run all tests to verify whiteout related
-> behavior after changing whiteout related code?
+> These looks like unrelated whitespace changes.
 > 
-> I suggest that you re-tag this test as 'whiteout', which is documented
-> already.
+> > -static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
+> > +loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
+> >  {
+> >  	const struct iomap *iomap = &iter->iomap;
+> >  	const struct iomap *srcmap = iomap_iter_srcmap(iter);
+> > @@ -918,6 +918,7 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
+> >  
+> >  	return written;
+> >  }
+> > +EXPORT_SYMBOL_GPL(iomap_zero_iter);
+> 
+> I don't see why this would have to be exported.
+> 
+> > +	unsigned 		flags,
+> > +	struct iomap 		*iomap)
+> > +{
+> > +	int			error = 0;
+> > +	struct xfs_inode	*ip = XFS_I(inode);
+> > +	bool			cow = xfs_is_cow_inode(ip);
+> 
+> The cow variable is only used once, so I think we can drop it.
+> 
+> > +	const struct iomap_iter *iter =
+> > +				container_of(iomap, typeof(*iter), iomap);
+> 
+> Please comment this as it is a little unusual.
+> 
+> > +
+> > +	if (cow) {
+> > +		if (iter->processed <= 0)
+> > +			xfs_reflink_cancel_cow_range(ip, pos, length, true);
+> > +		else
+> > +			error = xfs_reflink_end_cow(ip, pos, iter->processed);
+> > +	}
+> > +	return error ?: iter->processed;
+> 
+> The ->iomap_end convention is to return 0 or a negative error code.
+> Also i'd much prefer to just spell this out in a normal sequential way:
+> 
+> 	if (!xfs_is_cow_inode(ip))
+> 		return 0;
+> 
+> 	if (iter->processed <= 0) {
+> 		xfs_reflink_cancel_cow_range(ip, pos, length, true);
+> 		return 0;
+> 	}
+> 
+> 	return xfs_reflink_end_cow(ip, pos, iter->processed);
 
-Ooh!  That's a much better suggestion.  I'll do that instead! :)
+Seeing as written either contains iter->processed if it's positive, or
+zero if nothing got written or there were errors, I wonder why this
+isn't just:
 
-> If you want to be more specific, you can create a group
-> rename_whiteout, because RENAME_WHITEOUT is the vfs
-> interface that this test is actually exercising.
+	if (!xfs_is_cow_inode(ip));
+		return 0;
 
-Eh, if we want to split the groups someday we can always revisit it.
+	if (!written) {
+		xfs_reflink_cancel_cow_range(ip, pos, length, true);
+		return 0;
+	}
 
-Thanks for the suggestion; I'll have a v2 series out shortly.
+	return xfs_reflink_end_cow(ip, pos, written);
+
+? (He says while cleaning up trying to leave for vacation, pardon me
+if this comment is totally boneheaded...)
 
 --D
 
+> > +static inline int
+> > +xfs_iomap_zero_range(
+> > +	struct xfs_inode	*ip,
+> > +	loff_t			pos,
+> > +	loff_t			len,
+> > +	bool			*did_zero)
+> > +{
+> > +	struct inode		*inode = VFS_I(ip);
+> > +
+> > +	return IS_DAX(inode)
+> > +			? dax_iomap_zero_range(inode, pos, len, did_zero,
+> > +					       &xfs_dax_write_iomap_ops)
+> > +			: iomap_zero_range(inode, pos, len, did_zero,
+> > +					       &xfs_buffered_write_iomap_ops);
+> > +}
 > 
-> Thanks,
-> Amir.
+> 	if (IS_DAX(inode))
+> 		return dax_iomap_zero_range(inode, pos, len, did_zero,
+> 					    &xfs_dax_write_iomap_ops);
+> 	return iomap_zero_range(inode, pos, len, did_zero,
+> 				&xfs_buffered_write_iomap_ops);
+> 
+> > +static inline int
+> > +xfs_iomap_truncate_page(
+> > +	struct xfs_inode	*ip,
+> > +	loff_t			pos,
+> > +	bool			*did_zero)
+> > +{
+> > +	struct inode		*inode = VFS_I(ip);
+> > +
+> > +	return IS_DAX(inode)
+> > +			? dax_iomap_truncate_page(inode, pos, did_zero,
+> > +					       &xfs_dax_write_iomap_ops)
+> > +			: iomap_truncate_page(inode, pos, did_zero,
+> > +					       &xfs_buffered_write_iomap_ops);
+> > +}
+> 
+> Same here.
