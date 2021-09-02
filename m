@@ -2,173 +2,234 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D139CC4320E
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Sep 2021 09:59:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE23EC4320A
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Sep 2021 15:03:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B2F4C61041
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Sep 2021 09:59:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C7D40610A4
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Sep 2021 15:03:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232057AbhIBKAj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 2 Sep 2021 06:00:39 -0400
-Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:41245 "EHLO
-        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233710AbhIBKAi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Sep 2021 06:00:38 -0400
-Received: from dread.disaster.area (pa49-195-182-146.pa.nsw.optusnet.com.au [49.195.182.146])
-        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 71521108AB2
-        for <linux-xfs@vger.kernel.org>; Thu,  2 Sep 2021 19:59:37 +1000 (AEST)
-Received: from discord.disaster.area ([192.168.253.110])
-        by dread.disaster.area with esmtp (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1mLjVL-007nIs-OK
-        for linux-xfs@vger.kernel.org; Thu, 02 Sep 2021 19:59:31 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.94)
-        (envelope-from <david@fromorbit.com>)
-        id 1mLjVL-003pCx-Gm
-        for linux-xfs@vger.kernel.org; Thu, 02 Sep 2021 19:59:31 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 5/7] xfs: whiteouts release intents that are not in the AIL
-Date:   Thu,  2 Sep 2021 19:59:25 +1000
-Message-Id: <20210902095927.911100-6-david@fromorbit.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20210902095927.911100-1-david@fromorbit.com>
-References: <20210902095927.911100-1-david@fromorbit.com>
+        id S1345655AbhIBPEG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 2 Sep 2021 11:04:06 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48272 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229941AbhIBPEG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 2 Sep 2021 11:04:06 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 958B060BD3;
+        Thu,  2 Sep 2021 15:03:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1630594987;
+        bh=Tjt0PHy0qq37NTeabGyPABBmpSbllYCUDPs9hhZQadU=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=B0t0/qK6WPrqjE/bKYYIOuS2FgpDethbqV3mmXlBkOFm+4etMj5fqNN3rzx+PM6Xj
+         acaMt5KBrREtNOpVlRrnIdVdN12JgGhutFQk9LGBnu0nv5a1UXtq2CUAYF8Z2a1pzP
+         6ARvwsx4soZxLAJtPhCU1WV7S/aLbbUmFDqfzTcR7L7XDjrF+lYmwvHOaO+52ZH+rR
+         ajRx2y0e/w/DdJ1wh/3bu4EtJpuxjMQ2Jfo4WnmlLq7Qn8cT1eIl6y4DOcJqOUEsJH
+         QxaFOprMic/QBm1PXG5885h/8IZZ7o1OJUDmUb+sB7ZuqrtOECRbp0wRHdJMLaIApC
+         Yq2B293x4vWSw==
+Date:   Thu, 2 Sep 2021 08:03:07 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Amir Goldstein <amir73il@gmail.com>
+Cc:     Eryu Guan <guaneryu@gmail.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        fstests <fstests@vger.kernel.org>, Eryu Guan <guan@eryu.me>
+Subject: Re: [PATCH 4/5] tools: make sure that test groups are described in
+ the documentation
+Message-ID: <20210902150307.GF9942@magnolia>
+References: <163045514980.771564.6282165259140399788.stgit@magnolia>
+ <163045517173.771564.1524162806861567173.stgit@magnolia>
+ <CAOQ4uxi7205Ae+un1w4C4Dzh9-SykL=ogHQSBH=nnVGDkPfkhw@mail.gmail.com>
+ <20210901164311.GB9911@magnolia>
+ <CAOQ4uxgJz6OBmV=SD1fp9tkCAfiAhxjdCr+fxGd4ko4Y6NUscA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
-        a=QpfB3wCSrn/dqEBSktpwZQ==:117 a=QpfB3wCSrn/dqEBSktpwZQ==:17
-        a=7QKq2e-ADPsA:10 a=20KFwNOVAAAA:8 a=FmXBc2Kc0CuRUgi88GUA:9
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxgJz6OBmV=SD1fp9tkCAfiAhxjdCr+fxGd4ko4Y6NUscA@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Thu, Sep 02, 2021 at 07:49:51AM +0300, Amir Goldstein wrote:
+> On Wed, Sep 1, 2021 at 7:43 PM Darrick J. Wong <djwong@kernel.org> wrote:
+> >
+> > On Wed, Sep 01, 2021 at 07:46:01AM +0300, Amir Goldstein wrote:
+> > > On Wed, Sep 1, 2021 at 3:37 AM Darrick J. Wong <djwong@kernel.org> wrote:
+> > > >
+> > > > From: Darrick J. Wong <djwong@kernel.org>
+> > > >
+> > > > Create a file to document the purpose of each test group that is
+> > > > currently defined in fstests, and add a build script to check that every
+> > > > group mentioned in the tests is also mentioned in the documentation.
+> > > >
+> > >
+> > > This is awesome and long due.
+> > > Thanks for doing that!
+> > >
+> > > Minor nits about overlayfs groups below...
+> >
+> > Heh, yeah, thanks for making corrections. :)
+> >
+> > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > > ---
+> > > >  doc/group-names.txt    |  136 ++++++++++++++++++++++++++++++++++++++++++++++++
+> > > >  include/buildgrouplist |    1
+> > > >  tools/check-groups     |   33 ++++++++++++
+> > > >  3 files changed, 170 insertions(+)
+> > > >  create mode 100644 doc/group-names.txt
+> > > >  create mode 100755 tools/check-groups
+> > > >
+> > > >
+> > > > diff --git a/doc/group-names.txt b/doc/group-names.txt
+> > > > new file mode 100644
+> > > > index 00000000..ae517328
+> > > > --- /dev/null
+> > > > +++ b/doc/group-names.txt
+> > > > @@ -0,0 +1,136 @@
+> > > > +======================= =======================================================
+> > > > +Group Name:            Description:
+> > > > +======================= =======================================================
+> > > > +all                    All known tests, automatically generated by ./check at
+> > > > +                       runtime
+> > > > +auto                   Tests that should be run automatically.  These should
+> > > > +                       not require more than ~5 minutes to run.
+> > > > +quick                  Tests that should run in under 30 seconds.
+> > > > +deprecated             Old tests that should not be run.
+> > > > +
+> > > > +acl                    Access Control Lists
+> > > > +admin                  xfs_admin functionality
+> > > > +aio                    general libaio async io tests
+> > > > +atime                  file access time
+> > > > +attr                   extended attributes
+> > > > +attr2                  xfs v2 extended aributes
+> > > > +balance                        btrfs tree rebalance
+> > > > +bigtime                        timestamps beyond the year 2038
+> > > > +blockdev               block device functionality
+> > > > +broken                 broken tests
+> > > > +cap                    Linux capabilities
+> > > > +casefold               directory name casefolding
+> > > > +ci                     ASCII case-insensitive directory name lookups
+> > > > +clone                  FICLONE/FICLONERANGE ioctls
+> > > > +clone_stress           stress testing FICLONE/FICLONERANGE
+> > > > +collapse               fallocate collapse_range
+> > > > +compress               file compression
+> > > > +convert                        btrfs ext[34] conversion tool
+> > > > +copy                   xfs_copy functionality
+> > > > +copy_range             copy_file_range syscall
+> > > > +copyup                 overlayfs copyup support
+> > >
+> > > The tests in this group exercise copy up.
+> > > There is no such thing as overlayfs without "copyup support",
+> > > so guess my point is - remove the word "support"
+> >
+> > OK.
+> >
+> > > > +dangerous              dangerous test that can crash the system
+> > > > +dangerous_bothrepair   fuzzers to evaluate xfs_scrub + xfs_repair repair
+> > > > +dangerous_fuzzers      fuzzers that can crash your computer
+> > > > +dangerous_norepair     fuzzers to evaluate kernel metadata verifiers
+> > > > +dangerous_online_repair        fuzzers to evaluate xfs_scrub online repair
+> > > > +dangerous_repair       fuzzers to evaluate xfs_repair offline repair
+> > > > +dangerous_scrub                fuzzers to evaluate xfs_scrub checking
+> > > > +data                   data loss checkers
+> > > > +dax                    direct access mode for persistent memory files
+> > > > +db                     xfs_db functional tests
+> > > > +dedupe                 FIEDEDUPERANGE ioctl
+> > > > +defrag                 filesystem defragmenters
+> > > > +dir                    directory test functions
+> > > > +dump                   dump and restore utilities
+> > > > +eio                    IO error reporting
+> > > > +encrypt                        encrypted file contents
+> > > > +enospc                 ENOSPC error reporting
+> > > > +exportfs               file handles
+> > > > +filestreams            XFS filestreams allocator
+> > > > +freeze                 filesystem freeze tests
+> > > > +fsck                   general fsck tests
+> > > > +fsmap                  FS_IOC_GETFSMAP ioctl
+> > > > +fsr                    XFS free space reorganizer
+> > > > +fuzzers                        filesystem fuzz tests
+> > > > +growfs                 increasing the size of a filesystem
+> > > > +hardlink               hardlinks
+> > > > +health                 XFS health reporting
+> > > > +idmapped               idmapped mount functionality
+> > > > +inobtcount             XFS inode btree count tests
+> > > > +insert                 fallocate insert_range
+> > > > +ioctl                  general ioctl tests
+> > > > +io_uring               general io_uring async io tests
+> > > > +label                  filesystem labelling
+> > > > +limit                  resource limits
+> > > > +locks                  file locking
+> > > > +log                    metadata logging
+> > > > +logprint               xfs_logprint functional tests
+> > > > +long_rw                        long-soak read write IO path exercisers
+> > > > +metacopy               overlayfs metadata-only copy-up
+> > > > +metadata               filesystem metadata update exercisers
+> > > > +metadump               xfs_metadump/xfs_mdrestore functionality
+> > > > +mkfs                   filesystem formatting tools
+> > > > +mount                  mount option and functionality checks
+> > > > +nested                 nested overlayfs instances
+> > > > +nfs4_acl               NFSv4 access control lists
+> > > > +nonsamefs              overlayfs layers on different filesystems
+> > > > +online_repair          online repair functionality tests
+> > > > +other                  dumping ground, do not add more tests to this group
+> > > > +overlay                        using overlayfs on top of FSTYP
+> > >
+> > > This description is a bit confusing, because the recommended
+> > > way to run overlayfs tests as described in README.overlay is
+> > > to set FSTYP=xfs and run ./check -overlay
+> > >
+> > > I'm struggling for a better description but perhaps:
+> > > "using overlayfs regardless of ./check -overlay flag"?
+> >
+> > Hmm.  Since I'm the author of the only test that uses this tag, I guess
+> > I'm the authority (ha!) on what the name actually means.
+> >
+> > That test (generic/631) is a regression test for a XFS whiteout handling
+> > bug that can only be reproduced by layering overlayfs atop xfs.
+> > Overlayfs is incidental to reproducing the XFS bug, but AFAIK overlayfs
+> > is the only in-kernel user of whiteout, which is why it's critical here.
+> >
+> > It's not right to make it "_supported_fs overlay" because we're not
+> > testing overlayfs functionality; we're merely using it as a stick to
+> > poke another filesystem.
+> 
+> Yes. I know.
+> Note that while this is the only case of _require_extra_fs overaly
+> there is another case of _require_extra_fs ext2 (xfs/049)
+> 
+> >
+> > How about: "regression tests that require the use of overlayfs in a
+> > targetted configuration" ?
+> >
+> 
+> TBH, I do not think it is wise to tag the test by the test method
+> rather than the tested functionality.
 
-When we release an intent that a whiteout applies to, it will not
-have been committed to the journal and so won't be in the AIL. Hence
-when we drop the last reference to the intent, we do not want to try
-to remove it from the AIL as that will trigger a filesystem
-shutdown. Hence make the removal of intents from the AIL conditional
-on them actually being in the AIL so we do the correct thing.
+<nod> It seemed kinda awkward to me.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_attr_item.c     | 11 ++++++-----
- fs/xfs/xfs_bmap_item.c     |  8 +++++---
- fs/xfs/xfs_extfree_item.c  |  8 +++++---
- fs/xfs/xfs_refcount_item.c |  8 +++++---
- fs/xfs/xfs_rmap_item.c     |  8 +++++---
- 5 files changed, 26 insertions(+), 17 deletions(-)
+> What is more likely?
+> that a tester wants to run all tests that use overlay over FSTYP?
+> Or that a tester wants to run all tests to verify whiteout related
+> behavior after changing whiteout related code?
+> 
+> I suggest that you re-tag this test as 'whiteout', which is documented
+> already.
 
-diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-index 86c8d5d08176..11546967a5d7 100644
---- a/fs/xfs/xfs_attr_item.c
-+++ b/fs/xfs/xfs_attr_item.c
-@@ -67,11 +67,12 @@ xfs_attri_release(
- 	struct xfs_attri_log_item	*attrip)
- {
- 	ASSERT(atomic_read(&attrip->attri_refcount) > 0);
--	if (atomic_dec_and_test(&attrip->attri_refcount)) {
--		xfs_trans_ail_delete(&attrip->attri_item,
--				     SHUTDOWN_LOG_IO_ERROR);
--		xfs_attri_item_free(attrip);
--	}
-+	if (!atomic_dec_and_test(&attrip->attri_refcount))
-+		return;
-+
-+	if (test_bit(XFS_LI_IN_AIL, &attrip->attri_item.li_flags))
-+		xfs_trans_ail_delete(&attrip->attri_item, SHUTDOWN_LOG_IO_ERROR);
-+	xfs_attri_item_free(attrip);
- }
- 
- STATIC void
-diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-index 0b06159cfd1b..7cabb59138b1 100644
---- a/fs/xfs/xfs_bmap_item.c
-+++ b/fs/xfs/xfs_bmap_item.c
-@@ -54,10 +54,12 @@ xfs_bui_release(
- 	struct xfs_bui_log_item	*buip)
- {
- 	ASSERT(atomic_read(&buip->bui_refcount) > 0);
--	if (atomic_dec_and_test(&buip->bui_refcount)) {
-+	if (!atomic_dec_and_test(&buip->bui_refcount))
-+		return;
-+
-+	if (test_bit(XFS_LI_IN_AIL, &buip->bui_item.li_flags))
- 		xfs_trans_ail_delete(&buip->bui_item, SHUTDOWN_LOG_IO_ERROR);
--		xfs_bui_item_free(buip);
--	}
-+	xfs_bui_item_free(buip);
- }
- 
- 
-diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-index 87cba4a71883..7032125fe987 100644
---- a/fs/xfs/xfs_extfree_item.c
-+++ b/fs/xfs/xfs_extfree_item.c
-@@ -58,10 +58,12 @@ xfs_efi_release(
- 	struct xfs_efi_log_item	*efip)
- {
- 	ASSERT(atomic_read(&efip->efi_refcount) > 0);
--	if (atomic_dec_and_test(&efip->efi_refcount)) {
-+	if (!atomic_dec_and_test(&efip->efi_refcount))
-+		return;
-+
-+	if (test_bit(XFS_LI_IN_AIL, &efip->efi_item.li_flags))
- 		xfs_trans_ail_delete(&efip->efi_item, SHUTDOWN_LOG_IO_ERROR);
--		xfs_efi_item_free(efip);
--	}
-+	xfs_efi_item_free(efip);
- }
- 
- /*
-diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-index de739884e857..f62dc5b7af88 100644
---- a/fs/xfs/xfs_refcount_item.c
-+++ b/fs/xfs/xfs_refcount_item.c
-@@ -53,10 +53,12 @@ xfs_cui_release(
- 	struct xfs_cui_log_item	*cuip)
- {
- 	ASSERT(atomic_read(&cuip->cui_refcount) > 0);
--	if (atomic_dec_and_test(&cuip->cui_refcount)) {
-+	if (!atomic_dec_and_test(&cuip->cui_refcount))
-+		return;
-+
-+	if (test_bit(XFS_LI_IN_AIL, &cuip->cui_item.li_flags))
- 		xfs_trans_ail_delete(&cuip->cui_item, SHUTDOWN_LOG_IO_ERROR);
--		xfs_cui_item_free(cuip);
--	}
-+	xfs_cui_item_free(cuip);
- }
- 
- 
-diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-index 8d57529d9ddd..0c67abcd189b 100644
---- a/fs/xfs/xfs_rmap_item.c
-+++ b/fs/xfs/xfs_rmap_item.c
-@@ -53,10 +53,12 @@ xfs_rui_release(
- 	struct xfs_rui_log_item	*ruip)
- {
- 	ASSERT(atomic_read(&ruip->rui_refcount) > 0);
--	if (atomic_dec_and_test(&ruip->rui_refcount)) {
-+	if (!atomic_dec_and_test(&ruip->rui_refcount))
-+		return;
-+
-+	if (test_bit(XFS_LI_IN_AIL, &ruip->rui_item.li_flags))
- 		xfs_trans_ail_delete(&ruip->rui_item, SHUTDOWN_LOG_IO_ERROR);
--		xfs_rui_item_free(ruip);
--	}
-+	xfs_rui_item_free(ruip);
- }
- 
- STATIC void
--- 
-2.31.1
+Ooh!  That's a much better suggestion.  I'll do that instead! :)
 
+> If you want to be more specific, you can create a group
+> rename_whiteout, because RENAME_WHITEOUT is the vfs
+> interface that this test is actually exercising.
+
+Eh, if we want to split the groups someday we can always revisit it.
+
+Thanks for the suggestion; I'll have a v2 series out shortly.
+
+--D
+
+> 
+> Thanks,
+> Amir.
