@@ -4,40 +4,39 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 370C6C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Sep 2021 23:52:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A311BC433EF
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Sep 2021 23:52:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1E95061051
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Sep 2021 23:52:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8E9776108E
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Sep 2021 23:52:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345143AbhIBXxj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 2 Sep 2021 19:53:39 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59162 "EHLO mail.kernel.org"
+        id S1345522AbhIBXxo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 2 Sep 2021 19:53:44 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59216 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1345048AbhIBXxj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 2 Sep 2021 19:53:39 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E421F6101A;
-        Thu,  2 Sep 2021 23:52:39 +0000 (UTC)
+        id S1345048AbhIBXxo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 2 Sep 2021 19:53:44 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 66C036103A;
+        Thu,  2 Sep 2021 23:52:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1630626760;
-        bh=rxk/t4cR1g4piI1VKbOEcrL83pmv/7seWPEVoC2Ns3s=;
+        s=k20201202; t=1630626765;
+        bh=HnvHdXUFsYt+iyC811yisJQSfgq/QzkZiKdK/DhqPRw=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=o0uwmXPWeKoAgVg1ohqKrkHgWlmOwusKoqoDnTkqWOdzYMiicMgo9kydmyPl+z8WZ
-         1xZuypLw6C9xepJvlhEdViTlO7mvtJhW+XzFavp/eqRLCVOTsYjV1+vL43AzOB0XJt
-         90nWUWUip0YUNsZv9QsI5dJ0NvHf9HKlTtTHw7+WHwhMXhIF3a+KFOB+etV7nNezX4
-         rJOu2j23p0oWLpvr5QsBDHHlM2cuOujWRmAiX4aseZCVZmKQjAaoYIMTpwk6iaEcFQ
-         dfjC8pp7Yno3orzewWa/WrSRaHs+QbEkyh+xheaEOrq2ca6j3DCu/pcwlZJh2+iWPv
-         t1PU2NjrTDilg==
-Subject: [PATCH 3/8] xfs: fix incorrect fuzz test group name
+        b=GWPAR5IC1Ju9yzh7N1So8ruCKBHzto70a95FjpNrRG+9YXuQiJZBLBK44OzpPiP2j
+         YUHNECYmPoh4Syj6MzSn9jUpD6rr5ZMUaZfRY6Dx/vfyFJBq4Zcm/otyKmkxo6tlP1
+         aqRVLbQevt2nAz5t4TMrN7dECsLdAjx17HnEAaqnuNRvoYbW47Xry78YIFEuIMNhtd
+         HTDda3j7GQjScAsq1Wpnwe3FjltMZXSnr0AJXW+OvZsbezFqO977BcrdZdT09nh+tv
+         TzyWiCVzOnXjW65Rn0ElBYjSngPT9ccUyTsXMCvcSZmciQG7icpUjxO4/V++HQycf7
+         mA2Tv52P2sEfw==
+Subject: [PATCH 4/8] btrfs: fix incorrect subvolume test group name
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org, guan@eryu.me
-Date:   Thu, 02 Sep 2021 16:52:39 -0700
-Message-ID: <163062675965.1579659.16363145615876546346.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
+Date:   Thu, 02 Sep 2021 16:52:45 -0700
+Message-ID: <163062676513.1579659.12516104685003091290.stgit@magnolia>
 In-Reply-To: <163062674313.1579659.11141504872576317846.stgit@magnolia>
 References: <163062674313.1579659.11141504872576317846.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,54 +49,40 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-The group name for fuzz tests is 'fuzzers'.
+The group for testing subvolume functionality is 'subvol', not
+'subvolume'.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- tests/xfs/491 |    2 +-
- tests/xfs/492 |    2 +-
- tests/xfs/493 |    2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+ tests/btrfs/233 |    2 +-
+ tests/btrfs/245 |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
 
-diff --git a/tests/xfs/491 b/tests/xfs/491
-index 5c7c5d1f..7402b09a 100755
---- a/tests/xfs/491
-+++ b/tests/xfs/491
-@@ -7,7 +7,7 @@
- # Test detection & fixing of bad summary block counts at mount time.
+diff --git a/tests/btrfs/233 b/tests/btrfs/233
+index f3e3762c..6a414443 100755
+--- a/tests/btrfs/233
++++ b/tests/btrfs/233
+@@ -9,7 +9,7 @@
+ # performed.
  #
  . ./common/preamble
--_begin_fstest auto quick fuzz
-+_begin_fstest auto quick fuzzers
+-_begin_fstest auto quick subvolume
++_begin_fstest auto quick subvol
  
- # Import common functions.
- . ./common/filter
-diff --git a/tests/xfs/492 b/tests/xfs/492
-index 8258e5d8..514ac1e4 100755
---- a/tests/xfs/492
-+++ b/tests/xfs/492
-@@ -7,7 +7,7 @@
- # Test detection & fixing of bad summary inode counts at mount time.
- #
- . ./common/preamble
--_begin_fstest auto quick fuzz
-+_begin_fstest auto quick fuzzers
- 
- # Import common functions.
- . ./common/filter
-diff --git a/tests/xfs/493 b/tests/xfs/493
-index 58fd9c99..58091ad7 100755
---- a/tests/xfs/493
-+++ b/tests/xfs/493
+ # Override the default cleanup function.
+ _cleanup()
+diff --git a/tests/btrfs/245 b/tests/btrfs/245
+index 2b9c63c7..f3380ac2 100755
+--- a/tests/btrfs/245
++++ b/tests/btrfs/245
 @@ -8,7 +8,7 @@
- # Corrupt the AGFs to test mount failure when mount-fixing fails.
+ # as subvolume and snapshot creation and deletion.
  #
  . ./common/preamble
--_begin_fstest auto quick fuzz
-+_begin_fstest auto quick fuzzers
+-_begin_fstest auto quick idmapped subvolume
++_begin_fstest auto quick idmapped subvol
  
- # Import common functions.
- . ./common/filter
+ # get standard environment, filters and checks
+ . ./common/rc
 
