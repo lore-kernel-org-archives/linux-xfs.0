@@ -2,182 +2,121 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCEA9C4320E
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Sep 2021 15:33:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46590C4320E
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Sep 2021 15:48:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A1C5E61074
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Sep 2021 15:33:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2EE646101A
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Sep 2021 15:48:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345844AbhIBPeJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 2 Sep 2021 11:34:09 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57312 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234465AbhIBPeI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 2 Sep 2021 11:34:08 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 52A8E610CD;
-        Thu,  2 Sep 2021 15:33:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1630596790;
-        bh=WwYdTWP6eNm+J5Il2EKANSs5L/HmsnHp5e3hmUJfBUg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=A4dHS+sw0sVgMoOs4ab8XO8E1JWv1xdOpnvBUhIGkzrIgp/Vrxy8AO6lFMvOdJ2VN
-         uqUDpGALQTD51UZivGlUovONCe/bL16WwCOMEV6oyDeX9ob3pjohfGLQIriwHVw3zC
-         astHWlG++5QQnQXWEQlUvZ+6xlZKULakXzuDEhFuOxoBdyjOPqwbbc/p6sov2ZeGmg
-         PoG/UScH30YwdA/4XhG1Ql2uG90sufLtmm1Ec58x1ugVLt5nt26uF4Aw8EnMxnPKzB
-         nmiGnXdbovq9NWIZDPZ6glaw8XaC46cjuXICGx58o/YbdKxhNkKQ3P8cfE62Z32Et1
-         VgnrIt3Y2sBjQ==
-Date:   Thu, 2 Sep 2021 08:33:09 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Shiyang Ruan <ruansy.fnst@fujitsu.com>, linux-xfs@vger.kernel.org,
-        dan.j.williams@intel.com, david@fromorbit.com,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        nvdimm@lists.linux.dev, rgoldwyn@suse.de, viro@zeniv.linux.org.uk,
-        willy@infradead.org
-Subject: Re: [PATCH v8 6/7] xfs: support CoW in fsdax mode
-Message-ID: <20210902153309.GB9892@magnolia>
-References: <20210829122517.1648171-1-ruansy.fnst@fujitsu.com>
- <20210829122517.1648171-7-ruansy.fnst@fujitsu.com>
- <20210902074308.GE13867@lst.de>
+        id S1345918AbhIBPtC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 2 Sep 2021 11:49:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38070 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1345873AbhIBPtC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Sep 2021 11:49:02 -0400
+Received: from mail-lj1-x22e.google.com (mail-lj1-x22e.google.com [IPv6:2a00:1450:4864:20::22e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E510C061575
+        for <linux-xfs@vger.kernel.org>; Thu,  2 Sep 2021 08:48:03 -0700 (PDT)
+Received: by mail-lj1-x22e.google.com with SMTP id l18so4376721lji.12
+        for <linux-xfs@vger.kernel.org>; Thu, 02 Sep 2021 08:48:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=5wsPeIhzYXabpZGJAWeTrSQOBVTFZSeI6/V+A/PKS+M=;
+        b=ERUiyJetgJfhv6CSzrx6t3BC3sUidOHQEL/eDPlppAa2ihMq3Wb2UVSXXDUuPuaU1A
+         4/XvqW5lS+oI+M7I2xMssmbTqkpxCPxhR1wO2lWfQBg4oc+w/Mm4258ukKLi75PZRBLY
+         Wn2b943/0K9fY7TmwJ8wE1L+ipYVBjxFcZqsQ=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=5wsPeIhzYXabpZGJAWeTrSQOBVTFZSeI6/V+A/PKS+M=;
+        b=fRJQHWkHeXoC+ogTLxUUugsIHR2zA4NdHO62x5rivayY3p/TTnrZTwGFEAlX7PAtPJ
+         z2j/dDIa9rsmO1jZD6gsqg9zuUsA/YrkWVBn6aoTYJscd8LB21E9Xo3vwMgPpWiTJZmF
+         6kLaWkq13rodCgtZQqZIseLdeL0HvPeYoMptqTCf3pJTyq3B8ViCte/KrFQ5r9QILMu9
+         0dXbbghTwqEbIA0FZPs4gD28Vcof4cqymDgYkIGCV5vSfHarH4g697FxBPBJpJ5BED4S
+         d3h13dnLriJPcl66WdtodjhlPpNI4h0E/fvu0zHXpCH2oyBNLQzZoxXdlTJatn6mknuk
+         W0vA==
+X-Gm-Message-State: AOAM533EBUJbUuv0QSS3EFEyxzsD/PvyRyQkkZVd+VQkL/LksVW7wu6I
+        cjeVowmMOxnLN7r4AzH56l1J8tx6hB7BVLpp
+X-Google-Smtp-Source: ABdhPJyDIqSxYAw080ZhskRSwv0BgcssdMOe4DmVOQWAXvR0DbOAaf51idZTYL6IqWAlQ28Uv3Nyiw==
+X-Received: by 2002:a2e:5c9:: with SMTP id 192mr3119385ljf.337.1630597680417;
+        Thu, 02 Sep 2021 08:48:00 -0700 (PDT)
+Received: from mail-lf1-f49.google.com (mail-lf1-f49.google.com. [209.85.167.49])
+        by smtp.gmail.com with ESMTPSA id n4sm252227lji.100.2021.09.02.08.47.58
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 02 Sep 2021 08:47:59 -0700 (PDT)
+Received: by mail-lf1-f49.google.com with SMTP id t12so5120310lfg.9
+        for <linux-xfs@vger.kernel.org>; Thu, 02 Sep 2021 08:47:58 -0700 (PDT)
+X-Received: by 2002:a05:6512:228f:: with SMTP id f15mr3148224lfu.253.1630597678499;
+ Thu, 02 Sep 2021 08:47:58 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210902074308.GE13867@lst.de>
+References: <20210831211847.GC9959@magnolia>
+In-Reply-To: <20210831211847.GC9959@magnolia>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Thu, 2 Sep 2021 08:47:42 -0700
+X-Gmail-Original-Message-ID: <CAHk-=whyVPgkAfARB7gMjLEyu0kSxmb6qpqfuE_r6QstAzgHcA@mail.gmail.com>
+Message-ID: <CAHk-=whyVPgkAfARB7gMjLEyu0kSxmb6qpqfuE_r6QstAzgHcA@mail.gmail.com>
+Subject: Re: [GIT PULL] xfs: new code for 5.15
+To:     "Darrick J. Wong" <djwong@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Dennis Zhou <dennis@kernel.org>, Tejun Heo <tj@kernel.org>
+Cc:     linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Eric Sandeen <sandeen@sandeen.net>,
+        Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 02, 2021 at 09:43:08AM +0200, Christoph Hellwig wrote:
-> On Sun, Aug 29, 2021 at 08:25:16PM +0800, Shiyang Ruan wrote:
-> > In fsdax mode, WRITE and ZERO on a shared extent need CoW performed.
-> > After that, new allocated extents needs to be remapped to the file.  Add
-> > an implementation of ->iomap_end() for dax write ops to do the remapping
-> > work.
-> 
-> Please split the new dax infrastructure from the XFS changes.
-> 
-> >  static vm_fault_t dax_iomap_pte_fault(struct vm_fault *vmf, pfn_t *pfnp,
-> > -			       int *iomap_errp, const struct iomap_ops *ops)
-> > +		int *iomap_errp, const struct iomap_ops *ops)
-> >  {
-> >  	struct address_space *mapping = vmf->vma->vm_file->f_mapping;
-> >  	XA_STATE(xas, &mapping->i_pages, vmf->pgoff);
-> > @@ -1631,7 +1664,7 @@ static bool dax_fault_check_fallback(struct vm_fault *vmf, struct xa_state *xas,
-> >  }
-> >  
-> >  static vm_fault_t dax_iomap_pmd_fault(struct vm_fault *vmf, pfn_t *pfnp,
-> > -			       const struct iomap_ops *ops)
-> > +		const struct iomap_ops *ops)
-> 
-> These looks like unrelated whitespace changes.
-> 
-> > -static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
-> > +loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
-> >  {
-> >  	const struct iomap *iomap = &iter->iomap;
-> >  	const struct iomap *srcmap = iomap_iter_srcmap(iter);
-> > @@ -918,6 +918,7 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
-> >  
-> >  	return written;
-> >  }
-> > +EXPORT_SYMBOL_GPL(iomap_zero_iter);
-> 
-> I don't see why this would have to be exported.
-> 
-> > +	unsigned 		flags,
-> > +	struct iomap 		*iomap)
-> > +{
-> > +	int			error = 0;
-> > +	struct xfs_inode	*ip = XFS_I(inode);
-> > +	bool			cow = xfs_is_cow_inode(ip);
-> 
-> The cow variable is only used once, so I think we can drop it.
-> 
-> > +	const struct iomap_iter *iter =
-> > +				container_of(iomap, typeof(*iter), iomap);
-> 
-> Please comment this as it is a little unusual.
-> 
-> > +
-> > +	if (cow) {
-> > +		if (iter->processed <= 0)
-> > +			xfs_reflink_cancel_cow_range(ip, pos, length, true);
-> > +		else
-> > +			error = xfs_reflink_end_cow(ip, pos, iter->processed);
-> > +	}
-> > +	return error ?: iter->processed;
-> 
-> The ->iomap_end convention is to return 0 or a negative error code.
-> Also i'd much prefer to just spell this out in a normal sequential way:
-> 
-> 	if (!xfs_is_cow_inode(ip))
-> 		return 0;
-> 
-> 	if (iter->processed <= 0) {
-> 		xfs_reflink_cancel_cow_range(ip, pos, length, true);
-> 		return 0;
-> 	}
-> 
-> 	return xfs_reflink_end_cow(ip, pos, iter->processed);
+On Tue, Aug 31, 2021 at 2:18 PM Darrick J. Wong <djwong@kernel.org> wrote:
+>
+> As for new features: we now batch inode inactivations in percpu
+> background threads, which sharply decreases frontend thread wait time
+> when performing file deletions and should improve overall directory tree
+> deletion times.
 
-Seeing as written either contains iter->processed if it's positive, or
-zero if nothing got written or there were errors, I wonder why this
-isn't just:
+So no complaints on this one, but I do have a reaction: we have a lot
+of these random CPU hotplug events, and XFS now added another one.
 
-	if (!xfs_is_cow_inode(ip));
-		return 0;
+I don't see that as a problem, but just the _randomness_ of these
+callbacks makes me go "hmm". And that "enum cpuhp_state" thing isn't
+exactly a thing of beauty, and just makes me think there's something
+nasty going on.
 
-	if (!written) {
-		xfs_reflink_cancel_cow_range(ip, pos, length, true);
-		return 0;
-	}
+For the new xfs usage, I really get the feeling that it's not that XFS
+actually cares about the CPU states, but that this is literally tied
+to just having percpu state allocated and active, and that maybe it
+would be sensible to have something more specific to that kind of use.
 
-	return xfs_reflink_end_cow(ip, pos, written);
+We have other things that are very similar in nature - like the page
+allocator percpu caches etc, which for very similar reasons want cpu
+dead/online notification.
 
-? (He says while cleaning up trying to leave for vacation, pardon me
-if this comment is totally boneheaded...)
+I'm only throwing this out as a reaction to this - I'm not sure
+another interface would be good or worthwhile, but that "enum
+cpuhp_state" is ugly enough that I thought I'd rope in Thomas for CPU
+hotplug, and the percpu memory allocation people for comments.
 
---D
+IOW, just _maybe_ we would want to have some kind of callback model
+for "percpu_alloc()" and it being explicitly about allocations
+becoming available or going away, rather than about CPU state.
 
-> > +static inline int
-> > +xfs_iomap_zero_range(
-> > +	struct xfs_inode	*ip,
-> > +	loff_t			pos,
-> > +	loff_t			len,
-> > +	bool			*did_zero)
-> > +{
-> > +	struct inode		*inode = VFS_I(ip);
-> > +
-> > +	return IS_DAX(inode)
-> > +			? dax_iomap_zero_range(inode, pos, len, did_zero,
-> > +					       &xfs_dax_write_iomap_ops)
-> > +			: iomap_zero_range(inode, pos, len, did_zero,
-> > +					       &xfs_buffered_write_iomap_ops);
-> > +}
-> 
-> 	if (IS_DAX(inode))
-> 		return dax_iomap_zero_range(inode, pos, len, did_zero,
-> 					    &xfs_dax_write_iomap_ops);
-> 	return iomap_zero_range(inode, pos, len, did_zero,
-> 				&xfs_buffered_write_iomap_ops);
-> 
-> > +static inline int
-> > +xfs_iomap_truncate_page(
-> > +	struct xfs_inode	*ip,
-> > +	loff_t			pos,
-> > +	bool			*did_zero)
-> > +{
-> > +	struct inode		*inode = VFS_I(ip);
-> > +
-> > +	return IS_DAX(inode)
-> > +			? dax_iomap_truncate_page(inode, pos, did_zero,
-> > +					       &xfs_dax_write_iomap_ops)
-> > +			: iomap_truncate_page(inode, pos, did_zero,
-> > +					       &xfs_buffered_write_iomap_ops);
-> > +}
-> 
-> Same here.
+Comments?
+
+> Lastly, with this release, two new features have graduated to supported
+> status: inode btree counters (for faster mounts), and support for dates
+> beyond Y2038.
+
+Oh, I had thought Y2038 was already a non-issue for xfs. Silly me.
+
+              Linus
