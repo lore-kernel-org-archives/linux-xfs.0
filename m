@@ -2,223 +2,240 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF398C432BE
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Sep 2021 01:42:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB9F8C4320A
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Sep 2021 04:50:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AC7886054F
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Sep 2021 01:42:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 80E90610D0
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Sep 2021 04:50:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230295AbhIBBnQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 1 Sep 2021 21:43:16 -0400
-Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:48347 "EHLO
-        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229454AbhIBBnQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Sep 2021 21:43:16 -0400
-Received: from dread.disaster.area (pa49-195-182-146.pa.nsw.optusnet.com.au [49.195.182.146])
-        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id 57FC61144670;
-        Thu,  2 Sep 2021 11:42:16 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1mLbjy-007fCO-Je; Thu, 02 Sep 2021 11:42:06 +1000
-Date:   Thu, 2 Sep 2021 11:42:06 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Chris Dunlop <chris@onthe.net.au>
-Cc:     Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
-Subject: Re: Mysterious ENOSPC
-Message-ID: <20210902014206.GN2566745@dread.disaster.area>
-References: <335ae292-cb09-6e6e-9673-68cfae666fc0@sandeen.net>
- <20210826205635.GA2453892@onthe.net.au>
- <20210827025539.GA3583175@onthe.net.au>
- <20210827054956.GP3657114@dread.disaster.area>
- <20210827065347.GA3594069@onthe.net.au>
- <20210827220343.GQ3657114@dread.disaster.area>
- <20210828002137.GA3642069@onthe.net.au>
- <20210828035824.GA3654894@onthe.net.au>
- <20210829220457.GR3657114@dread.disaster.area>
- <20210830073720.GA3763165@onthe.net.au>
+        id S231302AbhIBEvB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 2 Sep 2021 00:51:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57306 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229459AbhIBEvA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Sep 2021 00:51:00 -0400
+Received: from mail-io1-xd30.google.com (mail-io1-xd30.google.com [IPv6:2607:f8b0:4864:20::d30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE83FC061575;
+        Wed,  1 Sep 2021 21:50:02 -0700 (PDT)
+Received: by mail-io1-xd30.google.com with SMTP id m11so873318ioo.6;
+        Wed, 01 Sep 2021 21:50:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=cNIoMdZYiagy9AIi4B4/ChydBGoTBfUwV+IH70dcMKw=;
+        b=YkI4TnMIw9CrokfoR9UYZel9RG5aZUlUn5c9sOwAsqWefJU9tswncZQiwzQ1f8FK7n
+         fKdc94ShrgI3Fl2gplWQegsVn16cm2lwH3Ua5L00M3NTc/0R7SikR9gM0wzJl1M/gSh/
+         jx7rgUVsXqD2SW7fAiOOfKaKQREsgTACgN9yjAhJmVjaIp67cNp/VVXywNR78QKL2SwJ
+         bLqvsZ02vUrdMacEGhIIQ+fPZwanWYHyrUvMhCZjLKMDNTEDMbLKWdw2sIZpjf7ctx0c
+         PpMDlmusZgDLMmCsGuXfdv/WJ2tuky+tW4TVCJQtdgOnNQg1plX/4IZp0xi8uxhpjtvX
+         bkjA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=cNIoMdZYiagy9AIi4B4/ChydBGoTBfUwV+IH70dcMKw=;
+        b=dTHtpLbPP4O44KtvEP+/cUna8FNcWDxTnJRn0B4AX7kJ57L6VYacN0EBcZrEeJ4SN1
+         ik1a8wQu4edyKSAJTqF55uT5NR4ZeNF4GgjmkJsKNHUrpdBadbLWRlr1oskY+/8cQUXH
+         9jtxiieZpm2vDMd+Pjvq5o5zPM185fJujl2ECZti13/vo/wHIGnf5G91IsTry+EgEt7p
+         B14pActHA523AsUP+4ixVw1Y8odBhpWXptIzo0jfYR1qJPyRD9WvyFt99V6rQhf/k26W
+         qGqlBn0bOjXDksEEZ7z69ZyUuncz6/UQZpStWmfsflwc/dM5Ik/3jwjt3TGLjRzF+lmz
+         tnDQ==
+X-Gm-Message-State: AOAM532MVxjRzw0a4mewqDVlQqu08RmzUyAvw7BEod6U2xgqhZF0fS+7
+        /fdfxKEoFujCBCfsmpH9n56IQxEBk+LYZr//EZvtdSJ9o/k=
+X-Google-Smtp-Source: ABdhPJyrju3xaeoxyJTkLwqt1a3th4oNhUyH8dSaIHhVc81BwGbuURPThJeS+W8FIRvhjXhyJ4VEpaoFAwGOyqmmEO8=
+X-Received: by 2002:a6b:e712:: with SMTP id b18mr1211926ioh.186.1630558202328;
+ Wed, 01 Sep 2021 21:50:02 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210830073720.GA3763165@onthe.net.au>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
-        a=QpfB3wCSrn/dqEBSktpwZQ==:117 a=QpfB3wCSrn/dqEBSktpwZQ==:17
-        a=kj9zAlcOel0A:10 a=7QKq2e-ADPsA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=gtWBzVrL4aRwStGtoSkA:9 a=CjuIK1q_8ugA:10 a=q1W7-ncRT9EA:10
-        a=V8jACeeQO_sA:10 a=_UtYBm2FmLkA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+References: <163045514980.771564.6282165259140399788.stgit@magnolia>
+ <163045517173.771564.1524162806861567173.stgit@magnolia> <CAOQ4uxi7205Ae+un1w4C4Dzh9-SykL=ogHQSBH=nnVGDkPfkhw@mail.gmail.com>
+ <20210901164311.GB9911@magnolia>
+In-Reply-To: <20210901164311.GB9911@magnolia>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Thu, 2 Sep 2021 07:49:51 +0300
+Message-ID: <CAOQ4uxgJz6OBmV=SD1fp9tkCAfiAhxjdCr+fxGd4ko4Y6NUscA@mail.gmail.com>
+Subject: Re: [PATCH 4/5] tools: make sure that test groups are described in
+ the documentation
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Eryu Guan <guaneryu@gmail.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        fstests <fstests@vger.kernel.org>, Eryu Guan <guan@eryu.me>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Aug 30, 2021 at 05:37:20PM +1000, Chris Dunlop wrote:
-> On Mon, Aug 30, 2021 at 08:04:57AM +1000, Dave Chinner wrote:
-> > On Sat, Aug 28, 2021 at 01:58:24PM +1000, Chris Dunlop wrote:
-> > > On Sat, Aug 28, 2021 at 10:21:37AM +1000, Chris Dunlop wrote:
-> > > > On Sat, Aug 28, 2021 at 08:03:43AM +1000, Dave Chinner wrote:
-> > > > > commit fd43cf600cf61c66ae0a1021aca2f636115c7fcb
-> > > > > Author: Brian Foster <bfoster@redhat.com>
-> > > > > Date:   Wed Apr 28 15:06:05 2021 -0700
-> > > > > 
-> > > > >   xfs: set aside allocation btree blocks from block reservation
-> > > > 
-> > > > Oh wow. Yes, sounds like a candidate. Is there same easy(-ish?) way of
-> > > > seeing if this fs is likely to be suffering from this particular issue
-> > > > or is it a matter of installing an appropriate kernel and seeing if the
-> > > > problem goes away?
-> > > 
-> > > Is this sufficient to tell us that this filesystem probably isn't suffering
-> > > from that issue?
-> > 
-> > IIRC, it's the per-ag histograms that are more important here
-> > because we are running out of space in an AG because of
-> > overcommitting the per-ag space. If there is an AG that is much more
-> > fragmented than others, then it will be consuming much more in way
-> > of freespace btree blocks than others...
-> 
-> Per-ag histograms attached.
-> 
-> Do the blocks used by the allocation btrees show up in the AG histograms?
-> E.g. with an AG like this:
-> 
-> AG 18
->    from      to extents  blocks    pct
->       1       1    1961    1961   0.01
->       2       3   17129   42602   0.11
->       4       7   33374  183312   0.48
->       8      15   68076  783020   2.06
->      16      31  146868 3469398   9.14
->      32      63  248690 10614558  27.96
->      64     127   32088 2798748   7.37
->     128     255    8654 1492521   3.93
->     256     511    4227 1431586   3.77
->     512    1023    2531 1824377   4.81
->    1024    2047    2125 3076304   8.10
->    2048    4095    1615 4691302  12.36
->    4096    8191    1070 6062351  15.97
->    8192   16383     139 1454627   3.83
->   16384   32767       2   41359   0.11
-> total free extents 568549
-> total free blocks 37968026
-> average free extent size 66.7806
-> 
-> ...it looks like it's significantly fragmented, but, if the allocation
-> btrees aren't part of this, it seems there's still sufficient free space
-> that it shouldn't be getting to ENOSPC?
+On Wed, Sep 1, 2021 at 7:43 PM Darrick J. Wong <djwong@kernel.org> wrote:
+>
+> On Wed, Sep 01, 2021 at 07:46:01AM +0300, Amir Goldstein wrote:
+> > On Wed, Sep 1, 2021 at 3:37 AM Darrick J. Wong <djwong@kernel.org> wrote:
+> > >
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > >
+> > > Create a file to document the purpose of each test group that is
+> > > currently defined in fstests, and add a build script to check that every
+> > > group mentioned in the tests is also mentioned in the documentation.
+> > >
+> >
+> > This is awesome and long due.
+> > Thanks for doing that!
+> >
+> > Minor nits about overlayfs groups below...
+>
+> Heh, yeah, thanks for making corrections. :)
+>
+> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > ---
+> > >  doc/group-names.txt    |  136 ++++++++++++++++++++++++++++++++++++++++++++++++
+> > >  include/buildgrouplist |    1
+> > >  tools/check-groups     |   33 ++++++++++++
+> > >  3 files changed, 170 insertions(+)
+> > >  create mode 100644 doc/group-names.txt
+> > >  create mode 100755 tools/check-groups
+> > >
+> > >
+> > > diff --git a/doc/group-names.txt b/doc/group-names.txt
+> > > new file mode 100644
+> > > index 00000000..ae517328
+> > > --- /dev/null
+> > > +++ b/doc/group-names.txt
+> > > @@ -0,0 +1,136 @@
+> > > +======================= =======================================================
+> > > +Group Name:            Description:
+> > > +======================= =======================================================
+> > > +all                    All known tests, automatically generated by ./check at
+> > > +                       runtime
+> > > +auto                   Tests that should be run automatically.  These should
+> > > +                       not require more than ~5 minutes to run.
+> > > +quick                  Tests that should run in under 30 seconds.
+> > > +deprecated             Old tests that should not be run.
+> > > +
+> > > +acl                    Access Control Lists
+> > > +admin                  xfs_admin functionality
+> > > +aio                    general libaio async io tests
+> > > +atime                  file access time
+> > > +attr                   extended attributes
+> > > +attr2                  xfs v2 extended aributes
+> > > +balance                        btrfs tree rebalance
+> > > +bigtime                        timestamps beyond the year 2038
+> > > +blockdev               block device functionality
+> > > +broken                 broken tests
+> > > +cap                    Linux capabilities
+> > > +casefold               directory name casefolding
+> > > +ci                     ASCII case-insensitive directory name lookups
+> > > +clone                  FICLONE/FICLONERANGE ioctls
+> > > +clone_stress           stress testing FICLONE/FICLONERANGE
+> > > +collapse               fallocate collapse_range
+> > > +compress               file compression
+> > > +convert                        btrfs ext[34] conversion tool
+> > > +copy                   xfs_copy functionality
+> > > +copy_range             copy_file_range syscall
+> > > +copyup                 overlayfs copyup support
+> >
+> > The tests in this group exercise copy up.
+> > There is no such thing as overlayfs without "copyup support",
+> > so guess my point is - remove the word "support"
+>
+> OK.
+>
+> > > +dangerous              dangerous test that can crash the system
+> > > +dangerous_bothrepair   fuzzers to evaluate xfs_scrub + xfs_repair repair
+> > > +dangerous_fuzzers      fuzzers that can crash your computer
+> > > +dangerous_norepair     fuzzers to evaluate kernel metadata verifiers
+> > > +dangerous_online_repair        fuzzers to evaluate xfs_scrub online repair
+> > > +dangerous_repair       fuzzers to evaluate xfs_repair offline repair
+> > > +dangerous_scrub                fuzzers to evaluate xfs_scrub checking
+> > > +data                   data loss checkers
+> > > +dax                    direct access mode for persistent memory files
+> > > +db                     xfs_db functional tests
+> > > +dedupe                 FIEDEDUPERANGE ioctl
+> > > +defrag                 filesystem defragmenters
+> > > +dir                    directory test functions
+> > > +dump                   dump and restore utilities
+> > > +eio                    IO error reporting
+> > > +encrypt                        encrypted file contents
+> > > +enospc                 ENOSPC error reporting
+> > > +exportfs               file handles
+> > > +filestreams            XFS filestreams allocator
+> > > +freeze                 filesystem freeze tests
+> > > +fsck                   general fsck tests
+> > > +fsmap                  FS_IOC_GETFSMAP ioctl
+> > > +fsr                    XFS free space reorganizer
+> > > +fuzzers                        filesystem fuzz tests
+> > > +growfs                 increasing the size of a filesystem
+> > > +hardlink               hardlinks
+> > > +health                 XFS health reporting
+> > > +idmapped               idmapped mount functionality
+> > > +inobtcount             XFS inode btree count tests
+> > > +insert                 fallocate insert_range
+> > > +ioctl                  general ioctl tests
+> > > +io_uring               general io_uring async io tests
+> > > +label                  filesystem labelling
+> > > +limit                  resource limits
+> > > +locks                  file locking
+> > > +log                    metadata logging
+> > > +logprint               xfs_logprint functional tests
+> > > +long_rw                        long-soak read write IO path exercisers
+> > > +metacopy               overlayfs metadata-only copy-up
+> > > +metadata               filesystem metadata update exercisers
+> > > +metadump               xfs_metadump/xfs_mdrestore functionality
+> > > +mkfs                   filesystem formatting tools
+> > > +mount                  mount option and functionality checks
+> > > +nested                 nested overlayfs instances
+> > > +nfs4_acl               NFSv4 access control lists
+> > > +nonsamefs              overlayfs layers on different filesystems
+> > > +online_repair          online repair functionality tests
+> > > +other                  dumping ground, do not add more tests to this group
+> > > +overlay                        using overlayfs on top of FSTYP
+> >
+> > This description is a bit confusing, because the recommended
+> > way to run overlayfs tests as described in README.overlay is
+> > to set FSTYP=xfs and run ./check -overlay
+> >
+> > I'm struggling for a better description but perhaps:
+> > "using overlayfs regardless of ./check -overlay flag"?
+>
+> Hmm.  Since I'm the author of the only test that uses this tag, I guess
+> I'm the authority (ha!) on what the name actually means.
+>
+> That test (generic/631) is a regression test for a XFS whiteout handling
+> bug that can only be reproduced by layering overlayfs atop xfs.
+> Overlayfs is incidental to reproducing the XFS bug, but AFAIK overlayfs
+> is the only in-kernel user of whiteout, which is why it's critical here.
+>
+> It's not right to make it "_supported_fs overlay" because we're not
+> testing overlayfs functionality; we're merely using it as a stick to
+> poke another filesystem.
 
-Unless something asks for ~120GB of space to be allocated from the
-AG, and then it will have only a small amount of free space and
-could trigger such issues.
+Yes. I know.
+Note that while this is the only case of _require_extra_fs overaly
+there is another case of _require_extra_fs ext2 (xfs/049)
 
-As you said, this is difficult to reproduce, so the current state of
-the FS is unlikely to be in the exact state that triggers the
-problem. What I'm looking at is whether the underlying conditions
-are present that could potentially lead to that sort of problem
-occuring
+>
+> How about: "regression tests that require the use of overlayfs in a
+> targetted configuration" ?
+>
 
-> > Context is very important when trying to determine if free space
-> > fragmentation is an issue or not. Most of the time, it isn't an
-> > issue at all but people have generally been trained to think "all
-> > fragmentation is bad" rather than "only worry about fragmentation if
-> > there is a problem that is directly related to physical allocation
-> > patterns"...
-> 
-> In this case it's a typical backup application: it uploads regular
-> incremental files and those are later merged into a full backup file, either
-> by extending or overwriting or reflinking depending on whether the app
-> decides to use reflinks or not. The uploads are sequential and mostly
-> large-ish writes (132K+), then the merge is small to medium size randomish
-> writes or reflinks (4K-???). So the smaller writes/reflinks are going to
-> create a significant amount of fragmentation. The incremental files are
-> removed entirely at some later time (no discard involved).
+TBH, I do not think it is wise to tag the test by the test method
+rather than the tested functionality.
 
-IOWs, sets of data with different layouts and temporal
-characteristics. Yup, that will cause fragmentation over time and
-slowly prevent recovery of large free spaces as files are deleted.
-The AG histograms largely reflect this.
+What is more likely?
+that a tester wants to run all tests that use overlay over FSTYP?
+Or that a tester wants to run all tests to verify whiteout related
+behavior after changing whiteout related code?
 
-> I guess if it's determined this pattern is critically suboptimal and causing
-> this errant ENOSPC issue, and the changes in 5.13 don't help, there's
-> nothing to stop me from occasionally doing a full (non-reflink) copy of the
-> large full backup files into another file to get them nicely sequential. I'd
-> lose any reflinks along the way of course, but they don't last a long time
-> anyway (days to a few weeks) depending on how long the smaller incremental
-> files are kept.
+I suggest that you re-tag this test as 'whiteout', which is documented
+already.
 
-IOWs, you suggest defragmenting the file data. You could do that
-transparently with xfs_fsr, but defragmenting data doesn't actually
-fix free space fragmentation - it actually makes it worse. This is
-inherent in the defragmentation algorithm - small used spaces get
-turned into small free spaces and large free spaces get turned into
-large used spaces.
+If you want to be more specific, you can create a group
+rename_whiteout, because RENAME_WHITEOUT is the vfs
+interface that this test is actually exercising.
 
-Defragmenting free space is a whole lot harder, and it involves
-identifying where free space is interleaved with data and then
-moving that data to other free space so the small free spaces are
-reconnected into a large free space. Defragmenting data is easy,
-defragmenting free space is much harder...
-
-> AG 15
->    from      to extents  blocks    pct
->       1       1     207     207   0.00
->       2       3     519    1471   0.02
->       4       7    1978   10867   0.13
->       8      15    3736   42434   0.50
->      16      31    6604  154719   1.83
->      32      63   13689  653865   7.73
->      64     127   24824 2356818  27.86
->     128     255   21639 3771966  44.59
->     256     511    1990  611208   7.23
->     512    1023     157  105129   1.24
->    1024    2047      74  107559   1.27
->    2048    4095     153  377991   4.47
->    4096    8191      27  163987   1.94
->    8192   16383       9  101213   1.20
-> total free extents 75606
-> total free blocks 8459434
-> average free extent size 111.888
-
-This is the AG is a candidate - it's only got ~35GB of free space
-in it and has significant free space fragmentation - at least 160
-freespace btree blocks per btree in this AG.
-
-> AG 30
->    from      to extents  blocks    pct
->       1       1    1672    1672   0.03
->       2       3    1073    2577   0.05
->       4       7    1202    6461   0.13
->       8      15    1751   19741   0.39
->      16      31    2830   65939   1.29
->      32      63    4589  216879   4.25
->      64     127    8443  801744  15.71
->     128     255    5988 1023450  20.05
->     256     511    2230  737877  14.46
->     512    1023     714  495411   9.71
->    1024    2047     377  536218  10.51
->    2048    4095     212  611170  11.98
->    4096    8191      85  478388   9.37
->    8192   16383       7   86683   1.70
->   16384   32767       1   19328   0.38
-> total free extents 31174
-> total free blocks 5103538
-> average free extent size 163.711
-
-This one has the least free space, but fewer free space
-extents. It's still a potential candidate for AG ENOSPC conditions
-to be triggered, though.
-
-Ok, now I've seen the filesystem layout, I can say that the
-preconditions for per-ag ENOSPC conditions do actually exist. Hence
-we now really need to know what operation is reporting ENOSPC. I
-guess we'll just have to wait for that to occur again and hope your
-scripts capture it.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+Amir.
