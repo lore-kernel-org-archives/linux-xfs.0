@@ -2,65 +2,112 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D7FBC83029
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Sep 2021 17:37:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F03F2C8302B
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Sep 2021 17:44:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0001F6112F
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Sep 2021 17:37:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D6AE06115B
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Sep 2021 17:44:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346762AbhIBRiW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 2 Sep 2021 13:38:22 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35600 "EHLO mail.kernel.org"
+        id S1346898AbhIBRpO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 2 Sep 2021 13:45:14 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38562 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1346674AbhIBRiR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 2 Sep 2021 13:38:17 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPS id 1C16560FC0;
-        Thu,  2 Sep 2021 17:37:19 +0000 (UTC)
+        id S1347204AbhIBRoK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 2 Sep 2021 13:44:10 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B8686600AA;
+        Thu,  2 Sep 2021 17:43:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1630604239;
-        bh=6HR08lp6HoGwEvv0kqklwqS3X1bMjRNNZVkrYMfOOwU=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=BAi1PtqhyY/K1zsKO9ojh8ifybJjijMUJMLfXltu3eJOIKGujS8rsDktAfyEj90pl
-         An962hzEjQUi86/PYN33WC5bDj7yvRed2BsnS/YCDfo/wrLjUwIQdVVhC2D2nbEfWj
-         dHpaKGDh8bZiUCC7nWT44hJ2DcTif4fKG6SD/AUeo8L/2fVMUY2YJfJI7Ez3JvlFWT
-         lv3j3kdMIWPWeOdCXRQiWMNrJeIDHtAhJsNAJmsVYlZzcM25Wp6w1UyuK3nm/EpU5x
-         OST/gl0LNZCKu9NIpXDJzlTI5LZnPwQFdCwHpak+bqThKwM6kKI4s7mcOLFZJoxTcJ
-         48XtP/xBeAcUg==
+        s=k20201202; t=1630604591;
+        bh=D0GaGVR2vKk3xktWmeeIHVHJSQvMWkhDtm3v+etPCSw=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Vo6/w5JuJRN9qBNRkl24dK0skloQpLcT0B1paVmTgkQFkU7H6LqPsOfT1pDRZMQGa
+         CM3OuEBcCzZBkIYlXTmrXzeHDFAiHvu4ZyI0Vx9QYREBrWvJoXdx1/82TJ5J0M3S9d
+         ll33WYUOA7OsLLp+y72k1SqgGtgftnY8CTGZAZyz2hGjyT7fFr/l96laZKUsm1FqWJ
+         OXNIkpQqGxqpugL0sTZS9aBaP+gmRz1/8baZR5TE+T0qcWkd9VKxGM+6KH/nzvlbmW
+         IpD2SL0elqP+XNBjbCS6TnWo8l4a6ckGnBCYrQ6cAi4NwTzPXT3FcgZ6h5x4Js6Uz5
+         OhDcVyH48nl4w==
+Date:   Thu, 2 Sep 2021 10:43:11 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     Thomas Gleixner <tglx@linutronix.de>,
+        Dennis Zhou <dennis@kernel.org>, Tejun Heo <tj@kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Eric Sandeen <sandeen@sandeen.net>,
+        Christoph Hellwig <hch@lst.de>
 Subject: Re: [GIT PULL] xfs: new code for 5.15
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <20210831211847.GC9959@magnolia>
+Message-ID: <20210902174311.GG9942@magnolia>
 References: <20210831211847.GC9959@magnolia>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20210831211847.GC9959@magnolia>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.15-merge-6
-X-PR-Tracked-Commit-Id: f38a032b165d812b0ba8378a5cd237c0888ff65f
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 90c90cda05aecf0f7c45f9f35384b31bba38455f
-Message-Id: <163060423908.29568.14182828511329643634.pr-tracker-bot@kernel.org>
-Date:   Thu, 02 Sep 2021 17:37:19 +0000
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        david@fromorbit.com, linux-kernel@vger.kernel.org,
-        sandeen@sandeen.net, hch@lst.de
+ <CAHk-=whyVPgkAfARB7gMjLEyu0kSxmb6qpqfuE_r6QstAzgHcA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAHk-=whyVPgkAfARB7gMjLEyu0kSxmb6qpqfuE_r6QstAzgHcA@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The pull request you sent on Tue, 31 Aug 2021 14:18:47 -0700:
+On Thu, Sep 02, 2021 at 08:47:42AM -0700, Linus Torvalds wrote:
+> On Tue, Aug 31, 2021 at 2:18 PM Darrick J. Wong <djwong@kernel.org> wrote:
+> >
+> > As for new features: we now batch inode inactivations in percpu
+> > background threads, which sharply decreases frontend thread wait time
+> > when performing file deletions and should improve overall directory tree
+> > deletion times.
+> 
+> So no complaints on this one, but I do have a reaction: we have a lot
+> of these random CPU hotplug events, and XFS now added another one.
+> 
+> I don't see that as a problem, but just the _randomness_ of these
+> callbacks makes me go "hmm". And that "enum cpuhp_state" thing isn't
+> exactly a thing of beauty, and just makes me think there's something
+> nasty going on.
+> 
+> For the new xfs usage, I really get the feeling that it's not that XFS
+> actually cares about the CPU states, but that this is literally tied
+> to just having percpu state allocated and active, and that maybe it
+> would be sensible to have something more specific to that kind of use.
 
-> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.15-merge-6
+Correct -- we don't really care about cpu state at all; all xfs needs is
+to push batched work items on a per-cpu list to another cpu when a cpu
+goes offline.  I didn't see anything that looked like it handled that
+kind of thing, so ... cpuhp_state it was. :/
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/90c90cda05aecf0f7c45f9f35384b31bba38455f
+> We have other things that are very similar in nature - like the page
+> allocator percpu caches etc, which for very similar reasons want cpu
+> dead/online notification.
+> 
+> I'm only throwing this out as a reaction to this - I'm not sure
+> another interface would be good or worthwhile, but that "enum
+> cpuhp_state" is ugly enough that I thought I'd rope in Thomas for CPU
+> hotplug, and the percpu memory allocation people for comments.
+> 
+> IOW, just _maybe_ we would want to have some kind of callback model
+> for "percpu_alloc()" and it being explicitly about allocations
+> becoming available or going away, rather than about CPU state.
+> 
+> Comments?
 
-Thank you!
+Seems like a good fit for us, though I'll let Dave Chinner chime in
+since he's the one with more per-cpu list patches coming up.
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+> > Lastly, with this release, two new features have graduated to supported
+> > status: inode btree counters (for faster mounts), and support for dates
+> > beyond Y2038.
+> 
+> Oh, I had thought Y2038 was already a non-issue for xfs. Silly me.
+
+It's been a new feature in upstream for a year now.  We're merely taking
+down the scary warnings that using this new code might result in a
+subspace vortex opening in the skies or that all trains bound for
+Moynihan end up on track 19 or wherever. ;)
+
+--D
+
+>               Linus
