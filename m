@@ -7,176 +7,268 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FB69C25AEB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 285C1C19F35
 	for <linux-xfs@archiver.kernel.org>; Thu,  2 Sep 2021 09:59:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3B16F61053
+	by mail.kernel.org (Postfix) with ESMTP id 0B0EB61041
 	for <linux-xfs@archiver.kernel.org>; Thu,  2 Sep 2021 09:59:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233700AbhIBKAf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S233585AbhIBKAf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Thu, 2 Sep 2021 06:00:35 -0400
-Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:44751 "EHLO
-        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233325AbhIBKAe (ORCPT
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:48521 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S233710AbhIBKAe (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Sep 2021 06:00:34 -0400
 Received: from dread.disaster.area (pa49-195-182-146.pa.nsw.optusnet.com.au [49.195.182.146])
-        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id 9EEA01143E51
-        for <linux-xfs@vger.kernel.org>; Thu,  2 Sep 2021 19:59:34 +1000 (AEST)
+        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id CDA5D80D5DB
+        for <linux-xfs@vger.kernel.org>; Thu,  2 Sep 2021 19:59:32 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1mLjVL-007nIm-Li
+        id 1mLjVL-007nJ2-RB
         for linux-xfs@vger.kernel.org; Thu, 02 Sep 2021 19:59:31 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1mLjVL-003pCo-E2
+        id 1mLjVL-003pD3-JQ
         for linux-xfs@vger.kernel.org; Thu, 02 Sep 2021 19:59:31 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 2/7] xfs: tag transactions that contain intent done items
-Date:   Thu,  2 Sep 2021 19:59:22 +1000
-Message-Id: <20210902095927.911100-3-david@fromorbit.com>
+Subject: [PATCH 7/7] xfs: reduce kvmalloc overhead for CIL shadow buffers
+Date:   Thu,  2 Sep 2021 19:59:27 +1000
+Message-Id: <20210902095927.911100-8-david@fromorbit.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210902095927.911100-1-david@fromorbit.com>
 References: <20210902095927.911100-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
         a=QpfB3wCSrn/dqEBSktpwZQ==:117 a=QpfB3wCSrn/dqEBSktpwZQ==:17
-        a=7QKq2e-ADPsA:10 a=20KFwNOVAAAA:8 a=Zy-FAL8c0QFeftCiL8gA:9
+        a=7QKq2e-ADPsA:10 a=20KFwNOVAAAA:8 a=BYTb1cA_JtdTmwEp6ZAA:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Intent whiteouts will require extra work to be done during
-transaction commit if the transaction contains an intent done item.
+Oh, let me count the ways that the kvmalloc API sucks dog eggs.
 
-To determine if a transaction contains an intent done item, we want
-to avoid having to walk all the items in the transaction to check if
-they are intent done items. Hence when we add an intent done item to
-a transaction, tag the transaction to indicate that it contains such
-an item.
+The problem is when we are logging lots of large objects, we hit
+kvmalloc really damn hard with costly order allocations, and
+behaviour utterly sucks:
 
-We don't tag the transaction when the defer ops is relogging an
-intent to move it forward in the log. Whiteouts will never apply to
-these cases, so we don't need to bother looking for them.
+     - 49.73% xlog_cil_commit
+	 - 31.62% kvmalloc_node
+	    - 29.96% __kmalloc_node
+	       - 29.38% kmalloc_large_node
+		  - 29.33% __alloc_pages
+		     - 24.33% __alloc_pages_slowpath.constprop.0
+			- 18.35% __alloc_pages_direct_compact
+			   - 17.39% try_to_compact_pages
+			      - compact_zone_order
+				 - 15.26% compact_zone
+				      5.29% __pageblock_pfn_to_page
+				      3.71% PageHuge
+				    - 1.44% isolate_migratepages_block
+					 0.71% set_pfnblock_flags_mask
+				   1.11% get_pfnblock_flags_mask
+			   - 0.81% get_page_from_freelist
+			      - 0.59% _raw_spin_lock_irqsave
+				 - do_raw_spin_lock
+				      __pv_queued_spin_lock_slowpath
+			- 3.24% try_to_free_pages
+			   - 3.14% shrink_node
+			      - 2.94% shrink_slab.constprop.0
+				 - 0.89% super_cache_count
+				    - 0.66% xfs_fs_nr_cached_objects
+				       - 0.65% xfs_reclaim_inodes_count
+					    0.55% xfs_perag_get_tag
+				   0.58% kfree_rcu_shrink_count
+			- 2.09% get_page_from_freelist
+			   - 1.03% _raw_spin_lock_irqsave
+			      - do_raw_spin_lock
+				   __pv_queued_spin_lock_slowpath
+		     - 4.88% get_page_from_freelist
+			- 3.66% _raw_spin_lock_irqsave
+			   - do_raw_spin_lock
+				__pv_queued_spin_lock_slowpath
+	    - 1.63% __vmalloc_node
+	       - __vmalloc_node_range
+		  - 1.10% __alloc_pages_bulk
+		     - 0.93% __alloc_pages
+			- 0.92% get_page_from_freelist
+			   - 0.89% rmqueue_bulk
+			      - 0.69% _raw_spin_lock
+				 - do_raw_spin_lock
+				      __pv_queued_spin_lock_slowpath
+	   13.73% memcpy_erms
+	 - 2.22% kvfree
+
+On this workload, that's almost a dozen CPUs all trying to compact
+and reclaim memory inside kvmalloc_node at the same time. Yet it is
+regularly falling back to vmalloc despite all that compaction, page
+and shrinker reclaim that direct reclaim is doing. Copying all the
+metadata is taking far less CPU time than allocating the storage!
+
+Direct reclaim should be considered extremely harmful.
+
+This is a high frequency, high throughput, CPU usage and latency
+sensitive allocation. We've got memory there, and we're using
+kvmalloc to allow memory allocation to avoid doing lots of work to
+try to do contiguous allocations.
+
+Except it still does *lots of costly work* that is unnecessary.
+
+Worse: the only way to avoid the slowpath page allocation trying to
+do compaction on costly allocations is to turn off direct reclaim
+(i.e. remove __GFP_RECLAIM_DIRECT from the gfp flags).
+
+Unfortunately, the stupid kvmalloc API then says "oh, this isn't a
+GFP_KERNEL allocation context, so you only get kmalloc!". This
+cuts off the vmalloc fallback, and this leads to almost instant OOM
+problems which ends up in filesystems deadlocks, shutdowns and/or
+kernel crashes.
+
+I want some basic kvmalloc behaviour:
+
+- kmalloc for a contiguous range with fail fast semantics - no
+  compaction direct reclaim if the allocation enters the slow path.
+- run normal vmalloc (i.e. GFP_KERNEL) if kmalloc fails
+
+The really, really stupid part about this is these kvmalloc() calls
+are run under memalloc_nofs task context, so all the allocations are
+always reduced to GFP_NOFS regardless of the fact that kvmalloc
+requires GFP_KERNEL to be passed in. IOWs, we're already telling
+kvmalloc to behave differently to the gfp flags we pass in, but it
+still won't allow vmalloc to be run with anything other than
+GFP_KERNEL.
+
+So, this patch open codes the kvmalloc() in the commit path to have
+the above described behaviour. The result is we more than halve the
+CPU time spend doing kvmalloc() in this path and transaction commits
+with 64kB objects in them more than doubles. i.e. we get ~5x
+reduction in CPU usage per costly-sized kvmalloc() invocation and
+the profile looks like this:
+
+  - 37.60% xlog_cil_commit
+	16.01% memcpy_erms
+      - 8.45% __kmalloc
+	 - 8.04% kmalloc_order_trace
+	    - 8.03% kmalloc_order
+	       - 7.93% alloc_pages
+		  - 7.90% __alloc_pages
+		     - 4.05% __alloc_pages_slowpath.constprop.0
+			- 2.18% get_page_from_freelist
+			- 1.77% wake_all_kswapds
+....
+				    - __wake_up_common_lock
+				       - 0.94% _raw_spin_lock_irqsave
+		     - 3.72% get_page_from_freelist
+			- 2.43% _raw_spin_lock_irqsave
+      - 5.72% vmalloc
+	 - 5.72% __vmalloc_node_range
+	    - 4.81% __get_vm_area_node.constprop.0
+	       - 3.26% alloc_vmap_area
+		  - 2.52% _raw_spin_lock
+	       - 1.46% _raw_spin_lock
+	      0.56% __alloc_pages_bulk
+      - 4.66% kvfree
+	 - 3.25% vfree
+	    - __vfree
+	       - 3.23% __vunmap
+		  - 1.95% remove_vm_area
+		     - 1.06% free_vmap_area_noflush
+			- 0.82% _raw_spin_lock
+		     - 0.68% _raw_spin_lock
+		  - 0.92% _raw_spin_lock
+	 - 1.40% kfree
+	    - 1.36% __free_pages
+	       - 1.35% __free_pages_ok
+		  - 1.02% _raw_spin_lock_irqsave
+
+It's worth noting that over 50% of the CPU time spent allocating
+these shadow buffers is now spent on spinlocks. So the shadow buffer
+allocation overhead is greatly reduced by getting rid of direct
+reclaim from kmalloc, and could probably be made even less costly if
+vmalloc() didn't use global spinlocks to protect it's structures.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_shared.h | 24 +++++++++++++++++-------
- fs/xfs/xfs_attr_item.c     |  4 +++-
- fs/xfs/xfs_bmap_item.c     |  2 +-
- fs/xfs/xfs_extfree_item.c  |  2 +-
- fs/xfs/xfs_refcount_item.c |  2 +-
- fs/xfs/xfs_rmap_item.c     |  2 +-
- 6 files changed, 24 insertions(+), 12 deletions(-)
+ fs/xfs/xfs_log_cil.c | 46 +++++++++++++++++++++++++++++++++-----------
+ 1 file changed, 35 insertions(+), 11 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
-index 25c4cab58851..e96618dbde29 100644
---- a/fs/xfs/libxfs/xfs_shared.h
-+++ b/fs/xfs/libxfs/xfs_shared.h
-@@ -54,13 +54,23 @@ void	xfs_log_get_max_trans_res(struct xfs_mount *mp,
- /*
-  * Values for t_flags.
-  */
--#define	XFS_TRANS_DIRTY		0x01	/* something needs to be logged */
--#define	XFS_TRANS_SB_DIRTY	0x02	/* superblock is modified */
--#define	XFS_TRANS_PERM_LOG_RES	0x04	/* xact took a permanent log res */
--#define	XFS_TRANS_SYNC		0x08	/* make commit synchronous */
--#define XFS_TRANS_RESERVE	0x20    /* OK to use reserved data blocks */
--#define XFS_TRANS_NO_WRITECOUNT 0x40	/* do not elevate SB writecount */
--#define XFS_TRANS_RES_FDBLKS	0x80	/* reserve newly freed blocks */
-+/* Transaction needs to be logged */
-+#define XFS_TRANS_DIRTY			(1 << 0)
-+/* Superblock is dirty and needs to be logged */
-+#define XFS_TRANS_SB_DIRTY		(1 << 1)
-+/* Transaction took a permanent log reservation */
-+#define XFS_TRANS_PERM_LOG_RES		(1 << 2)
-+/* Synchronous transaction commit needed */
-+#define XFS_TRANS_SYNC			(1 << 3)
-+/* Transaction can use reserve block pool */
-+#define XFS_TRANS_RESERVE		(1 << 4)
-+/* Transaction should avoid VFS level superblock write accounting */
-+#define XFS_TRANS_NO_WRITECOUNT		(1 << 5)
-+/* Transaction has freed blocks returned to it's reservation */
-+#define XFS_TRANS_RES_FDBLKS		(1 << 6)
-+/* Transaction contains an intent done log item */
-+#define XFS_TRANS_HAS_INTENT_DONE	(1 << 7)
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index fff68aad254e..81ebf03bfa5c 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -185,6 +185,39 @@ xlog_cil_iovec_space(
+ 			sizeof(uint64_t));
+ }
+ 
++/*
++ * shadow buffers can be large, so we need to use kvmalloc() here to ensure
++ * success. Unfortunately, kvmalloc() only allows GFP_KERNEL contexts to fall
++ * back to vmalloc, so we can't actually do anything useful with gfp flags to
++ * control the kmalloc() behaviour within kvmalloc(). Hence kmalloc() will do
++ * direct reclaim and compaction in the slow path, both of which are
++ * horrendously expensive. We just want kmalloc to fail fast and fall back to
++ * vmalloc if it can't get somethign straight away from the free lists or buddy
++ * allocator. Hence we have to open code kvmalloc outselves here.
++ *
++ * Also, we are in memalloc_nofs_save task context here, so despite the use of
++ * GFP_KERNEL here, we are actually going to be doing GFP_NOFS allocations. This
++ * is actually the only way to make vmalloc() do GFP_NOFS allocations, so lets
++ * just all pretend this is a GFP_KERNEL context operation....
++ */
++static inline void *
++xlog_cil_kvmalloc(
++	size_t		size)
++{
++	gfp_t		flags = GFP_KERNEL;
++	void		*p;
++
++	flags &= ~__GFP_DIRECT_RECLAIM;
++	flags |= __GFP_NOWARN | __GFP_NORETRY;
++	do {
++		p = kmalloc(buf_size, flags);
++		if (!p)
++			p = vmalloc(buf_size);
++	} while (!p);
++
++	return p;
++}
 +
  /*
-  * LOWMODE is used by the allocator to activate the lowspace algorithm - when
-  * free space is running low the extent allocator may choose to allocate an
-diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-index f900001e8f3a..572edb7fb2cd 100644
---- a/fs/xfs/xfs_attr_item.c
-+++ b/fs/xfs/xfs_attr_item.c
-@@ -311,8 +311,10 @@ xfs_trans_attr_finish_update(
- 	/*
- 	 * attr intent/done items are null when delayed attributes are disabled
- 	 */
--	if (attrdp)
-+	if (attrdp) {
- 		set_bit(XFS_LI_DIRTY, &attrdp->attrd_item.li_flags);
-+		args->trans->t_flags |= XFS_TRANS_HAS_INTENT_DONE;
-+	}
+  * Allocate or pin log vector buffers for CIL insertion.
+  *
+@@ -293,25 +326,16 @@ xlog_cil_alloc_shadow_bufs(
+ 		 */
+ 		if (!lip->li_lv_shadow ||
+ 		    buf_size > lip->li_lv_shadow->lv_size) {
+-
+ 			/*
+ 			 * We free and allocate here as a realloc would copy
+-			 * unnecessary data. We don't use kmem_zalloc() for the
++			 * unnecessary data. We don't use kvzalloc() for the
+ 			 * same reason - we don't need to zero the data area in
+ 			 * the buffer, only the log vector header and the iovec
+ 			 * storage.
+ 			 */
+ 			kmem_free(lip->li_lv_shadow);
++			lv = xlog_cil_kvmalloc(buf_size);
  
- 	return error;
- }
-diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-index 8de644a343b5..5244d85b1ba4 100644
---- a/fs/xfs/xfs_bmap_item.c
-+++ b/fs/xfs/xfs_bmap_item.c
-@@ -255,7 +255,7 @@ xfs_trans_log_finish_bmap_update(
- 	 * 1.) releases the BUI and frees the BUD
- 	 * 2.) shuts down the filesystem
- 	 */
--	tp->t_flags |= XFS_TRANS_DIRTY;
-+	tp->t_flags |= XFS_TRANS_DIRTY | XFS_TRANS_HAS_INTENT_DONE;
- 	set_bit(XFS_LI_DIRTY, &budp->bud_item.li_flags);
+-			/*
+-			 * We are in transaction context, which means this
+-			 * allocation will pick up GFP_NOFS from the
+-			 * memalloc_nofs_save/restore context the transaction
+-			 * holds. This means we can use GFP_KERNEL here so the
+-			 * generic kvmalloc() code will run vmalloc on
+-			 * contiguous page allocation failure as we require.
+-			 */
+-			lv = kvmalloc(buf_size, GFP_KERNEL);
+ 			memset(lv, 0, xlog_cil_iovec_space(niovecs));
  
- 	return error;
-diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-index 952a46477907..f689530aaa75 100644
---- a/fs/xfs/xfs_extfree_item.c
-+++ b/fs/xfs/xfs_extfree_item.c
-@@ -381,7 +381,7 @@ xfs_trans_free_extent(
- 	 * 1.) releases the EFI and frees the EFD
- 	 * 2.) shuts down the filesystem
- 	 */
--	tp->t_flags |= XFS_TRANS_DIRTY;
-+	tp->t_flags |= XFS_TRANS_DIRTY | XFS_TRANS_HAS_INTENT_DONE;
- 	set_bit(XFS_LI_DIRTY, &efdp->efd_item.li_flags);
- 
- 	next_extent = efdp->efd_next_extent;
-diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-index 38b38a734fd6..b426e98d7f4f 100644
---- a/fs/xfs/xfs_refcount_item.c
-+++ b/fs/xfs/xfs_refcount_item.c
-@@ -260,7 +260,7 @@ xfs_trans_log_finish_refcount_update(
- 	 * 1.) releases the CUI and frees the CUD
- 	 * 2.) shuts down the filesystem
- 	 */
--	tp->t_flags |= XFS_TRANS_DIRTY;
-+	tp->t_flags |= XFS_TRANS_DIRTY | XFS_TRANS_HAS_INTENT_DONE;
- 	set_bit(XFS_LI_DIRTY, &cudp->cud_item.li_flags);
- 
- 	return error;
-diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-index 1b3655090113..df3e61c1bf69 100644
---- a/fs/xfs/xfs_rmap_item.c
-+++ b/fs/xfs/xfs_rmap_item.c
-@@ -328,7 +328,7 @@ xfs_trans_log_finish_rmap_update(
- 	 * 1.) releases the RUI and frees the RUD
- 	 * 2.) shuts down the filesystem
- 	 */
--	tp->t_flags |= XFS_TRANS_DIRTY;
-+	tp->t_flags |= XFS_TRANS_DIRTY | XFS_TRANS_HAS_INTENT_DONE;
- 	set_bit(XFS_LI_DIRTY, &rudp->rud_item.li_flags);
- 
- 	return error;
+ 			INIT_LIST_HEAD(&lv->lv_list);
 -- 
 2.31.1
 
