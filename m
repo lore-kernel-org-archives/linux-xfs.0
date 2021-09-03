@@ -2,69 +2,115 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 474EBC43217
-	for <linux-xfs@archiver.kernel.org>; Fri,  3 Sep 2021 04:29:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D14BFC433EF
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Sep 2021 06:27:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 304CE610CC
-	for <linux-xfs@archiver.kernel.org>; Fri,  3 Sep 2021 04:29:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B4E226102A
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Sep 2021 06:27:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232164AbhICEam (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 3 Sep 2021 00:30:42 -0400
-Received: from verein.lst.de ([213.95.11.211]:53529 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232068AbhICEak (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 3 Sep 2021 00:30:40 -0400
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 4019668AFE; Fri,  3 Sep 2021 06:29:37 +0200 (CEST)
-Date:   Fri, 3 Sep 2021 06:29:37 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     Thomas Gleixner <tglx@linutronix.de>
+        id S231766AbhICG2B (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 3 Sep 2021 02:28:01 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:48570 "EHLO
+        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230128AbhICG2A (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Sep 2021 02:28:00 -0400
+From:   Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1630650419;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Oj03gZFgBKlneXTLuFlpjosq+qsCnLlz6Tsf57RrU6U=;
+        b=UxCO301dAkvC1O6CEFSs9BDF/EHWaGq74xuu22aOSKeDxyiG15pXQ8UdzD+GMCWD7qI2fy
+        1okhBIFuVJXPh18K9KmQXoAZmndIa7mAif+MJIC0m77cZqFlZPWn0jCziqOparFdWWg8Ln
+        OTKZ0Nv0FbxBGulDLACNIMI0f4i6IYRnxCcFGnsSLdcYXxlfncPuartw/17m5N75tPNhQ3
+        vWxLcBKMUq8fVXX9LT31xa70mOlZz9Wf50c3274w7i87yNQG9bCqGZCFPeEn6k8HsBsNj5
+        9y7uRrO8AIlOopb20+7C6qICj3fvhfZWyMpqG4VZYpTx4vzk3bAzpG67V9Z+ag==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1630650419;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Oj03gZFgBKlneXTLuFlpjosq+qsCnLlz6Tsf57RrU6U=;
+        b=w5/p55F8WBEP8YihYst5Fz3ycPHwF6J50NOGKBuCgwVsb5tcD0J8VxMchQOyY3ysNKvBlx
+        dcqIrcLg4xwxFrCg==
+To:     Dave Chinner <david@fromorbit.com>,
+        "Darrick J. Wong" <djwong@kernel.org>
 Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
         Dennis Zhou <dennis@kernel.org>, Tejun Heo <tj@kernel.org>,
         linux-fsdevel <linux-fsdevel@vger.kernel.org>,
         linux-xfs <linux-xfs@vger.kernel.org>,
-        Dave Chinner <david@fromorbit.com>,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         Eric Sandeen <sandeen@sandeen.net>,
         Christoph Hellwig <hch@lst.de>
 Subject: Re: [GIT PULL] xfs: new code for 5.15
-Message-ID: <20210903042937.GA21466@lst.de>
-References: <20210831211847.GC9959@magnolia> <CAHk-=whyVPgkAfARB7gMjLEyu0kSxmb6qpqfuE_r6QstAzgHcA@mail.gmail.com> <87wnnybxkb.ffs@tglx>
+In-Reply-To: <20210902223545.GA1826899@dread.disaster.area>
+References: <20210831211847.GC9959@magnolia>
+ <CAHk-=whyVPgkAfARB7gMjLEyu0kSxmb6qpqfuE_r6QstAzgHcA@mail.gmail.com>
+ <20210902174311.GG9942@magnolia>
+ <20210902223545.GA1826899@dread.disaster.area>
+Date:   Fri, 03 Sep 2021 08:26:58 +0200
+Message-ID: <87a6kub2dp.ffs@tglx>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <87wnnybxkb.ffs@tglx>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 02, 2021 at 09:13:24PM +0200, Thomas Gleixner wrote:
-> > I'm only throwing this out as a reaction to this - I'm not sure
-> > another interface would be good or worthwhile, but that "enum
-> > cpuhp_state" is ugly enough that I thought I'd rope in Thomas for CPU
-> > hotplug, and the percpu memory allocation people for comments.
-> 
-> It's not only about memory. 
-> 
-> > IOW, just _maybe_ we would want to have some kind of callback model
-> > for "percpu_alloc()" and it being explicitly about allocations
-> > becoming available or going away, rather than about CPU state.
-> 
-> The per cpu storage in XFS does not go away. It contains a llist head
-> and the queued work items need to be moved from the dead CPU to an alive
-> CPU and exposed to a work queue for processing. Similar to what we do
-> with timers, hrtimers and other stuff.
-> 
-> If there are callbacks which are doing pretty much the same thing, then
-> I'm all for a generic infrastructure for these.
+Dave,
 
-In the block layer we've added a new per-cpu bio list, for which
-the dead callback literally does nothing but free some memory.
-For that case a simple callback would be neat, but I'm not sure how
-common that is.
+On Fri, Sep 03 2021 at 08:35, Dave Chinner wrote:
+> On Thu, Sep 02, 2021 at 10:43:11AM -0700, Darrick J. Wong wrote:
+> The part I dislike most about it is that we have to modify a header
+> file that triggers full kernel rebuilds. Managing patch stacks and
+> branches where one of them modifies such a header file means quick,
+> XFS subsystem only kernel rebuilds are a rare thing...
+
+If you don't care about ordering, you can avoid touching the global
+header completely. The dynamic state ranges in PREPARE and ONLINE
+provide exactly what you want. It's documented.
+
+> That said, I'm all for a better interface to the CPU hotplug
+> notifications. THe current interface is ... esoteric and to
+
+What's so esoteric about:
+
+       state = cpuhp_setup_state(CPUHP_BP_PREPARE_DYN, "xfs:prepare", func1, func2);
+       state = cpuhp_setup_state(CPUHP_AP_ONLINE_DYN, "xfs:online", func3, func4);
+
+Only if you care about callback ordering vs. other subsystems, then adding
+the state in the global header is required. It's neither the end of the
+world, nor is it rocket science and requires expert knowledge to do so.
+
+> understand how to use it effectively requires becoming a CPU hotplug
+> expert.
+
+  https://www.kernel.org/doc/html/latest/core-api/cpu_hotplug.html
+
+If there is something missing in that documentation which makes you
+think you need to become a CPU hotplug expert, please let me know. I'm
+happy to expand that document.
+
+> There's something to be said for the simplicity of the old
+> register_cpu_notifier() interface we used to have...
+
+There is a lot to be said about it. The simplicity of it made people do
+the most hillarious things to deal with:
+
+  - Ordering issues including build order dependencies
+  - Asymetry between bringup and teardown
+  - The inability to test state transitions
+  - ....
+
+Back then when we converted the notifier mess 35 of ~140 hotplug
+notifiers (i.e. ~25%) contained bugs of all sorts. Quite some of them
+were caused by the well understood simplicity of the hotplug notifier
+mechanics. I'm surely not missing any of that.
+
+Thanks,
+
+        tglx
