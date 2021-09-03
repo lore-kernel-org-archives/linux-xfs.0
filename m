@@ -2,115 +2,142 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
 	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D14BFC433EF
-	for <linux-xfs@archiver.kernel.org>; Fri,  3 Sep 2021 06:27:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED0B2C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Sep 2021 18:41:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B4E226102A
-	for <linux-xfs@archiver.kernel.org>; Fri,  3 Sep 2021 06:27:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D479161051
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Sep 2021 18:41:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231766AbhICG2B (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 3 Sep 2021 02:28:01 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:48570 "EHLO
-        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230128AbhICG2A (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Sep 2021 02:28:00 -0400
-From:   Thomas Gleixner <tglx@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1630650419;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=Oj03gZFgBKlneXTLuFlpjosq+qsCnLlz6Tsf57RrU6U=;
-        b=UxCO301dAkvC1O6CEFSs9BDF/EHWaGq74xuu22aOSKeDxyiG15pXQ8UdzD+GMCWD7qI2fy
-        1okhBIFuVJXPh18K9KmQXoAZmndIa7mAif+MJIC0m77cZqFlZPWn0jCziqOparFdWWg8Ln
-        OTKZ0Nv0FbxBGulDLACNIMI0f4i6IYRnxCcFGnsSLdcYXxlfncPuartw/17m5N75tPNhQ3
-        vWxLcBKMUq8fVXX9LT31xa70mOlZz9Wf50c3274w7i87yNQG9bCqGZCFPeEn6k8HsBsNj5
-        9y7uRrO8AIlOopb20+7C6qICj3fvhfZWyMpqG4VZYpTx4vzk3bAzpG67V9Z+ag==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1630650419;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=Oj03gZFgBKlneXTLuFlpjosq+qsCnLlz6Tsf57RrU6U=;
-        b=w5/p55F8WBEP8YihYst5Fz3ycPHwF6J50NOGKBuCgwVsb5tcD0J8VxMchQOyY3ysNKvBlx
-        dcqIrcLg4xwxFrCg==
-To:     Dave Chinner <david@fromorbit.com>,
-        "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        id S1349004AbhICSmC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 3 Sep 2021 14:42:02 -0400
+Received: from mail-pf1-f174.google.com ([209.85.210.174]:36678 "EHLO
+        mail-pf1-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235623AbhICSmB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Sep 2021 14:42:01 -0400
+Received: by mail-pf1-f174.google.com with SMTP id m26so199608pff.3;
+        Fri, 03 Sep 2021 11:41:01 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=9kPuIw929oCM1hqjF6X0SykrffHZeMAV4qwiEqQpqlM=;
+        b=BgjtggZTslnnwvdyD/SXLFxsloepagk62cv0/tzYi77T3haRXMH5Yagbmy0bRDBDjK
+         MxEzKXwZOwnX7VTk4laTRXNH5uYQ7u5AWecSD6GTfON0d19Kr+EC0jka7Cy/JkK8UmRw
+         ukzhfpfXqKp9lu7gfTiH0u0ekw4/2cVXtrSPsNT984XtDsOKhifg2eiybBZVu0ftVqqR
+         XtHk5DhBcLRml5Cr7wPyw/PHLHi5GVNdbpRF2ZT3QsQOmqx9ZxjvX5Sd8C7UW1i1QQdK
+         a5gbYddxEjOoV3fbYzfcF/USVCBbk6tPyr2u9jVBhChi4hOUrJL4JV8iPmd5bo8Knfrs
+         zpAA==
+X-Gm-Message-State: AOAM5306MnVj6nvmB5xkirtWth+gZSXdCXOFXIROhFbLGYvl1YOO1b3h
+        JWj3lY/C4eaQG8Qw2wi+jaWBIE5ZoeQ=
+X-Google-Smtp-Source: ABdhPJyz1h2DoGc/xJZP3bPKJyUeJuf87D1bJQ4ZAsjg4pOPDrls990UTw78VYyy+bxgODCmcNmpCg==
+X-Received: by 2002:aa7:8d46:0:b029:3cd:c2fd:fea5 with SMTP id s6-20020aa78d460000b02903cdc2fdfea5mr218631pfe.31.1630694460564;
+        Fri, 03 Sep 2021 11:41:00 -0700 (PDT)
+Received: from fedora ([104.192.206.22])
+        by smtp.gmail.com with ESMTPSA id c26sm109821pgl.10.2021.09.03.11.40.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 03 Sep 2021 11:40:59 -0700 (PDT)
+Date:   Fri, 3 Sep 2021 14:40:58 -0400
+From:   Dennis Zhou <dennis@kernel.org>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
         Dennis Zhou <dennis@kernel.org>, Tejun Heo <tj@kernel.org>,
         linux-fsdevel <linux-fsdevel@vger.kernel.org>,
         linux-xfs <linux-xfs@vger.kernel.org>,
+        Dave Chinner <david@fromorbit.com>,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         Eric Sandeen <sandeen@sandeen.net>,
         Christoph Hellwig <hch@lst.de>
 Subject: Re: [GIT PULL] xfs: new code for 5.15
-In-Reply-To: <20210902223545.GA1826899@dread.disaster.area>
+Message-ID: <YTJsOoqaI3FiTkZD@fedora>
 References: <20210831211847.GC9959@magnolia>
  <CAHk-=whyVPgkAfARB7gMjLEyu0kSxmb6qpqfuE_r6QstAzgHcA@mail.gmail.com>
- <20210902174311.GG9942@magnolia>
- <20210902223545.GA1826899@dread.disaster.area>
-Date:   Fri, 03 Sep 2021 08:26:58 +0200
-Message-ID: <87a6kub2dp.ffs@tglx>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAHk-=whyVPgkAfARB7gMjLEyu0kSxmb6qpqfuE_r6QstAzgHcA@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Dave,
+Hello,
 
-On Fri, Sep 03 2021 at 08:35, Dave Chinner wrote:
-> On Thu, Sep 02, 2021 at 10:43:11AM -0700, Darrick J. Wong wrote:
-> The part I dislike most about it is that we have to modify a header
-> file that triggers full kernel rebuilds. Managing patch stacks and
-> branches where one of them modifies such a header file means quick,
-> XFS subsystem only kernel rebuilds are a rare thing...
+On Thu, Sep 02, 2021 at 08:47:42AM -0700, Linus Torvalds wrote:
+> On Tue, Aug 31, 2021 at 2:18 PM Darrick J. Wong <djwong@kernel.org> wrote:
+> >
+> > As for new features: we now batch inode inactivations in percpu
+> > background threads, which sharply decreases frontend thread wait time
+> > when performing file deletions and should improve overall directory tree
+> > deletion times.
+> 
+> So no complaints on this one, but I do have a reaction: we have a lot
+> of these random CPU hotplug events, and XFS now added another one.
+> 
+> I don't see that as a problem, but just the _randomness_ of these
+> callbacks makes me go "hmm". And that "enum cpuhp_state" thing isn't
+> exactly a thing of beauty, and just makes me think there's something
+> nasty going on.
+> 
+> For the new xfs usage, I really get the feeling that it's not that XFS
+> actually cares about the CPU states, but that this is literally tied
+> to just having percpu state allocated and active, and that maybe it
+> would be sensible to have something more specific to that kind of use.
+> 
+> We have other things that are very similar in nature - like the page
+> allocator percpu caches etc, which for very similar reasons want cpu
+> dead/online notification.
+> 
+> I'm only throwing this out as a reaction to this - I'm not sure
+> another interface would be good or worthwhile, but that "enum
+> cpuhp_state" is ugly enough that I thought I'd rope in Thomas for CPU
+> hotplug, and the percpu memory allocation people for comments.
+> 
+> IOW, just _maybe_ we would want to have some kind of callback model
+> for "percpu_alloc()" and it being explicitly about allocations
+> becoming available or going away, rather than about CPU state.
+> 
+> Comments?
+> 
 
-If you don't care about ordering, you can avoid touching the global
-header completely. The dynamic state ranges in PREPARE and ONLINE
-provide exactly what you want. It's documented.
+I think there are 2 pieces here from percpu's side:
+A) Onlining and offlining state related to a percpu alloc.
+B) Freeing backing memory of an allocation wrt hot plug.
 
-> That said, I'm all for a better interface to the CPU hotplug
-> notifications. THe current interface is ... esoteric and to
+An RFC was sent out for B) in [1] and you need A) for B).
+I can see percpu having a callback model for basic allocations that are
+independent, but for anything more complex, that subsystem would need to
+register with hotplug anyway. It appears percpu_counter already has hot
+plug support. percpu_refcount could be extended as well, but more
+complex initialization like the runqueues and slab related allocations
+would require work. In short, yes I think A) is doable/reasonable.
 
-What's so esoteric about:
+Freeing the backing memory for A) seems trickier. We would have to
+figure out a clean way to handle onlining/offlining racing with new
+percpu allocations (adding or removing pages for the corresponding cpu's
+chunk). To support A), init and onlining/offlining can be separate
+phases, but for B) init/freeing would have to be rolled into
+onlining/offlining.
 
-       state = cpuhp_setup_state(CPUHP_BP_PREPARE_DYN, "xfs:prepare", func1, func2);
-       state = cpuhp_setup_state(CPUHP_AP_ONLINE_DYN, "xfs:online", func3, func4);
+Without freeing, it's not incorrect for_each_online_cpu() to read a dead
+cpu's percpu values, but with freeing it does.
 
-Only if you care about callback ordering vs. other subsystems, then adding
-the state in the global header is required. It's neither the end of the
-world, nor is it rocket science and requires expert knowledge to do so.
+I guess to summarize, A) seems like it might be a good idea with
+init/destruction happening at allocation/freeing times. I'm a little
+skeptical of B) in terms of complexity. If y'all think it's a good idea
+I can look into it again.
 
-> understand how to use it effectively requires becoming a CPU hotplug
-> expert.
-
-  https://www.kernel.org/doc/html/latest/core-api/cpu_hotplug.html
-
-If there is something missing in that documentation which makes you
-think you need to become a CPU hotplug expert, please let me know. I'm
-happy to expand that document.
-
-> There's something to be said for the simplicity of the old
-> register_cpu_notifier() interface we used to have...
-
-There is a lot to be said about it. The simplicity of it made people do
-the most hillarious things to deal with:
-
-  - Ordering issues including build order dependencies
-  - Asymetry between bringup and teardown
-  - The inability to test state transitions
-  - ....
-
-Back then when we converted the notifier mess 35 of ~140 hotplug
-notifiers (i.e. ~25%) contained bugs of all sorts. Quite some of them
-were caused by the well understood simplicity of the hotplug notifier
-mechanics. I'm surely not missing any of that.
+[1] https://lore.kernel.org/lkml/20210601065147.53735-1-bharata@linux.ibm.com/
 
 Thanks,
+Dennis
 
-        tglx
+> > Lastly, with this release, two new features have graduated to supported
+> > status: inode btree counters (for faster mounts), and support for dates
+> > beyond Y2038.
+> 
+> Oh, I had thought Y2038 was already a non-issue for xfs. Silly me.
+> 
+>               Linus
