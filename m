@@ -2,321 +2,245 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA1EEC433F5
-	for <linux-xfs@archiver.kernel.org>; Sat,  4 Sep 2021 08:52:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0CB4C43217
+	for <linux-xfs@archiver.kernel.org>; Sun,  5 Sep 2021 00:21:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 95E2161056
-	for <linux-xfs@archiver.kernel.org>; Sat,  4 Sep 2021 08:52:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 87E0860F92
+	for <linux-xfs@archiver.kernel.org>; Sun,  5 Sep 2021 00:21:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233631AbhIDIxq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 4 Sep 2021 04:53:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59916 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232243AbhIDIxq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 4 Sep 2021 04:53:46 -0400
-Received: from mail-io1-xd2d.google.com (mail-io1-xd2d.google.com [IPv6:2607:f8b0:4864:20::d2d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B2D77C061575;
-        Sat,  4 Sep 2021 01:52:44 -0700 (PDT)
-Received: by mail-io1-xd2d.google.com with SMTP id g9so1565271ioq.11;
-        Sat, 04 Sep 2021 01:52:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=O/xdQPpLcqkGoDAHT5/yUOG1/iTmxRco6mo/vfFXA5c=;
-        b=o3WBTcUsGkRCnoZ/WRgbIrhjj5wKDdyrNP8nNg2pjsRmfNAeRFw2BkWccSr0tb0KmV
-         GHOslKK9XrL6o0yMERvGozEOPD+MegFqoOp/W+iiWCN5+Jr07V6H//sTmGgdWCImzfBF
-         FaEAcJhnOcpu2u8VkN3qOriv7oFys84sCuhAJUG3iOt+3BoJrI301oZHRPxA/jglq4up
-         u2nDla36YEnaPSwMXGStG1f/eKv+LqYzf5aQoG7clLg5J+vcuhQ1WkbISYQ45LaY6nQh
-         Iwnv34OHPkU+6vuEzpvGxKDtD664PdNXRR1wMtVGOiWcsbLOPkVsbi8Y3Qq+Lny//lyE
-         agTA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=O/xdQPpLcqkGoDAHT5/yUOG1/iTmxRco6mo/vfFXA5c=;
-        b=W4IAnpE+v6ujY2YRt2dKt9SP8+ET8PrHI76x42zGDgZ7npWAeYP7MV6GpDBCJA9ATo
-         M6aG/3h0UXXALuKuo8+CrcpqISlDOzdMS3q+RRvg6fV1xG04/Bkr4xOIzRdqHkiXNy+o
-         9nOQKVFlae9kS1h6b7+NnjFhPHNo+B8TUj7g8KyVHEnzJA0OXmppLAwSUtuo3on6Fl7h
-         Sfb4C22/bgZcILKF67IAWexRO8uBmv040/8+iEymMbcnfNlgRXwmSJUMWTX96LcW+wPy
-         raT7WTMQFhC1IMor3X6Sg9+uDncCPN8BMbmMHQgIN814TZFJwwwHk3YpGI37I4EY/Vbq
-         gzjA==
-X-Gm-Message-State: AOAM5303ujihJqoFAzWISQw68PaFnRRfgxnDYkVbE/C1IniJrPsO1jne
-        L7Pwd8oxrnIdZ1wVqcwpYhlSDvSNqZXbVFA4arU=
-X-Google-Smtp-Source: ABdhPJxi14rzfyHO1VJ+9YXtvh2Ka7f9BNTIQEetFkc6zBecb6h6fG0FvGG46AtU5B73nvkqQkx/PRVAxtHbywYn4qA=
-X-Received: by 2002:a05:6638:1301:: with SMTP id r1mr2567280jad.32.1630745563855;
- Sat, 04 Sep 2021 01:52:43 -0700 (PDT)
-MIME-Version: 1.0
-References: <163062674313.1579659.11141504872576317846.stgit@magnolia>
- <163062677608.1579659.1360826362143203767.stgit@magnolia> <20210904030600.GB2270902@magnolia>
-In-Reply-To: <20210904030600.GB2270902@magnolia>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Sat, 4 Sep 2021 11:52:32 +0300
-Message-ID: <CAOQ4uxgReLEdycbNqYfNUVNaSgPa_30E_gfoppN9M2RwVu9c6Q@mail.gmail.com>
-Subject: Re: [PATCH v2.1 6/8] tools: make sure that test groups are described
- in the documentation
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Eryu Guan <guaneryu@gmail.com>,
+        id S234857AbhIEAWO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 4 Sep 2021 20:22:14 -0400
+Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:47691 "EHLO
+        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S234283AbhIEAWO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 4 Sep 2021 20:22:14 -0400
+Received: from dread.disaster.area (pa49-195-182-146.pa.nsw.optusnet.com.au [49.195.182.146])
+        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id 13A931143E1A;
+        Sun,  5 Sep 2021 10:21:07 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1mMfuD-008mCI-AK; Sun, 05 Sep 2021 10:21:05 +1000
+Date:   Sun, 5 Sep 2021 10:21:05 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Thomas Gleixner <tglx@linutronix.de>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Dennis Zhou <dennis@kernel.org>, Tejun Heo <tj@kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
         linux-xfs <linux-xfs@vger.kernel.org>,
-        fstests <fstests@vger.kernel.org>, Eryu Guan <guan@eryu.me>
-Content-Type: text/plain; charset="UTF-8"
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Eric Sandeen <sandeen@sandeen.net>,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [GIT PULL] xfs: new code for 5.15
+Message-ID: <20210905002105.GC1826899@dread.disaster.area>
+References: <20210831211847.GC9959@magnolia>
+ <CAHk-=whyVPgkAfARB7gMjLEyu0kSxmb6qpqfuE_r6QstAzgHcA@mail.gmail.com>
+ <20210902174311.GG9942@magnolia>
+ <20210902223545.GA1826899@dread.disaster.area>
+ <87a6kub2dp.ffs@tglx>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <87a6kub2dp.ffs@tglx>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
+        a=QpfB3wCSrn/dqEBSktpwZQ==:117 a=QpfB3wCSrn/dqEBSktpwZQ==:17
+        a=kj9zAlcOel0A:10 a=7QKq2e-ADPsA:10 a=3AiNZ_45AAAA:8 a=VwQbUJbxAAAA:8
+        a=7-415B0cAAAA:8 a=qHsc3swS6rIxck_nN0wA:9 a=CjuIK1q_8ugA:10
+        a=BNLXQWJ-vaQA:10 a=GWTQ6tnsnZoA:10 a=tBs8r7Es1lhbrCgE1GuL:22
+        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Sep 4, 2021 at 6:06 AM Darrick J. Wong <djwong@kernel.org> wrote:
->
-> From: Darrick J. Wong <djwong@kernel.org>
->
-> Create a file to document the purpose of each test group that is
-> currently defined in fstests, and change mkgroupfile to check that every
-> group mentioned in the tests is also mentioned in the documentation.
->
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  common/preamble     |   21 ++++++++
->  doc/group-names.txt |  135 +++++++++++++++++++++++++++++++++++++++++++++++++++
->  tools/mkgroupfile   |   15 +++++-
->  3 files changed, 168 insertions(+), 3 deletions(-)
->  create mode 100644 doc/group-names.txt
->
-> diff --git a/common/preamble b/common/preamble
-> index 66b0ed05..64d79385 100644
-> --- a/common/preamble
-> +++ b/common/preamble
-> @@ -23,6 +23,26 @@ _register_cleanup()
->         trap "${cleanup}exit \$status" EXIT HUP INT QUIT TERM $*
->  }
->
-> +# Make sure each group is in the documentation file.
-> +_check_groups() {
-> +       test -n "$GROUPNAME_DOC_FILE" || return 0
-> +
-> +       local testname="$(echo "$0" | sed -e 's/^.*tests\///g')"
-> +       declare -a missing=()
-> +
-> +       for group in "$@"; do
-> +               if ! grep -q "^${group}[[:space:]]" "$GROUPNAME_DOC_FILE"; then
-> +                       missing+=("\"${group}\"")
-> +               fi
-> +       done
-> +       test "${#missing}" -eq 0 && return 0
-> +
-> +       local suffix=
-> +       test "${#missing}" -gt 1 && suffix="s"
-> +       echo "$testname: group$suffix ${missing[@]} not mentioned in documentation." 1>&2
-> +       return 1
-> +}
-> +
->  # Prepare to run a fstest by initializing the required global variables to
->  # their defaults, sourcing common functions, registering a cleanup function,
->  # and removing the $seqres.full file.
-> @@ -42,6 +62,7 @@ _begin_fstest()
->         # If we're only running the test to generate a group.list file,
->         # spit out the group data and exit.
->         if [ -n "$GENERATE_GROUPS" ]; then
-> +               _check_groups "$@" || exit 1
->                 echo "$seq $@"
->                 exit 0
->         fi
-> diff --git a/doc/group-names.txt b/doc/group-names.txt
-> new file mode 100644
-> index 00000000..e8e3477e
-> --- /dev/null
-> +++ b/doc/group-names.txt
-> @@ -0,0 +1,135 @@
-> +======================= =======================================================
-> +Group Name:            Description:
-> +======================= =======================================================
-> +all                    All known tests, automatically generated by ./check at
-> +                       runtime
-> +auto                   Tests that should be run automatically.  These should
-> +                       not require more than ~5 minutes to run.
-> +quick                  Tests that should run in under 30 seconds.
-> +deprecated             Old tests that should not be run.
-> +
-> +acl                    Access Control Lists
-> +admin                  xfs_admin functionality
-> +aio                    general libaio async io tests
-> +atime                  file access time
-> +attr                   extended attributes
-> +attr2                  xfs v2 extended aributes
-> +balance                        btrfs tree rebalance
-> +bigtime                        timestamps beyond the year 2038
-> +blockdev               block device functionality
-> +broken                 broken tests
-> +cap                    Linux capabilities
-> +casefold               directory name casefolding
-> +ci                     ASCII case-insensitive directory name lookups
-> +clone                  FICLONE/FICLONERANGE ioctls
-> +clone_stress           stress testing FICLONE/FICLONERANGE
-> +collapse               fallocate FALLOC_FL_COLLAPSE_RANGE
-> +compress               file compression
-> +convert                        btrfs ext[34] conversion tool
-> +copy                   xfs_copy functionality
-> +copy_range             copy_file_range syscall
-> +copyup                 overlayfs copyup
-> +dangerous              dangerous test that can crash the system
-> +dangerous_bothrepair   fuzzers to evaluate xfs_scrub + xfs_repair repair
-> +dangerous_fuzzers      fuzzers that can crash your computer
-> +dangerous_norepair     fuzzers to evaluate kernel metadata verifiers
-> +dangerous_online_repair        fuzzers to evaluate xfs_scrub online repair
-> +dangerous_repair       fuzzers to evaluate xfs_repair offline repair
-> +dangerous_scrub                fuzzers to evaluate xfs_scrub checking
-> +data                   data loss checkers
-> +dax                    direct access mode for persistent memory files
-> +db                     xfs_db functional tests
-> +dedupe                 FIEDEDUPERANGE ioctl
-> +defrag                 filesystem defragmenters
-> +dir                    directory test functions
-> +dump                   dump and restore utilities
-> +eio                    IO error reporting
-> +encrypt                        encrypted file contents
-> +enospc                 ENOSPC error reporting
-> +exportfs               file handles
-> +filestreams            XFS filestreams allocator
-> +freeze                 filesystem freeze tests
-> +fsck                   general fsck tests
-> +fsmap                  FS_IOC_GETFSMAP ioctl
-> +fsr                    XFS free space reorganizer
-> +fuzzers                        filesystem fuzz tests
-> +growfs                 increasing the size of a filesystem
-> +hardlink               hardlinks
-> +health                 XFS health reporting
-> +idmapped               idmapped mount functionality
-> +inobtcount             XFS inode btree count tests
-> +insert                 fallocate FALLOC_FL_INSERT_RANGE
-> +ioctl                  general ioctl tests
-> +io_uring               general io_uring async io tests
-> +label                  filesystem labelling
-> +limit                  resource limits
-> +locks                  file locking
-> +log                    metadata logging
-> +logprint               xfs_logprint functional tests
-> +long_rw                        long-soak read write IO path exercisers
-> +metacopy               overlayfs metadata-only copy-up
-> +metadata               filesystem metadata update exercisers
-> +metadump               xfs_metadump/xfs_mdrestore functionality
-> +mkfs                   filesystem formatting tools
-> +mount                  mount option and functionality checks
-> +nested                 nested overlayfs instances
-> +nfs4_acl               NFSv4 access control lists
-> +nonsamefs              overlayfs layers on different filesystems
-> +online_repair          online repair functionality tests
-> +other                  dumping ground, do not add more tests to this group
-> +pattern                        specific IO pattern tests
-> +perms                  access control and permission checking
-> +pipe                   pipe functionality
-> +pnfs                   PNFS
-> +posix                  POSIX behavior conformance
-> +prealloc               fallocate for preallocating unwritten space
-> +preallocrw             fallocate, then read and write
-> +punch                  fallocate FALLOC_FL_PUNCH_HOLE
-> +qgroup                 btrfs qgroup feature
-> +quota                  filesystem usage quotas
-> +raid                   btrfs RAID
-> +realtime               XFS realtime volumes
-> +recoveryloop           crash recovery loops
-> +redirect               overlayfs redirect_dir feature
-> +remote                 dump and restore with a remote tape
-> +remount                        remounting filesystems
-> +rename                 rename system call
-> +repair                 xfs_repair functional tests
-> +replace                        btrfs device replace
-> +replay                 dm-logwrites replays
-> +resize                 resize2fs functionality tests
-> +richacl                        rich ACL feature
-> +rmap                   XFS reverse mapping exercisers
-> +rotate                 overlayfs upper layer rotate tests from the unionmount
-> +                       test suite
-> +rw                     read/write IO tests
-> +samefs                 overlayfs when all layers are on the same fs
-> +scrub                  filesystem metadata scrubbers
-> +seed                   btrfs seeded filesystems
-> +seek                   llseek functionality
-> +send                   btrfs send/receive
-> +shrinkfs               decreasing the size of a filesystem
-> +shutdown               FS_IOC_SHUTDOWN ioctl
-> +snapshot               btrfs snapshots
-> +soak                   long running soak tests of any kind
-> +spaceman               xfs_spaceman functional tests
-> +splice                 splice system call
-> +stress                 fsstress filesystem exerciser
-> +subvol                 btrfs subvolumes
-> +swap                   swap files
-> +symlink                        symbolic links
-> +tape                   dump and restore with a tape
-> +thin                   thin provisioning
-> +trim                   FITRIM ioctl
-> +udf                    UDF functionality tests
-> +union                  tests from the unionmount test suite
-> +unlink                 O_TMPFILE unlinked files
-> +unshare                        fallocate FALLOC_FL_UNSHARE_RANGE
-> +v2log                  XFS v2 log format tests
-> +verity                 fsverity
-> +volume                 btrfs volume management
-> +whiteout               overlayfs whiteout functionality
-> +xino                   overlayfs xino feature
-> +zero                   fallocate FALLOC_FL_ZERO_RANGE
-> +zone                   zoned (SMR) device support
-> +======================= =======================================================
-> diff --git a/tools/mkgroupfile b/tools/mkgroupfile
-> index 0681e5d2..767bac90 100755
-> --- a/tools/mkgroupfile
-> +++ b/tools/mkgroupfile
-> @@ -9,6 +9,8 @@ fi
->
->  test_dir="$PWD"
->  groupfile="$1"
-> +GROUPNAME_DOC_FILE="$(readlink -m ../../doc/group-names.txt)"
-> +export GROUPNAME_DOC_FILE
->
->  if [ ! -x ../../check ]; then
->         echo "$0: Run this from tests/XXX/."
-> @@ -24,19 +26,26 @@ ENDL
->         cd ../../
->         export GENERATE_GROUPS=yes
->         grep -R -l "^_begin_fstest" "$test_dir/" 2>/dev/null | while read testfile; do
-> -               test -x "$testfile" && "$testfile"
-> +               test -x "$testfile" && "$testfile" || return 1
->         done | sort -g
-> +       local ret="${PIPESTATUS[1]}"
->         cd "$test_dir"
-> +       return $ret
->  }
->
->  if [ -z "$groupfile" ] || [ "$groupfile" = "-" ]; then
->         # Dump the group file to stdout and exit
->         generate_groupfile
-> -       exit 0
+On Fri, Sep 03, 2021 at 08:26:58AM +0200, Thomas Gleixner wrote:
+> Dave,
+> 
+> On Fri, Sep 03 2021 at 08:35, Dave Chinner wrote:
+> > On Thu, Sep 02, 2021 at 10:43:11AM -0700, Darrick J. Wong wrote:
+> > The part I dislike most about it is that we have to modify a header
+> > file that triggers full kernel rebuilds. Managing patch stacks and
+> > branches where one of them modifies such a header file means quick,
+> > XFS subsystem only kernel rebuilds are a rare thing...
+> 
+> If you don't care about ordering, you can avoid touching the global
+> header completely. The dynamic state ranges in PREPARE and ONLINE
+> provide exactly what you want. It's documented.
 
-Now the comment above is incorrect, but I think you
-did want to exit $ret?
+Ordering? When and why would I care about ordering?
+il_last_pushed_lsn
+> 
+> > That said, I'm all for a better interface to the CPU hotplug
+> > notifications. THe current interface is ... esoteric and to
+> 
+> What's so esoteric about:
+> 
+>        state = cpuhp_setup_state(CPUHP_BP_PREPARE_DYN, "xfs:prepare", func1, func2);
+>        state = cpuhp_setup_state(CPUHP_AP_ONLINE_DYN, "xfs:online", func3, func4);
 
->  fi
+I don't want -online- notifications.  I only want _offline_
+notifications and according to the documentation,
+CPUHP_AP_ONLINE_DYN get called on both online and offline state
+changes.
+
+Don't you see the cognitive dissonance that contradictory "use
+online for offline" API naming like this causes. It easily scores
+negative points on the Rusty's API scale....
+(http://sweng.the-davies.net/Home/rustys-api-design-manifesto)
+
+Also, having to understand what the multiple callbacks
+just for different operations is a bit of a WTF. What's the actual
+difference between the "online" and "prepare down" callbacks?
+For online notifications, the prepare down op is documented as the
+online hotplug error handling function that undoes the online
+callback.
+
+But if we are registering an -offline notification-, their use isn't
+actually documented. Is it the same, or is it inverted? I have to go
+read the code...
+
+That is then followed by this gem:
+
+"The callback can be remove by invoking cpuhp_remove_state(). In
+case of a dynamically allocated state (CPUHP_AP_ONLINE_DYN) use the
+returned state. During the removal of a hotplug state the teardown
+callback will be invoked."
+
+What does "use the returned state" mean? What returned
+state? Where did it come from? It's not defined anywhere. Then
+there's "the teardown callback will be invoked" - that's the first
+reference to a "teardown callback" in the documentation. I have to
+assume it means the "prepare_down" callback, but....
+
+... then I wonder: the prepare_down callback is per-cpu. Does this
+mean that when we remove a hp notifier, the prepare_down callback is
+called for every CPU? Or something else? It's not documented, I've
+got to go read the code just to work out the basic, fundamental
+behaviour of the API I'm trying to use....
+
+> Only if you care about callback ordering vs. other subsystems, then adding
+> the state in the global header is required. It's neither the end of the
+> world, nor is it rocket science and requires expert knowledge to do so.
+> 
+> > understand how to use it effectively requires becoming a CPU hotplug
+> > expert.
+> 
+>   https://www.kernel.org/doc/html/latest/core-api/cpu_hotplug.html
+> 
+> If there is something missing in that documentation which makes you
+> think you need to become a CPU hotplug expert, please let me know. I'm
+> happy to expand that document.
+
+Deja vu. It's memory-ordering all over again.
+
+The fundamental problem is documentation is written by experts in
+the subject matter and, as such, is full of implicit, unspoken
+knowledge the reader needs to know before the documentation makes
+sense. It is written in a way that only experts in the subject
+matter actually understand because only they have the underlying
+knowledge to fill in the blanks. And, worst of all, said experts get
+upset and obnoxiously defensive when someone dares to say that it's
+not perfect.
+
+You might not think that using CPUHP_AP_ONLINE_DYN for CPU offline
+events is hard to understand because you know the intimate details
+of the implementation (i.e. the offline events are the reverse order
+state transitions of online events). But for someone who hasn't
+touched the CPU hotplug infrastructure in several years, it's
+totally baroque.
+
+I still have little idea of what a "dynamically allocated state" is
+in the CPU hotplug model vs an ordered one. It's not defined in the
+documentation, nor is it explained how, why and when each should be
+used. No examples are given as to when dynamic vs static order is
+preferred or needed, and there's nothing in the documentation to
+tell you how to just do offline notification.
+
+Hence we end up with code like this:
+
+void __init page_writeback_init(void)
+{
+        BUG_ON(wb_domain_init(&global_wb_domain, GFP_KERNEL));
+
+        cpuhp_setup_state(CPUHP_AP_ONLINE_DYN, "mm/writeback:online",
+                          page_writeback_cpu_online, NULL);
+        cpuhp_setup_state(CPUHP_MM_WRITEBACK_DEAD, "mm/writeback:dead", NULL,
+                          page_writeback_cpu_online);
+}
+
+Which mixes a dynamic notifier for CPU online, followed by a
+specifically ordered offline notifier. Yet both call the same
+"online" function, one as a notifier, the other as a "teardown"
+callback. But in both cases, neither is used as a "teardown" for a
+failed hotplug case.
+
+The WTF level here is sky high. Taken at face value it makes no
+sense at all because it uses the same function for online and
+offline events. According to the documentation, neither notifier
+handles hotplug failure, and there's absolutely no clear reason for
+why one event is dynamic and the other is static.
+
+This is what makes it a terrible API: from my perspective, it seems
+almost impossible to use correctly even though I've read the
+documentation and spend a bunch of time reading the code and try
+hard to do the right thing. That's a -9 or -10 on the Rusty API
+scale...
+
+> > There's something to be said for the simplicity of the old
+> > register_cpu_notifier() interface we used to have...
+> 
+> There is a lot to be said about it. The simplicity of it made people do
+> the most hillarious things to deal with:
+> 
+>   - Ordering issues including build order dependencies
+>   - Asymetry between bringup and teardown
+>   - The inability to test state transitions
+>   - ....
 >
->  # Otherwise, write the group file to disk somewhere.
->  ngroupfile="${groupfile}.new"
->  rm -f "$ngroupfile"
->  generate_groupfile >> "$ngroupfile"
-> -mv "$ngroupfile" "$groupfile"
-> +ret=$?
-> +if [ $ret -eq 0 ]; then
-> +       mv "$ngroupfile" "$groupfile"
-> +else
-> +       rm -f "$ngroupfile"
-> +fi
-> +exit $ret
+> Back then when we converted the notifier mess 35 of ~140 hotplug
+> notifiers (i.e. ~25%) contained bugs of all sorts. Quite some of them
+> were caused by the well understood simplicity of the hotplug notifier
+> mechanics. I'm surely not missing any of that.
 
-I think that a cleanup() trap would have made this script a lot cleaner,
-not having to deal with ${PIPESTATUS[1]} and whatnot, but if there is
-a reason not to use cleanup() trap, I'm fine with this as well.
+You're conflating implementation problems with "API is unusable".
+The API was very easy to understand and use, and those
+implementation difficulties (like ordering and symmetry) could have
+eaily been fixed just by having a notifier block per defined
+transition, rather than multiplexing all state transitions all into
+a single notifier...
 
-Thanks,
-Amir.
+Indeed, that's the core difference between that old API and the
+current API - the current API requires registering a notifier per
+state transition, but that registers the notifier for both CPU up
+and down transitions.
+
+The problem with the new API is that the requirement for symmetry in
+some subsystems has bled into the API, and so now all the subsystems
+that *don't need/want symmetry* have to juggle some undocumented
+esoteric combination of state definitions and callbacks to get the
+behaviour they require. And that, AFAICT, means that those callbacks
+can't handle failures in hotplug processing properly.
+
+So rather than having a nice, simple "one callback per event" API,
+we've got this convoluted thing that behaves according to a
+combination of state definition and callback defintions. Then the
+API is duplicated into "_nocall()" variants (not documented!)
+because many subsystems do not want hotplug callbacks run on
+setup/teardown of hotplug events.
+
+The old hotplug notification *implementation* had problems, but the
+*API* was not the cause of those bugs. In contrast, the current API
+appears to make it impossible to implement notifiers for certain use
+cases correctly, and that's directly where my statement that "you
+need to be a cpuhp expert to use this" comes from....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
