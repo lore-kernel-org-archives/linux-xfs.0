@@ -2,143 +2,174 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B56DC433F5
-	for <linux-xfs@archiver.kernel.org>; Mon,  6 Sep 2021 09:42:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99200C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Sep 2021 05:57:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 38DF960F70
-	for <linux-xfs@archiver.kernel.org>; Mon,  6 Sep 2021 09:42:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7E9BC6108E
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Sep 2021 05:57:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240662AbhIFJnj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 6 Sep 2021 05:43:39 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:36072 "EHLO
-        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237787AbhIFJnc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Sep 2021 05:43:32 -0400
-From:   Thomas Gleixner <tglx@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1630921345;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=eI34dkboo2GUlocVviv6+R9K4VmeCPMQM21Fjmx5538=;
-        b=gWF2KY4IUmqrJgB+ljRMKEnaVgooIihoAIsg/Yj/n0E9Xi1Me5k1XjWItN6TlrQS3ri/H9
-        DdqH0h6uQ2Nw3LrKQZVQzRj/ftjH0eMRRShflIyeICJnkTtAN0NV6jAiB5gPVaCSqwmEoi
-        qEE0nyhikwcc/9+HjldLIz7sbu2sK6g81cddXWwFOzmjicCGV1mkSE0JaJKCsq2qqdrO6J
-        mufmG3ZID20m7KzHmx+DGlYawQ7fqXXZUYa6t2l7MdTQLBZPR09CLy6zYJGCi8pL0qDKYm
-        3CeW0odZMVrVJxdV55ope4dp7BESjKtAXhHKaQVY00vSo3eEKZqiKEQJA1f3Sg==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1630921345;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=eI34dkboo2GUlocVviv6+R9K4VmeCPMQM21Fjmx5538=;
-        b=m0USZb5bbdfTuv8I1COl11RPVUol3bQue36MXll2Hf790/MNqWGsZkigcQtwLCUuUl/74W
-        YZn7LYEjHRsCR/CA==
-To:     Randy Dunlap <rdunlap@infradead.org>,
-        Dave Chinner <david@fromorbit.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Dennis Zhou <dennis@kernel.org>, Tejun Heo <tj@kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        Christoph Hellwig <hch@lst.de>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Ingo Molnar <mingo@kernel.org>
-Subject: Re: [GIT PULL] xfs: new code for 5.15
-In-Reply-To: <7848ad2f-75fc-2416-8d9e-b0cc7c520107@infradead.org>
-References: <20210831211847.GC9959@magnolia>
- <CAHk-=whyVPgkAfARB7gMjLEyu0kSxmb6qpqfuE_r6QstAzgHcA@mail.gmail.com>
- <20210902174311.GG9942@magnolia>
- <20210902223545.GA1826899@dread.disaster.area> <87a6kub2dp.ffs@tglx>
- <20210905002105.GC1826899@dread.disaster.area> <87mtoqa9hb.ffs@tglx>
- <7848ad2f-75fc-2416-8d9e-b0cc7c520107@infradead.org>
-Date:   Mon, 06 Sep 2021 11:42:25 +0200
-Message-ID: <87eea29h1a.ffs@tglx>
+        id S231992AbhIGF6i (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Sep 2021 01:58:38 -0400
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:31532 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230226AbhIGF6c (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Sep 2021 01:58:32 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1630994246; x=1662530246;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=OKrrjd5/k06akLaoTcfUXhPC0E5xy6Ir73X/CYOw89Q=;
+  b=LAnoRLmyeuT85a/3lMm7RHn8bhNBPNWcRHOHLMG/IO0X5l7fwpMXceMg
+   npp+i+bLcPHaCW9FzUVjPOicW5ftffoSVp8FeV0byklHFipGoDEji/3eC
+   lSVh6Bslr4SvWchQcgfYvVJGfGuuDiYXyqxU+Gu+27EbxbQnL+iTSeE3v
+   up69k5Gda7qaLOc3l2aMMQdxZba2KZ4ku3GPbbXi6puOM2dhA1lTWH+uV
+   i6mUSeHn9DfcIXjNUPAVRnycioC78UfCVO20+W6cVlvSdAVyeTOc7wIFj
+   2y6d3iG2e+ckbDxyEnKuKYk+6JxOf/k8RdaBvMe3ldgb1oII3cLTv/KgW
+   g==;
+X-IronPort-AV: E=Sophos;i="5.85,274,1624291200"; 
+   d="scan'208";a="283140188"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 07 Sep 2021 13:57:25 +0800
+IronPort-SDR: 69v33UjgevRDlYTx8A8zq3BYKhQH3+/vT2hQBXKGNU5tRR4w0hZhmh594QbiwDksN1MpCQi2eh
+ mGu4sLTRSpK4qUi+C53puAu0yvANm1JrGPx7yjpNC2RgGSBOMsZhFbr7LeB82YGQZOKcMgFQJR
+ TtGpc6PrmogVZeSBnVZuKIuPibjvbY/vSUOMbozGsNH7ibf11IScuCLVvzerZ27U6GURL9/lbv
+ ozmjZ6Wx87of91zOMUUQCBAfu3HAR010IRy8KKl40mx3FzFJVSOga6mWtHbCb4xWb71A4AYc0B
+ Hj4hkDMALwmD3JqzWQ7yA2ne
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Sep 2021 22:32:24 -0700
+IronPort-SDR: 2fHs2u0F9TaKHNkAk6xLEH5I74JO0rwGC1Ose72vkKLdk4vtXXft64/sF5+kalOwJIXZ2hvJ2v
+ sKwFYTJfkn83pod1D5zUjRBtFtzrXX8SSIEFoxf+v+qLmcm7YGoKpEueAMPgBKzCUhNi2eGkX7
+ N0fLXnSByEsKvm5Dw9MrdnrVphruJlM0eI+eLE/wN8iyTvFMiisjM/T/qC/XsqDX2A/uKYoK0t
+ nG96DWLU6ny3M3B84uN+lR39lXwv6PSXHsdXsvflDpQFth2x5tscHID/giJpxgOjpXjYSNsFZv
+ 4rs=
+WDCIronportException: Internal
+Received: from jpf009007.ad.shared (HELO naota-xeon.wdc.com) ([10.225.51.79])
+  by uls-op-cesaip01.wdc.com with ESMTP; 06 Sep 2021 22:57:24 -0700
+From:   Naohiro Aota <naohiro.aota@wdc.com>
+To:     Catalin Marinas <catalin.marinas@arm.com>, linux-mm@kvack.org
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        linux-kernel@vger.kernel.org,
+        "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        Naohiro Aota <naohiro.aota@wdc.com>
+Subject: [PATCH] mm/kmemleak: allow __GFP_NOLOCKDEP passed to kmemleak's gfp
+Date:   Tue,  7 Sep 2021 14:56:59 +0900
+Message-Id: <20210907055659.3182992-1-naohiro.aota@wdc.com>
+X-Mailer: git-send-email 2.33.0
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Randy,
+In a memory pressure situation, I'm seeing the lockdep WARNING below.
+Actually, this is similar to a known false positive which is already
+addressed by commit 6dcde60efd94 ("xfs: more lockdep whackamole with
+kmem_alloc*").
 
-On Sun, Sep 05 2021 at 19:11, Randy Dunlap wrote:
-> On 9/5/21 4:28 PM, Thomas Gleixner wrote:
->> +  * cpuhp_setup_state() and cpuhp_setup_state_cpuslocked() install the
->> +    callbacks and invoke the @startup callback (if not NULL) for all online
->> +    CPUs which have currently a state greater than the newly installed
->> +    state. Depending on the state section the callback is either invoked on
->> +    the current CPU (PREPARE section) or on each online CPU (ONLINE
->> +    section) in the context of the CPU's hotplug thread.
->> +
->> +    If a callback fails for CPU N then the teardown callback for CPU
->> +    0 .. N-1 is invoked to rollback the operation. The state setup fails,
->
-> CPU 0? Does one of these fail since it's not an AP?
+This warning still persists because it's not from kmalloc() itself but
+from an allocation for kmemleak object. While kmalloc() itself suppress
+the warning with __GFP_NOLOCKDEP, gfp_kmemleak_mask() is dropping the
+flag for the kmemleak's allocation.
 
-Yes. CPU 0 is not special in any way.
+Allow __GFP_NOLOCKDEP to be passed to kmemleak's allocation, so that the
+warning for it is also suppressed.
 
-The point is that the hotplug state callbacks are set up late in the
-boot process or during runtime when a module is loaded or some
-functionality initialized on first use.
+  ======================================================
+  WARNING: possible circular locking dependency detected
+  5.14.0-rc7-BTRFS-ZNS+ #37 Not tainted
+  ------------------------------------------------------
+  kswapd0/288 is trying to acquire lock:
+  ffff88825ab45df0 (&xfs_nondir_ilock_class){++++}-{3:3}, at: xfs_ilock+0x8a/0x250
 
-At that time the boot CPU (0) and usually the secondary CPUs are online
-already. So the driver/subsystem has two ways to bring the per CPU
-functionality into operation:
+  but task is already holding lock:
+  ffffffff848cc1e0 (fs_reclaim){+.+.}-{0:0}, at: __fs_reclaim_acquire+0x5/0x30
 
- 1) Initialize all per CPU state manually which often involves queuing
-    work on each online CPU or invoking SMP function calls on the online
-    CPUs and if all succeeds install the callbacks. If something goes
-    wrong on one of the CPUs then the state has to be cleaned up on the
-    CPUs which had their state set up correctly already.
+  which lock already depends on the new lock.
 
-    This of course has to be done with cpus_read_lock() held to
-    serialize against a concurrent CPU hotplug operation.-
+  the existing dependency chain (in reverse order) is:
 
- 2) Let the hotplug core do that work. Setup a state with the
-    corresponding callbacks. The core invokes the startup callback on
-    all online CPUs (including 0) in the correct context:
+  -> #1 (fs_reclaim){+.+.}-{0:0}:
+         fs_reclaim_acquire+0x112/0x160
+         kmem_cache_alloc+0x48/0x400
+         create_object.isra.0+0x42/0xb10
+         kmemleak_alloc+0x48/0x80
+         __kmalloc+0x228/0x440
+         kmem_alloc+0xd3/0x2b0
+         kmem_alloc_large+0x5a/0x1c0
+         xfs_attr_copy_value+0x112/0x190
+         xfs_attr_shortform_getvalue+0x1fc/0x300
+         xfs_attr_get_ilocked+0x125/0x170
+         xfs_attr_get+0x329/0x450
+         xfs_get_acl+0x18d/0x430
+         get_acl.part.0+0xb6/0x1e0
+         posix_acl_xattr_get+0x13a/0x230
+         vfs_getxattr+0x21d/0x270
+         getxattr+0x126/0x310
+         __x64_sys_fgetxattr+0x1a6/0x2a0
+         do_syscall_64+0x3b/0x90
+         entry_SYSCALL_64_after_hwframe+0x44/0xae
 
-    for_each_online_cpu(cpu) {
-    	ret = invoke_callback_on/for_cpu(cpu, startup);
-        if (ret)
-        	goto err;
-        ...
+  -> #0 (&xfs_nondir_ilock_class){++++}-{3:3}:
+         __lock_acquire+0x2c0f/0x5a00
+         lock_acquire+0x1a1/0x4b0
+         down_read_nested+0x50/0x90
+         xfs_ilock+0x8a/0x250
+         xfs_can_free_eofblocks+0x34f/0x570
+         xfs_inactive+0x411/0x520
+         xfs_fs_destroy_inode+0x2c8/0x710
+         destroy_inode+0xc5/0x1a0
+         evict+0x444/0x620
+         dispose_list+0xfe/0x1c0
+         prune_icache_sb+0xdc/0x160
+         super_cache_scan+0x31e/0x510
+         do_shrink_slab+0x337/0x8e0
+         shrink_slab+0x362/0x5c0
+         shrink_node+0x7a7/0x1a40
+         balance_pgdat+0x64e/0xfe0
+         kswapd+0x590/0xa80
+         kthread+0x38c/0x460
+         ret_from_fork+0x22/0x30
 
-    Any of these callback invocations can fail even the one on the boot
-    CPU. In case of failure on CPU0 there is nothing to clean up, but if
-    the Nth CPU callback fails then the state has been established for
-    CPU 0 to CPU N-1 already, e.g. memory allocation, hardware setup ...
+  other info that might help us debug this:
+   Possible unsafe locking scenario:
+         CPU0                    CPU1
+         ----                    ----
+    lock(fs_reclaim);
+                                 lock(&xfs_nondir_ilock_class);
+                                 lock(fs_reclaim);
+    lock(&xfs_nondir_ilock_class);
 
-    So instead of returning with a half set up functionality, the core
-    does the rollback on CPU 0 to CPU N-1 by invoking the teardown
-    callback before returning the error code.
+   *** DEADLOCK ***
+  3 locks held by kswapd0/288:
+   #0: ffffffff848cc1e0 (fs_reclaim){+.+.}-{0:0}, at: __fs_reclaim_acquire+0x5/0x30
+   #1: ffffffff848a08d8 (shrinker_rwsem){++++}-{3:3}, at: shrink_slab+0x269/0x5c0
+   #2: ffff8881a7a820e8 (&type->s_umount_key#60){++++}-{3:3}, at: super_cache_scan+0x5a/0x510
 
-    err:
-    	for_each_online_cpu(cpu) {
-            if (startup_done[cpu])
-                invoke_callback_on/for_cpu(cpu, teardown);
-        }
+Signed-off-by: Naohiro Aota <naohiro.aota@wdc.com>
+---
+ mm/kmemleak.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-    That means the call site does not have to mop up the half
-    initialized state manually.
+diff --git a/mm/kmemleak.c b/mm/kmemleak.c
+index 73d46d16d575..1f4868cbba22 100644
+--- a/mm/kmemleak.c
++++ b/mm/kmemleak.c
+@@ -113,7 +113,8 @@
+ #define BYTES_PER_POINTER	sizeof(void *)
+ 
+ /* GFP bitmask for kmemleak internal allocations */
+-#define gfp_kmemleak_mask(gfp)	(((gfp) & (GFP_KERNEL | GFP_ATOMIC)) | \
++#define gfp_kmemleak_mask(gfp)	(((gfp) & (GFP_KERNEL | GFP_ATOMIC | \
++					   __GFP_NOLOCKDEP)) | \
+ 				 __GFP_NORETRY | __GFP_NOMEMALLOC | \
+ 				 __GFP_NOWARN)
+ 
+-- 
+2.33.0
 
-    All of that is properly serialized against CPU hotplug operations.
-
->> +
->> +    If a callback fails for CPU N then the teardown callback for CPU
->> +    0 .. N-1 is invoked to rollback the operation, the function fails and
->
-> all except the Boot CPU?
-
-See above.
-
-Thanks,
-
-        tglx
