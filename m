@@ -2,108 +2,191 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AAA7C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Sep 2021 14:36:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5401CC433F5
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Sep 2021 21:27:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6CF6460EFE
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Sep 2021 14:36:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3049C60F70
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Sep 2021 21:27:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349323AbhIHOhI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Sep 2021 10:37:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33268 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349338AbhIHOhI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Sep 2021 10:37:08 -0400
-Received: from mail-qt1-x834.google.com (mail-qt1-x834.google.com [IPv6:2607:f8b0:4864:20::834])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48913C061575
-        for <linux-xfs@vger.kernel.org>; Wed,  8 Sep 2021 07:36:00 -0700 (PDT)
-Received: by mail-qt1-x834.google.com with SMTP id x5so1983879qtq.13
-        for <linux-xfs@vger.kernel.org>; Wed, 08 Sep 2021 07:36:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=yakkadesign-com.20150623.gappssmtp.com; s=20150623;
-        h=to:from:subject:message-id:date:user-agent:mime-version
-         :content-transfer-encoding:content-language;
-        bh=j2SSw7LGl6IVXp84SFGCdQy47gJixzVB84rzXR3Q4YQ=;
-        b=sJ9Zndo/kNVfheRwt3CgHzGRlZPCfjJKB1/TiODyt3Jk33PvlxcgLsnAQGZ7kEPKOM
-         kmIbfHKNFrFTIAFKFY0VALDyY4OsQQY9kG6IuXcI96uXir108rNll59YR2+cUsZRoHUX
-         HBhoSmEJ1JeNZH8zTS6Kk+UEeBjW0stIgLv9OVaMdaj2pJOz8mBWhbaOBgf3ZIQ6bZo4
-         kMFrduLd97FeE1N1XM36LiAsbXBg6vlo9boxS83Yeg5LU2fgAf5TYxkJUmxh8Pj+eIJe
-         gAdB/ULv6vN/sS4Bo/ZNnvGpnxbXkz75FRM4WtHxrIxxv59G9Fybau/ftZbA1VYmTPkP
-         fUwQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:to:from:subject:message-id:date:user-agent
-         :mime-version:content-transfer-encoding:content-language;
-        bh=j2SSw7LGl6IVXp84SFGCdQy47gJixzVB84rzXR3Q4YQ=;
-        b=XlSsecTgMI3a8rMhTWBoG8cACFGQI4FTE+t0zkstpIowFiwAjOf6OWzxxX7crp3t60
-         lPDkdt2jiDeHbCw2adp5okThMHXrq0fM0sDizr3jJSF4YYbCktHZISySN1tRyiemiQZp
-         H6rrTZ2aEu9KxNMNDCUTT1Z2Xv1t+Qy0m19+zG5VTyX45iXSN+csHGJ5WI6+ww+a3Vp4
-         WqNDIVCpcuoOCZO5BtAlEsrEBSOaJO0afDB1jlTbnaefmbLZW6VcUkS7OMWqiFTARI4V
-         WC6UB/md7JfsX/5iMIlslSqxluhkZW0ZObIVUrTTAtjf4lYZMGb5Ke9uD4PPWPjiHfmX
-         jEjw==
-X-Gm-Message-State: AOAM530IlWJNDemWKQpxIFfEEVk743TxOsdHUZpMvDa7WGR+cvqcxOK9
-        IW6DK5MOwYIv8xI/BwuN/gdl30i9t/Allroxsvc=
-X-Google-Smtp-Source: ABdhPJx/7mygL/MDkgoASj8rOX2U7X128Jl4N9vAOmMX7oW4zaR+/7jJFMm2S3PJWoWWZ01slEdw8A==
-X-Received: by 2002:ac8:57cc:: with SMTP id w12mr4003046qta.239.1631111759270;
-        Wed, 08 Sep 2021 07:35:59 -0700 (PDT)
-Received: from ?IPv6:2602:306:bc57:e350:5a91:cfff:fe5a:fe83? ([2602:306:bc57:e350:5a91:cfff:fe5a:fe83])
-        by smtp.googlemail.com with ESMTPSA id b5sm1641365qtr.11.2021.09.08.07.35.58
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 08 Sep 2021 07:35:58 -0700 (PDT)
-To:     linux-xfs@vger.kernel.org
-From:   brian <a001@yakkadesign.com>
-Subject: Repair Metadata corruption detected at xfs_inode_buf_verify on CentOS
- 7 virtual machine
-Message-ID: <055dbf6e-a9b5-08a1-43bc-59f93e77f67d@yakkadesign.com>
-Date:   Wed, 8 Sep 2021 10:35:57 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
- Thunderbird/52.9.1
+        id S237393AbhIHV2p (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Sep 2021 17:28:45 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:36976 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231956AbhIHV2p (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Sep 2021 17:28:45 -0400
+Received: from dread.disaster.area (pa49-195-182-146.pa.nsw.optusnet.com.au [49.195.182.146])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 47B8082C659;
+        Thu,  9 Sep 2021 07:27:34 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1mO56T-00AFI7-1G; Thu, 09 Sep 2021 07:27:33 +1000
+Date:   Thu, 9 Sep 2021 07:27:33 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Momtchil Momtchev <momtchil@momtchev.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: heavy xfsaild I/O blocking process exit
+Message-ID: <20210908212733.GA2361455@dread.disaster.area>
+References: <b0537b9a-d2f8-9288-b631-5bf67488d930@momtchev.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+In-Reply-To: <b0537b9a-d2f8-9288-b631-5bf67488d930@momtchev.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
+        a=QpfB3wCSrn/dqEBSktpwZQ==:117 a=QpfB3wCSrn/dqEBSktpwZQ==:17
+        a=8nJEP1OIZ-IA:10 a=7QKq2e-ADPsA:10 a=xNf9USuDAAAA:8 a=7-415B0cAAAA:8
+        a=TJuteJKHv3KEP-wJsPYA:9 a=wPNLvfGTeEIA:10 a=SEwjQc04WA-l_NiBhQ7s:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-I have CentOS 7 Virtualbox virtual machine (VM) that gives the following 
-error on boot(removed parts replaced with â€¦)
-----------------------------------------------------------------------------
-XFS (dm-2): Metadata corruption detected at xfs_inode_buf_verify...
-XFS (dm-2): unmount and run xfs_repair
-XFS (dm-2): First 128 bytes of corrupted metadata buffer:
-â€¦
-XFS (dm-2): metadata I/O error in â€œxlog_recov_do..(read#2)â€ at daddr 
-0x1b32 error 117
-----------------------------------------------------------------------------
+On Wed, Sep 08, 2021 at 10:15:59AM +0200, Momtchil Momtchev wrote:
+> 
+> Hello,
+> 
+> 
+> I have a puzzling problem with XFS on Debian 10. I am running
+> number-crunching driven by Node.js - I have a process that creates about 2
+> million 1MB to 5MB files per day with an about 24h lifespan (weather
+> forecasting). The file system is obviously heavily fragmented. I have
+> absolutely no problems when running this in cruise mode, but every time I
+> decide to stop that process, especially when it has been running for a few
 
-I tried entered emergency mode, entered password and tried:
- Â Â Â  xfs_repair -L /dev/mapper/centos-root
+What does "stop that process" mean? You kill it, or do you run a
+stop command that tells the process to do a controlled shutdown?
 
-But I got the error:
- Â Â Â  /dev/mapper/centos-root contains a mounted filesystem
- Â Â Â  /dev/mapper/centos-root contains a mounted and writable filesystem
+> weeks or months, the process will become a zombie (freeing all its user
+> memory and file descriptors) and then xfsaild/kworker will continue flushing
+> the log for about 30-45 minutes before the process really quits.
 
-Next I booted from the Centos ISO then went
- Â  Â Â Â  troubleshooting â†’ Rescue a CentOS systemÂ  â†’ 1) Continue
+The xfsaild is not flushing the log. It's doing metadata writeback.
+If it is constantly busy, it means the log has run out of space and
+something else wants log space. That something else will block until
+the log space has been freed up by metadata writeback....
 
-This fails.Â  I get lines of = marks.Â  When I left overnight, I had a 
-blank screen.Â  When I ALT+Tab to program-log and then back to main, I 
-got a screen of scrolling errors.
+> It will
+> keep its binds to network ports (which is my main problem) but the system
+> will remain responsive and usable. The I/O pattern is several seconds of
+> random reading then a second or two of sequential writing.
 
-I nightly backup my data including this VM with rsync to a USB drive.Â  
-My last backup was while the VM was running.Â  In Virtualbox and on my 
-computers drive, I deleted the VM using the virtualbox GUI.Â  I thought 
-this would move the VM to the trash but it permanently deleted the VM.Â  
-The problem I'm having is with the backup VM from my USB drive.
+That would be expected from final close on lots of dirty inodes or
+finalising unlinks on final close. But that won't stop anything else
+from functioning.
 
-How should I troubleshoot and fix this problem?Â  My main goal is to get 
-my data off the VM.Â  I also unsuccessful with mounting the .vdi file in 
-another computer.
+> The kernel functions that are running in the zombie process context are
+> mainly xfs_btree_lookup, xfs_log_commit_cil, xfs_next_bit,
+> xfs_buf_find_isra.26
 
+Full profiles (e.g. from perf top -U -p <pid>) would be useful here,
+but this sounds very much like extent removal on final close. This
+will be removing either speculative preallocation beyond EOF or the
+workload has open but unlinked files and the unlink is being done at
+process exit.
 
+Either way, if the files are fragmented into millions of extents,
+this could take minutes per file being closed. But with only 1-5MB
+files, that shouldn't be occurring...
+
+> xfsaild is spending time in radix_tree_next_chunk, xfs_inode_buf_verify
+
+xfsaild should never be doing radix tree lookups - it only works on
+internal in-memory filessytem objects that it has direct references
+to. IOWs, I really need to see the actual profile outputs to
+determine what it is doing...
+
+xfs_inode_buf_verify() is expected if it is writing back dirty inode
+clusters. Which it will be, but at only 2 million files a day I
+wouldn't expect that to show up in profiles at all. It doesn't
+really even show up in profiles even at half a million inodes per
+_second_
+
+> kworker is in xfs_reclaim_inode, radix_tree_next_chunk
+
+Which kworker is that? Likely background inode reclaim, but that
+doesn't limit anything - it just indicates there are inodes
+available to be reclaimed.
+
+> This is on (standard up-to date Debian 10):
+> 
+> Linux version 4.19.0-16-amd64 (debian-kernel@lists.debian.org) (gcc version
+> 8.3.0 (Debian 8.3.0-6)) #1 SMP Debian 4.19.181-1 (2021-03-19)
+> 
+> xfs_progs 4.20.0-1
+> 
+> 
+> 
+> File system is RAID-0, 2x2TB disks with LVM over md (512k chunks)
+
+Are these SSDs or HDDs? I'll assume HDD at this point.
+
+> meta-data=/dev/mapper/vg0-home   isize=512    agcount=32, agsize=29849728
+> blks
+>          =                       sectsz=4096  attr=2, projid32bit=1
+>          =                       crc=1        finobt=1, sparse=1, rmapbt=0
+>          =                       reflink=0
+> data     =                       bsize=4096   blocks=955191296, imaxpct=5
+>          =                       sunit=128    swidth=256 blks
+> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+> log      =internal log           bsize=4096   blocks=466402, version=2
+>          =                       sectsz=4096  sunit=1 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+Ok, so you have a 1.7GB log. If those are HDDs, then you could have
+hundreds of thousands of dirty inodes tracked in the log, and
+metadata writeback has been falling behind for days because the log
+can be filled much faster than it can be drained.
+
+Assuming 200 write IOPS, 30 minutes would be 360,000 writes, which
+pretty much matches up with having half a million dirty inodes in
+the log and the process exiting needing to run a bunch of
+transactions that need a chunk of log space to make progress and
+having to wait on inode writeback to free up log space...
+
+> MemTotal:       32800968 kB
+> MemFree:          759308 kB
+> MemAvailable:   27941208 kB
+> Buffers:           43900 kB
+> Cached:         26504332 kB
+> SwapCached:         7560 kB
+> Active:         16101380 kB
+> Inactive:       11488252 kB
+> Active(anon):     813424 kB
+> Inactive(anon):   228180 kB
+> Active(file):   15287956 kB
+> Inactive(file): 11260072 kB
+
+So all your memory is in the page cache.
+
+> Unevictable:           0 kB
+> Mlocked:               0 kB
+> SwapTotal:      16777212 kB
+> SwapFree:       16715524 kB
+> Dirty:              2228 kB
+
+And almost all the page cache is clean.
+
+> Writeback:             0 kB
+> AnonPages:       1034280 kB
+> Mapped:            89660 kB
+> Shmem:               188 kB
+> Slab:            1508868 kB
+> SReclaimable:    1097804 kB
+> SUnreclaim:       411064 kB
+
+And that's enough slab cache to hold half a million cached, dirty
+inodes...
+
+More information required.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
