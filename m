@@ -7,42 +7,42 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E09EAC433FE
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Sep 2021 11:54:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7155AC433F5
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Sep 2021 12:17:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CAC4761BE5
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Sep 2021 11:54:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 58EE26113E
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Sep 2021 12:17:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241749AbhIILz6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 9 Sep 2021 07:55:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33230 "EHLO mail.kernel.org"
+        id S1349527AbhIIMSw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Sep 2021 08:18:52 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52722 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S241089AbhIILxj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 9 Sep 2021 07:53:39 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 570C76138D;
-        Thu,  9 Sep 2021 11:44:40 +0000 (UTC)
+        id S1349282AbhIIMQL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 9 Sep 2021 08:16:11 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id CD0D061A81;
+        Thu,  9 Sep 2021 11:49:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631187881;
-        bh=E0Wwtt/RpBwqOEd5e7ec+rsEkQxJmd7cg46/1odlycA=;
+        s=k20201202; t=1631188183;
+        bh=xHALvjEpIWz1vlc9j7zhvfX1vK6Thq282rPyW89XmQ0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=CrGW+5P6XFqDSyv4lLwvo3AyHMm/LrjG747uCDOu7xjg/LRbWqK7trnpxBCRaLmFo
-         bbxZ/fHMEVOB3QtPXNEKyDBBsmMivaMJ1bgXMo4QAlxVZiOvmRCxN+67hB62eMWZcW
-         mCSCg3TudC7nfceXFl6Q3jKP8HIRZj1niW4mAh7KCQ5Tiyi7rrb2ixnXvVNnvObdS6
-         wE2/hRZNDWTkzhsCn/FA4LHebUY7946qk/UGCI/ceuYbtdr3l/zCDrETiwBbjwjipB
-         +JcJFij1Kg3ICwO69QhLgnvge6tKzeGrh9ZNE35/DVM/UYRHGCeXdqFL76rMslIe7A
-         Xrj+nEK+6BaOw==
+        b=ta/4Y7JAecyHhB1wFvbzqmcNOH/wqwyDf0EI1BnCLCJuX8jFBkLRXHpxIZdZVxeP3
+         n2YTh9bAXhXGusTLy/5WVxSSqyMGJf4efxYMZBG0Iohupbvaqw7KAIoWRz8fFY9kwO
+         LtyWVCvkKnjnnnCCtXs42Drrwp/dZervEXpQDSC1GAB2V3RgonFG7u65KkO1hOPs/F
+         Cbfm+D1eE++jvc2vWwRo5u5hWkT8JZOgropmzYAC9Z2DS91XuZdXbuUNZqqJNYGzKT
+         Qw6pZH6LMmFUH1CdIBNZc1YelMch/KVpLKljc+2ve0tr2hq6nOskTcMSPDLKItjOFT
+         xUN0GBU1jZ3oQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     "Darrick J. Wong" <djwong@kernel.org>,
         Matthew Wilcox <willy@infradead.org>,
         Sasha Levin <sashal@kernel.org>, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.14 164/252] iomap: pass writeback errors to the mapping
-Date:   Thu,  9 Sep 2021 07:39:38 -0400
-Message-Id: <20210909114106.141462-164-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.13 145/219] iomap: pass writeback errors to the mapping
+Date:   Thu,  9 Sep 2021 07:45:21 -0400
+Message-Id: <20210909114635.143983-145-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210909114106.141462-1-sashal@kernel.org>
-References: <20210909114106.141462-1-sashal@kernel.org>
+In-Reply-To: <20210909114635.143983-1-sashal@kernel.org>
+References: <20210909114635.143983-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -72,10 +72,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 87ccb3438bec..b06138c6190b 100644
+index 9023717c5188..35839acd0004 100644
 --- a/fs/iomap/buffered-io.c
 +++ b/fs/iomap/buffered-io.c
-@@ -1016,7 +1016,7 @@ iomap_finish_page_writeback(struct inode *inode, struct page *page,
+@@ -1045,7 +1045,7 @@ iomap_finish_page_writeback(struct inode *inode, struct page *page,
  
  	if (error) {
  		SetPageError(page);
