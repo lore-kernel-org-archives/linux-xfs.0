@@ -2,60 +2,88 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0E23C433F5
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Sep 2021 11:39:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E09EAC433FE
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Sep 2021 11:54:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7C5D361100
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Sep 2021 11:39:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CAC4761BE5
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Sep 2021 11:54:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235466AbhIILlB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 9 Sep 2021 07:41:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35722 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235448AbhIILlB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Sep 2021 07:41:01 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44589C061575
-        for <linux-xfs@vger.kernel.org>; Thu,  9 Sep 2021 04:39:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=4c2khVOQjrYaRBeeuLES9ctidcPb3oWliST1BVfodBo=; b=pOZDNSGy50wQzGcaXUHzttdyBw
-        motN1wrL2IUgPA58sNDTGxP4xU4HxRV85e8I8JPPiZojgxSqsLfBF9I3yzOKNS9kBr/7DQS5/9eI5
-        2I792B+I1RGqHGe37JWZAPRf7jVbMKUgKxDygIcP2sP/brI0jlpfWLUpi3t0IoyLzK7UyJ6EW8C42
-        BHXcKT7+4q9bCxPAA8uDHrvoelYOZFauPqTnvSBqivxyEDCSYiVb8HGqGeGPh4ESjIifmaC5YJGID
-        M5h6oGPacLvi7M+f8VpthMpycw+0KXUyFHbsiIJ0Y02IZqBuIsA149fV00al1pCadQhZwh7Xi5mYk
-        +djTMZlg==;
-Received: from 089144209162.atnat0018.highway.a1.net ([89.144.209.162] helo=localhost)
-        by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mOINp-009m1o-AJ; Thu, 09 Sep 2021 11:39:02 +0000
-Date:   Thu, 9 Sep 2021 13:37:49 +0200
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [RFC PATCH 0/7] xfs: intent item whiteouts
-Message-ID: <YTnyDZ8mx3ucqKBn@infradead.org>
-References: <20210902095927.911100-1-david@fromorbit.com>
+        id S241749AbhIILz6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Sep 2021 07:55:58 -0400
+Received: from mail.kernel.org ([198.145.29.99]:33230 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S241089AbhIILxj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 9 Sep 2021 07:53:39 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 570C76138D;
+        Thu,  9 Sep 2021 11:44:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1631187881;
+        bh=E0Wwtt/RpBwqOEd5e7ec+rsEkQxJmd7cg46/1odlycA=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=CrGW+5P6XFqDSyv4lLwvo3AyHMm/LrjG747uCDOu7xjg/LRbWqK7trnpxBCRaLmFo
+         bbxZ/fHMEVOB3QtPXNEKyDBBsmMivaMJ1bgXMo4QAlxVZiOvmRCxN+67hB62eMWZcW
+         mCSCg3TudC7nfceXFl6Q3jKP8HIRZj1niW4mAh7KCQ5Tiyi7rrb2ixnXvVNnvObdS6
+         wE2/hRZNDWTkzhsCn/FA4LHebUY7946qk/UGCI/ceuYbtdr3l/zCDrETiwBbjwjipB
+         +JcJFij1Kg3ICwO69QhLgnvge6tKzeGrh9ZNE35/DVM/UYRHGCeXdqFL76rMslIe7A
+         Xrj+nEK+6BaOw==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Sasha Levin <sashal@kernel.org>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.14 164/252] iomap: pass writeback errors to the mapping
+Date:   Thu,  9 Sep 2021 07:39:38 -0400
+Message-Id: <20210909114106.141462-164-sashal@kernel.org>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20210909114106.141462-1-sashal@kernel.org>
+References: <20210909114106.141462-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210902095927.911100-1-david@fromorbit.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 02, 2021 at 07:59:20PM +1000, Dave Chinner wrote:
-> HI folks,
-> 
-> This is a patchset built on top of Allison's Logged Attributes
-> and my CIL Scalibility patch sets.
+From: "Darrick J. Wong" <djwong@kernel.org>
 
-Do you have a git tree with all applied somewhere to help playing
-with this series?
+[ Upstream commit b69eea82d37d9ee7cfb3bf05103549dd4ed5ffc3 ]
+
+Modern-day mapping_set_error has the ability to squash the usual
+negative error code into something appropriate for long-term storage in
+a struct address_space -- ENOSPC becomes AS_ENOSPC, and everything else
+becomes EIO.  iomap squashes /everything/ to EIO, just as XFS did before
+that, but this doesn't make sense.
+
+Fix this by making it so that we can pass ENOSPC to userspace when
+writeback fails due to space problems.
+
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ fs/iomap/buffered-io.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 87ccb3438bec..b06138c6190b 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -1016,7 +1016,7 @@ iomap_finish_page_writeback(struct inode *inode, struct page *page,
+ 
+ 	if (error) {
+ 		SetPageError(page);
+-		mapping_set_error(inode->i_mapping, -EIO);
++		mapping_set_error(inode->i_mapping, error);
+ 	}
+ 
+ 	WARN_ON_ONCE(i_blocks_per_page(inode, page) > 1 && !iop);
+-- 
+2.30.2
 
