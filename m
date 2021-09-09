@@ -2,233 +2,188 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=BAYES_00,DATE_IN_PAST_03_06,
-	DKIM_INVALID,DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A8ABC433FE
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Sep 2021 14:26:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F306C433F5
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Sep 2021 17:42:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1101A61131
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Sep 2021 14:26:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F5C760F4A
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Sep 2021 17:42:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348374AbhIIO1O (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 9 Sep 2021 10:27:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42988 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348198AbhIIO1K (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Sep 2021 10:27:10 -0400
-Received: from mail-wm1-x333.google.com (mail-wm1-x333.google.com [IPv6:2a00:1450:4864:20::333])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7228EC03BFEA
-        for <linux-xfs@vger.kernel.org>; Thu,  9 Sep 2021 06:03:59 -0700 (PDT)
-Received: by mail-wm1-x333.google.com with SMTP id n7-20020a05600c3b8700b002f8ca941d89so1347020wms.2
-        for <linux-xfs@vger.kernel.org>; Thu, 09 Sep 2021 06:03:59 -0700 (PDT)
+        id S242921AbhIIRnV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Sep 2021 13:43:21 -0400
+Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:22712 "EHLO
+        mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S242783AbhIIRnF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Sep 2021 13:43:05 -0400
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 189GUSAi023507;
+        Thu, 9 Sep 2021 17:41:55 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
+ date : message-id : content-transfer-encoding : content-type :
+ mime-version; s=corp-2021-07-09;
+ bh=O6g5htrlg03HOuTfk5vZkaG9XCjTf6GXdpfntkqu8Oo=;
+ b=uwxANT5bJgX6Gf9+u9cVA1eStiNuu8x35iodPA6KPV6rSVq6JIZ7fZr6F0eP18GE85tm
+ /IeqLrfsJ/uS5KQzve6Jdygm+zI016VBUBPIPk17Mc8j2P02lRDasOVobgOXCzyv3wSM
+ Kok9c//m8/t2qCgs1IwpkUIkzlMkuLEf1oq5NjZHOw8drnNrFn6cm8LDqAGTCPKrv2Rp
+ qrrKV/NSWiPxrXVog1g5FFnHIzbywvevt80y0tI9qrjJ84PoVtf7xiiljp/bBeQIkZlA
+ mV2r8gZTVnSE4sm93+UzCDk4As9nWMauBeVndiOjajrp1LMb7BRARROGFS738NshVD4w 7g== 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
+ date : message-id : content-transfer-encoding : content-type :
+ mime-version; s=corp-2020-01-29;
+ bh=O6g5htrlg03HOuTfk5vZkaG9XCjTf6GXdpfntkqu8Oo=;
+ b=Ro6+XVilhOMRANLGKfjAcrJZlix4ZbhVKZaWBhKx+NWRDNjSfOIgo/WD9zqCvWSlJlR/
+ n3ZW/I8c/kF9j251qtnAKzl3r5bo1IL0IXzYkpXWTwcXj2cYtSDuhNVo9aRUhE4vjWLE
+ Unk9a9UgFGFJS5u/CCnEW5ahcA2SpiqaHxczTdrRbFzh46GciMukqSVnDyOz2lhnvIs5
+ LZ87dhtT/IuWzBedsoDqiVUOMbRE5Vt2qUWwUBT1pLq4YfoBJseATzJd8jOi/6bLuy9S
+ AwjrV1ZX+gqdNBCc+2UsQWiYiwtcfJGccbDAnEFp0o1dZTSBIFH08Y7tt/cfre7XE+jA Lg== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3aydrsj0jh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 09 Sep 2021 17:41:54 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 189HQqdP102240;
+        Thu, 9 Sep 2021 17:41:53 GMT
+Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2107.outbound.protection.outlook.com [104.47.58.107])
+        by userp3020.oracle.com with ESMTP id 3axst5sdxj-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 09 Sep 2021 17:41:52 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=MorN7jlle8MwwCpMra3BQShFbOZveUIt2e6i7rewBq8VjiHfA+ru0IXUAFipgUoXOTOG64d+/AXTXcnMdtuWjwYynW+XdElSwQQNeJd/DpMLByWpBSP/FevSrhtD0/KcEmkE2Drr0dGxkyYSM1GPgyt93+DJNziGaK6nRCvfeTY6DvkXgK3vgK91a8pttNUa91fpu3SFC6YhRWQPluxkfEi6EgPN6BNHGyNm30shev0PUE4urqyks7EKxbF4VJP8tV8wR7O8TOwJUtf2lx/vaqhZuoUrjNT26kOL85fM773vXkmGr1zT/jrMvVOlVsf6FKV0ghZDCfjaOCMXWdCmqg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=O6g5htrlg03HOuTfk5vZkaG9XCjTf6GXdpfntkqu8Oo=;
+ b=BsaA5VKHsTx7Z9mjecRjoMlhYUQ5XQjljrqHJOG4uyNCHnyuUA1c5eNQTLiFQruGFqaMc8Ifvne63NtPuO4eqr7MXWZ4+5cfP2hkV8lgQx2G4siLXYObLKJP4XmTxHoHe6L/IKzaNwJunkbnXADZJbJdwrp/y7YzfhLmIPz8wNIIz+7RbV6NFuTbYcBLFJHSjmj5u15iHQ1yXepOWNKSVfqmruoUA2BJ5rVLY3daYs+DwqQqDxb2oWhKldaRbTmg1uzRR35PbX9IYUj/UdBvxSxm+DJl+g7ay0V/VZc0rsO4SNLyzaGkMvGQBjDEahgIzFJ7L7eUjisKLGNcsXaYQg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=momtchev.com; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=hL+XMszFpxzTIgWpy6rvhybTqrsOkgUyL+g2kQzc8MQ=;
-        b=hrHWkh+TR8o0ZNMJCjwvuyWbt920dLRMOPo1uEy1dZvBrsu8w1Itvxu9nLQYChL/Zn
-         Drr+8D8W/ZtGGm9oORCUql26hGWRfGCo572KCiVT67hc1uVXcB/nInZE8C+Ttsx0RnEv
-         F0nsKfzsjjnbYU2AHLmp/KJCaaDjJM+z29aCk=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=hL+XMszFpxzTIgWpy6rvhybTqrsOkgUyL+g2kQzc8MQ=;
-        b=fXTx0/IA/L4Iotdsfiype3DabszZ8cebC6umve1hI4ChKZqpbrhMnGxlltJUDFwl24
-         s/6MdyZSquQyXnU3/GV+mvw5YFysPJu6RkEK3yhaqWv+9Zv/vhlxHh50kC3Rm4dNvf3p
-         AO0GMwZpj78ErfiwyTyKC5ONi7FnXk2BSKnNS+0+z9Wzq7GsnHTEdN30ZSKBXHIQUQ3J
-         cXMdORc5eeQ15tSpNsCj2EhFHGtmMKzwq0aUFMqsLMpSOQFHbNZszy8nsX+zlsK2XH4w
-         o4LdcWYXsg1zcImUt2GP/XyTSMoHhTspgzM1GA/NbhHb++pd0As53dki1GH6Euum7HQn
-         kcaw==
-X-Gm-Message-State: AOAM532Hic6MEbWIdq/a10HN6lCrNRsg0zMF2paVxzeqgFiyu7n1McmA
-        cpScWllx057o9hPj9gG9JjNw08Zdj0bIMQ==
-X-Google-Smtp-Source: ABdhPJzsBS7iPkVmL+DiVAVFLwkr0DaQV0PkAz7xTO3i+CbJ6VZTA+cNqka2lqLhdHTisgkTmLXjag==
-X-Received: by 2002:a1c:158:: with SMTP id 85mr2848421wmb.187.1631192637386;
-        Thu, 09 Sep 2021 06:03:57 -0700 (PDT)
-Received: from [192.168.0.132] ([156.146.63.141])
-        by smtp.gmail.com with ESMTPSA id x11sm1600456wmk.21.2021.09.09.06.03.55
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 09 Sep 2021 06:03:56 -0700 (PDT)
-Subject: Re: heavy xfsaild I/O blocking process exit
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-References: <b0537b9a-d2f8-9288-b631-5bf67488d930@momtchev.com>
- <20210908212733.GA2361455@dread.disaster.area>
-From:   Momtchil Momtchev <momtchil@momtchev.com>
-Message-ID: <737f183b-173c-3763-e986-2fe49f62e8f1@momtchev.com>
-Date:   Thu, 9 Sep 2021 10:25:15 +0200
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.14.0
-MIME-Version: 1.0
-In-Reply-To: <20210908212733.GA2361455@dread.disaster.area>
-Content-Type: text/plain; charset=utf-8; format=flowed
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=O6g5htrlg03HOuTfk5vZkaG9XCjTf6GXdpfntkqu8Oo=;
+ b=dpzE3vd29lWx33jGBTKiLlkBOi+iPiDTl7Szk9KrUUOVE6d7Zxe8IfaKNGEySfEC0s3JAqJ3+paOLDdsLif31rxY61qRjBXtZ+80dMIJCNnTYkbZdRSBe3zMNqXOR1zkaXzz053+j41JpyFLnoRr7rWQmiholY+MAbHzoWKK0ew=
+Authentication-Results: vger.kernel.org; dkim=none (message not signed)
+ header.d=none;vger.kernel.org; dmarc=none action=none header.from=oracle.com;
+Received: from BYAPR10MB2791.namprd10.prod.outlook.com (2603:10b6:a03:83::16)
+ by BY5PR10MB4321.namprd10.prod.outlook.com (2603:10b6:a03:202::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4500.16; Thu, 9 Sep
+ 2021 17:41:51 +0000
+Received: from BYAPR10MB2791.namprd10.prod.outlook.com
+ ([fe80::4cf6:23af:2f90:3e64]) by BYAPR10MB2791.namprd10.prod.outlook.com
+ ([fe80::4cf6:23af:2f90:3e64%3]) with mapi id 15.20.4500.017; Thu, 9 Sep 2021
+ 17:41:50 +0000
+From:   Catherine Hoang <catherine.hoang@oracle.com>
+To:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: [PATCH 0/3] Dump log cleanups
+Date:   Thu,  9 Sep 2021 17:41:39 +0000
+Message-Id: <20210909174142.357719-1-catherine.hoang@oracle.com>
+X-Mailer: git-send-email 2.25.1
 Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Content-Type: text/plain
+X-ClientProxiedBy: BL1PR13CA0349.namprd13.prod.outlook.com
+ (2603:10b6:208:2c6::24) To BYAPR10MB2791.namprd10.prod.outlook.com
+ (2603:10b6:a03:83::16)
+MIME-Version: 1.0
+Received: from instance-20210819-1300.osdevelopmeniad.oraclevcn.com (209.17.40.39) by BL1PR13CA0349.namprd13.prod.outlook.com (2603:10b6:208:2c6::24) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4523.8 via Frontend Transport; Thu, 9 Sep 2021 17:41:50 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: c573a7a8-18b1-4fed-4287-08d973b91ad1
+X-MS-TrafficTypeDiagnostic: BY5PR10MB4321:
+X-Microsoft-Antispam-PRVS: <BY5PR10MB43213842511200FE06AF708A89D59@BY5PR10MB4321.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:5797;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: G8P9VZE2OeXeiTPNkj6B1r9W57DKWx/fro7k6TrB/tFN/Isgq0ICfLr/nUmrHWlCiaPgqzmWVsDlY/M32hanEvSWXrCVGGrsCQ+CADPzSHTaRGVdS5Fp1onDp1ZucOTn8z3/81OnaHgtjqHPri6lJoZFg+kG8Xbp8cyq3YafpVqH7fzBGUpesv4Oaelm98v3EmU1cgMkK8nP+i8ZE6WzgoGnuJ+qBppXHXNEMcby01XxxGOcDwpcFoE8IJ1VkM3KXbcQPxCDsjQzAmEU3mJj95o1Cr9bU547a+Q39ePBP8H8lxcZb9Dx/zyc1PzYamZCEyqKPo+g6BTcwoJHh9dJM+HAyghidZEov8zqLZdMlcXfaewVHGsUNodzHrwpsbwlhUEL8dlCSS7oDddOFjKGObn984YyQM28L8RR5808DxCZ9Ls09rZeGc94zXSBY3LZHL77tA1kWLXitCgW8PN8Y5H57PYNANNOnV4JEJ9l/vXl5C9wECTdaA8hIUBbbo2gz4iqlMJhf7hFoGyt/bCdqERXD/UuLK2yWOiQvhktaUloWVumsi0GmbV8oM7QtY4ZfN5Eza9kM6k0bPP/TJcwv83Se5rRcDGXSfue8CI8M13PFcdJChpxDxZqt5DvNKdJ0rMVfNz65B3YELtd2K/Bd33R5JtFYB/PVy045w17Z9MkQ2KmAPHfDfo3bz5GZPMUFOSpxb4+IZJNrVP9u7p/LCZWFeGJxt1Qt2WjMnFMa7O2PoDP5fqqFw5gW6d4TJOj/kdKkxPhAx84gI1VxrS2fRiZ85BwkBBsNrH0STETGaI=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR10MB2791.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(5660300002)(956004)(38100700002)(86362001)(38350700002)(2616005)(6506007)(44832011)(316002)(2906002)(26005)(966005)(66556008)(83380400001)(8936002)(6666004)(508600001)(186003)(8676002)(6512007)(1076003)(66476007)(450100002)(52116002)(36756003)(66946007)(6486002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?dZFxY+05X7jC0F6aLXW/csdjOdM3VAj9t3TiqBi1XeMd5rlndHvzb1i4dSwY?=
+ =?us-ascii?Q?dVI4uhqaMayssd+7+BEv+UN7acapFepNQpTaCi6fv6XIGB+ZZtdIr7UFuoeb?=
+ =?us-ascii?Q?NbBRLlZNb4a79cbRU7XQFqE5XWmwOHsh5Vd2BO5NyFHahxn7sC86lC1Bs8Wh?=
+ =?us-ascii?Q?BYXr+2zv4NY+2noorrkU19WAumAgnoxExdrWuKm2NUH42ogLHwqeZr0y8tNw?=
+ =?us-ascii?Q?tNeaINbf20T0psiS6OifHTKCfypd4KedfGdpRNoXSWGJ4yZ5+9BqmZy9xYzE?=
+ =?us-ascii?Q?AVgBVdty3Fhzs1FYLSs/O6J++86l0snNK0KTk8zQUhNJ2VfkJT+kB5eD/bJE?=
+ =?us-ascii?Q?noL0iEY00zK4NAp8tf43Rei8xfWv7LdGbf1EHuwSccu3+Co+Xn6GdJI8UwhM?=
+ =?us-ascii?Q?eQinAl9KYHq9F9EZLGtqInTITqRqcfIS/u5qLn1RMYy43/3gNr0fW8gyYZjH?=
+ =?us-ascii?Q?3MMMikyLPLP6r3A9HV89b9KuheQUkl8y+a5IcvQTgZWDfZOktdxanFn+HLyr?=
+ =?us-ascii?Q?090fQeAVG+r8G9iKdBoUzKGS3DWfP4AdjnMBzwtgq730JcLQPNwjzFztKqj3?=
+ =?us-ascii?Q?evBME415at1Cx50pK7Jd5U4x69LpeN5i76vsos0eSUG2lwRNgn2LoZKi/bgH?=
+ =?us-ascii?Q?eDmUOOXhanlAc3PeBsLS5TKMMBnQ8LTcE4GztCxZCfqeKOLX1n4rZtMBP3S/?=
+ =?us-ascii?Q?u4G1nNODjhQovl2R0tU7IcV/39672EM6IJiOMRiTUVKvltGGiyPpl+VWRq14?=
+ =?us-ascii?Q?p262nVC2cbhbw6PEQDTxVFpQMJjpXkutMD6hKNAy6ZiV4R1/ofdI00e9Dpwo?=
+ =?us-ascii?Q?gY22btdX0JZeJvpmYCP+nQkbaJlw5jYEkuvLfSyZowUM6m610mFEioMuWZVr?=
+ =?us-ascii?Q?eLUCA4urdrvK26iXVfTS6HWzRuvObUD2RdWzfrH4fkedF2h713+3NLnp9as+?=
+ =?us-ascii?Q?cW7GKUEtqJnvcLD93kYvGMx8PSLwfMgvmm3Ufq0PnGFYzuFqI+O1C1tUqR9c?=
+ =?us-ascii?Q?/HCXlKgG2RZ8mohr92vK0mMMdH8wZN9df/GCrkKLPwT3vQoLGyK9smVKEuv6?=
+ =?us-ascii?Q?P44OWIamow9ltyRzG+NgeTZsUkPBSqzmehgqJlgVRXx5X4vjcCAfErZ7HgZp?=
+ =?us-ascii?Q?SlIQeQjtAO84M+OIjE4BNPz33t/LptKykD4a6E1Aqh7li09X8E9Ey6tEn6sR?=
+ =?us-ascii?Q?TYW8XCwfmHXgVq0vNRBHH863H27QIKnzx98MvKJMN35INXEAFBRWDZEd0XC7?=
+ =?us-ascii?Q?/G7D4aX+Ug4d2rvwNRrlCAVsBRtqP7Jc1mGRT5+DJZ9DOLtxqMqb+UJZPVFa?=
+ =?us-ascii?Q?e465LGwx3lejlv1kaDQaKbJ1?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: c573a7a8-18b1-4fed-4287-08d973b91ad1
+X-MS-Exchange-CrossTenant-AuthSource: BYAPR10MB2791.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Sep 2021 17:41:50.7830
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: Fg90x2/Vut5NlYXoynkoOer7xfUdZ+B3/71m8t02VWcrp0nyzplubPpPMOfBSmIC01f/YJqcRlBMAxqCiljdGxHRXm5tEuAkBVSlCFKqcJ4=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR10MB4321
+X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10102 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 bulkscore=0
+ mlxlogscore=881 malwarescore=0 spamscore=0 mlxscore=0 suspectscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2109030001 definitions=main-2109090107
+X-Proofpoint-GUID: z5ODENulO4cgzF3zj361ztMrZkc351Or
+X-Proofpoint-ORIG-GUID: z5ODENulO4cgzF3zj361ztMrZkc351Or
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+Hi all,
 
-Thank you for your reply and your time. Your assumptions are correct. 
-The process is killed by systemd.
+This cleanup set is a followup to the log attribute replay test that was
+posted here:
 
-I can't use perf -p on it since it has freed all of its memory.
+https://lore.kernel.org/linux-xfs/20210901221006.125888-2-catherine.hoang@oracle.com/
 
-Metadata writeback is a very good explanation that is consistent with 
-everything I have seen - as the process writes lots of files and then 
-deletes them at some later point.
+This set renames the *_inject_logprint functions to *_remount_dump_log
+and moves them to common/xfs.
 
-Why does this writeback happens in the process context? Why isn't it in 
-a kworker?
+Questions and feedback are appreciated!
 
-What really surprises me is that this happens even if the process has 
-been idle for half an hour or so (it produces its files in bursts then 
-idles a little bit) - this rules out speculative preallocation since it 
-is freed on file close?
+Catherine
 
-Does xfssyncd_centisecs influence metadata writeback? I am currently 
-trying this.
+Catherine Hoang (3):
+  xfstests: Rename _scratch_inject_logprint to _scratch_remount_dump_log
+  xfstests: Rename _test_inject_logprint to _test_remount_dump_log
+  xfstests: Move *_dump_log routines to common/xfs
 
-Maybe I will reduce the journal size as a last resort.
-
-Anyway, this is more of an annoyance, than a real problem.
-
-
-On 08/09/2021 23:27, Dave Chinner wrote:
-> On Wed, Sep 08, 2021 at 10:15:59AM +0200, Momtchil Momtchev wrote:
->> Hello,
->>
->>
->> I have a puzzling problem with XFS on Debian 10. I am running
->> number-crunching driven by Node.js - I have a process that creates about 2
->> million 1MB to 5MB files per day with an about 24h lifespan (weather
->> forecasting). The file system is obviously heavily fragmented. I have
->> absolutely no problems when running this in cruise mode, but every time I
->> decide to stop that process, especially when it has been running for a few
-> What does "stop that process" mean? You kill it, or do you run a
-> stop command that tells the process to do a controlled shutdown?
->
->> weeks or months, the process will become a zombie (freeing all its user
->> memory and file descriptors) and then xfsaild/kworker will continue flushing
->> the log for about 30-45 minutes before the process really quits.
-> The xfsaild is not flushing the log. It's doing metadata writeback.
-> If it is constantly busy, it means the log has run out of space and
-> something else wants log space. That something else will block until
-> the log space has been freed up by metadata writeback....
->
->> It will
->> keep its binds to network ports (which is my main problem) but the system
->> will remain responsive and usable. The I/O pattern is several seconds of
->> random reading then a second or two of sequential writing.
-> That would be expected from final close on lots of dirty inodes or
-> finalising unlinks on final close. But that won't stop anything else
-> from functioning.
->
->> The kernel functions that are running in the zombie process context are
->> mainly xfs_btree_lookup, xfs_log_commit_cil, xfs_next_bit,
->> xfs_buf_find_isra.26
-> Full profiles (e.g. from perf top -U -p <pid>) would be useful here,
-> but this sounds very much like extent removal on final close. This
-> will be removing either speculative preallocation beyond EOF or the
-> workload has open but unlinked files and the unlink is being done at
-> process exit.
->
-> Either way, if the files are fragmented into millions of extents,
-> this could take minutes per file being closed. But with only 1-5MB
-> files, that shouldn't be occurring...
->
->> xfsaild is spending time in radix_tree_next_chunk, xfs_inode_buf_verify
-> xfsaild should never be doing radix tree lookups - it only works on
-> internal in-memory filessytem objects that it has direct references
-> to. IOWs, I really need to see the actual profile outputs to
-> determine what it is doing...
->
-> xfs_inode_buf_verify() is expected if it is writing back dirty inode
-> clusters. Which it will be, but at only 2 million files a day I
-> wouldn't expect that to show up in profiles at all. It doesn't
-> really even show up in profiles even at half a million inodes per
-> _second_
->
->> kworker is in xfs_reclaim_inode, radix_tree_next_chunk
-> Which kworker is that? Likely background inode reclaim, but that
-> doesn't limit anything - it just indicates there are inodes
-> available to be reclaimed.
->
->> This is on (standard up-to date Debian 10):
->>
->> Linux version 4.19.0-16-amd64 (debian-kernel@lists.debian.org) (gcc version
->> 8.3.0 (Debian 8.3.0-6)) #1 SMP Debian 4.19.181-1 (2021-03-19)
->>
->> xfs_progs 4.20.0-1
->>
->>
->>
->> File system is RAID-0, 2x2TB disks with LVM over md (512k chunks)
-> Are these SSDs or HDDs? I'll assume HDD at this point.
->
->> meta-data=/dev/mapper/vg0-home   isize=512    agcount=32, agsize=29849728
->> blks
->>           =                       sectsz=4096  attr=2, projid32bit=1
->>           =                       crc=1        finobt=1, sparse=1, rmapbt=0
->>           =                       reflink=0
->> data     =                       bsize=4096   blocks=955191296, imaxpct=5
->>           =                       sunit=128    swidth=256 blks
->> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
->> log      =internal log           bsize=4096   blocks=466402, version=2
->>           =                       sectsz=4096  sunit=1 blks, lazy-count=1
->> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> Ok, so you have a 1.7GB log. If those are HDDs, then you could have
-> hundreds of thousands of dirty inodes tracked in the log, and
-> metadata writeback has been falling behind for days because the log
-> can be filled much faster than it can be drained.
->
-> Assuming 200 write IOPS, 30 minutes would be 360,000 writes, which
-> pretty much matches up with having half a million dirty inodes in
-> the log and the process exiting needing to run a bunch of
-> transactions that need a chunk of log space to make progress and
-> having to wait on inode writeback to free up log space...
->
->> MemTotal:       32800968 kB
->> MemFree:          759308 kB
->> MemAvailable:   27941208 kB
->> Buffers:           43900 kB
->> Cached:         26504332 kB
->> SwapCached:         7560 kB
->> Active:         16101380 kB
->> Inactive:       11488252 kB
->> Active(anon):     813424 kB
->> Inactive(anon):   228180 kB
->> Active(file):   15287956 kB
->> Inactive(file): 11260072 kB
-> So all your memory is in the page cache.
->
->> Unevictable:           0 kB
->> Mlocked:               0 kB
->> SwapTotal:      16777212 kB
->> SwapFree:       16715524 kB
->> Dirty:              2228 kB
-> And almost all the page cache is clean.
->
->> Writeback:             0 kB
->> AnonPages:       1034280 kB
->> Mapped:            89660 kB
->> Shmem:               188 kB
->> Slab:            1508868 kB
->> SReclaimable:    1097804 kB
->> SUnreclaim:       411064 kB
-> And that's enough slab cache to hold half a million cached, dirty
-> inodes...
->
-> More information required.
->
-> Cheers,
->
-> Dave.
+ common/inject | 26 --------------------------
+ common/xfs    | 26 ++++++++++++++++++++++++++
+ tests/xfs/312 |  2 +-
+ tests/xfs/313 |  2 +-
+ tests/xfs/314 |  2 +-
+ tests/xfs/315 |  2 +-
+ tests/xfs/316 |  2 +-
+ tests/xfs/317 |  2 +-
+ tests/xfs/318 |  2 +-
+ tests/xfs/319 |  2 +-
+ tests/xfs/320 |  2 +-
+ tests/xfs/321 |  2 +-
+ tests/xfs/322 |  2 +-
+ tests/xfs/323 |  2 +-
+ tests/xfs/324 |  2 +-
+ tests/xfs/325 |  2 +-
+ tests/xfs/326 |  2 +-
+ tests/xfs/329 |  2 +-
+ 18 files changed, 42 insertions(+), 42 deletions(-)
 
 -- 
-Momtchil Momtchev <momtchil@momtchev.com>
+2.25.1
 
