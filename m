@@ -2,229 +2,346 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A16ACC4167D
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Sep 2021 17:42:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66D6DC433EF
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Sep 2021 19:11:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8E02061104
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Sep 2021 17:42:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 47FE460ED8
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Sep 2021 19:11:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242122AbhIIRnX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 9 Sep 2021 13:43:23 -0400
-Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:27506 "EHLO
-        mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S242709AbhIIRnG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Sep 2021 13:43:06 -0400
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 189G53nx010988;
-        Thu, 9 Sep 2021 17:41:56 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
- date : message-id : in-reply-to : references : content-transfer-encoding :
- content-type : mime-version; s=corp-2021-07-09;
- bh=HIO/jFq5tYVUzGBLJznMEzYsruPb2F9wV4IiIv0R0Ao=;
- b=nACBPROs557amhMi7qrzzHzkgVGEnza67f4eT590mtTJHTUrRaj12QTYN7Xr72k7Jprg
- TdrW/ZqmKDf2erLwd7TlN5rO8UyqNQ3uQfr1fozJprFo3jVSZqC5Szo5OXRctBWFZ8DI
- y/Yc0EMCegh/+NMYp8DYqJ3m+9lrq8WgfdaVG2l8MwyPJRdeoufE+INg/MNgENDdkRHy
- KsevqbUKq27RPtwkAtR0SEGgd55WcbXyu+v0KP+amlJBw+/9Don1o+ieTUhVTYkVDe+/
- fTBWF1cWq11kqgbDOfzp/soqTVpRsrR1aamLcWlVTjEGUnzjvNCBO0MBrt1gJOQPFgnw 5Q== 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
- date : message-id : in-reply-to : references : content-transfer-encoding :
- content-type : mime-version; s=corp-2020-01-29;
- bh=HIO/jFq5tYVUzGBLJznMEzYsruPb2F9wV4IiIv0R0Ao=;
- b=Ai5Yv7z0Juy8CvMW+jtM0RoeMHFraQJslPMAOuGSi9keMLbqfFRnNTvdDYRG8fsxc3aY
- x6z9ZDalWNm8aGQDg0acVg5CAy1zLhWql3sXpF5Y/RKzYCoho7QJLKyM9uBVN3GaCkX1
- 4oDljyjK44OrWlt+KSQVYeMQKI5JH2tvGkuhRajjAvg2xxRoYGD75dj6+B7/InoUnCFT
- N8CYQRvQe+8ystJTrOq44yc8pGkOVicxzuJrEs0tDSEKt2tmcoX1mezl/F7TOwaEOYGl
- qYpfX7FC8mSvL3w4MrFX/yvdL+nrkpYgwalK7HHjKYV2k/JSra741ssA7BfS9+N/qTLz Nw== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3ayfrpsd4k-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 09 Sep 2021 17:41:56 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 189HQGZ5172333;
-        Thu, 9 Sep 2021 17:41:54 GMT
-Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2107.outbound.protection.outlook.com [104.47.58.107])
-        by aserp3030.oracle.com with ESMTP id 3axcpqj267-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 09 Sep 2021 17:41:54 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=D0bnCQHCg1VTtSkFEiffIUgZug/tyYPzQfrP1koYyWyTzgKxmjWNn3GpO+Lnzah2uwqRetlklqBmyx65riTJ3iwtJPeptsySM8Th9VW0FYzvQgq6Hlp0LEsgldqgg6kHeuUv75LZMHgvzAHU8tV0d9caosB0RIzxcuh91nXmFwT3ZmqWILPid+UUAeNjQsIp7goXfFzZDqFJQGU2FHnWVfL5Q9OVx5Z5cnNAZxuXGDUCKxiHDF9LENt+kRigcf5VS7kLFmzllr6YV1ySmUtP229Haf6DXwFlC/dO6qDgdMwfM2LsSi2JQ5t9t7aY218hUCaUmo5p7RXMEcqPfPPRwA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=HIO/jFq5tYVUzGBLJznMEzYsruPb2F9wV4IiIv0R0Ao=;
- b=JAiM6Qsp29tapz+bu338UKR7Nv3WuLJf1lNfw/FFpKZF+Kd4niaDadV4VCVYDdNzq3IL4JQ1IPbuEo/OBWDY7y0/YdW4G6uzXAaVw6T718j/aUdFK3RDFLb03mTYPWClffjlwva71L2WhABrxt1A3nD3TUekHQHyw6LP8l7zKyRO4VIaJnN1mcwUya5KwyMpUjMijFi+Ygd8DMyO2Nr7jc3wWpDDTqqXx7Fjqnyz5sDBz7ztVXSJJekfiPxaEVrTC5S+lxb9jTiuGXAd3n5pBOQ1YzADd6xajH3pb00oUNsxFHl09iigs63arvmX37oAMMtGaEofNxLYBjHCXZCEFw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+        id S237476AbhIITM7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Sep 2021 15:12:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53694 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231425AbhIITM6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Sep 2021 15:12:58 -0400
+Received: from mail-qt1-x82d.google.com (mail-qt1-x82d.google.com [IPv6:2607:f8b0:4864:20::82d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0DAEC061574
+        for <linux-xfs@vger.kernel.org>; Thu,  9 Sep 2021 12:11:48 -0700 (PDT)
+Received: by mail-qt1-x82d.google.com with SMTP id s15so2406082qta.10
+        for <linux-xfs@vger.kernel.org>; Thu, 09 Sep 2021 12:11:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=HIO/jFq5tYVUzGBLJznMEzYsruPb2F9wV4IiIv0R0Ao=;
- b=DI+c2Iahj8Tw58SekbR3NYfm43+rkkY7rJD8oEnZNCYTXk4sz1lLUT+1BPbScb7O3Iepa4PKj/7Azy5EXo69T2Vq5eBx7wSU5ciYiS7qcuv/bif7106udPOuE+MzPVKcqjnkxC44lN00FNWlVGtW4jzo3aEhm0kpcZMGBf8pNFo=
-Authentication-Results: vger.kernel.org; dkim=none (message not signed)
- header.d=none;vger.kernel.org; dmarc=none action=none header.from=oracle.com;
-Received: from BYAPR10MB2791.namprd10.prod.outlook.com (2603:10b6:a03:83::16)
- by BY5PR10MB4321.namprd10.prod.outlook.com (2603:10b6:a03:202::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4500.16; Thu, 9 Sep
- 2021 17:41:52 +0000
-Received: from BYAPR10MB2791.namprd10.prod.outlook.com
- ([fe80::4cf6:23af:2f90:3e64]) by BYAPR10MB2791.namprd10.prod.outlook.com
- ([fe80::4cf6:23af:2f90:3e64%3]) with mapi id 15.20.4500.017; Thu, 9 Sep 2021
- 17:41:52 +0000
-From:   Catherine Hoang <catherine.hoang@oracle.com>
-To:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: [PATCH 3/3] xfstests: Move *_dump_log routines to common/xfs
-Date:   Thu,  9 Sep 2021 17:41:42 +0000
-Message-Id: <20210909174142.357719-4-catherine.hoang@oracle.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20210909174142.357719-1-catherine.hoang@oracle.com>
-References: <20210909174142.357719-1-catherine.hoang@oracle.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: BL1PR13CA0349.namprd13.prod.outlook.com
- (2603:10b6:208:2c6::24) To BYAPR10MB2791.namprd10.prod.outlook.com
- (2603:10b6:a03:83::16)
+        d=yakkadesign-com.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding:content-language;
+        bh=AUy2UzrS+f6svz6OeT3EBsrf/7+7ZA6qESc+GYZAFf8=;
+        b=pXY59L4maXiOjSTCsrPT2wp3cmy8IEVdPsqZuW3YNFGUAxTzeKdbOaZwuoVYQAyOsn
+         fi8+7fXeCMOrmsY4pUaGLRkrXQRvWz+03AZrNyUUp8rel1b88E+2rjy2WhqODuZ6FN1I
+         leu9xlFYIH0Yi6ftlvTs+r1OvNJLD/9wIUljG/pox+IwzXHb78Uw5wVXpYQFaLsML6xE
+         6nn6eAxHJ8Ovo1uE2m9QzPD+Lz+69hw34zLvprrUyyxIMi+XYFo0eXSjUVPQ9YHQPJaM
+         kZ1Wpxah9xbit/wmDRCisUNhwPVK5l8oBh3ynKNJVQTSaGUCS0iuGsxopeU+3X/E12pT
+         1Osw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding
+         :content-language;
+        bh=AUy2UzrS+f6svz6OeT3EBsrf/7+7ZA6qESc+GYZAFf8=;
+        b=7OdCtlAHjYYtXgn7rOYrrXXG1/+vLh9zwA12V2ouXP0q2HUm1rekVVIYizfY3Obi8a
+         lW/RiMmD1ZNb8z1OeiQ4kqrqeEjt/lm7GqIovdYJ09sqHfQCB2p69EdYnONwY0CWchrL
+         UIwDTFUmMsRgTLuqrAWISJeAjfFC/bnMDKO1B2JQNaPW2YeUR0FHLv3XkuHewvhJT8FE
+         mn83lcvLiiFSYvP2u7Hg6b9JPlyt7t6vbTmSb97nhkETy4Tu4gkkACT4pn+RGXZxblBU
+         w57tGkplF8PI5i/xt1S4VClVuAGubq8QniCzht25+9/lubObMQbph+lKD65sCyttbdwe
+         nb0A==
+X-Gm-Message-State: AOAM532pXx4DRSNr7WWSPz4M4H1+wVLhWYoLV5XYKMH9zv++vxV8pU8s
+        bv3hl9a2AH63MU1gwrwMhuSNlRO498X/aWod
+X-Google-Smtp-Source: ABdhPJxsNiSHUDiLYirW0zbHjMOZe7hpyfFR75IefxR5D4V2VVRxIcLmG9ofq8lvfNM4dj0d7w0VEg==
+X-Received: by 2002:ac8:40d6:: with SMTP id f22mr4521045qtm.345.1631214707608;
+        Thu, 09 Sep 2021 12:11:47 -0700 (PDT)
+Received: from [192.168.1.187] (107-197-126-53.lightspeed.gnvlsc.sbcglobal.net. [107.197.126.53])
+        by smtp.googlemail.com with ESMTPSA id l126sm1972295qke.96.2021.09.09.12.11.46
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 09 Sep 2021 12:11:47 -0700 (PDT)
+Subject: Re: Repair Metadata corruption detected at xfs_inode_buf_verify on
+ CentOS 7 virtual machine
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+References: <055dbf6e-a9b5-08a1-43bc-59f93e77f67d@yakkadesign.com>
+ <20210908213924.GB2361455@dread.disaster.area>
+ <987fa28b-4928-8557-0f09-73839790e910@yakkadesign.com>
+ <20210909025445.GC2361455@dread.disaster.area>
+From:   brian <a001@yakkadesign.com>
+Message-ID: <8a959313-b7ab-5434-7c8f-1cf8990ecb4d@yakkadesign.com>
+Date:   Thu, 9 Sep 2021 15:11:45 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
+ Thunderbird/52.9.1
 MIME-Version: 1.0
-Received: from instance-20210819-1300.osdevelopmeniad.oraclevcn.com (209.17.40.39) by BL1PR13CA0349.namprd13.prod.outlook.com (2603:10b6:208:2c6::24) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4523.8 via Frontend Transport; Thu, 9 Sep 2021 17:41:52 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: ffa07cb4-462e-4b38-e79f-08d973b91c07
-X-MS-TrafficTypeDiagnostic: BY5PR10MB4321:
-X-Microsoft-Antispam-PRVS: <BY5PR10MB43214C32E64E29F20EC50E8D89D59@BY5PR10MB4321.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:2958;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: IeghJq1Aep2jLRCDZ90/intsaQa1yrDpa1fhq+P7Zr1/OmXgegL4RNoYOqNKgCOuiieDMX/9lRqF37NFZAgzxx1xVbGlTx9IcCxhC9NlGPuX8zZx3mLAneg1NkrG/fqeMgcFdnQ+tlBFiQscdYS44LtrIc6tvOopsz8LQeWfx7BIxsY8gzUoPzNsoNmQjYFpUfCpfX/b5hY7lWrLJvwXEFnvxBpTyiZ0YbGlRrcs4ubmy2losMRFcKvqjQtMHyN0iokS9lWpEuTaJylTpD/NF7ZjQxt6Q2sBkKKrIJGmM7w8OCEZIdFwk4MwSeUCObaI3zqRyNew3J2Py5X8LaQFOgM9oHgnBN00hscQGDEsW+VY+HY3vjkhSn6cteu9LPCIpOHws189qZ+mFFt/qtHAxNDrAstOKMqtc4fChMCfzpybedh4BACypPNmxuJFTe7hGVtCMjG2PInF0ZGeFfr16ZWwT1OvJPXksx8+sKkX1NOgK6FIOVJCyZzJ9f/k8oOUr3lhZTZZBf53fpiqxYU+kw3cvFfC4MFn0HZK+qF0qhcYcflRNh5zFFPYx5E4wzF02KY7k/jsLtMSQeMiZbon5ADfcpO99Hm/uLAUS9exRyPbv9Tc4mvUqsvGHRQG0aWULNJIgd9RriGMnd5J+PCYrvIqbhI+FX612cN8I5iHckzg5fL9p9vknuAXgvvTIRIfwzRcfSX8C1quXYqhTyo9dA==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR10MB2791.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(5660300002)(956004)(38100700002)(86362001)(38350700002)(2616005)(6506007)(44832011)(316002)(2906002)(26005)(66556008)(83380400001)(8936002)(6666004)(508600001)(186003)(8676002)(6512007)(1076003)(66476007)(450100002)(52116002)(36756003)(66946007)(6486002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?akkUvuh1/bE9YndcVe+ue8dLnYZGsqcfN6c2yYUJQ9kwuUqXE58E9tKR+9k5?=
- =?us-ascii?Q?jHd6Gb0NWTWU0vp61sJXK2EFFT1Ne/1+dNuvC15XdMS7tsIfdOqeaC0mWLr9?=
- =?us-ascii?Q?9aXa+Yuec3L+6SwcO9dj4rjtf/CUoHGiNCDgNHT2EYrCGGzAkadq+OvL4RYk?=
- =?us-ascii?Q?kC2uXiLXb9fhP0DB8eTELDi2V1q4s/4U1OeQSg970Ei2JbT1iJ6zEGqarTrl?=
- =?us-ascii?Q?s9F02nnEtK/u5Au7tJQBW8wDWwV8g0EwxoUtrW0QGKpNKD4hP3FtHeVtJsVm?=
- =?us-ascii?Q?QEMWvtW0afdhgZOdwe/S92ObiHtOssAKtYM8skmXsr9mtJD1My+hwl79XoFG?=
- =?us-ascii?Q?0mF+toEXqJNkMME/clKPYI+EcpH5mh4GT1B79DH6WLNZ3caKoxzoAiVI1EoN?=
- =?us-ascii?Q?IutO51rAGLjvM5FeE8YnDQkhnnpa20+b3OKui05bqE5hYAbBoRj709HzMfXY?=
- =?us-ascii?Q?4Ox0ZB4owgmmJ8uBF3icgZVacxqD/x0Gu3mJKn+I2exYtK9zcy8rN2M0FHDr?=
- =?us-ascii?Q?bgf0l0FIH446mh1M9PuK7tcd7lTDTCVr7BFtpJND8ICGttp0r8XchIJ0QO8k?=
- =?us-ascii?Q?WB+sQzc71Mv/KeojjapezZ44nLYdwBRZHAhhj14WQYGWMJsJn76HrS8ROnQe?=
- =?us-ascii?Q?OEQUj5/M8QxtbIYyIOzYgvQoLuHa4AQoRO+BfaAwkVO2UzfN5Tyy93IyFlM0?=
- =?us-ascii?Q?aidcoz6AhbrqDkEzRrha7i0Sk4HW/MGySWa5mXvyO1HZksFW5HfQ6TqPmGc0?=
- =?us-ascii?Q?FTvDt/VxDpAD5MAg454KxUxSvN8jzlbPQR59M3raZTKv3s7T9AUNQqMz9PbR?=
- =?us-ascii?Q?TgKTUok5a6sHWYYXNnbxmZzoetzRIvzBb5cZiyKDSbc01CkuqGrbnEQtVAvg?=
- =?us-ascii?Q?Hfe6bDhRUkbU1DDriymbdFHTm+7tgcNKE/8VBkGOvGVNHm/5O4qu2/W4eIOs?=
- =?us-ascii?Q?lqePjxZExfLkrHnwx7TlfoVPvyg29USZPviDGwln9WDKscJ7qVByyVygoooG?=
- =?us-ascii?Q?u09An2K8HjTWPNBG4y6Awa6Yy9rq37zhv1E0NQ1sfpGLhHBnXa/f2LbmAXv+?=
- =?us-ascii?Q?aVdvBwSkNIfXcJu6M4cpND1fQ7jZAYhOv1D2DSd+YgijsEloFeoJHBQhvJ1A?=
- =?us-ascii?Q?RwXglnZuQLmrXgID7AlxdpQUHLcH74XZlugDbGtPl50hIc789omt5ES4YIjL?=
- =?us-ascii?Q?JongCQqlZH6PqxVmTVK3S6Nuvl2CMJXL3tAwm9JeSZq2DQyLDHkrOZ39GiXw?=
- =?us-ascii?Q?KGbBFrhtl2qoFeb8VQ++dbBkEofGwdnd39fJ7u7ZbFe/BRk9e+SgAmL4wFer?=
- =?us-ascii?Q?jaLX7i9oUbJ9p92lIYnL5kma?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ffa07cb4-462e-4b38-e79f-08d973b91c07
-X-MS-Exchange-CrossTenant-AuthSource: BYAPR10MB2791.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Sep 2021 17:41:52.6839
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: keCaiJUH06K2frCW99Mol8gQeivLMlN3cA2QveZOubmT5DHt6X8BKMeoWU5Azi+ovowR2SIBfb56C8NwhlEHrMrmaKZ19rZqg8jmo+evRPY=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR10MB4321
-X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10102 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxlogscore=999 bulkscore=0
- suspectscore=0 mlxscore=0 phishscore=0 malwarescore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2109030001
- definitions=main-2109090107
-X-Proofpoint-GUID: U3Zgt4wTbe6nRG6hTtBP_KDGIgQokfUj
-X-Proofpoint-ORIG-GUID: U3Zgt4wTbe6nRG6hTtBP_KDGIgQokfUj
+In-Reply-To: <20210909025445.GC2361455@dread.disaster.area>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Move _scratch_remount_dump_log and _test_remount_dump_log from
-common/inject to common/xfs. These routines do not inject errors and
-should be placed with other xfs common functions.
+I switched over to ubuntu and got the error "Device or resource busy".  
+How do I get around this error?
 
-Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
----
- common/inject | 26 --------------------------
- common/xfs    | 26 ++++++++++++++++++++++++++
- 2 files changed, 26 insertions(+), 26 deletions(-)
+Here is what I did:
+---------------------------------------------------------
+sudo apt-get install qemu
+sudo apt install qemu-utils
+sudo apt-get install xfsprogs
 
-diff --git a/common/inject b/common/inject
-index b5334d4a..6b590804 100644
---- a/common/inject
-+++ b/common/inject
-@@ -111,29 +111,3 @@ _scratch_inject_error()
- 		_fail "Cannot inject error ${type} value ${value}."
- 	fi
- }
--
--# Unmount and remount the scratch device, dumping the log
--_scratch_remount_dump_log()
--{
--	local opts="$1"
--
--	if test -n "$opts"; then
--		opts="-o $opts"
--	fi
--	_scratch_unmount
--	_scratch_dump_log
--	_scratch_mount "$opts"
--}
--
--# Unmount and remount the test device, dumping the log
--_test_remount_dump_log()
--{
--	local opts="$1"
--
--	if test -n "$opts"; then
--		opts="-o $opts"
--	fi
--	_test_unmount
--	_test_dump_log
--	_test_mount "$opts"
--}
-diff --git a/common/xfs b/common/xfs
-index bfb1bf1e..cda1f768 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -1263,3 +1263,29 @@ _require_scratch_xfs_bigtime()
- 		_notrun "bigtime feature not advertised on mount?"
- 	_scratch_unmount
- }
-+
-+# Unmount and remount the scratch device, dumping the log
-+_scratch_remount_dump_log()
-+{
-+	local opts="$1"
-+
-+	if test -n "$opts"; then
-+		opts="-o $opts"
-+	fi
-+	_scratch_unmount
-+	_scratch_dump_log
-+	_scratch_mount "$opts"
-+}
-+
-+# Unmount and remount the test device, dumping the log
-+_test_remount_dump_log()
-+{
-+	local opts="$1"
-+
-+	if test -n "$opts"; then
-+		opts="-o $opts"
-+	fi
-+	_test_unmount
-+	_test_dump_log
-+	_test_mount "$opts"
-+}
--- 
-2.25.1
+sudo modprobe nbd max_part=8
+
+sudo qemu-nbd --connect=/dev/nbd0 
+/media/sf_virtual_machine_share/centoOS7Python3p9_tmp-disk1.vdi
+
+sudo xfs_repair /dev/nbd0p2
+---------------------------------------------------------
+
+I got the error:
+---------------------------------------------------------
+xfs_repair: cannot open /dev/nbd0p2: Device or resource busy
+---------------------------------------------------------
+
+
+
+When I tried xfs_repair with the -n flag:
+---------------------------------------------------------
+sudo xfs_repair -n /dev/nbd0p2
+---------------------------------------------------------
+
+I got (I replaced some content with ...  Most of the content was ...):
+---------------------------------------------------------
+Phase 1 - find and verify superblock...
+bad primary superblock - bad magic number !!!
+...
+attempting to find secondary superblock...
+Sorry, could not find valid secondary superblock
+---------------------------------------------------------
+
+
+
+
+
+Here are some things I ran while trying to debug.
+cmd:
+---------------------------------------------------------
+sudo partprobe /dev/nbd0p2
+---------------------------------------------------------
+
+Result:
+---------------------------------------------------------
+Error: Partition(s) 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 
+16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 
+34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 
+52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64 on /dev/nbd0p2 have 
+been written, but we have been unable to inform the kernel of the 
+change, probably because it/they are in use.  As a result, the old 
+partition(s) will remain in use. You should reboot now before making 
+further changes.
+---------------------------------------------------------
+
+
+cmd:
+---------------------------------------------------------
+sudo fdisk -l /dev/nbd0p2
+---------------------------------------------------------
+
+Result:
+---------------------------------------------------------
+Disk /dev/nbd0p2: 101.72 GiB, 109207093248 bytes, 213295104 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+brian@brian-VirtualBox:~/Desktop$ sudo lvmdiskscan
+   /dev/loop0  [     219.00 MiB]
+   /dev/loop1  [     <55.44 MiB]
+   /dev/sda1   [     512.00 MiB]
+   /dev/nbd0p1 [       1.00 GiB]
+   /dev/loop2  [     <65.10 MiB]
+   /dev/nbd0p2 [    <101.71 GiB] LVM physical volume
+   /dev/loop3  [     <50.96 MiB]
+   /dev/loop4  [     <32.30 MiB]
+   /dev/loop5  [      32.30 MiB]
+   /dev/sda5   [      <2.00 TiB]
+   0 disks
+   9 partitions
+   0 LVM physical volume whole disks
+   1 LVM physical volume
+---------------------------------------------------------
+
+
+
+
+cmd:
+---------------------------------------------------------
+sudo lvscan
+---------------------------------------------------------
+
+Result:
+---------------------------------------------------------
+   ACTIVE            '/dev/centos/swap' [2.00 GiB] inherit
+   ACTIVE            '/dev/centos/home' [<49.70 GiB] inherit
+   ACTIVE            '/dev/centos/root' [50.00 GiB] inherit
+---------------------------------------------------------
+
+
+cmd:
+---------------------------------------------------------
+sudo lvm pvscan
+---------------------------------------------------------
+
+Result:
+---------------------------------------------------------
+   PV /dev/nbd0p2   VG centos          lvm2 [101.70 GiB / 4.00 MiB free]
+   Total: 1 [101.70 GiB] / in use: 1 [101.70 GiB] / in no VG: 0 [0   ]
+---------------------------------------------------------
+
+
+cmd:
+---------------------------------------------------------
+sudo lvm lvs
+---------------------------------------------------------
+
+result:
+---------------------------------------------------------
+   LV   VG     Attr       LSize   Pool Origin Data%  Meta%  Move Log 
+Cpy%Sync Convert
+   home centos -wi-a----- <49.70g
+   root centos -wi-a----- 50.00g
+   swap centos -wi-a-----   2.00g
+---------------------------------------------------------
+
+
+cmd:
+---------------------------------------------------------
+sudo e2fsck /dev/nbd0p2
+---------------------------------------------------------
+
+result:
+---------------------------------------------------------
+e2fsck 1.45.5 (07-Jan-2020)
+/dev/nbd0p2 is in use.
+e2fsck: Cannot continue, aborting.
+---------------------------------------------------------
+
+
+cmd:
+---------------------------------------------------------
+fsck -N /dev/nbd0p2
+---------------------------------------------------------
+
+result:
+---------------------------------------------------------
+fsck from util-linux 2.34
+[/usr/sbin/fsck.ext2 (1) -- /dev/nbd0p2] fsck.ext2 /dev/nbd0p2
+---------------------------------------------------------
+
+
+cmd:
+---------------------------------------------------------
+sudo stat -f /dev/nbd0p2
+---------------------------------------------------------
+
+result:
+---------------------------------------------------------
+   File: "/dev/nbd0p2"
+     ID: 0        Namelen: 255     Type: tmpfs
+Block size: 4096       Fundamental block size: 4096
+Blocks: Total: 495622     Free: 495622     Available: 495622
+Inodes: Total: 495622     Free: 495101
+---------------------------------------------------------
+
+
+
+
+
+On 09/08/2021 10:54 PM, Dave Chinner wrote:
+> On Wed, Sep 08, 2021 at 07:08:54PM -0400, brian wrote:
+>> Here is an update of the error.  If something looks off, let me know and
+>> I'll double check I transcribed correct.  Let me know if there is a way to
+>> post a screenshot.
+>>
+>> ----------------------------------------------------------------------------
+>>
+>> XFS (dm-2): Metadata corruption detected at xfs_inode_buf_verify+0x14d/0x160
+>> [xfs] xfs_inode block 0x1b5c1c0 xfs_inode_buf_verify
+>> XFS (dm-2): Unmount and run xfs_repair
+>> XFS (dm-2): First 128 bytes of corrupted metadata buffer:
+>> ffffae6842564000: 16 49 77 8a 32 7e 72 52 14 bb 51 98 7c a5 2c 9a
+>> .Iw.2~rR..Q.|.,.
+>> ffffae6842564010: dd 28 4d 94 88 03 2b 8c 99 33 67 ca 6a d5 aa c9
+>> .(M...+..3g.j...
+>> ffffae6842564020: f8 f8 78 c7 90 fc f5 af 7f 95 03 07 0e 0c 4a 37
+>> ..x...........J7
+>> ffffae6842564030: 7c f8 70 c7 09 14 c7 81 a5 a7 a7 cb a8 a8 28 b9
+>> |.p...........(.
+>> ffffae6842564040: 68 d1 a2 a0 73 f5 ae d5 73 94 23 3d 3d 5d 46 46
+>> h...s...s.#--]FF
+>> ffffae6842564050: 46 ca f9 f3 e7 3b 69 4c d3 94 6d db b6 75 14 3d
+>> F....;iL..m..u.=
+>> ffffae6842564060: 30 68 77 ec d8 e1 a4 d9 b7 6f 9f 0c 0b 0b 0b 32
+>> )hw......o.....2
+>> ffffae6842564070: 8e 9d 29 aa 03 4b 4c 4c 0c 52 66 29 a5 7c f4 d1
+>> ..)..KLL.Rf).|..
+>> XFS (dm-2): metadata I/O error in “xlog_recov_do..(read#2)” at daddr 0x1b32
+>> error 117
+> Ok, that doesn't contain inodes. It's not even recognisable
+> as filesystem metadata at all.
+>
+>> ----------------------------------------------------------------------------
+>>
+>> My computer is an older CentOS 6 box (on my todo list to replace).  I have
+>> an array of VirtualBox VMs.  All my data including VMs is in /home/brian
+>> directory.  I run rsync to backup /home/brian directory to a USB drive.
+>> Rsync treats the files of the VM just like any other file.  I noticed that
+>> the VMs can get corrupted if I leave them running during back up with rsync
+>> so I normally shut them down.  For this instance, I didn't shut down the VM
+>> when I launched rsync.
+>>
+>> @Dave
+>> Regarding your image file question, I don't believe the above is an image
+>> file.  Rsync copies file by file.  And I can navigate to the USB like my
+>> internal hdd.
+>>
+>> Regarding the freeze files system, no I did not freeze the guest.
+>>
+>> Regarding the older backups, I just have the rsync backup on a USB drive.
+>> I've been working with a copy from the USB to try at get this machine back,
+>> thus the unmodified USB rsync that was taken while the machine was running
+>> exists.
+>>
+>> While rsync was running, I had Selenium running web app tests in Chrome.
+>> All the data from my program was being written to a shared folder.  Chrome
+>> has it's own internal cache that could be changing but overall, I wouldn't
+>> expect the file system to be changing too much especially the booting part.
+> Log recovery covers anything that changed in the filesystem - it has
+> nothing to do with what is being accessed by boot operations.
+>
+>> My ultimate goal is to get to the data on this VM.  I've tried to mount this
+>> .vdi file in another instance of CentOS but have not been successful.  I may
+>> spin up an Ubuntu instance to try to get to the data.  The data on this VM
+>> can be recreated but I prefer not to have to redo the work.
+> 'mount -o ro,norecovery <dev>' will allow you to skip log recovery
+> and hopefully let you navigate the filesystem. It will not be error
+> free, though, because log recovery is needed for that to occur.
+>
+> If the filesystem looks mostly intact, copy all the data off it you
+> can. Then unmount it is and run xfs_repair -L <dev> on it to blow
+> away the log and repair any corruption found. This will cause data
+> loss, so don't do this unless you are prepared for it of have a
+> complete copy of the broken filesystem.
+>
+> I'd highly recommend doing this with a recent xfs_repair, not the
+> tools that came with CentOS 6.
+>
+> You could also do dry-run testing by taking a metadump of the broken
+> filesystem and restoring that to an image file and running reapir on
+> that image file. That will at least tell you how much of the
+> directory structure will be trashed and wht you'll be able to access
+> after repair.
+>
+> It may be that mounting w/ norecovery is your best bet of recovering
+> the contents of the bad filesystems, so do that first...
+>
+> Cheers,
+>
+> Dave.
 
