@@ -7,60 +7,60 @@ X-Spam-Status: No, score=-5.4 required=3.0 tests=BAYES_00,DATE_IN_PAST_03_06,
 	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81F95C4332F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A8ABC433FE
 	for <linux-xfs@archiver.kernel.org>; Thu,  9 Sep 2021 14:26:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 64F2A6113A
+	by mail.kernel.org (Postfix) with ESMTP id 1101A61131
 	for <linux-xfs@archiver.kernel.org>; Thu,  9 Sep 2021 14:26:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348447AbhIIO1O (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1348374AbhIIO1O (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Thu, 9 Sep 2021 10:27:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42984 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42988 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244879AbhIIO1L (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Sep 2021 10:27:11 -0400
-Received: from mail-wm1-x334.google.com (mail-wm1-x334.google.com [IPv6:2a00:1450:4864:20::334])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB573C03FED6
-        for <linux-xfs@vger.kernel.org>; Thu,  9 Sep 2021 06:04:02 -0700 (PDT)
-Received: by mail-wm1-x334.google.com with SMTP id k5-20020a05600c1c8500b002f76c42214bso1432554wms.3
-        for <linux-xfs@vger.kernel.org>; Thu, 09 Sep 2021 06:04:02 -0700 (PDT)
+        with ESMTP id S1348198AbhIIO1K (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Sep 2021 10:27:10 -0400
+Received: from mail-wm1-x333.google.com (mail-wm1-x333.google.com [IPv6:2a00:1450:4864:20::333])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7228EC03BFEA
+        for <linux-xfs@vger.kernel.org>; Thu,  9 Sep 2021 06:03:59 -0700 (PDT)
+Received: by mail-wm1-x333.google.com with SMTP id n7-20020a05600c3b8700b002f8ca941d89so1347020wms.2
+        for <linux-xfs@vger.kernel.org>; Thu, 09 Sep 2021 06:03:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=momtchev.com; s=google;
         h=subject:to:cc:references:from:message-id:date:user-agent
          :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=0mkzy8icgTvHFvWEJIpJjqdj2fy3WYAbxuXNrhD5S5U=;
-        b=NSDx1797UumT2+fywcOW+X4N3s16iCs2mIS0s4pkc4YT+KkKUPEHJP+9vpGr+UONHx
-         iDjpt7ZdGL2V3tKFyAuiZ9Y9m0bR4jOz42R6Rvxd7Vv7oF0ZracRqWt3OMQWTZ6RYrKk
-         W8BQbZ+6dCgDVFW/4uFaOfyBgspqZW+FHuxoo=
+        bh=hL+XMszFpxzTIgWpy6rvhybTqrsOkgUyL+g2kQzc8MQ=;
+        b=hrHWkh+TR8o0ZNMJCjwvuyWbt920dLRMOPo1uEy1dZvBrsu8w1Itvxu9nLQYChL/Zn
+         Drr+8D8W/ZtGGm9oORCUql26hGWRfGCo572KCiVT67hc1uVXcB/nInZE8C+Ttsx0RnEv
+         F0nsKfzsjjnbYU2AHLmp/KJCaaDjJM+z29aCk=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-transfer-encoding
          :content-language;
-        bh=0mkzy8icgTvHFvWEJIpJjqdj2fy3WYAbxuXNrhD5S5U=;
-        b=71VCE1LNMtWWemhG7rYVKHjGE23azv4+2hqW/jXh8mXzj7aQLKeWNlkn07yacG8FZs
-         Nnlx4RxLx0iTodhNjbByq5kymnQkdLwXbBbFbWL44Nu+oWlTOIKzlSGOk7lTAr3boTeG
-         t0VsjDuo2dQFc1XKzYHRwv/MfGCWyYNFGHpkVVzHLJw49Y7dSf+VOAGLQxAarT70yy7A
-         PZr4WfZNr5Z0DOHXzxC6NNN+W8IDP6qlLwBUTeZjQdEp/3wk4p8zlI6q2xRTesmQ+mHb
-         9zqDT/rQezOCNlfBroz7KMGHZiZwZM1lr7fullSfmwU+3ZcI7g2RUT+QTtuaHxrabhFz
-         eFpg==
-X-Gm-Message-State: AOAM531+pqo+5ekn9ZneRMFhh7WpUsKc2EW2GK4EJOUzaftzE9DGW959
-        axMp3b05bF8Qq2uiaWDzQJj8Coan04RK8g==
-X-Google-Smtp-Source: ABdhPJyYXgCaLu4iFLxp2NQt1mwJHn8znsRcr09i9R0wHNe1QqWZ/LlGcCSZ0BpKC7biKSIFG/0shA==
-X-Received: by 2002:a1c:234a:: with SMTP id j71mr2856044wmj.11.1631192640566;
-        Thu, 09 Sep 2021 06:04:00 -0700 (PDT)
+        bh=hL+XMszFpxzTIgWpy6rvhybTqrsOkgUyL+g2kQzc8MQ=;
+        b=fXTx0/IA/L4Iotdsfiype3DabszZ8cebC6umve1hI4ChKZqpbrhMnGxlltJUDFwl24
+         s/6MdyZSquQyXnU3/GV+mvw5YFysPJu6RkEK3yhaqWv+9Zv/vhlxHh50kC3Rm4dNvf3p
+         AO0GMwZpj78ErfiwyTyKC5ONi7FnXk2BSKnNS+0+z9Wzq7GsnHTEdN30ZSKBXHIQUQ3J
+         cXMdORc5eeQ15tSpNsCj2EhFHGtmMKzwq0aUFMqsLMpSOQFHbNZszy8nsX+zlsK2XH4w
+         o4LdcWYXsg1zcImUt2GP/XyTSMoHhTspgzM1GA/NbhHb++pd0As53dki1GH6Euum7HQn
+         kcaw==
+X-Gm-Message-State: AOAM532Hic6MEbWIdq/a10HN6lCrNRsg0zMF2paVxzeqgFiyu7n1McmA
+        cpScWllx057o9hPj9gG9JjNw08Zdj0bIMQ==
+X-Google-Smtp-Source: ABdhPJzsBS7iPkVmL+DiVAVFLwkr0DaQV0PkAz7xTO3i+CbJ6VZTA+cNqka2lqLhdHTisgkTmLXjag==
+X-Received: by 2002:a1c:158:: with SMTP id 85mr2848421wmb.187.1631192637386;
+        Thu, 09 Sep 2021 06:03:57 -0700 (PDT)
 Received: from [192.168.0.132] ([156.146.63.141])
-        by smtp.gmail.com with ESMTPSA id f17sm1581151wmf.4.2021.09.09.06.03.59
+        by smtp.gmail.com with ESMTPSA id x11sm1600456wmk.21.2021.09.09.06.03.55
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 09 Sep 2021 06:04:00 -0700 (PDT)
+        Thu, 09 Sep 2021 06:03:56 -0700 (PDT)
 Subject: Re: heavy xfsaild I/O blocking process exit
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <b0537b9a-d2f8-9288-b631-5bf67488d930@momtchev.com>
  <20210908212733.GA2361455@dread.disaster.area>
 From:   Momtchil Momtchev <momtchil@momtchev.com>
-Message-ID: <ed153c4c-14ac-734c-559b-3746f06e45b5@momtchev.com>
-Date:   Thu, 9 Sep 2021 11:27:21 +0200
+Message-ID: <737f183b-173c-3763-e986-2fe49f62e8f1@momtchev.com>
+Date:   Thu, 9 Sep 2021 10:25:15 +0200
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
  Thunderbird/78.14.0
 MIME-Version: 1.0
@@ -73,12 +73,29 @@ List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 
-I just found the problem - it is indeed the speculative allocation. The 
-process is leaking file descriptors (Node.js raises the limit itself so 
-leaks tend to remain hidden) - and when it is killed it starts going 
-through tens even hundreds of thousands of descriptors.
+Thank you for your reply and your time. Your assumptions are correct. 
+The process is killed by systemd.
 
-Thanks for all the tips.
+I can't use perf -p on it since it has freed all of its memory.
+
+Metadata writeback is a very good explanation that is consistent with 
+everything I have seen - as the process writes lots of files and then 
+deletes them at some later point.
+
+Why does this writeback happens in the process context? Why isn't it in 
+a kworker?
+
+What really surprises me is that this happens even if the process has 
+been idle for half an hour or so (it produces its files in bursts then 
+idles a little bit) - this rules out speculative preallocation since it 
+is freed on file close?
+
+Does xfssyncd_centisecs influence metadata writeback? I am currently 
+trying this.
+
+Maybe I will reduce the journal size as a last resort.
+
+Anyway, this is more of an annoyance, than a real problem.
 
 
 On 08/09/2021 23:27, Dave Chinner wrote:
