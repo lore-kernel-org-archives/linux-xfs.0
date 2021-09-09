@@ -2,200 +2,199 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4200AC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Sep 2021 03:39:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F8ABC433FE
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Sep 2021 04:02:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0F07261181
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Sep 2021 03:39:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 86829611AD
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Sep 2021 04:02:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350162AbhIIDku (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Sep 2021 23:40:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40286 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235831AbhIIDkp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Sep 2021 23:40:45 -0400
-Received: from mail-ot1-x335.google.com (mail-ot1-x335.google.com [IPv6:2607:f8b0:4864:20::335])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B24A7C061575
-        for <linux-xfs@vger.kernel.org>; Wed,  8 Sep 2021 20:39:36 -0700 (PDT)
-Received: by mail-ot1-x335.google.com with SMTP id a20-20020a0568300b9400b0051b8ca82dfcso779933otv.3
-        for <linux-xfs@vger.kernel.org>; Wed, 08 Sep 2021 20:39:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=yakkadesign-com.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=8tReEnxpDrsvdFvND/u33nwq70sBwu2BtziAJF23Atk=;
-        b=C3w5FcBVVhZTnelAVtBXDsRyxVvdsm0m0N5bWGQkEKE2FNudQsqAj6k2r3IRNj8R3Q
-         xbd/NtN4kccyv9jFnhmJbho4wgDjdDuXzj8fv+DOFVjwr9NR5JXprHYFnxdf95lAJrX7
-         6y0EVbUDcj0pNeQREulbL2IJLaKlkndEi3bv6RxZxvWjHpAQjlCA/mxXF3XwABtVkRbS
-         X+TdrdMkwLG/ehbcPXrcxme83+ecgxIHC1jgDoKYSpHf0WaeJ/eqVKKPXJZwdKibtQxm
-         UTmzlbRb0tfBX/c10lPhrx+fR9iYXqU1mzl7ouBacI26A/7niNyedwdo8vGpcIe6F+0x
-         vEDg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=8tReEnxpDrsvdFvND/u33nwq70sBwu2BtziAJF23Atk=;
-        b=PeR9xKlu3OlecXxlax5W17OolITuWoWSbqJBOnCGsa6rEmBQhgl9sbsYrkn3A8Ir8l
-         AxDr6Iuonyl1hK/J+UkDa0nQTsHgEgHGI580jZL/Esf4du9hsMnImztdMn36U0RHt4a0
-         rGDmkK/2WegtEw76BKwHy3rtayXhdyLhqs9pPHuaDea1m4DqEjQ7EKWa14FUxOBYDZbW
-         eYP2eWKQUlMwlHFbMvxSJboEcTZKdUeMUC4ls0n8DnzYcaCl2tmdmPvwsXNGlOBzcquU
-         bJnlDMnYeY38X+94mN4fMJ7zDMW2TNY9f3lr9Z45/KsUsoeH5cj968ev5yojyQMzJjQt
-         mklg==
-X-Gm-Message-State: AOAM533z9XGN4dymTY9IOwWHsR+4j7xAWyHIzrxsm1NAXD4EOgJqdfY/
-        3dcEK3L6RNeWNvt7l86FWonzbJlAnWBivgqvo0k=
-X-Google-Smtp-Source: ABdhPJynkZAqydP1KCqUG2V+iy/OuxCbDd7BpfAKtPcCWJjBjhDpiiT9lhApeS8JoxbAG2YJbb9BBA==
-X-Received: by 2002:a05:6830:91:: with SMTP id a17mr710893oto.189.1631158775800;
-        Wed, 08 Sep 2021 20:39:35 -0700 (PDT)
-Received: from ?IPv6:2602:306:bc57:e350:5a91:cfff:fe5a:fe83? ([2602:306:bc57:e350:5a91:cfff:fe5a:fe83])
-        by smtp.googlemail.com with ESMTPSA id p81sm134516oia.48.2021.09.08.20.39.34
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 08 Sep 2021 20:39:34 -0700 (PDT)
-Subject: Re: Repair Metadata corruption detected at xfs_inode_buf_verify on
- CentOS 7 virtual machine
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-References: <055dbf6e-a9b5-08a1-43bc-59f93e77f67d@yakkadesign.com>
- <20210908213924.GB2361455@dread.disaster.area>
- <987fa28b-4928-8557-0f09-73839790e910@yakkadesign.com>
- <20210909025445.GC2361455@dread.disaster.area>
-From:   brian <a001@yakkadesign.com>
-Message-ID: <9b338235-1a28-951a-5d8c-09e0af97329e@yakkadesign.com>
-Date:   Wed, 8 Sep 2021 23:39:33 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
- Thunderbird/52.9.1
-MIME-Version: 1.0
-In-Reply-To: <20210909025445.GC2361455@dread.disaster.area>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        id S229565AbhIIEDY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Sep 2021 00:03:24 -0400
+Received: from mail-bn7nam10on2062.outbound.protection.outlook.com ([40.107.92.62]:33083
+        "EHLO NAM10-BN7-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S229460AbhIIEDX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 9 Sep 2021 00:03:23 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=I9ciD8yDWb/YqMv2R/0Rd6iQ9e6emGxCw/8GaAn53s0qQpMpqwQCSNEVi3l1eZdlt7dtz/O24/uH8ssx7nuysSUnJFLLTrsE2jo6CdTEzrbLQbuDiMLVpmBMH3hy4SqdbH4BDSR4msm0rOY+toCErhvYO0W67FwsQNrvWjcBx/BrgU14BULh4Ic1STB+ekmaJt/4KabMjvcuUnLvz3JuGeymNqJ35QXlUi7Yv+E+09F6Sn8mlnofwpWpKZQh34t5bvnt6tDgd2hjokvw2uRH32fDeMl3ZnBo+t0oOhn+NfxF47iTXSsFzpyMEFd+oXQbWMYCCJIhGO2a0hCl/IcNdg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=81HVAdXZ/xV5qQxNdHooSo7SrUqwhIbs2GQ75VOX7gE=;
+ b=hma4fiJzcFrbwNfsQmQXUUgoa2PYZpdP8AcslvDB5zR0hRCdcY6NT/vne9iPqCFYAIdN/Vrt9Ug7wEll8PwoUCihlRXGEmYhgIfHQnwlsKkwFNN1Yps3/6x9SzZx1g1nCrqrNdReMjwee7Q1sJ/2TxY5L3Yv4JJ/7fOH23nfOEMcvs7+/8nRrRRpfOsKQd5ClXNiicaf704PGk1H47sej1krrq6rYOR4i0U3XJ9QbBgrP/PEWvejvQjOiNhs0XeZUEttElR1oRx2N4cjJLejcQT3xhN0R+KBPHkdQWXaW/FmwM0sIdlv+WyAD6cy93v+mwiASEBQaOP3xkDxOhSujA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=81HVAdXZ/xV5qQxNdHooSo7SrUqwhIbs2GQ75VOX7gE=;
+ b=q2ofnrexVv27Lwr9ECfG26ovmfw0pn8RQgYyLSSlCi5wzAoBfCzLeF1fNLNTyxHKjWdiUndrzbnJBpGGJg3ALAgLfIwJnBMsu9XJGnAmkTZcoIcQj59iw55rvmOIjM/P3qzmuD8iMrUqGSexxcbtktzboTZJ6x/QBY86r1FYGlQ=
+Authentication-Results: intel.com; dkim=none (message not signed)
+ header.d=none;intel.com; dmarc=none action=none header.from=amd.com;
+Received: from DM4PR12MB5133.namprd12.prod.outlook.com (2603:10b6:5:390::6) by
+ DM4PR12MB5325.namprd12.prod.outlook.com (2603:10b6:5:39e::20) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.4457.23; Thu, 9 Sep 2021 04:02:12 +0000
+Received: from DM4PR12MB5133.namprd12.prod.outlook.com
+ ([fe80::344d:ea6f:fb1d:ddc8]) by DM4PR12MB5133.namprd12.prod.outlook.com
+ ([fe80::344d:ea6f:fb1d:ddc8%9]) with mapi id 15.20.4500.014; Thu, 9 Sep 2021
+ 04:02:12 +0000
+Subject: Re: [PATCH v1 03/14] mm: add iomem vma selection for memory migration
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     "Sierra Guiza, Alejandro (Alex)" <alex.sierra@amd.com>,
+        akpm@linux-foundation.org, linux-mm@kvack.org,
+        rcampbell@nvidia.com, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org, amd-gfx@lists.freedesktop.org,
+        dri-devel@lists.freedesktop.org, jgg@nvidia.com,
+        jglisse@redhat.com, Dan Williams <dan.j.williams@intel.com>
+References: <20210825034828.12927-1-alex.sierra@amd.com>
+ <20210825034828.12927-4-alex.sierra@amd.com> <20210825074602.GA29620@lst.de>
+ <c4241eb3-07d2-c85b-0f48-cce4b8369381@amd.com>
+ <a9eb2c4a-d8cc-9553-57b7-fd1622679aaa@amd.com> <20210830082800.GA6836@lst.de>
+ <e40b3b79-f548-b87b-7a85-f654f25ed8dd@amd.com>
+ <20210901082925.GA21961@lst.de>
+ <11d64457-9d61-f82d-6c98-d68762dce85d@amd.com>
+ <20210902081826.GA16283@lst.de>
+From:   Felix Kuehling <felix.kuehling@amd.com>
+Message-ID: <8307c3b6-52c9-fbab-6f02-c00ed3e8a35e@amd.com>
+Date:   Thu, 9 Sep 2021 00:02:10 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.13.0
+In-Reply-To: <20210902081826.GA16283@lst.de>
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Content-Language: en-US
+X-ClientProxiedBy: YTOPR0101CA0039.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:b00:14::16) To DM4PR12MB5133.namprd12.prod.outlook.com
+ (2603:10b6:5:390::6)
+MIME-Version: 1.0
+Received: from [192.168.2.100] (142.186.47.3) by YTOPR0101CA0039.CANPRD01.PROD.OUTLOOK.COM (2603:10b6:b00:14::16) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4500.14 via Frontend Transport; Thu, 9 Sep 2021 04:02:11 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: dfd77367-aa11-45e5-ef40-08d973469a3e
+X-MS-TrafficTypeDiagnostic: DM4PR12MB5325:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <DM4PR12MB53250B4366D863A3DC70D32492D59@DM4PR12MB5325.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: QoB3mXpDVVBL3VlWuv5Np3fQLGpKYXd3C5LWNOvjTwv0hNETrIWaUFQffD/GDSHNZfcA1d1mQoxP4teRbZdRkGQDlDp2Cn4crmwnqF7HaU21Ff8FiujdO4bljDU2H9Wbcrrly0OPIw5c8Fspz+w+c2A72alVwl05mvRz4RyxKQEg3mcXMiXMa+EL8IaXwQitNoHTkHLoiQamTq2r+H6pRqlqlIGbFT3rPBGV+QPk+hglHkUfVL9tEkP7CH7VkcX8TsZns6NAE/zYJnW521vr7eReg/CclnNbSU+NUfXAu/Yk0nCf4dDAliLww+0//4NqXueWY0FUAx2FayoP5QdP1es6VRMCBH2TbItH5hNonb8uBChx/wXammQkwPbEDVCN9jClZahpaH5bhXriqW/8eUKI9EDtkIT/YBV9u7SnjFuyn6rExA1qUoF8JMMo1jVaKD5RksZ8ZLkFQhSZhchupVRXQ56phvAklSYnrz3xR5VpfczPzBWeneQdGg3OsPzRU5tWug9YEHkasSi47UXPJ+zlJdNSBcjqZKcj9o1z2JpL66JXb/fAw8deNFrFda4wqz3V8mHHMRX5q7G1vYv7ZcjBmh9skbQze6FRYmHoGquMBwkoTehhSI5SvPgbEElSTu5WBVx16fM0LvZAqjQdSq10dEBn8riBmxnU7nN4iELd83xaDMPD7ETSIViggzXF4tkMVu10TWaHku14Od/FA09iLqggqPPQAJ0hdE2s4xtla26aFZa6Ri2eDjbfRE7E
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM4PR12MB5133.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(396003)(366004)(136003)(39860400002)(376002)(346002)(316002)(4326008)(86362001)(36756003)(54906003)(5660300002)(26005)(478600001)(16576012)(6486002)(66946007)(31696002)(186003)(66556008)(6916009)(2906002)(38100700002)(7416002)(8936002)(8676002)(31686004)(83380400001)(2616005)(956004)(66476007)(44832011)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?MHk3NTl2bUp1ZFo5NHQ2U3EvU0JXazVNVjQwbjNEQVhMNklRWW1LM0tMdEwz?=
+ =?utf-8?B?bWdHNE5KMlhMbk1HWEVBdWh6Nk54ZDlzaS83VWRKSmZadytGR3J4eEtsUnM2?=
+ =?utf-8?B?QmZnek9HZWJ5NFFUdUJHdVhhQ21McFFWRHExRzFTODBqMVVTajYwWFUxYmZr?=
+ =?utf-8?B?UlNlaGgwSHlGTDZlV0NubXArbGJmYXNqTEk4bmhDZnZ1RUIxVDlJOFBFQnd2?=
+ =?utf-8?B?b2lCWXhpdzJqQW9EbGVoTTQ5SUNZRjc2b2RjVWJNNzZiWnY2M1ZrV3Z1NGNl?=
+ =?utf-8?B?UXdRdFpjRTd2VGJpSi9ocGtEVU5jU3AzRXZva0lkZWR0WDdRVXphSjR1WEQy?=
+ =?utf-8?B?UEtQc2YrZ1B6Q1MyTys5RlBsMVFYalpJcEl5OWJNTU1WL2RETFZkSWxRV3BM?=
+ =?utf-8?B?bmc5WGx3UEd1WkhwdDhXMWxWdkdnN1hvb0xCa2lxN3lEMEVESUNmVTJieW5W?=
+ =?utf-8?B?eU44TVkxNUY0SUFSUGV0SXhLUk9XcmNpczZHUVlQK2dQNU9rN3JydDlqZmtE?=
+ =?utf-8?B?bW5TVFp6QnRZeitzL0I4WElrV3owQ3FMUUYvQTF0dEtRb1ZaQnlLYmNienVN?=
+ =?utf-8?B?aU16a2NDUEpwdEl5SWNvZ3F2WkdlZU16SmxtUWdycjJGNXBnZTY5SFBKYVNw?=
+ =?utf-8?B?Ny9LNE5wekhKNnRZcnNrN0dQNGN2Wm1yRTEyUExOa29GQ0xDWExobzVkeE0v?=
+ =?utf-8?B?cjRRTVZKY3NhUDhPS2RpbzdqUXRyNHMyQUZpUXNNSjZscXVnLzhtQ1RWd240?=
+ =?utf-8?B?VGJ0bUlqdkU4NkRrRGNHWHYway9FR0RWalBHbGNDSEMwNHZiSEF1bnUxRmZw?=
+ =?utf-8?B?UTZtd1ArLzRMUkxCQThRYnJ2eU9xcXVlR1RjcVZ2STBOQUNlNmhkcmlhSmZr?=
+ =?utf-8?B?VzltZTZSY3lvYy9FQkhwNVh2S3hySTBhTFVIUnE3U0luMTAzSnNuSHAwWGJG?=
+ =?utf-8?B?TmlYS1Y0V0pMejUxSFhYYUdLSFVicG5tbUl1QjZwblJkVTFGM01qckIzQlh1?=
+ =?utf-8?B?TzE0MGJHNTJnajUvQmpVU3VMOGx2STBYd0lneXZ1dUUzOGY2K24yVnVhWHN4?=
+ =?utf-8?B?SlQ5clQ3amJ4WjFWVXF5Sk9Za1Y2U1kzVUFRZENvNlc5S3JKOUNzRlU0TEE2?=
+ =?utf-8?B?ckJXRHNrMTdqVGZCOXl5T3dndWx6L2prWnYvQk05T0UxRGZocFZLZ1VYOENv?=
+ =?utf-8?B?VnI4UEFLK0FmT0g1TFI4bER2eDBXUzFZMlovRDBJYk05WlAxSmtmMHhEY1J5?=
+ =?utf-8?B?eS9jMnBXS3pWVy9vWjY3MVVMcXR6dEFkY0JiTXNNNHZzdTgzQ0pGU0NJYThX?=
+ =?utf-8?B?dXo4aWF3bU9MTzJmRjhRSHdFenBGS3lXZUtIOXpUd0o4RXp2VXNueWtFanR3?=
+ =?utf-8?B?ZkhlcU1FOGw0elhqcDRjbUlibUpKUW8rekpqT2FjVTMrY0FBSWdkWkVwWDFi?=
+ =?utf-8?B?a1pQbGFnZnloNENlcjJoWWg3cWtsajA0cE84VndObFRJQ2pBVnZEYXRhWkZo?=
+ =?utf-8?B?UXg4OElaSFl2R1ZLMFlhVkhadk5tbG56MFZYWFNzekovVnJqMHhnOUlteUJu?=
+ =?utf-8?B?KzFhdUdpNm8vUnRoRml3bER3cWNBRk1MZTUzZEtjN1hKT05Wb1lKYjNiTGpU?=
+ =?utf-8?B?eVJjWFdRaUZpZm9DcHlBZ2FMaEw1VCtJakNwdy9lUERmd01kbmlGUVNYVXpQ?=
+ =?utf-8?B?VjZWM0NXemJJd0o1eFYxMnlyeXhFTnJDbERXZStzZG1PY2JPNjVzNmsrMkRZ?=
+ =?utf-8?Q?gyrXmVwZAdT9ZEC3qt750WGc8RgSZBZsB6clj4M?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: dfd77367-aa11-45e5-ef40-08d973469a3e
+X-MS-Exchange-CrossTenant-AuthSource: DM4PR12MB5133.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Sep 2021 04:02:12.5084
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 7EWvkY1SRC99zunzkk+9JwG2SHeDmCUY2WWVQV9YJLJ0d87x+F2Z93ApOfz03yEa5uAFliTZPhk2E8W368OSaA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB5325
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-@Dave,
-
-
-I would consider myself a beginner with Linux file systems.  I'm not 
-sure how to implement your suggestions.  If you have any suggested 
-places to dig deeper, let me know.
-
-
-When you say 'mount -o ro,norecovery <dev>', do you mean to boot the VM 
-I'm having problems with and add this from the prompt?  I'm not sure 
-what <dev> is.  I assume you mean /dev/.... Also, I thought I had to add 
-what is being mounted (e.g., image file).
-
-
-So far, I've been using the xfs_repair that is build into the VM (CentOS 
-7).  I've only accessed xfs_repair while in the emergency mode.  I'm not 
-sure how to use another version; I didn't think the emergency mode had 
-internet.
-
-
-Can you give me more direction in how to execute on your suggestions?
-
-
-Thank you again for your help.  I appreciate all the help.
-
-
-Brian
-
-
-On 09/08/2021 10:54 PM, Dave Chinner wrote:
-> On Wed, Sep 08, 2021 at 07:08:54PM -0400, brian wrote:
->> Here is an update of the error.  If something looks off, let me know and
->> I'll double check I transcribed correct.  Let me know if there is a way to
->> post a screenshot.
->>
->> ----------------------------------------------------------------------------
->>
->> XFS (dm-2): Metadata corruption detected at xfs_inode_buf_verify+0x14d/0x160
->> [xfs] xfs_inode block 0x1b5c1c0 xfs_inode_buf_verify
->> XFS (dm-2): Unmount and run xfs_repair
->> XFS (dm-2): First 128 bytes of corrupted metadata buffer:
->> ffffae6842564000: 16 49 77 8a 32 7e 72 52 14 bb 51 98 7c a5 2c 9a
->> .Iw.2~rR..Q.|.,.
->> ffffae6842564010: dd 28 4d 94 88 03 2b 8c 99 33 67 ca 6a d5 aa c9
->> .(M...+..3g.j...
->> ffffae6842564020: f8 f8 78 c7 90 fc f5 af 7f 95 03 07 0e 0c 4a 37
->> ..x...........J7
->> ffffae6842564030: 7c f8 70 c7 09 14 c7 81 a5 a7 a7 cb a8 a8 28 b9
->> |.p...........(.
->> ffffae6842564040: 68 d1 a2 a0 73 f5 ae d5 73 94 23 3d 3d 5d 46 46
->> h...s...s.#--]FF
->> ffffae6842564050: 46 ca f9 f3 e7 3b 69 4c d3 94 6d db b6 75 14 3d
->> F....;iL..m..u.=
->> ffffae6842564060: 30 68 77 ec d8 e1 a4 d9 b7 6f 9f 0c 0b 0b 0b 32
->> )hw......o.....2
->> ffffae6842564070: 8e 9d 29 aa 03 4b 4c 4c 0c 52 66 29 a5 7c f4 d1
->> ..)..KLL.Rf).|..
->> XFS (dm-2): metadata I/O error in “xlog_recov_do..(read#2)” at daddr 0x1b32
->> error 117
-> Ok, that doesn't contain inodes. It's not even recognisable
-> as filesystem metadata at all.
+Am 2021-09-02 um 4:18 a.m. schrieb Christoph Hellwig:
+> On Wed, Sep 01, 2021 at 11:40:43AM -0400, Felix Kuehling wrote:
+>>>>> It looks like I'm totally misunderstanding what you are adding here
+>>>>> then.  Why do we need any special treatment at all for memory that
+>>>>> has normal struct pages and is part of the direct kernel map?
+>>>> The pages are like normal memory for purposes of mapping them in CPU
+>>>> page tables and for coherent access from the CPU.
+>>> That's the user page tables.  What about the kernel direct map?
+>>> If there is a normal kernel struct page backing there really should
+>>> be no need for the pgmap.
+>> I'm not sure. The physical address ranges are in the UEFI system address
+>> map as special-purpose memory. Does Linux create the struct pages and
+>> kernel direct map for that without a pgmap call? I didn't see that last
+>> time I went digging through that code.
+> So doing some googling finds a patch from Dan that claims to hand EFI
+> special purpose memory to the device dax driver.  But when I try to
+> follow the version that got merged it looks it is treated simply as an
+> MMIO region to be claimed by drivers, which would not get a struct page.
 >
->> ----------------------------------------------------------------------------
->>
->> My computer is an older CentOS 6 box (on my todo list to replace).  I have
->> an array of VirtualBox VMs.  All my data including VMs is in /home/brian
->> directory.  I run rsync to backup /home/brian directory to a USB drive.
->> Rsync treats the files of the VM just like any other file.  I noticed that
->> the VMs can get corrupted if I leave them running during back up with rsync
->> so I normally shut them down.  For this instance, I didn't shut down the VM
->> when I launched rsync.
->>
->> @Dave
->> Regarding your image file question, I don't believe the above is an image
->> file.  Rsync copies file by file.  And I can navigate to the USB like my
->> internal hdd.
->>
->> Regarding the freeze files system, no I did not freeze the guest.
->>
->> Regarding the older backups, I just have the rsync backup on a USB drive.
->> I've been working with a copy from the USB to try at get this machine back,
->> thus the unmodified USB rsync that was taken while the machine was running
->> exists.
->>
->> While rsync was running, I had Selenium running web app tests in Chrome.
->> All the data from my program was being written to a shared folder.  Chrome
->> has it's own internal cache that could be changing but overall, I wouldn't
->> expect the file system to be changing too much especially the booting part.
-> Log recovery covers anything that changed in the filesystem - it has
-> nothing to do with what is being accessed by boot operations.
+> Dan, did I misunderstand how E820_TYPE_SOFT_RESERVED works?
 >
->> My ultimate goal is to get to the data on this VM.  I've tried to mount this
->> .vdi file in another instance of CentOS but have not been successful.  I may
->> spin up an Ubuntu instance to try to get to the data.  The data on this VM
->> can be recreated but I prefer not to have to redo the work.
-> 'mount -o ro,norecovery <dev>' will allow you to skip log recovery
-> and hopefully let you navigate the filesystem. It will not be error
-> free, though, because log recovery is needed for that to occur.
+>>>> From an application
+>>>> perspective, we want file-backed and anonymous mappings to be able to
+>>>> use DEVICE_PUBLIC pages with coherent CPU access. The goal is to
+>>>> optimize performance for GPU heavy workloads while minimizing the need
+>>>> to migrate data back-and-forth between system memory and device memory.
+>>> I don't really understand that part.  file backed pages are always
+>>> allocated by the file system using the pagecache helpers, that is
+>>> using the page allocator.  Anonymouns memory also always comes from
+>>> the page allocator.
+>> I'm coming at this from my experience with DEVICE_PRIVATE. Both
+>> anonymous and file-backed pages should be migrateable to DEVICE_PRIVATE
+>> memory by the migrate_vma_* helpers for more efficient access by our
+>> GPU. (*) It's part of the basic premise of HMM as I understand it. I
+>> would expect the same thing to work for DEVICE_PUBLIC memory.
+> Ok, so you want to migrate to and from them.  Not use DEVICE_PUBLIC
+> for the actual page cache pages.  That maks a lot more sense.
 >
-> If the filesystem looks mostly intact, copy all the data off it you
-> can. Then unmount it is and run xfs_repair -L <dev> on it to blow
-> away the log and repair any corruption found. This will cause data
-> loss, so don't do this unless you are prepared for it of have a
-> complete copy of the broken filesystem.
+>> I see DEVICE_PUBLIC as an improved version of DEVICE_PRIVATE that allows
+>> the CPU to map the device memory coherently to minimize the need for
+>> migrations when CPU and GPU access the same memory concurrently or
+>> alternatingly. But we're not going as far as putting that memory
+>> entirely under the management of the Linux memory manager and VM
+>> subsystem. Our (and HPE's) system architects decided that this memory is
+>> not suitable to be used like regular NUMA system memory by the Linux
+>> memory manager.
+> So yes.  It is a Memory Mapped I/O region, which unlike the PCIe BARs
+> that people typically deal with is fully cache coherent.  I think this
+> does make more sense as a description.
 >
-> I'd highly recommend doing this with a recent xfs_repair, not the
-> tools that came with CentOS 6.
->
-> You could also do dry-run testing by taking a metadump of the broken
-> filesystem and restoring that to an image file and running reapir on
-> that image file. That will at least tell you how much of the
-> directory structure will be trashed and wht you'll be able to access
-> after repair.
->
-> It may be that mounting w/ norecovery is your best bet of recovering
-> the contents of the bad filesystems, so do that first...
->
-> Cheers,
->
-> Dave.
+> But to go back to what start this discussion:  If these are memory
+> mapped I/O pfn_valid should generally not return true for them.
 
+As I understand it, pfn_valid should be true for any pfn that's part of
+the kernel's physical memory map, i.e. is returned by page_to_pfn or
+works with pfn_to_page. Both the hmm_range_fault and the migrate_vma_*
+APIs use pfns to refer to regular system memory and ZONE_DEVICE pages
+(even DEVICE_PRIVATE). Therefore I believe pfn_valid should be true for
+ZONE_DEVICE pages as well.
+
+Regards,
+  Felix
+
+
+>
+> And as you already pointed out in reply to Alex we need to tighten the
+> selection criteria one way or another.
