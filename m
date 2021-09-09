@@ -2,69 +2,69 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F306C433F5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AB60C4332F
 	for <linux-xfs@archiver.kernel.org>; Thu,  9 Sep 2021 17:42:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1F5C760F4A
+	by mail.kernel.org (Postfix) with ESMTP id 77C0D61132
 	for <linux-xfs@archiver.kernel.org>; Thu,  9 Sep 2021 17:42:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242921AbhIIRnV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 9 Sep 2021 13:43:21 -0400
-Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:22712 "EHLO
-        mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S242783AbhIIRnF (ORCPT
+        id S242269AbhIIRnW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Sep 2021 13:43:22 -0400
+Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:50170 "EHLO
+        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S242746AbhIIRnF (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Sep 2021 13:43:05 -0400
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 189GUSAi023507;
-        Thu, 9 Sep 2021 17:41:55 GMT
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 189FP4dv016559;
+        Thu, 9 Sep 2021 17:41:54 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
- date : message-id : content-transfer-encoding : content-type :
- mime-version; s=corp-2021-07-09;
- bh=O6g5htrlg03HOuTfk5vZkaG9XCjTf6GXdpfntkqu8Oo=;
- b=uwxANT5bJgX6Gf9+u9cVA1eStiNuu8x35iodPA6KPV6rSVq6JIZ7fZr6F0eP18GE85tm
- /IeqLrfsJ/uS5KQzve6Jdygm+zI016VBUBPIPk17Mc8j2P02lRDasOVobgOXCzyv3wSM
- Kok9c//m8/t2qCgs1IwpkUIkzlMkuLEf1oq5NjZHOw8drnNrFn6cm8LDqAGTCPKrv2Rp
- qrrKV/NSWiPxrXVog1g5FFnHIzbywvevt80y0tI9qrjJ84PoVtf7xiiljp/bBeQIkZlA
- mV2r8gZTVnSE4sm93+UzCDk4As9nWMauBeVndiOjajrp1LMb7BRARROGFS738NshVD4w 7g== 
+ date : message-id : in-reply-to : references : content-transfer-encoding :
+ content-type : mime-version; s=corp-2021-07-09;
+ bh=mTlIcwtBpMyJww31eheea88S6OPEz1/i7BchCMUGOuc=;
+ b=NFZslMbb58VaZ32rRgNCjf11cGae56Qn5H//cfrXONbOhALRKSKTHYX1qYJYmdGFmgkr
+ LsKndZsB8SpP1887KPM9iMuPaHEcz6gnz4BLddbwpYMGMcLYabXp9I9T9CKIZGePM8zC
+ Esa+EIKBhQtAKiEm9PEb6pEWCeL6MNQK3+VLTXMQmqKUCi+0uTKL53X0C4S6h8mWZsDJ
+ phsz2TkFBc5FTGHaJ9BvIiUQ+ccVwFS3Jza9NvQrv0J5HyztOkY0j6BRmeJAw0DHLC9U
+ yUwRCjRqsIEqKffW+jCwLUD77CGLzONkhwh9LMpXfszh2eVEbZA4Megdr/M+qYnIUxqE MA== 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
- date : message-id : content-transfer-encoding : content-type :
- mime-version; s=corp-2020-01-29;
- bh=O6g5htrlg03HOuTfk5vZkaG9XCjTf6GXdpfntkqu8Oo=;
- b=Ro6+XVilhOMRANLGKfjAcrJZlix4ZbhVKZaWBhKx+NWRDNjSfOIgo/WD9zqCvWSlJlR/
- n3ZW/I8c/kF9j251qtnAKzl3r5bo1IL0IXzYkpXWTwcXj2cYtSDuhNVo9aRUhE4vjWLE
- Unk9a9UgFGFJS5u/CCnEW5ahcA2SpiqaHxczTdrRbFzh46GciMukqSVnDyOz2lhnvIs5
- LZ87dhtT/IuWzBedsoDqiVUOMbRE5Vt2qUWwUBT1pLq4YfoBJseATzJd8jOi/6bLuy9S
- AwjrV1ZX+gqdNBCc+2UsQWiYiwtcfJGccbDAnEFp0o1dZTSBIFH08Y7tt/cfre7XE+jA Lg== 
+ date : message-id : in-reply-to : references : content-transfer-encoding :
+ content-type : mime-version; s=corp-2020-01-29;
+ bh=mTlIcwtBpMyJww31eheea88S6OPEz1/i7BchCMUGOuc=;
+ b=vG/zcBu2uPzuAuCU6LVKQEZn/lICwv9ZRBxNXxDR78PTe3DAdGXBn+NALlS6W87+70Ka
+ H7qqeRLGUoq9Czsxd7spbpoZLpr8Jh8SMGod+f2jwZaS2gn6+Y2/K3BgLt2DpjIurlWQ
+ E9pMjrAiaGm3F+wU7s9MAx7+lpw00rHXoiOezvPRn6f64qVTplgc4c7FArAF6b/vR/Sw
+ zNrk8iLE6Szp7Z2GpgQjvEHhElBrGcaHRMyr70c44mGwjnPP3WO/lVvNJLvfTY2Zyjyd
+ YHrMwNpLnVuRSvwk4VJkiKv0gpsp3bECmo6eeHWEuueHULBDCkVMC/20LUzeZU6LYV1T fg== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3aydrsj0jh-1
+        by mx0b-00069f02.pphosted.com with ESMTP id 3ayf8a9hph-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
         Thu, 09 Sep 2021 17:41:54 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 189HQqdP102240;
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 189HQqdQ102240;
         Thu, 9 Sep 2021 17:41:53 GMT
 Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2107.outbound.protection.outlook.com [104.47.58.107])
-        by userp3020.oracle.com with ESMTP id 3axst5sdxj-1
+        by userp3020.oracle.com with ESMTP id 3axst5sdxj-2
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 09 Sep 2021 17:41:52 +0000
+        Thu, 09 Sep 2021 17:41:53 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=MorN7jlle8MwwCpMra3BQShFbOZveUIt2e6i7rewBq8VjiHfA+ru0IXUAFipgUoXOTOG64d+/AXTXcnMdtuWjwYynW+XdElSwQQNeJd/DpMLByWpBSP/FevSrhtD0/KcEmkE2Drr0dGxkyYSM1GPgyt93+DJNziGaK6nRCvfeTY6DvkXgK3vgK91a8pttNUa91fpu3SFC6YhRWQPluxkfEi6EgPN6BNHGyNm30shev0PUE4urqyks7EKxbF4VJP8tV8wR7O8TOwJUtf2lx/vaqhZuoUrjNT26kOL85fM773vXkmGr1zT/jrMvVOlVsf6FKV0ghZDCfjaOCMXWdCmqg==
+ b=KqSuUPAMF03xBVVcgtWgpO+P6czptRrUg7ZiQ4FqkYv32IFEtXFAevEVTsDdY0duMUBSR6eVa1EI4UQ3IfuZC7lO7X6BnElgZFhz7srMJMAaKH/mSjkityKOnv5hcJ5IQAlPkxOJBf7iRP8H7f/SUAIGPlhT73C1NTAQ7Kvwlpqbcrz0J92jZaiuSw977y7CgFERdoIjotwJ6ioSrjYLsd1sJeO/Eu58LLAR5xlTKkmCSca5whxP4mg6LSDzYM0opwBT5/lMLPL1t8UoIIzGB6gkaxANmI0d9ZNPrDd840HjJwnq3XF3Y6JCp1dLC0Av51eB9XjuWI9ITgqpG0rY7w==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=O6g5htrlg03HOuTfk5vZkaG9XCjTf6GXdpfntkqu8Oo=;
- b=BsaA5VKHsTx7Z9mjecRjoMlhYUQ5XQjljrqHJOG4uyNCHnyuUA1c5eNQTLiFQruGFqaMc8Ifvne63NtPuO4eqr7MXWZ4+5cfP2hkV8lgQx2G4siLXYObLKJP4XmTxHoHe6L/IKzaNwJunkbnXADZJbJdwrp/y7YzfhLmIPz8wNIIz+7RbV6NFuTbYcBLFJHSjmj5u15iHQ1yXepOWNKSVfqmruoUA2BJ5rVLY3daYs+DwqQqDxb2oWhKldaRbTmg1uzRR35PbX9IYUj/UdBvxSxm+DJl+g7ay0V/VZc0rsO4SNLyzaGkMvGQBjDEahgIzFJ7L7eUjisKLGNcsXaYQg==
+ bh=mTlIcwtBpMyJww31eheea88S6OPEz1/i7BchCMUGOuc=;
+ b=fru5RLy8HB484actu7g8NoujYMW+pT+u5hXS1YN+TmgnOF53q9Rnck1EpH6vrwTJMSRYymrrFzwB76Uur8jBYQJj5FXljIXFJ1eoWFM9foDQcfMH86RMidYWzlg4IhMGgoAFR30h1uV8QpbwCn7w9+prp+FsHn0Q3hMLtNgrNhW+o5llEN2LtIKsfBlyvK8ltj1fdyh9+s0ghSLrzerCgjFX3dnxTZWsb1aRJEQ2uc7M+ias8YbSs0SC65FCGWX6nZCuzdN3H6ADfPk3YhAXrGqKWEuetCS4W5WAmahgh9I1zRs1SudPHGnPg8jJF/c9GLwQtk1zQacg5Y8O1CkPNw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=O6g5htrlg03HOuTfk5vZkaG9XCjTf6GXdpfntkqu8Oo=;
- b=dpzE3vd29lWx33jGBTKiLlkBOi+iPiDTl7Szk9KrUUOVE6d7Zxe8IfaKNGEySfEC0s3JAqJ3+paOLDdsLif31rxY61qRjBXtZ+80dMIJCNnTYkbZdRSBe3zMNqXOR1zkaXzz053+j41JpyFLnoRr7rWQmiholY+MAbHzoWKK0ew=
+ bh=mTlIcwtBpMyJww31eheea88S6OPEz1/i7BchCMUGOuc=;
+ b=BMA6yxwSGsnrdQz5riRenAI2cR64uyra7JwpD6XA3j4s7Alg4eZqXp+i99LyJX2NC2wE0gBhJbrfNf9bp1LGv/OAGAmMKfJjXs+ss4prjEpFW/mb8hoqmS+8vf0llYw+SYVvUz2Q+CH4Lxe4PEd4fY5sW5vKRP3d1M6v6E7dZuQ=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=oracle.com;
 Received: from BYAPR10MB2791.namprd10.prod.outlook.com (2603:10b6:a03:83::16)
@@ -75,115 +75,324 @@ Received: from BYAPR10MB2791.namprd10.prod.outlook.com (2603:10b6:a03:83::16)
 Received: from BYAPR10MB2791.namprd10.prod.outlook.com
  ([fe80::4cf6:23af:2f90:3e64]) by BYAPR10MB2791.namprd10.prod.outlook.com
  ([fe80::4cf6:23af:2f90:3e64%3]) with mapi id 15.20.4500.017; Thu, 9 Sep 2021
- 17:41:50 +0000
+ 17:41:51 +0000
 From:   Catherine Hoang <catherine.hoang@oracle.com>
 To:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: [PATCH 0/3] Dump log cleanups
-Date:   Thu,  9 Sep 2021 17:41:39 +0000
-Message-Id: <20210909174142.357719-1-catherine.hoang@oracle.com>
+Subject: [PATCH 1/3] xfstests: Rename _scratch_inject_logprint to _scratch_remount_dump_log
+Date:   Thu,  9 Sep 2021 17:41:40 +0000
+Message-Id: <20210909174142.357719-2-catherine.hoang@oracle.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20210909174142.357719-1-catherine.hoang@oracle.com>
+References: <20210909174142.357719-1-catherine.hoang@oracle.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 X-ClientProxiedBy: BL1PR13CA0349.namprd13.prod.outlook.com
  (2603:10b6:208:2c6::24) To BYAPR10MB2791.namprd10.prod.outlook.com
  (2603:10b6:a03:83::16)
 MIME-Version: 1.0
-Received: from instance-20210819-1300.osdevelopmeniad.oraclevcn.com (209.17.40.39) by BL1PR13CA0349.namprd13.prod.outlook.com (2603:10b6:208:2c6::24) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4523.8 via Frontend Transport; Thu, 9 Sep 2021 17:41:50 +0000
+Received: from instance-20210819-1300.osdevelopmeniad.oraclevcn.com (209.17.40.39) by BL1PR13CA0349.namprd13.prod.outlook.com (2603:10b6:208:2c6::24) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4523.8 via Frontend Transport; Thu, 9 Sep 2021 17:41:51 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: c573a7a8-18b1-4fed-4287-08d973b91ad1
+X-MS-Office365-Filtering-Correlation-Id: ea4fea95-3b7d-405c-3a6f-08d973b91b46
 X-MS-TrafficTypeDiagnostic: BY5PR10MB4321:
-X-Microsoft-Antispam-PRVS: <BY5PR10MB43213842511200FE06AF708A89D59@BY5PR10MB4321.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:5797;
+X-Microsoft-Antispam-PRVS: <BY5PR10MB43218FA0E13B05AB176A55C989D59@BY5PR10MB4321.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:1923;
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: G8P9VZE2OeXeiTPNkj6B1r9W57DKWx/fro7k6TrB/tFN/Isgq0ICfLr/nUmrHWlCiaPgqzmWVsDlY/M32hanEvSWXrCVGGrsCQ+CADPzSHTaRGVdS5Fp1onDp1ZucOTn8z3/81OnaHgtjqHPri6lJoZFg+kG8Xbp8cyq3YafpVqH7fzBGUpesv4Oaelm98v3EmU1cgMkK8nP+i8ZE6WzgoGnuJ+qBppXHXNEMcby01XxxGOcDwpcFoE8IJ1VkM3KXbcQPxCDsjQzAmEU3mJj95o1Cr9bU547a+Q39ePBP8H8lxcZb9Dx/zyc1PzYamZCEyqKPo+g6BTcwoJHh9dJM+HAyghidZEov8zqLZdMlcXfaewVHGsUNodzHrwpsbwlhUEL8dlCSS7oDddOFjKGObn984YyQM28L8RR5808DxCZ9Ls09rZeGc94zXSBY3LZHL77tA1kWLXitCgW8PN8Y5H57PYNANNOnV4JEJ9l/vXl5C9wECTdaA8hIUBbbo2gz4iqlMJhf7hFoGyt/bCdqERXD/UuLK2yWOiQvhktaUloWVumsi0GmbV8oM7QtY4ZfN5Eza9kM6k0bPP/TJcwv83Se5rRcDGXSfue8CI8M13PFcdJChpxDxZqt5DvNKdJ0rMVfNz65B3YELtd2K/Bd33R5JtFYB/PVy045w17Z9MkQ2KmAPHfDfo3bz5GZPMUFOSpxb4+IZJNrVP9u7p/LCZWFeGJxt1Qt2WjMnFMa7O2PoDP5fqqFw5gW6d4TJOj/kdKkxPhAx84gI1VxrS2fRiZ85BwkBBsNrH0STETGaI=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR10MB2791.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(5660300002)(956004)(38100700002)(86362001)(38350700002)(2616005)(6506007)(44832011)(316002)(2906002)(26005)(966005)(66556008)(83380400001)(8936002)(6666004)(508600001)(186003)(8676002)(6512007)(1076003)(66476007)(450100002)(52116002)(36756003)(66946007)(6486002);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: h6ZY6r+WjTmIcuuv0QPJSi9Jc60RdynDscAse5PeZ4+M7vpQeCzTnUZITG4+vzPjGabxDQBS6wzmD5vX1oZ6Cn4oGxMZooPUTfCqBz1Ym1pskgZDef0p9d76NoHjXQ02AHaqVieDtRDSkMpbL9cMO69MLpqQ5q4jWM58GLv1RrtPHwmDZY5UmQceQldBIXNaiw/5qjrO7l67wHdOe0Jox/xAjnRNeT37I2vLo86M0ZFEjXuidD/tPRMmh7BbfBwbBYNGUxUjB554vd8ogRy1pX03gKh2l+rT01xEJoHmJ7YoULQuABVkt0MmX3viHGCE5MfwUGGWpunvK1gd5mobVKhDbqyZpkIyi1Z0JUWD3zhAaZBPYqWPcTAW9ftyTSNZHjLSPYBel6Joeldn5WmEl/Q5TDM+fgfZpsfaYSYIQUtz8dO5I8af7tlIhTil6cEcn3CynAdlm81L0Z5pGu8rRx9udNXmv9/VsOQsf9Cy4dWQAE4DS87xyEgAUcrXu33LXJwXRX6nFJZmiats5J1n/adU1WGwpuhd5Z5aUwMf6m8VbyQ1nokTR8zgCsfD05dGpGYFtUYJV1ZF4QoIiNVb+nz4skGGb4MqpsR9Cdd4IshnqmwfLUxusFIQ7CRl8zRTes+cvCZL4tXyXrYJ2wVzIYf1qbXKuTK3A7XfvPTDAE90960TGk0Is1AaFhY2/9sMwGO59lwy3U1tRVmKTNlBXw==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR10MB2791.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(5660300002)(956004)(38100700002)(86362001)(38350700002)(2616005)(6506007)(44832011)(316002)(2906002)(26005)(66556008)(83380400001)(8936002)(6666004)(508600001)(186003)(8676002)(6512007)(1076003)(66476007)(450100002)(52116002)(36756003)(66946007)(6486002);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?dZFxY+05X7jC0F6aLXW/csdjOdM3VAj9t3TiqBi1XeMd5rlndHvzb1i4dSwY?=
- =?us-ascii?Q?dVI4uhqaMayssd+7+BEv+UN7acapFepNQpTaCi6fv6XIGB+ZZtdIr7UFuoeb?=
- =?us-ascii?Q?NbBRLlZNb4a79cbRU7XQFqE5XWmwOHsh5Vd2BO5NyFHahxn7sC86lC1Bs8Wh?=
- =?us-ascii?Q?BYXr+2zv4NY+2noorrkU19WAumAgnoxExdrWuKm2NUH42ogLHwqeZr0y8tNw?=
- =?us-ascii?Q?tNeaINbf20T0psiS6OifHTKCfypd4KedfGdpRNoXSWGJ4yZ5+9BqmZy9xYzE?=
- =?us-ascii?Q?AVgBVdty3Fhzs1FYLSs/O6J++86l0snNK0KTk8zQUhNJ2VfkJT+kB5eD/bJE?=
- =?us-ascii?Q?noL0iEY00zK4NAp8tf43Rei8xfWv7LdGbf1EHuwSccu3+Co+Xn6GdJI8UwhM?=
- =?us-ascii?Q?eQinAl9KYHq9F9EZLGtqInTITqRqcfIS/u5qLn1RMYy43/3gNr0fW8gyYZjH?=
- =?us-ascii?Q?3MMMikyLPLP6r3A9HV89b9KuheQUkl8y+a5IcvQTgZWDfZOktdxanFn+HLyr?=
- =?us-ascii?Q?090fQeAVG+r8G9iKdBoUzKGS3DWfP4AdjnMBzwtgq730JcLQPNwjzFztKqj3?=
- =?us-ascii?Q?evBME415at1Cx50pK7Jd5U4x69LpeN5i76vsos0eSUG2lwRNgn2LoZKi/bgH?=
- =?us-ascii?Q?eDmUOOXhanlAc3PeBsLS5TKMMBnQ8LTcE4GztCxZCfqeKOLX1n4rZtMBP3S/?=
- =?us-ascii?Q?u4G1nNODjhQovl2R0tU7IcV/39672EM6IJiOMRiTUVKvltGGiyPpl+VWRq14?=
- =?us-ascii?Q?p262nVC2cbhbw6PEQDTxVFpQMJjpXkutMD6hKNAy6ZiV4R1/ofdI00e9Dpwo?=
- =?us-ascii?Q?gY22btdX0JZeJvpmYCP+nQkbaJlw5jYEkuvLfSyZowUM6m610mFEioMuWZVr?=
- =?us-ascii?Q?eLUCA4urdrvK26iXVfTS6HWzRuvObUD2RdWzfrH4fkedF2h713+3NLnp9as+?=
- =?us-ascii?Q?cW7GKUEtqJnvcLD93kYvGMx8PSLwfMgvmm3Ufq0PnGFYzuFqI+O1C1tUqR9c?=
- =?us-ascii?Q?/HCXlKgG2RZ8mohr92vK0mMMdH8wZN9df/GCrkKLPwT3vQoLGyK9smVKEuv6?=
- =?us-ascii?Q?P44OWIamow9ltyRzG+NgeTZsUkPBSqzmehgqJlgVRXx5X4vjcCAfErZ7HgZp?=
- =?us-ascii?Q?SlIQeQjtAO84M+OIjE4BNPz33t/LptKykD4a6E1Aqh7li09X8E9Ey6tEn6sR?=
- =?us-ascii?Q?TYW8XCwfmHXgVq0vNRBHH863H27QIKnzx98MvKJMN35INXEAFBRWDZEd0XC7?=
- =?us-ascii?Q?/G7D4aX+Ug4d2rvwNRrlCAVsBRtqP7Jc1mGRT5+DJZ9DOLtxqMqb+UJZPVFa?=
- =?us-ascii?Q?e465LGwx3lejlv1kaDQaKbJ1?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?EN+9N8sZGGrWfmHrw6vl9VXTKHy93+WczvFqtR+8Hg7FI4h4Bd8LSQ0za4ga?=
+ =?us-ascii?Q?gS1Ev3lA9qVfbYvJoK4vg3I+h/xeLjTm4XUDA0Q7G8lDCYB5DBmiL8mW6kes?=
+ =?us-ascii?Q?CCGeaJVfnxtojWOfXgbrHzJ5FE4nZARQ3eDa6k+MCDGWMaPzCO4dE7x9eJiS?=
+ =?us-ascii?Q?353GAulSRq4np6hATK0FZ5AfO+S0K5OKvZrx5l1jrfG1NQK2l1qscdLfN0Ys?=
+ =?us-ascii?Q?74+3r8j1f2LyJiYb+L9JRE7O2UeTexAAPSao2ecK5w1FZrvoK8C4nfX7E7cK?=
+ =?us-ascii?Q?F87zNqgiKMoD/KjWqAOM03k7mBEoiLMQ8oNdWUZYKyM7r5nS+hNDjyta+lGF?=
+ =?us-ascii?Q?xfl3+/xgFW8fYIf7UBuT55Cgm3al+CJ5jqUpqe3TYfDSkIZYl5fc6+BH1MMS?=
+ =?us-ascii?Q?eGCNYSJOKBIpSS7LneR5RWd6HqgGwJR7z0Jdr91QCEnMO26gTMj7NFATlUSz?=
+ =?us-ascii?Q?z9Xy4vVxYRcVJ6LuzCR9d1s457aohqtT7aXqOqIdy7+1VmZQNjRnGMrvZuUA?=
+ =?us-ascii?Q?0S7MVSFcmTopoTvKD98a3WG2L3vrfu/f9uYfoPscy+q1C6Yrs0ndUOwxEDR7?=
+ =?us-ascii?Q?E+hxLkLK/Sii3MD/97vUwa0wznbojaoHxN/7THNPuE+gYd7jY6IbXIskDY3G?=
+ =?us-ascii?Q?L8JAAuQ+QFLBwWYV+vpC586eEfYyiVSy9Fc38uAe4rE4ItgYafGSOhZ0m/+I?=
+ =?us-ascii?Q?QUSEQmugYgnF5GVGUFILrY+t2F0vwMmzaE1ZwpFEc+3KmVQeJDTeZifsXPK3?=
+ =?us-ascii?Q?c0M0hfBCzvcHjQG0on/CrnVHmBnfCIQlmyNsL0S/U8BehzHkVqWgv1w4GjSt?=
+ =?us-ascii?Q?YB4BWb/ohPh+Y+YsvP847NATDvk7ikPFAZw6oHBXN5V0UrKrMnfSuHkRVBL4?=
+ =?us-ascii?Q?u/2Pyue2ZtAbs1WSrYbs97EEDsti7PGNc4SKoLAJgiiHkd2MwPTDu+tkXy6L?=
+ =?us-ascii?Q?uSbQ2FwvGF29T6BaD9eX/w6UmTMRhK2R1ETmrrqOLWVpaWhIrtJigH8hwbsK?=
+ =?us-ascii?Q?NYQYa+UXms6darlbSlgKwQ19vPpU6VJSxsB6I+Y7vAcUv5bxMMeA9WLgpvQs?=
+ =?us-ascii?Q?Mo0rcx0nE5+yTOQrGmLVzFtaxp8y/DL3kl/qA/1UQdDXX1ZEOLrpFiXbRVfg?=
+ =?us-ascii?Q?HkxAG1WVtOOEc4QJxnYHk1nbVHZG8++vGC1/MVr6zmcYkvAV97u7DEk84Ai9?=
+ =?us-ascii?Q?ix6WF5sSBMdnBVuH3s/MLuysfbNv7fFlC0E4U9FP4+h4EADVMBArIXLmjyS8?=
+ =?us-ascii?Q?GjmlTwTKKT4tpjsdDHGndRJMX5TulmLM+EN+5aVqV66HuJp8qlL0/Keo5ubY?=
+ =?us-ascii?Q?i+HgLdNY3ff7vlyHLpk8BDui?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c573a7a8-18b1-4fed-4287-08d973b91ad1
+X-MS-Exchange-CrossTenant-Network-Message-Id: ea4fea95-3b7d-405c-3a6f-08d973b91b46
 X-MS-Exchange-CrossTenant-AuthSource: BYAPR10MB2791.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Sep 2021 17:41:50.7830
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Sep 2021 17:41:51.4576
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Fg90x2/Vut5NlYXoynkoOer7xfUdZ+B3/71m8t02VWcrp0nyzplubPpPMOfBSmIC01f/YJqcRlBMAxqCiljdGxHRXm5tEuAkBVSlCFKqcJ4=
+X-MS-Exchange-CrossTenant-UserPrincipalName: Du86DIYTWRP+o0IX/8ErQMKc3zsYJQLy4HgFmIIlqD0RonYtwCmox644GD36lln/ZHWIfiRg0PnRkj2X/c0wLDNVRq9n4Qq3535n8+sWN1w=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR10MB4321
 X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10102 signatures=668682
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 bulkscore=0
- mlxlogscore=881 malwarescore=0 spamscore=0 mlxscore=0 suspectscore=0
+ mlxlogscore=999 malwarescore=0 spamscore=0 mlxscore=0 suspectscore=0
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2109030001 definitions=main-2109090107
-X-Proofpoint-GUID: z5ODENulO4cgzF3zj361ztMrZkc351Or
-X-Proofpoint-ORIG-GUID: z5ODENulO4cgzF3zj361ztMrZkc351Or
+X-Proofpoint-ORIG-GUID: g7DgtlLoAd8yzEpOD2p0lIpfCkQ_uIq_
+X-Proofpoint-GUID: g7DgtlLoAd8yzEpOD2p0lIpfCkQ_uIq_
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+Rename _scratch_inject_logprint to _scratch_remount_dump_log to better
+describe what this function does. _scratch_remount_dump_log unmounts
+and remounts the scratch device, dumping the log.
 
-This cleanup set is a followup to the log attribute replay test that was
-posted here:
+Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
+---
+ common/inject | 2 +-
+ tests/xfs/312 | 2 +-
+ tests/xfs/313 | 2 +-
+ tests/xfs/314 | 2 +-
+ tests/xfs/315 | 2 +-
+ tests/xfs/316 | 2 +-
+ tests/xfs/317 | 2 +-
+ tests/xfs/318 | 2 +-
+ tests/xfs/319 | 2 +-
+ tests/xfs/320 | 2 +-
+ tests/xfs/321 | 2 +-
+ tests/xfs/322 | 2 +-
+ tests/xfs/323 | 2 +-
+ tests/xfs/324 | 2 +-
+ tests/xfs/325 | 2 +-
+ tests/xfs/326 | 2 +-
+ tests/xfs/329 | 2 +-
+ 17 files changed, 17 insertions(+), 17 deletions(-)
 
-https://lore.kernel.org/linux-xfs/20210901221006.125888-2-catherine.hoang@oracle.com/
-
-This set renames the *_inject_logprint functions to *_remount_dump_log
-and moves them to common/xfs.
-
-Questions and feedback are appreciated!
-
-Catherine
-
-Catherine Hoang (3):
-  xfstests: Rename _scratch_inject_logprint to _scratch_remount_dump_log
-  xfstests: Rename _test_inject_logprint to _test_remount_dump_log
-  xfstests: Move *_dump_log routines to common/xfs
-
- common/inject | 26 --------------------------
- common/xfs    | 26 ++++++++++++++++++++++++++
- tests/xfs/312 |  2 +-
- tests/xfs/313 |  2 +-
- tests/xfs/314 |  2 +-
- tests/xfs/315 |  2 +-
- tests/xfs/316 |  2 +-
- tests/xfs/317 |  2 +-
- tests/xfs/318 |  2 +-
- tests/xfs/319 |  2 +-
- tests/xfs/320 |  2 +-
- tests/xfs/321 |  2 +-
- tests/xfs/322 |  2 +-
- tests/xfs/323 |  2 +-
- tests/xfs/324 |  2 +-
- tests/xfs/325 |  2 +-
- tests/xfs/326 |  2 +-
- tests/xfs/329 |  2 +-
- 18 files changed, 42 insertions(+), 42 deletions(-)
-
+diff --git a/common/inject b/common/inject
+index 984ec209..3b731df7 100644
+--- a/common/inject
++++ b/common/inject
+@@ -113,7 +113,7 @@ _scratch_inject_error()
+ }
+ 
+ # Unmount and remount the scratch device, dumping the log
+-_scratch_inject_logprint()
++_scratch_remount_dump_log()
+ {
+ 	local opts="$1"
+ 
+diff --git a/tests/xfs/312 b/tests/xfs/312
+index 1fcf26ab..94f868fe 100755
+--- a/tests/xfs/312
++++ b/tests/xfs/312
+@@ -63,7 +63,7 @@ echo "FS should be shut down, touch will fail"
+ touch $SCRATCH_MNT/badfs 2>&1 | _filter_scratch
+ 
+ echo "Remount to replay log"
+-_scratch_inject_logprint >> $seqres.full
++_scratch_remount_dump_log >> $seqres.full
+ 
+ echo "FS should be online, touch should succeed"
+ touch $SCRATCH_MNT/goodfs
+diff --git a/tests/xfs/313 b/tests/xfs/313
+index 6d2f9fac..9c7cf5b9 100755
+--- a/tests/xfs/313
++++ b/tests/xfs/313
+@@ -63,7 +63,7 @@ echo "FS should be shut down, touch will fail"
+ touch $SCRATCH_MNT/badfs 2>&1 | _filter_scratch
+ 
+ echo "Remount to replay log"
+-_scratch_inject_logprint >> $seqres.full
++_scratch_remount_dump_log >> $seqres.full
+ 
+ echo "FS should be online, touch should succeed"
+ touch $SCRATCH_MNT/goodfs
+diff --git a/tests/xfs/314 b/tests/xfs/314
+index 5165393e..9ac311d0 100755
+--- a/tests/xfs/314
++++ b/tests/xfs/314
+@@ -64,7 +64,7 @@ echo "FS should be shut down, touch will fail"
+ touch $SCRATCH_MNT/badfs 2>&1 | _filter_scratch
+ 
+ echo "Remount to replay log"
+-_scratch_inject_logprint >> $seqres.full
++_scratch_remount_dump_log >> $seqres.full
+ 
+ echo "FS should be online, touch should succeed"
+ touch $SCRATCH_MNT/goodfs
+diff --git a/tests/xfs/315 b/tests/xfs/315
+index 958a8c99..105515ab 100755
+--- a/tests/xfs/315
++++ b/tests/xfs/315
+@@ -61,7 +61,7 @@ echo "FS should be shut down, touch will fail"
+ touch $SCRATCH_MNT/badfs 2>&1 | _filter_scratch
+ 
+ echo "Remount to replay log"
+-_scratch_inject_logprint >> $seqres.full
++_scratch_remount_dump_log >> $seqres.full
+ 
+ echo "FS should be online, touch should succeed"
+ touch $SCRATCH_MNT/goodfs
+diff --git a/tests/xfs/316 b/tests/xfs/316
+index cf0c5adc..f0af19d2 100755
+--- a/tests/xfs/316
++++ b/tests/xfs/316
+@@ -61,7 +61,7 @@ echo "CoW all the blocks"
+ $XFS_IO_PROG -c "pwrite -W -S 0x67 -b $sz 0 $((blks * blksz))" $SCRATCH_MNT/file2 >> $seqres.full
+ 
+ echo "Remount to replay log"
+-_scratch_inject_logprint >> $seqres.full
++_scratch_remount_dump_log >> $seqres.full
+ 
+ echo "FS should be online, touch should succeed"
+ touch $SCRATCH_MNT/goodfs
+diff --git a/tests/xfs/317 b/tests/xfs/317
+index 7eef67af..1ca2672d 100755
+--- a/tests/xfs/317
++++ b/tests/xfs/317
+@@ -54,7 +54,7 @@ echo "FS should be shut down, touch will fail"
+ touch $SCRATCH_MNT/badfs 2>&1 | _filter_scratch
+ 
+ echo "Remount to replay log"
+-_scratch_inject_logprint >> $seqres.full
++_scratch_remount_dump_log >> $seqres.full
+ 
+ echo "Check files"
+ md5sum $SCRATCH_MNT/file0 | _filter_scratch
+diff --git a/tests/xfs/318 b/tests/xfs/318
+index d822e89a..38c7aa60 100755
+--- a/tests/xfs/318
++++ b/tests/xfs/318
+@@ -60,7 +60,7 @@ echo "FS should be shut down, touch will fail"
+ touch $SCRATCH_MNT/badfs 2>&1 | _filter_scratch
+ 
+ echo "Remount to replay log"
+-_scratch_inject_logprint >> $seqres.full
++_scratch_remount_dump_log >> $seqres.full
+ 
+ echo "Check files"
+ md5sum $SCRATCH_MNT/file1 2>&1 | _filter_scratch
+diff --git a/tests/xfs/319 b/tests/xfs/319
+index 0f61c119..d64651fb 100755
+--- a/tests/xfs/319
++++ b/tests/xfs/319
+@@ -57,7 +57,7 @@ echo "FS should be shut down, touch will fail"
+ touch $SCRATCH_MNT/badfs 2>&1 | _filter_scratch
+ 
+ echo "Remount to replay log"
+-_scratch_inject_logprint >> $seqres.full
++_scratch_remount_dump_log >> $seqres.full
+ 
+ echo "FS should be online, touch should succeed"
+ touch $SCRATCH_MNT/goodfs
+diff --git a/tests/xfs/320 b/tests/xfs/320
+index f65f3ad1..d22d76d9 100755
+--- a/tests/xfs/320
++++ b/tests/xfs/320
+@@ -55,7 +55,7 @@ echo "FS should be shut down, touch will fail"
+ touch $SCRATCH_MNT/badfs 2>&1 | _filter_scratch
+ 
+ echo "Remount to replay log"
+-_scratch_inject_logprint >> $seqres.full
++_scratch_remount_dump_log >> $seqres.full
+ 
+ echo "Check files"
+ md5sum $SCRATCH_MNT/file1 | _filter_scratch
+diff --git a/tests/xfs/321 b/tests/xfs/321
+index daff4449..06a34347 100755
+--- a/tests/xfs/321
++++ b/tests/xfs/321
+@@ -55,7 +55,7 @@ echo "FS should be shut down, touch will fail"
+ touch $SCRATCH_MNT/badfs 2>&1 | _filter_scratch
+ 
+ echo "Remount to replay log"
+-_scratch_inject_logprint >> $seqres.full
++_scratch_remount_dump_log >> $seqres.full
+ 
+ echo "Check files"
+ md5sum $SCRATCH_MNT/file1 | _filter_scratch
+diff --git a/tests/xfs/322 b/tests/xfs/322
+index f36e54d8..89a2f741 100755
+--- a/tests/xfs/322
++++ b/tests/xfs/322
+@@ -56,7 +56,7 @@ echo "FS should be shut down, touch will fail"
+ touch $SCRATCH_MNT/badfs 2>&1 | _filter_scratch
+ 
+ echo "Remount to replay log"
+-_scratch_inject_logprint >> $seqres.full
++_scratch_remount_dump_log >> $seqres.full
+ 
+ echo "Check files"
+ md5sum $SCRATCH_MNT/file1 | _filter_scratch
+diff --git a/tests/xfs/323 b/tests/xfs/323
+index f66a8ebf..66737da0 100755
+--- a/tests/xfs/323
++++ b/tests/xfs/323
+@@ -55,7 +55,7 @@ echo "FS should be shut down, touch will fail"
+ touch $SCRATCH_MNT/badfs 2>&1 | _filter_scratch
+ 
+ echo "Remount to replay log"
+-_scratch_inject_logprint >> $seqres.full
++_scratch_remount_dump_log >> $seqres.full
+ 
+ echo "FS should be online, touch should succeed"
+ touch $SCRATCH_MNT/goodfs
+diff --git a/tests/xfs/324 b/tests/xfs/324
+index ca2f25ac..9909db62 100755
+--- a/tests/xfs/324
++++ b/tests/xfs/324
+@@ -61,7 +61,7 @@ echo "Reflink all the blocks"
+ _cp_reflink $SCRATCH_MNT/file1 $SCRATCH_MNT/file4
+ 
+ echo "Remount to replay log"
+-_scratch_inject_logprint >> $seqres.full
++_scratch_remount_dump_log >> $seqres.full
+ 
+ echo "FS should be online, touch should succeed"
+ touch $SCRATCH_MNT/goodfs
+diff --git a/tests/xfs/325 b/tests/xfs/325
+index 3b98fd50..5b26b2b3 100755
+--- a/tests/xfs/325
++++ b/tests/xfs/325
+@@ -59,7 +59,7 @@ echo "FS should be shut down, touch will fail"
+ touch $SCRATCH_MNT/badfs 2>&1 | _filter_scratch
+ 
+ echo "Remount to replay log"
+-_scratch_inject_logprint >> $seqres.full
++_scratch_remount_dump_log >> $seqres.full
+ 
+ echo "FS should be online, touch should succeed"
+ touch $SCRATCH_MNT/goodfs
+diff --git a/tests/xfs/326 b/tests/xfs/326
+index bf5db08a..8b95a18a 100755
+--- a/tests/xfs/326
++++ b/tests/xfs/326
+@@ -71,7 +71,7 @@ echo "FS should be shut down, touch will fail"
+ touch $SCRATCH_MNT/badfs 2>&1 | _filter_scratch
+ 
+ echo "Remount to replay log"
+-_scratch_inject_logprint >> $seqres.full
++_scratch_remount_dump_log >> $seqres.full
+ 
+ echo "FS should be online, touch should succeed"
+ touch $SCRATCH_MNT/goodfs
+diff --git a/tests/xfs/329 b/tests/xfs/329
+index e57f6f7f..e9a30d05 100755
+--- a/tests/xfs/329
++++ b/tests/xfs/329
+@@ -52,7 +52,7 @@ echo "FS should be shut down, touch will fail"
+ touch $SCRATCH_MNT/badfs 2>&1 | _filter_scratch
+ 
+ echo "Remount to replay log" | tee /dev/ttyprintk
+-_scratch_inject_logprint >> $seqres.full
++_scratch_remount_dump_log >> $seqres.full
+ new_nextents=$(_count_extents $testdir/file1)
+ 
+ echo "Check extent count" | tee /dev/ttyprintk
 -- 
 2.25.1
 
