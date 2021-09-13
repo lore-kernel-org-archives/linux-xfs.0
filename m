@@ -5,56 +5,56 @@ X-Spam-Level:
 X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AE69C433EF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1E48C4332F
 	for <linux-xfs@archiver.kernel.org>; Mon, 13 Sep 2021 16:16:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EA7EB60F9B
-	for <linux-xfs@archiver.kernel.org>; Mon, 13 Sep 2021 16:16:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AF42160F9B
+	for <linux-xfs@archiver.kernel.org>; Mon, 13 Sep 2021 16:16:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345685AbhIMQRn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 13 Sep 2021 12:17:43 -0400
-Received: from mail-dm6nam11on2070.outbound.protection.outlook.com ([40.107.223.70]:11671
-        "EHLO NAM11-DM6-obe.outbound.protection.outlook.com"
+        id S1346018AbhIMQRo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 13 Sep 2021 12:17:44 -0400
+Received: from mail-bn8nam08on2056.outbound.protection.outlook.com ([40.107.100.56]:4995
+        "EHLO NAM04-BN8-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1343846AbhIMQRj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 13 Sep 2021 12:17:39 -0400
+        id S232274AbhIMQRk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 13 Sep 2021 12:17:40 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=VzCEV6qD0KfD6JcrQyAKfw7tJ/IXVq3VAmxpaybnIuU9sAJi+JnDJvMS/UvMicGUXs81QNz1OGlV78gmBQFfuCla0JNzP0qK1UNoYmn7h8VO8j8pbR6VsN2rm6yDxKvBMIIQHgHFaFLtQl9YB39rnYHW6E1W7HlLmrlogzy1tZFcl0PQTuQFz5DgQhYar+vrJ1Bsmeettbu6CB7Hw5VBpvZ3HjVD1H4/aokQ3sZWbYvUvCnmcUnjm2Rzu3Il014sWBn+dr/oZ88Pk4C+zmAzl1Xp9jXafOELSJUmOxjYyDCobFOZS484H4Mw3C9eKzczp7FO4kKUWzj6W1eDjZI4QQ==
+ b=Rccdmfw7i2HI6J5FzSzxqSsKhoiu0glCnBuKce53CDTSsi4tAfnz7t41jgcZTAvdSXIiEmuMvH+HbKdq29+gVUpJEVzwWy+241EbCC/YIAxZ45giUsJZIk/S/zEWedtzH5BdsQfDEbYSmPzf3kOwdTRAXSksJtVRXfNwttRZ3+P7vLpBcnxRN3tXY3t+SX3ZU4WGVoSLamwycXHMQSWa0d0DNNBoDUBi2QMznyMg7G3k0PiO+r0+e+vMke6vYJsWx/avXiODPwdRgmqp7xkNiac5YFI8IfhWRFBU4cS43PY/OiMBB9JpIFZfNmOzOnFE+VgetC9PsH/jp2HEmwg58Q==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=UOXVlxXjaV/L2Md0yFUOqN8vU589Vv6EPVl/uvpFxgA=;
- b=kh+mD2sP7Cmh27EA6PJiJi9KWmE8R5K2TptZwA8Zwaallzw4uYwTsCqSd/jJKapBMP9FRFIIGCFY39TqhSnh2f6HsFEJh1ASmnYTPFqLLtzndpsMXHKcioErYG6wj2PDZTKOfy3U7Lh/ryd4ChmWUMJJ2pOB3sq7LnFwZMEyofx6hcjsw0h63V0zVyfAJtMfHK32XiE0HwDy2IX+R1Sf8oNfIJdyxnWVzaWihnz3jiku+nyb/6HANpq0+jDJXQQcF//rfKB27j0eernv9GG36IpVq7Gwu2k3vgvVx9IKOalm3/nz32JA2nj14vU7Yu/nrt/H7IRLVN8p5q/js/heUQ==
+ bh=dgBVJdw5GCMpxWJ5Jn6UKTT8DtbGRCSPuoWxVWP9HLg=;
+ b=csV+/QVAGXF9zHLGL1hOCdoRVF2aF+1pOwbOQaClUTYsy+xmAkcLsimf+Hw5UhuQrrZ7cU3jVRFYfhMiHldVC8RkEFvAATHfEGhTHtN2Z1bVEAakqEdH4Jj1K2MdJ9CyAqB53WOEKRMVY42+5wq3QwHD5QJ7qNcFeo4nG6VsIKbM43/bzJrWzTARWr1at9sy4Sv+ggu8HQFW15oaqYcg8g5lDesg7KbiK/RAmYhP57ZXOvN6rCTalpAD+4fPpp5USfjC2PKnnWxamEGsYhkfpLgn7ObUkEqyi9dIVfdARFBvz/8OFVeSIzqt7gHtMFggQ/7nZ+JAEdBY6u3pUNLAKg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
  header.d=amd.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=UOXVlxXjaV/L2Md0yFUOqN8vU589Vv6EPVl/uvpFxgA=;
- b=yKYL+lywsCwV/W7AgvDPAmLTH0oHngxjaMvsMxlV0KabRDHcMilsAjgcH8i+EZWxUgTddpJxqSz7nK9vnXCQFkm9DZxjaxhT7eFdZ85y9cZ7YF74Mn7QBEANol/axXueXvU1RLQ7e8Mb/OLkT+bTcOC3v6QDX7S/zAQAHJlnLik=
+ bh=dgBVJdw5GCMpxWJ5Jn6UKTT8DtbGRCSPuoWxVWP9HLg=;
+ b=HezgMxQlEQzq38TMsEoI/8zhCUvWcF0LfuOMjRrtqDxCDgx90hba5qrBF03VEK45j5PBb+cUDmuz8pLoRlP45Pcl48I5wUW1xiVMOqOYZXrKucLvdN/w5u9xUpcLVAxsPxzyI4UhBXHldpIVtW454oJD3Wggncxc9ueny9G7Wk4=
 Authentication-Results: linux-foundation.org; dkim=none (message not signed)
  header.d=none;linux-foundation.org; dmarc=none action=none
  header.from=amd.com;
 Received: from SA0PR12MB4430.namprd12.prod.outlook.com (2603:10b6:806:70::20)
- by SN6PR12MB2767.namprd12.prod.outlook.com (2603:10b6:805:75::23) with
+ by SA0PR12MB4349.namprd12.prod.outlook.com (2603:10b6:806:98::21) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4500.18; Mon, 13 Sep
- 2021 16:16:18 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4478.25; Mon, 13 Sep
+ 2021 16:16:21 +0000
 Received: from SA0PR12MB4430.namprd12.prod.outlook.com
  ([fe80::f1aa:9adc:b4f:4d14]) by SA0PR12MB4430.namprd12.prod.outlook.com
  ([fe80::f1aa:9adc:b4f:4d14%7]) with mapi id 15.20.4500.019; Mon, 13 Sep 2021
- 16:16:18 +0000
+ 16:16:21 +0000
 From:   Alex Sierra <alex.sierra@amd.com>
 To:     akpm@linux-foundation.org, Felix.Kuehling@amd.com,
         linux-mm@kvack.org, rcampbell@nvidia.com,
         linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
 Cc:     amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
         hch@lst.de, jgg@nvidia.com, jglisse@redhat.com
-Subject: [PATCH v2 03/12] mm: add zone device public type memory support
-Date:   Mon, 13 Sep 2021 11:15:55 -0500
-Message-Id: <20210913161604.31981-4-alex.sierra@amd.com>
+Subject: [PATCH v2 06/12] drm/amdkfd: add SPM support for SVM
+Date:   Mon, 13 Sep 2021 11:15:58 -0500
+Message-Id: <20210913161604.31981-7-alex.sierra@amd.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20210913161604.31981-1-alex.sierra@amd.com>
 References: <20210913161604.31981-1-alex.sierra@amd.com>
@@ -64,238 +64,137 @@ X-ClientProxiedBy: SA9P223CA0015.NAMP223.PROD.OUTLOOK.COM
  (2603:10b6:806:26::20) To SA0PR12MB4430.namprd12.prod.outlook.com
  (2603:10b6:806:70::20)
 MIME-Version: 1.0
-Received: from alex-MS-7B09.amd.com (165.204.78.1) by SA9P223CA0015.NAMP223.PROD.OUTLOOK.COM (2603:10b6:806:26::20) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4500.14 via Frontend Transport; Mon, 13 Sep 2021 16:16:18 +0000
+Received: from alex-MS-7B09.amd.com (165.204.78.1) by SA9P223CA0015.NAMP223.PROD.OUTLOOK.COM (2603:10b6:806:26::20) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4500.14 via Frontend Transport; Mon, 13 Sep 2021 16:16:20 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: cbbfa199-f354-4441-f58b-08d976d1d194
-X-MS-TrafficTypeDiagnostic: SN6PR12MB2767:
+X-MS-Office365-Filtering-Correlation-Id: b15a3250-dd1f-4b49-06fb-08d976d1d31a
+X-MS-TrafficTypeDiagnostic: SA0PR12MB4349:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <SN6PR12MB276732833C447F48A3C0E884FDD99@SN6PR12MB2767.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
+X-Microsoft-Antispam-PRVS: <SA0PR12MB4349C21EBD92B0985B965398FDD99@SA0PR12MB4349.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:5797;
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: uOobYzhMsMxYofykOjqleizIMSN5tDfiVE0hsdY0YIuOIytnfol5wEG9aZcb2LanI2q5wnnR851nzCi00KZvdIQhKrDHOJLwP41cSNkD+/Ha9a79O1ormnI7xxJ7hXFtKVB0scSGTpBeQwwvFnUQwuHvnxuEJR5LqzMCQjoUCwaLLBV/eJ2wAAIdxlWM1jI0Hg+hD52yStm5ywjfabfhGy2LP6naC5yLSNtHi7BTBifQ1GYTeaYWaZGbWQh4YrbPpG0blpUPdBegm6LOj613WaEaaxFXJ+xFWtPX7lCLuJnk6g4P67UN9rExMJxgh23mEXs86+x6trce9NQheDmvAxvFJpOyLaUTwlqdiQ4JLuhiVKQC5T7eGTk+g1/VxcGfin6voPiNdVB1W1cRiNoNGo9j3rKQpfcW1xl5J7EqZ8E2fDkx3tSO07LPCCVWf8GQ0tScTr1Yb4rhGUztEsJ5ZHVNstEUBDD5YZGmSGji4ViWtRC21i101DLqMYaw0Pmyyk4a30h4cJRdox8MM+7TcLbKLHqqQpoE0qYKOIL20xjqOIO81gjqzhN8pSXSSB4p6ouohT39a5RflkewQtgXPyB0DS5xjprqycCrZEM9XIAw5vQSuMJzmTp7TpSaDnV+Y6CVFD0tl36SQPZbPyfdwmKgqQGxZ3vsJyeauNuCqbX4zKJAJobMRJf0DkLZcfyeEw6sc5DLhHcK4zNqsC+Gqw==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA0PR12MB4430.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(346002)(376002)(39860400002)(366004)(136003)(396003)(1076003)(7416002)(86362001)(66946007)(44832011)(478600001)(2616005)(6666004)(6486002)(52116002)(7696005)(956004)(5660300002)(316002)(83380400001)(4326008)(38350700002)(38100700002)(8676002)(66556008)(66476007)(2906002)(186003)(26005)(36756003)(8936002);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: Xra5nwwcBvnYaNhTCR6lkmPoXCz1/EcIsij5Awm5CBTN4b51Oa0bsVVK1hrGLl1IS62KH7YO7CJw79C09L1IVDbJ1Ddxy7mAJNE13QQb0LRjNLB2mMABNnbePo488QtttH2RvY9cmRijol9oRD35s0DeQrBkA8yWkFSU5aoXUFAN6hZpIVky2tgWlqG4p9PMtr57VckfAuLxV4OW/iEkwsGQCvZUeM2ymGVWPx3RvatfTquZVklz7dbMRavZ7xL7UzwhKFv94EekHnyGAf2BZxyuE/EyOsbncdYdmnGOuNWcO66i7qQp8wYX13qW+Rot3sQM+PlEOPCsyhpoR/HbI8sbAQ75HU1hPObfa87DO1/cUxcVzLASHRfwe5aN7X6KvitRFWrEioAd3I7N6KmnaDAHofBpRGZMb7gyi7sJXUEUNe0MPsUAd4N64LU4ok0SuX1PWjXFKsryu136QtjXmn1tRrUBkZtAkP94QyWatO4MTeJOtV8W52doGZoYpyrk0zU2bmBlHyNt9fZwgfNVoYJquBpdTQ9Qu5stXfiGRPi6qJQSpfugK2qvV7n0vGvXky/h9rx+GagSgRrg3n17VC0Ez8lQeWuBF1jGqiR0GYi9RVZGVlWeRiR0RFIAMSudjFPsQl2OnIDHqGPHr7KnnBsEHzPGD72hbuLJfzkqFxFQ7htI0r1RwhuOjE8xtpUUWRM7E9bOe7F7ZLs/F0xTqQ==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA0PR12MB4430.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(39860400002)(366004)(396003)(136003)(346002)(376002)(66556008)(52116002)(86362001)(66946007)(1076003)(186003)(7696005)(478600001)(44832011)(6666004)(38350700002)(26005)(38100700002)(66476007)(316002)(2906002)(83380400001)(956004)(2616005)(4326008)(8936002)(36756003)(8676002)(5660300002)(6486002)(7416002);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?Gk8w+pI3/M7xYZxqJXhwHh5Lc8eSZiZU8ZRdbyg/UTtr0H7VDG8rohpfjZVX?=
- =?us-ascii?Q?NhNcRWS3oTBqIbZfGm60eGJCNBVieNxKANZvYZoYlDw14HFmgu7BMontEFoZ?=
- =?us-ascii?Q?HPqgIk+wwBiQ5NUeZFsvBi4Egg3bw3sBt/dVVy1NubagmB4SJ/91Fpt2rkiF?=
- =?us-ascii?Q?ZK/LCnGifKw25Bu/RxvPhFqbXGscMH7e1NA34O2q1nJETDhsecPB4BKH+6Yt?=
- =?us-ascii?Q?FWd2or4H8W8qAuuePybfT/1Ber4UsuY71Ad0ZNjBCnz3eKEbJ2EXQzrahCb2?=
- =?us-ascii?Q?yNCGgNi50eN4xGjK3fZuEOo2UfNMXSo9c9PeGospqkykZNjQS8j8Qc0jRjFE?=
- =?us-ascii?Q?gPgwvthmVCPm7H0LGRoYGPtgzE0lHajNrigWB7Y0TslqNclgJpXpr5fDhJnA?=
- =?us-ascii?Q?1m8qdyPzm6Jmz3Kqn0BwJRSplx1grT0iEsnFbQ/PPb5DwdeLO4Ggq9uvfX8K?=
- =?us-ascii?Q?25sBoEjDr7jKsKUxxu1XRHgTnPvFZC/4TFhZjxqLR6iiDiYJH3FLvPxEbpqL?=
- =?us-ascii?Q?ke4cBbeY2yK2+8zq1Eif712GAYVyqRsANN4cx4fPWSARDeYkpcJcaZoAaBP5?=
- =?us-ascii?Q?LzRaQof2WY1GgYLRgoYHuebkG5NiIHLz8t3npIg1d+31SV+pMtaW6nxoYVWp?=
- =?us-ascii?Q?yTr13Eao3L/j27wsW09pEfqM0jbtBpFVM3tWOrOoEypEaWR4tjazuN+/pzdw?=
- =?us-ascii?Q?Y2iizfFFMHr8jcTkbTkxYg8EaznMctTm/FB95guFWbNU6CrePx4jdlpoV6bE?=
- =?us-ascii?Q?WgaAEZCBz8agBCvW7bldPIOmMz+AFheqaGAHyx0ujbKP+qJsccpTRZBPKEuh?=
- =?us-ascii?Q?0IRmUDl4GHpQteRYG/rpjrCbdPQYGqCEN1QIS3/XOroY5A5CqTHHw3sxIGK5?=
- =?us-ascii?Q?ERqGCEOvL5g9VSCpCMidcGuxTZD/BFOces9jQWTvoJtCPjCWu0Idl4s8Wl4r?=
- =?us-ascii?Q?8CUfikEbRdkimKjov8klIPCNv8GcgB5ai+dFRbwpsrrOmJHWhhF1MMocW2Gh?=
- =?us-ascii?Q?AKu+S9Wq2h3hC8CAxtnyQiUMwbm9AftjxIru9tIXX+Ui+8rkiE98ceTCrmYJ?=
- =?us-ascii?Q?6ZpAAsVYqhcw1YkoCWBQOQol20in/YGI2R9s4ClMzcLYpOgIMRMriyKQWyNs?=
- =?us-ascii?Q?meZCS1H6EgQC4bYJUHxZAXVNPzxeV9WCxfh9/V5sCrEM1kbe+QBCjyfwKERm?=
- =?us-ascii?Q?kH/EUx6eX8aO4heN5hauggKBMWlTNeEjiwp3t4fAewzhQBUEmnrtI7NAyIn+?=
- =?us-ascii?Q?b5LiCiD52j7h2y9i2m5mN4GnBEBf6d1nN4G7Mo5L+7gxWo/QnN8gm2InDUsY?=
- =?us-ascii?Q?Ny+jEwVswq0sCSSJovHJB5xj?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?PO2pryC76K3JPilDnjEuWaINdh0pgih37cgosoqupJGcjjYEuPSc581H3Rt5?=
+ =?us-ascii?Q?PEw+qObgcDSuisLSZFOO5JvExgcwXP0huN0ZhhP5iqmG/m5te0eALHvnI5wc?=
+ =?us-ascii?Q?yu4YvlhT45eKM5cptujnnHhXiySbMQFWNkEzUWziAjzBtFqsDIo6g1Tys+eP?=
+ =?us-ascii?Q?49EG5XUYMlOk+sHziG+08DY+3MGn7f5gpU6yZ9oQPSqg7IyL7Kw7ny5Wda2g?=
+ =?us-ascii?Q?4FzG2hSgdV8aX4z52GiL3E006KYpUd2bQYrhXmNRlC8T0FU7aOgYTjhQEeZP?=
+ =?us-ascii?Q?4Mp7FI388ggd4ygMPtMgupatsMVD4uVY9zil8T9vdu4/4BJTixouwygIHnJQ?=
+ =?us-ascii?Q?geglM6awT2DbtkPshfDHqLaF3mY1iG+S6mX6vL1mihh+V27yXSuZAbp3nGxo?=
+ =?us-ascii?Q?Wo8g7/2e5uKadpdwS6CxPxeP6tGKf91smv9bJxBcW0rcxAK8ea0oxN0pvvN2?=
+ =?us-ascii?Q?ObTl6DL7V5hs6Fh6yW3NoqiTFSS74L8K6VgNsRJ7SRWfJQMA7dcXOWzURYtm?=
+ =?us-ascii?Q?2KU8Md+FyAwSJM1cr3E1ypePYfnE+lJALiWPgDEG2V8Dre2gA5avEy4WwkD8?=
+ =?us-ascii?Q?wqlqSymoa+Jk6S8/rFi4zsGo9aDXlTdpyG8R0u4HAn+trKmqADl6Jo0HN4zB?=
+ =?us-ascii?Q?6lHNMTqL/IO8tZwi6A9IgUkwf3bIqwTgQUoFX3SchaJL5zymBgNb8YcrbI3e?=
+ =?us-ascii?Q?hpVh5Wlc1NKPXbMsES4RnHXvrfsfz9udEuayc3bEPzcY3zaOvBadDw91sInc?=
+ =?us-ascii?Q?RnIAK1LMbgVqOqfn9gPTss6jTc25W+ZZJKJbbnU9s90ZrE1hzJdn3mtmCVV1?=
+ =?us-ascii?Q?qiICimBEN1s+VgEKNU4A4l+d3aXcBPV/C+Uob/D3ueaL0AmDaIe7StYtW0k6?=
+ =?us-ascii?Q?TJR7D8K7YmXuRfYSlPZQz5XDJMtSXzzGliIacW3c32fVSvU10fEE45uSfx84?=
+ =?us-ascii?Q?mh5BiK5gqPtNLfIdS5VpQZAbNG/stveSRBYipb1gQ7r5EAPs/14DuixtlU1P?=
+ =?us-ascii?Q?Kbiwas2fiHG9XdQxpH0hrhtQt3/mTLoJpyqWHqg7bbb46itm32BU3lqnhw+y?=
+ =?us-ascii?Q?WP/gTj6n3tM/Y2yJopABHZgzVrV0XIy6pFkvs56DoSBSMldAL/jaJKTvBwa+?=
+ =?us-ascii?Q?gIS//0IWhnP11HP0J7JHzR3Oru8lEW0scflhG//uOOmgkCZsz3c5B6upyMUM?=
+ =?us-ascii?Q?Sos3iHUJbMC11SqUMg7vTXB4eZ4CKrgXDW5cZ4UR6Sz6coZC9v7Sr+/mtxic?=
+ =?us-ascii?Q?O+K/NtmM4qMutuPclrQC9OFI9u0tpvLSLN/Xf9evI8DHbLkItMFCHX3xrdkI?=
+ =?us-ascii?Q?XJBeVzgeMnNGmlU8oGdmyTCW?=
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: cbbfa199-f354-4441-f58b-08d976d1d194
+X-MS-Exchange-CrossTenant-Network-Message-Id: b15a3250-dd1f-4b49-06fb-08d976d1d31a
 X-MS-Exchange-CrossTenant-AuthSource: SA0PR12MB4430.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Sep 2021 16:16:18.7392
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Sep 2021 16:16:21.2940
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: btLU2jXT/AIXtTa905LBpfsfJzLxy3odS1Q+MVKTX4bivmm6ezK6L/PfLI+mRHlfJRkexGXCtuBFBPI7TtIG5g==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR12MB2767
+X-MS-Exchange-CrossTenant-UserPrincipalName: mQdOScBOU/mAg4BEre3gT7P2TfD90DabV+g3JBWRAhFtQTSpIJV4YNUkvBNrH5SeymqXqXHMrfiTl8vIweozcw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA0PR12MB4349
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Device memory that is cache coherent from device and CPU point of view.
-This is use on platform that have an advance system bus (like CAPI or
-CCIX). Any page of a process can be migrated to such memory. However,
-no one should be allow to pin such memory so that it can always be
-evicted.
+When CPU is connected throug XGMI, it has coherent
+access to VRAM resource. In this case that resource
+is taken from a table in the device gmc aperture base.
+This resource is used along with the device type, which could
+be DEVICE_PRIVATE or DEVICE_PUBLIC to create the device
+page map region.
 
 Signed-off-by: Alex Sierra <alex.sierra@amd.com>
+Reviewed-by: Felix Kuehling <Felix.Kuehling@amd.com>
 ---
- include/linux/memremap.h |  8 ++++++++
- include/linux/mm.h       |  8 ++++++++
- mm/memcontrol.c          |  6 +++---
- mm/memory-failure.c      |  6 +++++-
- mm/memremap.c            |  2 ++
- mm/migrate.c             | 19 ++++++++++++-------
- 6 files changed, 38 insertions(+), 11 deletions(-)
+v7:
+Remove lookup_resource call, so export symbol for this function
+is not longer required. Patch dropped "kernel: resource:
+lookup_resource as exported symbol"
+---
+ drivers/gpu/drm/amd/amdkfd/kfd_migrate.c | 32 +++++++++++++++---------
+ 1 file changed, 20 insertions(+), 12 deletions(-)
 
-diff --git a/include/linux/memremap.h b/include/linux/memremap.h
-index 77ff5fd0685f..431e1b0bc949 100644
---- a/include/linux/memremap.h
-+++ b/include/linux/memremap.h
-@@ -39,6 +39,13 @@ struct vmem_altmap {
-  * A more complete discussion of unaddressable memory may be found in
-  * include/linux/hmm.h and Documentation/vm/hmm.rst.
-  *
-+ * MEMORY_DEVICE_PUBLIC:
-+ * Device memory that is cache coherent from device and CPU point of view. This
-+ * is use on platform that have an advance system bus (like CAPI or CCIX). A
-+ * driver can hotplug the device memory using ZONE_DEVICE and with that memory
-+ * type. Any page of a process can be migrated to such memory. However no one
-+ * should be allow to pin such memory so that it can always be evicted.
-+ *
-  * MEMORY_DEVICE_FS_DAX:
-  * Host memory that has similar access semantics as System RAM i.e. DMA
-  * coherent and supports page pinning. In support of coordinating page
-@@ -59,6 +66,7 @@ struct vmem_altmap {
- enum memory_type {
- 	/* 0 is reserved to catch uninitialized type fields */
- 	MEMORY_DEVICE_PRIVATE = 1,
-+	MEMORY_DEVICE_PUBLIC,
- 	MEMORY_DEVICE_FS_DAX,
- 	MEMORY_DEVICE_GENERIC,
- 	MEMORY_DEVICE_PCI_P2PDMA,
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index e24c904deeec..70a932e8a2ee 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -1187,6 +1187,14 @@ static inline bool is_device_private_page(const struct page *page)
- 		page->pgmap->type == MEMORY_DEVICE_PRIVATE;
+diff --git a/drivers/gpu/drm/amd/amdkfd/kfd_migrate.c b/drivers/gpu/drm/amd/amdkfd/kfd_migrate.c
+index ffad39ffa8c6..d0e04f79a06e 100644
+--- a/drivers/gpu/drm/amd/amdkfd/kfd_migrate.c
++++ b/drivers/gpu/drm/amd/amdkfd/kfd_migrate.c
+@@ -866,7 +866,7 @@ int svm_migrate_init(struct amdgpu_device *adev)
+ {
+ 	struct kfd_dev *kfddev = adev->kfd.dev;
+ 	struct dev_pagemap *pgmap;
+-	struct resource *res;
++	struct resource *res = NULL;
+ 	unsigned long size;
+ 	void *r;
+ 
+@@ -881,22 +881,29 @@ int svm_migrate_init(struct amdgpu_device *adev)
+ 	 * should remove reserved size
+ 	 */
+ 	size = ALIGN(adev->gmc.real_vram_size, 2ULL << 20);
+-	res = devm_request_free_mem_region(adev->dev, &iomem_resource, size);
+-	if (IS_ERR(res))
+-		return -ENOMEM;
++	if (adev->gmc.xgmi.connected_to_cpu) {
++		pgmap->range.start = adev->gmc.aper_base;
++		pgmap->range.end = adev->gmc.aper_base + adev->gmc.aper_size - 1;
++		pgmap->type = MEMORY_DEVICE_PUBLIC;
++	} else {
++		res = devm_request_free_mem_region(adev->dev, &iomem_resource, size);
++		if (IS_ERR(res))
++			return -ENOMEM;
++		pgmap->range.start = res->start;
++		pgmap->range.end = res->end;
++		pgmap->type = MEMORY_DEVICE_PRIVATE;
++	}
+ 
+-	pgmap->type = MEMORY_DEVICE_PRIVATE;
+ 	pgmap->nr_range = 1;
+-	pgmap->range.start = res->start;
+-	pgmap->range.end = res->end;
+ 	pgmap->ops = &svm_migrate_pgmap_ops;
+ 	pgmap->owner = SVM_ADEV_PGMAP_OWNER(adev);
+-	pgmap->flags = MIGRATE_VMA_SELECT_DEVICE_PRIVATE;
++	pgmap->flags = 0;
+ 	r = devm_memremap_pages(adev->dev, pgmap);
+ 	if (IS_ERR(r)) {
+ 		pr_err("failed to register HMM device memory\n");
+-		devm_release_mem_region(adev->dev, res->start,
+-					res->end - res->start + 1);
++		if (pgmap->type == MEMORY_DEVICE_PRIVATE)
++			devm_release_mem_region(adev->dev, res->start,
++						res->end - res->start + 1);
+ 		return PTR_ERR(r);
+ 	}
+ 
+@@ -915,6 +922,7 @@ void svm_migrate_fini(struct amdgpu_device *adev)
+ 	struct dev_pagemap *pgmap = &adev->kfd.dev->pgmap;
+ 
+ 	devm_memunmap_pages(adev->dev, pgmap);
+-	devm_release_mem_region(adev->dev, pgmap->range.start,
+-				pgmap->range.end - pgmap->range.start + 1);
++	if (pgmap->type == MEMORY_DEVICE_PRIVATE)
++		devm_release_mem_region(adev->dev, pgmap->range.start,
++					pgmap->range.end - pgmap->range.start + 1);
  }
- 
-+static inline bool is_device_page(const struct page *page)
-+{
-+	return IS_ENABLED(CONFIG_DEV_PAGEMAP_OPS) &&
-+		is_zone_device_page(page) &&
-+		(page->pgmap->type == MEMORY_DEVICE_PRIVATE ||
-+		page->pgmap->type == MEMORY_DEVICE_PUBLIC);
-+}
-+
- static inline bool is_pci_p2pdma_page(const struct page *page)
- {
- 	return IS_ENABLED(CONFIG_DEV_PAGEMAP_OPS) &&
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 64ada9e650a5..1599ef1a3b03 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -5530,8 +5530,8 @@ static int mem_cgroup_move_account(struct page *page,
-  *   2(MC_TARGET_SWAP): if the swap entry corresponding to this pte is a
-  *     target for charge migration. if @target is not NULL, the entry is stored
-  *     in target->ent.
-- *   3(MC_TARGET_DEVICE): like MC_TARGET_PAGE  but page is MEMORY_DEVICE_PRIVATE
-- *     (so ZONE_DEVICE page and thus not on the lru).
-+ *   3(MC_TARGET_DEVICE): like MC_TARGET_PAGE  but page is MEMORY_DEVICE_PUBLIC
-+ *     or MEMORY_DEVICE_PRIVATE (so ZONE_DEVICE page and thus not on the lru).
-  *     For now we such page is charge like a regular page would be as for all
-  *     intent and purposes it is just special memory taking the place of a
-  *     regular page.
-@@ -5565,7 +5565,7 @@ static enum mc_target_type get_mctgt_type(struct vm_area_struct *vma,
- 		 */
- 		if (page_memcg(page) == mc.from) {
- 			ret = MC_TARGET_PAGE;
--			if (is_device_private_page(page))
-+			if (is_device_page(page))
- 				ret = MC_TARGET_DEVICE;
- 			if (target)
- 				target->page = page;
-diff --git a/mm/memory-failure.c b/mm/memory-failure.c
-index 6f5f78885ab4..16cadbabfc99 100644
---- a/mm/memory-failure.c
-+++ b/mm/memory-failure.c
-@@ -1373,12 +1373,16 @@ static int memory_failure_dev_pagemap(unsigned long pfn, int flags,
- 		goto unlock;
- 	}
- 
--	if (pgmap->type == MEMORY_DEVICE_PRIVATE) {
-+	switch (pgmap->type) {
-+	case MEMORY_DEVICE_PRIVATE:
-+	case MEMORY_DEVICE_PUBLIC:
- 		/*
- 		 * TODO: Handle HMM pages which may need coordination
- 		 * with device-side memory.
- 		 */
- 		goto unlock;
-+	default:
-+		break;
- 	}
- 
- 	/*
-diff --git a/mm/memremap.c b/mm/memremap.c
-index ab949a571e78..685be704b28e 100644
---- a/mm/memremap.c
-+++ b/mm/memremap.c
-@@ -294,6 +294,7 @@ void *memremap_pages(struct dev_pagemap *pgmap, int nid)
- 
- 	switch (pgmap->type) {
- 	case MEMORY_DEVICE_PRIVATE:
-+	case MEMORY_DEVICE_PUBLIC:
- 		if (!IS_ENABLED(CONFIG_DEVICE_PRIVATE)) {
- 			WARN(1, "Device private memory not supported\n");
- 			return ERR_PTR(-EINVAL);
-@@ -493,6 +494,7 @@ void free_zone_device_page(struct page *page)
- {
- 	switch (page->pgmap->type) {
- 	case MEMORY_DEVICE_PRIVATE:
-+	case MEMORY_DEVICE_PUBLIC:
- 		free_device_page(page);
- 		return;
- 	case MEMORY_DEVICE_FS_DAX:
-diff --git a/mm/migrate.c b/mm/migrate.c
-index e3a10e2a1bb3..7392648966d2 100644
---- a/mm/migrate.c
-+++ b/mm/migrate.c
-@@ -2565,7 +2565,7 @@ static bool migrate_vma_check_page(struct page *page)
- 		 * FIXME proper solution is to rework migration_entry_wait() so
- 		 * it does not need to take a reference on page.
- 		 */
--		return is_device_private_page(page);
-+		return is_device_page(page);
- 	}
- 
- 	/* For file back page */
-@@ -2854,7 +2854,7 @@ EXPORT_SYMBOL(migrate_vma_setup);
-  *     handle_pte_fault()
-  *       do_anonymous_page()
-  * to map in an anonymous zero page but the struct page will be a ZONE_DEVICE
-- * private page.
-+ * private or public page.
-  */
- static void migrate_vma_insert_page(struct migrate_vma *migrate,
- 				    unsigned long addr,
-@@ -2925,10 +2925,15 @@ static void migrate_vma_insert_page(struct migrate_vma *migrate,
- 
- 			swp_entry = make_device_private_entry(page, vma->vm_flags & VM_WRITE);
- 			entry = swp_entry_to_pte(swp_entry);
-+		} else if (is_device_page(page)) {
-+			entry = pte_mkold(mk_pte(page,
-+						 READ_ONCE(vma->vm_page_prot)));
-+			if (vma->vm_flags & VM_WRITE)
-+				entry = pte_mkwrite(pte_mkdirty(entry));
- 		} else {
- 			/*
--			 * For now we only support migrating to un-addressable
--			 * device memory.
-+			 * We support migrating to private and public types
-+			 * for device zone memory.
- 			 */
- 			pr_warn_once("Unsupported ZONE_DEVICE page type.\n");
- 			goto abort;
-@@ -3034,10 +3039,10 @@ void migrate_vma_pages(struct migrate_vma *migrate)
- 		mapping = page_mapping(page);
- 
- 		if (is_zone_device_page(newpage)) {
--			if (is_device_private_page(newpage)) {
-+			if (is_device_page(newpage)) {
- 				/*
--				 * For now only support private anonymous when
--				 * migrating to un-addressable device memory.
-+				 * For now only support private and public
-+				 * anonymous when migrating to device memory.
- 				 */
- 				if (mapping) {
- 					migrate->src[i] &= ~MIGRATE_PFN_MIGRATE;
 -- 
 2.32.0
 
