@@ -2,65 +2,71 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1EAFC433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 13 Sep 2021 16:23:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51AADC433FE
+	for <linux-xfs@archiver.kernel.org>; Mon, 13 Sep 2021 16:29:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BD6C36023B
-	for <linux-xfs@archiver.kernel.org>; Mon, 13 Sep 2021 16:23:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 33A6E604E9
+	for <linux-xfs@archiver.kernel.org>; Mon, 13 Sep 2021 16:29:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237587AbhIMQY1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 13 Sep 2021 12:24:27 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:43962 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236804AbhIMQYL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Sep 2021 12:24:11 -0400
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 6F69021F04;
-        Mon, 13 Sep 2021 16:22:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1631550174; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=yYIJjMUZ71LdWt3LZPpRDcVpejfYavC8pcMVWFXk4xc=;
-        b=XzWy99yCsEm/z2O7vC69f8c4oFeKYr+7HKAiG/jpcThWcc+DdvAhWv0nhLgrozuCVnVBQC
-        V0zpdzfqyCOKf9oggSPi59S9CYLfpGZcwLuZNg3BbxxN15Il4aksAlnnDW2sxyxED4fkkm
-        TwqEPw6vnVbe5vAfXL2s5nZiwQDMCDk=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1631550174;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=yYIJjMUZ71LdWt3LZPpRDcVpejfYavC8pcMVWFXk4xc=;
-        b=3FHbKhAkit0Yk82HtVBY+Jnfn0Ch3Ts3Tkk/DRIxxeIyvcl8FGjrY6MRm7phn7suUq5fzz
-        jTOCsTvArjBQCCAA==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 57AA713AAB;
-        Mon, 13 Sep 2021 16:22:54 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id p4ZjFd56P2HnJQAAMHmgww
-        (envelope-from <dwagner@suse.de>); Mon, 13 Sep 2021 16:22:54 +0000
-Date:   Mon, 13 Sep 2021 18:22:53 +0200
-From:   Daniel Wagner <dwagner@suse.de>
+        id S237734AbhIMQa4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 13 Sep 2021 12:30:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45114 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237339AbhIMQa4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Sep 2021 12:30:56 -0400
+Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F4F6C061574;
+        Mon, 13 Sep 2021 09:29:40 -0700 (PDT)
+Received: by mail-pl1-x62f.google.com with SMTP id bg1so6172962plb.13;
+        Mon, 13 Sep 2021 09:29:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=HzDTLjGw74e8CjqrCfWVLgo6C2sbYI/lSxwRQLVntl4=;
+        b=nDgSvSlJ4smKAm8c1xcHqnbe6jg/8lXJ0MYn2ZpG+aMxi9y1r8WvSFTRELTJcEVYP9
+         teR8yxsTUv3v497W7/jy7xBFTWZn/vbhsqfaKYuiY52cCtDmGxXhvNrAuDAsyaWcGekn
+         BAcesXdYk3jOnj/a/asM+E3cmrQD0z1vUCpNHUDj634dfPJm2QnUrO3r4VtdJLFs732t
+         zbjlJo7uSRcsNjZUEjkxeh520qmWHi6KGYQ/ZR8v3AK3GlIM9c9eEPuNUskzW5WSqWIj
+         t7HnXSOMyR4pLiDM4IJobWFFvMBjHvzRZ4GA/fkBFXYOUqFrwPJRfgE7aAf+ouixCfwo
+         yPJQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
+         :references:mime-version:content-disposition:in-reply-to;
+        bh=HzDTLjGw74e8CjqrCfWVLgo6C2sbYI/lSxwRQLVntl4=;
+        b=S6cgOOj57pcjsnKBR8AKmx+/x3ZAlmy5cAM9oDCTzGFUSyTAPt7qQLp1IxlcoAlL/c
+         jW0r37lvnp/nFEpFsTpoiM62BuRTKdioly0O1fR85EDrAUV6f/Rt/nKFAlysd0LOYPL+
+         f8xFAVv9ZzjMTtIbq2Kns+yAPC1Nv/1UhxbA3jBxjGOCisO7OrMQxGOkCXGjwKttaKN4
+         O+qmziYrGzfkLibxqZKXfMhFWVfjgDnSmztzWux5Gvby+4NVKPWEx1EOJngt7TcDI063
+         TRJDeO4nhrrS0DYWa4azu3N318bVNTP9JihYF2rMlmxfKAkl4X8b3X3uGfeXET6aM2Ku
+         tynA==
+X-Gm-Message-State: AOAM530A8u1cxUvMnvm9BdSa/ugfFF36e4VMZ/fOIJYEz6W21C5dau2Z
+        BK7jrrHA7hbOYcVaE5qWNJY=
+X-Google-Smtp-Source: ABdhPJwiPkgndzXzHNckVZlJdBGxTG76sHmV3+lRqtoX6mC6gzOmWzSgOi4PJn+GN6iv57bj/1sLIA==
+X-Received: by 2002:a17:90b:3a82:: with SMTP id om2mr328347pjb.67.1631550579542;
+        Mon, 13 Sep 2021 09:29:39 -0700 (PDT)
+Received: from localhost (2603-800c-1a02-1bae-e24f-43ff-fee6-449f.res6.spectrum.com. [2603:800c:1a02:1bae:e24f:43ff:fee6:449f])
+        by smtp.gmail.com with ESMTPSA id p9sm9431053pgn.36.2021.09.13.09.29.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 13 Sep 2021 09:29:39 -0700 (PDT)
+Sender: Tejun Heo <htejun@gmail.com>
+Date:   Mon, 13 Sep 2021 06:29:37 -1000
+From:   Tejun Heo <tj@kernel.org>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         "Rafael J. Wysocki" <rafael@kernel.org>,
         Alexander Viro <viro@zeniv.linux.org.uk>,
-        Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>,
-        linux-block@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+        Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org
 Subject: Re: [PATCH 01/13] seq_file: mark seq_get_buf as deprecated
-Message-ID: <20210913162253.ofaaiycyo2kcvlbo@carbon.lan>
+Message-ID: <YT98ccRMNBmoYPdl@slm.duckdns.org>
 References: <20210913054121.616001-1-hch@lst.de>
  <20210913054121.616001-2-hch@lst.de>
 MIME-Version: 1.0
@@ -71,10 +77,28 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Mon, Sep 13, 2021 at 07:41:09AM +0200, Christoph Hellwig wrote:
+> This function pokes a big hole into the seq_file abstraction.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  include/linux/seq_file.h | 4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> diff --git a/include/linux/seq_file.h b/include/linux/seq_file.h
+> index dd99569595fd3..db16b11477875 100644
+> --- a/include/linux/seq_file.h
+> +++ b/include/linux/seq_file.h
+> @@ -59,6 +59,10 @@ static inline bool seq_has_overflowed(struct seq_file *m)
+>   *
+>   * Return the number of bytes available in the buffer, or zero if
+>   * there's no space.
 > + *
 > + * DOT NOT USE IN NEW CODE! This function pokes a hole into the whole seq_file
-> + * abstraction.  The only remaining user outside of seq_file.c is sysfs, which
-> + * is gradually moving away from using seq_get_buf directly.
->   */
+        ^
+       typo
 
-Maybe adding a check to checkpatch could also help?
+Thanks.
+
+-- 
+tejun
