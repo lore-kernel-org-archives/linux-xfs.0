@@ -2,272 +2,257 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DC94C433FE
-	for <linux-xfs@archiver.kernel.org>; Mon, 13 Sep 2021 17:37:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42055C433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 13 Sep 2021 17:41:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 68764610CE
-	for <linux-xfs@archiver.kernel.org>; Mon, 13 Sep 2021 17:37:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 28491610D2
+	for <linux-xfs@archiver.kernel.org>; Mon, 13 Sep 2021 17:41:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243554AbhIMRiq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 13 Sep 2021 13:38:46 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41386 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S243543AbhIMRio (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 13 Sep 2021 13:38:44 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 629F6603E7;
-        Mon, 13 Sep 2021 17:37:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631554648;
-        bh=4QJS2bzb/cEKhpK6hvRXStqgnRg9u6La0KitZwoTsZo=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=gK7NpjtLD67wMcKQi7VBmxS3Ks8xDbNspNbjC+tq1Q0CVv1+n82oKCSQSNb957tIC
-         8QMX2jNH+xI7qCEvc1gBMBlNB+BIKV+/2A79ptty83Upp0eyYP2W7HIclng9mJww2l
-         PY21t1OUaGrW5HpJ/5unNZHt/e2ez8GRM9daD9858i03c4dp2bSGykKa5BuIiWHxqb
-         v7r/phEvvVxJK05GamCtArHk9x7HQTW73yat6nt5nWPgiM36GOTYhy9sPenR36JZBn
-         117cCrokg23XqQ4F1Ez/QOsFaj1JZj9vS3jSLU4rE58XwHHQCtAtxQoArc0w+gmxAA
-         W1QUHGBNjVnZw==
-Date:   Mon, 13 Sep 2021 10:37:28 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
+        id S243738AbhIMRnM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 13 Sep 2021 13:43:12 -0400
+Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:40378 "EHLO
+        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S242563AbhIMRnL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Sep 2021 13:43:11 -0400
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 18DG6jMI029752;
+        Mon, 13 Sep 2021 17:41:52 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : references : in-reply-to : content-type :
+ content-id : content-transfer-encoding : mime-version; s=corp-2021-07-09;
+ bh=l4QsSySbkILxEoT/ueCt0HMBgqPTRbhUKk1ILV+UQ0E=;
+ b=YT5Gj4/O6olj4DBO77iMhp4whFS6dVTSNn0UQwAQDTpG1si7Eym80MrqMRCQQG82NgAR
+ gleWkktLZvTSb9bs8yComaivem0hK1VYN2X/W/K92H4XK37WB1gZ/YFkVc1hp0KJrdWZ
+ Gw7Ubk79AsPbeoW7V+CFKevnQon1ocp7Hj3a8GKkzuxblIptSXzvuiUpSGJsMpyJuSdd
+ JH15MlrOvDmJmEmeIAzfQgD8RgE/ixu7urg3Ip8/Zl+BZQeXigC/dT3eshZGkFqREJ4n
+ cUXfbyOdsZJpx/sakVl4epdalYzfonn3AOgW/gW23t2GjP8QWPoV97elXZj5c+Ae9BY1 Fw== 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : references : in-reply-to : content-type :
+ content-id : content-transfer-encoding : mime-version; s=corp-2020-01-29;
+ bh=l4QsSySbkILxEoT/ueCt0HMBgqPTRbhUKk1ILV+UQ0E=;
+ b=nv6zKu+r75E8vCh1jsjF9zFROOP1UFPOv9BsBQxQsmm3dluMYUQDx+EC4bJBuj2NRtgL
+ 4xuzLxrkEv+cT5j6MDwIpYzJGbpSNussO8B0hyGy8NCQSsuZ3Zt4hjW58dBqB3nZySZj
+ IaHJVOeaWndXXfMnFGLp+CeQLyfbiDX1B62MeKey98V2Wwz1hsYiPg8KuXdkpq4Y1Rko
+ vNj1FIGCMIczw/z4dTW+Q9fe9qXBC+vDTxPA4xWf0zG7s73ncPS047VBZXaDqm65BSOM
+ I3Nlbz6s65UlTMtXDpmnMTRwCL+TsiKAvwCeLQpjHlgHyPDgigTVqskJrsCtH/OH01R/ Mg== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3b1k9ruj20-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 13 Sep 2021 17:41:52 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 18DHLbuu060775;
+        Mon, 13 Sep 2021 17:41:51 GMT
+Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2175.outbound.protection.outlook.com [104.47.58.175])
+        by userp3020.oracle.com with ESMTP id 3b167qs62c-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 13 Sep 2021 17:41:51 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=dzKu1xOo9VSiHFVPMKvT7RNIHsVtT5Vg79EFe9qNnIBZ6mFaAnh8sMg2Ub5MmHhzyN9f4VSD11M2g6Yb7H5320u0/qZy+erHC7b0ogLCLMbhW+gFs3g4sGnjsQ+bxeYXCsI6fJ837KzXEprT9FuLoey7txeBAl8Kw6+qkTObJuCmi/OwLP1/DCJkb9nAxVU6gz/Gi3ajoMtTZg4rRCRYNqFMOWRILwGn6LjbAQPheVJG48tdeiylxV7PgFfN1mBLdIrOAAIJN7yC+1UgqOBiAmWnw+oc93TColwwzYVh6RGO4XKtTXb3gpLz6zYQmh0UjpO1j9HvZ8cRwcroJDp3DQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=l4QsSySbkILxEoT/ueCt0HMBgqPTRbhUKk1ILV+UQ0E=;
+ b=cmLaW00Ff8kf1390CWdBiGMd3mgpMqyLIQUKqfgoikPg/YlsXZVhvC8xxVbCx7G3/HAzcn2GyqXIWHTZrNT7WrP9PFfi4Ag0bxvo8Z1EGbm6sOJa2Wok7mHLqT09K0wl3a3YFfat+0LofQJb2SoS0crgkikLX3Sq6hWfAHLIvmM165Yk0Nh4FPJTlXbplnL/VAMqQbWhDRxCAIZY8dYYSzJ1g0WISGTWU8GT/uU5MO1zTZlhZG0xTy9z5IxzNGQsbAlD1Xxdx9Qhaw1Mp6ED39M8eW01gCSuLKLhNM1Bf+qXxpBb8QyDq5GHYe+sGmMRFYRq3nIPu+7oANx99UjXSQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=l4QsSySbkILxEoT/ueCt0HMBgqPTRbhUKk1ILV+UQ0E=;
+ b=vORdIihDq9yIXswmqbLpLcLovCxjDmnEfPCGXtFAxA9gyhv/lTX6EH2m0cTNWV13+dP5HJbkY5P5JG6Fa1eNYHUtN+SJqLtAk/AEwghOF+8DvGxHmRe1QXO4jXjL/SUXOeo3vYPjxNz4ssNTylQ21c3nDDoGtNRfl9ldFBAiY3Y=
+Received: from DM6PR10MB2795.namprd10.prod.outlook.com (2603:10b6:5:70::21) by
+ DM5PR10MB1788.namprd10.prod.outlook.com (2603:10b6:4:8::15) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.4500.17; Mon, 13 Sep 2021 17:41:49 +0000
+Received: from DM6PR10MB2795.namprd10.prod.outlook.com
+ ([fe80::a59b:518a:8dc9:4f72]) by DM6PR10MB2795.namprd10.prod.outlook.com
+ ([fe80::a59b:518a:8dc9:4f72%6]) with mapi id 15.20.4500.019; Mon, 13 Sep 2021
+ 17:41:49 +0000
+From:   Catherine Hoang <catherine.hoang@oracle.com>
 To:     Eryu Guan <guan@eryu.me>
-Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org
-Subject: Re: [PATCH 1/3] xfs: test fsx with extent size hints set on a
- realtime file
-Message-ID: <20210913173728.GB638503@magnolia>
-References: <163045508495.769915.4859353445119566326.stgit@magnolia>
- <163045509043.769915.12768254084054792591.stgit@magnolia>
- <YTTUALZL8On/5ynk@desktop>
+CC:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "fstests@vger.kernel.org" <fstests@vger.kernel.org>
+Subject: Re: [External] : Re: [PATCH 3/3] xfstests: Move *_dump_log routines
+ to common/xfs
+Thread-Topic: [External] : Re: [PATCH 3/3] xfstests: Move *_dump_log routines
+ to common/xfs
+Thread-Index: AQHXpaH5MGcejf6xmkGdqNAmQCIJmKugEOOAgAIxGgA=
+Date:   Mon, 13 Sep 2021 17:41:49 +0000
+Message-ID: <5C50E492-45A5-40D2-B315-EC1AA5136B2B@oracle.com>
+References: <20210909174142.357719-1-catherine.hoang@oracle.com>
+ <20210909174142.357719-4-catherine.hoang@oracle.com>
+ <YT22rajMLkNyhKyr@desktop>
+In-Reply-To: <YT22rajMLkNyhKyr@desktop>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: eryu.me; dkim=none (message not signed)
+ header.d=none;eryu.me; dmarc=none action=none header.from=oracle.com;
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 36e2986d-5eed-4cac-b657-08d976ddc3ca
+x-ms-traffictypediagnostic: DM5PR10MB1788:
+x-microsoft-antispam-prvs: <DM5PR10MB17886BEE8075CF3CC9030CAB89D99@DM5PR10MB1788.namprd10.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:7691;
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: /oZymjGDtO5Z9MLU6tPLPvuP+58LKhNp/NM0QEWK2J1HYVBhl4gvQ563tqkzVgbbczfmwA1tTJvAB1/S4I/FL2hpz+N+v+CGzyI7SKi6kfEHLhAAdQ8FX71Ylwig8Ww6FNUZ6m3SS8bq0NxCoAV9a00K5p3XkxesT5DyyXLEHxifvzheyGm6+Ox6IN7SY6/IJlw8cOjM57UUES6oKYfro4NzUFtIaVdbM2jo6DB6i0kNtuD6K/SkSZJgKaK4aZl/awpfJ0kh/009FzIR2wJ15s2wODQgtKB5UffGjefeHrqdzFWhCJsoK75hjgdFRQAoarnvQauj932Qjr9KoDvSNtTK9WCSUGSe8TJglLRtDA/rPRH9VpvRv6C9lNeLsll9AYMB+yTghz014nZK/hgFfSkhaQgqWtWNx+Q/JvPgO5YTK231pMEHNC+Qv1QTVEJaPEZ9FnI2jHYh2/6gHLN5KW45bEDW4o3o9UMhV0dfereG7stVqTKNH0ILlKIwKhsUo4Ne7dCOl95kYaX0lmsItPUn0pgDAxE/tCyD+eKGr96EfM/Qn0jhhA3dOpTFfIa7mjioz0QCuQd9DUahpKLEOJKrXea9fvCWRKNpe2xVa32KZ/vZ30G5+/RB4CEYhuEljMydBPbNgjSxCEliMVmPHzjKfFvVL16tVnvWVxNYKP13Q8NIKldKMzdna1cBiQm/Kf7tyZR5AoUD5zlrQso/svs3EyTzehTTPxzygcpMbjM=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB2795.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(136003)(366004)(376002)(396003)(39860400002)(346002)(66946007)(6512007)(66476007)(64756008)(66446008)(71200400001)(76116006)(66556008)(5660300002)(316002)(44832011)(8676002)(478600001)(36756003)(83380400001)(91956017)(2616005)(33656002)(86362001)(2906002)(53546011)(4326008)(8936002)(6506007)(186003)(6916009)(54906003)(38100700002)(38070700005)(6486002)(122000001)(45980500001);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?V2pyC23Pomc+yfEYwP77ISdQEeFgr88G/eCoeAe7qH3mwJqzyiUgA04Gyd5E?=
+ =?us-ascii?Q?fH4CPF6brzre53hhITyYRMNyBH+dY9JcFjqS20mQYzapVlGk+gtZSdvU+El8?=
+ =?us-ascii?Q?UqmRFAmuQVMIUGQyCa4guVyVNhy3uB5UqSbkVyvzATydYMUGkFFeXLdnfkAt?=
+ =?us-ascii?Q?1cWcRdeGuycItVKMuILqVyt14kHPUps9fl68s9XqUX7KhNoON187dpBR1LhM?=
+ =?us-ascii?Q?rzH+QZqoNiL2yHsIHj7ytEi8vbVLAGWL8TqCk8PEW8ipYdZVzTUcoNHcfWP5?=
+ =?us-ascii?Q?WUk0mLXXCrBivq2DomZPc/94lqEZcBraFgCzH4w8/LJibBrnncKule9FV45B?=
+ =?us-ascii?Q?VHatzDbgSGZqizhKbASc3G6HrCSuK5fx7laCZbLkO7s0BxYpm6zazeGx63DY?=
+ =?us-ascii?Q?GVf1SGKjnb7iszZb39QCCsztNEtbEIwvlHBJo0oFOHo64eE/Oh7nJ6Lsq+56?=
+ =?us-ascii?Q?PoYzWLWqrg1c9TLCzQD6mkIkBf6WUNDKqSNPqJn8Ux/XcVFilLM+58HmIhai?=
+ =?us-ascii?Q?3BryJQxrLqX7TTTE3L6uEKLgklZu9XarMdsmngoBKpnYpmGMV4dgILGqkoex?=
+ =?us-ascii?Q?ta8L2m1tO+kb9G8eYlB9zN+kPV3rUnP6yzRVxLviKNbYAlpJOGsRf/fkqZAU?=
+ =?us-ascii?Q?lq5R518mrvJkju7WwRTbRu7xTQZuluKEk6pq0C9HC6JMNGKssJc+ZWLXvqrJ?=
+ =?us-ascii?Q?trvvME1ZBG3z4+wF/4V4AxgXhOvsROp+cWCtqCV8yi9WTK6Vz8A7mJ8tNWWC?=
+ =?us-ascii?Q?tZWh3KUJ4yrLiIfWFDrL9YYGtpU8s6sLhzXBVMPpH3KCTgIKnlDovhF1ODYR?=
+ =?us-ascii?Q?i4I7D6Kcth1+nfTkpQl2/+eFcpV94UQ374rL7KdZtp+fGdQghC+BQw6rSdYi?=
+ =?us-ascii?Q?Hi21eJAJUYTtIIwK7VxVRcSzXpx8NiH/O1hR+Aqkb55i9qqvnAt5mLhi/G+s?=
+ =?us-ascii?Q?mZiIrh18sULIv7vSYmP4gKJmVhXmj31tfXzK37tiTy2YcxyLIuDAW5Jqtpos?=
+ =?us-ascii?Q?P7ptDaeAfoOpQZpQI9yFH/FcWtruD5OB3mnIOfeU0SdFdXNl60wOY6/g0k08?=
+ =?us-ascii?Q?kMm2u626K+jbJ/QrW8d93DuBpREeG7G/IFxU6nTZJsDuypIlnfL7h2YluSoX?=
+ =?us-ascii?Q?QGQv3Xrbhj5xvu0h2beQ+aEjJyxAJJUlIiyXlaweKpUhtNRWDm3mzR1flRFf?=
+ =?us-ascii?Q?9Khc8etqjBO9L0mtqb57/jYjCGiJu0qiz32kSc9h0yirtLRsQmhBWegcOzL6?=
+ =?us-ascii?Q?HzF8M8uYKNYvLMtUMnRLnaSfXCna370ocnmrrQqzGBe8ogcNoDS1drEXr4Gd?=
+ =?us-ascii?Q?7XHJhWr74Ymk4QCtMiKP9mxZ5EiZoYk4rxEkiewBX9aQLOwM7t+O2mBjL6U9?=
+ =?us-ascii?Q?j6KOK4M=3D?=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <40032F600C179E409AEC42142FEDC073@namprd10.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YTTUALZL8On/5ynk@desktop>
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB2795.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 36e2986d-5eed-4cac-b657-08d976ddc3ca
+X-MS-Exchange-CrossTenant-originalarrivaltime: 13 Sep 2021 17:41:49.3108
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: SwLSk2EBjDlAk7VEw0kgUgASAG6AgE8Y1US7V1fbqN8MhWJ5Fq/KESOeulLLwsiP0UN0kSilHuco2nY+gnOmbNi09eSdlWQQpKAIKZAsF8Y=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR10MB1788
+X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10106 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adultscore=0 suspectscore=0
+ phishscore=0 mlxlogscore=999 malwarescore=0 mlxscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2109030001
+ definitions=main-2109130111
+X-Proofpoint-ORIG-GUID: Dbz6FICHCsTEBp936xP-qT6XoegdtS9x
+X-Proofpoint-GUID: Dbz6FICHCsTEBp936xP-qT6XoegdtS9x
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Sep 05, 2021 at 10:28:16PM +0800, Eryu Guan wrote:
-> On Tue, Aug 31, 2021 at 05:11:30PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > This is a regression test for the two realtime allocator bug fixes:
-> > 
-> > xfs: adjust rt allocation minlen when extszhint > rtextsize
-> > xfs: retry allocations when locality-based search fails
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> 
-> Looks fine to me, just a few minor nits inline.
-> 
-> > ---
-> >  tests/xfs/775     |  165 +++++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/xfs/775.out |    3 +
-> >  2 files changed, 168 insertions(+)
-> >  create mode 100755 tests/xfs/775
-> >  create mode 100644 tests/xfs/775.out
-> > 
-> > 
-> > diff --git a/tests/xfs/775 b/tests/xfs/775
-> > new file mode 100755
-> > index 00000000..e8e6b728
-> > --- /dev/null
-> > +++ b/tests/xfs/775
-> > @@ -0,0 +1,165 @@
-> > +#! /bin/bash
-> > +# SPDX-License-Identifier: GPL-2.0
-> > +# Copyright (c) 2021, Oracle.  All Rights Reserved.
-> > +#
-> > +# FS QA Test No. 775
-> > +#
-> > +# Regression test for commits:
-> > +#
-> > +# 9d5e8492eee0 ("xfs: adjust rt allocation minlen when extszhint > rtextsize")
-> > +# 676a659b60af ("xfs: retry allocations when locality-based search fails")
-> > +#
-> > +# The first bug occurs when an extent size hint is set on a realtime file.
-> > +# xfs_bmapi_rtalloc adjusts the offset and length of the allocation request to
-> > +# try to satisfy the hint, but doesn't adjust minlen to match.  If the
-> > +# allocator finds free space that isn't large enough to map even a single block
-> > +# of the original request, bmapi_write will return ENOSPC and the write fails
-> > +# even though there's plenty of space.
-> > +#
-> > +# The second bug occurs when an extent size hint is set on a file, we ask to
-> > +# allocate blocks in an empty region immediately adjacent to a previous
-> > +# allocation, and the nearest available free space isn't anywhere near the
-> > +# previous allocation, the near allocator will give up and return ENOSPC, even
-> > +# if there's sufficient free realtime extents to satisfy the allocation
-> > +# request.
-> > +#
-> > +# Both bugs can be exploited by the same user call sequence, so here's a
-> > +# targeted test that runs in less time than the reproducers that are listed in
-> > +# the fix patches themselves.
-> > +#
-> > +. ./common/preamble
-> > +_begin_fstest auto quick rw realtime
-> > +
-> > +# Override the default cleanup function.
-> > +_cleanup()
-> > +{
-> > +	cd /
-> > +}
-> 
-> Seems there's no need to override the default cleanup function?
 
-Yeah.  I'll clobber it.
-
-> > +
-> > +# Import common functions.
-> > +. ./common/filter
-> > +
-> > +# real QA test starts here
-> 
-> _supported_fs xfs
-
-Fixed.
-
-> > +_require_scratch
-> > +_require_realtime
-> > +_require_xfs_io_command "falloc"
-> > +_require_xfs_io_command "fpunch"
-> > +_require_test_program "punch-alternating"
-> > +
-> > +fill_rtdev()
-> > +{
-> > +	file=$1
-> > +
-> > +	filesize=`_get_available_space $SCRATCH_MNT`
-> > +	$XFS_IO_PROG -f -c "truncate $filesize" -c "falloc 0 $filesize" $file
-> > +
-> > +	chunks=20
-> > +	chunksizemb=$((filesize / chunks / 1048576))
-> > +	seq 1 $chunks | while read f; do
-> > +		echo "$((f * chunksizemb)) file size $f / 20"
-> > +		$XFS_IO_PROG -fc "falloc -k $(( (f - 1) * chunksizemb))m ${chunksizemb}m" $file
-> > +	done
-> > +
-> > +	chunks=100
-> > +	chunksizemb=$((filesize / chunks / 1048576))
-> > +	seq 80 $chunks | while read f; do
-> > +		echo "$((f * chunksizemb)) file size $f / $chunks"
-> > +		$XFS_IO_PROG -fc "falloc -k $(( (f - 1) * chunksizemb))m ${chunksizemb}m" $file
-> > +	done
-> > +
-> > +	filesizemb=$((filesize / 1048576))
-> > +	$XFS_IO_PROG -fc "falloc -k 0 ${filesizemb}m" $file
-> > +
-> > +	# Try again anyway
-> > +	avail=`_get_available_space $SCRATCH_MNT`
-> > +	$XFS_IO_PROG -fc "pwrite -S 0x65 0 $avail" ${file}
-> > +}
-> > +
-> > +echo "Format and mount"
-> > +_scratch_mkfs > $seqres.full 2>&1
-> > +_scratch_mount >> $seqres.full 2>&1
-> > +
-> > +# This is a test of the rt allocator; force all files to be created realtime
-> > +_xfs_force_bdev realtime $SCRATCH_MNT
-> > +
-> > +# Set the extent size hint larger than the realtime extent size.  This is
-> > +# necessary to exercise the minlen constraints on the realtime allocator.
-> > +fsbsize=$($XFS_IO_PROG -c 'statfs' $SCRATCH_MNT | grep geom.bsize | awk '{print $3}')
-> > +rtextsize_blks=$($XFS_IO_PROG -c 'statfs' $SCRATCH_MNT | grep geom.rtextsize | awk '{print $3}')
-> > +extsize=$((2 * rtextsize_blks * fsbsize))
-> > +
-> > +echo "rtextsize_blks=$rtextsize_blks extsize=$extsize" >> $seqres.full
-> > +_xfs_force_bdev realtime $SCRATCH_MNT
-> 
-> Already done above, could be removed?
-
-Yup, fixed.
-
---D
-
+> On Sep 12, 2021, at 1:13 AM, Eryu Guan <guan@eryu.me> wrote:
+>=20
+> On Thu, Sep 09, 2021 at 05:41:42PM +0000, Catherine Hoang wrote:
+>> Move _scratch_remount_dump_log and _test_remount_dump_log from
+>> common/inject to common/xfs. These routines do not inject errors and
+>> should be placed with other xfs common functions.
+>>=20
+>> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
+>> ---
+>> common/inject | 26 --------------------------
+>> common/xfs    | 26 ++++++++++++++++++++++++++
+>> 2 files changed, 26 insertions(+), 26 deletions(-)
+>>=20
+>> diff --git a/common/inject b/common/inject
+>> index b5334d4a..6b590804 100644
+>> --- a/common/inject
+>> +++ b/common/inject
+>> @@ -111,29 +111,3 @@ _scratch_inject_error()
+>> 		_fail "Cannot inject error ${type} value ${value}."
+>> 	fi
+>> }
+>> -
+>> -# Unmount and remount the scratch device, dumping the log
+>> -_scratch_remount_dump_log()
+>> -{
+>> -	local opts=3D"$1"
+>> -
+>> -	if test -n "$opts"; then
+>> -		opts=3D"-o $opts"
+>> -	fi
+>> -	_scratch_unmount
+>> -	_scratch_dump_log
+>=20
+> This function is a common function that could handle multiple
+> filesystems, currently it supports xfs, ext4 and f2fs. So it's not a
+> xfs-specific function, and moving it to common/xfs doesn't seem correct.
+> Perhaps we should move it to common/log.
+I see, I will move this to common/log on the next revision.
+>=20
+>> -	_scratch_mount "$opts"
+>> -}
+>> -
+>> -# Unmount and remount the test device, dumping the log
+>> -_test_remount_dump_log()
+>> -{
+>> -	local opts=3D"$1"
+>> -
+>> -	if test -n "$opts"; then
+>> -		opts=3D"-o $opts"
+>> -	fi
+>> -	_test_unmount
+>> -	_test_dump_log
+>=20
+> Same here.
+>=20
 > Thanks,
 > Eryu
-> 
-> > +$XFS_IO_PROG -c "extsize $extsize" $SCRATCH_MNT
-> > +
-> > +# Compute the geometry of the test files we're going to create.  Realtime
-> > +# volumes are simple, which means that we can control the space allocations
-> > +# exactly to exploit bugs!
-> > +#
-> > +# Since this is a test of the near rt allocator, we need to set up the test to
-> > +# have a victim file with at least one rt extent allocated to it and enough
-> > +# free space to allocate at least one more rt extent at an adjacent file
-> > +# offset.  The free space must not be immediately adjacent to the the first
-> > +# extent that we allocate to the victim file, and it must not be large enough
-> > +# to satisfy the entire allocation request all at once.
-> > +#
-> > +# Our free space fragmentation strategy is the usual fallocate-and-punch swiss
-> > +# cheese file, which means the free space is split into five sections:
-> > +#
-> > +# The first will be remapped into the victim file.
-> > +#
-> > +# The second section exists to prevent the free extents from being adjacent to
-> > +# the first section.  It will be very large, since we allocate all the rt
-> > +# space.
-> > +#
-> > +# The last three sections will have every other rt extent punched out to create
-> > +# some free space.
-> > +remap_sz=$((extsize * 2))
-> > +required_sz=$((5 * remap_sz))
-> > +free_rtspace=$(_get_available_space $SCRATCH_MNT)
-> > +if [ $free_rtspace -lt $required_sz ]; then
-> > +	_notrun "Insufficient free space on rt volume.  Needed $required_sz, saw $free_rtspace."
-> > +fi
-> > +
-> > +# Allocate all the space on the rt volume so that we can control space
-> > +# allocations exactly.
-> > +fill_rtdev $SCRATCH_MNT/bigfile &>> $seqres.full
-> > +
-> > +# We need at least 4 remap sections to proceed
-> > +bigfile_sz=$(stat -c '%s' $SCRATCH_MNT/bigfile)
-> > +if [ $bigfile_sz -lt $required_sz ]; then
-> > +	_notrun "Free space control file needed $required_sz bytes, got $bigfile_sz."
-> > +fi
-> > +
-> > +# Remap the first remap section to a victim file.
-> > +$XFS_IO_PROG -c "fpunch 0 $remap_sz" $SCRATCH_MNT/bigfile
-> > +$XFS_IO_PROG -f -c "truncate $required_sz" -c "falloc 0 $remap_sz" $SCRATCH_MNT/victim
-> > +
-> > +# Punch out every other extent of the last two sections, to fragment free space.
-> > +frag_sz=$((remap_sz * 3))
-> > +punch_off=$((bigfile_sz - frag_sz))
-> > +$here/src/punch-alternating $SCRATCH_MNT/bigfile -o $((punch_off / fsbsize)) -i $((rtextsize_blks * 2)) -s $rtextsize_blks
-> > +
-> > +# Make sure we have some free rtextents.
-> > +free_rtx=$($XFS_IO_PROG -c 'statfs' $SCRATCH_MNT | grep counts.freertx | awk '{print $3}')
-> > +if [ $free_rtx -eq 0 ]; then
-> > +	echo "Expected fragmented free rt space, found none."
-> > +fi
-> > +
-> > +# Try to double the amount of blocks in the victim file.  On a buggy kernel,
-> > +# the rt allocator will fail immediately with ENOSPC even though we left enough
-> > +# free space for the write will complete fully.
-> > +echo "Try to write a bunch of stuff to the fragmented rt space"
-> > +$XFS_IO_PROG -c "pwrite -S 0x63 -b $remap_sz $remap_sz $remap_sz" -c stat $SCRATCH_MNT/victim >> $seqres.full
-> > +
-> > +# The victim file should own at least two sections' worth of blocks.
-> > +victim_sectors=$(stat -c '%b' $SCRATCH_MNT/victim)
-> > +victim_space_usage=$((victim_sectors * 512))
-> > +expected_usage=$((remap_sz * 2))
-> > +
-> > +if [ $victim_space_usage -lt $expected_usage ]; then
-> > +	echo "Victim file should be using at least $expected_usage bytes, saw $victim_space_usage."
-> > +fi
-> > +
-> > +status=0
-> > +exit
-> > diff --git a/tests/xfs/775.out b/tests/xfs/775.out
-> > new file mode 100644
-> > index 00000000..f5a72156
-> > --- /dev/null
-> > +++ b/tests/xfs/775.out
-> > @@ -0,0 +1,3 @@
-> > +QA output created by 775
-> > +Format and mount
-> > +Try to write a bunch of stuff to the fragmented rt space
+Sure, will move this too. Thanks for the feedback!
+Catherine
+>=20
+>> -	_test_mount "$opts"
+>> -}
+>> diff --git a/common/xfs b/common/xfs
+>> index bfb1bf1e..cda1f768 100644
+>> --- a/common/xfs
+>> +++ b/common/xfs
+>> @@ -1263,3 +1263,29 @@ _require_scratch_xfs_bigtime()
+>> 		_notrun "bigtime feature not advertised on mount?"
+>> 	_scratch_unmount
+>> }
+>> +
+>> +# Unmount and remount the scratch device, dumping the log
+>> +_scratch_remount_dump_log()
+>> +{
+>> +	local opts=3D"$1"
+>> +
+>> +	if test -n "$opts"; then
+>> +		opts=3D"-o $opts"
+>> +	fi
+>> +	_scratch_unmount
+>> +	_scratch_dump_log
+>> +	_scratch_mount "$opts"
+>> +}
+>> +
+>> +# Unmount and remount the test device, dumping the log
+>> +_test_remount_dump_log()
+>> +{
+>> +	local opts=3D"$1"
+>> +
+>> +	if test -n "$opts"; then
+>> +		opts=3D"-o $opts"
+>> +	fi
+>> +	_test_unmount
+>> +	_test_dump_log
+>> +	_test_mount "$opts"
+>> +}
+>> --=20
+>> 2.25.1
+
