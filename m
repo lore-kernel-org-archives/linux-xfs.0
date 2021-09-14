@@ -2,171 +2,207 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79FCBC433FE
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Sep 2021 03:28:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BA92C433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Sep 2021 05:13:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6244561211
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Sep 2021 03:28:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DDCE661151
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Sep 2021 05:13:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238652AbhIND3I (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 13 Sep 2021 23:29:08 -0400
-Received: from smtp-out2.suse.de ([195.135.220.29]:49238 "EHLO
-        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238424AbhIND3E (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Sep 2021 23:29:04 -0400
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id B3B32200C6;
-        Tue, 14 Sep 2021 03:27:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1631590058; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=cJSGn6WA2R49IT1QsgaLiH/CWsOR41ePlSu1rtiMbCg=;
-        b=lQFnJD3mRRl+MwXbo/AUs9pWRfh/FmxioTQrHr4TKGAwgXbBt7IwWVuOmR4BSPBTZzZaqp
-        w7oH+cfEoeoh/BCy8UzcBgFXeEtx+W7qx0FQ6M+NbOVVuAIhMyIsve4VWEUbFxFVob5BId
-        qXtJXoCmV+GsSqKzD5k9V9YpOjcWXGA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1631590058;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=cJSGn6WA2R49IT1QsgaLiH/CWsOR41ePlSu1rtiMbCg=;
-        b=h8MhPWifJWR/qF5e6Qb4KbwDznco+h5XlQjsH1PBqKDA5cr1isS79/33q0rOE8x7LqNmO+
-        dOn2OkKj5qqbJEAw==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 080A913B56;
-        Tue, 14 Sep 2021 03:27:34 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id cgviLKYWQGGuJgAAMHmgww
-        (envelope-from <neilb@suse.de>); Tue, 14 Sep 2021 03:27:34 +0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+        id S239462AbhINFOX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Sep 2021 01:14:23 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49992 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S239500AbhINFOV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 14 Sep 2021 01:14:21 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id DBAB860F21;
+        Tue, 14 Sep 2021 05:13:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1631596384;
+        bh=AUC88WAiX+VR+fTnlcmenz58rltr9CQ7tv88IFx/wQQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=gtm192x0anPgl38s8NNt3Wc46OwSlcp1LPVgM7PqMhdMDKdSPFD1Q4IclJL6sBYta
+         0BHtaIko7qK2PtfubiSe9GirD3MujUh3/nvebHmjtO4OdZDw1NHjwSlQiDXtJh2t9G
+         kAq4V7av/nhvVE56YXW3AU6pps/ZzeUu247yxXzM=
+Date:   Tue, 14 Sep 2021 07:12:43 +0200
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>,
+        linux-block@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 13/13] xfs: convert xfs_sysfs attrs to use ->seq_show
+Message-ID: <YUAvSx42abg5S2ym@kroah.com>
+References: <20210913054121.616001-1-hch@lst.de>
+ <20210913054121.616001-14-hch@lst.de>
+ <YT7vZthsMCM1uKxm@kroah.com>
+ <20210914012029.GF2361455@dread.disaster.area>
 MIME-Version: 1.0
-From:   "NeilBrown" <neilb@suse.de>
-To:     "Dave Chinner" <david@fromorbit.com>
-Cc:     "Andrew Morton" <akpm@linux-foundation.org>,
-        "Theodore Ts'o" <tytso@mit.edu>,
-        "Andreas Dilger" <adilger.kernel@dilger.ca>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        "Matthew Wilcox" <willy@infradead.org>,
-        "Mel Gorman" <mgorman@suse.com>, linux-xfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 5/6] XFS: remove congestion_wait() loop from kmem_alloc()
-In-reply-to: <20210914013117.GG2361455@dread.disaster.area>
-References: <163157808321.13293.486682642188075090.stgit@noble.brown>,
- <163157838439.13293.5032214643474179966.stgit@noble.brown>,
- <20210914013117.GG2361455@dread.disaster.area>
-Date:   Tue, 14 Sep 2021 13:27:31 +1000
-Message-id: <163159005180.3992.2350725240228509854@noble.neil.brown.name>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210914012029.GF2361455@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, 14 Sep 2021, Dave Chinner wrote:
-> On Tue, Sep 14, 2021 at 10:13:04AM +1000, NeilBrown wrote:
-> > Documentation commment in gfp.h discourages indefinite retry loops on
-> > ENOMEM and says of __GFP_NOFAIL that it
+On Tue, Sep 14, 2021 at 11:20:29AM +1000, Dave Chinner wrote:
+> On Mon, Sep 13, 2021 at 08:27:50AM +0200, Greg Kroah-Hartman wrote:
+> > On Mon, Sep 13, 2021 at 07:41:21AM +0200, Christoph Hellwig wrote:
+> > > Trivial conversion to the seq_file based sysfs attributes.
+> > > 
+> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > > ---
+> > >  fs/xfs/xfs_stats.c | 24 +++++-------
+> > >  fs/xfs/xfs_stats.h |  2 +-
+> > >  fs/xfs/xfs_sysfs.c | 96 +++++++++++++++++++++++-----------------------
+> > >  3 files changed, 58 insertions(+), 64 deletions(-)
+> > > 
+> > > diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
+> > > index 20e0534a772c9..71e7a84ba0403 100644
+> > > --- a/fs/xfs/xfs_stats.c
+> > > +++ b/fs/xfs/xfs_stats.c
+> > > @@ -16,10 +16,9 @@ static int counter_val(struct xfsstats __percpu *stats, int idx)
+> > >  	return val;
+> > >  }
+> > >  
+> > > -int xfs_stats_format(struct xfsstats __percpu *stats, char *buf)
+> > > +void xfs_stats_format(struct xfsstats __percpu *stats, struct seq_file *sf)
+> > >  {
+> > >  	int		i, j;
+> > > -	int		len = 0;
+> > >  	uint64_t	xs_xstrat_bytes = 0;
+> > >  	uint64_t	xs_write_bytes = 0;
+> > >  	uint64_t	xs_read_bytes = 0;
+> > > @@ -58,13 +57,12 @@ int xfs_stats_format(struct xfsstats __percpu *stats, char *buf)
+> > >  	/* Loop over all stats groups */
+> > >  
+> > >  	for (i = j = 0; i < ARRAY_SIZE(xstats); i++) {
+> > > -		len += scnprintf(buf + len, PATH_MAX - len, "%s",
+> > > -				xstats[i].desc);
+> > > +		seq_printf(sf, "%s", xstats[i].desc);
+> > > +
+> > >  		/* inner loop does each group */
+> > >  		for (; j < xstats[i].endpoint; j++)
+> > > -			len += scnprintf(buf + len, PATH_MAX - len, " %u",
+> > > -					counter_val(stats, j));
+> > > -		len += scnprintf(buf + len, PATH_MAX - len, "\n");
+> > > +			seq_printf(sf, " %u", counter_val(stats, j));
+> > > +		seq_printf(sf, "\n");
+> > >  	}
+> > >  	/* extra precision counters */
+> > >  	for_each_possible_cpu(i) {
+> > > @@ -74,18 +72,14 @@ int xfs_stats_format(struct xfsstats __percpu *stats, char *buf)
+> > >  		defer_relog += per_cpu_ptr(stats, i)->s.defer_relog;
+> > >  	}
+> > >  
+> > > -	len += scnprintf(buf + len, PATH_MAX-len, "xpc %Lu %Lu %Lu\n",
+> > > +	seq_printf(sf, "xpc %Lu %Lu %Lu\n",
+> > >  			xs_xstrat_bytes, xs_write_bytes, xs_read_bytes);
+> > > -	len += scnprintf(buf + len, PATH_MAX-len, "defer_relog %llu\n",
+> > > -			defer_relog);
+> > > -	len += scnprintf(buf + len, PATH_MAX-len, "debug %u\n",
+> > > +	seq_printf(sf, "defer_relog %llu\n", defer_relog);
+> > >  #if defined(DEBUG)
+> > > -		1);
+> > > +	seq_printf(sf, "debug 1\n");
+> > >  #else
+> > > -		0);
+> > > +	seq_printf(sf, "debug 0\n");
+> > >  #endif
+> > > -
+> > > -	return len;
+> > >  }
 > > 
-> >     is definitely preferable to use the flag rather than opencode
-> >     endless loop around allocator.
-> > 
-> > So remove the loop, instead specifying __GFP_NOFAIL if KM_MAYFAIL was
-> > not given.
-> > 
-> > Signed-off-by: NeilBrown <neilb@suse.de>
-> > ---
-> >  fs/xfs/kmem.c |   16 ++++------------
-> >  1 file changed, 4 insertions(+), 12 deletions(-)
-> > 
-> > diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
-> > index 6f49bf39183c..f545f3633f88 100644
-> > --- a/fs/xfs/kmem.c
-> > +++ b/fs/xfs/kmem.c
-> > @@ -13,19 +13,11 @@ kmem_alloc(size_t size, xfs_km_flags_t flags)
-> >  {
-> >  	int	retries = 0;
-> >  	gfp_t	lflags = kmem_flags_convert(flags);
-> > -	void	*ptr;
-> >  
-> >  	trace_kmem_alloc(size, flags, _RET_IP_);
-> >  
-> > -	do {
-> > -		ptr = kmalloc(size, lflags);
-> > -		if (ptr || (flags & KM_MAYFAIL))
-> > -			return ptr;
-> > -		if (!(++retries % 100))
-> > -			xfs_err(NULL,
-> > -	"%s(%u) possible memory allocation deadlock size %u in %s (mode:0x%x)",
-> > -				current->comm, current->pid,
-> > -				(unsigned int)size, __func__, lflags);
-> > -		congestion_wait(BLK_RW_ASYNC, HZ/50);
-> > -	} while (1);
-> > +	if (!(flags & KM_MAYFAIL))
-> > +		lflags |= __GFP_NOFAIL;
-> > +
-> > +	return kmalloc(size, lflags);
-> >  }
-> 
-> Which means we no longer get warnings about memory allocation
-> failing - kmem_flags_convert() sets __GFP_NOWARN for all allocations
-> in this loop. Hence we'll now get silent deadlocks through this code
-> instead of getting warnings that memory allocation is failing
-> repeatedly.
-
-Yes, that is a problem.  Could we just clear __GFP_NOWARN when setting
-__GFP_NOFAIL?
-Or is the 1-in-100 important? I think default warning is 1 every 10
-seconds.
-
-> 
-> I also wonder about changing the backoff behaviour here (it's a 20ms
-> wait right now because there are not early wakeups) will affect the
-> behaviour, as __GFP_NOFAIL won't wait for that extra time between
-> allocation attempts....
-
-The internal backoff is 100ms if there is much pending writeout, and
-there are 16 internal retries.  If there is not much pending writeout, I
-think it just loops with cond_resched().
-So adding 20ms can only be at all interesting when the only way to
-reclaim memory is something other than writeout.  I don't know how to
-think about that.
-
-> 
-> And, of course, how did you test this? Sometimes we see
-> unpredicted behaviours as a result of "simple" changes like this
-> under low memory conditions...
-
-I suspect this is close to untestable.  While I accept that there might
-be a scenario where the change might cause some macro effect, it would
-most likely be some interplay with some other subsystem struggling with
-memory.  Testing XFS by itself would be unlikely to find it.
-
-Thanks,
-NeilBrown
-
-
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> > That is a sysfs file?  What happened to the "one value per file" rule
+> > here?
 > 
 > 
+> There is no "rule" that says syfs files must contain one value per
+> file; the documentation says that one value per file is the
+> "preferred" format.  Documentation/filesystems/sysfs.rst:
+> 
+> [...]
+> Attributes
+> ...
+> Attributes should be ASCII text files, preferably with only one value
+> per file. It is noted that it may not be efficient to contain only one
+> value per file, so it is socially acceptable to express an array of
+> values of the same type.
+> [...]
+> 
+
+An array of values is one thing like "what is the power states for this
+device".  A list of different key/value pairs is a totally different
+thing entirely.
+
+> We are exposing a large array of integer values here, so multiple
+> values per file are explicitly considered an acceptible format.
+
+Not really, that was not the goal of sysfs at all.
+
+> Further, as there are roughly 200 individual stats in this file and
+> calculating each stat requires per-cpu aggregation, the the cost of
+> calculating and reading each stat individually is prohibitive, not
+> just inefficient.
+
+Have you measured it?  How often does the file get read and by what
+tools?
+
+We have learned from our past mistakes in /proc where we did this in the
+past and required keeping obsolete values and constantly tweaking
+userspace parsers.  That is why we made sysfs one-value-per-file.  If
+the file is not there, the value is not there, much easier to handle
+future changes.
+
+> So, yes, we might have multiple lines in the file that you can frown
+> about, but OTOH the file format has been exposed as a kernel ABI for
+> a couple of decades via /proc/fs/xfs/stat.
+
+proc had no such rules, but we have learned :)
+
+> Hence exposing it in
+> sysfs to provide a more fine-grained breakdown of the stats (per
+> mount instead of global) is a no-brainer. We don't have to rewrite
+> the parsing engines in multiple userspace monitoring programs to
+> extract this information from the kernel - they just create a new
+> instance and read a different file and it all just works.
+
+But then you run into the max size restriction on sysfs files
+(PAGE_SIZE) and things break down.
+
+Please don't do this.
+
+> Indeed, there's precedence for such /proc file formats in more
+> fine-grained sysfs files. e.g.  /sys/bus/node/devices/node<n>/vmstat
+> and /sys/bus/node/devices/node<n>/meminfo retain the same format
+> (and hence userspace parsers) for the per-node stats as /proc/vmstat
+> and /proc/meminfo use for the global stats...
+
+And I have complained about those files in the past many times.  And
+they are running into problems in places dealing with them too.
+
+> tl;dr: the file contains arrays of values, it's inefficient to read
+> values one at a time, it's a pre-existing ABI-constrainted file
+> format, there's precedence in core kernel statistics
+> implementations and the documented guidelines allow this sort of
+> usage in these cases.
+
+I would prefer not to do this, and I will not take core sysfs changes to
+make this any easier.
+
+Which is one big reason why I don't like just making sysfs use the seq
+file api, it would allow stuff like this to propagate to other places in
+the kernel.
+
+Maybe I should cut the file size of a sysfs file down to PAGE_SIZE/4 or
+less, that might be better :)
+
+thanks,
+
+greg k-h
