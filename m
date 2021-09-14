@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90648C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Sep 2021 02:41:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71986C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Sep 2021 02:41:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 78541610D1
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Sep 2021 02:41:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 55033610FB
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Sep 2021 02:41:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235706AbhINCmj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 13 Sep 2021 22:42:39 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53316 "EHLO mail.kernel.org"
+        id S235956AbhINCmp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 13 Sep 2021 22:42:45 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53340 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234374AbhINCmi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 13 Sep 2021 22:42:38 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3C9E6610FB;
-        Tue, 14 Sep 2021 02:41:22 +0000 (UTC)
+        id S234374AbhINCmo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 13 Sep 2021 22:42:44 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id ABA55610D1;
+        Tue, 14 Sep 2021 02:41:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631587282;
-        bh=653Y42PGC3qIZsMbFcFSRvsJ8b02uOLCx9qxZCfAkho=;
+        s=k20201202; t=1631587287;
+        bh=joraU5cxcw8coys0KRcVKDs7IpKpW2AMauNb/BOMqJE=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=G2K7KyhcXk/IDlp1eXSeJNBEKvf9TVZOZuTRakCiDKY3i6HTHWlduZUM+LRxSWbx4
-         HRe6wq/Non25PdlC36mhADdB+9SJduOHs4DUnAJ8//0eJOUmyoEPyGtauKJA0+SiV1
-         MSe+bapO1w+GnT/O/PvyFWu/QRdSVgWiOeu9jB7/eHKpELI1zatBs8ahVyFisK/yWe
-         op3fnf1ob3S2tI4JBmFEUmtnhYCoU8QkMMo3GzZLcBWNeRwK+dmNUJN04jmh7KGNtP
-         HmPFpN3PMPYFPzS6R5U4vuwju921v1yvbla3LbHtL6J3ScB45FZ0ValhyFHLPOAPQi
-         o19av8fITdOmg==
-Subject: [PATCH 15/43] xfs: make the pointer passed to btree set_root
+        b=EEPd2RjZH5m7mBzi/ZNGzlLyh+Z5qnHPVlUyTqBIhV3KkMZvzJAEJj0tt4uZccYRm
+         eF7HyOc5pl4nnFh9fncfbNUiT2ZUBUohGvy7nFP/evSkynC5lFOupwz16I3Iv145iv
+         jCXa1EQmR+NSumIYEvDwqGYsSYIixM8HW64FPFoLgOmC5iQfe9E+eDX4EVhYNBPiyS
+         27NOBuBVHm5Ip+BGivskUUFCc1wPjVKJO/gWWgPZLgVyKhXwJ9jnCg4z3ymakFZudf
+         503kMPTY2Al/LrGEfL0qwcF9VAw2W9rYLq5P5SvPvh2W9WyW3ZmlwdlQ1M1IJu5e/l
+         e14nXEVA/CWqg==
+Subject: [PATCH 16/43] xfs: make the start pointer passed to btree alloc_block
  functions const
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
 Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Date:   Mon, 13 Sep 2021 19:41:22 -0700
-Message-ID: <163158728198.1604118.6785493093865692097.stgit@magnolia>
+Date:   Mon, 13 Sep 2021 19:41:27 -0700
+Message-ID: <163158728744.1604118.7373675138987652673.stgit@magnolia>
 In-Reply-To: <163158719952.1604118.14415288328687941574.stgit@magnolia>
 References: <163158719952.1604118.14415288328687941574.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,133 +50,182 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: b5a6e5fe0e6840bc90e51cf522d6c5a880cde567
+Source kernel commit: deb06b9ab6dfa167c280a68d5acb2f12e007073f
 
-The pointer passed to each per-AG btree type's ->set_root function isn't
-supposed to be modified (that function sets an external pointer to the
-root block) so mark them const.
+The @start pointer passed to each per-AG btree type's ->alloc_block
+function isn't supposed to be modified, since it's a hint about the
+location of the btree block being split that is to be fed to the
+allocator, so mark the parameter const.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/xfs_alloc_btree.c    |    6 +++---
+ libxfs/xfs_alloc_btree.c    |    8 ++++----
+ libxfs/xfs_bmap_btree.c     |    8 ++++----
  libxfs/xfs_btree.h          |    2 +-
- libxfs/xfs_btree_staging.c  |    6 +++---
- libxfs/xfs_ialloc_btree.c   |   12 ++++++------
- libxfs/xfs_refcount_btree.c |    6 +++---
- libxfs/xfs_rmap_btree.c     |    6 +++---
- 6 files changed, 19 insertions(+), 19 deletions(-)
+ libxfs/xfs_btree_staging.c  |    8 ++++----
+ libxfs/xfs_ialloc_btree.c   |   26 +++++++++++++-------------
+ libxfs/xfs_refcount_btree.c |    8 ++++----
+ libxfs/xfs_rmap_btree.c     |    8 ++++----
+ 7 files changed, 34 insertions(+), 34 deletions(-)
 
 
 diff --git a/libxfs/xfs_alloc_btree.c b/libxfs/xfs_alloc_btree.c
-index 79130125..c10f20d6 100644
+index c10f20d6..33b43c7c 100644
 --- a/libxfs/xfs_alloc_btree.c
 +++ b/libxfs/xfs_alloc_btree.c
-@@ -29,9 +29,9 @@ xfs_allocbt_dup_cursor(
+@@ -48,10 +48,10 @@ xfs_allocbt_set_root(
  
- STATIC void
- xfs_allocbt_set_root(
+ STATIC int
+ xfs_allocbt_alloc_block(
 -	struct xfs_btree_cur	*cur,
--	union xfs_btree_ptr	*ptr,
--	int			inc)
+-	union xfs_btree_ptr	*start,
+-	union xfs_btree_ptr	*new,
+-	int			*stat)
 +	struct xfs_btree_cur		*cur,
-+	const union xfs_btree_ptr	*ptr,
-+	int				inc)
++	const union xfs_btree_ptr	*start,
++	union xfs_btree_ptr		*new,
++	int				*stat)
  {
- 	struct xfs_buf		*agbp = cur->bc_ag.agbp;
- 	struct xfs_agf		*agf = agbp->b_addr;
+ 	int			error;
+ 	xfs_agblock_t		bno;
+diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
+index 9e2e9926..0552157a 100644
+--- a/libxfs/xfs_bmap_btree.c
++++ b/libxfs/xfs_bmap_btree.c
+@@ -191,10 +191,10 @@ xfs_bmbt_update_cursor(
+ 
+ STATIC int
+ xfs_bmbt_alloc_block(
+-	struct xfs_btree_cur	*cur,
+-	union xfs_btree_ptr	*start,
+-	union xfs_btree_ptr	*new,
+-	int			*stat)
++	struct xfs_btree_cur		*cur,
++	const union xfs_btree_ptr	*start,
++	union xfs_btree_ptr		*new,
++	int				*stat)
+ {
+ 	xfs_alloc_arg_t		args;		/* block allocation args */
+ 	int			error;		/* error return value */
 diff --git a/libxfs/xfs_btree.h b/libxfs/xfs_btree.h
-index 4b95373c..504032d9 100644
+index 504032d9..8a36012a 100644
 --- a/libxfs/xfs_btree.h
 +++ b/libxfs/xfs_btree.h
-@@ -106,7 +106,7 @@ struct xfs_btree_ops {
- 
- 	/* update btree root pointer */
- 	void	(*set_root)(struct xfs_btree_cur *cur,
--			    union xfs_btree_ptr *nptr, int level_change);
-+			    const union xfs_btree_ptr *nptr, int level_change);
+@@ -110,7 +110,7 @@ struct xfs_btree_ops {
  
  	/* block allocation / freeing */
  	int	(*alloc_block)(struct xfs_btree_cur *cur,
+-			       union xfs_btree_ptr *start_bno,
++			       const union xfs_btree_ptr *start_bno,
+ 			       union xfs_btree_ptr *new_bno,
+ 			       int *stat);
+ 	int	(*free_block)(struct xfs_btree_cur *cur, struct xfs_buf *bp);
 diff --git a/libxfs/xfs_btree_staging.c b/libxfs/xfs_btree_staging.c
-index ace2eb7c..d808f0fc 100644
+index d808f0fc..146d2475 100644
 --- a/libxfs/xfs_btree_staging.c
 +++ b/libxfs/xfs_btree_staging.c
-@@ -112,9 +112,9 @@ xfs_btree_fakeroot_init_ptr_from_cur(
- /* Update the btree root information for a per-AG fake root. */
- STATIC void
- xfs_btree_afakeroot_set_root(
+@@ -59,10 +59,10 @@ xfs_btree_fakeroot_dup_cursor(
+  */
+ STATIC int
+ xfs_btree_fakeroot_alloc_block(
 -	struct xfs_btree_cur	*cur,
--	union xfs_btree_ptr	*ptr,
--	int			inc)
+-	union xfs_btree_ptr	*start_bno,
+-	union xfs_btree_ptr	*new_bno,
+-	int			*stat)
 +	struct xfs_btree_cur		*cur,
-+	const union xfs_btree_ptr	*ptr,
-+	int				inc)
++	const union xfs_btree_ptr	*start_bno,
++	union xfs_btree_ptr		*new_bno,
++	int				*stat)
  {
- 	struct xbtree_afakeroot	*afake = cur->bc_ag.afake;
- 
+ 	ASSERT(0);
+ 	return -EFSCORRUPTED;
 diff --git a/libxfs/xfs_ialloc_btree.c b/libxfs/xfs_ialloc_btree.c
-index 14b54f13..f644882b 100644
+index f644882b..5053c4a5 100644
 --- a/libxfs/xfs_ialloc_btree.c
 +++ b/libxfs/xfs_ialloc_btree.c
-@@ -39,9 +39,9 @@ xfs_inobt_dup_cursor(
+@@ -87,11 +87,11 @@ xfs_inobt_mod_blockcount(
  
- STATIC void
- xfs_inobt_set_root(
+ STATIC int
+ __xfs_inobt_alloc_block(
 -	struct xfs_btree_cur	*cur,
--	union xfs_btree_ptr	*nptr,
--	int			inc)	/* level change */
+-	union xfs_btree_ptr	*start,
+-	union xfs_btree_ptr	*new,
+-	int			*stat,
+-	enum xfs_ag_resv_type	resv)
 +	struct xfs_btree_cur		*cur,
-+	const union xfs_btree_ptr	*nptr,
-+	int				inc)	/* level change */
++	const union xfs_btree_ptr	*start,
++	union xfs_btree_ptr		*new,
++	int				*stat,
++	enum xfs_ag_resv_type		resv)
  {
- 	struct xfs_buf		*agbp = cur->bc_ag.agbp;
- 	struct xfs_agi		*agi = agbp->b_addr;
-@@ -53,9 +53,9 @@ xfs_inobt_set_root(
+ 	xfs_alloc_arg_t		args;		/* block allocation args */
+ 	int			error;		/* error return value */
+@@ -126,20 +126,20 @@ __xfs_inobt_alloc_block(
  
- STATIC void
- xfs_finobt_set_root(
+ STATIC int
+ xfs_inobt_alloc_block(
 -	struct xfs_btree_cur	*cur,
--	union xfs_btree_ptr	*nptr,
--	int			inc)	/* level change */
+-	union xfs_btree_ptr	*start,
+-	union xfs_btree_ptr	*new,
+-	int			*stat)
 +	struct xfs_btree_cur		*cur,
-+	const union xfs_btree_ptr	*nptr,
-+	int				inc)	/* level change */
++	const union xfs_btree_ptr	*start,
++	union xfs_btree_ptr		*new,
++	int				*stat)
  {
- 	struct xfs_buf		*agbp = cur->bc_ag.agbp;
- 	struct xfs_agi		*agi = agbp->b_addr;
+ 	return __xfs_inobt_alloc_block(cur, start, new, stat, XFS_AG_RESV_NONE);
+ }
+ 
+ STATIC int
+ xfs_finobt_alloc_block(
+-	struct xfs_btree_cur	*cur,
+-	union xfs_btree_ptr	*start,
+-	union xfs_btree_ptr	*new,
+-	int			*stat)
++	struct xfs_btree_cur		*cur,
++	const union xfs_btree_ptr	*start,
++	union xfs_btree_ptr		*new,
++	int				*stat)
+ {
+ 	if (cur->bc_mp->m_finobt_nores)
+ 		return xfs_inobt_alloc_block(cur, start, new, stat);
 diff --git a/libxfs/xfs_refcount_btree.c b/libxfs/xfs_refcount_btree.c
-index b088c4a0..291098a9 100644
+index 291098a9..7a5a1a8d 100644
 --- a/libxfs/xfs_refcount_btree.c
 +++ b/libxfs/xfs_refcount_btree.c
-@@ -30,9 +30,9 @@ xfs_refcountbt_dup_cursor(
+@@ -50,10 +50,10 @@ xfs_refcountbt_set_root(
  
- STATIC void
- xfs_refcountbt_set_root(
+ STATIC int
+ xfs_refcountbt_alloc_block(
 -	struct xfs_btree_cur	*cur,
--	union xfs_btree_ptr	*ptr,
--	int			inc)
+-	union xfs_btree_ptr	*start,
+-	union xfs_btree_ptr	*new,
+-	int			*stat)
 +	struct xfs_btree_cur		*cur,
-+	const union xfs_btree_ptr	*ptr,
-+	int				inc)
++	const union xfs_btree_ptr	*start,
++	union xfs_btree_ptr		*new,
++	int				*stat)
  {
  	struct xfs_buf		*agbp = cur->bc_ag.agbp;
  	struct xfs_agf		*agf = agbp->b_addr;
 diff --git a/libxfs/xfs_rmap_btree.c b/libxfs/xfs_rmap_btree.c
-index 6d28a469..755246c6 100644
+index 755246c6..7a441f64 100644
 --- a/libxfs/xfs_rmap_btree.c
 +++ b/libxfs/xfs_rmap_btree.c
-@@ -55,9 +55,9 @@ xfs_rmapbt_dup_cursor(
+@@ -74,10 +74,10 @@ xfs_rmapbt_set_root(
  
- STATIC void
- xfs_rmapbt_set_root(
+ STATIC int
+ xfs_rmapbt_alloc_block(
 -	struct xfs_btree_cur	*cur,
--	union xfs_btree_ptr	*ptr,
--	int			inc)
+-	union xfs_btree_ptr	*start,
+-	union xfs_btree_ptr	*new,
+-	int			*stat)
 +	struct xfs_btree_cur		*cur,
-+	const union xfs_btree_ptr	*ptr,
-+	int				inc)
++	const union xfs_btree_ptr	*start,
++	union xfs_btree_ptr		*new,
++	int				*stat)
  {
  	struct xfs_buf		*agbp = cur->bc_ag.agbp;
  	struct xfs_agf		*agf = agbp->b_addr;
