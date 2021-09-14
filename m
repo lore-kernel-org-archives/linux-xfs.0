@@ -2,195 +2,68 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33F81C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Sep 2021 06:05:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB808C433FE
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Sep 2021 07:30:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0DEC360F6D
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Sep 2021 06:05:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C3F6060E74
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Sep 2021 07:30:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239908AbhINGGn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Sep 2021 02:06:43 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:48644 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S239812AbhINGGk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Sep 2021 02:06:40 -0400
-Received: from dread.disaster.area (pa49-195-238-16.pa.nsw.optusnet.com.au [49.195.238.16])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 74FF288194E;
-        Tue, 14 Sep 2021 16:05:20 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1mQ1ZH-00CH3R-CT; Tue, 14 Sep 2021 16:05:19 +1000
-Date:   Tue, 14 Sep 2021 16:05:19 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     NeilBrown <neilb@suse.de>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Mel Gorman <mgorman@suse.com>, linux-xfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 5/6] XFS: remove congestion_wait() loop from kmem_alloc()
-Message-ID: <20210914060519.GJ2361455@dread.disaster.area>
-References: <163157808321.13293.486682642188075090.stgit@noble.brown>
- <163157838439.13293.5032214643474179966.stgit@noble.brown>
- <20210914013117.GG2361455@dread.disaster.area>
- <163159005180.3992.2350725240228509854@noble.neil.brown.name>
+        id S240723AbhINHb0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Sep 2021 03:31:26 -0400
+Received: from verein.lst.de ([213.95.11.211]:58878 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S239257AbhINHbZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 14 Sep 2021 03:31:25 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 9922B67373; Tue, 14 Sep 2021 09:30:04 +0200 (CEST)
+Date:   Tue, 14 Sep 2021 09:30:03 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>,
+        linux-block@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 13/13] xfs: convert xfs_sysfs attrs to use ->seq_show
+Message-ID: <20210914073003.GA31077@lst.de>
+References: <20210913054121.616001-1-hch@lst.de> <20210913054121.616001-14-hch@lst.de> <YT7vZthsMCM1uKxm@kroah.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <163159005180.3992.2350725240228509854@noble.neil.brown.name>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
-        a=DzKKRZjfViQTE5W6EVc0VA==:117 a=DzKKRZjfViQTE5W6EVc0VA==:17
-        a=kj9zAlcOel0A:10 a=7QKq2e-ADPsA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=8gt0TS_iLB6qLJAy30IA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <YT7vZthsMCM1uKxm@kroah.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 14, 2021 at 01:27:31PM +1000, NeilBrown wrote:
-> On Tue, 14 Sep 2021, Dave Chinner wrote:
-> > On Tue, Sep 14, 2021 at 10:13:04AM +1000, NeilBrown wrote:
-> > > Documentation commment in gfp.h discourages indefinite retry loops on
-> > > ENOMEM and says of __GFP_NOFAIL that it
-> > > 
-> > >     is definitely preferable to use the flag rather than opencode
-> > >     endless loop around allocator.
-> > > 
-> > > So remove the loop, instead specifying __GFP_NOFAIL if KM_MAYFAIL was
-> > > not given.
-> > > 
-> > > Signed-off-by: NeilBrown <neilb@suse.de>
-> > > ---
-> > >  fs/xfs/kmem.c |   16 ++++------------
-> > >  1 file changed, 4 insertions(+), 12 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
-> > > index 6f49bf39183c..f545f3633f88 100644
-> > > --- a/fs/xfs/kmem.c
-> > > +++ b/fs/xfs/kmem.c
-> > > @@ -13,19 +13,11 @@ kmem_alloc(size_t size, xfs_km_flags_t flags)
-> > >  {
-> > >  	int	retries = 0;
-> > >  	gfp_t	lflags = kmem_flags_convert(flags);
-> > > -	void	*ptr;
-> > >  
-> > >  	trace_kmem_alloc(size, flags, _RET_IP_);
-> > >  
-> > > -	do {
-> > > -		ptr = kmalloc(size, lflags);
-> > > -		if (ptr || (flags & KM_MAYFAIL))
-> > > -			return ptr;
-> > > -		if (!(++retries % 100))
-> > > -			xfs_err(NULL,
-> > > -	"%s(%u) possible memory allocation deadlock size %u in %s (mode:0x%x)",
-> > > -				current->comm, current->pid,
-> > > -				(unsigned int)size, __func__, lflags);
-> > > -		congestion_wait(BLK_RW_ASYNC, HZ/50);
-> > > -	} while (1);
-> > > +	if (!(flags & KM_MAYFAIL))
-> > > +		lflags |= __GFP_NOFAIL;
-> > > +
-> > > +	return kmalloc(size, lflags);
-> > >  }
-> > 
-> > Which means we no longer get warnings about memory allocation
-> > failing - kmem_flags_convert() sets __GFP_NOWARN for all allocations
-> > in this loop. Hence we'll now get silent deadlocks through this code
-> > instead of getting warnings that memory allocation is failing
-> > repeatedly.
-> 
-> Yes, that is a problem.  Could we just clear __GFP_NOWARN when setting
-> __GFP_NOFAIL?
+On Mon, Sep 13, 2021 at 08:27:50AM +0200, Greg Kroah-Hartman wrote:
+> Anyway, I like the idea, but as you can see here, it could lead to even
+> more abuse of sysfs files.  We are just now getting people to use
+> sysfs_emit() and that is showing us where people have been abusing the
+> api in bad ways.
 
-Probably.
+To be honest I've always seen sysfs_emit as at best a horrible band aid
+to enforce the PAGE_SIZE bounds checking.  Better than nothing, but
+not a solution at all, as you can't force anyone to actually use it.
 
-> Or is the 1-in-100 important? I think default warning is 1 every 10
-> seconds.
+> Is there any way that sysfs can keep the existing show functionality and
+> just do the seq_printf() for the buffer returned by the attribute file
+> inside of the sysfs core?
 
-1-in-100 is an arbitrary number to prevent spamming of logs unless
-there is a real likelihood of there being a memory allocation
-deadlock. We've typically only ever seen this when trying to do
-high-order allocations (e.g. 64kB for xattr buffers) and failing
-repeatedly in extreme memory pressure events. It's a canary that we
-leave in the logs so that when a user reports problems we know that
-they've been running under extended extreme low memory conditions
-and can adjust the triage process accordingly.
-
-So, we could remove __GFP_NOWARN, as long as the core allocator code
-has sufficient rate limiting that it won't spam the logs due to
-extended failure looping...
-
-> > I also wonder about changing the backoff behaviour here (it's a 20ms
-> > wait right now because there are not early wakeups) will affect the
-> > behaviour, as __GFP_NOFAIL won't wait for that extra time between
-> > allocation attempts....
-> 
-> The internal backoff is 100ms if there is much pending writeout, and
-> there are 16 internal retries.  If there is not much pending writeout, I
-> think it just loops with cond_resched().
-> So adding 20ms can only be at all interesting when the only way to
-> reclaim memory is something other than writeout.  I don't know how to
-> think about that.
-
-Any cache that uses a shrinker to reclaim (e.g. dentry, inodes, fs
-metadata, etc due to recursive directory traversals) can cause
-reclaim looping and priority escalation without there being any page
-cache writeback or reclaim possible. Especially when you have
-GFP_NOFS allocation context and all your memory is in VFS level
-caches. At that point, direct reclaim cannot (and will not) make
-forwards progress, so we still have to wait for some other
-GFP_KERNEL context reclaim (e.g. kswapd) to make progress reclaiming
-memory while we wait.
-
-Fundamentally, the memory reclaim backoff code doesn't play well
-with shrinkers. Patches from an old patchset which pushed lack of
-shrinker progress back up into the vmscan level backoff algorithms
-was something I was experimenting with a few years ago. e.g.
-
-https://lore.kernel.org/linux-xfs/20191031234618.15403-16-david@fromorbit.com/
-https://lore.kernel.org/linux-xfs/20191031234618.15403-17-david@fromorbit.com/
-
-We didn't end up going this way to solve the XFS inode reclaim
-problems - I ended up solving that entirely by pinning XFS buffer
-cache memory and modifying the XFS inode shrinker - but it was this
-patchset that first exposed the fact that congestion_wait() was no
-longer functioning as intended. See the last few paragraphs of the
-(long) cover letter for v1 of that patchset here:
-
-https://lore.kernel.org/linux-xfs/20190801021752.4986-1-david@fromorbit.com/
-
-So, yeah, I know full well that congestion_wait() is mostly just
-an unconditional timeout these days...
-
-> > And, of course, how did you test this? Sometimes we see
-> > unpredicted behaviours as a result of "simple" changes like this
-> > under low memory conditions...
-> 
-> I suspect this is close to untestable.  While I accept that there might
-> be a scenario where the change might cause some macro effect, it would
-> most likely be some interplay with some other subsystem struggling with
-> memory.  Testing XFS by itself would be unlikely to find it.
-
-Filesystem traversal workloads (e.g. chown -R) are the ones that
-hammer memory allocation from GFP_NOFS context which creates memory
-pressure that cannot be balanced by direct reclaim as direct reclaim
-cannot reclaim filesystem caches in this situation. This is where I
-would expect extra backoff on failing GFP_NOFS allocations to have
-some effect...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Well, you'd need one page allocated in the seq_file code, and one in
+the sysfs code.  At which point we might as well drop using seq_file
+at all.  But in general seq_file seems like a very nice helper for
+over flow free printing into a buffer.  If sysfs files actually were
+all limited to a single print we wouldn't really need it, and could
+just have something like sysfs_emit just with the buffer hidden inside
+a structure that is opaqueue to the caller.  But looking at various
+attributes that is not exactly the case.  While the majority certainly
+uses a single value and a single print statement there is plenty where
+this is not the case.  Either because they use multiple values, or
+often also because they dynamically append to the string to print
+things like comma-separated flags.
