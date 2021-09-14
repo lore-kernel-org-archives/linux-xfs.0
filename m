@@ -7,39 +7,38 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3895C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Sep 2021 02:40:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FE46C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Sep 2021 02:40:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CDD6D610FB
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Sep 2021 02:40:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6D5F0610F9
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Sep 2021 02:40:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234374AbhINCl2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 13 Sep 2021 22:41:28 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52956 "EHLO mail.kernel.org"
+        id S237737AbhINCld (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 13 Sep 2021 22:41:33 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52990 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236074AbhINCl1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 13 Sep 2021 22:41:27 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 39D05610D1;
-        Tue, 14 Sep 2021 02:40:11 +0000 (UTC)
+        id S236074AbhINCld (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 13 Sep 2021 22:41:33 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id AD536610D1;
+        Tue, 14 Sep 2021 02:40:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631587211;
-        bh=qtx4K6+rnWMjKDGdEjLxy78d7q2/++H/a6DV8Tkibco=;
+        s=k20201202; t=1631587216;
+        bh=o18SNfpxKXEHRwHWCvQ1qgCmdrG4xUlE29/n49hnEKU=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=SqJynLqmiH1BtiqPRfbzJJpdkyuzBE98iKHq/AevS69kscx/pLwBjnwPHQE8rsazl
-         +S9dhOsBhCuDym/RkQeghCCo97d8o00ghFIVP+k3NFBZbjcRAL6LNGU3pUtOEm39YB
-         QXZcyRG4/ytAwT7rv20iJ/G0bK0vI07YujaPC/JlhsJlRa1bXpMW6kAz1RJWHY5BkL
-         mdV2AHcKFyLrf0vVQj4Nzrcr239M++347TjHTdd71jg7z6e3djnLDAMK9CAuUFxquT
-         t9mT3s6orsIIZ9+HO95tqk4RtwArm79k9SCBdSqSMdXwwTeCWgR1/YtQDJrBnmtcZT
-         FJ03ddC2CX46A==
-Subject: [PATCH 02/43] xfs: remove support for disabling quota accounting on a
- mounted file system
+        b=brflDvSkOSFUTor6a1a5+zbOUO+Oy/ZvW2ZhLSEheImCMWdREZ+bwxlEyUO2YfLDk
+         vrTBD98kF1DqwXtZ6LFpgqitD+COIwys6fsj9rkVpKNWLFn/feVOUPEy6BxF2Mu5di
+         6JITZ42KTeKxsGjYPwvousX/rZuldhkcONRxIf4pPTjzrenPxR68TMxv4XQL+rx4lx
+         oFlO5GK+6VOV7JzdOF236NLcOlE+9xDB16QlEzHVNc+nK0LCze7vK4SbPkZqqtfnr5
+         SyGimu2FP5Ekce1W36efmxxXaVYsxVYn2aWlnmKpZCpclgRvJxR8hfjyILM9zBFaJN
+         X74RVlPMuGQ6w==
+Subject: [PATCH 03/43] xfs: remove the active vs running quota differentiation
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
 Cc:     Christoph Hellwig <hch@lst.de>,
         Carlos Maiolino <cmaiolino@redhat.com>,
         linux-xfs@vger.kernel.org
-Date:   Mon, 13 Sep 2021 19:40:10 -0700
-Message-ID: <163158721096.1604118.17353772572397459905.stgit@magnolia>
+Date:   Mon, 13 Sep 2021 19:40:16 -0700
+Message-ID: <163158721644.1604118.9350600009342205792.stgit@magnolia>
 In-Reply-To: <163158719952.1604118.14415288328687941574.stgit@magnolia>
 References: <163158719952.1604118.14415288328687941574.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -52,82 +51,65 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: 40b52225e58cd3adf9358146b4b39dccfbfe5892
+Source kernel commit: 149e53afc851713a70b6a06ebfaf2ebf25975454
 
-Disabling quota accounting is hairy, racy code with all kinds of pitfalls.
-And it has a very strange mind set, as quota accounting (unlike
-enforcement) really is a propery of the on-disk format.  There is no good
-use case for supporting this.
+These only made a difference when quotaoff supported disabling quota
+accounting on a mounted file system, so we can switch everyone to use
+a single set of flags and helpers now. Note that the *QUOTA_ON naming
+for the helpers is kept as it was the much more commonly used one.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/xfs_trans_resv.c |   30 ------------------------------
- libxfs/xfs_trans_resv.h |    2 --
- 2 files changed, 32 deletions(-)
+ libxfs/xfs_quota_defs.h |   30 ++++--------------------------
+ 1 file changed, 4 insertions(+), 26 deletions(-)
 
 
-diff --git a/libxfs/xfs_trans_resv.c b/libxfs/xfs_trans_resv.c
-index 9ce7d8f9..fa5edb87 100644
---- a/libxfs/xfs_trans_resv.c
-+++ b/libxfs/xfs_trans_resv.c
-@@ -797,29 +797,6 @@ xfs_calc_qm_dqalloc_reservation(
- 			XFS_FSB_TO_B(mp, XFS_DQUOT_CLUSTER_SIZE_FSB) - 1);
- }
+diff --git a/libxfs/xfs_quota_defs.h b/libxfs/xfs_quota_defs.h
+index 0f0af4e3..a02c5062 100644
+--- a/libxfs/xfs_quota_defs.h
++++ b/libxfs/xfs_quota_defs.h
+@@ -60,36 +60,14 @@ typedef uint8_t		xfs_dqtype_t;
+ #define XFS_DQUOT_LOGRES(mp)	\
+ 	((sizeof(struct xfs_dq_logformat) + sizeof(struct xfs_disk_dquot)) * 6)
+ 
+-#define XFS_IS_QUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_ALL_QUOTA_ACCT)
+-#define XFS_IS_UQUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_UQUOTA_ACCT)
+-#define XFS_IS_PQUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_PQUOTA_ACCT)
+-#define XFS_IS_GQUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_GQUOTA_ACCT)
++#define XFS_IS_QUOTA_ON(mp)		((mp)->m_qflags & XFS_ALL_QUOTA_ACCT)
++#define XFS_IS_UQUOTA_ON(mp)		((mp)->m_qflags & XFS_UQUOTA_ACCT)
++#define XFS_IS_PQUOTA_ON(mp)		((mp)->m_qflags & XFS_PQUOTA_ACCT)
++#define XFS_IS_GQUOTA_ON(mp)		((mp)->m_qflags & XFS_GQUOTA_ACCT)
+ #define XFS_IS_UQUOTA_ENFORCED(mp)	((mp)->m_qflags & XFS_UQUOTA_ENFD)
+ #define XFS_IS_GQUOTA_ENFORCED(mp)	((mp)->m_qflags & XFS_GQUOTA_ENFD)
+ #define XFS_IS_PQUOTA_ENFORCED(mp)	((mp)->m_qflags & XFS_PQUOTA_ENFD)
  
 -/*
-- * Turning off quotas.
-- *    the quota off logitems: sizeof(struct xfs_qoff_logitem) * 2
-- *    the superblock for the quota flags: sector size
+- * Incore only flags for quotaoff - these bits get cleared when quota(s)
+- * are in the process of getting turned off. These flags are in m_qflags but
+- * never in sb_qflags.
 - */
--STATIC uint
--xfs_calc_qm_quotaoff_reservation(
--	struct xfs_mount	*mp)
--{
--	return sizeof(struct xfs_qoff_logitem) * 2 +
--		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
--}
+-#define XFS_UQUOTA_ACTIVE	0x1000  /* uquotas are being turned off */
+-#define XFS_GQUOTA_ACTIVE	0x2000  /* gquotas are being turned off */
+-#define XFS_PQUOTA_ACTIVE	0x4000  /* pquotas are being turned off */
+-#define XFS_ALL_QUOTA_ACTIVE	\
+-	(XFS_UQUOTA_ACTIVE | XFS_GQUOTA_ACTIVE | XFS_PQUOTA_ACTIVE)
 -
 -/*
-- * End of turning off quotas.
-- *    the quota off logitems: sizeof(struct xfs_qoff_logitem) * 2
+- * Checking XFS_IS_*QUOTA_ON() while holding any inode lock guarantees
+- * quota will be not be switched off as long as that inode lock is held.
 - */
--STATIC uint
--xfs_calc_qm_quotaoff_end_reservation(void)
--{
--	return sizeof(struct xfs_qoff_logitem) * 2;
--}
+-#define XFS_IS_QUOTA_ON(mp)	((mp)->m_qflags & (XFS_UQUOTA_ACTIVE | \
+-						   XFS_GQUOTA_ACTIVE | \
+-						   XFS_PQUOTA_ACTIVE))
+-#define XFS_IS_UQUOTA_ON(mp)	((mp)->m_qflags & XFS_UQUOTA_ACTIVE)
+-#define XFS_IS_GQUOTA_ON(mp)	((mp)->m_qflags & XFS_GQUOTA_ACTIVE)
+-#define XFS_IS_PQUOTA_ON(mp)	((mp)->m_qflags & XFS_PQUOTA_ACTIVE)
 -
  /*
-  * Syncing the incore super block changes to disk.
-  *     the super block to reflect the changes: sector size
-@@ -922,13 +899,6 @@ xfs_trans_resv_calc(
- 	resp->tr_qm_setqlim.tr_logres = xfs_calc_qm_setqlim_reservation();
- 	resp->tr_qm_setqlim.tr_logcount = XFS_DEFAULT_LOG_COUNT;
- 
--	resp->tr_qm_quotaoff.tr_logres = xfs_calc_qm_quotaoff_reservation(mp);
--	resp->tr_qm_quotaoff.tr_logcount = XFS_DEFAULT_LOG_COUNT;
--
--	resp->tr_qm_equotaoff.tr_logres =
--		xfs_calc_qm_quotaoff_end_reservation();
--	resp->tr_qm_equotaoff.tr_logcount = XFS_DEFAULT_LOG_COUNT;
--
- 	resp->tr_sb.tr_logres = xfs_calc_sb_reservation(mp);
- 	resp->tr_sb.tr_logcount = XFS_DEFAULT_LOG_COUNT;
- 
-diff --git a/libxfs/xfs_trans_resv.h b/libxfs/xfs_trans_resv.h
-index 7241ab28..fc4e9b36 100644
---- a/libxfs/xfs_trans_resv.h
-+++ b/libxfs/xfs_trans_resv.h
-@@ -46,8 +46,6 @@ struct xfs_trans_resv {
- 	struct xfs_trans_res	tr_growrtfree;	/* grow realtime freeing */
- 	struct xfs_trans_res	tr_qm_setqlim;	/* adjust quota limits */
- 	struct xfs_trans_res	tr_qm_dqalloc;	/* allocate quota on disk */
--	struct xfs_trans_res	tr_qm_quotaoff;	/* turn quota off */
--	struct xfs_trans_res	tr_qm_equotaoff;/* end of turn quota off */
- 	struct xfs_trans_res	tr_sb;		/* modify superblock */
- 	struct xfs_trans_res	tr_fsyncts;	/* update timestamps on fsync */
- };
+  * Flags to tell various functions what to do. Not all of these are meaningful
+  * to a single function. None of these XFS_QMOPT_* flags are meant to have
 
