@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04F74C433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Sep 2021 02:43:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82C67C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Sep 2021 02:43:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E1719610D1
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Sep 2021 02:43:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 687F3610F9
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Sep 2021 02:43:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235706AbhINCou (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 13 Sep 2021 22:44:50 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54086 "EHLO mail.kernel.org"
+        id S237553AbhINCo7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 13 Sep 2021 22:44:59 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54120 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237565AbhINCou (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 13 Sep 2021 22:44:50 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8FFF9610D1;
-        Tue, 14 Sep 2021 02:43:33 +0000 (UTC)
+        id S237725AbhINCoz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 13 Sep 2021 22:44:55 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0EC78606A5;
+        Tue, 14 Sep 2021 02:43:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631587413;
-        bh=UxQxJ4pMUx3E9hmdGz8f1royBn/yKmtMgQ/3n8+Whls=;
+        s=k20201202; t=1631587419;
+        bh=2N3rnH7ZMYAPSxQPlbx4bB1HUZmbEq4QFBWc5Y6EJV0=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=Es0rR52+ZcRFOhG1HpqxU3K//FxFia2uC42J8tfHl2GkpWsXbhpI83LwgM+He2n2y
-         JCMTjV5Fr4lQNDeLfLfoFU3HN6MK5PA5I5QKDP3fNtAMGBop86jZWHeAjPSvDtAHzK
-         mdD6GjTFM1jjC9aCM4FAwxzjl/ckTZSUg/L5PQMFY4p69ow9tRRR5m8nJghMASUpRq
-         Y+WUeNzQcKtM8Lbh+6rPqXQQ3zmAXjDyhy3EhmUR/0J3DWG5shBjXaQph6UF0JSio5
-         mi873VaCi5UajGBIpkCoMh7aPyBYY2dEQ9wwH6tHhX62cQWAGynsPm8ukUIZ6mPGQv
-         DdIO0CMFRf1Fw==
-Subject: [PATCH 39/43] libxfs: always initialize internal buffer map
+        b=uyWpogF9AQEHAzSlKy4aEVz/o5ihp4d0LgV30H1kEBG7aHNKbLTtT+/ZCgbBAiDII
+         9y0sPywUOy5TaYTJmp8vRg+hRBaB0/pfemiGmWdYOxPHTlqMuAUDq7hzLPGvhli2I9
+         dSb3SCJ3TVrULrClpDBW6ISI6Gk6gISGTsmg4vLTRRxuVA0h5bzrwGH80o/u0qSNjh
+         gr0DzPJtH5G1agCssBYizKRiFRA6fwSQQc0C1wDaFIPuM7Qa/SyCKseQbrflnpIAIj
+         7n9fTaBVNRSeJly+Mce2WLgM7ySj8i7dnkR83sin+uZ7qFwD0ZRY927pxEYLpQ9R5f
+         ZKN+1hlEmIwxg==
+Subject: [PATCH 40/43] libxfs: replace XFS_BUF_SET_ADDR with a function
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Mon, 13 Sep 2021 19:43:33 -0700
-Message-ID: <163158741330.1604118.2384362360060613446.stgit@magnolia>
+Date:   Mon, 13 Sep 2021 19:43:38 -0700
+Message-ID: <163158741878.1604118.17091065004793020901.stgit@magnolia>
 In-Reply-To: <163158719952.1604118.14415288328687941574.stgit@magnolia>
 References: <163158719952.1604118.14415288328687941574.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,44 +49,59 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-The __initbuf function is responsible for initializing the fields of an
-xfs_buf.  Buffers are always required to have a mapping, though in the
-typical case there's only one mapping, so we can use the internal one.
-
-The single-mapping b_maps init code at the end of the function doesn't
-quite get this right though -- if a single-mapping buffer in the cache
-was allowed to expire and now is being repurposed, it'll come out with
-b_maps == &__b_map, in which case we incorrectly skip initializing the
-map.  This has gone unnoticed until now because (AFAICT) the code paths
-that use b_maps are the same ones that are called with multi-mapping
-buffers, which are initialized correctly.
-
-Anyway, the improperly initialized single-mappings will cause problems
-in upcoming patches where we turn b_bn into the cache key and require
-the use of b_maps[0].bm_bn for the buffer LBA.  Fix this.
+Replace XFS_BUF_SET_ADDR with a new function that will set the buffer
+block number correctly, then port the two users to it.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/rdwr.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ libxfs/libxfs_io.h        |    5 ++++-
+ libxlog/xfs_log_recover.c |    2 +-
+ mkfs/xfs_mkfs.c           |    4 ++--
+ 3 files changed, 7 insertions(+), 4 deletions(-)
 
 
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index f4e76029..03dc2917 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -251,9 +251,11 @@ __initbuf(struct xfs_buf *bp, struct xfs_buftarg *btp, xfs_daddr_t bno,
- 	bp->b_ops = NULL;
- 	INIT_LIST_HEAD(&bp->b_li_list);
+diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
+index 3cc4f4ee..bf489259 100644
+--- a/libxfs/libxfs_io.h
++++ b/libxfs/libxfs_io.h
+@@ -116,7 +116,10 @@ typedef unsigned int xfs_buf_flags_t;
+ #define xfs_buf_offset(bp, offset)	((bp)->b_addr + (offset))
+ #define XFS_BUF_ADDR(bp)		((bp)->b_bn)
  
--	if (!bp->b_maps) {
--		bp->b_nmaps = 1;
-+	if (!bp->b_maps)
- 		bp->b_maps = &bp->__b_map;
-+
-+	if (bp->b_maps == &bp->__b_map) {
-+		bp->b_nmaps = 1;
- 		bp->b_maps[0].bm_bn = bp->b_bn;
- 		bp->b_maps[0].bm_len = bp->b_length;
+-#define XFS_BUF_SET_ADDR(bp,blk)	((bp)->b_bn = (blk))
++static inline void xfs_buf_set_daddr(struct xfs_buf *bp, xfs_daddr_t blkno)
++{
++	bp->b_bn = blkno;
++}
+ 
+ void libxfs_buf_set_priority(struct xfs_buf *bp, int priority);
+ int libxfs_buf_priority(struct xfs_buf *bp);
+diff --git a/libxlog/xfs_log_recover.c b/libxlog/xfs_log_recover.c
+index d43914b9..3c24c021 100644
+--- a/libxlog/xfs_log_recover.c
++++ b/libxlog/xfs_log_recover.c
+@@ -114,7 +114,7 @@ xlog_bread_noalign(
+ 	ASSERT(nbblks > 0);
+ 	ASSERT(nbblks <= bp->b_length);
+ 
+-	XFS_BUF_SET_ADDR(bp, log->l_logBBstart + blk_no);
++	xfs_buf_set_daddr(bp, log->l_logBBstart + blk_no);
+ 	bp->b_length = nbblks;
+ 	bp->b_error = 0;
+ 
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 63895f28..057b3b09 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -3505,8 +3505,8 @@ alloc_write_buf(
+ 				error);
+ 		exit(1);
  	}
+-	bp->b_bn = daddr;
+-	bp->b_maps[0].bm_bn = daddr;
++
++	xfs_buf_set_daddr(bp, daddr);
+ 	return bp;
+ }
+ 
 
