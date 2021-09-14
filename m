@@ -7,37 +7,36 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95321C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Sep 2021 02:43:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E35F7C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Sep 2021 02:43:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7F022610D1
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Sep 2021 02:43:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C87F8610D1
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Sep 2021 02:43:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236205AbhINCok (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 13 Sep 2021 22:44:40 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54034 "EHLO mail.kernel.org"
+        id S237213AbhINCop (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 13 Sep 2021 22:44:45 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54062 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235706AbhINCoj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 13 Sep 2021 22:44:39 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 9D628606A5;
-        Tue, 14 Sep 2021 02:43:22 +0000 (UTC)
+        id S235706AbhINCoo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 13 Sep 2021 22:44:44 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 1AC65610D1;
+        Tue, 14 Sep 2021 02:43:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631587402;
-        bh=0gUrzyn26X7ZeQ4qwix4Dc84ue5GI9Kj8eM2Vmvyy6k=;
+        s=k20201202; t=1631587408;
+        bh=jhc/LzY7PKw1UL+pDL3snu2U824RWKsMEcZQhET9ztA=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=E4VIgttgt26B4V1ox3TEHpNB8bmCMgf3ErjilIZ2G0s8OX1fbwP2739D9FKnJ5j2b
-         I8lctc3jD1S8lF49R5l+qG2QCkZTCaZILdejupDGgx3Mh7+UDNQa2/LWrL+F/V6roW
-         keRodOyMGMV2iayPHljCxSfoPio+QJXFDhgnvjVaE+WFwQetne5BPGfcM7LAYH1DWj
-         WXy7f44wyrZ8nZjoqxZJ9h+VylbPvjTsZCOM3hH148TkBTG6fpXRfnHw2yN9BTOfU/
-         +2gpUk5Z/6pGPU1DCUBAmVbpRj577S9FiOpPVEqNS8a+Y1BEUv0Jv0SPN2m+L+O9k8
-         zCYi60/fXy2ZA==
-Subject: [PATCH 37/43] libxfs: use opstate flags and functions for libxfs
- mount options
+        b=J6lkSmwBTYJ+Meogx10LxR5IUydywx5fJSVSQ07Yqr+/qlVOfzTGv6lYftM6okhod
+         la1fwoqdYJdTBKW/mq4AwFI6IJOmqS79xPK9S4krl1HcXwcU41xpehsJsTpvFxnbPw
+         BtXwnd5n5GwFCtih/f5YSCaXpNYcMzOhB6x7YGB9Ju0LH777d3n3ZAAZlr+N6EI5Cl
+         WdZQIQp0Cix1XU79GMeY7Re6Y511yxEDVMntIHyEVaYAXwTN5wS3Y23KPERj20KlM2
+         3dPTwpRf4f8g12aYXhHsUKbc/tlLvMERZcClQcf6sPfZxJ+zerELU46At3Bc4UMbZ0
+         Y1AuiBH6oWmpQ==
+Subject: [PATCH 38/43] libxfs: remove pointless *XFS_MOUNT* flags
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Mon, 13 Sep 2021 19:43:22 -0700
-Message-ID: <163158740237.1604118.3025907636672209452.stgit@magnolia>
+Date:   Mon, 13 Sep 2021 19:43:27 -0700
+Message-ID: <163158740784.1604118.16211586847965140773.stgit@magnolia>
 In-Reply-To: <163158719952.1604118.14415288328687941574.stgit@magnolia>
 References: <163158719952.1604118.14415288328687941574.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,137 +49,149 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Port the two LIBXFS_MOUNT flags that actually do anything to set opstate
-flags, in preparation for removing m_flags.
+Get rid of these flags and the m_flags field, since none of them do
+anything anymore.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- include/xfs_mount.h  |    4 ++++
- libxfs/init.c        |   17 ++++++++++-------
- libxfs/libxfs_priv.h |    2 +-
- repair/xfs_repair.c  |    2 +-
- 4 files changed, 16 insertions(+), 9 deletions(-)
+ db/attrset.c              |    4 ----
+ include/xfs_mount.h       |    7 +------
+ libxfs/init.c             |   11 ++---------
+ libxfs/libxfs_priv.h      |   10 ----------
+ libxlog/xfs_log_recover.c |    1 -
+ 5 files changed, 3 insertions(+), 30 deletions(-)
 
 
+diff --git a/db/attrset.c b/db/attrset.c
+index 98a08a49..6441809a 100644
+--- a/db/attrset.c
++++ b/db/attrset.c
+@@ -107,7 +107,6 @@ attr_set_f(
+ 			break;
+ 
+ 		case 'n':
+-			mp->m_flags |= LIBXFS_MOUNT_COMPAT_ATTR;
+ 			break;
+ 
+ 		/* value length */
+@@ -169,7 +168,6 @@ attr_set_f(
+ 	set_cur_inode(iocur_top->ino);
+ 
+ out:
+-	mp->m_flags &= ~LIBXFS_MOUNT_COMPAT_ATTR;
+ 	if (args.dp)
+ 		libxfs_irele(args.dp);
+ 	if (args.value)
+@@ -211,7 +209,6 @@ attr_remove_f(
+ 			break;
+ 
+ 		case 'n':
+-			mp->m_flags |= LIBXFS_MOUNT_COMPAT_ATTR;
+ 			break;
+ 
+ 		default:
+@@ -254,7 +251,6 @@ attr_remove_f(
+ 	set_cur_inode(iocur_top->ino);
+ 
+ out:
+-	mp->m_flags &= ~LIBXFS_MOUNT_COMPAT_ATTR;
+ 	if (args.dp)
+ 		libxfs_irele(args.dp);
+ 	return 0;
 diff --git a/include/xfs_mount.h b/include/xfs_mount.h
-index 29d0440e..1f4f4390 100644
+index 1f4f4390..41fd374a 100644
 --- a/include/xfs_mount.h
 +++ b/include/xfs_mount.h
-@@ -213,6 +213,8 @@ __XFS_UNSUPP_FEAT(readonly)
-  * XXX: need real atomic bit ops!
-  */
- #define XFS_OPSTATE_INODE32		0	/* inode32 allocator active */
-+#define XFS_OPSTATE_DEBUGGER		1	/* is this the debugger? */
-+#define XFS_OPSTATE_REPORT_CORRUPTION	2	/* report buffer corruption? */
+@@ -77,7 +77,6 @@ typedef struct xfs_mount {
+ 	uint			m_alloc_set_aside; /* space we can't use */
+ 	uint			m_ag_max_usable; /* max space per AG */
+ 	struct radix_tree_root	m_perag_tree;
+-	uint			m_flags;	/* global mount flags */
+ 	uint64_t		m_features;	/* active filesystem features */
+ 	unsigned long		m_opstate;	/* dynamic state flags */
+ 	bool			m_finobt_nores; /* no per-AG finobt resv. */
+@@ -249,11 +248,7 @@ __XFS_UNSUPP_OPSTATE(readonly)
+ __XFS_UNSUPP_OPSTATE(shutdown)
  
- #define __XFS_IS_OPSTATE(name, NAME) \
- static inline bool xfs_is_ ## name (struct xfs_mount *mp) \
-@@ -235,6 +237,8 @@ static inline bool xfs_set_ ## name (struct xfs_mount *mp) \
- }
+ #define LIBXFS_MOUNT_DEBUGGER		0x0001
+-#define LIBXFS_MOUNT_32BITINODES	0x0002
+-#define LIBXFS_MOUNT_32BITINOOPT	0x0004
+-#define LIBXFS_MOUNT_COMPAT_ATTR	0x0008
+-#define LIBXFS_MOUNT_ATTR2		0x0010
+-#define LIBXFS_MOUNT_WANT_CORRUPTED	0x0020
++#define LIBXFS_MOUNT_WANT_CORRUPTED	0x0002
  
- __XFS_IS_OPSTATE(inode32, INODE32)
-+__XFS_IS_OPSTATE(debugger, DEBUGGER)
-+__XFS_IS_OPSTATE(reporting_corruption, REPORT_CORRUPTION)
+ #define LIBXFS_BHASHSIZE(sbp) 		(1<<10)
  
- #define __XFS_UNSUPP_OPSTATE(name) \
- static inline bool xfs_is_ ## name (struct xfs_mount *mp) \
 diff --git a/libxfs/init.c b/libxfs/init.c
-index d36595cf..a96f5389 100644
+index a96f5389..7845ba2c 100644
 --- a/libxfs/init.c
 +++ b/libxfs/init.c
-@@ -441,7 +441,7 @@ rtmount_init(
- 		return -1;
- 	}
- 
--	if (mp->m_rtdev_targp->bt_bdev == 0 && !(flags & LIBXFS_MOUNT_DEBUGGER)) {
-+	if (mp->m_rtdev_targp->bt_bdev == 0 && !xfs_is_debugger(mp)) {
- 		fprintf(stderr, _("%s: filesystem has a realtime subvolume\n"),
- 			progname);
- 		return -1;
-@@ -456,7 +456,7 @@ rtmount_init(
- 	/*
- 	 * Allow debugger to be run without the realtime device present.
+@@ -532,13 +532,10 @@ xfs_set_inode_alloc(
+ 	 * sufficiently large, set XFS_MOUNT_32BITINODES if we must alter
+ 	 * the allocator to accommodate the request.
  	 */
--	if (flags & LIBXFS_MOUNT_DEBUGGER)
-+	if (xfs_is_debugger(mp))
- 		return 0;
+-	if ((mp->m_flags & XFS_MOUNT_SMALL_INUMS) && ino > XFS_MAXINUMBER_32) {
++	if (ino > XFS_MAXINUMBER_32)
+ 		xfs_set_inode32(mp);
+-		mp->m_flags |= XFS_MOUNT_32BITINODES;
+-	} else {
++	else
+ 		xfs_clear_inode32(mp);
+-		mp->m_flags &= ~XFS_MOUNT_32BITINODES;
+-	}
  
- 	/*
-@@ -715,10 +715,13 @@ libxfs_mount(
- 	struct xfs_buf		*bp;
- 	struct xfs_sb		*sbp;
- 	xfs_daddr_t		d;
--	bool			debugger = (flags & LIBXFS_MOUNT_DEBUGGER);
- 	int			error;
- 
- 	mp->m_features = xfs_sb_version_to_features(sb);
-+	if (flags & LIBXFS_MOUNT_DEBUGGER)
-+		xfs_set_debugger(mp);
-+	if (flags & LIBXFS_MOUNT_WANT_CORRUPTED)
-+		xfs_set_reporting_corruption(mp);
+ 	for (index = 0; index < agcount; index++) {
+ 		struct xfs_perag	*pag;
+@@ -725,7 +722,6 @@ libxfs_mount(
  	libxfs_buftarg_init(mp, dev, logdev, rtdev);
  
  	mp->m_finobt_nores = true;
-@@ -751,7 +754,7 @@ libxfs_mount(
- 	d = (xfs_daddr_t) XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
- 	if (XFS_BB_TO_FSB(mp, d) != mp->m_sb.sb_dblocks) {
- 		fprintf(stderr, _("%s: size check failed\n"), progname);
--		if (!(flags & LIBXFS_MOUNT_DEBUGGER))
-+		if (!xfs_is_debugger(mp))
- 			return NULL;
- 	}
+-	mp->m_flags = (LIBXFS_MOUNT_32BITINODES|LIBXFS_MOUNT_32BITINOOPT);
+ 	xfs_set_inode32(mp);
+ 	mp->m_sb = *sb;
+ 	INIT_RADIX_TREE(&mp->m_perag_tree, GFP_KERNEL);
+@@ -789,9 +785,6 @@ libxfs_mount(
  
-@@ -800,7 +803,7 @@ libxfs_mount(
- 			XFS_FSS_TO_BB(mp, 1), 0, &bp, NULL);
- 	if (error) {
- 		fprintf(stderr, _("%s: data size check failed\n"), progname);
--		if (!debugger)
-+		if (!xfs_is_debugger(mp))
- 			return NULL;
- 	} else
- 		libxfs_buf_relse(bp);
-@@ -814,7 +817,7 @@ libxfs_mount(
- 				0, &bp, NULL)) {
- 			fprintf(stderr, _("%s: log size checks failed\n"),
- 					progname);
--			if (!debugger)
-+			if (!xfs_is_debugger(mp))
- 				return NULL;
- 		}
- 		if (bp)
-@@ -842,7 +845,7 @@ libxfs_mount(
- 		if (error) {
- 			fprintf(stderr, _("%s: read of AG %u failed\n"),
- 						progname, sbp->sb_agcount);
--			if (!debugger)
-+			if (!xfs_is_debugger(mp))
- 				return NULL;
- 			fprintf(stderr, _("%s: limiting reads to AG 0\n"),
- 								progname);
+ 	xfs_da_mount(mp);
+ 
+-	if (xfs_has_attr2(mp))
+-		mp->m_flags |= LIBXFS_MOUNT_ATTR2;
+-
+ 	/* Initialize the precomputed transaction reservations values */
+ 	xfs_trans_init(mp);
+ 
 diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-index 3e5ff2a8..3fc13c52 100644
+index 3fc13c52..75f26f36 100644
 --- a/libxfs/libxfs_priv.h
 +++ b/libxfs/libxfs_priv.h
-@@ -153,7 +153,7 @@ enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
- } while (0)
+@@ -443,16 +443,6 @@ void __xfs_buf_mark_corrupt(struct xfs_buf *bp, xfs_failaddr_t fa);
+ #define xfs_buf_mark_corrupt(bp) __xfs_buf_mark_corrupt((bp), __this_address)
  
- #define XFS_WARN_CORRUPT(mp, expr) \
--	( ((mp)->m_flags & LIBXFS_MOUNT_WANT_CORRUPTED) ? \
-+	( xfs_is_reporting_corruption(mp) ? \
- 	   (printf("%s: XFS_WARN_CORRUPT at %s:%d", #expr, \
- 		   __func__, __LINE__), true) : true)
+ /* mount stuff */
+-#define XFS_MOUNT_32BITINODES		LIBXFS_MOUNT_32BITINODES
+-#define XFS_MOUNT_ATTR2			LIBXFS_MOUNT_ATTR2
+-#define XFS_MOUNT_SMALL_INUMS		0	/* ignored in userspace */
+-#define XFS_MOUNT_WSYNC			0	/* ignored in userspace */
+-#define XFS_MOUNT_NOALIGN		0	/* ignored in userspace */
+-#define XFS_MOUNT_IKEEP			0	/* ignored in userspace */
+-#define XFS_MOUNT_SWALLOC		0	/* ignored in userspace */
+-#define XFS_MOUNT_RDONLY		0	/* ignored in userspace */
+-#define XFS_MOUNT_BAD_SUMMARY		0	/* ignored in userspace */
+-
+ #define xfs_trans_set_sync(tp)		((void) 0)
+ #define xfs_trans_buf_set_type(tp, bp, t)	({	\
+ 	int __t = (t);					\
+diff --git a/libxlog/xfs_log_recover.c b/libxlog/xfs_log_recover.c
+index 592e4502..d43914b9 100644
+--- a/libxlog/xfs_log_recover.c
++++ b/libxlog/xfs_log_recover.c
+@@ -827,7 +827,6 @@ xlog_find_tail(
+ 			 * superblock counters from the perag headers if we
+ 			 * have a filesystem using non-persistent counters.
+ 			 */
+-			log->l_mp->m_flags |= XFS_MOUNT_WAS_CLEAN;
+ 		}
+ 	}
  
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index abde6fe8..bcd44cd5 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -979,7 +979,7 @@ main(int argc, char **argv)
- 
- 	/* Spit out function & line on these corruption macros */
- 	if (verbose > 2)
--		mp->m_flags |= LIBXFS_MOUNT_WANT_CORRUPTED;
-+		xfs_set_reporting_corruption(mp);
- 
- 	/* Capture the first writeback so that we can set needsrepair. */
- 	if (xfs_has_crc(mp))
 
