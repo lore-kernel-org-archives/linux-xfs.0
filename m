@@ -7,37 +7,36 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8922C433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Sep 2021 02:41:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53F46C433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Sep 2021 02:41:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A22CC610F9
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Sep 2021 02:41:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 308DC61108
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Sep 2021 02:41:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236074AbhINCnG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 13 Sep 2021 22:43:06 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53480 "EHLO mail.kernel.org"
+        id S235706AbhINCnL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 13 Sep 2021 22:43:11 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53506 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234374AbhINCnG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 13 Sep 2021 22:43:06 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 80443610CC;
-        Tue, 14 Sep 2021 02:41:49 +0000 (UTC)
+        id S234374AbhINCnL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 13 Sep 2021 22:43:11 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id F04CC610CC;
+        Tue, 14 Sep 2021 02:41:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631587309;
-        bh=TcFCeBPnxLvqlpWygdscfZwtNWXM7c3b54HUHS2AP+g=;
+        s=k20201202; t=1631587315;
+        bh=KlnbJlF9e8iNH4QQKPKmX92PVOKJqFA0JHLGC3Zbt50=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=CZSWoQd+6gmkZt/Ndd5HdCA4q/d4ioyHz5tYREDztsdsBCj4UUvujxLNxMS1Z2KfB
-         jUtbPvWekkFA1AXPHymH28F48C/R0YYyY0FLx7T7pAVkgjyb3D4ftjgHPr+W2NuxbW
-         y4q3n5C+wOiAJ55UPUpBNx+AZyFui5chUVcAQJ/kJYBDHlHZs6gldAqOFYXVtKAi1m
-         oE/I13uk4fGoAZITJ+hXgPCCreY4CvWGeTotN95+KiJ+1N0jJqcncg/jNu4IDabL3L
-         QTTpGkodgmvinBr+UnvT4N5uAHEhBYexS6rSPNNzZNoCLGi0Rv9vQYNq9PFG8KRSXT
-         GUVfFXUqwx2MQ==
-Subject: [PATCH 20/43] xfs: sb verifier doesn't handle uncached sb buffer
+        b=Xya67BbbDxp1jmIBlU/6tGDKndHMif5nCz9E3uBKru9joxKcVCOv+AE6N6eC0REkd
+         oEjxQUMucgM7Dp/epRV9FgzEQ2Rrw0UzEQK1ewR51fnP34cvKoFET2vtIGxaJK+luw
+         jFclHadQXWmUe2fP+tEIWtBhhawv6M5hJGynHgumiKik2OoXsXL8KpXRJQgJEnm4Z5
+         TmoD/2jyIkD0rXN0OTb4X2D6DqxHAs8ilsFc+Hp2ivFRsJR7jWOIb3Y1ls38ecv3VV
+         CF0JbBI0G7YnJY9oyur4WKUr7HvQZ6NhtYPIoK4jIGNmtTbE6sz61qcmqRW5wWm+wB
+         5ZQvr+hMqo19w==
+Subject: [PATCH 21/43] xfs: rename xfs_has_attr()
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
-Cc:     Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>,
-        linux-xfs@vger.kernel.org
-Date:   Mon, 13 Sep 2021 19:41:49 -0700
-Message-ID: <163158730925.1604118.17231730849319617732.stgit@magnolia>
+Cc:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
+Date:   Mon, 13 Sep 2021 19:41:54 -0700
+Message-ID: <163158731471.1604118.2196733648224977803.stgit@magnolia>
 In-Reply-To: <163158719952.1604118.14415288328687941574.stgit@magnolia>
 References: <163158719952.1604118.14415288328687941574.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,38 +49,73 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Source kernel commit: 8cf07f3dd56195316be97758cb8b4e1d7183ea84
+Source kernel commit: 51b495eba84dee8c1df4abfc26fc134ea190e28f
 
-The verifier checks explicitly for bp->b_bn == XFS_SB_DADDR to match
-the primary superblock buffer, but the primary superblock is an
-uncached buffer and so bp->b_bn is always -1ULL. Hence this never
-matches and the CRC error reporting is wholly dependent on the
-mount superblock already being populated so CRC feature checks pass
-and allow CRC errors to be reported.
+xfs_has_attr() is poorly named. It has global scope as it is defined
+in a header file, but it has no namespace scope that tells us what
+it is checking has attributes. It's not even clear what "has_attr"
+means, because what it is actually doing is an attribute fork lookup
+to see if the attribute exists.
 
-Fix this so that the primary superblock CRC error reporting is not
-dependent on already having read the superblock into memory.
+Upcoming patches use this "xfs_has_<foo>" namespace for global
+filesystem features, which conflicts with this function.
+
+Rename xfs_has_attr() to xfs_attr_lookup() and make it a static
+function, freeing up the "xfs_has_" namespace for global scope
+usage.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/xfs_sb.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ libxfs/xfs_attr.c |    7 +++----
+ libxfs/xfs_attr.h |    1 -
+ 2 files changed, 3 insertions(+), 5 deletions(-)
 
 
-diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
-index b2e214ee..f29a59ae 100644
---- a/libxfs/xfs_sb.c
-+++ b/libxfs/xfs_sb.c
-@@ -634,7 +634,7 @@ xfs_sb_read_verify(
+diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
+index 2957fd03..07b19652 100644
+--- a/libxfs/xfs_attr.c
++++ b/libxfs/xfs_attr.c
+@@ -642,8 +642,8 @@ xfs_attr_set_iter(
+ /*
+  * Return EEXIST if attr is found, or ENOATTR if not
+  */
+-int
+-xfs_has_attr(
++static int
++xfs_attr_lookup(
+ 	struct xfs_da_args	*args)
+ {
+ 	struct xfs_inode	*dp = args->dp;
+@@ -780,8 +780,8 @@ xfs_attr_set(
+ 			goto out_trans_cancel;
+ 	}
  
- 		if (!xfs_buf_verify_cksum(bp, XFS_SB_CRC_OFF)) {
- 			/* Only fail bad secondaries on a known V5 filesystem */
--			if (bp->b_bn == XFS_SB_DADDR ||
-+			if (bp->b_maps[0].bm_bn == XFS_SB_DADDR ||
- 			    xfs_sb_version_hascrc(&mp->m_sb)) {
- 				error = -EFSBADCRC;
- 				goto out_error;
++	error = xfs_attr_lookup(args);
+ 	if (args->value) {
+-		error = xfs_has_attr(args);
+ 		if (error == -EEXIST && (args->attr_flags & XATTR_CREATE))
+ 			goto out_trans_cancel;
+ 		if (error == -ENOATTR && (args->attr_flags & XATTR_REPLACE))
+@@ -796,7 +796,6 @@ xfs_attr_set(
+ 		if (!args->trans)
+ 			goto out_unlock;
+ 	} else {
+-		error = xfs_has_attr(args);
+ 		if (error != -EEXIST)
+ 			goto out_trans_cancel;
+ 
+diff --git a/libxfs/xfs_attr.h b/libxfs/xfs_attr.h
+index 8de5d1d2..5e71f719 100644
+--- a/libxfs/xfs_attr.h
++++ b/libxfs/xfs_attr.h
+@@ -490,7 +490,6 @@ int xfs_attr_get_ilocked(struct xfs_da_args *args);
+ int xfs_attr_get(struct xfs_da_args *args);
+ int xfs_attr_set(struct xfs_da_args *args);
+ int xfs_attr_set_args(struct xfs_da_args *args);
+-int xfs_has_attr(struct xfs_da_args *args);
+ int xfs_attr_remove_args(struct xfs_da_args *args);
+ int xfs_attr_remove_iter(struct xfs_delattr_context *dac);
+ bool xfs_attr_namecheck(const void *name, size_t length);
 
