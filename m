@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53F46C433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Sep 2021 02:41:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A645C433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Sep 2021 02:42:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 308DC61108
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Sep 2021 02:41:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 37FD9610D1
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Sep 2021 02:42:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235706AbhINCnL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 13 Sep 2021 22:43:11 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53506 "EHLO mail.kernel.org"
+        id S237467AbhINCnR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 13 Sep 2021 22:43:17 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53532 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234374AbhINCnL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 13 Sep 2021 22:43:11 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id F04CC610CC;
-        Tue, 14 Sep 2021 02:41:54 +0000 (UTC)
+        id S237098AbhINCnR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 13 Sep 2021 22:43:17 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 68BD9610D1;
+        Tue, 14 Sep 2021 02:42:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631587315;
-        bh=KlnbJlF9e8iNH4QQKPKmX92PVOKJqFA0JHLGC3Zbt50=;
+        s=k20201202; t=1631587320;
+        bh=87rFHsW5ysEHoN9qLTfflJIMTUC4ESrfLPfJjo/5NZk=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=Xya67BbbDxp1jmIBlU/6tGDKndHMif5nCz9E3uBKru9joxKcVCOv+AE6N6eC0REkd
-         oEjxQUMucgM7Dp/epRV9FgzEQ2Rrw0UzEQK1ewR51fnP34cvKoFET2vtIGxaJK+luw
-         jFclHadQXWmUe2fP+tEIWtBhhawv6M5hJGynHgumiKik2OoXsXL8KpXRJQgJEnm4Z5
-         TmoD/2jyIkD0rXN0OTb4X2D6DqxHAs8ilsFc+Hp2ivFRsJR7jWOIb3Y1ls38ecv3VV
-         CF0JbBI0G7YnJY9oyur4WKUr7HvQZ6NhtYPIoK4jIGNmtTbE6sz61qcmqRW5wWm+wB
-         5ZQvr+hMqo19w==
-Subject: [PATCH 21/43] xfs: rename xfs_has_attr()
+        b=FmmvBKzoFYpcSjKOrg0xOhTw0DAmcWK2M0u+L5ISRehtiK41JTUgYmEf8HVZ0R+/V
+         wdzCF0pBjGgSs8n/HscUJOQc75mQt+lt761FmRZxihA4yvoARY2QFwZ/vbN1Pgm+V1
+         vw8QTcu4/RFtHofd/Be09CD8EkoWIio/EY1h2DKVy7kuKBFlP26yT/1RdgXk4dSZDH
+         X0ctmUxj6ikuRmalDunNr+hx9UKbGMdTZ7DOK2Poo1lat413/zySZDfU7u50uFlxCX
+         ZlbxgVLdU4RZisEg/BaPcHlsvyBoSXjsqsT0vcoqmrG0q5BjdzRFQPWM+cGqO8SBwh
+         5w3kLwdOr+FTA==
+Subject: [PATCH 22/43] xfs: rework attr2 feature and mount options
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
 Cc:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
-Date:   Mon, 13 Sep 2021 19:41:54 -0700
-Message-ID: <163158731471.1604118.2196733648224977803.stgit@magnolia>
+Date:   Mon, 13 Sep 2021 19:42:00 -0700
+Message-ID: <163158732017.1604118.6704125945588625133.stgit@magnolia>
 In-Reply-To: <163158719952.1604118.14415288328687941574.stgit@magnolia>
 References: <163158719952.1604118.14415288328687941574.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,73 +49,94 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Source kernel commit: 51b495eba84dee8c1df4abfc26fc134ea190e28f
+Source kernel commit: e23b55d537c9be60ae918fa6c3be0d699986f346
 
-xfs_has_attr() is poorly named. It has global scope as it is defined
-in a header file, but it has no namespace scope that tells us what
-it is checking has attributes. It's not even clear what "has_attr"
-means, because what it is actually doing is an attribute fork lookup
-to see if the attribute exists.
+The attr2 feature is somewhat unique in that it has both a superblock
+feature bit to enable it and mount options to enable and disable it.
 
-Upcoming patches use this "xfs_has_<foo>" namespace for global
-filesystem features, which conflicts with this function.
+Back when it was first introduced in 2005, attr2 was disabled unless
+either the attr2 superblock feature bit was set, or the attr2 mount
+option was set. If the superblock feature bit was not set but the
+mount option was set, then when the first attr2 format inode fork
+was created, it would set the superblock feature bit. This is as it
+should be - the superblock feature bit indicated the presence of the
+attr2 on disk format.
 
-Rename xfs_has_attr() to xfs_attr_lookup() and make it a static
-function, freeing up the "xfs_has_" namespace for global scope
-usage.
+The noattr2 mount option, however, did not affect the superblock
+feature bit. If noattr2 was specified, the on-disk superblock
+feature bit was ignored and the code always just created attr1
+format inode forks.  If neither of the attr2 or noattr2 mounts
+option were specified, then the behaviour was determined by the
+superblock feature bit.
+
+This was all pretty sane.
+
+Fast foward 3 years, and we are dealing with fallout from the
+botched sb_features2 addition and having to deal with feature
+mismatches between the sb_features2 and sb_bad_features2 fields. The
+attr2 feature bit was one of these flags. The reconciliation was
+done well after mount option parsing and, unfortunately, the feature
+reconciliation had a bug where it ignored the noattr2 mount option.
+
+For reasons lost to the mists of time, it was decided that resolving
+this issue in commit 7c12f296500e ("[XFS] Fix up noattr2 so that it
+will properly update the versionnum and features2 fields.") required
+noattr2 to clear the superblock attr2 feature bit.  This greatly
+complicated the attr2 behaviour and broke rules about feature bits
+needing to be set when those specific features are present in the
+filesystem.
+
+By complicated, I mean that it introduced problems due to feature
+bit interactions with log recovery. All of the superblock feature
+bit checks are done prior to log recovery, but if we crash after
+removing a feature bit, then on the next mount we see the feature
+bit in the unrecovered superblock, only to have it go away after the
+log has been replayed.  This means our mount time feature processing
+could be all wrong.
+
+Hence you can mount with noattr2, crash shortly afterwards, and
+mount again without attr2 or noattr2 and still have attr2 enabled
+because the second mount sees attr2 still enabled in the superblock
+before recovery runs and removes the feature bit. It's just a mess.
+
+Further, this is all legacy code as the v5 format requires attr2 to
+be enabled at all times and it cannot be disabled.  i.e. the noattr2
+mount option returns an error when used on v5 format filesystems.
+
+To straighten this all out, this patch reverts the attr2/noattr2
+mount option behaviour back to the original behaviour. There is no
+reason for disabling attr2 these days, so we will only do this when
+the noattr2 mount option is set. This will not remove the superblock
+feature bit. The superblock bit will provide the default behaviour
+and only track whether attr2 is present on disk or not. The attr2
+mount option will enable the creation of attr2 format inode forks,
+and if the superblock feature bit is not set it will be added when
+the first attr2 inode fork is created.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/xfs_attr.c |    7 +++----
- libxfs/xfs_attr.h |    1 -
- 2 files changed, 3 insertions(+), 5 deletions(-)
+ libxfs/xfs_format.h |    7 -------
+ 1 file changed, 7 deletions(-)
 
 
-diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index 2957fd03..07b19652 100644
---- a/libxfs/xfs_attr.c
-+++ b/libxfs/xfs_attr.c
-@@ -642,8 +642,8 @@ xfs_attr_set_iter(
- /*
-  * Return EEXIST if attr is found, or ENOATTR if not
-  */
--int
--xfs_has_attr(
-+static int
-+xfs_attr_lookup(
- 	struct xfs_da_args	*args)
+diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
+index 5d8a1291..ac739e6a 100644
+--- a/libxfs/xfs_format.h
++++ b/libxfs/xfs_format.h
+@@ -398,13 +398,6 @@ static inline void xfs_sb_version_addattr2(struct xfs_sb *sbp)
+ 	sbp->sb_features2 |= XFS_SB_VERSION2_ATTR2BIT;
+ }
+ 
+-static inline void xfs_sb_version_removeattr2(struct xfs_sb *sbp)
+-{
+-	sbp->sb_features2 &= ~XFS_SB_VERSION2_ATTR2BIT;
+-	if (!sbp->sb_features2)
+-		sbp->sb_versionnum &= ~XFS_SB_VERSION_MOREBITSBIT;
+-}
+-
+ static inline bool xfs_sb_version_hasprojid32bit(struct xfs_sb *sbp)
  {
- 	struct xfs_inode	*dp = args->dp;
-@@ -780,8 +780,8 @@ xfs_attr_set(
- 			goto out_trans_cancel;
- 	}
- 
-+	error = xfs_attr_lookup(args);
- 	if (args->value) {
--		error = xfs_has_attr(args);
- 		if (error == -EEXIST && (args->attr_flags & XATTR_CREATE))
- 			goto out_trans_cancel;
- 		if (error == -ENOATTR && (args->attr_flags & XATTR_REPLACE))
-@@ -796,7 +796,6 @@ xfs_attr_set(
- 		if (!args->trans)
- 			goto out_unlock;
- 	} else {
--		error = xfs_has_attr(args);
- 		if (error != -EEXIST)
- 			goto out_trans_cancel;
- 
-diff --git a/libxfs/xfs_attr.h b/libxfs/xfs_attr.h
-index 8de5d1d2..5e71f719 100644
---- a/libxfs/xfs_attr.h
-+++ b/libxfs/xfs_attr.h
-@@ -490,7 +490,6 @@ int xfs_attr_get_ilocked(struct xfs_da_args *args);
- int xfs_attr_get(struct xfs_da_args *args);
- int xfs_attr_set(struct xfs_da_args *args);
- int xfs_attr_set_args(struct xfs_da_args *args);
--int xfs_has_attr(struct xfs_da_args *args);
- int xfs_attr_remove_args(struct xfs_da_args *args);
- int xfs_attr_remove_iter(struct xfs_delattr_context *dac);
- bool xfs_attr_namecheck(const void *name, size_t length);
+ 	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) ||
 
