@@ -4,40 +4,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95A85C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:43:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0082C433FE
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:43:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7ADE5610E8
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:43:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B948D610E8
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:43:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232975AbhIOXog (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Sep 2021 19:44:36 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46626 "EHLO mail.kernel.org"
+        id S233035AbhIOXol (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Sep 2021 19:44:41 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46728 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233088AbhIOXof (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Sep 2021 19:44:35 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E115A60F25;
-        Wed, 15 Sep 2021 23:43:15 +0000 (UTC)
+        id S229769AbhIOXok (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Sep 2021 19:44:40 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 5FDD260F25;
+        Wed, 15 Sep 2021 23:43:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631749396;
-        bh=Aem0n8k7yKOwaFfh9ieEOEKzi9tgK38YiIxKjHcKQ9I=;
+        s=k20201202; t=1631749401;
+        bh=GRcPOIw1lNn1TdWhOuyKf5aex8PKCEBHDTJwOCI6KVw=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=EBL+kcdy3r+/6okeGFip45zqf6USP6b1kGZQ+ksOs9ZKqkEjSCJQAnd9Nk1yW6Smb
-         Q26rtsTpRbweJRaOEi1fj0ZN0CRAx++IRWmcOHpV2WljGTHZ3F+hQGOn7Np8wa21Re
-         LLKxhnzxbDHdQVpJiMx7zA5uzzZy99wjJOWFunl3jQyYp3lQKC2NKxr+B8R+iojtRX
-         CFnKCjmUFlSRqExkbp7cYXnb0ynqvKfS5DcMFoX9rFZszPBTmik6AGJQsEiKR57KKg
-         Is+OvFFwKwhaRJFPB6X3uwD1qlNCi9Fg52LkcPS0XYp1nPbAU9QIvvffJDgmi6/uU8
-         WxyOJCSq9N0eg==
-Subject: [PATCH 7/9] tools: add missing license tags to my scripts
+        b=Zv0oMebsl+DDyapzqVB15uBYImCcJEHa7aK4fKhjSjm75aEDqI3YKaXUYsJMeimrM
+         xhY+CinkHOAj6IoXoelKRNcdxguJ5Gp3qZqwXseean6sCsaz2Q9/SWzbbwscRYF06q
+         8qtBZJa2I3m6b8vjIz9XLug5CRHm0RFkdsjV76TAuYVEashcJBXbOmzeBtqzbjHAcw
+         9kobXSt3MUIoaanTgkgVX4Lj6PB0Ij8rFVptsxCHGqKvVJiRCrj9jEaaUrkz35BQBa
+         +SdJU6A204CEibJZQyPVviJkoUEmN45s/uuD20JyuyDR0rBTDRezTe7XGHeDs4p/xo
+         nGUv+E8/WfvwQ==
+Subject: [PATCH 8/9] new: only allow documented test group names
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Wed, 15 Sep 2021 16:43:15 -0700
-Message-ID: <163174939566.380880.290670167130749389.stgit@magnolia>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org, guan@eryu.me
+Date:   Wed, 15 Sep 2021 16:43:21 -0700
+Message-ID: <163174940111.380880.3160888950588893158.stgit@magnolia>
 In-Reply-To: <163174935747.380880.7635671692624086987.stgit@magnolia>
 References: <163174935747.380880.7635671692624086987.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,57 +50,68 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-I forgot to add spdx license tags and copyright statements to some of
-the tools that I've contributed to fstests.  Fix this to be explicit.
+Now that we require all group names to be listed in doc/group-names.txt,
+we can use that (instead of running mkgroupfile) to check if the group
+name(s) supplied by the user actually exist.  This has the secondary
+effect of being a second nudge towards keeping the description of groups
+up to date.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- tools/mkgroupfile |    4 +++-
- tools/mvtest      |    5 ++++-
- tools/nextid      |    4 +++-
- 3 files changed, 10 insertions(+), 3 deletions(-)
+ new |   24 +++++++++++-------------
+ 1 file changed, 11 insertions(+), 13 deletions(-)
 
 
-diff --git a/tools/mkgroupfile b/tools/mkgroupfile
-index e4244507..634ec92c 100755
---- a/tools/mkgroupfile
-+++ b/tools/mkgroupfile
-@@ -1,5 +1,7 @@
- #!/bin/bash
--
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2021 Oracle.  All Rights Reserved.
-+#
- # Generate a group file from the _begin_fstest call in each test.
+diff --git a/new b/new
+index 2097a883..6b7dc5d4 100755
+--- a/new
++++ b/new
+@@ -83,6 +83,14 @@ then
+     exit 1
+ fi
  
- if [ "$1" = "--help" ]; then
-diff --git a/tools/mvtest b/tools/mvtest
-index 5088b45f..99b15414 100755
---- a/tools/mvtest
-+++ b/tools/mvtest
-@@ -1,6 +1,9 @@
- #!/bin/sh
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2015 Oracle.  All Rights Reserved.
-+#
-+# Move a test and update the golden output file.
++# Extract group names from the documentation.
++group_names() {
++	awk '/^[[:lower:][:digit:]_]/ {
++		if ($1 != "" && $1 != "Group" && $2 != "Name:" && $1 != "all")
++			printf("%s\n", $1);
++	}' doc/group-names.txt
++}
++
+ if [ $# -eq 0 ]
+ then
  
--# Renumber a test
- dir="$(dirname "$0")"
- 
- if [ -z "$1" ] || [ "$1" = "--help" ]; then
-diff --git a/tools/nextid b/tools/nextid
-index 9507de29..9e31718c 100755
---- a/tools/nextid
-+++ b/tools/nextid
-@@ -1,5 +1,7 @@
- #!/bin/bash
--
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2015 Oracle.  All Rights Reserved.
-+#
- # Compute the next available test id in a given test directory.
- 
- if [ $# != 1 ] || [ "$1" = "--help" ] || [ ! -d "tests/$1/" ]; then
+@@ -93,16 +101,7 @@ then
+ 	[ -z "$ans" ] && ans=other
+ 	if [ "X$ans" = "X?" ]
+ 	then
+-	    for d in $SRC_GROUPS; do
+-		(cd "tests/$d/" ; ../../tools/mkgroupfile "$tmpfile")
+-		l=$(sed -n < "$tmpfile" \
+-		    -e 's/#.*//' \
+-		    -e 's/$/ /' \
+-		    -e 's;\(^[0-9][0-9][0-9]\)\(.*$\);\2;p')
+-		grpl="$grpl $l"
+-	    done
+-	    lst=`for word in $grpl; do echo $word; done | sort| uniq `
+-	    echo $lst
++	    echo $(group_names)
+ 	else
+ 	    # only allow lower cases, spaces, digits and underscore in group
+ 	    inval=`echo $ans | tr -d '[:lower:][:space:][:digit:]_'`
+@@ -120,11 +119,10 @@ then
+ else
+     # expert mode, groups are on the command line
+     #
+-    (cd "$tdir" ; ../../tools/mkgroupfile "$tmpfile")
+     for g in $*
+     do
+-	if ! grep -q "[[:space:]]$g" "$tmpfile"; then
+-	    echo "Warning: group \"$g\" not defined in $tdir tests"
++	if ! grep -q "^$g" doc/group-names.txt; then
++	    echo "Warning: group \"$g\" not defined in documentation"
+ 	fi
+     done
+     ans="$*"
 
