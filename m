@@ -4,42 +4,43 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC081C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:11:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A1DBC433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:11:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9EBE4610E8
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:11:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 45386610E8
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:11:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232910AbhIOXMd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Sep 2021 19:12:33 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38146 "EHLO mail.kernel.org"
+        id S232894AbhIOXMj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Sep 2021 19:12:39 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38298 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232894AbhIOXMd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Sep 2021 19:12:33 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8739C600D4;
-        Wed, 15 Sep 2021 23:11:13 +0000 (UTC)
+        id S232867AbhIOXMi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Sep 2021 19:12:38 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id F025F600D4;
+        Wed, 15 Sep 2021 23:11:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631747473;
-        bh=QKaMjkDR5Ba/R7Y5mDszeCx87xblo7R7YQk4Sb6r7y4=;
+        s=k20201202; t=1631747479;
+        bh=yRdrz/EwstmD8YrKyBLnvDWI+2IvK+XUx/hNUSYwW08=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=lDKwRaAjitg6+hAU+t01gso7eH/9JIedG0IvI8Mg/pmLdeNzco2mF2yOy0OtO0l27
-         4twJKPLtm1dSJ8jIXZucAO69/WBSvVGYjED1mLycQ0U3aGy+WM3rXduPitxM+I/MvN
-         WmUsJCcw71wIK8KlLCO0wRHYnqKsO0kUtrKuYwLF1xZw6lHVEElKdcdo0PSAAo3d+t
-         buyhQe2skx+AzzW6sqq2lwM8uwtdOEUqkaQGWlKM19HjlSzXf2S2J1dAhu2Bs9dRBN
-         LrE4rOYaGaTM8ZazkFgwom+XazVtShIoSv88eoZ57fBptQuWu5cuSFtFWfQADCUSYj
-         1TMhbSvRhgI+A==
-Subject: [PATCH 51/61] xfs: perag may be null in xfs_imap()
+        b=tzZv5wYwk3DV3hu+svn/8t2H92UQ37/HgowFgSy677qeFC/DDXrpEXkV3ZZmq8f42
+         EPaUL+a2Me6paLZNczlLlouqph6zQW2gYwu3JVgidmdyDBap41J9Qxdiv3ENVaNZGw
+         l1VydF59PizcQb/B4pFoCcEBiOcCy608vu0ZEtq3Mc2/X6OyGt2GSyVSlAGMfTMg1J
+         t9IOYSUWlj/Ib13R8o87HFDfIoKV8CkNY7OSD19nzAjXgVtI4/q6yFiQNyHIzkZVPH
+         RqBVdv4aCcDIb10/zbY+3+eHJkdRXe5L3y6m758u+Zjo8JlSlqGTDQ8ItdL8emryfM
+         I9Y0Obo5vCpuA==
+Subject: [PATCH 52/61] xfs: log stripe roundoff is a property of the log
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
-Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
-        Dave Chinner <dchinner@redhat.com>,
+Cc:     Dave Chinner <dchinner@redhat.com>,
+        Chandan Babu R <chandanrlinux@gmail.com>,
+        Christoph Hellwig <hch@lst.de>,
         Allison Henderson <allison.henderson@oracle.com>,
         linux-xfs@vger.kernel.org
-Date:   Wed, 15 Sep 2021 16:11:13 -0700
-Message-ID: <163174747329.350433.16479686939560119558.stgit@magnolia>
+Date:   Wed, 15 Sep 2021 16:11:18 -0700
+Message-ID: <163174747873.350433.4858121901730189781.stgit@magnolia>
 In-Reply-To: <163174719429.350433.8562606396437219220.stgit@magnolia>
 References: <163174719429.350433.8562606396437219220.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -52,42 +53,43 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Source kernel commit: 90e2c1c20ac672756a2835b5a92a606dd48a4aa3
+Source kernel commit: a6a65fef5ef8d0a6a0ce514eb66b2f3dfa777b48
 
-Dan Carpenter's static checker reported:
+We don't need to look at the xfs_mount and superblock every time we
+need to do an iclog roundoff calculation. The property is fixed for
+the life of the log, so store the roundoff in the log at mount time
+and use that everywhere.
 
-The patch 7b13c5155182: "xfs: use perag for ialloc btree cursors"
-from Jun 2, 2021, leads to the following Smatch complaint:
+On a debug build:
 
-fs/xfs/libxfs/xfs_ialloc.c:2403 xfs_imap()
-error: we previously assumed 'pag' could be null (see line 2294)
+$ size fs/xfs/xfs_log.o.*
+text    data     bss     dec     hex filename
+27360     560       8   27928    6d18 fs/xfs/xfs_log.o.orig
+27219     560       8   27787    6c8b fs/xfs/xfs_log.o.patched
 
-And it's right. Fix it.
-
-Fixes: 7b13c5155182 ("xfs: use perag for ialloc btree cursors")
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/xfs_ialloc.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ libxfs/xfs_log_format.h |    3 ---
+ 1 file changed, 3 deletions(-)
 
 
-diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
-index d14437bf..4d297a90 100644
---- a/libxfs/xfs_ialloc.c
-+++ b/libxfs/xfs_ialloc.c
-@@ -2393,7 +2393,8 @@ xfs_imap(
- 	}
- 	error = 0;
- out_drop:
--	xfs_perag_put(pag);
-+	if (pag)
-+		xfs_perag_put(pag);
- 	return error;
- }
+diff --git a/libxfs/xfs_log_format.h b/libxfs/xfs_log_format.h
+index 3e15ea29..d548ea4b 100644
+--- a/libxfs/xfs_log_format.h
++++ b/libxfs/xfs_log_format.h
+@@ -34,9 +34,6 @@ typedef uint32_t xlog_tid_t;
+ #define XLOG_MIN_RECORD_BSHIFT	14		/* 16384 == 1 << 14 */
+ #define XLOG_BIG_RECORD_BSHIFT	15		/* 32k == 1 << 15 */
+ #define XLOG_MAX_RECORD_BSHIFT	18		/* 256k == 1 << 18 */
+-#define XLOG_BTOLSUNIT(log, b)  (((b)+(log)->l_mp->m_sb.sb_logsunit-1) / \
+-                                 (log)->l_mp->m_sb.sb_logsunit)
+-#define XLOG_LSUNITTOB(log, su) ((su) * (log)->l_mp->m_sb.sb_logsunit)
+ 
+ #define XLOG_HEADER_SIZE	512
  
 
