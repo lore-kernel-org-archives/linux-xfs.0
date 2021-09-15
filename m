@@ -2,129 +2,156 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C204FC4332F
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 22:39:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68BBDC433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:06:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AA7B16023D
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 22:39:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 457DC60EB2
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:06:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232684AbhIOWk0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Sep 2021 18:40:26 -0400
-Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:37072 "EHLO
-        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229538AbhIOWk0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Sep 2021 18:40:26 -0400
-Received: from dread.disaster.area (pa49-195-238-16.pa.nsw.optusnet.com.au [49.195.238.16])
-        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id 4357499FB;
-        Thu, 16 Sep 2021 08:39:00 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1mQdYQ-00CvLU-9f; Thu, 16 Sep 2021 08:38:58 +1000
-Date:   Thu, 16 Sep 2021 08:38:58 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Mel Gorman <mgorman@techsingularity.net>
-Cc:     NeilBrown <neilb@suse.de>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        "Darrick J. Wong" <djwong@kernel.org>, Jan Kara <jack@suse.cz>,
-        Michal Hocko <mhocko@suse.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-mm@kvack.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/6] EXT4: Remove ENOMEM/congestion_wait() loops.
-Message-ID: <20210915223858.GM2361455@dread.disaster.area>
-References: <163157808321.13293.486682642188075090.stgit@noble.brown>
- <163157838437.13293.14244628630141187199.stgit@noble.brown>
- <20210914163432.GR3828@suse.com>
- <20210914235535.GL2361455@dread.disaster.area>
- <20210915085904.GU3828@suse.com>
- <20210915143510.GE3959@techsingularity.net>
+        id S231579AbhIOXHz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Sep 2021 19:07:55 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59062 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231197AbhIOXHy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Sep 2021 19:07:54 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 22CC1600D4;
+        Wed, 15 Sep 2021 23:06:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1631747195;
+        bh=kMbavDg8ElL5x6mviBTdurXquAYkzVHYNlZeFKp8xQM=;
+        h=Subject:From:To:Cc:Date:From;
+        b=M/x/p15hvT6JVs0l9q5gy4GxOCevR4LdAQe/mgraEWeCpD+8vVCjG1sddMWCI87P/
+         YQuNdCoJj7vWEkqsEJSyHf93UQYkneIJSZNomLNim3BvTYCcaROdOfXM3ppuc1aet3
+         PMWMv83nUCAMrI66B3OT/TS+OQ32Soa1jyh2TLFJSDY4VsI3ziLQVYgaPyFakoZNTb
+         VF32q20xga5upyObqe9GbPd5wCEeFguZz4Bt5UWDk529ZHRDp0Tql/VQT1RUvMxqoa
+         8chVwwJ0GwOiBX4wsyouQXSR4UXfpHEo40fXM7Fkx7BSqaHGyFfP+hO7/G5c6Ffnzi
+         8v/deKX+DX12w==
+Subject: [PATCHSET 00/61] xfs: sync libxfs with 5.14
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     sandeen@sandeen.net, djwong@kernel.org
+Cc:     Carlos Maiolino <cmaiolino@redhat.com>,
+        Chandan Babu R <chandanrlinux@gmail.com>,
+        Brian Foster <bfoster@redhat.com>,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        Kees Cook <keescook@chromium.org>,
+        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        Gao Xiang <hsiangkao@linux.alibaba.com>,
+        Allison Henderson <allison.henderson@oracle.com>,
+        Shaokun Zhang <zhangshaokun@hisilicon.com>,
+        Abaci Robot <abaci@linux.alibaba.com>,
+        Carlos Maiolino <cmaiolino@redhat.com>,
+        Dave Chinner <dchinner@redhat.com>,
+        Bill O'Donnell <bodonnel@redhat.com>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Date:   Wed, 15 Sep 2021 16:06:34 -0700
+Message-ID: <163174719429.350433.8562606396437219220.stgit@magnolia>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210915143510.GE3959@techsingularity.net>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
-        a=DzKKRZjfViQTE5W6EVc0VA==:117 a=DzKKRZjfViQTE5W6EVc0VA==:17
-        a=kj9zAlcOel0A:10 a=7QKq2e-ADPsA:10 a=7-415B0cAAAA:8
-        a=rs-OYbL5b6b9dbSePnwA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 15, 2021 at 03:35:10PM +0100, Mel Gorman wrote:
-> On Wed, Sep 15, 2021 at 09:59:04AM +0100, Mel Gorman wrote:
-> > > Yup, that's what we need, but I don't see why it needs to be exposed
-> > > outside the allocation code at all.
-> > > 
-> > 
-> > Probably not. At least some of it could be contained within reclaim
-> > itself to block when reclaim is not making progress as opposed to anything
-> > congestion related. That might still livelock if no progress can be made
-> > but that's not new, the OOM hammer should eventually kick in.
-> > 
-> 
-> There are two sides to the reclaim-related throttling
-> 
-> 1. throttling because zero progress is being made
-> 2. throttling because there are too many dirty pages or pages under
->    writeback cycling through the LRU too quickly.
-> 
-> The dirty page aspects (and the removal of wait_iff_congested which is
-> almost completely broken) could be done with something like the following
-> (completly untested). The downside is that end_page_writeback() takes an
-> atomic penalty if reclaim is throttled but at that point the system is
-> struggling anyway so I doubt it matters.
+Hi all,
 
-The atomics are pretty nasty, as is directly accessing the pgdat on
-every call to end_page_writeback(). Those will be performance
-limiting factors. Indeed, we don't use atomics for dirty page
-throttling, which does dirty page accounting via
-percpu counters on the BDI and doesn't require wakeups.
+This patchset backports all the libxfs changes from kernel 5.14, as well
+as all the related for_each_perag and fallthrough; cleanups that went
+with it.  I've prepared this series and pull request per Eric's request.
 
-Also, we've already got per-node and per-zone counters there for
-dirty/write pending stats, so do we actually need new counters and
-wakeups here?
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
-i.e. balance_dirty_pages() does not have an explicit wakeup - it
-bases it's sleep time on the (memcg aware) measured writeback rate
-on the BDI the page belongs to and the amount of outstanding dirty
-data on that BDI. i.e. it estimates fairly accurately what the wait
-time for this task should be given the dirty page demand and current
-writeback progress being made is and just sleeps for that length of
-time.
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
 
-Ideally, that's what should be happening here - we should be able to
-calculate a page cleaning rate estimation and then base the sleep
-time on that. No wakeups needed - when we've waited for the
-estimated time, we try to reclaim again...
+--D
 
-In fact, why can't this "too many dirty pages" case just use the
-balance_dirty_pages() infrastructure to do the "wait for writeback"
-reclaim backoff? Why do we even need to re-invent the wheel here?
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=libxfs-5.14-sync
+---
+ db/fsmap.c                  |   17 -
+ db/info.c                   |   18 -
+ db/type.c                   |    2 
+ growfs/xfs_growfs.c         |    6 
+ include/atomic.h            |    1 
+ include/libxfs.h            |    3 
+ include/linux.h             |   17 +
+ include/xfs_mount.h         |   65 ---
+ include/xfs_multidisk.h     |    5 
+ libfrog/Makefile            |    3 
+ libfrog/mockups.h           |   43 ++
+ libfrog/radix-tree.h        |    3 
+ libxfs/Makefile             |   10 
+ libxfs/init.c               |  147 +++----
+ libxfs/libxfs_api_defs.h    |    2 
+ libxfs/libxfs_priv.h        |   18 +
+ libxfs/topology.c           |    5 
+ libxfs/topology.h           |    6 
+ libxfs/util.c               |   12 -
+ libxfs/xfs_ag.c             |  287 +++++++++++++
+ libxfs/xfs_ag.h             |  136 ++++++
+ libxfs/xfs_ag_resv.c        |   15 -
+ libxfs/xfs_ag_resv.h        |   15 +
+ libxfs/xfs_alloc.c          |  113 +++--
+ libxfs/xfs_alloc.h          |    2 
+ libxfs/xfs_alloc_btree.c    |   31 +
+ libxfs/xfs_alloc_btree.h    |    9 
+ libxfs/xfs_attr.c           |  956 ++++++++++++++++++++++++++-----------------
+ libxfs/xfs_attr.h           |  403 ++++++++++++++++++
+ libxfs/xfs_attr_leaf.c      |    5 
+ libxfs/xfs_attr_leaf.h      |    2 
+ libxfs/xfs_attr_remote.c    |  167 +++-----
+ libxfs/xfs_attr_remote.h    |    8 
+ libxfs/xfs_bmap.c           |    3 
+ libxfs/xfs_bmap.h           |    1 
+ libxfs/xfs_btree.c          |   15 -
+ libxfs/xfs_btree.h          |   12 -
+ libxfs/xfs_da_btree.c       |    2 
+ libxfs/xfs_ialloc.c         |  696 ++++++++++++++++---------------
+ libxfs/xfs_ialloc.h         |   43 --
+ libxfs/xfs_ialloc_btree.c   |   46 +-
+ libxfs/xfs_ialloc_btree.h   |   13 -
+ libxfs/xfs_inode_buf.c      |   30 +
+ libxfs/xfs_log_format.h     |   14 -
+ libxfs/xfs_refcount.c       |  122 +++--
+ libxfs/xfs_refcount.h       |    9 
+ libxfs/xfs_refcount_btree.c |   39 +-
+ libxfs/xfs_refcount_btree.h |    7 
+ libxfs/xfs_rmap.c           |  147 +++----
+ libxfs/xfs_rmap.h           |    6 
+ libxfs/xfs_rmap_btree.c     |   46 +-
+ libxfs/xfs_rmap_btree.h     |    8 
+ libxfs/xfs_sb.c             |  145 -------
+ libxfs/xfs_sb.h             |    9 
+ libxfs/xfs_shared.h         |   20 -
+ libxfs/xfs_trans_inode.c    |   10 
+ libxfs/xfs_types.c          |    4 
+ libxfs/xfs_types.h          |    1 
+ mkfs/proto.c                |    1 
+ mkfs/proto.h                |   13 +
+ mkfs/xfs_mkfs.c             |   11 
+ repair/agbtree.c            |   28 +
+ repair/agbtree.h            |    8 
+ repair/dinode.c             |   18 -
+ repair/phase4.c             |    4 
+ repair/phase5.c             |   16 -
+ repair/rmap.c               |   43 +-
+ repair/sb.c                 |    1 
+ repair/scan.c               |    4 
+ scrub/inodes.c              |    2 
+ scrub/repair.c              |    2 
+ scrub/scrub.c               |    8 
+ 72 files changed, 2520 insertions(+), 1619 deletions(-)
+ create mode 100644 libfrog/mockups.h
+ rename libfrog/topology.c => libxfs/topology.c (99%)
+ rename libfrog/topology.h => libxfs/topology.h (88%)
+ create mode 100644 mkfs/proto.h
 
-> diff --git a/mm/filemap.c b/mm/filemap.c
-> index dae481293b5d..b9be9afa4308 100644
-> --- a/mm/filemap.c
-> +++ b/mm/filemap.c
-> @@ -1606,6 +1606,8 @@ void end_page_writeback(struct page *page)
->  	smp_mb__after_atomic();
->  	wake_up_page(page, PG_writeback);
->  	put_page(page);
-> +
-> +	acct_reclaim_writeback(page);
-
-UAF - that would need to be before the put_page() call...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
