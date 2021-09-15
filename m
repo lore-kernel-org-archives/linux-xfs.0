@@ -2,266 +2,122 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A53FDC433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 10:46:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D358C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 11:51:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8137861279
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 10:46:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 481466127C
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 11:51:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237628AbhIOKr2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Sep 2021 06:47:28 -0400
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:56889 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S237592AbhIOKrW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Sep 2021 06:47:22 -0400
-IronPort-Data: =?us-ascii?q?A9a23=3AtJiYrKkMm/e4LFL/E5twbl/o5gz6J0RdPkR7XQ2?=
- =?us-ascii?q?eYbTBsI5bpzAAmmEWWGmFPauIMWGgfdp/Oomw905QsJ7dzN8xGwZq+CA2RRqmi?=
- =?us-ascii?q?+KfW43BcR2Y0wB+jyH7ZBs+qZ1YM7EsFehsJpPnjkrrYuWJQUVUj/nSH+KtUbO?=
- =?us-ascii?q?cYUideCc/IMsfoUM68wIGqt4w6TSJK1vlVeLa+6UzCnf8s9JHGj58B5a4lf9al?=
- =?us-ascii?q?K+aVAX0EbAJTasjUFf2zxH5BX+ETE27ByOQroJ8RoZWSwtfpYxV8F81/z91Yj+?=
- =?us-ascii?q?kur39NEMXQL/OJhXIgX1TM0SgqkEa4HVsjeBgb7xBAatUo2zhc9RZ0shEs4ehD?=
- =?us-ascii?q?wkvJbHklvkfUgVDDmd1OqguFLrveCHj7JXClxKcG5fr67A0ZK0sBqUU8/h2DUl?=
- =?us-ascii?q?A7/sdLyoHbwzFjOWzqJqkS+1ol+wiKsfxNY8Ss30myivWZd4qSJaFQePV5Ntc3?=
- =?us-ascii?q?T41nehPG+rTY4wSbj8HRBjCfBpJNX8UBYg4kePugWPwGxVetl6UoK8f52nI0Bc?=
- =?us-ascii?q?31LnrLcqTdtGULe1VlUawonnauWj0ajkAO9ubxSWU9Fq3m/TC2y/2MKoWFbul5?=
- =?us-ascii?q?rtkm1Ge2GEXIAMZWEH9ovSjjEO6HdVFJCQ8/isosLh390GxSNT5dwO3rWTCvRM?=
- =?us-ascii?q?GXddUVeog52mlzqvS/hbcFmYfZiBOZcZgt8IsQzEukFiTkLvBGz11t5WHRHSc6?=
- =?us-ascii?q?PGQrDWvKW4SN2BEeCxscOevy7EPu6lq1lSWEIklS/Xz07XI9fjL62jihEADa38?=
- =?us-ascii?q?70abnD5mGwG0=3D?=
-IronPort-HdrOrdr: =?us-ascii?q?A9a23=3A0ZAPJ68suSk9lV1wwK9uk+C9I+orL9Y04lQ7?=
- =?us-ascii?q?vn2ZKCY0TiX2ra2TdZggvyMc6wxxZJhDo7+90cC7KBu2yXcc2/hzAV7IZmXbUQ?=
- =?us-ascii?q?WTQr1f0Q=3D=3D?=
-X-IronPort-AV: E=Sophos;i="5.85,295,1624291200"; 
-   d="scan'208";a="114519072"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 15 Sep 2021 18:45:58 +0800
-Received: from G08CNEXMBPEKD06.g08.fujitsu.local (unknown [10.167.33.206])
-        by cn.fujitsu.com (Postfix) with ESMTP id 0A9AC4D0DC76;
-        Wed, 15 Sep 2021 18:45:54 +0800 (CST)
-Received: from G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.85) by
- G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206) with Microsoft SMTP Server
- (TLS) id 15.0.1497.23; Wed, 15 Sep 2021 18:45:48 +0800
-Received: from irides.mr.mr.mr (10.167.225.141) by
- G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.23 via Frontend Transport; Wed, 15 Sep 2021 18:45:47 +0800
-From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-To:     <djwong@kernel.org>, <hch@lst.de>, <linux-xfs@vger.kernel.org>
-CC:     <ruansy.fnst@fujitsu.com>, <dan.j.williams@intel.com>,
-        <david@fromorbit.com>, <linux-fsdevel@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <nvdimm@lists.linux.dev>,
-        <rgoldwyn@suse.de>, <viro@zeniv.linux.org.uk>,
-        <willy@infradead.org>
-Subject: [PATCH v9 7/8] xfs: support CoW in fsdax mode
-Date:   Wed, 15 Sep 2021 18:45:00 +0800
-Message-ID: <20210915104501.4146910-8-ruansy.fnst@fujitsu.com>
-X-Mailer: git-send-email 2.33.0
-In-Reply-To: <20210915104501.4146910-1-ruansy.fnst@fujitsu.com>
-References: <20210915104501.4146910-1-ruansy.fnst@fujitsu.com>
+        id S232774AbhIOLxQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Sep 2021 07:53:16 -0400
+Received: from smtp-out1.suse.de ([195.135.220.28]:45234 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232672AbhIOLxP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Sep 2021 07:53:15 -0400
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out1.suse.de (Postfix) with ESMTP id 90FC422230;
+        Wed, 15 Sep 2021 11:51:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1631706715; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=ezTag8FBwZoPE0mbLQd/8vVA5u9wYyKzzA2BAaeCdqk=;
+        b=Oowyq/u6gqCCB5BKOXaYHANJZj9rQRrGvyHHnoqL1aX++Prhi3F/s+TF/6PlPAURkDAXvl
+        jxiuM8flPGKlG5a4+hCKS9+5+lPuySlLZeGkY6QQYlSV4ysoNL+WVXmZzvpHIYF6CSaq3+
+        C35NZQnKrXWKI6wrCyqiIDtxYChJ3d4=
+Received: from suse.cz (unknown [10.100.201.86])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by relay2.suse.de (Postfix) with ESMTPS id 5F0C9A3B8F;
+        Wed, 15 Sep 2021 11:51:55 +0000 (UTC)
+Date:   Wed, 15 Sep 2021 13:51:54 +0200
+From:   Michal Hocko <mhocko@suse.com>
+To:     NeilBrown <neilb@suse.de>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Mel Gorman <mgorman@suse.com>, linux-xfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-nfs@vger.kernel.org, linux-mm@kvack.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/6] MM: improve documentation for __GFP_NOFAIL
+Message-ID: <YUHeWnKtR0WMNGo8@dhcp22.suse.cz>
+References: <163157808321.13293.486682642188075090.stgit@noble.brown>
+ <163157838436.13293.8832201267053160346.stgit@noble.brown>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: 0A9AC4D0DC76.A4DD2
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <163157838436.13293.8832201267053160346.stgit@noble.brown>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-In fsdax mode, WRITE and ZERO on a shared extent need CoW performed.
-After that, new allocated extents needs to be remapped to the file.
-So, add a CoW identification in ->iomap_begin(), and implement
-->iomap_end() to do the remapping work.
+On Tue 14-09-21 10:13:04, Neil Brown wrote:
+> __GFP_NOFAIL is documented both in gfp.h and memory-allocation.rst.
+> The details are not entirely consistent.
+> 
+> This patch ensures both places state that:
+>  - there is a cost potentially imposed on other subsystems
+>  - it should only be used when there is no real alternative
+>  - it is preferable to an endless loop
+>  - it is strongly discourages for costly-order allocations.
+>
 
-Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
----
- fs/xfs/xfs_bmap_util.c |  3 +--
- fs/xfs/xfs_file.c      |  6 +++---
- fs/xfs/xfs_iomap.c     | 38 +++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_iomap.h     | 30 ++++++++++++++++++++++++++++++
- fs/xfs/xfs_iops.c      |  7 +++----
- fs/xfs/xfs_reflink.c   |  3 +--
- 6 files changed, 75 insertions(+), 12 deletions(-)
+Yes this is a useful addition to the documentation. Thanks!
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 73a36b7be3bd..0681250e0a5d 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1009,8 +1009,7 @@ xfs_free_file_space(
- 		return 0;
- 	if (offset + len > XFS_ISIZE(ip))
- 		len = XFS_ISIZE(ip) - offset;
--	error = iomap_zero_range(VFS_I(ip), offset, len, NULL,
--			&xfs_buffered_write_iomap_ops);
-+	error = xfs_iomap_zero_range(ip, offset, len, NULL);
- 	if (error)
- 		return error;
- 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 7aa943edfc02..2ef1930374d2 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -704,7 +704,7 @@ xfs_file_dax_write(
- 	pos = iocb->ki_pos;
- 
- 	trace_xfs_file_dax_write(iocb, from);
--	ret = dax_iomap_rw(iocb, from, &xfs_direct_write_iomap_ops);
-+	ret = dax_iomap_rw(iocb, from, &xfs_dax_write_iomap_ops);
- 	if (ret > 0 && iocb->ki_pos > i_size_read(inode)) {
- 		i_size_write(inode, iocb->ki_pos);
- 		error = xfs_setfilesize(ip, pos, ret);
-@@ -1329,8 +1329,8 @@ __xfs_filemap_fault(
- 		xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
- 		ret = dax_iomap_fault(vmf, pe_size, &pfn, NULL,
- 				(write_fault && !vmf->cow_page) ?
--				 &xfs_direct_write_iomap_ops :
--				 &xfs_read_iomap_ops);
-+					&xfs_dax_write_iomap_ops :
-+					&xfs_read_iomap_ops);
- 		if (ret & VM_FAULT_NEEDDSYNC)
- 			ret = dax_finish_sync_fault(vmf, pe_size, pfn);
- 		xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 093758440ad5..6fa3b377cb81 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -761,7 +761,8 @@ xfs_direct_write_iomap_begin(
- 
- 		/* may drop and re-acquire the ilock */
- 		error = xfs_reflink_allocate_cow(ip, &imap, &cmap, &shared,
--				&lockmode, flags & IOMAP_DIRECT);
-+				&lockmode,
-+				(flags & IOMAP_DIRECT) || IS_DAX(inode));
- 		if (error)
- 			goto out_unlock;
- 		if (shared)
-@@ -854,6 +855,41 @@ const struct iomap_ops xfs_direct_write_iomap_ops = {
- 	.iomap_begin		= xfs_direct_write_iomap_begin,
- };
- 
-+static int
-+xfs_dax_write_iomap_end(
-+	struct inode 		*inode,
-+	loff_t 			pos,
-+	loff_t 			length,
-+	ssize_t 		written,
-+	unsigned 		flags,
-+	struct iomap 		*iomap)
-+{
-+	struct xfs_inode	*ip = XFS_I(inode);
-+	/*
-+	 * Usually we use @written to indicate whether the operation was
-+	 * successful.  But it is always positive or zero.  The CoW needs the
-+	 * actual error code from actor().  So, get it from
-+	 * iomap_iter->processed.
-+	 */
-+	const struct iomap_iter *iter =
-+				container_of(iomap, typeof(*iter), iomap);
-+
-+	if (!xfs_is_cow_inode(ip))
-+		return 0;
-+
-+	if (iter->processed <= 0) {
-+		xfs_reflink_cancel_cow_range(ip, pos, length, true);
-+		return 0;
-+	}
-+
-+	return xfs_reflink_end_cow(ip, pos, iter->processed);
-+}
-+
-+const struct iomap_ops xfs_dax_write_iomap_ops = {
-+	.iomap_begin 	= xfs_direct_write_iomap_begin,
-+	.iomap_end	= xfs_dax_write_iomap_end,
-+};
-+
- static int
- xfs_buffered_write_iomap_begin(
- 	struct inode		*inode,
-diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
-index 7d3703556d0e..92679a0c3578 100644
---- a/fs/xfs/xfs_iomap.h
-+++ b/fs/xfs/xfs_iomap.h
-@@ -45,5 +45,35 @@ extern const struct iomap_ops xfs_direct_write_iomap_ops;
- extern const struct iomap_ops xfs_read_iomap_ops;
- extern const struct iomap_ops xfs_seek_iomap_ops;
- extern const struct iomap_ops xfs_xattr_iomap_ops;
-+extern const struct iomap_ops xfs_dax_write_iomap_ops;
-+
-+static inline int
-+xfs_iomap_zero_range(
-+	struct xfs_inode	*ip,
-+	loff_t			pos,
-+	loff_t			len,
-+	bool			*did_zero)
-+{
-+	struct inode		*inode = VFS_I(ip);
-+
-+	return iomap_zero_range(inode, pos, len, did_zero,
-+			IS_DAX(inode) ?
-+				&xfs_dax_write_iomap_ops :
-+				&xfs_buffered_write_iomap_ops);
-+}
-+
-+static inline int
-+xfs_iomap_truncate_page(
-+	struct xfs_inode	*ip,
-+	loff_t			pos,
-+	bool			*did_zero)
-+{
-+	struct inode		*inode = VFS_I(ip);
-+
-+	return iomap_truncate_page(inode, pos, did_zero,
-+			IS_DAX(inode)?
-+				&xfs_dax_write_iomap_ops :
-+				&xfs_buffered_write_iomap_ops);
-+}
- 
- #endif /* __XFS_IOMAP_H__*/
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index a607d6aca5c4..332e6208dffd 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -911,8 +911,8 @@ xfs_setattr_size(
- 	 */
- 	if (newsize > oldsize) {
- 		trace_xfs_zero_eof(ip, oldsize, newsize - oldsize);
--		error = iomap_zero_range(inode, oldsize, newsize - oldsize,
--				&did_zeroing, &xfs_buffered_write_iomap_ops);
-+		error = xfs_iomap_zero_range(ip, oldsize, newsize - oldsize,
-+				&did_zeroing);
- 	} else {
- 		/*
- 		 * iomap won't detect a dirty page over an unwritten block (or a
-@@ -924,8 +924,7 @@ xfs_setattr_size(
- 						     newsize);
- 		if (error)
- 			return error;
--		error = iomap_truncate_page(inode, newsize, &did_zeroing,
--				&xfs_buffered_write_iomap_ops);
-+		error = xfs_iomap_truncate_page(ip, newsize, &did_zeroing);
- 	}
- 
- 	if (error)
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 7ecea0311e88..9d876e268734 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1269,8 +1269,7 @@ xfs_reflink_zero_posteof(
- 		return 0;
- 
- 	trace_xfs_zero_eof(ip, isize, pos - isize);
--	return iomap_zero_range(VFS_I(ip), isize, pos - isize, NULL,
--			&xfs_buffered_write_iomap_ops);
-+	return xfs_iomap_zero_range(ip, isize, pos - isize, NULL);
- }
- 
- /*
+> Signed-off-by: NeilBrown <neilb@suse.de>
+
+Acked-by: Michal Hocko <mhocko@suse.com>
+
+> ---
+>  Documentation/core-api/memory-allocation.rst |    9 ++++++++-
+>  include/linux/gfp.h                          |    4 ++++
+>  2 files changed, 12 insertions(+), 1 deletion(-)
+> 
+> diff --git a/Documentation/core-api/memory-allocation.rst b/Documentation/core-api/memory-allocation.rst
+> index 5954ddf6ee13..9458ce72d31c 100644
+> --- a/Documentation/core-api/memory-allocation.rst
+> +++ b/Documentation/core-api/memory-allocation.rst
+> @@ -126,7 +126,14 @@ or another request.
+>  
+>    * ``GFP_KERNEL | __GFP_NOFAIL`` - overrides the default allocator behavior
+>      and all allocation requests will loop endlessly until they succeed.
+> -    This might be really dangerous especially for larger orders.
+> +    The allocator may provide access to memory that would otherwise be
+> +    reserved in order to satisfy this allocation which might adversely
+> +    affect other subsystems.  So it should only be used when there is no
+> +    reasonable failure policy and when the memory is likely to be freed
+> +    again in the near future.  Its use is strong discourage (via a
+> +    WARN_ON) for allocations larger than ``PAGE_ALLOC_COSTLY_ORDER``.
+> +    While this flag is best avoided, it is still preferable to endless
+> +    loops around the allocator.
+>  
+>  Selecting memory allocator
+>  ==========================
+> diff --git a/include/linux/gfp.h b/include/linux/gfp.h
+> index 55b2ec1f965a..101479373738 100644
+> --- a/include/linux/gfp.h
+> +++ b/include/linux/gfp.h
+> @@ -209,6 +209,10 @@ struct vm_area_struct;
+>   * used only when there is no reasonable failure policy) but it is
+>   * definitely preferable to use the flag rather than opencode endless
+>   * loop around allocator.
+> + * Use of this flag may provide access to memory which would otherwise be
+> + * reserved.  As such it must be understood that there can be a cost imposed
+> + * on other subsystems as well as the obvious cost of placing the calling
+> + * thread in an uninterruptible indefinite wait.
+>   * Using this flag for costly allocations is _highly_ discouraged.
+>   */
+>  #define __GFP_IO	((__force gfp_t)___GFP_IO)
+> 
+
 -- 
-2.33.0
-
-
-
+Michal Hocko
+SUSE Labs
