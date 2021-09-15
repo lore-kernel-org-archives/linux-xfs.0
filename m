@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2F7EC433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:10:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E039C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:10:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 97CC1610E8
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:10:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2091761101
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:10:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232740AbhIOXL2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Sep 2021 19:11:28 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36286 "EHLO mail.kernel.org"
+        id S229538AbhIOXLd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Sep 2021 19:11:33 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36434 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229538AbhIOXL1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Sep 2021 19:11:27 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 0EEAC610A6;
-        Wed, 15 Sep 2021 23:10:08 +0000 (UTC)
+        id S231579AbhIOXLd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Sep 2021 19:11:33 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 78BF1610A6;
+        Wed, 15 Sep 2021 23:10:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631747408;
-        bh=RHZDUuCtkVfl0Wz2ePRGYMcYeSirR0Hugc2Sutu3TFk=;
+        s=k20201202; t=1631747413;
+        bh=3uTDRDXTKJwc3zgepikaXP/cg9K/7e7l3ZemhydkMoY=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=Qb3sBe5jlNqa0UTx8MhcB/qWrga4bp/AUUimoR3aMO2D94RdYed+q9ZFkF3waeWTz
-         LwdzcD7JvfdFTC8wkQkyZaMIBkCdjAl6TEAVK82MQRdu5Vht1j3C4LmgywJFCosbEV
-         WBo4E0w1/PDFyQ4A/PqtLj9VlYrUtTU+JnznwtbYA/Kr1ktefazZyBkUCKxbwpZriZ
-         85LHEVzSS/I88Zns/V0heeRyJ2Gh2fopiUlfTI1rDMmIPguw6X3u9hU4lEXDt2VACM
-         +047FLuDjnU6TTDoOOVfQDqqDPVGixG1zVjwkL3lmUZHkeqMSxqLZcVEqkfhCsqbnZ
-         qeI4P/pY4I95g==
-Subject: [PATCH 39/61] xfs: get rid of xfs_dir_ialloc()
+        b=ff475+FLluXF8DIFAy7xDNPbkzhVFij0tBjy5ieLryD+IpaVGyvOCuOJEneGTGQby
+         C4RBfdXrb7nr7seDFULGCul0QvU3KaLqFe62bvWqDsZw6+76wwg1Du8ZxJb+Ju7DIG
+         X1gZHBWVv9YFpYpEQum6yk5Ci/1qerizL0ZoiRS7zt+XItvN0xn1EPjotkbi+tNTev
+         wUJY9wLT+tiDcoDdS+zIThacNrZyLWw8bSLbgHvAExjQJMD3E6T5i347VYXNdijtZw
+         o8Bon419c81hZbWeEcgpYIo8HvRPtyW+ZAGadZpy369xlP0KCqLaUK2rvQP5d+hqlJ
+         AavuYL8IPVmIQ==
+Subject: [PATCH 40/61] xfs: inode allocation can use a single perag instance
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
 Cc:     Dave Chinner <dchinner@redhat.com>,
         Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
-Date:   Wed, 15 Sep 2021 16:10:07 -0700
-Message-ID: <163174740780.350433.16571266852111030872.stgit@magnolia>
+Date:   Wed, 15 Sep 2021 16:10:13 -0700
+Message-ID: <163174741324.350433.3726522503472995156.stgit@magnolia>
 In-Reply-To: <163174719429.350433.8562606396437219220.stgit@magnolia>
 References: <163174719429.350433.8562606396437219220.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,154 +50,53 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Source kernel commit: b652afd937033911944d7f681f2031b006961f1d
+Source kernel commit: 309161f6603ce1a53b76a42817cde2a9bcd17e82
 
-This is just a simple wrapper around the per-ag inode allocation
-that doesn't need to exist. The internal mechanism to select and
-allocate within an AG does not need to be exposed outside
-xfs_ialloc.c, and it being exposed simply makes it harder to follow
-the code and simplify it.
-
-This is simplified by internalising xf_dialloc_select_ag() and
-xfs_dialloc_ag() into a single xfs_dialloc() function and then
-xfs_dir_ialloc() can go away.
+Now that we've internalised the two-phase inode allocation, we can
+now easily make the AG selection and allocation atomic from the
+perspective of a single perag context. This will ensure AGs going
+offline/away cannot occur between the selection and allocation
+steps.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/util.c       |   12 +-----------
- libxfs/xfs_ialloc.c |   17 ++++++++++-------
- libxfs/xfs_ialloc.h |   27 ++++-----------------------
- 3 files changed, 15 insertions(+), 41 deletions(-)
+ libxfs/xfs_ialloc.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 
-diff --git a/libxfs/util.c b/libxfs/util.c
-index f8ea3d2a..905f1784 100644
---- a/libxfs/util.c
-+++ b/libxfs/util.c
-@@ -514,7 +514,6 @@ libxfs_dir_ialloc(
- 	struct fsxattr		*fsx,
- 	struct xfs_inode	**ipp)
- {
--	struct xfs_buf		*agibp;
- 	xfs_ino_t		parent_ino = dp ? dp->i_ino : 0;
- 	xfs_ino_t		ino;
- 	int			error;
-@@ -523,19 +522,10 @@ libxfs_dir_ialloc(
- 	 * Call the space management code to pick the on-disk inode to be
- 	 * allocated.
- 	 */
--	error = xfs_dialloc_select_ag(tpp, parent_ino, mode, &agibp);
-+	error = xfs_dialloc(tpp, parent_ino, mode, &ino);
- 	if (error)
- 		return error;
- 
--	if (!agibp)
--		return -ENOSPC;
--
--	/* Allocate an inode from the selected AG */
--	error = xfs_dialloc_ag(*tpp, agibp, parent_ino, &ino);
--	if (error)
--		return error;
--	ASSERT(ino != NULLFSINO);
--
- 	return libxfs_init_new_inode(*tpp, dp, ino, mode, nlink, rdev, cr,
- 				fsx, ipp);
- }
 diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
-index 573a7804..b133b2ed 100644
+index b133b2ed..60e09a53 100644
 --- a/libxfs/xfs_ialloc.c
 +++ b/libxfs/xfs_ialloc.c
-@@ -1423,7 +1423,7 @@ xfs_dialloc_ag_update_inobt(
-  * The caller selected an AG for us, and made sure that free inodes are
-  * available.
-  */
--int
-+static int
+@@ -1427,6 +1427,7 @@ static int
  xfs_dialloc_ag(
  	struct xfs_trans	*tp,
  	struct xfs_buf		*agbp,
-@@ -1597,24 +1597,23 @@ xfs_ialloc_next_ag(
-  * can be allocated, -ENOSPC be returned.
-  */
- int
--xfs_dialloc_select_ag(
-+xfs_dialloc(
- 	struct xfs_trans	**tpp,
++	struct xfs_perag	*pag,
  	xfs_ino_t		parent,
- 	umode_t			mode,
--	struct xfs_buf		**IO_agbp)
-+	xfs_ino_t		*new_ino)
+ 	xfs_ino_t		*inop)
  {
- 	struct xfs_mount	*mp = (*tpp)->t_mountp;
- 	struct xfs_buf		*agbp;
- 	xfs_agnumber_t		agno;
--	int			error;
-+	int			error = 0;
- 	xfs_agnumber_t		start_agno;
- 	struct xfs_perag	*pag;
- 	struct xfs_ino_geometry	*igeo = M_IGEO(mp);
- 	bool			okalloc = true;
- 	int			needspace;
- 	int			flags;
--
--	*IO_agbp = NULL;
-+	xfs_ino_t		ino;
+@@ -1441,7 +1442,6 @@ xfs_dialloc_ag(
+ 	int				error;
+ 	int				offset;
+ 	int				i;
+-	struct xfs_perag		*pag = agbp->b_pag;
  
- 	/*
- 	 * Directories, symlinks, and regular files frequently allocate at least
-@@ -1760,7 +1759,11 @@ xfs_dialloc_select_ag(
+ 	if (!xfs_sb_version_hasfinobt(&mp->m_sb))
+ 		return xfs_dialloc_ag_inobt(tp, agbp, pag, parent, inop);
+@@ -1758,9 +1758,9 @@ xfs_dialloc(
+ 	xfs_perag_put(pag);
  	return error ? error : -ENOSPC;
  found_ag:
- 	xfs_perag_put(pag);
--	*IO_agbp = agbp;
-+	/* Allocate an inode in the found AG */
-+	error = xfs_dialloc_ag(*tpp, agbp, parent, &ino);
-+	if (error)
-+		return error;
-+	*new_ino = ino;
- 	return 0;
- }
- 
-diff --git a/libxfs/xfs_ialloc.h b/libxfs/xfs_ialloc.h
-index 3511086a..886f6748 100644
---- a/libxfs/xfs_ialloc.h
-+++ b/libxfs/xfs_ialloc.h
-@@ -33,30 +33,11 @@ xfs_make_iptr(struct xfs_mount *mp, struct xfs_buf *b, int o)
- }
- 
- /*
-- * Allocate an inode on disk.
-- * Mode is used to tell whether the new inode will need space, and whether
-- * it is a directory.
-- *
-- * There are two phases to inode allocation: selecting an AG and ensuring
-- * that it contains free inodes, followed by allocating one of the free
-- * inodes. xfs_dialloc_select_ag() does the former and returns a locked AGI
-- * to the caller, ensuring that followup call to xfs_dialloc_ag() will
-- * have free inodes to allocate from. xfs_dialloc_ag() will return the inode
-- * number of the free inode we allocated.
-+ * Allocate an inode on disk.  Mode is used to tell whether the new inode will
-+ * need space, and whether it is a directory.
-  */
--int					/* error */
--xfs_dialloc_select_ag(
--	struct xfs_trans **tpp,		/* double pointer of transaction */
--	xfs_ino_t	parent,		/* parent inode (directory) */
--	umode_t		mode,		/* mode bits for new inode */
--	struct xfs_buf	**IO_agbp);
--
--int
--xfs_dialloc_ag(
--	struct xfs_trans	*tp,
--	struct xfs_buf		*agbp,
--	xfs_ino_t		parent,
--	xfs_ino_t		*inop);
-+int xfs_dialloc(struct xfs_trans **tpp, xfs_ino_t parent, umode_t mode,
-+		xfs_ino_t *new_ino);
- 
- /*
-  * Free disk inode.  Carefully avoids touching the incore inode, all
+-	xfs_perag_put(pag);
+ 	/* Allocate an inode in the found AG */
+-	error = xfs_dialloc_ag(*tpp, agbp, parent, &ino);
++	error = xfs_dialloc_ag(*tpp, agbp, pag, parent, &ino);
++	xfs_perag_put(pag);
+ 	if (error)
+ 		return error;
+ 	*new_ino = ino;
 
