@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5996C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:43:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95A85C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:43:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AF82461131
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:43:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7ADE5610E8
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:43:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232944AbhIOXoa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Sep 2021 19:44:30 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46524 "EHLO mail.kernel.org"
+        id S232975AbhIOXog (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Sep 2021 19:44:36 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46626 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232836AbhIOXoa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Sep 2021 19:44:30 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 7429E60F8F;
-        Wed, 15 Sep 2021 23:43:10 +0000 (UTC)
+        id S233088AbhIOXof (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Sep 2021 19:44:35 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E115A60F25;
+        Wed, 15 Sep 2021 23:43:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631749390;
-        bh=vFdU1gYYNcZXvqyxGHUrERl+DiKStdLv+nCK/u3nZ6g=;
+        s=k20201202; t=1631749396;
+        bh=Aem0n8k7yKOwaFfh9ieEOEKzi9tgK38YiIxKjHcKQ9I=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=NRpDQr0dRkQhmTq3u4gUW42ncZSc5NNGkdeYGNRqwxXUyKU6uhf38iFq7wEvwS/TC
-         YuOM0OoEDvULmHq4GKVcAnKa4dwSLdal8LN0uWqWKuT3loRUtHJvB5f7TXLJvq8QNs
-         AiKIJ1IaVcGE2AOonHQtUcKgn84aIEvURIdtz/187SBwJ3z05mUoaoCettiiyKO3HM
-         yVQwSFGLu3ArAUrq5tyYCObh1b3ctJDAk3coGmspOSyWQr4iSiSSPOyNXGPeoUe81V
-         09LxIppmiUOj6kgu/3nBfi8XnxaTqSAcl3Z3a+535M8vZTJYrJg7FD0MRZkyOq2szJ
-         V3xDa9QBSP0nA==
-Subject: [PATCH 6/9] tools: make sure that test groups are described in the
- documentation
+        b=EBL+kcdy3r+/6okeGFip45zqf6USP6b1kGZQ+ksOs9ZKqkEjSCJQAnd9Nk1yW6Smb
+         Q26rtsTpRbweJRaOEi1fj0ZN0CRAx++IRWmcOHpV2WljGTHZ3F+hQGOn7Np8wa21Re
+         LLKxhnzxbDHdQVpJiMx7zA5uzzZy99wjJOWFunl3jQyYp3lQKC2NKxr+B8R+iojtRX
+         CFnKCjmUFlSRqExkbp7cYXnb0ynqvKfS5DcMFoX9rFZszPBTmik6AGJQsEiKR57KKg
+         Is+OvFFwKwhaRJFPB6X3uwD1qlNCi9Fg52LkcPS0XYp1nPbAU9QIvvffJDgmi6/uU8
+         WxyOJCSq9N0eg==
+Subject: [PATCH 7/9] tools: add missing license tags to my scripts
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Wed, 15 Sep 2021 16:43:10 -0700
-Message-ID: <163174939022.380880.4370326262613244115.stgit@magnolia>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
+Date:   Wed, 15 Sep 2021 16:43:15 -0700
+Message-ID: <163174939566.380880.290670167130749389.stgit@magnolia>
 In-Reply-To: <163174935747.380880.7635671692624086987.stgit@magnolia>
 References: <163174935747.380880.7635671692624086987.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,259 +50,57 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create a file to document the purpose of each test group that is
-currently defined in fstests, and change mkgroupfile to check that every
-group mentioned in the tests is also mentioned in the documentation.
+I forgot to add spdx license tags and copyright statements to some of
+the tools that I've contributed to fstests.  Fix this to be explicit.
 
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- common/preamble     |   21 ++++++++
- doc/group-names.txt |  135 +++++++++++++++++++++++++++++++++++++++++++++++++++
- tools/mkgroupfile   |   33 +++++++++---
- 3 files changed, 181 insertions(+), 8 deletions(-)
- create mode 100644 doc/group-names.txt
+ tools/mkgroupfile |    4 +++-
+ tools/mvtest      |    5 ++++-
+ tools/nextid      |    4 +++-
+ 3 files changed, 10 insertions(+), 3 deletions(-)
 
 
-diff --git a/common/preamble b/common/preamble
-index 66b0ed05..64d79385 100644
---- a/common/preamble
-+++ b/common/preamble
-@@ -23,6 +23,26 @@ _register_cleanup()
- 	trap "${cleanup}exit \$status" EXIT HUP INT QUIT TERM $*
- }
- 
-+# Make sure each group is in the documentation file.
-+_check_groups() {
-+	test -n "$GROUPNAME_DOC_FILE" || return 0
-+
-+	local testname="$(echo "$0" | sed -e 's/^.*tests\///g')"
-+	declare -a missing=()
-+
-+	for group in "$@"; do
-+		if ! grep -q "^${group}[[:space:]]" "$GROUPNAME_DOC_FILE"; then
-+			missing+=("\"${group}\"")
-+		fi
-+	done
-+	test "${#missing}" -eq 0 && return 0
-+
-+	local suffix=
-+	test "${#missing}" -gt 1 && suffix="s"
-+	echo "$testname: group$suffix ${missing[@]} not mentioned in documentation." 1>&2
-+	return 1
-+}
-+
- # Prepare to run a fstest by initializing the required global variables to
- # their defaults, sourcing common functions, registering a cleanup function,
- # and removing the $seqres.full file.
-@@ -42,6 +62,7 @@ _begin_fstest()
- 	# If we're only running the test to generate a group.list file,
- 	# spit out the group data and exit.
- 	if [ -n "$GENERATE_GROUPS" ]; then
-+		_check_groups "$@" || exit 1
- 		echo "$seq $@"
- 		exit 0
- 	fi
-diff --git a/doc/group-names.txt b/doc/group-names.txt
-new file mode 100644
-index 00000000..e8e3477e
---- /dev/null
-+++ b/doc/group-names.txt
-@@ -0,0 +1,135 @@
-+======================= =======================================================
-+Group Name:		Description:
-+======================= =======================================================
-+all			All known tests, automatically generated by ./check at
-+			runtime
-+auto			Tests that should be run automatically.  These should
-+			not require more than ~5 minutes to run.
-+quick			Tests that should run in under 30 seconds.
-+deprecated		Old tests that should not be run.
-+
-+acl			Access Control Lists
-+admin			xfs_admin functionality
-+aio			general libaio async io tests
-+atime			file access time
-+attr			extended attributes
-+attr2			xfs v2 extended aributes
-+balance			btrfs tree rebalance
-+bigtime			timestamps beyond the year 2038
-+blockdev		block device functionality
-+broken			broken tests
-+cap			Linux capabilities
-+casefold		directory name casefolding
-+ci			ASCII case-insensitive directory name lookups
-+clone			FICLONE/FICLONERANGE ioctls
-+clone_stress		stress testing FICLONE/FICLONERANGE
-+collapse		fallocate FALLOC_FL_COLLAPSE_RANGE
-+compress		file compression
-+convert			btrfs ext[34] conversion tool
-+copy			xfs_copy functionality
-+copy_range		copy_file_range syscall
-+copyup			overlayfs copyup
-+dangerous		dangerous test that can crash the system
-+dangerous_bothrepair	fuzzers to evaluate xfs_scrub + xfs_repair repair
-+dangerous_fuzzers	fuzzers that can crash your computer
-+dangerous_norepair	fuzzers to evaluate kernel metadata verifiers
-+dangerous_online_repair	fuzzers to evaluate xfs_scrub online repair
-+dangerous_repair	fuzzers to evaluate xfs_repair offline repair
-+dangerous_scrub		fuzzers to evaluate xfs_scrub checking
-+data			data loss checkers
-+dax			direct access mode for persistent memory files
-+db			xfs_db functional tests
-+dedupe			FIEDEDUPERANGE ioctl
-+defrag			filesystem defragmenters
-+dir			directory test functions
-+dump			dump and restore utilities
-+eio			IO error reporting
-+encrypt			encrypted file contents
-+enospc			ENOSPC error reporting
-+exportfs		file handles
-+filestreams		XFS filestreams allocator
-+freeze			filesystem freeze tests
-+fsck			general fsck tests
-+fsmap			FS_IOC_GETFSMAP ioctl
-+fsr			XFS free space reorganizer
-+fuzzers			filesystem fuzz tests
-+growfs			increasing the size of a filesystem
-+hardlink		hardlinks
-+health			XFS health reporting
-+idmapped		idmapped mount functionality
-+inobtcount		XFS inode btree count tests
-+insert			fallocate FALLOC_FL_INSERT_RANGE
-+ioctl			general ioctl tests
-+io_uring		general io_uring async io tests
-+label			filesystem labelling
-+limit			resource limits
-+locks			file locking
-+log			metadata logging
-+logprint		xfs_logprint functional tests
-+long_rw			long-soak read write IO path exercisers
-+metacopy		overlayfs metadata-only copy-up
-+metadata		filesystem metadata update exercisers
-+metadump		xfs_metadump/xfs_mdrestore functionality
-+mkfs			filesystem formatting tools
-+mount			mount option and functionality checks
-+nested			nested overlayfs instances
-+nfs4_acl		NFSv4 access control lists
-+nonsamefs		overlayfs layers on different filesystems
-+online_repair		online repair functionality tests
-+other			dumping ground, do not add more tests to this group
-+pattern			specific IO pattern tests
-+perms			access control and permission checking
-+pipe			pipe functionality
-+pnfs			PNFS
-+posix			POSIX behavior conformance
-+prealloc		fallocate for preallocating unwritten space
-+preallocrw		fallocate, then read and write
-+punch			fallocate FALLOC_FL_PUNCH_HOLE
-+qgroup			btrfs qgroup feature
-+quota			filesystem usage quotas
-+raid			btrfs RAID
-+realtime		XFS realtime volumes
-+recoveryloop		crash recovery loops
-+redirect		overlayfs redirect_dir feature
-+remote			dump and restore with a remote tape
-+remount			remounting filesystems
-+rename			rename system call
-+repair			xfs_repair functional tests
-+replace			btrfs device replace
-+replay			dm-logwrites replays
-+resize			resize2fs functionality tests
-+richacl			rich ACL feature
-+rmap			XFS reverse mapping exercisers
-+rotate			overlayfs upper layer rotate tests from the unionmount
-+			test suite
-+rw			read/write IO tests
-+samefs			overlayfs when all layers are on the same fs
-+scrub			filesystem metadata scrubbers
-+seed			btrfs seeded filesystems
-+seek			llseek functionality
-+send			btrfs send/receive
-+shrinkfs		decreasing the size of a filesystem
-+shutdown		FS_IOC_SHUTDOWN ioctl
-+snapshot		btrfs snapshots
-+soak			long running soak tests of any kind
-+spaceman		xfs_spaceman functional tests
-+splice			splice system call
-+stress			fsstress filesystem exerciser
-+subvol			btrfs subvolumes
-+swap			swap files
-+symlink			symbolic links
-+tape			dump and restore with a tape
-+thin			thin provisioning
-+trim			FITRIM ioctl
-+udf			UDF functionality tests
-+union			tests from the unionmount test suite
-+unlink			O_TMPFILE unlinked files
-+unshare			fallocate FALLOC_FL_UNSHARE_RANGE
-+v2log			XFS v2 log format tests
-+verity			fsverity
-+volume			btrfs volume management
-+whiteout		overlayfs whiteout functionality
-+xino			overlayfs xino feature
-+zero			fallocate FALLOC_FL_ZERO_RANGE
-+zone			zoned (SMR) device support
-+======================= =======================================================
 diff --git a/tools/mkgroupfile b/tools/mkgroupfile
-index 0681e5d2..e4244507 100755
+index e4244507..634ec92c 100755
 --- a/tools/mkgroupfile
 +++ b/tools/mkgroupfile
-@@ -9,12 +9,28 @@ fi
- 
- test_dir="$PWD"
- groupfile="$1"
-+GROUPNAME_DOC_FILE="$(readlink -m ../../doc/group-names.txt)"
-+export GROUPNAME_DOC_FILE
- 
- if [ ! -x ../../check ]; then
- 	echo "$0: Run this from tests/XXX/."
- 	exit 1
- fi
- 
-+cleanup() {
-+	test -z "$groupfile" && return
-+	test -z "$ngroupfile" && return
-+
-+	if [ $ret -eq 0 ]; then
-+		mv "$ngroupfile" "$groupfile"
-+	else
-+		rm -f "$ngroupfile"
-+	fi
-+}
-+
-+ret=1	# trigger cleanup of temporary files unless we succeed
-+trap 'cleanup; exit $ret' EXIT INT TERM QUIT
-+
- generate_groupfile() {
- 	cat << ENDL
- # QA groups control file, automatically generated.
-@@ -24,19 +40,20 @@ ENDL
- 	cd ../../
- 	export GENERATE_GROUPS=yes
- 	grep -R -l "^_begin_fstest" "$test_dir/" 2>/dev/null | while read testfile; do
--		test -x "$testfile" && "$testfile"
-+		test -x "$testfile" && "$testfile" || return 1
- 	done | sort -g
-+	ret="${PIPESTATUS[1]}"
- 	cd "$test_dir"
- }
- 
- if [ -z "$groupfile" ] || [ "$groupfile" = "-" ]; then
- 	# Dump the group file to stdout and exit
-+	unset groupfile
- 	generate_groupfile
--	exit 0
-+else
-+	# Otherwise, write the group file to disk somewhere.
-+	ngroupfile="${groupfile}.new"
-+	rm -f "$ngroupfile"
-+	generate_groupfile >> "$ngroupfile"
-+	# let cleanup rename or delete ngroupfile
- fi
+@@ -1,5 +1,7 @@
+ #!/bin/bash
 -
--# Otherwise, write the group file to disk somewhere.
--ngroupfile="${groupfile}.new"
--rm -f "$ngroupfile"
--generate_groupfile >> "$ngroupfile"
--mv "$ngroupfile" "$groupfile"
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2021 Oracle.  All Rights Reserved.
++#
+ # Generate a group file from the _begin_fstest call in each test.
+ 
+ if [ "$1" = "--help" ]; then
+diff --git a/tools/mvtest b/tools/mvtest
+index 5088b45f..99b15414 100755
+--- a/tools/mvtest
++++ b/tools/mvtest
+@@ -1,6 +1,9 @@
+ #!/bin/sh
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2015 Oracle.  All Rights Reserved.
++#
++# Move a test and update the golden output file.
+ 
+-# Renumber a test
+ dir="$(dirname "$0")"
+ 
+ if [ -z "$1" ] || [ "$1" = "--help" ]; then
+diff --git a/tools/nextid b/tools/nextid
+index 9507de29..9e31718c 100755
+--- a/tools/nextid
++++ b/tools/nextid
+@@ -1,5 +1,7 @@
+ #!/bin/bash
+-
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2015 Oracle.  All Rights Reserved.
++#
+ # Compute the next available test id in a given test directory.
+ 
+ if [ $# != 1 ] || [ "$1" = "--help" ] || [ ! -d "tests/$1/" ]; then
 
