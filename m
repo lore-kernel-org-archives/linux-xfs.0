@@ -3,55 +3,42 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68BBDC433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:06:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21AFFC433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:06:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 457DC60EB2
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:06:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 03F9760EE3
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:06:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231579AbhIOXHz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Sep 2021 19:07:55 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59062 "EHLO mail.kernel.org"
+        id S232133AbhIOXIA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Sep 2021 19:08:00 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59222 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231197AbhIOXHy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Sep 2021 19:07:54 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 22CC1600D4;
-        Wed, 15 Sep 2021 23:06:35 +0000 (UTC)
+        id S231197AbhIOXIA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Sep 2021 19:08:00 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 91C02606A5;
+        Wed, 15 Sep 2021 23:06:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631747195;
-        bh=kMbavDg8ElL5x6mviBTdurXquAYkzVHYNlZeFKp8xQM=;
-        h=Subject:From:To:Cc:Date:From;
-        b=M/x/p15hvT6JVs0l9q5gy4GxOCevR4LdAQe/mgraEWeCpD+8vVCjG1sddMWCI87P/
-         YQuNdCoJj7vWEkqsEJSyHf93UQYkneIJSZNomLNim3BvTYCcaROdOfXM3ppuc1aet3
-         PMWMv83nUCAMrI66B3OT/TS+OQ32Soa1jyh2TLFJSDY4VsI3ziLQVYgaPyFakoZNTb
-         VF32q20xga5upyObqe9GbPd5wCEeFguZz4Bt5UWDk529ZHRDp0Tql/VQT1RUvMxqoa
-         8chVwwJ0GwOiBX4wsyouQXSR4UXfpHEo40fXM7Fkx7BSqaHGyFfP+hO7/G5c6Ffnzi
-         8v/deKX+DX12w==
-Subject: [PATCHSET 00/61] xfs: sync libxfs with 5.14
+        s=k20201202; t=1631747200;
+        bh=+NNk8NJIZuoJAGUQRQyXuasKf+moBwnT8d4wAJnO3NU=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=Dk1uHBOlVE6165tY8S/FAqRe0uLzX/NCmiEohJqrBGCk6Gg4gYJtr/6eXr4RT8r8o
+         h2TovNH+fuByujgV1GDqKZtNRLk2nQx6deDHc2Q5ir+ctWR2gvWe6byGR3StHI9PaT
+         S9BTKhtx7OMBiOc2YRLUW8xTahDthCQ4dKRxU49t2/GA2zeJdeANWQc+95UUm4vNgl
+         u86fenut8ZJ6jxoYrp6bwHz5N6mzRxSoI6gTrSx0fVM+Y+Y32tyCX5O7PSFbFd2g/6
+         mnXaMlCUkJtfgEzyXMZ0hX3FsH1gYMxqs3Hi1N/fue1YpvmNw2/gayjPO2mUH4EhvY
+         KIQGtZDnGmkoQ==
+Subject: [PATCH 01/61] mkfs: move mkfs/proto.c declarations to mkfs/proto.h
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
-Cc:     Carlos Maiolino <cmaiolino@redhat.com>,
-        Chandan Babu R <chandanrlinux@gmail.com>,
-        Brian Foster <bfoster@redhat.com>,
-        Stephen Rothwell <sfr@canb.auug.org.au>,
-        Kees Cook <keescook@chromium.org>,
-        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        Gao Xiang <hsiangkao@linux.alibaba.com>,
-        Allison Henderson <allison.henderson@oracle.com>,
-        Shaokun Zhang <zhangshaokun@hisilicon.com>,
-        Abaci Robot <abaci@linux.alibaba.com>,
-        Carlos Maiolino <cmaiolino@redhat.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        Bill O'Donnell <bodonnel@redhat.com>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Date:   Wed, 15 Sep 2021 16:06:34 -0700
-Message-ID: <163174719429.350433.8562606396437219220.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org
+Date:   Wed, 15 Sep 2021 16:06:40 -0700
+Message-ID: <163174720034.350433.11964220787370567480.stgit@magnolia>
+In-Reply-To: <163174719429.350433.8562606396437219220.stgit@magnolia>
+References: <163174719429.350433.8562606396437219220.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -60,98 +47,76 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-This patchset backports all the libxfs changes from kernel 5.14, as well
-as all the related for_each_perag and fallthrough; cleanups that went
-with it.  I've prepared this series and pull request per Eric's request.
+These functions are only used by mkfs, so move them to a separate header
+file that isn't in an internal library.
 
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
-
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=libxfs-5.14-sync
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- db/fsmap.c                  |   17 -
- db/info.c                   |   18 -
- db/type.c                   |    2 
- growfs/xfs_growfs.c         |    6 
- include/atomic.h            |    1 
- include/libxfs.h            |    3 
- include/linux.h             |   17 +
- include/xfs_mount.h         |   65 ---
- include/xfs_multidisk.h     |    5 
- libfrog/Makefile            |    3 
- libfrog/mockups.h           |   43 ++
- libfrog/radix-tree.h        |    3 
- libxfs/Makefile             |   10 
- libxfs/init.c               |  147 +++----
- libxfs/libxfs_api_defs.h    |    2 
- libxfs/libxfs_priv.h        |   18 +
- libxfs/topology.c           |    5 
- libxfs/topology.h           |    6 
- libxfs/util.c               |   12 -
- libxfs/xfs_ag.c             |  287 +++++++++++++
- libxfs/xfs_ag.h             |  136 ++++++
- libxfs/xfs_ag_resv.c        |   15 -
- libxfs/xfs_ag_resv.h        |   15 +
- libxfs/xfs_alloc.c          |  113 +++--
- libxfs/xfs_alloc.h          |    2 
- libxfs/xfs_alloc_btree.c    |   31 +
- libxfs/xfs_alloc_btree.h    |    9 
- libxfs/xfs_attr.c           |  956 ++++++++++++++++++++++++++-----------------
- libxfs/xfs_attr.h           |  403 ++++++++++++++++++
- libxfs/xfs_attr_leaf.c      |    5 
- libxfs/xfs_attr_leaf.h      |    2 
- libxfs/xfs_attr_remote.c    |  167 +++-----
- libxfs/xfs_attr_remote.h    |    8 
- libxfs/xfs_bmap.c           |    3 
- libxfs/xfs_bmap.h           |    1 
- libxfs/xfs_btree.c          |   15 -
- libxfs/xfs_btree.h          |   12 -
- libxfs/xfs_da_btree.c       |    2 
- libxfs/xfs_ialloc.c         |  696 ++++++++++++++++---------------
- libxfs/xfs_ialloc.h         |   43 --
- libxfs/xfs_ialloc_btree.c   |   46 +-
- libxfs/xfs_ialloc_btree.h   |   13 -
- libxfs/xfs_inode_buf.c      |   30 +
- libxfs/xfs_log_format.h     |   14 -
- libxfs/xfs_refcount.c       |  122 +++--
- libxfs/xfs_refcount.h       |    9 
- libxfs/xfs_refcount_btree.c |   39 +-
- libxfs/xfs_refcount_btree.h |    7 
- libxfs/xfs_rmap.c           |  147 +++----
- libxfs/xfs_rmap.h           |    6 
- libxfs/xfs_rmap_btree.c     |   46 +-
- libxfs/xfs_rmap_btree.h     |    8 
- libxfs/xfs_sb.c             |  145 -------
- libxfs/xfs_sb.h             |    9 
- libxfs/xfs_shared.h         |   20 -
- libxfs/xfs_trans_inode.c    |   10 
- libxfs/xfs_types.c          |    4 
- libxfs/xfs_types.h          |    1 
- mkfs/proto.c                |    1 
- mkfs/proto.h                |   13 +
- mkfs/xfs_mkfs.c             |   11 
- repair/agbtree.c            |   28 +
- repair/agbtree.h            |    8 
- repair/dinode.c             |   18 -
- repair/phase4.c             |    4 
- repair/phase5.c             |   16 -
- repair/rmap.c               |   43 +-
- repair/sb.c                 |    1 
- repair/scan.c               |    4 
- scrub/inodes.c              |    2 
- scrub/repair.c              |    2 
- scrub/scrub.c               |    8 
- 72 files changed, 2520 insertions(+), 1619 deletions(-)
- create mode 100644 libfrog/mockups.h
- rename libfrog/topology.c => libxfs/topology.c (99%)
- rename libfrog/topology.h => libxfs/topology.h (88%)
+ include/xfs_multidisk.h |    5 -----
+ mkfs/proto.c            |    1 +
+ mkfs/proto.h            |   13 +++++++++++++
+ mkfs/xfs_mkfs.c         |    1 +
+ 4 files changed, 15 insertions(+), 5 deletions(-)
  create mode 100644 mkfs/proto.h
+
+
+diff --git a/include/xfs_multidisk.h b/include/xfs_multidisk.h
+index abfb50ce..a16a9fe2 100644
+--- a/include/xfs_multidisk.h
++++ b/include/xfs_multidisk.h
+@@ -42,9 +42,4 @@
+ #define XFS_NOMULTIDISK_AGLOG		2	/* 4 AGs */
+ #define XFS_MULTIDISK_AGCOUNT		(1 << XFS_MULTIDISK_AGLOG)
+ 
+-/* proto.c */
+-extern char *setup_proto (char *fname);
+-extern void parse_proto (xfs_mount_t *mp, struct fsxattr *fsx, char **pp);
+-extern void res_failed (int err);
+-
+ #endif	/* __XFS_MULTIDISK_H__ */
+diff --git a/mkfs/proto.c b/mkfs/proto.c
+index 6b22cc6a..ef130ed6 100644
+--- a/mkfs/proto.c
++++ b/mkfs/proto.c
+@@ -7,6 +7,7 @@
+ #include "libxfs.h"
+ #include <sys/stat.h>
+ #include "libfrog/convert.h"
++#include "proto.h"
+ 
+ /*
+  * Prototypes for internal functions.
+diff --git a/mkfs/proto.h b/mkfs/proto.h
+new file mode 100644
+index 00000000..9ccbddf6
+--- /dev/null
++++ b/mkfs/proto.h
+@@ -0,0 +1,13 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (c) 2000-2001,2004-2005 Silicon Graphics, Inc.
++ * All Rights Reserved.
++ */
++#ifndef MKFS_PROTO_H_
++#define MKFS_PROTO_H_
++
++extern char *setup_proto (char *fname);
++extern void parse_proto (xfs_mount_t *mp, struct fsxattr *fsx, char **pp);
++extern void res_failed (int err);
++
++#endif /* MKFS_PROTO_H_ */
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 9c14c04e..16e347e5 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -11,6 +11,7 @@
+ #include "libfrog/fsgeom.h"
+ #include "libfrog/topology.h"
+ #include "libfrog/convert.h"
++#include "proto.h"
+ #include <ini.h>
+ 
+ #define TERABYTES(count, blog)	((uint64_t)(count) << (40 - (blog)))
 
