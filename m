@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A89B0C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:42:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E93BEC433FE
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:42:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 86BCF610FF
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:42:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D590560F25
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:42:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233133AbhIOXoM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Sep 2021 19:44:12 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46128 "EHLO mail.kernel.org"
+        id S233050AbhIOXoQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Sep 2021 19:44:16 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46222 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233280AbhIOXoI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Sep 2021 19:44:08 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id AE4EF60F25;
-        Wed, 15 Sep 2021 23:42:48 +0000 (UTC)
+        id S233046AbhIOXoO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Sep 2021 19:44:14 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 25E1960F8F;
+        Wed, 15 Sep 2021 23:42:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631749368;
-        bh=tT/mGLd4kItwm7Ge6257Bqs1Xr0PhVhHfPEySTspvHA=;
+        s=k20201202; t=1631749374;
+        bh=rxk/t4cR1g4piI1VKbOEcrL83pmv/7seWPEVoC2Ns3s=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=N+ht+hpLeMe3oqlIcDSoJMdTgm5Y1MEn2VXoBHipDUVCAgjeccTpcX/Qo40dDUKxD
-         hyXrlU8GEm1UXh1n1U/W5GLMZ8dc+8Tt5fTNY6Iwwl+jFalPtjg7pWGJLZe9waGhCF
-         uZpEpH02iUhMZKlOdNObF0iZVKQqZPHL4w9hb0cL60uStxuvg+8Br+0ibzncVLpr/k
-         4m4u/DNEofmR2Vs3gNnopIrkY8mDf5U1VQ+i6OFI51oRnAMUaV9PJZr14qXcAXDUp0
-         q5jFjmg3BCpuzCKXqdMGpZ5/RbgCbb7Wylbu/MUaCGBGJXsueRglVcWHpxNiy68waK
-         v5rUILxCD8XlQ==
-Subject: [PATCH 2/9] xfs: move reflink tests into the clone group
+        b=Mqe2Rc8mdkkaVqdZ/tuFLqtb9Sf3m7jj+RYwixWZYeZLgQKJalldUSqaw8WXzRJzL
+         AuZLsrOXCdqYpuTl9PuaWk6UfgRSEjoyCRUDq4nq2nzJUQ96XWSnS1yfHPxksbUSKQ
+         wVcQegHdJD+phjYpaYLZyQ9a6ijHqH8zyf2Z2EnSqX3dmKuvJ0ivsLGFh6eA/Kcmh0
+         R3clduMlYiygabJR6ZR/YZI8Wgx2CggAo74+V+X3iMtIPx0I8o4dARDP0trzHsFllv
+         FGR5vYkr62OLoqJL8exe4s/iDhH6fa7AYH5ws52yJKLow0hgSNeeRU6z9GcgwUdcoM
+         63yy7Xk9BwJBQ==
+Subject: [PATCH 3/9] xfs: fix incorrect fuzz test group name
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com
 Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
         fstests@vger.kernel.org, guan@eryu.me
-Date:   Wed, 15 Sep 2021 16:42:48 -0700
-Message-ID: <163174936843.380880.4944637627844574386.stgit@magnolia>
+Date:   Wed, 15 Sep 2021 16:42:53 -0700
+Message-ID: <163174937390.380880.10714985927715519622.stgit@magnolia>
 In-Reply-To: <163174935747.380880.7635671692624086987.stgit@magnolia>
 References: <163174935747.380880.7635671692624086987.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,68 +50,53 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-"clone" is the group for tests that exercise FICLONERANGE, so move these
-tests.
+The group name for fuzz tests is 'fuzzers'.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- tests/xfs/519 |    2 +-
- tests/xfs/520 |    2 +-
- tests/xfs/535 |    2 +-
- tests/xfs/536 |    2 +-
- 4 files changed, 4 insertions(+), 4 deletions(-)
+ tests/xfs/491 |    2 +-
+ tests/xfs/492 |    2 +-
+ tests/xfs/493 |    2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
 
-diff --git a/tests/xfs/519 b/tests/xfs/519
-index 675ec07e..49c62b56 100755
---- a/tests/xfs/519
-+++ b/tests/xfs/519
-@@ -9,7 +9,7 @@
- # flushing the log and then remounting to check file contents.
- 
- . ./common/preamble
--_begin_fstest auto quick reflink
-+_begin_fstest auto quick clone
- 
- # Import common functions.
- . ./common/filter
-diff --git a/tests/xfs/520 b/tests/xfs/520
-index 8410f2ba..2fceb07c 100755
---- a/tests/xfs/520
-+++ b/tests/xfs/520
-@@ -12,7 +12,7 @@
- # is included in the current kernel.
+diff --git a/tests/xfs/491 b/tests/xfs/491
+index 5c7c5d1f..7402b09a 100755
+--- a/tests/xfs/491
++++ b/tests/xfs/491
+@@ -7,7 +7,7 @@
+ # Test detection & fixing of bad summary block counts at mount time.
  #
  . ./common/preamble
--_begin_fstest auto quick reflink
-+_begin_fstest auto quick clone
- 
- # Override the default cleanup function.
- _cleanup()
-diff --git a/tests/xfs/535 b/tests/xfs/535
-index 4c883675..1a5da61b 100755
---- a/tests/xfs/535
-+++ b/tests/xfs/535
-@@ -7,7 +7,7 @@
- # Verify that XFS does not cause inode fork's extent count to overflow when
- # writing to a shared extent.
- . ./common/preamble
--_begin_fstest auto quick reflink
-+_begin_fstest auto quick clone
+-_begin_fstest auto quick fuzz
++_begin_fstest auto quick fuzzers
  
  # Import common functions.
  . ./common/filter
-diff --git a/tests/xfs/536 b/tests/xfs/536
-index e5f904f5..64fa4fbf 100755
---- a/tests/xfs/536
-+++ b/tests/xfs/536
+diff --git a/tests/xfs/492 b/tests/xfs/492
+index 8258e5d8..514ac1e4 100755
+--- a/tests/xfs/492
++++ b/tests/xfs/492
 @@ -7,7 +7,7 @@
- # Verify that XFS does not cause inode fork's extent count to overflow when
- # remapping extents from one file's inode fork to another.
+ # Test detection & fixing of bad summary inode counts at mount time.
+ #
  . ./common/preamble
--_begin_fstest auto quick reflink
-+_begin_fstest auto quick clone
+-_begin_fstest auto quick fuzz
++_begin_fstest auto quick fuzzers
+ 
+ # Import common functions.
+ . ./common/filter
+diff --git a/tests/xfs/493 b/tests/xfs/493
+index 58fd9c99..58091ad7 100755
+--- a/tests/xfs/493
++++ b/tests/xfs/493
+@@ -8,7 +8,7 @@
+ # Corrupt the AGFs to test mount failure when mount-fixing fails.
+ #
+ . ./common/preamble
+-_begin_fstest auto quick fuzz
++_begin_fstest auto quick fuzzers
  
  # Import common functions.
  . ./common/filter
