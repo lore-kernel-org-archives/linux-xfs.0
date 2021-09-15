@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01321C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:10:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08B65C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:10:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D99E5610A6
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:10:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DE519600D4
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:10:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231579AbhIOXLr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Sep 2021 19:11:47 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36710 "EHLO mail.kernel.org"
+        id S232133AbhIOXLt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Sep 2021 19:11:49 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36864 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232691AbhIOXLo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Sep 2021 19:11:44 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 68BB0610A6;
-        Wed, 15 Sep 2021 23:10:24 +0000 (UTC)
+        id S231197AbhIOXLt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Sep 2021 19:11:49 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id DE8A1610A6;
+        Wed, 15 Sep 2021 23:10:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631747424;
-        bh=VufB+xR8IkB4mVAbwiji1INcFqfubshpMUKckjslezk=;
+        s=k20201202; t=1631747430;
+        bh=mZ0FBZxi+YHAOiPeWbsOko/JX9cqG8agqoyklp17qYU=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=UhPHfekruwhA1Eh7rrGInqbQrormdlwDvjkRyk3WB3IzDbVh83yUjJ7iSZqNtRcU1
-         h3+To/gC53dgt5TLItVxeAd6f9hzU96P1At/YvqottslTY5Twcbn5Ls6L4X9zay4Fa
-         j29qqxOMHeoXidO+I0Y9OVcdXxrHshEnDI6KVmagaV0d9btLs4+LuwijIeye+xP+eg
-         3HAPfxbaMc0eISxOQO2zA6FhzP89+R3MtidPG87YZHIF+LC0//8W/Dfuhexg1uElDg
-         i/zK5vJmxkNHyu93jmH7ajmF5TUt6sNAVMKFqvo0MnUSr3LbU9xTqNk2vHRPaF9B+P
-         3f8NZtEIkI/Hw==
-Subject: [PATCH 42/61] xfs: use perag through unlink processing
+        b=rjp0jwyMin/GsN1WqFUWSel13WmtEO2bQvCr7yiWAuqwCTLS4W30xFOSOHgFEI3K5
+         EZ5AHhGKbQPF5Q/BvmslWeyb488SC+hpthiu85noGm1Qku2a1Wc/Ardj89OlP5Aua0
+         maHU0L6Tx2XuTREvK29sZCYIwFw2Wp24VfGTO6E9hdHMyK2E0TQrumUycHqKGYlZwo
+         HaWd5qQfYVv7F9WiFjsVmQX2TLeAhZgjsSkS8DCYppInVcqQMZgf8R7CyYvrIQDfII
+         umMovDnvKna0ACEj5WKmt4Lf/Ga/lnt6z1l8Qr4H3baYFB5tYgoPEDpPzeLcsEv7AC
+         UZo/EixOqP5Gw==
+Subject: [PATCH 43/61] xfs: remove xfs_perag_t
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
 Cc:     Dave Chinner <dchinner@redhat.com>,
         Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
-Date:   Wed, 15 Sep 2021 16:10:24 -0700
-Message-ID: <163174742414.350433.3652497263995199207.stgit@magnolia>
+Date:   Wed, 15 Sep 2021 16:10:29 -0700
+Message-ID: <163174742963.350433.11960764460744496227.stgit@magnolia>
 In-Reply-To: <163174719429.350433.8562606396437219220.stgit@magnolia>
 References: <163174719429.350433.8562606396437219220.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,110 +50,145 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Source kernel commit: f40aadb2bb64fe0a3d9b59957e70796d629cdee2
+Source kernel commit: 509201163fca3d4d906bd50a5320115d42818748
 
-Unlinked lists are held in the perag, and freeing of inodes needs to
-be passed a perag, too, so look up the perag early in the unlink
-processing and use it throughout.
+Almost unused, gets rid of another typedef.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/xfs_ialloc.c |   23 ++++++++++-------------
- libxfs/xfs_ialloc.h |   13 ++-----------
- 2 files changed, 12 insertions(+), 24 deletions(-)
+ libxfs/xfs_ag.c    |   24 ++++++++++++------------
+ libxfs/xfs_ag.h    |    4 ++--
+ libxfs/xfs_alloc.c |   42 +++++++++++++++++++++---------------------
+ 3 files changed, 35 insertions(+), 35 deletions(-)
 
 
-diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
-index a1454908..e24136a4 100644
---- a/libxfs/xfs_ialloc.c
-+++ b/libxfs/xfs_ialloc.c
-@@ -2129,35 +2129,33 @@ xfs_difree_finobt(
+diff --git a/libxfs/xfs_ag.c b/libxfs/xfs_ag.c
+index 1db6a65b..403d9a20 100644
+--- a/libxfs/xfs_ag.c
++++ b/libxfs/xfs_ag.c
+@@ -102,19 +102,19 @@ xfs_perag_put(
   */
  int
- xfs_difree(
--	struct xfs_trans	*tp,		/* transaction pointer */
--	xfs_ino_t		inode,		/* inode to be freed */
--	struct xfs_icluster	*xic)	/* cluster info if deleted */
-+	struct xfs_trans	*tp,
-+	struct xfs_perag	*pag,
-+	xfs_ino_t		inode,
-+	struct xfs_icluster	*xic)
+ xfs_initialize_perag_data(
+-	struct xfs_mount *mp,
+-	xfs_agnumber_t	agcount)
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agcount)
  {
- 	/* REFERENCED */
- 	xfs_agblock_t		agbno;	/* block number containing inode */
- 	struct xfs_buf		*agbp;	/* buffer for allocation group header */
- 	xfs_agino_t		agino;	/* allocation group inode number */
--	xfs_agnumber_t		agno;	/* allocation group number */
- 	int			error;	/* error return value */
- 	struct xfs_mount	*mp = tp->t_mountp;
- 	struct xfs_inobt_rec_incore rec;/* btree record */
--	struct xfs_perag	*pag;
+-	xfs_agnumber_t	index;
+-	xfs_perag_t	*pag;
+-	xfs_sb_t	*sbp = &mp->m_sb;
+-	uint64_t	ifree = 0;
+-	uint64_t	ialloc = 0;
+-	uint64_t	bfree = 0;
+-	uint64_t	bfreelst = 0;
+-	uint64_t	btree = 0;
+-	uint64_t	fdblocks;
+-	int		error = 0;
++	xfs_agnumber_t		index;
++	struct xfs_perag	*pag;
++	struct xfs_sb		*sbp = &mp->m_sb;
++	uint64_t		ifree = 0;
++	uint64_t		ialloc = 0;
++	uint64_t		bfree = 0;
++	uint64_t		bfreelst = 0;
++	uint64_t		btree = 0;
++	uint64_t		fdblocks;
++	int			error = 0;
+ 
+ 	for (index = 0; index < agcount; index++) {
+ 		/*
+diff --git a/libxfs/xfs_ag.h b/libxfs/xfs_ag.h
+index fa58a45f..70b97851 100644
+--- a/libxfs/xfs_ag.h
++++ b/libxfs/xfs_ag.h
+@@ -29,7 +29,7 @@ struct xfs_ag_resv {
+  * Per-ag incore structure, copies of information in agf and agi, to improve the
+  * performance of allocation group selection.
+  */
+-typedef struct xfs_perag {
++struct xfs_perag {
+ 	struct xfs_mount *pag_mount;	/* owner filesystem */
+ 	xfs_agnumber_t	pag_agno;	/* AG this structure belongs to */
+ 	atomic_t	pag_ref;	/* perag reference count */
+@@ -102,7 +102,7 @@ typedef struct xfs_perag {
+ 	 * or have some other means to control concurrency.
+ 	 */
+ 	struct rhashtable	pagi_unlinked_hash;
+-} xfs_perag_t;
++};
+ 
+ int xfs_initialize_perag(struct xfs_mount *mp, xfs_agnumber_t agcount,
+ 			xfs_agnumber_t *maxagi);
+diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
+index 5ecf6706..369bb0ba 100644
+--- a/libxfs/xfs_alloc.c
++++ b/libxfs/xfs_alloc.c
+@@ -2690,21 +2690,21 @@ xfs_alloc_fix_freelist(
+  * Get a block from the freelist.
+  * Returns with the buffer for the block gotten.
+  */
+-int				/* error */
++int
+ xfs_alloc_get_freelist(
+-	xfs_trans_t	*tp,	/* transaction pointer */
+-	struct xfs_buf	*agbp,	/* buffer containing the agf structure */
+-	xfs_agblock_t	*bnop,	/* block address retrieved from freelist */
+-	int		btreeblk) /* destination is a AGF btree */
++	struct xfs_trans	*tp,
++	struct xfs_buf		*agbp,
++	xfs_agblock_t		*bnop,
++	int			btreeblk)
+ {
+-	struct xfs_agf	*agf = agbp->b_addr;
+-	struct xfs_buf	*agflbp;/* buffer for a.g. freelist structure */
+-	xfs_agblock_t	bno;	/* block number returned */
+-	__be32		*agfl_bno;
+-	int		error;
+-	int		logflags;
+-	xfs_mount_t	*mp = tp->t_mountp;
+-	xfs_perag_t	*pag;	/* per allocation group data */
++	struct xfs_agf		*agf = agbp->b_addr;
++	struct xfs_buf		*agflbp;
++	xfs_agblock_t		bno;
++	__be32			*agfl_bno;
++	int			error;
++	int			logflags;
++	struct xfs_mount	*mp = tp->t_mountp;
++	struct xfs_perag	*pag;
  
  	/*
- 	 * Break up inode number into its components.
- 	 */
--	agno = XFS_INO_TO_AGNO(mp, inode);
--	if (agno >= mp->m_sb.sb_agcount) {
--		xfs_warn(mp, "%s: agno >= mp->m_sb.sb_agcount (%d >= %d).",
--			__func__, agno, mp->m_sb.sb_agcount);
-+	if (pag->pag_agno != XFS_INO_TO_AGNO(mp, inode)) {
-+		xfs_warn(mp, "%s: agno != pag->pag_agno (%d != %d).",
-+			__func__, XFS_INO_TO_AGNO(mp, inode), pag->pag_agno);
- 		ASSERT(0);
- 		return -EINVAL;
- 	}
- 	agino = XFS_INO_TO_AGINO(mp, inode);
--	if (inode != XFS_AGINO_TO_INO(mp, agno, agino))  {
-+	if (inode != XFS_AGINO_TO_INO(mp, pag->pag_agno, agino))  {
- 		xfs_warn(mp, "%s: inode != XFS_AGINO_TO_INO() (%llu != %llu).",
- 			__func__, (unsigned long long)inode,
--			(unsigned long long)XFS_AGINO_TO_INO(mp, agno, agino));
-+			(unsigned long long)XFS_AGINO_TO_INO(mp, pag->pag_agno, agino));
- 		ASSERT(0);
- 		return -EINVAL;
- 	}
-@@ -2171,7 +2169,7 @@ xfs_difree(
- 	/*
- 	 * Get the allocation group header.
- 	 */
--	error = xfs_ialloc_read_agi(mp, tp, agno, &agbp);
-+	error = xfs_ialloc_read_agi(mp, tp, pag->pag_agno, &agbp);
- 	if (error) {
- 		xfs_warn(mp, "%s: xfs_ialloc_read_agi() returned error %d.",
- 			__func__, error);
-@@ -2181,7 +2179,6 @@ xfs_difree(
- 	/*
- 	 * Fix up the inode allocation btree.
- 	 */
--	pag = agbp->b_pag;
- 	error = xfs_difree_inobt(mp, tp, agbp, pag, agino, xic, &rec);
- 	if (error)
- 		goto error0;
-diff --git a/libxfs/xfs_ialloc.h b/libxfs/xfs_ialloc.h
-index 886f6748..9df7c804 100644
---- a/libxfs/xfs_ialloc.h
-+++ b/libxfs/xfs_ialloc.h
-@@ -39,17 +39,8 @@ xfs_make_iptr(struct xfs_mount *mp, struct xfs_buf *b, int o)
- int xfs_dialloc(struct xfs_trans **tpp, xfs_ino_t parent, umode_t mode,
- 		xfs_ino_t *new_ino);
- 
--/*
-- * Free disk inode.  Carefully avoids touching the incore inode, all
-- * manipulations incore are the caller's responsibility.
-- * The on-disk inode is not changed by this operation, only the
-- * btree (free inode mask) is changed.
-- */
--int					/* error */
--xfs_difree(
--	struct xfs_trans *tp,		/* transaction pointer */
--	xfs_ino_t	inode,		/* inode to be freed */
--	struct xfs_icluster *ifree);	/* cluster info if deleted */
-+int xfs_difree(struct xfs_trans *tp, struct xfs_perag *pag,
-+		xfs_ino_t ino, struct xfs_icluster *ifree);
- 
+ 	 * Freelist is empty, give up.
+@@ -2814,20 +2814,20 @@ xfs_alloc_pagf_init(
  /*
-  * Return the location of the inode in imap, for mapping it into a buffer.
+  * Put the block on the freelist for the allocation group.
+  */
+-int					/* error */
++int
+ xfs_alloc_put_freelist(
+-	xfs_trans_t		*tp,	/* transaction pointer */
+-	struct xfs_buf		*agbp,	/* buffer for a.g. freelist header */
+-	struct xfs_buf		*agflbp,/* buffer for a.g. free block array */
+-	xfs_agblock_t		bno,	/* block being freed */
+-	int			btreeblk) /* block came from a AGF btree */
++	struct xfs_trans	*tp,
++	struct xfs_buf		*agbp,
++	struct xfs_buf		*agflbp,
++	xfs_agblock_t		bno,
++	int			btreeblk)
+ {
+ 	struct xfs_mount	*mp = tp->t_mountp;
+ 	struct xfs_agf		*agf = agbp->b_addr;
+-	__be32			*blockp;/* pointer to array entry */
++	struct xfs_perag	*pag;
++	__be32			*blockp;
+ 	int			error;
+ 	int			logflags;
+-	xfs_perag_t		*pag;	/* per allocation group data */
+ 	__be32			*agfl_bno;
+ 	int			startoff;
+ 
 
