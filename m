@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AAD41C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:06:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02889C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:07:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8ED14600D4
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:06:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DDDF5600D4
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:07:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231197AbhIOXIR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Sep 2021 19:08:17 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59598 "EHLO mail.kernel.org"
+        id S232691AbhIOXIX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Sep 2021 19:08:23 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59724 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232684AbhIOXIQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Sep 2021 19:08:16 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E18FE606A5;
-        Wed, 15 Sep 2021 23:06:56 +0000 (UTC)
+        id S232684AbhIOXIW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Sep 2021 19:08:22 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 5991E606A5;
+        Wed, 15 Sep 2021 23:07:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631747217;
-        bh=IrwHM9H1gSfqfl/PhxYIIq1VE280GzsFulhVyuktQbE=;
+        s=k20201202; t=1631747222;
+        bh=tysK1yawfYQYmqKb7uOa4YN0VfdAC9UTqV5rixYZKQk=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=Bl5HU2kX21Q3W9HQeLZW9eFq4/MowKD37wgJi2VPTgwftWcHseM3cK5sX/7i09ScK
-         aHfccuen5psL2qIqejayhMkLxZSHkqrkU4KM++n3FQ4Dgv0Zc2hF3W4fIOzL5yVE0l
-         Bgtu1qNWBv7MF7Vir/e6rIUutAErAXjedfUN3U6UzyY40lU+AawumrLzOszBoDk6Na
-         5jlOwiBo9BryTbE0619tPSSJt8oOBeclD1JAzkc8xdpsDsjq3WkvcfRKRFYNWdKtk0
-         qPqdsGhrunVlTQ4L8oLHSBsUJDUxQ4NIsdg3bp6mW/v4+s27pVB+MdH7KzWrdjpqmo
-         Di6pqDDKVw50g==
-Subject: [PATCH 04/61] libxfs: port xfs_set_inode_alloc from the kernel
+        b=bwMgdi+BAVOQeVbUchE9l6CxkQcfkRIomHCvOq0T1qhzbL4hi6nzWs3UXv+ZHTr8U
+         9temeUQegf+Xu6Et6RdgmjGoamSTdctZuTsB+Ml5PYLxfI1xSj4FbjrJ4zodsdbIJe
+         7Ls1Ob3IDMqfDlGIqtDsgEZV2iI3APBodiOsxnuUsF4Gfj9Twpzatn0dxSKOPebPyw
+         v0pXK9lp4bDMK0nzS74VbWYF0hcWf+jfoS7vXEjV48zdmSn+25jptvrlskVWrkXPKn
+         Kbiae74FvoHLSOUkGxOcWu0auWrxKKm/x2Jsu25yAMKnBoxyP65w1s1Z0UCXA9Lnwd
+         u1VuAJE1qEqQw==
+Subject: [PATCH 05/61] libxfs: fix whitespace inconsistencies with kernel
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Wed, 15 Sep 2021 16:06:56 -0700
-Message-ID: <163174721668.350433.1083608596895028766.stgit@magnolia>
+Date:   Wed, 15 Sep 2021 16:07:02 -0700
+Message-ID: <163174722210.350433.13099529255108655931.stgit@magnolia>
 In-Reply-To: <163174719429.350433.8562606396437219220.stgit@magnolia>
 References: <163174719429.350433.8562606396437219220.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,184 +49,40 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-To prepare to perag initialization code move to libxfs, port the
-xfs_set_inode_alloc function from the kernel and make
-libxfs_initialize_perag use it.  The code isn't 1:1 identical, but
-AFAICT it behaves the same way.  In a future kernel release we'll
-move the function into xfs_ag.c and update xfsprogs.
+Fix a few places where the whitespace isn't an exact match for the
+kernel.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/init.c |  142 ++++++++++++++++++++++++++++++++++++---------------------
- 1 file changed, 89 insertions(+), 53 deletions(-)
+ libxfs/xfs_btree.h      |    2 +-
+ libxfs/xfs_rmap_btree.h |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
 
-diff --git a/libxfs/init.c b/libxfs/init.c
-index 1ec83791..6223181f 100644
---- a/libxfs/init.c
-+++ b/libxfs/init.c
-@@ -482,18 +482,102 @@ rtmount_init(
- 	return 0;
- }
+diff --git a/libxfs/xfs_btree.h b/libxfs/xfs_btree.h
+index 0f790234..10e50cba 100644
+--- a/libxfs/xfs_btree.h
++++ b/libxfs/xfs_btree.h
+@@ -88,7 +88,7 @@ uint32_t xfs_btree_magic(int crc, xfs_btnum_t btnum);
+  */
+ #define XFS_BTREE_STATS_INC(cur, stat)	\
+ 	XFS_STATS_INC_OFF((cur)->bc_mp, (cur)->bc_statoff + __XBTS_ ## stat)
+-#define XFS_BTREE_STATS_ADD(cur, stat, val)    \
++#define XFS_BTREE_STATS_ADD(cur, stat, val)	\
+ 	XFS_STATS_ADD_OFF((cur)->bc_mp, (cur)->bc_statoff + __XBTS_ ## stat, val)
  
-+/*
-+ * Set parameters for inode allocation heuristics, taking into account
-+ * filesystem size and inode32/inode64 mount options; i.e. specifically
-+ * whether or not XFS_MOUNT_SMALL_INUMS is set.
-+ *
-+ * Inode allocation patterns are altered only if inode32 is requested
-+ * (XFS_MOUNT_SMALL_INUMS), and the filesystem is sufficiently large.
-+ * If altered, XFS_MOUNT_32BITINODES is set as well.
-+ *
-+ * An agcount independent of that in the mount structure is provided
-+ * because in the growfs case, mp->m_sb.sb_agcount is not yet updated
-+ * to the potentially higher ag count.
-+ *
-+ * Returns the maximum AG index which may contain inodes.
-+ */
-+xfs_agnumber_t
-+xfs_set_inode_alloc(
-+	struct xfs_mount *mp,
-+	xfs_agnumber_t	agcount)
-+{
-+	xfs_agnumber_t	index;
-+	xfs_agnumber_t	maxagi = 0;
-+	xfs_sb_t	*sbp = &mp->m_sb;
-+	xfs_agnumber_t	max_metadata;
-+	xfs_agino_t	agino;
-+	xfs_ino_t	ino;
-+
-+	/*
-+	 * Calculate how much should be reserved for inodes to meet
-+	 * the max inode percentage.  Used only for inode32.
-+	 */
-+	if (M_IGEO(mp)->maxicount) {
-+		uint64_t	icount;
-+
-+		icount = sbp->sb_dblocks * sbp->sb_imax_pct;
-+		do_div(icount, 100);
-+		icount += sbp->sb_agblocks - 1;
-+		do_div(icount, sbp->sb_agblocks);
-+		max_metadata = icount;
-+	} else {
-+		max_metadata = agcount;
-+	}
-+
-+	/* Get the last possible inode in the filesystem */
-+	agino =	XFS_AGB_TO_AGINO(mp, sbp->sb_agblocks - 1);
-+	ino = XFS_AGINO_TO_INO(mp, agcount - 1, agino);
-+
-+	/*
-+	 * If user asked for no more than 32-bit inodes, and the fs is
-+	 * sufficiently large, set XFS_MOUNT_32BITINODES if we must alter
-+	 * the allocator to accommodate the request.
-+	 */
-+	if ((mp->m_flags & XFS_MOUNT_SMALL_INUMS) && ino > XFS_MAXINUMBER_32)
-+		mp->m_flags |= XFS_MOUNT_32BITINODES;
-+	else
-+		mp->m_flags &= ~XFS_MOUNT_32BITINODES;
-+
-+	for (index = 0; index < agcount; index++) {
-+		struct xfs_perag	*pag;
-+
-+		ino = XFS_AGINO_TO_INO(mp, index, agino);
-+
-+		pag = xfs_perag_get(mp, index);
-+
-+		if (mp->m_flags & XFS_MOUNT_32BITINODES) {
-+			if (ino > XFS_MAXINUMBER_32) {
-+				pag->pagi_inodeok = 0;
-+				pag->pagf_metadata = 0;
-+			} else {
-+				pag->pagi_inodeok = 1;
-+				maxagi++;
-+				if (index < max_metadata)
-+					pag->pagf_metadata = 1;
-+				else
-+					pag->pagf_metadata = 0;
-+			}
-+		} else {
-+			pag->pagi_inodeok = 1;
-+			pag->pagf_metadata = 0;
-+		}
-+
-+		xfs_perag_put(pag);
-+	}
-+
-+	return (mp->m_flags & XFS_MOUNT_32BITINODES) ? maxagi : agcount;
-+}
-+
- static int
- libxfs_initialize_perag(
- 	xfs_mount_t	*mp,
- 	xfs_agnumber_t	agcount,
- 	xfs_agnumber_t	*maxagi)
- {
--	xfs_agnumber_t	index, max_metadata;
-+	xfs_agnumber_t	index;
- 	xfs_agnumber_t	first_initialised = 0;
- 	xfs_perag_t	*pag;
--	xfs_agino_t	agino;
--	xfs_ino_t	ino;
--	xfs_sb_t	*sbp = &mp->m_sb;
- 	int		error = -ENOMEM;
+ #define	XFS_BTREE_MAXLEVELS	9	/* max of all btrees */
+diff --git a/libxfs/xfs_rmap_btree.h b/libxfs/xfs_rmap_btree.h
+index 08c57dee..35b81fc8 100644
+--- a/libxfs/xfs_rmap_btree.h
++++ b/libxfs/xfs_rmap_btree.h
+@@ -4,7 +4,7 @@
+  * All Rights Reserved.
+  */
+ #ifndef __XFS_RMAP_BTREE_H__
+-#define	__XFS_RMAP_BTREE_H__
++#define __XFS_RMAP_BTREE_H__
  
- 	/*
-@@ -522,55 +606,7 @@ libxfs_initialize_perag(
- 		}
- 	}
- 
--	/*
--	 * If we mount with the inode64 option, or no inode overflows
--	 * the legacy 32-bit address space clear the inode32 option.
--	 */
--	agino = XFS_AGB_TO_AGINO(mp, sbp->sb_agblocks - 1);
--	ino = XFS_AGINO_TO_INO(mp, agcount - 1, agino);
--
--	if ((mp->m_flags & XFS_MOUNT_SMALL_INUMS) && ino > XFS_MAXINUMBER_32)
--		mp->m_flags |= XFS_MOUNT_32BITINODES;
--	else
--		mp->m_flags &= ~XFS_MOUNT_32BITINODES;
--
--	if (mp->m_flags & XFS_MOUNT_32BITINODES) {
--		/*
--		 * Calculate how much should be reserved for inodes to meet
--		 * the max inode percentage.
--		 */
--		if (M_IGEO(mp)->maxicount) {
--			uint64_t	icount;
--
--			icount = sbp->sb_dblocks * sbp->sb_imax_pct;
--			do_div(icount, 100);
--			icount += sbp->sb_agblocks - 1;
--			do_div(icount, sbp->sb_agblocks);
--			max_metadata = icount;
--		} else {
--			max_metadata = agcount;
--		}
--
--		for (index = 0; index < agcount; index++) {
--			ino = XFS_AGINO_TO_INO(mp, index, agino);
--			if (ino > XFS_MAXINUMBER_32) {
--				index++;
--				break;
--			}
--
--			pag = xfs_perag_get(mp, index);
--			pag->pagi_inodeok = 1;
--			if (index < max_metadata)
--				pag->pagf_metadata = 1;
--			xfs_perag_put(pag);
--		}
--	} else {
--		for (index = 0; index < agcount; index++) {
--			pag = xfs_perag_get(mp, index);
--			pag->pagi_inodeok = 1;
--			xfs_perag_put(pag);
--		}
--	}
-+	index = xfs_set_inode_alloc(mp, agcount);
- 
- 	if (maxagi)
- 		*maxagi = index;
+ struct xfs_buf;
+ struct xfs_btree_cur;
 
