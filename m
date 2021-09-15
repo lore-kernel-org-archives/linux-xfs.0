@@ -7,40 +7,39 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A1BCC433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:07:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6066CC433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:07:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 00A03610A6
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:07:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 47C8F600D4
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:07:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232733AbhIOXJA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Sep 2021 19:09:00 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60684 "EHLO mail.kernel.org"
+        id S231197AbhIOXJG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Sep 2021 19:09:06 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60830 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231579AbhIOXJA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Sep 2021 19:09:00 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 78F80600D4;
-        Wed, 15 Sep 2021 23:07:40 +0000 (UTC)
+        id S229538AbhIOXJF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Sep 2021 19:09:05 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id ED623610A4;
+        Wed, 15 Sep 2021 23:07:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631747260;
-        bh=jzN3g1CowRu0tzUsfrAsuoBeFTvjUCBTVlzkwW+zty0=;
+        s=k20201202; t=1631747266;
+        bh=iafA21hIfq/mIJ1MPQjPlhcF6KIzbX7NBnBqFHUhtyI=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=Zc+lgwMN70HCXaDX6x8XYcWMIIdf94tlDAtNqDNGfb/WNVjmY6phpgGbbu3cJbUOQ
-         J2QCn9x2vDB8t0ch1FcqiTOE7MlCqTmmJ/9ChP8S8OxbzbCZVYgPXps8dzhs53KFoW
-         ojBzI9qtgUsWv7q1bYEVxDifdL7Kx+sBrJ5A6d4f5BtbbVMy1FEi56NqoT6IBaCFr5
-         XBDeILgaY0WqtNGVtL4Fq70/Mcnz0XqBWm+dZ193W4vh6MJNmm3ZQZ0hqUnHV7w9Of
-         7pu6s8jGbR8WfGfnZwJ5LnO48atQV4SweoVZ335vDwqGCj46foqLxzQK7SYlctOpwl
-         /3pa3fsoV8DBA==
-Subject: [PATCH 12/61] xfs: Separate xfs_attr_node_addname and
- xfs_attr_node_addname_clear_incomplete
+        b=U6d3sNfIGgJVD9PU9YaI+hKnp8/dgNBYWRqdX48+U9IuVGJT/IUIM4AU1HYO4erlZ
+         D09jYQPabdbCnII9FhXaSqqE3P8SzsFcrJGWW6P4U5deg0b5XOGSylEMqA03PsE54l
+         eNu2CoXuCzbR7CRqNvz7tdZZ7uhc27OjttW/BZzERUY4UyyZ8WqL/vqBxuZW4lXUR1
+         iojlpdJ99pAtS9khsNWeTgWaYa64t44AX7FwUXHZ751k/UdEGVsjqC5Ov1BAzsNu6T
+         B0baQejyPF+ZIlbAjYH1d+XkH8FejQf6wDEeAjSUOjnY3G52kx/T67Rgjm6hFZpGq0
+         njppRFaZM7mjg==
+Subject: [PATCH 13/61] xfs: Add helper xfs_attr_node_addname_find_attr
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
 Cc:     Allison Henderson <allison.henderson@oracle.com>,
         Brian Foster <bfoster@redhat.com>,
         Chandan Babu R <chandanrlinux@gmail.com>,
         linux-xfs@vger.kernel.org
-Date:   Wed, 15 Sep 2021 16:07:40 -0700
-Message-ID: <163174726022.350433.12590140251272123669.stgit@magnolia>
+Date:   Wed, 15 Sep 2021 16:07:45 -0700
+Message-ID: <163174726568.350433.16535608870459259637.stgit@magnolia>
 In-Reply-To: <163174719429.350433.8562606396437219220.stgit@magnolia>
 References: <163174719429.350433.8562606396437219220.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -53,61 +52,180 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Allison Henderson <allison.henderson@oracle.com>
 
-Source kernel commit: f0f7c502c728d0c6947219739631bad101f8737b
+Source kernel commit: 6ca5a4a1f52952790a40099b79b5631d91163ba4
 
-This patch separate xfs_attr_node_addname into two functions.  This will
-help to make it easier to hoist parts of xfs_attr_node_addname that need
-state management
+This patch separates the first half of xfs_attr_node_addname into a
+helper function xfs_attr_node_addname_find_attr.  It also replaces the
+restart goto with an EAGAIN return code driven by a loop in the calling
+function.  This looks odd now, but will clean up nicly once we introduce
+the state machine.  It will also enable hoisting the last state out of
+xfs_attr_node_addname with out having to plumb in a "done" parameter to
+know if we need to move to the next state or not.
 
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/xfs_attr.c |   23 +++++++++++++++++++++++
- 1 file changed, 23 insertions(+)
+ libxfs/xfs_attr.c |  101 ++++++++++++++++++++++++++++++++---------------------
+ 1 file changed, 61 insertions(+), 40 deletions(-)
 
 
 diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index b181777d..158149af 100644
+index 158149af..32a51d56 100644
 --- a/libxfs/xfs_attr.c
 +++ b/libxfs/xfs_attr.c
-@@ -54,6 +54,7 @@ STATIC int xfs_attr_leaf_hasname(struct xfs_da_args *args, struct xfs_buf **bp);
+@@ -52,7 +52,10 @@ STATIC int xfs_attr_leaf_hasname(struct xfs_da_args *args, struct xfs_buf **bp);
+  * Internal routines when attribute list is more than one block.
+  */
  STATIC int xfs_attr_node_get(xfs_da_args_t *args);
- STATIC int xfs_attr_node_addname(xfs_da_args_t *args);
+-STATIC int xfs_attr_node_addname(xfs_da_args_t *args);
++STATIC int xfs_attr_node_addname(struct xfs_da_args *args,
++				 struct xfs_da_state *state);
++STATIC int xfs_attr_node_addname_find_attr(struct xfs_da_args *args,
++				 struct xfs_da_state **state);
  STATIC int xfs_attr_node_removename(xfs_da_args_t *args);
-+STATIC int xfs_attr_node_addname_clear_incomplete(struct xfs_da_args *args);
+ STATIC int xfs_attr_node_addname_clear_incomplete(struct xfs_da_args *args);
  STATIC int xfs_attr_node_hasname(xfs_da_args_t *args,
- 				 struct xfs_da_state **state);
- STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
-@@ -1073,6 +1074,28 @@ xfs_attr_node_addname(
+@@ -287,6 +290,7 @@ xfs_attr_set_args(
+ 	struct xfs_da_args	*args)
+ {
+ 	struct xfs_inode	*dp = args->dp;
++	struct xfs_da_state     *state;
+ 	int			error;
+ 
+ 	/*
+@@ -332,7 +336,14 @@ xfs_attr_set_args(
  			return error;
  	}
  
-+	error = xfs_attr_node_addname_clear_incomplete(args);
-+	if (error)
-+		goto out;
-+	retval = 0;
-+out:
-+	if (state)
-+		xfs_da_state_free(state);
-+	if (error)
-+		return error;
+-	return xfs_attr_node_addname(args);
++	do {
++		error = xfs_attr_node_addname_find_attr(args, &state);
++		if (error)
++			return error;
++		error = xfs_attr_node_addname(args, state);
++	} while (error == -EAGAIN);
++
++	return error;
+ }
+ 
+ /*
+@@ -896,6 +907,50 @@ xfs_attr_node_hasname(
+  * External routines when attribute list size > geo->blksize
+  *========================================================================*/
+ 
++STATIC int
++xfs_attr_node_addname_find_attr(
++	struct xfs_da_args	*args,
++	struct xfs_da_state     **state)
++{
++	int			retval;
++
++	/*
++	 * Search to see if name already exists, and get back a pointer
++	 * to where it should go.
++	 */
++	retval = xfs_attr_node_hasname(args, state);
++	if (retval != -ENOATTR && retval != -EEXIST)
++		goto error;
++
++	if (retval == -ENOATTR && (args->attr_flags & XATTR_REPLACE))
++		goto error;
++	if (retval == -EEXIST) {
++		if (args->attr_flags & XATTR_CREATE)
++			goto error;
++
++		trace_xfs_attr_node_replace(args);
++
++		/* save the attribute state for later removal*/
++		args->op_flags |= XFS_DA_OP_RENAME;	/* atomic rename op */
++		xfs_attr_save_rmt_blk(args);
++
++		/*
++		 * clear the remote attr state now that it is saved so that the
++		 * values reflect the state of the attribute we are about to
++		 * add, not the attribute we just found and will remove later.
++		 */
++		args->rmtblkno = 0;
++		args->rmtblkcnt = 0;
++		args->rmtvaluelen = 0;
++	}
++
++	return 0;
++error:
++	if (*state)
++		xfs_da_state_free(*state);
 +	return retval;
 +}
 +
-+
-+STATIC int
-+xfs_attr_node_addname_clear_incomplete(
-+	struct xfs_da_args		*args)
-+{
-+	struct xfs_da_state		*state = NULL;
-+	struct xfs_da_state_blk		*blk;
-+	int				retval = 0;
-+	int				error = 0;
-+
- 	/*
- 	 * Re-find the "old" attribute entry after any split ops. The INCOMPLETE
- 	 * flag means that we will find the "old" attr, not the "new" one.
+ /*
+  * Add a name to a Btree-format attribute list.
+  *
+@@ -908,52 +963,18 @@ xfs_attr_node_hasname(
+  */
+ STATIC int
+ xfs_attr_node_addname(
+-	struct xfs_da_args	*args)
++	struct xfs_da_args	*args,
++	struct xfs_da_state	*state)
+ {
+-	struct xfs_da_state	*state;
+ 	struct xfs_da_state_blk	*blk;
+ 	struct xfs_inode	*dp;
+ 	int			retval, error;
+ 
+ 	trace_xfs_attr_node_addname(args);
+ 
+-	/*
+-	 * Fill in bucket of arguments/results/context to carry around.
+-	 */
+ 	dp = args->dp;
+-restart:
+-	/*
+-	 * Search to see if name already exists, and get back a pointer
+-	 * to where it should go.
+-	 */
+-	error = 0;
+-	retval = xfs_attr_node_hasname(args, &state);
+-	if (retval != -ENOATTR && retval != -EEXIST)
+-		goto out;
+-
+-	blk = &state->path.blk[ state->path.active-1 ];
++	blk = &state->path.blk[state->path.active-1];
+ 	ASSERT(blk->magic == XFS_ATTR_LEAF_MAGIC);
+-	if (retval == -ENOATTR && (args->attr_flags & XATTR_REPLACE))
+-		goto out;
+-	if (retval == -EEXIST) {
+-		if (args->attr_flags & XATTR_CREATE)
+-			goto out;
+-
+-		trace_xfs_attr_node_replace(args);
+-
+-		/* save the attribute state for later removal*/
+-		args->op_flags |= XFS_DA_OP_RENAME;	/* atomic rename op */
+-		xfs_attr_save_rmt_blk(args);
+-
+-		/*
+-		 * clear the remote attr state now that it is saved so that the
+-		 * values reflect the state of the attribute we are about to
+-		 * add, not the attribute we just found and will remove later.
+-		 */
+-		args->rmtblkno = 0;
+-		args->rmtblkcnt = 0;
+-		args->rmtvaluelen = 0;
+-	}
+ 
+ 	retval = xfs_attr3_leaf_add(blk->bp, state->args);
+ 	if (retval == -ENOSPC) {
+@@ -980,7 +1001,7 @@ xfs_attr_node_addname(
+ 			if (error)
+ 				goto out;
+ 
+-			goto restart;
++			return -EAGAIN;
+ 		}
+ 
+ 		/*
 
