@@ -5,63 +5,62 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F095C433FE
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Sep 2021 06:06:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2F1FC433FE
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Sep 2021 06:10:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 77E4661185
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Sep 2021 06:06:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D82B7611C8
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Sep 2021 06:10:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234443AbhIPGIJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Sep 2021 02:08:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45236 "EHLO
+        id S234418AbhIPGLe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Sep 2021 02:11:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45968 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231281AbhIPGIJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Sep 2021 02:08:09 -0400
-Received: from mail-il1-x134.google.com (mail-il1-x134.google.com [IPv6:2607:f8b0:4864:20::134])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E04AC061574;
-        Wed, 15 Sep 2021 23:06:49 -0700 (PDT)
-Received: by mail-il1-x134.google.com with SMTP id a20so5515030ilq.7;
-        Wed, 15 Sep 2021 23:06:49 -0700 (PDT)
+        with ESMTP id S231281AbhIPGLe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Sep 2021 02:11:34 -0400
+Received: from mail-il1-x12b.google.com (mail-il1-x12b.google.com [IPv6:2607:f8b0:4864:20::12b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CC55C061574;
+        Wed, 15 Sep 2021 23:10:14 -0700 (PDT)
+Received: by mail-il1-x12b.google.com with SMTP id h20so5486772ilj.13;
+        Wed, 15 Sep 2021 23:10:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=sXGS7/NTxvn+at+OBJjhvMUltwvBiIcpCdjlRNLBG9w=;
-        b=qDifrJ/ysCK0q8yavNw72UDM3avtgvZZA2rZu06ZympbsXtTuZSj1rvmoFw1Osagrl
-         iKyUwdz97c1UXFg9nxzdqbxqHUERE0+iNnVFln/z6I+KzDPCN1BQMbXE9sKkA5bRGFWT
-         0SJw2fFq2NubtBvNRoVuesIpwfcm/uITx/g05OUuuCzuo5iHMYhLwL5p464CVCqfUbPu
-         Ndhi0TVBx2FrHr9WWxRCtRX44Nbz5jVTp9YmodYL5s7YvmOaKnILeALd/6+v/m7wVZYs
-         aPjtffbsWjf6DzpbEAp1WlnR1KpKZYqptOwQ0D7P1n59lIE7gPEeh9VsyRstQPkj8Hyw
-         sOXg==
+        bh=46IQBGcmswUosE/ngUiyEuvBOFmoV3KfwjFmkV8bi5E=;
+        b=dpCDcxPnpKkJNga2ChP/U9U1Tpa4E3m11JCcpnACsyyp4U822GnWdtbkfEfri2/VFz
+         KM61xwomPksQZTXYmaLplRUD4xvC01dlsO1L/yyBColfw80uP6WILRIfKio9fmy6XvbX
+         xGTsj0OSCt19mANkGfLjx/7kpt7/IKjSEqoD84PK5NGLKORWA+1fcwZP8MRHUnRz4ODv
+         HzsVbdgqFrkz5tI2a9xDlkQu8uhMnDsc2nTAiyIJu5ZzWQaGMrLsfFxvd8vOFmfLbbMU
+         ZJRe+HeJ1Le8d+I1N1OR2PVKIEfMNZPAt4U5Dwz2Nd8ZaLmJPrOTtcHGnwARo8qgoeSM
+         nL7A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=sXGS7/NTxvn+at+OBJjhvMUltwvBiIcpCdjlRNLBG9w=;
-        b=tujqxeoOfKXdwzmfZZjVKpWu559xS85K5r1kSvFfvHY0dYOwjaYoIirIpy6o+wT92N
-         +IO4inPvOUIHhSQj9p1aV0LOY8nVX3/AS9jk5Nxc7If9oNXL2I2f7gOa+wlJMxPGJMxm
-         nMO1F8fzLvZWW4A7yY5w3Qb1+q4nZYSxHMPaOLHq/FWaSDMoMY93kJuFvI2u9d6OXv2z
-         g+hhofQF3TOIOKptvRcQnzGr4Pa0upMHhX+jKO4UKQJfw2y4Dw1GIUTQEji2FKgaDLzh
-         5PlFgFlflN4cITvCuuM8C7JXd6bTH/gPbZxV4B+L9L7tbst15GfQ0+MW7X9ynrMjKIyi
-         LuDw==
-X-Gm-Message-State: AOAM532zkvMtLkfH3odDnc/H0wylwhwBTpqqcthjJDaZ7ZJT1XmD60h0
-        YdxCZ9Iw7c1Ns4ITd1UEks4fmCEihyRPdql4ptE5fk9HBCQ=
-X-Google-Smtp-Source: ABdhPJyTlJIkDERQEfTaI1T4P64wk21kx598YGiooowU9+W7vGJsmwcu2wrjNm9AF3IswCxEgYj/OwZyC2oeBAPmA5w=
-X-Received: by 2002:a05:6e02:1a67:: with SMTP id w7mr2771803ilv.24.1631772408806;
- Wed, 15 Sep 2021 23:06:48 -0700 (PDT)
+        bh=46IQBGcmswUosE/ngUiyEuvBOFmoV3KfwjFmkV8bi5E=;
+        b=rh+rDrvnmxSkTwN7ZH+fw8gFgc+Bp9XXuXkTwUb/MPWXE1bwTTEvH6x0Zps6PuonEr
+         BLnB4iCVWV+JRKmJ8KWPK/d2sdYD1XnlXNN4yiuDGU1vFFo+EUQw1JcAyb2jMAukeebO
+         S7o6rL1ZoS0nZFol7RreWt0IAzcjW3Z5CkSNEfHZF1KpNER2NQPkSI8jlFqJnoYMbgPx
+         id6QoNjhZpYjCHRWYqlWEx6YnBr2eMIUIOlHUlWXqOaMt1BWFe9jYaVFXWIu3lTCUJqz
+         GHDkA2DZczb7fEeiMkFp6RhP1HEx5pXrQWr/wYMCQK6xpfUIgcMTU0xHo2MYjiAKe48n
+         fiPg==
+X-Gm-Message-State: AOAM530YjSiXqOnrHEwuIZaCoJg7lLEcnAbofsgPSJRoURHxmIBJUicU
+        P66v9q24n9uuGsMrJjFhOXiE38pIXGBq+OsFjQ65wGCb8zI=
+X-Google-Smtp-Source: ABdhPJwcXSlPk0fMMmBNF817simmpZ6pNpcIyGjZUHeOUE1nIhYNVO8ya6gM99ag+H0NowjgZWtJKga9mqiLy5cpWuY=
+X-Received: by 2002:a92:d752:: with SMTP id e18mr2861701ilq.254.1631772613676;
+ Wed, 15 Sep 2021 23:10:13 -0700 (PDT)
 MIME-Version: 1.0
-References: <163174935747.380880.7635671692624086987.stgit@magnolia> <163174939566.380880.290670167130749389.stgit@magnolia>
-In-Reply-To: <163174939566.380880.290670167130749389.stgit@magnolia>
+References: <163174935747.380880.7635671692624086987.stgit@magnolia> <163174940111.380880.3160888950588893158.stgit@magnolia>
+In-Reply-To: <163174940111.380880.3160888950588893158.stgit@magnolia>
 From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Thu, 16 Sep 2021 09:06:38 +0300
-Message-ID: <CAOQ4uxh-_qHNRJF1Jn8A=NpFw4+8tneOMPTFE6B-Rj4ryWFeqw@mail.gmail.com>
-Subject: Re: [PATCH 7/9] tools: add missing license tags to my scripts
+Date:   Thu, 16 Sep 2021 09:10:02 +0300
+Message-ID: <CAOQ4uxh-B8kvbchVxYBWHPxYuaeObyx3e-yEkVeOwHb6B-8JRA@mail.gmail.com>
+Subject: Re: [PATCH 8/9] new: only allow documented test group names
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Eryu Guan <guaneryu@gmail.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
+Cc:     Eryu Guan <guaneryu@gmail.com>, Christoph Hellwig <hch@lst.de>,
         linux-xfs <linux-xfs@vger.kernel.org>,
         fstests <fstests@vger.kernel.org>, Eryu Guan <guan@eryu.me>
 Content-Type: text/plain; charset="UTF-8"
@@ -73,72 +72,70 @@ On Thu, Sep 16, 2021 at 2:43 AM Darrick J. Wong <djwong@kernel.org> wrote:
 >
 > From: Darrick J. Wong <djwong@kernel.org>
 >
-> I forgot to add spdx license tags and copyright statements to some of
-> the tools that I've contributed to fstests.  Fix this to be explicit.
+> Now that we require all group names to be listed in doc/group-names.txt,
+> we can use that (instead of running mkgroupfile) to check if the group
+> name(s) supplied by the user actually exist.  This has the secondary
+> effect of being a second nudge towards keeping the description of groups
+> up to date.
 >
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-
-Is someone having an identity crisis? :-P
-
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 
 > ---
->  common/preamble     |   21 ++++++++
->  doc/group-names.txt |  135 +++++++++++++++++++++++++++++++++++++++++++++++++++
->  tools/mkgroupfile   |   33 +++++++++---
->  3 files changed, 181 insertions(+), 8 deletions(-)
->  create mode 100644 doc/group-names.txt
+>  new |   24 +++++++++++-------------
+>  1 file changed, 11 insertions(+), 13 deletions(-)
 >
 >
-> diff
-> ---
->  tools/mkgroupfile |    4 +++-
->  tools/mvtest      |    5 ++++-
->  tools/nextid      |    4 +++-
->  3 files changed, 10 insertions(+), 3 deletions(-)
+> diff --git a/new b/new
+> index 2097a883..6b7dc5d4 100755
+> --- a/new
+> +++ b/new
+> @@ -83,6 +83,14 @@ then
+>      exit 1
+>  fi
 >
+> +# Extract group names from the documentation.
+> +group_names() {
+> +       awk '/^[[:lower:][:digit:]_]/ {
+> +               if ($1 != "" && $1 != "Group" && $2 != "Name:" && $1 != "all")
+> +                       printf("%s\n", $1);
+> +       }' doc/group-names.txt
+> +}
+> +
+>  if [ $# -eq 0 ]
+>  then
 >
-> diff --git a/tools/mkgroupfile b/tools/mkgroupfile
-> index e4244507..634ec92c 100755
-> --- a/tools/mkgroupfile
-> +++ b/tools/mkgroupfile
-> @@ -1,5 +1,7 @@
->  #!/bin/bash
-> -
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2021 Oracle.  All Rights Reserved.
-> +#
->  # Generate a group file from the _begin_fstest call in each test.
+> @@ -93,16 +101,7 @@ then
+>         [ -z "$ans" ] && ans=other
+>         if [ "X$ans" = "X?" ]
+>         then
+> -           for d in $SRC_GROUPS; do
+> -               (cd "tests/$d/" ; ../../tools/mkgroupfile "$tmpfile")
+> -               l=$(sed -n < "$tmpfile" \
+> -                   -e 's/#.*//' \
+> -                   -e 's/$/ /' \
+> -                   -e 's;\(^[0-9][0-9][0-9]\)\(.*$\);\2;p')
+> -               grpl="$grpl $l"
+> -           done
+> -           lst=`for word in $grpl; do echo $word; done | sort| uniq `
+> -           echo $lst
+> +           echo $(group_names)
+>         else
+>             # only allow lower cases, spaces, digits and underscore in group
+>             inval=`echo $ans | tr -d '[:lower:][:space:][:digit:]_'`
+> @@ -120,11 +119,10 @@ then
+>  else
+>      # expert mode, groups are on the command line
+>      #
+> -    (cd "$tdir" ; ../../tools/mkgroupfile "$tmpfile")
+>      for g in $*
+>      do
+> -       if ! grep -q "[[:space:]]$g" "$tmpfile"; then
+> -           echo "Warning: group \"$g\" not defined in $tdir tests"
+> +       if ! grep -q "^$g" doc/group-names.txt; then
+> +           echo "Warning: group \"$g\" not defined in documentation"
+>         fi
+>      done
+>      ans="$*"
 >
->  if [ "$1" = "--help" ]; then
-> diff --git a/tools/mvtest b/tools/mvtest
-> index 5088b45f..99b15414 100755
-> --- a/tools/mvtest
-> +++ b/tools/mvtest
-> @@ -1,6 +1,9 @@
->  #!/bin/sh
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2015 Oracle.  All Rights Reserved.
-> +#
-
-[...]
-
-> diff --git a/tools/nextid b/tools/nextid
-> index 9507de29..9e31718c 100755
-> --- a/tools/nextid
-> +++ b/tools/nextid
-> @@ -1,5 +1,7 @@
->  #!/bin/bash
-> -
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2015 Oracle.  All Rights Reserved.
-> +#
-
-I suppose 2015 is intentional?
-Should it be 2015-2021? I have no idea what the legal implications
-are, but anyway, very low probability that those scripts would end up
-in litigation :)
-
-Thanks,
-Amir.
