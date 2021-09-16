@@ -2,143 +2,153 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-21.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A91BC433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Sep 2021 01:39:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C00AC433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Sep 2021 01:46:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7850261164
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Sep 2021 01:39:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EC503611C8
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Sep 2021 01:46:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233565AbhIPBkh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Sep 2021 21:40:37 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48606 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229816AbhIPBkg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Sep 2021 21:40:36 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 171A761185;
-        Thu, 16 Sep 2021 01:39:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631756357;
-        bh=qiapaZb67wwUv941O9e/iIpg4NcRC50TGqFQbf4qXHo=;
-        h=Date:From:To:Cc:Subject:From;
-        b=cadutgf1ZfCzX5z3WVOk4howI0AgD1RNcLPqmp8PxFR/4/y6UX1vZM1LG4j26sRe9
-         jjhZlqZxObUx+K762pxoDBQjY36GxIiRoF9J4iR4A/mKsWyAp3/fwsvhR8mCQOP/gA
-         XC47oOq2cOai7vdexXAJyGyEEy6EfG2tjIp17dHc5F0vqdr39dIaIAg8safm+CaDHn
-         slh80w93XUsVV8Lc8CPsncSDprErEfP9FD/UZ1qk9Rnamf0UqVDjq9Xco3KbEgTBea
-         jPSbOcTpQU7b8wd3oBaFMUpTgw4Ves8I0zqqNqIn6gBUYVpXQgxf2FoMbAAHiS1vxd
-         ZlFT0zm9FBsFA==
-Date:   Wed, 15 Sep 2021 18:39:16 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     xfs <linux-xfs@vger.kernel.org>,
-        linux-ext4 <linux-ext4@vger.kernel.org>,
-        linux-btrfs <linux-btrfs@vger.kernel.org>
-Cc:     linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Subject: Shameless plug for the FS Track at LPC next week!
-Message-ID: <20210916013916.GD34899@magnolia>
+        id S233688AbhIPBsO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Sep 2021 21:48:14 -0400
+Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:52828 "EHLO
+        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232171AbhIPBsO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Sep 2021 21:48:14 -0400
+Received: from dread.disaster.area (pa49-195-238-16.pa.nsw.optusnet.com.au [49.195.238.16])
+        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 8A52B106C53
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Sep 2021 11:46:53 +1000 (AEST)
+Received: from discord.disaster.area ([192.168.253.110])
+        by dread.disaster.area with esmtp (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1mQgUH-00CySk-0q
+        for linux-xfs@vger.kernel.org; Thu, 16 Sep 2021 11:46:53 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.95-RC2)
+        (envelope-from <david@fromorbit.com>)
+        id 1mQgUG-007hWw-Vs
+        for linux-xfs@vger.kernel.org;
+        Thu, 16 Sep 2021 11:46:52 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH 3/5] atomic: convert to uatomic
+Date:   Thu, 16 Sep 2021 11:46:47 +1000
+Message-Id: <20210916014649.1835564-4-david@fromorbit.com>
+X-Mailer: git-send-email 2.33.0
+In-Reply-To: <20210916014649.1835564-1-david@fromorbit.com>
+References: <20210916013707.GQ2361455@dread.disaster.area>
+ <20210916014649.1835564-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
+        a=DzKKRZjfViQTE5W6EVc0VA==:117 a=DzKKRZjfViQTE5W6EVc0VA==:17
+        a=7QKq2e-ADPsA:10 a=20KFwNOVAAAA:8 a=9uXBr0ESAAAA:20
+        a=ildpD4JrNXhSmCI8gPYA:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks!
+From: Dave Chinner <dchinner@redhat.com>
 
-The Linux Plumbers conference is next week!  The filesystems mini
-conference is next Tuesday, 21 September, starting at 14:00 UTC:
+Now we have liburcu, we can make use of it's atomic variable
+implementation. It is almost identical to the kernel API - it's just
+got a "uatomic" prefix. liburcu also provides all the same aomtic
+variable memory barriers as the kernel, so if we pull memory barrier
+dependent kernel code across, it will just work with the right
+barrier wrappers.
 
-https://linuxplumbersconf.org/event/11/sessions/111/#20210921
+This is preparation the addition of more extensive atomic operations
+the that kernel buffer cache requires to function correctly.
 
-(it's the light green column second from the right)
-
-As most of you are probably aware, LSFMM has been cancelled for a second
-year in a row, which leaves LPC as the only developer focused gathering
-this year.  This year's conference is virtual, like last year.  If you'd
-like to participate, it's not too late to register ($50 USD):
-
-https://linuxplumbersconf.org/event/11/page/112-attend
-
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
+ include/atomic.h | 65 ++++++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 54 insertions(+), 11 deletions(-)
 
-The first session will be run by Matthew Wilcox, who will say something
-about the ongoing folio work, assuming Linus isn't going to pull it for
-5.15.  We'll see where things are in a week.
+diff --git a/include/atomic.h b/include/atomic.h
+index e0e1ba84bc82..8c0f96326f08 100644
+--- a/include/atomic.h
++++ b/include/atomic.h
+@@ -7,21 +7,64 @@
+ #define __ATOMIC_H__
+ 
+ /*
+- * Warning: These are not really atomic at all. They are wrappers around the
+- * kernel atomic variable interface. If we do need these variables to be atomic
+- * (due to multithreading of the code that uses them) we need to add some
+- * pthreads magic here.
++ * Atomics are provided by liburcu.
++ *
++ * API and guidelines for which operations provide memory barriers is here:
++ *
++ * https://github.com/urcu/userspace-rcu/blob/master/doc/uatomic-api.md
++ *
++ * Unlike the kernel, the same interface supports 32 and 64 bit atomic integers.
+  */
++#include <urcu/uatomic.h>
++#include "spinlock.h"
++
+ typedef	int32_t	atomic_t;
+ typedef	int64_t	atomic64_t;
+ 
+-#define atomic_inc_return(x)	(++(*(x)))
+-#define atomic_dec_return(x)	(--(*(x)))
++#define atomic_read(a)		uatomic_read(a)
++#define atomic_set(a, v)	uatomic_set(a, v)
++#define atomic_add(a, v)	uatomic_add(a, v)
++#define atomic_sub(a, v)	uatomic_sub(a, v)
++#define atomic_inc(a)		uatomic_inc(a)
++#define atomic_dec(a)		uatomic_dec(a)
++#define atomic_inc_return(a)	uatomic_add_return(a, 1)
++#define atomic_dec_return(a)	uatomic_sub_return(a, 1)
++#define atomic_dec_and_test(a)	(atomic_dec_return(a) == 0)
++#define cmpxchg(a, o, n)        uatomic_cmpxchg(a, o, n);
++
++static inline bool atomic_add_unless(atomic_t *a, int v, int u)
++{
++	int r = atomic_read(a);
++	int n, o;
++
++	do {
++		o = r;
++		if (o == u)
++			break;
++		n = o + v;
++		r = uatomic_cmpxchg(a, o, n);
++	} while (r != o);
++
++	return o != u;
++}
++
++static inline bool atomic_dec_and_lock(atomic_t *a, spinlock_t *lock)
++{
++	if (atomic_add_unless(a, -1, 1))
++		return 0;
++
++	spin_lock(lock);
++	if (atomic_dec_and_test(a))
++		return 1;
++	spin_unlock(lock);
++	return 0;
++}
+ 
+-#define atomic64_read(x)	*(x)
+-#define atomic64_set(x, v)	(*(x) = v)
+-#define atomic64_add(v, x)	(*(x) += v)
+-#define atomic64_inc(x)		((*(x))++)
+-#define atomic64_dec(x)		((*(x))--)
++#define atomic64_read(x)	uatomic_read(x)
++#define atomic64_set(x, v)	uatomic_set(x, v)
++#define atomic64_add(a, v)	uatomic_add(a, v)
++#define atomic64_sub(a, v)	uatomic_sub(a, v)
++#define atomic64_inc(a)		uatomic_inc(a)
++#define atomic64_dec(a)		uatomic_dec(a)
+ 
+ #endif /* __ATOMIC_H__ */
+-- 
+2.33.0
 
-Christian Brauner will run the second session, discussing what idmapped
-filesystem mounts are for and the current status of supporting more
-filesystems.
-
----
-
-Next up will be a session run by me about both of the atomic file write
-features that have been variously proposed and asked for by various
-enterprisey users.  The first proposal refers to direct atomic file
-writes to storage hardware.  I /think/ this mostly involves enabling the
-relevant plumbing in the block layer and then wiring up iomap/xfs to use
-it.  Possibly also a new pwritev2 flag or file mode or something.
-
-(Christoph did this in 2019: https://lwn.net/Articles/789600/ )
-
-The /other/ atomic file write feature, of course, is my longstanding RFC
-to add a VFS call that enables atomic swapping of file contents, which
-enables a program to reflink a file's contents to an O_TMPFILE file,
-write some changes to the tempfile, and then swap /all/ the changed
-blocks back to the original file.  This call would be durable even if
-the system goes down.  The feature is actually the brainchild of the
-online filesystem repair effort, but I figured it wasn't so hard to
-extend a tendril to userspace to make it more generally useful.
-
-https://lwn.net/Articles/818977/
-https://lore.kernel.org/linux-fsdevel/161723932606.3149451.12366114306150243052.stgit@magnolia/
-
----
-
-Allison will be running the fourth session about our current progress
-towards enabling sysadmins to shrink filesystems, and what pieces we're
-going to need to clear space from the end of the filesystem and then
-reduce the size.  FWIW Dave has been working on an inode relocation
-("reno") tool, and I've been working on a free space defragmenter that
-kind of barely works.  Originally this was a XFS-focused discussion, but
-it seems that Andreas still remembers the last time someone tried to add
-it to ext4.
-
----
-
-Session #4 discusses the proliferation of cloud storage technologies and
-the new failure modes that Ted and I have observed with these devices.
-I think Ted had a few things to say about cloud devices, and due to the
-repeated requests I think it would be worth polling the audience to find
-out if they'd like filesystems to be more resilient (when possible) in
-the face of not-totally-reliable storage.  Obviously everyone wants that
-as a broad goal, but what should we pitch?  Metadata IO retries?
-Restoring lost information from a mirror?  Online repair?
-
----
-
-The final session will be a presentation about the XFS roadmap for 2022.
-I'll start with a recap of the new features from last year's LTS that
-have been maturing this year, and which pieces have landed for this
-year's LTS kernel.
-
-I /hope/ that this will attract a conversation between (x)fs developers
-and real application developers about what features could be coming down
-the pipeline and what features would they most be interested in.
-
----
-
-To all the XFS developers: it has been a very long time since I've seen
-all your faces!  I would love to have a developer BOF of some kind to
-see you all again, and to introduce Catherine Hoang (our newest
-addition) to the group.
-
-If nobody else shows up to the roadmap we could do it there, but I'd
-like to have /some/ kind of venue for everyone who don't find the
-timeslots convenient (i.e. Dave and Chandan).  This doesn't have to take
-a long time -- even a 15 minute meet and greet to help everyone
-(re)associate names with faces would go a long way towards feeling
-normal(ish) again. ;)
-
---D
