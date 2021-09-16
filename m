@@ -7,81 +7,81 @@ X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5BACC43217
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Sep 2021 10:07:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60754C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Sep 2021 10:08:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D30A060EB6
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Sep 2021 10:07:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 49A0261185
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Sep 2021 10:08:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236376AbhIPKJP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Sep 2021 06:09:15 -0400
-Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:49056 "EHLO
-        mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S236373AbhIPKJB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Sep 2021 06:09:01 -0400
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 18G8xuwP010995;
-        Thu, 16 Sep 2021 10:07:40 GMT
+        id S235633AbhIPKKF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Sep 2021 06:10:05 -0400
+Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:22986 "EHLO
+        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S236417AbhIPKJG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Sep 2021 06:09:06 -0400
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 18G8xkpf012725;
+        Thu, 16 Sep 2021 10:07:44 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references :
  content-transfer-encoding : content-type : mime-version;
- s=corp-2021-07-09; bh=RnCuiVLDSAy7dcsVyp4Qjszb2PpTKBJCDoIDQytDxQE=;
- b=zmziNgQvq/FZwWRn0Oix/oCIoNocwmCe3qBBHpCb66PcNGhkqOlEZ3o9jBIhBCEBZZf9
- q4oqKqrhBWsFAgmPVIUpkdeZbQmpz23JXcKfNB1diIOqy2yDy51oX1fK63Y27PgtitPd
- dmg9U51zao8xOco/oZhGabLmXvV2/Mmd1VaMmQ4PXKdsAYn0doK93kZe2/Y1MNJbg9IQ
- R0BlRBIsu0rNF315PxqjI4zsIvjKbMYkGLve+VT6HHes9f8VTvF2Q+3agohsPZzeCmMy
- osW7pBjzJCX8R3W5GwTbeg5kF+3MQ2q9aDdgfBxM95xZ3Csa/UQvKo2PRwzZxuEEeVIv Yg== 
+ s=corp-2021-07-09; bh=ue0OuPKcW9LhfwvkMALuhADN0yh0xDt+Ow7tIb3nKcc=;
+ b=Ua5Eybg0azji7ac7ya7jHQNqp/4hCz+L+EdukMaj7LAIPYBiIwKG+n3m62JC6vG4ybI3
+ Y9ZNEy6AsW6WapQSGyYjDCNydzkLV24FgnMftQIvzXDQtFJPPVdZtwbmZPXzO41ccUeY
+ 18egFS7jsLU7kRIS5cgVxpOpNST0zAeNISh085L9OzBwNul96zSTMpROBU+szxryaHk6
+ MLyiBa4/meGahZwebgHycEPesDtgluWMpdAoE8nI5ASW9d6nGvvJGWNXYODnkMxNKeOG
+ 3cR6ImtQjQNcv65EP92DRL1N+AbX3quQYF4K/RMwK3mDY9uoUExOuQnlk1r+DAQXz+dA pQ== 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references :
  content-transfer-encoding : content-type : mime-version;
- s=corp-2020-01-29; bh=RnCuiVLDSAy7dcsVyp4Qjszb2PpTKBJCDoIDQytDxQE=;
- b=vEZKKh5Yf/vj6M17ygY/yEVLZLU2O1HEQ40gMjrAnD+uQ5kqHwSTKKPjq2Wr0DX9uxjf
- D00F+/Ft/rpgwvFudK+4YjoAb5CDpjXJgKwhJqNq/3hxJPGcsKBPleAj2zlPD7+amUuD
- 2tNq3fNa7wHpLF9IBP16xCZ8NWO6oMc+Ku+/+6GepE7Ap0zXh/8xDCVnmh/my2im2RXl
- ohJ4WEyUWeLXdRtT5VyXqmjMffGEtAwTdGnn9nLmYzuh2Yb7QYhT4j2eKCZH1ad7gpcc
- 1vwWIUczySOv42EED/bbO4awCmfQQBRypuCDRsX64Sxw+tK43PL/AkaX1pnhAiiynCpx Pw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3b3jysjvac-1
+ s=corp-2020-01-29; bh=ue0OuPKcW9LhfwvkMALuhADN0yh0xDt+Ow7tIb3nKcc=;
+ b=EslxxPmmfV0LkBA1W8dPwzJw/Xnu4ohN9/4+PXN8v0mubMOmtYD5t0IlnPJfIBck/DLo
+ rYen7nMpxe/sKPmzLmrnxPUyHH43vlQkJndcXXzzqCbXsRPNL1tGUNrAnpWH27PUlgsy
+ kGB7oUMLsT6tb1tFGAwW+paXvxbIPKfqL9YD8pqypAEjHXs0Snga9+tpVzg2jg2MwgiQ
+ pSuEe38LhnWEfM+uihr2Mx3XLlpoaJTtBRR7twlm7MoNsCg0mAe/IcekIdenRXxQZAbF
+ Fdfrd54ZUKsToagvjX4UMmKRnga2V3zaO/rFK2ycmqNuW7hT9rHfjhrIR4NjQJxCGaNc jw== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3b3s74hgkr-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 16 Sep 2021 10:07:40 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 18GA5is5171556;
-        Thu, 16 Sep 2021 10:07:39 GMT
-Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2047.outbound.protection.outlook.com [104.47.66.47])
-        by userp3020.oracle.com with ESMTP id 3b167uxnuy-1
+        Thu, 16 Sep 2021 10:07:44 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 18GA5FkK030661;
+        Thu, 16 Sep 2021 10:07:43 GMT
+Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2044.outbound.protection.outlook.com [104.47.66.44])
+        by userp3030.oracle.com with ESMTP id 3b0hjxyc1k-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 16 Sep 2021 10:07:39 +0000
+        Thu, 16 Sep 2021 10:07:43 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Y58Z5ry6fKp9jfMQagZZqPaLcB3KcaUdNk9/4HOF3nPOisskQvRe2ezipY6T11BX4SEB6Py9i7lVIfoApA1/0IOV0t/s6enPWXmsbyzEs+T7TcJj5fgoyYwOo5nntw7Bn0LZP4xfUS+ovLY2y/3KofhpU9Y6v+LM75MPpETI5eNywmqe3+BRs6+Syo1qZoDWPKdFY60Of1YYYQ8JndDYtUJEMg8ID7w6MhcFc7M4uN7AGZArnMttaU1xa6/SpV7lja9jSZlUMIxSrW3u/KsSeg9lvftMzc7A99DOe/kGDZiC8Q1tLn3UBThhhgLFy4ngLFWQ+L/6kWLf6VjKw9iFWw==
+ b=HqihWjKlrAu+aKjZ5AcjPtdpKZnlfy3h6vMUu2DQk5piELRrPTzA3ANr/EM+gH+ifEvjD2P/I7y50DMYeWnPZxJ2MWug83nNd40B3KMCzmu7e4zOyHSlR1DIheaEnuN0mZRRnYQYYBLDwlxqg0OLsqdAjN5eNG2p7LvdCJQKqeLk4oqrIDkJoaGKA9gSlvGG8+hOe8OMJGjpjcVwsviNwPTe1EvmhvjYL6oQob7EDM5RSsaaxxFzXMyS0SFrDlqILQc8Iv3k0MZIc2SIGmIvZM5OYd5hiTry14hHaPHjor3JIQX124U/Z/3QMIaMXp3xJPVX2twsi4ZEP7q+g3jsjg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=RnCuiVLDSAy7dcsVyp4Qjszb2PpTKBJCDoIDQytDxQE=;
- b=iUgL+uP3yqHgAtABGbe+vpftYkzsEVORHGv+EC5vLRy74c4cHTXhbotm0mHKRFJLgbH5o4SlzLUToHJUmUUH/J1zGTmZidvRALP1Oiz+UqyLh3SJt/3f2mi8e65xaUzCnuyEqrdT9Gsp8vbpCabsRlWnCe2iWLtSiARGicZdI2XgxzdQcsIM1/M5ybYdmmHL3Z6jzzIX1+gELYJ9Ce+e2WpmC2WcDFQq9ic1GWEQrTi+Lnj1ezuOPF+TPHucJDVCYY0o6jns39zUTcT4Jz2SAA87K6CkzGIri1L8E9aZvgFSOm5DNmyINt9Sz/ZUgzFLrJa8rgglmve0/4j+L+tgIQ==
+ bh=ue0OuPKcW9LhfwvkMALuhADN0yh0xDt+Ow7tIb3nKcc=;
+ b=TZpH7lWtdphJ6I4gF7lsjdtNAIkL/UX5bk+pqlagdScWSQpnHz9yCDEgJUg7qr44vFW5Sc7zWUaQYhF+JRKlSPnaOngEe5n85DC4obsR9OcyCHRHIeoxv/Ds8Q9QdPIonvmv6Zz3P/JdCITUvAcPceXcEbDs14gQJkLBfMT+/G7W9FPnf5QpwNSJtMq+y3qoeaVbYjIOpZXqCBAVqZAiyzly7JjjUpEK7lrmwiZXcW1bva0/aqtXTPOUb19C1ZtHNaLt3sDIUnMh38+FtP1AxUv3VmZc6kpQFsByaaAEJbSXJcezvRzxLJMKTvNCz3/G3lSTFwm+bcwsSX+OBINt+Q==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=RnCuiVLDSAy7dcsVyp4Qjszb2PpTKBJCDoIDQytDxQE=;
- b=Pz4sFP9H0nQLiS1Pf4fnhx2c+avkeC3fm1zksLhjBrmKci7h3grJmLYjbCclUcFxk/SDQLbJsucO2lq0bbJEmGXtQ/YlyYBpGLWMEUbfKN5oGTMpZ6ApvSuv2yqqLvHXe/mJjG2lBlmyCF86AbhaEcIBmdCQFC4HjOuGHkg6Ym0=
+ bh=ue0OuPKcW9LhfwvkMALuhADN0yh0xDt+Ow7tIb3nKcc=;
+ b=LiEj00p7aYzetPEo5kuUEMG59tV3GeTvFfHuw0oOu2EjOc9lTdreVAkQ+5Yf4kVUw/u9hWyPwDwlvt+/VkIKiDFxaicw+7xpQuwnnU1QJFeRScoVc+5J2N11WAK+s9nAWzDYmrXIq2lj0lIGgTano8SIT/dPos+cVBfmNgmGawY=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=oracle.com;
 Received: from SA2PR10MB4587.namprd10.prod.outlook.com (2603:10b6:806:114::12)
  by SN6PR10MB2878.namprd10.prod.outlook.com (2603:10b6:805:d6::19) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4500.16; Thu, 16 Sep
- 2021 10:07:36 +0000
+ 2021 10:07:40 +0000
 Received: from SA2PR10MB4587.namprd10.prod.outlook.com
  ([fe80::1138:f2cb:64f8:c901]) by SA2PR10MB4587.namprd10.prod.outlook.com
  ([fe80::1138:f2cb:64f8:c901%9]) with mapi id 15.20.4523.016; Thu, 16 Sep 2021
- 10:07:36 +0000
+ 10:07:40 +0000
 From:   Chandan Babu R <chandan.babu@oracle.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     Chandan Babu R <chandan.babu@oracle.com>, djwong@kernel.org
-Subject: [PATCH V3 10/12] xfs: Extend per-inode extent counter widths
-Date:   Thu, 16 Sep 2021 15:36:45 +0530
-Message-Id: <20210916100647.176018-11-chandan.babu@oracle.com>
+Subject: [PATCH V3 12/12] xfs: Define max extent length based on on-disk format definition
+Date:   Thu, 16 Sep 2021 15:36:47 +0530
+Message-Id: <20210916100647.176018-13-chandan.babu@oracle.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210916100647.176018-1-chandan.babu@oracle.com>
 References: <20210916100647.176018-1-chandan.babu@oracle.com>
@@ -91,619 +91,577 @@ X-ClientProxiedBy: MAXPR0101CA0025.INDPRD01.PROD.OUTLOOK.COM
  (2603:1096:a00:d::11) To SA2PR10MB4587.namprd10.prod.outlook.com
  (2603:10b6:806:114::12)
 MIME-Version: 1.0
-Received: from localhost.localdomain (122.171.167.196) by MAXPR0101CA0025.INDPRD01.PROD.OUTLOOK.COM (2603:1096:a00:d::11) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4523.14 via Frontend Transport; Thu, 16 Sep 2021 10:07:34 +0000
+Received: from localhost.localdomain (122.171.167.196) by MAXPR0101CA0025.INDPRD01.PROD.OUTLOOK.COM (2603:1096:a00:d::11) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4523.14 via Frontend Transport; Thu, 16 Sep 2021 10:07:38 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 495b537c-4e5b-4e39-a2b0-08d978f9ce41
+X-MS-Office365-Filtering-Correlation-Id: a0815f13-20ab-4ee0-e888-08d978f9d12e
 X-MS-TrafficTypeDiagnostic: SN6PR10MB2878:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <SN6PR10MB28783B50AFE11A97AFFB2C0FF6DC9@SN6PR10MB2878.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:183;
+X-Microsoft-Antispam-PRVS: <SN6PR10MB2878C9BD8AB01F611F54A698F6DC9@SN6PR10MB2878.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:1332;
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: +TQcdiDM2xRwkucyUMOCWEqis9WfuhDJztRYTP6m9qRMItrNZVsn9phJ5ni4/4345ExCpTU3T4G8IHodwpaeN0tBhum5qCg0ojOjw2zfqrsp+kFLl0mPkffYeKF39yKDR7OWJd6Zuencz2YWDwvNV3SilcuSjxROxcPUx2yCWDVRqROJw8nWr4B9lMZvCj8u7aFd6k9lunB5tncAHvUC6IPs3ip13ZBjn0qy2YbbrD50BZH3pGOcA5c+xu1MwjBGNDIfAbhKkebfx4r0Bqwlx6ycA329LOnzyRNrsHXtMX6lxyXSp/od0R0nkoakd8Jw/6e1alZB7HHed70yOzjkzuxNWevf+2geVkqyXTPTfpDQqayOXO75sWQABBYzY1LMWdjjljW357NzOFOtdJL5AVrMwr9kb+MyWLRgf1xat1TkH/WPQ7B+NEmNSI0UdbMMiXfC3qsSwxRYg85ag5Irowas/pYVgFIM4lchTh2HRY3rPkolKrYfdD0QnGJAfk41ys99M2jUpoFYfyI3sVBfk1rEnMxnlowpeSgJ3z9IkIoSPWMiigsinULm4PFvjiaAI3s2mbaMu/0um6Tn9B14ib6N8sQvDUWgdX8FzpcU2oOce4N77ClGJXS+9CMFCkMz3K6jOlJ6KnLCufivV/8i7p4Q6Js8YYkzDzzHR0rTouBKMPhbxTGnlsaSqYeY0yrzbsCMOWDdLpEptzQeVGvC1g==
+X-Microsoft-Antispam-Message-Info: 45SVp66fCO3MNfsCJ5QOVfs58hiapN4yn+V94reYqO6UpWX/7KB5gqTFzNodPjcu7RgfF2+K60mmbGj4wj/9sb9jKehPKIuvrbovUyHr3fTUw9E19PcshsSFOPHv4c1jX7bh47r6NJKHru5ImizHHSdlMODdLna1fkIrFfdfzgERl5XSMwOnbhwCm3jSRQD2NMZwXmmwqoPvSlY3id0Xg1yyKTT79oPsKqwmoLR/99Hmnf1ssLA1yjtlgQWkK02dUXOg+b1BytcyCIVe8ZVK1fhYtGIdijNvCFD1hHNdGH4M2LnGVmvAiRLzicuKKk4BsvFniBJ0WxlbvJy0taUJyt8Bs/YIv9IeAxW9vlGp7mPFryHJPeCwQtG9PxC3OiTg8qH5nArbm45luvgRBBG6fhzX7v5jAYLarTq7O43ImUYTPfoAy9rNqMkNU9QMYvPKNf7+ZcX2PQVLB1Yjsv0K4YXCyFW2KODYA68FbkpcwxOv3dQ581oxOSTSeLhUaTD9IJFw9KFUmB2DaxbjvIumZ+yhJQ+WR3KqgZf/Z+Sn06DUgiRLQrMyjdtMPW2U7ivWDmun4OMDKblCXSNJ6IXWRjaPc2RQqdauU0GGOgsS7FXF4XmBKhTfg4h3LlORkiC6/cCpT5yHfkFWnEPfhUgE4JKyW4HjF7QVaXGnNKg9bNc8I0BpMykymD3fEc3bp0nd7dCIpHfZDEjYAhy5R3qomw==
 X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(376002)(396003)(39860400002)(366004)(136003)(346002)(478600001)(5660300002)(186003)(66946007)(86362001)(66476007)(66556008)(38100700002)(2616005)(83380400001)(6512007)(8676002)(956004)(4326008)(26005)(6916009)(52116002)(38350700002)(6666004)(6506007)(1076003)(36756003)(8936002)(6486002)(30864003)(316002)(2906002);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?98uepA+7Cze4YTTIi0n8MisKU2RrspXscmOK1U1L0/W+3X6mhgAWkKk08KiB?=
- =?us-ascii?Q?DkYtKmtsc2kdaipRU8eqeAsGxpPm5XKlnIwpKO/Hzx50yeChEDEhus51EWPF?=
- =?us-ascii?Q?+cCHlVtxczsmJgddDRPMI4zcrpVOR5zMmaN22wHFAgmjZnIz3J79xtyZp2aK?=
- =?us-ascii?Q?BiLRJM4i7YqUL5zjujyHY7dsXjG8/+cnM3VwPDF+mXZBsmIA7tH5chfPEvCC?=
- =?us-ascii?Q?DgTSX8auJYLVZ3rEtw/1OXq8QQQ1bd0mR1ns5u+1QvlHLK23oepvY43IU5Tt?=
- =?us-ascii?Q?QagfsBJPEnOOQc2WFjW2F5xgmgbKn88fZyDTW/lZ213sJBGWkDtSfSxpEgLZ?=
- =?us-ascii?Q?6gx/QydcDa3Dh0FnWW11uYvhfRthPN/XA3idvHeQ+z8HpuLGI/CJsF4AL7Yn?=
- =?us-ascii?Q?AgK93VhGOMnILX/GWKbFj5DE3asz4LzqRl0iaL1TbCLLRbT8xcfV5gqF3xUg?=
- =?us-ascii?Q?ChIla6VcSK0Y5Nl25atLVmqGgbIosSLPM4mdHNK5RTkH8CIlJv8VkC9bbLvr?=
- =?us-ascii?Q?NMCWVYP1cMubXg7GWZf38+aCFHSBLEjO+U/Xo2kIB0oaWgTO1gmI/76wxuR3?=
- =?us-ascii?Q?ZuNQDvNcmKsZ5TZdxOwHSC7zXgxnFlgZJTG2nnkyhllDr3fOcHsWIS0BOhb5?=
- =?us-ascii?Q?EG52TXnWqUnuYJwsA8PN2PzV134KTSa38xcHuPitOLd+JI7V9frcIm3pZj8s?=
- =?us-ascii?Q?qI3RW0lEt7YQZr6CVLYKbJqSg9V2EaANkgnpL93+YS/G3pPXh3cM+T1ow+vS?=
- =?us-ascii?Q?TvEmpu1p60NQ2UDaLb+skx78e8spfx1v/yD4LCOzB48TZCEH8982kdHqafDu?=
- =?us-ascii?Q?u1oSoVFu0flx2WKeQXf6yr7J1hatFS4J4CEucpAEH8sGLPeyaJ3DDsCL+vGq?=
- =?us-ascii?Q?wjxDl2er3sHhooMIQ7NUHK38a/RxtP4Am8sJkjFC8R5qZlNBHvYzh4WqGzVP?=
- =?us-ascii?Q?DMxOd5CdaSwI2SKUUov/CABkdLMWXeKoBRsXgCNYSX8OnEfYLoq3RaiQYySn?=
- =?us-ascii?Q?NC49Qj9ov2hMtReuBMRX05D8yE1B5uh7pqMINEGLR7KWpB8EdIOE8zoJaLVq?=
- =?us-ascii?Q?eMCwgZ1w1/1PuIiUjRjQsEldWXQRTyr9VKVlYEvclxTiLSjlLAnHWBEDTIa0?=
- =?us-ascii?Q?PPjXq/rbP8ogg8rFgiIVfIpl0gt5Hr0YzPx9w1UmMVZiN2LjnSFgh/D3WkXN?=
- =?us-ascii?Q?6XDp4U27bZdE5GjcWuaszqGoC+1WLYG1DZ82sl1274Tpy2y99yNiZHskUjjx?=
- =?us-ascii?Q?5PKU3n2VQdr4hUFnqyY2Hz9svL0iV8GSMdaL35OtqoJ/BBdlBhwSmIWONP0z?=
- =?us-ascii?Q?qVS+ymmDjjcjYUSmWUyRtHZP?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?aB/gXPdU3W0PYbSJbbkb9ZI/vSntT80Y1jbuFd3ChO8pYv0B+v+gBJN3p1kV?=
+ =?us-ascii?Q?iCmpvRLmz4ikJgm6fZgctDZJ2Ba+rY0yEgqBY/eYhYFozlExcpJ9qLzM7QV/?=
+ =?us-ascii?Q?HzX8pzXsbIfQP41f6doWgn/XDwINSM53O79EKEKmp1VagbAEKdS5ZmG2QUHT?=
+ =?us-ascii?Q?pyXeI+jS6xw3CRKBTTMLdYlijQ1WWUKzKe4VjcO9X6CEu0pwL64By+KBd21Z?=
+ =?us-ascii?Q?0HT2qoJ2otMT0efxxQygB6apzbhAcFJsNpRi2BI8amT7ryh8KNTXxpYoRqMG?=
+ =?us-ascii?Q?KoCSCR1JzC66dFkz7CXtoMB8rQlki1GfZnGdiSeJ61uVeLT8MZDFSYemq4AC?=
+ =?us-ascii?Q?N69DIjqMetr15h4WgMuln2i6I4PjMFdz4mRqS7IapMQFQUWGUE2FXq5bby4O?=
+ =?us-ascii?Q?j122hGakFrq/76rEJdRLrXHQHpKysJkdpJ+8R71QOOjuK3/B5XRYxJKkrWuG?=
+ =?us-ascii?Q?XtrBNGwgL28aGDKrBmKojpD+UecBHw3w0khuOFS8t+0EnxaM9jiMhiD8eAO5?=
+ =?us-ascii?Q?xVJBd84SbC0YI4OeGpa7gZChZ27hH50bEx+yTBBTSxsWFs4pA2AKiMkDtJAl?=
+ =?us-ascii?Q?TthfiLSfQPJtYqNxatkNmvzPPE3xp6qoiekyGBS9GzuAstXUpUBe6sP7zEoK?=
+ =?us-ascii?Q?vpX7NKH7tOUX6ZmZMAnGibp/8H7L29VuUf2GwN1hJ4shauQJCxZZT/S3YKGv?=
+ =?us-ascii?Q?YLbpfqE3u1K/T425XBgnfmYnGnd7WQt7qSBwAivE8qbQOQmfN6of6kMFYK6f?=
+ =?us-ascii?Q?30eR2lzr6rtd7uUySjyJBpbqhQq5KMjMHpcwzfMIIVOKZYuJr7Dh+Rra2SxX?=
+ =?us-ascii?Q?v7nrnSr/YPhzOIx6/q6qe5qwp2AxKLEoGS/LH/QhXzrRJZZx61qb0NOgGE6p?=
+ =?us-ascii?Q?c2w/rWXThBNoLR2ee6IGSGehKLQa/ZygfyZKRs8WADOU9KMu/EcpJtJl+LrZ?=
+ =?us-ascii?Q?+PQSM4hiI1A9LIFMojN4sZjGexqqmMcqFYNetE3l+Yoki6NktYDkC6cWmWVN?=
+ =?us-ascii?Q?PipaKbxYWV1BLjoc0VT9jW9YxaWVatiif+6fpVKi7kb6oKVAZJEaRDqMYPG3?=
+ =?us-ascii?Q?7OPXHa8KQphgddwPU+dRRsIuNY1Edlorm0P85q14GXaA5SZ0Wc9U3U8ZfApO?=
+ =?us-ascii?Q?BMkW71J5zdjx3ON5cTxE4oxWu2pDJIsSHXmgBFAM+NdRB0eTrVdMollUu562?=
+ =?us-ascii?Q?L+IndMTaXv8iSf8CwHbGd0KBOnD6x90eTxSM+nilpuAdX1rHrGsuR/hDUuiN?=
+ =?us-ascii?Q?xQ51pxnHMagcb918G2AXQ4LTRDVgNBxtM4BF7FAXSJDvG+aNkbCIpPtQfLWO?=
+ =?us-ascii?Q?JOnwkse+JocLZX+RsFY1/3s+?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 495b537c-4e5b-4e39-a2b0-08d978f9ce41
+X-MS-Exchange-CrossTenant-Network-Message-Id: a0815f13-20ab-4ee0-e888-08d978f9d12e
 X-MS-Exchange-CrossTenant-AuthSource: SA2PR10MB4587.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Sep 2021 10:07:36.5136
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Sep 2021 10:07:40.7490
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 7X0IXFt9RaY0gR74+f/P+993gcClRUFVLf/VfZE8oFqhweqC0ZGwoyP7j2g5O6j+Ahdu06YlthlzLWwsH9EU7A==
+X-MS-Exchange-CrossTenant-UserPrincipalName: /s1YrMjRTza9D4tcirHz8tkCbTB6Jd37drWBBVHtjL0momgemdq7ogBudPT6Arntao1c0v+oOcg7X/9LTxbgAA==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR10MB2878
 X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10108 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adultscore=0 suspectscore=0
- phishscore=0 mlxlogscore=999 malwarescore=0 mlxscore=0 bulkscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 adultscore=0 phishscore=0
+ mlxlogscore=999 suspectscore=0 spamscore=0 bulkscore=0 malwarescore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2109030001
  definitions=main-2109160064
-X-Proofpoint-GUID: lswEDW9hhvv1QTJcIMUsIJSDXcTstB_7
-X-Proofpoint-ORIG-GUID: lswEDW9hhvv1QTJcIMUsIJSDXcTstB_7
+X-Proofpoint-ORIG-GUID: les0j0iU9GupyPJBhxqses6oIryhRXzw
+X-Proofpoint-GUID: les0j0iU9GupyPJBhxqses6oIryhRXzw
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This commit adds a new 64-bit per-inode data extent counter. However the
-maximum number of extents that a data fork can hold is limited to 2^48
-extents. This feature is available only when XFS_SB_FEAT_INCOMPAT_NREXT64
-feature bit is enabled on the filesystem. Also, enabling this feature bit
-causes attr fork extent counter to use the 32-bit extent counter that was
-previously used to hold the data fork extent counter. This implies that the
-attr fork can now occupy a maximum of 2^32 extents.
+The maximum extent length depends on maximum block count that can be stored in
+a BMBT record. Hence this commit defines MAXEXTLEN based on
+BMBT_BLOCKCOUNT_BITLEN.
 
+While at it, the commit also renames MAXEXTLEN to XFS_MAX_EXTLEN.
+
+Suggested-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c        |  8 ++-
- fs/xfs/libxfs/xfs_format.h      | 87 ++++++++++++++++++++++-----------
- fs/xfs/libxfs/xfs_fs.h          |  1 +
- fs/xfs/libxfs/xfs_ialloc.c      |  2 +
- fs/xfs/libxfs/xfs_inode_buf.c   | 25 +++++++++-
- fs/xfs/libxfs/xfs_inode_fork.h  | 18 +++++--
- fs/xfs/libxfs/xfs_log_format.h  |  3 +-
- fs/xfs/libxfs/xfs_sb.c          |  4 ++
- fs/xfs/libxfs/xfs_trans_inode.c |  6 +++
- fs/xfs/scrub/inode_repair.c     | 11 ++++-
- fs/xfs/xfs_inode.c              |  2 +-
- fs/xfs/xfs_inode.h              |  5 ++
- fs/xfs/xfs_inode_item.c         | 21 +++++++-
- fs/xfs/xfs_inode_item_recover.c | 26 +++++++---
- fs/xfs/xfs_mount.h              |  2 +
- 15 files changed, 171 insertions(+), 50 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c       | 59 +++++++++++++++++-----------------
+ fs/xfs/libxfs/xfs_format.h     | 20 ++++++------
+ fs/xfs/libxfs/xfs_inode_buf.c  |  4 +--
+ fs/xfs/libxfs/xfs_rtbitmap.c   |  4 +--
+ fs/xfs/libxfs/xfs_swapext.c    |  6 ++--
+ fs/xfs/libxfs/xfs_trans_resv.c | 10 +++---
+ fs/xfs/scrub/bmap.c            |  2 +-
+ fs/xfs/scrub/bmap_repair.c     |  2 +-
+ fs/xfs/scrub/repair.c          |  2 +-
+ fs/xfs/xfs_bmap_util.c         | 14 ++++----
+ fs/xfs/xfs_iomap.c             | 28 ++++++++--------
+ 11 files changed, 77 insertions(+), 74 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 1a716067901f..a77cf8619ec0 100644
+index a77cf8619ec0..fb10ea078361 100644
 --- a/fs/xfs/libxfs/xfs_bmap.c
 +++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -55,18 +55,16 @@ xfs_bmap_compute_maxlevels(
- 	int		whichfork)	/* data or attr fork */
- {
- 	xfs_extnum_t	maxleafents;	/* max leaf entries possible */
-+	xfs_rfsblock_t	maxblocks;	/* max blocks at this level */
- 	int		level;		/* btree level */
--	uint		maxblocks;	/* max blocks at this level */
- 	int		maxrootrecs;	/* max records in root block */
- 	int		minleafrecs;	/* min records in leaf block */
- 	int		minnoderecs;	/* min records in node block */
- 	int		sz;		/* root block size */
+@@ -548,7 +548,7 @@ __xfs_bmap_add_free(
+ 
+ 	ASSERT(bno != NULLFSBLOCK);
+ 	ASSERT(len > 0);
+-	ASSERT(len <= MAXEXTLEN);
++	ASSERT(len <= XFS_MAX_EXTLEN);
+ 	ASSERT(!isnullstartblock(bno));
+ 	agno = XFS_FSB_TO_AGNO(mp, bno);
+ 	agbno = XFS_FSB_TO_AGBNO(mp, bno);
+@@ -1504,7 +1504,7 @@ xfs_bmap_add_extent_delay_real(
+ 	    LEFT.br_startoff + LEFT.br_blockcount == new->br_startoff &&
+ 	    LEFT.br_startblock + LEFT.br_blockcount == new->br_startblock &&
+ 	    LEFT.br_state == new->br_state &&
+-	    LEFT.br_blockcount + new->br_blockcount <= MAXEXTLEN)
++	    LEFT.br_blockcount + new->br_blockcount <= XFS_MAX_EXTLEN)
+ 		state |= BMAP_LEFT_CONTIG;
  
  	/*
--	 * The maximum number of extents in a file, hence the maximum number of
--	 * leaf entries, is controlled by the size of the on-disk extent count,
--	 * either a signed 32-bit number for the data fork, or a signed 16-bit
--	 * number for the attr fork.
-+	 * The maximum number of extents in a fork, hence the maximum number of
-+	 * leaf entries, is controlled by the size of the on-disk extent count.
- 	 *
- 	 * Note that we can no longer assume that if we are in ATTR1 that the
- 	 * fork offset of all the inodes will be
+@@ -1522,13 +1522,13 @@ xfs_bmap_add_extent_delay_real(
+ 	    new_endoff == RIGHT.br_startoff &&
+ 	    new->br_startblock + new->br_blockcount == RIGHT.br_startblock &&
+ 	    new->br_state == RIGHT.br_state &&
+-	    new->br_blockcount + RIGHT.br_blockcount <= MAXEXTLEN &&
++	    new->br_blockcount + RIGHT.br_blockcount <= XFS_MAX_EXTLEN &&
+ 	    ((state & (BMAP_LEFT_CONTIG | BMAP_LEFT_FILLING |
+ 		       BMAP_RIGHT_FILLING)) !=
+ 		      (BMAP_LEFT_CONTIG | BMAP_LEFT_FILLING |
+ 		       BMAP_RIGHT_FILLING) ||
+ 	     LEFT.br_blockcount + new->br_blockcount + RIGHT.br_blockcount
+-			<= MAXEXTLEN))
++			<= XFS_MAX_EXTLEN))
+ 		state |= BMAP_RIGHT_CONTIG;
+ 
+ 	error = 0;
+@@ -2067,7 +2067,7 @@ xfs_bmap_add_extent_unwritten_real(
+ 	    LEFT.br_startoff + LEFT.br_blockcount == new->br_startoff &&
+ 	    LEFT.br_startblock + LEFT.br_blockcount == new->br_startblock &&
+ 	    LEFT.br_state == new->br_state &&
+-	    LEFT.br_blockcount + new->br_blockcount <= MAXEXTLEN)
++	    LEFT.br_blockcount + new->br_blockcount <= XFS_MAX_EXTLEN)
+ 		state |= BMAP_LEFT_CONTIG;
+ 
+ 	/*
+@@ -2085,13 +2085,13 @@ xfs_bmap_add_extent_unwritten_real(
+ 	    new_endoff == RIGHT.br_startoff &&
+ 	    new->br_startblock + new->br_blockcount == RIGHT.br_startblock &&
+ 	    new->br_state == RIGHT.br_state &&
+-	    new->br_blockcount + RIGHT.br_blockcount <= MAXEXTLEN &&
++	    new->br_blockcount + RIGHT.br_blockcount <= XFS_MAX_EXTLEN &&
+ 	    ((state & (BMAP_LEFT_CONTIG | BMAP_LEFT_FILLING |
+ 		       BMAP_RIGHT_FILLING)) !=
+ 		      (BMAP_LEFT_CONTIG | BMAP_LEFT_FILLING |
+ 		       BMAP_RIGHT_FILLING) ||
+ 	     LEFT.br_blockcount + new->br_blockcount + RIGHT.br_blockcount
+-			<= MAXEXTLEN))
++			<= XFS_MAX_EXTLEN))
+ 		state |= BMAP_RIGHT_CONTIG;
+ 
+ 	/*
+@@ -2600,15 +2600,15 @@ xfs_bmap_add_extent_hole_delay(
+ 	 */
+ 	if ((state & BMAP_LEFT_VALID) && (state & BMAP_LEFT_DELAY) &&
+ 	    left.br_startoff + left.br_blockcount == new->br_startoff &&
+-	    left.br_blockcount + new->br_blockcount <= MAXEXTLEN)
++	    left.br_blockcount + new->br_blockcount <= XFS_MAX_EXTLEN)
+ 		state |= BMAP_LEFT_CONTIG;
+ 
+ 	if ((state & BMAP_RIGHT_VALID) && (state & BMAP_RIGHT_DELAY) &&
+ 	    new->br_startoff + new->br_blockcount == right.br_startoff &&
+-	    new->br_blockcount + right.br_blockcount <= MAXEXTLEN &&
++	    new->br_blockcount + right.br_blockcount <= XFS_MAX_EXTLEN &&
+ 	    (!(state & BMAP_LEFT_CONTIG) ||
+ 	     (left.br_blockcount + new->br_blockcount +
+-	      right.br_blockcount <= MAXEXTLEN)))
++	      right.br_blockcount <= XFS_MAX_EXTLEN)))
+ 		state |= BMAP_RIGHT_CONTIG;
+ 
+ 	/*
+@@ -2751,17 +2751,17 @@ xfs_bmap_add_extent_hole_real(
+ 	    left.br_startoff + left.br_blockcount == new->br_startoff &&
+ 	    left.br_startblock + left.br_blockcount == new->br_startblock &&
+ 	    left.br_state == new->br_state &&
+-	    left.br_blockcount + new->br_blockcount <= MAXEXTLEN)
++	    left.br_blockcount + new->br_blockcount <= XFS_MAX_EXTLEN)
+ 		state |= BMAP_LEFT_CONTIG;
+ 
+ 	if ((state & BMAP_RIGHT_VALID) && !(state & BMAP_RIGHT_DELAY) &&
+ 	    new->br_startoff + new->br_blockcount == right.br_startoff &&
+ 	    new->br_startblock + new->br_blockcount == right.br_startblock &&
+ 	    new->br_state == right.br_state &&
+-	    new->br_blockcount + right.br_blockcount <= MAXEXTLEN &&
++	    new->br_blockcount + right.br_blockcount <= XFS_MAX_EXTLEN &&
+ 	    (!(state & BMAP_LEFT_CONTIG) ||
+ 	     left.br_blockcount + new->br_blockcount +
+-	     right.br_blockcount <= MAXEXTLEN))
++	     right.br_blockcount <= XFS_MAX_EXTLEN))
+ 		state |= BMAP_RIGHT_CONTIG;
+ 
+ 	error = 0;
+@@ -3003,15 +3003,15 @@ xfs_bmap_extsize_align(
+ 
+ 	/*
+ 	 * For large extent hint sizes, the aligned extent might be larger than
+-	 * MAXEXTLEN. In that case, reduce the size by an extsz so that it pulls
+-	 * the length back under MAXEXTLEN. The outer allocation loops handle
+-	 * short allocation just fine, so it is safe to do this. We only want to
+-	 * do it when we are forced to, though, because it means more allocation
+-	 * operations are required.
++	 * XFS_MAX_EXTLEN. In that case, reduce the size by an extsz so that it
++	 * pulls the length back under XFS_MAX_EXTLEN. The outer allocation
++	 * loops handle short allocation just fine, so it is safe to do this. We
++	 * only want to do it when we are forced to, though, because it means
++	 * more allocation operations are required.
+ 	 */
+-	while (align_alen > MAXEXTLEN)
++	while (align_alen > XFS_MAX_EXTLEN)
+ 		align_alen -= extsz;
+-	ASSERT(align_alen <= MAXEXTLEN);
++	ASSERT(align_alen <= XFS_MAX_EXTLEN);
+ 
+ 	/*
+ 	 * If the previous block overlaps with this proposed allocation
+@@ -3101,9 +3101,9 @@ xfs_bmap_extsize_align(
+ 			return -EINVAL;
+ 	} else {
+ 		ASSERT(orig_off >= align_off);
+-		/* see MAXEXTLEN handling above */
++		/* see XFS_MAX_EXTLEN handling above */
+ 		ASSERT(orig_end <= align_off + align_alen ||
+-		       align_alen + extsz > MAXEXTLEN);
++		       align_alen + extsz > XFS_MAX_EXTLEN);
+ 	}
+ 
+ #ifdef DEBUG
+@@ -4070,7 +4070,7 @@ xfs_bmapi_reserve_delalloc(
+ 	 * Cap the alloc length. Keep track of prealloc so we know whether to
+ 	 * tag the inode before we return.
+ 	 */
+-	alen = XFS_FILBLKS_MIN(len + prealloc, MAXEXTLEN);
++	alen = XFS_FILBLKS_MIN(len + prealloc, XFS_MAX_EXTLEN);
+ 	if (!eof)
+ 		alen = XFS_FILBLKS_MIN(alen, got->br_startoff - aoff);
+ 	if (prealloc && alen >= len)
+@@ -4203,7 +4203,7 @@ xfs_bmapi_allocate(
+ 		if (!xfs_iext_peek_prev_extent(ifp, &bma->icur, &bma->prev))
+ 			bma->prev.br_startoff = NULLFILEOFF;
+ 	} else {
+-		bma->length = XFS_FILBLKS_MIN(bma->length, MAXEXTLEN);
++		bma->length = XFS_FILBLKS_MIN(bma->length, XFS_MAX_EXTLEN);
+ 		if (!bma->eof)
+ 			bma->length = XFS_FILBLKS_MIN(bma->length,
+ 					bma->got.br_startoff - bma->offset);
+@@ -4524,8 +4524,8 @@ xfs_bmapi_write(
+ 			 * xfs_extlen_t and therefore 32 bits. Hence we have to
+ 			 * check for 32-bit overflows and handle them here.
+ 			 */
+-			if (len > (xfs_filblks_t)MAXEXTLEN)
+-				bma.length = MAXEXTLEN;
++			if (len > (xfs_filblks_t)XFS_MAX_EXTLEN)
++				bma.length = XFS_MAX_EXTLEN;
+ 			else
+ 				bma.length = len;
+ 
+@@ -4660,7 +4660,8 @@ xfs_bmapi_convert_delalloc(
+ 	bma.ip = ip;
+ 	bma.wasdel = true;
+ 	bma.offset = bma.got.br_startoff;
+-	bma.length = max_t(xfs_filblks_t, bma.got.br_blockcount, MAXEXTLEN);
++	bma.length = max_t(xfs_filblks_t, bma.got.br_blockcount,
++			XFS_MAX_EXTLEN);
+ 	bma.minleft = xfs_bmapi_minleft(tp, ip, whichfork);
+ 
+ 	/*
+@@ -4743,7 +4744,7 @@ xfs_bmapi_remap(
+ 
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	ASSERT(len > 0);
+-	ASSERT(len <= (xfs_filblks_t)MAXEXTLEN);
++	ASSERT(len <= (xfs_filblks_t)XFS_MAX_EXTLEN);
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+ 	ASSERT(!(flags & ~(XFS_BMAPI_ATTRFORK | XFS_BMAPI_PREALLOC |
+ 			   XFS_BMAPI_NORMAP)));
+@@ -5716,7 +5717,7 @@ xfs_bmse_can_merge(
+ 	if ((left->br_startoff + left->br_blockcount != startoff) ||
+ 	    (left->br_startblock + left->br_blockcount != got->br_startblock) ||
+ 	    (left->br_state != got->br_state) ||
+-	    (left->br_blockcount + got->br_blockcount > MAXEXTLEN))
++	    (left->br_blockcount + got->br_blockcount > XFS_MAX_EXTLEN))
+ 		return false;
+ 
+ 	return true;
 diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 87c927d912f6..7373ac8b890d 100644
+index 7d08bb0fe510..e0fb19761669 100644
 --- a/fs/xfs/libxfs/xfs_format.h
 +++ b/fs/xfs/libxfs/xfs_format.h
-@@ -388,6 +388,7 @@ xfs_sb_has_ro_compat_feature(
- #define XFS_SB_FEAT_INCOMPAT_BIGTIME	(1 << 3)	/* large timestamps */
- #define XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR (1 << 4)	/* needs xfs_repair */
- #define XFS_SB_FEAT_INCOMPAT_METADIR	(1 << 5)	/* metadata dir tree */
-+#define XFS_SB_FEAT_INCOMPAT_NREXT64	(1 << 6)	/* 64-bit data fork extent counter */
- #define XFS_SB_FEAT_INCOMPAT_ALL \
- 		(XFS_SB_FEAT_INCOMPAT_FTYPE|	\
- 		 XFS_SB_FEAT_INCOMPAT_SPINODES|	\
-@@ -802,6 +803,16 @@ typedef struct xfs_dinode {
- 	__be64		di_size;	/* number of bytes in file */
- 	__be64		di_nblocks;	/* # of direct & btree blocks used */
- 	__be32		di_extsize;	/* basic/minimum extent size for file */
-+
-+	/*
-+	 * On a extcnt64bit filesystem, di_nextents64 holds the data fork
-+	 * extent count, di_nextents32 holds the attr fork extent count,
-+	 * and di_nextents16 must be zero.
-+	 *
-+	 * Otherwise, di_nextents32 holds the data fork extent count,
-+	 * di_nextents16 holds the attr fork extent count, and di_nextents64
-+	 * must be zero.
-+	 */
- 	__be32		di_nextents32;	/* number of extents in data fork */
- 	__be16		di_nextents16;	/* number of extents in attribute fork*/
- 	__u8		di_forkoff;	/* attr fork offs, <<3 for 64b align */
-@@ -820,7 +831,8 @@ typedef struct xfs_dinode {
- 	__be64		di_lsn;		/* flush sequence */
- 	__be64		di_flags2;	/* more random flags */
- 	__be32		di_cowextsize;	/* basic cow extent size for file */
--	__u8		di_pad2[12];	/* more padding for future expansion */
-+	__u8		di_pad2[4];	/* more padding for future expansion */
-+	__be64		di_nextents64;
+@@ -885,16 +885,6 @@ enum xfs_dinode_fmt {
+ 	{ XFS_DINODE_FMT_BTREE,		"btree" }, \
+ 	{ XFS_DINODE_FMT_UUID,		"uuid" }
  
- 	/* fields only written to during inode creation */
- 	xfs_timestamp_t	di_crtime;	/* time created */
-@@ -876,6 +888,8 @@ enum xfs_dinode_fmt {
-  * Max values for extlen and disk inode's extent counters.
+-/*
+- * Max values for extlen and disk inode's extent counters.
+- */
+-#define	MAXEXTLEN		((xfs_extlen_t)0x1fffff)	/* 21 bits */
+-#define XFS_IFORK_EXTCNT_MAXU48	((xfs_extnum_t)0xffffffffffff)	/* Unsigned 48-bits */
+-#define XFS_IFORK_EXTCNT_MAXU32	((xfs_aextnum_t)0xffffffff)	/* Unsigned 32-bits */
+-#define XFS_IFORK_EXTCNT_MAXS32 ((xfs_extnum_t)0x7fffffff)	/* Signed 32-bits */
+-#define XFS_IFORK_EXTCNT_MAXS16 ((xfs_aextnum_t)0x7fff)		/* Signed 16-bits */
+-
+-
+ /*
+  * Inode minimum and maximum sizes.
   */
- #define	MAXEXTLEN		((xfs_extlen_t)0x1fffff)	/* 21 bits */
+@@ -1701,6 +1691,16 @@ typedef struct xfs_bmbt_rec {
+ typedef uint64_t	xfs_bmbt_rec_base_t;	/* use this for casts */
+ typedef xfs_bmbt_rec_t xfs_bmdr_rec_t;
+ 
++/*
++ * Max values for extlen and disk inode's extent counters.
++ */
++#define XFS_MAX_EXTLEN		((xfs_extlen_t)(1 << BMBT_BLOCKCOUNT_BITLEN) - 1)
 +#define XFS_IFORK_EXTCNT_MAXU48	((xfs_extnum_t)0xffffffffffff)	/* Unsigned 48-bits */
 +#define XFS_IFORK_EXTCNT_MAXU32	((xfs_aextnum_t)0xffffffff)	/* Unsigned 32-bits */
- #define XFS_IFORK_EXTCNT_MAXS32 ((xfs_extnum_t)0x7fffffff)	/* Signed 32-bits */
- #define XFS_IFORK_EXTCNT_MAXS16 ((xfs_aextnum_t)0x7fff)		/* Signed 16-bits */
- 
-@@ -931,32 +945,6 @@ enum xfs_dinode_fmt {
- 		(dip)->di_format : \
- 		(dip)->di_aformat)
- 
--static inline int
--xfs_dfork_nextents(
--	struct xfs_dinode	*dip,
--	int			whichfork,
--	xfs_extnum_t		*nextents)
--{
--	int			error = 0;
--
--	switch (whichfork) {
--	case XFS_DATA_FORK:
--		*nextents = be32_to_cpu(dip->di_nextents32);
--		break;
--
--	case XFS_ATTR_FORK:
--		*nextents = be16_to_cpu(dip->di_nextents16);
--		break;
--
--	default:
--		ASSERT(0);
--		error = -EFSCORRUPTED;
--		break;
--	}
--
--	return error;
--}
--
++#define XFS_IFORK_EXTCNT_MAXS32 ((xfs_extnum_t)0x7fffffff)	/* Signed 32-bits */
++#define XFS_IFORK_EXTCNT_MAXS16 ((xfs_aextnum_t)0x7fff)		/* Signed 16-bits */
++
++
  /*
-  * For block and character special files the 32bit dev_t is stored at the
-  * beginning of the data fork.
-@@ -1023,6 +1011,7 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
- #define XFS_DIFLAG2_COWEXTSIZE_BIT   2  /* copy on write extent size hint */
- #define XFS_DIFLAG2_BIGTIME_BIT	3	/* big timestamps */
- #define XFS_DIFLAG2_METADATA_BIT 4	/* filesystem metadata */
-+#define XFS_DIFLAG2_NREXT64_BIT 5	/* 64-bit extent counter enabled */
- 
- #define XFS_DIFLAG2_DAX		(1 << XFS_DIFLAG2_DAX_BIT)
- #define XFS_DIFLAG2_REFLINK     (1 << XFS_DIFLAG2_REFLINK_BIT)
-@@ -1053,10 +1042,12 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
-  * - Metadata directory entries must have correct ftype.
+  * Values and macros for delayed-allocation startblock fields.
   */
- #define XFS_DIFLAG2_METADATA	(1 << XFS_DIFLAG2_METADATA_BIT)
-+#define XFS_DIFLAG2_NREXT64	(1 << XFS_DIFLAG2_NREXT64_BIT)
-+
- 
- #define XFS_DIFLAG2_ANY \
- 	(XFS_DIFLAG2_DAX | XFS_DIFLAG2_REFLINK | XFS_DIFLAG2_COWEXTSIZE | \
--	 XFS_DIFLAG2_BIGTIME | XFS_DIFLAG2_METADATA)
-+	 XFS_DIFLAG2_BIGTIME | XFS_DIFLAG2_METADATA | XFS_DIFLAG2_NREXT64)
- 
- static inline bool xfs_dinode_has_bigtime(const struct xfs_dinode *dip)
- {
-@@ -1064,6 +1055,46 @@ static inline bool xfs_dinode_has_bigtime(const struct xfs_dinode *dip)
- 	       (dip->di_flags2 & cpu_to_be64(XFS_DIFLAG2_BIGTIME));
- }
- 
-+static inline bool xfs_dinode_has_nrext64(const struct xfs_dinode *dip)
-+{
-+	return dip->di_version >= 3 &&
-+	       (dip->di_flags2 & cpu_to_be64(XFS_DIFLAG2_NREXT64));
-+}
-+
-+static inline int
-+xfs_dfork_nextents(
-+	struct xfs_dinode	*dip,
-+	int			whichfork,
-+	xfs_extnum_t		*nextents)
-+{
-+	int			error = 0;
-+	bool			inode_has_nrext64;
-+
-+	inode_has_nrext64 = xfs_dinode_has_nrext64(dip);
-+
-+	if (inode_has_nrext64 && dip->di_nextents16 != 0)
-+		return -EFSCORRUPTED;
-+
-+	switch (whichfork) {
-+	case XFS_DATA_FORK:
-+		*nextents = inode_has_nrext64 ? be64_to_cpu(dip->di_nextents64) :
-+			be32_to_cpu(dip->di_nextents32);
-+		break;
-+
-+	case XFS_ATTR_FORK:
-+		*nextents = inode_has_nrext64 ? be32_to_cpu(dip->di_nextents32) :
-+			be16_to_cpu(dip->di_nextents16);
-+		break;
-+
-+	default:
-+		ASSERT(0);
-+		error = -EFSCORRUPTED;
-+		break;
-+	}
-+
-+	return error;
-+}
-+
- /*
-  * Inode number format:
-  * low inopblog bits - offset in block
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index b76906914d89..3d0b679d96d7 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -254,6 +254,7 @@ typedef struct xfs_fsop_resblks {
- #define XFS_FSOP_GEOM_FLAGS_INOBTCNT	(1 << 22) /* inobt btree counter */
- #define XFS_FSOP_GEOM_FLAGS_ATOMIC_SWAP	(1 << 23) /* atomic swapext */
- #define XFS_FSOP_GEOM_FLAGS_METADIR	(1 << 24) /* metadata directories */
-+#define XFS_FSOP_GEOM_FLAGS_NREXT64	(1 << 25) /* 64-bit extent counter */
- 
- /*
-  * Minimum and maximum sizes need for growth checks.
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 77119ea7d1ce..585743208392 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -2836,6 +2836,8 @@ xfs_ialloc_setup_geometry(
- 	igeo->new_diflags2 = 0;
- 	if (xfs_has_bigtime(mp))
- 		igeo->new_diflags2 |= XFS_DIFLAG2_BIGTIME;
-+	if (xfs_has_nrext64(mp))
-+		igeo->new_diflags2 |= XFS_DIFLAG2_NREXT64;
- 
- 	/* Compute inode btree geometry. */
- 	igeo->agino_log = sbp->sb_inopblog + sbp->sb_agblklog;
 diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index 882ed4873afe..0ab332c913c4 100644
+index 0ab332c913c4..1b27095b423d 100644
 --- a/fs/xfs/libxfs/xfs_inode_buf.c
 +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -285,6 +285,27 @@ xfs_inode_to_disk_ts(
- 	return ts;
- }
+@@ -747,7 +747,7 @@ xfs_inode_validate_extsize(
+ 	if (extsize_bytes % blocksize_bytes)
+ 		return __this_address;
  
-+static inline void
-+xfs_inode_to_disk_iext_counters(
-+	struct xfs_inode	*ip,
-+	struct xfs_dinode	*to)
-+{
-+	if (xfs_inode_has_nrext64(ip)) {
-+		to->di_nextents64 = cpu_to_be64(xfs_ifork_nextents(&ip->i_df));
-+		to->di_nextents32 = cpu_to_be32(xfs_ifork_nextents(ip->i_afp));
-+		/*
-+		 * We might be upgrading the inode to use wider extent counters
-+		 * than was previously used. Hence zero the unused field.
-+		 */
-+		to->di_nextents16 = cpu_to_be16(0);
-+	} else {
-+		if (xfs_has_v3inodes(ip->i_mount))
-+			to->di_nextents64 = 0;
-+		to->di_nextents32 = cpu_to_be32(xfs_ifork_nextents(&ip->i_df));
-+		to->di_nextents16 = cpu_to_be16(xfs_ifork_nextents(ip->i_afp));
-+	}
-+}
-+
- void
- xfs_inode_to_disk(
- 	struct xfs_inode	*ip,
-@@ -313,8 +334,6 @@ xfs_inode_to_disk(
- 	to->di_size = cpu_to_be64(ip->i_disk_size);
- 	to->di_nblocks = cpu_to_be64(ip->i_nblocks);
- 	to->di_extsize = cpu_to_be32(ip->i_extsize);
--	to->di_nextents32 = cpu_to_be32(xfs_ifork_nextents(&ip->i_df));
--	to->di_nextents16 = cpu_to_be16(xfs_ifork_nextents(ip->i_afp));
- 	to->di_forkoff = ip->i_forkoff;
- 	to->di_aformat = xfs_ifork_format(ip->i_afp);
- 	to->di_flags = cpu_to_be16(ip->i_diflags);
-@@ -334,6 +353,8 @@ xfs_inode_to_disk(
- 		to->di_version = 2;
- 		to->di_flushiter = cpu_to_be16(ip->i_flushiter);
- 	}
-+
-+	xfs_inode_to_disk_iext_counters(ip, to);
- }
+-	if (extsize > MAXEXTLEN)
++	if (extsize > XFS_MAX_EXTLEN)
+ 		return __this_address;
  
- static xfs_failaddr_t
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-index 4b9df10e8eea..f8a85ba6e9e9 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.h
-+++ b/fs/xfs/libxfs/xfs_inode_fork.h
-@@ -136,10 +136,22 @@ static inline int8_t xfs_ifork_format(struct xfs_ifork *ifp)
- static inline xfs_extnum_t xfs_iext_max_nextents(struct xfs_mount *mp,
- 		int whichfork)
- {
--	if (whichfork == XFS_DATA_FORK || whichfork == XFS_COW_FORK)
--		return XFS_IFORK_EXTCNT_MAXS32;
-+	bool has_64bit_extcnt = xfs_has_nrext64(mp);
+ 	if (!rt_flag && extsize > mp->m_sb.sb_agblocks / 2)
+@@ -804,7 +804,7 @@ xfs_inode_validate_cowextsize(
+ 	if (cowextsize_bytes % mp->m_sb.sb_blocksize)
+ 		return __this_address;
  
--	return XFS_IFORK_EXTCNT_MAXS16;
-+	switch (whichfork) {
-+	case XFS_DATA_FORK:
-+	case XFS_COW_FORK:
-+		return has_64bit_extcnt ? XFS_IFORK_EXTCNT_MAXU48
-+			: XFS_IFORK_EXTCNT_MAXS32;
-+
-+	case XFS_ATTR_FORK:
-+		return has_64bit_extcnt ? XFS_IFORK_EXTCNT_MAXU32
-+			: XFS_IFORK_EXTCNT_MAXS16;
-+
-+	default:
-+		ASSERT(0);
-+		return 0;
-+	}
- }
+-	if (cowextsize > MAXEXTLEN)
++	if (cowextsize > XFS_MAX_EXTLEN)
+ 		return __this_address;
  
- struct xfs_ifork *xfs_ifork_alloc(enum xfs_dinode_fmt format,
-diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
-index 9f352ff4352b..de4bcb94c732 100644
---- a/fs/xfs/libxfs/xfs_log_format.h
-+++ b/fs/xfs/libxfs/xfs_log_format.h
-@@ -429,7 +429,8 @@ struct xfs_log_dinode {
- 
- 	uint64_t	di_flags2;	/* more random flags */
- 	uint32_t	di_cowextsize;	/* basic cow extent size for file */
--	uint8_t		di_pad2[12];	/* more padding for future expansion */
-+	uint8_t		di_pad2[4];	/* more padding for future expansion */
-+	uint64_t	di_nextents64; /* higher part of data fork extent count */
- 
- 	/* fields only written to during inode creation */
- 	xfs_log_timestamp_t di_crtime;	/* time created */
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index ffff91081036..a6b84893ebda 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -126,6 +126,8 @@ xfs_sb_version_to_features(
- 		features |= XFS_FEAT_NEEDSREPAIR;
- 	if (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_METADIR)
- 		features |= XFS_FEAT_METADIR;
-+	if (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_NREXT64)
-+		features |= XFS_FEAT_NREXT64;
- 
- 	if (sbp->sb_features_log_incompat & XFS_SB_FEAT_INCOMPAT_LOG_ATOMIC_SWAP)
- 		features |= XFS_FEAT_ATOMIC_SWAP;
-@@ -1175,6 +1177,8 @@ xfs_fs_geometry(
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_ATOMIC_SWAP;
- 	if (xfs_has_metadir(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_METADIR;
-+	if (xfs_has_nrext64(mp))
-+		geo->flags |= XFS_FSOP_GEOM_FLAGS_NREXT64;
- 	geo->rtsectsize = sbp->sb_blocksize;
- 	geo->dirblocksize = xfs_dir2_dirblock_bytes(sbp);
- 
-diff --git a/fs/xfs/libxfs/xfs_trans_inode.c b/fs/xfs/libxfs/xfs_trans_inode.c
-index 6a3a869635bf..ac622097243a 100644
---- a/fs/xfs/libxfs/xfs_trans_inode.c
-+++ b/fs/xfs/libxfs/xfs_trans_inode.c
-@@ -144,6 +144,12 @@ xfs_trans_log_inode(
- 		flags |= XFS_ILOG_CORE;
- 	}
- 
-+	if ((flags & XFS_ILOG_CORE) &&
-+	    xfs_has_nrext64(ip->i_mount) &&
-+	    !xfs_inode_has_nrext64(ip)) {
-+		ip->i_diflags2 |= XFS_DIFLAG2_NREXT64;
-+	}
-+
- 	/*
- 	 * Inode verifiers do not check that the extent size hint is an integer
- 	 * multiple of the rt extent size on a directory with both rtinherit
-diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
-index 133109d84b98..995bad2cedd6 100644
---- a/fs/xfs/scrub/inode_repair.c
-+++ b/fs/xfs/scrub/inode_repair.c
-@@ -740,7 +740,10 @@ xrep_dinode_zap_dfork(
- {
- 	trace_xrep_dinode_zap_dfork(sc, dip);
- 
--	dip->di_nextents32 = 0;
-+	if (xfs_dinode_has_nrext64(dip))
-+		dip->di_nextents64 = 0;
-+	else
-+		dip->di_nextents32 = 0;
- 
- 	/* Special files always get reset to DEV */
- 	switch (mode & S_IFMT) {
-@@ -827,7 +830,11 @@ xrep_dinode_zap_afork(
- 	trace_xrep_dinode_zap_afork(sc, dip);
- 
- 	dip->di_aformat = XFS_DINODE_FMT_EXTENTS;
--	dip->di_nextents16 = 0;
-+
-+	if (xfs_dinode_has_nrext64(dip))
-+		dip->di_nextents32 = 0;
-+	else
-+		dip->di_nextents16 = 0;
- 
- 	dip->di_forkoff = 0;
- 	dip->di_mode = cpu_to_be16(mode & ~0777);
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 6338a93b975c..3c969803e671 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2539,7 +2539,7 @@ xfs_iflush(
- 				ip->i_nblocks, mp, XFS_ERRTAG_IFLUSH_5)) {
- 		xfs_alert_tag(mp, XFS_PTAG_IFLUSH,
- 			"%s: detected corrupt incore inode %llu, "
--			"total extents = %llu nblocks = %lld, ptr "PTR_FMT,
-+			"total extents = %llu, nblocks = %lld, ptr "PTR_FMT,
- 			__func__, ip->i_ino,
- 			ip->i_df.if_nextents + xfs_ifork_nextents(ip->i_afp),
- 			ip->i_nblocks, ip);
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index b0114c8cef76..348b1dbe42c0 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -230,6 +230,11 @@ static inline bool xfs_inode_has_bigrtextents(struct xfs_inode *ip)
- 	return XFS_IS_REALTIME_INODE(ip) && ip->i_mount->m_sb.sb_rextsize > 1;
- }
- 
-+static inline bool xfs_inode_has_nrext64(struct xfs_inode *ip)
-+{
-+	return ip->i_diflags2 & XFS_DIFLAG2_NREXT64;
-+}
-+
+ 	if (cowextsize > mp->m_sb.sb_agblocks / 2)
+diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
+index 7b70ac58a1dc..0ed94079f72c 100644
+--- a/fs/xfs/libxfs/xfs_rtbitmap.c
++++ b/fs/xfs/libxfs/xfs_rtbitmap.c
+@@ -1015,7 +1015,7 @@ xfs_rtfree_extent(
  /*
-  * Return the buftarg used for data allocations on a given inode.
+  * Free some blocks in the realtime subvolume.  rtbno and rtlen are in units of
+  * rt blocks, not rt extents; must be aligned to the rt extent size; and rtlen
+- * cannot exceed MAXEXTLEN.
++ * cannot exceed XFS_MAX_EXTLEN.
   */
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index e4800a965670..5c318aaecff4 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -358,6 +358,23 @@ xfs_copy_dm_fields_to_log_dinode(
- 	}
- }
+ int
+ xfs_rtfree_blocks(
+@@ -1028,7 +1028,7 @@ xfs_rtfree_blocks(
+ 	xfs_filblks_t		len;
+ 	xfs_extlen_t		mod;
  
-+static inline void
-+xfs_inode_to_log_dinode_iext_counters(
-+	struct xfs_inode	*ip,
-+	struct xfs_log_dinode	*to)
-+{
-+	if (xfs_inode_has_nrext64(ip)) {
-+		to->di_nextents64 = xfs_ifork_nextents(&ip->i_df);
-+		to->di_nextents32 = xfs_ifork_nextents(ip->i_afp);
-+		to->di_nextents16 = 0;
-+	} else {
-+		if (xfs_has_v3inodes(ip->i_mount))
-+			to->di_nextents64 = 0;
-+		to->di_nextents32 = xfs_ifork_nextents(&ip->i_df);
-+		to->di_nextents16 = xfs_ifork_nextents(ip->i_afp);
-+	}
-+}
-+
- static void
- xfs_inode_to_log_dinode(
- 	struct xfs_inode	*ip,
-@@ -385,8 +402,6 @@ xfs_inode_to_log_dinode(
- 	to->di_size = ip->i_disk_size;
- 	to->di_nblocks = ip->i_nblocks;
- 	to->di_extsize = ip->i_extsize;
--	to->di_nextents32 = xfs_ifork_nextents(&ip->i_df);
--	to->di_nextents16 = xfs_ifork_nextents(ip->i_afp);
- 	to->di_forkoff = ip->i_forkoff;
- 	to->di_aformat = xfs_ifork_format(ip->i_afp);
- 	to->di_flags = ip->i_diflags;
-@@ -411,6 +426,8 @@ xfs_inode_to_log_dinode(
- 		to->di_version = 2;
- 		to->di_flushiter = ip->i_flushiter;
- 	}
-+
-+	xfs_inode_to_log_dinode_iext_counters(ip, to);
- }
+-	ASSERT(rtlen <= MAXEXTLEN);
++	ASSERT(rtlen <= XFS_MAX_EXTLEN);
  
+ 	len = div_u64_rem(rtlen, mp->m_sb.sb_rextsize, &mod);
+ 	if (mod) {
+diff --git a/fs/xfs/libxfs/xfs_swapext.c b/fs/xfs/libxfs/xfs_swapext.c
+index 36c918776ba0..6a5564e534eb 100644
+--- a/fs/xfs/libxfs/xfs_swapext.c
++++ b/fs/xfs/libxfs/xfs_swapext.c
+@@ -757,7 +757,7 @@ can_merge(
+ 	if (b1->br_startoff   + b1->br_blockcount == b2->br_startoff &&
+ 	    b1->br_startblock + b1->br_blockcount == b2->br_startblock &&
+ 	    b1->br_state			  == b2->br_state &&
+-	    b1->br_blockcount + b2->br_blockcount <= MAXEXTLEN)
++	    b1->br_blockcount + b2->br_blockcount <= XFS_MAX_EXTLEN)
+ 		return true;
+ 
+ 	return false;
+@@ -799,7 +799,7 @@ delta_nextents_step(
+ 		state |= CRIGHT_CONTIG;
+ 	if ((state & CBOTH_CONTIG) == CBOTH_CONTIG &&
+ 	    left->br_startblock + curr->br_startblock +
+-					right->br_startblock > MAXEXTLEN)
++					right->br_startblock > XFS_MAX_EXTLEN)
+ 		state &= ~CRIGHT_CONTIG;
+ 
+ 	if (nhole)
+@@ -810,7 +810,7 @@ delta_nextents_step(
+ 		state |= NRIGHT_CONTIG;
+ 	if ((state & NBOTH_CONTIG) == NBOTH_CONTIG &&
+ 	    left->br_startblock + new->br_startblock +
+-					right->br_startblock > MAXEXTLEN)
++					right->br_startblock > XFS_MAX_EXTLEN)
+ 		state &= ~NRIGHT_CONTIG;
+ 
+ 	switch (state & (CLEFT_CONTIG | CRIGHT_CONTIG | CHOLE)) {
+diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+index b3de538ea7ce..0c165bf3c357 100644
+--- a/fs/xfs/libxfs/xfs_trans_resv.c
++++ b/fs/xfs/libxfs/xfs_trans_resv.c
+@@ -209,8 +209,8 @@ xfs_calc_inode_chunk_res(
  /*
-diff --git a/fs/xfs/xfs_inode_item_recover.c b/fs/xfs/xfs_inode_item_recover.c
-index c21fb3d2ddca..980d6615f6f2 100644
---- a/fs/xfs/xfs_inode_item_recover.c
-+++ b/fs/xfs/xfs_inode_item_recover.c
-@@ -167,8 +167,6 @@ xfs_log_dinode_to_disk(
- 	to->di_size = cpu_to_be64(from->di_size);
- 	to->di_nblocks = cpu_to_be64(from->di_nblocks);
- 	to->di_extsize = cpu_to_be32(from->di_extsize);
--	to->di_nextents32 = cpu_to_be32(from->di_nextents32);
--	to->di_nextents16 = cpu_to_be16(from->di_nextents16);
- 	to->di_forkoff = from->di_forkoff;
- 	to->di_aformat = from->di_aformat;
- 	to->di_dmevmask = cpu_to_be32(from->di_dmevmask);
-@@ -182,12 +180,17 @@ xfs_log_dinode_to_disk(
- 							  from->di_crtime);
- 		to->di_flags2 = cpu_to_be64(from->di_flags2);
- 		to->di_cowextsize = cpu_to_be32(from->di_cowextsize);
-+		to->di_nextents64 = cpu_to_be64(from->di_nextents64);
-+		to->di_nextents32 = cpu_to_be32(from->di_nextents32);
-+		to->di_nextents16 = cpu_to_be16(from->di_nextents16);
- 		to->di_ino = cpu_to_be64(from->di_ino);
- 		to->di_lsn = cpu_to_be64(lsn);
- 		memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
- 		uuid_copy(&to->di_uuid, &from->di_uuid);
- 		to->di_flushiter = 0;
- 	} else {
-+		to->di_nextents32 = cpu_to_be32(from->di_nextents32);
-+		to->di_nextents16 = cpu_to_be16(from->di_nextents16);
- 		to->di_flushiter = cpu_to_be16(from->di_flushiter);
- 	}
+  * Per-extent log reservation for the btree changes involved in freeing or
+  * allocating a realtime extent.  We have to be able to log as many rtbitmap
+- * blocks as needed to mark inuse MAXEXTLEN blocks' worth of realtime extents,
+- * as well as the realtime summary block.
++ * blocks as needed to mark inuse XFS_MAX_EXTLEN blocks' worth of realtime
++ * extents, as well as the realtime summary block.
+  */
+ static unsigned int
+ xfs_rtalloc_log_count(
+@@ -220,7 +220,7 @@ xfs_rtalloc_log_count(
+ 	unsigned int		blksz = XFS_FSB_TO_B(mp, 1);
+ 	unsigned int		rtbmp_bytes;
+ 
+-	rtbmp_bytes = (MAXEXTLEN / mp->m_sb.sb_rextsize) / NBBY;
++	rtbmp_bytes = (XFS_MAX_EXTLEN / mp->m_sb.sb_rextsize) / NBBY;
+ 	return (howmany(rtbmp_bytes, blksz) + 1) * num_ops;
  }
-@@ -203,6 +206,8 @@ xlog_recover_inode_commit_pass2(
- 	struct xfs_mount		*mp = log->l_mp;
- 	struct xfs_buf			*bp;
- 	struct xfs_dinode		*dip;
-+	xfs_extnum_t                    nextents;
-+	xfs_aextnum_t                   anextents;
- 	int				len;
- 	char				*src;
- 	char				*dest;
-@@ -342,16 +347,25 @@ xlog_recover_inode_commit_pass2(
- 			goto out_release;
- 		}
- 	}
--	if (unlikely(ldip->di_nextents32 + ldip->di_nextents16 > ldip->di_nblocks)) {
-+
-+	if (xfs_has_v3inodes(mp) &&
-+		ldip->di_flags2 & XFS_DIFLAG2_NREXT64) {
-+		nextents = ldip->di_nextents64;
-+		anextents = ldip->di_nextents32;
-+	} else {
-+		nextents = ldip->di_nextents32;
-+		anextents = ldip->di_nextents16;
-+	}
-+
-+	if (unlikely(nextents + anextents > ldip->di_nblocks)) {
- 		XFS_CORRUPTION_ERROR("xlog_recover_inode_pass2(5)",
- 				     XFS_ERRLEVEL_LOW, mp, ldip,
- 				     sizeof(*ldip));
- 		xfs_alert(mp,
- 	"%s: Bad inode log record, rec ptr "PTR_FMT", dino ptr "PTR_FMT", "
--	"dino bp "PTR_FMT", ino %Ld, total extents = %d, nblocks = %Ld",
-+	"dino bp "PTR_FMT", ino %Ld, total extents = %llu, nblocks = %Ld",
- 			__func__, item, dip, bp, in_f->ilf_ino,
--			ldip->di_nextents32 + ldip->di_nextents16,
--			ldip->di_nblocks);
-+			nextents + anextents, ldip->di_nblocks);
- 		error = -EFSCORRUPTED;
- 		goto out_release;
- 	}
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index a4c149670476..f558d5c4a5f1 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -288,6 +288,7 @@ typedef struct xfs_mount {
- #define XFS_FEAT_NEEDSREPAIR	(1ULL << 25)	/* needs xfs_repair */
- #define XFS_FEAT_ATOMIC_SWAP	(1ULL << 26)	/* extent swap log items */
- #define XFS_FEAT_METADIR	(1ULL << 27)	/* metadata directory tree */
-+#define XFS_FEAT_NREXT64	(1ULL << 28)	/* 64-bit inode extent counters */
  
- /* Mount features */
- #define XFS_FEAT_NOATTR2	(1ULL << 48)	/* disable attr2 creation */
-@@ -370,6 +371,7 @@ __XFS_HAS_FEAT(bigtime, BIGTIME)
- __XFS_HAS_FEAT(needsrepair, NEEDSREPAIR)
- __XFS_LOG_FEAT(atomicswap, ATOMIC_SWAP)
- __XFS_HAS_FEAT(metadir, METADIR)
-+__XFS_HAS_FEAT(nrext64, NREXT64)
+@@ -279,7 +279,7 @@ xfs_refcount_log_reservation(
+  *    the inode's bmap btree: max depth * block size
+  *    the agfs of the ags from which the extents are allocated: 2 * sector
+  *    the superblock free block counter: sector size
+- *    the realtime bitmap: ((MAXEXTLEN / rtextsize) / NBBY) bytes
++ *    the realtime bitmap: ((XFS_MAX_EXTLEN / rtextsize) / NBBY) bytes
+  *    the realtime summary: 1 block
+  *    the allocation btrees: 2 trees * (2 * max depth - 1) * block size
+  * And the bmap_finish transaction can free bmap blocks in a join (t3):
+@@ -334,7 +334,7 @@ xfs_calc_write_reservation(
+  *    the agf for each of the ags: 2 * sector size
+  *    the agfl for each of the ags: 2 * sector size
+  *    the super block to reflect the freed blocks: sector size
+- *    the realtime bitmap: 2 exts * ((MAXEXTLEN / rtextsize) / NBBY) bytes
++ *    the realtime bitmap: 2 exts * ((XFS_MAX_EXTLEN / rtextsize) / NBBY) bytes
+  *    the realtime summary: 2 exts * 1 block
+  *    worst case split in allocation btrees per extent assuming 2 extents:
+  *		2 exts * 2 trees * (2 * max depth - 1) * block size
+diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+index 5fcaa2518799..d57509090788 100644
+--- a/fs/xfs/scrub/bmap.c
++++ b/fs/xfs/scrub/bmap.c
+@@ -427,7 +427,7 @@ xchk_bmap_iextent(
+ 				irec->br_startoff);
  
- /*
-  * Decide if this filesystem can use log-assisted ("atomic") extent swapping.
+ 	/* Make sure the extent points to a valid place. */
+-	if (irec->br_blockcount > MAXEXTLEN)
++	if (irec->br_blockcount > XFS_MAX_EXTLEN)
+ 		xchk_fblock_set_corrupt(info->sc, info->whichfork,
+ 				irec->br_startoff);
+ 	if (info->is_rt &&
+diff --git a/fs/xfs/scrub/bmap_repair.c b/fs/xfs/scrub/bmap_repair.c
+index 471f67d7acb1..6f1edadbadac 100644
+--- a/fs/xfs/scrub/bmap_repair.c
++++ b/fs/xfs/scrub/bmap_repair.c
+@@ -92,7 +92,7 @@ xrep_bmap_from_rmap(
+ 
+ 	do {
+ 		irec.br_blockcount = min_t(xfs_filblks_t, blockcount,
+-				MAXEXTLEN);
++				XFS_MAX_EXTLEN);
+ 		xfs_bmbt_disk_set_all(&rbe, &irec);
+ 
+ 		trace_xrep_bmap_found(rb->sc->ip, rb->whichfork, &irec);
+diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+index 5ea55a4f4c2b..67268a534a83 100644
+--- a/fs/xfs/scrub/repair.c
++++ b/fs/xfs/scrub/repair.c
+@@ -1127,7 +1127,7 @@ xrep_reap_extent(
+ 	xfs_agblock_t		agbno_next = agbno + len;
+ 	int			error = 0;
+ 
+-	ASSERT(len <= MAXEXTLEN);
++	ASSERT(len <= XFS_MAX_EXTLEN);
+ 
+ 	if (sc->ip != NULL) {
+ 		/*
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index f43f1d434fe2..45a86b36c9dc 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -120,14 +120,14 @@ xfs_bmap_rtalloc(
+ 	 */
+ 	ralen = ap->length / mp->m_sb.sb_rextsize;
+ 	/*
+-	 * If the old value was close enough to MAXEXTLEN that
++	 * If the old value was close enough to XFS_MAX_EXTLEN that
+ 	 * we rounded up to it, cut it back so it's valid again.
+ 	 * Note that if it's a really large request (bigger than
+-	 * MAXEXTLEN), we don't hear about that number, and can't
++	 * XFS_MAX_EXTLEN), we don't hear about that number, and can't
+ 	 * adjust the starting point to match it.
+ 	 */
+-	if (ralen * mp->m_sb.sb_rextsize >= MAXEXTLEN)
+-		ralen = MAXEXTLEN / mp->m_sb.sb_rextsize;
++	if (ralen * mp->m_sb.sb_rextsize >= XFS_MAX_EXTLEN)
++		ralen = XFS_MAX_EXTLEN / mp->m_sb.sb_rextsize;
+ 
+ 	/*
+ 	 * Lock out modifications to both the RT bitmap and summary inodes
+@@ -841,9 +841,11 @@ xfs_alloc_file_space(
+ 		 * count, hence we need to limit the number of blocks we are
+ 		 * trying to reserve to avoid an overflow. We can't allocate
+ 		 * more than @nimaps extents, and an extent is limited on disk
+-		 * to MAXEXTLEN (21 bits), so use that to enforce the limit.
++		 * to XFS_MAX_EXTLEN (21 bits), so use that to enforce the
++		 * limit.
+ 		 */
+-		resblks = min_t(xfs_fileoff_t, (e - s), (MAXEXTLEN * nimaps));
++		resblks = min_t(xfs_fileoff_t, (e - s),
++				(XFS_MAX_EXTLEN * nimaps));
+ 		if (unlikely(rt)) {
+ 			dblocks = XFS_DIOSTRAT_SPACE_RES(mp, 0);
+ 			rblocks = resblks;
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 2c8eee2fe5be..e5e5d1482ff2 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -399,7 +399,7 @@ xfs_iomap_prealloc_size(
+ 	 */
+ 	plen = prev.br_blockcount;
+ 	while (xfs_iext_prev_extent(ifp, &ncur, &got)) {
+-		if (plen > MAXEXTLEN / 2 ||
++		if (plen > XFS_MAX_EXTLEN / 2 ||
+ 		    isnullstartblock(got.br_startblock) ||
+ 		    got.br_startoff + got.br_blockcount != prev.br_startoff ||
+ 		    got.br_startblock + got.br_blockcount != prev.br_startblock)
+@@ -411,23 +411,23 @@ xfs_iomap_prealloc_size(
+ 	/*
+ 	 * If the size of the extents is greater than half the maximum extent
+ 	 * length, then use the current offset as the basis.  This ensures that
+-	 * for large files the preallocation size always extends to MAXEXTLEN
+-	 * rather than falling short due to things like stripe unit/width
+-	 * alignment of real extents.
++	 * for large files the preallocation size always extends to
++	 * XFS_MAX_EXTLEN rather than falling short due to things like stripe
++	 * unit/width alignment of real extents.
+ 	 */
+ 	alloc_blocks = plen * 2;
+-	if (alloc_blocks > MAXEXTLEN)
++	if (alloc_blocks > XFS_MAX_EXTLEN)
+ 		alloc_blocks = XFS_B_TO_FSB(mp, offset);
+ 	qblocks = alloc_blocks;
+ 
+ 	/*
+-	 * MAXEXTLEN is not a power of two value but we round the prealloc down
+-	 * to the nearest power of two value after throttling. To prevent the
+-	 * round down from unconditionally reducing the maximum supported
+-	 * prealloc size, we round up first, apply appropriate throttling,
+-	 * round down and cap the value to MAXEXTLEN.
++	 * XFS_MAX_EXTLEN is not a power of two value but we round the prealloc
++	 * down to the nearest power of two value after throttling. To prevent
++	 * the round down from unconditionally reducing the maximum supported
++	 * prealloc size, we round up first, apply appropriate throttling, round
++	 * down and cap the value to XFS_MAX_EXTLEN.
+ 	 */
+-	alloc_blocks = XFS_FILEOFF_MIN(roundup_pow_of_two(MAXEXTLEN),
++	alloc_blocks = XFS_FILEOFF_MIN(roundup_pow_of_two(XFS_MAX_EXTLEN),
+ 				       alloc_blocks);
+ 
+ 	freesp = percpu_counter_read_positive(&mp->m_fdblocks);
+@@ -475,14 +475,14 @@ xfs_iomap_prealloc_size(
+ 	 */
+ 	if (alloc_blocks)
+ 		alloc_blocks = rounddown_pow_of_two(alloc_blocks);
+-	if (alloc_blocks > MAXEXTLEN)
+-		alloc_blocks = MAXEXTLEN;
++	if (alloc_blocks > XFS_MAX_EXTLEN)
++		alloc_blocks = XFS_MAX_EXTLEN;
+ 
+ 	/*
+ 	 * If we are still trying to allocate more space than is
+ 	 * available, squash the prealloc hard. This can happen if we
+ 	 * have a large file on a small filesystem and the above
+-	 * lowspace thresholds are smaller than MAXEXTLEN.
++	 * lowspace thresholds are smaller than XFS_MAX_EXTLEN.
+ 	 */
+ 	while (alloc_blocks && alloc_blocks >= freesp)
+ 		alloc_blocks >>= 4;
 -- 
 2.30.2
 
