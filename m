@@ -2,150 +2,69 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5444EC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Sep 2021 06:52:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EC14C433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Sep 2021 07:19:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3A6E061178
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Sep 2021 06:52:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B9A861185
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Sep 2021 07:19:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234640AbhIPGxr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Sep 2021 02:53:47 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:48426 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232254AbhIPGxr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Sep 2021 02:53:47 -0400
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id BD63922324;
-        Thu, 16 Sep 2021 06:52:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1631775144; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=rgPYC/jO9gO7VeQL2HNt6VwK+j/K8XgK6Ia/iOSZmOA=;
-        b=hyumKxv6Z1+GNRpK2emC5w8B+VLGOQafgHC+qT62hFQsVpViXyiB+mwGicPS7LoAcfjwD/
-        OnsM+osaP8zGhyId8SbUcUt7jIxfG37qnmBQLJNvqD8YBhtYB1FqAqMxHRsalzcEFswLt2
-        KT6QGXECdYCpeVo67h3EGaQ5VfNThQk=
-Received: from suse.cz (unknown [10.100.201.86])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by relay2.suse.de (Postfix) with ESMTPS id 59A0AA3B87;
-        Thu, 16 Sep 2021 06:52:24 +0000 (UTC)
-Date:   Thu, 16 Sep 2021 08:52:23 +0200
-From:   Michal Hocko <mhocko@suse.com>
-To:     NeilBrown <neilb@suse.de>
-Cc:     Mel Gorman <mgorman@suse.de>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        "Darrick J. Wong" <djwong@kernel.org>, Jan Kara <jack@suse.cz>,
-        Matthew Wilcox <willy@infradead.org>,
-        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-mm@kvack.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/6] EXT4: Remove ENOMEM/congestion_wait() loops.
-Message-ID: <YULpp4gVgZSuH65/@dhcp22.suse.cz>
-References: <163157808321.13293.486682642188075090.stgit@noble.brown>
- <163157838437.13293.14244628630141187199.stgit@noble.brown>
- <20210914163432.GR3828@suse.com>
- <163165609100.3992.1570739756456048657@noble.neil.brown.name>
- <YUHh2ddnJEDGI8YG@dhcp22.suse.cz>
- <163174534006.3992.15394603624652359629@noble.neil.brown.name>
+        id S234708AbhIPHUt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Sep 2021 03:20:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33024 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234752AbhIPHUs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Sep 2021 03:20:48 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D48B2C061574
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Sep 2021 00:19:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=W4NKuufPM1MQX6Bnpn7OgEueOhxhM+sJJMhwez4W47k=; b=jqW2rA4RE0r4ulRfLT9///+8i2
+        BXAISGhiLZuPSVTa5IsMl/x1Bupw74XZxZ021lVgdEl9ZXYczdCRDWCioz6GgFb6efwMN1x+lsS3c
+        8rtMRrrJ6y59en3QTXW9G9TZyAM/QqDqxwlnpudAMGX3umFBxwaAIUReZgOt9fUl9Xk74h7VEEwCQ
+        Auvns9YIJeCezjwVyxb4DssMMd1JOJdqpvTPmTozhbx7MNJ35dJ3zEGUEoOtXRQAyXyzHUfigcXDG
+        voWsQ2uIeKz0J/NLowYqD5dMv/rYc9T6mbgSVLomSboTaxDka72mIiOLk3vqOVQO84VlCbxys5Uy8
+        1W1qXSgw==;
+Received: from hch by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1mQlez-00GPXj-7P; Thu, 16 Sep 2021 07:18:26 +0000
+Date:   Thu, 16 Sep 2021 08:18:17 +0100
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     sandeen@sandeen.net, Dave Chinner <dchinner@redhat.com>,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 61/61] mkfs: warn about V4 deprecation when creating new
+ V4 filesystems
+Message-ID: <YULvufnBE3VRfZu8@infradead.org>
+References: <163174719429.350433.8562606396437219220.stgit@magnolia>
+ <163174752777.350433.15312061958254066456.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <163174534006.3992.15394603624652359629@noble.neil.brown.name>
+In-Reply-To: <163174752777.350433.15312061958254066456.stgit@magnolia>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu 16-09-21 08:35:40, Neil Brown wrote:
-> On Wed, 15 Sep 2021, Michal Hocko wrote:
-> > On Wed 15-09-21 07:48:11, Neil Brown wrote:
-> > > 
-> > > Why does __GFP_NOFAIL access the reserves? Why not require that the
-> > > relevant "Try harder" flag (__GFP_ATOMIC or __GFP_MEMALLOC) be included
-> > > with __GFP_NOFAIL if that is justified?
-> > 
-> > Does 5020e285856c ("mm, oom: give __GFP_NOFAIL allocations access to
-> > memory reserves") help?
+On Wed, Sep 15, 2021 at 04:12:07PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Yes, that helps.  A bit.
+> The V4 filesystem format is deprecated in the upstream Linux kernel.  In
+> September 2025 it will be turned off by default in the kernel and five
+> years after that, support will be removed entirely.  Warn people
+> formatting new filesystems with the old format, particularly since V4 is
+> not the default.
 > 
-> I'm not fond of the clause "the allocation request might have come with some
-> locks held".  What if it doesn't?  Does it still have to pay the price.
-> 
-> Should we not require that the caller indicate if any locks are held?
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-I do not think this would help much TBH. What if the lock in question
-doesn't impose any dependency through allocation problem?
+Looks good,
 
-> That way callers which don't hold locks can use __GFP_NOFAIL without
-> worrying about imposing on other code.
-> 
-> Or is it so rare that __GFP_NOFAIL would be used without holding a lock
-> that it doesn't matter?
-> 
-> The other commit of interest is
-> 
-> Commit: 6c18ba7a1899 ("mm: help __GFP_NOFAIL allocations which do not trigger OOM killer")
-> 
-> I don't find the reasoning convincing.  It is a bit like "Robbing Peter
-> to pay Paul".  It takes from the reserves to allow a __GFP_NOFAIL to
-> proceed, with out any reason to think this particular allocation has any
-> more 'right' to the reserves than anything else.
-
-I do agree that this is not really optimal. I do not remember exact
-details but these changes were mostly based or inspired by extreme
-memory pressure testing by Tetsuo who has managed to trigger quite some
-corner cases. Especially those where NOFS was involved were problematic.
-
-> While I don't like the reasoning in either of these, they do make it
-> clear (to me) that the use of reserves is entirely an internal policy
-> decision.  They should *not* be seen as part of the API and callers
-> should not have to be concerned about it when deciding whether to use
-> __GFP_NOFAIL or not.
-
-Yes. NOFAIL should have high enough bar to use - essentially there is no
-other way than use it - that memory reserves shouldn't be a road block.
-If we learn that existing users can seriously deplete memory reserves
-then we might need to reconsider the existing logic. So far there are no
-indications that NOFAIL would really cause any problems in that area.
-
-> The use of these reserves is, at most, a hypothetical problem.  If it
-> ever looks like becoming a real practical problem, it needs to be fixed
-> internally to the page allocator.  Maybe an extra water-mark which isn't
-> quite as permissive as ALLOC_HIGH...
-> 
-> I'm inclined to drop all references to reserves from the documentation
-> for __GFP_NOFAIL.
-
-I have found your additions to the documentation useful.
-
-> I think there are enough users already that adding a
-> couple more isn't going to make problems substantially more likely.  And
-> more will be added anyway that the mm/ team won't have the opportunity
-> or bandwidth to review.
-> 
-> Meanwhile I'll see if I can understand the intricacies of alloc_page so
-> that I can contibute to making it more predictable.
-> 
-> Question: In those cases where an open-coded loop is appropriate, such
-> as when you want to handle signals or can drop locks, how bad would it
-> be to have a tight loop without any sleep?
->
-> should_reclaim_retry() will sleep 100ms (sometimes...).  Is that enough?
-> __GFP_NOFAIL doesn't add any sleep when looping.
-
-Yeah, NOFAIL doesn't add any explicit sleep points. In general there is
-no guarantee that a sleepable allocation will sleep. We do cond_resched
-in general but sleeping is enforced only for worker contexts because WQ
-concurrency depends on an explicit sleeping. So to answer your question,
-if you really need to sleep between retries then you should do it
-manually but cond_resched can be implied.
--- 
-Michal Hocko
-SUSE Labs
+(assuming you're already dealing with the xfstests fallout)
