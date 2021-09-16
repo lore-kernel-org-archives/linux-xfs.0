@@ -2,132 +2,280 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.9 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB2CDC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Sep 2021 02:36:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FBF9C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Sep 2021 04:01:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8D0B661207
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Sep 2021 02:36:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7F33760EE2
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Sep 2021 04:01:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231724AbhIPCiN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Sep 2021 22:38:13 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36136 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233825AbhIPCiN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Sep 2021 22:38:13 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 4B56160E97;
-        Thu, 16 Sep 2021 02:36:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631759813;
-        bh=Hgocm3QlSPrkxtGfGQI/VjT81Trc4nJd7a+448XONRE=;
-        h=Date:From:To:Cc:Subject:From;
-        b=r0egsyAvJAJrGi1miBV5rcTlSuqyqoEi7mKzC5QjmEEh9pMpN+DBV/dRB2fn5/Ecg
-         XnxGgL1jlcSCkW6sKN3Qk0oXjHwi/njzZeOsl4frc3AqxrrkhoGLk4Q9P82rBdNM7B
-         wTaFwG0TK8P8T2oC2wt5S6ef+izqLHxbLQkrdzJ2Lr8QHC5pkYXtoXz1sK8+XThRdU
-         0dfvIU0mgvv84Gx6qjyS68op61FKEbDAnTfKRxjOddG6DFICiUW9a67MU4tYMuqA6V
-         L1AufK6l4892nwdDNy0bTwAw3dfZsm84AkWM0bJg9jBvf7bUSm0xLVbFGS7WmyWsvX
-         kT8XAGjE+ayOA==
-Date:   Wed, 15 Sep 2021 19:36:52 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Allison Henderson <allison.henderson@oracle.com>,
-        Brian Foster <bfoster@redhat.com>,
-        Catherine Hoang <catherine.hoang@oracle.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Eryu Guan <guaneryu@gmail.com>,
-        Gao Xiang <hsiangkao@linux.alibaba.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Chandan Babu R <chandanrlinux@gmail.com>,
-        Eric Sandeen <sandeen@redhat.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Bill O'Donnell <billodo@redhat.com>,
-        Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: XFS Sprints
-Message-ID: <20210916023652.GA34820@magnolia>
+        id S229534AbhIPECw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Sep 2021 00:02:52 -0400
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:6828 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S229463AbhIPECw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Sep 2021 00:02:52 -0400
+IronPort-Data: =?us-ascii?q?A9a23=3A357CzKBYh08fLxVW/1Liw5YqxClBgxIJ4g17XOL?=
+ =?us-ascii?q?fBlW7gTxz1zcByjAaWj/XOf2LZDD8Kt1xbo208EIEsJOAx9UxeLYW3SszFioV8?=
+ =?us-ascii?q?6IpJjg4wn/YZnrUdouaJK5ex512huLocYZkExcwmj/3auK49Sgli/nRLlbBILW?=
+ =?us-ascii?q?s1h5ZFFYMpBgJ2UoLd94R2uaEsPDha++/kYqaT/73ZDdJ7wVJ3lc8sMpvnv/AU?=
+ =?us-ascii?q?MPa41v0tnRmDRxCUcS3e3M9VPrzLonpR5f0rxU9IwK0ewrD5OnREmLx9BFrBM6?=
+ =?us-ascii?q?nk6rgbwsBRbu60Qqm0yIQAvb9xEMZ4HFaPqUTbZLwbW9NljyPhME3xtNWqbS+V?=
+ =?us-ascii?q?AUoIrbR3u8aVnG0FgknZPEbpeSXeyfXXcu7iheun2HX6/lnEkA6FYMC/eNwG2t?=
+ =?us-ascii?q?P6boTLzVlRg+Cg+an6LO9RPNliskqII/sJox3kn1py3fbS+knRZTCSqDRzd5ew?=
+ =?us-ascii?q?Do0wMtJGJ72a8gGbjxgRBfNeRtCPhEQEp1WtOG2inj6dhVcqUmJvuwz4m7O3Ep?=
+ =?us-ascii?q?93aaFGNreevSOXtkTkkvwjnjJ+GD1HQAcHMeC0jfD/n/EruvOmz7rHYwJGLCm+?=
+ =?us-ascii?q?/pCnlKe3CoQBQcQWF/9puO24ma6WtRCOwkX9zAooKwa6kOmVJ/+Uge+rXrCuQQ?=
+ =?us-ascii?q?TM/JUEusn+ESdxLH8/QmUHC4HQyRHZdhgs9U5LRQ010WOt8HkAz1x9rmUT2+Ns?=
+ =?us-ascii?q?LCOonWvOkAowcUqDcMfZVJdpYC9/8do1VSSJuuP2ZWd1rXdcQwcCRjTxMTmu4g?=
+ =?us-ascii?q?usA=3D=3D?=
+IronPort-HdrOrdr: =?us-ascii?q?A9a23=3AQbzQjKHfi1gB9f85pLqE1MeALOsnbusQ8zAX?=
+ =?us-ascii?q?PiFKOHhom6mj+vxG88506faKslwssR0b+OxoW5PwJE80l6QFgrX5VI3KNGbbUQ?=
+ =?us-ascii?q?CTXeNfBOXZowHIKmnX8+5x8eNaebFiNduYNzNHpPe/zA6mM9tI+rW6zJw=3D?=
+X-IronPort-AV: E=Sophos;i="5.85,297,1624291200"; 
+   d="scan'208";a="114553827"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 16 Sep 2021 12:01:30 +0800
+Received: from G08CNEXMBPEKD06.g08.fujitsu.local (unknown [10.167.33.206])
+        by cn.fujitsu.com (Postfix) with ESMTP id B49994D0DC75;
+        Thu, 16 Sep 2021 12:01:26 +0800 (CST)
+Received: from G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.85) by
+ G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.23; Thu, 16 Sep 2021 12:01:20 +0800
+Received: from [127.0.0.1] (10.167.225.141) by
+ G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
+ id 15.0.1497.23 via Frontend Transport; Thu, 16 Sep 2021 12:01:20 +0800
+Subject: Re: [PATCH v9 8/8] xfs: Add dax dedupe support
+To:     "Darrick J. Wong" <djwong@kernel.org>
+CC:     <hch@lst.de>, <linux-xfs@vger.kernel.org>,
+        <dan.j.williams@intel.com>, <david@fromorbit.com>,
+        <linux-fsdevel@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <nvdimm@lists.linux.dev>, <rgoldwyn@suse.de>,
+        <viro@zeniv.linux.org.uk>, <willy@infradead.org>
+References: <20210915104501.4146910-1-ruansy.fnst@fujitsu.com>
+ <20210915104501.4146910-9-ruansy.fnst@fujitsu.com>
+ <20210916003008.GE34830@magnolia>
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+Message-ID: <38eeee6f-aa11-4c13-b7c0-2e48927b85dc@fujitsu.com>
+Date:   Thu, 16 Sep 2021 12:01:18 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.14.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+In-Reply-To: <20210916003008.GE34830@magnolia>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-yoursite-MailScanner-ID: B49994D0DC75.A3825
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi again,
 
-Now that 5.15-rc1 is past, I would like to say something:
 
-I've been reflecting on my (sharply higher) stress levels in 2021, and
-realized that I don't enjoy our development process anymore.  One of the
-nice things about being a co-maintainer is that I can take advantage of
-the fact that suggesting improvements == leadership, though that comes
-with the responsibility that leadership == actually making it happen.
+On 2021/9/16 8:30, Darrick J. Wong wrote:
+> On Wed, Sep 15, 2021 at 06:45:01PM +0800, Shiyang Ruan wrote:
+>> Introduce xfs_mmaplock_two_inodes_and_break_dax_layout() for dax files
+>> who are going to be deduped.  After that, call compare range function
+>> only when files are both DAX or not.
+>>
+>> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+>> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+>> Reviewed-by: Christoph Hellwig <hch@lst.de>
+>> ---
+>>   fs/xfs/xfs_file.c    |  2 +-
+>>   fs/xfs/xfs_inode.c   | 80 +++++++++++++++++++++++++++++++++++++++++---
+>>   fs/xfs/xfs_inode.h   |  1 +
+>>   fs/xfs/xfs_reflink.c |  4 +--
+>>   4 files changed, 80 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+>> index 2ef1930374d2..c3061723613c 100644
+>> --- a/fs/xfs/xfs_file.c
+>> +++ b/fs/xfs/xfs_file.c
+>> @@ -846,7 +846,7 @@ xfs_wait_dax_page(
+>>   	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
+>>   }
+>>   
+>> -static int
+>> +int
+>>   xfs_break_dax_layouts(
+>>   	struct inode		*inode,
+>>   	bool			*retry)
+>> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+>> index a4f6f034fb81..bdc084cdbf46 100644
+>> --- a/fs/xfs/xfs_inode.c
+>> +++ b/fs/xfs/xfs_inode.c
+>> @@ -3790,6 +3790,61 @@ xfs_iolock_two_inodes_and_break_layout(
+>>   	return 0;
+>>   }
+>>   
+>> +static int
+>> +xfs_mmaplock_two_inodes_and_break_dax_layout(
+>> +	struct xfs_inode	*ip1,
+>> +	struct xfs_inode	*ip2)
+>> +{
+>> +	int			error, attempts = 0;
+>> +	bool			retry;
+>> +	struct page		*page;
+>> +	struct xfs_log_item	*lp;
+>> +
+>> +	if (ip1->i_ino > ip2->i_ino)
+>> +		swap(ip1, ip2);
+>> +
+>> +again:
+>> +	retry = false;
+>> +	/* Lock the first inode */
+>> +	xfs_ilock(ip1, XFS_MMAPLOCK_EXCL);
+>> +	error = xfs_break_dax_layouts(VFS_I(ip1), &retry);
+>> +	if (error || retry) {
+>> +		xfs_iunlock(ip1, XFS_MMAPLOCK_EXCL);
+>> +		if (error == 0 && retry)
+>> +			goto again;
+>> +		return error;
+>> +	}
+>> +
+>> +	if (ip1 == ip2)
+>> +		return 0;
+>> +
+>> +	/* Nested lock the second inode */
+>> +	lp = &ip1->i_itemp->ili_item;
+>> +	if (lp && test_bit(XFS_LI_IN_AIL, &lp->li_flags)) {
+>> +		if (!xfs_ilock_nowait(ip2,
+>> +		    xfs_lock_inumorder(XFS_MMAPLOCK_EXCL, 1))) {
+>> +			xfs_iunlock(ip1, XFS_MMAPLOCK_EXCL);
+>> +			if ((++attempts % 5) == 0)
+>> +				delay(1); /* Don't just spin the CPU */
+>> +			goto again;
+>> +		}
+> 
+> I suspect we don't need this part for grabbing the MMAPLOCK^W pagecache
+> invalidatelock.  The AIL only grabs the ILOCK, never the IOLOCK or the
+> MMAPLOCK.
 
-The thing that has been bothering me these past few months is how we
-decide what's going into the next merge window.  People send patchsets
-at various points between the second week of the merge window and the
-week after -rc6, and then ... they wait to see if anyone will actually
-read them.  I or one of the maintainers will get to them eventually, but
-as a developer it's hard to know if nobody's responding because they
-don't like the patchset?  Or they're quietly on leave?  Or they're
-drowning trying to get their own patchsets out to the list?  Or they
-have too many bugs to triage and distro kernel backports?  Or they're
-afraid of me?
+Maybe I have misunderstood this part.
 
-Regardless, I've had the experience that it's stressful as the
-maintainer looking at all the stuff needing review; it's stressful as a
-developer trying to figure out if I'm /really/ going to make any
-progress this cycle; and as a reviewer it's stressful keeping up with
-both of these dynamics.  I've also heard similar sentiments from
-everyone else.
+What I want is to lock the two inode nestedly.  This code is copied from 
+xfs_lock_two_inodes(), which checks this AIL during locking two inode 
+with each of the three kinds of locks.
 
-The other problem I sense we're having is implied sole ownership of
-patchesets being developed.  Reviewers make comments, but then it seems
-like it's totally on the developer (as the applicant) to make all those
-changes.  It's ... frustrating to watch new code stall because reviewers
-ask for cleanups and code restructuring that are outside of the original
-scope of the series as a condition for adding a Reviewed-by tag... but
-then they don't work on those cleanups.
+But I also found the recent merged function: 
+filemap_invalidate_lock_two() just locks two inode directly without 
+checking AIL.  So, I am not if the AIL check is needed in this case.
 
-At that point, what's a developer to do?  Try to get someone else's
-attention and start the review process all over again?  Try to get
-another maintainer's attention and have them do it?  This last thing is
-hard if you're already a maintainer, because doing that slows /everyone/
-down.
+> 
+>> +	} else
+>> +		xfs_ilock(ip2, xfs_lock_inumorder(XFS_MMAPLOCK_EXCL, 1));
+>> +	/*
+>> +	 * We cannot use xfs_break_dax_layouts() directly here because it may
+>> +	 * need to unlock & lock the XFS_MMAPLOCK_EXCL which is not suitable
+>> +	 * for this nested lock case.
+>> +	 */
+>> +	page = dax_layout_busy_page(VFS_I(ip2)->i_mapping);
+>> +	if (page && page_ref_count(page) != 1) {
+> 
+> Do you think the patch "ext4/xfs: add page refcount helper" would be a
+> good cleanup to head this series?
+> 
+> https://lore.kernel.org/linux-xfs/20210913161604.31981-1-alex.sierra@amd.com/T/#m59cf7cd5c0d521ad487fa3a15d31c3865db88bdf
 
-(And yes, I've been growing our XFS team at Oracle this year so that
-this doesn't seem so one-sided with RedHat.)
+Got it.
 
-I've also heard from a few of you who find it offputting when patches
-show up with verbiage that could be interpreted as "I know best and
-won't take any further suggestions".  I agree with your feelings when
-I hear complaints coming in, because my own thoughts had usually already
-been "hmm, this sounds preemptively defensive, why?"
 
-Ok, so, things I /do/ like:
+--
+Thanks,
+Ruan
 
-During the 5.15 development cycle I really enjoyed going back and forth
-with Dave over my deferred inode inactivation series and the log
-speedups that we were both proposing.  I learned about percpu lists, and
-I hope he found it useful to remember how that part of the inode cache
-works again.  This dialectic was what drew me to XFS back in 2014 when I
-started working on reflink, and I've been missing it, especially since
-the pandemic started.
+> 
+> The rest of the logic looks ok.
+> 
+> --D
+> 
+>> +		xfs_iunlock(ip2, XFS_MMAPLOCK_EXCL);
+>> +		xfs_iunlock(ip1, XFS_MMAPLOCK_EXCL);
+>> +		goto again;
+>> +	}
+>> +
+>> +	return 0;
+>> +}
+>> +
+>>   /*
+>>    * Lock two inodes so that userspace cannot initiate I/O via file syscalls or
+>>    * mmap activity.
+>> @@ -3804,8 +3859,19 @@ xfs_ilock2_io_mmap(
+>>   	ret = xfs_iolock_two_inodes_and_break_layout(VFS_I(ip1), VFS_I(ip2));
+>>   	if (ret)
+>>   		return ret;
+>> -	filemap_invalidate_lock_two(VFS_I(ip1)->i_mapping,
+>> -				    VFS_I(ip2)->i_mapping);
+>> +
+>> +	if (IS_DAX(VFS_I(ip1)) && IS_DAX(VFS_I(ip2))) {
+>> +		ret = xfs_mmaplock_two_inodes_and_break_dax_layout(ip1, ip2);
+>> +		if (ret) {
+>> +			inode_unlock(VFS_I(ip2));
+>> +			if (ip1 != ip2)
+>> +				inode_unlock(VFS_I(ip1));
+>> +			return ret;
+>> +		}
+>> +	} else
+>> +		filemap_invalidate_lock_two(VFS_I(ip1)->i_mapping,
+>> +					    VFS_I(ip2)->i_mapping);
+>> +
+>>   	return 0;
+>>   }
+>>   
+>> @@ -3815,8 +3881,14 @@ xfs_iunlock2_io_mmap(
+>>   	struct xfs_inode	*ip1,
+>>   	struct xfs_inode	*ip2)
+>>   {
+>> -	filemap_invalidate_unlock_two(VFS_I(ip1)->i_mapping,
+>> -				      VFS_I(ip2)->i_mapping);
+>> +	if (IS_DAX(VFS_I(ip1)) && IS_DAX(VFS_I(ip2))) {
+>> +		xfs_iunlock(ip2, XFS_MMAPLOCK_EXCL);
+>> +		if (ip1 != ip2)
+>> +			xfs_iunlock(ip1, XFS_MMAPLOCK_EXCL);
+>> +	} else
+>> +		filemap_invalidate_unlock_two(VFS_I(ip1)->i_mapping,
+>> +					      VFS_I(ip2)->i_mapping);
+>> +
+>>   	inode_unlock(VFS_I(ip2));
+>>   	if (ip1 != ip2)
+>>   		inode_unlock(VFS_I(ip1));
+>> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+>> index b21b177832d1..f7e26fe31a26 100644
+>> --- a/fs/xfs/xfs_inode.h
+>> +++ b/fs/xfs/xfs_inode.h
+>> @@ -472,6 +472,7 @@ enum xfs_prealloc_flags {
+>>   
+>>   int	xfs_update_prealloc_flags(struct xfs_inode *ip,
+>>   				  enum xfs_prealloc_flags flags);
+>> +int	xfs_break_dax_layouts(struct inode *inode, bool *retry);
+>>   int	xfs_break_layouts(struct inode *inode, uint *iolock,
+>>   		enum layout_break_reason reason);
+>>   
+>> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+>> index 9d876e268734..3b99c9dfcf0d 100644
+>> --- a/fs/xfs/xfs_reflink.c
+>> +++ b/fs/xfs/xfs_reflink.c
+>> @@ -1327,8 +1327,8 @@ xfs_reflink_remap_prep(
+>>   	if (XFS_IS_REALTIME_INODE(src) || XFS_IS_REALTIME_INODE(dest))
+>>   		goto out_unlock;
+>>   
+>> -	/* Don't share DAX file data for now. */
+>> -	if (IS_DAX(inode_in) || IS_DAX(inode_out))
+>> +	/* Don't share DAX file data with non-DAX file. */
+>> +	if (IS_DAX(inode_in) != IS_DAX(inode_out))
+>>   		goto out_unlock;
+>>   
+>>   	if (!IS_DAX(inode_in))
+>> -- 
+>> 2.33.0
+>>
+>>
+>>
 
-So the question I have is: Can we do community sprints?  Let's get
-together (on the lists, or irc, wherever) the week after -rc2 drops to
-figure out who thinks they're close to submitting patchsets, decide
-which one or two big patchsets we as a group want to try to land this
-cycle, and then let's /all/ collaborate on making it happen.  If you
-think a cleanup would be a big help for someone else's patchset, write
-those changes and make that part happen.
 
-There's never been a prohibition on us working like that, but I'd like
-it if we were more intentional about working like a coordinated team to
-get things done.  What do you all think?
-
-(Small changes and bug fixes can be sent any time and I'll take a look
-at them; I'm not proposing any changes to that part of the process.)
-
---D
