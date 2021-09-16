@@ -4,86 +4,127 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3F35C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:43:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8EF6C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Sep 2021 00:09:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DD4C8610FF
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Sep 2021 23:43:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9DFFD61165
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Sep 2021 00:09:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233046AbhIOXou (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Sep 2021 19:44:50 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46836 "EHLO mail.kernel.org"
+        id S233070AbhIPAKe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Sep 2021 20:10:34 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41852 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229769AbhIOXoq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Sep 2021 19:44:46 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D071960F25;
-        Wed, 15 Sep 2021 23:43:26 +0000 (UTC)
+        id S232465AbhIPAKe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Sep 2021 20:10:34 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 6010761164;
+        Thu, 16 Sep 2021 00:09:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631749406;
-        bh=Wwnf7Myvevd+6SzfYQlIGdUlsu5mvL+Va58aS8i5qYg=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=VnI/EJ52VVfIog8KBu4tfDc7TO1DoN9yO8P2JTbzXchdrm8ptuil5FfKAZDQy40S2
-         QLDsHA/afmA1njtVbykUeB+OZb36WeNmsXuO2biJ0UG3xQ1ofZJ/v+U9hSYYVJiUxM
-         cJCrIbe/FlFgckZ4rO+C36Vdz9OMI7Dipgf0GrXWPDMcMzEyXMA9mznpxFlLqbWPGg
-         1pZ8Dscg02ZjA7PR6WR/E30vy5s71L4EfFxoVZlnBQP3SIVI8FONZcJTOfDJMhKjKN
-         mzzmOi+1H9tJ0EgkBzWoLnzhlOVHJWQc4VLlGvV8OJneTm8WA3/sf1eGli8f4/MG0M
-         cBKKoHsqNyAiw==
-Subject: [PATCH 9/9] new: don't allow new tests in group 'other'
+        s=k20201202; t=1631750954;
+        bh=1GLkZYrQ9JcJycVqwmmU7hYi0ILuTB1I20PfYrCv3mk=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=dQukCslu83VpTBuY/KDFf7r9dFwP7LFhqIc7lNwB0bm1GI592vfpCG3CGS/Sty24Y
+         TzcOzv2y5oF69EWmDf3pMRAEmvyIrEIH8lrRpjAt731/uN8G9/fJc8JaKmpL6QVz5h
+         17JI7ys+E+dHFfcVki2he1O+72ph0uWYlbex8QtHqC+6WdhFFV8D/y/lbIz49V1QSR
+         /HltPfN0o9uyLh7BqtYDCJ5FTqgIdiNDpBT/aiYrSq60aEiEMNC1bAreAxG8hWnqys
+         onc0S04hoh537z5lGyscDCL4W6tNyJEnHKZ6mhpqvWB7nDNsL64R0xwx0VM129ROPh
+         nkxENJMDmteMg==
+Date:   Wed, 15 Sep 2021 17:09:14 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org, guaneryu@gmail.com
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Wed, 15 Sep 2021 16:43:26 -0700
-Message-ID: <163174940659.380880.14564845266535022734.stgit@magnolia>
-In-Reply-To: <163174935747.380880.7635671692624086987.stgit@magnolia>
-References: <163174935747.380880.7635671692624086987.stgit@magnolia>
-User-Agent: StGit/0.19
+To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
+Cc:     hch@lst.de, linux-xfs@vger.kernel.org, dan.j.williams@intel.com,
+        david@fromorbit.com, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, nvdimm@lists.linux.dev,
+        rgoldwyn@suse.de, viro@zeniv.linux.org.uk, willy@infradead.org,
+        Ritesh Harjani <riteshh@linux.ibm.com>
+Subject: Re: [PATCH v9 1/8] fsdax: Output address in dax_iomap_pfn() and
+ rename it
+Message-ID: <20210916000914.GB34830@magnolia>
+References: <20210915104501.4146910-1-ruansy.fnst@fujitsu.com>
+ <20210915104501.4146910-2-ruansy.fnst@fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210915104501.4146910-2-ruansy.fnst@fujitsu.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Wed, Sep 15, 2021 at 06:44:54PM +0800, Shiyang Ruan wrote:
+> Add address output in dax_iomap_pfn() in order to perform a memcpy() in
+> CoW case.  Since this function both output address and pfn, rename it to
+> dax_iomap_direct_access().
+> 
+> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Ritesh Harjani <riteshh@linux.ibm.com>
+> Reviewed-by: Dan Williams <dan.j.williams@intel.com>
 
-The 'other' group is vaguely defined at best -- other than what?  It's
-not clear what tests belong in this group, and it has become a dumping
-ground for random stuff that are classified in other groups.  Don't let
-people create new other group tests.
+Could've sworn I reviewed this a few revisions ago...
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- new |    7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+--D
 
-
-diff --git a/new b/new
-index 6b7dc5d4..5cf96c50 100755
---- a/new
-+++ b/new
-@@ -96,9 +96,9 @@ then
- 
-     while true
-     do
--	echo -n "Add to group(s) [other] (separate by space, ? for list): "
-+	echo -n "Add to group(s) [auto] (separate by space, ? for list): "
- 	read ans
--	[ -z "$ans" ] && ans=other
-+	[ -z "$ans" ] && ans=auto
- 	if [ "X$ans" = "X?" ]
- 	then
- 	    echo $(group_names)
-@@ -109,6 +109,9 @@ then
- 		echo "Invalid characters in group(s): $inval"
- 		echo "Only lower cases, digits and underscore are allowed in groups, separated by space"
- 		continue
-+	    elif echo "$ans" | grep -q -w "other"; then
-+		echo "Do not add more tests to group \"other\"."
-+		continue
- 	    else
- 		# remove redundant spaces/tabs
- 		ans=`echo "$ans" | sed 's/\s\+/ /g'`
-
+> ---
+>  fs/dax.c | 16 ++++++++++++----
+>  1 file changed, 12 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/dax.c b/fs/dax.c
+> index 4e3e5a283a91..8b482a58acae 100644
+> --- a/fs/dax.c
+> +++ b/fs/dax.c
+> @@ -1010,8 +1010,8 @@ static sector_t dax_iomap_sector(const struct iomap *iomap, loff_t pos)
+>  	return (iomap->addr + (pos & PAGE_MASK) - iomap->offset) >> 9;
+>  }
+>  
+> -static int dax_iomap_pfn(const struct iomap *iomap, loff_t pos, size_t size,
+> -			 pfn_t *pfnp)
+> +static int dax_iomap_direct_access(const struct iomap *iomap, loff_t pos,
+> +		size_t size, void **kaddr, pfn_t *pfnp)
+>  {
+>  	const sector_t sector = dax_iomap_sector(iomap, pos);
+>  	pgoff_t pgoff;
+> @@ -1023,11 +1023,13 @@ static int dax_iomap_pfn(const struct iomap *iomap, loff_t pos, size_t size,
+>  		return rc;
+>  	id = dax_read_lock();
+>  	length = dax_direct_access(iomap->dax_dev, pgoff, PHYS_PFN(size),
+> -				   NULL, pfnp);
+> +				   kaddr, pfnp);
+>  	if (length < 0) {
+>  		rc = length;
+>  		goto out;
+>  	}
+> +	if (!pfnp)
+> +		goto out_check_addr;
+>  	rc = -EINVAL;
+>  	if (PFN_PHYS(length) < size)
+>  		goto out;
+> @@ -1037,6 +1039,12 @@ static int dax_iomap_pfn(const struct iomap *iomap, loff_t pos, size_t size,
+>  	if (length > 1 && !pfn_t_devmap(*pfnp))
+>  		goto out;
+>  	rc = 0;
+> +
+> +out_check_addr:
+> +	if (!kaddr)
+> +		goto out;
+> +	if (!*kaddr)
+> +		rc = -EFAULT;
+>  out:
+>  	dax_read_unlock(id);
+>  	return rc;
+> @@ -1401,7 +1409,7 @@ static vm_fault_t dax_fault_iter(struct vm_fault *vmf,
+>  		return pmd ? VM_FAULT_FALLBACK : VM_FAULT_SIGBUS;
+>  	}
+>  
+> -	err = dax_iomap_pfn(&iter->iomap, pos, size, &pfn);
+> +	err = dax_iomap_direct_access(&iter->iomap, pos, size, NULL, &pfn);
+>  	if (err)
+>  		return pmd ? VM_FAULT_FALLBACK : dax_fault_return(err);
+>  
+> -- 
+> 2.33.0
+> 
+> 
+> 
