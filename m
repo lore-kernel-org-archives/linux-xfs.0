@@ -8,59 +8,59 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05468C433FE
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Sep 2021 05:52:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF829C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Sep 2021 05:52:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D29C3611CE
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Sep 2021 05:52:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A088F611C6
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Sep 2021 05:52:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234427AbhIPFx6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Sep 2021 01:53:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42054 "EHLO
+        id S232976AbhIPFyS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Sep 2021 01:54:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42126 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234420AbhIPFx6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Sep 2021 01:53:58 -0400
-Received: from mail-io1-xd2a.google.com (mail-io1-xd2a.google.com [IPv6:2607:f8b0:4864:20::d2a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E145C061574;
-        Wed, 15 Sep 2021 22:52:38 -0700 (PDT)
-Received: by mail-io1-xd2a.google.com with SMTP id b200so6500228iof.13;
-        Wed, 15 Sep 2021 22:52:38 -0700 (PDT)
+        with ESMTP id S229503AbhIPFyS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Sep 2021 01:54:18 -0400
+Received: from mail-il1-x132.google.com (mail-il1-x132.google.com [IPv6:2607:f8b0:4864:20::132])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3790DC061574;
+        Wed, 15 Sep 2021 22:52:58 -0700 (PDT)
+Received: by mail-il1-x132.google.com with SMTP id b15so5470268ils.10;
+        Wed, 15 Sep 2021 22:52:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=zK4umYWkiaA8UuiFU7EdJ+7rnXBMXDa3wq8/0CWvk30=;
-        b=HuY2Wt+7H3u1niuQhBecPcNiLDnblZB3mU76EaHuI1/X8G8T5H1mSlC/fRyuGw1m09
-         OIBIe30Yg2jqNYBN0ozjl++vVimnRYQCGMdqv8CRVaAqStrKYLxdmxJi7/VAu+9jevi+
-         Vn54GnhMY/1hebTGV6kVRat1szW/y1NBdiYkFHgsUOYGzIzylJCecK6x0djsgIWZ9m+f
-         AC3HOQTQml+qT1ihiv4rjrc9IWmDNUoq6Vw16LVQIBX8dp2kcQXf4HSJFfPdRADOi70n
-         WyGby0ck1qnv5oNDQ3IlBxNYspSouSwtscQEl5uYbn9mpsDk0HhrS7+/VdViTf1Xou0o
-         zMcg==
+        bh=HysuB8/vaN/sHa2crtHM0+/De06RJAH1ORTdLeHewMA=;
+        b=J/OYbGnpOSJOmvQINBFk8JeWtgFDmpECqFp1rV8CIETbiaPLLYzS5H+SlhOuQnwTKv
+         NWZcwWeRTfHAPJiaHAcppj29rL8EWq5fx0npDQnRNkIvc2GXjd624YbktvXvQj6uuybZ
+         DWgDuEFz61pTUZx2YVeCX2rNoixlEG63O0xU8l5DqKmGHPh34z76R+gIKjatXFHAlY8m
+         aWcKTUtmfFWwX5Fi+RB7zWi5nimoFEw0N86zT39zQX9yjRwmoAKQpUBbUQ4NhcxwfTsc
+         ze7Kb91F0e1VmhJwX5QxFyife00qCQ8Dm5upcZ3hKvZUYLQK5cV7Y6yhmiBRGeZye4O+
+         n55A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=zK4umYWkiaA8UuiFU7EdJ+7rnXBMXDa3wq8/0CWvk30=;
-        b=hyJyn24WOOe1Xv1+ZBa6wvYI/mXfRgA5H1n9ifeTAZKHNBv9iHJ4vNKQr7rygOpQew
-         2CPYUR5ojoTqBjKUmK1zdKWWWHSwtXF2bJG1dmX/u2Cwb0Kmd3V85WsGz/QQABM0XC+w
-         XByKJ2/E6rcRRMaFch+rDXq6d4BMZkvf68fjVxQv2zR2MvUXlG8+7Cv2nZFa7nipD7GU
-         6YqFOL5oMpgDosf/Z8ZINMDcIDQZMVyVCqt0jLaiyVjeM8+zFydIm9/36OQwLtXcfBrW
-         rOvkGfz/18u/WAF89hgbEoYYNn3mu381MXzonW9qyiH0Movo6Y8gJwMTOPeYbxj5fwmf
-         eh6Q==
-X-Gm-Message-State: AOAM531qAJfshlaJR6E7rdylI1cxlJQ1/AQfEsZgggXUvWdeSHvF44Iq
-        hn+OfVj7sXbc7FqARH8qRdqgYUrjxixfe0Lexb8=
-X-Google-Smtp-Source: ABdhPJwUNamSQZHNKS+y8cSLfvuk1TrG+RHNQewv/A+LheviomAiuJSQYG/+jmnYx7RfIHyShxiEcM3SZ9a421r4V+A=
-X-Received: by 2002:a5e:dc02:: with SMTP id b2mr3016436iok.197.1631771557696;
- Wed, 15 Sep 2021 22:52:37 -0700 (PDT)
+        bh=HysuB8/vaN/sHa2crtHM0+/De06RJAH1ORTdLeHewMA=;
+        b=c9OxLe1ikqgeRgmNzERwqA/XLkzMR9SwR/xcbGpSni8MRtAb3MuQ5JjOwYPy/g//It
+         jiQ9vV6jjp7kthvACtZLzcyJNYE5bclg/6/W+0eQ5DQ9uRElY1ZnPACaShsAUGXG+Db9
+         H7PjrdG+SqBE+zlYu6ciPS71nZaxQoi4uJAycCWKPE0IFIGL7ZygamurGvOtAvr0tWoU
+         9tY0WgFmqHUR6JW0nbHMbrJr6tUK4wSrRHv5In8WoYgqjXB9A4u16/PQ6u5uTHjKD3L+
+         IfM6+/KhaAmILTv7ApNca1CJCfHMvipbLd6bZUlam64haSdNTC9ZOgOuAX+MVTs4V+pT
+         lKmg==
+X-Gm-Message-State: AOAM532SQV7KLj7kYCNXsYJ0GfdJNg1968LCjQE+F1/tkU7QXg0avNq4
+        c5f/mcHTW/xVbVQAIE2E14g4PYGyFtwIi+8d9Kw=
+X-Google-Smtp-Source: ABdhPJziXdlW0SBDlauGrWDrK6JNKX5XKy6Cka4fzzJTF6Ft6omjYGYgXhwxVOtT9LDNYreFMpkx39DIwM27fuiEsZc=
+X-Received: by 2002:a92:d752:: with SMTP id e18mr2823086ilq.254.1631771577697;
+ Wed, 15 Sep 2021 22:52:57 -0700 (PDT)
 MIME-Version: 1.0
-References: <163174935747.380880.7635671692624086987.stgit@magnolia> <163174937390.380880.10714985927715519622.stgit@magnolia>
-In-Reply-To: <163174937390.380880.10714985927715519622.stgit@magnolia>
+References: <163174935747.380880.7635671692624086987.stgit@magnolia> <163174937934.380880.8949346653026672201.stgit@magnolia>
+In-Reply-To: <163174937934.380880.8949346653026672201.stgit@magnolia>
 From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Thu, 16 Sep 2021 08:52:26 +0300
-Message-ID: <CAOQ4uxgGOTMMUZXRsKsKd5Kgw_ZO8KzNQfXqeqn_eZd_sfqwhw@mail.gmail.com>
-Subject: Re: [PATCH 3/9] xfs: fix incorrect fuzz test group name
+Date:   Thu, 16 Sep 2021 08:52:46 +0300
+Message-ID: <CAOQ4uxjDWLM4+ssHH4XM9VMsv=X_r7sdwB9LcJFWYvC70F5F7A@mail.gmail.com>
+Subject: Re: [PATCH 4/9] btrfs: fix incorrect subvolume test group name
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Eryu Guan <guaneryu@gmail.com>, Christoph Hellwig <hch@lst.de>,
+Cc:     Eryu Guan <guaneryu@gmail.com>,
         linux-xfs <linux-xfs@vger.kernel.org>,
         fstests <fstests@vger.kernel.org>, Eryu Guan <guan@eryu.me>
 Content-Type: text/plain; charset="UTF-8"
@@ -72,56 +72,42 @@ On Thu, Sep 16, 2021 at 2:43 AM Darrick J. Wong <djwong@kernel.org> wrote:
 >
 > From: Darrick J. Wong <djwong@kernel.org>
 >
-> The group name for fuzz tests is 'fuzzers'.
+> The group for testing subvolume functionality is 'subvol', not
+> 'subvolume'.
 >
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 
 > ---
->  tests/xfs/491 |    2 +-
->  tests/xfs/492 |    2 +-
->  tests/xfs/493 |    2 +-
->  3 files changed, 3 insertions(+), 3 deletions(-)
+>  tests/btrfs/233 |    2 +-
+>  tests/btrfs/245 |    2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
 >
 >
-> diff --git a/tests/xfs/491 b/tests/xfs/491
-> index 5c7c5d1f..7402b09a 100755
-> --- a/tests/xfs/491
-> +++ b/tests/xfs/491
-> @@ -7,7 +7,7 @@
->  # Test detection & fixing of bad summary block counts at mount time.
+> diff --git a/tests/btrfs/233 b/tests/btrfs/233
+> index f3e3762c..6a414443 100755
+> --- a/tests/btrfs/233
+> +++ b/tests/btrfs/233
+> @@ -9,7 +9,7 @@
+>  # performed.
 >  #
 >  . ./common/preamble
-> -_begin_fstest auto quick fuzz
-> +_begin_fstest auto quick fuzzers
+> -_begin_fstest auto quick subvolume
+> +_begin_fstest auto quick subvol
 >
->  # Import common functions.
->  . ./common/filter
-> diff --git a/tests/xfs/492 b/tests/xfs/492
-> index 8258e5d8..514ac1e4 100755
-> --- a/tests/xfs/492
-> +++ b/tests/xfs/492
-> @@ -7,7 +7,7 @@
->  # Test detection & fixing of bad summary inode counts at mount time.
->  #
->  . ./common/preamble
-> -_begin_fstest auto quick fuzz
-> +_begin_fstest auto quick fuzzers
->
->  # Import common functions.
->  . ./common/filter
-> diff --git a/tests/xfs/493 b/tests/xfs/493
-> index 58fd9c99..58091ad7 100755
-> --- a/tests/xfs/493
-> +++ b/tests/xfs/493
+>  # Override the default cleanup function.
+>  _cleanup()
+> diff --git a/tests/btrfs/245 b/tests/btrfs/245
+> index 2b9c63c7..f3380ac2 100755
+> --- a/tests/btrfs/245
+> +++ b/tests/btrfs/245
 > @@ -8,7 +8,7 @@
->  # Corrupt the AGFs to test mount failure when mount-fixing fails.
+>  # as subvolume and snapshot creation and deletion.
 >  #
 >  . ./common/preamble
-> -_begin_fstest auto quick fuzz
-> +_begin_fstest auto quick fuzzers
+> -_begin_fstest auto quick idmapped subvolume
+> +_begin_fstest auto quick idmapped subvol
 >
->  # Import common functions.
->  . ./common/filter
+>  # get standard environment, filters and checks
+>  . ./common/rc
 >
