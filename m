@@ -2,259 +2,128 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 997BCC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Sep 2021 04:18:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DCB1C433FE
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Sep 2021 05:51:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7C3DB611C8
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Sep 2021 04:18:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 71736611EE
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Sep 2021 05:51:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229904AbhIPETc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Sep 2021 00:19:32 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57658 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229463AbhIPETb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 16 Sep 2021 00:19:31 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E19A36113E;
-        Thu, 16 Sep 2021 04:18:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631765892;
-        bh=07MliWGJfGAK+LhqNrCmA5FdUeLaldL2r83Wm9CtfwE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=YNy7NcFBStdeULkAFLP1P/e8exSZKD/ocG0UoVxepppronIhq3DuOcEgY9DbIUpUx
-         Ts2B4qsGqOZQhEMvr6kuBvwouJoPBd+IRhbRnBDTX1AjM6riW5JXJ+NY33FHu0gIXM
-         nmKYOky1JW4mWHdpPchdsUvl8QmapizQ2FC12gQuBYvW7acddNmqmmpQAWLOMZv/gB
-         ze8EhCyoCvudfheaRV91fy4ERv3QgoJAqNvLrDvL3B6aqnroPjQmF1icxewkc/fb+I
-         zjsTo0QCjyPN+ngTpfAjH3w0myrvPJU4gL0bmaOkJjn8ZtE4XJBS1PYvTozRzYlyuR
-         TcyJEfRDi+ACw==
-Date:   Wed, 15 Sep 2021 21:18:11 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Cc:     hch@lst.de, linux-xfs@vger.kernel.org, dan.j.williams@intel.com,
-        david@fromorbit.com, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, nvdimm@lists.linux.dev,
-        rgoldwyn@suse.de, viro@zeniv.linux.org.uk, willy@infradead.org
-Subject: Re: [PATCH v9 8/8] xfs: Add dax dedupe support
-Message-ID: <20210916041811.GB34874@magnolia>
-References: <20210915104501.4146910-1-ruansy.fnst@fujitsu.com>
- <20210915104501.4146910-9-ruansy.fnst@fujitsu.com>
- <20210916003008.GE34830@magnolia>
- <38eeee6f-aa11-4c13-b7c0-2e48927b85dc@fujitsu.com>
+        id S234413AbhIPFxC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Sep 2021 01:53:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41848 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231293AbhIPFxB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Sep 2021 01:53:01 -0400
+Received: from mail-il1-x12c.google.com (mail-il1-x12c.google.com [IPv6:2607:f8b0:4864:20::12c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 808D1C061574;
+        Wed, 15 Sep 2021 22:51:41 -0700 (PDT)
+Received: by mail-il1-x12c.google.com with SMTP id h9so5488869ile.6;
+        Wed, 15 Sep 2021 22:51:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=EB2cvcmf/sJW7A86QaWGWU/ctLOHlfpqzgBZF330PoI=;
+        b=TgWDGM2CKukc66wSM3uDJR8MO6S8YzPLnkdEhdn1vI7Qdl/84Qf3KXMzN0zFdyuJu3
+         U6WA6laGYilKnUDcZ1lFk8yUOlBYH0dRz9zZ7Qdq7FYHEpAPXlft3jZHASrNrUE1mbuO
+         0q/XW4tRT1lNYdY/F4EsJJdjaX71AbMic/Nh99hDjrdhZ6pUxZbTB8WdTGcC/wIHk63i
+         5/nwhTwa2LPeljYK5b6w2Vylpxym3uiGxJrAyt5sgqch2wK6gpzdBV0R4RXZUKarEdZO
+         WmPMahq63qzV3wqaLvPxZAihlJzneuZRSr4+Ilb3SOaSTQR+nrv+p53n19+AYS9y/XzA
+         AH/w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=EB2cvcmf/sJW7A86QaWGWU/ctLOHlfpqzgBZF330PoI=;
+        b=wWW28XcYOWcsYrKsu7u2oaihyq2X3A3hOu8GVID3Vh60PuDBLVZ2Ta2qjKdoZPaIow
+         aGeHEyCTDg08e3KchF/A0KnvcFHmcGMVLU0XUE2LJTxvNSZDTQdPc5q7xfwXS4dZkNXy
+         TaWTSrT9HVqDEGM8gpdUC8ZCjz7OFBjuDI9f72OLcqEPqHnDr8o2bw/IRj+/qdSsPGgn
+         14yw2xIkc/FnTrvgMBNn5xozO4v2EtYTwTxrZHjnQdHjyq02tvBIDieepwFex4I6glmp
+         YdIybR+6ebV+vGNP148jN3ZIG/78eUQHG1bKBqcQXS7R02WK38YfrMKzuCLjdByfO//W
+         W2Hg==
+X-Gm-Message-State: AOAM5325Bwtzyvbs8wDYq0JEZxA1gK12m3LiyIaqAfM3paxxqaY06HvA
+        ++usEeZ1/UR0gS/2eH2gMz4MeBnPDYuX5eF2aIhrO+7Qljc=
+X-Google-Smtp-Source: ABdhPJyfL9e0xcEfP9rrkkKz+vlFCs1ve3TTxt8Nu8WYRNNlIBarPBo8SZCn5CVWZ52uCp4PL9dwMAVnayK8lZibi/c=
+X-Received: by 2002:a92:d491:: with SMTP id p17mr2812018ilg.107.1631771500951;
+ Wed, 15 Sep 2021 22:51:40 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <38eeee6f-aa11-4c13-b7c0-2e48927b85dc@fujitsu.com>
+References: <163174935747.380880.7635671692624086987.stgit@magnolia> <163174936296.380880.5004927987240020121.stgit@magnolia>
+In-Reply-To: <163174936296.380880.5004927987240020121.stgit@magnolia>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Thu, 16 Sep 2021 08:51:30 +0300
+Message-ID: <CAOQ4uxgg9qsJHDsHVDyBAsOJ4n9qB3kzVOwbjKKTou4-sin0AQ@mail.gmail.com>
+Subject: Re: [PATCH 1/9] ceph: re-tag copy_file_range as being in the
+ copy_range group
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Eryu Guan <guaneryu@gmail.com>, Christoph Hellwig <hch@lst.de>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        fstests <fstests@vger.kernel.org>, Eryu Guan <guan@eryu.me>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 16, 2021 at 12:01:18PM +0800, Shiyang Ruan wrote:
-> 
-> 
-> On 2021/9/16 8:30, Darrick J. Wong wrote:
-> > On Wed, Sep 15, 2021 at 06:45:01PM +0800, Shiyang Ruan wrote:
-> > > Introduce xfs_mmaplock_two_inodes_and_break_dax_layout() for dax files
-> > > who are going to be deduped.  After that, call compare range function
-> > > only when files are both DAX or not.
-> > > 
-> > > Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
-> > > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> > > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > > ---
-> > >   fs/xfs/xfs_file.c    |  2 +-
-> > >   fs/xfs/xfs_inode.c   | 80 +++++++++++++++++++++++++++++++++++++++++---
-> > >   fs/xfs/xfs_inode.h   |  1 +
-> > >   fs/xfs/xfs_reflink.c |  4 +--
-> > >   4 files changed, 80 insertions(+), 7 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> > > index 2ef1930374d2..c3061723613c 100644
-> > > --- a/fs/xfs/xfs_file.c
-> > > +++ b/fs/xfs/xfs_file.c
-> > > @@ -846,7 +846,7 @@ xfs_wait_dax_page(
-> > >   	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
-> > >   }
-> > > -static int
-> > > +int
-> > >   xfs_break_dax_layouts(
-> > >   	struct inode		*inode,
-> > >   	bool			*retry)
-> > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > > index a4f6f034fb81..bdc084cdbf46 100644
-> > > --- a/fs/xfs/xfs_inode.c
-> > > +++ b/fs/xfs/xfs_inode.c
-> > > @@ -3790,6 +3790,61 @@ xfs_iolock_two_inodes_and_break_layout(
-> > >   	return 0;
-> > >   }
-> > > +static int
-> > > +xfs_mmaplock_two_inodes_and_break_dax_layout(
-> > > +	struct xfs_inode	*ip1,
-> > > +	struct xfs_inode	*ip2)
-> > > +{
-> > > +	int			error, attempts = 0;
-> > > +	bool			retry;
-> > > +	struct page		*page;
-> > > +	struct xfs_log_item	*lp;
-> > > +
-> > > +	if (ip1->i_ino > ip2->i_ino)
-> > > +		swap(ip1, ip2);
-> > > +
-> > > +again:
-> > > +	retry = false;
-> > > +	/* Lock the first inode */
-> > > +	xfs_ilock(ip1, XFS_MMAPLOCK_EXCL);
-> > > +	error = xfs_break_dax_layouts(VFS_I(ip1), &retry);
-> > > +	if (error || retry) {
-> > > +		xfs_iunlock(ip1, XFS_MMAPLOCK_EXCL);
-> > > +		if (error == 0 && retry)
-> > > +			goto again;
-> > > +		return error;
-> > > +	}
-> > > +
-> > > +	if (ip1 == ip2)
-> > > +		return 0;
-> > > +
-> > > +	/* Nested lock the second inode */
-> > > +	lp = &ip1->i_itemp->ili_item;
-> > > +	if (lp && test_bit(XFS_LI_IN_AIL, &lp->li_flags)) {
-> > > +		if (!xfs_ilock_nowait(ip2,
-> > > +		    xfs_lock_inumorder(XFS_MMAPLOCK_EXCL, 1))) {
-> > > +			xfs_iunlock(ip1, XFS_MMAPLOCK_EXCL);
-> > > +			if ((++attempts % 5) == 0)
-> > > +				delay(1); /* Don't just spin the CPU */
-> > > +			goto again;
-> > > +		}
-> > 
-> > I suspect we don't need this part for grabbing the MMAPLOCK^W pagecache
-> > invalidatelock.  The AIL only grabs the ILOCK, never the IOLOCK or the
-> > MMAPLOCK.
-> 
-> Maybe I have misunderstood this part.
-> 
-> What I want is to lock the two inode nestedly.  This code is copied from
-> xfs_lock_two_inodes(), which checks this AIL during locking two inode with
-> each of the three kinds of locks.
+On Thu, Sep 16, 2021 at 2:42 AM Darrick J. Wong <djwong@kernel.org> wrote:
+>
+> From: Darrick J. Wong <djwong@kernel.org>
+>
+> copy_range is the group name for copy_file_range tests, so reclassify
+> these tests.
+>
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 
-<nod> It's totally reasonable to copy-paste the function you want and
-change it as needed...
-
-> But I also found the recent merged function: filemap_invalidate_lock_two()
-> just locks two inode directly without checking AIL.  So, I am not if the AIL
-> check is needed in this case.
-
-...especially when even the maintainer is only 99% sure that the AIL
-checking chunk here can be removed.  Anyone else have an opinion?
-
---D
-
-> > 
-> > > +	} else
-> > > +		xfs_ilock(ip2, xfs_lock_inumorder(XFS_MMAPLOCK_EXCL, 1));
-> > > +	/*
-> > > +	 * We cannot use xfs_break_dax_layouts() directly here because it may
-> > > +	 * need to unlock & lock the XFS_MMAPLOCK_EXCL which is not suitable
-> > > +	 * for this nested lock case.
-> > > +	 */
-> > > +	page = dax_layout_busy_page(VFS_I(ip2)->i_mapping);
-> > > +	if (page && page_ref_count(page) != 1) {
-> > 
-> > Do you think the patch "ext4/xfs: add page refcount helper" would be a
-> > good cleanup to head this series?
-> > 
-> > https://lore.kernel.org/linux-xfs/20210913161604.31981-1-alex.sierra@amd.com/T/#m59cf7cd5c0d521ad487fa3a15d31c3865db88bdf
-> 
-> Got it.
-> 
-> 
-> --
-> Thanks,
-> Ruan
-> 
-> > 
-> > The rest of the logic looks ok.
-> > 
-> > --D
-> > 
-> > > +		xfs_iunlock(ip2, XFS_MMAPLOCK_EXCL);
-> > > +		xfs_iunlock(ip1, XFS_MMAPLOCK_EXCL);
-> > > +		goto again;
-> > > +	}
-> > > +
-> > > +	return 0;
-> > > +}
-> > > +
-> > >   /*
-> > >    * Lock two inodes so that userspace cannot initiate I/O via file syscalls or
-> > >    * mmap activity.
-> > > @@ -3804,8 +3859,19 @@ xfs_ilock2_io_mmap(
-> > >   	ret = xfs_iolock_two_inodes_and_break_layout(VFS_I(ip1), VFS_I(ip2));
-> > >   	if (ret)
-> > >   		return ret;
-> > > -	filemap_invalidate_lock_two(VFS_I(ip1)->i_mapping,
-> > > -				    VFS_I(ip2)->i_mapping);
-> > > +
-> > > +	if (IS_DAX(VFS_I(ip1)) && IS_DAX(VFS_I(ip2))) {
-> > > +		ret = xfs_mmaplock_two_inodes_and_break_dax_layout(ip1, ip2);
-> > > +		if (ret) {
-> > > +			inode_unlock(VFS_I(ip2));
-> > > +			if (ip1 != ip2)
-> > > +				inode_unlock(VFS_I(ip1));
-> > > +			return ret;
-> > > +		}
-> > > +	} else
-> > > +		filemap_invalidate_lock_two(VFS_I(ip1)->i_mapping,
-> > > +					    VFS_I(ip2)->i_mapping);
-> > > +
-> > >   	return 0;
-> > >   }
-> > > @@ -3815,8 +3881,14 @@ xfs_iunlock2_io_mmap(
-> > >   	struct xfs_inode	*ip1,
-> > >   	struct xfs_inode	*ip2)
-> > >   {
-> > > -	filemap_invalidate_unlock_two(VFS_I(ip1)->i_mapping,
-> > > -				      VFS_I(ip2)->i_mapping);
-> > > +	if (IS_DAX(VFS_I(ip1)) && IS_DAX(VFS_I(ip2))) {
-> > > +		xfs_iunlock(ip2, XFS_MMAPLOCK_EXCL);
-> > > +		if (ip1 != ip2)
-> > > +			xfs_iunlock(ip1, XFS_MMAPLOCK_EXCL);
-> > > +	} else
-> > > +		filemap_invalidate_unlock_two(VFS_I(ip1)->i_mapping,
-> > > +					      VFS_I(ip2)->i_mapping);
-> > > +
-> > >   	inode_unlock(VFS_I(ip2));
-> > >   	if (ip1 != ip2)
-> > >   		inode_unlock(VFS_I(ip1));
-> > > diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-> > > index b21b177832d1..f7e26fe31a26 100644
-> > > --- a/fs/xfs/xfs_inode.h
-> > > +++ b/fs/xfs/xfs_inode.h
-> > > @@ -472,6 +472,7 @@ enum xfs_prealloc_flags {
-> > >   int	xfs_update_prealloc_flags(struct xfs_inode *ip,
-> > >   				  enum xfs_prealloc_flags flags);
-> > > +int	xfs_break_dax_layouts(struct inode *inode, bool *retry);
-> > >   int	xfs_break_layouts(struct inode *inode, uint *iolock,
-> > >   		enum layout_break_reason reason);
-> > > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> > > index 9d876e268734..3b99c9dfcf0d 100644
-> > > --- a/fs/xfs/xfs_reflink.c
-> > > +++ b/fs/xfs/xfs_reflink.c
-> > > @@ -1327,8 +1327,8 @@ xfs_reflink_remap_prep(
-> > >   	if (XFS_IS_REALTIME_INODE(src) || XFS_IS_REALTIME_INODE(dest))
-> > >   		goto out_unlock;
-> > > -	/* Don't share DAX file data for now. */
-> > > -	if (IS_DAX(inode_in) || IS_DAX(inode_out))
-> > > +	/* Don't share DAX file data with non-DAX file. */
-> > > +	if (IS_DAX(inode_in) != IS_DAX(inode_out))
-> > >   		goto out_unlock;
-> > >   	if (!IS_DAX(inode_in))
-> > > -- 
-> > > 2.33.0
-> > > 
-> > > 
-> > > 
-> 
-> 
+> ---
+>  tests/ceph/001 |    2 +-
+>  tests/ceph/002 |    2 +-
+>  tests/ceph/003 |    2 +-
+>  3 files changed, 3 insertions(+), 3 deletions(-)
+>
+>
+> diff --git a/tests/ceph/001 b/tests/ceph/001
+> index aca77168..c00de308 100755
+> --- a/tests/ceph/001
+> +++ b/tests/ceph/001
+> @@ -11,7 +11,7 @@
+>  # file and 3) the middle of the dst file.
+>  #
+>  . ./common/preamble
+> -_begin_fstest auto quick copy
+> +_begin_fstest auto quick copy_range
+>
+>  # get standard environment
+>  . common/filter
+> diff --git a/tests/ceph/002 b/tests/ceph/002
+> index 428f23a9..9bc728fd 100755
+> --- a/tests/ceph/002
+> +++ b/tests/ceph/002
+> @@ -20,7 +20,7 @@
+>  #   linux kernel: 78beb0ff2fec ("ceph: use copy-from2 op in copy_file_range")
+>  #
+>  . ./common/preamble
+> -_begin_fstest auto quick copy
+> +_begin_fstest auto quick copy_range
+>
+>  # get standard environment
+>  . common/filter
+> diff --git a/tests/ceph/003 b/tests/ceph/003
+> index 9f8c6068..faedb48c 100755
+> --- a/tests/ceph/003
+> +++ b/tests/ceph/003
+> @@ -7,7 +7,7 @@
+>  # Test copy_file_range with infile = outfile
+>  #
+>  . ./common/preamble
+> -_begin_fstest auto quick copy
+> +_begin_fstest auto quick copy_range
+>
+>  # get standard environment
+>  . common/filter
+>
