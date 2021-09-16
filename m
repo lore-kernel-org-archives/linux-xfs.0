@@ -2,176 +2,125 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B6EEC433FE
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Sep 2021 22:13:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68688C433FE
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Sep 2021 22:53:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7ED58610D1
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Sep 2021 22:13:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 52BC961241
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Sep 2021 22:53:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240791AbhIPWOt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Sep 2021 18:14:49 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:54872 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240764AbhIPWOs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Sep 2021 18:14:48 -0400
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id D597F22285;
-        Thu, 16 Sep 2021 22:13:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1631830405; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=fUML7PP2cwKhFn9IzXhNLUrnTUVcJXoS96ewZU1uWd4=;
-        b=jXq3fACJglbXO8ZZxnEEMQ+MUPWIjZYeP9OWVMQcOLpTCitAL/GY0hB3ikpZqLry9QOXDj
-        ZRrPGSLgWi+Y6HeNGhcNrGJGBweWKtIOvbUo2E/PYEVdhNesAL6oSHskkTyze7963m/w7v
-        FapF8aEecdCetxL/vyAtSFplWCBT8aI=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1631830405;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=fUML7PP2cwKhFn9IzXhNLUrnTUVcJXoS96ewZU1uWd4=;
-        b=tYmy1+ayRfKGCMEtC5l9akiHOlDJJKFM6kSmG2YO8aDY/SdACek6JZkZDMbN7tSZ+4Wr23
-        jXJfi3+TQ02lBADg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 35C2013D6D;
-        Thu, 16 Sep 2021 22:13:21 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id uyMeOYHBQ2GwUwAAMHmgww
-        (envelope-from <neilb@suse.de>); Thu, 16 Sep 2021 22:13:21 +0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+        id S241321AbhIPWy2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Sep 2021 18:54:28 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39630 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S241276AbhIPWy1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 16 Sep 2021 18:54:27 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8BAE46120D;
+        Thu, 16 Sep 2021 22:53:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1631832786;
+        bh=citTwsml1XSO/t1QTQ4k2wyZwIF8oGSYYQ6E9+rnQyY=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=hW+vw2Lf1whk0SInRDqqLh14cZeFpoghVko0tE6jNEKRtvnbiAJOleWY6DsEvA5l7
+         zaXtY2dERD1FpxR81bXcmtJzoQ1ms4p6qFVTRdhZVFx6Iz6AeruUz206BAjZpohfgN
+         Bieh+RnINhWSV8ZeTV66fftfsyABbpxN1Nuyczh0k3oJkErQekaqivfHviBhh7ez1q
+         BtDTd1mhgUrJ9QC++uld7Xnr2tQG3yPY+uGwrDD4sXiEfze9BOp6xpL/AfxeK/f9dP
+         qslIOcsqS9/gdBqjGuv9GN78sVOEob+J9Y2TgrwqGccyJIZrdghLIY4cz9qzJ+W/0Z
+         LRSO6aBmql8gQ==
+Date:   Thu, 16 Sep 2021 15:53:06 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Amir Goldstein <amir73il@gmail.com>
+Cc:     Eryu Guan <guaneryu@gmail.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        fstests <fstests@vger.kernel.org>, Eryu Guan <guan@eryu.me>
+Subject: Re: [PATCH 9/9] new: don't allow new tests in group 'other'
+Message-ID: <20210916225306.GB34846@magnolia>
+References: <163174935747.380880.7635671692624086987.stgit@magnolia>
+ <163174940659.380880.14564845266535022734.stgit@magnolia>
+ <CAOQ4uxh6fZNzCX2wAQdhmz4Z+4xGbZMF0zfSkKUZKjS0KZhpOA@mail.gmail.com>
 MIME-Version: 1.0
-From:   "NeilBrown" <neilb@suse.de>
-To:     "Michal Hocko" <mhocko@suse.com>
-Cc:     "Andrew Morton" <akpm@linux-foundation.org>,
-        "Theodore Ts'o" <tytso@mit.edu>,
-        "Andreas Dilger" <adilger.kernel@dilger.ca>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        "Matthew Wilcox" <willy@infradead.org>,
-        "Mel Gorman" <mgorman@suse.com>, linux-xfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/6] MM: annotate congestion_wait() and
- wait_iff_congested() as ineffective.
-In-reply-to: <YUHfdtth69qKvk8r@dhcp22.suse.cz>
-References: <163157808321.13293.486682642188075090.stgit@noble.brown>,
- <163157838437.13293.15392955714346973750.stgit@noble.brown>,
- <YUHfdtth69qKvk8r@dhcp22.suse.cz>
-Date:   Fri, 17 Sep 2021 08:13:19 +1000
-Message-id: <163183039931.3992.6407941879351179168@noble.neil.brown.name>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxh6fZNzCX2wAQdhmz4Z+4xGbZMF0zfSkKUZKjS0KZhpOA@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, 15 Sep 2021, Michal Hocko wrote:
-> On Tue 14-09-21 10:13:04, Neil Brown wrote:
-> > Only 4 subsystems call set_bdi_congested() or clear_bdi_congested():
-> >  block/pktcdvd, fs/ceph fs/fuse fs/nfs
-> >=20
-> > It may make sense to use congestion_wait() or wait_iff_congested()
-> > within these subsystems, but they have no value outside of these.
-> >=20
-> > Add documentation comments to these functions to discourage further use.
->=20
-> This is an unfortunate state. The MM layer still relies on the API.
-> While adding a documentation to clarify the current status can stop more
-> usage I am wondering what is a real alternative. My experience tells me
-> that a lack of real alternative will lead to new creative ways of doing
-> things instead.
-
-That is a valid concern.  Discouraging the use of an interface without
-providing a clear alternative risks people doing worse things.
-
-At lease if people continue to use congestion_wait(), then we will be
-able to find those uses when we are able to provide a better approach.
-
-I'll drop this patch.
-
-Thanks,
-NeilBrown
-
-
-> =20
-> > Signed-off-by: NeilBrown <neilb@suse.de>
+On Thu, Sep 16, 2021 at 09:40:54AM +0300, Amir Goldstein wrote:
+> On Thu, Sep 16, 2021 at 2:43 AM Darrick J. Wong <djwong@kernel.org> wrote:
+> >
+> > From: Darrick J. Wong <djwong@kernel.org>
+> >
+> > The 'other' group is vaguely defined at best -- other than what?  It's
+> > not clear what tests belong in this group, and it has become a dumping
+> > ground for random stuff that are classified in other groups.  Don't let
+> > people create new other group tests.
+> >
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > > ---
-> >  include/linux/backing-dev.h |    7 +++++++
-> >  mm/backing-dev.c            |    9 +++++++++
-> >  2 files changed, 16 insertions(+)
-> >=20
-> > diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
-> > index ac7f231b8825..cc9513840351 100644
-> > --- a/include/linux/backing-dev.h
-> > +++ b/include/linux/backing-dev.h
-> > @@ -153,6 +153,13 @@ static inline int wb_congested(struct bdi_writeback =
-*wb, int cong_bits)
-> >  	return wb->congested & cong_bits;
-> >  }
-> > =20
-> > +/* NOTE congestion_wait() and wait_iff_congested() are
-> > + * largely useless except as documentation.
-> > + * congestion_wait() will (almost) always wait for the given timeout.
-> > + * wait_iff_congested() will (almost) never wait, but will call
-> > + * cond_resched().
-> > + * Were possible an alternative waiting strategy should be found.
-> > + */
-> >  long congestion_wait(int sync, long timeout);
-> >  long wait_iff_congested(int sync, long timeout);
-> > =20
-> > diff --git a/mm/backing-dev.c b/mm/backing-dev.c
-> > index 4a9d4e27d0d9..53472ab38796 100644
-> > --- a/mm/backing-dev.c
-> > +++ b/mm/backing-dev.c
-> > @@ -1023,6 +1023,11 @@ EXPORT_SYMBOL(set_bdi_congested);
-> >   * Waits for up to @timeout jiffies for a backing_dev (any backing_dev) =
-to exit
-> >   * write congestion.  If no backing_devs are congested then just wait fo=
-r the
-> >   * next write to be completed.
-> > + *
-> > + * NOTE: in the current implementation, hardly any backing_devs are ever
-> > + * marked as congested, and write-completion is rarely reported (see cal=
-ls
-> > + * to clear_bdi_congested).  So this should not be assumed to ever wake =
-before
-> > + * the timeout.
-> >   */
-> >  long congestion_wait(int sync, long timeout)
-> >  {
-> > @@ -1054,6 +1059,10 @@ EXPORT_SYMBOL(congestion_wait);
-> >   * The return value is 0 if the sleep is for the full timeout. Otherwise,
-> >   * it is the number of jiffies that were still remaining when the functi=
-on
-> >   * returned. return_value =3D=3D timeout implies the function did not sl=
-eep.
-> > + *
-> > + * NOTE: in the current implementation, hardly any backing_devs are ever
-> > + * marked as congested, and write-completion is rarely reported (see cal=
-ls
-> > + * to clear_bdi_congested).  So this should not be assumed to sleep at a=
-ll.
-> >   */
-> >  long wait_iff_congested(int sync, long timeout)
-> >  {
-> >=20
->=20
-> --=20
-> Michal Hocko
-> SUSE Labs
->=20
->=20
+> >  new |    7 +++++--
+> >  1 file changed, 5 insertions(+), 2 deletions(-)
+> >
+> >
+> > diff --git a/new b/new
+> > index 6b7dc5d4..5cf96c50 100755
+> > --- a/new
+> > +++ b/new
+> > @@ -96,9 +96,9 @@ then
+> >
+> >      while true
+> >      do
+> > -       echo -n "Add to group(s) [other] (separate by space, ? for list): "
+> > +       echo -n "Add to group(s) [auto] (separate by space, ? for list): "
+> >         read ans
+> > -       [ -z "$ans" ] && ans=other
+> > +       [ -z "$ans" ] && ans=auto
+> >         if [ "X$ans" = "X?" ]
+> >         then
+> >             echo $(group_names)
+> > @@ -109,6 +109,9 @@ then
+> >                 echo "Invalid characters in group(s): $inval"
+> >                 echo "Only lower cases, digits and underscore are allowed in groups, separated by space"
+> >                 continue
+> > +           elif echo "$ans" | grep -q -w "other"; then
+> > +               echo "Do not add more tests to group \"other\"."
+> > +               continue
+> 
+> Should we also filter out "other" from group_names(), so it is not listed
+> for "?"?
+
+No; there are drawbacks to that, as you point out below.
+
+> With this patch, "other" does not emit a warning when passed in as a script
+> command line argument.
+
+Done.
+
+> If we filter "other" from group_names(), then the warning in "expert mode"
+> will be a bit confusing (group "other" not defined in documentation).
+
+I will filter it out in the specific case case that the interactive user
+specified "?" to list the groups.
+
+> Also, it is not clear to me if this is intentional behavior that interactive
+> mode allows non-dcumented groups (with valid chars validation) and
+> expert mode does not allow non-documented groups?
+
+Probably not.
+
+> It may be simpler to use the same helper in both modes (is_group_valid)
+> to emit the correct warning and either proceed (expert mode) or get
+> back to prompt (interactive mode).
+
+This is getting farther afield from where I wanted this thing to go.
+Very well, I'll split the ./new cleanups into its own series, but TBH
+I've gotten tired of people asking for more and more cleanups out of me.
+
+--D
+
+> Thanks,
+> Amir.
