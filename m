@@ -2,146 +2,84 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6013BC43219
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Sep 2021 03:00:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9D9DC433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Sep 2021 06:07:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 48CEF61029
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Sep 2021 03:00:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B783161019
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Sep 2021 06:07:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243240AbhIQDBr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Sep 2021 23:01:47 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:56658 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243237AbhIQDBi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Sep 2021 23:01:38 -0400
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id DB335223BE;
-        Fri, 17 Sep 2021 03:00:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1631847615; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=VOYRJb9fJ+cMO6Hj0cgeXpg6pQoK6BH8BG5fqFk6i+M=;
-        b=TRc7wKqSyLeB/iEALRI6D6YqRSG6iz+Dq+XLvWC0q61avt5RPD6l5eo+J9e2cm0RAlLndG
-        bCR/i4dYjEnf68mBhKdVP1g+5WyLBU137hqqn9pFB7hOY9jQh9U2O/3XagwE7D9w6IZHhX
-        bB+fyY7lriilGsSaYPwQeJPgnfg1Glk=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1631847615;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=VOYRJb9fJ+cMO6Hj0cgeXpg6pQoK6BH8BG5fqFk6i+M=;
-        b=/lq6dz70EAyTVlxTdVKlR4Bn0HQwVD6XFi1dN/9iHfYMXcFuYHWhp0rAc/wmbsX9/3XzPy
-        3BMcXfR/dH2dKDAg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 732FE13D0B;
-        Fri, 17 Sep 2021 03:00:11 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id X8J7DLsERGHIMwAAMHmgww
-        (envelope-from <neilb@suse.de>); Fri, 17 Sep 2021 03:00:11 +0000
-Subject: [PATCH 6/6] XFS: remove congestion_wait() loop from
- xfs_buf_alloc_pages()
-From:   NeilBrown <neilb@suse.de>
-To:     Andrew Morton <akpm@linux-foundation.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Mel Gorman <mgorman@suse.de>, Michal Hocko <mhocko@suse.com>,
-        ". Dave Chinner" <david@fromorbit.com>,
-        Jonathan Corbet <corbet@lwn.net>
-Cc:     linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-mm@kvack.org, linux-kernel@vger.kernel.org,
-        linux-doc@vger.kernel.org
-Date:   Fri, 17 Sep 2021 12:56:57 +1000
-Message-ID: <163184741782.29351.3052773526186670351.stgit@noble.brown>
-In-Reply-To: <163184698512.29351.4735492251524335974.stgit@noble.brown>
-References: <163184698512.29351.4735492251524335974.stgit@noble.brown>
-User-Agent: StGit/0.23
+        id S234178AbhIQGJC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Sep 2021 02:09:02 -0400
+Received: from smtp1.onthe.net.au ([203.22.196.249]:56229 "EHLO
+        smtp1.onthe.net.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232726AbhIQGJB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Sep 2021 02:09:01 -0400
+Received: from localhost (smtp2.private.onthe.net.au [10.200.63.13])
+        by smtp1.onthe.net.au (Postfix) with ESMTP id 8C90461C64;
+        Fri, 17 Sep 2021 16:07:38 +1000 (EST)
+Received: from smtp1.onthe.net.au ([10.200.63.11])
+        by localhost (smtp.onthe.net.au [10.200.63.13]) (amavisd-new, port 10028)
+        with ESMTP id 3jrt91Gak1AL; Fri, 17 Sep 2021 16:07:38 +1000 (AEST)
+Received: from athena.private.onthe.net.au (chris-gw2-vpn.private.onthe.net.au [10.9.3.2])
+        by smtp1.onthe.net.au (Postfix) with ESMTP id 5E4A161C65;
+        Fri, 17 Sep 2021 16:07:38 +1000 (EST)
+Received: by athena.private.onthe.net.au (Postfix, from userid 1026)
+        id 48F406802FA; Fri, 17 Sep 2021 16:07:38 +1000 (AEST)
+Date:   Fri, 17 Sep 2021 16:07:38 +1000
+From:   Chris Dunlop <chris@onthe.net.au>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
+Subject: Re: Mysterious ENOSPC
+Message-ID: <20210917060738.GA1005340@onthe.net.au>
+References: <20210826205635.GA2453892@onthe.net.au>
+ <20210827025539.GA3583175@onthe.net.au>
+ <20210827054956.GP3657114@dread.disaster.area>
+ <20210827065347.GA3594069@onthe.net.au>
+ <20210827220343.GQ3657114@dread.disaster.area>
+ <20210828002137.GA3642069@onthe.net.au>
+ <20210828035824.GA3654894@onthe.net.au>
+ <20210829220457.GR3657114@dread.disaster.area>
+ <20210830073720.GA3763165@onthe.net.au>
+ <20210902014206.GN2566745@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+In-Reply-To: <20210902014206.GN2566745@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Documentation commment in gfp.h discourages indefinite retry loops on
-ENOMEM and says of __GFP_NOFAIL that it
+On Thu, Sep 02, 2021 at 11:42:06AM +1000, Dave Chinner wrote:
+> On Mon, Aug 30, 2021 at 08:04:57AM +1000, Dave Chinner wrote:
+>> FWIW, if you are using reflink heavily and you have rmap enabled (as
+>> you have), there's every chance that an AG has completely run out of
+>> space and so new rmap records for shared extents can't be allocated
+>> - that can give you spurious ENOSPC errors before the filesystem is
+>> 100% full, too.
+>>
+>> i.e. every shared extent in the filesystem has a rmap record
+>> pointing back to each owner of the shared extent. That means for an
+>> extent shared 1000 times, there are 1000 rmap records for that
+>> shared extent. If you share it again, a new rmap record needs to be
+>> inserted into the rmapbt, and if the AG is completely out of space
+>> this can fail w/ ENOSPC. Hence you can get ENOSPC errors attempting
+>> to shared or unshare extents because there isn't space in the AG for
+>> the tracking metadata for the new extent record....
+...
+> Ok, now I've seen the filesystem layout, I can say that the
+> preconditions for per-ag ENOSPC conditions do actually exist. Hence
+> we now really need to know what operation is reporting ENOSPC. I
+> guess we'll just have to wait for that to occur again and hope your
+> scripts capture it.
 
-    is definitely preferable to use the flag rather than opencode
-    endless loop around allocator.
+FYI, "something" seems to have changed without any particular prompting 
+and there haven't been any ENOSPC events in the last 3 weeks whereas 
+previously they were occurring 4-5 times a week. Sigh.
 
-congestion_wait() is indistinguishable from
-schedule_timeout_uninterruptible() in practice and it is not a good way
-to wait for memory to become available.
+Cheers,
 
-So add __GFP_NOFAIL to gfp if failure is not an option, and remove the
-congestion_wait().  We now only loop when failure is an option, and
-alloc_bulk_pages_array() made some progres, but not enough.
-
-Signed-off-by: NeilBrown <neilb@suse.de>
----
- fs/xfs/xfs_buf.c |   14 ++++++--------
- 1 file changed, 6 insertions(+), 8 deletions(-)
-
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 5fa6cd947dd4..b19ab52c551b 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -352,7 +352,7 @@ xfs_buf_alloc_pages(
- 	if (flags & XBF_READ_AHEAD)
- 		gfp_mask |= __GFP_NORETRY;
- 	else
--		gfp_mask |= GFP_NOFS;
-+		gfp_mask |= GFP_NOFS | __GFP_NOFAIL;
- 
- 	/* Make sure that we have a page list */
- 	bp->b_page_count = DIV_ROUND_UP(BBTOB(bp->b_length), PAGE_SIZE);
-@@ -372,8 +372,9 @@ xfs_buf_alloc_pages(
- 
- 	/*
- 	 * Bulk filling of pages can take multiple calls. Not filling the entire
--	 * array is not an allocation failure, so don't back off if we get at
--	 * least one extra page.
-+	 * array is not an allocation failure but is worth counting in
-+	 * xb_pages_retries statistics.  If we don't even get one page,
-+	 * then this must be a READ_AHEAD and we should abort.
- 	 */
- 	for (;;) {
- 		long	last = filled;
-@@ -385,16 +386,13 @@ xfs_buf_alloc_pages(
- 			break;
- 		}
- 
--		if (filled != last)
--			continue;
--
--		if (flags & XBF_READ_AHEAD) {
-+		if (filled == last) {
-+			ASSERT(flags & XBF_READ_AHEAD);
- 			xfs_buf_free_pages(bp);
- 			return -ENOMEM;
- 		}
- 
- 		XFS_STATS_INC(bp->b_mount, xb_page_retries);
--		congestion_wait(BLK_RW_ASYNC, HZ / 50);
- 	}
- 	return 0;
- }
-
-
+Chris
