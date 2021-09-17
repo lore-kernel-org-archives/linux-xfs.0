@@ -2,56 +2,59 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D381C43217
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Sep 2021 02:59:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2101C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Sep 2021 02:59:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 74E0761019
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Sep 2021 02:59:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 88C2661019
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Sep 2021 02:59:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243206AbhIQDAq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Sep 2021 23:00:46 -0400
-Received: from smtp-out2.suse.de ([195.135.220.29]:41356 "EHLO
+        id S243297AbhIQDAy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Sep 2021 23:00:54 -0400
+Received: from smtp-out2.suse.de ([195.135.220.29]:41390 "EHLO
         smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243049AbhIQDAp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Sep 2021 23:00:45 -0400
+        with ESMTP id S243248AbhIQDAw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Sep 2021 23:00:52 -0400
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 09F2B2007B;
-        Fri, 17 Sep 2021 02:59:22 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id ABA7D2007B;
+        Fri, 17 Sep 2021 02:59:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1631847562; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1631847569; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=8pvkjCFdBH92niZgGsbVOrH9zONIePhOsL1BwdfqgnA=;
-        b=NrP8J0vhVKv0eLroW/bpzL2ejtwWpy1oEAi7DdQ4kMU5Kv8Oq6l5iLYPu7H9EkxbF1q4/A
-        na+xtpPAcJUY68yb7FlQ9lmxSLRRQKANIKbvzZj9RSTof31Djq1vJviErXSODqyW0wqB4e
-        LQe1sAc/mk1g9ojaRCFZduOcyNryYAc=
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=PhO+AMBCn5CF5KJqwHi2NRgoifLeDG6tBD6IhB9YLqI=;
+        b=vThorR8aWQ88Y2GmJEKKlzu9235Z/ZeCUkMr1tu37GhRXPpZfoOnsprc1JRFJTuXWRqbYo
+        OrwNdG+winpkkSlgaBUSLsVjiQSK1WiUbcsFBMP1c4iGoCvNYpDkYEriFSvFrODR8idE2j
+        Tlusg86Y9/ATaenPc/okC73RyP3RPU0=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1631847562;
+        s=susede2_ed25519; t=1631847569;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=8pvkjCFdBH92niZgGsbVOrH9zONIePhOsL1BwdfqgnA=;
-        b=PMuREhLfwiF/t1B800k94ChByfic8xUfzyWra9ANkKBEq5p7ic9AJetd/jrDccwucIyfGK
-        Kco4+Zd25/JWTsBA==
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=PhO+AMBCn5CF5KJqwHi2NRgoifLeDG6tBD6IhB9YLqI=;
+        b=PdD7iVhth5i0uczJ3IGRe4R+iuVLNQA6JKSOCFB6xykfVbdQIAbKb0z9L556d52BZHWlwR
+        comcujPIZxeGDSBw==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 9733913D0B;
-        Fri, 17 Sep 2021 02:59:17 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 4A36E13D0B;
+        Fri, 17 Sep 2021 02:59:25 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id wyQIFYUERGFLMwAAMHmgww
-        (envelope-from <neilb@suse.de>); Fri, 17 Sep 2021 02:59:17 +0000
-Subject: [PATCH 0/6 v2] congestion_wait() and GFP_NOFAIL
+        id v4HZAo0ERGFmMwAAMHmgww
+        (envelope-from <neilb@suse.de>); Fri, 17 Sep 2021 02:59:25 +0000
+Subject: [PATCH 1/6] MM: Support __GFP_NOFAIL in  alloc_pages_bulk_*() and
+ improve doco
 From:   NeilBrown <neilb@suse.de>
 To:     Andrew Morton <akpm@linux-foundation.org>,
         Theodore Ts'o <tytso@mit.edu>,
@@ -66,7 +69,9 @@ Cc:     linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
         linux-mm@kvack.org, linux-kernel@vger.kernel.org,
         linux-doc@vger.kernel.org
 Date:   Fri, 17 Sep 2021 12:56:57 +1000
-Message-ID: <163184698512.29351.4735492251524335974.stgit@noble.brown>
+Message-ID: <163184741776.29351.3565418361661850328.stgit@noble.brown>
+In-Reply-To: <163184698512.29351.4735492251524335974.stgit@noble.brown>
+References: <163184698512.29351.4735492251524335974.stgit@noble.brown>
 User-Agent: StGit/0.23
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -75,62 +80,49 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This second version:
-  - add recipients for the Documentation/core-api changes
-  - add fix for __alloc_pages_bulk() to handle GFP_NOFAIL
-  - drops the annotations for congestion_wait() as being ineffective
-    as that isn't really useful until an alternative is available
-  - changes to GFP_NOFAIL documentation changes to focus on the possible
-    deadlocks rather than the use of memory reserves
-  - Improves ext4 and xfs patches based on feedback from Ted and Dave.
+When alloc_pages_bulk_array() is called on an array that is partially
+allocated, the level of effort to get a single page is less than when
+the array was completely unallocated.  This behaviour is inconsistent,
+but now fixed.  One effect if this is that __GFP_NOFAIL will not ensure
+at least one page is allocated.
 
-The patches are independent, except that the last patch depends on the
-first.
+Also clarify the expected success rate.  __alloc_pages_bulk() will
+allocated one page according to @gfp, and may allocate more if that can
+be done cheaply.  It is assumed that the caller values cheap allocation
+where possible and may decide to use what it has got, or to call again
+to get more.
 
-As mentioned last time:
-
-  These are the easy bits.  There are 5 calls to congestion_wait() and
-  one to wait_iff_congested() in mm/ which need consideration.  There
-  are multiple calls to congestion_wait in fs/, particularly fs/f2fs/
-  which need to be addressed too.  I'll try to form an opinion about
-  these in coming weeks.
-
-(other interesting comment in original cover letter just duplicates
- observations made in the commit messages of individual patches).
-
-NeilBrown
-
-
+Acked-by: Mel Gorman <mgorman@suse.com>
+Fixes: 0f87d9d30f21 ("mm/page_alloc: add an array-based interface to the bulk page allocator")
+Signed-off-by: NeilBrown <neilb@suse.de>
 ---
+ mm/page_alloc.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-NeilBrown (6):
-      MM: Support __GFP_NOFAIL in  alloc_pages_bulk_*() and improve doco
-      MM: improve documentation for __GFP_NOFAIL
-      EXT4: Remove ENOMEM/congestion_wait() loops.
-      EXT4: remove congestion_wait from ext4_bio_write_page, and simplify
-      XFS: remove congestion_wait() loop from kmem_alloc()
-      XFS: remove congestion_wait() loop from xfs_buf_alloc_pages()
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index b37435c274cf..aa51016e49c5 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -5191,6 +5191,11 @@ static inline bool prepare_alloc_pages(gfp_t gfp_mask, unsigned int order,
+  * is the maximum number of pages that will be stored in the array.
+  *
+  * Returns the number of pages on the list or array.
++ *
++ * At least one page will be allocated if that is possible while
++ * remaining consistent with @gfp.  Extra pages up to the requested
++ * total will be allocated opportunistically when doing so is
++ * significantly cheaper than having the caller repeat the request.
+  */
+ unsigned long __alloc_pages_bulk(gfp_t gfp, int preferred_nid,
+ 			nodemask_t *nodemask, int nr_pages,
+@@ -5292,7 +5297,7 @@ unsigned long __alloc_pages_bulk(gfp_t gfp, int preferred_nid,
+ 								pcp, pcp_list);
+ 		if (unlikely(!page)) {
+ 			/* Try and get at least one page */
+-			if (!nr_populated)
++			if (!nr_account)
+ 				goto failed_irq;
+ 			break;
+ 		}
 
-
- Documentation/core-api/memory-allocation.rst | 25 ++++++++-
- fs/ext4/ext4.h                               |  2 +-
- fs/ext4/ext4_jbd2.c                          |  4 +-
- fs/ext4/ext4_jbd2.h                          | 14 +++---
- fs/ext4/extents.c                            | 53 ++++++++------------
- fs/ext4/extents_status.c                     | 35 +++++++------
- fs/ext4/extents_status.h                     |  2 +-
- fs/ext4/ialloc.c                             |  3 +-
- fs/ext4/indirect.c                           |  2 +-
- fs/ext4/inode.c                              |  6 +--
- fs/ext4/ioctl.c                              |  4 +-
- fs/ext4/page-io.c                            | 13 ++---
- fs/ext4/super.c                              |  2 +-
- fs/jbd2/transaction.c                        |  8 +--
- fs/xfs/kmem.c                                | 19 +++----
- fs/xfs/xfs_buf.c                             | 14 +++---
- include/linux/gfp.h                          |  6 ++-
- 17 files changed, 113 insertions(+), 99 deletions(-)
-
---
-Signature
 
