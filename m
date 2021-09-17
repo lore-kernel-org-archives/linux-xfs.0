@@ -2,84 +2,98 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9D9DC433EF
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Sep 2021 06:07:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FEACC433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Sep 2021 08:30:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B783161019
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Sep 2021 06:07:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 17926611C4
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Sep 2021 08:30:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234178AbhIQGJC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Sep 2021 02:09:02 -0400
-Received: from smtp1.onthe.net.au ([203.22.196.249]:56229 "EHLO
-        smtp1.onthe.net.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232726AbhIQGJB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Sep 2021 02:09:01 -0400
-Received: from localhost (smtp2.private.onthe.net.au [10.200.63.13])
-        by smtp1.onthe.net.au (Postfix) with ESMTP id 8C90461C64;
-        Fri, 17 Sep 2021 16:07:38 +1000 (EST)
-Received: from smtp1.onthe.net.au ([10.200.63.11])
-        by localhost (smtp.onthe.net.au [10.200.63.13]) (amavisd-new, port 10028)
-        with ESMTP id 3jrt91Gak1AL; Fri, 17 Sep 2021 16:07:38 +1000 (AEST)
-Received: from athena.private.onthe.net.au (chris-gw2-vpn.private.onthe.net.au [10.9.3.2])
-        by smtp1.onthe.net.au (Postfix) with ESMTP id 5E4A161C65;
-        Fri, 17 Sep 2021 16:07:38 +1000 (EST)
-Received: by athena.private.onthe.net.au (Postfix, from userid 1026)
-        id 48F406802FA; Fri, 17 Sep 2021 16:07:38 +1000 (AEST)
-Date:   Fri, 17 Sep 2021 16:07:38 +1000
-From:   Chris Dunlop <chris@onthe.net.au>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
-Subject: Re: Mysterious ENOSPC
-Message-ID: <20210917060738.GA1005340@onthe.net.au>
-References: <20210826205635.GA2453892@onthe.net.au>
- <20210827025539.GA3583175@onthe.net.au>
- <20210827054956.GP3657114@dread.disaster.area>
- <20210827065347.GA3594069@onthe.net.au>
- <20210827220343.GQ3657114@dread.disaster.area>
- <20210828002137.GA3642069@onthe.net.au>
- <20210828035824.GA3654894@onthe.net.au>
- <20210829220457.GR3657114@dread.disaster.area>
- <20210830073720.GA3763165@onthe.net.au>
- <20210902014206.GN2566745@dread.disaster.area>
+        id S245373AbhIQIcH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Sep 2021 04:32:07 -0400
+Received: from smtp-out1.suse.de ([195.135.220.28]:41546 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232295AbhIQIcH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Sep 2021 04:32:07 -0400
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out1.suse.de (Postfix) with ESMTP id 5AFCF22286;
+        Fri, 17 Sep 2021 08:30:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1631867444; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=5eb8TqjzrqfA6ERLZr5A6LRYLt6Dsy4QQOdugdSe97Q=;
+        b=XdmkuscCNdsJbshxJludjY9UBBxnrbeeje9zR82u+BctBDXam0UMT8SP2fcDBYZ8aK/Smc
+        KK/ENfXXqaYp1ZVw7dgw7fKlvNMDcINECnbmaTL/uw1vFM3xyY9gnITACUu6/fHxERD3Z9
+        M0t8mT0HGmh5SlFuY54Ma1mexoGe2VQ=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1631867444;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=5eb8TqjzrqfA6ERLZr5A6LRYLt6Dsy4QQOdugdSe97Q=;
+        b=E/Cq/YykbiDucpkCYq/JzAf9kaune18m05B2tIsNjSE0lmHWgW8/GBS+8vNCJeMe80D3SL
+        8yGpCLimjZj+SGBw==
+Received: from quack2.suse.cz (unknown [10.100.224.230])
+        by relay2.suse.de (Postfix) with ESMTP id 18851A3B84;
+        Fri, 17 Sep 2021 08:30:44 +0000 (UTC)
+Received: by quack2.suse.cz (Postfix, from userid 1000)
+        id EEBB21E0CA7; Fri, 17 Sep 2021 10:30:43 +0200 (CEST)
+Date:   Fri, 17 Sep 2021 10:30:43 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     xfs <linux-xfs@vger.kernel.org>,
+        linux-ext4 <linux-ext4@vger.kernel.org>,
+        linux-btrfs <linux-btrfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Subject: Re: Shameless plug for the FS Track at LPC next week!
+Message-ID: <20210917083043.GA6547@quack2.suse.cz>
+References: <20210916013916.GD34899@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210902014206.GN2566745@dread.disaster.area>
+In-Reply-To: <20210916013916.GD34899@magnolia>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 02, 2021 at 11:42:06AM +1000, Dave Chinner wrote:
-> On Mon, Aug 30, 2021 at 08:04:57AM +1000, Dave Chinner wrote:
->> FWIW, if you are using reflink heavily and you have rmap enabled (as
->> you have), there's every chance that an AG has completely run out of
->> space and so new rmap records for shared extents can't be allocated
->> - that can give you spurious ENOSPC errors before the filesystem is
->> 100% full, too.
->>
->> i.e. every shared extent in the filesystem has a rmap record
->> pointing back to each owner of the shared extent. That means for an
->> extent shared 1000 times, there are 1000 rmap records for that
->> shared extent. If you share it again, a new rmap record needs to be
->> inserted into the rmapbt, and if the AG is completely out of space
->> this can fail w/ ENOSPC. Hence you can get ENOSPC errors attempting
->> to shared or unshare extents because there isn't space in the AG for
->> the tracking metadata for the new extent record....
-...
-> Ok, now I've seen the filesystem layout, I can say that the
-> preconditions for per-ag ENOSPC conditions do actually exist. Hence
-> we now really need to know what operation is reporting ENOSPC. I
-> guess we'll just have to wait for that to occur again and hope your
-> scripts capture it.
+Hi!
 
-FYI, "something" seems to have changed without any particular prompting 
-and there haven't been any ENOSPC events in the last 3 weeks whereas 
-previously they were occurring 4-5 times a week. Sigh.
+We did a small update to the schedule:
 
-Cheers,
+> Christian Brauner will run the second session, discussing what idmapped
+> filesystem mounts are for and the current status of supporting more
+> filesystems.
 
-Chris
+We have extended this session as we'd like to discuss and get some feedback
+from users about project quotas and project ids:
+
+Project quotas were originally mostly a collaborative feature and later got
+used by some container runtimes to implement limitation of used space on a
+filesystem shared by multiple containers. As a result current semantics of
+project quotas are somewhat surprising and handling of project ids is not
+consistent among filesystems. The main two contending points are:
+
+1) Currently the inode owner can set project id of the inode to any
+arbitrary number if he is in init_user_ns. It cannot change project id at
+all in other user namespaces.
+
+2) Should project IDs be mapped in user namespaces or not? User namespace
+code does implement the mapping, VFS quota code maps project ids when using
+them. However e.g. XFS does not map project IDs in its calls setting them
+in the inode. Among other things this results in some funny errors if you
+set project ID to (unsigned)-1.
+
+In the session we'd like to get feedback how project quotas / ids get used
+/ could be used so that we can define the common semantics and make the
+code consistently follow these rules.
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
