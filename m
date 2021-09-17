@@ -2,118 +2,138 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01E2AC433F5
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Sep 2021 15:34:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CACEC433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Sep 2021 16:00:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DB8E461164
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Sep 2021 15:34:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5A78E61100
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Sep 2021 16:00:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240114AbhIQPgJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Sep 2021 11:36:09 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43032 "EHLO mail.kernel.org"
+        id S229840AbhIQQBX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Sep 2021 12:01:23 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51946 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S242482AbhIQPe1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 17 Sep 2021 11:34:27 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C941A610A7;
-        Fri, 17 Sep 2021 15:33:04 +0000 (UTC)
+        id S229553AbhIQQBX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 17 Sep 2021 12:01:23 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 255B661019;
+        Fri, 17 Sep 2021 16:00:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631892784;
-        bh=9MHIk2t5x7NEHeTxPOE1It1AGkcx0ikE4Sxn9rPtHQU=;
+        s=k20201202; t=1631894401;
+        bh=5ajiJ7iHk5eR9Bt5z3D/ZQHJwfEgy4mmvqGfWLY2BFg=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=X0GMxlW2/qRnn9KvjDA2e4/N8ThLppKFZdLCMZO16lyjwnRDCZ3dlTfK0bNMGaFEt
-         Ns0l2VkaNU0c5R63DCWMVeXuMxtKLB7QXHZXuU/VluNMbCD10Amr/SFtTradft6PT/
-         kIbUxdZE/NcwzoLf6oWvmxuhaA/Vg56JS5ZuGnm0yFwSNcT1IyKAW/jZ4jHltT+FFc
-         PW6fNq+b7CdfzUjyAoIJi5/Xyk98g3z6nUFpI9bc/nTwzafC1tAGdTRHv0mWZbtc07
-         ypQtB/mSa0xe+6Stoo52k7dLskqy/4Xamxj4/ut6gDseyOwj1njfwqYpmVWNVMAHqj
-         rY491xXQ9RYjQ==
-Date:   Fri, 17 Sep 2021 08:33:04 -0700
+        b=RWE31FD47PGp3YPi66J7WgrniAXZDN3KZTisQ6rk2akztof5zYLI8gAcv7prTzmNo
+         45j0Zdwn+jtLU+tbhlHMxGzL5FTUW/dUvy/bJqhCkkoucsimQYrwB8HmoXhtmjBYQ2
+         JLrmTgy81XF8yz60+DS53EYX47Lfuv/bpWkDMaC5AFQ3QqnnsAMCvF11CxzLZQkvZo
+         fpsMZKj7Pexd7DzuMYpmV2a/cShnquYfHdj5lE7UlHaumMoMXTbRXILwNKlK1K/8js
+         krmmLC2uKX7YsESA9luoOejpI0+yM3CDTgySWPPodIxstv8lgIlZPU8q8tB5mAY+NN
+         wFTqJeo2LKXyQ==
+Date:   Fri, 17 Sep 2021 09:00:00 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Shiyang Ruan <ruansy.fnst@fujitsu.com>, linux-xfs@vger.kernel.org,
-        dan.j.williams@intel.com, david@fromorbit.com,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        nvdimm@lists.linux.dev, rgoldwyn@suse.de, viro@zeniv.linux.org.uk,
-        willy@infradead.org
-Subject: Re: [PATCH v9 7/8] xfs: support CoW in fsdax mode
-Message-ID: <20210917153304.GB10250@magnolia>
-References: <20210915104501.4146910-1-ruansy.fnst@fujitsu.com>
- <20210915104501.4146910-8-ruansy.fnst@fujitsu.com>
- <20210916002227.GD34830@magnolia>
- <20210916063251.GE13306@lst.de>
+To:     Amir Goldstein <amir73il@gmail.com>
+Cc:     Eryu Guan <guaneryu@gmail.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        fstests <fstests@vger.kernel.org>, Eryu Guan <guan@eryu.me>
+Subject: Re: [PATCH 9/9] new: don't allow new tests in group 'other'
+Message-ID: <20210917160000.GA10224@magnolia>
+References: <163174935747.380880.7635671692624086987.stgit@magnolia>
+ <163174940659.380880.14564845266535022734.stgit@magnolia>
+ <CAOQ4uxh6fZNzCX2wAQdhmz4Z+4xGbZMF0zfSkKUZKjS0KZhpOA@mail.gmail.com>
+ <20210916225306.GB34846@magnolia>
+ <CAOQ4uxiXFw9t61S3J3MPULqrS9RvGEUPQf3Eq54P9qtjL8zMcw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210916063251.GE13306@lst.de>
+In-Reply-To: <CAOQ4uxiXFw9t61S3J3MPULqrS9RvGEUPQf3Eq54P9qtjL8zMcw@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 16, 2021 at 08:32:51AM +0200, Christoph Hellwig wrote:
-> On Wed, Sep 15, 2021 at 05:22:27PM -0700, Darrick J. Wong wrote:
-> > >  		xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-> > >  		ret = dax_iomap_fault(vmf, pe_size, &pfn, NULL,
-> > >  				(write_fault && !vmf->cow_page) ?
-> > > -				 &xfs_direct_write_iomap_ops :
-> > > -				 &xfs_read_iomap_ops);
-> > > +					&xfs_dax_write_iomap_ops :
-> > > +					&xfs_read_iomap_ops);
-> > 
-> > Hmm... I wonder if this should get hoisted to a "xfs_dax_iomap_fault"
-> > wrapper like you did for xfs_iomap_zero_range?
+On Fri, Sep 17, 2021 at 05:31:25AM +0300, Amir Goldstein wrote:
+> On Fri, Sep 17, 2021 at 1:53 AM Darrick J. Wong <djwong@kernel.org> wrote:
+> >
+> > On Thu, Sep 16, 2021 at 09:40:54AM +0300, Amir Goldstein wrote:
+> > > On Thu, Sep 16, 2021 at 2:43 AM Darrick J. Wong <djwong@kernel.org> wrote:
+> > > >
+> > > > From: Darrick J. Wong <djwong@kernel.org>
+> > > >
+> > > > The 'other' group is vaguely defined at best -- other than what?  It's
+> > > > not clear what tests belong in this group, and it has become a dumping
+> > > > ground for random stuff that are classified in other groups.  Don't let
+> > > > people create new other group tests.
+> > > >
+> > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > > ---
+> > > >  new |    7 +++++--
+> > > >  1 file changed, 5 insertions(+), 2 deletions(-)
+> > > >
+> > > >
+> > > > diff --git a/new b/new
+> > > > index 6b7dc5d4..5cf96c50 100755
+> > > > --- a/new
+> > > > +++ b/new
+> > > > @@ -96,9 +96,9 @@ then
+> > > >
+> > > >      while true
+> > > >      do
+> > > > -       echo -n "Add to group(s) [other] (separate by space, ? for list): "
+> > > > +       echo -n "Add to group(s) [auto] (separate by space, ? for list): "
+> > > >         read ans
+> > > > -       [ -z "$ans" ] && ans=other
+> > > > +       [ -z "$ans" ] && ans=auto
+> > > >         if [ "X$ans" = "X?" ]
+> > > >         then
+> > > >             echo $(group_names)
+> > > > @@ -109,6 +109,9 @@ then
+> > > >                 echo "Invalid characters in group(s): $inval"
+> > > >                 echo "Only lower cases, digits and underscore are allowed in groups, separated by space"
+> > > >                 continue
+> > > > +           elif echo "$ans" | grep -q -w "other"; then
+> > > > +               echo "Do not add more tests to group \"other\"."
+> > > > +               continue
+> > >
+> > > Should we also filter out "other" from group_names(), so it is not listed
+> > > for "?"?
+> >
+> > No; there are drawbacks to that, as you point out below.
+> >
+> > > With this patch, "other" does not emit a warning when passed in as a script
+> > > command line argument.
+> >
+> > Done.
+> >
+> > > If we filter "other" from group_names(), then the warning in "expert mode"
+> > > will be a bit confusing (group "other" not defined in documentation).
+> >
+> > I will filter it out in the specific case case that the interactive user
+> > specified "?" to list the groups.
+> >
+> > > Also, it is not clear to me if this is intentional behavior that interactive
+> > > mode allows non-dcumented groups (with valid chars validation) and
+> > > expert mode does not allow non-documented groups?
+> >
+> > Probably not.
+> >
+> > > It may be simpler to use the same helper in both modes (is_group_valid)
+> > > to emit the correct warning and either proceed (expert mode) or get
+> > > back to prompt (interactive mode).
+> >
+> > This is getting farther afield from where I wanted this thing to go.
+> > Very well, I'll split the ./new cleanups into its own series, but TBH
+> > I've gotten tired of people asking for more and more cleanups out of me.
+> >
 > 
-> This has just a single users, so the classic argument won't apply.  That
-> being said __xfs_filemap_fault is a complete mess to due the calling
-> conventions of the various VFS methods multiplexed into it.  So yes,
-> splitting out a xfs_dax_iomap_fault to wrap the above plus the
-> dax_finish_sync_fault call might not actually be a bad idea nevertheless.
+> Fair enough.
+> TBH I just wanted to point out the inconsistencies that I noticed.
+> I don't really mind if they are fixed.
+> I should have been more clear about this point.
 
-Agree.
-
-> > > +	struct xfs_inode	*ip = XFS_I(inode);
-> > > +	/*
-> > > +	 * Usually we use @written to indicate whether the operation was
-> > > +	 * successful.  But it is always positive or zero.  The CoW needs the
-> > > +	 * actual error code from actor().  So, get it from
-> > > +	 * iomap_iter->processed.
-> > 
-> > Hm.  All six arguments are derived from the struct iomap_iter, so maybe
-> > it makes more sense to pass that in?  I'll poke around with this more
-> > tomorrow.
-> 
-> I'd argue against just changing the calling conventions for ->iomap_end
-> now.  The original iter patches from willy allowed passing a single
-> next callback combinging iomap_begin and iomap_end in a way that with
-> a little magic we can avoid the indirect calls entirely.  I think we'll
-> need to experiment with that that a bit and see if is worth the effort
-> first.  I plan to do that but I might not get to it immediate.  If some
-> else wants to take over I'm fine with that.
-
-Ah, I forgot that.  Yay Etch-a-Sketch brain. <shake> -ENODATA ;)
-
-> > >  static int
-> > >  xfs_buffered_write_iomap_begin(
-> > 
-> > Also, we have an related request to drop the EXPERIMENTAL tag for
-> > non-DAX reflink.  Whichever patch enables dax+reflink for xfs needs to
-> > make it clear that reflink + any possibility of DAX emits an
-> > EXPERIMENTAL warning.
-> 
-> More importantly before we can merge this series we also need the VM
-> level support for reflink-aware reverse mapping.  So while this series
-> here is no in a good enough shape I don't see how we could merge it
-> without that other series as we'd have to disallow mmap for reflink+dax
-> files otherwise.
-
-I've forgotten why we need mm level reverse mapping again?  The pmem
-poison stuff can use ->media_failure (or whatever it was called,
-memory_failure?) to find all the owners and notify them.  Was there
-some other accounting reason that fell out of my brain?
-
-I'm more afraid of 'sharing pages between files needs mm support'
-sparking another multi-year folioesque fight with the mm people.
+Oh.  Well thank you for reviewing this series and the ./new cleanups. :)
 
 --D
+
+> Thanks,
+> Amir.
