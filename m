@@ -2,137 +2,118 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34B0EC4332F
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Sep 2021 14:42:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01E2AC433F5
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Sep 2021 15:34:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1FD93611C3
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Sep 2021 14:42:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DB8E461164
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Sep 2021 15:34:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229715AbhIQOoB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Sep 2021 10:44:01 -0400
-Received: from smtp-out2.suse.de ([195.135.220.29]:36748 "EHLO
-        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229462AbhIQOoA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Sep 2021 10:44:00 -0400
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id 6DEE02028D;
-        Fri, 17 Sep 2021 14:42:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1631889756; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=9Q9z58nJWZPYLSInI8nBVh8lTbi5/ptCY6EYwUNxRM4=;
-        b=MUYuU0fOLsgnj8zbOAkl/3jMLDnS31vFMWaKPHkYgJw1tZkKnIOLzJy7WrbTXqjqEpHMcL
-        ClB0fxX40hbcNJFuD00Rt8mCP7uEGLcZYn7LWcomJtLEJLljcA0Z26Y7EeL/pJwQuXZ5R/
-        yKRTA4uf38taeV1zhjd6CARyC2keir4=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1631889756;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=9Q9z58nJWZPYLSInI8nBVh8lTbi5/ptCY6EYwUNxRM4=;
-        b=iQepc13dGR2A2g+ziflA00yEmJbebWNeoIDsac1mJMFizHHqfl7RS8h8Wtor/t/r2KaHLs
-        t43wYd5JMlQXYmBQ==
-Received: from suse.de (unknown [10.163.32.246])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by relay2.suse.de (Postfix) with ESMTPS id 21802A3BFF;
-        Fri, 17 Sep 2021 14:42:35 +0000 (UTC)
-Date:   Fri, 17 Sep 2021 15:42:33 +0100
-From:   Mel Gorman <mgorman@suse.de>
-To:     NeilBrown <neilb@suse.de>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Michal Hocko <mhocko@suse.com>,
-        Jesper Dangaard Brouer <jbrouer@redhat.com>,
-        ". Dave Chinner" <david@fromorbit.com>,
-        Jonathan Corbet <corbet@lwn.net>, linux-xfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org
-Subject: Re: [PATCH 1/6] MM: Support __GFP_NOFAIL in  alloc_pages_bulk_*()
- and improve doco
-Message-ID: <20210917144233.GD3891@suse.de>
-References: <163184698512.29351.4735492251524335974.stgit@noble.brown>
- <163184741776.29351.3565418361661850328.stgit@noble.brown>
+        id S240114AbhIQPgJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Sep 2021 11:36:09 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43032 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S242482AbhIQPe1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 17 Sep 2021 11:34:27 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C941A610A7;
+        Fri, 17 Sep 2021 15:33:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1631892784;
+        bh=9MHIk2t5x7NEHeTxPOE1It1AGkcx0ikE4Sxn9rPtHQU=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=X0GMxlW2/qRnn9KvjDA2e4/N8ThLppKFZdLCMZO16lyjwnRDCZ3dlTfK0bNMGaFEt
+         Ns0l2VkaNU0c5R63DCWMVeXuMxtKLB7QXHZXuU/VluNMbCD10Amr/SFtTradft6PT/
+         kIbUxdZE/NcwzoLf6oWvmxuhaA/Vg56JS5ZuGnm0yFwSNcT1IyKAW/jZ4jHltT+FFc
+         PW6fNq+b7CdfzUjyAoIJi5/Xyk98g3z6nUFpI9bc/nTwzafC1tAGdTRHv0mWZbtc07
+         ypQtB/mSa0xe+6Stoo52k7dLskqy/4Xamxj4/ut6gDseyOwj1njfwqYpmVWNVMAHqj
+         rY491xXQ9RYjQ==
+Date:   Fri, 17 Sep 2021 08:33:04 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Shiyang Ruan <ruansy.fnst@fujitsu.com>, linux-xfs@vger.kernel.org,
+        dan.j.williams@intel.com, david@fromorbit.com,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        nvdimm@lists.linux.dev, rgoldwyn@suse.de, viro@zeniv.linux.org.uk,
+        willy@infradead.org
+Subject: Re: [PATCH v9 7/8] xfs: support CoW in fsdax mode
+Message-ID: <20210917153304.GB10250@magnolia>
+References: <20210915104501.4146910-1-ruansy.fnst@fujitsu.com>
+ <20210915104501.4146910-8-ruansy.fnst@fujitsu.com>
+ <20210916002227.GD34830@magnolia>
+ <20210916063251.GE13306@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <163184741776.29351.3565418361661850328.stgit@noble.brown>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20210916063251.GE13306@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-I'm top-posting to cc Jesper with full context of the patch. I don't
-have a problem with this patch other than the Fixes: being a bit
-marginal, I should have acked as Mel Gorman <mgorman@suse.de> and the
-@gfp in the comment should have been @gfp_mask.
+On Thu, Sep 16, 2021 at 08:32:51AM +0200, Christoph Hellwig wrote:
+> On Wed, Sep 15, 2021 at 05:22:27PM -0700, Darrick J. Wong wrote:
+> > >  		xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+> > >  		ret = dax_iomap_fault(vmf, pe_size, &pfn, NULL,
+> > >  				(write_fault && !vmf->cow_page) ?
+> > > -				 &xfs_direct_write_iomap_ops :
+> > > -				 &xfs_read_iomap_ops);
+> > > +					&xfs_dax_write_iomap_ops :
+> > > +					&xfs_read_iomap_ops);
+> > 
+> > Hmm... I wonder if this should get hoisted to a "xfs_dax_iomap_fault"
+> > wrapper like you did for xfs_iomap_zero_range?
+> 
+> This has just a single users, so the classic argument won't apply.  That
+> being said __xfs_filemap_fault is a complete mess to due the calling
+> conventions of the various VFS methods multiplexed into it.  So yes,
+> splitting out a xfs_dax_iomap_fault to wrap the above plus the
+> dax_finish_sync_fault call might not actually be a bad idea nevertheless.
 
-However, an assumption the API design made was that it should fail fast
-if memory is not quickly available but have at least one page in the
-array. I don't think the network use case cares about the situation where
-the array is already populated but I'd like Jesper to have the opportunity
-to think about it.  It's possible he would prefer it's explicit and the
-check becomes
-(!nr_populated || ((gfp_mask & __GFP_NOFAIL) && !nr_account)) to
-state that __GFP_NOFAIL users are willing to take a potential latency
-penalty if the array is already partially populated but !__GFP_NOFAIL
-users would prefer fail-fast behaviour. I'm on the fence because while
-I wrote the implementation, it was based on other peoples requirements.
+Agree.
 
-On Fri, Sep 17, 2021 at 12:56:57PM +1000, NeilBrown wrote:
-> When alloc_pages_bulk_array() is called on an array that is partially
-> allocated, the level of effort to get a single page is less than when
-> the array was completely unallocated.  This behaviour is inconsistent,
-> but now fixed.  One effect if this is that __GFP_NOFAIL will not ensure
-> at least one page is allocated.
+> > > +	struct xfs_inode	*ip = XFS_I(inode);
+> > > +	/*
+> > > +	 * Usually we use @written to indicate whether the operation was
+> > > +	 * successful.  But it is always positive or zero.  The CoW needs the
+> > > +	 * actual error code from actor().  So, get it from
+> > > +	 * iomap_iter->processed.
+> > 
+> > Hm.  All six arguments are derived from the struct iomap_iter, so maybe
+> > it makes more sense to pass that in?  I'll poke around with this more
+> > tomorrow.
 > 
-> Also clarify the expected success rate.  __alloc_pages_bulk() will
-> allocated one page according to @gfp, and may allocate more if that can
-> be done cheaply.  It is assumed that the caller values cheap allocation
-> where possible and may decide to use what it has got, or to call again
-> to get more.
+> I'd argue against just changing the calling conventions for ->iomap_end
+> now.  The original iter patches from willy allowed passing a single
+> next callback combinging iomap_begin and iomap_end in a way that with
+> a little magic we can avoid the indirect calls entirely.  I think we'll
+> need to experiment with that that a bit and see if is worth the effort
+> first.  I plan to do that but I might not get to it immediate.  If some
+> else wants to take over I'm fine with that.
+
+Ah, I forgot that.  Yay Etch-a-Sketch brain. <shake> -ENODATA ;)
+
+> > >  static int
+> > >  xfs_buffered_write_iomap_begin(
+> > 
+> > Also, we have an related request to drop the EXPERIMENTAL tag for
+> > non-DAX reflink.  Whichever patch enables dax+reflink for xfs needs to
+> > make it clear that reflink + any possibility of DAX emits an
+> > EXPERIMENTAL warning.
 > 
-> Acked-by: Mel Gorman <mgorman@suse.com>
-> Fixes: 0f87d9d30f21 ("mm/page_alloc: add an array-based interface to the bulk page allocator")
-> Signed-off-by: NeilBrown <neilb@suse.de>
-> ---
->  mm/page_alloc.c |    7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
-> 
-> diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-> index b37435c274cf..aa51016e49c5 100644
-> --- a/mm/page_alloc.c
-> +++ b/mm/page_alloc.c
-> @@ -5191,6 +5191,11 @@ static inline bool prepare_alloc_pages(gfp_t gfp_mask, unsigned int order,
->   * is the maximum number of pages that will be stored in the array.
->   *
->   * Returns the number of pages on the list or array.
-> + *
-> + * At least one page will be allocated if that is possible while
-> + * remaining consistent with @gfp.  Extra pages up to the requested
-> + * total will be allocated opportunistically when doing so is
-> + * significantly cheaper than having the caller repeat the request.
->   */
->  unsigned long __alloc_pages_bulk(gfp_t gfp, int preferred_nid,
->  			nodemask_t *nodemask, int nr_pages,
-> @@ -5292,7 +5297,7 @@ unsigned long __alloc_pages_bulk(gfp_t gfp, int preferred_nid,
->  								pcp, pcp_list);
->  		if (unlikely(!page)) {
->  			/* Try and get at least one page */
-> -			if (!nr_populated)
-> +			if (!nr_account)
->  				goto failed_irq;
->  			break;
->  		}
-> 
-> 
+> More importantly before we can merge this series we also need the VM
+> level support for reflink-aware reverse mapping.  So while this series
+> here is no in a good enough shape I don't see how we could merge it
+> without that other series as we'd have to disallow mmap for reflink+dax
+> files otherwise.
+
+I've forgotten why we need mm level reverse mapping again?  The pmem
+poison stuff can use ->media_failure (or whatever it was called,
+memory_failure?) to find all the owners and notify them.  Was there
+some other accounting reason that fell out of my brain?
+
+I'm more afraid of 'sharing pages between files needs mm support'
+sparking another multi-year folioesque fight with the mm people.
+
+--D
