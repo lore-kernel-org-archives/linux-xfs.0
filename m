@@ -2,131 +2,135 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A861DC433F5
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Sep 2021 10:42:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 036B0C433F5
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Sep 2021 10:44:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 80C5D611CA
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Sep 2021 10:42:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CFAB06120D
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Sep 2021 10:44:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240888AbhIQKnx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Sep 2021 06:43:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40554 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231364AbhIQKnx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Sep 2021 06:43:53 -0400
-Received: from mail-il1-x12f.google.com (mail-il1-x12f.google.com [IPv6:2607:f8b0:4864:20::12f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68297C061574;
-        Fri, 17 Sep 2021 03:42:31 -0700 (PDT)
-Received: by mail-il1-x12f.google.com with SMTP id m4so9808272ilj.9;
-        Fri, 17 Sep 2021 03:42:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=B59WIn6lLpW+T3exh+AhWXJEftTYi0iejRxBk6P7bvk=;
-        b=fmHMlfsAcIjVDJ+V9aw6JMVWUJWea+pDPnOwO/6XJQPfJ2jcw4EDbMwKmeLCCjncG4
-         A3lY1XAONnNQMgj5RioisVSdb7g02h2P+EHYbYva2Njw8YOWFrNE9iFHvKF7fIXP/MBR
-         TadqD9XVhebwgGG4sotww0+BtetEc3+2oZ6E6VkQN7dvzSJVsqi/gKiWWQugF1RKjDud
-         yafhv08c8h4mrfS7k9gth8t0lAmBrCjOGr6jknE+e/GUjgyrUfGkSAisK7ILIKYUXpPc
-         KbIM+aJY7WAIdOpd+Aih0CVDMpzIawfDYJspB3KQZf8CleSYyMgAhBXqQmt0jrC4/Yuc
-         1Qgg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=B59WIn6lLpW+T3exh+AhWXJEftTYi0iejRxBk6P7bvk=;
-        b=Q5XW2owO5M+JQEPVAsPlPrl8zXeSTTxKlE+6xNe+oOtDbE1XYULIql4uzkkl+YulL6
-         Wiqj6P+PSDhfpkp0jwJHRePsj/nc3WNHUDNYgUeJGE0naBYiZuQsxJcbC0EZnWEilmxz
-         gjwZfEiUnBh9wCOMVzbfXXVonhg1E8vAzlUVD4eLP9LwOBEZhPIuNwg+WVCt9OdDZVE9
-         Qy7Px6jLpYXlLHsiZ0EITvzrUDDmGxg+fH4kYO1EgwBeqw/k70G2W0B7JyVNi9JLWbUi
-         3JXGHuLehQVxu7xZX/jFyZboDNgIZgOf7eEIILSovdGIVr1+YV5+vd0piL/zRxUH+CUI
-         mAxw==
-X-Gm-Message-State: AOAM530u5oVY5yDU4EYaheoYHGmNQzjZrniZ5HO0EBa2n8nFUns19RK4
-        uChKy2HO4JCqYaiDJPpNld52Y/w1ySfVCakaz0w=
-X-Google-Smtp-Source: ABdhPJzPEQJY44CpnTx6w2g5NQ1AThmD4Cf5x9UjRKefkfIwkABnmVPfyfB4KT5wFBXtPEwVLNaykfVKa+j661imoqY=
-X-Received: by 2002:a05:6e02:1a67:: with SMTP id w7mr7435498ilv.24.1631875350690;
- Fri, 17 Sep 2021 03:42:30 -0700 (PDT)
+        id S1343775AbhIQKp1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Sep 2021 06:45:27 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:59065 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S243599AbhIQKp0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Sep 2021 06:45:26 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1631875444;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Yjuq7cya6/eyxY3obyZMZVApt3mSJBG4rSl0Zko1nXM=;
+        b=c5O6SNW+PqlurlsoC8OPJyXVtShk7p547b5jAtz7fVjb2sKKIWJKfw97OfF/yIatxC4dXt
+        LsA4IXbxCq8oNTklqB4Y/k7141FARnBIHv4hb9klGjeH9NefdA43VPhJECA9uPEI4Ed++s
+        HEyMt85T1+27i70jdCRJXnmjleqsUoM=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-165-TEXMi8FGMg6vAtTUIBCiIQ-1; Fri, 17 Sep 2021 06:44:03 -0400
+X-MC-Unique: TEXMi8FGMg6vAtTUIBCiIQ-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B75B1835DE0;
+        Fri, 17 Sep 2021 10:44:01 +0000 (UTC)
+Received: from warthog.procyon.org.uk (unknown [10.33.36.44])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id C014760583;
+        Fri, 17 Sep 2021 10:44:00 +0000 (UTC)
+Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
+        Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
+        Kingdom.
+        Registered in England and Wales under Company Registration No. 3798903
+From:   David Howells <dhowells@redhat.com>
+In-Reply-To: <2315872.1631874463@warthog.procyon.org.uk>
+References: <2315872.1631874463@warthog.procyon.org.uk>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     dhowells@redhat.com, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: Could we get an IOCB_NO_READ_HOLE?
 MIME-Version: 1.0
-References: <163183918998.953189.9876855385681643134.stgit@magnolia> <163183920637.953189.13037781612178012211.stgit@magnolia>
-In-Reply-To: <163183920637.953189.13037781612178012211.stgit@magnolia>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Fri, 17 Sep 2021 13:42:19 +0300
-Message-ID: <CAOQ4uxiTu-b2HAQiFrtbziUKKxKwKjJe2fVnKiVM=AAm_9bXyg@mail.gmail.com>
-Subject: Re: [PATCH 3/3] new: don't allow new tests in group 'other'
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Eryu Guan <guaneryu@gmail.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        fstests <fstests@vger.kernel.org>, Eryu Guan <guan@eryu.me>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <2349283.1631875439.1@warthog.procyon.org.uk>
+Content-Transfer-Encoding: quoted-printable
+Date:   Fri, 17 Sep 2021 11:43:59 +0100
+Message-ID: <2349284.1631875439@warthog.procyon.org.uk>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 17, 2021 at 12:57 PM Darrick J. Wong <djwong@kernel.org> wrote:
->
-> From: Darrick J. Wong <djwong@kernel.org>
->
-> The 'other' group is vaguely defined at best -- other than what?  It's
-> not clear what tests belong in this group, and it has become a dumping
-> ground for random stuff that are classified in other groups.  Don't let
-> people create new other group tests.
->
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Amir Goldstein <amir73il@gmail.com>
+David Howells <dhowells@redhat.com> wrote:
 
-> ---
->  new |    9 ++++++---
->  1 file changed, 6 insertions(+), 3 deletions(-)
->
->
-> diff --git a/new b/new
-> index 3a657d20..9651e0e0 100755
-> --- a/new
-> +++ b/new
-> @@ -100,6 +100,9 @@ check_groups() {
->                         echo "Invalid characters in group(s): ${inval}"
->                         echo "Only lower cases, digits and underscore are allowed in groups, separated by space"
->                         return 1
-> +               elif [ "${g}" = "other" ]; then
-> +                       echo "Do not add more tests to group \"other\""
-> +                       return 1
->                 elif ! group_names | grep -q -w "${g}"; then
->                         echo "Warning: group \"${g}\" not defined in documentation"
->                         return 1
-> @@ -111,16 +114,16 @@ check_groups() {
->
->  if [ $# -eq 0 ]; then
->         # interactive mode
-> -       prompt="Add to group(s) [other] (separate by space, ? for list): "
-> +       prompt="Add to group(s) [auto] (separate by space, ? for list): "
->         while true; do
->                 read -p "${prompt}" -a new_groups || exit 1
->                 case "${#new_groups[@]}" in
->                 0)
-> -                       new_groups=("other")
-> +                       new_groups=("auto")
->                         ;;
->                 1)
->                         if [ "${new_groups[0]}" = "?" ]; then
-> -                               echo $(group_names)
-> +                               echo $(group_names | grep -v -w 'other')
->                                 continue
->                         fi
->                         ;;
->
+> Would it be possible to get an IOCB_NO_READ_HOLE flag that causes a read=
+ to
+> either fail entirely if there's a hole in the file or to stop at the hol=
+e,
+> possibly returning -ENODATA if the hole is at the front of the file?
+> =
 
-Darrick,
+> Looking at iomap_dio_iter(), IOMAP_HOLE should be enabled in
+> iomap_iter::iomap.type for this?  Is it that simple?
 
-Thanks for the first cleanup and for this extra cleanup.
-I wanted to point out that with this patch there is no implication
-to filtering out "other" in group_names() SHOULD you think
-this is better. I definitely have no problem with the patch as is!
+Actually, that's not the right thing.  How about the attached - at least f=
+or
+direct I/O?
 
-Thanks,
-Amir.
+David
+---
+commit 522d2834f9994b82b1fa1f1eeeb48ede16b327c7
+Author: David Howells <dhowells@redhat.com>
+Date:   Fri Sep 17 11:33:41 2021 +0100
+
+    iomap: Implement IOCB_NO_READ_HOLE
+
+diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+index 4ecd255e0511..d2309dec27c4 100644
+--- a/fs/iomap/direct-io.c
++++ b/fs/iomap/direct-io.c
+@@ -18,6 +18,7 @@
+  * Private flags for iomap_dio, must not overlap with the public ones in
+  * iomap.h:
+  */
++#define IOMAP_DIO_NO_READ_HOLE	(1 << 27)
+ #define IOMAP_DIO_WRITE_FUA	(1 << 28)
+ #define IOMAP_DIO_NEED_SYNC	(1 << 29)
+ #define IOMAP_DIO_WRITE		(1 << 30)
+@@ -412,6 +413,8 @@ static loff_t iomap_dio_iter(const struct iomap_iter *=
+iter,
+ 	case IOMAP_HOLE:
+ 		if (WARN_ON_ONCE(dio->flags & IOMAP_DIO_WRITE))
+ 			return -EIO;
++		if (dio->flags & IOMAP_DIO_NO_READ_HOLE)
++			return dio->size ? 0 : -ENODATA;
+ 		return iomap_dio_hole_iter(iter, dio);
+ 	case IOMAP_UNWRITTEN:
+ 		if (!(dio->flags & IOMAP_DIO_WRITE))
+@@ -503,6 +506,8 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *it=
+er,
+ =
+
+ 		if (iter_is_iovec(iter))
+ 			dio->flags |=3D IOMAP_DIO_DIRTY;
++		if (iocb->ki_flags & IOCB_NO_READ_HOLE)
++			dio->flags |=3D IOMAP_DIO_NO_READ_HOLE;
+ 	} else {
+ 		iomi.flags |=3D IOMAP_WRITE;
+ 		dio->flags |=3D IOMAP_DIO_WRITE;
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index e7a633353fd2..f4c8ca22531d 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -321,6 +321,7 @@ enum rw_hint {
+ #define IOCB_NOIO		(1 << 20)
+ /* can use bio alloc cache */
+ #define IOCB_ALLOC_CACHE	(1 << 21)
++#define IOCB_NO_READ_HOLE	(1 << 22)	/* Don't read from a hole */
+ =
+
+ struct kiocb {
+ 	struct file		*ki_filp;
+
