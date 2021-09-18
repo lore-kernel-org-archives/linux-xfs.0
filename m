@@ -3,289 +3,222 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DC26C433F5
-	for <linux-xfs@archiver.kernel.org>; Sat, 18 Sep 2021 00:02:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3E5FC433EF
+	for <linux-xfs@archiver.kernel.org>; Sat, 18 Sep 2021 00:03:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1D40560F51
-	for <linux-xfs@archiver.kernel.org>; Sat, 18 Sep 2021 00:02:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A2DB9611C3
+	for <linux-xfs@archiver.kernel.org>; Sat, 18 Sep 2021 00:03:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241646AbhIRADn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Sep 2021 20:03:43 -0400
-Received: from mail.kernel.org ([198.145.29.99]:44456 "EHLO mail.kernel.org"
+        id S235554AbhIRAE4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Sep 2021 20:04:56 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44872 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237453AbhIRADn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 17 Sep 2021 20:03:43 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C350B610FD;
-        Sat, 18 Sep 2021 00:02:20 +0000 (UTC)
+        id S230379AbhIRAE4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 17 Sep 2021 20:04:56 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8867260F51;
+        Sat, 18 Sep 2021 00:03:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631923340;
-        bh=RMFPekOmCM1d2h5lvt2Ae5HxwfNf/8drwNyhly3KYqU=;
+        s=k20201202; t=1631923413;
+        bh=HtQI9JwI2+8PnWmq8AJ7xzV3AvN1zoixQbcei+v3h4U=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=fmMUUesM5k/dV39LWfx3SUHxiU8ova2QoEOO3zZe89Xnl49X5qtXut3mBgPk/1xoe
-         oRzGep7Y+RR9JQXW6ZzOcBoJ4FRq2vUlMfnIcPtkwhd4KhlaJpPBduix65kb24gqwF
-         MAcqNmW9NTfcR5fgDLN8+Z/FBilD0qTsPjifXImtYbLeWVm00ksAGTjzTSs121lz0a
-         flo8l87MvoElQXzr/qvvEi7GErgowJtk+2CaY3umA0O/6E1P1NzE2Ng6+AmYZMmj7S
-         p1o/Nv6E5BozLU3N2VKgQZb/hK8eVJWxwJEuMSMgw5fwF5XhB7+RRT5S4rinsm2apW
-         KcRcSp6+RdTnQ==
-Date:   Fri, 17 Sep 2021 17:02:20 -0700
+        b=lqJP7DGYfDctXuMQSNfgEb+mUuh5nHj33lmouXQ6zr1hSiHKC+BKT8rs+tbgGt2g3
+         oF4IPjLqS0lA5crPh7Z+d/6dSd+CC7srsOZWTcB0V6D39F3YHRVc84g5F3mEVoBV1H
+         RZO8h7IpJF9nClB58IHIfOfplYhh9MF795sp/44A9nOGA2XA3GwhbINNaAvcqCa7UD
+         Vp5xJ0EExTNJVE2Oy5Md8lfTcBhmxEtKn03PPBZp2F+jJRjpTIZLsMimG5S/iHmnEO
+         spHxzAohmVTCc7gvdL1ZIlWSlxZREkVUN+KnRwPGVZ7VyYQ59SaMOApaNCOa1Vxner
+         fNyU/zGfpUJxQ==
+Date:   Fri, 17 Sep 2021 17:03:33 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Allison Henderson <allison.henderson@oracle.com>
+To:     Chandan Babu R <chandan.babu@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v24 02/11] xfs: Capture buffers for delayed ops
-Message-ID: <20210918000220.GC10250@magnolia>
-References: <20210824224434.968720-1-allison.henderson@oracle.com>
- <20210824224434.968720-3-allison.henderson@oracle.com>
- <20210830174407.GA9942@magnolia>
- <dce359c9-18d2-ad38-b951-d1cb98d7cc7d@oracle.com>
+Subject: Re: [PATCH V3 00/12] xfs: Extend per-inode extent counters
+Message-ID: <20210918000333.GD10224@magnolia>
+References: <20210916100647.176018-1-chandan.babu@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <dce359c9-18d2-ad38-b951-d1cb98d7cc7d@oracle.com>
+In-Reply-To: <20210916100647.176018-1-chandan.babu@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 31, 2021 at 10:50:52AM -0700, Allison Henderson wrote:
+On Thu, Sep 16, 2021 at 03:36:35PM +0530, Chandan Babu R wrote:
+> The commit xfs: fix inode fork extent count overflow
+> (3f8a4f1d876d3e3e49e50b0396eaffcc4ba71b08) mentions that 10 billion
+> data fork extents should be possible to create. However the
+> corresponding on-disk field has a signed 32-bit type. Hence this
+> patchset extends the per-inode data extent counter to 64 bits out of
+> which 48 bits are used to store the extent count. 
 > 
+> Also, XFS has an attr fork extent counter which is 16 bits wide. A
+> workload which,
+> 1. Creates 1 million 255-byte sized xattrs,
+> 2. Deletes 50% of these xattrs in an alternating manner,
+> 3. Tries to insert 400,000 new 255-byte sized xattrs
+>    causes the xattr extent counter to overflow.
 > 
-> On 8/30/21 10:44 AM, Darrick J. Wong wrote:
-> > On Tue, Aug 24, 2021 at 03:44:25PM -0700, Allison Henderson wrote:
-> > > This patch enables delayed operations to capture held buffers with in
-> > > the xfs_defer_capture. Buffers are then rejoined to the new
-> > > transaction in xlog_finish_defer_ops
-> > > 
-> > > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> > > ---
-> > >   fs/xfs/libxfs/xfs_defer.c  | 7 ++++++-
-> > >   fs/xfs/libxfs/xfs_defer.h  | 4 +++-
-> > >   fs/xfs/xfs_bmap_item.c     | 2 +-
-> > >   fs/xfs/xfs_buf.c           | 1 +
-> > >   fs/xfs/xfs_buf.h           | 1 +
-> > >   fs/xfs/xfs_extfree_item.c  | 2 +-
-> > >   fs/xfs/xfs_log_recover.c   | 7 +++++++
-> > >   fs/xfs/xfs_refcount_item.c | 2 +-
-> > >   fs/xfs/xfs_rmap_item.c     | 2 +-
-> > >   9 files changed, 22 insertions(+), 6 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-> > > index eff4a127188e..d1d09b6aca55 100644
-> > > --- a/fs/xfs/libxfs/xfs_defer.c
-> > > +++ b/fs/xfs/libxfs/xfs_defer.c
-> > > @@ -639,6 +639,7 @@ xfs_defer_ops_capture(
-> > >   	dfc = kmem_zalloc(sizeof(*dfc), KM_NOFS);
-> > >   	INIT_LIST_HEAD(&dfc->dfc_list);
-> > >   	INIT_LIST_HEAD(&dfc->dfc_dfops);
-> > > +	INIT_LIST_HEAD(&dfc->dfc_buffers);
-> > >   	xfs_defer_create_intents(tp);
-> > > @@ -690,7 +691,8 @@ int
-> > >   xfs_defer_ops_capture_and_commit(
-> > >   	struct xfs_trans		*tp,
-> > >   	struct xfs_inode		*capture_ip,
-> > > -	struct list_head		*capture_list)
-> > > +	struct list_head		*capture_list,
-> > > +	struct xfs_buf			*bp)
-> > 
-> > I wonder if xfs_defer_ops_capture should learn to pick up the inodes and
-> > buffers to hold automatically from the transaction that's being
-> > committed?  Seeing as xfs_defer_trans_roll already knows how to do that
-> > across transaction rolls, and that's more or less the same thing we're
-> > doing here, but in a much more roundabout way.
-> I see, I suppose it could?  But it wouldnt be used in this case though, at
-> least not yet.  I sort of got the impression that people like to see things
-> added as they are needed, and then unused code culled where it can be.  I
-> would think that if the need does arise though, b_delay would be easy to
-> expand into list of xfs_delay_items or something similar to what
-> xfs_defer_trans_roll has.
+> Dave tells me that there are instances where a single file has more
+> than 100 million hardlinks. With parent pointers being stored in
+> xattrs, we will overflow the signed 16-bits wide xattr extent counter
+> when large number of hardlinks are created. Hence this patchset
+> extends the on-disk field to 32-bits.
+> 
+> The following changes are made to accomplish this,
+> 1. A new incompat superblock flag to prevent older kernels from mounting
+>    the filesystem. This flag has to be set during mkfs time.
+> 2. A new 64-bit inode field is created to hold the data extent
+>    counter.
+> 3. The existing 32-bit inode data extent counter will be used to hold
+>    the attr fork extent counter.
+> 
+> The patchset has been tested by executing xfstests with the following
+> mkfs.xfs options,
+> 1. -m crc=0 -b size=1k
+> 2. -m crc=0 -b size=4k
+> 3. -m crc=0 -b size=512
+> 4. -m rmapbt=1,reflink=1 -b size=1k
+> 5. -m rmapbt=1,reflink=1 -b size=4k
+> 
+> Each of the above test scenarios were executed on the following
+> combinations (For V4 FS test scenario, the last combination
+> i.e. "Patched (enable extcnt64bit)", was omitted).
+> |-------------------------------+-----------|
+> | Xfsprogs                      | Kernel    |
+> |-------------------------------+-----------|
+> | Unpatched                     | Patched   |
+> | Patched (disable extcnt64bit) | Unpatched |
+> | Patched (disable extcnt64bit) | Patched   |
+> | Patched (enable extcnt64bit)  | Patched   |
+> |-------------------------------+-----------|
+> 
+> I have also written a test (yet to be converted into xfstests format)
+> to check if the correct extent counter fields are updated with/without
+> the new incompat flag. I have also fixed some of the existing fstests
+> to work with the new extent counter fields.
+> 
+> Increasing data extent counter width also causes the maximum height of
+> BMBT to increase. This requires that the macro XFS_BTREE_MAXLEVELS be
+> updated with a larger value. However such a change causes the value of
+> mp->m_rmap_maxlevels to increase which in turn causes log reservation
+> sizes to increase and hence a modified XFS driver will fail to mount
+> filesystems created by older versions of mkfs.xfs.
+> 
+> Hence this patchset is built on top of Darrick's btree-dynamic-depth
+> branch which removes the macro XFS_BTREE_MAXLEVELS and computes
+> mp->m_rmap_maxlevels based on the size of an AG.
 
-On further thought, I decided that log recovery of intent items really
-ought to be able to hold the same number and type of resources across a
-transaction "roll" that we can do at runtime, since there really ought
-to be no difference.
-
-I wrote a quick patch series to hoist the runtime code path to store the
-held buffers and inodes during xfs_defer_trans_roll in an explicitly
-named structure with separate save and restore helpers, then refactored
-log recovery to use it.
-
-This cleans up the API a bit so we that the defer capture system picks
-up the held resources from the log item state just like a regular defer
-roll.  It occurs to me that another way to handle intent item recovery
-would be to create workqueue items for each recovered intent and then
-kick the transactions off in background threads so that the end of all
-the _recover functions would be xfs_trans_commit.  But that's a lot more
-surgery on the recovery code and I don't want to go there right now.
-
-Anyway, I'll send the RFC series shortly and cc you on it, in case you
-want to incorporate it at the head of your series and nuke patch #2.
-
-Note: the end of the xattri recovery function then becomes:
-
-	error = xfs_defer_ops_capture_and_commit(tp, capture_list);
-	if (error)
-		/* pretend I handled the error */
-
-	if (attr->xattri_dac.leaf_bp)
-		xfs_buf_relse(attr->xattri_dac.leaf_bp);
-	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-	xfs_irele(ip);
-	return 0;
-
-I think it's a bug that patch 4 doesn't release leaf_bp, since we
-require code that holds a buffer across a commit to relse it explicitly.
+I forward-ported /just/ that branch to a 5.16 dev branch and will send
+that out, in case you wanted to add it to the head of your dev branch
+and thereby escape relying on the bajillion patches in djwong-dev.
 
 --D
 
+> These patches can also be obtained from
+> https://github.com/chandanr/linux.git at branch
+> xfs-incompat-extend-extcnt-v3.
 > 
-> > 
-> > >   {
-> > >   	struct xfs_mount		*mp = tp->t_mountp;
-> > >   	struct xfs_defer_capture	*dfc;
-> > > @@ -703,6 +705,9 @@ xfs_defer_ops_capture_and_commit(
-> > >   	if (!dfc)
-> > >   		return xfs_trans_commit(tp);
-> > > +	if (bp && bp->b_transp == tp)
-> > > +		list_add_tail(&bp->b_delay, &dfc->dfc_buffers);
-> > > +
-> > >   	/* Commit the transaction and add the capture structure to the list. */
-> > >   	error = xfs_trans_commit(tp);
-> > >   	if (error) {
-> > > diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-> > > index 05472f71fffe..739f70d72fd5 100644
-> > > --- a/fs/xfs/libxfs/xfs_defer.h
-> > > +++ b/fs/xfs/libxfs/xfs_defer.h
-> > > @@ -74,6 +74,7 @@ struct xfs_defer_capture {
-> > >   	/* Deferred ops state saved from the transaction. */
-> > >   	struct list_head	dfc_dfops;
-> > > +	struct list_head	dfc_buffers;
-> > >   	unsigned int		dfc_tpflags;
-> > >   	/* Block reservations for the data and rt devices. */
-> > > @@ -95,7 +96,8 @@ struct xfs_defer_capture {
-> > >    * This doesn't normally happen except log recovery.
-> > >    */
-> > >   int xfs_defer_ops_capture_and_commit(struct xfs_trans *tp,
-> > > -		struct xfs_inode *capture_ip, struct list_head *capture_list);
-> > > +		struct xfs_inode *capture_ip, struct list_head *capture_list,
-> > > +		struct xfs_buf *bp);
-> > >   void xfs_defer_ops_continue(struct xfs_defer_capture *d, struct xfs_trans *tp,
-> > >   		struct xfs_inode **captured_ipp);
-> > >   void xfs_defer_ops_release(struct xfs_mount *mp, struct xfs_defer_capture *d);
-> > > diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-> > > index 03159970133f..51ba8ee368ca 100644
-> > > --- a/fs/xfs/xfs_bmap_item.c
-> > > +++ b/fs/xfs/xfs_bmap_item.c
-> > > @@ -532,7 +532,7 @@ xfs_bui_item_recover(
-> > >   	 * Commit transaction, which frees the transaction and saves the inode
-> > >   	 * for later replay activities.
-> > >   	 */
-> > > -	error = xfs_defer_ops_capture_and_commit(tp, ip, capture_list);
-> > > +	error = xfs_defer_ops_capture_and_commit(tp, ip, capture_list, NULL);
-> > >   	if (error)
-> > >   		goto err_unlock;
-> > > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> > > index 047bd6e3f389..29b4655a0a65 100644
-> > > --- a/fs/xfs/xfs_buf.c
-> > > +++ b/fs/xfs/xfs_buf.c
-> > > @@ -233,6 +233,7 @@ _xfs_buf_alloc(
-> > >   	init_completion(&bp->b_iowait);
-> > >   	INIT_LIST_HEAD(&bp->b_lru);
-> > >   	INIT_LIST_HEAD(&bp->b_list);
-> > > +	INIT_LIST_HEAD(&bp->b_delay);
-> > >   	INIT_LIST_HEAD(&bp->b_li_list);
-> > >   	sema_init(&bp->b_sema, 0); /* held, no waiters */
-> > >   	spin_lock_init(&bp->b_lock);
-> > > diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> > > index 6b0200b8007d..c51445705dc6 100644
-> > > --- a/fs/xfs/xfs_buf.h
-> > > +++ b/fs/xfs/xfs_buf.h
-> > > @@ -151,6 +151,7 @@ struct xfs_buf {
-> > >   	int			b_io_error;	/* internal IO error state */
-> > >   	wait_queue_head_t	b_waiters;	/* unpin waiters */
-> > >   	struct list_head	b_list;
-> > > +	struct list_head	b_delay;	/* delayed operations list */
-> > >   	struct xfs_perag	*b_pag;		/* contains rbtree root */
-> > >   	struct xfs_mount	*b_mount;
-> > >   	struct xfs_buftarg	*b_target;	/* buffer target (device) */
-> > 
-> > The bare list-conveyance machinery looks fine to me, but adding 16 bytes
-> > to struct xfs_buf for something that only happens during log recovery is
-> > rather expensive.  Can you reuse b_list for this purpose?  I think the
-> > only user of b_list are the buffer delwri functions, which shouldn't be
-> > active here since the xattr recovery mechanism (a) holds the buffer lock
-> > and (b) doesn't itself use delwri buffer lists for xattr leaf blocks.
-> > 
-> > (The AIL uses delwri lists, but it won't touch a locked buffer.)
-> > 
-> Sure, it sounds like it would work, will try it out.
+> I will be posting the changes associated with xfsprogs separately.
 > 
-> > > diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-> > > index 3f8a0713573a..046f21338c48 100644
-> > > --- a/fs/xfs/xfs_extfree_item.c
-> > > +++ b/fs/xfs/xfs_extfree_item.c
-> > > @@ -637,7 +637,7 @@ xfs_efi_item_recover(
-> > >   	}
-> > > -	return xfs_defer_ops_capture_and_commit(tp, NULL, capture_list);
-> > > +	return xfs_defer_ops_capture_and_commit(tp, NULL, capture_list, NULL);
-> > >   abort_error:
-> > >   	xfs_trans_cancel(tp);
-> > > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> > > index 10562ecbd9ea..6a3c0bb16b69 100644
-> > > --- a/fs/xfs/xfs_log_recover.c
-> > > +++ b/fs/xfs/xfs_log_recover.c
-> > > @@ -2465,6 +2465,7 @@ xlog_finish_defer_ops(
-> > >   	struct list_head	*capture_list)
-> > >   {
-> > >   	struct xfs_defer_capture *dfc, *next;
-> > > +	struct xfs_buf		*bp, *bnext;
-> > >   	struct xfs_trans	*tp;
-> > >   	struct xfs_inode	*ip;
-> > >   	int			error = 0;
-> > > @@ -2489,6 +2490,12 @@ xlog_finish_defer_ops(
-> > >   			return error;
-> > >   		}
-> > > +		list_for_each_entry_safe(bp, bnext, &dfc->dfc_buffers, b_delay) {
-> > > +			xfs_trans_bjoin(tp, bp);
-> > > +			xfs_trans_bhold(tp, bp);
-> > > +			list_del_init(&bp->b_delay);
-> > > +		}
-> > 
-> > Why isn't this in xfs_defer_ops_continue, like the code that extracts
-> > the inodes from the capture struct and hands them back to the caller?
-> Its just what was discussed in the last review is all.  That does look like
-> a better place for it though.  Will move there.
+> Changelog:
+> V2 -> V3:
+> 1. Define maximum extent length as a function of
+>    BMBT_BLOCKCOUNT_BITLEN.
+> 2. Introduce xfs_iext_max_nextents() function in the patch series
+>    before renaming MAXEXTNUM/MAXAEXTNUM. This is done to reduce
+>    proliferation of macros indicating maximum extent count for data
+>    and attribute forks.
+> 3. Define xfs_dfork_nextents() as an inline function.
+> 4. Use xfs_rfsblock_t as the data type for variables that hold block
+>    count.
+> 5. xfs_dfork_nextents() now returns -EFSCORRUPTED when an invalid fork
+>    is passed as an argument.
+> 6. The following changes are done to enable bulkstat ioctl to report
+>    64-bit extent counters,
+>    - Carve out a new 64-bit field xfs_bulkstat->bs_extents64 from
+>      xfs_bulkstat->bs_pad[]. 
+>    - Carve out a new 64-bit field xfs_bulk_ireq->bulkstat_flags from
+>      xfs_bulk_ireq->reserved[] to hold bulkstat specific operational
+>      flags. Introduce XFS_IBULK_NREXT64 flag to indicate that
+>      userspace has the necessary infrastructure to receive 64-bit
+>      extent counters.
+>    - Define the new flag XFS_BULK_IREQ_BULKSTAT for userspace to
+>      indicate that xfs_bulk_ireq->bulkstat_flags has valid flags set.
+> 7. Rename the incompat flag from XFS_SB_FEAT_INCOMPAT_EXTCOUNT_64BIT
+>    to XFS_SB_FEAT_INCOMPAT_NREXT64.
+> 8. Add a new helper function xfs_inode_to_disk_iext_counters() to
+>    convert from incore inode extent counters to ondisk inode extent
+>    counters.
+> 9. Reuse XFS_ERRTAG_REDUCE_MAX_IEXTENTS error tag to skip reporting
+>    inodes with more than 10 extents when bulkstat ioctl is invoked by
+>    userspace.
+> 10. Introduce the new per-inode XFS_DIFLAG2_NREXT64 flag to indicate
+>     that the inode uses 64-bit extent counter. This is used to allow
+>     administrators to upgrade existing filesystems.
+> 11. Export presence of XFS_SB_FEAT_INCOMPAT_NREXT64 feature to
+>     userspace via XFS_IOC_FSGEOMETRY ioctl.
 > 
-> Allison
+> V1 -> V2:
+> 1. Rebase patches on top of Darrick's btree-dynamic-depth branch.
+> 2. Add new bulkstat ioctl version to support 64-bit data fork extent
+>    counter field.
+> 3. Introduce new error tag to verify if the old bulkstat ioctls skip
+>    reporting inodes with large data fork extent counters.
 > 
-> > 
-> > > +
-> > >   		/*
-> > >   		 * Transfer to this new transaction all the dfops we captured
-> > >   		 * from recovering a single intent item.
-> > > diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-> > > index 46904b793bd4..a6e7351ca4f9 100644
-> > > --- a/fs/xfs/xfs_refcount_item.c
-> > > +++ b/fs/xfs/xfs_refcount_item.c
-> > > @@ -557,7 +557,7 @@ xfs_cui_item_recover(
-> > >   	}
-> > >   	xfs_refcount_finish_one_cleanup(tp, rcur, error);
-> > > -	return xfs_defer_ops_capture_and_commit(tp, NULL, capture_list);
-> > > +	return xfs_defer_ops_capture_and_commit(tp, NULL, capture_list, NULL);
-> > >   abort_error:
-> > >   	xfs_refcount_finish_one_cleanup(tp, rcur, error);
-> > > diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-> > > index 5f0695980467..8c70a4af80a9 100644
-> > > --- a/fs/xfs/xfs_rmap_item.c
-> > > +++ b/fs/xfs/xfs_rmap_item.c
-> > > @@ -587,7 +587,7 @@ xfs_rui_item_recover(
-> > >   	}
-> > >   	xfs_rmap_finish_one_cleanup(tp, rcur, error);
-> > > -	return xfs_defer_ops_capture_and_commit(tp, NULL, capture_list);
-> > > +	return xfs_defer_ops_capture_and_commit(tp, NULL, capture_list, NULL);
-> > >   abort_error:
-> > >   	xfs_rmap_finish_one_cleanup(tp, rcur, error);
-> > > -- 
-> > > 2.25.1
-> > > 
+> Chandan Babu R (12):
+>   xfs: Move extent count limits to xfs_format.h
+>   xfs: Introduce xfs_iext_max_nextents() helper
+>   xfs: Rename MAXEXTNUM, MAXAEXTNUM to XFS_IFORK_EXTCNT_MAXS32,
+>     XFS_IFORK_EXTCNT_MAXS16
+>   xfs: Use xfs_extnum_t instead of basic data types
+>   xfs: Introduce xfs_dfork_nextents() helper
+>   xfs: xfs_dfork_nextents: Return extent count via an out argument
+>   xfs: Rename inode's extent counter fields based on their width
+>   xfs: Promote xfs_extnum_t and xfs_aextnum_t to 64 and 32-bits
+>     respectively
+>   xfs: Enable bulkstat ioctl to support 64-bit per-inode extent counters
+>   xfs: Extend per-inode extent counter widths
+>   xfs: Add XFS_SB_FEAT_INCOMPAT_NREXT64 to XFS_SB_FEAT_INCOMPAT_ALL
+>   xfs: Define max extent length based on on-disk format definition
+> 
+>  fs/xfs/libxfs/xfs_bmap.c        | 80 ++++++++++++++-------------
+>  fs/xfs/libxfs/xfs_format.h      | 80 +++++++++++++++++++++++----
+>  fs/xfs/libxfs/xfs_fs.h          | 20 +++++--
+>  fs/xfs/libxfs/xfs_ialloc.c      |  2 +
+>  fs/xfs/libxfs/xfs_inode_buf.c   | 61 ++++++++++++++++-----
+>  fs/xfs/libxfs/xfs_inode_fork.c  | 32 +++++++----
+>  fs/xfs/libxfs/xfs_inode_fork.h  | 23 +++++++-
+>  fs/xfs/libxfs/xfs_log_format.h  |  7 +--
+>  fs/xfs/libxfs/xfs_rtbitmap.c    |  4 +-
+>  fs/xfs/libxfs/xfs_sb.c          |  4 ++
+>  fs/xfs/libxfs/xfs_swapext.c     |  6 +--
+>  fs/xfs/libxfs/xfs_trans_inode.c |  6 +++
+>  fs/xfs/libxfs/xfs_trans_resv.c  | 10 ++--
+>  fs/xfs/libxfs/xfs_types.h       | 11 +---
+>  fs/xfs/scrub/attr_repair.c      |  2 +-
+>  fs/xfs/scrub/bmap.c             |  2 +-
+>  fs/xfs/scrub/bmap_repair.c      |  2 +-
+>  fs/xfs/scrub/inode.c            | 96 ++++++++++++++++++++-------------
+>  fs/xfs/scrub/inode_repair.c     | 71 +++++++++++++++++-------
+>  fs/xfs/scrub/repair.c           |  2 +-
+>  fs/xfs/scrub/trace.h            | 16 +++---
+>  fs/xfs/xfs_bmap_util.c          | 14 ++---
+>  fs/xfs/xfs_inode.c              |  4 +-
+>  fs/xfs/xfs_inode.h              |  5 ++
+>  fs/xfs/xfs_inode_item.c         | 21 +++++++-
+>  fs/xfs/xfs_inode_item_recover.c | 26 ++++++---
+>  fs/xfs/xfs_ioctl.c              |  7 +++
+>  fs/xfs/xfs_iomap.c              | 28 +++++-----
+>  fs/xfs/xfs_itable.c             | 25 ++++++++-
+>  fs/xfs/xfs_itable.h             |  2 +
+>  fs/xfs/xfs_iwalk.h              |  7 ++-
+>  fs/xfs/xfs_mount.h              |  2 +
+>  fs/xfs/xfs_trace.h              |  6 +--
+>  33 files changed, 478 insertions(+), 206 deletions(-)
+> 
+> -- 
+> 2.30.2
+> 
