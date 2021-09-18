@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D4ABC433EF
-	for <linux-xfs@archiver.kernel.org>; Sat, 18 Sep 2021 01:30:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D9DBC433F5
+	for <linux-xfs@archiver.kernel.org>; Sat, 18 Sep 2021 01:30:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 02A3060FBF
-	for <linux-xfs@archiver.kernel.org>; Sat, 18 Sep 2021 01:30:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D738E61241
+	for <linux-xfs@archiver.kernel.org>; Sat, 18 Sep 2021 01:30:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234515AbhIRBbl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Sep 2021 21:31:41 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37260 "EHLO mail.kernel.org"
+        id S234976AbhIRBbo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Sep 2021 21:31:44 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37284 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234976AbhIRBbi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 17 Sep 2021 21:31:38 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E458E6112E;
-        Sat, 18 Sep 2021 01:30:15 +0000 (UTC)
+        id S234986AbhIRBbo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 17 Sep 2021 21:31:44 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 63BFC6112E;
+        Sat, 18 Sep 2021 01:30:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631928616;
-        bh=Cxj1cGQ5vwazVeHYmrjlibKlT7ggUBVTm3vRlZTryeo=;
+        s=k20201202; t=1631928621;
+        bh=wyJB9VQeHVYy8UU10UPpc7ar+rymniwbbZCURJpfOvU=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=MhgMoZZtoHS62mHuWeu6Fv2qg8KHAPzz0YhsuIGmUr+GLcDflTBIo6T657NEevBrq
-         V/wSoZtDqUup7L9EkUPT0lE4FyFRwA4wN0hKi6dMoT9UShl+DWnZ3N04abmICYbQEd
-         s+BvhNvclwi1NZpBESAFNNeoIAlfEhI1s2ZX7o7DgZxfGORtiX34JRhcNkUISMv92Q
-         OaadiPpbqxQKxF688wu2tLUmWcLIZsPY2SC6V6opULFHOpnzjWKNCesxmq0/VZfwTS
-         0MZ1D8+3IthccIkD912c5QNkoxIUp+t3U2HXC+ms5ZfvOzpqrzz+FqWNYYKjSy6Ar2
-         mh3bRkRBjbrxA==
-Subject: [PATCH 12/14] xfs: compute actual maximum btree height for critical
- reservation calculation
+        b=X1Uk8mrsb7pnrzd9SZAQTZSlBTV+QOdDyEEKgnz6wQa0Q610ABuRKmSZR4bi3MAEu
+         LyOJEDpzErXxNqMsHVkMR1kC/bbh0QFfM1zsoh8qAO9trlyAe2+X6NINohNY5hb8lR
+         GBs4Ubp2sEAMlqqyhRH3D2oV/IxLs8ZRulXUHGviS+znCzBahME79ZVVN4IVn+Xnq5
+         GKWikn3oqfOj+CzH5D7h15qF927rbaPBZ6dVUFBTP/YU67H5yc29g77tN/tMUG5MDr
+         0LbqcYf5jnBPXD6ifMZUNs5rO3H0/g96Y4DKWk+j6VyqxAaJxX2okMvRwdSEmPVJm2
+         k6+yidwV4ltiw==
+Subject: [PATCH 13/14] xfs: compute the maximum height of the rmap btree when
+ reflink enabled
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, chandan.babu@oracle.com, chandanrlinux@gmail.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Fri, 17 Sep 2021 18:30:15 -0700
-Message-ID: <163192861564.416199.12921575958749918045.stgit@magnolia>
+Date:   Fri, 17 Sep 2021 18:30:21 -0700
+Message-ID: <163192862112.416199.3937220618088469929.stgit@magnolia>
 In-Reply-To: <163192854958.416199.3396890438240296942.stgit@magnolia>
 References: <163192854958.416199.3396890438240296942.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,93 +50,207 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Compute the actual maximum btree height when deciding if per-AG block
-reservation is critically low.  This only affects the sanity check
-condition, since we /generally/ will trigger on the 10% threshold.
-This is a long-winded way of saying that we're removing one more
-usage of XFS_BTREE_MAXLEVELS.
+Instead of assuming that the hardcoded XFS_BTREE_MAXLEVELS value is big
+enough to handle the maximally tall rmap btree when all blocks are in
+use and maximally shared, let's compute the maximum height assuming the
+rmapbt consumes as many blocks as possible.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_ag_resv.c |    4 +++-
- fs/xfs/libxfs/xfs_btree.c   |   19 +++++++++++++++----
- fs/xfs/libxfs/xfs_btree.h   |    1 +
- 3 files changed, 19 insertions(+), 5 deletions(-)
+ fs/xfs/libxfs/xfs_btree.c       |   34 +++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_btree.h       |    2 ++
+ fs/xfs/libxfs/xfs_rmap_btree.c  |   40 ++++++++++++++++++++-------------------
+ fs/xfs/libxfs/xfs_rmap_btree.h  |    2 +-
+ fs/xfs/libxfs/xfs_trans_resv.c  |   12 ++++++++++++
+ fs/xfs/libxfs/xfs_trans_space.h |    7 +++++++
+ fs/xfs/xfs_mount.c              |    2 +-
+ 7 files changed, 78 insertions(+), 21 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
-index 2aa2b3484c28..931481fbdd72 100644
---- a/fs/xfs/libxfs/xfs_ag_resv.c
-+++ b/fs/xfs/libxfs/xfs_ag_resv.c
-@@ -72,6 +72,7 @@ xfs_ag_resv_critical(
- {
- 	xfs_extlen_t			avail;
- 	xfs_extlen_t			orig;
-+	xfs_extlen_t			btree_maxlevels;
- 
- 	switch (type) {
- 	case XFS_AG_RESV_METADATA:
-@@ -91,7 +92,8 @@ xfs_ag_resv_critical(
- 	trace_xfs_ag_resv_critical(pag, type, avail);
- 
- 	/* Critically low if less than 10% or max btree height remains. */
--	return XFS_TEST_ERROR(avail < orig / 10 || avail < XFS_BTREE_MAXLEVELS,
-+	btree_maxlevels = xfs_btree_maxlevels(pag->pag_mount, XFS_BTNUM_MAX);
-+	return XFS_TEST_ERROR(avail < orig / 10 || avail < btree_maxlevels,
- 			pag->pag_mount, XFS_ERRTAG_AG_RESV_CRITICAL);
- }
- 
 diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index f9516828a847..6cf49f7e1299 100644
+index 6cf49f7e1299..005bc42cf0bd 100644
 --- a/fs/xfs/libxfs/xfs_btree.c
 +++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -4922,12 +4922,17 @@ xfs_btree_has_more_records(
- 		return block->bb_u.s.bb_rightsib != cpu_to_be32(NULLAGBLOCK);
+@@ -4526,6 +4526,40 @@ xfs_btree_compute_maxlevels(
+ 	return level;
  }
  
--/* Compute the maximum allowed height for a given btree type. */
--static unsigned int
 +/*
-+ * Compute the maximum allowed height for a given btree type.  If XFS_BTNUM_MAX
-+ * is passed in, the maximum allowed height for all btree types is returned.
++ * Compute the maximum height of a btree that is allowed to consume up to the
++ * given number of blocks.
 + */
 +unsigned int
- xfs_btree_maxlevels(
- 	struct xfs_mount	*mp,
- 	xfs_btnum_t		btnum)
- {
-+	unsigned int		ret;
++xfs_btree_compute_maxlevels_size(
++	unsigned long long	max_btblocks,
++	unsigned int		leaf_mnr)
++{
++	unsigned long long	leaf_blocks = leaf_mnr;
++	unsigned long long	blocks_left;
++	unsigned int		maxlevels;
 +
- 	switch (btnum) {
- 	case XFS_BTNUM_BNO:
- 	case XFS_BTNUM_CNT:
-@@ -4943,9 +4948,15 @@ xfs_btree_maxlevels(
- 	case XFS_BTNUM_REFC:
- 		return mp->m_refc_maxlevels;
- 	default:
--		ASSERT(0);
--		return XFS_BTREE_MAXLEVELS;
-+		break;
- 	}
++	if (max_btblocks < 1)
++		return 0;
 +
-+	ret = mp->m_ag_maxlevels;
-+	ret = max(ret, mp->m_bm_maxlevels[XFS_DATA_FORK]);
-+	ret = max(ret, mp->m_bm_maxlevels[XFS_ATTR_FORK]);
-+	ret = max(ret, M_IGEO(mp)->inobt_maxlevels);
-+	ret = max(ret, mp->m_rmap_maxlevels);
-+	return max(ret, mp->m_refc_maxlevels);
- }
- 
- /* Allocate a new btree cursor of the appropriate size. */
++	/*
++	 * The loop increments maxlevels as long as there would be enough
++	 * blocks left in the reservation to handle each node block at the
++	 * current level pointing to the minimum possible number of leaf blocks
++	 * at the next level down.  We start the loop assuming a single-level
++	 * btree consuming one block.
++	 */
++	maxlevels = 1;
++	blocks_left = max_btblocks - 1;
++	while (leaf_blocks < blocks_left) {
++		maxlevels++;
++		blocks_left -= leaf_blocks;
++		leaf_blocks *= leaf_mnr;
++	}
++
++	return maxlevels;
++}
++
+ /*
+  * Query a regular btree for all records overlapping a given interval.
+  * Start with a LE lookup of the key of low_rec and return all records
 diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index ae83fbf58c18..106760c540c7 100644
+index 106760c540c7..d256d869f0af 100644
 --- a/fs/xfs/libxfs/xfs_btree.h
 +++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -574,5 +574,6 @@ void xfs_btree_copy_keys(struct xfs_btree_cur *cur,
- 		const union xfs_btree_key *src_key, int numkeys);
- struct xfs_btree_cur *xfs_btree_alloc_cursor(struct xfs_mount *mp,
- 		struct xfs_trans *tp, xfs_btnum_t btnum);
-+unsigned int xfs_btree_maxlevels(struct xfs_mount *mp, xfs_btnum_t btnum);
+@@ -476,6 +476,8 @@ xfs_failaddr_t xfs_btree_lblock_verify(struct xfs_buf *bp,
+ 		unsigned int max_recs);
  
- #endif	/* __XFS_BTREE_H__ */
+ uint xfs_btree_compute_maxlevels(uint *limits, unsigned long len);
++unsigned int xfs_btree_compute_maxlevels_size(unsigned long long max_btblocks,
++		unsigned int leaf_mnr);
+ unsigned long long xfs_btree_calc_size(uint *limits, unsigned long long len);
+ 
+ /*
+diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
+index f3c4d0965cc9..85caeb14e4db 100644
+--- a/fs/xfs/libxfs/xfs_rmap_btree.c
++++ b/fs/xfs/libxfs/xfs_rmap_btree.c
+@@ -535,30 +535,32 @@ xfs_rmapbt_maxrecs(
+ }
+ 
+ /* Compute the maximum height of an rmap btree. */
+-void
++unsigned int
+ xfs_rmapbt_compute_maxlevels(
+-	struct xfs_mount		*mp)
++	struct xfs_mount	*mp)
+ {
++	if (!xfs_has_reflink(mp)) {
++		/*
++		 * If there's no block sharing, compute the maximum rmapbt
++		 * height assuming one rmap record per AG block.
++		 */
++		return xfs_btree_compute_maxlevels(mp->m_rmap_mnr,
++				mp->m_sb.sb_agblocks);
++	}
++
+ 	/*
+-	 * On a non-reflink filesystem, the maximum number of rmap
+-	 * records is the number of blocks in the AG, hence the max
+-	 * rmapbt height is log_$maxrecs($agblocks).  However, with
+-	 * reflink each AG block can have up to 2^32 (per the refcount
+-	 * record format) owners, which means that theoretically we
+-	 * could face up to 2^64 rmap records.
++	 * Compute the asymptotic maxlevels for an rmapbt on a reflink fs.
+ 	 *
+-	 * That effectively means that the max rmapbt height must be
+-	 * XFS_BTREE_MAXLEVELS.  "Fortunately" we'll run out of AG
+-	 * blocks to feed the rmapbt long before the rmapbt reaches
+-	 * maximum height.  The reflink code uses ag_resv_critical to
+-	 * disallow reflinking when less than 10% of the per-AG metadata
+-	 * block reservation since the fallback is a regular file copy.
++	 * On a reflink filesystem, each AG block can have up to 2^32 (per the
++	 * refcount record format) owners, which means that theoretically we
++	 * could face up to 2^64 rmap records.  However, we're likely to run
++	 * out of blocks in the AG long before that happens, which means that
++	 * we must compute the max height based on what the btree will look
++	 * like if it consumes almost all the blocks in the AG due to maximal
++	 * sharing factor.
+ 	 */
+-	if (xfs_has_reflink(mp))
+-		mp->m_rmap_maxlevels = XFS_BTREE_MAXLEVELS;
+-	else
+-		mp->m_rmap_maxlevels = xfs_btree_compute_maxlevels(
+-				mp->m_rmap_mnr, mp->m_sb.sb_agblocks);
++	return xfs_btree_compute_maxlevels_size(mp->m_sb.sb_agblocks,
++			mp->m_rmap_mnr[1]);
+ }
+ 
+ /* Calculate the refcount btree size for some records. */
+diff --git a/fs/xfs/libxfs/xfs_rmap_btree.h b/fs/xfs/libxfs/xfs_rmap_btree.h
+index f2eee6572af4..5aaecf755abd 100644
+--- a/fs/xfs/libxfs/xfs_rmap_btree.h
++++ b/fs/xfs/libxfs/xfs_rmap_btree.h
+@@ -49,7 +49,7 @@ struct xfs_btree_cur *xfs_rmapbt_stage_cursor(struct xfs_mount *mp,
+ void xfs_rmapbt_commit_staged_btree(struct xfs_btree_cur *cur,
+ 		struct xfs_trans *tp, struct xfs_buf *agbp);
+ int xfs_rmapbt_maxrecs(int blocklen, int leaf);
+-extern void xfs_rmapbt_compute_maxlevels(struct xfs_mount *mp);
++unsigned int xfs_rmapbt_compute_maxlevels(struct xfs_mount *mp);
+ 
+ extern xfs_extlen_t xfs_rmapbt_calc_size(struct xfs_mount *mp,
+ 		unsigned long long len);
+diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+index 5e300daa2559..679f10e08f31 100644
+--- a/fs/xfs/libxfs/xfs_trans_resv.c
++++ b/fs/xfs/libxfs/xfs_trans_resv.c
+@@ -814,6 +814,15 @@ xfs_trans_resv_calc(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_trans_resv	*resp)
+ {
++	unsigned int		rmap_maxlevels = mp->m_rmap_maxlevels;
++
++	/*
++	 * In the early days of rmap+reflink, we hardcoded the rmap maxlevels
++	 * to 9 even if the AG size was smaller.
++	 */
++	if (xfs_has_rmapbt(mp) && xfs_has_reflink(mp))
++		mp->m_rmap_maxlevels = XFS_OLD_REFLINK_RMAP_MAXLEVELS;
++
+ 	/*
+ 	 * The following transactions are logged in physical format and
+ 	 * require a permanent reservation on space.
+@@ -916,4 +925,7 @@ xfs_trans_resv_calc(
+ 	resp->tr_clearagi.tr_logres = xfs_calc_clear_agi_bucket_reservation(mp);
+ 	resp->tr_growrtzero.tr_logres = xfs_calc_growrtzero_reservation(mp);
+ 	resp->tr_growrtfree.tr_logres = xfs_calc_growrtfree_reservation(mp);
++
++	/* Put everything back the way it was.  This goes at the end. */
++	mp->m_rmap_maxlevels = rmap_maxlevels;
+ }
+diff --git a/fs/xfs/libxfs/xfs_trans_space.h b/fs/xfs/libxfs/xfs_trans_space.h
+index 50332be34388..440c9c390b86 100644
+--- a/fs/xfs/libxfs/xfs_trans_space.h
++++ b/fs/xfs/libxfs/xfs_trans_space.h
+@@ -17,6 +17,13 @@
+ /* Adding one rmap could split every level up to the top of the tree. */
+ #define XFS_RMAPADD_SPACE_RES(mp) ((mp)->m_rmap_maxlevels)
+ 
++/*
++ * Note that we historically set m_rmap_maxlevels to 9 when reflink was
++ * enabled, so we must preserve this behavior to avoid changing the transaction
++ * space reservations.
++ */
++#define XFS_OLD_REFLINK_RMAP_MAXLEVELS	(9)
++
+ /* Blocks we might need to add "b" rmaps to a tree. */
+ #define XFS_NRMAPADD_SPACE_RES(mp, b)\
+ 	(((b + XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp) - 1) / \
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 06dac09eddbd..e600a0b781c8 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -635,7 +635,7 @@ xfs_mountfs(
+ 	xfs_bmap_compute_maxlevels(mp, XFS_DATA_FORK);
+ 	xfs_bmap_compute_maxlevels(mp, XFS_ATTR_FORK);
+ 	xfs_mount_setup_inode_geom(mp);
+-	xfs_rmapbt_compute_maxlevels(mp);
++	mp->m_rmap_maxlevels = xfs_rmapbt_compute_maxlevels(mp);
+ 	xfs_refcountbt_compute_maxlevels(mp);
+ 
+ 	/*
 
