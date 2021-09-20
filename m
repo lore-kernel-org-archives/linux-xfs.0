@@ -2,318 +2,190 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E2BEC433FE
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Sep 2021 20:07:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39351C433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Sep 2021 23:08:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 46F8461268
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Sep 2021 20:07:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1C1E06044F
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Sep 2021 23:08:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231422AbhITUJE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 20 Sep 2021 16:09:04 -0400
-Received: from mail-bn1nam07on2077.outbound.protection.outlook.com ([40.107.212.77]:31070
-        "EHLO NAM02-BN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S231414AbhITUHD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 20 Sep 2021 16:07:03 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=RFBFbDYyWpdq4Cxqb79jXYUxdnCL4YvhfvHvv2TM8RhEsuJvvg46gG8Jea4tCb28wKvcOMqd3C/o6tyjJHaa+yCOHvwXlIEmeCIDdkUcxt5AfBb5Hx92BP/6QHe/wMJVEDiab04CgQN6yUhj0LmVX/temY2tCpEMjsk6fwwAby6irRgnuRCgPaPwA4vyOAMhLJjd1DevHa4qaAVfGpuvdY6gJO+bNG2Kdr8llUnpr5+ZtyOxHW4ORVE0s3Z8h709SRzoRboFJqFqzts+HNuzkfaIvI+xBg6TVVTupfh9PKK4lp9nV0ELQKKv9k6J6kuOMq64WlmyL1VyrSBLGmAAfA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=e6QiknsDtDbo16MzY8mXMYYJhjEFtjlG6PbZJmVHPZw=;
- b=m4k0NbtZMBtE3OqWLgFoJlNKZEXIg9xfCPWDeuuLe/xSD4rWhD7W+YZ/aW38oyw4aSU/53t1OKa3JiLsiC3DXnsOfDJUUjRWhVpl73827MVjUNt8QS0Wq0IwnDBGQuC8IQ93DeNxjripdozuKm+bfOMOEJs57BtgYLRGJjAW1MjX047Qt4ZoUA+JvB/2fvsnGAWRfwS8iMG5nsQ1EFqQQErwZlM/ype5uZmVfw+efxAmMDRk2eVyNSj6FglGCpEmRY6wP499mPusqhlrOxDLRChIh/B18HBU3Szcx4LdWmlroLMm6Q+9XvxqgKYbqE+CvyX4k3ur8VxnvUC35PkF/A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=e6QiknsDtDbo16MzY8mXMYYJhjEFtjlG6PbZJmVHPZw=;
- b=5adnuL+jK5hKus77SlJBVQiUpFVDTLJYylryKIBBhglmFLvYhNHkStDmuNzIEaKaiXb+hD2t7sr2T4ezz6UiuwuWrxiBOP3kL5yI78TSIAf/NNUtiJv1tVTty3YdmiYZjfNAXI6Cm+9aCTPUUOxCM2JRkK6b4IIbmWOkETi9RKs=
-Authentication-Results: redhat.com; dkim=none (message not signed)
- header.d=none;redhat.com; dmarc=none action=none header.from=amd.com;
-Received: from SA0PR12MB4430.namprd12.prod.outlook.com (2603:10b6:806:70::20)
- by SA0PR12MB4510.namprd12.prod.outlook.com (2603:10b6:806:94::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4523.14; Mon, 20 Sep
- 2021 20:05:33 +0000
-Received: from SA0PR12MB4430.namprd12.prod.outlook.com
- ([fe80::f1aa:9adc:b4f:4d14]) by SA0PR12MB4430.namprd12.prod.outlook.com
- ([fe80::f1aa:9adc:b4f:4d14%7]) with mapi id 15.20.4523.018; Mon, 20 Sep 2021
- 20:05:33 +0000
-Subject: Re: [PATCH v2 09/12] lib: test_hmm add module param for zone device
- type
-To:     Alistair Popple <apopple@nvidia.com>, akpm@linux-foundation.org,
-        Felix.Kuehling@amd.com, linux-mm@kvack.org, rcampbell@nvidia.com,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc:     amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        hch@lst.de, jgg@nvidia.com, jglisse@redhat.com
-References: <20210913161604.31981-1-alex.sierra@amd.com>
- <20210913161604.31981-10-alex.sierra@amd.com> <2139200.KYAmxeAneQ@nvdebian>
-From:   "Sierra Guiza, Alejandro (Alex)" <alex.sierra@amd.com>
-Message-ID: <729f833c-e880-96ce-5f49-2d72a93faa21@amd.com>
-Date:   Mon, 20 Sep 2021 15:05:30 -0500
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.14.0
-In-Reply-To: <2139200.KYAmxeAneQ@nvdebian>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
-X-ClientProxiedBy: SA9PR13CA0122.namprd13.prod.outlook.com
- (2603:10b6:806:27::7) To SA0PR12MB4430.namprd12.prod.outlook.com
- (2603:10b6:806:70::20)
+        id S232844AbhITXKG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 20 Sep 2021 19:10:06 -0400
+Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:56750 "EHLO
+        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229490AbhITXIG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Sep 2021 19:08:06 -0400
+Received: from dread.disaster.area (pa49-195-238-16.pa.nsw.optusnet.com.au [49.195.238.16])
+        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 37AF5108883;
+        Tue, 21 Sep 2021 09:06:36 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1mSSMt-00EpCl-Mo; Tue, 21 Sep 2021 09:06:35 +1000
+Date:   Tue, 21 Sep 2021 09:06:35 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     chandan.babu@oracle.com, chandanrlinux@gmail.com,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 11/14] xfs: dynamically allocate cursors based on
+ maxlevels
+Message-ID: <20210920230635.GM1756565@dread.disaster.area>
+References: <163192854958.416199.3396890438240296942.stgit@magnolia>
+ <163192861018.416199.11733078081556457241.stgit@magnolia>
 MIME-Version: 1.0
-Received: from [172.31.9.47] (165.204.77.11) by SA9PR13CA0122.namprd13.prod.outlook.com (2603:10b6:806:27::7) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4544.6 via Frontend Transport; Mon, 20 Sep 2021 20:05:32 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: f2b93f99-51f1-441b-2601-08d97c7200d0
-X-MS-TrafficTypeDiagnostic: SA0PR12MB4510:
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <SA0PR12MB4510CCFB0D09BA1A1D525CF3FDA09@SA0PR12MB4510.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:7691;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: g1WPuHuS9tpFdhaZkYgdajFEI7Wak/4eenYUdY8evXUEN3FFg4XK+/MgDAwCD1atfis88Lzctiv5L+j3OuPhs++r8fo93lOV0nfkdtvGh/9IwTTcarbaEzsFGVyQ5pg+mO/pqfDn1VJZfF/cuek9rDyG4Xw5PXneap4n9cyHsls2+ENkN5b0yzxnNyEY/3y3aRgsYUoby91Zv3USI00uDQ940jMV3hyRjZ5D+FxXj54XQ5MkzVWyr+276M+vjvl4MDC8sraNC501sS31iGM+6qwq5Vp+b9gueQzw0gKUeczcGCN/mO66V2xZbY8VxvngXOfIsVzjuEuOD1jBH+VHBYZ5NPsPpH5SIaF7L+vIbg3sl4e6vcAyRkRO1VMIvv5KEC4A5odLi/dc5ke3KNlrB/eVIfNCtG9XRNF/grOQ4u82UyZpg0li6ILdBt3pPHlPEf+DISci4qGWdTWCEIYkZzC2ePQdTOfRuk3BUVCzuyqFk8Gw2kI3VeydtskvKevkrEKG6IEjYKljfVmvYzdu4MUfl0tJ8JE28ImCSEDWpUBZT7Zchn+10vBLpLCMbN7vnTOQDExoOG32XvfG7y6e06ddffs0dep3Ae+JRl2LlObfPNM0ZnVk9IHUgTNSZSbr3wdvoSaf6IzDwDkJhizXhoc8gAdfoMhUXZudANzz1vMhyi0aOfpp/3G5F3CpF2xEeARID+nlCiRLp5uLCW8TumNe7G8Eyt3kJxdwAgFeW0o82ED27rm9fb2grI2QsCKAb5Hpo7c3dYQ+nV79mQDRbg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA0PR12MB4430.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(86362001)(2616005)(4326008)(2906002)(956004)(16576012)(5660300002)(83380400001)(26005)(316002)(8936002)(7416002)(8676002)(31686004)(52116002)(6486002)(36756003)(31696002)(508600001)(186003)(53546011)(38100700002)(66556008)(66946007)(38350700002)(66476007)(43740500002)(45980500001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?QWV0blpOZm9oK1lHOVF3bFIrOXViRC9uYmNtV3lkRnBVbHpIekVNRFlLdS9z?=
- =?utf-8?B?eU83aU5pbk02eXVkTzZGMU9FR3VmSEtPME5ncGZ6L3M1MklMdm4vclZSeXFl?=
- =?utf-8?B?USs4cTBET09OcWl0YUlEdEFzNEZIbWhrK3FyOUNqUzgrWFZQTEVGNHlwd083?=
- =?utf-8?B?UU9jMXB3UzVvcUVnZXNEd3ZoVld0bmVQUVJzbmtjUUtDYW9XcmJIck4wWVlW?=
- =?utf-8?B?c0R3UGorRFkzaWtnTC9lbks5akg3R1BzcHJZV2dWeEhMNTlLNFNhcnZlOENU?=
- =?utf-8?B?aU5scUdrVXR0bHRnejRaeThBS0YrS1R0MnUzRDRZK011dkg5eG4yc1BKNFh6?=
- =?utf-8?B?aHUxOERiZ0Y3MTFLMGRFSlVWcHkxQlNsR3psL3FDZGEySkE0YXZaMTFCSDBl?=
- =?utf-8?B?NFU0enhzcVVaY3ExNktuRGlhTUhmMmRyVmJMZjVpWVNPR2JIYTNpamJuL2VB?=
- =?utf-8?B?MzdkQnVrazl5Sng3dFJVVm5JaThwREp6bHc1ZHBLbjRLU21NM3I4RThKL3NC?=
- =?utf-8?B?NUp5a09MWGEzS2s2dXhhTSs2WXE3cFp0MENvUXlMNVJDdTZjZ0oxS1hWVFF3?=
- =?utf-8?B?UGZZRWFSQXhZSDZmSDJiYjZLa2NzdWgxWDI1RW5LNDFHS3UxcmlHVmxlWXRl?=
- =?utf-8?B?NEpQcjF3elBZUVE4TWRoN3VXcXBCY0dMRi92TVVzeGtwaEJpZWtEY2VrVHJ4?=
- =?utf-8?B?L2FuVjd6Tzk1V2lleTliYXkyR0xXZ2NSd2ZwYnBOVkl3WjZkellqTHlqOGxi?=
- =?utf-8?B?a1V5Z1BOVEk0N0xkZW9GUGJ6eEpONzBjSkVkR095WlprMFVTV1pKWGJDUEs1?=
- =?utf-8?B?aHdiM0UxUUFHaTFaQjRnWUNLenE2WCtlR3RzSWQrZEc3cGg0NC82RG9ORUlh?=
- =?utf-8?B?WDBwYW91VE1rWlE1QUg2aERYbHZwRzZ6Mmh0d1MxS2FWUmxUMGt6MjZ5eVdX?=
- =?utf-8?B?MnVLVmJPWXpjbjBWOVlzeCtRNjBKUTRRZmZlUjI2YW1BR1RTOHFJbDh5WGox?=
- =?utf-8?B?RXN2Ly9QOWkvRVZ6R2h4QUtwU2VnNE96Ny9BMmNaeU42ZUszSWRpQXMrVm5O?=
- =?utf-8?B?SUE3YU5za3RoaHFPUVAyK291MTJMamRNd243OGlJZmU1aEh2YzJWT2pydHNG?=
- =?utf-8?B?alF1MFRKZSsyd01WRVZMTWVKWFhWeTlGcXdwMzNYNXZwbEVSWFhDVU93RFZy?=
- =?utf-8?B?OWhDZzJ5U3NnVHk5RHJxUHZEeDlJeEoxWVdQQk42TXJHNjdGRS9PZXlDRGRO?=
- =?utf-8?B?TnQwbUlyVFArSGw3bTMvMGp5QTFZMDBBeXpUWTlFbHJNcmdyd3dHb2t2dGJk?=
- =?utf-8?B?OUxlY0lRUkRZTmlsUVlGREt3VHZoUUNPNjhqS0lYaUNxc2N6c1Q4NVNNRWJT?=
- =?utf-8?B?R3V1UzhXN0FNY1BuN1UvRmsrMDRZdGxYZkxRdHBVbTNiY1F1UjZyTnppNDh3?=
- =?utf-8?B?UlhBbTVLRm5mVWpmb3BIWTloc2t5NDBqZFR0Zk1BbXl6Q1V4aE5UVUpWZGVL?=
- =?utf-8?B?SzlZdC9TK1oxNndrYjBoVFRLM3F2d2EvVlQ4dkM3cVFXNFRIWGYyVUxZWExV?=
- =?utf-8?B?QVQ5dEpIRE5EcTVXc0w5amJSM3RoQVRybkpHdmozYWQ4ZWtOL1JRb3JzbTJO?=
- =?utf-8?B?RmdKWlhVRlVNMG1kU2o2SE5mN3ExV3pNb2EybGxkaW90b2J3NC93S3dKQ01D?=
- =?utf-8?B?T29TMUZFZE5WdmlHUHUrWDBHRVF0RjFNZDNpYXVaWEpJWFRLKzdLbE9BM1hT?=
- =?utf-8?Q?+411FrIG4EVvLMNYx35cWrJmKwQDjEOEzsj+wLB?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f2b93f99-51f1-441b-2601-08d97c7200d0
-X-MS-Exchange-CrossTenant-AuthSource: SA0PR12MB4430.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Sep 2021 20:05:33.3005
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: fvtxYjd2jJSo2qLPxFqG1ctqljB0X5HTGABiVewIlyalXtwo/etum8fpS5txyAN6EWTKNf+r8SNyOUsMSaXUaA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA0PR12MB4510
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <163192861018.416199.11733078081556457241.stgit@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
+        a=DzKKRZjfViQTE5W6EVc0VA==:117 a=DzKKRZjfViQTE5W6EVc0VA==:17
+        a=kj9zAlcOel0A:10 a=7QKq2e-ADPsA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=ey4o2al8hPZ2qFo5ZQIA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Fri, Sep 17, 2021 at 06:30:10PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Replace the statically-sized btree cursor zone with dynamically sized
+> allocations so that we can reduce the memory overhead for per-AG bt
+> cursors while handling very tall btrees for rt metadata.
 
-On 9/20/2021 3:53 AM, Alistair Popple wrote:
-> On Tuesday, 14 September 2021 2:16:01 AM AEST Alex Sierra wrote:
->> In order to configure device public in test_hmm, two module parameters
->> should be passed, which correspond to the SP start address of each
->> device (2) spm_addr_dev0 & spm_addr_dev1. If no parameters are passed,
->> private device type is configured.
-> It's a pity that testing this seems to require some amount of special setup to
-> test. Is there a way this could be made to work on a more standard setup
-> similar to how DEVICE_PRIVATE is tested?
-Hi Alistair
-We tried to do it as simpler as possible. Unfortunately, there are two main
-requirements to register dev memory as DEVICE_PUBLIC type. This memory must
-NOT be accessed by any memory allocator (SLAB, SLOB, SLUB) plus, it has 
-to be
-CPU coherently accessed.  We also want to avoid aliasing the same PFNs for
-different page types (regular system memory and DEVICE_PUBLIC). So we don't
-want the reserved memory to be part of the kernel's memory map before we 
-call
-memremap_pages. A transparent way of doing it, without any special HW, was
-setting a portion of system memory as SPM (Special purpose memory). And use
-this as our “device fake” memory.
+Hmmmmm. We do a *lot* of btree cursor allocation and freeing under
+load. Keeping that in a single slab rather than using heap memory is
+a good idea for stuff like this for many reasons...
 
-Regards,
-Alex Sierra
+I mean, if we are creating a million inodes a second, a rouch
+back-of-the-envelope calculation says we are doing 3-4 million btree
+cursor instantiations a second. That's a lot of short term churn on
+the heap that we don't really need to subject it to. And even a few
+extra instructions in a path called millions of times a second adds
+up to a lot of extra runtime overhead.
 
->
->> Signed-off-by: Alex Sierra <alex.sierra@amd.com>
->> ---
->> v5:
->> Remove devmem->pagemap.type = MEMORY_DEVICE_PRIVATE at
->> dmirror_allocate_chunk that was forcing to configure pagemap.type
->> to MEMORY_DEVICE_PRIVATE
->>
->> v6:
->> Check for null pointers for resource and memremap references
->> at dmirror_allocate_chunk
->>
->> v7:
->> Due to patch dropped from these patch series "kernel: resource:
->> lookup_resource as exported symbol", lookup_resource was not longer a
->> callable function. This was used in public device configuration, to
->> get start and end addresses, to create pgmap->range struct. This
->> information is now taken directly from the spm_addr_devX parameters and
->> the fixed size DEVMEM_CHUNK_SIZE.
->> ---
->>   lib/test_hmm.c      | 66 +++++++++++++++++++++++++++++++--------------
->>   lib/test_hmm_uapi.h |  1 +
->>   2 files changed, 47 insertions(+), 20 deletions(-)
->>
->> diff --git a/lib/test_hmm.c b/lib/test_hmm.c
->> index 3cd91ca31dd7..ef27e355738a 100644
->> --- a/lib/test_hmm.c
->> +++ b/lib/test_hmm.c
->> @@ -33,6 +33,16 @@
->>   #define DEVMEM_CHUNK_SIZE		(256 * 1024 * 1024U)
->>   #define DEVMEM_CHUNKS_RESERVE		16
->>   
->> +static unsigned long spm_addr_dev0;
->> +module_param(spm_addr_dev0, long, 0644);
->> +MODULE_PARM_DESC(spm_addr_dev0,
->> +		"Specify start address for SPM (special purpose memory) used for device 0. By setting this Generic device type will be used. Make sure spm_addr_dev1 is set too");
->> +
->> +static unsigned long spm_addr_dev1;
->> +module_param(spm_addr_dev1, long, 0644);
->> +MODULE_PARM_DESC(spm_addr_dev1,
->> +		"Specify start address for SPM (special purpose memory) used for device 1. By setting this Generic device type will be used. Make sure spm_addr_dev0 is set too");
->> +
->>   static const struct dev_pagemap_ops dmirror_devmem_ops;
->>   static const struct mmu_interval_notifier_ops dmirror_min_ops;
->>   static dev_t dmirror_dev;
->> @@ -450,11 +460,11 @@ static int dmirror_write(struct dmirror *dmirror, struct hmm_dmirror_cmd *cmd)
->>   	return ret;
->>   }
->>   
->> -static bool dmirror_allocate_chunk(struct dmirror_device *mdevice,
->> +static int dmirror_allocate_chunk(struct dmirror_device *mdevice,
->>   				   struct page **ppage)
->>   {
->>   	struct dmirror_chunk *devmem;
->> -	struct resource *res;
->> +	struct resource *res = NULL;
->>   	unsigned long pfn;
->>   	unsigned long pfn_first;
->>   	unsigned long pfn_last;
->> @@ -462,17 +472,29 @@ static bool dmirror_allocate_chunk(struct dmirror_device *mdevice,
->>   
->>   	devmem = kzalloc(sizeof(*devmem), GFP_KERNEL);
->>   	if (!devmem)
->> -		return false;
->> +		return -ENOMEM;
->>   
->> -	res = request_free_mem_region(&iomem_resource, DEVMEM_CHUNK_SIZE,
->> -				      "hmm_dmirror");
->> -	if (IS_ERR(res))
->> -		goto err_devmem;
->> +	if (!spm_addr_dev0 && !spm_addr_dev1) {
->> +		res = request_free_mem_region(&iomem_resource, DEVMEM_CHUNK_SIZE,
->> +					      "hmm_dmirror");
->> +		if (IS_ERR_OR_NULL(res))
->> +			goto err_devmem;
->> +		devmem->pagemap.range.start = res->start;
->> +		devmem->pagemap.range.end = res->end;
->> +		devmem->pagemap.type = MEMORY_DEVICE_PRIVATE;
->> +		mdevice->zone_device_type = HMM_DMIRROR_MEMORY_DEVICE_PRIVATE;
->> +	} else if (spm_addr_dev0 && spm_addr_dev1) {
->> +		devmem->pagemap.range.start = MINOR(mdevice->cdevice.dev) ?
->> +							spm_addr_dev0 :
->> +							spm_addr_dev1;
->> +		devmem->pagemap.range.end = devmem->pagemap.range.start +
->> +					    DEVMEM_CHUNK_SIZE - 1;
->> +		devmem->pagemap.type = MEMORY_DEVICE_PUBLIC;
->> +		mdevice->zone_device_type = HMM_DMIRROR_MEMORY_DEVICE_PUBLIC;
->> +	} else {
->> +		pr_err("Both spm_addr_dev parameters should be set\n");
->> +	}
->>   
->> -	mdevice->zone_device_type = HMM_DMIRROR_MEMORY_DEVICE_PRIVATE;
->> -	devmem->pagemap.type = MEMORY_DEVICE_PRIVATE;
->> -	devmem->pagemap.range.start = res->start;
->> -	devmem->pagemap.range.end = res->end;
->>   	devmem->pagemap.nr_range = 1;
->>   	devmem->pagemap.ops = &dmirror_devmem_ops;
->>   	devmem->pagemap.owner = mdevice;
->> @@ -493,10 +515,14 @@ static bool dmirror_allocate_chunk(struct dmirror_device *mdevice,
->>   		mdevice->devmem_capacity = new_capacity;
->>   		mdevice->devmem_chunks = new_chunks;
->>   	}
->> -
->>   	ptr = memremap_pages(&devmem->pagemap, numa_node_id());
->> -	if (IS_ERR(ptr))
->> +	if (IS_ERR_OR_NULL(ptr)) {
->> +		if (ptr)
->> +			ret = PTR_ERR(ptr);
->> +		else
->> +			ret = -EFAULT;
->>   		goto err_release;
->> +	}
->>   
->>   	devmem->mdevice = mdevice;
->>   	pfn_first = devmem->pagemap.range.start >> PAGE_SHIFT;
->> @@ -529,7 +555,8 @@ static bool dmirror_allocate_chunk(struct dmirror_device *mdevice,
->>   
->>   err_release:
->>   	mutex_unlock(&mdevice->devmem_lock);
->> -	release_mem_region(devmem->pagemap.range.start, range_len(&devmem->pagemap.range));
->> +	if (res)
->> +		release_mem_region(devmem->pagemap.range.start, range_len(&devmem->pagemap.range));
->>   err_devmem:
->>   	kfree(devmem);
->>   
->> @@ -1097,10 +1124,8 @@ static int dmirror_device_init(struct dmirror_device *mdevice, int id)
->>   	if (ret)
->>   		return ret;
->>   
->> -	/* Build a list of free ZONE_DEVICE private struct pages */
->> -	dmirror_allocate_chunk(mdevice, NULL);
->> -
->> -	return 0;
->> +	/* Build a list of free ZONE_DEVICE struct pages */
->> +	return dmirror_allocate_chunk(mdevice, NULL);
->>   }
->>   
->>   static void dmirror_device_remove(struct dmirror_device *mdevice)
->> @@ -1113,8 +1138,9 @@ static void dmirror_device_remove(struct dmirror_device *mdevice)
->>   				mdevice->devmem_chunks[i];
->>   
->>   			memunmap_pages(&devmem->pagemap);
->> -			release_mem_region(devmem->pagemap.range.start,
->> -					   range_len(&devmem->pagemap.range));
->> +			if (devmem->pagemap.type == MEMORY_DEVICE_PRIVATE)
->> +				release_mem_region(devmem->pagemap.range.start,
->> +						   range_len(&devmem->pagemap.range));
->>   			kfree(devmem);
->>   		}
->>   		kfree(mdevice->devmem_chunks);
->> diff --git a/lib/test_hmm_uapi.h b/lib/test_hmm_uapi.h
->> index ee88701793d5..00259d994410 100644
->> --- a/lib/test_hmm_uapi.h
->> +++ b/lib/test_hmm_uapi.h
->> @@ -65,6 +65,7 @@ enum {
->>   enum {
->>   	/* 0 is reserved to catch uninitialized type fields */
->>   	HMM_DMIRROR_MEMORY_DEVICE_PRIVATE = 1,
->> +	HMM_DMIRROR_MEMORY_DEVICE_PUBLIC,
->>   };
->>   
->>   #endif /* _LIB_TEST_HMM_UAPI_H */
->>
->
->
->
+So....
+
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  fs/xfs/libxfs/xfs_btree.c |   40 ++++++++++++++++++++++++++++++++--------
+>  fs/xfs/libxfs/xfs_btree.h |    2 --
+>  fs/xfs/xfs_super.c        |   11 +----------
+>  3 files changed, 33 insertions(+), 20 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+> index 2486ba22c01d..f9516828a847 100644
+> --- a/fs/xfs/libxfs/xfs_btree.c
+> +++ b/fs/xfs/libxfs/xfs_btree.c
+> @@ -23,11 +23,6 @@
+>  #include "xfs_btree_staging.h"
+>  #include "xfs_ag.h"
+>  
+> -/*
+> - * Cursor allocation zone.
+> - */
+> -kmem_zone_t	*xfs_btree_cur_zone;
+> -
+>  /*
+>   * Btree magic numbers.
+>   */
+> @@ -379,7 +374,7 @@ xfs_btree_del_cursor(
+>  		kmem_free(cur->bc_ops);
+>  	if (!(cur->bc_flags & XFS_BTREE_LONG_PTRS) && cur->bc_ag.pag)
+>  		xfs_perag_put(cur->bc_ag.pag);
+> -	kmem_cache_free(xfs_btree_cur_zone, cur);
+> +	kmem_free(cur);
+>  }
+>  
+>  /*
+> @@ -4927,6 +4922,32 @@ xfs_btree_has_more_records(
+>  		return block->bb_u.s.bb_rightsib != cpu_to_be32(NULLAGBLOCK);
+>  }
+>  
+> +/* Compute the maximum allowed height for a given btree type. */
+> +static unsigned int
+> +xfs_btree_maxlevels(
+> +	struct xfs_mount	*mp,
+> +	xfs_btnum_t		btnum)
+> +{
+> +	switch (btnum) {
+> +	case XFS_BTNUM_BNO:
+> +	case XFS_BTNUM_CNT:
+> +		return mp->m_ag_maxlevels;
+> +	case XFS_BTNUM_BMAP:
+> +		return max(mp->m_bm_maxlevels[XFS_DATA_FORK],
+> +			   mp->m_bm_maxlevels[XFS_ATTR_FORK]);
+> +	case XFS_BTNUM_INO:
+> +	case XFS_BTNUM_FINO:
+> +		return M_IGEO(mp)->inobt_maxlevels;
+> +	case XFS_BTNUM_RMAP:
+> +		return mp->m_rmap_maxlevels;
+> +	case XFS_BTNUM_REFC:
+> +		return mp->m_refc_maxlevels;
+> +	default:
+> +		ASSERT(0);
+> +		return XFS_BTREE_MAXLEVELS;
+> +	}
+> +}
+> +
+>  /* Allocate a new btree cursor of the appropriate size. */
+>  struct xfs_btree_cur *
+>  xfs_btree_alloc_cursor(
+> @@ -4935,13 +4956,16 @@ xfs_btree_alloc_cursor(
+>  	xfs_btnum_t		btnum)
+>  {
+>  	struct xfs_btree_cur	*cur;
+> +	unsigned int		maxlevels = xfs_btree_maxlevels(mp, btnum);
+>  
+> -	cur = kmem_cache_zalloc(xfs_btree_cur_zone, GFP_NOFS | __GFP_NOFAIL);
+> +	ASSERT(maxlevels <= XFS_BTREE_MAXLEVELS);
+> +
+> +	cur = kmem_zalloc(xfs_btree_cur_sizeof(maxlevels), KM_NOFS);
+
+Instead of multiple dynamic runtime calculations to determine the
+size to allocate from the heap, which then has to select a slab
+based on size, why don't we just pre-calculate the max size of
+the cursor at XFS module init and use that for the btree cursor slab
+size?
+
+The memory overhead of the cursor isn't an issue because we've been
+maximally sizing it since forever, and the whole point of a slab
+cache is to minimise allocation overhead of frequently allocated
+objects. It seems to me that we really want to retain these
+properties of the cursor allocator, not give them up just as we're
+in the process of making other modifications that will hit the path
+more frequently than it's ever been hit before...
+
+I like all the dynamic sized guards that this series places in the
+cursor, but I don't think we want to change the way we allocate the
+cursors just to support that.
+
+FWIW, an example of avoidable runtime calculation overhead of
+constants is xlog_calc_unit_res(). These values are actually
+constant for a given transaction reservation, but at 1.6 million
+transactions a second it shows up at #20 on the flat profile of
+functions using the most CPU:
+
+0.71%  [kernel]  [k] xlog_calc_unit_res
+
+0.71% of 32 CPUs for 1.6 million calculations a second of the same
+constants is a non-trivial amount of CPU time to spend doing
+unnecessary repeated calculations.
+
+Even though the btree cursor constant calculations are simpler than
+the log res calculations, they are more frequent. Hence on general
+principles of efficiency, I don't think we want to be replacing high
+frequency, low overhead slab/zone based allocations with heap
+allocations that require repeated constant calculations and
+size->slab redirection....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
