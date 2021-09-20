@@ -2,92 +2,171 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55E2EC433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Sep 2021 23:38:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B8B5C433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Sep 2021 23:50:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 345E961019
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Sep 2021 23:38:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E29AC61252
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Sep 2021 23:50:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244635AbhITXjl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 20 Sep 2021 19:39:41 -0400
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:57739 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S240008AbhITXhl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Sep 2021 19:37:41 -0400
-Received: from dread.disaster.area (pa49-195-238-16.pa.nsw.optusnet.com.au [49.195.238.16])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 3262989A95;
-        Tue, 21 Sep 2021 09:36:12 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1mSSpX-00Ephy-Co; Tue, 21 Sep 2021 09:36:11 +1000
-Date:   Tue, 21 Sep 2021 09:36:11 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     chandan.babu@oracle.com, chandanrlinux@gmail.com,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 11/14] xfs: dynamically allocate cursors based on
- maxlevels
-Message-ID: <20210920233611.GN1756565@dread.disaster.area>
-References: <163192854958.416199.3396890438240296942.stgit@magnolia>
- <163192861018.416199.11733078081556457241.stgit@magnolia>
- <20210920230635.GM1756565@dread.disaster.area>
+        id S236720AbhITXvu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 20 Sep 2021 19:51:50 -0400
+Received: from smtp-out1.suse.de ([195.135.220.28]:46288 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236315AbhITXts (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Sep 2021 19:49:48 -0400
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id E0B25220C9;
+        Mon, 20 Sep 2021 23:48:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1632181698; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=WDR8rd0yeY+WwyoUfkNID7NmGWHu0FjMPIrB2wt75VE=;
+        b=chupZgMQPOxHEij3AQE2fQ2gSjEBexoIhCfHuOMAHmdvWRbUCZ3gF+k/9vweTWz5Vta7u7
+        mQNBvpOGiocqZ8S2DLOKWCj1DnMxDgqu+pm+lZ995Bqs12YFbnoaxjNRQ+fsjkM3Y2EJf6
+        IcYOJqc0DX/D4NVZVgH8EEpAAkJy30I=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1632181698;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=WDR8rd0yeY+WwyoUfkNID7NmGWHu0FjMPIrB2wt75VE=;
+        b=D5EiDX5Iks4DL7NrQNDrrqwivNtaz8nkcu8GToJ6VdTOfRtsYDcTPgMQNgtEz/8W0CdMf5
+        geVHQgv+cPcW2OAg==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 40BED13B3F;
+        Mon, 20 Sep 2021 23:48:13 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id 5j12O70dSWH0bgAAMHmgww
+        (envelope-from <neilb@suse.de>); Mon, 20 Sep 2021 23:48:13 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210920230635.GM1756565@dread.disaster.area>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
-        a=DzKKRZjfViQTE5W6EVc0VA==:117 a=DzKKRZjfViQTE5W6EVc0VA==:17
-        a=kj9zAlcOel0A:10 a=7QKq2e-ADPsA:10 a=7-415B0cAAAA:8
-        a=VN5i81WXcHvmF2wlZfsA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+From:   "NeilBrown" <neilb@suse.de>
+To:     "Mel Gorman" <mgorman@suse.de>
+Cc:     "Andrew Morton" <akpm@linux-foundation.org>,
+        "Theodore Ts'o" <tytso@mit.edu>,
+        "Andreas Dilger" <adilger.kernel@dilger.ca>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        "Matthew Wilcox" <willy@infradead.org>,
+        "Michal Hocko" <mhocko@suse.com>,
+        "Jesper Dangaard Brouer" <jbrouer@redhat.com>,
+        "Dave Chinner" <david@fromorbit.com>,
+        "Jonathan Corbet" <corbet@lwn.net>, linux-xfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-nfs@vger.kernel.org, linux-mm@kvack.org,
+        linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org
+Subject: Re: [PATCH 1/6] MM: Support __GFP_NOFAIL in  alloc_pages_bulk_*() and
+ improve doco
+In-reply-to: <20210917144233.GD3891@suse.de>
+References: <163184698512.29351.4735492251524335974.stgit@noble.brown>,
+ <163184741776.29351.3565418361661850328.stgit@noble.brown>,
+ <20210917144233.GD3891@suse.de>
+Date:   Tue, 21 Sep 2021 09:48:11 +1000
+Message-id: <163218169134.3992.18152143151159846850@noble.neil.brown.name>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 21, 2021 at 09:06:35AM +1000, Dave Chinner wrote:
-> FWIW, an example of avoidable runtime calculation overhead of
-> constants is xlog_calc_unit_res(). These values are actually
-> constant for a given transaction reservation, but at 1.6 million
-> transactions a second it shows up at #20 on the flat profile of
-> functions using the most CPU:
-> 
-> 0.71%  [kernel]  [k] xlog_calc_unit_res
-> 
-> 0.71% of 32 CPUs for 1.6 million calculations a second of the same
-> constants is a non-trivial amount of CPU time to spend doing
-> unnecessary repeated calculations.
-> 
-> Even though the btree cursor constant calculations are simpler than
-> the log res calculations, they are more frequent. Hence on general
-> principles of efficiency, I don't think we want to be replacing high
-> frequency, low overhead slab/zone based allocations with heap
-> allocations that require repeated constant calculations and
-> size->slab redirection....
+On Sat, 18 Sep 2021, Mel Gorman wrote:
+> I'm top-posting to cc Jesper with full context of the patch. I don't
+> have a problem with this patch other than the Fixes: being a bit
+> marginal, I should have acked as Mel Gorman <mgorman@suse.de> and the
+> @gfp in the comment should have been @gfp_mask.
+>=20
+> However, an assumption the API design made was that it should fail fast
+> if memory is not quickly available but have at least one page in the
+> array. I don't think the network use case cares about the situation where
+> the array is already populated but I'd like Jesper to have the opportunity
+> to think about it.  It's possible he would prefer it's explicit and the
+> check becomes
+> (!nr_populated || ((gfp_mask & __GFP_NOFAIL) && !nr_account)) to
+> state that __GFP_NOFAIL users are willing to take a potential latency
+> penalty if the array is already partially populated but !__GFP_NOFAIL
+> users would prefer fail-fast behaviour. I'm on the fence because while
+> I wrote the implementation, it was based on other peoples requirements.
 
-FWIW, I have another example that I don't have profiles for right now
-because I didn't record them in the patch series that ends up
-pre-calculating the AIL push target: xlog_grant_push_threshold().
+I can see that it could be desirable to not try too hard when we already
+have pages allocated, but maybe the best way to achieve that is for the
+called to clear __GFP_RECLAIM in that case.
 
-This threshold is largely a fixed value ahead of the current log
-tail (push at >75% of the physical log spacei consumed). We
-do that calculation more often than we call xlog_calc_unit_res().
-Because xlog_grant_push_threshold() accesses contended atomic
-variables, it ends up consume 1-2% of total CPU time when
-transactions rates reach the million/s ballpark.
+Alternately, callers that really want the __GFP_RECLAIM and __GFP_NOFAIL
+flags to be honoured could ensure that the array passed in is empty.
+That wouldn't be difficult (for current callers).
 
-I've currently replaced it with a fixed push threshold calculated at
-mount time and let the AIL calculate the LSN of the push target
-itself when it needs it.  The result is a substantial reduction in
-the CPU usage of the hot xfs_log_reserve() path, which also happens
-to be the same hot path xlog_calc_unit_res() is called from...
+In either case, the documentation should make it clear which flags are
+honoured when.
 
-Cheers,
+Let's see what Jesper has to say.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+NeilBrown
+
+
+>=20
+> On Fri, Sep 17, 2021 at 12:56:57PM +1000, NeilBrown wrote:
+> > When alloc_pages_bulk_array() is called on an array that is partially
+> > allocated, the level of effort to get a single page is less than when
+> > the array was completely unallocated.  This behaviour is inconsistent,
+> > but now fixed.  One effect if this is that __GFP_NOFAIL will not ensure
+> > at least one page is allocated.
+> >=20
+> > Also clarify the expected success rate.  __alloc_pages_bulk() will
+> > allocated one page according to @gfp, and may allocate more if that can
+> > be done cheaply.  It is assumed that the caller values cheap allocation
+> > where possible and may decide to use what it has got, or to call again
+> > to get more.
+> >=20
+> > Acked-by: Mel Gorman <mgorman@suse.com>
+> > Fixes: 0f87d9d30f21 ("mm/page_alloc: add an array-based interface to the =
+bulk page allocator")
+> > Signed-off-by: NeilBrown <neilb@suse.de>
+> > ---
+> >  mm/page_alloc.c |    7 ++++++-
+> >  1 file changed, 6 insertions(+), 1 deletion(-)
+> >=20
+> > diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+> > index b37435c274cf..aa51016e49c5 100644
+> > --- a/mm/page_alloc.c
+> > +++ b/mm/page_alloc.c
+> > @@ -5191,6 +5191,11 @@ static inline bool prepare_alloc_pages(gfp_t gfp_m=
+ask, unsigned int order,
+> >   * is the maximum number of pages that will be stored in the array.
+> >   *
+> >   * Returns the number of pages on the list or array.
+> > + *
+> > + * At least one page will be allocated if that is possible while
+> > + * remaining consistent with @gfp.  Extra pages up to the requested
+> > + * total will be allocated opportunistically when doing so is
+> > + * significantly cheaper than having the caller repeat the request.
+> >   */
+> >  unsigned long __alloc_pages_bulk(gfp_t gfp, int preferred_nid,
+> >  			nodemask_t *nodemask, int nr_pages,
+> > @@ -5292,7 +5297,7 @@ unsigned long __alloc_pages_bulk(gfp_t gfp, int pre=
+ferred_nid,
+> >  								pcp, pcp_list);
+> >  		if (unlikely(!page)) {
+> >  			/* Try and get at least one page */
+> > -			if (!nr_populated)
+> > +			if (!nr_account)
+> >  				goto failed_irq;
+> >  			break;
+> >  		}
+> >=20
+> >=20
+>=20
+>=20
