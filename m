@@ -2,504 +2,318 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 240F8C433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Sep 2021 18:56:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E2BEC433FE
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Sep 2021 20:07:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0FE5960F6B
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Sep 2021 18:56:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 46F8461268
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Sep 2021 20:07:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355245AbhITS47 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 20 Sep 2021 14:56:59 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35736 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1385806AbhITSw2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 20 Sep 2021 14:52:28 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E139A61B27;
-        Mon, 20 Sep 2021 17:39:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1632159574;
-        bh=8Jnr3Kz+gFIO0F2722ikeI/N6jlRdESjgkzDVYOGaYk=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=JlaOZeoD8j2CaOk1mAPBK4c6GjrN+7mOk/YJ8+YLB4inc+HY2ZXZBYQwpsxOI99mt
-         KtSUTUvbMnAJbxxRX26aK+63K1bzkfoWusZdun58IUMmY1vp0iqqrZhEla9lDGaAwK
-         vOj0VXruZnQ5G/k/a96kxW+NI1tajGwCT0IzK28Rmzgx+pkZb6k/kHVtztlrUuXEQz
-         3uwNCTqHrVZXVIO04ThrmCmePrSpcAmvTIl9jz5cr8jl3XeCmlbMtuTmqdhUzyZ4Y4
-         t1F3XhlmdN6aSnFB5ZwRvw1vE8h+hzqVwCetNydnSbPx8RR8O8C5Tr1GpnadQ/Ht/8
-         RvTVXq6d+D66w==
-Date:   Mon, 20 Sep 2021 10:39:33 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Chandan Babu R <chandan.babu@oracle.com>
-Cc:     chandanrlinux@gmail.com, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 02/14] xfs: don't allocate scrub contexts on the stack
-Message-ID: <20210920173933.GB570615@magnolia>
-References: <163192854958.416199.3396890438240296942.stgit@magnolia>
- <163192856086.416199.10504751435007741959.stgit@magnolia>
- <87y27r7eu9.fsf@debian-BULLSEYE-live-builder-AMD64>
+        id S231422AbhITUJE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 20 Sep 2021 16:09:04 -0400
+Received: from mail-bn1nam07on2077.outbound.protection.outlook.com ([40.107.212.77]:31070
+        "EHLO NAM02-BN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S231414AbhITUHD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 20 Sep 2021 16:07:03 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=RFBFbDYyWpdq4Cxqb79jXYUxdnCL4YvhfvHvv2TM8RhEsuJvvg46gG8Jea4tCb28wKvcOMqd3C/o6tyjJHaa+yCOHvwXlIEmeCIDdkUcxt5AfBb5Hx92BP/6QHe/wMJVEDiab04CgQN6yUhj0LmVX/temY2tCpEMjsk6fwwAby6irRgnuRCgPaPwA4vyOAMhLJjd1DevHa4qaAVfGpuvdY6gJO+bNG2Kdr8llUnpr5+ZtyOxHW4ORVE0s3Z8h709SRzoRboFJqFqzts+HNuzkfaIvI+xBg6TVVTupfh9PKK4lp9nV0ELQKKv9k6J6kuOMq64WlmyL1VyrSBLGmAAfA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=e6QiknsDtDbo16MzY8mXMYYJhjEFtjlG6PbZJmVHPZw=;
+ b=m4k0NbtZMBtE3OqWLgFoJlNKZEXIg9xfCPWDeuuLe/xSD4rWhD7W+YZ/aW38oyw4aSU/53t1OKa3JiLsiC3DXnsOfDJUUjRWhVpl73827MVjUNt8QS0Wq0IwnDBGQuC8IQ93DeNxjripdozuKm+bfOMOEJs57BtgYLRGJjAW1MjX047Qt4ZoUA+JvB/2fvsnGAWRfwS8iMG5nsQ1EFqQQErwZlM/ype5uZmVfw+efxAmMDRk2eVyNSj6FglGCpEmRY6wP499mPusqhlrOxDLRChIh/B18HBU3Szcx4LdWmlroLMm6Q+9XvxqgKYbqE+CvyX4k3ur8VxnvUC35PkF/A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=e6QiknsDtDbo16MzY8mXMYYJhjEFtjlG6PbZJmVHPZw=;
+ b=5adnuL+jK5hKus77SlJBVQiUpFVDTLJYylryKIBBhglmFLvYhNHkStDmuNzIEaKaiXb+hD2t7sr2T4ezz6UiuwuWrxiBOP3kL5yI78TSIAf/NNUtiJv1tVTty3YdmiYZjfNAXI6Cm+9aCTPUUOxCM2JRkK6b4IIbmWOkETi9RKs=
+Authentication-Results: redhat.com; dkim=none (message not signed)
+ header.d=none;redhat.com; dmarc=none action=none header.from=amd.com;
+Received: from SA0PR12MB4430.namprd12.prod.outlook.com (2603:10b6:806:70::20)
+ by SA0PR12MB4510.namprd12.prod.outlook.com (2603:10b6:806:94::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4523.14; Mon, 20 Sep
+ 2021 20:05:33 +0000
+Received: from SA0PR12MB4430.namprd12.prod.outlook.com
+ ([fe80::f1aa:9adc:b4f:4d14]) by SA0PR12MB4430.namprd12.prod.outlook.com
+ ([fe80::f1aa:9adc:b4f:4d14%7]) with mapi id 15.20.4523.018; Mon, 20 Sep 2021
+ 20:05:33 +0000
+Subject: Re: [PATCH v2 09/12] lib: test_hmm add module param for zone device
+ type
+To:     Alistair Popple <apopple@nvidia.com>, akpm@linux-foundation.org,
+        Felix.Kuehling@amd.com, linux-mm@kvack.org, rcampbell@nvidia.com,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc:     amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        hch@lst.de, jgg@nvidia.com, jglisse@redhat.com
+References: <20210913161604.31981-1-alex.sierra@amd.com>
+ <20210913161604.31981-10-alex.sierra@amd.com> <2139200.KYAmxeAneQ@nvdebian>
+From:   "Sierra Guiza, Alejandro (Alex)" <alex.sierra@amd.com>
+Message-ID: <729f833c-e880-96ce-5f49-2d72a93faa21@amd.com>
+Date:   Mon, 20 Sep 2021 15:05:30 -0500
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.14.0
+In-Reply-To: <2139200.KYAmxeAneQ@nvdebian>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
+X-ClientProxiedBy: SA9PR13CA0122.namprd13.prod.outlook.com
+ (2603:10b6:806:27::7) To SA0PR12MB4430.namprd12.prod.outlook.com
+ (2603:10b6:806:70::20)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <87y27r7eu9.fsf@debian-BULLSEYE-live-builder-AMD64>
+Received: from [172.31.9.47] (165.204.77.11) by SA9PR13CA0122.namprd13.prod.outlook.com (2603:10b6:806:27::7) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4544.6 via Frontend Transport; Mon, 20 Sep 2021 20:05:32 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: f2b93f99-51f1-441b-2601-08d97c7200d0
+X-MS-TrafficTypeDiagnostic: SA0PR12MB4510:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <SA0PR12MB4510CCFB0D09BA1A1D525CF3FDA09@SA0PR12MB4510.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:7691;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: g1WPuHuS9tpFdhaZkYgdajFEI7Wak/4eenYUdY8evXUEN3FFg4XK+/MgDAwCD1atfis88Lzctiv5L+j3OuPhs++r8fo93lOV0nfkdtvGh/9IwTTcarbaEzsFGVyQ5pg+mO/pqfDn1VJZfF/cuek9rDyG4Xw5PXneap4n9cyHsls2+ENkN5b0yzxnNyEY/3y3aRgsYUoby91Zv3USI00uDQ940jMV3hyRjZ5D+FxXj54XQ5MkzVWyr+276M+vjvl4MDC8sraNC501sS31iGM+6qwq5Vp+b9gueQzw0gKUeczcGCN/mO66V2xZbY8VxvngXOfIsVzjuEuOD1jBH+VHBYZ5NPsPpH5SIaF7L+vIbg3sl4e6vcAyRkRO1VMIvv5KEC4A5odLi/dc5ke3KNlrB/eVIfNCtG9XRNF/grOQ4u82UyZpg0li6ILdBt3pPHlPEf+DISci4qGWdTWCEIYkZzC2ePQdTOfRuk3BUVCzuyqFk8Gw2kI3VeydtskvKevkrEKG6IEjYKljfVmvYzdu4MUfl0tJ8JE28ImCSEDWpUBZT7Zchn+10vBLpLCMbN7vnTOQDExoOG32XvfG7y6e06ddffs0dep3Ae+JRl2LlObfPNM0ZnVk9IHUgTNSZSbr3wdvoSaf6IzDwDkJhizXhoc8gAdfoMhUXZudANzz1vMhyi0aOfpp/3G5F3CpF2xEeARID+nlCiRLp5uLCW8TumNe7G8Eyt3kJxdwAgFeW0o82ED27rm9fb2grI2QsCKAb5Hpo7c3dYQ+nV79mQDRbg==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA0PR12MB4430.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(86362001)(2616005)(4326008)(2906002)(956004)(16576012)(5660300002)(83380400001)(26005)(316002)(8936002)(7416002)(8676002)(31686004)(52116002)(6486002)(36756003)(31696002)(508600001)(186003)(53546011)(38100700002)(66556008)(66946007)(38350700002)(66476007)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?QWV0blpOZm9oK1lHOVF3bFIrOXViRC9uYmNtV3lkRnBVbHpIekVNRFlLdS9z?=
+ =?utf-8?B?eU83aU5pbk02eXVkTzZGMU9FR3VmSEtPME5ncGZ6L3M1MklMdm4vclZSeXFl?=
+ =?utf-8?B?USs4cTBET09OcWl0YUlEdEFzNEZIbWhrK3FyOUNqUzgrWFZQTEVGNHlwd083?=
+ =?utf-8?B?UU9jMXB3UzVvcUVnZXNEd3ZoVld0bmVQUVJzbmtjUUtDYW9XcmJIck4wWVlW?=
+ =?utf-8?B?c0R3UGorRFkzaWtnTC9lbks5akg3R1BzcHJZV2dWeEhMNTlLNFNhcnZlOENU?=
+ =?utf-8?B?aU5scUdrVXR0bHRnejRaeThBS0YrS1R0MnUzRDRZK011dkg5eG4yc1BKNFh6?=
+ =?utf-8?B?aHUxOERiZ0Y3MTFLMGRFSlVWcHkxQlNsR3psL3FDZGEySkE0YXZaMTFCSDBl?=
+ =?utf-8?B?NFU0enhzcVVaY3ExNktuRGlhTUhmMmRyVmJMZjVpWVNPR2JIYTNpamJuL2VB?=
+ =?utf-8?B?MzdkQnVrazl5Sng3dFJVVm5JaThwREp6bHc1ZHBLbjRLU21NM3I4RThKL3NC?=
+ =?utf-8?B?NUp5a09MWGEzS2s2dXhhTSs2WXE3cFp0MENvUXlMNVJDdTZjZ0oxS1hWVFF3?=
+ =?utf-8?B?UGZZRWFSQXhZSDZmSDJiYjZLa2NzdWgxWDI1RW5LNDFHS3UxcmlHVmxlWXRl?=
+ =?utf-8?B?NEpQcjF3elBZUVE4TWRoN3VXcXBCY0dMRi92TVVzeGtwaEJpZWtEY2VrVHJ4?=
+ =?utf-8?B?L2FuVjd6Tzk1V2lleTliYXkyR0xXZ2NSd2ZwYnBOVkl3WjZkellqTHlqOGxi?=
+ =?utf-8?B?a1V5Z1BOVEk0N0xkZW9GUGJ6eEpONzBjSkVkR095WlprMFVTV1pKWGJDUEs1?=
+ =?utf-8?B?aHdiM0UxUUFHaTFaQjRnWUNLenE2WCtlR3RzSWQrZEc3cGg0NC82RG9ORUlh?=
+ =?utf-8?B?WDBwYW91VE1rWlE1QUg2aERYbHZwRzZ6Mmh0d1MxS2FWUmxUMGt6MjZ5eVdX?=
+ =?utf-8?B?MnVLVmJPWXpjbjBWOVlzeCtRNjBKUTRRZmZlUjI2YW1BR1RTOHFJbDh5WGox?=
+ =?utf-8?B?RXN2Ly9QOWkvRVZ6R2h4QUtwU2VnNE96Ny9BMmNaeU42ZUszSWRpQXMrVm5O?=
+ =?utf-8?B?SUE3YU5za3RoaHFPUVAyK291MTJMamRNd243OGlJZmU1aEh2YzJWT2pydHNG?=
+ =?utf-8?B?alF1MFRKZSsyd01WRVZMTWVKWFhWeTlGcXdwMzNYNXZwbEVSWFhDVU93RFZy?=
+ =?utf-8?B?OWhDZzJ5U3NnVHk5RHJxUHZEeDlJeEoxWVdQQk42TXJHNjdGRS9PZXlDRGRO?=
+ =?utf-8?B?TnQwbUlyVFArSGw3bTMvMGp5QTFZMDBBeXpUWTlFbHJNcmdyd3dHb2t2dGJk?=
+ =?utf-8?B?OUxlY0lRUkRZTmlsUVlGREt3VHZoUUNPNjhqS0lYaUNxc2N6c1Q4NVNNRWJT?=
+ =?utf-8?B?R3V1UzhXN0FNY1BuN1UvRmsrMDRZdGxYZkxRdHBVbTNiY1F1UjZyTnppNDh3?=
+ =?utf-8?B?UlhBbTVLRm5mVWpmb3BIWTloc2t5NDBqZFR0Zk1BbXl6Q1V4aE5UVUpWZGVL?=
+ =?utf-8?B?SzlZdC9TK1oxNndrYjBoVFRLM3F2d2EvVlQ4dkM3cVFXNFRIWGYyVUxZWExV?=
+ =?utf-8?B?QVQ5dEpIRE5EcTVXc0w5amJSM3RoQVRybkpHdmozYWQ4ZWtOL1JRb3JzbTJO?=
+ =?utf-8?B?RmdKWlhVRlVNMG1kU2o2SE5mN3ExV3pNb2EybGxkaW90b2J3NC93S3dKQ01D?=
+ =?utf-8?B?T29TMUZFZE5WdmlHUHUrWDBHRVF0RjFNZDNpYXVaWEpJWFRLKzdLbE9BM1hT?=
+ =?utf-8?Q?+411FrIG4EVvLMNYx35cWrJmKwQDjEOEzsj+wLB?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f2b93f99-51f1-441b-2601-08d97c7200d0
+X-MS-Exchange-CrossTenant-AuthSource: SA0PR12MB4430.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Sep 2021 20:05:33.3005
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: fvtxYjd2jJSo2qLPxFqG1ctqljB0X5HTGABiVewIlyalXtwo/etum8fpS5txyAN6EWTKNf+r8SNyOUsMSaXUaA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA0PR12MB4510
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Sep 20, 2021 at 03:23:34PM +0530, Chandan Babu R wrote:
-> On 18 Sep 2021 at 06:59, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> >
-> > Convert the on-stack scrub context, btree scrub context, and da btree
-> > scrub context into a heap allocation so that we reduce stack usage and
-> > gain the ability to handle tall btrees without issue.
-> >
-> > Specifically, this saves us ~208 bytes for the dabtree scrub, ~464 bytes
-> > for the btree scrub, and ~200 bytes for the main scrub context.
-> >
-> 
-> Apart from the nits pointed below, the remaining changes look good to me.
-> 
-> Reviewed-by: Chandan Babu R <chandan.babu@oracle.com>
-> 
-> 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  fs/xfs/scrub/btree.c   |   54 ++++++++++++++++++++++++------------------
-> >  fs/xfs/scrub/btree.h   |    1 +
-> >  fs/xfs/scrub/dabtree.c |   62 ++++++++++++++++++++++++++----------------------
-> >  fs/xfs/scrub/scrub.c   |   60 ++++++++++++++++++++++++++--------------------
-> >  4 files changed, 98 insertions(+), 79 deletions(-)
-> >
-> >
-> > diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
-> > index eccb855dc904..26dcb4691e31 100644
-> > --- a/fs/xfs/scrub/btree.c
-> > +++ b/fs/xfs/scrub/btree.c
-> > @@ -627,15 +627,8 @@ xchk_btree(
-> >  	const struct xfs_owner_info	*oinfo,
-> >  	void				*private)
-> >  {
-> > -	struct xchk_btree		bs = {
-> > -		.cur			= cur,
-> > -		.scrub_rec		= scrub_fn,
-> > -		.oinfo			= oinfo,
-> > -		.firstrec		= true,
-> > -		.private		= private,
-> > -		.sc			= sc,
-> > -	};
-> >  	union xfs_btree_ptr		ptr;
-> > +	struct xchk_btree		*bs;
-> >  	union xfs_btree_ptr		*pp;
-> >  	union xfs_btree_rec		*recp;
-> >  	struct xfs_btree_block		*block;
-> > @@ -646,10 +639,24 @@ xchk_btree(
-> >  	int				i;
-> >  	int				error = 0;
-> >  
-> > +	/*
-> > +	 * Allocate the btree scrub context from the heap, because this
-> > +	 * structure can get rather large.
-> > +	 */
-> > +	bs = kmem_zalloc(sizeof(struct xchk_btree), KM_NOFS | KM_MAYFAIL);
-> > +	if (!bs)
-> > +		return -ENOMEM;
-> > +	bs->cur = cur;
-> > +	bs->scrub_rec = scrub_fn;
-> > +	bs->oinfo = oinfo;
-> > +	bs->firstrec = true;
-> > +	bs->private = private;
-> > +	bs->sc = sc;
-> > +
-> >  	/* Initialize scrub state */
-> >  	for (i = 0; i < XFS_BTREE_MAXLEVELS; i++)
-> > -		bs.firstkey[i] = true;
-> > -	INIT_LIST_HEAD(&bs.to_check);
-> > +		bs->firstkey[i] = true;
-> > +	INIT_LIST_HEAD(&bs->to_check);
-> >  
-> >  	/* Don't try to check a tree with a height we can't handle. */
-> >  	if (cur->bc_nlevels > XFS_BTREE_MAXLEVELS) {
-> > @@ -663,9 +670,9 @@ xchk_btree(
-> >  	 */
-> >  	level = cur->bc_nlevels - 1;
-> >  	cur->bc_ops->init_ptr_from_cur(cur, &ptr);
-> > -	if (!xchk_btree_ptr_ok(&bs, cur->bc_nlevels, &ptr))
-> > +	if (!xchk_btree_ptr_ok(bs, cur->bc_nlevels, &ptr))
-> >  		goto out;
-> > -	error = xchk_btree_get_block(&bs, level, &ptr, &block, &bp);
-> > +	error = xchk_btree_get_block(bs, level, &ptr, &block, &bp);
-> >  	if (error || !block)
-> >  		goto out;
-> >  
-> > @@ -678,7 +685,7 @@ xchk_btree(
-> >  			/* End of leaf, pop back towards the root. */
-> >  			if (cur->bc_ptrs[level] >
-> >  			    be16_to_cpu(block->bb_numrecs)) {
-> > -				xchk_btree_block_keys(&bs, level, block);
-> > +				xchk_btree_block_keys(bs, level, block);
-> >  				if (level < cur->bc_nlevels - 1)
-> >  					cur->bc_ptrs[level + 1]++;
-> >  				level++;
-> > @@ -686,11 +693,11 @@ xchk_btree(
-> >  			}
-> >  
-> >  			/* Records in order for scrub? */
-> > -			xchk_btree_rec(&bs);
-> > +			xchk_btree_rec(bs);
-> >  
-> >  			/* Call out to the record checker. */
-> >  			recp = xfs_btree_rec_addr(cur, cur->bc_ptrs[0], block);
-> > -			error = bs.scrub_rec(&bs, recp);
-> > +			error = bs->scrub_rec(bs, recp);
-> >  			if (error)
-> >  				break;
-> >  			if (xchk_should_terminate(sc, &error) ||
-> > @@ -703,7 +710,7 @@ xchk_btree(
-> >  
-> >  		/* End of node, pop back towards the root. */
-> >  		if (cur->bc_ptrs[level] > be16_to_cpu(block->bb_numrecs)) {
-> > -			xchk_btree_block_keys(&bs, level, block);
-> > +			xchk_btree_block_keys(bs, level, block);
-> >  			if (level < cur->bc_nlevels - 1)
-> >  				cur->bc_ptrs[level + 1]++;
-> >  			level++;
-> > @@ -711,16 +718,16 @@ xchk_btree(
-> >  		}
-> >  
-> >  		/* Keys in order for scrub? */
-> > -		xchk_btree_key(&bs, level);
-> > +		xchk_btree_key(bs, level);
-> >  
-> >  		/* Drill another level deeper. */
-> >  		pp = xfs_btree_ptr_addr(cur, cur->bc_ptrs[level], block);
-> > -		if (!xchk_btree_ptr_ok(&bs, level, pp)) {
-> > +		if (!xchk_btree_ptr_ok(bs, level, pp)) {
-> >  			cur->bc_ptrs[level]++;
-> >  			continue;
-> >  		}
-> >  		level--;
-> > -		error = xchk_btree_get_block(&bs, level, pp, &block, &bp);
-> > +		error = xchk_btree_get_block(bs, level, pp, &block, &bp);
-> >  		if (error || !block)
-> >  			goto out;
-> >  
-> > @@ -729,13 +736,14 @@ xchk_btree(
-> >  
-> >  out:
-> >  	/* Process deferred owner checks on btree blocks. */
-> > -	list_for_each_entry_safe(co, n, &bs.to_check, list) {
-> > -		if (!error && bs.cur)
-> > -			error = xchk_btree_check_block_owner(&bs,
-> > -					co->level, co->daddr);
-> > +	list_for_each_entry_safe(co, n, &bs->to_check, list) {
-> > +		if (!error && bs->cur)
-> > +			error = xchk_btree_check_block_owner(bs, co->level,
-> > +					co->daddr);
-> >  		list_del(&co->list);
-> >  		kmem_free(co);
-> >  	}
-> > +	kmem_free(bs);
-> >  
-> >  	return error;
-> >  }
-> > diff --git a/fs/xfs/scrub/btree.h b/fs/xfs/scrub/btree.h
-> > index b7d2fc01fbf9..d5c0b0cbc505 100644
-> > --- a/fs/xfs/scrub/btree.h
-> > +++ b/fs/xfs/scrub/btree.h
-> > @@ -44,6 +44,7 @@ struct xchk_btree {
-> >  	bool				firstkey[XFS_BTREE_MAXLEVELS];
-> >  	struct list_head		to_check;
-> >  };
-> > +
-> >  int xchk_btree(struct xfs_scrub *sc, struct xfs_btree_cur *cur,
-> >  		xchk_btree_rec_fn scrub_fn, const struct xfs_owner_info *oinfo,
-> >  		void *private);
-> > diff --git a/fs/xfs/scrub/dabtree.c b/fs/xfs/scrub/dabtree.c
-> > index 8a52514bc1ff..b962cfbbd92b 100644
-> > --- a/fs/xfs/scrub/dabtree.c
-> > +++ b/fs/xfs/scrub/dabtree.c
-> > @@ -473,7 +473,7 @@ xchk_da_btree(
-> >  	xchk_da_btree_rec_fn		scrub_fn,
-> >  	void				*private)
-> >  {
-> > -	struct xchk_da_btree		ds = {};
-> > +	struct xchk_da_btree		*ds;
-> >  	struct xfs_mount		*mp = sc->mp;
-> >  	struct xfs_da_state_blk		*blks;
-> >  	struct xfs_da_node_entry	*key;
-> > @@ -486,32 +486,35 @@ xchk_da_btree(
-> >  		return 0;
-> >  
-> >  	/* Set up initial da state. */
-> > -	ds.dargs.dp = sc->ip;
-> > -	ds.dargs.whichfork = whichfork;
-> > -	ds.dargs.trans = sc->tp;
-> > -	ds.dargs.op_flags = XFS_DA_OP_OKNOENT;
-> > -	ds.state = xfs_da_state_alloc(&ds.dargs);
-> > -	ds.sc = sc;
-> > -	ds.private = private;
-> > +	ds = kmem_zalloc(sizeof(struct xchk_da_btree), KM_NOFS | KM_MAYFAIL);
-> > +	if (!ds)
-> > +		return -ENOMEM;
-> > +	ds->dargs.dp = sc->ip;
-> > +	ds->dargs.whichfork = whichfork;
-> > +	ds->dargs.trans = sc->tp;
-> > +	ds->dargs.op_flags = XFS_DA_OP_OKNOENT;
-> > +	ds->state = xfs_da_state_alloc(&ds->dargs);
-> > +	ds->sc = sc;
-> > +	ds->private = private;
-> >  	if (whichfork == XFS_ATTR_FORK) {
-> > -		ds.dargs.geo = mp->m_attr_geo;
-> > -		ds.lowest = 0;
-> > -		ds.highest = 0;
-> > +		ds->dargs.geo = mp->m_attr_geo;
-> > +		ds->lowest = 0;
-> > +		ds->highest = 0;
-> >  	} else {
-> > -		ds.dargs.geo = mp->m_dir_geo;
-> > -		ds.lowest = ds.dargs.geo->leafblk;
-> > -		ds.highest = ds.dargs.geo->freeblk;
-> > +		ds->dargs.geo = mp->m_dir_geo;
-> > +		ds->lowest = ds->dargs.geo->leafblk;
-> > +		ds->highest = ds->dargs.geo->freeblk;
-> >  	}
-> > -	blkno = ds.lowest;
-> > +	blkno = ds->lowest;
-> >  	level = 0;
-> >  
-> >  	/* Find the root of the da tree, if present. */
-> > -	blks = ds.state->path.blk;
-> > -	error = xchk_da_btree_block(&ds, level, blkno);
-> > +	blks = ds->state->path.blk;
-> > +	error = xchk_da_btree_block(ds, level, blkno);
-> >  	if (error)
-> >  		goto out_state;
-> >  	/*
-> > -	 * We didn't find a block at ds.lowest, which means that there's
-> > +	 * We didn't find a block at ds->lowest, which means that there's
-> >  	 * no LEAF1/LEAFN tree (at least not where it's supposed to be),
-> >  	 * so jump out now.
-> >  	 */
-> > @@ -523,16 +526,16 @@ xchk_da_btree(
-> >  		/* Handle leaf block. */
-> >  		if (blks[level].magic != XFS_DA_NODE_MAGIC) {
-> >  			/* End of leaf, pop back towards the root. */
-> > -			if (blks[level].index >= ds.maxrecs[level]) {
-> > +			if (blks[level].index >= ds->maxrecs[level]) {
-> >  				if (level > 0)
-> >  					blks[level - 1].index++;
-> > -				ds.tree_level++;
-> > +				ds->tree_level++;
-> >  				level--;
-> >  				continue;
-> >  			}
-> >  
-> >  			/* Dispatch record scrubbing. */
-> > -			error = scrub_fn(&ds, level);
-> > +			error = scrub_fn(ds, level);
-> >  			if (error)
-> >  				break;
-> >  			if (xchk_should_terminate(sc, &error) ||
-> > @@ -545,17 +548,17 @@ xchk_da_btree(
-> >  
-> >  
-> >  		/* End of node, pop back towards the root. */
-> > -		if (blks[level].index >= ds.maxrecs[level]) {
-> > +		if (blks[level].index >= ds->maxrecs[level]) {
-> >  			if (level > 0)
-> >  				blks[level - 1].index++;
-> > -			ds.tree_level++;
-> > +			ds->tree_level++;
-> >  			level--;
-> >  			continue;
-> >  		}
-> >  
-> >  		/* Hashes in order for scrub? */
-> > -		key = xchk_da_btree_node_entry(&ds, level);
-> > -		error = xchk_da_btree_hash(&ds, level, &key->hashval);
-> > +		key = xchk_da_btree_node_entry(ds, level);
-> > +		error = xchk_da_btree_hash(ds, level, &key->hashval);
-> >  		if (error)
-> >  			goto out;
-> >  
-> > @@ -564,11 +567,11 @@ xchk_da_btree(
-> >  		level++;
-> >  		if (level >= XFS_DA_NODE_MAXDEPTH) {
-> >  			/* Too deep! */
-> > -			xchk_da_set_corrupt(&ds, level - 1);
-> > +			xchk_da_set_corrupt(ds, level - 1);
-> >  			break;
-> >  		}
-> > -		ds.tree_level--;
-> > -		error = xchk_da_btree_block(&ds, level, blkno);
-> > +		ds->tree_level--;
-> > +		error = xchk_da_btree_block(ds, level, blkno);
-> >  		if (error)
-> >  			goto out;
-> >  		if (blks[level].bp == NULL)
-> > @@ -587,6 +590,7 @@ xchk_da_btree(
-> >  	}
-> >  
-> >  out_state:
-> > -	xfs_da_state_free(ds.state);
-> > +	xfs_da_state_free(ds->state);
-> > +	kmem_free(ds);
-> >  	return error;
-> >  }
-> > diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-> > index 51e4c61916d2..0569b15526ea 100644
-> > --- a/fs/xfs/scrub/scrub.c
-> > +++ b/fs/xfs/scrub/scrub.c
-> > @@ -461,15 +461,10 @@ xfs_scrub_metadata(
-> >  	struct file			*file,
-> >  	struct xfs_scrub_metadata	*sm)
-> >  {
-> > -	struct xfs_scrub		sc = {
-> > -		.file			= file,
-> > -		.sm			= sm,
-> > -	};
-> > +	struct xfs_scrub		*sc;
-> >  	struct xfs_mount		*mp = XFS_I(file_inode(file))->i_mount;
-> >  	int				error = 0;
-> >  
-> > -	sc.mp = mp;
-> > -
-> >  	BUILD_BUG_ON(sizeof(meta_scrub_ops) !=
-> >  		(sizeof(struct xchk_meta_ops) * XFS_SCRUB_TYPE_NR));
-> >  
-> > @@ -489,59 +484,68 @@ xfs_scrub_metadata(
-> >  
-> >  	xchk_experimental_warning(mp);
-> >  
-> > -	sc.ops = &meta_scrub_ops[sm->sm_type];
-> > -	sc.sick_mask = xchk_health_mask_for_scrub_type(sm->sm_type);
-> > +	sc = kmem_zalloc(sizeof(struct xfs_scrub), KM_NOFS | KM_MAYFAIL);
-> > +	if (!sc) {
-> > +		error = -ENOMEM;
-> > +		goto out;
-> > +	}
-> > +
-> > +	sc->mp = mp;
-> > +	sc->file = file;
-> > +	sc->sm = sm;
-> > +	sc->ops = &meta_scrub_ops[sm->sm_type];
-> > +	sc->sick_mask = xchk_health_mask_for_scrub_type(sm->sm_type);
-> >  retry_op:
-> >  	/*
-> >  	 * When repairs are allowed, prevent freezing or readonly remount while
-> >  	 * scrub is running with a real transaction.
-> >  	 */
-> >  	if (sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) {
-> > -		error = mnt_want_write_file(sc.file);
-> > +		error = mnt_want_write_file(sc->file);
-> >  		if (error)
-> >  			goto out;
-> 
-> The above should be "goto out_sc" ...
-> 
-> >  	}
-> >  
-> >  	/* Set up for the operation. */
-> > -	error = sc.ops->setup(&sc);
-> > +	error = sc->ops->setup(sc);
-> >  	if (error)
-> >  		goto out_teardown;
-> >  
-> >  	/* Scrub for errors. */
-> > -	error = sc.ops->scrub(&sc);
-> > -	if (!(sc.flags & XCHK_TRY_HARDER) && error == -EDEADLOCK) {
-> > +	error = sc->ops->scrub(sc);
-> > +	if (!(sc->flags & XCHK_TRY_HARDER) && error == -EDEADLOCK) {
-> >  		/*
-> >  		 * Scrubbers return -EDEADLOCK to mean 'try harder'.
-> >  		 * Tear down everything we hold, then set up again with
-> >  		 * preparation for worst-case scenarios.
-> >  		 */
-> > -		error = xchk_teardown(&sc, 0);
-> > +		error = xchk_teardown(sc, 0);
-> >  		if (error)
-> >  			goto out;
-> 
-> ... also, the one above.
 
-Ugh, that must have been a porting error.  Fixed.
+On 9/20/2021 3:53 AM, Alistair Popple wrote:
+> On Tuesday, 14 September 2021 2:16:01 AM AEST Alex Sierra wrote:
+>> In order to configure device public in test_hmm, two module parameters
+>> should be passed, which correspond to the SP start address of each
+>> device (2) spm_addr_dev0 & spm_addr_dev1. If no parameters are passed,
+>> private device type is configured.
+> It's a pity that testing this seems to require some amount of special setup to
+> test. Is there a way this could be made to work on a more standard setup
+> similar to how DEVICE_PRIVATE is tested?
+Hi Alistair
+We tried to do it as simpler as possible. Unfortunately, there are two main
+requirements to register dev memory as DEVICE_PUBLIC type. This memory must
+NOT be accessed by any memory allocator (SLAB, SLOB, SLUB) plus, it has 
+to be
+CPU coherently accessed.  We also want to avoid aliasing the same PFNs for
+different page types (regular system memory and DEVICE_PUBLIC). So we don't
+want the reserved memory to be part of the kernel's memory map before we 
+call
+memremap_pages. A transparent way of doing it, without any special HW, was
+setting a portion of system memory as SPM (Special purpose memory). And use
+this as our “device fake” memory.
 
---D
+Regards,
+Alex Sierra
 
-> > -		sc.flags |= XCHK_TRY_HARDER;
-> > +		sc->flags |= XCHK_TRY_HARDER;
-> >  		goto retry_op;
-> >  	} else if (error || (sm->sm_flags & XFS_SCRUB_OFLAG_INCOMPLETE))
-> >  		goto out_teardown;
-> >  
-> > -	xchk_update_health(&sc);
-> > +	xchk_update_health(sc);
-> >  
-> > -	if ((sc.sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) &&
-> > -	    !(sc.flags & XREP_ALREADY_FIXED)) {
-> > +	if ((sc->sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) &&
-> > +	    !(sc->flags & XREP_ALREADY_FIXED)) {
-> >  		bool needs_fix;
-> >  
-> >  		/* Let debug users force us into the repair routines. */
-> >  		if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_FORCE_SCRUB_REPAIR))
-> > -			sc.sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
-> > +			sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
-> >  
-> > -		needs_fix = (sc.sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
-> > -						XFS_SCRUB_OFLAG_XCORRUPT |
-> > -						XFS_SCRUB_OFLAG_PREEN));
-> > +		needs_fix = (sc->sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
-> > +						 XFS_SCRUB_OFLAG_XCORRUPT |
-> > +						 XFS_SCRUB_OFLAG_PREEN));
-> >  		/*
-> >  		 * If userspace asked for a repair but it wasn't necessary,
-> >  		 * report that back to userspace.
-> >  		 */
-> >  		if (!needs_fix) {
-> > -			sc.sm->sm_flags |= XFS_SCRUB_OFLAG_NO_REPAIR_NEEDED;
-> > +			sc->sm->sm_flags |= XFS_SCRUB_OFLAG_NO_REPAIR_NEEDED;
-> >  			goto out_nofix;
-> >  		}
-> >  
-> > @@ -549,26 +553,28 @@ xfs_scrub_metadata(
-> >  		 * If it's broken, userspace wants us to fix it, and we haven't
-> >  		 * already tried to fix it, then attempt a repair.
-> >  		 */
-> > -		error = xrep_attempt(&sc);
-> > +		error = xrep_attempt(sc);
-> >  		if (error == -EAGAIN) {
-> >  			/*
-> >  			 * Either the repair function succeeded or it couldn't
-> >  			 * get all the resources it needs; either way, we go
-> >  			 * back to the beginning and call the scrub function.
-> >  			 */
-> > -			error = xchk_teardown(&sc, 0);
-> > +			error = xchk_teardown(sc, 0);
-> >  			if (error) {
-> >  				xrep_failure(mp);
-> > -				goto out;
-> > +				goto out_sc;
-> >  			}
-> >  			goto retry_op;
-> >  		}
-> >  	}
-> >  
-> >  out_nofix:
-> > -	xchk_postmortem(&sc);
-> > +	xchk_postmortem(sc);
-> >  out_teardown:
-> > -	error = xchk_teardown(&sc, error);
-> > +	error = xchk_teardown(sc, error);
-> > +out_sc:
-> > +	kmem_free(sc);
-> >  out:
-> >  	trace_xchk_done(XFS_I(file_inode(file)), sm, error);
-> >  	if (error == -EFSCORRUPTED || error == -EFSBADCRC) {
-> 
-> 
-> -- 
-> chandan
+>
+>> Signed-off-by: Alex Sierra <alex.sierra@amd.com>
+>> ---
+>> v5:
+>> Remove devmem->pagemap.type = MEMORY_DEVICE_PRIVATE at
+>> dmirror_allocate_chunk that was forcing to configure pagemap.type
+>> to MEMORY_DEVICE_PRIVATE
+>>
+>> v6:
+>> Check for null pointers for resource and memremap references
+>> at dmirror_allocate_chunk
+>>
+>> v7:
+>> Due to patch dropped from these patch series "kernel: resource:
+>> lookup_resource as exported symbol", lookup_resource was not longer a
+>> callable function. This was used in public device configuration, to
+>> get start and end addresses, to create pgmap->range struct. This
+>> information is now taken directly from the spm_addr_devX parameters and
+>> the fixed size DEVMEM_CHUNK_SIZE.
+>> ---
+>>   lib/test_hmm.c      | 66 +++++++++++++++++++++++++++++++--------------
+>>   lib/test_hmm_uapi.h |  1 +
+>>   2 files changed, 47 insertions(+), 20 deletions(-)
+>>
+>> diff --git a/lib/test_hmm.c b/lib/test_hmm.c
+>> index 3cd91ca31dd7..ef27e355738a 100644
+>> --- a/lib/test_hmm.c
+>> +++ b/lib/test_hmm.c
+>> @@ -33,6 +33,16 @@
+>>   #define DEVMEM_CHUNK_SIZE		(256 * 1024 * 1024U)
+>>   #define DEVMEM_CHUNKS_RESERVE		16
+>>   
+>> +static unsigned long spm_addr_dev0;
+>> +module_param(spm_addr_dev0, long, 0644);
+>> +MODULE_PARM_DESC(spm_addr_dev0,
+>> +		"Specify start address for SPM (special purpose memory) used for device 0. By setting this Generic device type will be used. Make sure spm_addr_dev1 is set too");
+>> +
+>> +static unsigned long spm_addr_dev1;
+>> +module_param(spm_addr_dev1, long, 0644);
+>> +MODULE_PARM_DESC(spm_addr_dev1,
+>> +		"Specify start address for SPM (special purpose memory) used for device 1. By setting this Generic device type will be used. Make sure spm_addr_dev0 is set too");
+>> +
+>>   static const struct dev_pagemap_ops dmirror_devmem_ops;
+>>   static const struct mmu_interval_notifier_ops dmirror_min_ops;
+>>   static dev_t dmirror_dev;
+>> @@ -450,11 +460,11 @@ static int dmirror_write(struct dmirror *dmirror, struct hmm_dmirror_cmd *cmd)
+>>   	return ret;
+>>   }
+>>   
+>> -static bool dmirror_allocate_chunk(struct dmirror_device *mdevice,
+>> +static int dmirror_allocate_chunk(struct dmirror_device *mdevice,
+>>   				   struct page **ppage)
+>>   {
+>>   	struct dmirror_chunk *devmem;
+>> -	struct resource *res;
+>> +	struct resource *res = NULL;
+>>   	unsigned long pfn;
+>>   	unsigned long pfn_first;
+>>   	unsigned long pfn_last;
+>> @@ -462,17 +472,29 @@ static bool dmirror_allocate_chunk(struct dmirror_device *mdevice,
+>>   
+>>   	devmem = kzalloc(sizeof(*devmem), GFP_KERNEL);
+>>   	if (!devmem)
+>> -		return false;
+>> +		return -ENOMEM;
+>>   
+>> -	res = request_free_mem_region(&iomem_resource, DEVMEM_CHUNK_SIZE,
+>> -				      "hmm_dmirror");
+>> -	if (IS_ERR(res))
+>> -		goto err_devmem;
+>> +	if (!spm_addr_dev0 && !spm_addr_dev1) {
+>> +		res = request_free_mem_region(&iomem_resource, DEVMEM_CHUNK_SIZE,
+>> +					      "hmm_dmirror");
+>> +		if (IS_ERR_OR_NULL(res))
+>> +			goto err_devmem;
+>> +		devmem->pagemap.range.start = res->start;
+>> +		devmem->pagemap.range.end = res->end;
+>> +		devmem->pagemap.type = MEMORY_DEVICE_PRIVATE;
+>> +		mdevice->zone_device_type = HMM_DMIRROR_MEMORY_DEVICE_PRIVATE;
+>> +	} else if (spm_addr_dev0 && spm_addr_dev1) {
+>> +		devmem->pagemap.range.start = MINOR(mdevice->cdevice.dev) ?
+>> +							spm_addr_dev0 :
+>> +							spm_addr_dev1;
+>> +		devmem->pagemap.range.end = devmem->pagemap.range.start +
+>> +					    DEVMEM_CHUNK_SIZE - 1;
+>> +		devmem->pagemap.type = MEMORY_DEVICE_PUBLIC;
+>> +		mdevice->zone_device_type = HMM_DMIRROR_MEMORY_DEVICE_PUBLIC;
+>> +	} else {
+>> +		pr_err("Both spm_addr_dev parameters should be set\n");
+>> +	}
+>>   
+>> -	mdevice->zone_device_type = HMM_DMIRROR_MEMORY_DEVICE_PRIVATE;
+>> -	devmem->pagemap.type = MEMORY_DEVICE_PRIVATE;
+>> -	devmem->pagemap.range.start = res->start;
+>> -	devmem->pagemap.range.end = res->end;
+>>   	devmem->pagemap.nr_range = 1;
+>>   	devmem->pagemap.ops = &dmirror_devmem_ops;
+>>   	devmem->pagemap.owner = mdevice;
+>> @@ -493,10 +515,14 @@ static bool dmirror_allocate_chunk(struct dmirror_device *mdevice,
+>>   		mdevice->devmem_capacity = new_capacity;
+>>   		mdevice->devmem_chunks = new_chunks;
+>>   	}
+>> -
+>>   	ptr = memremap_pages(&devmem->pagemap, numa_node_id());
+>> -	if (IS_ERR(ptr))
+>> +	if (IS_ERR_OR_NULL(ptr)) {
+>> +		if (ptr)
+>> +			ret = PTR_ERR(ptr);
+>> +		else
+>> +			ret = -EFAULT;
+>>   		goto err_release;
+>> +	}
+>>   
+>>   	devmem->mdevice = mdevice;
+>>   	pfn_first = devmem->pagemap.range.start >> PAGE_SHIFT;
+>> @@ -529,7 +555,8 @@ static bool dmirror_allocate_chunk(struct dmirror_device *mdevice,
+>>   
+>>   err_release:
+>>   	mutex_unlock(&mdevice->devmem_lock);
+>> -	release_mem_region(devmem->pagemap.range.start, range_len(&devmem->pagemap.range));
+>> +	if (res)
+>> +		release_mem_region(devmem->pagemap.range.start, range_len(&devmem->pagemap.range));
+>>   err_devmem:
+>>   	kfree(devmem);
+>>   
+>> @@ -1097,10 +1124,8 @@ static int dmirror_device_init(struct dmirror_device *mdevice, int id)
+>>   	if (ret)
+>>   		return ret;
+>>   
+>> -	/* Build a list of free ZONE_DEVICE private struct pages */
+>> -	dmirror_allocate_chunk(mdevice, NULL);
+>> -
+>> -	return 0;
+>> +	/* Build a list of free ZONE_DEVICE struct pages */
+>> +	return dmirror_allocate_chunk(mdevice, NULL);
+>>   }
+>>   
+>>   static void dmirror_device_remove(struct dmirror_device *mdevice)
+>> @@ -1113,8 +1138,9 @@ static void dmirror_device_remove(struct dmirror_device *mdevice)
+>>   				mdevice->devmem_chunks[i];
+>>   
+>>   			memunmap_pages(&devmem->pagemap);
+>> -			release_mem_region(devmem->pagemap.range.start,
+>> -					   range_len(&devmem->pagemap.range));
+>> +			if (devmem->pagemap.type == MEMORY_DEVICE_PRIVATE)
+>> +				release_mem_region(devmem->pagemap.range.start,
+>> +						   range_len(&devmem->pagemap.range));
+>>   			kfree(devmem);
+>>   		}
+>>   		kfree(mdevice->devmem_chunks);
+>> diff --git a/lib/test_hmm_uapi.h b/lib/test_hmm_uapi.h
+>> index ee88701793d5..00259d994410 100644
+>> --- a/lib/test_hmm_uapi.h
+>> +++ b/lib/test_hmm_uapi.h
+>> @@ -65,6 +65,7 @@ enum {
+>>   enum {
+>>   	/* 0 is reserved to catch uninitialized type fields */
+>>   	HMM_DMIRROR_MEMORY_DEVICE_PRIVATE = 1,
+>> +	HMM_DMIRROR_MEMORY_DEVICE_PUBLIC,
+>>   };
+>>   
+>>   #endif /* _LIB_TEST_HMM_UAPI_H */
+>>
+>
+>
+>
