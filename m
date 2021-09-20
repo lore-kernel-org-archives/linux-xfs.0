@@ -7,143 +7,144 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
 	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CD77C433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Sep 2021 10:09:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BA94C433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Sep 2021 10:09:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 35BD860E9C
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Sep 2021 10:09:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6D9F160E9C
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Sep 2021 10:09:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235599AbhITKKq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 20 Sep 2021 06:10:46 -0400
-Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:20650 "EHLO
-        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235642AbhITKKp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Sep 2021 06:10:45 -0400
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 18KA6cXh008278;
-        Mon, 20 Sep 2021 10:09:17 GMT
+        id S235721AbhITKLI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 20 Sep 2021 06:11:08 -0400
+Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:34912 "EHLO
+        mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S235710AbhITKLE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Sep 2021 06:11:04 -0400
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 18K7xPwk028077;
+        Mon, 20 Sep 2021 10:09:36 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=references : from :
  to : cc : subject : in-reply-to : message-id : date : content-type :
  mime-version; s=corp-2021-07-09;
- bh=P35ORkvnNH97kWmXIQSPmJiTCcZabzezH2X5HVLiXH4=;
- b=LJPmRHukkVr2FsdDO4ZpCVeq3eFCpEfaAjUZ5FlLfMg0G6pD5Gs5AlZDhalaQQ1wqcKY
- r6MkW/z0i/cJ1H6eXpDPJeCq5I/u/ZWq6zxp8Qqb6pxZgKT2IDofWwHEFF/mOhBo/1QZ
- JlwWkc/sxbXsHzlRkx8ZK14I2FNfhaOO9FQXlAkfD5LlX8LPw4hzQ5BW2PqdVXYRCEof
- qLwujYov0pQy4ZPEiYWOK3qecMAS6XHTMBIs9BUJQKnbnlTiGdf7GB/4PLSYRSn009Pi
- WVnXabpuBGfJ6xt1A1VdWm+rh5gY7hMYCb8cqn/S5/dRUlZvqetD1KMvE0e0LF34xMWb Uw== 
+ bh=xeEHnA4ypW7leo+pszPdKqfFL+td7pojjxHxdNTw/xo=;
+ b=IkeU8rn7JokQTAW1YauroQQCWiskWMVJIaDXgZHk4fSEyDJ2shzCGfq5SprWkjgU6pd9
+ J2rDSeF/KwTPyeWrU0PgslGKD3Q4eGbu/OPdCW1ZqzgplCt92ve2Wk0GJhAmXG/l7/vo
+ 11IqCkaKeNPm5x257Xa2oThK5OgGvEicREkpYGqsBbPLwqF3KyY34M1yTuRwVB604qBY
+ Jm6eoA5juARBUotHknhGxKrl33HkMsGPjtYgEktr7M/42wheYgNBjXx05/8wgYkgsHGU
+ NfAHWzIPFbnDRik1gxkwxnKNS4s2YFEhBaBfpBOJ/9EEZ3XEmV2OxlsjcX7VcT07b9AK nA== 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=references : from :
  to : cc : subject : in-reply-to : message-id : date : content-type :
  mime-version; s=corp-2020-01-29;
- bh=P35ORkvnNH97kWmXIQSPmJiTCcZabzezH2X5HVLiXH4=;
- b=P/wwY1BXmx14nKERXvd/qG+9tIW2fCyHnTQZWDeuch7iEa0g4HC8K2Q5zzoXKEWjbecB
- 5ZO+2dHg90qBlhLQae+05FU3DhJKsEiP1MOrAquc+OCRaxv/K3BNq5NZQyZ5oXjkYt8S
- TuXiIHEN+G850NLi92HTN3jAR2dETx2VkOpy0XQYjtsmjujF/EMKwwznxjVy1j2oeiBM
- ODbGyfe9+ByFfVrUSVnqNsIAUiHCzGDva2nryybLokUTkKOSpC1vOP3+DuhGaOsqdXml
- sl4P40w8umV4VfxjqnsW1LK+X/gxD7G4iE2D4y4bBK8hh31/O7TZhU0puOotHPgZzFJk Bg== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3b66hnhs7v-1
+ bh=xeEHnA4ypW7leo+pszPdKqfFL+td7pojjxHxdNTw/xo=;
+ b=qfkPAGGiyoWriMXBiyzrs7rwxfbY+qvrOeDtADmK/YJ8Fzz2+H5vH004K6xjZfuXHaNZ
+ uaWqiyBAR699oQV3IUKid1mxjWK+91bVjvEERt+Rc7M+d+Qi3+2jL2g3ewPv6ESujKQ/
+ XoiIJTLLpq1O8t68CTyJ3mBv396BD7wn6C0uukcDSvfz3krj8r5+HkVNZMPcMVotEe1B
+ 7d7Uj/jRxBh/6zkaJG3pJXjJpjOxZhDY96NXYH8qbRnTPqczhh81rvhZket9hpNH/EJu
+ WOO8NKU9XN3FaVh529bO6sVmgQXbJAYIPwFW9n+t3rjFaUHZZfkjJV51c/KNkSRylz02 ZA== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3b65mr9tnk-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 20 Sep 2021 10:09:17 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 18KA5Uht031714;
-        Mon, 20 Sep 2021 10:09:16 GMT
-Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2041.outbound.protection.outlook.com [104.47.66.41])
-        by userp3030.oracle.com with ESMTP id 3b557vayjq-1
+        Mon, 20 Sep 2021 10:09:35 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 18KA4q6T034439;
+        Mon, 20 Sep 2021 10:09:34 GMT
+Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2170.outbound.protection.outlook.com [104.47.55.170])
+        by aserp3030.oracle.com with ESMTP id 3b565cd8g5-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 20 Sep 2021 10:09:16 +0000
+        Mon, 20 Sep 2021 10:09:34 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=GePtgsIfrugDCZeg76AmwgkvXCEREH+N/uc3FaFlqsGRiNVh80DqMP+UMj3GyuBEGuGxDJi0rtWlWd9z1TStQQpdvjTAr7jAI6W7qliNoIQKjmAwJJx1z5XT6I7DD2ZuNtk09/tE5hldpmpwhYsBXgMlLI0tzzaTDW9hF1i0dfTxCjMyapOiZnDPKaQ6isB2rWadU8DaoTbNQh2L687zIHEj5+wpYA6ciVMtPqP4CnS0sAb/MjVYKhrVgkmhpxBZSiWIeqvv0Wb3zlkMlEbe0TPL0YGxs3iEEWLvuYZELljZfnwsGd1K5a4oW16/n8WA+hvvIMaAkHmSCrC1tSvZPg==
+ b=jhS1BSQWS96xahmL/2kRnL9DTHgm8PSNw2HCrmTu6U6xmTXzEIf5khP7A8bJbUhqBhiUImdd9SdhO/MY9XaRP99GEeIwLNj7dPhpqwccLIccYPggP9a8j0zESdGRYNMVrgax8i5XbUCBOoyVizpW8Fe8NloJNHzgBpXRW+o8HoBAWt1MGDoeYsuFw/CirW0bAxGzBpDcZl5nKHD+7Y92XMj/+vk2FiPzKb0N8Mk8CS67zrPOOoWHUbKcDBhIAXRc7kukOej5MMxy6HaCwv+kgMSJzCCnSVPXF9Fo3m2AUXXyEu7z5lFDSXtBBc3sQ+CXf1oPBwsR8aeFfsB4oGylmA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=P35ORkvnNH97kWmXIQSPmJiTCcZabzezH2X5HVLiXH4=;
- b=H/IN2BSwlj28szsIiINy+0+dcAIdj3xUWldHevQc/PvDKAvUKPzbODtE+n+JKmjSiCVX2Oelj3uBAXmFfqcdBswX812qKb73B8z0k6g+3OP8b5xNFn5N3PthZBXEWzQ9hLtZnpa+ndwlTMjjy4QhemUkUUtxeQ3fjRmrR+NBWR0wOF/CZksKBlRuqQb688iPNUyjaXjmxOrowVkm5WY/wQulWay/S0AvlBDq+SMr6mJiDw6loNxSu4xLy6TD/LCb9wUaRkqyf/20emLh4xOko9xmCDcF3sHF7XVE2F1CPeD4+SRz62bKC7OfyC/teflMfUrVGQxLA5slBpXtt5yUFw==
+ bh=xeEHnA4ypW7leo+pszPdKqfFL+td7pojjxHxdNTw/xo=;
+ b=cH1zSvmlur4yi7YykDDOe0hUgbCiMw2BaXLNnFNOei1lf+l2VklyOg47gs/E+T6vaNOip2uLFJgpIgfqV94MkOcCHS04UWqFfnOYcdI1bvXmi7e/YfFJ3mLkLbbZDeAzVXtPnIZ6sBo0Padj0dgIlIhSmFQAx20WY1ecSmY0U4Thhg7KGzhmHQ5HuPTichXu/fXsxprTHtuBuxn9FhApp0StZDPQOoLS9dev4NBp+NejgxY10/vxC2jexTF3+VQSzmvOXAka+nUIz8h0LMu6Wp6iuOz6bG6DbVDHpbfg5uYdOTAtHrumkgptns+U/bTSL0wVlhBVjd5paSYGft3oxQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=P35ORkvnNH97kWmXIQSPmJiTCcZabzezH2X5HVLiXH4=;
- b=MnIVYM5lZ5w5678uZYuMNGRYjNDF++jkQdmcKSRTamy+XWdZya7OUzo6fG2QsjBBiPgSitnDErWvdVzzFWuURvKCU+NloxLi6H2dB0oQjMqZ8E4Z/SG3KAC+ubmbTsrX4nbmfz43IRzm2/QKdzEdxUE036G7HFokmSuVnhMnRfg=
+ bh=xeEHnA4ypW7leo+pszPdKqfFL+td7pojjxHxdNTw/xo=;
+ b=vZDT0zZ/Zvm+g/YsRn/NxHdMFag0tK7o0CdIoPz9hUbjRIMNzbjr4oL1W8R48BS0A6uL91hurpgoPKZZb2sSSB+l4z6WinNICqgjKUqXyAXQJTD2aMSMqYkc/DRcxXEucpi4skiarzOz5C1uvqfz3AB+G3h5NAcDu3UNx1WjUJI=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=oracle.com;
 Received: from SA2PR10MB4587.namprd10.prod.outlook.com (2603:10b6:806:114::12)
  by SA2PR10MB4410.namprd10.prod.outlook.com (2603:10b6:806:fb::20) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4523.17; Mon, 20 Sep
- 2021 10:09:13 +0000
+ 2021 10:09:33 +0000
 Received: from SA2PR10MB4587.namprd10.prod.outlook.com
  ([fe80::1138:f2cb:64f8:c901]) by SA2PR10MB4587.namprd10.prod.outlook.com
  ([fe80::1138:f2cb:64f8:c901%9]) with mapi id 15.20.4523.018; Mon, 20 Sep 2021
- 10:09:13 +0000
+ 10:09:33 +0000
 References: <163192854958.416199.3396890438240296942.stgit@magnolia>
- <163192856086.416199.10504751435007741959.stgit@magnolia>
+ <163192856634.416199.12496831484611764326.stgit@magnolia>
 User-agent: mu4e 1.4.15; emacs 27.1
 From:   Chandan Babu R <chandan.babu@oracle.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     chandanrlinux@gmail.com, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 02/14] xfs: don't allocate scrub contexts on the stack
-In-reply-to: <163192856086.416199.10504751435007741959.stgit@magnolia>
-Message-ID: <87y27r7eu9.fsf@debian-BULLSEYE-live-builder-AMD64>
-Date:   Mon, 20 Sep 2021 15:23:34 +0530
+Subject: Re: [PATCH 03/14] xfs: dynamically allocate btree scrub context
+ structure
+In-reply-to: <163192856634.416199.12496831484611764326.stgit@magnolia>
+Message-ID: <87v92v7etp.fsf@debian-BULLSEYE-live-builder-AMD64>
+Date:   Mon, 20 Sep 2021 15:23:54 +0530
 Content-Type: text/plain
-X-ClientProxiedBy: MA1PR0101CA0009.INDPRD01.PROD.OUTLOOK.COM
- (2603:1096:a00:21::19) To SA2PR10MB4587.namprd10.prod.outlook.com
+X-ClientProxiedBy: MA1PR0101CA0008.INDPRD01.PROD.OUTLOOK.COM
+ (2603:1096:a00:21::18) To SA2PR10MB4587.namprd10.prod.outlook.com
  (2603:10b6:806:114::12)
 MIME-Version: 1.0
-Received: from nandi (223.182.249.90) by MA1PR0101CA0009.INDPRD01.PROD.OUTLOOK.COM (2603:1096:a00:21::19) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4523.14 via Frontend Transport; Mon, 20 Sep 2021 10:09:11 +0000
+Received: from nandi (223.182.249.90) by MA1PR0101CA0008.INDPRD01.PROD.OUTLOOK.COM (2603:1096:a00:21::18) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4523.14 via Frontend Transport; Mon, 20 Sep 2021 10:09:31 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 4364f1c2-290c-4d02-a04c-08d97c1eb24c
+X-MS-Office365-Filtering-Correlation-Id: c47f6409-37f1-4adb-6213-08d97c1ebe0f
 X-MS-TrafficTypeDiagnostic: SA2PR10MB4410:
-X-Microsoft-Antispam-PRVS: <SA2PR10MB4410AEAAC3159AD66DDCB89AF6A09@SA2PR10MB4410.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:8273;
+X-Microsoft-Antispam-PRVS: <SA2PR10MB441062C9E05FE358456E3923F6A09@SA2PR10MB4410.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:3826;
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: zjznetUcXQYM5qYWNr6zVNl0yUAXuzC0LS1jD8Fu0txRu0mqSigH8SW89LLi/5cGHnaegVs8yN1LtF7EbuCzIANVpmo0SmLcB+oD72K2QP6PiwDMtL8MymOearqwgR5Q71EZnGmUVHqEZGZPCyu9KQwFmdYpmWNTLPVC8IIyvruF6cR6/ubfPbNFjj5wC2fWcYMzEq9kL8t/MARYtH9du/3COkY7H5FJYUspe5jvyTLDhIb0fxR1RV2ZPtZn9TGMOMmTg211nB6k2YwISeFN6FQMwBxcnyWbHAeSqg5TETi8/oIik5EgRSxU2E99aVls0YNbCWHcGDA0wKaYfs3oeAUAB44EY9nOEIt3qpOLkqJ+L+PT4gLOFJm0jco+PDD+K53rylvRo9VHOI1/b90EyhpSCXHN/wPaUxucibWgY2waO2Z/NkYIU6DwLyV1f9je2KefEdF5zgbV+RGozKsZ1HBKEjA0xcK4A0Kb4PtI2AZ/VHHdYwiI6wtaaUlxMyPMUzSzfrSaCHYHawyFAitAzuXwq8ljCfIUZeLPrXKGi9AP8kCgIhECIPecXCGNcRXtov30aKebbizekgYnJbkn868LNJfG0I6bM5Lu4Cd/L6xHNn3kvKCTi1/zREzUuIeEE0a6fkuX3WsJ4vVrf5Wu1uWsUVv2gfHQ9tz0zLpjG27lY/TSB1XH54xrfVmKnLB1e9gAR38z7JHAtFzcm72Gyg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(7916004)(366004)(9686003)(83380400001)(186003)(26005)(6486002)(53546011)(66476007)(66556008)(6496006)(38100700002)(38350700002)(6666004)(52116002)(956004)(8936002)(4326008)(66946007)(2906002)(508600001)(30864003)(316002)(5660300002)(6916009)(8676002)(33716001)(86362001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: XpbE9QU71WPYxhUqvzYLuvzBG4X5F8m42EiZODB+WCxWNOOEZuBfSnOQU8PLt0DY8yB490LgVAwR+MHTFSJC60LBw5V6FbZ/svjsGdT287iegLnYG3dlHcaRfK0CIrjAVUpDDqimG14zd8jqd1IzcnyhpqCi1mo9Haly0XDqMBByDFwlPLMEh1eMejMJGZ/Qr2n/GFjkz4UiZiey5FQRBRlo8xPzmd+lDZm8tvWjjjc5Eiop5W812k1HPo3gTlO6ffA3GOAUMsSggzvbW+0/tBvJUGLNIRYlcED06vws0fXmRrE47vYJlqSv+M3pmtAxHuUVE6kHfQhPngixg8XMnrAzOvOp9fv45hLzDR0dL6KB7Uy4DvyqFEJTOMHslW7pn666s4fN2YMB0YsOMejWzwcQ5lLSyDO3ZOBPRzudUs7oEdhYYCT9DD72hDp7RS89bSZExTqJpCOpGpaZyt68YJvuDMHfJlnwQ3AvJt9ZcmnfFhlQJuD1tYDJtuzPaYD0L/ROBJ7cLs5tZkNvlOyIlAbeTKKPPKIEdd6VALxA1MBdsbUlWD50fPTL3C5Ghd41j8x5Xg87/zepMhzkpY+kPYqRuY9DzXZxiqqbGu3F25T6tqsc5Fd6Mm1BL1glQdPWczwPrVSj8aaVcgnlVBUCcMETOSUmN7etBYlrPL5I7umaal//GlKgy8rlaMju1VLKB76v4QCCz/3uhrVDhXUitg==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(7916004)(366004)(9686003)(83380400001)(186003)(26005)(6486002)(53546011)(66476007)(66556008)(6496006)(38100700002)(38350700002)(6666004)(52116002)(956004)(8936002)(4326008)(66946007)(2906002)(508600001)(316002)(5660300002)(6916009)(8676002)(33716001)(86362001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?ou0gp9+2HrQWbbborVm/pOIALPsg156KhRKYAMl42SCsPD1Etyof9qteFV63?=
- =?us-ascii?Q?WwbpG6apNaI9kFYXD401HcjH4vgn7cgiabaRW3/8PfI6QQSmD8Qpph44UEfM?=
- =?us-ascii?Q?0pklrAInIh47+nczzZq2D/5Slsb8lfUSMm73nGLE1VLPQNepa0uFwMA/TZ2b?=
- =?us-ascii?Q?ufnR4AGoH4zYsNsbAq/sgxySoT6cK1iF56o3SjQgisSsFQjqcAjIiYm0LoOV?=
- =?us-ascii?Q?tW2bLUSPmIkmF+K9Ft4LLGR77Y5q6BIPB7Cbxm/0wuyOaIXTLnDxI3FTLobE?=
- =?us-ascii?Q?ubDXv5N2sZKxlqqcH613JhZJOjFB7LNqZr6+H7owS5IzGLQ8elt6y4OvRoF4?=
- =?us-ascii?Q?xVpK/KgoEzVUOkCrcSRjhzYxUlyyeEzMYNS2hFSYzrT4Xgh4GEwp4wCASizg?=
- =?us-ascii?Q?IlfSWaWlUPAvkoYyUGSBgtLDfk5KH4QAcmECMt4AACV7GmfrW1KOCxMZtuXc?=
- =?us-ascii?Q?4kvMKNkEln6hragrdp97JSSGMPoZLn5SY7UZFkraJ3fzOTNz+gfGqLDio5Xj?=
- =?us-ascii?Q?b11C8aAlmFZW2r/oE9f9fG/e8tN+m2uaPm+fW85Rxr51gSXzjtHHujROaaNm?=
- =?us-ascii?Q?2XsPXrbPL5hx8yo1DkFKRXaRWiceSrEMKKR0uVqz2Zs2agVjQI37aXSmxf0Z?=
- =?us-ascii?Q?EwKJi+fomJB+hWX/nMhDkxEipXOC5LndID7YMyZRD7/6SEi5YlIigkCF+Fby?=
- =?us-ascii?Q?ZZY69z7GL5PYnMi6qN/Kq+Trq9v/U3xgkB2zyMaeoVChVuAX6C3MqBOy2ZlQ?=
- =?us-ascii?Q?5Yo1wl5QM4wAhbiUotvLFHxRHLZfA9HM18jHt/Mugv8R67CiBCrvObHui5iZ?=
- =?us-ascii?Q?xXeXoek8Wj5dYruWpYKAeFos1IY42oYrc7b+7s2vfqTWOKsQ4wqMhLV25Cq3?=
- =?us-ascii?Q?SXq881AlDchVDa3NaQdjqX7+8tbcI+CeBko8J/WM3jgauwPqrLmnsTP8x4GB?=
- =?us-ascii?Q?36h7kojxIogyJL4cqLINQJR9P6klTnrUuNBjdflEsi9YadzvCu1IHtmfPU0T?=
- =?us-ascii?Q?Aaui0FPP9pD4PzLq1yvfoxIFbba53+yqC1B3WPb48vigpvaxOJ+DiU63avIh?=
- =?us-ascii?Q?4bpmvhLofk9DoG2xcyXDMM1OIicD1N86fKtFlJuMt+kY00dLM2QhidKKuLpo?=
- =?us-ascii?Q?PXn+9hUVFhvWG8qHZMD+dClPEjvT1NYZWQQBhWTpNvc8wewKiB6N3QAjzU2U?=
- =?us-ascii?Q?Zw5Dpt5HMCqbHbbTJf1wR3W9BJsfujf8vUyUk9yVcLnTLW5OHyhuUi8NAjCl?=
- =?us-ascii?Q?Zq8PslvG/o8NpBeRu1Rqsj75xrR8sL77k9uB/Q+A9Iwsvn2J9XF6W72Z5qGe?=
- =?us-ascii?Q?2jHO+7qJI6xaTefeLAI47sj3?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?JbdiHe/f1/m0ZraaYpxEMCF4n2xDwxq6FWZTt1Dl33LmTtCXKAxfRxdcgfAE?=
+ =?us-ascii?Q?v+X4Nn+y60IoSvuEmQDUpyqvN0rrgMb87+F6rAEeTwJmCKEFAs/7H44V8aLd?=
+ =?us-ascii?Q?mvQkgk71pCFxfue80PDXec0bjB3NE0iLo+fo208A1L/zNA5nuhorZrtQNFeG?=
+ =?us-ascii?Q?rB/lrUI/bLoxiU73uAg9I2rI4qhd/yq6RwMmqa+3RB2FvrIFEhGspP6RdlAX?=
+ =?us-ascii?Q?KFo/8vI5XUhs8xICKANIEOMa/FptfkL22TEVzFOouTuLE5vRq0cV7x9a8F0v?=
+ =?us-ascii?Q?B6H1VDDzN2jtJ0xtt+/Yy0X5o+HrsYTL8Tg2nH0jIAWOnoyF78a+3DR/3STF?=
+ =?us-ascii?Q?8F311WQPAQoktROCJmMWN5yRQUkQyJh8C8y/5XDc6UxXwezvysOaSZd00KHi?=
+ =?us-ascii?Q?hYWsvA5lfj8oCjo4dpXHTIVFmP62JgOvh9euvOjpbNaxmi1I/av77dda/1ME?=
+ =?us-ascii?Q?bVuvvfW/3iay7VxTKrvMnpSDvSKChccLy4aHIyx9VDJWfxyn3zQPugmNolQA?=
+ =?us-ascii?Q?3e4bnUD3mS37uoBw0DwJk/XEO6kzfwMElCx6OSIf3lrxJ2imD/+If6JLfAF8?=
+ =?us-ascii?Q?nr+jYODVqutDNKCkSnyhP/n+GMKxoIMfJNW0p9Y/VrTWN2nElOYpGviHWJ2w?=
+ =?us-ascii?Q?7SworxtZlkCavfS1YXVyu09g0gbCVKZwgq/j3baqGZClE0HET/WQw505tLX/?=
+ =?us-ascii?Q?Ug4DXEnqj9Qq6RG16JpiBH4t+qdyLtIBMvBkGIH6ps5Sx6gHudaLYVJekDUA?=
+ =?us-ascii?Q?e4BMDSKQSt16IsYGNbMXNNSGpGuduFBxyIJ8tVkjw4P5XHnh+WlKnitaX+qL?=
+ =?us-ascii?Q?nTJZ9E32yAdlONTcHYcRVGUncJ6JJHAQp6+fRRyl9eBenlU8iPFmhMUk3PET?=
+ =?us-ascii?Q?ZCVrS7jmEMT8cUflbR7Z9x/191WamGqCf3oBeUE8BxVuwY345v/jXrk1yy8j?=
+ =?us-ascii?Q?g3Jka/WFKpnOY9ki5TUnw7/YWOIvHMZ2EFist5Mvh2d/tF4IpW2jpdOBe/uW?=
+ =?us-ascii?Q?0EzY+QehQuTrWY7y6RTg/QxqQ49QxrKdZ97qIcXTONxkhxWI/mTn0pGUi0EN?=
+ =?us-ascii?Q?qkqHob6ahKa31Y6xlcx2VrUCXQnFRXpQUwdrxmI/S9psvF7zqlBJAnFRPCJd?=
+ =?us-ascii?Q?UcEmnqoRVflgF3paHJaq9j4iuGlRNfBU41RZR/Uan4JYEKmlAGa2AAIRpUXe?=
+ =?us-ascii?Q?0UlEI8AzURVTzwA5KyXwFwaRtOZ24jTOfqZWqXy66lWuVRrvMocEAYOyWyS9?=
+ =?us-ascii?Q?ifum6bk/CqTGb0CiROhucOqdht+12DmBFCNCbSBiEq+wT329LbTRpE1cl1ry?=
+ =?us-ascii?Q?qcdhI6TiM4l6VBB0aZIgOm7K?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4364f1c2-290c-4d02-a04c-08d97c1eb24c
+X-MS-Exchange-CrossTenant-Network-Message-Id: c47f6409-37f1-4adb-6213-08d97c1ebe0f
 X-MS-Exchange-CrossTenant-AuthSource: SA2PR10MB4587.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Sep 2021 10:09:13.7619
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Sep 2021 10:09:33.2254
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: wyE4BNMX3OdkyfRTF2MX8X+cvu7eT1qYmCV14XQpd/4PtdgsulbKVUufSM+Vva0trcRK0/SH+pmoQJAra5xflA==
+X-MS-Exchange-CrossTenant-UserPrincipalName: LtahsMyuxHNy4RviZyefpnMxQalSvd+K5YDEzAOrubnFD/bLyJnXuevQvza3iQ7vIRhCTD6hU1v8GLvhUQuDpQ==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA2PR10MB4410
 X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10112 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 suspectscore=0 spamscore=0
- bulkscore=0 adultscore=0 mlxlogscore=999 malwarescore=0 phishscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0 malwarescore=0
+ mlxscore=0 suspectscore=0 spamscore=0 adultscore=0 mlxlogscore=999
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2109030001
  definitions=main-2109200062
-X-Proofpoint-GUID: ZXnPiCIxJMcm3buXc7pCqb3rp0Bi-J87
-X-Proofpoint-ORIG-GUID: ZXnPiCIxJMcm3buXc7pCqb3rp0Bi-J87
+X-Proofpoint-GUID: _Mzkw5V0rnrmxsXc8vdnYdiWhlc0psWo
+X-Proofpoint-ORIG-GUID: _Mzkw5V0rnrmxsXc8vdnYdiWhlc0psWo
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -151,449 +152,142 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 18 Sep 2021 at 06:59, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 >
-> Convert the on-stack scrub context, btree scrub context, and da btree
-> scrub context into a heap allocation so that we reduce stack usage and
-> gain the ability to handle tall btrees without issue.
->
-> Specifically, this saves us ~208 bytes for the dabtree scrub, ~464 bytes
-> for the btree scrub, and ~200 bytes for the main scrub context.
->
+> Reorganize struct xchk_btree so that we can dynamically size the context
+> structure to fit the type of btree cursor that we have.  This will
+> enable us to use memory more efficiently once we start adding very tall
+> btree types.
 
-Apart from the nits pointed below, the remaining changes look good to me.
+The changes look good to me from the perspective of functional correctness.
 
 Reviewed-by: Chandan Babu R <chandan.babu@oracle.com>
 
-
+>
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
->  fs/xfs/scrub/btree.c   |   54 ++++++++++++++++++++++++------------------
->  fs/xfs/scrub/btree.h   |    1 +
->  fs/xfs/scrub/dabtree.c |   62 ++++++++++++++++++++++++++----------------------
->  fs/xfs/scrub/scrub.c   |   60 ++++++++++++++++++++++++++--------------------
->  4 files changed, 98 insertions(+), 79 deletions(-)
+>  fs/xfs/scrub/btree.c |   38 +++++++++++++++++---------------------
+>  fs/xfs/scrub/btree.h |   16 +++++++++++++---
+>  2 files changed, 30 insertions(+), 24 deletions(-)
 >
 >
 > diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
-> index eccb855dc904..26dcb4691e31 100644
+> index 26dcb4691e31..7b7762ae22e5 100644
 > --- a/fs/xfs/scrub/btree.c
 > +++ b/fs/xfs/scrub/btree.c
-> @@ -627,15 +627,8 @@ xchk_btree(
->  	const struct xfs_owner_info	*oinfo,
->  	void				*private)
->  {
-> -	struct xchk_btree		bs = {
-> -		.cur			= cur,
-> -		.scrub_rec		= scrub_fn,
-> -		.oinfo			= oinfo,
-> -		.firstrec		= true,
-> -		.private		= private,
-> -		.sc			= sc,
-> -	};
->  	union xfs_btree_ptr		ptr;
-> +	struct xchk_btree		*bs;
+> @@ -141,9 +141,10 @@ xchk_btree_rec(
+>  	trace_xchk_btree_rec(bs->sc, cur, 0);
+>  
+>  	/* If this isn't the first record, are they in order? */
+> -	if (!bs->firstrec && !cur->bc_ops->recs_inorder(cur, &bs->lastrec, rec))
+> +	if (bs->levels[0].has_lastkey &&
+> +	    !cur->bc_ops->recs_inorder(cur, &bs->lastrec, rec))
+>  		xchk_btree_set_corrupt(bs->sc, cur, 0);
+> -	bs->firstrec = false;
+> +	bs->levels[0].has_lastkey = true;
+>  	memcpy(&bs->lastrec, rec, cur->bc_ops->rec_len);
+>  
+>  	if (cur->bc_nlevels == 1)
+> @@ -188,11 +189,11 @@ xchk_btree_key(
+>  	trace_xchk_btree_key(bs->sc, cur, level);
+>  
+>  	/* If this isn't the first key, are they in order? */
+> -	if (!bs->firstkey[level] &&
+> -	    !cur->bc_ops->keys_inorder(cur, &bs->lastkey[level], key))
+> +	if (bs->levels[level].has_lastkey &&
+> +	    !cur->bc_ops->keys_inorder(cur, &bs->levels[level].lastkey, key))
+>  		xchk_btree_set_corrupt(bs->sc, cur, level);
+> -	bs->firstkey[level] = false;
+> -	memcpy(&bs->lastkey[level], key, cur->bc_ops->key_len);
+> +	bs->levels[level].has_lastkey = true;
+> +	memcpy(&bs->levels[level].lastkey, key, cur->bc_ops->key_len);
+>  
+>  	if (level + 1 >= cur->bc_nlevels)
+>  		return;
+> @@ -632,38 +633,33 @@ xchk_btree(
 >  	union xfs_btree_ptr		*pp;
 >  	union xfs_btree_rec		*recp;
 >  	struct xfs_btree_block		*block;
-> @@ -646,10 +639,24 @@ xchk_btree(
->  	int				i;
+> -	int				level;
+>  	struct xfs_buf			*bp;
+>  	struct check_owner		*co;
+>  	struct check_owner		*n;
+> -	int				i;
+> +	size_t				cur_sz;
+> +	int				level;
 >  	int				error = 0;
 >  
-> +	/*
-> +	 * Allocate the btree scrub context from the heap, because this
-> +	 * structure can get rather large.
-> +	 */
-> +	bs = kmem_zalloc(sizeof(struct xchk_btree), KM_NOFS | KM_MAYFAIL);
-> +	if (!bs)
-> +		return -ENOMEM;
-> +	bs->cur = cur;
-> +	bs->scrub_rec = scrub_fn;
-> +	bs->oinfo = oinfo;
-> +	bs->firstrec = true;
-> +	bs->private = private;
-> +	bs->sc = sc;
-> +
->  	/* Initialize scrub state */
->  	for (i = 0; i < XFS_BTREE_MAXLEVELS; i++)
-> -		bs.firstkey[i] = true;
-> -	INIT_LIST_HEAD(&bs.to_check);
-> +		bs->firstkey[i] = true;
-> +	INIT_LIST_HEAD(&bs->to_check);
->  
->  	/* Don't try to check a tree with a height we can't handle. */
->  	if (cur->bc_nlevels > XFS_BTREE_MAXLEVELS) {
-> @@ -663,9 +670,9 @@ xchk_btree(
+>  	/*
+>  	 * Allocate the btree scrub context from the heap, because this
+> -	 * structure can get rather large.
+> +	 * structure can get rather large.  Don't let a caller feed us a
+> +	 * totally absurd size.
 >  	 */
->  	level = cur->bc_nlevels - 1;
->  	cur->bc_ops->init_ptr_from_cur(cur, &ptr);
-> -	if (!xchk_btree_ptr_ok(&bs, cur->bc_nlevels, &ptr))
-> +	if (!xchk_btree_ptr_ok(bs, cur->bc_nlevels, &ptr))
->  		goto out;
-> -	error = xchk_btree_get_block(&bs, level, &ptr, &block, &bp);
-> +	error = xchk_btree_get_block(bs, level, &ptr, &block, &bp);
->  	if (error || !block)
->  		goto out;
+> -	bs = kmem_zalloc(sizeof(struct xchk_btree), KM_NOFS | KM_MAYFAIL);
+> +	cur_sz = xchk_btree_sizeof(cur->bc_nlevels);
+> +	if (cur_sz > PAGE_SIZE) {
+> +		xchk_btree_set_corrupt(sc, cur, 0);
+> +		return 0;
+> +	}
+> +	bs = kmem_zalloc(cur_sz, KM_NOFS | KM_MAYFAIL);
+>  	if (!bs)
+>  		return -ENOMEM;
+>  	bs->cur = cur;
+>  	bs->scrub_rec = scrub_fn;
+>  	bs->oinfo = oinfo;
+> -	bs->firstrec = true;
+>  	bs->private = private;
+>  	bs->sc = sc;
+> -
+> -	/* Initialize scrub state */
+> -	for (i = 0; i < XFS_BTREE_MAXLEVELS; i++)
+> -		bs->firstkey[i] = true;
+>  	INIT_LIST_HEAD(&bs->to_check);
 >  
-> @@ -678,7 +685,7 @@ xchk_btree(
->  			/* End of leaf, pop back towards the root. */
->  			if (cur->bc_ptrs[level] >
->  			    be16_to_cpu(block->bb_numrecs)) {
-> -				xchk_btree_block_keys(&bs, level, block);
-> +				xchk_btree_block_keys(bs, level, block);
->  				if (level < cur->bc_nlevels - 1)
->  					cur->bc_ptrs[level + 1]++;
->  				level++;
-> @@ -686,11 +693,11 @@ xchk_btree(
->  			}
->  
->  			/* Records in order for scrub? */
-> -			xchk_btree_rec(&bs);
-> +			xchk_btree_rec(bs);
->  
->  			/* Call out to the record checker. */
->  			recp = xfs_btree_rec_addr(cur, cur->bc_ptrs[0], block);
-> -			error = bs.scrub_rec(&bs, recp);
-> +			error = bs->scrub_rec(bs, recp);
->  			if (error)
->  				break;
->  			if (xchk_should_terminate(sc, &error) ||
-> @@ -703,7 +710,7 @@ xchk_btree(
->  
->  		/* End of node, pop back towards the root. */
->  		if (cur->bc_ptrs[level] > be16_to_cpu(block->bb_numrecs)) {
-> -			xchk_btree_block_keys(&bs, level, block);
-> +			xchk_btree_block_keys(bs, level, block);
->  			if (level < cur->bc_nlevels - 1)
->  				cur->bc_ptrs[level + 1]++;
->  			level++;
-> @@ -711,16 +718,16 @@ xchk_btree(
->  		}
->  
->  		/* Keys in order for scrub? */
-> -		xchk_btree_key(&bs, level);
-> +		xchk_btree_key(bs, level);
->  
->  		/* Drill another level deeper. */
->  		pp = xfs_btree_ptr_addr(cur, cur->bc_ptrs[level], block);
-> -		if (!xchk_btree_ptr_ok(&bs, level, pp)) {
-> +		if (!xchk_btree_ptr_ok(bs, level, pp)) {
->  			cur->bc_ptrs[level]++;
->  			continue;
->  		}
->  		level--;
-> -		error = xchk_btree_get_block(&bs, level, pp, &block, &bp);
-> +		error = xchk_btree_get_block(bs, level, pp, &block, &bp);
->  		if (error || !block)
->  			goto out;
->  
-> @@ -729,13 +736,14 @@ xchk_btree(
->  
->  out:
->  	/* Process deferred owner checks on btree blocks. */
-> -	list_for_each_entry_safe(co, n, &bs.to_check, list) {
-> -		if (!error && bs.cur)
-> -			error = xchk_btree_check_block_owner(&bs,
-> -					co->level, co->daddr);
-> +	list_for_each_entry_safe(co, n, &bs->to_check, list) {
-> +		if (!error && bs->cur)
-> +			error = xchk_btree_check_block_owner(bs, co->level,
-> +					co->daddr);
->  		list_del(&co->list);
->  		kmem_free(co);
->  	}
-> +	kmem_free(bs);
->  
->  	return error;
->  }
+> -	/* Don't try to check a tree with a height we can't handle. */
+> -	if (cur->bc_nlevels > XFS_BTREE_MAXLEVELS) {
+> -		xchk_btree_set_corrupt(sc, cur, 0);
+> -		goto out;
+> -	}
+> -
+>  	/*
+>  	 * Load the root of the btree.  The helper function absorbs
+>  	 * error codes for us.
 > diff --git a/fs/xfs/scrub/btree.h b/fs/xfs/scrub/btree.h
-> index b7d2fc01fbf9..d5c0b0cbc505 100644
+> index d5c0b0cbc505..7f8c54d8020e 100644
 > --- a/fs/xfs/scrub/btree.h
 > +++ b/fs/xfs/scrub/btree.h
-> @@ -44,6 +44,7 @@ struct xchk_btree {
->  	bool				firstkey[XFS_BTREE_MAXLEVELS];
+> @@ -29,6 +29,11 @@ typedef int (*xchk_btree_rec_fn)(
+>  	struct xchk_btree		*bs,
+>  	const union xfs_btree_rec	*rec);
+>  
+> +struct xchk_btree_levels {
+> +	union xfs_btree_key		lastkey;
+> +	bool				has_lastkey;
+> +};
+> +
+>  struct xchk_btree {
+>  	/* caller-provided scrub state */
+>  	struct xfs_scrub		*sc;
+> @@ -39,12 +44,17 @@ struct xchk_btree {
+>  
+>  	/* internal scrub state */
+>  	union xfs_btree_rec		lastrec;
+> -	bool				firstrec;
+> -	union xfs_btree_key		lastkey[XFS_BTREE_MAXLEVELS];
+> -	bool				firstkey[XFS_BTREE_MAXLEVELS];
 >  	struct list_head		to_check;
+> +	struct xchk_btree_levels	levels[];
 >  };
+>  
+> +static inline size_t
+> +xchk_btree_sizeof(unsigned int levels)
+> +{
+> +	return sizeof(struct xchk_btree) +
+> +				(levels * sizeof(struct xchk_btree_levels));
+> +}
 > +
 >  int xchk_btree(struct xfs_scrub *sc, struct xfs_btree_cur *cur,
 >  		xchk_btree_rec_fn scrub_fn, const struct xfs_owner_info *oinfo,
 >  		void *private);
-> diff --git a/fs/xfs/scrub/dabtree.c b/fs/xfs/scrub/dabtree.c
-> index 8a52514bc1ff..b962cfbbd92b 100644
-> --- a/fs/xfs/scrub/dabtree.c
-> +++ b/fs/xfs/scrub/dabtree.c
-> @@ -473,7 +473,7 @@ xchk_da_btree(
->  	xchk_da_btree_rec_fn		scrub_fn,
->  	void				*private)
->  {
-> -	struct xchk_da_btree		ds = {};
-> +	struct xchk_da_btree		*ds;
->  	struct xfs_mount		*mp = sc->mp;
->  	struct xfs_da_state_blk		*blks;
->  	struct xfs_da_node_entry	*key;
-> @@ -486,32 +486,35 @@ xchk_da_btree(
->  		return 0;
->  
->  	/* Set up initial da state. */
-> -	ds.dargs.dp = sc->ip;
-> -	ds.dargs.whichfork = whichfork;
-> -	ds.dargs.trans = sc->tp;
-> -	ds.dargs.op_flags = XFS_DA_OP_OKNOENT;
-> -	ds.state = xfs_da_state_alloc(&ds.dargs);
-> -	ds.sc = sc;
-> -	ds.private = private;
-> +	ds = kmem_zalloc(sizeof(struct xchk_da_btree), KM_NOFS | KM_MAYFAIL);
-> +	if (!ds)
-> +		return -ENOMEM;
-> +	ds->dargs.dp = sc->ip;
-> +	ds->dargs.whichfork = whichfork;
-> +	ds->dargs.trans = sc->tp;
-> +	ds->dargs.op_flags = XFS_DA_OP_OKNOENT;
-> +	ds->state = xfs_da_state_alloc(&ds->dargs);
-> +	ds->sc = sc;
-> +	ds->private = private;
->  	if (whichfork == XFS_ATTR_FORK) {
-> -		ds.dargs.geo = mp->m_attr_geo;
-> -		ds.lowest = 0;
-> -		ds.highest = 0;
-> +		ds->dargs.geo = mp->m_attr_geo;
-> +		ds->lowest = 0;
-> +		ds->highest = 0;
->  	} else {
-> -		ds.dargs.geo = mp->m_dir_geo;
-> -		ds.lowest = ds.dargs.geo->leafblk;
-> -		ds.highest = ds.dargs.geo->freeblk;
-> +		ds->dargs.geo = mp->m_dir_geo;
-> +		ds->lowest = ds->dargs.geo->leafblk;
-> +		ds->highest = ds->dargs.geo->freeblk;
->  	}
-> -	blkno = ds.lowest;
-> +	blkno = ds->lowest;
->  	level = 0;
->  
->  	/* Find the root of the da tree, if present. */
-> -	blks = ds.state->path.blk;
-> -	error = xchk_da_btree_block(&ds, level, blkno);
-> +	blks = ds->state->path.blk;
-> +	error = xchk_da_btree_block(ds, level, blkno);
->  	if (error)
->  		goto out_state;
->  	/*
-> -	 * We didn't find a block at ds.lowest, which means that there's
-> +	 * We didn't find a block at ds->lowest, which means that there's
->  	 * no LEAF1/LEAFN tree (at least not where it's supposed to be),
->  	 * so jump out now.
->  	 */
-> @@ -523,16 +526,16 @@ xchk_da_btree(
->  		/* Handle leaf block. */
->  		if (blks[level].magic != XFS_DA_NODE_MAGIC) {
->  			/* End of leaf, pop back towards the root. */
-> -			if (blks[level].index >= ds.maxrecs[level]) {
-> +			if (blks[level].index >= ds->maxrecs[level]) {
->  				if (level > 0)
->  					blks[level - 1].index++;
-> -				ds.tree_level++;
-> +				ds->tree_level++;
->  				level--;
->  				continue;
->  			}
->  
->  			/* Dispatch record scrubbing. */
-> -			error = scrub_fn(&ds, level);
-> +			error = scrub_fn(ds, level);
->  			if (error)
->  				break;
->  			if (xchk_should_terminate(sc, &error) ||
-> @@ -545,17 +548,17 @@ xchk_da_btree(
->  
->  
->  		/* End of node, pop back towards the root. */
-> -		if (blks[level].index >= ds.maxrecs[level]) {
-> +		if (blks[level].index >= ds->maxrecs[level]) {
->  			if (level > 0)
->  				blks[level - 1].index++;
-> -			ds.tree_level++;
-> +			ds->tree_level++;
->  			level--;
->  			continue;
->  		}
->  
->  		/* Hashes in order for scrub? */
-> -		key = xchk_da_btree_node_entry(&ds, level);
-> -		error = xchk_da_btree_hash(&ds, level, &key->hashval);
-> +		key = xchk_da_btree_node_entry(ds, level);
-> +		error = xchk_da_btree_hash(ds, level, &key->hashval);
->  		if (error)
->  			goto out;
->  
-> @@ -564,11 +567,11 @@ xchk_da_btree(
->  		level++;
->  		if (level >= XFS_DA_NODE_MAXDEPTH) {
->  			/* Too deep! */
-> -			xchk_da_set_corrupt(&ds, level - 1);
-> +			xchk_da_set_corrupt(ds, level - 1);
->  			break;
->  		}
-> -		ds.tree_level--;
-> -		error = xchk_da_btree_block(&ds, level, blkno);
-> +		ds->tree_level--;
-> +		error = xchk_da_btree_block(ds, level, blkno);
->  		if (error)
->  			goto out;
->  		if (blks[level].bp == NULL)
-> @@ -587,6 +590,7 @@ xchk_da_btree(
->  	}
->  
->  out_state:
-> -	xfs_da_state_free(ds.state);
-> +	xfs_da_state_free(ds->state);
-> +	kmem_free(ds);
->  	return error;
->  }
-> diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-> index 51e4c61916d2..0569b15526ea 100644
-> --- a/fs/xfs/scrub/scrub.c
-> +++ b/fs/xfs/scrub/scrub.c
-> @@ -461,15 +461,10 @@ xfs_scrub_metadata(
->  	struct file			*file,
->  	struct xfs_scrub_metadata	*sm)
->  {
-> -	struct xfs_scrub		sc = {
-> -		.file			= file,
-> -		.sm			= sm,
-> -	};
-> +	struct xfs_scrub		*sc;
->  	struct xfs_mount		*mp = XFS_I(file_inode(file))->i_mount;
->  	int				error = 0;
->  
-> -	sc.mp = mp;
-> -
->  	BUILD_BUG_ON(sizeof(meta_scrub_ops) !=
->  		(sizeof(struct xchk_meta_ops) * XFS_SCRUB_TYPE_NR));
->  
-> @@ -489,59 +484,68 @@ xfs_scrub_metadata(
->  
->  	xchk_experimental_warning(mp);
->  
-> -	sc.ops = &meta_scrub_ops[sm->sm_type];
-> -	sc.sick_mask = xchk_health_mask_for_scrub_type(sm->sm_type);
-> +	sc = kmem_zalloc(sizeof(struct xfs_scrub), KM_NOFS | KM_MAYFAIL);
-> +	if (!sc) {
-> +		error = -ENOMEM;
-> +		goto out;
-> +	}
-> +
-> +	sc->mp = mp;
-> +	sc->file = file;
-> +	sc->sm = sm;
-> +	sc->ops = &meta_scrub_ops[sm->sm_type];
-> +	sc->sick_mask = xchk_health_mask_for_scrub_type(sm->sm_type);
->  retry_op:
->  	/*
->  	 * When repairs are allowed, prevent freezing or readonly remount while
->  	 * scrub is running with a real transaction.
->  	 */
->  	if (sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) {
-> -		error = mnt_want_write_file(sc.file);
-> +		error = mnt_want_write_file(sc->file);
->  		if (error)
->  			goto out;
-
-The above should be "goto out_sc" ...
-
->  	}
->  
->  	/* Set up for the operation. */
-> -	error = sc.ops->setup(&sc);
-> +	error = sc->ops->setup(sc);
->  	if (error)
->  		goto out_teardown;
->  
->  	/* Scrub for errors. */
-> -	error = sc.ops->scrub(&sc);
-> -	if (!(sc.flags & XCHK_TRY_HARDER) && error == -EDEADLOCK) {
-> +	error = sc->ops->scrub(sc);
-> +	if (!(sc->flags & XCHK_TRY_HARDER) && error == -EDEADLOCK) {
->  		/*
->  		 * Scrubbers return -EDEADLOCK to mean 'try harder'.
->  		 * Tear down everything we hold, then set up again with
->  		 * preparation for worst-case scenarios.
->  		 */
-> -		error = xchk_teardown(&sc, 0);
-> +		error = xchk_teardown(sc, 0);
->  		if (error)
->  			goto out;
-
-... also, the one above.
-
-> -		sc.flags |= XCHK_TRY_HARDER;
-> +		sc->flags |= XCHK_TRY_HARDER;
->  		goto retry_op;
->  	} else if (error || (sm->sm_flags & XFS_SCRUB_OFLAG_INCOMPLETE))
->  		goto out_teardown;
->  
-> -	xchk_update_health(&sc);
-> +	xchk_update_health(sc);
->  
-> -	if ((sc.sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) &&
-> -	    !(sc.flags & XREP_ALREADY_FIXED)) {
-> +	if ((sc->sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) &&
-> +	    !(sc->flags & XREP_ALREADY_FIXED)) {
->  		bool needs_fix;
->  
->  		/* Let debug users force us into the repair routines. */
->  		if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_FORCE_SCRUB_REPAIR))
-> -			sc.sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
-> +			sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
->  
-> -		needs_fix = (sc.sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
-> -						XFS_SCRUB_OFLAG_XCORRUPT |
-> -						XFS_SCRUB_OFLAG_PREEN));
-> +		needs_fix = (sc->sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
-> +						 XFS_SCRUB_OFLAG_XCORRUPT |
-> +						 XFS_SCRUB_OFLAG_PREEN));
->  		/*
->  		 * If userspace asked for a repair but it wasn't necessary,
->  		 * report that back to userspace.
->  		 */
->  		if (!needs_fix) {
-> -			sc.sm->sm_flags |= XFS_SCRUB_OFLAG_NO_REPAIR_NEEDED;
-> +			sc->sm->sm_flags |= XFS_SCRUB_OFLAG_NO_REPAIR_NEEDED;
->  			goto out_nofix;
->  		}
->  
-> @@ -549,26 +553,28 @@ xfs_scrub_metadata(
->  		 * If it's broken, userspace wants us to fix it, and we haven't
->  		 * already tried to fix it, then attempt a repair.
->  		 */
-> -		error = xrep_attempt(&sc);
-> +		error = xrep_attempt(sc);
->  		if (error == -EAGAIN) {
->  			/*
->  			 * Either the repair function succeeded or it couldn't
->  			 * get all the resources it needs; either way, we go
->  			 * back to the beginning and call the scrub function.
->  			 */
-> -			error = xchk_teardown(&sc, 0);
-> +			error = xchk_teardown(sc, 0);
->  			if (error) {
->  				xrep_failure(mp);
-> -				goto out;
-> +				goto out_sc;
->  			}
->  			goto retry_op;
->  		}
->  	}
->  
->  out_nofix:
-> -	xchk_postmortem(&sc);
-> +	xchk_postmortem(sc);
->  out_teardown:
-> -	error = xchk_teardown(&sc, error);
-> +	error = xchk_teardown(sc, error);
-> +out_sc:
-> +	kmem_free(sc);
->  out:
->  	trace_xchk_done(XFS_I(file_inode(file)), sm, error);
->  	if (error == -EFSCORRUPTED || error == -EFSBADCRC) {
 
 
 -- 
