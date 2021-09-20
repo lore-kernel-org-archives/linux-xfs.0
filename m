@@ -7,143 +7,143 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
 	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A190C433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Sep 2021 10:11:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16AD3C433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Sep 2021 10:11:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0AFAE60F25
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Sep 2021 10:11:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E973760F25
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Sep 2021 10:11:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235691AbhITKNH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 20 Sep 2021 06:13:07 -0400
-Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:29810 "EHLO
+        id S233724AbhITKNW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 20 Sep 2021 06:13:22 -0400
+Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:56164 "EHLO
         mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235607AbhITKNG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Sep 2021 06:13:06 -0400
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 18KA7199008283;
-        Mon, 20 Sep 2021 10:11:38 GMT
+        by vger.kernel.org with ESMTP id S233597AbhITKNV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Sep 2021 06:13:21 -0400
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 18KA42dJ019667;
+        Mon, 20 Sep 2021 10:11:53 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=references : from :
  to : cc : subject : in-reply-to : message-id : date : content-type :
  mime-version; s=corp-2021-07-09;
- bh=Boby2SKU2OJ9CapDzQD5tfkBZpaqf893taWsctVCFsc=;
- b=jRmCgIdyRWB3u3GfsuAQK0ThoYXxt+chabBQr92+4AEGvd3fT/nGpYzc9HUnmLfXE+HM
- zPK3lHmbpfz0fEDlLXm/UO5/leJh2HkphEssuVR0brkrd9Pq8I6fXvV23DV/1n2BuXy5
- FH/SSvqnlwgTJ06kBt2+p4ssNTfT4128s4q+pr8oBg+eeGN3t8An4maSEOLFxxkswe13
- xSqQJQQdqEIpkxT9HAecgl+7R6DIjS0NJ8s3tpN+h8dQa34Ai8Eeaz6kfEWdFr6f2OOi
- kBbXKaLbRHzXIpSfahNqyyrkDzghO5rSAlqBiDbdjiIMEcSK97iMfNLgrmIjR9D+0T2I IA== 
+ bh=NzeMW0K2Lj0TPxd5ibUnl5LRmj2OP3BwZVFsJKiLN4I=;
+ b=bY0FL6S0CbJDqGgnQ70Nt3FSqJwX64JdXhn8NMsz3S8lyxE3tw7lLlnMGAibcrJVhXoB
+ vDEeSvs8bP0EFTaCL9HenVt4PsXx+7T2f69+JubjRGS8HXO3DfHmzAsFGnmYogqEttda
+ FrU/pD386Y7o4+SePw/YePQmqnnhpz7RzmNP0tsCD/6UUvHNWwTDt36QnOo264hU4v10
+ nDQq+2parfiZCi1QV7OwPFjNrPtcV4d99KqTErxv/8LPx5Mp+JogmwJQNt6CH3149WDj
+ SLoBqnWNF1HEYld7v6IvsGfsoXoMuDw8mKPkMlYYXqDzIQ7RKoA5w/X+7n61JmKWZdLJ 6g== 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=references : from :
  to : cc : subject : in-reply-to : message-id : date : content-type :
  mime-version; s=corp-2020-01-29;
- bh=Boby2SKU2OJ9CapDzQD5tfkBZpaqf893taWsctVCFsc=;
- b=B7uI5UIoTHcIzkHS0XYqc8tIOIeenupBQ4Yj+kllxJxXebyR37fYMPy9hOBPVMFS4Pi7
- p6ZCvlURJo0MeXSVQyJAXBwDBipR015k0CUjf+0EzJmWbYym4U0EZNsdsarPEkifG4C0
- VMAmaNMU/dpJXo+vxoMvL6ndJPXeRo+bThMYCZCS0ygdtyw2RTkwKUfszNF2M2j1KFvo
- 3+HjtaKEmSG0fAe6x/58XKNnqDh/Z5oAdss9hzm/I6aiC8vx70kHFfAEhmaiAUBWLIoT
- G/MY+cTGKZut1S8pdnAj95skh27XJm1lUyXHVUKOzqlFgyzwRi/fsAhfc6CXAhMZg4cT EQ== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3b66hnhse9-1
+ bh=NzeMW0K2Lj0TPxd5ibUnl5LRmj2OP3BwZVFsJKiLN4I=;
+ b=G3ryWBfDcE/Js13gMcRDrn+k7gMpIqeDNLb2Sj+G7NoMvs0FEz1cgdwc2hVWdLxHWptS
+ es2yX19hPcuxPRNCy3urpaKDug3X9QPO3diAhXx8/1dHw5J4BNs/hCg5SgfjMzk/wfp5
+ v4TdIQ164IXv49skEnQJJ1p8MlpLwl1UGtFImsVsQjNWwmo9tIXoHMKUeCdeyQgD0eCD
+ ricSTsW5Sa5sXDn6k+Q1kuUezbhHz0SB+Av7XnVzaUMdbJqyz2Bk5CEp8dIBRpjyMQMJ
+ jTkd6rCyOPin6Geprhoa5I2wrK33ZZmlVmcu8axbxDVSp8HneYArqF1Age5zJmTINlFc fA== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3b66j2hsdn-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 20 Sep 2021 10:11:38 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 18KAAidr116098;
-        Mon, 20 Sep 2021 10:11:38 GMT
-Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2046.outbound.protection.outlook.com [104.47.66.46])
-        by aserp3020.oracle.com with ESMTP id 3b57x3u02g-1
+        Mon, 20 Sep 2021 10:11:53 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 18KABT41050377;
+        Mon, 20 Sep 2021 10:11:52 GMT
+Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2040.outbound.protection.outlook.com [104.47.66.40])
+        by userp3030.oracle.com with ESMTP id 3b557vb223-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 20 Sep 2021 10:11:37 +0000
+        Mon, 20 Sep 2021 10:11:52 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=AvBY+KEo8PgIJdUbKkelqOHhTUwrV/E447ATbNfQU8pH9cFbMJjadn01OF0igDcliWG5pVL1ZMJilRXd7pwuIyJwKscOJhEI9yBWfYcplAI5jAIURfdgHrmLSTlREfEAiMIJVSU0qvRP5rxCEDasXl9HQShJrHe8xf9E3+FeyT1Unjd+Pq5RDG7FQAeNi9Mbf4KObR4nOTXXYzE63USNHY9CkaWE6U89okU5cCYqaCOvYYguGEpo6a4RKSV0FNo3EkyTqew2CXgwZzQqCJC9FZhn0zr+nsgR4b1Eq66P1Vvq44yJmGTgoe4yJUPEKCLg0RqYfsxTY38cVcdjEk+2Mw==
+ b=kK5JIbRWYKHKT5yiuiSy0gsyNW31j/K++agtc/0c1TNyWzYfQlj40XH+0s7YNph0DE0KuuNvB6NgIUvQZbl7beQkTZUhSBUPaOKJnXgVg7RbDIpvesWQv0DR8OATDtC1ZKlI8sV8j2VLg26CRZ4DFeSi2y/M9ZzpIsNhI+Dsqm5RniiDauqm4Y2T37Mdvlet0jU7q+VFiWVXY1n7bkv8zWxKp+91ORxS8quReIaNK8NMn2n2XHizjTV8oAHU/xArIRF/6ZC+Lm+EhOMIEbdrvPSkO1jVGzy34PAzgtMShmCd+l4EmnrsD0GJXz+1xiVpzN/A4xEzm+OuRHNtDZ7EQA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=Boby2SKU2OJ9CapDzQD5tfkBZpaqf893taWsctVCFsc=;
- b=U/FYAjDhZpNraXYn7ATXVFOT9Sw6DHddWTbVO30Qxb0YjU1euChB4SdST6Xcij/t/Ttzgoo0PlnFP5UjnPA8KtODlkxieSasGLzda5vLZGuV0tOEJBDtwnLTgC5W84ttR+sohdk3y0dofg+vvZxFpFNXMFYBHO/8Tj2g5C1EcHx7JN4029tDMLteR6gL5XgyKX1Yn4a9CfkyV53pvJvRHIWpheydvMbTRypfnDGi+PbwckKzoVRrzfzTo+eaxJLEob/F8QierQwIjznjT9KZz8+a5Pfx9IomF2CAsmy3tv+KBTgNK0ZOWrTiqWX9IAWFeiPP8mf0QKKBDzDgFkv5DQ==
+ bh=NzeMW0K2Lj0TPxd5ibUnl5LRmj2OP3BwZVFsJKiLN4I=;
+ b=CXogg1btgbvzDAxtXjyn/tU144jrnbz9a36QkmUmAyV7VMU3i23ivt/5YNB635BVr1QQzmfmMqZ1QGzOqyQmNLaE6KL3GwTLMQmE4D9JvtrpYKbtM2BHOn+IT7Hk8U0L9sZY52YLsFOP54nwLxyKnoPZ1e2HgvwGPuxduVB0x0tYYRf7gRc00gk72EEPCbsk+OW1aypSX0hoZ9RXWuPHt/XflS7lbH5DPvJ3MH2YFzWA9qPkRykI2HuvxnjThQ4ec+A4mgznw7mHdR27xDGAoB7lHVTtL1Fdl2u7YnaRwiRDgrPjUV9XfKOxuw4BNBong7UuYI6Q40rfaLFw7dRrTA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Boby2SKU2OJ9CapDzQD5tfkBZpaqf893taWsctVCFsc=;
- b=Vd72Sh2/64lPHiKebG3BuFbT6Uo7Q9oPTOO7RxbuzRqTq6Vv95aA/Wf8QBU0lNq3Pmz63Z3Mp8APfT8rYG+j4L4c/eafLGOIMW/WJFq2wMhmpWwqhEs7HiZ084P1EtQyOl8WwatpZ4UU0mh08N4LRIlbFIzp/8ZhokKrdekcSO4=
+ bh=NzeMW0K2Lj0TPxd5ibUnl5LRmj2OP3BwZVFsJKiLN4I=;
+ b=jfLkkgAmIOmY+PXe54/bWDvgfuFtFIKX+UeAvPr2SeNR3/HC1QiElApNVaROdN6B8MPr9ICFGqO1qbsaV09/9DoeiU4OflPLzuuM+T02p/E7aIyvYdHQbsNAUZlUjlf+YLmcLVQbDGw/FWEBTQBtrXrG6WgeL9+PAdBGKPJAk7Y=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=oracle.com;
 Received: from SA2PR10MB4587.namprd10.prod.outlook.com (2603:10b6:806:114::12)
  by SA2PR10MB4540.namprd10.prod.outlook.com (2603:10b6:806:110::18) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4523.14; Mon, 20 Sep
- 2021 10:11:36 +0000
+ 2021 10:11:50 +0000
 Received: from SA2PR10MB4587.namprd10.prod.outlook.com
  ([fe80::1138:f2cb:64f8:c901]) by SA2PR10MB4587.namprd10.prod.outlook.com
  ([fe80::1138:f2cb:64f8:c901%9]) with mapi id 15.20.4523.018; Mon, 20 Sep 2021
- 10:11:36 +0000
+ 10:11:50 +0000
 References: <163192854958.416199.3396890438240296942.stgit@magnolia>
- <163192860467.416199.3157992669504614921.stgit@magnolia>
+ <163192861018.416199.11733078081556457241.stgit@magnolia>
 User-agent: mu4e 1.4.15; emacs 27.1
 From:   Chandan Babu R <chandan.babu@oracle.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     chandanrlinux@gmail.com, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 10/14] xfs: encode the max btree height in the cursor
-In-reply-to: <163192860467.416199.3157992669504614921.stgit@magnolia>
-Message-ID: <87bl4n7eqh.fsf@debian-BULLSEYE-live-builder-AMD64>
-Date:   Mon, 20 Sep 2021 15:25:50 +0530
+Subject: Re: [PATCH 11/14] xfs: dynamically allocate cursors based on maxlevels
+In-reply-to: <163192861018.416199.11733078081556457241.stgit@magnolia>
+Message-ID: <878rzr7ept.fsf@debian-BULLSEYE-live-builder-AMD64>
+Date:   Mon, 20 Sep 2021 15:26:14 +0530
 Content-Type: text/plain
-X-ClientProxiedBy: MAXPR0101CA0068.INDPRD01.PROD.OUTLOOK.COM
- (2603:1096:a00:e::30) To SA2PR10MB4587.namprd10.prod.outlook.com
+X-ClientProxiedBy: MAXPR0101CA0013.INDPRD01.PROD.OUTLOOK.COM
+ (2603:1096:a00:c::23) To SA2PR10MB4587.namprd10.prod.outlook.com
  (2603:10b6:806:114::12)
 MIME-Version: 1.0
-Received: from nandi (223.182.249.90) by MAXPR0101CA0068.INDPRD01.PROD.OUTLOOK.COM (2603:1096:a00:e::30) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4523.14 via Frontend Transport; Mon, 20 Sep 2021 10:11:34 +0000
+Received: from nandi (223.182.249.90) by MAXPR0101CA0013.INDPRD01.PROD.OUTLOOK.COM (2603:1096:a00:c::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4523.14 via Frontend Transport; Mon, 20 Sep 2021 10:11:48 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: b7a4a191-fca1-42d5-e4b2-08d97c1f073d
+X-MS-Office365-Filtering-Correlation-Id: 24761830-db1d-4256-d622-08d97c1f0fc4
 X-MS-TrafficTypeDiagnostic: SA2PR10MB4540:
-X-Microsoft-Antispam-PRVS: <SA2PR10MB4540FD788D4FDD3952AC8F25F6A09@SA2PR10MB4540.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:5797;
+X-Microsoft-Antispam-PRVS: <SA2PR10MB4540D650A50C067E2F232B60F6A09@SA2PR10MB4540.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:3631;
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: YBciz3vc1lmI78qaVnBxExtCvlj0czRSn8Lkku8rRTJSfqxPHiqs8qr1tatyYddWrq3tCau0MXZdEYheNn0OW6ZfBun1o1NN+K+wZ1LU02ARz4/WyTlsFPB9Llnw1PIuPYouHuBkVE+OgNjcLFndNvXW4yJ/r4wtiLc2oLz7286W+3B5utskq+s8qPz/XZ8hscq/hwopg736EkwBF1sQY9/HX4TMYz4u1oScAO3mkoin+M80+VKn/DSaCjTgFDPk1pgp34bjGqYsQWDIlodWUyMKH4NTZ3omSOhqvgj2VrzZoU56jTBhlGiUaxwA8xFyPOZaT0ZBe0xvTikPgWxXtJMwFGMH9BfW+wlny+4VyqM8WKdBl2z8pcV4tGU0T6bD0fO/3dz6Q03KclEsrAOk6q5xBLflkP7QmqQK5INIYGvgbgM6iTjNDDtnrJ7p0hs+Z3ljx/Fcf4krd9PSPMlSkcRrV2kbyvniWeVnBnsDG+oJ2K2m7+kOYbzXifbNOW99uRf0vgRpFgHEkN2QS6EqxV3cR7DBe2v49HMy4aTNJ8omLAx+2p0/2q3fgoyu3uMr4Y8ZMCIN5sbn6oo4f4G3QpFZdDlF3MzvQq1vw2FZVCG3lrkKzQ97My5bIaOrge1dehUm46XLymMutoA8NQzEHYFEFZb/mo6gvD/u5/ghW0wg1/OIVGpg4NgI3d8rTA730RNqptTCXq3BGBos3w0bZQ==
+X-Microsoft-Antispam-Message-Info: yjswezpcrJnMxvp/F3Wvk3A+5ImbeV1JW6Wl6eqtngHFXMc73r0c9VLzR3IFGcwJI2j18d8GToZRl+gdGnpgY9euwj6pQCEsLIgLzSkfn6JQ1dzkBAslX5su4vP8dI8YfgXz8nmSQusfdTz2uX2zeLG7WkvDbklEDPY+b6OsFcHQJS9u7tBuBHcc6ye9HVxVEnYtJFeymoNEZ+xo1qiv9U7EuSGMKiy6KVqpVYfH3ELOL7G2TsjDbnRrjZts7qGDEl+jwAI1fyn/wV+1FiqKgISl5VeDywQeriB+ijMyP+bd4rwIjNArNwwJvFOpTi/wovFFqSRheuY5u3niL7CEPPrG+XL33DIKQOJWtyxRtwz/TO+GJ3mmnJWBCxrX/ju9XOKQgReQOGD/LT0bqzOTHZJ6acMJnoMal9X0++ocIaRr5Ei+TTHfRkgd07xAeNCcmIQbeVArh6GAojXPFsr5LpZPy4AzRHqHGYf2BnSBrpCvAaUo/khxOqqbpn8JKQ2YuHfX7nQudWNLlvK96K0F9n1EUCh+F1s05DU4Z1y703lFqoc7fCfwqLEPl5trzLdTq700+uTos1jfRxntS2MroCs3b3KCTrlljkbqYf2bIakfLc0Y4dN94qNATQQQLw2L0CHp6E1KGWTUpsq1FXDYpqvtpKHrYhTq8UqVjaXVDsQg7RtKSNLGjSjOdGN+OBGe
 X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(7916004)(366004)(316002)(4326008)(33716001)(26005)(52116002)(53546011)(6916009)(86362001)(6496006)(38100700002)(8676002)(6486002)(508600001)(5660300002)(38350700002)(66946007)(956004)(186003)(66476007)(83380400001)(9686003)(66556008)(2906002)(8936002)(6666004);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?IB+6yrJelU4/PWv94A9I5HQ5hFQsPIu++mfJZ8JeP7qynXvEOomn0VzmviCe?=
- =?us-ascii?Q?BPICjCRJbjLsvrs8WFTtF5oEfsr4+WFlwRnbL1Lx79bONLdWrZsvezc+Y/kZ?=
- =?us-ascii?Q?JwMMhwvVKGtTzlL4NTHLJ0BKjzJfeWgccF4jyV6GNazBhKHU+NuPfoI3A2bs?=
- =?us-ascii?Q?TAAxJTrc/iF7T4pFVDI9iijC5dDjWMVcvO3xfDXYLp7GUauxxHxy89JBYiBZ?=
- =?us-ascii?Q?pOy47PvCWujLG51nm7Tsta6IN0oA3hXKCOvEOyGbKFiX4yu4nANoCJ0pbFP1?=
- =?us-ascii?Q?2APQNm7nxiph03/jZARJtGWmKRu2pCkOeOc5uVExRuqWCgeYs7o63r0eKmtS?=
- =?us-ascii?Q?Meh1zRdSGQP11hr2P9RJZTkCBmVUVuWxz4cxcxwlI+RLxi+nF+0fNb4qyqtq?=
- =?us-ascii?Q?TZUYohyjo0xG5CeBaxpUYWe56sBLuO/c3NKGXZcvO/limoAyeWawaBONWa7D?=
- =?us-ascii?Q?OaySokl+5M/d6cC/7WWQxk0IwCVXvy1qB2qKbMWFW4CMdboynN4a3Eil/vtL?=
- =?us-ascii?Q?pa++uKdgoq3Yy7S/z6mPLwvldAh4powyFCyTR77ACAK4eb1nEsmYembHpzVp?=
- =?us-ascii?Q?/69sOXGHSB5zD7uc1B0qKSEA2r9Hm8UnIFuMwmjtxSCjHgvrmbZToNn8d+jq?=
- =?us-ascii?Q?DWt/iP51E+MQb5EMek6YV7NJni+qwblkGKTFAvqBwWkkm1MCbzEFzJ/kB59V?=
- =?us-ascii?Q?a774tUxuae7EHNbF5NKL2wnAozsjBLOEnO1bLibk3v/fiBelZe3Pg2Lo8PoC?=
- =?us-ascii?Q?XSLl+lpjgCcKxnoPm4aGmve8sJhpAV3dsEr0r0kr4d6Ee4Ncano3Fb9d+bWI?=
- =?us-ascii?Q?sJvRKrLaBrxSIOgiKyjGyFakayQw6cPWUKpV1iDFJQhk+A3gzALgWZCizX0Y?=
- =?us-ascii?Q?A4DlvEiGeKOHoi/7qef6n75az7e6TfvxWT+SS1xx17R2vMS4V+u1k5uxEUjn?=
- =?us-ascii?Q?AvF4V0C3hc2i3NpHsVqcrAf2BrGaHKflzNyJM711NMd0lp8xTcQ5skVaRFhD?=
- =?us-ascii?Q?XSdGZSBQL3MKlAnyEEd/ft9DOXpySchQogtgQMCjlvrDdT4gZNPfS6UuSVms?=
- =?us-ascii?Q?4o18GQem2t9fPuIQhwF15yjU6WpTFKu+/urpw6MXM5nIdBl2Uw5JEgi0TINf?=
- =?us-ascii?Q?dj9y/SnzxM1BRzVW6mP6Thj7KfZGwn1ezhyWmUxMBwct3LAMUW0bzoSBmHMw?=
- =?us-ascii?Q?8DRVFsaG2NPp631x2hp0SMOWGe5rMAME/Ykr3MvlDTtE+ouSOaLjaydMWi64?=
- =?us-ascii?Q?lJ8MNfR/UKOW2uhPKsadQPN+pk0pFXjspajTNfsg6NsE5JC5E1IaQ4qOD4xU?=
- =?us-ascii?Q?t3J9psfOSYAeh8c3JQqWQXdm?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?oo51H3KLgPUJE+47Y7c3jqgmrrDJ1kTOWUK8mI/5CHZngC+pt8dm7zUE8OeC?=
+ =?us-ascii?Q?5ocKFN/c/djBoTjeqAleXLMO99yLMTJUa3vW9O5BbfNzY5UY8sZGpCE/aEW+?=
+ =?us-ascii?Q?YcZLLJ400+FF7vh5kegBzEnJnSaZt6B/0a5MRqNMJHR7tS4bRZvGC4hGrk0+?=
+ =?us-ascii?Q?L0bhkmhd46EwyGRQNeZfBX2JuxmcHz6v7n6dqA0cn/8uCj8/GUArh+oZDZbC?=
+ =?us-ascii?Q?ilB3+iF711m8iq5ULyrgtIYw6vIaOTpXGtnpUzow42XBIqTAq+akxsPVCU5l?=
+ =?us-ascii?Q?3oOJnFbiXYRHhNYM9FsFUWASVYJcczqBzgjONopfeDEaCc62hCaOhApXCZ41?=
+ =?us-ascii?Q?rB5SqE1fpQlC3FyZoedU8iKjZBhA/EPvGnZOOa5EHPRaaZcUFfcCicg6S79S?=
+ =?us-ascii?Q?aDibaYnw1JXIKHMqa43syKX95to9f9aQ6GZO9EqrM/pAVYp1JJ8Wisu+ztD/?=
+ =?us-ascii?Q?E+zin5Sh3iDVMUIaZq7Ecjfj41hjmJQva8MpLyjXLuUK3aXWkGk8bPp0xBU7?=
+ =?us-ascii?Q?B6O9ltP5V1KTjnLrvFAYQ28oMA5js/4ruoDVsh6GVXYPMwZ6sRcqAf+uV792?=
+ =?us-ascii?Q?eFzSRoBhXJrP05HE73FOEGCMnkTBazNdsV1P+nd2kxdCEo2K7iLSmdidUpQM?=
+ =?us-ascii?Q?S/cBOuTYYSsljqoHdirc2EDj8Su7Oy0XCLTd6taZXRqd6ZzdYHTKq0mfaaCp?=
+ =?us-ascii?Q?cBs62CM8xgktXVENy4VP+AOfZs+Z1VYk236ZRt66hAwn4VqEJuxIvQ3v4o9W?=
+ =?us-ascii?Q?0e4FsT+K18m0O5Se6EN4YDvjTZgz9zJyaBHxM2QEoq54esmNOSdA/n/EJ5YR?=
+ =?us-ascii?Q?+LHSIX9KWgiZ/x6hXC0TiG+5Xp5Ld7bfEK0cxUkBSWasmL9NRq5TeKAYY++9?=
+ =?us-ascii?Q?grqxUzvUj3ERFeu+8coCOp3lsiFrIJXQ779nQiYcf+WBUgpQQXijBxL1H9ir?=
+ =?us-ascii?Q?NqT9yFTs4CBCre+87QJGDvcX13lq76iMIfFM8C83awEA/Qm8pin06NKtf20u?=
+ =?us-ascii?Q?uXjQChsykoMWLPO8vOae4wF32Be8MDSHLGVupTJdrxcgdrETcmlyYz8CwL30?=
+ =?us-ascii?Q?ylkL8L96vdCB5098KSbVpaW8Y3+qQiLB5gnxM6T/2MSj/fVJYLbPlPjA7hV6?=
+ =?us-ascii?Q?0M34ogrCO3qM+gwynOMmKVQOUE/iiPH1oiFjlxkXrrHSAvdv6fd5ezgpruhR?=
+ =?us-ascii?Q?iOwzzREuGW74VnIm+nZimtN5wfYaWGqKB5IWfTubByYDwdOcXxWw09n/zGDj?=
+ =?us-ascii?Q?DEPiQzY75gY3sCSO808m78DFSH7eyil0Sj1E0ACOZXf+H3cljTj5p57f0tyI?=
+ =?us-ascii?Q?fholeRxkeyXjUXjpvtoZfdl+?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b7a4a191-fca1-42d5-e4b2-08d97c1f073d
+X-MS-Exchange-CrossTenant-Network-Message-Id: 24761830-db1d-4256-d622-08d97c1f0fc4
 X-MS-Exchange-CrossTenant-AuthSource: SA2PR10MB4587.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Sep 2021 10:11:35.9969
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Sep 2021 10:11:50.3031
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: yGN0VNBKA+pPXtvwlah0XBBy8VYszmqfZnasxw6J2hiDlv48ztjegwmEdugbC0LyjoyuUF6AMcaTic6X8HMuhQ==
+X-MS-Exchange-CrossTenant-UserPrincipalName: lRKPRP+2VaFVDTXUvoM6WdHu+CSVWUWkTvmczJUZZCSb2s5PrzCXm1s8epx3s1nJIJktITqKBtKATkByez+MZw==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA2PR10MB4540
 X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10112 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxscore=0 adultscore=0
- phishscore=0 spamscore=0 bulkscore=0 mlxlogscore=999 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 suspectscore=0 spamscore=0
+ bulkscore=0 adultscore=0 mlxlogscore=999 malwarescore=0 phishscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2109030001
  definitions=main-2109200063
-X-Proofpoint-GUID: 271ESS6FMXnAQ-IfjIGb-B0C2ydwyqAH
-X-Proofpoint-ORIG-GUID: 271ESS6FMXnAQ-IfjIGb-B0C2ydwyqAH
+X-Proofpoint-GUID: wtL8d-EosaGl-yaHIjmT6WvUjvmXkAmj
+X-Proofpoint-ORIG-GUID: wtL8d-EosaGl-yaHIjmT6WvUjvmXkAmj
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -151,8 +151,9 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 18 Sep 2021 at 07:00, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 >
-> Encode the maximum btree height in the cursor, since we're soon going to
-> allow smaller cursors for AG btrees and larger cursors for file btrees.
+> Replace the statically-sized btree cursor zone with dynamically sized
+> allocations so that we can reduce the memory overhead for per-AG bt
+> cursors while handling very tall btrees for rt metadata.
 >
 
 Looks good.
@@ -161,117 +162,142 @@ Reviewed-by: Chandan Babu R <chandan.babu@oracle.com>
 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
->  fs/xfs/libxfs/xfs_bmap.c          |    2 +-
->  fs/xfs/libxfs/xfs_btree.c         |    5 +++--
->  fs/xfs/libxfs/xfs_btree.h         |    3 ++-
->  fs/xfs/libxfs/xfs_btree_staging.c |   10 +++++-----
->  4 files changed, 11 insertions(+), 9 deletions(-)
+>  fs/xfs/libxfs/xfs_btree.c |   40 ++++++++++++++++++++++++++++++++--------
+>  fs/xfs/libxfs/xfs_btree.h |    2 --
+>  fs/xfs/xfs_super.c        |   11 +----------
+>  3 files changed, 33 insertions(+), 20 deletions(-)
 >
 >
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 644b956301b6..2ae5bf9a74e7 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -239,7 +239,7 @@ xfs_bmap_get_bp(
->  	if (!cur)
->  		return NULL;
->  
-> -	for (i = 0; i < XFS_BTREE_MAXLEVELS; i++) {
-> +	for (i = 0; i < cur->bc_maxlevels; i++) {
->  		if (!cur->bc_levels[i].bp)
->  			break;
->  		if (xfs_buf_daddr(cur->bc_levels[i].bp) == bno)
 > diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-> index 70785004414e..2486ba22c01d 100644
+> index 2486ba22c01d..f9516828a847 100644
 > --- a/fs/xfs/libxfs/xfs_btree.c
 > +++ b/fs/xfs/libxfs/xfs_btree.c
-> @@ -2933,7 +2933,7 @@ xfs_btree_new_iroot(
->  	be16_add_cpu(&block->bb_level, 1);
->  	xfs_btree_set_numrecs(block, 1);
->  	cur->bc_nlevels++;
-> -	ASSERT(cur->bc_nlevels <= XFS_BTREE_MAXLEVELS);
-> +	ASSERT(cur->bc_nlevels <= cur->bc_maxlevels);
->  	cur->bc_levels[level + 1].ptr = 1;
+> @@ -23,11 +23,6 @@
+>  #include "xfs_btree_staging.h"
+>  #include "xfs_ag.h"
 >  
->  	kp = xfs_btree_key_addr(cur, 1, block);
-> @@ -3097,7 +3097,7 @@ xfs_btree_new_root(
->  	xfs_btree_setbuf(cur, cur->bc_nlevels, nbp);
->  	cur->bc_levels[cur->bc_nlevels].ptr = nptr;
->  	cur->bc_nlevels++;
-> -	ASSERT(cur->bc_nlevels <= XFS_BTREE_MAXLEVELS);
-> +	ASSERT(cur->bc_nlevels <= cur->bc_maxlevels);
->  	*stat = 1;
->  	return 0;
->  error0:
-> @@ -4941,6 +4941,7 @@ xfs_btree_alloc_cursor(
+> -/*
+> - * Cursor allocation zone.
+> - */
+> -kmem_zone_t	*xfs_btree_cur_zone;
+> -
+>  /*
+>   * Btree magic numbers.
+>   */
+> @@ -379,7 +374,7 @@ xfs_btree_del_cursor(
+>  		kmem_free(cur->bc_ops);
+>  	if (!(cur->bc_flags & XFS_BTREE_LONG_PTRS) && cur->bc_ag.pag)
+>  		xfs_perag_put(cur->bc_ag.pag);
+> -	kmem_cache_free(xfs_btree_cur_zone, cur);
+> +	kmem_free(cur);
+>  }
+>  
+>  /*
+> @@ -4927,6 +4922,32 @@ xfs_btree_has_more_records(
+>  		return block->bb_u.s.bb_rightsib != cpu_to_be32(NULLAGBLOCK);
+>  }
+>  
+> +/* Compute the maximum allowed height for a given btree type. */
+> +static unsigned int
+> +xfs_btree_maxlevels(
+> +	struct xfs_mount	*mp,
+> +	xfs_btnum_t		btnum)
+> +{
+> +	switch (btnum) {
+> +	case XFS_BTNUM_BNO:
+> +	case XFS_BTNUM_CNT:
+> +		return mp->m_ag_maxlevels;
+> +	case XFS_BTNUM_BMAP:
+> +		return max(mp->m_bm_maxlevels[XFS_DATA_FORK],
+> +			   mp->m_bm_maxlevels[XFS_ATTR_FORK]);
+> +	case XFS_BTNUM_INO:
+> +	case XFS_BTNUM_FINO:
+> +		return M_IGEO(mp)->inobt_maxlevels;
+> +	case XFS_BTNUM_RMAP:
+> +		return mp->m_rmap_maxlevels;
+> +	case XFS_BTNUM_REFC:
+> +		return mp->m_refc_maxlevels;
+> +	default:
+> +		ASSERT(0);
+> +		return XFS_BTREE_MAXLEVELS;
+> +	}
+> +}
+> +
+>  /* Allocate a new btree cursor of the appropriate size. */
+>  struct xfs_btree_cur *
+>  xfs_btree_alloc_cursor(
+> @@ -4935,13 +4956,16 @@ xfs_btree_alloc_cursor(
+>  	xfs_btnum_t		btnum)
+>  {
+>  	struct xfs_btree_cur	*cur;
+> +	unsigned int		maxlevels = xfs_btree_maxlevels(mp, btnum);
+>  
+> -	cur = kmem_cache_zalloc(xfs_btree_cur_zone, GFP_NOFS | __GFP_NOFAIL);
+> +	ASSERT(maxlevels <= XFS_BTREE_MAXLEVELS);
+> +
+> +	cur = kmem_zalloc(xfs_btree_cur_sizeof(maxlevels), KM_NOFS);
+>  	cur->bc_tp = tp;
 >  	cur->bc_mp = mp;
 >  	cur->bc_btnum = btnum;
 >  	cur->bc_blocklog = mp->m_sb.sb_blocklog;
-> +	cur->bc_maxlevels = XFS_BTREE_MAXLEVELS;
+> -	cur->bc_maxlevels = XFS_BTREE_MAXLEVELS;
+> +	cur->bc_maxlevels = maxlevels;
 >  
 >  	return cur;
 >  }
 > diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-> index 6540c4957c36..6075918efa0c 100644
+> index 6075918efa0c..ae83fbf58c18 100644
 > --- a/fs/xfs/libxfs/xfs_btree.h
 > +++ b/fs/xfs/libxfs/xfs_btree.h
-> @@ -235,9 +235,10 @@ struct xfs_btree_cur
->  	struct xfs_mount	*bc_mp;	/* file system mount struct */
->  	const struct xfs_btree_ops *bc_ops;
->  	uint			bc_flags; /* btree features - below */
-> -	union xfs_btree_irec	bc_rec;	/* current insert/search record value */
-> +	uint8_t		bc_maxlevels;	/* maximum levels for this btree type */
->  	uint8_t		bc_nlevels;	/* number of levels in the tree */
->  	uint8_t		bc_blocklog;	/* log2(blocksize) of btree blocks */
-> +	union xfs_btree_irec	bc_rec;	/* current insert/search record value */
->  	xfs_btnum_t	bc_btnum;	/* identifies which btree type */
->  	int		bc_statoff;	/* offset of btre stats array */
+> @@ -13,8 +13,6 @@ struct xfs_trans;
+>  struct xfs_ifork;
+>  struct xfs_perag;
 >  
-> diff --git a/fs/xfs/libxfs/xfs_btree_staging.c b/fs/xfs/libxfs/xfs_btree_staging.c
-> index cc56efc2b90a..dd75e208b543 100644
-> --- a/fs/xfs/libxfs/xfs_btree_staging.c
-> +++ b/fs/xfs/libxfs/xfs_btree_staging.c
-> @@ -657,12 +657,12 @@ xfs_btree_bload_compute_geometry(
->  	 * checking levels 0 and 1 here, so set bc_nlevels such that the btree
->  	 * code doesn't interpret either as the root level.
->  	 */
-> -	cur->bc_nlevels = XFS_BTREE_MAXLEVELS - 1;
-> +	cur->bc_nlevels = cur->bc_maxlevels - 1;
->  	xfs_btree_bload_ensure_slack(cur, &bbl->leaf_slack, 0);
->  	xfs_btree_bload_ensure_slack(cur, &bbl->node_slack, 1);
+> -extern kmem_zone_t	*xfs_btree_cur_zone;
+> -
+>  /*
+>   * Generic key, ptr and record wrapper structures.
+>   *
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 30bae0657343..25a548bbb0b2 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1965,17 +1965,11 @@ xfs_init_zones(void)
+>  	if (!xfs_bmap_free_item_zone)
+>  		goto out_destroy_log_ticket_zone;
 >  
->  	bbl->nr_records = nr_this_level = nr_records;
-> -	for (cur->bc_nlevels = 1; cur->bc_nlevels <= XFS_BTREE_MAXLEVELS;) {
-> +	for (cur->bc_nlevels = 1; cur->bc_nlevels <= cur->bc_maxlevels;) {
->  		uint64_t	level_blocks;
->  		uint64_t	dontcare64;
->  		unsigned int	level = cur->bc_nlevels - 1;
-> @@ -703,7 +703,7 @@ xfs_btree_bload_compute_geometry(
->  			 * block-based btree level.
->  			 */
->  			cur->bc_nlevels++;
-> -			ASSERT(cur->bc_nlevels <= XFS_BTREE_MAXLEVELS);
-> +			ASSERT(cur->bc_nlevels <= cur->bc_maxlevels);
->  			xfs_btree_bload_level_geometry(cur, bbl, level,
->  					nr_this_level, &avg_per_block,
->  					&level_blocks, &dontcare64);
-> @@ -719,14 +719,14 @@ xfs_btree_bload_compute_geometry(
+> -	xfs_btree_cur_zone = kmem_cache_create("xfs_btree_cur",
+> -				xfs_btree_cur_sizeof(XFS_BTREE_MAXLEVELS),
+> -					       0, 0, NULL);
+> -	if (!xfs_btree_cur_zone)
+> -		goto out_destroy_bmap_free_item_zone;
+> -
+>  	xfs_da_state_zone = kmem_cache_create("xfs_da_state",
+>  					      sizeof(struct xfs_da_state),
+>  					      0, 0, NULL);
+>  	if (!xfs_da_state_zone)
+> -		goto out_destroy_btree_cur_zone;
+> +		goto out_destroy_bmap_free_item_zone;
 >  
->  			/* Otherwise, we need another level of btree. */
->  			cur->bc_nlevels++;
-> -			ASSERT(cur->bc_nlevels <= XFS_BTREE_MAXLEVELS);
-> +			ASSERT(cur->bc_nlevels <= cur->bc_maxlevels);
->  		}
->  
->  		nr_blocks += level_blocks;
->  		nr_this_level = level_blocks;
->  	}
->  
-> -	if (cur->bc_nlevels > XFS_BTREE_MAXLEVELS)
-> +	if (cur->bc_nlevels > cur->bc_maxlevels)
->  		return -EOVERFLOW;
->  
->  	bbl->btree_height = cur->bc_nlevels;
+>  	xfs_ifork_zone = kmem_cache_create("xfs_ifork",
+>  					   sizeof(struct xfs_ifork),
+> @@ -2105,8 +2099,6 @@ xfs_init_zones(void)
+>  	kmem_cache_destroy(xfs_ifork_zone);
+>   out_destroy_da_state_zone:
+>  	kmem_cache_destroy(xfs_da_state_zone);
+> - out_destroy_btree_cur_zone:
+> -	kmem_cache_destroy(xfs_btree_cur_zone);
+>   out_destroy_bmap_free_item_zone:
+>  	kmem_cache_destroy(xfs_bmap_free_item_zone);
+>   out_destroy_log_ticket_zone:
+> @@ -2138,7 +2130,6 @@ xfs_destroy_zones(void)
+>  	kmem_cache_destroy(xfs_trans_zone);
+>  	kmem_cache_destroy(xfs_ifork_zone);
+>  	kmem_cache_destroy(xfs_da_state_zone);
+> -	kmem_cache_destroy(xfs_btree_cur_zone);
+>  	kmem_cache_destroy(xfs_bmap_free_item_zone);
+>  	kmem_cache_destroy(xfs_log_ticket_zone);
+>  }
 
 
 -- 
