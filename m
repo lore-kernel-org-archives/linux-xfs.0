@@ -2,171 +2,151 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B8B5C433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Sep 2021 23:50:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBB14C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Sep 2021 00:46:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E29AC61252
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Sep 2021 23:50:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A14A760F56
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Sep 2021 00:46:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236720AbhITXvu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 20 Sep 2021 19:51:50 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:46288 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236315AbhITXts (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Sep 2021 19:49:48 -0400
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id E0B25220C9;
-        Mon, 20 Sep 2021 23:48:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1632181698; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=WDR8rd0yeY+WwyoUfkNID7NmGWHu0FjMPIrB2wt75VE=;
-        b=chupZgMQPOxHEij3AQE2fQ2gSjEBexoIhCfHuOMAHmdvWRbUCZ3gF+k/9vweTWz5Vta7u7
-        mQNBvpOGiocqZ8S2DLOKWCj1DnMxDgqu+pm+lZ995Bqs12YFbnoaxjNRQ+fsjkM3Y2EJf6
-        IcYOJqc0DX/D4NVZVgH8EEpAAkJy30I=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1632181698;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=WDR8rd0yeY+WwyoUfkNID7NmGWHu0FjMPIrB2wt75VE=;
-        b=D5EiDX5Iks4DL7NrQNDrrqwivNtaz8nkcu8GToJ6VdTOfRtsYDcTPgMQNgtEz/8W0CdMf5
-        geVHQgv+cPcW2OAg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 40BED13B3F;
-        Mon, 20 Sep 2021 23:48:13 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id 5j12O70dSWH0bgAAMHmgww
-        (envelope-from <neilb@suse.de>); Mon, 20 Sep 2021 23:48:13 +0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+        id S230354AbhIUAsD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 20 Sep 2021 20:48:03 -0400
+Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:37262 "EHLO
+        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230220AbhIUAqC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Sep 2021 20:46:02 -0400
+Received: from dread.disaster.area (pa49-195-238-16.pa.nsw.optusnet.com.au [49.195.238.16])
+        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id 349331009BF2;
+        Tue, 21 Sep 2021 10:44:32 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1mSTtf-00Eqls-33; Tue, 21 Sep 2021 10:44:31 +1000
+Date:   Tue, 21 Sep 2021 10:44:31 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     jane.chu@oracle.com, linux-xfs@vger.kernel.org, hch@infradead.org,
+        dan.j.williams@intel.com, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 3/5] vfs: add a zero-initialization mode to fallocate
+Message-ID: <20210921004431.GO1756565@dread.disaster.area>
+References: <163192864476.417973.143014658064006895.stgit@magnolia>
+ <163192866125.417973.7293598039998376121.stgit@magnolia>
 MIME-Version: 1.0
-From:   "NeilBrown" <neilb@suse.de>
-To:     "Mel Gorman" <mgorman@suse.de>
-Cc:     "Andrew Morton" <akpm@linux-foundation.org>,
-        "Theodore Ts'o" <tytso@mit.edu>,
-        "Andreas Dilger" <adilger.kernel@dilger.ca>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        "Matthew Wilcox" <willy@infradead.org>,
-        "Michal Hocko" <mhocko@suse.com>,
-        "Jesper Dangaard Brouer" <jbrouer@redhat.com>,
-        "Dave Chinner" <david@fromorbit.com>,
-        "Jonathan Corbet" <corbet@lwn.net>, linux-xfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org
-Subject: Re: [PATCH 1/6] MM: Support __GFP_NOFAIL in  alloc_pages_bulk_*() and
- improve doco
-In-reply-to: <20210917144233.GD3891@suse.de>
-References: <163184698512.29351.4735492251524335974.stgit@noble.brown>,
- <163184741776.29351.3565418361661850328.stgit@noble.brown>,
- <20210917144233.GD3891@suse.de>
-Date:   Tue, 21 Sep 2021 09:48:11 +1000
-Message-id: <163218169134.3992.18152143151159846850@noble.neil.brown.name>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <163192866125.417973.7293598039998376121.stgit@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
+        a=DzKKRZjfViQTE5W6EVc0VA==:117 a=DzKKRZjfViQTE5W6EVc0VA==:17
+        a=kj9zAlcOel0A:10 a=7QKq2e-ADPsA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=jBJWxBCxkUIqe1ibMVcA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, 18 Sep 2021, Mel Gorman wrote:
-> I'm top-posting to cc Jesper with full context of the patch. I don't
-> have a problem with this patch other than the Fixes: being a bit
-> marginal, I should have acked as Mel Gorman <mgorman@suse.de> and the
-> @gfp in the comment should have been @gfp_mask.
->=20
-> However, an assumption the API design made was that it should fail fast
-> if memory is not quickly available but have at least one page in the
-> array. I don't think the network use case cares about the situation where
-> the array is already populated but I'd like Jesper to have the opportunity
-> to think about it.  It's possible he would prefer it's explicit and the
-> check becomes
-> (!nr_populated || ((gfp_mask & __GFP_NOFAIL) && !nr_account)) to
-> state that __GFP_NOFAIL users are willing to take a potential latency
-> penalty if the array is already partially populated but !__GFP_NOFAIL
-> users would prefer fail-fast behaviour. I'm on the fence because while
-> I wrote the implementation, it was based on other peoples requirements.
+On Fri, Sep 17, 2021 at 06:31:01PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Add a new mode to fallocate to zero-initialize all the storage backing a
+> file.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  fs/open.c                   |    5 +++++
+>  include/linux/falloc.h      |    1 +
+>  include/uapi/linux/falloc.h |    9 +++++++++
+>  3 files changed, 15 insertions(+)
+> 
+> 
+> diff --git a/fs/open.c b/fs/open.c
+> index daa324606a41..230220b8f67a 100644
+> --- a/fs/open.c
+> +++ b/fs/open.c
+> @@ -256,6 +256,11 @@ int vfs_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
+>  	    (mode & ~FALLOC_FL_INSERT_RANGE))
+>  		return -EINVAL;
+>  
+> +	/* Zeroinit should only be used by itself and keep size must be set. */
+> +	if ((mode & FALLOC_FL_ZEROINIT_RANGE) &&
+> +	    (mode != (FALLOC_FL_ZEROINIT_RANGE | FALLOC_FL_KEEP_SIZE)))
+> +		return -EINVAL;
+> +
+>  	/* Unshare range should only be used with allocate mode. */
+>  	if ((mode & FALLOC_FL_UNSHARE_RANGE) &&
+>  	    (mode & ~(FALLOC_FL_UNSHARE_RANGE | FALLOC_FL_KEEP_SIZE)))
+> diff --git a/include/linux/falloc.h b/include/linux/falloc.h
+> index f3f0b97b1675..4597b416667b 100644
+> --- a/include/linux/falloc.h
+> +++ b/include/linux/falloc.h
+> @@ -29,6 +29,7 @@ struct space_resv {
+>  					 FALLOC_FL_PUNCH_HOLE |		\
+>  					 FALLOC_FL_COLLAPSE_RANGE |	\
+>  					 FALLOC_FL_ZERO_RANGE |		\
+> +					 FALLOC_FL_ZEROINIT_RANGE |	\
+>  					 FALLOC_FL_INSERT_RANGE |	\
+>  					 FALLOC_FL_UNSHARE_RANGE)
+>  
+> diff --git a/include/uapi/linux/falloc.h b/include/uapi/linux/falloc.h
+> index 51398fa57f6c..8144403b6102 100644
+> --- a/include/uapi/linux/falloc.h
+> +++ b/include/uapi/linux/falloc.h
+> @@ -77,4 +77,13 @@
+>   */
+>  #define FALLOC_FL_UNSHARE_RANGE		0x40
+>  
+> +/*
+> + * FALLOC_FL_ZEROINIT_RANGE is used to reinitialize storage backing a file by
+> + * writing zeros to it.  Subsequent read and writes should not fail due to any
+> + * previous media errors.  Blocks must be not be shared or require copy on
+> + * write.  Holes and unwritten extents are left untouched.  This mode must be
+> + * used with FALLOC_FL_KEEP_SIZE.
+> + */
+> +#define FALLOC_FL_ZEROINIT_RANGE	0x80
 
-I can see that it could be desirable to not try too hard when we already
-have pages allocated, but maybe the best way to achieve that is for the
-called to clear __GFP_RECLAIM in that case.
+Hmmmm.
 
-Alternately, callers that really want the __GFP_RECLAIM and __GFP_NOFAIL
-flags to be honoured could ensure that the array passed in is empty.
-That wouldn't be difficult (for current callers).
+I think this wants to be a behavioural modifier for existing
+operations rather than an operation unto itself. i.e. similar to how
+KEEP_SIZE modifies ALLOC behaviour but doesn't fundamentally alter
+the guarantees ALLOC provides userspace.
 
-In either case, the documentation should make it clear which flags are
-honoured when.
+In this case, the change of behaviour over ZERO_RANGE is that we
+want physical zeros to be written instead of the filesystem
+optimising away the physical zeros by manipulating the layout
+of the file.
 
-Let's see what Jesper has to say.
+There's been requests in the past for a way to make ALLOC also
+behave like this - in the case that users want fully allocated space
+to be preallocated so their applications don't take unwritten extent
+conversion penalties on first writes. Databases are an example here,
+where setup of a new WAL file isn't performance critical, but writes
+to the WAL are and the WAL files are write-once. Hence they always
+take unwritten conversion penalties and the only way around that is
+to physically zero the files before use...
 
-Thanks,
-NeilBrown
+So it seems to me what we actually need here is a "write zeroes"
+modifier to fallocate() operations to tell the filesystem that the
+application really wants it to write zeroes over that range, not
+just guarantee space has been physically allocated....
 
+Then we have and API that looks like:
 
->=20
-> On Fri, Sep 17, 2021 at 12:56:57PM +1000, NeilBrown wrote:
-> > When alloc_pages_bulk_array() is called on an array that is partially
-> > allocated, the level of effort to get a single page is less than when
-> > the array was completely unallocated.  This behaviour is inconsistent,
-> > but now fixed.  One effect if this is that __GFP_NOFAIL will not ensure
-> > at least one page is allocated.
-> >=20
-> > Also clarify the expected success rate.  __alloc_pages_bulk() will
-> > allocated one page according to @gfp, and may allocate more if that can
-> > be done cheaply.  It is assumed that the caller values cheap allocation
-> > where possible and may decide to use what it has got, or to call again
-> > to get more.
-> >=20
-> > Acked-by: Mel Gorman <mgorman@suse.com>
-> > Fixes: 0f87d9d30f21 ("mm/page_alloc: add an array-based interface to the =
-bulk page allocator")
-> > Signed-off-by: NeilBrown <neilb@suse.de>
-> > ---
-> >  mm/page_alloc.c |    7 ++++++-
-> >  1 file changed, 6 insertions(+), 1 deletion(-)
-> >=20
-> > diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-> > index b37435c274cf..aa51016e49c5 100644
-> > --- a/mm/page_alloc.c
-> > +++ b/mm/page_alloc.c
-> > @@ -5191,6 +5191,11 @@ static inline bool prepare_alloc_pages(gfp_t gfp_m=
-ask, unsigned int order,
-> >   * is the maximum number of pages that will be stored in the array.
-> >   *
-> >   * Returns the number of pages on the list or array.
-> > + *
-> > + * At least one page will be allocated if that is possible while
-> > + * remaining consistent with @gfp.  Extra pages up to the requested
-> > + * total will be allocated opportunistically when doing so is
-> > + * significantly cheaper than having the caller repeat the request.
-> >   */
-> >  unsigned long __alloc_pages_bulk(gfp_t gfp, int preferred_nid,
-> >  			nodemask_t *nodemask, int nr_pages,
-> > @@ -5292,7 +5297,7 @@ unsigned long __alloc_pages_bulk(gfp_t gfp, int pre=
-ferred_nid,
-> >  								pcp, pcp_list);
-> >  		if (unlikely(!page)) {
-> >  			/* Try and get at least one page */
-> > -			if (!nr_populated)
-> > +			if (!nr_account)
-> >  				goto failed_irq;
-> >  			break;
-> >  		}
-> >=20
-> >=20
->=20
->=20
+	ALLOC		- allocate space efficiently
+	ALLOC | INIT	- allocate space by writing zeros to it
+	ZERO		- zero data and preallocate space efficiently
+	ZERO | INIT	- zero range by writing zeros to it
+
+Which seems to cater for all the cases I know of where physically
+writing zeros instead of allocating unwritten extents is the
+preferred behaviour of fallocate()....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
