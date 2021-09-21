@@ -2,324 +2,334 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63801C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Sep 2021 04:08:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8983CC4332F
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Sep 2021 05:14:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 36ED1611ED
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Sep 2021 04:08:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5A5F06115A
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Sep 2021 05:14:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230285AbhIUEJy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 21 Sep 2021 00:09:54 -0400
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:55398 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229905AbhIUEJR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Sep 2021 00:09:17 -0400
-Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 18L40a1Z008878;
-        Tue, 21 Sep 2021 00:07:16 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=pp1; bh=nIFUnm0tOm3zDvFUkCv/jbbpvnqnLDzxrErAHwebuL0=;
- b=NkoaT9FS1SxoacE6QUJZyGfhbMiaTkpEs1M2DjSeAXP8AbOyPEB0MgaXMPcxZBFadwSV
- vciSQXh/y5+CvqkfSrv5T8riMYZbl0hdyzwGtQ4Q4r7b7UpoTaLAPUG285qt4BPlk1g9
- tPh4bQYYfx4FHpkszwC9wqCi/xiKWhhyF6IV3BDWD3StJqp8vQcfFWQkrIQKhcZ5UfTh
- vFa1aYLgj8QEqScq0nJgBdsnwGkYZF3IaDCcWKPDKN90hf4ieAsGR3ddZ+mxhrOTCUAy
- AfJlhlD+os0yh3VwJpXpgoDfzncu027UBp442g27PUnlTpfXsdI1s4Gxof/UsaF6Z2VW tA== 
-Received: from ppma04ams.nl.ibm.com (63.31.33a9.ip4.static.sl-reverse.com [169.51.49.99])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3b7804r3bv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 21 Sep 2021 00:07:15 -0400
-Received: from pps.filterd (ppma04ams.nl.ibm.com [127.0.0.1])
-        by ppma04ams.nl.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 18L43GDR007027;
-        Tue, 21 Sep 2021 04:07:13 GMT
-Received: from b06cxnps4075.portsmouth.uk.ibm.com (d06relay12.portsmouth.uk.ibm.com [9.149.109.197])
-        by ppma04ams.nl.ibm.com with ESMTP id 3b57r9fab6-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 21 Sep 2021 04:07:13 +0000
-Received: from d06av22.portsmouth.uk.ibm.com (d06av22.portsmouth.uk.ibm.com [9.149.105.58])
-        by b06cxnps4075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 18L47AGL2490912
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 21 Sep 2021 04:07:10 GMT
-Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id A48B04C046;
-        Tue, 21 Sep 2021 04:07:10 +0000 (GMT)
-Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 222834C04E;
-        Tue, 21 Sep 2021 04:07:10 +0000 (GMT)
-Received: from localhost (unknown [9.43.105.212])
-        by d06av22.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Tue, 21 Sep 2021 04:07:09 +0000 (GMT)
-Date:   Tue, 21 Sep 2021 09:37:08 +0530
-From:   riteshh <riteshh@linux.ibm.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     jane.chu@oracle.com, linux-xfs@vger.kernel.org, hch@infradead.org,
-        dan.j.williams@intel.com, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 1/5] dax: prepare pmem for use by zero-initializing
- contents and clearing poisons
-Message-ID: <20210921040708.ojbbbt6i524wgsaj@riteshh-domain>
-References: <163192864476.417973.143014658064006895.stgit@magnolia>
- <163192865031.417973.8372869475521627214.stgit@magnolia>
- <20210918165408.ivsue463wpiitzjw@riteshh-domain>
- <20210920172225.GA570615@magnolia>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210920172225.GA570615@magnolia>
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: IN1stZH4ptWreK8AaCL6WXqC9oAZE101
-X-Proofpoint-ORIG-GUID: IN1stZH4ptWreK8AaCL6WXqC9oAZE101
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+        id S229471AbhIUFQC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 21 Sep 2021 01:16:02 -0400
+Received: from mail-co1nam11on2046.outbound.protection.outlook.com ([40.107.220.46]:65473
+        "EHLO NAM11-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S229441AbhIUFQB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 21 Sep 2021 01:16:01 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=OG1DLmRmAJu7jaTTIqTRexcrZVpa/cTsdQs5rTtTCOLWP1vTW8nZhhdio3m+dAD9jUtnAnqOifryAaB+kLqIh8SBT+3SwnDtqImMXvpDO11YY9mEu0A7QeXoVGqxqjAuipGwVWUGXDw/8KXH35FTWc0IZymG23ivUbJOR2AZfTc9uojHkQVaFIMprYH+VNW7RPkcQe4bJx+4mWPoWeCHXbPEDaSKK5Nx5nC58LM93yIjy+7FEoAXOgFhTlXYgUfNLDPLr6xgh2S/3V81TziwdJD3BXiKo4NsTK5AAi136wqZYerk6CyOApKmhtUIRsmwoAvDW6nDeVs+Wd3O2/gJRA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=COCU5c3cXw8LNRE7ukk7dc/Zk+tWeqegeW4S/B8A2Y4=;
+ b=DFDLr1y2yCNH8WT79AbwRjVCALybbwjN8lVcZi1RhsskjZBM035en7gqSb2vsGZHvtYwUGuYQUHm1jqR4oJDcvVhGYGnZzg8dJ4X7c5CcGLzYMIFsqqP2tuWI78BXZmP17z3qEVxPc23KIgqk99Q+/D29avzjdhn8Mq/9rsqQsyhwDbeXfOvxjF/tSzIJgZOQ/NEHm3eqfwsl14EqtfEJtc95vzvBQNw0vMUjOk+5tcyQyKIahvCQD+APanmgHbBk1uSo2kies5OOS3hi2O7xVXTs4o6zT+oC7xhVMLrTaFCzhLLDI2gPpEY9QOyupwDXpjyedZsHVy4BrIXzNxFqQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.112.32) smtp.rcpttodomain=amd.com smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=quarantine sp=none pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=COCU5c3cXw8LNRE7ukk7dc/Zk+tWeqegeW4S/B8A2Y4=;
+ b=o5DGK+hJyrjTl1IZEAwDePWfk6Hc3Ug8elwu78MJTg4gkMGAQiJHLnUArHRJsMW/lEhzkWpzLdPWv6m6J/mbau63WcbhXSohzFwnZRKZMXqflnvEqo48Kp1+34CQ+4wtH8e0Ueiuvg/0/PRDSUsoqoJFLDnoYE15TGiBWS1To7/d5QovL77M2RqYv13JToCu3JAXtu95zLzlpYbVeDMQl33XwCTP5CD18uhO1yAhK8zfBWPQwL9LltkoxX6q4TBt9hHzkVu/QJ9IHD9TBE3+Tc3iJ4jByXCSiCb2sw5jeB2iizf1jqvrRmKCVnq/wsSEiBF/7t97H+URrVZptYxpgg==
+Received: from DM6PR11CA0066.namprd11.prod.outlook.com (2603:10b6:5:14c::43)
+ by DM5PR1201MB0043.namprd12.prod.outlook.com (2603:10b6:4:57::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4523.16; Tue, 21 Sep
+ 2021 05:14:30 +0000
+Received: from DM6NAM11FT013.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:5:14c:cafe::b3) by DM6PR11CA0066.outlook.office365.com
+ (2603:10b6:5:14c::43) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4523.14 via Frontend
+ Transport; Tue, 21 Sep 2021 05:14:30 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.112.32)
+ smtp.mailfrom=nvidia.com; amd.com; dkim=none (message not signed)
+ header.d=none;amd.com; dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.112.32 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.112.32; helo=mail.nvidia.com;
+Received: from mail.nvidia.com (216.228.112.32) by
+ DM6NAM11FT013.mail.protection.outlook.com (10.13.173.142) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ 15.20.4523.14 via Frontend Transport; Tue, 21 Sep 2021 05:14:30 +0000
+Received: from DRHQMAIL107.nvidia.com (10.27.9.16) by HQMAIL109.nvidia.com
+ (172.20.187.15) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Mon, 20 Sep
+ 2021 22:14:29 -0700
+Received: from nvdebian.localnet (172.20.187.6) by DRHQMAIL107.nvidia.com
+ (10.27.9.16) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Tue, 21 Sep
+ 2021 05:14:27 +0000
+From:   Alistair Popple <apopple@nvidia.com>
+To:     <akpm@linux-foundation.org>, <Felix.Kuehling@amd.com>,
+        <linux-mm@kvack.org>, <rcampbell@nvidia.com>,
+        <linux-ext4@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        "Sierra Guiza, Alejandro (Alex)" <alex.sierra@amd.com>
+CC:     <amd-gfx@lists.freedesktop.org>, <dri-devel@lists.freedesktop.org>,
+        <hch@lst.de>, <jgg@nvidia.com>, <jglisse@redhat.com>
+Subject: Re: [PATCH v2 09/12] lib: test_hmm add module param for zone device type
+Date:   Tue, 21 Sep 2021 15:14:25 +1000
+Message-ID: <2161903.HsYN06obEU@nvdebian>
+In-Reply-To: <729f833c-e880-96ce-5f49-2d72a93faa21@amd.com>
+References: <20210913161604.31981-1-alex.sierra@amd.com> <2139200.KYAmxeAneQ@nvdebian> <729f833c-e880-96ce-5f49-2d72a93faa21@amd.com>
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.182.1,Aquarius:18.0.790,Hydra:6.0.391,FMLib:17.0.607.475
- definitions=2021-09-20_11,2021-09-20_01,2020-04-07_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0
- lowpriorityscore=0 priorityscore=1501 mlxscore=0 suspectscore=0
- spamscore=0 clxscore=1015 impostorscore=0 adultscore=0 phishscore=0
- mlxlogscore=999 bulkscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2109030001 definitions=main-2109210023
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="UTF-8"
+X-Originating-IP: [172.20.187.6]
+X-ClientProxiedBy: HQMAIL101.nvidia.com (172.20.187.10) To
+ DRHQMAIL107.nvidia.com (10.27.9.16)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: a6aceead-3bef-47b6-c7af-08d97cbeb128
+X-MS-TrafficTypeDiagnostic: DM5PR1201MB0043:
+X-Microsoft-Antispam-PRVS: <DM5PR1201MB004316AA32995E9F5C0ED460DFA19@DM5PR1201MB0043.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: mS8SZmwd4UVXnrOa1Y54TU3oIn/cTG+EFKD5bXWhlaqAs9GTUnwRA8zU+EFDNd7bRXy1AUz0VayJZz6BS5m8wxbD3nl8LlYkiSfEk/102L7V8JTRIndNiTdl7CiO4aK+JZo/HW3Tf5MxiMN/LO08E4FNW0XcTJgIZ9iAJQK8W9Ukde18NuxQPsbgPGzCi5FUImv/Q2v4WPAPLwzSHD6cjN2on98Y7cVcxTyd1sLP4D0CsNE9FWN/5lYcTc/RpSo3sQsNjkw4dXVlH0TeqGuWVAa58t2zVIjoCckxPjuYhpC7bu7UhfJePKvG9qjHyOV4SD9MKJ3UCqvF6AxsHQOAxdg6aKurGXEi3rl1g8DsTKf4Tl9RWdyZhX0BVEuUlKTsgfNhSVnpKMfYg5UwHaF/bjeGtIeGyUn3p+e1bNL1bckufZ1IzI3VUODENe0opwOXV6YMHNm3udaOBdTTEcKI611l5xYDNKSbBHYWB2sSQW4fahPyjV2qSIwQkecaFwqxQpZIqudEnorOfb/ehdiJzlLxLhHkdG0EYVKu8xaFne9qtukuNCHB7eyWeE/bs7BTDmoM3zcOf20mjewbUU/MF/ltsXRxuiK/DYqM7B5+0Pjr8s9JIw4CVWiHzqjEd2uKZG65tM88/8F7RtAq925nJdAM3pWvuNk6Ogw+J0RxdtYZ22JfpUW4S5S83kGYie+SDQFYT0B8/tdcwyOsodiGI/ofe9hVvX8SFN+IaASFibE=
+X-Forefront-Antispam-Report: CIP:216.228.112.32;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:schybrid01.nvidia.com;CAT:NONE;SFS:(4636009)(46966006)(36840700001)(8676002)(356005)(26005)(7636003)(4326008)(53546011)(83380400001)(82310400003)(36860700001)(508600001)(16526019)(186003)(86362001)(8936002)(9686003)(110136005)(2906002)(33716001)(316002)(54906003)(70586007)(70206006)(7416002)(47076005)(9576002)(426003)(336012)(5660300002)(39026012);DIR:OUT;SFP:1101;
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Sep 2021 05:14:30.6433
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: a6aceead-3bef-47b6-c7af-08d97cbeb128
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.112.32];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT013.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR1201MB0043
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 21/09/20 10:22AM, Darrick J. Wong wrote:
-> On Sat, Sep 18, 2021 at 10:24:08PM +0530, riteshh wrote:
-> > On 21/09/17 06:30PM, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <djwong@kernel.org>
-> > >
-> > > Our current "advice" to people using persistent memory and FSDAX who
-> > > wish to recover upon receipt of a media error (aka 'hwpoison') event
-> > > from ACPI is to punch-hole that part of the file and then pwrite it,
-> > > which will magically cause the pmem to be reinitialized and the poison
-> > > to be cleared.
-> > >
-> > > Punching doesn't make any sense at all -- the (re)allocation on pwrite
-> > > does not permit the caller to specify where to find blocks, which means
-> > > that we might not get the same pmem back.  This pushes the user farther
-> > > away from the goal of reinitializing poisoned memory and leads to
-> > > complaints about unnecessary file fragmentation.
-> > >
-> > > AFAICT, the only reason why the "punch and write" dance works at all is
-> > > that the XFS and ext4 currently call blkdev_issue_zeroout when
-> > > allocating pmem ahead of a write call.  Even a regular overwrite won't
-> > > clear the poison, because dax_direct_access is smart enough to bail out
-> > > on poisoned pmem, but not smart enough to clear it.  To be fair, that
-> > > function maps pages and has no idea what kinds of reads and writes the
-> > > caller might want to perform.
-> > >
-> > > Therefore, create a dax_zeroinit_range function that filesystems can to
-> > > reset the pmem contents to zero and clear hardware media error flags.
-> > > This uses the dax page zeroing helper function, which should ensure that
-> > > subsequent accesses will not trip over any pre-existing media errors.
-> >
-> > Thanks Darrick for such clear explaination of the problem and your solution.
-> > As I see from this thread [1], it looks like we are heading in this direction,
-> > so I thought of why not review this RFC patch series :)
-> >
-> > [1]: https://lore.kernel.org/all/CAPcyv4iAr_Vwwgqw+4wz0RQUXhUUJGGz7_T+p+W6tC4T+k+zNw@mail.gmail.com/
-> >
-> > >
-> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > ---
-> > >  fs/dax.c            |   93 +++++++++++++++++++++++++++++++++++++++++++++++++++
-> > >  include/linux/dax.h |    7 ++++
-> > >  2 files changed, 100 insertions(+)
-> > >
-> > >
-> > > diff --git a/fs/dax.c b/fs/dax.c
-> > > index 4e3e5a283a91..765b80d08605 100644
-> > > --- a/fs/dax.c
-> > > +++ b/fs/dax.c
-> > > @@ -1714,3 +1714,96 @@ vm_fault_t dax_finish_sync_fault(struct vm_fault *vmf,
-> > >  	return dax_insert_pfn_mkwrite(vmf, pfn, order);
-> > >  }
-> > >  EXPORT_SYMBOL_GPL(dax_finish_sync_fault);
-> > > +
-> > > +static loff_t
-> > > +dax_zeroinit_iter(struct iomap_iter *iter)
-> > > +{
-> > > +	struct iomap *iomap = &iter->iomap;
-> > > +	const struct iomap *srcmap = iomap_iter_srcmap(iter);
-> > > +	const u64 start = iomap->addr + iter->pos - iomap->offset;
-> > > +	const u64 nr_bytes = iomap_length(iter);
-> > > +	u64 start_page = start >> PAGE_SHIFT;
-> > > +	u64 nr_pages = nr_bytes >> PAGE_SHIFT;
-> > > +	int ret;
-> > > +
-> > > +	if (!iomap->dax_dev)
-> > > +		return -ECANCELED;
-> > > +
-> > > +	/*
-> > > +	 * The physical extent must be page aligned because that's what the dax
-> > > +	 * function requires.
-> > > +	 */
-> > > +	if (!PAGE_ALIGNED(start | nr_bytes))
-> > > +		return -ECANCELED;
-> > > +
-> > > +	/*
-> > > +	 * The dax function, by using pgoff_t, is stuck with unsigned long, so
-> > > +	 * we must check for overflows.
-> > > +	 */
-> > > +	if (start_page >= ULONG_MAX || start_page + nr_pages > ULONG_MAX)
-> > > +		return -ECANCELED;
-> > > +
-> > > +	/* Must be able to zero storage directly without fs intervention. */
-> > > +	if (iomap->flags & IOMAP_F_SHARED)
-> > > +		return -ECANCELED;
-> > > +	if (srcmap != iomap)
-> > > +		return -ECANCELED;
-> > > +
-> > > +	switch (iomap->type) {
-> > > +	case IOMAP_MAPPED:
-> > > +		while (nr_pages > 0) {
-> > > +			/* XXX function only supports one page at a time?! */
-> > > +			ret = dax_zero_page_range(iomap->dax_dev, start_page,
-> > > +					1);
-> > > +			if (ret)
-> > > +				return ret;
-> > > +			start_page++;
-> > > +			nr_pages--;
-> > > +		}
-> > > +
-> > > +		fallthrough;
-> > > +	case IOMAP_UNWRITTEN:
-> > > +		return nr_bytes;
-> > > +	}
-> > > +
-> > > +	/* Reject holes, inline data, or delalloc extents. */
-> > > +	return -ECANCELED;
-> >
-> > We reject holes here, but the other vfs plumbing patch [2] mentions
-> > "Holes and unwritten extents are left untouched.".
-> > Shouldn't we just return nr_bytes for IOMAP_HOLE case as well?
->
-> I'm not entirely sure what we should do for holes and unwritten extents,
-> as you can tell from the gross inconsistency between the comment and the
-> code. :/
->
-> On block devices, I think we rely on the behavior that writing to disk
-> will clear the device's error state (via LBA remapping or some other
-> strategy).  I think this means iomap_zeroinit can skip unwritten extents
-> because reads and read faults will be satisfied from the zero page and
-> writeback (or direct writes) will trigger the drive firmware.
->
-> On FSDAX devices, reads are fulfilled by zeroing the user buffer, and
-> read faults with the (dax) zero page.  Writes and write faults won't
-> clear the poison (unlike disks).  So I guess this means that
-> dax_zeroinit *does* have to act on unwritten areas.
->
-> Ok.  I'll make those changes.
+On Tuesday, 21 September 2021 6:05:30 AM AEST Sierra Guiza, Alejandro (Alex=
+) wrote:
+>=20
+> On 9/20/2021 3:53 AM, Alistair Popple wrote:
+> > On Tuesday, 14 September 2021 2:16:01 AM AEST Alex Sierra wrote:
+> >> In order to configure device public in test_hmm, two module parameters
+> >> should be passed, which correspond to the SP start address of each
+> >> device (2) spm_addr_dev0 & spm_addr_dev1. If no parameters are passed,
+> >> private device type is configured.
+> > It's a pity that testing this seems to require some amount of special s=
+etup to
+> > test. Is there a way this could be made to work on a more standard setup
+> > similar to how DEVICE_PRIVATE is tested?
+> Hi Alistair
+> We tried to do it as simpler as possible. Unfortunately, there are two ma=
+in
+> requirements to register dev memory as DEVICE_PUBLIC type. This memory mu=
+st
+> NOT be accessed by any memory allocator (SLAB, SLOB, SLUB) plus, it has=20
+> to be
+> CPU coherently accessed.  We also want to avoid aliasing the same PFNs for
+> different page types (regular system memory and DEVICE_PUBLIC). So we don=
+'t
+> want the reserved memory to be part of the kernel's memory map before we=
+=20
+> call
+> memremap_pages. A transparent way of doing it, without any special HW, was
+> setting a portion of system memory as SPM (Special purpose memory). And u=
+se
+> this as our =E2=80=9Cdevice fake=E2=80=9D memory.
 
-Yes, I guess unwritten extents still have extents blocks allocated with
-generally a bit marked (to mark it as unwritten). So there could still be
-a need to clear the poison for this in case of DAX.
+Ok, I think it's great that we can test this without special HW but the boot
+time configuration is still a bit annoying. Would it be possible to allocate
+memory fitting the above requirements by hot unplugging it with something l=
+ike
+offline_and_remove_memory()?
 
->
-> As for holes -- on the one hand, one could argue that zero-initializing
-> a hole makes no sense and should be an error.  OTOH one could make an
-> equally compelling argument that it's merely a nop.  Thoughts?
+I also don't see why the DEVICE_PRIVATE and DEVICE_PUBLIC testing should be
+mutually exclusive - why can't we test both without reloading the module?
 
-So in case of holes consider this case (please correct if any of my
-understanding below is wrong/incomplete).
-If we have a large hole and if someone tries to do write to that area.
-1. Then from what I understood from the code FS will try and allocate some disk
-   blocks (could these blocks be marked with HWpoison as FS has no way of
-   knowing it?).
-2. If yes, then after allocating those blocks dax_direct_access will fail (as
-   you had mentioned above). But it won't clear the HWposion.
-3. Then the user again will have to clear using this API. But that is only for
-   a given extent which is some part of the hole which FS allocated.
-Now above could be repeated until the entire hole range is covered.
-Is that above understanding correct?
+ - Alistair
 
-If yes, then maybe it all depends on what sort of gurantee the API is providing.
-If using the API on the given range guarantees that the entire file range will
-not have any blocks with HWpoison then I guess we may have to cover the
-IOMAP_HOLE case as well?
-If not, then maybe we could explicitly mentioned this in the API documentation.
-
-Please help correct if any of above does not make any sense. It will help me
-understand this use case better.
-
--ritesh
-
->
-> --D
->
-> > [2]: "vfs: add a zero-initialization mode to fallocate"
+> Regards,
+> Alex Sierra
+>=20
 > >
-> > Although I am not an expert in this area, but the rest of the patch looks
-> > very well crafted to me. Thanks again for such details :)
+> >> Signed-off-by: Alex Sierra <alex.sierra@amd.com>
+> >> ---
+> >> v5:
+> >> Remove devmem->pagemap.type =3D MEMORY_DEVICE_PRIVATE at
+> >> dmirror_allocate_chunk that was forcing to configure pagemap.type
+> >> to MEMORY_DEVICE_PRIVATE
+> >>
+> >> v6:
+> >> Check for null pointers for resource and memremap references
+> >> at dmirror_allocate_chunk
+> >>
+> >> v7:
+> >> Due to patch dropped from these patch series "kernel: resource:
+> >> lookup_resource as exported symbol", lookup_resource was not longer a
+> >> callable function. This was used in public device configuration, to
+> >> get start and end addresses, to create pgmap->range struct. This
+> >> information is now taken directly from the spm_addr_devX parameters and
+> >> the fixed size DEVMEM_CHUNK_SIZE.
+> >> ---
+> >>   lib/test_hmm.c      | 66 +++++++++++++++++++++++++++++++------------=
+=2D-
+> >>   lib/test_hmm_uapi.h |  1 +
+> >>   2 files changed, 47 insertions(+), 20 deletions(-)
+> >>
+> >> diff --git a/lib/test_hmm.c b/lib/test_hmm.c
+> >> index 3cd91ca31dd7..ef27e355738a 100644
+> >> --- a/lib/test_hmm.c
+> >> +++ b/lib/test_hmm.c
+> >> @@ -33,6 +33,16 @@
+> >>   #define DEVMEM_CHUNK_SIZE		(256 * 1024 * 1024U)
+> >>   #define DEVMEM_CHUNKS_RESERVE		16
+> >>  =20
+> >> +static unsigned long spm_addr_dev0;
+> >> +module_param(spm_addr_dev0, long, 0644);
+> >> +MODULE_PARM_DESC(spm_addr_dev0,
+> >> +		"Specify start address for SPM (special purpose memory) used for de=
+vice 0. By setting this Generic device type will be used. Make sure spm_add=
+r_dev1 is set too");
+> >> +
+> >> +static unsigned long spm_addr_dev1;
+> >> +module_param(spm_addr_dev1, long, 0644);
+> >> +MODULE_PARM_DESC(spm_addr_dev1,
+> >> +		"Specify start address for SPM (special purpose memory) used for de=
+vice 1. By setting this Generic device type will be used. Make sure spm_add=
+r_dev0 is set too");
+> >> +
+> >>   static const struct dev_pagemap_ops dmirror_devmem_ops;
+> >>   static const struct mmu_interval_notifier_ops dmirror_min_ops;
+> >>   static dev_t dmirror_dev;
+> >> @@ -450,11 +460,11 @@ static int dmirror_write(struct dmirror *dmirror=
+, struct hmm_dmirror_cmd *cmd)
+> >>   	return ret;
+> >>   }
+> >>  =20
+> >> -static bool dmirror_allocate_chunk(struct dmirror_device *mdevice,
+> >> +static int dmirror_allocate_chunk(struct dmirror_device *mdevice,
+> >>   				   struct page **ppage)
+> >>   {
+> >>   	struct dmirror_chunk *devmem;
+> >> -	struct resource *res;
+> >> +	struct resource *res =3D NULL;
+> >>   	unsigned long pfn;
+> >>   	unsigned long pfn_first;
+> >>   	unsigned long pfn_last;
+> >> @@ -462,17 +472,29 @@ static bool dmirror_allocate_chunk(struct dmirro=
+r_device *mdevice,
+> >>  =20
+> >>   	devmem =3D kzalloc(sizeof(*devmem), GFP_KERNEL);
+> >>   	if (!devmem)
+> >> -		return false;
+> >> +		return -ENOMEM;
+> >>  =20
+> >> -	res =3D request_free_mem_region(&iomem_resource, DEVMEM_CHUNK_SIZE,
+> >> -				      "hmm_dmirror");
+> >> -	if (IS_ERR(res))
+> >> -		goto err_devmem;
+> >> +	if (!spm_addr_dev0 && !spm_addr_dev1) {
+> >> +		res =3D request_free_mem_region(&iomem_resource, DEVMEM_CHUNK_SIZE,
+> >> +					      "hmm_dmirror");
+> >> +		if (IS_ERR_OR_NULL(res))
+> >> +			goto err_devmem;
+> >> +		devmem->pagemap.range.start =3D res->start;
+> >> +		devmem->pagemap.range.end =3D res->end;
+> >> +		devmem->pagemap.type =3D MEMORY_DEVICE_PRIVATE;
+> >> +		mdevice->zone_device_type =3D HMM_DMIRROR_MEMORY_DEVICE_PRIVATE;
+> >> +	} else if (spm_addr_dev0 && spm_addr_dev1) {
+> >> +		devmem->pagemap.range.start =3D MINOR(mdevice->cdevice.dev) ?
+> >> +							spm_addr_dev0 :
+> >> +							spm_addr_dev1;
+> >> +		devmem->pagemap.range.end =3D devmem->pagemap.range.start +
+> >> +					    DEVMEM_CHUNK_SIZE - 1;
+> >> +		devmem->pagemap.type =3D MEMORY_DEVICE_PUBLIC;
+> >> +		mdevice->zone_device_type =3D HMM_DMIRROR_MEMORY_DEVICE_PUBLIC;
+> >> +	} else {
+> >> +		pr_err("Both spm_addr_dev parameters should be set\n");
+> >> +	}
+> >>  =20
+> >> -	mdevice->zone_device_type =3D HMM_DMIRROR_MEMORY_DEVICE_PRIVATE;
+> >> -	devmem->pagemap.type =3D MEMORY_DEVICE_PRIVATE;
+> >> -	devmem->pagemap.range.start =3D res->start;
+> >> -	devmem->pagemap.range.end =3D res->end;
+> >>   	devmem->pagemap.nr_range =3D 1;
+> >>   	devmem->pagemap.ops =3D &dmirror_devmem_ops;
+> >>   	devmem->pagemap.owner =3D mdevice;
+> >> @@ -493,10 +515,14 @@ static bool dmirror_allocate_chunk(struct dmirro=
+r_device *mdevice,
+> >>   		mdevice->devmem_capacity =3D new_capacity;
+> >>   		mdevice->devmem_chunks =3D new_chunks;
+> >>   	}
+> >> -
+> >>   	ptr =3D memremap_pages(&devmem->pagemap, numa_node_id());
+> >> -	if (IS_ERR(ptr))
+> >> +	if (IS_ERR_OR_NULL(ptr)) {
+> >> +		if (ptr)
+> >> +			ret =3D PTR_ERR(ptr);
+> >> +		else
+> >> +			ret =3D -EFAULT;
+> >>   		goto err_release;
+> >> +	}
+> >>  =20
+> >>   	devmem->mdevice =3D mdevice;
+> >>   	pfn_first =3D devmem->pagemap.range.start >> PAGE_SHIFT;
+> >> @@ -529,7 +555,8 @@ static bool dmirror_allocate_chunk(struct dmirror_=
+device *mdevice,
+> >>  =20
+> >>   err_release:
+> >>   	mutex_unlock(&mdevice->devmem_lock);
+> >> -	release_mem_region(devmem->pagemap.range.start, range_len(&devmem->p=
+agemap.range));
+> >> +	if (res)
+> >> +		release_mem_region(devmem->pagemap.range.start, range_len(&devmem->=
+pagemap.range));
+> >>   err_devmem:
+> >>   	kfree(devmem);
+> >>  =20
+> >> @@ -1097,10 +1124,8 @@ static int dmirror_device_init(struct dmirror_d=
+evice *mdevice, int id)
+> >>   	if (ret)
+> >>   		return ret;
+> >>  =20
+> >> -	/* Build a list of free ZONE_DEVICE private struct pages */
+> >> -	dmirror_allocate_chunk(mdevice, NULL);
+> >> -
+> >> -	return 0;
+> >> +	/* Build a list of free ZONE_DEVICE struct pages */
+> >> +	return dmirror_allocate_chunk(mdevice, NULL);
+> >>   }
+> >>  =20
+> >>   static void dmirror_device_remove(struct dmirror_device *mdevice)
+> >> @@ -1113,8 +1138,9 @@ static void dmirror_device_remove(struct dmirror=
+_device *mdevice)
+> >>   				mdevice->devmem_chunks[i];
+> >>  =20
+> >>   			memunmap_pages(&devmem->pagemap);
+> >> -			release_mem_region(devmem->pagemap.range.start,
+> >> -					   range_len(&devmem->pagemap.range));
+> >> +			if (devmem->pagemap.type =3D=3D MEMORY_DEVICE_PRIVATE)
+> >> +				release_mem_region(devmem->pagemap.range.start,
+> >> +						   range_len(&devmem->pagemap.range));
+> >>   			kfree(devmem);
+> >>   		}
+> >>   		kfree(mdevice->devmem_chunks);
+> >> diff --git a/lib/test_hmm_uapi.h b/lib/test_hmm_uapi.h
+> >> index ee88701793d5..00259d994410 100644
+> >> --- a/lib/test_hmm_uapi.h
+> >> +++ b/lib/test_hmm_uapi.h
+> >> @@ -65,6 +65,7 @@ enum {
+> >>   enum {
+> >>   	/* 0 is reserved to catch uninitialized type fields */
+> >>   	HMM_DMIRROR_MEMORY_DEVICE_PRIVATE =3D 1,
+> >> +	HMM_DMIRROR_MEMORY_DEVICE_PUBLIC,
+> >>   };
+> >>  =20
+> >>   #endif /* _LIB_TEST_HMM_UAPI_H */
+> >>
 > >
-> > -ritesh
 > >
-> > >
-> > > +}
-> > > +
-> > > +/*
-> > > + * Initialize storage mapped to a DAX-mode file to a known value and ensure the
-> > > + * media are ready to accept read and write commands.  This requires the use of
-> > > + * the dax layer's zero page range function to write zeroes to a pmem region
-> > > + * and to reset any hardware media error state.
-> > > + *
-> > > + * The physical extents must be aligned to page size.  The file must be backed
-> > > + * by a pmem device.  The extents returned must not require copy on write (or
-> > > + * any other mapping interventions from the filesystem) and must be contiguous.
-> > > + * @done will be set to true if the reset succeeded.
-> > > + *
-> > > + * Returns 0 if the zero initialization succeeded, -ECANCELED if the storage
-> > > + * mappings do not support zero initialization, -EOPNOTSUPP if the device does
-> > > + * not support it, or the usual negative errno.
-> > > + */
-> > > +int
-> > > +dax_zeroinit_range(struct inode *inode, loff_t pos, u64 len,
-> > > +		   const struct iomap_ops *ops)
-> > > +{
-> > > +	struct iomap_iter iter = {
-> > > +		.inode		= inode,
-> > > +		.pos		= pos,
-> > > +		.len		= len,
-> > > +		.flags		= IOMAP_REPORT,
-> > > +	};
-> > > +	int ret;
-> > > +
-> > > +	if (!IS_DAX(inode))
-> > > +		return -EINVAL;
-> > > +	if (pos + len > i_size_read(inode))
-> > > +		return -EINVAL;
-> > > +
-> > > +	while ((ret = iomap_iter(&iter, ops)) > 0)
-> > > +		iter.processed = dax_zeroinit_iter(&iter);
-> > > +	return ret;
-> > > +}
-> > > +EXPORT_SYMBOL_GPL(dax_zeroinit_range);
-> > > diff --git a/include/linux/dax.h b/include/linux/dax.h
-> > > index 2619d94c308d..3c873f7c35ba 100644
-> > > --- a/include/linux/dax.h
-> > > +++ b/include/linux/dax.h
-> > > @@ -129,6 +129,8 @@ struct page *dax_layout_busy_page(struct address_space *mapping);
-> > >  struct page *dax_layout_busy_page_range(struct address_space *mapping, loff_t start, loff_t end);
-> > >  dax_entry_t dax_lock_page(struct page *page);
-> > >  void dax_unlock_page(struct page *page, dax_entry_t cookie);
-> > > +int dax_zeroinit_range(struct inode *inode, loff_t pos, u64 len,
-> > > +			const struct iomap_ops *ops);
-> > >  #else
-> > >  #define generic_fsdax_supported		NULL
-> > >
-> > > @@ -174,6 +176,11 @@ static inline dax_entry_t dax_lock_page(struct page *page)
-> > >  static inline void dax_unlock_page(struct page *page, dax_entry_t cookie)
-> > >  {
-> > >  }
-> > > +static inline int dax_zeroinit_range(struct inode *inode, loff_t pos, u64 len,
-> > > +		const struct iomap_ops *ops)
-> > > +{
-> > > +	return -EOPNOTSUPP;
-> > > +}
-> > >  #endif
-> > >
-> > >  #if IS_ENABLED(CONFIG_DAX)
-> > >
+> >
+>=20
+
+
+
+
