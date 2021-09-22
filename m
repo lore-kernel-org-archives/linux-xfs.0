@@ -2,86 +2,74 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E069C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Sep 2021 16:17:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8872C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Sep 2021 17:37:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8507D611EE
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Sep 2021 16:17:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 89B1A61181
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Sep 2021 17:37:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236620AbhIVQTW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 22 Sep 2021 12:19:22 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52172 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236523AbhIVQTW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 22 Sep 2021 12:19:22 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2ACCA611CA;
-        Wed, 22 Sep 2021 16:17:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1632327472;
-        bh=6xURudNGYFT+xwYFM4dvhTcedWRpJiT5e99ox4zjrhs=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Y3SCLQrkEgSPf1zbBPqsN/FVhCqcugzS3Yvd5BxN/kwq0CfayFHwL16bQNG+qr+J5
-         kPZLNA3Tl/R0w7HPkcwGBlXb5dxelVzgFF77cn9gh74BHVWxW4ZKGxedybL18GbAFb
-         yIx9dVao/YNjpgszsTe2lqPm+o9h6fY+18Yza5MB1tcRHzfhFuviGDW4DDWnS61CX7
-         GWUr/l3efWsZxDTc+nijNfj9FmbTmZeheeTMcQ4tU/pnzBOBBkQC9rX5T1oGH+eN5W
-         IXYsNNjqVjZhMZ+70c5iZKlQN6ReT+76h1oHzwgB7eiLS0ELBy1L+DYfZiJB0PeRWD
-         mYPAHa9PeBEEA==
-Date:   Wed, 22 Sep 2021 09:17:51 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     chandan.babu@oracle.com, chandanrlinux@gmail.com,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 03/14] xfs: dynamically allocate btree scrub context
- structure
-Message-ID: <20210922161751.GG570615@magnolia>
-References: <163192854958.416199.3396890438240296942.stgit@magnolia>
- <163192856634.416199.12496831484611764326.stgit@magnolia>
- <YUmbJvitO5DeRR5D@infradead.org>
+        id S236840AbhIVRig (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 22 Sep 2021 13:38:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44954 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236717AbhIVRig (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Sep 2021 13:38:36 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10AD9C061574;
+        Wed, 22 Sep 2021 10:37:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:In-Reply-To:References;
+        bh=ARgc5BTNEQt9FG8904QxPv30VGpYKOfYo9r3bA9lDKg=; b=WlNfNytjOVO7nSmbZow+kLL5Bv
+        QPQCXq6UGc8G/xHRilX5R+ZKUS3aUd5BN4wUMDXyVmSCGgVflBgsJtunv2ZBqe3yDium0DTkrLDiV
+        Zn30Roqv3z5VvhpTS0DKThiJQ+oUjF8sq4YPDPedTh+IcsTa/L5kYrHXvyCswlo074FOdjtqzAq/x
+        jJ5JAPTRsmJSVTDql+KqOD7FBVqZoxzWli44Ta5ZW/J+IIr6wVNR9LqRJDUc/lJKO+Og2a3BWhWmN
+        3BnxXzhifhAKuzy3W+rL8B/QNHTo0urx5ynSL/omjsIM5speYb3PRLxlLeflxcyJ+LHGiW6gF3AQ4
+        +pmHFLMA==;
+Received: from [2001:4bb8:184:72db:3a8e:1992:6715:6960] (helo=localhost)
+        by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1mT68e-004zdc-Mh; Wed, 22 Sep 2021 17:34:58 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Dan Williams <dan.j.williams@intel.com>,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        Dave Jiang <dave.jiang@intel.com>
+Cc:     Mike Snitzer <snitzer@redhat.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        linux-xfs@vger.kernel.org, nvdimm@lists.linux.dev,
+        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+Subject: dax_supported() related cleanups v2
+Date:   Wed, 22 Sep 2021 19:34:28 +0200
+Message-Id: <20210922173431.2454024-1-hch@lst.de>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YUmbJvitO5DeRR5D@infradead.org>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 21, 2021 at 09:43:18AM +0100, Christoph Hellwig wrote:
-> On Fri, Sep 17, 2021 at 06:29:26PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Reorganize struct xchk_btree so that we can dynamically size the context
-> > structure to fit the type of btree cursor that we have.  This will
-> > enable us to use memory more efficiently once we start adding very tall
-> > btree types.
-> 
-> So bs->levels[0].has_lastkey replaces bs->firstkey?  Can you explain
-> a bit more how this works for someone not too familiar with the scrub
-> code.
+Hi all,
 
-For each record and key that the btree scrubber encounters, it needs to
-know if it should call ->{recs,keys}_inorder to check the ordering of
-each item in the btree block.
+this series first clarifies how to use fsdax in the Kconfig help a bit,
+and then untangles the code path that checks if fsdax is supported.
 
-Hmm.  Come to think of it, we could use "cur->bc_ptrs[level] > 0"
-instead of tracking it separately.  Ok, that'll become a separate
-cleanup patch to reduce memory further.  Good question!
+Changes since v1:
+ - improve the FS_DAX Kconfig help text further
+ - write a proper commit log for a patch missing it
 
-> > +static inline size_t
-> > +xchk_btree_sizeof(unsigned int levels)
-> > +{
-> > +	return sizeof(struct xchk_btree) +
-> > +				(levels * sizeof(struct xchk_btree_levels));
-> 
-> This should probably use struct_size().
-
-Assuming it's ok with sending a typed null pointer into a macro:
-
-	return struct_size((struct xchk_btree *)NULL, levels, nr_levels);
-
-Then ok.
-
---D
+Diffstat
+ drivers/dax/super.c   |  191 +++++++++++++++++++-------------------------------
+ drivers/md/dm-table.c |    9 --
+ drivers/md/dm.c       |    2 
+ fs/Kconfig            |   21 ++++-
+ fs/ext2/super.c       |    3 
+ fs/ext4/super.c       |    3 
+ fs/xfs/xfs_super.c    |   16 +++-
+ include/linux/dax.h   |   41 +---------
+ 8 files changed, 117 insertions(+), 169 deletions(-)
