@@ -2,130 +2,73 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BE43C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Sep 2021 04:13:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86C01C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Sep 2021 05:26:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3282C60F02
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Sep 2021 04:13:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6A53760F21
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Sep 2021 05:26:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230514AbhIVEPY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 22 Sep 2021 00:15:24 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56896 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229495AbhIVEPY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 22 Sep 2021 00:15:24 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E144C61131;
-        Wed, 22 Sep 2021 04:13:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1632284035;
-        bh=8D1IagfIKZeKbgZvrNFVsValHcrqDaHRd1Ma/26N9ac=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=EtPhBWn41/0ih90TiHFm4j+Xd743V8njMjzEngPPd3WAdmt305OyTGs4VJRQTe9hG
-         b8rkay02SczcNowdnMj/lBr7JtzNO1RewwMPMFcR9pyCWU80s0zniAsyXfxbkfnrbF
-         0O+gyIO3aBlG5JiT0ET9JmkIgbfKw+c9M4brc9jsy7L65V+BeOC2fXqR7Cyxa+vr56
-         H4/tDCkEE2eqhGw7cPIiRUsVBb1YN6HkQz7koY1nsBalzlyCe5pGZAaDm9t4NJHQt9
-         9HcNKjEeVngs0MQHZN9oRx/h+guvmibU9rMsEwWnRIH/FWu+OpkcVEzMp7c69j7BkN
-         1igj5DGbzNqoQ==
-Date:   Tue, 21 Sep 2021 21:13:54 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Dan Williams <dan.j.williams@intel.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Jane Chu <jane.chu@oracle.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Subject: Re: [PATCH 3/5] vfs: add a zero-initialization mode to fallocate
-Message-ID: <20210922041354.GE570615@magnolia>
-References: <163192864476.417973.143014658064006895.stgit@magnolia>
- <163192866125.417973.7293598039998376121.stgit@magnolia>
- <20210921004431.GO1756565@dread.disaster.area>
- <YUmYbxW70Ub2ytOc@infradead.org>
- <CAPcyv4jF1UNW5rdXX3q2hfDcvzGLSnk=1a0C0i7_UjdivuG+pQ@mail.gmail.com>
- <20210922023801.GD570615@magnolia>
- <20210922035907.GR1756565@dread.disaster.area>
+        id S232126AbhIVF15 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 22 Sep 2021 01:27:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43308 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231896AbhIVF14 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Sep 2021 01:27:56 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8FBAC061574;
+        Tue, 21 Sep 2021 22:26:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=E4QmGfF8PZSooK1M54CX3ENwACNcGJeNerat+O5YjO4=; b=QpyRbwQS1oTQwsC5euvirJgCBw
+        keBMcROQSMtHTMrynH3d96bmqnrLfigJdMdXxUpe71Zwx7WQHxnmyS4XzNjP6SmmfOsKhbtFLeWUj
+        +tdgixCGUHoFv74yqAfbHUHZghnl7lIlu2cXocAQ40qp5NnWQE7AigssJdJAtnJPTyRdwZaCh00/+
+        JwqOmYYQWN+dlQhj4hXhu43qSg9gjSvKRP4pCc/8UgWuWLgcF6Mvnf3iesHrMggAX70H5SvZo4u3P
+        yP1AQazdOMXTIw18zkB3k/E+vJen7brfoTCEE52EnwC+X7CGuYbz/qy0GHcizuSzgKO172K1FbpRz
+        2PkkYvGw==;
+Received: from hch by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1mSukx-004TQ5-6I; Wed, 22 Sep 2021 05:25:27 +0000
+Date:   Wed, 22 Sep 2021 06:25:19 +0100
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>,
+        Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        dan.j.williams@intel.com
+Subject: Re: [PATCH 3/3] ext2: remove dax EXPERIMENTAL warning
+Message-ID: <YUq+P/5NG61CqszV@infradead.org>
+References: <1631726561-16358-1-git-send-email-sandeen@redhat.com>
+ <1631726561-16358-4-git-send-email-sandeen@redhat.com>
+ <20210917094707.GD6547@quack2.suse.cz>
+ <YUSRHjynaozAuO+P@infradead.org>
+ <20210922023622.GC570615@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210922035907.GR1756565@dread.disaster.area>
+In-Reply-To: <20210922023622.GC570615@magnolia>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 22, 2021 at 01:59:07PM +1000, Dave Chinner wrote:
-> On Tue, Sep 21, 2021 at 07:38:01PM -0700, Darrick J. Wong wrote:
-> > On Tue, Sep 21, 2021 at 07:16:26PM -0700, Dan Williams wrote:
-> > > On Tue, Sep 21, 2021 at 1:32 AM Christoph Hellwig <hch@infradead.org> wrote:
-> > > >
-> > > > On Tue, Sep 21, 2021 at 10:44:31AM +1000, Dave Chinner wrote:
-> > > > > I think this wants to be a behavioural modifier for existing
-> > > > > operations rather than an operation unto itself. i.e. similar to how
-> > > > > KEEP_SIZE modifies ALLOC behaviour but doesn't fundamentally alter
-> > > > > the guarantees ALLOC provides userspace.
-> > > > >
-> > > > > In this case, the change of behaviour over ZERO_RANGE is that we
-> > > > > want physical zeros to be written instead of the filesystem
-> > > > > optimising away the physical zeros by manipulating the layout
-> > > > > of the file.
-> > > >
-> > > > Yes.
-> > > >
-> > > > > Then we have and API that looks like:
-> > > > >
-> > > > >       ALLOC           - allocate space efficiently
-> > > > >       ALLOC | INIT    - allocate space by writing zeros to it
-> > > > >       ZERO            - zero data and preallocate space efficiently
-> > > > >       ZERO | INIT     - zero range by writing zeros to it
-> > > > >
-> > > > > Which seems to cater for all the cases I know of where physically
-> > > > > writing zeros instead of allocating unwritten extents is the
-> > > > > preferred behaviour of fallocate()....
-> > > >
-> > > > Agreed.  I'm not sure INIT is really the right name, but I can't come
-> > > > up with a better idea offhand.
-> > > 
-> > > FUA? As in, this is a forced-unit-access zeroing all the way to media
-> > > bypassing any mechanisms to emulate zero-filled payloads on future
-> > > reads.
+On Tue, Sep 21, 2021 at 07:36:22PM -0700, Darrick J. Wong wrote:
+> 'still a mess' isn't all that useful for figuring out what still needs
+> to be done and splitting up the work.  Do you have items beyond my own
+> list below?
 > 
-> Yes, that's the semantic we want, but FUA already defines specific
-> data integrity behaviour in the storage stack w.r.t. volatile
-> caches.
-> 
-> Also, FUA is associated with devices - it's low level storage jargon
-> and so is not really appropriate to call a user interface operation
-> FUA where users have no idea what a "unit" or "access" actually
-> means.
-> 
-> Hence we should not overload this name with some other operation
-> that does not have (and should not have) explicit data integrity
-> requirements. That will just cause confusion for everyone.
-> 
-> > FALLOC_FL_ZERO_EXISTING, because you want to zero the storage that
-> > already exists at that file range?
-> 
-> IMO that doesn't work as a behavioural modifier for ALLOC because
-> the ALLOC semantics are explicitly "don't touch existing user
-> data"...
+>  - still arguing over what exactly FALLOC_FL_ZERO_REINIT_WHATEVER_PONIES
+>    should be doing
+>  - no reflink support, encompassing:
+>  - hwpoison from mmap regions really ought to tell the fs that bad stuff
+>    happened
+>  - mm rmap can't handle more than one owner
 
-Well since you can't preallocate /and/ zerorange at the same time...
-
-/* For FALLOC_FL_ZERO_RANGE, write zeroes to pre-existing mapped storage. */
-#define FALLOC_FL_ZERO_EXISTING		(0x80)
-
-/* For preallocation, allocate written extents and set the contents to
- * zeroes. */
-#define FALLOC_FL_ALLOC_WRITE_ZEROES	(0x80)
-
---D
-
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+My main really big item is that we're still mounting through a fake
+block device, suporting partitions and all that crap.  We need to sort
+out the whole story of how pmem/nvdimm is actually treated, because
+what we have right now is not sustainable at all.
