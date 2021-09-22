@@ -2,202 +2,202 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F207EC433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Sep 2021 05:28:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A13DFC433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Sep 2021 05:30:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D0C7E61166
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Sep 2021 05:28:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8A629611C6
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Sep 2021 05:30:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232060AbhIVFa2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 22 Sep 2021 01:30:28 -0400
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:63650 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231896AbhIVFa0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Sep 2021 01:30:26 -0400
-Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 18M4xd5T032721;
-        Wed, 22 Sep 2021 01:28:25 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=pp1; bh=47nIbvR+LFyg6zGGaJMRcbkXTukftCGHc5HemEoOdkw=;
- b=qWBSaiqES+nHVYbcQqkLt6utuvDfWRhD6JM9O0GKlSZVbYi/xiBLs97pvI6jUukJMtqA
- Ij5avpxVNEae4qu3Apbxk/b809acpTReFZeok/5ISrfhGvdkXBarVxro1ZP49NTfwO6n
- xi4F3q08cukjtsrBujA6VW47JbX5AvsTk9yx2EstCVVzF7kh1d5QHWzeYIiV9H+zfIpX
- KGeb9t9tWMC62OzOLdOQBT+dzkyZsXsRKX1Qd2veH2sTsawUzjBYpszv4XuLKAvqTyEe
- ZTy4K+H8RgXuTh7PcrbZSz7xd5UII+zuTuuc3f4PIShILl+lsDjacF3fGYROzcerfJVS bg== 
-Received: from ppma05fra.de.ibm.com (6c.4a.5195.ip4.static.sl-reverse.com [149.81.74.108])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3b7wxw0jaf-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 22 Sep 2021 01:28:25 -0400
-Received: from pps.filterd (ppma05fra.de.ibm.com [127.0.0.1])
-        by ppma05fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 18M5N6dp012809;
-        Wed, 22 Sep 2021 05:28:23 GMT
-Received: from b06cxnps3074.portsmouth.uk.ibm.com (d06relay09.portsmouth.uk.ibm.com [9.149.109.194])
-        by ppma05fra.de.ibm.com with ESMTP id 3b7q69t6ug-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 22 Sep 2021 05:28:22 +0000
-Received: from d06av23.portsmouth.uk.ibm.com (d06av23.portsmouth.uk.ibm.com [9.149.105.59])
-        by b06cxnps3074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 18M5SK1Y42992012
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 22 Sep 2021 05:28:20 GMT
-Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 29A6BA405D;
-        Wed, 22 Sep 2021 05:28:20 +0000 (GMT)
-Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 9D813A4040;
-        Wed, 22 Sep 2021 05:28:19 +0000 (GMT)
-Received: from localhost (unknown [9.43.105.212])
-        by d06av23.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Wed, 22 Sep 2021 05:28:19 +0000 (GMT)
-Date:   Wed, 22 Sep 2021 10:58:18 +0530
-From:   riteshh <riteshh@linux.ibm.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>, jane.chu@oracle.com,
-        linux-xfs@vger.kernel.org, hch@infradead.org,
-        dan.j.williams@intel.com, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 3/5] vfs: add a zero-initialization mode to fallocate
-Message-ID: <20210922052818.rszl76zkmx2tbgu2@riteshh-domain>
-References: <163192864476.417973.143014658064006895.stgit@magnolia>
- <163192866125.417973.7293598039998376121.stgit@magnolia>
- <20210921004431.GO1756565@dread.disaster.area>
+        id S232136AbhIVFcV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 22 Sep 2021 01:32:21 -0400
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:52689 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232187AbhIVFcU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Sep 2021 01:32:20 -0400
+Received: from dread.disaster.area (pa49-195-238-16.pa.nsw.optusnet.com.au [49.195.238.16])
+        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 621EF82B910;
+        Wed, 22 Sep 2021 15:30:48 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1mSuqF-00FIz4-Gk; Wed, 22 Sep 2021 15:30:47 +1000
+Date:   Wed, 22 Sep 2021 15:30:47 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     xfs <linux-xfs@vger.kernel.org>,
+        Chandan Babu R <chandanrlinux@gmail.com>,
+        Allison Henderson <allison.henderson@oracle.com>,
+        Eric Sandeen <sandeen@redhat.com>,
+        Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: kernel 5.16 sprint planning
+Message-ID: <20210922053047.GS1756565@dread.disaster.area>
+References: <20210922030252.GE570642@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210921004431.GO1756565@dread.disaster.area>
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: vkVkkma6gF4He-fsjlrIMC2Ekg4QstdM
-X-Proofpoint-ORIG-GUID: vkVkkma6gF4He-fsjlrIMC2Ekg4QstdM
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.182.1,Aquarius:18.0.790,Hydra:6.0.391,FMLib:17.0.607.475
- definitions=2021-09-22_01,2021-09-20_01,2020-04-07_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 mlxscore=0
- suspectscore=0 bulkscore=0 lowpriorityscore=0 clxscore=1015 phishscore=0
- mlxlogscore=999 adultscore=0 malwarescore=0 impostorscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2109200000 definitions=main-2109220033
+In-Reply-To: <20210922030252.GE570642@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
+        a=DzKKRZjfViQTE5W6EVc0VA==:117 a=DzKKRZjfViQTE5W6EVc0VA==:17
+        a=kj9zAlcOel0A:10 a=7QKq2e-ADPsA:10 a=7-415B0cAAAA:8
+        a=1VOY59-uw8JwzIQ1OJ4A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 21/09/21 10:44AM, Dave Chinner wrote:
-> On Fri, Sep 17, 2021 at 06:31:01PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> >
-> > Add a new mode to fallocate to zero-initialize all the storage backing a
-> > file.
-> >
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  fs/open.c                   |    5 +++++
-> >  include/linux/falloc.h      |    1 +
-> >  include/uapi/linux/falloc.h |    9 +++++++++
-> >  3 files changed, 15 insertions(+)
-> >
-> >
-> > diff --git a/fs/open.c b/fs/open.c
-> > index daa324606a41..230220b8f67a 100644
-> > --- a/fs/open.c
-> > +++ b/fs/open.c
-> > @@ -256,6 +256,11 @@ int vfs_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
-> >  	    (mode & ~FALLOC_FL_INSERT_RANGE))
-> >  		return -EINVAL;
-> >
-> > +	/* Zeroinit should only be used by itself and keep size must be set. */
-> > +	if ((mode & FALLOC_FL_ZEROINIT_RANGE) &&
-> > +	    (mode != (FALLOC_FL_ZEROINIT_RANGE | FALLOC_FL_KEEP_SIZE)))
-> > +		return -EINVAL;
-> > +
-> >  	/* Unshare range should only be used with allocate mode. */
-> >  	if ((mode & FALLOC_FL_UNSHARE_RANGE) &&
-> >  	    (mode & ~(FALLOC_FL_UNSHARE_RANGE | FALLOC_FL_KEEP_SIZE)))
-> > diff --git a/include/linux/falloc.h b/include/linux/falloc.h
-> > index f3f0b97b1675..4597b416667b 100644
-> > --- a/include/linux/falloc.h
-> > +++ b/include/linux/falloc.h
-> > @@ -29,6 +29,7 @@ struct space_resv {
-> >  					 FALLOC_FL_PUNCH_HOLE |		\
-> >  					 FALLOC_FL_COLLAPSE_RANGE |	\
-> >  					 FALLOC_FL_ZERO_RANGE |		\
-> > +					 FALLOC_FL_ZEROINIT_RANGE |	\
-> >  					 FALLOC_FL_INSERT_RANGE |	\
-> >  					 FALLOC_FL_UNSHARE_RANGE)
-> >
-> > diff --git a/include/uapi/linux/falloc.h b/include/uapi/linux/falloc.h
-> > index 51398fa57f6c..8144403b6102 100644
-> > --- a/include/uapi/linux/falloc.h
-> > +++ b/include/uapi/linux/falloc.h
-> > @@ -77,4 +77,13 @@
-> >   */
-> >  #define FALLOC_FL_UNSHARE_RANGE		0x40
-> >
-> > +/*
-> > + * FALLOC_FL_ZEROINIT_RANGE is used to reinitialize storage backing a file by
-> > + * writing zeros to it.  Subsequent read and writes should not fail due to any
-> > + * previous media errors.  Blocks must be not be shared or require copy on
-> > + * write.  Holes and unwritten extents are left untouched.  This mode must be
-> > + * used with FALLOC_FL_KEEP_SIZE.
-> > + */
-> > +#define FALLOC_FL_ZEROINIT_RANGE	0x80
->
-> Hmmmm.
->
-> I think this wants to be a behavioural modifier for existing
-> operations rather than an operation unto itself. i.e. similar to how
-> KEEP_SIZE modifies ALLOC behaviour but doesn't fundamentally alter
-> the guarantees ALLOC provides userspace.
->
-> In this case, the change of behaviour over ZERO_RANGE is that we
-> want physical zeros to be written instead of the filesystem
-> optimising away the physical zeros by manipulating the layout
-> of the file.
->
-> There's been requests in the past for a way to make ALLOC also
-> behave like this - in the case that users want fully allocated space
-> to be preallocated so their applications don't take unwritten extent
-> conversion penalties on first writes. Databases are an example here,
-> where setup of a new WAL file isn't performance critical, but writes
-> to the WAL are and the WAL files are write-once. Hence they always
-> take unwritten conversion penalties and the only way around that is
-> to physically zero the files before use...
->
-> So it seems to me what we actually need here is a "write zeroes"
-> modifier to fallocate() operations to tell the filesystem that the
-> application really wants it to write zeroes over that range, not
-> just guarantee space has been physically allocated....
->
-> Then we have and API that looks like:
->
-> 	ALLOC		- allocate space efficiently
-> 	ALLOC | INIT	- allocate space by writing zeros to it
-> 	ZERO		- zero data and preallocate space efficiently
-> 	ZERO | INIT	- zero range by writing zeros to it
->
-> Which seems to cater for all the cases I know of where physically
-> writing zeros instead of allocating unwritten extents is the
-> preferred behaviour of fallocate()....
->
+On Tue, Sep 21, 2021 at 08:02:52PM -0700, Darrick J. Wong wrote:
+> Hi everyone,
+> 
+> Now that the LPC fs track is over, I would like to take nominations for
+> which patchsets do people think they'd like to submit for 5.16, as well
+> as volunteers to review those submissions.
+> 
+> I can think of a few things that /could/ be close to ready:
+> 
+>  - Allison's logged xattrs (submitted for review during 5.15 and Dave
+>    started playing around with it)
+> 
+>  - Dave's logging parallelization patches (submitted during 5.14 but
+>    pulled back at the last minute because of unrelated log recovery
+>    issues uncovered)
+> 
+>  - Chandan's large extent counter series, which requires the btree
+>    cursor reworking that I sent last week
+> 
+>  - A patchset from me to reduce sharply the size of transaction
+>    reservations when rmap and reflink are enabled.
 
-If that's the case we can just have FALLOC_FL_ZEROWRITE_RANGE?
-Where FALLOC_FL_ZERO_RANGE & FALLOC_FL_ZEROWRITE_RANGE are mutually exclusive.
+OK, that'll need perf testing as that will definitely change how
+reservations and metadata writeback interact. Smaller log
+reservations mean less log pressure and/or more concurrent
+transactions in flight for a given log size. That may show up
+new scalability bottlenecks or make existing ones worse....
 
-AFAIU,
-/* FALLOC_FL_ZERO_RANGE may optimize the underlying blocks with unwritten
- * extents if the filesystem allows so, but with FALLOC_FL_ZEROWRITE_RANGE,
- * the underlying blocks are guranteed to be written with zeros.
- * In case of hole it will be preallocated with written extents and will be
- * initialized with zeroes. If FALLOC_FL_KEEP_SIZE is specified then the
- * inode size will remain the same.
- *
- * Essentially similar to FALLOC_FL_ZERO_RANGE but with gurantees that
- * underlying storage has written extents initialized with zeroes.
- */
-#define FALLOC_FL_ZEROWRITE_RANGE		0x80
+> Would anyone like to add items to this list, or remove items?
 
-Does that make sense?
+I have the intent whiteout series to go with the logged attrs, and
+I'm trying to get the next round of perag refcounting for shrink
+series sorted out in time, too.
 
--ritesh
+> For each of the items /not/ authored by me, I ask the collaborators on
+> each: Do you intend to submit this for consideration for 5.16?  And do
+> you have any reviewers in mind?
+
+I'm trying to do final rebase and testing before posting them all
+again, been a bit held back by weird test problems and regressions
+outside XFS over the past couple of days...
+
+Also, can we get all the patch sets being worked on in a sprint
+posted in git trees to make it easy for everyone to pull in and
+update code as it gets changed?
+
+> For everyone else: Do you see something you'd like to see land in 5.16?
+
+For future sprints, this seems like it would be a good question to
+ask at the time the merge window for the previous cycle opens. Code
+that is not proposed/ready for a merge sprint by -rc2 isn't a
+candidate for the sprint. Then the sprint runs -rc3 to -rc5, and we
+have everything finalised and merged by -rc6 and soaking in for-next
+for 1-2 weeks before the merge window opens...
+
+> Would you be willing to pair off with the author(s) to conduct a review?
+
+Sure.
+
+But keep in mind that formal pairing is not the _only_ approach
+here, and in some cases won't be the best approach. Not everyone has
+the same level of knowledge and/or expertise, and some things
+require more review than others.  Sprints don't change the need for
+different types of review to be performed, just the time constraints
+for performing and addressing them.
+
+Another thing that is clear from the the inode inactivation and
+delayed attribute series is that performance and scalability testing
+is needed for significant new functionality. This is something that
+needs to be done early on in the sprint so we have time to can
+address problems during the review sprint. This isn't code review,
+but it is certainly analysis that needs to be performed.
+
+Are there things other than code review that we need to focus on
+during a sprint? I think testing the code being reviewed is also
+a core part of the sprint process, such that we get code tested in a
+wider variety of environments before it gets merged...
+
+> -------
+> 
+> Carlos asked after the FS track today about what kinds of things need
+> working on.  I can think of two things needing attention in xfsprogs:
+> 
+>  - Helping Eric deal with the xfs_perag changes that require mockups.
+>    (I might just revisit this, since I already threw a ton of patches at
+>    the list.)
+
+I threw patches at it, too, to implement the functionality rather
+than just mock it up...
+
+>  - Protofiles: I occasionally get pings both internally and via PM from
+>    people wanting to create smallest-possible prepopulated XFS images
+>    from a directory tree.  Exploding minimum-sized images aren't a great
+>    idea because the log and AGs will be very small, but:
+> 
+>    Given that we have a bitrotting tool (xfs_estimate) to guesstimate
+>    the size of the image, mkfs support for ye olde 4th Ed. Unix
+>    protofiles, and I have a script to generate protofiles, should
+>    someone clean all that up into a single tool that converts a
+>    directory tree into an image?  Preferably one with as large an AG+log
+>    as possible?
+> 
+>    Or should we choose to withdraw all that functionality?
+
+I'm not sure this is materially better than mkfs with appropriate
+geometry, then mounting and using rsync to copy the data across.
+the xfsprogs protofile copying is inherently single threaded until
+we have fully fledged modification concurrency capability in
+userspace libxfs....
+
+>    I have a slight greybeard preference for keeping protofiles on the
+>    grounds that protofiles have been supported on various Unix mkfs for
+>    almost 50 years, and they're actually compatible with the JFS tools
+>    and <cough> other things like AIX and HPUX.  But the rest of you can
+>    overrule me... ;)
+
+I'm not that sentimental :) If it's not useful or can be implemented
+with other standard tools, then we should get rid of it.
+
+> Does anyone have any suggestions beyond that?
+
+For xfsprogs?
+
+Fix the concurrency mess in libxfs
+Fix the unnecessary command line parsing library complexity
+properly abstract buftargs across both xfsprogs and kernel code
+code cleanups in repair, db, etc.
+Optimising mkfs defaults for SSDs
+port the common part of log recovery to libxfs to replace libxlog
+rewrite xfs_logprint to use the new libxfs port
+rewrite xfs_logprint to be sane and understandable
+build a mkfs config file library for common use cases
+Modernise xfs_fsr with an eye to shrink requirements
+AIO/io_uring for xfs_fsr
+AIO/io_uring for metadump/restore
+AIO/io_uring for xfs_copy
+Add PSI support for memory usage feed back to libxfs
+Implement shrinkers for trimming caches from PSI events
+Port fs/xfs/xfs_buf.c to replace the libxfs buffer cache
+AIO/io_uring support for libxfs buffer cache
+Fix the repair prefetching mess
+optimise IO for million AG filesystems
+Clean up the repair memory usage/cache sizing/threading heuristics
+....
+
+Need more?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
