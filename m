@@ -2,121 +2,73 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88314C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Sep 2021 18:54:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A947C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Sep 2021 18:55:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 76ADD61131
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Sep 2021 18:54:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 68AF961131
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Sep 2021 18:55:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231967AbhIVSzo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 22 Sep 2021 14:55:44 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59846 "EHLO mail.kernel.org"
+        id S237152AbhIVS5Z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 22 Sep 2021 14:57:25 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60312 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229732AbhIVSzj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 22 Sep 2021 14:55:39 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E232C61131;
-        Wed, 22 Sep 2021 18:54:08 +0000 (UTC)
+        id S235203AbhIVS5X (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 22 Sep 2021 14:57:23 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 9434961107;
+        Wed, 22 Sep 2021 18:55:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1632336849;
-        bh=nw4rmUXhQ4DXG70zhOKzoN09kTCH7w6/WXX6pxQ3kws=;
+        s=k20201202; t=1632336953;
+        bh=AqgfVJ5cM8U3pTTGRVeSteDUaaxgAHiGuA4RFy1awVg=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=B9GFQPcRBA3kUuYk2dMAQiHm9KgtgisBscnO7fqiigAehyKvcCJ1413IwKa8Ils8l
-         i75tdgLJjgC3GlYrz5MAVrj1rEiwl8jBVrrv6JzXGLKPbSuDxYvIAKBJ+SwdV6ijAq
-         /To8nbl3xqm61zTQv7lHdldZDwx85Cp2G8sOSuIWo5iPYZJCFz3MuDo0yj8D4D+4Ax
-         wPRunMATJlIH8XwwC24azoN3EFFKr3byQx6nM0zgDvUGWCejP7bWmggHCTr0AGbpzM
-         UsKbcDIvwV605UQpeTKdUbw5RSb3CnPz46UwGGAjhrBOUVo9a5p0fJ1CWOxLk9E/CA
-         Ikj06RMzF+mMw==
-Date:   Wed, 22 Sep 2021 11:54:08 -0700
+        b=sPgtTl/GV/QOD9xbfhiWwLxpgszrATn8JH1T6OnmDfFYsGETdLXsIBth5NJ3rxAvG
+         WP+IuGO/phPA3pBMhRYvkR/76Uct93t/x02sGks1GLrAyrJaLrfz2lfpKiXwVCoI3+
+         Zv13acOfM0jBlwwB40W9UzUOJ/EbMLiZcuwhh5R3bqGO+YJd25XyWDXh0DvTx1zWAj
+         6ZrND1MFvm+l7/ipI2gmXPA3EUSHyhqAj+iJhd5RZtYcS85nTp8aaiUkVyX0qUZqqI
+         UVql/C8GBc0zpVSLWxatdoYeAOLkv4CrHTUP7+EQqt+2Q1J1Q25jxL6W63AvpXPgQ7
+         LpsvhajzNaNBA==
+Date:   Wed, 22 Sep 2021 11:55:53 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     jane.chu@oracle.com, linux-xfs@vger.kernel.org, hch@infradead.org,
-        dan.j.williams@intel.com, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 2/5] iomap: use accelerated zeroing on a block device to
- zero a file range
-Message-ID: <20210922185408.GL570615@magnolia>
-References: <163192864476.417973.143014658064006895.stgit@magnolia>
- <163192865577.417973.11122330974455662098.stgit@magnolia>
- <20210921223343.GP1756565@dread.disaster.area>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Dave Chinner <david@fromorbit.com>, chandan.babu@oracle.com,
+        chandanrlinux@gmail.com, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 11/14] xfs: dynamically allocate cursors based on
+ maxlevels
+Message-ID: <20210922185553.GM570615@magnolia>
+References: <163192854958.416199.3396890438240296942.stgit@magnolia>
+ <163192861018.416199.11733078081556457241.stgit@magnolia>
+ <20210920230635.GM1756565@dread.disaster.area>
+ <YUmf9Zmp01WcEw0T@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210921223343.GP1756565@dread.disaster.area>
+In-Reply-To: <YUmf9Zmp01WcEw0T@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 22, 2021 at 08:33:43AM +1000, Dave Chinner wrote:
-> On Fri, Sep 17, 2021 at 06:30:55PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Sep 21, 2021 at 10:03:49AM +0100, Christoph Hellwig wrote:
+> On Tue, Sep 21, 2021 at 09:06:35AM +1000, Dave Chinner wrote:
+> > On Fri, Sep 17, 2021 at 06:30:10PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > > 
+> > > Replace the statically-sized btree cursor zone with dynamically sized
+> > > allocations so that we can reduce the memory overhead for per-AG bt
+> > > cursors while handling very tall btrees for rt metadata.
 > > 
-> > Create a function that ensures that the storage backing part of a file
-> > contains zeroes and will not trip over old media errors if the contents
-> > are re-read.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  fs/iomap/direct-io.c  |   75 +++++++++++++++++++++++++++++++++++++++++++++++++
-> >  include/linux/iomap.h |    3 ++
-> >  2 files changed, 78 insertions(+)
-> > 
-> > 
-> > diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-> > index 4ecd255e0511..48826a49f976 100644
-> > --- a/fs/iomap/direct-io.c
-> > +++ b/fs/iomap/direct-io.c
-> > @@ -652,3 +652,78 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
-> >  	return iomap_dio_complete(dio);
-> >  }
-> >  EXPORT_SYMBOL_GPL(iomap_dio_rw);
-> > +
-> > +static loff_t
-> > +iomap_zeroinit_iter(struct iomap_iter *iter)
-> > +{
-> > +	struct iomap *iomap = &iter->iomap;
-> > +	const struct iomap *srcmap = iomap_iter_srcmap(iter);
-> > +	const u64 start = iomap->addr + iter->pos - iomap->offset;
-> > +	const u64 nr_bytes = iomap_length(iter);
-> > +	sector_t sector = start >> SECTOR_SHIFT;
-> > +	sector_t nr_sectors = nr_bytes >> SECTOR_SHIFT;
-> > +	int ret;
-> > +
-> > +	if (!iomap->bdev)
-> > +		return -ECANCELED;
-> > +
-> > +	/* The physical extent must be sector-aligned for block layer APIs. */
-> > +	if ((start | nr_bytes) & (SECTOR_SIZE - 1))
-> > +		return -EINVAL;
-> > +
-> > +	/* Must be able to zero storage directly without fs intervention. */
-> > +	if (iomap->flags & IOMAP_F_SHARED)
-> > +		return -ECANCELED;
-> > +	if (srcmap != iomap)
-> > +		return -ECANCELED;
-> > +
-> > +	switch (iomap->type) {
-> > +	case IOMAP_MAPPED:
-> > +		ret = blkdev_issue_zeroout(iomap->bdev, sector, nr_sectors,
-> > +				GFP_KERNEL, 0);
+> > Hmmmmm. We do a *lot* of btree cursor allocation and freeing under
+> > load. Keeping that in a single slab rather than using heap memory is
+> > a good idea for stuff like this for many reasons...
 > 
-> Pretty sure this needs to use BLKDEV_ZERO_NOUNMAP.
+> Or rather a few slabs for the different kind of cursors.  But otherwise
+> agreed.
 
-Oops, good catch!
+I think I prefer to let Chandan decide if there are going to be enough
+heavily fragmented files to warrant a second slab for maxlevels>9 files.
+We should probably be selective about which cursor maxheight we want to
+use depending on whether or not the file really needs it.
 
 --D
-
-> The whole point of this is having zeroed space allocated ready for
-> write on return, so having the hardware optimise away the physical
-> storage zeroing by punching a hole in it's backing store and then
-> potentially getting ENOSPC on the next write to this range would be
-> .... suboptimal.
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
