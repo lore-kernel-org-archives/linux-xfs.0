@@ -7,88 +7,74 @@ X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCC1BC433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Sep 2021 19:47:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A796C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Sep 2021 20:27:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A9A0F60EFF
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Sep 2021 19:47:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E0EC610D1
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Sep 2021 20:27:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237222AbhIVTtA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 22 Sep 2021 15:49:00 -0400
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:40026 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S237233AbhIVTs7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Sep 2021 15:48:59 -0400
-Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 18MJdOMa031093;
-        Wed, 22 Sep 2021 15:47:23 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=pp1; bh=Xn5kaHlxC1t6hBYGmqMTm6+qiz4j73N8Po8GIgKcQnM=;
- b=tMzsMvhCf3M0S/D6cMXPTnFETfwHXohJFOdMjJgEJxn/egC7eZoBT0chvE2XKuZjrhx7
- 6rRzJEHB9LXryq7dsGHLb6uYNbwqAuUf70QktaR98ByTg+3StAW5sCBKgLI37xZloRJX
- zdPkl86yhy/lvPELkqyJ2Q6v1Ne4tTEYPhGDHpqqHF2A1YcGb5rsW7Wnplh+KZn47mTY
- nh+V5pvTuy3IUfjdjtRHi29q3oVgv72EH0SR/zZWzhXPjFnT+dlK2702xANXloPl0TMF
- rHPRFJ3zqsr43UmmdekLlN7PVqBJ4mJyhA3StveFJ37gsFYqyTlZcRGka9+1h9/aNkyw OA== 
-Received: from ppma03fra.de.ibm.com (6b.4a.5195.ip4.static.sl-reverse.com [149.81.74.107])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3b8au3g4gv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 22 Sep 2021 15:47:22 -0400
-Received: from pps.filterd (ppma03fra.de.ibm.com [127.0.0.1])
-        by ppma03fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 18MJbnOC018600;
-        Wed, 22 Sep 2021 19:47:20 GMT
-Received: from b06cxnps4074.portsmouth.uk.ibm.com (d06relay11.portsmouth.uk.ibm.com [9.149.109.196])
-        by ppma03fra.de.ibm.com with ESMTP id 3b7q6k275y-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 22 Sep 2021 19:47:20 +0000
-Received: from d06av24.portsmouth.uk.ibm.com (d06av24.portsmouth.uk.ibm.com [9.149.105.60])
-        by b06cxnps4074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 18MJlHgs52560150
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 22 Sep 2021 19:47:17 GMT
-Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id A51E44204B;
-        Wed, 22 Sep 2021 19:47:17 +0000 (GMT)
-Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 4234F4204D;
-        Wed, 22 Sep 2021 19:47:17 +0000 (GMT)
-Received: from localhost (unknown [9.43.105.212])
-        by d06av24.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Wed, 22 Sep 2021 19:47:17 +0000 (GMT)
-Date:   Thu, 23 Sep 2021 01:17:16 +0530
-From:   riteshh <riteshh@linux.ibm.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     jane.chu@oracle.com, linux-xfs@vger.kernel.org, hch@infradead.org,
-        dan.j.williams@intel.com, linux-fsdevel@vger.kernel.org
+        id S237640AbhIVU2g (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 22 Sep 2021 16:28:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55796 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237636AbhIVU2g (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Sep 2021 16:28:36 -0400
+Received: from mail-pg1-x52d.google.com (mail-pg1-x52d.google.com [IPv6:2607:f8b0:4864:20::52d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6DE8C061574
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Sep 2021 13:27:05 -0700 (PDT)
+Received: by mail-pg1-x52d.google.com with SMTP id 81so448794pgb.0
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Sep 2021 13:27:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20210112.gappssmtp.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=V7B4Op7jxUlLVva1iz44pF/hK7De7vsXXP5PesX0X2Q=;
+        b=b7N5Ex30Cv4q+WMABFbt2GD823yZYE1yCO+IWqtkdCuFr8PiQnuLUnlsD+lW58qZgY
+         Iz56sfrm27QwPIHkuaODUTAGg892LRl0+jY3ubsyWnqth93LaBv06cht9p3O4AYueyg7
+         R2BLnpcUQHu/Z6JPvnqRnTr9nMUvGDRRPK4MEiUlvINNv2nsaqSQl9fxSjet3gChtaqI
+         fs0Vgju2kmKfooEISsAWCYoyJtjaww/qVwLHWRN5gIn49BIr2hSe4QiXoI2Hh0IH57cu
+         NwZy1+9th0sRpJFxYW0kWFVlWedBppj8jbAyeEK4j1iLzqrsUtsOPwmg4GZKxVr5qEKN
+         cOzQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=V7B4Op7jxUlLVva1iz44pF/hK7De7vsXXP5PesX0X2Q=;
+        b=ZBVx0D/SEKgkveKNre1GTy94cymGIQZLguC7nGSZhot1XY2IuyxVDV8H8Yig+ayV/m
+         ptf6P8gCijWfabI6DoXR4qzQqT2F9fG6mGQneKVmdQbbUlN43+Az74r0Ap9nAEXQykVT
+         KNcg2jgQWdlYUeYPoqxpea/iNWPrvYcf8KJXsIk+vBhSLzvHIG3d4kxIcwqxO56UUk0B
+         AvIlGZqxgeAUDlqVy24pRzVVsgybz8FRQGdJdxvg6rx/ogsNShTv9butfBIrL50q6H6a
+         L7HMB/fXy0ukSgeaRrSR3aWVjO4HAEq3beAxz8cY4WkNsdESOL/PPNYoLundQWMJA2oc
+         bcAw==
+X-Gm-Message-State: AOAM533sTOVZp5UI8ZPQ5ORXw/6cgNLglP75WsBIPb3x2/vrW2EZl8lL
+        C4WvtIkhPWw+tqY3GISyIw1zFsClGCFL99Y4KVCw/w==
+X-Google-Smtp-Source: ABdhPJyuDHAkKuwK0QN430F33N+99p9Vhf/jnqueqby8Lbqd2MmB68lW2/3XLrOqyt9IzAM1A4MSEcYu0LJrdwU3Gck=
+X-Received: by 2002:a62:7f87:0:b0:444:b077:51ef with SMTP id
+ a129-20020a627f87000000b00444b07751efmr850946pfd.61.1632342425287; Wed, 22
+ Sep 2021 13:27:05 -0700 (PDT)
+MIME-Version: 1.0
+References: <163192864476.417973.143014658064006895.stgit@magnolia>
+ <163192865031.417973.8372869475521627214.stgit@magnolia> <20210918165408.ivsue463wpiitzjw@riteshh-domain>
+ <20210920172225.GA570615@magnolia> <20210921040708.ojbbbt6i524wgsaj@riteshh-domain>
+ <20210922182642.GJ570615@magnolia>
+In-Reply-To: <20210922182642.GJ570615@magnolia>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Wed, 22 Sep 2021 13:26:54 -0700
+Message-ID: <CAPcyv4iDSk+-azs52cw-Aqs7yn0_hifqNgKtM1c68Wu_xam8RQ@mail.gmail.com>
 Subject: Re: [PATCH 1/5] dax: prepare pmem for use by zero-initializing
  contents and clearing poisons
-Message-ID: <20210922194716.4qbp6bpeuhwpml3c@riteshh-domain>
-References: <163192864476.417973.143014658064006895.stgit@magnolia>
- <163192865031.417973.8372869475521627214.stgit@magnolia>
- <20210918165408.ivsue463wpiitzjw@riteshh-domain>
- <20210920172225.GA570615@magnolia>
- <20210921040708.ojbbbt6i524wgsaj@riteshh-domain>
- <20210922182642.GJ570615@magnolia>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210922182642.GJ570615@magnolia>
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: ytK7pLpwIG7dvfoonIUiFzUsMyka_5MV
-X-Proofpoint-ORIG-GUID: ytK7pLpwIG7dvfoonIUiFzUsMyka_5MV
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
-MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.182.1,Aquarius:18.0.790,Hydra:6.0.391,FMLib:17.0.607.475
- definitions=2021-09-22_07,2021-09-22_01,2020-04-07_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0
- mlxlogscore=999 suspectscore=0 priorityscore=1501 impostorscore=0
- mlxscore=0 clxscore=1015 phishscore=0 bulkscore=0 spamscore=0 adultscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2109200000 definitions=main-2109220128
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     riteshh <riteshh@linux.ibm.com>, Jane Chu <jane.chu@oracle.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 21/09/22 11:26AM, Darrick J. Wong wrote:
+On Wed, Sep 22, 2021 at 11:27 AM Darrick J. Wong <djwong@kernel.org> wrote:
+>
 > On Tue, Sep 21, 2021 at 09:37:08AM +0530, riteshh wrote:
 > > On 21/09/20 10:22AM, Darrick J. Wong wrote:
 > > > On Sat, Sep 18, 2021 at 10:24:08PM +0530, riteshh wrote:
@@ -112,8 +98,6 @@ On 21/09/22 11:26AM, Darrick J. Wong wrote:
 > > > > > allocating pmem ahead of a write call.  Even a regular overwrite won't
 > > > > > clear the poison, because dax_direct_access is smart enough to bail out
 > > > > > on poisoned pmem, but not smart enough to clear it.  To be fair, that
-> > > > >
-> > > > >
 > > > > > function maps pages and has no idea what kinds of reads and writes the
 > > > > > caller might want to perform.
 > > > > >
@@ -141,63 +125,63 @@ On 21/09/22 11:26AM, Darrick J. Wong wrote:
 > > > > > --- a/fs/dax.c
 > > > > > +++ b/fs/dax.c
 > > > > > @@ -1714,3 +1714,96 @@ vm_fault_t dax_finish_sync_fault(struct vm_fault *vmf,
-> > > > >  	return dax_insert_pfn_mkwrite(vmf, pfn, order);
+> > > > >         return dax_insert_pfn_mkwrite(vmf, pfn, order);
 > > > > >  }
 > > > > >  EXPORT_SYMBOL_GPL(dax_finish_sync_fault);
 > > > > > +
 > > > > > +static loff_t
 > > > > > +dax_zeroinit_iter(struct iomap_iter *iter)
 > > > > > +{
-> > > > > +	struct iomap *iomap = &iter->iomap;
-> > > > > +	const struct iomap *srcmap = iomap_iter_srcmap(iter);
-> > > > > +	const u64 start = iomap->addr + iter->pos - iomap->offset;
-> > > > > +	const u64 nr_bytes = iomap_length(iter);
-> > > > > +	u64 start_page = start >> PAGE_SHIFT;
-> > > > > +	u64 nr_pages = nr_bytes >> PAGE_SHIFT;
-> > > > > +	int ret;
+> > > > > +       struct iomap *iomap = &iter->iomap;
+> > > > > +       const struct iomap *srcmap = iomap_iter_srcmap(iter);
+> > > > > +       const u64 start = iomap->addr + iter->pos - iomap->offset;
+> > > > > +       const u64 nr_bytes = iomap_length(iter);
+> > > > > +       u64 start_page = start >> PAGE_SHIFT;
+> > > > > +       u64 nr_pages = nr_bytes >> PAGE_SHIFT;
+> > > > > +       int ret;
 > > > > > +
-> > > > > +	if (!iomap->dax_dev)
-> > > > > +		return -ECANCELED;
+> > > > > +       if (!iomap->dax_dev)
+> > > > > +               return -ECANCELED;
 > > > > > +
-> > > > > +	/*
-> > > > > +	 * The physical extent must be page aligned because that's what the dax
-> > > > > +	 * function requires.
-> > > > > +	 */
-> > > > > +	if (!PAGE_ALIGNED(start | nr_bytes))
-> > > > > +		return -ECANCELED;
+> > > > > +       /*
+> > > > > +        * The physical extent must be page aligned because that's what the dax
+> > > > > +        * function requires.
+> > > > > +        */
+> > > > > +       if (!PAGE_ALIGNED(start | nr_bytes))
+> > > > > +               return -ECANCELED;
 > > > > > +
-> > > > > +	/*
-> > > > > +	 * The dax function, by using pgoff_t, is stuck with unsigned long, so
-> > > > > +	 * we must check for overflows.
-> > > > > +	 */
-> > > > > +	if (start_page >= ULONG_MAX || start_page + nr_pages > ULONG_MAX)
-> > > > > +		return -ECANCELED;
+> > > > > +       /*
+> > > > > +        * The dax function, by using pgoff_t, is stuck with unsigned long, so
+> > > > > +        * we must check for overflows.
+> > > > > +        */
+> > > > > +       if (start_page >= ULONG_MAX || start_page + nr_pages > ULONG_MAX)
+> > > > > +               return -ECANCELED;
 > > > > > +
-> > > > > +	/* Must be able to zero storage directly without fs intervention. */
-> > > > > +	if (iomap->flags & IOMAP_F_SHARED)
-> > > > > +		return -ECANCELED;
-> > > > > +	if (srcmap != iomap)
-> > > > > +		return -ECANCELED;
+> > > > > +       /* Must be able to zero storage directly without fs intervention. */
+> > > > > +       if (iomap->flags & IOMAP_F_SHARED)
+> > > > > +               return -ECANCELED;
+> > > > > +       if (srcmap != iomap)
+> > > > > +               return -ECANCELED;
 > > > > > +
-> > > > > +	switch (iomap->type) {
-> > > > > +	case IOMAP_MAPPED:
-> > > > > +		while (nr_pages > 0) {
-> > > > > +			/* XXX function only supports one page at a time?! */
-> > > > > +			ret = dax_zero_page_range(iomap->dax_dev, start_page,
-> > > > > +					1);
-> > > > > +			if (ret)
-> > > > > +				return ret;
-> > > > > +			start_page++;
-> > > > > +			nr_pages--;
-> > > > > +		}
+> > > > > +       switch (iomap->type) {
+> > > > > +       case IOMAP_MAPPED:
+> > > > > +               while (nr_pages > 0) {
+> > > > > +                       /* XXX function only supports one page at a time?! */
+> > > > > +                       ret = dax_zero_page_range(iomap->dax_dev, start_page,
+> > > > > +                                       1);
+> > > > > +                       if (ret)
+> > > > > +                               return ret;
+> > > > > +                       start_page++;
+> > > > > +                       nr_pages--;
+> > > > > +               }
 > > > > > +
-> > > > > +		fallthrough;
-> > > > > +	case IOMAP_UNWRITTEN:
-> > > > > +		return nr_bytes;
-> > > > > +	}
+> > > > > +               fallthrough;
+> > > > > +       case IOMAP_UNWRITTEN:
+> > > > > +               return nr_bytes;
+> > > > > +       }
 > > > > > +
-> > > > > +	/* Reject holes, inline data, or delalloc extents. */
-> > > > > +	return -ECANCELED;
+> > > > > +       /* Reject holes, inline data, or delalloc extents. */
+> > > > > +       return -ECANCELED;
 > > > >
 > > > > We reject holes here, but the other vfs plumbing patch [2] mentions
 > > > > "Holes and unwritten extents are left untouched.".
@@ -222,20 +206,6 @@ On 21/09/22 11:26AM, Darrick J. Wong wrote:
 > required to allocate written zeroed extents and/or zero unwritten
 > extents and mark them written.  So we don't actually need to zero
 > unwritten extents.
-
-Oh yes, thanks for catching that.
-
-ext4 has this flag set for DAX inode in ext4_iomap_alloc()
-ext4_iomap_begin() -> ext4_iomap_alloc() ->
-	if (IS_DAX(inode))
-		m_flags = EXT4_GET_BLOCKS_CREATE_ZERO;
-
-Also,
-#define EXT4_GET_BLOCKS_CREATE_ZERO		(EXT4_GET_BLOCKS_CREATE | EXT4_GET_BLOCKS_ZERO)
-
-if EXT4_GET_BLOCKS_ZERO is set then we call
-ext4_map_blocks -> ext4_issue_zeroout() -> blkdev_issue_zeroout()
-
 >
 > > >
 > > > Ok.  I'll make those changes.
@@ -259,23 +229,6 @@ ext4_map_blocks -> ext4_issue_zeroout() -> blkdev_issue_zeroout()
 > Freshly allocated extents are zeroed via blkdev_issue_zeroout before
 > being mapped into the file, which will clear the poison.  That last bit
 > is only the reason why the punch-and-rewrite dance ever worked at all.
-
-Frankly speaking, this discussion actually got me thinking about what is special
-about punch and write (w/o making any assumptions) that it clears the poison?
-
-What about just punch hole alone?
-So I guess this too can clear the HWpoison on the next write (after fault ->
-allocating blocks for DAX -> this will call blkdev_issue_zeroout())
-but I guess the problem with this approach, as you mentioned, it may cause file
-fragmentation. Thisis since we may not get the same block back on next write
-after punch hole.
-
-Looking at the code of pmem driver, it is actually pmem_do_write() which
-clears the pmem HWpoison.
-
-And I guess the offset and size should be page_aligned because that's what calls
-dax_zero_page_range() which can clear the HWpoison in dax_iomap_zero().
-
 >
 > We'll have to make sure this poison clearing still happens even after
 > the dax/block layer divorce.
@@ -295,95 +248,15 @@ dax_zero_page_range() which can clear the HWpoison in dax_iomap_zero().
 >
 > Ok.  The short version is that zeroinit will ensure that subsequent
 > reads, writes, or faults to allocated file ranges won't have problems
-> with pre-existing poison flags.  If the user wants to fill sparse holes,
-> they can do that with a separate fallocate call.
+> with pre-existing poison flags.
 
-Yes, it is now clear to me.
-Thanks for taking time and replying.
+s/won't/likely won't/
 
--ritesh
+s/pre-existing/known pre-existing/
 
->
-> --D
->
-> > Please help correct if any of above does not make any sense. It will help me
-> > understand this use case better.
-> >
-> > -ritesh
-> >
-> > >
-> > > --D
-> > >
-> > > > [2]: "vfs: add a zero-initialization mode to fallocate"
-> > > >
-> > > > Although I am not an expert in this area, but the rest of the patch looks
-> > > > very well crafted to me. Thanks again for such details :)
-> > > >
-> > > > -ritesh
-> > > >
-> > > > >
-> > > > > +}
-> > > > > +
-> > > > > +/*
-> > > > > + * Initialize storage mapped to a DAX-mode file to a known value and ensure the
-> > > > > + * media are ready to accept read and write commands.  This requires the use of
-> > > > > + * the dax layer's zero page range function to write zeroes to a pmem region
-> > > > > + * and to reset any hardware media error state.
-> > > > > + *
-> > > > > + * The physical extents must be aligned to page size.  The file must be backed
-> > > > > + * by a pmem device.  The extents returned must not require copy on write (or
-> > > > > + * any other mapping interventions from the filesystem) and must be contiguous.
-> > > > > + * @done will be set to true if the reset succeeded.
-> > > > > + *
-> > > > > + * Returns 0 if the zero initialization succeeded, -ECANCELED if the storage
-> > > > > + * mappings do not support zero initialization, -EOPNOTSUPP if the device does
-> > > > > + * not support it, or the usual negative errno.
-> > > > > + */
-> > > > > +int
-> > > > > +dax_zeroinit_range(struct inode *inode, loff_t pos, u64 len,
-> > > > > +		   const struct iomap_ops *ops)
-> > > > > +{
-> > > > > +	struct iomap_iter iter = {
-> > > > > +		.inode		= inode,
-> > > > > +		.pos		= pos,
-> > > > > +		.len		= len,
-> > > > > +		.flags		= IOMAP_REPORT,
-> > > > > +	};
-> > > > > +	int ret;
-> > > > > +
-> > > > > +	if (!IS_DAX(inode))
-> > > > > +		return -EINVAL;
-> > > > > +	if (pos + len > i_size_read(inode))
-> > > > > +		return -EINVAL;
-> > > > > +
-> > > > > +	while ((ret = iomap_iter(&iter, ops)) > 0)
-> > > > > +		iter.processed = dax_zeroinit_iter(&iter);
-> > > > > +	return ret;
-> > > > > +}
-> > > > > +EXPORT_SYMBOL_GPL(dax_zeroinit_range);
-> > > > > diff --git a/include/linux/dax.h b/include/linux/dax.h
-> > > > > index 2619d94c308d..3c873f7c35ba 100644
-> > > > > --- a/include/linux/dax.h
-> > > > > +++ b/include/linux/dax.h
-> > > > > @@ -129,6 +129,8 @@ struct page *dax_layout_busy_page(struct address_space *mapping);
-> > > > >  struct page *dax_layout_busy_page_range(struct address_space *mapping, loff_t start, loff_t end);
-> > > > >  dax_entry_t dax_lock_page(struct page *page);
-> > > > >  void dax_unlock_page(struct page *page, dax_entry_t cookie);
-> > > > > +int dax_zeroinit_range(struct inode *inode, loff_t pos, u64 len,
-> > > > > +			const struct iomap_ops *ops);
-> > > > >  #else
-> > > > >  #define generic_fsdax_supported		NULL
-> > > > >
-> > > > > @@ -174,6 +176,11 @@ static inline dax_entry_t dax_lock_page(struct page *page)
-> > > > >  static inline void dax_unlock_page(struct page *page, dax_entry_t cookie)
-> > > > >  {
-> > > > >  }
-> > > > > +static inline int dax_zeroinit_range(struct inode *inode, loff_t pos, u64 len,
-> > > > > +		const struct iomap_ops *ops)
-> > > > > +{
-> > > > > +	return -EOPNOTSUPP;
-> > > > > +}
-> > > > >  #endif
-> > > > >
-> > > > >  #if IS_ENABLED(CONFIG_DAX)
-> > > > >
+i.e. the guarantees of this interface is that it will have tried its
+best to clean up media errors, and that may only be possible for pmem
+if latent poison has been previously notified to the driver, and if
+the driver supports error clearing. For example, if you're using
+memmap=ss!nn to emulate PMEM with a DRAM range with poison I expect
+that this routine will succeed even though no poison is corrected.
