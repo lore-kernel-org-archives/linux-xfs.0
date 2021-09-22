@@ -2,103 +2,103 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06A44C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Sep 2021 01:48:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A952C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Sep 2021 02:16:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B9B3760F4C
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Sep 2021 01:48:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4C73C60F23
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Sep 2021 02:16:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232537AbhIVBtu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 21 Sep 2021 21:49:50 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:60407 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230433AbhIVBtt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Sep 2021 21:49:49 -0400
-Received: from dread.disaster.area (pa49-195-238-16.pa.nsw.optusnet.com.au [49.195.238.16])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id E147B882B77;
-        Wed, 22 Sep 2021 11:48:06 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1mSrMi-00FFIs-Kc; Wed, 22 Sep 2021 11:48:04 +1000
-Date:   Wed, 22 Sep 2021 11:48:04 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Rustam Kovhaev <rkovhaev@gmail.com>
-Cc:     Eric Sandeen <sandeen@sandeen.net>,
-        Fengfei Xi <xi.fengfei@h3c.com>, darrick.wong@oracle.com,
-        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        tian.xianting@h3c.com
-Subject: Re: [PATCH] xfs: fix system crash caused by null bp->b_pages
-Message-ID: <20210922014804.GQ1756565@dread.disaster.area>
-References: <20201224095142.7201-1-xi.fengfei@h3c.com>
- <63d75865-84c6-0f76-81a2-058f4cad1d84@sandeen.net>
- <YUphLS+pXoVwPxMz@nuc10>
+        id S229731AbhIVCSH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 21 Sep 2021 22:18:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57444 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229640AbhIVCSH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Sep 2021 22:18:07 -0400
+Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32A44C061575
+        for <linux-xfs@vger.kernel.org>; Tue, 21 Sep 2021 19:16:38 -0700 (PDT)
+Received: by mail-pl1-x634.google.com with SMTP id w6so752512pll.3
+        for <linux-xfs@vger.kernel.org>; Tue, 21 Sep 2021 19:16:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20210112.gappssmtp.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=OosjfkLZh41x2OZZ5/Fq0+NUoloZ5quy7DhXoOzNYPo=;
+        b=sc0tCxyYdZFVlGPIIr0dwpCw4M1wGDO19NAxNhEcE9rrShoOnwk3EaHGa+aje94ke8
+         l0y0Rw+1YzMdkaA7wYUSc3Jh/PCUzrdAni7NzXATSJy8GQG01iqBASofOsgmNUm+3mb1
+         Bs6s6HiOMBSDjkac4hID0AsKAWOCNExqnHBvsYxkh33xNFy0kJEm21h1lejHfVQKMIQX
+         RESOjYS3rKj+nJP9MyN9vQj6r2vG96AKKusAHjEFho6mo0uGMIwpK1A6Wl/hGE14Bkvd
+         E+S7ZngUtI32asDf3QYZOgY6sBh7VoMVBSQJnWdVYPvzClvgz071WetnhBmcjqfkgq8+
+         cz1A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=OosjfkLZh41x2OZZ5/Fq0+NUoloZ5quy7DhXoOzNYPo=;
+        b=hIeiNlWFx0PGtb5U/FMHZLH4eOTkJXYNoQXtAZzRxdyxLjgZ/tY/oGfBwEQ8H7/pKe
+         TL8eKJwCiKokMs5hOtkg9h6IByLhV26KTnnKXAtzLSS5Df2PhwKJCrcVuZ+DDV7aluir
+         YfOESilpNb91DtJ7BuoB2r/zRrch7+8VlK20vVejdbajKRYCvTriH1GR+5fgEZAPINLf
+         RE4mqOYOj1cTH0qixAYFLfYwZjIgsyQpQw1qtfSUOVLr1SqoW5OthqBgBduMbh7l2zQc
+         0H5Z0fJGfWGEGATGsGY5IKyRYQYXVoq79qitW1q0/NnILpwNQgI+pHCZNLu6fH+RYIpu
+         ncfA==
+X-Gm-Message-State: AOAM5318DDlDBiNjyosc5tvD8HBQQPsS3VkMhAwnotSSVnFUm6Q1zxXP
+        z+obN3GbCWzLOlAqyCGLbREgRJDWUEeHJRYFQ7Cw5A==
+X-Google-Smtp-Source: ABdhPJyclj4v0WQt0eQovMB+LlfPq/vxMuTMkF+PGvJeKggTto8OLI38FoDxRLjHCfd/IDJyVuwNh+N03sjTTLWyTj8=
+X-Received: by 2002:a17:90a:f18f:: with SMTP id bv15mr8398509pjb.93.1632276997599;
+ Tue, 21 Sep 2021 19:16:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <YUphLS+pXoVwPxMz@nuc10>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
-        a=DzKKRZjfViQTE5W6EVc0VA==:117 a=DzKKRZjfViQTE5W6EVc0VA==:17
-        a=IkcTkHD0fZMA:10 a=7QKq2e-ADPsA:10 a=7-415B0cAAAA:8
-        a=7LpL5LFFSHU8rAMU7E4A:9 a=QEXdDO2ut3YA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+References: <163192864476.417973.143014658064006895.stgit@magnolia>
+ <163192866125.417973.7293598039998376121.stgit@magnolia> <20210921004431.GO1756565@dread.disaster.area>
+ <YUmYbxW70Ub2ytOc@infradead.org>
+In-Reply-To: <YUmYbxW70Ub2ytOc@infradead.org>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Tue, 21 Sep 2021 19:16:26 -0700
+Message-ID: <CAPcyv4jF1UNW5rdXX3q2hfDcvzGLSnk=1a0C0i7_UjdivuG+pQ@mail.gmail.com>
+Subject: Re: [PATCH 3/5] vfs: add a zero-initialization mode to fallocate
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Jane Chu <jane.chu@oracle.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 21, 2021 at 03:48:13PM -0700, Rustam Kovhaev wrote:
-> Hi Fengfei, Eric,
-> 
-> On Thu, Dec 24, 2020 at 01:35:32PM -0600, Eric Sandeen wrote:
-> > On 12/24/20 3:51 AM, Fengfei Xi wrote:
-> > > We have encountered the following problems several times:
-> > >     1、A raid slot or hardware problem causes block device loss.
-> > >     2、Continue to issue IO requests to the problematic block device.
-> > >     3、The system possibly crash after a few hours.
-> > 
-> > What kernel is this on?
-> > 
-> 
-> I have a customer that recently hit this issue on 4.12.14-122.74
-> SLE12-SP5 kernel.
+On Tue, Sep 21, 2021 at 1:32 AM Christoph Hellwig <hch@infradead.org> wrote:
+>
+> On Tue, Sep 21, 2021 at 10:44:31AM +1000, Dave Chinner wrote:
+> > I think this wants to be a behavioural modifier for existing
+> > operations rather than an operation unto itself. i.e. similar to how
+> > KEEP_SIZE modifies ALLOC behaviour but doesn't fundamentally alter
+> > the guarantees ALLOC provides userspace.
+> >
+> > In this case, the change of behaviour over ZERO_RANGE is that we
+> > want physical zeros to be written instead of the filesystem
+> > optimising away the physical zeros by manipulating the layout
+> > of the file.
+>
+> Yes.
+>
+> > Then we have and API that looks like:
+> >
+> >       ALLOC           - allocate space efficiently
+> >       ALLOC | INIT    - allocate space by writing zeros to it
+> >       ZERO            - zero data and preallocate space efficiently
+> >       ZERO | INIT     - zero range by writing zeros to it
+> >
+> > Which seems to cater for all the cases I know of where physically
+> > writing zeros instead of allocating unwritten extents is the
+> > preferred behaviour of fallocate()....
+>
+> Agreed.  I'm not sure INIT is really the right name, but I can't come
+> up with a better idea offhand.
 
-I think need to engage SuSE support and engineering, then, as this
-is not a kernel supported by upstream devs. I'd be saying the same
-thing if this was an RHEL frankenkernel, too.
-
-> Here is my backtrace:
-> [965887.179651] XFS (veeamimage0): Mounting V5 Filesystem
-> [965887.848169] XFS (veeamimage0): Starting recovery (logdev: internal)
-> [965888.268088] XFS (veeamimage0): Ending recovery (logdev: internal)
-> [965888.289466] XFS (veeamimage1): Mounting V5 Filesystem
-> [965888.406585] XFS (veeamimage1): Starting recovery (logdev: internal)
-> [965888.473768] XFS (veeamimage1): Ending recovery (logdev: internal)
-> [986032.367648] XFS (veeamimage0): metadata I/O error: block 0x1044a20 ("xfs_buf_iodone_callback_error") error 5 numblks 32
-
-Storage layers returned -EIO a second before things went bad.
-Whether that is relevant cannot be determined from the information
-provided.
-
-> [986033.152809] BUG: unable to handle kernel NULL pointer dereference at           (null)
-> [986033.152973] IP: xfs_buf_offset+0x2c/0x60 [xfs]
-> [986033.153013] PGD 0 P4D 0 
-> [986033.153041] Oops: 0000 [#1] SMP PTI
-> [986033.153083] CPU: 13 PID: 48029 Comm: xfsaild/veeamim Tainted: P           OE      4.12.14-122.74-default #1 SLE12-SP5
-
-And there are unknown proprietary modules loaded, so we can't trust
-the code in the kernel to be operating correctly...
-
-I'm not sure there's really anything upstream developers can help
-with without any idea of how to reproduce this problem on a current
-kernel...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+FUA? As in, this is a forced-unit-access zeroing all the way to media
+bypassing any mechanisms to emulate zero-filled payloads on future
+reads.
