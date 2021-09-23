@@ -2,130 +2,107 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96E12C433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 23 Sep 2021 22:54:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B5BCC433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Sep 2021 23:00:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 70E796124B
-	for <linux-xfs@archiver.kernel.org>; Thu, 23 Sep 2021 22:54:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0BD7761107
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Sep 2021 23:00:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243431AbhIWW4J (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 23 Sep 2021 18:56:09 -0400
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:53621 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S236363AbhIWW4J (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Sep 2021 18:56:09 -0400
-Received: from dread.disaster.area (pa49-195-238-16.pa.nsw.optusnet.com.au [49.195.238.16])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 2E6A489820;
-        Fri, 24 Sep 2021 08:54:34 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1mTXbt-00FxXx-CB; Fri, 24 Sep 2021 08:54:33 +1000
-Date:   Fri, 24 Sep 2021 08:54:33 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Dan Williams <dan.j.williams@intel.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Jane Chu <jane.chu@oracle.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Subject: Re: [PATCH 3/5] vfs: add a zero-initialization mode to fallocate
-Message-ID: <20210923225433.GX1756565@dread.disaster.area>
-References: <CAPcyv4jF1UNW5rdXX3q2hfDcvzGLSnk=1a0C0i7_UjdivuG+pQ@mail.gmail.com>
- <20210922023801.GD570615@magnolia>
- <20210922035907.GR1756565@dread.disaster.area>
- <20210922041354.GE570615@magnolia>
- <20210922054931.GT1756565@dread.disaster.area>
- <20210922212725.GN570615@magnolia>
- <20210923000255.GO570615@magnolia>
- <20210923014209.GW1756565@dread.disaster.area>
- <CAPcyv4j77cWASW1Qp=J8poVRi8+kDQbBsLZb0HY+dzeNa=ozNg@mail.gmail.com>
- <CAPcyv4in7WRw1_e5iiQOnoZ9QjQWhjj+J7HoDf3ObweUvADasg@mail.gmail.com>
+        id S243531AbhIWXCO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 23 Sep 2021 19:02:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53596 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S243492AbhIWXCN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Sep 2021 19:02:13 -0400
+Received: from mail-yb1-xb2a.google.com (mail-yb1-xb2a.google.com [IPv6:2607:f8b0:4864:20::b2a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C6B1C061757
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Sep 2021 16:00:41 -0700 (PDT)
+Received: by mail-yb1-xb2a.google.com with SMTP id b82so930332ybg.1
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Sep 2021 16:00:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fooishbar-org.20210112.gappssmtp.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=tNi4Bos8lh7sJkc+jDcM0nJh0Q/L0O1bHURQWGbTkX4=;
+        b=BSc1fqu6/Z/Rv3MnwMMeXb/jTCrjhoOWWYoqBAGDKtIkwZf5Ohw+67BmYf7iyGtKLw
+         FGPyN7RfyoVb/tO3VZUYC67xDFTbdn2SvyUwiirIGqrO3ztPpmYSJ+QQoBVJAhPXsQzH
+         JIgFfev54CDOz7nVU0ko5gEDaIniTuNVSzBdP3SUiz4wrhztbFrvVI617a+Qg7Q7GU2Y
+         PxqWZ/Y4REdyQy8jB1fGjgCHPwZQe+RvBts8vdqPb14T84tyq1AgoglerVejtYa/hSrx
+         TknyI/LcvKRi1Qa0viPfnd3bH164YUcPly4CFCQw61l9fehNp4BxbaO2AD8T1AQlkEkJ
+         ygAQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=tNi4Bos8lh7sJkc+jDcM0nJh0Q/L0O1bHURQWGbTkX4=;
+        b=1NyKQ0yWM993bczVNnkE4hDPO1TfHuF+71BUYY0MGoIzpc6jNoT0zZeX3qDPwCgSjj
+         lmjUFUrZ0Sr04vu4qSarKVM6kIROlYi88JII9q5KmOjRNnpPAczxn7FeuH7fVGmlkBy0
+         cbmMH2cd+CXx1IfAVhXDIzAfdC6Bly0qlvhPjGz9/Z7OPJlwoKb4r+caO3nyiY1rX/+O
+         uxElmD68Izw3Q6re8O4WukFStYIHTr18cubcNsQqyYH9KLLC7izxZRo7Q5p/PT26NfSe
+         wdHmn1Siy890Y1g7YeTruo8lOH1Q/2L17OYAK4qAkV4wEv/k5XiWTN2R3cZ8f18yB3uJ
+         FsWA==
+X-Gm-Message-State: AOAM532EkrhudGizrE8WyQ8fHWN2PLzpoM8Eaxl89zf8rWbMb1KQiau6
+        Ipa0guCYp++SuXLbMpJSO1aYI9vfzYn90HI0v5Ee8Q==
+X-Google-Smtp-Source: ABdhPJzVucE3eg4ogr+EckrLlTAcmioko3LFLfBIUNJScv90rQfbKQAJbN/ec8tKzwtaa08Bv8HD0UYl2BesVajSqx8=
+X-Received: by 2002:a25:bb52:: with SMTP id b18mr9308175ybk.506.1632438040561;
+ Thu, 23 Sep 2021 16:00:40 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAPcyv4in7WRw1_e5iiQOnoZ9QjQWhjj+J7HoDf3ObweUvADasg@mail.gmail.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
-        a=DzKKRZjfViQTE5W6EVc0VA==:117 a=DzKKRZjfViQTE5W6EVc0VA==:17
-        a=kj9zAlcOel0A:10 a=7QKq2e-ADPsA:10 a=QyXUC8HyAAAA:8 a=7-415B0cAAAA:8
-        a=suq7dG2qvrYvm2gpiewA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+References: <23aeacb6-0cd9-d10f-76bc-3c9d33905daa@amd.com> <ca132183-e778-4a86-c81e-4d292e9d41a7@amd.com>
+ <YUzl7qywbtVHipUT@casper.infradead.org>
+In-Reply-To: <YUzl7qywbtVHipUT@casper.infradead.org>
+From:   Daniel Stone <daniel@fooishbar.org>
+Date:   Fri, 24 Sep 2021 00:00:29 +0100
+Message-ID: <CAPj87rNqCuSvSZLuF=ULCXRpbDBQC+XAA+_Awa__4dvRkckamw@mail.gmail.com>
+Subject: Re: BoF at LPC: Documenting the Heterogeneous Memory Model Architecture
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Felix Kuehling <felix.kuehling@amd.com>,
+        Linux MM <linux-mm@kvack.org>, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org,
+        Maling list - DRI developers 
+        <dri-devel@lists.freedesktop.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Jerome Glisse <jglisse@redhat.com>,
+        Ralph Campbell <rcampbell@nvidia.com>,
+        "Theodore Ts'o" <tytso@mit.edu>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Mel Gorman <mgorman@techsingularity.net>,
+        Peter Zijlstra <peterz@infradead.org>,
+        "Phillips, Daniel" <Daniel.Phillips@amd.com>,
+        "Sierra Guiza, Alejandro (Alex)" <Alex.Sierra@amd.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 22, 2021 at 10:42:11PM -0700, Dan Williams wrote:
-> On Wed, Sep 22, 2021 at 7:43 PM Dan Williams <dan.j.williams@intel.com> wrote:
+Hi,
+
+On Thu, 23 Sept 2021 at 21:40, Matthew Wilcox <willy@infradead.org> wrote:
+> On Thu, Sep 23, 2021 at 04:25:08PM -0400, Felix Kuehling wrote:
+> > Change of plan: Instead of a BoF, this is now a session in the "GPU/media/AI
+> > buffer management and interop MC" micro conference. Thank you Daniel Stone
+> > for making that happen.
+> > https://linuxplumbersconf.org/event/11/contributions/1112/
 > >
-> > On Wed, Sep 22, 2021 at 6:42 PM Dave Chinner <david@fromorbit.com> wrote:
-> > [..]
-> > > Hence this discussion leads me to conclude that fallocate() simply
-> > > isn't the right interface to clear storage hardware poison state and
-> > > it's much simpler for everyone - kernel and userspace - to provide a
-> > > pwritev2(RWF_CLEAR_HWERROR) flag to directly instruct the IO path to
-> > > clear hardware error state before issuing this user write to the
-> > > hardware.
-> >
-> > That flag would slot in nicely in dax_iomap_iter() as the gate for
-> > whether dax_direct_access() should allow mapping over error ranges,
-> > and then as a flag to dax_copy_from_iter() to indicate that it should
-> > compare the incoming write to known poison and clear it before
-> > proceeding.
-> >
-> > I like the distinction, because there's a chance the application did
-> > not know that the page had experienced data loss and might want the
-> > error behavior. The other service the driver could offer with this
-> > flag is to do a precise check of the incoming write to make sure it
-> > overlaps known poison and then repair the entire page. Repairing whole
-> > pages makes for a cleaner implementation of the code that tries to
-> > keep poison out of the CPU speculation path, {set,clear}_mce_nospec().
-> 
-> This flag could also be useful for preadv2() as there is currently no
-> way to read the good data in a PMEM page with poison via DAX. So the
-> flag would tell dax_direct_access() to again proceed in the face of
-> errors, but then the driver's dax_copy_to_iter() operation could
-> either read up to the precise byte offset of the error in the page, or
-> autoreplace error data with zero's to try to maximize data recovery.
+> > It is scheduled for tomorrow (Friday) 08:40-10:00 Pacific, 11:40-13:00
+> > Eastern, 15:40-17:00 UTC.
+>
+> That's up against:
+>
+>  Direct map management
+> Vlastimil Babka, Mike Rapoport, Rick Edgecombe  11:30-12:15.
+>
+> Seems like a lot of the same people would want to be in both sessions.
+> Maybe one could be moved?
 
-Yes, it could. I like the idea - say RWF_IGNORE_HWERROR - to read
-everything that can be read from the bad range because it's the
-other half of the problem RWF_RESET_HWERROR is trying to address.
-That is, the operation we want to perform on a range with an error
-state is -data recovery-, not "reinitialisation". Data recovery
-requires two steps:
-
-- "try to recover the data from the bad storage"; and
-- "reinitialise the data and clear the error state"
-
-These naturally map to read() and write() operations, not
-fallocate(). With RWF flags they become explicit data recovery
-operations, unlike fallocate() which needs to imply that "writing
-zeroes" == "reset hardware error state". While that reset method
-may be true for a specific pmem hardware implementation it is not a
-requirement for all storage hardware. It's most definitely not a
-requirement for future storage hardware, either.
-
-It also means that applications have no choice in what data they can
-use to reinitialise the damaged range with because fallocate() only
-supports writing zeroes. If we've recovered data via a read() as you
-suggest we could, then we can rebuild the data from other redundant
-information and immediately write that back to the storage, hence
-repairing the fault.
-
-That, in turn, allows the filesystem to turn the RWF_RESET_HWERROR
-write into an exclusive operation and hence allow the
-reinitialisation with the recovered/repaired state to run atomically
-w.r.t. all other filesystem operations.  i.e. the reset write
-completes the recovery operation instead of requiring separate
-"reset" and "write recovered data into zeroed range" steps that
-cannot be executed atomically by userspace...
+Good point, and thanks, but it's hard to keep the longer slot whilst
+moving it later; I wonder if we could move direct map management to
+the final slot?
 
 Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Daniel
