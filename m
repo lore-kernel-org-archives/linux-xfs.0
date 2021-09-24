@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-17.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A34F2C433F5
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Sep 2021 01:26:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E945DC433F5
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Sep 2021 01:26:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8956C61100
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Sep 2021 01:26:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D177B610CB
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Sep 2021 01:26:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243751AbhIXB2R (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 23 Sep 2021 21:28:17 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56928 "EHLO mail.kernel.org"
+        id S243752AbhIXB2X (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 23 Sep 2021 21:28:23 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56954 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S243740AbhIXB2R (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 23 Sep 2021 21:28:17 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 4162B604E9;
-        Fri, 24 Sep 2021 01:26:45 +0000 (UTC)
+        id S243745AbhIXB2X (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 23 Sep 2021 21:28:23 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B5369604E9;
+        Fri, 24 Sep 2021 01:26:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1632446805;
-        bh=ODdp7Qca5YOttj5LEc0yQDH0len8f/VOek5AfJ+0r24=;
+        s=k20201202; t=1632446810;
+        bh=zZNNqDnk059e51dML5eQ54aTywK5tD+ZUvNN5NGi+YA=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=d0viapAyeyjb9pf61Bk4VEbXhjf60UvumZBaBi1Q5tYV2OH6ZAHalauwZhxjkA6C6
-         evhrNLk8Y28TKEQO1UAnPfdVaWJ1y+yEhUxP5m3vtnbeKEw9gkAov+4LYKW7nr180u
-         t182MYjTlSFAwszR/rHADDTikJ26T7W9GVnF51a5aJSqe+JgScL05vxQPOo7JBRvAk
-         XS1BPSedCnrC2+i3ZXHQWR/6er6FZVv+LUv/86xiIA0QTzfRmtq2ZftBWLoH9ZAyeQ
-         w/P2p9YihAsHapiFgBFqDNBN3B4QGqI3j4aTYlUUrHI8CbOgm9BAKaFuj6F22qgrMI
-         rbzKlk8gSEPpA==
-Subject: [PATCH 06/15] xfs: stricter btree height checking when looking for
- errors
+        b=FuZlKM1QPu+0StYNk05OGUdbzrO6vVg3MFqrYbeMkMlC24Bpbx76bTv4tZ4HF7ZzY
+         uZcnwOGI8DMNoAjKgSDRRUT9+ZBk6Pd94hqQJ5LrG/ZjEck41OTVvqXuTtNVaqel0E
+         +pSFOmYQmHZwzEHNkmjhpEAdl/M8fPT+6fLgk0nGKQc4IWWpt8qTYSTz4K4vnYcOQS
+         Hi3tdXC/5CKjTKSSGuSoS3oBZNL2Hi1alJLDi9+Y9WgWnrCQvRIxUyjnffp9PkweVj
+         +cnqAvP+aTTlKa0Kf8uNeC78Oqwxe52jWV7YB+rxxJfrZ3E8jMNBdj3h0CHxMeMX7k
+         Jo6aIdynploAw==
+Subject: [PATCH 07/15] xfs: stricter btree height checking when scanning for
+ btree roots
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, chandan.babu@oracle.com, chandanrlinux@gmail.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Thu, 23 Sep 2021 18:26:45 -0700
-Message-ID: <163244680498.2701302.305104585133892705.stgit@magnolia>
+Date:   Thu, 23 Sep 2021 18:26:50 -0700
+Message-ID: <163244681046.2701302.16309740082564344334.stgit@magnolia>
 In-Reply-To: <163244677169.2701302.12882919857957905332.stgit@magnolia>
 References: <163244677169.2701302.12882919857957905332.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,77 +50,79 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Since each btree type has its own precomputed maxlevels variable now,
-use them instead of the generic XFS_BTREE_MAXLEVELS to check the level
-of each per-AG btree.
+When we're scanning for btree roots to rebuild the AG headers, make sure
+that the proposed tree does not exceed the maximum height for that btree
+type (and not just XFS_BTREE_MAXLEVELS).
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Chandan Babu R <chandan.babu@oracle.com>
 ---
- fs/xfs/scrub/agheader.c |   13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+ fs/xfs/scrub/agheader_repair.c |    8 +++++++-
+ fs/xfs/scrub/repair.h          |    3 +++
+ 2 files changed, 10 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-index ae3c9f6e2c69..a2c3af77b6c2 100644
---- a/fs/xfs/scrub/agheader.c
-+++ b/fs/xfs/scrub/agheader.c
-@@ -555,11 +555,11 @@ xchk_agf(
- 		xchk_block_set_corrupt(sc, sc->sa.agf_bp);
+diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
+index 0f8deee66f15..05c27149b65d 100644
+--- a/fs/xfs/scrub/agheader_repair.c
++++ b/fs/xfs/scrub/agheader_repair.c
+@@ -122,7 +122,7 @@ xrep_check_btree_root(
+ 	xfs_agnumber_t			agno = sc->sm->sm_agno;
  
- 	level = be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]);
--	if (level <= 0 || level > XFS_BTREE_MAXLEVELS)
-+	if (level <= 0 || level > mp->m_ag_maxlevels)
- 		xchk_block_set_corrupt(sc, sc->sa.agf_bp);
+ 	return xfs_verify_agbno(mp, agno, fab->root) &&
+-	       fab->height <= XFS_BTREE_MAXLEVELS;
++	       fab->height <= fab->maxlevels;
+ }
  
- 	level = be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]);
--	if (level <= 0 || level > XFS_BTREE_MAXLEVELS)
-+	if (level <= 0 || level > mp->m_ag_maxlevels)
- 		xchk_block_set_corrupt(sc, sc->sa.agf_bp);
+ /*
+@@ -339,18 +339,22 @@ xrep_agf(
+ 		[XREP_AGF_BNOBT] = {
+ 			.rmap_owner = XFS_RMAP_OWN_AG,
+ 			.buf_ops = &xfs_bnobt_buf_ops,
++			.maxlevels = sc->mp->m_ag_maxlevels,
+ 		},
+ 		[XREP_AGF_CNTBT] = {
+ 			.rmap_owner = XFS_RMAP_OWN_AG,
+ 			.buf_ops = &xfs_cntbt_buf_ops,
++			.maxlevels = sc->mp->m_ag_maxlevels,
+ 		},
+ 		[XREP_AGF_RMAPBT] = {
+ 			.rmap_owner = XFS_RMAP_OWN_AG,
+ 			.buf_ops = &xfs_rmapbt_buf_ops,
++			.maxlevels = sc->mp->m_rmap_maxlevels,
+ 		},
+ 		[XREP_AGF_REFCOUNTBT] = {
+ 			.rmap_owner = XFS_RMAP_OWN_REFC,
+ 			.buf_ops = &xfs_refcountbt_buf_ops,
++			.maxlevels = sc->mp->m_refc_maxlevels,
+ 		},
+ 		[XREP_AGF_END] = {
+ 			.buf_ops = NULL,
+@@ -881,10 +885,12 @@ xrep_agi(
+ 		[XREP_AGI_INOBT] = {
+ 			.rmap_owner = XFS_RMAP_OWN_INOBT,
+ 			.buf_ops = &xfs_inobt_buf_ops,
++			.maxlevels = M_IGEO(sc->mp)->inobt_maxlevels,
+ 		},
+ 		[XREP_AGI_FINOBT] = {
+ 			.rmap_owner = XFS_RMAP_OWN_INOBT,
+ 			.buf_ops = &xfs_finobt_buf_ops,
++			.maxlevels = M_IGEO(sc->mp)->inobt_maxlevels,
+ 		},
+ 		[XREP_AGI_END] = {
+ 			.buf_ops = NULL
+diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
+index 3bb152d52a07..840f74ec431c 100644
+--- a/fs/xfs/scrub/repair.h
++++ b/fs/xfs/scrub/repair.h
+@@ -44,6 +44,9 @@ struct xrep_find_ag_btree {
+ 	/* in: buffer ops */
+ 	const struct xfs_buf_ops	*buf_ops;
  
- 	if (xfs_has_rmapbt(mp)) {
-@@ -568,7 +568,7 @@ xchk_agf(
- 			xchk_block_set_corrupt(sc, sc->sa.agf_bp);
- 
- 		level = be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAP]);
--		if (level <= 0 || level > XFS_BTREE_MAXLEVELS)
-+		if (level <= 0 || level > mp->m_rmap_maxlevels)
- 			xchk_block_set_corrupt(sc, sc->sa.agf_bp);
- 	}
- 
-@@ -578,7 +578,7 @@ xchk_agf(
- 			xchk_block_set_corrupt(sc, sc->sa.agf_bp);
- 
- 		level = be32_to_cpu(agf->agf_refcount_level);
--		if (level <= 0 || level > XFS_BTREE_MAXLEVELS)
-+		if (level <= 0 || level > mp->m_refc_maxlevels)
- 			xchk_block_set_corrupt(sc, sc->sa.agf_bp);
- 	}
- 
-@@ -850,6 +850,7 @@ xchk_agi(
- 	struct xfs_mount	*mp = sc->mp;
- 	struct xfs_agi		*agi;
- 	struct xfs_perag	*pag;
-+	struct xfs_ino_geometry	*igeo = M_IGEO(sc->mp);
- 	xfs_agnumber_t		agno = sc->sm->sm_agno;
- 	xfs_agblock_t		agbno;
- 	xfs_agblock_t		eoag;
-@@ -880,7 +881,7 @@ xchk_agi(
- 		xchk_block_set_corrupt(sc, sc->sa.agi_bp);
- 
- 	level = be32_to_cpu(agi->agi_level);
--	if (level <= 0 || level > XFS_BTREE_MAXLEVELS)
-+	if (level <= 0 || level > igeo->inobt_maxlevels)
- 		xchk_block_set_corrupt(sc, sc->sa.agi_bp);
- 
- 	if (xfs_has_finobt(mp)) {
-@@ -889,7 +890,7 @@ xchk_agi(
- 			xchk_block_set_corrupt(sc, sc->sa.agi_bp);
- 
- 		level = be32_to_cpu(agi->agi_free_level);
--		if (level <= 0 || level > XFS_BTREE_MAXLEVELS)
-+		if (level <= 0 || level > igeo->inobt_maxlevels)
- 			xchk_block_set_corrupt(sc, sc->sa.agi_bp);
- 	}
- 
++	/* in: maximum btree height */
++	unsigned int			maxlevels;
++
+ 	/* out: the highest btree block found and the tree height */
+ 	xfs_agblock_t			root;
+ 	unsigned int			height;
 
