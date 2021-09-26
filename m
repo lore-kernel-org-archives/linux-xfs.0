@@ -2,119 +2,103 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27554C433F5
-	for <linux-xfs@archiver.kernel.org>; Sun, 26 Sep 2021 00:47:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB4B2C43219
+	for <linux-xfs@archiver.kernel.org>; Sun, 26 Sep 2021 03:11:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EAFFB6109D
-	for <linux-xfs@archiver.kernel.org>; Sun, 26 Sep 2021 00:47:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F762608FE
+	for <linux-xfs@archiver.kernel.org>; Sun, 26 Sep 2021 03:11:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230214AbhIZAs7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 25 Sep 2021 20:48:59 -0400
-Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:59293 "EHLO
-        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230211AbhIZAs7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 25 Sep 2021 20:48:59 -0400
-Received: from dread.disaster.area (pa49-195-238-16.pa.nsw.optusnet.com.au [49.195.238.16])
-        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id 5626D1BCF20;
-        Sun, 26 Sep 2021 10:47:22 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1mUIK9-00GkTI-Oo; Sun, 26 Sep 2021 10:47:21 +1000
-Date:   Sun, 26 Sep 2021 10:47:21 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     chandan.babu@oracle.com, chandanrlinux@gmail.com,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/4] xfs: use separate btree cursor slab for each btree
- type
-Message-ID: <20210926004721.GD1756565@dread.disaster.area>
-References: <163244685787.2701674.13029851795897591378.stgit@magnolia>
- <163244687985.2701674.5510358661953545557.stgit@magnolia>
+        id S230387AbhIZDMt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 25 Sep 2021 23:12:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42454 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230338AbhIZDMs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 25 Sep 2021 23:12:48 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94B67C061570;
+        Sat, 25 Sep 2021 20:11:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=WwIZ0BhBYA1F8Xahxd7anDpTfWZsBUHuFr6CADROb6c=; b=il8nnVKNIf4P7d1b/wjKSIYSsb
+        tKx4hIRiHaRAIWdEBd4+ppylMZXu8zj+sunMAUv+TAookWSNqbjWCTqQ6xZCbzO9nz8LVRtU5eRkd
+        2qqAe4aZyxP/jMB3vR2gELmqcn/uTa+TTcC9bJxCMyc1jDp4WCD0j5nA2HjcbT5ylZIDLRgBEx6hW
+        wMLm/jdYvre6N0SpLJSED3l2DEVtfQ6kBBvhtgafZactWNTZLdgPPwiyhujYSm5XSi7gR+NN9zIgD
+        gwTymYQIr2WuO3xqn+Mr8tukgD1eRuloL2tYfe754ETp6XoRMgmEDc1lF2Cbj+Eq11zBbRdlOskjB
+        zkACra/Q==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1mUKYt-008bG5-I5; Sun, 26 Sep 2021 03:10:46 +0000
+Date:   Sun, 26 Sep 2021 04:10:43 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     David Howells <dhowells@redhat.com>, hch@lst.de,
+        trond.myklebust@primarydata.com, Theodore Ts'o <tytso@mit.edu>,
+        linux-block@vger.kernel.org, ceph-devel@vger.kernel.org,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Jeff Layton <jlayton@kernel.org>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Anna Schumaker <anna.schumaker@netapp.com>, linux-mm@kvack.org,
+        Bob Liu <bob.liu@oracle.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Josef Bacik <josef@toxicpanda.com>,
+        Seth Jennings <sjenning@linux.vnet.ibm.com>,
+        Jens Axboe <axboe@kernel.dk>, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-cifs@vger.kernel.org, Chris Mason <clm@fb.com>,
+        David Sterba <dsterba@suse.com>,
+        Minchan Kim <minchan@kernel.org>,
+        Steve French <sfrench@samba.org>, NeilBrown <neilb@suse.de>,
+        Dan Magenheimer <dan.magenheimer@oracle.com>,
+        linux-nfs@vger.kernel.org, Ilya Dryomov <idryomov@gmail.com>,
+        linux-btrfs@vger.kernel.org, viro@zeniv.linux.org.uk,
+        torvalds@linux-foundation.org, linux-kernel@vger.kernel.org
+Subject: Re: [RFC][PATCH v3 0/9] mm: Use DIO for swap and fix NFS swapfiles
+Message-ID: <YU/ks7Sfw5Wj0K1p@casper.infradead.org>
+References: <163250387273.2330363.13240781819520072222.stgit@warthog.procyon.org.uk>
+ <20210925234243.GA1756565@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <163244687985.2701674.5510358661953545557.stgit@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
-        a=DzKKRZjfViQTE5W6EVc0VA==:117 a=DzKKRZjfViQTE5W6EVc0VA==:17
-        a=kj9zAlcOel0A:10 a=7QKq2e-ADPsA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=7o786gbDF7qkn78YGUkA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20210925234243.GA1756565@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 23, 2021 at 06:27:59PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Now that we have the infrastructure to track the max possible height of
-> each btree type, we can create a separate slab zone for cursors of each
-> type of btree.  For smaller indices like the free space btrees, this
-> means that we can pack more cursors into a slab page, improving slab
-> utilization.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  fs/xfs/libxfs/xfs_btree.c |   12 ++++++------
->  fs/xfs/libxfs/xfs_btree.h |    9 +--------
->  fs/xfs/xfs_super.c        |   33 ++++++++++++++++++++++++---------
->  3 files changed, 31 insertions(+), 23 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-> index 120280c998f8..3131de9ae631 100644
-> --- a/fs/xfs/libxfs/xfs_btree.c
-> +++ b/fs/xfs/libxfs/xfs_btree.c
-> @@ -26,7 +26,6 @@
->  /*
->   * Cursor allocation zone.
->   */
-> -kmem_zone_t	*xfs_btree_cur_zone;
->  struct xfs_btree_cur_zone xfs_btree_cur_zones[XFS_BTNUM_MAX] = {
->  	[XFS_BTNUM_BNO]		= { .name = "xfs_alloc_btree_cur" },
->  	[XFS_BTNUM_INO]		= { .name = "xfs_ialloc_btree_cur" },
-> @@ -364,6 +363,7 @@ xfs_btree_del_cursor(
->  	struct xfs_btree_cur	*cur,		/* btree cursor */
->  	int			error)		/* del because of error */
->  {
-> +	struct xfs_btree_cur_zone *bczone = &xfs_btree_cur_zones[cur->bc_btnum];
->  	int			i;		/* btree level */
->  
->  	/*
-> @@ -386,10 +386,10 @@ xfs_btree_del_cursor(
->  		kmem_free(cur->bc_ops);
->  	if (!(cur->bc_flags & XFS_BTREE_LONG_PTRS) && cur->bc_ag.pag)
->  		xfs_perag_put(cur->bc_ag.pag);
-> -	if (cur->bc_maxlevels > XFS_BTREE_CUR_ZONE_MAXLEVELS)
-> +	if (cur->bc_maxlevels > bczone->maxlevels)
->  		kmem_free(cur);
->  	else
-> -		kmem_cache_free(xfs_btree_cur_zone, cur);
-> +		kmem_cache_free(bczone->zone, cur);
->  }
->  
->  /*
-> @@ -5021,12 +5021,12 @@ xfs_btree_alloc_cursor(
->  {
->  	struct xfs_btree_cur	*cur;
->  	unsigned int		maxlevels = xfs_btree_maxlevels(mp, btnum);
-> +	struct xfs_btree_cur_zone *bczone = &xfs_btree_cur_zones[btnum];
->  
-> -	if (maxlevels > XFS_BTREE_CUR_ZONE_MAXLEVELS)
-> +	if (maxlevels > bczone->maxlevels)
->  		cur = kmem_zalloc(xfs_btree_cur_sizeof(maxlevels), KM_NOFS);
->  	else
-> -		cur = kmem_cache_zalloc(xfs_btree_cur_zone,
-> -				GFP_NOFS | __GFP_NOFAIL);
-> +		cur = kmem_cache_zalloc(bczone->zone, GFP_NOFS | __GFP_NOFAIL);
+On Sun, Sep 26, 2021 at 09:42:43AM +1000, Dave Chinner wrote:
+> Ok, so if the filesystem is doing block mapping in the IO path now,
+> why does the swap file still need to map the file into a private
+> block mapping now?  i.e all the work that iomap_swapfile_activate()
+> does for filesystems like XFS and ext4 - it's this completely
+> redundant now that we are doing block mapping during swap file IO
+> via iomap_dio_rw()?
 
-When will maxlevels ever be greater than bczone->maxlevels? Isn't
-the bczone->maxlevels case always supposed to be the tallest
-possible height for that btree?
+Hi Dave,
 
-Cheers,
+Thanks for bringing up all these points.  I think they all deserve to go
+into the documentation as "things to consider" for people implementing
+->swap_rw for their filesystem.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Something I don't think David perhaps made sufficiently clear is that
+regular DIO from userspace gets handled by ->read_iter and ->write_iter.
+This ->swap_rw op is used exclusive for, as the name suggests, swap DIO.
+So filesystems don't have to handle swap DIO and regular DIO the same
+way, and can split the allocation work between ->swap_activate and the
+iomap callback as they see fit (as long as they can guarantee the lack
+of deadlocks under memory pressure).
+
+There are several advantages to using the DIO infrastructure for
+swap:
+
+ - unify block & net swap paths
+ - allow filesystems to _see_ swap IOs instead of being bypassed
+ - get rid of the swap extent rbtree
+ - allow writing compound pages to swap files instead of splitting
+   them
+ - allow ->readpage to be synchronous for better error reporting
+ - remove page_file_mapping() and page_file_offset()
+
+I suspect there are several problems with this patchset, but I'm not
+likely to have a chance to read it closely for a few days.  If you
+have time to give the XFS parts a good look, that would be fantastic.
