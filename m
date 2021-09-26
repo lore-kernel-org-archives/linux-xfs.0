@@ -2,135 +2,133 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA7F0C433F5
-	for <linux-xfs@archiver.kernel.org>; Sat, 25 Sep 2021 23:49:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99FD2C433EF
+	for <linux-xfs@archiver.kernel.org>; Sun, 26 Sep 2021 00:43:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AC7F26108C
-	for <linux-xfs@archiver.kernel.org>; Sat, 25 Sep 2021 23:49:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 68201610A3
+	for <linux-xfs@archiver.kernel.org>; Sun, 26 Sep 2021 00:43:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230181AbhIYXv1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 25 Sep 2021 19:51:27 -0400
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:37142 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230078AbhIYXv0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 25 Sep 2021 19:51:26 -0400
+        id S230213AbhIZApV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 25 Sep 2021 20:45:21 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:42839 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230211AbhIZApV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 25 Sep 2021 20:45:21 -0400
 Received: from dread.disaster.area (pa49-195-238-16.pa.nsw.optusnet.com.au [49.195.238.16])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id DCBF988C06;
-        Sun, 26 Sep 2021 09:49:49 +1000 (AEST)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 457E78838BC;
+        Sun, 26 Sep 2021 10:43:44 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1mUHQT-00GjWN-4z; Sun, 26 Sep 2021 09:49:49 +1000
-Date:   Sun, 26 Sep 2021 09:49:49 +1000
+        id 1mUIGd-00GkQT-A2; Sun, 26 Sep 2021 10:43:43 +1000
+Date:   Sun, 26 Sep 2021 10:43:43 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     Chandan Babu R <chandan.babu@oracle.com>,
-        linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>,
-        djwong@kernel.org
-Subject: Re: [PATCH V2 3/5] atomic: convert to uatomic
-Message-ID: <20210925234949.GB1756565@dread.disaster.area>
-References: <20210924140912.201481-1-chandan.babu@oracle.com>
- <20210924140912.201481-4-chandan.babu@oracle.com>
- <80546d48-9018-e374-2a0b-caf84e521ebd@sandeen.net>
- <20210925231500.GZ1756565@dread.disaster.area>
- <058f370e-8973-3049-c168-904cad17d090@sandeen.net>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     chandan.babu@oracle.com, chandanrlinux@gmail.com,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/4] xfs: check absolute maximum nlevels for each btree
+ type
+Message-ID: <20210926004343.GC1756565@dread.disaster.area>
+References: <163244685787.2701674.13029851795897591378.stgit@magnolia>
+ <163244687436.2701674.5377184817013946444.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <058f370e-8973-3049-c168-904cad17d090@sandeen.net>
+In-Reply-To: <163244687436.2701674.5377184817013946444.stgit@magnolia>
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
         a=DzKKRZjfViQTE5W6EVc0VA==:117 a=DzKKRZjfViQTE5W6EVc0VA==:17
-        a=kj9zAlcOel0A:10 a=7QKq2e-ADPsA:10 a=20KFwNOVAAAA:8 a=yPCof4ZbAAAA:8
-        a=9uXBr0ESAAAA:20 a=7-415B0cAAAA:8 a=5ngvwbRkZSgKJq4ONK8A:9
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=7QKq2e-ADPsA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=JAHgLN7nDS3Y1voxMgkA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Sep 25, 2021 at 06:18:58PM -0500, Eric Sandeen wrote:
-> On 9/25/21 6:15 PM, Dave Chinner wrote:
-> > On Fri, Sep 24, 2021 at 05:13:30PM -0500, Eric Sandeen wrote:
-> > > On 9/24/21 9:09 AM, Chandan Babu R wrote:
-> > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > 
-> > > > Now we have liburcu, we can make use of it's atomic variable
-> > > > implementation. It is almost identical to the kernel API - it's just
-> > > > got a "uatomic" prefix. liburcu also provides all the same aomtic
-> > > > variable memory barriers as the kernel, so if we pull memory barrier
-> > > > dependent kernel code across, it will just work with the right
-> > > > barrier wrappers.
-> > > > 
-> > > > This is preparation the addition of more extensive atomic operations
-> > > > the that kernel buffer cache requires to function correctly.
-> > > > 
-> > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > > [chandan.babu@oracle.com: Swap order of arguments provided to atomic[64]_[add|sub]()]
-> > > > Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
-> > > > ---
-> > > >    include/atomic.h | 65 ++++++++++++++++++++++++++++++++++++++++--------
-> > > >    1 file changed, 54 insertions(+), 11 deletions(-)
-> > > > 
-> > > > diff --git a/include/atomic.h b/include/atomic.h
-> > > > index e0e1ba84..99cb85d3 100644
-> > > > --- a/include/atomic.h
-> > > > +++ b/include/atomic.h
-> > > > @@ -7,21 +7,64 @@
-> > > >    #define __ATOMIC_H__
-> > > >    /*
-> > > > - * Warning: These are not really atomic at all. They are wrappers around the
-> > > > - * kernel atomic variable interface. If we do need these variables to be atomic
-> > > > - * (due to multithreading of the code that uses them) we need to add some
-> > > > - * pthreads magic here.
-> > > > + * Atomics are provided by liburcu.
-> > > > + *
-> > > > + * API and guidelines for which operations provide memory barriers is here:
-> > > > + *
-> > > > + * https://github.com/urcu/userspace-rcu/blob/master/doc/uatomic-api.md
-> > > > + *
-> > > > + * Unlike the kernel, the same interface supports 32 and 64 bit atomic integers.
-> > > 
-> > > Given this, anyone have any objection to putting the #defines together at the
-> > > top, rather than hiding the 64 variants at the end of the file?
-> > 
-> > I wanted to keep the -APIs- separate, because all the kernel
-> > atomic/atomic64 stuff is already separate and type checked. I don't
-> > see any point in commingling the two different atomic type APIs
-> > just because the implementation ends up being the same and that some
-> > wrappers are defines and others are static inline code.
-> > 
-> > Ideally, the wrappers should all be static inlines so we get correct
-> > atomic_t/atomic64_t type checking in userspace. Those are the types
-> > we care about in terms of libxfs, so to typecheck the API properly
-> > these should -all- be static inlines. The patch as it stands was a
-> > "get it working properly" patch, not a "finalised, strictly correct
-> > API" patch. That was somethign for "down the road" as I polished the
-> > patchset ready for eventual review.....
+On Thu, Sep 23, 2021 at 06:27:54PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Ok. Well, I was only talking about moving lines in your patch, nothing functional
-> at all. And ... that's why I had asked earlier (I think?) if your patch was
-> considered ready for review/merge, or just a demonstration of things to come.
+> Add code for all five btree types so that we can compute the absolute
+> maximum possible btree height for each btree type, and then check that
+> none of them exceed XFS_BTREE_CUR_ZONE_MAXLEVELS.  The code to do the
+> actual checking is a little excessive, but it sets us up for per-type
+> cursor zones in the next patch.
 
-I though you were asking "does it work/been tested enough to merge"
-to which I answered "yes". I did point out that it was a quick
-forward port, so stuff like variables the wrong way around in
-wrappers I had to add for the forward port shouldn't be a surprise.
+Ok, I think the cursor "zone" array is the wrong approach here.
 
-> So I guess changing it to a static inline as you suggest should be done before
-> merge.
+First of all - can we stop using the term "zone" for new code?
+That's the old irix terminolgy for slab caches, and we have been
+moving away from that to the Linux "kmem_cache" terminology and
+types for quite some time.
 
-I don't see that as necessary before merging it. It's the direction
-these wrappers need to move in so that we get better consistency in
-libxfs between user and kernel space. We don't have to do everyone
-at once and make code pristine perfect before merging it. Merging
-functional, working code is far better than trying to polish off
-every rough edge of every patch before considering them for merge..
+AFAICT, the only reason for having the zone array is so that
+xfs_btree_alloc_cursor() can do a lookup via btnum into the array to
+get the maxlevels and kmem cache pointer to allocate from.
 
-> Anything else like that that you don't actually consider quite ready,
-> in the first 3 patches?
+Given that we've just called into xfs_btree_alloc_cursor() from the
+specific btree type we are allocating the cursor for (that's where
+we got btnum from!), we should just be passing these type specific
+variables directly from the caller like we do for btnum. That gets
+rid of the need for the zone array completely....
 
-Nope.
+i.e. I don't see why the per-type cache information needs to be
+global information. The individual max-level calculations could just
+be individual kmem_cache_alloc() calls to set locally defined (i.e.
+static global) cache pointers and max size variables.
 
--Dave.
+> diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+> index c8fea6a464d5..ce428c98e7c4 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc_btree.c
+> +++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+> @@ -541,6 +541,17 @@ xfs_inobt_maxrecs(
+>  	return blocklen / (sizeof(xfs_inobt_key_t) + sizeof(xfs_inobt_ptr_t));
+>  }
+>  
+> +unsigned int
+> +xfs_inobt_absolute_maxlevels(void)
+> +{
+> +	unsigned int		minrecs[2];
+> +
+> +	xfs_btree_absolute_minrecs(minrecs, 0, sizeof(xfs_inobt_rec_t),
+> +			sizeof(xfs_inobt_key_t) + sizeof(xfs_inobt_ptr_t));
+> +
+> +	return xfs_btree_compute_maxlevels(minrecs, XFS_MAX_AG_INODES);
+> +}
+
+i.e. rather than returning the size here, we do:
+
+static int xfs_inobt_maxlevels;
+static struct kmem_cache xfs_inobt_cursor_cache;
+
+int __init
+xfs_inobt_create_cursor_cache(void)
+{
+	unsigned int		minrecs[2];
+
+	xfs_btree_absolute_minrecs(minrecs, 0, sizeof(xfs_inobt_rec_t),
+			sizeof(xfs_inobt_key_t) + sizeof(xfs_inobt_ptr_t));
+	xfs_inobt_maxlevels = xfs_btree_compute_maxlevels(minrecs,
+			XFS_MAX_AG_INODES);
+	xfs_inobt_cursor_cache = kmem_cache_alloc("xfs_inobt_cur",
+			xfs_btree_cur_sizeof(xfs_inobt_maxlevels),
+			0, 0, NULL);
+	if (!xfs_inobt_cursor_cache)
+		return -ENOMEM;
+	return 0;
+}
+
+void
+xfs_inobt_destroy_cursor_cache(void)
+{
+	kmem_cache_destroy(xfs_inobt_cursor_cache);
+}
+
+and nothing outside fs/xfs/libxfs/xfs_ialloc_btree.c ever needs to
+know about these variables as they only ever feed into
+xfs_btree_alloc_cursor() from xfs_inobt_init_common().
+
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
