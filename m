@@ -2,191 +2,327 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EBA4FC4332F
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Sep 2021 01:41:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76BA6C433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Sep 2021 15:01:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C955D610A2
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Sep 2021 01:41:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5D33C60F4A
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Sep 2021 15:01:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232417AbhI0Bmu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 26 Sep 2021 21:42:50 -0400
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:20627 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232405AbhI0Bmt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 Sep 2021 21:42:49 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1632706872; x=1664242872;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=xJ0TLHwb9tSGKFai8gOTtlCcwirLmQjZkSZn+OmDpkI=;
-  b=j0BYjf5Ulk8E3mvqPz2nJjLb44kDMpdtH9VujN1fjll4P4q9x70Wq4QV
-   f9BO34L024UP7lDPGaWE4f9Ah934jarjAGe+ifimAOIRNXfVvfsRzUhuw
-   zWOZDM3q0mdivrU63+PY2N16j12jimppqEhpNJXVwUkfLEBJ1cyNdsXa+
-   KFEeKCslN0PV8jrxcyRTDjykfNf+lSZW17vBwLiXtdf9BRr0ZT2zOty+v
-   2bAM4oQpLrSUthxt21OnenU5xWRhYvffVDKkiQXO9Rr/z4J/WD37B49Nt
-   xPdNE00ALDlvVpW9jI5oGGnx0k3d+z5MWmr2wL3ac92dvwqGeg5bMT0bk
-   g==;
-X-IronPort-AV: E=Sophos;i="5.85,325,1624291200"; 
-   d="scan'208";a="180083666"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 27 Sep 2021 09:41:11 +0800
-IronPort-SDR: So/K+Z0COSZXoddXkc3RUYaAE13DrgI1yeZNqPmq4tJ7UnWs8XMWnabDEPuetNPEUNPopWtjKb
- jiRjwlQJuVNRRI3vD++h7sZ2XPWJ28PG+NAhtmuvOlI0y9vzMAbdtZh1ir/SBzpiNKJJMA4lvi
- Ji9wnBZ6Va45y6zKqbHiUA6WRlka4vD6AR4nHSVNoPyDsx6V8Z9texIgb96MKpnBbA7oEMQIR9
- PXpui6RLgiqFs6OQEQ9Caqp0sggLMv+GkClL5K6/z9EdT/3sI2MO0PJmTH6nTbL3XtKM4kl9Fv
- E99yI17XwoYc0s5D3nCLh4Rm
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Sep 2021 18:15:44 -0700
-IronPort-SDR: 8a/QvLiRqxpQNZyEAfTFvGWpQnO0lrBEEupS4ymw/+x+EHlQDxa+CWL9Qjbimiv0tj4v8mxjAt
- g+n6FnytTJuPmLfkx1JiMNYuOI9Ekaf1UbS+5xkz+LgtfzimcTJPmpdoysr3FuHWvwHuNLAehb
- y70FPmztNDG3iML08Hzc7/zH9IIvaTv7rosmP1KuNyWvKuTxOKj9jk4l63mw/hWYSji1TNhN93
- DT4toshKizC7DdiaG9d6d4Sozuwyqz+mkS8ILufGfz58Hou1qoYDMzbkqEF3G1NK2S311X/rhr
- zXc=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Sep 2021 18:41:11 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4HHlj22gMGz1SHvx
-        for <linux-xfs@vger.kernel.org>; Sun, 26 Sep 2021 18:41:10 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1632706869; x=1635298870; bh=xJ0TLHwb9tSGKFai8gOTtlCcwirLmQjZkSZ
-        n+OmDpkI=; b=HN3oMIlc4PuWgWFdu4EY/XuVN0W8MKCvMIm7xDne77yHlFKv2Rz
-        6IZ2P0nYmvVYAcdt0dA/M2RUDjkC5PheQOH4SGJaVKtoWyATP35gmtiyylPJ9bgt
-        yE+GnEiKKNrU3L/xW3temhUlOJFv/d5GBdO1McLsUFAXOZI5os7no8VPJ1+whrSz
-        tO5sZyzNHDzZHcxKyL/f5rA/c2imN/HzjV1ep3/qqbyix2apLOeA0ZeBzmu7iF3w
-        97W18UizbSD2qtiiDiBkDdM4f7hBsMrjSPlnEcwlS6CqN72Nw0dXVeUoNPuJ8ePY
-        3thuGvs1qdVy7pWAwHtLX4nP18HxjrjRKoQ==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id uf5_ORfYrfpy for <linux-xfs@vger.kernel.org>;
-        Sun, 26 Sep 2021 18:41:09 -0700 (PDT)
-Received: from [10.89.85.1] (c02drav6md6t.dhcp.fujisawa.hgst.com [10.89.85.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4HHlhy0bYrz1RvTg;
-        Sun, 26 Sep 2021 18:41:05 -0700 (PDT)
-Message-ID: <2f933d26-541c-06eb-e5d3-336c05f31f1d@opensource.wdc.com>
-Date:   Mon, 27 Sep 2021 10:41:04 +0900
+        id S234893AbhI0PCt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 27 Sep 2021 11:02:49 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:60839 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S235043AbhI0PCn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Sep 2021 11:02:43 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1632754865;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=yO1F5xV/w3jVVx3CqCKE+zM6zxRBKmBmGEUCcB0x0Q0=;
+        b=VHFyOVlaOlKS/KfM08wAWgkd2RPnjzJ0c4LA3gkarXetYExVH+OhFCZYhTb3WJH6Uy9G2e
+        XwnByMvlzyZFL3+GXvhgH3mFDPF3LWIWdTOr9qlCoOJm+x9IDb93CZJLBU3iN9pGcaglrg
+        qU/m+a2xCoDQY8UQCNyFu1TOcSsoe0w=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-64-0ys8d1JIMfGFeSmBfLZOPA-1; Mon, 27 Sep 2021 11:01:01 -0400
+X-MC-Unique: 0ys8d1JIMfGFeSmBfLZOPA-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 7D5BE802921;
+        Mon, 27 Sep 2021 15:01:00 +0000 (UTC)
+Received: from redhat.com (unknown [10.22.17.105])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id CC66F6C8FC;
+        Mon, 27 Sep 2021 15:00:48 +0000 (UTC)
+Date:   Mon, 27 Sep 2021 10:00:47 -0500
+From:   Bill O'Donnell <billodo@redhat.com>
+To:     Gao Xiang <hsiangkao@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>,
+        Donald Douwsma <ddouwsma@redhat.com>
+Subject: Re: [RFC PATCH v2] xfsrestore: fix rootdir due to xfsdump bulkstat
+ misuse
+Message-ID: <20210927150047.h6czo5ege2ogcql5@redhat.com>
+References: <20201113125127.966243-1-hsiangkao@redhat.com>
+ <20201116080723.1486270-1-hsiangkao@redhat.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.1.1
-Subject: Re: [PATCH v3 9/9] mm: Remove swap BIO paths and only use DIO paths
-Content-Language: en-US
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Matthew Wilcox <willy@infradead.org>,
-        David Howells <dhowells@redhat.com>, hch@lst.de,
-        trond.myklebust@primarydata.com, Jens Axboe <axboe@kernel.dk>,
-        "Darrick J. Wong" <djwong@kernel.org>, linux-block@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-mm@kvack.org, darrick.wong@oracle.com,
-        viro@zeniv.linux.org.uk, jlayton@kernel.org,
-        torvalds@linux-foundation.org, linux-nfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <YU84rYOyyXDP3wjp@casper.infradead.org>
- <163250387273.2330363.13240781819520072222.stgit@warthog.procyon.org.uk>
- <163250396319.2330363.10564506508011638258.stgit@warthog.procyon.org.uk>
- <2396106.1632584202@warthog.procyon.org.uk>
- <YU9X2o74+aZP4iWV@casper.infradead.org>
- <5fde9167-6f8b-c698-f34d-d7fafd4219f7@opensource.wdc.com>
- <20210927012527.GF1756565@dread.disaster.area>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital
-In-Reply-To: <20210927012527.GF1756565@dread.disaster.area>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201116080723.1486270-1-hsiangkao@redhat.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2021/09/27 10:25, Dave Chinner wrote:
-> On Mon, Sep 27, 2021 at 08:08:53AM +0900, Damien Le Moal wrote:
->> On 2021/09/26 2:09, Matthew Wilcox wrote:
->>> On Sat, Sep 25, 2021 at 04:36:42PM +0100, David Howells wrote:
->>>> Matthew Wilcox <willy@infradead.org> wrote:
->>>>
->>>>> On Fri, Sep 24, 2021 at 06:19:23PM +0100, David Howells wrote:
->>>>>> Delete the BIO-generating swap read/write paths and always use ->swap_rw().
->>>>>> This puts the mapping layer in the filesystem.
->>>>>
->>>>> Is SWP_FS_OPS now unused after this patch?
->>>>
->>>> Ummm.  Interesting question - it's only used in swap_set_page_dirty():
->>>>
->>>> int swap_set_page_dirty(struct page *page)
->>>> {
->>>> 	struct swap_info_struct *sis = page_swap_info(page);
->>>>
->>>> 	if (data_race(sis->flags & SWP_FS_OPS)) {
->>>> 		struct address_space *mapping = sis->swap_file->f_mapping;
->>>>
->>>> 		VM_BUG_ON_PAGE(!PageSwapCache(page), page);
->>>> 		return mapping->a_ops->set_page_dirty(page);
->>>> 	} else {
->>>> 		return __set_page_dirty_no_writeback(page);
->>>> 	}
->>>> }
->>>
->>> I suspect that's no longer necessary.  NFS was the only filesystem
->>> using SWP_FS_OPS and ...
->>>
->>> fs/nfs/file.c:  .set_page_dirty = __set_page_dirty_nobuffers,
->>>
->>> so it's not like NFS does anything special to reserve memory to write
->>> back swap pages.
->>>
->>>>> Also, do we still need ->swap_activate and ->swap_deactivate?
->>>>
->>>> f2fs does quite a lot of work in its ->swap_activate(), as does btrfs.  I'm
->>>> not sure how necessary it is.  cifs looks like it intends to use it, but it's
->>>> not fully implemented yet.  zonefs and nfs do some checking, including hole
->>>> checking in nfs's case.  nfs also does some setting up for the sunrpc
->>>> transport.
->>>>
->>>> btrfs, cifs, f2fs and nfs all supply ->swap_deactivate() to undo the effects
->>>> of the activation.
->>>
->>> Right ... so my question really is, now that we're doing I/O through
->>> aops->direct_IO (or ->swap_rw), do those magic things need to be done?
->>> After all, open(O_DIRECT) doesn't do these same magic things.  They're
->>> really there to allow the direct-to-BIO path to work, and you're removing
->>> that here.
->>
->> For zonefs, ->swap_activate() checks that the user is not trying to use a
->> sequential write only file for swap. Swap cannot work on these files as there
->> are no guarantees that the writes will be sequential.
+On Mon, Nov 16, 2020 at 04:07:23PM +0800, Gao Xiang wrote:
+> If rootino is wrong and misspecified to a subdir inode #,
+> the following assertion could be triggered:
+>   assert(ino != persp->p_rootino || hardh == persp->p_rooth);
 > 
-> iomap_swapfile_activate() is used by ext4, XFS and zonefs. It checks
-> there are no holes in the file, no shared extents, no inline
-> extents, the swap info block device matches the block device the
-> extent is mapped to (i.e. filesystems can have more than one bdev,
-> swapfile only supports files on sb->s_bdev), etc.
+> This patch adds a '-x' option (another awkward thing is that
+> the codebase doesn't support long options) to address
+> problamatic images by searching for the real dir, the reason
+> that I don't enable it by default is that I'm not very confident
+> with the xfsrestore codebase and xfsdump bulkstat issue will
+> also be fixed immediately as well, so this function might be
+> optional and only useful for pre-exist corrupted dumps.
+> 
+> In details, my understanding of the original logic is
+>  1) xfsrestore will create a rootdir node_t (p_rooth);
+>  2) it will build the tree hierarchy from inomap and adopt
+>     the parent if needed (so inodes whose parent ino hasn't
+>     detected will be in the orphan dir, p_orphh);
+>  3) during this period, if ino == rootino and
+>     hardh != persp->p_rooth (IOWs, another node_t with
+>     the same ino # is created), that'd be definitely wrong.
+> 
+> So the proposal fix is that
+>  - considering the xfsdump root ino # is a subdir inode, it'll
+>    trigger ino == rootino && hardh != persp->p_rooth condition;
+>  - so we log this node_t as persp->p_rooth rather than the
+>    initial rootdir node_t created in 1);
+>  - we also know that this node is actually a subdir, and after
+>    the whole inomap is scanned (IOWs, the tree is built),
+>    the real root dir will have the orphan dir parent p_orphh;
+>  - therefore, we walk up by the parent until some node_t has
+>    the p_orphh, so that's it.
+> 
+> Cc: Donald Douwsma <ddouwsma@redhat.com>
+> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
 
-OK. But I was referring to the additional check in zonefs_swap_activate() before
-iomap_swapfile_activate() is called. We must prevent that function from being
-called for a full sequential write only zone file since such file will pass all
-checks (no hole, all extents written etc) but cannot be used for swap since it
-is not writtable when full (no overwrites allowed in sequential zones).
+I used your manual fault injection patch to test, and this solution
+works for me. Thanks!
 
+Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+
+> ---
+> changes since RFC v1:
+>  - fix non-dir fake rootino cases since tree_begindir()
+>    won't be triggered for these non-dir, and we could do
+>    that in tree_addent() instead (fault injection verified);
 > 
-> Also, I noticed, iomap_swapfile_add_extent() filters out extents
-> that are smaller than PAGE_SIZE, and aligns larger extents to
-> PAGE_SIZE. This allows ensures that when fs block size != PAGE_SIZE
-> that only a single IO per page being swapped is required. i.e. the
-> DIO path may change the "one page, one bio, one IO" behaviour that
-> the current swapfile mapping guarantees.
+>  - fix fake rootino case with gen = 0 as well, for more
+>    details, see the inlined comment in link_hardh()
+>    (fault injection verified as well).
 > 
-> Cheers,
+> Anyway, all of this behaves like a workaround and I have
+> no idea how to deal it more gracefully.
 > 
-> Dave.
+>  restore/content.c |  7 +++++
+>  restore/getopt.h  |  4 +--
+>  restore/tree.c    | 70 ++++++++++++++++++++++++++++++++++++++++++++---
+>  restore/tree.h    |  2 ++
+>  4 files changed, 77 insertions(+), 6 deletions(-)
+> 
+> diff --git a/restore/content.c b/restore/content.c
+> index 6b22965..e807a83 100644
+> --- a/restore/content.c
+> +++ b/restore/content.c
+> @@ -865,6 +865,7 @@ static int quotafilecheck(char *type, char *dstdir, char *quotafile);
+>  
+>  bool_t content_media_change_needed;
+>  bool_t restore_rootdir_permissions;
+> +bool_t need_fixrootdir;
+>  char *media_change_alert_program = NULL;
+>  size_t perssz;
+>  
+> @@ -964,6 +965,7 @@ content_init(int argc, char *argv[], size64_t vmsz)
+>  	stsz = 0;
+>  	interpr = BOOL_FALSE;
+>  	restore_rootdir_permissions = BOOL_FALSE;
+> +	need_fixrootdir = BOOL_FALSE;
+>  	optind = 1;
+>  	opterr = 0;
+>  	while ((c = getopt(argc, argv, GETOPT_CMDSTRING)) != EOF) {
+> @@ -1189,6 +1191,9 @@ content_init(int argc, char *argv[], size64_t vmsz)
+>  		case GETOPT_FMT2COMPAT:
+>  			tranp->t_truncategenpr = BOOL_TRUE;
+>  			break;
+> +		case GETOPT_FIXROOTDIR:
+> +			need_fixrootdir = BOOL_TRUE;
+> +			break;
+>  		}
+>  	}
+>  
+> @@ -3140,6 +3145,8 @@ applydirdump(drive_t *drivep,
+>  			return rv;
+>  		}
+>  
+> +		if (need_fixrootdir)
+> +			tree_fixroot();
+>  		persp->s.dirdonepr = BOOL_TRUE;
+>  	}
+>  
+> diff --git a/restore/getopt.h b/restore/getopt.h
+> index b5bc004..b0c0c7d 100644
+> --- a/restore/getopt.h
+> +++ b/restore/getopt.h
+> @@ -26,7 +26,7 @@
+>   * purpose is to contain that command string.
+>   */
+>  
+> -#define GETOPT_CMDSTRING	"a:b:c:def:himn:op:qrs:tv:wABCDEFG:H:I:JKL:M:NO:PQRS:TUVWX:Y:"
+> +#define GETOPT_CMDSTRING	"a:b:c:def:himn:op:qrs:tv:wxABCDEFG:H:I:JKL:M:NO:PQRS:TUVWX:Y:"
+>  
+>  #define GETOPT_WORKSPACE	'a'	/* workspace dir (content.c) */
+>  #define GETOPT_BLOCKSIZE        'b'     /* blocksize for rmt */
+> @@ -51,7 +51,7 @@
+>  /*				'u' */
+>  #define	GETOPT_VERBOSITY	'v'	/* verbosity level (0 to 4) */
+>  #define	GETOPT_SMALLWINDOW	'w'	/* use a small window for dir entries */
+> -/*				'x' */
+> +#define GETOPT_FIXROOTDIR	'x'	/* try to fix rootdir due to bulkstat misuse */
+>  /*				'y' */
+>  /*				'z' */
+>  #define	GETOPT_NOEXTATTR	'A'	/* do not restore ext. file attr. */
+> diff --git a/restore/tree.c b/restore/tree.c
+> index 0670318..918fa01 100644
+> --- a/restore/tree.c
+> +++ b/restore/tree.c
+> @@ -15,7 +15,6 @@
+>   * along with this program; if not, write the Free Software Foundation,
+>   * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+>   */
+> -
+>  #include <stdio.h>
+>  #include <unistd.h>
+>  #include <stdlib.h>
+> @@ -265,6 +264,7 @@ extern void usage(void);
+>  extern size_t pgsz;
+>  extern size_t pgmask;
+>  extern bool_t restore_rootdir_permissions;
+> +extern bool_t need_fixrootdir;
+>  
+>  /* forward declarations of locally defined static functions ******************/
+>  
+> @@ -331,10 +331,45 @@ static tran_t *tranp = 0;
+>  static char *persname = PERS_NAME;
+>  static char *orphname = ORPH_NAME;
+>  static xfs_ino_t orphino = ORPH_INO;
+> +static nh_t orig_rooth = NH_NULL;
+>  
+>  
+>  /* definition of locally defined global functions ****************************/
+>  
+> +void
+> +tree_fixroot(void)
+> +{
+> +	nh_t		rooth = persp->p_rooth;
+> +	xfs_ino_t 	rootino;
+> +
+> +	while (1) {
+> +		nh_t	parh;
+> +		node_t *rootp = Node_map(rooth);
+> +
+> +		rootino = rootp->n_ino;
+> +		parh = rootp->n_parh;
+> +		Node_unmap(rooth, &rootp);
+> +
+> +		if (parh == rooth ||
+> +		/*
+> +		 * since all new node (including non-parent)
+> +		 * would be adopted into orphh
+> +		 */
+> +		    parh == persp->p_orphh ||
+> +		    parh == NH_NULL)
+> +			break;
+> +		rooth = parh;
+> +	}
+> +
+> +	if (rooth != persp->p_rooth) {
+> +		persp->p_rooth = rooth;
+> +		persp->p_rootino = rootino;
+> +
+> +		mlog(MLOG_NORMAL, _("fix root # to %llu (bind mount?)\n"),
+> +		     rootino);
+> +	}
+> +}
+> +
+>  /* ARGSUSED */
+>  bool_t
+>  tree_init(char *hkdir,
+> @@ -754,7 +789,8 @@ tree_begindir(filehdr_t *fhdrp, dah_t *dahp)
+>  	/* lookup head of hardlink list
+>  	 */
+>  	hardh = link_hardh(ino, gen);
+> -	assert(ino != persp->p_rootino || hardh == persp->p_rooth);
+> +	if (need_fixrootdir == BOOL_FALSE)
+> +		assert(ino != persp->p_rootino || hardh == persp->p_rooth);
+>  
+>  	/* already present
+>  	 */
+> @@ -823,7 +859,6 @@ tree_begindir(filehdr_t *fhdrp, dah_t *dahp)
+>  		adopt(persp->p_orphh, hardh, NRH_NULL);
+>  		*dahp = dah;
+>  	}
+> -
+>  	return hardh;
+>  }
+>  
+> @@ -968,6 +1003,7 @@ tree_addent(nh_t parh, xfs_ino_t ino, gen_t gen, char *name, size_t namelen)
+>  				}
+>  			} else {
+>  				assert(hardp->n_nrh != NRH_NULL);
+> +
+>  				namebuflen
+>  				=
+>  				namreg_get(hardp->n_nrh,
+> @@ -1118,6 +1154,13 @@ tree_addent(nh_t parh, xfs_ino_t ino, gen_t gen, char *name, size_t namelen)
+>  		      ino,
+>  		      gen);
+>  	}
+> +	/* found the fake rootino from subdir, need fix p_rooth. */
+> +	if (need_fixrootdir == BOOL_TRUE &&
+> +	    persp->p_rootino == ino && hardh != persp->p_rooth) {
+> +		mlog(MLOG_NORMAL,
+> +		     _("found fake rootino #%llu, will fix.\n"), ino);
+> +		persp->p_rooth = hardh;
+> +	}
+>  	return RV_OK;
+>  }
+>  
+> @@ -3841,7 +3884,26 @@ selsubtree_recurse_down(nh_t nh, bool_t sensepr)
+>  static nh_t
+>  link_hardh(xfs_ino_t ino, gen_t gen)
+>  {
+> -	return hash_find(ino, gen);
+> +	nh_t tmp = hash_find(ino, gen);
+> +
+> +	/*
+> +	 * XXX (another workaround): the simply way is that don't reuse node_t
+> +	 * with gen = 0 created in tree_init(). Otherwise, it could cause
+> +	 * xfsrestore: tree.c:1003: tree_addent: Assertion
+> +	 * `hardp->n_nrh != NRH_NULL' failed.
+> +	 * and that node_t is a dir node but the fake rootino could be a non-dir
+> +	 * plus reusing it could cause potential loop in tree hierarchy.
+> +	 */
+> +	if (need_fixrootdir == BOOL_TRUE &&
+> +	    ino == persp->p_rootino && gen == 0 &&
+> +	    orig_rooth == NH_NULL) {
+> +		mlog(MLOG_NORMAL,
+> +_("link out fake rootino %llu with gen=0 created in tree_init()\n"), ino);
+> +		link_out(tmp);
+> +		orig_rooth = tmp;
+> +		return NH_NULL;
+> +	}
+> +	return tmp;
+>  }
+>  
+>  /* returns following node in hard link list
+> diff --git a/restore/tree.h b/restore/tree.h
+> index 4f9ffe8..5d0c346 100644
+> --- a/restore/tree.h
+> +++ b/restore/tree.h
+> @@ -18,6 +18,8 @@
+>  #ifndef TREE_H
+>  #define TREE_H
+>  
+> +void tree_fixroot(void);
+> +
+>  /* tree_init - creates a new tree abstraction.
+>   */
+>  extern bool_t tree_init(char *hkdir,
+> -- 
+> 2.18.4
 > 
 
-
--- 
-Damien Le Moal
-Western Digital Research
