@@ -2,156 +2,194 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FF3BC433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Sep 2021 21:07:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 434E9C433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Sep 2021 21:57:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7139E60EFD
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Sep 2021 21:07:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 174DF61041
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Sep 2021 21:57:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237076AbhI0VJc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 27 Sep 2021 17:09:32 -0400
-Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:41697 "EHLO
-        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S236743AbhI0VJb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Sep 2021 17:09:31 -0400
+        id S237467AbhI0V7K (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 27 Sep 2021 17:59:10 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:38743 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S237399AbhI0V7K (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Sep 2021 17:59:10 -0400
 Received: from dread.disaster.area (pa49-195-238-16.pa.nsw.optusnet.com.au [49.195.238.16])
-        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 86368106BC8;
-        Tue, 28 Sep 2021 07:07:51 +1000 (AEST)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 6A019883E0A;
+        Tue, 28 Sep 2021 07:57:30 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1mUxqo-00HRym-VE; Tue, 28 Sep 2021 07:07:50 +1000
-Date:   Tue, 28 Sep 2021 07:07:50 +1000
+        id 1mUycr-00HSnl-Bt; Tue, 28 Sep 2021 07:57:29 +1000
+Date:   Tue, 28 Sep 2021 07:57:29 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Jane Chu <jane.chu@oracle.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Subject: Re: [PATCH 3/5] vfs: add a zero-initialization mode to fallocate
-Message-ID: <20210927210750.GH1756565@dread.disaster.area>
-References: <20210922054931.GT1756565@dread.disaster.area>
- <20210922212725.GN570615@magnolia>
- <20210923000255.GO570615@magnolia>
- <20210923014209.GW1756565@dread.disaster.area>
- <CAPcyv4j77cWASW1Qp=J8poVRi8+kDQbBsLZb0HY+dzeNa=ozNg@mail.gmail.com>
- <CAPcyv4in7WRw1_e5iiQOnoZ9QjQWhjj+J7HoDf3ObweUvADasg@mail.gmail.com>
- <20210923225433.GX1756565@dread.disaster.area>
- <CAPcyv4jsU1ZBY0MNKf9CCCFaR4qcwUCRmZHstPpF02pefKnDtg@mail.gmail.com>
- <09ed3c3c-391b-bf91-2456-d7f7ca5ab2fb@oracle.com>
- <20210924013516.GB570577@magnolia>
+Cc:     chandan.babu@oracle.com, chandanrlinux@gmail.com,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/4] xfs: check absolute maximum nlevels for each btree
+ type
+Message-ID: <20210927215729.GI1756565@dread.disaster.area>
+References: <163244685787.2701674.13029851795897591378.stgit@magnolia>
+ <163244687436.2701674.5377184817013946444.stgit@magnolia>
+ <20210926004343.GC1756565@dread.disaster.area>
+ <20210927181751.GS570615@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210924013516.GB570577@magnolia>
+In-Reply-To: <20210927181751.GS570615@magnolia>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=epq8cqlX c=1 sm=1 tr=0 ts=615232a8
+X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
         a=DzKKRZjfViQTE5W6EVc0VA==:117 a=DzKKRZjfViQTE5W6EVc0VA==:17
-        a=kj9zAlcOel0A:10 a=7QKq2e-ADPsA:10 a=7-415B0cAAAA:8 a=QyXUC8HyAAAA:8
-        a=ZdkKxCtHSC7M8R2DOccA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=7QKq2e-ADPsA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=bXSMoOxmo52nUMYyag8A:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 23, 2021 at 06:35:16PM -0700, Darrick J. Wong wrote:
-> On Thu, Sep 23, 2021 at 06:21:19PM -0700, Jane Chu wrote:
-> > 
-> > On 9/23/2021 6:18 PM, Dan Williams wrote:
-> > > On Thu, Sep 23, 2021 at 3:54 PM Dave Chinner <david@fromorbit.com> wrote:
-> > > > 
-> > > > On Wed, Sep 22, 2021 at 10:42:11PM -0700, Dan Williams wrote:
-> > > > > On Wed, Sep 22, 2021 at 7:43 PM Dan Williams <dan.j.williams@intel.com> wrote:
-> > > > > > 
-> > > > > > On Wed, Sep 22, 2021 at 6:42 PM Dave Chinner <david@fromorbit.com> wrote:
-> > > > > > [..]
-> > > > > > > Hence this discussion leads me to conclude that fallocate() simply
-> > > > > > > isn't the right interface to clear storage hardware poison state and
-> > > > > > > it's much simpler for everyone - kernel and userspace - to provide a
-> > > > > > > pwritev2(RWF_CLEAR_HWERROR) flag to directly instruct the IO path to
-> > > > > > > clear hardware error state before issuing this user write to the
-> > > > > > > hardware.
-> > > > > > 
-> > > > > > That flag would slot in nicely in dax_iomap_iter() as the gate for
-> > > > > > whether dax_direct_access() should allow mapping over error ranges,
-> > > > > > and then as a flag to dax_copy_from_iter() to indicate that it should
-> > > > > > compare the incoming write to known poison and clear it before
-> > > > > > proceeding.
-> > > > > > 
-> > > > > > I like the distinction, because there's a chance the application did
-> > > > > > not know that the page had experienced data loss and might want the
-> > > > > > error behavior. The other service the driver could offer with this
-> > > > > > flag is to do a precise check of the incoming write to make sure it
-> > > > > > overlaps known poison and then repair the entire page. Repairing whole
-> > > > > > pages makes for a cleaner implementation of the code that tries to
-> > > > > > keep poison out of the CPU speculation path, {set,clear}_mce_nospec().
-> > > > > 
-> > > > > This flag could also be useful for preadv2() as there is currently no
-> > > > > way to read the good data in a PMEM page with poison via DAX. So the
-> > > > > flag would tell dax_direct_access() to again proceed in the face of
-> > > > > errors, but then the driver's dax_copy_to_iter() operation could
-> > > > > either read up to the precise byte offset of the error in the page, or
-> > > > > autoreplace error data with zero's to try to maximize data recovery.
-> > > > 
-> > > > Yes, it could. I like the idea - say RWF_IGNORE_HWERROR - to read
-> > > > everything that can be read from the bad range because it's the
-> > > > other half of the problem RWF_RESET_HWERROR is trying to address.
-> > > > That is, the operation we want to perform on a range with an error
-> > > > state is -data recovery-, not "reinitialisation". Data recovery
-> > > > requires two steps:
-> > > > 
-> > > > - "try to recover the data from the bad storage"; and
-> > > > - "reinitialise the data and clear the error state"
-> > > > 
-> > > > These naturally map to read() and write() operations, not
-> > > > fallocate(). With RWF flags they become explicit data recovery
-> > > > operations, unlike fallocate() which needs to imply that "writing
-> > > > zeroes" == "reset hardware error state". While that reset method
-> > > > may be true for a specific pmem hardware implementation it is not a
-> > > > requirement for all storage hardware. It's most definitely not a
-> > > > requirement for future storage hardware, either.
-> > > > 
-> > > > It also means that applications have no choice in what data they can
-> > > > use to reinitialise the damaged range with because fallocate() only
-> > > > supports writing zeroes. If we've recovered data via a read() as you
-> > > > suggest we could, then we can rebuild the data from other redundant
-> > > > information and immediately write that back to the storage, hence
-> > > > repairing the fault.
-> > > > 
-> > > > That, in turn, allows the filesystem to turn the RWF_RESET_HWERROR
-> > > > write into an exclusive operation and hence allow the
-> > > > reinitialisation with the recovered/repaired state to run atomically
-> > > > w.r.t. all other filesystem operations.  i.e. the reset write
-> > > > completes the recovery operation instead of requiring separate
-> > > > "reset" and "write recovered data into zeroed range" steps that
-> > > > cannot be executed atomically by userspace...
+On Mon, Sep 27, 2021 at 11:17:51AM -0700, Darrick J. Wong wrote:
+> On Sun, Sep 26, 2021 at 10:43:43AM +1000, Dave Chinner wrote:
+> > On Thu, Sep 23, 2021 at 06:27:54PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
 > > > 
-> > > /me nods
-> > > 
-> > > Jane, want to take a run at patches for this ^^^?
-> > > 
+> > > Add code for all five btree types so that we can compute the absolute
+> > > maximum possible btree height for each btree type, and then check that
+> > > none of them exceed XFS_BTREE_CUR_ZONE_MAXLEVELS.  The code to do the
+> > > actual checking is a little excessive, but it sets us up for per-type
+> > > cursor zones in the next patch.
 > > 
-> > Sure, I'll give it a try.
+> > Ok, I think the cursor "zone" array is the wrong approach here.
 > > 
-> > Thank you all for the discussions!
+> > First of all - can we stop using the term "zone" for new code?
+> > That's the old irix terminolgy for slab caches, and we have been
+> > moving away from that to the Linux "kmem_cache" terminology and
+> > types for quite some time.
+> > 
+> > AFAICT, the only reason for having the zone array is so that
+> > xfs_btree_alloc_cursor() can do a lookup via btnum into the array to
+> > get the maxlevels and kmem cache pointer to allocate from.
+> > 
+> > Given that we've just called into xfs_btree_alloc_cursor() from the
+> > specific btree type we are allocating the cursor for (that's where
+> > we got btnum from!), we should just be passing these type specific
+> > variables directly from the caller like we do for btnum. That gets
+> > rid of the need for the zone array completely....
+> > 
+> > i.e. I don't see why the per-type cache information needs to be
+> > global information. The individual max-level calculations could just
+> > be individual kmem_cache_alloc() calls to set locally defined (i.e.
+> > static global) cache pointers and max size variables.
 > 
-> Cool, thank you!
+> If the cache is a static variable inside xfs_fubar_btree.c, how do you
+> know which cache to pass to kmem_cache_free in xfs_btree_del_cursor?
+> Does this imply adding per-btree del_cursor functions and refactoring
+> the entire codebase to use them?
 
-I'd like to propose a slight modification to the API: a single RWF
-flag called RWF_RECOVER_DATA. On read, this means the storage tries
-to read all the data it can from the range, and for the parts it
-can't read data from (cachelines, sectors, whatever) it returns as
-zeroes.
+Use a switch statement on cur->bc_btnum and a function call to free
+the cursor? That's about the same CPU cost as a cacheline miss
+when looking up the global array for the cache pointer.
 
-On write, this means the errors over the range get cleared and the
-user data provided gets written over the top of whatever was there.
-Filesystems should perform this as an exclusive operation to that
-range of the file.
+The other obvious way of doing it is putting the cache pointer in
+the cursor itself. Cost is 8 bytes per cursor, but you've just
+reduced the size of most cursors by more than that so I see no big
+deal in using some of that space. It also means we don't take a
+cacheline miss just to look up the array that contains the pointer -
+the cursor will be hot at this point in time....
 
-That way we only need one IOCB_RECOVERY flag, and for communicating
-with lower storage layers (e.g. dm/md raid and/or hardware) only one
-REQ_RECOVERY flag is needed in the bio.
+<looks at kmem cache code>
 
-Thoughts?
+Huh.
+
+Both slab and slub keep the cache pointer in page->slab_cache. They
+don't actually need (or use!) the cache pointer to be supplied -
+kfree() would work just fine on kmem_cache allocated objects.
+
+The problem is SLOB - it doesn't do this, and the kmem_cache
+implementation is subtly different to the kmalloc implementation
+and it doesn't store the slab cache on page->slab_cache. So to
+support SLOB, we have to use kmem_cache_free().
+
+How's this for a triple negative that makes you scratch your head,
+but demonstrates that SLAB/SLUB can handle null cache pointers
+correctly:
+
+/*
+ * Caller must not use kfree_bulk() on memory not originally allocated
+ * by kmalloc(), because the SLOB allocator cannot handle this.
+ */
+static __always_inline void kfree_bulk(size_t size, void **p)
+{
+        kmem_cache_free_bulk(NULL, size, p);
+}
+
+Ok, so we can't completely optimise the cache pointer way (which
+would be the best solution), so I'd be leaning towards a pointer
+within the cursor..
+
+> I was /trying/ to get a dependent patchset ready so that Chandan could
+> submit the extent counters patchset for 5.16, not trigger a refactoring
+> of a whole ton of btree code.  If you want to hide the information that
+> badly, please take over this patchset and solve both the above problem
+> and then one below.
+
+I'm not trying to hide anything, just trying to keep the
+implementation modular and not reliant on an explosion of one-off
+global constructs that have to be repeatedly looked up on every
+operation. Just keep a pointer to the zone in the cursor....
+
+> > > diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+> > > index c8fea6a464d5..ce428c98e7c4 100644
+> > > --- a/fs/xfs/libxfs/xfs_ialloc_btree.c
+> > > +++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+> > > @@ -541,6 +541,17 @@ xfs_inobt_maxrecs(
+> > >  	return blocklen / (sizeof(xfs_inobt_key_t) + sizeof(xfs_inobt_ptr_t));
+> > >  }
+> > >  
+> > > +unsigned int
+> > > +xfs_inobt_absolute_maxlevels(void)
+> > > +{
+> > > +	unsigned int		minrecs[2];
+> > > +
+> > > +	xfs_btree_absolute_minrecs(minrecs, 0, sizeof(xfs_inobt_rec_t),
+> > > +			sizeof(xfs_inobt_key_t) + sizeof(xfs_inobt_ptr_t));
+> > > +
+> > > +	return xfs_btree_compute_maxlevels(minrecs, XFS_MAX_AG_INODES);
+> > > +}
+> > 
+> > i.e. rather than returning the size here, we do:
+> > 
+> > static int xfs_inobt_maxlevels;
+> > static struct kmem_cache xfs_inobt_cursor_cache;
+> > 
+> > int __init
+> > xfs_inobt_create_cursor_cache(void)
+> > {
+> > 	unsigned int		minrecs[2];
+> > 
+> > 	xfs_btree_absolute_minrecs(minrecs, 0, sizeof(xfs_inobt_rec_t),
+> > 			sizeof(xfs_inobt_key_t) + sizeof(xfs_inobt_ptr_t));
+> > 	xfs_inobt_maxlevels = xfs_btree_compute_maxlevels(minrecs,
+> > 			XFS_MAX_AG_INODES);
+> 
+> Something you couldn't have seen here is that the xfsprogs port contains
+> an addition to the xfs_db btheight switch to print these absolute maxima
+> so that we won't have to compute them by hand anymore.
+>
+> Maybe I should have noted both of these points in the commit message?
+> Though I've also been chided for submitting excessive comments in the
+> past, which is why I didn't.
+
+Please err on the side of verbosity in commit messages - it's better
+to document the obvious than it is to omit important design
+criteria.  Anyone reading the code is not going to know what your
+design constraints were if you don't document them. Making sure
+everyone knows you've created lots of little functions to build a
+global table in the kernel code "because userspace" needs to know
+of that "because userspace" requirement...
+
+I still don't like global tables like this we have to look up on
+every cursor del operation. I'd much prefer the object carries the
+state needed for generic code to perform operations on it
+efficiently...
 
 Cheers,
 
