@@ -2,154 +2,125 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D57D1C433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Sep 2021 18:17:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67540C433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Sep 2021 18:21:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BB14760F4B
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Sep 2021 18:17:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4AA9460EE9
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Sep 2021 18:21:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236029AbhI0STa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 27 Sep 2021 14:19:30 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50308 "EHLO mail.kernel.org"
+        id S235986AbhI0SXB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 27 Sep 2021 14:23:01 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51198 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236012AbhI0STa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 27 Sep 2021 14:19:30 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 503CC60F11;
-        Mon, 27 Sep 2021 18:17:52 +0000 (UTC)
+        id S235950AbhI0SXA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 27 Sep 2021 14:23:00 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 7C55460F11;
+        Mon, 27 Sep 2021 18:21:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1632766672;
-        bh=LfD71qjUxHHfVBqcpZkH9QdQG8j/Dr1ieZkoVuv4Okk=;
+        s=k20201202; t=1632766882;
+        bh=SAJZTbRYrLU9pkvLqDD2tUAtpnaizkJH43kZl7K4nec=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=IHKnrJu69NWBxsseFQ7CGfY9FptKVqNNggJC94tRvIiYhQqv+WT96IHTY9P7GFOn8
-         bqg1YdkdmzpJwHS9zupBCa2egp7Pi6YetQJK0xFg740luE5HM4bvxOcz//56DlZ2Rv
-         PKk+2UAp6VPUZnUaMrLjOmoSuFAf3aEykFmKAZMKGykRk/GsBexgNakauadxqE53fX
-         6uF0o+sxQERBkwQttlJq44b0s5gxwnm6BDJvTGaA0kylyK+keHcF5TfyjrkhHsAP7D
-         hF5SMfZaiB+WmfmzXA+4MM7lPt1OmyzcMVMOGq4rpQvfNDt57Pkkc6UNwu/jbLgMrN
-         C5gurRsECtFrw==
-Date:   Mon, 27 Sep 2021 11:17:51 -0700
+        b=HgGwcwK68If0i287P2LUheHVF1y8HcpMuLhAF9qjH3mBs32OBUY5rNm1upZeeiz32
+         uzeGRVazvYNOtUT2pmy+I6u05Tb5qOR+8za+b70pIYz24oHHb5L7dPLq5x6o7JwAuA
+         8jDUtvxg07zwS/lJe+j9euj1XKf5/FAcbc3sNeo9bXmiLwbqzxBWB/jSDRWHrkfwoP
+         uFh1vwUQBvr4cAoDFJSyJGtJ9uMbMbrKKLJBoOvBiVwJs4Ijkj4jbusghdv0oJs+RA
+         ofzKSflThdjA7R3hv2ekqE6/s6jAX7Vw4E2ybmDzXz2lPWGfvMRKOCKEpLRJ6bMGTc
+         BBXqkzd7lJicQ==
+Date:   Mon, 27 Sep 2021 11:21:22 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     chandan.babu@oracle.com, chandanrlinux@gmail.com,
         linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/4] xfs: check absolute maximum nlevels for each btree
+Subject: Re: [PATCH 4/4] xfs: use separate btree cursor slab for each btree
  type
-Message-ID: <20210927181751.GS570615@magnolia>
+Message-ID: <20210927182122.GT570615@magnolia>
 References: <163244685787.2701674.13029851795897591378.stgit@magnolia>
- <163244687436.2701674.5377184817013946444.stgit@magnolia>
- <20210926004343.GC1756565@dread.disaster.area>
+ <163244687985.2701674.5510358661953545557.stgit@magnolia>
+ <20210926004721.GD1756565@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210926004343.GC1756565@dread.disaster.area>
+In-Reply-To: <20210926004721.GD1756565@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Sep 26, 2021 at 10:43:43AM +1000, Dave Chinner wrote:
-> On Thu, Sep 23, 2021 at 06:27:54PM -0700, Darrick J. Wong wrote:
+On Sun, Sep 26, 2021 at 10:47:21AM +1000, Dave Chinner wrote:
+> On Thu, Sep 23, 2021 at 06:27:59PM -0700, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > Add code for all five btree types so that we can compute the absolute
-> > maximum possible btree height for each btree type, and then check that
-> > none of them exceed XFS_BTREE_CUR_ZONE_MAXLEVELS.  The code to do the
-> > actual checking is a little excessive, but it sets us up for per-type
-> > cursor zones in the next patch.
-> 
-> Ok, I think the cursor "zone" array is the wrong approach here.
-> 
-> First of all - can we stop using the term "zone" for new code?
-> That's the old irix terminolgy for slab caches, and we have been
-> moving away from that to the Linux "kmem_cache" terminology and
-> types for quite some time.
-> 
-> AFAICT, the only reason for having the zone array is so that
-> xfs_btree_alloc_cursor() can do a lookup via btnum into the array to
-> get the maxlevels and kmem cache pointer to allocate from.
-> 
-> Given that we've just called into xfs_btree_alloc_cursor() from the
-> specific btree type we are allocating the cursor for (that's where
-> we got btnum from!), we should just be passing these type specific
-> variables directly from the caller like we do for btnum. That gets
-> rid of the need for the zone array completely....
-> 
-> i.e. I don't see why the per-type cache information needs to be
-> global information. The individual max-level calculations could just
-> be individual kmem_cache_alloc() calls to set locally defined (i.e.
-> static global) cache pointers and max size variables.
-
-If the cache is a static variable inside xfs_fubar_btree.c, how do you
-know which cache to pass to kmem_cache_free in xfs_btree_del_cursor?
-Does this imply adding per-btree del_cursor functions and refactoring
-the entire codebase to use them?
-
-I was /trying/ to get a dependent patchset ready so that Chandan could
-submit the extent counters patchset for 5.16, not trigger a refactoring
-of a whole ton of btree code.  If you want to hide the information that
-badly, please take over this patchset and solve both the above problem
-and then one below.
-
-> > diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
-> > index c8fea6a464d5..ce428c98e7c4 100644
-> > --- a/fs/xfs/libxfs/xfs_ialloc_btree.c
-> > +++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
-> > @@ -541,6 +541,17 @@ xfs_inobt_maxrecs(
-> >  	return blocklen / (sizeof(xfs_inobt_key_t) + sizeof(xfs_inobt_ptr_t));
+> > Now that we have the infrastructure to track the max possible height of
+> > each btree type, we can create a separate slab zone for cursors of each
+> > type of btree.  For smaller indices like the free space btrees, this
+> > means that we can pack more cursors into a slab page, improving slab
+> > utilization.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  fs/xfs/libxfs/xfs_btree.c |   12 ++++++------
+> >  fs/xfs/libxfs/xfs_btree.h |    9 +--------
+> >  fs/xfs/xfs_super.c        |   33 ++++++++++++++++++++++++---------
+> >  3 files changed, 31 insertions(+), 23 deletions(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+> > index 120280c998f8..3131de9ae631 100644
+> > --- a/fs/xfs/libxfs/xfs_btree.c
+> > +++ b/fs/xfs/libxfs/xfs_btree.c
+> > @@ -26,7 +26,6 @@
+> >  /*
+> >   * Cursor allocation zone.
+> >   */
+> > -kmem_zone_t	*xfs_btree_cur_zone;
+> >  struct xfs_btree_cur_zone xfs_btree_cur_zones[XFS_BTNUM_MAX] = {
+> >  	[XFS_BTNUM_BNO]		= { .name = "xfs_alloc_btree_cur" },
+> >  	[XFS_BTNUM_INO]		= { .name = "xfs_ialloc_btree_cur" },
+> > @@ -364,6 +363,7 @@ xfs_btree_del_cursor(
+> >  	struct xfs_btree_cur	*cur,		/* btree cursor */
+> >  	int			error)		/* del because of error */
+> >  {
+> > +	struct xfs_btree_cur_zone *bczone = &xfs_btree_cur_zones[cur->bc_btnum];
+> >  	int			i;		/* btree level */
+> >  
+> >  	/*
+> > @@ -386,10 +386,10 @@ xfs_btree_del_cursor(
+> >  		kmem_free(cur->bc_ops);
+> >  	if (!(cur->bc_flags & XFS_BTREE_LONG_PTRS) && cur->bc_ag.pag)
+> >  		xfs_perag_put(cur->bc_ag.pag);
+> > -	if (cur->bc_maxlevels > XFS_BTREE_CUR_ZONE_MAXLEVELS)
+> > +	if (cur->bc_maxlevels > bczone->maxlevels)
+> >  		kmem_free(cur);
+> >  	else
+> > -		kmem_cache_free(xfs_btree_cur_zone, cur);
+> > +		kmem_cache_free(bczone->zone, cur);
 > >  }
 > >  
-> > +unsigned int
-> > +xfs_inobt_absolute_maxlevels(void)
-> > +{
-> > +	unsigned int		minrecs[2];
-> > +
-> > +	xfs_btree_absolute_minrecs(minrecs, 0, sizeof(xfs_inobt_rec_t),
-> > +			sizeof(xfs_inobt_key_t) + sizeof(xfs_inobt_ptr_t));
-> > +
-> > +	return xfs_btree_compute_maxlevels(minrecs, XFS_MAX_AG_INODES);
-> > +}
+> >  /*
+> > @@ -5021,12 +5021,12 @@ xfs_btree_alloc_cursor(
+> >  {
+> >  	struct xfs_btree_cur	*cur;
+> >  	unsigned int		maxlevels = xfs_btree_maxlevels(mp, btnum);
+> > +	struct xfs_btree_cur_zone *bczone = &xfs_btree_cur_zones[btnum];
+> >  
+> > -	if (maxlevels > XFS_BTREE_CUR_ZONE_MAXLEVELS)
+> > +	if (maxlevels > bczone->maxlevels)
+> >  		cur = kmem_zalloc(xfs_btree_cur_sizeof(maxlevels), KM_NOFS);
+> >  	else
+> > -		cur = kmem_cache_zalloc(xfs_btree_cur_zone,
+> > -				GFP_NOFS | __GFP_NOFAIL);
+> > +		cur = kmem_cache_zalloc(bczone->zone, GFP_NOFS | __GFP_NOFAIL);
 > 
-> i.e. rather than returning the size here, we do:
-> 
-> static int xfs_inobt_maxlevels;
-> static struct kmem_cache xfs_inobt_cursor_cache;
-> 
-> int __init
-> xfs_inobt_create_cursor_cache(void)
-> {
-> 	unsigned int		minrecs[2];
-> 
-> 	xfs_btree_absolute_minrecs(minrecs, 0, sizeof(xfs_inobt_rec_t),
-> 			sizeof(xfs_inobt_key_t) + sizeof(xfs_inobt_ptr_t));
-> 	xfs_inobt_maxlevels = xfs_btree_compute_maxlevels(minrecs,
-> 			XFS_MAX_AG_INODES);
+> When will maxlevels ever be greater than bczone->maxlevels? Isn't
+> the bczone->maxlevels case always supposed to be the tallest
+> possible height for that btree?
 
-Something you couldn't have seen here is that the xfsprogs port contains
-an addition to the xfs_db btheight switch to print these absolute maxima
-so that we won't have to compute them by hand anymore.
-
-Maybe I should have noted both of these points in the commit message?
-Though I've also been chided for submitting excessive comments in the
-past, which is why I didn't.
+It should never happen, provided that the maxlevels computation and
+verification are all correct.  I thought it was important to leave the
+heap allocation in here as a fallback, since the consequence for getting
+the size calculations wrong is corrupt kernel memory.
 
 --D
 
-> 	xfs_inobt_cursor_cache = kmem_cache_alloc("xfs_inobt_cur",
-> 			xfs_btree_cur_sizeof(xfs_inobt_maxlevels),
-> 			0, 0, NULL);
-> 	if (!xfs_inobt_cursor_cache)
-> 		return -ENOMEM;
-> 	return 0;
-> }
-> 
-> void
-> xfs_inobt_destroy_cursor_cache(void)
-> {
-> 	kmem_cache_destroy(xfs_inobt_cursor_cache);
-> }
-> 
-> and nothing outside fs/xfs/libxfs/xfs_ialloc_btree.c ever needs to
-> know about these variables as they only ever feed into
-> xfs_btree_alloc_cursor() from xfs_inobt_init_common().
-> 
 > Cheers,
 > 
 > Dave.
