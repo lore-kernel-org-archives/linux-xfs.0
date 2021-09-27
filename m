@@ -2,157 +2,157 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7E65C433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Sep 2021 15:07:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D57D1C433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Sep 2021 18:17:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BF86260FF2
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Sep 2021 15:07:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BB14760F4B
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Sep 2021 18:17:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235077AbhI0PIx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 27 Sep 2021 11:08:53 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:20179 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235057AbhI0PIw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Sep 2021 11:08:52 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1632755234;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=s/FvFYdu4aJ674PkIJoIx3ht1jScIVSeY6fbvyITKSk=;
-        b=f8dWPVMU24kf5aw6JbUeUnGhxmbuxH0k4lXvICt8WYeTB1J6P503liP2lQocusm1rXm9Do
-        xc5+1IOmCM/l4ObR7aYLw+HuYpu59p39ZCOIzq/OReA7zemGXA4bof0qa4SB3n1WP9SoAs
-        xAgRhL8JUvH1o2QsB7BPKygO0NkMF48=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-566-cNJ9ey1-NS-ydfmYzSC7Sw-1; Mon, 27 Sep 2021 11:07:10 -0400
-X-MC-Unique: cNJ9ey1-NS-ydfmYzSC7Sw-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 7867381426E;
-        Mon, 27 Sep 2021 15:07:09 +0000 (UTC)
-Received: from redhat.com (unknown [10.22.17.105])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 8830B604CC;
-        Mon, 27 Sep 2021 15:07:04 +0000 (UTC)
-Date:   Mon, 27 Sep 2021 10:07:02 -0500
-From:   Bill O'Donnell <billodo@redhat.com>
-To:     Gao Xiang <hsiangkao@redhat.com>
-Cc:     linux-xfs@vger.kernel.org,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Eric Sandeen <sandeen@redhat.com>
-Subject: Re: [PATCH v3 2/2] xfsdump: intercept bind mount targets
-Message-ID: <20210927150702.jbi57mjiqs7t74bm@redhat.com>
-References: <20201103023315.786103-2-hsiangkao@redhat.com>
- <20201103153328.889676-1-hsiangkao@redhat.com>
+        id S236029AbhI0STa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 27 Sep 2021 14:19:30 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50308 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S236012AbhI0STa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 27 Sep 2021 14:19:30 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 503CC60F11;
+        Mon, 27 Sep 2021 18:17:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1632766672;
+        bh=LfD71qjUxHHfVBqcpZkH9QdQG8j/Dr1ieZkoVuv4Okk=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=IHKnrJu69NWBxsseFQ7CGfY9FptKVqNNggJC94tRvIiYhQqv+WT96IHTY9P7GFOn8
+         bqg1YdkdmzpJwHS9zupBCa2egp7Pi6YetQJK0xFg740luE5HM4bvxOcz//56DlZ2Rv
+         PKk+2UAp6VPUZnUaMrLjOmoSuFAf3aEykFmKAZMKGykRk/GsBexgNakauadxqE53fX
+         6uF0o+sxQERBkwQttlJq44b0s5gxwnm6BDJvTGaA0kylyK+keHcF5TfyjrkhHsAP7D
+         hF5SMfZaiB+WmfmzXA+4MM7lPt1OmyzcMVMOGq4rpQvfNDt57Pkkc6UNwu/jbLgMrN
+         C5gurRsECtFrw==
+Date:   Mon, 27 Sep 2021 11:17:51 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     chandan.babu@oracle.com, chandanrlinux@gmail.com,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/4] xfs: check absolute maximum nlevels for each btree
+ type
+Message-ID: <20210927181751.GS570615@magnolia>
+References: <163244685787.2701674.13029851795897591378.stgit@magnolia>
+ <163244687436.2701674.5377184817013946444.stgit@magnolia>
+ <20210926004343.GC1756565@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201103153328.889676-1-hsiangkao@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+In-Reply-To: <20210926004343.GC1756565@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 03, 2020 at 11:33:28PM +0800, Gao Xiang wrote:
-> It's a bit strange pointing at some non-root bind mount target and
-> then actually dumping from the actual root dir instead.
+On Sun, Sep 26, 2021 at 10:43:43AM +1000, Dave Chinner wrote:
+> On Thu, Sep 23, 2021 at 06:27:54PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Add code for all five btree types so that we can compute the absolute
+> > maximum possible btree height for each btree type, and then check that
+> > none of them exceed XFS_BTREE_CUR_ZONE_MAXLEVELS.  The code to do the
+> > actual checking is a little excessive, but it sets us up for per-type
+> > cursor zones in the next patch.
 > 
-> Therefore, instead of searching for the root dir of the filesystem,
-> just intercept all bind mount targets by checking whose ino # of
-> ".." is itself with getdents.
+> Ok, I think the cursor "zone" array is the wrong approach here.
 > 
-> Fixes: 25195ebf107d ("xfsdump: handle bind mount targets")
-> Cc: Eric Sandeen <sandeen@redhat.com>
-> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
+> First of all - can we stop using the term "zone" for new code?
+> That's the old irix terminolgy for slab caches, and we have been
+> moving away from that to the Linux "kmem_cache" terminology and
+> types for quite some time.
+> 
+> AFAICT, the only reason for having the zone array is so that
+> xfs_btree_alloc_cursor() can do a lookup via btnum into the array to
+> get the maxlevels and kmem cache pointer to allocate from.
+> 
+> Given that we've just called into xfs_btree_alloc_cursor() from the
+> specific btree type we are allocating the cursor for (that's where
+> we got btnum from!), we should just be passing these type specific
+> variables directly from the caller like we do for btnum. That gets
+> rid of the need for the zone array completely....
+> 
+> i.e. I don't see why the per-type cache information needs to be
+> global information. The individual max-level calculations could just
+> be individual kmem_cache_alloc() calls to set locally defined (i.e.
+> static global) cache pointers and max size variables.
 
-Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+If the cache is a static variable inside xfs_fubar_btree.c, how do you
+know which cache to pass to kmem_cache_free in xfs_btree_del_cursor?
+Does this imply adding per-btree del_cursor functions and refactoring
+the entire codebase to use them?
 
-> ---
-> changes since v2 (Eric):
->  - error out the case where the directory cannot be read;
->  - In any case, stop as soon as we have found "..";
->  - update the mountpoint error message and use i18n instead;
+I was /trying/ to get a dependent patchset ready so that Chandan could
+submit the extent counters patchset for 5.16, not trigger a refactoring
+of a whole ton of btree code.  If you want to hide the information that
+badly, please take over this patchset and solve both the above problem
+and then one below.
+
+> > diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+> > index c8fea6a464d5..ce428c98e7c4 100644
+> > --- a/fs/xfs/libxfs/xfs_ialloc_btree.c
+> > +++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+> > @@ -541,6 +541,17 @@ xfs_inobt_maxrecs(
+> >  	return blocklen / (sizeof(xfs_inobt_key_t) + sizeof(xfs_inobt_ptr_t));
+> >  }
+> >  
+> > +unsigned int
+> > +xfs_inobt_absolute_maxlevels(void)
+> > +{
+> > +	unsigned int		minrecs[2];
+> > +
+> > +	xfs_btree_absolute_minrecs(minrecs, 0, sizeof(xfs_inobt_rec_t),
+> > +			sizeof(xfs_inobt_key_t) + sizeof(xfs_inobt_ptr_t));
+> > +
+> > +	return xfs_btree_compute_maxlevels(minrecs, XFS_MAX_AG_INODES);
+> > +}
 > 
->  dump/content.c | 57 ++++++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 57 insertions(+)
+> i.e. rather than returning the size here, we do:
 > 
-> diff --git a/dump/content.c b/dump/content.c
-> index c11d9b4..c248e74 100644
-> --- a/dump/content.c
-> +++ b/dump/content.c
-> @@ -511,6 +511,55 @@ static bool_t create_inv_session(
->  		ix_t subtreecnt,
->  		size_t strmix);
->  
-> +static bool_t
-> +check_rootdir(int fd,
-> +	      xfs_ino_t ino)
-> +{
-> +	struct dirent	*gdp;
-> +	size_t		gdsz;
-> +	bool_t		found = BOOL_FALSE;
-> +
-> +	gdsz = sizeof(struct dirent) + NAME_MAX + 1;
-> +	if (gdsz < GETDENTSBUF_SZ_MIN)
-> +		gdsz = GETDENTSBUF_SZ_MIN;
-> +	gdp = (struct dirent *)calloc(1, gdsz);
-> +	assert(gdp);
-> +
-> +	while (1) {
-> +		struct dirent *p;
-> +		int nread;
-> +
-> +		nread = getdents_wrap(fd, (char *)gdp, gdsz);
-> +		/*
-> +		 * negative count indicates something very bad happened;
-> +		 * try to gracefully end this dir.
-> +		 */
-> +		if (nread < 0) {
-> +			mlog(MLOG_NORMAL | MLOG_WARNING,
-> +_("unable to read dirents for directory ino %llu: %s\n"),
-> +			      ino, strerror(errno));
-> +			break;
-> +		}
-> +
-> +		/* no more directory entries: break; */
-> +		if (!nread)
-> +			break;
-> +
-> +		for (p = gdp; nread > 0;
-> +		     nread -= (int)p->d_reclen,
-> +		     assert(nread >= 0),
-> +		     p = (struct dirent *)((char *)p + p->d_reclen)) {
-> +			if (!strcmp(p->d_name, "..")) {
-> +				if (p->d_ino == ino)
-> +					found = BOOL_TRUE;
-> +				break;
-> +			}
-> +		}
-> +	}
-> +	free(gdp);
-> +	return found;
-> +}
-> +
->  bool_t
->  content_init(int argc,
->  	      char *argv[],
-> @@ -1393,6 +1442,14 @@ baseuuidbypass:
->  			      mntpnt);
->  			return BOOL_FALSE;
->  		}
-> +
-> +		if (!check_rootdir(sc_fsfd, rootstat.st_ino)) {
-> +			mlog(MLOG_ERROR,
-> +_("%s is not the root of the filesystem (bind mount?) - use primary mountpoint\n"),
-> +			     mntpnt);
-> +			return BOOL_FALSE;
-> +		}
-> +
->  		sc_rootxfsstatp =
->  			(struct xfs_bstat *)calloc(1, sizeof(struct xfs_bstat));
->  		assert(sc_rootxfsstatp);
+> static int xfs_inobt_maxlevels;
+> static struct kmem_cache xfs_inobt_cursor_cache;
+> 
+> int __init
+> xfs_inobt_create_cursor_cache(void)
+> {
+> 	unsigned int		minrecs[2];
+> 
+> 	xfs_btree_absolute_minrecs(minrecs, 0, sizeof(xfs_inobt_rec_t),
+> 			sizeof(xfs_inobt_key_t) + sizeof(xfs_inobt_ptr_t));
+> 	xfs_inobt_maxlevels = xfs_btree_compute_maxlevels(minrecs,
+> 			XFS_MAX_AG_INODES);
+
+Something you couldn't have seen here is that the xfsprogs port contains
+an addition to the xfs_db btheight switch to print these absolute maxima
+so that we won't have to compute them by hand anymore.
+
+Maybe I should have noted both of these points in the commit message?
+Though I've also been chided for submitting excessive comments in the
+past, which is why I didn't.
+
+--D
+
+> 	xfs_inobt_cursor_cache = kmem_cache_alloc("xfs_inobt_cur",
+> 			xfs_btree_cur_sizeof(xfs_inobt_maxlevels),
+> 			0, 0, NULL);
+> 	if (!xfs_inobt_cursor_cache)
+> 		return -ENOMEM;
+> 	return 0;
+> }
+> 
+> void
+> xfs_inobt_destroy_cursor_cache(void)
+> {
+> 	kmem_cache_destroy(xfs_inobt_cursor_cache);
+> }
+> 
+> and nothing outside fs/xfs/libxfs/xfs_ialloc_btree.c ever needs to
+> know about these variables as they only ever feed into
+> xfs_btree_alloc_cursor() from xfs_inobt_init_common().
+> 
+> Cheers,
+> 
+> Dave.
 > -- 
-> 2.18.1
-> 
-
+> Dave Chinner
+> david@fromorbit.com
