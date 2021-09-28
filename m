@@ -2,181 +2,80 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4ECAEC433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Sep 2021 00:08:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12F74C433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Sep 2021 00:26:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 27A0061181
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Sep 2021 00:08:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E462960E73
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Sep 2021 00:26:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238279AbhI1AJu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 27 Sep 2021 20:09:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51602 "EHLO
+        id S238322AbhI1A1l (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 27 Sep 2021 20:27:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55580 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238239AbhI1AJu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Sep 2021 20:09:50 -0400
-Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE764C061575
-        for <linux-xfs@vger.kernel.org>; Mon, 27 Sep 2021 17:08:11 -0700 (PDT)
-Received: by mail-pl1-x62d.google.com with SMTP id j14so12943057plx.4
-        for <linux-xfs@vger.kernel.org>; Mon, 27 Sep 2021 17:08:11 -0700 (PDT)
+        with ESMTP id S238277AbhI1A1l (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Sep 2021 20:27:41 -0400
+Received: from mail-wm1-x329.google.com (mail-wm1-x329.google.com [IPv6:2a00:1450:4864:20::329])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE2D4C061575
+        for <linux-xfs@vger.kernel.org>; Mon, 27 Sep 2021 17:26:02 -0700 (PDT)
+Received: by mail-wm1-x329.google.com with SMTP id d207-20020a1c1dd8000000b00307e2d1ec1aso1314707wmd.5
+        for <linux-xfs@vger.kernel.org>; Mon, 27 Sep 2021 17:26:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20210112.gappssmtp.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=SFyVj9jMzZDynp8Zc5/t3tU9a3H9qvbPvV/wKg5WCVY=;
-        b=jxw2QqijIXj2//Xrh9C53cPwdU7qHg50jF+9D3ItOjN1r0pHHUV6OLBO0FzDbkMh8B
-         26kQhZYS/V/783GB5Pmh6bOMjwuaAL0KGHp2KmDbXyjCm+InKYJbosHduHcSLwaC/HEL
-         KyNGpXqRTzEodLiOd8kMHxyF04ER9vwq0x7YFF5iTSAbzENtYF5wyJ1g83dDI6SEPrqI
-         85bZoSM0Jyg8DBGKsdIVj5/T7AZPYzvHovrLDVUAyu4cuIyZkBdpHWCm+vVjZZPIVXbx
-         XC8VaIjNVGmL0iNoAwdWuxqYzXCisLzivXTD+yoCb5tBWdSEk8Mz8p1lSSlBHqEZXMCO
-         87kg==
+        d=fishpost-de.20210112.gappssmtp.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=kOQ+DA5jAt2xgN5/riZkbnKBTz/3d0Uus7prsTxBALA=;
+        b=XWK12IuQKVm4jeu+yLbibMoa3RrnqNrfLXvwXc1qCOF8qs2MQIphG300ZCzm+U1dIp
+         kM5qZ0ixJeCMS+d2JPGUAjZv8oCaE21SvrgVzdy2iiRYBfYmGn1zdAeIz5FejVACPVrr
+         NBIUzE57gnDUTKmb9/pg7qJBnohppX0YPTys2kc0ePeHcpHMKlhlixuqayE1SnRwmtC6
+         2yCYBD3M0m33EB7ODZ1251Q34GGvtIhvSxgpTWbHTQujHSoLSPburJxo/thZc9baI9jA
+         kDeVT5tgMjqe49kgmyub9Xn9YbX/sJrmQUuCbeuOHluDBN8cFJCplh8mafyf+vAiT2xY
+         f3rQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=SFyVj9jMzZDynp8Zc5/t3tU9a3H9qvbPvV/wKg5WCVY=;
-        b=BzDpeQzcUBMRRC6g0pCi1gXDLR7DDhYJ5WzodagTpKXokCNO7NeGb41p6KFAxrIurb
-         BP+XbEfkF5wOZWwGyVuwKkaCBTs4hGPTQN9vIbOTV5NYbLYlGo4LcN6YHbBwrWZRRr+n
-         GXzlZyjTQrA/JophcsLG2vetAcGDP18NXgk79k2fAb+HfVLohfXPZ0xf2SgQoxpuVXDt
-         sFhaWYZWHgW932/c4ShIF1Kmcuds6/IAQdHONqnRLLuv/RigsRoPtb+XTr0bjj/nCE6g
-         VRdj9SUsjH2e0ebKfMheDqO8bFmUpuPTajZVcgSXAgrYij6Pvoyf/WZnfTjo2oUzJ/nU
-         sU0g==
-X-Gm-Message-State: AOAM531DqpxdfpY0TLNpqiMNune3XdJT8d9O1GyPVvbnjJAgJwvrVKhU
-        RnyG9C1Xc3EJF41fu+eqZDNLVaXf5P2yQZYmT6gqtkGY9KU=
-X-Google-Smtp-Source: ABdhPJwTJ6A2k1UeeqGfydjJ5IF+bOjyXKqkae/MK8Zyhai2HFNW0OwsicxXR42kX7SWIOLmyvlSNTfNStJ7G95eh9s=
-X-Received: by 2002:a17:902:e80f:b0:13b:721d:f750 with SMTP id
- u15-20020a170902e80f00b0013b721df750mr2333618plg.18.1632787691398; Mon, 27
- Sep 2021 17:08:11 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=kOQ+DA5jAt2xgN5/riZkbnKBTz/3d0Uus7prsTxBALA=;
+        b=qSNyhxNngiwjR9bKrccCoLg7LQ23gwda6AymorqiWpLhwaS148uUxOn5eMeWInxLxP
+         Q0un+vwMHKvc54KLkv89rMAeHZ2p8hcTP+iCjoPlkV+gSNIvfg45dhzh1FGnPPtA4Ygf
+         LRXAkCzyq7cXIz2q5J5jyza2rZ72cNdgs/qgKPvi3BQwBLB4KJhTt6bbtxhpAkNEMoA4
+         qJvjSf8qrRJFJiKfCJjh3YpHm8pUNC2pYog2moiOObfuOxh/BQtmlBGIRsLCW5deHiFD
+         nh9tHmB2oe6XbTgFr9hPAInOuTQuixiRZC6q2fDFR/I2aewvBpM7wUqlesgwlvnW7taq
+         Zd2g==
+X-Gm-Message-State: AOAM533RhwfYOY9u4A15iK9fG7vWXmtpA1qn57zkt5KvcppiwRpfB+bH
+        sLwYyDHd2UJZHQYYjMShHXxaFM72uzmUwaF4Z3Y=
+X-Google-Smtp-Source: ABdhPJynTBkrPae5ZsHZqvigpO0tKwcG/DTSmePcHnZF2ESgS2tPR9F4o+ia9b3HWT9OjRm5JeSIsA==
+X-Received: by 2002:a05:600c:2201:: with SMTP id z1mr1830879wml.55.1632788761467;
+        Mon, 27 Sep 2021 17:26:01 -0700 (PDT)
+Received: from thinkbage.fritz.box (p200300d06f1f7300176a2a162e6525fe.dip0.t-ipconnect.de. [2003:d0:6f1f:7300:176a:2a16:2e65:25fe])
+        by smtp.gmail.com with ESMTPSA id p3sm4755814wrn.47.2021.09.27.17.26.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 27 Sep 2021 17:26:01 -0700 (PDT)
+From:   Bastian Germann <bastiangermann@fishpost.de>
+X-Google-Original-From: Bastian Germann <bage@debian.org>
+To:     linux-xfs@vger.kernel.org
+Cc:     Bastian Germann <bage@debian.org>
+Subject: [PATCH 0/3] debian updates
+Date:   Tue, 28 Sep 2021 02:25:49 +0200
+Message-Id: <20210928002552.10517-1-bage@debian.org>
+X-Mailer: git-send-email 2.33.0
 MIME-Version: 1.0
-References: <20210922054931.GT1756565@dread.disaster.area> <20210922212725.GN570615@magnolia>
- <20210923000255.GO570615@magnolia> <20210923014209.GW1756565@dread.disaster.area>
- <CAPcyv4j77cWASW1Qp=J8poVRi8+kDQbBsLZb0HY+dzeNa=ozNg@mail.gmail.com>
- <CAPcyv4in7WRw1_e5iiQOnoZ9QjQWhjj+J7HoDf3ObweUvADasg@mail.gmail.com>
- <20210923225433.GX1756565@dread.disaster.area> <CAPcyv4jsU1ZBY0MNKf9CCCFaR4qcwUCRmZHstPpF02pefKnDtg@mail.gmail.com>
- <09ed3c3c-391b-bf91-2456-d7f7ca5ab2fb@oracle.com> <20210924013516.GB570577@magnolia>
- <20210927210750.GH1756565@dread.disaster.area> <b0861cd0-f5c3-6a56-29f9-cd4421c221c4@oracle.com>
-In-Reply-To: <b0861cd0-f5c3-6a56-29f9-cd4421c221c4@oracle.com>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Mon, 27 Sep 2021 17:08:03 -0700
-Message-ID: <CAPcyv4gys1F6G1cgXk2UOcr27GNBAfc+ZBoh7MAwFVu5cqfXDg@mail.gmail.com>
-Subject: Re: [PATCH 3/5] vfs: add a zero-initialization mode to fallocate
-To:     Jane Chu <jane.chu@oracle.com>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Sep 27, 2021 at 2:58 PM Jane Chu <jane.chu@oracle.com> wrote:
->
-> On 9/27/2021 2:07 PM, Dave Chinner wrote:
-> > On Thu, Sep 23, 2021 at 06:35:16PM -0700, Darrick J. Wong wrote:
-> >> On Thu, Sep 23, 2021 at 06:21:19PM -0700, Jane Chu wrote:
-> >>>
-> >>> On 9/23/2021 6:18 PM, Dan Williams wrote:
-> >>>> On Thu, Sep 23, 2021 at 3:54 PM Dave Chinner <david@fromorbit.com> wrote:
-> >>>>>
-> >>>>> On Wed, Sep 22, 2021 at 10:42:11PM -0700, Dan Williams wrote:
-> >>>>>> On Wed, Sep 22, 2021 at 7:43 PM Dan Williams <dan.j.williams@intel.com> wrote:
-> >>>>>>>
-> >>>>>>> On Wed, Sep 22, 2021 at 6:42 PM Dave Chinner <david@fromorbit.com> wrote:
-> >>>>>>> [..]
-> >>>>>>>> Hence this discussion leads me to conclude that fallocate() simply
-> >>>>>>>> isn't the right interface to clear storage hardware poison state and
-> >>>>>>>> it's much simpler for everyone - kernel and userspace - to provide a
-> >>>>>>>> pwritev2(RWF_CLEAR_HWERROR) flag to directly instruct the IO path to
-> >>>>>>>> clear hardware error state before issuing this user write to the
-> >>>>>>>> hardware.
-> >>>>>>>
-> >>>>>>> That flag would slot in nicely in dax_iomap_iter() as the gate for
-> >>>>>>> whether dax_direct_access() should allow mapping over error ranges,
-> >>>>>>> and then as a flag to dax_copy_from_iter() to indicate that it should
-> >>>>>>> compare the incoming write to known poison and clear it before
-> >>>>>>> proceeding.
-> >>>>>>>
-> >>>>>>> I like the distinction, because there's a chance the application did
-> >>>>>>> not know that the page had experienced data loss and might want the
-> >>>>>>> error behavior. The other service the driver could offer with this
-> >>>>>>> flag is to do a precise check of the incoming write to make sure it
-> >>>>>>> overlaps known poison and then repair the entire page. Repairing whole
-> >>>>>>> pages makes for a cleaner implementation of the code that tries to
-> >>>>>>> keep poison out of the CPU speculation path, {set,clear}_mce_nospec().
-> >>>>>>
-> >>>>>> This flag could also be useful for preadv2() as there is currently no
-> >>>>>> way to read the good data in a PMEM page with poison via DAX. So the
-> >>>>>> flag would tell dax_direct_access() to again proceed in the face of
-> >>>>>> errors, but then the driver's dax_copy_to_iter() operation could
-> >>>>>> either read up to the precise byte offset of the error in the page, or
-> >>>>>> autoreplace error data with zero's to try to maximize data recovery.
-> >>>>>
-> >>>>> Yes, it could. I like the idea - say RWF_IGNORE_HWERROR - to read
-> >>>>> everything that can be read from the bad range because it's the
-> >>>>> other half of the problem RWF_RESET_HWERROR is trying to address.
-> >>>>> That is, the operation we want to perform on a range with an error
-> >>>>> state is -data recovery-, not "reinitialisation". Data recovery
-> >>>>> requires two steps:
-> >>>>>
-> >>>>> - "try to recover the data from the bad storage"; and
-> >>>>> - "reinitialise the data and clear the error state"
-> >>>>>
-> >>>>> These naturally map to read() and write() operations, not
-> >>>>> fallocate(). With RWF flags they become explicit data recovery
-> >>>>> operations, unlike fallocate() which needs to imply that "writing
-> >>>>> zeroes" == "reset hardware error state". While that reset method
-> >>>>> may be true for a specific pmem hardware implementation it is not a
-> >>>>> requirement for all storage hardware. It's most definitely not a
-> >>>>> requirement for future storage hardware, either.
-> >>>>>
-> >>>>> It also means that applications have no choice in what data they can
-> >>>>> use to reinitialise the damaged range with because fallocate() only
-> >>>>> supports writing zeroes. If we've recovered data via a read() as you
-> >>>>> suggest we could, then we can rebuild the data from other redundant
-> >>>>> information and immediately write that back to the storage, hence
-> >>>>> repairing the fault.
-> >>>>>
-> >>>>> That, in turn, allows the filesystem to turn the RWF_RESET_HWERROR
-> >>>>> write into an exclusive operation and hence allow the
-> >>>>> reinitialisation with the recovered/repaired state to run atomically
-> >>>>> w.r.t. all other filesystem operations.  i.e. the reset write
-> >>>>> completes the recovery operation instead of requiring separate
-> >>>>> "reset" and "write recovered data into zeroed range" steps that
-> >>>>> cannot be executed atomically by userspace...
-> >>>>
-> >>>> /me nods
-> >>>>
-> >>>> Jane, want to take a run at patches for this ^^^?
-> >>>>
-> >>>
-> >>> Sure, I'll give it a try.
-> >>>
-> >>> Thank you all for the discussions!
-> >>
-> >> Cool, thank you!
-> >
-> > I'd like to propose a slight modification to the API: a single RWF
-> > flag called RWF_RECOVER_DATA. On read, this means the storage tries
-> > to read all the data it can from the range, and for the parts it
-> > can't read data from (cachelines, sectors, whatever) it returns as
-> > zeroes.
-> >
-> > On write, this means the errors over the range get cleared and the
-> > user data provided gets written over the top of whatever was there.
-> > Filesystems should perform this as an exclusive operation to that
-> > range of the file.
-> >
-> > That way we only need one IOCB_RECOVERY flag, and for communicating
-> > with lower storage layers (e.g. dm/md raid and/or hardware) only one
-> > REQ_RECOVERY flag is needed in the bio.
-> >
-> > Thoughts?
->
-> Sounds cleaner.  Dan, your thoughts?
+These are three independent changes for xfsprogs' debianization.
 
-I like it. I was struggling with a way to unify the flag names, and
-"recovery" is a good term for not surprising the caller with zeros.
-I.e. don't use this flow to avoid errors, use this flow to maximize
-data recovery.
+Bastian Germann (3):
+  debian: Update Uploaders list
+  debian: Pass --build and --host to configure
+  debian: Tag xfslibs-dev "Multi-Arch: same"
+
+ debian/changelog | 10 ++++++++++
+ debian/control   |  3 ++-
+ debian/rules     |  9 +++++++--
+ 3 files changed, 19 insertions(+), 3 deletions(-)
+
+-- 
+2.33.0
+
