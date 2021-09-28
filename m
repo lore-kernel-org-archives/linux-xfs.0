@@ -2,54 +2,99 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D55F3C433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Sep 2021 02:35:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26CB2C43217
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Sep 2021 03:11:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AFDA161247
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Sep 2021 02:35:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 12E9A61247
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Sep 2021 03:11:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238610AbhI1Cgy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 27 Sep 2021 22:36:54 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50978 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S238598AbhI1Cgy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 27 Sep 2021 22:36:54 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 7255561156
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Sep 2021 02:35:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1632796515;
-        bh=z8X6MJMe8x20QKOWVpqBTA4zJ2wPyHjW2lnL3PGQX1c=;
-        h=Date:From:To:Subject:From;
-        b=TAoZx1BP4nbzKzXjgORmq5b45dcnoC/0NJGPxiw0vxWCBzym2XcEgGTcuDxzzOoUg
-         6vWSJxxiR4qOMPzqgx3K6pdvx+8BXfkYucnP4iPzgm4qqFnBVopdaEkjqgVuWf1X3h
-         Bcy+0LTW7w3k0wEIfyzR7e9/L09sMGsnikGsSya3skTnn+a0uhohk24zVjLDOQwHkv
-         ZG77dF8JjcHAHD+8ljfzI2RGqagW87f+rHbiL6UWC5IZDnzMJ3oOfl9B9MHmt5MC5k
-         Th9yGgfBs33sMqJ3jdhGiYnkSb+XTR1LGgKgESaaeYVMVGBBOwTsN3pOtwNJzHxjxD
-         JK56iV6+FxkQQ==
-Date:   Mon, 27 Sep 2021 19:35:15 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     xfs <linux-xfs@vger.kernel.org>
-Subject: /me taps out
-Message-ID: <20210928023515.GH570642@magnolia>
+        id S238797AbhI1DNZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 27 Sep 2021 23:13:25 -0400
+Received: from smtp-out1.suse.de ([195.135.220.28]:35268 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238748AbhI1DNX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Sep 2021 23:13:23 -0400
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 95E6C222DF;
+        Tue, 28 Sep 2021 03:11:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1632798701; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=k1irZcE6GgE63UfMaZ69q7wFQxdxy8PkJV1UDRuOwDA=;
+        b=Af8PPYiGG/KoV03reINXBzNVPccmiyHVMrwNt2UIFxlU1jhXBp5nI2Gka9opvfla6EYXOa
+        u9dubE+5BF4AwBJlVzPfA+nwLlAQkhckDkag+FkKT+kBsnwd6qmqqlWA/pOjn0C1Ffe5V9
+        HYSxfFfncwL3S6Y8kijKplmMugjgsEE=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1632798701;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=k1irZcE6GgE63UfMaZ69q7wFQxdxy8PkJV1UDRuOwDA=;
+        b=rvEM/v30W6HdMnLZksiPaBfoRjZ8iPYI6P23HeASJG7DpSxpqPRoywlWfOvhpMFCEARX9U
+        W3t0wcFCENMdaDDw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id C1463132D4;
+        Tue, 28 Sep 2021 03:11:32 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id HD3CH+SHUmHafwAAMHmgww
+        (envelope-from <neilb@suse.de>); Tue, 28 Sep 2021 03:11:32 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+From:   "NeilBrown" <neilb@suse.de>
+To:     "David Howells" <dhowells@redhat.com>
+Cc:     willy@infradead.org, hch@lst.de, trond.myklebust@primarydata.com,
+        "Theodore Ts'o" <tytso@mit.edu>, linux-block@vger.kernel.org,
+        ceph-devel@vger.kernel.org,
+        "Trond Myklebust" <trond.myklebust@hammerspace.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        "Jeff Layton" <jlayton@kernel.org>,
+        "Andreas Dilger" <adilger.kernel@dilger.ca>,
+        "Anna Schumaker" <anna.schumaker@netapp.com>, linux-mm@kvack.org,
+        "Bob Liu" <bob.liu@oracle.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        "Josef Bacik" <josef@toxicpanda.com>,
+        "Seth Jennings" <sjenning@linux.vnet.ibm.com>,
+        "Jens Axboe" <axboe@kernel.dk>, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-cifs@vger.kernel.org, "Chris Mason" <clm@fb.com>,
+        "David Sterba" <dsterba@suse.com>,
+        "Minchan Kim" <minchan@kernel.org>,
+        "Steve French" <sfrench@samba.org>,
+        "Dan Magenheimer" <dan.magenheimer@oracle.com>,
+        linux-nfs@vger.kernel.org, "Ilya Dryomov" <idryomov@gmail.com>,
+        linux-btrfs@vger.kernel.org, dhowells@redhat.com,
+        viro@zeniv.linux.org.uk, torvalds@linux-foundation.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [RFC][PATCH v3 0/9] mm: Use DIO for swap and fix NFS swapfiles
+In-reply-to: <163250387273.2330363.13240781819520072222.stgit@warthog.procyon.org.uk>
+References: <163250387273.2330363.13240781819520072222.stgit@warthog.procyon.org.uk>
+Date:   Tue, 28 Sep 2021 13:11:29 +1000
+Message-id: <163279868982.18792.10448745714922373194@noble.neil.brown.name>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+On Sat, 25 Sep 2021, David Howells wrote:
+> Whilst trying to make this work, I found that NFS's support for swapfiles
+> seems to have been non-functional since Aug 2019 (I think), so the first
+> patch fixes that.  Question is: do we actually *want* to keep this
+> functionality, given that it seems that no one's tested it with an upstream
+> kernel in the last couple of years?
 
-Between this and last week's conference and meeting activities, I have
-experienced so much pressure and stress dealing with discussions that
-never seem to resolve, preparing for customer meetings where people
-complain about why can't I get things moving faster, and feeling under
-the gun to squeeze patches onto the list in between everything else
-going on to try to keep other people unblocked (hence the RFC-for-people
-patchsets last week) that I've turned into That Jerk on IRC.
+SUSE definitely want to keep this functionality.  We have customers
+using it.
+I agree it would be good if it was being tested somewhere....
 
-I apologize for being the roaring jerk to people and am putting myself
-on timeout until at least next Tuesday the 5th.  I hope this will ease
-off by then, because I need to stop working successive 12 hour days.
-
---D
+Thanks,
+NeilBrown
