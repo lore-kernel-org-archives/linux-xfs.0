@@ -2,122 +2,104 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76239C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Sep 2021 00:33:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ACA12C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Sep 2021 00:47:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 53D2160FF2
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Sep 2021 00:33:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8A781611C3
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Sep 2021 00:47:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238352AbhI1AfG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 27 Sep 2021 20:35:06 -0400
-Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:48229 "EHLO
-        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S238236AbhI1AfF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Sep 2021 20:35:05 -0400
+        id S238240AbhI1Ass (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 27 Sep 2021 20:48:48 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:32829 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S238236AbhI1Ass (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Sep 2021 20:48:48 -0400
 Received: from dread.disaster.area (pa49-195-238-16.pa.nsw.optusnet.com.au [49.195.238.16])
-        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id 37D1DA9EE;
-        Tue, 28 Sep 2021 10:33:25 +1000 (AEST)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 6DAA91053007;
+        Tue, 28 Sep 2021 10:47:08 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1mV13k-00HVNh-Gq; Tue, 28 Sep 2021 10:33:24 +1000
-Date:   Tue, 28 Sep 2021 10:33:24 +1000
+        id 1mV1H1-00HVXM-R4; Tue, 28 Sep 2021 10:47:07 +1000
+Date:   Tue, 28 Sep 2021 10:47:07 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     Chandan Babu R <chandan.babu@oracle.com>
 Cc:     linux-xfs@vger.kernel.org, djwong@kernel.org
-Subject: Re: [PATCH V3 12/12] xfs: Define max extent length based on on-disk
- format definition
-Message-ID: <20210928003324.GN1756565@dread.disaster.area>
+Subject: Re: [PATCH V3 08/12] xfs: Promote xfs_extnum_t and xfs_aextnum_t to
+ 64 and 32-bits respectively
+Message-ID: <20210928004707.GO1756565@dread.disaster.area>
 References: <20210916100647.176018-1-chandan.babu@oracle.com>
- <20210916100647.176018-13-chandan.babu@oracle.com>
+ <20210916100647.176018-9-chandan.babu@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210916100647.176018-13-chandan.babu@oracle.com>
+In-Reply-To: <20210916100647.176018-9-chandan.babu@oracle.com>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=Af7P4EfG c=1 sm=1 tr=0
         a=DzKKRZjfViQTE5W6EVc0VA==:117 a=DzKKRZjfViQTE5W6EVc0VA==:17
-        a=kj9zAlcOel0A:10 a=7QKq2e-ADPsA:10 a=7-415B0cAAAA:8
-        a=Lg7D5mDAIUrzhamEM1YA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=7QKq2e-ADPsA:10 a=VwQbUJbxAAAA:8 a=yPCof4ZbAAAA:8
+        a=7-415B0cAAAA:8 a=h-9boRcjp6GGoqKsSTkA:9 a=CjuIK1q_8ugA:10
+        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 16, 2021 at 03:36:47PM +0530, Chandan Babu R wrote:
-> The maximum extent length depends on maximum block count that can be stored in
-> a BMBT record. Hence this commit defines MAXEXTLEN based on
-> BMBT_BLOCKCOUNT_BITLEN.
+On Thu, Sep 16, 2021 at 03:36:43PM +0530, Chandan Babu R wrote:
+> A future commit will introduce a 64-bit on-disk data extent counter and a
+> 32-bit on-disk attr extent counter. This commit promotes xfs_extnum_t and
+> xfs_aextnum_t to 64 and 32-bits in order to correctly handle in-core versions
+> of these quantities.
 > 
-> While at it, the commit also renames MAXEXTLEN to XFS_MAX_EXTLEN.
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
 
-hmmmm. So you reimplemented:
+So while I was auditing extent lengths w.r.t. the last patch f the
+series, I noticed that xfs_extnum_t is used in the struct
+xfs_log_dinode and so changing the size of these types changes the
+layout of this structure:
 
-#define BMBT_BLOCKCOUNT_MASK    ((1ULL << BMBT_BLOCKCOUNT_BITLEN) - 1)
+/*
+ * Define the format of the inode core that is logged. This structure must be
+ * kept identical to struct xfs_dinode except for the endianness annotations.
+ */
+struct xfs_log_dinode {
+....
+        xfs_rfsblock_t  di_nblocks;     /* # of direct & btree blocks used */
+        xfs_extlen_t    di_extsize;     /* basic/minimum extent size for file */
+        xfs_extnum_t    di_nextents;    /* number of extents in data fork */
+        xfs_aextnum_t   di_anextents;   /* number of extents in attribute fork*/
+....
 
-and defined it as XFS_MAX_EXTLEN?
+Which means this:
 
-One of these two defines needs to go away. :)
+> -typedef int32_t		xfs_extnum_t;	/* # of extents in a file */
+> -typedef int16_t		xfs_aextnum_t;	/* # extents in an attribute fork */
+> +typedef uint64_t	xfs_extnum_t;	/* # of extents in a file */
+> +typedef uint32_t	xfs_aextnum_t;	/* # extents in an attribute fork */
 
-Also, this macro really defines the maximum extent length a BMBT
-record can hold, not the maximum XFS extent length supported. I
-think it should be  named XFS_BMBT_MAX_EXTLEN and also used to
-replace BMBT_BLOCKCOUNT_MASK.
+creates an incompatible log format change that will cause silent
+inode corruption during log recovery if inodes logged with this
+change are replayed on an older kernel without this change. It's not
+just the type size change that matters here - it also changes the
+implicit padding in this structure because xfs_extlen_t is a 32 bit
+object and so:
 
-The counter example are free space btree records - they can hold
-extents lengths up to 2^31 blocks long:
+Old					New
+64 bit object (di_nblocks)		64 bit object (di_nblocks)
+32 bit object (di_extsize)		32 bit object (di_extsize)
+					32 bit pad (implicit)
+32 bit object (di_nextents)		64 bit object (di_nextents)
+16 bit object (di_anextents)		32 bit ojecct (di_anextents
+8 bit object (di_forkoff)		8 bit object (di_forkoff)
+8 bit object (di_aformat)		8 bit object (di_aformat)
+					16 bit pad (implicit)
+32 bit object (di_dmevmask)		32 bit object (di_dmevmask)
 
-typedef struct xfs_alloc_rec {
-        __be32          ar_startblock;  /* starting block number */
-        __be32          ar_blockcount;  /* count of free blocks */
-} xfs_alloc_rec_t, xfs_alloc_key_t;
 
-So, yes, I think MAXEXTLEN needs cleaning up, but it needs some more
-work to make it explicit in what it refers to.
-
-Also:
-
-> -/*
-> - * Max values for extlen and disk inode's extent counters.
-> - */
-> -#define	MAXEXTLEN		((xfs_extlen_t)0x1fffff)	/* 21 bits */
-> -#define XFS_IFORK_EXTCNT_MAXU48	((xfs_extnum_t)0xffffffffffff)	/* Unsigned 48-bits */
-> -#define XFS_IFORK_EXTCNT_MAXU32	((xfs_aextnum_t)0xffffffff)	/* Unsigned 32-bits */
-> -#define XFS_IFORK_EXTCNT_MAXS32 ((xfs_extnum_t)0x7fffffff)	/* Signed 32-bits */
-> -#define XFS_IFORK_EXTCNT_MAXS16 ((xfs_aextnum_t)0x7fff)		/* Signed 16-bits */
-> -
-> -
->  /*
->   * Inode minimum and maximum sizes.
->   */
-> @@ -1701,6 +1691,16 @@ typedef struct xfs_bmbt_rec {
->  typedef uint64_t	xfs_bmbt_rec_base_t;	/* use this for casts */
->  typedef xfs_bmbt_rec_t xfs_bmdr_rec_t;
->  
-> +/*
-> + * Max values for extlen and disk inode's extent counters.
-> + */
-> +#define XFS_MAX_EXTLEN		((xfs_extlen_t)(1 << BMBT_BLOCKCOUNT_BITLEN) - 1)
-> +#define XFS_IFORK_EXTCNT_MAXU48	((xfs_extnum_t)0xffffffffffff)	/* Unsigned 48-bits */
-> +#define XFS_IFORK_EXTCNT_MAXU32	((xfs_aextnum_t)0xffffffff)	/* Unsigned 32-bits */
-> +#define XFS_IFORK_EXTCNT_MAXS32 ((xfs_extnum_t)0x7fffffff)	/* Signed 32-bits */
-> +#define XFS_IFORK_EXTCNT_MAXS16 ((xfs_aextnum_t)0x7fff)		/* Signed 16-bits */
-
-At the end of the patch series, I still really don't like these
-names. Hungarian notation is ugly, and they don't tell me what type
-they apply to. Hence I don't know what limit is the correct one to
-apply to which fork and which format....
-
-These would be much better as
-
-#define XFS_MAX_EXTCNT_DATA_FORK	((1ULL < 48) - 1)
-#define XFS_MAX_EXTCNT_ATTR_FORK	((1ULL < 32) - 1)
-
-#define XFS_MAX_EXTCNT_DATA_FORK_OLD	((1ULL < 31) - 1)
-#define XFS_MAX_EXTCNT_ATTR_FORK_OLD	((1ULL < 15) - 1)
-
-The name tells me what object/format they apply to, and the
-implementation tells me the exact size without needing a comment
-to make it readable. And it doesn't need casts that just add noise
-to the implementation...
+That's quite the layout change, and that's something we must not do
+without a feature bit being set. hence I think we need to rev the
+struct xfs_log_dinode version for large extent count support, too,
+so that the struct xfs_log_dinode does not change size for
+filesystems without the large extent count feature.
 
 Cheers,
 
