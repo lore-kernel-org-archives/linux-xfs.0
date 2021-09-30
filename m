@@ -2,129 +2,175 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB2EAC433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Sep 2021 00:40:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 787C3C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Sep 2021 01:19:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D11DA61288
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Sep 2021 00:40:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 56A4561381
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Sep 2021 01:19:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347512AbhI3AmD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 29 Sep 2021 20:42:03 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:60261 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S244341AbhI3AmA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Sep 2021 20:42:00 -0400
+        id S230070AbhI3BVH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 29 Sep 2021 21:21:07 -0400
+Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:38512 "EHLO
+        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229477AbhI3BVG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Sep 2021 21:21:06 -0400
 Received: from dread.disaster.area (pa49-195-238-16.pa.nsw.optusnet.com.au [49.195.238.16])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id CC4218846C2;
-        Thu, 30 Sep 2021 10:40:16 +1000 (AEST)
+        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id 37EDDAA9D;
+        Thu, 30 Sep 2021 11:19:23 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1mVk7T-000fQh-25; Thu, 30 Sep 2021 10:40:15 +1000
-Date:   Thu, 30 Sep 2021 10:40:15 +1000
+        id 1mVkjK-000g0T-A0; Thu, 30 Sep 2021 11:19:22 +1000
+Date:   Thu, 30 Sep 2021 11:19:22 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     Chandan Babu R <chandan.babu@oracle.com>
 Cc:     linux-xfs@vger.kernel.org, djwong@kernel.org
-Subject: Re: [PATCH V3 07/12] xfs: Rename inode's extent counter fields based
- on their width
-Message-ID: <20210930004015.GM2361455@dread.disaster.area>
+Subject: Re: [PATCH V3 06/12] xfs: xfs_dfork_nextents: Return extent count
+ via an out argument
+Message-ID: <20210930011922.GN2361455@dread.disaster.area>
 References: <20210916100647.176018-1-chandan.babu@oracle.com>
- <20210916100647.176018-8-chandan.babu@oracle.com>
- <20210927234637.GM1756565@dread.disaster.area>
- <20210928040431.GP1756565@dread.disaster.area>
- <87czors49w.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <20210916100647.176018-7-chandan.babu@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <87czors49w.fsf@debian-BULLSEYE-live-builder-AMD64>
+In-Reply-To: <20210916100647.176018-7-chandan.babu@oracle.com>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=61550771
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=6155109b
         a=DzKKRZjfViQTE5W6EVc0VA==:117 a=DzKKRZjfViQTE5W6EVc0VA==:17
         a=kj9zAlcOel0A:10 a=7QKq2e-ADPsA:10 a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8
-        a=PBnoTMuumf0sBhVUzcEA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=GgJH210hQ0jFwe1QOuYA:9 a=M0C-vMso4fN1-_c1:21 a=CjuIK1q_8ugA:10
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 29, 2021 at 10:33:23PM +0530, Chandan Babu R wrote:
-> On 28 Sep 2021 at 09:34, Dave Chinner wrote:
-> > On Tue, Sep 28, 2021 at 09:46:37AM +1000, Dave Chinner wrote:
-> >> On Thu, Sep 16, 2021 at 03:36:42PM +0530, Chandan Babu R wrote:
-> >> > This commit renames extent counter fields in "struct xfs_dinode" and "struct
-> >> > xfs_log_dinode" based on the width of the fields. As of this commit, the
-> >> > 32-bit field will be used to count data fork extents and the 16-bit field will
-> >> > be used to count attr fork extents.
-> >> > 
-> >> > This change is done to enable a future commit to introduce a new 64-bit extent
-> >> > counter field.
-> >> > 
-> >> > Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
-> >> > ---
-> >> >  fs/xfs/libxfs/xfs_format.h      |  8 ++++----
-> >> >  fs/xfs/libxfs/xfs_inode_buf.c   |  4 ++--
-> >> >  fs/xfs/libxfs/xfs_log_format.h  |  4 ++--
-> >> >  fs/xfs/scrub/inode_repair.c     |  4 ++--
-> >> >  fs/xfs/scrub/trace.h            | 14 +++++++-------
-> >> >  fs/xfs/xfs_inode_item.c         |  4 ++--
-> >> >  fs/xfs/xfs_inode_item_recover.c |  8 ++++----
-> >> >  7 files changed, 23 insertions(+), 23 deletions(-)
-> >> > 
-> >> > diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> >> > index dba868f2c3e3..87c927d912f6 100644
-> >> > --- a/fs/xfs/libxfs/xfs_format.h
-> >> > +++ b/fs/xfs/libxfs/xfs_format.h
-> >> > @@ -802,8 +802,8 @@ typedef struct xfs_dinode {
-> >> >  	__be64		di_size;	/* number of bytes in file */
-> >> >  	__be64		di_nblocks;	/* # of direct & btree blocks used */
-> >> >  	__be32		di_extsize;	/* basic/minimum extent size for file */
-> >> > -	__be32		di_nextents;	/* number of extents in data fork */
-> >> > -	__be16		di_anextents;	/* number of extents in attribute fork*/
-> >> > +	__be32		di_nextents32;	/* number of extents in data fork */
-> >> > +	__be16		di_nextents16;	/* number of extents in attribute fork*/
-> >> 
-> >> 
-> >> Hmmm. Having the same field in the inode hold the extent count
-> >> for different inode forks based on a bit in the superblock means the
-> >> on-disk inode format is not self describing. i.e. we can't decode
-> >> the on-disk contents of an inode correctly without knowing whether a
-> >> specific feature bit is set in the superblock or not.
-> >
-> > Hmmmm - I just realised that there is an inode flag that indicates
-> > the format is different. It's jsut that most of the code doing
-> > conditional behaviour is using the superblock flag, not the inode
-> > flag as the conditional.
-> >
-> > So it is self describing, but I still don't like the way the same
-> > field is used for the different forks. It just feels like we are
-> > placing a landmine that we are going to forget about and step
-> > on in the future....
-> >
+On Thu, Sep 16, 2021 at 03:36:41PM +0530, Chandan Babu R wrote:
+> This commit changes xfs_dfork_nextents() to return an error code. The extent
+> count itself is now returned through an out argument. This facility will be
+> used by a future commit to indicate an inconsistent ondisk extent count.
 > 
-> Sorry, I missed this response from you.
+> Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_format.h     | 14 ++---
+>  fs/xfs/libxfs/xfs_inode_buf.c  | 16 ++++--
+>  fs/xfs/libxfs/xfs_inode_fork.c | 21 ++++++--
+>  fs/xfs/scrub/inode.c           | 94 +++++++++++++++++++++-------------
+>  fs/xfs/scrub/inode_repair.c    | 34 ++++++++----
+>  5 files changed, 118 insertions(+), 61 deletions(-)
 > 
-> I agree with your suggestion. I will use the inode version number to help in
-> deciding which extent counter fields are valid for a specific inode.
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index b4638052801f..dba868f2c3e3 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -931,28 +931,30 @@ enum xfs_dinode_fmt {
+>  		(dip)->di_format : \
+>  		(dip)->di_aformat)
+>  
+> -static inline xfs_extnum_t
+> +static inline int
+>  xfs_dfork_nextents(
+>  	struct xfs_dinode	*dip,
+> -	int			whichfork)
+> +	int			whichfork,
+> +	xfs_extnum_t		*nextents)
+>  {
+> -	xfs_extnum_t		nextents = 0;
+> +	int			error = 0;
+>  
+>  	switch (whichfork) {
+>  	case XFS_DATA_FORK:
+> -		nextents = be32_to_cpu(dip->di_nextents);
+> +		*nextents = be32_to_cpu(dip->di_nextents);
+>  		break;
+>  
+>  	case XFS_ATTR_FORK:
+> -		nextents = be16_to_cpu(dip->di_anextents);
+> +		*nextents = be16_to_cpu(dip->di_anextents);
+>  		break;
+>  
+>  	default:
+>  		ASSERT(0);
+> +		error = -EFSCORRUPTED;
+>  		break;
+>  	}
+>  
+> -	return nextents;
+> +	return error;
+>  }
 
-No, don't do something I suggested with a flawed understanding of
-the code.
+So why do we need to do this? AFAICT, the only check that can return
+errors that is added by the ned of the patch series is a
+on-disk-format check that does:
 
-Just because *I* suggest something, it means you have to make that
-change. That is reacting to *who* said something, not *what was
-said*.
+	if (inode_has_nrext64 && dip->di_nextents16 != 0)
+		return -EFSCORRUPTED;
 
-So, I may have reservations about the way the storage definitions
-are being redefined, but if I had a valid, technical argument I
-could give right now I would have said so directly. I can't put my
-finger on why this worries me in this case but didn't for something
-like, say, the BIGTIME feature which redefined the contents of
-various fields in the inode.
+This doesn't belong here - it is conflating verification with
+extraction. Verfication of the on-disk format belongs in the
+verifiers or verification code, not in the function that extracts
 
-IOWs, I haven't really had time to think and go back over the rest
-of the patchset since I realised my mistake and determine if that
-changes what I think about this, so don't go turning the patchset
-upside just because *I suggested something*.
+>  /*
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> index 176c98798aa4..dc511630cc7a 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> @@ -345,7 +345,8 @@ xfs_dinode_verify_fork(
+>  	xfs_extnum_t		di_nextents;
+>  	xfs_extnum_t		max_extents;
+>  
+> -	di_nextents = xfs_dfork_nextents(dip, whichfork);
+> +	if (xfs_dfork_nextents(dip, whichfork, &di_nextents))
+> +		return __this_address;
+>  
+>  	switch (XFS_DFORK_FORMAT(dip, whichfork)) {
+>  	case XFS_DINODE_FMT_LOCAL:
+> @@ -477,6 +478,7 @@ xfs_dinode_verify(
+>  	uint64_t		flags2;
+>  	uint64_t		di_size;
+>  	xfs_extnum_t            nextents;
+> +	xfs_extnum_t            naextents;
+>  	xfs_rfsblock_t		nblocks;
+>  
+>  	if (dip->di_magic != cpu_to_be16(XFS_DINODE_MAGIC))
+> @@ -508,8 +510,13 @@ xfs_dinode_verify(
+>  	if ((S_ISLNK(mode) || S_ISDIR(mode)) && di_size == 0)
+>  		return __this_address;
+>  
+> -	nextents = xfs_dfork_nextents(dip, XFS_DATA_FORK);
+> -	nextents += xfs_dfork_nextents(dip, XFS_ATTR_FORK);
+> +	if (xfs_dfork_nextents(dip, XFS_DATA_FORK, &nextents))
+> +		return __this_address;
+> +
+> +	if (xfs_dfork_nextents(dip, XFS_ATTR_FORK, &naextents))
+> +		return __this_address;
 
-Think critically about what is said and respond to that, not look
-at who said it and respond based on their reputation.
+Yeah, so this should end up being:
+
+xfs_failaddr_t
+xfs_dfork_nextents_verify(
+	... )
+{
+	if (ip->di_flags2 & NREXT64) {
+		if (!xfs_has_nrext64(mp))
+			return __this_address;
+		if (dip->di_nextents16 != 0)
+			return __this_address;
+	} else if (dip->di_nextents64 != 0)
+		return __this_address;
+	}
+	return NULL;
+}
+
+and
+	faddr = xfs_dfork_nextents_verify(dip, mp);
+	if (faddr)
+		return faddr;
+	nextents = xfs_dfork_nextents(dip, XFS_DATA_FORK);
+	naextents = xfs_dfork_nextents(dip, XFS_ATTR_FORK);
+
+Now all the verification can be removed from xfs_dfork_nextents(),
+and anything that needs to verify that the extent counts are in a
+valid format can call xfs_dfork_nextents_verify() to perform this
+check (i.e. the dinode verifiers and scrub checking code).
 
 Cheers,
 
