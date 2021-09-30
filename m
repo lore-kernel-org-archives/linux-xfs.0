@@ -2,153 +2,133 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88418C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Sep 2021 21:24:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB2EAC433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Sep 2021 00:40:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5DD08615A7
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Sep 2021 21:24:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D11DA61288
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Sep 2021 00:40:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344094AbhI2V0D (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 29 Sep 2021 17:26:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54880 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232425AbhI2V0C (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Sep 2021 17:26:02 -0400
-Received: from mail-pg1-x532.google.com (mail-pg1-x532.google.com [IPv6:2607:f8b0:4864:20::532])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52AF7C06161C;
-        Wed, 29 Sep 2021 14:24:21 -0700 (PDT)
-Received: by mail-pg1-x532.google.com with SMTP id e7so4061500pgk.2;
-        Wed, 29 Sep 2021 14:24:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=Fpo01N+lyyScDWgq92D1/O48N99YsmZj4WQK3k5r6Mo=;
-        b=HM4oHczu6gs2h9KK3RI3VcgQwjbssZtyx7Vv2BcE3kGpF4b1QJ0oRybxE9aBl2GH1x
-         /w43iWh5gjuSTpKtS8sxxcG9Nx1wNNO85Qtxd5GGBEa/2A2cjwEOni8csuVK8ApBzBN7
-         kcxxhWAMjMt2ooGQ/7ZnOuMcCK7C46xyz4lCqBfF52Ejh88yWXA+xBfTqPqT0/dW+PG3
-         bQFC3uszdafIr55L58NftLtzImjQfyIUEWtjQDdW8NYZYz4etC4EQ67Ze1hEImGxVg2A
-         bkf6prnLYNE30FAdNKNU1zCSJ9zwkwQ9qh2FgxfoaemFCoKNbtsNS/X8reqnf8LZObtt
-         p8qA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=Fpo01N+lyyScDWgq92D1/O48N99YsmZj4WQK3k5r6Mo=;
-        b=Z2o1r0B8rpGehp5xZoU874etkbQezOM54I/mrOFGvtDTpUYESiQVb6CBfRT5snagQg
-         WC/ifWY7WmVsepgIotxuzjXpsGFCUqKkS1WuLiKb8Fhee1ClJ28Q3De12ZXwvwaRGYDE
-         +PhINpoD9/j0kWvOtlWw47ocQuPagrbzMI6Q/XoDeyYjiZFV2bJ7Jp8jXFlCCVCQjsSz
-         oncrndIsj/P7wPbQRf2c9rUWvv/5Utjpg1pSqFlYTDdlClx7lZeV7o9LqnwwvcSQs8x9
-         kF9qary1Vv2vX1mJY2qfkK5JUxpAukK3Ks3KpBmkyJOq4xsw1BqvXAK2UlcCgy6N+i7b
-         K82A==
-X-Gm-Message-State: AOAM530mB8HyTVYyxto/YBQRt3mjB+8zZoCh+bntmKiGjb+2QZT2Nauo
-        Cl3I+ZGdejzpeZ8b9X7uysA=
-X-Google-Smtp-Source: ABdhPJz+Twh3I6xWm488muRPTJARlQ/8j0JckJWLWy34bu13dAChLYGq4WwFW2WNKGjs5i0N0T5qew==
-X-Received: by 2002:a63:fb58:: with SMTP id w24mr1718437pgj.327.1632950660735;
-        Wed, 29 Sep 2021 14:24:20 -0700 (PDT)
-Received: from nuc10.aws.cis.local (d50-92-229-34.bchsia.telus.net. [50.92.229.34])
-        by smtp.gmail.com with ESMTPSA id i5sm2689322pjk.47.2021.09.29.14.24.19
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Sep 2021 14:24:20 -0700 (PDT)
-From:   Rustam Kovhaev <rkovhaev@gmail.com>
-To:     djwong@kernel.org, linux-xfs@vger.kernel.org, cl@linux.com,
-        penberg@kernel.org, rientjes@google.com, iamjoonsoo.kim@lge.com,
-        akpm@linux-foundation.org, vbabka@suse.cz
-Cc:     linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-        gregkh@linuxfoundation.org, Rustam Kovhaev <rkovhaev@gmail.com>
-Subject: [PATCH] xfs: use kmem_cache_free() for kmem_cache objects
-Date:   Wed, 29 Sep 2021 14:23:47 -0700
-Message-Id: <20210929212347.1139666-1-rkovhaev@gmail.com>
-X-Mailer: git-send-email 2.30.2
+        id S1347512AbhI3AmD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 29 Sep 2021 20:42:03 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:60261 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S244341AbhI3AmA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Sep 2021 20:42:00 -0400
+Received: from dread.disaster.area (pa49-195-238-16.pa.nsw.optusnet.com.au [49.195.238.16])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id CC4218846C2;
+        Thu, 30 Sep 2021 10:40:16 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1mVk7T-000fQh-25; Thu, 30 Sep 2021 10:40:15 +1000
+Date:   Thu, 30 Sep 2021 10:40:15 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Chandan Babu R <chandan.babu@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, djwong@kernel.org
+Subject: Re: [PATCH V3 07/12] xfs: Rename inode's extent counter fields based
+ on their width
+Message-ID: <20210930004015.GM2361455@dread.disaster.area>
+References: <20210916100647.176018-1-chandan.babu@oracle.com>
+ <20210916100647.176018-8-chandan.babu@oracle.com>
+ <20210927234637.GM1756565@dread.disaster.area>
+ <20210928040431.GP1756565@dread.disaster.area>
+ <87czors49w.fsf@debian-BULLSEYE-live-builder-AMD64>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <87czors49w.fsf@debian-BULLSEYE-live-builder-AMD64>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=61550771
+        a=DzKKRZjfViQTE5W6EVc0VA==:117 a=DzKKRZjfViQTE5W6EVc0VA==:17
+        a=kj9zAlcOel0A:10 a=7QKq2e-ADPsA:10 a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8
+        a=PBnoTMuumf0sBhVUzcEA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-For kmalloc() allocations SLOB prepends the blocks with a 4-byte header,
-and it puts the size of the allocated blocks in that header.
-Blocks allocated with kmem_cache_alloc() allocations do not have that
-header.
+On Wed, Sep 29, 2021 at 10:33:23PM +0530, Chandan Babu R wrote:
+> On 28 Sep 2021 at 09:34, Dave Chinner wrote:
+> > On Tue, Sep 28, 2021 at 09:46:37AM +1000, Dave Chinner wrote:
+> >> On Thu, Sep 16, 2021 at 03:36:42PM +0530, Chandan Babu R wrote:
+> >> > This commit renames extent counter fields in "struct xfs_dinode" and "struct
+> >> > xfs_log_dinode" based on the width of the fields. As of this commit, the
+> >> > 32-bit field will be used to count data fork extents and the 16-bit field will
+> >> > be used to count attr fork extents.
+> >> > 
+> >> > This change is done to enable a future commit to introduce a new 64-bit extent
+> >> > counter field.
+> >> > 
+> >> > Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
+> >> > ---
+> >> >  fs/xfs/libxfs/xfs_format.h      |  8 ++++----
+> >> >  fs/xfs/libxfs/xfs_inode_buf.c   |  4 ++--
+> >> >  fs/xfs/libxfs/xfs_log_format.h  |  4 ++--
+> >> >  fs/xfs/scrub/inode_repair.c     |  4 ++--
+> >> >  fs/xfs/scrub/trace.h            | 14 +++++++-------
+> >> >  fs/xfs/xfs_inode_item.c         |  4 ++--
+> >> >  fs/xfs/xfs_inode_item_recover.c |  8 ++++----
+> >> >  7 files changed, 23 insertions(+), 23 deletions(-)
+> >> > 
+> >> > diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> >> > index dba868f2c3e3..87c927d912f6 100644
+> >> > --- a/fs/xfs/libxfs/xfs_format.h
+> >> > +++ b/fs/xfs/libxfs/xfs_format.h
+> >> > @@ -802,8 +802,8 @@ typedef struct xfs_dinode {
+> >> >  	__be64		di_size;	/* number of bytes in file */
+> >> >  	__be64		di_nblocks;	/* # of direct & btree blocks used */
+> >> >  	__be32		di_extsize;	/* basic/minimum extent size for file */
+> >> > -	__be32		di_nextents;	/* number of extents in data fork */
+> >> > -	__be16		di_anextents;	/* number of extents in attribute fork*/
+> >> > +	__be32		di_nextents32;	/* number of extents in data fork */
+> >> > +	__be16		di_nextents16;	/* number of extents in attribute fork*/
+> >> 
+> >> 
+> >> Hmmm. Having the same field in the inode hold the extent count
+> >> for different inode forks based on a bit in the superblock means the
+> >> on-disk inode format is not self describing. i.e. we can't decode
+> >> the on-disk contents of an inode correctly without knowing whether a
+> >> specific feature bit is set in the superblock or not.
+> >
+> > Hmmmm - I just realised that there is an inode flag that indicates
+> > the format is different. It's jsut that most of the code doing
+> > conditional behaviour is using the superblock flag, not the inode
+> > flag as the conditional.
+> >
+> > So it is self describing, but I still don't like the way the same
+> > field is used for the different forks. It just feels like we are
+> > placing a landmine that we are going to forget about and step
+> > on in the future....
+> >
+> 
+> Sorry, I missed this response from you.
+> 
+> I agree with your suggestion. I will use the inode version number to help in
+> deciding which extent counter fields are valid for a specific inode.
 
-SLOB explodes when you allocate memory with kmem_cache_alloc() and then
-try to free it with kfree() instead of kmem_cache_free().
-SLOB will assume that there is a header when there is none, read some
-garbage to size variable and corrupt the adjacent objects, which
-eventually leads to hang or panic.
+No, don't do something I suggested with a flawed understanding of
+the code.
 
-Let's make XFS work with SLOB by using proper free function.
+Just because *I* suggest something, it means you have to make that
+change. That is reacting to *who* said something, not *what was
+said*.
 
-Fixes: 9749fee83f38 ("xfs: enable the xfs_defer mechanism to process extents to free")
-Signed-off-by: Rustam Kovhaev <rkovhaev@gmail.com>
----
- fs/xfs/xfs_extfree_item.c | 6 +++---
- mm/slob.c                 | 6 ++++--
- 2 files changed, 7 insertions(+), 5 deletions(-)
+So, I may have reservations about the way the storage definitions
+are being redefined, but if I had a valid, technical argument I
+could give right now I would have said so directly. I can't put my
+finger on why this worries me in this case but didn't for something
+like, say, the BIGTIME feature which redefined the contents of
+various fields in the inode.
 
-diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-index 3f8a0713573a..a4b8caa2c601 100644
---- a/fs/xfs/xfs_extfree_item.c
-+++ b/fs/xfs/xfs_extfree_item.c
-@@ -482,7 +482,7 @@ xfs_extent_free_finish_item(
- 			free->xefi_startblock,
- 			free->xefi_blockcount,
- 			&free->xefi_oinfo, free->xefi_skip_discard);
--	kmem_free(free);
-+	kmem_cache_free(xfs_bmap_free_item_zone, free);
- 	return error;
- }
- 
-@@ -502,7 +502,7 @@ xfs_extent_free_cancel_item(
- 	struct xfs_extent_free_item	*free;
- 
- 	free = container_of(item, struct xfs_extent_free_item, xefi_list);
--	kmem_free(free);
-+	kmem_cache_free(xfs_bmap_free_item_zone, free);
- }
- 
- const struct xfs_defer_op_type xfs_extent_free_defer_type = {
-@@ -564,7 +564,7 @@ xfs_agfl_free_finish_item(
- 	extp->ext_len = free->xefi_blockcount;
- 	efdp->efd_next_extent++;
- 
--	kmem_free(free);
-+	kmem_cache_free(xfs_bmap_free_item_zone, free);
- 	return error;
- }
- 
-diff --git a/mm/slob.c b/mm/slob.c
-index 74d3f6e60666..d2d859ded5f8 100644
---- a/mm/slob.c
-+++ b/mm/slob.c
-@@ -389,7 +389,6 @@ static void slob_free(void *block, int size)
- 
- 	if (unlikely(ZERO_OR_NULL_PTR(block)))
- 		return;
--	BUG_ON(!size);
- 
- 	sp = virt_to_page(block);
- 	units = SLOB_UNITS(size);
-@@ -556,6 +555,7 @@ void kfree(const void *block)
- 	if (PageSlab(sp)) {
- 		int align = max_t(size_t, ARCH_KMALLOC_MINALIGN, ARCH_SLAB_MINALIGN);
- 		unsigned int *m = (unsigned int *)(block - align);
-+		BUG_ON(!*m || *m > (PAGE_SIZE - align));
- 		slob_free(m, *m + align);
- 	} else {
- 		unsigned int order = compound_order(sp);
-@@ -649,8 +649,10 @@ EXPORT_SYMBOL(kmem_cache_alloc_node);
- 
- static void __kmem_cache_free(void *b, int size)
- {
--	if (size < PAGE_SIZE)
-+	if (size < PAGE_SIZE) {
-+		BUG_ON(!size);
- 		slob_free(b, size);
-+	}
- 	else
- 		slob_free_pages(b, get_order(size));
- }
+IOWs, I haven't really had time to think and go back over the rest
+of the patchset since I realised my mistake and determine if that
+changes what I think about this, so don't go turning the patchset
+upside just because *I suggested something*.
+
+Think critically about what is said and respond to that, not look
+at who said it and respond based on their reputation.
+
+Cheers,
+
+Dave.
 -- 
-2.30.2
-
+Dave Chinner
+david@fromorbit.com
