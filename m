@@ -2,123 +2,116 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3DAEC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Sep 2021 08:13:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F08AC43219
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Sep 2021 15:54:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 80D0A615E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Sep 2021 08:13:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 87C2860F5B
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Sep 2021 15:54:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348889AbhI3IPY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 30 Sep 2021 04:15:24 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:39170 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348866AbhI3IPY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Sep 2021 04:15:24 -0400
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 230E522604;
-        Thu, 30 Sep 2021 08:13:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1632989621; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=N5Thg/LdS+f/OKiGebbx9x8XYiOc+eM0qG2VzPO3ksA=;
-        b=hrvXjqxldUZaVP6V9n8Ne2cJpHPgc53PR5EUoYb3IoavUPBpwGK1vQbl0IQBFJIr7CElyr
-        l00SIPUnq4rWthUOhUoLFBrLbL/49ZhI+w852lCVVzPLkk+6cE9mj/GBxlRByxn3BOPKdr
-        yUO6/O4Zqyst7gHhae3vlaEhx4HSIFw=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1632989621;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=N5Thg/LdS+f/OKiGebbx9x8XYiOc+eM0qG2VzPO3ksA=;
-        b=qW7AxlIsdvqS3QXhaO/Apmfy+pkRmM9UlKBjSJ4/soig/IGHz6HanIdehExw0AJRZarJLz
-        V78KLOOgcJSib3Bg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id E5BB0140CC;
-        Thu, 30 Sep 2021 08:13:40 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id HRZfN7RxVWEdJwAAMHmgww
-        (envelope-from <vbabka@suse.cz>); Thu, 30 Sep 2021 08:13:40 +0000
-Message-ID: <17f537b3-e2eb-5d0a-1465-20f3d3c960e2@suse.cz>
-Date:   Thu, 30 Sep 2021 10:13:40 +0200
+        id S1346983AbhI3P4a (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 30 Sep 2021 11:56:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56282 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1346577AbhI3P42 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Sep 2021 11:56:28 -0400
+Received: from mail-lf1-x12d.google.com (mail-lf1-x12d.google.com [IPv6:2a00:1450:4864:20::12d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0C0AC06176A;
+        Thu, 30 Sep 2021 08:54:45 -0700 (PDT)
+Received: by mail-lf1-x12d.google.com with SMTP id i4so27713049lfv.4;
+        Thu, 30 Sep 2021 08:54:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=8LuCj9+8GFiHaMYgM8A65UudQg+qoOQQ2QUvcQ4XJ6s=;
+        b=PXKNBxqcRYxhwIV2v2X64yZJayzFfGuPEaFJcRpO4WCNqMpCZwI1df/zPBhLNhmRG9
+         7YWtoaofqurtGMdx0tYBEI6UfndHKtDaw4PBX49q9qi3J9QTKWYVNSDazJnLhCwGhWpW
+         sQyH53wtu7PQHWXKpw0IKJFLkzoLewsXUWMxyWUFA0GoZc/geWBr365BCc9DFKmEuqTx
+         QD1UXjg8vOB88FTGI55O4xvrqxi80eDmibsD2swnwubvtT8jN+7r24raClw1eWxICIMn
+         Xqc+xF7xzZT7TnBUA1RA5nmOrLjD64wC+WGfBcYeYx3rm7565L5ZdR6xyKgYS9WfGChU
+         NdlA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=8LuCj9+8GFiHaMYgM8A65UudQg+qoOQQ2QUvcQ4XJ6s=;
+        b=XbBmZKylOYkv9SoXviPKr9BWXkZnTMEhN/fJ51HYr7LvZ50SCBNVHrOfV5SWpjYM2r
+         Y2qiC9CZ/lZsMRA6GQqL2/yNfuvwmt01k+raQ/914z/0iuApGZgUMbKUALfvCbUniGRI
+         gSalxO6Z+kngZPgLhCAU9cS1ehUiZTvEswwuJASnjNdOIUR0Z+riW4QpL82Pr+TXguTS
+         2fDK3wKyn6cI/dVyVPlz5oC6323Y0CaVOJqjzh8gwILnBViU/sGrMjSLtCdVqkbFx6bt
+         8hDoqhoj9aXS9t5aF9sa3JGdoOav5Q8f/6EcjMIWu/mSG6lZ8XF7xAHIVtuMFICV5S9y
+         uQUg==
+X-Gm-Message-State: AOAM530xbUXEPedn3z2RSBSh4SRFgiu7yX3y79mfdsl/iauHJLStOASh
+        TzYK5mmp8+9+DBjHeQ/cTbqVveEdVpYvTtbgkUjRp9WQ
+X-Google-Smtp-Source: ABdhPJyOHnVmMylaeGdsSDUQCs/a7NstziQ8gAm3Iq6Rldf9w/4qe7wGWECjl3a+7RS3TZsUTx6/zgFOVy33MH5VI2M=
+X-Received: by 2002:a05:6512:32c5:: with SMTP id f5mr7091563lfg.234.1633017283958;
+ Thu, 30 Sep 2021 08:54:43 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.1.2
-Content-Language: en-US
-To:     Dave Chinner <david@fromorbit.com>,
-        Rustam Kovhaev <rkovhaev@gmail.com>
-Cc:     djwong@kernel.org, linux-xfs@vger.kernel.org, cl@linux.com,
-        penberg@kernel.org, rientjes@google.com, iamjoonsoo.kim@lge.com,
-        akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
-        linux-mm@kvack.org, gregkh@linuxfoundation.org,
-        Al Viro <viro@ZenIV.linux.org.uk>
-References: <20210929212347.1139666-1-rkovhaev@gmail.com>
- <20210930044202.GP2361455@dread.disaster.area>
-From:   Vlastimil Babka <vbabka@suse.cz>
-Subject: Re: [PATCH] xfs: use kmem_cache_free() for kmem_cache objects
-In-Reply-To: <20210930044202.GP2361455@dread.disaster.area>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <163250387273.2330363.13240781819520072222.stgit@warthog.procyon.org.uk>
+ <163279868982.18792.10448745714922373194@noble.neil.brown.name>
+In-Reply-To: <163279868982.18792.10448745714922373194@noble.neil.brown.name>
+From:   Steve French <smfrench@gmail.com>
+Date:   Thu, 30 Sep 2021 10:54:32 -0500
+Message-ID: <CAH2r5msHO9HTQGeO6MoR2_U76B9kLeoFS=FRbMuiNsh=YeFdWg@mail.gmail.com>
+Subject: Re: [RFC][PATCH v3 0/9] mm: Use DIO for swap and fix NFS swapfiles
+To:     NeilBrown <neilb@suse.de>
+Cc:     David Howells <dhowells@redhat.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Trond Myklebust <trond.myklebust@primarydata.com>,
+        "Theodore Ts'o" <tytso@mit.edu>, linux-block@vger.kernel.org,
+        ceph-devel <ceph-devel@vger.kernel.org>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Jeff Layton <jlayton@kernel.org>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Anna Schumaker <anna.schumaker@netapp.com>,
+        linux-mm <linux-mm@kvack.org>, Bob Liu <bob.liu@oracle.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Josef Bacik <josef@toxicpanda.com>,
+        Seth Jennings <sjenning@linux.vnet.ibm.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-ext4 <linux-ext4@vger.kernel.org>,
+        CIFS <linux-cifs@vger.kernel.org>, Chris Mason <clm@fb.com>,
+        David Sterba <dsterba@suse.com>,
+        Minchan Kim <minchan@kernel.org>,
+        Steve French <sfrench@samba.org>,
+        Dan Magenheimer <dan.magenheimer@oracle.com>,
+        linux-nfs <linux-nfs@vger.kernel.org>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        linux-btrfs <linux-btrfs@vger.kernel.org>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 9/30/21 06:42, Dave Chinner wrote:
-> On Wed, Sep 29, 2021 at 02:23:47PM -0700, Rustam Kovhaev wrote:
->> For kmalloc() allocations SLOB prepends the blocks with a 4-byte header,
->> and it puts the size of the allocated blocks in that header.
->> Blocks allocated with kmem_cache_alloc() allocations do not have that
->> header.
->> 
->> SLOB explodes when you allocate memory with kmem_cache_alloc() and then
->> try to free it with kfree() instead of kmem_cache_free().
->> SLOB will assume that there is a header when there is none, read some
->> garbage to size variable and corrupt the adjacent objects, which
->> eventually leads to hang or panic.
->> 
->> Let's make XFS work with SLOB by using proper free function.
->> 
->> Fixes: 9749fee83f38 ("xfs: enable the xfs_defer mechanism to process extents to free")
->> Signed-off-by: Rustam Kovhaev <rkovhaev@gmail.com>
-> 
-> IOWs, XFS has been broken on SLOB for over 5 years and nobody
-> anywhere has noticed.
-> 
-> And we've just had a discussion where the very best solution was to
-> use kfree() on kmem_cache_alloc() objects so we didn't ahve to spend
-> CPU doing global type table lookups or use an extra 8 bytes of
-> memory per object to track the slab cache just so we could call
-> kmem_cache_free() with the correct slab cache.
-> 
-> But, of course, SLOB doesn't allow this and I was really tempted to
-> solve that by adding a Kconfig "depends on SLAB|SLUB" option so that
-> we don't have to care about SLOB not working.
-> 
-> However, as it turns out that XFS on SLOB has already been broken
-> for so long, maybe we should just not care about SLOB code and
-> seriously consider just adding a specific dependency on SLAB|SLUB...
+On Mon, Sep 27, 2021 at 10:12 PM NeilBrown <neilb@suse.de> wrote:
+>
+> On Sat, 25 Sep 2021, David Howells wrote:
+> > Whilst trying to make this work, I found that NFS's support for swapfiles
+> > seems to have been non-functional since Aug 2019 (I think), so the first
+> > patch fixes that.  Question is: do we actually *want* to keep this
+> > functionality, given that it seems that no one's tested it with an upstream
+> > kernel in the last couple of years?
+>
+> SUSE definitely want to keep this functionality.  We have customers
+> using it.
+> I agree it would be good if it was being tested somewhere....
+>
 
-I think it's fair if something like XFS (not meant for tiny systems AFAIK?)
-excludes SLOB (meant for tiny systems). Clearly nobody tried to use these
-two together last 5 years anyway.
-Maybe we could also just add the 4 bytes to all SLOB objects, declare
-kfree() is always fine and be done with it. Yes, it will make SLOB footprint
-somewhat less tiny, but even whan we added kmalloc power of two alignment
-guarantees, the impact on SLOB was negligible.
+I am trying to work through the testing of swap over SMB3 mounts
+since there are use cases where you need to expand the swap
+space to remote storage and so this requirement comes up.  The main difficulty
+I run into is forgetting to mount with the mount options (to store mode bits)
+(so swap file has the right permissions) and debugging some of the
+xfstests relating to swap can be a little confusing.
 
-> Thoughts?
-> 
-> Cheers,
-> 
-> Dave.
-> 
+-- 
+Thanks,
 
+Steve
