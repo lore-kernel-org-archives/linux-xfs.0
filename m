@@ -2,172 +2,100 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E199EC433EF
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Oct 2021 20:33:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 596D6C433FE
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Oct 2021 01:07:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C78D861AA4
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Oct 2021 20:33:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 32AF56101A
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Oct 2021 01:07:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230074AbhJAUfF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 1 Oct 2021 16:35:05 -0400
-Received: from sandeen.net ([63.231.237.45]:53250 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1355034AbhJAUfE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 1 Oct 2021 16:35:04 -0400
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 7B72314A18
-        for <linux-xfs@vger.kernel.org>; Fri,  1 Oct 2021 15:32:39 -0500 (CDT)
-To:     xfs <linux-xfs@vger.kernel.org>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs for-next updated to 7c432f77
-Message-ID: <bddb12ee-3726-2bd3-764d-654d54625535@sandeen.net>
-Date:   Fri, 1 Oct 2021 15:33:18 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.14.0
+        id S231794AbhJDBJL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 3 Oct 2021 21:09:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37574 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231363AbhJDBJL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Oct 2021 21:09:11 -0400
+Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0CC4AC061780
+        for <linux-xfs@vger.kernel.org>; Sun,  3 Oct 2021 18:07:23 -0700 (PDT)
+Received: by mail-pl1-x630.google.com with SMTP id t4so2044197plo.0
+        for <linux-xfs@vger.kernel.org>; Sun, 03 Oct 2021 18:07:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :mime-version;
+        bh=pStQdMrL6ZFdXlJGha4PGljRtDULz8i5+uPOyRWf8rU=;
+        b=kAMJB1dPHfIu0grrWDbrhbolngM0JPtqVX6W4LQ0dtNlTNzO4A4V4jJfu3GO//KpI/
+         zoCckKf+f5s6de3QFu2N7/YZY8bZhxxvwZ/cVyDsFquSDFcoOsCt9tkpgk8jwGmfEcWR
+         OKK/uu0L1RIcNvw+Ro/RFp06yHEtZkrhJNa8FM/BDB59V45gHSKiejNo357eRnDtDSy/
+         b76AdDM/tjRm2HBiefXqqGCizbuXhYPpOwxVNjkVSaN+zzokQ1GhYkxAEiqJ/E/NxsxO
+         cqUaV5bA/NdeHMtleODM3D57VAurRyugnfdK9q0qM1J2IakdMLzcGTbSIMufvfOtYCZ7
+         ycdw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:in-reply-to:message-id
+         :references:mime-version;
+        bh=pStQdMrL6ZFdXlJGha4PGljRtDULz8i5+uPOyRWf8rU=;
+        b=2C7p1RZldVf33JIhrpsh02tOFgaIZUmcj0brEnO1TRdmjIvwjKy4FqMonXNk5CPNh0
+         qq/r5LMTONVX1qiY7qpi6hZ5nlxF4XKOLyP/s4yaIRrqN5dwy8AItkU0U7GBpr9tITJx
+         rF7ITuA1OJL2nbVsD8w8WUXziH6Ei0iWNtJxaoWV4TlJOhnO/AFPTw+igzm1GbmVO8AD
+         BrERn13PUW65DI520KBZjwfThm5PjYE7T8Wn+5/86nv2SPMNWKLYO5SOmTzxD5vR9Zql
+         bI+thkJh/s+1NAFOBN1dys9fUuMFx8HW2d5MbsFp82iqcMzqozSG/7gW88m2gph6HXsI
+         k26Q==
+X-Gm-Message-State: AOAM533b50P1i/nsiSLn4w8+QhcFSi9rcWbEh32pxn1CPO+2M49jGyjG
+        CXwZC/2OjKb92znxJtuFqbKAUg==
+X-Google-Smtp-Source: ABdhPJw+OUZxiTir+uXz7ip5A94n6l2wmdN8lZupAMuxEoGz73pp9OWHAtT4OzzvlWLfGbA3B+EWQQ==
+X-Received: by 2002:a17:902:7e48:b0:13d:a58a:e9ce with SMTP id a8-20020a1709027e4800b0013da58ae9cemr20330094pln.21.1633309642214;
+        Sun, 03 Oct 2021 18:07:22 -0700 (PDT)
+Received: from [2620:15c:17:3:4faa:17e6:3602:9e7d] ([2620:15c:17:3:4faa:17e6:3602:9e7d])
+        by smtp.gmail.com with ESMTPSA id p24sm2314787pjz.32.2021.10.03.18.07.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 03 Oct 2021 18:07:21 -0700 (PDT)
+Date:   Sun, 3 Oct 2021 18:07:20 -0700 (PDT)
+From:   David Rientjes <rientjes@google.com>
+To:     Rustam Kovhaev <rkovhaev@gmail.com>
+cc:     Vlastimil Babka <vbabka@suse.cz>,
+        Dave Chinner <david@fromorbit.com>, djwong@kernel.org,
+        linux-xfs@vger.kernel.org, cl@linux.com, penberg@kernel.org,
+        iamjoonsoo.kim@lge.com, akpm@linux-foundation.org,
+        linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+        gregkh@linuxfoundation.org, Al Viro <viro@zeniv.linux.org.uk>,
+        dvyukov@google.com
+Subject: Re: [PATCH] xfs: use kmem_cache_free() for kmem_cache objects
+In-Reply-To: <YVZXF3mbaW+Pe+Ji@nuc10>
+Message-ID: <1e0df91-556e-cee5-76f7-285d28fe31@google.com>
+References: <20210929212347.1139666-1-rkovhaev@gmail.com> <20210930044202.GP2361455@dread.disaster.area> <17f537b3-e2eb-5d0a-1465-20f3d3c960e2@suse.cz> <YVYGcLbu/aDKXkag@nuc10> <a9b3cd91-8ee6-a654-b2a8-00c3efb69559@suse.cz> <YVZXF3mbaW+Pe+Ji@nuc10>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="9frgLgUAGwF6E99hgYvIpC4lf6FJT55z7"
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---9frgLgUAGwF6E99hgYvIpC4lf6FJT55z7
-Content-Type: multipart/mixed; boundary="BYlyVDYf2yceXP2842ZfdWnYzLOhq1V9x";
- protected-headers="v1"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: xfs <linux-xfs@vger.kernel.org>
-Message-ID: <bddb12ee-3726-2bd3-764d-654d54625535@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs for-next updated to 7c432f77
+On Thu, 30 Sep 2021, Rustam Kovhaev wrote:
 
---BYlyVDYf2yceXP2842ZfdWnYzLOhq1V9x
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+> > >> I think it's fair if something like XFS (not meant for tiny systems AFAIK?)
+> > >> excludes SLOB (meant for tiny systems). Clearly nobody tried to use these
+> > >> two together last 5 years anyway.
+> > > 
+> > > +1 for adding Kconfig option, it seems like some things are not meant to
+> > > be together.
+> > 
+> > But if we patch SLOB, we won't need it.
+> 
+> OK, so we consider XFS on SLOB a supported configuration that might be
+> used and should be tested.
+> I'll look into maybe adding a config with CONFIG_SLOB and CONFIG_XFS_FS
+> to syzbot.
+> 
+> It seems that we need to patch SLOB anyway, because any other code can
+> hit the very same issue.
+> 
 
-Hi folks,
+It's probably best to introduce both (SLOB fix and Kconfig change for 
+XFS), at least in the interim because the combo of XFS and SLOB could be 
+broken in other ways.  If syzbot doesn't complain with a patched kernel to 
+allow SLOB to be used with XFS, then we could potentially allow them to be 
+used together.
 
-The for-next branch of the xfsprogs repository at:
-
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
-
-has just been updated.
-
-Patches often get missed, so please check if your outstanding
-patches were in this update. If they have not been in this update,
-please resubmit them to linux-xfs@vger.kernel.org so they can be
-picked up in the next update.
-
-The new head of the for-next branch is commit:
-
-7c432f77 misc: convert utilities to use "fallthrough;"
-
-New Commits:
-
-Darrick J. Wong (5):
-       [ec4e15fd] mkfs: move mkfs/proto.c declarations to mkfs/proto.h
-       [6bc3531c] libfrog: move topology.[ch] to libxfs
-       [b9ee1227] libxfs: port xfs_set_inode_alloc from the kernel
-       [8fb63e2a] libxfs: fix whitespace inconsistencies with kernel
-       [7c432f77] misc: convert utilities to use "fallthrough;"
-
-Dave Chinner (3):
-       [e4da1b16] xfsprogs: introduce liburcu support
-       [686bddf9] libxfs: add spinlock_t wrapper
-       [de555f66] atomic: convert to uatomic
-
-Gustavo A. R. Silva (1):
-       [df9c7d8d] xfs: Fix fall-through warnings for Clang
-
-
-Code Diffstat:
-
-  configure.ac                   |   3 +
-  copy/Makefile                  |   3 +-
-  copy/xfs_copy.c                |   3 +
-  db/Makefile                    |   3 +-
-  db/type.c                      |   2 +-
-  debian/control                 |   2 +-
-  growfs/Makefile                |   3 +-
-  growfs/xfs_growfs.c            |   6 +-
-  include/Makefile               |   1 +
-  include/atomic.h               |  65 +++++++++++++++---
-  include/builddefs.in           |   4 +-
-  include/libxfs.h               |   2 +
-  include/linux.h                |  21 ++++++
-  include/platform_defs.h.in     |   1 +
-  include/spinlock.h             |  25 +++++++
-  include/xfs_inode.h            |   1 +
-  include/xfs_mount.h            |   2 +
-  include/xfs_multidisk.h        |   5 --
-  include/xfs_trans.h            |   1 +
-  libfrog/Makefile               |   2 -
-  libfrog/workqueue.c            |   3 +
-  libxfs/Makefile                |  10 +--
-  libxfs/init.c                  | 149 ++++++++++++++++++++++++++--------=
--------
-  libxfs/libxfs_priv.h           |   7 +-
-  libxfs/logitem.c               |   4 +-
-  libxfs/rdwr.c                  |   2 +
-  {libfrog =3D> libxfs}/topology.c |   5 +-
-  {libfrog =3D> libxfs}/topology.h |   6 +-
-  libxfs/xfs_ag_resv.c           |   4 +-
-  libxfs/xfs_alloc.c             |   2 +-
-  libxfs/xfs_btree.h             |   2 +-
-  libxfs/xfs_da_btree.c          |   2 +-
-  libxfs/xfs_rmap_btree.h        |   2 +-
-  logprint/Makefile              |   3 +-
-  m4/Makefile                    |   1 +
-  m4/package_urcu.m4             |  22 ++++++
-  mdrestore/Makefile             |   3 +-
-  mkfs/Makefile                  |   2 +-
-  mkfs/proto.c                   |   1 +
-  mkfs/proto.h                   |  13 ++++
-  mkfs/xfs_mkfs.c                |   2 +-
-  repair/Makefile                |   2 +-
-  repair/dinode.c                |  18 ++---
-  repair/phase4.c                |   4 +-
-  repair/prefetch.c              |   9 ++-
-  repair/progress.c              |   4 +-
-  repair/sb.c                    |   1 -
-  repair/scan.c                  |   4 +-
-  scrub/Makefile                 |   3 +-
-  scrub/inodes.c                 |   2 +-
-  scrub/progress.c               |   2 +
-  scrub/repair.c                 |   2 +-
-  scrub/scrub.c                  |   8 +--
-  53 files changed, 327 insertions(+), 132 deletions(-)
-  create mode 100644 include/spinlock.h
-  rename {libfrog =3D> libxfs}/topology.c (99%)
-  rename {libfrog =3D> libxfs}/topology.h (88%)
-  create mode 100644 m4/package_urcu.m4
-  create mode 100644 mkfs/proto.h
-
-
---BYlyVDYf2yceXP2842ZfdWnYzLOhq1V9x--
-
---9frgLgUAGwF6E99hgYvIpC4lf6FJT55z7
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature"
-
------BEGIN PGP SIGNATURE-----
-
-wsF5BAABCAAjFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAmFXcI4FAwAAAAAACgkQIK4WkuE93uCc
-LA/+JDxM6yhtNobukABg7GGX+rFx6xRM8SG3fH22xSbJIf8k1vygeC65wazutnBTxInZnS9JE717
-Z1Lyq6/BAyxaeqmE33WQBikWLpVElgWAUck6/A5ZqMe+08u/maopAbKTneJrYatM1nT/8JLmJFFY
-QSs6W8UB30CKB3bbLU4bNTIvAdGEQ1e/ByARrSnrwf84FcacokIGSkGJ/PMVoYBkD235Fdgmw+5z
-Uj8nnhGhXVrhkK08YVnIRbgEtKWrtVitfDcIhJcgAl/sRIy7QL587ih5spH+9UlOjN3FInQo+bva
-0gfr5EIg06Z9+GaZkeDcB1160SnnYpWm9nYwxSDCW+Hc1h3kjCCbS+ZqWC8llG2z1BvL+D9HGoSh
-gp3OnJ9ELbsngAEf6CINhfgUtAYRIePXHhkOSj7bdtCdk2O21j8HiLvRAbXW/QNzwCLSQMdy8llY
-3LmFMZf2l2R4BbbDN6DTebu/cPkY3yY6l/1oOGt0AHSUFBGJjyPo51IjmZcxaYyZkLDGB4DG13mE
-8/lThC+wHoBbdWckDeMg9xw0gWICThsdHvaONJO+snOkVWEBaNKgzAzOPJ7fBGYqXW6TxEBGhVW2
-FHF21CEMNQhM7Lp1ZRY39KNLzVnfNoBTxSNman+PJtNWNQdqZWY8zNwQW1wLfwVcO7+1dEzXjj+J
-Ez0=
-=i3VZ
------END PGP SIGNATURE-----
-
---9frgLgUAGwF6E99hgYvIpC4lf6FJT55z7--
+(I'm not sure that this freeing issue is the *only* thing that is broken, 
+nor that we have sufficient information to make that determination right 
+now..)
