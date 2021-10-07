@@ -2,453 +2,589 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCEF6C433F5
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Oct 2021 10:52:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8163C433F5
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Oct 2021 12:04:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B32A86113E
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Oct 2021 10:52:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 96BA46103B
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Oct 2021 12:04:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240917AbhJGKyh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Oct 2021 06:54:37 -0400
-Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:3660 "EHLO
-        mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S240896AbhJGKyg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Oct 2021 06:54:36 -0400
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1979pQVO018891;
-        Thu, 7 Oct 2021 10:52:41 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=references : from :
- to : cc : subject : in-reply-to : message-id : date : content-type :
- mime-version; s=corp-2021-07-09;
- bh=VFHRzmdo+BmQnHhBeibTYb3yMKCBlBsrNNh3TmZGZYo=;
- b=dGguNXtbi9H4BKH+SYeOf7z3rspe1xqIXgJWUL0MoK4rWXPaFeyJKgAtNxWe7WYVmVG3
- FDwGOM6u0Ta13RLbu5p2MY+NBSNaPGLpOJh+lnuylasSjpBr8ym11HKYgtBy/81vD+dL
- FI3C7AlP4BEhAf+FrUU5cBWVDvqYJ7M+u62kBQYL2rl3I8NLM3W9F/iF9V7R+5Jy1/E8
- qd37T56zCWu/sS0MvLQRLJ3+glDZ9GoL8isLMPhYSLlZpAckVyuTA5FGf2vmwFlj8pMD
- pe+ezH6O6Nr39cexmqQM5tQ6rZxx5A9bPDqpvZaWc44K3cBEGTRkrxW5vkzwNEdKhcal HA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3bhwfdgppt-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 07 Oct 2021 10:52:41 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 197AoQ08191225;
-        Thu, 7 Oct 2021 10:52:40 GMT
-Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2104.outbound.protection.outlook.com [104.47.55.104])
-        by aserp3020.oracle.com with ESMTP id 3bev90ryxk-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 07 Oct 2021 10:52:39 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=lw5ssRr8NewSfca1mUl97xq5t8FfnHOkarxXA72gKKHbCQ/EMhQmC/DajO0lbQmnjNEBngHf++NVZ65s4N+pr2n5r+WlxsSxjQpUonCjOy2MljbNC2+aCdV19QhYIgu6Hc396omL2be/3MiJk1Pawhkt4Kk8Rbdb8GQPW19himNHyFGG08/gx4173ZRtC5v32PCUabF8pYnqEcWUnt658cSQnb76O3OHD0Fgwwk/igs8ObRU8rUM1LxINlKFR8qXANJ4RILWRc2fQOxcnXz78+OpjccxF3Knw7QVkmn7urcgVQlUjpEoRylb9TJ1NCv8x62KcAn7SPYoQd6woZitFw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=VFHRzmdo+BmQnHhBeibTYb3yMKCBlBsrNNh3TmZGZYo=;
- b=L3wTc2nFMuMW3+/VjLLwj6/2XQhbi/UAf8XOJyVVIw2vnXRtSxiZgzte80jk2rdnZUHnEj2oO9CO/aERjktKB22hGuZe7PdIEUgE9qjk2zpc2G9i5j9yMB/wlHOFjfk8UWut5bPod7nlFnNddVxIz6Z4OH9UeCD/cJpb7bHYxT9nUUxFLzmuH6HfahRvmvEJ8kjad6VscMU4WedZGfurEyLtH1kXkUpCPo+vi0GuluV741iHEM3AWHyBZ9yfHK8a6akHFuMWNEUU3I86ZByg3JLR2+UXuj6Ipbt0YfRvH80MMSxxR+icxMzPZR74H5d/zD1XAss5+waRzXEHthUaWw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=VFHRzmdo+BmQnHhBeibTYb3yMKCBlBsrNNh3TmZGZYo=;
- b=XhkC4PSHUdyZyJ9sIMQhHV9JCnoCQzVyIGw26GLD38Ww46kwJ8xRBwFan+GbgT1rph9aDCYtLT5058jIs0MhodGnDyDbrK70lLQUqycFDwna5pbSNAWS2QHTaTd1uwa/sdUIsqVDlNVt3cGfFrhMPu5H6SyRzNFbN/jfhdHF6JQ=
-Authentication-Results: kernel.org; dkim=none (message not signed)
- header.d=none;kernel.org; dmarc=none action=none header.from=oracle.com;
-Received: from SA2PR10MB4587.namprd10.prod.outlook.com (2603:10b6:806:114::12)
- by SA2PR10MB4460.namprd10.prod.outlook.com (2603:10b6:806:118::23) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4587.19; Thu, 7 Oct
- 2021 10:52:37 +0000
-Received: from SA2PR10MB4587.namprd10.prod.outlook.com
- ([fe80::1138:f2cb:64f8:c901]) by SA2PR10MB4587.namprd10.prod.outlook.com
- ([fe80::1138:f2cb:64f8:c901%7]) with mapi id 15.20.4566.023; Thu, 7 Oct 2021
- 10:52:37 +0000
-References: <20210916100647.176018-1-chandan.babu@oracle.com>
- <20210916100647.176018-8-chandan.babu@oracle.com>
- <20210927234637.GM1756565@dread.disaster.area>
- <20210928040431.GP1756565@dread.disaster.area>
- <87czors49w.fsf@debian-BULLSEYE-live-builder-AMD64>
- <20210930004015.GM2361455@dread.disaster.area>
- <20210930043117.GO2361455@dread.disaster.area>
- <87zgrubjwn.fsf@debian-BULLSEYE-live-builder-AMD64>
- <20210930225523.GA54211@dread.disaster.area>
-User-agent: mu4e 1.4.15; emacs 27.1
-From:   Chandan Babu R <chandan.babu@oracle.com>
+        id S241154AbhJGMFy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Oct 2021 08:05:54 -0400
+Received: from smtp-out2.suse.de ([195.135.220.29]:44002 "EHLO
+        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232993AbhJGMFx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Oct 2021 08:05:53 -0400
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out2.suse.de (Postfix) with ESMTP id E89551FD78;
+        Thu,  7 Oct 2021 12:03:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1633608238; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=zGS58y/aOyI58tMIa4CEXLztlENw+vd5ijmJ4mSqvPI=;
+        b=HSBhigJ5VOqzR+LnmBCHff3KYtmeMQ7W9MA1RHMVfhyMFtKVqVxU1cKXr/W/trsLdaIrFH
+        P3ima7QpGhJnWcE5nBgVmlb32bsNvDwi7VoKH6JroKvikMscR9ASWNaYS+f+FXt0pZ0848
+        zA+IGWDmIWopvieLdjQge0zLPKwAKPU=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1633608238;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=zGS58y/aOyI58tMIa4CEXLztlENw+vd5ijmJ4mSqvPI=;
+        b=TatljhB8gLn/JcN2fZO/FQ3lbIYhkIEocSoXPKd23wk788sk7stvFnlCawHGeKgW4MrjKK
+        +I5I0lAtcKron3Cg==
+Received: from quack2.suse.cz (unknown [10.100.224.230])
+        by relay2.suse.de (Postfix) with ESMTP id CE07AA3B81;
+        Thu,  7 Oct 2021 12:03:58 +0000 (UTC)
+Received: by quack2.suse.cz (Postfix, from userid 1000)
+        id 6008F1F2C96; Thu,  7 Oct 2021 14:03:57 +0200 (CEST)
+Date:   Thu, 7 Oct 2021 14:03:57 +0200
+From:   Jan Kara <jack@suse.cz>
 To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org, djwong@kernel.org
-Subject: Re: [PATCH V3 07/12] xfs: Rename inode's extent counter fields
- based on their width
-In-reply-to: <20210930225523.GA54211@dread.disaster.area>
-Message-ID: <87pmshrtsm.fsf@debian-BULLSEYE-live-builder-AMD64>
-Date:   Thu, 07 Oct 2021 16:22:25 +0530
-Content-Type: text/plain
-X-ClientProxiedBy: SG2PR06CA0185.apcprd06.prod.outlook.com (2603:1096:4:1::17)
- To SA2PR10MB4587.namprd10.prod.outlook.com (2603:10b6:806:114::12)
+Cc:     Jan Kara <jack@suse.cz>, linux-xfs@vger.kernel.org,
+        Dave Chinner <dchinner@redhat.com>,
+        "Darrick J. Wong" <djwong@kernel.org>
+Subject: Re: Performance regression with async inode inactivation
+Message-ID: <20211007120357.GD12712@quack2.suse.cz>
+References: <20211004100653.GD2255@quack2.suse.cz>
+ <20211004211508.GB54211@dread.disaster.area>
+ <20211005081157.GA24625@quack2.suse.cz>
+ <20211005212608.GC54211@dread.disaster.area>
+ <20211006181001.GA4182@quack2.suse.cz>
+ <20211006215851.GD54211@dread.disaster.area>
 MIME-Version: 1.0
-Received: from nandi (138.3.205.4) by SG2PR06CA0185.apcprd06.prod.outlook.com (2603:1096:4:1::17) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4566.22 via Frontend Transport; Thu, 7 Oct 2021 10:52:35 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: e50add37-24ac-4907-cb24-08d989809344
-X-MS-TrafficTypeDiagnostic: SA2PR10MB4460:
-X-Microsoft-Antispam-PRVS: <SA2PR10MB4460C98E4E905B1E970C9562F6B19@SA2PR10MB4460.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:9508;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: fubXc4tE2Akins42Bv5amg9GDoqJPoLiUQjZ7wxeCyCS1VyrboNE4SJP09uvakEpAGAz/gWBGbXUxzrWcJ9/seg0oX0nkr6weVH4EEOD9rTi9HDSvpoGTGFX3PogteQHvqbZ6gJNEv+tkR3/SnYK/5oeEd+6KHMi7CbU/3CwY22guWhBA35d9kNC3ERT4Wf5x03RjaOx2UIh3DI35lqmaNDJ0arUFg/xzg75SB60/yC28ODm4EzDotdkUDB9FPzotEMtPwZMvnvcuDX0N3NvEzWOlkzW4AO5+byC6KZ8hVvvGfyw3iJVqvt6ZJyyN/iga/Snk2RsrNk++5y+hY6yI9S3iEPx/NWATNP7rnbT12AZATrsh4SclUL03zBp2cI8IJzGMGYY4VuLpoZc9/0FvDlPg6MiRS5Qa3RPJU9NdQmDNqsk+b5O0GiIG9h0Fzc+KlOPMC2mjpF6M9bgFZCxImrDGC+k6WeVxy3VUSqCoIz6rYN9wYaCuHNudZRWmkl8Mz8RjFvZ0ungPu01AwD5IlK/S7bfjrjUpl6sFwY4njiTm/1hq3xgYhcy4DRTCef0PyzzNUMALvfZaVhcBBmGNKVhsuG4ZFRn647smsrU87yHSFUkRwnbvozT3hF3u3o6ceYb0HGbDfpPcr/mTpJTWSqHSZBz5q7aP4zOQBVcDC23YzFsx3tZRtFI5yDGa3z+3fjcnNdkuGvt03K8z3y5Aw==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(7916004)(366004)(8676002)(26005)(4326008)(52116002)(9686003)(8936002)(6486002)(5660300002)(38350700002)(38100700002)(956004)(6916009)(6666004)(53546011)(83380400001)(33716001)(66556008)(66476007)(2906002)(316002)(30864003)(6496006)(86362001)(186003)(508600001)(66946007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?OWHzyN+ElvtNzcSmL79oVC/GQF5tTqQ6uY7gf/6WxGvF5c/M2CNbAcR+ZnWv?=
- =?us-ascii?Q?xxL+eBl5kBI8AwCfTkcImgQel2Lw0kqohlnpUYs1326jRR5kO3dl3vg9HyAD?=
- =?us-ascii?Q?zYcoNt3LokMQDu5ZEl08jIy5duzHwXdMdZTO9Y4hMfD50V+iTCyKkjdWad9u?=
- =?us-ascii?Q?HLlIVOTbJBvJRL7U0qQfIBQciotw4CR+BO745/LBkL8uHefUahlqKuBB63H4?=
- =?us-ascii?Q?sL4gBFg2yoS2R4QFuUelLcWwU7J7oF9SSBDYvVMvm9mjkb/nlZtgJV0HPPQL?=
- =?us-ascii?Q?ECRLOEg15zjnz0L/C9GMiu2YBmnnbfNXGtv86Yd2igGy/hrXdW5Donc9tyeU?=
- =?us-ascii?Q?GmpEtqYFELVI5kfftAXbvVgB1DLQ/cajbBo1RxlZFsx0ufQKQm/tqUR57m+i?=
- =?us-ascii?Q?3VAmyobN4TACYhQd6kAOERv9zVBxWOYBYpTY+3CPxQ3kBlb0z2JMkurvuKfC?=
- =?us-ascii?Q?VHC65MECTVOyh5a/1xCvGZXve9ptjNnX4bvHLrNWRQnos3GQEt0TkuQJnwFF?=
- =?us-ascii?Q?f+3C/e9KxS6HI4IizsO+WSrEnC1jvOKkD9PHCppJ/NDmyLk/2j1nqse07pTW?=
- =?us-ascii?Q?qg+L6ARZtk2vSIOAC+VeorQcALIS+gM0J8T4s2qI9flPcCfRTnaHuPfOQ/KU?=
- =?us-ascii?Q?92JWSq+2MCOVMrg6qqE6at4FIKGM3qoIuZgbmwTuJxqKG1MDChCA5m/PKt2s?=
- =?us-ascii?Q?+/xKGFyYtYTQYjM4NCmYUA35G4U32V2LvXr85aM0/AJ7qxf9JGBUz2LCMDk6?=
- =?us-ascii?Q?do+vzc3OrK9F4qFfC15NoF3lKw7nE/rvENAFGez7BEAmnzjV4Pc0mzYUYq/N?=
- =?us-ascii?Q?nDdPAnYY1hUbwRAGJN4VL77F5TTYXiiFEpb4uq7yKvGBa7TxEm+MUeedPCbK?=
- =?us-ascii?Q?a6H8GvvbQvjbwxaO6kVJCS5AlFlkWa6LKf6Byi6QPq2s3OwRqA5OxuB5UFJV?=
- =?us-ascii?Q?3fEr0NOHvZ6uqMo6kiNPcna3wYbdzCLWR6FYdhQ5KokekYErzhqBuaQ3fkvM?=
- =?us-ascii?Q?C+4uYoASNw1nUcaz6U9Xwsr8QjnNqp3DqS2oXM7nnRzg5pBvavYViP02hFdb?=
- =?us-ascii?Q?AbAtldBiRHU+8zHn2ofs/7Jmaf5kDtKCqh5rpTISGbGq/KM7vdX9GXoEzeuX?=
- =?us-ascii?Q?+a+FYj2ufRlo0DvtVtNA7qdWzkYWtNb6FySE4VgrUvJgiVRol/fAxy5v2D0q?=
- =?us-ascii?Q?uGs950uEkQimAkAjrW43uQWa4kOw7RlWLLe1sXwKTR11V4kZo183dlw7qAt9?=
- =?us-ascii?Q?zCJHWj1Z6sVtzow7Ob1Zfoz7PoYBLGhPao2SXh0cIObmi0dHp8XwBa1IENRD?=
- =?us-ascii?Q?qV4BtMUCXXy5gFnW0CYzS0zX?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e50add37-24ac-4907-cb24-08d989809344
-X-MS-Exchange-CrossTenant-AuthSource: SA2PR10MB4587.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Oct 2021 10:52:37.3565
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: IMMi3BHtLLGbYXtYKb5hMl4UX/2l+MqOaVjtM+yECv3dkr1czrUH1oUXcE7vBQ4O6nNyKwlyBMbflCCXlK+dLQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA2PR10MB4460
-X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10129 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 adultscore=0 phishscore=0
- spamscore=0 mlxscore=0 mlxlogscore=999 suspectscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2109230001
- definitions=main-2110070074
-X-Proofpoint-ORIG-GUID: vYY6GM6U9IsFGl55WwSzoslsXoagiiJ2
-X-Proofpoint-GUID: vYY6GM6U9IsFGl55WwSzoslsXoagiiJ2
+Content-Type: multipart/mixed; boundary="xXmbgvnjoT4axfJE"
+Content-Disposition: inline
+In-Reply-To: <20211006215851.GD54211@dread.disaster.area>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 01 Oct 2021 at 04:25, Dave Chinner wrote:
-> On Thu, Sep 30, 2021 at 01:00:00PM +0530, Chandan Babu R wrote:
->> On 30 Sep 2021 at 10:01, Dave Chinner wrote:
->> > On Thu, Sep 30, 2021 at 10:40:15AM +1000, Dave Chinner wrote:
->> >> On Wed, Sep 29, 2021 at 10:33:23PM +0530, Chandan Babu R wrote:
->> >> > On 28 Sep 2021 at 09:34, Dave Chinner wrote:
->> >> > > On Tue, Sep 28, 2021 at 09:46:37AM +1000, Dave Chinner wrote:
->> >> > >> On Thu, Sep 16, 2021 at 03:36:42PM +0530, Chandan Babu R wrote:
->> >> > >> > This commit renames extent counter fields in "struct xfs_dinode" and "struct
->> >> > >> > xfs_log_dinode" based on the width of the fields. As of this commit, the
->> >> > >> > 32-bit field will be used to count data fork extents and the 16-bit field will
->> >> > >> > be used to count attr fork extents.
->> >> > >> > 
->> >> > >> > This change is done to enable a future commit to introduce a new 64-bit extent
->> >> > >> > counter field.
->> >> > >> > 
->> >> > >> > Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
->> >> > >> > ---
->> >> > >> >  fs/xfs/libxfs/xfs_format.h      |  8 ++++----
->> >> > >> >  fs/xfs/libxfs/xfs_inode_buf.c   |  4 ++--
->> >> > >> >  fs/xfs/libxfs/xfs_log_format.h  |  4 ++--
->> >> > >> >  fs/xfs/scrub/inode_repair.c     |  4 ++--
->> >> > >> >  fs/xfs/scrub/trace.h            | 14 +++++++-------
->> >> > >> >  fs/xfs/xfs_inode_item.c         |  4 ++--
->> >> > >> >  fs/xfs/xfs_inode_item_recover.c |  8 ++++----
->> >> > >> >  7 files changed, 23 insertions(+), 23 deletions(-)
->> >> > >> > 
->> >> > >> > diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
->> >> > >> > index dba868f2c3e3..87c927d912f6 100644
->> >> > >> > --- a/fs/xfs/libxfs/xfs_format.h
->> >> > >> > +++ b/fs/xfs/libxfs/xfs_format.h
->> >> > >> > @@ -802,8 +802,8 @@ typedef struct xfs_dinode {
->> >> > >> >  	__be64		di_size;	/* number of bytes in file */
->> >> > >> >  	__be64		di_nblocks;	/* # of direct & btree blocks used */
->> >> > >> >  	__be32		di_extsize;	/* basic/minimum extent size for file */
->> >> > >> > -	__be32		di_nextents;	/* number of extents in data fork */
->> >> > >> > -	__be16		di_anextents;	/* number of extents in attribute fork*/
->> >> > >> > +	__be32		di_nextents32;	/* number of extents in data fork */
->> >> > >> > +	__be16		di_nextents16;	/* number of extents in attribute fork*/
->> >> > >> 
->> >> > >> 
->> >> > >> Hmmm. Having the same field in the inode hold the extent count
->> >> > >> for different inode forks based on a bit in the superblock means the
->> >> > >> on-disk inode format is not self describing. i.e. we can't decode
->> >> > >> the on-disk contents of an inode correctly without knowing whether a
->> >> > >> specific feature bit is set in the superblock or not.
->> >> > >
->> >> > > Hmmmm - I just realised that there is an inode flag that indicates
->> >> > > the format is different. It's jsut that most of the code doing
->> >> > > conditional behaviour is using the superblock flag, not the inode
->> >> > > flag as the conditional.
->> >> > >
->> >> > > So it is self describing, but I still don't like the way the same
->> >> > > field is used for the different forks. It just feels like we are
->> >> > > placing a landmine that we are going to forget about and step
->> >> > > on in the future....
->> >> > >
->> >> > 
->> >> > Sorry, I missed this response from you.
->> >> > 
->> >> > I agree with your suggestion. I will use the inode version number to help in
->> >> > deciding which extent counter fields are valid for a specific inode.
->> >> 
->> >> No, don't do something I suggested with a flawed understanding of
->> >> the code.
->> >> 
->> >> Just because *I* suggest something, it means you have to make that
->> >> change. That is reacting to *who* said something, not *what was
->> >> said*.
->> >> 
->> >> So, I may have reservations about the way the storage definitions
->> >> are being redefined, but if I had a valid, technical argument I
->> >> could give right now I would have said so directly. I can't put my
->> >> finger on why this worries me in this case but didn't for something
->> >> like, say, the BIGTIME feature which redefined the contents of
->> >> various fields in the inode.
->> >> 
->> >> IOWs, I haven't really had time to think and go back over the rest
->> >> of the patchset since I realised my mistake and determine if that
->> >> changes what I think about this, so don't go turning the patchset
->> >> upside just because *I suggested something*.
->> >
->> > So, looking over the patchset more, I think I understand my feeling
->> > a bit better. Inconsistency is a big part of it.
->> >
->> > The in-memory extent counts are held in the struct xfs_inode_fork
->> > and not the inode. The type is a xfs_extcnt_t - it's not a size
->> > dependent type. Indeed, there are actually no users of the
->> > xfs_aextcnt_t variable in XFS at all any more. It should be removed.
->> >
->> > What this means is that in-memory inode extent counting just doesn't
->> > discriminate between inode fork types. They are all 64 bit counters,
->> > and all the limits applied to them should be 64 bit types. Even the
->> > checks for overflow are abstracted away by
->> > xfs_iext_count_may_overflow(), so none of the extent manipulation
->> > code has any idea there are different types and limits in the
->> > on-disk format.
->> >
->> > That's good.
->> >
->> > The only place the actual type matters is when looking at the raw
->> > disk inode and, unfortunately, that's where it gets messy. Anything
->> > accessing the on-disk inode directly has to look at inode version
->> > number, and an inode feature flag to interpret the inode format
->> > correctly.  That format is then reflected in an in-memory inode
->> > feature flag, and then there's the superblock feature flag on top of
->> > that to indicate that there are NREXT64 format inodes in the
->> > filesystem.
->> >
->> > Then there's implied dynamic upgrades of the on-disk inode format.
->> > We see that being implied in xfs_inode_to_disk_iext_counters() and
->> > xfs_trans_log_inode() but the filesystem format can't be changed
->> > dynamically. i.e. we can't create new NREXT64 inodes if the
->> > superblock flag is not set, so there is no code in this patchset
->> > that I can see that provides a trigger for a dynamic upgrade to
->> > start. IOWs, the filesystem has to be taken offline to change the
->> > superblock feature bit, and the setup of the default NREXT64 inode
->> > flag at mount time re-inforces this.
->> >
->> > With this in mind, I started to see inconsistent use of inode
->> > feature flag vs superblock feature flag to determine on-disk inode
->> > extent count limits. e.g. look at xfs_iext_count_may_overflow() and
->> > xfs_iext_max_nextents(). Both of these are determining the maximum
->> > number of extents that are valid for an inode, and they look at the
->> > -superblock feature bit- to determine the limits.
->> >
->> > This only works if all inodes in the filesystem have the same
->> > format, which is not true if we are doing dynamic upgrades of the
->> > inode features. The most obvious case here is that scrub needs to
->> > determine the layout and limits based on the current feature bits in
->> > the inode, not the superblock feature bit.
->> >
->> > Then we have to look at how the upgrade is performed - by changing
->> > the in-memory inode flag during xfs_trans_log_inode() when the inode
->> > is dirtied. When we are modifying the inode for extent allocation,
->> > we check the extent count limits on the inode *before* we dirty the
->> > inode. Hence the only way an "upgrade at overflow thresholds" can
->> > actually work is if we don't use the inode flag for determining
->> > limits but instead use the sueprblock feature bit limits. But as
->> > I've already pointed out, that leads to other problems.
->> >
->> > When we are converting an inode format, we currently do it when the
->> > inode is first brought into memory and read from disk (i.e.
->> > xfs_inode_from_disk()). We do the full conversion at this point in
->> > time, such that if the inode is dirtied in memory all the correct
->> > behaviour for the new format occurs and the writeback is done in the
->> > new format.
->> >
->> > This would allow xfs_iext_count_may_overflow/xfs_iext_max_nextents
->> > to actually return the correct limits for the inode as it is being
->> > modified and not have to rely on superblock feature bits. If the
->> > inode is not being modified, then the in-memory format changes are
->> > discarded when the inode is reclaimed from memory and nothing
->> > changes on disk.
->> >
->> > This means that once we've read the inode in from disk and set up
->> > ip->i_diflags2 according to the superblock feature bit, we can use
->> > the in-memory inode flag -everywhere- we need to find and/or check
->> > limits during modifications. Yes, I know that the BIGTIME upgrade
->> > path does this, but that doesn't have limits that prevent
->> > modifications from taking place before we can log the inode and set
->> > the BIGTIME flag....
->> >
->> 
->> Ok. The above solution looks logically correct. I haven't been able to come up
->> with a scenario where the solution wouldn't work. I will implement it and see
->> if anything breaks.
->
-> I think I can poke one hole in it - I missed the fact that if we
-> upgrade and inode read time, and then we modify the inode without
-> modifying the inode core (can we even do that - metadata mods should
-> at least change timestamps right?) then we don't log the format
-> change or the NREXT64 inode flag change and they only appear in the
-> on-disk inode at writeback.
->
-> Log recovery needs to be checked for correct behaviour here. I think
-> that if the inode is in NREXT64 format when read in and the log
-> inode core is not, then the on disk LSN must be more recent than
-> what is being recovered from the log and should be skipped. If
-> NREXT64 is present in the log inode, then we logged the core
-> properly and we just don't care what format is on disk because we
-> replay it into NREXT64 format and write that back.
 
-xfs_inode_item_format() logs the inode core regardless of whether
-XFS_ILOG_CORE flag is set in xfs_inode_log_item->ili_fields. Hence, setting
-the NREXT64 bit in xfs_dinode->di_flags2 just after reading an inode from disk
-should not result in a scenario where the corresponding
-xfs_log_dinode->di_flags2 will not have NREXT64 bit set.
+--xXmbgvnjoT4axfJE
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-If log recovery comes across a log inode with NREXT64 bit set in its di_flags2
-field, then we can safely conclude that the ondisk inode has to be updated to
-reflect this change i.e. there is no need to compare LSNs of the checkpoint
-transaction being replayed and that of the disk inode.
+On Thu 07-10-21 08:58:51, Dave Chinner wrote:
+> On Wed, Oct 06, 2021 at 08:10:01PM +0200, Jan Kara wrote:
+> > On Wed 06-10-21 08:26:08, Dave Chinner wrote:
+> > > On Tue, Oct 05, 2021 at 10:11:57AM +0200, Jan Kara wrote:
+> > > > On Tue 05-10-21 08:15:08, Dave Chinner wrote:
+> > > > > On Mon, Oct 04, 2021 at 12:06:53PM +0200, Jan Kara wrote:
+> > > > > > Hello,
+> > > > > > 
+> > > > > > our performance testing grid has detected a performance regression caused
+> > > > > > by commit ab23a77687 ("xfs: per-cpu deferred inode inactivation queues")
+> > > > > > with reaim benchmark running 'disk' and 'disk-large' workloads. The
+> > > > > > regression has been so far detected on two machines - marvin7 (48 cpus, 64
+> > > > > > GB ram, SATA SSD), dobby (64 cpus, 192 GB ram, rotating disk behind
+> > > > > > megaraid_sas controller).
+> > > > > 
+> > > > > Yup, large cpu count, single slow disk, and the cause will likely be
+> > > > > exclusive rwsem lock contention on a directory inode that concurrent
+> > > > > openat and unlink are occuring in.
+> > > > > 
+> > > > > Basically, that commit removed a bunch of userspace overhead in
+> > > > > unlinks, when mean they run as fast as the unlink() call can remove
+> > > > > the directory entry. There is effectively nothing throttling
+> > > > > unlink() in XFS now except for available log space and it mostly
+> > > > > runs to completion without blocking. Hence the front end unlink
+> > > > > performance can run in much faster bursts before delayed
+> > > > > inactivation needs to run.
+> > > > > 
+> > > > > Given most of the added CPU overhead is in the rwsem spin_on_owner
+> > > > > path, it implies that the write lock holder is, indeed, not sleeping
+> > > > > with the lock held. Hence reaim is hitting a borderline contended
+> > > > > rwsem much harder and with different behaviour, resulting in
+> > > > > catastrophic breakdown of lock performance and hence unlink
+> > > > > performance goes backwards.
+> > > > > 
+> > > > > I can't see any other new sleeping lock contention in the workload
+> > > > > profiles - the context switch rate goes down substantially (by 35%!)
+> > > > > with commit ab23a77687, which also implies that the lock contention
+> > > > > is resulting in much longer spin and/or sleep times on the lock.
+> > > > > 
+> > > > > I'm not sure we can do anything about this in the filesystem. The
+> > > > > contended lock is a core, high level VFS lock which is the first
+> > > > > point of unlinkat() syscall serialisation. This is the lock that is
+> > > > > directly exposed to userspace concurrency, so the scalability of
+> > > > > this lock determines concurrency performance of the userspace
+> > > > > application.....
+> > > > 
+> > > > Thanks for explanation! It makes sense, except one difference I can see in
+> > > > vmstat on both marvin7 and dobby which I don't understand:
+> > > > 
+> > > > Dobby:
+> > > > Ops Sector Reads                     1009081.00     1009081.00
+> > > > Ops Sector Writes                   11550795.00    18753764.00
+> > > > 
+> > > > Marvin7:
+> > > > Ops Sector Reads                      887951.00      887951.00
+> > > > Ops Sector Writes                    8248822.00    11135086.00
+> > > > 
+> > > > So after the change reaim ends up doing noticeably more writes. I had a
+> > > > look at iostat comparison as well but there wasn't anything particular
+> > > > standing out besides higher amount of writes on the test disk. I guess,
+> > > > I'll limit the number of clients to a single number showing the regression,
+> > > > enable some more detailed monitoring and see whether something interesting
+> > > > pops up.
+> > > 
+> > > Interesting.
+> > > 
+> > > There weren't iostats in the original intel profiles given. I
+> > > can see a couple of vmstats that give some indications -
+> > > vmstat.io.bo went up from ~2500 to ~6000, and proc-vmstat.pgpgout
+> > > went up from ~90k to 250k.
+> > > 
+> > > Looking at another more recent profile, there are more IO related
+> > > stats in the output vmstat.nr_written went up by 2.5x and
+> > > vmstat.pgpgout went up by a factor of 6 (50k -> 300k) but otherwise
+> > > everything else was fairly constant in the VM. The resident size of
+> > > the file cache is small, and vmstat.nr_dirtied went up by a small
+> > > ammount by it's 4 orders of magnitude larger than nr_written.
+> > > 
+> > > Hmmm. That implies a *lot* of overwrite of cached files.
+> > > 
+> > > I wonder if we've just changed the memory pressure enough to trigger
+> > > more frequent writeback? We're delaying the inactivation (and hence
+> > > page cache invalidation) of up to 256 inodes per CPU, and the number
+> > > of cached+dirty inodes appears to have increased a small amount
+> > > (from ~3000 to ~4000). With slow disks, a small change in writeback
+> > > behaviour could cause seek-bound related performance regressions.
+> > > 
+> > > Also worth noting is that there's been some recent variance in reaim
+> > > numbers recently because of the journal FUA/flush optimisations
+> > > we've made.  Some machines report +20% from that change, some report
+> > > -20%, and there's no pattern to it. It's just another indication
+> > > that the reaim scalability and perf on these large CPU count, single
+> > > spinning disk setups is highly dependent on disk performance and
+> > > seek optimisation...
+> > > 
+> > > Have you run any tests on a system that isn't stupidly overpowered
+> > > for it's disk subsystem? e.g. has an SSD rather than spinning rust?
+> > 
+> > So marvin7 actually has SSD. I was experimenting some more. Attached is a
+> > simple reproducer that demonstrates the issue for me - it just creates 16k
+> > file, fsync it, delete it in a loop from given number processes (I run with
+> > 48). The reproducer runs ~25% slower after the commit ab23a77687. Note that
+> > the reproducer makes each process use a different directory so i_rwsem
+> > contention is out of question.
+> > 
+> > From blktrace I can see that indeed after the commit we do ~25% more
+> > writes.  Each stress-unlink process does the same amount of IO, the extra
+> > IO comes solely from the worker threads.
+> 
+> So the question is "which worker thread?".
 
->
-> SO I *think* we're ok here, but it needs closer inspection to
-> determine behaviour is actually safe. If it is safe, then maybe in
-> future we can do the same thing for BIGTIME and get that upgrade out
-> of xfs_trans_log_inode() as well....
->
->> > ---
->> >
->> > FWIW, I also think doing something like this would help make the
->> > code be easier to read and confirm that it is obviously correct when
->> > reading it:
->> >
->> > 	__be32          di_gid;         /* owner's group id */
->> > 	__be32          di_nlink;       /* number of links to file */
->> > 	__be16          di_projid_lo;   /* lower part of owner's project id */
->> > 	__be16          di_projid_hi;   /* higher part owner's project id */
->> > 	union {
->> > 		__be64	di_big_dextcnt;	/* NREXT64 data extents */
->> > 		__u8	di_v3_pad[8];	/* !NREXT64 V3 inode zeroed space */
->> > 		struct {
->> > 			__u8	di_v2_pad[6];	/* V2 inode zeroed space */
->> > 			__be16	di_flushiter;	/* V2 inode incremented on flush */
->> > 		};
->> > 	};
->> > 	xfs_timestamp_t di_atime;       /* time last accessed */
->> > 	xfs_timestamp_t di_mtime;       /* time last modified */
->> > 	xfs_timestamp_t di_ctime;       /* time created/inode modified */
->> > 	__be64          di_size;        /* number of bytes in file */
->> > 	__be64          di_nblocks;     /* # of direct & btree blocks used */
->> > 	__be32          di_extsize;     /* basic/minimum extent size for file */
->> > 	union {
->> > 		struct {
->> > 			__be32	di_big_aextcnt; /* NREXT64 attr extents */
->> > 			__be16	di_nrext64_pad;	/* NREXT64 unused, zero */
->> > 		};
->> > 		struct {
->> > 			__be32	di_nextents;    /* !NREXT64 data extents */
->> > 			__be16	di_anextents;   /* !NREXT64 attr extents */
->> > 		}
->> > 	}
+Yes, I'm also wondering ;) But it's impossible to tell from block traces
+(there's just "kworker/xx:x" there).
 
-The two structures above result in padding and hence result in a hole being
-introduced. The entire union above can be replaced with the following,
+> > Also I'd note that before the
+> > commit we were reusing blocks much more (likely inode blocks getting
+> > reused) - before the commit we write to ~88 MB worth of distinct disk
+> > blocks, after the commit we write to ~296 MB worth of distinct disk blocks.
+> 
+> Hmmm, I didn't see this at first.  What's the filesystem layout
+> (xfs_info) and the CLI for the test that you ran? How many CPUs was
+> the test run on?
 
-        union {
-                __be32  di_big_aextcnt; /* NREXT64 attr extents */
-                __be32  di_nextents;    /* !NREXT64 data extents */
-        };
-        union {
-                __be16  di_nrext64_pad; /* NREXT64 unused, zero */
-                __be16  di_anextents;   /* !NREXT64 attr extents */
-        };
+The machine has 24 cores, each core has 2 SMT siblings, so 48 logical CPUs.
+That's why I've run stress-unlink with 48 processes.
 
->> > 	__u8            di_forkoff;     /* attr fork offs, <<3 for 64b align */
->> > 	__s8            di_aformat;     /* format of attr fork's data */
->> > ...
->> >
->> > Then we get something like:
->> >
->> > static inline void
->> > xfs_inode_to_disk_iext_counters(
->> >        struct xfs_inode        *ip,
->> >        struct xfs_dinode       *to)
->> > {
->> >        if (xfs_inode_has_nrext64(ip)) {
->> >                to->di_big_dextent_cnt = cpu_to_be64(xfs_ifork_nextents(&ip->i_df));
->> >                to->di_big_anextents = cpu_to_be32(xfs_ifork_nextents(ip->i_afp));
->> >                to->di_nrext64_pad = 0;
->> >        } else {
->> >                to->di_nextents = cpu_to_be32(xfs_ifork_nextents(&ip->i_df));
->> >                to->di_anextents = cpu_to_be16(xfs_ifork_nextents(ip->i_afp));
->> >        }
->> > }
->> >
->> > This is now obvious that we are writing to the correct fields
->> > in the inode for the feature bits that are set, and we don't need
->> > to zero the di_big_dextcnt field because that's been taken care of
->> > by the existing di_v2_pad/flushiter zeroing. That bit could probably
->> > be improved by unwinding and open coding this in xfs_inode_to_disk(),
->> > but I think what I'm proposing should be obvious now...
->> >
->> 
->> Yes, the explaination provided by you is very clear. I will implement these
->> suggestions.
->
-> Don't forget to try to poke holes in it and look for complexity that
-> can be removed before you try to implement or optimise anything.
->
-> FWIW, the code design concept I'm basing this on is that complexity
-> should be contained within the structures that store the data,
-> rather than be directly exposed to the code that manipulates the
-> data.
->
+xfs_info is:
 
-To summarize the design,
+meta-data=/dev/sdb1              isize=512    agcount=4, agsize=29303104 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=0, rmapbt=0
+         =                       reflink=0
+data     =                       bsize=4096   blocks=117212416, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=4096   blocks=57232, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
-- We need both the per-inode flag (for satisfying the requirement of
-  self-describing metadata) and superblock flag (since an older kernel should
-  not be allowed to mount an fs containing inodes with large extent counters).
+This is whatever are XFS defaults (with somewhat dated xfsprogs on this
+machine - 4.15.0), I didn't pass any special parameters to mkfs.xfs.
 
-- When an allocated inode is read from disk, the incore inode's NREXT64 bit in
-  di_flags2 field should be set if the superblock has NREXT64 feature enabled.
+> Running a test with 100 procs across 32p, so creating 100 dirs and
+> 10000 files, on a 1.4TB SSD:
+> 
+> $ xfs_info /mnt/scratch
+> meta-data=/dev/mapper/fast       isize=512    agcount=67, agsize=5467072 blks
+>          =                       sectsz=512   attr=2, projid32bit=1
+>          =                       crc=1        finobt=1, sparse=1, rmapbt=0
+>          =                       reflink=1
+> data     =                       bsize=4096   blocks=366292480, imaxpct=5
+>          =                       sunit=64     swidth=256 blks
+> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+> log      =internal log           bsize=4096   blocks=512000, version=2
+>          =                       sectsz=512   sunit=1 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> $ ./stress-unlink 100 /mnt/scratch
+> 0.301
+> $
+> 
+> 
+> The total number of inode cluster writes is:
+> 
+> $ pminfo -f xfs.icluster_flushcnt
+> 
+> xfs.icluster_flushcnt
+>     value 68
+> 
+> That's 68 * 32kB or about 2MB.
+> 
+> [pminfo is part of Performance Co-Pilot - https://pcp.io/]
+> 
+> We did this many user writes:
+> 
+> $ pminfo -f xfs.write xfs.write_bytes
+> 
+> xfs.write
+>     value 10000
+> 
+>     xfs.write_bytes
+>         value 163840000
+> 
+> which is 160MB in 10000 writes.
+> 
+> Metadata writeback was:
+> 
+> $ pminfo -f xfs.log_tail.push_ail.success 
+> 
+> xfs.log_tail.push_ail.success
+>     value 473
+> 
+> 473 buffers, part of which was 68 inode clusters so the total is
+> about ~400 x 4kB + 2MB = 3.6MB.
+> 
+> So, really, there isn't a potential for 25% growth in these numbers
+> that would make any sort of difference. The only remaining source of
+> IO differential is log writes:
+> 
+> $ pminfo -f xfs.log
+> 
+> xfs.log.writes
+>     value 1055
+> 
+>     xfs.log.blocks
+>         value 28212
+> ....
+> 
+> Which indicates another ~1000 IOs and ~28MB written.
+> 
+> And that's it. We've got a total of about 195MB written to disk for
+> 100 concurrent runs, and it's no different before and after deferred
+> inactivation. Other tests that I commonly run that do lots of file
+> creates and unlinks along with sync writes (e.g. dbench) didn't show
+> any regressions up to 512 concurrent processes, either. So there's
+> no obvious regression on this filesystem layout....
+> 
+> But it made me wonder - there are two things that could influence
+> background inactivation here: the AG count (which determines unlink
+> concurrency) and log size (which determines transaction
+> concurrency). So I remade the filesystem with a tiny 32MB log and 2
+> AGs, and that changed a -lot-:
+> 
+> xfs.icluster_flushcnt
+>     value 40420
+> 
+> xfs.log_tail.push_ail.success
+>     value 46098
+> 
+> Yeah, we did 40,000 inode cluster writes for only 10000 inode
+> modifications. Basically, we wrote every inode cluster once for
+> every inode modification (post create, post write, post unlink, post
+> deferred activation). Normally create/unlink loops the inode doesn't
+> even touch the disk - it's cancelled in the log before it gets
+> flushed to disk and so this is where a chunk of the difference in
+> disk space consumed comes from. It can be expected behaviour.
+> 
+> xfs.log_tail.push_ail.pinned
+>     value 84381
+> 
+> And we hit pinned items in the AIL 85,000 times instead of 0. This
+> triggers more log forces, but fsync is already doing that so it's
+> not a big deal. However:
+> 
+> xfs.log_tail.try_logspace
+>     value 80392
+> 
+> xfs.log_tail.sleep_logspace
+>      value 59938
+> 
+> 75% of the operations had to wait on log space, which means it's
+> forcing the log tail to flush metadata to make space. That's where
+> all the inode cluster writes are coming from - the transactions are
+> lock stepping on log space. i.e. every time we want to modify an
+> inode, we have to flush a dirty inode to make space in the log.
+> 
+> This also means that the CIL can't perform efficient in-memory
+> transaction aggregation because it's always being forced out to
+> disk. As a result:
+> 
+> xfs.log.writes
+>     value 6504
+> 
+>     xfs.log.blocks
+>         value 65784
+> 
+> 6x as many log writes, for 65MB of log writes. IOWs, the smaller log
+> reduced CIL aggregation efficiency substantially and so we wrote
+> twice as much to the log just because we had a small log.
+> 
+> So, the question needs to be asked: is this a function of a small
+> log, or is this behaviour of low AG count?
+> 
+> Increasing AG count back out to > CPU count resulted in the number
+> of inode cluster flushes dropping to ~3000, and the log writes
+> dropping back down to 1000 and 28MB of log writes. Performance went
+> way up, too (from 1.8s down to 0.35s), indicating that AG
+> concurrency is a factor here.
+> 
+> OTOH, leaving the AG count at 2 and increasing the log back out to
+> 2GB removed all the log space waiting, all the inode cluster
+> flushing, and everything to do with waiting on log space. But
+> performance barely changed (1.8s down to 1.5s) and log bandwidth
+> *went up*:
+> 
+> xfs.log.writes
+>     value 6528
+> 
+> xfs.log.blocks
+>     value 135452
+> 
+> 6,500 log writes, 130MB written to the log. IOWs, both too-small log
+> space and too-low AG count for the given workload concurrency will
+> adversely affect performance of concurrent workloads.
+> 
+> But we already knew that, didn't we? :/
+> 
+> Bumping the AG count from 2 to 16 and using a moderately sized log
+> (i.e. > 100MB) largely erases the bad behaviour. Indeed, agcount=16,
+> log size=100MB drops runtime to 0.30s and pretty much returns inode
+> write count and log write/bw back down to minimums on this 100
+> process workload.
+> 
+> But to point out that this isn't perfect for everything, if I run
+> the same test with 1000 processes on that config, it takes 6.2s,
+> writes 400MB to the log and flushes 153,000 inode clusters. We're
+> back to not having enough log space for the workload. Bumping out to
+> agcount=67 (2x CPU count) and max log size(2GB) results in runtime
+> of 3.5s (largely linear from the 100 process count), no inode
+> writeback and only 200MB of log throughput.
+> 
+> So, yeah, I suspect that if you change the mkfs parameters for the
+> reaim tests to have more AGs and significantly increased log space
+> over the defaults, the regression should disappear...
+> 
+> Can you run these experiments with reaim on your test machines and
+> see if they are influenced by filesystem level concurrency
+> parameters like AG count and log size as these tests suggest?
 
-- Any modification to an inode is guaranteed to cause logging of its di_flags2
-  field. Hence xfs_iext_max_nextents() can depend on an inode's di_flags2
-  field's NREXT64 bit to determine the maximum extent count.
+Thanks for the detailed analysis and suggestions. So here are some numbers
+from my end. First, note that I've bumped number of unlinks each process
+does from 100 to 1000 so that runtime on the test machine gets above 1s to
+avoid some random noise. The relative slowdown (25%) didn't change (I did
+it already yesterday but sent stress-unlink version without bumped up loop
+count). Exact time to complete of stress-unlink are (from 5 runs):
 
-- Newly allocated inodes will have NREXT64 bit set in di_flags2 field by
-  default due to xfs_ino_geometry->new_diflags2 having XFS_DIFLAG2_NREXT64 bit
-  set.
+(default mkfs params - agcount=4, logsize=223MB)
+	AVG	STDDEV
+before	2.7952	0.022886
+after	3.4746	0.025303
 
-Apart from the regular fs operations, the on-disk format changes introduced
-above seems to work well with Log replay, Scrub and xfs_repair.
+I did also runs with increased AG count (to 96) and log size (to 512 MB).
+The results are somewhat surprising:
 
+(agcount=96, logsize=512MB)
+	AVG	STDDEV
+before	3.1340	0.044168
+after	3.3612	0.048412
+
+So the change did somewhat help the case with deferred inactivation however
+it significantly hurt the kernel before deferred inactivation. Overall we
+are still far from original performance. 
+
+I had a look at xfs stats (full stats are attached for 4 different configs
+- (before / after) * (defaults / high ag count)) and logging stats are
+clearly different:
+
+defaults-before:
+log 4700 157590 0 48585 71854
+defaults-after:
+log 10293 536643 6 48007 53762
+highag-before:
+log 5933 233065 0 48000 58240
+highag-after:
+log 6789 303249 0 48155 53795
+
+We can see big differences in the amount of log writes as well as logged
+blocks. defaults-before logged 76 MB, defaults-after logged 262 MB,
+highag-before logged 113 MB, highag-after logged 148 MB. Given data writes
+for this test are 750 MB (16k * 48 processes * 1000 loops), the difference
+of 186 MB of log IO matches well with the observed difference in the amount
+of writes in block traces.
+
+I'm not sure why the amount of logged blocks differs so much.  I didn't find
+big difference between various configs in push_ail stats.  However I did
+find notable differences in various btree stats:
+
+defaults-before:
+abtb2 99580 228864 15129 15129 0 0 0 0 0 0 0 0 0 0 49616
+abtc2 229903 464130 96526 96526 0 0 0 0 0 0 0 0 0 0 299055
+ibt2 96099 96096 3 3 0 0 0 0 0 0 0 0 0 0 0
+fibt2 96099 96096 3 3 0 0 0 0 0 0 0 0 0 0 0
+
+defaults-after:
+abtb2 95532 400144 36596 36441 0 0 0 0 0 0 0 0 0 0 1421782
+abtc2 157421 667273 61135 60980 0 0 0 0 0 0 0 0 0 0 1935106
+ibt2 95420 220423 51 34 0 0 0 0 0 0 0 0 0 0 1
+fibt2 131505 230219 7708 7691 0 0 0 0 0 0 0 0 0 0 40470
+
+highag-before:
+abtb2 120143 240191 24047 24047 0 0 0 0 0 0 0 0 0 0 0
+abtc2 288334 456240 120143 120143 0 0 0 0 0 0 0 0 0 0 24051
+ibt2 96143 96096 47 47 0 0 0 0 0 0 0 0 0 0 0
+fibt2 96143 96096 47 47 0 0 0 0 0 0 0 0 0 0 0
+
+highag-after:
+abtb2 96903 205361 20137 20117 0 0 0 0 0 0 0 0 0 0 101850
+abtc2 211742 433347 81617 81597 0 0 0 0 0 0 0 0 0 0 274068
+ibt2 96083 96035 48 47 0 0 0 0 0 0 0 0 0 0 0
+fibt2 96083 96035 48 47 0 0 0 0 0 0 0 0 0 0 0
+
+So we seem to be shuffling btrees more in the slower configurations.
+
+								Honza
 -- 
-chandan
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
+
+--xXmbgvnjoT4axfJE
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="unlink-before-stats-defaults.txt"
+
+extent_alloc 48004 192025 48004 192025
+abt 0 0 0 0
+blk_map 48073 96001 48001 96001 48001 288076 0
+bmbt 0 0 0 0
+dir 96 48048 48048 0
+trans 0 384280 0
+ig 48048 47952 2 96 0 0 0
+log 4700 157590 0 48585 71854
+push_ail 384280 0 289 8 0 101 0 18 0 1
+xstrat 48000 0
+rw 48000 0
+attr 0 0 0 0
+icluster 0 4 20
+vnodes 97 0 0 0 48048 48048 48048 0
+buf 768796 24 768772 138553 41272 24 0 20 17
+abtb2 99580 228864 15129 15129 0 0 0 0 0 0 0 0 0 0 49616
+abtc2 229903 464130 96526 96526 0 0 0 0 0 0 0 0 0 0 299055
+bmbt2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ibt2 96099 96096 3 3 0 0 0 0 0 0 0 0 0 0 0
+fibt2 96099 96096 3 3 0 0 0 0 0 0 0 0 0 0 0
+rmapbt 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+refcntbt 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+qm 0 0 0 0 0 0 0 0 0
+xpc 786432000 786432000 0
+defer_relog 0
+debug 0
+
+--xXmbgvnjoT4axfJE
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="unlink-after-stats-defaults.txt"
+
+extent_alloc 48052 192409 47308 189365
+abt 0 0 0 0
+blk_map 48073 96001 47274 96001 47274 287349 0
+bmbt 0 0 0 0
+dir 96 48048 48048 0
+trans 0 381555 0
+ig 48048 46076 0 1972 0 1245 0
+log 10293 536643 6 48007 53762
+push_ail 381555 0 413 68 0 36 0 1028 0 6
+xstrat 48000 0
+rw 48000 0
+attr 0 0 0 0
+icluster 0 36 1123
+vnodes 728 0 0 0 48048 48048 48048 0
+buf 846870 121 846749 89673 27864 121 0 117 18
+abtb2 95532 400144 36596 36441 0 0 0 0 0 0 0 0 0 0 1421782
+abtc2 157421 667273 61135 60980 0 0 0 0 0 0 0 0 0 0 1935106
+bmbt2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ibt2 95420 220423 51 34 0 0 0 0 0 0 0 0 0 0 1
+fibt2 131505 230219 7708 7691 0 0 0 0 0 0 0 0 0 0 40470
+rmapbt 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+refcntbt 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+qm 0 0 0 0 0 0 0 0 0
+xpc 786432000 786432000 0
+defer_relog 0
+debug 0
+
+--xXmbgvnjoT4axfJE
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="unlink-before-stats-highag2.txt"
+
+extent_alloc 48048 192377 48048 192377
+abt 0 0 0 0
+blk_map 48073 96001 48001 96001 48001 288076 0
+bmbt 0 0 0 0
+dir 96 48048 48048 0
+trans 0 384677 0
+ig 48048 47952 0 96 0 0 0
+log 5933 233065 0 48000 58240
+push_ail 384677 0 0 0 0 0 0 0 0 0
+xstrat 48000 0
+rw 48000 0
+attr 0 0 0 0
+icluster 0 0 0
+vnodes 97 0 0 0 48048 48048 48048 0
+buf 769219 288 768931 0 0 288 0 240 193
+abtb2 120143 240191 24047 24047 0 0 0 0 0 0 0 0 0 0 0
+abtc2 288334 456240 120143 120143 0 0 0 0 0 0 0 0 0 0 24051
+bmbt2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ibt2 96143 96096 47 47 0 0 0 0 0 0 0 0 0 0 0
+fibt2 96143 96096 47 47 0 0 0 0 0 0 0 0 0 0 0
+rmapbt 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+refcntbt 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+qm 0 0 0 0 0 0 0 0 0
+xpc 786432000 786432000 0
+defer_relog 0
+debug 0
+
+--xXmbgvnjoT4axfJE
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="unlink-after-stats-highag2.txt"
+
+extent_alloc 48049 192385 47987 192133
+abt 0 0 0 0
+blk_map 48050 96001 47940 96001 47940 287992 0
+bmbt 0 0 0 0
+dir 48 48048 48048 0
+trans 0 384389 0
+ig 48048 46316 0 1732 0 1671 0
+log 6789 303249 0 48155 53795
+push_ail 384389 0 132 489 0 4 0 1633 0 1
+xstrat 48000 0
+rw 48000 0
+attr 0 0 0 0
+icluster 0 95 1716
+vnodes 764 0 0 0 48048 48048 48048 0
+buf 771055 97 770958 1339 250 97 0 97 0
+abtb2 96903 205361 20137 20117 0 0 0 0 0 0 0 0 0 0 101850
+abtc2 211742 433347 81617 81597 0 0 0 0 0 0 0 0 0 0 274068
+bmbt2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ibt2 96083 96035 48 47 0 0 0 0 0 0 0 0 0 0 0
+fibt2 96083 96035 48 47 0 0 0 0 0 0 0 0 0 0 0
+rmapbt 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+refcntbt 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+qm 0 0 0 0 0 0 0 0 0
+xpc 786432000 786432000 0
+defer_relog 0
+debug 0
+
+--xXmbgvnjoT4axfJE--
