@@ -2,92 +2,139 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2796C433FE
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Oct 2021 16:15:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F84AC433FE
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Oct 2021 16:19:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8E5216105A
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Oct 2021 16:15:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 416BF611C3
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Oct 2021 16:19:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242575AbhJGQRn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Oct 2021 12:17:43 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34078 "EHLO mail.kernel.org"
+        id S242611AbhJGQVW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Oct 2021 12:21:22 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36394 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231495AbhJGQRn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 7 Oct 2021 12:17:43 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3DA16610E6;
-        Thu,  7 Oct 2021 16:15:49 +0000 (UTC)
+        id S242392AbhJGQVV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 7 Oct 2021 12:21:21 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 05F4D61130;
+        Thu,  7 Oct 2021 16:19:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1633623349;
-        bh=s78kXF6ET3D+RY8YLYXBo5UxO6AnsgdgwjJt8RVB3iM=;
+        s=k20201202; t=1633623568;
+        bh=C+X78jnx6oPpOhyPNSDt1k84PcnJj4R9QW0zHoOVY6o=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=T0/zHlMro95taJUzknqTWCH/zKaeqjURxnPfSua0xW1CedVySEBFE348oZufI8Hqv
-         gbiAoVXHPjE17tBfwan/I3yZSKCzw8OV93lVblYhL8D8YkO9zTEo+lYalzzw46AC9l
-         lRIcYz8TqTQoxgR10EwYQ1twE3kx2UDnSH9nyAMUNJvuayqn2ZR2r7L4dLgEM0tVXL
-         iU1UasLMeNiNQVmW2lqS+pOh9ZyM07GWdId1UyQ46LWHDB7jalgVe9rechHs0Vy1M0
-         kbWTPD0QEqpr4prpaN01Y2XfQniowb1FuEOL2o6C1E+8cAczi8j4QtWtoWBTirsFp0
-         WU8S+YcCyCfZw==
-Date:   Thu, 7 Oct 2021 09:15:48 -0700
+        b=mEy5wb98L7y5xxjnuBHozKJgW/RLIrh2ZqUwV5CJdrMiq4xBu8bVvl3E+gw+wH88/
+         sXxbP+5PrMpbhLU/HOthNzJmInoqOdk8QABag0MTg/I9j2TQiuBWkKNYIZsak8t5Ub
+         ZZYHYDW338gyC4BJm1JmIn8Ioi3YMiy6fbd2zNZgVi9eV75rfSlwwaIcx6QrYoEps/
+         08/O+l2fWFOj8bEPnHGevSl1Ikn2EMGyCKvg+SonhjSMFLIn9BCFzeYaZEWsoK+fEL
+         p/QRLkLPO2zQDRwNpwi/ULDy/Bs4qtrX+tDr60IDNVvifjc+jNHKbTmTQk5D0zZq2t
+         4IIn+n2NPbsbg==
+Date:   Thu, 7 Oct 2021 09:19:27 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Catherine Hoang <catherine.hoang@oracle.com>
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
         allison.henderson@oracle.com
-Subject: Re: [PATCH v2 4/4] common/log: Fix *_dump_log routines for ext4
-Message-ID: <20211007161548.GA24282@magnolia>
+Subject: Re: [PATCH v2 3/4] common/log: Move *_dump_log routines to common/log
+Message-ID: <20211007161927.GB24282@magnolia>
 References: <20211007002641.714906-1-catherine.hoang@oracle.com>
- <20211007002641.714906-5-catherine.hoang@oracle.com>
+ <20211007002641.714906-4-catherine.hoang@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211007002641.714906-5-catherine.hoang@oracle.com>
+In-Reply-To: <20211007002641.714906-4-catherine.hoang@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 07, 2021 at 12:26:41AM +0000, Catherine Hoang wrote:
-> dumpe2fs -h displays the superblock contents, not the journal contents.
-> Use the logdump utility to dump the contents of the journal.
-> 
-> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
-> ---
->  common/log | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/common/log b/common/log
-> index 0a9aaa7f..154f3959 100644
-> --- a/common/log
-> +++ b/common/log
-> @@ -229,7 +229,7 @@ _scratch_dump_log()
->  		$DUMP_F2FS_PROG $SCRATCH_DEV
->  		;;
->  	ext4)
-> -		$DUMPE2FS_PROG -h $SCRATCH_DEV
-> +		$DEBUGFS_PROG -R "logdump -a" $SCRATCH_DEV
+On Thu, Oct 07, 2021 at 12:26:40AM +0000, Catherine Hoang wrote:
+> Move _scratch_remount_dump_log and _test_remount_dump_log from
+> common/inject to common/log. These routines do not inject errors and
+> should be placed with other common log functions.
 
-Hmm.  Some of the tests call _require_command on various e2fsprogs
-programs.  However, debugfs has been a part of e2fsprogs since forever
-and e2fsprogs is a required fstests dependency, so I guess those
-callsites are unnecessary (but otherwise benign).  For that matter, I
-think e2fsprogs is an 'essential' package on Debian and almost always
-installed by Linux distros.  I think that means it's safe to assume that
-debugfs is present.
+Doesn't this mean that all those tests that got changed in the first
+patch will also need an update to source common/log?
+
+OH, right, common/inject sources common/log.  Problem solved.
 
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-
->  		;;
->  	*)
->  		;;
-> @@ -246,7 +246,7 @@ _test_dump_log()
->  		$DUMP_F2FS_PROG $TEST_DEV
->  		;;
->  	ext4)
-> -		$DUMPE2FS_PROG -h $TEST_DEV
-> +		$DEBUGFS_PROG -R "logdump -a" $TEST_DEV
->  		;;
->  	*)
->  		;;
+> 
+> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
+> Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+> ---
+>  common/inject | 26 --------------------------
+>  common/log    | 26 ++++++++++++++++++++++++++
+>  2 files changed, 26 insertions(+), 26 deletions(-)
+> 
+> diff --git a/common/inject b/common/inject
+> index b5334d4a..6b590804 100644
+> --- a/common/inject
+> +++ b/common/inject
+> @@ -111,29 +111,3 @@ _scratch_inject_error()
+>  		_fail "Cannot inject error ${type} value ${value}."
+>  	fi
+>  }
+> -
+> -# Unmount and remount the scratch device, dumping the log
+> -_scratch_remount_dump_log()
+> -{
+> -	local opts="$1"
+> -
+> -	if test -n "$opts"; then
+> -		opts="-o $opts"
+> -	fi
+> -	_scratch_unmount
+> -	_scratch_dump_log
+> -	_scratch_mount "$opts"
+> -}
+> -
+> -# Unmount and remount the test device, dumping the log
+> -_test_remount_dump_log()
+> -{
+> -	local opts="$1"
+> -
+> -	if test -n "$opts"; then
+> -		opts="-o $opts"
+> -	fi
+> -	_test_unmount
+> -	_test_dump_log
+> -	_test_mount "$opts"
+> -}
+> diff --git a/common/log b/common/log
+> index c7921f50..0a9aaa7f 100644
+> --- a/common/log
+> +++ b/common/log
+> @@ -608,5 +608,31 @@ _get_log_configs()
+>      esac
+>  }
+>  
+> +# Unmount and remount the scratch device, dumping the log
+> +_scratch_remount_dump_log()
+> +{
+> +	local opts="$1"
+> +
+> +	if test -n "$opts"; then
+> +		opts="-o $opts"
+> +	fi
+> +	_scratch_unmount
+> +	_scratch_dump_log
+> +	_scratch_mount "$opts"
+> +}
+> +
+> +# Unmount and remount the test device, dumping the log
+> +_test_remount_dump_log()
+> +{
+> +	local opts="$1"
+> +
+> +	if test -n "$opts"; then
+> +		opts="-o $opts"
+> +	fi
+> +	_test_unmount
+> +	_test_dump_log
+> +	_test_mount "$opts"
+> +}
+> +
+>  # make sure this script returns success
+>  /bin/true
 > -- 
 > 2.25.1
 > 
