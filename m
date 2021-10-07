@@ -2,162 +2,174 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88F81C4167B
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Oct 2021 00:26:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C155EC43217
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Oct 2021 10:07:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7365B61177
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Oct 2021 00:26:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ACE83610E6
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Oct 2021 10:07:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232398AbhJGA2s (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 6 Oct 2021 20:28:48 -0400
-Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:49574 "EHLO
-        mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S239983AbhJGA2q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Oct 2021 20:28:46 -0400
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 196Nwx2b019750;
-        Thu, 7 Oct 2021 00:26:54 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references :
- content-transfer-encoding : content-type : mime-version;
- s=corp-2021-07-09; bh=0CmXZTjura0u5CgXkrxJMT70/ilW8RiGxkEmQEMfjy0=;
- b=wN4i8Ny7irmfA/Ad12TxhMGue3mGWI2QQO2CJMjQzOFPo9ImTlL2iugJJKCR4w8sf2Pm
- f4Co0/YS1HLdm6/XE0rp//c/ElD5gAfdb9ZcEv1EBh3535cbYmOh+HUo1SU8BztLmDet
- QBHBwHJ24o6zYslPtzKpUQfjbtoBCT37W4r7+l2QAYHo4usDO8AL5YKDx7v209ZDxhWj
- iKq4kSsO2CI5lCHp4YPbn/AGkmJIaXnCU7A8LcVZSTZn6sRm5OB+6QHbAmJ/E3zcG3br
- CUfz5xKln7MSuOnjPS6t/Z6QfSecu8nsgBP3LqXERqaa2gZvrjYrgSzshV/fmf+bAJpA pA== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3bh2dnqjap-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 07 Oct 2021 00:26:52 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 1970AkGD192858;
-        Thu, 7 Oct 2021 00:26:50 GMT
-Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2043.outbound.protection.outlook.com [104.47.66.43])
-        by userp3020.oracle.com with ESMTP id 3bf16vya41-3
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 07 Oct 2021 00:26:50 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=EhMpel9gViMtUeaMhXcAAJV49WW0JaU5wFjycFKvkikD9ZKpYo3xGufHK8fFhWs7wU1ZqbJd6FdtMI0Cpe6XTZ0oAWKcr4c9+kZ8rUSpj1avwYcmC4ms3lxM8cf8tO9UVuV4Wp/mhH6l3M/IhKzntvgaGFWbk97tT8WdvatDnI2M5qLvscAmvZ3QHBOWegR5fxwV97udYANZNOc+ex61SyKGoJ/wAu8kZcOMKEkvdA6ZizaexTqUPFYk76TSXhJLh+wjxx9zH1nPI0daYLES3UfMauExahmQK6X4cLaXuBO4HrhhMwpNW3FFrwH7zy4QdnsYN8S2liKWASRoBmdFbg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=0CmXZTjura0u5CgXkrxJMT70/ilW8RiGxkEmQEMfjy0=;
- b=dEStN6JTskMW5S8BQdiBKK9t0pz/EknswKfLiaOl6kvKcsL1Rp08Idw2loVYRYovVnwMND/6gwK0F4dUxkNX+mjxzRBuY0R6aXqCTp8WNdJ3nnDf+TyFoMZxF7yHiJFH/wz68Quu0I0MddUE7YH6mm1Bkvit6sG3XEN/Z4EjvMdz4JQ3+iqNLfLjvsst9x8yGFMo0J6dyTaVNZwb+dAj/a6y+2km3OGwxDh4wNNXJv/TMfk4OTb9aMNfeCodkguAffRpHvhSAyTgus/crALAeA0ejG3vOhWKHSrowMXVtqejr4F0wTqBcZqDCtfH0rFnKZwlt9gK1t6IowcBcfzggA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=0CmXZTjura0u5CgXkrxJMT70/ilW8RiGxkEmQEMfjy0=;
- b=f8cyv83HccBl4ijA5ahXLb7scU+Glf65z+tQ6u0BikIXCcv4RnI2rpuaC80AprTJ1HpSL80oK/2kRCRYp9GjfFCdZT71I5a+GjbZA0xqVGJHlLxF3+RAAKDJCeTLImRdvZLsrgXmYRUsMM0L2KktrL1Wz1E9ei0p9LjbJFBMlDQ=
-Authentication-Results: vger.kernel.org; dkim=none (message not signed)
- header.d=none;vger.kernel.org; dmarc=none action=none header.from=oracle.com;
-Received: from DM6PR10MB2795.namprd10.prod.outlook.com (2603:10b6:5:70::21) by
- DS7PR10MB5118.namprd10.prod.outlook.com (2603:10b6:5:3b0::15) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.4587.18; Thu, 7 Oct 2021 00:26:48 +0000
-Received: from DM6PR10MB2795.namprd10.prod.outlook.com
- ([fe80::a59b:518a:8dc9:4f72]) by DM6PR10MB2795.namprd10.prod.outlook.com
- ([fe80::a59b:518a:8dc9:4f72%6]) with mapi id 15.20.4566.023; Thu, 7 Oct 2021
- 00:26:48 +0000
-From:   Catherine Hoang <catherine.hoang@oracle.com>
-To:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Cc:     allison.henderson@oracle.com
-Subject: [PATCH v2 2/4] xfstests: Rename _test_inject_logprint to _test_remount_dump_log
-Date:   Thu,  7 Oct 2021 00:26:39 +0000
-Message-Id: <20211007002641.714906-3-catherine.hoang@oracle.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20211007002641.714906-1-catherine.hoang@oracle.com>
-References: <20211007002641.714906-1-catherine.hoang@oracle.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: MN2PR05CA0019.namprd05.prod.outlook.com
- (2603:10b6:208:c0::32) To DM6PR10MB2795.namprd10.prod.outlook.com
- (2603:10b6:5:70::21)
+        id S240700AbhJGKJj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Oct 2021 06:09:39 -0400
+Received: from smtp-out1.suse.de ([195.135.220.28]:34754 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S240540AbhJGKJi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Oct 2021 06:09:38 -0400
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out1.suse.de (Postfix) with ESMTP id A9C7722526;
+        Thu,  7 Oct 2021 10:07:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1633601263; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=H4Ul2HxwLohvq2LxFkQLFFYYgikdgrah0DTLC7cFiY0=;
+        b=quSKVcFrsqj8pOlL7N/kApBS4N4Hnnreq8O3OeVVlo2YqiBeMCubqiCrN23pnvEkGkRujC
+        EbSln1J9I0kGz4w/KXsTVaUpaYrZ9GM4yb5q+leWfbR7h/2lWIE/KwUJw6YVdC1YBVkZ/q
+        lkL9wAvpj+T7f2AX9jcpxm/i65rYKhY=
+Received: from suse.cz (unknown [10.100.201.86])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by relay2.suse.de (Postfix) with ESMTPS id 5B313A3B81;
+        Thu,  7 Oct 2021 10:07:43 +0000 (UTC)
+Date:   Thu, 7 Oct 2021 12:07:42 +0200
+From:   Michal Hocko <mhocko@suse.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Vlastimil Babka <vbabka@suse.cz>, NeilBrown <neilb@suse.de>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Mel Gorman <mgorman@suse.de>, Jonathan Corbet <corbet@lwn.net>,
+        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+        linux-doc@vger.kernel.org
+Subject: Re: [PATCH 2/6] MM: improve documentation for __GFP_NOFAIL
+Message-ID: <YV7G7gyfZkmw7/Ae@dhcp22.suse.cz>
+References: <163184698512.29351.4735492251524335974.stgit@noble.brown>
+ <163184741778.29351.16920832234899124642.stgit@noble.brown>
+ <b680fb87-439b-0ba4-cf9f-33d729f27941@suse.cz>
+ <YVwyhDnE/HEnoLAi@dhcp22.suse.cz>
+ <eba04a07-99da-771a-ab6b-36de41f9f120@suse.cz>
+ <20211006231452.GF54211@dread.disaster.area>
 MIME-Version: 1.0
-Received: from instance-20210819-1300.osdevelopmeniad.oraclevcn.com (209.17.40.39) by MN2PR05CA0019.namprd05.prod.outlook.com (2603:10b6:208:c0::32) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4587.9 via Frontend Transport; Thu, 7 Oct 2021 00:26:48 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: ee2225bc-7c16-48ac-e0d0-08d989292699
-X-MS-TrafficTypeDiagnostic: DS7PR10MB5118:
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <DS7PR10MB51180635A5657A17FC4C79A789B19@DS7PR10MB5118.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:1728;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: daEAKlObEdSMewq2fUyOniBtqdInAR/t8GaQ0Qp0Go3r0SCFIkXqok8Ex0VXO0bfkx8TurJWli1prmNCL+Yw8y5AMuFFFMCNQG82l6vYQsqZZHMfwh7/EphC/wrvXcQ1S0VOzAL31oWvYk0dzH5TFNftobc4oKIc1pda1e1ZUP0IlivMsYy1wjujYq5VU8qhjvkyUPJKhbSLvwT1NryCisVwnB/i0I2l3E67qgu0pvgOJ6JGygG/26hd8rE4V0oGPleEWzI7rzLenj9f+GBl5wRsbSp2oAmkzGRzBDSPnOyvD9H6DmJneK2165TdDJqCKLM029LnjH634/eWt5Wm4AnV/chyCGNpIFZhx06uzA3saWBesdxcfsz/vL3c7baQG5N/HCWvKlpBWHtyBnszG8twmbpekSrFhYg72137r8H8W0kLbu2rxcb78jc6np5dRrYUXDrhxykCLi0TCw8S/i2GZhIs39pv+Xx5PjolAqrqjx444CyEs0YXz6VGby1kGUlCONyKdd1tUgCheBrTFbgDdSpsOvRe7X1lbRRo32B52b6251E+1Exe6CTTBb3sjv8ngGNjvirCyBNuN4T7gr4OcI1vFoajWnRyAQmXxP4dvINGg8sgYrhXy+YXTJeC28bAjTWBnjRemztpKb+r1NRetsAZVoxuVK6GOW38IbERzg+PjvmdF1wJPcmPUYy7AgVeO6QHkZ9xo7SvW+G4qw==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB2795.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(6512007)(508600001)(6666004)(38350700002)(186003)(2906002)(38100700002)(36756003)(107886003)(5660300002)(44832011)(83380400001)(8676002)(450100002)(316002)(4744005)(26005)(6506007)(52116002)(66556008)(66946007)(956004)(1076003)(8936002)(4326008)(6486002)(2616005)(86362001)(66476007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?1GGuokqpsRIoJ6GOubIvjENrBpcri0iVMaU9CNdjMAN7VdFEC3pnmRzNxbVe?=
- =?us-ascii?Q?DyQ9+wDsyD36htbvaKYTL6SWR2183fO+ojENbNQUumNwJmH8TKHOOgTzSJja?=
- =?us-ascii?Q?+TNxyPIUuh6yxNfCVzXWCu+AdrAsZjURMSWimH0RpjxkjnsvfCRc8++hWfHG?=
- =?us-ascii?Q?dDvOE7FYOQfDoVCoBIXPxDou/W7tWXlXoEG+IHc4h3hmgfLYnga+c4dwYVCg?=
- =?us-ascii?Q?3Gd+5GvvVQ9LeBbUC4kXvpBvVRZ8t6VblnTfN7rjZiSgr7CPh+zFKFYFZJqO?=
- =?us-ascii?Q?wKJzwilgZLLUzxogKSUPZiyVU3EP9SSOL1CdQ6M0Dhk61E3l6vbXWX2l7Ztx?=
- =?us-ascii?Q?/S/pHzAHvND4KImTQgFfStgsC7I+0MVLDHZgGKgXHKQJqSCuGJrbeJPb5OgW?=
- =?us-ascii?Q?yzTYrrrAxQmSK2xnoxqasj/d0TqZjECb69CsR50gBUzG1xs3Cp1+xYC/Kwtk?=
- =?us-ascii?Q?vRwcHRmM18MLamuFKE976SqZYEotU7RXOfFUon/swZ7tEkgzff7EJAGYFys6?=
- =?us-ascii?Q?YFKr9PttDVgoHXPXCkUxWIWwRb0DHUtfZjVnPq2c8CQ5ODDcugVwkAYHttXy?=
- =?us-ascii?Q?ZP6Ut75xEX+BsN5RWM46dDm/HnOw3/hodlmDIsDi2nHH7mcWRC3TFyKCFvn4?=
- =?us-ascii?Q?6JBEfv6VDK2yZfGH325/8h8EZ/kFdahpcjAQuXLusJ8waEgAHXRvp6xAept7?=
- =?us-ascii?Q?L0JaX5HxSw3WF0y+tR87tuGGfwc4CNZ8X1R9hvhwT38uz9mQd/JLOgAcCHmA?=
- =?us-ascii?Q?0SdK7NuMgYiYGWbkZhMsDi62oGGJLAbEoJ8AxM1x8dpvL+2nOyTPya2nuSP+?=
- =?us-ascii?Q?9DdBKd0ghUoDQmq3ixOElOxqJCbQ8ULkFxDOxGgiNcxuMUPwYVjsYSk2Or/A?=
- =?us-ascii?Q?riZf7ffwT3zVEnz8Z62msiCzjo9L1gewh4mbLVX1OUGX/j/TFnC1gLRyNPdz?=
- =?us-ascii?Q?8cbzImAPKGt/bHQAKKDlB+ov5W74jFt6ADHAyWqM+omvlI25e10NONBxKkEd?=
- =?us-ascii?Q?apBNGHf7MoXSeBGn/TdLyEWuSozRmpmh7dBaEKuWvJecyFa/qWUtivFRIuFu?=
- =?us-ascii?Q?1A+029ZFpct+mjes7MVYjL8emJuFJRGdS7jE5xwBf7jXBs6sImG8im5PLiCn?=
- =?us-ascii?Q?NARP/IUedmp2mq7VZAuv2OrgmU0ZDPa64ig4zbxOFpZAS6GcIjtNgh0ZB1cN?=
- =?us-ascii?Q?5xRsrhvQoXAuVJ7bwX96vrn8jz3Tbbq6bhawfofE5ChVQZnxqZsPlcBHA648?=
- =?us-ascii?Q?k2UGT6cZZFJqulLbjmYFZQoxPpfJZ1JH+OobYsTyZn+SX/XXlo4veBmA4UW1?=
- =?us-ascii?Q?SzxoqP3OEskmrpQPOa4EVcdw?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ee2225bc-7c16-48ac-e0d0-08d989292699
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB2795.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Oct 2021 00:26:48.6227
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: hB+c+56RTrAIFndQ06apXHrx4DWx7ZhGBufPBf/ZE3k88uOCE1/fy1gf/WxCnZv+c+YytGqPXEzKwiKS27C1LeJKU0/iNirXPH0i42yyGRI=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR10MB5118
-X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10129 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 adultscore=0
- phishscore=0 malwarescore=0 bulkscore=0 mlxlogscore=999 mlxscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2109230001 definitions=main-2110070000
-X-Proofpoint-ORIG-GUID: cZVWWBFFfutw4ByYQkq6_NljbXywTiJj
-X-Proofpoint-GUID: cZVWWBFFfutw4ByYQkq6_NljbXywTiJj
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20211006231452.GF54211@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Rename _test_inject_logprint to _test_remount_dump_log to better
-describe what this function does. _test_remount_dump_log unmounts
-and remounts the test device, dumping the log.
+On Thu 07-10-21 10:14:52, Dave Chinner wrote:
+> On Tue, Oct 05, 2021 at 02:27:45PM +0200, Vlastimil Babka wrote:
+> > On 10/5/21 13:09, Michal Hocko wrote:
+> > > On Tue 05-10-21 11:20:51, Vlastimil Babka wrote:
+> > > [...]
+> > >> > --- a/include/linux/gfp.h
+> > >> > +++ b/include/linux/gfp.h
+> > >> > @@ -209,7 +209,11 @@ struct vm_area_struct;
+> > >> >   * used only when there is no reasonable failure policy) but it is
+> > >> >   * definitely preferable to use the flag rather than opencode endless
+> > >> >   * loop around allocator.
+> > >> > - * Using this flag for costly allocations is _highly_ discouraged.
+> > >> > + * Use of this flag may lead to deadlocks if locks are held which would
+> > >> > + * be needed for memory reclaim, write-back, or the timely exit of a
+> > >> > + * process killed by the OOM-killer.  Dropping any locks not absolutely
+> > >> > + * needed is advisable before requesting a %__GFP_NOFAIL allocate.
+> > >> > + * Using this flag for costly allocations (order>1) is _highly_ discouraged.
+> > >> 
+> > >> We define costly as 3, not 1. But sure it's best to avoid even order>0 for
+> > >> __GFP_NOFAIL. Advising order>1 seems arbitrary though?
+> > > 
+> > > This is not completely arbitrary. We have a warning for any higher order
+> > > allocation.
+> > > rmqueue:
+> > > 	WARN_ON_ONCE((gfp_flags & __GFP_NOFAIL) && (order > 1));
+> > 
+> > Oh, I missed that.
+> > 
+> > > I do agree that "Using this flag for higher order allocations is
+> > > _highly_ discouraged.
+> > 
+> > Well, with the warning in place this is effectively forbidden, not just
+> > discouraged.
+> 
+> Yup, especially as it doesn't obey __GFP_NOWARN.
+> 
+> See commit de2860f46362 ("mm: Add kvrealloc()") as a direct result
+> of unwittingly tripping over this warning when adding __GFP_NOFAIL
+> annotations to replace open coded high-order kmalloc loops that have
+> been in place for a couple of decades without issues.
+> 
+> Personally I think that the way __GFP_NOFAIL is first of all
+> recommended over open coded loops and then only later found to be
+> effectively forbidden and needing to be replaced with open coded
+> loops to be a complete mess.
 
-Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
-Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
----
- common/inject | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Well, there are two things. Opencoding something that _can_ be replaced
+by __GFP_NOFAIL and those that cannot because the respective allocator
+doesn't really support that semantic. kvmalloc is explicit about that
+IIRC. If you have a better way to consolidate the documentation then I
+am all for it.
 
-diff --git a/common/inject b/common/inject
-index 3b731df7..b5334d4a 100644
---- a/common/inject
-+++ b/common/inject
-@@ -126,7 +126,7 @@ _scratch_remount_dump_log()
- }
- 
- # Unmount and remount the test device, dumping the log
--_test_inject_logprint()
-+_test_remount_dump_log()
- {
- 	local opts="$1"
- 
+> Not to mention on the impossibility of using __GFP_NOFAIL with
+> kvmalloc() calls. Just what do we expect kmalloc_node(__GFP_NORETRY
+> | __GFP_NOFAIL) to do, exactly?
+
+This combination doesn't make any sense. Like others. Do you want us to
+list all combinations that make sense?
+
+> So, effectively, we have to open-code around kvmalloc() in
+> situations where failure is not an option. Even if we pass
+> __GFP_NOFAIL to __vmalloc(), it isn't guaranteed to succeed because
+> of the "we won't honor gfp flags passed to __vmalloc" semantics it
+> has.
+
+yes vmalloc doesn't support nofail semantic and it is not really trivial
+to craft it there.
+
+> Even the API constaints of kvmalloc() w.r.t. only doing the vmalloc
+> fallback if the gfp context is GFP_KERNEL - we already do GFP_NOFS
+> kvmalloc via memalloc_nofs_save/restore(), so this behavioural
+> restriction w.r.t. gfp flags just makes no sense at all.
+
+GFP_NOFS (without using the scope API) has the same problem as NOFAIL in
+the vmalloc. Hence it is not supported. If you use the scope API then
+you can GFP_KERNEL for kvmalloc. This is clumsy but I am not sure how to
+define these conditions in a more sensible way. Special case NOFS if the
+scope api is in use? Why do you want an explicit NOFS then?
+
+> That leads to us having to go back to writing extremely custom open
+> coded loops to avoid awful high-order kmalloc direct reclaim
+> behaviour and still fall back to vmalloc and to still handle NOFAIL
+> semantics we need:
+> 
+> https://lore.kernel.org/linux-xfs/20210902095927.911100-8-david@fromorbit.com/
+
+It would be more productive to get to MM people rather than rant on a
+xfs specific patchse. Anyway, I can see a kvmalloc mode where the
+kmalloc allocation would be really a very optimistic one - like your
+effectively GFP_NOWAIT. Nobody has requested such a mode until now and I
+am not sure how we would sensibly describe that by a gfp mask.
+
+Btw. your GFP_NOWAIT | __GFP_NORETRY combination doesn't make any sense
+in the allocator context as the later is a reclaim mofifier which
+doesn't get applied when the reclaim is disabled (in your case by flags
+&= ~__GFP_DIRECT_RECLAIM).
+
+GFP flags are not that easy to build a coherent and usable apis.
+Something we carry as a baggage for a long time.
+
+> So, really, the problems are much deeper here than just badly
+> documented, catch-22 rules for __GFP_NOFAIL - we can't even use
+> __GFP_NOFAIL consistently across the allocation APIs because it
+> changes allocation behaviours in unusable, self-defeating ways....
+
+GFP_NOFAIL sucks. Not all allocator can follow it for practical
+reasons. You are welcome to help document those awkward corner cases or
+fix them up if you have a good idea how.
+
+Thanks!
 -- 
-2.25.1
-
+Michal Hocko
+SUSE Labs
