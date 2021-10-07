@@ -2,174 +2,104 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C155EC43217
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Oct 2021 10:07:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B359C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Oct 2021 10:45:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ACE83610E6
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Oct 2021 10:07:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 246F1610C8
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Oct 2021 10:45:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240700AbhJGKJj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Oct 2021 06:09:39 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:34754 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240540AbhJGKJi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Oct 2021 06:09:38 -0400
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id A9C7722526;
-        Thu,  7 Oct 2021 10:07:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1633601263; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
+        id S241024AbhJGKrT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Oct 2021 06:47:19 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:43632 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S241030AbhJGKrS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Oct 2021 06:47:18 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1633603523;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=H4Ul2HxwLohvq2LxFkQLFFYYgikdgrah0DTLC7cFiY0=;
-        b=quSKVcFrsqj8pOlL7N/kApBS4N4Hnnreq8O3OeVVlo2YqiBeMCubqiCrN23pnvEkGkRujC
-        EbSln1J9I0kGz4w/KXsTVaUpaYrZ9GM4yb5q+leWfbR7h/2lWIE/KwUJw6YVdC1YBVkZ/q
-        lkL9wAvpj+T7f2AX9jcpxm/i65rYKhY=
-Received: from suse.cz (unknown [10.100.201.86])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by relay2.suse.de (Postfix) with ESMTPS id 5B313A3B81;
-        Thu,  7 Oct 2021 10:07:43 +0000 (UTC)
-Date:   Thu, 7 Oct 2021 12:07:42 +0200
-From:   Michal Hocko <mhocko@suse.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Vlastimil Babka <vbabka@suse.cz>, NeilBrown <neilb@suse.de>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Mel Gorman <mgorman@suse.de>, Jonathan Corbet <corbet@lwn.net>,
-        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-mm@kvack.org, linux-kernel@vger.kernel.org,
-        linux-doc@vger.kernel.org
-Subject: Re: [PATCH 2/6] MM: improve documentation for __GFP_NOFAIL
-Message-ID: <YV7G7gyfZkmw7/Ae@dhcp22.suse.cz>
-References: <163184698512.29351.4735492251524335974.stgit@noble.brown>
- <163184741778.29351.16920832234899124642.stgit@noble.brown>
- <b680fb87-439b-0ba4-cf9f-33d729f27941@suse.cz>
- <YVwyhDnE/HEnoLAi@dhcp22.suse.cz>
- <eba04a07-99da-771a-ab6b-36de41f9f120@suse.cz>
- <20211006231452.GF54211@dread.disaster.area>
+        bh=FDjAZy0o0cxNZIR+OmfLcOHAknshOPeLmRYeFyi+lAA=;
+        b=atGZ0N5udU9BLZV2sFRc2+OJTTvwLr9B54HYlAbj+CTsBMrgdbPIUr7VT3iDmkz7jf9NBH
+        nygvMYx820nAvtMcoB2KbCL9gj1c6Qo9j3St9DvDhcPPV9AX664FvVRFQPE5XtpxwmP2sb
+        cZ4AhE8ItZoT/hXfEO6QudrqjY7kr7U=
+Received: from mail-wr1-f70.google.com (mail-wr1-f70.google.com
+ [209.85.221.70]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-313-r5-fIim5NiCwGKss5my6Yg-1; Thu, 07 Oct 2021 06:45:22 -0400
+X-MC-Unique: r5-fIim5NiCwGKss5my6Yg-1
+Received: by mail-wr1-f70.google.com with SMTP id j19-20020adfb313000000b00160a9de13b3so4342368wrd.8
+        for <linux-xfs@vger.kernel.org>; Thu, 07 Oct 2021 03:45:22 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:subject:message-id:mail-followup-to
+         :references:mime-version:content-disposition:in-reply-to;
+        bh=FDjAZy0o0cxNZIR+OmfLcOHAknshOPeLmRYeFyi+lAA=;
+        b=b53uk0kK2bRVzPOuoZZ0alz76V8zynMOGBV1ajkiJuL1Ze2bFPNUyms47sj0KlKRu1
+         jxY18mEQ1zSYQ+KsjXbS9xnFLs2cfkz4ewH205uF/hgWVCXTJsT2WqdcoHPNntuJBUYf
+         QiQxfpd9vXNDGKHwFDodAiohf3n9Rzrm2pGL3tHO/xq7XPG9OIdORu+x9rZpTV3Plbr9
+         C1ZgykHA/XbS1OAW9DxqV+MczX/EP41+tgP9B8+rYro9RUNI/HN959di3ta/2LHQF1so
+         DiFfjAGi0pJuIewzJj8v5MfWsASvBiHB6Zu15EObcn59nwehdEs2kOkrS0W6aQEeCkDS
+         7lYg==
+X-Gm-Message-State: AOAM531Ofsbc5z6jFSTnyCKIk9H7hVruImfFQC+7rUd0KiZu2irTDKoa
+        OWKbpv0Oyu0Th2fbqybW9tURgmS9EtbXX7wwPUuRd+6qHRBK9sk3bwU8LSAWCw0o/S9Cn2S+aDn
+        8H1lU40bs9Y3ujFnRiM8Z
+X-Received: by 2002:adf:e390:: with SMTP id e16mr4365361wrm.217.1633603521081;
+        Thu, 07 Oct 2021 03:45:21 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzGJ7j4YYp+k1+F6gRIRkOd25pX1zY1sEKxcTR+kd3yglGXyZBW+0zxZNg/tkvObbamZi9GXA==
+X-Received: by 2002:adf:e390:: with SMTP id e16mr4365331wrm.217.1633603520786;
+        Thu, 07 Oct 2021 03:45:20 -0700 (PDT)
+Received: from andromeda.lan (ip4-46-39-172-19.cust.nbox.cz. [46.39.172.19])
+        by smtp.gmail.com with ESMTPSA id z20sm4372180wmi.42.2021.10.07.03.45.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 07 Oct 2021 03:45:19 -0700 (PDT)
+Date:   Thu, 7 Oct 2021 12:45:18 +0200
+From:   Carlos Maiolino <cmaiolino@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] Prevent mmap command to map beyond EOF
+Message-ID: <20211007104518.obsjrafsojryin7b@andromeda.lan>
+Mail-Followup-To: "Darrick J. Wong" <djwong@kernel.org>,
+        linux-xfs@vger.kernel.org
+References: <20211004141140.53607-1-cmaiolino@redhat.com>
+ <20211005223653.GG24307@magnolia>
+ <20211006113400.lcwukggcqwkrftkz@andromeda.lan>
+ <20211006155419.GI24307@magnolia>
+ <20211006165407.bplbdyfb66hbumk5@andromeda.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211006231452.GF54211@dread.disaster.area>
+In-Reply-To: <20211006165407.bplbdyfb66hbumk5@andromeda.lan>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu 07-10-21 10:14:52, Dave Chinner wrote:
-> On Tue, Oct 05, 2021 at 02:27:45PM +0200, Vlastimil Babka wrote:
-> > On 10/5/21 13:09, Michal Hocko wrote:
-> > > On Tue 05-10-21 11:20:51, Vlastimil Babka wrote:
-> > > [...]
-> > >> > --- a/include/linux/gfp.h
-> > >> > +++ b/include/linux/gfp.h
-> > >> > @@ -209,7 +209,11 @@ struct vm_area_struct;
-> > >> >   * used only when there is no reasonable failure policy) but it is
-> > >> >   * definitely preferable to use the flag rather than opencode endless
-> > >> >   * loop around allocator.
-> > >> > - * Using this flag for costly allocations is _highly_ discouraged.
-> > >> > + * Use of this flag may lead to deadlocks if locks are held which would
-> > >> > + * be needed for memory reclaim, write-back, or the timely exit of a
-> > >> > + * process killed by the OOM-killer.  Dropping any locks not absolutely
-> > >> > + * needed is advisable before requesting a %__GFP_NOFAIL allocate.
-> > >> > + * Using this flag for costly allocations (order>1) is _highly_ discouraged.
-> > >> 
-> > >> We define costly as 3, not 1. But sure it's best to avoid even order>0 for
-> > >> __GFP_NOFAIL. Advising order>1 seems arbitrary though?
-> > > 
-> > > This is not completely arbitrary. We have a warning for any higher order
-> > > allocation.
-> > > rmqueue:
-> > > 	WARN_ON_ONCE((gfp_flags & __GFP_NOFAIL) && (order > 1));
+On Wed, Oct 06, 2021 at 06:54:07PM +0200, Carlos Maiolino wrote:
+> > > My biggest motivation was actually seeing xfs_io crashing due a sigbus
+> > > while running generic/172 and generic/173. And personally, I'd rather see an
+> > > error message like "attempt to mmap/mwrite beyond EOF" than seeing it crash.
+> > > Also, as you mentioned, programs are allowed to set up such kind of
+> > > configuration (IIUC what you mean, mixing mmap, extend, truncate, etc), so, I
+> > > believe such userspace programs should also ensure they are not attempting to
+> > > write to invalid memory.
 > > 
-> > Oh, I missed that.
-> > 
-> > > I do agree that "Using this flag for higher order allocations is
-> > > _highly_ discouraged.
-> > 
-> > Well, with the warning in place this is effectively forbidden, not just
-> > discouraged.
+> > This patch would /also/ prevent us from writing an fstest to check that
+> > a process /does/ get SIGBUS when writing to a mapping beyond EOF.  Huh,
+> > we don't have a test for that...
+
+After looking closer into g/173, I see what you mean now.
 > 
-> Yup, especially as it doesn't obey __GFP_NOWARN.
+> The whole command that ends up receiving a SIGBUS is:
 > 
-> See commit de2860f46362 ("mm: Add kvrealloc()") as a direct result
-> of unwittingly tripping over this warning when adding __GFP_NOFAIL
-> annotations to replace open coded high-order kmalloc loops that have
-> been in place for a couple of decades without issues.
-> 
-> Personally I think that the way __GFP_NOFAIL is first of all
-> recommended over open coded loops and then only later found to be
-> effectively forbidden and needing to be replaced with open coded
-> loops to be a complete mess.
+> xfs_io -i -f -c 'mmap -rw 0 41943040' -c 'mwrite -S 0x62 0 41943040'
 
-Well, there are two things. Opencoding something that _can_ be replaced
-by __GFP_NOFAIL and those that cannot because the respective allocator
-doesn't really support that semantic. kvmalloc is explicit about that
-IIRC. If you have a better way to consolidate the documentation then I
-am all for it.
+And...
 
-> Not to mention on the impossibility of using __GFP_NOFAIL with
-> kvmalloc() calls. Just what do we expect kmalloc_node(__GFP_NORETRY
-> | __GFP_NOFAIL) to do, exactly?
+> At a later point, I just did some tests using an empty, 0
+> sized file.
 
-This combination doesn't make any sense. Like others. Do you want us to
-list all combinations that make sense?
+And playing around with a 0 sized file without coming back to look closer into
+g/173 was what had been blinding me.
+Please just disregard this patch and my apologies for the noise.
 
-> So, effectively, we have to open-code around kvmalloc() in
-> situations where failure is not an option. Even if we pass
-> __GFP_NOFAIL to __vmalloc(), it isn't guaranteed to succeed because
-> of the "we won't honor gfp flags passed to __vmalloc" semantics it
-> has.
-
-yes vmalloc doesn't support nofail semantic and it is not really trivial
-to craft it there.
-
-> Even the API constaints of kvmalloc() w.r.t. only doing the vmalloc
-> fallback if the gfp context is GFP_KERNEL - we already do GFP_NOFS
-> kvmalloc via memalloc_nofs_save/restore(), so this behavioural
-> restriction w.r.t. gfp flags just makes no sense at all.
-
-GFP_NOFS (without using the scope API) has the same problem as NOFAIL in
-the vmalloc. Hence it is not supported. If you use the scope API then
-you can GFP_KERNEL for kvmalloc. This is clumsy but I am not sure how to
-define these conditions in a more sensible way. Special case NOFS if the
-scope api is in use? Why do you want an explicit NOFS then?
-
-> That leads to us having to go back to writing extremely custom open
-> coded loops to avoid awful high-order kmalloc direct reclaim
-> behaviour and still fall back to vmalloc and to still handle NOFAIL
-> semantics we need:
-> 
-> https://lore.kernel.org/linux-xfs/20210902095927.911100-8-david@fromorbit.com/
-
-It would be more productive to get to MM people rather than rant on a
-xfs specific patchse. Anyway, I can see a kvmalloc mode where the
-kmalloc allocation would be really a very optimistic one - like your
-effectively GFP_NOWAIT. Nobody has requested such a mode until now and I
-am not sure how we would sensibly describe that by a gfp mask.
-
-Btw. your GFP_NOWAIT | __GFP_NORETRY combination doesn't make any sense
-in the allocator context as the later is a reclaim mofifier which
-doesn't get applied when the reclaim is disabled (in your case by flags
-&= ~__GFP_DIRECT_RECLAIM).
-
-GFP flags are not that easy to build a coherent and usable apis.
-Something we carry as a baggage for a long time.
-
-> So, really, the problems are much deeper here than just badly
-> documented, catch-22 rules for __GFP_NOFAIL - we can't even use
-> __GFP_NOFAIL consistently across the allocation APIs because it
-> changes allocation behaviours in unusable, self-defeating ways....
-
-GFP_NOFAIL sucks. Not all allocator can follow it for practical
-reasons. You are welcome to help document those awkward corner cases or
-fix them up if you have a good idea how.
-
-Thanks!
 -- 
-Michal Hocko
-SUSE Labs
+Carlos
+
