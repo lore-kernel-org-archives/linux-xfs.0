@@ -2,251 +2,251 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 629FCC433F5
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Oct 2021 23:44:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBD86C4332F
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Oct 2021 07:48:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3BBFC6128C
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Oct 2021 23:44:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A9C6D60FC3
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Oct 2021 07:48:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233860AbhJGXq2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Oct 2021 19:46:28 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:60628 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233854AbhJGXq2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Oct 2021 19:46:28 -0400
-Received: from dread.disaster.area (pa49-195-238-16.pa.nsw.optusnet.com.au [49.195.238.16])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 28982884BC6;
-        Fri,  8 Oct 2021 10:44:31 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1mYd3u-003g0R-TR; Fri, 08 Oct 2021 10:44:30 +1100
-Date:   Fri, 8 Oct 2021 10:44:30 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Jan Kara <jack@suse.cz>
-Cc:     linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>,
-        "Darrick J. Wong" <djwong@kernel.org>
-Subject: Re: Performance regression with async inode inactivation
-Message-ID: <20211007234430.GH54211@dread.disaster.area>
-References: <20211004100653.GD2255@quack2.suse.cz>
- <20211004211508.GB54211@dread.disaster.area>
- <20211005081157.GA24625@quack2.suse.cz>
- <20211005212608.GC54211@dread.disaster.area>
- <20211006181001.GA4182@quack2.suse.cz>
- <20211006215851.GD54211@dread.disaster.area>
- <20211007120357.GD12712@quack2.suse.cz>
+        id S232692AbhJHHuj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 8 Oct 2021 03:50:39 -0400
+Received: from smtp-out2.suse.de ([195.135.220.29]:43608 "EHLO
+        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229693AbhJHHuh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Oct 2021 03:50:37 -0400
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out2.suse.de (Postfix) with ESMTP id 0BB751FD70;
+        Fri,  8 Oct 2021 07:48:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1633679321; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=ZelD4w9CDZNOGwHQrpHZ9Ow+bu3ULaS3im3bY0kWS+Y=;
+        b=LOEmWf21Avco99a6kn/i9X+G9LI0yHaGGx7uXZgqQ0JWZ5cwogYhWkG1VS2c0mN/9U4m1v
+        BPuFaqnQvJSdwH5lxe0uHuZIqcXMd+ng0EfdoP/67WyjQs7UCqGqCesSj92C7alF7+wzZ+
+        0qEeyR1N9aO7eVwbG+9jtQO6mv2YyjE=
+Received: from suse.cz (unknown [10.100.201.86])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by relay2.suse.de (Postfix) with ESMTPS id AFD3DA3B89;
+        Fri,  8 Oct 2021 07:48:40 +0000 (UTC)
+Date:   Fri, 8 Oct 2021 09:48:39 +0200
+From:   Michal Hocko <mhocko@suse.com>
+To:     NeilBrown <neilb@suse.de>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Vlastimil Babka <vbabka@suse.cz>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Mel Gorman <mgorman@suse.de>, Jonathan Corbet <corbet@lwn.net>,
+        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+        linux-doc@vger.kernel.org
+Subject: Re: [PATCH 2/6] MM: improve documentation for __GFP_NOFAIL
+Message-ID: <YV/31+qXwqEgaxJL@dhcp22.suse.cz>
+References: <163184698512.29351.4735492251524335974.stgit@noble.brown>
+ <163184741778.29351.16920832234899124642.stgit@noble.brown>
+ <b680fb87-439b-0ba4-cf9f-33d729f27941@suse.cz>
+ <YVwyhDnE/HEnoLAi@dhcp22.suse.cz>
+ <eba04a07-99da-771a-ab6b-36de41f9f120@suse.cz>
+ <20211006231452.GF54211@dread.disaster.area>
+ <YV7G7gyfZkmw7/Ae@dhcp22.suse.cz>
+ <163364854551.31063.4377741712039731672@noble.neil.brown.name>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211007120357.GD12712@quack2.suse.cz>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=615f8660
-        a=DzKKRZjfViQTE5W6EVc0VA==:117 a=DzKKRZjfViQTE5W6EVc0VA==:17
-        a=kj9zAlcOel0A:10 a=8gfv0ekSlNoA:10 a=7-415B0cAAAA:8
-        a=bbVRqeLnWSvzABbziioA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <163364854551.31063.4377741712039731672@noble.neil.brown.name>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 07, 2021 at 02:03:57PM +0200, Jan Kara wrote:
-> On Thu 07-10-21 08:58:51, Dave Chinner wrote:
-> > On Wed, Oct 06, 2021 at 08:10:01PM +0200, Jan Kara wrote:
-> > Hmmm, I didn't see this at first.  What's the filesystem layout
-> > (xfs_info) and the CLI for the test that you ran? How many CPUs was
-> > the test run on?
-> 
-> The machine has 24 cores, each core has 2 SMT siblings, so 48 logical CPUs.
-> That's why I've run stress-unlink with 48 processes.
-> 
-> xfs_info is:
-> 
-> meta-data=/dev/sdb1              isize=512    agcount=4, agsize=29303104 blks
->          =                       sectsz=512   attr=2, projid32bit=1
->          =                       crc=1        finobt=1, sparse=0, rmapbt=0
->          =                       reflink=0
-> data     =                       bsize=4096   blocks=117212416, imaxpct=25
->          =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-> log      =internal log           bsize=4096   blocks=57232, version=2
-
-OK, default log is ~230MB, fs size is ~400GB?
-
-> > But to point out that this isn't perfect for everything, if I run
-> > the same test with 1000 processes on that config, it takes 6.2s,
-> > writes 400MB to the log and flushes 153,000 inode clusters. We're
-> > back to not having enough log space for the workload. Bumping out to
-> > agcount=67 (2x CPU count) and max log size(2GB) results in runtime
-> > of 3.5s (largely linear from the 100 process count), no inode
-> > writeback and only 200MB of log throughput.
+On Fri 08-10-21 10:15:45, Neil Brown wrote:
+> On Thu, 07 Oct 2021, Michal Hocko wrote:
+> > On Thu 07-10-21 10:14:52, Dave Chinner wrote:
+> > > On Tue, Oct 05, 2021 at 02:27:45PM +0200, Vlastimil Babka wrote:
+> > > > On 10/5/21 13:09, Michal Hocko wrote:
+> > > > > On Tue 05-10-21 11:20:51, Vlastimil Babka wrote:
+> > > > > [...]
+> > > > >> > --- a/include/linux/gfp.h
+> > > > >> > +++ b/include/linux/gfp.h
+> > > > >> > @@ -209,7 +209,11 @@ struct vm_area_struct;
+> > > > >> >   * used only when there is no reasonable failure policy) but it is
+> > > > >> >   * definitely preferable to use the flag rather than opencode endless
+> > > > >> >   * loop around allocator.
+> > > > >> > - * Using this flag for costly allocations is _highly_ discouraged.
+> > > > >> > + * Use of this flag may lead to deadlocks if locks are held which would
+> > > > >> > + * be needed for memory reclaim, write-back, or the timely exit of a
+> > > > >> > + * process killed by the OOM-killer.  Dropping any locks not absolutely
+> > > > >> > + * needed is advisable before requesting a %__GFP_NOFAIL allocate.
+> > > > >> > + * Using this flag for costly allocations (order>1) is _highly_ discouraged.
+> > > > >> 
+> > > > >> We define costly as 3, not 1. But sure it's best to avoid even order>0 for
+> > > > >> __GFP_NOFAIL. Advising order>1 seems arbitrary though?
+> > > > > 
+> > > > > This is not completely arbitrary. We have a warning for any higher order
+> > > > > allocation.
+> > > > > rmqueue:
+> > > > > 	WARN_ON_ONCE((gfp_flags & __GFP_NOFAIL) && (order > 1));
+> > > > 
+> > > > Oh, I missed that.
+> > > > 
+> > > > > I do agree that "Using this flag for higher order allocations is
+> > > > > _highly_ discouraged.
+> > > > 
+> > > > Well, with the warning in place this is effectively forbidden, not just
+> > > > discouraged.
+> > > 
+> > > Yup, especially as it doesn't obey __GFP_NOWARN.
+> > > 
+> > > See commit de2860f46362 ("mm: Add kvrealloc()") as a direct result
+> > > of unwittingly tripping over this warning when adding __GFP_NOFAIL
+> > > annotations to replace open coded high-order kmalloc loops that have
+> > > been in place for a couple of decades without issues.
+> > > 
+> > > Personally I think that the way __GFP_NOFAIL is first of all
+> > > recommended over open coded loops and then only later found to be
+> > > effectively forbidden and needing to be replaced with open coded
+> > > loops to be a complete mess.
 > > 
-> > So, yeah, I suspect that if you change the mkfs parameters for the
-> > reaim tests to have more AGs and significantly increased log space
-> > over the defaults, the regression should disappear...
+> > Well, there are two things. Opencoding something that _can_ be replaced
+> > by __GFP_NOFAIL and those that cannot because the respective allocator
+> > doesn't really support that semantic. kvmalloc is explicit about that
+> > IIRC. If you have a better way to consolidate the documentation then I
+> > am all for it.
+> 
+> I think one thing that might help make the documentation better is to
+> explicitly state *why* __GFP_NOFAIL is better than a loop.
+> 
+> It occurs to me that
+>   while (!(p = kmalloc(sizeof(*p), GFP_KERNEL));
+> 
+> would behave much the same as adding __GFP_NOFAIL and dropping the
+> 'while'.  So why not? I certainly cannot see the need to add any delay
+> to this loop as kmalloc does a fair bit of sleeping when permitted.
+> 
+> I understand that __GFP_NOFAIL allows page_alloc to dip into reserves,
+> but Mel holds that up as a reason *not* to use __GFP_NOFAIL as it can
+> impact on other subsystems.
+
+__GFP_NOFAIL usage is a risk on its own. It is a hard requirement that
+the allocator cannot back off. So it has to absolutely everything to
+suceed. Whether it cheats and dips into reserves or not is a mere
+implementation detail and a subject to the specific implementation.
+
+> Why not just let the caller decide if they
+> deserve the boost, but oring in __GFP_ATOMIC or __GFP_MEMALLOC as
+> appropriate.
+
+They can do that. Explicit access to memory reserves is allowed unless
+it is explicitly forbidden by NOMEMALLOC flag.
+
+> I assume there is a good reason.  I vaguely remember the conversation
+> that lead to __GFP_NOFAIL being introduced.  I just cannot remember or
+> deduce what the reason is.  So it would be great to have it documented.
+
+The basic reason is that if the allocator knows this is must suceed
+allocation request then it can prioritize it in some way. A dumb kmalloc
+loop as you pictured it is likely much less optimal in that sense, isn't
+it? Compare that to mempool allocator which is non failing as well but
+it has some involved handling and that is certainly not a good fit for
+__GFP_NOFAIL in the page allocator.
+ 
+> > > Not to mention on the impossibility of using __GFP_NOFAIL with
+> > > kvmalloc() calls. Just what do we expect kmalloc_node(__GFP_NORETRY
+> > > | __GFP_NOFAIL) to do, exactly?
 > > 
-> > Can you run these experiments with reaim on your test machines and
-> > see if they are influenced by filesystem level concurrency
-> > parameters like AG count and log size as these tests suggest?
+> > This combination doesn't make any sense. Like others. Do you want us to
+> > list all combinations that make sense?
 > 
-> Thanks for the detailed analysis and suggestions. So here are some numbers
-> from my end. First, note that I've bumped number of unlinks each process
-> does from 100 to 1000 so that runtime on the test machine gets above 1s to
-> avoid some random noise. The relative slowdown (25%) didn't change (I did
-> it already yesterday but sent stress-unlink version without bumped up loop
-> count). Exact time to complete of stress-unlink are (from 5 runs):
+> I've been wondering about that.  There seem to be sets of flags that are
+> mutually exclusive.  It is as though gfp_t is a struct of a few enums.
 > 
-> (default mkfs params - agcount=4, logsize=223MB)
-> 	AVG	STDDEV
-> before	2.7952	0.022886
-> after		3.4746	0.025303
+> 0, DMA32, DMA, HIGHMEM
+> 0, FS, IO
+> 0, ATOMIC, MEMALLOC, NOMEMALLOC, HIGH
+> NORETRY, RETRY_MAYFAIL, 0, NOFAIL
+> 0, KSWAPD_RECLAIM, DIRECT_RECLAIM
+> 0, THISNODE, HARDWALL
 > 
-> I did also runs with increased AG count (to 96) and log size (to 512 MB).
-> The results are somewhat surprising:
+> In a few cases there seem to be 3 bits where there are only 4 possibly
+> combinations, so 2 bits would be enough.  There is probably no real
+> value is squeezing these into 2 bits, but clearly documenting the groups
+> surely wouldn't hurt.  Particularly highlighting the difference between
+> related bits would help.
+
+Don't we have that already? We have them grouped by placement,
+watermarks, reclaim and action modifiers. Then we have useful
+combinations. I believe we can always improve on that and I am always
+ready to listen here.
+
+> The set with  'ATOMIC' is hard to wrap my mind around.
+> They relate to ALLOC_HIGH and ALLOC_HARDER, but also to WMARK_NIN,
+> WMARK_LOW, WMARK_HIGH ... I think.
+
+ALLOC* and WMARK* is an internal allocator concept and I believe users
+of gfp flags shouldn't really care or even know those exist.
+
+> I wonder if FS,IO is really in the same set as DIRECT_RECLAIM as they
+> all affect reclaim.  Maybe FS and IO are only relevan if DIRECT_RECLAIM
+> is set?
+
+yes, this indeed the case. Page allocator doesn't go outside of its
+proper without the direct reclaim.
+
+> I'd love to know that to expect if neither RETRY_MAYFAIL or NOFAIL is
+> set.  I guess it can fail, but it still tries harder than if
+> RETRY_MAYFAIL is set....
+> Ahhhh...  I found some documentation which mentions
+
+The reclaim behavior is described along with the respective modifiers. I
+believe we can thank you for this structure as you were the primary
+driving force to clarify the behavior.
+
+> that RETRY_MAYFAIL
+> doesn't trigger the oom killer.  Is that it? So RETRY_NOKILLOOM might be
+> a better name?
+
+Again the those are implementation details and I am not sure we really
+want to bother users with all of them. This wold quickly become hairy
+and likely even outdated after some time. The documentation tries to
+describe different levels of involvement. NOWAIT - no direct reclaim,
+NORETRY - only a light attempt to reclaim, RETRY_MAYFAIL - try as hard
+as feasible, NOFAIL - cannot really fail.
+
+If we can improve the wording I am all for it.
+ 
+> > > So, effectively, we have to open-code around kvmalloc() in
+> > > situations where failure is not an option. Even if we pass
+> > > __GFP_NOFAIL to __vmalloc(), it isn't guaranteed to succeed because
+> > > of the "we won't honor gfp flags passed to __vmalloc" semantics it
+> > > has.
+> > 
+> > yes vmalloc doesn't support nofail semantic and it is not really trivial
+> > to craft it there.
+> > 
+> > > Even the API constaints of kvmalloc() w.r.t. only doing the vmalloc
+> > > fallback if the gfp context is GFP_KERNEL - we already do GFP_NOFS
+> > > kvmalloc via memalloc_nofs_save/restore(), so this behavioural
+> > > restriction w.r.t. gfp flags just makes no sense at all.
+> > 
+> > GFP_NOFS (without using the scope API) has the same problem as NOFAIL in
+> > the vmalloc. Hence it is not supported. If you use the scope API then
+> > you can GFP_KERNEL for kvmalloc. This is clumsy but I am not sure how to
+> > define these conditions in a more sensible way. Special case NOFS if the
+> > scope api is in use? Why do you want an explicit NOFS then?
 > 
-> (agcount=96, logsize=512MB)
-> 	AVG	STDDEV
-> before	3.1340	0.044168
-> after		3.3612	0.048412
+> It would seem to make sense for kvmalloc to WARN_ON if it is passed
+> flags that does not allow it to use vmalloc.
 
-You bumped the log size to 512MB, but then bumped the amount of work
-by a factor of 10....
+vmalloc is certainly not the hottest path in the kernel so I wouldn't be
+opposed. One should be careful that WARN_ON is effectively BUG_ON in
+some configurations but we are sinners from that perspective all over
+the place...
 
-> So the change did somewhat help the case with deferred inactivation however
-> it significantly hurt the kernel before deferred inactivation. Overall we
-> are still far from original performance. 
-> 
-> I had a look at xfs stats (full stats are attached for 4 different configs
-> - (before / after) * (defaults / high ag count)) and logging stats are
-> clearly different:
-> 
-> defaults-before:
-> log 4700 157590 0 48585 71854
-
-Fits in < 75% of log space, so will not be pushing out metadata at
-all during the test.
-
-> defaults-after:
-> log 10293 536643 6 48007 53762
-
-Overwrites the log 2.5x, so limited by metadata writeback speed for
-most of the test.
-
-> highag-before:
-> log 5933 233065 0 48000 58240
-
-Yup, workload is spread across 16x more AGs and AG metadata, so I'd
-expect to see such an increase in log throuhgput. But with a larger
-log, this won't be tail-pushing...
-
-> highag-after:
-> log 6789 303249 0 48155 53795
-
-And this is also under the tail-pushing threshold, so really the
-only difference in perf here comes from writing more metadata to
-the log.
-
-> We can see big differences in the amount of log writes as well as logged
-> blocks. defaults-before logged 76 MB, defaults-after logged 262 MB,
-> highag-before logged 113 MB, highag-after logged 148 MB. Given data writes
-> for this test are 750 MB (16k * 48 processes * 1000 loops), the difference
-> of 186 MB of log IO matches well with the observed difference in the amount
-> of writes in block traces.
-> 
-> I'm not sure why the amount of logged blocks differs so much.
-
-fsync() interactions.
-
-On the original code, the two unlink transactions are temporally
-adjacent as both are in unlinkat() syscall context.  One is directly
-run by the syscall, the other in task_run context at syscall exit
-when processing the last reference of the file being dropped.
-
-In general, that means the objects modified (inode cluster, AGI,
-inode, etc) are captured by the same CIL context and so aggregate in
-memory as a single change (essentially log dedupe). Then the next
-fsync() from some other context runs, pushing the CIL to disk and
-we only log those objects modified in unlink to the journal once.
-
-With deferred activation, the two phases of unlink are temporally
-decoupled. We get a bunch of inodes running the first phase in
-unlink() context, but the second phase is run later in a tight loop
-from workqueue context. But this means that fsync()s occur between
-the two pahses, and hence the objects modified in the two phases of
-unlink are modified in two separate CIL contexts. Hence they get
-written to the log twice.
-
-Depending on the way things work out, deferred inactivation also
-results in longer unlinked inode chains, resulting in more objects
-being logged per unlink than without deferred inactivation, as the
-inodes are added to the unlink chain and then immediately removed
-before any others are added. Hence deferred inode inactivation will
-increase the amount written to the log per unlink if the two phases
-of unlink as split across journal checkpoints.
-
-IOWs, an increase in log writes for open-write-fsync-close-unlink
-workloads is not unexpected. But this workload isn't really a real
-world workload in any way - we generally don't do data integrity
-writes only to immediately throw the data away. :/
-
-Remove the fsync and we do have a real world workload - temporary
-files for compiles, etc. Then everything should mostly get logged
-in the same CIL context because all transactions are run
-asynchronously and aggregate in memory until the CIL is full and
-checkpoints itself. Hence log writes shouldn't change very much at
-all for such workloads.
-
-> I didn't find
-> big difference between various configs in push_ail stats.  However I did
-> find notable differences in various btree stats:
-> 
-> defaults-before:
-> abtb2 99580 228864 15129 15129 0 0 0 0 0 0 0 0 0 0 49616
-> abtc2 229903 464130 96526 96526 0 0 0 0 0 0 0 0 0 0 299055
-> ibt2 96099 96096 3 3 0 0 0 0 0 0 0 0 0 0 0
-> fibt2 96099 96096 3 3 0 0 0 0 0 0 0 0 0 0 0
-> 
-> defaults-after:
-> abtb2 95532 400144 36596 36441 0 0 0 0 0 0 0 0 0 0 1421782
-> abtc2 157421 667273 61135 60980 0 0 0 0 0 0 0 0 0 0 1935106
-> ibt2 95420 220423 51 34 0 0 0 0 0 0 0 0 0 0 1
-> fibt2 131505 230219 7708 7691 0 0 0 0 0 0 0 0 0 0 40470
-
-Yup, the change in the finobt is indicative of slight changes in
-order of allocate/free of inodes. We're tracking a more free
-inode records because we aren't doing purely sequential inode
-allocation and freeing due to AGI contention managing the unlinked
-inode chain.
-
-IOWs, we've previously hyper-optimised create-unlink workloads to
-aggressively reuse inodes, and that resulted in rapid reuse of
-the unlinked inodes. That still happens, but deferred inactivation
-increases the pool of free inodes that is being cycled over by this
-workload. This reflects the per-ag contention occurring in this
-limited fs config - we're getting larger batches of unlinked inodes
-being chained on the AGs and so when they are freed we see more
-inodes being added to the finobt and then reallocated from there.
-
-I have plans to further decouple the unlinked AGI chain updates
-between the two phases of unlink that will help address this, but
-that is future work and not ready to go yet.
-
-> highag-before:
-> abtb2 120143 240191 24047 24047 0 0 0 0 0 0 0 0 0 0 0
-> abtc2 288334 456240 120143 120143 0 0 0 0 0 0 0 0 0 0 24051
-> ibt2 96143 96096 47 47 0 0 0 0 0 0 0 0 0 0 0
-> fibt2 96143 96096 47 47 0 0 0 0 0 0 0 0 0 0 0
-> 
-> highag-after:
-> abtb2 96903 205361 20137 20117 0 0 0 0 0 0 0 0 0 0 101850
-> abtc2 211742 433347 81617 81597 0 0 0 0 0 0 0 0 0 0 274068
-> ibt2 96083 96035 48 47 0 0 0 0 0 0 0 0 0 0 0
-> fibt2 96083 96035 48 47 0 0 0 0 0 0 0 0 0 0 0
-
-With this, we have no AGI contention to speak of between the two
-phases of unlink, so unlinked inode chains remain very short in both
-cases and so we don't see any change to finobt residency.
-
-Cheers,
-
-Dave.
+Thanks!
 -- 
-Dave Chinner
-david@fromorbit.com
+Michal Hocko
+SUSE Labs
