@@ -2,251 +2,232 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBD86C4332F
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Oct 2021 07:48:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D238C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Oct 2021 14:45:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A9C6D60FC3
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Oct 2021 07:48:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 31E8160F58
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Oct 2021 14:45:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232692AbhJHHuj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 8 Oct 2021 03:50:39 -0400
-Received: from smtp-out2.suse.de ([195.135.220.29]:43608 "EHLO
-        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229693AbhJHHuh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Oct 2021 03:50:37 -0400
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id 0BB751FD70;
-        Fri,  8 Oct 2021 07:48:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1633679321; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
+        id S230511AbhJHOrN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 8 Oct 2021 10:47:13 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:31123 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230468AbhJHOrN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Oct 2021 10:47:13 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1633704317;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=ZelD4w9CDZNOGwHQrpHZ9Ow+bu3ULaS3im3bY0kWS+Y=;
-        b=LOEmWf21Avco99a6kn/i9X+G9LI0yHaGGx7uXZgqQ0JWZ5cwogYhWkG1VS2c0mN/9U4m1v
-        BPuFaqnQvJSdwH5lxe0uHuZIqcXMd+ng0EfdoP/67WyjQs7UCqGqCesSj92C7alF7+wzZ+
-        0qEeyR1N9aO7eVwbG+9jtQO6mv2YyjE=
-Received: from suse.cz (unknown [10.100.201.86])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by relay2.suse.de (Postfix) with ESMTPS id AFD3DA3B89;
-        Fri,  8 Oct 2021 07:48:40 +0000 (UTC)
-Date:   Fri, 8 Oct 2021 09:48:39 +0200
-From:   Michal Hocko <mhocko@suse.com>
-To:     NeilBrown <neilb@suse.de>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Vlastimil Babka <vbabka@suse.cz>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Mel Gorman <mgorman@suse.de>, Jonathan Corbet <corbet@lwn.net>,
-        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-mm@kvack.org, linux-kernel@vger.kernel.org,
-        linux-doc@vger.kernel.org
-Subject: Re: [PATCH 2/6] MM: improve documentation for __GFP_NOFAIL
-Message-ID: <YV/31+qXwqEgaxJL@dhcp22.suse.cz>
-References: <163184698512.29351.4735492251524335974.stgit@noble.brown>
- <163184741778.29351.16920832234899124642.stgit@noble.brown>
- <b680fb87-439b-0ba4-cf9f-33d729f27941@suse.cz>
- <YVwyhDnE/HEnoLAi@dhcp22.suse.cz>
- <eba04a07-99da-771a-ab6b-36de41f9f120@suse.cz>
- <20211006231452.GF54211@dread.disaster.area>
- <YV7G7gyfZkmw7/Ae@dhcp22.suse.cz>
- <163364854551.31063.4377741712039731672@noble.neil.brown.name>
+        bh=TQw/iEj0zogFEo3yYkWuLcLKlstlVlPa71pjRUhE3M0=;
+        b=bgYdcpRwyO7Wdtg5msKZSO2O1/IeCxofa2A02r9U+fEAzXln8jltTaJkAN27oa9KOiT2Tb
+        R0JVDITU8fugfic9dQTep5luzr34Lk1RgEqWmDEgwBJ4lNJfq/MDNO9ajVa1g3YC2/HI4S
+        UZ8uEHy9OL2zb5+wpybZJfiwZDHOphI=
+Received: from mail-qk1-f198.google.com (mail-qk1-f198.google.com
+ [209.85.222.198]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-252-DB9ZnxxBOGuosT6PVNwJ9A-1; Fri, 08 Oct 2021 10:45:16 -0400
+X-MC-Unique: DB9ZnxxBOGuosT6PVNwJ9A-1
+Received: by mail-qk1-f198.google.com with SMTP id c16-20020a05620a0cf000b0045f1d55407aso3896064qkj.22
+        for <linux-xfs@vger.kernel.org>; Fri, 08 Oct 2021 07:45:16 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=TQw/iEj0zogFEo3yYkWuLcLKlstlVlPa71pjRUhE3M0=;
+        b=NRBz7FDO0Wlemh9EteMbyJfQ1MIAf/Ovf28RQHF04pC2hHoDMtmJxc8P2IYg23alxP
+         Q+9B9FR5qKlQu1Fj4yPAigH/ydxMEKwVR2r7dRf1t7WIcHY00wZVh2DnKRjb5Gu3bQOJ
+         dmVcgd2JcfeRPq/6YW0P6oBi6yXTGsEHB+tZztu8Qm9uCcYIcmVNjRd34f9xEsIUUYLy
+         1AosCXJAYEbp3nqlxLhYWhe1Jt5C2KMmWTisU8funHw80cNXBxxVKqztqNWRDfMjJyk0
+         gaabotkO7ijKLIqe3Qf/wkaduGiVLRgYcEoIKqBoGFGRbAoC2vqBt/PQjQERkXknp+Iw
+         aJKQ==
+X-Gm-Message-State: AOAM530qjUOn+1QafNV06yXkhi3OYKAopKlLKcrBcf8o+Man7jNNoUdT
+        AE93wyZMKKVB0Jd0W/uWpysIUSsFYysSkDsHE7uPPLPBT4voJW2SvsClcreglV/AL9RijTbngTb
+        Qsl7FNdyRrieIpiWiWdGy
+X-Received: by 2002:a37:9244:: with SMTP id u65mr3376823qkd.46.1633704315820;
+        Fri, 08 Oct 2021 07:45:15 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJxZF52Q4oXawdJ+Z2uyZghINdIkACU6pGve4rT2CLfpAtlu/bTUnvLVV7HWreV9KFYM+CaMfw==
+X-Received: by 2002:a37:9244:: with SMTP id u65mr3376797qkd.46.1633704315518;
+        Fri, 08 Oct 2021 07:45:15 -0700 (PDT)
+Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
+        by smtp.gmail.com with ESMTPSA id w7sm2496428qtc.29.2021.10.08.07.45.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 08 Oct 2021 07:45:15 -0700 (PDT)
+Date:   Fri, 8 Oct 2021 10:45:13 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/3] xfs: terminate perag iteration reliably on end agno
+Message-ID: <YWBZef87p55+XKNh@bfoster>
+References: <20211007125053.1096868-1-bfoster@redhat.com>
+ <20211007125053.1096868-4-bfoster@redhat.com>
+ <20211007230259.GG54211@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <163364854551.31063.4377741712039731672@noble.neil.brown.name>
+In-Reply-To: <20211007230259.GG54211@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri 08-10-21 10:15:45, Neil Brown wrote:
-> On Thu, 07 Oct 2021, Michal Hocko wrote:
-> > On Thu 07-10-21 10:14:52, Dave Chinner wrote:
-> > > On Tue, Oct 05, 2021 at 02:27:45PM +0200, Vlastimil Babka wrote:
-> > > > On 10/5/21 13:09, Michal Hocko wrote:
-> > > > > On Tue 05-10-21 11:20:51, Vlastimil Babka wrote:
-> > > > > [...]
-> > > > >> > --- a/include/linux/gfp.h
-> > > > >> > +++ b/include/linux/gfp.h
-> > > > >> > @@ -209,7 +209,11 @@ struct vm_area_struct;
-> > > > >> >   * used only when there is no reasonable failure policy) but it is
-> > > > >> >   * definitely preferable to use the flag rather than opencode endless
-> > > > >> >   * loop around allocator.
-> > > > >> > - * Using this flag for costly allocations is _highly_ discouraged.
-> > > > >> > + * Use of this flag may lead to deadlocks if locks are held which would
-> > > > >> > + * be needed for memory reclaim, write-back, or the timely exit of a
-> > > > >> > + * process killed by the OOM-killer.  Dropping any locks not absolutely
-> > > > >> > + * needed is advisable before requesting a %__GFP_NOFAIL allocate.
-> > > > >> > + * Using this flag for costly allocations (order>1) is _highly_ discouraged.
-> > > > >> 
-> > > > >> We define costly as 3, not 1. But sure it's best to avoid even order>0 for
-> > > > >> __GFP_NOFAIL. Advising order>1 seems arbitrary though?
-> > > > > 
-> > > > > This is not completely arbitrary. We have a warning for any higher order
-> > > > > allocation.
-> > > > > rmqueue:
-> > > > > 	WARN_ON_ONCE((gfp_flags & __GFP_NOFAIL) && (order > 1));
-> > > > 
-> > > > Oh, I missed that.
-> > > > 
-> > > > > I do agree that "Using this flag for higher order allocations is
-> > > > > _highly_ discouraged.
-> > > > 
-> > > > Well, with the warning in place this is effectively forbidden, not just
-> > > > discouraged.
-> > > 
-> > > Yup, especially as it doesn't obey __GFP_NOWARN.
-> > > 
-> > > See commit de2860f46362 ("mm: Add kvrealloc()") as a direct result
-> > > of unwittingly tripping over this warning when adding __GFP_NOFAIL
-> > > annotations to replace open coded high-order kmalloc loops that have
-> > > been in place for a couple of decades without issues.
-> > > 
-> > > Personally I think that the way __GFP_NOFAIL is first of all
-> > > recommended over open coded loops and then only later found to be
-> > > effectively forbidden and needing to be replaced with open coded
-> > > loops to be a complete mess.
+On Fri, Oct 08, 2021 at 10:02:59AM +1100, Dave Chinner wrote:
+> On Thu, Oct 07, 2021 at 08:50:53AM -0400, Brian Foster wrote:
+> > The for_each_perag*() set of macros are hacky in that some (i.e. those
+> > based on sb_agcount) rely on the assumption that perag iteration
+> > terminates naturally with a NULL perag at the specified end agno. Others
+> > allow for the final AG to have a valid perag and require the calling
+> > function to clean up any potential leftover xfs_perag reference on
+> > termination of the loop.
 > > 
-> > Well, there are two things. Opencoding something that _can_ be replaced
-> > by __GFP_NOFAIL and those that cannot because the respective allocator
-> > doesn't really support that semantic. kvmalloc is explicit about that
-> > IIRC. If you have a better way to consolidate the documentation then I
-> > am all for it.
-> 
-> I think one thing that might help make the documentation better is to
-> explicitly state *why* __GFP_NOFAIL is better than a loop.
-> 
-> It occurs to me that
->   while (!(p = kmalloc(sizeof(*p), GFP_KERNEL));
-> 
-> would behave much the same as adding __GFP_NOFAIL and dropping the
-> 'while'.  So why not? I certainly cannot see the need to add any delay
-> to this loop as kmalloc does a fair bit of sleeping when permitted.
-> 
-> I understand that __GFP_NOFAIL allows page_alloc to dip into reserves,
-> but Mel holds that up as a reason *not* to use __GFP_NOFAIL as it can
-> impact on other subsystems.
-
-__GFP_NOFAIL usage is a risk on its own. It is a hard requirement that
-the allocator cannot back off. So it has to absolutely everything to
-suceed. Whether it cheats and dips into reserves or not is a mere
-implementation detail and a subject to the specific implementation.
-
-> Why not just let the caller decide if they
-> deserve the boost, but oring in __GFP_ATOMIC or __GFP_MEMALLOC as
-> appropriate.
-
-They can do that. Explicit access to memory reserves is allowed unless
-it is explicitly forbidden by NOMEMALLOC flag.
-
-> I assume there is a good reason.  I vaguely remember the conversation
-> that lead to __GFP_NOFAIL being introduced.  I just cannot remember or
-> deduce what the reason is.  So it would be great to have it documented.
-
-The basic reason is that if the allocator knows this is must suceed
-allocation request then it can prioritize it in some way. A dumb kmalloc
-loop as you pictured it is likely much less optimal in that sense, isn't
-it? Compare that to mempool allocator which is non failing as well but
-it has some involved handling and that is certainly not a good fit for
-__GFP_NOFAIL in the page allocator.
- 
-> > > Not to mention on the impossibility of using __GFP_NOFAIL with
-> > > kvmalloc() calls. Just what do we expect kmalloc_node(__GFP_NORETRY
-> > > | __GFP_NOFAIL) to do, exactly?
+> > Aside from providing a subtly inconsistent interface, the former variant
+> > is racy with a potential growfs in progress because growfs can create
+> > discoverable post-eofs perags before the final superblock update that
+> > completes the grow operation and increases sb_agcount. This leads to
+> > unexpected assert failures (reproduced by xfs/104) such as the following
+> > in the superblock buffer write verifier path:
 > > 
-> > This combination doesn't make any sense. Like others. Do you want us to
-> > list all combinations that make sense?
+> >  XFS: Assertion failed: agno < mp->m_sb.sb_agcount, file: fs/xfs/libxfs/xfs_types.c, line: 22
 > 
-> I've been wondering about that.  There seem to be sets of flags that are
-> mutually exclusive.  It is as though gfp_t is a struct of a few enums.
+> Yeah, that's a bad assert. It's not valid in the context of grow or
+> shrink or any of the future advanced per-ag management things we
+> want to do.
 > 
-> 0, DMA32, DMA, HIGHMEM
-> 0, FS, IO
-> 0, ATOMIC, MEMALLOC, NOMEMALLOC, HIGH
-> NORETRY, RETRY_MAYFAIL, 0, NOFAIL
-> 0, KSWAPD_RECLAIM, DIRECT_RECLAIM
-> 0, THISNODE, HARDWALL
+
+I think it depends on the context. I don't think it's unreasonable to
+expect certain paths to not want to process post-eofs perags. I don't
+really like the placement of this assert tbh (with it being in a generic
+helper) and the sb write verifier is probably not ideal context for the
+check in a generic sense, but it does flag unexpected behavior when you
+consider the higher level iteration is based on sb_agcount.
+
+> I'm ok with the change being proposed as a expedient bug fix, but
+> I'll note that the approach taken to fix it is not compatible with
+> future plans for managing shrink and perag operations. I'll comment
+> on the patch first, then the rest of the email is commentary about
+> how xfs_perag_get() is intended to be used...
 > 
-> In a few cases there seem to be 3 bits where there are only 4 possibly
-> combinations, so 2 bits would be enough.  There is probably no real
-> value is squeezing these into 2 bits, but clearly documenting the groups
-> surely wouldn't hurt.  Particularly highlighting the difference between
-> related bits would help.
+> > diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
+> > index d05c9217c3af..edcdd4fbc225 100644
+> > --- a/fs/xfs/libxfs/xfs_ag.h
+> > +++ b/fs/xfs/libxfs/xfs_ag.h
+> > @@ -116,34 +116,30 @@ void xfs_perag_put(struct xfs_perag *pag);
+> >  
+> >  /*
+> >   * Perag iteration APIs
+> > - *
+> > - * XXX: for_each_perag_range() usage really needs an iterator to clean up when
+> > - * we terminate at end_agno because we may have taken a reference to the perag
+> > - * beyond end_agno. Right now callers have to be careful to catch and clean that
+> > - * up themselves. This is not necessary for the callers of for_each_perag() and
+> > - * for_each_perag_from() because they terminate at sb_agcount where there are
+> > - * no perag structures in tree beyond end_agno.
+> 
+> We still really need an iterator for the range iterations so that we
+> can have a consistent set of behaviours for all iterations and
+> don't need a special case just for the "mid walk break" where the
+> code keeps the active reference to the perag for itself...
+> 
 
-Don't we have that already? We have them grouped by placement,
-watermarks, reclaim and action modifiers. Then we have useful
-combinations. I believe we can always improve on that and I am always
-ready to listen here.
+Ok, but what exactly are you referring to by "an iterator" beyond what
+we have here to this point? A walker function with a callback or
+something? And why wouldn't we have done that in the first place instead
+of introducing the API wart documented above?
 
-> The set with  'ATOMIC' is hard to wrap my mind around.
-> They relate to ALLOC_HIGH and ALLOC_HARDER, but also to WMARK_NIN,
-> WMARK_LOW, WMARK_HIGH ... I think.
+> >   */
+> >  static inline
+> >  struct xfs_perag *xfs_perag_next(
+> >  	struct xfs_perag	*pag,
+> > -	xfs_agnumber_t		*agno)
+> > +	xfs_agnumber_t		*agno,
+> > +	xfs_agnumber_t		end_agno)
+> >  {
+> >  	struct xfs_mount	*mp = pag->pag_mount;
+> >  
+> >  	*agno = pag->pag_agno + 1;
+> >  	xfs_perag_put(pag);
+> > -	pag = xfs_perag_get(mp, *agno);
+> > +	pag = NULL;
+> > +	if (*agno <= end_agno)
+> > +		pag = xfs_perag_get(mp, *agno);
+> >  	return pag;
+> 
+> 	*agno = pag->pag_agno + 1;
+> 	xfs_perag_put(pag);
+> 	if (*agno > end_agno)
+> 		return NULL;
+> 	return xfs_perag_get(mp, *agno);
+> 
 
-ALLOC* and WMARK* is an internal allocator concept and I believe users
-of gfp flags shouldn't really care or even know those exist.
+Will fix.
 
-> I wonder if FS,IO is really in the same set as DIRECT_RECLAIM as they
-> all affect reclaim.  Maybe FS and IO are only relevan if DIRECT_RECLAIM
-> is set?
+> >  }
+> >  
+> >  #define for_each_perag_range(mp, agno, end_agno, pag) \
+> >  	for ((pag) = xfs_perag_get((mp), (agno)); \
+> > -		(pag) != NULL && (agno) <= (end_agno); \
+> > -		(pag) = xfs_perag_next((pag), &(agno)))
+> > +		(pag) != NULL; \
+> > +		(pag) = xfs_perag_next((pag), &(agno), (end_agno)))
+> >  
+> >  #define for_each_perag_from(mp, agno, pag) \
+> > -	for_each_perag_range((mp), (agno), (mp)->m_sb.sb_agcount, (pag))
+> > +	for_each_perag_range((mp), (agno), (mp)->m_sb.sb_agcount - 1, (pag))
+> 
+> Isn't this one line the entire bug fix right here? i.e. the
+> factoring is largely unnecessary, the grow race bug is fixed by just
+> this one-liner?
+> 
 
-yes, this indeed the case. Page allocator doesn't go outside of its
-proper without the direct reclaim.
+No, the reference count problems can still occur regardless of this
+particular change.
 
-> I'd love to know that to expect if neither RETRY_MAYFAIL or NOFAIL is
-> set.  I guess it can fail, but it still tries harder than if
-> RETRY_MAYFAIL is set....
-> Ahhhh...  I found some documentation which mentions
-
-The reclaim behavior is described along with the respective modifiers. I
-believe we can thank you for this structure as you were the primary
-driving force to clarify the behavior.
-
-> that RETRY_MAYFAIL
-> doesn't trigger the oom killer.  Is that it? So RETRY_NOKILLOOM might be
-> a better name?
-
-Again the those are implementation details and I am not sure we really
-want to bother users with all of them. This wold quickly become hairy
-and likely even outdated after some time. The documentation tries to
-describe different levels of involvement. NOWAIT - no direct reclaim,
-NORETRY - only a light attempt to reclaim, RETRY_MAYFAIL - try as hard
-as feasible, NOFAIL - cannot really fail.
-
-If we can improve the wording I am all for it.
- 
-> > > So, effectively, we have to open-code around kvmalloc() in
-> > > situations where failure is not an option. Even if we pass
-> > > __GFP_NOFAIL to __vmalloc(), it isn't guaranteed to succeed because
-> > > of the "we won't honor gfp flags passed to __vmalloc" semantics it
-> > > has.
+...
+> 
+> > The following assert failure occasionally triggers during the xfs_perag
+> > free path on unmount, presumably because one of the many
+> > for_each_perag() loops in the code that is expected to terminate with a
+> > NULL pag raced with a growfs and actually terminated with a non-NULL
+> > reference to post-eofs (at the time) perag.
 > > 
-> > yes vmalloc doesn't support nofail semantic and it is not really trivial
-> > to craft it there.
+> >  XFS: Assertion failed: atomic_read(&pag->pag_ref) == 0, file: fs/xfs/libxfs/xfs_ag.c, line: 195
 > > 
-> > > Even the API constaints of kvmalloc() w.r.t. only doing the vmalloc
-> > > fallback if the gfp context is GFP_KERNEL - we already do GFP_NOFS
-> > > kvmalloc via memalloc_nofs_save/restore(), so this behavioural
-> > > restriction w.r.t. gfp flags just makes no sense at all.
-> > 
-> > GFP_NOFS (without using the scope API) has the same problem as NOFAIL in
-> > the vmalloc. Hence it is not supported. If you use the scope API then
-> > you can GFP_KERNEL for kvmalloc. This is clumsy but I am not sure how to
-> > define these conditions in a more sensible way. Special case NOFS if the
-> > scope api is in use? Why do you want an explicit NOFS then?
+> > Rework the lower level perag iteration logic to explicitly terminate
+> > on the specified end agno, not implicitly rely on pag == NULL as a
+> > termination clause and thus avoid these problems.
 > 
-> It would seem to make sense for kvmalloc to WARN_ON if it is passed
-> flags that does not allow it to use vmalloc.
+> IMO, this just hides the symptom that results from code that isn't
+> handling unexpected adverse loop termination correctly. The
+> iterators are going to get more complex in the near future, so we
+> really need them to have a robust iterator API that does all the
+> cleanup work correctly, rather than try to hide it all in a
+> increasingly complex for loop construct.
+> 
 
-vmalloc is certainly not the hottest path in the kernel so I wouldn't be
-opposed. One should be careful that WARN_ON is effectively BUG_ON in
-some configurations but we are sinners from that perspective all over
-the place...
+Any loop that uses one of the sb_agcount based iteration macros in a
+context that can race with growfs and doesn't check pag != NULL post
+loop is not handling loop termination correctly. The sb_agcount check
+effectively builds in an early termination vector to every such usage,
+because we can't guarantee that pag == NULL when the sb_agcount check
+causes loop termination.
 
-Thanks!
--- 
-Michal Hocko
-SUSE Labs
+IOW, the following usage pattern documented in the comment above is not
+universally correct/safe:
+
+	for_each_perag(...) {
+		/* no early termination */
+	}
+	/* no perag check because no early termination */
+
+... because for_each_perag() is not implemented correctly to guarantee
+that pag == NULL on exit of the loop. This is a simple logic bug with a
+simple fix.
+
+Brian
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+
