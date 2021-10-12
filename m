@@ -2,84 +2,90 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 958F1C433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Oct 2021 19:05:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA8C5C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Oct 2021 19:08:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6E505610CC
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Oct 2021 19:05:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AC2BC60F3A
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Oct 2021 19:08:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231586AbhJLTHP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Oct 2021 15:07:15 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59678 "EHLO mail.kernel.org"
+        id S232654AbhJLTKY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Oct 2021 15:10:24 -0400
+Received: from mail.kernel.org ([198.145.29.99]:33398 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234764AbhJLTFb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 12 Oct 2021 15:05:31 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id CC15E60E09;
-        Tue, 12 Oct 2021 19:03:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
-        s=korg; t=1634065405;
-        bh=41ZgXWvJqX6cNDtIQEONvKgmB5mmWoA3gdKQ9esdOVk=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=0blFRlQK51dgu5FJKOqFr1L6t3mVBbILK25yhOQvYbDuiPk4p/Xlmnu0gZa3KlXFG
-         piH0prBBWaQ3m2nPz29jPiijWku3bv4yF077HespUJB5jDIWOWf1wBVn/h4JIWCJTW
-         NDX7+IpzU2qmix0bc6QUcCtixPz37PA42oiuSsT8=
-Date:   Tue, 12 Oct 2021 12:03:22 -0700
-From:   Andrew Morton <akpm@linux-foundation.org>
-To:     Jason Gunthorpe <jgg@nvidia.com>
-Cc:     Alex Sierra <alex.sierra@amd.com>, Felix.Kuehling@amd.com,
-        linux-mm@kvack.org, rcampbell@nvidia.com,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        hch@lst.de, jglisse@redhat.com, apopple@nvidia.com
-Subject: Re: [PATCH v1 00/12] MEMORY_DEVICE_COHERENT for CPU-accessible
- coherent device memory
-Message-Id: <20211012120322.224d88dad0188160a40dd615@linux-foundation.org>
-In-Reply-To: <20211012185629.GZ2744544@nvidia.com>
-References: <20211012171247.2861-1-alex.sierra@amd.com>
-        <20211012113957.53f05928dd60f3686331fede@linux-foundation.org>
-        <20211012185629.GZ2744544@nvidia.com>
-X-Mailer: Sylpheed 3.5.1 (GTK+ 2.24.31; x86_64-pc-linux-gnu)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+        id S231751AbhJLTKY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 12 Oct 2021 15:10:24 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 94BFA601FA;
+        Tue, 12 Oct 2021 19:08:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1634065702;
+        bh=xOsh0JSmkemRR5j1SF7p4r6ObbaUNKO/TXYXQqJydek=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ifFDF/Zcnh7mo+8rlB+3RqUQs9SXYjw9ODVyRO7Wkx9LlmtfW0bqNgh7vsBhpIQ8m
+         arjY4H3UYEj76wxHAhPvFPmqUSEnr2MURVBWk82ShY3SD1+nBLYHJFRTClKReFCK+w
+         atpewWtdSwIqlT0/eGWSS6J4Mq2cEN4JdX7U2lM/jAzYiIIN0s6xOFY0kGDJzddDnS
+         /8xvRwWdFhruVR3L6VOeOP7Abitg5Oo7+GbP8M45G8zDyuCxRhpfrxYYMVfPZEtEwB
+         IE88W0G9KjUhsEI3Q2JgOzFA9uuZXbNAJTfR/gXx2XdcxN5RYYtSXVTLua9uulrnzT
+         LtbFI3YBe4AbA==
+Date:   Tue, 12 Oct 2021 12:08:22 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2 3/4] xfs: terminate perag iteration reliably on agcount
+Message-ID: <20211012190822.GN24307@magnolia>
+References: <20211012165203.1354826-1-bfoster@redhat.com>
+ <20211012165203.1354826-4-bfoster@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20211012165203.1354826-4-bfoster@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, 12 Oct 2021 15:56:29 -0300 Jason Gunthorpe <jgg@nvidia.com> wrote:
+On Tue, Oct 12, 2021 at 12:52:02PM -0400, Brian Foster wrote:
+> The for_each_perag_from() iteration macro relies on sb_agcount to
+> process every perag currently within EOFS from a given starting
+> point. It's perfectly valid to have perag structures beyond
+> sb_agcount, however, such as if a growfs is in progress. If a perag
+> loop happens to race with growfs in this manner, it will actually
+> attempt to process the post-EOFS perag where ->pag_agno ==
+> sb_agcount. This is reproduced by xfs/104 and manifests as the
+> following assert failure in superblock write verifier context:
+> 
+>  XFS: Assertion failed: agno < mp->m_sb.sb_agcount, file: fs/xfs/libxfs/xfs_types.c, line: 22
+> 
+> Update the corresponding macro to only process perags that are
+> within the current sb_agcount.
 
-> > To what other uses will this infrastructure be put?
-> > 
-> > Because I must ask: if this feature is for one single computer which
-> > presumably has a custom kernel, why add it to mainline Linux?
-> 
-> Well, it certainly isn't just "one single computer". Overall I know of
-> about, hmm, ~10 *datacenters* worth of installations that are using
-> similar technology underpinnings.
-> 
-> "Frontier" is the code name for a specific installation but as the
-> technology is proven out there will be many copies made of that same
-> approach.
-> 
-> The previous program "Summit" was done with NVIDIA GPUs and PowerPC
-> CPUs and also included a very similar capability. I think this is a
-> good sign that this coherently attached accelerator will continue to
-> be a theme in computing going foward. IIRC this was done using out of
-> tree kernel patches and NUMA localities.
-> 
-> Specifically with CXL now being standardized and on a path to ubiquity
-> I think we will see an explosion in deployments of coherently attached
-> accelerator memory. This is the high end trickling down to wider
-> usage.
-> 
-> I strongly think many CXL accelerators are going to want to manage
-> their on-accelerator memory in this way as it makes universal sense to
-> want to carefully manage memory access locality to optimize for
-> performance.
+Does this need a Fixes: tag?
 
-Thanks.  Can we please get something like the above into the [0/n]
-changelog?  Along with any other high-level info which is relevant?
+Also ... should we be checking for agno <= agcount-1 for the initial
+xfs_perag_get in the first for loop clause of for_each_perag_range?
+I /think/ the answer is that the current users are careful enough to
+check that race, but I haven't looked exhaustively.
 
-It's rather important.  "why should I review this", "why should we
-merge this", etc.
+Welcome back, by the way. :)
 
+--D
+
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_ag.h | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
+> index cf8baae2ba18..b8cc5017efba 100644
+> --- a/fs/xfs/libxfs/xfs_ag.h
+> +++ b/fs/xfs/libxfs/xfs_ag.h
+> @@ -142,7 +142,7 @@ struct xfs_perag *xfs_perag_next(
+>  		(pag) = xfs_perag_next((pag), &(agno)))
+>  
+>  #define for_each_perag_from(mp, agno, pag) \
+> -	for_each_perag_range((mp), (agno), (mp)->m_sb.sb_agcount, (pag))
+> +	for_each_perag_range((mp), (agno), (mp)->m_sb.sb_agcount - 1, (pag))
+>  
+>  
+>  #define for_each_perag(mp, agno, pag) \
+> -- 
+> 2.31.1
+> 
