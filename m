@@ -2,38 +2,38 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81376C433FE
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Oct 2021 23:32:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5959C433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Oct 2021 23:32:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6907460E53
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Oct 2021 23:32:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AF5F760ED4
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Oct 2021 23:32:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236010AbhJLXeg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Oct 2021 19:34:36 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48048 "EHLO mail.kernel.org"
+        id S235541AbhJLXem (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Oct 2021 19:34:42 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48086 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235541AbhJLXeg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 12 Oct 2021 19:34:36 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 1603160EBB;
-        Tue, 12 Oct 2021 23:32:34 +0000 (UTC)
+        id S234169AbhJLXel (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 12 Oct 2021 19:34:41 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8D6DA60E53;
+        Tue, 12 Oct 2021 23:32:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1634081554;
-        bh=FSlTtdgOJH664EgEf4aLJtetr6P2fOJIEdqzi0mkG/Q=;
-        h=Subject:From:To:Cc:Date:From;
-        b=LgqnwqP/X90UCsDZ27HM37mNuuplLGIc0WcwZMId36HSNzB//T7LFOtd5ga/JWr/L
-         BcHv/IGGrHkbGf5gWg1xpj+896zl9sb4Nk25kJxNheoKH1Us4QMwhhbQkzWxL/i6Fa
-         2D/Gqzcw+FSmni2QFZpgQKhdNMzgPgYS58tHzhGRQJMwyWWsg7g2k6zjPcPnCJf29E
-         U/TXHkJi3yyRg35k3Qa+5mo4t3c/MuOqSnIb6/i2MNX4fM+CwNGzCSVSroE8eTOGDC
-         VNWAKcVom1gV8wEuybtPw5UyqU7fpk1FboOL63ZF+hRBSZf3MmcISmlieZc4TP0LXA
-         CGrQf5RgU2M+w==
-Subject: [PATCHSET v3 00/15] xfs: support dynamic btree cursor height
+        s=k20201202; t=1634081559;
+        bh=4F6K/QG6wH1qhqYOUuEKtyGHLGPZG8SV64N8qHlbXWI=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=uG0MrFBDa+CFdsTIq12y/sAm1Mgr2CvOQ6JDPUld2koLZzu2aJ0WR5JY9XFBoky8m
+         e0+NBgFADCXer7su+AApDxQaijpyLK0l+7YTs31s+SeBTkKZY/0YlLMnvX/cg82Rif
+         HguaivSCZ17IOiVghg0Xk5HUJKwUFuFwoXJFrcYc3DylJL/u6ilDWqZy50XMhppbU8
+         5gci9mVzA94GllI5fqcDY8WjXJ6Md5RnC6bWKQDpyjBvpn8Ov3ZzXua4tde1fOExXa
+         /V+a0swCtiNLjbHrCyZ/LX+D7jzZpqYHGs+afQRCfDX5KKihGN1Z2ZtlVJwU7eBoIp
+         MuKGinsB5quug==
+Subject: [PATCH 01/15] xfs: remove xfs_btree_cur.bc_blocklog
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, david@fromorbit.com
-Cc:     Chandan Babu R <chandan.babu@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        chandan.babu@oracle.com, hch@lst.de
-Date:   Tue, 12 Oct 2021 16:32:33 -0700
-Message-ID: <163408155346.4151249.8364703447365270670.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org, chandan.babu@oracle.com, hch@lst.de
+Date:   Tue, 12 Oct 2021 16:32:39 -0700
+Message-ID: <163408155929.4151249.7734053676233395860.stgit@magnolia>
+In-Reply-To: <163408155346.4151249.8364703447365270670.stgit@magnolia>
+References: <163408155346.4151249.8364703447365270670.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -42,96 +42,92 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-In what's left of this series, we rearrange the incore btree cursor so
-that we can support btrees of any height.  This will become necessary
-for realtime rmap and reflink since we'd like to handle tall trees
-without bloating the AG btree cursors.
+This field isn't used by anyone, so get rid of it.
 
-Chandan Babu pointed out that his large extent counters series depends
-on the ability to have btree cursors of arbitrary heights, so I've
-ported this to 5.15-rc4 so his patchsets won't have to depend on
-djwong-dev for submission.
-
-Following the review discussions about the dynamic btree cursor height
-patches, I've throw together another series to reduce the size of the
-btree cursor, compute the absolute maximum possible btree heights for
-each btree type, and now each btree cursor has its own slab cache:
-
-$ grep xfs.*cur /proc/slabinfo
-xfs_refcbt_cur 0 0 200 20 1 : tunables 0 0 0 : slabdata 4 4 0
-xfs_rmapbt_cur 0 0 248 16 1 : tunables 0 0 0 : slabdata 4 4 0
-xfs_bmbt_cur   0 0 248 16 1 : tunables 0 0 0 : slabdata 4 4 0
-xfs_inobt_cur  0 0 216 18 1 : tunables 0 0 0 : slabdata 4 4 0
-xfs_bnobt_cur  0 0 216 18 1 : tunables 0 0 0 : slabdata 4 4 0
-
-I've also rigged up the debugger to make it easier to extract the actual
-height information:
-
-$ xfs_db /dev/sda -c 'btheight -w absmax all'
-bnobt: 7
-cntbt: 7
-inobt: 7
-finobt: 7
-bmapbt: 9
-refcountbt: 6
-rmapbt: 9
-
-As you can see from the slabinfo output, this no longer means that we're
-allocating 224-byte cursors for all five btree types.  Even with the
-extra overhead of supporting dynamic cursor sizes and per-btree caches,
-we still come out ahead in terms of cursor size for three of the five
-btree types.
-
-This series now also includes a couple of patches to reduce holes and
-unnecessary fields in the btree cursor.
-
-v2: reduce scrub btree checker memory footprint even more, put the one
-    fixpatch first, use struct_size, fix 80col problems, move all the
-    btree cache work to a separate series
-v3: rebase to 5.15-rc4, fold in the per-btree cursor cache patches,
-    remove all the references to "zones" since they're called "caches"
-    in Linux
-
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
-
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=btree-dynamic-depth-5.16
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_ag_resv.c        |   18 ++
- fs/xfs/libxfs/xfs_alloc.c          |    7 +
- fs/xfs/libxfs/xfs_alloc_btree.c    |   39 ++++-
- fs/xfs/libxfs/xfs_alloc_btree.h    |    5 +
- fs/xfs/libxfs/xfs_bmap.c           |   13 +-
- fs/xfs/libxfs/xfs_bmap_btree.c     |   41 +++++
- fs/xfs/libxfs/xfs_bmap_btree.h     |    5 +
- fs/xfs/libxfs/xfs_btree.c          |  270 +++++++++++++++++++++++-------------
- fs/xfs/libxfs/xfs_btree.h          |   79 ++++++++---
- fs/xfs/libxfs/xfs_btree_staging.c  |   10 +
- fs/xfs/libxfs/xfs_fs.h             |    2 
- fs/xfs/libxfs/xfs_ialloc.c         |    1 
- fs/xfs/libxfs/xfs_ialloc_btree.c   |   46 +++++-
- fs/xfs/libxfs/xfs_ialloc_btree.h   |    5 +
- fs/xfs/libxfs/xfs_refcount_btree.c |   46 +++++-
- fs/xfs/libxfs/xfs_refcount_btree.h |    5 +
- fs/xfs/libxfs/xfs_rmap_btree.c     |  108 +++++++++++---
- fs/xfs/libxfs/xfs_rmap_btree.h     |    5 +
- fs/xfs/libxfs/xfs_trans_resv.c     |   13 ++
- fs/xfs/libxfs/xfs_trans_space.h    |    7 +
- fs/xfs/scrub/bitmap.c              |   22 +--
- fs/xfs/scrub/bmap.c                |    2 
- fs/xfs/scrub/btree.c               |   77 +++++-----
- fs/xfs/scrub/btree.h               |   13 +-
- fs/xfs/scrub/trace.c               |    7 +
- fs/xfs/scrub/trace.h               |   10 +
- fs/xfs/xfs_super.c                 |   53 ++++++-
- fs/xfs/xfs_trace.h                 |    2 
- 28 files changed, 660 insertions(+), 251 deletions(-)
+ fs/xfs/libxfs/xfs_alloc_btree.c    |    1 -
+ fs/xfs/libxfs/xfs_bmap_btree.c     |    1 -
+ fs/xfs/libxfs/xfs_btree.h          |    1 -
+ fs/xfs/libxfs/xfs_ialloc_btree.c   |    2 --
+ fs/xfs/libxfs/xfs_refcount_btree.c |    1 -
+ fs/xfs/libxfs/xfs_rmap_btree.c     |    1 -
+ 6 files changed, 7 deletions(-)
+
+
+diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
+index 6746fd735550..152ed2a202f4 100644
+--- a/fs/xfs/libxfs/xfs_alloc_btree.c
++++ b/fs/xfs/libxfs/xfs_alloc_btree.c
+@@ -482,7 +482,6 @@ xfs_allocbt_init_common(
+ 	cur->bc_tp = tp;
+ 	cur->bc_mp = mp;
+ 	cur->bc_btnum = btnum;
+-	cur->bc_blocklog = mp->m_sb.sb_blocklog;
+ 	cur->bc_ag.abt.active = false;
+ 
+ 	if (btnum == XFS_BTNUM_CNT) {
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+index 72444b8b38a6..a43dea8d6a65 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.c
++++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+@@ -558,7 +558,6 @@ xfs_bmbt_init_cursor(
+ 	cur->bc_mp = mp;
+ 	cur->bc_nlevels = be16_to_cpu(ifp->if_broot->bb_level) + 1;
+ 	cur->bc_btnum = XFS_BTNUM_BMAP;
+-	cur->bc_blocklog = mp->m_sb.sb_blocklog;
+ 	cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_bmbt_2);
+ 
+ 	cur->bc_ops = &xfs_bmbt_ops;
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index 513ade4a89f8..49ecc496238f 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -229,7 +229,6 @@ struct xfs_btree_cur
+ #define	XFS_BTCUR_LEFTRA	1	/* left sibling has been read-ahead */
+ #define	XFS_BTCUR_RIGHTRA	2	/* right sibling has been read-ahead */
+ 	uint8_t		bc_nlevels;	/* number of levels in the tree */
+-	uint8_t		bc_blocklog;	/* log2(blocksize) of btree blocks */
+ 	xfs_btnum_t	bc_btnum;	/* identifies which btree type */
+ 	int		bc_statoff;	/* offset of btre stats array */
+ 
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+index 27190840c5d8..10736b89b679 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.c
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+@@ -444,8 +444,6 @@ xfs_inobt_init_common(
+ 		cur->bc_ops = &xfs_finobt_ops;
+ 	}
+ 
+-	cur->bc_blocklog = mp->m_sb.sb_blocklog;
+-
+ 	if (xfs_has_crc(mp))
+ 		cur->bc_flags |= XFS_BTREE_CRC_BLOCKS;
+ 
+diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
+index 1ef9b99962ab..3ea589f15b14 100644
+--- a/fs/xfs/libxfs/xfs_refcount_btree.c
++++ b/fs/xfs/libxfs/xfs_refcount_btree.c
+@@ -326,7 +326,6 @@ xfs_refcountbt_init_common(
+ 	cur->bc_tp = tp;
+ 	cur->bc_mp = mp;
+ 	cur->bc_btnum = XFS_BTNUM_REFC;
+-	cur->bc_blocklog = mp->m_sb.sb_blocklog;
+ 	cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_refcbt_2);
+ 
+ 	cur->bc_flags |= XFS_BTREE_CRC_BLOCKS;
+diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
+index b7dbbfb3aeed..d65bf3c6f25e 100644
+--- a/fs/xfs/libxfs/xfs_rmap_btree.c
++++ b/fs/xfs/libxfs/xfs_rmap_btree.c
+@@ -457,7 +457,6 @@ xfs_rmapbt_init_common(
+ 	/* Overlapping btree; 2 keys per pointer. */
+ 	cur->bc_btnum = XFS_BTNUM_RMAP;
+ 	cur->bc_flags = XFS_BTREE_CRC_BLOCKS | XFS_BTREE_OVERLAPPING;
+-	cur->bc_blocklog = mp->m_sb.sb_blocklog;
+ 	cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_rmap_2);
+ 	cur->bc_ops = &xfs_rmapbt_ops;
+ 
 
