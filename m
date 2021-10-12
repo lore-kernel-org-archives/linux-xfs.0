@@ -2,44 +2,44 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82002C4167B
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Oct 2021 17:13:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DD0EC4167E
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Oct 2021 17:13:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6DB7361076
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Oct 2021 17:13:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 48FBF60F21
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Oct 2021 17:13:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231945AbhJLRPH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Oct 2021 13:15:07 -0400
-Received: from mail-dm6nam10on2057.outbound.protection.outlook.com ([40.107.93.57]:30879
-        "EHLO NAM10-DM6-obe.outbound.protection.outlook.com"
+        id S231717AbhJLRPK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Oct 2021 13:15:10 -0400
+Received: from mail-bn1nam07on2040.outbound.protection.outlook.com ([40.107.212.40]:36014
+        "EHLO NAM02-BN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S230148AbhJLRPG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 12 Oct 2021 13:15:06 -0400
+        id S232037AbhJLRPH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 12 Oct 2021 13:15:07 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Q2VPpTvDvyxWPkGTVFwOSf/gV96ZUfijuM3e2pD7yiqQiEudvKDhkt9skX1kNGoqmhEC0zZ32ok0xPC2EFGiHIuVxa6i3u4PTAh/Gdiz93oESsdKarPFPfILEqxlGNVDmYtxsu8lkR8VYT08zjcjKRSq5wPxtrVvaJ8/Jr1ujrZJ9cGqOj9WLVRUYKbs3pQJmPkVxTdpe9We3k+cs1Rr6C9maV2JPxR+AJ+p9/KxavD6HOma1X570Eh8qc0P34VJP2GYztlxjV0eG/c5N2hhVG+xWlRVR9n6zXrEd7i7m8PXDiPbnibVo4H0oACVfmGb+MJLEhv0Tp6hnXVEnMAX2g==
+ b=flxfKHN2zpfAsuKbV21hvaQA6xo350N6RW58Tt3BlSgEJtShX9apzUMzPl97U9R3mLk5PoyKKjCOXl0ZwpaGhM0gSzON28L7Wj5Dvk1g0U4fGBCLL836tTB/CL/BEdCsSLIDRDcQZARKsd//miLvJMhb0TXyFMmAakG1dXh1jl1asAZWWaQW9vp2YmowPlSY4hdOqBg7O+xnJGM833xn32iVk2kwY7v+245HWrjHWmlJH92G/a/b+mEtb3oA3ZPgTYj/vJrtJstdevxUPu00tE54aXujedCnAkzN/jo28w7C8RZjr1cNWhIzCOqPSk1bQDOfPZOGafxVUv0GKkl2Wg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=prqqgRWlNmUY+FCzPMwMlLKkTVbC2ZOWpWdIq8n/6hw=;
- b=Lb5Qg+CPF4sDaEJkxridy8L2rJnXquolU+UL/QMcHfoVoYP46tGr1krZhJ7NAMHmL86YzwrymoujchfK4JW6owAq9XxaTpz/7PW2gYA3dw1Xv0foWOlxRDgqOKuYWmOWsKu+KHzYRPpVYvV4T6wpVoJk2jrOZAa62dQYPu37no5WJQ4rAmG7neOMP+ktgqeR9okjRFFecVqOODjM92vgNYQayyqwE1eEwTE9FagTJFardbNcLcqUpUKLJGvo4PrWpYwf2P8PaHwFOhy2TLOCHXA0yVZgNvqPIg3mZbmJeySP5XZOeOwgXnq1jf+T2ppS6pYYCo3Inke19QpCg6lt4A==
+ bh=w3JARPoydLGt1UDbIwVdt/aNNvnM7zBb7jbo/f49f+o=;
+ b=YoJguOy7WsdsFLjaHPFJ4HGmP1lCwrbe9fUEZDYUs4mvMHlQPsmpsHY71GHkynFyrzEttrzdM0kEqSHPFwXa9sD5pJGlEMm9OJ4kHwHm25+jEEuXWDfmux77g+kXx/350TdEsIefuX/sYy1Joe/LnZjmQBb0PEl91Fsk2vsPYG1nUOoD2rnHCv61L9KLuyP5txUV6pd94v/s1r6KJpG+RE3sW/RnsUXSwDlhjcasZGn8n18rjDuqrXMivp0FuqUb+gG4OXJtd2clLc8fewILU4avar43eHei5gJq1jm9MQjeS0ScYIxVDsI6p5XDCkCDrxmazaBe4v1Xa9d6SS+hCA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=linux-foundation.org smtp.mailfrom=amd.com;
  dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
  header.from=amd.com; dkim=none (message not signed); arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=prqqgRWlNmUY+FCzPMwMlLKkTVbC2ZOWpWdIq8n/6hw=;
- b=W299mrfcLzyYpKyLdyQ0Quo0yXPX3ylduTuyWyZQcFDnirtn7NucX5b4ebrTdrrS2UdDRJa0/6sfZ+lWohnNoNAeOk9wj6nbNGAhalU+g+TzwhT3IOW8HX0BoWhf7RKAei6EMgCh6v0PfaSOGS9cq3n4RgOmUJgSzy4R7V6n0ts=
-Received: from MW4PR04CA0284.namprd04.prod.outlook.com (2603:10b6:303:89::19)
- by SA0PR12MB4512.namprd12.prod.outlook.com (2603:10b6:806:71::9) with
+ bh=w3JARPoydLGt1UDbIwVdt/aNNvnM7zBb7jbo/f49f+o=;
+ b=Y4nkbjZIJjPGJCDkXZYncRUwvZs0dfaUNWsLT885bEimkPFx9i8vBUNYPlcfc6y0nuzKEQNuaKz+dCGou3yzuWz3X5SS/RnRhGM673pVS2ttNiw2IvIrLFALHKiNBzaJa+uwp8grefi7UtWq1MD17hdHUh1WHsG+3NJ0CqkeXGs=
+Received: from MW4PR04CA0285.namprd04.prod.outlook.com (2603:10b6:303:89::20)
+ by MN2PR12MB3423.namprd12.prod.outlook.com (2603:10b6:208:cb::22) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4587.20; Tue, 12 Oct
- 2021 17:13:01 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4587.19; Tue, 12 Oct
+ 2021 17:13:03 +0000
 Received: from CO1NAM11FT005.eop-nam11.prod.protection.outlook.com
- (2603:10b6:303:89:cafe::43) by MW4PR04CA0284.outlook.office365.com
- (2603:10b6:303:89::19) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4587.25 via Frontend
- Transport; Tue, 12 Oct 2021 17:13:01 +0000
+ (2603:10b6:303:89:cafe::f2) by MW4PR04CA0285.outlook.office365.com
+ (2603:10b6:303:89::20) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4587.19 via Frontend
+ Transport; Tue, 12 Oct 2021 17:13:03 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
  smtp.mailfrom=amd.com; linux-foundation.org; dkim=none (message not signed)
  header.d=none;linux-foundation.org; dmarc=pass action=none
@@ -50,11 +50,11 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
 Received: from SATLEXMB04.amd.com (165.204.84.17) by
  CO1NAM11FT005.mail.protection.outlook.com (10.13.174.147) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.4587.18 via Frontend Transport; Tue, 12 Oct 2021 17:13:01 +0000
+ 15.20.4587.18 via Frontend Transport; Tue, 12 Oct 2021 17:13:02 +0000
 Received: from alex-MS-7B09.amd.com (10.180.168.240) by SATLEXMB04.amd.com
  (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.8; Tue, 12 Oct
- 2021 12:12:58 -0500
+ 2021 12:13:00 -0500
 From:   Alex Sierra <alex.sierra@amd.com>
 To:     <akpm@linux-foundation.org>, <Felix.Kuehling@amd.com>,
         <linux-mm@kvack.org>, <rcampbell@nvidia.com>,
@@ -62,9 +62,9 @@ To:     <akpm@linux-foundation.org>, <Felix.Kuehling@amd.com>,
 CC:     <amd-gfx@lists.freedesktop.org>, <dri-devel@lists.freedesktop.org>,
         <hch@lst.de>, <jgg@nvidia.com>, <jglisse@redhat.com>,
         <apopple@nvidia.com>
-Subject: [PATCH v1 01/12] ext4/xfs: add page refcount helper
-Date:   Tue, 12 Oct 2021 12:12:36 -0500
-Message-ID: <20211012171247.2861-2-alex.sierra@amd.com>
+Subject: [PATCH v1 03/12] mm: add zone device coherent type memory support
+Date:   Tue, 12 Oct 2021 12:12:38 -0500
+Message-ID: <20211012171247.2861-4-alex.sierra@amd.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20211012171247.2861-1-alex.sierra@amd.com>
 References: <20211012171247.2861-1-alex.sierra@amd.com>
@@ -76,143 +76,210 @@ X-ClientProxiedBy: SATLEXMB03.amd.com (10.181.40.144) To SATLEXMB04.amd.com
  (10.181.40.145)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 8e3ea715-00a1-4afb-5580-08d98da38bac
-X-MS-TrafficTypeDiagnostic: SA0PR12MB4512:
-X-Microsoft-Antispam-PRVS: <SA0PR12MB4512F560EFC73D900A16DF58FDB69@SA0PR12MB4512.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:3044;
+X-MS-Office365-Filtering-Correlation-Id: 236139f5-bc16-4995-8fc3-08d98da38cc3
+X-MS-TrafficTypeDiagnostic: MN2PR12MB3423:
+X-Microsoft-Antispam-PRVS: <MN2PR12MB34237232EA0F218F0B30786DFDB69@MN2PR12MB3423.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 0jtMTfNAceBhf8FQmAGtJoBdU7jveQ/4yan0XVhsAoqNyHR3XrSzcIs+JJ3kPYTiKPJuGd5HcRq1ysyXZ8Uzv81vreesR+Bl2pCHx6/FpiTx4HYu167XAkqfyaIBaEnWx5p3U22UFDg/1dwaF+7xkQOlr5QlojKUUCO8IbJ+8iRr+gxrJBGm92OHNFUKj5ZJCK+H3U32xXMxyqzMEQRhFwNDRwqp3VgWt7Hsj01+ywBKjE4h8KwOLUe8UIM6EYse0WUygxM5M5hWlJyYH/vejVnMdzpcqVU/lyRGEv/8nMKc+uVUn6zK/LvBuMT6L+HJY2Mzof4Yql+tSxRwNR5UUNUboCRg4dV/jDic7Q0vcI7f8/87dOTtW0jTSR7BZ229aX2LpQIpJPX3JYcte4jjcopgzH6Xb5eb5Quuc62whqZYs8B+kONoPdbFlS9HfQW77ubcvzUxD9mt2rOLP1DL/wjGvQqXIoXm3fydffjyMhczopYa8eKmIYuGQhr+NeH3MPNfRM/4ZLM8TvbcGwqCfJCEtAlEGWSNb7MTXTCwxD19GoGAJedDDB7bmc7BluurpwHpodgqPQ9sWdaku6gcctXLAe3/seVQu+xz8sGirqavCT6mIvC9x5XiFpxHZO6hnDfKRDMZEw1SMaTIgCXvBumPfKNFAohxf4YUiBUuJJD6h9s2YiaEMOjQ4kYahKTnV6sqFfOoAZRzTCW8vWSO3MfvcQbPLkFuFzlJpIaz4AE=
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(4636009)(36840700001)(46966006)(8676002)(336012)(7416002)(7696005)(86362001)(36860700001)(4326008)(83380400001)(1076003)(2906002)(316002)(44832011)(5660300002)(81166007)(2616005)(426003)(54906003)(186003)(16526019)(82310400003)(8936002)(6666004)(508600001)(70586007)(70206006)(47076005)(26005)(110136005)(356005)(36756003)(36900700001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: wkG+W1gtKysYliQM0nqipM15O89mNmHuRRCXW9pKjvmWMoKP3kPwvfzfXYAJcHvTe+WZBd6XF1e6yTaeZoOrf7MmCDKKb9XnFMjdH7QdZzWyy9p9lNIqKq4F9dnP3Eg0sIfF5xd2jAessoJKC77c/yHgbydmf93F21HGwzBcDhDf0jrMCg/NDkXwugh6u73HT6UahUCyZg0XJcmLwDEEnGadZ8Z47ATezfX8hF+vYhXjfE6HgQlNBEhT55cFNij6eeuW6pKdaVapmKzgnQXF3Vk2gJUP+3B5TdJC0tpV+QcD/YudOfBbvQs4g/Xfi4ejzdprMcEsVLeDMqrNpDdrUnJa9zWtnX5V7qwtKuEWHIxyz1YO84rwB3LLY8zQr+sOTuE6xnDZfiFleoHcSmbamXEDIMswKsE+PBcNnqnT5CYOTtnLxEdwhmJLlyXTGLKC4fHtGEdnO0YpzrbG77rnHRlU3F6HAPEIAkRF12vyThC03sfcaCZrdj7TuIMX1oR/3UpgZ0TfJZzs64iP6OKGRlZ3JERPz4zO+R870n4V0ixEUun7Xd6s1dqBOnv7cU4v2+zKOmI2iwkMvwphRzCurHzpsHqsPAzeyORjgpscBUl9U1Y0wjar6R96dBQUYx7apHTBzw4+YmgTPuT0IjwiBT4lhrThi6QWJ9SsefDG5woATJx8otALv8JWUpUZHh5H+g7Ohqf178Svx7jFEWDURlvPgfpokB7GTP+hjfo0DM4=
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(4636009)(46966006)(36840700001)(86362001)(36860700001)(83380400001)(7696005)(316002)(70206006)(16526019)(186003)(1076003)(36756003)(47076005)(8936002)(82310400003)(4326008)(7416002)(336012)(356005)(5660300002)(26005)(2616005)(2906002)(8676002)(6666004)(81166007)(508600001)(110136005)(426003)(44832011)(54906003)(70586007)(36900700001);DIR:OUT;SFP:1101;
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Oct 2021 17:13:01.0389
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Oct 2021 17:13:02.8379
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8e3ea715-00a1-4afb-5580-08d98da38bac
+X-MS-Exchange-CrossTenant-Network-Message-Id: 236139f5-bc16-4995-8fc3-08d98da38cc3
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
 X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT005.eop-nam11.prod.protection.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA0PR12MB4512
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR12MB3423
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Ralph Campbell <rcampbell@nvidia.com>
+Device memory that is cache coherent from device and CPU point of view.
+This is use on platform that have an advance system bus (like CAPI or
+CCIX). Any page of a process can be migrated to such memory. However,
+no one should be allow to pin such memory so that it can always be
+evicted.
 
-There are several places where ZONE_DEVICE struct pages assume a reference
-count == 1 means the page is idle and free. Instead of open coding this,
-add a helper function to hide this detail.
-
-Signed-off-by: Ralph Campbell <rcampbell@nvidia.com>
 Signed-off-by: Alex Sierra <alex.sierra@amd.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Theodore Ts'o <tytso@mit.edu>
-Acked-by: Darrick J. Wong <djwong@kernel.org>
 ---
-v3:
-[AS]: rename dax_layout_is_idle_page func to dax_page_unused
+ include/linux/memremap.h |  8 ++++++++
+ include/linux/mm.h       |  8 ++++++++
+ mm/memcontrol.c          |  6 +++---
+ mm/memory-failure.c      |  6 +++++-
+ mm/memremap.c            |  2 ++
+ mm/migrate.c             | 19 ++++++++++++-------
+ 6 files changed, 38 insertions(+), 11 deletions(-)
 
-v4:
-[AS]: This ref count functionality was missing on fuse/dax.c.
----
- fs/dax.c            |  4 ++--
- fs/ext4/inode.c     |  5 +----
- fs/fuse/dax.c       |  4 +---
- fs/xfs/xfs_file.c   |  4 +---
- include/linux/dax.h | 10 ++++++++++
- 5 files changed, 15 insertions(+), 12 deletions(-)
-
-diff --git a/fs/dax.c b/fs/dax.c
-index 62352cbcf0f4..c387d09e3e5a 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -369,7 +369,7 @@ static void dax_disassociate_entry(void *entry, struct address_space *mapping,
- 	for_each_mapped_pfn(entry, pfn) {
- 		struct page *page = pfn_to_page(pfn);
- 
--		WARN_ON_ONCE(trunc && page_ref_count(page) > 1);
-+		WARN_ON_ONCE(trunc && !dax_page_unused(page));
- 		WARN_ON_ONCE(page->mapping && page->mapping != mapping);
- 		page->mapping = NULL;
- 		page->index = 0;
-@@ -383,7 +383,7 @@ static struct page *dax_busy_page(void *entry)
- 	for_each_mapped_pfn(entry, pfn) {
- 		struct page *page = pfn_to_page(pfn);
- 
--		if (page_ref_count(page) > 1)
-+		if (!dax_page_unused(page))
- 			return page;
- 	}
- 	return NULL;
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index fe6045a46599..05ffe6875cb1 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -3971,10 +3971,7 @@ int ext4_break_layouts(struct inode *inode)
- 		if (!page)
- 			return 0;
- 
--		error = ___wait_var_event(&page->_refcount,
--				atomic_read(&page->_refcount) == 1,
--				TASK_INTERRUPTIBLE, 0, 0,
--				ext4_wait_dax_page(ei));
-+		error = dax_wait_page(ei, page, ext4_wait_dax_page);
- 	} while (error == 0);
- 
- 	return error;
-diff --git a/fs/fuse/dax.c b/fs/fuse/dax.c
-index ff99ab2a3c43..2b1f190ba78a 100644
---- a/fs/fuse/dax.c
-+++ b/fs/fuse/dax.c
-@@ -677,9 +677,7 @@ static int __fuse_dax_break_layouts(struct inode *inode, bool *retry,
- 		return 0;
- 
- 	*retry = true;
--	return ___wait_var_event(&page->_refcount,
--			atomic_read(&page->_refcount) == 1, TASK_INTERRUPTIBLE,
--			0, 0, fuse_wait_dax_page(inode));
-+	return dax_wait_page(inode, page, fuse_wait_dax_page);
+diff --git a/include/linux/memremap.h b/include/linux/memremap.h
+index 77ff5fd0685f..d64cd2e8147a 100644
+--- a/include/linux/memremap.h
++++ b/include/linux/memremap.h
+@@ -39,6 +39,13 @@ struct vmem_altmap {
+  * A more complete discussion of unaddressable memory may be found in
+  * include/linux/hmm.h and Documentation/vm/hmm.rst.
+  *
++ * MEMORY_DEVICE_COHERENT:
++ * Device memory that is cache coherent from device and CPU point of view. This
++ * is use on platform that have an advance system bus (like CAPI or CCIX). A
++ * driver can hotplug the device memory using ZONE_DEVICE and with that memory
++ * type. Any page of a process can be migrated to such memory. However no one
++ * should be allow to pin such memory so that it can always be evicted.
++ *
+  * MEMORY_DEVICE_FS_DAX:
+  * Host memory that has similar access semantics as System RAM i.e. DMA
+  * coherent and supports page pinning. In support of coordinating page
+@@ -59,6 +66,7 @@ struct vmem_altmap {
+ enum memory_type {
+ 	/* 0 is reserved to catch uninitialized type fields */
+ 	MEMORY_DEVICE_PRIVATE = 1,
++	MEMORY_DEVICE_COHERENT,
+ 	MEMORY_DEVICE_FS_DAX,
+ 	MEMORY_DEVICE_GENERIC,
+ 	MEMORY_DEVICE_PCI_P2PDMA,
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index e24c904deeec..8bc697006a5c 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -1187,6 +1187,14 @@ static inline bool is_device_private_page(const struct page *page)
+ 		page->pgmap->type == MEMORY_DEVICE_PRIVATE;
  }
  
- /* dmap_end == 0 leads to unmapping of whole file */
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 396ef36dcd0a..182057281086 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -840,9 +840,7 @@ xfs_break_dax_layouts(
- 		return 0;
- 
- 	*retry = true;
--	return ___wait_var_event(&page->_refcount,
--			atomic_read(&page->_refcount) == 1, TASK_INTERRUPTIBLE,
--			0, 0, xfs_wait_dax_page(inode));
-+	return dax_wait_page(inode, page, xfs_wait_dax_page);
- }
- 
- int
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index b52f084aa643..8b5da1d60dbc 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -243,6 +243,16 @@ static inline bool dax_mapping(struct address_space *mapping)
- 	return mapping->host && IS_DAX(mapping->host);
- }
- 
-+static inline bool dax_page_unused(struct page *page)
++static inline bool is_device_page(const struct page *page)
 +{
-+	return page_ref_count(page) == 1;
++	return IS_ENABLED(CONFIG_DEV_PAGEMAP_OPS) &&
++		is_zone_device_page(page) &&
++		(page->pgmap->type == MEMORY_DEVICE_PRIVATE ||
++		page->pgmap->type == MEMORY_DEVICE_COHERENT);
 +}
 +
-+#define dax_wait_page(_inode, _page, _wait_cb)				\
-+	___wait_var_event(&(_page)->_refcount,				\
-+		dax_page_unused(_page),				\
-+		TASK_INTERRUPTIBLE, 0, 0, _wait_cb(_inode))
-+
- #ifdef CONFIG_DEV_DAX_HMEM_DEVICES
- void hmem_register_device(int target_nid, struct resource *r);
- #else
+ static inline bool is_pci_p2pdma_page(const struct page *page)
+ {
+ 	return IS_ENABLED(CONFIG_DEV_PAGEMAP_OPS) &&
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 9a6bfb4fd36c..fe5a96428dce 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5526,8 +5526,8 @@ static int mem_cgroup_move_account(struct page *page,
+  *   2(MC_TARGET_SWAP): if the swap entry corresponding to this pte is a
+  *     target for charge migration. if @target is not NULL, the entry is stored
+  *     in target->ent.
+- *   3(MC_TARGET_DEVICE): like MC_TARGET_PAGE  but page is MEMORY_DEVICE_PRIVATE
+- *     (so ZONE_DEVICE page and thus not on the lru).
++ *   3(MC_TARGET_DEVICE): like MC_TARGET_PAGE  but page is MEMORY_DEVICE_COHERENT
++ *     or MEMORY_DEVICE_PRIVATE (so ZONE_DEVICE page and thus not on the lru).
+  *     For now we such page is charge like a regular page would be as for all
+  *     intent and purposes it is just special memory taking the place of a
+  *     regular page.
+@@ -5561,7 +5561,7 @@ static enum mc_target_type get_mctgt_type(struct vm_area_struct *vma,
+ 		 */
+ 		if (page_memcg(page) == mc.from) {
+ 			ret = MC_TARGET_PAGE;
+-			if (is_device_private_page(page))
++			if (is_device_page(page))
+ 				ret = MC_TARGET_DEVICE;
+ 			if (target)
+ 				target->page = page;
+diff --git a/mm/memory-failure.c b/mm/memory-failure.c
+index 6f5f78885ab4..1076f5a07370 100644
+--- a/mm/memory-failure.c
++++ b/mm/memory-failure.c
+@@ -1373,12 +1373,16 @@ static int memory_failure_dev_pagemap(unsigned long pfn, int flags,
+ 		goto unlock;
+ 	}
+ 
+-	if (pgmap->type == MEMORY_DEVICE_PRIVATE) {
++	switch (pgmap->type) {
++	case MEMORY_DEVICE_PRIVATE:
++	case MEMORY_DEVICE_COHERENT:
+ 		/*
+ 		 * TODO: Handle HMM pages which may need coordination
+ 		 * with device-side memory.
+ 		 */
+ 		goto unlock;
++	default:
++		break;
+ 	}
+ 
+ 	/*
+diff --git a/mm/memremap.c b/mm/memremap.c
+index ab949a571e78..56033955d1f4 100644
+--- a/mm/memremap.c
++++ b/mm/memremap.c
+@@ -294,6 +294,7 @@ void *memremap_pages(struct dev_pagemap *pgmap, int nid)
+ 
+ 	switch (pgmap->type) {
+ 	case MEMORY_DEVICE_PRIVATE:
++	case MEMORY_DEVICE_COHERENT:
+ 		if (!IS_ENABLED(CONFIG_DEVICE_PRIVATE)) {
+ 			WARN(1, "Device private memory not supported\n");
+ 			return ERR_PTR(-EINVAL);
+@@ -493,6 +494,7 @@ void free_zone_device_page(struct page *page)
+ {
+ 	switch (page->pgmap->type) {
+ 	case MEMORY_DEVICE_PRIVATE:
++	case MEMORY_DEVICE_COHERENT:
+ 		free_device_page(page);
+ 		return;
+ 	case MEMORY_DEVICE_FS_DAX:
+diff --git a/mm/migrate.c b/mm/migrate.c
+index e3a10e2a1bb3..2bda612f3650 100644
+--- a/mm/migrate.c
++++ b/mm/migrate.c
+@@ -2565,7 +2565,7 @@ static bool migrate_vma_check_page(struct page *page)
+ 		 * FIXME proper solution is to rework migration_entry_wait() so
+ 		 * it does not need to take a reference on page.
+ 		 */
+-		return is_device_private_page(page);
++		return is_device_page(page);
+ 	}
+ 
+ 	/* For file back page */
+@@ -2854,7 +2854,7 @@ EXPORT_SYMBOL(migrate_vma_setup);
+  *     handle_pte_fault()
+  *       do_anonymous_page()
+  * to map in an anonymous zero page but the struct page will be a ZONE_DEVICE
+- * private page.
++ * private or coherent page.
+  */
+ static void migrate_vma_insert_page(struct migrate_vma *migrate,
+ 				    unsigned long addr,
+@@ -2925,10 +2925,15 @@ static void migrate_vma_insert_page(struct migrate_vma *migrate,
+ 
+ 			swp_entry = make_device_private_entry(page, vma->vm_flags & VM_WRITE);
+ 			entry = swp_entry_to_pte(swp_entry);
++		} else if (is_device_page(page)) {
++			entry = pte_mkold(mk_pte(page,
++						 READ_ONCE(vma->vm_page_prot)));
++			if (vma->vm_flags & VM_WRITE)
++				entry = pte_mkwrite(pte_mkdirty(entry));
+ 		} else {
+ 			/*
+-			 * For now we only support migrating to un-addressable
+-			 * device memory.
++			 * We support migrating to private and coherent types
++			 * for device zone memory.
+ 			 */
+ 			pr_warn_once("Unsupported ZONE_DEVICE page type.\n");
+ 			goto abort;
+@@ -3034,10 +3039,10 @@ void migrate_vma_pages(struct migrate_vma *migrate)
+ 		mapping = page_mapping(page);
+ 
+ 		if (is_zone_device_page(newpage)) {
+-			if (is_device_private_page(newpage)) {
++			if (is_device_page(newpage)) {
+ 				/*
+-				 * For now only support private anonymous when
+-				 * migrating to un-addressable device memory.
++				 * For now only support private and coherent
++				 * anonymous when migrating to device memory.
+ 				 */
+ 				if (mapping) {
+ 					migrate->src[i] &= ~MIGRATE_PFN_MIGRATE;
 -- 
 2.32.0
 
