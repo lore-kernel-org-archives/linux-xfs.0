@@ -2,118 +2,136 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FD08C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Oct 2021 23:22:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81376C433FE
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Oct 2021 23:32:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5D51960EB4
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Oct 2021 23:22:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6907460E53
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Oct 2021 23:32:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233180AbhJLXY6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Oct 2021 19:24:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46014 "EHLO mail.kernel.org"
+        id S236010AbhJLXeg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Oct 2021 19:34:36 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48048 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229588AbhJLXY6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 12 Oct 2021 19:24:58 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id DC82E60E0C;
-        Tue, 12 Oct 2021 23:22:55 +0000 (UTC)
+        id S235541AbhJLXeg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 12 Oct 2021 19:34:36 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 1603160EBB;
+        Tue, 12 Oct 2021 23:32:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1634080976;
-        bh=19NERmz1OqKhIhpjNbFrKpQAyB+6CWRvPQ5u6HEy1lg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=eZQXhhZqPtEhDAbDT69+mDQw8CryvBAxGrDUcNYq+M5YfmJkgPp51lyCcAzgMtZEt
-         7TbOEw0t0kMIbkf3Z5bSlywAm9JONFZB5KB1TNf7yLezBFhHrV1fc6vdPbRteHtvJi
-         nnhMhvvvMPaaBKjRWb37CLwCxyOnj0GYxS30cro3ff2RuT64lKd5aEzH6Yd+up3OaH
-         HQVGdst1F0TFZ9vO5MpC4Th1gmnarMLVmZ3qzDvsAammTQomu51Lm/h8YoIxo6gwi0
-         Xzo8Gn/yQ1XN4VSJ7a3hFIVcM2lEAqgwGj/+siE20Dz8VVFusSRxHmWdVH/pXc+ZrH
-         5kNamSSFyjrFQ==
-Date:   Tue, 12 Oct 2021 16:22:55 -0700
+        s=k20201202; t=1634081554;
+        bh=FSlTtdgOJH664EgEf4aLJtetr6P2fOJIEdqzi0mkG/Q=;
+        h=Subject:From:To:Cc:Date:From;
+        b=LgqnwqP/X90UCsDZ27HM37mNuuplLGIc0WcwZMId36HSNzB//T7LFOtd5ga/JWr/L
+         BcHv/IGGrHkbGf5gWg1xpj+896zl9sb4Nk25kJxNheoKH1Us4QMwhhbQkzWxL/i6Fa
+         2D/Gqzcw+FSmni2QFZpgQKhdNMzgPgYS58tHzhGRQJMwyWWsg7g2k6zjPcPnCJf29E
+         U/TXHkJi3yyRg35k3Qa+5mo4t3c/MuOqSnIb6/i2MNX4fM+CwNGzCSVSroE8eTOGDC
+         VNWAKcVom1gV8wEuybtPw5UyqU7fpk1FboOL63ZF+hRBSZf3MmcISmlieZc4TP0LXA
+         CGrQf5RgU2M+w==
+Subject: [PATCHSET v3 00/15] xfs: support dynamic btree cursor height
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Vlastimil Babka <vbabka@suse.cz>
-Cc:     David Rientjes <rientjes@google.com>,
-        Rustam Kovhaev <rkovhaev@gmail.com>,
-        Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
-        cl@linux.com, penberg@kernel.org, iamjoonsoo.kim@lge.com,
-        akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
-        linux-mm@kvack.org, gregkh@linuxfoundation.org,
-        Al Viro <viro@zeniv.linux.org.uk>, dvyukov@google.com
-Subject: Re: [PATCH] xfs: use kmem_cache_free() for kmem_cache objects
-Message-ID: <20211012232255.GS24307@magnolia>
-References: <20210929212347.1139666-1-rkovhaev@gmail.com>
- <20210930044202.GP2361455@dread.disaster.area>
- <17f537b3-e2eb-5d0a-1465-20f3d3c960e2@suse.cz>
- <YVYGcLbu/aDKXkag@nuc10>
- <a9b3cd91-8ee6-a654-b2a8-00c3efb69559@suse.cz>
- <YVZXF3mbaW+Pe+Ji@nuc10>
- <1e0df91-556e-cee5-76f7-285d28fe31@google.com>
- <20211012204320.GP24307@magnolia>
- <20211012204345.GQ24307@magnolia>
- <9db5d16a-2999-07a4-c49d-7417601f834f@suse.cz>
+To:     djwong@kernel.org, david@fromorbit.com
+Cc:     Chandan Babu R <chandan.babu@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+        chandan.babu@oracle.com, hch@lst.de
+Date:   Tue, 12 Oct 2021 16:32:33 -0700
+Message-ID: <163408155346.4151249.8364703447365270670.stgit@magnolia>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <9db5d16a-2999-07a4-c49d-7417601f834f@suse.cz>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 12, 2021 at 11:32:25PM +0200, Vlastimil Babka wrote:
-> On 10/12/2021 10:43 PM, Darrick J. Wong wrote:
-> > On Tue, Oct 12, 2021 at 01:43:20PM -0700, Darrick J. Wong wrote:
-> >> On Sun, Oct 03, 2021 at 06:07:20PM -0700, David Rientjes wrote:
-> >>> On Thu, 30 Sep 2021, Rustam Kovhaev wrote:
-> >>>
-> >>>>>>> I think it's fair if something like XFS (not meant for tiny systems AFAIK?)
-> >>>>>>> excludes SLOB (meant for tiny systems). Clearly nobody tried to use these
-> >>>>>>> two together last 5 years anyway.
-> >>>>>>
-> >>>>>> +1 for adding Kconfig option, it seems like some things are not meant to
-> >>>>>> be together.
-> >>>>>
-> >>>>> But if we patch SLOB, we won't need it.
-> >>>>
-> >>>> OK, so we consider XFS on SLOB a supported configuration that might be
-> >>>> used and should be tested.
-> >>>> I'll look into maybe adding a config with CONFIG_SLOB and CONFIG_XFS_FS
-> >>>> to syzbot.
-> >>>>
-> >>>> It seems that we need to patch SLOB anyway, because any other code can
-> >>>> hit the very same issue.
-> >>>>
-> >>>
-> >>> It's probably best to introduce both (SLOB fix and Kconfig change for 
-> >>> XFS), at least in the interim because the combo of XFS and SLOB could be 
-> >>> broken in other ways.  If syzbot doesn't complain with a patched kernel to 
-> >>> allow SLOB to be used with XFS, then we could potentially allow them to be 
-> >>> used together.
-> >>>
-> >>> (I'm not sure that this freeing issue is the *only* thing that is broken, 
-> >>> nor that we have sufficient information to make that determination right 
-> >>> now..)
-> >>
-> >> I audited the entire xfs (kernel) codebase and didn't find any other
-> >> usage errors.  Thanks for the patch; I'll apply it to for-next.
-> 
-> Which patch, the one that started this thread and uses kmem_cache_free() instead
-> of kfree()? I thought we said it's not the best way?
+Hi all,
 
-It's probably better to fix slob to be able to tell that a kmem_free'd
-object actually belongs to a cache and should get freed that way, just
-like its larger sl[ua]b cousins.
+In what's left of this series, we rearrange the incore btree cursor so
+that we can support btrees of any height.  This will become necessary
+for realtime rmap and reflink since we'd like to handle tall trees
+without bloating the AG btree cursors.
 
-However, even if that does come to pass, anybody /else/ who wants to
-start(?) using XFS on a SLOB system will need this patch to fix the
-minor papercut.  Now that I've checked the rest of the codebase, I don't
-find it reasonable to make XFS mutually exclusive with SLOB over two
-instances of slab cache misuse.  Hence the RVB. :)
+Chandan Babu pointed out that his large extent counters series depends
+on the ability to have btree cursors of arbitrary heights, so I've
+ported this to 5.15-rc4 so his patchsets won't have to depend on
+djwong-dev for submission.
+
+Following the review discussions about the dynamic btree cursor height
+patches, I've throw together another series to reduce the size of the
+btree cursor, compute the absolute maximum possible btree heights for
+each btree type, and now each btree cursor has its own slab cache:
+
+$ grep xfs.*cur /proc/slabinfo
+xfs_refcbt_cur 0 0 200 20 1 : tunables 0 0 0 : slabdata 4 4 0
+xfs_rmapbt_cur 0 0 248 16 1 : tunables 0 0 0 : slabdata 4 4 0
+xfs_bmbt_cur   0 0 248 16 1 : tunables 0 0 0 : slabdata 4 4 0
+xfs_inobt_cur  0 0 216 18 1 : tunables 0 0 0 : slabdata 4 4 0
+xfs_bnobt_cur  0 0 216 18 1 : tunables 0 0 0 : slabdata 4 4 0
+
+I've also rigged up the debugger to make it easier to extract the actual
+height information:
+
+$ xfs_db /dev/sda -c 'btheight -w absmax all'
+bnobt: 7
+cntbt: 7
+inobt: 7
+finobt: 7
+bmapbt: 9
+refcountbt: 6
+rmapbt: 9
+
+As you can see from the slabinfo output, this no longer means that we're
+allocating 224-byte cursors for all five btree types.  Even with the
+extra overhead of supporting dynamic cursor sizes and per-btree caches,
+we still come out ahead in terms of cursor size for three of the five
+btree types.
+
+This series now also includes a couple of patches to reduce holes and
+unnecessary fields in the btree cursor.
+
+v2: reduce scrub btree checker memory footprint even more, put the one
+    fixpatch first, use struct_size, fix 80col problems, move all the
+    btree cache work to a separate series
+v3: rebase to 5.15-rc4, fold in the per-btree cursor cache patches,
+    remove all the references to "zones" since they're called "caches"
+    in Linux
+
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
+
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
 
 --D
 
-> > Also, the obligatory
-> > 
-> > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > --D
-> > 
-> >>
-> >> --D
-> 
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=btree-dynamic-depth-5.16
+---
+ fs/xfs/libxfs/xfs_ag_resv.c        |   18 ++
+ fs/xfs/libxfs/xfs_alloc.c          |    7 +
+ fs/xfs/libxfs/xfs_alloc_btree.c    |   39 ++++-
+ fs/xfs/libxfs/xfs_alloc_btree.h    |    5 +
+ fs/xfs/libxfs/xfs_bmap.c           |   13 +-
+ fs/xfs/libxfs/xfs_bmap_btree.c     |   41 +++++
+ fs/xfs/libxfs/xfs_bmap_btree.h     |    5 +
+ fs/xfs/libxfs/xfs_btree.c          |  270 +++++++++++++++++++++++-------------
+ fs/xfs/libxfs/xfs_btree.h          |   79 ++++++++---
+ fs/xfs/libxfs/xfs_btree_staging.c  |   10 +
+ fs/xfs/libxfs/xfs_fs.h             |    2 
+ fs/xfs/libxfs/xfs_ialloc.c         |    1 
+ fs/xfs/libxfs/xfs_ialloc_btree.c   |   46 +++++-
+ fs/xfs/libxfs/xfs_ialloc_btree.h   |    5 +
+ fs/xfs/libxfs/xfs_refcount_btree.c |   46 +++++-
+ fs/xfs/libxfs/xfs_refcount_btree.h |    5 +
+ fs/xfs/libxfs/xfs_rmap_btree.c     |  108 +++++++++++---
+ fs/xfs/libxfs/xfs_rmap_btree.h     |    5 +
+ fs/xfs/libxfs/xfs_trans_resv.c     |   13 ++
+ fs/xfs/libxfs/xfs_trans_space.h    |    7 +
+ fs/xfs/scrub/bitmap.c              |   22 +--
+ fs/xfs/scrub/bmap.c                |    2 
+ fs/xfs/scrub/btree.c               |   77 +++++-----
+ fs/xfs/scrub/btree.h               |   13 +-
+ fs/xfs/scrub/trace.c               |    7 +
+ fs/xfs/scrub/trace.h               |   10 +
+ fs/xfs/xfs_super.c                 |   53 ++++++-
+ fs/xfs/xfs_trace.h                 |    2 
+ 28 files changed, 660 insertions(+), 251 deletions(-)
+
