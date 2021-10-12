@@ -2,127 +2,173 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6297C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Oct 2021 16:52:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77304C433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Oct 2021 17:13:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BF66360462
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Oct 2021 16:52:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5BDEF610A2
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Oct 2021 17:13:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230420AbhJLQyK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Oct 2021 12:54:10 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:28751 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231368AbhJLQyJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Oct 2021 12:54:09 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1634057527;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=eaR2QlHlYZclfJynNsLKh/sMTZnHBIdrqDnC8JEBNCM=;
-        b=TadT9HBSVGbebH3TwfsI+zw3Qcx3wariy6ZLgRhLKXtGElL1TAoYdcQu7YmrA3mX9TWpcn
-        j6bkzBWojRmXpc+qZS+RrlHHCuqoCjX1xRveobXJ+uhQ3irLCu8b+RNfMCTOa3YEOj6G2l
-        kU8ktbBa7Xunld5eCYd1lm9crxH6s5A=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-509-cSHHl9kqOB67QZWaXy9SFQ-1; Tue, 12 Oct 2021 12:52:06 -0400
-X-MC-Unique: cSHHl9kqOB67QZWaXy9SFQ-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 90594100E328
-        for <linux-xfs@vger.kernel.org>; Tue, 12 Oct 2021 16:52:05 +0000 (UTC)
-Received: from bfoster.redhat.com (unknown [10.22.18.206])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 4ECC253B03
-        for <linux-xfs@vger.kernel.org>; Tue, 12 Oct 2021 16:52:05 +0000 (UTC)
-From:   Brian Foster <bfoster@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v2 4/4] xfs: fix perag reference leak on iteration race with growfs
-Date:   Tue, 12 Oct 2021 12:52:03 -0400
-Message-Id: <20211012165203.1354826-5-bfoster@redhat.com>
-In-Reply-To: <20211012165203.1354826-1-bfoster@redhat.com>
-References: <20211012165203.1354826-1-bfoster@redhat.com>
+        id S230463AbhJLRPF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Oct 2021 13:15:05 -0400
+Received: from mail-dm6nam10on2042.outbound.protection.outlook.com ([40.107.93.42]:18382
+        "EHLO NAM10-DM6-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S229495AbhJLRPF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 12 Oct 2021 13:15:05 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=IcQXf7/u7gsY7TwsHAWtK43QvhPGKhygTu5lPv1FfOqMZ+mkJb9O7U9kQrmFXTX57Vjr5ABamQHwIeiKtTOg7OJZUla9XwKVa6FTr4X6XhYQ8yKEZBTpFH4NlHdP3gqW8Vr/KgVnvjVhuWPJ6FhCu+0icRQEPvIpHMC+BJP/YUuXEEE46FBqAd6Zn8PvpqHTHe/rOcDCo+j9G7vpLYALmKFUv2ZWsomed9BNd4fib1eiT19uvnkp8HmCTcgYijXHsI58mjLrcERLzp67NAMmX5vN346lDHi+eissO7mE4MVD4cx0RbUTlfTpJmDEUWR0PGTTH78oTMd75Z4iMk1Mxg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=1Ep7yohZ546+mBAuxYD4acb/u4qn1JKsye35hwYl5SM=;
+ b=c62IyyXkHBnR+JjmzFIDPgIdD9yELwf/7z4vkmOFAA3YrQB8ugj6QSZDL6UF3UddzUsoaNA8i2Gd2KLAjkCIjj7QfCiyB/sZGHqRvC48ViAllcQnoDCfOGq0J0rBvf+lslG9kuxx3BRlCynGdrFoTDpfUUnG6Pc4bqIrxbs5rtU+v/3bhsBXSKF8BCrtLDB8gYD+6xp6W53zI1rWDPqhEw+v3Wp4LmKheEzOuuSwo5VjrDVHqs5TX2xuTgwEIdlFRpcgl/zwR73OrMAkKerkTlfRTFq3SSv1SHdGxrXi/BtLeyYNhTdG5Q2WkIOXM2EjlSo3bN7EEvoVIWeH/UtUoQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=linux-foundation.org smtp.mailfrom=amd.com;
+ dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
+ header.from=amd.com; dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=1Ep7yohZ546+mBAuxYD4acb/u4qn1JKsye35hwYl5SM=;
+ b=oULE/GbI2Fmfo1A1SX5wktXadPWqhgCgDgqaf7Qs5a9BRFfm/ZsTxEP+LwaO2xlDzWxc3Qq+cWJGinUYL119V+KlPMbTtMimnzd+9AnG6vohY+ljdjJsAflX9VlQ6XVnW8iw5ECrnl6rGTakJzka28q+o5QvG1+pf/WEkIAfW7w=
+Received: from MW4PR04CA0272.namprd04.prod.outlook.com (2603:10b6:303:89::7)
+ by MN2PR12MB3998.namprd12.prod.outlook.com (2603:10b6:208:16d::19) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4587.22; Tue, 12 Oct
+ 2021 17:12:59 +0000
+Received: from CO1NAM11FT005.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:303:89:cafe::57) by MW4PR04CA0272.outlook.office365.com
+ (2603:10b6:303:89::7) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4587.25 via Frontend
+ Transport; Tue, 12 Oct 2021 17:12:59 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; linux-foundation.org; dkim=none (message not signed)
+ header.d=none;linux-foundation.org; dmarc=pass action=none
+ header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=SATLEXMB04.amd.com;
+Received: from SATLEXMB04.amd.com (165.204.84.17) by
+ CO1NAM11FT005.mail.protection.outlook.com (10.13.174.147) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.4587.18 via Frontend Transport; Tue, 12 Oct 2021 17:12:58 +0000
+Received: from alex-MS-7B09.amd.com (10.180.168.240) by SATLEXMB04.amd.com
+ (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.8; Tue, 12 Oct
+ 2021 12:12:57 -0500
+From:   Alex Sierra <alex.sierra@amd.com>
+To:     <akpm@linux-foundation.org>, <Felix.Kuehling@amd.com>,
+        <linux-mm@kvack.org>, <rcampbell@nvidia.com>,
+        <linux-ext4@vger.kernel.org>, <linux-xfs@vger.kernel.org>
+CC:     <amd-gfx@lists.freedesktop.org>, <dri-devel@lists.freedesktop.org>,
+        <hch@lst.de>, <jgg@nvidia.com>, <jglisse@redhat.com>,
+        <apopple@nvidia.com>
+Subject: [PATCH v1 00/12] MEMORY_DEVICE_COHERENT for CPU-accessible coherent device memory 
+Date:   Tue, 12 Oct 2021 12:12:35 -0500
+Message-ID: <20211012171247.2861-1-alex.sierra@amd.com>
+X-Mailer: git-send-email 2.32.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+Content-Type: text/plain
+X-Originating-IP: [10.180.168.240]
+X-ClientProxiedBy: SATLEXMB03.amd.com (10.181.40.144) To SATLEXMB04.amd.com
+ (10.181.40.145)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 2efaf7c7-0dbd-4476-af09-08d98da38a53
+X-MS-TrafficTypeDiagnostic: MN2PR12MB3998:
+X-Microsoft-Antispam-PRVS: <MN2PR12MB3998AF0013DD03F728D8754CFDB69@MN2PR12MB3998.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:9508;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: /qhRrkUjmw6i4U6uxtpXLmsRwKCb7YgSV7fs1zuT90IgrSA8AI6qbjZVHKsjdi0/kev3irhdyq9mqdXstiyBNO+dZmEFcJKm0WA549uzS/Ns1UF1h7SsF6Y1fDWcClnGDNmQBxY/9nvI6SfhEMtD1FRlrnai50gbDua3fQWZe5aAGiY+BtfVbbMRvynaORIzJ9LA8Xy1G/rhFSoJne4+MpN9FByPcqZrmNejPxhLKoaEv7eAY8CofYtQAdpe3hVLMJZ5CeCrVd+DabDzfzAZzRXS1gnN6pi9olST21R740nds6/Ze497N1c/48cFVNLssEWsHLsvT3rYVPxElkRpudwy71XGeeopPEnoNuQh5Z/e/i1ryuJcj4fVPYL6Ftiypc8zrGwVWbv2YPn20KDxnJQBJOWCa3/9swViZA8Hae4QXF2lxiqU7wepzWJVvaZ7daRQyUrhXbrwWHgFwafkLQFVNM1vjBr0vFUPgXg5vAGapTDeKXuHUnpx6jk/Wxyl4b8Kzp1B1KXeitihyEnkA0+zurfMstSgLOBIj2dd9ufhduByP4OaM30H+CgK0I0IjG86/5yzlZ9SbL5LUK/r0COwLIpuEGaQ20luPXfoWLdTDcwxNw3OcYDJ1lfG8I4zWGE3rH0dxjSP6h+F2VY4kb1K9kNtC9wfQv9lNvtmRWVYNY5y3rGGCJQ6EqR+BhakPau/rw4PpoSpwFCMwHIGA4dlZbb+TlQzzoFFlKdSW9w=
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(4636009)(36840700001)(46966006)(81166007)(186003)(86362001)(8676002)(16526019)(36756003)(47076005)(82310400003)(26005)(110136005)(1076003)(54906003)(83380400001)(356005)(8936002)(7416002)(426003)(4326008)(316002)(70206006)(70586007)(2906002)(508600001)(2616005)(6666004)(966005)(4743002)(7696005)(36860700001)(336012)(44832011)(5660300002)(36900700001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Oct 2021 17:12:58.7362
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2efaf7c7-0dbd-4476-af09-08d98da38a53
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT005.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR12MB3998
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The for_each_perag*() set of macros are hacky in that some (i.e.
-those based on sb_agcount) rely on the assumption that perag
-iteration terminates naturally with a NULL perag at the specified
-end_agno. Others allow for the final AG to have a valid perag and
-require the calling function to clean up any potential leftover
-xfs_perag reference on termination of the loop.
+This patch series introduces MEMORY_DEVICE_COHERENT, a type of memory
+owned by a device that can be mapped into CPU page tables like
+MEMORY_DEVICE_GENERIC and can also be migrated like MEMORY_DEVICE_PRIVATE.
+With MEMORY_DEVICE_COHERENT, we isolate the new memory type from other
+subsystems as far as possible, though there are some small changes to
+other subsystems such as filesystem DAX, to handle the new memory type
+appropriately.
 
-Aside from providing a subtly inconsistent interface, the former
-variant is racy with growfs because growfs can create discoverable
-post-eofs perags before the final superblock update that completes
-the grow operation and increases sb_agcount. This leads to the
-following assert failure (reproduced by xfs/104) in the perag free
-path during unmount:
+We use ZONE_DEVICE for this instead of NUMA so that the amdgpu
+allocator can manage it without conflicting with core mm for non-unified
+memory use cases.
 
- XFS: Assertion failed: atomic_read(&pag->pag_ref) == 0, file: fs/xfs/libxfs/xfs_ag.c, line: 195
+How it works: The system BIOS advertises the GPU device memory (aka VRAM)
+as SPM (special purpose memory) in the UEFI system address map.
+The amdgpu driver registers the memory with devmap as
+MEMORY_DEVICE_COHERENT using devm_memremap_pages.
 
-This occurs because one of the many for_each_perag() loops in the
-code that is expected to terminate with a NULL pag (and thus has no
-post-loop xfs_perag_put() check) raced with a growfs and found a
-non-NULL post-EOFS perag, but terminated naturally based on the
-end_agno check without releasing the post-EOFS perag.
+The initial user for this hardware page migration capability will be
+the Frontier supercomputer project. Our nodes in the lab have .5 TB of
+system memory plus 256 GB of device memory split across 4 GPUs, all in
+the same coherent address space. Page migration is expected to improve
+application efficiency significantly. We will report empirical results
+as they become available.
 
-Rework the iteration logic to lift the agno check from the main for
-loop conditional to the iteration helper function. The for loop now
-purely terminates on a NULL pag and xfs_perag_next() avoids taking a
-reference to any perag beyond end_agno in the first place.
+This includes patches originally by Ralph Campbell to change ZONE_DEVICE
+reference counting as requested in previous reviews of this patch series
+(see https://patchwork.freedesktop.org/series/90706/). We extended
+hmm_test to cover migration of MEMORY_DEVICE_COHERENT. This patch set
+builds on HMM and our SVM memory manager already merged in 5.14.
+We would like to complete review and merge this migration patchset for
+5.16.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_ag.h | 16 ++++++----------
- 1 file changed, 6 insertions(+), 10 deletions(-)
+Alex Sierra (10):
+  mm: add zone device coherent type memory support
+  mm: add device coherent vma selection for memory migration
+  drm/amdkfd: ref count init for device pages
+  drm/amdkfd: add SPM support for SVM
+  drm/amdkfd: coherent type as sys mem on migration to ram
+  lib: test_hmm add ioctl to get zone device type
+  lib: test_hmm add module param for zone device type
+  lib: add support for device coherent type in test_hmm
+  tools: update hmm-test to support device coherent type
+  tools: update test_hmm script to support SP config
 
-diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
-index b8cc5017efba..e20575c898f9 100644
---- a/fs/xfs/libxfs/xfs_ag.h
-+++ b/fs/xfs/libxfs/xfs_ag.h
-@@ -116,30 +116,26 @@ void xfs_perag_put(struct xfs_perag *pag);
- 
- /*
-  * Perag iteration APIs
-- *
-- * XXX: for_each_perag_range() usage really needs an iterator to clean up when
-- * we terminate at end_agno because we may have taken a reference to the perag
-- * beyond end_agno. Right now callers have to be careful to catch and clean that
-- * up themselves. This is not necessary for the callers of for_each_perag() and
-- * for_each_perag_from() because they terminate at sb_agcount where there are
-- * no perag structures in tree beyond end_agno.
-  */
- static inline
- struct xfs_perag *xfs_perag_next(
- 	struct xfs_perag	*pag,
--	xfs_agnumber_t		*agno)
-+	xfs_agnumber_t		*agno,
-+	xfs_agnumber_t		end_agno)
- {
- 	struct xfs_mount	*mp = pag->pag_mount;
- 
- 	*agno = pag->pag_agno + 1;
- 	xfs_perag_put(pag);
-+	if (*agno > end_agno)
-+		return NULL;
- 	return xfs_perag_get(mp, *agno);
- }
- 
- #define for_each_perag_range(mp, agno, end_agno, pag) \
- 	for ((pag) = xfs_perag_get((mp), (agno)); \
--		(pag) != NULL && (agno) <= (end_agno); \
--		(pag) = xfs_perag_next((pag), &(agno)))
-+		(pag) != NULL; \
-+		(pag) = xfs_perag_next((pag), &(agno), (end_agno)))
- 
- #define for_each_perag_from(mp, agno, pag) \
- 	for_each_perag_range((mp), (agno), (mp)->m_sb.sb_agcount - 1, (pag))
+Ralph Campbell (2):
+  ext4/xfs: add page refcount helper
+  mm: remove extra ZONE_DEVICE struct page refcount
+
+ arch/powerpc/kvm/book3s_hv_uvmem.c       |   2 +-
+ drivers/gpu/drm/amd/amdkfd/kfd_migrate.c |  40 ++--
+ drivers/gpu/drm/nouveau/nouveau_dmem.c   |   2 +-
+ fs/dax.c                                 |   8 +-
+ fs/ext4/inode.c                          |   5 +-
+ fs/fuse/dax.c                            |   4 +-
+ fs/xfs/xfs_file.c                        |   4 +-
+ include/linux/dax.h                      |  10 +
+ include/linux/memremap.h                 |  15 +-
+ include/linux/migrate.h                  |   1 +
+ include/linux/mm.h                       |  19 +-
+ lib/test_hmm.c                           | 276 +++++++++++++++++------
+ lib/test_hmm_uapi.h                      |  20 +-
+ mm/internal.h                            |   8 +
+ mm/memcontrol.c                          |  12 +-
+ mm/memory-failure.c                      |   6 +-
+ mm/memremap.c                            |  71 ++----
+ mm/migrate.c                             |  33 +--
+ mm/page_alloc.c                          |   3 +
+ mm/swap.c                                |  45 +---
+ tools/testing/selftests/vm/hmm-tests.c   | 137 +++++++++--
+ tools/testing/selftests/vm/test_hmm.sh   |  20 +-
+ 22 files changed, 490 insertions(+), 251 deletions(-)
+
 -- 
-2.31.1
+2.32.0
 
