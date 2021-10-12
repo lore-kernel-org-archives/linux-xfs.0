@@ -2,38 +2,36 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBAABC433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Oct 2021 23:33:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AC21C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Oct 2021 23:33:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C2FDC60EB6
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Oct 2021 23:33:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0144C60F92
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Oct 2021 23:33:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235640AbhJLXfP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Oct 2021 19:35:15 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48264 "EHLO mail.kernel.org"
+        id S235950AbhJLXfV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Oct 2021 19:35:21 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48292 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234129AbhJLXfO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 12 Oct 2021 19:35:14 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 9A09960E53;
-        Tue, 12 Oct 2021 23:33:12 +0000 (UTC)
+        id S234129AbhJLXfU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 12 Oct 2021 19:35:20 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 239D760ED4;
+        Tue, 12 Oct 2021 23:33:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1634081592;
-        bh=cS2TPX7Hdf+X5nAStlCWZqcdFHUlsDAf70yMWNuhkTU=;
+        s=k20201202; t=1634081598;
+        bh=Zvk7U/b35ya2g/SZFSUqx9RGV0HxoSvhrDfx119UcQI=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=C9n0P1XHbnrIGVUNmQSQMldf1l41agFulfHycjxen0vW0RbuPAJRdsvCP2ktMAQPL
-         pwFmfXH1B60DYBbC6iqBCfLV+1s0dLYv5Bu/xrcwKycDyc1ZkWO6yx8vY7xhWjmm2V
-         gsxju+o63HLwGP0vAkVoSTuiDKF3t7MmBymSRvUKAN4jjTk+lv8PpQDZWM/TKGde8a
-         Q2EhngtGDyXpDOC0yvgyiGY+HkjlCapNT+x020uBoLG8+Apg4tmpK1UcmOskIGUsGN
-         I0R+ohUhtpTJTPUaATXy/GYWMFEJ8CuNPUFC71C+DhCL1gCsz8pHZWC2nHDX3gBUZf
-         zFMmVPbNFjDyw==
-Subject: [PATCH 07/15] xfs: refactor btree cursor allocation function
+        b=TyLL5wstManFvOwxk5fQitchOXcYe0iasdUzPcb5iFOHNuaI/ZxnapAKaEYyhTAVr
+         2drk3qL32uusWXjj2FL+YSlDe/EgYFaEEZeqyMAkHzbjNYY0yNr/6Lgk2jxWgC8Hgk
+         Yf//DouoCDhqAPXRZt8AihT3jkx+f4JXg/K5Z8Y/aSkepJMYHPR9OuWxQfn+fSAbNr
+         SDDc8IUfEBiIFCxKHOggue/Xmw2KAkH7ZnhklF+BxatIji7qE2tsWUTC7cZQK9GD4U
+         EFEyAVQpfbS1lpRHq5stBjvZIVs/sd9wdQPRHN8MQFyIj/CiWUu+0umAepqMvH3oyO
+         kYkFnfV5RGwRA==
+Subject: [PATCH 08/15] xfs: encode the max btree height in the cursor
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, david@fromorbit.com
-Cc:     Chandan Babu R <chandan.babu@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        chandan.babu@oracle.com, hch@lst.de
-Date:   Tue, 12 Oct 2021 16:33:12 -0700
-Message-ID: <163408159230.4151249.14190118477095749260.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org, chandan.babu@oracle.com, hch@lst.de
+Date:   Tue, 12 Oct 2021 16:33:17 -0700
+Message-ID: <163408159784.4151249.6976364349258667730.stgit@magnolia>
 In-Reply-To: <163408155346.4151249.8364703447365270670.stgit@magnolia>
 References: <163408155346.4151249.8364703447365270670.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -46,128 +44,116 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Refactor btree allocation to a common helper.
+Encode the maximum btree height in the cursor, since we're soon going to
+allow smaller cursors for AG btrees and larger cursors for file btrees.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Chandan Babu R <chandan.babu@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_alloc_btree.c    |    6 +-----
- fs/xfs/libxfs/xfs_bmap_btree.c     |    6 +-----
- fs/xfs/libxfs/xfs_btree.h          |   16 ++++++++++++++++
- fs/xfs/libxfs/xfs_ialloc_btree.c   |    5 +----
- fs/xfs/libxfs/xfs_refcount_btree.c |    5 +----
- fs/xfs/libxfs/xfs_rmap_btree.c     |    5 +----
- 6 files changed, 21 insertions(+), 22 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c          |    2 +-
+ fs/xfs/libxfs/xfs_btree.c         |    4 ++--
+ fs/xfs/libxfs/xfs_btree.h         |    2 ++
+ fs/xfs/libxfs/xfs_btree_staging.c |   10 +++++-----
+ 4 files changed, 10 insertions(+), 8 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
-index 152ed2a202f4..c644b11132f6 100644
---- a/fs/xfs/libxfs/xfs_alloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_alloc_btree.c
-@@ -477,11 +477,7 @@ xfs_allocbt_init_common(
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 644b956301b6..2ae5bf9a74e7 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -239,7 +239,7 @@ xfs_bmap_get_bp(
+ 	if (!cur)
+ 		return NULL;
  
- 	ASSERT(btnum == XFS_BTNUM_BNO || btnum == XFS_BTNUM_CNT);
+-	for (i = 0; i < XFS_BTREE_MAXLEVELS; i++) {
++	for (i = 0; i < cur->bc_maxlevels; i++) {
+ 		if (!cur->bc_levels[i].bp)
+ 			break;
+ 		if (xfs_buf_daddr(cur->bc_levels[i].bp) == bno)
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 25dfab81025f..6ced8f028d47 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -2933,7 +2933,7 @@ xfs_btree_new_iroot(
+ 	be16_add_cpu(&block->bb_level, 1);
+ 	xfs_btree_set_numrecs(block, 1);
+ 	cur->bc_nlevels++;
+-	ASSERT(cur->bc_nlevels <= XFS_BTREE_MAXLEVELS);
++	ASSERT(cur->bc_nlevels <= cur->bc_maxlevels);
+ 	cur->bc_levels[level + 1].ptr = 1;
  
--	cur = kmem_cache_zalloc(xfs_btree_cur_zone, GFP_NOFS | __GFP_NOFAIL);
--
--	cur->bc_tp = tp;
--	cur->bc_mp = mp;
--	cur->bc_btnum = btnum;
-+	cur = xfs_btree_alloc_cursor(mp, tp, btnum);
- 	cur->bc_ag.abt.active = false;
- 
- 	if (btnum == XFS_BTNUM_CNT) {
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-index a43dea8d6a65..a06987e36db5 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-@@ -552,12 +552,8 @@ xfs_bmbt_init_cursor(
- 	struct xfs_btree_cur	*cur;
- 	ASSERT(whichfork != XFS_COW_FORK);
- 
--	cur = kmem_cache_zalloc(xfs_btree_cur_zone, GFP_NOFS | __GFP_NOFAIL);
--
--	cur->bc_tp = tp;
--	cur->bc_mp = mp;
-+	cur = xfs_btree_alloc_cursor(mp, tp, XFS_BTNUM_BMAP);
- 	cur->bc_nlevels = be16_to_cpu(ifp->if_broot->bb_level) + 1;
--	cur->bc_btnum = XFS_BTNUM_BMAP;
- 	cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_bmbt_2);
- 
- 	cur->bc_ops = &xfs_bmbt_ops;
+ 	kp = xfs_btree_key_addr(cur, 1, block);
+@@ -3097,7 +3097,7 @@ xfs_btree_new_root(
+ 	xfs_btree_setbuf(cur, cur->bc_nlevels, nbp);
+ 	cur->bc_levels[cur->bc_nlevels].ptr = nptr;
+ 	cur->bc_nlevels++;
+-	ASSERT(cur->bc_nlevels <= XFS_BTREE_MAXLEVELS);
++	ASSERT(cur->bc_nlevels <= cur->bc_maxlevels);
+ 	*stat = 1;
+ 	return 0;
+ error0:
 diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index 613f7a303cc6..76509e819d60 100644
+index 76509e819d60..43766e5b680f 100644
 --- a/fs/xfs/libxfs/xfs_btree.h
 +++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -573,4 +573,20 @@ void xfs_btree_copy_keys(struct xfs_btree_cur *cur,
- 		union xfs_btree_key *dst_key,
- 		const union xfs_btree_key *src_key, int numkeys);
+@@ -238,6 +238,7 @@ struct xfs_btree_cur
+ 	xfs_btnum_t		bc_btnum; /* identifies which btree type */
+ 	union xfs_btree_irec	bc_rec;	/* current insert/search record value */
+ 	uint8_t			bc_nlevels; /* number of levels in the tree */
++	uint8_t			bc_maxlevels; /* maximum levels for this btree type */
+ 	int			bc_statoff; /* offset of btree stats array */
  
-+static inline struct xfs_btree_cur *
-+xfs_btree_alloc_cursor(
-+	struct xfs_mount	*mp,
-+	struct xfs_trans	*tp,
-+	xfs_btnum_t		btnum)
-+{
-+	struct xfs_btree_cur	*cur;
-+
-+	cur = kmem_cache_zalloc(xfs_btree_cur_zone, GFP_NOFS | __GFP_NOFAIL);
-+	cur->bc_tp = tp;
-+	cur->bc_mp = mp;
-+	cur->bc_btnum = btnum;
-+
-+	return cur;
-+}
-+
- #endif	/* __XFS_BTREE_H__ */
-diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
-index 10736b89b679..c8fea6a464d5 100644
---- a/fs/xfs/libxfs/xfs_ialloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
-@@ -432,10 +432,7 @@ xfs_inobt_init_common(
- {
- 	struct xfs_btree_cur	*cur;
+ 	/*
+@@ -585,6 +586,7 @@ xfs_btree_alloc_cursor(
+ 	cur->bc_tp = tp;
+ 	cur->bc_mp = mp;
+ 	cur->bc_btnum = btnum;
++	cur->bc_maxlevels = XFS_BTREE_MAXLEVELS;
  
--	cur = kmem_cache_zalloc(xfs_btree_cur_zone, GFP_NOFS | __GFP_NOFAIL);
--	cur->bc_tp = tp;
--	cur->bc_mp = mp;
--	cur->bc_btnum = btnum;
-+	cur = xfs_btree_alloc_cursor(mp, tp, btnum);
- 	if (btnum == XFS_BTNUM_INO) {
- 		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_ibt_2);
- 		cur->bc_ops = &xfs_inobt_ops;
-diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
-index 3ea589f15b14..48c45e31d897 100644
---- a/fs/xfs/libxfs/xfs_refcount_btree.c
-+++ b/fs/xfs/libxfs/xfs_refcount_btree.c
-@@ -322,10 +322,7 @@ xfs_refcountbt_init_common(
+ 	return cur;
+ }
+diff --git a/fs/xfs/libxfs/xfs_btree_staging.c b/fs/xfs/libxfs/xfs_btree_staging.c
+index cc56efc2b90a..dd75e208b543 100644
+--- a/fs/xfs/libxfs/xfs_btree_staging.c
++++ b/fs/xfs/libxfs/xfs_btree_staging.c
+@@ -657,12 +657,12 @@ xfs_btree_bload_compute_geometry(
+ 	 * checking levels 0 and 1 here, so set bc_nlevels such that the btree
+ 	 * code doesn't interpret either as the root level.
+ 	 */
+-	cur->bc_nlevels = XFS_BTREE_MAXLEVELS - 1;
++	cur->bc_nlevels = cur->bc_maxlevels - 1;
+ 	xfs_btree_bload_ensure_slack(cur, &bbl->leaf_slack, 0);
+ 	xfs_btree_bload_ensure_slack(cur, &bbl->node_slack, 1);
  
- 	ASSERT(pag->pag_agno < mp->m_sb.sb_agcount);
+ 	bbl->nr_records = nr_this_level = nr_records;
+-	for (cur->bc_nlevels = 1; cur->bc_nlevels <= XFS_BTREE_MAXLEVELS;) {
++	for (cur->bc_nlevels = 1; cur->bc_nlevels <= cur->bc_maxlevels;) {
+ 		uint64_t	level_blocks;
+ 		uint64_t	dontcare64;
+ 		unsigned int	level = cur->bc_nlevels - 1;
+@@ -703,7 +703,7 @@ xfs_btree_bload_compute_geometry(
+ 			 * block-based btree level.
+ 			 */
+ 			cur->bc_nlevels++;
+-			ASSERT(cur->bc_nlevels <= XFS_BTREE_MAXLEVELS);
++			ASSERT(cur->bc_nlevels <= cur->bc_maxlevels);
+ 			xfs_btree_bload_level_geometry(cur, bbl, level,
+ 					nr_this_level, &avg_per_block,
+ 					&level_blocks, &dontcare64);
+@@ -719,14 +719,14 @@ xfs_btree_bload_compute_geometry(
  
--	cur = kmem_cache_zalloc(xfs_btree_cur_zone, GFP_NOFS | __GFP_NOFAIL);
--	cur->bc_tp = tp;
--	cur->bc_mp = mp;
--	cur->bc_btnum = XFS_BTNUM_REFC;
-+	cur = xfs_btree_alloc_cursor(mp, tp, XFS_BTNUM_REFC);
- 	cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_refcbt_2);
+ 			/* Otherwise, we need another level of btree. */
+ 			cur->bc_nlevels++;
+-			ASSERT(cur->bc_nlevels <= XFS_BTREE_MAXLEVELS);
++			ASSERT(cur->bc_nlevels <= cur->bc_maxlevels);
+ 		}
  
- 	cur->bc_flags |= XFS_BTREE_CRC_BLOCKS;
-diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
-index d65bf3c6f25e..f3c4d0965cc9 100644
---- a/fs/xfs/libxfs/xfs_rmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_rmap_btree.c
-@@ -451,11 +451,8 @@ xfs_rmapbt_init_common(
- {
- 	struct xfs_btree_cur	*cur;
+ 		nr_blocks += level_blocks;
+ 		nr_this_level = level_blocks;
+ 	}
  
--	cur = kmem_cache_zalloc(xfs_btree_cur_zone, GFP_NOFS | __GFP_NOFAIL);
--	cur->bc_tp = tp;
--	cur->bc_mp = mp;
- 	/* Overlapping btree; 2 keys per pointer. */
--	cur->bc_btnum = XFS_BTNUM_RMAP;
-+	cur = xfs_btree_alloc_cursor(mp, tp, XFS_BTNUM_RMAP);
- 	cur->bc_flags = XFS_BTREE_CRC_BLOCKS | XFS_BTREE_OVERLAPPING;
- 	cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_rmap_2);
- 	cur->bc_ops = &xfs_rmapbt_ops;
+-	if (cur->bc_nlevels > XFS_BTREE_MAXLEVELS)
++	if (cur->bc_nlevels > cur->bc_maxlevels)
+ 		return -EOVERFLOW;
+ 
+ 	bbl->btree_height = cur->bc_nlevels;
 
