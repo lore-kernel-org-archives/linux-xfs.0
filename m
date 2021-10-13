@@ -2,205 +2,288 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A520C43219
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Oct 2021 08:27:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 920FDC433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Oct 2021 09:51:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E154B60273
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Oct 2021 08:27:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A1D660EDF
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Oct 2021 09:51:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234440AbhJMI3H (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 Oct 2021 04:29:07 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:59052 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232609AbhJMI3D (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Oct 2021 04:29:03 -0400
+        id S237603AbhJMJxo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 13 Oct 2021 05:53:44 -0400
+Received: from smtp-out2.suse.de ([195.135.220.29]:52638 "EHLO
+        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238945AbhJMJxo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Oct 2021 05:53:44 -0400
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id 4721822293;
-        Wed, 13 Oct 2021 08:26:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1634113619; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        by smtp-out2.suse.de (Postfix) with ESMTP id 5B285201CA;
+        Wed, 13 Oct 2021 09:51:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1634118700; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=McR6yLTw26IMl2q+Ttf8E0wCs6FpSGK2pEn0KwZBs4Q=;
-        b=Bc2vAIAmillFOD/w7gXfw+OemzeQe4gw3MeuwYVov4/Uno6d88ZQytx35zg3gnZFoo+m3e
-        AraEWcP/ZW/YS59FTqCxuwlTSWG1/rZVgyI/zedQilBYDcaev36ZPoV+ig2L2nyPz7u5gb
-        IVIZNlkwo/2ROs3X6NM9FabSSFwkYiw=
-Received: from suse.cz (unknown [10.100.201.86])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by relay2.suse.de (Postfix) with ESMTPS id B41AAA3B83;
-        Wed, 13 Oct 2021 08:26:58 +0000 (UTC)
-Date:   Wed, 13 Oct 2021 10:26:58 +0200
-From:   Michal Hocko <mhocko@suse.com>
+        bh=oRbO9y4IVv08xUAYCwf8PSf7iV+tEDafxLGCjEVSp14=;
+        b=qI7GUEFMGHxbaU9zoAXsUf8r11++eLiJsYzSVkRiXbO24XRdauDH1uNjMjc2s3PsY+oe7f
+        0zF0/bc87G0qshmEBDB8Pgg1VXoYezE2fQf6b3pfvzlaSWK/0od4e+iEZ/KgAd7KUFN395
+        BsTbvMbG402JtvXKZEYpGJgqkw5g2FA=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1634118700;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=oRbO9y4IVv08xUAYCwf8PSf7iV+tEDafxLGCjEVSp14=;
+        b=mm6F/aCmm849gS7xHEOZ69wGJvJQCHeBUgyxC50gleu/n69+Mu++YoRYXFJBrFwwFk7FKd
+        95CoB24gZWptftBw==
+Received: from quack2.suse.cz (unknown [10.100.224.230])
+        by relay2.suse.de (Postfix) with ESMTP id 4DAEEA3B87;
+        Wed, 13 Oct 2021 09:51:40 +0000 (UTC)
+Received: by quack2.suse.cz (Postfix, from userid 1000)
+        id 2BD251E11B6; Wed, 13 Oct 2021 11:51:39 +0200 (CEST)
+Date:   Wed, 13 Oct 2021 11:51:39 +0200
+From:   Jan Kara <jack@suse.cz>
 To:     Dave Chinner <david@fromorbit.com>
-Cc:     NeilBrown <neilb@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Mel Gorman <mgorman@suse.de>, Jonathan Corbet <corbet@lwn.net>,
-        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-mm@kvack.org, linux-kernel@vger.kernel.org,
-        linux-doc@vger.kernel.org
-Subject: Re: [PATCH 2/6] MM: improve documentation for __GFP_NOFAIL
-Message-ID: <YWaYUsXgXS6GXM+M@dhcp22.suse.cz>
-References: <b680fb87-439b-0ba4-cf9f-33d729f27941@suse.cz>
- <YVwyhDnE/HEnoLAi@dhcp22.suse.cz>
- <eba04a07-99da-771a-ab6b-36de41f9f120@suse.cz>
- <20211006231452.GF54211@dread.disaster.area>
- <YV7G7gyfZkmw7/Ae@dhcp22.suse.cz>
- <163364854551.31063.4377741712039731672@noble.neil.brown.name>
- <YV/31+qXwqEgaxJL@dhcp22.suse.cz>
- <20211008223649.GJ54211@dread.disaster.area>
- <YWQmsESyyiea0zle@dhcp22.suse.cz>
- <20211013023231.GV2361455@dread.disaster.area>
+Cc:     Jan Kara <jack@suse.cz>, linux-xfs@vger.kernel.org,
+        Dave Chinner <dchinner@redhat.com>,
+        "Darrick J. Wong" <djwong@kernel.org>
+Subject: Re: Performance regression with async inode inactivation
+Message-ID: <20211013095139.GC19200@quack2.suse.cz>
+References: <20211004100653.GD2255@quack2.suse.cz>
+ <20211004211508.GB54211@dread.disaster.area>
+ <20211005081157.GA24625@quack2.suse.cz>
+ <20211005212608.GC54211@dread.disaster.area>
+ <20211006181001.GA4182@quack2.suse.cz>
+ <20211006215851.GD54211@dread.disaster.area>
+ <20211007120357.GD12712@quack2.suse.cz>
+ <20211007234430.GH54211@dread.disaster.area>
+ <20211012134255.GA19200@quack2.suse.cz>
+ <20211012212339.GQ2361455@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211013023231.GV2361455@dread.disaster.area>
+In-Reply-To: <20211012212339.GQ2361455@dread.disaster.area>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed 13-10-21 13:32:31, Dave Chinner wrote:
-> On Mon, Oct 11, 2021 at 01:57:36PM +0200, Michal Hocko wrote:
-> > On Sat 09-10-21 09:36:49, Dave Chinner wrote:
-> > > On Fri, Oct 08, 2021 at 09:48:39AM +0200, Michal Hocko wrote:
-> > > > > > > Even the API constaints of kvmalloc() w.r.t. only doing the vmalloc
-> > > > > > > fallback if the gfp context is GFP_KERNEL - we already do GFP_NOFS
-> > > > > > > kvmalloc via memalloc_nofs_save/restore(), so this behavioural
-> > > > > > > restriction w.r.t. gfp flags just makes no sense at all.
-> > > > > > 
-> > > > > > GFP_NOFS (without using the scope API) has the same problem as NOFAIL in
-> > > > > > the vmalloc. Hence it is not supported. If you use the scope API then
-> > > > > > you can GFP_KERNEL for kvmalloc. This is clumsy but I am not sure how to
-> > > > > > define these conditions in a more sensible way. Special case NOFS if the
-> > > > > > scope api is in use? Why do you want an explicit NOFS then?
-> > > 
-> > > Exactly my point - this is clumsy and a total mess. I'm not asking
-> > > for an explicit GFP_NOFS, just pointing out that the documented
-> > > restrictions that "vmalloc can only do GFP_KERNEL allocations" is
-> > > completely wrong.
-> > > 
-> > > vmalloc()
-> > > {
-> > > 	if (!(gfp_flags &  __GFP_FS))
-> > > 		memalloc_nofs_save();
-> > > 	p = __vmalloc(gfp_flags | GFP_KERNEL)
-> > > 	if (!(gfp_flags &  __GFP_FS))
-> > > 		memalloc_nofs_restore();
-> > > }
-> > > 
-> > > Yup, that's how simple it is to support GFP_NOFS support in
-> > > vmalloc().
+On Wed 13-10-21 08:23:39, Dave Chinner wrote:
+> On Tue, Oct 12, 2021 at 03:42:55PM +0200, Jan Kara wrote:
+> > On Fri 08-10-21 10:44:30, Dave Chinner wrote:
+> > > Remove the fsync and we do have a real world workload - temporary
+> > > files for compiles, etc. Then everything should mostly get logged
+> > > in the same CIL context because all transactions are run
+> > > asynchronously and aggregate in memory until the CIL is full and
+> > > checkpoints itself. Hence log writes shouldn't change very much at
+> > > all for such workloads.
 > > 
-> > Yes, this would work from the functionality POV but it defeats the
-> > philosophy behind the scope API. Why would you even need this if the
-> > scope was defined by the caller of the allocator?
-> 
-> Who actually cares that vmalloc might be using the scoped API
-> internally to implement GFP_NOFS or GFP_NOIO? Nobody at all.
-> It is far more useful (and self documenting!) for one-off allocations
-> to pass a GFP_NOFS flag than it is to use a scope API...
-
-I would agree with you if the explicit GFP_NOFS usage was consistent
-and actually justified in the majority cases. My experience tells me
-otherwise though. Many filesystems use the flag just because that is
-easier. That leads to a huge overuse of the flag that leads to practical
-problems.
-
-I was hoping that if we offer an API that would define problematic
-reclaim recursion scopes then it would reduce the abuse. I haven't
-expected this to happen overnight but it is few years and it seems
-it will not happen soon either.
-
-[...]
-
-> > > It also points out that the scope API is highly deficient.
-> > > We can do GFP_NOFS via the scope API, but we can't
-> > > do anything else because *there is no scope API for other GFP
-> > > flags*.
-> > > 
-> > > Why don't we have a GFP_NOFAIL/__GFP_RETRY_FOREVER scope API?
+> > OK, that makes sense. Thanks for explanation. So to verify your theory,
+> > I've removed fsync(2) from the test program. So now it is pure create,
+> > write, unlink workload. Results of "stress-unlink 48 /mnt", now for 5000
+> > loops of create-unlink to increase runtime (but the workload does barely
+> > any writes so it should not matter wrt log):
 > > 
-> > NO{FS,IO} where first flags to start this approach. And I have to admit
-> > the experiment was much less successful then I hoped for. There are
-> > still thousands of direct NOFS users so for some reason defining scopes
-> > is not an easy thing to do.
+> > default mkfs params:
+> > 	AVG	STDDEV
+> > before	2.0380	0.1597
+> > after	2.7356	0.4712
 > > 
-> > I am not against NOFAIL scopes in principle but seeing the nofs
-> > "success" I am worried this will not go really well either and it is
-> > much more tricky as NOFAIL has much stronger requirements than NOFS.
-> > Just imagine how tricky this can be if you just call a library code
-> > that is not under your control within a NOFAIL scope. What if that
-> > library code decides to allocate (e.g. printk that would attempt to do
-> > an optimistic NOWAIT allocation).
+> > agcount=96, log size 512M
+> > 	AVG	STDDEV
+> > before	1.0610	0.0227
+> > after	1.2508	0.0218
+> > 
+> > So still notable regression with the async inactivation. With default mkfs
+> > params we'd need more runs to get more reliable results (note the rather
+> > high standard deviation) but with high AG count results show pretty stable
+> > 20% regression - so let's have a look at that.
+> > 
+> > Looking at xfs stats there are barely any differences between before &
+> > after - 'after' writes a bit more to the log but it is ~1.5 MB over the
+> > whole benchmark run, altogether spending some 8ms doing IO so that's not
+> > it. Generally the workload seems to be CPU / memory bound now (it does
+> > barely any IO). Perf shows we are heavily contending on some spinlock in
+> > xfs_cil_commit() - I presume this is a xc_cil_lock.
 > 
-> I already asked you that _exact_ question earlier in the thread
-> w.r.t.  kvmalloc(GFP_NOFAIL) using optimistic NOWAIT kmalloc
-> allocation. I asked you as a MM expert to define *and document* the
-> behaviour that should result, not turn around and use the fact that
-> it is undefined behaviour as a "this is too hard" excuse for not
-> changing anything.
-
-Dave, you have "thrown" a lot of complains in previous emails and it is
-hard to tell rants from features requests apart. I am sorry but I
-believe it would be much more productive to continue this discussion if
-you could mild your tone.
-
-Can I ask you to break down your feature requests into separate emails
-so that we can discuss and track them separately rather in this quite a
-long thread which has IMHO diverghed from the initial topic. Thanks!
-
-> THe fact is that the scope APIs are only really useful for certain
-> contexts where restrictions are set by higher level functionality.
-> For one-off allocation constraints the API sucks and we end up with
-
-Could you be more specific about these one-off allocation constrains?
-What would be the reason to define one-off NO{FS,IO} allocation
-constrain? Or did you have your NOFAIL example in mind?
-
-> crap like this (found in btrfs):
+> Yes, and I have patches that fix this. It got reverted a before
+> release because it exposed a bunch of underlying zero-fay bugs in
+> the log code, and I haven't had time to run it through the review
+> cycle again even though it's pretty much unchanged from commits
+> 26-39 in this series:
 > 
->                 /*                                                               
->                  * We're holding a transaction handle, so use a NOFS memory      
->                  * allocation context to avoid deadlock if reclaim happens.      
->                  */                                                              
->                 nofs_flag = memalloc_nofs_save();                                
->                 value = kmalloc(size, GFP_KERNEL);                               
->                 memalloc_nofs_restore(nofs_flag);                                
+> https://lore.kernel.org/linux-xfs/20210603052240.171998-1-david@fromorbit.com/
+> 
+> The profiles in this patch demonstrate the problem and the fix:
+> 
+> https://lore.kernel.org/linux-xfs/20210603052240.171998-35-david@fromorbit.com/
+> 
+> I did all my perf testing of inode inactivation with the CIL
+> scalability patches also installed, because deferred inode
+> inactivation only made contention on the CIL lock worse in my perf
+> tests. We simply can't evaluate the benefit of a change when the
+> system is easily driven into catastrophic lock breakdown by user
+> level operational concurrency.
+> 
+> IOWs, the CIL lock is the global limiting factor for async
+> transaction commit rates on large CPU count machines, and things
+> that remove bottlenecks in higher layers often just increase
+> contention on this lock and drive it into breakdown. That makes perf
+> go backwards, not forwards, and it's not the fault of the high level
+> change being made. That doesn't make the high level change wrong, it
+> just means we need to peel the onion further before the improvements
+> are fully realised.
 
-Yes this looks wrong indeed! If I were to review such a code I would ask
-why the scope cannot match the transaction handle context. IIRC jbd does
-that.
+OK, understood.
 
-I am aware of these patterns. I was pulled in some discussions in the
-past and in some it turned out that the constrain is not needed at all
-and in some cases that has led to a proper scope definition. As you
-point out in your other examples it just happens that it is easier to
-go an easy path and define scopes ad-hoc to work around allocation
-API limitations.
+> > This actually happens
+> > both before and after, but we seem to spend some more time there with async
+> > inactivation. Likely this is related to work being done from worker
+> > threads. Perf stats for comparison:
+> > 
+> > before
+> >          51,135.08 msec cpu-clock                 #   47.894 CPUs utilized          
+> >              4,699      context-switches          #    0.092 K/sec                  
+> >                382      cpu-migrations            #    0.007 K/sec                  
+> >              1,228      page-faults               #    0.024 K/sec                  
+> >    128,884,972,351      cycles                    #    2.520 GHz                    
+> >     38,517,767,839      instructions              #    0.30  insn per cycle         
+> >      8,337,611,468      branches                  #  163.051 M/sec                  
+> >         39,749,736      branch-misses             #    0.48% of all branches        
+> >         25,225,109      cache-misses                                                
+> > 
+> >        1.067666170 seconds time elapsed
+> > 
+> > after
+> >          65,353.43 msec cpu-clock                 #   47.894 CPUs utilized          
+> >             43,737      context-switches          #    0.669 K/sec                  
+> >              1,824      cpu-migrations            #    0.028 K/sec                  
+> >              1,953      page-faults               #    0.030 K/sec                  
+> >    155,144,150,867      cycles                    #    2.374 GHz                    
+> >     45,280,145,337      instructions              #    0.29  insn per cycle         
+> >     10,027,567,384      branches                  #  153.436 M/sec                  
+> >         39,554,691      branch-misses             #    0.39% of all branches        
+> >         30,203,567      cache-misses                                                
+> > 
+> >        1.364539400 seconds time elapsed
+> > 
+> > So we can see huge increase in context-switches, notable increase in
+> > cache-misses, decrease in cycles/s so perhaps we are bouncing cache more?
+> > Anyway I guess this is kind of expected due to the nature of async
+> > inactivation, I just wanted to highlight that there are regressions without
+> > fsync in the game as well.
+> 
+> Context switches are largely noise - they are most likely just AGI
+> locks being bounced a bit more. It's the spinlock contention that is
+> the likely issue here. For example, on my 32p machine with vanilla
+> 5.15-rc4 with a fsync-less, 5000 iteration test run:
+> 
+> $ sudo perf_5.9 stat ./stress-unlink 32 /mnt/scratch
+> Processes started.
+> 1.290
+> 
+>  Performance counter stats for './stress-unlink 32 /mnt/scratch':
+> 
+>          16,856.61 msec task-clock                #   12.595 CPUs utilized          
+>             48,297      context-switches          #    0.003 M/sec                  
+>              4,219      cpu-migrations            #    0.250 K/sec                  
+>              1,373      page-faults               #    0.081 K/sec                  
+>     39,254,798,526      cycles                    #    2.329 GHz                    
+>     16,460,808,349      instructions              #    0.42  insn per cycle         
+>      3,475,251,228      branches                  #  206.166 M/sec                  
+>         12,129,889      branch-misses             #    0.35% of all branches        
+> 
+>        1.338312347 seconds time elapsed
+> 
+>        0.186554000 seconds user
+>       17.247176000 seconds sys
+> 
+> And with 5.15-rc4 + CIL scalability:
+> 
+> $ sudo perf_5.9 stat ./stress-unlink 32 /mnt/scratch
+> Processes started.
+> 0.894
+> 
+>  Performance counter stats for './stress-unlink 32 /mnt/scratch':
+> 
+>          12,917.93 msec task-clock                #   13.805 CPUs utilized
+>             39,680      context-switches          #    0.003 M/sec
+>              2,737      cpu-migrations            #    0.212 K/sec
+>              1,402      page-faults               #    0.109 K/sec
+>     30,920,293,752      cycles                    #    2.394 GHz
+>     14,472,067,501      instructions              #    0.47  insn per cycle
+>      2,700,978,247      branches                  #  209.087 M/sec
+>          9,287,754      branch-misses             #    0.34% of all branches
+> 
+>        0.935710173 seconds time elapsed
+> 
+>        0.192467000 seconds user
+>       13.245977000 seconds sys
+> 
+> Runtime of the fsync-less, 5,000 iteration version drops from 1.29s
+> to 0.89s, IPC goes up, branches and branch-misses go down, context
+> switches only go down slightly, etc. IOWs, when you take away the
+> CIL lock contention, we get back all that perf loss and then some...
 
-[...]
+Nice results!
 
-> IOWs, a large number of the users of the scope API simply make
-> [k]vmalloc() provide GFP_NOFS behaviour. ceph_kvmalloc() is pretty
-> much a wrapper that indicates how all vmalloc functions should
-> behave. Honour GFP_NOFS and GFP_NOIO by using the scope API
-> internally.
+> FWIW, let's really hammer it for a long while. Vanilla 5.14-rc4:
+> 
+> $ sudo perf_5.9 stat ./stress-unlink 1000 /mnt/scratch
+> Processes started.
+> 38.881
+> 
+>  Performance counter stats for './stress-unlink 1000 /mnt/scratch':
+> 
+>         733,741.06 msec task-clock                #   16.004 CPUs utilized          
+>         13,131,968      context-switches          #    0.018 M/sec                  
+>          1,302,636      cpu-migrations            #    0.002 M/sec                  
+>             40,720      page-faults               #    0.055 K/sec                  
+>  1,195,192,185,398      cycles                    #    1.629 GHz                    
+>    643,382,890,656      instructions              #    0.54  insn per cycle         
+>    129,065,409,600      branches                  #  175.900 M/sec                  
+>        768,146,988      branch-misses             #    0.60% of all branches        
+> 
+>       45.847750477 seconds time elapsed
+> 
+>       11.194020000 seconds user
+>      758.762376000 seconds sys
+> 
+> And the transaction rate is pinned at 800,000/s for the entire test.
+> We're running at the limit of the CIL lock here.
+> 
+> With CIL scalbility patchset:
+> 
+> $ sudo perf_5.9 stat ./stress-unlink 1000 /mnt/scratch
+> Processes started.
+> 28.263
+> 
+>  Performance counter stats for './stress-unlink 1000 /mnt/scratch':
+> 
+>         450,547.80 msec task-clock                #   15.038 CPUs utilized          
+>          5,949,268      context-switches          #    0.013 M/sec                  
+>            868,887      cpu-migrations            #    0.002 M/sec                  
+>             41,570      page-faults               #    0.092 K/sec                  
+>    836,933,822,425      cycles                    #    1.858 GHz                    
+>    536,132,522,275      instructions              #    0.64  insn per cycle         
+>     99,264,579,180      branches                  #  220.320 M/sec                  
+>        506,921,132      branch-misses             #    0.51% of all branches        
+> 
+>       29.961492616 seconds time elapsed
+> 
+>        7.796758000 seconds user
+>      471.990545000 seconds sys
+> 
+> 
+> 30% reduction in runtime because the transaction rate is now
+> running at 1.1M/s. Improvements in code execution across the board
+> here, so the problem clearly isn't the deferred inode inactivation.
+> 
+> IOWs, I'm largely not concerned about the high CPU count perf
+> regressions that we are seeing from log code these days - the fix is
+> largely ready, it's just lacking in available engineering time to get
+> it over the line and merged right now...
 
-I was discouraging from this behavior at vmalloc level to push people
-to use scopes properly - aka at the level where the reclaim recursion is
-really a problem. If that is infeasible in practice then we can
-re-evaluate of course. I was really hoping we can get rid of cargo cult
-GFP_NOFS usage this way but the reality often disagrees with hopes.
+OK, thanks for explanation!
 
-All that being said, let's discuss [k]vmalloc constrains and usecases
-that need changes in a separate email thread.
-
-Thanks!
+								Honza
 -- 
-Michal Hocko
-SUSE Labs
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
