@@ -2,115 +2,276 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2B22C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Oct 2021 01:59:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83624C43217
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Oct 2021 02:32:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CA55C60EE5
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Oct 2021 01:59:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B31F60041
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Oct 2021 02:32:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231137AbhJMCBU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Oct 2021 22:01:20 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34482 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230398AbhJMCBU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 12 Oct 2021 22:01:20 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id AD70D60720
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Oct 2021 01:59:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1634090357;
-        bh=qDR7OJs2rbf94vuB67YhWX9p9dH67B1YW4+k+aJ/4rE=;
-        h=Date:From:To:Subject:From;
-        b=uW8Dwke9eLp0wUYZm7bcNaLNOXcnxb8Y7iSVG9aVkSbwLsEn1Qp+CZpvbFPS/93C1
-         ZdoJRzEvsmd5p0MLfmgn+DctJi1CyP3T39xYSQrXSDtQDOQwcUKCaU8jz+bfeM6kjQ
-         9ENUV3rhgvAFu8ujtJs+Ih2g/FuXEntwZKmEPyFpF6oATdeNH0Kyzvsw4L2scypxuF
-         bzv5yaWGYqTxqS29wmZuCBmWo2EMz9OltXFqrQO/HQIxDkjTMFzfvCIZqyVk2xgju+
-         dTMJHVs1LHjojjJCYZInWv7C+ljWsv3iRD9cq4OPcH8fw3kw3c1bdk1OXc87s3Fc2A
-         /mqoS5sUKCqRg==
-Date:   Tue, 12 Oct 2021 18:59:17 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     xfs <linux-xfs@vger.kernel.org>
-Subject: [ANNOUNCE] xfs-linux: for-next updated to b06b65cb3f9b
-Message-ID: <20211013015917.GT24307@magnolia>
+        id S235912AbhJMCel (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Oct 2021 22:34:41 -0400
+Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:35514 "EHLO
+        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S233316AbhJMCel (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Oct 2021 22:34:41 -0400
+Received: from dread.disaster.area (pa49-195-238-16.pa.nsw.optusnet.com.au [49.195.238.16])
+        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 89ADC104FAB;
+        Wed, 13 Oct 2021 13:32:32 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1maU4F-005boy-4E; Wed, 13 Oct 2021 13:32:31 +1100
+Date:   Wed, 13 Oct 2021 13:32:31 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Michal Hocko <mhocko@suse.com>
+Cc:     NeilBrown <neilb@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Mel Gorman <mgorman@suse.de>, Jonathan Corbet <corbet@lwn.net>,
+        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+        linux-doc@vger.kernel.org
+Subject: Re: [PATCH 2/6] MM: improve documentation for __GFP_NOFAIL
+Message-ID: <20211013023231.GV2361455@dread.disaster.area>
+References: <163184741778.29351.16920832234899124642.stgit@noble.brown>
+ <b680fb87-439b-0ba4-cf9f-33d729f27941@suse.cz>
+ <YVwyhDnE/HEnoLAi@dhcp22.suse.cz>
+ <eba04a07-99da-771a-ab6b-36de41f9f120@suse.cz>
+ <20211006231452.GF54211@dread.disaster.area>
+ <YV7G7gyfZkmw7/Ae@dhcp22.suse.cz>
+ <163364854551.31063.4377741712039731672@noble.neil.brown.name>
+ <YV/31+qXwqEgaxJL@dhcp22.suse.cz>
+ <20211008223649.GJ54211@dread.disaster.area>
+ <YWQmsESyyiea0zle@dhcp22.suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <YWQmsESyyiea0zle@dhcp22.suse.cz>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=epq8cqlX c=1 sm=1 tr=0 ts=61664544
+        a=DzKKRZjfViQTE5W6EVc0VA==:117 a=DzKKRZjfViQTE5W6EVc0VA==:17
+        a=kj9zAlcOel0A:10 a=8gfv0ekSlNoA:10 a=7-415B0cAAAA:8
+        a=neU_OqogJPR7JUYaiz0A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+On Mon, Oct 11, 2021 at 01:57:36PM +0200, Michal Hocko wrote:
+> On Sat 09-10-21 09:36:49, Dave Chinner wrote:
+> > On Fri, Oct 08, 2021 at 09:48:39AM +0200, Michal Hocko wrote:
+> > > > > > Even the API constaints of kvmalloc() w.r.t. only doing the vmalloc
+> > > > > > fallback if the gfp context is GFP_KERNEL - we already do GFP_NOFS
+> > > > > > kvmalloc via memalloc_nofs_save/restore(), so this behavioural
+> > > > > > restriction w.r.t. gfp flags just makes no sense at all.
+> > > > > 
+> > > > > GFP_NOFS (without using the scope API) has the same problem as NOFAIL in
+> > > > > the vmalloc. Hence it is not supported. If you use the scope API then
+> > > > > you can GFP_KERNEL for kvmalloc. This is clumsy but I am not sure how to
+> > > > > define these conditions in a more sensible way. Special case NOFS if the
+> > > > > scope api is in use? Why do you want an explicit NOFS then?
+> > 
+> > Exactly my point - this is clumsy and a total mess. I'm not asking
+> > for an explicit GFP_NOFS, just pointing out that the documented
+> > restrictions that "vmalloc can only do GFP_KERNEL allocations" is
+> > completely wrong.
+> > 
+> > vmalloc()
+> > {
+> > 	if (!(gfp_flags &  __GFP_FS))
+> > 		memalloc_nofs_save();
+> > 	p = __vmalloc(gfp_flags | GFP_KERNEL)
+> > 	if (!(gfp_flags &  __GFP_FS))
+> > 		memalloc_nofs_restore();
+> > }
+> > 
+> > Yup, that's how simple it is to support GFP_NOFS support in
+> > vmalloc().
+> 
+> Yes, this would work from the functionality POV but it defeats the
+> philosophy behind the scope API. Why would you even need this if the
+> scope was defined by the caller of the allocator?
 
-The for-next branch of the xfs-linux repository at:
+Who actually cares that vmalloc might be using the scoped API
+internally to implement GFP_NOFS or GFP_NOIO? Nobody at all.
+It is far more useful (and self documenting!) for one-off allocations
+to pass a GFP_NOFS flag than it is to use a scope API...
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+> The initial hope was
+> to get rid of the NOFS abuse that can be seen in many filesystems. All
+> allocations from the scope would simply inherit the NOFS semantic so
+> an explicit NOFS shouldn't be really necessary, right?
 
-has just been updated.
+Yes, but I think you miss my point entirely: that the vmalloc
+restrictions on what gfp flags can be passed without making it
+entirely useless are completely arbitrary and non-sensical.
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.  I think the only ones I know about are Brian's perag
-iteration patches, the btree cursor and zone cleanups, and I plan to
-start taking a fresh look at Shiyang's DAX patches tomorrow.
+> > This goes along with the argument that "it's impossible to do
+> > GFP_NOFAIL with vmalloc" as I addressed above. These things are not
+> > impossible, but we hide behind "we don't want people to use vmalloc"
+> > as an excuse for having shitty behaviour whilst ignoring that
+> > vmalloc is *heavily used* by core subsystems like filesystems
+> > because they cannot rely on high order allocations succeeding....
+> 
+> I do not think there is any reason to discourage anybody from using
+> vmalloc these days. 32b is dying out and vmalloc space is no longer a
+> very scarce resource.
 
-The new head of the for-next branch is commit:
+We are still discouraged from doing high order allocations and
+should only use pages directly. Not to mention that the API doesn't
+make it simple to use vmalloc as a direct replacement for high order
+kmalloc tends to discourage new users...
 
-b06b65cb3f9b xfs: remove the xfs_dqblk_t typedef
+> > It also points out that the scope API is highly deficient.
+> > We can do GFP_NOFS via the scope API, but we can't
+> > do anything else because *there is no scope API for other GFP
+> > flags*.
+> > 
+> > Why don't we have a GFP_NOFAIL/__GFP_RETRY_FOREVER scope API?
+> 
+> NO{FS,IO} where first flags to start this approach. And I have to admit
+> the experiment was much less successful then I hoped for. There are
+> still thousands of direct NOFS users so for some reason defining scopes
+> is not an easy thing to do.
+> 
+> I am not against NOFAIL scopes in principle but seeing the nofs
+> "success" I am worried this will not go really well either and it is
+> much more tricky as NOFAIL has much stronger requirements than NOFS.
+> Just imagine how tricky this can be if you just call a library code
+> that is not under your control within a NOFAIL scope. What if that
+> library code decides to allocate (e.g. printk that would attempt to do
+> an optimistic NOWAIT allocation).
 
-New Commits:
+I already asked you that _exact_ question earlier in the thread
+w.r.t.  kvmalloc(GFP_NOFAIL) using optimistic NOWAIT kmalloc
+allocation. I asked you as a MM expert to define *and document* the
+behaviour that should result, not turn around and use the fact that
+it is undefined behaviour as a "this is too hard" excuse for not
+changing anything.
 
-Christoph Hellwig (3):
-      [b634a75b3e5a] xfs: remove the xfs_dinode_t typedef
-      [c310dcf40cd0] xfs: remove the xfs_dsb_t typedef
-      [b06b65cb3f9b] xfs: remove the xfs_dqblk_t typedef
+THe fact is that the scope APIs are only really useful for certain
+contexts where restrictions are set by higher level functionality.
+For one-off allocation constraints the API sucks and we end up with
+crap like this (found in btrfs):
 
-Darrick J. Wong (8):
-      [031f1a417e08] xfs: formalize the process of holding onto resources across a defer roll
-      [cfe5630bacde] xfs: port the defer ops capture and continue to resource capture
-      [af2a15d8d09e] xfs: fix maxlevels comparisons in the btree staging code
-      [e3d10ab7037b] xfs: remove xfs_btree_cur_t typedef
-      [507d6b151304] xfs: don't allocate scrub contexts on the stack
-      [c00bfaba5b1a] xfs: stricter btree height checking when looking for errors
-      [708f9938ecfe] xfs: stricter btree height checking when scanning for btree roots
-      [b912c7158477] xfs: check that bc_nlevels never overflows
+                /*                                                               
+                 * We're holding a transaction handle, so use a NOFS memory      
+                 * allocation context to avoid deadlock if reclaim happens.      
+                 */                                                              
+                nofs_flag = memalloc_nofs_save();                                
+                value = kmalloc(size, GFP_KERNEL);                               
+                memalloc_nofs_restore(nofs_flag);                                
 
-Gustavo A. R. Silva (1):
-      [a785fba7df9a] xfs: Use kvcalloc() instead of kvzalloc()
+But also from btrfs, this pattern is repeated in several places:
 
-Rustam Kovhaev (1):
-      [7a6037cfb70d] xfs: use kmem_cache_free() for kmem_cache objects
+        nofs_flag = memalloc_nofs_save();                                        
+        ctx = kvmalloc(struct_size(ctx, chunks, num_chunks), GFP_KERNEL);        
+        memalloc_nofs_restore(nofs_flag);                                        
 
+This needs to use the scoped API because vmalloc doesn't support
+GFP_NOFS. So the poor "vmalloc needs scoped API" pattern is bleeding
+over into other code that doesn't have the problems vmalloc does. Do
+you see how this leads to poorly written code now?
 
-Code Diffstat:
+Or perhaps I should just point at ceph?
 
- fs/xfs/libxfs/xfs_alloc.c         |  12 +--
- fs/xfs/libxfs/xfs_bmap.c          |  12 +--
- fs/xfs/libxfs/xfs_btree.c         |  14 ++--
- fs/xfs/libxfs/xfs_btree.h         |  12 +--
- fs/xfs/libxfs/xfs_btree_staging.c |   6 +-
- fs/xfs/libxfs/xfs_defer.c         | 171 ++++++++++++++++++++++++++------------
- fs/xfs/libxfs/xfs_defer.h         |  38 +++++++--
- fs/xfs/libxfs/xfs_dquot_buf.c     |   4 +-
- fs/xfs/libxfs/xfs_format.h        |  12 +--
- fs/xfs/libxfs/xfs_inode_buf.c     |   6 +-
- fs/xfs/libxfs/xfs_inode_fork.c    |  16 ++--
- fs/xfs/libxfs/xfs_sb.c            |   4 +-
- fs/xfs/scrub/agheader.c           |  13 +--
- fs/xfs/scrub/agheader_repair.c    |   8 +-
- fs/xfs/scrub/btree.c              |  54 +++++++-----
- fs/xfs/scrub/dabtree.c            |  62 +++++++-------
- fs/xfs/scrub/repair.h             |   3 +
- fs/xfs/scrub/scrub.c              |  64 +++++++-------
- fs/xfs/xfs_bmap_item.c            |   2 +-
- fs/xfs/xfs_buf_item_recover.c     |   2 +-
- fs/xfs/xfs_dquot.c                |   2 +-
- fs/xfs/xfs_extfree_item.c         |   8 +-
- fs/xfs/xfs_ioctl.c                |   6 +-
- fs/xfs/xfs_log_recover.c          |  12 +--
- fs/xfs/xfs_qm.c                   |   2 +-
- fs/xfs/xfs_refcount_item.c        |   2 +-
- fs/xfs/xfs_rmap_item.c            |   2 +-
- fs/xfs/xfs_trans.c                |   8 +-
- fs/xfs/xfs_trans.h                |   6 --
- mm/slob.c                         |   6 +-
- 30 files changed, 341 insertions(+), 228 deletions(-)
+/*
+ * kvmalloc() doesn't fall back to the vmalloc allocator unless flags are
+ * compatible with (a superset of) GFP_KERNEL.  This is because while the
+ * actual pages are allocated with the specified flags, the page table pages
+ * are always allocated with GFP_KERNEL.
+ *
+ * ceph_kvmalloc() may be called with GFP_KERNEL, GFP_NOFS or GFP_NOIO.
+ */
+void *ceph_kvmalloc(size_t size, gfp_t flags)
+{
+        void *p;
+
+        if ((flags & (__GFP_IO | __GFP_FS)) == (__GFP_IO | __GFP_FS)) {
+                p = kvmalloc(size, flags);
+        } else if ((flags & (__GFP_IO | __GFP_FS)) == __GFP_IO) {
+                unsigned int nofs_flag = memalloc_nofs_save();
+                p = kvmalloc(size, GFP_KERNEL);
+                memalloc_nofs_restore(nofs_flag);
+        } else {
+                unsigned int noio_flag = memalloc_noio_save();
+                p = kvmalloc(size, GFP_KERNEL);
+                memalloc_noio_restore(noio_flag);
+        }
+
+        return p;
+}
+
+IOWs, a large number of the users of the scope API simply make
+[k]vmalloc() provide GFP_NOFS behaviour. ceph_kvmalloc() is pretty
+much a wrapper that indicates how all vmalloc functions should
+behave. Honour GFP_NOFS and GFP_NOIO by using the scope API
+internally.
+
+> > That
+> > would save us a lot of bother in XFS. What about GFP_DIRECT_RECLAIM?
+> > I'd really like to turn that off for allocations in the XFS
+> > transaction commit path (as noted already in this thread) because
+> > direct reclaim that can make no progress is actively harmful (as
+> > noted already in this thread)
+> 
+> As always if you have reasonable usecases then it is best to bring them
+> up on the MM list and we can discuss them.
+
+They've been pointed out many times in the past, and I've pointed
+them out again in this thread. Telling me to "bring them up on the
+mm list" when that's exactly what I'm doing right now is not a
+helpful response.
+
+> > Like I said - this is more than just bad documentation - the problem
+> > is that the whole allocation API is an inconsistent mess of control
+> > mechanisms to begin with...
+> 
+> I am not going to disagree. There is a lot of historical baggage and
+> it doesn't help that any change is really hard to review because this
+> interface is used throughout the kernel. I have tried to change some
+> most obvious inconsistencies and I can tell this has always been a
+> frustrating experience with a very small "reward" in the end because
+> there are so many other problems.
+
+Technical debt in the mm APIs is something the mm developers need to
+address, not the people who tell you it's a problem for them.
+Telling the messenger "do my job for me because I find it too
+frustrating to make progress myself" doesn't help anyone make
+progress. If you find it frustrating trying to get mm code changed,
+imagine what it feels like for someone on the outside asking for
+relatively basic things like a consistent control API....
+
+> That being said, I would more than love to have a consistent and well
+> defined interface and if you want to spend a lot of time on that then be
+> my guest.
+
+My point exactly: saying "fix it yourself" is not a good response....
+
+> > > > It would seem to make sense for kvmalloc to WARN_ON if it is passed
+> > > > flags that does not allow it to use vmalloc.
+> > > 
+> > > vmalloc is certainly not the hottest path in the kernel so I wouldn't be
+> > > opposed.
+> > 
+> > kvmalloc is most certainly becoming one of the hottest paths in XFS.
+> > IOWs, arguments that "vmalloc is not a hot path" are simply invalid
+> > these days because they are simply untrue. e.g. the profiles I
+> > posted in this thread...
+> 
+> Is it such a hot path that a check for compatible flags would be visible
+> in profiles though?
+
+No, that doesn't even show up as noise - the overhead of global
+spinlock contention and direct reclaim are the elephants that
+profiles point to, not a couple of flag checks on function
+parameters...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
