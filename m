@@ -2,423 +2,508 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D185BC433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Oct 2021 21:36:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 626F4C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Oct 2021 21:42:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B29EF6117A
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Oct 2021 21:36:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4A20F611BF
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Oct 2021 21:42:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229882AbhJMVii (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 Oct 2021 17:38:38 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55694 "EHLO mail.kernel.org"
+        id S230126AbhJMVoz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 13 Oct 2021 17:44:55 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58208 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229706AbhJMVii (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 13 Oct 2021 17:38:38 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3BF2E60FDA;
-        Wed, 13 Oct 2021 21:36:34 +0000 (UTC)
+        id S229730AbhJMVoy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 13 Oct 2021 17:44:54 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 6C2426109E;
+        Wed, 13 Oct 2021 21:42:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1634160994;
-        bh=gdPP3S/c08OUcBM3uNGymeJky6v7aLHjowvaTJMnKrU=;
+        s=k20201202; t=1634161370;
+        bh=xRX1QikG4AmJQNc01ifZBHck4OUDNU1SziC+uE0JQ2E=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=pn5GpUIBBLyaBJDf2DxcJOKDAfxn6yn4wYRVHM8PkWLEGAeLewkC/dz9AQI88OsHn
-         vPm1+oqTPdiSy0ydtxyrLICCvit+y1Dkc2HokLx3ote7Vc9F/0/kvfqVcd3ZGiDZuO
-         XoPK7Utbm8xkp/pEwBfxqJzRJucN4Od6Fqej1LJrTiXuZ26oVfW0LWzGv67AZdAIgs
-         OQXGJu2gdbv9Tlu7mgixILmbD6+o6qI3xBL9prEDE+LZ9Db5Q/T6vTM416ZsrFlJW8
-         VX8tTnUunk86YsewFUxMtkmrmvTmgLly7qRG8GufsOpUKK2/HgTNCOwOPKFwwkS6PP
-         QEya14ahs1NFQ==
-Date:   Wed, 13 Oct 2021 14:36:33 -0700
+        b=FZbFRTySR+bjgXClQUpECi6W1RTPgLz5mgfdakhP5Ys6qikzaOxMUmCF/DsgEssDu
+         pnz0lMEmZ8gCUsOAkgW1BP1dPqnHpnW4m3vo4NIFLeB8F4q4ndjj/6iHz7rWF1IsFl
+         zEOVQTjCUix+faEzo3rBZbrmK1tbaSOypkul8Xn5Wr1Y61ZupL9CuLaRunPt+2ElHo
+         IMfjQ0hKKpQ055q4ztgh0DnzK9v55w+SOFIAoPIPAtK9gRKfQg9aPrKyTgja0NbOY7
+         fxArBLTQlM57PgVVjIBPs48zt/+CMAyVP9KY6Ij3JB8SeXN8wjqfuz66AxHmr1XC5w
+         Do1LFg6VGTqpw==
+Date:   Wed, 13 Oct 2021 14:42:50 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org, chandan.babu@oracle.com, hch@lst.de
-Subject: Re: [PATCH 14/15] xfs: compute absolute maximum nlevels for each
+Subject: Re: [PATCH 15/15] xfs: use separate btree cursor cache for each
  btree type
-Message-ID: <20211013213633.GZ24307@magnolia>
+Message-ID: <20211013214250.GA24307@magnolia>
 References: <163408155346.4151249.8364703447365270670.stgit@magnolia>
- <163408163084.4151249.13133029541413030318.stgit@magnolia>
- <20211013075743.GG2361455@dread.disaster.area>
+ <163408163634.4151249.5333674876821248862.stgit@magnolia>
+ <20211013080114.GH2361455@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211013075743.GG2361455@dread.disaster.area>
+In-Reply-To: <20211013080114.GH2361455@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 13, 2021 at 06:57:43PM +1100, Dave Chinner wrote:
-> On Tue, Oct 12, 2021 at 04:33:50PM -0700, Darrick J. Wong wrote:
+On Wed, Oct 13, 2021 at 07:01:14PM +1100, Dave Chinner wrote:
+> On Tue, Oct 12, 2021 at 04:33:56PM -0700, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > Add code for all five btree types so that we can compute the absolute
-> > maximum possible btree height for each btree type.  This is a setup for
-> > the next patch, which makes every btree type have its own cursor cache.
-> > 
-> > The functions are exported so that we can have xfs_db report the
-> > absolute maximum btree heights for each btree type, rather than making
-> > everyone run their own ad-hoc computations.
+> > Now that we have the infrastructure to track the max possible height of
+> > each btree type, we can create a separate slab cache for cursors of each
+> > type of btree.  For smaller indices like the free space btrees, this
+> > means that we can pack more cursors into a slab page, improving slab
+> > utilization.
 > > 
 > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > > ---
-> >  fs/xfs/libxfs/xfs_alloc.c          |    1 +
-> >  fs/xfs/libxfs/xfs_alloc_btree.c    |   13 +++++++++++
-> >  fs/xfs/libxfs/xfs_alloc_btree.h    |    2 ++
-> >  fs/xfs/libxfs/xfs_bmap.c           |    1 +
-> >  fs/xfs/libxfs/xfs_bmap_btree.c     |   14 ++++++++++++
-> >  fs/xfs/libxfs/xfs_bmap_btree.h     |    2 ++
-> >  fs/xfs/libxfs/xfs_btree.c          |   41 ++++++++++++++++++++++++++++++++++++
-> >  fs/xfs/libxfs/xfs_btree.h          |    3 +++
-> >  fs/xfs/libxfs/xfs_fs.h             |    2 ++
-> >  fs/xfs/libxfs/xfs_ialloc.c         |    1 +
-> >  fs/xfs/libxfs/xfs_ialloc_btree.c   |   19 +++++++++++++++++
-> >  fs/xfs/libxfs/xfs_ialloc_btree.h   |    2 ++
-> >  fs/xfs/libxfs/xfs_refcount_btree.c |   20 ++++++++++++++++++
-> >  fs/xfs/libxfs/xfs_refcount_btree.h |    2 ++
-> >  fs/xfs/libxfs/xfs_rmap_btree.c     |   27 ++++++++++++++++++++++++
-> >  fs/xfs/libxfs/xfs_rmap_btree.h     |    2 ++
-> >  16 files changed, 152 insertions(+)
+> >  fs/xfs/libxfs/xfs_alloc_btree.c    |   21 ++++++++++++++
+> >  fs/xfs/libxfs/xfs_alloc_btree.h    |    3 ++
+> >  fs/xfs/libxfs/xfs_bmap_btree.c     |   21 ++++++++++++++
+> >  fs/xfs/libxfs/xfs_bmap_btree.h     |    3 ++
+> >  fs/xfs/libxfs/xfs_btree.c          |    7 +----
+> >  fs/xfs/libxfs/xfs_btree.h          |   17 +++---------
+> >  fs/xfs/libxfs/xfs_ialloc_btree.c   |   21 ++++++++++++++
+> >  fs/xfs/libxfs/xfs_ialloc_btree.h   |    3 ++
+> >  fs/xfs/libxfs/xfs_refcount_btree.c |   21 ++++++++++++++
+> >  fs/xfs/libxfs/xfs_refcount_btree.h |    3 ++
+> >  fs/xfs/libxfs/xfs_rmap_btree.c     |   21 ++++++++++++++
+> >  fs/xfs/libxfs/xfs_rmap_btree.h     |    3 ++
+> >  fs/xfs/xfs_super.c                 |   53 ++++++++++++++++++++++++++++++++----
+> >  13 files changed, 168 insertions(+), 29 deletions(-)
 > > 
 > > 
-> > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> > index 55c5adc9b54e..7145416a230c 100644
-> > --- a/fs/xfs/libxfs/xfs_alloc.c
-> > +++ b/fs/xfs/libxfs/xfs_alloc.c
-> > @@ -2198,6 +2198,7 @@ xfs_alloc_compute_maxlevels(
-> >  {
-> >  	mp->m_ag_maxlevels = xfs_btree_compute_maxlevels(mp->m_alloc_mnr,
-> >  			(mp->m_sb.sb_agblocks + 1) / 2);
-> > +	ASSERT(mp->m_ag_maxlevels <= xfs_allocbt_absolute_maxlevels());
-> >  }
-> >  
-> >  /*
 > > diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
-> > index f14bad21503f..61f6d266b822 100644
+> > index 61f6d266b822..4c5942146b05 100644
 > > --- a/fs/xfs/libxfs/xfs_alloc_btree.c
 > > +++ b/fs/xfs/libxfs/xfs_alloc_btree.c
-> > @@ -582,6 +582,19 @@ xfs_allocbt_maxrecs(
-> >  	return blocklen / (sizeof(xfs_alloc_key_t) + sizeof(xfs_alloc_ptr_t));
-> >  }
+> > @@ -20,6 +20,7 @@
+> >  #include "xfs_trans.h"
+> >  #include "xfs_ag.h"
 > >  
-> > +/* Compute the max possible height of the maximally sized free space btree. */
-> > +unsigned int
-> > +xfs_allocbt_absolute_maxlevels(void)
+> > +static kmem_zone_t	*xfs_allocbt_cur_cache;
+> >  
+> >  STATIC struct xfs_btree_cur *
+> >  xfs_allocbt_dup_cursor(
+> > @@ -477,7 +478,8 @@ xfs_allocbt_init_common(
+> >  
+> >  	ASSERT(btnum == XFS_BTNUM_BNO || btnum == XFS_BTNUM_CNT);
+> >  
+> > -	cur = xfs_btree_alloc_cursor(mp, tp, btnum, mp->m_ag_maxlevels);
+> > +	cur = xfs_btree_alloc_cursor(mp, tp, btnum, mp->m_ag_maxlevels,
+> > +			xfs_allocbt_cur_cache);
+> >  	cur->bc_ag.abt.active = false;
+> >  
+> >  	if (btnum == XFS_BTNUM_CNT) {
+> > @@ -603,3 +605,20 @@ xfs_allocbt_calc_size(
+> >  {
+> >  	return xfs_btree_calc_size(mp->m_alloc_mnr, len);
+> >  }
+> > +
+> > +int __init
+> > +xfs_allocbt_init_cur_cache(void)
 > > +{
-> > +	unsigned int		minrecs[2];
+> > +	xfs_allocbt_cur_cache = kmem_cache_create("xfs_bnobt_cur",
+> > +			xfs_btree_cur_sizeof(xfs_allocbt_absolute_maxlevels()),
+> > +			0, 0, NULL);
 > > +
-> > +	xfs_btree_absolute_minrecs(minrecs, 0, sizeof(xfs_alloc_rec_t),
-> > +			sizeof(xfs_alloc_key_t) + sizeof(xfs_alloc_ptr_t));
-> > +
-> > +	return xfs_btree_compute_maxlevels(minrecs,
-> > +			(XFS_MAX_AG_BLOCKS + 1) / 2);
+> > +	return xfs_allocbt_cur_cache != NULL ? 0 : -ENOMEM;
+> 
+> 	if (!xfs_allocbt_cur_cache)
+> 		return -ENOMEM;
+> 	return 0;
+> 
+> (and the others :)
+
+Fixed.
+
 > > +}
-> 
-> Hmmmm. This is kinds messy. I'd prefer we share code with the
-> xfs_allocbt_maxrecs() function that do this. Not sure "absolute" is
-> the right word, either. It's more a function of the on-disk format
-> maximum, not an "absolute" thing.
-
-<nod> I'm not passionate about the name one way or the other.
-
-> I mean, we know that the worst case is going to be for each btree
-> type - we don't need to pass in XFS_BTREE_CRC_BLOCKS or
-> XFS_BTREE_LONG_PTRS to generic code for it to branch multiple times
-> to be generic.
-
-Yeah, that function was a conditional mess.  I like...
-
-> Instead:
-> 
-> static inline int
-> xfs_allocbt_block_maxrecs(
->         int                     blocklen,
->         int                     leaf)
-> {
->         if (leaf)
->                 return blocklen / sizeof(xfs_alloc_rec_t);
->         return blocklen / (sizeof(xfs_alloc_key_t) + sizeof(xfs_alloc_ptr_t));
-> }
-> 
-> /*
->  * Calculate number of records in an alloc btree block.
->  */
-> int
-> xfs_allocbt_maxrecs(
->         struct xfs_mount        *mp,
->         int                     blocklen,
->         int                     leaf)
-> {
->         blocklen -= XFS_ALLOC_BLOCK_LEN(mp);
-> 	return xfs_allobt_block_maxrecs(blocklen, leaf);
-> }
-> 
-> xfs_allocbt_maxlevels_ondisk()
-> {
-> 	unsigned int		minrecs[2];
-> 
-> 	minrecs[0] = xfs_allocbt_block_maxrecs(
-> 			XFS_MIN_BLOCKSIZE - XFS_BTREE_SBLOCK_LEN, true) / 2;
-> 	minrecs[1] = xfs_allocbt_block_maxrecs(
-> 			XFS_MIN_BLOCKSIZE - XFS_BTREE_SBLOCK_LEN, false) / 2;
-
-...this a lot better since one doesn't have to switch back and forth
-between source files to figure out how the computation works.
-
-However, I want to propose a possibly pedantic addition to the blocksize
-computation for btrees.  We want to compute the maximum btree height
-that we're ever going to see, which means that we are modeling a btree
-with the minimum possible fanout factor.  That means the smallest btree
-nodes possible, and half full.
-
-min V5 blocksize: 1024 bytes
-V5 btree short header: 56 bytes
-min V5 btree record area: 968 bytes
-
-min V4 blocksize: 512 bytes
-V4 btree short header: 16 bytes
-min V4 btree record area: 496 bytes
-
-In other words, the bit above for the allocbt ought to be:
-
-	blocklen = min(XFS_MIN_BLOCKSIZE - XFS_BTREE_SBLOCK_LEN,
-		       XFS_MIN_CRC_BLOCKSIZE - XFS_BTREE_SBLOCK_CRC_LEN);
-
-Which is very pedantic, since the whole expression /always/ evalulates
-to 496.  IIRC the kernel has enough macro soup to resolve that into a
-constant expression so it shouldn't cost us anything.
-
-> 
-> 	return xfs_btree_compute_maxlevels(minrecs,
-> 			(XFS_MAX_AG_BLOCKS + 1) / 2);
-> }
-> 
-> All the other btree implementations factor this way, too, allowing
-> the minrec values to be calculated clearly and directly in the
-> specific btree function...
-
-Yeah, that's a lot clearer.  I'll migrate all the btree types towards
-that.
-
 > > +
-> >  /* Calculate the freespace btree size for some records. */
-> >  xfs_extlen_t
-> >  xfs_allocbt_calc_size(
+> > +void
+> > +xfs_allocbt_destroy_cur_cache(void)
+> > +{
+> > +	kmem_cache_destroy(xfs_allocbt_cur_cache);
+> > +	xfs_allocbt_cur_cache = NULL;
+> > +}
 > > diff --git a/fs/xfs/libxfs/xfs_alloc_btree.h b/fs/xfs/libxfs/xfs_alloc_btree.h
-> > index 2f6b816aaf9f..c47d0e285435 100644
+> > index c47d0e285435..82a9b3201f91 100644
 > > --- a/fs/xfs/libxfs/xfs_alloc_btree.h
 > > +++ b/fs/xfs/libxfs/xfs_alloc_btree.h
-> > @@ -60,4 +60,6 @@ extern xfs_extlen_t xfs_allocbt_calc_size(struct xfs_mount *mp,
-> >  void xfs_allocbt_commit_staged_btree(struct xfs_btree_cur *cur,
-> >  		struct xfs_trans *tp, struct xfs_buf *agbp);
+> > @@ -62,4 +62,7 @@ void xfs_allocbt_commit_staged_btree(struct xfs_btree_cur *cur,
 > >  
-> > +unsigned int xfs_allocbt_absolute_maxlevels(void);
+> >  unsigned int xfs_allocbt_absolute_maxlevels(void);
+> >  
+> > +int __init xfs_allocbt_init_cur_cache(void);
+> > +void xfs_allocbt_destroy_cur_cache(void);
 > > +
 > >  #endif	/* __XFS_ALLOC_BTREE_H__ */
-> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> > index 2ae5bf9a74e7..7e70df8d1a9b 100644
-> > --- a/fs/xfs/libxfs/xfs_bmap.c
-> > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> > @@ -93,6 +93,7 @@ xfs_bmap_compute_maxlevels(
-> >  			maxblocks = (maxblocks + minnoderecs - 1) / minnoderecs;
-> >  	}
-> >  	mp->m_bm_maxlevels[whichfork] = level;
-> > +	ASSERT(mp->m_bm_maxlevels[whichfork] <= xfs_bmbt_absolute_maxlevels());
-> >  }
-> >  
-> >  unsigned int
 > > diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-> > index b90122de0df0..7001aff639d2 100644
+> > index 7001aff639d2..99261d51d2c3 100644
 > > --- a/fs/xfs/libxfs/xfs_bmap_btree.c
 > > +++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-> > @@ -587,6 +587,20 @@ xfs_bmbt_maxrecs(
-> >  	return blocklen / (sizeof(xfs_bmbt_key_t) + sizeof(xfs_bmbt_ptr_t));
-> >  }
+> > @@ -22,6 +22,8 @@
+> >  #include "xfs_trace.h"
+> >  #include "xfs_rmap.h"
 > >  
-> > +/* Compute the max possible height of the maximally sized bmap btree. */
-> > +unsigned int
-> > +xfs_bmbt_absolute_maxlevels(void)
-> > +{
-> > +	unsigned int		minrecs[2];
-> > +
-> > +	xfs_btree_absolute_minrecs(minrecs, XFS_BTREE_LONG_PTRS,
-> > +			sizeof(struct xfs_bmbt_rec),
-> > +			sizeof(struct xfs_bmbt_key) +
-> > +				sizeof(xfs_bmbt_ptr_t));
-> > +
-> > +	return xfs_btree_compute_maxlevels(minrecs, MAXEXTNUM) + 1;
-> > +}
-> 
-> 	minrecs[0] = xfs_bmbt_block_maxrecs(
-> 			XFS_MIN_BLOCKSIZE - XFS_BTREE_LBLOCK_LEN, true) / 2;
-> 	....
-> 
+> > +static kmem_zone_t	*xfs_bmbt_cur_cache;
 > > +
 > >  /*
-> >   * Calculate number of records in a bmap btree inode root.
+> >   * Convert on-disk form of btree root to in-memory form.
 > >   */
+> > @@ -553,7 +555,7 @@ xfs_bmbt_init_cursor(
+> >  	ASSERT(whichfork != XFS_COW_FORK);
+> >  
+> >  	cur = xfs_btree_alloc_cursor(mp, tp, XFS_BTNUM_BMAP,
+> > -			mp->m_bm_maxlevels[whichfork]);
+> > +			mp->m_bm_maxlevels[whichfork], xfs_bmbt_cur_cache);
+> >  	cur->bc_nlevels = be16_to_cpu(ifp->if_broot->bb_level) + 1;
+> >  	cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_bmbt_2);
+> >  
+> > @@ -664,3 +666,20 @@ xfs_bmbt_calc_size(
+> >  {
+> >  	return xfs_btree_calc_size(mp->m_bmap_dmnr, len);
+> >  }
+> > +
+> > +int __init
+> > +xfs_bmbt_init_cur_cache(void)
+> > +{
+> > +	xfs_bmbt_cur_cache = kmem_cache_create("xfs_bmbt_cur",
+> > +			xfs_btree_cur_sizeof(xfs_bmbt_absolute_maxlevels()),
+> > +			0, 0, NULL);
+> > +
+> > +	return xfs_bmbt_cur_cache != NULL ? 0 : -ENOMEM;
+> > +}
+> > +
+> > +void
+> > +xfs_bmbt_destroy_cur_cache(void)
+> > +{
+> > +	kmem_cache_destroy(xfs_bmbt_cur_cache);
+> > +	xfs_bmbt_cur_cache = NULL;
+> > +}
 > > diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
-> > index 729e3bc569be..e9218e92526b 100644
+> > index e9218e92526b..4c752f7341df 100644
 > > --- a/fs/xfs/libxfs/xfs_bmap_btree.h
 > > +++ b/fs/xfs/libxfs/xfs_bmap_btree.h
-> > @@ -110,4 +110,6 @@ extern struct xfs_btree_cur *xfs_bmbt_init_cursor(struct xfs_mount *,
-> >  extern unsigned long long xfs_bmbt_calc_size(struct xfs_mount *mp,
-> >  		unsigned long long len);
+> > @@ -112,4 +112,7 @@ extern unsigned long long xfs_bmbt_calc_size(struct xfs_mount *mp,
 > >  
-> > +unsigned int xfs_bmbt_absolute_maxlevels(void);
+> >  unsigned int xfs_bmbt_absolute_maxlevels(void);
+> >  
+> > +int __init xfs_bmbt_init_cur_cache(void);
+> > +void xfs_bmbt_destroy_cur_cache(void);
 > > +
 > >  #endif	/* __XFS_BMAP_BTREE_H__ */
 > > diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-> > index b95c817ad90d..bea1bdf9b8b9 100644
+> > index bea1bdf9b8b9..11ff814996a1 100644
 > > --- a/fs/xfs/libxfs/xfs_btree.c
 > > +++ b/fs/xfs/libxfs/xfs_btree.c
-> > @@ -4964,3 +4964,44 @@ xfs_btree_has_more_records(
-> >  	else
-> >  		return block->bb_u.s.bb_rightsib != cpu_to_be32(NULLAGBLOCK);
+> > @@ -23,11 +23,6 @@
+> >  #include "xfs_btree_staging.h"
+> >  #include "xfs_ag.h"
+> >  
+> > -/*
+> > - * Cursor allocation zone.
+> > - */
+> > -kmem_zone_t	*xfs_btree_cur_zone;
+> > -
+> >  /*
+> >   * Btree magic numbers.
+> >   */
+> > @@ -379,7 +374,7 @@ xfs_btree_del_cursor(
+> >  		kmem_free(cur->bc_ops);
+> >  	if (!(cur->bc_flags & XFS_BTREE_LONG_PTRS) && cur->bc_ag.pag)
+> >  		xfs_perag_put(cur->bc_ag.pag);
+> > -	kmem_cache_free(xfs_btree_cur_zone, cur);
+> > +	kmem_cache_free(cur->bc_cache, cur);
+> >  }
+> >  
+> >  /*
+> > diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+> > index acb202839afd..6d61ce1559e2 100644
+> > --- a/fs/xfs/libxfs/xfs_btree.h
+> > +++ b/fs/xfs/libxfs/xfs_btree.h
+> > @@ -13,8 +13,6 @@ struct xfs_trans;
+> >  struct xfs_ifork;
+> >  struct xfs_perag;
+> >  
+> > -extern kmem_zone_t	*xfs_btree_cur_zone;
+> > -
+> >  /*
+> >   * Generic key, ptr and record wrapper structures.
+> >   *
+> > @@ -92,12 +90,6 @@ uint32_t xfs_btree_magic(int crc, xfs_btnum_t btnum);
+> >  #define XFS_BTREE_STATS_ADD(cur, stat, val)	\
+> >  	XFS_STATS_ADD_OFF((cur)->bc_mp, (cur)->bc_statoff + __XBTS_ ## stat, val)
+> >  
+> > -/*
+> > - * The btree cursor zone hands out cursors that can handle up to this many
+> > - * levels.  This is the known maximum for all btree types.
+> > - */
+> > -#define XFS_BTREE_CUR_ZONE_MAXLEVELS	(9)
+> > -
+> >  struct xfs_btree_ops {
+> >  	/* size of the key and record structures */
+> >  	size_t	key_len;
+> > @@ -238,6 +230,7 @@ struct xfs_btree_cur
+> >  	struct xfs_trans	*bc_tp;	/* transaction we're in, if any */
+> >  	struct xfs_mount	*bc_mp;	/* file system mount struct */
+> >  	const struct xfs_btree_ops *bc_ops;
+> > +	kmem_zone_t		*bc_cache; /* cursor cache */
+> >  	unsigned int		bc_flags; /* btree features - below */
+> >  	xfs_btnum_t		bc_btnum; /* identifies which btree type */
+> >  	union xfs_btree_irec	bc_rec;	/* current insert/search record value */
+> > @@ -586,17 +579,17 @@ xfs_btree_alloc_cursor(
+> >  	struct xfs_mount	*mp,
+> >  	struct xfs_trans	*tp,
+> >  	xfs_btnum_t		btnum,
+> > -	uint8_t			maxlevels)
+> > +	uint8_t			maxlevels,
+> > +	kmem_zone_t		*cache)
+> >  {
+> >  	struct xfs_btree_cur	*cur;
+> >  
+> > -	ASSERT(maxlevels <= XFS_BTREE_CUR_ZONE_MAXLEVELS);
+> > -
+> > -	cur = kmem_cache_zalloc(xfs_btree_cur_zone, GFP_NOFS | __GFP_NOFAIL);
+> > +	cur = kmem_cache_zalloc(cache, GFP_NOFS | __GFP_NOFAIL);
+> >  	cur->bc_tp = tp;
+> >  	cur->bc_mp = mp;
+> >  	cur->bc_btnum = btnum;
+> >  	cur->bc_maxlevels = maxlevels;
+> > +	cur->bc_cache = cache;
+> >  
+> >  	return cur;
+> >  }
+> > diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+> > index 2e3dd1d798bd..2502085d476c 100644
+> > --- a/fs/xfs/libxfs/xfs_ialloc_btree.c
+> > +++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+> > @@ -22,6 +22,8 @@
+> >  #include "xfs_rmap.h"
+> >  #include "xfs_ag.h"
+> >  
+> > +static kmem_zone_t	*xfs_inobt_cur_cache;
+> > +
+> >  STATIC int
+> >  xfs_inobt_get_minrecs(
+> >  	struct xfs_btree_cur	*cur,
+> > @@ -433,7 +435,7 @@ xfs_inobt_init_common(
+> >  	struct xfs_btree_cur	*cur;
+> >  
+> >  	cur = xfs_btree_alloc_cursor(mp, tp, btnum,
+> > -			M_IGEO(mp)->inobt_maxlevels);
+> > +			M_IGEO(mp)->inobt_maxlevels, xfs_inobt_cur_cache);
+> >  	if (btnum == XFS_BTNUM_INO) {
+> >  		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_ibt_2);
+> >  		cur->bc_ops = &xfs_inobt_ops;
+> > @@ -776,3 +778,20 @@ xfs_iallocbt_calc_size(
+> >  {
+> >  	return xfs_btree_calc_size(M_IGEO(mp)->inobt_mnr, len);
 > >  }
 > > +
-> > +/*
-> > + * Compute absolute minrecs for leaf and node btree blocks.  Callers should set
-> > + * BTREE_LONG_PTRS and BTREE_OVERLAPPING as they would for regular cursors.
-> > + * Set BTREE_CRC_BLOCKS if the btree type is supported /only/ on V5 or newer
-> > + * filesystems.
-> > + */
-> > +void
-> > +xfs_btree_absolute_minrecs(
-> > +	unsigned int		*minrecs,
-> > +	unsigned int		bc_flags,
-> > +	unsigned int		leaf_recbytes,
-> > +	unsigned int		node_recbytes)
+> > +int __init
+> > +xfs_inobt_init_cur_cache(void)
 > > +{
-> > +	unsigned int		min_recbytes;
+> > +	xfs_inobt_cur_cache = kmem_cache_create("xfs_inobt_cur",
+> > +			xfs_btree_cur_sizeof(xfs_inobt_absolute_maxlevels()),
+> > +			0, 0, NULL);
 > > +
-> > +	/*
-> > +	 * If this btree type is supported on V4, we use the smaller V4 min
-> > +	 * block size along with the V4 header size.  If the btree type is only
-> > +	 * supported on V5, use the (twice as large) V5 min block size along
-> > +	 * with the V5 header size.
-> > +	 */
-> > +	if (!(bc_flags & XFS_BTREE_CRC_BLOCKS)) {
-> > +		if (bc_flags & XFS_BTREE_LONG_PTRS)
-> > +			min_recbytes = XFS_MIN_BLOCKSIZE -
-> > +							XFS_BTREE_LBLOCK_LEN;
-> > +		else
-> > +			min_recbytes = XFS_MIN_BLOCKSIZE -
-> > +							XFS_BTREE_SBLOCK_LEN;
-> > +	} else if (bc_flags & XFS_BTREE_LONG_PTRS) {
-> > +		min_recbytes = XFS_MIN_CRC_BLOCKSIZE - XFS_BTREE_LBLOCK_CRC_LEN;
-> > +	} else {
-> > +		min_recbytes = XFS_MIN_CRC_BLOCKSIZE - XFS_BTREE_SBLOCK_CRC_LEN;
-> > +	}
+> > +	return xfs_inobt_cur_cache != NULL ? 0 : -ENOMEM;
+> > +}
 > > +
-> > +	if (bc_flags & XFS_BTREE_OVERLAPPING)
-> > +		node_recbytes <<= 1;
+> > +void
+> > +xfs_inobt_destroy_cur_cache(void)
+> > +{
+> > +	kmem_cache_destroy(xfs_inobt_cur_cache);
+> > +	xfs_inobt_cur_cache = NULL;
+> > +}
+> > diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.h b/fs/xfs/libxfs/xfs_ialloc_btree.h
+> > index 1f09530bf856..b384733d5e0f 100644
+> > --- a/fs/xfs/libxfs/xfs_ialloc_btree.h
+> > +++ b/fs/xfs/libxfs/xfs_ialloc_btree.h
+> > @@ -77,4 +77,7 @@ void xfs_inobt_commit_staged_btree(struct xfs_btree_cur *cur,
+> >  
+> >  unsigned int xfs_inobt_absolute_maxlevels(void);
+> >  
+> > +int __init xfs_inobt_init_cur_cache(void);
+> > +void xfs_inobt_destroy_cur_cache(void);
 > > +
-> > +	minrecs[0] = min_recbytes / (2 * leaf_recbytes);
-> > +	minrecs[1] = min_recbytes / (2 * node_recbytes);
+> >  #endif	/* __XFS_IALLOC_BTREE_H__ */
+> > diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
+> > index bacd1b442b09..ba27a3ea2ce2 100644
+> > --- a/fs/xfs/libxfs/xfs_refcount_btree.c
+> > +++ b/fs/xfs/libxfs/xfs_refcount_btree.c
+> > @@ -21,6 +21,8 @@
+> >  #include "xfs_rmap.h"
+> >  #include "xfs_ag.h"
+> >  
+> > +static kmem_zone_t	*xfs_refcountbt_cur_cache;
+> > +
+> >  static struct xfs_btree_cur *
+> >  xfs_refcountbt_dup_cursor(
+> >  	struct xfs_btree_cur	*cur)
+> > @@ -323,7 +325,7 @@ xfs_refcountbt_init_common(
+> >  	ASSERT(pag->pag_agno < mp->m_sb.sb_agcount);
+> >  
+> >  	cur = xfs_btree_alloc_cursor(mp, tp, XFS_BTNUM_REFC,
+> > -			mp->m_refc_maxlevels);
+> > +			mp->m_refc_maxlevels, xfs_refcountbt_cur_cache);
+> >  	cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_refcbt_2);
+> >  
+> >  	cur->bc_flags |= XFS_BTREE_CRC_BLOCKS;
+> > @@ -505,3 +507,20 @@ xfs_refcountbt_calc_reserves(
+> >  
+> >  	return error;
+> >  }
+> > +
+> > +int __init
+> > +xfs_refcountbt_init_cur_cache(void)
+> > +{
+> > +	xfs_refcountbt_cur_cache = kmem_cache_create("xfs_refcbt_cur",
+> > +			xfs_btree_cur_sizeof(xfs_refcountbt_absolute_maxlevels()),
+> > +			0, 0, NULL);
+> > +
+> > +	return xfs_refcountbt_cur_cache != NULL ? 0 : -ENOMEM;
+> > +}
+> > +
+> > +void
+> > +xfs_refcountbt_destroy_cur_cache(void)
+> > +{
+> > +	kmem_cache_destroy(xfs_refcountbt_cur_cache);
+> > +	xfs_refcountbt_cur_cache = NULL;
+> > +}
+> > diff --git a/fs/xfs/libxfs/xfs_refcount_btree.h b/fs/xfs/libxfs/xfs_refcount_btree.h
+> > index 2625b08f50a8..a1437d0a5717 100644
+> > --- a/fs/xfs/libxfs/xfs_refcount_btree.h
+> > +++ b/fs/xfs/libxfs/xfs_refcount_btree.h
+> > @@ -67,4 +67,7 @@ void xfs_refcountbt_commit_staged_btree(struct xfs_btree_cur *cur,
+> >  
+> >  unsigned int xfs_refcountbt_absolute_maxlevels(void);
+> >  
+> > +int __init xfs_refcountbt_init_cur_cache(void);
+> > +void xfs_refcountbt_destroy_cur_cache(void);
+> > +
+> >  #endif	/* __XFS_REFCOUNT_BTREE_H__ */
+> > diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
+> > index 860627b5ec08..0a9bc37c01d0 100644
+> > --- a/fs/xfs/libxfs/xfs_rmap_btree.c
+> > +++ b/fs/xfs/libxfs/xfs_rmap_btree.c
+> > @@ -22,6 +22,8 @@
+> >  #include "xfs_ag.h"
+> >  #include "xfs_ag_resv.h"
+> >  
+> > +static kmem_zone_t	*xfs_rmapbt_cur_cache;
+> > +
+> >  /*
+> >   * Reverse map btree.
+> >   *
+> > @@ -453,7 +455,7 @@ xfs_rmapbt_init_common(
+> >  
+> >  	/* Overlapping btree; 2 keys per pointer. */
+> >  	cur = xfs_btree_alloc_cursor(mp, tp, XFS_BTNUM_RMAP,
+> > -			mp->m_rmap_maxlevels);
+> > +			mp->m_rmap_maxlevels, xfs_rmapbt_cur_cache);
+> >  	cur->bc_flags = XFS_BTREE_CRC_BLOCKS | XFS_BTREE_OVERLAPPING;
+> >  	cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_rmap_2);
+> >  	cur->bc_ops = &xfs_rmapbt_ops;
+> > @@ -670,3 +672,20 @@ xfs_rmapbt_calc_reserves(
+> >  
+> >  	return error;
+> >  }
+> > +
+> > +int __init
+> > +xfs_rmapbt_init_cur_cache(void)
+> > +{
+> > +	xfs_rmapbt_cur_cache = kmem_cache_create("xfs_rmapbt_cur",
+> > +			xfs_btree_cur_sizeof(xfs_rmapbt_absolute_maxlevels()),
+> > +			0, 0, NULL);
+> > +
+> > +	return xfs_rmapbt_cur_cache != NULL ? 0 : -ENOMEM;
+> > +}
+> > +
+> > +void
+> > +xfs_rmapbt_destroy_cur_cache(void)
+> > +{
+> > +	kmem_cache_destroy(xfs_rmapbt_cur_cache);
+> > +	xfs_rmapbt_cur_cache = NULL;
+> > +}
+> > diff --git a/fs/xfs/libxfs/xfs_rmap_btree.h b/fs/xfs/libxfs/xfs_rmap_btree.h
+> > index 84fe74de923f..dd5422850656 100644
+> > --- a/fs/xfs/libxfs/xfs_rmap_btree.h
+> > +++ b/fs/xfs/libxfs/xfs_rmap_btree.h
+> > @@ -61,4 +61,7 @@ extern int xfs_rmapbt_calc_reserves(struct xfs_mount *mp, struct xfs_trans *tp,
+> >  
+> >  unsigned int xfs_rmapbt_absolute_maxlevels(void);
+> >  
+> > +int __init xfs_rmapbt_init_cur_cache(void);
+> > +void xfs_rmapbt_destroy_cur_cache(void);
+> > +
+> >  #endif /* __XFS_RMAP_BTREE_H__ */
+> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> > index 90c92a6a49e0..399d7cfc7d4b 100644
+> > --- a/fs/xfs/xfs_super.c
+> > +++ b/fs/xfs/xfs_super.c
+> > @@ -37,6 +37,13 @@
+> >  #include "xfs_reflink.h"
+> >  #include "xfs_pwork.h"
+> >  #include "xfs_ag.h"
+> > +#include "xfs_btree.h"
+> > +#include "xfs_alloc_btree.h"
+> > +#include "xfs_ialloc_btree.h"
+> > +#include "xfs_bmap_btree.h"
+> > +#include "xfs_rmap_btree.h"
+> > +#include "xfs_refcount_btree.h"
+> > +
+> >  
+> >  #include <linux/magic.h>
+> >  #include <linux/fs_context.h>
+> > @@ -1950,9 +1957,45 @@ static struct file_system_type xfs_fs_type = {
+> >  };
+> >  MODULE_ALIAS_FS("xfs");
+> >  
+> > +STATIC int __init
+> > +xfs_init_btree_cur_caches(void)
+> > +{
+> > +	int				error;
+> > +
+> > +	error = xfs_allocbt_init_cur_cache();
+> > +	if (error)
+> > +		return error;
+> > +	error = xfs_inobt_init_cur_cache();
+> > +	if (error)
+> > +		return error;
+> > +	error = xfs_bmbt_init_cur_cache();
+> > +	if (error)
+> > +		return error;
+> > +	error = xfs_rmapbt_init_cur_cache();
+> > +	if (error)
+> > +		return error;
+> > +	error = xfs_refcountbt_init_cur_cache();
+> > +	if (error)
+> > +		return error;
+> > +
+> > +	return 0;
+> > +}
+> > +
+> > +STATIC void
+> > +xfs_destroy_btree_cur_caches(void)
+> > +{
+> > +	xfs_allocbt_destroy_cur_cache();
+> > +	xfs_inobt_destroy_cur_cache();
+> > +	xfs_bmbt_destroy_cur_cache();
+> > +	xfs_rmapbt_destroy_cur_cache();
+> > +	xfs_refcountbt_destroy_cur_cache();
 > > +}
 > 
-> This can go away.
+> MOve these to libxfs/xfs_btree.c and then it minimises the custom
+> init code for userspace. Also means you don't need to include
+> all the individual btree headers in xfs-super.c...
+> 
+> Otherwise it all looks ok.
 
 Done.
 
-> > diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-> > index 20a2828c11ef..acb202839afd 100644
-> > --- a/fs/xfs/libxfs/xfs_btree.h
-> > +++ b/fs/xfs/libxfs/xfs_btree.h
-> > @@ -601,4 +601,7 @@ xfs_btree_alloc_cursor(
-> >  	return cur;
-> >  }
-> >  
-> > +void xfs_btree_absolute_minrecs(unsigned int *minrecs, unsigned int bc_flags,
-> > +		unsigned int leaf_recbytes, unsigned int node_recbytes);
-> > +
-> >  #endif	/* __XFS_BTREE_H__ */
-> > diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> > index bde2b4c64dbe..c43877c8a279 100644
-> > --- a/fs/xfs/libxfs/xfs_fs.h
-> > +++ b/fs/xfs/libxfs/xfs_fs.h
-> > @@ -268,6 +268,8 @@ typedef struct xfs_fsop_resblks {
-> >   */
-> >  #define XFS_MIN_AG_BYTES	(1ULL << 24)	/* 16 MB */
-> >  #define XFS_MAX_AG_BYTES	(1ULL << 40)	/* 1 TB */
-> > +#define XFS_MAX_AG_BLOCKS	(XFS_MAX_AG_BYTES / XFS_MIN_BLOCKSIZE)
-> > +#define XFS_MAX_CRC_AG_BLOCKS	(XFS_MAX_AG_BYTES / XFS_MIN_CRC_BLOCKSIZE)
-> >  
-> >  /* keep the maximum size under 2^31 by a small amount */
-> >  #define XFS_MAX_LOG_BYTES \
-> > diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-> > index 994ad783d407..017aebdda42f 100644
-> > --- a/fs/xfs/libxfs/xfs_ialloc.c
-> > +++ b/fs/xfs/libxfs/xfs_ialloc.c
-> > @@ -2793,6 +2793,7 @@ xfs_ialloc_setup_geometry(
-> >  	inodes = (1LL << XFS_INO_AGINO_BITS(mp)) >> XFS_INODES_PER_CHUNK_LOG;
-> >  	igeo->inobt_maxlevels = xfs_btree_compute_maxlevels(igeo->inobt_mnr,
-> >  			inodes);
-> > +	ASSERT(igeo->inobt_maxlevels <= xfs_inobt_absolute_maxlevels());
-> >  
-> >  	/*
-> >  	 * Set the maximum inode count for this filesystem, being careful not
-> > diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
-> > index 3a5a24648b87..2e3dd1d798bd 100644
-> > --- a/fs/xfs/libxfs/xfs_ialloc_btree.c
-> > +++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
-> > @@ -542,6 +542,25 @@ xfs_inobt_maxrecs(
-> >  	return blocklen / (sizeof(xfs_inobt_key_t) + sizeof(xfs_inobt_ptr_t));
-> >  }
-> >  
-> > +/* Compute the max possible height of the maximally sized inode btree. */
-> > +unsigned int
-> > +xfs_inobt_absolute_maxlevels(void)
-> > +{
-> > +	unsigned int		minrecs[2];
-> > +	unsigned long long	max_ag_inodes;
-> > +
-> > +	/*
-> > +	 * For the absolute maximum, pretend that we can fill an entire AG
-> > +	 * completely full of inodes except for the AG headers.
-> > +	 */
-> > +	max_ag_inodes = (XFS_MAX_AG_BYTES - (4 * BBSIZE)) / XFS_DINODE_MIN_SIZE;
-> > +
-> > +	xfs_btree_absolute_minrecs(minrecs, 0, sizeof(xfs_inobt_rec_t),
-> > +			sizeof(xfs_inobt_key_t) + sizeof(xfs_inobt_ptr_t));
-> > +
-> > +	return xfs_btree_compute_maxlevels(minrecs, max_ag_inodes);
-> > +}
-> 
-> We've got two different inobt max levels on disk. The inobt which has v4
-> limits, whilst the finobt that has v5 limits...
-
-<nod> I'll make it return the larger of the two heights, though the
-inode btree is always going to win due to its smaller minimum block size.
-
-> > +/* Compute the max possible height of the maximally sized rmap btree. */
-> > +unsigned int
-> > +xfs_rmapbt_absolute_maxlevels(void)
-> > +{
-> > +	unsigned int		minrecs[2];
-> > +
-> > +	xfs_btree_absolute_minrecs(minrecs,
-> > +			XFS_BTREE_CRC_BLOCKS | XFS_BTREE_OVERLAPPING,
-> > +			sizeof(struct xfs_rmap_rec),
-> > +			sizeof(struct xfs_rmap_key) + sizeof(xfs_rmap_ptr_t));
-> > +
-> > +	/*
-> > +	 * Compute the asymptotic maxlevels for an rmapbt on any reflink fs.
-> > +	 *
-> > +	 * On a reflink filesystem, each AG block can have up to 2^32 (per the
-> > +	 * refcount record format) owners, which means that theoretically we
-> > +	 * could face up to 2^64 rmap records.  However, we're likely to run
-> > +	 * out of blocks in the AG long before that happens, which means that
-> > +	 * we must compute the max height based on what the btree will look
-> > +	 * like if it consumes almost all the blocks in the AG due to maximal
-> > +	 * sharing factor.
-> > +	 */
-> > +	return xfs_btree_compute_maxlevels_size(XFS_MAX_CRC_AG_BLOCKS,
-> 
-> Huh. I don't know where XFS_MAX_CRC_AG_BLOCKS is defined. I must
-> have missed it somewhere?
-
-It was added elsewhere in this patch.
-
 --D
 
+> 
 > Cheers,
 > 
 > Dave.
