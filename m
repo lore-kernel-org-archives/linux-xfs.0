@@ -2,112 +2,108 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B1EDC433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Oct 2021 16:57:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BADCC433FE
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Oct 2021 17:07:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 05A6B61056
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Oct 2021 16:57:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4CDBB60C49
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Oct 2021 17:07:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238169AbhJMQ7M (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 Oct 2021 12:59:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56510 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238191AbhJMQ6v (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Oct 2021 12:58:51 -0400
-Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B89A7C06176F;
-        Wed, 13 Oct 2021 09:56:43 -0700 (PDT)
-Received: by mail-pj1-x102b.google.com with SMTP id ls14-20020a17090b350e00b001a00e2251c8so2738975pjb.4;
-        Wed, 13 Oct 2021 09:56:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=8cbGKp/2SKCzI/7d16DE4Ims0SpFBLwu8hl8mlZLlOo=;
-        b=oFOn0Tq6sOCCa7oR6RuKde4xQw/hwbwVhtwaptJIyoz2QA0GkZ9SKG3SAlsSoD+BMa
-         gEVYT4q9hXHpebwTNziXfq1juVpttO+VHUMgvGPN4wfIIEFWO6Oshc+V0lsU2MEnKRwk
-         gd6zgi2n9+xCksbFjiA2pyYJLXIYgmcK5Y87Fj/1PfYaFN8i1pnw8hLDQJCyPxu3cYqd
-         jnm5ImJZzukIJcSrdtu0tw7QzD0ocFZ38OzE9YX6s9whTQ31snbu/eoH3Gfd8ShIGRnN
-         0//WyRX584GCgmRxwVTl8z6kqvkPzMFQaHq33lBjtLn9BlUwQGkfvv0zZ8Hvzb7voIds
-         nwwA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=8cbGKp/2SKCzI/7d16DE4Ims0SpFBLwu8hl8mlZLlOo=;
-        b=c3OttgWwuiCVza8WbYrWmuOL6SDQ6ugJowdBcsyfZOd/8qI9GU0jIeKrsKuObMlYg6
-         3Dd3Q545+8zq+5GRX5fhB0fveT0aRW8uYgFMeNNqhqaGpyRvqPVCJrcszlXZprFip/0C
-         hEeKuFBtCOFhg1eXvGcu2fBrO1DiQgmnLrK9KwfSHPkyQQMPRkid/qERzbF11j77uf4B
-         YJFzK0RRPxRG74h741MkZiQeFIlBhYAHdlKJRSJuLd1ZAE5yySYZhNPa0oaO1yfaRSRY
-         0rOXXNCzLvWIRPUuidWHgmjUwyrNTDEkrVzctoGGO6cfkFcEHz4T9XTo47/WkQmKKKj/
-         9cUw==
-X-Gm-Message-State: AOAM532EBuE/gGjjAGIHFvretA8UxctPI6agNVZR2mwGF0kWmN5JouP5
-        xzMc8MGuwWiwqO187lD0+Qg=
-X-Google-Smtp-Source: ABdhPJyPTTN4ICW/JsbxaYnIm7r4sYNqOFBOw14o7XVRCfZKdqH5y/kW1VzGq0CitYgns0ZYFAz8Xw==
-X-Received: by 2002:a17:90b:17c9:: with SMTP id me9mr404934pjb.197.1634144203230;
-        Wed, 13 Oct 2021 09:56:43 -0700 (PDT)
-Received: from nuc10 (d50-92-229-34.bchsia.telus.net. [50.92.229.34])
-        by smtp.gmail.com with ESMTPSA id x13sm84916pge.37.2021.10.13.09.56.42
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 13 Oct 2021 09:56:42 -0700 (PDT)
-Date:   Wed, 13 Oct 2021 09:56:41 -0700
-From:   Rustam Kovhaev <rkovhaev@gmail.com>
-To:     Vlastimil Babka <vbabka@suse.cz>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        David Rientjes <rientjes@google.com>,
-        Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
-        cl@linux.com, penberg@kernel.org, iamjoonsoo.kim@lge.com,
-        akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
-        linux-mm@kvack.org, gregkh@linuxfoundation.org,
-        Al Viro <viro@zeniv.linux.org.uk>, dvyukov@google.com
-Subject: Re: [PATCH] xfs: use kmem_cache_free() for kmem_cache objects
-Message-ID: <YWcPyYk0Rlyvl9a9@nuc10>
-References: <17f537b3-e2eb-5d0a-1465-20f3d3c960e2@suse.cz>
- <YVYGcLbu/aDKXkag@nuc10>
- <a9b3cd91-8ee6-a654-b2a8-00c3efb69559@suse.cz>
- <YVZXF3mbaW+Pe+Ji@nuc10>
- <1e0df91-556e-cee5-76f7-285d28fe31@google.com>
- <20211012204320.GP24307@magnolia>
- <20211012204345.GQ24307@magnolia>
- <9db5d16a-2999-07a4-c49d-7417601f834f@suse.cz>
- <20211012232255.GS24307@magnolia>
- <3928ef69-eaac-241c-eb32-d2dd2eab9384@suse.cz>
+        id S229915AbhJMRJv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 13 Oct 2021 13:09:51 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58996 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229681AbhJMRJv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 13 Oct 2021 13:09:51 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 1B24A610E6;
+        Wed, 13 Oct 2021 17:07:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1634144868;
+        bh=SEcZATXGsFJgbYaxmscGDWEMxkHf3/Ts/M9+4Mcp2iE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=f5UxUhQ3M6srOycg/omfwsFnfpYIBfphc0TwQCDVLQWJ4bW+NT3C45cdkAF0hjqLf
+         7K9R52e3jd5azySSMKl0cX27eIbVuqsRGLz5JXHgwovAleaKqkUbA5hlS4sREWzq3z
+         z82VTQYBQ/wjOSAVHwd5KGxCjNCQopjhIXmGbXwx8nyh4P7qg2t7Qy31qcbgN3YSOT
+         w5QAgR7fMlvAvKNMQo82i9JrbL8s1+Nm4IfgGZxwCl1kpyJCl6ngKmS3cDFClrbbfP
+         4bmkPRf8TpVkG9glWmM2t3wzBfESucNryq4FJXakt87/4lno3kcjlVRrrFschp7Aaz
+         HT7xY3l7YZz6A==
+Date:   Wed, 13 Oct 2021 10:07:47 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org, chandan.babu@oracle.com, hch@lst.de
+Subject: Re: [PATCH 10/15] xfs: compute actual maximum btree height for
+ critical reservation calculation
+Message-ID: <20211013170747.GX24307@magnolia>
+References: <163408155346.4151249.8364703447365270670.stgit@magnolia>
+ <163408160882.4151249.14701173486144926020.stgit@magnolia>
+ <20211013054939.GC2361455@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <3928ef69-eaac-241c-eb32-d2dd2eab9384@suse.cz>
+In-Reply-To: <20211013054939.GC2361455@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 13, 2021 at 09:38:31AM +0200, Vlastimil Babka wrote:
-> On 10/13/21 01:22, Darrick J. Wong wrote:
-> > On Tue, Oct 12, 2021 at 11:32:25PM +0200, Vlastimil Babka wrote:
-> >> On 10/12/2021 10:43 PM, Darrick J. Wong wrote:
-> >> > On Tue, Oct 12, 2021 at 01:43:20PM -0700, Darrick J. Wong wrote:
-> >> >> On Sun, Oct 03, 2021 at 06:07:20PM -0700, David Rientjes wrote:
-> >> >>
-> >> >> I audited the entire xfs (kernel) codebase and didn't find any other
-> >> >> usage errors.  Thanks for the patch; I'll apply it to for-next.
-> >> 
-> >> Which patch, the one that started this thread and uses kmem_cache_free() instead
-> >> of kfree()? I thought we said it's not the best way?
+On Wed, Oct 13, 2021 at 04:49:39PM +1100, Dave Chinner wrote:
+> On Tue, Oct 12, 2021 at 04:33:28PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > It's probably better to fix slob to be able to tell that a kmem_free'd
-> > object actually belongs to a cache and should get freed that way, just
-> > like its larger sl[ua]b cousins.
+> > Compute the actual maximum btree height when deciding if per-AG block
+> > reservation is critically low.  This only affects the sanity check
+> > condition, since we /generally/ will trigger on the 10% threshold.
+> > This is a long-winded way of saying that we're removing one more
+> > usage of XFS_BTREE_MAXLEVELS.
 > 
-> Agreed. Rustam, do you still plan to do that?
+> And replacing it with a branchy dynamic calculation that has a
+> static, unchanging result. :(
+> 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  fs/xfs/libxfs/xfs_ag_resv.c |   18 +++++++++++++++++-
+> >  1 file changed, 17 insertions(+), 1 deletion(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+> > index 2aa2b3484c28..d34d4614f175 100644
+> > --- a/fs/xfs/libxfs/xfs_ag_resv.c
+> > +++ b/fs/xfs/libxfs/xfs_ag_resv.c
+> > @@ -60,6 +60,20 @@
+> >   * to use the reservation system should update ask/used in xfs_ag_resv_init.
+> >   */
+> >  
+> > +/* Compute maximum possible height for per-AG btree types for this fs. */
+> > +static unsigned int
+> > +xfs_ag_btree_maxlevels(
+> > +	struct xfs_mount	*mp)
+> > +{
+> > +	unsigned int		ret = mp->m_ag_maxlevels;
+> > +
+> > +	ret = max(ret, mp->m_bm_maxlevels[XFS_DATA_FORK]);
+> > +	ret = max(ret, mp->m_bm_maxlevels[XFS_ATTR_FORK]);
+> > +	ret = max(ret, M_IGEO(mp)->inobt_maxlevels);
+> > +	ret = max(ret, mp->m_rmap_maxlevels);
+> > +	return max(ret, mp->m_refc_maxlevels);
+> > +}
+> 
+> Hmmmm. perhaps mp->m_ag_maxlevels should be renamed to
+> mp->m_agbno_maxlevels and we pre-calculate mp->m_ag_maxlevels from
 
-Yes, I do, thank you.
+I prefer m_alloc_maxlevels for the first one, since "agbno" means "AG
+block number" in my head.
 
+As for the second, how about "m_agbtree_maxlevels" since we already use
+'agbtree' to refer to per-AG btrees elsewhere?
+
+Other than the naming, I agree with your suggestion.
+
+--D
+
+> the above function and just use the variable in the
+> xfs_ag_resv_critical() check?
 > 
-> > However, even if that does come to pass, anybody /else/ who wants to
-> > start(?) using XFS on a SLOB system will need this patch to fix the
-> > minor papercut.  Now that I've checked the rest of the codebase, I don't
-> > find it reasonable to make XFS mutually exclusive with SLOB over two
-> > instances of slab cache misuse.  Hence the RVB. :)
+> Cheers,
 > 
-> Ok. I was just wondering because Dave's first reply was that actually you'll
-> need to expand the use of kfree() instead of kmem_cache_free().
-> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
