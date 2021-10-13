@@ -2,65 +2,107 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37895C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Oct 2021 07:28:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D736C433FE
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Oct 2021 07:38:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1BB546103C
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Oct 2021 07:28:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 40DC461074
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Oct 2021 07:38:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238464AbhJMHae (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 Oct 2021 03:30:34 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:47810 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S238446AbhJMHae (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Oct 2021 03:30:34 -0400
-Received: from dread.disaster.area (pa49-195-238-16.pa.nsw.optusnet.com.au [49.195.238.16])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id ADF8710552EB;
-        Wed, 13 Oct 2021 18:28:30 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1maYgg-005gi0-5q; Wed, 13 Oct 2021 18:28:30 +1100
-Date:   Wed, 13 Oct 2021 18:28:30 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, chandan.babu@oracle.com, hch@lst.de
-Subject: Re: [PATCH 13/15] xfs: widen btree maxlevels computation to handle
- 64-bit record counts
-Message-ID: <20211013072830.GF2361455@dread.disaster.area>
-References: <163408155346.4151249.8364703447365270670.stgit@magnolia>
- <163408162537.4151249.5138465633448556647.stgit@magnolia>
+        id S238536AbhJMHkg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 13 Oct 2021 03:40:36 -0400
+Received: from smtp-out1.suse.de ([195.135.220.28]:52548 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238565AbhJMHkg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Oct 2021 03:40:36 -0400
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id B9FD9222C0;
+        Wed, 13 Oct 2021 07:38:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1634110711; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=m2/5m4EyNl7HialOD6IWobME8joFWhALPD0XeJqljVQ=;
+        b=d/Y5iKa4s2ThoqvqoYb8etqWtevCqOBHYZ1DF1p+oWm4BNq5proRG8XQwacGegyAqB75Ek
+        j8WQTrGXsr/qzoT8mGcjl1Hdzk1hMBiQZTncNkiAKcJfCIdLsoQj+f5aCOhretdrLKNNpA
+        cIyKJdpDYlB65nkVFopzCYv4umGIE0Y=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1634110711;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=m2/5m4EyNl7HialOD6IWobME8joFWhALPD0XeJqljVQ=;
+        b=fbLc4QJpjAioNpDXuQMoQ2cfpcSZhuuFzmAs/0lsu085RIwJJatBvU7POTVHCmbF8Sk8BH
+        TogvOXMpdLYrLMDw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 858EB13CBE;
+        Wed, 13 Oct 2021 07:38:31 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id +E26H/eMZmHgeAAAMHmgww
+        (envelope-from <vbabka@suse.cz>); Wed, 13 Oct 2021 07:38:31 +0000
+Message-ID: <3928ef69-eaac-241c-eb32-d2dd2eab9384@suse.cz>
+Date:   Wed, 13 Oct 2021 09:38:31 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <163408162537.4151249.5138465633448556647.stgit@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=61668a9e
-        a=DzKKRZjfViQTE5W6EVc0VA==:117 a=DzKKRZjfViQTE5W6EVc0VA==:17
-        a=kj9zAlcOel0A:10 a=8gfv0ekSlNoA:10 a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8
-        a=7-415B0cAAAA:8 a=2siaQ3fK4hl32L4kpwMA:9 a=CjuIK1q_8ugA:10
-        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.2.0
+Subject: Re: [PATCH] xfs: use kmem_cache_free() for kmem_cache objects
+Content-Language: en-US
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     David Rientjes <rientjes@google.com>,
+        Rustam Kovhaev <rkovhaev@gmail.com>,
+        Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
+        cl@linux.com, penberg@kernel.org, iamjoonsoo.kim@lge.com,
+        akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
+        linux-mm@kvack.org, gregkh@linuxfoundation.org,
+        Al Viro <viro@zeniv.linux.org.uk>, dvyukov@google.com
+References: <20210929212347.1139666-1-rkovhaev@gmail.com>
+ <20210930044202.GP2361455@dread.disaster.area>
+ <17f537b3-e2eb-5d0a-1465-20f3d3c960e2@suse.cz> <YVYGcLbu/aDKXkag@nuc10>
+ <a9b3cd91-8ee6-a654-b2a8-00c3efb69559@suse.cz> <YVZXF3mbaW+Pe+Ji@nuc10>
+ <1e0df91-556e-cee5-76f7-285d28fe31@google.com>
+ <20211012204320.GP24307@magnolia> <20211012204345.GQ24307@magnolia>
+ <9db5d16a-2999-07a4-c49d-7417601f834f@suse.cz>
+ <20211012232255.GS24307@magnolia>
+From:   Vlastimil Babka <vbabka@suse.cz>
+In-Reply-To: <20211012232255.GS24307@magnolia>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 12, 2021 at 04:33:45PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On 10/13/21 01:22, Darrick J. Wong wrote:
+> On Tue, Oct 12, 2021 at 11:32:25PM +0200, Vlastimil Babka wrote:
+>> On 10/12/2021 10:43 PM, Darrick J. Wong wrote:
+>> > On Tue, Oct 12, 2021 at 01:43:20PM -0700, Darrick J. Wong wrote:
+>> >> On Sun, Oct 03, 2021 at 06:07:20PM -0700, David Rientjes wrote:
+>> >>
+>> >> I audited the entire xfs (kernel) codebase and didn't find any other
+>> >> usage errors.  Thanks for the patch; I'll apply it to for-next.
+>> 
+>> Which patch, the one that started this thread and uses kmem_cache_free() instead
+>> of kfree()? I thought we said it's not the best way?
 > 
-> Rework xfs_btree_compute_maxlevels to handle larger record counts, since
-> we're about to add support for very large data forks.  Eventually the
-> realtime reverse mapping btree will need this too.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  fs/xfs/libxfs/xfs_btree.c |   16 ++++++++--------
->  fs/xfs/libxfs/xfs_btree.h |    3 ++-
->  2 files changed, 10 insertions(+), 9 deletions(-)
+> It's probably better to fix slob to be able to tell that a kmem_free'd
+> object actually belongs to a cache and should get freed that way, just
+> like its larger sl[ua]b cousins.
 
-Looks good. howmany_64() uses do_div() properly so there shouldn't
-be any issues with this on 32 bit platforms.
+Agreed. Rustam, do you still plan to do that?
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> However, even if that does come to pass, anybody /else/ who wants to
+> start(?) using XFS on a SLOB system will need this patch to fix the
+> minor papercut.  Now that I've checked the rest of the codebase, I don't
+> find it reasonable to make XFS mutually exclusive with SLOB over two
+> instances of slab cache misuse.  Hence the RVB. :)
 
--- 
-Dave Chinner
-david@fromorbit.com
+Ok. I was just wondering because Dave's first reply was that actually you'll
+need to expand the use of kfree() instead of kmem_cache_free().
+
