@@ -2,288 +2,143 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 920FDC433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Oct 2021 09:51:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3BB1C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Oct 2021 13:34:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7A1D660EDF
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Oct 2021 09:51:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B3EDD610E8
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Oct 2021 13:34:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237603AbhJMJxo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 Oct 2021 05:53:44 -0400
-Received: from smtp-out2.suse.de ([195.135.220.29]:52638 "EHLO
-        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238945AbhJMJxo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Oct 2021 05:53:44 -0400
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id 5B285201CA;
-        Wed, 13 Oct 2021 09:51:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1634118700; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=oRbO9y4IVv08xUAYCwf8PSf7iV+tEDafxLGCjEVSp14=;
-        b=qI7GUEFMGHxbaU9zoAXsUf8r11++eLiJsYzSVkRiXbO24XRdauDH1uNjMjc2s3PsY+oe7f
-        0zF0/bc87G0qshmEBDB8Pgg1VXoYezE2fQf6b3pfvzlaSWK/0od4e+iEZ/KgAd7KUFN395
-        BsTbvMbG402JtvXKZEYpGJgqkw5g2FA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1634118700;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=oRbO9y4IVv08xUAYCwf8PSf7iV+tEDafxLGCjEVSp14=;
-        b=mm6F/aCmm849gS7xHEOZ69wGJvJQCHeBUgyxC50gleu/n69+Mu++YoRYXFJBrFwwFk7FKd
-        95CoB24gZWptftBw==
-Received: from quack2.suse.cz (unknown [10.100.224.230])
-        by relay2.suse.de (Postfix) with ESMTP id 4DAEEA3B87;
-        Wed, 13 Oct 2021 09:51:40 +0000 (UTC)
-Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id 2BD251E11B6; Wed, 13 Oct 2021 11:51:39 +0200 (CEST)
-Date:   Wed, 13 Oct 2021 11:51:39 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Jan Kara <jack@suse.cz>, linux-xfs@vger.kernel.org,
-        Dave Chinner <dchinner@redhat.com>,
-        "Darrick J. Wong" <djwong@kernel.org>
-Subject: Re: Performance regression with async inode inactivation
-Message-ID: <20211013095139.GC19200@quack2.suse.cz>
-References: <20211004100653.GD2255@quack2.suse.cz>
- <20211004211508.GB54211@dread.disaster.area>
- <20211005081157.GA24625@quack2.suse.cz>
- <20211005212608.GC54211@dread.disaster.area>
- <20211006181001.GA4182@quack2.suse.cz>
- <20211006215851.GD54211@dread.disaster.area>
- <20211007120357.GD12712@quack2.suse.cz>
- <20211007234430.GH54211@dread.disaster.area>
- <20211012134255.GA19200@quack2.suse.cz>
- <20211012212339.GQ2361455@dread.disaster.area>
+        id S235436AbhJMNg6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 13 Oct 2021 09:36:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36894 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235565AbhJMNgz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Oct 2021 09:36:55 -0400
+Received: from mail-wr1-x42c.google.com (mail-wr1-x42c.google.com [IPv6:2a00:1450:4864:20::42c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9BBE6C061768
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Oct 2021 06:34:49 -0700 (PDT)
+Received: by mail-wr1-x42c.google.com with SMTP id v17so8432877wrv.9
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Oct 2021 06:34:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ffwll.ch; s=google;
+        h=date:from:to:cc:subject:message-id:mail-followup-to:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=miQRTp5hbRC1OCVn4QsRcT9kmnoc0mnhrgOilHbNn1g=;
+        b=F0E4EuXR+3flbL7Xzl8XisBhT8qIwH7MG0zDDrByvsqJ7u0MvCbJ+Jdk27g1cp2SlZ
+         9eUPMq4/iImU+0GtvR6R8lhPuCXmipsVTsAD3q7rkP21TldlzL8k+m7OPM4caW0UvsC2
+         7EcztkwWSBS0RIOzrl5QE35wqRU+YUSNac2QE=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id
+         :mail-followup-to:references:mime-version:content-disposition
+         :in-reply-to;
+        bh=miQRTp5hbRC1OCVn4QsRcT9kmnoc0mnhrgOilHbNn1g=;
+        b=TkPZpXV94Inyg0NJTeH7SF3BKNjwTyeNzfqftz9jWXzu75nWWaP4L09mu3FaNg7zL8
+         U0FUvShdLfO1yNplK6v07EsK1ajjpdBqZyK1Wsa0vn+csFAsRezbUEs7Akf4NQBmY1Wr
+         +yT0N6ZVlr7FCgz+mTsX3wXwo3OPK15xf+ENkA2FQ5xe4CsKz+UZR03l3BxMP7wWBzoL
+         s+eohCKQmYIu0m1YYt6MdZmIFwHKmBqJzRvdCaQMN2LaSRK0p6gOQ/C1VmekuUDAaKk7
+         NlqjGWYskAGD34ljZ3heHwT7oJz76LuDhml+7d0GA7SXleaLRQA2Q1Tls7tyYKp+5w5q
+         DCzA==
+X-Gm-Message-State: AOAM531UdfNxYfDBQGEr+9W2Of2wfiaJcRtwp8y4+S00emqS4Uzx3JIX
+        jhFPLPWFgTGvVWBiUlMUo3xBSw==
+X-Google-Smtp-Source: ABdhPJyPnoPCgju2Szs7ixA3PwCFFi3lyPyAvuULHAdCBT2PI9V1y8J8yrCa0Gufzb/wqCsDI8QXUQ==
+X-Received: by 2002:a05:600c:4ecb:: with SMTP id g11mr12644285wmq.67.1634132087950;
+        Wed, 13 Oct 2021 06:34:47 -0700 (PDT)
+Received: from phenom.ffwll.local ([2a02:168:57f4:0:efd0:b9e5:5ae6:c2fa])
+        by smtp.gmail.com with ESMTPSA id w1sm5376300wmc.19.2021.10.13.06.34.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 13 Oct 2021 06:34:47 -0700 (PDT)
+Date:   Wed, 13 Oct 2021 15:34:45 +0200
+From:   Daniel Vetter <daniel@ffwll.ch>
+To:     Jason Gunthorpe <jgg@nvidia.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Alex Sierra <alex.sierra@amd.com>, Felix.Kuehling@amd.com,
+        linux-mm@kvack.org, rcampbell@nvidia.com,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        hch@lst.de, jglisse@redhat.com, apopple@nvidia.com
+Subject: Re: [PATCH v1 00/12] MEMORY_DEVICE_COHERENT for CPU-accessible
+ coherent device memory
+Message-ID: <YWbgdXJBtupdy1qs@phenom.ffwll.local>
+Mail-Followup-To: Jason Gunthorpe <jgg@nvidia.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Alex Sierra <alex.sierra@amd.com>, Felix.Kuehling@amd.com,
+        linux-mm@kvack.org, rcampbell@nvidia.com,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        hch@lst.de, jglisse@redhat.com, apopple@nvidia.com
+References: <20211012171247.2861-1-alex.sierra@amd.com>
+ <20211012113957.53f05928dd60f3686331fede@linux-foundation.org>
+ <20211012185629.GZ2744544@nvidia.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211012212339.GQ2361455@dread.disaster.area>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20211012185629.GZ2744544@nvidia.com>
+X-Operating-System: Linux phenom 5.10.0-8-amd64 
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed 13-10-21 08:23:39, Dave Chinner wrote:
-> On Tue, Oct 12, 2021 at 03:42:55PM +0200, Jan Kara wrote:
-> > On Fri 08-10-21 10:44:30, Dave Chinner wrote:
-> > > Remove the fsync and we do have a real world workload - temporary
-> > > files for compiles, etc. Then everything should mostly get logged
-> > > in the same CIL context because all transactions are run
-> > > asynchronously and aggregate in memory until the CIL is full and
-> > > checkpoints itself. Hence log writes shouldn't change very much at
-> > > all for such workloads.
+On Tue, Oct 12, 2021 at 03:56:29PM -0300, Jason Gunthorpe wrote:
+> On Tue, Oct 12, 2021 at 11:39:57AM -0700, Andrew Morton wrote:
+> > On Tue, 12 Oct 2021 12:12:35 -0500 Alex Sierra <alex.sierra@amd.com> wrote:
 > > 
-> > OK, that makes sense. Thanks for explanation. So to verify your theory,
-> > I've removed fsync(2) from the test program. So now it is pure create,
-> > write, unlink workload. Results of "stress-unlink 48 /mnt", now for 5000
-> > loops of create-unlink to increase runtime (but the workload does barely
-> > any writes so it should not matter wrt log):
+> > > This patch series introduces MEMORY_DEVICE_COHERENT, a type of memory
+> > > owned by a device that can be mapped into CPU page tables like
+> > > MEMORY_DEVICE_GENERIC and can also be migrated like MEMORY_DEVICE_PRIVATE.
+> > > With MEMORY_DEVICE_COHERENT, we isolate the new memory type from other
+> > > subsystems as far as possible, though there are some small changes to
+> > > other subsystems such as filesystem DAX, to handle the new memory type
+> > > appropriately.
+> > > 
+> > > We use ZONE_DEVICE for this instead of NUMA so that the amdgpu
+> > > allocator can manage it without conflicting with core mm for non-unified
+> > > memory use cases.
+> > > 
+> > > How it works: The system BIOS advertises the GPU device memory (aka VRAM)
+> > > as SPM (special purpose memory) in the UEFI system address map.
+> > > The amdgpu driver registers the memory with devmap as
+> > > MEMORY_DEVICE_COHERENT using devm_memremap_pages.
+> > > 
+> > > The initial user for this hardware page migration capability will be
+> > > the Frontier supercomputer project.
 > > 
-> > default mkfs params:
-> > 	AVG	STDDEV
-> > before	2.0380	0.1597
-> > after	2.7356	0.4712
+> > To what other uses will this infrastructure be put?
 > > 
-> > agcount=96, log size 512M
-> > 	AVG	STDDEV
-> > before	1.0610	0.0227
-> > after	1.2508	0.0218
-> > 
-> > So still notable regression with the async inactivation. With default mkfs
-> > params we'd need more runs to get more reliable results (note the rather
-> > high standard deviation) but with high AG count results show pretty stable
-> > 20% regression - so let's have a look at that.
-> > 
-> > Looking at xfs stats there are barely any differences between before &
-> > after - 'after' writes a bit more to the log but it is ~1.5 MB over the
-> > whole benchmark run, altogether spending some 8ms doing IO so that's not
-> > it. Generally the workload seems to be CPU / memory bound now (it does
-> > barely any IO). Perf shows we are heavily contending on some spinlock in
-> > xfs_cil_commit() - I presume this is a xc_cil_lock.
+> > Because I must ask: if this feature is for one single computer which
+> > presumably has a custom kernel, why add it to mainline Linux?
 > 
-> Yes, and I have patches that fix this. It got reverted a before
-> release because it exposed a bunch of underlying zero-fay bugs in
-> the log code, and I haven't had time to run it through the review
-> cycle again even though it's pretty much unchanged from commits
-> 26-39 in this series:
+> Well, it certainly isn't just "one single computer". Overall I know of
+> about, hmm, ~10 *datacenters* worth of installations that are using
+> similar technology underpinnings.
 > 
-> https://lore.kernel.org/linux-xfs/20210603052240.171998-1-david@fromorbit.com/
+> "Frontier" is the code name for a specific installation but as the
+> technology is proven out there will be many copies made of that same
+> approach.
 > 
-> The profiles in this patch demonstrate the problem and the fix:
+> The previous program "Summit" was done with NVIDIA GPUs and PowerPC
+> CPUs and also included a very similar capability. I think this is a
+> good sign that this coherently attached accelerator will continue to
+> be a theme in computing going foward. IIRC this was done using out of
+> tree kernel patches and NUMA localities.
 > 
-> https://lore.kernel.org/linux-xfs/20210603052240.171998-35-david@fromorbit.com/
+> Specifically with CXL now being standardized and on a path to ubiquity
+> I think we will see an explosion in deployments of coherently attached
+> accelerator memory. This is the high end trickling down to wider
+> usage.
 > 
-> I did all my perf testing of inode inactivation with the CIL
-> scalability patches also installed, because deferred inode
-> inactivation only made contention on the CIL lock worse in my perf
-> tests. We simply can't evaluate the benefit of a change when the
-> system is easily driven into catastrophic lock breakdown by user
-> level operational concurrency.
-> 
-> IOWs, the CIL lock is the global limiting factor for async
-> transaction commit rates on large CPU count machines, and things
-> that remove bottlenecks in higher layers often just increase
-> contention on this lock and drive it into breakdown. That makes perf
-> go backwards, not forwards, and it's not the fault of the high level
-> change being made. That doesn't make the high level change wrong, it
-> just means we need to peel the onion further before the improvements
-> are fully realised.
+> I strongly think many CXL accelerators are going to want to manage
+> their on-accelerator memory in this way as it makes universal sense to
+> want to carefully manage memory access locality to optimize for
+> performance.
 
-OK, understood.
+Yeah with CXL this will be used by a lot more drivers/devices, not
+even including nvidia's blob.
 
-> > This actually happens
-> > both before and after, but we seem to spend some more time there with async
-> > inactivation. Likely this is related to work being done from worker
-> > threads. Perf stats for comparison:
-> > 
-> > before
-> >          51,135.08 msec cpu-clock                 #   47.894 CPUs utilized          
-> >              4,699      context-switches          #    0.092 K/sec                  
-> >                382      cpu-migrations            #    0.007 K/sec                  
-> >              1,228      page-faults               #    0.024 K/sec                  
-> >    128,884,972,351      cycles                    #    2.520 GHz                    
-> >     38,517,767,839      instructions              #    0.30  insn per cycle         
-> >      8,337,611,468      branches                  #  163.051 M/sec                  
-> >         39,749,736      branch-misses             #    0.48% of all branches        
-> >         25,225,109      cache-misses                                                
-> > 
-> >        1.067666170 seconds time elapsed
-> > 
-> > after
-> >          65,353.43 msec cpu-clock                 #   47.894 CPUs utilized          
-> >             43,737      context-switches          #    0.669 K/sec                  
-> >              1,824      cpu-migrations            #    0.028 K/sec                  
-> >              1,953      page-faults               #    0.030 K/sec                  
-> >    155,144,150,867      cycles                    #    2.374 GHz                    
-> >     45,280,145,337      instructions              #    0.29  insn per cycle         
-> >     10,027,567,384      branches                  #  153.436 M/sec                  
-> >         39,554,691      branch-misses             #    0.39% of all branches        
-> >         30,203,567      cache-misses                                                
-> > 
-> >        1.364539400 seconds time elapsed
-> > 
-> > So we can see huge increase in context-switches, notable increase in
-> > cache-misses, decrease in cycles/s so perhaps we are bouncing cache more?
-> > Anyway I guess this is kind of expected due to the nature of async
-> > inactivation, I just wanted to highlight that there are regressions without
-> > fsync in the game as well.
-> 
-> Context switches are largely noise - they are most likely just AGI
-> locks being bounced a bit more. It's the spinlock contention that is
-> the likely issue here. For example, on my 32p machine with vanilla
-> 5.15-rc4 with a fsync-less, 5000 iteration test run:
-> 
-> $ sudo perf_5.9 stat ./stress-unlink 32 /mnt/scratch
-> Processes started.
-> 1.290
-> 
->  Performance counter stats for './stress-unlink 32 /mnt/scratch':
-> 
->          16,856.61 msec task-clock                #   12.595 CPUs utilized          
->             48,297      context-switches          #    0.003 M/sec                  
->              4,219      cpu-migrations            #    0.250 K/sec                  
->              1,373      page-faults               #    0.081 K/sec                  
->     39,254,798,526      cycles                    #    2.329 GHz                    
->     16,460,808,349      instructions              #    0.42  insn per cycle         
->      3,475,251,228      branches                  #  206.166 M/sec                  
->         12,129,889      branch-misses             #    0.35% of all branches        
-> 
->        1.338312347 seconds time elapsed
-> 
->        0.186554000 seconds user
->       17.247176000 seconds sys
-> 
-> And with 5.15-rc4 + CIL scalability:
-> 
-> $ sudo perf_5.9 stat ./stress-unlink 32 /mnt/scratch
-> Processes started.
-> 0.894
-> 
->  Performance counter stats for './stress-unlink 32 /mnt/scratch':
-> 
->          12,917.93 msec task-clock                #   13.805 CPUs utilized
->             39,680      context-switches          #    0.003 M/sec
->              2,737      cpu-migrations            #    0.212 K/sec
->              1,402      page-faults               #    0.109 K/sec
->     30,920,293,752      cycles                    #    2.394 GHz
->     14,472,067,501      instructions              #    0.47  insn per cycle
->      2,700,978,247      branches                  #  209.087 M/sec
->          9,287,754      branch-misses             #    0.34% of all branches
-> 
->        0.935710173 seconds time elapsed
-> 
->        0.192467000 seconds user
->       13.245977000 seconds sys
-> 
-> Runtime of the fsync-less, 5,000 iteration version drops from 1.29s
-> to 0.89s, IPC goes up, branches and branch-misses go down, context
-> switches only go down slightly, etc. IOWs, when you take away the
-> CIL lock contention, we get back all that perf loss and then some...
-
-Nice results!
-
-> FWIW, let's really hammer it for a long while. Vanilla 5.14-rc4:
-> 
-> $ sudo perf_5.9 stat ./stress-unlink 1000 /mnt/scratch
-> Processes started.
-> 38.881
-> 
->  Performance counter stats for './stress-unlink 1000 /mnt/scratch':
-> 
->         733,741.06 msec task-clock                #   16.004 CPUs utilized          
->         13,131,968      context-switches          #    0.018 M/sec                  
->          1,302,636      cpu-migrations            #    0.002 M/sec                  
->             40,720      page-faults               #    0.055 K/sec                  
->  1,195,192,185,398      cycles                    #    1.629 GHz                    
->    643,382,890,656      instructions              #    0.54  insn per cycle         
->    129,065,409,600      branches                  #  175.900 M/sec                  
->        768,146,988      branch-misses             #    0.60% of all branches        
-> 
->       45.847750477 seconds time elapsed
-> 
->       11.194020000 seconds user
->      758.762376000 seconds sys
-> 
-> And the transaction rate is pinned at 800,000/s for the entire test.
-> We're running at the limit of the CIL lock here.
-> 
-> With CIL scalbility patchset:
-> 
-> $ sudo perf_5.9 stat ./stress-unlink 1000 /mnt/scratch
-> Processes started.
-> 28.263
-> 
->  Performance counter stats for './stress-unlink 1000 /mnt/scratch':
-> 
->         450,547.80 msec task-clock                #   15.038 CPUs utilized          
->          5,949,268      context-switches          #    0.013 M/sec                  
->            868,887      cpu-migrations            #    0.002 M/sec                  
->             41,570      page-faults               #    0.092 K/sec                  
->    836,933,822,425      cycles                    #    1.858 GHz                    
->    536,132,522,275      instructions              #    0.64  insn per cycle         
->     99,264,579,180      branches                  #  220.320 M/sec                  
->        506,921,132      branch-misses             #    0.51% of all branches        
-> 
->       29.961492616 seconds time elapsed
-> 
->        7.796758000 seconds user
->      471.990545000 seconds sys
-> 
-> 
-> 30% reduction in runtime because the transaction rate is now
-> running at 1.1M/s. Improvements in code execution across the board
-> here, so the problem clearly isn't the deferred inode inactivation.
-> 
-> IOWs, I'm largely not concerned about the high CPU count perf
-> regressions that we are seeing from log code these days - the fix is
-> largely ready, it's just lacking in available engineering time to get
-> it over the line and merged right now...
-
-OK, thanks for explanation!
-
-								Honza
+I guess if you want make sure get an ack on this from CXL folks, so that
+we don't end up with a mess.
+-Daniel
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Daniel Vetter
+Software Engineer, Intel Corporation
+http://blog.ffwll.ch
