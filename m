@@ -2,101 +2,116 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61BCCC433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Oct 2021 20:18:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDBD3C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Oct 2021 20:58:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4234A604AC
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Oct 2021 20:18:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB82861154
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Oct 2021 20:58:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229750AbhJMUUV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 Oct 2021 16:20:21 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:36049 "EHLO
+        id S229725AbhJMVAD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 13 Oct 2021 17:00:03 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:37405 "EHLO
         mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229794AbhJMUUG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Oct 2021 16:20:06 -0400
+        by vger.kernel.org with ESMTP id S229496AbhJMVAD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Oct 2021 17:00:03 -0400
 Received: from dread.disaster.area (pa49-195-238-16.pa.nsw.optusnet.com.au [49.195.238.16])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 71FB01056738;
-        Thu, 14 Oct 2021 07:18:01 +1100 (AEDT)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 866F51056750;
+        Thu, 14 Oct 2021 07:57:56 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1makhM-005tFT-K9; Thu, 14 Oct 2021 07:18:00 +1100
-Date:   Thu, 14 Oct 2021 07:18:00 +1100
+        id 1malJz-005txV-AD; Thu, 14 Oct 2021 07:57:55 +1100
+Date:   Thu, 14 Oct 2021 07:57:55 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, chandan.babu@oracle.com, hch@lst.de
-Subject: Re: [PATCH 10/15] xfs: compute actual maximum btree height for
- critical reservation calculation
-Message-ID: <20211013201800.GI2361455@dread.disaster.area>
-References: <163408155346.4151249.8364703447365270670.stgit@magnolia>
- <163408160882.4151249.14701173486144926020.stgit@magnolia>
- <20211013054939.GC2361455@dread.disaster.area>
- <20211013170747.GX24307@magnolia>
+To:     Holger =?iso-8859-1?Q?Hoffst=E4tte?= 
+        <holger@applied-asynchrony.com>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>
+Subject: Re: Sorting blocks in xfs_buf_delwri_submit_buffers() still
+ necessary?
+Message-ID: <20211013205755.GJ2361455@dread.disaster.area>
+References: <05c69404-cc05-444b-e4b0-1e358deae272@applied-asynchrony.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20211013170747.GX24307@magnolia>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <05c69404-cc05-444b-e4b0-1e358deae272@applied-asynchrony.com>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=epq8cqlX c=1 sm=1 tr=0 ts=61673ef9
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=61674856
         a=DzKKRZjfViQTE5W6EVc0VA==:117 a=DzKKRZjfViQTE5W6EVc0VA==:17
-        a=kj9zAlcOel0A:10 a=8gfv0ekSlNoA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=3EOO1nZAihp2rVCAeTkA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+        a=8nJEP1OIZ-IA:10 a=8gfv0ekSlNoA:10 a=7-415B0cAAAA:8
+        a=9oMsoIRCxFo-Of0Ew24A:9 a=wPNLvfGTeEIA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 13, 2021 at 10:07:47AM -0700, Darrick J. Wong wrote:
-> On Wed, Oct 13, 2021 at 04:49:39PM +1100, Dave Chinner wrote:
-> > On Tue, Oct 12, 2021 at 04:33:28PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <djwong@kernel.org>
-> > > 
-> > > Compute the actual maximum btree height when deciding if per-AG block
-> > > reservation is critically low.  This only affects the sanity check
-> > > condition, since we /generally/ will trigger on the 10% threshold.
-> > > This is a long-winded way of saying that we're removing one more
-> > > usage of XFS_BTREE_MAXLEVELS.
-> > 
-> > And replacing it with a branchy dynamic calculation that has a
-> > static, unchanging result. :(
-> > 
-> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > ---
-> > >  fs/xfs/libxfs/xfs_ag_resv.c |   18 +++++++++++++++++-
-> > >  1 file changed, 17 insertions(+), 1 deletion(-)
-> > > 
-> > > 
-> > > diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
-> > > index 2aa2b3484c28..d34d4614f175 100644
-> > > --- a/fs/xfs/libxfs/xfs_ag_resv.c
-> > > +++ b/fs/xfs/libxfs/xfs_ag_resv.c
-> > > @@ -60,6 +60,20 @@
-> > >   * to use the reservation system should update ask/used in xfs_ag_resv_init.
-> > >   */
-> > >  
-> > > +/* Compute maximum possible height for per-AG btree types for this fs. */
-> > > +static unsigned int
-> > > +xfs_ag_btree_maxlevels(
-> > > +	struct xfs_mount	*mp)
-> > > +{
-> > > +	unsigned int		ret = mp->m_ag_maxlevels;
-> > > +
-> > > +	ret = max(ret, mp->m_bm_maxlevels[XFS_DATA_FORK]);
-> > > +	ret = max(ret, mp->m_bm_maxlevels[XFS_ATTR_FORK]);
-> > > +	ret = max(ret, M_IGEO(mp)->inobt_maxlevels);
-> > > +	ret = max(ret, mp->m_rmap_maxlevels);
-> > > +	return max(ret, mp->m_refc_maxlevels);
-> > > +}
-> > 
-> > Hmmmm. perhaps mp->m_ag_maxlevels should be renamed to
-> > mp->m_agbno_maxlevels and we pre-calculate mp->m_ag_maxlevels from
+On Wed, Oct 13, 2021 at 07:13:10PM +0200, Holger Hoffstätte wrote:
+> Hi,
 > 
-> I prefer m_alloc_maxlevels for the first one, since "agbno" means "AG
-> block number" in my head.
-> 
-> As for the second, how about "m_agbtree_maxlevels" since we already use
-> 'agbtree' to refer to per-AG btrees elsewhere?
+> Based on what's going on in blk-mq & NVMe land
 
-Much better than my suggestions :)
+What's going on in this area that is any different from the past few
+years?
+
+> I though I'd check if XFS still
+> sorts buffers before sending them down the pipe, and sure enough that still
+> happens in xfs_buf.c:xfs_buf_delwri_submit_buffers() (the comparson function
+> is directly above). Before I make a fool of myself and try to remove this,
+> do we still think this is necessary?
+
+Yes, I do.
+
+A though experiment for you, which you can then back up with actual
+simulation with fio:
+
+What is more efficient and faster at the hardware level: 16
+individual sequential 4kB IOs or one 64kB IO?
+
+Which of these uses less CPU to dispatch and complete?
+
+Which has less IO in flight and so allows more concurrent IO to be
+dispatched to the hardware at the same time?
+
+Answering these questions will give you your answer.
+
+So, play around with AIO to simulate xfs buffer IO - the xfs buffer
+cache is really just a high concurrency async IO engine. Use fio to
+submit a series of individual sequential 4kB AIO writes with a queue
+depth of, say, 128 to a file and time it. Then submit the
+same number of sequential 4kB AIO writes as batches of 64 IOs
+at a time. Which one is faster? Why is it faster? You'll need to
+play around with fio queue batching controls to do this, but you can
+simulate it quite easily.
+
+The individual sequential IO fio simulation is the equivalent of
+eliding the buffer sort in xfs_buf_delwri_submit_buffers(), whilst
+the batched submission is equivalent of what we have now.
+
+Just because your hardware can do a million IOPS, it doesn't mean
+the most efficient way to do IO is to dispatch a million IOPS....
+
+> If there's a scheduler it will do the
+> same thing, and SSD/NVMe might do the same in HW anyway or not care.
+> The only scenario I can think of where this might make a difference is
+> rotational RAID without scheduler attached. Not sure.
+
+Schedulers only have a reorder window of a 100-200 individual IOs.
+xfs_buf_delwri_submit_buffers() can be passed tens of thousands of
+buffers in a single list for IO dispatch that need reordering.
+
+IOWs, the sort+merge window for number of IOs we dispatch from
+metadata writeback is often orders of magnitude larger than what the
+block layer scheduler can optimise effectively. The IO stack
+behaviour is largely GIGO, so anythign we can do at a highly layer
+to make the IO submission less garbage-like results in improved
+throughput through the software and hardware layers of the storage
+stack.
+
+> I'm looking forward to hear what a foolish idea this is.
+
+If the list_sort() is not showing up in profiles, then it is
+essentially free. Last time I checked, our biggest overhead was the
+CPU overhead of flushing a million inodes/s from the AIL to their
+backing buffers - the list_sort() didn't even show up in the top 50
+functions in the profile...
 
 Cheers,
 
