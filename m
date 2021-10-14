@@ -2,539 +2,129 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 136F6C433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 20:18:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B1C4C433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 20:57:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ECCFC610E6
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 20:18:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA9B161166
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 20:57:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230324AbhJNUUe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 Oct 2021 16:20:34 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35800 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229912AbhJNUUe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 14 Oct 2021 16:20:34 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id AC5D2610D2;
-        Thu, 14 Oct 2021 20:18:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1634242708;
-        bh=Cist08Fzxh4Zr/PBiREP5czy7a20QgHvdAl/lGzj6HU=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=VhtpVXsLp667zBpxFd0gFWmvfF+wFRM/dxvvBu+EWNPfBw6Qj0+TyzAR019s41QXq
-         j+7BJtDGz9wq5H8YxNo+MqGEg5UEirV1q7H2GrCgj5Lbyh3jOhMQvyZ/+zMtVGDHOj
-         E6/kJ3+oSxVwgxnozMx2Jp0dL0iFN+fobjP5w7bcnNbl9wpFE46H2043lpkD4QgwEf
-         ZQn8crV6El1tFgYJvlFo/TdN2hrgw/bE1KQcauvcE8rf1Vdl4y+11HUv/94Cox8hn9
-         PQ69QLoBxlUvIxDVpa8/D+ldQOj91kH5+rHmKeQheHaVYWhWs76YLyCzkdT/mwbgnk
-         o4ns4dZd+bfNg==
-Subject: [PATCH 17/17] xfs: use separate btree cursor cache for each btree
- type
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org, david@fromorbit.com
-Cc:     linux-xfs@vger.kernel.org, chandan.babu@oracle.com, hch@lst.de
-Date:   Thu, 14 Oct 2021 13:18:28 -0700
-Message-ID: <163424270836.756780.5038212434647220692.stgit@magnolia>
-In-Reply-To: <163424261462.756780.16294781570977242370.stgit@magnolia>
-References: <163424261462.756780.16294781570977242370.stgit@magnolia>
-User-Agent: StGit/0.19
+        id S232623AbhJNU7j (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 Oct 2021 16:59:39 -0400
+Received: from mail-mw2nam10on2071.outbound.protection.outlook.com ([40.107.94.71]:40032
+        "EHLO NAM10-MW2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S231308AbhJNU7i (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 14 Oct 2021 16:59:38 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=T+Og7C0rC3DEF8QlsgaEZsMGm6uZZX9QaR2GSSQUJAGM4pSDhE+Uq4VzhE92ie0ZNAHPjGQi8nbcDLsMNphIsPYKlxEOZERR7r4UpQWU0UhNJsIiat9xyO8OZf+gUJBF4Oy/wOaIxToitUEqVCl/Nz2T03bCMs/tjphf/O/iUWUjcpsPLlwLVZu90eyckwpLcE1WG012ezOuxTqBHB1Z/pA7TuX4knvM/o9HD744be6YOdo2K8CARZF9rE0qePQ6OjTy5U+58tAoYCL0XF3YZdumTt64BUHua/GvfFOjEyl/EgOS6C76zvKkYmwO1Pflsl5J7hFwqSyAVJMP011a6A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=hvpTn4a8zxu+601pUl+qvYpYhZTCqZpliAcG4fPUr5s=;
+ b=Ho+d4v4bH/R9m2EzhJLUDY7fyUqS2JTqW+sVRaL4Ge9FqgC1LQM8yNCljXN2eNerZoPhOR2gMNNYeJxvoDeqjjnAM3KDkehQzxyzSML0JIPgUH9AAVnMHEnY2+WLpyB7dWIcxoe4V6Qh6h0svySsCHL89NqC8cf0JcdaL9iMEfoZEOuNThmQkW7Dq3vxNkmsxwhsSSEdAdGBsdWbH4s4vrEI3c8o415mw25XFkFAYPzbtXby6/G5+Fy9voXMkcEiuG4QFsA5sU9bSI4DI++xXm5lW8zDm08+pv82rRGuxxPpcUzbj6EOzmKk/JmDp8La/tPWr+agEXyAo4m0QMMwNA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.112.36) smtp.rcpttodomain=infradead.org smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
+ header.from=nvidia.com; dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=hvpTn4a8zxu+601pUl+qvYpYhZTCqZpliAcG4fPUr5s=;
+ b=siQxPlzZrFafDLoU/wWpNpFmUfEU1SGEUiT/51tFpyooJQu/uNsIHESaevyKl31TSocdUOUOD5FzLoPjrdNM+Y11tvxKL1MvXmfaNgLPUVXXh5U6RY9qECzv2ds5l72RGMbCgmnQDU6ZxGAR16CNEvgDMerRR04WSGqdJGJpxQNe55M2RR518lndp843Ts2W5tW8uSWTdYC64qTTeF48WGNoBiPlifvWfDSkfohb2LA/nfLkHj0NmXFOwDqh04OY9DduntztJ5vs6QroP7Loswl749H0rQP63RO324gBdPVAKPnzBulPhBG2NZ8PguIxmLjTEtFKv6ezwoEHuZ0V7Q==
+Received: from BN0PR04CA0075.namprd04.prod.outlook.com (2603:10b6:408:ea::20)
+ by MWHPR12MB1151.namprd12.prod.outlook.com (2603:10b6:300:e::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4587.20; Thu, 14 Oct
+ 2021 20:57:31 +0000
+Received: from BN8NAM11FT016.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:408:ea:cafe::e1) by BN0PR04CA0075.outlook.office365.com
+ (2603:10b6:408:ea::20) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4608.14 via Frontend
+ Transport; Thu, 14 Oct 2021 20:57:29 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.112.36)
+ smtp.mailfrom=nvidia.com; infradead.org; dkim=none (message not signed)
+ header.d=none;infradead.org; dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.112.36 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.112.36; helo=mail.nvidia.com;
+Received: from mail.nvidia.com (216.228.112.36) by
+ BN8NAM11FT016.mail.protection.outlook.com (10.13.176.97) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ 15.20.4608.15 via Frontend Transport; Thu, 14 Oct 2021 20:57:28 +0000
+Received: from HQMAIL105.nvidia.com (172.20.187.12) by HQMAIL101.nvidia.com
+ (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Thu, 14 Oct
+ 2021 20:57:28 +0000
+Received: from HQMAIL111.nvidia.com (172.20.187.18) by HQMAIL105.nvidia.com
+ (172.20.187.12) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Thu, 14 Oct
+ 2021 20:57:27 +0000
+Received: from rcampbell-test.nvidia.com (172.20.187.5) by mail.nvidia.com
+ (172.20.187.18) with Microsoft SMTP Server (TLS) id 15.0.1497.18 via Frontend
+ Transport; Thu, 14 Oct 2021 20:57:27 +0000
+Subject: Re: [PATCH v1 2/2] mm: remove extra ZONE_DEVICE struct page refcount
+To:     Jason Gunthorpe <jgg@nvidia.com>
+CC:     Alex Sierra <alex.sierra@amd.com>, <akpm@linux-foundation.org>,
+        <Felix.Kuehling@amd.com>, <linux-mm@kvack.org>,
+        <linux-ext4@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <amd-gfx@lists.freedesktop.org>, <dri-devel@lists.freedesktop.org>,
+        <hch@lst.de>, <jglisse@redhat.com>, <apopple@nvidia.com>,
+        <willy@infradead.org>
+References: <20211014153928.16805-1-alex.sierra@amd.com>
+ <20211014153928.16805-3-alex.sierra@amd.com>
+ <20211014170634.GV2744544@nvidia.com>
+ <eafbccb5-f94b-0ddd-bb46-7ee92ed36ee8@nvidia.com>
+ <20211014180132.GA3567687@nvidia.com>
+From:   Ralph Campbell <rcampbell@nvidia.com>
+Message-ID: <b8b57851-674a-956d-0d7a-779e601bf6d8@nvidia.com>
+Date:   Thu, 14 Oct 2021 13:57:27 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20211014180132.GA3567687@nvidia.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: fb1a4024-13e8-4cc7-e460-08d98f553c05
+X-MS-TrafficTypeDiagnostic: MWHPR12MB1151:
+X-Microsoft-Antispam-PRVS: <MWHPR12MB11511B8165131FCED4395C30C2B89@MWHPR12MB1151.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:2000;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 6MGQ3ilDl/sD2S/c635rH+iM0P8Z+gdnUjcY/3k+H5mlYVJX6KexIJnW61DGHrlmoAPO+VEsQSIC9vUQIlDvre6heZS+PnRSMM98+QsIOjmstgSMGqYngl5uQ+VyAW5MpFrk2wCM1JFK0qZ6Co3mHr3YNmikAtx/2yUgDBxa6E7bhDJccZKWC8k/Dq/wUfL8IBXX9vRAc/y0n25J630DWEWmCwiASj5Djqxu61RF31WD4sQB2a0IHyzSNoALhVrceMzdjB9QpKuzzt8O4NaKJ9vLH8+K2gI4S1Q52VxHtXssg7OLvcrqM9gSR2MTfIpHWa+SCADvEteW5IxUtoi+a8yLosqia7K4c8gQCQY0+XQA6tPnYNITMF3XLB/T6vjrE7g1Jwj2niv1Wulk9qo1QdcIrAk86SrqtDRvv/Pc0Iwm8zvFJIpuMFrS9juoDFZItuGV1CZT5vadS/6x4eF7NjwEdVp7cezPnkiPl35FC0G0Ko0l1DEibklcFHC1uXHjxZZL3EJqovhb05NPyhjDzDygoVCg4ctDHNHIrmnQstlAsKqxjhoXx9hHMCEpO4qdqxTGEHj77sU96tVGaiLgvfw5fFZbQIOlFcc59UokMg4uztn9JFqegNTw4Os2axxBlKaU/Belt8hh/SElEIC1JjZ5icNsKmX/acfILzmSgaQ2yAhBfwz5TyqmEncTjImzED3BJaze0/ebcd/bK6roFEtMt+Os2zl7kT8ZLnyYQhQ=
+X-Forefront-Antispam-Report: CIP:216.228.112.36;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:schybrid05.nvidia.com;CAT:NONE;SFS:(4636009)(46966006)(36840700001)(36756003)(8936002)(31686004)(8676002)(7416002)(7636003)(53546011)(426003)(26005)(2616005)(508600001)(356005)(4744005)(336012)(6636002)(4326008)(37006003)(70586007)(2906002)(5660300002)(36860700001)(31696002)(54906003)(7696005)(316002)(47076005)(70206006)(82310400003)(6862004)(86362001)(186003)(43740500002);DIR:OUT;SFP:1101;
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Oct 2021 20:57:28.9928
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: fb1a4024-13e8-4cc7-e460-08d98f553c05
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.112.36];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT016.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR12MB1151
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
 
-Now that we have the infrastructure to track the max possible height of
-each btree type, we can create a separate slab cache for cursors of each
-type of btree.  For smaller indices like the free space btrees, this
-means that we can pack more cursors into a slab page, improving slab
-utilization.
+On 10/14/21 11:01 AM, Jason Gunthorpe wrote:
+> On Thu, Oct 14, 2021 at 10:35:27AM -0700, Ralph Campbell wrote:
+>
+>> I ran xfstests-dev using the kernel boot option to "fake" a pmem device
+>> when I first posted this patch. The tests ran OK (or at least the same
+>> tests passed with and without my patch).
+> Hmm. I know nothing of xfstests but
+>
+> tests/generic/413
+>
+> Looks kind of like it might cover this situation?
+>
+> Did it run for you?
+>
+> Jason
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/libxfs/xfs_alloc_btree.c    |   23 +++++++++++++++++
- fs/xfs/libxfs/xfs_alloc_btree.h    |    3 ++
- fs/xfs/libxfs/xfs_bmap_btree.c     |   23 +++++++++++++++++
- fs/xfs/libxfs/xfs_bmap_btree.h     |    3 ++
- fs/xfs/libxfs/xfs_btree.c          |   48 ++++++++++++++++++++++++++++++++----
- fs/xfs/libxfs/xfs_btree.h          |   20 ++++++---------
- fs/xfs/libxfs/xfs_ialloc_btree.c   |   23 +++++++++++++++++
- fs/xfs/libxfs/xfs_ialloc_btree.h   |    3 ++
- fs/xfs/libxfs/xfs_refcount_btree.c |   23 +++++++++++++++++
- fs/xfs/libxfs/xfs_refcount_btree.h |    3 ++
- fs/xfs/libxfs/xfs_rmap_btree.c     |   23 +++++++++++++++++
- fs/xfs/libxfs/xfs_rmap_btree.h     |    3 ++
- fs/xfs/xfs_super.c                 |   13 +++++-----
- 13 files changed, 182 insertions(+), 29 deletions(-)
-
-
-diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
-index d0a7aa4b52a8..609d349e7bd4 100644
---- a/fs/xfs/libxfs/xfs_alloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_alloc_btree.c
-@@ -20,6 +20,7 @@
- #include "xfs_trans.h"
- #include "xfs_ag.h"
- 
-+static kmem_zone_t	*xfs_allocbt_cur_cache;
- 
- STATIC struct xfs_btree_cur *
- xfs_allocbt_dup_cursor(
-@@ -477,7 +478,8 @@ xfs_allocbt_init_common(
- 
- 	ASSERT(btnum == XFS_BTNUM_BNO || btnum == XFS_BTNUM_CNT);
- 
--	cur = xfs_btree_alloc_cursor(mp, tp, btnum, mp->m_alloc_maxlevels);
-+	cur = xfs_btree_alloc_cursor(mp, tp, btnum, mp->m_alloc_maxlevels,
-+			xfs_allocbt_cur_cache);
- 	cur->bc_ag.abt.active = false;
- 
- 	if (btnum == XFS_BTNUM_CNT) {
-@@ -617,3 +619,22 @@ xfs_allocbt_calc_size(
- {
- 	return xfs_btree_calc_size(mp->m_alloc_mnr, len);
- }
-+
-+int __init
-+xfs_allocbt_init_cur_cache(void)
-+{
-+	xfs_allocbt_cur_cache = kmem_cache_create("xfs_bnobt_cur",
-+			xfs_btree_cur_sizeof(xfs_allocbt_maxlevels_ondisk()),
-+			0, 0, NULL);
-+
-+	if (!xfs_allocbt_cur_cache)
-+		return -ENOMEM;
-+	return 0;
-+}
-+
-+void
-+xfs_allocbt_destroy_cur_cache(void)
-+{
-+	kmem_cache_destroy(xfs_allocbt_cur_cache);
-+	xfs_allocbt_cur_cache = NULL;
-+}
-diff --git a/fs/xfs/libxfs/xfs_alloc_btree.h b/fs/xfs/libxfs/xfs_alloc_btree.h
-index c715bee5ae90..45df893ef6bb 100644
---- a/fs/xfs/libxfs/xfs_alloc_btree.h
-+++ b/fs/xfs/libxfs/xfs_alloc_btree.h
-@@ -62,4 +62,7 @@ void xfs_allocbt_commit_staged_btree(struct xfs_btree_cur *cur,
- 
- unsigned int xfs_allocbt_maxlevels_ondisk(void);
- 
-+int __init xfs_allocbt_init_cur_cache(void);
-+void xfs_allocbt_destroy_cur_cache(void);
-+
- #endif	/* __XFS_ALLOC_BTREE_H__ */
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-index 59d146696a62..107ac1d127bf 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-@@ -22,6 +22,8 @@
- #include "xfs_trace.h"
- #include "xfs_rmap.h"
- 
-+static kmem_zone_t	*xfs_bmbt_cur_cache;
-+
- /*
-  * Convert on-disk form of btree root to in-memory form.
-  */
-@@ -553,7 +555,7 @@ xfs_bmbt_init_cursor(
- 	ASSERT(whichfork != XFS_COW_FORK);
- 
- 	cur = xfs_btree_alloc_cursor(mp, tp, XFS_BTNUM_BMAP,
--			mp->m_bm_maxlevels[whichfork]);
-+			mp->m_bm_maxlevels[whichfork], xfs_bmbt_cur_cache);
- 	cur->bc_nlevels = be16_to_cpu(ifp->if_broot->bb_level) + 1;
- 	cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_bmbt_2);
- 
-@@ -675,3 +677,22 @@ xfs_bmbt_calc_size(
- {
- 	return xfs_btree_calc_size(mp->m_bmap_dmnr, len);
- }
-+
-+int __init
-+xfs_bmbt_init_cur_cache(void)
-+{
-+	xfs_bmbt_cur_cache = kmem_cache_create("xfs_bmbt_cur",
-+			xfs_btree_cur_sizeof(xfs_bmbt_maxlevels_ondisk()),
-+			0, 0, NULL);
-+
-+	if (!xfs_bmbt_cur_cache)
-+		return -ENOMEM;
-+	return 0;
-+}
-+
-+void
-+xfs_bmbt_destroy_cur_cache(void)
-+{
-+	kmem_cache_destroy(xfs_bmbt_cur_cache);
-+	xfs_bmbt_cur_cache = NULL;
-+}
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
-index 2a1c9e607b52..3e7a40a83835 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.h
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.h
-@@ -112,4 +112,7 @@ extern unsigned long long xfs_bmbt_calc_size(struct xfs_mount *mp,
- 
- unsigned int xfs_bmbt_maxlevels_ondisk(void);
- 
-+int __init xfs_bmbt_init_cur_cache(void);
-+void xfs_bmbt_destroy_cur_cache(void);
-+
- #endif	/* __XFS_BMAP_BTREE_H__ */
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 43e646f3956c..80723dac519f 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -22,11 +22,11 @@
- #include "xfs_log.h"
- #include "xfs_btree_staging.h"
- #include "xfs_ag.h"
--
--/*
-- * Cursor allocation zone.
-- */
--kmem_zone_t	*xfs_btree_cur_zone;
-+#include "xfs_alloc_btree.h"
-+#include "xfs_ialloc_btree.h"
-+#include "xfs_bmap_btree.h"
-+#include "xfs_rmap_btree.h"
-+#include "xfs_refcount_btree.h"
- 
- /*
-  * Btree magic numbers.
-@@ -379,7 +379,7 @@ xfs_btree_del_cursor(
- 		kmem_free(cur->bc_ops);
- 	if (!(cur->bc_flags & XFS_BTREE_LONG_PTRS) && cur->bc_ag.pag)
- 		xfs_perag_put(cur->bc_ag.pag);
--	kmem_cache_free(xfs_btree_cur_zone, cur);
-+	kmem_cache_free(cur->bc_cache, cur);
- }
- 
- /*
-@@ -4962,3 +4962,39 @@ xfs_btree_has_more_records(
- 	else
- 		return block->bb_u.s.bb_rightsib != cpu_to_be32(NULLAGBLOCK);
- }
-+
-+/* Set up all the btree cursor caches. */
-+int __init
-+xfs_btree_init_cur_caches(void)
-+{
-+	int		error;
-+
-+	error = xfs_allocbt_init_cur_cache();
-+	if (error)
-+		return error;
-+	error = xfs_inobt_init_cur_cache();
-+	if (error)
-+		return error;
-+	error = xfs_bmbt_init_cur_cache();
-+	if (error)
-+		return error;
-+	error = xfs_rmapbt_init_cur_cache();
-+	if (error)
-+		return error;
-+	error = xfs_refcountbt_init_cur_cache();
-+	if (error)
-+		return error;
-+
-+	return 0;
-+}
-+
-+/* Destroy all the btree cursor caches, if they've been allocated. */
-+void
-+xfs_btree_destroy_cur_caches(void)
-+{
-+	xfs_allocbt_destroy_cur_cache();
-+	xfs_inobt_destroy_cur_cache();
-+	xfs_bmbt_destroy_cur_cache();
-+	xfs_rmapbt_destroy_cur_cache();
-+	xfs_refcountbt_destroy_cur_cache();
-+}
-diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index fdf7090c74f4..7bc5a3796052 100644
---- a/fs/xfs/libxfs/xfs_btree.h
-+++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -13,8 +13,6 @@ struct xfs_trans;
- struct xfs_ifork;
- struct xfs_perag;
- 
--extern kmem_zone_t	*xfs_btree_cur_zone;
--
- /*
-  * Generic key, ptr and record wrapper structures.
-  *
-@@ -92,12 +90,6 @@ uint32_t xfs_btree_magic(int crc, xfs_btnum_t btnum);
- #define XFS_BTREE_STATS_ADD(cur, stat, val)	\
- 	XFS_STATS_ADD_OFF((cur)->bc_mp, (cur)->bc_statoff + __XBTS_ ## stat, val)
- 
--/*
-- * The btree cursor zone hands out cursors that can handle up to this many
-- * levels.  This is the known maximum for all btree types.
-- */
--#define XFS_BTREE_CUR_CACHE_MAXLEVELS	(9)
--
- struct xfs_btree_ops {
- 	/* size of the key and record structures */
- 	size_t	key_len;
-@@ -238,6 +230,7 @@ struct xfs_btree_cur
- 	struct xfs_trans	*bc_tp;	/* transaction we're in, if any */
- 	struct xfs_mount	*bc_mp;	/* file system mount struct */
- 	const struct xfs_btree_ops *bc_ops;
-+	kmem_zone_t		*bc_cache; /* cursor cache */
- 	unsigned int		bc_flags; /* btree features - below */
- 	xfs_btnum_t		bc_btnum; /* identifies which btree type */
- 	union xfs_btree_irec	bc_rec;	/* current insert/search record value */
-@@ -592,19 +585,22 @@ xfs_btree_alloc_cursor(
- 	struct xfs_mount	*mp,
- 	struct xfs_trans	*tp,
- 	xfs_btnum_t		btnum,
--	uint8_t			maxlevels)
-+	uint8_t			maxlevels,
-+	kmem_zone_t		*cache)
- {
- 	struct xfs_btree_cur	*cur;
- 
--	ASSERT(maxlevels <= XFS_BTREE_CUR_CACHE_MAXLEVELS);
--
--	cur = kmem_cache_zalloc(xfs_btree_cur_zone, GFP_NOFS | __GFP_NOFAIL);
-+	cur = kmem_cache_zalloc(cache, GFP_NOFS | __GFP_NOFAIL);
- 	cur->bc_tp = tp;
- 	cur->bc_mp = mp;
- 	cur->bc_btnum = btnum;
- 	cur->bc_maxlevels = maxlevels;
-+	cur->bc_cache = cache;
- 
- 	return cur;
- }
- 
-+int __init xfs_btree_init_cur_caches(void);
-+void xfs_btree_destroy_cur_caches(void);
-+
- #endif	/* __XFS_BTREE_H__ */
-diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
-index 74681e881164..4a11024408e0 100644
---- a/fs/xfs/libxfs/xfs_ialloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
-@@ -22,6 +22,8 @@
- #include "xfs_rmap.h"
- #include "xfs_ag.h"
- 
-+static kmem_zone_t	*xfs_inobt_cur_cache;
-+
- STATIC int
- xfs_inobt_get_minrecs(
- 	struct xfs_btree_cur	*cur,
-@@ -433,7 +435,7 @@ xfs_inobt_init_common(
- 	struct xfs_btree_cur	*cur;
- 
- 	cur = xfs_btree_alloc_cursor(mp, tp, btnum,
--			M_IGEO(mp)->inobt_maxlevels);
-+			M_IGEO(mp)->inobt_maxlevels, xfs_inobt_cur_cache);
- 	if (btnum == XFS_BTNUM_INO) {
- 		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_ibt_2);
- 		cur->bc_ops = &xfs_inobt_ops;
-@@ -812,3 +814,22 @@ xfs_iallocbt_calc_size(
- {
- 	return xfs_btree_calc_size(M_IGEO(mp)->inobt_mnr, len);
- }
-+
-+int __init
-+xfs_inobt_init_cur_cache(void)
-+{
-+	xfs_inobt_cur_cache = kmem_cache_create("xfs_inobt_cur",
-+			xfs_btree_cur_sizeof(xfs_inobt_maxlevels_ondisk()),
-+			0, 0, NULL);
-+
-+	if (!xfs_inobt_cur_cache)
-+		return -ENOMEM;
-+	return 0;
-+}
-+
-+void
-+xfs_inobt_destroy_cur_cache(void)
-+{
-+	kmem_cache_destroy(xfs_inobt_cur_cache);
-+	xfs_inobt_cur_cache = NULL;
-+}
-diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.h b/fs/xfs/libxfs/xfs_ialloc_btree.h
-index 6d3e4a3316d7..26451cb76b98 100644
---- a/fs/xfs/libxfs/xfs_ialloc_btree.h
-+++ b/fs/xfs/libxfs/xfs_ialloc_btree.h
-@@ -77,4 +77,7 @@ void xfs_inobt_commit_staged_btree(struct xfs_btree_cur *cur,
- 
- unsigned int xfs_iallocbt_maxlevels_ondisk(void);
- 
-+int __init xfs_inobt_init_cur_cache(void);
-+void xfs_inobt_destroy_cur_cache(void);
-+
- #endif	/* __XFS_IALLOC_BTREE_H__ */
-diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
-index 3bf802fc33bb..6c4deb436c07 100644
---- a/fs/xfs/libxfs/xfs_refcount_btree.c
-+++ b/fs/xfs/libxfs/xfs_refcount_btree.c
-@@ -21,6 +21,8 @@
- #include "xfs_rmap.h"
- #include "xfs_ag.h"
- 
-+static kmem_zone_t	*xfs_refcountbt_cur_cache;
-+
- static struct xfs_btree_cur *
- xfs_refcountbt_dup_cursor(
- 	struct xfs_btree_cur	*cur)
-@@ -323,7 +325,7 @@ xfs_refcountbt_init_common(
- 	ASSERT(pag->pag_agno < mp->m_sb.sb_agcount);
- 
- 	cur = xfs_btree_alloc_cursor(mp, tp, XFS_BTNUM_REFC,
--			mp->m_refc_maxlevels);
-+			mp->m_refc_maxlevels, xfs_refcountbt_cur_cache);
- 	cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_refcbt_2);
- 
- 	cur->bc_flags |= XFS_BTREE_CRC_BLOCKS;
-@@ -514,3 +516,22 @@ xfs_refcountbt_calc_reserves(
- 
- 	return error;
- }
-+
-+int __init
-+xfs_refcountbt_init_cur_cache(void)
-+{
-+	xfs_refcountbt_cur_cache = kmem_cache_create("xfs_refcbt_cur",
-+			xfs_btree_cur_sizeof(xfs_refcountbt_maxlevels_ondisk()),
-+			0, 0, NULL);
-+
-+	if (!xfs_refcountbt_cur_cache)
-+		return -ENOMEM;
-+	return 0;
-+}
-+
-+void
-+xfs_refcountbt_destroy_cur_cache(void)
-+{
-+	kmem_cache_destroy(xfs_refcountbt_cur_cache);
-+	xfs_refcountbt_cur_cache = NULL;
-+}
-diff --git a/fs/xfs/libxfs/xfs_refcount_btree.h b/fs/xfs/libxfs/xfs_refcount_btree.h
-index d7f7c89cbf35..d66b37259bed 100644
---- a/fs/xfs/libxfs/xfs_refcount_btree.h
-+++ b/fs/xfs/libxfs/xfs_refcount_btree.h
-@@ -67,4 +67,7 @@ void xfs_refcountbt_commit_staged_btree(struct xfs_btree_cur *cur,
- 
- unsigned int xfs_refcountbt_maxlevels_ondisk(void);
- 
-+int __init xfs_refcountbt_init_cur_cache(void);
-+void xfs_refcountbt_destroy_cur_cache(void);
-+
- #endif	/* __XFS_REFCOUNT_BTREE_H__ */
-diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
-index 0c96e26daca9..3d4134eab8cf 100644
---- a/fs/xfs/libxfs/xfs_rmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_rmap_btree.c
-@@ -22,6 +22,8 @@
- #include "xfs_ag.h"
- #include "xfs_ag_resv.h"
- 
-+static kmem_zone_t	*xfs_rmapbt_cur_cache;
-+
- /*
-  * Reverse map btree.
-  *
-@@ -453,7 +455,7 @@ xfs_rmapbt_init_common(
- 
- 	/* Overlapping btree; 2 keys per pointer. */
- 	cur = xfs_btree_alloc_cursor(mp, tp, XFS_BTNUM_RMAP,
--			mp->m_rmap_maxlevels);
-+			mp->m_rmap_maxlevels, xfs_rmapbt_cur_cache);
- 	cur->bc_flags = XFS_BTREE_CRC_BLOCKS | XFS_BTREE_OVERLAPPING;
- 	cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_rmap_2);
- 	cur->bc_ops = &xfs_rmapbt_ops;
-@@ -674,3 +676,22 @@ xfs_rmapbt_calc_reserves(
- 
- 	return error;
- }
-+
-+int __init
-+xfs_rmapbt_init_cur_cache(void)
-+{
-+	xfs_rmapbt_cur_cache = kmem_cache_create("xfs_rmapbt_cur",
-+			xfs_btree_cur_sizeof(xfs_rmapbt_maxlevels_ondisk()),
-+			0, 0, NULL);
-+
-+	if (!xfs_rmapbt_cur_cache)
-+		return -ENOMEM;
-+	return 0;
-+}
-+
-+void
-+xfs_rmapbt_destroy_cur_cache(void)
-+{
-+	kmem_cache_destroy(xfs_rmapbt_cur_cache);
-+	xfs_rmapbt_cur_cache = NULL;
-+}
-diff --git a/fs/xfs/libxfs/xfs_rmap_btree.h b/fs/xfs/libxfs/xfs_rmap_btree.h
-index e9778b62ad55..3244715dd111 100644
---- a/fs/xfs/libxfs/xfs_rmap_btree.h
-+++ b/fs/xfs/libxfs/xfs_rmap_btree.h
-@@ -61,4 +61,7 @@ extern int xfs_rmapbt_calc_reserves(struct xfs_mount *mp, struct xfs_trans *tp,
- 
- unsigned int xfs_rmapbt_maxlevels_ondisk(void);
- 
-+int __init xfs_rmapbt_init_cur_cache(void);
-+void xfs_rmapbt_destroy_cur_cache(void);
-+
- #endif /* __XFS_RMAP_BTREE_H__ */
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 2a535a8bc3c0..6fcafc43b823 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -37,6 +37,7 @@
- #include "xfs_reflink.h"
- #include "xfs_pwork.h"
- #include "xfs_ag.h"
-+#include "xfs_btree.h"
- 
- #include <linux/magic.h>
- #include <linux/fs_context.h>
-@@ -1953,6 +1954,8 @@ MODULE_ALIAS_FS("xfs");
- STATIC int __init
- xfs_init_zones(void)
- {
-+	int		error;
-+
- 	xfs_log_ticket_zone = kmem_cache_create("xfs_log_ticket",
- 						sizeof(struct xlog_ticket),
- 						0, 0, NULL);
-@@ -1965,10 +1968,8 @@ xfs_init_zones(void)
- 	if (!xfs_bmap_free_item_zone)
- 		goto out_destroy_log_ticket_zone;
- 
--	xfs_btree_cur_zone = kmem_cache_create("xfs_btree_cur",
--			xfs_btree_cur_sizeof(XFS_BTREE_CUR_CACHE_MAXLEVELS),
--			0, 0, NULL);
--	if (!xfs_btree_cur_zone)
-+	error = xfs_btree_init_cur_caches();
-+	if (error)
- 		goto out_destroy_bmap_free_item_zone;
- 
- 	xfs_da_state_zone = kmem_cache_create("xfs_da_state",
-@@ -2106,7 +2107,7 @@ xfs_init_zones(void)
-  out_destroy_da_state_zone:
- 	kmem_cache_destroy(xfs_da_state_zone);
-  out_destroy_btree_cur_zone:
--	kmem_cache_destroy(xfs_btree_cur_zone);
-+	xfs_btree_destroy_cur_caches();
-  out_destroy_bmap_free_item_zone:
- 	kmem_cache_destroy(xfs_bmap_free_item_zone);
-  out_destroy_log_ticket_zone:
-@@ -2138,7 +2139,7 @@ xfs_destroy_zones(void)
- 	kmem_cache_destroy(xfs_trans_zone);
- 	kmem_cache_destroy(xfs_ifork_zone);
- 	kmem_cache_destroy(xfs_da_state_zone);
--	kmem_cache_destroy(xfs_btree_cur_zone);
-+	xfs_btree_destroy_cur_caches();
- 	kmem_cache_destroy(xfs_bmap_free_item_zone);
- 	kmem_cache_destroy(xfs_log_ticket_zone);
- }
+I don't remember. I'll have to rerun the test which might take a day or two
+to set up again.
 
