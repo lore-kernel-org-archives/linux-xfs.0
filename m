@@ -2,191 +2,183 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 626A4C433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 18:17:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E19F5C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 18:44:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 46BB261139
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 18:17:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C061161156
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 18:44:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231596AbhJNSTL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 Oct 2021 14:19:11 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45546 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230119AbhJNSTL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 14 Oct 2021 14:19:11 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D7E8760EBB;
-        Thu, 14 Oct 2021 18:17:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1634235425;
-        bh=nk2O1INGQJeoYK2hz0/chQbDTBJGcPDWQbYrayE/aaM=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=i+GrwntAyD87EpYdHQzMGU2dlEGyPdLmLrRmggCA7m4PKbBfzhbxM9H54jEdEt4kF
-         LwrGHNmrP8B77ITYnhupmqdyqnYbspZYu1KEpKMRBa2L3NZ5+efhGHMF9wTFm6sdPt
-         4SwK0t0pfsOslTSXJO76mpfsxC13CDfQs+C2TmrdyW3MpPwomgxD5iVmaVWzIsLGze
-         nANB+3Ao+C53dm0OvlLJGSPRppCYDIRaTQUxc4CewrH91C3m32y3RyHBX8l+VarIii
-         QivlIQhM6K0c/F1/qguP1EPvZPZjKp7CpcrxhwEBod+TS+9soi3Y6mOffwsz8gN6Nm
-         nOiIxQWIeqLVA==
-Date:   Thu, 14 Oct 2021 11:17:05 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        nvdimm@lists.linux.dev, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org, dan.j.williams@intel.com,
-        david@fromorbit.com, hch@infradead.org, jane.chu@oracle.com
-Subject: Re: [PATCH v7 5/8] fsdax: Introduce dax_lock_mapping_entry()
-Message-ID: <20211014181705.GH24307@magnolia>
-References: <20210924130959.2695749-1-ruansy.fnst@fujitsu.com>
- <20210924130959.2695749-6-ruansy.fnst@fujitsu.com>
+        id S230512AbhJNSqe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 Oct 2021 14:46:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42226 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230384AbhJNSqd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Oct 2021 14:46:33 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 880DEC061570;
+        Thu, 14 Oct 2021 11:44:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=1/IU3zzvNtZ8I2cOxrDjZM+5f1zuXePR+7Z+lyREdJs=; b=BM9dmieAAA8LE4gmJ0k+mXHUvl
+        +wvMf0d1KWjAXoRhtD87kn6N/ii/WDzd32yi2jIQXv741l0o2NmgJhQIWSllMrpHsikcO1M9/t8OC
+        ivjYqf+UACw/tUWnQKua+AAJy1Wf+jtOoO71EjCAVQdX2J+uTX9NRLpDQuQk5kXN7Cpo7FBaScrXv
+        FjiTLrMrPT97C1e2L+ov9yOBuQJ6nXqY06zN8UCRtm52yVv/fbvEA+Ea7m2QXGzqLAbz75jezONPd
+        0s9t4qFrCKlUm9FQz9GvcC0xqc9vcJ9kiyYY0vLQZonDO0enCltv/6iQjmQhLxDG7v5dEpQSSkLKT
+        GS1klIBw==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1mb5h6-008WfV-3P; Thu, 14 Oct 2021 18:43:30 +0000
+Date:   Thu, 14 Oct 2021 19:43:08 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Jason Gunthorpe <jgg@nvidia.com>
+Cc:     Alex Sierra <alex.sierra@amd.com>, akpm@linux-foundation.org,
+        Felix.Kuehling@amd.com, linux-mm@kvack.org, rcampbell@nvidia.com,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        hch@lst.de, jglisse@redhat.com, apopple@nvidia.com,
+        Dan Williams <dan.j.williams@intel.com>,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        Dave Jiang <dave.jiang@intel.com>, nvdimm@lists.linux.dev
+Subject: Re: [PATCH v1 2/2] mm: remove extra ZONE_DEVICE struct page refcount
+Message-ID: <YWh6PL7nvh4DqXCI@casper.infradead.org>
+References: <20211014153928.16805-1-alex.sierra@amd.com>
+ <20211014153928.16805-3-alex.sierra@amd.com>
+ <20211014170634.GV2744544@nvidia.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210924130959.2695749-6-ruansy.fnst@fujitsu.com>
+In-Reply-To: <20211014170634.GV2744544@nvidia.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 24, 2021 at 09:09:56PM +0800, Shiyang Ruan wrote:
-> The current dax_lock_page() locks dax entry by obtaining mapping and
-> index in page.  To support 1-to-N RMAP in NVDIMM, we need a new function
-> to lock a specific dax entry corresponding to this file's mapping,index.
-> And BTW, output the page corresponding to the specific dax entry for
-> caller use.
-> 
-> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
-> ---
->  fs/dax.c            | 65 ++++++++++++++++++++++++++++++++++++++++++++-
->  include/linux/dax.h | 15 +++++++++++
->  2 files changed, 79 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/dax.c b/fs/dax.c
-> index 798c43f09eee..509b65e60478 100644
-> --- a/fs/dax.c
-> +++ b/fs/dax.c
-> @@ -390,7 +390,7 @@ static struct page *dax_busy_page(void *entry)
->  }
->  
->  /*
-> - * dax_lock_mapping_entry - Lock the DAX entry corresponding to a page
-> + * dax_lock_page - Lock the DAX entry corresponding to a page
->   * @page: The page whose entry we want to lock
->   *
->   * Context: Process context.
-> @@ -455,6 +455,69 @@ void dax_unlock_page(struct page *page, dax_entry_t cookie)
->  	dax_unlock_entry(&xas, (void *)cookie);
->  }
->  
-> +/*
-> + * dax_lock_mapping_entry - Lock the DAX entry corresponding to a mapping
-> + * @mapping: the file's mapping whose entry we want to lock
-> + * @index: the offset within this file
-> + * @page: output the dax page corresponding to this dax entry
-> + *
-> + * Return: A cookie to pass to dax_unlock_mapping_entry() or 0 if the entry
-> + * could not be locked.
-> + */
-> +dax_entry_t dax_lock_mapping_entry(struct address_space *mapping, pgoff_t index,
-> +		struct page **page)
-> +{
-> +	XA_STATE(xas, NULL, 0);
-> +	void *entry;
-> +
-> +	rcu_read_lock();
-> +	for (;;) {
-> +		entry = NULL;
-> +		if (!dax_mapping(mapping))
-> +			break;
-> +
-> +		xas.xa = &mapping->i_pages;
-> +		xas_lock_irq(&xas);
-> +		xas_set(&xas, index);
-> +		entry = xas_load(&xas);
-> +		if (dax_is_locked(entry)) {
-> +			rcu_read_unlock();
-> +			wait_entry_unlocked(&xas, entry);
-> +			rcu_read_lock();
-> +			continue;
-> +		}
-> +		if (!entry ||
-> +		    dax_is_zero_entry(entry) || dax_is_empty_entry(entry)) {
-> +			/*
-> +			 * Because we are looking for entry from file's mapping
-> +			 * and index, so the entry may not be inserted for now,
-> +			 * or even a zero/empty entry.  We don't think this is
-> +			 * an error case.  So, return a special value and do
-> +			 * not output @page.
-> +			 */
-> +			entry = (void *)~0UL;
 
-I kinda wonder if these open-coded magic values ~0UL (no entry) and 0
-(cannot lock) should be #defines that force-cast the magic value to
-dax_entry_t...
+It would probably help if you cc'd Dan on this.
+As far as I know he's the only person left who cares about GUP on DAX.
 
-...but then I'm not really an expert in the design behind fs/dax.c --
-this part looks reasonable enough to me, but I think Dan or Matthew
-ought to look this over.
-
---D
-
-> +		} else {
-> +			*page = pfn_to_page(dax_to_pfn(entry));
-> +			dax_lock_entry(&xas, entry);
-> +		}
-> +		xas_unlock_irq(&xas);
-> +		break;
-> +	}
-> +	rcu_read_unlock();
-> +	return (dax_entry_t)entry;
-> +}
-> +
-> +void dax_unlock_mapping_entry(struct address_space *mapping, pgoff_t index,
-> +		dax_entry_t cookie)
-> +{
-> +	XA_STATE(xas, &mapping->i_pages, index);
-> +
-> +	if (cookie == ~0UL)
-> +		return;
-> +
-> +	dax_unlock_entry(&xas, (void *)cookie);
-> +}
-> +
->  /*
->   * Find page cache entry at given index. If it is a DAX entry, return it
->   * with the entry locked. If the page cache doesn't contain an entry at
-> diff --git a/include/linux/dax.h b/include/linux/dax.h
-> index d273d59723cd..65411bee4312 100644
-> --- a/include/linux/dax.h
-> +++ b/include/linux/dax.h
-> @@ -156,6 +156,10 @@ struct page *dax_layout_busy_page(struct address_space *mapping);
->  struct page *dax_layout_busy_page_range(struct address_space *mapping, loff_t start, loff_t end);
->  dax_entry_t dax_lock_page(struct page *page);
->  void dax_unlock_page(struct page *page, dax_entry_t cookie);
-> +dax_entry_t dax_lock_mapping_entry(struct address_space *mapping,
-> +		unsigned long index, struct page **page);
-> +void dax_unlock_mapping_entry(struct address_space *mapping,
-> +		unsigned long index, dax_entry_t cookie);
->  #else
->  #define generic_fsdax_supported		NULL
->  
-> @@ -201,6 +205,17 @@ static inline dax_entry_t dax_lock_page(struct page *page)
->  static inline void dax_unlock_page(struct page *page, dax_entry_t cookie)
->  {
->  }
-> +
-> +static inline dax_entry_t dax_lock_mapping_entry(struct address_space *mapping,
-> +		unsigned long index, struct page **page)
-> +{
-> +	return 0;
-> +}
-> +
-> +static inline void dax_unlock_mapping_entry(struct address_space *mapping,
-> +		unsigned long index, dax_entry_t cookie)
-> +{
-> +}
->  #endif
->  
->  #if IS_ENABLED(CONFIG_DAX)
-> -- 
-> 2.33.0
+On Thu, Oct 14, 2021 at 02:06:34PM -0300, Jason Gunthorpe wrote:
+> On Thu, Oct 14, 2021 at 10:39:28AM -0500, Alex Sierra wrote:
+> > From: Ralph Campbell <rcampbell@nvidia.com>
+> > 
+> > ZONE_DEVICE struct pages have an extra reference count that complicates the
+> > code for put_page() and several places in the kernel that need to check the
+> > reference count to see that a page is not being used (gup, compaction,
+> > migration, etc.). Clean up the code so the reference count doesn't need to
+> > be treated specially for ZONE_DEVICE.
+> > 
+> > Signed-off-by: Ralph Campbell <rcampbell@nvidia.com>
+> > Signed-off-by: Alex Sierra <alex.sierra@amd.com>
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> > v2:
+> > AS: merged this patch in linux 5.11 version
+> > 
+> > v5:
+> > AS: add condition at try_grab_page to check for the zone device type, while
+> > page ref counter is checked less/equal to zero. In case of device zone, pages
+> > ref counter are initialized to zero.
+> > 
+> > v7:
+> > AS: fix condition at try_grab_page added at v5, is invalid. It supposed
+> > to fix xfstests/generic/413 test, however, there's a known issue on
+> > this test where DAX mapped area DIO to non-DAX expect to fail.
+> > https://patchwork.kernel.org/project/fstests/patch/1489463960-3579-1-git-send-email-xzhou@redhat.com
+> > This condition was removed after rebase over patch series
+> > https://lore.kernel.org/r/20210813044133.1536842-4-jhubbard@nvidia.com
+> > ---
+> >  arch/powerpc/kvm/book3s_hv_uvmem.c     |  2 +-
+> >  drivers/gpu/drm/nouveau/nouveau_dmem.c |  2 +-
+> >  fs/dax.c                               |  4 +-
+> >  include/linux/dax.h                    |  2 +-
+> >  include/linux/memremap.h               |  7 +--
+> >  include/linux/mm.h                     | 11 ----
+> >  lib/test_hmm.c                         |  2 +-
+> >  mm/internal.h                          |  8 +++
+> >  mm/memcontrol.c                        |  6 +--
+> >  mm/memremap.c                          | 69 +++++++-------------------
+> >  mm/migrate.c                           |  5 --
+> >  mm/page_alloc.c                        |  3 ++
+> >  mm/swap.c                              | 45 ++---------------
+> >  13 files changed, 46 insertions(+), 120 deletions(-)
 > 
+> Has anyone tested this with FSDAX? Does get_user_pages() on fsdax
+> backed memory still work?
 > 
+> What refcount value does the struct pages have when they are installed
+> in the PTEs? Remember a 0 refcount will make all the get_user_pages()
+> fail.
 > 
+> I'm looking at the call path starting in ext4_punch_hole() and I would
+> expect to see something manipulating the page ref count before
+> the ext4_break_layouts() call path gets to the dax_page_unused() test.
+> 
+> All I see is we go into unmap_mapping_pages() - that would normally
+> put back the page references held by PTEs but insert_pfn() has this:
+> 
+> 	if (pfn_t_devmap(pfn))
+> 		entry = pte_mkdevmap(pfn_t_pte(pfn, prot));
+> 
+> And:
+> 
+> static inline pte_t pte_mkdevmap(pte_t pte)
+> {
+> 	return pte_set_flags(pte, _PAGE_SPECIAL|_PAGE_DEVMAP);
+> }
+> 
+> Which interacts with vm_normal_page():
+> 
+> 		if (pte_devmap(pte))
+> 			return NULL;
+> 
+> To disable that refcounting?
+> 
+> So... I have a feeling this will have PTEs pointing to 0 refcount
+> pages? Unless FSDAX is !pte_devmap which is not the case, right?
+> 
+> This seems further confirmed by this comment:
+> 
+> 	/*
+> 	 * If we race get_user_pages_fast() here either we'll see the
+> 	 * elevated page count in the iteration and wait, or
+> 	 * get_user_pages_fast() will see that the page it took a reference
+> 	 * against is no longer mapped in the page tables and bail to the
+> 	 * get_user_pages() slow path.  The slow path is protected by
+> 	 * pte_lock() and pmd_lock(). New references are not taken without
+> 	 * holding those locks, and unmap_mapping_pages() will not zero the
+> 	 * pte or pmd without holding the respective lock, so we are
+> 	 * guaranteed to either see new references or prevent new
+> 	 * references from being established.
+> 	 */
+> 
+> Which seems to explain this scheme relies on unmap_mapping_pages() to
+> fence GUP_fast, not on GUP_fast observing 0 refcounts when it should
+> stop.
+> 
+> This seems like it would be properly fixed by using normal page
+> refcounting for PTEs - ie stop using special for these pages?
+> 
+> Does anyone know why devmap is pte_special anyhow?
+> 
+> > +void free_zone_device_page(struct page *page)
+> > +{
+> > +	switch (page->pgmap->type) {
+> > +	case MEMORY_DEVICE_PRIVATE:
+> > +		free_device_page(page);
+> > +		return;
+> > +	case MEMORY_DEVICE_FS_DAX:
+> > +		/* notify page idle */
+> > +		wake_up_var(&page->_refcount);
+> > +		return;
+> 
+> It is not for this series, but I wonder if we should just always call
+> ops->page_free and have free_device_page() logic in that callback for
+> the non-fs-dax cases?
+> 
+> For instance where is the mem_cgroup_charge() call to pair with the
+> mem_cgroup_uncharge() in free_device_page()?
+> 
+> Isn't cgroup charging (or not) the responsibility of the "allocator"
+> eg the pgmap_ops owner?
+> 
+> Jason
