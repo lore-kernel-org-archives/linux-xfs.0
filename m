@@ -2,38 +2,36 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 167EAC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 20:17:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17839C433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 20:17:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F28B76108E
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 20:17:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F3F5A61019
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 20:17:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231394AbhJNUTY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 Oct 2021 16:19:24 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35008 "EHLO mail.kernel.org"
+        id S230494AbhJNUT2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 Oct 2021 16:19:28 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35064 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231708AbhJNUTW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 14 Oct 2021 16:19:22 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 4AB7C6105A;
-        Thu, 14 Oct 2021 20:17:17 +0000 (UTC)
+        id S229587AbhJNUT2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 14 Oct 2021 16:19:28 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C354661027;
+        Thu, 14 Oct 2021 20:17:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1634242637;
-        bh=NKoWYhGgZ7I7MXKnkjZaiF3+7hue06OMvYBfpyh+eWg=;
+        s=k20201202; t=1634242642;
+        bh=NJBOqEgduRbYcHTL6jNX3Tx05FEzBJTMRjpbH+6Nx60=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=Lo08GSvsvdzwkLVH0F4te9wPRauLGZW86GnJHE6f7B1l/TBQJzXs5rEh7J3Wsrgav
-         T2AwXTuLymokgexNZR2isUCZt+IMUqKHrTDV0CxuxgVLPTglk8QXfXPPwenIcCM1yC
-         eUfvO4bjsxFI8D4KLBAmIxpgkPSyj8H6C2qXBS1uaIGZUUm/AupGm6mzvcRcjTJeAn
-         +7H8UehKIw+Ks3MElW1Te5MEIVG/WcvzL2Db3N7T5EfZQ4S1mieJ58e/b9pFOT7mgl
-         1sKsQymeMZLk5rPxJuYObjQNXMYmzhv300/dJwPb9UCq1KY7yHTyE1rYQYU2SBtmoa
-         kHrr3Okk0DRXw==
-Subject: [PATCH 04/17] xfs: don't track firstrec/firstkey separately in
- xchk_btree
+        b=scdjg2MHu3W8gaGSJWUbgx781O2nF0uymsRLO2Q00sJi7s+LONZid7lz29zbifTFq
+         YvJkBlKet0qcjeOb1w0UBezAxfzXVOJQ//i9TXblahdMdTRl9vp08Y9W9FeNGyZYCZ
+         0v4Di5SMlTcbaqAqKEFr0gw3AUCSQpnvc18iZpUp9oxnWg3r9HdhGa1uSRf1u4kGm6
+         suFqLg6VVWmw6HLxKS/uh+vuHQXxR0eugjxnDmXLYg68F42QKItY5WQ1DMKrsblmKU
+         xWNiPkMnflpmL68Wau2Fm1TW57UIW7l9mPWd+nuKvpQc42KIm668HsfRvhsis2nUx/
+         sdHF/gOJmD1Hw==
+Subject: [PATCH 05/17] xfs: dynamically allocate btree scrub context structure
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, david@fromorbit.com
-Cc:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
-        chandan.babu@oracle.com, hch@lst.de
-Date:   Thu, 14 Oct 2021 13:17:17 -0700
-Message-ID: <163424263699.756780.408883477457816376.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org, chandan.babu@oracle.com, hch@lst.de
+Date:   Thu, 14 Oct 2021 13:17:22 -0700
+Message-ID: <163424264249.756780.1871555838190156050.stgit@magnolia>
 In-Reply-To: <163424261462.756780.16294781570977242370.stgit@magnolia>
 References: <163424261462.756780.16294781570977242370.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -46,86 +44,102 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-The btree scrubbing code checks that the records (or keys) that it finds
-in a btree block are all in order by calling the btree cursor's
-->recs_inorder function.  This of course makes no sense for the first
-item in the block, so we switch that off with a separate variable in
-struct xchk_btree.
-
-Christoph helped me figure out that the variable is unnecessary, since
-we just accessed bc_ptrs[level] and can compare that against zero.  Use
-that, and save ourselves some memory space.
+Reorganize struct xchk_btree so that we can dynamically size the context
+structure to fit the type of btree cursor that we have.  This will
+enable us to use memory more efficiently once we start adding very tall
+btree types.  Right-size the lastkey array to match the number of *node*
+levels in the tree so that we stop wasting space.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/scrub/btree.c |   11 +++--------
- fs/xfs/scrub/btree.h |    2 --
- 2 files changed, 3 insertions(+), 10 deletions(-)
+ fs/xfs/scrub/btree.c |   23 ++++++++++++-----------
+ fs/xfs/scrub/btree.h |   15 ++++++++++++++-
+ 2 files changed, 26 insertions(+), 12 deletions(-)
 
 
 diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
-index 26dcb4691e31..d5e1ca521fc4 100644
+index d5e1ca521fc4..6d4eba85ef77 100644
 --- a/fs/xfs/scrub/btree.c
 +++ b/fs/xfs/scrub/btree.c
-@@ -141,9 +141,9 @@ xchk_btree_rec(
- 	trace_xchk_btree_rec(bs->sc, cur, 0);
- 
- 	/* If this isn't the first record, are they in order? */
--	if (!bs->firstrec && !cur->bc_ops->recs_inorder(cur, &bs->lastrec, rec))
-+	if (cur->bc_ptrs[0] > 1 &&
-+	    !cur->bc_ops->recs_inorder(cur, &bs->lastrec, rec))
- 		xchk_btree_set_corrupt(bs->sc, cur, 0);
--	bs->firstrec = false;
- 	memcpy(&bs->lastrec, rec, cur->bc_ops->rec_len);
- 
- 	if (cur->bc_nlevels == 1)
-@@ -188,10 +188,9 @@ xchk_btree_key(
- 	trace_xchk_btree_key(bs->sc, cur, level);
+@@ -189,9 +189,9 @@ xchk_btree_key(
  
  	/* If this isn't the first key, are they in order? */
--	if (!bs->firstkey[level] &&
-+	if (cur->bc_ptrs[level] > 1 &&
- 	    !cur->bc_ops->keys_inorder(cur, &bs->lastkey[level], key))
+ 	if (cur->bc_ptrs[level] > 1 &&
+-	    !cur->bc_ops->keys_inorder(cur, &bs->lastkey[level], key))
++	    !cur->bc_ops->keys_inorder(cur, &bs->lastkey[level - 1], key))
  		xchk_btree_set_corrupt(bs->sc, cur, level);
--	bs->firstkey[level] = false;
- 	memcpy(&bs->lastkey[level], key, cur->bc_ops->key_len);
+-	memcpy(&bs->lastkey[level], key, cur->bc_ops->key_len);
++	memcpy(&bs->lastkey[level - 1], key, cur->bc_ops->key_len);
  
  	if (level + 1 >= cur->bc_nlevels)
-@@ -636,7 +635,6 @@ xchk_btree(
+ 		return;
+@@ -631,17 +631,24 @@ xchk_btree(
+ 	union xfs_btree_ptr		*pp;
+ 	union xfs_btree_rec		*recp;
+ 	struct xfs_btree_block		*block;
+-	int				level;
  	struct xfs_buf			*bp;
  	struct check_owner		*co;
  	struct check_owner		*n;
--	int				i;
++	size_t				cur_sz;
++	int				level;
  	int				error = 0;
  
  	/*
-@@ -649,13 +647,10 @@ xchk_btree(
+ 	 * Allocate the btree scrub context from the heap, because this
+-	 * structure can get rather large.
++	 * structure can get rather large.  Don't let a caller feed us a
++	 * totally absurd size.
+ 	 */
+-	bs = kmem_zalloc(sizeof(struct xchk_btree), KM_NOFS | KM_MAYFAIL);
++	cur_sz = xchk_btree_sizeof(cur->bc_nlevels);
++	if (cur_sz > PAGE_SIZE) {
++		xchk_btree_set_corrupt(sc, cur, 0);
++		return 0;
++	}
++	bs = kmem_zalloc(cur_sz, KM_NOFS | KM_MAYFAIL);
+ 	if (!bs)
+ 		return -ENOMEM;
  	bs->cur = cur;
- 	bs->scrub_rec = scrub_fn;
- 	bs->oinfo = oinfo;
--	bs->firstrec = true;
- 	bs->private = private;
- 	bs->sc = sc;
- 
+@@ -653,12 +660,6 @@ xchk_btree(
  	/* Initialize scrub state */
--	for (i = 0; i < XFS_BTREE_MAXLEVELS; i++)
--		bs->firstkey[i] = true;
  	INIT_LIST_HEAD(&bs->to_check);
  
- 	/* Don't try to check a tree with a height we can't handle. */
+-	/* Don't try to check a tree with a height we can't handle. */
+-	if (cur->bc_nlevels > XFS_BTREE_MAXLEVELS) {
+-		xchk_btree_set_corrupt(sc, cur, 0);
+-		goto out;
+-	}
+-
+ 	/*
+ 	 * Load the root of the btree.  The helper function absorbs
+ 	 * error codes for us.
 diff --git a/fs/xfs/scrub/btree.h b/fs/xfs/scrub/btree.h
-index b7d2fc01fbf9..7671108f9f85 100644
+index 7671108f9f85..da61a53a0b61 100644
 --- a/fs/xfs/scrub/btree.h
 +++ b/fs/xfs/scrub/btree.h
-@@ -39,9 +39,7 @@ struct xchk_btree {
+@@ -39,9 +39,22 @@ struct xchk_btree {
  
  	/* internal scrub state */
  	union xfs_btree_rec		lastrec;
--	bool				firstrec;
- 	union xfs_btree_key		lastkey[XFS_BTREE_MAXLEVELS];
--	bool				firstkey[XFS_BTREE_MAXLEVELS];
+-	union xfs_btree_key		lastkey[XFS_BTREE_MAXLEVELS];
  	struct list_head		to_check;
++
++	/* this element must come last! */
++	union xfs_btree_key		lastkey[];
  };
++
++/*
++ * Calculate the size of a xchk_btree structure.  There are nlevels-1 slots for
++ * keys because we track leaf records separately in lastrec.
++ */
++static inline size_t
++xchk_btree_sizeof(unsigned int nlevels)
++{
++	return struct_size((struct xchk_btree *)NULL, lastkey, nlevels - 1);
++}
++
  int xchk_btree(struct xfs_scrub *sc, struct xfs_btree_cur *cur,
+ 		xchk_btree_rec_fn scrub_fn, const struct xfs_owner_info *oinfo,
+ 		void *private);
 
