@@ -2,268 +2,238 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08BC2C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 17:06:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E2DFC433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 17:06:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D4B0F61151
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 17:06:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8050661151
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 17:06:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233087AbhJNRI2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 Oct 2021 13:08:28 -0400
-Received: from mail.kernel.org ([198.145.29.99]:44574 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232331AbhJNRI2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 14 Oct 2021 13:08:28 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2175761152;
-        Thu, 14 Oct 2021 17:06:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1634231183;
-        bh=gHRFogiS7ENQ7g40ZXO7645Y7MTCDeTBdUTC9wUMGTw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=m3sQXvBJ4t8iKB6QoTZGaZtSHLZQRO33s6kuXRUHqgE+plVGXl3/hRmp0inrfOSEQ
-         WG4JHMRngdQVNjCs5casGqGtT1PBIN+VMFs9uIURw61QVhtt64/0hCiBlXVNFciC0Y
-         uhUbsUPoQrVG2e0HkopGtEabRcJY1aZKlJcFkeoFTtuwQRV4ZSKvmNajVa3pkUrJpa
-         lXt8sU8JKJlv+fXYcNgrrp8gW1Dr+YfedI3C9eDcdMuZ+mJrjbdtB0dmADovxPzhWg
-         wm2MCXvPIaRswW/LMoitUorAH6PJnClFC09yNnuRp2tqIX42t8T0NEX37KmhOAC/wH
-         ZwNnyOdxxTTdg==
-Date:   Thu, 14 Oct 2021 10:06:22 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Cc:     dan.j.williams@intel.com, hch@lst.de, linux-xfs@vger.kernel.org,
-        david@fromorbit.com, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, nvdimm@lists.linux.dev,
-        rgoldwyn@suse.de, viro@zeniv.linux.org.uk, willy@infradead.org
-Subject: Re: [PATCH v10 7/8] xfs: support CoW in fsdax mode
-Message-ID: <20211014170622.GB24333@magnolia>
-References: <20210928062311.4012070-1-ruansy.fnst@fujitsu.com>
- <20210928062311.4012070-8-ruansy.fnst@fujitsu.com>
-MIME-Version: 1.0
+        id S233381AbhJNRIo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 Oct 2021 13:08:44 -0400
+Received: from mail-co1nam11on2082.outbound.protection.outlook.com ([40.107.220.82]:2468
+        "EHLO NAM11-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S232630AbhJNRIm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 14 Oct 2021 13:08:42 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Oa+GBbwMF3YZT1ZvR43nB0m3AphHYF6FG0I7/jFNX2aZKWcbcb/gQ65LVAMzrH5rSeovCAnj58xeFO9g6EtPv5GIbi1d/BskfjALUt6kuGrHew9Dn7MDnS62xqmOq9tqJ+lrVER9Fn/5ln5oBmd/e/ssjDNut9ySIei7zf4Q7rugTMG3QVLAKDRdIEsxLOX6x6lC2t86z+vFLW/IVV1+BicGde+NLeensS7ARKdceBZMF7JOA2ta3eWgcJMfY5mitkPT8AjWP4p60VFSolzeDEbGrlo66BA8Juz9DV8U8FVlcVQSfKdDsZV9ssi84X5zZRZs1loxwymnUU16oP8TDQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=s1rFXrxB+epYZ/KH+r27A/8S6iW7EtjjrbKRH3annzE=;
+ b=fo9a1a45JXu2BG6ZpFqSxxIpqo7rzMGJG88zkTHsnUwCpKkUDVeCAyTzhCSNJxJi20/brlF93v/iR+X0CftsqT5xWdzTKDY8dQUYEm8jqFi3CvPJVlslwEP7IhmFQXnlk4dTpuGdWj7gY9Hm1doADBGOZleFDQZqxhtGlq74JkU+M68h6Fmh69nGwAMv4AntT0cfWj/sOjD2CX9wCh38ckbEPG9RVssbm/R9DZ4lOWjZN41JOccErPjXFLqzFVj6cpE3CeV4tq3Tp86pALsGBtrbteW/Kpufm1KA1mVxrPRyuZD3+fuhWszTRfjhRGG0gguYzvR0S+tc7TMBdshUmw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=s1rFXrxB+epYZ/KH+r27A/8S6iW7EtjjrbKRH3annzE=;
+ b=lFHPx8VUyaIh3eTy/czwGBxS/HEsYuYzqHTeAxjuntim9E43wd5mXgKJWZYvTaOzamfvpBc+L1xxNzfAN/Omll13nBSSic17+4YDQplaM3YHgLC8MaebQdNkhLcZP8vP5qIdzjIztYo4bw5YCrrLVLgEIU6XI5PCGX7foN7vtdnCvFCQtGXsdNZ/3eut1ssP+W+RqCXKnEBcE2WP09AsI4VUPEtA7TmWIuGMZAF8GNhuk4XHZRxuLAKbAY7OMbQTC9Xsgvknql/Rl2n9FMR2Hvbxij4ph1sMzuQXGFzHpzDRS5GoGJcVodihGewaeeYtwVx/JiflnqqSEM5MVyoShg==
+Authentication-Results: amd.com; dkim=none (message not signed)
+ header.d=none;amd.com; dmarc=none action=none header.from=nvidia.com;
+Received: from BL0PR12MB5506.namprd12.prod.outlook.com (2603:10b6:208:1cb::22)
+ by BL1PR12MB5142.namprd12.prod.outlook.com (2603:10b6:208:312::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4608.16; Thu, 14 Oct
+ 2021 17:06:36 +0000
+Received: from BL0PR12MB5506.namprd12.prod.outlook.com
+ ([fe80::e8af:232:915e:2f95]) by BL0PR12MB5506.namprd12.prod.outlook.com
+ ([fe80::e8af:232:915e:2f95%6]) with mapi id 15.20.4608.017; Thu, 14 Oct 2021
+ 17:06:36 +0000
+Date:   Thu, 14 Oct 2021 14:06:34 -0300
+From:   Jason Gunthorpe <jgg@nvidia.com>
+To:     Alex Sierra <alex.sierra@amd.com>
+Cc:     akpm@linux-foundation.org, Felix.Kuehling@amd.com,
+        linux-mm@kvack.org, rcampbell@nvidia.com,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        hch@lst.de, jglisse@redhat.com, apopple@nvidia.com,
+        willy@infradead.org
+Subject: Re: [PATCH v1 2/2] mm: remove extra ZONE_DEVICE struct page refcount
+Message-ID: <20211014170634.GV2744544@nvidia.com>
+References: <20211014153928.16805-1-alex.sierra@amd.com>
+ <20211014153928.16805-3-alex.sierra@amd.com>
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210928062311.4012070-8-ruansy.fnst@fujitsu.com>
+In-Reply-To: <20211014153928.16805-3-alex.sierra@amd.com>
+X-ClientProxiedBy: BL1PR13CA0125.namprd13.prod.outlook.com
+ (2603:10b6:208:2bb::10) To BL0PR12MB5506.namprd12.prod.outlook.com
+ (2603:10b6:208:1cb::22)
+MIME-Version: 1.0
+Received: from mlx.ziepe.ca (142.162.113.129) by BL1PR13CA0125.namprd13.prod.outlook.com (2603:10b6:208:2bb::10) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4628.9 via Frontend Transport; Thu, 14 Oct 2021 17:06:35 +0000
+Received: from jgg by mlx with local (Exim 4.94)        (envelope-from <jgg@nvidia.com>)        id 1mb4Be-00EzE9-Hk; Thu, 14 Oct 2021 14:06:34 -0300
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: a1dbd519-48a6-474c-19de-08d98f34facf
+X-MS-TrafficTypeDiagnostic: BL1PR12MB5142:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <BL1PR12MB5142ED13AA4DEEAEA0B57BEDC2B89@BL1PR12MB5142.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:8273;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: vMDGvKMFxbZAdA44gNyp4J5vog7a9SHspy2Vi1D7GgFhwZDjjOaTD9mhNVVutCMIcDfCEKqAiOwTQJSs2DXy5qP935PMv/4px9R0md2MPoYclpJp4M3Mkko4K4rz25lgzrcJTZduL8bPxHLZb/MffuObUAGj3+evdYJdjwlu0nBIiVkWhRriS0t1o52Mo5KRcUKhqtsc/jXBUzgibo8B1np0DgdluzEXiOzc4dY6Kle6g7wStIw+8Vw84NS17ZkNg9WGsm+bDIZeUbNpfEjrQLMTdU140CTrpRtajSFFxXoxkGtj/SwCIjHAO64w9bR390SD2uUG1cHVONjcoB3J8dvreaZ9WPkXtwMcDoWUELl+C2s+82QWD/DYI3UiJKWw/QhkLzsinE58YluwxCS9M38mWbJVyEhnacT3XZsqUaOpQ7dAWz2No2Ew80DtTQTyf2pCSSWzn2lEo/XAjjiB3RZnw0PRutUUAJSSs8J6jg2p+cVbz1EmDLo8SoKq0ykOmezcN7VFvTUGonL6CPzAUk3yH750jZx97zHaV6TpVDGKvLLKkAhZfz8lY1fNKHXChjx6MfE87SfuQrAui6T2IhZEZv5mAaSIJP6uApFsJYxWACtTgsxi8PzEFXNahS7txcZjdBOPhVZCn6PSJSpX18amsKh22o78Qo8KU8Zkiz/rwpaNQYI/+XkwvXpglmU5wf8h3DOoh+Cjtq9dIJ0SyVi/VCXC6Bz3bHQ07nUnMm/uYudRmpFqIN/LvxPCpWZU//TSxUny1K/xoTHrj/txyA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL0PR12MB5506.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(2906002)(66946007)(316002)(66556008)(186003)(38100700002)(508600001)(26005)(83380400001)(5660300002)(8936002)(66476007)(4326008)(1076003)(2616005)(86362001)(6916009)(8676002)(36756003)(426003)(7416002)(33656002)(966005)(9786002)(9746002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?0GT9uMNkCgm2BQ97o8kEJ2VDmJI+sIIAAgzWhgSkbQDJ+GIQ0FaOyT0+UMmu?=
+ =?us-ascii?Q?EuERtEG5lKM9y/EA/saS3Fuf9fj7XI/+4UCaot79XuU0l1aPNBXYrHe1d4Be?=
+ =?us-ascii?Q?C7JmmQf+PeyjLdgsRpYLog/BkUz4Ze24EZxrvxia2xvsc14KFH4XoFyqpobG?=
+ =?us-ascii?Q?pQJrqehqj0sUTx9Hhmrp5fz5r7BHqfw5ptQyW69GCYPXJ8XRYZNscO4GUFBU?=
+ =?us-ascii?Q?EEk5jA6/x6UrftlGJ49CDGTu4U4d0jorKO9MFL9FufQODfChBaNTCfmTzlVX?=
+ =?us-ascii?Q?sQjLrRo0R+n87R5LMpuMnm6NQiVpfeK/Moubm/m3ZUplqL45bzqHfnbc6uvs?=
+ =?us-ascii?Q?eS//EMuRjoeN0T9K/x31zkLr1ugWWHPDJ7jIeXD7/3G2NdxQ9zgbMdn/Fkrr?=
+ =?us-ascii?Q?t57FRNMbxnSAE3p/TCN8l40bF1c2fEFVLjMW+KmIOqNTfxVxvQFs1F7OyHxd?=
+ =?us-ascii?Q?C7gsuZtb8b2CjfxqNHUwKMDCdgffXrLaWkUURwUE1eo7TzH+0f3IR52m0yFi?=
+ =?us-ascii?Q?+ZqosW6CYcCOb1dx7YgWsBAT7wMPUgSm8Gt0H5HcwcOExWJYI/5ibVyvoGg3?=
+ =?us-ascii?Q?iGQwIlHUrb7UH7l9tHHEsj9wRn3Ax9Jo6zVAoCPb8OWF9ArhA71NCSt19fNr?=
+ =?us-ascii?Q?qtmP8uqOO2IeRnsKFKO+4d6Lj2H4yDYoimH/4Log0aBDhlVYrhvXHtvsz9xI?=
+ =?us-ascii?Q?6jK1B+v3kbNRgCNv5T6pgX02Wc308dDiep169tjascGDzRqbesbNwpqwhWo3?=
+ =?us-ascii?Q?NsQqOFvsl5XQSssPiX3W+Pd3/Al+3BXyNuReB/8tmWJGgaz3hoiVZah8z+lw?=
+ =?us-ascii?Q?eN1zFcbgwNfu0BZbn4XXmgC4GzGcTBJH7WAKEZZGSpkMmTCO1WK99HJagCnt?=
+ =?us-ascii?Q?z/tU5mv3ndFY+0gPE37uxv/HTdNY8mYMpL7EeNxhQ+jxGlS6CqdMe3D1fTTC?=
+ =?us-ascii?Q?TmLgvdwle+GWKk+I61VE3UrnJuccp9CqfvpFi4gYF8jxQU7nRGW9zwNOEcTb?=
+ =?us-ascii?Q?zFx3ck/Iyp2KFgpO1Jb0ntwmCEeoc6ahRbcPdyfG3PNpk68oq3DflwJFFCa5?=
+ =?us-ascii?Q?saAxS9BJI9Ts86uJZ3ESBiYvnSdKqr4SX3zahEQX3gtoDFqdXSQfQpeaUO5M?=
+ =?us-ascii?Q?BAJK+qWgIMbitZ1ocq4elvoj5udSe/86/AwjDz8OB1WjXmhSt/+3UtYzSaKy?=
+ =?us-ascii?Q?UpG3i2cyXpFtwY4v8EDhQVNOU9O6vh6+Eqp+fZ4cGjS7bwOxna5LW0/61Gdm?=
+ =?us-ascii?Q?0oJEsvnxLdeAoNVb2aJSuj6ToCghfYJi3toJxruj25NLP2kMWyV3YU87XHeH?=
+ =?us-ascii?Q?OWPLc9DqpxaasmoIqud9l7ms?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a1dbd519-48a6-474c-19de-08d98f34facf
+X-MS-Exchange-CrossTenant-AuthSource: BL0PR12MB5506.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Oct 2021 17:06:36.0634
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: KoAZX63yIQHlEcekjS6wt3SUuJ4LaGHrIzM5iDD4uB2EUqvXx07C6FhyAFM66fVN
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL1PR12MB5142
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 28, 2021 at 02:23:10PM +0800, Shiyang Ruan wrote:
-> In fsdax mode, WRITE and ZERO on a shared extent need CoW performed.
-> After that, new allocated extents needs to be remapped to the file.
-> So, add a CoW identification in ->iomap_begin(), and implement
-> ->iomap_end() to do the remapping work.
+On Thu, Oct 14, 2021 at 10:39:28AM -0500, Alex Sierra wrote:
+> From: Ralph Campbell <rcampbell@nvidia.com>
 > 
-> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
-
-I think this patch looks good, so:
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
-A big thank you to Shiyang for persisting in getting this series
-finished! :)
-
-Judging from the conversation Christoph and I had the last time this
-patchset was submitted, I gather the last big remaining issue is the use
-of page->mapping for hw poison.  So I'll go take a look at "fsdax:
-introduce FS query interface to support reflink" now.
-
---D
-
+> ZONE_DEVICE struct pages have an extra reference count that complicates the
+> code for put_page() and several places in the kernel that need to check the
+> reference count to see that a page is not being used (gup, compaction,
+> migration, etc.). Clean up the code so the reference count doesn't need to
+> be treated specially for ZONE_DEVICE.
+> 
+> Signed-off-by: Ralph Campbell <rcampbell@nvidia.com>
+> Signed-off-by: Alex Sierra <alex.sierra@amd.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/xfs_bmap_util.c |  3 +--
->  fs/xfs/xfs_file.c      |  7 ++-----
->  fs/xfs/xfs_iomap.c     | 30 +++++++++++++++++++++++++++-
->  fs/xfs/xfs_iomap.h     | 44 ++++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/xfs_iops.c      |  7 +++----
->  fs/xfs/xfs_reflink.c   |  3 +--
->  6 files changed, 80 insertions(+), 14 deletions(-)
+> v2:
+> AS: merged this patch in linux 5.11 version
 > 
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index 73a36b7be3bd..0681250e0a5d 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -1009,8 +1009,7 @@ xfs_free_file_space(
->  		return 0;
->  	if (offset + len > XFS_ISIZE(ip))
->  		len = XFS_ISIZE(ip) - offset;
-> -	error = iomap_zero_range(VFS_I(ip), offset, len, NULL,
-> -			&xfs_buffered_write_iomap_ops);
-> +	error = xfs_iomap_zero_range(ip, offset, len, NULL);
->  	if (error)
->  		return error;
->  
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 7aa943edfc02..afde4fbefb6f 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -704,7 +704,7 @@ xfs_file_dax_write(
->  	pos = iocb->ki_pos;
->  
->  	trace_xfs_file_dax_write(iocb, from);
-> -	ret = dax_iomap_rw(iocb, from, &xfs_direct_write_iomap_ops);
-> +	ret = dax_iomap_rw(iocb, from, &xfs_dax_write_iomap_ops);
->  	if (ret > 0 && iocb->ki_pos > i_size_read(inode)) {
->  		i_size_write(inode, iocb->ki_pos);
->  		error = xfs_setfilesize(ip, pos, ret);
-> @@ -1327,10 +1327,7 @@ __xfs_filemap_fault(
->  		pfn_t pfn;
->  
->  		xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-> -		ret = dax_iomap_fault(vmf, pe_size, &pfn, NULL,
-> -				(write_fault && !vmf->cow_page) ?
-> -				 &xfs_direct_write_iomap_ops :
-> -				 &xfs_read_iomap_ops);
-> +		ret = xfs_dax_iomap_fault(vmf, pe_size, write_fault, &pfn);
->  		if (ret & VM_FAULT_NEEDDSYNC)
->  			ret = dax_finish_sync_fault(vmf, pe_size, pfn);
->  		xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 093758440ad5..51cb5b713521 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -761,7 +761,8 @@ xfs_direct_write_iomap_begin(
->  
->  		/* may drop and re-acquire the ilock */
->  		error = xfs_reflink_allocate_cow(ip, &imap, &cmap, &shared,
-> -				&lockmode, flags & IOMAP_DIRECT);
-> +				&lockmode,
-> +				(flags & IOMAP_DIRECT) || IS_DAX(inode));
->  		if (error)
->  			goto out_unlock;
->  		if (shared)
-> @@ -854,6 +855,33 @@ const struct iomap_ops xfs_direct_write_iomap_ops = {
->  	.iomap_begin		= xfs_direct_write_iomap_begin,
->  };
->  
-> +static int
-> +xfs_dax_write_iomap_end(
-> +	struct inode		*inode,
-> +	loff_t			pos,
-> +	loff_t			length,
-> +	ssize_t			written,
-> +	unsigned		flags,
-> +	struct iomap		*iomap)
-> +{
-> +	struct xfs_inode	*ip = XFS_I(inode);
-> +
-> +	if (!xfs_is_cow_inode(ip))
-> +		return 0;
-> +
-> +	if (!written) {
-> +		xfs_reflink_cancel_cow_range(ip, pos, length, true);
-> +		return 0;
-> +	}
-> +
-> +	return xfs_reflink_end_cow(ip, pos, written);
-> +}
-> +
-> +const struct iomap_ops xfs_dax_write_iomap_ops = {
-> +	.iomap_begin	= xfs_direct_write_iomap_begin,
-> +	.iomap_end	= xfs_dax_write_iomap_end,
-> +};
-> +
->  static int
->  xfs_buffered_write_iomap_begin(
->  	struct inode		*inode,
-> diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
-> index 7d3703556d0e..81726bfbf890 100644
-> --- a/fs/xfs/xfs_iomap.h
-> +++ b/fs/xfs/xfs_iomap.h
-> @@ -7,6 +7,7 @@
->  #define __XFS_IOMAP_H__
->  
->  #include <linux/iomap.h>
-> +#include <linux/dax.h>
->  
->  struct xfs_inode;
->  struct xfs_bmbt_irec;
-> @@ -45,5 +46,48 @@ extern const struct iomap_ops xfs_direct_write_iomap_ops;
->  extern const struct iomap_ops xfs_read_iomap_ops;
->  extern const struct iomap_ops xfs_seek_iomap_ops;
->  extern const struct iomap_ops xfs_xattr_iomap_ops;
-> +extern const struct iomap_ops xfs_dax_write_iomap_ops;
-> +
-> +static inline int
-> +xfs_iomap_zero_range(
-> +	struct xfs_inode	*ip,
-> +	loff_t			pos,
-> +	loff_t			len,
-> +	bool			*did_zero)
-> +{
-> +	struct inode		*inode = VFS_I(ip);
-> +
-> +	return iomap_zero_range(inode, pos, len, did_zero,
-> +			IS_DAX(inode) ?
-> +				&xfs_dax_write_iomap_ops :
-> +				&xfs_buffered_write_iomap_ops);
-> +}
-> +
-> +static inline int
-> +xfs_iomap_truncate_page(
-> +	struct xfs_inode	*ip,
-> +	loff_t			pos,
-> +	bool			*did_zero)
-> +{
-> +	struct inode		*inode = VFS_I(ip);
-> +
-> +	return iomap_truncate_page(inode, pos, did_zero,
-> +			IS_DAX(inode) ?
-> +				&xfs_dax_write_iomap_ops :
-> +				&xfs_buffered_write_iomap_ops);
-> +}
-> +
-> +static inline int
-> +xfs_dax_iomap_fault(
-> +	struct vm_fault		*vmf,
-> +	enum page_entry_size	pe_size,
-> +	bool			write_fault,
-> +	pfn_t			*pfn)
-> +{
-> +	return dax_iomap_fault(vmf, pe_size, pfn, NULL,
-> +			(write_fault && !vmf->cow_page) ?
-> +				&xfs_dax_write_iomap_ops :
-> +				&xfs_read_iomap_ops);
-> +}
->  
->  #endif /* __XFS_IOMAP_H__*/
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index a607d6aca5c4..332e6208dffd 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -911,8 +911,8 @@ xfs_setattr_size(
->  	 */
->  	if (newsize > oldsize) {
->  		trace_xfs_zero_eof(ip, oldsize, newsize - oldsize);
-> -		error = iomap_zero_range(inode, oldsize, newsize - oldsize,
-> -				&did_zeroing, &xfs_buffered_write_iomap_ops);
-> +		error = xfs_iomap_zero_range(ip, oldsize, newsize - oldsize,
-> +				&did_zeroing);
->  	} else {
->  		/*
->  		 * iomap won't detect a dirty page over an unwritten block (or a
-> @@ -924,8 +924,7 @@ xfs_setattr_size(
->  						     newsize);
->  		if (error)
->  			return error;
-> -		error = iomap_truncate_page(inode, newsize, &did_zeroing,
-> -				&xfs_buffered_write_iomap_ops);
-> +		error = xfs_iomap_truncate_page(ip, newsize, &did_zeroing);
->  	}
->  
->  	if (error)
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index 7ecea0311e88..9d876e268734 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -1269,8 +1269,7 @@ xfs_reflink_zero_posteof(
->  		return 0;
->  
->  	trace_xfs_zero_eof(ip, isize, pos - isize);
-> -	return iomap_zero_range(VFS_I(ip), isize, pos - isize, NULL,
-> -			&xfs_buffered_write_iomap_ops);
-> +	return xfs_iomap_zero_range(ip, isize, pos - isize, NULL);
->  }
->  
->  /*
-> -- 
-> 2.33.0
+> v5:
+> AS: add condition at try_grab_page to check for the zone device type, while
+> page ref counter is checked less/equal to zero. In case of device zone, pages
+> ref counter are initialized to zero.
 > 
-> 
-> 
+> v7:
+> AS: fix condition at try_grab_page added at v5, is invalid. It supposed
+> to fix xfstests/generic/413 test, however, there's a known issue on
+> this test where DAX mapped area DIO to non-DAX expect to fail.
+> https://patchwork.kernel.org/project/fstests/patch/1489463960-3579-1-git-send-email-xzhou@redhat.com
+> This condition was removed after rebase over patch series
+> https://lore.kernel.org/r/20210813044133.1536842-4-jhubbard@nvidia.com
+> ---
+>  arch/powerpc/kvm/book3s_hv_uvmem.c     |  2 +-
+>  drivers/gpu/drm/nouveau/nouveau_dmem.c |  2 +-
+>  fs/dax.c                               |  4 +-
+>  include/linux/dax.h                    |  2 +-
+>  include/linux/memremap.h               |  7 +--
+>  include/linux/mm.h                     | 11 ----
+>  lib/test_hmm.c                         |  2 +-
+>  mm/internal.h                          |  8 +++
+>  mm/memcontrol.c                        |  6 +--
+>  mm/memremap.c                          | 69 +++++++-------------------
+>  mm/migrate.c                           |  5 --
+>  mm/page_alloc.c                        |  3 ++
+>  mm/swap.c                              | 45 ++---------------
+>  13 files changed, 46 insertions(+), 120 deletions(-)
+
+Has anyone tested this with FSDAX? Does get_user_pages() on fsdax
+backed memory still work?
+
+What refcount value does the struct pages have when they are installed
+in the PTEs? Remember a 0 refcount will make all the get_user_pages()
+fail.
+
+I'm looking at the call path starting in ext4_punch_hole() and I would
+expect to see something manipulating the page ref count before
+the ext4_break_layouts() call path gets to the dax_page_unused() test.
+
+All I see is we go into unmap_mapping_pages() - that would normally
+put back the page references held by PTEs but insert_pfn() has this:
+
+	if (pfn_t_devmap(pfn))
+		entry = pte_mkdevmap(pfn_t_pte(pfn, prot));
+
+And:
+
+static inline pte_t pte_mkdevmap(pte_t pte)
+{
+	return pte_set_flags(pte, _PAGE_SPECIAL|_PAGE_DEVMAP);
+}
+
+Which interacts with vm_normal_page():
+
+		if (pte_devmap(pte))
+			return NULL;
+
+To disable that refcounting?
+
+So... I have a feeling this will have PTEs pointing to 0 refcount
+pages? Unless FSDAX is !pte_devmap which is not the case, right?
+
+This seems further confirmed by this comment:
+
+	/*
+	 * If we race get_user_pages_fast() here either we'll see the
+	 * elevated page count in the iteration and wait, or
+	 * get_user_pages_fast() will see that the page it took a reference
+	 * against is no longer mapped in the page tables and bail to the
+	 * get_user_pages() slow path.  The slow path is protected by
+	 * pte_lock() and pmd_lock(). New references are not taken without
+	 * holding those locks, and unmap_mapping_pages() will not zero the
+	 * pte or pmd without holding the respective lock, so we are
+	 * guaranteed to either see new references or prevent new
+	 * references from being established.
+	 */
+
+Which seems to explain this scheme relies on unmap_mapping_pages() to
+fence GUP_fast, not on GUP_fast observing 0 refcounts when it should
+stop.
+
+This seems like it would be properly fixed by using normal page
+refcounting for PTEs - ie stop using special for these pages?
+
+Does anyone know why devmap is pte_special anyhow?
+
+> +void free_zone_device_page(struct page *page)
+> +{
+> +	switch (page->pgmap->type) {
+> +	case MEMORY_DEVICE_PRIVATE:
+> +		free_device_page(page);
+> +		return;
+> +	case MEMORY_DEVICE_FS_DAX:
+> +		/* notify page idle */
+> +		wake_up_var(&page->_refcount);
+> +		return;
+
+It is not for this series, but I wonder if we should just always call
+ops->page_free and have free_device_page() logic in that callback for
+the non-fs-dax cases?
+
+For instance where is the mem_cgroup_charge() call to pair with the
+mem_cgroup_uncharge() in free_device_page()?
+
+Isn't cgroup charging (or not) the responsibility of the "allocator"
+eg the pgmap_ops owner?
+
+Jason
