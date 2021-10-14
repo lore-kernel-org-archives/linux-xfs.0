@@ -2,131 +2,235 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5DA1C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 18:01:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1A1FC433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 18:02:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AA15B61056
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 18:01:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C4D3B61156
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 18:02:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233803AbhJNSDn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 Oct 2021 14:03:43 -0400
-Received: from mail-bn1nam07on2061.outbound.protection.outlook.com ([40.107.212.61]:34949
-        "EHLO NAM02-BN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S233793AbhJNSDm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 14 Oct 2021 14:03:42 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=mgmJ5HRlS4ylOQbQcw1ULWD2QjMdcDZW1ledq4gCrs7j4TmY21eYIaZM+7ws79hwJdk6HHz/aPUt0k0o8mKHDKqOm3gBgaWzkgGjNIVBvJk0Iy4WMXO7A0ySgGRzKp7nJ8Wy5lRh5FnpFmX3YwhoIBILHpwirnGdihL/y8LTk9qCglbnLOvx0BkDNyNQhpOqSmrbdKwY4Jr0S/uQD4eFtFQHJw0zsjbyf8en1V9Cwe07RWOPEyGLXKnG5Nv6rdpmF81vTqZ4Ajzp0QiZeqyilpK4tjHO1EkU5BbXxNo9XCydDvcAOlTTGuJYZ0WmsYYMxPd3uluymgQIdAwV5AMrvw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=pTWeaN6k/Bpt+VIU1uOGBAwXLCiqUfRLhPyU/tj/XHg=;
- b=UAY5ql79CeoPWrA8/Hv+8AK3Mnmvxitl4MSUVs0ZD8m8G7eCn8mk4lFa6ciDALxxH/9tP1k76/DYL0IR3BCHMMpqx7WFcypBLOxtLK05XIytylXAPI4bYSK2xtGt6qTTInkeA+fPMSwiVpz6IHzSgxH4MQig57hGndXQ5Z8bGBhPcKEqu+l4I0GUx0Gu5Gip0vFeU1QDRaMYm2xGva1w1Gwpc0lkx/HsIrXp/E8eztRTTfW+c3nd2TOXEhSoS2n//+JRkSCkza7+XHg449Y3j5KvFmDWezpTsl9uV6nmvmz2WgY2bZEhc9cnfGrLlBwBfSk1x2aJcL2BZV6lOXISsw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=pTWeaN6k/Bpt+VIU1uOGBAwXLCiqUfRLhPyU/tj/XHg=;
- b=g4d3Q+zZ4tXudjsV7dNhuHoG2pD4vVWvUzfwlRy+3oWTCvfuo8rbS8YvWVbpwtwMRRyk/tLe+db13G05aJ6NOG6R76KW1HhBuqVHx5RjovzZpLImfQX23lwntIB1WzfAjFiBBdZqzZmdh95oTc0Eiw5Fvtkp3IPDHaeb1TMWcGo9kjJLtMSm1U823yPxcsYrIz+KPNTXIZjC8v1EZzMh3Hnbvefhjh+3Abnh+vW/YVSxBK42fiIC00Ix9KaxeAuv2wJZcWHNTJ6kAuHMHrsjwHcehd/BUsNAu9fCvjGxI3z/olmr1LoQneg7O7u9UgkSDkSkzD01K4w7o0ECLMic4w==
-Authentication-Results: nvidia.com; dkim=none (message not signed)
- header.d=none;nvidia.com; dmarc=none action=none header.from=nvidia.com;
-Received: from BL0PR12MB5506.namprd12.prod.outlook.com (2603:10b6:208:1cb::22)
- by BL1PR12MB5349.namprd12.prod.outlook.com (2603:10b6:208:31f::7) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4608.16; Thu, 14 Oct
- 2021 18:01:33 +0000
-Received: from BL0PR12MB5506.namprd12.prod.outlook.com
- ([fe80::e8af:232:915e:2f95]) by BL0PR12MB5506.namprd12.prod.outlook.com
- ([fe80::e8af:232:915e:2f95%6]) with mapi id 15.20.4608.017; Thu, 14 Oct 2021
- 18:01:33 +0000
-Date:   Thu, 14 Oct 2021 15:01:32 -0300
-From:   Jason Gunthorpe <jgg@nvidia.com>
-To:     Ralph Campbell <rcampbell@nvidia.com>
-Cc:     Alex Sierra <alex.sierra@amd.com>, akpm@linux-foundation.org,
-        Felix.Kuehling@amd.com, linux-mm@kvack.org,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        hch@lst.de, jglisse@redhat.com, apopple@nvidia.com,
-        willy@infradead.org
-Subject: Re: [PATCH v1 2/2] mm: remove extra ZONE_DEVICE struct page refcount
-Message-ID: <20211014180132.GA3567687@nvidia.com>
-References: <20211014153928.16805-1-alex.sierra@amd.com>
- <20211014153928.16805-3-alex.sierra@amd.com>
- <20211014170634.GV2744544@nvidia.com>
- <eafbccb5-f94b-0ddd-bb46-7ee92ed36ee8@nvidia.com>
+        id S231956AbhJNSEj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 Oct 2021 14:04:39 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38896 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229983AbhJNSEi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 14 Oct 2021 14:04:38 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 55C5260174;
+        Thu, 14 Oct 2021 18:02:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1634234553;
+        bh=XREgYAXJhCji8H7zRG00lEAFIOm24wQYsyx1jQyoJJQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=RB5ufLHC6EEk6Ds+OrQfJKO49SiE0s8j7VKjeAKvLsFbq3ZfAMG+VSk4D3XxxTyIB
+         3dkbWZ5fxwcn8hNVbp9CgG41yJ6krSa8V4Pc3Aya1C6t0rljybkLyV95GAbEOYY92k
+         ZUqE9yBOJNsLJqwojKjiQiWriXngN5Hy+hFRVtgr0je87NX6NCHcMY44dakh/hu8E2
+         1puKeYFCso/JIU2oxdMZLSlJmV83hYFOg0XqHnH8G6pOn/vXxjC+V3qb0j2PXBeMWW
+         icOdYfbY3k1qWjZgq6Jt/Ms81CfLwKuPU/PE19xXK4wP2g67CsqCbyDk9CgQIARnAc
+         S0hhMfIiwMeUA==
+Date:   Thu, 14 Oct 2021 11:02:33 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
+Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        nvdimm@lists.linux.dev, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org, dan.j.williams@intel.com,
+        david@fromorbit.com, hch@infradead.org, jane.chu@oracle.com
+Subject: Re: [PATCH v7 3/8] mm: factor helpers for memory_failure_dev_pagemap
+Message-ID: <20211014180233.GF24307@magnolia>
+References: <20210924130959.2695749-1-ruansy.fnst@fujitsu.com>
+ <20210924130959.2695749-4-ruansy.fnst@fujitsu.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <eafbccb5-f94b-0ddd-bb46-7ee92ed36ee8@nvidia.com>
-X-ClientProxiedBy: MN2PR16CA0064.namprd16.prod.outlook.com
- (2603:10b6:208:234::33) To BL0PR12MB5506.namprd12.prod.outlook.com
- (2603:10b6:208:1cb::22)
-MIME-Version: 1.0
-Received: from mlx.ziepe.ca (142.162.113.129) by MN2PR16CA0064.namprd16.prod.outlook.com (2603:10b6:208:234::33) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4608.16 via Frontend Transport; Thu, 14 Oct 2021 18:01:33 +0000
-Received: from jgg by mlx with local (Exim 4.94)        (envelope-from <jgg@nvidia.com>)        id 1mb52q-00F0Gn-G3; Thu, 14 Oct 2021 15:01:32 -0300
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 67f71548-4169-45a7-d721-08d98f3ca84e
-X-MS-TrafficTypeDiagnostic: BL1PR12MB5349:
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <BL1PR12MB534938FADF618AD8F90B7974C2B89@BL1PR12MB5349.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:1443;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: TAx7q8UJaBbAeNdGpDcObsMuPlCQB561ARegScjE0sDb0xzRaJD+jCwHrW8/jtkK3WmgizXJ6nXPNKc4dwEr8ZAEFwYIoH7ctNDUL+cSAMLOLyugg7qMYCjjrVEXZ4HmmMSFcmMFdXsIj+nnf6C9exFcaMTXcPSgWiOnYbqQOZmfztOJ4sOETxJqQ3I7W5kh7eeOB8owxb3JszjCGjHwk3LG3iYV/2ok55Lyf3HIVhyi0pJ4JvmWfACiRdyI1Bmkv52DArK9AZT+DKakSop1umMNGsRRjh731DHkTg0TwY+1jowHC58mZOGMjOyJwvOGnyne0nBZHxgn7jr31t+CNqCHSDYTqzibJZil5qMNeIzj6T7r2tF20s6VhwxPHFNUyo8s8lcDsKZOxqySboE8BfNs83oijaGK8PGKQJCJU3KD05bWlki9Sf14OtaYolSDAi1Yfc3IccCdRHWwPDazVxGKkLG/p2bC04S1LVh3pZCjuL/S6QZHoJP8JaCvxoCT4IyC47mtct8EiVDJeoVIimeT4cuuz/YzV5eKH94TWNYINRmB0dPnX0YvUf8L6Vsu8LztIR4PyhV+Ahrzh7kXaBzrDBBXvVzwRz+IMCa9CtuSqMj7VDxI0dP1S8hT3N3Ii9ScJLyes0g0rOxrwEfWjA==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL0PR12MB5506.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(86362001)(2906002)(426003)(8936002)(2616005)(508600001)(7416002)(9786002)(9746002)(38100700002)(1076003)(6862004)(4744005)(5660300002)(4326008)(6636002)(316002)(66476007)(36756003)(66946007)(8676002)(66556008)(186003)(33656002)(26005)(37006003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?As3jK/DyNCazXR6k/je9X5gZkXzkw1b60WjA67ZCPZm6zc+/CRQi4FeFEK0W?=
- =?us-ascii?Q?uCX+sZEUoFMZpJg8xxfJgu26f9LsM6urVJGYVUPUGaG2oeknmRKU4ZSr/4TH?=
- =?us-ascii?Q?qp+ENGwHY/TSFifyw+uecz5ibM69MqLkev4RqZEHMqdoUDar6bW8fTQoeiNw?=
- =?us-ascii?Q?R5P/2z/jSqg5EMnkonfbiu8I3XmHETLIbgdry9M0/L5X4bMLeVSUIn9iB8Ya?=
- =?us-ascii?Q?PzrYkJO4ngo+gzrUBf29zCJBzWKi5lcb2mdTKFC0+J1Y4EJ/QKC1kjJqshk8?=
- =?us-ascii?Q?1yMz/0oOyodUDS42rxfg0UrcsiRTZaF1/wGJxhOX9fq62TiSIQvpdglXqSZz?=
- =?us-ascii?Q?rO/x1rZbRbkQKUJb0d3HtUolLuPTIbBfyfsGadEBmQGQ9LwHviRiH77QYq6g?=
- =?us-ascii?Q?8uA8NWG9ZYU+HW+GbDjyGasDu/BuTik6LhnUUFTt+q7A7vqvQn4m7vHZTGiB?=
- =?us-ascii?Q?TSi1SjOo0y3cP7VtP/pxlbEahN/P50WtQVCRwAvt1qupBIFdExjEOKsPGGVB?=
- =?us-ascii?Q?VpmVVjNIbAQ2Q/BtEOg8PLXuZhA2bSe4qqp6ZcsfADEFI2hSoVV25KL+pFDw?=
- =?us-ascii?Q?VN7i43p3eJYhGvjuowzVbi+3FJkSKqA6UZN6rNImmBVL66pJUeJ+mQk3lhf3?=
- =?us-ascii?Q?Y+6nsUWXwyFWNA63z5FdlH3s2H+f9C+6zbanFgEKhbuVy/5kTjNbnEDu+RsB?=
- =?us-ascii?Q?/dXFCa51S6gQk8UFQU6nfZ9d7sOxXWehVabrcM1PShM6+UqZR42Bona7J8x+?=
- =?us-ascii?Q?Rls2ueLdk+qkArnUavymr3yoBX5ncfQ+1lra8XG03lZ6m9sY2zdolaGRFe9J?=
- =?us-ascii?Q?Cn+72AKMJHMfu0FKkra7jPIo6v9Lep3BieFUxq8hj2n2TJMEUysMLyrWBuhE?=
- =?us-ascii?Q?MQNqZXjNmpzcPw+v8h8/zXJbLPzlZK9SMB5PTU9eCzOPRy18Y/K5y9Mu6twj?=
- =?us-ascii?Q?2l2pccGerShzMBo4w1Ukr1CLlRLsJzOcR8pRFi7ADk/dDP0iHa6CUa7O/BgD?=
- =?us-ascii?Q?DnLNmvj7ndV0WPZiiKFp88l/mP0Xv+klxwTSXYZw+k4AowYkBQchObAgOHpv?=
- =?us-ascii?Q?FuupqoDCbvahTCoDfAgkDgFT9q2iee9P+g2RQfy7F/lIcjVJFcLtrz+JANYS?=
- =?us-ascii?Q?gjvhe4r1aR9h/yzJbH/F+PKQTITUfDlvoF2z9FjSYP/AdkRwAfP2S0DSgnHJ?=
- =?us-ascii?Q?19DhkTElrMy57w1EmTG2Fal+x85jvhE2jEiil4OKOf3Yc9BcjAquS3lEF+7n?=
- =?us-ascii?Q?/B/rYxy/S+2/iE2eRoH+rxU6CFY/ak9eRuv2OTCfxhj+EIsMBhQR1+JQAlAG?=
- =?us-ascii?Q?zp3h/mpEwgSaZY+M3N9M+uxSfPpswRJkJu5VIGrCT+jP2Q=3D=3D?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 67f71548-4169-45a7-d721-08d98f3ca84e
-X-MS-Exchange-CrossTenant-AuthSource: BL0PR12MB5506.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Oct 2021 18:01:33.6683
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 7iCqo0/S//TRdR9g3NtiuEnxK/vF5jpwAkJ+fCktAWXkxrcf1zuaqtO/ZZpBRIJk
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL1PR12MB5349
+In-Reply-To: <20210924130959.2695749-4-ruansy.fnst@fujitsu.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 14, 2021 at 10:35:27AM -0700, Ralph Campbell wrote:
+On Fri, Sep 24, 2021 at 09:09:54PM +0800, Shiyang Ruan wrote:
+> memory_failure_dev_pagemap code is a bit complex before introduce RMAP
+> feature for fsdax.  So it is needed to factor some helper functions to
+> simplify these code.
+> 
+> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
 
-> I ran xfstests-dev using the kernel boot option to "fake" a pmem device
-> when I first posted this patch. The tests ran OK (or at least the same
-> tests passed with and without my patch). 
+This looks like a reasonable hoist...
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-Hmm. I know nothing of xfstests but 
+--D
 
-tests/generic/413
-
-Looks kind of like it might cover this situation?
-
-Did it run for you?
-
-Jason
+> ---
+>  mm/memory-failure.c | 140 ++++++++++++++++++++++++--------------------
+>  1 file changed, 76 insertions(+), 64 deletions(-)
+> 
+> diff --git a/mm/memory-failure.c b/mm/memory-failure.c
+> index 54879c339024..8ff9b52823c0 100644
+> --- a/mm/memory-failure.c
+> +++ b/mm/memory-failure.c
+> @@ -1430,6 +1430,79 @@ static int try_to_split_thp_page(struct page *page, const char *msg)
+>  	return 0;
+>  }
+>  
+> +static void unmap_and_kill(struct list_head *to_kill, unsigned long pfn,
+> +		struct address_space *mapping, pgoff_t index, int flags)
+> +{
+> +	struct to_kill *tk;
+> +	unsigned long size = 0;
+> +
+> +	list_for_each_entry(tk, to_kill, nd)
+> +		if (tk->size_shift)
+> +			size = max(size, 1UL << tk->size_shift);
+> +	if (size) {
+> +		/*
+> +		 * Unmap the largest mapping to avoid breaking up device-dax
+> +		 * mappings which are constant size. The actual size of the
+> +		 * mapping being torn down is communicated in siginfo, see
+> +		 * kill_proc()
+> +		 */
+> +		loff_t start = (index << PAGE_SHIFT) & ~(size - 1);
+> +
+> +		unmap_mapping_range(mapping, start, size, 0);
+> +	}
+> +
+> +	kill_procs(to_kill, flags & MF_MUST_KILL, false, pfn, flags);
+> +}
+> +
+> +static int mf_generic_kill_procs(unsigned long long pfn, int flags,
+> +		struct dev_pagemap *pgmap)
+> +{
+> +	struct page *page = pfn_to_page(pfn);
+> +	LIST_HEAD(to_kill);
+> +	dax_entry_t cookie;
+> +
+> +	/*
+> +	 * Prevent the inode from being freed while we are interrogating
+> +	 * the address_space, typically this would be handled by
+> +	 * lock_page(), but dax pages do not use the page lock. This
+> +	 * also prevents changes to the mapping of this pfn until
+> +	 * poison signaling is complete.
+> +	 */
+> +	cookie = dax_lock_page(page);
+> +	if (!cookie)
+> +		return -EBUSY;
+> +
+> +	if (hwpoison_filter(page))
+> +		return 0;
+> +
+> +	if (pgmap->type == MEMORY_DEVICE_PRIVATE) {
+> +		/*
+> +		 * TODO: Handle HMM pages which may need coordination
+> +		 * with device-side memory.
+> +		 */
+> +		return -EBUSY;
+> +	}
+> +
+> +	/*
+> +	 * Use this flag as an indication that the dax page has been
+> +	 * remapped UC to prevent speculative consumption of poison.
+> +	 */
+> +	SetPageHWPoison(page);
+> +
+> +	/*
+> +	 * Unlike System-RAM there is no possibility to swap in a
+> +	 * different physical page at a given virtual address, so all
+> +	 * userspace consumption of ZONE_DEVICE memory necessitates
+> +	 * SIGBUS (i.e. MF_MUST_KILL)
+> +	 */
+> +	flags |= MF_ACTION_REQUIRED | MF_MUST_KILL;
+> +	collect_procs(page, &to_kill, true);
+> +
+> +	unmap_and_kill(&to_kill, pfn, page->mapping, page->index, flags);
+> +	dax_unlock_page(page, cookie);
+> +	return 0;
+> +}
+> +
+>  static int memory_failure_hugetlb(unsigned long pfn, int flags)
+>  {
+>  	struct page *p = pfn_to_page(pfn);
+> @@ -1519,12 +1592,8 @@ static int memory_failure_dev_pagemap(unsigned long pfn, int flags,
+>  		struct dev_pagemap *pgmap)
+>  {
+>  	struct page *page = pfn_to_page(pfn);
+> -	unsigned long size = 0;
+> -	struct to_kill *tk;
+>  	LIST_HEAD(tokill);
+> -	int rc = -EBUSY;
+> -	loff_t start;
+> -	dax_entry_t cookie;
+> +	int rc = -ENXIO;
+>  
+>  	if (flags & MF_COUNT_INCREASED)
+>  		/*
+> @@ -1533,67 +1602,10 @@ static int memory_failure_dev_pagemap(unsigned long pfn, int flags,
+>  		put_page(page);
+>  
+>  	/* device metadata space is not recoverable */
+> -	if (!pgmap_pfn_valid(pgmap, pfn)) {
+> -		rc = -ENXIO;
+> -		goto out;
+> -	}
+> -
+> -	/*
+> -	 * Prevent the inode from being freed while we are interrogating
+> -	 * the address_space, typically this would be handled by
+> -	 * lock_page(), but dax pages do not use the page lock. This
+> -	 * also prevents changes to the mapping of this pfn until
+> -	 * poison signaling is complete.
+> -	 */
+> -	cookie = dax_lock_page(page);
+> -	if (!cookie)
+> +	if (!pgmap_pfn_valid(pgmap, pfn))
+>  		goto out;
+>  
+> -	if (hwpoison_filter(page)) {
+> -		rc = 0;
+> -		goto unlock;
+> -	}
+> -
+> -	if (pgmap->type == MEMORY_DEVICE_PRIVATE) {
+> -		/*
+> -		 * TODO: Handle HMM pages which may need coordination
+> -		 * with device-side memory.
+> -		 */
+> -		goto unlock;
+> -	}
+> -
+> -	/*
+> -	 * Use this flag as an indication that the dax page has been
+> -	 * remapped UC to prevent speculative consumption of poison.
+> -	 */
+> -	SetPageHWPoison(page);
+> -
+> -	/*
+> -	 * Unlike System-RAM there is no possibility to swap in a
+> -	 * different physical page at a given virtual address, so all
+> -	 * userspace consumption of ZONE_DEVICE memory necessitates
+> -	 * SIGBUS (i.e. MF_MUST_KILL)
+> -	 */
+> -	flags |= MF_ACTION_REQUIRED | MF_MUST_KILL;
+> -	collect_procs(page, &tokill, flags & MF_ACTION_REQUIRED);
+> -
+> -	list_for_each_entry(tk, &tokill, nd)
+> -		if (tk->size_shift)
+> -			size = max(size, 1UL << tk->size_shift);
+> -	if (size) {
+> -		/*
+> -		 * Unmap the largest mapping to avoid breaking up
+> -		 * device-dax mappings which are constant size. The
+> -		 * actual size of the mapping being torn down is
+> -		 * communicated in siginfo, see kill_proc()
+> -		 */
+> -		start = (page->index << PAGE_SHIFT) & ~(size - 1);
+> -		unmap_mapping_range(page->mapping, start, size, 0);
+> -	}
+> -	kill_procs(&tokill, flags & MF_MUST_KILL, false, pfn, flags);
+> -	rc = 0;
+> -unlock:
+> -	dax_unlock_page(page, cookie);
+> +	rc = mf_generic_kill_procs(pfn, flags, pgmap);
+>  out:
+>  	/* drop pgmap ref acquired in caller */
+>  	put_dev_pagemap(pgmap);
+> -- 
+> 2.33.0
+> 
+> 
+> 
