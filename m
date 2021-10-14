@@ -2,235 +2,194 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94799C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 17:35:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65075C433FE
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 17:42:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7A04F611AD
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 17:35:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4E86A603E8
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 17:42:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233534AbhJNRhg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 Oct 2021 13:37:36 -0400
-Received: from mail-co1nam11on2056.outbound.protection.outlook.com ([40.107.220.56]:37120
-        "EHLO NAM11-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S232389AbhJNRhf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 14 Oct 2021 13:37:35 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=cT/wXuK05mbOCnBeLElg7Id8BAP+FDW2bGG+u6JuhOngeJXv3fwIFAiJsZgQL8RRnVdYmkDC71AVl9Ft9g1adGgOEBa4jXtb1zaEeEfouCHixzWmuxLMF7+V0mfJnMbj+XiU238x55V7M4YmDZak2eN37U13jARPhh5RGmq1wvpGQp5IiEVp/vykL3zu+5ZP6ZeWsb3sflmSXSHV7ni5PHNMLw2R4Sylr/ycjrKQaR3eGVEpbEjFNWknrcrav0YG8FE+RJazE/lpRMPrMjTUkxPn+Hunne0bU1TdwFdS/9CTO10sGRfGE5lcZpesfMsgJ4NM7XinrOQfaZmfk3Uu6A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=dWvb25JkDfMpg3JxqpciD0ArRBV2EnzgM1d7p/8xxTI=;
- b=FLHQ9ovUjEFw+LMDid1WT2+3gGUcgrjoWgYwsDEJXvpAdLOLZ7K/1E2C4c+fWGaahD87FA1o0Kz9pN4g4UP/pghHYEZ10MUCOFYFjNDNVeYLZ8Gc0vvAX1p69gGGz4FOoA7cgb0I1KNnX551bz1NA6iYoNemR2Onp3SpnBlmKvNxhIIVnskTr84aIUfJOcoBIygvIRDYHpUqssySOf2O0Ddv2uDhaZ8ixEIDCzkwH3gAbczEXkOwS2scx4CvANzFv4HGApcPEfezdkrmh/kvJ+48iPV47MKAlVdT0yi9EIssYtq4aEAQviuzxmUOprbraYEohIY2zMNel8MFqFfAmg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.112.32) smtp.rcpttodomain=kvack.org smtp.mailfrom=nvidia.com;
- dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
- header.from=nvidia.com; dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=dWvb25JkDfMpg3JxqpciD0ArRBV2EnzgM1d7p/8xxTI=;
- b=g768QAHuDw0Ng2zLQE5QDPZNedGanyXZng4H/fI08unqpVuzSnXOtWWBcMr58ilohwO1V0aE4CDxGNu6w+H7jUvUSLcpXlFmi+rSqdU2ZMxQ89QAgL6G4IzmYjuRAeiJkFWNc82D7wcWkPD3AmdypJfmjhSydg4JTUOtUQAo0VDqX8D2sahdL3RpfMevBJ5OBAOr7lMOUfjCrjg5JgmuUDci164FhR6pZweEnEu/h1neOzJGwAyoPpC8aHd1JVIpda4vqQCmML6gs5gL46exSjoUsbHCdD8kGOsJ2oSrXTTvClV6Sj6Ga5P8toa4J/An7PGUH/t/GKWBHWag25qXKA==
-Received: from DM3PR08CA0006.namprd08.prod.outlook.com (2603:10b6:0:52::16) by
- DM6PR12MB4265.namprd12.prod.outlook.com (2603:10b6:5:211::14) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.4587.20; Thu, 14 Oct 2021 17:35:29 +0000
-Received: from DM6NAM11FT019.eop-nam11.prod.protection.outlook.com
- (2603:10b6:0:52:cafe::aa) by DM3PR08CA0006.outlook.office365.com
- (2603:10b6:0:52::16) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4608.15 via Frontend
- Transport; Thu, 14 Oct 2021 17:35:29 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.112.32)
- smtp.mailfrom=nvidia.com; kvack.org; dkim=none (message not signed)
- header.d=none;kvack.org; dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.112.32 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.112.32; helo=mail.nvidia.com;
-Received: from mail.nvidia.com (216.228.112.32) by
- DM6NAM11FT019.mail.protection.outlook.com (10.13.172.172) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.20.4608.15 via Frontend Transport; Thu, 14 Oct 2021 17:35:28 +0000
-Received: from HQMAIL111.nvidia.com (172.20.187.18) by HQMAIL109.nvidia.com
- (172.20.187.15) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Thu, 14 Oct
- 2021 10:35:27 -0700
-Received: from rcampbell-test.nvidia.com (172.20.187.6) by mail.nvidia.com
- (172.20.187.18) with Microsoft SMTP Server (TLS) id 15.0.1497.18 via Frontend
- Transport; Thu, 14 Oct 2021 17:35:27 +0000
-Subject: Re: [PATCH v1 2/2] mm: remove extra ZONE_DEVICE struct page refcount
-To:     Jason Gunthorpe <jgg@nvidia.com>, Alex Sierra <alex.sierra@amd.com>
-CC:     <akpm@linux-foundation.org>, <Felix.Kuehling@amd.com>,
-        <linux-mm@kvack.org>, <linux-ext4@vger.kernel.org>,
-        <linux-xfs@vger.kernel.org>, <amd-gfx@lists.freedesktop.org>,
-        <dri-devel@lists.freedesktop.org>, <hch@lst.de>,
-        <jglisse@redhat.com>, <apopple@nvidia.com>, <willy@infradead.org>
-References: <20211014153928.16805-1-alex.sierra@amd.com>
- <20211014153928.16805-3-alex.sierra@amd.com>
- <20211014170634.GV2744544@nvidia.com>
-From:   Ralph Campbell <rcampbell@nvidia.com>
-Message-ID: <eafbccb5-f94b-0ddd-bb46-7ee92ed36ee8@nvidia.com>
-Date:   Thu, 14 Oct 2021 10:35:27 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
+        id S233558AbhJNRoI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 Oct 2021 13:44:08 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:21034 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232779AbhJNRoH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Oct 2021 13:44:07 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1634233322;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=5niZdcnuLXA/dAnya5ood6hs95Odwg1KLMhZ5D015o0=;
+        b=AbRERN3VYhiymH5sZLg7ebf4Pvt+ZjKpWX96qMgmtqn13gEyBXEMypQtFqfX8+KMoDQBQd
+        9xjjJqXVZmcL2aTiBRM0iS+AhGkstwuZjpHWkArLCvxOq2OdJ97cOgpZrOomFVG1zkyZbW
+        zLJ39P3UFuuTmCmjWTZuFsXJaTgowNM=
+Received: from mail-qt1-f200.google.com (mail-qt1-f200.google.com
+ [209.85.160.200]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-282-Wh2dc2lzOIGwIRlgo3wk4w-1; Thu, 14 Oct 2021 13:42:00 -0400
+X-MC-Unique: Wh2dc2lzOIGwIRlgo3wk4w-1
+Received: by mail-qt1-f200.google.com with SMTP id 12-20020aed208c000000b002a78b33ad97so4975031qtb.23
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Oct 2021 10:42:00 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=5niZdcnuLXA/dAnya5ood6hs95Odwg1KLMhZ5D015o0=;
+        b=fttiqPP7gXznniyXluznoApQtsYUwt9jTSNZFH15n4Xmfe+xsg9FBAvegCIUhDBIdy
+         ssOSn4eeBggH7aPURqFCTnyT/xpoe1aXBIPBinChs1/eOkT45mL5/k0hdyJyIuF94SDW
+         ZcejN9f8+onR+yavsvtsq8jE3iG4v9yvREHCx7to7bYoIfjzYy3coxj7ynJSRdozD3PW
+         yfdIqE9nOSwspvxHfOTmGfZQ9JsPUlaxI4knle773W0YgSkhOULYZj+7note1qV5o+Mk
+         oXRgfx9nGoHcBc1NdEii0Gc/2MMJk2WxL1Hs0cKzTJkZyh8ULtruds7vRKhBMJrixFQO
+         YoCg==
+X-Gm-Message-State: AOAM533MyXu1WUhgcF/cu6ObAsrU2F/OQFSXi+qTSVRPr9trX3JkoX7B
+        hrUIvhnDJyNCSBoN4RXA2RyzlTg3I2y/BWyNq4kjvZPATvCxY43MoVrduv78NFynAG5fB1nLGKJ
+        fifLef3Exj2X0Cya+uaWx
+X-Received: by 2002:ad4:4366:: with SMTP id u6mr6866046qvt.36.1634233320138;
+        Thu, 14 Oct 2021 10:42:00 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzYEQkWL3mS1xnAiPpGpfz4P0Vs0BILVT4ICvZwXBPTTk15XXswySy9S+KW6SL3DEjDTfRO5g==
+X-Received: by 2002:ad4:4366:: with SMTP id u6mr6866022qvt.36.1634233319818;
+        Thu, 14 Oct 2021 10:41:59 -0700 (PDT)
+Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
+        by smtp.gmail.com with ESMTPSA id q6sm1653901qtn.65.2021.10.14.10.41.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 14 Oct 2021 10:41:59 -0700 (PDT)
+Date:   Thu, 14 Oct 2021 13:41:57 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2 3/4] xfs: terminate perag iteration reliably on agcount
+Message-ID: <YWhr5Z184iH4/X8G@bfoster>
+References: <20211012165203.1354826-1-bfoster@redhat.com>
+ <20211012165203.1354826-4-bfoster@redhat.com>
+ <20211012190822.GN24307@magnolia>
+ <YWg6XNufgGOUXNnI@bfoster>
+ <20211014164621.GA24333@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20211014170634.GV2744544@nvidia.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: d3b98879-206f-4164-4711-08d98f3903d8
-X-MS-TrafficTypeDiagnostic: DM6PR12MB4265:
-X-Microsoft-Antispam-PRVS: <DM6PR12MB4265133C80AC57DCE4C93BE6C2B89@DM6PR12MB4265.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: YPqtKOkWVoOdxIrOIlGmhwpjBfOMas1PkaxppOZ7ozZi2CJk8eVO0I+wQ8Y2YEIdfdD+7X3mlnQJwfET6ftctNHlRS4cnslfshH11HWhhE4tBW9dH25hL7Kugh7zq/tDCZIuUDUEFAvMDRqBu8Bb5T0I0g0QrAF7C4wGZaCoy1hSQK84I5KFHOfAnAwsht4qgnPub3fQ7l9Et4asl3qB74ju48zS0WiXbm/1Yp0uPMDbHMDP6KZxERkgQuhU/xvpEPSrMQSDdfSQ2Gf9qRBSDXF7qInCXFU3yiSaFRYZIy1liDeu9lxzee9k/ld+8zDTMO2JzIwLscx6e0rhJafjoo2yZuWu3aZFAmyYCcaWR1+JoORLG8cFqqJOkRaU4PPrytSIUH9cq8/z/92un1PiwcXLKX324X4ZCEDAYDBMyDzav+FclTLV2vAg6NLIN60ecbZGD71ElD56/dRMWoyqYOCztMjvZBm0GifwmmmNKHnSnSIo6BdiX8/SNHqrBOrrdVZsHQDoLDwBM0pA9EtZxeI4w1SY4B+o6ZvqhBTNihd7fscTvnVTtlHrZg02GD7dXu9Dkvmhl9yxOl1Pn4V2unOHXEfuJJWXlO2MdiHSoUyJtKCzlluDM+BFTOjOpHeMzgo6Hl/Bmg1xKFZf4fCWB6CcOHt1NvevSZbXuk4mfbYvpTg0SAINyIA7ymsECSpQGcrwXwFUAIgAVjfYILEYhDyk4JFq+tm/c1+SDL6QSujGO/NVwKew4pVkDbkH7ccYBwVIsUtBkoWylKU4pOivJ9MbaKG2Y+g9/LEVZwqfg4RFwdZVqMjX+WDN4XvUlzafPVZsBkSjSmYD2jEJzjhpEz4kfOX5qbDvZyozEG7EMf4=
-X-Forefront-Antispam-Report: CIP:216.228.112.32;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:schybrid01.nvidia.com;CAT:NONE;SFS:(4636009)(36840700001)(46966006)(7416002)(4326008)(31686004)(53546011)(8676002)(8936002)(7696005)(70586007)(70206006)(426003)(47076005)(83380400001)(2616005)(508600001)(7636003)(336012)(356005)(2906002)(316002)(186003)(31696002)(36860700001)(966005)(5660300002)(54906003)(36756003)(82310400003)(110136005)(26005)(86362001)(43740500002);DIR:OUT;SFP:1101;
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Oct 2021 17:35:28.9049
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: d3b98879-206f-4164-4711-08d98f3903d8
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.112.32];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT019.eop-nam11.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB4265
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20211014164621.GA24333@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Thu, Oct 14, 2021 at 09:46:21AM -0700, Darrick J. Wong wrote:
+> On Thu, Oct 14, 2021 at 10:10:36AM -0400, Brian Foster wrote:
+> > On Tue, Oct 12, 2021 at 12:08:22PM -0700, Darrick J. Wong wrote:
+> > > On Tue, Oct 12, 2021 at 12:52:02PM -0400, Brian Foster wrote:
+> > > > The for_each_perag_from() iteration macro relies on sb_agcount to
+> > > > process every perag currently within EOFS from a given starting
+> > > > point. It's perfectly valid to have perag structures beyond
+> > > > sb_agcount, however, such as if a growfs is in progress. If a perag
+> > > > loop happens to race with growfs in this manner, it will actually
+> > > > attempt to process the post-EOFS perag where ->pag_agno ==
+> > > > sb_agcount. This is reproduced by xfs/104 and manifests as the
+> > > > following assert failure in superblock write verifier context:
+> > > > 
+> > > >  XFS: Assertion failed: agno < mp->m_sb.sb_agcount, file: fs/xfs/libxfs/xfs_types.c, line: 22
+> > > > 
+> > > > Update the corresponding macro to only process perags that are
+> > > > within the current sb_agcount.
+> > > 
+> > > Does this need a Fixes: tag?
+> > > 
+> > 
+> > Probably. I briefly looked into this originally, saw that this code was
+> > introduced/modified across a span of commits and skipped it because it
+> > wasn't immediately clear which singular commit may have introduced the
+> > bug(s). Since these are now separate patches, I'd probably go with
+> > 58d43a7e3263 ("xfs: pass perags around in fsmap data dev functions") for
+> > this one (since it introduced the use of sb_agcount) and f250eedcf762
+> > ("xfs: make for_each_perag... a first class citizen") for the next
+> > patch.
+> > 
+> > That said, technically we could probably refer to the latter for both of
+> > these fixes as a suitable enough catchall for the intended purpose of
+> > the Fixes tag. I suspect the fundamental problem actually exists in that
+> > base patch because for_each_perag() iterates solely based on pag !=
+> > NULL. It seems a little odd that the sb_agcount usage is not introduced
+> > until a couple patches later, but I suppose that could just be
+> > considered a dependency. In reality, it's probably unlikely to ever have
+> > a stable kernel at that intermediate point of a rework series so it
+> > might not matter much either way. I don't really have a preference one
+> > way or the other. Your call..?
+> 
+> Those fixes tags seem like a reasonable breadcrumb for finding fixes.
+> I'll add them to the respective patches on commit.  So for this third
+> one:
+> 
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> 
 
-On 10/14/21 10:06 AM, Jason Gunthorpe wrote:
-> On Thu, Oct 14, 2021 at 10:39:28AM -0500, Alex Sierra wrote:
->> From: Ralph Campbell <rcampbell@nvidia.com>
->>
->> ZONE_DEVICE struct pages have an extra reference count that complicates the
->> code for put_page() and several places in the kernel that need to check the
->> reference count to see that a page is not being used (gup, compaction,
->> migration, etc.). Clean up the code so the reference count doesn't need to
->> be treated specially for ZONE_DEVICE.
->>
->> Signed-off-by: Ralph Campbell <rcampbell@nvidia.com>
->> Signed-off-by: Alex Sierra <alex.sierra@amd.com>
->> Reviewed-by: Christoph Hellwig <hch@lst.de>
->> ---
->> v2:
->> AS: merged this patch in linux 5.11 version
->>
->> v5:
->> AS: add condition at try_grab_page to check for the zone device type, while
->> page ref counter is checked less/equal to zero. In case of device zone, pages
->> ref counter are initialized to zero.
->>
->> v7:
->> AS: fix condition at try_grab_page added at v5, is invalid. It supposed
->> to fix xfstests/generic/413 test, however, there's a known issue on
->> this test where DAX mapped area DIO to non-DAX expect to fail.
->> https://patchwork.kernel.org/project/fstests/patch/1489463960-3579-1-git-send-email-xzhou@redhat.com
->> This condition was removed after rebase over patch series
->> https://lore.kernel.org/r/20210813044133.1536842-4-jhubbard@nvidia.com
->> ---
->>   arch/powerpc/kvm/book3s_hv_uvmem.c     |  2 +-
->>   drivers/gpu/drm/nouveau/nouveau_dmem.c |  2 +-
->>   fs/dax.c                               |  4 +-
->>   include/linux/dax.h                    |  2 +-
->>   include/linux/memremap.h               |  7 +--
->>   include/linux/mm.h                     | 11 ----
->>   lib/test_hmm.c                         |  2 +-
->>   mm/internal.h                          |  8 +++
->>   mm/memcontrol.c                        |  6 +--
->>   mm/memremap.c                          | 69 +++++++-------------------
->>   mm/migrate.c                           |  5 --
->>   mm/page_alloc.c                        |  3 ++
->>   mm/swap.c                              | 45 ++---------------
->>   13 files changed, 46 insertions(+), 120 deletions(-)
-> Has anyone tested this with FSDAX? Does get_user_pages() on fsdax
-> backed memory still work?
+Thanks. Do you want me to post my v3 with the style and tag fixes or
+have you already made those changes?
 
-I ran xfstests-dev using the kernel boot option to "fake" a pmem device
-when I first posted this patch. The tests ran OK (or at least the same
-tests passed with and without my patch). However, I could never really
-convince myself the changes were "OK" for fsdax since I didn't understand
-the code that well. I would still like to see a xfsdax maintainer or
-expert ACK this change.
+> > > Also ... should we be checking for agno <= agcount-1 for the initial
+> > > xfs_perag_get in the first for loop clause of for_each_perag_range?
+> > > I /think/ the answer is that the current users are careful enough to
+> > > check that race, but I haven't looked exhaustively.
+> > > 
+> > 
+> > Not sure I follow... for_each_perag_range() is a more generic variant
+> > that doesn't know or care about sb_agcount. I think it should support
+> > the ability to span an arbitrary range of perags regardless of
+> > sb_agcount. Hm?
+> 
+> Oh, I was idly wondering if these iterators ought to have one more
+> training wheel where the loop would be skipped entirely if you did
+> something buggy such as:
+> 
+> agno = mp->m_sb.sb_agcount;
+> /* time goes by */
+> for_each_perag_from(mp, agno...)
+> 	/* stuff */
+> 
+> Normally that would be skipped since xfs_perag_get(sb_agcount) returns
+> NULL, except in the case that it's racing with growfs.  But, some
+> malfunction like this should be fairly easy to spot even in the common
+> case.
+> 
 
-https://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git
+Oh, I see. Yeah, I think technically that would be more defensive logic.
+We might be able to repurpose xfs_perag_next() into something more
+generic that also covers the init case, but I'm not terribly concerned
+with that type of misuse in the context of this patch (and not sure it
+warrants the quirky logic if there are bigger changes pending with these
+macros anyways).
 
-> What refcount value does the struct pages have when they are installed
-> in the PTEs? Remember a 0 refcount will make all the get_user_pages()
-> fail.
->
-> I'm looking at the call path starting in ext4_punch_hole() and I would
-> expect to see something manipulating the page ref count before
-> the ext4_break_layouts() call path gets to the dax_page_unused() test.
->
-> All I see is we go into unmap_mapping_pages() - that would normally
-> put back the page references held by PTEs but insert_pfn() has this:
->
-> 	if (pfn_t_devmap(pfn))
-> 		entry = pte_mkdevmap(pfn_t_pte(pfn, prot));
->
-> And:
->
-> static inline pte_t pte_mkdevmap(pte_t pte)
-> {
-> 	return pte_set_flags(pte, _PAGE_SPECIAL|_PAGE_DEVMAP);
-> }
->
-> Which interacts with vm_normal_page():
->
-> 		if (pte_devmap(pte))
-> 			return NULL;
->
-> To disable that refcounting?
->
-> So... I have a feeling this will have PTEs pointing to 0 refcount
-> pages? Unless FSDAX is !pte_devmap which is not the case, right?
->
-> This seems further confirmed by this comment:
->
-> 	/*
-> 	 * If we race get_user_pages_fast() here either we'll see the
-> 	 * elevated page count in the iteration and wait, or
-> 	 * get_user_pages_fast() will see that the page it took a reference
-> 	 * against is no longer mapped in the page tables and bail to the
-> 	 * get_user_pages() slow path.  The slow path is protected by
-> 	 * pte_lock() and pmd_lock(). New references are not taken without
-> 	 * holding those locks, and unmap_mapping_pages() will not zero the
-> 	 * pte or pmd without holding the respective lock, so we are
-> 	 * guaranteed to either see new references or prevent new
-> 	 * references from being established.
-> 	 */
->
-> Which seems to explain this scheme relies on unmap_mapping_pages() to
-> fence GUP_fast, not on GUP_fast observing 0 refcounts when it should
-> stop.
->
-> This seems like it would be properly fixed by using normal page
-> refcounting for PTEs - ie stop using special for these pages?
->
-> Does anyone know why devmap is pte_special anyhow?
->
->> +void free_zone_device_page(struct page *page)
->> +{
->> +	switch (page->pgmap->type) {
->> +	case MEMORY_DEVICE_PRIVATE:
->> +		free_device_page(page);
->> +		return;
->> +	case MEMORY_DEVICE_FS_DAX:
->> +		/* notify page idle */
->> +		wake_up_var(&page->_refcount);
->> +		return;
-> It is not for this series, but I wonder if we should just always call
-> ops->page_free and have free_device_page() logic in that callback for
-> the non-fs-dax cases?
->
-> For instance where is the mem_cgroup_charge() call to pair with the
-> mem_cgroup_uncharge() in free_device_page()?
->
-> Isn't cgroup charging (or not) the responsibility of the "allocator"
-> eg the pgmap_ops owner?
->
-> Jason
+Brian
+
+> --D
+> 
+> > > Welcome back, by the way. :)
+> > > 
+> > 
+> > Thanks!
+> > 
+> > Brian
+> > 
+> > > --D
+> > > 
+> > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > > ---
+> > > >  fs/xfs/libxfs/xfs_ag.h | 2 +-
+> > > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > > > 
+> > > > diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
+> > > > index cf8baae2ba18..b8cc5017efba 100644
+> > > > --- a/fs/xfs/libxfs/xfs_ag.h
+> > > > +++ b/fs/xfs/libxfs/xfs_ag.h
+> > > > @@ -142,7 +142,7 @@ struct xfs_perag *xfs_perag_next(
+> > > >  		(pag) = xfs_perag_next((pag), &(agno)))
+> > > >  
+> > > >  #define for_each_perag_from(mp, agno, pag) \
+> > > > -	for_each_perag_range((mp), (agno), (mp)->m_sb.sb_agcount, (pag))
+> > > > +	for_each_perag_range((mp), (agno), (mp)->m_sb.sb_agcount - 1, (pag))
+> > > >  
+> > > >  
+> > > >  #define for_each_perag(mp, agno, pag) \
+> > > > -- 
+> > > > 2.31.1
+> > > > 
+> > > 
+> > 
+> 
+
