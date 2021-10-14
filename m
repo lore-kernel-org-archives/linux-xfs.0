@@ -2,131 +2,152 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19E18C433FE
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 11:46:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29A09C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 14:10:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 01B4461163
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 11:46:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0FFC2610EA
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 14:10:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231254AbhJNLs5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 Oct 2021 07:48:57 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:57600 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231195AbhJNLs4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Oct 2021 07:48:56 -0400
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id C454721A74;
-        Thu, 14 Oct 2021 11:46:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1634212009; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
+        id S231417AbhJNOMr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 Oct 2021 10:12:47 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:30258 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231388AbhJNOMq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Oct 2021 10:12:46 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1634220641;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=wyaP3FH3PLclKjDKzeDI/4MiW25bGyBys//UvUZ3Dtc=;
-        b=oGF2SOMb+pNZDg14b6Db7pdF4DQSHbGw0lc7CMPv+bf+1B3mR4Wc+QoF8G3bESLpiicgq3
-        1oCC9VPDJ+OIF1PQO01uxozfS+WjRUmcVwp3ibJ9PrbIafhtupqhCv9IGsA+Y6IxQSHcd3
-        zJkxyTtr2HEu6eddciChxUNXtRP69tQ=
-Received: from suse.cz (unknown [10.100.201.86])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by relay2.suse.de (Postfix) with ESMTPS id 95BE2A3B83;
-        Thu, 14 Oct 2021 11:46:49 +0000 (UTC)
-Date:   Thu, 14 Oct 2021 13:46:48 +0200
-From:   Michal Hocko <mhocko@suse.com>
-To:     David Sterba <dsterba@suse.cz>
-Cc:     Dave Chinner <david@fromorbit.com>, NeilBrown <neilb@suse.de>,
-        Vlastimil Babka <vbabka@suse.cz>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Mel Gorman <mgorman@suse.de>, Jonathan Corbet <corbet@lwn.net>,
-        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-mm@kvack.org, linux-kernel@vger.kernel.org,
-        linux-doc@vger.kernel.org
-Subject: Re: [PATCH 2/6] MM: improve documentation for __GFP_NOFAIL
-Message-ID: <YWgYqNOUE/Sx7WeZ@dhcp22.suse.cz>
-References: <eba04a07-99da-771a-ab6b-36de41f9f120@suse.cz>
- <20211006231452.GF54211@dread.disaster.area>
- <YV7G7gyfZkmw7/Ae@dhcp22.suse.cz>
- <163364854551.31063.4377741712039731672@noble.neil.brown.name>
- <YV/31+qXwqEgaxJL@dhcp22.suse.cz>
- <20211008223649.GJ54211@dread.disaster.area>
- <YWQmsESyyiea0zle@dhcp22.suse.cz>
- <20211013023231.GV2361455@dread.disaster.area>
- <YWaYUsXgXS6GXM+M@dhcp22.suse.cz>
- <20211014113201.GA19582@twin.jikos.cz>
+        bh=/bP7eAe58KmRZqx0g7n7Pk9RXA+OSk9FFKouwIoobiQ=;
+        b=MC+G+32F12zDxSQRZxQ9Drn8P9kHyjVOcKjpnTN1grX7YJmRNUG9QTxBL+K9kxL3cLl7JY
+        RRhLa0JBrX57g+Fz65goDlrQm+KfV3BynsJTtvv+rbGbjA/BihyeD+JpK/v/qvBwzanPQL
+        DU9gpEZrZiOcMC8pBWCetNgMkT28IZU=
+Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com
+ [209.85.160.197]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-161-hyVixiDaMOWAgmep3V_vJw-1; Thu, 14 Oct 2021 10:10:40 -0400
+X-MC-Unique: hyVixiDaMOWAgmep3V_vJw-1
+Received: by mail-qt1-f197.google.com with SMTP id w12-20020ac80ecc000000b002a7a4cd22faso1444835qti.4
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Oct 2021 07:10:40 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=/bP7eAe58KmRZqx0g7n7Pk9RXA+OSk9FFKouwIoobiQ=;
+        b=saan/ctjZoXvzqR907UO9xZ1KQkFPG3Q/hCp13nkJ1tvb12AtOAmNPheiwFuPk4kUq
+         BsrhDyzp2T0YLpINLOEAG+aKP7zgReOHK+iRVAEFKFVq0jM0eKCmpytpUMmLxs1jSdGF
+         BsRo7Wih0SQ2ohTAkqpedcyrizDPLpKoSJ/And0b2yTqzb5tPkDI23CZ4+Xaw6CmxnbO
+         VkHkws7PPxvsagskl29TA2YkVlONrAP+hsrEN5ENp8JCEwQ4IaJlLIKqAGJELe1D4qWr
+         fzZRS8K0x633gOFvHbgp1rr3ewa04jeffvi7yly29rrUWuCEWJglWCmCekfju+0dN78u
+         FUZA==
+X-Gm-Message-State: AOAM531lUF0XVQO2lo2ic+46lXRFtmaNMx01Vx21BiS63F+OFYnxtiDQ
+        XQ/hWJXU0uvHXYBSvPVptd1rza3oFyb4B+2QY6utuvPQ8wdZELMxSUPA/crMqN08d1x4VLFbYcU
+        hVmWG3Dlg93UzljVIYeVx
+X-Received: by 2002:a05:620a:4448:: with SMTP id w8mr4940856qkp.261.1634220639427;
+        Thu, 14 Oct 2021 07:10:39 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJxZMTIZaj6KlZYRyQ5g94izIbr1+qA6aAe+68yUz5mgD0kHRZ8IYQOHsgkv8ZCGQgkNwig9Vw==
+X-Received: by 2002:a05:620a:4448:: with SMTP id w8mr4940828qkp.261.1634220639166;
+        Thu, 14 Oct 2021 07:10:39 -0700 (PDT)
+Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
+        by smtp.gmail.com with ESMTPSA id r9sm1423115qtx.15.2021.10.14.07.10.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 14 Oct 2021 07:10:38 -0700 (PDT)
+Date:   Thu, 14 Oct 2021 10:10:36 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2 3/4] xfs: terminate perag iteration reliably on agcount
+Message-ID: <YWg6XNufgGOUXNnI@bfoster>
+References: <20211012165203.1354826-1-bfoster@redhat.com>
+ <20211012165203.1354826-4-bfoster@redhat.com>
+ <20211012190822.GN24307@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211014113201.GA19582@twin.jikos.cz>
+In-Reply-To: <20211012190822.GN24307@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu 14-10-21 13:32:01, David Sterba wrote:
-> On Wed, Oct 13, 2021 at 10:26:58AM +0200, Michal Hocko wrote:
-> > > crap like this (found in btrfs):
-> > > 
-> > >                 /*                                                               
-> > >                  * We're holding a transaction handle, so use a NOFS memory      
-> > >                  * allocation context to avoid deadlock if reclaim happens.      
-> > >                  */                                                              
-> > >                 nofs_flag = memalloc_nofs_save();                                
-> > >                 value = kmalloc(size, GFP_KERNEL);                               
-> > >                 memalloc_nofs_restore(nofs_flag);                                
+On Tue, Oct 12, 2021 at 12:08:22PM -0700, Darrick J. Wong wrote:
+> On Tue, Oct 12, 2021 at 12:52:02PM -0400, Brian Foster wrote:
+> > The for_each_perag_from() iteration macro relies on sb_agcount to
+> > process every perag currently within EOFS from a given starting
+> > point. It's perfectly valid to have perag structures beyond
+> > sb_agcount, however, such as if a growfs is in progress. If a perag
+> > loop happens to race with growfs in this manner, it will actually
+> > attempt to process the post-EOFS perag where ->pag_agno ==
+> > sb_agcount. This is reproduced by xfs/104 and manifests as the
+> > following assert failure in superblock write verifier context:
 > > 
-> > Yes this looks wrong indeed! If I were to review such a code I would ask
-> > why the scope cannot match the transaction handle context. IIRC jbd does
-> > that.
+> >  XFS: Assertion failed: agno < mp->m_sb.sb_agcount, file: fs/xfs/libxfs/xfs_types.c, line: 22
+> > 
+> > Update the corresponding macro to only process perags that are
+> > within the current sb_agcount.
 > 
-> Adding the transaction start/end as the NOFS scope is a long term plan
-> and going on for years, because it's not a change we would need in
-> btrfs, but rather a favor to MM to switch away from "GFP_NOFS everywhere
-> because it's easy".
+> Does this need a Fixes: tag?
 > 
-> The first step was to convert the easy cases. Almost all safe cases
-> switching GFP_NOFS to GFP_KERNEL have happened. Another step is to
-> convert GFP_NOFS to memalloc_nofs_save/GFP_KERNEL/memalloc_nofs_restore
-> in contexts where we know we'd rely on the transaction NOFS scope in the
-> future. Once this is implemented, the memalloc_nofs_* calls are deleted
-> and it works as expected.  Now you may argue that the switch could be
-> changing GFP_NOFS to GFP_KERNEL at that time but that is not that easy
-> to review or reason about in the whole transaction context in all
-> allocations.
-> 
-> This leads to code that was found in __btrfs_set_acl and called crap
-> or wrong, because perhaps the background and the bigger plan is not
-> immediately obvious. I hope the explanation above it puts it to the
-> right perspective.
 
-Yes it helps. Thanks for the clarification because this is far from
-obvious and changelogs I've checked do not mention this high level plan.
-I would have gone with a /* TODO: remove me once transactions use scopes... */
-but this is obviously your call.
+Probably. I briefly looked into this originally, saw that this code was
+introduced/modified across a span of commits and skipped it because it
+wasn't immediately clear which singular commit may have introduced the
+bug(s). Since these are now separate patches, I'd probably go with
+58d43a7e3263 ("xfs: pass perags around in fsmap data dev functions") for
+this one (since it introduced the use of sb_agcount) and f250eedcf762
+("xfs: make for_each_perag... a first class citizen") for the next
+patch.
 
+That said, technically we could probably refer to the latter for both of
+these fixes as a suitable enough catchall for the intended purpose of
+the Fixes tag. I suspect the fundamental problem actually exists in that
+base patch because for_each_perag() iterates solely based on pag !=
+NULL. It seems a little odd that the sb_agcount usage is not introduced
+until a couple patches later, but I suppose that could just be
+considered a dependency. In reality, it's probably unlikely to ever have
+a stable kernel at that intermediate point of a rework series so it
+might not matter much either way. I don't really have a preference one
+way or the other. Your call..?
+
+> Also ... should we be checking for agno <= agcount-1 for the initial
+> xfs_perag_get in the first for loop clause of for_each_perag_range?
+> I /think/ the answer is that the current users are careful enough to
+> check that race, but I haven't looked exhaustively.
 > 
-> The other class of scoped NOFS protection is around vmalloc-based
-> allocations but that's for a different reason, would be solved by the
-> same transaction start/end conversion as well.
+
+Not sure I follow... for_each_perag_range() is a more generic variant
+that doesn't know or care about sb_agcount. I think it should support
+the ability to span an arbitrary range of perags regardless of
+sb_agcount. Hm?
+
+> Welcome back, by the way. :)
 > 
-> I'm working on that from time to time but this usually gets pushed down
-> in the todo list. It's changing a lot of code, from what I've researched
-> so far cannot be done at once and would probably introduce bugs hard to
-> hit because of the external conditions (allocator, system load, ...).
-> 
-> I have a plan to do that incrementally, adding assertions and converting
-> functions in small batches to be able to catch bugs early, but I'm not
-> exactly thrilled to start such endeavour in addition to normal
-> development bug hunting.
-> 
-> To get things moving again, I've refreshed the patch adding stubs and
-> will try to find the best timing for merg to avoid patch conflicts, but
-> no promises.
 
 Thanks!
 
--- 
-Michal Hocko
-SUSE Labs
+Brian
+
+> --D
+> 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_ag.h | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
+> > index cf8baae2ba18..b8cc5017efba 100644
+> > --- a/fs/xfs/libxfs/xfs_ag.h
+> > +++ b/fs/xfs/libxfs/xfs_ag.h
+> > @@ -142,7 +142,7 @@ struct xfs_perag *xfs_perag_next(
+> >  		(pag) = xfs_perag_next((pag), &(agno)))
+> >  
+> >  #define for_each_perag_from(mp, agno, pag) \
+> > -	for_each_perag_range((mp), (agno), (mp)->m_sb.sb_agcount, (pag))
+> > +	for_each_perag_range((mp), (agno), (mp)->m_sb.sb_agcount - 1, (pag))
+> >  
+> >  
+> >  #define for_each_perag(mp, agno, pag) \
+> > -- 
+> > 2.31.1
+> > 
+> 
+
