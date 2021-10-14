@@ -2,64 +2,72 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3ECC9C433FE
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 16:53:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C8D4C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 16:58:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 217F860F59
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 16:53:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4047D60F6F
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 16:58:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231825AbhJNQ4C (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 Oct 2021 12:56:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45344 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230244AbhJNQ4B (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Oct 2021 12:56:01 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D6A1C061570;
-        Thu, 14 Oct 2021 09:53:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=AP05hDHW3jnp/8SKRcKLGgYaYjlel0b7xcFX3XAvvcQ=; b=WrkEY1NXq2B+vb3ir5rv+AxuPg
-        cQLMnetlragb8L7WOZfh2WRUI5amnBlq8PlDunGKpTP6nGfIOIcYnWFF9UuTTFHIVKNRkM+vx+2Dy
-        COMPWhQnxXy5qu73bdmTU7k0CJi1gGHXUvMqopwf5oBqTkX1+Q9pDzR3CrmrDDfC0EKlK4c8ZaMK7
-        sDvAfPn5lhegMNYQnZ7pKkzJ51QUPqeOSUOnmsleGDbkMn9aU+nkXYPeWigSuK38OwbcmnkhuI+9K
-        mGfn626q1LkPL8F2E1A8enzyO5vqH5MPRzxIZ3FVVVW2IH8w34E9HLHyAbDdNUkG177gXsh8NBe0L
-        iOqMMBMQ==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mb3y7-008TLK-Fz; Thu, 14 Oct 2021 16:52:58 +0000
-Date:   Thu, 14 Oct 2021 17:52:35 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Alex Sierra <alex.sierra@amd.com>
-Cc:     akpm@linux-foundation.org, Felix.Kuehling@amd.com,
-        linux-mm@kvack.org, rcampbell@nvidia.com,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        hch@lst.de, jgg@nvidia.com, jglisse@redhat.com, apopple@nvidia.com
-Subject: Re: [PATCH v1 2/2] mm: remove extra ZONE_DEVICE struct page refcount
-Message-ID: <YWhgU2vJfTN6XOyl@casper.infradead.org>
-References: <20211014153928.16805-1-alex.sierra@amd.com>
- <20211014153928.16805-3-alex.sierra@amd.com>
+        id S232430AbhJNRAU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 Oct 2021 13:00:20 -0400
+Received: from smtprelay0066.hostedemail.com ([216.40.44.66]:47232 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S231327AbhJNRAT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Oct 2021 13:00:19 -0400
+X-Greylist: delayed 371 seconds by postgrey-1.27 at vger.kernel.org; Thu, 14 Oct 2021 13:00:19 EDT
+Received: from smtprelay.hostedemail.com (10.5.19.251.rfc1918.com [10.5.19.251])
+        by smtpgrave01.hostedemail.com (Postfix) with ESMTP id 39235183AB0B7
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Oct 2021 16:52:04 +0000 (UTC)
+Received: from omf07.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
+        by smtprelay08.hostedemail.com (Postfix) with ESMTP id AA5AC182CED2A;
+        Thu, 14 Oct 2021 16:52:02 +0000 (UTC)
+Received: from [HIDDEN] (Authenticated sender: joe@perches.com) by omf07.hostedemail.com (Postfix) with ESMTPA id 54A4C315D79;
+        Thu, 14 Oct 2021 16:52:01 +0000 (UTC)
+Message-ID: <c8ee50d4bc36ff9d38e0ffe4cd8e28be0424918b.camel@perches.com>
+Subject: Re: [PATCH] xfs: replace snprintf in show functions with sysfs_emit
+From:   Joe Perches <joe@perches.com>
+To:     Qing Wang <wangqing@vivo.com>,
+        "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date:   Thu, 14 Oct 2021 09:51:58 -0700
+In-Reply-To: <1634095771-4671-1-git-send-email-wangqing@vivo.com>
+References: <1634095771-4671-1-git-send-email-wangqing@vivo.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+User-Agent: Evolution 3.40.0-1 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20211014153928.16805-3-alex.sierra@amd.com>
+Content-Transfer-Encoding: 8bit
+X-Stat-Signature: n78zqpxar9xcf5mue7is394uj6phozjg
+X-Rspamd-Server: rspamout03
+X-Rspamd-Queue-Id: 54A4C315D79
+X-Session-Marker: 6A6F6540706572636865732E636F6D
+X-Session-ID: U2FsdGVkX18LhRhzIELuab0K9xBuEwXc1HSgHPw0hN0=
+X-HE-Tag: 1634230321-487330
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 14, 2021 at 10:39:28AM -0500, Alex Sierra wrote:
-> From: Ralph Campbell <rcampbell@nvidia.com>
+On Tue, 2021-10-12 at 20:29 -0700, Qing Wang wrote:
+> coccicheck complains about the use of snprintf() in sysfs show functions.
 > 
-> ZONE_DEVICE struct pages have an extra reference count that complicates the
-> code for put_page() and several places in the kernel that need to check the
-> reference count to see that a page is not being used (gup, compaction,
-> migration, etc.). Clean up the code so the reference count doesn't need to
-> be treated specially for ZONE_DEVICE.
+> Fix the coccicheck warning:
+> WARNING: use scnprintf or sprintf.
 > 
-> Signed-off-by: Ralph Campbell <rcampbell@nvidia.com>
-> Signed-off-by: Alex Sierra <alex.sierra@amd.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Use sysfs_emit instead of scnprintf or sprintf makes more sense.
+[]
+> diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+[]
+> @@ -104,7 +104,7 @@ bug_on_assert_show(
+>  	struct kobject		*kobject,
+>  	char			*buf)
+>  {
+> -	return snprintf(buf, PAGE_SIZE, "%d\n", xfs_globals.bug_on_assert ? 1 : 0);
+> +	return sysfs_emit(buf, "%d\n", xfs_globals.bug_on_assert ? 1 : 0);
 
-Reviewed-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+trivia:
+
+The ?: is not necessary as xfs_globals.bug_on_assert is a bool
+and would have an implicit cast done.
+
+	return sysfs_emit(buf, "%d\n", xfs_globals.bug_on_assert);
+
+
