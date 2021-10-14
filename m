@@ -2,130 +2,256 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1ACA4C433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 17:59:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47650C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 18:00:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EE598610EA
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 17:59:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 21F8061056
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 18:00:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233059AbhJNSBN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 Oct 2021 14:01:13 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:38826 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233136AbhJNSBN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Oct 2021 14:01:13 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1634234348;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=6DnwLH6v1rU2RnGOl6QGEKyBjIbo6ISfdN//eUJ8P14=;
-        b=VY443z8PIQPxYX0os93lv1aO4L3XIqckrlwGM3fw+rYB3lyWCoF5CL72RmG8/H/OTw0dSL
-        MiKFw9rsF9i3shVQZ/u5XBJTgN6PeQzgJaNSp/f8+Mv6EOPinygajqsv62LL97422dLcwx
-        mekwkk5PDHhzGz/F83awqWIq5O45nkA=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-136-uBCFse1qNau7MndPWCfQ3Q-1; Thu, 14 Oct 2021 13:59:06 -0400
-X-MC-Unique: uBCFse1qNau7MndPWCfQ3Q-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 8E5D41006ABA
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Oct 2021 17:59:05 +0000 (UTC)
-Received: from bfoster.redhat.com (unknown [10.22.8.90])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 4CBC45C1A3
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Oct 2021 17:59:05 +0000 (UTC)
-From:   Brian Foster <bfoster@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v3 4/4] xfs: fix perag reference leak on iteration race with growfs
-Date:   Thu, 14 Oct 2021 13:59:02 -0400
-Message-Id: <20211014175902.1519172-5-bfoster@redhat.com>
-In-Reply-To: <20211014175902.1519172-1-bfoster@redhat.com>
-References: <20211014175902.1519172-1-bfoster@redhat.com>
+        id S233632AbhJNSCe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 Oct 2021 14:02:34 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37950 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233764AbhJNSCb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 14 Oct 2021 14:02:31 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 218CB61056;
+        Thu, 14 Oct 2021 18:00:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1634234426;
+        bh=kNjkeDBzuQfKoxHXcqV0S2llnADIp119vN6i/9sLhI0=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=G+2O+xStpmBdi2GvmMWeubjNCIO1twn71R2X9fWluUEAyGo3Si35GkyuwT73m2Cj2
+         djRXu/apHaUwV+JT5JfphXPS0aquut7uuFllJdLigvBAOVyJdZohTpOK7tIT44xFgi
+         HnWZYT1YZHjyH1cVLcEs0yQw31IexSnUHC+tvGy9GusWytkK9TiJMaSGYnH2em7IsD
+         7mybQ9s2WZ+TOb/8eX6OubU8D1O+0hnsmjrg3E4fP8UpIInWtMMnoh1iZIxAnSUs8/
+         2xLgsR/+OBsMaJCsyvCOkYeihH9cghkssYwvRv0n67UwWs/GSck8bIDV5m2A1ukzXl
+         kReRVmUiaL9VQ==
+Date:   Thu, 14 Oct 2021 11:00:25 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
+Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        nvdimm@lists.linux.dev, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org, dan.j.williams@intel.com,
+        david@fromorbit.com, hch@infradead.org, jane.chu@oracle.com
+Subject: Re: [PATCH v7 2/8] dax: Introduce holder for dax_device
+Message-ID: <20211014180025.GC24333@magnolia>
+References: <20210924130959.2695749-1-ruansy.fnst@fujitsu.com>
+ <20210924130959.2695749-3-ruansy.fnst@fujitsu.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210924130959.2695749-3-ruansy.fnst@fujitsu.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The for_each_perag*() set of macros are hacky in that some (i.e.
-those based on sb_agcount) rely on the assumption that perag
-iteration terminates naturally with a NULL perag at the specified
-end_agno. Others allow for the final AG to have a valid perag and
-require the calling function to clean up any potential leftover
-xfs_perag reference on termination of the loop.
+On Fri, Sep 24, 2021 at 09:09:53PM +0800, Shiyang Ruan wrote:
+> To easily track filesystem from a pmem device, we introduce a holder for
+> dax_device structure, and also its operation.  This holder is used to
+> remember who is using this dax_device:
+>  - When it is the backend of a filesystem, the holder will be the
+>    superblock of this filesystem.
+>  - When this pmem device is one of the targets in a mapped device, the
+>    holder will be this mapped device.  In this case, the mapped device
+>    has its own dax_device and it will follow the first rule.  So that we
+>    can finally track to the filesystem we needed.
+> 
+> The holder and holder_ops will be set when filesystem is being mounted,
+> or an target device is being activated.
+> 
+> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+> ---
+>  drivers/dax/super.c | 59 +++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/dax.h | 29 ++++++++++++++++++++++
+>  2 files changed, 88 insertions(+)
+> 
+> diff --git a/drivers/dax/super.c b/drivers/dax/super.c
+> index 48ce86501d93..7d4a11dcba90 100644
+> --- a/drivers/dax/super.c
+> +++ b/drivers/dax/super.c
+> @@ -23,7 +23,10 @@
+>   * @cdev: optional character interface for "device dax"
+>   * @host: optional name for lookups where the device path is not available
+>   * @private: dax driver private data
+> + * @holder_data: holder of a dax_device: could be filesystem or mapped device
+>   * @flags: state and boolean properties
+> + * @ops: operations for dax_device
+> + * @holder_ops: operations for the inner holder
+>   */
+>  struct dax_device {
+>  	struct hlist_node list;
+> @@ -31,8 +34,10 @@ struct dax_device {
+>  	struct cdev cdev;
+>  	const char *host;
+>  	void *private;
+> +	void *holder_data;
+>  	unsigned long flags;
+>  	const struct dax_operations *ops;
+> +	const struct dax_holder_operations *holder_ops;
+>  };
+>  
+>  static dev_t dax_devt;
+> @@ -374,6 +379,29 @@ int dax_zero_page_range(struct dax_device *dax_dev, pgoff_t pgoff,
+>  }
+>  EXPORT_SYMBOL_GPL(dax_zero_page_range);
+>  
+> +int dax_holder_notify_failure(struct dax_device *dax_dev, loff_t offset,
+> +			      size_t size, int flags)
+> +{
+> +	int rc;
+> +
+> +	dax_read_lock();
+> +	if (!dax_alive(dax_dev)) {
+> +		rc = -ENXIO;
+> +		goto out;
+> +	}
+> +
+> +	if (!dax_dev->holder_data) {
+> +		rc = -EOPNOTSUPP;
+> +		goto out;
+> +	}
+> +
+> +	rc = dax_dev->holder_ops->notify_failure(dax_dev, offset, size, flags);
 
-Aside from providing a subtly inconsistent interface, the former
-variant is racy with growfs because growfs can create discoverable
-post-eofs perags before the final superblock update that completes
-the grow operation and increases sb_agcount. This leads to the
-following assert failure (reproduced by xfs/104) in the perag free
-path during unmount:
+Shouldn't this check if dax_dev->holder_ops != NULL before dereferencing
+it for the function call?  Imagine an implementation that wants to
+attach a ->notify_failure function to a dax_device, maintains its own
+lookup table, and decides that it doesn't need to set holder_data.
 
- XFS: Assertion failed: atomic_read(&pag->pag_ref) == 0, file: fs/xfs/libxfs/xfs_ag.c, line: 195
+(Or, imagine someone who writes a garbage into holder_data and *boom*)
 
-This occurs because one of the many for_each_perag() loops in the
-code that is expected to terminate with a NULL pag (and thus has no
-post-loop xfs_perag_put() check) raced with a growfs and found a
-non-NULL post-EOFS perag, but terminated naturally based on the
-end_agno check without releasing the post-EOFS perag.
+How does the locking work here?  If there's a media failure, we'll take
+dax_rwsem and call ->notify_failure.  If the ->notify_failure function
+wants to access the pmem to handle the error by calling back into the
+dax code, will that cause nested locking on dax_rwsem?
 
-Rework the iteration logic to lift the agno check from the main for
-loop conditional to the iteration helper function. The for loop now
-purely terminates on a NULL pag and xfs_perag_next() avoids taking a
-reference to any perag beyond end_agno in the first place.
+Jumping ahead a bit, I think the rmap btree accesses that the xfs
+implementation performs can cause xfs_buf(fer) cache IO, which would
+trigger that if the buffers aren't already in memory, if I'm reading
+this correctly?
 
-Fixes: f250eedcf762 ("xfs: make for_each_perag... a first class citizen")
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/libxfs/xfs_ag.h | 16 ++++++----------
- 1 file changed, 6 insertions(+), 10 deletions(-)
+> +out:
+> +	dax_read_unlock();
+> +	return rc;
+> +}
+> +EXPORT_SYMBOL_GPL(dax_holder_notify_failure);
+> +
+>  #ifdef CONFIG_ARCH_HAS_PMEM_API
+>  void arch_wb_cache_pmem(void *addr, size_t size);
+>  void dax_flush(struct dax_device *dax_dev, void *addr, size_t size)
+> @@ -618,6 +646,37 @@ void put_dax(struct dax_device *dax_dev)
+>  }
+>  EXPORT_SYMBOL_GPL(put_dax);
+>  
+> +void dax_set_holder(struct dax_device *dax_dev, void *holder,
+> +		const struct dax_holder_operations *ops)
+> +{
+> +	dax_write_lock();
+> +	if (!dax_alive(dax_dev)) {
+> +		dax_write_unlock();
+> +		return;
+> +	}
+> +
+> +	dax_dev->holder_data = holder;
+> +	dax_dev->holder_ops = ops;
+> +	dax_write_unlock();
 
-diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
-index 4585ebb3f450..3f597cad2c33 100644
---- a/fs/xfs/libxfs/xfs_ag.h
-+++ b/fs/xfs/libxfs/xfs_ag.h
-@@ -116,30 +116,26 @@ void xfs_perag_put(struct xfs_perag *pag);
- 
- /*
-  * Perag iteration APIs
-- *
-- * XXX: for_each_perag_range() usage really needs an iterator to clean up when
-- * we terminate at end_agno because we may have taken a reference to the perag
-- * beyond end_agno. Right now callers have to be careful to catch and clean that
-- * up themselves. This is not necessary for the callers of for_each_perag() and
-- * for_each_perag_from() because they terminate at sb_agcount where there are
-- * no perag structures in tree beyond end_agno.
-  */
- static inline struct xfs_perag *
- xfs_perag_next(
- 	struct xfs_perag	*pag,
--	xfs_agnumber_t		*agno)
-+	xfs_agnumber_t		*agno,
-+	xfs_agnumber_t		end_agno)
- {
- 	struct xfs_mount	*mp = pag->pag_mount;
- 
- 	*agno = pag->pag_agno + 1;
- 	xfs_perag_put(pag);
-+	if (*agno > end_agno)
-+		return NULL;
- 	return xfs_perag_get(mp, *agno);
- }
- 
- #define for_each_perag_range(mp, agno, end_agno, pag) \
- 	for ((pag) = xfs_perag_get((mp), (agno)); \
--		(pag) != NULL && (agno) <= (end_agno); \
--		(pag) = xfs_perag_next((pag), &(agno)))
-+		(pag) != NULL; \
-+		(pag) = xfs_perag_next((pag), &(agno), (end_agno)))
- 
- #define for_each_perag_from(mp, agno, pag) \
- 	for_each_perag_range((mp), (agno), (mp)->m_sb.sb_agcount - 1, (pag))
--- 
-2.31.1
+I guess this means that the holder has to detach itself before anyone
+calls kill_dax, or else a dead dax device ends up with a dangling
+reference to the holder?
 
+> +}
+> +EXPORT_SYMBOL_GPL(dax_set_holder);
+> +
+> +void *dax_get_holder(struct dax_device *dax_dev)
+> +{
+> +	void *holder;
+> +
+> +	dax_read_lock();
+> +	if (!dax_alive(dax_dev)) {
+> +		dax_read_unlock();
+> +		return NULL;
+> +	}
+> +
+> +	holder = dax_dev->holder_data;
+> +	dax_read_unlock();
+> +	return holder;
+> +}
+> +EXPORT_SYMBOL_GPL(dax_get_holder);
+> +
+>  /**
+>   * inode_dax: convert a public inode into its dax_dev
+>   * @inode: An inode with i_cdev pointing to a dax_dev
+> diff --git a/include/linux/dax.h b/include/linux/dax.h
+> index 097b3304f9b9..d273d59723cd 100644
+> --- a/include/linux/dax.h
+> +++ b/include/linux/dax.h
+> @@ -38,9 +38,24 @@ struct dax_operations {
+>  	int (*zero_page_range)(struct dax_device *, pgoff_t, size_t);
+>  };
+>  
+> +struct dax_holder_operations {
+> +	/*
+> +	 * notify_failure - notify memory failure into inner holder device
+> +	 * @dax_dev: the dax device which contains the holder
+> +	 * @offset: offset on this dax device where memory failure occurs
+> +	 * @size: length of this memory failure event
+> +	 * @flags: action flags for memory failure handler
+> +	 */
+> +	int (*notify_failure)(struct dax_device *dax_dev, loff_t offset,
+> +			size_t size, int flags);
+
+Shouldn't size be u64 or something?  Let's say that 8GB of your pmem go
+bad, wouldn't you want a single call?  Though I guess the current
+implementation only goes a single page at a time, doesn't it?
+
+> +};
+> +
+>  extern struct attribute_group dax_attribute_group;
+>  
+>  #if IS_ENABLED(CONFIG_DAX)
+> +void dax_set_holder(struct dax_device *dax_dev, void *holder,
+> +		const struct dax_holder_operations *ops);
+> +void *dax_get_holder(struct dax_device *dax_dev);
+>  struct dax_device *alloc_dax(void *private, const char *host,
+>  		const struct dax_operations *ops, unsigned long flags);
+>  void put_dax(struct dax_device *dax_dev);
+> @@ -70,6 +85,18 @@ static inline bool daxdev_mapping_supported(struct vm_area_struct *vma,
+>  	return dax_synchronous(dax_dev);
+>  }
+>  #else
+> +static inline struct dax_device *dax_get_by_host(const char *host)
+
+Not sure why this is being added here?  AFAICT none of the patches call
+this function...?
+
+--D
+
+> +{
+> +	return NULL;
+> +}
+> +static inline void dax_set_holder(struct dax_device *dax_dev, void *holder,
+> +		const struct dax_holder_operations *ops)
+> +{
+> +}
+> +static inline void *dax_get_holder(struct dax_device *dax_dev)
+> +{
+> +	return NULL;
+> +}
+>  static inline struct dax_device *alloc_dax(void *private, const char *host,
+>  		const struct dax_operations *ops, unsigned long flags)
+>  {
+> @@ -198,6 +225,8 @@ size_t dax_copy_to_iter(struct dax_device *dax_dev, pgoff_t pgoff, void *addr,
+>  		size_t bytes, struct iov_iter *i);
+>  int dax_zero_page_range(struct dax_device *dax_dev, pgoff_t pgoff,
+>  			size_t nr_pages);
+> +int dax_holder_notify_failure(struct dax_device *dax_dev, loff_t offset,
+> +		size_t size, int flags);
+>  void dax_flush(struct dax_device *dax_dev, void *addr, size_t size);
+>  
+>  ssize_t dax_iomap_rw(struct kiocb *iocb, struct iov_iter *iter,
+> -- 
+> 2.33.0
+> 
+> 
+> 
