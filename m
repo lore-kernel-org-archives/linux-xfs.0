@@ -2,256 +2,131 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47650C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 18:00:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5DA1C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 18:01:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 21F8061056
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 18:00:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AA15B61056
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Oct 2021 18:01:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233632AbhJNSCe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 Oct 2021 14:02:34 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37950 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233764AbhJNSCb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 14 Oct 2021 14:02:31 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 218CB61056;
-        Thu, 14 Oct 2021 18:00:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1634234426;
-        bh=kNjkeDBzuQfKoxHXcqV0S2llnADIp119vN6i/9sLhI0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=G+2O+xStpmBdi2GvmMWeubjNCIO1twn71R2X9fWluUEAyGo3Si35GkyuwT73m2Cj2
-         djRXu/apHaUwV+JT5JfphXPS0aquut7uuFllJdLigvBAOVyJdZohTpOK7tIT44xFgi
-         HnWZYT1YZHjyH1cVLcEs0yQw31IexSnUHC+tvGy9GusWytkK9TiJMaSGYnH2em7IsD
-         7mybQ9s2WZ+TOb/8eX6OubU8D1O+0hnsmjrg3E4fP8UpIInWtMMnoh1iZIxAnSUs8/
-         2xLgsR/+OBsMaJCsyvCOkYeihH9cghkssYwvRv0n67UwWs/GSck8bIDV5m2A1ukzXl
-         kReRVmUiaL9VQ==
-Date:   Thu, 14 Oct 2021 11:00:25 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        nvdimm@lists.linux.dev, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org, dan.j.williams@intel.com,
-        david@fromorbit.com, hch@infradead.org, jane.chu@oracle.com
-Subject: Re: [PATCH v7 2/8] dax: Introduce holder for dax_device
-Message-ID: <20211014180025.GC24333@magnolia>
-References: <20210924130959.2695749-1-ruansy.fnst@fujitsu.com>
- <20210924130959.2695749-3-ruansy.fnst@fujitsu.com>
-MIME-Version: 1.0
+        id S233803AbhJNSDn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 Oct 2021 14:03:43 -0400
+Received: from mail-bn1nam07on2061.outbound.protection.outlook.com ([40.107.212.61]:34949
+        "EHLO NAM02-BN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S233793AbhJNSDm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 14 Oct 2021 14:03:42 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=mgmJ5HRlS4ylOQbQcw1ULWD2QjMdcDZW1ledq4gCrs7j4TmY21eYIaZM+7ws79hwJdk6HHz/aPUt0k0o8mKHDKqOm3gBgaWzkgGjNIVBvJk0Iy4WMXO7A0ySgGRzKp7nJ8Wy5lRh5FnpFmX3YwhoIBILHpwirnGdihL/y8LTk9qCglbnLOvx0BkDNyNQhpOqSmrbdKwY4Jr0S/uQD4eFtFQHJw0zsjbyf8en1V9Cwe07RWOPEyGLXKnG5Nv6rdpmF81vTqZ4Ajzp0QiZeqyilpK4tjHO1EkU5BbXxNo9XCydDvcAOlTTGuJYZ0WmsYYMxPd3uluymgQIdAwV5AMrvw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=pTWeaN6k/Bpt+VIU1uOGBAwXLCiqUfRLhPyU/tj/XHg=;
+ b=UAY5ql79CeoPWrA8/Hv+8AK3Mnmvxitl4MSUVs0ZD8m8G7eCn8mk4lFa6ciDALxxH/9tP1k76/DYL0IR3BCHMMpqx7WFcypBLOxtLK05XIytylXAPI4bYSK2xtGt6qTTInkeA+fPMSwiVpz6IHzSgxH4MQig57hGndXQ5Z8bGBhPcKEqu+l4I0GUx0Gu5Gip0vFeU1QDRaMYm2xGva1w1Gwpc0lkx/HsIrXp/E8eztRTTfW+c3nd2TOXEhSoS2n//+JRkSCkza7+XHg449Y3j5KvFmDWezpTsl9uV6nmvmz2WgY2bZEhc9cnfGrLlBwBfSk1x2aJcL2BZV6lOXISsw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=pTWeaN6k/Bpt+VIU1uOGBAwXLCiqUfRLhPyU/tj/XHg=;
+ b=g4d3Q+zZ4tXudjsV7dNhuHoG2pD4vVWvUzfwlRy+3oWTCvfuo8rbS8YvWVbpwtwMRRyk/tLe+db13G05aJ6NOG6R76KW1HhBuqVHx5RjovzZpLImfQX23lwntIB1WzfAjFiBBdZqzZmdh95oTc0Eiw5Fvtkp3IPDHaeb1TMWcGo9kjJLtMSm1U823yPxcsYrIz+KPNTXIZjC8v1EZzMh3Hnbvefhjh+3Abnh+vW/YVSxBK42fiIC00Ix9KaxeAuv2wJZcWHNTJ6kAuHMHrsjwHcehd/BUsNAu9fCvjGxI3z/olmr1LoQneg7O7u9UgkSDkSkzD01K4w7o0ECLMic4w==
+Authentication-Results: nvidia.com; dkim=none (message not signed)
+ header.d=none;nvidia.com; dmarc=none action=none header.from=nvidia.com;
+Received: from BL0PR12MB5506.namprd12.prod.outlook.com (2603:10b6:208:1cb::22)
+ by BL1PR12MB5349.namprd12.prod.outlook.com (2603:10b6:208:31f::7) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4608.16; Thu, 14 Oct
+ 2021 18:01:33 +0000
+Received: from BL0PR12MB5506.namprd12.prod.outlook.com
+ ([fe80::e8af:232:915e:2f95]) by BL0PR12MB5506.namprd12.prod.outlook.com
+ ([fe80::e8af:232:915e:2f95%6]) with mapi id 15.20.4608.017; Thu, 14 Oct 2021
+ 18:01:33 +0000
+Date:   Thu, 14 Oct 2021 15:01:32 -0300
+From:   Jason Gunthorpe <jgg@nvidia.com>
+To:     Ralph Campbell <rcampbell@nvidia.com>
+Cc:     Alex Sierra <alex.sierra@amd.com>, akpm@linux-foundation.org,
+        Felix.Kuehling@amd.com, linux-mm@kvack.org,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        hch@lst.de, jglisse@redhat.com, apopple@nvidia.com,
+        willy@infradead.org
+Subject: Re: [PATCH v1 2/2] mm: remove extra ZONE_DEVICE struct page refcount
+Message-ID: <20211014180132.GA3567687@nvidia.com>
+References: <20211014153928.16805-1-alex.sierra@amd.com>
+ <20211014153928.16805-3-alex.sierra@amd.com>
+ <20211014170634.GV2744544@nvidia.com>
+ <eafbccb5-f94b-0ddd-bb46-7ee92ed36ee8@nvidia.com>
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210924130959.2695749-3-ruansy.fnst@fujitsu.com>
+In-Reply-To: <eafbccb5-f94b-0ddd-bb46-7ee92ed36ee8@nvidia.com>
+X-ClientProxiedBy: MN2PR16CA0064.namprd16.prod.outlook.com
+ (2603:10b6:208:234::33) To BL0PR12MB5506.namprd12.prod.outlook.com
+ (2603:10b6:208:1cb::22)
+MIME-Version: 1.0
+Received: from mlx.ziepe.ca (142.162.113.129) by MN2PR16CA0064.namprd16.prod.outlook.com (2603:10b6:208:234::33) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4608.16 via Frontend Transport; Thu, 14 Oct 2021 18:01:33 +0000
+Received: from jgg by mlx with local (Exim 4.94)        (envelope-from <jgg@nvidia.com>)        id 1mb52q-00F0Gn-G3; Thu, 14 Oct 2021 15:01:32 -0300
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 67f71548-4169-45a7-d721-08d98f3ca84e
+X-MS-TrafficTypeDiagnostic: BL1PR12MB5349:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <BL1PR12MB534938FADF618AD8F90B7974C2B89@BL1PR12MB5349.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:1443;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: TAx7q8UJaBbAeNdGpDcObsMuPlCQB561ARegScjE0sDb0xzRaJD+jCwHrW8/jtkK3WmgizXJ6nXPNKc4dwEr8ZAEFwYIoH7ctNDUL+cSAMLOLyugg7qMYCjjrVEXZ4HmmMSFcmMFdXsIj+nnf6C9exFcaMTXcPSgWiOnYbqQOZmfztOJ4sOETxJqQ3I7W5kh7eeOB8owxb3JszjCGjHwk3LG3iYV/2ok55Lyf3HIVhyi0pJ4JvmWfACiRdyI1Bmkv52DArK9AZT+DKakSop1umMNGsRRjh731DHkTg0TwY+1jowHC58mZOGMjOyJwvOGnyne0nBZHxgn7jr31t+CNqCHSDYTqzibJZil5qMNeIzj6T7r2tF20s6VhwxPHFNUyo8s8lcDsKZOxqySboE8BfNs83oijaGK8PGKQJCJU3KD05bWlki9Sf14OtaYolSDAi1Yfc3IccCdRHWwPDazVxGKkLG/p2bC04S1LVh3pZCjuL/S6QZHoJP8JaCvxoCT4IyC47mtct8EiVDJeoVIimeT4cuuz/YzV5eKH94TWNYINRmB0dPnX0YvUf8L6Vsu8LztIR4PyhV+Ahrzh7kXaBzrDBBXvVzwRz+IMCa9CtuSqMj7VDxI0dP1S8hT3N3Ii9ScJLyes0g0rOxrwEfWjA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL0PR12MB5506.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(86362001)(2906002)(426003)(8936002)(2616005)(508600001)(7416002)(9786002)(9746002)(38100700002)(1076003)(6862004)(4744005)(5660300002)(4326008)(6636002)(316002)(66476007)(36756003)(66946007)(8676002)(66556008)(186003)(33656002)(26005)(37006003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?As3jK/DyNCazXR6k/je9X5gZkXzkw1b60WjA67ZCPZm6zc+/CRQi4FeFEK0W?=
+ =?us-ascii?Q?uCX+sZEUoFMZpJg8xxfJgu26f9LsM6urVJGYVUPUGaG2oeknmRKU4ZSr/4TH?=
+ =?us-ascii?Q?qp+ENGwHY/TSFifyw+uecz5ibM69MqLkev4RqZEHMqdoUDar6bW8fTQoeiNw?=
+ =?us-ascii?Q?R5P/2z/jSqg5EMnkonfbiu8I3XmHETLIbgdry9M0/L5X4bMLeVSUIn9iB8Ya?=
+ =?us-ascii?Q?PzrYkJO4ngo+gzrUBf29zCJBzWKi5lcb2mdTKFC0+J1Y4EJ/QKC1kjJqshk8?=
+ =?us-ascii?Q?1yMz/0oOyodUDS42rxfg0UrcsiRTZaF1/wGJxhOX9fq62TiSIQvpdglXqSZz?=
+ =?us-ascii?Q?rO/x1rZbRbkQKUJb0d3HtUolLuPTIbBfyfsGadEBmQGQ9LwHviRiH77QYq6g?=
+ =?us-ascii?Q?8uA8NWG9ZYU+HW+GbDjyGasDu/BuTik6LhnUUFTt+q7A7vqvQn4m7vHZTGiB?=
+ =?us-ascii?Q?TSi1SjOo0y3cP7VtP/pxlbEahN/P50WtQVCRwAvt1qupBIFdExjEOKsPGGVB?=
+ =?us-ascii?Q?VpmVVjNIbAQ2Q/BtEOg8PLXuZhA2bSe4qqp6ZcsfADEFI2hSoVV25KL+pFDw?=
+ =?us-ascii?Q?VN7i43p3eJYhGvjuowzVbi+3FJkSKqA6UZN6rNImmBVL66pJUeJ+mQk3lhf3?=
+ =?us-ascii?Q?Y+6nsUWXwyFWNA63z5FdlH3s2H+f9C+6zbanFgEKhbuVy/5kTjNbnEDu+RsB?=
+ =?us-ascii?Q?/dXFCa51S6gQk8UFQU6nfZ9d7sOxXWehVabrcM1PShM6+UqZR42Bona7J8x+?=
+ =?us-ascii?Q?Rls2ueLdk+qkArnUavymr3yoBX5ncfQ+1lra8XG03lZ6m9sY2zdolaGRFe9J?=
+ =?us-ascii?Q?Cn+72AKMJHMfu0FKkra7jPIo6v9Lep3BieFUxq8hj2n2TJMEUysMLyrWBuhE?=
+ =?us-ascii?Q?MQNqZXjNmpzcPw+v8h8/zXJbLPzlZK9SMB5PTU9eCzOPRy18Y/K5y9Mu6twj?=
+ =?us-ascii?Q?2l2pccGerShzMBo4w1Ukr1CLlRLsJzOcR8pRFi7ADk/dDP0iHa6CUa7O/BgD?=
+ =?us-ascii?Q?DnLNmvj7ndV0WPZiiKFp88l/mP0Xv+klxwTSXYZw+k4AowYkBQchObAgOHpv?=
+ =?us-ascii?Q?FuupqoDCbvahTCoDfAgkDgFT9q2iee9P+g2RQfy7F/lIcjVJFcLtrz+JANYS?=
+ =?us-ascii?Q?gjvhe4r1aR9h/yzJbH/F+PKQTITUfDlvoF2z9FjSYP/AdkRwAfP2S0DSgnHJ?=
+ =?us-ascii?Q?19DhkTElrMy57w1EmTG2Fal+x85jvhE2jEiil4OKOf3Yc9BcjAquS3lEF+7n?=
+ =?us-ascii?Q?/B/rYxy/S+2/iE2eRoH+rxU6CFY/ak9eRuv2OTCfxhj+EIsMBhQR1+JQAlAG?=
+ =?us-ascii?Q?zp3h/mpEwgSaZY+M3N9M+uxSfPpswRJkJu5VIGrCT+jP2Q=3D=3D?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 67f71548-4169-45a7-d721-08d98f3ca84e
+X-MS-Exchange-CrossTenant-AuthSource: BL0PR12MB5506.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Oct 2021 18:01:33.6683
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 7iCqo0/S//TRdR9g3NtiuEnxK/vF5jpwAkJ+fCktAWXkxrcf1zuaqtO/ZZpBRIJk
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL1PR12MB5349
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 24, 2021 at 09:09:53PM +0800, Shiyang Ruan wrote:
-> To easily track filesystem from a pmem device, we introduce a holder for
-> dax_device structure, and also its operation.  This holder is used to
-> remember who is using this dax_device:
->  - When it is the backend of a filesystem, the holder will be the
->    superblock of this filesystem.
->  - When this pmem device is one of the targets in a mapped device, the
->    holder will be this mapped device.  In this case, the mapped device
->    has its own dax_device and it will follow the first rule.  So that we
->    can finally track to the filesystem we needed.
-> 
-> The holder and holder_ops will be set when filesystem is being mounted,
-> or an target device is being activated.
-> 
-> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
-> ---
->  drivers/dax/super.c | 59 +++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/dax.h | 29 ++++++++++++++++++++++
->  2 files changed, 88 insertions(+)
-> 
-> diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-> index 48ce86501d93..7d4a11dcba90 100644
-> --- a/drivers/dax/super.c
-> +++ b/drivers/dax/super.c
-> @@ -23,7 +23,10 @@
->   * @cdev: optional character interface for "device dax"
->   * @host: optional name for lookups where the device path is not available
->   * @private: dax driver private data
-> + * @holder_data: holder of a dax_device: could be filesystem or mapped device
->   * @flags: state and boolean properties
-> + * @ops: operations for dax_device
-> + * @holder_ops: operations for the inner holder
->   */
->  struct dax_device {
->  	struct hlist_node list;
-> @@ -31,8 +34,10 @@ struct dax_device {
->  	struct cdev cdev;
->  	const char *host;
->  	void *private;
-> +	void *holder_data;
->  	unsigned long flags;
->  	const struct dax_operations *ops;
-> +	const struct dax_holder_operations *holder_ops;
->  };
->  
->  static dev_t dax_devt;
-> @@ -374,6 +379,29 @@ int dax_zero_page_range(struct dax_device *dax_dev, pgoff_t pgoff,
->  }
->  EXPORT_SYMBOL_GPL(dax_zero_page_range);
->  
-> +int dax_holder_notify_failure(struct dax_device *dax_dev, loff_t offset,
-> +			      size_t size, int flags)
-> +{
-> +	int rc;
-> +
-> +	dax_read_lock();
-> +	if (!dax_alive(dax_dev)) {
-> +		rc = -ENXIO;
-> +		goto out;
-> +	}
-> +
-> +	if (!dax_dev->holder_data) {
-> +		rc = -EOPNOTSUPP;
-> +		goto out;
-> +	}
-> +
-> +	rc = dax_dev->holder_ops->notify_failure(dax_dev, offset, size, flags);
+On Thu, Oct 14, 2021 at 10:35:27AM -0700, Ralph Campbell wrote:
 
-Shouldn't this check if dax_dev->holder_ops != NULL before dereferencing
-it for the function call?  Imagine an implementation that wants to
-attach a ->notify_failure function to a dax_device, maintains its own
-lookup table, and decides that it doesn't need to set holder_data.
+> I ran xfstests-dev using the kernel boot option to "fake" a pmem device
+> when I first posted this patch. The tests ran OK (or at least the same
+> tests passed with and without my patch). 
 
-(Or, imagine someone who writes a garbage into holder_data and *boom*)
+Hmm. I know nothing of xfstests but 
 
-How does the locking work here?  If there's a media failure, we'll take
-dax_rwsem and call ->notify_failure.  If the ->notify_failure function
-wants to access the pmem to handle the error by calling back into the
-dax code, will that cause nested locking on dax_rwsem?
+tests/generic/413
 
-Jumping ahead a bit, I think the rmap btree accesses that the xfs
-implementation performs can cause xfs_buf(fer) cache IO, which would
-trigger that if the buffers aren't already in memory, if I'm reading
-this correctly?
+Looks kind of like it might cover this situation?
 
-> +out:
-> +	dax_read_unlock();
-> +	return rc;
-> +}
-> +EXPORT_SYMBOL_GPL(dax_holder_notify_failure);
-> +
->  #ifdef CONFIG_ARCH_HAS_PMEM_API
->  void arch_wb_cache_pmem(void *addr, size_t size);
->  void dax_flush(struct dax_device *dax_dev, void *addr, size_t size)
-> @@ -618,6 +646,37 @@ void put_dax(struct dax_device *dax_dev)
->  }
->  EXPORT_SYMBOL_GPL(put_dax);
->  
-> +void dax_set_holder(struct dax_device *dax_dev, void *holder,
-> +		const struct dax_holder_operations *ops)
-> +{
-> +	dax_write_lock();
-> +	if (!dax_alive(dax_dev)) {
-> +		dax_write_unlock();
-> +		return;
-> +	}
-> +
-> +	dax_dev->holder_data = holder;
-> +	dax_dev->holder_ops = ops;
-> +	dax_write_unlock();
+Did it run for you?
 
-I guess this means that the holder has to detach itself before anyone
-calls kill_dax, or else a dead dax device ends up with a dangling
-reference to the holder?
-
-> +}
-> +EXPORT_SYMBOL_GPL(dax_set_holder);
-> +
-> +void *dax_get_holder(struct dax_device *dax_dev)
-> +{
-> +	void *holder;
-> +
-> +	dax_read_lock();
-> +	if (!dax_alive(dax_dev)) {
-> +		dax_read_unlock();
-> +		return NULL;
-> +	}
-> +
-> +	holder = dax_dev->holder_data;
-> +	dax_read_unlock();
-> +	return holder;
-> +}
-> +EXPORT_SYMBOL_GPL(dax_get_holder);
-> +
->  /**
->   * inode_dax: convert a public inode into its dax_dev
->   * @inode: An inode with i_cdev pointing to a dax_dev
-> diff --git a/include/linux/dax.h b/include/linux/dax.h
-> index 097b3304f9b9..d273d59723cd 100644
-> --- a/include/linux/dax.h
-> +++ b/include/linux/dax.h
-> @@ -38,9 +38,24 @@ struct dax_operations {
->  	int (*zero_page_range)(struct dax_device *, pgoff_t, size_t);
->  };
->  
-> +struct dax_holder_operations {
-> +	/*
-> +	 * notify_failure - notify memory failure into inner holder device
-> +	 * @dax_dev: the dax device which contains the holder
-> +	 * @offset: offset on this dax device where memory failure occurs
-> +	 * @size: length of this memory failure event
-> +	 * @flags: action flags for memory failure handler
-> +	 */
-> +	int (*notify_failure)(struct dax_device *dax_dev, loff_t offset,
-> +			size_t size, int flags);
-
-Shouldn't size be u64 or something?  Let's say that 8GB of your pmem go
-bad, wouldn't you want a single call?  Though I guess the current
-implementation only goes a single page at a time, doesn't it?
-
-> +};
-> +
->  extern struct attribute_group dax_attribute_group;
->  
->  #if IS_ENABLED(CONFIG_DAX)
-> +void dax_set_holder(struct dax_device *dax_dev, void *holder,
-> +		const struct dax_holder_operations *ops);
-> +void *dax_get_holder(struct dax_device *dax_dev);
->  struct dax_device *alloc_dax(void *private, const char *host,
->  		const struct dax_operations *ops, unsigned long flags);
->  void put_dax(struct dax_device *dax_dev);
-> @@ -70,6 +85,18 @@ static inline bool daxdev_mapping_supported(struct vm_area_struct *vma,
->  	return dax_synchronous(dax_dev);
->  }
->  #else
-> +static inline struct dax_device *dax_get_by_host(const char *host)
-
-Not sure why this is being added here?  AFAICT none of the patches call
-this function...?
-
---D
-
-> +{
-> +	return NULL;
-> +}
-> +static inline void dax_set_holder(struct dax_device *dax_dev, void *holder,
-> +		const struct dax_holder_operations *ops)
-> +{
-> +}
-> +static inline void *dax_get_holder(struct dax_device *dax_dev)
-> +{
-> +	return NULL;
-> +}
->  static inline struct dax_device *alloc_dax(void *private, const char *host,
->  		const struct dax_operations *ops, unsigned long flags)
->  {
-> @@ -198,6 +225,8 @@ size_t dax_copy_to_iter(struct dax_device *dax_dev, pgoff_t pgoff, void *addr,
->  		size_t bytes, struct iov_iter *i);
->  int dax_zero_page_range(struct dax_device *dax_dev, pgoff_t pgoff,
->  			size_t nr_pages);
-> +int dax_holder_notify_failure(struct dax_device *dax_dev, loff_t offset,
-> +		size_t size, int flags);
->  void dax_flush(struct dax_device *dax_dev, void *addr, size_t size);
->  
->  ssize_t dax_iomap_rw(struct kiocb *iocb, struct iov_iter *iter,
-> -- 
-> 2.33.0
-> 
-> 
-> 
+Jason
