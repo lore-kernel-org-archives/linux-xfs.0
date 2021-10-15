@@ -2,98 +2,166 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23D1BC433F5
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Oct 2021 00:57:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05533C433F5
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Oct 2021 01:37:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1138C610EA
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Oct 2021 00:57:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D665860C49
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Oct 2021 01:37:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234708AbhJOA7k (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 Oct 2021 20:59:40 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37198 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234745AbhJOA7f (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 14 Oct 2021 20:59:35 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C6E8461040;
-        Fri, 15 Oct 2021 00:57:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1634259449;
-        bh=WFqaaGetsrU0F1LXNipYaIrryMD5ZYTRfecIsz8rLq8=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=snUtZ9excOZNnlFFMRUeJVIxjWJFru1Xvrjr8xypife31DULY3UMsHv/mzQYLm0MG
-         c9DxNx3iz2b741uRBsnAMYRZ+n1uDj8mCPhiw5S4bGh+diRuhvtguhDaKgMyzVNPZJ
-         JMqzlqoOm0y4OKUSb6bYHxmoZL/bAftajHT41L60WYI5G2r0aIP/0RT10ferHe+p3u
-         fFaj0Te7y9rhfifV+KsydswLpAWBKsvPSTk4yFR929qVA6SrgPJ06LFpK9R2i6QtXE
-         39BAhklqvLUNInES41D5KZmnAg0pRVkCWRpIrusVtvG31ZOFmiyzB57FODAtapjC4w
-         k1qCMqgGYq9Tg==
-Date:   Thu, 14 Oct 2021 17:57:29 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Rustam Kovhaev <rkovhaev@gmail.com>
-Cc:     Vlastimil Babka <vbabka@suse.cz>,
-        David Rientjes <rientjes@google.com>,
-        Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
-        cl@linux.com, penberg@kernel.org, iamjoonsoo.kim@lge.com,
-        akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
-        linux-mm@kvack.org, gregkh@linuxfoundation.org,
-        Al Viro <viro@zeniv.linux.org.uk>, dvyukov@google.com
-Subject: Re: [PATCH] xfs: use kmem_cache_free() for kmem_cache objects
-Message-ID: <20211015005729.GD24333@magnolia>
-References: <YVYGcLbu/aDKXkag@nuc10>
- <a9b3cd91-8ee6-a654-b2a8-00c3efb69559@suse.cz>
- <YVZXF3mbaW+Pe+Ji@nuc10>
- <1e0df91-556e-cee5-76f7-285d28fe31@google.com>
- <20211012204320.GP24307@magnolia>
- <20211012204345.GQ24307@magnolia>
- <9db5d16a-2999-07a4-c49d-7417601f834f@suse.cz>
- <20211012232255.GS24307@magnolia>
- <3928ef69-eaac-241c-eb32-d2dd2eab9384@suse.cz>
- <YWcPyYk0Rlyvl9a9@nuc10>
+        id S232683AbhJOBjw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 Oct 2021 21:39:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49996 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229832AbhJOBjw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Oct 2021 21:39:52 -0400
+Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B351C061570
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Oct 2021 18:37:46 -0700 (PDT)
+Received: by mail-pj1-x1034.google.com with SMTP id ls18-20020a17090b351200b001a00250584aso8227613pjb.4
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Oct 2021 18:37:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20210112.gappssmtp.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=Nr8k1aUv3z2OzOm3G6XuPV/NnMghC3CxLAXi8H1jgq0=;
+        b=Mq60g49KQfqJSx9Hlnpx1LkISuHFFWCkdhMNhbH31PDqxasC1fBD6r9vXBbknkaWMK
+         lChJJPt+7b3pndrbO9E/vbjDaPud20IbnvRAMOogvsJsZT2U7U2B08GDOjq5mJAz//YT
+         pUFXQlTk6FHl/Y5XqZwpAwYXkmA/nd/FXzsy+ADUyTODVVWD0me/6KKjEDCOhGFa4tU4
+         wSxvbpsQXT+KAhdAkd80WrKMMrzTxWLBZMYNVG9REGY3Ujp+K9XNl6UD/fgSRvtPtXtz
+         0QqqOunHYakkVaxUm+vSHdYXntEMMCYCrb+aUsaBUqYAJXyC9rdXR8U+kphiap+Pl4pP
+         hPXQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=Nr8k1aUv3z2OzOm3G6XuPV/NnMghC3CxLAXi8H1jgq0=;
+        b=S2e7pUd834K0X/h4P51c5CYT7i8qmx+Q16hs78fZBq/suLTN9Kt0YnTzoH+fw+4rIe
+         efqS2F7Rff9bJm5X52G4upI5xadYtb/r7OFNBX3gKAK7zAA6kTypY0zlpjQ/uv52cB+k
+         184f6Qo6p2I9kNlHR6Io9QVy4h59cMQTPjp7PpsRjbJzBJ47fP6nxrNEPe5GxalmBeOy
+         bsoyAdrzsjfo7cQqc4IqDAb1o5cEitkzb8TqFGU8d6pPKA8qCO0+VVqMlVD+XEpgZAOC
+         7dIO7XPdP/UIJsDf0Q13s+LpTN1qlo6FCcUnMoqE/xELVMn71hRt3eJ/+AeAEey4h2Ja
+         JJCA==
+X-Gm-Message-State: AOAM530hHftuQ6yW5A0rBF9JI1aflV75z146uzZ2NcjhfNb9w24jSKUg
+        EHmL4s3PG9hlvJZ47/o5Y4CIpp90Vd47jfcsYOWVJA==
+X-Google-Smtp-Source: ABdhPJzJeyDQ3E7K9800YlGpr55I5n0doDZS1y4ODUC2mgk0GCjS+vEI9q19Hu7ebbpj4/v0RR4BsGE6NqO67YdMecY=
+X-Received: by 2002:a17:902:ab50:b0:13f:4c70:9322 with SMTP id
+ ij16-20020a170902ab5000b0013f4c709322mr8238204plb.89.1634261866111; Thu, 14
+ Oct 2021 18:37:46 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YWcPyYk0Rlyvl9a9@nuc10>
+References: <20211014153928.16805-1-alex.sierra@amd.com> <20211014153928.16805-3-alex.sierra@amd.com>
+ <20211014170634.GV2744544@nvidia.com> <YWh6PL7nvh4DqXCI@casper.infradead.org>
+ <CAPcyv4hBdSwdtG6Hnx9mDsRXiPMyhNH=4hDuv8JZ+U+Jj4RUWg@mail.gmail.com> <20211014230606.GZ2744544@nvidia.com>
+In-Reply-To: <20211014230606.GZ2744544@nvidia.com>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Thu, 14 Oct 2021 18:37:35 -0700
+Message-ID: <CAPcyv4hC4qxbO46hp=XBpDaVbeh=qdY6TgvacXRprQ55Qwe-Dg@mail.gmail.com>
+Subject: Re: [PATCH v1 2/2] mm: remove extra ZONE_DEVICE struct page refcount
+To:     Jason Gunthorpe <jgg@nvidia.com>
+Cc:     Matthew Wilcox <willy@infradead.org>,
+        Alex Sierra <alex.sierra@amd.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        Linux MM <linux-mm@kvack.org>,
+        Ralph Campbell <rcampbell@nvidia.com>,
+        linux-ext4 <linux-ext4@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        amd-gfx list <amd-gfx@lists.freedesktop.org>,
+        Maling list - DRI developers 
+        <dri-devel@lists.freedesktop.org>, Christoph Hellwig <hch@lst.de>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Alistair Popple <apopple@nvidia.com>,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Linux NVDIMM <nvdimm@lists.linux.dev>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 13, 2021 at 09:56:41AM -0700, Rustam Kovhaev wrote:
-> On Wed, Oct 13, 2021 at 09:38:31AM +0200, Vlastimil Babka wrote:
-> > On 10/13/21 01:22, Darrick J. Wong wrote:
-> > > On Tue, Oct 12, 2021 at 11:32:25PM +0200, Vlastimil Babka wrote:
-> > >> On 10/12/2021 10:43 PM, Darrick J. Wong wrote:
-> > >> > On Tue, Oct 12, 2021 at 01:43:20PM -0700, Darrick J. Wong wrote:
-> > >> >> On Sun, Oct 03, 2021 at 06:07:20PM -0700, David Rientjes wrote:
-> > >> >>
-> > >> >> I audited the entire xfs (kernel) codebase and didn't find any other
-> > >> >> usage errors.  Thanks for the patch; I'll apply it to for-next.
-> > >> 
-> > >> Which patch, the one that started this thread and uses kmem_cache_free() instead
-> > >> of kfree()? I thought we said it's not the best way?
-> > > 
-> > > It's probably better to fix slob to be able to tell that a kmem_free'd
-> > > object actually belongs to a cache and should get freed that way, just
-> > > like its larger sl[ua]b cousins.
-> > 
-> > Agreed. Rustam, do you still plan to do that?
-> 
-> Yes, I do, thank you.
+On Thu, Oct 14, 2021 at 4:06 PM Jason Gunthorpe <jgg@nvidia.com> wrote:
+>
+> On Thu, Oct 14, 2021 at 12:01:14PM -0700, Dan Williams wrote:
+> > > > Does anyone know why devmap is pte_special anyhow?
+> >
+> > It does not need to be special as mentioned here:
+> >
+> > https://lore.kernel.org/all/CAPcyv4iFeVDVPn6uc=aKsyUvkiu3-fK-N16iJVZQ3N8oT00hWA@mail.gmail.com/
+>
+> I added a remark there
+>
+> Not special means more to me, it means devmap should do the refcounts
+> properly like normal memory pages.
+>
+> It means vm_normal_page should return !NULL and it means insert_page,
+> not insert_pfn should be used to install them in the PTE. VMAs should
+> not be MIXED MAP, but normal struct page maps.
+>
+> I think this change alone would fix all the refcount problems
+> everwhere in DAX and devmap.
+>
+> > The refcount dependencies also go away after this...
+> >
+> > https://lore.kernel.org/all/161604050866.1463742.7759521510383551055.stgit@dwillia2-desk3.amr.corp.intel.com/
+> >
+> > ...but you can see that patches 1 and 2 in that series depend on being
+> > able to guarantee that all mappings are invalidated when the undelying
+> > device that owns the pgmap goes away.
+>
+> If I have put everything together right this is because of what I
+> pointed to here. FS-DAX is installing 0 refcount pages into PTEs and
+> expecting that to work sanely.
+>
+> This means the page map cannot be removed until all the PTEs are fully
+> flushed, which buggily doesn't happen because of the missing unplug.
+>
+> However, this is all because nobody incrd a refcount to represent the
+> reference in the PTE and since this ment that 0 refcount pages were
+> wrongly stuffed into PTEs then devmap used the refcount == 1 hack to
+> unbreak GUP?
+>
+> So.. Is there some reason why devmap pages are trying so hard to avoid
+> sane refcounting???
 
-Note that I left out the parts of the patch that changed mm/slob.c
-because I didn't think that was appropriate for a patch titled 'xfs:'.
+I wouldn't put it that way. It's more that the original sin of
+ZONE_DEVICE that sought to reuse the lru field space, by never having
+a zero recount, then got layered upon and calcified in malignant ways.
+In the meantime surrounding infrastructure got decrustified. Work like
+the 'struct page' cleanup among other things, made it clearer and
+clearer over time that the original design choice needed to be fixed.
 
-> 
-> > 
-> > > However, even if that does come to pass, anybody /else/ who wants to
-> > > start(?) using XFS on a SLOB system will need this patch to fix the
-> > > minor papercut.  Now that I've checked the rest of the codebase, I don't
-> > > find it reasonable to make XFS mutually exclusive with SLOB over two
-> > > instances of slab cache misuse.  Hence the RVB. :)
-> > 
-> > Ok. I was just wondering because Dave's first reply was that actually you'll
-> > need to expand the use of kfree() instead of kmem_cache_free().
+> If the PTE itself holds the refcount (by not being special) then there
+> is no need for the pagemap stuff in GUP. pagemap already waits for
+> refs to go to 0 so the missing shootdown during nvdimm unplug will
+> cause pagemap to block until the address spaces are invalidated. IMHO
+> this is already better than the current buggy situation of allowing
+> continued PTE reference to memory that is now removed from the system.
+>
+> > For that to happen there needs to be communication back to the FS for
+> > device-gone / failure events. That work is in progress via this
+> > series:
+> >
+> > https://lore.kernel.org/all/20210924130959.2695749-1-ruansy.fnst@fujitsu.com/
+>
+> This is fine, but I don't think it should block fixing the mm side -
+> the end result here still cannot be 0 ref count pages installed in
+> PTEs.
+>
+> Fixing that does not depend on shootdown during device removal, right?
+>
+> It requires holding refcounts while pages are installed into address
+> spaces - and this lack is a direct cause of making the PTEs all
+> special and using insert_pfn and MIXED_MAP.
 
-I look forward to doing this, but since XFS is a downstream consumer of
-the kmem apis, we'll have to wait until the slob changes land to do
-that.
+The MIXED_MAP and insert_pfn were a holdover from page-less DAX, but
+now that we have page-available DAX, yes, we can skip the FS
+notification and just rely on typical refcounting and hanging until
+the FS has a chance to uninstall the PTEs. You're right, the FS
+notification is an improvement to the conversion, not a requirement.
 
---D
+However, there still needs to be something in the gup-fast path to
+indicate that GUP_LONGTERM is not possible because the PTE represents
+a pfn that can not support typical page-cache behavior for truncate
+which is to just disconnect the page from the file and keep the page
+pinned indefinitely. I think the "no longterm" caveat would be the
+only remaining utility of PTE_DEVMAP after the above conversion to use
+typical page refcounts throughout DAX.
