@@ -2,166 +2,165 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05533C433F5
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Oct 2021 01:37:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F46CC433FE
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Oct 2021 03:45:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D665860C49
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Oct 2021 01:37:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D938A60FC3
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Oct 2021 03:45:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232683AbhJOBjw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 Oct 2021 21:39:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49996 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229832AbhJOBjw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Oct 2021 21:39:52 -0400
-Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B351C061570
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Oct 2021 18:37:46 -0700 (PDT)
-Received: by mail-pj1-x1034.google.com with SMTP id ls18-20020a17090b351200b001a00250584aso8227613pjb.4
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Oct 2021 18:37:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20210112.gappssmtp.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=Nr8k1aUv3z2OzOm3G6XuPV/NnMghC3CxLAXi8H1jgq0=;
-        b=Mq60g49KQfqJSx9Hlnpx1LkISuHFFWCkdhMNhbH31PDqxasC1fBD6r9vXBbknkaWMK
-         lChJJPt+7b3pndrbO9E/vbjDaPud20IbnvRAMOogvsJsZT2U7U2B08GDOjq5mJAz//YT
-         pUFXQlTk6FHl/Y5XqZwpAwYXkmA/nd/FXzsy+ADUyTODVVWD0me/6KKjEDCOhGFa4tU4
-         wSxvbpsQXT+KAhdAkd80WrKMMrzTxWLBZMYNVG9REGY3Ujp+K9XNl6UD/fgSRvtPtXtz
-         0QqqOunHYakkVaxUm+vSHdYXntEMMCYCrb+aUsaBUqYAJXyC9rdXR8U+kphiap+Pl4pP
-         hPXQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=Nr8k1aUv3z2OzOm3G6XuPV/NnMghC3CxLAXi8H1jgq0=;
-        b=S2e7pUd834K0X/h4P51c5CYT7i8qmx+Q16hs78fZBq/suLTN9Kt0YnTzoH+fw+4rIe
-         efqS2F7Rff9bJm5X52G4upI5xadYtb/r7OFNBX3gKAK7zAA6kTypY0zlpjQ/uv52cB+k
-         184f6Qo6p2I9kNlHR6Io9QVy4h59cMQTPjp7PpsRjbJzBJ47fP6nxrNEPe5GxalmBeOy
-         bsoyAdrzsjfo7cQqc4IqDAb1o5cEitkzb8TqFGU8d6pPKA8qCO0+VVqMlVD+XEpgZAOC
-         7dIO7XPdP/UIJsDf0Q13s+LpTN1qlo6FCcUnMoqE/xELVMn71hRt3eJ/+AeAEey4h2Ja
-         JJCA==
-X-Gm-Message-State: AOAM530hHftuQ6yW5A0rBF9JI1aflV75z146uzZ2NcjhfNb9w24jSKUg
-        EHmL4s3PG9hlvJZ47/o5Y4CIpp90Vd47jfcsYOWVJA==
-X-Google-Smtp-Source: ABdhPJzJeyDQ3E7K9800YlGpr55I5n0doDZS1y4ODUC2mgk0GCjS+vEI9q19Hu7ebbpj4/v0RR4BsGE6NqO67YdMecY=
-X-Received: by 2002:a17:902:ab50:b0:13f:4c70:9322 with SMTP id
- ij16-20020a170902ab5000b0013f4c709322mr8238204plb.89.1634261866111; Thu, 14
- Oct 2021 18:37:46 -0700 (PDT)
-MIME-Version: 1.0
-References: <20211014153928.16805-1-alex.sierra@amd.com> <20211014153928.16805-3-alex.sierra@amd.com>
- <20211014170634.GV2744544@nvidia.com> <YWh6PL7nvh4DqXCI@casper.infradead.org>
- <CAPcyv4hBdSwdtG6Hnx9mDsRXiPMyhNH=4hDuv8JZ+U+Jj4RUWg@mail.gmail.com> <20211014230606.GZ2744544@nvidia.com>
-In-Reply-To: <20211014230606.GZ2744544@nvidia.com>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Thu, 14 Oct 2021 18:37:35 -0700
-Message-ID: <CAPcyv4hC4qxbO46hp=XBpDaVbeh=qdY6TgvacXRprQ55Qwe-Dg@mail.gmail.com>
+        id S235257AbhJODsD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 Oct 2021 23:48:03 -0400
+Received: from mail-mw2nam10on2065.outbound.protection.outlook.com ([40.107.94.65]:15072
+        "EHLO NAM10-MW2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S233555AbhJODsC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 14 Oct 2021 23:48:02 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=m+GaMyM+jkaMLT/j8sKgShirrCIhZ3t8KsdXats/GOiPwL+2/yIpLJCs/3DpOLaoqsDaoazqMqKypW3wJPlSm7QKm6itTdDVgfeN7bXcb2dNwq0HuBoDu/831e6DC3TEGjofY1oWZQVqxJsv5ajE+r3EsNw3KshO8jeiPYVFXSND83eYDTtj0y7xG+2iXs1kpNoWtInDy8h5mmEH0wLLR1lXLP2cuqVJuB8Lvlf87eTF8M0QeiydHpmrdMlksS2Sp6rfXb4NfToCJ3P5J2im/G/bGxfxwXggz5WB32V2zGwC4fVnRZXuF2L0DOdYVt48i+dARvZCRNo4AECt3jtsmw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=JUthTYcpuV8BpUCzxKEXfzKBMrpaR8XcWGVMDC+NOYE=;
+ b=aYfSSW057/99EkNiGRTcMIoe/6ktHnvI1mlAjYLUWGzn95C/UBjgzScrsR+Lo2FxI9rqAgzDVLXam/zvRdleLgx4TjSvKBnREeql6Qe1XMpzN2E/Y094II803EdNuDT6sEJvuTdfrFqExiTGhzTRMRO9J1LJOkIXrFajCLQCCk3mmw+5WB0P7IoZ5aBpwocv2QYFBSS8COrCeSsdurWqzLpNt4euJoIwz0c5+MG3jAeVXktbe73oUhjTyvdSMpapmzAIPwoToBG9pXmfVeGcZj2IiHARc5tzE/5TYoMEqQts+l0wMLkaIMvy40WE/UB+X5O0VUYtf4nhF92w1dbnNA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=JUthTYcpuV8BpUCzxKEXfzKBMrpaR8XcWGVMDC+NOYE=;
+ b=Yg41wCTr1LKIfk5dAbfMc0ryO0iB9U8BCLEYKewJGYZnC3AjcXuDPO4FmjBVz6yEH7AWcEYGk6onoajSIhkaeG7FgqB/PyFJeGj2ue2SUQDgo+QJNthokwdt1ZzrUcfCJz+BHi+u7JFte6DWKJ5vyg4L96vaznfhoWw1+G8Ip64=
+Authentication-Results: nvidia.com; dkim=none (message not signed)
+ header.d=none;nvidia.com; dmarc=none action=none header.from=amd.com;
+Received: from SA0PR12MB4430.namprd12.prod.outlook.com (2603:10b6:806:70::20)
+ by SN1PR12MB2366.namprd12.prod.outlook.com (2603:10b6:802:25::19) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4608.16; Fri, 15 Oct
+ 2021 03:45:54 +0000
+Received: from SA0PR12MB4430.namprd12.prod.outlook.com
+ ([fe80::c3f:b81f:a077:5d5f]) by SA0PR12MB4430.namprd12.prod.outlook.com
+ ([fe80::c3f:b81f:a077:5d5f%6]) with mapi id 15.20.4608.016; Fri, 15 Oct 2021
+ 03:45:54 +0000
+Message-ID: <fe418973-5086-e13b-2e58-c786dbdd9d0f@amd.com>
+Date:   Thu, 14 Oct 2021 22:45:52 -0500
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.1.2
 Subject: Re: [PATCH v1 2/2] mm: remove extra ZONE_DEVICE struct page refcount
-To:     Jason Gunthorpe <jgg@nvidia.com>
-Cc:     Matthew Wilcox <willy@infradead.org>,
-        Alex Sierra <alex.sierra@amd.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        Linux MM <linux-mm@kvack.org>,
-        Ralph Campbell <rcampbell@nvidia.com>,
-        linux-ext4 <linux-ext4@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        amd-gfx list <amd-gfx@lists.freedesktop.org>,
-        Maling list - DRI developers 
-        <dri-devel@lists.freedesktop.org>, Christoph Hellwig <hch@lst.de>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Alistair Popple <apopple@nvidia.com>,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Linux NVDIMM <nvdimm@lists.linux.dev>
-Content-Type: text/plain; charset="UTF-8"
+Content-Language: en-US
+To:     Ralph Campbell <rcampbell@nvidia.com>,
+        Jason Gunthorpe <jgg@nvidia.com>
+Cc:     akpm@linux-foundation.org, Felix.Kuehling@amd.com,
+        linux-mm@kvack.org, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org, amd-gfx@lists.freedesktop.org,
+        dri-devel@lists.freedesktop.org, hch@lst.de, jglisse@redhat.com,
+        apopple@nvidia.com, willy@infradead.org
+References: <20211014153928.16805-1-alex.sierra@amd.com>
+ <20211014153928.16805-3-alex.sierra@amd.com>
+ <20211014170634.GV2744544@nvidia.com>
+ <eafbccb5-f94b-0ddd-bb46-7ee92ed36ee8@nvidia.com>
+ <20211014180132.GA3567687@nvidia.com>
+ <b8b57851-674a-956d-0d7a-779e601bf6d8@nvidia.com>
+From:   "Sierra Guiza, Alejandro (Alex)" <alex.sierra@amd.com>
+In-Reply-To: <b8b57851-674a-956d-0d7a-779e601bf6d8@nvidia.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: SN7PR04CA0038.namprd04.prod.outlook.com
+ (2603:10b6:806:120::13) To SA0PR12MB4430.namprd12.prod.outlook.com
+ (2603:10b6:806:70::20)
+MIME-Version: 1.0
+Received: from [172.31.9.47] (165.204.77.11) by SN7PR04CA0038.namprd04.prod.outlook.com (2603:10b6:806:120::13) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4608.14 via Frontend Transport; Fri, 15 Oct 2021 03:45:53 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 52e58202-8b59-42dd-e5d9-08d98f8e4a1f
+X-MS-TrafficTypeDiagnostic: SN1PR12MB2366:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <SN1PR12MB23663A17ED8FE5AE9A107B4FFDB99@SN1PR12MB2366.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:1923;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: mg5DnhxhX1NX76gysWumpS/u5bONUW9zFHhOpq2Yz9CEdwM/kcITQqu6ioHXRvb4xWhwfJc61Ig8YYD5sUExxW8t4iuGo4AX25ivHCqxFv5pNGTbZQK0H9PnJfO4S4tIp56iGegtz6mEUtKcwHbpqp8t7xQHX7t1fpyxebIpe1YlKmicKB9wdvOhkcIhIZGT2vevY2Co4K+0APmLnniNDB7ic8X7dXYY4KI4E2TJ2B/8EVVzplpOTU7TnstYMTcAX8izz9t8uJJXvE9arPRoMzJOOTgDOKXi0fzmJlqCztNlzBK/5c0/JcwVuds1XBvpqrLSTRdaYCbgTBD0ebSQwMJFIqzXJX6s/xT1fscPGAWgvbvdOCpV9qzEfa30MPMkUufzRAYE1fzMCqa9ZAVXNDXFDmSxbYg11+9V9vrRsv2v0CsWMiL8K3ew98j0RRkxb/IUNkqzYTx7ju3w5jfakFqdjg9O8cejzBNehLCNu/ebU3wzCSSrtykItRPjSeM2dSvQLNECEZjd4l66O77u6ycCBrIShhm/jTWgqsseyeoe7QSNBUK34Hhb0ygQjak5PRFfvPfDUZ/FAwPQpKms+yfDcSs70+n3S+hLHy8Ab9zX1dX3bkBHK6cS4kfJ9w+pqGoXAENOpQOx09cuWFRvqDYsjIy6fsZKD1Ir30ZlAIwnxmFgj7L7UwcFe2hcnNrPq9j7gAbQekHduB1M+UBFMGtbXgpjqr562Pl+oCdixJU=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA0PR12MB4430.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(36756003)(86362001)(5660300002)(316002)(66556008)(66476007)(2906002)(956004)(8936002)(8676002)(6486002)(66946007)(31696002)(2616005)(110136005)(4326008)(26005)(7416002)(186003)(31686004)(16576012)(53546011)(508600001)(38100700002)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?YlNITXZOTXVacnlFMy9kWERyVXRpS0REZ2dWNW05all0NHU3VzJWMmh3Snp1?=
+ =?utf-8?B?b0JYbUw1NWtTRElDRy9jcktNMTMyMFJrZVMwTTZBZEQ2S3loYnJOaXVsMThV?=
+ =?utf-8?B?anVKdG9vVDRDR0lKVWZqSm43ZkxwNk9hMVd5WjJ0OG81MWFGTEY2WDhMYjdX?=
+ =?utf-8?B?SFE0d0JlNFFkK0tKN2xyYmlBWDhRZ0VtVldsbkNNWmUyYzE5VlE0aElPdTE0?=
+ =?utf-8?B?N3Q4MTgzQmwvQkQwWnMzcVBhUXdla2pBVkJkRStRNU9qM015VDR3aHlJeUxI?=
+ =?utf-8?B?dG5yUmRNM3hrOUJWcGZGV1MxWTF0SWpBclJPNW1KbTMzTHJVaDRaYkUrOFFl?=
+ =?utf-8?B?bnA0OUFMMVhaSkp6SWcvS2Z0a25tTk5VbjkrRTF0SUptVGVEaGxCcmIyUlBR?=
+ =?utf-8?B?ZWs0R1NDL1VJY3N2RS9DQjkrQS9TQVFpSERxdkFzTDNNUWdmQkNkUkVBY3ZJ?=
+ =?utf-8?B?UFFmbjN6NG5MN2lIcDhqaWpTKzU0Nko1Q0VVSlEvU25pZlBrNEYyN29zNjdS?=
+ =?utf-8?B?dHVZZk13MDFXL1RvQTdHVFlSdXZNSkN4Umh6UURISjB0NVpBNyszZWFyTHIy?=
+ =?utf-8?B?Vy8rUHBWdzMyWis0UTFIaE5aMm94bUhVSHVzR3g1anY2M3lJejNIeWREUHNF?=
+ =?utf-8?B?MklSSEhuZmZIV2JiVERTcnIzT1FVQ3B1dU9reGx0b0tmUWpHWlFBNkhPeHVU?=
+ =?utf-8?B?TU9vUXdqNlpwSTJTZGltOEpCS2NZWEJRbWVaWi9vSngyb2ZHU0RaSVFWaDlK?=
+ =?utf-8?B?c3gxbzZYUzQ1ZHliOVUrWWpVdmdEeEU0RHlnbGhMZTRpendqZko1MGpnS29L?=
+ =?utf-8?B?eUxOa3FvYVg1YnV0OXpZelh2VjE5VXh3eXV2VHV1OUNqRDJSSVRMMC9nbjIw?=
+ =?utf-8?B?c2ptVElodGNPdUtmUjVwMW5zT291YmdUMENlVGhkWGJTS3cwSU9wazJlbDEw?=
+ =?utf-8?B?ZEdkTEozNWNFaGdKU3hyOUxyMHBlajVDZ0luellxYXIyRjhwYlVPV2VmNTZ2?=
+ =?utf-8?B?QkVoODc1ZWtBUm55ZEZNWmlBVjlNZ3ZrRkJnR1czQW1RL09zWks5bWZYN2c5?=
+ =?utf-8?B?MER6blM3UHJOQ0ZsMnEyVXZScEdBOE96d21nY3pjejVJVVFQNFRrREE5d25K?=
+ =?utf-8?B?UFpGV0FDSHBoNFZIdmFsVmVwZm5lTk03TmQ5bWo1ZlI4U1FINUF0MWpUbEdp?=
+ =?utf-8?B?dXM3aVVGRWhMMEFIL2xsSlFNdDU0d2lDK1F3U0dyZXVlYXovZXYyVG9aNUti?=
+ =?utf-8?B?eDZXYU9BK2FYc1Y0aU9SZUMwNzViUHNYQ0ppRWg0TSs0R29YMWdqVWk2ZWNF?=
+ =?utf-8?B?cXZEQnRjK3NQRU9LVFRHOVRpTm02YXJGMllmZHNIdXp2Kyt3RGpCdFUwZ3Uz?=
+ =?utf-8?B?K2p0bkh1R3I3eUZaK1BHTnBIT0xHRDZrcjdoMTAxN1d1QmtUSGY1S3FoMVdF?=
+ =?utf-8?B?bzFiUFIzNmt2c2xyTTJXODB5UEVZZGpwL3psZVBtdWdWK3dxbzFiZ3hvakV1?=
+ =?utf-8?B?by9oMkxZazB5b2w0Q2NNajg1c2lQQXBtc0Yrci9VYjhWWjNsSEVXQ01IQ3la?=
+ =?utf-8?B?VEVOblVJL0Z6T3R5dXJqNzI5YzM3cCs2RDRna05sUEhXZi9JSTYrdUpYRFVJ?=
+ =?utf-8?B?UFFlYWZZRTRPaW11a0wzZGp5cFpOdEdLWnVqYkYvWUFISE9Sd1NHM2hlZ2ZZ?=
+ =?utf-8?B?eUhjblQrU2lOUXRNanVCVHN2NTcvOHJjb3J2aDhRTmI3dXNqT1VoN1RyUkFE?=
+ =?utf-8?Q?/C9fdcSznVheRjWRVS8bD+i5Rgy1CDtpSSX+DM8?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 52e58202-8b59-42dd-e5d9-08d98f8e4a1f
+X-MS-Exchange-CrossTenant-AuthSource: SA0PR12MB4430.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Oct 2021 03:45:54.3827
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: J20kBa6HcNNRKmxosRc8EipHbysH6PRh8iy+VQdYjalHdU4hR+UvmzYMqU0yUqbhgPMmsSB9RSe3wx4R0+0z3A==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN1PR12MB2366
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 14, 2021 at 4:06 PM Jason Gunthorpe <jgg@nvidia.com> wrote:
->
-> On Thu, Oct 14, 2021 at 12:01:14PM -0700, Dan Williams wrote:
-> > > > Does anyone know why devmap is pte_special anyhow?
-> >
-> > It does not need to be special as mentioned here:
-> >
-> > https://lore.kernel.org/all/CAPcyv4iFeVDVPn6uc=aKsyUvkiu3-fK-N16iJVZQ3N8oT00hWA@mail.gmail.com/
->
-> I added a remark there
->
-> Not special means more to me, it means devmap should do the refcounts
-> properly like normal memory pages.
->
-> It means vm_normal_page should return !NULL and it means insert_page,
-> not insert_pfn should be used to install them in the PTE. VMAs should
-> not be MIXED MAP, but normal struct page maps.
->
-> I think this change alone would fix all the refcount problems
-> everwhere in DAX and devmap.
->
-> > The refcount dependencies also go away after this...
-> >
-> > https://lore.kernel.org/all/161604050866.1463742.7759521510383551055.stgit@dwillia2-desk3.amr.corp.intel.com/
-> >
-> > ...but you can see that patches 1 and 2 in that series depend on being
-> > able to guarantee that all mappings are invalidated when the undelying
-> > device that owns the pgmap goes away.
->
-> If I have put everything together right this is because of what I
-> pointed to here. FS-DAX is installing 0 refcount pages into PTEs and
-> expecting that to work sanely.
->
-> This means the page map cannot be removed until all the PTEs are fully
-> flushed, which buggily doesn't happen because of the missing unplug.
->
-> However, this is all because nobody incrd a refcount to represent the
-> reference in the PTE and since this ment that 0 refcount pages were
-> wrongly stuffed into PTEs then devmap used the refcount == 1 hack to
-> unbreak GUP?
->
-> So.. Is there some reason why devmap pages are trying so hard to avoid
-> sane refcounting???
 
-I wouldn't put it that way. It's more that the original sin of
-ZONE_DEVICE that sought to reuse the lru field space, by never having
-a zero recount, then got layered upon and calcified in malignant ways.
-In the meantime surrounding infrastructure got decrustified. Work like
-the 'struct page' cleanup among other things, made it clearer and
-clearer over time that the original design choice needed to be fixed.
+On 10/14/2021 3:57 PM, Ralph Campbell wrote:
+>
+> On 10/14/21 11:01 AM, Jason Gunthorpe wrote:
+>> On Thu, Oct 14, 2021 at 10:35:27AM -0700, Ralph Campbell wrote:
+>>
+>>> I ran xfstests-dev using the kernel boot option to "fake" a pmem device
+>>> when I first posted this patch. The tests ran OK (or at least the same
+>>> tests passed with and without my patch).
+>> Hmm. I know nothing of xfstests but
+>>
+>> tests/generic/413
+>>
+>> Looks kind of like it might cover this situation?
+>>
+>> Did it run for you?
+>>
+>> Jason
+>
+> I don't remember. I'll have to rerun the test which might take a day 
+> or two
+> to set up again.
+>
+I just ran this generic/413 on my side using pmem fake device. It does fail.
+I remember we proposed a fix on this patch before try_get_page was removed.
+@@ -1186,7 +1153,7 @@ bool __must_check try_grab_page(struct page *page, 
+unsigned int flags);
+  static inline __must_check bool try_get_page(struct page *page)
+  {
+         page = compound_head(page);
+-       if (WARN_ON_ONCE(page_ref_count(page) <= 0))
++       if (WARN_ON_ONCE(page_ref_count(page) < 
+(int)!is_zone_device_page(page)))
+                 return false;
+         page_ref_inc(page);
+         return true;
 
-> If the PTE itself holds the refcount (by not being special) then there
-> is no need for the pagemap stuff in GUP. pagemap already waits for
-> refs to go to 0 so the missing shootdown during nvdimm unplug will
-> cause pagemap to block until the address spaces are invalidated. IMHO
-> this is already better than the current buggy situation of allowing
-> continued PTE reference to memory that is now removed from the system.
->
-> > For that to happen there needs to be communication back to the FS for
-> > device-gone / failure events. That work is in progress via this
-> > series:
-> >
-> > https://lore.kernel.org/all/20210924130959.2695749-1-ruansy.fnst@fujitsu.com/
->
-> This is fine, but I don't think it should block fixing the mm side -
-> the end result here still cannot be 0 ref count pages installed in
-> PTEs.
->
-> Fixing that does not depend on shootdown during device removal, right?
->
-> It requires holding refcounts while pages are installed into address
-> spaces - and this lack is a direct cause of making the PTEs all
-> special and using insert_pfn and MIXED_MAP.
+Alex
 
-The MIXED_MAP and insert_pfn were a holdover from page-less DAX, but
-now that we have page-available DAX, yes, we can skip the FS
-notification and just rely on typical refcounting and hanging until
-the FS has a chance to uninstall the PTEs. You're right, the FS
-notification is an improvement to the conversion, not a requirement.
-
-However, there still needs to be something in the gup-fast path to
-indicate that GUP_LONGTERM is not possible because the PTE represents
-a pfn that can not support typical page-cache behavior for truncate
-which is to just disconnect the page from the file and keep the page
-pinned indefinitely. I think the "no longterm" caveat would be the
-only remaining utility of PTE_DEVMAP after the above conversion to use
-typical page refcounts throughout DAX.
