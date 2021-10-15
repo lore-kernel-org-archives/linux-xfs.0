@@ -2,202 +2,87 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B404FC433F5
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Oct 2021 19:42:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9C8CC433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Oct 2021 20:29:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8BBA861164
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Oct 2021 19:42:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B28CA610E5
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Oct 2021 20:29:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242759AbhJOTo6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 15 Oct 2021 15:44:58 -0400
-Received: from sandeen.net ([63.231.237.45]:47620 "EHLO sandeen.net"
+        id S238611AbhJOUbc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 15 Oct 2021 16:31:32 -0400
+Received: from sandeen.net ([63.231.237.45]:50012 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S238197AbhJOTo5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 15 Oct 2021 15:44:57 -0400
+        id S238545AbhJOUbb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 15 Oct 2021 16:31:31 -0400
 Received: from [10.0.0.146] (liberator.sandeen.net [10.0.0.146])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 53E1A4900
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Oct 2021 14:41:45 -0500 (CDT)
-Message-ID: <40ae0dd3-aeea-344c-ac6b-e76b42892e86@sandeen.net>
-Date:   Fri, 15 Oct 2021 14:42:49 -0500
+        by sandeen.net (Postfix) with ESMTPSA id 2FF3A4900;
+        Fri, 15 Oct 2021 15:28:19 -0500 (CDT)
+Message-ID: <abf2094c-588e-8306-85ab-9cd4ca12735f@sandeen.net>
+Date:   Fri, 15 Oct 2021 15:29:23 -0500
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
  Gecko/20100101 Thunderbird/91.2.0
 Content-Language: en-US
-To:     xfs <linux-xfs@vger.kernel.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>,
+        Eric Sandeen <sandeen@redhat.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+References: <20211005223252.GF24307@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs for-next updated to 7189ee53
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="------------MqmmCOOkMYMk030ULpCxEfMD"
+Subject: Re: [PATCH] libxfs: fix crash on second attempt to initialize library
+In-Reply-To: <20211005223252.GF24307@magnolia>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---------------MqmmCOOkMYMk030ULpCxEfMD
-Content-Type: multipart/mixed; boundary="------------4fasVMJ8oINND16Wf5UFLb7D";
- protected-headers="v1"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: xfs <linux-xfs@vger.kernel.org>
-Message-ID: <40ae0dd3-aeea-344c-ac6b-e76b42892e86@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs for-next updated to 7189ee53
+On 10/5/21 5:32 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> xfs_repair crashes when it tries to initialize the libxfs library but
+> the initialization fails because the fs is already mounted:
 
---------------4fasVMJ8oINND16Wf5UFLb7D
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: base64
+Sorry for missing this; looks right to me. For some reason I did not hit
+it in testing, old library version I guess.
 
-SGkgZm9sa3MsDQoNClRoZSBmb3ItbmV4dCBicmFuY2ggb2YgdGhlIHhmc3Byb2dzIHJlcG9z
-aXRvcnkgYXQ6DQoNCglnaXQ6Ly9naXQua2VybmVsLm9yZy9wdWIvc2NtL2ZzL3hmcy94ZnNw
-cm9ncy1kZXYuZ2l0DQoNCmhhcyBqdXN0IGJlZW4gdXBkYXRlZC4NCg0KUGF0Y2hlcyBvZnRl
-biBnZXQgbWlzc2VkLCBzbyBwbGVhc2UgY2hlY2sgaWYgeW91ciBvdXRzdGFuZGluZw0KcGF0
-Y2hlcyB3ZXJlIGluIHRoaXMgdXBkYXRlLiBJZiB0aGV5IGhhdmUgbm90IGJlZW4gaW4gdGhp
-cyB1cGRhdGUsDQpwbGVhc2UgcmVzdWJtaXQgdGhlbSB0byBsaW51eC14ZnNAdmdlci5rZXJu
-ZWwub3JnIHNvIHRoZXkgY2FuIGJlDQpwaWNrZWQgdXAgaW4gdGhlIG5leHQgdXBkYXRlLg0K
-DQpUaGlzIGlzIHJlYWxseSBqdXN0IHRoZSBsaWJ4ZnMtNS4xNCBzeW5jIChmaW5hbGx5ISku
-ICBCaWcgdGhhbmtzDQp0byBjaGFuZGFuLCBkandvbmcsIGRjaGlubmVyIHdobyBhbGwgaGVs
-cGVkIHNpZ25pZmljYW50bHkgd2l0aCB3aGF0DQp3YXMgYSBtdWNoIG1vcmUgY2hhbGxlbmdp
-bmcgbGlieGZzIHN5bmMgdGhpcyB0aW1lLg0KDQpPZGRzIGFyZSB0aGlzIHdpbGwgYmUgdGhl
-IGJ1bGsgb2YgdGhlIGZpbmFsIDUuMTQgcmVsZWFzZS4gSSB3aWxsIGp1c3QNCmFkZCBEYXJy
-aWNrJ3MgZGVwcmVjYXRpb24gd2FybmluZywgYW5kIGFueXRoaW5nIGVsc2UgSSBnZXQgcmVt
-aW5kZWQNCm9mIGluIHRoZSBuZXh0IHdlZWsuICA6KQ0KDQpUaGFua3MsDQotRXJpYw0KDQpU
-aGUgbmV3IGhlYWQgb2YgdGhlIGZvci1uZXh0IGJyYW5jaCBpcyBjb21taXQ6DQoNCjcxODll
-ZTUzIHhmc19kYjogY29udmVydCB0aGUgYWdyZXN2IGNvbW1hbmQgdG8gdXNlIGZvcl9lYWNo
-X3BlcmFnDQoNCk5ldyBDb21taXRzOg0KDQpBbGxpc29uIEhlbmRlcnNvbiAoMTUpOg0KICAg
-ICAgIFs2MTkyZWZhMF0geGZzOiBSZXZlcnNlIGFwcGx5IDcyYjk3ZWE0MGQNCiAgICAgICBb
-MmU5OWQ4NDRdIHhmczogQWRkIHhmc19hdHRyX25vZGVfcmVtb3ZlX25hbWUNCiAgICAgICBb
-OTNjMTJjYTddIHhmczogUmVmYWN0b3IgeGZzX2F0dHJfc2V0X3Nob3J0Zm9ybQ0KICAgICAg
-IFtmZDFmYTVkY10geGZzOiBTZXBhcmF0ZSB4ZnNfYXR0cl9ub2RlX2FkZG5hbWUgYW5kIHhm
-c19hdHRyX25vZGVfYWRkbmFtZV9jbGVhcl9pbmNvbXBsZXRlDQogICAgICAgWzYwZTUyOTAy
-XSB4ZnM6IEFkZCBoZWxwZXIgeGZzX2F0dHJfbm9kZV9hZGRuYW1lX2ZpbmRfYXR0cg0KICAg
-ICAgIFs4N2Y5YzFlZl0geGZzOiBIb2lzdCB4ZnNfYXR0cl9ub2RlX2FkZG5hbWUNCiAgICAg
-ICBbZDVhZDg5OTZdIHhmczogSG9pc3QgeGZzX2F0dHJfbGVhZl9hZGRuYW1lDQogICAgICAg
-W2YzYjg3MzRjXSB4ZnM6IEhvaXN0IG5vZGUgdHJhbnNhY3Rpb24gaGFuZGxpbmcNCiAgICAg
-ICBbZDllMzQ5YjRdIHhmczogQWRkIGRlbGF5IHJlYWR5IGF0dHIgcmVtb3ZlIHJvdXRpbmVz
-DQogICAgICAgW2ZjNTg3MzFjXSB4ZnM6IEFkZCBkZWxheSByZWFkeSBhdHRyIHNldCByb3V0
-aW5lcw0KICAgICAgIFs5MzQ3YzY0YV0geGZzOiBSZW1vdmUgeGZzX2F0dHJfcm10dmFsX3Nl
-dA0KICAgICAgIFs3NGQ4NmUxMV0geGZzOiBDbGVhbiB1cCB4ZnNfYXR0cl9ub2RlX2FkZG5h
-bWVfY2xlYXJfaW5jb21wbGV0ZQ0KICAgICAgIFszMjZkNTU1Yl0geGZzOiBGaXggZGVmYXVs
-dCBBU1NFUlQgaW4geGZzX2F0dHJfc2V0X2l0ZXINCiAgICAgICBbNDI1ZDJmYTddIHhmczog
-TWFrZSBhdHRyIG5hbWUgc2NoZW1lcyBjb25zaXN0ZW50DQogICAgICAgWzhlNDA3YjdjXSB4
-ZnM6IEluaXRpYWxpemUgZXJyb3IgaW4geGZzX2F0dHJfcmVtb3ZlX2l0ZXINCg0KQ2hyaXN0
-b3BoIEhlbGx3aWcgKDEpOg0KICAgICAgIFs4NmZiZTIyMV0geGZzOiBtYXJrIHhmc19ibWFw
-X3NldF9hdHRyZm9ya29mZiBzdGF0aWMNCg0KRGFycmljayBKLiBXb25nICg3KToNCiAgICAg
-ICBbMTg5ODZlMjZdIGxpYnhmczogZml4IGNhbGxfcmN1IGNyYXNoIHdoZW4gdW5tb3VudGlu
-ZyB0aGUgZmFrZSBtb3VudCBpbiBta2ZzDQogICAgICAgW2VjNTlkMmM5XSB4ZnM6IGNsZWFu
-IHVwIG9wZW4tY29kZWQgZnMgYmxvY2sgdW5pdCBjb252ZXJzaW9ucw0KICAgICAgIFthM2I3
-NDQ1Y10geGZzOiBmaXggcmFkaXggdHJlZSB0YWcgc2lnbnMNCiAgICAgICBbM2NlMGI2MTRd
-IHhmczogZml4IGVuZGlhbm5lc3MgaXNzdWUgaW4geGZzX2FnX3Nocmlua19zcGFjZQ0KICAg
-ICAgIFthMGVjZGNiMl0geGZzOiBjaGVjayBmb3Igc3BhcnNlIGlub2RlIGNsdXN0ZXJzIHRo
-YXQgY3Jvc3MgbmV3IEVPQUcgd2hlbiBzaHJpbmtpbmcNCiAgICAgICBbMjBjZDc4MWRdIHhm
-czogY29ycmVjdCB0aGUgbmFycmF0aXZlIGFyb3VuZCBtaXNhbGlnbmVkIHJ0aW5oZXJpdC9l
-eHRzemluaGVyaXQgZGlycw0KICAgICAgIFs3MTg5ZWU1M10geGZzX2RiOiBjb252ZXJ0IHRo
-ZSBhZ3Jlc3YgY29tbWFuZCB0byB1c2UgZm9yX2VhY2hfcGVyYWcNCg0KRGF2ZSBDaGlubmVy
-ICgyOCk6DQogICAgICAgW2Y5YTUzMGY3XSB4ZnM6IHVzZSB4ZnNfYnVmX2FsbG9jX3BhZ2Vz
-IGZvciB1bmNhY2hlZCBidWZmZXJzDQogICAgICAgWzkzNTZkNDZmXSB4ZnM6IG1vdmUgeGZz
-X3BlcmFnX2dldC9wdXQgdG8geGZzX2FnLltjaF0NCiAgICAgICBbNWU1ZWEwNGVdIHhmczog
-bW92ZSBwZXJhZyBzdHJ1Y3R1cmUgYW5kIHNldHVwIHRvIGxpYnhmcy94ZnNfYWcuW2NoXQ0K
-ICAgICAgIFthZDhkZGYxNl0geGZzOiBtYWtlIGZvcl9lYWNoX3BlcmFnLi4uIGEgZmlyc3Qg
-Y2xhc3MgY2l0aXplbg0KICAgICAgIFszNWE2ODg2Nl0geGZzOiBjb252ZXJ0IHJhdyBhZyB3
-YWxrcyB0byB1c2UgZm9yX2VhY2hfcGVyYWcNCiAgICAgICBbMDg4YmU3OTVdIHhmczogY29u
-dmVydCB4ZnNfaXdhbGsgdG8gdXNlIHBlcmFnIHJlZmVyZW5jZXMNCiAgICAgICBbZmVlYTgw
-YWZdIHhmczogY29udmVydCBzZWNvbmRhcnkgc3VwZXJibG9jayB3YWxrIHRvIHVzZSBwZXJh
-Z3MNCiAgICAgICBbZmQxZDQyOGVdIHhmczogcGFzcyBwZXJhZ3MgdGhyb3VnaCB0byB0aGUg
-YnVzeSBleHRlbnQgY29kZQ0KICAgICAgIFs3MjZmMzc1Nl0geGZzOiBwdXNoIHBlcmFncyB0
-aHJvdWdoIHRoZSBhZyByZXNlcnZhdGlvbiBjYWxsb3V0cw0KICAgICAgIFszYmMzOTI1Ml0g
-eGZzOiBwYXNzIHBlcmFncyBhcm91bmQgaW4gZnNtYXAgZGF0YSBkZXYgZnVuY3Rpb25zDQog
-ICAgICAgW2YzMjliODgzXSB4ZnM6IGFkZCBhIHBlcmFnIHRvIHRoZSBidHJlZSBjdXJzb3IN
-CiAgICAgICBbYzdhZWNiNmFdIHhmczogY29udmVydCBybWFwIGJ0cmVlIGN1cnNvciB0byB1
-c2luZyBhIHBlcmFnDQogICAgICAgW2ZkNWQyNGY4XSB4ZnM6IGNvbnZlcnQgcmVmY291bnQg
-YnRyZWUgY3Vyc29yIHRvIHVzZSBwZXJhZ3MNCiAgICAgICBbNjIyNWMwYjFdIHhmczogY29u
-dmVydCBhbGxvY2J0IGN1cnNvcnMgdG8gdXNlIHBlcmFncw0KICAgICAgIFs4NjRlMDUyMF0g
-eGZzOiB1c2UgcGVyYWcgZm9yIGlhbGxvYyBidHJlZSBjdXJzb3JzDQogICAgICAgW2M1Y2Vj
-MDUwXSB4ZnM6IHJlbW92ZSBhZ25vIGZyb20gYnRyZWUgY3Vyc29yDQogICAgICAgWzQ4MzEz
-MTI3XSB4ZnM6IHNpbXBsaWZ5IHhmc19kaWFsbG9jX3NlbGVjdF9hZygpIHJldHVybiB2YWx1
-ZXMNCiAgICAgICBbOWRlYWQ4ZDhdIHhmczogY29sbGFwc2UgQUcgc2VsZWN0aW9uIGZvciBp
-bm9kZSBhbGxvY2F0aW9uDQogICAgICAgW2Q3NjdhMjg2XSB4ZnM6IGdldCByaWQgb2YgeGZz
-X2Rpcl9pYWxsb2MoKQ0KICAgICAgIFs1YWU4OTM4ZV0geGZzOiBpbm9kZSBhbGxvY2F0aW9u
-IGNhbiB1c2UgYSBzaW5nbGUgcGVyYWcgaW5zdGFuY2UNCiAgICAgICBbNGVlZjEyNzNdIHhm
-czogY2xlYW4gdXAgYW5kIHNpbXBsaWZ5IHhmc19kaWFsbG9jKCkNCiAgICAgICBbMDYxM2Fh
-OTFdIHhmczogdXNlIHBlcmFnIHRocm91Z2ggdW5saW5rIHByb2Nlc3NpbmcNCiAgICAgICBb
-MmE5Nzg5OTBdIHhmczogcmVtb3ZlIHhmc19wZXJhZ190DQogICAgICAgWzgyZWJmNjVkXSB4
-ZnM6IGRyb3AgdGhlIEFHSSBiZWluZyBwYXNzZWQgdG8geGZzX2NoZWNrX2FnaV9mcmVlY291
-bnQNCiAgICAgICBbZjE5YWU5YzVdIHhmczogcGVyYWcgbWF5IGJlIG51bGwgaW4geGZzX2lt
-YXAoKQ0KICAgICAgIFs1ZjViYjExNl0geGZzOiBsb2cgc3RyaXBlIHJvdW5kb2ZmIGlzIGEg
-cHJvcGVydHkgb2YgdGhlIGxvZw0KICAgICAgIFthNGNmNTIzM10geGZzOiB4ZnNfbG9nX2Zv
-cmNlX2xzbiBpc24ndCBwYXNzZWQgYSBMU04NCiAgICAgICBbNWQyZmQ1OTFdIHhmczogbG9n
-Z2luZyB0aGUgb24gZGlzayBpbm9kZSBMU04gY2FuIG1ha2UgaXQgZ28gYmFja3dhcmRzDQoN
-Ckd1c3Rhdm8gQS4gUi4gU2lsdmEgKDEpOg0KICAgICAgIFsxNzNlNDU2OF0geGZzOiBGaXgg
-bXVsdGlwbGUgZmFsbC10aHJvdWdoIHdhcm5pbmdzIGZvciBDbGFuZw0KDQpKaWFwZW5nIENo
-b25nICgxKToNCiAgICAgICBbNTU4ZTVjZGRdIHhmczogUmVtb3ZlIHJlZHVuZGFudCBhc3Np
-Z25tZW50IHRvIGJ1c3kNCg0KU2hhb2t1biBaaGFuZyAoMSk6DQogICAgICAgWzliODQ5YWZi
-XSB4ZnM6IHNvcnQgdmFyaWFibGUgYWxwaGFiZXRpY2FsbHkgdG8gYXZvaWQgcmVwZWF0ZWQg
-ZGVjbGFyYXRpb24NCg0KDQpDb2RlIERpZmZzdGF0Og0KDQogIGRiL2ZzbWFwLmMgICAgICAg
-ICAgICAgICAgICB8ICAxNyArLQ0KICBkYi9pbmZvLmMgICAgICAgICAgICAgICAgICAgfCAg
-MTggKy0NCiAgaW5jbHVkZS9saWJ4ZnMuaCAgICAgICAgICAgIHwgICAxICsNCiAgaW5jbHVk
-ZS94ZnNfbW91bnQuaCAgICAgICAgIHwgIDY3ICstLS0NCiAgbGliZnJvZy9yYWRpeC10cmVl
-LmggICAgICAgIHwgICAzICsNCiAgbGlieGZzL2luaXQuYyAgICAgICAgICAgICAgIHwgIDY3
-ICstLS0NCiAgbGlieGZzL2xpYnhmc19hcGlfZGVmcy5oICAgIHwgICAyICsNCiAgbGlieGZz
-L2xpYnhmc19wcml2LmggICAgICAgIHwgIDE0ICstDQogIGxpYnhmcy91dGlsLmMgICAgICAg
-ICAgICAgICB8ICAxMiArLQ0KICBsaWJ4ZnMveGZzX2FnLmMgICAgICAgICAgICAgfCAyODcg
-KysrKysrKysrKysrKy0NCiAgbGlieGZzL3hmc19hZy5oICAgICAgICAgICAgIHwgMTM2ICsr
-KysrKysNCiAgbGlieGZzL3hmc19hZ19yZXN2LmMgICAgICAgIHwgIDExICstDQogIGxpYnhm
-cy94ZnNfYWdfcmVzdi5oICAgICAgICB8ICAxNSArDQogIGxpYnhmcy94ZnNfYWxsb2MuYyAg
-ICAgICAgICB8IDExMSArKystLS0NCiAgbGlieGZzL3hmc19hbGxvYy5oICAgICAgICAgIHwg
-ICAyICstDQogIGxpYnhmcy94ZnNfYWxsb2NfYnRyZWUuYyAgICB8ICAzMSArLQ0KICBsaWJ4
-ZnMveGZzX2FsbG9jX2J0cmVlLmggICAgfCAgIDkgKy0NCiAgbGlieGZzL3hmc19hdHRyLmMg
-ICAgICAgICAgIHwgOTEwICsrKysrKysrKysrKysrKysrKysrKysrKysrLS0tLS0tLS0tLS0t
-LS0tLS0tDQogIGxpYnhmcy94ZnNfYXR0ci5oICAgICAgICAgICB8IDQwMyArKysrKysrKysr
-KysrKysrKysrKw0KICBsaWJ4ZnMveGZzX2F0dHJfbGVhZi5jICAgICAgfCAgIDUgKy0NCiAg
-bGlieGZzL3hmc19hdHRyX2xlYWYuaCAgICAgIHwgICAyICstDQogIGxpYnhmcy94ZnNfYXR0
-cl9yZW1vdGUuYyAgICB8IDE2NyArKysrLS0tLQ0KICBsaWJ4ZnMveGZzX2F0dHJfcmVtb3Rl
-LmggICAgfCAgIDggKy0NCiAgbGlieGZzL3hmc19ibWFwLmMgICAgICAgICAgIHwgICAzICst
-DQogIGxpYnhmcy94ZnNfYm1hcC5oICAgICAgICAgICB8ICAgMSAtDQogIGxpYnhmcy94ZnNf
-YnRyZWUuYyAgICAgICAgICB8ICAxNSArLQ0KICBsaWJ4ZnMveGZzX2J0cmVlLmggICAgICAg
-ICAgfCAgMTAgKy0NCiAgbGlieGZzL3hmc19pYWxsb2MuYyAgICAgICAgIHwgNjkyICsrKysr
-KysrKysrKysrKystLS0tLS0tLS0tLS0tLS0tLQ0KICBsaWJ4ZnMveGZzX2lhbGxvYy5oICAg
-ICAgICAgfCAgNDMgKy0tDQogIGxpYnhmcy94ZnNfaWFsbG9jX2J0cmVlLmMgICB8ICA0NiAr
-LS0NCiAgbGlieGZzL3hmc19pYWxsb2NfYnRyZWUuaCAgIHwgIDEzICstDQogIGxpYnhmcy94
-ZnNfaW5vZGVfYnVmLmMgICAgICB8ICAzMCArLQ0KICBsaWJ4ZnMveGZzX2xvZ19mb3JtYXQu
-aCAgICAgfCAgMTQgKy0NCiAgbGlieGZzL3hmc19yZWZjb3VudC5jICAgICAgIHwgMTIyICsr
-Ky0tLQ0KICBsaWJ4ZnMveGZzX3JlZmNvdW50LmggICAgICAgfCAgIDkgKy0NCiAgbGlieGZz
-L3hmc19yZWZjb3VudF9idHJlZS5jIHwgIDM5ICstDQogIGxpYnhmcy94ZnNfcmVmY291bnRf
-YnRyZWUuaCB8ICAgNyArLQ0KICBsaWJ4ZnMveGZzX3JtYXAuYyAgICAgICAgICAgfCAxNDcg
-KysrLS0tLQ0KICBsaWJ4ZnMveGZzX3JtYXAuaCAgICAgICAgICAgfCAgIDYgKy0NCiAgbGli
-eGZzL3hmc19ybWFwX2J0cmVlLmMgICAgIHwgIDQ2ICstLQ0KICBsaWJ4ZnMveGZzX3JtYXBf
-YnRyZWUuaCAgICAgfCAgIDYgKy0NCiAgbGlieGZzL3hmc19zYi5jICAgICAgICAgICAgIHwg
-MTQ1ICstLS0tLS0NCiAgbGlieGZzL3hmc19zYi5oICAgICAgICAgICAgIHwgICA5IC0NCiAg
-bGlieGZzL3hmc19zaGFyZWQuaCAgICAgICAgIHwgIDQwICstDQogIGxpYnhmcy94ZnNfdHJh
-bnNfaW5vZGUuYyAgICB8ICAxMCArLQ0KICBsaWJ4ZnMveGZzX3R5cGVzLmMgICAgICAgICAg
-fCAgIDQgKy0NCiAgbGlieGZzL3hmc190eXBlcy5oICAgICAgICAgIHwgICAxICsNCiAgcmVw
-YWlyL2FnYnRyZWUuYyAgICAgICAgICAgIHwgIDI4ICstDQogIHJlcGFpci9hZ2J0cmVlLmgg
-ICAgICAgICAgICB8ICAgOCArLQ0KICByZXBhaXIvcGhhc2U1LmMgICAgICAgICAgICAgfCAg
-MTYgKy0NCiAgcmVwYWlyL3JtYXAuYyAgICAgICAgICAgICAgIHwgIDQzICsrLQ0KICA1MSBm
-aWxlcyBjaGFuZ2VkLCAyMzMzIGluc2VydGlvbnMoKyksIDE1MTggZGVsZXRpb25zKC0pDQo=
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-
---------------4fasVMJ8oINND16Wf5UFLb7D--
-
---------------MqmmCOOkMYMk030ULpCxEfMD
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature"
-
------BEGIN PGP SIGNATURE-----
-
-wsF5BAABCAAjFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAmFp2bkFAwAAAAAACgkQIK4WkuE93uDG
-Lw//XY41SsdMp9dT9aGreDGF9dAFrMRg6IR9xBkCBULmSuFo8u6N1R2JudRsQ8hOGe0QeTDqW0fM
-G0Dt7NK6M7L3Cf7dXk466WJNoVgqG5mk1ds2aI9dkwfuUq0dBrQE/eH6w2HZOqqgbZ7UsUWkyZ3h
-ZJfHMw7n5UW/VzHgfOTk7cZUwXWGF8Jp7yy5MBqg8Wp26kZ3hQ/wIIWc1UEYQch3NlaTsgJJkRSt
-i4P/ZGHyKuD5AhokoNIkCU/dLq4qq6IeKJyF0/UFST9f05k31OBOBynWHQDN5qb1QKjQGsXAWWjG
-WOi9+R7DFB8gLBineKuxkwwu6OABE044CI+8GKXKMJofbKbOtYiekVc/arhuSGhaqJe96qBYi26N
-Q54vGj9OMHtegaGshumJgSSreNzCRD7FGxs3mxXO6AfFVxgaEv+g1pX4ah79eaXIIj6qGd37V7PK
-TPnaUhjstZHfZ0MfIZL2VbZeX2vL0+Fbw+2bC/REnFIkV9bXLW12Snjgcaw4DgkxHwpL9se/qEj2
-svYEIKhQ+4Y+eV1sBvrEfPcP7+MkOLpiqSSCJMmTXL04J039QZsigPeMWiXlZi3nd966cEoYP7aJ
-7BxKyLlAhFYOyvlsJXVUl9xu5IKP/MEUfexT/r6DzBNhHwu+U7G/l3KI5hTzGhtZtBOJduRA+DzP
-j7w=
-=9eK6
------END PGP SIGNATURE-----
-
---------------MqmmCOOkMYMk030ULpCxEfMD--
+> 
+> # xfs_repair /dev/sdd
+> xfs_repair: /dev/sdd contains a mounted filesystem
+> xfs_repair: urcu.c:553: urcu_memb_register_thread: Assertion `!URCU_TLS(rcu_reader).registered' failed.
+> Aborted
+> 
+> This is because libxfs_init() registers the main thread with liburcu,
+> but doesn't unregister the thread if libxfs library initialization
+> fails.  When repair sets more dangerous options and tries again, the
+> second initialization attempt causes liburcu to abort.  Fix this by
+> unregistering the thread with liburcu if libxfs initialization fails.
+> 
+> Observed by running xfs/284.
+> 
+> Fixes: e4da1b16 ("xfsprogs: introduce liburcu support")
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>   libxfs/init.c |    4 +++-
+>   1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/libxfs/init.c b/libxfs/init.c
+> index d0753ce5..14911596 100644
+> --- a/libxfs/init.c
+> +++ b/libxfs/init.c
+> @@ -407,8 +407,10 @@ libxfs_init(libxfs_init_t *a)
+>   		unlink(rtpath);
+>   	if (fd >= 0)
+>   		close(fd);
+> -	if (!rval)
+> +	if (!rval) {
+>   		libxfs_close_devices(a);
+> +		rcu_unregister_thread();
+> +	}
+>   
+>   	return rval;
+>   }
+> 
