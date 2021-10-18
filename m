@@ -2,92 +2,210 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EAF1C433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Oct 2021 22:26:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81941C433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Oct 2021 23:06:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 30FEC610FB
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Oct 2021 22:26:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4E5B761027
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Oct 2021 23:06:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229524AbhJRW2b (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 Oct 2021 18:28:31 -0400
-Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:36934 "EHLO
-        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230070AbhJRW2a (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Oct 2021 18:28:30 -0400
-Received: from dread.disaster.area (pa49-195-238-16.pa.nsw.optusnet.com.au [49.195.238.16])
-        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 0F4E5107702;
-        Tue, 19 Oct 2021 09:26:15 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1mcb5C-007ojG-Uj; Tue, 19 Oct 2021 09:26:14 +1100
-Date:   Tue, 19 Oct 2021 09:26:14 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, chandan.babu@oracle.com, hch@lst.de
-Subject: Re: [PATCH v4.1 01/17] xfs: fix incorrect decoding in
- xchk_btree_cur_fsbno
-Message-ID: <20211018222614.GY2361455@dread.disaster.area>
-References: <163424261462.756780.16294781570977242370.stgit@magnolia>
- <163424262046.756780.2366797746965376855.stgit@magnolia>
- <20211015004203.GO24307@magnolia>
+        id S229941AbhJRXI3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 Oct 2021 19:08:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53964 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229524AbhJRXI3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Oct 2021 19:08:29 -0400
+Received: from mail-qt1-x831.google.com (mail-qt1-x831.google.com [IPv6:2607:f8b0:4864:20::831])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53975C061745
+        for <linux-xfs@vger.kernel.org>; Mon, 18 Oct 2021 16:06:17 -0700 (PDT)
+Received: by mail-qt1-x831.google.com with SMTP id w2so16799212qtn.0
+        for <linux-xfs@vger.kernel.org>; Mon, 18 Oct 2021 16:06:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=t13jy1xQQB0gmrT1NW6zHUJeUfFTnWrh5vLufzqGSOo=;
+        b=fs+pNVjSp3t08y/Qek5U1K5zYFVoFGvNZNYlFKrOzb5uFIcN616uN4ceFhbswCQe7X
+         GUI/334ZkDOCYAG+JpNB9RdhrVATD0hQUjfxnS5ctmLY2ZenBoqQuwH76SRvkXdP3cM+
+         Qj0Fbzxqk/1FraNlERd968zbnq2JTCiCQ5CDO3Q9WlBmC+057YzLvNhj4/rxypVAcP6J
+         rQjumGXPcmEExt0Lzf/PYTPfWRlJ1vp+BUyWiM8N59qwmvNjm9ZC55jAARqDBFWT2HWZ
+         3jklaTYrhAgcwaVE5TpN3HHyWJ9JCIz/QYjAgjghO3lQCIQG8A268X/1sctoDSt10rLN
+         uwfg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=t13jy1xQQB0gmrT1NW6zHUJeUfFTnWrh5vLufzqGSOo=;
+        b=bd3kxsuzFLuFK+vMvFE9Z5FmnWx2g2vMnefnNvEEOZJYeRaDcDDmxkFA5Q4V/9vr3b
+         PVRIf5ri1TKhtKWRr/tlf40Z4iKlULsrxm2OBvDLRxTg0f9b678ufEs1sPd0LcPnjpDL
+         1XmCvqtB6A6cEyPbCI2P0oPX7Sos4u7lWs5HZY0uj1dcKoJfHvxXjrcWfCV3Vm+ZB55T
+         /Msq4Tdz2l4sOFJOoieaFgKsKA+DpzIL1fXRMgFQaZ78GUU8jzKqQnqMZJTTHk28y31b
+         pdsWGIuMrKHux1t6JUn8nz9eMYo0wRTDtcun4AfOdm1DJTSz3UNA06D7+WlSVrmmTI7T
+         /jYw==
+X-Gm-Message-State: AOAM531clpdyVzUBJxkFVY9CrhZ9giBI13p7ePNUOg2LVcamc/y8/MgT
+        ZgUDihgt8gjFvdaDS6Pq8nWDog==
+X-Google-Smtp-Source: ABdhPJwMWFSkjHgN749nnHNdzV4ycZUrAg1Cl3jWHBuFmRmB/uqZm1f8+nVTShmwK2hP+IrC5sCFZQ==
+X-Received: by 2002:ac8:5755:: with SMTP id 21mr32075024qtx.353.1634598376340;
+        Mon, 18 Oct 2021 16:06:16 -0700 (PDT)
+Received: from ziepe.ca (hlfxns017vw-142-162-113-129.dhcp-dynamic.fibreop.ns.bellaliant.net. [142.162.113.129])
+        by smtp.gmail.com with ESMTPSA id e16sm6723324qkl.108.2021.10.18.16.06.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 18 Oct 2021 16:06:15 -0700 (PDT)
+Received: from jgg by mlx with local (Exim 4.94)
+        (envelope-from <jgg@ziepe.ca>)
+        id 1mcbhu-00GP5O-UW; Mon, 18 Oct 2021 20:06:14 -0300
+Date:   Mon, 18 Oct 2021 20:06:14 -0300
+From:   Jason Gunthorpe <jgg@ziepe.ca>
+To:     Dan Williams <dan.j.williams@intel.com>
+Cc:     Matthew Wilcox <willy@infradead.org>,
+        Alex Sierra <alex.sierra@amd.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        Linux MM <linux-mm@kvack.org>,
+        Ralph Campbell <rcampbell@nvidia.com>,
+        linux-ext4 <linux-ext4@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        amd-gfx list <amd-gfx@lists.freedesktop.org>,
+        Maling list - DRI developers 
+        <dri-devel@lists.freedesktop.org>, Christoph Hellwig <hch@lst.de>,
+        =?utf-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
+        Alistair Popple <apopple@nvidia.com>,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Linux NVDIMM <nvdimm@lists.linux.dev>,
+        David Hildenbrand <david@redhat.com>,
+        Joao Martins <joao.m.martins@oracle.com>
+Subject: Re: [PATCH v1 2/2] mm: remove extra ZONE_DEVICE struct page refcount
+Message-ID: <20211018230614.GF3686969@ziepe.ca>
+References: <20211014153928.16805-3-alex.sierra@amd.com>
+ <20211014170634.GV2744544@nvidia.com>
+ <YWh6PL7nvh4DqXCI@casper.infradead.org>
+ <CAPcyv4hBdSwdtG6Hnx9mDsRXiPMyhNH=4hDuv8JZ+U+Jj4RUWg@mail.gmail.com>
+ <20211014230606.GZ2744544@nvidia.com>
+ <CAPcyv4hC4qxbO46hp=XBpDaVbeh=qdY6TgvacXRprQ55Qwe-Dg@mail.gmail.com>
+ <20211016154450.GJ2744544@nvidia.com>
+ <CAPcyv4j0kHREAOG6_07E2foz6e4FP8D72mZXH6ivsiUBu_8c6g@mail.gmail.com>
+ <20211018182559.GC3686969@ziepe.ca>
+ <CAPcyv4jvZjeMcKLVuOEQ_gXRd87i3NUX5D=MmsJ++rWafnK-NQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211015004203.GO24307@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=616df489
-        a=DzKKRZjfViQTE5W6EVc0VA==:117 a=DzKKRZjfViQTE5W6EVc0VA==:17
-        a=kj9zAlcOel0A:10 a=8gfv0ekSlNoA:10 a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8
-        a=7-415B0cAAAA:8 a=FaHjbzKQ8L-E_o8YzBIA:9 a=CjuIK1q_8ugA:10
-        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <CAPcyv4jvZjeMcKLVuOEQ_gXRd87i3NUX5D=MmsJ++rWafnK-NQ@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 14, 2021 at 05:42:03PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> During review of subsequent patches, Dave and I noticed that this
-> function doesn't work quite right -- accessing cur->bc_ino depends on
-> the ROOT_IN_INODE flag, not LONG_PTRS.  Fix that and the parentheses
-> isssue.  While we're at it, remove the piece that accesses cur->bc_ag,
-> because block 0 of an AG is never part of a btree.
-> 
-> Note: This changes the btree scrubber tracepoints behavior -- if the
-> cursor has no buffer for a certain level, it will always report
-> NULLFSBLOCK.  It is assumed that anyone tracing the online fsck code
-> will also be tracing xchk_start/xchk_done or otherwise be aware of what
-> exactly is being scrubbed.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
-> v4.1: note the new behavior in the commit message
-> ---
->  fs/xfs/scrub/trace.c |    7 ++++---
->  1 file changed, 4 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/scrub/trace.c b/fs/xfs/scrub/trace.c
-> index c0ef53fe6611..93c13763c15e 100644
-> --- a/fs/xfs/scrub/trace.c
-> +++ b/fs/xfs/scrub/trace.c
-> @@ -24,10 +24,11 @@ xchk_btree_cur_fsbno(
->  	if (level < cur->bc_nlevels && cur->bc_bufs[level])
->  		return XFS_DADDR_TO_FSB(cur->bc_mp,
->  				xfs_buf_daddr(cur->bc_bufs[level]));
-> -	if (level == cur->bc_nlevels - 1 && cur->bc_flags & XFS_BTREE_LONG_PTRS)
-> +
-> +	if (level == cur->bc_nlevels - 1 &&
-> +	    (cur->bc_flags & XFS_BTREE_ROOT_IN_INODE))
->  		return XFS_INO_TO_FSB(cur->bc_mp, cur->bc_ino.ip->i_ino);
-> -	if (!(cur->bc_flags & XFS_BTREE_LONG_PTRS))
-> -		return XFS_AGB_TO_FSB(cur->bc_mp, cur->bc_ag.pag->pag_agno, 0);
-> +
->  	return NULLFSBLOCK;
->  }
+On Mon, Oct 18, 2021 at 12:37:30PM -0700, Dan Williams wrote:
 
-Looks good with the update to the commit message.
+> > device-dax uses PUD, along with TTM, they are the only places. I'm not
+> > sure TTM is a real place though.
+> 
+> I was setting device-dax aside because it can use Joao's changes to
+> get compound-page support.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
--- 
-Dave Chinner
-david@fromorbit.com
+Ideally, but that ideas in that patch series have been floating around
+for a long time now..
+ 
+> > As I understand things, something like FSDAX post-folio should
+> > generate maximal compound pages for extents in the page cache that are
+> > physically contiguous.
+> >
+> > A high order folio can be placed in any lower order in the page
+> > tables, so we never have to fracture it, unless the underlying page
+> > are moved around - which requires an unmap_mapping_range() cycle..
+> 
+> That would be useful to disconnect the compound-page size from the
+> page-table-entry installed for the page. However, don't we need
+> typical compound page fracturing in the near term until folios move
+> ahead?
+
+I do not know, just mindful not to get ahead of Matthew
+ 
+> > > There are end users that would notice the PMD regression, and I think
+> > > FSDAX PMDs with proper compound page metadata is on the same order of
+> > > work as fixing the refcount.
+> >
+> > Hmm, I don't know.. I sketched out the refcount stuff and the code is
+> > OK but ugly and will add a conditional to some THP cases
+> 
+> That reminds me that there are several places that do:
+> 
+> pmd_devmap(pmd) || pmd_trans_huge(pmd)
+
+I haven't tried to look at this yet. I did check that the pte_devmap()
+flag can be deleted, but this is more tricky.
+
+We have pmd_huge(), pmd_large(), pmd_devmap(), pmd_trans_huge(),
+pmd_leaf(), at least
+
+and I couldn't tell you today the subtle differences between all of
+these things on every arch :\
+
+AFAIK there should only be three case:
+ - pmd points to a pte table
+ - pmd is in the special hugetlb format
+ - pmd points at something described by struct page(s)
+
+> ...for the common cases where a THP and DEVMAP page are equivalent,
+> but there are a few places where those paths are not shared when the
+> THP path expects that the page came from the page allocator. So while
+> DEVMAP is not needed in GUP after this conversion, there still needs
+> to be an audit of when THP needs to be careful of DAX mappings.
+
+Yes, it is a tricky job to do the full work, but I think in the end,
+'pmd points at something described by struct page(s)' is enough for
+all code to use is_zone_device_page() instead of a PTE bit or VMA flag
+to drive its logic.
+
+> > Here I imagine the thing that creates the pgmap would specify the
+> > policy it wants. In most cases the policy is tightly coupled to what
+> > the free function in the the provided dev_pagemap_ops does..
+> 
+> The thing that creates the pgmap is the device-driver, and
+> device-driver does not implement truncate or reclaim. It's not until
+> the FS mounts that the pgmap needs to start enforcing pin lifetime
+> guarantees.
+
+I am explaining this wrong, the immediate need is really 'should
+foll_longterm fail fast-gup to the slow path' and something like the
+nvdimm driver can just set that to 1 and rely on VMA flags to control
+what the slow path does - as is today.
+
+It is not as elegant as more flags in the pgmap, but it would get the
+job done with minimal fuss.
+
+Might be nice to either rely fully on VMA flags or fully on pgmap
+holder flags for FOLL_LONGTERM?
+
+> > Anyhow, I'm wondering on a way forward. There are many balls in the
+> > air, all linked:
+> >  - Joao's compound page support for device_dax and more
+> >  - Alex's DEVICE_COHERENT
+> 
+> I have not seen these patches.
+
+It is where this series came from. As DEVICE_COHERENT is focused on
+changing the migration code and, as I recall, the 1 == free thing
+complicated that enough that Christoph requested it be cleaned.
+
+> >  - The refcount normalization
+> >  - Removing the pgmap test from GUP
+> >  - Removing the need for the PUD/PMD/PTE special bit
+> >  - Removing the need for the PUD/PMD/PTE devmap bit
+> 
+> It's not clear that this anything but pure cleanup once the special
+> bit can be used for architectures that don't have devmap. Those same
+> archs presumably don't care about the THP collisions with DAX.
+
+I understood there was some community that was interested in DAX on
+other arches that don't have the PTE bits to spare, so this would be
+of interest to them?
+
+> Completing the DAX reflink work is in my near term goals and that
+> includes "shootdown for fsdax and removing the pgmap test from GUP",
+> but probably not in the order that "refcount normalization" folks
+> would prefer.
+
+Indeed, I don't think that will help many of the stuck items on the
+list move ahead.
+
+Jason
