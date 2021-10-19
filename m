@@ -2,36 +2,36 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0485EC433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Oct 2021 18:52:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C52CC433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Oct 2021 18:52:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DB22060EFE
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Oct 2021 18:52:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6783360E90
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Oct 2021 18:52:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231783AbhJSSyo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Oct 2021 14:54:44 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59590 "EHLO mail.kernel.org"
+        id S234715AbhJSSys (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Oct 2021 14:54:48 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59656 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234715AbhJSSym (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 19 Oct 2021 14:54:42 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 758CD60E90;
-        Tue, 19 Oct 2021 18:52:29 +0000 (UTC)
+        id S234722AbhJSSys (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 19 Oct 2021 14:54:48 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E8C8C60F9F;
+        Tue, 19 Oct 2021 18:52:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1634669549;
-        bh=ZjhNlOLGMIYBKBI6Ojhm00FnV9lgg0okqTosE9lEWc4=;
+        s=k20201202; t=1634669555;
+        bh=ETPaNOXJ66wSN+LcMpC/s90szZopuBakrhEQmYK7/8k=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=D9bOavzfOEHlhFNBl96IEPgWIH+FWwq8KKqj4yTXaB6ITGT8yg5B0rpxymv2xiQYm
-         BZuUrj8FbbufKbP8R1L9V1wWbJ6wXWLfloddmCUZKyCsAwDW7pB9WxPrEKmuw93qMZ
-         lmxp4jEC3vBH2m94RJ7wyYSrurNb559hNMagH5gKdGDADgU9oSxRHXaCWEjbL0hTnN
-         X2oFZ+nppr4S8bjCn/Ote8eFiRkuLpbb1eykMasspaVYwP/gt9gbZRVKedccWWrWMR
-         V4nCIWWgAWlUv6DCfeEkrlWU+zI2ygAanpN7OgGcYDOg6ChC/qq1jMFYY0FQgn6qWl
-         hHPK+s1vGimzA==
-Subject: [PATCH 4/5] xfs: reduce the size of struct xfs_extent_free_item
+        b=QdV9zdhx2Nhfs7iW1aVR89V4psWhrOdDfgpmmptJVqCzKxyAnWhIZ58on8NjkzUyV
+         vAdSSDJx96qQs18SZp66Vo4+nWivk+Rt+i7Xz3Sqp0leIxARfuhDLMnBhnQR6gfEzl
+         /k4g6KDso4ExA1HrOVEbtsdKa3sDsd2ctvLAhcJjuCCWDopUNlza9W8+BXD5HU3GMx
+         0jO5xRtzH79DajgetXxXr+RD3HS7vX5dgDpMR9QrJUfF0DC6BlyfQFsu4EGRRaY4kC
+         B4D4j7B+BvhFqgW0Q/iBm1SQo15jl+QAJLok9HqHzGanpejxWn0BmBDgMOl84MeMgu
+         IPcwJTMzKFF0w==
+Subject: [PATCH 5/5] xfs: remove unused parameter from refcount code
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 19 Oct 2021 11:52:29 -0700
-Message-ID: <163466954919.2235671.801665171595051864.stgit@magnolia>
+Date:   Tue, 19 Oct 2021 11:52:34 -0700
+Message-ID: <163466955467.2235671.4983293287731225085.stgit@magnolia>
 In-Reply-To: <163466952709.2235671.6966476326124447013.stgit@magnolia>
 References: <163466952709.2235671.6966476326124447013.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -44,138 +44,81 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-We only use EFIs to free metadata blocks -- not regular data/attr fork
-extents.  Remove all the fields that we never use, for a net reduction
-of 16 bytes.
+The owner info parameter is always NULL, so get rid of the parameter.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_alloc.c |   25 ++++++++++++++++---------
- fs/xfs/libxfs/xfs_alloc.h |    8 ++++++--
- fs/xfs/xfs_extfree_item.c |   13 ++++++++++---
- 3 files changed, 32 insertions(+), 14 deletions(-)
+ fs/xfs/libxfs/xfs_refcount.c |   19 ++++++++-----------
+ 1 file changed, 8 insertions(+), 11 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 9bc1a03a8167..353e53b892e6 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -2462,12 +2462,11 @@ xfs_defer_agfl_block(
- 	ASSERT(xfs_extfree_item_cache != NULL);
- 	ASSERT(oinfo != NULL);
- 
--	new = kmem_cache_alloc(xfs_extfree_item_cache,
-+	new = kmem_cache_zalloc(xfs_extfree_item_cache,
- 			       GFP_KERNEL | __GFP_NOFAIL);
- 	new->xefi_startblock = XFS_AGB_TO_FSB(mp, agno, agbno);
- 	new->xefi_blockcount = 1;
--	new->xefi_oinfo = *oinfo;
--	new->xefi_skip_discard = false;
-+	new->xefi_owner = oinfo->oi_owner;
- 
- 	trace_xfs_agfl_free_defer(mp, agno, 0, agbno, 1);
- 
-@@ -2505,15 +2504,23 @@ __xfs_free_extent_later(
- #endif
- 	ASSERT(xfs_extfree_item_cache != NULL);
- 
--	new = kmem_cache_alloc(xfs_extfree_item_cache,
-+	new = kmem_cache_zalloc(xfs_extfree_item_cache,
- 			       GFP_KERNEL | __GFP_NOFAIL);
- 	new->xefi_startblock = bno;
- 	new->xefi_blockcount = (xfs_extlen_t)len;
--	if (oinfo)
--		new->xefi_oinfo = *oinfo;
--	else
--		new->xefi_oinfo = XFS_RMAP_OINFO_SKIP_UPDATE;
--	new->xefi_skip_discard = skip_discard;
-+	if (skip_discard)
-+		new->xefi_flags |= XFS_EFI_SKIP_DISCARD;
-+	if (oinfo) {
-+		ASSERT(oinfo->oi_offset == 0);
-+
-+		if (oinfo->oi_flags & XFS_OWNER_INFO_ATTR_FORK)
-+			new->xefi_flags |= XFS_EFI_ATTR_FORK;
-+		if (oinfo->oi_flags & XFS_OWNER_INFO_BMBT_BLOCK)
-+			new->xefi_flags |= XFS_EFI_BMBT_BLOCK;
-+		new->xefi_owner = oinfo->oi_owner;
-+	} else {
-+		new->xefi_owner = XFS_RMAP_OWN_NULL;
-+	}
- 	trace_xfs_bmap_free_defer(tp->t_mountp,
- 			XFS_FSB_TO_AGNO(tp->t_mountp, bno), 0,
- 			XFS_FSB_TO_AGBNO(tp->t_mountp, bno), len);
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index b61aeb6fbe32..1c14a0b1abea 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -258,12 +258,16 @@ void __xfs_free_extent_later(struct xfs_trans *tp, xfs_fsblock_t bno,
-  */
- struct xfs_extent_free_item {
- 	struct list_head	xefi_list;
-+	uint64_t		xefi_owner;
- 	xfs_fsblock_t		xefi_startblock;/* starting fs block number */
- 	xfs_extlen_t		xefi_blockcount;/* number of blocks in extent */
--	bool			xefi_skip_discard;
--	struct xfs_owner_info	xefi_oinfo;	/* extent owner */
-+	unsigned int		xefi_flags;
- };
- 
-+#define XFS_EFI_SKIP_DISCARD	(1U << 0) /* don't issue discard */
-+#define XFS_EFI_ATTR_FORK	(1U << 1) /* freeing attr fork block */
-+#define XFS_EFI_BMBT_BLOCK	(1U << 2) /* freeing bmap btree block */
-+
- static inline void
- xfs_free_extent_later(
- 	struct xfs_trans		*tp,
-diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-index eb378e345f13..47ef9c9c5c17 100644
---- a/fs/xfs/xfs_extfree_item.c
-+++ b/fs/xfs/xfs_extfree_item.c
-@@ -474,14 +474,20 @@ xfs_extent_free_finish_item(
- 	struct list_head		*item,
- 	struct xfs_btree_cur		**state)
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index bb9e256f4970..327ba25e9e17 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -918,8 +918,7 @@ xfs_refcount_adjust_extents(
+ 	struct xfs_btree_cur	*cur,
+ 	xfs_agblock_t		*agbno,
+ 	xfs_extlen_t		*aglen,
+-	enum xfs_refc_adjust_op	adj,
+-	struct xfs_owner_info	*oinfo)
++	enum xfs_refc_adjust_op	adj)
  {
-+	struct xfs_owner_info		oinfo = { };
- 	struct xfs_extent_free_item	*free;
+ 	struct xfs_refcount_irec	ext, tmp;
  	int				error;
+@@ -977,7 +976,7 @@ xfs_refcount_adjust_extents(
+ 						cur->bc_ag.pag->pag_agno,
+ 						tmp.rc_startblock);
+ 				xfs_free_extent_later(cur->bc_tp, fsbno,
+-						  tmp.rc_blockcount, oinfo);
++						  tmp.rc_blockcount, NULL);
+ 			}
  
- 	free = container_of(item, struct xfs_extent_free_item, xefi_list);
-+	oinfo.oi_owner = free->xefi_owner;
-+	if (free->xefi_flags & XFS_EFI_ATTR_FORK)
-+		oinfo.oi_flags |= XFS_OWNER_INFO_ATTR_FORK;
-+	if (free->xefi_flags & XFS_EFI_BMBT_BLOCK)
-+		oinfo.oi_flags |= XFS_OWNER_INFO_BMBT_BLOCK;
- 	error = xfs_trans_free_extent(tp, EFD_ITEM(done),
- 			free->xefi_startblock,
- 			free->xefi_blockcount,
--			&free->xefi_oinfo, free->xefi_skip_discard);
-+			&oinfo, free->xefi_flags & XFS_EFI_SKIP_DISCARD);
- 	kmem_cache_free(xfs_extfree_item_cache, free);
- 	return error;
- }
-@@ -525,6 +531,7 @@ xfs_agfl_free_finish_item(
- 	struct list_head		*item,
- 	struct xfs_btree_cur		**state)
+ 			(*agbno) += tmp.rc_blockcount;
+@@ -1021,8 +1020,8 @@ xfs_refcount_adjust_extents(
+ 			fsbno = XFS_AGB_TO_FSB(cur->bc_mp,
+ 					cur->bc_ag.pag->pag_agno,
+ 					ext.rc_startblock);
+-			xfs_free_extent_later(cur->bc_tp, fsbno, ext.rc_blockcount,
+-					  oinfo);
++			xfs_free_extent_later(cur->bc_tp, fsbno,
++					ext.rc_blockcount, NULL);
+ 		}
+ 
+ skip:
+@@ -1050,8 +1049,7 @@ xfs_refcount_adjust(
+ 	xfs_extlen_t		aglen,
+ 	xfs_agblock_t		*new_agbno,
+ 	xfs_extlen_t		*new_aglen,
+-	enum xfs_refc_adjust_op	adj,
+-	struct xfs_owner_info	*oinfo)
++	enum xfs_refc_adjust_op	adj)
  {
-+	struct xfs_owner_info		oinfo = { };
- 	struct xfs_mount		*mp = tp->t_mountp;
- 	struct xfs_efd_log_item		*efdp = EFD_ITEM(done);
- 	struct xfs_extent_free_item	*free;
-@@ -539,13 +546,13 @@ xfs_agfl_free_finish_item(
- 	ASSERT(free->xefi_blockcount == 1);
- 	agno = XFS_FSB_TO_AGNO(mp, free->xefi_startblock);
- 	agbno = XFS_FSB_TO_AGBNO(mp, free->xefi_startblock);
-+	oinfo.oi_owner = free->xefi_owner;
+ 	bool			shape_changed;
+ 	int			shape_changes = 0;
+@@ -1094,8 +1092,7 @@ xfs_refcount_adjust(
+ 		cur->bc_ag.refc.shape_changes++;
  
- 	trace_xfs_agfl_free_deferred(mp, agno, 0, agbno, free->xefi_blockcount);
+ 	/* Now that we've taken care of the ends, adjust the middle extents */
+-	error = xfs_refcount_adjust_extents(cur, new_agbno, new_aglen,
+-			adj, oinfo);
++	error = xfs_refcount_adjust_extents(cur, new_agbno, new_aglen, adj);
+ 	if (error)
+ 		goto out_error;
  
- 	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
- 	if (!error)
--		error = xfs_free_agfl_block(tp, agno, agbno, agbp,
--					    &free->xefi_oinfo);
-+		error = xfs_free_agfl_block(tp, agno, agbno, agbp, &oinfo);
- 
- 	/*
- 	 * Mark the transaction dirty, even on error. This ensures the
+@@ -1190,12 +1187,12 @@ xfs_refcount_finish_one(
+ 	switch (type) {
+ 	case XFS_REFCOUNT_INCREASE:
+ 		error = xfs_refcount_adjust(rcur, bno, blockcount, &new_agbno,
+-			new_len, XFS_REFCOUNT_ADJUST_INCREASE, NULL);
++				new_len, XFS_REFCOUNT_ADJUST_INCREASE);
+ 		*new_fsb = XFS_AGB_TO_FSB(mp, pag->pag_agno, new_agbno);
+ 		break;
+ 	case XFS_REFCOUNT_DECREASE:
+ 		error = xfs_refcount_adjust(rcur, bno, blockcount, &new_agbno,
+-			new_len, XFS_REFCOUNT_ADJUST_DECREASE, NULL);
++				new_len, XFS_REFCOUNT_ADJUST_DECREASE);
+ 		*new_fsb = XFS_AGB_TO_FSB(mp, pag->pag_agno, new_agbno);
+ 		break;
+ 	case XFS_REFCOUNT_ALLOC_COW:
 
