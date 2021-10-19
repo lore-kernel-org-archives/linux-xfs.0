@@ -2,123 +2,152 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C52CC433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Oct 2021 18:52:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2527C433FE
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Oct 2021 19:21:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6783360E90
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Oct 2021 18:52:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D2F9E6135F
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Oct 2021 19:21:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234715AbhJSSys (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Oct 2021 14:54:48 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59656 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234722AbhJSSys (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 19 Oct 2021 14:54:48 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E8C8C60F9F;
-        Tue, 19 Oct 2021 18:52:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1634669555;
-        bh=ETPaNOXJ66wSN+LcMpC/s90szZopuBakrhEQmYK7/8k=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=QdV9zdhx2Nhfs7iW1aVR89V4psWhrOdDfgpmmptJVqCzKxyAnWhIZ58on8NjkzUyV
-         vAdSSDJx96qQs18SZp66Vo4+nWivk+Rt+i7Xz3Sqp0leIxARfuhDLMnBhnQR6gfEzl
-         /k4g6KDso4ExA1HrOVEbtsdKa3sDsd2ctvLAhcJjuCCWDopUNlza9W8+BXD5HU3GMx
-         0jO5xRtzH79DajgetXxXr+RD3HS7vX5dgDpMR9QrJUfF0DC6BlyfQFsu4EGRRaY4kC
-         B4D4j7B+BvhFqgW0Q/iBm1SQo15jl+QAJLok9HqHzGanpejxWn0BmBDgMOl84MeMgu
-         IPcwJTMzKFF0w==
-Subject: [PATCH 5/5] xfs: remove unused parameter from refcount code
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 19 Oct 2021 11:52:34 -0700
-Message-ID: <163466955467.2235671.4983293287731225085.stgit@magnolia>
-In-Reply-To: <163466952709.2235671.6966476326124447013.stgit@magnolia>
-References: <163466952709.2235671.6966476326124447013.stgit@magnolia>
-User-Agent: StGit/0.19
+        id S230432AbhJSTXd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Oct 2021 15:23:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47664 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232347AbhJSTXc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Oct 2021 15:23:32 -0400
+Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F5C5C06174E
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Oct 2021 12:21:19 -0700 (PDT)
+Received: by mail-pl1-x62d.google.com with SMTP id y4so14441812plb.0
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Oct 2021 12:21:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20210112.gappssmtp.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=A0ozvNXsQJNcX/pewDd9ckpqp0ETylCl5PX4CkgxTjA=;
+        b=dIpN/4YGGNH4r1EZENPOoUM36qbNMxX0AlEbDXR+QAUuWgDJulDqEi3wGiq/1+ers/
+         MtNK0sg7f9C/QkJyKAJlFRYKqMBrTfln8PJngSh8ITqopx0o8J1obkFmoFdux9294FXa
+         0ool0au7ytqQW+k+FPfqnMPWwg5vnKGiVhNgNjwxlfxeranZOVIdAnN2DTdpI6wVKD3S
+         78DmFolU0SXPPnnv6NF8puovRVgO1rRm/SJEGKuOaaGFJvzVcaTz85rlz8++NBOOAXd7
+         t/YIuxqKfUmA5B4vTl9lTDomRDwyKSQWYZDfBGBNdaXHm7+cgFxwO+idryj4IONEZqwU
+         vC2A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=A0ozvNXsQJNcX/pewDd9ckpqp0ETylCl5PX4CkgxTjA=;
+        b=Wlh1UV2+kLL7IgAX2EA3DcsBZTzW+kxhDxCVX9p2llcbe15PmPBJiBKiP2SeMtO+bM
+         YGz/plnYuEackTKo0HPjCCt7zrk6vYaQaDmyvP+TTkJraXN7TodCSmK3cCW3kvOxNixH
+         STVLVj/NaVN7zd7wa991nUeMC7RkHnuCbFCCCpEhhzU6ATA8mX6xXeSYN/tHJp5JGX0N
+         54fLYKgEf7sdSiiEY0ErJggLFNHfNO9A+th4NV3GlseSbmF57ZOyLG9vqrBfVTjEtLH9
+         i1l0KaMGzAd3QhHLM2QUbKP9Lkzi+DdFuoVWXf65K9EEUH9hBsgGlRkm7aE6KGx/nzOb
+         Dtqg==
+X-Gm-Message-State: AOAM530DdUEO6MIpP53qy9WEsOWdbu+/KCGTcFlS/nFzSWLIyX1aQCEo
+        5dgfixxrnnWWEBi+O5TfFGDFk9UKrbOG1Kx2sIQ8c2Jy/payPQ==
+X-Google-Smtp-Source: ABdhPJxnZNNxl4GB/nPoKZm/Jigqlqq+b5Yi5opJ2SeB60SRKWrnwAOzNK7EVcYCxhzXA3M9GeWcrmYdSBdgg3eEB9o=
+X-Received: by 2002:a17:90b:350f:: with SMTP id ls15mr1918933pjb.220.1634671278933;
+ Tue, 19 Oct 2021 12:21:18 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+References: <YWh6PL7nvh4DqXCI@casper.infradead.org> <CAPcyv4hBdSwdtG6Hnx9mDsRXiPMyhNH=4hDuv8JZ+U+Jj4RUWg@mail.gmail.com>
+ <20211014230606.GZ2744544@nvidia.com> <CAPcyv4hC4qxbO46hp=XBpDaVbeh=qdY6TgvacXRprQ55Qwe-Dg@mail.gmail.com>
+ <20211016154450.GJ2744544@nvidia.com> <CAPcyv4j0kHREAOG6_07E2foz6e4FP8D72mZXH6ivsiUBu_8c6g@mail.gmail.com>
+ <20211018182559.GC3686969@ziepe.ca> <CAPcyv4jvZjeMcKLVuOEQ_gXRd87i3NUX5D=MmsJ++rWafnK-NQ@mail.gmail.com>
+ <20211018230614.GF3686969@ziepe.ca> <499043a0-b3d8-7a42-4aee-84b81f5b633f@oracle.com>
+ <20211019160136.GH3686969@ziepe.ca>
+In-Reply-To: <20211019160136.GH3686969@ziepe.ca>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Tue, 19 Oct 2021 12:21:09 -0700
+Message-ID: <CAPcyv4gmvxi5tpT+xgxPLMPGZiLqKsft_5PzpMQZ-aCvwpbCvw@mail.gmail.com>
+Subject: Re: [PATCH v1 2/2] mm: remove extra ZONE_DEVICE struct page refcount
+To:     Jason Gunthorpe <jgg@ziepe.ca>
+Cc:     Joao Martins <joao.m.martins@oracle.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Alex Sierra <alex.sierra@amd.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        Linux MM <linux-mm@kvack.org>,
+        Ralph Campbell <rcampbell@nvidia.com>,
+        linux-ext4 <linux-ext4@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        amd-gfx list <amd-gfx@lists.freedesktop.org>,
+        Maling list - DRI developers 
+        <dri-devel@lists.freedesktop.org>, Christoph Hellwig <hch@lst.de>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Alistair Popple <apopple@nvidia.com>,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Linux NVDIMM <nvdimm@lists.linux.dev>,
+        David Hildenbrand <david@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Oct 19, 2021 at 9:02 AM Jason Gunthorpe <jgg@ziepe.ca> wrote:
+>
+> On Tue, Oct 19, 2021 at 04:13:34PM +0100, Joao Martins wrote:
+> > On 10/19/21 00:06, Jason Gunthorpe wrote:
+> > > On Mon, Oct 18, 2021 at 12:37:30PM -0700, Dan Williams wrote:
+> > >
+> > >>> device-dax uses PUD, along with TTM, they are the only places. I'm not
+> > >>> sure TTM is a real place though.
+> > >>
+> > >> I was setting device-dax aside because it can use Joao's changes to
+> > >> get compound-page support.
+> > >
+> > > Ideally, but that ideas in that patch series have been floating around
+> > > for a long time now..
+> > >
+> > The current status of the series misses a Rb on patches 6,7,10,12-14.
+> > Well, patch 8 too should now drop its tag, considering the latest
+> > discussion.
+> >
+> > If it helps moving things forward I could split my series further into:
+> >
+> > 1) the compound page introduction (patches 1-7) of my aforementioned series
+> > 2) vmemmap deduplication for memory gains (patches 9-14)
+> > 3) gup improvements (patch 8 and gup-slow improvements)
+>
+> I would split it, yes..
+>
+> I think we can see a general consensus that making compound_head/etc
+> work consistently with how THP uses it will provide value and
+> opportunity for optimization going forward.
+>
+> > Whats the benefit between preventing longterm at start
+> > versus only after mounting the filesystem? Or is the intended future purpose
+> > to pass more context into an holder potential future callback e.g. nack longterm
+> > pins on a page basis?
+>
+> I understood Dan's remark that the device-dax path allows
+> FOLL_LONGTERM and the FSDAX path does not ?
+>
+> Which, IIRC, today is signaled basd on vma properties and in all cases
+> fast-gup is denied.
 
-The owner info parameter is always NULL, so get rid of the parameter.
+Yeah, I forgot that 7af75561e171 eliminated any possibility of
+longterm-gup-fast for device-dax, let's not disturb that status quo.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/libxfs/xfs_refcount.c |   19 ++++++++-----------
- 1 file changed, 8 insertions(+), 11 deletions(-)
+> > Maybe we can start by at least not add any flags and just prevent
+> > FOLL_LONGTERM on fsdax -- which I guess was the original purpose of
+> > commit 7af75561e171 ("mm/gup: add FOLL_LONGTERM capability to GUP fast").
+> > This patch (which I can formally send) has a sketch of that (below scissors mark):
+> >
+> > https://lore.kernel.org/linux-mm/6a18179e-65f7-367d-89a9-d5162f10fef0@oracle.com/
+>
+> Yes, basically, whatever test we want for 'deny fast gup foll
+> longterm' is fine.
+>
+> Personally I'd like to see us move toward a set of flag specifying
+> each special behavior and not a collection of types that imply special
+> behaviors.
+>
+> Eg we have at least:
+>  - Block gup fast on foll_longterm
+>  - Capture the refcount ==1 and use the pgmap free hook
+>    (confusingly called page_is_devmap_managed())
+>  - Always use a swap entry
+>  - page->index/mapping are used in the usual file based way?
+>
+> Probably more things..
 
-
-diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-index bb9e256f4970..327ba25e9e17 100644
---- a/fs/xfs/libxfs/xfs_refcount.c
-+++ b/fs/xfs/libxfs/xfs_refcount.c
-@@ -918,8 +918,7 @@ xfs_refcount_adjust_extents(
- 	struct xfs_btree_cur	*cur,
- 	xfs_agblock_t		*agbno,
- 	xfs_extlen_t		*aglen,
--	enum xfs_refc_adjust_op	adj,
--	struct xfs_owner_info	*oinfo)
-+	enum xfs_refc_adjust_op	adj)
- {
- 	struct xfs_refcount_irec	ext, tmp;
- 	int				error;
-@@ -977,7 +976,7 @@ xfs_refcount_adjust_extents(
- 						cur->bc_ag.pag->pag_agno,
- 						tmp.rc_startblock);
- 				xfs_free_extent_later(cur->bc_tp, fsbno,
--						  tmp.rc_blockcount, oinfo);
-+						  tmp.rc_blockcount, NULL);
- 			}
- 
- 			(*agbno) += tmp.rc_blockcount;
-@@ -1021,8 +1020,8 @@ xfs_refcount_adjust_extents(
- 			fsbno = XFS_AGB_TO_FSB(cur->bc_mp,
- 					cur->bc_ag.pag->pag_agno,
- 					ext.rc_startblock);
--			xfs_free_extent_later(cur->bc_tp, fsbno, ext.rc_blockcount,
--					  oinfo);
-+			xfs_free_extent_later(cur->bc_tp, fsbno,
-+					ext.rc_blockcount, NULL);
- 		}
- 
- skip:
-@@ -1050,8 +1049,7 @@ xfs_refcount_adjust(
- 	xfs_extlen_t		aglen,
- 	xfs_agblock_t		*new_agbno,
- 	xfs_extlen_t		*new_aglen,
--	enum xfs_refc_adjust_op	adj,
--	struct xfs_owner_info	*oinfo)
-+	enum xfs_refc_adjust_op	adj)
- {
- 	bool			shape_changed;
- 	int			shape_changes = 0;
-@@ -1094,8 +1092,7 @@ xfs_refcount_adjust(
- 		cur->bc_ag.refc.shape_changes++;
- 
- 	/* Now that we've taken care of the ends, adjust the middle extents */
--	error = xfs_refcount_adjust_extents(cur, new_agbno, new_aglen,
--			adj, oinfo);
-+	error = xfs_refcount_adjust_extents(cur, new_agbno, new_aglen, adj);
- 	if (error)
- 		goto out_error;
- 
-@@ -1190,12 +1187,12 @@ xfs_refcount_finish_one(
- 	switch (type) {
- 	case XFS_REFCOUNT_INCREASE:
- 		error = xfs_refcount_adjust(rcur, bno, blockcount, &new_agbno,
--			new_len, XFS_REFCOUNT_ADJUST_INCREASE, NULL);
-+				new_len, XFS_REFCOUNT_ADJUST_INCREASE);
- 		*new_fsb = XFS_AGB_TO_FSB(mp, pag->pag_agno, new_agbno);
- 		break;
- 	case XFS_REFCOUNT_DECREASE:
- 		error = xfs_refcount_adjust(rcur, bno, blockcount, &new_agbno,
--			new_len, XFS_REFCOUNT_ADJUST_DECREASE, NULL);
-+				new_len, XFS_REFCOUNT_ADJUST_DECREASE);
- 		*new_fsb = XFS_AGB_TO_FSB(mp, pag->pag_agno, new_agbno);
- 		break;
- 	case XFS_REFCOUNT_ALLOC_COW:
-
+Yes, agree with the principle of reducing type-implied special casing.
