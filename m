@@ -2,35 +2,35 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE748C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Oct 2021 18:29:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EC2EC433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Oct 2021 18:37:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B810660FF2
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Oct 2021 18:29:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 16E8460EE2
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Oct 2021 18:37:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230052AbhJTSbW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 Oct 2021 14:31:22 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53544 "EHLO mail.kernel.org"
+        id S230454AbhJTSjY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 Oct 2021 14:39:24 -0400
+Received: from mail.kernel.org ([198.145.29.99]:57494 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229998AbhJTSbW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 20 Oct 2021 14:31:22 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPS id 73B2B61212
-        for <linux-xfs@vger.kernel.org>; Wed, 20 Oct 2021 18:29:07 +0000 (UTC)
+        id S230076AbhJTSjY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 20 Oct 2021 14:39:24 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPS id B1D8B61212
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Oct 2021 18:37:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1634754547;
-        bh=KWanMda2PQGbAbKdEvFGr4h1rGqBkzJawzoOclBKSh0=;
+        s=k20201202; t=1634755029;
+        bh=nC/bPXaSEMo18KZEAKNn/PrbcW9EBpKanEnBDMqosx4=;
         h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=MfkxKgkNcbcdbvWUo3HxwOtuA7Z+X7qZakl4RGBTrQTCL6yIn4nwe8pGZGh3/79sf
-         8DwaaP97UWkZE6teMlsVzP283oJ7dtXkOpqUpE1RlmjqypzuBSE9L5x6J9hsyppVtQ
-         ka2KDts9H0J1WiD1rhwt3n1hF5tslGYP5pRgPjn57veKxjFK4LoT2BpRP769LzQh4R
-         SCkYUs1t0qMHRxLuFbeRc/dihC5zafBYROiZjap4DVWE6lw7UqTz8CFy3LOqy2uD5u
-         gfIEYkwT39nfuRr17s0vzAkLMR5VQa54ntG5GpjSSYTCb3DBgcPNh0ytmF7NRpk9wv
-         kuJnJxemJ6feg==
+        b=esMfXd0pWPgQKxgOCSet6hpy9bjY/GCxzwaYkxHgfTLe570ZVnY+Xe4JExqYUGyMa
+         86HKHAZNQ6q188fpGOr5cYpTr3bTs7Y4AWEP9yz1SotcoM5IstpDWWmps8GLJxBv4n
+         eeGf6QoI4Z4c/Gr3hHf+smBoQGuyt/GIBpAZEdE8hja9zs6OZLCA4rXrytM3J5BLb4
+         R2f/9uNr9WwIK57fatDVCQ2dNyZf1kXpjMoIIXdDvfn7zbeBM1D3N3ErM6EmGmSqe/
+         IV0TVkWnRDm6JVyxiPMbjtiE7Tkqfd2AFOPjlqDFffiF2j1ajOe/kqvJd34zc/r1E7
+         /iXl+Ex/Z51dQ==
 From:   bugzilla-daemon@bugzilla.kernel.org
 To:     linux-xfs@vger.kernel.org
 Subject: [Bug 214767] xfs seems to hang due to race condition? maybe related
  to (gratuitous) thaw.
-Date:   Wed, 20 Oct 2021 18:29:07 +0000
+Date:   Wed, 20 Oct 2021 18:37:09 +0000
 X-Bugzilla-Reason: None
 X-Bugzilla-Type: changed
 X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
@@ -46,7 +46,7 @@ X-Bugzilla-Priority: P1
 X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
 X-Bugzilla-Flags: 
 X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-214767-201763-OsTcd5XnKF@https.bugzilla.kernel.org/>
+Message-ID: <bug-214767-201763-1MKLhv0B5x@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-214767-201763@https.bugzilla.kernel.org/>
 References: <bug-214767-201763@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
@@ -60,19 +60,11 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 https://bugzilla.kernel.org/show_bug.cgi?id=3D214767
 
---- Comment #4 from Christian Theune (ct@flyingcircus.io) ---
-Another thing I noticed: it always hangs the nix-daemon (nixos.org) which d=
-oes
-some dance around managing an overlay read-only mount that gets re-mounted =
-rw
-for a short period while changing things in there. Here is what it looks li=
-ke
-normally:
-
-/dev/vda1 on / type xfs
-(rw,relatime,attr2,inode64,logbufs=3D8,logbsize=3D32k,noquota)
-/dev/vda1 on /nix/store type xfs
-(ro,relatime,attr2,inode64,logbufs=3D8,logbsize=3D32k,noquota)
+--- Comment #5 from Christian Theune (ct@flyingcircus.io) ---
+I've also picked this up with the friends from NixOS in case we can shed so=
+me
+light on what the dance is that the nix-daemon performs here:
+https://github.com/NixOS/nixpkgs/issues/142394
 
 --=20
 You may reply to this email to add a comment.
