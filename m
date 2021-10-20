@@ -2,68 +2,67 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65C36C433FE
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Oct 2021 05:47:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4EC2C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Oct 2021 06:58:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 494C7610F8
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Oct 2021 05:47:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 99DD6610E6
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Oct 2021 06:58:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229691AbhJTFuM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 Oct 2021 01:50:12 -0400
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:38489 "EHLO
+        id S229789AbhJTHBC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 Oct 2021 03:01:02 -0400
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:4281 "EHLO
         heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S229591AbhJTFuL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Oct 2021 01:50:11 -0400
-IronPort-Data: =?us-ascii?q?A9a23=3AEOAS+K1vFuavyONW+PbD5bhwkn2cJEfYwER7XOP?=
- =?us-ascii?q?LsXnJhzhz1mMCmGUbUGnSPqmDNmf8f4sgaom+pxwDsJTdztU2QQE+nZ1PZygU8?=
- =?us-ascii?q?JKaX7x1DatR0xu6d5SFFAQ+hyknQoGowPscEzmM+X9BDpC79SMljPnSHuKlYAL?=
- =?us-ascii?q?5EnsZqTFMGX5JZS1Ly7ZRbr5A2bBVMivV0T/Ai5S31GyNh1aYBlkpB5er83uDi?=
- =?us-ascii?q?hhdVAQw5TTSbdgT1LPXeuJ84Jg3fcldJFOgKmVY83LTegrN8F251juxExYFAdX?=
- =?us-ascii?q?jnKv5c1ERX/jZOg3mZnh+AvDk20Yd4HdplPtT2Pk0MC+7jx2Tgtl308QLu5qrV?=
- =?us-ascii?q?S8nI6/NhP8AFRJfFkmSOIUfoeGefCLg4Jz7I0ruNiGEL+9VJE0/I4wU0uhtBmR?=
- =?us-ascii?q?J7/YZNHYGaRXrr+K9wJq6TOd2j8guJcWtO5kQ0llsxDefD7A5QJTHQqzP/vdZ2?=
- =?us-ascii?q?is9goZFGvO2T8Ybdj1pYzzDbgdJN1NRD4gx9M+sh3/iY3hdrXqWu6M84C7U1gM?=
- =?us-ascii?q?Z+L7zPNvQf/SORN5JhQCcp2Tb7yL1Dw9yHN6WzzfD+XKxrujVlCj/VcQZE7jQ3?=
- =?us-ascii?q?vprhkCDg2IIBBAIWF+Tv/a0kAi9VshZJkhS/TAhxYA29Uq2Xpz+Uge+rXqsoBE?=
- =?us-ascii?q?RQZxTHvc85QXLzbDbiy6dB24ZXntRZscOqsA7X3op20WPktevAiZg2IB541r1G?=
- =?us-ascii?q?qy89Gv0YHZKazRZI3JscOfM2PG7yKlbs/4FZowL/HaJs+DI?=
-IronPort-HdrOrdr: =?us-ascii?q?A9a23=3ARHDas65JxaMIjv9QSQPXwCzXdLJyesId70hD?=
- =?us-ascii?q?6qhwISY6TiX+rbHWoB17726TtN9/YgBDpTntAsm9qDbnhPlICOoqTNOftWvdyQ?=
- =?us-ascii?q?iVxehZhOOIqVDd8m/Fl9K1vp0NT0ERMrLN5BRB/KPHCReDYqsd6ejC4Ka1nv3f?=
- =?us-ascii?q?0nsoaQlrbptr5wB/Bh3zKDwMeCB2QYo+CIGH5tdK4x6peXEsZMy9AXUfG8fZod?=
- =?us-ascii?q?mjruOdXTc2Qw4g9BKVjS6lrJrzEx2j1B8YVD9VhZcOmFK16zDE2g=3D=3D?=
+        with ESMTP id S229771AbhJTHBC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Oct 2021 03:01:02 -0400
+IronPort-Data: =?us-ascii?q?A9a23=3AJ7EZiq4RTYnGDyHIPKdMvQxRtFPGchMFZxGqfqr?=
+ =?us-ascii?q?LsXjdYENSgzYCzGYWW2mGPPuMMWOjKop+Pt6x9RwCsMWExt9nHFc5pCpnJ55og?=
+ =?us-ascii?q?ZCbXIzGdC8cHM8zwvXrFRsht4NHAjX5BJhcokT0+1H9bdANkVEmjfvRH+KmULa?=
+ =?us-ascii?q?dUsxMbVQMpBkJ2EsLd9ER0tYAbeiRW2thiPuqyyHtEAbNNw1cbgr435m+RCZH5?=
+ =?us-ascii?q?5wejt+3UmsWPpintHeG/5Uc4Ql2yauZdxMUSaEMdgK2qnqq8V23wo/Z109F5tK?=
+ =?us-ascii?q?NmbC9fFAIQ6LJIE6FjX8+t6qK20AE/3JtlP1gcqd0hUR/0l1lm/hr1dxLro32R?=
+ =?us-ascii?q?wEyIoXCheYcTwJFVSp5OMWq/ZeeeCbm7JHMnhWun3zEhq8G4FsNFYER5Od7KW9?=
+ =?us-ascii?q?U8vkfMjoMclaIgOfe6LKwSsFtgMo5JcXmNY9ZvWtvpRnVBPBgQ9bcQqHO5NZdx?=
+ =?us-ascii?q?x8xgNxDGbDVYM9xQTZtcxPGbDVMN00RBZZ4m/2n7lH7cjtFuBeQoII0/WHYz0p?=
+ =?us-ascii?q?2yreFGNzLdt2PQO1Rn12EvSTC/mLkElcWOcL34TiM9H/qje/StSThUYkWGfuz8?=
+ =?us-ascii?q?fsCqFmSwHEDTRMNWValrP2RlEGzQZRcJlYS9y5oqrI9nGSvT9/gT1i7rWSCsxo?=
+ =?us-ascii?q?0RdVdCas55RuLx66S5ByWbkAATzhceJk2utQeWzMnzBmKksnvCDgpt6eaIU9xX?=
+ =?us-ascii?q?J/8QSiaYHBTdDFdI3RfC1Zt3jUqm6lr5jqnczqpOPfdYgXJJAzN?=
+IronPort-HdrOrdr: =?us-ascii?q?A9a23=3A9g+zgKomESeEptiyULrMY2UaV5oXeYIsimQD?=
+ =?us-ascii?q?101hICG9E/bo8/xG+c536faaslgssQ4b8+xoVJPgfZq+z+8R3WByB8bAYOCOgg?=
+ =?us-ascii?q?LBQ72KhrGSoQEIdRefysdtkY9kc4VbTOb7FEVGi6/BizWQIpINx8am/cmT6dvj?=
+ =?us-ascii?q?8w=3D=3D?=
 X-IronPort-AV: E=Sophos;i="5.87,166,1631548800"; 
-   d="scan'208";a="116152798"
+   d="scan'208";a="116155790"
 Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 20 Oct 2021 13:47:55 +0800
-Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
-        by cn.fujitsu.com (Postfix) with ESMTP id 52BD24D100E9;
-        Wed, 20 Oct 2021 13:47:51 +0800 (CST)
+  by heian.cn.fujitsu.com with ESMTP; 20 Oct 2021 14:58:46 +0800
+Received: from G08CNEXMBPEKD06.g08.fujitsu.local (unknown [10.167.33.206])
+        by cn.fujitsu.com (Postfix) with ESMTP id EE0EA4D0DC95;
+        Wed, 20 Oct 2021 14:58:44 +0800 (CST)
 Received: from G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) by
- G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
- (TLS) id 15.0.1497.23; Wed, 20 Oct 2021 13:47:51 +0800
+ G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.23; Wed, 20 Oct 2021 14:58:43 +0800
 Received: from [10.167.216.64] (10.167.216.64) by
  G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.23 via Frontend Transport; Wed, 20 Oct 2021 13:47:50 +0800
-Subject: Re: [PATCH v7 6/8] mm: Introduce mf_dax_kill_procs() for fsdax case
+ id 15.0.1497.23 via Frontend Transport; Wed, 20 Oct 2021 14:58:44 +0800
+Subject: Re: [PATCH v7 2/8] dax: Introduce holder for dax_device
 To:     "Darrick J. Wong" <djwong@kernel.org>
 CC:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
         <nvdimm@lists.linux.dev>, <linux-mm@kvack.org>,
         <linux-fsdevel@vger.kernel.org>, <dan.j.williams@intel.com>,
         <david@fromorbit.com>, <hch@infradead.org>, <jane.chu@oracle.com>
 References: <20210924130959.2695749-1-ruansy.fnst@fujitsu.com>
- <20210924130959.2695749-7-ruansy.fnst@fujitsu.com>
- <20211014193241.GK24307@magnolia>
+ <20210924130959.2695749-3-ruansy.fnst@fujitsu.com>
+ <20211014180025.GC24333@magnolia>
 From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Message-ID: <25f86782-ff1f-db4d-d5da-fd1e5bee45f6@fujitsu.com>
-Date:   Wed, 20 Oct 2021 13:47:50 +0800
+Message-ID: <5d4fb139-ea0c-7b43-ba7d-ac52d1bb462c@fujitsu.com>
+Date:   Wed, 20 Oct 2021 14:58:43 +0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
  Thunderbird/78.14.0
 MIME-Version: 1.0
-In-Reply-To: <20211014193241.GK24307@magnolia>
+In-Reply-To: <20211014180025.GC24333@magnolia>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
-X-yoursite-MailScanner-ID: 52BD24D100E9.A140D
+X-yoursite-MailScanner-ID: EE0EA4D0DC95.A3002
 X-yoursite-MailScanner: Found to be clean
 X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
 Precedence: bulk
@@ -72,242 +71,236 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 
 
-在 2021/10/15 3:32, Darrick J. Wong 写道:
-> On Fri, Sep 24, 2021 at 09:09:57PM +0800, Shiyang Ruan wrote:
->> This function is called at the end of RMAP routine, i.e. filesystem
->> recovery function, to collect and kill processes using a shared page of
->> DAX file.  The difference between mf_generic_kill_procs() is,
->> it accepts file's mapping,offset instead of struct page.  Because
->> different file's mappings and offsets may share the same page in fsdax
->> mode.  So, it is called when filesystem RMAP results are found.
+在 2021/10/15 2:00, Darrick J. Wong 写道:
+> On Fri, Sep 24, 2021 at 09:09:53PM +0800, Shiyang Ruan wrote:
+>> To easily track filesystem from a pmem device, we introduce a holder for
+>> dax_device structure, and also its operation.  This holder is used to
+>> remember who is using this dax_device:
+>>   - When it is the backend of a filesystem, the holder will be the
+>>     superblock of this filesystem.
+>>   - When this pmem device is one of the targets in a mapped device, the
+>>     holder will be this mapped device.  In this case, the mapped device
+>>     has its own dax_device and it will follow the first rule.  So that we
+>>     can finally track to the filesystem we needed.
+>>
+>> The holder and holder_ops will be set when filesystem is being mounted,
+>> or an target device is being activated.
 >>
 >> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
 >> ---
->>   fs/dax.c            | 10 ------
->>   include/linux/dax.h |  9 +++++
->>   include/linux/mm.h  |  2 ++
->>   mm/memory-failure.c | 83 ++++++++++++++++++++++++++++++++++++++++-----
->>   4 files changed, 86 insertions(+), 18 deletions(-)
+>>   drivers/dax/super.c | 59 +++++++++++++++++++++++++++++++++++++++++++++
+>>   include/linux/dax.h | 29 ++++++++++++++++++++++
+>>   2 files changed, 88 insertions(+)
 >>
->> diff --git a/fs/dax.c b/fs/dax.c
->> index 509b65e60478..2536c105ec7f 100644
->> --- a/fs/dax.c
->> +++ b/fs/dax.c
->> @@ -852,16 +852,6 @@ static void *dax_insert_entry(struct xa_state *xas,
->>   	return entry;
->>   }
+>> diff --git a/drivers/dax/super.c b/drivers/dax/super.c
+>> index 48ce86501d93..7d4a11dcba90 100644
+>> --- a/drivers/dax/super.c
+>> +++ b/drivers/dax/super.c
+>> @@ -23,7 +23,10 @@
+>>    * @cdev: optional character interface for "device dax"
+>>    * @host: optional name for lookups where the device path is not available
+>>    * @private: dax driver private data
+>> + * @holder_data: holder of a dax_device: could be filesystem or mapped device
+>>    * @flags: state and boolean properties
+>> + * @ops: operations for dax_device
+>> + * @holder_ops: operations for the inner holder
+>>    */
+>>   struct dax_device {
+>>   	struct hlist_node list;
+>> @@ -31,8 +34,10 @@ struct dax_device {
+>>   	struct cdev cdev;
+>>   	const char *host;
+>>   	void *private;
+>> +	void *holder_data;
+>>   	unsigned long flags;
+>>   	const struct dax_operations *ops;
+>> +	const struct dax_holder_operations *holder_ops;
+>>   };
 >>   
->> -static inline
->> -unsigned long pgoff_address(pgoff_t pgoff, struct vm_area_struct *vma)
->> -{
->> -	unsigned long address;
->> -
->> -	address = vma->vm_start + ((pgoff - vma->vm_pgoff) << PAGE_SHIFT);
->> -	VM_BUG_ON_VMA(address < vma->vm_start || address >= vma->vm_end, vma);
->> -	return address;
->> -}
->> -
->>   /* Walk all mappings of a given index of a file and writeprotect them */
->>   static void dax_entry_mkclean(struct address_space *mapping, pgoff_t index,
->>   		unsigned long pfn)
+>>   static dev_t dax_devt;
+>> @@ -374,6 +379,29 @@ int dax_zero_page_range(struct dax_device *dax_dev, pgoff_t pgoff,
+>>   }
+>>   EXPORT_SYMBOL_GPL(dax_zero_page_range);
+>>   
+>> +int dax_holder_notify_failure(struct dax_device *dax_dev, loff_t offset,
+>> +			      size_t size, int flags)
+>> +{
+>> +	int rc;
+>> +
+>> +	dax_read_lock();
+>> +	if (!dax_alive(dax_dev)) {
+>> +		rc = -ENXIO;
+>> +		goto out;
+>> +	}
+>> +
+>> +	if (!dax_dev->holder_data) {
+>> +		rc = -EOPNOTSUPP;
+>> +		goto out;
+>> +	}
+>> +
+>> +	rc = dax_dev->holder_ops->notify_failure(dax_dev, offset, size, flags);
+> 
+> Shouldn't this check if dax_dev->holder_ops != NULL before dereferencing
+> it for the function call?  Imagine an implementation that wants to
+> attach a ->notify_failure function to a dax_device, maintains its own
+> lookup table, and decides that it doesn't need to set holder_data.
+> 
+> (Or, imagine someone who writes a garbage into holder_data and *boom*)
+
+My mistake. I should check @holder_ops instead of @holder_data.
+
+> 
+> How does the locking work here?  If there's a media failure, we'll take
+> dax_rwsem and call ->notify_failure.  If the ->notify_failure function
+> wants to access the pmem to handle the error by calling back into the
+> dax code, will that cause nested locking on dax_rwsem?
+
+Won't for now.  I have tested it with my simple testcases.
+> 
+> Jumping ahead a bit, I think the rmap btree accesses that the xfs
+> implementation performs can cause xfs_buf(fer) cache IO, which would
+> trigger that if the buffers aren't already in memory, if I'm reading
+> this correctly?
+
+I didn't think of this case.  But I think this uses read lock too.  It 
+won't be blocked.  Only dax_set_holder() takes write lock.
+
+> 
+>> +out:
+>> +	dax_read_unlock();
+>> +	return rc;
+>> +}
+>> +EXPORT_SYMBOL_GPL(dax_holder_notify_failure);
+>> +
+>>   #ifdef CONFIG_ARCH_HAS_PMEM_API
+>>   void arch_wb_cache_pmem(void *addr, size_t size);
+>>   void dax_flush(struct dax_device *dax_dev, void *addr, size_t size)
+>> @@ -618,6 +646,37 @@ void put_dax(struct dax_device *dax_dev)
+>>   }
+>>   EXPORT_SYMBOL_GPL(put_dax);
+>>   
+>> +void dax_set_holder(struct dax_device *dax_dev, void *holder,
+>> +		const struct dax_holder_operations *ops)
+>> +{
+>> +	dax_write_lock();
+>> +	if (!dax_alive(dax_dev)) {
+>> +		dax_write_unlock();
+>> +		return;
+>> +	}
+>> +
+>> +	dax_dev->holder_data = holder;
+>> +	dax_dev->holder_ops = ops;
+>> +	dax_write_unlock();
+> 
+> I guess this means that the holder has to detach itself before anyone
+> calls kill_dax, or else a dead dax device ends up with a dangling
+> reference to the holder?
+
+Yes.
+
+> 
+>> +}
+>> +EXPORT_SYMBOL_GPL(dax_set_holder);
+>> +
+>> +void *dax_get_holder(struct dax_device *dax_dev)
+>> +{
+>> +	void *holder;
+>> +
+>> +	dax_read_lock();
+>> +	if (!dax_alive(dax_dev)) {
+>> +		dax_read_unlock();
+>> +		return NULL;
+>> +	}
+>> +
+>> +	holder = dax_dev->holder_data;
+>> +	dax_read_unlock();
+>> +	return holder;
+>> +}
+>> +EXPORT_SYMBOL_GPL(dax_get_holder);
+>> +
+>>   /**
+>>    * inode_dax: convert a public inode into its dax_dev
+>>    * @inode: An inode with i_cdev pointing to a dax_dev
 >> diff --git a/include/linux/dax.h b/include/linux/dax.h
->> index 65411bee4312..3d90becbd160 100644
+>> index 097b3304f9b9..d273d59723cd 100644
 >> --- a/include/linux/dax.h
 >> +++ b/include/linux/dax.h
->> @@ -258,6 +258,15 @@ static inline bool dax_mapping(struct address_space *mapping)
->>   {
->>   	return mapping->host && IS_DAX(mapping->host);
->>   }
->> +static inline unsigned long pgoff_address(pgoff_t pgoff,
->> +		struct vm_area_struct *vma)
->> +{
->> +	unsigned long address;
->> +
->> +	address = vma->vm_start + ((pgoff - vma->vm_pgoff) << PAGE_SHIFT);
->> +	VM_BUG_ON_VMA(address < vma->vm_start || address >= vma->vm_end, vma);
->> +	return address;
->> +}
->>   
->>   #ifdef CONFIG_DEV_DAX_HMEM_DEVICES
->>   void hmem_register_device(int target_nid, struct resource *r);
->> diff --git a/include/linux/mm.h b/include/linux/mm.h
->> index 73a52aba448f..d06af0051e53 100644
->> --- a/include/linux/mm.h
->> +++ b/include/linux/mm.h
->> @@ -3114,6 +3114,8 @@ enum mf_flags {
->>   	MF_MUST_KILL = 1 << 2,
->>   	MF_SOFT_OFFLINE = 1 << 3,
+>> @@ -38,9 +38,24 @@ struct dax_operations {
+>>   	int (*zero_page_range)(struct dax_device *, pgoff_t, size_t);
 >>   };
->> +extern int mf_dax_kill_procs(struct address_space *mapping, pgoff_t index,
->> +			     size_t size, int flags);
->>   extern int memory_failure(unsigned long pfn, int flags);
->>   extern void memory_failure_queue(unsigned long pfn, int flags);
->>   extern void memory_failure_queue_kick(int cpu);
->> diff --git a/mm/memory-failure.c b/mm/memory-failure.c
->> index 85eab206b68f..a9d0d487d205 100644
->> --- a/mm/memory-failure.c
->> +++ b/mm/memory-failure.c
->> @@ -302,10 +302,9 @@ void shake_page(struct page *p)
+>>   
+>> +struct dax_holder_operations {
+>> +	/*
+>> +	 * notify_failure - notify memory failure into inner holder device
+>> +	 * @dax_dev: the dax device which contains the holder
+>> +	 * @offset: offset on this dax device where memory failure occurs
+>> +	 * @size: length of this memory failure event
+>> +	 * @flags: action flags for memory failure handler
+>> +	 */
+>> +	int (*notify_failure)(struct dax_device *dax_dev, loff_t offset,
+>> +			size_t size, int flags);
+> 
+> Shouldn't size be u64 or something?  Let's say that 8GB of your pmem go
+> bad, wouldn't you want a single call?  Though I guess the current
+> implementation only goes a single page at a time, doesn't it?
+
+Right.
+
+> 
+>> +};
+>> +
+>>   extern struct attribute_group dax_attribute_group;
+>>   
+>>   #if IS_ENABLED(CONFIG_DAX)
+>> +void dax_set_holder(struct dax_device *dax_dev, void *holder,
+>> +		const struct dax_holder_operations *ops);
+>> +void *dax_get_holder(struct dax_device *dax_dev);
+>>   struct dax_device *alloc_dax(void *private, const char *host,
+>>   		const struct dax_operations *ops, unsigned long flags);
+>>   void put_dax(struct dax_device *dax_dev);
+>> @@ -70,6 +85,18 @@ static inline bool daxdev_mapping_supported(struct vm_area_struct *vma,
+>>   	return dax_synchronous(dax_dev);
 >>   }
->>   EXPORT_SYMBOL_GPL(shake_page);
->>   
->> -static unsigned long dev_pagemap_mapping_shift(struct page *page,
->> +static unsigned long dev_pagemap_mapping_shift(unsigned long address,
->>   		struct vm_area_struct *vma)
->>   {
->> -	unsigned long address = vma_address(page, vma);
->>   	pgd_t *pgd;
->>   	p4d_t *p4d;
->>   	pud_t *pud;
->> @@ -345,7 +344,7 @@ static unsigned long dev_pagemap_mapping_shift(struct page *page,
->>    * Schedule a process for later kill.
->>    * Uses GFP_ATOMIC allocations to avoid potential recursions in the VM.
->>    */
->> -static void add_to_kill(struct task_struct *tsk, struct page *p,
->> +static void add_to_kill(struct task_struct *tsk, struct page *p, pgoff_t pgoff,
+>>   #else
+>> +static inline struct dax_device *dax_get_by_host(const char *host)
 > 
-> Hm, so I guess you're passing the page and the pgoff now because
-> page->index is meaningless for shared dax pages?  Ok.
+> Not sure why this is being added here?  AFAICT none of the patches call
+> this function...?
 
-Yes, it is for that case.
-
-> 
->>   		       struct vm_area_struct *vma,
->>   		       struct list_head *to_kill)
->>   {
->> @@ -358,9 +357,15 @@ static void add_to_kill(struct task_struct *tsk, struct page *p,
->>   	}
->>   
->>   	tk->addr = page_address_in_vma(p, vma);
->> -	if (is_zone_device_page(p))
->> -		tk->size_shift = dev_pagemap_mapping_shift(p, vma);
->> -	else
->> +	if (is_zone_device_page(p)) {
->> +		/*
->> +		 * Since page->mapping is no more used for fsdax, we should
->> +		 * calculate the address in a fsdax way.
->> +		 */
->> +		if (p->pgmap->type == MEMORY_DEVICE_FS_DAX)
->> +			tk->addr = pgoff_address(pgoff, vma);
->> +		tk->size_shift = dev_pagemap_mapping_shift(tk->addr, vma);
->> +	} else
->>   		tk->size_shift = page_shift(compound_head(p));
->>   
->>   	/*
->> @@ -508,7 +513,7 @@ static void collect_procs_anon(struct page *page, struct list_head *to_kill,
->>   			if (!page_mapped_in_vma(page, vma))
->>   				continue;
->>   			if (vma->vm_mm == t->mm)
->> -				add_to_kill(t, page, vma, to_kill);
->> +				add_to_kill(t, page, 0, vma, to_kill);
->>   		}
->>   	}
->>   	read_unlock(&tasklist_lock);
->> @@ -544,7 +549,32 @@ static void collect_procs_file(struct page *page, struct list_head *to_kill,
->>   			 * to be informed of all such data corruptions.
->>   			 */
->>   			if (vma->vm_mm == t->mm)
->> -				add_to_kill(t, page, vma, to_kill);
->> +				add_to_kill(t, page, 0, vma, to_kill);
->> +		}
->> +	}
->> +	read_unlock(&tasklist_lock);
->> +	i_mmap_unlock_read(mapping);
->> +}
->> +
->> +/*
->> + * Collect processes when the error hit a fsdax page.
->> + */
->> +static void collect_procs_fsdax(struct page *page, struct address_space *mapping,
->> +		pgoff_t pgoff, struct list_head *to_kill)
->> +{
->> +	struct vm_area_struct *vma;
->> +	struct task_struct *tsk;
->> +
->> +	i_mmap_lock_read(mapping);
->> +	read_lock(&tasklist_lock);
->> +	for_each_process(tsk) {
->> +		struct task_struct *t = task_early_kill(tsk, true);
->> +
->> +		if (!t)
->> +			continue;
->> +		vma_interval_tree_foreach(vma, &mapping->i_mmap, pgoff, pgoff) {
->> +			if (vma->vm_mm == t->mm)
->> +				add_to_kill(t, page, pgoff, vma, to_kill);
->>   		}
->>   	}
->>   	read_unlock(&tasklist_lock);
->> @@ -1503,6 +1533,43 @@ static int mf_generic_kill_procs(unsigned long long pfn, int flags,
->>   	return 0;
->>   }
->>   
->> +/**
->> + * mf_dax_kill_procs - Collect and kill processes who are using this file range
->> + * @mapping:	the file in use
->> + * @index:	start offset of the range
->> + * @size:	length of the range
-> 
-> It feels odd that one argument is in units of pgoff_t but the other is
-> in bytes.
-
-The index is page aligned but @size may not be.  I will explain it in 
-detail in the comments.
-
-> 
->> + * @flags:	memory failure flags
->> + */
->> +int mf_dax_kill_procs(struct address_space *mapping, pgoff_t index,
->> +		size_t size, int flags)
->> +{
->> +	LIST_HEAD(to_kill);
->> +	dax_entry_t cookie;
->> +	struct page *page;
->> +	size_t end = (index << PAGE_SHIFT) + size;
->> +
->> +	flags |= MF_ACTION_REQUIRED | MF_MUST_KILL;
-> 
-> Hm.  What flags will we be passing to the xfs_dax_notify_failure_fn?
-> Does XFS itself have to care about what's in the flags values, or is it
-> really just a magic cookie to be passed from the mm layer into the fs
-> and back to mf_dax_kill_procs?
-> 
-
-Just to pass the flag from mm layer to mf_dax_kill_procs().  No one 
-inside this RMAP progress will care about or change it.  As you 
-mentioned in the next patch, I think this should be named with a "mf_" 
-prefix to make it easier to understand.
+It's mistake when I rebase my code to the latest.  These lines were 
+deleted but I didn't notice.  Will fix it.
 
 
 --
 Thanks,
 Ruan.
 
+> 
 > --D
 > 
->> +
->> +	for (; (index << PAGE_SHIFT) < end; index++) {
->> +		page = NULL;
->> +		cookie = dax_lock_mapping_entry(mapping, index, &page);
->> +		if (!cookie)
->> +			return -EBUSY;
->> +		if (!page)
->> +			goto unlock;
->> +
->> +		SetPageHWPoison(page);
->> +
->> +		collect_procs_fsdax(page, mapping, index, &to_kill);
->> +		unmap_and_kill(&to_kill, page_to_pfn(page), mapping,
->> +				index, flags);
->> +unlock:
->> +		dax_unlock_mapping_entry(mapping, index, cookie);
->> +	}
->> +	return 0;
+>> +{
+>> +	return NULL;
 >> +}
->> +EXPORT_SYMBOL_GPL(mf_dax_kill_procs);
->> +
->>   static int memory_failure_hugetlb(unsigned long pfn, int flags)
+>> +static inline void dax_set_holder(struct dax_device *dax_dev, void *holder,
+>> +		const struct dax_holder_operations *ops)
+>> +{
+>> +}
+>> +static inline void *dax_get_holder(struct dax_device *dax_dev)
+>> +{
+>> +	return NULL;
+>> +}
+>>   static inline struct dax_device *alloc_dax(void *private, const char *host,
+>>   		const struct dax_operations *ops, unsigned long flags)
 >>   {
->>   	struct page *p = pfn_to_page(pfn);
+>> @@ -198,6 +225,8 @@ size_t dax_copy_to_iter(struct dax_device *dax_dev, pgoff_t pgoff, void *addr,
+>>   		size_t bytes, struct iov_iter *i);
+>>   int dax_zero_page_range(struct dax_device *dax_dev, pgoff_t pgoff,
+>>   			size_t nr_pages);
+>> +int dax_holder_notify_failure(struct dax_device *dax_dev, loff_t offset,
+>> +		size_t size, int flags);
+>>   void dax_flush(struct dax_device *dax_dev, void *addr, size_t size);
+>>   
+>>   ssize_t dax_iomap_rw(struct kiocb *iocb, struct iov_iter *iter,
 >> -- 
 >> 2.33.0
 >>
