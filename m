@@ -2,91 +2,91 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE609C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Oct 2021 11:51:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D6A6C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Oct 2021 13:30:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A1BFD60EE9
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Oct 2021 11:51:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E913A61374
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Oct 2021 13:30:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229691AbhJTLxY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 Oct 2021 07:53:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42924 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229548AbhJTLxX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Oct 2021 07:53:23 -0400
-Received: from mail-ed1-x52d.google.com (mail-ed1-x52d.google.com [IPv6:2a00:1450:4864:20::52d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F596C06161C
-        for <linux-xfs@vger.kernel.org>; Wed, 20 Oct 2021 04:51:09 -0700 (PDT)
-Received: by mail-ed1-x52d.google.com with SMTP id a25so24892674edx.8
-        for <linux-xfs@vger.kernel.org>; Wed, 20 Oct 2021 04:51:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:content-transfer-encoding:mime-version:subject:message-id:date
-         :to;
-        bh=qft4Ov4wy7FTzKolLao2d2bfdlidrug4OG9ujAKN/WY=;
-        b=DGThwnbtA+CAhtiukEyOTEEIOvUoEHJ8wxBIWWb7UBl1tApaYgjSEvbd9SmgAvL3uc
-         T4PEzH0rAqNkS4lFYTI2DiziPI02g34tMZt5Uhau2DOCH2bO0BcQPihXdU6LUr9wDwUL
-         Kg55Bwd4zcNzP0lvCAcpYlRpWzc40nSMInDliaLdWzq+fY4N9lXL8Ly8sy++H14zjKit
-         VUizGiB1vYng98/j14JubBhQpGiZcbqb2rjxnNxYwQg2fNGKyQL9uYOO5ofM8CAVslnh
-         8fe64yFTxg+tsEkmYHkQ/vv1Wsjt98M7sS7kfcEvYax+sWyHJrHhsf9HI6UWyqL5eDnp
-         lVdg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:content-transfer-encoding:mime-version
-         :subject:message-id:date:to;
-        bh=qft4Ov4wy7FTzKolLao2d2bfdlidrug4OG9ujAKN/WY=;
-        b=N1E8RR3e7TFaO5TXdCEuMtUs91EqP/NojNGazg9XrPlK/mwHEPRtqlJ+nDjXfyfqc4
-         3EITjHFdhnIMUS096KsEVSa2l8RE4wZIMyKlsRzXvV0pcmQiEbqU+CPnhINO5G6swjLh
-         YYjj786TdZkBj3bBJElHiCqgbG1nKbmN8Z5Cius8IpKtBBsfhVRRDFI0uJiRfPqdWjkB
-         mjUyOlsL7ktoSl5E/umWqOpEbQZHTBe6f/srMU2kgb81n9sbPs2P255dOScvABxMjtS9
-         ofjAu9xV5UmEZdK8ITNwVOZI0i0wGSqcQWkXpaHx9dSnYYHBAZLQe+YjtfcvqfbFnwF2
-         Llng==
-X-Gm-Message-State: AOAM533YpoXbOCrPGu0bt6gm1Uo06xtNBCH7mXX84L12PLftDV9+iD6g
-        CvHVWqfE6BQYjZGS3T+7tzMRoANLBP0=
-X-Google-Smtp-Source: ABdhPJxvFHlX6zfr19BN4jzkeHSHhjq5H3IMkwWrUuFbGYIboY8LJQNR8Owkr6tIl1LjBpNRgaywSg==
-X-Received: by 2002:a17:906:d541:: with SMTP id cr1mr47516571ejc.81.1634730667440;
-        Wed, 20 Oct 2021 04:51:07 -0700 (PDT)
-Received: from smtpclient.apple (105.245.6.51.dyn.plus.net. [51.6.245.105])
-        by smtp.gmail.com with ESMTPSA id j3sm927073ejy.65.2021.10.20.04.51.06
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 20 Oct 2021 04:51:06 -0700 (PDT)
-From:   Dan Greenfield <dgrnfld@gmail.com>
-Content-Type: text/plain;
-        charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Mime-Version: 1.0 (Mac OS X Mail 14.0 \(3654.120.0.1.13\))
-Subject: XFS NVMe RDMA?
-Message-Id: <965EC18A-BF96-4544-AFE0-FA0F1787FD49@gmail.com>
-Date:   Wed, 20 Oct 2021 12:51:05 +0100
-To:     linux-xfs@vger.kernel.org
-X-Mailer: Apple Mail (2.3654.120.0.1.13)
+        id S230029AbhJTNdC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 Oct 2021 09:33:02 -0400
+Received: from sandeen.net ([63.231.237.45]:53440 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230179AbhJTNdC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 20 Oct 2021 09:33:02 -0400
+Received: from [10.0.0.146] (liberator.sandeen.net [10.0.0.146])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id D92384919;
+        Wed, 20 Oct 2021 08:29:32 -0500 (CDT)
+Message-ID: <45acd361-0983-1b37-d93d-c5ac1029399c@sandeen.net>
+Date:   Wed, 20 Oct 2021 08:30:45 -0500
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.2.0
+Content-Language: en-US
+To:     Dave Chinner <david@fromorbit.com>, xfs <linux-xfs@vger.kernel.org>
+References: <e5d00665-ff40-cd6a-3c5c-a022341c3344@sandeen.net>
+ <20211019204418.GZ2361455@dread.disaster.area>
+ <6f7d8d49-909a-f9f3-273c-8641eedb5ea2@sandeen.net>
+ <20211020113605.ayzm2cxrexxjr5yl@andromeda.lan>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: Small project: Make it easier to upgrade root fs (i.e. to
+ bigtime)
+In-Reply-To: <20211020113605.ayzm2cxrexxjr5yl@andromeda.lan>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Dear XFS Experts,
+On 10/20/21 6:36 AM, Carlos Maiolino wrote:
+> On Tue, Oct 19, 2021 at 04:04:14PM -0500, Eric Sandeen wrote:
+>> On 10/19/21 3:44 PM, Dave Chinner wrote:
+>>> On Tue, Oct 19, 2021 at 10:18:31AM -0500, Eric Sandeen wrote:
+>>>> Darrick taught xfs_admin to upgrade filesystems to bigtime and inobtcount, which is
+>>>> nice! But it operates via xfs_repair on an unmounted filesystem, so it's a bit tricky
+>>>> to do for the root fs.
+>>>>
+>>>> It occurs to me that with the /forcefsck and /fsckoptions files[1], we might be able
+>>>> to make this a bit easier. i.e. touch /forcefsck and add "-c bigtime=1" to /fsckoptions,
+>>>> and then the initrd/initramfs should run xfs_repair with -c bigtime=1 and do the upgrade.
+>>>
+>>> Does that happen before/after swap is enabled?
+> 
+> IIRC in general, it follows the /etc/fstab mount order, and to access that,
+> rootfs should be mounted, and, (also IIRC), the rootfs is mounted RO, and then
+> remounted RW once the boot pre-reqs are read, but I can confirm that.
+> 
+>>
+>>> Also, ISTR historical problems with doing initrd based root fs
+>>> operations because it's not uncommon for the root filesystem to fail
+>>> to cleanly unmount on shutdown.  i.e. it can end up not having the
+>>> unmount record written because shutdown finishes with the superblock
+>>> still referenced. Hence the filesystem has to be mounted and the log
+>>> replayed before repair can be run on it....
+>>>
+> 
+> I suppose this is already true nowadays? If /forcefsck exists, we are already
+> running fsck the on the rootfs, so, I wonder what happens nowadays, as I haven't
+> tried to use /forcefsck. But anyway, I don't think the behavior will be much
+> different from the current one. I should check what happens today..
+> 
+>>>> Does anyone see a problem with this?  If not, would anyone like to
+>>>> take this on as a small project?
+> 
+> If nobody has any objections, I'll be happy to work on this :)
 
-   as you may or may not know, XFS on NVMe was used as part of the #1 =
-entry to the IO500 benchmarks, as announced at ISC21. That entry swept =
-away the other competition (albeit on large custom hardware), including =
-systems using Intel=E2=80=99s DAOS using Octane/PMem, WekaIO, Lustre, =
-GekkoFS and others.
+Sure, go for it. Talking to Darrick yesterday, we were wondering how swap is
+handled in the initramfs.  If you haven't mounted root, you don't have fstab
+to find swap. But blkid *could* identify all swap partitions anyway. I doubt
+it does that.
 
-There=E2=80=99s no publication associated with it, however there=E2=80=99s=
- a video presenting how they did it:
-https://www.youtube.com/watch?v=3DBJpkpA6hsDc
+The other thing I wondered about was checking system memory, and limiting
+repair to use that much with -m. If it's not available, would it fail more
+gracefully than OOMing halfway through?
 
-In it they describe how they used XFS for storing data chunks, and =
-RocksDB for storing metadata. I=E2=80=99m trying to dig deeper on how =
-they could have used XFS, and in particular how they could have used =
-RDMA to access XFS data. The XFS DAX mode as far as I=E2=80=99m aware =
-requires PMem rather than NVMe?
+if this all feels to crazy, I'm ok with not going forward but it seems worth
+investigating, because operations like this on the root fs can be a real pain.
 
-Do you have any ideas how they could have been able to utilise RDMA so =
-that node A can directly access data chunks stored on XFS on node B? Is =
-the only approach to mmap the chunk on node B and then RDMA it to/from =
-node A?
-
-Kind regards,
-   Dan=
+-Eric
