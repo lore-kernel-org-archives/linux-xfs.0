@@ -2,145 +2,80 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC034C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Oct 2021 17:12:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE748C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Oct 2021 18:29:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A80A5610EA
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Oct 2021 17:12:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B810660FF2
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Oct 2021 18:29:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230073AbhJTRPB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 Oct 2021 13:15:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33214 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229941AbhJTRPA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Oct 2021 13:15:00 -0400
-Received: from mail-pg1-x52d.google.com (mail-pg1-x52d.google.com [IPv6:2607:f8b0:4864:20::52d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1EFD9C06161C
-        for <linux-xfs@vger.kernel.org>; Wed, 20 Oct 2021 10:12:46 -0700 (PDT)
-Received: by mail-pg1-x52d.google.com with SMTP id f5so23072191pgc.12
-        for <linux-xfs@vger.kernel.org>; Wed, 20 Oct 2021 10:12:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20210112.gappssmtp.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=yh4VNQVbmqEE1XoY0HfdKCiOCUMZEFg9p2e4mySh1ho=;
-        b=gXp+nm6KP18UxdU9Hk3ApH1mhWLfoJo59VGT/uI2ErBwWWyik4nmEDpSY+ZrwJRKsD
-         1m2G6rHPn7W/JZ+E3tckd4iJSTd6DrCA1haY52Re29y61eWHiifpVeHfZXxxVG0OyAIG
-         SNKtPfTbbylxqWGsIA6ibBarKTRo4H14iXLyBREaAXG+H2DN8uhwtgKoCeWK8woL61v/
-         h3zf1b5/RLytsJ/EioaqOo91sbl+0/PnLuBJrtfYdYpnEHnps1RtQHpp6zHlZvn6BAf5
-         ILV5/M+yMBS3ApNMZ1KgMy5ldAYTELk9W2MzVGpH+zHnvMYELSkCHHRjl7R71WGss/j1
-         /9/Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=yh4VNQVbmqEE1XoY0HfdKCiOCUMZEFg9p2e4mySh1ho=;
-        b=Q7j87VfvtaYoOPXHTbIUrAyE1v2kopb4R9B2ILRgh6k5afMxD53+1w27g7qj52KCDd
-         hAL8nkbUdtUb6K5K9u1lpqZdjETX5UVDuuZiE2XFuq6J9jk4SvxIvX4FHs0vgYUDt9LS
-         pyY2sGHEA274s+cNYWqXarXaCRRl2lHnHArebwZqOXoddSm2Rq30Mh9enzG25nZyFviR
-         4CIB9ULQkkpGVIfbrbG25tft0mRuPuuj72n+b9Hh5w/QF9zDYH/27sHHFRXt/Z0C9JU2
-         tV9LSlip+fkj8/In5+I89G35zEOySQI5qOaC7+nw83/qO93YJ7SkdR2gKt/lLOf+Gvtf
-         QA2Q==
-X-Gm-Message-State: AOAM530VzLXf3mntMm2L2Ap5+xqiH+WiEH+hUD3JMv5KbNrJEp3wivWM
-        K4Cbae9AUoT047nTvpKconQb97wtwTss6wz+wMi7qA==
-X-Google-Smtp-Source: ABdhPJwX0GE82e3GMz46Z+6E2d1Wq5pKde1k4jJ2mpNNK8H935nRo76Hn1Yb+qZii2GkvCfouy2IWMMOT+HKVGAV2+o=
-X-Received: by 2002:a63:1e0e:: with SMTP id e14mr388190pge.5.1634749965551;
- Wed, 20 Oct 2021 10:12:45 -0700 (PDT)
-MIME-Version: 1.0
-References: <YWh6PL7nvh4DqXCI@casper.infradead.org> <CAPcyv4hBdSwdtG6Hnx9mDsRXiPMyhNH=4hDuv8JZ+U+Jj4RUWg@mail.gmail.com>
- <20211014230606.GZ2744544@nvidia.com> <CAPcyv4hC4qxbO46hp=XBpDaVbeh=qdY6TgvacXRprQ55Qwe-Dg@mail.gmail.com>
- <20211016154450.GJ2744544@nvidia.com> <CAPcyv4j0kHREAOG6_07E2foz6e4FP8D72mZXH6ivsiUBu_8c6g@mail.gmail.com>
- <20211018182559.GC3686969@ziepe.ca> <CAPcyv4jvZjeMcKLVuOEQ_gXRd87i3NUX5D=MmsJ++rWafnK-NQ@mail.gmail.com>
- <20211018230614.GF3686969@ziepe.ca> <499043a0-b3d8-7a42-4aee-84b81f5b633f@oracle.com>
- <20211019160136.GH3686969@ziepe.ca> <CAPcyv4gmvxi5tpT+xgxPLMPGZiLqKsft_5PzpMQZ-aCvwpbCvw@mail.gmail.com>
- <a82a1307-938b-eaf1-cf3d-b9dc76215636@oracle.com>
-In-Reply-To: <a82a1307-938b-eaf1-cf3d-b9dc76215636@oracle.com>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Wed, 20 Oct 2021 10:12:35 -0700
-Message-ID: <CAPcyv4g7+FTNi-vFvx_3qzrosTSET6nPc=ozdxs=p1dm0hBJtg@mail.gmail.com>
-Subject: Re: [PATCH v1 2/2] mm: remove extra ZONE_DEVICE struct page refcount
-To:     Joao Martins <joao.m.martins@oracle.com>
-Cc:     Jason Gunthorpe <jgg@ziepe.ca>,
-        Matthew Wilcox <willy@infradead.org>,
-        Alex Sierra <alex.sierra@amd.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        Linux MM <linux-mm@kvack.org>,
-        Ralph Campbell <rcampbell@nvidia.com>,
-        linux-ext4 <linux-ext4@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        amd-gfx list <amd-gfx@lists.freedesktop.org>,
-        Maling list - DRI developers 
-        <dri-devel@lists.freedesktop.org>, Christoph Hellwig <hch@lst.de>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Alistair Popple <apopple@nvidia.com>,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Linux NVDIMM <nvdimm@lists.linux.dev>,
-        David Hildenbrand <david@redhat.com>
+        id S230052AbhJTSbW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 Oct 2021 14:31:22 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53544 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229998AbhJTSbW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 20 Oct 2021 14:31:22 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPS id 73B2B61212
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Oct 2021 18:29:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1634754547;
+        bh=KWanMda2PQGbAbKdEvFGr4h1rGqBkzJawzoOclBKSh0=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=MfkxKgkNcbcdbvWUo3HxwOtuA7Z+X7qZakl4RGBTrQTCL6yIn4nwe8pGZGh3/79sf
+         8DwaaP97UWkZE6teMlsVzP283oJ7dtXkOpqUpE1RlmjqypzuBSE9L5x6J9hsyppVtQ
+         ka2KDts9H0J1WiD1rhwt3n1hF5tslGYP5pRgPjn57veKxjFK4LoT2BpRP769LzQh4R
+         SCkYUs1t0qMHRxLuFbeRc/dihC5zafBYROiZjap4DVWE6lw7UqTz8CFy3LOqy2uD5u
+         gfIEYkwT39nfuRr17s0vzAkLMR5VQa54ntG5GpjSSYTCb3DBgcPNh0ytmF7NRpk9wv
+         kuJnJxemJ6feg==
+From:   bugzilla-daemon@bugzilla.kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 214767] xfs seems to hang due to race condition? maybe related
+ to (gratuitous) thaw.
+Date:   Wed, 20 Oct 2021 18:29:07 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: ct@flyingcircus.io
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-214767-201763-OsTcd5XnKF@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-214767-201763@https.bugzilla.kernel.org/>
+References: <bug-214767-201763@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 20, 2021 at 10:09 AM Joao Martins <joao.m.martins@oracle.com> wrote:
->
-> On 10/19/21 20:21, Dan Williams wrote:
-> > On Tue, Oct 19, 2021 at 9:02 AM Jason Gunthorpe <jgg@ziepe.ca> wrote:
-> >>
-> >> On Tue, Oct 19, 2021 at 04:13:34PM +0100, Joao Martins wrote:
-> >>> On 10/19/21 00:06, Jason Gunthorpe wrote:
-> >>>> On Mon, Oct 18, 2021 at 12:37:30PM -0700, Dan Williams wrote:
-> >>>>
-> >>>>>> device-dax uses PUD, along with TTM, they are the only places. I'm not
-> >>>>>> sure TTM is a real place though.
-> >>>>>
-> >>>>> I was setting device-dax aside because it can use Joao's changes to
-> >>>>> get compound-page support.
-> >>>>
-> >>>> Ideally, but that ideas in that patch series have been floating around
-> >>>> for a long time now..
-> >>>>
-> >>> The current status of the series misses a Rb on patches 6,7,10,12-14.
-> >>> Well, patch 8 too should now drop its tag, considering the latest
-> >>> discussion.
-> >>>
-> >>> If it helps moving things forward I could split my series further into:
-> >>>
-> >>> 1) the compound page introduction (patches 1-7) of my aforementioned series
-> >>> 2) vmemmap deduplication for memory gains (patches 9-14)
-> >>> 3) gup improvements (patch 8 and gup-slow improvements)
-> >>
-> >> I would split it, yes..
-> >>
-> >> I think we can see a general consensus that making compound_head/etc
-> >> work consistently with how THP uses it will provide value and
-> >> opportunity for optimization going forward.
-> >>
->
-> I'll go do that. Meanwhile, I'll wait a couple days for Dan to review the
-> dax subsystem patches (6 & 7), or otherwise send them over.
->
-> >>> Whats the benefit between preventing longterm at start
-> >>> versus only after mounting the filesystem? Or is the intended future purpose
-> >>> to pass more context into an holder potential future callback e.g. nack longterm
-> >>> pins on a page basis?
-> >>
-> >> I understood Dan's remark that the device-dax path allows
-> >> FOLL_LONGTERM and the FSDAX path does not ?
-> >>
-> >> Which, IIRC, today is signaled basd on vma properties and in all cases
-> >> fast-gup is denied.
-> >
-> > Yeah, I forgot that 7af75561e171 eliminated any possibility of
-> > longterm-gup-fast for device-dax, let's not disturb that status quo.
-> >
-> I am slightly confused by this comment -- the status quo is what we are
-> questioning here -- And we talked about changing that in the past too
-> (thread below), that longterm-gup-fast was an oversight that that commit
-> was only applicable to fsdax. [Maybe this is just my english confusion]
+https://bugzilla.kernel.org/show_bug.cgi?id=3D214767
 
-No, you have it correct. However that "regression" has gone unnoticed,
-so unless there is data showing that gup-fast on device-dax is
-critical for longterm page pinning workflows I'm ok for longterm to
-continue to trigger gup-slow.
+--- Comment #4 from Christian Theune (ct@flyingcircus.io) ---
+Another thing I noticed: it always hangs the nix-daemon (nixos.org) which d=
+oes
+some dance around managing an overlay read-only mount that gets re-mounted =
+rw
+for a short period while changing things in there. Here is what it looks li=
+ke
+normally:
+
+/dev/vda1 on / type xfs
+(rw,relatime,attr2,inode64,logbufs=3D8,logbsize=3D32k,noquota)
+/dev/vda1 on /nix/store type xfs
+(ro,relatime,attr2,inode64,logbufs=3D8,logbsize=3D32k,noquota)
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
