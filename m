@@ -2,48 +2,68 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6F90C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Oct 2021 22:16:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC3C4C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Oct 2021 22:38:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AE097611CC
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Oct 2021 22:16:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9425D61004
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Oct 2021 22:38:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230082AbhJTWTB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 Oct 2021 18:19:01 -0400
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:55062 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229695AbhJTWTB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Oct 2021 18:19:01 -0400
-Received: from dread.disaster.area (pa49-195-238-16.pa.nsw.optusnet.com.au [49.195.238.16])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id EACA58D8FB;
-        Thu, 21 Oct 2021 09:16:44 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1mdJt4-008ZgD-U1; Thu, 21 Oct 2021 09:16:42 +1100
-Date:   Thu, 21 Oct 2021 09:16:42 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     bugzilla-daemon@bugzilla.kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [Bug 214767] New: xfs seems to hang due to race condition? maybe
- related to (gratuitous) thaw.
-Message-ID: <20211020221642.GA2361455@dread.disaster.area>
-References: <bug-214767-201763@https.bugzilla.kernel.org/>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+        id S229842AbhJTWkr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 Oct 2021 18:40:47 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37604 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229695AbhJTWkr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 20 Oct 2021 18:40:47 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPS id 5064C61374
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Oct 2021 22:38:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1634769512;
+        bh=Qh6zuz18ArqhCAOpoknt5oEp2rFDhQuYafpiunhwCyM=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=ppoDBudvp8q94HwWBbfvZ4oXIqbWu1ByKxBPpngBGw2QKWRZmMXvNytPvHWjEYBOJ
+         OloNh0Nek8W+ltkDc5DBnMclCkg3TDNZ6ySVdZ+PjF14whLtiNgGgT/iqAtyB52IfO
+         YtRmQxvfTxApTQ0s7MH7pxkieH7jBNtgPjx75OKS9JMZk/p2P3MkJeACSmfwbHltpc
+         kn9e081ZpOQBoCIMuYEdwBYPlw7eyqjCiq6x/fCMBVjE6iHZJ1h6lkHvRSvTVR6q6y
+         Fqw5sL8L7/KiLtPlZQ2rhxNq9tt9v2XRI2eTSE+ModjzN7tpKnINAoOUtXEGG3VtkU
+         ebLd10Ukx/vMA==
+From:   bugzilla-daemon@bugzilla.kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 214767] xfs seems to hang due to race condition? maybe related
+ to (gratuitous) thaw.
+Date:   Wed, 20 Oct 2021 22:38:31 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: david@fromorbit.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-214767-201763-KTu5ekbZNF@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-214767-201763@https.bugzilla.kernel.org/>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=6170954d
-        a=DzKKRZjfViQTE5W6EVc0VA==:117 a=DzKKRZjfViQTE5W6EVc0VA==:17
-        a=Y7pbzP1Hdpi20SMr:21 a=kj9zAlcOel0A:10 a=8gfv0ekSlNoA:10 a=VwQbUJbxAAAA:8
-        a=7-415B0cAAAA:8 a=4jsdeo0mP5zgtitmewIA:9 a=CjuIK1q_8ugA:10
-        a=W4iUb41TIiNtaFHdFdN3:22 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+References: <bug-214767-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 20, 2021 at 07:36:07AM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
+https://bugzilla.kernel.org/show_bug.cgi?id=3D214767
+
+--- Comment #8 from Dave Chinner (david@fromorbit.com) ---
+On Wed, Oct 20, 2021 at 07:36:07AM +0000, bugzilla-daemon@bugzilla.kernel.o=
+rg
+wrote:
 > [656898.034261] Call Trace:
 > [656898.034538]  __schedule+0x271/0x860
 > [656898.034881]  schedule+0x46/0xb0
@@ -57,6 +77,9 @@ is the likely fix:
 Cheers,
 
 Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
