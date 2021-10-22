@@ -2,227 +2,199 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D5B4C4332F
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Oct 2021 00:10:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABDF6C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Oct 2021 00:50:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 89D86610D0
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Oct 2021 00:10:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 934D161373
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Oct 2021 00:50:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232134AbhJVAMO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Oct 2021 20:12:14 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:47926 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231750AbhJVAMN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Oct 2021 20:12:13 -0400
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id A7BCB218CE;
-        Fri, 22 Oct 2021 00:09:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1634861394; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=t4rV+MNkF8RcZ6MSJOX/2lQh/XwvC0RkEQ5hX7Lq39w=;
-        b=BZGFeIzcjdI2sLgabps0IlJN9KXtf0Gy/NNRiYfbHP6pnAPgBGld9kSk7/ig6/YPPh0gT4
-        LWh2HDcyq6wDqx9aDYnxmSHDIJGSN8HAM+xwFasSuzmChd1JaVRxwzQqu0B13yDd0c7Ikw
-        zWVfw3h2XRzSos9AliOvE3JQfe0+SZM=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1634861394;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=t4rV+MNkF8RcZ6MSJOX/2lQh/XwvC0RkEQ5hX7Lq39w=;
-        b=RalCbPbDj36LWJI0cp/Gng4X+RPBdCR8N6xQ98vS9FAv7YVnh/9NTmMemYmxKq0fA37z3O
-        Exg6raq2U5cMOoCw==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 86A251346B;
-        Fri, 22 Oct 2021 00:09:48 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id uw2vDEwBcmEmFQAAMHmgww
-        (envelope-from <neilb@suse.de>); Fri, 22 Oct 2021 00:09:48 +0000
+        id S232187AbhJVAwT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 Oct 2021 20:52:19 -0400
+Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:55396 "EHLO
+        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232469AbhJVAwL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Oct 2021 20:52:11 -0400
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 19LNianW020528;
+        Fri, 22 Oct 2021 00:49:18 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : references : in-reply-to : content-type :
+ content-id : content-transfer-encoding : mime-version; s=corp-2021-07-09;
+ bh=4FrvQtn8GtQ/wLSbZy0SHr0ehhs9xqXA0y/x2JCUQtQ=;
+ b=GIpkURow71PRrq/LIEDALL8Xp4XRGC+9iqKeU9LFk2JujPw4KTTiQREmJiu9PIxqHZaJ
+ x0KpuZh+J6PBr+KaQvSeQd4LPQ1Xwa98r/NNqsEiEbnwC7Bjguewg21eABcSCXJ7yih+
+ NtYKDgzVGdYYkqcnvMzqhKV9o/6EVTsvP9LxoDuj38HHiKqUTtkhTho5lUGPTbKJAi1u
+ z+y99PclHD/R4IjxMGjswsKfJKiLwii4KRavP+Y7UmmvgiiaBprJ1EucQLc/bWhby/SR
+ Pt1//h62PTRUaTP450O2aQU0daiXzsjopdsOaHZOAWcurPx1EIL6wfh/178Wrb6AYth8 fQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3btkw51bqy-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 22 Oct 2021 00:49:18 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 19M0exN0071304;
+        Fri, 22 Oct 2021 00:49:17 GMT
+Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2170.outbound.protection.outlook.com [104.47.55.170])
+        by aserp3030.oracle.com with ESMTP id 3bqmsk3r22-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 22 Oct 2021 00:49:17 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=J3IKsMYYoE7Ja5rN8/avBSdFIT+BTXX9yclSJjjTdKCS3//JJbNZDqSbSMu8gGFFGkqnZcu/qrE0fJC+Pqxv8MrnMlBAi88c6YsjI6v8L2hjWhondGG9tDmdG9g0P+7wiNjwnPlMzk2we/RiJPDab2M8i7qVQglfDLlkoQ5+ZMhwqH1ZRdirS9tDOEa+IY8GhFP+8kGAgjlwIa3iBHAC5ADVOz1roHOhtaWmn4vX7kuPNPvIHYPtqNW41f2VVXjS+DPZxFme7KZ3xPpuNI5VfJJEk8BO2x+UvhqcGg2HQ+s5EaoRW2Rt44M5wfBB4G90+4sS4nfZAhBiqexj1+kOZQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=4FrvQtn8GtQ/wLSbZy0SHr0ehhs9xqXA0y/x2JCUQtQ=;
+ b=QHaLxdRSGsUgRPpqBnYrP3vpOVOlxYzZyVgjEk12SCKpA2ZxiI9BYZRk7hIKQ8kMnaTI4j29cpcDGhcSB7N9SfpUZDipzb2O10axEvgm+kbSa2SsaZxUUShPrBK+eR5RfGNjY+WOciFcelFpRNxeWNxyrClXjwFY/GvQZ4mF1L9Wt0usLVp/cZjKCNG5B0JLoKuohzoq4z4l+CVPjKIOem703bAamyBdL3N1+FIdCg34rAouZHIR4Mx3F27kEYhvB4GJ1djtptI2WL+u5+l7TUpdbz140eGqJs6VP0f3bC8WhUnU5kfn8+TfKp60EhILJdZtlgPWtX4TIi+wqOs53w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=4FrvQtn8GtQ/wLSbZy0SHr0ehhs9xqXA0y/x2JCUQtQ=;
+ b=YYQRODGMEeyr5kVyuIg0gB2Mu/zsm0/o358iRlF9te6ecVgHZjpQIZvns4GX5r3xANV90Vtg/rct1nyd3ovlBePe4fi3XyvTXZjr3GpgfBEnDdAuR7V0UDn2WDAwAQ12XZubQLilEHYdi9KDZWIF/undnqyRk01J603KdtIV8Nc=
+Received: from SJ0PR10MB4429.namprd10.prod.outlook.com (2603:10b6:a03:2d1::14)
+ by SJ0PR10MB5533.namprd10.prod.outlook.com (2603:10b6:a03:3f7::24) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4628.18; Fri, 22 Oct
+ 2021 00:49:15 +0000
+Received: from SJ0PR10MB4429.namprd10.prod.outlook.com
+ ([fe80::401:1df2:3e9a:66c]) by SJ0PR10MB4429.namprd10.prod.outlook.com
+ ([fe80::401:1df2:3e9a:66c%5]) with mapi id 15.20.4628.018; Fri, 22 Oct 2021
+ 00:49:15 +0000
+From:   Jane Chu <jane.chu@oracle.com>
+To:     Christoph Hellwig <hch@infradead.org>
+CC:     "david@fromorbit.com" <david@fromorbit.com>,
+        "djwong@kernel.org" <djwong@kernel.org>,
+        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
+        "vishal.l.verma@intel.com" <vishal.l.verma@intel.com>,
+        "dave.jiang@intel.com" <dave.jiang@intel.com>,
+        "agk@redhat.com" <agk@redhat.com>,
+        "snitzer@redhat.com" <snitzer@redhat.com>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "ira.weiny@intel.com" <ira.weiny@intel.com>,
+        "willy@infradead.org" <willy@infradead.org>,
+        "vgoyal@redhat.com" <vgoyal@redhat.com>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "nvdimm@lists.linux.dev" <nvdimm@lists.linux.dev>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH 4/6] dm,dax,pmem: prepare dax_copy_to/from_iter() APIs
+ with DAXDEV_F_RECOVERY
+Thread-Topic: [PATCH 4/6] dm,dax,pmem: prepare dax_copy_to/from_iter() APIs
+ with DAXDEV_F_RECOVERY
+Thread-Index: AQHXxhA/migZDNV1a0+SBofbRrgPHKvdURMAgADgEIA=
+Date:   Fri, 22 Oct 2021 00:49:15 +0000
+Message-ID: <325baeaf-54f6-dea0-ed2b-6be5a2ec47db@oracle.com>
+References: <20211021001059.438843-1-jane.chu@oracle.com>
+ <20211021001059.438843-5-jane.chu@oracle.com>
+ <YXFOlKWUuwFUJxUZ@infradead.org>
+In-Reply-To: <YXFOlKWUuwFUJxUZ@infradead.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.14.0
+authentication-results: infradead.org; dkim=none (message not signed)
+ header.d=none;infradead.org; dmarc=none action=none header.from=oracle.com;
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 7e3c56ff-f8e1-4445-5f5a-08d994f5c5a5
+x-ms-traffictypediagnostic: SJ0PR10MB5533:
+x-microsoft-antispam-prvs: <SJ0PR10MB5533B445904ED1BDA91A88BCF3809@SJ0PR10MB5533.namprd10.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:2399;
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: xQu4WxADlt8ZEsBF4C+BzSLiSpcRVOvMSfzfnzGDQXkICjijIFNS5vxpB0Esc6a8GwiT2M0ilBvsfVRoxyaU/FwN4BDUhqOPWoIN8FGUARkdbCfO2lcXjKpWvGtAGMmzXn+03+mHfbud7U+ObqCPMLY6nAdVJHw+GOdbBF7T2NN82/lnBglGa0tfmRqmpPXmx5iboRmNOl/WLfDUilV6nnf1Xp9QhrT3E56WPKSUOyK7tYGZeqeG0crOZPFXD1NW+K6HCiaExZPrIpQkxv/vkyIkYYEnjCIq0EEVG1ebjjMwgIvq7+hMnthn1tCCrMoocpJZF/IvORE0kYzcaBY0mNnSUOFzpRguDpNmPfXFZp8NMhAX4+CLz444rvOJQvD92vYU5XzFTrIKw6BCSKlTNmlnump5ImOrb9wimGHreyoOACiSrfbdIinXPfhjZ7hejuDU9yWKlJZDzacEtH5QASlppQTybuo05WwbLwaiMQn39xvtoMAvMpLUJMniptPc+0rmzhPqTFatq7t7+8UC6PbaQ9htvxgy69KRYkJq1jALEjKTz2XLkjnFBEXWhdciyAI5q1vOXCnOlnUa7WQPqNYcHZhpKaDpU2R2c1IaqtnTwVogiPylTBzzh285OXyTwTQ8vn6elQ1zTTzQXyAeOtH/x0Sak2AmDbGjOgutKpKZ9/dnnUGf/fmxxIzxy6JcvWjjpw93tLKTHTzZRcEej6JcQ5M0aG+1Wg/dcKu9+KW0ivH6Cfak1vgYbC8W+LaClG6sDknGUsyBk0oV1HPSKA==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ0PR10MB4429.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(64756008)(6506007)(4326008)(66446008)(66946007)(66476007)(53546011)(66556008)(71200400001)(186003)(6512007)(2616005)(26005)(122000001)(44832011)(508600001)(38100700002)(54906003)(6486002)(5660300002)(38070700005)(86362001)(83380400001)(316002)(2906002)(31696002)(8936002)(7416002)(31686004)(76116006)(6916009)(8676002)(36756003)(91956017)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?WHUvNDVOMDd2WTcvR2lhNlJYdlJhT3dtdDg0YVZlU2hBK29MNXFmY0RJNGho?=
+ =?utf-8?B?ZzN0bE1KTWFwcDZsQ2dSVDJBM2NXeUZmeGFJaFJNekR0THVTU05JcS9OU3dE?=
+ =?utf-8?B?L0xpZWFrVHo4YW5SYUpCbld2cDhMdlBhcUVxU3pSbHRISDJTMFUrRERBZ0pl?=
+ =?utf-8?B?aU5vNUdMYytBM1lUMEl5ay9IeklyOGRDWGZRTlhrL0dnN09FNThVbEtybkdl?=
+ =?utf-8?B?NU5laFk3K0xla205L1NtWUc1alR2U3BjWkhrMlU3b0lRdkFIQjdGS0lSV1R5?=
+ =?utf-8?B?OXJZa1RLQjBwZ2gySytLanNIN0hJYU9yVTVwaERoOXFsdTJvZDZmdnNGemtu?=
+ =?utf-8?B?MmRHVzRqNzdacG1kN3hwa25VRDhaOHRtNCtVR25Camdoc0s1Nk00QlhYS1Jm?=
+ =?utf-8?B?akRSdDVRVmhTV3NlbFFRNVNjUk93M0tpSHovbHFOby81ZHhWK0tIQ0I3Wkta?=
+ =?utf-8?B?UWJ4UTR2L3BpVEpzWFRHdEloRHpUdVBvTG9tMWRjN2lQUU9yb1duVlZjeElo?=
+ =?utf-8?B?RUIwS0JkL3RuWkkrNWxERU9Qc0xSWUc3M1FnSWRxR2lldExVTjVYWU5aRUln?=
+ =?utf-8?B?SmtGU1NJSFNXMkFSWC9vdERObTBwSXdXMzR6b2pLTWJVa0NPTThLTW04dHNn?=
+ =?utf-8?B?bHk3Q0J6ZTRWOE5DZ0tWSHZGWmRBVTN0UGliZHNRMWlSdzYzRGs1WCszOGRn?=
+ =?utf-8?B?OHRaanRVeEY2cG9lYnlhZU1RajJ4di9LeDFydFk3S1hQSjRsQVFRVm01b1FJ?=
+ =?utf-8?B?SlNPbGdRQ2hMQWNNWWUrZHo0YXNzWHdrbzVnWmM4MFhwVldkb2tmaXl2YjUx?=
+ =?utf-8?B?YjNyM1JRcEp2cnJOR3R2YUJVQlpmbzRmS0xjdDJCRjJSb2Z6K29oNHBtSFdX?=
+ =?utf-8?B?em9qbTdLQzgwUXg2SUNTS0dJOUVqWWIvcGlyZ1lCb1ZRSVFIclNTNDNaSzVM?=
+ =?utf-8?B?L2pMQmEreUlzbmdRbGk5RlEvdy9rQlVYdjdUcUhML2NjZjdIMmIrK2NWTDNl?=
+ =?utf-8?B?YlF6cnR2SUUvVXJCSStzTVZXbS9NSUFnZzdiemRxNzNLMnVRUEs1RndmckVk?=
+ =?utf-8?B?d2RYYlcrSkxoWkhFRmFjaWJ2Rjd3QkxOczVESHJLM1BuSkNINU11aVdOc0lq?=
+ =?utf-8?B?RHZoVEhERkFHQmhEb25semVUZlk4Nm5FU21DVTRob1dNRmovOTJmUzNpSjJT?=
+ =?utf-8?B?bTNLRXV2RHZOQk5YS2htOXl5aVBubkhlQml1ODBHb0ZpcVY2NWswT04weDV1?=
+ =?utf-8?B?QTV0QjUySGlhWFVmVEE3VVRveVoreUVGUjFUanAxYWNJYUUrQlVrZGZUTEFz?=
+ =?utf-8?B?RXpLRlNLZ1NvV1lCbTQ5d2taTTYzYllSTmZ3a2NmK2NkS0I2dElWZHNaVFUy?=
+ =?utf-8?B?eTFtQnFLYlRuY1pHWGFGS2lWd2RjRjdVODNTK3oyV0UySzBTbEk0Q1pocThC?=
+ =?utf-8?B?SGtteitJZm5NcTRHWnBrZ2ZzSm1hS2twOHBUMzBzQjMzV0Z6cE1VYlgvQkdM?=
+ =?utf-8?B?ZXAzMmhTNTMvN3UwWDh5UlMyUnNnaEdkNi9EZGtCcmIwQnhpdTI0VGlWMEIz?=
+ =?utf-8?B?K1FpMzlzQkRDaGV6REIzajFlNVBjazh4WUpxSitUNC90Y3BKcHBkVnpmcDR0?=
+ =?utf-8?B?VE9HYzhUSVR3UU80VnB2YkIwcE11T3FVYWp4UTlVTko0R29aTFk1d0Mrdnha?=
+ =?utf-8?B?TDh3NGUyYXZObElBU2pMZklRMUxsNWY4bGwweUFmWUhUUXYybElIVVdSUVBO?=
+ =?utf-8?B?M3hyZXpYdzNQQWxoQ05HQ0FRMXpzTVJZTHZaWjlMbWJFVHBXWVlHU1hicUhQ?=
+ =?utf-8?B?UHlVUEpjV0NxQkQ0ZllQT1Z2RitGM25XYWh0ZFQwQ3BmdVRFVVh0MTN1MThp?=
+ =?utf-8?B?VjcrY2NoaStyYzRPQTYxZXZQZXIzZWVoUm91UnpaMFVjcFE9PQ==?=
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-ID: <BBB4DAE3B1312540A6CC5D9ED2B3A9D6@namprd10.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-From:   "NeilBrown" <neilb@suse.de>
-To:     "Michal Hocko" <mhocko@suse.com>
-Cc:     "Dave Chinner" <david@fromorbit.com>,
-        "Vlastimil Babka" <vbabka@suse.cz>,
-        "Andrew Morton" <akpm@linux-foundation.org>,
-        "Theodore Ts'o" <tytso@mit.edu>,
-        "Andreas Dilger" <adilger.kernel@dilger.ca>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        "Matthew Wilcox" <willy@infradead.org>,
-        "Mel Gorman" <mgorman@suse.de>, "Jonathan Corbet" <corbet@lwn.net>,
-        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-mm@kvack.org, linux-kernel@vger.kernel.org,
-        linux-doc@vger.kernel.org
-Subject: Re: [PATCH 2/6] MM: improve documentation for __GFP_NOFAIL
-In-reply-to: <YW7PPViS0fEdTaKH@dhcp22.suse.cz>
-References: <eba04a07-99da-771a-ab6b-36de41f9f120@suse.cz>,
- <20211006231452.GF54211@dread.disaster.area>,
- <YV7G7gyfZkmw7/Ae@dhcp22.suse.cz>,
- <163364854551.31063.4377741712039731672@noble.neil.brown.name>,
- <YV/31+qXwqEgaxJL@dhcp22.suse.cz>,
- <20211008223649.GJ54211@dread.disaster.area>,
- <YWQmsESyyiea0zle@dhcp22.suse.cz>,
- <163398898675.17149.16715168325131099480@noble.neil.brown.name>,
- <YW1LLlwjbyv8dcmn@dhcp22.suse.cz>,
- <163461794761.17149.1193247176490791274@noble.neil.brown.name>,
- <YW7PPViS0fEdTaKH@dhcp22.suse.cz>
-Date:   Fri, 22 Oct 2021 11:09:44 +1100
-Message-id: <163486138482.17149.3261315484384960888@noble.neil.brown.name>
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SJ0PR10MB4429.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7e3c56ff-f8e1-4445-5f5a-08d994f5c5a5
+X-MS-Exchange-CrossTenant-originalarrivaltime: 22 Oct 2021 00:49:15.2318
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: jane.chu@oracle.com
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR10MB5533
+X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10144 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adultscore=0 malwarescore=0
+ phishscore=0 mlxlogscore=999 bulkscore=0 suspectscore=0 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2109230001
+ definitions=main-2110220001
+X-Proofpoint-GUID: WNg8BHml_komDAw90HNBEtKfjrAL9SxU
+X-Proofpoint-ORIG-GUID: WNg8BHml_komDAw90HNBEtKfjrAL9SxU
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, 20 Oct 2021, Michal Hocko wrote:
-> On Tue 19-10-21 15:32:27, Neil Brown wrote:
-
-[clip looks of discussion where we are largely in agreement - happy to
- see that!]
-
-> > Presumably there is a real risk of deadlock if we just remove the
-> > memory-reserves boosts of __GFP_NOFAIL.  Maybe it would be safe to
-> > replace all current users of __GFP_NOFAIL with __GFP_NOFAIL|__GFP_HIGH,
-> > and then remove the __GFP_HIGH where analysis suggests there is no risk
-> > of deadlocks.
-> 
-> I would much rather not bind those together and go other way around. If
-> somebody can actually hit deadlocks (those are quite easy to spot as
-> they do not go away) then we can talk about how to deal with them.
-> Memory reserves can help only > < this much.
-
-I recall maybe 10 years ago Linus saying that he preferred simplicity to
-mathematical provability for handling memory deadlocks (or something
-like that).  I lean towards provability myself, but I do see the other
-perspective.
-We have mempools and they can provide strong guarantees (though they are
-often over-allocated I think).  But they can be a bit clumsy.  I believe
-that DaveM is strong against anything like that in the network layer, so
-we strongly depend on GFP_MEMALLOC functionality for swap-over-NFS.  I'm
-sure it is important elsewhere too.
-
-Of course __GFP_HIGH and __GFP_ATOMIC provide an intermediate priority
-level - more likely to fail than __GFP_MEMALLOC.  I suspect they should
-not be seen as avoiding deadlock, only as improving service.  So using
-them when we cannot wait might make sense, but there are probably other
-circumstances.
-
-> > Why is __GFP_NOFAIL better?
-> 
-> Because the allocator can do something if it knows that the allocation
-> cannot fail. E.g. give such an allocation a higher priority over those
-> that are allowed to fail. This is not limited to memory reserves,
-> although this is the only measure that is implemented currently IIRC.
-> On the other hand if there is something interesting the caller can do
-> directly - e.g. do internal object management like mempool does - then
-> it is better to retry at that level.
-
-It *can* do something, but I don't think it *should* do something - not
-if that could have a negative impact on other threads.  Just because I
-cannot fail, that doesn't mean someone else should fail to help me.
-Maybe I should just wait longer.
-
-> 
-> > >  * Using this flag for costly allocations is _highly_ discouraged.
-> > 
-> > This is unhelpful.  Saying something is "discouraged" carries an implied
-> > threat.  This is open source and threats need to be open.
-> > Why is it discouraged? IF it is not forbidden, then it is clearly
-> > permitted.  Maybe there are costs  - so a clear statement of those costs
-> > would be appropriate.
-> > Also, what is a suitable alternative?
-> > 
-> > Current code will trigger a WARN_ON, so it is effectively forbidden.
-> > Maybe we should document that __GFP_NOFAIL is forbidden for orders above
-> > 1, and that vmalloc() should be used instead (thanks for proposing that
-> > patch!).
-> 
-> I think we want to recommend kvmalloc as an alternative once vmalloc is
-> NOFAIL aware.
-> 
-> I will skip over some of the specific regarding SLAB and NOFS usage if
-> you do not mind and focus on points that have direct documentation
-> consequences. Also I do not feel qualified commenting on neither SLAB
-> nor FS internals.
-> 
-> [...]
-> > There is a lot of stuff there.... the bits that are important to me are:
-> > 
-> >  - why is __GFP_NOFAIL preferred? It is a valuable convenience, but I
-> >    don't see that it is necessary
-> 
-> I think it is preferred for one and a half reasons. It tells allocator
-> that this allocation cannot really fail and the caller doesn't have a
-> very good/clever retry policy (e.g. like mempools mentioned above). The
-> half reason would be for tracking purposes (git grep __GFP_NOFAIL) is
-> easier than trying to catch all sorts of while loops over allocation
-> which do not do anything really interesting.
-
-I think the one reason is misguided, as described above.
-I think the half reason is good, and that we should introduce
-   memalloc_retry_wait()
-and encourage developers to use that for any memalloc retry loop.
-__GFP_NOFAIL would then be a convenience flag which causes the allocator
-(slab or alloc_page or whatever) to call memalloc_retry_wait() and do
-the loop internally.
-What exactly memalloc_retry_wait() does (if anything) can be decided
-separately and changed as needed.
-
-> >  - is it reasonable to use __GFP_HIGH when looping if there is a risk of
-> >    deadlock?
-> 
-> As I've said above. Memory reserves are a finite resource and as such
-> they cannot fundamentally solve deadlocks. They can help prioritize
-> though.
-
-To be fair, they can solve 1 level of deadlock.  i.e. if you only need
-to make one allocation to guarantee progress, then allocating from
-reserves can help.  If you might need to make a second allocation
-without freeing the first - then a single reserve pool can provide
-guarantees (which is why we use mempool is layered block devices - md
-over dm over loop of scsi).
-
-> 
-> >  - Will __GFP_DIRECT_RECLAIM always result in a delay before failure? In
-> >    that case it should be safe to loop around allocations using
-> >    __GFP_DIRECT_RECLAIM without needing congestion_wait() (so it can
-> >    just be removed.
-> 
-> This is a good question and I do not think we have that documented
-> anywhere. We do cond_resched() for sure. I do not think we guarantee a
-> sleeping point in general. Maybe we should, I am not really sure.
-
-If we add memalloc_retry_wait(), it wouldn't matter.  We would only need
-to ensure that memalloc_retry_wait() waited if page_alloc didn't.
-
-
-I think we should:
- - introduce memalloc_retry_wait() and use it for all malloc retry loops
-   including __GFP_NOFAIL
- - drop all the priority boosts added for __GFP_NOFAIL
- - drop __GFP_ATOMIC and change all the code that tests for __GFP_ATOMIC
-   to instead test for __GFP_HIGH.  __GFP_ATOMIC is NEVER used without
-   __GFP_HIGH.  This give a slight boost to several sites that use
-   __GFP_HIGH explicitly.
- - choose a consistent order threshold for disallowing __GFP_NOFAIL
-   (rmqueue uses "order > 1", __alloc_pages_slowpath uses
-    "order > PAGE_ALLOC_COSTLY_ORDER"), test it once - early - and
-   document kvmalloc as an alternative.  Code can also loop if there
-   is an alternative strategy for freeing up memory.
-
-Thanks,
-NeilBrown
-
-
-Thanks,
-NeilBrown
+T24gMTAvMjEvMjAyMSA0OjI3IEFNLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90ZToNCj4gT24gV2Vk
+LCBPY3QgMjAsIDIwMjEgYXQgMDY6MTA6NTdQTSAtMDYwMCwgSmFuZSBDaHUgd3JvdGU6DQo+PiBQ
+cmVwYXJlIGRheF9jb3B5X3RvL2Zyb21faXRlcigpIEFQSXMgd2l0aCBEQVhERVZfRl9SRUNPVkVS
+WSBmbGFnDQo+PiBzdWNoIHRoYXQgd2hlbiB0aGUgZmxhZyBpcyBzZXQsIHRoZSB1bmRlcmx5aW5n
+IGRyaXZlciBpbXBsZW1lbnRhdGlvbg0KPj4gb2YgdGhlIEFQSXMgbWF5IGRlYWwgd2l0aCBwb3Rl
+bnRpYWwgcG9pc29uIGluIGEgZ2l2ZW4gYWRkcmVzcw0KPj4gcmFuZ2UgYW5kIHJlYWQgcGFydGlh
+bCBkYXRhIG9yIHdyaXRlIGFmdGVyIGNsZWFyaW5nIHBvaXNvbi4NCj4gDQo+IEZZSSwgSSd2ZSBi
+ZWVuIHdvbmRlcmluZyBmb3IgYSB3aGlsZSBpZiB3ZSBjb3VsZCBqdXN0IGtpbGwgb2ZmIHRoZXNl
+DQo+IG1ldGhvZHMgZW50aXJlbHkuICBCYXNpY2FsbHkgdGhlIGRyaXZlciBpbnRlcmFjdGlvbiBj
+b25zaXN0cyBvZiB0d28NCj4gcGFydHM6DQo+IA0KPiAgIGEpIHdldGhlciB0byB1c2UgdGhlIGZs
+dXNoY2FjaGUvbWNzYWZlIHZhcmlhbnRzIG9mIHRoZSBnZW5lcmljIGhlbHBlcnMNCj4gICBiKSBh
+Y3R1YWxseSBkb2luZyByZW1hcHBpbmcgZm9yIGRldmljZSBtYXBwZXINCj4gDQo+IHRvIG1lIGl0
+IHNlZW1zIGxpa2Ugd2Ugc2hvdWxkIGhhbmRsZSBhKSB3aXRoIGZsYWdzIGluIGRheF9vcGVyYXRp
+b25zLA0KPiBhbmQgb25seSBoYXZlIGEgcmVtYXAgY2FsbGJhY2sgZm9yIGRldmljZSBtYXBwZXIu
+ICBUaGF0IHdheSB3ZSdkIGF2b2lkDQo+IHRoZSBpbmRpcmVjdCBjYWxscyBmb3IgdGhlIG5hdGl2
+ZSBjYXNlLCBhbmQgYWxzbyBhdm9pZCB0b25zIG9mDQo+IGJvaWxlcnBsYXRlIGNvZGUuICAiZnV0
+aGVyIGRlY291cGxlIERBWCBmcm9tIGJsb2NrIGRldmljZXMiIHNlcmllcw0KPiBhbHJlYWR5IG1h
+c3NhZ2VzIHRoZSBkZXZpY2UgbWFwcGVyIGludG8gYSBmb3JtIHN1aXRhYmxlIGZvciBzdWNoDQo+
+IGNhbGxiYWNrcy4NCj4gDQoNCkkndmUgbG9va2VkIHRocm91Z2ggeW91ciAiZnV0aGVyIGRlY291
+cGxlIERBWCBmcm9tIGJsb2NrIGRldmljZXMiIHNlcmllcyANCmFuZCBsaWtlcyB0aGUgdXNlIG9m
+IHhhcnJheSBpbiBwbGFjZSBvZiB0aGUgaG9zdCBoYXNoIGxpc3QuDQpXaGljaCB1cHN0cmVhbSB2
+ZXJzaW9uIGlzIHRoZSBzZXJpZXMgYmFzZWQgdXBvbj8NCklmIGl0J3MgYmFzZWQgb24geW91ciBk
+ZXZlbG9wbWVudCByZXBvLCBJJ2QgYmUgaGFwcHkgdG8gdGFrZSBhIGNsb25lDQphbmQgcmViYXNl
+IG15IHBhdGNoZXMgb24geW91cnMgaWYgeW91IHByb3ZpZGUgYSBsaW5rLiBQbGVhc2UgbGV0IG1l
+DQprbm93IHRoZSBiZXN0IHdheSB0byBjb29wZXJhdGUuDQoNClRoYXQgc2FpZCwgSSdtIHVuY2xl
+YXIgYXQgd2hhdCB5b3UncmUgdHJ5aW5nIHRvIHN1Z2dlc3Qgd2l0aCByZXNwZWN0DQp0byB0aGUg
+J0RBWERFVl9GX1JFQ09WRVJZJyBmbGFnLiAgVGhlIGZsYWcgY2FtZSBmcm9tIHVwcGVyIGRheC1m
+cw0KY2FsbCBzdGFjayB0byB0aGUgZG0gdGFyZ2V0IGxheWVyLCBhbmQgdGhlIGRtIHRhcmdldHMg
+YXJlIGVxdWlwcGVkDQp3aXRoIGhhbmRsaW5nIHBtZW0gZHJpdmVyIHNwZWNpZmljIHRhc2ssIHNv
+IGl0IGFwcGVhcnMgdGhhdCB0aGUgZmxhZyANCndvdWxkIG5lZWQgdG8gYmUgcGFzc2VkIGRvd24g
+dG8gdGhlIG5hdGl2ZSBwbWVtIGxheWVyLCByaWdodD8NCkFtIEkgdG90YWxseSBtaXNzaW5nIHlv
+dXIgcG9pbnQ/DQoNCnRoYW5rcywNCi1qYW5lDQo=
