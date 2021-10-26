@@ -2,75 +2,68 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2306C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 Oct 2021 01:59:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64528C433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 Oct 2021 14:12:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7D5D660EC0
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 Oct 2021 01:59:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 482196103C
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 Oct 2021 14:12:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230160AbhJZCBl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 25 Oct 2021 22:01:41 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40772 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230146AbhJZCBl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 25 Oct 2021 22:01:41 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 0976C60F9B;
-        Tue, 26 Oct 2021 01:59:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1635213558;
-        bh=2mPUeS3RqwqWj8tVvCnTHL2ub0rzQLafcEE3PBVvJxI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=RuYRtDUL8OWpn9pezDpylf0Duc4khiZkIfof7OM069mENoXozlR5G0lb3jrEa/FCB
-         mlMS9IiMSAAAhUoO0Vggr1uMV/I0QJmbI9iYeGhUuKuxHLtn6gEKMitRkgtaUODQWZ
-         BHBc5f8jGXGiHjrw1MbN4KiF/wdLxU/wJxvKzDG8Ohulj+OVHf8Ot7IOK+XvXO02pH
-         8hNfNCorjcoz+zFMVMOazp2WknM02/dPru1Lhab6m9b4qhNzpUZ+mr2cuBvYdtSMNX
-         Re3StoFBV2qNhzJiOOc19pMIw9sedzt2OjerihGJXXFgcJATQiJP6VXNe1C+wwNlgY
-         gfGcuDB4ReD1Q==
-Date:   Mon, 25 Oct 2021 18:59:17 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Wan Jiabing <wanjiabing@vivo.com>
-Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kael_w@yeah.net
-Subject: Re: [PATCH] xfs: Remove duplicated include in xfs_super
-Message-ID: <20211026015917.GA24307@magnolia>
-References: <20211026014807.27554-1-wanjiabing@vivo.com>
+        id S236446AbhJZOOo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 Oct 2021 10:14:44 -0400
+Received: from out30-133.freemail.mail.aliyun.com ([115.124.30.133]:36654 "EHLO
+        out30-133.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S236431AbhJZOOo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Oct 2021 10:14:44 -0400
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R181e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04394;MF=jefflexu@linux.alibaba.com;NM=1;PH=DS;RN=10;SR=0;TI=SMTPD_---0Utn9eYf_1635257537;
+Received: from admindeMacBook-Pro-2.local(mailfrom:jefflexu@linux.alibaba.com fp:SMTPD_---0Utn9eYf_1635257537)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Tue, 26 Oct 2021 22:12:18 +0800
+To:     Theodore Ts'o <tytso@mit.edu>, adilger.kernel@dilger.ca,
+        "Darrick J. Wong" <djwong@kernel.org>, ira.weiny@intel.com
+Cc:     linux-xfs@vger.kernel.org,
+        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
+        linux-fsdevel@vger.kernel.org, dan.j.williams@intel.com,
+        Vivek Goyal <vgoyal@redhat.com>, Christoph Hellwig <hch@lst.de>
+From:   JeffleXu <jefflexu@linux.alibaba.com>
+Subject: [Question] ext4/xfs: Default behavior changed after per-file DAX
+Message-ID: <26ddaf6d-fea7-ed20-cafb-decd63b2652a@linux.alibaba.com>
+Date:   Tue, 26 Oct 2021 22:12:17 +0800
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.14.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20211026014807.27554-1-wanjiabing@vivo.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Oct 25, 2021 at 09:48:07PM -0400, Wan Jiabing wrote:
-> Fix following checkincludes.pl warning:
-> ./fs/xfs/xfs_super.c: xfs_btree.h is included more than once.
-> 
-> The include is in line 15. Remove the duplicated here.
-> 
-> Signed-off-by: Wan Jiabing <wanjiabing@vivo.com>
+Hi,
 
-LGTM, thanks for the patch. :)
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Recently I'm working on supporting per-file DAX for virtiofs [1]. Vivek
+Goyal and I are interested [2] why the default behavior has changed
+since introduction of per-file DAX on ext4 and xfs [3][4].
 
---D
+That is, before the introduction of per-file DAX, when user doesn't
+specify '-o dax', DAX is disabled for all files. After supporting
+per-file DAX, when neither '-o dax' nor '-o dax=always|inode|never' is
+specified, it actually works in a '-o dax=inode' way if the underlying
+blkdev is DAX capable, i.e. depending on the persistent inode flag. That
+is, the default behavior has changed from user's perspective.
 
-> ---
->  fs/xfs/xfs_super.c | 1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index f4c508428aad..e21459f9923a 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -37,7 +37,6 @@
->  #include "xfs_reflink.h"
->  #include "xfs_pwork.h"
->  #include "xfs_ag.h"
-> -#include "xfs_btree.h"
->  #include "xfs_defer.h"
->  
->  #include <linux/magic.h>
-> -- 
-> 2.20.1
-> 
+We are not sure if this is intentional or not. Appreciate if anyone
+could offer some hint.
+
+
+[1] https://lore.kernel.org/all/YW2Oj4FrIB8do3zX@redhat.com/T/
+[2]
+https://lore.kernel.org/all/YW2Oj4FrIB8do3zX@redhat.com/T/#mf067498887ca2023c64c8b8f6aec879557eb28f8
+[3] 9cb20f94afcd2964944f9468e38da736ee855b19 ("fs/ext4: Make DAX mount
+option a tri-state")
+[4] 02beb2686ff964884756c581d513e103542dcc6a ("fs/xfs: Make DAX mount
+option a tri-state")
+
+
+-- 
+Thanks,
+Jeffle
