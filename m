@@ -2,68 +2,68 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7435C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Oct 2021 13:14:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DDA7C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Oct 2021 14:37:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C585460F56
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Oct 2021 13:14:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E732C60041
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Oct 2021 14:37:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236993AbhJ0NRT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 27 Oct 2021 09:17:19 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:27665 "EHLO
+        id S238718AbhJ0Ojw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 27 Oct 2021 10:39:52 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:25098 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S236927AbhJ0NRS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Oct 2021 09:17:18 -0400
+        by vger.kernel.org with ESMTP id S237830AbhJ0Ojr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Oct 2021 10:39:47 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1635340492;
+        s=mimecast20190719; t=1635345440;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=6lYaDAFuy3wt+ZO/zKfRWwoq5pybwrOMZoYnxodYxNE=;
-        b=erHkmr1LZJQOepLGqqaO2W+nJMC+mxttB6I0EkQddF0vL2D70a2X6cSRMldmRn4NQpICwH
-        9TMWaZWnIFSB+0sA9K8ZqCykFTPIJl/DAxUU37S6T1y6RKArM3kf9rxYBEjbOJ0FSmWv50
-        gpTlTPZ2nU/QMDuu/jwxqcTmz03c480=
+        bh=E1vyAZxABNWLffAypdcb6P/mlOFUhtHlP6sxjkFN/ww=;
+        b=GZS1TyLhAF295aE0jlbp9kkLmUkEexsM6SQOThgBTFmPcy3WK63At6ElWP6QUMBsr3foVO
+        c5za/iGRGIWx9IRnliTCgQ5qBUxqoWQmdLoy7Fm+um9SpV5J6EPOWkdsqyk4SaxrRb1kPF
+        grjo6flbJp0UJUJ2IpY+phbnjHijzbc=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-317-Q5cUAYpoMiC8w9SP8OSISw-1; Wed, 27 Oct 2021 09:14:51 -0400
-X-MC-Unique: Q5cUAYpoMiC8w9SP8OSISw-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+ us-mta-590-owj1BTSENIGtCyjHaGNYrw-1; Wed, 27 Oct 2021 10:37:17 -0400
+X-MC-Unique: owj1BTSENIGtCyjHaGNYrw-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B4E29A0CAB;
-        Wed, 27 Oct 2021 13:14:49 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id DDE4D100725B;
+        Wed, 27 Oct 2021 14:36:30 +0000 (UTC)
 Received: from horse.redhat.com (unknown [10.22.34.10])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 5B8A21001B3B;
-        Wed, 27 Oct 2021 13:14:49 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 5F49C196F4;
+        Wed, 27 Oct 2021 14:36:30 +0000 (UTC)
 Received: by horse.redhat.com (Postfix, from userid 10451)
-        id E3E8F2204A5; Wed, 27 Oct 2021 09:14:48 -0400 (EDT)
-Date:   Wed, 27 Oct 2021 09:14:48 -0400
+        id D6BDB2204A5; Wed, 27 Oct 2021 10:36:24 -0400 (EDT)
+Date:   Wed, 27 Oct 2021 10:36:24 -0400
 From:   Vivek Goyal <vgoyal@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
+To:     Ira Weiny <ira.weiny@intel.com>
 Cc:     "Darrick J. Wong" <djwong@kernel.org>,
         JeffleXu <jefflexu@linux.alibaba.com>,
         Theodore Ts'o <tytso@mit.edu>, adilger.kernel@dilger.ca,
-        ira.weiny@intel.com, linux-xfs@vger.kernel.org,
+        linux-xfs@vger.kernel.org,
         "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
         linux-fsdevel@vger.kernel.org, dan.j.williams@intel.com,
         Christoph Hellwig <hch@lst.de>,
         Dave Chinner <dchinner@redhat.com>
 Subject: Re: [Question] ext4/xfs: Default behavior changed after per-file DAX
-Message-ID: <YXlQyMfXDQnO/5E3@redhat.com>
+Message-ID: <YXlj6GhxkFBQRJYk@redhat.com>
 References: <26ddaf6d-fea7-ed20-cafb-decd63b2652a@linux.alibaba.com>
  <20211026154834.GB24307@magnolia>
  <YXhWP/FCkgHG/+ou@redhat.com>
- <20211026223317.GB5111@dread.disaster.area>
+ <20211026205730.GI3465596@iweiny-DESK2.sc.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211026223317.GB5111@dread.disaster.area>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+In-Reply-To: <20211026205730.GI3465596@iweiny-DESK2.sc.intel.com>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 27, 2021 at 09:33:17AM +1100, Dave Chinner wrote:
+On Tue, Oct 26, 2021 at 01:57:31PM -0700, Ira Weiny wrote:
 > On Tue, Oct 26, 2021 at 03:25:51PM -0400, Vivek Goyal wrote:
 > > On Tue, Oct 26, 2021 at 08:48:34AM -0700, Darrick J. Wong wrote:
 > > > On Tue, Oct 26, 2021 at 10:12:17PM +0800, JeffleXu wrote:
@@ -89,171 +89,193 @@ On Wed, Oct 27, 2021 at 09:33:17AM +1100, Dave Chinner wrote:
 > > > https://lore.kernel.org/linux-fsdevel/20200429043328.411431-1-ira.weiny@intel.com/
 > > 
 > > Ok, so basically new dax options semantics are different from old "-o dax".
-> 
-> Well, yes. "-o dax" is exactly equivalent of "-o dax=always", but it
-> is deprecated and should be ignored for the purposes of a new FSDAX
-> implementation. It will go away eventually.
-> 
+> > 
 > > - dax=inode is default. This is change of behavior from old "-o dax" where
 > >   default was *no dax* at all.
 > 
-> No, it's not actually a change of behaviour. The default behaviour
-> of a filesystem that supports DAX is identical when you have no
-> mount option specified: if you've taken no action to enable DAX,
-> then DAX will be disabled and not used.
+> Again I think this is debatable.  The file system will still work and all files
+> will, by default, _not_ use DAX.  Specifying '-o dax' or future proof '-o
+> dax=always' will override this just like it did before.
 > 
-> We originally implemented DAX with per-inode flags an no mount
-> option in XFS - the mount option came along with the ext4 DAX
-> implementation for testing because it didn't have on-disk inode
-> flags for DAX.
-> 
-> IOWs, the dax=inode default reflects how we originally intended
-> FSDAX to be managed and how it originally behaved on XFS when no
-> mount option was specified. Then we came across bugs in dynamically
-> changing the per-inode DAX state, we temporarily disabled the
-> on-disk flags on XFS (because EXPERIMENTAL). Then some people
-> started incorrectly associated "no dax option" with "admin wants dax
-> disabled". Then we fixed the bugs with changing on-disk inode flags,
-> ext4 added an on-disk flag and we re-enabled them. The result was a
-> tristate config situation - never, always and per-inode...
-> 
+> > 
 > > - I tried xfs and mount does not fail even if user mounted with
 > >   "-o dax=inode" and underlying block device does not support dax.
 > >   That's little strange. Some users might expect a failure if certain
 > >   mount option can't be enabled.
 > 
-
-Hi Dave,
-
-Thanks for all the explanaiton and background. It helps me a lot in
-wrapping my head around the rationale for current design.
-
-> It's perfectly reasonable. If the hardware doesn't support DAX, then
-> we just always behave as if dax=never is set.
-
-I tried mounting non-DAX block device with dax=always and it failed
-saying DAX can't be used with reflink.
-
-[  100.371978] XFS (vdb): DAX unsupported by block device. Turning off DAX.
-[  100.374185] XFS (vdb): DAX and reflink cannot be used together!
-
-So looks like first check tried to fallback to dax=never as device does
-not support DAX. But later reflink check thought dax is enabled and
-did not fallback to dax=never.
-
-> IOWs, we simply ignore
-> the inode DAX hint, because we can never enable it. There's just no
-> reason for being obnoxious and rejecting mounts just because the
-> block device doesn't support DAX.
+> But the mount option _is_ enabled.  It is just that the files can't be used in
+> DAX mode.  The files can still have their inode flag set.  This was
+> specifically discussed to support backing up file systems on devices which did
+> not support DAX.  This allows you to restore that file system with all the
+> proper inode flags in place.
 > 
-> Then we have to consider filesystems with multiple block devices
-> that have different DAX capabilities. dax=inode has to transparently
-> become dax=never for the block devices that don't support DAX, but
-> still operate as dax=inode for the other DAX capable block devices.
+> If a DAX file is on a non-DAX device the file will not be in DAX mode when
+> opened.  A statx() call can determine this.
 > 
-> We also have to consider that block devices can change configuration
-> dynamically - think about teired storage (e.g a dm-cache device)
-> that has pmem for hot access and SSDs for backing store. That could
-> mean we have DAX capable access for hot data, but not for cold data
-> fetched/stored from SSD. We might manually migrate data between
-> teirs and so the dax capability of the data sets can change
-> dynamically.
-> 
-> The actual presence of DAX should be completely transparent and
-> irrelevant to the application unless the application is specifically
-> dependent on DAX being enabled (i.e. using application level CPU
-> cache flushes for data integrity purposes). If so, it is up to the
-> application to check STATX_ATTR_DAX on it's open files and refuse to
-> operate.
-> 
+> > 
 > >   So in general, what's the expected behavior with filesystem mount
 > >   options. If user passes a mount option and it can't be enabled,
 > >   should filesystem return error and force user to try again without
 > >   the certain mount option or silently fallback to something else.
+> 
+> But it is enabled.
+> 
 > > 
 > >   I think in the past I have come across overlayfs users which demanded
 > >   that mount fails if certain overlayfs option they have passed in
 > >   can't be honored. They want to know about it so that they can either
 > >   fix the configuration or change mount option.
 > 
-> It's up to the filesystem how it handles mount options. XFS just
-> turns dax=always into dax=never with a warning and continues
-> onwards. There's no point in forcing the user to mount with a
-> different mount option - the end result is going to be exactly the
-> same (i.e. dax=never because hardware doesn't support it).
+> I understand how this is a bit convoluted.  However, for 99% of the users out
+> there who are using DAX on DAX devices this is not going to change anything for
+> them.  (Especially since they are all probably using '-o dax').
 > 
+> > 
 > > - With xfs, I mounted /dev/pmem0 with "-o dax=inode" and checked
 > >   /proc/mounts and I don't see "dax=inode" there. Is that intentional?
 > 
-> Yes, XFS policy is to elide default options from the mount table.
-
-For my education purposes, why do we hide default options. These defaults
-can vary from system to system based on kernel version or based on
-kernel CONFIG options. So if I login into a system and try to figure
-out what defaults xfs (or any other filesystem is working with), I
-probably will have no idea. Looking at /proc/mounts still might help
-me a bit with debugging what filesystem might be doing.
-
-IOW, I thought that from debugging point of view it can be very helpful
-to even show default options. But there must be reasons to hide defaults
-that I am not aware of.
-
+> Yes absolutely.  I originally implemented it to show dax=inode and was told
+> that default mount options were not to be shown.  After thinking about it I
+> agreed.  It is intractable to print out all the mount options which are
+> defaulted.  The user can read what the defaults are an know what the file
+> system is using for options which are not overridden.
 > 
+> > 
+> > I am just trying to wrap my head around the new semantics as we are
+> > trying to implement those for virtiofs.
+> > 
 > > So following is the side affects of behavior change.
 > > 
 > > A. If somebody wrote scripts and scanned for mount flags to decide whehter
-> >    dax is enabled or not, these will not work anymore.
-> 
-> Correct - this was never supported in the first place and we went
-> through this years ago with intel doing dodgy things like this in their
-> userspace library that we never intended to support.
-> 
-> >    scripts will have
+> >    dax is enabled or not, these will not work anymore. scripts will have
 > >    to be changed to stat() every file in filesystem and look for
 > >    STATX_ATTR_DAX flag to determine dax status.
 > 
-> If you are scanning the filesystem for "DAX capability" then you are
-> doing it wrong. DAX capability is a property of the underlying block
-> device:
+> Why would you need to stat() 'every' file?  Why, and to who, is it important
+> that every file in the file system is in dax mode?
+
+Only for debugging purpose say I want to know which mounts/files are using
+DAX.
+
+> I was getting the feeling
+> that it was important to the client to know this on the server but you last
+> email in the other thread has confused me on that point.[1]
 > 
-> $ cat /sys/block/pmem0/queue/dax 
-> 1
-> $
 > 
-> And that tells you if the filesystem is on DAX capable hardware
-> and hence can be used if the admin and/or application turns it on.
-> 
+> > 
 > > I would have thought to not make dax=inode default and let user opt-in
 > > for that using "dax=inode" mount option. But I guess people liked 
 > > dax=inode default better.
+> 
+> Yes, because it gives the _end_ user (not the sys-admin) the control on their
+> individual files.
+
+Well, I can argue that _end_ user should get that control only if sysadmin
+allows that. If sysadmin did not enable reflink feature, end user does not
+get to use it.
+
+Anyway, I think idea is that you did not want sys-admin to have to mount
+xfs instance with dax=inode and have this feature be enabled by default
+and that's why.
+
+> 
 > > 
 > > Anway, I guess if we want to keep the behavior of virtiofs in-line with
 > > ext4/xfs, we might have to make dax=inode default (atleast in client).
 > 
-> Yes, I've been asking you to make dax=inode the default for some
-> time now.
+> Yes, I think we should make dax=inode the default.
 > 
 > > Server default might be different because querying the state of
 > > FS_XFLAG_DAX is extra ioctl() call on each LOOKUP and GETATTR call and
 > > those who don't want to use DAX, might not want to pay this cost.
 > 
-> The admin cost of managing per-inode/per-directory DAX capability is
-> negliable. It's a "set-once" operation done at application
-> installation/configuration/data set initialisation time, and never
-> changed again.
+> I've not responded on the other thread because I feel like I've reached the
+> depth of my virtiofs knowledge.  From your email:
+> 
+> 	"In general, there is no connection between DAX in guest and device on
+> 	host enabling DAX."[1]
+> 
+> But then you say:
+> 
+> 	"... if server does not support DAX and client asks for DAX, mount will
+> 	fail. (As it should fail)."[1]
 
-Agreed.
+When I say server I mean "virtiofs daemon + qemu" combination. So qemu has
+to specify that virtiofs device has a cache using option
+"cache-size=<X>G". If this is missing, DAX can't be enabled in guest. This
+is somewhat similar to whether underlying block device supports DAX or
+not. In this case it signifies whether virtiofs device supports DAX or
+not.
 
-> Performance/overhead arguments for per-inode flag
-> admin hold no water at all.
+And this has nothing to do with host devieces capability of being able to
+do DAX. 
 
-Not sure I understand this. If we make dax=inode default in server, then
-server will always have to call ioctl() to figure out if FS_XFLAG_DAX
-is set or not on LOOKUP and GETATTR calls. So that's one extra system
-call all the time. That's not an admin overhead but runtime overhead
-of virtiofs file server. And if user never intends to use DAX, then
-there is no need to have this overhead (by default).
+> 
+> So I decided I need to review the virtiofs code a bit to better understand this
+> relationship.  Because I'm confused.
+> 
+> As to the subject of having a file based policy; any such policy is not the
+> kernels job.  If users want to have different policies based on file size they
+> are free to do that with dax=inode.  I don't see how that works with the other
+> 2 mount options.
+
+Right. File based policy will be in user space (virtiofsd). It will not
+be part of kernel. In fat guest kernel will not even know what policy
+is being used by server. Server will tell guest kernel whether to
+enable DAX on a inode or not.
+
+> 
+> Furthermore, performance of different files may be device specific and moving a
+> file from one device to another may result in the user wanting to change the
+> mode, which dax=inode allows.
+> 
+> All of this this supports dax=inode as a better default.
+> 
+> I get the feeling that your most concerned with the admin user being able to
+> see if the entire file system is in DAX mode.  Is that true?  And I can't argue
+> that indeed that is different.
+
+Right. I am looking at new dax options from the lens of old dax options
+where I could easily look at mount options and tell whether filesystem
+is using dax or not. And dax was disabled by default and user had to
+opt-in to enable dax.
+
+> But I'm failing to see the use case for that
+> being a requirement.
+
+Agreed that this is not necessarily a requirement. It is just little
+different from old dax options. And I was only worried about users
+being confused.
+
+> 
+> Is the biggest issue the lack of visibility to see if the device supports DAX?
+
+Not necessarily. I think for me two biggest issues are.
+
+- Should dax be enabled by default in server as well. If we do that,
+  server will have to make extra ioctl() call on every LOOKUP and GETATTR
+  fuse request. Local filesystems probably can easily query FS_XFLAGS_DAX
+  state but doing extra syscall all the time will probably be some cost
+  (No idea how much).
+
+- So far if virtiofs is mounted without any of the dax options, just
+  by looking at mount option, I could tell, DAX is not enabled on any
+  of the files. But that will not be true anymore. Because dax=inode
+  be default, it is possible that server upgrade enabled dax on some
+  or all the files.
+
+  I guess I will have to stick to same reason given by ext4/xfs. That is
+  to determine whether DAX is enabled on a file or not, you need to
+  query STATX_ATTR_DAX flag. That's the only way to conclude if DAX is
+  being used on a file or not. Don't look at filesystem mount options
+  and reach a conclusion (except the case of dax=never).
 
 Thanks
 Vivek
+
+> 
+> Ira
+> 
+> [1] https://lore.kernel.org/linux-fsdevel/YXgGlrlv9VBFVt2U@redhat.com/
+> 
 
