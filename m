@@ -2,78 +2,90 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DDD00C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Oct 2021 02:52:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2325C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Oct 2021 06:50:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B84E3610C7
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Oct 2021 02:52:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D407F6023B
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Oct 2021 06:50:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234735AbhJ0CzK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 26 Oct 2021 22:55:10 -0400
-Received: from out30-131.freemail.mail.aliyun.com ([115.124.30.131]:55584 "EHLO
-        out30-131.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S236497AbhJ0CzK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Oct 2021 22:55:10 -0400
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R121e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04400;MF=jefflexu@linux.alibaba.com;NM=1;PH=DS;RN=10;SR=0;TI=SMTPD_---0UtqE.Tu_1635303162;
-Received: from admindeMacBook-Pro-2.local(mailfrom:jefflexu@linux.alibaba.com fp:SMTPD_---0UtqE.Tu_1635303162)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Wed, 27 Oct 2021 10:52:43 +0800
-Subject: Re: [Question] ext4/xfs: Default behavior changed after per-file DAX
-From:   JeffleXu <jefflexu@linux.alibaba.com>
-To:     Theodore Ts'o <tytso@mit.edu>, adilger.kernel@dilger.ca,
-        "Darrick J. Wong" <djwong@kernel.org>, ira.weiny@intel.com
-Cc:     linux-xfs@vger.kernel.org,
-        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
-        linux-fsdevel@vger.kernel.org, dan.j.williams@intel.com,
-        Vivek Goyal <vgoyal@redhat.com>, Christoph Hellwig <hch@lst.de>
-References: <26ddaf6d-fea7-ed20-cafb-decd63b2652a@linux.alibaba.com>
-Message-ID: <ce055127-5814-5335-43d2-4d0425425ba9@linux.alibaba.com>
-Date:   Wed, 27 Oct 2021 10:52:42 +0800
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.14.0
+        id S235258AbhJ0Gwu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 27 Oct 2021 02:52:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51166 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231761AbhJ0Gwu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Oct 2021 02:52:50 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51DDAC061570;
+        Tue, 26 Oct 2021 23:50:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=yjuWgGmhQsdJLTs6v2WuNddPxXE6Sp4DzBaIzpvmDxI=; b=C5iwMARf+IMLZdYCmk6ZUrqOkO
+        8BwoK3oTNJDlvSjeimyONSspbVA1scvfDU+66PFDD3dLzT6NFr3opsayEOwR2nXD/UQNuiKmxo1Y8
+        9VcCSxCnK4544hxrLn1Q+6+3xqaFirt088Fy912wVD5q14DRRDCT6srIfw1ruVTyctXhFZZhiFiiF
+        v3k4kTFZf60t1bQi5bkepl9c7guEHtbzZrmP2UDqOqIcHSJmlbb9ssd+eqmErkz5Oam+1MMNKVMbU
+        tl3E0Q/zIWt1tEbckfFO0WIFCqAS2kD/IXbdMRtpnXHodSv/GpTla3Ask2eTyW0X1NaJU8B3iaS/N
+        JRm0MBZg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1mfcl5-0043Vr-Rj; Wed, 27 Oct 2021 06:49:59 +0000
+Date:   Tue, 26 Oct 2021 23:49:59 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Jane Chu <jane.chu@oracle.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        "david@fromorbit.com" <david@fromorbit.com>,
+        "djwong@kernel.org" <djwong@kernel.org>,
+        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
+        "vishal.l.verma@intel.com" <vishal.l.verma@intel.com>,
+        "dave.jiang@intel.com" <dave.jiang@intel.com>,
+        "agk@redhat.com" <agk@redhat.com>,
+        "snitzer@redhat.com" <snitzer@redhat.com>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "ira.weiny@intel.com" <ira.weiny@intel.com>,
+        "willy@infradead.org" <willy@infradead.org>,
+        "vgoyal@redhat.com" <vgoyal@redhat.com>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "nvdimm@lists.linux.dev" <nvdimm@lists.linux.dev>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: [dm-devel] [PATCH 0/6] dax poison recovery with
+ RWF_RECOVERY_DATA flag
+Message-ID: <YXj2lwrxRxHdr4hb@infradead.org>
+References: <20211021001059.438843-1-jane.chu@oracle.com>
+ <YXFPfEGjoUaajjL4@infradead.org>
+ <e89a2b17-3f03-a43e-e0b9-5d2693c3b089@oracle.com>
+ <YXJN4s1HC/Y+KKg1@infradead.org>
+ <2102a2e6-c543-2557-28a2-8b0bdc470855@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <26ddaf6d-fea7-ed20-cafb-decd63b2652a@linux.alibaba.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <2102a2e6-c543-2557-28a2-8b0bdc470855@oracle.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Sorry for the noise. Ira Weiny had replied my previous mail [1] but
-unfortunately the reply was moved into junk box, and I didn't note that.
+On Fri, Oct 22, 2021 at 08:52:55PM +0000, Jane Chu wrote:
+> Thanks - I try to be honest.  As far as I can tell, the argument
+> about the flag is a philosophical argument between two views.
+> One view assumes design based on perfect hardware, and media error
+> belongs to the category of brokenness. Another view sees media
+> error as a build-in hardware component and make design to include
+> dealing with such errors.
 
-[1]
-https://lore.kernel.org/all/YW2Oj4FrIB8do3zX@redhat.com/T/#mb022959fe3b6e9b82e2b066dd8daa301cd2b2c53
+No, I don't think so.  Bit errors do happen in all media, which is
+why devices are built to handle them.  It is just the Intel-style
+pmem interface to handle them which is completely broken.  
 
-On 10/26/21 10:12 PM, JeffleXu wrote:
-> Hi,
-> 
-> Recently I'm working on supporting per-file DAX for virtiofs [1]. Vivek
-> Goyal and I are interested [2] why the default behavior has changed
-> since introduction of per-file DAX on ext4 and xfs [3][4].
-> 
-> That is, before the introduction of per-file DAX, when user doesn't
-> specify '-o dax', DAX is disabled for all files. After supporting
-> per-file DAX, when neither '-o dax' nor '-o dax=always|inode|never' is
-> specified, it actually works in a '-o dax=inode' way if the underlying
-> blkdev is DAX capable, i.e. depending on the persistent inode flag. That
-> is, the default behavior has changed from user's perspective.
-> 
-> We are not sure if this is intentional or not. Appreciate if anyone
-> could offer some hint.
-> 
-> 
-> [1] https://lore.kernel.org/all/YW2Oj4FrIB8do3zX@redhat.com/T/
-> [2]
-> https://lore.kernel.org/all/YW2Oj4FrIB8do3zX@redhat.com/T/#mf067498887ca2023c64c8b8f6aec879557eb28f8
-> [3] 9cb20f94afcd2964944f9468e38da736ee855b19 ("fs/ext4: Make DAX mount
-> option a tri-state")
-> [4] 02beb2686ff964884756c581d513e103542dcc6a ("fs/xfs: Make DAX mount
-> option a tri-state")
-> 
-> 
+> errors in mind from start.  I guess I'm trying to articulate why
+> it is acceptable to include the RWF_DATA_RECOVERY flag to the
+> existing RWF_ flags. - this way, pwritev2 remain fast on fast path,
+> and its slow path (w/ error clearing) is faster than other alternative.
+> Other alternative being 1 system call to clear the poison, and
+> another system call to run the fast pwrite for recovery, what
+> happens if something happened in between?
 
--- 
-Thanks,
-Jeffle
+Well, my point is doing recovery from bit errors is by definition not
+the fast path.  Which is why I'd rather keep it away from the pmem
+read/write fast path, which also happens to be the (much more important)
+non-pmem read/write path.
