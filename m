@@ -2,90 +2,93 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2325C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Oct 2021 06:50:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C326C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Oct 2021 08:17:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D407F6023B
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Oct 2021 06:50:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 494A6608FE
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Oct 2021 08:17:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235258AbhJ0Gwu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 27 Oct 2021 02:52:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51166 "EHLO
+        id S238821AbhJ0IT1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 27 Oct 2021 04:19:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42938 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231761AbhJ0Gwu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Oct 2021 02:52:50 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51DDAC061570;
-        Tue, 26 Oct 2021 23:50:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=yjuWgGmhQsdJLTs6v2WuNddPxXE6Sp4DzBaIzpvmDxI=; b=C5iwMARf+IMLZdYCmk6ZUrqOkO
-        8BwoK3oTNJDlvSjeimyONSspbVA1scvfDU+66PFDD3dLzT6NFr3opsayEOwR2nXD/UQNuiKmxo1Y8
-        9VcCSxCnK4544hxrLn1Q+6+3xqaFirt088Fy912wVD5q14DRRDCT6srIfw1ruVTyctXhFZZhiFiiF
-        v3k4kTFZf60t1bQi5bkepl9c7guEHtbzZrmP2UDqOqIcHSJmlbb9ssd+eqmErkz5Oam+1MMNKVMbU
-        tl3E0Q/zIWt1tEbckfFO0WIFCqAS2kD/IXbdMRtpnXHodSv/GpTla3Ask2eTyW0X1NaJU8B3iaS/N
-        JRm0MBZg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mfcl5-0043Vr-Rj; Wed, 27 Oct 2021 06:49:59 +0000
-Date:   Tue, 26 Oct 2021 23:49:59 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Jane Chu <jane.chu@oracle.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        "david@fromorbit.com" <david@fromorbit.com>,
-        "djwong@kernel.org" <djwong@kernel.org>,
-        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
-        "vishal.l.verma@intel.com" <vishal.l.verma@intel.com>,
-        "dave.jiang@intel.com" <dave.jiang@intel.com>,
-        "agk@redhat.com" <agk@redhat.com>,
-        "snitzer@redhat.com" <snitzer@redhat.com>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "ira.weiny@intel.com" <ira.weiny@intel.com>,
-        "willy@infradead.org" <willy@infradead.org>,
-        "vgoyal@redhat.com" <vgoyal@redhat.com>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "nvdimm@lists.linux.dev" <nvdimm@lists.linux.dev>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: [dm-devel] [PATCH 0/6] dax poison recovery with
- RWF_RECOVERY_DATA flag
-Message-ID: <YXj2lwrxRxHdr4hb@infradead.org>
-References: <20211021001059.438843-1-jane.chu@oracle.com>
- <YXFPfEGjoUaajjL4@infradead.org>
- <e89a2b17-3f03-a43e-e0b9-5d2693c3b089@oracle.com>
- <YXJN4s1HC/Y+KKg1@infradead.org>
- <2102a2e6-c543-2557-28a2-8b0bdc470855@oracle.com>
+        with ESMTP id S238895AbhJ0ITZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Oct 2021 04:19:25 -0400
+Received: from mail-pg1-x529.google.com (mail-pg1-x529.google.com [IPv6:2607:f8b0:4864:20::529])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44BC2C061570;
+        Wed, 27 Oct 2021 01:17:00 -0700 (PDT)
+Received: by mail-pg1-x529.google.com with SMTP id m21so2134336pgu.13;
+        Wed, 27 Oct 2021 01:17:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=tQOjbBTTRqwxaF+AU8DgUm9IinPwENM37U/QT2p6dLw=;
+        b=QL464tjaPQUxDpm+AEGVUvzp46JJo9myEZgddM1JfnqV3ZhFw4yrIxP05fRf4I4T2z
+         Nx+efGXZvYD/uHp1JktJ43D4SckKtjrLYmgfQJBoodM5COL6F9FLXzlxZzsAfM0+BriD
+         1uHZM0rf5NOvnkqvP/cIyEWPktUSeu/nuQ1YI9zH2M7y739YBUnNRzXDVdCjd6JQWjXH
+         6P+iJPdui//EIxjb41tMN4zwNw/guU9pXBuxcjLDxqnxjtkndsEpuM5u95v2S1ycWZiR
+         8UdGcQ5Lb9gXXKL0XhWBoxSgGmXpQlAUAa779Af6V3MiLDJAWN8yuNfnOg5dwKVxpOrx
+         bg0w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=tQOjbBTTRqwxaF+AU8DgUm9IinPwENM37U/QT2p6dLw=;
+        b=7dHinMKH+ysBNBDuyC22EKOxL0Hha7iFhUDuzXQFBxzGAJtZJy5Z2J+NF68KYwNkGR
+         IwVShTWfn32fQK4ZaczZxQZGg/nXzXPZqkejiMht7t/NipPeeA6kPa+9bgOPEsESANu0
+         VeJTimvvHN19dhuUcweE+cw+H1O6WTzwz2DKVGXBNBPp1rWyA9w3m/ii+TvtG7K/6Jhi
+         WY+Y6GnIKUtnt3D+CiueTY6bB71GMB/o61RooWEaNu4NDvTxHmdHF5srWpoXcIEi1bhG
+         6bBAkzOn3mK8/75LSibjNUzVFjp63+lNdQpzeAe9YjXpu1U25He0r95gpWyZUp/7dNC0
+         XrCw==
+X-Gm-Message-State: AOAM5320sBab2vid4Q1JVjBQhC/sPJN0Fgr04s2D+c0v/AeFbFLUJ1vA
+        kdUEcfyeawRO53b8ML7dl80fdPB3QPY=
+X-Google-Smtp-Source: ABdhPJxd7y1oFhbK65/wgJgXVKMKuEndmIAh2nMUBVTLP87b9kg6XYw21r9mjshU28mzBd4zZMl7Bg==
+X-Received: by 2002:a65:530d:: with SMTP id m13mr22858991pgq.128.1635322619910;
+        Wed, 27 Oct 2021 01:16:59 -0700 (PDT)
+Received: from localhost.localdomain ([193.203.214.57])
+        by smtp.gmail.com with ESMTPSA id u10sm11022534pfk.211.2021.10.27.01.16.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 27 Oct 2021 01:16:59 -0700 (PDT)
+From:   cgel.zte@gmail.com
+X-Google-Original-From: ran.jianping@zte.com.cn
+To:     djwong@kernel.org
+Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ran jianping <ran.jianping@zte.com.cn>,
+        Zeal Robot <zealci@zte.com.cn>
+Subject: [PATCH xfs] xfs: remove duplicate include in xfs_super.c
+Date:   Wed, 27 Oct 2021 08:16:52 +0000
+Message-Id: <20211027081652.1946-1-ran.jianping@zte.com.cn>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <2102a2e6-c543-2557-28a2-8b0bdc470855@oracle.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Oct 22, 2021 at 08:52:55PM +0000, Jane Chu wrote:
-> Thanks - I try to be honest.  As far as I can tell, the argument
-> about the flag is a philosophical argument between two views.
-> One view assumes design based on perfect hardware, and media error
-> belongs to the category of brokenness. Another view sees media
-> error as a build-in hardware component and make design to include
-> dealing with such errors.
+From: ran jianping <ran.jianping@zte.com.cn>
 
-No, I don't think so.  Bit errors do happen in all media, which is
-why devices are built to handle them.  It is just the Intel-style
-pmem interface to handle them which is completely broken.  
+'xfs_btree.h ' included in 'fs/xfs/xfs_super.c'
+ is duplicated.It is also included on the 40 line.
 
-> errors in mind from start.  I guess I'm trying to articulate why
-> it is acceptable to include the RWF_DATA_RECOVERY flag to the
-> existing RWF_ flags. - this way, pwritev2 remain fast on fast path,
-> and its slow path (w/ error clearing) is faster than other alternative.
-> Other alternative being 1 system call to clear the poison, and
-> another system call to run the fast pwrite for recovery, what
-> happens if something happened in between?
+Reported-by: Zeal Robot <zealci@zte.com.cn>
+Signed-off-by: ran jianping <ran.jianping@zte.com.cn>
+---
+ fs/xfs/xfs_super.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-Well, my point is doing recovery from bit errors is by definition not
-the fast path.  Which is why I'd rather keep it away from the pmem
-read/write fast path, which also happens to be the (much more important)
-non-pmem read/write path.
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index f4c508428aad..e21459f9923a 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -37,7 +37,6 @@
+ #include "xfs_reflink.h"
+ #include "xfs_pwork.h"
+ #include "xfs_ag.h"
+-#include "xfs_btree.h"
+ #include "xfs_defer.h"
+ 
+ #include <linux/magic.h>
+-- 
+2.25.1
+
