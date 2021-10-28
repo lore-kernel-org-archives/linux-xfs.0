@@ -2,144 +2,87 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CAC39C433FE
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 Oct 2021 13:01:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A764C433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 Oct 2021 16:29:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B2BAE61106
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 Oct 2021 13:01:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA9B86108F
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 Oct 2021 16:29:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230312AbhJ1NEI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 28 Oct 2021 09:04:08 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:27960 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230254AbhJ1NEG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Oct 2021 09:04:06 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1635426099;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=FupFfwYx23AzIgmYL0JF4mnLTMKSzm4R1VAnl+qdKtw=;
-        b=M57pBZjwsA9hSsNqSFT7MWDXw9mt7ns58krUH8A34nNrHatXHBhW5UTdmzLUjHCfJITqpq
-        +AGce6lRPkXbHh0tUA64eq4NvD+xGQMFm9Unv81Cxf10tMJKAaMS2u4POBmVfn4gUm7qnw
-        u4WgrEpkVIszHSEpLswPqdd/xzv2N4o=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-501-ZULfcvIjNP2gz08D3yN8gw-1; Thu, 28 Oct 2021 09:01:35 -0400
-X-MC-Unique: ZULfcvIjNP2gz08D3yN8gw-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S229974AbhJ1Qbh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 28 Oct 2021 12:31:37 -0400
+Received: from sandeen.net ([63.231.237.45]:35518 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229594AbhJ1Qbg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 28 Oct 2021 12:31:36 -0400
+Received: from [10.0.0.146] (liberator.sandeen.net [10.0.0.146])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A92E110168C4;
-        Thu, 28 Oct 2021 13:01:33 +0000 (UTC)
-Received: from horse.redhat.com (unknown [10.22.9.143])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 21A795C1B4;
-        Thu, 28 Oct 2021 13:01:33 +0000 (UTC)
-Received: by horse.redhat.com (Postfix, from userid 10451)
-        id 8066A220562; Thu, 28 Oct 2021 09:01:32 -0400 (EDT)
-Date:   Thu, 28 Oct 2021 09:01:32 -0400
-From:   Vivek Goyal <vgoyal@redhat.com>
-To:     JeffleXu <jefflexu@linux.alibaba.com>
-Cc:     Ira Weiny <ira.weiny@intel.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
+        by sandeen.net (Postfix) with ESMTPSA id 02EA078D2;
+        Thu, 28 Oct 2021 11:27:41 -0500 (CDT)
+Message-ID: <ef95af19-4b0a-61e8-5dfa-3e223118da8e@sandeen.net>
+Date:   Thu, 28 Oct 2021 11:29:08 -0500
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.2.1
+Content-Language: en-US
+To:     Vivek Goyal <vgoyal@redhat.com>, Dave Chinner <david@fromorbit.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        JeffleXu <jefflexu@linux.alibaba.com>,
         Theodore Ts'o <tytso@mit.edu>, adilger.kernel@dilger.ca,
-        linux-xfs@vger.kernel.org,
+        ira.weiny@intel.com, linux-xfs@vger.kernel.org,
         "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
         linux-fsdevel@vger.kernel.org, dan.j.williams@intel.com,
         Christoph Hellwig <hch@lst.de>,
         Dave Chinner <dchinner@redhat.com>
-Subject: Re: [Question] ext4/xfs: Default behavior changed after per-file DAX
-Message-ID: <YXqfLDLogZlk3m9e@redhat.com>
 References: <26ddaf6d-fea7-ed20-cafb-decd63b2652a@linux.alibaba.com>
- <20211026154834.GB24307@magnolia>
- <YXhWP/FCkgHG/+ou@redhat.com>
- <20211026205730.GI3465596@iweiny-DESK2.sc.intel.com>
- <YXlj6GhxkFBQRJYk@redhat.com>
- <665787d0-f227-a95b-37a3-20f2ea3e09aa@linux.alibaba.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <665787d0-f227-a95b-37a3-20f2ea3e09aa@linux.alibaba.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+ <20211026154834.GB24307@magnolia> <YXhWP/FCkgHG/+ou@redhat.com>
+ <20211026223317.GB5111@dread.disaster.area> <YXlQyMfXDQnO/5E3@redhat.com>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: [Question] ext4/xfs: Default behavior changed after per-file DAX
+In-Reply-To: <YXlQyMfXDQnO/5E3@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 28, 2021 at 01:52:27PM +0800, JeffleXu wrote:
-> 
-> 
-> On 10/27/21 10:36 PM, Vivek Goyal wrote:
-> > [snip]
-> > 
-> >>
-> >> Is the biggest issue the lack of visibility to see if the device supports DAX?
-> > 
-> > Not necessarily. I think for me two biggest issues are.
-> > 
-> > - Should dax be enabled by default in server as well. If we do that,
-> >   server will have to make extra ioctl() call on every LOOKUP and GETATTR
-> >   fuse request. Local filesystems probably can easily query FS_XFLAGS_DAX
-> >   state but doing extra syscall all the time will probably be some cost
-> >   (No idea how much).
-> 
-> I tested the time cost from virtiofsd's perspective (time cost of
-> passthrough_ll.c:lo_do_lookup()):
-> - before per inode DAX feature: 2~4 us
-> - after per inode DAX feature: 7~8 us
-> 
-> It is within expectation, as the introduction of per inode DAX feature,
-> one extra ioctl() system call is introduced.
-> 
-> Also the time cost from client's perspective (time cost of
-> fs/fuse/dir.c:fuse_lookup_name())
-> - before per inode DAX feature: 25~30 us
-> - after per inode DAX feature: 30~35 us
-> 
-> That is, ~15%~20% performance loss.
+On 10/27/21 8:14 AM, Vivek Goyal wrote:
+> On Wed, Oct 27, 2021 at 09:33:17AM +1100, Dave Chinner wrote:
 
-Hi Jeffle,
+...
 
-Thanks for measuring the performance impact of enabling dax=inode by
-default in server.
+> Hi Dave,
+> 
+> Thanks for all the explanaiton and background. It helps me a lot in
+> wrapping my head around the rationale for current design.
+> 
+>> It's perfectly reasonable. If the hardware doesn't support DAX, then
+>> we just always behave as if dax=never is set.
+> 
+> I tried mounting non-DAX block device with dax=always and it failed
+> saying DAX can't be used with reflink.
+> 
+> [  100.371978] XFS (vdb): DAX unsupported by block device. Turning off DAX.
+> [  100.374185] XFS (vdb): DAX and reflink cannot be used together!
+> 
+> So looks like first check tried to fallback to dax=never as device does
+> not support DAX. But later reflink check thought dax is enabled and
+> did not fallback to dax=never.
 
-> 
-> Currently we do ioctl() to query the persitent inode flags every time
-> FUSE_LOOKUP request is received, maybe we could cache the result of
-> ioctl() on virtiofsd side, but I have no idea how to intercept the
-> runtime modification to these persistent indoe flags from other
-> processes on host, e.g. sysadmin on host, to maintain the cache consistency.
-> 
-> So if the default behavior of client side is 'dax=inode', and virtiofsd
-> disables per inode DAX by default (neither '-o dax=server|attr' is
-> specified for virtiofsd) for the sake of performance, then guest won't
-> see DAX enabled and thus won't be surprised. This can reduce the
-> behavior change to the minimum.
+We need to think hard about this stuff and audit it to be sure.
 
-Agreed. Lets not enable any dax by default in server and let admin/user
-enable dax explicitly in server. From fuse client perspective, we can
-assume dax=inode by default. That way kernel side behavior will be
-similar to ext4/xfs (as long as server has been started with per
-inode dax policy).
+But, I think that reflink check should probably just be removed, now that
+DAX files and reflinked files can co-exist on a filesystem - it's just
+that they can't both be active on the /same file/.
 
-Vivek
-> 
-> 
-> > 
-> > - So far if virtiofs is mounted without any of the dax options, just
-> >   by looking at mount option, I could tell, DAX is not enabled on any
-> >   of the files. But that will not be true anymore. Because dax=inode
-> >   be default, it is possible that server upgrade enabled dax on some
-> >   or all the files.
-> > 
-> >   I guess I will have to stick to same reason given by ext4/xfs. That is
-> >   to determine whether DAX is enabled on a file or not, you need to
-> >   query STATX_ATTR_DAX flag. That's the only way to conclude if DAX is
-> >   being used on a file or not. Don't look at filesystem mount options
-> >   and reach a conclusion (except the case of dax=never).
-> 
-> 
-> -- 
-> Thanks,
-> Jeffle
-> 
+I think that even "dax=always" is still just "advisory" - it means,
+try to enable dax on every file. It may still fail in the same ways as
+dax=inode (default) + flag set may fail.
 
+But ... we should go through the whole mount option / feature set /
+device capability logic to be sure this is all consistent. Thanks for
+pointing it out!
+
+-Eric
+
+>> IO
