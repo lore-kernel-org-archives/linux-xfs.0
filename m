@@ -2,161 +2,107 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9989C4332F
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 Oct 2021 01:44:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF58EC433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 Oct 2021 05:52:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D5DA961130
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 Oct 2021 01:44:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D4DB60FF2
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 Oct 2021 05:52:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229638AbhJ1Bqn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 27 Oct 2021 21:46:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56818 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229723AbhJ1Bqn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Oct 2021 21:46:43 -0400
-Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1ABEDC061767
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Oct 2021 18:44:17 -0700 (PDT)
-Received: by mail-pj1-x1033.google.com with SMTP id n36-20020a17090a5aa700b0019fa884ab85so6644661pji.5
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Oct 2021 18:44:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20210112.gappssmtp.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=X1wiwLbjvMr0fUU/Ik7bpLL2xq562nKRBks78M/tbQ0=;
-        b=NwrWjK1zEgkC/h0OltkWmV8v6U9kycWNkAzFyZ2UqlXn15yubZLd83LVcZWNlLL1f0
-         Fv5BW1FJAtxuVzU9kXByXaxfMtmiH5UDaukXhF9R+cJyfOGMfQT6zf04USpHM9TDLMLF
-         8zm7+00diA9rU2lDu/DTfvUOEu2zCMioGVYImhjXSkJTydRCIKV9cRbUQapJjcrGiqMK
-         QnZf8nIfPhTNHOoqGDCmmZuYu6PaW3nbxj784zhi1I6uIMMPp2z6oTqTZJk+LfG12Qzb
-         jA/Y5wJffgH2J2qLufj0bLW03BgfGI/buoZEjp4mtmSwLrMRhWqThDSfNCSg+TsSc0DH
-         V6Cg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=X1wiwLbjvMr0fUU/Ik7bpLL2xq562nKRBks78M/tbQ0=;
-        b=d2owIebdHDc5oSFHNG18D0XsO9lSWuIXHemnKfubJPhSXecX/jq8ixMy5nqKWrcTA6
-         0tuX1zFWiZybS4kZrf3O1Szw0KAFaNhUkPO84BvlL0woMPA/KuQHITBPwxPA1/BtD2gy
-         rl5ynfOLwtDizcbnP637ZqRYnx9w9oR3OThc+RUnqGAJynPQiRP1eeJZaVRm4H/q9K7l
-         vJjOm0NdV5ixO6ECGERYU78TgPQpJhedZzK3+l8PJgOroIVKTDi7YshtdhYed3vSRo7/
-         ptVdFLH54NcijCDf7QMoE6wALQxtbrm/unw6+ffDtWeN+JX97aiY1fieiYxHmaCfvf9Y
-         WWZA==
-X-Gm-Message-State: AOAM533sSKWH6crEpcKeu6dJ9tmHJAHVaUIA334gd6rxCXM7kANT/4wz
-        yF9U/r7w7o8FJ5W7kt1FIH9a06uuJRfRbiG6BKM+HQ==
-X-Google-Smtp-Source: ABdhPJyk8c8xZHfkX0RONmluScnz61A4HGhWerdM4JYgASaD4FzedQ2nCFUwr5W/5xCzT57VlrSOf0tWDKABqHHbWT8=
-X-Received: by 2002:a17:902:8a97:b0:13e:6e77:af59 with SMTP id
- p23-20020a1709028a9700b0013e6e77af59mr1240292plo.4.1635385456643; Wed, 27 Oct
- 2021 18:44:16 -0700 (PDT)
+        id S229697AbhJ1Fy6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 28 Oct 2021 01:54:58 -0400
+Received: from out30-45.freemail.mail.aliyun.com ([115.124.30.45]:46433 "EHLO
+        out30-45.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229586AbhJ1Fy5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Oct 2021 01:54:57 -0400
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R541e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04407;MF=jefflexu@linux.alibaba.com;NM=1;PH=DS;RN=11;SR=0;TI=SMTPD_---0Utxz1z-_1635400347;
+Received: from admindeMacBook-Pro-2.local(mailfrom:jefflexu@linux.alibaba.com fp:SMTPD_---0Utxz1z-_1635400347)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Thu, 28 Oct 2021 13:52:28 +0800
+Subject: Re: [Question] ext4/xfs: Default behavior changed after per-file DAX
+To:     Vivek Goyal <vgoyal@redhat.com>, Ira Weiny <ira.weiny@intel.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        Theodore Ts'o <tytso@mit.edu>, adilger.kernel@dilger.ca,
+        linux-xfs@vger.kernel.org,
+        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
+        linux-fsdevel@vger.kernel.org, dan.j.williams@intel.com,
+        Christoph Hellwig <hch@lst.de>,
+        Dave Chinner <dchinner@redhat.com>
+References: <26ddaf6d-fea7-ed20-cafb-decd63b2652a@linux.alibaba.com>
+ <20211026154834.GB24307@magnolia> <YXhWP/FCkgHG/+ou@redhat.com>
+ <20211026205730.GI3465596@iweiny-DESK2.sc.intel.com>
+ <YXlj6GhxkFBQRJYk@redhat.com>
+From:   JeffleXu <jefflexu@linux.alibaba.com>
+Message-ID: <665787d0-f227-a95b-37a3-20f2ea3e09aa@linux.alibaba.com>
+Date:   Thu, 28 Oct 2021 13:52:27 +0800
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.14.0
 MIME-Version: 1.0
-References: <20211018044054.1779424-1-hch@lst.de> <20211018044054.1779424-12-hch@lst.de>
-In-Reply-To: <20211018044054.1779424-12-hch@lst.de>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Wed, 27 Oct 2021 18:44:04 -0700
-Message-ID: <CAPcyv4ht6fZOdx4YN9FRCnmD2Wy4zzG7nJPQSdSPAgvZNHxoFw@mail.gmail.com>
-Subject: Re: [PATCH 11/11] dax: move bdev_dax_pgoff to fs/dax.c
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Mike Snitzer <snitzer@redhat.com>, Ira Weiny <ira.weiny@intel.com>,
-        device-mapper development <dm-devel@redhat.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Linux NVDIMM <nvdimm@lists.linux.dev>,
-        linux-s390 <linux-s390@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-erofs@lists.ozlabs.org,
-        linux-ext4 <linux-ext4@vger.kernel.org>,
-        virtualization@lists.linux-foundation.org
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <YXlj6GhxkFBQRJYk@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Oct 17, 2021 at 9:41 PM Christoph Hellwig <hch@lst.de> wrote:
->
-> No functional changet, but this will allow for a tighter integration
 
-s/changet/changes/
 
-> with the iomap code, including possible passing the partition offset
+On 10/27/21 10:36 PM, Vivek Goyal wrote:
+> [snip]
+> 
+>>
+>> Is the biggest issue the lack of visibility to see if the device supports DAX?
+> 
+> Not necessarily. I think for me two biggest issues are.
+> 
+> - Should dax be enabled by default in server as well. If we do that,
+>   server will have to make extra ioctl() call on every LOOKUP and GETATTR
+>   fuse request. Local filesystems probably can easily query FS_XFLAGS_DAX
+>   state but doing extra syscall all the time will probably be some cost
+>   (No idea how much).
 
-s/possible/possibly/
+I tested the time cost from virtiofsd's perspective (time cost of
+passthrough_ll.c:lo_do_lookup()):
+- before per inode DAX feature: 2~4 us
+- after per inode DAX feature: 7~8 us
 
-> in the iomap in the future.  For now it mostly avoids growing more
+It is within expectation, as the introduction of per inode DAX feature,
+one extra ioctl() system call is introduced.
 
-s/now/now,/
+Also the time cost from client's perspective (time cost of
+fs/fuse/dir.c:fuse_lookup_name())
+- before per inode DAX feature: 25~30 us
+- after per inode DAX feature: 30~35 us
 
-...all of the above fixed up locally.
+That is, ~15%~20% performance loss.
 
-Other than that, it looks good to me.
+Currently we do ioctl() to query the persitent inode flags every time
+FUSE_LOOKUP request is received, maybe we could cache the result of
+ioctl() on virtiofsd side, but I have no idea how to intercept the
+runtime modification to these persistent indoe flags from other
+processes on host, e.g. sysadmin on host, to maintain the cache consistency.
 
-> callers outside of fs/dax.c.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/dax/super.c | 14 --------------
->  fs/dax.c            | 13 +++++++++++++
->  include/linux/dax.h |  1 -
->  3 files changed, 13 insertions(+), 15 deletions(-)
->
-> diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-> index 803942586d1b6..c0910687fbcb2 100644
-> --- a/drivers/dax/super.c
-> +++ b/drivers/dax/super.c
-> @@ -67,20 +67,6 @@ void dax_remove_host(struct gendisk *disk)
->  }
->  EXPORT_SYMBOL_GPL(dax_remove_host);
->
-> -int bdev_dax_pgoff(struct block_device *bdev, sector_t sector, size_t size,
-> -               pgoff_t *pgoff)
-> -{
-> -       sector_t start_sect = bdev ? get_start_sect(bdev) : 0;
-> -       phys_addr_t phys_off = (start_sect + sector) * 512;
-> -
-> -       if (pgoff)
-> -               *pgoff = PHYS_PFN(phys_off);
-> -       if (phys_off % PAGE_SIZE || size % PAGE_SIZE)
-> -               return -EINVAL;
-> -       return 0;
-> -}
-> -EXPORT_SYMBOL(bdev_dax_pgoff);
-> -
->  /**
->   * dax_get_by_host() - temporary lookup mechanism for filesystem-dax
->   * @bdev: block device to find a dax_device for
-> diff --git a/fs/dax.c b/fs/dax.c
-> index 4e3e5a283a916..eb715363fd667 100644
-> --- a/fs/dax.c
-> +++ b/fs/dax.c
-> @@ -709,6 +709,19 @@ int dax_invalidate_mapping_entry_sync(struct address_space *mapping,
->         return __dax_invalidate_entry(mapping, index, false);
->  }
->
-> +static int bdev_dax_pgoff(struct block_device *bdev, sector_t sector, size_t size,
-> +               pgoff_t *pgoff)
-> +{
-> +       sector_t start_sect = bdev ? get_start_sect(bdev) : 0;
-> +       phys_addr_t phys_off = (start_sect + sector) * 512;
-> +
-> +       if (pgoff)
-> +               *pgoff = PHYS_PFN(phys_off);
-> +       if (phys_off % PAGE_SIZE || size % PAGE_SIZE)
-> +               return -EINVAL;
-> +       return 0;
-> +}
-> +
->  static int copy_cow_page_dax(struct block_device *bdev, struct dax_device *dax_dev,
->                              sector_t sector, struct page *to, unsigned long vaddr)
->  {
-> diff --git a/include/linux/dax.h b/include/linux/dax.h
-> index 439c3c70e347b..324363b798ecd 100644
-> --- a/include/linux/dax.h
-> +++ b/include/linux/dax.h
-> @@ -107,7 +107,6 @@ static inline bool daxdev_mapping_supported(struct vm_area_struct *vma,
->  #endif
->
->  struct writeback_control;
-> -int bdev_dax_pgoff(struct block_device *, sector_t, size_t, pgoff_t *pgoff);
->  #if IS_ENABLED(CONFIG_FS_DAX)
->  int dax_add_host(struct dax_device *dax_dev, struct gendisk *disk);
->  void dax_remove_host(struct gendisk *disk);
-> --
-> 2.30.2
->
+So if the default behavior of client side is 'dax=inode', and virtiofsd
+disables per inode DAX by default (neither '-o dax=server|attr' is
+specified for virtiofsd) for the sake of performance, then guest won't
+see DAX enabled and thus won't be surprised. This can reduce the
+behavior change to the minimum.
+
+
+> 
+> - So far if virtiofs is mounted without any of the dax options, just
+>   by looking at mount option, I could tell, DAX is not enabled on any
+>   of the files. But that will not be true anymore. Because dax=inode
+>   be default, it is possible that server upgrade enabled dax on some
+>   or all the files.
+> 
+>   I guess I will have to stick to same reason given by ext4/xfs. That is
+>   to determine whether DAX is enabled on a file or not, you need to
+>   query STATX_ATTR_DAX flag. That's the only way to conclude if DAX is
+>   being used on a file or not. Don't look at filesystem mount options
+>   and reach a conclusion (except the case of dax=never).
+
+
+-- 
+Thanks,
+Jeffle
