@@ -2,31 +2,45 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8424AC433FE
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 Oct 2021 18:24:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EDB9C433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 Oct 2021 19:19:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 53743610D2
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 Oct 2021 18:24:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E9020610FC
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 Oct 2021 19:19:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230462AbhJ1S0g (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 28 Oct 2021 14:26:36 -0400
-Received: from mga09.intel.com ([134.134.136.24]:58306 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229645AbhJ1S0g (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 28 Oct 2021 14:26:36 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10151"; a="230336085"
-X-IronPort-AV: E=Sophos;i="5.87,190,1631602800"; 
-   d="scan'208";a="230336085"
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Oct 2021 11:24:08 -0700
-X-IronPort-AV: E=Sophos;i="5.87,190,1631602800"; 
-   d="scan'208";a="448078729"
-Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.147])
-  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Oct 2021 11:24:08 -0700
-Date:   Thu, 28 Oct 2021 11:24:08 -0700
-From:   Ira Weiny <ira.weiny@intel.com>
-To:     JeffleXu <jefflexu@linux.alibaba.com>
-Cc:     Vivek Goyal <vgoyal@redhat.com>,
+        id S230505AbhJ1TWU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 28 Oct 2021 15:22:20 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:44249 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230460AbhJ1TWT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Oct 2021 15:22:19 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1635448792;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=itVqLjWPvjd96pFjKmpiNF0U4CjfqdxXKr0YqA5Ss10=;
+        b=TBb3Ue181EUPv7EsQ/hAnONuLgTJRnADl830dYdeEWKW39EiPSxfO0xyV5qum3IswkzhU1
+        vXUoSCXZDceGVFmlHY8c5b3Kl7L24MhY1ghrGEyEzeAe5ewcW6uep6ZDndMQJJw8YJsynf
+        OW1Om6BxAUPdpkvhTzOpqYCSEkAPB8I=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-144-Cz9pkv1FM7iqfDz_qk42oA-1; Thu, 28 Oct 2021 15:19:48 -0400
+X-MC-Unique: Cz9pkv1FM7iqfDz_qk42oA-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id E2CD1806688;
+        Thu, 28 Oct 2021 19:19:46 +0000 (UTC)
+Received: from horse.redhat.com (unknown [10.22.9.143])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 86DB02657F;
+        Thu, 28 Oct 2021 19:19:46 +0000 (UTC)
+Received: by horse.redhat.com (Postfix, from userid 10451)
+        id DA429220562; Thu, 28 Oct 2021 15:19:45 -0400 (EDT)
+Date:   Thu, 28 Oct 2021 15:19:45 -0400
+From:   Vivek Goyal <vgoyal@redhat.com>
+To:     Ira Weiny <ira.weiny@intel.com>
+Cc:     JeffleXu <jefflexu@linux.alibaba.com>,
         "Darrick J. Wong" <djwong@kernel.org>,
         Theodore Ts'o <tytso@mit.edu>, adilger.kernel@dilger.ca,
         linux-xfs@vger.kernel.org,
@@ -35,103 +49,142 @@ Cc:     Vivek Goyal <vgoyal@redhat.com>,
         Christoph Hellwig <hch@lst.de>,
         Dave Chinner <dchinner@redhat.com>
 Subject: Re: [Question] ext4/xfs: Default behavior changed after per-file DAX
-Message-ID: <20211028182407.GG3538886@iweiny-DESK2.sc.intel.com>
+Message-ID: <YXr30ZHODgKjZU2R@redhat.com>
 References: <26ddaf6d-fea7-ed20-cafb-decd63b2652a@linux.alibaba.com>
  <20211026154834.GB24307@magnolia>
  <YXhWP/FCkgHG/+ou@redhat.com>
  <20211026205730.GI3465596@iweiny-DESK2.sc.intel.com>
  <YXlj6GhxkFBQRJYk@redhat.com>
  <665787d0-f227-a95b-37a3-20f2ea3e09aa@linux.alibaba.com>
+ <20211028182407.GG3538886@iweiny-DESK2.sc.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <665787d0-f227-a95b-37a3-20f2ea3e09aa@linux.alibaba.com>
-User-Agent: Mutt/1.11.1 (2018-12-01)
+In-Reply-To: <20211028182407.GG3538886@iweiny-DESK2.sc.intel.com>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 28, 2021 at 01:52:27PM +0800, JeffleXu wrote:
-> 
-> 
-> On 10/27/21 10:36 PM, Vivek Goyal wrote:
-> > [snip]
+On Thu, Oct 28, 2021 at 11:24:08AM -0700, Ira Weiny wrote:
+> On Thu, Oct 28, 2021 at 01:52:27PM +0800, JeffleXu wrote:
 > > 
-> >>
-> >> Is the biggest issue the lack of visibility to see if the device supports DAX?
 > > 
-> > Not necessarily. I think for me two biggest issues are.
+> > On 10/27/21 10:36 PM, Vivek Goyal wrote:
+> > > [snip]
+> > > 
+> > >>
+> > >> Is the biggest issue the lack of visibility to see if the device supports DAX?
+> > > 
+> > > Not necessarily. I think for me two biggest issues are.
+> > > 
+> > > - Should dax be enabled by default in server as well. If we do that,
+> > >   server will have to make extra ioctl() call on every LOOKUP and GETATTR
+> > >   fuse request. Local filesystems probably can easily query FS_XFLAGS_DAX
+> > >   state but doing extra syscall all the time will probably be some cost
+> > >   (No idea how much).
 > > 
-> > - Should dax be enabled by default in server as well. If we do that,
-> >   server will have to make extra ioctl() call on every LOOKUP and GETATTR
-> >   fuse request. Local filesystems probably can easily query FS_XFLAGS_DAX
-> >   state but doing extra syscall all the time will probably be some cost
-> >   (No idea how much).
+> > I tested the time cost from virtiofsd's perspective (time cost of
+> > passthrough_ll.c:lo_do_lookup()):
+> > - before per inode DAX feature: 2~4 us
+> > - after per inode DAX feature: 7~8 us
+> > 
+> > It is within expectation, as the introduction of per inode DAX feature,
+> > one extra ioctl() system call is introduced.
+> > 
+> > Also the time cost from client's perspective (time cost of
+> > fs/fuse/dir.c:fuse_lookup_name())
+> > - before per inode DAX feature: 25~30 us
+> > - after per inode DAX feature: 30~35 us
+> > 
+> > That is, ~15%~20% performance loss.
+> > 
+> > Currently we do ioctl() to query the persitent inode flags every time
+> > FUSE_LOOKUP request is received, maybe we could cache the result of
+> > ioctl() on virtiofsd side, but I have no idea how to intercept the
+> > runtime modification to these persistent indoe flags from other
+> > processes on host, e.g. sysadmin on host, to maintain the cache consistency.
+> >
 > 
-> I tested the time cost from virtiofsd's perspective (time cost of
-> passthrough_ll.c:lo_do_lookup()):
-> - before per inode DAX feature: 2~4 us
-> - after per inode DAX feature: 7~8 us
-> 
-> It is within expectation, as the introduction of per inode DAX feature,
-> one extra ioctl() system call is introduced.
-> 
-> Also the time cost from client's perspective (time cost of
-> fs/fuse/dir.c:fuse_lookup_name())
-> - before per inode DAX feature: 25~30 us
-> - after per inode DAX feature: 30~35 us
-> 
-> That is, ~15%~20% performance loss.
-> 
-> Currently we do ioctl() to query the persitent inode flags every time
-> FUSE_LOOKUP request is received, maybe we could cache the result of
-> ioctl() on virtiofsd side, but I have no idea how to intercept the
-> runtime modification to these persistent indoe flags from other
-> processes on host, e.g. sysadmin on host, to maintain the cache consistency.
->
+> Do you really expect the dax flag to change on individual files a lot?  This in
+> itself is an expensive operation as the FS has to flush the inode.
 
-Do you really expect the dax flag to change on individual files a lot?  This in
-itself is an expensive operation as the FS has to flush the inode.
-
-> 
-> So if the default behavior of client side is 'dax=inode', and virtiofsd
-> disables per inode DAX by default (neither '-o dax=server|attr' is
-
-I'm not following what dax=server or dax=attr is?
-
-> specified for virtiofsd) for the sake of performance, then guest won't
-> see DAX enabled and thus won't be surprised. This can reduce the
-> behavior change to the minimum.
-> 
-
-What processes, other than virtiofsd have 'control' of these files?
-
-I know that a sysadmin could come in and change the dax flag but I think that
-is like saying a sys-admin can come in and change your .bashrc and your
-environment is suddenly different.  We have to trust the admins not to do stuff
-like that.  So I don't think admins are going to be changing the dax flag on
-files out from under 'users'; in this case virtiofsd.  Right?
-
-That means that virtiofsd could cache the status and avoid the performance
-issues above correct?
-
-Ira
+No, we do not expect it to change often. But in a shared filesystem it
+could be changed by somebody else. So we can't cache it in virtiofsd.
+Even if we cache it we will need mechanism to invalidate cache if
+some other client changed it. 
 
 > 
 > > 
-> > - So far if virtiofs is mounted without any of the dax options, just
-> >   by looking at mount option, I could tell, DAX is not enabled on any
-> >   of the files. But that will not be true anymore. Because dax=inode
-> >   be default, it is possible that server upgrade enabled dax on some
-> >   or all the files.
+> > So if the default behavior of client side is 'dax=inode', and virtiofsd
+> > disables per inode DAX by default (neither '-o dax=server|attr' is
+> 
+> I'm not following what dax=server or dax=attr is?
+
+These are just the virtiofs daemon option names we are considering to
+allow daemon to switch between different kind of policies. These names
+are not final. As of now dax=attr is suggesting that look for FS_XFLAG_DAX
+flag on inode and enable DAX on inode accordingly. dax=server means
+that server can choose other policy to enable/disable DAX on an inode
+(and can ignore FS_XFLAG_DAX). 
+
+> 
+> > specified for virtiofsd) for the sake of performance, then guest won't
+> > see DAX enabled and thus won't be surprised. This can reduce the
+> > behavior change to the minimum.
 > > 
-> >   I guess I will have to stick to same reason given by ext4/xfs. That is
-> >   to determine whether DAX is enabled on a file or not, you need to
-> >   query STATX_ATTR_DAX flag. That's the only way to conclude if DAX is
-> >   being used on a file or not. Don't look at filesystem mount options
-> >   and reach a conclusion (except the case of dax=never).
 > 
+> What processes, other than virtiofsd have 'control' of these files?
+
+Guest process  or user can change these flags. virtiofsd is not going
+to modify this flag. It will just query this flag and respond to client
+to enable DAX if this flag/attr is set on inode.
+
 > 
-> -- 
-> Thanks,
-> Jeffle
+> I know that a sysadmin could come in and change the dax flag but I think that
+> is like saying a sys-admin can come in and change your .bashrc and your
+> environment is suddenly different.  We have to trust the admins not to do stuff
+> like that.  So I don't think admins are going to be changing the dax flag on
+> files out from under 'users'; in this case virtiofsd.  Right?
+
+Right. Generally I don't expect that on host anybody will change it. But I
+will not rule it out because host is the one preparing initial filesystem
+for the guest and if admin/tools on host want to set FS_XFLAG_DAX on
+some of the inodes to begin with, so be it. Guest will boot with that
+initial filesystem state.
+
+> 
+> That means that virtiofsd could cache the status and avoid the performance
+> issues above correct?
+
+This directory could be shared also. That means multiple guests are
+sharing same directory (each guest has one corresponding virtiofsd
+instance running). That means if one guest changes the property of
+one of the files, other guests/virtiofsd will have no idea that property
+has changed.
+
+Vivek
+
+> 
+> Ira
+> 
+> > 
+> > > 
+> > > - So far if virtiofs is mounted without any of the dax options, just
+> > >   by looking at mount option, I could tell, DAX is not enabled on any
+> > >   of the files. But that will not be true anymore. Because dax=inode
+> > >   be default, it is possible that server upgrade enabled dax on some
+> > >   or all the files.
+> > > 
+> > >   I guess I will have to stick to same reason given by ext4/xfs. That is
+> > >   to determine whether DAX is enabled on a file or not, you need to
+> > >   query STATX_ATTR_DAX flag. That's the only way to conclude if DAX is
+> > >   being used on a file or not. Don't look at filesystem mount options
+> > >   and reach a conclusion (except the case of dax=never).
+> > 
+> > 
+> > -- 
+> > Thanks,
+> > Jeffle
+> 
+
