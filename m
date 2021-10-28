@@ -2,76 +2,136 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0FABC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 Oct 2021 17:15:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8424AC433FE
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 Oct 2021 18:24:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7696A610C8
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 Oct 2021 17:15:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 53743610D2
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 Oct 2021 18:24:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230225AbhJ1RRh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 28 Oct 2021 13:17:37 -0400
-Received: from sandeen.net ([63.231.237.45]:37760 "EHLO sandeen.net"
+        id S230462AbhJ1S0g (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 28 Oct 2021 14:26:36 -0400
+Received: from mga09.intel.com ([134.134.136.24]:58306 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230174AbhJ1RRh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 28 Oct 2021 13:17:37 -0400
-Received: from [10.0.0.146] (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 143314919;
-        Thu, 28 Oct 2021 12:13:42 -0500 (CDT)
-Message-ID: <6412d9dc-e058-c807-5b2e-524e85333783@sandeen.net>
-Date:   Thu, 28 Oct 2021 12:15:09 -0500
+        id S229645AbhJ1S0g (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 28 Oct 2021 14:26:36 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10151"; a="230336085"
+X-IronPort-AV: E=Sophos;i="5.87,190,1631602800"; 
+   d="scan'208";a="230336085"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Oct 2021 11:24:08 -0700
+X-IronPort-AV: E=Sophos;i="5.87,190,1631602800"; 
+   d="scan'208";a="448078729"
+Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.147])
+  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Oct 2021 11:24:08 -0700
+Date:   Thu, 28 Oct 2021 11:24:08 -0700
+From:   Ira Weiny <ira.weiny@intel.com>
+To:     JeffleXu <jefflexu@linux.alibaba.com>
+Cc:     Vivek Goyal <vgoyal@redhat.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Theodore Ts'o <tytso@mit.edu>, adilger.kernel@dilger.ca,
+        linux-xfs@vger.kernel.org,
+        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
+        linux-fsdevel@vger.kernel.org, dan.j.williams@intel.com,
+        Christoph Hellwig <hch@lst.de>,
+        Dave Chinner <dchinner@redhat.com>
+Subject: Re: [Question] ext4/xfs: Default behavior changed after per-file DAX
+Message-ID: <20211028182407.GG3538886@iweiny-DESK2.sc.intel.com>
+References: <26ddaf6d-fea7-ed20-cafb-decd63b2652a@linux.alibaba.com>
+ <20211026154834.GB24307@magnolia>
+ <YXhWP/FCkgHG/+ou@redhat.com>
+ <20211026205730.GI3465596@iweiny-DESK2.sc.intel.com>
+ <YXlj6GhxkFBQRJYk@redhat.com>
+ <665787d0-f227-a95b-37a3-20f2ea3e09aa@linux.alibaba.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.2.1
-Content-Language: en-US
-To:     Gabe Al-Ghalith <algh0022@umn.edu>, linux-xfs@vger.kernel.org
-References: <CAPqFctLu3L=qxf+Agwks5F+wTCxgRKgHqrQqokRPi62744KLHQ@mail.gmail.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: Segmentation fault on 28tb usb3 volume with xfs_repair
-In-Reply-To: <CAPqFctLu3L=qxf+Agwks5F+wTCxgRKgHqrQqokRPi62744KLHQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <665787d0-f227-a95b-37a3-20f2ea3e09aa@linux.alibaba.com>
+User-Agent: Mutt/1.11.1 (2018-12-01)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 10/27/21 4:06 PM, Gabe Al-Ghalith wrote:
-> I'm running a 28TB volume on USB3 with xfs. I have many other volumes
-> with NTFS formatting that haven't had issues, but both xfs volumes
-> have had trouble. When I run xfs_repair on a drive that hangs and
-> crashes, I get a segfault.
+On Thu, Oct 28, 2021 at 01:52:27PM +0800, JeffleXu wrote:
 > 
-> I'm running Fedora 33 with Linux 5.14.11-100.fc33.x86_64. My machine
-> has 1.5TB of RAM. I seem to reach the segmentation fault on what looks
-> like recursive reconstruction of ".." directory inodes:
 > 
-> I'm including the run log as of Phase 6 (which is where the failure
-> happens) inline below:
+> On 10/27/21 10:36 PM, Vivek Goyal wrote:
+> > [snip]
+> > 
+> >>
+> >> Is the biggest issue the lack of visibility to see if the device supports DAX?
+> > 
+> > Not necessarily. I think for me two biggest issues are.
+> > 
+> > - Should dax be enabled by default in server as well. If we do that,
+> >   server will have to make extra ioctl() call on every LOOKUP and GETATTR
+> >   fuse request. Local filesystems probably can easily query FS_XFLAGS_DAX
+> >   state but doing extra syscall all the time will probably be some cost
+> >   (No idea how much).
 > 
+> I tested the time cost from virtiofsd's perspective (time cost of
+> passthrough_ll.c:lo_do_lookup()):
+> - before per inode DAX feature: 2~4 us
+> - after per inode DAX feature: 7~8 us
+> 
+> It is within expectation, as the introduction of per inode DAX feature,
+> one extra ioctl() system call is introduced.
+> 
+> Also the time cost from client's perspective (time cost of
+> fs/fuse/dir.c:fuse_lookup_name())
+> - before per inode DAX feature: 25~30 us
+> - after per inode DAX feature: 30~35 us
+> 
+> That is, ~15%~20% performance loss.
+> 
+> Currently we do ioctl() to query the persitent inode flags every time
+> FUSE_LOOKUP request is received, maybe we could cache the result of
+> ioctl() on virtiofsd side, but I have no idea how to intercept the
+> runtime modification to these persistent indoe flags from other
+> processes on host, e.g. sysadmin on host, to maintain the cache consistency.
+>
+
+Do you really expect the dax flag to change on individual files a lot?  This in
+itself is an expensive operation as the FS has to flush the inode.
+
+> 
+> So if the default behavior of client side is 'dax=inode', and virtiofsd
+> disables per inode DAX by default (neither '-o dax=server|attr' is
+
+I'm not following what dax=server or dax=attr is?
+
+> specified for virtiofsd) for the sake of performance, then guest won't
+> see DAX enabled and thus won't be surprised. This can reduce the
+> behavior change to the minimum.
+> 
+
+What processes, other than virtiofsd have 'control' of these files?
+
+I know that a sysadmin could come in and change the dax flag but I think that
+is like saying a sys-admin can come in and change your .bashrc and your
+environment is suddenly different.  We have to trust the admins not to do stuff
+like that.  So I don't think admins are going to be changing the dax flag on
+files out from under 'users'; in this case virtiofsd.  Right?
+
+That means that virtiofsd could cache the status and avoid the performance
+issues above correct?
+
+Ira
+
+> 
+> > 
+> > - So far if virtiofs is mounted without any of the dax options, just
+> >   by looking at mount option, I could tell, DAX is not enabled on any
+> >   of the files. But that will not be true anymore. Because dax=inode
+> >   be default, it is possible that server upgrade enabled dax on some
+> >   or all the files.
+> > 
+> >   I guess I will have to stick to same reason given by ext4/xfs. That is
+> >   to determine whether DAX is enabled on a file or not, you need to
+> >   query STATX_ATTR_DAX flag. That's the only way to conclude if DAX is
+> >   being used on a file or not. Don't look at filesystem mount options
+> >   and reach a conclusion (except the case of dax=never).
+> 
+> 
+> -- 
 > Thanks,
-> Gabe
-
-Can you try creating an xfs_metadump of the filesystem, and see if the
-segfault is reproducible?
-
-Then, if you are willing to share it (in private) we could do some
-debugging.
-
-To create the xfs_metadump:
-
-# xfs_metadump /dev/$WHATEVER metadump.meta
-
-To see if the image reproduces the problem,
-
-# xfs_mdrestore metadump.meta metadump.img
-
-(Note that both metadump.meta and metadump.img are metadata-only, contain
-no file data, and will take FAR less than 28T of disk space.)
-
-If so, and if you're OK with sharing the obfuscated metadump (it contains
-no file data, but may contain unobfuscated short file names, xattrs etc),
-then compress it and send it my way, offline.
-
-Thanks,
--Eric
+> Jeffle
