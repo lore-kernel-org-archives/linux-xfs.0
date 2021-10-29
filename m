@@ -2,141 +2,102 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24E65C433EF
-	for <linux-xfs@archiver.kernel.org>; Fri, 29 Oct 2021 11:46:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 428E3C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 29 Oct 2021 15:42:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 036F361167
-	for <linux-xfs@archiver.kernel.org>; Fri, 29 Oct 2021 11:46:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 213E3611C4
+	for <linux-xfs@archiver.kernel.org>; Fri, 29 Oct 2021 15:42:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231473AbhJ2LtG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 29 Oct 2021 07:49:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36140 "EHLO
+        id S229945AbhJ2PpL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 29 Oct 2021 11:45:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34300 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230475AbhJ2LtG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Oct 2021 07:49:06 -0400
-Received: from mail-wr1-x433.google.com (mail-wr1-x433.google.com [IPv6:2a00:1450:4864:20::433])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 955E5C061570;
-        Fri, 29 Oct 2021 04:46:37 -0700 (PDT)
-Received: by mail-wr1-x433.google.com with SMTP id d3so15735978wrh.8;
-        Fri, 29 Oct 2021 04:46:37 -0700 (PDT)
+        with ESMTP id S229723AbhJ2PpK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Oct 2021 11:45:10 -0400
+Received: from mail-pg1-x534.google.com (mail-pg1-x534.google.com [IPv6:2607:f8b0:4864:20::534])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63FACC061714
+        for <linux-xfs@vger.kernel.org>; Fri, 29 Oct 2021 08:42:41 -0700 (PDT)
+Received: by mail-pg1-x534.google.com with SMTP id j9so2114551pgh.1
+        for <linux-xfs@vger.kernel.org>; Fri, 29 Oct 2021 08:42:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=4USXpy4HYDd4725dd4VPkkRl2D3ibOF+yr4vsPBEkE8=;
-        b=A4S1LAhHVhcAlkTRzNX9fuGuZAY1nFDO66K6YvKon+ZQjANxdTeXP2kGII385WYI9Q
-         Ij5KX8/L0OoTmQHHYNb05fl4PIxpCYvK2XEC5mF2KnRSZs5sLJnbaBswalpDWffoUNGJ
-         N4FQnykQgjeHp/CG9lA6JhtnoPNy4OfWB61/K1rbkPYXE5zFchgwdKxk0A7QdbfiXDff
-         C1FVOxlK0bbke5RHj+ybYPneAIP8MZI/XyMFzpdqSA8zLD09bBrNg82zwmio63TEagVx
-         Dmi89md243x/5qtDfi5g/H4mq/osbs60I15q9+0hAzNRwFoaEwPIDpBl9EzjMdy8FL9r
-         QHHg==
+        d=intel-com.20210112.gappssmtp.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=kkrK8/+uwUhU1+ibCc9sihgvRMe3oeCDEJlEEAsQMNY=;
+        b=6wmVMWLAKN8exE8XR8wv/iFYhudFZm/xaEJpNEZmOxWSzGBAVEn+M6ckTQFipGdRJT
+         yb6PYTTcKIVqTXGsV3bkPy2TCiq4+HLgRy2cRXBAvM33znfROc4XjMNFzIfr4UE69rdj
+         4eISFf7aFEyAHo2Sf/MANtuSqjdRnwdAyb7h0RnbdOmg2MrJVd+mPCxh87qxZR21UV1T
+         Jo7MDmjd0zsp2/1yCw8PZ5/EZTwQNFNoOJVWhez881Nf3OlrTKHfCKrLAxk43DLXDdPH
+         n00SPDakiTsjm+voDnH7pSuvR7gHcdocX6KbBQemE5xaUaALVKmTKfT7gJVRpb96WLOa
+         Bfgg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=4USXpy4HYDd4725dd4VPkkRl2D3ibOF+yr4vsPBEkE8=;
-        b=vEHU+ZXZmQREUIazlHt7kQ7lMjDyNm/Db+9DU4SlUCjD00iTRCa2RmEmKfY3TGVeXF
-         6c+iGmsQnfE2KzH5edQQSXVuC3wCOOnJncE2zF3G5fDpodnh44cxwEWjZe50VE3r/3Ce
-         YllUw1kWPNMueqsFGc24It06nSJsnVxef+Tn805SWCWqx3R91f3rkxNfL5ZS6Ecb/Sbf
-         0Ej8BUJunvvTz1ZDSWzl9cuQFkcy3CZtWyAQNyEh2Khcc4iLKGvlYnFFxdn7C9UYg33C
-         kRw48xgMvqKg80YEflLvdGvaWvnmKcr165bpG/QaJleeIu54fUZBeeiDFTqONFCNSZp0
-         tP4w==
-X-Gm-Message-State: AOAM533cnQo/ZZVO7v0nrODwexV970aiotZSXaI+VT6+kNQWNKLoyUyN
-        Stbu8W4kbxubEgmVO3dnZ2k=
-X-Google-Smtp-Source: ABdhPJzTlT2UpuaMBC4cfEXRAY32D5GvOd2OdG1plI8jXT/MbOD36lk+nBoDgi4LlwWwjWLI0IcMbA==
-X-Received: by 2002:a5d:47a3:: with SMTP id 3mr13567924wrb.336.1635507996210;
-        Fri, 29 Oct 2021 04:46:36 -0700 (PDT)
-Received: from [192.168.8.198] ([148.252.129.16])
-        by smtp.gmail.com with ESMTPSA id s3sm8421482wmh.30.2021.10.29.04.46.35
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 29 Oct 2021 04:46:35 -0700 (PDT)
-Message-ID: <22255117-52de-4b2d-822e-b4bc50bbc52b@gmail.com>
-Date:   Fri, 29 Oct 2021 12:46:14 +0100
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=kkrK8/+uwUhU1+ibCc9sihgvRMe3oeCDEJlEEAsQMNY=;
+        b=29tTmyy1pCDedfWHPAF7ajFSHb8cg07jYA5uaVWGrzUtjNUxW02Cut3amEJfh/2NQp
+         eHvhf8tZgtJWY5amXgol0LNN3Mh/3BLcfky1HAACd6u8fXQurqFgzOq3qmDUq1Rk9GKQ
+         WKvjrAduWf2ZxLqqTFvcMlnZLrrQCZthdXA7BKZjfuzv5xjeIdxdTXeVlnRN/d4hRfND
+         S971OnmrTruHf2hKxnwLgVgSxhfwIbN+DBJy5MQKVcISw6GujujGsmlUY/2G0l+v8fw0
+         F/VAL1G9EymL/u33WoNDJc2kibEqO9AxGrUjRYpOXLTv8sKIhUg0L7jlDrcWHt6oJ/dL
+         oPFQ==
+X-Gm-Message-State: AOAM530CjCoyDRKvmqDqFSmDKEA9zLCSH6cR+ohUlf+k5u7kAnVkVQFd
+        0P51scTFT7Y+D+jOaM8H2iq+avZ8eNXVyGw1U8cFjIdLFkU=
+X-Google-Smtp-Source: ABdhPJwscYMJBcsf4QuT7rFuYsL/BYYBLAhJeu/07ZB2t6F9Qexmb3kIziq0UAiLr3A7UbGhuhxXArjTEfzlR4kAptU=
+X-Received: by 2002:a05:6a00:140e:b0:444:b077:51ef with SMTP id
+ l14-20020a056a00140e00b00444b07751efmr11616698pfu.61.1635522160977; Fri, 29
+ Oct 2021 08:42:40 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.2.0
-Subject: Re: [dm-devel] [PATCH 0/6] dax poison recovery with RWF_RECOVERY_DATA
- flag
-Content-Language: en-US
-To:     Dave Chinner <david@fromorbit.com>,
-        "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Jane Chu <jane.chu@oracle.com>,
-        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
-        "vishal.l.verma@intel.com" <vishal.l.verma@intel.com>,
-        "dave.jiang@intel.com" <dave.jiang@intel.com>,
-        "agk@redhat.com" <agk@redhat.com>,
-        "snitzer@redhat.com" <snitzer@redhat.com>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "ira.weiny@intel.com" <ira.weiny@intel.com>,
-        "willy@infradead.org" <willy@infradead.org>,
-        "vgoyal@redhat.com" <vgoyal@redhat.com>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "nvdimm@lists.linux.dev" <nvdimm@lists.linux.dev>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-References: <20211021001059.438843-1-jane.chu@oracle.com>
- <YXFPfEGjoUaajjL4@infradead.org>
- <e89a2b17-3f03-a43e-e0b9-5d2693c3b089@oracle.com>
- <YXJN4s1HC/Y+KKg1@infradead.org>
- <2102a2e6-c543-2557-28a2-8b0bdc470855@oracle.com>
- <YXj2lwrxRxHdr4hb@infradead.org> <20211028002451.GB2237511@magnolia>
- <20211028225955.GA449541@dread.disaster.area>
-From:   Pavel Begunkov <asml.silence@gmail.com>
-In-Reply-To: <20211028225955.GA449541@dread.disaster.area>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20211018044054.1779424-1-hch@lst.de> <CAPcyv4iEt78-XSsKjTWcpy71zaduXyyigTro6f3fmRqqFOG98Q@mail.gmail.com>
+ <20211029105139.1194bb7f@canb.auug.org.au>
+In-Reply-To: <20211029105139.1194bb7f@canb.auug.org.au>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Fri, 29 Oct 2021 08:42:29 -0700
+Message-ID: <CAPcyv4g8iEyN5UN1w1xBqQDYSb3HCh7_smsmjt-PiHORRK+X9Q@mail.gmail.com>
+Subject: Re: futher decouple DAX from block devices
+To:     Stephen Rothwell <sfr@canb.auug.org.au>,
+        Christoph Hellwig <hch@lst.de>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Shiyang Ruan <ruansy.fnst@fujitsu.com>
+Cc:     Mike Snitzer <snitzer@redhat.com>, Ira Weiny <ira.weiny@intel.com>,
+        device-mapper development <dm-devel@redhat.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Linux NVDIMM <nvdimm@lists.linux.dev>,
+        linux-s390 <linux-s390@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-erofs@lists.ozlabs.org,
+        linux-ext4 <linux-ext4@vger.kernel.org>,
+        virtualization@lists.linux-foundation.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 10/28/21 23:59, Dave Chinner wrote:
-[...]
->>> Well, my point is doing recovery from bit errors is by definition not
->>> the fast path.  Which is why I'd rather keep it away from the pmem
->>> read/write fast path, which also happens to be the (much more important)
->>> non-pmem read/write path.
->>
->> The trouble is, we really /do/ want to be able to (re)write the failed
->> area, and we probably want to try to read whatever we can.  Those are
->> reads and writes, not {pre,f}allocation activities.  This is where Dave
->> and I arrived at a month ago.
->>
->> Unless you'd be ok with a second IO path for recovery where we're
->> allowed to be slow?  That would probably have the same user interface
->> flag, just a different path into the pmem driver.
-> 
-> I just don't see how 4 single line branches to propage RWF_RECOVERY
-> down to the hardware is in any way an imposition on the fast path.
-> It's no different for passing RWF_HIPRI down to the hardware *in the
-> fast path* so that the IO runs the hardware in polling mode because
-> it's faster for some hardware.
+On Thu, Oct 28, 2021 at 4:52 PM Stephen Rothwell <sfr@canb.auug.org.au> wrote:
+>
+> Hi Dan,
+>
+> On Wed, 27 Oct 2021 13:46:31 -0700 Dan Williams <dan.j.williams@intel.com> wrote:
+> >
+> > My merge resolution is here [1]. Christoph, please have a look. The
+> > rebase and the merge result are both passing my test and I'm now going
+> > to review the individual patches. However, while I do that and collect
+> > acks from DM and EROFS folks, I want to give Stephen a heads up that
+> > this is coming. Primarily I want to see if someone sees a better
+> > strategy to merge this, please let me know, but if not I plan to walk
+> > Stephen and Linus through the resolution.
+>
+> It doesn't look to bad to me (however it is a bit late in the cycle :-(
+> ).  Once you are happy, just put it in your tree (some of the conflicts
+> are against the current -rc3 based version of your tree anyway) and I
+> will cope with it on Monday.
 
-Not particularly about this flag, but it is expensive. Surely looks
-cheap when it's just one feature, but there are dozens of them with
-limited applicability, default config kernels are already sluggish
-when it comes to really fast devices and it's not getting better.
-Also, pretty often every of them will add a bunch of extra checks
-to fix something of whatever it would be.
+Christoph, Darrick, Shiyang,
 
-So let's add a bit of pragmatism to the picture, if there is just one
-user of a feature but it adds overhead for millions of machines that
-won't ever use it, it's expensive.
-
-This one doesn't spill yet into paths I care about, but in general
-it'd be great if we start thinking more about such stuff instead of
-throwing yet another if into the path, e.g. by shifting the overhead
-from linear to a constant for cases that don't use it, for instance
-with callbacks or bit masks.
-
-> IOWs, saying that we shouldn't implement RWF_RECOVERY because it
-> adds a handful of branches 	 the fast path is like saying that we
-> shouldn't implement RWF_HIPRI because it slows down the fast path
-> for non-polled IO....
-> 
-> Just factor the actual recovery operations out into a separate
-> function like:
-
--- 
-Pavel Begunkov
+I'm losing my nerve to try to jam this into v5.16 this late in the
+cycle. I do want to get dax+reflink squared away as soon as possible,
+but that looks like something that needs to build on top of a
+v5.16-rc1 at this point. If Linus does a -rc8 then maybe it would have
+enough soak time, but otherwise I want to take the time to collect the
+acks and queue up some more follow-on cleanups to prepare for
+block-less-dax.
