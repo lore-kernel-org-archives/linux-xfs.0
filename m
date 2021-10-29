@@ -2,172 +2,141 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC2BAC433EF
-	for <linux-xfs@archiver.kernel.org>; Fri, 29 Oct 2021 08:52:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24E65C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 29 Oct 2021 11:46:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9B79460D43
-	for <linux-xfs@archiver.kernel.org>; Fri, 29 Oct 2021 08:52:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 036F361167
+	for <linux-xfs@archiver.kernel.org>; Fri, 29 Oct 2021 11:46:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231499AbhJ2Iyd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 29 Oct 2021 04:54:33 -0400
-Received: from mail1.bemta26.messagelabs.com ([85.158.142.115]:50712 "EHLO
-        mail1.bemta26.messagelabs.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231489AbhJ2Iyd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Oct 2021 04:54:33 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fujitsu.com;
-        s=170520fj; t=1635497524; i=@fujitsu.com;
-        bh=zaky3TEYcshvFmINx+tvDjpL2jIYaTV7Jdyb3KtQgcE=;
-        h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type;
-        b=g3kzbR9CJNIJMbuM/O4MJa7v/j+vKeocpcnVLdtrvwW0NViwObtfssFxvWLuZtY8N
-         8bteJIUsG4J/lhAfzlskhnIiMqvnkF5jzyfVbEVo4T0knEuiuGDtFKpY3u+RgUEJdk
-         MOOrJxFrrblfkoagw009wBeXeXaBcZTWUsMObs7Qbpwo4gQXePSVlIyWnAQ6XDr2JR
-         FyWZo7QiMF69VtUKj7od0ZpQ6h2JGptbZoAmGOHXN+Q71vDEogOg+HpbpzUK8QTl/b
-         5zPtNdDKGQD8OJmsKWE8ryCHH3IZBN8K5wNJuNUDMU0xRU1Ek4Fbor7wk0uhn39NqH
-         QB/gdUVK/LKeg==
-Received: from [100.113.4.229] (using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256 bits))
-        by server-4.bemta.az-b.eu-central-1.aws.symcld.net id 3A/1B-09058-436BB716; Fri, 29 Oct 2021 08:52:04 +0000
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrEIsWRWlGSWpSXmKPExsViZ8MRomu8rTr
-  R4Oh+DYvLT/gsTrfsZbfY9WcHuwOzx6ZVnWwenzfJBTBFsWbmJeVXJLBmfH12gK1gk3TF6fU/
-  mBsYt4l3MXJxCAm8ZpSYfuIUO4Szh1Hi+q7jrF2MnBxsApoSzzoXMIPYIgLiEo8X3WICsZkFM
-  iQ2dF0CqxEW8JJYuOQGC4jNIqAqsX3KQnYQm1fAQ6L7/wawegkBBYkpD98zQ8QFJU7OfMICMU
-  dC4uCLF8wQNYoSlzq+MULYFRKzZrUxTWDknYWkZRaSlgWMTKsYLZOKMtMzSnITM3N0DQ0MdA0
-  NjXVNdA2NDfQSq3ST9FJLdZNT80qKEoGyeonlxXrFlbnJOSl6eaklmxiBwZdSyNK0g/H3qw96
-  hxglOZiURHl/rq1OFOJLyk+pzEgszogvKs1JLT7EKMPBoSTBu3gLUE6wKDU9tSItMwcYCTBpC
-  Q4eJRHenA1Aad7igsTc4sx0iNQpRl2Oy9fnLWIWYsnLz0uVEue9DjJDAKQoozQPbgQsKi8xyk
-  oJ8zIyMDAI8RSkFuVmlqDKv2IU52BUEubl3Qw0hSczrwRu0yugI5iAjmBWqgA5oiQRISXVwDS
-  XQ256bsXtx2rK/ivYY/Xkqp+YtZXquvxe83t/50MtlhKB4KtWLYuDvr9llGOYMkvR5cf3kIbt
-  778mfQqokcibV9NwrEbzwctoUd/nx/JkWp2+WAWl8IQ1dIo09bcZnKmMXHg1u63O81Uow/p3V
-  fsEF4hxbkt+G3L8tONk3YKyWsZJ4hw5i5j3WJ3cyhc3NTnqGCuzSf/GGRa3rywI2qQ6NX+2zy
-  MZ/Z7vdjffKfjmx67mP/L5pIipvasnp+Rb3yrGDy2ehziNM/01Ba7dzuJI2jtVeVNDfNFSdon
-  SIoYb+jaf+vutrnounHVLzuDtC+YMZV7uLFV+4f+/y2bsexaacvL+Ss9CO8OXwcVKLMUZiYZa
-  zEXFiQBF3X/dRQMAAA==
-X-Env-Sender: xuyang2018.jy@fujitsu.com
-X-Msg-Ref: server-8.tower-238.messagelabs.com!1635497523!193463!1
-X-Originating-IP: [62.60.8.84]
-X-SYMC-ESS-Client-Auth: outbound-route-from=pass
-X-StarScan-Received: 
-X-StarScan-Version: 9.81.4; banners=-,-,-
-X-VirusChecked: Checked
-Received: (qmail 20951 invoked from network); 29 Oct 2021 08:52:03 -0000
-Received: from unknown (HELO mailhost3.uk.fujitsu.com) (62.60.8.84)
-  by server-8.tower-238.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 29 Oct 2021 08:52:03 -0000
-Received: from R01UKEXCASM126.r01.fujitsu.local ([10.183.43.178])
-        by mailhost3.uk.fujitsu.com (8.14.5/8.14.5) with ESMTP id 19T8q3dd020426
-        (version=TLSv1/SSLv3 cipher=AES256-SHA bits=256 verify=FAIL);
-        Fri, 29 Oct 2021 09:52:03 +0100
-Received: from localhost.localdomain (10.167.220.84) by
- R01UKEXCASM126.r01.fujitsu.local (10.183.43.178) with Microsoft SMTP Server
- (TLS) id 15.0.1497.24; Fri, 29 Oct 2021 09:52:01 +0100
-From:   Yang Xu <xuyang2018.jy@fujitsu.com>
-To:     <djwong@kernel.org>
-CC:     <fstests@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        Yang Xu <xuyang2018.jy@fujitsu.com>
-Subject: [PATCH] xfs: Fix the free logic of state in xfs_attr_node_hasname
-Date:   Fri, 29 Oct 2021 16:52:00 +0800
-Message-ID: <1635497520-8168-1-git-send-email-xuyang2018.jy@fujitsu.com>
-X-Mailer: git-send-email 1.8.3.1
+        id S231473AbhJ2LtG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 29 Oct 2021 07:49:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36140 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230475AbhJ2LtG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Oct 2021 07:49:06 -0400
+Received: from mail-wr1-x433.google.com (mail-wr1-x433.google.com [IPv6:2a00:1450:4864:20::433])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 955E5C061570;
+        Fri, 29 Oct 2021 04:46:37 -0700 (PDT)
+Received: by mail-wr1-x433.google.com with SMTP id d3so15735978wrh.8;
+        Fri, 29 Oct 2021 04:46:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=4USXpy4HYDd4725dd4VPkkRl2D3ibOF+yr4vsPBEkE8=;
+        b=A4S1LAhHVhcAlkTRzNX9fuGuZAY1nFDO66K6YvKon+ZQjANxdTeXP2kGII385WYI9Q
+         Ij5KX8/L0OoTmQHHYNb05fl4PIxpCYvK2XEC5mF2KnRSZs5sLJnbaBswalpDWffoUNGJ
+         N4FQnykQgjeHp/CG9lA6JhtnoPNy4OfWB61/K1rbkPYXE5zFchgwdKxk0A7QdbfiXDff
+         C1FVOxlK0bbke5RHj+ybYPneAIP8MZI/XyMFzpdqSA8zLD09bBrNg82zwmio63TEagVx
+         Dmi89md243x/5qtDfi5g/H4mq/osbs60I15q9+0hAzNRwFoaEwPIDpBl9EzjMdy8FL9r
+         QHHg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=4USXpy4HYDd4725dd4VPkkRl2D3ibOF+yr4vsPBEkE8=;
+        b=vEHU+ZXZmQREUIazlHt7kQ7lMjDyNm/Db+9DU4SlUCjD00iTRCa2RmEmKfY3TGVeXF
+         6c+iGmsQnfE2KzH5edQQSXVuC3wCOOnJncE2zF3G5fDpodnh44cxwEWjZe50VE3r/3Ce
+         YllUw1kWPNMueqsFGc24It06nSJsnVxef+Tn805SWCWqx3R91f3rkxNfL5ZS6Ecb/Sbf
+         0Ej8BUJunvvTz1ZDSWzl9cuQFkcy3CZtWyAQNyEh2Khcc4iLKGvlYnFFxdn7C9UYg33C
+         kRw48xgMvqKg80YEflLvdGvaWvnmKcr165bpG/QaJleeIu54fUZBeeiDFTqONFCNSZp0
+         tP4w==
+X-Gm-Message-State: AOAM533cnQo/ZZVO7v0nrODwexV970aiotZSXaI+VT6+kNQWNKLoyUyN
+        Stbu8W4kbxubEgmVO3dnZ2k=
+X-Google-Smtp-Source: ABdhPJzTlT2UpuaMBC4cfEXRAY32D5GvOd2OdG1plI8jXT/MbOD36lk+nBoDgi4LlwWwjWLI0IcMbA==
+X-Received: by 2002:a5d:47a3:: with SMTP id 3mr13567924wrb.336.1635507996210;
+        Fri, 29 Oct 2021 04:46:36 -0700 (PDT)
+Received: from [192.168.8.198] ([148.252.129.16])
+        by smtp.gmail.com with ESMTPSA id s3sm8421482wmh.30.2021.10.29.04.46.35
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 29 Oct 2021 04:46:35 -0700 (PDT)
+Message-ID: <22255117-52de-4b2d-822e-b4bc50bbc52b@gmail.com>
+Date:   Fri, 29 Oct 2021 12:46:14 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.167.220.84]
-X-ClientProxiedBy: G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) To
- R01UKEXCASM126.r01.fujitsu.local (10.183.43.178)
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.2.0
+Subject: Re: [dm-devel] [PATCH 0/6] dax poison recovery with RWF_RECOVERY_DATA
+ flag
+Content-Language: en-US
+To:     Dave Chinner <david@fromorbit.com>,
+        "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Jane Chu <jane.chu@oracle.com>,
+        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
+        "vishal.l.verma@intel.com" <vishal.l.verma@intel.com>,
+        "dave.jiang@intel.com" <dave.jiang@intel.com>,
+        "agk@redhat.com" <agk@redhat.com>,
+        "snitzer@redhat.com" <snitzer@redhat.com>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "ira.weiny@intel.com" <ira.weiny@intel.com>,
+        "willy@infradead.org" <willy@infradead.org>,
+        "vgoyal@redhat.com" <vgoyal@redhat.com>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "nvdimm@lists.linux.dev" <nvdimm@lists.linux.dev>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+References: <20211021001059.438843-1-jane.chu@oracle.com>
+ <YXFPfEGjoUaajjL4@infradead.org>
+ <e89a2b17-3f03-a43e-e0b9-5d2693c3b089@oracle.com>
+ <YXJN4s1HC/Y+KKg1@infradead.org>
+ <2102a2e6-c543-2557-28a2-8b0bdc470855@oracle.com>
+ <YXj2lwrxRxHdr4hb@infradead.org> <20211028002451.GB2237511@magnolia>
+ <20211028225955.GA449541@dread.disaster.area>
+From:   Pavel Begunkov <asml.silence@gmail.com>
+In-Reply-To: <20211028225955.GA449541@dread.disaster.area>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-When testing xfstests xfs/126 on lastest upstream kernel, it will hang on some machine.
-Adding a getxattr operation after xattr corrupted, I can reproduce it 100%.
+On 10/28/21 23:59, Dave Chinner wrote:
+[...]
+>>> Well, my point is doing recovery from bit errors is by definition not
+>>> the fast path.  Which is why I'd rather keep it away from the pmem
+>>> read/write fast path, which also happens to be the (much more important)
+>>> non-pmem read/write path.
+>>
+>> The trouble is, we really /do/ want to be able to (re)write the failed
+>> area, and we probably want to try to read whatever we can.  Those are
+>> reads and writes, not {pre,f}allocation activities.  This is where Dave
+>> and I arrived at a month ago.
+>>
+>> Unless you'd be ok with a second IO path for recovery where we're
+>> allowed to be slow?  That would probably have the same user interface
+>> flag, just a different path into the pmem driver.
+> 
+> I just don't see how 4 single line branches to propage RWF_RECOVERY
+> down to the hardware is in any way an imposition on the fast path.
+> It's no different for passing RWF_HIPRI down to the hardware *in the
+> fast path* so that the IO runs the hardware in polling mode because
+> it's faster for some hardware.
 
-The deadlock as below:
-[983.923403] task:setfattr        state:D stack:    0 pid:17639 ppid: 14687 flags:0x00000080
-[  983.923405] Call Trace:
-[  983.923410]  __schedule+0x2c4/0x700
-[  983.923412]  schedule+0x37/0xa0
-[  983.923414]  schedule_timeout+0x274/0x300
-[  983.923416]  __down+0x9b/0xf0
-[  983.923451]  ? xfs_buf_find.isra.29+0x3c8/0x5f0 [xfs]
-[  983.923453]  down+0x3b/0x50
-[  983.923471]  xfs_buf_lock+0x33/0xf0 [xfs]
-[  983.923490]  xfs_buf_find.isra.29+0x3c8/0x5f0 [xfs]
-[  983.923508]  xfs_buf_get_map+0x4c/0x320 [xfs]
-[  983.923525]  xfs_buf_read_map+0x53/0x310 [xfs]
-[  983.923541]  ? xfs_da_read_buf+0xcf/0x120 [xfs]
-[  983.923560]  xfs_trans_read_buf_map+0x1cf/0x360 [xfs]
-[  983.923575]  ? xfs_da_read_buf+0xcf/0x120 [xfs]
-[  983.923590]  xfs_da_read_buf+0xcf/0x120 [xfs]
-[  983.923606]  xfs_da3_node_read+0x1f/0x40 [xfs]
-[  983.923621]  xfs_da3_node_lookup_int+0x69/0x4a0 [xfs]
-[  983.923624]  ? kmem_cache_alloc+0x12e/0x270
-[  983.923637]  xfs_attr_node_hasname+0x6e/0xa0 [xfs]
-[  983.923651]  xfs_has_attr+0x6e/0xd0 [xfs]
-[  983.923664]  xfs_attr_set+0x273/0x320 [xfs]
-[  983.923683]  xfs_xattr_set+0x87/0xd0 [xfs]
-[  983.923686]  __vfs_removexattr+0x4d/0x60
-[  983.923688]  __vfs_removexattr_locked+0xac/0x130
-[  983.923689]  vfs_removexattr+0x4e/0xf0
-[  983.923690]  removexattr+0x4d/0x80
-[  983.923693]  ? __check_object_size+0xa8/0x16b
-[  983.923695]  ? strncpy_from_user+0x47/0x1a0
-[  983.923696]  ? getname_flags+0x6a/0x1e0
-[  983.923697]  ? _cond_resched+0x15/0x30
-[  983.923699]  ? __sb_start_write+0x1e/0x70
-[  983.923700]  ? mnt_want_write+0x28/0x50
-[  983.923701]  path_removexattr+0x9b/0xb0
-[  983.923702]  __x64_sys_removexattr+0x17/0x20
-[  983.923704]  do_syscall_64+0x5b/0x1a0
-[  983.923705]  entry_SYSCALL_64_after_hwframe+0x65/0xca
-[  983.923707] RIP: 0033:0x7f080f10ee1b
+Not particularly about this flag, but it is expensive. Surely looks
+cheap when it's just one feature, but there are dozens of them with
+limited applicability, default config kernels are already sluggish
+when it comes to really fast devices and it's not getting better.
+Also, pretty often every of them will add a bunch of extra checks
+to fix something of whatever it would be.
 
-When getxattr calls xfs_attr_node_get, xfs_da3_node_lookup_int fails in
-xfs_attr_node_hasname because we have use blocktrash to random it in xfs/126. So it
-free stat and xfs_attr_node_get doesn't do xfs_buf_trans release job.
+So let's add a bit of pragmatism to the picture, if there is just one
+user of a feature but it adds overhead for millions of machines that
+won't ever use it, it's expensive.
 
-Then subsequent removexattr will hang because of it.
+This one doesn't spill yet into paths I care about, but in general
+it'd be great if we start thinking more about such stuff instead of
+throwing yet another if into the path, e.g. by shifting the overhead
+from linear to a constant for cases that don't use it, for instance
+with callbacks or bit masks.
 
-This bug was introduced by kernel commit 07120f1abdff ("xfs: Add xfs_has_attr and subroutines").
-It adds xfs_attr_node_hasname helper and said caller will be responsible for freeing the state
-in this case. But xfs_attr_node_hasname will free stat itself instead of caller if
-xfs_da3_node_lookup_int fails.
+> IOWs, saying that we shouldn't implement RWF_RECOVERY because it
+> adds a handful of branches 	 the fast path is like saying that we
+> shouldn't implement RWF_HIPRI because it slows down the fast path
+> for non-polled IO....
+> 
+> Just factor the actual recovery operations out into a separate
+> function like:
 
-Fix this bug by moving the step of free state into caller.
-
-Fixes: 07120f1abdff ("xfs: Add xfs_has_attr and subroutines")
-Signed-off-by: Yang Xu <xuyang2018.jy@fujitsu.com>
----
- fs/xfs/libxfs/xfs_attr.c | 13 +++++--------
- 1 file changed, 5 insertions(+), 8 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index fbc9d816882c..6ad50a76fd8d 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -1077,21 +1077,18 @@ xfs_attr_node_hasname(
- 
- 	state = xfs_da_state_alloc(args);
- 	if (statep != NULL)
--		*statep = NULL;
-+		*statep = state;
- 
- 	/*
- 	 * Search to see if name exists, and get back a pointer to it.
- 	 */
- 	error = xfs_da3_node_lookup_int(state, &retval);
--	if (error) {
--		xfs_da_state_free(state);
--		return error;
--	}
-+	if (error)
-+		retval = error;
- 
--	if (statep != NULL)
--		*statep = state;
--	else
-+	if (!statep)
- 		xfs_da_state_free(state);
-+
- 	return retval;
- }
- 
 -- 
-2.23.0
-
+Pavel Begunkov
