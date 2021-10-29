@@ -2,159 +2,84 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D012C433F5
-	for <linux-xfs@archiver.kernel.org>; Fri, 29 Oct 2021 02:22:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C5ABC4332F
+	for <linux-xfs@archiver.kernel.org>; Fri, 29 Oct 2021 04:57:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 01A4B61166
-	for <linux-xfs@archiver.kernel.org>; Fri, 29 Oct 2021 02:22:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6C34D610E8
+	for <linux-xfs@archiver.kernel.org>; Fri, 29 Oct 2021 04:57:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231501AbhJ2CZP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 28 Oct 2021 22:25:15 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40724 "EHLO mail.kernel.org"
+        id S231720AbhJ2FAG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 29 Oct 2021 01:00:06 -0400
+Received: from mga18.intel.com ([134.134.136.126]:61389 "EHLO mga18.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231348AbhJ2CZO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 28 Oct 2021 22:25:14 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPS id DC9ED61177
-        for <linux-xfs@vger.kernel.org>; Fri, 29 Oct 2021 02:22:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1635474166;
-        bh=MRf0f4Kja1CxCzDCWUhP21BL2VCI8GKeSB6FNBhAfqE=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=ebwrpSdXGyQGnafnbK/1ak/cDIxsHeiPi1gIQkyHTzytEtV3bBWhzS5HldFLvhLvz
-         zKv76ysPOyAzcNllqL3FSTvj3wBu4qQimxrUpHj+dSBbNWb44aW3yQ+IMJ0N74IwG3
-         T2DD2mfztPfdLlvzIMug5XC8nrMyouOMCc0M2V2sM1/HMdtHKFt97Ke9peINTIB8s2
-         +yHUmaU0VPWEkVzJ/vWEc6JIYqFaFsusRHfJXnDH/QNg853FLcS5S8/BH+wyvpU8fL
-         HAQ0WiyyoN4ggXy64se50WoMmTV6NK5Q2LtUoY0BCR2kZ93u/1hl/wd9jzs4HE3QRC
-         +sztse7G6IFsA==
-From:   bugzilla-daemon@bugzilla.kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 214767] xfs seems to hang due to race condition? maybe related
- to (gratuitous) thaw.
-Date:   Fri, 29 Oct 2021 02:22:46 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: high
-X-Bugzilla-Who: pedram.fard@appian.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-214767-201763-xcOGV26Txc@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-214767-201763@https.bugzilla.kernel.org/>
-References: <bug-214767-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        id S229504AbhJ2FAG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 29 Oct 2021 01:00:06 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10151"; a="217502763"
+X-IronPort-AV: E=Sophos;i="5.87,191,1631602800"; 
+   d="scan'208";a="217502763"
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Oct 2021 21:57:38 -0700
+X-IronPort-AV: E=Sophos;i="5.87,191,1631602800"; 
+   d="scan'208";a="665692765"
+Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.147])
+  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Oct 2021 21:57:38 -0700
+Date:   Thu, 28 Oct 2021 21:57:37 -0700
+From:   Ira Weiny <ira.weiny@intel.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Dan Williams <dan.j.williams@intel.com>,
+        Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com,
+        linux-xfs@vger.kernel.org, nvdimm@lists.linux.dev,
+        linux-s390@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        virtualization@lists.linux-foundation.org
+Subject: Re: [PATCH 03/11] dax: simplify the dax_device <-> gendisk
+ association
+Message-ID: <20211029045737.GJ3538886@iweiny-DESK2.sc.intel.com>
+References: <20211018044054.1779424-1-hch@lst.de>
+ <20211018044054.1779424-4-hch@lst.de>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20211018044054.1779424-4-hch@lst.de>
+User-Agent: Mutt/1.11.1 (2018-12-01)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D214767
+On Mon, Oct 18, 2021 at 06:40:46AM +0200, Christoph Hellwig wrote:
+> Replace the dax_host_hash with an xarray indexed by the pointer value
+> of the gendisk, and require explicitl calls from the block drivers that
+> want to associate their gendisk with a dax_device.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/dax/bus.c            |   2 +-
+>  drivers/dax/super.c          | 106 +++++++++--------------------------
+>  drivers/md/dm.c              |   6 +-
+>  drivers/nvdimm/pmem.c        |   8 ++-
+>  drivers/s390/block/dcssblk.c |  11 +++-
+>  fs/fuse/virtio_fs.c          |   2 +-
+>  include/linux/dax.h          |  19 +++++--
+>  7 files changed, 60 insertions(+), 94 deletions(-)
+> 
+> diff --git a/drivers/dax/bus.c b/drivers/dax/bus.c
+> index 6cc4da4c713d9..6d91b0186e3be 100644
+> --- a/drivers/dax/bus.c
+> +++ b/drivers/dax/bus.c
+> @@ -1326,7 +1326,7 @@ struct dev_dax *devm_create_dev_dax(struct dev_dax_data *data)
+>  	 * No 'host' or dax_operations since there is no access to this
+>  	 * device outside of mmap of the resulting character device.
+>  	 */
 
---- Comment #14 from Pedram Fard (pedram.fard@appian.com) ---
-Here is the result of echo t > /proc/sysrq-trigger:
+NIT: this comment needs to be updated as well.
 
-1 I root       578     2  0  60 -20 -     0 -      Oct20 ?        00:00:00
-[xfsalloc]
-1 I root       579     2  0  60 -20 -     0 -      Oct20 ?        00:00:00
-[xfs_mru_cache]
-1 I root      1251     2  0  60 -20 -     0 -      Oct20 ?        00:00:00
-[xfs-buf/nvme0n1]
-1 I root      1252     2  0  60 -20 -     0 -      Oct20 ?        00:00:00
-[xfs-conv/nvme0n]
-1 I root      1253     2  0  60 -20 -     0 -      Oct20 ?        00:00:00
-[xfs-cil/nvme0n1]
-1 I root      1254     2  0  60 -20 -     0 -      Oct20 ?        00:00:00
-[xfs-reclaim/nvm]
-1 I root      1255     2  0  60 -20 -     0 -      Oct20 ?        00:00:00
-[xfs-eofblocks/n]
-1 I root      1256     2  0  60 -20 -     0 -      Oct20 ?        00:00:00
-[xfs-log/nvme0n1]
-1 S root      1257     2  0  80   0 -     0 -      Oct20 ?        00:02:06
-[xfsaild/nvme0n1]
-1 I root      1990     2  0  60 -20 -     0 -      Oct20 ?        00:00:00
-[xfs-buf/dm-0]
-1 I root      1991     2  0  60 -20 -     0 -      Oct20 ?        00:00:00
-[xfs-conv/dm-0]
-1 I root      1992     2  0  60 -20 -     0 -      Oct20 ?        00:00:00
-[xfs-cil/dm-0]
-1 I root      1993     2  0  60 -20 -     0 -      Oct20 ?        00:00:00
-[xfs-reclaim/dm-]
-1 I root      1994     2  0  60 -20 -     0 -      Oct20 ?        00:00:00
-[xfs-eofblocks/d]
-1 I root      1995     2  0  60 -20 -     0 -      Oct20 ?        00:00:00
-[xfs-log/dm-0]
-1 S root      1996     2  0  80   0 -     0 -      Oct20 ?        00:00:00
-[xfsaild/dm-0]
-1 I root      1999     2  0  60 -20 -     0 -      Oct20 ?        00:00:00
-[xfs-buf/dm-1]
-1 I root      2000     2  0  60 -20 -     0 -      Oct20 ?        00:00:00
-[xfs-conv/dm-1]
-1 I root      2001     2  0  60 -20 -     0 -      Oct20 ?        00:00:00
-[xfs-cil/dm-1]
-1 I root      2002     2  0  60 -20 -     0 -      Oct20 ?        00:00:00
-[xfs-reclaim/dm-]
-1 I root      2003     2  0  60 -20 -     0 -      Oct20 ?        00:00:00
-[xfs-eofblocks/d]
-1 I root      2004     2  0  60 -20 -     0 -      Oct20 ?        00:00:00
-[xfs-log/dm-1]
-1 S root      2005     2  0  80   0 -     0 -      Oct20 ?        00:01:53
-[xfsaild/dm-1]
-1 I root      2008     2  0  60 -20 -     0 -      Oct20 ?        00:00:00
-[xfs-buf/dm-2]
-1 I root      2009     2  0  60 -20 -     0 -      Oct20 ?        00:00:00
-[xfs-conv/dm-2]
-1 I root      2010     2  0  60 -20 -     0 -      Oct20 ?        00:00:00
-[xfs-cil/dm-2]
-1 I root      2011     2  0  60 -20 -     0 -      Oct20 ?        00:00:00
-[xfs-reclaim/dm-]
-1 I root      2012     2  0  60 -20 -     0 -      Oct20 ?        00:00:00
-[xfs-eofblocks/d]
-1 I root      2013     2  0  60 -20 -     0 -      Oct20 ?        00:00:00
-[xfs-log/dm-2]
-1 S root      2014     2  0  80   0 -     0 -      Oct20 ?        00:00:00
-[xfsaild/dm-2]
-0 S root      2226  1942  0  80   0 - 30496 -      17:41 ?        00:00:00
-/bin/sh -f /usr/sbin/xfs_freeze -u /usr/local/appian
-4 D root      2230  2226  0  80   0 - 29825 -      17:41 ?        00:00:00
-/usr/sbin/xfs_io -F -r -p xfs_freeze -x -c thaw /usr/local/appian
-1 I root      4068     2  0  60 -20 -     0 -      Oct20 ?        00:00:00
-[xfs-buf/dm-3]
-1 I root      4069     2  0  60 -20 -     0 -      Oct20 ?        00:00:00
-[xfs-conv/dm-3]
-1 I root      4070     2  0  60 -20 -     0 -      Oct20 ?        00:00:00
-[xfs-cil/dm-3]
-1 I root      4071     2  0  60 -20 -     0 -      Oct20 ?        00:00:00
-[xfs-reclaim/dm-]
-1 I root      4072     2  0  60 -20 -     0 -      Oct20 ?        00:00:00
-[xfs-eofblocks/d]
-1 I root      4073     2  0  60 -20 -     0 -      Oct20 ?        00:00:00
-[xfs-log/dm-3]
-1 S root      4074     2  0  80   0 -     0 -      Oct20 ?        00:02:01
-[xfsaild/dm-3]
-0 S root     10903 13809  0  80   0 - 29855 -      17:57 pts/0    00:00:00 =
-grep
---color=3Dauto xfs
-1 I root     11221     2  0  80   0 -     0 -      17:44 ?        00:00:00
-[kworker/1:4-xfs]
-4 D root     22209     1  0  80   0 - 29825 -      16:08 ?        00:00:00
-/usr/sbin/xfs_io -F -r -p xfs_freeze -x -c thaw /usr/local/appian
-1 I root     23187     2  0  80   0 -     0 -      17:37 ?        00:00:00
-[kworker/1:3-xfs]
-1 I root     30083     2  0  80   0 -     0 -      17:29 ?        00:00:00
-[kworker/1:1-xfs]
+Ira
 
---=20
-You may reply to this email to add a comment.
+> -	dax_dev = alloc_dax(dev_dax, NULL, NULL, DAXDEV_F_SYNC);
+> +	dax_dev = alloc_dax(dev_dax, NULL, DAXDEV_F_SYNC);
+>  	if (IS_ERR(dax_dev)) {
+>  		rc = PTR_ERR(dax_dev);
+>  		goto err_alloc_dax;
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+[snip]
+
