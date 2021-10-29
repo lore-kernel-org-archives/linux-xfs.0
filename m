@@ -2,84 +2,100 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C5ABC4332F
-	for <linux-xfs@archiver.kernel.org>; Fri, 29 Oct 2021 04:57:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCF0AC433FE
+	for <linux-xfs@archiver.kernel.org>; Fri, 29 Oct 2021 08:50:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6C34D610E8
-	for <linux-xfs@archiver.kernel.org>; Fri, 29 Oct 2021 04:57:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C1B2261075
+	for <linux-xfs@archiver.kernel.org>; Fri, 29 Oct 2021 08:50:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231720AbhJ2FAG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 29 Oct 2021 01:00:06 -0400
-Received: from mga18.intel.com ([134.134.136.126]:61389 "EHLO mga18.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229504AbhJ2FAG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 29 Oct 2021 01:00:06 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10151"; a="217502763"
-X-IronPort-AV: E=Sophos;i="5.87,191,1631602800"; 
-   d="scan'208";a="217502763"
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Oct 2021 21:57:38 -0700
-X-IronPort-AV: E=Sophos;i="5.87,191,1631602800"; 
-   d="scan'208";a="665692765"
-Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.147])
-  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Oct 2021 21:57:38 -0700
-Date:   Thu, 28 Oct 2021 21:57:37 -0700
-From:   Ira Weiny <ira.weiny@intel.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Dan Williams <dan.j.williams@intel.com>,
-        Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com,
-        linux-xfs@vger.kernel.org, nvdimm@lists.linux.dev,
-        linux-s390@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        virtualization@lists.linux-foundation.org
-Subject: Re: [PATCH 03/11] dax: simplify the dax_device <-> gendisk
- association
-Message-ID: <20211029045737.GJ3538886@iweiny-DESK2.sc.intel.com>
-References: <20211018044054.1779424-1-hch@lst.de>
- <20211018044054.1779424-4-hch@lst.de>
+        id S231549AbhJ2IxW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 29 Oct 2021 04:53:22 -0400
+Received: from mail1.bemta25.messagelabs.com ([195.245.230.5]:55646 "EHLO
+        mail1.bemta25.messagelabs.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231510AbhJ2IxN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Oct 2021 04:53:13 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fujitsu.com;
+        s=170520fj; t=1635497444; i=@fujitsu.com;
+        bh=/fUUkCG4KILcfjVVsjJFd1CZYv5+RELEJvg3ij0heRI=;
+        h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type;
+        b=Ib3mvwEBBVYkZ+PhwaIxwgxYxv3jMYt0HBPvMVM1lcheXpFQidQjAkJIKQYSFwrI6
+         YoxXcCTwCMjse/0iZi3z7VWjLKv+CfXHu7lZHqi76tRXzrH37/NTV9tRxgxU46LE+q
+         e76diqYTyCPVJgg3lh20YUkjxJYAMZtpPXKyfgle1qW1DXpYnn0cZESNcUqY9dowJN
+         pVzOCg1d/5pt3JTvSYRjAo+ReriJtSXZtVOVrH/RddlymHDZfvMDYU0j4HIYOBfcQY
+         ml9lJ9Nzln3HaRQoMUEvPeN8/iROFZEqNAOieNnEJVh52w8jAJHyHqgPxkys1hUse0
+         LCS5X2iVRocYg==
+Received: from [100.112.192.69] (using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256 bits))
+        by server-5.bemta.az-a.eu-west-1.aws.symcld.net id D9/A9-17094-4E5BB716; Fri, 29 Oct 2021 08:50:44 +0000
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrHIsWRWlGSWpSXmKPExsViZ8MxRffJ1up
+  Eg2fMFpef8FmcbtnLbrHrzw52B2aPTas62Tw+b5ILYIpizcxLyq9IYM24tvIPW8FH1orNNz4w
+  NjA2sXYxcnEICbxmlLi44x2Qwwnk7GGUmH9ACcRmE9CUeNa5gBnEFhEQl3i86BYTiM0skCGxo
+  esSWL2wgJFE36n/LF2MHBwsAqoStyangoR5BTwkzrx/AlYuIaAgMeXhe2aIuKDEyZlPWCDGSE
+  gcfPGCGaJGUeJSxzdGCLtCYtasNqYJjLyzkLTMQtKygJFpFaNFUlFmekZJbmJmjq6hgYGuoaG
+  RrqGlsa6RsYleYpVuol5qqW55anGJrqFeYnmxXnFlbnJOil5easkmRmDQpRQcfLWDceWbD3qH
+  GCU5mJREeX+urU4U4kvKT6nMSCzOiC8qzUktPsQow8GhJMG7eAtQTrAoNT21Ii0zBxgBMGkJD
+  h4lEd6cDUBp3uKCxNzizHSI1ClGXY7L1+ctYhZiycvPS5US570OMkMApCijNA9uBCwaLzHKSg
+  nzMjIwMAjxFKQW5WaWoMq/YhTnYFQS5uXdDDSFJzOvBG7TK6AjmICOYFaqADmiJBEhJdXAdHz
+  TxvyG4BDvbxe/dZXz7/smblZ9/djs4+IzQpiCPas+652L2nWx+YfkkcwN4d9iVRcY2+2eIl8Y
+  8+ZGRJxYa9vFptYAhrDElMaELB6fohcmLTrHDH+mRzRwfjQNyv/4ee01+1lnH/mby4S80bD9m
+  cfclLDd+l7cFn9d4861ccknd2/Jmsz8rvJNWLCYlf1zu/wrwUrLHs5zWz3L+bGgUN0K8y0bJz
+  gpLX/01CHu/J2pPxPXnnu08sXFV8lJc4N2Vj9MuHBzWnfHh5tKrKGLp00KlOoz/O4b2/7HYRH
+  z/srQqC2rly0wtqw6YDBLcy7nrQ8xDI2PucptXl15+S/2D89Lxh7XR/db03X//CzzVWIpzkg0
+  1GIuKk4EAJLUhc1BAwAA
+X-Env-Sender: xuyang2018.jy@fujitsu.com
+X-Msg-Ref: server-7.tower-271.messagelabs.com!1635497443!2753!1
+X-Originating-IP: [62.60.8.148]
+X-SYMC-ESS-Client-Auth: outbound-route-from=pass
+X-StarScan-Received: 
+X-StarScan-Version: 9.81.4; banners=-,-,-
+X-VirusChecked: Checked
+Received: (qmail 32690 invoked from network); 29 Oct 2021 08:50:43 -0000
+Received: from unknown (HELO mailhost1.uk.fujitsu.com) (62.60.8.148)
+  by server-7.tower-271.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 29 Oct 2021 08:50:43 -0000
+Received: from R01UKEXCASM126.r01.fujitsu.local ([10.183.43.178])
+        by mailhost1.uk.fujitsu.com (8.14.5/8.14.5) with ESMTP id 19T8oTI9015371
+        (version=TLSv1/SSLv3 cipher=AES256-SHA bits=256 verify=FAIL);
+        Fri, 29 Oct 2021 09:50:36 +0100
+Received: from localhost.localdomain (10.167.220.84) by
+ R01UKEXCASM126.r01.fujitsu.local (10.183.43.178) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.24; Fri, 29 Oct 2021 09:50:27 +0100
+From:   Yang Xu <xuyang2018.jy@fujitsu.com>
+To:     <djwong@kernel.org>
+CC:     <fstests@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        Yang Xu <xuyang2018.jy@fujitsu.com>
+Subject: [PATCH] xfs/126: Add a getxattr opeartion
+Date:   Fri, 29 Oct 2021 16:50:24 +0800
+Message-ID: <1635497424-8095-1-git-send-email-xuyang2018.jy@fujitsu.com>
+X-Mailer: git-send-email 1.8.3.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20211018044054.1779424-4-hch@lst.de>
-User-Agent: Mutt/1.11.1 (2018-12-01)
+Content-Type: text/plain
+X-Originating-IP: [10.167.220.84]
+X-ClientProxiedBy: G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) To
+ R01UKEXCASM126.r01.fujitsu.local (10.183.43.178)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Oct 18, 2021 at 06:40:46AM +0200, Christoph Hellwig wrote:
-> Replace the dax_host_hash with an xarray indexed by the pointer value
-> of the gendisk, and require explicitl calls from the block drivers that
-> want to associate their gendisk with a dax_device.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/dax/bus.c            |   2 +-
->  drivers/dax/super.c          | 106 +++++++++--------------------------
->  drivers/md/dm.c              |   6 +-
->  drivers/nvdimm/pmem.c        |   8 ++-
->  drivers/s390/block/dcssblk.c |  11 +++-
->  fs/fuse/virtio_fs.c          |   2 +-
->  include/linux/dax.h          |  19 +++++--
->  7 files changed, 60 insertions(+), 94 deletions(-)
-> 
-> diff --git a/drivers/dax/bus.c b/drivers/dax/bus.c
-> index 6cc4da4c713d9..6d91b0186e3be 100644
-> --- a/drivers/dax/bus.c
-> +++ b/drivers/dax/bus.c
-> @@ -1326,7 +1326,7 @@ struct dev_dax *devm_create_dev_dax(struct dev_dax_data *data)
->  	 * No 'host' or dax_operations since there is no access to this
->  	 * device outside of mmap of the resulting character device.
->  	 */
+It is design to reproduce a deadlock on upstream kernel. It is introduced
+by kernel commit 07120f1abdff ("xfs: Add xfs_has_attr and subroutines").
 
-NIT: this comment needs to be updated as well.
+Signed-off-by: Yang Xu <xuyang2018.jy@fujitsu.com>
+---
+ tests/xfs/126 | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Ira
-
-> -	dax_dev = alloc_dax(dev_dax, NULL, NULL, DAXDEV_F_SYNC);
-> +	dax_dev = alloc_dax(dev_dax, NULL, DAXDEV_F_SYNC);
->  	if (IS_ERR(dax_dev)) {
->  		rc = PTR_ERR(dax_dev);
->  		goto err_alloc_dax;
-
-[snip]
+diff --git a/tests/xfs/126 b/tests/xfs/126
+index c3a74b1c..9a77a60e 100755
+--- a/tests/xfs/126
++++ b/tests/xfs/126
+@@ -69,7 +69,7 @@ done
+ 
+ echo "+ mount image && modify xattr"
+ if _try_scratch_mount >> $seqres.full 2>&1; then
+-
++	getfattr "${SCRATCH_MNT}/attrfile" -n "user.x00000000" 2> /dev/null || _fail "modified corrupt xattr"
+ 	setfattr -x "user.x00000000" "${SCRATCH_MNT}/attrfile" 2> /dev/null && _fail "modified corrupt xattr"
+ 	umount "${SCRATCH_MNT}"
+ fi
+-- 
+2.23.0
 
