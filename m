@@ -2,213 +2,232 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3000C433F5
-	for <linux-xfs@archiver.kernel.org>; Sat, 30 Oct 2021 16:57:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E04DC433EF
+	for <linux-xfs@archiver.kernel.org>; Sun, 31 Oct 2021 13:23:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 94CD060296
-	for <linux-xfs@archiver.kernel.org>; Sat, 30 Oct 2021 16:57:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1CA4760EB1
+	for <linux-xfs@archiver.kernel.org>; Sun, 31 Oct 2021 13:23:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229576AbhJ3Q7g (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 30 Oct 2021 12:59:36 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39804 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229474AbhJ3Q7f (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 30 Oct 2021 12:59:35 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3D5F160296
-        for <linux-xfs@vger.kernel.org>; Sat, 30 Oct 2021 16:57:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1635613025;
-        bh=D7h+S5y78urwSG8qFUAVLPWf3PgIinhj5WL8hHdDzWo=;
-        h=Date:From:To:Subject:From;
-        b=T8Mw03vFq0fc+cEpXjnhWTcGtZWfMNDIofhUR5kS+LLtjM8radpJFfcqYV9LYD1M3
-         LiyzQ+Xk/OBMEsWRNtXjqACAI+ekKff+29YF+z/PxPmBTMX5M7sGphgTv/yALs7Rl8
-         qFy5ckV7VmVcBytzut0OvGtHpDdUJO+XXNoy9YdKkyH4D6+KK+xxvfnhjxgpPnYMIj
-         xLT+9ybAmh9mCb2ZhdPHgfLnTjj8NkautF6KxGxkHivJZ3xIKQsqNYD5rw31AEHCjJ
-         iJ25VOnyPdXuCO/40BQVxt1KZ3ZlaE/KEgied/jwNzgat/uGESR5CqUbRyzcPhYWvk
-         ANglCSQ9xg65A==
-Date:   Sat, 30 Oct 2021 09:57:04 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     xfs <linux-xfs@vger.kernel.org>
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 2a09b575074f
-Message-ID: <20211030165704.GG24307@magnolia>
+        id S229747AbhJaNZb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 31 Oct 2021 09:25:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35956 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229626AbhJaNZb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 31 Oct 2021 09:25:31 -0400
+Received: from mail-wr1-x432.google.com (mail-wr1-x432.google.com [IPv6:2a00:1450:4864:20::432])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8133DC061570;
+        Sun, 31 Oct 2021 06:22:59 -0700 (PDT)
+Received: by mail-wr1-x432.google.com with SMTP id v17so24207704wrv.9;
+        Sun, 31 Oct 2021 06:22:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=Jf6SDTWkMqXzv0QqQSCH2GQMbJgZyWWXdFXwIRei+eA=;
+        b=gRl4NUUm+ZjWcPR6a1WSH7orW20Fy105Gy38h+d1NIaoQURLOgTDo61OOXdXFVyHO7
+         vs43vfSzhyRoR/vGKgWiDNv/KNAkGN7obYDDsYPrasHvv84VIbJKMnLBUiDawF4HUtRc
+         sR2syMI1dn9QBhjJRuaBaxxn8waiROWktV13D+oAAKSBx8xC2BKt2NCFJagksddbMU4g
+         tsytzz6dDckC5oSYrMzPnY38LJbg2Dxm+ewCY5fxHs31nZEAp3Y+H0GMKwgb+PQKB1K2
+         jpuTkmjS61DwHAeg7yU1Z6czYQDJlPeKZ3eIA7EcWN5/43eJbr/JkpEG/NHMoOknJrVI
+         IoPg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=Jf6SDTWkMqXzv0QqQSCH2GQMbJgZyWWXdFXwIRei+eA=;
+        b=6e/H4N5y1DydzF2NEZya80jOlB3AqMJjhLmpLSxhN9JFQdBH3QZzwsW2gxGAWoyTlr
+         jSEGJH5pFyfqv6U69vmyjlDw0nvflw8IfYI86YkDT0qeeo3+XxvGje7TiyehCNXOI/H9
+         0exrKcXiqxPGaETypd2IdOzNmfkPIba5rgDj+lqp4O/eH+DsUkTMrfraqrs+QD+RV2eV
+         tYtgDEtlC3BzfmzBVl+2OkJS/dN1RgkNH+6oHEQu0zhBJXXQXrm5vehnxrLNFToNfdHg
+         OTYcwGFXiSgQrLLxpuw1il4eRXLwPMuy6gYcnsjN4Nec0BHiTbGqtCR8goJnSmxalICr
+         uikg==
+X-Gm-Message-State: AOAM5326EQERCAn0owwQmY8Zrew3ZF1vqVekIm9BpiB7gvrv9cXdTfio
+        4HVHaZujeV2BxxcTg2yj4+Y=
+X-Google-Smtp-Source: ABdhPJwe81NiP2m6SZsYCxtthQKFwaV9/lqDLxmxy8VMxp0zyRIKyCnNwIjAhtz/toMYpXnKWoP/Ug==
+X-Received: by 2002:a05:6000:15c6:: with SMTP id y6mr29561346wry.382.1635686578008;
+        Sun, 31 Oct 2021 06:22:58 -0700 (PDT)
+Received: from [192.168.8.198] ([85.255.232.29])
+        by smtp.gmail.com with ESMTPSA id a4sm9477733wmb.39.2021.10.31.06.22.56
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 31 Oct 2021 06:22:57 -0700 (PDT)
+Message-ID: <1a76314d-9b62-82a3-2787-96e6b83720fc@gmail.com>
+Date:   Sun, 31 Oct 2021 13:19:48 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.2.0
+Subject: Re: [dm-devel] [PATCH 0/6] dax poison recovery with RWF_RECOVERY_DATA
+ flag
+Content-Language: en-US
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Jane Chu <jane.chu@oracle.com>,
+        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
+        "vishal.l.verma@intel.com" <vishal.l.verma@intel.com>,
+        "dave.jiang@intel.com" <dave.jiang@intel.com>,
+        "agk@redhat.com" <agk@redhat.com>,
+        "snitzer@redhat.com" <snitzer@redhat.com>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "ira.weiny@intel.com" <ira.weiny@intel.com>,
+        "willy@infradead.org" <willy@infradead.org>,
+        "vgoyal@redhat.com" <vgoyal@redhat.com>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "nvdimm@lists.linux.dev" <nvdimm@lists.linux.dev>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+References: <20211021001059.438843-1-jane.chu@oracle.com>
+ <YXFPfEGjoUaajjL4@infradead.org>
+ <e89a2b17-3f03-a43e-e0b9-5d2693c3b089@oracle.com>
+ <YXJN4s1HC/Y+KKg1@infradead.org>
+ <2102a2e6-c543-2557-28a2-8b0bdc470855@oracle.com>
+ <YXj2lwrxRxHdr4hb@infradead.org> <20211028002451.GB2237511@magnolia>
+ <20211028225955.GA449541@dread.disaster.area>
+ <22255117-52de-4b2d-822e-b4bc50bbc52b@gmail.com>
+ <20211029223233.GB449541@dread.disaster.area>
+From:   Pavel Begunkov <asml.silence@gmail.com>
+In-Reply-To: <20211029223233.GB449541@dread.disaster.area>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+On 10/29/21 23:32, Dave Chinner wrote:
+> On Fri, Oct 29, 2021 at 12:46:14PM +0100, Pavel Begunkov wrote:
+>> On 10/28/21 23:59, Dave Chinner wrote:
+>> [...]
+>>>>> Well, my point is doing recovery from bit errors is by definition not
+>>>>> the fast path.  Which is why I'd rather keep it away from the pmem
+>>>>> read/write fast path, which also happens to be the (much more important)
+>>>>> non-pmem read/write path.
+>>>>
+>>>> The trouble is, we really /do/ want to be able to (re)write the failed
+>>>> area, and we probably want to try to read whatever we can.  Those are
+>>>> reads and writes, not {pre,f}allocation activities.  This is where Dave
+>>>> and I arrived at a month ago.
+>>>>
+>>>> Unless you'd be ok with a second IO path for recovery where we're
+>>>> allowed to be slow?  That would probably have the same user interface
+>>>> flag, just a different path into the pmem driver.
+>>>
+>>> I just don't see how 4 single line branches to propage RWF_RECOVERY
+>>> down to the hardware is in any way an imposition on the fast path.
+>>> It's no different for passing RWF_HIPRI down to the hardware *in the
+>>> fast path* so that the IO runs the hardware in polling mode because
+>>> it's faster for some hardware.
+>>
+>> Not particularly about this flag, but it is expensive. Surely looks
+>> cheap when it's just one feature, but there are dozens of them with
+>> limited applicability, default config kernels are already sluggish
+>> when it comes to really fast devices and it's not getting better.
+>> Also, pretty often every of them will add a bunch of extra checks
+>> to fix something of whatever it would be.
+>>
+>> So let's add a bit of pragmatism to the picture, if there is just one
+>> user of a feature but it adds overhead for millions of machines that
+>> won't ever use it, it's expensive.
+> 
+> Yup, you just described RWF_HIPRI! Seriously, Pavel, did you read
+> past this?  I'll quote what I said again, because I've already
+> addressed this argument to point out how silly it is:
 
-The for-next branch of the xfs-linux repository at:
+And you almost got to the initial point in your penult paragraph. A
+single if for a single flag is not an issue, what is the problem is
+when there are dozens of them and the overhead for it is not isolated,
+so the kernel has to jump through dozens of those.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
-
-has just been updated.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.  I decided to add a couple of minor code cleanups
-that were sent in.
-
-The new head of the for-next branch is commit:
-
-2a09b575074f xfs: use swap() to make code cleaner
-
-New Commits:
-
-Brian Foster (5):
-      [bf2307b19513] xfs: fold perag loop iteration logic into helper function
-      [f1788b5e5ee2] xfs: rename the next_agno perag iteration variable
-      [8ed004eb9d07] xfs: terminate perag iteration reliably on agcount
-      [892a666fafa1] xfs: fix perag reference leak on iteration race with growfs
-      [5ca5916b6bc9] xfs: punch out data fork delalloc blocks on COW writeback failure
-
-Changcheng Deng (1):
-      [2a09b575074f] xfs: use swap() to make code cleaner
-
-Christoph Hellwig (3):
-      [de38db7239c4] xfs: remove the xfs_dinode_t typedef
-      [ed67ebfd7c40] xfs: remove the xfs_dsb_t typedef
-      [11a83f4c3930] xfs: remove the xfs_dqblk_t typedef
-
-Darrick J. Wong (32):
-      [c5db9f937b29] xfs: formalize the process of holding onto resources across a defer roll
-      [512edfac85d2] xfs: port the defer ops capture and continue to resource capture
-      [78e8ec83a404] xfs: fix maxlevels comparisons in the btree staging code
-      [ae127f087dc2] xfs: remove xfs_btree_cur_t typedef
-      [510a28e195cd] xfs: don't allocate scrub contexts on the stack
-      [f4585e82340b] xfs: stricter btree height checking when looking for errors
-      [1ba6fd34ca63] xfs: stricter btree height checking when scanning for btree roots
-      [4c175af2ccd3] xfs: check that bc_nlevels never overflows
-      [94a14cfd3b6e] xfs: fix incorrect decoding in xchk_btree_cur_fsbno
-      [cc411740472d] xfs: remove xfs_btree_cur.bc_blocklog
-      [efb79ea31067] xfs: reduce the size of nr_ops for refcount btree cursors
-      [d47fef9342d0] xfs: don't track firstrec/firstkey separately in xchk_btree
-      [eae5db476f9d] xfs: dynamically allocate btree scrub context structure
-      [6ca444cfd663] xfs: prepare xfs_btree_cur for dynamic cursor heights
-      [69724d920e7c] xfs: rearrange xfs_btree_cur fields for better packing
-      [56370ea6e5fe] xfs: refactor btree cursor allocation function
-      [c0643f6fdd6d] xfs: encode the max btree height in the cursor
-      [c940a0c54a2e] xfs: dynamically allocate cursors based on maxlevels
-      [7cb3efb4cfdd] xfs: rename m_ag_maxlevels to m_allocbt_maxlevels
-      [b74e15d720d0] xfs: compute maximum AG btree height for critical reservation calculation
-      [1b236ad7ba80] xfs: clean up xfs_btree_{calc_size,compute_maxlevels}
-      [9ec691205e7d] xfs: compute the maximum height of the rmap btree when reflink enabled
-      [bc8883eb775d] xfs: kill XFS_BTREE_MAXLEVELS
-      [0ed5f7356dae] xfs: compute absolute maximum nlevels for each btree type
-      [9fa47bdcd33b] xfs: use separate btree cursor cache for each btree type
-      [e7720afad068] xfs: remove kmem_zone typedef
-      [182696fb021f] xfs: rename _zone variables to _cache
-      [9e253954acf5] xfs: compact deferred intent item structures
-      [f3c799c22c66] xfs: create slab caches for frequently-used deferred items
-      [c201d9ca5392] xfs: rename xfs_bmap_add_free to xfs_free_extent_later
-      [b3b5ff412ab0] xfs: reduce the size of struct xfs_extent_free_item
-      [c04c51c52469] xfs: remove unused parameter from refcount code
-
-Gustavo A. R. Silva (1):
-      [a785fba7df9a] xfs: Use kvcalloc() instead of kvzalloc()
-
-Qing Wang (1):
-      [53eb47b491c8] xfs: replace snprintf in show functions with sysfs_emit
-
-Rustam Kovhaev (1):
-      [c30a0cbd07ec] xfs: use kmem_cache_free() for kmem_cache objects
-
-Wan Jiabing (1):
-      [0b9007ec7b9f] xfs: Remove duplicated include in xfs_super
+And just to be clear I'll outline again, that's a general problem,
+I have no relation to the layers touched and it's up to relevant
+people, obviously. Even though I'd expect but haven't found the flag
+being rejected in other places, but well I may have missed something.
 
 
-Code Diffstat:
+>>> IOWs, saying that we shouldn't implement RWF_RECOVERY because it
+>>> adds a handful of branches to the fast path is like saying that we
+>>> shouldn't implement RWF_HIPRI because it slows down the fast path
+>>> for non-polled IO....
+> 
+>   RWF_HIPRI functionality represents a *tiny* niche in the wider
+> Linux ecosystem, so by your reasoning it is too expensive to
+> implement because millions (billions!) of machines don't need or use
+> it. Do you now see how silly your argument is?
+> 
+> Seriously, this "optimise the IO fast path at the cost of everything
+> else" craziness has gotten out of hand. Nobody in the filesystem or
+> application world cares if you can do 10M IOPS per core when all the
+> CPU is doing is sitting in a tight loop inside the kernel repeatedly
+> overwriting data in the same memory buffers, essentially tossing the
+> old away the data without ever accessing it or doing anything with
+> it.  Such speed racer games are *completely meaningless* as an
+> optimisation goal - it's what we've called "benchmarketing" for a
+> couple of decades now.
 
- fs/xfs/kmem.h                      |   4 -
- fs/xfs/libxfs/xfs_ag.c             |   2 +-
- fs/xfs/libxfs/xfs_ag.h             |  36 ++--
- fs/xfs/libxfs/xfs_ag_resv.c        |   3 +-
- fs/xfs/libxfs/xfs_alloc.c          | 120 ++++++++++---
- fs/xfs/libxfs/xfs_alloc.h          |  38 ++++-
- fs/xfs/libxfs/xfs_alloc_btree.c    |  63 +++++--
- fs/xfs/libxfs/xfs_alloc_btree.h    |   5 +
- fs/xfs/libxfs/xfs_attr_leaf.c      |   2 +-
- fs/xfs/libxfs/xfs_bmap.c           | 101 ++++-------
- fs/xfs/libxfs/xfs_bmap.h           |  35 +---
- fs/xfs/libxfs/xfs_bmap_btree.c     |  62 +++++--
- fs/xfs/libxfs/xfs_bmap_btree.h     |   5 +
- fs/xfs/libxfs/xfs_btree.c          | 333 +++++++++++++++++++++++--------------
- fs/xfs/libxfs/xfs_btree.h          |  99 ++++++++---
- fs/xfs/libxfs/xfs_btree_staging.c  |   8 +-
- fs/xfs/libxfs/xfs_da_btree.c       |   6 +-
- fs/xfs/libxfs/xfs_da_btree.h       |   3 +-
- fs/xfs/libxfs/xfs_defer.c          | 241 ++++++++++++++++++++-------
- fs/xfs/libxfs/xfs_defer.h          |  41 ++++-
- fs/xfs/libxfs/xfs_dquot_buf.c      |   4 +-
- fs/xfs/libxfs/xfs_format.h         |  12 +-
- fs/xfs/libxfs/xfs_fs.h             |   2 +
- fs/xfs/libxfs/xfs_ialloc.c         |   5 +-
- fs/xfs/libxfs/xfs_ialloc_btree.c   |  90 +++++++++-
- fs/xfs/libxfs/xfs_ialloc_btree.h   |   5 +
- fs/xfs/libxfs/xfs_inode_buf.c      |   6 +-
- fs/xfs/libxfs/xfs_inode_fork.c     |  24 +--
- fs/xfs/libxfs/xfs_inode_fork.h     |   2 +-
- fs/xfs/libxfs/xfs_refcount.c       |  46 +++--
- fs/xfs/libxfs/xfs_refcount.h       |   7 +-
- fs/xfs/libxfs/xfs_refcount_btree.c |  73 ++++++--
- fs/xfs/libxfs/xfs_refcount_btree.h |   5 +
- fs/xfs/libxfs/xfs_rmap.c           |  21 ++-
- fs/xfs/libxfs/xfs_rmap.h           |   7 +-
- fs/xfs/libxfs/xfs_rmap_btree.c     | 116 ++++++++++---
- fs/xfs/libxfs/xfs_rmap_btree.h     |   5 +
- fs/xfs/libxfs/xfs_sb.c             |   4 +-
- fs/xfs/libxfs/xfs_trans_resv.c     |  18 +-
- fs/xfs/libxfs/xfs_trans_space.h    |   9 +-
- fs/xfs/scrub/agheader.c            |  13 +-
- fs/xfs/scrub/agheader_repair.c     |   8 +-
- fs/xfs/scrub/bitmap.c              |  22 +--
- fs/xfs/scrub/bmap.c                |   2 +-
- fs/xfs/scrub/btree.c               | 121 +++++++-------
- fs/xfs/scrub/btree.h               |  17 +-
- fs/xfs/scrub/dabtree.c             |  62 +++----
- fs/xfs/scrub/repair.h              |   3 +
- fs/xfs/scrub/scrub.c               |  64 +++----
- fs/xfs/scrub/trace.c               |  11 +-
- fs/xfs/scrub/trace.h               |  10 +-
- fs/xfs/xfs_aops.c                  |  15 +-
- fs/xfs/xfs_attr_inactive.c         |   2 +-
- fs/xfs/xfs_bmap_item.c             |  18 +-
- fs/xfs/xfs_bmap_item.h             |   6 +-
- fs/xfs/xfs_buf.c                   |  14 +-
- fs/xfs/xfs_buf_item.c              |   8 +-
- fs/xfs/xfs_buf_item.h              |   2 +-
- fs/xfs/xfs_buf_item_recover.c      |   2 +-
- fs/xfs/xfs_dquot.c                 |  28 ++--
- fs/xfs/xfs_extfree_item.c          |  33 ++--
- fs/xfs/xfs_extfree_item.h          |   6 +-
- fs/xfs/xfs_icache.c                |  10 +-
- fs/xfs/xfs_icreate_item.c          |   6 +-
- fs/xfs/xfs_icreate_item.h          |   2 +-
- fs/xfs/xfs_inode.c                 |  12 +-
- fs/xfs/xfs_inode.h                 |   2 +-
- fs/xfs/xfs_inode_item.c            |   6 +-
- fs/xfs/xfs_inode_item.h            |   2 +-
- fs/xfs/xfs_ioctl.c                 |   6 +-
- fs/xfs/xfs_log.c                   |   6 +-
- fs/xfs/xfs_log_priv.h              |   2 +-
- fs/xfs/xfs_log_recover.c           |  12 +-
- fs/xfs/xfs_mount.c                 |  14 ++
- fs/xfs/xfs_mount.h                 |   5 +-
- fs/xfs/xfs_mru_cache.c             |   2 +-
- fs/xfs/xfs_qm.c                    |   2 +-
- fs/xfs/xfs_qm.h                    |   2 +-
- fs/xfs/xfs_refcount_item.c         |  18 +-
- fs/xfs/xfs_refcount_item.h         |   6 +-
- fs/xfs/xfs_reflink.c               |   2 +-
- fs/xfs/xfs_rmap_item.c             |  18 +-
- fs/xfs/xfs_rmap_item.h             |   6 +-
- fs/xfs/xfs_super.c                 | 233 +++++++++++++-------------
- fs/xfs/xfs_sysfs.c                 |  24 +--
- fs/xfs/xfs_trace.h                 |   2 +-
- fs/xfs/xfs_trans.c                 |  16 +-
- fs/xfs/xfs_trans.h                 |   8 +-
- fs/xfs/xfs_trans_dquot.c           |   4 +-
- 89 files changed, 1656 insertions(+), 907 deletions(-)
+10M you mentioned is just a way to measure, there is nothing wrong
+with it. And considering that there are enough of users considering
+or already switching to spdk because of performance, the approach
+is not wrong. And it goes not only for IO polling, normal irq IO
+suffers from the same problems.
+
+A related story is that this number is for a pretty reduced config,
+it'll go down with a more default-ish kernel.
+
+> If all we focus on is bragging rights because "bigger number is
+> always better", then we'll end up with iand IO path that looks like
+> the awful mess that the fs/direct-io.c turned into. That ended up
+> being hyper-optimised for CPU performance right down to single
+> instructions and cacheline load orders that the code became
+> extremely fragile and completely unmaintainable.
+> 
+> We ended up *reimplementing the direct IO code from scratch* so that
+> XFS could build and submit direct IO smarter and faster because it
+> simply couldn't be done to the old code.  That's how iomap came
+> about, and without *any optimisation at all* iomap was 20-30% faster
+> than the old, hyper-optimised fs/direct-io.c code.  IOWs, we always
+> knew we could do direct IO faster than fs/direct-io.c, but we
+> couldn't make the fs/direct-io.c faster because of the
+> hyper-optimisation of the code paths made it impossible to modify
+> and maintain.> The current approach of hyper-optimising the IO path for maximum
+> per-core IOPS at the expensive of everything else has been proven in
+> the past to be exactly the wrong approach to be taking for IO path
+> development. Yes, we need to be concerned about performance and work
+> to improve it, but we should not be doing that at the cost of
+> everything else that the IO stack needs to be able to do.
+
+And iomap is great, what you described is a good typical example
+of unmaintainable code. I may get wrong what you exactly refer
+to, but I don't see maintainability not being considered.
+
+Even more interesting to notice that more often than not extra
+features (and flags) almost always hurt maintainability of the
+kernel, but then other benefits outweigh (hopefully).
+
+> Fundamentally, optimisation is something we do *after* we provide
+> the functionality that is required; using "fast path optimisation"
+> as a blunt force implement to prevent new features from being
+> implemented is just ...  obnoxious.
+> 
+>> This one doesn't spill yet into paths I care about, but in general
+>> it'd be great if we start thinking more about such stuff instead of
+>> throwing yet another if into the path, e.g. by shifting the overhead
+>> from linear to a constant for cases that don't use it, for instance
+>> with callbacks or bit masks.
+> 
+> This is orthogonal to providing data recovery functionality.
+> If the claims that flag propagation is too expensive are true, then
+> fixing this problem this will also improve RWF_HIPRI performance
+> regardless of whether RWF_DATA_RECOVERY exists or not...
+> 
+> IOWs, *if* there is a fast path performance degradation as a result
+> of flag propagation, then *go measure it* and show us how much
+> impact it has on _real world applications_.  *Show us the numbers*
+> and document how much each additional flag propagation actually
+> costs so we can talk about whether it is acceptible, mitigation
+> strategies and/or alternative implementations.  Flag propagation
+> overhead is just not a valid reason for preventing us adding new
+> flags to the IO path. Fix the flag propagation overhead if it's a
+> problem for you, don't use it as an excuse for preventing people
+> from adding new functionality that uses flag propagation...
+
+-- 
+Pavel Begunkov
