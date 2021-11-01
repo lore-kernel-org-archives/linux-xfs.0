@@ -2,149 +2,100 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2E02C433EF
-	for <linux-xfs@archiver.kernel.org>; Mon,  1 Nov 2021 12:41:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4252FC433EF
+	for <linux-xfs@archiver.kernel.org>; Mon,  1 Nov 2021 16:12:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B9E1460FE8
-	for <linux-xfs@archiver.kernel.org>; Mon,  1 Nov 2021 12:41:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 26B2960F24
+	for <linux-xfs@archiver.kernel.org>; Mon,  1 Nov 2021 16:12:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232029AbhKAMnk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 1 Nov 2021 08:43:40 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:38588 "EHLO
+        id S232473AbhKAQPb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 1 Nov 2021 12:15:31 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:52677 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231807AbhKAMnj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Nov 2021 08:43:39 -0400
+        by vger.kernel.org with ESMTP id S232655AbhKAQPa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Nov 2021 12:15:30 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1635770465;
+        s=mimecast20190719; t=1635783176;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=j+gYxaHEAFuVJ+DJo3x07QEuuhtZCDwSEuGUWeCK9J0=;
-        b=K+90MiNm0mmziorW5hALAF1zln6kw7+z7N8hRr40VuUwkWfXZp8eDuqubKD+5ctV7VOXwD
-        /WM3eVSszBqLonhD2enjrwcIdeFcVJvlzlt2RFcJxrt7tYaP9Cr5jWIrPQ0vQkZp3hr3w/
-        byBSYFzuqg6agFRHj6+OZOa3nQKfd4w=
-Received: from mail-ed1-f69.google.com (mail-ed1-f69.google.com
- [209.85.208.69]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-556-oCh0KnbYN4y_bQMegq2gmg-1; Mon, 01 Nov 2021 08:41:02 -0400
-X-MC-Unique: oCh0KnbYN4y_bQMegq2gmg-1
-Received: by mail-ed1-f69.google.com with SMTP id o22-20020a056402439600b003dd4f228451so15401463edc.16
-        for <linux-xfs@vger.kernel.org>; Mon, 01 Nov 2021 05:41:02 -0700 (PDT)
+        bh=+G6SzjVTR+LCyYNlG0zbcp2+gduPxDNU+2Zc+nwBRpo=;
+        b=OSGCzH7a9iwXipiTHXUGo0ViW4DQj+HOpxAD9jdj6SQT3OMsIMINUJqLIoxrv37CEdPivy
+        BBYalGl+Hf/j1rPWI5ToSbwXQmb4zIXtemJC726Rt+HykiFddlTIctqsfIt08KH+Wtk5NW
+        nmF8FM6EQKMZHFJ7vPOmuIz1BuWLhjk=
+Received: from mail-qv1-f71.google.com (mail-qv1-f71.google.com
+ [209.85.219.71]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-338-jChEWbO1OrOM66Ier0TDQQ-1; Mon, 01 Nov 2021 12:12:55 -0400
+X-MC-Unique: jChEWbO1OrOM66Ier0TDQQ-1
+Received: by mail-qv1-f71.google.com with SMTP id e10-20020a0cd64a000000b0038422ec2242so16679157qvj.19
+        for <linux-xfs@vger.kernel.org>; Mon, 01 Nov 2021 09:12:55 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id
-         :mail-followup-to:references:mime-version:content-disposition
-         :in-reply-to;
-        bh=j+gYxaHEAFuVJ+DJo3x07QEuuhtZCDwSEuGUWeCK9J0=;
-        b=y4KYLBwoIw7EvqhGGjIf5+cPI5msj0nEnDXermVJNTLpww8bNIRA4j7WUMZsgSRx0U
-         R2P+nGpzq/+SEBtAzAGzLAbJOZhFBchDcY7NGVjaB4Bt/UP+OV3VXXuR0F+TcoF9UQmC
-         A7CQlvR+3u5ZA4ZAvu3MrMdaGElX6DCRED9j3f3PqnDEj+IDYO9VxzbSENxm7qIyfTfE
-         xZ4Qv+LcUBtduE192yjIjm0nI9+wpeu/csgVUvHgF5ilp1sqIVU6/qAcY5SM2ICTs5bJ
-         9PYtmkeufb0pDGzSeM7Xqy0hv6Vc4gRc3O9lkLyPGcGPWekyzCOeijY4w8D04QplbXPz
-         Zd8w==
-X-Gm-Message-State: AOAM5319i45acWQdFvJveqEgancAEYL4tVGiGuB4m1gpsDfNuVSUKI7h
-        k+9lX/+509sdeAfF9Q8CAUr0iX5eWqWNMS+sV9m0mfZYIHX9GEib+Usla0f2/gzoGI6nX/0HkHu
-        YC65WPTfQjXErvOSztCx0
-X-Received: by 2002:a05:6402:5189:: with SMTP id q9mr39314510edd.94.1635770461629;
-        Mon, 01 Nov 2021 05:41:01 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwYnqCs+XHgpL3Di4ElIKr9LS4B1DCO72rkdXFPGRLrJf2eeOky8Hm6wWWZAsSq2JTRflw3cQ==
-X-Received: by 2002:a05:6402:5189:: with SMTP id q9mr39314474edd.94.1635770461393;
-        Mon, 01 Nov 2021 05:41:01 -0700 (PDT)
-Received: from andromeda.lan (ip4-46-39-172-19.cust.nbox.cz. [46.39.172.19])
-        by smtp.gmail.com with ESMTPSA id gs19sm2979263ejc.117.2021.11.01.05.41.00
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=+G6SzjVTR+LCyYNlG0zbcp2+gduPxDNU+2Zc+nwBRpo=;
+        b=ufiutE8T6B5w+MmMuBa4FRmCpDndd836AzDnBq/RD6/fdOxS5XJBROn02ZExL+oynV
+         TWtoIpwjrjczKyiZMaCWDy5fW5UJ/6Ii785RQqzwSd/9Qzo/RK34/zx0oj7fAqpGKDj5
+         QbZdWJ36ZCYhVrX/1jq/tUxil95N7ABtVhjemvHGLkCATVkYOr82VuOTMMR31JFLVwX0
+         fM2rBnVDMW1SIvmOc/+xgTdz6VLqpTOMEGzZb0vieETVk8Y7dpzs2S52FzbfqM57LvsX
+         p8OSNE18cmIjrR0sivVvBv2Juv3MaiPejl2pG6lG6kJueu1iYO3wUEwjhobE9XhLwXtB
+         f6cA==
+X-Gm-Message-State: AOAM532sAuzG2x8pBWTwP+Rvh4rIjDPH3+sUZOP033f4S7jHyB8WjgVJ
+        LemxQ6WH2WxS4TB8D6BcY47SYZLmRNPDoLGDsOqaV2jx/+fxThK1qnzufrUf7Z0IOq0Jjl4lYyF
+        roIc6UjskHgHHfln6S30=
+X-Received: by 2002:a0c:e708:: with SMTP id d8mr23264804qvn.62.1635783175445;
+        Mon, 01 Nov 2021 09:12:55 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJx/H7B1fdn7PP13//AwKmpta1av9FRTtOajPRoBskVHgoJcCnXd+0D44u/s4udzcALoTqA+Rw==
+X-Received: by 2002:a0c:e708:: with SMTP id d8mr23264758qvn.62.1635783175189;
+        Mon, 01 Nov 2021 09:12:55 -0700 (PDT)
+Received: from localhost (pool-68-160-176-52.bstnma.fios.verizon.net. [68.160.176.52])
+        by smtp.gmail.com with ESMTPSA id v16sm167031qtw.90.2021.11.01.09.12.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 01 Nov 2021 05:41:00 -0700 (PDT)
-Date:   Mon, 1 Nov 2021 13:40:58 +0100
-From:   Carlos Maiolino <cmaiolino@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     david@fromorbit.com, linux-xfs@vger.kernel.org
-Subject: Re: [PATCHSET v2 0/2] xfs: clean up zone terminology
-Message-ID: <20211101124058.7vravktsufrcruzu@andromeda.lan>
-Mail-Followup-To: "Darrick J. Wong" <djwong@kernel.org>,
-        david@fromorbit.com, linux-xfs@vger.kernel.org
-References: <163466951226.2234337.10978241003370731405.stgit@magnolia>
+        Mon, 01 Nov 2021 09:12:54 -0700 (PDT)
+Date:   Mon, 1 Nov 2021 12:12:53 -0400
+From:   Mike Snitzer <snitzer@redhat.com>
+To:     Dan Williams <dan.j.williams@intel.com>
+Cc:     Christoph Hellwig <hch@lst.de>, Ira Weiny <ira.weiny@intel.com>,
+        device-mapper development <dm-devel@redhat.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Linux NVDIMM <nvdimm@lists.linux.dev>,
+        linux-s390 <linux-s390@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-erofs@lists.ozlabs.org,
+        linux-ext4 <linux-ext4@vger.kernel.org>,
+        virtualization@lists.linux-foundation.org
+Subject: Re: [PATCH 01/11] dm: make the DAX support dependend on CONFIG_FS_DAX
+Message-ID: <YYASBVuorCedsnRL@redhat.com>
+References: <20211018044054.1779424-1-hch@lst.de>
+ <20211018044054.1779424-2-hch@lst.de>
+ <CAPcyv4hrEPizMOH-XhCqh=23EJDG=W6VwvQ1pVstfe-Jm-AsiQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <163466951226.2234337.10978241003370731405.stgit@magnolia>
+In-Reply-To: <CAPcyv4hrEPizMOH-XhCqh=23EJDG=W6VwvQ1pVstfe-Jm-AsiQ@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 19, 2021 at 11:51:52AM -0700, Darrick J. Wong wrote:
-> Hi all,
-> 
-> Dave requested[1] that we stop using the old Irix "zone" terminology to
-> describe Linux slab caches.  Since we're using an ugly typedef to wrap
-> the new in the old, get rid of the typedef, and change the wording to
-> reflect the way Linux has been for a good 20+ years.  This enables
-> cleaning up of the bigger zone/cache mess in userspace.
-> 
-> [1] https://lore.kernel.org/linux-xfs/20210926004343.GC1756565@dread.disaster.area/
-> 
-> v2: rebase atop the final btree cursor series
-> 
-> If you're going to start using this mess, you probably ought to just
-> pull from my git trees, which are linked below.
-> 
-> This is an extraordinary way to destroy everything.  Enjoy!
-> Comments and questions are, as always, welcome.
+On Wed, Oct 27 2021 at  4:53P -0400,
+Dan Williams <dan.j.williams@intel.com> wrote:
 
-LGTM. For the series:
-
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-
+> On Sun, Oct 17, 2021 at 9:41 PM Christoph Hellwig <hch@lst.de> wrote:
+> >
+> > The device mapper DAX support is all hanging off a block device and thus
+> > can't be used with device dax.  Make it depend on CONFIG_FS_DAX instead
+> > of CONFIG_DAX_DRIVER.  This also means that bdev_dax_pgoff only needs to
+> > be built under CONFIG_FS_DAX now.
 > 
-> --D
+> Looks good.
 > 
-> kernel git tree:
-> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=slab-cache-cleanups-5.16
-> ---
->  fs/xfs/kmem.h                      |    4 -
->  fs/xfs/libxfs/xfs_alloc.c          |    6 -
->  fs/xfs/libxfs/xfs_alloc_btree.c    |    2 
->  fs/xfs/libxfs/xfs_attr_leaf.c      |    2 
->  fs/xfs/libxfs/xfs_bmap.c           |    6 -
->  fs/xfs/libxfs/xfs_bmap.h           |    2 
->  fs/xfs/libxfs/xfs_bmap_btree.c     |    2 
->  fs/xfs/libxfs/xfs_btree.h          |    4 -
->  fs/xfs/libxfs/xfs_da_btree.c       |    6 -
->  fs/xfs/libxfs/xfs_da_btree.h       |    3 
->  fs/xfs/libxfs/xfs_ialloc_btree.c   |    2 
->  fs/xfs/libxfs/xfs_inode_fork.c     |    8 +
->  fs/xfs/libxfs/xfs_inode_fork.h     |    2 
->  fs/xfs/libxfs/xfs_refcount_btree.c |    2 
->  fs/xfs/libxfs/xfs_rmap_btree.c     |    2 
->  fs/xfs/xfs_attr_inactive.c         |    2 
->  fs/xfs/xfs_bmap_item.c             |   12 +-
->  fs/xfs/xfs_bmap_item.h             |    6 -
->  fs/xfs/xfs_buf.c                   |   14 +-
->  fs/xfs/xfs_buf_item.c              |    8 +
->  fs/xfs/xfs_buf_item.h              |    2 
->  fs/xfs/xfs_dquot.c                 |   26 ++--
->  fs/xfs/xfs_extfree_item.c          |   18 +--
->  fs/xfs/xfs_extfree_item.h          |    6 -
->  fs/xfs/xfs_icache.c                |   10 +-
->  fs/xfs/xfs_icreate_item.c          |    6 -
->  fs/xfs/xfs_icreate_item.h          |    2 
->  fs/xfs/xfs_inode.c                 |    2 
->  fs/xfs/xfs_inode.h                 |    2 
->  fs/xfs/xfs_inode_item.c            |    6 -
->  fs/xfs/xfs_inode_item.h            |    2 
->  fs/xfs/xfs_log.c                   |    6 -
->  fs/xfs/xfs_log_priv.h              |    2 
->  fs/xfs/xfs_mru_cache.c             |    2 
->  fs/xfs/xfs_qm.h                    |    2 
->  fs/xfs/xfs_refcount_item.c         |   12 +-
->  fs/xfs/xfs_refcount_item.h         |    6 -
->  fs/xfs/xfs_rmap_item.c             |   12 +-
->  fs/xfs/xfs_rmap_item.h             |    6 -
->  fs/xfs/xfs_super.c                 |  218 ++++++++++++++++++------------------
->  fs/xfs/xfs_trans.c                 |    8 +
->  fs/xfs/xfs_trans.h                 |    2 
->  fs/xfs/xfs_trans_dquot.c           |    4 -
->  43 files changed, 226 insertions(+), 231 deletions(-)
-> 
+> Mike, can I get an ack to take this through nvdimm.git? (you'll likely
+> see me repeat this question on subsequent patches in this series).
 
--- 
-Carlos
+Sorry for late reply, but I see you punted on pushing for 5.16 merge
+anyway (I'm sure my lack of response didn't help, sorry about that).
+
+Acked-by: Mike Snitzer <snitzer@redhat.com>
+
+Thanks!
 
