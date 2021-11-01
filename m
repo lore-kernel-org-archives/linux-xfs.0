@@ -2,83 +2,127 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67D6DC433EF
-	for <linux-xfs@archiver.kernel.org>; Mon,  1 Nov 2021 20:52:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 755E1C4332F
+	for <linux-xfs@archiver.kernel.org>; Mon,  1 Nov 2021 20:53:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 51215600CD
-	for <linux-xfs@archiver.kernel.org>; Mon,  1 Nov 2021 20:52:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 52C7E6109D
+	for <linux-xfs@archiver.kernel.org>; Mon,  1 Nov 2021 20:53:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231365AbhKAUyg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 1 Nov 2021 16:54:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58508 "EHLO
+        id S229990AbhKAU4Z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 1 Nov 2021 16:56:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58932 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231423AbhKAUye (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Nov 2021 16:54:34 -0400
-Received: from mail-io1-xd36.google.com (mail-io1-xd36.google.com [IPv6:2607:f8b0:4864:20::d36])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A15EDC061714
-        for <linux-xfs@vger.kernel.org>; Mon,  1 Nov 2021 13:52:00 -0700 (PDT)
-Received: by mail-io1-xd36.google.com with SMTP id r194so23120141iod.7
-        for <linux-xfs@vger.kernel.org>; Mon, 01 Nov 2021 13:52:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=IRU4Z2xriuoQgD604RO9is0EGLUaklqHlotccA9A6iE=;
-        b=8ByB/iElhTLkclQsnrNIowA1//89qoViaN/EH4ukJxsNXhij83csIOaL7hjthiM+9s
-         x9QR3spucYZtRfwp5j3lEww/Ru363gpNRyJL0lrrG6HtQmUXl1rhs7KMYd5ezqknjrsB
-         Bww5FzrggV1X2vezWAT1b+l/OqqylX5kZ1oFBYYHoq9bw/CLhi90eBMsykT5ishErZix
-         dUULBc6hS6N3JvrovU2ERxRIQGSv9Dpkj7Qu9VIPCJtLYpdy1E/Yhdy5tiFA9gmWPH9k
-         dovYOox+cdcaM9R20AwgzV0MEzfjcUNhhL8758tKYjfNr/Bdi7qNx8uPdo4/DB2FH60t
-         b/6w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=IRU4Z2xriuoQgD604RO9is0EGLUaklqHlotccA9A6iE=;
-        b=wb+mO+AlewpPT6h0nOdpF5ETEON2LnBcRNuO3A6bpDh5o44vxPe4XNTkXhM6AhJkAE
-         I8S+B8XOxRNVezPBGzLRQGcyhDylpzE9ul6Kyrf1v3IMP8xqiQIiACooLWaFse/+jNzG
-         dOnMEAXAqaWlDWJjaw0mVuWBJn2V8ltzVj4O29UPJEH6QDEPGhKvcSvdx7QA5W+lgZ5N
-         OPmfxyGsxBpnwZM1+kyTip82DfQUWYMLWKXgl2R1tKYrb7KQIdNSzA8ynrm3GPUD9KLJ
-         tPi6+IRTmRJH6vxZ5d/g2RCGkHWXXD4dTkq+afUxKsuQdKaXVzq9alf70pnisEyBtEnR
-         KFpw==
-X-Gm-Message-State: AOAM532kt8HzNSWTSGitcw9WrN6L7YDAWtALz7NR9LddiuUeYjs+X8oM
-        uZ7ih/mBUXoTgsWW+Lhom5bY5Q==
-X-Google-Smtp-Source: ABdhPJyfBAZ8A31TF7HBRXzm1jDAkKBXsQCg7F27GSkwEtsBBhA6yJ7BkEG7xRtx66YY4cF2b5yFPQ==
-X-Received: by 2002:a05:6602:3d3:: with SMTP id g19mr23505098iov.42.1635799920114;
-        Mon, 01 Nov 2021 13:52:00 -0700 (PDT)
-Received: from [192.168.1.30] ([207.135.234.126])
-        by smtp.gmail.com with ESMTPSA id b69sm3653495iof.43.2021.11.01.13.51.59
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 01 Nov 2021 13:51:59 -0700 (PDT)
-Subject: Re: [PATCH 03/21] block: Add bio_for_each_folio_all()
-To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        with ESMTP id S229948AbhKAU4Y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Nov 2021 16:56:24 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D165CC061714;
+        Mon,  1 Nov 2021 13:53:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=t87jKZsrDuqY3K77jLbQIbUND30IkeMub+USzTY+ZF4=; b=nwPgmoWpQSLyF2GyXAsA66NKx4
+        eFN7OHxshBvyc/VnBozjYdnqDbj5rNOeo3TzJ3fGGrHxdoyNnJuHA4V3NFHoQ9Untp7Qm2xx3TlSx
+        VEEOBStVJsU5ZJI5XzH+ceLULWFXbphIYUC5DvcYq7dri9j/1CYLd6tDkybyTAn+2lag/YIRqQKFq
+        NosCARytHhFiCxalTdpNKe6CfFpO1eJ4zTMUnz+gCCjFeJG+8BdA1A1XaxEBuA0NCIl3loJQJxOb8
+        oHwPqsgW27ixhZShRWSTuX6pyDZglfa0O1xabvpXbiYzaAmnITxp2j62iC2bf4MKOktiSu1YJLrQ8
+        1No8I1Yw==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1mheFA-0040fl-Ni; Mon, 01 Nov 2021 20:49:51 +0000
+From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
-        Christoph Hellwig <hch@infradead.org>
+        Jens Axboe <axboe@kernel.dk>,
+        Christoph Hellwig <hch@infradead.org>,
+        Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 06/21] iomap: Convert iomap_page_release to take a folio
+Date:   Mon,  1 Nov 2021 20:39:14 +0000
+Message-Id: <20211101203929.954622-7-willy@infradead.org>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20211101203929.954622-1-willy@infradead.org>
 References: <20211101203929.954622-1-willy@infradead.org>
- <20211101203929.954622-4-willy@infradead.org>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <13b57818-5e11-7797-86b7-fd7bd6c66504@kernel.dk>
-Date:   Mon, 1 Nov 2021 14:51:59 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <20211101203929.954622-4-willy@infradead.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 11/1/21 2:39 PM, Matthew Wilcox (Oracle) wrote:
-> Allow callers to iterate over each folio instead of each page.  The
-> bio need not have been constructed using folios originally.
+iomap_page_release() was also assuming that it was being passed a
+head page.
 
-Reviewed-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/iomap/buffered-io.c | 18 +++++++++++-------
+ 1 file changed, 11 insertions(+), 7 deletions(-)
 
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index d96c00c1e9e3..b8984f39d8b0 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -59,18 +59,18 @@ iomap_page_create(struct inode *inode, struct folio *folio)
+ 	return iop;
+ }
+ 
+-static void
+-iomap_page_release(struct page *page)
++static void iomap_page_release(struct folio *folio)
+ {
+-	struct iomap_page *iop = detach_page_private(page);
+-	unsigned int nr_blocks = i_blocks_per_page(page->mapping->host, page);
++	struct iomap_page *iop = folio_detach_private(folio);
++	struct inode *inode = folio->mapping->host;
++	unsigned int nr_blocks = i_blocks_per_folio(inode, folio);
+ 
+ 	if (!iop)
+ 		return;
+ 	WARN_ON_ONCE(atomic_read(&iop->read_bytes_pending));
+ 	WARN_ON_ONCE(atomic_read(&iop->write_bytes_pending));
+ 	WARN_ON_ONCE(bitmap_full(iop->uptodate, nr_blocks) !=
+-			PageUptodate(page));
++			folio_test_uptodate(folio));
+ 	kfree(iop);
+ }
+ 
+@@ -451,6 +451,8 @@ EXPORT_SYMBOL_GPL(iomap_is_partially_uptodate);
+ int
+ iomap_releasepage(struct page *page, gfp_t gfp_mask)
+ {
++	struct folio *folio = page_folio(page);
++
+ 	trace_iomap_releasepage(page->mapping->host, page_offset(page),
+ 			PAGE_SIZE);
+ 
+@@ -461,7 +463,7 @@ iomap_releasepage(struct page *page, gfp_t gfp_mask)
+ 	 */
+ 	if (PageDirty(page) || PageWriteback(page))
+ 		return 0;
+-	iomap_page_release(page);
++	iomap_page_release(folio);
+ 	return 1;
+ }
+ EXPORT_SYMBOL_GPL(iomap_releasepage);
+@@ -469,6 +471,8 @@ EXPORT_SYMBOL_GPL(iomap_releasepage);
+ void
+ iomap_invalidatepage(struct page *page, unsigned int offset, unsigned int len)
+ {
++	struct folio *folio = page_folio(page);
++
+ 	trace_iomap_invalidatepage(page->mapping->host, offset, len);
+ 
+ 	/*
+@@ -478,7 +482,7 @@ iomap_invalidatepage(struct page *page, unsigned int offset, unsigned int len)
+ 	if (offset == 0 && len == PAGE_SIZE) {
+ 		WARN_ON_ONCE(PageWriteback(page));
+ 		cancel_dirty_page(page);
+-		iomap_page_release(page);
++		iomap_page_release(folio);
+ 	}
+ }
+ EXPORT_SYMBOL_GPL(iomap_invalidatepage);
 -- 
-Jens Axboe
+2.33.0
 
