@@ -2,147 +2,91 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D939EC433F5
-	for <linux-xfs@archiver.kernel.org>; Mon,  1 Nov 2021 20:49:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F15C4C4332F
+	for <linux-xfs@archiver.kernel.org>; Mon,  1 Nov 2021 20:51:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B4E0D600EF
-	for <linux-xfs@archiver.kernel.org>; Mon,  1 Nov 2021 20:49:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D713D610FC
+	for <linux-xfs@archiver.kernel.org>; Mon,  1 Nov 2021 20:51:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230468AbhKAUwA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 1 Nov 2021 16:52:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57894 "EHLO
+        id S231310AbhKAUyT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 1 Nov 2021 16:54:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58410 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229541AbhKAUv7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Nov 2021 16:51:59 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B600C061714;
-        Mon,  1 Nov 2021 13:49:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-Type:Content-ID:Content-Description;
-        bh=JowmokzmLBePGKHizYHUmJEnsmoAJKdK0XLGuVKangc=; b=OPDnbPO+2WPGuCPNQivcEhvQM3
-        4VMQeGpkiQKj0e9JPD9Vsq+M9grGQ5Jo3T8628qbhYoMmsG7ni6fTnwry27leIAdefeClLvTKupeT
-        iPo/6iKJwYnvm66lu/svcPQrgcukoVZHVSceV5LgNBCIXkjqbJ7xXbAZyJ5C7amF8rCl3QloCn/vO
-        VpJGCDZCm3ZUdgxbcsP3UlSRzNlu5lk+zQAVbiN/g6Dil0N8Tjg9Erl2rZDeJZw7gAjQZVnE3fZIM
-        ndF+dRuRN3nyR1y0a/cOZGO+Aq2Z2a52ML+6/O4BXjQUsmEzKR0pfUojyFMmajCRjirO5D9EZSOO2
-        3j5Rb2Gw==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mheBy-0040aY-MB; Mon, 01 Nov 2021 20:46:37 +0000
-From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        with ESMTP id S230322AbhKAUyM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Nov 2021 16:54:12 -0400
+Received: from mail-io1-xd2d.google.com (mail-io1-xd2d.google.com [IPv6:2607:f8b0:4864:20::d2d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CDA6DC061767
+        for <linux-xfs@vger.kernel.org>; Mon,  1 Nov 2021 13:51:38 -0700 (PDT)
+Received: by mail-io1-xd2d.google.com with SMTP id v65so23124643ioe.5
+        for <linux-xfs@vger.kernel.org>; Mon, 01 Nov 2021 13:51:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=CMGE2kkQeNi/kwlNp/sxaKwbffuHzsFYRTX7+Qn4S5k=;
+        b=Dbu4JokQJoepDvPa1O2EjBOPWwhJaddMCAqi05hDlVjKvuMr9LIcsz6aWOSgpvXI3A
+         31sX9LkCHSEigGYGMOVpIN/2+Yo4GHSwRHQWq3KYJ4BSin4ZhaF354PhZDZgVbWCgYII
+         rfLqji0mTVg1k79xcx58UVwLWJI/35FBHOnpNpZ/js87+L40AiaLaTwO6WF7WMm6Rci/
+         /Ib9YX9HEiHx8MZH8Nh6lUf+fq/PJkAHD9Oi+cdMO3s2yTEGIDGHb2Y5IhF13SOPxXdd
+         0Fu6yTi4N2nNAGliR36vvNlPEqA1iHYgpz1AdQNqkHPmcXJyVXsKoWn8hU+474QzCQIm
+         k5tQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=CMGE2kkQeNi/kwlNp/sxaKwbffuHzsFYRTX7+Qn4S5k=;
+        b=WP6O9Q+0UvOEa5n2zx7fmMsWf3dZCWPYkYKY1MYDi5beBpInms0TpjB9yTVZsq79ut
+         R4+nppAuf87sh+sIVaC84vVKrcdKMzIPOGhwFJlW+PkzzZYnAFwdSFwHpVvpagMRm92e
+         LbKW5I8VFbfgK3o7/fqZKRy/e5DtmZ5J8t7c3A1aO1EbKI8+AJ9klOrQQ4LQHJK7DcgU
+         dWo9xk4/waabXwXwvbx5+pmz8khUVzShZpifIcMF6HYpy/HMTJwW85j5mxbiOtIq6bhe
+         ecsDQ2xMR03n7+2ggqKARfOca3WKeUbwapGn8Zbe2p2HL/bCbmvabFadTyuvamRmZq26
+         udQQ==
+X-Gm-Message-State: AOAM530XDNDJytomWYex/SoQz0hlbvc+yFAd+VQRl1EsK8IzS4NFvyYO
+        tjl3X0GE1mFBAl1K32BPs9uRDg==
+X-Google-Smtp-Source: ABdhPJxlImzKDo8ZsB+bpNGxu2iBOEwuLlA9ExA3PeHJGanwTyuKtaNtZMQstsxJLn9G6YhLjPBDNQ==
+X-Received: by 2002:a6b:8e58:: with SMTP id q85mr22385605iod.7.1635799898185;
+        Mon, 01 Nov 2021 13:51:38 -0700 (PDT)
+Received: from [192.168.1.30] ([207.135.234.126])
+        by smtp.gmail.com with ESMTPSA id f11sm5817976ilu.82.2021.11.01.13.51.37
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 01 Nov 2021 13:51:37 -0700 (PDT)
+Subject: Re: [PATCH 02/21] block: Add bio_add_folio()
+To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
-        Jens Axboe <axboe@kernel.dk>,
         Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 04/21] iomap: Convert to_iomap_page to take a folio
-Date:   Mon,  1 Nov 2021 20:39:12 +0000
-Message-Id: <20211101203929.954622-5-willy@infradead.org>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20211101203929.954622-1-willy@infradead.org>
 References: <20211101203929.954622-1-willy@infradead.org>
+ <20211101203929.954622-3-willy@infradead.org>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <0384e51b-0938-dccb-8c70-caa1f2b35d34@kernel.dk>
+Date:   Mon, 1 Nov 2021 14:51:37 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20211101203929.954622-3-willy@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The big comment about only using a head page can go away now that
-it takes a folio argument.
+On 11/1/21 2:39 PM, Matthew Wilcox (Oracle) wrote:
+> This is a thin wrapper around bio_add_page().  The main advantage here
+> is the documentation that stupidly large folios are not supported.
+> It's not currently possible to allocate stupidly large folios, but if
+> it ever becomes possible, this function will fail gracefully instead of
+> doing I/O to the wrong bytes.
 
-Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/iomap/buffered-io.c | 32 +++++++++++++++-----------------
- 1 file changed, 15 insertions(+), 17 deletions(-)
+Might be better with UINT_MAX instead of stupidly here, because then
+it immediately makes sense. Can you make a change to that effect?
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 9cc5798423d1..24a2aa69c467 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -22,8 +22,8 @@
- #include "../internal.h"
- 
- /*
-- * Structure allocated for each page or THP when block size < page size
-- * to track sub-page uptodate status and I/O completions.
-+ * Structure allocated for each folio when block size < folio size
-+ * to track sub-folio uptodate status and I/O completions.
-  */
- struct iomap_page {
- 	atomic_t		read_bytes_pending;
-@@ -32,17 +32,10 @@ struct iomap_page {
- 	unsigned long		uptodate[];
- };
- 
--static inline struct iomap_page *to_iomap_page(struct page *page)
-+static inline struct iomap_page *to_iomap_page(struct folio *folio)
- {
--	/*
--	 * per-block data is stored in the head page.  Callers should
--	 * not be dealing with tail pages, and if they are, they can
--	 * call thp_head() first.
--	 */
--	VM_BUG_ON_PGFLAGS(PageTail(page), page);
--
--	if (page_has_private(page))
--		return (struct iomap_page *)page_private(page);
-+	if (folio_test_private(folio))
-+		return folio_get_private(folio);
- 	return NULL;
- }
- 
-@@ -51,7 +44,8 @@ static struct bio_set iomap_ioend_bioset;
- static struct iomap_page *
- iomap_page_create(struct inode *inode, struct page *page)
- {
--	struct iomap_page *iop = to_iomap_page(page);
-+	struct folio *folio = page_folio(page);
-+	struct iomap_page *iop = to_iomap_page(folio);
- 	unsigned int nr_blocks = i_blocks_per_page(inode, page);
- 
- 	if (iop || nr_blocks <= 1)
-@@ -144,7 +138,8 @@ iomap_adjust_read_range(struct inode *inode, struct iomap_page *iop,
- static void
- iomap_iop_set_range_uptodate(struct page *page, unsigned off, unsigned len)
- {
--	struct iomap_page *iop = to_iomap_page(page);
-+	struct folio *folio = page_folio(page);
-+	struct iomap_page *iop = to_iomap_page(folio);
- 	struct inode *inode = page->mapping->host;
- 	unsigned first = off >> inode->i_blkbits;
- 	unsigned last = (off + len - 1) >> inode->i_blkbits;
-@@ -173,7 +168,8 @@ static void
- iomap_read_page_end_io(struct bio_vec *bvec, int error)
- {
- 	struct page *page = bvec->bv_page;
--	struct iomap_page *iop = to_iomap_page(page);
-+	struct folio *folio = page_folio(page);
-+	struct iomap_page *iop = to_iomap_page(folio);
- 
- 	if (unlikely(error)) {
- 		ClearPageUptodate(page);
-@@ -427,7 +423,8 @@ int
- iomap_is_partially_uptodate(struct page *page, unsigned long from,
- 		unsigned long count)
- {
--	struct iomap_page *iop = to_iomap_page(page);
-+	struct folio *folio = page_folio(page);
-+	struct iomap_page *iop = to_iomap_page(folio);
- 	struct inode *inode = page->mapping->host;
- 	unsigned len, first, last;
- 	unsigned i;
-@@ -1003,7 +1000,8 @@ static void
- iomap_finish_page_writeback(struct inode *inode, struct page *page,
- 		int error, unsigned int len)
- {
--	struct iomap_page *iop = to_iomap_page(page);
-+	struct folio *folio = page_folio(page);
-+	struct iomap_page *iop = to_iomap_page(folio);
- 
- 	if (error) {
- 		SetPageError(page);
+With that:
+
+Reviewed-by: Jens Axboe <axboe@kernel.dk>
+
 -- 
-2.33.0
+Jens Axboe
 
