@@ -2,79 +2,101 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B6EBC433EF
-	for <linux-xfs@archiver.kernel.org>; Mon,  1 Nov 2021 20:25:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA074C433F5
+	for <linux-xfs@archiver.kernel.org>; Mon,  1 Nov 2021 20:42:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7CC2160ED5
-	for <linux-xfs@archiver.kernel.org>; Mon,  1 Nov 2021 20:25:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9434060F3A
+	for <linux-xfs@archiver.kernel.org>; Mon,  1 Nov 2021 20:42:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229896AbhKAU2T (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 1 Nov 2021 16:28:19 -0400
-Received: from ishtar.tlinx.org ([173.164.175.65]:39462 "EHLO
-        Ishtar.sc.tlinx.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229560AbhKAU2S (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Nov 2021 16:28:18 -0400
-Received: from [192.168.3.12] (Athenae [192.168.3.12])
-        by Ishtar.sc.tlinx.org (8.14.7/8.14.4/SuSE Linux 0.8) with ESMTP id 1A1KPfRK046364;
-        Mon, 1 Nov 2021 13:25:43 -0700
-Message-ID: <61804CD4.8070103@tlinx.org>
-Date:   Mon, 01 Nov 2021 13:23:48 -0700
-From:   L A Walsh <xfs@tlinx.org>
-User-Agent: Thunderbird 2.0.0.24 (Windows/20100228)
+        id S230246AbhKAUpY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 1 Nov 2021 16:45:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56342 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229896AbhKAUpX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Nov 2021 16:45:23 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A163C061714;
+        Mon,  1 Nov 2021 13:42:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:In-Reply-To:References;
+        bh=chNWjrMwxLlygvBLJNWRNHDSE0gjni5bIuk9Yy4tZbo=; b=mqHGFzEOS8E9CxQtoKts2Wr12C
+        I1N4Da08CVdnvJ93OJWiJXiQXJmAmmXVRYFDL42Y+9W0tDiPUOCB09Or5yn/TkHqPzjYHdQRJBcRr
+        sk6ywml3gbPH7h552U5YCA4Jjye3g5aMc3eMoo08IJPn6pAKVF9r9ZpaUuzrJ/eO/TzKqOQRwKUyA
+        armn0zRIawNhoW2YPjxD7MUiEL6cvl9MUbLs65pAc8nWT+362aevCP0me4Mn3E8uUrHSGrUMGKiXY
+        GFGmoLtuOy+CxoQGxfTppCfS3NPfXlnOhv7ZmI6oEjb5mDu+qX53EiMCKsfsDzFzb9Qbv6R5a9rjk
+        FLURsvRw==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1mhe5b-0040Ls-6E; Mon, 01 Nov 2021 20:39:59 +0000
+From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
+        Jens Axboe <axboe@kernel.dk>,
+        Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH 00/21] iomap/xfs folio patches
+Date:   Mon,  1 Nov 2021 20:39:08 +0000
+Message-Id: <20211101203929.954622-1-willy@infradead.org>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-To:     linux-xfs <linux-xfs@vger.kernel.org>
-CC:     Dave Chinner <david@fromorbit.com>
-Subject: cause of xfsdump msg: root ino 192 differs from mount dir ino 256
-References: <617721E0.5000009@tlinx.org> <20211026004814.GA5111@dread.disaster.area> <617F0A6D.6060506@tlinx.org>
-In-Reply-To: <617F0A6D.6060506@tlinx.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+This patchset converts XFS & iomap to use folios, and gets them to
+a state where they can handle multi-page folios.  I don't anticipate
+needing to touch XFS again until we're at the point where we want to
+convert the aops to be type-safe.  The patches apply to both current
+Linus head and next-20211101.  It completes an xfstests run with no
+unexpected failures.  Most of these patches have been posted before and
+I've retained acks/reviews where I thought them reasonable.  Some are new.
 
-Addendum to the below: get_blocks showed no error messages.
+I'd really like a better name than 'mapping_set_large_folios()'.
+mapping_set_multi_page_folios() seems a bit long.  mapping_set_mpf()
+is a bit obscure.
 
+Jens, I'd really like your ack on patches 2 & 3; I know we discussed
+them before.
 
-When I xfsdump my /home partition, I see the above diagnostic
-where it  lists "bind mount?" might be involved, but as far as
-I can see, that's not the case.
+Matthew Wilcox (Oracle) (21):
+  fs: Remove FS_THP_SUPPORT
+  block: Add bio_add_folio()
+  block: Add bio_for_each_folio_all()
+  iomap: Convert to_iomap_page to take a folio
+  iomap: Convert iomap_page_create to take a folio
+  iomap: Convert iomap_page_release to take a folio
+  iomap: Convert iomap_releasepage to use a folio
+  iomap: Add iomap_invalidate_folio
+  iomap: Pass the iomap_page into iomap_set_range_uptodate
+  iomap: Convert bio completions to use folios
+  iomap: Use folio offsets instead of page offsets
+  iomap: Convert iomap_read_inline_data to take a folio
+  iomap: Convert readahead and readpage to use a folio
+  iomap: Convert iomap_page_mkwrite to use a folio
+  iomap: Convert iomap_write_begin and iomap_write_end to folios
+  iomap: Convert iomap_write_end_inline to take a folio
+  iomap,xfs: Convert ->discard_page to ->discard_folio
+  iomap: Convert iomap_add_to_ioend to take a folio
+  iomap: Convert iomap_migrate_page to use folios
+  iomap: Support multi-page folios in invalidatepage
+  xfs: Support multi-page folios
 
-grepping for '/home\s' on output of mount:
+ Documentation/core-api/kernel-api.rst |   1 +
+ block/bio.c                           |  22 ++
+ fs/inode.c                            |   2 -
+ fs/iomap/buffered-io.c                | 499 +++++++++++++-------------
+ fs/xfs/xfs_aops.c                     |  24 +-
+ fs/xfs/xfs_icache.c                   |   2 +
+ include/linux/bio.h                   |  56 ++-
+ include/linux/fs.h                    |   1 -
+ include/linux/iomap.h                 |   3 +-
+ include/linux/pagemap.h               |  16 +
+ mm/shmem.c                            |   3 +-
+ 11 files changed, 366 insertions(+), 263 deletions(-)
 
-/bin/mount|grep -P '/home\s'
-
-shows only 1 entry -- nothing mounted on top of it:
-
-/dev/mapper/Space-Home2 on /home type xfs (...)
-
-I have bind-mounts of things like
-/home/opt  on /opt, but that shouldn't affect the root node,
-as far as I know.
-
-So what would cause the root node to differ from the mountdir
-ino?
-
-I try mounting the same filesystem someplace new:
-
-# df .
-Filesystem        Size  Used Avail Use% Mounted on
-/dev/Space/Home2  2.0T  1.5T  569G  73% /home
-mkdir /home2
-Ishtar:home# mount /dev/Space/Home2 /home2
-Ishtar:home# ll -di /home /home2
-256 drwxr-xr-x 40 4096 Nov  1 10:23 /home/
-256 drwxr-xr-x 40 4096 Nov  1 10:23 /home2/
-
-Shows 256 as the root inode.  So why is xfsdump claiming
-192 is root inode?
-
-I used xfs_db and 192 is allocated to a normal file, while
-256 displays nothing for the filename.
-
-How should I further debug this?
-
-
-
+-- 
+2.33.0
 
