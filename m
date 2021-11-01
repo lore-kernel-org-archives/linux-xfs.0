@@ -2,242 +2,202 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84A9AC433EF
-	for <linux-xfs@archiver.kernel.org>; Mon,  1 Nov 2021 06:33:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4426AC433EF
+	for <linux-xfs@archiver.kernel.org>; Mon,  1 Nov 2021 07:00:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 66E1860FD9
-	for <linux-xfs@archiver.kernel.org>; Mon,  1 Nov 2021 06:33:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2221861078
+	for <linux-xfs@archiver.kernel.org>; Mon,  1 Nov 2021 07:00:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229958AbhKAGgC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 1 Nov 2021 02:36:02 -0400
-Received: from esa5.fujitsucc.c3s2.iphmx.com ([68.232.159.76]:19921 "EHLO
-        esa5.fujitsucc.c3s2.iphmx.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229933AbhKAGgA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Nov 2021 02:36:00 -0400
-X-Greylist: delayed 427 seconds by postgrey-1.27 at vger.kernel.org; Mon, 01 Nov 2021 02:35:59 EDT
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=fujitsu.com; i=@fujitsu.com; q=dns/txt; s=fj1;
-  t=1635748408; x=1667284408;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-id:content-transfer-encoding:
-   mime-version;
-  bh=IEg2Kv2hdmLWCn0W2tEtQ0ZQlby5ktObtmU+rkbOj3E=;
-  b=FNUaoOVbIM2iVBlja7aQdH0xxcWV3O1EskG3A2tKS5XM2okDBR1/mlV+
-   6aK3RU8xK33vwDgWkncJAXMoMps/xiAFMOS/u3cra9pnsyaSAGrigwM4U
-   ++eAlTK2kom6CHKNDNe2vJtghqfc0nxKsHlbKjT1u9otj10hb9KcOh5gO
-   NsNXpWFJ9CuUhLbuQSn1zgWDE/bqmmmCj/a24d8rkG+YClkA8/Jirau0A
-   6ixF53IsHbCNK9+gXP6wAz67QOU4PxWnqrFKGa73JNLVOlVab/H68bp+0
-   IOBdaMQ+s3d9dLA/5znQhyiJCoOi4nUSPUZkkUBGGpjDX6CiHSipS9AuS
-   w==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10154"; a="42662545"
-X-IronPort-AV: E=Sophos;i="5.87,198,1631545200"; 
-   d="scan'208";a="42662545"
-Received: from mail-os2jpn01lp2059.outbound.protection.outlook.com (HELO JPN01-OS2-obe.outbound.protection.outlook.com) ([104.47.92.59])
-  by ob1.fujitsucc.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Nov 2021 15:26:18 +0900
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=WSqAne5YpxXYi+8uOQVe3hodbecI6AmcT6nSVmkzbX6Is4uSYPDI2mjjnliktqA5HSBwLPbDmcjhOFbUn2d6OEBPJycq67FdnSqHPI0smYyihaeBnm5IC5Li2JyujzCWAMvio2y27ehBtNF31+4pGRtnTsD89xMBd29iULXNl3R4Uy6qiQgN1MdHfhgO9TKVhs7aQ9IvyqIzUarcO9hmAruvN1LQv7XtgDpQSChuXgahT36ZSx+Dl/YDP9TLyzfxLOpaWhyDCdCyWQxUSHvUrCC/Kz4R/togIRhGSj0vJrrveIWLw90w8Ifg27HY7VC2y77YJOBlSrpP1y70ta1Weg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=IEg2Kv2hdmLWCn0W2tEtQ0ZQlby5ktObtmU+rkbOj3E=;
- b=LL9Dj8dS0tiG4TAeq63tCLTqYwm1V15uuG7lDHWttwjeb1hp7jfBt8uBjJLTNK1WdGI/XqvrLm6escvoVIu3gf/mjxPQIiTBEnVulRQD3Gtew/n+zOawt4OMkzZiL6JyuQjQWJq5/K5bbagO1R6/8nB0CRSAs7NPOhStAK6l6tVOEj8/sXHpjI6SvBRwbpCFlP4JGvofPHujGkFmHTA5kZ73s/fiIQEEJHZMMnjLy5i8ELErUzeeAXf+g3+arram6CA9d3fWkDvIGs8xfVhRaD/0iWLA3nKakZP43b8P7A9JR5i0RubMEdIXEaR0UIUoWRuVyGY+n10qq3swKvVmMQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=fujitsu.com; dmarc=pass action=none header.from=fujitsu.com;
- dkim=pass header.d=fujitsu.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=fujitsu.onmicrosoft.com; s=selector2-fujitsu-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=IEg2Kv2hdmLWCn0W2tEtQ0ZQlby5ktObtmU+rkbOj3E=;
- b=ptPLlxi3SWJSVwstZD2v5tfVeXtc6YRQ7aRRBrVt8JJVKxiC3g3itXnESb2471EAXQrLsEYw3VB8Ojk2BbHbQEvwM6PFXlGLtY4B0D5DRtFHsQMVUFMMlu2S20rxUtEnpVusH+87iUtSuraRN9zofDSHylhAyqajT+mY5XVVzy8=
-Received: from TYCPR01MB6544.jpnprd01.prod.outlook.com (2603:1096:400:98::6)
- by TYAPR01MB6537.jpnprd01.prod.outlook.com (2603:1096:400:95::7) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4649.15; Mon, 1 Nov
- 2021 06:26:14 +0000
-Received: from TYCPR01MB6544.jpnprd01.prod.outlook.com
- ([fe80::35a5:c639:9f43:ee9]) by TYCPR01MB6544.jpnprd01.prod.outlook.com
- ([fe80::35a5:c639:9f43:ee9%7]) with mapi id 15.20.4649.019; Mon, 1 Nov 2021
- 06:26:14 +0000
-From:   "xuyang2018.jy@fujitsu.com" <xuyang2018.jy@fujitsu.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-CC:     Allison Henderson <allison.henderson@oracle.com>,
-        "fstests@vger.kernel.org" <fstests@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: Fix the free logic of state in xfs_attr_node_hasname
-Thread-Topic: [PATCH] xfs: Fix the free logic of state in
- xfs_attr_node_hasname
-Thread-Index: AQHXzKJFYHH4n9sw50GRQnvy+lWjeqvqUmUAgAPnI4A=
-Date:   Mon, 1 Nov 2021 06:26:14 +0000
-Message-ID: <617F8893.8090203@fujitsu.com>
-References: <1635497520-8168-1-git-send-email-xuyang2018.jy@fujitsu.com>
- <20211029185024.GF24307@magnolia>
+        id S229984AbhKAHDL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 1 Nov 2021 03:03:11 -0400
+Received: from mail1.bemta25.messagelabs.com ([195.245.230.3]:46396 "EHLO
+        mail1.bemta25.messagelabs.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229933AbhKAHDL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Nov 2021 03:03:11 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fujitsu.com;
+        s=170520fj; t=1635750037; i=@fujitsu.com;
+        bh=bEB63BkLGE0Y4igwnZ97G3Tg5AVNSAby7hXzcRSvhzM=;
+        h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+         MIME-Version:Content-Type;
+        b=EjJh8RhGIQWVzhrl++k5EQjEhh2WCdbT1lA/EzrjmptlqAGJbhBukgXgbrJhC64Sv
+         GWdQ1O793GjqJ2J0WD1US8dOY0FcIU5KkvfFQvxcQHE0APd9tucG05nMYF1boiR93+
+         7I6BaEeIt9IwcijFDs6RJApUmH48NHhLetCpdZFyg4aTzGEJTnex0hI1getv4SBcrL
+         8U50UwpsAzAcoXtfQlXblvKdsQ32bgQsugvF2QoQvj3TrBNFYE/QjoIaNPT7l+J7vL
+         cVdnmXz40ii19MRdwsGLmwQxzYbLVGVeMViiui3k09JLtffSPPkID878bgp1woRZ4p
+         5LjaZpmuqDutg==
+Received: from [100.112.192.69] (using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256 bits))
+        by server-3.bemta.az-a.eu-west-1.aws.symcld.net id 72/02-05531-5909F716; Mon, 01 Nov 2021 07:00:37 +0000
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrFIsWRWlGSWpSXmKPExsViZ8MxSXfKhPp
+  Egx+3DC0aWtqYLC4/4bM43bKX3WLXnx3sDiwem1Z1snl8fHqLxePzJrkA5ijWzLyk/IoE1owv
+  +26yFSxQrDjc3MLUwLhOpouRi0NIYAujROP5hywQzgImiUN3j7BCOLsZJX78/8/YxcjJwSagK
+  fGscwFzFyMHh4iAucT1j0wgYWaBBIkJW5ezg9jCAr4Sr15PZgcpYRFQkWj8oAsS5hXwkJizvY
+  kFxJYQUJCY8vA9M4jNKaAn8f7ZZ7AxQgK6EtPuHmKDqBeUODnzCQvEeAmJgy9eMEP0Kkpc6vj
+  GCGFXSMya1cYEYatJXD23iXkCo+AsJO2zkLQvYGRaxWiRVJSZnlGSm5iZo2toYKBraGika2hp
+  pGtkYKKXWKWbqJdaqlueWlyia6iXWF6sV1yZm5yTopeXWrKJERjsKQUHzuxgPPX6g94hRkkOJ
+  iVR3sKe+kQhvqT8lMqMxOKM+KLSnNTiQ4wyHBxKErzZjUA5waLU9NSKtMwcYOTBpCU4eJREeP
+  f3AqV5iwsSc4sz0yFSpxh1OS5fn7eIWYglLz8vVUqcV7wfqEgApCijNA9uBCwJXGKUlRLmZWR
+  gYBDiKUgtys0sQZV/xSjOwagkzLsaZApPZl4J3KZXQEcwAR2xT6wG5IiSRISUVAPTpvSOnl9W
+  j6pzTu3Y+Si24+lE7o0H123/2cB4+L5CQa7j5WuzPh6a77e79KVg+iIt786s353n661DJc+Ix
+  RisORkd7RNwRyvQ+OblZ3nvA5JmH/rv/sp1i//tE1qJb+J75v9hXMjdz7dQLkjQ4c9Othxh9f
+  fSKoZ3Yhx1f0/xDm7Wdo3NesZYfePutU1vAg/nJpjnsXh2McmLzjr2aPcP9rvblqmUvX+/18v
+  DmsV9l+Idd+GMwzNS5Q3O6nd/8GA8OkEwj5PDuHzKRs2l5yNNji7aW/RubpKdwcPfqzVeWqfF
+  7ZJ+cu6nQd7uzpq0uNwkBu/5t/KfaqU+vLk9KD/q05kP7sdCCvmMldfdi5ylxFKckWioxVxUn
+  AgAkiVdkX0DAAA=
+X-Env-Sender: xuyang2018.jy@fujitsu.com
+X-Msg-Ref: server-15.tower-267.messagelabs.com!1635750036!218015!1
+X-Originating-IP: [62.60.8.146]
+X-SYMC-ESS-Client-Auth: outbound-route-from=pass
+X-StarScan-Received: 
+X-StarScan-Version: 9.81.4; banners=-,-,-
+X-VirusChecked: Checked
+Received: (qmail 10701 invoked from network); 1 Nov 2021 07:00:36 -0000
+Received: from unknown (HELO n03ukasimr02.n03.fujitsu.local) (62.60.8.146)
+  by server-15.tower-267.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 1 Nov 2021 07:00:36 -0000
+Received: from n03ukasimr02.n03.fujitsu.local (localhost [127.0.0.1])
+        by n03ukasimr02.n03.fujitsu.local (Postfix) with ESMTP id 34F7B100470;
+        Mon,  1 Nov 2021 07:00:36 +0000 (GMT)
+Received: from R01UKEXCASM126.r01.fujitsu.local (unknown [10.183.43.178])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by n03ukasimr02.n03.fujitsu.local (Postfix) with ESMTPS id 23FA4100466;
+        Mon,  1 Nov 2021 07:00:36 +0000 (GMT)
+Received: from localhost.localdomain (10.167.220.84) by
+ R01UKEXCASM126.r01.fujitsu.local (10.183.43.178) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.24; Mon, 1 Nov 2021 07:00:25 +0000
+From:   Yang Xu <xuyang2018.jy@fujitsu.com>
+To:     <djwong@kernel.org>, <allison.henderson@oracle.com>
+CC:     <linux-xfs@vger.kernel.org>, <fstests@vger.kernel.org>,
+        Yang Xu <xuyang2018.jy@fujitsu.com>
+Subject: [PATCH v2] xfs: Fix the free logic of state in xfs_attr_node_hasname
+Date:   Mon, 1 Nov 2021 15:00:20 +0800
+Message-ID: <1635750020-2275-1-git-send-email-xuyang2018.jy@fujitsu.com>
+X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <20211029185024.GF24307@magnolia>
-Accept-Language: zh-CN, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: kernel.org; dkim=none (message not signed)
- header.d=none;kernel.org; dmarc=none action=none header.from=fujitsu.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 7bcba3cb-fa37-4520-baee-08d99d008147
-x-ms-traffictypediagnostic: TYAPR01MB6537:
-x-microsoft-antispam-prvs: <TYAPR01MB65374B3638A82DAA416FC4E4FD8A9@TYAPR01MB6537.jpnprd01.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:9508;
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: vq6+vfw5KYPXKGlV5iWH0+q/nQgMXIE8MQ39VcDoFn6cJGmE5pGF+ZUjS/oWKYDh2JvWcTl/1DXgyXhDmEI0A8f3sofLPP4rQ0utWG81Llo9x7XVjp8Kd5DsnvO46jeFq4wo8DhrUbol73OEOJlJOvK4dJY/HspOMxKeJOIVI28HVEtMAJvZyTI8HeCSx5ZtSX28QRo4NQOdD1MwIjZC7fC2DAZ9KM5r3LR/31cvI6XaSn0OJWkqW1C5TOnTGtQHUDLQifcJS/hFU1W6w+uqgIvGVVOUb3FAs6wwrlkqUA6YmClymyDWobLq1OGc3QX0ZNbchf2EoL1orvF4A1SQAGNMo1/77uH9iTFMyIkgdTRKq8j5eiKzbqqSwgetDq3e4PbavI/HEjmXJcYgd3h0Lw2MCoCtH+qQ0KkOO1gTXox9BjctJCe0hxd91FukZeD9vg9kgy3EPM46+d1dp7iTNfzjes8wJjdMJAj1LawABmWxDVqZvEQIOYINAZj9cDuV270/brSzSrhH2HRS8r2C7LA1HG5HObEL+qsMow3ctws7s6zW+3gfntg+08EuQ8xfhbXVY1ofAQzTRK3/UrYnld3w6XGarZdpVU/elRIwrcc2S4psFnsDc/eBCzjIG/7bsc+e5vyb3pfCgrLBhX1ScpHZcnivFMzSfAIHQT1rHL5E2bDcT+hsxJvb4BrebG+mX0yAZ3IaXwr8pHozFgEEIQ==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TYCPR01MB6544.jpnprd01.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(91956017)(76116006)(38070700005)(85182001)(66446008)(64756008)(66556008)(66476007)(5660300002)(6486002)(6916009)(8676002)(82960400001)(2906002)(38100700002)(4326008)(8936002)(316002)(54906003)(66946007)(36756003)(6512007)(83380400001)(508600001)(26005)(122000001)(2616005)(186003)(71200400001)(6506007)(53546011)(86362001)(87266011)(33656002);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?gb2312?B?K09veS85YkFkLzZEOXhwUjlsbVFMKzgvYU54bS9UR0NzeEMyYlBURGhicDRD?=
- =?gb2312?B?U1Rza2laZzEvUkFEamJhOWNiNEVaSWF0WCt2M1l4bUpiNzFnYnJvQTRGUXg4?=
- =?gb2312?B?Z05MNkdyUVBEekFta3JhK2tmZXRqUzh0aktkUW1SV0V5Y2hLN1FwYWRLWG1n?=
- =?gb2312?B?RnNpOTNBdklBMkdiMnVDbWZZclRrS0tCeEp0cCtYVDR2Z3ZhOGU0NGhsT0or?=
- =?gb2312?B?L2VwMjFXN3NmRFVlQzdjVGJTaGRMSkM1MjFtQlc3YVhsZ3BCMDVvMnh5Q0du?=
- =?gb2312?B?U25wUmtPVDQxM2E4d25TM2VycXd1MnY5MUwxUW5oaGRMRXFDUTRiMThHVmVF?=
- =?gb2312?B?ZFUwNVJSLys3ZW1jalAwTWNwd1pGUzBGRFBUM0NkTWF6OG5YeitTeGRPSkZK?=
- =?gb2312?B?WHUrV0tTOFFEelB2dUFPY0pGWWExSTV3WWU2ZUlpTFJ3eUhuM3FidlA0Vkl1?=
- =?gb2312?B?eVNWSWErdFpwTEFxcWo1SXJvaWZtKzlFNFVOaWpLdHNhQXNPRTN5dkVPb09i?=
- =?gb2312?B?eEdYSTVBRmZrYkIvYS9kd2NQMGI5WlpTSmZsODk1bm5GS2dzYlFTQUVQWURQ?=
- =?gb2312?B?M3RwZjVKM2gxZXlIejdqQnBKNmFZdXAydE1mKzNsU3F4bTNxa3ZkbzFXaEgr?=
- =?gb2312?B?ZTJwZS8xaTJlWGpyVDBPa0RyMytXOWVTaXFITkZlTldEWTVYcUpHRUpTd2w2?=
- =?gb2312?B?WE41dlNqcUQyOFAvRjlKUmNMTzNnSUtpWVZjS3lYd0NtaEVZWnU0UG9tSE9Q?=
- =?gb2312?B?dFI2aU1IbWtjcW9zS25ueVZreVNQbzNyZWFlaVJyN25LbTA5R2twNkxNLzFG?=
- =?gb2312?B?UUZCaWtkSmVMT0lqWGhRNU9XeWppWDJCa2UwUkZDU0xoUC9oRjlWcVVGZlNL?=
- =?gb2312?B?cnBERlAyaWo1QVVqbm9SMlQrdFp5Y3U1dk9adzF6dFBXK3p0WEFHM0dMaENV?=
- =?gb2312?B?SjZ3bG9HZ01saHg2ODV5STdWcjFoMTZOMGlCbFgwNnRTQ1hmZHRvWnFuaU5o?=
- =?gb2312?B?Vk16blcvTk01Tktka21ZeHIrb3Z6b3orcWw1b1VIYjFPNXZRVTdxYUN1WDkr?=
- =?gb2312?B?ZWRBMHd1emFPMGE2TlNmK3dJT21Cc0kvV29IU3hWdnN5cUMvOHc1ckRmejJv?=
- =?gb2312?B?NmVQRTRvbEFqS3E1VmJrZmFpSlhGOGZLYnhRU3ZYd0h2aE8yVW1EaUdQMkVP?=
- =?gb2312?B?S0hxR2l6T2RlTGEvbUFrSkkwdmJ1eFo5U2prNVQ2THBCVk9qN2psWlRjcDF1?=
- =?gb2312?B?NG1nTVZvV29yM1ZKVUVLUWZYTW5lODlEbU1WejRlVjJ6SGpPNXVleFJnblo2?=
- =?gb2312?B?cy85R2xidWZRbjdwbmxPOEtkK0FSZjZzbmlHNXI4c3RESUlPZUVsb3dsMXFk?=
- =?gb2312?B?dEhscnVnY1R3aUNiTnlKQ3p5WTFzN3psVU9XRkQ1c2JheCs2N1l3V2VFUmJB?=
- =?gb2312?B?NGhMZlpOOU1VYkdXWTNXQWdITXI5cWZUdlAyTXh1S1dvQUs2d3FXSGRtU1pK?=
- =?gb2312?B?VjNxbnNBeExHTVI5dmpFSmZSVENkK21lTGtOd3NHK1ZGSU1ldlpMNnlqV3Rx?=
- =?gb2312?B?ZkJVN21jTHYrSnR4VWxUcmVDdHJLNUQ0RFl1cXJLT3N0dUZpa2xEVCt3NTMw?=
- =?gb2312?B?ajNSSE1zTDkwUjNKNDRTL09uUEdvMFlINkJBYlFieEp6amJLVWdVZWRzZFFF?=
- =?gb2312?B?U1FjaDFiRExPS1orclpBazBEZ3RQVmFzRmJFRSs5OUQrbG51bnNHeHhCQnFu?=
- =?gb2312?B?cEhncWw2MENjRUJ0aVY5VTQrY3hsNk5zamJJUitxNk9RVXpVcGVTRXdGOE9a?=
- =?gb2312?B?dEgxWWVManhSVUhsZ25JdnYxZitzcmJYZlE1elFvTUc5MW95SmJEVkYrdXBa?=
- =?gb2312?B?LzhNU25yNmV0MWZnSzFTcytmMDFVb0xZcTg5TStveXMwQ3EzdHRnZUl1dHA3?=
- =?gb2312?B?THdEK1dDNndlREZmczdTZUJ6OXlaUHhvcHh0bFVIbmtNWm5SQnVoL09PSVd1?=
- =?gb2312?B?Q000d21UeHRRVzVWa2RQcFRLL05QUmpRZEFYbmhYMERFY1pBSDNmblNsOGE5?=
- =?gb2312?B?Z0RBNmtPWGJ1MEpMNm1BUHhXMjhZdmhMbk9ZQ0Z4OGdubndGNkcySkpWREpa?=
- =?gb2312?B?UjlmSExxWG43bm92L1lVaEYyV1h3aHFJZFNXeEY5QWJhcjIxWTFmYmhnUFEw?=
- =?gb2312?B?VnRLRDBjSVFpaTV1WGloa2RFTW9ITDdqTXo0OUJXVXFZeFhjcVROWkVtN0ho?=
- =?gb2312?Q?tGCTnecaYyZmvGAdvsw7uKq+utJcEa+yDU8X+DXqLU=3D?=
-Content-Type: text/plain; charset="gb2312"
-Content-ID: <F82AFD49BFFEB640961F83EF99FFA71C@jpnprd01.prod.outlook.com>
-Content-Transfer-Encoding: base64
+References: <20211029185024.GF24307@magnolia>
 MIME-Version: 1.0
-X-OriginatorOrg: fujitsu.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: TYCPR01MB6544.jpnprd01.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7bcba3cb-fa37-4520-baee-08d99d008147
-X-MS-Exchange-CrossTenant-originalarrivaltime: 01 Nov 2021 06:26:14.3660
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: a19f121d-81e1-4858-a9d8-736e267fd4c7
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: lslEXzSfmsEeau3Gm73bduy+JufSJfkxRTMyM06lDxi9z6vo4h8bPBgJGNrloPMMXoEqCO4tGfs4R8heuwo8t7gRKLpLxFeYzBWlhnbanP8=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYAPR01MB6537
+Content-Type: text/plain
+X-Originating-IP: [10.167.220.84]
+X-ClientProxiedBy: G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) To
+ R01UKEXCASM126.r01.fujitsu.local (10.183.43.178)
+X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-T24gMjAyMS8xMC8zMCAyOjUwLCBEYXJyaWNrIEouIFdvbmcgd3JvdGU6DQo+IFthZGRpbmcgdGhl
-IHJlc2lkZW50IHhhdHRycyBleHBlcnRdDQo+DQo+IE9uIEZyaSwgT2N0IDI5LCAyMDIxIGF0IDA0
-OjUyOjAwUE0gKzA4MDAsIFlhbmcgWHUgd3JvdGU6DQo+PiBXaGVuIHRlc3RpbmcgeGZzdGVzdHMg
-eGZzLzEyNiBvbiBsYXN0ZXN0IHVwc3RyZWFtIGtlcm5lbCwgaXQgd2lsbCBoYW5nIG9uIHNvbWUg
-bWFjaGluZS4NCj4+IEFkZGluZyBhIGdldHhhdHRyIG9wZXJhdGlvbiBhZnRlciB4YXR0ciBjb3Jy
-dXB0ZWQsIEkgY2FuIHJlcHJvZHVjZSBpdCAxMDAlLg0KPj4NCj4+IFRoZSBkZWFkbG9jayBhcyBi
-ZWxvdzoNCj4+IFs5ODMuOTIzNDAzXSB0YXNrOnNldGZhdHRyICAgICAgICBzdGF0ZTpEIHN0YWNr
-OiAgICAwIHBpZDoxNzYzOSBwcGlkOiAxNDY4NyBmbGFnczoweDAwMDAwMDgwDQo+PiBbICA5ODMu
-OTIzNDA1XSBDYWxsIFRyYWNlOg0KPj4gWyAgOTgzLjkyMzQxMF0gIF9fc2NoZWR1bGUrMHgyYzQv
-MHg3MDANCj4+IFsgIDk4My45MjM0MTJdICBzY2hlZHVsZSsweDM3LzB4YTANCj4+IFsgIDk4My45
-MjM0MTRdICBzY2hlZHVsZV90aW1lb3V0KzB4Mjc0LzB4MzAwDQo+PiBbICA5ODMuOTIzNDE2XSAg
-X19kb3duKzB4OWIvMHhmMA0KPj4gWyAgOTgzLjkyMzQ1MV0gID8geGZzX2J1Zl9maW5kLmlzcmEu
-MjkrMHgzYzgvMHg1ZjAgW3hmc10NCj4+IFsgIDk4My45MjM0NTNdICBkb3duKzB4M2IvMHg1MA0K
-Pj4gWyAgOTgzLjkyMzQ3MV0gIHhmc19idWZfbG9jaysweDMzLzB4ZjAgW3hmc10NCj4+IFsgIDk4
-My45MjM0OTBdICB4ZnNfYnVmX2ZpbmQuaXNyYS4yOSsweDNjOC8weDVmMCBbeGZzXQ0KPj4gWyAg
-OTgzLjkyMzUwOF0gIHhmc19idWZfZ2V0X21hcCsweDRjLzB4MzIwIFt4ZnNdDQo+PiBbICA5ODMu
-OTIzNTI1XSAgeGZzX2J1Zl9yZWFkX21hcCsweDUzLzB4MzEwIFt4ZnNdDQo+PiBbICA5ODMuOTIz
-NTQxXSAgPyB4ZnNfZGFfcmVhZF9idWYrMHhjZi8weDEyMCBbeGZzXQ0KPj4gWyAgOTgzLjkyMzU2
-MF0gIHhmc190cmFuc19yZWFkX2J1Zl9tYXArMHgxY2YvMHgzNjAgW3hmc10NCj4+IFsgIDk4My45
-MjM1NzVdICA/IHhmc19kYV9yZWFkX2J1ZisweGNmLzB4MTIwIFt4ZnNdDQo+PiBbICA5ODMuOTIz
-NTkwXSAgeGZzX2RhX3JlYWRfYnVmKzB4Y2YvMHgxMjAgW3hmc10NCj4+IFsgIDk4My45MjM2MDZd
-ICB4ZnNfZGEzX25vZGVfcmVhZCsweDFmLzB4NDAgW3hmc10NCj4+IFsgIDk4My45MjM2MjFdICB4
-ZnNfZGEzX25vZGVfbG9va3VwX2ludCsweDY5LzB4NGEwIFt4ZnNdDQo+PiBbICA5ODMuOTIzNjI0
-XSAgPyBrbWVtX2NhY2hlX2FsbG9jKzB4MTJlLzB4MjcwDQo+PiBbICA5ODMuOTIzNjM3XSAgeGZz
-X2F0dHJfbm9kZV9oYXNuYW1lKzB4NmUvMHhhMCBbeGZzXQ0KPj4gWyAgOTgzLjkyMzY1MV0gIHhm
-c19oYXNfYXR0cisweDZlLzB4ZDAgW3hmc10NCj4+IFsgIDk4My45MjM2NjRdICB4ZnNfYXR0cl9z
-ZXQrMHgyNzMvMHgzMjAgW3hmc10NCj4+IFsgIDk4My45MjM2ODNdICB4ZnNfeGF0dHJfc2V0KzB4
-ODcvMHhkMCBbeGZzXQ0KPj4gWyAgOTgzLjkyMzY4Nl0gIF9fdmZzX3JlbW92ZXhhdHRyKzB4NGQv
-MHg2MA0KPj4gWyAgOTgzLjkyMzY4OF0gIF9fdmZzX3JlbW92ZXhhdHRyX2xvY2tlZCsweGFjLzB4
-MTMwDQo+PiBbICA5ODMuOTIzNjg5XSAgdmZzX3JlbW92ZXhhdHRyKzB4NGUvMHhmMA0KPj4gWyAg
-OTgzLjkyMzY5MF0gIHJlbW92ZXhhdHRyKzB4NGQvMHg4MA0KPj4gWyAgOTgzLjkyMzY5M10gID8g
-X19jaGVja19vYmplY3Rfc2l6ZSsweGE4LzB4MTZiDQo+PiBbICA5ODMuOTIzNjk1XSAgPyBzdHJu
-Y3B5X2Zyb21fdXNlcisweDQ3LzB4MWEwDQo+PiBbICA5ODMuOTIzNjk2XSAgPyBnZXRuYW1lX2Zs
-YWdzKzB4NmEvMHgxZTANCj4+IFsgIDk4My45MjM2OTddICA/IF9jb25kX3Jlc2NoZWQrMHgxNS8w
-eDMwDQo+PiBbICA5ODMuOTIzNjk5XSAgPyBfX3NiX3N0YXJ0X3dyaXRlKzB4MWUvMHg3MA0KPj4g
-WyAgOTgzLjkyMzcwMF0gID8gbW50X3dhbnRfd3JpdGUrMHgyOC8weDUwDQo+PiBbICA5ODMuOTIz
-NzAxXSAgcGF0aF9yZW1vdmV4YXR0cisweDliLzB4YjANCj4+IFsgIDk4My45MjM3MDJdICBfX3g2
-NF9zeXNfcmVtb3ZleGF0dHIrMHgxNy8weDIwDQo+PiBbICA5ODMuOTIzNzA0XSAgZG9fc3lzY2Fs
-bF82NCsweDViLzB4MWEwDQo+PiBbICA5ODMuOTIzNzA1XSAgZW50cnlfU1lTQ0FMTF82NF9hZnRl
-cl9od2ZyYW1lKzB4NjUvMHhjYQ0KPj4gWyAgOTgzLjkyMzcwN10gUklQOiAwMDMzOjB4N2YwODBm
-MTBlZTFiDQo+Pg0KPj4gV2hlbiBnZXR4YXR0ciBjYWxscyB4ZnNfYXR0cl9ub2RlX2dldCwgeGZz
-X2RhM19ub2RlX2xvb2t1cF9pbnQgZmFpbHMgaW4NCj4+IHhmc19hdHRyX25vZGVfaGFzbmFtZSBi
-ZWNhdXNlIHdlIGhhdmUgdXNlIGJsb2NrdHJhc2ggdG8gcmFuZG9tIGl0IGluIHhmcy8xMjYuIFNv
-IGl0DQo+PiBmcmVlIHN0YXQgYW5kIHhmc19hdHRyX25vZGVfZ2V0IGRvZXNuJ3QgZG8geGZzX2J1
-Zl90cmFucyByZWxlYXNlIGpvYi4NCj4+DQo+PiBUaGVuIHN1YnNlcXVlbnQgcmVtb3ZleGF0dHIg
-d2lsbCBoYW5nIGJlY2F1c2Ugb2YgaXQuDQo+Pg0KPj4gVGhpcyBidWcgd2FzIGludHJvZHVjZWQg
-Ynkga2VybmVsIGNvbW1pdCAwNzEyMGYxYWJkZmYgKCJ4ZnM6IEFkZCB4ZnNfaGFzX2F0dHIgYW5k
-IHN1YnJvdXRpbmVzIikuDQo+PiBJdCBhZGRzIHhmc19hdHRyX25vZGVfaGFzbmFtZSBoZWxwZXIg
-YW5kIHNhaWQgY2FsbGVyIHdpbGwgYmUgcmVzcG9uc2libGUgZm9yIGZyZWVpbmcgdGhlIHN0YXRl
-DQo+PiBpbiB0aGlzIGNhc2UuIEJ1dCB4ZnNfYXR0cl9ub2RlX2hhc25hbWUgd2lsbCBmcmVlIHN0
-YXQgaXRzZWxmIGluc3RlYWQgb2YgY2FsbGVyIGlmDQo+PiB4ZnNfZGEzX25vZGVfbG9va3VwX2lu
-dCBmYWlscy4NCj4+DQo+PiBGaXggdGhpcyBidWcgYnkgbW92aW5nIHRoZSBzdGVwIG9mIGZyZWUg
-c3RhdGUgaW50byBjYWxsZXIuDQo+Pg0KPj4gRml4ZXM6IDA3MTIwZjFhYmRmZiAoInhmczogQWRk
-IHhmc19oYXNfYXR0ciBhbmQgc3Vicm91dGluZXMiKQ0KPj4gU2lnbmVkLW9mZi1ieTogWWFuZyBY
-dTx4dXlhbmcyMDE4Lmp5QGZ1aml0c3UuY29tPg0KPg0KPiBBaCwgSSBrbmV3IHRoaXMgZnVuY3Rp
-b24gd2FzIGdyb3NzLiAgQmVmb3JlLCB3ZSB3b3VsZCBzZXQgKnN0YXRlcCB0bw0KPiBOVUxMIHVw
-b24gZW50cnkgdG8gdGhlIGZ1bmN0aW9uLCBhbmQgd2Ugd291bGQgcGFzcyB0aGUgbmV3bHkgYWxs
-b2NhdGVkDQo+IGRhIHN0YXRlIGJhY2sgb3V0IGlmICFlcnJvci4gIEhvd2V2ZXIsIHRoZSBjYWxs
-ZXIgaGFzIG5vIGlkZWEgaWYgdGhlDQo+IHJldHVybiB2YWx1ZSBjYW1lIGZyb20gZXJyb3Igb3Ig
-cmV0dmFsLCBvdGhlciB0aGFuIChJIGd1ZXNzKSB0aGUgY29tbWVudA0KPiBpbXBsaWVzIChvciBo
-YWQgYmV0dGVyIGltcGx5KSB0aGF0IEVOT0FUVFIvRUVYSVNUIG9ubHkgY29tZSBmcm9tIHJldHZh
-bC4NCj4NCj4gTm93IHlvdSdyZSBjaGFuZ2luZyBpdCB0byBhbHdheXMgcGFzcyBzdGF0ZSBvdXQg
-dmlhICoqc3RhdGVwIGV2ZW4gaWYgdGhlDQo+IGRhMyBsb29rdXAgcmV0dXJucyBlcnJvciBhbmQg
-d2Ugd2FudCB0byBwYXNzIHRoYXQgb3V0LiAgQnV0IHRoZW4NCj4geGZzX2F0dHJfbm9kZV9hZGRu
-YW1lX2ZpbmRfYXR0ciBkb2VzIHRoaXM6DQo+DQo+IHJldHZhbCA9IHhmc19hdHRyX25vZGVfaGFz
-bmFtZShhcmdzLCZkYWMtPmRhX3N0YXRlKTsNCj4gaWYgKHJldHZhbCAhPSAtRU5PQVRUUiYmICBy
-ZXR2YWwgIT0gLUVFWElTVCkNCj4gCXJldHVybiBlcnJvcjsNCj4NCj4gd2l0aG91dCBldmVyIGNs
-ZWFyaW5nIGRhYy0+ZGFfc3RhdGUuICBXb24ndCB0aGF0IGxlYWsgdGhlIGRhIHN0YXRlPw0KWWVz
-LiBXZSBzaG91bGQgY2xlYXIgZGFjLT5kYV9zdGF0ZSBoZXJlIGJ5IHVzaW5nIGdvdG8gZXJyb3Ig
-aW5zdGVhZCBvZiANCnJldHVybiBlcnJvci4NCj4NCj4gR3JhbnRlZCwgSSB3b25kZXIgaWYgdGhl
-IHhmc19hdHRyX25vZGVfaGFzbmFtZSBjYWxsIGluDQo+IHhmc19hdHRyX25vZGVfcmVtb3ZlbmFt
-ZV9zZXR1cCB3aWxsIGFsc28gbGVhayB0aGUgc3RhdGUgaWYgdGhlIHJldHVybg0KPiB2YWx1ZSBp
-cyBFTk9BVFRSPw0KWWVzLCBpdCB3aWxsIGFsc28gbGVhayB0aGUgc3RhdGUgaWYgZXJyb3IgaXMg
-bm90IEVFWElTVC4gV2lsbCBmaXggdGhlbSANCmluIHYyLg0KPg0KPiBJZiB5b3UgYXNrIG1lIHRo
-ZSB3aG9sZSBFTk9BVFRSL0VFWElTVCB0aGluZyBzdGlsbCBuZWVkcyB0byBiZSByZXBsYWNlZA0K
-PiB3aXRoIGFuIGVudW0geGZzX2F0dHJfbG9va3VwX3Jlc3VsdCBwYXNzZWQgb3V0IHNlcGFyYXRl
-bHkgc28gdGhhdCB3ZQ0KPiBkb24ndCBoYXZlIHRvIHRoaW5rIGFib3V0IHdoaWNoIG1hZ2ljIGVy
-cm5vIHZhbHVlcyBhcmUgbm90IHJlYWxseQ0KPiBlcnJvcnMuDQpBZ3JlZS4NCg0KQmVzdCBSZWdh
-cmRzDQpZYW5nIFh1DQo+DQo+IC0tRA0KPg0KPj4gLS0tDQo+PiAgIGZzL3hmcy9saWJ4ZnMveGZz
-X2F0dHIuYyB8IDEzICsrKysrLS0tLS0tLS0NCj4+ICAgMSBmaWxlIGNoYW5nZWQsIDUgaW5zZXJ0
-aW9ucygrKSwgOCBkZWxldGlvbnMoLSkNCj4+DQo+PiBkaWZmIC0tZ2l0IGEvZnMveGZzL2xpYnhm
-cy94ZnNfYXR0ci5jIGIvZnMveGZzL2xpYnhmcy94ZnNfYXR0ci5jDQo+PiBpbmRleCBmYmM5ZDgx
-Njg4MmMuLjZhZDUwYTc2ZmQ4ZCAxMDA2NDQNCj4+IC0tLSBhL2ZzL3hmcy9saWJ4ZnMveGZzX2F0
-dHIuYw0KPj4gKysrIGIvZnMveGZzL2xpYnhmcy94ZnNfYXR0ci5jDQo+PiBAQCAtMTA3NywyMSAr
-MTA3NywxOCBAQCB4ZnNfYXR0cl9ub2RlX2hhc25hbWUoDQo+Pg0KPj4gICAJc3RhdGUgPSB4ZnNf
-ZGFfc3RhdGVfYWxsb2MoYXJncyk7DQo+PiAgIAlpZiAoc3RhdGVwICE9IE5VTEwpDQo+PiAtCQkq
-c3RhdGVwID0gTlVMTDsNCj4+ICsJCSpzdGF0ZXAgPSBzdGF0ZTsNCj4+DQo+PiAgIAkvKg0KPj4g
-ICAJICogU2VhcmNoIHRvIHNlZSBpZiBuYW1lIGV4aXN0cywgYW5kIGdldCBiYWNrIGEgcG9pbnRl
-ciB0byBpdC4NCj4+ICAgCSAqLw0KPj4gICAJZXJyb3IgPSB4ZnNfZGEzX25vZGVfbG9va3VwX2lu
-dChzdGF0ZSwmcmV0dmFsKTsNCj4+IC0JaWYgKGVycm9yKSB7DQo+PiAtCQl4ZnNfZGFfc3RhdGVf
-ZnJlZShzdGF0ZSk7DQo+PiAtCQlyZXR1cm4gZXJyb3I7DQo+PiAtCX0NCj4+ICsJaWYgKGVycm9y
-KQ0KPj4gKwkJcmV0dmFsID0gZXJyb3I7DQo+Pg0KPj4gLQlpZiAoc3RhdGVwICE9IE5VTEwpDQo+
-PiAtCQkqc3RhdGVwID0gc3RhdGU7DQo+PiAtCWVsc2UNCj4+ICsJaWYgKCFzdGF0ZXApDQo+PiAg
-IAkJeGZzX2RhX3N0YXRlX2ZyZWUoc3RhdGUpOw0KPj4gKw0KPj4gICAJcmV0dXJuIHJldHZhbDsN
-Cj4+ICAgfQ0KPj4NCj4+IC0tDQo+PiAyLjIzLjANCj4+DQo=
+When testing xfstests xfs/126 on lastest upstream kernel, it will hang on some machine.
+Adding a getxattr operation after xattr corrupted, I can reproduce it 100%.
+
+The deadlock as below:
+[983.923403] task:setfattr        state:D stack:    0 pid:17639 ppid: 14687 flags:0x00000080
+[  983.923405] Call Trace:
+[  983.923410]  __schedule+0x2c4/0x700
+[  983.923412]  schedule+0x37/0xa0
+[  983.923414]  schedule_timeout+0x274/0x300
+[  983.923416]  __down+0x9b/0xf0
+[  983.923451]  ? xfs_buf_find.isra.29+0x3c8/0x5f0 [xfs]
+[  983.923453]  down+0x3b/0x50
+[  983.923471]  xfs_buf_lock+0x33/0xf0 [xfs]
+[  983.923490]  xfs_buf_find.isra.29+0x3c8/0x5f0 [xfs]
+[  983.923508]  xfs_buf_get_map+0x4c/0x320 [xfs]
+[  983.923525]  xfs_buf_read_map+0x53/0x310 [xfs]
+[  983.923541]  ? xfs_da_read_buf+0xcf/0x120 [xfs]
+[  983.923560]  xfs_trans_read_buf_map+0x1cf/0x360 [xfs]
+[  983.923575]  ? xfs_da_read_buf+0xcf/0x120 [xfs]
+[  983.923590]  xfs_da_read_buf+0xcf/0x120 [xfs]
+[  983.923606]  xfs_da3_node_read+0x1f/0x40 [xfs]
+[  983.923621]  xfs_da3_node_lookup_int+0x69/0x4a0 [xfs]
+[  983.923624]  ? kmem_cache_alloc+0x12e/0x270
+[  983.923637]  xfs_attr_node_hasname+0x6e/0xa0 [xfs]
+[  983.923651]  xfs_has_attr+0x6e/0xd0 [xfs]
+[  983.923664]  xfs_attr_set+0x273/0x320 [xfs]
+[  983.923683]  xfs_xattr_set+0x87/0xd0 [xfs]
+[  983.923686]  __vfs_removexattr+0x4d/0x60
+[  983.923688]  __vfs_removexattr_locked+0xac/0x130
+[  983.923689]  vfs_removexattr+0x4e/0xf0
+[  983.923690]  removexattr+0x4d/0x80
+[  983.923693]  ? __check_object_size+0xa8/0x16b
+[  983.923695]  ? strncpy_from_user+0x47/0x1a0
+[  983.923696]  ? getname_flags+0x6a/0x1e0
+[  983.923697]  ? _cond_resched+0x15/0x30
+[  983.923699]  ? __sb_start_write+0x1e/0x70
+[  983.923700]  ? mnt_want_write+0x28/0x50
+[  983.923701]  path_removexattr+0x9b/0xb0
+[  983.923702]  __x64_sys_removexattr+0x17/0x20
+[  983.923704]  do_syscall_64+0x5b/0x1a0
+[  983.923705]  entry_SYSCALL_64_after_hwframe+0x65/0xca
+[  983.923707] RIP: 0033:0x7f080f10ee1b
+
+When getxattr calls xfs_attr_node_get function, xfs_da3_node_lookup_int fails with EFSCORRUPTED in
+xfs_attr_node_hasname because we have use blocktrash to random it in xfs/126. So it
+free state in internal and xfs_attr_node_get doesn't do xfs_buf_trans release job.
+
+Then subsequent removexattr will hang because of it.
+
+This bug was introduced by kernel commit 07120f1abdff ("xfs: Add xfs_has_attr and subroutines").
+It adds xfs_attr_node_hasname helper and said caller will be responsible for freeing the state
+in this case. But xfs_attr_node_hasname will free state itself instead of caller if
+xfs_da3_node_lookup_int fails.
+
+Fix this bug by moving the step of free state into caller.
+
+Also, use "goto error/out" instead of returning error directly in xfs_attr_node_addname_find_attr and
+xfs_attr_node_removename_setup function because we should free state ourselves.
+
+Fixes: 07120f1abdff ("xfs: Add xfs_has_attr and subroutines")
+Signed-off-by: Yang Xu <xuyang2018.jy@fujitsu.com>
+---
+ fs/xfs/libxfs/xfs_attr.c | 17 +++++++----------
+ 1 file changed, 7 insertions(+), 10 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index fbc9d816882c..23523b802539 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -1077,21 +1077,18 @@ xfs_attr_node_hasname(
+ 
+ 	state = xfs_da_state_alloc(args);
+ 	if (statep != NULL)
+-		*statep = NULL;
++		*statep = state;
+ 
+ 	/*
+ 	 * Search to see if name exists, and get back a pointer to it.
+ 	 */
+ 	error = xfs_da3_node_lookup_int(state, &retval);
+-	if (error) {
+-		xfs_da_state_free(state);
+-		return error;
+-	}
++	if (error)
++		retval = error;
+ 
+-	if (statep != NULL)
+-		*statep = state;
+-	else
++	if (!statep)
+ 		xfs_da_state_free(state);
++
+ 	return retval;
+ }
+ 
+@@ -1112,7 +1109,7 @@ xfs_attr_node_addname_find_attr(
+ 	 */
+ 	retval = xfs_attr_node_hasname(args, &dac->da_state);
+ 	if (retval != -ENOATTR && retval != -EEXIST)
+-		return retval;
++		goto error;
+ 
+ 	if (retval == -ENOATTR && (args->attr_flags & XATTR_REPLACE))
+ 		goto error;
+@@ -1337,7 +1334,7 @@ int xfs_attr_node_removename_setup(
+ 
+ 	error = xfs_attr_node_hasname(args, state);
+ 	if (error != -EEXIST)
+-		return error;
++		goto out;
+ 	error = 0;
+ 
+ 	ASSERT((*state)->path.blk[(*state)->path.active - 1].bp != NULL);
+-- 
+2.23.0
+
