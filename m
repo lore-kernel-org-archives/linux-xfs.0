@@ -2,115 +2,78 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13C04C433FE
-	for <linux-xfs@archiver.kernel.org>; Mon,  1 Nov 2021 16:28:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B48C5C433EF
+	for <linux-xfs@archiver.kernel.org>; Mon,  1 Nov 2021 19:40:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EFF9D610D2
-	for <linux-xfs@archiver.kernel.org>; Mon,  1 Nov 2021 16:28:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8FDFB61053
+	for <linux-xfs@archiver.kernel.org>; Mon,  1 Nov 2021 19:40:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232627AbhKAQbQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 1 Nov 2021 12:31:16 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:46304 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232588AbhKAQbQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Nov 2021 12:31:16 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1635784122;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=vSSeiEsgy4ZRAwPPYMh123Zf4LHs8XHr2NNVii6Qq7o=;
-        b=AvCPbg1FTPfLMjWc7ypl3iG98diUCbhNwGIK33qkzkphpEsehtLzuq/IYpiYpQgrCy2L7+
-        c3v1KDixloqG3Ng3ccyy3cjQGIe8vA5LCddSAnMrItTSCPBgIsoibsijzZcddq7PkRalMS
-        2V2TvGAHoAUFgWvumnraXAfhel7N1zI=
-Received: from mail-qk1-f198.google.com (mail-qk1-f198.google.com
- [209.85.222.198]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-35-tEquYEKgPfWzmivl0q9_sg-1; Mon, 01 Nov 2021 12:28:41 -0400
-X-MC-Unique: tEquYEKgPfWzmivl0q9_sg-1
-Received: by mail-qk1-f198.google.com with SMTP id g1-20020a05620a108100b00462bc91f9ffso10187631qkk.12
-        for <linux-xfs@vger.kernel.org>; Mon, 01 Nov 2021 09:28:41 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=vSSeiEsgy4ZRAwPPYMh123Zf4LHs8XHr2NNVii6Qq7o=;
-        b=6fJPGS052PzhEwdp42BCc+EIFQnhd89jEg3KRbOwL8BbnJPIXOCAagQKj/Ach8/UpV
-         ucua8KcGULi/2emfEy2jPQicMkxWdSrZukksXZslUmj30liGKizhpILcA4ym6hrrKOSI
-         PLxT+qgVmatUqUi9w96EfQSQiiHdXcEE/Sgupn6GG4fsjNIAQ/+y7a1T8CZ6bog5eok9
-         WOO9RoLB94ViyGG+H/wIYk4UL2EdqiFBeuR0FDqLxIy+Qzu9egKTRX5ux5MzVaUPBMCA
-         jukvafTQdGyUDF6zXBNDzh2bzEgo/zXdqEYHBBQIVoWCbtGFxyQ3iDHthFhcfH6lnW3j
-         JCXg==
-X-Gm-Message-State: AOAM531MfFWgLgsKGL+ECT3Gj8H5R6KKWIQjSg5kDVbVhD1d+f+G6Qkl
-        CEn3NQ6QRr36MhQ0wzz9IJ4ZNzPENC0DZXFY7OG0TNLK0Sz9UyuLlzkzxT5zxNFvG7QxM8HPdip
-        VHpzrL7B7K9HggkdyY7M=
-X-Received: by 2002:a05:6214:e4a:: with SMTP id o10mr29863858qvc.58.1635784120279;
-        Mon, 01 Nov 2021 09:28:40 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwnnToYfIdlwewHO/8stJwOwIrIwZDJizj1Vl7BOinzg8bNzbcfCyJ9R9K4APUV9a9jX59VOw==
-X-Received: by 2002:a05:6214:e4a:: with SMTP id o10mr29863844qvc.58.1635784120140;
-        Mon, 01 Nov 2021 09:28:40 -0700 (PDT)
-Received: from localhost (pool-68-160-176-52.bstnma.fios.verizon.net. [68.160.176.52])
-        by smtp.gmail.com with ESMTPSA id u185sm10250817qkd.48.2021.11.01.09.28.39
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 01 Nov 2021 09:28:39 -0700 (PDT)
-Date:   Mon, 1 Nov 2021 12:28:38 -0400
-From:   Mike Snitzer <snitzer@redhat.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Dan Williams <dan.j.williams@intel.com>,
-        Ira Weiny <ira.weiny@intel.com>, dm-devel@redhat.com,
-        linux-xfs@vger.kernel.org, nvdimm@lists.linux.dev,
-        linux-s390@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        virtualization@lists.linux-foundation.org
-Subject: Re: [PATCH 03/11] dax: simplify the dax_device <-> gendisk
- association
-Message-ID: <YYAVtv6kiqVHDjQH@redhat.com>
-References: <20211018044054.1779424-1-hch@lst.de>
- <20211018044054.1779424-4-hch@lst.de>
+        id S229610AbhKATna (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 1 Nov 2021 15:43:30 -0400
+Received: from ishtar.tlinx.org ([173.164.175.65]:39460 "EHLO
+        Ishtar.sc.tlinx.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229511AbhKATna (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Nov 2021 15:43:30 -0400
+Received: from [192.168.3.12] (Athenae [192.168.3.12])
+        by Ishtar.sc.tlinx.org (8.14.7/8.14.4/SuSE Linux 0.8) with ESMTP id 1A1Jerqw042854;
+        Mon, 1 Nov 2021 12:40:55 -0700
+Message-ID: <61804254.3070001@tlinx.org>
+Date:   Mon, 01 Nov 2021 12:39:00 -0700
+From:   L A Walsh <xfs@tlinx.org>
+User-Agent: Thunderbird 2.0.0.24 (Windows/20100228)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20211018044054.1779424-4-hch@lst.de>
+To:     linux-xfs <linux-xfs@vger.kernel.org>
+CC:     Dave Chinner <david@fromorbit.com>
+Subject: cause of xfsdump msg: root ino 192 differs from mount dir ino 256
+References: <617721E0.5000009@tlinx.org> <20211026004814.GA5111@dread.disaster.area>
+In-Reply-To: <20211026004814.GA5111@dread.disaster.area>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Oct 18 2021 at 12:40P -0400,
-Christoph Hellwig <hch@lst.de> wrote:
 
-> Replace the dax_host_hash with an xarray indexed by the pointer value
-> of the gendisk, and require explicitl calls from the block drivers that
-> want to associate their gendisk with a dax_device.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+When I xfsdump my /home partition, I see the above diagnostic
+where it  lists "bind mount?" might be involved, but as far as
+I can see, that's not the case.
 
-...
+grepping for '/home\s' on output of mount:
 
-> diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-> index 79737aee516b1..a0a4703620650 100644
-> --- a/drivers/md/dm.c
-> +++ b/drivers/md/dm.c
-> @@ -1683,6 +1683,7 @@ static void cleanup_mapped_device(struct mapped_device *md)
->  	bioset_exit(&md->io_bs);
->  
->  	if (md->dax_dev) {
-> +		dax_remove_host(md->disk);
->  		kill_dax(md->dax_dev);
->  		put_dax(md->dax_dev);
->  		md->dax_dev = NULL;
-> @@ -1784,10 +1785,11 @@ static struct mapped_device *alloc_dev(int minor)
->  	sprintf(md->disk->disk_name, "dm-%d", minor);
->  
->  	if (IS_ENABLED(CONFIG_FS_DAX)) {
-> -		md->dax_dev = alloc_dax(md, md->disk->disk_name,
-> -					&dm_dax_ops, 0);
-> +		md->dax_dev = alloc_dax(md, &dm_dax_ops, 0);
->  		if (IS_ERR(md->dax_dev))
->  			goto bad;
-> +		if (dax_add_host(md->dax_dev, md->disk))
-> +			goto bad;
->  	}
->  
->  	format_dev_t(md->name, MKDEV(_major, minor));
+/bin/mount|grep -P '/home\s'
 
-Acked-by: Mike Snitzer <snitzer@redhat.com>
+shows only 1 entry -- nothing mounted on top of it:
+
+/dev/mapper/Space-Home2 on /home type xfs (...)
+
+I have bind-mounts of things like
+/home/opt  on /opt, but that shouldn't affect the root node,
+as far as I know.
+
+So what would cause the root node to differ from the mountdir
+ino?
+
+I try mounting the same filesystem someplace new:
+
+# df .
+Filesystem        Size  Used Avail Use% Mounted on
+/dev/Space/Home2  2.0T  1.5T  569G  73% /home
+
+mkdir /home2
+Ishtar:home# mount /dev/Space/Home2 /home2
+
+Ishtar:home# ll -di /home /home2
+256 drwxr-xr-x 40 4096 Nov  1 10:23 /home/
+256 drwxr-xr-x 40 4096 Nov  1 10:23 /home2/
+
+Shows 256 as the root inode.  So why is xfsdump claiming
+192 is root inode?
+
+I used xfs_db and 192 is allocated to a normal file, while
+256 displays nothing for the filename.
+
+How should I further debug this?
+
+
+
 
