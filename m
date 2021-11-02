@@ -2,115 +2,122 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FAE7C433F5
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Nov 2021 04:47:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC060C433FE
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Nov 2021 06:19:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EADD260F36
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Nov 2021 04:47:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A302660F58
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Nov 2021 06:19:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229491AbhKBEuC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 2 Nov 2021 00:50:02 -0400
-Received: from ishtar.tlinx.org ([173.164.175.65]:39468 "EHLO
-        Ishtar.sc.tlinx.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229486AbhKBEuB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Nov 2021 00:50:01 -0400
-Received: from [192.168.3.12] (Athenae [192.168.3.12])
-        by Ishtar.sc.tlinx.org (8.14.7/8.14.4/SuSE Linux 0.8) with ESMTP id 1A24lNkp095197;
-        Mon, 1 Nov 2021 21:47:26 -0700
-Message-ID: <6180C25E.7030901@tlinx.org>
-Date:   Mon, 01 Nov 2021 21:45:18 -0700
-From:   L A Walsh <xfs@tlinx.org>
-User-Agent: Thunderbird 2.0.0.24 (Windows/20100228)
+        id S229571AbhKBGV7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 2 Nov 2021 02:21:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42942 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229497AbhKBGV7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Nov 2021 02:21:59 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2654C061714;
+        Mon,  1 Nov 2021 23:19:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=KdIhbeTBoLRUYR2IAPFmlM4VoN/TtUZV3//iIpzahwM=; b=gEliM4LypGip4U+QMQe7n5WPg+
+        8eF6rmeTZnEHXk8zsn5+LTsHo0ig9kZOyN4e+FFEa6YZuPTo4iSXZQcldSvGmvKpllSlorZqwbgkT
+        HKffEXvbAOcbwfsYA2+uU33ejwxMPoLiSRNY+d4hmrEY3vg4fS1/7E6nKilyDH/PiQvr7n9mSYnNs
+        jikQKAvqUFNTxA184hcFBlOilNj0XyLf3a0Uy2RsW8ZONVAYEDmx+GxVHvRm0MqozQH3lYB1ZPVt5
+        LxffLGlx8Gc5jttGyxDUerEAc3tqqv3LLUkq8lU5Hg3zMTTpnUOVYjoNmero8H6QeZnp+UkWZVzeg
+        THCpn1ug==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1mhn8K-000eBZ-KX; Tue, 02 Nov 2021 06:18:56 +0000
+Date:   Mon, 1 Nov 2021 23:18:56 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Jane Chu <jane.chu@oracle.com>,
+        "david@fromorbit.com" <david@fromorbit.com>,
+        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
+        "vishal.l.verma@intel.com" <vishal.l.verma@intel.com>,
+        "dave.jiang@intel.com" <dave.jiang@intel.com>,
+        "agk@redhat.com" <agk@redhat.com>,
+        "snitzer@redhat.com" <snitzer@redhat.com>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "ira.weiny@intel.com" <ira.weiny@intel.com>,
+        "willy@infradead.org" <willy@infradead.org>,
+        "vgoyal@redhat.com" <vgoyal@redhat.com>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "nvdimm@lists.linux.dev" <nvdimm@lists.linux.dev>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: [dm-devel] [PATCH 0/6] dax poison recovery with
+ RWF_RECOVERY_DATA flag
+Message-ID: <YYDYUCCiEPXhZEw0@infradead.org>
+References: <20211021001059.438843-1-jane.chu@oracle.com>
+ <YXFPfEGjoUaajjL4@infradead.org>
+ <e89a2b17-3f03-a43e-e0b9-5d2693c3b089@oracle.com>
+ <YXJN4s1HC/Y+KKg1@infradead.org>
+ <2102a2e6-c543-2557-28a2-8b0bdc470855@oracle.com>
+ <YXj2lwrxRxHdr4hb@infradead.org>
+ <20211028002451.GB2237511@magnolia>
 MIME-Version: 1.0
-To:     Dave Chinner <david@fromorbit.com>
-CC:     linux-xfs <linux-xfs@vger.kernel.org>
-Subject: Re: cause of xfsdump msg: root ino 192 differs from mount dir ino
- 256
-References: <617721E0.5000009@tlinx.org> <20211026004814.GA5111@dread.disaster.area> <617F0A6D.6060506@tlinx.org> <61804CD4.8070103@tlinx.org> <20211101211244.GC449541@dread.disaster.area>
-In-Reply-To: <20211101211244.GC449541@dread.disaster.area>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20211028002451.GB2237511@magnolia>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The restore finished, the beginning is:
-xfsrestore: using file dump (drive_simple) strategy
-xfsrestore: version 3.1.8 (dump format 3.0)
-xfsrestore: searching media for dump
-xfsrestore: examining media file 0
-xfsrestore: dump description: 
-xfsrestore: hostname: Ishtar
-xfsrestore: mount point: /home
-xfsrestore: volume: /dev/Space/Home2
-xfsrestore: session time: Mon Nov  1 07:37:47 2021
-xfsrestore: level: 0
-xfsrestore: session label: "home"
-xfsrestore: media label: ""
-xfsrestore: file system id: 5f41265a-3114-fb3c-2020-082214061852
-xfsrestore: session id: 586026b8-5947-4b95-a213-1532ba25f503
-xfsrestore: media id: 5fb4cd58-5cc9-4678-9829-a6539588a170
-xfsrestore: searching media for directory dump
-xfsrestore: reading directories
-xfsrestore: status at 18:21:14: 1289405/1338497 directories reconstructed, 96.3% complete, 13840475 directory entries processed, 60 seconds elapsed
-xfsrestore: 1338497 directories and 14357961 entries processed
-xfsrestore: directory post-processing
-xfsrestore: restoring non-directory files
-xfsrestore: NOTE: ino 259 salvaging file, placing in orphanage/256.0/root+usr+var_copies/20210316/usr/lib/mono/gac/System.Reactive.Runtime.Remoting/2.2.0.0__31bf3856ad364e35/System.Reactive.Runtime.Remoting.dll
-...
-there are a bunch of lines like that, 'wc' on the file shows:
+On Wed, Oct 27, 2021 at 05:24:51PM -0700, Darrick J. Wong wrote:
+> ...so would you happen to know if anyone's working on solving this
+> problem for us by putting the memory controller in charge of dealing
+> with media errors?
 
-> wc /tmp/xfsrestore.log 
-  5320822  50100130 821050625 /tmp/xfsrestore.log
+The only one who could know is Intel..
 
-Then the end of the file looks like:
+> The trouble is, we really /do/ want to be able to (re)write the failed
+> area, and we probably want to try to read whatever we can.  Those are
+> reads and writes, not {pre,f}allocation activities.  This is where Dave
+> and I arrived at a month ago.
+> 
+> Unless you'd be ok with a second IO path for recovery where we're
+> allowed to be slow?  That would probably have the same user interface
+> flag, just a different path into the pmem driver.
 
-xfsrestore: NOTE: ino 8485912415 salvaging file, placing in orphanage/256.0/tools/samba/samba-4.14.2/third_party/resolv_wrapper/wscript
-xfsrestore: WARNING: unable to rmdir /nhome/./orphanage: Directory not empty
-xfsrestore: restore complete: 7643 seconds elapsed
-xfsrestore: Restore Summary:
-xfsrestore:   stream 0 /backups/ishtar/home/home-211101-0-0737.dump OK (success)
-xfsrestore: Restore Status: SUCCESS
+Which is fine with me.  If you look at the API here we do have the
+RWF_ API, which them maps to the IOMAP API, which maps to the DAX_
+API which then gets special casing over three methods.
 
-The lines in between beginning and end appear to be 
-an incrementing inode & file list of the disk as it was
-put into the orphanage
+And while Pavel pointed out that he and Jens are now optimizing for
+single branches like this.  I think this actually is silly and it is
+not my point.
 
-The restored file system appears to slightly larger, but
-that's likely because I cleared off some garbage from the
-current home.
+The point is that the DAX in-kernel API is a mess, and before we make
+it even worse we need to sort it first.  What is directly relevant
+here is that the copy_from_iter and copy_to_iter APIs do not make
+sense.  Most of the DAX API is based around getting a memory mapping
+using ->direct_access, it is just the read/write path which is a slow
+path that actually uses this.  I have a very WIP patch series to try
+to sort this out here:
 
-Ah, the xfsdump just finished:
+http://git.infradead.org/users/hch/misc.git/shortlog/refs/heads/dax-devirtualize
 
->/root/bin/dump1fs#160(Xfsdump)> xfsdump -b 268435456 -l 0 -L home -e - /home
-xfsdump: using file dump (drive_simple) strategy
-xfsdump: version 3.1.8 (dump format 3.0)
-xfsdump: level 0 dump of Ishtar:/home
-xfsdump: dump date: Mon Nov  1 18:15:07 2021
-xfsdump: session id: 8f996280-21df-42c5-b0a0-3f1584ae1f54
-xfsdump: session label: "home"
-xfsdump: NOTE: root ino 192 differs from mount dir ino 256, bind mount?
-xfsdump: ino map phase 1: constructing initial dump list
-xfsdump: ino map phase 2: skipping (no pruning necessary)
-xfsdump: ino map phase 3: skipping (only one dump stream)
-xfsdump: ino map construction complete
-xfsdump: estimated dump size: 1587242183552 bytes
-xfsdump: creating dump session media file 0 (media 0, file 0)
-xfsdump: dumping ino map
-xfsdump: dumping directories
-xfsdump: dumping non-directory files
-xfsdump: ending media file
-xfsdump: media file size 1577602668640 bytes
-xfsdump: dump size (non-dir files) : 1574177966864 bytes
-xfsdump: dump complete: 12536 seconds elapsed
-xfsdump: Dump Status: SUCCESS
+But back to this series.  The basic DAX model is that the callers gets a
+memory mapping an just works on that, maybe calling a sync after a write
+in a few cases.  So any kind of recovery really needs to be able to
+work with that model as going forward the copy_to/from_iter path will
+be used less and less.  i.e. file systems can and should use
+direct_access directly instead of using the block layer implementation
+in the pmem driver.  As an example the dm-writecache driver, the pending
+bcache nvdimm support and the (horribly and out of tree) nova file systems
+won't even use this path.  We need to find a way to support recovery
+for them.  And overloading it over the read/write path which is not
+the main path for DAX, but the absolutely fast path for 99% of the
+kernel users is a horrible idea.
 
+So how can we work around the horrible nvdimm design for data recovery
+in a way that:
 
-Except for the 5.3 million lines between the start+end, the xfsrestore output is above.
+   a) actually works with the intended direct memory map use case
+   b) doesn't really affect the normal kernel too much
 
-I can't imagine why you'd want the 5.3 million lines of
-file listings, but if you do, I'll need to upload it somewhere.
-
-
-
-
+?
