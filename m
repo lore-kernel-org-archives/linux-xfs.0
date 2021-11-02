@@ -2,63 +2,65 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1684C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Nov 2021 16:19:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0274CC433F5
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Nov 2021 16:36:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B9C0C61105
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Nov 2021 16:19:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DCEAD60D42
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Nov 2021 16:36:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231526AbhKBQSt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 2 Nov 2021 12:18:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35522 "EHLO
+        id S234987AbhKBQi4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 2 Nov 2021 12:38:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42104 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234709AbhKBQG6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Nov 2021 12:06:58 -0400
-Received: from mail-pg1-x52e.google.com (mail-pg1-x52e.google.com [IPv6:2607:f8b0:4864:20::52e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1BFAC061203
-        for <linux-xfs@vger.kernel.org>; Tue,  2 Nov 2021 09:04:06 -0700 (PDT)
-Received: by mail-pg1-x52e.google.com with SMTP id g184so20532039pgc.6
-        for <linux-xfs@vger.kernel.org>; Tue, 02 Nov 2021 09:04:06 -0700 (PDT)
+        with ESMTP id S235112AbhKBQir (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Nov 2021 12:38:47 -0400
+Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B5B72C061A0B
+        for <linux-xfs@vger.kernel.org>; Tue,  2 Nov 2021 09:12:59 -0700 (PDT)
+Received: by mail-pl1-x62c.google.com with SMTP id u11so4762542plf.3
+        for <linux-xfs@vger.kernel.org>; Tue, 02 Nov 2021 09:12:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=intel-com.20210112.gappssmtp.com; s=20210112;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=pqUtMw42srMAJfM2b3lzp/b+ILplHJlRcpIaRS/3TQM=;
-        b=M1Jy4rAev2XNNrOaCWRPKKonIM70Nc4Pm5SPQkebmdl++tjn6a6C7m3mnLdNZFp0pr
-         Dw88LtEJTtN1PUO++FTkdtdNtjTNQDnlwv2yLNTeMXrjP9ZyYAKGTMcL8r9RTRPBw3il
-         4C97/+Sa7C2wkCTq6baD8je9LdaO98oiGYYt7spVrtyDRzBtQpt9dbnzUI85k/5rztRv
-         YJjx1bNAw3Odr4BoA8nGSa8XDcp5bV9j8cNbaFaDoC0vNAdSZH4jYZcFSEHleUzrSlpk
-         yxIbYa611I/q0MBtSK4EowjkBNpDUpLqBOxKzNjkyNInHvPRJou4mqsFW/Ul7RBz7G+C
-         9qNQ==
+        bh=pIALiqswCfSwk+/MEarCA9yLgBnLpJVqWRaUmM6jp5w=;
+        b=YDMPEv8WJX5C5t8J+KvkqjymPpcW6bISPU13EEZn9i3ppfDrXqCBOkIiZ+qG6d/0W9
+         oMQLSczBNDPwvPGAeBCQCFCpFym+2LBzFX/2J1emFCX8/PiT0sSrN/EKaU5MKnn4a0Kp
+         2TPNyYUqhhBEvMdCFQyeipttIkdwn8Tm3bBSASjQz/q8pbYMW+PXgXDYQ9zDnbsNtNKj
+         tEA+auAFo01awfsN/txIuLZzv2x3qAeCbidvO2qL7Rnrtfwe8Rz+IyyDyOLljZkYawzP
+         JPuyPodJwGTYZZ1N8kC66Kge83QF/+vX/h8zKe7PGTocddZq4FaAT4hFeKM3Pxy/O7TW
+         pClQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=pqUtMw42srMAJfM2b3lzp/b+ILplHJlRcpIaRS/3TQM=;
-        b=G9pxSpenAJIqkQcOAsw75VJfSaaPL1LjFVH63Bvm6f7PuKWSua5gkZ6wyV+mznad7h
-         I6nxnNxj5PrC5LmsPqLlMmrzCMRv4uGQhcAqg6KjYfpVq1AcLMXLA599EEGFlpY7TEOo
-         S54r6xugBz+u0xD9s73QKRYjwlmX3iVYjifnJXtjTfumdBKOhywwjRLrRzxKciGpsqVf
-         R8nQPTGxnTZjzmUQvI7U+KSiXCScEmquaLpOPPIYmdJnAKnX8+CshldMf6QQUSebVcH9
-         c4eWBo11YAt468adjBOWIunQqTBhLl/G0cOXBRZKp1o28seVxvCj5BUkB8Zs3kgRQo4u
-         fyQw==
-X-Gm-Message-State: AOAM532qqUVXFo4tAeg6MK+P3c99TaAwXCBi74CF/xSbWFJsHFFF3L9W
-        g0uArNtUjipoQoSDcXcFnXj610Lq6aem+K79T9oWlw==
-X-Google-Smtp-Source: ABdhPJyi2jXIzQpJmrRalOBu2yRBUoqURsVK2whse/fQ0ZQUdF57+LmGNFNbptM0HlteOtS8dkMwnbU4y4A7thJeMNM=
-X-Received: by 2002:a63:6302:: with SMTP id x2mr11074410pgb.5.1635869046166;
- Tue, 02 Nov 2021 09:04:06 -0700 (PDT)
+        bh=pIALiqswCfSwk+/MEarCA9yLgBnLpJVqWRaUmM6jp5w=;
+        b=4nMAfXFlccrBtIoR8bBgRP3xZGqOWEiyzK4ly67zSM7TknHbIe4IJyWRCe7L9qffII
+         L1WA9N6qz1X05EPmy/K9wIoKqUS4fP6jbta0nV6i7OXkHwEf/QxynzYgB7WEg6US2Wx4
+         6CIBrzTZVekqTGBqgQxto5dTXflabL6SubOyBTm7xUq6KPmks1RD3FSYuMiYWvPMZV3v
+         P+5TEIJnCPAip/3/VuxPMOOn3ddznp3IrPbcdRki76/+meulOeYrsHK8972IUUmAD9HT
+         WIuBAHjOB+RAZCoRh+IL8nFFOF7MnuEF1ORRm8CzKefjtG/1/xXNkurkD+MqhJatYFeK
+         jc+Q==
+X-Gm-Message-State: AOAM531WC3+JTURs938jJwn+Aon4ragvP7BtQ6JuxEY//Jp67RjZvyIf
+        C+SyBPxfZMclsenicmRrYur/v4Y0JYkKLCcFONeNVw==
+X-Google-Smtp-Source: ABdhPJyUerhRmPa3p6Y+5F6zaaUU9FmrqYmMRvdoPUtNZXczvAj1BoJWZcyxx8lp/uHInRyxjBoZleDZuAuNEyTgQ/Q=
+X-Received: by 2002:a17:902:ab50:b0:13f:4c70:9322 with SMTP id
+ ij16-20020a170902ab5000b0013f4c709322mr32351492plb.89.1635869579139; Tue, 02
+ Nov 2021 09:12:59 -0700 (PDT)
 MIME-Version: 1.0
 References: <20211021001059.438843-1-jane.chu@oracle.com> <YXFPfEGjoUaajjL4@infradead.org>
  <e89a2b17-3f03-a43e-e0b9-5d2693c3b089@oracle.com> <YXJN4s1HC/Y+KKg1@infradead.org>
  <2102a2e6-c543-2557-28a2-8b0bdc470855@oracle.com> <YXj2lwrxRxHdr4hb@infradead.org>
-In-Reply-To: <YXj2lwrxRxHdr4hb@infradead.org>
+ <20211028002451.GB2237511@magnolia>
+In-Reply-To: <20211028002451.GB2237511@magnolia>
 From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Tue, 2 Nov 2021 09:03:55 -0700
-Message-ID: <CAPcyv4hK18DetEf9+NcDqM5y07Vp-=nhysHJ3JSnKbS-ET2ppw@mail.gmail.com>
+Date:   Tue, 2 Nov 2021 09:12:48 -0700
+Message-ID: <CAPcyv4ge8ebFn2tBtc9_ThEYXjCczLW4H8NYrOJKbGF_Y-Wg5w@mail.gmail.com>
 Subject: Re: [dm-devel] [PATCH 0/6] dax poison recovery with RWF_RECOVERY_DATA flag
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Jane Chu <jane.chu@oracle.com>,
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Jane Chu <jane.chu@oracle.com>,
         "david@fromorbit.com" <david@fromorbit.com>,
-        "djwong@kernel.org" <djwong@kernel.org>,
         "vishal.l.verma@intel.com" <vishal.l.verma@intel.com>,
         "dave.jiang@intel.com" <dave.jiang@intel.com>,
         "agk@redhat.com" <agk@redhat.com>,
@@ -76,37 +78,67 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 26, 2021 at 11:50 PM Christoph Hellwig <hch@infradead.org> wrote:
+On Wed, Oct 27, 2021 at 5:25 PM Darrick J. Wong <djwong@kernel.org> wrote:
 >
-> On Fri, Oct 22, 2021 at 08:52:55PM +0000, Jane Chu wrote:
-> > Thanks - I try to be honest.  As far as I can tell, the argument
-> > about the flag is a philosophical argument between two views.
-> > One view assumes design based on perfect hardware, and media error
-> > belongs to the category of brokenness. Another view sees media
-> > error as a build-in hardware component and make design to include
-> > dealing with such errors.
+> On Tue, Oct 26, 2021 at 11:49:59PM -0700, Christoph Hellwig wrote:
+> > On Fri, Oct 22, 2021 at 08:52:55PM +0000, Jane Chu wrote:
+> > > Thanks - I try to be honest.  As far as I can tell, the argument
+> > > about the flag is a philosophical argument between two views.
+> > > One view assumes design based on perfect hardware, and media error
+> > > belongs to the category of brokenness. Another view sees media
+> > > error as a build-in hardware component and make design to include
+> > > dealing with such errors.
+> >
+> > No, I don't think so.  Bit errors do happen in all media, which is
+> > why devices are built to handle them.  It is just the Intel-style
+> > pmem interface to handle them which is completely broken.
 >
-> No, I don't think so.  Bit errors do happen in all media, which is
-> why devices are built to handle them.  It is just the Intel-style
-> pmem interface to handle them which is completely broken.
-
-No, any media can report checksum / parity errors. NVME also seems to
-do a poor job with multi-bit ECC errors consumed from DRAM. There is
-nothing "pmem" or "Intel" specific here.
-
-> > errors in mind from start.  I guess I'm trying to articulate why
-> > it is acceptable to include the RWF_DATA_RECOVERY flag to the
-> > existing RWF_ flags. - this way, pwritev2 remain fast on fast path,
-> > and its slow path (w/ error clearing) is faster than other alternative.
-> > Other alternative being 1 system call to clear the poison, and
-> > another system call to run the fast pwrite for recovery, what
-> > happens if something happened in between?
+> Yeah, I agree, this takes me back to learning how to use DISKEDIT to
+> work around a hole punched in a file (with a pen!) in the 1980s...
 >
-> Well, my point is doing recovery from bit errors is by definition not
-> the fast path.  Which is why I'd rather keep it away from the pmem
-> read/write fast path, which also happens to be the (much more important)
-> non-pmem read/write path.
+> ...so would you happen to know if anyone's working on solving this
+> problem for us by putting the memory controller in charge of dealing
+> with media errors?
 
-I would expect this interface to be useful outside of pmem as a
-"failfast" or "try harder to recover" flag for reading over media
-errors.
+What are you guys going on about? ECC memory corrects single-bit
+errors in the background, multi-bit errors cause the memory controller
+to signal that data is gone. This is how ECC memory has worked since
+forever. Typically the kernel's memory-failure path is just throwing
+away pages that signal data loss. Throwing away pmem pages is harder
+because unlike DRAM the physical address of the page matters to upper
+layers.
+
+>
+> > > errors in mind from start.  I guess I'm trying to articulate why
+> > > it is acceptable to include the RWF_DATA_RECOVERY flag to the
+> > > existing RWF_ flags. - this way, pwritev2 remain fast on fast path,
+> > > and its slow path (w/ error clearing) is faster than other alternative.
+> > > Other alternative being 1 system call to clear the poison, and
+> > > another system call to run the fast pwrite for recovery, what
+> > > happens if something happened in between?
+> >
+> > Well, my point is doing recovery from bit errors is by definition not
+> > the fast path.  Which is why I'd rather keep it away from the pmem
+> > read/write fast path, which also happens to be the (much more important)
+> > non-pmem read/write path.
+>
+> The trouble is, we really /do/ want to be able to (re)write the failed
+> area, and we probably want to try to read whatever we can.  Those are
+> reads and writes, not {pre,f}allocation activities.  This is where Dave
+> and I arrived at a month ago.
+>
+> Unless you'd be ok with a second IO path for recovery where we're
+> allowed to be slow?  That would probably have the same user interface
+> flag, just a different path into the pmem driver.
+>
+> Ha, how about a int fd2 = recoveryfd(fd); call where you'd get whatever
+> speshul options (retry raid mirrors!  scrape the film off the disk if
+> you have to!) you want that can take forever, leaving the fast paths
+> alone?
+
+I am still failing to see the technical argument for why
+RWF_RECOVER_DATA significantly impacts the fast path, and why you
+think this is somehow specific to pmem. In fact the pmem effort is
+doing the responsible thing and trying to plumb this path while other
+storage drivers just seem to be pretending that memory errors never
+happen.
