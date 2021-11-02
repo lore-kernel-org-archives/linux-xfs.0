@@ -2,94 +2,70 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0FE5C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Nov 2021 12:29:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C3F4C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Nov 2021 14:16:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A5724604D2
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Nov 2021 12:29:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5C8CD60FC2
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Nov 2021 14:16:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230100AbhKBMc0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 2 Nov 2021 08:32:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42610 "EHLO
+        id S230419AbhKBOTQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 2 Nov 2021 10:19:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38824 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229530AbhKBMcZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Nov 2021 08:32:25 -0400
+        with ESMTP id S229712AbhKBOTP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Nov 2021 10:19:15 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06E1DC061714;
-        Tue,  2 Nov 2021 05:29:50 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E97D4C061714;
+        Tue,  2 Nov 2021 07:16:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=TKqWgfpw5AGxV0aXDmIN4fp1Id+pK1uozWw0xKtDRVU=; b=o3CXWrfh6eqE/lwsca02rozqZi
-        OKidFQjXbtIZCsmOTMW6lm0UZf4jV+/3UzKD5e2BRyjbi0/0OTBwZhxKMLqEikCYo5IknqCcBY4FZ
-        8tDZWe8odIIUSQvYZA99b7ad2EaM18IKKCj6hc4+hl6xAjdmRil/Vv2tSSgF0+vGrOiKRLpc84cEd
-        s40c1JwJvOlFAdQRRqzsMgQqCsGsWUywtkapp54VRZB5DKQhlhyvp/brpw1s+Kde1Kv1JjNcQLaZY
-        VBNS7+gt5Dv4idlPr/falDKw8o4yF554w+cRiqLW11HkNrPn4D0mK11mGQ+nqrJR7pnAzORfmr06c
-        39usDeAQ==;
+        bh=Frpr96sflPeeQPJcNwVDoz7On83K64HxlUkHEJTrzvk=; b=dzP+N8YEsV5NKFfEHD4ddUohAc
+        dANaLgnKRkAy3iIPJpjjFVP2o+c1WUllO471Y0Pp37vrPm5RqJmZzzWAo00q44fMMvoYOsYf4yxxR
+        KwUZRxhYlYEg2GcxAxgCu7dd7+Eq+q/mIpvdArPTO+pEJI6uSG0mNx8X9OQJqUoN+lvMUFh97uu9X
+        P+f5rO0VBpOii7AeA36S+CtTe/D8FtPNzlYk4i2Xih83VzaJ49SnqpKZgT50lEHcXJSjONvtlVl4p
+        vLmqp1bKS8FBqvAu63U0mxGPEwGL+ypD7kK7JiP2TaManjgx/cO+sLscyEfFAtVWBLiLpldNwlzTl
+        aQ9gDDXA==;
 Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mhsta-004UJp-MJ; Tue, 02 Nov 2021 12:29:01 +0000
-Date:   Tue, 2 Nov 2021 12:28:06 +0000
+        id 1mhuZS-004Xf5-VB; Tue, 02 Nov 2021 14:15:37 +0000
+Date:   Tue, 2 Nov 2021 14:15:26 +0000
 From:   Matthew Wilcox <willy@infradead.org>
-To:     Christoph Hellwig <hch@infradead.org>
+To:     Jens Axboe <axboe@kernel.dk>
 Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH 13/21] iomap: Convert readahead and readpage to use a
- folio
-Message-ID: <YYEu1qj3yxF968HR@casper.infradead.org>
+        linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 02/21] block: Add bio_add_folio()
+Message-ID: <YYFH/k8oo1r4fl9p@casper.infradead.org>
 References: <20211101203929.954622-1-willy@infradead.org>
- <20211101203929.954622-14-willy@infradead.org>
- <YYDmz8olTe/Qr2ch@infradead.org>
+ <20211101203929.954622-3-willy@infradead.org>
+ <0384e51b-0938-dccb-8c70-caa1f2b35d34@kernel.dk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YYDmz8olTe/Qr2ch@infradead.org>
+In-Reply-To: <0384e51b-0938-dccb-8c70-caa1f2b35d34@kernel.dk>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 02, 2021 at 12:20:47AM -0700, Christoph Hellwig wrote:
-> On Mon, Nov 01, 2021 at 08:39:21PM +0000, Matthew Wilcox (Oracle) wrote:
-> >  	for (done = 0; done < length; done += ret) {
-> > -		if (ctx->cur_page && offset_in_page(iter->pos + done) == 0) {
-> > -			if (!ctx->cur_page_in_bio)
-> > -				unlock_page(ctx->cur_page);
-> > -			put_page(ctx->cur_page);
-> > -			ctx->cur_page = NULL;
-> > +		if (ctx->cur_folio &&
-> > +		    offset_in_folio(ctx->cur_folio, iter->pos + done) == 0) {
-> > +			if (!ctx->cur_folio_in_bio)
-> > +				folio_unlock(ctx->cur_folio);
-> > +			ctx->cur_folio = NULL;
+On Mon, Nov 01, 2021 at 02:51:37PM -0600, Jens Axboe wrote:
+> On 11/1/21 2:39 PM, Matthew Wilcox (Oracle) wrote:
+> > This is a thin wrapper around bio_add_page().  The main advantage here
+> > is the documentation that stupidly large folios are not supported.
+> > It's not currently possible to allocate stupidly large folios, but if
+> > it ever becomes possible, this function will fail gracefully instead of
+> > doing I/O to the wrong bytes.
 > 
-> Where did the put_page here disappear to?
+> Might be better with UINT_MAX instead of stupidly here, because then
+> it immediately makes sense. Can you make a change to that effect?
 
-I'll put that explanation in the changelog:
+I'll make it "that folios larger than 2GiB are not supported.  It's not
+currently possible to allocate folios that large,"
 
-Handle folios of arbitrary size instead of working in PAGE_SIZE units.
-readahead_folio() puts the page for you, so this is not quite a mechanical
-change.
-
----
-
-The reason for making that change is that I messed up when introducing the
-readahead() operation.  I followed the refcounting rule of ->readpages()
-instead of the rule of ->readpage().  For a successful readahead, we have
-two more atomic operations than necessary.  I want to fix that, and
-this seems like a good opportunity to do it.  Once all filesystems are
-converted to call readahead_folio(), we can remove the extra get_page()
-and put_page().
-
-I did put an explanation of that in commit 9bf70167e3c6, but it's not
-reasonable to expect reviewers to remember that when reviewing changes
-to their filesystem's readahead, so I'll be sure to mention it in any
-future conversion's changelogs.
-
-    mm/filemap: Add readahead_folio()
-
-    The pointers stored in the page cache are folios, by definition.
-    This change comes with a behaviour change -- callers of readahead_folio()
-    are no longer required to put the page reference themselves.  This matches
-    how readpage works, rather than matching how readpages used to work.
-
+> With that:
+> 
+> Reviewed-by: Jens Axboe <axboe@kernel.dk>
+> 
+> -- 
+> Jens Axboe
+> 
