@@ -2,77 +2,149 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7090C433FE
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Nov 2021 12:50:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E78CFC433EF
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Nov 2021 15:43:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9262660295
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Nov 2021 12:50:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C849F6109F
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Nov 2021 15:43:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230299AbhKCMwr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 3 Nov 2021 08:52:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35580 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230282AbhKCMwq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Nov 2021 08:52:46 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78026C061714;
-        Wed,  3 Nov 2021 05:50:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=AWxSgl03y6hj3Uclf1xozKOXfzyGEIJRVjgfKOuJfpg=; b=YuVMiK6AS8CrpAonDsTY6eSJVb
-        OugD9VsmoHFM7boGrHLu1QNyCytMHEg5N91zyXYRxpdssp5JyGumIRtnDLczTlyGZjvjxZbOfVUSu
-        u7Voc9B6hX01wrjNWQ52S3RodehRg4jMLvQ7dSctJVKuaig11MUJMUNnKJGQ5WGkcgnzrRHpn9oh5
-        x/pOcow5cBk8Muleo21zE8sYrnuJLCICJrc7wSzHPq5g/+Wq5jS8KofnVayU2t4XMSZRBm5+nWZ3M
-        x3Iz+x5zsxxIyb8HG/mzwYgDPnbD82Aniau6Qs8ra5Wo6Cw+aWZbw0HF5+o76aMPh3S6teWu+26zG
-        uYXZsPyw==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1miFgM-005Cll-UN; Wed, 03 Nov 2021 12:48:29 +0000
-Date:   Wed, 3 Nov 2021 12:47:58 +0000
-From:   Matthew Wilcox <willy@infradead.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
+        id S231674AbhKCPpr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 3 Nov 2021 11:45:47 -0400
+Received: from mail.kernel.org ([198.145.29.99]:32874 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229587AbhKCPpq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 3 Nov 2021 11:45:46 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 1D18561076;
+        Wed,  3 Nov 2021 15:43:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1635954190;
+        bh=JrJPc27Pj0tqZ4ZP+BqiHNjvhEOsKrIRpVsSC3jH0zM=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=u3duK6HdKhrJ+gv7G4sdRhqAUI/wXrCFslo6C07CZfLiQRSjx6XWpSQTzPAdLZRGk
+         EyUrTnHOx2NztJUGzcoDPzWbdgTGWZC6n1OCySF1sHGC8BR+z3VTKL5r5HoVovgepY
+         TtN7YH7qSsOQXYWSd2oGB6VLotCVRxuDWn+nH0F4cuC44tuWRi0rHXJEcsxowEBOlx
+         xJiD4m3z55u5ufJIfeNXuOfBmWcKni7/Ih1NaI0K5QXh0lS656M68MRz39ZWQPthgY
+         6dZnu1G1TndELw1qOSMRnL9nmc1Rv0qmKmYdBMXyFRKdgJiq5KL36jGWfkdzsYCnkH
+         01RDqlE4zJzqg==
+Date:   Wed, 3 Nov 2021 08:43:09 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>
 Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
         Jens Axboe <axboe@kernel.dk>,
         Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 15/21] iomap: Convert iomap_write_begin and
- iomap_write_end to folios
-Message-ID: <YYKE/ohWPf7jUBM/@casper.infradead.org>
+Subject: Re: [PATCH 17/21] iomap,xfs: Convert ->discard_page to
+ ->discard_folio
+Message-ID: <20211103154309.GK24307@magnolia>
 References: <20211101203929.954622-1-willy@infradead.org>
- <20211101203929.954622-16-willy@infradead.org>
- <20211102232215.GG2237511@magnolia>
- <YYH+wfNdgubpqtyP@casper.infradead.org>
+ <20211101203929.954622-18-willy@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YYH+wfNdgubpqtyP@casper.infradead.org>
+In-Reply-To: <20211101203929.954622-18-willy@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Nov 03, 2021 at 03:15:13AM +0000, Matthew Wilcox wrote:
-> On Tue, Nov 02, 2021 at 04:22:15PM -0700, Darrick J. Wong wrote:
-> > > +	page = folio_file_page(folio, pos >> PAGE_SHIFT);
-> > 
-> > Isn't this only needed in the BUFFER_HEAD case?
+On Mon, Nov 01, 2021 at 08:39:25PM +0000, Matthew Wilcox (Oracle) wrote:
+> XFS has the only implementation of ->discard_page today, so convert it
+> to use folios in the same patch as converting the API.
 > 
-> Good catch.  Want me to fold this in?
-> 
-> @@ -632,12 +631,12 @@ static int iomap_write_begin(const struct iomap_iter *iter, loff_t pos,
->                 goto out_no_page;
->         }
->  
-> -       page = folio_file_page(folio, pos >> PAGE_SHIFT);
->         if (srcmap->type == IOMAP_INLINE)
->                 status = iomap_write_begin_inline(iter, folio);
-> -       else if (srcmap->flags & IOMAP_F_BUFFER_HEAD)
-> +       else if (srcmap->flags & IOMAP_F_BUFFER_HEAD) {
-> +               struct page *page = folio_file_page(folio, pos >> PAGE_SHIFT);
->                 status = __block_write_begin_int(page, pos, len, NULL, srcmap);
+> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 
-On second thoughts, this is silly.  __block_write_begin_int() doesn't
-want the precise page (because it constructs buffer_heads and attaches
-them to the passed-in page).  I should just pass &folio->page here.
-And __block_write_begin_int() should be converted to take a folio
-at some point.
+LGTM
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+
+--D
+
+> ---
+>  fs/iomap/buffered-io.c |  4 ++--
+>  fs/xfs/xfs_aops.c      | 24 ++++++++++++------------
+>  include/linux/iomap.h  |  2 +-
+>  3 files changed, 15 insertions(+), 15 deletions(-)
+> 
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 6862487f4067..c50ae76835ca 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -1349,8 +1349,8 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
+>  		 * won't be affected by I/O completion and we must unlock it
+>  		 * now.
+>  		 */
+> -		if (wpc->ops->discard_page)
+> -			wpc->ops->discard_page(page, file_offset);
+> +		if (wpc->ops->discard_folio)
+> +			wpc->ops->discard_folio(page_folio(page), file_offset);
+>  		if (!count) {
+>  			ClearPageUptodate(page);
+>  			unlock_page(page);
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 34fc6148032a..c6c4d07d0d26 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -428,37 +428,37 @@ xfs_prepare_ioend(
+>   * see a ENOSPC in writeback).
+>   */
+>  static void
+> -xfs_discard_page(
+> -	struct page		*page,
+> -	loff_t			fileoff)
+> +xfs_discard_folio(
+> +	struct folio		*folio,
+> +	loff_t			pos)
+>  {
+> -	struct inode		*inode = page->mapping->host;
+> +	struct inode		*inode = folio->mapping->host;
+>  	struct xfs_inode	*ip = XFS_I(inode);
+>  	struct xfs_mount	*mp = ip->i_mount;
+> -	unsigned int		pageoff = offset_in_page(fileoff);
+> -	xfs_fileoff_t		start_fsb = XFS_B_TO_FSBT(mp, fileoff);
+> -	xfs_fileoff_t		pageoff_fsb = XFS_B_TO_FSBT(mp, pageoff);
+> +	size_t			offset = offset_in_folio(folio, pos);
+> +	xfs_fileoff_t		start_fsb = XFS_B_TO_FSBT(mp, pos);
+> +	xfs_fileoff_t		pageoff_fsb = XFS_B_TO_FSBT(mp, offset);
+>  	int			error;
+>  
+>  	if (xfs_is_shutdown(mp))
+>  		goto out_invalidate;
+>  
+>  	xfs_alert_ratelimited(mp,
+> -		"page discard on page "PTR_FMT", inode 0x%llx, offset %llu.",
+> -			page, ip->i_ino, fileoff);
+> +		"page discard on page "PTR_FMT", inode 0x%llx, pos %llu.",
+> +			folio, ip->i_ino, pos);
+>  
+>  	error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
+> -			i_blocks_per_page(inode, page) - pageoff_fsb);
+> +			i_blocks_per_folio(inode, folio) - pageoff_fsb);
+>  	if (error && !xfs_is_shutdown(mp))
+>  		xfs_alert(mp, "page discard unable to remove delalloc mapping.");
+>  out_invalidate:
+> -	iomap_invalidatepage(page, pageoff, PAGE_SIZE - pageoff);
+> +	iomap_invalidate_folio(folio, offset, folio_size(folio) - offset);
+>  }
+>  
+>  static const struct iomap_writeback_ops xfs_writeback_ops = {
+>  	.map_blocks		= xfs_map_blocks,
+>  	.prepare_ioend		= xfs_prepare_ioend,
+> -	.discard_page		= xfs_discard_page,
+> +	.discard_folio		= xfs_discard_folio,
+>  };
+>  
+>  STATIC int
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index 91de58ca09fc..1a161314d7e4 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -285,7 +285,7 @@ struct iomap_writeback_ops {
+>  	 * Optional, allows the file system to discard state on a page where
+>  	 * we failed to submit any I/O.
+>  	 */
+> -	void (*discard_page)(struct page *page, loff_t fileoff);
+> +	void (*discard_folio)(struct folio *folio, loff_t pos);
+>  };
+>  
+>  struct iomap_writepage_ctx {
+> -- 
+> 2.33.0
+> 
