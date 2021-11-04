@@ -2,86 +2,95 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B808C433F5
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Nov 2021 18:09:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EDA0C433F5
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Nov 2021 18:10:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 57D2B6120D
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Nov 2021 18:09:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 446B96120F
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Nov 2021 18:10:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232721AbhKDSM0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 4 Nov 2021 14:12:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38126 "EHLO
+        id S234090AbhKDSNJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 4 Nov 2021 14:13:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38294 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232152AbhKDSM0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Nov 2021 14:12:26 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1328C061714;
-        Thu,  4 Nov 2021 11:09:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=X/zx02lrok+YXE3fHYCnesmy30oZEd5gQFjWswEssO8=; b=Sbg76vqBUrKRwSH8VKRkJgiUCC
-        r1oyKJ79d1QE9fOCCZaLTLXMc2ew6uKuULTjgBflx8d78VPVr2homn7rL3kQVHvP7Ak9/wM0MbpSy
-        YSrJUXTFHpxtX4i3XpHfoy8u4fm08G+Cx16cTwYn/LBCFS7Lv3f39xVI6zKCrHqps5FJzI6XW50qi
-        8xgjF5t15JvLZTKg6czUDnDkLd8NyrCoKV5fYiMDj6WPdVlgUuSxgdjCS10DIR/kWUthyM54DNI3M
-        3ulIl7eI4ED25BAW7Mc3MlXqYoWF5f6UgyROaM1IDdmMYVmXaRrN/V/m7JIC73SF58NYKDj27R5M0
-        Cc4GufhA==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mih7J-0062bO-LC; Thu, 04 Nov 2021 18:06:22 +0000
-Date:   Thu, 4 Nov 2021 18:05:37 +0000
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Dan Williams <dan.j.williams@intel.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Jane Chu <jane.chu@oracle.com>,
-        "david@fromorbit.com" <david@fromorbit.com>,
-        "vishal.l.verma@intel.com" <vishal.l.verma@intel.com>,
-        "dave.jiang@intel.com" <dave.jiang@intel.com>,
-        "agk@redhat.com" <agk@redhat.com>,
-        "snitzer@redhat.com" <snitzer@redhat.com>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "ira.weiny@intel.com" <ira.weiny@intel.com>,
-        "vgoyal@redhat.com" <vgoyal@redhat.com>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "nvdimm@lists.linux.dev" <nvdimm@lists.linux.dev>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: [dm-devel] [PATCH 0/6] dax poison recovery with
- RWF_RECOVERY_DATA flag
-Message-ID: <YYQg8X9VAuWYekD4@casper.infradead.org>
-References: <2102a2e6-c543-2557-28a2-8b0bdc470855@oracle.com>
- <YXj2lwrxRxHdr4hb@infradead.org>
- <20211028002451.GB2237511@magnolia>
- <YYDYUCCiEPXhZEw0@infradead.org>
- <CAPcyv4j8snuGpy=z6BAXogQkP5HmTbqzd6e22qyERoNBvFKROw@mail.gmail.com>
- <YYK/tGfpG0CnVIO4@infradead.org>
- <CAPcyv4it2_PVaM8z216AXm6+h93frg79WM-ziS9To59UtEQJTA@mail.gmail.com>
- <YYOaOBKgFQYzT/s/@infradead.org>
- <CAPcyv4jKHH7H+PmcsGDxsWA5CS_U3USHM8cT1MhoLk72fa9z8Q@mail.gmail.com>
- <YYQbu6dOCVB7yS02@infradead.org>
+        with ESMTP id S234091AbhKDSNJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Nov 2021 14:13:09 -0400
+Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB612C061203
+        for <linux-xfs@vger.kernel.org>; Thu,  4 Nov 2021 11:10:30 -0700 (PDT)
+Received: by mail-pl1-x630.google.com with SMTP id r5so8637302pls.1
+        for <linux-xfs@vger.kernel.org>; Thu, 04 Nov 2021 11:10:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20210112.gappssmtp.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=7mdrEIaynFJhMAYVbY2RCFSQ3xBs/5manpadoyeA8Jg=;
+        b=0YEcomScst+1AzYcEtB+P3/DmeUM77501UDi4utLMr5xdKJlnd8UevBd12j9FnZ3vM
+         pfReEE9Mys+ZVEwliSTF7urxA8Wo0+Hi1QGvdNyLT71G18SgBjzWHXiXc01F/GMcT30o
+         4sj59niVU83geSVU+jTxOcRmF241hREk19CsoBH8kxr2RQdc6rHN1RFVCxVTxuFK53C5
+         ubx4NqJpME+C1zDILd+MfHjSjbqUFn2nDpjUaVUu+wM8te1yVWJyRStj28nUJ7WDbMUk
+         H2RDjE1nkFNI+5JNwfhWiSHo+ZLBnVukougjDJ/S9PImKe7sfLSLlzrr4uAIBYjBE48z
+         eouQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=7mdrEIaynFJhMAYVbY2RCFSQ3xBs/5manpadoyeA8Jg=;
+        b=7l+xZNs4GrJtR8mUQYRAkaNzW5FAcHxCNeizHVsdsFOYuTCyqL0RdLCkXO9rmmBjRQ
+         E2PIYEn0O03YdvlPpUgGxzCUONOphMEPrtV+g7U7vZPYM50y/qDwGuY7RCjtqGFpNf8P
+         kW0GKpj7L0At1Mim/f52ijLvyJTA4rYOt2Wcf/rCnAF/peMFtgC1V+u7K9p2FiYAWci9
+         hVTwPICp4okbKIRwejF7jdRZb2QuV+/hXVKy5RH7n4VFhtAciVEW2ADycqprlrEk9+8O
+         Og/lcNdi5fTgBdzVS1GYXejhB76VPwgylDC+U8/kakpTksyuqT0bMDQwjmegIRbwg/18
+         X7cQ==
+X-Gm-Message-State: AOAM532AeLGjqQbv2gCH65B+7knA3Pw1ewTy3oDFfulQbpsK5KONE+mO
+        1Df3egcBhNZzxjZbYhIL3d4FVcCdsLV7o/H5OXRdoQ==
+X-Google-Smtp-Source: ABdhPJxpE7179nYWnBAffbsem/btoh3olrocKEPy5McMuIBWtGLmZ02iwXqFLVvSNceMnE3VXVk1wLsDAvNCq2GAmrQ=
+X-Received: by 2002:a17:902:b697:b0:141:c7aa:e10f with SMTP id
+ c23-20020a170902b69700b00141c7aae10fmr33445935pls.18.1636049430346; Thu, 04
+ Nov 2021 11:10:30 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YYQbu6dOCVB7yS02@infradead.org>
+References: <20211018044054.1779424-1-hch@lst.de> <21ff4333-e567-2819-3ae0-6a2e83ec7ce6@sandeen.net>
+ <20211104081740.GA23111@lst.de> <20211104173417.GJ2237511@magnolia> <20211104173559.GB31740@lst.de>
+In-Reply-To: <20211104173559.GB31740@lst.de>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Thu, 4 Nov 2021 11:10:19 -0700
+Message-ID: <CAPcyv4jbjc+XtX5RX5OL3vPadsYZwoK1NG1qC5AcpySBu5tL4g@mail.gmail.com>
+Subject: Re: futher decouple DAX from block devices
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        Eric Sandeen <sandeen@sandeen.net>,
+        Mike Snitzer <snitzer@redhat.com>,
+        Ira Weiny <ira.weiny@intel.com>,
+        device-mapper development <dm-devel@redhat.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Linux NVDIMM <nvdimm@lists.linux.dev>,
+        linux-s390 <linux-s390@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-erofs@lists.ozlabs.org,
+        linux-ext4 <linux-ext4@vger.kernel.org>,
+        virtualization@lists.linux-foundation.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Nov 04, 2021 at 10:43:23AM -0700, Christoph Hellwig wrote:
-> Well, the answer for other interfaces (at least at the gold plated
-> cost option) is so strong internal CRCs that user visible bits clobbered
-> by cosmic rays don't realisticly happen.  But it is a problem with the
-> cheaper ones, and at least SCSI and NVMe offer the error list through
-> the Get LBA status command (and I bet ATA too, but I haven't looked into
-> that).  Oddly enough there has never been much interested from the
-> fs community for those.
+On Thu, Nov 4, 2021 at 10:36 AM Christoph Hellwig <hch@lst.de> wrote:
+>
+> On Thu, Nov 04, 2021 at 10:34:17AM -0700, Darrick J. Wong wrote:
+> > /me wonders, are block devices going away?  Will mkfs.xfs have to learn
+> > how to talk to certain chardevs?  I guess jffs2 and others already do
+> > that kind of thing... but I suppose I can wait for the real draft to
+> > show up to ramble further. ;)
+>
+> Right now I've mostly been looking into the kernel side.  An no, I
+> do not expect /dev/pmem* to go away as you'll still need it for a
+> not DAX aware file system and/or application (such as mkfs initially).
+>
+> But yes, just pointing mkfs to the chardev should be doable with very
+> little work.  We can point it to a regular file after all.
 
-"don't realistically happen" is different when you're talking about
-"doesn't happen within the warranty period of my laptop's SSD" and
-"doesn't happen on my fleet of 10k servers before they're taken out of
-service".  There's also a big difference in speeds between an NVMe drive
-(7GB/s) and a memory device (20-50GB/s).  The UBER being talked about
-when I was still at Intel was similar to / slightly better than DRAM,
-but that's still several failures per year across an entire data centre
-that's using pmem flat-out.
+Note that I've avoided implementing read/write fops for dax devices
+partly out of concern for not wanting to figure out shared-mmap vs
+write coherence issues, but also because of a bet with Dave Hansen
+that device-dax not grow features like what happened to hugetlbfs. So
+it would seem mkfs would need to switch to mmap I/O, or bite the
+bullet and implement read/write fops in the driver.
