@@ -2,189 +2,165 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E3F8C433F5
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Nov 2021 01:30:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D0EFC433F5
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Nov 2021 02:21:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6B06F611CA
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Nov 2021 01:30:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 42E1C6023D
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Nov 2021 02:21:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231129AbhKDBcp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 3 Nov 2021 21:32:45 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49722 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230198AbhKDBco (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 3 Nov 2021 21:32:44 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id A3B0F604DC;
-        Thu,  4 Nov 2021 01:30:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1635989407;
-        bh=inY9wFVb2pvq4N1STY3VyggQrwjqpw5wSnDOQW2NE3E=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=VdpXswJnUdUuiUHsIb/w2Mb57ebLfVN1JP2Ju3B+FAjhHNxdIE5gXMWFbIC+wLHJx
-         Y3I3DbrLPlU+1iMOjRmh00sY0orFXTGdFz+HhLmDKoEYnYK2UoxDrb0nUSH3gVebjd
-         HWLDsGcW5uX8Y+jCgtdHpvGKIguoeS4iuAZ37ZL33RijZe30WcuI+mGAcg9NyzYrYd
-         voAp3Iuu1KrQQn60L88oDBIxzkbh6UjViOHMAky2tkXYjafrsPWsy3xTElLha4Y7Uw
-         gw90EKgjOLWj6YDPMJu6Q1Rz06n5JbqbHfhhZlUk0M1auaGhAcVPxn3d8okOkD5JbG
-         cdXE7mfQi2r6A==
-Date:   Wed, 3 Nov 2021 18:30:07 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Allison Henderson <allison.henderson@oracle.com>,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: Fix double unlock in defer capture code
-Message-ID: <20211104013007.GP24307@magnolia>
-References: <20211103213309.824096-1-allison.henderson@oracle.com>
- <20211104001633.GD449541@dread.disaster.area>
+        id S229561AbhKDCYR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 3 Nov 2021 22:24:17 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:51343 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229541AbhKDCYQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Nov 2021 22:24:16 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1635992499;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=+1t0WDO/fpSESsnWA7L/CZCLfrr2CI8lZwROdpVNulI=;
+        b=PKvhyH2PiSxNHRcnNBm8Hlaws8TF56BBqZt5fEEx7JWGqfrQ0l1ZjSRJrpftJke2lAxY+0
+        Sp3ZbFdgmxyUWM5MD6a5vMuClIIo1ftV4yds+aVaf2NZEBWIuqzyrmFOUibG2ZCeq1LKon
+        tOikTkXRpB6nC7q0JFS8Qy0Uld+VkcA=
+Received: from mail-io1-f72.google.com (mail-io1-f72.google.com
+ [209.85.166.72]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-411-o912zwiwMWOUF7XWznjCZQ-1; Wed, 03 Nov 2021 22:21:37 -0400
+X-MC-Unique: o912zwiwMWOUF7XWznjCZQ-1
+Received: by mail-io1-f72.google.com with SMTP id m5-20020a0566022e8500b005e192595a3dso2864939iow.20
+        for <linux-xfs@vger.kernel.org>; Wed, 03 Nov 2021 19:21:37 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:message-id:date:mime-version:user-agent
+         :content-language:to:subject:cc:content-transfer-encoding;
+        bh=+1t0WDO/fpSESsnWA7L/CZCLfrr2CI8lZwROdpVNulI=;
+        b=mjFh2oNlYW8PDcf9jM9LsiIX5wo78UxcO27z2TuBgY6E5I1Q/Q0lQzDcH787Vv3yhe
+         0kHnBXf9KwNNVReWHgJr5UgPLIKoXTCFJQ4SqPUmD338m3C9Vsi1uTQxpWbbCQ28NoU6
+         DLEQ4dF8AiNDLbjFSnUbx1CT3frZq5xqa4fZnhIEUau4E3MJgKQvvcrAz5UynMajXqkF
+         5Vi8kwpiu9nFKPELiJksZGNKF5Gv1tQq9pXg0jZeDjcxW2UScEkjSCLskGxue8ERrQpJ
+         ANlF5JZZrsGSB+bqSvDv9+ylHptO8aimdmxebKDLBohdl7NG0+8HPeYk+zUV7yhB7jkp
+         EmUw==
+X-Gm-Message-State: AOAM5330NOCjfzTtJqwkCnrQYUXPGAP1gtsyhn7e+MoP5ADi6RdJ649I
+        JrNzl8QSaQGF6NYQQz9JvRtpJeOPpEv4wk4VU2bjXgDDGMw3s5AmRUWX7aMt8+nzZY/ByTwjw3/
+        /dRikULhkVlwQS198D0PzkMLmOkfbkMKB1uexYI6Q3Btof1c6sQOt/h05T4YyLBIUTBZJhgHM
+X-Received: by 2002:a05:6638:3391:: with SMTP id h17mr1639897jav.33.1635992497165;
+        Wed, 03 Nov 2021 19:21:37 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJx4lQn00ZJ+suCv2ICJQkOLF4rkYdaPoCZjxF8pbN+FSUlFfbTylooA0Gvltv6hRkQrEwZSRQ==
+X-Received: by 2002:a05:6638:3391:: with SMTP id h17mr1639881jav.33.1635992496932;
+        Wed, 03 Nov 2021 19:21:36 -0700 (PDT)
+Received: from [10.0.0.146] (sandeen.net. [63.231.237.45])
+        by smtp.gmail.com with ESMTPSA id l14sm2180104iow.31.2021.11.03.19.21.36
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 03 Nov 2021 19:21:36 -0700 (PDT)
+From:   Eric Sandeen <esandeen@redhat.com>
+X-Google-Original-From: Eric Sandeen <sandeen@redhat.com>
+Message-ID: <389722a5-4b02-c76d-a5ac-d92d1e642b21@redhat.com>
+Date:   Wed, 3 Nov 2021 21:21:35 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20211104001633.GD449541@dread.disaster.area>
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.2.1
+Content-Language: en-US
+To:     xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH] xfsprogs: move stubbed-out kernel functions out of
+ xfs_shared.h
+Cc:     "Darrick J. Wong" <djwong@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Nov 04, 2021 at 11:16:33AM +1100, Dave Chinner wrote:
-> On Wed, Nov 03, 2021 at 02:33:09PM -0700, Allison Henderson wrote:
-> > The new deferred attr patch set uncovered a double unlock in the
-> > recent port of the defer ops capture and continue code.  During log
-> > recovery, we're allowed to hold buffers to a transaction that's being
-> > used to replay an intent item.  When we capture the resources as part
-> > of scheduling a continuation of an intent chain, we call xfs_buf_hold
-> > to retain our reference to the buffer beyond the transaction commit,
-> > but we do /not/ call xfs_trans_bhold to maintain the buffer lock.
-> > This means that xfs_defer_ops_continue needs to relock the buffers
-> > before xfs_defer_restore_resources joins then tothe new transaction.
-> > 
-> > Additionally, the buffers should not be passed back via the dres
-> > structure since they need to remain locked unlike the inodes.  So
-> > simply set dr_bufs to zero after populating the dres structure.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_defer.c | 40 ++++++++++++++++++++++++++++++++++++++-
-> >  1 file changed, 39 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-> > index 0805ade2d300..734ac9fd2628 100644
-> > --- a/fs/xfs/libxfs/xfs_defer.c
-> > +++ b/fs/xfs/libxfs/xfs_defer.c
-> > @@ -22,6 +22,7 @@
-> >  #include "xfs_refcount.h"
-> >  #include "xfs_bmap.h"
-> >  #include "xfs_alloc.h"
-> > +#include "xfs_buf.h"
-> >  
-> >  static struct kmem_cache	*xfs_defer_pending_cache;
-> >  
-> > @@ -762,6 +763,33 @@ xfs_defer_ops_capture_and_commit(
-> >  	return 0;
-> >  }
-> >  
-> > +static void
-> > +xfs_defer_relock_buffers(
-> > +	struct xfs_defer_capture	*dfc)
-> > +{
-> > +	struct xfs_defer_resources	*dres = &dfc->dfc_held;
-> > +	unsigned int			i, j;
-> > +
-> > +	/*
-> > +	 * Sort the elements via bubble sort.  (Remember, there are at most 2
-> > +	 * elements to sort, so this is adequate.)
-> > +	 */
-> 
-> Seems like overkill if we only have two buffers that can be held.
-> All we need if there are only two buffers is a swap() call.
-> 
-> However, locking arbitrary buffers based on disk address order is
-> also theoretically incorrect.
-> 
-> For example, if the two buffers we have held the AGF and AGI buffers
-> for a given AG, then this will lock the AGF before the AGI. However,
-> the lock order for AGI vs AGF is AGI first, hence we'd be locking
-> these buffers in the wrong order here. Another example is that btree
-> buffers are generally locked in parent->child order or
-> sibling->sibling order, not disk offset order.
-> 
-> Hence I'm wondering is this generalisation is a safe method of
-> locking buffers.
-> 
-> In general, the first locked and joined buffer in a transaction is
-> always the first that should be locked. Hence I suspect we need to
-> ensure that the dres->dr_bp array always reflects the order in which
-> buffers were joined to a transaction so that we can simply lock them
-> in ascending array index order and not need to care what the
-> relationship between the buffers are...
+Move kernel stubs out of libxfs/xfs_shared.h, which is kernel
+libxfs code and should not have userspace shims in it.
 
-/me agrees with that; I think you ought to be able to skip the sort
-entirely because the dr_bp array is loaded in order of the transaction
-items, which means that we'd be locking them in the same order as the
-transaction.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-> > +	for (i = 0; i < dres->dr_bufs; i++) {
-> > +		for (j = 1; j < dres->dr_bufs; j++) {
-> > +			if (xfs_buf_daddr(dres->dr_bp[j]) <
-> > +				xfs_buf_daddr(dres->dr_bp[j - 1])) {
-> > +				struct xfs_buf  *temp = dres->dr_bp[j];
-> > +
-> > +				dres->dr_bp[j] = dres->dr_bp[j - 1];
-> > +				dres->dr_bp[j - 1] = temp;
-> > +			}
-> > +		}
-> > +	}
-> > +
-> > +	for (i = 0; i < dres->dr_bufs; i++)
-> > +		xfs_buf_lock(dres->dr_bp[i]);
-> > +}
-> > +
-> >  /*
-> >   * Attach a chain of captured deferred ops to a new transaction and free the
-> >   * capture structure.  If an inode was captured, it will be passed back to the
-> > @@ -777,15 +805,25 @@ xfs_defer_ops_continue(
-> >  	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
-> >  	ASSERT(!(tp->t_flags & XFS_TRANS_DIRTY));
-> >  
-> > -	/* Lock and join the captured inode to the new transaction. */
-> > +	/* Lock the captured resources to the new transaction. */
-> >  	if (dfc->dfc_held.dr_inos == 2)
-> >  		xfs_lock_two_inodes(dfc->dfc_held.dr_ip[0], XFS_ILOCK_EXCL,
-> >  				    dfc->dfc_held.dr_ip[1], XFS_ILOCK_EXCL);
-> >  	else if (dfc->dfc_held.dr_inos == 1)
-> >  		xfs_ilock(dfc->dfc_held.dr_ip[0], XFS_ILOCK_EXCL);
-> > +
-> > +	xfs_defer_relock_buffers(dfc);
-> > +
-> > +	/* Join the captured resources to the new transaction. */
-> >  	xfs_defer_restore_resources(tp, &dfc->dfc_held);
-> >  	memcpy(dres, &dfc->dfc_held, sizeof(struct xfs_defer_resources));
-> >  
-> > +	/*
-> > +	 * Inodes must be passed back to the log recovery code to be unlocked,
-> > +	 * but buffers do not.  Ignore the captured buffers
-> > +	 */
-> > +	dres->dr_bufs = 0;
-> 
-> I'm not sure what this comment is supposed to indicate. This seems
-> to be infrastructure specific to log recovery, not general runtime
-> functionality, but even in that context I don't really understand
-> what it means or why it is done...
+diff --git a/include/libxfs.h b/include/libxfs.h
+index 24424d0e..64b44af8 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -11,6 +11,7 @@
+  #include "platform_defs.h"
+  #include "xfs.h"
+  
++#include "stubs.h"
+  #include "list.h"
+  #include "hlist.h"
+  #include "cache.h"
+diff --git a/include/stubs.h b/include/stubs.h
+new file mode 100644
+index 00000000..41eaa0c4
+--- /dev/null
++++ b/include/stubs.h
+@@ -0,0 +1,28 @@
++// SPDX-License-Identifier: GPL-2.0
++
++/*
++ * Stub out unimplemented and unneeded kernel structures etc
++ */
++#ifndef STUBS_H
++#define STUBS_H
++
++struct rb_root {
++};
++
++#define RB_ROOT 		(struct rb_root) { }
++
++typedef struct wait_queue_head {
++} wait_queue_head_t;
++
++#define init_waitqueue_head(wqh)	do { } while(0)
++
++struct rhashtable {
++};
++
++struct delayed_work {
++};
++
++#define INIT_DELAYED_WORK(work, func)	do { } while(0)
++#define cancel_delayed_work_sync(work)	do { } while(0)
++
++#endif
+diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+index 15bae1ff..32271c66 100644
+--- a/libxfs/libxfs_priv.h
++++ b/libxfs/libxfs_priv.h
+@@ -41,6 +41,7 @@
+  #include "platform_defs.h"
+  #include "xfs.h"
+  
++#include "stubs.h"
+  #include "list.h"
+  #include "hlist.h"
+  #include "cache.h"
+diff --git a/libxfs/xfs_shared.h b/libxfs/xfs_shared.h
+index bafee48c..25c4cab5 100644
+--- a/libxfs/xfs_shared.h
++++ b/libxfs/xfs_shared.h
+@@ -180,24 +180,4 @@ struct xfs_ino_geometry {
+  
+  };
+  
+-/* Faked up kernel bits */
+-struct rb_root {
+-};
+-
+-#define RB_ROOT 		(struct rb_root) { }
+-
+-typedef struct wait_queue_head {
+-} wait_queue_head_t;
+-
+-#define init_waitqueue_head(wqh)	do { } while(0)
+-
+-struct rhashtable {
+-};
+-
+-struct delayed_work {
+-};
+-
+-#define INIT_DELAYED_WORK(work, func)	do { } while(0)
+-#define cancel_delayed_work_sync(work)	do { } while(0)
+-
+  #endif /* __XFS_SHARED_H__ */
 
-The defer_capture machinery picks up inodes that were ijoined with
-lock_flags==0 (i.e. caller will unlock explicitly), which is why they
-have to be passed back out after the entire transaction sequence
-completes.
-
-By contrast, the defer capture machinery picks up buffers with BLI_HOLD
-set on the log item.  These are only meant to maintain the hold across
-the next transaction roll (or the next defer_finish invocation), which
-means that the caller is responsible for unlocking and releasing the
-buffer (or I guess re-holding it) during that next transaction.
-
---D
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
