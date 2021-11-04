@@ -2,26 +2,26 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C043C4332F
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Nov 2021 06:48:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78885C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Nov 2021 06:49:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0A4C360232
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Nov 2021 06:48:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 58E6960232
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Nov 2021 06:49:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230472AbhKDGvZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 4 Nov 2021 02:51:25 -0400
-Received: from mail-bn7nam10on2070.outbound.protection.outlook.com ([40.107.92.70]:43328
-        "EHLO NAM10-BN7-obe.outbound.protection.outlook.com"
+        id S230306AbhKDGwJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 4 Nov 2021 02:52:09 -0400
+Received: from mail-dm6nam11on2060.outbound.protection.outlook.com ([40.107.223.60]:34177
+        "EHLO NAM11-DM6-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S230404AbhKDGvR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 4 Nov 2021 02:51:17 -0400
+        id S230152AbhKDGwI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 4 Nov 2021 02:52:08 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=kDf/bigtcD9hSFeCyTxGCzuKkvtd4fA220LLjejGiQf3hcI1A5qhjj1mHNgRy9IsxPgaXeFpP5yT55bR2WJqLVZsxkab6TkiqUr0Zj5DkwjJ3AJTAwE1/9R6niiE03rhbZcoLBWufJsvF42k/Hs6Uvvi564Y7STB96U6B+ldqyZPPluznWvqi9SsiXFj+ZOqsFM5HcroXPNmoZH/RQ3G3E0zNflYGkKvQ/FiYDgIiotSxceVL4IjKbArEeLKJSt39guF8GxYU2jw8hdaEeOrByCam3yJKzy2ZdpWVkCjhhxJaFC3eFJp1gGuTXyTO3z6Dj4Dyz76ZbGeKhVE5MwBFA==
+ b=KEwhjSx/p3QJF4YF4EZBMOQrNkkPCuMixuz4VaTD+Y5qUT5Qt4OT49zbAbZC0kxfuHDFPeLR3I3AtPzzFFAUuX9etV8L1PKeYuiTyNIQpSbhkjTiyD5M+ieBPTLLWTLPQ63C7FEkWOXzCYMewvFKAi8zsw+uYfvDZeIZC3AsdEmBWLhWIsFvX6YsoTBRGjzxsFYK2ELvzizw9eccW7qfOMLJYn7+KlKs0zWXvm5OWsBoXHZaCertVYPb0e0LRwtGtCqB/TwsyMs97aE3wPZ/ks/KFbGnxQ3r2tzawUjNSZQtQkQY5MQcsIfo4FunspOCy6+w+OAcggMffSTrheKqHg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=gjcVHWbnAEecA915XA0wQ3vH3zi30J91BMVloHaQxR4=;
- b=LTBA8cFlD7p8HA4YlLqNRshVxPj6ddLA3OgAMwQ2wCBHL/UsYFpA1cUif75OzNGmmBiCoEHSYkMfHE1Tj5dvZWARVhAtYPTPc8NWS8O8VJfTlZc8+S50Y5PkMZ+lhfb+7Om3xg0rYQ5Dcctx0lwjBOmYrzBxEECu3AbiLsW7IQlbbj6cReYP7CaDImrkrUapDdTiytKjO6MFF7rgIy5qllxQdWI6fZ5Z5hZyxsKf8JwtXHyCny1NU7wfS6ogiC0OU8INexsiXqRy1XknxRmzWqaagJUVsZBXwEelnT1Z2DXmtCwCAr2fM2FNS18eB4vWccRB+FxsXgNBNNbmG8NHYA==
+ bh=Ane43rtMhrYoZXTGaIipvrwNkaplJZzdbnTQZQVIfp4=;
+ b=n5cKvGYJZ+oM3eXLvkoiZxei6u7v1dD83aAChMBbQigrUpW+cvmkhGDaSq/14M7ONMSVKY+ug9DkQamq8jNE8RW4pyTIhIRCVAnigwhd5G6sBJUH6QDqc7z9sO8L2FtuUqsaW8SwI7oWSeOGfz3fJB6NeyHjEZOiKEzTCn492gMIq70gqtH1B7/RKqWcfJQ6JgoHoQ4KKCXcQQSyHXUfziZzXQJW5UynT0b001hXTLU79A8dZp8F4/7QFFE4DFeT0Q94WLAqiiwVcf+VvUBTAk6YbbOx9hzTUFF3IeCR3a2HaM3RACo34x9i2LlvKC1gKwns8pnH1fCeuQ+oxg4o2g==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  216.228.112.34) smtp.rcpttodomain=infradead.org smtp.mailfrom=nvidia.com;
  dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
@@ -29,18 +29,18 @@ ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=gjcVHWbnAEecA915XA0wQ3vH3zi30J91BMVloHaQxR4=;
- b=UyIDrB2kOwKKYJqyzDLPNFYR13zjLS70PI6dudbRmUBTWb/9DUy/I2jDd56Tc412Set/hIQ3n4WUKrUIep7OtTRj16zeaj8Om59Bn+BxWxYCbJKvgh/Q7ipceivkSvvfG5rcEK5JyLxHtlC6NyZXizT+cCBKOgpdG1C5i2rgDMkS2qk2ANr08NBlWgxt19qT2kEo6+v13Z9u9NwHJRZRIVFfXhw4JHzwMXdFbbevNkk3Wo0sOPx/9uNTGPSyL6eW+SUNZ2vX3Z9O3pgeuYdA8NjZPZGktLzISxtUY6yTMzstAOZozPi6z2QlJCZ+NUaMx4OrWOI9pbdCj7/GHaKe/Q==
-Received: from BN6PR22CA0049.namprd22.prod.outlook.com (2603:10b6:404:ca::11)
- by CH2PR12MB4922.namprd12.prod.outlook.com (2603:10b6:610:65::22) with
+ bh=Ane43rtMhrYoZXTGaIipvrwNkaplJZzdbnTQZQVIfp4=;
+ b=QVutPaZ8r01lwuarP4Ok8Rp/xHRzOpNzcvLV9QdYIOqQWxEZARFb6bKxmzer23UV4uAXI5gQnuG19T/tlnIgeS6SC590sQiA0SXNgnnt3CZfyiEd9k7ZKRcjX+W3yZu9Ax72AsKn4OHoTL3Vj/7HiwmCgoE+vb0c5hK/kWKlRIZOKZEcLgXzoxc5/sCa4Cl7IVBbe6pf6MpzdxX4cuW+Hbeh1WOXlm3tRfZ5CS0GgpGuc+YYWXXrPq8XH7ZfDYVNHMRD8EuA3WToqE+3ueWEQE/LdkSWYnIwFUlsUO+aDlxbuuWLgHl4CI1L/u6T94x0Dl5dxStfp3y5E9Q2RpXHOA==
+Received: from MWHPR15CA0041.namprd15.prod.outlook.com (2603:10b6:300:ad::27)
+ by BL0PR12MB4929.namprd12.prod.outlook.com (2603:10b6:208:1c4::7) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4649.14; Thu, 4 Nov
- 2021 06:48:36 +0000
-Received: from BN8NAM11FT039.eop-nam11.prod.protection.outlook.com
- (2603:10b6:404:ca:cafe::ec) by BN6PR22CA0049.outlook.office365.com
- (2603:10b6:404:ca::11) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4649.15 via Frontend
- Transport; Thu, 4 Nov 2021 06:48:36 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4669.11; Thu, 4 Nov
+ 2021 06:49:28 +0000
+Received: from CO1NAM11FT054.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:300:ad:cafe::18) by MWHPR15CA0041.outlook.office365.com
+ (2603:10b6:300:ad::27) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4669.11 via Frontend
+ Transport; Thu, 4 Nov 2021 06:49:27 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.112.34)
  smtp.mailfrom=nvidia.com; infradead.org; dkim=none (message not signed)
  header.d=none;infradead.org; dmarc=pass action=none header.from=nvidia.com;
@@ -48,12 +48,12 @@ Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
  216.228.112.34 as permitted sender) receiver=protection.outlook.com;
  client-ip=216.228.112.34; helo=mail.nvidia.com;
 Received: from mail.nvidia.com (216.228.112.34) by
- BN8NAM11FT039.mail.protection.outlook.com (10.13.177.169) with Microsoft SMTP
+ CO1NAM11FT054.mail.protection.outlook.com (10.13.174.70) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.20.4669.10 via Frontend Transport; Thu, 4 Nov 2021 06:48:36 +0000
+ 15.20.4669.10 via Frontend Transport; Thu, 4 Nov 2021 06:49:27 +0000
 Received: from dev.nvidia.com (172.20.187.6) by HQMAIL107.nvidia.com
  (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Thu, 4 Nov
- 2021 06:48:34 +0000
+ 2021 06:49:25 +0000
 From:   Chaitanya Kulkarni <chaitanyak@nvidia.com>
 To:     <linux-block@vger.kernel.org>, <linux-raid@vger.kernel.org>,
         <linux-nvme@lists.infradead.org>, <linux-scsi@vger.kernel.org>,
@@ -72,9 +72,9 @@ CC:     <axboe@kernel.dk>, <agk@redhat.com>, <snitzer@redhat.com>,
         <idryomov@gmail.com>, <danil.kipnis@cloud.ionos.com>,
         <ebiggers@google.com>, <jinpu.wang@cloud.ionos.com>,
         Chaitanya Kulkarni <kch@nvidia.com>
-Subject: [RFC PATCH 5/8] nvmet: add Verify emulation support for bdev-ns
-Date:   Wed, 3 Nov 2021 23:46:31 -0700
-Message-ID: <20211104064634.4481-6-chaitanyak@nvidia.com>
+Subject: [RFC PATCH 7/8] null_blk: add REQ_OP_VERIFY support
+Date:   Wed, 3 Nov 2021 23:46:33 -0700
+Message-ID: <20211104064634.4481-8-chaitanyak@nvidia.com>
 X-Mailer: git-send-email 2.29.0
 In-Reply-To: <20211104064634.4481-1-chaitanyak@nvidia.com>
 References: <20211104064634.4481-1-chaitanyak@nvidia.com>
@@ -86,196 +86,145 @@ X-ClientProxiedBy: HQMAIL111.nvidia.com (172.20.187.18) To
  HQMAIL107.nvidia.com (172.20.187.13)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: d463c2a0-3cc9-4ef9-715f-08d99f5f205d
-X-MS-TrafficTypeDiagnostic: CH2PR12MB4922:
-X-Microsoft-Antispam-PRVS: <CH2PR12MB49221098D02442DD978C64ECA38D9@CH2PR12MB4922.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:6108;
+X-MS-Office365-Filtering-Correlation-Id: 4c88335d-44df-4ab6-fdb0-08d99f5f3ed1
+X-MS-TrafficTypeDiagnostic: BL0PR12MB4929:
+X-Microsoft-Antispam-PRVS: <BL0PR12MB49292A540009AE62BFCBC1D6A38D9@BL0PR12MB4929.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:4125;
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: gLwEKNl/4NCZ2aXAcasSAQW/zJDJM2GuhK8L/BvmKkaQA4L+RDYpQZZrg3dCMopLZ9YgDUiqIntp8Jv+unb3obuOoQb0aFNTgEj/DRn40UHsElmL6Vgyasza905kvDkueExaOlyuKX6KKX5x1UD8oSHUHeXQd9N9+QVthtbE+6hdBtwDwXlJGjWo73HU6BD2GtIXXDPz/+BiHsdNGb5daYb7MdyvVNhF2vgVVCLiNY5dojm5ntd/cmijm5Xqh7J7zzuNIr1UjdwgSRw5vS9YiwTXO1CFg5l6fg2HD4KAnMqvNNFwC3Tx/f0II1YG9D2qpsOOnqkDMBVbktrunPlxK07bmHdQrm1EuySCQ/FcwSGY9cNlV4W255mJb+sNkVqGah6rozTO8ttomqDk388bNioAcb4ausqBFrgX8ffV8XV/hgq2Pzpa64VqeNwDDuGMORbB/lGPaJWsaD23L/NG3USaxpJH8Cwz3xBS6dds3ZQq5NUuJtgsfLSkJunSTy70KIrrFPH76GQiW7QocO+mjuFRCKVSWv+8rwvPkNHZoLgcnSqRjuIyBETVxbSIEnjbOgCm7W9ZCELS8LcGGomYbY9FWllovcTtvfXDyO0L5lhtkh+rsWwGAZB5FX+7L5yDr6/RH7KeOgFeS5IvzOMLpUHllH8z0c0V5uGQGD/IGtfJn8BMqTaojKC4Fa54KqbkqmDUI7xhiYXhg7lXGSroFKwm/q9fAFYUVAUnGIkEsJB5D+QPcsc8IrDhjCUC59yy
-X-Forefront-Antispam-Report: CIP:216.228.112.34;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:schybrid03.nvidia.com;CAT:NONE;SFS:(4636009)(46966006)(36840700001)(36860700001)(36756003)(70586007)(336012)(26005)(186003)(5660300002)(82310400003)(7696005)(107886003)(16526019)(2906002)(86362001)(15650500001)(4326008)(70206006)(2616005)(8936002)(316002)(36906005)(7636003)(1076003)(54906003)(110136005)(8676002)(356005)(7416002)(426003)(508600001)(7406005)(6666004)(83380400001)(47076005)(21314003)(2101003);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: cNcSmwHUNvU0MLrJY51f1jFTCFVJ/bInnujjBlLYf7Af8VWppB8y+0OxE3uGiPlteGRiS7INsnRvgmV3gr9EWJvNS1+5QUiZgHJqiP9YRUvg06GBcORfdopDWCIJwBoxEMff4Y1B6f10QE/2c5uo7sA5mmD59sDu1mB52sQlGoE49jbyrtfjFIx7ZC+wFQUrb0ElSbnd3swuqJysWxnbxQDEa0uvW0CO9CFrDABZ3mY+Ps6/+RA8ZFBNb+W/0tikWtCh+QOz9vxugVq0htgjcsybd8GfTcYn8GKt1A0aEz+r0u67l4kjeXN4aa/vUaeduBJQGWpH8nRaINa9LINagFgKLEdUqyZwJrMEn1AmcCvYfqYPOt6nkwp28Zqw4dj07/wT33nPSLmmWS53vrRm2wrjcANJ/Xf5G7q5xRASI0SLtW+Ovwm7BFvRwW3/p/qLAliRnyS6F29FI/vcMwGbdrTzncE/snlVLgHyDE3tmixpESGnpu5/9tyTMsCdodsRsIrKjDXZqL+mhgj14fynEjULEb8Ls8RgOUU7ggDwvMKsruE+vaPqYGfd+Yp9sSj5ErL/bm6iIgcr+uvi3fxvlmasnKNfPDR/QjMYn3eHcgoJoZKJXHL1pvtQg8ZpE1OpuqSSCLWERbybURW1rm+6XaqhJmUukqzw1s/W1fvQP5nhSX133syiHTEmTNvWOtDJx3+sKZLdjbNxRWPaiwiVjmeIvZJ17hmTngZwCVHj7a8=
+X-Forefront-Antispam-Report: CIP:216.228.112.34;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:schybrid03.nvidia.com;CAT:NONE;SFS:(4636009)(46966006)(36840700001)(336012)(8676002)(86362001)(426003)(26005)(16526019)(186003)(36860700001)(47076005)(7406005)(7416002)(2616005)(54906003)(8936002)(316002)(110136005)(7696005)(36756003)(508600001)(356005)(107886003)(70586007)(7636003)(6666004)(83380400001)(5660300002)(4326008)(70206006)(2906002)(1076003)(82310400003)(2101003);DIR:OUT;SFP:1101;
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Nov 2021 06:48:36.1661
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Nov 2021 06:49:27.3205
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: d463c2a0-3cc9-4ef9-715f-08d99f5f205d
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4c88335d-44df-4ab6-fdb0-08d99f5f3ed1
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.112.34];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT039.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT054.eop-nam11.prod.protection.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR12MB4922
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL0PR12MB4929
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Chaitanya Kulkarni <kch@nvidia.com>
 
-Not all devices can support verify requests which can be mapped to
-the controller specific command. This patch adds a way to emulate
-REQ_OP_VERIFY for NVMeOF block device namespace. We add a new
-workqueue to offload the emulation with the help of
-__blkdev_emulate_verify().
+Add a new module parameter, configfs attribute to configure handling of
+the REQ_OP_VERIFY. This is needed for testing newly added REQ_OP_VERIFY
+block layer operation.
 
 Signed-off-by: Chaitanya Kulkarni <kch@nvidia.com>
 ---
- drivers/nvme/target/core.c        | 12 +++++++-
- drivers/nvme/target/io-cmd-bdev.c | 51 ++++++++++++++++++++++++++-----
- drivers/nvme/target/nvmet.h       |  3 ++
- 3 files changed, 57 insertions(+), 9 deletions(-)
+ drivers/block/null_blk/main.c     | 25 ++++++++++++++++++++++++-
+ drivers/block/null_blk/null_blk.h |  1 +
+ 2 files changed, 25 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/nvme/target/core.c b/drivers/nvme/target/core.c
-index 8ce4d59cc9e7..8a17a6479073 100644
---- a/drivers/nvme/target/core.c
-+++ b/drivers/nvme/target/core.c
-@@ -16,6 +16,7 @@
- #include "nvmet.h"
+diff --git a/drivers/block/null_blk/main.c b/drivers/block/null_blk/main.c
+index d6c821d48090..36a5f5343cee 100644
+--- a/drivers/block/null_blk/main.c
++++ b/drivers/block/null_blk/main.c
+@@ -216,6 +216,10 @@ static unsigned int g_zone_nr_conv;
+ module_param_named(zone_nr_conv, g_zone_nr_conv, uint, 0444);
+ MODULE_PARM_DESC(zone_nr_conv, "Number of conventional zones when block device is zoned. Default: 0");
  
- struct workqueue_struct *buffered_io_wq;
-+struct workqueue_struct *verify_wq;
- static const struct nvmet_fabrics_ops *nvmet_transports[NVMF_TRTYPE_MAX];
- static DEFINE_IDA(cntlid_ida);
- 
-@@ -1546,11 +1547,17 @@ static int __init nvmet_init(void)
- 
- 	nvmet_ana_group_enabled[NVMET_DEFAULT_ANA_GRPID] = 1;
- 
-+	verify_wq = alloc_workqueue("nvmet-verify-wq", WQ_MEM_RECLAIM, 0);
-+	if (!verify_wq) {
-+		error = -ENOMEM;
-+		goto out;
-+	}
++static bool g_verify;
++module_param_named(verify, g_verify, bool, 0444);
++MODULE_PARM_DESC(verify, "Allow REQ_OP_VERIFY processing. Default: false");
 +
- 	buffered_io_wq = alloc_workqueue("nvmet-buffered-io-wq",
- 			WQ_MEM_RECLAIM, 0);
- 	if (!buffered_io_wq) {
- 		error = -ENOMEM;
--		goto out;
-+		goto out_free_verify_work_queue;
- 	}
- 
- 	error = nvmet_init_discovery();
-@@ -1566,6 +1573,8 @@ static int __init nvmet_init(void)
- 	nvmet_exit_discovery();
- out_free_work_queue:
- 	destroy_workqueue(buffered_io_wq);
-+out_free_verify_work_queue:
-+	destroy_workqueue(verify_wq);
- out:
- 	return error;
- }
-@@ -1576,6 +1585,7 @@ static void __exit nvmet_exit(void)
- 	nvmet_exit_discovery();
- 	ida_destroy(&cntlid_ida);
- 	destroy_workqueue(buffered_io_wq);
-+	destroy_workqueue(verify_wq);
- 
- 	BUILD_BUG_ON(sizeof(struct nvmf_disc_rsp_page_entry) != 1024);
- 	BUILD_BUG_ON(sizeof(struct nvmf_disc_rsp_page_hdr) != 1024);
-diff --git a/drivers/nvme/target/io-cmd-bdev.c b/drivers/nvme/target/io-cmd-bdev.c
-index 5a888cdadfea..80b8e7bfd1ae 100644
---- a/drivers/nvme/target/io-cmd-bdev.c
-+++ b/drivers/nvme/target/io-cmd-bdev.c
-@@ -433,25 +433,60 @@ static void nvmet_bdev_execute_write_zeroes(struct nvmet_req *req)
- 	}
- }
- 
--static void nvmet_bdev_execute_verify(struct nvmet_req *req)
-+static void __nvmet_req_to_verify_sectors(struct nvmet_req *req,
-+		sector_t *sects, sector_t *nr_sects)
+ static unsigned int g_zone_max_open;
+ module_param_named(zone_max_open, g_zone_max_open, uint, 0444);
+ MODULE_PARM_DESC(zone_max_open, "Maximum number of open zones when block device is zoned. Default: 0 (no limit)");
+@@ -358,6 +362,7 @@ NULLB_DEVICE_ATTR(blocking, bool, NULL);
+ NULLB_DEVICE_ATTR(use_per_node_hctx, bool, NULL);
+ NULLB_DEVICE_ATTR(memory_backed, bool, NULL);
+ NULLB_DEVICE_ATTR(discard, bool, NULL);
++NULLB_DEVICE_ATTR(verify, bool, NULL);
+ NULLB_DEVICE_ATTR(mbps, uint, NULL);
+ NULLB_DEVICE_ATTR(cache_size, ulong, NULL);
+ NULLB_DEVICE_ATTR(zoned, bool, NULL);
+@@ -477,6 +482,7 @@ static struct configfs_attribute *nullb_device_attrs[] = {
+ 	&nullb_device_attr_power,
+ 	&nullb_device_attr_memory_backed,
+ 	&nullb_device_attr_discard,
++	&nullb_device_attr_verify,
+ 	&nullb_device_attr_mbps,
+ 	&nullb_device_attr_cache_size,
+ 	&nullb_device_attr_badblocks,
+@@ -539,7 +545,7 @@ nullb_group_drop_item(struct config_group *group, struct config_item *item)
+ static ssize_t memb_group_features_show(struct config_item *item, char *page)
  {
- 	struct nvme_verify_cmd *verify = &req->cmd->verify;
-+
-+	*sects = le64_to_cpu(verify->slba) << (req->ns->blksize_shift - 9);
-+	*nr_sects = (((sector_t)le16_to_cpu(verify->length) + 1) <<
-+			(req->ns->blksize_shift - 9));
-+}
-+
-+static void nvmet_bdev_emulate_verify_work(struct work_struct *w)
-+{
-+	struct nvmet_req *req = container_of(w, struct nvmet_req, b.work);
-+	sector_t nr_sector;
-+	sector_t sector;
-+	int ret = 0;
-+
-+	__nvmet_req_to_verify_sectors(req, &sector, &nr_sector);
-+	if (!nr_sector)
-+		goto out;
-+
-+	ret = blkdev_emulate_verify(req->ns->bdev, sector, nr_sector,
-+			GFP_KERNEL);
-+out:
-+	nvmet_req_complete(req,
-+			   blk_to_nvme_status(req, errno_to_blk_status(ret)));
-+}
-+
-+static void nvmet_bdev_submit_emulate_verify(struct nvmet_req *req)
-+{
-+	INIT_WORK(&req->b.work, nvmet_bdev_emulate_verify_work);
-+	queue_work(verify_wq, &req->b.work);
-+}
-+
-+
-+static void nvmet_bdev_execute_verify(struct nvmet_req *req)
-+{
- 	struct bio *bio = NULL;
- 	sector_t nr_sector;
- 	sector_t sector;
--	int ret;
-+	int ret = 0;
- 
- 	if (!nvmet_check_transfer_len(req, 0))
- 		return;
- 
-+	/* offload emulation */
- 	if (!bdev_verify_sectors(req->ns->bdev)) {
--		nvmet_req_complete(req, NVME_SC_INTERNAL | NVME_SC_DNR);
-+		nvmet_bdev_submit_emulate_verify(req);
- 		return;
- 	}
- 
--	sector = le64_to_cpu(verify->slba) << (req->ns->blksize_shift - 9);
--	nr_sector = (((sector_t)le16_to_cpu(verify->length) + 1) <<
--			(req->ns->blksize_shift - 9));
-+	__nvmet_req_to_verify_sectors(req, &sector, &nr_sector);
-+	if (!nr_sector)
-+		goto out;
- 
- 	ret = __blkdev_issue_verify(req->ns->bdev, sector, nr_sector,
- 			GFP_KERNEL, &bio);
-@@ -459,9 +494,9 @@ static void nvmet_bdev_execute_verify(struct nvmet_req *req)
- 		bio->bi_private = req;
- 		bio->bi_end_io = nvmet_bio_done;
- 		submit_bio(bio);
--	} else {
--		nvmet_req_complete(req, errno_to_nvme_status(req, ret));
- 	}
-+out:
-+	nvmet_req_complete(req, errno_to_nvme_status(req, ret));
+ 	return snprintf(page, PAGE_SIZE,
+-			"memory_backed,discard,bandwidth,cache,badblocks,zoned,zone_size,zone_capacity,zone_nr_conv,zone_max_open,zone_max_active,blocksize,max_sectors\n");
++			"memory_backed,discard,verify,bandwidth,cache,badblocks,zoned,zone_size,zone_capacity,zone_nr_conv,zone_max_open,zone_max_active,blocksize,max_sectors\n");
  }
  
- u16 nvmet_bdev_parse_io_cmd(struct nvmet_req *req)
-diff --git a/drivers/nvme/target/nvmet.h b/drivers/nvme/target/nvmet.h
-index 8776dd1a0490..7f3f584b1e7b 100644
---- a/drivers/nvme/target/nvmet.h
-+++ b/drivers/nvme/target/nvmet.h
-@@ -323,6 +323,8 @@ struct nvmet_req {
- 	union {
- 		struct {
- 			struct bio      inline_bio;
-+			/* XXX: should we take work out of union ? */
-+			struct work_struct      work;
- 		} b;
- 		struct {
- 			bool			mpool_alloc;
-@@ -355,6 +357,7 @@ struct nvmet_req {
+ CONFIGFS_ATTR_RO(memb_group_, features);
+@@ -601,6 +607,7 @@ static struct nullb_device *null_alloc_dev(void)
+ 	dev->use_per_node_hctx = g_use_per_node_hctx;
+ 	dev->zoned = g_zoned;
+ 	dev->zone_size = g_zone_size;
++	dev->verify = g_verify;
+ 	dev->zone_capacity = g_zone_capacity;
+ 	dev->zone_nr_conv = g_zone_nr_conv;
+ 	dev->zone_max_open = g_zone_max_open;
+@@ -1165,6 +1172,9 @@ static int null_handle_rq(struct nullb_cmd *cmd)
+ 	struct req_iterator iter;
+ 	struct bio_vec bvec;
+ 
++	if (req_op(rq) == REQ_OP_VERIFY)
++		return 0;
++
+ 	spin_lock_irq(&nullb->lock);
+ 	rq_for_each_segment(bvec, rq, iter) {
+ 		len = bvec.bv_len;
+@@ -1192,6 +1202,9 @@ static int null_handle_bio(struct nullb_cmd *cmd)
+ 	struct bio_vec bvec;
+ 	struct bvec_iter iter;
+ 
++	if (bio_op(bio) == REQ_OP_VERIFY)
++		return 0;
++
+ 	spin_lock_irq(&nullb->lock);
+ 	bio_for_each_segment(bvec, bio, iter) {
+ 		len = bvec.bv_len;
+@@ -1609,6 +1622,15 @@ static void null_config_discard(struct nullb *nullb)
+ 	blk_queue_flag_set(QUEUE_FLAG_DISCARD, nullb->q);
+ }
+ 
++static void null_config_verify(struct nullb *nullb)
++{
++	if (nullb->dev->verify == false)
++		return;
++
++	blk_queue_max_verify_sectors(nullb->q, UINT_MAX >> 9);
++	blk_queue_flag_set(QUEUE_FLAG_VERIFY, nullb->q);
++}
++
+ static const struct block_device_operations null_bio_ops = {
+ 	.owner		= THIS_MODULE,
+ 	.submit_bio	= null_submit_bio,
+@@ -1881,6 +1903,7 @@ static int null_add_dev(struct nullb_device *dev)
+ 	blk_queue_max_hw_sectors(nullb->q, dev->max_sectors);
+ 
+ 	null_config_discard(nullb);
++	null_config_verify(nullb);
+ 
+ 	sprintf(nullb->disk_name, "nullb%d", nullb->index);
+ 
+diff --git a/drivers/block/null_blk/null_blk.h b/drivers/block/null_blk/null_blk.h
+index 83504f3cc9d6..e6913c099e71 100644
+--- a/drivers/block/null_blk/null_blk.h
++++ b/drivers/block/null_blk/null_blk.h
+@@ -95,6 +95,7 @@ struct nullb_device {
+ 	bool power; /* power on/off the device */
+ 	bool memory_backed; /* if data is stored in memory */
+ 	bool discard; /* if support discard */
++	bool verify; /* if support verify */
+ 	bool zoned; /* if device is zoned */
  };
  
- extern struct workqueue_struct *buffered_io_wq;
-+extern struct workqueue_struct *verify_wq;
- 
- static inline void nvmet_set_result(struct nvmet_req *req, u32 result)
- {
 -- 
 2.22.1
 
