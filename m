@@ -2,160 +2,105 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDB97C433FE
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Nov 2021 06:21:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3C6DC433EF
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Nov 2021 06:24:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B4CCD611CB
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Nov 2021 06:21:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B2C9D611CB
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Nov 2021 06:24:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230494AbhKDGY3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 4 Nov 2021 02:24:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46190 "EHLO
+        id S229994AbhKDG1Q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 4 Nov 2021 02:27:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46848 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230319AbhKDGY2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Nov 2021 02:24:28 -0400
-Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8DAAC061203
-        for <linux-xfs@vger.kernel.org>; Wed,  3 Nov 2021 23:21:50 -0700 (PDT)
-Received: by mail-pl1-x62c.google.com with SMTP id f8so5523708plo.12
-        for <linux-xfs@vger.kernel.org>; Wed, 03 Nov 2021 23:21:50 -0700 (PDT)
+        with ESMTP id S230150AbhKDG1Q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Nov 2021 02:27:16 -0400
+Received: from mail-pf1-x432.google.com (mail-pf1-x432.google.com [IPv6:2607:f8b0:4864:20::432])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95E04C061714;
+        Wed,  3 Nov 2021 23:24:38 -0700 (PDT)
+Received: by mail-pf1-x432.google.com with SMTP id 127so4880387pfu.1;
+        Wed, 03 Nov 2021 23:24:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20210112.gappssmtp.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=ZyuA6ddRdNnvNpvSUsN4hZr4Uf2uGmRKXvml9zPHv3U=;
-        b=LZQMkMEgCvdpUn1y3IGr6TRctr3Q9zUor3iSBVXWEwdAP54SnFBy+WF/4Ebp9InWiZ
-         82EJ07KkJqO1IXAjeb5tQuOwY1ckueHAnmH/o6R5PLxqRYs7VaaskeCn1nugf4y2mqcY
-         E6yt7u/txZYD8jXP/DpSBx32wbdzRNzBp4YXA0WR06xzBm2Tz82m9R7MZkgsmA0yPcMZ
-         ToDGBKl9+nZ9SgaoC7yR0jgPCp3Cx6s1akPqKynUiynPbM1vR9RHDbsWDBq4+aqq/5sp
-         U+yyphazc5dywiF0swD7YL24mIehmRIY8zog0Mlsw1WKup+EjujksqX34ab7rjp8ivql
-         LdNg==
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=GczOOZ819CBVgyrUgEiQpSFxZ9oaI7CSNNwrM6gcDi4=;
+        b=Hu35XFzFsKri1uUtqJXkVeckJpsGM+72fM9nRGmwsmGKva2zZiiphwLe4A9jZ+8JtD
+         Kw1zFBfRAPLGrBT+z0EXyEZnEFJjfOjig1FEAfUTMQpNjzgFp4EIFD+zEbsPiEhMTOFb
+         JdcrER+e7ACeY4Bvx25gGPy/ncmt1vVnYGX4cPeFK7uY3TFv0z56krh0NkPdygBcjFpr
+         NKtSJbz/6sWCN0a1NkDg6/cuYc6xgPPo+Jh7fwRPYPBRka1V51GNCVDLQHEq0zVyv8n0
+         yyRcj+R/FYrPKKAQHXvUqRKXMoYB20tThH80cM1JIK2EAS8oRM78+6ARrSP//HG/Aagc
+         1KRw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=ZyuA6ddRdNnvNpvSUsN4hZr4Uf2uGmRKXvml9zPHv3U=;
-        b=57X9UYxjB5oNcUDG6pUiuqJocGMHaC0b5TKYKk9B9whOpPJTmuOLob4N+Z0O+dAjs5
-         TZ6L+AgX+h0pYMwwFf8od6XNpHu7KP0Y49GqOg7lx+ADHj0uUW21iKv0I/dstoDazKOs
-         sJZdnbacUDosa+CqqffU/QYvRIA5pwPT9AZvueOLqZicWmZsgpZNhFDaTYsPf7+ucq1O
-         jidFoekNDLhYgxVaj+O7p4ttwYWjsTcVvJTEvyUkJyQnq5i/dwCWnHfTDiKFNodbT5w1
-         lOf32mPQUiJU6g01XCXGap+QbGK9uq1dLgbJ9XxMl0+aijyBfsOO22JqczpXxZHcPG5+
-         nPwg==
-X-Gm-Message-State: AOAM531MxFe94L9NIVW+bgLJiZHKNlKwdDxAp4DCbMIgkdOAg0Jylu76
-        zacIDPJv3AlG7tNpewfQw366nomfsbD0s3ih4OBn9A==
-X-Google-Smtp-Source: ABdhPJx4n/3hi5QSqYsscdoJBCM1f/g8m0p4vAuABjz6+mE+bZ+8hWcuD6Y6gRvy3XYJHICi5mkaZySCeaB3JPBO+/Q=
-X-Received: by 2002:a17:90a:6c47:: with SMTP id x65mr3577541pjj.8.1636006910291;
- Wed, 03 Nov 2021 23:21:50 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=GczOOZ819CBVgyrUgEiQpSFxZ9oaI7CSNNwrM6gcDi4=;
+        b=MCM1ezX5PLcyxpByBdgeCRMr+MieUk7F9NKb+Y4hOo2VXAhge15efId8H7rPZe/NgW
+         X6r27NTMbeKjRiv9zW/HU6hpPtWScmqlH4eJXLl8aVZY1uaeNEczJUJxn2MvOaVINHJ8
+         LAfUi+qILvLvPwSWJzdWe7071NHs9enN7H/x2YiMqlKPjru9fRLWhERG/y6S5eySY/s/
+         leQb784CR/4x7G0/cqr8wxq2YnkNJR8AqEsTgNl1Zm9I6tw/G4wKSRfTlfBS6kXDbd6g
+         bk9oVNtJloZLrn0zpmLL8NfURvGUr0a4uJNkZW8bSBP0tN2cu7XH8fs6eSey8oA73TJM
+         hfIw==
+X-Gm-Message-State: AOAM530BOUVZCPWEzP1WCpgaWWyR1MuzzHut0PXvYky6SG2Fzi5LSg4k
+        CGxLQ/k0xIqsZCWFA54gyQU=
+X-Google-Smtp-Source: ABdhPJx2kCDWjn3aW8xNGJEIMKL7cFbznv7TIOcrXCtTgu4rDAqzfybLYZNq4KC75JGG5WTFZNuvRQ==
+X-Received: by 2002:a05:6a00:a02:b0:47b:f59a:2c80 with SMTP id p2-20020a056a000a0200b0047bf59a2c80mr49662649pfh.41.1636007078227;
+        Wed, 03 Nov 2021 23:24:38 -0700 (PDT)
+Received: from debian11-dev-61.localdomain (192.243.120.180.16clouds.com. [192.243.120.180])
+        by smtp.gmail.com with ESMTPSA id h12sm3861462pfh.75.2021.11.03.23.24.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 03 Nov 2021 23:24:38 -0700 (PDT)
+From:   davidcomponentone@gmail.com
+X-Google-Original-From: yang.guang5@zte.com.cn
+To:     djwong@kernel.org
+Cc:     davidcomponentone@gmail.com, linux-xfs@vger.kernel.org,
+        dchinner@redhat.com, chandan.babu@oracle.com,
+        gustavoars@kernel.org, yang.guang5@zte.com.cn,
+        linux-kernel@vger.kernel.org, Zeal Robot <zealci@zte.com.cn>
+Subject: [PATCH] xfs: use swap() to make code cleaner
+Date:   Thu,  4 Nov 2021 14:24:27 +0800
+Message-Id: <20211104062427.1506328-1-yang.guang5@zte.com.cn>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-References: <20211021001059.438843-1-jane.chu@oracle.com> <YXFPfEGjoUaajjL4@infradead.org>
- <e89a2b17-3f03-a43e-e0b9-5d2693c3b089@oracle.com> <YXJN4s1HC/Y+KKg1@infradead.org>
- <2102a2e6-c543-2557-28a2-8b0bdc470855@oracle.com> <YXj2lwrxRxHdr4hb@infradead.org>
- <20211028002451.GB2237511@magnolia> <YYDYUCCiEPXhZEw0@infradead.org> <dfca8558-ad70-41d5-1131-63db66b70542@oracle.com>
-In-Reply-To: <dfca8558-ad70-41d5-1131-63db66b70542@oracle.com>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Wed, 3 Nov 2021 23:21:39 -0700
-Message-ID: <CAPcyv4jLn4_SYxLtp_cUT=mm6Y3An22BA+sqex1S-CBnAm6qGA@mail.gmail.com>
-Subject: Re: [dm-devel] [PATCH 0/6] dax poison recovery with RWF_RECOVERY_DATA flag
-To:     Jane Chu <jane.chu@oracle.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        "david@fromorbit.com" <david@fromorbit.com>,
-        "vishal.l.verma@intel.com" <vishal.l.verma@intel.com>,
-        "dave.jiang@intel.com" <dave.jiang@intel.com>,
-        "agk@redhat.com" <agk@redhat.com>,
-        "snitzer@redhat.com" <snitzer@redhat.com>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "ira.weiny@intel.com" <ira.weiny@intel.com>,
-        "willy@infradead.org" <willy@infradead.org>,
-        "vgoyal@redhat.com" <vgoyal@redhat.com>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "nvdimm@lists.linux.dev" <nvdimm@lists.linux.dev>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Nov 3, 2021 at 11:10 AM Jane Chu <jane.chu@oracle.com> wrote:
->
-> On 11/1/2021 11:18 PM, Christoph Hellwig wrote:
-> > On Wed, Oct 27, 2021 at 05:24:51PM -0700, Darrick J. Wong wrote:
-> >> ...so would you happen to know if anyone's working on solving this
-> >> problem for us by putting the memory controller in charge of dealing
-> >> with media errors?
-> >
-> > The only one who could know is Intel..
-> >
-> >> The trouble is, we really /do/ want to be able to (re)write the failed
-> >> area, and we probably want to try to read whatever we can.  Those are
-> >> reads and writes, not {pre,f}allocation activities.  This is where Dave
-> >> and I arrived at a month ago.
-> >>
-> >> Unless you'd be ok with a second IO path for recovery where we're
-> >> allowed to be slow?  That would probably have the same user interface
-> >> flag, just a different path into the pmem driver.
-> >
-> > Which is fine with me.  If you look at the API here we do have the
-> > RWF_ API, which them maps to the IOMAP API, which maps to the DAX_
-> > API which then gets special casing over three methods.
-> >
-> > And while Pavel pointed out that he and Jens are now optimizing for
-> > single branches like this.  I think this actually is silly and it is
-> > not my point.
-> >
-> > The point is that the DAX in-kernel API is a mess, and before we make
-> > it even worse we need to sort it first.  What is directly relevant
-> > here is that the copy_from_iter and copy_to_iter APIs do not make
-> > sense.  Most of the DAX API is based around getting a memory mapping
-> > using ->direct_access, it is just the read/write path which is a slow
-> > path that actually uses this.  I have a very WIP patch series to try
-> > to sort this out here:
-> >
-> > http://git.infradead.org/users/hch/misc.git/shortlog/refs/heads/dax-devirtualize
-> >
-> > But back to this series.  The basic DAX model is that the callers gets a
-> > memory mapping an just works on that, maybe calling a sync after a write
-> > in a few cases.  So any kind of recovery really needs to be able to
-> > work with that model as going forward the copy_to/from_iter path will
-> > be used less and less.  i.e. file systems can and should use
-> > direct_access directly instead of using the block layer implementation
-> > in the pmem driver.  As an example the dm-writecache driver, the pending
-> > bcache nvdimm support and the (horribly and out of tree) nova file systems
-> > won't even use this path.  We need to find a way to support recovery
-> > for them.  And overloading it over the read/write path which is not
-> > the main path for DAX, but the absolutely fast path for 99% of the
-> > kernel users is a horrible idea.
-> >
-> > So how can we work around the horrible nvdimm design for data recovery
-> > in a way that:
-> >
-> >     a) actually works with the intended direct memory map use case
-> >     b) doesn't really affect the normal kernel too much
-> >
-> > ?
-> >
->
-> This is clearer, I've looked at your 'dax-devirtualize' patch which
-> removes pmem_copy_to/from_iter, and as you mentioned before,
-> a separate API for poison-clearing is needed. So how about I go ahead
-> rebase my earlier patch
->
-> https://lore.kernel.org/lkml/20210914233132.3680546-2-jane.chu@oracle.com/
-> on 'dax-devirtualize', provide dm support for clear-poison?
-> That way, the non-dax 99% of the pwrite use-cases aren't impacted at all
-> and we resolve the urgent pmem poison-clearing issue?
->
-> Dan, are you okay with this?  I am getting pressure from our customers
-> who are basically stuck at the moment.
+From: Yang Guang <yang.guang5@zte.com.cn>
 
-The concern I have with dax_clear_poison() is that it precludes atomic
-error clearing. Also, as Boris and I discussed, poisoned pages should
-be marked NP (not present) rather than UC (uncacheable) [1]. With
-those 2 properties combined I think that wants a custom pmem fault
-handler that knows how to carefully write to pmem pages with poison
-present, rather than an additional explicit dax-operation. That also
-meets Christoph's requirement of "works with the intended direct
-memory map use case".
+Use the macro 'swap()' defined in 'include/linux/minmax.h' to avoid
+opencoding it.
 
-[1]: https://lore.kernel.org/r/CAPcyv4hrXPb1tASBZUg-GgdVs0OOFKXMXLiHmktg_kFi7YBMyQ@mail.gmail.com
+Reported-by: Zeal Robot <zealci@zte.com.cn>
+Signed-off-by: Yang Guang <yang.guang5@zte.com.cn>
+---
+ fs/xfs/libxfs/xfs_da_btree.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+index dd7a2dbce1d1..9dc1ecb9713d 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.c
++++ b/fs/xfs/libxfs/xfs_da_btree.c
+@@ -864,7 +864,6 @@ xfs_da3_node_rebalance(
+ {
+ 	struct xfs_da_intnode	*node1;
+ 	struct xfs_da_intnode	*node2;
+-	struct xfs_da_intnode	*tmpnode;
+ 	struct xfs_da_node_entry *btree1;
+ 	struct xfs_da_node_entry *btree2;
+ 	struct xfs_da_node_entry *btree_s;
+@@ -894,9 +893,7 @@ xfs_da3_node_rebalance(
+ 	    ((be32_to_cpu(btree2[0].hashval) < be32_to_cpu(btree1[0].hashval)) ||
+ 	     (be32_to_cpu(btree2[nodehdr2.count - 1].hashval) <
+ 			be32_to_cpu(btree1[nodehdr1.count - 1].hashval)))) {
+-		tmpnode = node1;
+-		node1 = node2;
+-		node2 = tmpnode;
++		swap(node1, node2);
+ 		xfs_da3_node_hdr_from_disk(dp->i_mount, &nodehdr1, node1);
+ 		xfs_da3_node_hdr_from_disk(dp->i_mount, &nodehdr2, node2);
+ 		btree1 = nodehdr1.btree;
+-- 
+2.30.2
+
