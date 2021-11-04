@@ -2,78 +2,52 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D15CC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Nov 2021 17:34:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD728C43217
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Nov 2021 17:36:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 81E5461076
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Nov 2021 17:34:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A7425611C0
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Nov 2021 17:36:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233867AbhKDRhQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 4 Nov 2021 13:37:16 -0400
-Received: from verein.lst.de ([213.95.11.211]:36174 "EHLO verein.lst.de"
+        id S233908AbhKDRil (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 4 Nov 2021 13:38:41 -0400
+Received: from verein.lst.de ([213.95.11.211]:36185 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231667AbhKDRhP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 4 Nov 2021 13:37:15 -0400
+        id S233896AbhKDRij (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 4 Nov 2021 13:38:39 -0400
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id 64F956732D; Thu,  4 Nov 2021 18:34:31 +0100 (CET)
-Date:   Thu, 4 Nov 2021 18:34:31 +0100
+        id ACAA76732D; Thu,  4 Nov 2021 18:35:59 +0100 (CET)
+Date:   Thu, 4 Nov 2021 18:35:59 +0100
 From:   Christoph Hellwig <hch@lst.de>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Chaitanya Kulkarni <chaitanyak@nvidia.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "agk@redhat.com" <agk@redhat.com>,
-        "snitzer@redhat.com" <snitzer@redhat.com>,
-        "song@kernel.org" <song@kernel.org>,
-        "kbusch@kernel.org" <kbusch@kernel.org>,
-        "sagi@grimberg.me" <sagi@grimberg.me>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
-        "javier@javigon.com" <javier@javigon.com>,
-        "johannes.thumshirn@wdc.com" <johannes.thumshirn@wdc.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "dongli.zhang@oracle.com" <dongli.zhang@oracle.com>,
-        "ming.lei@redhat.com" <ming.lei@redhat.com>,
-        "osandov@fb.com" <osandov@fb.com>,
-        "willy@infradead.org" <willy@infradead.org>,
-        "jefflexu@linux.alibaba.com" <jefflexu@linux.alibaba.com>,
-        "josef@toxicpanda.com" <josef@toxicpanda.com>,
-        "clm@fb.com" <clm@fb.com>, "dsterba@suse.com" <dsterba@suse.com>,
-        "jack@suse.com" <jack@suse.com>, "tytso@mit.edu" <tytso@mit.edu>,
-        "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>,
-        "jlayton@kernel.org" <jlayton@kernel.org>,
-        "idryomov@gmail.com" <idryomov@gmail.com>,
-        "danil.kipnis@cloud.ionos.com" <danil.kipnis@cloud.ionos.com>,
-        "ebiggers@google.com" <ebiggers@google.com>,
-        "jinpu.wang@cloud.ionos.com" <jinpu.wang@cloud.ionos.com>
-Subject: Re: [RFC PATCH 0/8] block: add support for REQ_OP_VERIFY
-Message-ID: <20211104173431.GA31740@lst.de>
-References: <20211104064634.4481-1-chaitanyak@nvidia.com> <20211104071439.GA21927@lst.de> <661bcadd-a030-4a72-81ae-ef15080f0241@nvidia.com> <20211104173235.GI2237511@magnolia>
+Cc:     Christoph Hellwig <hch@lst.de>, Eric Sandeen <sandeen@sandeen.net>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Mike Snitzer <snitzer@redhat.com>,
+        Ira Weiny <ira.weiny@intel.com>, dm-devel@redhat.com,
+        linux-xfs@vger.kernel.org, nvdimm@lists.linux.dev,
+        linux-s390@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        virtualization@lists.linux-foundation.org
+Subject: Re: futher decouple DAX from block devices
+Message-ID: <20211104173559.GB31740@lst.de>
+References: <20211018044054.1779424-1-hch@lst.de> <21ff4333-e567-2819-3ae0-6a2e83ec7ce6@sandeen.net> <20211104081740.GA23111@lst.de> <20211104173417.GJ2237511@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211104173235.GI2237511@magnolia>
+In-Reply-To: <20211104173417.GJ2237511@magnolia>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Nov 04, 2021 at 10:32:35AM -0700, Darrick J. Wong wrote:
-> I also wonder if it would be useful (since we're already having a
-> discussion elsewhere about data integrity syscalls for pmem) to be able
-> to call this sort of thing against files?  In which case we'd want
-> another preadv2 flag or something, and then plumb all that through the
-> vfs/iomap as needed?
+On Thu, Nov 04, 2021 at 10:34:17AM -0700, Darrick J. Wong wrote:
+> /me wonders, are block devices going away?  Will mkfs.xfs have to learn
+> how to talk to certain chardevs?  I guess jffs2 and others already do
+> that kind of thing... but I suppose I can wait for the real draft to
+> show up to ramble further. ;)
 
-IFF we do this (can't answer if there is a need) we should not
-overload read with it.  It is an operation that does not return
-data but just a status, so let's not get into that mess.
+Right now I've mostly been looking into the kernel side.  An no, I
+do not expect /dev/pmem* to go away as you'll still need it for a
+not DAX aware file system and/or application (such as mkfs initially).
+
+But yes, just pointing mkfs to the chardev should be doable with very
+little work.  We can point it to a regular file after all.
