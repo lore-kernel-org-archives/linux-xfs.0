@@ -2,113 +2,77 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31FE4C433F5
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Nov 2021 03:34:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32BD8C433FE
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Nov 2021 03:35:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 17E6B61106
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Nov 2021 03:34:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B95461166
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Nov 2021 03:35:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229928AbhKDDgh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 3 Nov 2021 23:36:37 -0400
-Received: from sandeen.net ([63.231.237.45]:58490 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229893AbhKDDgh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 3 Nov 2021 23:36:37 -0400
-Received: from [10.0.0.146] (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 03E41FB436;
-        Wed,  3 Nov 2021 22:32:20 -0500 (CDT)
-Message-ID: <d5bf39e3-c1d0-192b-89bc-bc74f1c43460@sandeen.net>
-Date:   Wed, 3 Nov 2021 22:33:58 -0500
+        id S230059AbhKDDiK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 3 Nov 2021 23:38:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38104 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229913AbhKDDiK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Nov 2021 23:38:10 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB804C061714;
+        Wed,  3 Nov 2021 20:35:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=0O/VdyfANdJRg4X3F77zWL20vmq21Xlj10FoIbPmDkE=; b=jXZGpKzaK03F2BR+7PinT0OlJM
+        ZNizT4HqpvIaU/hRL/n+3hKgQMBVNEyXMcqV1WTcWASGCcrLdsqUoJIWpfdJO+9L5ujPVRT/jUg1p
+        Gri+yTKxVjmkfg7SOmKbdctrPULlzYmpxE3gBJ5x8LoN2NQn+j1a4y6spJX7ZNurwOsczJ6hWclXj
+        xReNyIJkXWCRsqxcdE8bEpOeAVaWoHqaEJ4xMn4IZLpt6IcgbPseaC//ZTTvFY7We1p50jWd8hO40
+        24KTepIf6d0j2PheqbZBHyrcg4Z/KGlRcMQfCGzQqe4XHPB85NYE+SOdcqaYPb6XRI2Z4pzZmeGKR
+        N4q4L1PQ==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1miTVg-005dkV-Bf; Thu, 04 Nov 2021 03:34:07 +0000
+Date:   Thu, 4 Nov 2021 03:33:52 +0000
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH 18/21] iomap: Convert iomap_add_to_ioend to take a folio
+Message-ID: <YYNUoONKjuo6Izfz@casper.infradead.org>
+References: <20211101203929.954622-1-willy@infradead.org>
+ <20211101203929.954622-19-willy@infradead.org>
+ <YYDoMltwjNKtJaWR@infradead.org>
+ <YYGfUuItAyTNax5V@casper.infradead.org>
+ <YYKwyudsHOmPthUP@infradead.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.2.1
-Content-Language: en-US
-To:     "Darrick J. Wong" <djwong@kernel.org>, sandeen@redhat.com
-Cc:     xfs <linux-xfs@vger.kernel.org>
-References: <389722a5-4b02-c76d-a5ac-d92d1e642b21@redhat.com>
- <7fe17d89-749d-7114-1f4f-294aba1e3f1d@redhat.com>
- <20211104031411.GS24307@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [PATCH V2] xfsprogs: move stubbed-out kernel functions out of
- xfs_shared.h
-In-Reply-To: <20211104031411.GS24307@magnolia>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YYKwyudsHOmPthUP@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 11/3/21 10:14 PM, Darrick J. Wong wrote:
-> On Wed, Nov 03, 2021 at 09:59:57PM -0500, Eric Sandeen wrote:
->> Move kernel stubs out of libxfs/xfs_shared.h, which is kernel
->> libxfs code and should not have userspace shims in it.
->>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> ---
->>
->> V2: fix spdx and copyright
->>
->> diff --git a/include/libxfs.h b/include/libxfs.h
->> index 24424d0e..64b44af8 100644
->> --- a/include/libxfs.h
->> +++ b/include/libxfs.h
->> @@ -11,6 +11,7 @@
->>   #include "platform_defs.h"
->>   #include "xfs.h"
->> +#include "stubs.h"
->>   #include "list.h"
->>   #include "hlist.h"
->>   #include "cache.h"
->> diff --git a/include/stubs.h b/include/stubs.h
->> new file mode 100644
->> index 00000000..d80e8de0
->> --- /dev/null
->> +++ b/include/stubs.h
->> @@ -0,0 +1,29 @@
->> +/* SPDX-License-Identifier: GPL-2.0 */
->> +/*
->> + * Copyright (c) 2021 Red Hat, Inc.
->> + * All Rights Reserved.
->> + */
->> +#ifndef STUBS_H
->> +#define STUBS_H
->> +
->> +/* Stub out unimplemented and unneeded kernel functions */
->> +struct rb_root {
->> +};
->> +
->> +#define RB_ROOT 		(struct rb_root) { }
+On Wed, Nov 03, 2021 at 08:54:50AM -0700, Christoph Hellwig wrote:
+> > -	 * Walk through the page to find areas to write back. If we run off the
+> > -	 * end of the current map or find the current map invalid, grab a new
+> > -	 * one.
+> > +	 * Walk through the folio to find areas to write back. If we
+> > +	 * run off the end of the current map or find the current map
+> > +	 * invalid, grab a new one.
 > 
-> Please to remove  ^ this unnecessary space.
+> No real need for reflowing the comment, it still fits just fine even
+> with the folio change.
+
+Sure, but I don't like using column 79, unless it's better to.  We're on
+three lines anyway; may as well make better use of that third line.
+
+> > +	isize = i_size_read(inode);
+> > +	end_pos = page_offset(page) + PAGE_SIZE;
+> > +	if (end_pos - 1 >= isize) {
 > 
->> +
->> +typedef struct wait_queue_head {
->> +} wait_queue_head_t;
->> +
->> +#define init_waitqueue_head(wqh)	do { } while(0)
->> +
->> +struct rhashtable {
->> +};
->> +
->> +struct delayed_work {
->> +};
->> +
->> +#define INIT_DELAYED_WORK(work, func)	do { } while(0)
->> +#define cancel_delayed_work_sync(work)	do { } while(0)
->> +
->> +#endif
+> Wouldn't this check be more obvious as:
 > 
-> This probably ought to be '#endif /* STUBS_H */' just to keep it clear
-> which #ifdef it goes with.
+> 	if (end_pos > i_size) {
 
-Yup I spotted and added that already. I'm so rusty.
-
-> With those two things fixed,
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
-Thanks,
--Eric
+I _think_ we restrict the maximum file size to 2^63 - 1 to avoid i_size
+ever being negative.  But that means that end_pos might be 2^63 (ie
+LONG_MIN), so we need to subtract one from it to get the right answer.
+Maybe worth a comment?
