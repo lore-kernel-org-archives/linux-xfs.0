@@ -2,26 +2,26 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C32BEC433FE
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Nov 2021 06:48:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7421EC433EF
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Nov 2021 06:48:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B13EE60232
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Nov 2021 06:48:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5F1D560232
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Nov 2021 06:48:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230261AbhKDGvT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 4 Nov 2021 02:51:19 -0400
-Received: from mail-mw2nam12on2060.outbound.protection.outlook.com ([40.107.244.60]:47009
-        "EHLO NAM12-MW2-obe.outbound.protection.outlook.com"
+        id S230511AbhKDGvW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 4 Nov 2021 02:51:22 -0400
+Received: from mail-bn8nam08on2052.outbound.protection.outlook.com ([40.107.100.52]:11361
+        "EHLO NAM04-BN8-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S230329AbhKDGuG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 4 Nov 2021 02:50:06 -0400
+        id S230472AbhKDGvF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 4 Nov 2021 02:51:05 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=ZNw03sv6yOAxqC0Qeke/lMAPMMxU37uhkYcNFThKx1KyV0mSxN+NxnbVkKhVI6nPDo+AV7EgwAvFFiKtUKJObE/xCM2W/pI3gp4D8slSrMKa0rbyjW8y06Fsih5bwR0HHEpjbu3zOPSHcDjPlTA7GRcK6WlMCQoDUVQeUtCSmn9gYQS7UibZ6Xjw1f/Kx12coP9QcPabUXXpFs4n36gT1NeDfRQ/rOsMdJIuHGu55uS/2QjY4HvljNpJagqw/sVmP9CGg2KpZ6OLo/ii4geAa1bciZARrukLtLjvByQmwvXxIZ+1kJQ88vKzssrq2XYa90on85zKEhOJ3HeCX+yIyA==
+ b=Phdwf2cmpA7znVg8zzEzRKBYk3w1Ui9e+T/S1ctvZhD4JhH16rB6gqdFyET2BxIGZTxg0d7ouVYemOMJBYZGFoJcacp5Nn6bOvgnmLnaJdVPfirxq4nE1xM7UVHTBgqWzXW9Hj6lLPUuvgTzd4Iv64nNSgugc+DNLi4MCVFAl+wuluMhlLvpFikBRgjbETfgwrk8lZwYWu/SiBSGT4i4sRHTzv/PMk+pbVFt5ubG1gsrKL+ch+0qqsUAqfC6EVgmV5oRvK8gMAHKtIf4zYWRE8k2EvcfEvATIcKzJV3DA5cuh8Mr7+VSS3n4LNxTM0WQKpKZEdrkPjIRGRsHTa3/lg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=kzkvyrZQGecBWWu5cQbYLpZWloO/z8LKS+RChfb1jZ4=;
- b=ACsLo+PP39+oM2uTCJGQQXaWV5uh4KIXOkhyWjDRDdajvjrF3XB1+UdikdrlOYk9PbLvhE/AfU6a3WYcoW4A9/2Bzpj9R7yV935HiSsPVn+HVEMGJEU0TOfEGU5g/jEmCVlWTLPJe5/s/bWU3fnrwvotKyr1dqeGbCIopIBEm5Z95Uv0UT9GVB8sDd4CVEs7XulIdQj3s/vR5ZJS0SQdWKvGsfe4vQ6Kr9z+MjDnB7H/oSz72zAYphLD2cZ8nitK580Ek1VrKG1PnZB8HBqxWKiLrEQ9mpimcjBwpA2aXsptMfE/N15v4IMvrwaShI6MWBpobqq58RYVINU+xYimfg==
+ bh=0ansAADAdB2dyXV5mYpIXS0FVuE+fozbNP94aSGQI4o=;
+ b=RSUjd89S7QjXSYydP4NT6iDl3vOol/07aJp4ETERhaA39wPlaQ0htHq6/Bt3VnS8xlrbkFuxMYQh/t0qw/RFY13PLaQOFaoUmPbj4iwBkuja8s5KboLDGjs29WlFOaFVS9ZHiYDvFVRlJ7wbOEmpOgORygy4jQj2j/m+a5OFmaDlPXXRLLwck/lkfvTgJ6NwsoudKYXOkk1/CCLjMREyfQQhWb6sKoFVlJ5609OhLEkfZjl0pWjkkQS82TwUj1alsUWuSp/rChU5Xxhr1JsUtoL0jRTxt/gVm8qIufJ+HWZoTQaoOJ97O0/UlDkPb0se1MGneQO3m+GyV7nr1baClQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  216.228.112.34) smtp.rcpttodomain=infradead.org smtp.mailfrom=nvidia.com;
  dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
@@ -29,18 +29,18 @@ ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=kzkvyrZQGecBWWu5cQbYLpZWloO/z8LKS+RChfb1jZ4=;
- b=rvZbHlxPDiwiWjWqvk0h+ayggdTxNNs9gNRCIVsY3T6lUq7Rw0dyEFfgup+TVlnZGGsycxVB+CI4l9Sh2UJ5gKQjV0LRVQGJfrQlG1n3WN54xuDSFICLO2DlXhnFQTZqOHWmjdsd2a6r5PL/uC3ZYpGUxIw0LiXp0ZJwVMYRnYzQbY9hMgebI2OAb9Cft6TTYeZDBypwIm5MS+j9hUuuBsy5XGo3QFTtGmJMQE5Uj3d8kci+9HcmVk59H+5Y9WFDczlfupjLJmEf3ZDSqGFxYrUf7Bl15x9SOkdv8ZboAqrd0GSGbwj9vbfgLtse18yS/UVkjfe3g8H+SWkZ3VLjjg==
-Received: from MW4PR04CA0341.namprd04.prod.outlook.com (2603:10b6:303:8a::16)
- by DM4PR12MB5341.namprd12.prod.outlook.com (2603:10b6:5:39e::18) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4669.11; Thu, 4 Nov
- 2021 06:47:26 +0000
-Received: from CO1NAM11FT044.eop-nam11.prod.protection.outlook.com
- (2603:10b6:303:8a:cafe::2b) by MW4PR04CA0341.outlook.office365.com
- (2603:10b6:303:8a::16) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4669.10 via Frontend
- Transport; Thu, 4 Nov 2021 06:47:26 +0000
+ bh=0ansAADAdB2dyXV5mYpIXS0FVuE+fozbNP94aSGQI4o=;
+ b=WOmzo9b/ggfyHPHgnUqThzLRnFdO5iap12HhvdPBQXdWV5EPd5PQrwI4dacqINXadKIYtAxwrhaaACEKUPia/2rgH3HQJjzW8jMWg+rDHvvmV4W903QKKqc2+QQTdt3tFTot3nXBHT2Af1VgEWm4RS3xW5NrDBjml57NGa7n8hCJcCadj9PcwIj04JVV0osDTeqbx4DbSnZrxE1Up1/fCjEk5aqtmc1xDG6FY2zuF6NIHREMzKafU2fVNZNvZndqoyOXRnLAw2d4PJjggCZIl5OZYGxl+vBvxzylhuAntpO3mHO+uriPWYQUx+PJE6pA2f0QqpTJdTcopzICU6Rlhg==
+Received: from MWHPR1401CA0007.namprd14.prod.outlook.com
+ (2603:10b6:301:4b::17) by BY5PR12MB4872.namprd12.prod.outlook.com
+ (2603:10b6:a03:1c4::13) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4669.10; Thu, 4 Nov
+ 2021 06:48:24 +0000
+Received: from CO1NAM11FT036.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:301:4b:cafe::91) by MWHPR1401CA0007.outlook.office365.com
+ (2603:10b6:301:4b::17) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4669.11 via Frontend
+ Transport; Thu, 4 Nov 2021 06:48:24 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.112.34)
  smtp.mailfrom=nvidia.com; infradead.org; dkim=none (message not signed)
  header.d=none;infradead.org; dmarc=pass action=none header.from=nvidia.com;
@@ -48,12 +48,12 @@ Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
  216.228.112.34 as permitted sender) receiver=protection.outlook.com;
  client-ip=216.228.112.34; helo=mail.nvidia.com;
 Received: from mail.nvidia.com (216.228.112.34) by
- CO1NAM11FT044.mail.protection.outlook.com (10.13.175.188) with Microsoft SMTP
+ CO1NAM11FT036.mail.protection.outlook.com (10.13.174.124) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.20.4669.10 via Frontend Transport; Thu, 4 Nov 2021 06:47:24 +0000
-Received: from dev.nvidia.com (172.20.187.6) by HQMAIL107.nvidia.com
+ 15.20.4669.10 via Frontend Transport; Thu, 4 Nov 2021 06:48:23 +0000
+Received: from dev.nvidia.com (172.20.187.5) by HQMAIL107.nvidia.com
  (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Thu, 4 Nov
- 2021 06:47:23 +0000
+ 2021 06:48:11 +0000
 From:   Chaitanya Kulkarni <chaitanyak@nvidia.com>
 To:     <linux-block@vger.kernel.org>, <linux-raid@vger.kernel.org>,
         <linux-nvme@lists.infradead.org>, <linux-scsi@vger.kernel.org>,
@@ -72,168 +72,140 @@ CC:     <axboe@kernel.dk>, <agk@redhat.com>, <snitzer@redhat.com>,
         <idryomov@gmail.com>, <danil.kipnis@cloud.ionos.com>,
         <ebiggers@google.com>, <jinpu.wang@cloud.ionos.com>,
         Chaitanya Kulkarni <kch@nvidia.com>
-Subject: [RFC PATCH 2/8] scsi: add REQ_OP_VERIFY support
-Date:   Wed, 3 Nov 2021 23:46:28 -0700
-Message-ID: <20211104064634.4481-3-chaitanyak@nvidia.com>
+Subject: [PATCH 4/8] nvmet: add Verify command support for bdev-ns
+Date:   Wed, 3 Nov 2021 23:46:30 -0700
+Message-ID: <20211104064634.4481-5-chaitanyak@nvidia.com>
 X-Mailer: git-send-email 2.29.0
 In-Reply-To: <20211104064634.4481-1-chaitanyak@nvidia.com>
 References: <20211104064634.4481-1-chaitanyak@nvidia.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-Originating-IP: [172.20.187.6]
+X-Originating-IP: [172.20.187.5]
 X-ClientProxiedBy: HQMAIL111.nvidia.com (172.20.187.18) To
  HQMAIL107.nvidia.com (172.20.187.13)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 26ac02d0-1700-42ae-15c3-08d99f5ef585
-X-MS-TrafficTypeDiagnostic: DM4PR12MB5341:
-X-Microsoft-Antispam-PRVS: <DM4PR12MB5341ABF93E80986C0583AC37A38D9@DM4PR12MB5341.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:6108;
+X-MS-Office365-Filtering-Correlation-Id: e9fe58b2-e2d4-4979-886e-08d99f5f189f
+X-MS-TrafficTypeDiagnostic: BY5PR12MB4872:
+X-Microsoft-Antispam-PRVS: <BY5PR12MB48723BB1E490C132E0F3B9FDA38D9@BY5PR12MB4872.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:4303;
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 6+53OUy59cS/uSmDZSCGJU2KvFqthHmmZMneEYFyfYl7c38hrX35h6sTKLip6j9weUmd8D2Nol9W8LIfrh2LcxFvam4OApQi2z93Od9yYy83UIjTz/oAW3AvHHUIGUYd+RLqy1+SVKSesfvSZSsG3Fw18AymIAm7gIV+sMQYwNlKp3fkqW68+R7gR9/FLebse/u73XSc0pbu3cdseLaH3c67Wj53S5zZDtLCzbrZa1DPArGMaHGL88J5UqEqmD5G+c4dhyzSset20lFtQ51B7KLEfYHy0xFQoaHgxd3QFJZD2f8y9wBayrufiVvaMdnqJiMDEItRn44F8BIQC/N0CYPLRVmYRIO1uPzU0f8/+aEK7N+NPCojipbmdb1b8COe6zfQ3qMudVHlms7yB2oD52+eumgFSbNcbzsZB5Q2zOBPdvUgZoCxCBMqomS78j//T9b53L1Rs39EDClTYojzLfDhW88jA57xJ8tKurIZI1+m4k0j+oRvBZWto6ovigc2OwHRSz5Vinat0V/Dxa1jFx9scBPMoneOJoElnckO9Xeyd02FW1mGr4x2hXTS87ijzjcwKEsuZ/uVO2hxiN1C1QvC0jTCDnpPLLRSulxz1aTtz2h78MozaVySnRpAqifyiWax7WQV2dJHou+YctEwNMr0l0BxPIuQ9cWyaXCs7wyjJPNImkzldJ3XN5Z9w0Dj9hlHyJleKV2q1gjrLa0mDT5H4bBjcH6qQXeSk2WiRhcbuvPAwHEPi1r7SMBidFsO
-X-Forefront-Antispam-Report: CIP:216.228.112.34;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:schybrid03.nvidia.com;CAT:NONE;SFS:(4636009)(36840700001)(46966006)(110136005)(8936002)(16526019)(86362001)(508600001)(54906003)(47076005)(2616005)(83380400001)(1076003)(4326008)(336012)(426003)(186003)(7696005)(82310400003)(7416002)(36860700001)(356005)(5660300002)(2906002)(107886003)(36756003)(316002)(70586007)(26005)(36906005)(70206006)(7406005)(8676002)(7636003)(21314003)(2101003);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: EO8BTKCM6VtmG7mGQ+x4yQAEAJGfB8VQywv+7G9X9ZkOISMPLIreHV9sxZj/J7qC9VXdn5eG87MwXPRDFOp1phZFz+uaQEkRasnrqHO4IQnKVIz/zOJ0iQIe0sZYikdfOn54n7lR462qRv6lSb2ZMDNc5z1jBUVws60lMjHMjE/pLtSjCKcy7sMO4sqesU8e+eWSKz6st+0Cby0Kqmdbmzf3kX7thvfaLMOwY/F+E2gc2bHjHyr7MCfHs9sdeB+smbImQBSVdP3+NZyNt+1O4KHnh1ou5i86bD1pMUd8mJ1pUujouPDitowElGPiB8fqXB+FoXCDk7ZraC6Ifk8fgpXQ0orVtw913cGa0LkusGlDNi8IvrYsH45PRCWibyMUUKoXi9AhMWrbUTGOvoSa62CfRB/g5SfhgDoOaG/TvxetavE1QYdOQGn8qoYjk1qrJl47+HxT9HJTh6ke5biV/NZZ021CRNjxBQz9PTGw4H6Zzmt+BL9QIhziaqth9+Z/4udmXPFT+yI0kBYgn80jQYp98QXHL2XwOj0b7jfeEVJw6gl1jcmcgEqRWfCz1XodmvQqRR40Y0xBQol53+bIbhfXQn7Zv6taH9NDNSkcu9PBornhTjFTTrUidIPMhxiPK0DxFx7MfgxZQjKuVMM0GgUOKsS1w2WBKq0fNfW43ltip3G17OjfSxC6uU7xcKE2ZuylJTkL2jJ71n2by33c+q0ag/yFJOSqhtfBKzbQoZoAb0O930gU3hbNDRIFpslF
+X-Forefront-Antispam-Report: CIP:216.228.112.34;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:schybrid03.nvidia.com;CAT:NONE;SFS:(4636009)(46966006)(36840700001)(2906002)(83380400001)(110136005)(86362001)(82310400003)(186003)(16526019)(54906003)(2616005)(4326008)(6666004)(70206006)(47076005)(70586007)(426003)(336012)(8676002)(36756003)(36860700001)(15650500001)(1076003)(356005)(316002)(36906005)(508600001)(8936002)(7406005)(7416002)(5660300002)(7636003)(7696005)(26005)(107886003)(21314003)(2101003);DIR:OUT;SFP:1101;
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Nov 2021 06:47:24.3298
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Nov 2021 06:48:23.2284
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 26ac02d0-1700-42ae-15c3-08d99f5ef585
+X-MS-Exchange-CrossTenant-Network-Message-Id: e9fe58b2-e2d4-4979-886e-08d99f5f189f
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.112.34];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT044.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT036.eop-nam11.prod.protection.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB5341
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR12MB4872
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Chaitanya Kulkarni <kch@nvidia.com>
 
+Add support for handling verify command on target. Call into
+__blkdev_issue_verify, which the block layer expands into the
+REQ_OP_VERIFY LBAs.
+
 Signed-off-by: Chaitanya Kulkarni <kch@nvidia.com>
 ---
- drivers/scsi/sd.c | 52 +++++++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/sd.h |  1 +
- 2 files changed, 53 insertions(+)
+ drivers/nvme/target/admin-cmd.c   |  3 ++-
+ drivers/nvme/target/io-cmd-bdev.c | 39 +++++++++++++++++++++++++++++++
+ 2 files changed, 41 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index a3d2d4bc4a3d..7f2c4eb98cf8 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -106,6 +106,7 @@ MODULE_ALIAS_SCSI_DEVICE(TYPE_ZBC);
+diff --git a/drivers/nvme/target/admin-cmd.c b/drivers/nvme/target/admin-cmd.c
+index 613a4d8feac1..87cad64895e6 100644
+--- a/drivers/nvme/target/admin-cmd.c
++++ b/drivers/nvme/target/admin-cmd.c
+@@ -408,7 +408,8 @@ static void nvmet_execute_identify_ctrl(struct nvmet_req *req)
+ 	id->nn = cpu_to_le32(ctrl->subsys->max_nsid);
+ 	id->mnan = cpu_to_le32(NVMET_MAX_NAMESPACES);
+ 	id->oncs = cpu_to_le16(NVME_CTRL_ONCS_DSM |
+-			NVME_CTRL_ONCS_WRITE_ZEROES);
++			NVME_CTRL_ONCS_WRITE_ZEROES |
++			NVME_CTRL_ONCS_VERIFY);
  
- static void sd_config_discard(struct scsi_disk *, unsigned int);
- static void sd_config_write_same(struct scsi_disk *);
-+static void sd_config_verify(struct scsi_disk *sdkp);
- static int  sd_revalidate_disk(struct gendisk *);
- static void sd_unlock_native_capacity(struct gendisk *disk);
- static int  sd_probe(struct device *);
-@@ -995,6 +996,41 @@ static blk_status_t sd_setup_write_zeroes_cmnd(struct scsi_cmnd *cmd)
- 	return sd_setup_write_same10_cmnd(cmd, false);
- }
- 
-+static void sd_config_verify(struct scsi_disk *sdkp)
-+{
-+	struct request_queue *q = sdkp->disk->queue;
-+
-+	/* XXX: use same pattern as sd_config_write_same(). */
-+	blk_queue_max_verify_sectors(q, UINT_MAX >> 9);
-+}
-+
-+static blk_status_t sd_setup_verify_cmnd(struct scsi_cmnd *cmd)
-+{
-+       struct request *rq = cmd->request;
-+       struct scsi_device *sdp = cmd->device;
-+       struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
-+       u64 lba = sectors_to_logical(sdp, blk_rq_pos(rq));
-+       u32 nr_blocks = sectors_to_logical(sdp, blk_rq_sectors(rq));
-+
-+       if (!sdkp->verify_16)
-+	       return BLK_STS_NOTSUPP;
-+
-+       cmd->cmd_len = 16;
-+       cmd->cmnd[0] = VERIFY_16;
-+       /* skip veprotect / dpo / bytchk */
-+       cmd->cmnd[1] = 0;
-+       put_unaligned_be64(lba, &cmd->cmnd[2]);
-+       put_unaligned_be32(nr_blocks, &cmd->cmnd[10]);
-+       cmd->cmnd[14] = 0;
-+       cmd->cmnd[15] = 0;
-+
-+       cmd->allowed = SD_MAX_RETRIES;
-+       cmd->sc_data_direction = DMA_NONE;
-+       cmd->transfersize = 0;
-+
-+       return BLK_STS_OK;
-+}
-+
- static void sd_config_write_same(struct scsi_disk *sdkp)
- {
- 	struct request_queue *q = sdkp->disk->queue;
-@@ -1345,6 +1381,8 @@ static blk_status_t sd_init_command(struct scsi_cmnd *cmd)
- 		}
- 	case REQ_OP_WRITE_ZEROES:
- 		return sd_setup_write_zeroes_cmnd(cmd);
-+	case REQ_OP_VERIFY:
-+		return sd_setup_verify_cmnd(cmd);
- 	case REQ_OP_WRITE_SAME:
- 		return sd_setup_write_same_cmnd(cmd);
- 	case REQ_OP_FLUSH:
-@@ -2029,6 +2067,7 @@ static int sd_done(struct scsi_cmnd *SCpnt)
- 	switch (req_op(req)) {
- 	case REQ_OP_DISCARD:
- 	case REQ_OP_WRITE_ZEROES:
-+	case REQ_OP_VERIFY:
- 	case REQ_OP_WRITE_SAME:
- 	case REQ_OP_ZONE_RESET:
- 	case REQ_OP_ZONE_RESET_ALL:
-@@ -3096,6 +3135,17 @@ static void sd_read_write_same(struct scsi_disk *sdkp, unsigned char *buffer)
- 		sdkp->ws10 = 1;
- }
- 
-+static void sd_read_verify(struct scsi_disk *sdkp, unsigned char *buffer)
-+{
-+       struct scsi_device *sdev = sdkp->device;
-+
-+       sd_printk(KERN_INFO, sdkp, "VERIFY16 check.\n");
-+       if (scsi_report_opcode(sdev, buffer, SD_BUF_SIZE, VERIFY_16) == 1) {
-+	       sd_printk(KERN_INFO, sdkp, " VERIFY16 in ON .\n");
-+               sdkp->verify_16 = 1;
-+       }
-+}
-+
- static void sd_read_security(struct scsi_disk *sdkp, unsigned char *buffer)
- {
- 	struct scsi_device *sdev = sdkp->device;
-@@ -3224,6 +3274,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 		sd_read_cache_type(sdkp, buffer);
- 		sd_read_app_tag_own(sdkp, buffer);
- 		sd_read_write_same(sdkp, buffer);
-+		sd_read_verify(sdkp, buffer);
- 		sd_read_security(sdkp, buffer);
+ 	/* XXX: don't report vwc if the underlying device is write through */
+ 	id->vwc = NVME_CTRL_VWC_PRESENT;
+diff --git a/drivers/nvme/target/io-cmd-bdev.c b/drivers/nvme/target/io-cmd-bdev.c
+index ec45e597084b..5a888cdadfea 100644
+--- a/drivers/nvme/target/io-cmd-bdev.c
++++ b/drivers/nvme/target/io-cmd-bdev.c
+@@ -128,6 +128,7 @@ static u16 blk_to_nvme_status(struct nvmet_req *req, blk_status_t blk_sts)
+ 		switch (req->cmd->common.opcode) {
+ 		case nvme_cmd_dsm:
+ 		case nvme_cmd_write_zeroes:
++		case nvme_cmd_verify:
+ 			status = NVME_SC_ONCS_NOT_SUPPORTED | NVME_SC_DNR;
+ 			break;
+ 		default:
+@@ -153,6 +154,10 @@ static u16 blk_to_nvme_status(struct nvmet_req *req, blk_status_t blk_sts)
+ 		req->error_slba =
+ 			le64_to_cpu(req->cmd->write_zeroes.slba);
+ 		break;
++	case nvme_cmd_verify:
++		req->error_slba =
++			le64_to_cpu(req->cmd->verify.slba);
++		break;
+ 	default:
+ 		req->error_slba = 0;
  	}
+@@ -428,6 +433,37 @@ static void nvmet_bdev_execute_write_zeroes(struct nvmet_req *req)
+ 	}
+ }
  
-@@ -3265,6 +3316,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 
- 	set_capacity_and_notify(disk, logical_to_sectors(sdp, sdkp->capacity));
- 	sd_config_write_same(sdkp);
-+	sd_config_verify(sdkp);
- 	kfree(buffer);
- 
- 	/*
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index b59136c4125b..94a86bf6dac4 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -120,6 +120,7 @@ struct scsi_disk {
- 	unsigned	lbpvpd : 1;
- 	unsigned	ws10 : 1;
- 	unsigned	ws16 : 1;
-+	unsigned        verify_16 : 1;
- 	unsigned	rc_basis: 2;
- 	unsigned	zoned: 2;
- 	unsigned	urswrz : 1;
++static void nvmet_bdev_execute_verify(struct nvmet_req *req)
++{
++	struct nvme_verify_cmd *verify = &req->cmd->verify;
++	struct bio *bio = NULL;
++	sector_t nr_sector;
++	sector_t sector;
++	int ret;
++
++	if (!nvmet_check_transfer_len(req, 0))
++		return;
++
++	if (!bdev_verify_sectors(req->ns->bdev)) {
++		nvmet_req_complete(req, NVME_SC_INTERNAL | NVME_SC_DNR);
++		return;
++	}
++
++	sector = le64_to_cpu(verify->slba) << (req->ns->blksize_shift - 9);
++	nr_sector = (((sector_t)le16_to_cpu(verify->length) + 1) <<
++			(req->ns->blksize_shift - 9));
++
++	ret = __blkdev_issue_verify(req->ns->bdev, sector, nr_sector,
++			GFP_KERNEL, &bio);
++	if (bio) {
++		bio->bi_private = req;
++		bio->bi_end_io = nvmet_bio_done;
++		submit_bio(bio);
++	} else {
++		nvmet_req_complete(req, errno_to_nvme_status(req, ret));
++	}
++}
++
+ u16 nvmet_bdev_parse_io_cmd(struct nvmet_req *req)
+ {
+ 	struct nvme_command *cmd = req->cmd;
+@@ -448,6 +484,9 @@ u16 nvmet_bdev_parse_io_cmd(struct nvmet_req *req)
+ 	case nvme_cmd_write_zeroes:
+ 		req->execute = nvmet_bdev_execute_write_zeroes;
+ 		return 0;
++	case nvme_cmd_verify:
++		req->execute = nvmet_bdev_execute_verify;
++		return 0;
+ 	default:
+ 		pr_err("unhandled cmd %d on qid %d\n", cmd->common.opcode,
+ 		       req->sq->qid);
 -- 
 2.22.1
 
