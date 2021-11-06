@@ -2,270 +2,160 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7F19C433F5
-	for <linux-xfs@archiver.kernel.org>; Sat,  6 Nov 2021 02:05:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1A25C433F5
+	for <linux-xfs@archiver.kernel.org>; Sat,  6 Nov 2021 02:08:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B9DF161074
-	for <linux-xfs@archiver.kernel.org>; Sat,  6 Nov 2021 02:05:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9C12A6113A
+	for <linux-xfs@archiver.kernel.org>; Sat,  6 Nov 2021 02:08:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230274AbhKFCHk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 5 Nov 2021 22:07:40 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42436 "EHLO mail.kernel.org"
+        id S230382AbhKFCKp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 5 Nov 2021 22:10:45 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42648 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229703AbhKFCHk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 5 Nov 2021 22:07:40 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id EDCB36108B;
-        Sat,  6 Nov 2021 02:04:59 +0000 (UTC)
+        id S229703AbhKFCKp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 5 Nov 2021 22:10:45 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 00CB161074;
+        Sat,  6 Nov 2021 02:08:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1636164300;
-        bh=udtQy0yP6Y3MJL34Gk4eb5HwUbF+N1OWD9p36VtaM4g=;
+        s=k20201202; t=1636164485;
+        bh=9pstBxCueFjzWV/EeSMXfOYfcaHmbcqF63s3xUhZOTg=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=TiAKJRpdTC5hp4dGqZUhTGvsF/y8GQScz4MIO49Z8MKlK0RjAd+IBM95nMqMBv5vW
-         kRGz1UhrO5HVVfAplk2il42P0v8qk8kNMA1x9ugniTwnAEuSEjdkQB87QnOenk12co
-         6+WcIPQOgoH3mLRztJaXPN9UdPcOJ4L0lG4QcdYyMjCDmPEBytEYoYTCJR9Ci3fekN
-         d/wCbUYWuUbvvO+9uwMELy8G70dXTj/IxQ0V9NRlfujmUrA1O5LS3M+sHZYCFbfFg6
-         3S/SHsPqz2hsxlKKoUbzNm1Dv7jXgIkmXotuLYCxSodRjGR/cfJc90t/L53HymUPov
-         SN4NjzZ/Hg2zw==
-Date:   Fri, 5 Nov 2021 19:04:59 -0700
+        b=Vi+YRLYsEM2UpVRiT+BwhH9PqLS+zqXNIt7wZuAiDZqjwTK8CubC+mj/kry79Q+QK
+         1g5u/tWiNtkO+0SwlSBK5duOGLMbA/bADr5korbp0aqetx/DE0VAhTqVUsFopyEqaE
+         4i0HZ+HUkkZAei9RSuY+BJQLnwQwozR8GX5RImogedBLwQbB9Eq4wsTELReLOATcuc
+         vILUF6AwsM+awO9KR+5C649vIEilegsbe+2R/rdcMKpXsPfELfUJ+U3KmAy+OuvO2y
+         JWep4PmxMbtiGhg3EsG+euVY+//vo+L542w1qmLqDLjT9VLw3r302eE0Ke9P5gcatD
+         5WGb9YAa7AEFA==
+Date:   Fri, 5 Nov 2021 19:08:04 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Jane Chu <jane.chu@oracle.com>
-Cc:     david@fromorbit.com, dan.j.williams@intel.com, hch@infradead.org,
-        vishal.l.verma@intel.com, dave.jiang@intel.com, agk@redhat.com,
-        snitzer@redhat.com, dm-devel@redhat.com, ira.weiny@intel.com,
-        willy@infradead.org, vgoyal@redhat.com,
-        linux-fsdevel@vger.kernel.org, nvdimm@lists.linux.dev,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] dax,pmem: Implement pmem based dax data recovery
-Message-ID: <20211106020459.GL2237511@magnolia>
-References: <20211106011638.2613039-1-jane.chu@oracle.com>
- <20211106011638.2613039-3-jane.chu@oracle.com>
+To:     Theodore Ts'o <tytso@mit.edu>
+Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
+        leah.rumancik@gmail.com
+Subject: Re: xfs/076 takes a long long time testing with a realtime volume
+Message-ID: <20211106020804.GU24307@magnolia>
+References: <YYVo8ZyKpy4Di0pK@mit.edu>
+ <YYXhNip3PctJAaDY@mit.edu>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211106011638.2613039-3-jane.chu@oracle.com>
+In-Reply-To: <YYXhNip3PctJAaDY@mit.edu>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Nov 05, 2021 at 07:16:38PM -0600, Jane Chu wrote:
-> For /dev/pmem based dax, enable DAX_OP_RECOVERY mode for
-> dax_direct_access to translate 'kaddr' over a range that
-> may contain poison(s); and enable dax_copy_to_iter to
-> read as much data as possible up till a poisoned page is
-> encountered; and enable dax_copy_from_iter to clear poison
-> among a page-aligned range, and then write the good data over.
-> 
-> Signed-off-by: Jane Chu <jane.chu@oracle.com>
-> ---
->  drivers/md/dm.c       |  2 ++
->  drivers/nvdimm/pmem.c | 75 ++++++++++++++++++++++++++++++++++++++++---
->  fs/dax.c              | 24 +++++++++++---
->  3 files changed, 92 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-> index dc354db22ef9..9b3dac916f22 100644
-> --- a/drivers/md/dm.c
-> +++ b/drivers/md/dm.c
-> @@ -1043,6 +1043,7 @@ static size_t dm_dax_copy_from_iter(struct dax_device *dax_dev, pgoff_t pgoff,
->  	if (!ti)
->  		goto out;
->  	if (!ti->type->dax_copy_from_iter) {
-> +		WARN_ON(mode == DAX_OP_RECOVERY);
->  		ret = copy_from_iter(addr, bytes, i);
->  		goto out;
->  	}
-> @@ -1067,6 +1068,7 @@ static size_t dm_dax_copy_to_iter(struct dax_device *dax_dev, pgoff_t pgoff,
->  	if (!ti)
->  		goto out;
->  	if (!ti->type->dax_copy_to_iter) {
-> +		WARN_ON(mode == DAX_OP_RECOVERY);
+On Fri, Nov 05, 2021 at 09:58:14PM -0400, Theodore Ts'o wrote:
+> After committing some exclusions into my test runner framework (see
+> below), I tested a potential fix to xfs/076 which disables the
+> real-time volume when creating the scratch volume.  Should I send it
+> as a formal patch to fstests?
 
-Maybe just return -EOPNOTSUPP here?
+Does adding:
 
-Warnings are kinda loud.
+_xfs_force_bdev data $SCRATCH_MNT
 
->  		ret = copy_to_iter(addr, bytes, i);
->  		goto out;
->  	}
-> diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
-> index 3dc99e0bf633..8ae6aa678c51 100644
-> --- a/drivers/nvdimm/pmem.c
-> +++ b/drivers/nvdimm/pmem.c
-> @@ -260,7 +260,7 @@ __weak long __pmem_direct_access(struct pmem_device *pmem, pgoff_t pgoff,
->  	resource_size_t offset = PFN_PHYS(pgoff) + pmem->data_offset;
->  
->  	if (unlikely(is_bad_pmem(&pmem->bb, PFN_PHYS(pgoff) / 512,
-> -					PFN_PHYS(nr_pages))))
-> +				 PFN_PHYS(nr_pages)) && mode == DAX_OP_NORMAL))
->  		return -EIO;
->  
->  	if (kaddr)
-> @@ -303,20 +303,85 @@ static long pmem_dax_direct_access(struct dax_device *dax_dev,
->  }
->  
->  /*
-> - * Use the 'no check' versions of copy_from_iter_flushcache() and
-> - * copy_mc_to_iter() to bypass HARDENED_USERCOPY overhead. Bounds
-> - * checking, both file offset and device offset, is handled by
-> - * dax_iomap_actor()
-> + * Even though the 'no check' versions of copy_from_iter_flushcache()
-> + * and copy_mc_to_iter() are used to bypass HARDENED_USERCOPY overhead,
-> + * 'read'/'write' aren't always safe when poison is consumed. They happen
-> + * to be safe because the 'read'/'write' range has been guaranteed
-> + * be free of poison(s) by a prior call to dax_direct_access() on the
-> + * caller stack.
-> + * But on a data recovery code path, the 'read'/'write' range is expected
-> + * to contain poison(s), and so poison(s) is explicit checked, such that
-> + * 'read' can fetch data from clean page(s) up till the first poison is
-> + * encountered, and 'write' requires the range be page aligned in order
-> + * to restore the poisoned page's memory type back to "rw" after clearing
-> + * the poison(s).
-> + * In the event of poison related failure, (size_t) -EIO is returned and
-> + * caller may check the return value after casting it to (ssize_t).
-> + *
-> + * TODO: add support for CPUs that support MOVDIR64B instruction for
-> + * faster poison clearing, and possibly smaller error blast radius.
-
-I get that it's still early days yet for whatever pmem stuff is going on
-for 5.17, but I feel like this ought to be a separate function called by
-pmem_copy_from_iter, with this huge comment attached to that recovery
-function.
-
->   */
->  static size_t pmem_copy_from_iter(struct dax_device *dax_dev, pgoff_t pgoff,
->  		void *addr, size_t bytes, struct iov_iter *i, int mode)
->  {
-> +	phys_addr_t pmem_off;
-> +	size_t len, lead_off;
-> +	struct pmem_device *pmem = dax_get_private(dax_dev);
-> +	struct device *dev = pmem->bb.dev;
-> +
-> +	if (unlikely(mode == DAX_OP_RECOVERY)) {
-> +		lead_off = (unsigned long)addr & ~PAGE_MASK;
-> +		len = PFN_PHYS(PFN_UP(lead_off + bytes));
-> +		if (is_bad_pmem(&pmem->bb, PFN_PHYS(pgoff) / 512, len)) {
-> +			if (lead_off || !(PAGE_ALIGNED(bytes))) {
-> +				dev_warn(dev, "Found poison, but addr(%p) and/or bytes(%#lx) not page aligned\n",
-> +					addr, bytes);
-> +				return (size_t) -EIO;
-> +			}
-> +			pmem_off = PFN_PHYS(pgoff) + pmem->data_offset;
-> +			if (pmem_clear_poison(pmem, pmem_off, bytes) !=
-> +						BLK_STS_OK)
-> +				return (size_t) -EIO;
-
-Looks reasonable enough to me, though you might want to restructure this
-to reduce the amount of indent.
-
-FWIW I dislike how is_bad_pmem mixes units (sector_t vs. bytes), that
-was seriously confusing.  But I guess that's a weird quirk of the
-badblocks API and .... ugh.
-
-(I dunno, can we at least clean up the nvdimm parts and some day replace
-the badblocks backend with something that can handle more than 16
-records?  interval_tree is more than up to that task, I know, I use it
-for xfs online fsck...)
-
-> +		}
-> +	}
-> +
->  	return _copy_from_iter_flushcache(addr, bytes, i);
->  }
->  
->  static size_t pmem_copy_to_iter(struct dax_device *dax_dev, pgoff_t pgoff,
->  		void *addr, size_t bytes, struct iov_iter *i, int mode)
->  {
-> +	int num_bad;
-> +	size_t len, lead_off;
-> +	unsigned long bad_pfn;
-> +	bool bad_pmem = false;
-> +	size_t adj_len = bytes;
-> +	sector_t sector, first_bad;
-> +	struct pmem_device *pmem = dax_get_private(dax_dev);
-> +	struct device *dev = pmem->bb.dev;
-> +
-> +	if (unlikely(mode == DAX_OP_RECOVERY)) {
-> +		sector = PFN_PHYS(pgoff) / 512;
-> +		lead_off = (unsigned long)addr & ~PAGE_MASK;
-> +		len = PFN_PHYS(PFN_UP(lead_off + bytes));
-> +		if (pmem->bb.count)
-> +			bad_pmem = !!badblocks_check(&pmem->bb, sector,
-> +					len / 512, &first_bad, &num_bad);
-> +		if (bad_pmem) {
-> +			bad_pfn = PHYS_PFN(first_bad * 512);
-> +			if (bad_pfn == pgoff) {
-> +				dev_warn(dev, "Found poison in page: pgoff(%#lx)\n",
-> +					pgoff);
-> +				return -EIO;
-> +			}
-> +			adj_len = PFN_PHYS(bad_pfn - pgoff) - lead_off;
-> +			dev_WARN_ONCE(dev, (adj_len > bytes),
-> +					"out-of-range first_bad?");
-> +		}
-> +		if (adj_len == 0)
-> +			return (size_t) -EIO;
-
-Uh, are we supposed to adjust bytes here or something?
+right after _scratch_mount make the performance problem go away?  Sparse
+inodes and realtime are a supported configuration.
 
 --D
 
-> +	}
-> +
->  	return _copy_mc_to_iter(addr, bytes, i);
->  }
+> diff --git a/tests/xfs/076 b/tests/xfs/076
+> index eac7410e..5628c08f 100755
+> --- a/tests/xfs/076
+> +++ b/tests/xfs/076
+> @@ -60,6 +60,7 @@ _require_xfs_io_command "falloc"
+>  _require_xfs_io_command "fpunch"
+>  _require_xfs_sparse_inodes
 >  
-> diff --git a/fs/dax.c b/fs/dax.c
-> index bea6df1498c3..7640be6b6a97 100644
-> --- a/fs/dax.c
-> +++ b/fs/dax.c
-> @@ -1219,6 +1219,8 @@ static loff_t dax_iomap_iter(const struct iomap_iter *iomi,
->  		unsigned offset = pos & (PAGE_SIZE - 1);
->  		const size_t size = ALIGN(length + offset, PAGE_SIZE);
->  		const sector_t sector = dax_iomap_sector(iomap, pos);
-> +		long nr_page = PHYS_PFN(size);
-> +		int dax_mode = DAX_OP_NORMAL;
->  		ssize_t map_len;
->  		pgoff_t pgoff;
->  		void *kaddr;
-> @@ -1232,8 +1234,13 @@ static loff_t dax_iomap_iter(const struct iomap_iter *iomi,
->  		if (ret)
->  			break;
->  
-> -		map_len = dax_direct_access(dax_dev, pgoff, PHYS_PFN(size),
-> -					    DAX_OP_NORMAL, &kaddr, NULL);
-> +		map_len = dax_direct_access(dax_dev, pgoff, nr_page, dax_mode,
-> +					    &kaddr, NULL);
-> +		if (unlikely(map_len == -EIO)) {
-> +			dax_mode = DAX_OP_RECOVERY;
-> +			map_len = dax_direct_access(dax_dev, pgoff, nr_page,
-> +						    dax_mode, &kaddr, NULL);
-> +		}
->  		if (map_len < 0) {
->  			ret = map_len;
->  			break;
-> @@ -1252,11 +1259,20 @@ static loff_t dax_iomap_iter(const struct iomap_iter *iomi,
->  		 */
->  		if (iov_iter_rw(iter) == WRITE)
->  			xfer = dax_copy_from_iter(dax_dev, pgoff, kaddr,
-> -					map_len, iter, DAX_OP_NORMAL);
-> +					map_len, iter, dax_mode);
->  		else
->  			xfer = dax_copy_to_iter(dax_dev, pgoff, kaddr,
-> -					map_len, iter, DAX_OP_NORMAL);
-> +					map_len, iter, dax_mode);
->  
-> +		/*
-> +		 * If dax data recovery is enacted via DAX_OP_RECOVERY,
-> +		 * recovery failure would be indicated by a -EIO return
-> +		 * in 'xfer' casted as (size_t).
-> +		 */
-> +		if ((ssize_t)xfer == -EIO) {
-> +			ret = -EIO;
-> +			break;
-> +		}
->  		pos += xfer;
->  		length -= xfer;
->  		done += xfer;
-> -- 
-> 2.18.4
+> +unset SCRATCH_RTDEV
+>  _scratch_mkfs "-d size=50m -m crc=1 -i sparse" |
+>  	_filter_mkfs > /dev/null 2> $tmp.mkfs
+>  . $tmp.mkfs	# for isize
 > 
+> 						- Ted
+> 
+> For why this is needed, see the commit description below:
+> 
+> commit c41ae1cc0b21eafd2858541c0bc195f951c0726c
+> Author: Theodore Ts'o <tytso@mit.edu>
+> Date:   Fri Nov 5 20:46:19 2021 -0400
+> 
+>     test-appliance: exclude xfs/076 from the realtime configs
+>     
+>     The xfs/076 test takes two minutes on a normal xfs file system (e.g.,
+>     a normal 4k block size file system).  However, when there is a
+>     real-time volume attached, this test takes over 80 minutes.  The
+>     reason for this seems to be because the test is spending a lot more
+>     time failing to create files due to missing directories.  Compare:
+>     
+>     root@xfstests-2:~# ls -sh /results/xfs/results-4k/xfs/076.full
+>     48K /results/xfs/results-4k/xfs/076.full
+>     root@xfstests-2:~# ls -sh /tmp/realtime-076.full
+>     25M /tmp/realtime-076.full
+>     
+>     and:
+>     
+>     root@xfstests-2:~# grep "cannot touch" /results/xfs/results-4k/xfs/076.full | wc -l
+>     656
+>     root@xfstests-2:~# grep "cannot touch" /tmp/realtime-076.full | wc -l
+>     327664
+>     
+>     The failures from 076.full look like this:
+>     
+>     touch: cannot touch '/xt-vdc/offset.21473722368/25659': No space left on device
+>     touch: cannot touch '/xt-vdc/offset.21473656832/0': No such file or directory
+>     touch: cannot touch '/xt-vdc/offset.21473591296/0': No such file or directory
+>     ...
+>     touch: cannot touch '/xt-vdc/offset.196608/0': No such file or directory
+>     touch: cannot touch '/xt-vdc/offset.131072/0': No such file or directory
+>     touch: cannot touch '/xt-vdc/offset.65536/0': No such file or directory
+>     touch: cannot touch '/xt-vdc/offset.0/0': No such file or directory
+>     
+>     What seems to be going on is that xfs/076 tries to create a small
+>     scratch file system --- but when we attach a real-time volume this
+>     balloons the available size of the file system.  Of course, that space
+>     can't be used for normal files.  As a result, xfs/076 is incorrectly
+>     estimating how many files it needs to create to fill the file system.
+>     
+>     I'm not sure what's the best way to fix this in the test; perhaps the
+>     test should forcibly unset SCRATCH_RTDEV environment variable before
+>     running _scratch_mkfs?  Anyway, for now, we'll just skip running
+>     xfs/076 for the xfs/realtime* configs.
+>     
+>     Signed-off-by: Theodore Ts'o <tytso@mit.edu>
+> 
+> diff --git a/kvm-xfstests/test-appliance/files/root/fs/xfs/cfg/realtime.exclude b/kvm-xfstests/test-appliance/files/root/fs/xfs/cfg/realtime.exclude
+> index a9acba9c..bafce552 100644
+> --- a/kvm-xfstests/test-appliance/files/root/fs/xfs/cfg/realtime.exclude
+> +++ b/kvm-xfstests/test-appliance/files/root/fs/xfs/cfg/realtime.exclude
+> @@ -1,2 +1,7 @@
+>  # Normal configurations don't support dax
+>  -g dax
+> +
+> +# The xfs/076 test takes well over an hour (80 minutes using 100GB GCE
+> +# PD/SSD) when run with an external realtime device, which triggers
+> +# the ltm "test is stalled" failsafe which aborts the VM.
+> +xfs/076
+> diff --git a/kvm-xfstests/test-appliance/files/root/fs/xfs/cfg/realtime_28k_logdev.exclude b/kvm-xfstests/test-appliance/files/root/fs/xfs/cfg/realtime_28k_logdev.exclude
+> index a9acba9c..bafce552 100644
+> --- a/kvm-xfstests/test-appliance/files/root/fs/xfs/cfg/realtime_28k_logdev.exclude
+> +++ b/kvm-xfstests/test-appliance/files/root/fs/xfs/cfg/realtime_28k_logdev.exclude
+> @@ -1,2 +1,7 @@
+>  # Normal configurations don't support dax
+>  -g dax
+> +
+> +# The xfs/076 test takes well over an hour (80 minutes using 100GB GCE
+> +# PD/SSD) when run with an external realtime device, which triggers
+> +# the ltm "test is stalled" failsafe which aborts the VM.
+> +xfs/076
+> diff --git a/kvm-xfstests/test-appliance/files/root/fs/xfs/cfg/realtime_logdev.exclude b/kvm-xfstests/test-appliance/files/root/fs/xfs/cfg/realtime_logdev.exclude
+> index a9acba9c..bafce552 100644
+> --- a/kvm-xfstests/test-appliance/files/root/fs/xfs/cfg/realtime_logdev.exclude
+> +++ b/kvm-xfstests/test-appliance/files/root/fs/xfs/cfg/realtime_logdev.exclude
+> @@ -1,2 +1,7 @@
+>  # Normal configurations don't support dax
+>  -g dax
+> +
+> +# The xfs/076 test takes well over an hour (80 minutes using 100GB GCE
+> +# PD/SSD) when run with an external realtime device, which triggers
+> +# the ltm "test is stalled" failsafe which aborts the VM.
+> +xfs/076
