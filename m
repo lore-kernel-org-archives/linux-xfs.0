@@ -2,39 +2,39 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32424C4332F
-	for <linux-xfs@archiver.kernel.org>; Sun,  7 Nov 2021 13:00:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AC49C433F5
+	for <linux-xfs@archiver.kernel.org>; Sun,  7 Nov 2021 13:03:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 060E6613AC
-	for <linux-xfs@archiver.kernel.org>; Sun,  7 Nov 2021 13:00:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 401B8613B1
+	for <linux-xfs@archiver.kernel.org>; Sun,  7 Nov 2021 13:03:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235355AbhKGNDB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 7 Nov 2021 08:03:01 -0500
-Received: from out20-25.mail.aliyun.com ([115.124.20.25]:53900 "EHLO
-        out20-25.mail.aliyun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235343AbhKGNDB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 7 Nov 2021 08:03:01 -0500
-X-Alimail-AntiSpam: AC=PASS;BC=0.07436282|-1;BR=01201311R121ee;CH=green;DM=|CONTINUE|false|;DS=SPAM|spam_blackmail|0.983527-0.00130665-0.0151667;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047213;MF=guan@eryu.me;NM=1;PH=DS;RN=4;RT=4;SR=0;TI=SMTPD_---.LosVVvp_1636290014;
-Received: from localhost(mailfrom:guan@eryu.me fp:SMTPD_---.LosVVvp_1636290014)
-          by smtp.aliyun-inc.com(10.147.41.121);
-          Sun, 07 Nov 2021 21:00:14 +0800
-Date:   Sun, 7 Nov 2021 21:00:14 +0800
+        id S235393AbhKGNGN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 7 Nov 2021 08:06:13 -0500
+Received: from out20-14.mail.aliyun.com ([115.124.20.14]:41386 "EHLO
+        out20-14.mail.aliyun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235343AbhKGNGM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 7 Nov 2021 08:06:12 -0500
+X-Alimail-AntiSpam: AC=PASS;BC=0.07436282|-1;BR=01201311R111ee;CH=green;DM=|CONTINUE|false|;DS=SPAM|spam_blackmail|0.983527-0.00130665-0.0151667;FP=16997298187749298930|3|2|4|0|-1|-1|-1;HT=ay29a033018047209;MF=guan@eryu.me;NM=1;PH=DS;RN=5;RT=5;SR=0;TI=SMTPD_---.LosJ1G._1636290204;
+Received: from localhost(mailfrom:guan@eryu.me fp:SMTPD_---.LosJ1G._1636290204)
+          by smtp.aliyun-inc.com(10.147.41.120);
+          Sun, 07 Nov 2021 21:03:25 +0800
+Date:   Sun, 7 Nov 2021 21:03:24 +0800
 From:   Eryu Guan <guan@eryu.me>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     Eryu Guan <guaneryu@gmail.com>, fstests <fstests@vger.kernel.org>,
-        xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] fsstress: run more than 2^32 operations
-Message-ID: <YYfN3v+Ph/LGDNCi@desktop>
-References: <20211102190819.GV24282@magnolia>
+        xfs <linux-xfs@vger.kernel.org>, Zorro Lang <zlang@redhat.com>
+Subject: Re: [PATCH v2] fsstress: run more than 2^32 operations
+Message-ID: <YYfOnMc6mu3Bv/4e@desktop>
+References: <20211103161206.GW24282@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211102190819.GV24282@magnolia>
+In-Reply-To: <20211103161206.GW24282@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 02, 2021 at 12:08:19PM -0700, Darrick J. Wong wrote:
+On Wed, Nov 03, 2021 at 09:12:06AM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
 > Now that storage has gotten really really fast, we have to crank up
@@ -45,10 +45,12 @@ On Tue, Nov 02, 2021 at 12:08:19PM -0700, Darrick J. Wong wrote:
 > the universe, like we did for fsx a while back. ;)
 > 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Reviewed-by: Zorro Lang <zlang@redhat.com>
+> ---
+> v2: fix whitespace damage, add rvbs
 
-Thanks for the fix!
-
-I saw this new warning, and changed '%d' to '%lld' as suggested by gcc
+Ah, I meant to reply to this v2 patch.. I fixed a compile warning on
+commit
 
 fsstress.c: In function 'subvol_delete_f':
 fsstress.c:4970:16: warning: format '%d' expects argument of type 'int', but argument 3 has type 'opnum_t' {aka 'long long int'} [-Wformat=]
@@ -64,13 +66,12 @@ fsstress.c:4970:16: warning: format '%d' expects argument of type 'int', but arg
 
 Thanks,
 Eryu
-
 > ---
 >  ltp/fsstress.c |  673 ++++++++++++++++++++++++++++----------------------------
 >  1 file changed, 340 insertions(+), 333 deletions(-)
 > 
 > diff --git a/ltp/fsstress.c b/ltp/fsstress.c
-> index 90ae432e..3d53e25f 100644
+> index 90ae432e..b3f3d4a6 100644
 > --- a/ltp/fsstress.c
 > +++ b/ltp/fsstress.c
 > @@ -147,7 +147,9 @@ typedef enum {
@@ -625,7 +626,7 @@ Eryu
 >  	e = xfsctl(".", fd, XFS_IOC_FSBULKSTAT_SINGLE, &bsr) < 0 ? errno : 0;
 >  	if (v)
 > -		printf("%d/%d: bulkstat1 %s ino %lld %d\n", 
-> +		printf("%d/%lld: bulkstat1 %s ino %lld %d\n", 
+> +		printf("%d/%lld: bulkstat1 %s ino %lld %d\n",
 >  		       procid, opno, good?"real":"random",
 >  		       verifiable_log ? -1LL : (long long)ino, e);
 >  	close(fd);
