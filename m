@@ -2,89 +2,137 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81FC5C433EF
-	for <linux-xfs@archiver.kernel.org>; Sun,  7 Nov 2021 22:58:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99852C433F5
+	for <linux-xfs@archiver.kernel.org>; Mon,  8 Nov 2021 04:10:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 58EBC613A6
-	for <linux-xfs@archiver.kernel.org>; Sun,  7 Nov 2021 22:58:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7BC7461390
+	for <linux-xfs@archiver.kernel.org>; Mon,  8 Nov 2021 04:10:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229962AbhKGXAv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 7 Nov 2021 18:00:51 -0500
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:43732 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231618AbhKGXAv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 7 Nov 2021 18:00:51 -0500
-Received: from dread.disaster.area (pa49-195-103-97.pa.nsw.optusnet.com.au [49.195.103.97])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 705FE865486;
-        Mon,  8 Nov 2021 09:58:06 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1mjr6z-0068HA-OM; Mon, 08 Nov 2021 09:58:05 +1100
-Date:   Mon, 8 Nov 2021 09:58:05 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     sandeen@redhat.com, xfs <linux-xfs@vger.kernel.org>,
-        "Darrick J. Wong" <djwong@kernel.org>
-Subject: Re: [PATCH V3 RFC] xfsprogs: remove stubbed-out kernel functions out
- from xfs_shared.h
-Message-ID: <20211107225805.GI449541@dread.disaster.area>
-References: <389722a5-4b02-c76d-a5ac-d92d1e642b21@redhat.com>
- <fa2fe2c5-645b-6263-3493-b59b4d096488@redhat.com>
- <20211104223823.GF449541@dread.disaster.area>
- <0123f094-a073-0ba8-7cac-27394193d277@sandeen.net>
+        id S237341AbhKHENT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 7 Nov 2021 23:13:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42574 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236536AbhKHENS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 7 Nov 2021 23:13:18 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B981FC061570;
+        Sun,  7 Nov 2021 20:10:34 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:In-Reply-To:References;
+        bh=ktUs3uTQ8/E5fdzFkqY1zH7fnzNTHiKLIPKl79EDTvQ=; b=rz69hoxIcde3ZSkZGxzrx8B3G3
+        NZ6ipfKdYo7Dgv0EQAZqiT/2KjOgglkGFI5PCGdSzPIFGuNMW7Pg6mYhHUqsdM2/uAWAfEcIZdixl
+        dri2cK+oMRkmy/8S11UkympF9k6ohjmCUXcasgTnz1SpbJEy8bvwlPeuSB9EH8ju9xPAGstrkMhA+
+        VN1hfVqbAuwlG+Krp34Fg6ez5l2mxpIboxKVvpzl1ASZvTKcOBquL19nrC9NL14ro8LjvQrl5JSAD
+        ae4HVB0MXWulOgw5oTH1VoWBTwWupJgDaOi29ZoE5sG6qg8QXyndUsWfjxEjr3a9hyLoLSTg3kkTd
+        O1qRXaZA==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1mjvur-0089Qy-Hv; Mon, 08 Nov 2021 04:06:26 +0000
+From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
+To:     "Darrick J . Wong " <djwong@kernel.org>
+Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
+        Jens Axboe <axboe@kernel.dk>,
+        Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH v2 00/28] iomap/xfs folio patches
+Date:   Mon,  8 Nov 2021 04:05:23 +0000
+Message-Id: <20211108040551.1942823-1-willy@infradead.org>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <0123f094-a073-0ba8-7cac-27394193d277@sandeen.net>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=618859fe
-        a=fP9RlOTWD4uZJjPSFnn6Ew==:117 a=fP9RlOTWD4uZJjPSFnn6Ew==:17
-        a=kj9zAlcOel0A:10 a=vIxV3rELxO4A:10 a=7-415B0cAAAA:8
-        a=SWQqYkDptuFE033Nv2UA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Nov 05, 2021 at 11:40:57AM -0500, Eric Sandeen wrote:
-> On 11/4/21 5:38 PM, Dave Chinner wrote:
-> 
-> > With those changes, we end up with some new stubs in libxfs_priv.h
-> > and two places where we need #ifdef __KERNEL__ in xfs_ag.[ch]. Most
-> > of the mess in this patch goes away....
-> > 
-> > Cheers,
-> > 
-> > Dave.
-> Ok.
-> 
-> I will split this up into the right patch granularity, but is this the
-> endpoint you're looking for?  One #ifdef in each of xfs_ag.[ch], two total.
+This patchset converts XFS & iomap to use folios, and gets them to a
+state where they can handle multi-page folios.  Applying these patches
+is not yet sufficient to actually start using multi-page folios for
+XFS; more page cache changes are needed.  I don't anticipate needing to
+touch XFS again until we're at the point where we want to convert the
+aops to be type-safe.  It completes an xfstests run with no unexpected
+failures.  Most of these patches have been posted before and I've retained
+acks/reviews where I thought them reasonable.  Some patches are new.
 
-Yup.
+v2:
+ - Added review tags from Jens, Darrick & Christoph (thanks!)
+ - Added folio_zero_* wrappers around zero_user_*()
+ - Added a patch to rename AS_THP_SUPPORT
+ - Added a patch to convert __block_write_begin_int() to take a folio
+ - Split the iomap_add_to_ioend() patch into three
+ - Updated changelog of bio_add_folio() (Jens)
+ - Adjusted whitespace of bio patches (Christoph, Jens)
+ - Improved changelog of readahead conversion to explain why the put_page()
+   disappeared (Christoph)
+ - Add a patch to zero an entire folio at a time, instead of limiting to
+   a page
+ - Switch pos & end_pos back to being u64 from loff_t
+ - Call block_write_end() and ->page_done with the head page of the folio,
+   as that's what those functions expect.
 
-> The delayed work init/cancel assymmetry is a little odd, but I'll
-> get over it.
-> 
-> diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-> index 15bae1ff..2ca3b9b2 100644
-> --- a/libxfs/libxfs_priv.h
-> +++ b/libxfs/libxfs_priv.h
-> @@ -673,6 +673,9 @@ static inline void xfs_iunlink_destroy(struct xfs_perag *pag) { }
->  xfs_agnumber_t xfs_set_inode_alloc(struct xfs_mount *mp,
->  		xfs_agnumber_t agcount);
-> +/* Faked up kernel bits */
-> +#define cancel_delayed_work_sync(work) do { } while(0)
+I intend to push patch 1 upstream myself (before 5.16), but I've included
+it here to avoid nasty messages from the build-bots.  I can probably
+persuade Linus to take patches 2-4 as well if Darrick's not comfortable
+taking them as part of the iomap changes.
 
-Comment is completely redundant. libxfs_priv.h is entirely for
-"faked up kernel bits".
+These changes are also available at:
+  git://git.infradead.org/users/willy/pagecache.git heads/folio-iomap
 
-I'd also put this up near the top of the file near the definition of
-struct iomap, not place it randomly in amongst a bunch of XFS
-definitions.
+I intend to rebase that branch to include any further R-b tags (some of
+the patches are new and don't have reviews).
 
-Cheers,
+Matthew Wilcox (Oracle) (28):
+  csky,sparc: Declare flush_dcache_folio()
+  mm: Add functions to zero portions of a folio
+  fs: Remove FS_THP_SUPPORT
+  fs: Rename AS_THP_SUPPORT and mapping_thp_support
+  block: Add bio_add_folio()
+  block: Add bio_for_each_folio_all()
+  fs/buffer: Convert __block_write_begin_int() to take a folio
+  iomap: Convert to_iomap_page to take a folio
+  iomap: Convert iomap_page_create to take a folio
+  iomap: Convert iomap_page_release to take a folio
+  iomap: Convert iomap_releasepage to use a folio
+  iomap: Add iomap_invalidate_folio
+  iomap: Pass the iomap_page into iomap_set_range_uptodate
+  iomap: Convert bio completions to use folios
+  iomap: Use folio offsets instead of page offsets
+  iomap: Convert iomap_read_inline_data to take a folio
+  iomap: Convert readahead and readpage to use a folio
+  iomap: Convert iomap_page_mkwrite to use a folio
+  iomap: Convert __iomap_zero_iter to use a folio
+  iomap: Convert iomap_write_begin() and iomap_write_end() to folios
+  iomap: Convert iomap_write_end_inline to take a folio
+  iomap,xfs: Convert ->discard_page to ->discard_folio
+  iomap: Simplify iomap_writepage_map()
+  iomap: Simplify iomap_do_writepage()
+  iomap: Convert iomap_add_to_ioend() to take a folio
+  iomap: Convert iomap_migrate_page() to use folios
+  iomap: Support multi-page folios in invalidatepage
+  xfs: Support multi-page folios
 
-Dave.
+ Documentation/core-api/kernel-api.rst  |   1 +
+ arch/csky/abiv1/inc/abi/cacheflush.h   |   1 +
+ arch/csky/abiv2/inc/abi/cacheflush.h   |   2 +
+ arch/sparc/include/asm/cacheflush_32.h |   1 +
+ arch/sparc/include/asm/cacheflush_64.h |   1 +
+ block/bio.c                            |  22 ++
+ fs/buffer.c                            |  22 +-
+ fs/inode.c                             |   2 -
+ fs/internal.h                          |   2 +-
+ fs/iomap/buffered-io.c                 | 506 +++++++++++++------------
+ fs/xfs/xfs_aops.c                      |  24 +-
+ fs/xfs/xfs_icache.c                    |   2 +
+ include/linux/bio.h                    |  56 ++-
+ include/linux/fs.h                     |   1 -
+ include/linux/highmem.h                |  44 ++-
+ include/linux/iomap.h                  |   3 +-
+ include/linux/pagemap.h                |  26 +-
+ mm/highmem.c                           |   2 -
+ mm/shmem.c                             |   3 +-
+ 19 files changed, 431 insertions(+), 290 deletions(-)
+
 -- 
-Dave Chinner
-david@fromorbit.com
+2.33.0
+
