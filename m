@@ -2,34 +2,34 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EBCA9C35269
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Nov 2021 08:33:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97F6BC4332F
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Nov 2021 08:33:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D19EE611C4
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Nov 2021 08:33:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7F848611C4
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Nov 2021 08:33:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244226AbhKIIgk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 9 Nov 2021 03:36:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59948 "EHLO
+        id S244224AbhKIIgm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 9 Nov 2021 03:36:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59978 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244178AbhKIIgf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Nov 2021 03:36:35 -0500
+        with ESMTP id S244234AbhKIIgl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Nov 2021 03:36:41 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3BC0FC061205;
-        Tue,  9 Nov 2021 00:33:50 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11C71C061764;
+        Tue,  9 Nov 2021 00:33:55 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=mfMDb5n97/RHD98fzJck6QJCWRVIOtc8ifMZjDMd/kQ=; b=Jeyxv3tsyyzZnJxRVCO2TB86Ws
-        w+QW/DSGu6mPXAbKWCOMHiAmNN5rK3FhaDN94URftiwooYE6Kz+gz8a1HfSlssB02QBDy9aJwX46c
-        NDXerTZam1l2Ml3fw83VloMPreSlSXJm/jzRom9zjYEnt43pMde3L43bArtupfVvuk4O+f8AQph7l
-        Kj3jYG42Lvn+DXbfwPw5jj3lpKQh72Cd06FD0JbEYC1NX2yES5mwAwZHyF2oVjSOtBAbNtBoXMeDR
-        vbug0yVOpp8HDFIdvP9bfctKCkHC9LPNUxlsH4CvmgS1IONxvcj5qU2yhGCBnm1dXQO4vmrrrzMZ9
-        YK5BQzmw==;
+        bh=+scVZaxx4kcvp0Cboq1Z7TDSMt9zURLxK3cUHRmeCJY=; b=TVkdImeUmftPM79g0PQhq20Ta/
+        RuxJyo/av4rpO9uxXtuLKWWoEXVONWEOL7vNvV5s8fmK01QKc9v6zFnOGpWQ8veO3PW41Veas6UZd
+        7vhJhKrargNEMiZSeZbpl5goXtJhQ1blmw3uTTLPOrnp4Ylr6Mkbdrwjsy2aUO2KGzReNWaN7T1RT
+        1vs5j3lyh+OmWzCpqYO62KgdQupFc3i8JBAmq1ShrHT1uqi9w8d7WcG88O26dMVcPidYVh2zNjS3K
+        Y3ydrmz/SGcOgWBJAkmvOjEGIncW+Ke5rV/nj/tmVsx9UIkM/+3rpVyE4E6+uyOWiKc8zys52VYQe
+        9itJrl+Q==;
 Received: from [2001:4bb8:19a:7ee7:fb46:2fe1:8652:d9d4] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mkMZd-000s62-5h; Tue, 09 Nov 2021 08:33:46 +0000
+        id 1mkMZh-000s7y-MB; Tue, 09 Nov 2021 08:33:50 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Dan Williams <dan.j.williams@intel.com>
 Cc:     Mike Snitzer <snitzer@redhat.com>, Ira Weiny <ira.weiny@intel.com>,
@@ -38,9 +38,9 @@ Cc:     Mike Snitzer <snitzer@redhat.com>, Ira Weiny <ira.weiny@intel.com>,
         linux-fsdevel@vger.kernel.org, linux-erofs@lists.ozlabs.org,
         linux-ext4@vger.kernel.org,
         virtualization@lists.linux-foundation.org
-Subject: [PATCH 18/29] fsdax: decouple zeroing from the iomap buffered I/O code
-Date:   Tue,  9 Nov 2021 09:32:58 +0100
-Message-Id: <20211109083309.584081-19-hch@lst.de>
+Subject: [PATCH 21/29] xfs: move dax device handling into xfs_{alloc,free}_buftarg
+Date:   Tue,  9 Nov 2021 09:33:01 +0100
+Message-Id: <20211109083309.584081-22-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20211109083309.584081-1-hch@lst.de>
 References: <20211109083309.584081-1-hch@lst.de>
@@ -51,257 +51,160 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Unshare the DAX and iomap buffered I/O page zeroing code.  This code
-previously did a IS_DAX check deep inside the iomap code, which in
-fact was the only DAX check in the code.  Instead move these checks
-into the callers.  Most callers already have DAX special casing anyway
-and XFS will need it for reflink support as well.
+Hide the DAX device lookup from the xfs_super.c code.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/dax.c               | 77 ++++++++++++++++++++++++++++++++++--------
- fs/ext2/inode.c        |  6 ++--
- fs/ext4/inode.c        |  4 +--
- fs/iomap/buffered-io.c | 35 +++++++------------
- fs/xfs/xfs_iomap.c     |  6 ++++
- include/linux/dax.h    |  6 +++-
- 6 files changed, 91 insertions(+), 43 deletions(-)
+ fs/xfs/xfs_buf.c   |  8 ++++----
+ fs/xfs/xfs_buf.h   |  4 ++--
+ fs/xfs/xfs_super.c | 26 +++++---------------------
+ 3 files changed, 11 insertions(+), 27 deletions(-)
 
-diff --git a/fs/dax.c b/fs/dax.c
-index dc9ebeff850ab..5b52b878124ac 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -1135,24 +1135,73 @@ static int dax_memzero(struct dax_device *dax_dev, pgoff_t pgoff,
- 	return rc;
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 631c5a61d89b7..4d4553ffa7050 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1892,6 +1892,7 @@ xfs_free_buftarg(
+ 	list_lru_destroy(&btp->bt_lru);
+ 
+ 	blkdev_issue_flush(btp->bt_bdev);
++	fs_put_dax(btp->bt_daxdev);
+ 
+ 	kmem_free(btp);
+ }
+@@ -1932,11 +1933,10 @@ xfs_setsize_buftarg_early(
+ 	return xfs_setsize_buftarg(btp, bdev_logical_block_size(bdev));
  }
  
--s64 dax_iomap_zero(loff_t pos, u64 length, struct iomap *iomap)
-+static loff_t dax_zero_iter(struct iomap_iter *iter, bool *did_zero)
+-xfs_buftarg_t *
++struct xfs_buftarg *
+ xfs_alloc_buftarg(
+ 	struct xfs_mount	*mp,
+-	struct block_device	*bdev,
+-	struct dax_device	*dax_dev)
++	struct block_device	*bdev)
  {
--	pgoff_t pgoff = dax_iomap_pgoff(iomap, pos);
--	long rc, id;
--	unsigned offset = offset_in_page(pos);
--	unsigned size = min_t(u64, PAGE_SIZE - offset, length);
-+	const struct iomap *iomap = &iter->iomap;
-+	const struct iomap *srcmap = iomap_iter_srcmap(iter);
-+	loff_t pos = iter->pos;
-+	loff_t length = iomap_length(iter);
-+	loff_t written = 0;
-+
-+	/* already zeroed?  we're done. */
-+	if (srcmap->type == IOMAP_HOLE || srcmap->type == IOMAP_UNWRITTEN)
-+		return length;
-+
-+	do {
-+		unsigned offset = offset_in_page(pos);
-+		unsigned size = min_t(u64, PAGE_SIZE - offset, length);
-+		pgoff_t pgoff = dax_iomap_pgoff(iomap, pos);
-+		long rc;
-+		int id;
+ 	xfs_buftarg_t		*btp;
  
--	id = dax_read_lock();
--	if (IS_ALIGNED(pos, PAGE_SIZE) && size == PAGE_SIZE)
--		rc = dax_zero_page_range(iomap->dax_dev, pgoff, 1);
--	else
--		rc = dax_memzero(iomap->dax_dev, pgoff, offset, size);
--	dax_read_unlock(id);
-+		id = dax_read_lock();
-+		if (IS_ALIGNED(pos, PAGE_SIZE) && size == PAGE_SIZE)
-+			rc = dax_zero_page_range(iomap->dax_dev, pgoff, 1);
-+		else
-+			rc = dax_memzero(iomap->dax_dev, pgoff, offset, size);
-+		dax_read_unlock(id);
+@@ -1945,7 +1945,7 @@ xfs_alloc_buftarg(
+ 	btp->bt_mount = mp;
+ 	btp->bt_dev =  bdev->bd_dev;
+ 	btp->bt_bdev = bdev;
+-	btp->bt_daxdev = dax_dev;
++	btp->bt_daxdev = fs_dax_get_by_bdev(bdev);
  
--	if (rc < 0)
--		return rc;
--	return size;
-+		if (rc < 0)
-+			return rc;
-+		pos += size;
-+		length -= size;
-+		written += size;
-+		if (did_zero)
-+			*did_zero = true;
-+	} while (length > 0);
-+
-+	return written;
-+}
-+
-+int dax_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
-+		const struct iomap_ops *ops)
-+{
-+	struct iomap_iter iter = {
-+		.inode		= inode,
-+		.pos		= pos,
-+		.len		= len,
-+		.flags		= IOMAP_ZERO,
-+	};
-+	int ret;
-+
-+	while ((ret = iomap_iter(&iter, ops)) > 0)
-+		iter.processed = dax_zero_iter(&iter, did_zero);
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(dax_zero_range);
-+
-+int dax_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
-+		const struct iomap_ops *ops)
-+{
-+	unsigned int blocksize = i_blocksize(inode);
-+	unsigned int off = pos & (blocksize - 1);
-+
-+	/* Block boundary? Nothing to do */
-+	if (!off)
-+		return 0;
-+	return dax_zero_range(inode, pos, blocksize - off, did_zero, ops);
- }
-+EXPORT_SYMBOL_GPL(dax_truncate_page);
+ 	/*
+ 	 * Buffer IO error rate limiting. Limit it to no more than 10 messages
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index 6b0200b8007d1..bd7f709f0d232 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -338,8 +338,8 @@ xfs_buf_update_cksum(struct xfs_buf *bp, unsigned long cksum_offset)
+ /*
+  *	Handling of buftargs.
+  */
+-extern struct xfs_buftarg *xfs_alloc_buftarg(struct xfs_mount *,
+-		struct block_device *, struct dax_device *);
++struct xfs_buftarg *xfs_alloc_buftarg(struct xfs_mount *mp,
++		struct block_device *bdev);
+ extern void xfs_free_buftarg(struct xfs_buftarg *);
+ extern void xfs_buftarg_wait(struct xfs_buftarg *);
+ extern void xfs_buftarg_drain(struct xfs_buftarg *);
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 3a45d5caa28d5..7262716afb215 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -391,26 +391,19 @@ STATIC void
+ xfs_close_devices(
+ 	struct xfs_mount	*mp)
+ {
+-	struct dax_device *dax_ddev = mp->m_ddev_targp->bt_daxdev;
+-
+ 	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp) {
+ 		struct block_device *logdev = mp->m_logdev_targp->bt_bdev;
+-		struct dax_device *dax_logdev = mp->m_logdev_targp->bt_daxdev;
  
- static loff_t dax_iomap_iter(const struct iomap_iter *iomi,
- 		struct iov_iter *iter)
-diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
-index 333fa62661d56..ae9993018a015 100644
---- a/fs/ext2/inode.c
-+++ b/fs/ext2/inode.c
-@@ -1297,9 +1297,9 @@ static int ext2_setsize(struct inode *inode, loff_t newsize)
- 	inode_dio_wait(inode);
- 
- 	if (IS_DAX(inode)) {
--		error = iomap_zero_range(inode, newsize,
--					 PAGE_ALIGN(newsize) - newsize, NULL,
--					 &ext2_iomap_ops);
-+		error = dax_zero_range(inode, newsize,
-+				       PAGE_ALIGN(newsize) - newsize, NULL,
-+				       &ext2_iomap_ops);
- 	} else if (test_opt(inode->i_sb, NOBH))
- 		error = nobh_truncate_page(inode->i_mapping,
- 				newsize, ext2_get_block);
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 0f06305167d5a..8c443b753b815 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -3783,8 +3783,8 @@ static int ext4_block_zero_page_range(handle_t *handle,
- 		length = max;
- 
- 	if (IS_DAX(inode)) {
--		return iomap_zero_range(inode, from, length, NULL,
--					&ext4_iomap_ops);
-+		return dax_zero_range(inode, from, length, NULL,
-+				      &ext4_iomap_ops);
+ 		xfs_free_buftarg(mp->m_logdev_targp);
+ 		xfs_blkdev_put(logdev);
+-		fs_put_dax(dax_logdev);
  	}
- 	return __ext4_block_zero_page_range(handle, mapping, from, length);
+ 	if (mp->m_rtdev_targp) {
+ 		struct block_device *rtdev = mp->m_rtdev_targp->bt_bdev;
+-		struct dax_device *dax_rtdev = mp->m_rtdev_targp->bt_daxdev;
+ 
+ 		xfs_free_buftarg(mp->m_rtdev_targp);
+ 		xfs_blkdev_put(rtdev);
+-		fs_put_dax(dax_rtdev);
+ 	}
+ 	xfs_free_buftarg(mp->m_ddev_targp);
+-	fs_put_dax(dax_ddev);
  }
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 1753c26c8e76e..b1511255b4df8 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -870,26 +870,8 @@ iomap_file_unshare(struct inode *inode, loff_t pos, loff_t len,
+ 
+ /*
+@@ -428,8 +421,6 @@ xfs_open_devices(
+ 	struct xfs_mount	*mp)
+ {
+ 	struct block_device	*ddev = mp->m_super->s_bdev;
+-	struct dax_device	*dax_ddev = fs_dax_get_by_bdev(ddev);
+-	struct dax_device	*dax_logdev = NULL, *dax_rtdev = NULL;
+ 	struct block_device	*logdev = NULL, *rtdev = NULL;
+ 	int			error;
+ 
+@@ -439,8 +430,7 @@ xfs_open_devices(
+ 	if (mp->m_logname) {
+ 		error = xfs_blkdev_get(mp, mp->m_logname, &logdev);
+ 		if (error)
+-			goto out;
+-		dax_logdev = fs_dax_get_by_bdev(logdev);
++			return error;
+ 	}
+ 
+ 	if (mp->m_rtname) {
+@@ -454,25 +444,24 @@ xfs_open_devices(
+ 			error = -EINVAL;
+ 			goto out_close_rtdev;
+ 		}
+-		dax_rtdev = fs_dax_get_by_bdev(rtdev);
+ 	}
+ 
+ 	/*
+ 	 * Setup xfs_mount buffer target pointers
+ 	 */
+ 	error = -ENOMEM;
+-	mp->m_ddev_targp = xfs_alloc_buftarg(mp, ddev, dax_ddev);
++	mp->m_ddev_targp = xfs_alloc_buftarg(mp, ddev);
+ 	if (!mp->m_ddev_targp)
+ 		goto out_close_rtdev;
+ 
+ 	if (rtdev) {
+-		mp->m_rtdev_targp = xfs_alloc_buftarg(mp, rtdev, dax_rtdev);
++		mp->m_rtdev_targp = xfs_alloc_buftarg(mp, rtdev);
+ 		if (!mp->m_rtdev_targp)
+ 			goto out_free_ddev_targ;
+ 	}
+ 
+ 	if (logdev && logdev != ddev) {
+-		mp->m_logdev_targp = xfs_alloc_buftarg(mp, logdev, dax_logdev);
++		mp->m_logdev_targp = xfs_alloc_buftarg(mp, logdev);
+ 		if (!mp->m_logdev_targp)
+ 			goto out_free_rtdev_targ;
+ 	} else {
+@@ -488,14 +477,9 @@ xfs_open_devices(
+ 	xfs_free_buftarg(mp->m_ddev_targp);
+  out_close_rtdev:
+ 	xfs_blkdev_put(rtdev);
+-	fs_put_dax(dax_rtdev);
+  out_close_logdev:
+-	if (logdev && logdev != ddev) {
++	if (logdev && logdev != ddev)
+ 		xfs_blkdev_put(logdev);
+-		fs_put_dax(dax_logdev);
+-	}
+- out:
+-	fs_put_dax(dax_ddev);
+ 	return error;
  }
- EXPORT_SYMBOL_GPL(iomap_file_unshare);
  
--static s64 __iomap_zero_iter(struct iomap_iter *iter, loff_t pos, u64 length)
--{
--	struct page *page;
--	int status;
--	unsigned offset = offset_in_page(pos);
--	unsigned bytes = min_t(u64, PAGE_SIZE - offset, length);
--
--	status = iomap_write_begin(iter, pos, bytes, &page);
--	if (status)
--		return status;
--
--	zero_user(page, offset, bytes);
--	mark_page_accessed(page);
--
--	return iomap_write_end(iter, pos, bytes, bytes, page);
--}
--
- static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
- {
--	struct iomap *iomap = &iter->iomap;
- 	const struct iomap *srcmap = iomap_iter_srcmap(iter);
- 	loff_t pos = iter->pos;
- 	loff_t length = iomap_length(iter);
-@@ -900,12 +882,19 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
- 		return length;
- 
- 	do {
--		s64 bytes;
-+		unsigned offset = offset_in_page(pos);
-+		size_t bytes = min_t(u64, PAGE_SIZE - offset, length);
-+		struct page *page;
-+		int status;
- 
--		if (IS_DAX(iter->inode))
--			bytes = dax_iomap_zero(pos, length, iomap);
--		else
--			bytes = __iomap_zero_iter(iter, pos, length);
-+		status = iomap_write_begin(iter, pos, bytes, &page);
-+		if (status)
-+			return status;
-+
-+		zero_user(page, offset, bytes);
-+		mark_page_accessed(page);
-+
-+		bytes = iomap_write_end(iter, pos, bytes, bytes, page);
- 		if (bytes < 0)
- 			return bytes;
- 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index d6d71ae9f2ae4..604000b6243ec 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1321,6 +1321,9 @@ xfs_zero_range(
- {
- 	struct inode		*inode = VFS_I(ip);
- 
-+	if (IS_DAX(inode))
-+		return dax_zero_range(inode, pos, len, did_zero,
-+				      &xfs_buffered_write_iomap_ops);
- 	return iomap_zero_range(inode, pos, len, did_zero,
- 				&xfs_buffered_write_iomap_ops);
- }
-@@ -1333,6 +1336,9 @@ xfs_truncate_page(
- {
- 	struct inode		*inode = VFS_I(ip);
- 
-+	if (IS_DAX(inode))
-+		return dax_truncate_page(inode, pos, did_zero,
-+					&xfs_buffered_write_iomap_ops);
- 	return iomap_truncate_page(inode, pos, did_zero,
- 				   &xfs_buffered_write_iomap_ops);
- }
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index 324363b798ecd..a5cc2f1aa840e 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -14,6 +14,7 @@ typedef unsigned long dax_entry_t;
- struct dax_device;
- struct gendisk;
- struct iomap_ops;
-+struct iomap_iter;
- struct iomap;
- 
- struct dax_operations {
-@@ -124,6 +125,10 @@ struct page *dax_layout_busy_page(struct address_space *mapping);
- struct page *dax_layout_busy_page_range(struct address_space *mapping, loff_t start, loff_t end);
- dax_entry_t dax_lock_page(struct page *page);
- void dax_unlock_page(struct page *page, dax_entry_t cookie);
-+int dax_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
-+		const struct iomap_ops *ops);
-+int dax_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
-+		const struct iomap_ops *ops);
- #else
- static inline int dax_add_host(struct dax_device *dax_dev, struct gendisk *disk)
- {
-@@ -204,7 +209,6 @@ vm_fault_t dax_finish_sync_fault(struct vm_fault *vmf,
- int dax_delete_mapping_entry(struct address_space *mapping, pgoff_t index);
- int dax_invalidate_mapping_entry_sync(struct address_space *mapping,
- 				      pgoff_t index);
--s64 dax_iomap_zero(loff_t pos, u64 length, struct iomap *iomap);
- static inline bool dax_mapping(struct address_space *mapping)
- {
- 	return mapping->host && IS_DAX(mapping->host);
 -- 
 2.30.2
 
