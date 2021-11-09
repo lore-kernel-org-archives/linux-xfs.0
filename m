@@ -2,36 +2,36 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65758C43219
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C499DC4321E
 	for <linux-xfs@archiver.kernel.org>; Tue,  9 Nov 2021 01:52:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5245F6115B
+	by mail.kernel.org (Postfix) with ESMTP id AC5006115B
 	for <linux-xfs@archiver.kernel.org>; Tue,  9 Nov 2021 01:52:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240878AbhKIBzc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S241525AbhKIBzc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Mon, 8 Nov 2021 20:55:32 -0500
-Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:48973 "EHLO
-        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S241478AbhKIBzb (ORCPT
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:57615 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S240965AbhKIBzb (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Nov 2021 20:55:31 -0500
 Received: from dread.disaster.area (pa49-195-103-97.pa.nsw.optusnet.com.au [49.195.103.97])
-        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id C83D2105668
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 960548A0062
         for <linux-xfs@vger.kernel.org>; Tue,  9 Nov 2021 12:52:44 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1mkGJY-006ZaI-6F
-        for linux-xfs@vger.kernel.org; Tue, 09 Nov 2021 12:52:44 +1100
+        id 1mkGJX-006Za2-VC
+        for linux-xfs@vger.kernel.org; Tue, 09 Nov 2021 12:52:43 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.95)
         (envelope-from <david@fromorbit.com>)
-        id 1mkGJY-006Uiu-4R
+        id 1mkGJX-006UiV-To
         for linux-xfs@vger.kernel.org;
-        Tue, 09 Nov 2021 12:52:44 +1100
+        Tue, 09 Nov 2021 12:52:43 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 09/14] xfs: convert CIL to unordered per cpu lists
-Date:   Tue,  9 Nov 2021 12:52:35 +1100
-Message-Id: <20211109015240.1547991-10-david@fromorbit.com>
+Subject: [PATCH 04/14] xfs: introduce per-cpu CIL tracking structure
+Date:   Tue,  9 Nov 2021 12:52:30 +1100
+Message-Id: <20211109015240.1547991-5-david@fromorbit.com>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <20211109015240.1547991-1-david@fromorbit.com>
 References: <20211109015240.1547991-1-david@fromorbit.com>
@@ -41,238 +41,156 @@ X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=6189d46c
         a=fP9RlOTWD4uZJjPSFnn6Ew==:117 a=fP9RlOTWD4uZJjPSFnn6Ew==:17
         a=vIxV3rELxO4A:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
-        a=LJalFvrMBqGHNnPjixMA:9 a=AjGcO6oz07-iQ99wixmX:22
+        a=3WjegZqcOLNj38eB_csA:9 a=AjGcO6oz07-iQ99wixmX:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-So that we can remove the cil_lock which is a global serialisation
-point. We've already got ordering sorted, so all we need to do is
-treat the CIL list like the busy extent list and reconstruct it
-before the push starts.
+The CIL push lock is highly contended on larger machines, becoming a
+hard bottleneck that about 700,000 transaction commits/s on >16p
+machines. To address this, start moving the CIL tracking
+infrastructure to utilise per-CPU structures.
 
-This is what we're trying to avoid:
+We need to track the space used, the amount of log reservation space
+reserved to write the CIL, the log items in the CIL and the busy
+extents that need to be completed by the CIL commit.  This requires
+a couple of per-cpu counters, an unordered per-cpu list and a
+globally ordered per-cpu list.
 
- -   75.35%     1.83%  [kernel]            [k] xfs_log_commit_cil
-    - 46.35% xfs_log_commit_cil
-       - 41.54% _raw_spin_lock
-          - 67.30% do_raw_spin_lock
-               66.96% __pv_queued_spin_lock_slowpath
-
-Which happens on a 32p system when running a 32-way 'rm -rf'
-workload. After this patch:
-
--   20.90%     3.23%  [kernel]               [k] xfs_log_commit_cil
-   - 17.67% xfs_log_commit_cil
-      - 6.51% xfs_log_ticket_ungrant
-           1.40% xfs_log_space_wake
-        2.32% memcpy_erms
-      - 2.18% xfs_buf_item_committing
-         - 2.12% xfs_buf_item_release
-            - 1.03% xfs_buf_unlock
-                 0.96% up
-              0.72% xfs_buf_rele
-        1.33% xfs_inode_item_format
-        1.19% down_read
-        0.91% up_read
-        0.76% xfs_buf_item_format
-      - 0.68% kmem_alloc_large
-         - 0.67% kmem_alloc
-              0.64% __kmalloc
-        0.50% xfs_buf_item_size
-
-It kinda looks like the workload is running out of log space all
-the time. But all the spinlock contention is gone and the
-transaction commit rate has gone from 800k/s to 1.3M/s so the amount
-of real work being done has gone up a *lot*.
+Create a per-cpu structure to hold these and all the management
+interfaces needed, as well as the hooks to handle hotplug CPUs.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_log_cil.c  | 69 +++++++++++++++++++------------------------
- fs/xfs/xfs_log_priv.h |  3 +-
- 2 files changed, 31 insertions(+), 41 deletions(-)
+ fs/xfs/xfs_log_cil.c  | 30 ++++++++++++++++++++++++++++--
+ fs/xfs/xfs_log_priv.h | 18 ++++++++++++++++++
+ fs/xfs/xfs_super.c    |  1 +
+ 3 files changed, 47 insertions(+), 2 deletions(-)
 
 diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index d07c3cf1b3b7..0ff1069dd008 100644
+index dffa6ba5e0cb..2de1ca43bcde 100644
 --- a/fs/xfs/xfs_log_cil.c
 +++ b/fs/xfs/xfs_log_cil.c
-@@ -72,6 +72,7 @@ xlog_cil_ctx_alloc(void)
- 	ctx = kmem_zalloc(sizeof(*ctx), KM_NOFS);
- 	INIT_LIST_HEAD(&ctx->committing);
- 	INIT_LIST_HEAD(&ctx->busy_extents);
-+	INIT_LIST_HEAD(&ctx->log_items);
- 	INIT_WORK(&ctx->push_work, xlog_cil_push_work);
- 	return ctx;
+@@ -1537,6 +1537,26 @@ xfs_log_item_in_current_chkpt(
+ 	return lip->li_seq == cil->xc_ctx->sequence;
  }
-@@ -99,6 +100,8 @@ xlog_cil_pcp_aggregate(
- 			list_splice_init(&cilpcp->busy_extents,
- 					&ctx->busy_extents);
- 		}
-+		if (!list_empty(&cilpcp->log_items))
-+			list_splice_init(&cilpcp->log_items, &ctx->log_items);
  
- 		/*
- 		 * We're in the middle of switching cil contexts.  Reset the
-@@ -489,10 +492,9 @@ xlog_cil_insert_items(
- 	/*
- 	 * We need to take the CIL checkpoint unit reservation on the first
- 	 * commit into the CIL. Test the XLOG_CIL_EMPTY bit first so we don't
--	 * unnecessarily do an atomic op in the fast path here. We don't need to
--	 * hold the xc_cil_lock here to clear the XLOG_CIL_EMPTY bit as we are
--	 * under the xc_ctx_lock here and that needs to be held exclusively to
--	 * reset the XLOG_CIL_EMPTY bit.
-+	 * unnecessarily do an atomic op in the fast path here. We can clear the
-+	 * XLOG_CIL_EMPTY bit as we are under the xc_ctx_lock here and that
-+	 * needs to be held exclusively to reset the XLOG_CIL_EMPTY bit.
- 	 */
- 	if (test_bit(XLOG_CIL_EMPTY, &cil->xc_flags) &&
- 	    test_and_clear_bit(XLOG_CIL_EMPTY, &cil->xc_flags))
-@@ -546,24 +548,6 @@ xlog_cil_insert_items(
- 	/* attach the transaction to the CIL if it has any busy extents */
- 	if (!list_empty(&tp->t_busy))
- 		list_splice_init(&tp->t_busy, &cilpcp->busy_extents);
--	put_cpu_ptr(cilpcp);
--
--	/*
--	 * If we've overrun the reservation, dump the tx details before we move
--	 * the log items. Shutdown is imminent...
--	 */
--	tp->t_ticket->t_curr_res -= ctx_res + len;
--	if (WARN_ON(tp->t_ticket->t_curr_res < 0)) {
--		xfs_warn(log->l_mp, "Transaction log reservation overrun:");
--		xfs_warn(log->l_mp,
--			 "  log items: %d bytes (iov hdrs: %d bytes)",
--			 len, iovhdr_res);
--		xfs_warn(log->l_mp, "  split region headers: %d bytes",
--			 split_res);
--		xfs_warn(log->l_mp, "  ctx ticket: %d bytes", ctx_res);
--		xlog_print_trans(tp);
--	}
--
- 	/*
- 	 * Now update the order of everything modified in the transaction
- 	 * and insert items into the CIL if they aren't already there.
-@@ -571,7 +555,6 @@ xlog_cil_insert_items(
- 	 * the transaction commit.
- 	 */
- 	order = atomic_inc_return(&ctx->order_id);
--	spin_lock(&cil->xc_cil_lock);
- 	list_for_each_entry(lip, &tp->t_items, li_trans) {
- 
- 		/* Skip items which aren't dirty in this transaction. */
-@@ -581,10 +564,25 @@ xlog_cil_insert_items(
- 		lip->li_order_id = order;
- 		if (!list_empty(&lip->li_cil))
- 			continue;
--		list_add_tail(&lip->li_cil, &cil->xc_cil);
-+		list_add_tail(&lip->li_cil, &cilpcp->log_items);
- 	}
-+	put_cpu_ptr(cilpcp);
- 
--	spin_unlock(&cil->xc_cil_lock);
-+	/*
-+	 * If we've overrun the reservation, dump the tx details before we move
-+	 * the log items. Shutdown is imminent...
-+	 */
-+	tp->t_ticket->t_curr_res -= ctx_res + len;
-+	if (WARN_ON(tp->t_ticket->t_curr_res < 0)) {
-+		xfs_warn(log->l_mp, "Transaction log reservation overrun:");
-+		xfs_warn(log->l_mp,
-+			 "  log items: %d bytes (iov hdrs: %d bytes)",
-+			 len, iovhdr_res);
-+		xfs_warn(log->l_mp, "  split region headers: %d bytes",
-+			 split_res);
-+		xfs_warn(log->l_mp, "  ctx ticket: %d bytes", ctx_res);
-+		xlog_print_trans(tp);
-+	}
- 
- 	if (tp->t_ticket->t_curr_res < 0)
- 		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
-@@ -1118,18 +1116,12 @@ xlog_cil_push_work(
- 
- 	xlog_cil_pcp_aggregate(cil, ctx);
- 
--	/*
--	 * Pull all the log vectors off the items in the CIL, and remove the
--	 * items from the CIL. We don't need the CIL lock here because it's only
--	 * needed on the transaction commit side which is currently locked out
--	 * by the flush lock.
--	 */
--	list_sort(NULL, &cil->xc_cil, xlog_cil_order_cmp);
--	lv = NULL;
--	while (!list_empty(&cil->xc_cil)) {
-+	list_sort(NULL, &ctx->log_items, xlog_cil_order_cmp);
++/*
++ * Move dead percpu state to the relevant CIL context structures.
++ *
++ * We have to lock the CIL context here to ensure that nothing is modifying
++ * the percpu state, either addition or removal. Both of these are done under
++ * the CIL context lock, so grabbing that exclusively here will ensure we can
++ * safely drain the cilpcp for the CPU that is dying.
++ */
++void
++xlog_cil_pcp_dead(
++	struct xlog		*log,
++	unsigned int		cpu)
++{
++	struct xfs_cil		*cil = log->l_cilp;
 +
-+	while (!list_empty(&ctx->log_items)) {
- 		struct xfs_log_item	*item;
++	down_write(&cil->xc_ctx_lock);
++	/* move stuff on dead CPU to context */
++	up_write(&cil->xc_ctx_lock);
++}
++
+ /*
+  * Perform initial CIL structure initialisation.
+  */
+@@ -1560,6 +1580,11 @@ xlog_cil_init(
+ 	if (!cil->xc_push_wq)
+ 		goto out_destroy_cil;
  
--		item = list_first_entry(&cil->xc_cil,
-+		item = list_first_entry(&ctx->log_items,
- 					struct xfs_log_item, li_cil);
- 		list_del_init(&item->li_cil);
- 		item->li_order_id = 0;
-@@ -1292,7 +1284,6 @@ xlog_cil_push_background(
- 	 * The cil won't be empty because we are called while holding the
- 	 * context lock so whatever we added to the CIL will still be there.
- 	 */
--	ASSERT(!list_empty(&cil->xc_cil));
- 	ASSERT(!test_bit(XLOG_CIL_EMPTY, &cil->xc_flags));
- 
- 	/*
-@@ -1639,6 +1630,8 @@ xlog_cil_pcp_dead(
- 	}
- 	cilpcp->space_reserved = 0;
- 
-+	if (!list_empty(&cilpcp->log_items))
-+		list_splice_init(&cilpcp->log_items, &ctx->log_items);
- 	if (!list_empty(&cilpcp->busy_extents))
- 		list_splice_init(&cilpcp->busy_extents, &ctx->busy_extents);
- 	atomic_add(cilpcp->space_used, &ctx->space_used);
-@@ -1679,11 +1672,10 @@ xlog_cil_init(
- 	for_each_possible_cpu(cpu) {
- 		cilpcp = per_cpu_ptr(cil->xc_pcp, cpu);
- 		INIT_LIST_HEAD(&cilpcp->busy_extents);
-+		INIT_LIST_HEAD(&cilpcp->log_items);
- 	}
- 
--	INIT_LIST_HEAD(&cil->xc_cil);
++	cil->xc_log = log;
++	cil->xc_pcp = alloc_percpu(struct xlog_cil_pcp);
++	if (!cil->xc_pcp)
++		goto out_destroy_wq;
++
+ 	INIT_LIST_HEAD(&cil->xc_cil);
  	INIT_LIST_HEAD(&cil->xc_committing);
--	spin_lock_init(&cil->xc_cil_lock);
- 	spin_lock_init(&cil->xc_push_lock);
- 	init_waitqueue_head(&cil->xc_push_wait);
+ 	spin_lock_init(&cil->xc_cil_lock);
+@@ -1568,14 +1593,14 @@ xlog_cil_init(
  	init_rwsem(&cil->xc_ctx_lock);
-@@ -1714,7 +1706,6 @@ xlog_cil_destroy(
- 		kmem_free(cil->xc_ctx);
- 	}
+ 	init_waitqueue_head(&cil->xc_start_wait);
+ 	init_waitqueue_head(&cil->xc_commit_wait);
+-	cil->xc_log = log;
+ 	log->l_cilp = cil;
  
--	ASSERT(list_empty(&cil->xc_cil));
+ 	ctx = xlog_cil_ctx_alloc();
+ 	xlog_cil_ctx_switch(cil, ctx);
+-
+ 	return 0;
+ 
++out_destroy_wq:
++	destroy_workqueue(cil->xc_push_wq);
+ out_destroy_cil:
+ 	kmem_free(cil);
+ 	return -ENOMEM;
+@@ -1595,6 +1620,7 @@ xlog_cil_destroy(
+ 
+ 	ASSERT(list_empty(&cil->xc_cil));
  	ASSERT(test_bit(XLOG_CIL_EMPTY, &cil->xc_flags));
- 	free_percpu(cil->xc_pcp);
++	free_percpu(cil->xc_pcp);
  	destroy_workqueue(cil->xc_push_wq);
+ 	kmem_free(cil);
+ }
 diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 2b3236ef1f5c..5bb7faea2c4f 100644
+index 8eba58d70e19..0a744ccddbd6 100644
 --- a/fs/xfs/xfs_log_priv.h
 +++ b/fs/xfs/xfs_log_priv.h
-@@ -224,6 +224,7 @@ struct xfs_cil_ctx {
- 	struct xlog_ticket	*ticket;	/* chkpt ticket */
- 	atomic_t		space_used;	/* aggregate size of regions */
- 	struct list_head	busy_extents;	/* busy extents in chkpt */
-+	struct list_head	log_items;	/* log items in chkpt */
- 	struct xfs_log_vec	*lv_chain;	/* logvecs being pushed */
- 	struct list_head	iclog_entry;
- 	struct list_head	committing;	/* ctx committing list */
-@@ -262,8 +263,6 @@ struct xfs_cil {
- 	struct xlog		*xc_log;
- 	unsigned long		xc_flags;
- 	atomic_t		xc_iclog_hdrs;
--	struct list_head	xc_cil;
--	spinlock_t		xc_cil_lock;
- 	struct workqueue_struct	*xc_push_wq;
+@@ -231,6 +231,14 @@ struct xfs_cil_ctx {
+ 	struct work_struct	push_work;
+ };
  
- 	struct rw_semaphore	xc_ctx_lock ____cacheline_aligned_in_smp;
++/*
++ * Per-cpu CIL tracking items
++ */
++struct xlog_cil_pcp {
++	struct list_head	busy_extents;
++	struct list_head	log_items;
++};
++
+ /*
+  * Committed Item List structure
+  *
+@@ -266,6 +274,11 @@ struct xfs_cil {
+ 	wait_queue_head_t	xc_start_wait;
+ 	xfs_csn_t		xc_current_sequence;
+ 	wait_queue_head_t	xc_push_wait;	/* background push throttle */
++
++	void __percpu		*xc_pcp;	/* percpu CIL structures */
++#ifdef CONFIG_HOTPLUG_CPU
++	struct list_head	xc_pcp_list;
++#endif
+ } ____cacheline_aligned_in_smp;
+ 
+ /* xc_flags bit values */
+@@ -647,4 +660,9 @@ xlog_valid_lsn(
+ 	return valid;
+ }
+ 
++/*
++ * CIL CPU dead notifier
++ */
++void xlog_cil_pcp_dead(struct xlog *log, unsigned int cpu);
++
+ #endif	/* __XFS_LOG_PRIV_H__ */
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index e21459f9923a..f847866b9ecc 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -2185,6 +2185,7 @@ xfs_cpu_dead(
+ 	list_for_each_entry_safe(mp, n, &xfs_mount_list, m_mount_list) {
+ 		spin_unlock(&xfs_mount_list_lock);
+ 		xfs_inodegc_cpu_dead(mp, cpu);
++		xlog_cil_pcp_dead(mp->m_log, cpu);
+ 		spin_lock(&xfs_mount_list_lock);
+ 	}
+ 	spin_unlock(&xfs_mount_list_lock);
 -- 
 2.33.0
 
