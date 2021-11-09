@@ -2,251 +2,153 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1540FC433EF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55C13C4321E
 	for <linux-xfs@archiver.kernel.org>; Tue,  9 Nov 2021 01:51:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F10C861105
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Nov 2021 01:51:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 42A5461151
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Nov 2021 01:51:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240313AbhKIBxs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 Nov 2021 20:53:48 -0500
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:49164 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S240381AbhKIBxq (ORCPT
+        id S240381AbhKIBxt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 Nov 2021 20:53:49 -0500
+Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:39231 "EHLO
+        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S240487AbhKIBxq (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Nov 2021 20:53:46 -0500
 Received: from dread.disaster.area (pa49-195-103-97.pa.nsw.optusnet.com.au [49.195.103.97])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 17D4946CA4F
+        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 1B534107019
         for <linux-xfs@vger.kernel.org>; Tue,  9 Nov 2021 12:50:58 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1mkGHq-006ZYF-Bw
+        id 1mkGHq-006ZXp-1C
         for linux-xfs@vger.kernel.org; Tue, 09 Nov 2021 12:50:58 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.95)
         (envelope-from <david@fromorbit.com>)
-        id 1mkGHq-006Ucw-AP
+        id 1mkGHp-006UcG-W5
         for linux-xfs@vger.kernel.org;
         Tue, 09 Nov 2021 12:50:58 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 09/16] xfs: pass lv chain length into xlog_write()
-Date:   Tue,  9 Nov 2021 12:50:48 +1100
-Message-Id: <20211109015055.1547604-10-david@fromorbit.com>
+Subject: [PATCH 00/16 v6] xfs: rework xlog_write()
+Date:   Tue,  9 Nov 2021 12:50:39 +1100
+Message-Id: <20211109015055.1547604-1-david@fromorbit.com>
 X-Mailer: git-send-email 2.33.0
-In-Reply-To: <20211109015055.1547604-1-david@fromorbit.com>
-References: <20211109015055.1547604-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=6189d403
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=6189d403
         a=fP9RlOTWD4uZJjPSFnn6Ew==:117 a=fP9RlOTWD4uZJjPSFnn6Ew==:17
-        a=vIxV3rELxO4A:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
-        a=r1RjEeUhuTgk3y8VTxQA:9 a=AjGcO6oz07-iQ99wixmX:22
+        a=vIxV3rELxO4A:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=afZ3VLhyg-m26p0hK-wA:9 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+Time to try again for this code....
 
-The caller of xlog_write() usually has a close accounting of the
-aggregated vector length contained in the log vector chain passed to
-xlog_write(). There is no need to iterate the chain to calculate he
-length of the data in xlog_write_calculate_len() if the caller is
-already iterating that chain to build it.
+xlog_write() is code that causes severe eye bleeding. It's extremely
+difficult to understand the way it is structured, and extremely easy
+to break because of all the weird parameters it passes between
+functions that do very non-obvious things. state is set in
+xlog_write_finish_copy() that is carried across both outer and inner
+loop iterations that is used by xlog_write_setup_copy(), which also
+sets state that xlog_write_finish_copy() needs. The way iclog space
+was obtained affects the accounting logic that ends up being passed
+to xlog_state_finish_copy(). The code that handles commit iclogs is
+spread over multiple functions and is obfuscated by the set/finish
+copy code.
 
-Passing in the vector length avoids doing an extra chain iteration,
-which can be a significant amount of work given that large CIL
-commits can have hundreds of thousands of vectors attached to the
-chain.
+It's just a mess.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/xfs_log.c      | 35 +++++------------------------------
- fs/xfs/xfs_log_cil.c  | 25 +++++++++++++++++--------
- fs/xfs/xfs_log_priv.h |  2 +-
- 3 files changed, 23 insertions(+), 39 deletions(-)
+It's also extremely inefficient.
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index bd2e50804cb4..76d5a743f6fb 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -972,7 +972,8 @@ xlog_write_unmount_record(
- 	/* account for space used by record data */
- 	ticket->t_curr_res -= sizeof(unmount_rec);
- 
--	return xlog_write(log, NULL, &vec, ticket, XLOG_UNMOUNT_TRANS);
-+	return xlog_write(log, NULL, &vec, ticket, XLOG_UNMOUNT_TRANS,
-+			reg.i_len);
- }
- 
- /*
-@@ -2223,32 +2224,6 @@ xlog_print_trans(
- 	}
- }
- 
--/*
-- * Calculate the potential space needed by the log vector. All regions contain
-- * their own opheaders and they are accounted for in region space so we don't
-- * need to add them to the vector length here.
-- */
--static int
--xlog_write_calc_vec_length(
--	struct xlog_ticket	*ticket,
--	struct xfs_log_vec	*log_vector,
--	uint			optype)
--{
--	struct xfs_log_vec	*lv;
--	int			len = 0;
--	int			i;
--
--	for (lv = log_vector; lv; lv = lv->lv_next) {
--		/* we don't write ordered log vectors */
--		if (lv->lv_buf_len == XFS_LOG_VEC_ORDERED)
--			continue;
--
--		for (i = 0; i < lv->lv_niovecs; i++)
--			len += lv->lv_iovecp[i].i_len;
--	}
--	return len;
--}
--
- static xlog_op_header_t *
- xlog_write_setup_ophdr(
- 	struct xlog_op_header	*ophdr,
-@@ -2402,13 +2377,14 @@ xlog_write(
- 	struct xfs_cil_ctx	*ctx,
- 	struct xfs_log_vec	*log_vector,
- 	struct xlog_ticket	*ticket,
--	uint			optype)
-+	uint			optype,
-+	uint32_t		len)
-+
- {
- 	struct xlog_in_core	*iclog = NULL;
- 	struct xfs_log_vec	*lv = log_vector;
- 	struct xfs_log_iovec	*vecp = lv->lv_iovecp;
- 	int			index = 0;
--	int			len;
- 	int			partial_copy = 0;
- 	int			partial_copy_len = 0;
- 	int			contwr = 0;
-@@ -2423,7 +2399,6 @@ xlog_write(
- 		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
- 	}
- 
--	len = xlog_write_calc_vec_length(ticket, log_vector, optype);
- 	while (lv && (!lv->lv_niovecs || index < lv->lv_niovecs)) {
- 		void		*ptr;
- 		int		log_offset;
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index dc49b8072b9b..00243939b220 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -791,7 +791,8 @@ xlog_cil_order_write(
- static int
- xlog_cil_write_chain(
- 	struct xfs_cil_ctx	*ctx,
--	struct xfs_log_vec	*chain)
-+	struct xfs_log_vec	*chain,
-+	uint32_t		chain_len)
- {
- 	struct xlog		*log = ctx->cil->xc_log;
- 	int			error;
-@@ -799,7 +800,8 @@ xlog_cil_write_chain(
- 	error = xlog_cil_order_write(ctx->cil, ctx->sequence, _START_RECORD);
- 	if (error)
- 		return error;
--	return xlog_write(log, ctx, chain, ctx->ticket, XLOG_START_TRANS);
-+	return xlog_write(log, ctx, chain, ctx->ticket, XLOG_START_TRANS,
-+			chain_len);
- }
- 
- /*
-@@ -838,7 +840,8 @@ xlog_cil_write_commit_record(
- 
- 	/* account for space used by record data */
- 	ctx->ticket->t_curr_res -= reg.i_len;
--	error = xlog_write(log, ctx, &vec, ctx->ticket, XLOG_COMMIT_TRANS);
-+	error = xlog_write(log, ctx, &vec, ctx->ticket, XLOG_COMMIT_TRANS,
-+			reg.i_len);
- 	if (error)
- 		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
- 	return error;
-@@ -900,11 +903,12 @@ xlog_cil_build_trans_hdr(
- 				sizeof(struct xfs_trans_header);
- 	hdr->lhdr[1].i_type = XLOG_REG_TYPE_TRANSHDR;
- 
--	tic->t_curr_res -= hdr->lhdr[0].i_len + hdr->lhdr[1].i_len;
--
- 	lvhdr->lv_niovecs = 2;
- 	lvhdr->lv_iovecp = &hdr->lhdr[0];
-+	lvhdr->lv_bytes = hdr->lhdr[0].i_len + hdr->lhdr[1].i_len;
- 	lvhdr->lv_next = ctx->lv_chain;
-+
-+	tic->t_curr_res -= lvhdr->lv_bytes;
- }
- 
- /*
-@@ -931,7 +935,8 @@ xlog_cil_push_work(
- 	struct xlog		*log = cil->xc_log;
- 	struct xfs_log_vec	*lv;
- 	struct xfs_cil_ctx	*new_ctx;
--	int			num_iovecs;
-+	int			num_iovecs = 0;
-+	int			num_bytes = 0;
- 	int			error = 0;
- 	struct xlog_cil_trans_hdr thdr;
- 	struct xfs_log_vec	lvhdr = { NULL };
-@@ -1032,7 +1037,6 @@ xlog_cil_push_work(
- 	 * by the flush lock.
- 	 */
- 	lv = NULL;
--	num_iovecs = 0;
- 	while (!list_empty(&cil->xc_cil)) {
- 		struct xfs_log_item	*item;
- 
-@@ -1046,6 +1050,10 @@ xlog_cil_push_work(
- 		lv = item->li_lv;
- 		item->li_lv = NULL;
- 		num_iovecs += lv->lv_niovecs;
-+
-+		/* we don't write ordered log vectors */
-+		if (lv->lv_buf_len != XFS_LOG_VEC_ORDERED)
-+			num_bytes += lv->lv_bytes;
- 	}
- 
- 	/*
-@@ -1084,6 +1092,7 @@ xlog_cil_push_work(
- 	 * transaction header here as it is not accounted for in xlog_write().
- 	 */
- 	xlog_cil_build_trans_hdr(ctx, &thdr, &lvhdr, num_iovecs);
-+	num_bytes += lvhdr.lv_bytes;
- 
- 	/*
- 	 * Before we format and submit the first iclog, we have to ensure that
-@@ -1091,7 +1100,7 @@ xlog_cil_push_work(
- 	 */
- 	wait_for_completion(&bdev_flush);
- 
--	error = xlog_cil_write_chain(ctx, &lvhdr);
-+	error = xlog_cil_write_chain(ctx, &lvhdr, num_bytes);
- 	if (error)
- 		goto out_abort_free_ticket;
- 
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 47165c4d2a49..56df86d62430 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -492,7 +492,7 @@ void	xlog_print_tic_res(struct xfs_mount *mp, struct xlog_ticket *ticket);
- void	xlog_print_trans(struct xfs_trans *);
- int	xlog_write(struct xlog *log, struct xfs_cil_ctx *ctx,
- 		struct xfs_log_vec *log_vector, struct xlog_ticket *tic,
--		uint optype);
-+		uint optype, uint32_t len);
- void	xfs_log_ticket_ungrant(struct xlog *log, struct xlog_ticket *ticket);
- void	xfs_log_ticket_regrant(struct xlog *log, struct xlog_ticket *ticket);
- 
--- 
-2.33.0
+For all the complexity created by having to keep track of partial
+copy state for loop continuation, this is a *rare* occurrence. On a
+256kB iclog buffer, we can copy a couple of thousand regions (e.g.
+inode log format + inode core regions) without hitting the partial
+copy case once. IOWs, we don't need to track partial copy state for
+the vast majority of region copy operations we perform. It's all
+unnecessary overhead.
+
+Not to mention that before we even start the copy, we walk every log
+vector and log iovec to count the op headers needed and the amount
+of space consumed by the log vector chain despite having just done a
+log item walk to construct the log vector chain.  This is all
+unnecessary overhead given that the CIL code already counts the
+vectors and can trivially count the size of the log vector chain at
+the same time.
+
+Then there is the opheaders that xlog_write() adds before every
+region. This is why it needs to count headers, because we have
+to account for this space they use in the journal. We've already
+reserved this space when committing items to the CIL, but we still
+require xlog_write() to add these fixed size headers to log regions
+and account for the space in the CIL context log ticket.
+
+Hence we have complexity tracking and reserving CIL space at
+transaction commit time, as well as complexity formatting and
+accounting for this space when the CIL writes them to the log. This
+can be done much more efficiently by adding the opheaders to the log
+regions at item formatting time, largely removing the need to do
+anything but update opheader lengths and flags in xlog_write().
+
+This opens up a bunch of other optimisations in the item formatting
+code that can reduce the number of regions we need to track, but
+that is not a topic this patch set tries to address.
+
+The simplification of the accounting and reservation of space for
+log opheaders during the transaction commit path allows for further
+optimisations of that fast path. e.g. it makes it possible to
+move to per-cpu accounting and tracking of the CIL.
+
+Further, the simplifications in opheader management allow us to
+implement a fast path for xlog_write() that does almost nothing but
+iterate the log vector chain doing memcpy() and advancing the iclog
+data pointer. The only time we need to worry about partial copies is
+when a log vector will not wholly fit within the current iclog. By
+writing a slow path that just handles a single log vector that needs
+to be split across multiple iclogs, we get rid of all the difficult
+to follow logic. That is what this patchset implements.
+
+Overall, we go from 3 iterations of the log vector chain to two, the
+majority of the copies hit the xlog_write_single() fast path, the
+xlog_write() code is much simpler, the handling of iclog state is
+much cleaner, and all the partial copy state is contained within a
+single function. The fast path loops are much smaller and tighter,
+the regions we memcpy() are larger, and so overall the code is much
+more efficient.
+
+Unfortunately, this code is complex and full of subtle stuff that
+takes a *lot* of time and effort to understand. Hence I feel that
+these changes aren't actually properly reviewable by anyone. If
+someone else presented this patchset to me, I'd be pretty much say
+the same thing, because to understand all the subtle corner cases in
+xlog_write() takes weeks of bashing your head repeatedly into said
+corner cases.
+
+But, really, that's why I've rewritten the code. I think the code
+I've written is much easier to understand and there's less of it.
+The compiled code is smaller and faster. It passes fstests. And it
+opens more avenues for future improvement of the log write code
+that would otherwise have to do with the mess of xlog_write()....
+
+git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git xlog-write-rework
+
+Version 6:
+- split out from aggregated patchset
+- rebase on linux-xfs/for-next
+- include iclog->ic_datap type change patch from Christoph Hellwig
+- rolled xlog_write_iovec()/xlog_write_full() improvements into the
+  xlog_write_single() introduction (adaption from patches written by Christoph
+  Hellwig)
+- pass record_cnt and data_cnt into xlog_write_single() right from the start
+  rather than modify the interface when xlog_write_partial() comes along.
+- rolled the xlog_write_partial() and log vector iteration improvements into
+  the xlog_write_partial() introduction (adaption from patches written by
+  Christoph Hellwig).
+- include remove xlog_verify_dest_ptr() patch from Christoph Hellwig
+
+Version 5:
+- https://lore.kernel.org/linux-xfs/20210603052240.171998-1-david@fromorbit.com/
 
