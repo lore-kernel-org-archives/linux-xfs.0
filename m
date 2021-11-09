@@ -2,174 +2,173 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F314CC4332F
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Nov 2021 01:51:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79AF8C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Nov 2021 01:52:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DA48661159
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Nov 2021 01:51:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5FA4A61105
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Nov 2021 01:52:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240733AbhKIBxv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 Nov 2021 20:53:51 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:36369 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S238619AbhKIBxr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Nov 2021 20:53:47 -0500
+        id S241537AbhKIBzb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 Nov 2021 20:55:31 -0500
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:58350 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S240594AbhKIBza (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Nov 2021 20:55:30 -0500
 Received: from dread.disaster.area (pa49-195-103-97.pa.nsw.optusnet.com.au [49.195.103.97])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 2899D105C1A5
-        for <linux-xfs@vger.kernel.org>; Tue,  9 Nov 2021 12:50:59 +1100 (AEDT)
+        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 8220B46CA6E
+        for <linux-xfs@vger.kernel.org>; Tue,  9 Nov 2021 12:52:44 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1mkGHq-006ZYQ-Hc
-        for linux-xfs@vger.kernel.org; Tue, 09 Nov 2021 12:50:58 +1100
+        id 1mkGJX-006ZZr-QG
+        for linux-xfs@vger.kernel.org; Tue, 09 Nov 2021 12:52:43 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.95)
         (envelope-from <david@fromorbit.com>)
-        id 1mkGHq-006UdG-GM
+        id 1mkGJX-006UiE-Ow
         for linux-xfs@vger.kernel.org;
-        Tue, 09 Nov 2021 12:50:58 +1100
+        Tue, 09 Nov 2021 12:52:43 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 13/16] xfs: remove xlog_verify_dest_ptr
-Date:   Tue,  9 Nov 2021 12:50:52 +1100
-Message-Id: <20211109015055.1547604-14-david@fromorbit.com>
+Subject: [PATCH 00/14 v6] xfs: improve CIL scalability
+Date:   Tue,  9 Nov 2021 12:52:26 +1100
+Message-Id: <20211109015240.1547991-1-david@fromorbit.com>
 X-Mailer: git-send-email 2.33.0
-In-Reply-To: <20211109015055.1547604-1-david@fromorbit.com>
-References: <20211109015055.1547604-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=6189d403
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=6189d46c
         a=fP9RlOTWD4uZJjPSFnn6Ew==:117 a=fP9RlOTWD4uZJjPSFnn6Ew==:17
-        a=vIxV3rELxO4A:10 a=20KFwNOVAAAA:8 a=pGLkceISAAAA:8 a=7-415B0cAAAA:8
-        a=TtUvnfYE3bnzAJtYeuQA:9 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=vIxV3rELxO4A:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=BQ4tkPckFW3K2o-p3LwA:9 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Christoph Hellwig <hch@lst.de>
+Time to try again to get this code merged.
 
-Just check that the offset in xlog_write_vec is smaller than the iclog
-size and remove the expensive cycling through all iclogs.
+This series aims to improve the scalability of XFS transaction
+commits on large CPU count machines. My 32p machine hits contention
+limits in xlog_cil_commit() at about 700,000 transaction commits a
+section. It hits this at 16 thread workloads, and 32 thread
+workloads go no faster and just burn CPU on the CIL spinlocks.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
-Signed-off-by: Dave Chinner <david@fromorbit.com>
----
- fs/xfs/xfs_log.c      | 35 +----------------------------------
- fs/xfs/xfs_log_priv.h |  4 ----
- 2 files changed, 1 insertion(+), 38 deletions(-)
+This patchset gets rid of spinlocks and global serialisation points
+in the xlog_cil_commit() path. It does this by moving to a
+combination of per-cpu counters, unordered per-cpu lists and
+post-ordered per-cpu lists.
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 02db5a712e76..d6ef555b1310 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -61,10 +61,6 @@ xlog_sync(
- 	struct xlog_in_core	*iclog);
- #if defined(DEBUG)
- STATIC void
--xlog_verify_dest_ptr(
--	struct xlog		*log,
--	void			*ptr);
--STATIC void
- xlog_verify_grant_tail(
- 	struct xlog *log);
- STATIC void
-@@ -77,7 +73,6 @@ xlog_verify_tail_lsn(
- 	struct xlog		*log,
- 	struct xlog_in_core	*iclog);
- #else
--#define xlog_verify_dest_ptr(a,b)
- #define xlog_verify_grant_tail(a)
- #define xlog_verify_iclog(a,b,c)
- #define xlog_verify_tail_lsn(a,b)
-@@ -1640,9 +1635,6 @@ xlog_alloc_log(
- 				GFP_KERNEL | __GFP_RETRY_MAYFAIL);
- 		if (!iclog->ic_data)
- 			goto out_free_iclog;
--#ifdef DEBUG
--		log->l_iclog_bak[i] = &iclog->ic_header;
--#endif
- 		head = &iclog->ic_header;
- 		memset(head, 0, sizeof(xlog_rec_header_t));
- 		head->h_magicno = cpu_to_be32(XLOG_HEADER_MAGIC_NUM);
-@@ -2234,6 +2226,7 @@ xlog_write_iovec(
- 	uint32_t		*record_cnt,
- 	uint32_t		*data_cnt)
- {
-+	ASSERT(*log_offset < iclog->ic_log->l_iclog_size);
- 	ASSERT(*log_offset % sizeof(int32_t) == 0);
- 	ASSERT(write_len % sizeof(int32_t) == 0);
- 
-@@ -2329,7 +2322,6 @@ xlog_write_partial(
- 	int			*contwr)
- {
- 	struct xlog_in_core	*iclog = *iclogp;
--	struct xlog		*log = iclog->ic_log;
- 	struct xlog_op_header	*ophdr;
- 	int			index = 0;
- 	uint32_t		rlen;
-@@ -2368,7 +2360,6 @@ xlog_write_partial(
- 		if (rlen != reg->i_len)
- 			ophdr->oh_flags |= XLOG_CONTINUE_TRANS;
- 
--		xlog_verify_dest_ptr(log, iclog->ic_datap + *log_offset);
- 		xlog_write_iovec(iclog, log_offset, reg->i_addr,
- 				rlen, len, record_cnt, data_cnt);
- 
-@@ -2436,7 +2427,6 @@ xlog_write_partial(
- 			rlen = min_t(uint32_t, rlen, iclog->ic_size - *log_offset);
- 			ophdr->oh_len = cpu_to_be32(rlen);
- 
--			xlog_verify_dest_ptr(log, iclog->ic_datap + *log_offset);
- 			xlog_write_iovec(iclog, log_offset,
- 					reg->i_addr + reg_offset,
- 					rlen, len, record_cnt, data_cnt);
-@@ -3560,29 +3550,6 @@ xlog_ticket_alloc(
- }
- 
- #if defined(DEBUG)
--/*
-- * Make sure that the destination ptr is within the valid data region of
-- * one of the iclogs.  This uses backup pointers stored in a different
-- * part of the log in case we trash the log structure.
-- */
--STATIC void
--xlog_verify_dest_ptr(
--	struct xlog	*log,
--	void		*ptr)
--{
--	int i;
--	int good_ptr = 0;
--
--	for (i = 0; i < log->l_iclog_bufs; i++) {
--		if (ptr >= log->l_iclog_bak[i] &&
--		    ptr <= log->l_iclog_bak[i] + log->l_iclog_size)
--			good_ptr++;
--	}
--
--	if (!good_ptr)
--		xfs_emerg(log->l_mp, "%s: invalid ptr", __func__);
--}
--
- /*
-  * Check to make sure the grant write head didn't just over lap the tail.  If
-  * the cycles are the same, we can't be overlapping.  Otherwise, make sure that
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 6e9c7d924363..8c98b57e2a63 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -420,10 +420,6 @@ struct xlog {
- 
- 	struct xfs_kobj		l_kobj;
- 
--	/* The following field are used for debugging; need to hold icloglock */
--#ifdef DEBUG
--	void			*l_iclog_bak[XLOG_MAX_ICLOGS];
--#endif
- 	/* log recovery lsn tracking (for buffer submission */
- 	xfs_lsn_t		l_recovery_lsn;
- 
--- 
-2.33.0
+This results in transaction commit rates exceeding 1.6 million
+commits/s under unlink certain workloads, and while the log lock
+contention is largely gone there is still significant lock
+contention at the VFS at 600,000 transactions/s:
+
+  19.39%  [kernel]  [k] __pv_queued_spin_lock_slowpath
+   6.40%  [kernel]  [k] do_raw_spin_lock
+   4.07%  [kernel]  [k] __raw_callee_save___pv_queued_spin_unlock
+   3.08%  [kernel]  [k] memcpy_erms
+   1.93%  [kernel]  [k] xfs_buf_find
+   1.69%  [kernel]  [k] xlog_cil_commit
+   1.50%  [kernel]  [k] syscall_exit_to_user_mode
+   1.18%  [kernel]  [k] memset_erms
+
+
+-   64.23%     0.22%  [kernel]            [k] path_openat
+   - 64.01% path_openat
+      - 48.69% xfs_vn_create
+         - 48.60% xfs_generic_create
+            - 40.96% xfs_create
+               - 20.39% xfs_dir_ialloc
+                  - 7.05% xfs_setup_inode
+>>>>>                - 6.87% inode_sb_list_add
+                        - 6.54% _raw_spin_lock
+                           - 6.53% do_raw_spin_lock
+                                6.08% __pv_queued_spin_lock_slowpath
+.....
+               - 11.27% xfs_trans_commit
+                  - 11.23% __xfs_trans_commit
+                     - 10.85% xlog_cil_commit
+                          2.47% memcpy_erms
+                        - 1.77% xfs_buf_item_committing
+                           - 1.70% xfs_buf_item_release
+                              - 0.79% xfs_buf_unlock
+                                   0.68% up
+                                0.61% xfs_buf_rele
+                          0.80% xfs_buf_item_format
+                          0.73% xfs_inode_item_format
+                          0.68% xfs_buf_item_size
+                        - 0.55% kmem_alloc_large
+                           - 0.55% kmem_alloc
+                                0.52% __kmalloc
+.....
+            - 7.08% d_instantiate
+               - 6.66% security_d_instantiate
+>>>>>>            - 6.63% selinux_d_instantiate
+                     - 6.48% inode_doinit_with_dentry
+                        - 6.11% _raw_spin_lock
+                           - 6.09% do_raw_spin_lock
+                                5.60% __pv_queued_spin_lock_slowpath
+....
+      - 1.77% terminate_walk
+>>>>>>   - 1.69% dput
+            - 1.55% _raw_spin_lock
+               - do_raw_spin_lock
+                    1.19% __pv_queued_spin_lock_slowpath
+
+
+But when we extend out to 1.5M commits/s we see that the contention
+starts to shift to the atomics in the lockless log reservation path:
+
+  14.81%  [kernel]  [k] __pv_queued_spin_lock_slowpath
+   7.88%  [kernel]  [k] xlog_grant_add_space
+   7.18%  [kernel]  [k] xfs_log_ticket_ungrant
+   4.82%  [kernel]  [k] do_raw_spin_lock
+   3.58%  [kernel]  [k] xlog_space_left
+   3.51%  [kernel]  [k] xlog_cil_commit
+
+There's still substantial spin lock contention occurring at the VFS,
+too, but it's indicating that multiple atomic variable updates per
+transaction reservation/commit pair is starting to reach scalability
+limits here.
+
+This is largely a re-implementation of a past RFC patchsets. While
+that were good enough proof of concept to perf test, they did not
+preserve transaction order correctly and failed shutdown tests all
+the time. The changes to the CIL accounting and behaviour, combined
+with the structural changes to xlog_write() in prior patchsets make
+the per-cpu restructuring possible and sane.
+
+Instead of trying to account for continuation log opheaders on a
+"growth" basis, we pre-calculate how many iclogs we'll need to write
+out a maximally sized CIL checkpoint and just reserve that space one
+per commit until the CIL has a full reservation. If we ever run a
+commit when we are already at the hard limit (because
+post-throttling) we simply take an extra reservation from each
+commit that is run when over the limit. Hence we don't need to do
+space usage math in the fast path and so never need to sum the
+per-cpu counters in this path.
+
+Similarly, per-cpu lists have the problem of ordering - we can't
+remove an item from a per-cpu list if we want to move it forward in
+the CIL. We solve this problem by using an atomic counter to give
+every commit a sequence number that is copied into the log items in
+that transaction. Hence relogging items just overwrites the sequence
+number in the log item, and does not move it in the per-cpu lists.
+Once we reaggregate the per-cpu lists back into a single list in the
+CIL push work, we can run it through list-sort() and reorder it back
+into a globally ordered list. This costs a bit of CPU time, but now
+that the CIL can run multiple works and pipelines properly, this is
+not a limiting factor for performance. It does increase fsync
+latency when the CIL is full, but workloads issuing large numbers of
+fsync()s or sync transactions end up with very small CILs and so the
+latency impact or sorting is not measurable for such workloads.
+
+git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git xfs-cil-scale-3
+
+Version 6:
+- split out from aggregated patchset
+- rebase on linux-xfs/for-next + dgc/xlog-write-rework
+
+Version 5:
+- https://lore.kernel.org/linux-xfs/20210603052240.171998-1-david@fromorbit.com/
 
