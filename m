@@ -2,135 +2,57 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A992C19775
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Nov 2021 08:34:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 188A4C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Nov 2021 08:37:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 31B236115A
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Nov 2021 08:34:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 031A76115A
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Nov 2021 08:37:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244313AbhKIIhj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 9 Nov 2021 03:37:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60054 "EHLO
+        id S239771AbhKIIjs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 9 Nov 2021 03:39:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60744 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239713AbhKIIgz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Nov 2021 03:36:55 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1619BC0613B9;
-        Tue,  9 Nov 2021 00:34:10 -0800 (PST)
+        with ESMTP id S239047AbhKIIjq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Nov 2021 03:39:46 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 605E7C061764;
+        Tue,  9 Nov 2021 00:36:59 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-Type:Content-ID:Content-Description;
-        bh=dGumlXA8bKenaWXczMrz5P/DlTIFWU6uPrJEsJbZBpA=; b=Ce+9Re7FrclwSe+nEL2ezM+LO2
-        4kPTB/AeeMDNXfabLJp4oiZ67cCSpUhrKxzjZP+ob/SX+cVOYo207D22qv0/Am61QvuKpaDUXqRnV
-        WaXroLBuaJ/pnSTL/TL8HrZN1ri2P3m2NiPIuMF24pMEbz2G5CwkwnCrgfkSSH9+F3c57VJlSR0dT
-        4afAjUP+gtO4JQ1MB3yZQ/qsrmDMmsCNkdotlQXn8YRxVP/2EywmUtgt+KpNH32EWB24MtMdYBqop
-        2Tqx8YAhAiibk6OpbICNHDnOfkjcf7BeCI8ti7Jboagd2CJ7s/3AX+Hd6d+l4S++Asy+fJOUBTGwc
-        DlMRam9g==;
-Received: from [2001:4bb8:19a:7ee7:fb46:2fe1:8652:d9d4] (helo=localhost)
-        by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mkMZr-000sDM-MC; Tue, 09 Nov 2021 08:34:00 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Dan Williams <dan.j.williams@intel.com>
-Cc:     Mike Snitzer <snitzer@redhat.com>, Ira Weiny <ira.weiny@intel.com>,
-        dm-devel@redhat.com, linux-xfs@vger.kernel.org,
-        nvdimm@lists.linux.dev, linux-s390@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-erofs@lists.ozlabs.org,
-        linux-ext4@vger.kernel.org,
-        virtualization@lists.linux-foundation.org
-Subject: [PATCH 27/29] dax: fix up some of the block device related ifdefs
-Date:   Tue,  9 Nov 2021 09:33:07 +0100
-Message-Id: <20211109083309.584081-28-hch@lst.de>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20211109083309.584081-1-hch@lst.de>
-References: <20211109083309.584081-1-hch@lst.de>
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=zTI8nQ3jMXNTmsVOkP1ahhIhMO162JA8Ib3ozvKtoFI=; b=TNb0MCaAjSQNXLYGlk4Mw7fows
+        UJqfC/5+V/6P+j/Dqrs0tUeO7WB1xosjo1YMSs5bjhmURexhUidKy4xxBaMphmXeejatJK1IdYU8Z
+        8P7t6zdyLhFTJkTSIThe0sePozzwqwAYDTNzrBrGrFGVIJZjXmf4WLV8m/MWs7QRdTxmNO+6xclR+
+        Hv0JIYRgHWLT/duLSunKjGxkUSSyKnyymsuiJ4tEWYrdaCwKOkCIysbbEQ/NbtfT9ieO6FhKRJLWk
+        J/HACKmFu0qeAQzfb6no9CJ0sZsJm1Ofu5LYGtqQ53cIv6AAQh+V7N2N0ciX3Xzxa0QSQhRGlBHA1
+        OOWuFeaw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1mkMcj-0012e4-MD; Tue, 09 Nov 2021 08:36:57 +0000
+Date:   Tue, 9 Nov 2021 00:36:57 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>
+Cc:     "Darrick J . Wong " <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2 01/28] csky,sparc: Declare flush_dcache_folio()
+Message-ID: <YYozKaEXemjKwEar@infradead.org>
+References: <20211108040551.1942823-1-willy@infradead.org>
+ <20211108040551.1942823-2-willy@infradead.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20211108040551.1942823-2-willy@infradead.org>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The DAX device <-> block device association is only enabled if
-CONFIG_BLOCK is enabled.  Update dax.h to account for that and use
-the right conditions for the fs_put_dax stub as well.
+On Mon, Nov 08, 2021 at 04:05:24AM +0000, Matthew Wilcox (Oracle) wrote:
+> These architectures do not include asm-generic/cacheflush.h so need
+> to declare it themselves.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- include/linux/dax.h | 41 ++++++++++++++++++++---------------------
- 1 file changed, 20 insertions(+), 21 deletions(-)
-
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index 90f95deff504d..5568d3dca941b 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -108,28 +108,15 @@ static inline bool daxdev_mapping_supported(struct vm_area_struct *vma,
- #endif
- 
- struct writeback_control;
--#if IS_ENABLED(CONFIG_FS_DAX)
-+#if defined(CONFIG_BLOCK) && defined(CONFIG_FS_DAX)
- int dax_add_host(struct dax_device *dax_dev, struct gendisk *disk);
- void dax_remove_host(struct gendisk *disk);
--
-+struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev,
-+		u64 *start_off);
- static inline void fs_put_dax(struct dax_device *dax_dev)
- {
- 	put_dax(dax_dev);
- }
--
--struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev,
--		u64 *start_off);
--int dax_writeback_mapping_range(struct address_space *mapping,
--		struct dax_device *dax_dev, struct writeback_control *wbc);
--
--struct page *dax_layout_busy_page(struct address_space *mapping);
--struct page *dax_layout_busy_page_range(struct address_space *mapping, loff_t start, loff_t end);
--dax_entry_t dax_lock_page(struct page *page);
--void dax_unlock_page(struct page *page, dax_entry_t cookie);
--int dax_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
--		const struct iomap_ops *ops);
--int dax_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
--		const struct iomap_ops *ops);
- #else
- static inline int dax_add_host(struct dax_device *dax_dev, struct gendisk *disk)
- {
-@@ -138,17 +125,29 @@ static inline int dax_add_host(struct dax_device *dax_dev, struct gendisk *disk)
- static inline void dax_remove_host(struct gendisk *disk)
- {
- }
--
--static inline void fs_put_dax(struct dax_device *dax_dev)
--{
--}
--
- static inline struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev,
- 		u64 *start_off)
- {
- 	return NULL;
- }
-+static inline void fs_put_dax(struct dax_device *dax_dev)
-+{
-+}
-+#endif /* CONFIG_BLOCK && CONFIG_FS_DAX */
-+
-+#if IS_ENABLED(CONFIG_FS_DAX)
-+int dax_writeback_mapping_range(struct address_space *mapping,
-+		struct dax_device *dax_dev, struct writeback_control *wbc);
- 
-+struct page *dax_layout_busy_page(struct address_space *mapping);
-+struct page *dax_layout_busy_page_range(struct address_space *mapping, loff_t start, loff_t end);
-+dax_entry_t dax_lock_page(struct page *page);
-+void dax_unlock_page(struct page *page, dax_entry_t cookie);
-+int dax_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
-+		const struct iomap_ops *ops);
-+int dax_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
-+		const struct iomap_ops *ops);
-+#else
- static inline struct page *dax_layout_busy_page(struct address_space *mapping)
- {
- 	return NULL;
--- 
-2.30.2
-
+In mainline mm/util.c implements flush_dcache_folio unless
+ARCH_IMPLEMENTS_FLUSH_DCACHE_FOLIO is set.  So I think you need to
+define that for csky and sparc.
