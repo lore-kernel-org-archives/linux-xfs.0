@@ -2,34 +2,34 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E51FFC4332F
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Nov 2021 08:33:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7962C433F5
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Nov 2021 08:33:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C5EF161186
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Nov 2021 08:33:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CE40E610E9
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Nov 2021 08:33:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244105AbhKIIgI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 9 Nov 2021 03:36:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59806 "EHLO
+        id S244123AbhKIIgO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 9 Nov 2021 03:36:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59822 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237239AbhKIIgH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Nov 2021 03:36:07 -0500
+        with ESMTP id S237239AbhKIIgL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Nov 2021 03:36:11 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 606F9C061764;
-        Tue,  9 Nov 2021 00:33:22 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70CBBC061764;
+        Tue,  9 Nov 2021 00:33:25 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=Jvpll4CUM8325AAF1SMXHTCZMQ9k8eTKnfeXNAO1IIY=; b=fEKs2O3qr1oWpwShLpnke0tnoT
-        LXzsgmfi4uGIVxVTr99js7ppf76/NoInucNWUxb+l/GV6A3bhc5ZlJ604W4mGb8q7Rfc37MCD+E6u
-        E4jX7kjxliK6KNjRVfQEjsyhFvJsO3yqTbJXsLm+nXx6caAgPht4qXPuj3iU35dqOMprZR7I/21f1
-        2p2WMGfaOeggGXvpF03VeNb9cFR9cOSLOo/iae6jJRSAc5XtXb1GMdqUJfkVBWvYsU5os9KMZYby6
-        +YkrcOxU7/LTq7CtfUxoT30My4LkP6wROJ9v9lNxmtOgRlHmkWjuP22/0KAQYUf1TD5Oxmbd0XgIU
-        Bc36aLDQ==;
+        bh=/UOhk+aCjmw4IcKFQxJFjUhaacfvQMsVGHtw6Oh0pgU=; b=rdR1iIJUysmE8nRJhVw9bNqNcp
+        8echW5oA/94avlJbwg/FA9CdiX+4EB8Uscv9tIdbDEZPSzHUThgHJr/VpORs7fHOLVLmbHm6FSnCa
+        c3p/0Zwb54leaozWprP8d+hr4t/bdbofDGxBNHnWcwDsiNHBK9RcdMfr1C2NIWBAUUKVlg4d4xG0q
+        C/5EaO5wXfo4kT/HsbD82Gju/ex+0pI9PnUZVuRzsDnTqPqkyx5F5yZMJ3ULme8b0+IcHCSeBcVzA
+        2Ix9scM8foqKqTHFSUXzLvvhTp+JKBiBJkvU/icgDP2UGaG4sBE31/3zDeOGp9n6KHXlBemoMny1o
+        X75Qcpug==;
 Received: from [2001:4bb8:19a:7ee7:fb46:2fe1:8652:d9d4] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mkMZ5-000ry5-Fk; Tue, 09 Nov 2021 08:33:12 +0000
+        id 1mkMZD-000ryI-IK; Tue, 09 Nov 2021 08:33:20 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Dan Williams <dan.j.williams@intel.com>
 Cc:     Mike Snitzer <snitzer@redhat.com>, Ira Weiny <ira.weiny@intel.com>,
@@ -38,9 +38,9 @@ Cc:     Mike Snitzer <snitzer@redhat.com>, Ira Weiny <ira.weiny@intel.com>,
         linux-fsdevel@vger.kernel.org, linux-erofs@lists.ozlabs.org,
         linux-ext4@vger.kernel.org,
         virtualization@lists.linux-foundation.org
-Subject: [PATCH 01/29] nvdimm/pmem: move dax_attribute_group from dax to pmem
-Date:   Tue,  9 Nov 2021 09:32:41 +0100
-Message-Id: <20211109083309.584081-2-hch@lst.de>
+Subject: [PATCH 03/29] dax: remove CONFIG_DAX_DRIVER
+Date:   Tue,  9 Nov 2021 09:32:43 +0100
+Message-Id: <20211109083309.584081-4-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20211109083309.584081-1-hch@lst.de>
 References: <20211109083309.584081-1-hch@lst.de>
@@ -51,213 +51,68 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-dax_attribute_group is only used by the pmem driver, and can avoid the
-completely pointless lookup by the disk name if moved there.  This
-leaves just a single caller of dax_get_by_host, so move dax_get_by_host
-into the same ifdef block as that caller.
+CONFIG_DAX_DRIVER only selects CONFIG_DAX now, so remove it.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dan Williams <dan.j.williams@intel.com>
-Link: https://lore.kernel.org/r/20210922173431.2454024-3-hch@lst.de
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/dax/super.c   | 100 ++++++++----------------------------------
- drivers/nvdimm/pmem.c |  43 ++++++++++++++++++
- include/linux/dax.h   |   2 -
- 3 files changed, 61 insertions(+), 84 deletions(-)
+ drivers/dax/Kconfig        | 4 ----
+ drivers/nvdimm/Kconfig     | 2 +-
+ drivers/s390/block/Kconfig | 2 +-
+ fs/fuse/Kconfig            | 2 +-
+ 4 files changed, 3 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-index fc89e91beea7c..b882cf8106ea3 100644
---- a/drivers/dax/super.c
-+++ b/drivers/dax/super.c
-@@ -63,6 +63,24 @@ static int dax_host_hash(const char *host)
- 	return hashlen_hash(hashlen_string("DAX", host)) % DAX_HASH_SIZE;
- }
- 
-+#ifdef CONFIG_BLOCK
-+#include <linux/blkdev.h>
-+
-+int bdev_dax_pgoff(struct block_device *bdev, sector_t sector, size_t size,
-+		pgoff_t *pgoff)
-+{
-+	sector_t start_sect = bdev ? get_start_sect(bdev) : 0;
-+	phys_addr_t phys_off = (start_sect + sector) * 512;
-+
-+	if (pgoff)
-+		*pgoff = PHYS_PFN(phys_off);
-+	if (phys_off % PAGE_SIZE || size % PAGE_SIZE)
-+		return -EINVAL;
-+	return 0;
-+}
-+EXPORT_SYMBOL(bdev_dax_pgoff);
-+
-+#if IS_ENABLED(CONFIG_FS_DAX)
- /**
-  * dax_get_by_host() - temporary lookup mechanism for filesystem-dax
-  * @host: alternate name for the device registered by a dax driver
-@@ -94,24 +112,6 @@ static struct dax_device *dax_get_by_host(const char *host)
- 	return found;
- }
- 
--#ifdef CONFIG_BLOCK
--#include <linux/blkdev.h>
+diff --git a/drivers/dax/Kconfig b/drivers/dax/Kconfig
+index d2834c2cfa10d..954ab14ba7778 100644
+--- a/drivers/dax/Kconfig
++++ b/drivers/dax/Kconfig
+@@ -1,8 +1,4 @@
+ # SPDX-License-Identifier: GPL-2.0-only
+-config DAX_DRIVER
+-	select DAX
+-	bool
 -
--int bdev_dax_pgoff(struct block_device *bdev, sector_t sector, size_t size,
--		pgoff_t *pgoff)
--{
--	sector_t start_sect = bdev ? get_start_sect(bdev) : 0;
--	phys_addr_t phys_off = (start_sect + sector) * 512;
--
--	if (pgoff)
--		*pgoff = PHYS_PFN(phys_off);
--	if (phys_off % PAGE_SIZE || size % PAGE_SIZE)
--		return -EINVAL;
--	return 0;
--}
--EXPORT_SYMBOL(bdev_dax_pgoff);
--
--#if IS_ENABLED(CONFIG_FS_DAX)
- struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev)
- {
- 	if (!blk_queue_dax(bdev->bd_disk->queue))
-@@ -231,70 +231,6 @@ enum dax_device_flags {
- 	DAXDEV_SYNC,
- };
- 
--static ssize_t write_cache_show(struct device *dev,
--		struct device_attribute *attr, char *buf)
--{
--	struct dax_device *dax_dev = dax_get_by_host(dev_name(dev));
--	ssize_t rc;
--
--	WARN_ON_ONCE(!dax_dev);
--	if (!dax_dev)
--		return -ENXIO;
--
--	rc = sprintf(buf, "%d\n", !!dax_write_cache_enabled(dax_dev));
--	put_dax(dax_dev);
--	return rc;
--}
--
--static ssize_t write_cache_store(struct device *dev,
--		struct device_attribute *attr, const char *buf, size_t len)
--{
--	bool write_cache;
--	int rc = strtobool(buf, &write_cache);
--	struct dax_device *dax_dev = dax_get_by_host(dev_name(dev));
--
--	WARN_ON_ONCE(!dax_dev);
--	if (!dax_dev)
--		return -ENXIO;
--
--	if (rc)
--		len = rc;
--	else
--		dax_write_cache(dax_dev, write_cache);
--
--	put_dax(dax_dev);
--	return len;
--}
--static DEVICE_ATTR_RW(write_cache);
--
--static umode_t dax_visible(struct kobject *kobj, struct attribute *a, int n)
--{
--	struct device *dev = container_of(kobj, typeof(*dev), kobj);
--	struct dax_device *dax_dev = dax_get_by_host(dev_name(dev));
--
--	WARN_ON_ONCE(!dax_dev);
--	if (!dax_dev)
--		return 0;
--
--#ifndef CONFIG_ARCH_HAS_PMEM_API
--	if (a == &dev_attr_write_cache.attr)
--		return 0;
--#endif
--	return a->mode;
--}
--
--static struct attribute *dax_attributes[] = {
--	&dev_attr_write_cache.attr,
--	NULL,
--};
--
--struct attribute_group dax_attribute_group = {
--	.name = "dax",
--	.attrs = dax_attributes,
--	.is_visible = dax_visible,
--};
--EXPORT_SYMBOL_GPL(dax_attribute_group);
--
- /**
-  * dax_direct_access() - translate a device pgoff to an absolute pfn
-  * @dax_dev: a dax_device instance representing the logical memory range
-diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
-index c74d7bceb2224..9cc0d0ebfad16 100644
---- a/drivers/nvdimm/pmem.c
-+++ b/drivers/nvdimm/pmem.c
-@@ -327,6 +327,49 @@ static const struct dax_operations pmem_dax_ops = {
- 	.zero_page_range = pmem_dax_zero_page_range,
- };
- 
-+static ssize_t write_cache_show(struct device *dev,
-+		struct device_attribute *attr, char *buf)
-+{
-+	struct pmem_device *pmem = dev_to_disk(dev)->private_data;
-+
-+	return sprintf(buf, "%d\n", !!dax_write_cache_enabled(pmem->dax_dev));
-+}
-+
-+static ssize_t write_cache_store(struct device *dev,
-+		struct device_attribute *attr, const char *buf, size_t len)
-+{
-+	struct pmem_device *pmem = dev_to_disk(dev)->private_data;
-+	bool write_cache;
-+	int rc;
-+
-+	rc = strtobool(buf, &write_cache);
-+	if (rc)
-+		return rc;
-+	dax_write_cache(pmem->dax_dev, write_cache);
-+	return len;
-+}
-+static DEVICE_ATTR_RW(write_cache);
-+
-+static umode_t dax_visible(struct kobject *kobj, struct attribute *a, int n)
-+{
-+#ifndef CONFIG_ARCH_HAS_PMEM_API
-+	if (a == &dev_attr_write_cache.attr)
-+		return 0;
-+#endif
-+	return a->mode;
-+}
-+
-+static struct attribute *dax_attributes[] = {
-+	&dev_attr_write_cache.attr,
-+	NULL,
-+};
-+
-+static const struct attribute_group dax_attribute_group = {
-+	.name		= "dax",
-+	.attrs		= dax_attributes,
-+	.is_visible	= dax_visible,
-+};
-+
- static const struct attribute_group *pmem_attribute_groups[] = {
- 	&dax_attribute_group,
- 	NULL,
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index 2619d94c308d4..8623caa673889 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -38,8 +38,6 @@ struct dax_operations {
- 	int (*zero_page_range)(struct dax_device *, pgoff_t, size_t);
- };
- 
--extern struct attribute_group dax_attribute_group;
--
- #if IS_ENABLED(CONFIG_DAX)
- struct dax_device *alloc_dax(void *private, const char *host,
- 		const struct dax_operations *ops, unsigned long flags);
+ menuconfig DAX
+ 	tristate "DAX: direct access to differentiated memory"
+ 	select SRCU
+diff --git a/drivers/nvdimm/Kconfig b/drivers/nvdimm/Kconfig
+index b7d1eb38b27d4..347fe7afa5830 100644
+--- a/drivers/nvdimm/Kconfig
++++ b/drivers/nvdimm/Kconfig
+@@ -22,7 +22,7 @@ if LIBNVDIMM
+ config BLK_DEV_PMEM
+ 	tristate "PMEM: Persistent memory block device support"
+ 	default LIBNVDIMM
+-	select DAX_DRIVER
++	select DAX
+ 	select ND_BTT if BTT
+ 	select ND_PFN if NVDIMM_PFN
+ 	help
+diff --git a/drivers/s390/block/Kconfig b/drivers/s390/block/Kconfig
+index d0416dbd0cd81..e3710a762abae 100644
+--- a/drivers/s390/block/Kconfig
++++ b/drivers/s390/block/Kconfig
+@@ -5,7 +5,7 @@ comment "S/390 block device drivers"
+ config DCSSBLK
+ 	def_tristate m
+ 	select FS_DAX_LIMITED
+-	select DAX_DRIVER
++	select DAX
+ 	prompt "DCSSBLK support"
+ 	depends on S390 && BLOCK
+ 	help
+diff --git a/fs/fuse/Kconfig b/fs/fuse/Kconfig
+index 40ce9a1c12e5d..038ed0b9aaa5d 100644
+--- a/fs/fuse/Kconfig
++++ b/fs/fuse/Kconfig
+@@ -45,7 +45,7 @@ config FUSE_DAX
+ 	select INTERVAL_TREE
+ 	depends on VIRTIO_FS
+ 	depends on FS_DAX
+-	depends on DAX_DRIVER
++	depends on DAX
+ 	help
+ 	  This allows bypassing guest page cache and allows mapping host page
+ 	  cache directly in guest address space.
 -- 
 2.30.2
 
