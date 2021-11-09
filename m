@@ -2,64 +2,131 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94258C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Nov 2021 08:47:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB2EFC433F5
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Nov 2021 18:49:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 73F5161057
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Nov 2021 08:47:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7AFEB60187
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Nov 2021 18:49:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243386AbhKIIuQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 9 Nov 2021 03:50:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35102 "EHLO
+        id S242646AbhKISvx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 9 Nov 2021 13:51:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59906 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234536AbhKIIuQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Nov 2021 03:50:16 -0500
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16683C061764;
-        Tue,  9 Nov 2021 00:47:31 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=PBOzNrsV4A9wCCmGrmISDgCyMiVuWn8YI6+FumKvyYY=; b=w5Js4Qtqeb8DD52GUAhXFFCIzH
-        yn9zTTHj0In3cqCKoaJmO8IPGTHZWeYRwWQRGA2p+7F+YS1aPGKQk9XjY0hvv+FAigqIkUM4dRvxF
-        nKvLYrIQKr/wb+pE+ZfLo/ogJcbnK4dNw5SVYg0v10ySIfIceUwfA4SkZPQnhYBRK1L2o/kf/VoHq
-        DZMLmmFyGv/OsWuTTamQDSdU5/vKJ35tctsb5eWXyXpH/Ca9AM+6Axt+X1e9NrGhxMFOuEVy5ikhw
-        NuMqWoDSeDuW0tg3iOKqr9fVI8w5v47yKpVk2JSTDNOhMn534LCzoOrOb6rREJ6XnmQvJqHL2Jwgz
-        FZg+821w==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mkMmw-00159k-6K; Tue, 09 Nov 2021 08:47:30 +0000
-Date:   Tue, 9 Nov 2021 00:47:30 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>
-Cc:     "Darrick J . Wong " <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 19/28] iomap: Convert __iomap_zero_iter to use a folio
-Message-ID: <YYo1ony4/ds5C7Nd@infradead.org>
-References: <20211108040551.1942823-1-willy@infradead.org>
- <20211108040551.1942823-20-willy@infradead.org>
+        with ESMTP id S242635AbhKISvu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Nov 2021 13:51:50 -0500
+Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F094C061767
+        for <linux-xfs@vger.kernel.org>; Tue,  9 Nov 2021 10:49:02 -0800 (PST)
+Received: by mail-pf1-x430.google.com with SMTP id m26so216519pff.3
+        for <linux-xfs@vger.kernel.org>; Tue, 09 Nov 2021 10:49:02 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20210112.gappssmtp.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=9bp0YO5sOM+lpNoi642x1FUr5VchwTC78oq/dL28lzk=;
+        b=0Q1ubUOlWM8Iug6rvhIAFjz7MaLu3MQqTHHXXNFaAN3qobCKUeard5v3w6hQexzI6j
+         EQcZDkHYWqy9mWUon0Sw5zW0RErSz2I0osX0CHUN1ykL/BCN5ucRl32GT2O6dYVhRDx+
+         DIx0Bq3GMoEu4GQuOAoCsyqrJqRNG5y2MVJRbJCthUwPi140VN85CTlRi+CQIGmDkuoJ
+         o4YlTHfCQyJ4T21m/SW8rbNEAXwp16xbZ8UL7OpvPbBafjrbOh4FjIMKgETwtEC4fnjk
+         Wxk5Ja7eZ0ILW/8jehkfJvL5xHHWw8sddDBe/kDwglw+DIpJultHbe9pcAc33W5VFQaI
+         j5NA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=9bp0YO5sOM+lpNoi642x1FUr5VchwTC78oq/dL28lzk=;
+        b=E2mbj9BK7kZ7Zh0+Um/a6PwmWteF/c7vrjx6giyup9/+jnnjlIuKvz5YoF4Dy/hjIp
+         JCFcEDxAg+VYFx7OHSOmRytxvcV2GgkCOAIiju8bMpFQKc6IIpmp0LAZXUtjF3qkb1Ga
+         JVsOT6+wJhuXWrDWheQDoxmYSmdS0ji9VmkxNR02XND8RcLM7wdFUrpTpaN48AiJBbF2
+         8AC+ia0+pcZdqSniM6AqIQnycsaiw+HHSC2yWU2QPOCAA0sLGUcPogJRoaQ7yQIBSKk1
+         yjqKdc2MjzCydhSe+vDJNLBcCjPOmrUfJ1jUe0qc6FEhRl0NJDYyYID8hZF5z+gKG/yF
+         3bLQ==
+X-Gm-Message-State: AOAM532xHXsAv8vb/R4cVYcuJhxYRgxDroBtwAJfXeXxs4QEmOq6CKxr
+        1v60j9lSHc6fyQiB9J7MLX3BWb7Yk9j3wfM98W6RXA==
+X-Google-Smtp-Source: ABdhPJxiswkGl2pVIvWWZ6aSVUFazaiZRuYEfrTL3uF2sZNR2Ly4HeMeR//UR5dITrLxDj1E3LTcAsgeWYlO0yGvWG4=
+X-Received: by 2002:a05:6a00:1a51:b0:4a0:3c1:4f45 with SMTP id
+ h17-20020a056a001a5100b004a003c14f45mr4740999pfv.86.1636483741722; Tue, 09
+ Nov 2021 10:49:01 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20211108040551.1942823-20-willy@infradead.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+References: <20211106011638.2613039-1-jane.chu@oracle.com> <20211106011638.2613039-3-jane.chu@oracle.com>
+ <YYoi2JiwTtmxONvB@infradead.org>
+In-Reply-To: <YYoi2JiwTtmxONvB@infradead.org>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Tue, 9 Nov 2021 10:48:51 -0800
+Message-ID: <CAPcyv4hQrUEhDOK-Ys1_=Sxb8f+GJZvpKZHTUPKQvVMaMe8XMg@mail.gmail.com>
+Subject: Re: [PATCH v2 2/2] dax,pmem: Implement pmem based dax data recovery
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Jane Chu <jane.chu@oracle.com>, david <david@fromorbit.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Vishal L Verma <vishal.l.verma@intel.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@redhat.com>,
+        device-mapper development <dm-devel@redhat.com>,
+        "Weiny, Ira" <ira.weiny@intel.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Vivek Goyal <vgoyal@redhat.com>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Linux NVDIMM <nvdimm@lists.linux.dev>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Nov 08, 2021 at 04:05:42AM +0000, Matthew Wilcox (Oracle) wrote:
-> The zero iterator can work in folio-sized chunks instead of page-sized
-> chunks.  This will save a lot of page cache lookups if the file is cached
-> in multi-page folios.
-> 
-> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+On Mon, Nov 8, 2021 at 11:27 PM Christoph Hellwig <hch@infradead.org> wrote:
+>
+> On Fri, Nov 05, 2021 at 07:16:38PM -0600, Jane Chu wrote:
+> >  static size_t pmem_copy_from_iter(struct dax_device *dax_dev, pgoff_t pgoff,
+> >               void *addr, size_t bytes, struct iov_iter *i, int mode)
+> >  {
+> > +     phys_addr_t pmem_off;
+> > +     size_t len, lead_off;
+> > +     struct pmem_device *pmem = dax_get_private(dax_dev);
+> > +     struct device *dev = pmem->bb.dev;
+> > +
+> > +     if (unlikely(mode == DAX_OP_RECOVERY)) {
+> > +             lead_off = (unsigned long)addr & ~PAGE_MASK;
+> > +             len = PFN_PHYS(PFN_UP(lead_off + bytes));
+> > +             if (is_bad_pmem(&pmem->bb, PFN_PHYS(pgoff) / 512, len)) {
+> > +                     if (lead_off || !(PAGE_ALIGNED(bytes))) {
+> > +                             dev_warn(dev, "Found poison, but addr(%p) and/or bytes(%#lx) not page aligned\n",
+> > +                                     addr, bytes);
+> > +                             return (size_t) -EIO;
+> > +                     }
+> > +                     pmem_off = PFN_PHYS(pgoff) + pmem->data_offset;
+> > +                     if (pmem_clear_poison(pmem, pmem_off, bytes) !=
+> > +                                             BLK_STS_OK)
+> > +                             return (size_t) -EIO;
+> > +             }
+> > +     }
+>
+> This is in the wrong spot.  As seen in my WIP series individual drivers
+> really should not hook into copying to and from the iter, because it
+> really is just one way to write to a nvdimm.  How would dm-writecache
+> clear the errors with this scheme?
+>
+> So IMHO going back to the separate recovery method as in your previous
+> patch really is the way to go.  If/when the 64-bit store happens we
+> need to figure out a good way to clear the bad block list for that.
 
-Looks good:
+I think we just make error management a first class citizen of a
+dax-device and stop abstracting it behind a driver callback. That way
+the driver that registers the dax-device can optionally register error
+management as well. Then fsdax path can do:
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+        rc = dax_direct_access(..., &kaddr, ...);
+        if (unlikely(rc)) {
+                kaddr = dax_mk_recovery(kaddr);
+                dax_direct_access(..., &kaddr, ...);
+                return dax_recovery_{read,write}(..., kaddr, ...);
+        }
+        return copy_{mc_to_iter,from_iter_flushcache}(...);
 
-but it will clash with my just sent series that decouples DAX
-zeroing from buffered I/O zeroing and folds __iomap_zero_iter into
-the caller.
+Where, the recovery version of dax_direct_access() has the opportunity
+to change the page permissions / use an alias mapping for the access,
+dax_recovery_read() allows reading the good cachelines out of a
+poisoned page, and dax_recovery_write() coordinates error list
+management and returning a poison page to full write-back caching
+operation when no more poisoned cacheline are detected in the page.
