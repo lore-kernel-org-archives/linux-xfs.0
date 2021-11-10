@@ -2,95 +2,74 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BE14C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 10 Nov 2021 14:52:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FF88C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 10 Nov 2021 15:16:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EA27B6115A
-	for <linux-xfs@archiver.kernel.org>; Wed, 10 Nov 2021 14:52:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 07DDC610D2
+	for <linux-xfs@archiver.kernel.org>; Wed, 10 Nov 2021 15:16:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232077AbhKJOzD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 10 Nov 2021 09:55:03 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:55328 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231703AbhKJOzD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Nov 2021 09:55:03 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1636555935;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=JGaRarhvw23xm4PTZjUPJaQyjQW9oMGbXcgdEZdlsWo=;
-        b=bpq+4tAjtLJi02ygf6uFhRIQpfQooVlKVgvjY2qAB0Hu7Pvt4gua9+nnkdt5Crz/WdKJva
-        wvmWtBzvUW87Gb0UDFATvPdfQOn3eBG4L5vPUDyITZ82N6c/sS+qUw7Vr/aVJN95RK2iXM
-        Mhhw3bOKR+dRI0BPQQqmtGjPHE1IGLc=
-Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
- [209.85.128.72]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-450-4qUnSth9NWGtp2ugfseluQ-1; Wed, 10 Nov 2021 09:52:14 -0500
-X-MC-Unique: 4qUnSth9NWGtp2ugfseluQ-1
-Received: by mail-wm1-f72.google.com with SMTP id 205-20020a1c00d6000000b003335d1384f1so257978wma.3
-        for <linux-xfs@vger.kernel.org>; Wed, 10 Nov 2021 06:52:13 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=JGaRarhvw23xm4PTZjUPJaQyjQW9oMGbXcgdEZdlsWo=;
-        b=yhRLRfdioU9naMQhrK/P3UasTp0FMI4oz4K6coFjdpNhf673p4bTX6uC79NLoCESXA
-         2RDCP4oMeZ2cNSVHuBrUT7BDv8kI+ygRg0YNXhkyS+cd7fAjVB/xcPK05mGq5iMAC5Lr
-         fz1rweaWNaFSsbqjMTLoGrK3C3rwsOreQCEWYgRcpiYWbTaitchNt0nra0khPuBvuefC
-         PbMQMIEpOsBc8W5cOVEweAK8YBnVgtSBCgVgoBsVM8eowbRVlba581hbervCAj8ipVgf
-         D9lGTkLI9ENbPb+vxOTvsM1ZROr6YmqgyYPBl9TWaGQff+2OwJhBUon/x/W8PCHmsAd1
-         5nSw==
-X-Gm-Message-State: AOAM531B3O1FmYV+Bvq5X7tIDjBMbA/1j7EBefZgGrb/zPRDItXmMlzo
-        gEDMSR3q8fPKAjS4UX74WiKaWYMvrAz8wpmT8HwGxsjI0LLT1v81hfMls9J+vXwzV2izeQM2rjr
-        bskV4FPfQuMRaLeJMdTywh8fxooT6WBOEC30q
-X-Received: by 2002:a5d:43c5:: with SMTP id v5mr356455wrr.11.1636555932912;
-        Wed, 10 Nov 2021 06:52:12 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJx6l6A0hw8OFbT4CeKMWuzjHe409Rc88qj5MEQ+MgMfrW4P0aNPr9xBjEscvoB2kMqOlJr33ybNzTxG6gtHVog=
-X-Received: by 2002:a5d:43c5:: with SMTP id v5mr356435wrr.11.1636555932767;
- Wed, 10 Nov 2021 06:52:12 -0800 (PST)
-MIME-Version: 1.0
-References: <20211110113842.517426-1-agruenba@redhat.com> <20211110125527.GA25465@lst.de>
-In-Reply-To: <20211110125527.GA25465@lst.de>
-From:   Andreas Gruenbacher <agruenba@redhat.com>
-Date:   Wed, 10 Nov 2021 15:52:01 +0100
-Message-ID: <CAHc6FU49TnYvrL-FU5oz9th6STuQ=eYokjsD+0QpbkdHedRd9w@mail.gmail.com>
-Subject: Re: [5.15 REGRESSION] iomap: Fix inline extent handling in iomap_readpage
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        cluster-devel <cluster-devel@redhat.com>,
-        stable <stable@vger.kernel.org>
+        id S232263AbhKJPTY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 10 Nov 2021 10:19:24 -0500
+Received: from mail.kernel.org ([198.145.29.99]:51906 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232111AbhKJPTY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 Nov 2021 10:19:24 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPS id A532361221
+        for <linux-xfs@vger.kernel.org>; Wed, 10 Nov 2021 15:16:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1636557396;
+        bh=l1v1GheslsaKhdEoJd1LIIvXQPZPX9boyDBW8n9XtWA=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=qjS7kgSN3zDJb1m4+Y+mPbbn90K/x0PzBAxhDXa51w6Dg9lfpmFkQJbKxJmVbJr//
+         wM3klCQ+nHL/iKuD65+LfEFBFdBrDizryNQw8Rj4Ja+VJqinjO3Rfw1dOZY/PAoc/5
+         q7drLCpEl8NJfMG2abCpUU/yxxOpKHStKzmIwaxbjmLOUQO1zXmvCQGIubGzaA5P5w
+         dEKuNjX4p5G7+G8BwCrcLWSByoZ9K4T+slswa1A3qLNnHpNkwFDqi8SCJ+EgvJQylp
+         UgBwNYfjdChlx0X6YsZcq+rRvcxdO57koymTsBfu0zV72GqOkFOfmTzp7+pikqrEYd
+         WkmtCT9JF1tKA==
+From:   bugzilla-daemon@bugzilla.kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 214767] xfs seems to hang due to race condition? maybe related
+ to (gratuitous) thaw.
+Date:   Wed, 10 Nov 2021 15:16:35 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: ct@flyingcircus.io
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-214767-201763-cXpP1tlDle@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-214767-201763@https.bugzilla.kernel.org/>
+References: <bug-214767-201763@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Nov 10, 2021 at 1:55 PM Christoph Hellwig <hch@lst.de> wrote:
-> On Wed, Nov 10, 2021 at 12:38:42PM +0100, Andreas Gruenbacher wrote:
-> > +     if (iomap->type == IOMAP_INLINE) {
-> > +             /*
-> > +              * The filesystem sets iomap->length to the size of the inline
-> > +              * data.  We're at the end of the file, so we know that the
-> > +              * rest of the page needs to be zeroed out.
-> > +              */
-> > +             iomap->length = iomap_read_inline_data(iter, page);
-> > +             return iomap->length;
->
-> You can't just change iomap->length here.  Fix the file system to
-> return the right length, please.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D214767
 
-Hmm, that doesn't make sense to me: the filesystem doesn't know that
-iomap_readpage will pad to page boundaries. This happens at the iomap
-layer, so the iomap layer should also deal with the consequences.
-We're using different alignment rules here and for direct I/O, so that
-makes fake-aligning the extent size in iomap_begin even more
-questionable.
+--- Comment #16 from Christian Theune (ct@flyingcircus.io) ---
+I started trying out the fix that Dave and am using it with 5.10.76 (applied
+clean with a bit of fuzzing).
 
-"Fixing" the extent size the filesystem returns would also break
-direct I/O. We could add some additional padding code to
-iomap_dio_inline_iter to deal with that, but currently, there's no
-need for that.
+@Dave do you happen do know whether there's a helper that can stress test l=
+ive
+systems in this regard?
 
-Thanks,
-Andreas
+--=20
+You may reply to this email to add a comment.
 
+You are receiving this mail because:
+You are watching the assignee of the bug.=
