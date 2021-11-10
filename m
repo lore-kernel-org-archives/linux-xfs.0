@@ -2,183 +2,73 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16A0BC433EF
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Nov 2021 21:02:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D3D6C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 10 Nov 2021 01:56:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E880B604DB
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Nov 2021 21:02:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0727C611BF
+	for <linux-xfs@archiver.kernel.org>; Wed, 10 Nov 2021 01:56:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244824AbhKIVFU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 9 Nov 2021 16:05:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33668 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244850AbhKIVFU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Nov 2021 16:05:20 -0500
-Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8358C061766
-        for <linux-xfs@vger.kernel.org>; Tue,  9 Nov 2021 13:02:33 -0800 (PST)
-Received: by mail-pf1-x434.google.com with SMTP id g18so555424pfk.5
-        for <linux-xfs@vger.kernel.org>; Tue, 09 Nov 2021 13:02:33 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20210112.gappssmtp.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=NGCSLoiUEixbJUJjsAamjo0128u/1ab9KY+NrB7bwnI=;
-        b=IDKm1rsTtY3dB0GDCmzldy6w5oNdAEtYqYum2g8jAh8YcbdgNPee6EKgJgpVDGvOYm
-         bU6jDw0yL/QcyIuE/xVK1UYwJc49WviERyfg4i3F/XXBlL1DNA+ighGEMF3DuJCCq8tv
-         QWtcGcWkkrl6zbkb1R9aYtSkyT7LRYl6pjn5y+1bV2Wwg+Uy9m6899rhjfE/tggdqcV7
-         mgVw6fzNLoRs6Gtjk9melP5C5jhP0pwQfMd4XIVp2t1qomP89JlhKCbulJn73gqXMq9y
-         yavXZHcca/est+LsSX+OrbpkL8gszp7TwD/gV7PtJ8VksmnTYRybSZLRVsLOHU/acVk3
-         YKlA==
+        id S229712AbhKJB7n (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 9 Nov 2021 20:59:43 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:27632 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229470AbhKJB7n (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Nov 2021 20:59:43 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1636509416;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=4voTsQ2NOR++mhYo6YSDxe5eUYfW9Dvn6FZd4VsW7Wg=;
+        b=IsMwaSS4veZtbIZcRguvJgcy2KbHGsnnQ4CK6DgOOgHZYCV0q9QEfha44/C5XjLfIKscqS
+        sfN+HRNaISq/CllRPz9k5sFEVRArbiunXSyGIXPlQtoIrRc8jk+nft1yngHuMQvzgg8wqU
+        kAayZ6altznXgERlBSI5UuhcnZLyY9s=
+Received: from mail-il1-f199.google.com (mail-il1-f199.google.com
+ [209.85.166.199]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-562-wDlqMBKxNb6KYwq0wYJMjQ-1; Tue, 09 Nov 2021 20:56:54 -0500
+X-MC-Unique: wDlqMBKxNb6KYwq0wYJMjQ-1
+Received: by mail-il1-f199.google.com with SMTP id k5-20020a92c245000000b0026d8bebbff7so702496ilo.2
+        for <linux-xfs@vger.kernel.org>; Tue, 09 Nov 2021 17:56:54 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=NGCSLoiUEixbJUJjsAamjo0128u/1ab9KY+NrB7bwnI=;
-        b=lgpyUKZg5LxtMvETrf0sKNdrUOvr7CL3m8IZhiZSDMdqrJer6vcgXyngfAxFS5D43z
-         0+lQb6USwU/nBqpY18xDyNuAWDDu00j4yDpPhab649zJRskRA9RUxakPDj4702rkWVF1
-         RwVfrJHB0Xrh13Byv+ObFx+DmtG3mCGn5wLiJKu6OE72xZMUh1eSVFZ7LRuD4dNZh5Sl
-         /ngCBbbdMMH67IbrswJZJPnyB0ggTYzhoujwoXVgzzccHLHAHNsXE75PaCdEmc8vvKN7
-         FBUvmpFh2c/QdbTRkudNVjjX5YHij3mr5atvxUvaz/LO+KzekUsG9OJIuXQbp8yVgN4E
-         ZqAQ==
-X-Gm-Message-State: AOAM530URU15XlZI/W1eJTqJ2VaiUjpcjXg85tC+SiKge2IpuuPLU2Jk
-        yJWFy329ZAxFe6p83QqPelou4trTimgqveVVIXCKTQ==
-X-Google-Smtp-Source: ABdhPJxLkjcYAJ6xF4i22dGgcThaQc5MIlNV4NzhpLHAutoT4ZKPk8dFHjZwxwWusNLUT463Jmt8uLtznOEGS++66P4=
-X-Received: by 2002:a05:6a00:140e:b0:444:b077:51ef with SMTP id
- l14-20020a056a00140e00b00444b07751efmr11438892pfu.61.1636491753212; Tue, 09
- Nov 2021 13:02:33 -0800 (PST)
+        h=x-gm-message-state:from:message-id:date:mime-version:user-agent
+         :content-language:to:subject:content-transfer-encoding;
+        bh=4voTsQ2NOR++mhYo6YSDxe5eUYfW9Dvn6FZd4VsW7Wg=;
+        b=OTFcu73nIHApDdmKWza+RGebD6scigjTD+JzjQ6i0yipL+4n8QH2ZlXNBSOe/tigfx
+         Ezdj3YV6YwOw51MFBwIStMtmBxhXMUmYjMH+T9pVvkpzmA8+Q6jCGgkwZDffjSNmfT/o
+         sV6cxpegAbn5mPVOFdbes0tKSNiowAMt5YEcDUS2i++5PhFBdYRdTzJqmDc1yP6jsrj/
+         R4AwgdriaeGuXZo1N1YZE1Tz4Edm+FSzsZLD8Z/aDcjqx5YgSbePbq0bxEdBIhxqRfCt
+         TtDChuFvgzggy198YG1BwJ6jKa/m8piwQS+2af+giMrsct1okq1chCshK4qf7/AqHee1
+         +4FA==
+X-Gm-Message-State: AOAM533ObcQNE99LfrVyIFBJZoOjFhbJ7AJUj9nFYa7pZujOswhZZgGG
+        u9iZXbrGvMQthSV28JBdOdnAcXp4BV2vOu0idocleMjXmWyUekBu/F2md4uXOJ8paZGKVVmfEmO
+        m/sEMOjAS13fcY6sLmAuxdRclbBEZyX2XdTVpSPuuUwnKo7la1Na1tYFtu4LDvddM0+DdChB8
+X-Received: by 2002:a05:6e02:20ea:: with SMTP id q10mr8599477ilv.10.1636509414116;
+        Tue, 09 Nov 2021 17:56:54 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJwi9UlXMUrI3T28VN64xkEp8P/gByp8cDuhc56eWQk8RLPESNm/iTROpgwY/YYCdwlpPo1gMg==
+X-Received: by 2002:a05:6e02:20ea:: with SMTP id q10mr8599461ilv.10.1636509413874;
+        Tue, 09 Nov 2021 17:56:53 -0800 (PST)
+Received: from [10.0.0.146] (sandeen.net. [63.231.237.45])
+        by smtp.gmail.com with ESMTPSA id e25sm916319ioc.43.2021.11.09.17.56.53
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 09 Nov 2021 17:56:53 -0800 (PST)
+From:   Eric Sandeen <esandeen@redhat.com>
+X-Google-Original-From: Eric Sandeen <sandeen@redhat.com>
+Message-ID: <a98ed48b-7297-34af-2a2a-795b15b35f12@redhat.com>
+Date:   Tue, 9 Nov 2021 19:56:52 -0600
 MIME-Version: 1.0
-References: <20211106011638.2613039-1-jane.chu@oracle.com> <20211106011638.2613039-3-jane.chu@oracle.com>
- <YYoi2JiwTtmxONvB@infradead.org> <CAPcyv4hQrUEhDOK-Ys1_=Sxb8f+GJZvpKZHTUPKQvVMaMe8XMg@mail.gmail.com>
- <15f01d51-2611-3566-0d08-bdfbec53f88c@oracle.com>
-In-Reply-To: <15f01d51-2611-3566-0d08-bdfbec53f88c@oracle.com>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Tue, 9 Nov 2021 13:02:23 -0800
-Message-ID: <CAPcyv4gwbZ=Z6xCjDCASpkPnw1EC8NMAJDh9_sa3n2PAG5+zAA@mail.gmail.com>
-Subject: Re: [PATCH v2 2/2] dax,pmem: Implement pmem based dax data recovery
-To:     Jane Chu <jane.chu@oracle.com>
-Cc:     Christoph Hellwig <hch@infradead.org>, david <david@fromorbit.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Vishal L Verma <vishal.l.verma@intel.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Alasdair Kergon <agk@redhat.com>,
-        Mike Snitzer <snitzer@redhat.com>,
-        device-mapper development <dm-devel@redhat.com>,
-        "Weiny, Ira" <ira.weiny@intel.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Vivek Goyal <vgoyal@redhat.com>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Linux NVDIMM <nvdimm@lists.linux.dev>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.3.0
+Content-Language: en-US
+To:     xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH 0/3] xfs: #ifdef out perag code for userspace
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 9, 2021 at 11:59 AM Jane Chu <jane.chu@oracle.com> wrote:
->
-> On 11/9/2021 10:48 AM, Dan Williams wrote:
-> > On Mon, Nov 8, 2021 at 11:27 PM Christoph Hellwig <hch@infradead.org> wrote:
-> >>
-> >> On Fri, Nov 05, 2021 at 07:16:38PM -0600, Jane Chu wrote:
-> >>>   static size_t pmem_copy_from_iter(struct dax_device *dax_dev, pgoff_t pgoff,
-> >>>                void *addr, size_t bytes, struct iov_iter *i, int mode)
-> >>>   {
-> >>> +     phys_addr_t pmem_off;
-> >>> +     size_t len, lead_off;
-> >>> +     struct pmem_device *pmem = dax_get_private(dax_dev);
-> >>> +     struct device *dev = pmem->bb.dev;
-> >>> +
-> >>> +     if (unlikely(mode == DAX_OP_RECOVERY)) {
-> >>> +             lead_off = (unsigned long)addr & ~PAGE_MASK;
-> >>> +             len = PFN_PHYS(PFN_UP(lead_off + bytes));
-> >>> +             if (is_bad_pmem(&pmem->bb, PFN_PHYS(pgoff) / 512, len)) {
-> >>> +                     if (lead_off || !(PAGE_ALIGNED(bytes))) {
-> >>> +                             dev_warn(dev, "Found poison, but addr(%p) and/or bytes(%#lx) not page aligned\n",
-> >>> +                                     addr, bytes);
-> >>> +                             return (size_t) -EIO;
-> >>> +                     }
-> >>> +                     pmem_off = PFN_PHYS(pgoff) + pmem->data_offset;
-> >>> +                     if (pmem_clear_poison(pmem, pmem_off, bytes) !=
-> >>> +                                             BLK_STS_OK)
-> >>> +                             return (size_t) -EIO;
-> >>> +             }
-> >>> +     }
-> >>
-> >> This is in the wrong spot.  As seen in my WIP series individual drivers
-> >> really should not hook into copying to and from the iter, because it
-> >> really is just one way to write to a nvdimm.  How would dm-writecache
-> >> clear the errors with this scheme?
-> >>
-> >> So IMHO going back to the separate recovery method as in your previous
-> >> patch really is the way to go.  If/when the 64-bit store happens we
-> >> need to figure out a good way to clear the bad block list for that.
-> >
-> > I think we just make error management a first class citizen of a
-> > dax-device and stop abstracting it behind a driver callback. That way
-> > the driver that registers the dax-device can optionally register error
-> > management as well. Then fsdax path can do:
-> >
-> >          rc = dax_direct_access(..., &kaddr, ...);
-> >          if (unlikely(rc)) {
-> >                  kaddr = dax_mk_recovery(kaddr);
->
-> Sorry, what does dax_mk_recovery(kaddr) do?
+Series of patches to get userspace and kernelspace to the point where
+xfsprogs can sync up ok and build with a minimum of stub functions etc.
 
-I was thinking this just does the hackery to set a flag bit in the
-pointer, something like:
-
-return (void *) ((unsigned long) kaddr | DAX_RECOVERY)
-
->
-> >                  dax_direct_access(..., &kaddr, ...);
-> >                  return dax_recovery_{read,write}(..., kaddr, ...);
-> >          }
-> >          return copy_{mc_to_iter,from_iter_flushcache}(...);
-> >
-> > Where, the recovery version of dax_direct_access() has the opportunity
-> > to change the page permissions / use an alias mapping for the access,
->
-> again, sorry, what 'page permissions'?  memory_failure_dev_pagemap()
-> changes the poisoned page mem_type from 'rw' to 'uc-' (should be NP?),
-> do you mean to reverse the change?
-
-Right, the result of the conversation with Boris is that
-memory_failure() should mark the page as NP in call cases, so
-dax_direct_access() needs to create a UC mapping and
-dax_recover_{read,write}() would sink that operation and either return
-the page to NP after the access completes, or convert it to WB if the
-operation cleared the error.
-
-> > dax_recovery_read() allows reading the good cachelines out of a
-> > poisoned page, and dax_recovery_write() coordinates error list
-> > management and returning a poison page to full write-back caching
-> > operation when no more poisoned cacheline are detected in the page.
-> >
->
-> How about to introduce 3 dax_recover_ APIs:
->    dax_recover_direct_access(): similar to dax_direct_access except
->       it ignores error list and return the kaddr, and hence is also
->       optional, exported by device driver that has the ability to
->       detect error;
->    dax_recovery_read(): optional, supported by pmem driver only,
->       reads as much data as possible up to the poisoned page;
-
-It wouldn't be a property of the pmem driver, I expect it would be a
-flag on the dax device whether to attempt recovery or not. I.e. get
-away from this being a pmem callback and make this a native capability
-of a dax device.
-
->    dax_recovery_write(): optional, supported by pmem driver only,
->       first clear-poison, then write.
->
-> Should we worry about the dm targets?
-
-The dm targets after Christoph's conversion should be able to do all
-the translation at direct access time and then dax_recovery_X can be
-done on the resulting already translated kaddr.
-
-> Both dax_recovery_read/write() are hooked up to dax_iomap_iter().
-
-Yes.
