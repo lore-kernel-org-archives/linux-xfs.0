@@ -2,32 +2,35 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E65DBC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 Nov 2021 03:45:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16ED5C433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 Nov 2021 03:45:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B9A336162E
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 Nov 2021 03:45:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F0CA461039
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 Nov 2021 03:45:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230185AbhKKDrv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 10 Nov 2021 22:47:51 -0500
-Received: from smtp01.aussiebb.com.au ([121.200.0.92]:53848 "EHLO
-        smtp01.aussiebb.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229699AbhKKDru (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Nov 2021 22:47:50 -0500
-X-Greylist: delayed 333 seconds by postgrey-1.27 at vger.kernel.org; Wed, 10 Nov 2021 22:47:50 EST
+        id S230256AbhKKDrw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 10 Nov 2021 22:47:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53558 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229699AbhKKDrw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Nov 2021 22:47:52 -0500
+X-Greylist: delayed 329 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 10 Nov 2021 19:45:03 PST
+Received: from smtp01.aussiebb.com.au (smtp01.aussiebb.com.au [IPv6:2403:5800:3:25::1001])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8823DC061766
+        for <linux-xfs@vger.kernel.org>; Wed, 10 Nov 2021 19:45:03 -0800 (PST)
 Received: from localhost (localhost.localdomain [127.0.0.1])
-        by smtp01.aussiebb.com.au (Postfix) with ESMTP id AF1721002A7;
-        Thu, 11 Nov 2021 14:39:33 +1100 (AEDT)
+        by smtp01.aussiebb.com.au (Postfix) with ESMTP id 0D8D710004F;
+        Thu, 11 Nov 2021 14:39:27 +1100 (AEDT)
 X-Virus-Scanned: Debian amavisd-new at smtp01.aussiebb.com.au
 Received: from smtp01.aussiebb.com.au ([127.0.0.1])
         by localhost (smtp01.aussiebb.com.au [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id lhI9-2cYJ_S0; Thu, 11 Nov 2021 14:39:33 +1100 (AEDT)
+        with ESMTP id vT_5Af2SkO8e; Thu, 11 Nov 2021 14:39:26 +1100 (AEDT)
 Received: by smtp01.aussiebb.com.au (Postfix, from userid 116)
-        id 9E14B1002A9; Thu, 11 Nov 2021 14:39:33 +1100 (AEDT)
+        id EB611100070; Thu, 11 Nov 2021 14:39:26 +1100 (AEDT)
 Received: from mickey.themaw.net (unknown [100.72.131.210])
-        by smtp01.aussiebb.com.au (Postfix) with ESMTP id F089F100299;
-        Thu, 11 Nov 2021 14:39:30 +1100 (AEDT)
-Subject: [PATCH 2/2] xfs: make sure link path does not go away at access
+        by smtp01.aussiebb.com.au (Postfix) with ESMTP id 3885410027F;
+        Thu, 11 Nov 2021 14:39:25 +1100 (AEDT)
+Subject: [PATCH 1/2] vfs: check dentry is still valid in get_link()
 From:   Ian Kent <raven@themaw.net>
 To:     xfs <linux-xfs@vger.kernel.org>,
         "Darrick J. Wong" <djwong@kernel.org>
@@ -37,85 +40,70 @@ Cc:     Miklos Szeredi <miklos@szeredi.hu>,
         David Howells <dhowells@redhat.com>,
         linux-fsdevel <linux-fsdevel@vger.kernel.org>,
         Kernel Mailing List <linux-kernel@vger.kernel.org>
-Date:   Thu, 11 Nov 2021 11:39:30 +0800
-Message-ID: <163660197073.22525.11235124150551283676.stgit@mickey.themaw.net>
-In-Reply-To: <163660195990.22525.6041281669106537689.stgit@mickey.themaw.net>
-References: <163660195990.22525.6041281669106537689.stgit@mickey.themaw.net>
+Date:   Thu, 11 Nov 2021 11:39:19 +0800
+Message-ID: <163660195990.22525.6041281669106537689.stgit@mickey.themaw.net>
 User-Agent: StGit/0.23
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-When following a trailing symlink in rcu-walk mode it's possible to
-succeed in getting the ->get_link() method pointer but the link path
-string be deallocated while it's being used.
+When following a trailing symlink in rcu-walk mode it's possible for
+the dentry to become invalid between the last dentry seq lock check
+and getting the link (eg. an unlink) leading to a backtrace similar
+to this:
 
-Utilize the rcu mechanism to mitigate this risk.
+crash> bt
+PID: 10964  TASK: ffff951c8aa92f80  CPU: 3   COMMAND: "TaniumCX"
+…
+ #7 [ffffae44d0a6fbe0] page_fault at ffffffff8d6010fe
+    [exception RIP: unknown or invalid address]
+    RIP: 0000000000000000  RSP: ffffae44d0a6fc90  RFLAGS: 00010246
+    RAX: ffffffff8da3cc80  RBX: ffffae44d0a6fd30  RCX: 0000000000000000
+    RDX: ffffae44d0a6fd98  RSI: ffff951aa9af3008  RDI: 0000000000000000
+    RBP: 0000000000000000   R8: ffffae44d0a6fb94   R9: 0000000000000000
+    R10: ffff951c95d8c318  R11: 0000000000080000  R12: ffffae44d0a6fd98
+    R13: ffff951aa9af3008  R14: ffff951c8c9eb840  R15: 0000000000000000
+    ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
+ #8 [ffffae44d0a6fc90] trailing_symlink at ffffffff8cf24e61
+ #9 [ffffae44d0a6fcc8] path_lookupat at ffffffff8cf261d1
+#10 [ffffae44d0a6fd28] filename_lookup at ffffffff8cf2a700
+#11 [ffffae44d0a6fe40] vfs_statx at ffffffff8cf1dbc4
+#12 [ffffae44d0a6fe98] __do_sys_newstat at ffffffff8cf1e1f9
+#13 [ffffae44d0a6ff38] do_syscall_64 at ffffffff8cc0420b
 
-Suggested-by: Miklos Szeredi <miklos@szeredi.hu>
+Most of the time this is not a problem because the inode is unchanged
+while the rcu read lock is held.
+
+But xfs can re-use inodes which can result in the inode ->get_link()
+method becoming invalid (or NULL).
+
+This case needs to be checked for in fs/namei.c:get_link() and if
+detected the walk re-started.
+
 Signed-off-by: Ian Kent <raven@themaw.net>
 ---
- fs/xfs/kmem.h      |    4 ++++
- fs/xfs/xfs_inode.c |    4 ++--
- fs/xfs/xfs_iops.c  |   10 ++++++++--
- 3 files changed, 14 insertions(+), 4 deletions(-)
+ fs/namei.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
-index 54da6d717a06..c1bd1103b340 100644
---- a/fs/xfs/kmem.h
-+++ b/fs/xfs/kmem.h
-@@ -61,6 +61,10 @@ static inline void  kmem_free(const void *ptr)
- {
- 	kvfree(ptr);
- }
-+static inline void  kmem_free_rcu(const void *ptr)
-+{
-+	kvfree_rcu(ptr);
-+}
- 
- 
- static inline void *
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index a4f6f034fb81..aaa1911e61ed 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2650,8 +2650,8 @@ xfs_ifree(
- 	 * already been freed by xfs_attr_inactive.
- 	 */
- 	if (ip->i_df.if_format == XFS_DINODE_FMT_LOCAL) {
--		kmem_free(ip->i_df.if_u1.if_data);
--		ip->i_df.if_u1.if_data = NULL;
-+		kmem_free_rcu(ip->i_df.if_u1.if_data);
-+		RCU_INIT_POINTER(ip->i_df.if_u1.if_data, NULL);
- 		ip->i_df.if_bytes = 0;
- 	}
- 
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index a607d6aca5c4..2977e19da7b7 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -524,11 +524,17 @@ xfs_vn_get_link_inline(
- 
- 	/*
- 	 * The VFS crashes on a NULL pointer, so return -EFSCORRUPTED if
--	 * if_data is junk.
-+	 * if_data is junk. Also, if the path walk is in rcu-walk mode
-+	 * and the inode link path has gone away due inode re-use we have
-+	 * no choice but to tell the VFS to redo the lookup.
- 	 */
--	link = ip->i_df.if_u1.if_data;
-+	link = rcu_dereference(ip->i_df.if_u1.if_data);
-+	if (!dentry && !link)
-+		return ERR_PTR(-ECHILD);
-+
- 	if (XFS_IS_CORRUPT(ip->i_mount, !link))
- 		return ERR_PTR(-EFSCORRUPTED);
-+
- 	return link;
- }
- 
+diff --git a/fs/namei.c b/fs/namei.c
+index 1946d9667790..9a48a6106516 100644
+--- a/fs/namei.c
++++ b/fs/namei.c
+@@ -1760,8 +1760,11 @@ static const char *pick_link(struct nameidata *nd, struct path *link,
+ 	if (!res) {
+ 		const char * (*get)(struct dentry *, struct inode *,
+ 				struct delayed_call *);
+-		get = inode->i_op->get_link;
++		get = READ_ONCE(inode->i_op->get_link);
+ 		if (nd->flags & LOOKUP_RCU) {
++			/* Does the inode still match the associated dentry? */
++			if (unlikely(read_seqcount_retry(&link->dentry->d_seq, last->seq)))
++				return ERR_PTR(-ECHILD);
+ 			res = get(NULL, inode, &last->done);
+ 			if (res == ERR_PTR(-ECHILD) && try_to_unlazy(nd))
+ 				res = get(link->dentry, inode, &last->done);
 
 
