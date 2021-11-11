@@ -2,75 +2,75 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8152C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 Nov 2021 16:21:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E006BC433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 Nov 2021 17:24:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 92B3061354
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 Nov 2021 16:21:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AF73961268
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 Nov 2021 17:24:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233902AbhKKQYN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 11 Nov 2021 11:24:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54260 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233890AbhKKQYL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Nov 2021 11:24:11 -0500
-Received: from mail-io1-xd2c.google.com (mail-io1-xd2c.google.com [IPv6:2607:f8b0:4864:20::d2c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 137A3C061766;
-        Thu, 11 Nov 2021 08:21:22 -0800 (PST)
-Received: by mail-io1-xd2c.google.com with SMTP id m9so7678096iop.0;
-        Thu, 11 Nov 2021 08:21:22 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=hBm6JO/iSJ+GL1C6xVW5PCmaMsD9ZfQqODjs2YkP1sU=;
-        b=YV71s0Ev2mXVcz6tWXyGZUsZLzfLGIkp3ELcfIJgPv2VpPq/w5tgNgNrqw+LhKSK60
-         ypAN/jXd2U6uHeSo6EKYM/zbuOJjvXF2o1EfAmhIYDnO4J2yvU2nNH4jhsF/rPgVr3bb
-         PA4/javfSdpJOvTjk44LNTGCIrwi2A5vk0Uny5Zc8EjPCM3Wp8yaJaeS7h9ev/9shMri
-         Y2aFBgo5K4oI03r0IdC4eQANOTblYgjhhh3f8yAxn3sUQHc7z6YHPMh8IvmNLzhD7nQc
-         iP4dlZyUtwFS6qHzAjhd+KnNGwdCOGRRlmSuuTRYwgG6vQzI7je8tn/bPRGwHXLJDZUH
-         GabQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=hBm6JO/iSJ+GL1C6xVW5PCmaMsD9ZfQqODjs2YkP1sU=;
-        b=SarYalpw53/tK9IJkrSCNpMBj11LmTgwa6wmqR5HwTI0VBRr6D0jJCzZstX/+YJYNC
-         KBi6yHloW1K0Idgaj+hXuMnR2ecVaVCwxknBompUSGJDO1jXf4vnIYVzyNZiXaOItn6/
-         Etl7EEJdcS1YweBtfyJ4XumJTmrd3mLhdrnlXEOUHaYeTuzZAsNe/RYybpFN9pBIX1HT
-         D3e2CNbl0hNfwBDDXHWqzS8qtSXPtCuO3Bq7yn5LbONwkDcT587baYVWYM9yZC+o8FMv
-         C+rZ6gYOQP1vK6iif7eWCyYGVmBlUG4w7aiTb4HhwiY6J41mb1n8yNQ6Krof6cnHrNUM
-         j9Mw==
-X-Gm-Message-State: AOAM533j7Ya6DY7pA9xPOGxOxX3pU1e1q+ANgUbg4BTPT620QE4PB0Yz
-        GbUK2h5jEzIsRlNUwsh4ivJumBrlL1MIQj+8aaE=
-X-Google-Smtp-Source: ABdhPJxkBdvyWNsHljIwNTdiGRWG08lJpu3tGVUukky9muJYg0YaC5jYHTIk/gC7oo7gaQB5/SOPVDm2YXZLXvzSMe8=
-X-Received: by 2002:a05:6602:45d:: with SMTP id e29mr5752619iov.202.1636647681387;
- Thu, 11 Nov 2021 08:21:21 -0800 (PST)
+        id S234308AbhKKR1b (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 11 Nov 2021 12:27:31 -0500
+Received: from mail.kernel.org ([198.145.29.99]:47330 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233987AbhKKR1a (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 11 Nov 2021 12:27:30 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0AF6060EE4
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Nov 2021 17:24:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1636651481;
+        bh=FQjmRdvMApbondxxWjU8fhuVJQf3x/WCJY6RfKp98oE=;
+        h=Date:From:To:Subject:From;
+        b=M+eKbHxUCFie1k3DrqhGTOfVMctYKqtIp/Vh6ap6tOUNgkUQcfGaGYVfnRb+KyWiN
+         4zy7/dmwXH/whz8+nVd967gaoyvd49I9advaIDgIRMnvHtYcaJQpZ7jWjBN0IKFHCV
+         dO+Fx77g33Xpy1ad9IWfyoMX1ogpVfvO48vQQF93NXqyBG75H/LoAjV5a5b58P8NYr
+         UODptT1MpQN/NV1PowVJfQU+Qz+qeB8VaDfv4dzT+Ix4f5R8dbBiyiz4g4nr4MM7nb
+         NeDvLPxExCu6qVzqxalfoP6vFuC/42vSN6TbUs7V+mmFD+TWoa2aaZaEUfW8pYisLv
+         1McMLbw4gIDQg==
+Date:   Thu, 11 Nov 2021 09:24:40 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     xfs <linux-xfs@vger.kernel.org>
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 4a6b35b3b3f2
+Message-ID: <20211111172440.GD24307@magnolia>
 MIME-Version: 1.0
-References: <20211110113842.517426-1-agruenba@redhat.com> <20211110125527.GA25465@lst.de>
- <CAHc6FU49TnYvrL-FU5oz9th6STuQ=eYokjsD+0QpbkdHedRd9w@mail.gmail.com> <20211111072506.GB30478@lst.de>
-In-Reply-To: <20211111072506.GB30478@lst.de>
-From:   =?UTF-8?Q?Andreas_Gr=C3=BCnbacher?= <andreas.gruenbacher@gmail.com>
-Date:   Thu, 11 Nov 2021 17:21:10 +0100
-Message-ID: <CAHpGcM+GVufLn_VZD_Kmrj=Y-XQwkqcjFxN4aFajh1Loi324ow@mail.gmail.com>
-Subject: Re: [5.15 REGRESSION] iomap: Fix inline extent handling in iomap_readpage
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Andreas Gruenbacher <agruenba@redhat.com>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        cluster-devel <cluster-devel@redhat.com>,
-        stable <stable@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Am Do., 11. Nov. 2021 um 08:26 Uhr schrieb Christoph Hellwig <hch@lst.de>:
-> The iomap mapping sizes are read-only to iomap for a good reason.  You
-> can't just break that design.
+Hi folks,
 
-Right. We can stop iomap_iter by returning 0 now though; see v2.
+The for-next branch of the xfs-linux repository at:
 
-Thanks,
-Andreas
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+
+has just been updated.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
+
+The new head of the for-next branch is commit:
+
+4a6b35b3b3f2 xfs: sync xfs_btree_split macros with userspace libxfs
+
+New Commits:
+
+Darrick J. Wong (1):
+      [4a6b35b3b3f2] xfs: sync xfs_btree_split macros with userspace libxfs
+
+Eric Sandeen (1):
+      [29f11fce211c] xfs: #ifdef out perag code for userspace
+
+Yang Guang (1):
+      [5b068aadf62d] xfs: use swap() to make dabtree code cleaner
+
+
+Code Diffstat:
+
+ fs/xfs/libxfs/xfs_ag.c       | 2 ++
+ fs/xfs/libxfs/xfs_ag.h       | 8 +++++---
+ fs/xfs/libxfs/xfs_btree.c    | 4 ++++
+ fs/xfs/libxfs/xfs_da_btree.c | 5 +----
+ 4 files changed, 12 insertions(+), 7 deletions(-)
