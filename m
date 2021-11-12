@@ -2,68 +2,143 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75F34C433F5
-	for <linux-xfs@archiver.kernel.org>; Fri, 12 Nov 2021 06:40:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 750DBC433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 12 Nov 2021 07:23:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 48C2C60F45
-	for <linux-xfs@archiver.kernel.org>; Fri, 12 Nov 2021 06:40:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 52FB060FDA
+	for <linux-xfs@archiver.kernel.org>; Fri, 12 Nov 2021 07:23:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230510AbhKLGm7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 12 Nov 2021 01:42:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47658 "EHLO
+        id S233737AbhKLH01 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 12 Nov 2021 02:26:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57258 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230259AbhKLGm7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Nov 2021 01:42:59 -0500
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1148DC061766
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Nov 2021 22:40:09 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=KkJn5a2hSWRpD4SIGG2hBAqrHsN8rD2dxLrp6OdUHdQ=; b=nYFg6dqPVml4OSo8/DEYDG3Whd
-        RtjiyUvExQsyiivP+no8HuBYu0So2Nt6XSlv553xwdSFhT+IjW1OtB8Yq1SphCQMamqpNQWTLH3V8
-        5UB/dqZ/m0XsfcdSC/zWPP5q+IhTSVy1Jl6AfRfQNNAT/AFmKGL+0grbqNMRvybW74y+V+eEssqUb
-        QvfjEuYIyoJ1l9+SiiRjm+Ksjom8ikK2USG6Q1N6TfDZwXvQTKVR9oFk7Q+gM5R2PDb/Tk1DD4q5v
-        hnwNDatrw0WjrW5YeHokQwTqzj2Xz9THS8XW4OMUUHiaEvf7zXARsnYK3UuUYULVfpjvEse+SswCb
-        3WrN1RMA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mlQEK-009Xos-NF; Fri, 12 Nov 2021 06:40:08 +0000
-Date:   Thu, 11 Nov 2021 22:40:08 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Dan Greenfield <dgrnfld@gmail.com>
-Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
-Subject: Re: XFS NVMe RDMA?
-Message-ID: <YY4MSDOJKc64JcU/@infradead.org>
-References: <965EC18A-BF96-4544-AFE0-FA0F1787FD49@gmail.com>
- <YXBE5y2cJtAaMfzs@infradead.org>
- <YXBFaOqjMRN7ucFb@infradead.org>
- <3CBB4EC9-5953-4276-8219-DA8B10ABB05F@gmail.com>
+        with ESMTP id S232841AbhKLH00 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Nov 2021 02:26:26 -0500
+Received: from mail-ua1-x92d.google.com (mail-ua1-x92d.google.com [IPv6:2607:f8b0:4864:20::92d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE464C0613F5
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Nov 2021 23:23:36 -0800 (PST)
+Received: by mail-ua1-x92d.google.com with SMTP id l24so12752949uak.2
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Nov 2021 23:23:36 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=szeredi.hu; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=325jIQD91PfQv8e01cBKjuWX0X3uGvDDvQO81AqevsI=;
+        b=kLApZWS3ieetfzU/l392vRyp3+K0MXi+OOpXP6lQJP7T8uV53A424twDgLP6xZX/SM
+         cOUI+Bzq6P3z+V1LU4cXEfaafNq5ICcwbgz5+qs8vBUKVzypYuex8CFYpoB6UCfPy/2D
+         uQUcKsEB+DUrEMY1+pixcU3G8elLgekMz34dY=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=325jIQD91PfQv8e01cBKjuWX0X3uGvDDvQO81AqevsI=;
+        b=8Pb7W2eWm56mN197CxR/Ph53k0bBqhX2sVRoOMsjKibumsugrNyDqCpymgGQ2xISEM
+         y6+KriQwitSaDoNXJr8epXRlT622aovnJ0VwQXDYvmD1aJde+tMMhdKZwM//7dSUYgkR
+         MjRystYjFqriZ2nPgtt75OC2fKVshKPMH2aqU/LfTIiftm+GhAm8YwF6XuifyOfVOskN
+         LzgLK6hXJbG4tsf3O8PjhF/kn8Wi+79G9jFscssN35ONITIwvKoq60PVWyTCRDQk1Se7
+         hlzKu6f2Yx06XBuZ8k4O/nocpCcp6YR7l/vFQgd4KUWzezMHjuDxigyHQPyULxA//wHu
+         iaGQ==
+X-Gm-Message-State: AOAM5321yYRRA6Q0fyozyqybE4f2EMQgq64wvN0WUqtdgJx0Metx2lU3
+        WRrvzymU53sldCip0s5SwQ2nS8J0a+VLu85aZVerzn4+e4Q=
+X-Google-Smtp-Source: ABdhPJxpCAoaKGMK5xE203li37lxfdntaKgVxTBZHVG0q+YmWoM61nh7/90/b0lcwABVl4FOIQQVdBScTuVuZY3jBwU=
+X-Received: by 2002:a67:782:: with SMTP id 124mr6970271vsh.24.1636701815845;
+ Thu, 11 Nov 2021 23:23:35 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <3CBB4EC9-5953-4276-8219-DA8B10ABB05F@gmail.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+References: <163660195990.22525.6041281669106537689.stgit@mickey.themaw.net>
+ <163660197073.22525.11235124150551283676.stgit@mickey.themaw.net> <20211112003249.GL449541@dread.disaster.area>
+In-Reply-To: <20211112003249.GL449541@dread.disaster.area>
+From:   Miklos Szeredi <miklos@szeredi.hu>
+Date:   Fri, 12 Nov 2021 08:23:24 +0100
+Message-ID: <CAJfpegvHDM_Mtc8+ASAcmNLd6RiRM+KutjBOoycun_Oq2=+p=w@mail.gmail.com>
+Subject: Re: [PATCH 2/2] xfs: make sure link path does not go away at access
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Ian Kent <raven@themaw.net>, xfs <linux-xfs@vger.kernel.org>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Brian Foster <bfoster@redhat.com>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        David Howells <dhowells@redhat.com>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Dan,
+On Fri, 12 Nov 2021 at 01:32, Dave Chinner <david@fromorbit.com> wrote:
+>
+> On Thu, Nov 11, 2021 at 11:39:30AM +0800, Ian Kent wrote:
+> > When following a trailing symlink in rcu-walk mode it's possible to
+> > succeed in getting the ->get_link() method pointer but the link path
+> > string be deallocated while it's being used.
+> >
+> > Utilize the rcu mechanism to mitigate this risk.
+> >
+> > Suggested-by: Miklos Szeredi <miklos@szeredi.hu>
+> > Signed-off-by: Ian Kent <raven@themaw.net>
+> > ---
+> >  fs/xfs/kmem.h      |    4 ++++
+> >  fs/xfs/xfs_inode.c |    4 ++--
+> >  fs/xfs/xfs_iops.c  |   10 ++++++++--
+> >  3 files changed, 14 insertions(+), 4 deletions(-)
+> >
+> > diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
+> > index 54da6d717a06..c1bd1103b340 100644
+> > --- a/fs/xfs/kmem.h
+> > +++ b/fs/xfs/kmem.h
+> > @@ -61,6 +61,10 @@ static inline void  kmem_free(const void *ptr)
+> >  {
+> >       kvfree(ptr);
+> >  }
+> > +static inline void  kmem_free_rcu(const void *ptr)
+> > +{
+> > +     kvfree_rcu(ptr);
+> > +}
+> >
+> >
+> >  static inline void *
+> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > index a4f6f034fb81..aaa1911e61ed 100644
+> > --- a/fs/xfs/xfs_inode.c
+> > +++ b/fs/xfs/xfs_inode.c
+> > @@ -2650,8 +2650,8 @@ xfs_ifree(
+> >        * already been freed by xfs_attr_inactive.
+> >        */
+> >       if (ip->i_df.if_format == XFS_DINODE_FMT_LOCAL) {
+> > -             kmem_free(ip->i_df.if_u1.if_data);
+> > -             ip->i_df.if_u1.if_data = NULL;
+> > +             kmem_free_rcu(ip->i_df.if_u1.if_data);
+> > +             RCU_INIT_POINTER(ip->i_df.if_u1.if_data, NULL);
+> >               ip->i_df.if_bytes = 0;
+> >       }
+>
+> How do we get here in a way that the VFS will walk into this inode
+> during a lookup?
+>
+> I mean, the dentry has to be validated and held during the RCU path
+> walk, so if we are running a transaction to mark the inode as free
+> here it has already been unlinked and the dentry turned
+> negative. So anything that is doing a lockless pathwalk onto that
+> dentry *should* see that it is a negative dentry at this point and
+> hence nothing should be walking any further or trying to access the
+> link that was shared from ->get_link().
+>
+> AFAICT, that's what the sequence check bug you fixed in the previous
+> patch guarantees. It makes no difference if the unlinked inode has
+> been recycled or not, the lookup race condition is the same in that
+> the inode has gone through ->destroy_inode and is now owned by the
+> filesystem and not the VFS.
 
-sorry for the late reply.  This sat in my outbox for a while almost
-fully written.
+Yes, the concern here is that without locking all the above can
+theoretically happen between the sequence number check and  if_data
+being dereferenced.
 
-On Wed, Oct 27, 2021 at 09:23:42AM +0100, Dan Greenfield wrote:
-> Quick Question: would I be correct in assuming that if I mmap()ed each 8-64MB (chunk) file from XFS, and then did RDMA from the mmap region, that it would first be copied from NVMe into DRAM (does this bypass CPU?) and *then* be copied across RDMA, rather than directly be copied from NVMe by RDMA? Or does O_DIRECT properly allow bypass straight to NVMe for RDMA?
+> Otherwise, it might just be best to memset the buffer to zero here
+> rather than free it, and leave it to be freed when the inode is
+> freed from the RCU callback in xfs_inode_free_callback() as per
+> normal.
 
-The answer is: it depends.  mmap on a non-DAX file system always copied
-into DRAM.  mmap on a DAX file system (that is using pmem) can map
-the "storage" directly into memory, in which case some RDMA setups can
-DMA without a copy.
+My suggestion was to use .free_inode instead of .destroy_inode, the
+former always being called after an RCU grace period.
 
-But with a plain old SSD there is no path available to userspace to
-transfer without copying to DRAM.  If OTOH you use in-kernel NVMe over
-fabics target, it can directly transfers from the SSDs in some
-circumstances.  Currently that does require using the SSD directly
-without a file system, but with a little more work it could also work
-using a file system.
+Thanks,
+Miklos
