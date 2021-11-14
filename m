@@ -2,93 +2,61 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23B38C433F5
-	for <linux-xfs@archiver.kernel.org>; Sun, 14 Nov 2021 17:23:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2085CC433EF
+	for <linux-xfs@archiver.kernel.org>; Sun, 14 Nov 2021 20:24:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0090B603E9
-	for <linux-xfs@archiver.kernel.org>; Sun, 14 Nov 2021 17:23:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EBD1161152
+	for <linux-xfs@archiver.kernel.org>; Sun, 14 Nov 2021 20:24:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231831AbhKNR0E (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 14 Nov 2021 12:26:04 -0500
-Received: from mail.kernel.org ([198.145.29.99]:58874 "EHLO mail.kernel.org"
+        id S234739AbhKNU1Z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 14 Nov 2021 15:27:25 -0500
+Received: from mail.kernel.org ([198.145.29.99]:57240 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230314AbhKNR0E (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 14 Nov 2021 12:26:04 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id CD91360EB9;
-        Sun, 14 Nov 2021 17:23:09 +0000 (UTC)
+        id S231436AbhKNU1V (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 14 Nov 2021 15:27:21 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPS id 1100060462;
+        Sun, 14 Nov 2021 20:24:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1636910589;
-        bh=kQGuEYYiOrRDCpWGkbcW29M7DIXgWvDHAW/+sLNn9Zg=;
-        h=Date:From:To:Cc:Subject:From;
-        b=iP8xLB2t39R2aDC+1F5dTodDZIrWS3fPOXzdbtdNjHq96OqzUqgXOAjXM7eMpmHQ5
-         eg6YS8+pBf7hBq/OpAz9RHQgHzJcrJUC7CBRBl8IxdGfAzsHjpF7PJzJ8n+L+oZSoU
-         cfTFKsBvbLAI0rrU/iWmx2Ej2ylqu1MQtljWj1IWkmFfFdLVrwR3/+4G61Yia6XXNn
-         EET3HAsKkdb3x0mjT7Ob+7iWvo6nt4ZJw1aE5uE5XCe+bKf9kG6FGIyWVx11mc/alu
-         xCCIvklQwayx4aByHY0amqw5ZJfmjA1m2oO58o+27HuRaNz4xGo9f/HndQfoLi4wLz
-         ScfzdU+3PnBxQ==
-Date:   Sun, 14 Nov 2021 09:23:09 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        s=k20201202; t=1636921467;
+        bh=R/2ceRnbMhu2ZUu2GczjarustDgI4bmWSaWhmHf/n7M=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=Qdupi9mbbrV/3XaDYCO3LIOZO7gAlKdAaHXTJ5HUiOQXnWdLdz4Z239ocGadwkyqQ
+         j+nNoPx5+o3EiDShErF17zM7YREuqxX8ZdjDt0u9G72iykjyRLU5ktVOFXHU+aVeN5
+         fGrC01jK3vdEPqtvs7YngZ2kAvkTUJUbO0fFhE1AVQoq27pNx38aWZ8xYvZ4bpPGNA
+         Gil09OYjjMZaK4haMNkcrZyFE0himBEXXo/b0gEdWobqhGk7scOI0Zxcrv0kmh6nZI
+         RUp9aaoEC/uzM+11OuojZhzxIf9Xa9aDK/a8r8F56Ux9dioqEC0ljqw60z8kp8bjEM
+         ETroySmokMJhw==
+Subject: Re: [GIT PULL] xfs: cleanups and resyncs for 5.16
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <20211114172309.GE24307@magnolia>
+References: <20211114172309.GE24307@magnolia>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20211114172309.GE24307@magnolia>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.16-merge-5
+X-PR-Tracked-Commit-Id: 4a6b35b3b3f28df81fea931dc77c4c229cbdb5b2
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: ce49bfc8d0372212ccd7d1c1b45c60b077f77684
+Message-Id: <163692146690.4278.335385691531056076.pr-tracker-bot@kernel.org>
+Date:   Sun, 14 Nov 2021 20:24:26 +0000
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
         david@fromorbit.com, linux-kernel@vger.kernel.org,
         sandeen@sandeen.net, hch@lst.de
-Subject: [GIT PULL] xfs: cleanups and resyncs for 5.16
-Message-ID: <20211114172309.GE24307@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Linus,
+The pull request you sent on Sun, 14 Nov 2021 09:23:09 -0800:
 
-Please pull this branch containing a handful of code cleanups for 5.16.
+> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.16-merge-5
 
-The most "exciting" aspect of this branch is that the xfsprogs
-maintainer and I have worked through the last of the code discrepancies
-between kernel and userspace libxfs such that there are no code
-differences between the two except for #includes.  IOWs, diff suffices
-to demonstrate that the userspace tools behave the same as the kernel,
-and kernel-only bits are clearly marked in the /kernel/ source code
-instead of just the userspace source.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/ce49bfc8d0372212ccd7d1c1b45c60b077f77684
 
-The branch merges cleanly against upstream as of a few minutes ago.
-Please let me know if anything else strange happens during the merge
-process.
+Thank you!
 
---D
-
-The following changes since commit 2a09b575074ff3ed23907b6f6f3da87af41f592b:
-
-  xfs: use swap() to make code cleaner (2021-10-30 09:28:55 -0700)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.16-merge-5
-
-for you to fetch changes up to 4a6b35b3b3f28df81fea931dc77c4c229cbdb5b2:
-
-  xfs: sync xfs_btree_split macros with userspace libxfs (2021-11-11 09:13:39 -0800)
-
-----------------------------------------------------------------
-Minor tweaks for 5.16:
- * Clean up open-coded swap() calls.
- * A little bit of #ifdef golf to complete the reunification of the
-   kernel and userspace libxfs source code.
-
-----------------------------------------------------------------
-Darrick J. Wong (1):
-      xfs: sync xfs_btree_split macros with userspace libxfs
-
-Eric Sandeen (1):
-      xfs: #ifdef out perag code for userspace
-
-Yang Guang (1):
-      xfs: use swap() to make dabtree code cleaner
-
- fs/xfs/libxfs/xfs_ag.c       | 2 ++
- fs/xfs/libxfs/xfs_ag.h       | 8 +++++---
- fs/xfs/libxfs/xfs_btree.c    | 4 ++++
- fs/xfs/libxfs/xfs_da_btree.c | 5 +----
- 4 files changed, 12 insertions(+), 7 deletions(-)
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
