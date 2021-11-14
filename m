@@ -2,61 +2,61 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2085CC433EF
-	for <linux-xfs@archiver.kernel.org>; Sun, 14 Nov 2021 20:24:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DEF4AC433EF
+	for <linux-xfs@archiver.kernel.org>; Sun, 14 Nov 2021 21:24:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EBD1161152
-	for <linux-xfs@archiver.kernel.org>; Sun, 14 Nov 2021 20:24:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A545260FDA
+	for <linux-xfs@archiver.kernel.org>; Sun, 14 Nov 2021 21:24:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234739AbhKNU1Z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 14 Nov 2021 15:27:25 -0500
-Received: from mail.kernel.org ([198.145.29.99]:57240 "EHLO mail.kernel.org"
+        id S236345AbhKNV1P (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 14 Nov 2021 16:27:15 -0500
+Received: from mx1.bul.net ([195.85.215.56]:59702 "EHLO mx1.bul.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231436AbhKNU1V (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 14 Nov 2021 15:27:21 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPS id 1100060462;
-        Sun, 14 Nov 2021 20:24:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1636921467;
-        bh=R/2ceRnbMhu2ZUu2GczjarustDgI4bmWSaWhmHf/n7M=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=Qdupi9mbbrV/3XaDYCO3LIOZO7gAlKdAaHXTJ5HUiOQXnWdLdz4Z239ocGadwkyqQ
-         j+nNoPx5+o3EiDShErF17zM7YREuqxX8ZdjDt0u9G72iykjyRLU5ktVOFXHU+aVeN5
-         fGrC01jK3vdEPqtvs7YngZ2kAvkTUJUbO0fFhE1AVQoq27pNx38aWZ8xYvZ4bpPGNA
-         Gil09OYjjMZaK4haMNkcrZyFE0himBEXXo/b0gEdWobqhGk7scOI0Zxcrv0kmh6nZI
-         RUp9aaoEC/uzM+11OuojZhzxIf9Xa9aDK/a8r8F56Ux9dioqEC0ljqw60z8kp8bjEM
-         ETroySmokMJhw==
-Subject: Re: [GIT PULL] xfs: cleanups and resyncs for 5.16
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <20211114172309.GE24307@magnolia>
-References: <20211114172309.GE24307@magnolia>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20211114172309.GE24307@magnolia>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.16-merge-5
-X-PR-Tracked-Commit-Id: 4a6b35b3b3f28df81fea931dc77c4c229cbdb5b2
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: ce49bfc8d0372212ccd7d1c1b45c60b077f77684
-Message-Id: <163692146690.4278.335385691531056076.pr-tracker-bot@kernel.org>
-Date:   Sun, 14 Nov 2021 20:24:26 +0000
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        david@fromorbit.com, linux-kernel@vger.kernel.org,
-        sandeen@sandeen.net, hch@lst.de
+        id S236359AbhKNV1H (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 14 Nov 2021 16:27:07 -0500
+X-Greylist: delayed 522 seconds by postgrey-1.27 at vger.kernel.org; Sun, 14 Nov 2021 16:27:06 EST
+Received: by mx1.bul.net (Postfix, from userid 1002)
+        id 4DE58609A1; Sun, 14 Nov 2021 23:15:25 +0200 (EET)
+Received: from purple.bonev.com (purple.bonev.com [195.85.215.215])
+        by mx1.bul.net (Postfix) with ESMTP id 66DB96096E
+        for <linux-xfs@vger.kernel.org>; Sun, 14 Nov 2021 23:15:20 +0200 (EET)
+Received: (qmail 25989 invoked by uid 64020); 14 Nov 2021 23:15:20 +0200
+Received: from unknown (HELO localhost.localdomain) (195.85.215.8)
+  by purple.bonev.com with SMTP; 14 Nov 2021 23:15:20 +0200
+From:   Boian Bonev <bbonev@ipacct.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     bage@debian.org, Boian Bonev <bbonev@ipacct.com>
+Subject: [PATCH] Avoid format truncation
+Date:   Sun, 14 Nov 2021 23:14:58 +0200
+Message-Id: <20211114211457.199710-1-bbonev@ipacct.com>
+X-Mailer: git-send-email 2.33.1
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The pull request you sent on Sun, 14 Nov 2021 09:23:09 -0800:
+io.c:644:17: note: ‘snprintf’ output between 4 and 14 bytes into a destination of size 8
 
-> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.16-merge-5
+Signed-off-by: Boian Bonev <bbonev@ipacct.com>
+---
+ db/io.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/ce49bfc8d0372212ccd7d1c1b45c60b077f77684
-
-Thank you!
-
+diff --git a/db/io.c b/db/io.c
+index c79cf105..154c3bd9 100644
+--- a/db/io.c
++++ b/db/io.c
+@@ -638,7 +638,7 @@ stack_f(
+ 	char	**argv)
+ {
+ 	int	i;
+-	char	tagbuf[8];
++	char	tagbuf[14];
+ 
+ 	for (i = iocur_sp; i > 0; i--) {
+ 		snprintf(tagbuf, sizeof(tagbuf), "%d: ", i);
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+2.33.1
+
