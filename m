@@ -2,162 +2,209 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BC67C433FE
-	for <linux-xfs@archiver.kernel.org>; Tue, 16 Nov 2021 00:26:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93D76C433FE
+	for <linux-xfs@archiver.kernel.org>; Tue, 16 Nov 2021 00:32:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2C6DA619EA
-	for <linux-xfs@archiver.kernel.org>; Tue, 16 Nov 2021 00:26:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 40D8561AA2
+	for <linux-xfs@archiver.kernel.org>; Tue, 16 Nov 2021 00:32:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242683AbhKPA33 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 15 Nov 2021 19:29:29 -0500
-Received: from mail-dm3nam07on2059.outbound.protection.outlook.com ([40.107.95.59]:29793
-        "EHLO NAM02-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1344592AbhKOTed (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 15 Nov 2021 14:34:33 -0500
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=J5b+ov1kXe0u4s68rVk123dq9RXpkksIV2VY3ohzKf2ua8qf7f0b2DW8vpXqqhfrheR1+5AiDOWe00tVB5VWMLT48UxVzhEBVkebz2K/P0HTDxFvL4fwQ4+PeGC4BpXRCCqC5aBKkbgM2U+7DTm5IPd7yGE7S0hdcBfxCauYus13VBC8qjf9osWv7teLMdgPC3STZKrLmWXRq2ZtUZw2y19PRkkhOWWRuClb5XArnhYzGYND7XxEmWvUSvBi9BKHn1HNiH0V3Kh6x8cE/slISpwT46akEDLJeTvJshrORhuPkHXJjbsLyUs8bNpzsrQJ1L4woXuATknsFoKn8NASwQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ZAbNt4xJJFwfAH985ezN+TQYdpqKMdpffqXzHRYyAOc=;
- b=aiwG2nxfxnllNhkeF1pHON/uvEieTEVVNZHFFIQMn9q4CVtOmssg12asxqOHL6cKVNG7kCJGs4rq7A7407oH1xBRvXIYS/KOo2V8Gy/B7tiDlfguqlGluhi13eq3BbwBxRlcv+y6CgykbqF+6c8PnJfdiySR4ktaPIw2FbN6WWBB2kD8oGcL+2+Qijx0kVIw2XI8q/hqz5IIpvekKx0YZKxrpUmrLcdHWBAmgdX5OBjaWWH3yeGjGAWAIH3Re7yEjpHKICD9oOQGkNoHtRv35N7vieyu+nchH6GRKjqYY02iLhYaMA1B9V6RxzD/PydFfyzwAMbV/FnT5Bj9WCUYfw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=linux-foundation.org smtp.mailfrom=amd.com;
- dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
- header.from=amd.com; dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ZAbNt4xJJFwfAH985ezN+TQYdpqKMdpffqXzHRYyAOc=;
- b=PWXHnbpj1XcMwPHFn+ft0M2R7HD1aPuMHQAZavNlSPfoT7gDzmzH1mezpSmlpW6hoByxLhxKdqDofFDYXWlrhJxjfVIPOGz7S0ESS9gyd6BbjA77gU4wPJub0cfDmfclnYZvxhqVa29D+6Yi6wlKXAnzcYQK+Ujx2dQkXD7cw1w=
-Received: from CO1PR15CA0061.namprd15.prod.outlook.com (2603:10b6:101:1f::29)
- by BYAPR12MB3141.namprd12.prod.outlook.com (2603:10b6:a03:da::33) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4690.26; Mon, 15 Nov
- 2021 19:30:45 +0000
-Received: from CO1NAM11FT040.eop-nam11.prod.protection.outlook.com
- (2603:10b6:101:1f:cafe::69) by CO1PR15CA0061.outlook.office365.com
- (2603:10b6:101:1f::29) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4690.26 via Frontend
- Transport; Mon, 15 Nov 2021 19:30:44 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=SATLEXMB04.amd.com;
-Received: from SATLEXMB04.amd.com (165.204.84.17) by
- CO1NAM11FT040.mail.protection.outlook.com (10.13.174.140) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.4690.15 via Frontend Transport; Mon, 15 Nov 2021 19:30:44 +0000
-Received: from alex-MS-7B09.amd.com (10.180.168.240) by SATLEXMB04.amd.com
- (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.17; Mon, 15 Nov
- 2021 13:30:36 -0600
-From:   Alex Sierra <alex.sierra@amd.com>
-To:     <akpm@linux-foundation.org>, <Felix.Kuehling@amd.com>,
-        <linux-mm@kvack.org>, <rcampbell@nvidia.com>,
-        <linux-ext4@vger.kernel.org>, <linux-xfs@vger.kernel.org>
-CC:     <amd-gfx@lists.freedesktop.org>, <dri-devel@lists.freedesktop.org>,
-        <hch@lst.de>, <jgg@nvidia.com>, <jglisse@redhat.com>,
-        <apopple@nvidia.com>, <willy@infradead.org>
-Subject: [PATCH v1 0/9] Add MEMORY_DEVICE_COHERENT for coherent device memory mapping
-Date:   Mon, 15 Nov 2021 13:30:17 -0600
-Message-ID: <20211115193026.27568-1-alex.sierra@amd.com>
-X-Mailer: git-send-email 2.32.0
+        id S1353271AbhKPAfa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 15 Nov 2021 19:35:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37256 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1344608AbhKOTZH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Nov 2021 14:25:07 -0500
+Received: from mail-yb1-xb2f.google.com (mail-yb1-xb2f.google.com [IPv6:2607:f8b0:4864:20::b2f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54EFFC04A1B9
+        for <linux-xfs@vger.kernel.org>; Mon, 15 Nov 2021 10:35:41 -0800 (PST)
+Received: by mail-yb1-xb2f.google.com with SMTP id s186so49727391yba.12
+        for <linux-xfs@vger.kernel.org>; Mon, 15 Nov 2021 10:35:41 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=colorremedies-com.20210112.gappssmtp.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=4vBj+1Z+tdGD5NjjExREEHvjNGdrcWTlSqiqfm9DnGE=;
+        b=qSkMjRPnrKRdIqc/za67eea+qPXcP7xvRioM3siLCIZjWlUceTGIndIadcIarelEhU
+         F6VjapzUIy2F1tjWo/RQZ1aP7BXX0taGyo3EVKtWSreklioZZqsyc5KKS4W1co+bSbEJ
+         3oX63qj32Idq6B38AdB8DsqSH8WJ9z8c+4Fs9PmcBG4ChFiDr1Ygnva/QsMt1u0pRuyg
+         S/22Js0hp1Hkv2VNRmOD+1Hw4au6KeohrRqgO1jtgg3tj2OC76YgV5Qb9G7ako/rWWwX
+         BgvS7pKvWSwF30jeuMfnweqngLbarc77726fHdSnHqZzTzNnisxQmXe0fEzRIyc5Fgvi
+         Zarg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=4vBj+1Z+tdGD5NjjExREEHvjNGdrcWTlSqiqfm9DnGE=;
+        b=0FXn55mPGaEK3kFzN1XD+EqaCrpDf5zSqwTOcbejlsh424QUKdHF3nj/kmIoMzV2jg
+         nUm7pNLPow142c+EGW2WrzrAi26NDEec9c4CnsGXoruJ8aVSr7n3/ROy00JNsHX3Qvha
+         /JkrCNnFmSGsHS/YPmI0qZRg/Hff3K6W5exZ7Y/iBFY1JCwAVCm6cUZpK1wzL6R8KwL2
+         dAAfCGUsSl7q+Dwo5d8pgTOI/uzbIPEafUYP00ZGqeb3V+gD9GVtZl/UrzgDPGOy/GhE
+         9iACLhYHVunhofhVzhoYUAaH4VpOMRZwZXvnsTX3NI3CsB618wx1NT6i+T6orG4hmuv7
+         dNIg==
+X-Gm-Message-State: AOAM533cnGXr08tFd54IqCq7TQQvZeEx6tC8dH71MTB76D7RqlrO7tUU
+        ikL9gJMZ/clZXf4p2PD9yLBc9hOsaqMFJeotI/4UFzA9vpJctN1AV9Y=
+X-Google-Smtp-Source: ABdhPJzfaUmbbzezIMa8Iy2/S0ffqwm0FKaFr+kB3weKROEizNxwUcuRyr28gURWWhWQwEjFGkse+qX31eM21PyeTGg=
+X-Received: by 2002:a05:6902:1021:: with SMTP id x1mr1100978ybt.391.1637001340490;
+ Mon, 15 Nov 2021 10:35:40 -0800 (PST)
 MIME-Version: 1.0
+References: <CAA43vkU_X5Ss0uiKwji3eOPSo00-t-UGO-hNnAUy7-Wuyuce-g@mail.gmail.com>
+In-Reply-To: <CAA43vkU_X5Ss0uiKwji3eOPSo00-t-UGO-hNnAUy7-Wuyuce-g@mail.gmail.com>
+From:   Chris Murphy <lists@colorremedies.com>
+Date:   Mon, 15 Nov 2021 13:35:24 -0500
+Message-ID: <CAJCQCtQCJ-biTPq8+_yZx6x3=ART1tMYttpMwwddzx4frWdDow@mail.gmail.com>
+Subject: Re: Question regarding XFS crisis recovery
+To:     Sean Caron <scaron@umich.edu>
+Cc:     xfs list <linux-xfs@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.180.168.240]
-X-ClientProxiedBy: SATLEXMB04.amd.com (10.181.40.145) To SATLEXMB04.amd.com
- (10.181.40.145)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 7f7155dd-5caf-43b2-8b0a-08d9a86e6b20
-X-MS-TrafficTypeDiagnostic: BYAPR12MB3141:
-X-Microsoft-Antispam-PRVS: <BYAPR12MB31413794248582B40CEABD16FD989@BYAPR12MB3141.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:9508;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 9YpqkidzCsag3zHzz+gcDqm7AhGMohQr/T8B6PYXyryP1WFEoFn9SzE0mTFrqXohtO2vzcgBX9GCHImyQCCaDo132cFQKKp/+4m1weLcQ1Z8+9rJnWRPqmKBsWcmQMSxHZTKEKLQynkI60kEvIQTSoIu+AP9a0eZmLnZ0lKaIm8dDv3tBBJMtjRHTSNeiPB0RG08FccpYFjwyVC1OKLaZ3uDZwHFA2ye8hxLRo+Ie2MLsis4msJ3mqc8ivdzr7TgIZRdblJHoZJn8/RrfMmqhZOOOLR9o7eVR/Clk0AYRX9Y0c2TghE/I9XjRE2RagABN+o7sH031VFJts341OcPnFzykOpu7BqyNvfifHAhXBwRgVW+GyzBYBaOH0EviqbsccKno+OMPUVFA6e7qJH3CZ4m5HCRMk9NTlzmEndgc/TZqEfo+dP51Piqb6mnEe8tSo14EAaDAfNUbnaYAWDbjqYc1qedShUtcQzVvBmjz5Algv5FffdaPykiX1Z4vHhWY1zAwp7e61I89cCQUGJpf8Q04tsbGNFBQEwx5l8vfXopcZ4IeHhm40v57GAT9nA5npeFChOtPb1Z3OweMIZ1qzsXcjm/2LsHphSibzCXDCo6uFDJEk3JEbxA/VDYoYdBhon2XmYTVW8mjwk6PEcx2JQuNRbvP6+U78KjHGs4aik/MV2NIsQ3RxAfFTPtRRfHrvYBOX2rI+tOSfcKRiZ2A44FqRJgY0Cwgsd2zCOO23g=
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(4636009)(36840700001)(46966006)(336012)(8936002)(2906002)(26005)(47076005)(508600001)(82310400003)(8676002)(86362001)(186003)(44832011)(4326008)(16526019)(7416002)(2616005)(426003)(6666004)(316002)(356005)(81166007)(110136005)(54906003)(36860700001)(5660300002)(36756003)(70206006)(70586007)(83380400001)(1076003)(7696005)(36900700001);DIR:OUT;SFP:1101;
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Nov 2021 19:30:44.5210
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7f7155dd-5caf-43b2-8b0a-08d9a86e6b20
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT040.eop-nam11.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR12MB3141
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This patch series introduces MEMORY_DEVICE_COHERENT, a type of memory
-owned by a device that can be mapped into CPU page tables like
-MEMORY_DEVICE_GENERIC and can also be migrated like
-MEMORY_DEVICE_PRIVATE.
-Christoph, the suggestion to incorporate Ralph Campbell’s refcount
-cleanup patch into our hardware page migration patchset originally came
-from you, but it proved impractical to do things in that order because
-the refcount cleanup introduced a bug with wide ranging structural
-implications. Instead, we amended Ralph’s patch so that it could be
-applied after merging the migration work. As we saw from the recent
-discussion, merging the refcount work is going to take some time and
-cooperation between multiple development groups, while the migration
-work is ready now and is needed now. So we propose to merge this
-patchset first and continue to work with Ralph and others to merge the
-refcount cleanup separately, when it is ready.
-This patch series is mostly self-contained except for a few places where
-it needs to update other subsystems to handle the new memory type.
-System stability and performance are not affected according to our
-ongoing testing, including xfstests.
-How it works: The system BIOS advertises the GPU device memory
-(aka VRAM) as SPM (special purpose memory) in the UEFI system address
-map.
-The amdgpu driver registers the memory with devmap as
-MEMORY_DEVICE_COHERENT using devm_memremap_pages. The initial user for
-this hardware page migration capability is the Frontier supercomputer
-project. This functionality is not AMD-specific. We expect other GPU
-vendors to find this functionality useful, and possibly other hardware
-types in the future.
-Our test nodes in the lab are similar to the Frontier configuration,
-with .5 TB of system memory plus 256 GB of device memory split across
-4 GPUs, all in a single coherent address space. Page migration is
-expected to improve application efficiency significantly. We will
-report empirical results as they become available.
-We extended hmm_test to cover migration of MEMORY_DEVICE_COHERENT. This
-patch set builds on HMM and our SVM memory manager already merged in
-5.15.
+On Mon, Nov 15, 2021 at 12:22 PM Sean Caron <scaron@umich.edu> wrote:
+>
+> Hi all,
+>
+> I recently had to manage a storage failure on a ~150 TB XFS volume and
+> I just wanted to check with the group here to see if anything could
+> have been done differently. Here is my story.
+>
+> We had a 150 TB RAID 60 volume formatted with XFS. The volume was made
+> up of two 21-drive RAID 6 strings (4 TB drives). This was all done
+> with Linux MD software RAID.
+>
+> The filesystem was filled to 100% capacity when it failed. I'm not
+> sure if this contributed to the poor outcome.
+>
+> There was no backup available of this filesystem (of course).
+>
+> About a week ago, we had two drives become spuriously ejected from one
+> of the two RAID 6 strings that composed this volume. This seems to
+> happen sometimes as a result of various hardware and software
+> glitches. We checked the drives with smartctl, added them back to the
+> array and a resync operation started.
+>
+> The resync ran for a little while and failed, because a third disk in
+> the array (which mdadm had never failed out, and smartctl still
+> thought was OK) reported a read error/bad blocks and dropped out of
+> the array.
+>
+> We decided to clone the failed disk to a brand new replacement drive with:
+>
+> dd conv=notrunc,noerror,sync
+>
+> Figuring we'd lose a few sectors to get nulled out, but we'd have a
+> drive that could run the rebuild without getting kicked due to read
+> errors (we've used this technique in the past to recover from this
+> kind of situation successfully).
+>
+> Clone completed. We swapped the clone drive with the bad blocks drive
+> and kicked off another rebuild.
+>
+> Rebuild fails again because a fourth drive is throwing bad blocks/read
+> errors and gets kicked out of the array.
+>
+> We scan all 21 drives in this array with smartctl and there are
+> actually three more drives in total where SMART has logged read
+> errors.
+>
+> This is starting to look pretty bad but what can we do? We just clone
+> these three drives to three more fresh drives using dd
+> conv=notrunc,noerror,sync.
+>
+> Swap them in for the old bad block drives and kick off another
+> rebuild. The rebuild actually runs and completes successfully. MD
+> thinks the array is fine, running, not degraded at all.
+>
+> We mount the array. It mounts, but it is obviously pretty damaged.
+> Normally when this happens we try to mount it read only and copy off
+> what we can, then write it off. This time, we can't hardly do anything
+> but an "ls" in the filesystem without getting "structure needs
+> cleaning". Doing any kind of material access to the filesystem gives
+> various major errors (i.e. "in-memory corruption of filesystem data
+> detected") and the filesystem goes offline. Reads just fail with I/O
+> errors.
+>
+> What can we do? Seems like at this stage we just run xfs_repair and
+> hope for the best, right?
+>
+> Ran xfs_repair in dry run mode and it's looking pretty bad, just from
+> the sheer amount of output.
+>
+> But there's no real way to know exactly how much data xfs_repair will
+> wipe out, and what alternatives do we have? The filesystem hardly
+> mounts without faulting anyway. Seems like there's little choice going
+> forward to run it, and see what shakes out.
+>
+> We run xfs_repair overnight. It ran for a while, then eventually hung
+> in Phase 4, I think.
+>
+> We killed xfs_repair off and re-ran it with the -P flag. It runs for
+> maybe two or three hours and eventually completes.
+>
+> We mount the filesystem up. Of around 150 TB, we have maybe 10% of
+> that in data salad in lost+found, 21 GB of good data and the rest is
+> gone.
+>
+> Copy off what we can, and call it dead. This is where we're at now.
+>
+> It seems like the MD rebuild process really scrambled things somehow.
+> I'm not sure if this was due to some kind of kernel bug, or just
+> zeroed out bad sectors in wrong places or what. Once the md resync
+> ran, we were cooked.
+>
+> I guess, after blowing through four or five "Hope you have a backup,
+> but if not, you can try this and pray" checkpoints, I just want to
+> check with the developers and group here to see if we did the best
+> thing possible given the circumstances?
+>
+> Xfs_repair is it, right? When things are that scrambled, pretty much
+> all you can do is run an xfs_repair and hope for the best? Am I
+> correct in thinking that there is no better or alternative tool that
+> will give different results?
+>
+> Can a commercial data recovery service make any better sense of a
+> scrambled XFS than xfs_repair could? When the underlying device is
+> presenting OK, just scrambled data on it?
 
-Alex Sierra (9):
-  mm: add zone device coherent type memory support
-  mm: add device coherent vma selection for memory migration
-  drm/amdkfd: add SPM support for SVM
-  drm/amdkfd: coherent type as sys mem on migration to ram
-  lib: test_hmm add ioctl to get zone device type
-  lib: test_hmm add module param for zone device type
-  lib: add support for device coherent type in test_hmm
-  tools: update hmm-test to support device coherent type
-  tools: update test_hmm script to support SP config
+I'm going to let others address the XFS issues if any. My take is this
+is not at all XFS related, but a problem with lower layers in the
+storage stack.
 
- drivers/gpu/drm/amd/amdkfd/kfd_migrate.c |  34 ++-
- include/linux/memremap.h                 |   8 +
- include/linux/migrate.h                  |   1 +
- include/linux/mm.h                       |   9 +
- lib/test_hmm.c                           | 270 +++++++++++++++++------
- lib/test_hmm_uapi.h                      |  21 +-
- mm/memcontrol.c                          |   6 +-
- mm/memory-failure.c                      |   6 +-
- mm/memremap.c                            |   5 +-
- mm/migrate.c                             |  30 ++-
- tools/testing/selftests/vm/hmm-tests.c   | 156 +++++++++++--
- tools/testing/selftests/vm/test_hmm.sh   |  20 +-
- 12 files changed, 446 insertions(+), 120 deletions(-)
+What is the SCT ERC value for each of the drives?  This value must be
+less than the kernel's SCSI command timer, which by default is 30
+seconds.
+
+It sounds to me like a common misconfiguration where the drive SCT ERC
+is not configured, bad sectors accumulate over time because they are
+never being fixed up as a result of the miconfiguration. And once a
+single stripe is lost, representing a critical amount off file system
+metadata, you lose the whole file system. It's a very high penalty for
+what is actually an avoidable problem, but relies on esoteric
+knowledge and resistence of downstream distros to change kernel
+defaults because they don't understand most of the knobs. And upstream
+kernel development's reluctance to change defaults because of various
+downstream expectations based on them. Those are generally valid
+positions, but in the specific case of large software raid arrays,
+Linux has a bad reputation strictly because of crap defaults where the
+common case is that SCT ERC is a higher value than the SCSI command
+timer. And this will *always* lead to data loss, eventually.
+
+Check the *device* timeout with this command
+smartctl -l scterc /dev/sdX
+
+Check the *kernel* timeout with this command
+cat /sys/block/sdX/device/timeout
+
+If the drive doesn't support configurable SCT ERC, then you must
+increase the kernel's command timer to a ridiculous value like 180.
+Seriously 180 seconds for a drive to decide whether a sector is
+unreadable is ridiculous but the logic of the consumer drive is
+there's no redundancy so try as long and hard as possible before
+giving up, the exact opposite of what we want in a raid array.
+
+This guide is a bit stale, I prefer to change either SCT ERC or the
+command timer with a udev rule. But the result is the same.
+https://raid.wiki.kernel.org/index.php/Timeout_Mismatch
 
 -- 
-2.32.0
-
+Chris Murphy
