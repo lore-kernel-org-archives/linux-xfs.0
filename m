@@ -2,104 +2,75 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D241C433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 15 Nov 2021 16:03:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 578FDC433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 15 Nov 2021 16:46:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 55BDC61B95
-	for <linux-xfs@archiver.kernel.org>; Mon, 15 Nov 2021 16:03:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3FDEB63210
+	for <linux-xfs@archiver.kernel.org>; Mon, 15 Nov 2021 16:46:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232331AbhKOQGs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 15 Nov 2021 11:06:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49462 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236627AbhKOQG1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Nov 2021 11:06:27 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 207BFC061714;
-        Mon, 15 Nov 2021 08:03:26 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=qkUydK/JEpz1c2gCYWSYemddT0P7Gi6azgiiqazupB4=; b=UuWeihRGHAaodRxfmRwxonWNv4
-        BDZIGfo/ORjAo8uV4/sfJfXy1Bi5Px4Tmo/D24gJjyNphP4WA0HBaTVDzxSItgHL7ISKDnGU+BcGH
-        q0czvecHi403XDDlHZjKMWdnl5suM9VDeccTmxKVjttW7bkuoPtcUgTPCBUr5pdY4A2BvDbJti8rA
-        6Ie8/x6ezNC8u45jfRzA1mWQJBMVjzjydMh1MczP0lNAmGLsBoXqRB3TndFwZDfvz1wrGnHnu51VK
-        OGZagW4a3+MP3ULFxJ/sGAGAjqfKLZC17xj3UEclfOJz7k66atZN/UBXV/OzDEDqZWUo4/Q81V7ih
-        L2s9sceQ==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mmeS2-005p33-No; Mon, 15 Nov 2021 16:03:22 +0000
-Date:   Mon, 15 Nov 2021 16:03:22 +0000
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     "Darrick J . Wong " <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH v2 04/28] fs: Rename AS_THP_SUPPORT and
- mapping_thp_support
-Message-ID: <YZKEyrrH4SjqV8W7@casper.infradead.org>
-References: <20211108040551.1942823-1-willy@infradead.org>
- <20211108040551.1942823-5-willy@infradead.org>
- <YYo0L60o7ThqGzlX@infradead.org>
+        id S230399AbhKOQtE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 15 Nov 2021 11:49:04 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39512 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231845AbhKOQs1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 15 Nov 2021 11:48:27 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8AA0561B9F;
+        Mon, 15 Nov 2021 16:45:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1636994730;
+        bh=z5MlQ5ioenB1ssjfhPYQsEBl9P01+wXOotwyWUby+wU=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=GPwp3O6emSL8hjWF7io3ndOUk1fgfwaPOXx3xUua3UVec6hnPzKk35upnG7hbKsrt
+         N+OmzhX1hCZOloJlDC99ueLxfD7y6BEB2BRMYL3mPbRawuzKyKacz0W0sRrN13xVir
+         BtiNxEsp6Zq0mDsUHYxZzyPXYyyGeq0zGhKYZ8IDzNCyu5wzsFMxmqiDks62+nIuyi
+         Y8ezonLIUK8TBCIrPsdvsf+TdTlSYumYHogbhaExuPTff4E9C0mJKVGwqqkR9gdtN1
+         ysOLsv49OThSmdEjD6viYE7rR8cZejqqYMdVtbOwkd5ED28XJsC18h2jZ/ZsFrxolm
+         V4pi7Z5fHsz2Q==
+Date:   Mon, 15 Nov 2021 08:45:30 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Boian Bonev <bbonev@ipacct.com>
+Cc:     linux-xfs@vger.kernel.org, bage@debian.org
+Subject: Re: [PATCH] Avoid format truncation
+Message-ID: <20211115164530.GF24307@magnolia>
+References: <20211114211457.199710-1-bbonev@ipacct.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <YYo0L60o7ThqGzlX@infradead.org>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20211114211457.199710-1-bbonev@ipacct.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 09, 2021 at 12:41:19AM -0800, Christoph Hellwig wrote:
-> On Mon, Nov 08, 2021 at 04:05:27AM +0000, Matthew Wilcox (Oracle) wrote:
-> > These are now indicators of multi-page folio support, not THP support.
+On Sun, Nov 14, 2021 at 11:14:58PM +0200, Boian Bonev wrote:
+> io.c:644:17: note: ‘snprintf’ output between 4 and 14 bytes into a destination of size 8
 > 
-> Given that we don't use the large foltio term anywhere else this really
-> needs to grow a comment explaining what the flag means.
+> Signed-off-by: Boian Bonev <bbonev@ipacct.com>
 
-I think I prefer the term 'large' to 'multi'.  What would you think to
-this patch (not on top of any particular branch; just to show the scope
-of it ...)
+I really hope nobody ever gets to a cursor depth of 4 billion, but the
+logic is correct, so...
 
-+++ b/include/linux/page-flags.h
-@@ -692,7 +692,7 @@ static inline bool folio_test_single(struct folio *folio)
-        return !folio_test_head(folio);
- }
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
--static inline bool folio_test_multi(struct folio *folio)
-+static inline bool folio_test_large(struct folio *folio)
- {
-        return folio_test_head(folio);
- }
-+++ b/mm/filemap.c
-@@ -192,9 +192,9 @@ static void filemap_unaccount_folio(struct address_space *mapping,
-        __lruvec_stat_mod_folio(folio, NR_FILE_PAGES, -nr);
-        if (folio_test_swapbacked(folio)) {
-                __lruvec_stat_mod_folio(folio, NR_SHMEM, -nr);
--               if (folio_test_multi(folio))
-+               if (folio_test_large(folio))
-                        __lruvec_stat_mod_folio(folio, NR_SHMEM_THPS, -nr);
--       } else if (folio_test_multi(folio)) {
-+       } else if (folio_test_large(folio)) {
-                __lruvec_stat_mod_folio(folio, NR_FILE_THPS, -nr);
-                filemap_nr_thps_dec(mapping);
-        }
-@@ -236,7 +236,7 @@ void filemap_free_folio(struct address_space *mapping, struct folio *folio)
-        if (freepage)
-                freepage(&folio->page);
+--D
 
--       if (folio_test_multi(folio) && !folio_test_hugetlb(folio)) {
-+       if (folio_test_large(folio) && !folio_test_hugetlb(folio)) {
-                folio_ref_sub(folio, folio_nr_pages(folio));
-                VM_BUG_ON_FOLIO(folio_ref_count(folio) <= 0, folio);
-        } else {
-+++ b/mm/memcontrol.c
-@@ -5558,7 +5558,7 @@ static int mem_cgroup_move_account(struct page *page,
-
-        VM_BUG_ON(from == to);
-        VM_BUG_ON_FOLIO(folio_test_lru(folio), folio);
--       VM_BUG_ON(compound && !folio_test_multi(folio));
-+       VM_BUG_ON(compound && !folio_test_large(folio));
-
-        /*
-         * Prevent mem_cgroup_migrate() from looking at
-
+> ---
+>  db/io.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/db/io.c b/db/io.c
+> index c79cf105..154c3bd9 100644
+> --- a/db/io.c
+> +++ b/db/io.c
+> @@ -638,7 +638,7 @@ stack_f(
+>  	char	**argv)
+>  {
+>  	int	i;
+> -	char	tagbuf[8];
+> +	char	tagbuf[14];
+>  
+>  	for (i = iocur_sp; i > 0; i--) {
+>  		snprintf(tagbuf, sizeof(tagbuf), "%d: ", i);
+> -- 
+> 2.33.1
+> 
