@@ -2,164 +2,216 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CB39C433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 15 Nov 2021 23:37:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C166C433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 16 Nov 2021 00:25:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 345F461A40
-	for <linux-xfs@archiver.kernel.org>; Mon, 15 Nov 2021 23:37:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 42E7C619E8
+	for <linux-xfs@archiver.kernel.org>; Tue, 16 Nov 2021 00:25:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343683AbhKOXj7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 15 Nov 2021 18:39:59 -0500
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:44402 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S244235AbhKOVYk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Nov 2021 16:24:40 -0500
-Received: from dread.disaster.area (pa49-195-103-97.pa.nsw.optusnet.com.au [49.195.103.97])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id D094EA3E4D;
-        Tue, 16 Nov 2021 08:21:41 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1mmjQ4-009GDy-Ck; Tue, 16 Nov 2021 08:21:40 +1100
-Date:   Tue, 16 Nov 2021 08:21:40 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Sean Caron <scaron@umich.edu>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: Question regarding XFS crisis recovery
-Message-ID: <20211115212140.GN449541@dread.disaster.area>
-References: <CAA43vkU_X5Ss0uiKwji3eOPSo00-t-UGO-hNnAUy7-Wuyuce-g@mail.gmail.com>
+        id S1348938AbhKPA2x (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 15 Nov 2021 19:28:53 -0500
+Received: from mail-bn8nam08on2089.outbound.protection.outlook.com ([40.107.100.89]:35260
+        "EHLO NAM04-BN8-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1346819AbhKOTg2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 15 Nov 2021 14:36:28 -0500
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=EDPHhEl9WA3zaN3STRLLvFSI7AmDYnVK0IWb23hH/qRV0S2kMAzawGd7qgyP/6MtMO7NlCmx859lLWOzJocbgg9wVDv4RBVabhdS+xwhJLrapo7pqhDKefHZ8GFqFwjK0SNKL1siqYapPrUCv4Lc98Y9DCDtf8QmonPyxW3c4u0AQJaUvSHoT5khlKxq6RvrTG5gvu/OEYgW+HeBqs7ihkdsy6LgQmLoI2xQ6EHSOwbzDYE1DHsMkkBJ2eKNbZoEfBPAPj/hazeMv+7oLCo+eXFLfa9IQrUtz/BnEzrpjEJ2KbHK2dsfogB46aY2rO5lhwk/+GyiJnpODmMAP4FCRg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=GFE6hdbCetcen9KK7oP0V4CZUKjOggR58YrLI61Ul1k=;
+ b=BtGsOut9TgnXhpNGm9Qa+8JWvg3XCsJv6ORTbYtE0MRZD6P/azW+eENoRv9SoQQ42FzegNgSTT8Z6fsnycFtPHk/xuCHIgtHixm8IC0zFgRBg0Rrykw6Yr2/dzmGgx3uNPLxLXGgdm5uk1WfraRUC9VrphUF7Bw1hktcHSvaJNcOWgeGxmrYxOcTI7MoF1gnmZPKaREcdRr/rmB7pgDSWiliDuVNFprdYZ1os4dLcMKj7zSOWXnFr5QJsTzO+iuwZypW5lRR+Nz5PreG1AhLPZIYOw4IiZAKOTIFFjGhLbdJQa+obe5DX9C8S92YPCq9ZVTVZyIzZM5jLb/XH54jrA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=linux-foundation.org smtp.mailfrom=amd.com;
+ dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
+ header.from=amd.com; dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=GFE6hdbCetcen9KK7oP0V4CZUKjOggR58YrLI61Ul1k=;
+ b=JjuRV3bHattHP5G5WT8aWTBr6IaUvcHHDPyQxgyEhTeNQXZX5xfz3jpyCWjF3i4YFh0XPuDE3vYVInek/d1HCls93v1myqBR4lnsqpf31TOyrbQh5DYD0/i4Z6Zq9jR9e5nzCtwfwDQhYVU1a9a5iLVDfAd0m15vqt0tUDgnSNs=
+Received: from MW4PR03CA0266.namprd03.prod.outlook.com (2603:10b6:303:b4::31)
+ by BL0PR12MB2371.namprd12.prod.outlook.com (2603:10b6:207:3e::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4690.17; Mon, 15 Nov
+ 2021 19:33:26 +0000
+Received: from CO1NAM11FT036.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:303:b4:cafe::86) by MW4PR03CA0266.outlook.office365.com
+ (2603:10b6:303:b4::31) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4690.15 via Frontend
+ Transport; Mon, 15 Nov 2021 19:33:26 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=SATLEXMB04.amd.com;
+Received: from SATLEXMB04.amd.com (165.204.84.17) by
+ CO1NAM11FT036.mail.protection.outlook.com (10.13.174.124) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.4690.15 via Frontend Transport; Mon, 15 Nov 2021 19:33:26 +0000
+Received: from alex-MS-7B09.amd.com (10.180.168.240) by SATLEXMB04.amd.com
+ (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.17; Mon, 15 Nov
+ 2021 13:33:21 -0600
+From:   Alex Sierra <alex.sierra@amd.com>
+To:     <akpm@linux-foundation.org>, <Felix.Kuehling@amd.com>,
+        <linux-mm@kvack.org>, <rcampbell@nvidia.com>,
+        <linux-ext4@vger.kernel.org>, <linux-xfs@vger.kernel.org>
+CC:     <amd-gfx@lists.freedesktop.org>, <dri-devel@lists.freedesktop.org>,
+        <hch@lst.de>, <jgg@nvidia.com>, <jglisse@redhat.com>,
+        <apopple@nvidia.com>, <willy@infradead.org>
+Subject: [PATCH v1 1/2] ext4/xfs: add page refcount helper
+Date:   Mon, 15 Nov 2021 13:33:05 -0600
+Message-ID: <20211115193306.27734-2-alex.sierra@amd.com>
+X-Mailer: git-send-email 2.32.0
+In-Reply-To: <20211115193306.27734-1-alex.sierra@amd.com>
+References: <20211115193306.27734-1-alex.sierra@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAA43vkU_X5Ss0uiKwji3eOPSo00-t-UGO-hNnAUy7-Wuyuce-g@mail.gmail.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=epq8cqlX c=1 sm=1 tr=0 ts=6192cf65
-        a=fP9RlOTWD4uZJjPSFnn6Ew==:117 a=fP9RlOTWD4uZJjPSFnn6Ew==:17
-        a=kj9zAlcOel0A:10 a=vIxV3rELxO4A:10 a=7-415B0cAAAA:8
-        a=xSgTIT8fC6Y3WRbsYe4A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.180.168.240]
+X-ClientProxiedBy: SATLEXMB04.amd.com (10.181.40.145) To SATLEXMB04.amd.com
+ (10.181.40.145)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: b1365992-c5e9-4ff8-b403-08d9a86ecb79
+X-MS-TrafficTypeDiagnostic: BL0PR12MB2371:
+X-Microsoft-Antispam-PRVS: <BL0PR12MB2371C697218C8D899D6EDC1EFD989@BL0PR12MB2371.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:3044;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: kMfIr6AMt21TBj8gsAeY+dINTNFx90Qurl8cPg3aRYE2Vn7UxRoVfxOHuvxib6/tTcdgVN3Md1fMbxmcjDdOt0NsuHZgQ1pNcDWw3s3XvssaatTgp8STY3qeJgjufxZlc5/V+6Ux4DvbplI+WQtPRhNdGJEkbvxqkAOkLofAAdnMfp7W0kObiBnCBjaHa1CJQLxIBrxuqUYQJRwabGnXYBeYC5ZHd2V0A90h+RWe+gaMjJ89peOama+YB6ZGXeE4GF3+EZ33zfuJairp5ZS5Q7WAtwNUz0Xyg7eMYaNgdcR+rUribMarxL+CaoAhXlxq+DkuFCBkdRDty8zhZ9s1SaVgdiCF08sE0zwY+wNpKxC+cUifyTJGpvJ5msnbfDIbT6fPmA8GreE5J2ZcvslxyhGIsvdnj07240sEk6vh0SKcrbMPPZROugrxua0hLCcP1LLoGf3tuFqIrDsPkxJ4wwHQyAonbNehI1l0OsqoW4JBzye0Cu7EJwHzzWBjK2/bhm/aaUimUED3JKI7/zJwVuFpNSKbjgzJRKiy1elYzKZd0xG4Tc4TMpA0IX4CQ2LP77gCWeZfTKhnRjukqQtx1Z2VyA/U1vwHtbTF8YsaKiPoVFgDpT8irTyG0cQolJTeVV0g9+c7CpCAfGI2FmgFdPhxclwPKCLv92J2r6ZmhKRA4CGqwyJm6PIVURBYlIjcbQRHnZXObnMPfJGE7J3zxE4G2Wcvcv7dVqYe0mw3pcU=
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(4636009)(46966006)(36840700001)(7696005)(7416002)(316002)(6666004)(26005)(36756003)(2906002)(5660300002)(110136005)(16526019)(54906003)(186003)(86362001)(1076003)(36860700001)(4326008)(83380400001)(81166007)(2616005)(70206006)(82310400003)(70586007)(44832011)(336012)(8936002)(426003)(508600001)(47076005)(356005)(8676002)(36900700001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Nov 2021 19:33:26.1696
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: b1365992-c5e9-4ff8-b403-08d9a86ecb79
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT036.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL0PR12MB2371
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Nov 15, 2021 at 12:14:34PM -0500, Sean Caron wrote:
-> Hi all,
-> 
-> I recently had to manage a storage failure on a ~150 TB XFS volume and
-> I just wanted to check with the group here to see if anything could
-> have been done differently. Here is my story.
+From: Ralph Campbell <rcampbell@nvidia.com>
 
-:(
+There are several places where ZONE_DEVICE struct pages assume a reference
+count == 1 means the page is idle and free. Instead of open coding this,
+add a helper function to hide this detail.
 
-> We had a 150 TB RAID 60 volume formatted with XFS. The volume was made
-> up of two 21-drive RAID 6 strings (4 TB drives). This was all done
-> with Linux MD software RAID.
+Signed-off-by: Ralph Campbell <rcampbell@nvidia.com>
+Signed-off-by: Alex Sierra <alex.sierra@amd.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Theodore Ts'o <tytso@mit.edu>
+Acked-by: Darrick J. Wong <djwong@kernel.org>
+---
+v3:
+[AS]: rename dax_layout_is_idle_page func to dax_page_unused
 
-A 21-drive RAID-6 made this cascading failure scenario inevitable,
-especially if all the drives were identical (same vendor and
-manufacturing batch). Once the first drive goes bad, the rest are at
-death's door. RAID rebuild is about the most intensive sustained
-load you can put on a drive, and if a drive is marginal that's often
-all that is needed to kick it over the edge. The more disks in the
-RAID set, the more likely cascading failures during rebuild are.
+v4:
+[AS]: This ref count functionality was missing on fuse/dax.c.
+---
+ fs/dax.c            |  4 ++--
+ fs/ext4/inode.c     |  5 +----
+ fs/fuse/dax.c       |  4 +---
+ fs/xfs/xfs_file.c   |  4 +---
+ include/linux/dax.h | 10 ++++++++++
+ 5 files changed, 15 insertions(+), 12 deletions(-)
 
-> We mount the array. It mounts, but it is obviously pretty damaged.
-> Normally when this happens we try to mount it read only and copy off
-> what we can, then write it off. This time, we can't hardly do anything
-> but an "ls" in the filesystem without getting "structure needs
-> cleaning".
-
-Which makes me think that the damage is, unfortunately, high up in
-directory heirarchy and the inodes and sub-directories that hold
-most of the data can't be accessed.
-
-> Doing any kind of material access to the filesystem gives
-> various major errors (i.e. "in-memory corruption of filesystem data
-> detected") and the filesystem goes offline. Reads just fail with I/O
-> errors.
-> 
-> What can we do? Seems like at this stage we just run xfs_repair and
-> hope for the best, right?
-
-Not quite. The next step would have been to take a metadump of the
-broken filesystem and then restore the image to a file on non-broken
-storage. Then you can run repair on the restored metadump image and
-see just how much ends up being left after xfs_repair runs. That
-tells you the likely result of running repair without actually
-changing anything in the damaged storage.
-
-> Ran xfs_repair in dry run mode and it's looking pretty bad, just from
-> the sheer amount of output.
-> 
-> But there's no real way to know exactly how much data xfs_repair will
-> wipe out, and what alternatives do we have?
-
-That's exactly what metadump/restore/repair/"mount -o loop" allows
-us to evaluate.
-
-> We run xfs_repair overnight. It ran for a while, then eventually hung
-> in Phase 4, I think.
-> 
-> We killed xfs_repair off and re-ran it with the -P flag. It runs for
-> maybe two or three hours and eventually completes.
-> 
-> We mount the filesystem up. Of around 150 TB, we have maybe 10% of
-> that in data salad in lost+found, 21 GB of good data and the rest is
-> gone.
-> 
-> Copy off what we can, and call it dead. This is where we're at now.
-
-Yeah, and there's probably not a lot that can be done now except run
-custom data scrapers over the raw disk blocks to try to recognise
-unconnected metadata and files to try to recover the raw information
-that is no longer connected to the repaired directory structure.
-That's slow, time consuming and expensive.
-
-> It seems like the MD rebuild process really scrambled things somehow.
-> I'm not sure if this was due to some kind of kernel bug, or just
-> zeroed out bad sectors in wrong places or what. Once the md resync
-> ran, we were cooked.
-> 
-> I guess, after blowing through four or five "Hope you have a backup,
-> but if not, you can try this and pray" checkpoints, I just want to
-> check with the developers and group here to see if we did the best
-> thing possible given the circumstances?
-
-Before running repair - which is a "can't go back once it's started"
-operation - you probably should have reached out for advice. We do
-have tools that allow us to examine, investigate and modify the
-on-disk format manually (xfs_db), and with metadump you can provide
-us with a compact, obfuscated metadata-only image that we can look
-at directly and see if there's anything that can be done to recover
-the data from the broken filesystem. xfs_db requires substantial
-expertise to use as a manual recovery tool, so it's not something
-that just anyone can do...
-
-> Xfs_repair is it, right? When things are that scrambled, pretty much
-> all you can do is run an xfs_repair and hope for the best? Am I
-> correct in thinking that there is no better or alternative tool that
-> will give different results?
-
-There are other tools that we have that can help understand the
-nature of the corruption before an operation is performed that can't
-be undone. Using those tools can lead to a better outcome, but in
-RAID failure cases like these it is still often "storage is
-completely scrambled, the filesystem and the data on it is toast no
-matter what we do"....
-
-> Can a commercial data recovery service make any better sense of a
-> scrambled XFS than xfs_repair could? When the underlying device is
-> presenting OK, just scrambled data on it?
-
-Commercial data recovery services have their own custom data
-scrapers that pull all the disconnected fragments of data off the
-drive and then they tend to reconstruct the data manually from
-there. They have a different goal to xfs_repair (data recovery vs
-filesystem consistency) but a good data recovery service might be
-able to scrape some of the data from disk blocks that xfs_repair
-removed all the corrupt metadata references to...
-
-Cheers,
-
-Dave.
+diff --git a/fs/dax.c b/fs/dax.c
+index 4e3e5a283a91..84803c835650 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -369,7 +369,7 @@ static void dax_disassociate_entry(void *entry, struct address_space *mapping,
+ 	for_each_mapped_pfn(entry, pfn) {
+ 		struct page *page = pfn_to_page(pfn);
+ 
+-		WARN_ON_ONCE(trunc && page_ref_count(page) > 1);
++		WARN_ON_ONCE(trunc && !dax_page_unused(page));
+ 		WARN_ON_ONCE(page->mapping && page->mapping != mapping);
+ 		page->mapping = NULL;
+ 		page->index = 0;
+@@ -383,7 +383,7 @@ static struct page *dax_busy_page(void *entry)
+ 	for_each_mapped_pfn(entry, pfn) {
+ 		struct page *page = pfn_to_page(pfn);
+ 
+-		if (page_ref_count(page) > 1)
++		if (!dax_page_unused(page))
+ 			return page;
+ 	}
+ 	return NULL;
+diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+index 0f06305167d5..068e8f78ec02 100644
+--- a/fs/ext4/inode.c
++++ b/fs/ext4/inode.c
+@@ -3913,10 +3913,7 @@ int ext4_break_layouts(struct inode *inode)
+ 		if (!page)
+ 			return 0;
+ 
+-		error = ___wait_var_event(&page->_refcount,
+-				atomic_read(&page->_refcount) == 1,
+-				TASK_INTERRUPTIBLE, 0, 0,
+-				ext4_wait_dax_page(inode));
++		error = dax_wait_page(inode, page, ext4_wait_dax_page);
+ 	} while (error == 0);
+ 
+ 	return error;
+diff --git a/fs/fuse/dax.c b/fs/fuse/dax.c
+index 281d79f8b3d3..f6d2a36e56e2 100644
+--- a/fs/fuse/dax.c
++++ b/fs/fuse/dax.c
+@@ -676,9 +676,7 @@ static int __fuse_dax_break_layouts(struct inode *inode, bool *retry,
+ 		return 0;
+ 
+ 	*retry = true;
+-	return ___wait_var_event(&page->_refcount,
+-			atomic_read(&page->_refcount) == 1, TASK_INTERRUPTIBLE,
+-			0, 0, fuse_wait_dax_page(inode));
++	return dax_wait_page(inode, page, fuse_wait_dax_page);
+ }
+ 
+ /* dmap_end == 0 leads to unmapping of whole file */
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 7aa943edfc02..fb13b12fd032 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -860,9 +860,7 @@ xfs_break_dax_layouts(
+ 		return 0;
+ 
+ 	*retry = true;
+-	return ___wait_var_event(&page->_refcount,
+-			atomic_read(&page->_refcount) == 1, TASK_INTERRUPTIBLE,
+-			0, 0, xfs_wait_dax_page(inode));
++	return dax_wait_page(inode, page, xfs_wait_dax_page);
+ }
+ 
+ int
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index 2619d94c308d..c9c27fbf0b98 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -216,6 +216,16 @@ static inline bool dax_mapping(struct address_space *mapping)
+ 	return mapping->host && IS_DAX(mapping->host);
+ }
+ 
++static inline bool dax_page_unused(struct page *page)
++{
++	return page_ref_count(page) == 1;
++}
++
++#define dax_wait_page(_inode, _page, _wait_cb)				\
++	___wait_var_event(&(_page)->_refcount,				\
++		dax_page_unused(_page),				\
++		TASK_INTERRUPTIBLE, 0, 0, _wait_cb(_inode))
++
+ #ifdef CONFIG_DEV_DAX_HMEM_DEVICES
+ void hmem_register_device(int target_nid, struct resource *r);
+ #else
 -- 
-Dave Chinner
-david@fromorbit.com
+2.32.0
+
