@@ -2,34 +2,31 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9103C433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 15 Nov 2021 02:24:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BB78C433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 15 Nov 2021 02:24:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AC0B861056
-	for <linux-xfs@archiver.kernel.org>; Mon, 15 Nov 2021 02:24:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3FFDD610A6
+	for <linux-xfs@archiver.kernel.org>; Mon, 15 Nov 2021 02:24:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229638AbhKOC1k (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 14 Nov 2021 21:27:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33444 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229453AbhKOC1d (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 14 Nov 2021 21:27:33 -0500
-Received: from smtp02.aussiebb.com.au (smtp02.aussiebb.com.au [IPv6:2403:5800:3:25::1002])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6ACFBC061746;
-        Sun, 14 Nov 2021 18:24:22 -0800 (PST)
+        id S229716AbhKOC1p (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 14 Nov 2021 21:27:45 -0500
+Received: from smtp02.aussiebb.com.au ([121.200.0.93]:35860 "EHLO
+        smtp02.aussiebb.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229544AbhKOC1g (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 14 Nov 2021 21:27:36 -0500
 Received: from localhost (localhost.localdomain [127.0.0.1])
-        by smtp02.aussiebb.com.au (Postfix) with ESMTP id 55A4F102D7A;
-        Mon, 15 Nov 2021 13:24:18 +1100 (AEDT)
+        by smtp02.aussiebb.com.au (Postfix) with ESMTP id D3C1D102D82;
+        Mon, 15 Nov 2021 13:24:29 +1100 (AEDT)
 X-Virus-Scanned: Debian amavisd-new at smtp02.aussiebb.com.au
 Received: from smtp02.aussiebb.com.au ([127.0.0.1])
         by localhost (smtp02.aussiebb.com.au [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id XtXQ1N5wrVTJ; Mon, 15 Nov 2021 13:24:18 +1100 (AEDT)
+        with ESMTP id UqFNLGMF9cvO; Mon, 15 Nov 2021 13:24:29 +1100 (AEDT)
 Received: by smtp02.aussiebb.com.au (Postfix, from userid 116)
-        id 40E3F102D70; Mon, 15 Nov 2021 13:24:18 +1100 (AEDT)
+        id B36D3102D70; Mon, 15 Nov 2021 13:24:29 +1100 (AEDT)
 Received: from mickey.themaw.net (unknown [100.72.131.210])
-        by smtp02.aussiebb.com.au (Postfix) with ESMTP id 8C850102D6D;
-        Mon, 15 Nov 2021 13:24:16 +1100 (AEDT)
-Subject: [PATCH 2 0/2] xfs: fix inline link path race
+        by smtp02.aussiebb.com.au (Postfix) with ESMTP id 3E3B6102D70;
+        Mon, 15 Nov 2021 13:24:28 +1100 (AEDT)
+Subject: [PATCH 2 2/2] xfs: make sure link path does not go away at access
 From:   Ian Kent <raven@themaw.net>
 To:     xfs <linux-xfs@vger.kernel.org>,
         "Darrick J. Wong" <djwong@kernel.org>,
@@ -40,8 +37,10 @@ Cc:     Miklos Szeredi <miklos@szeredi.hu>,
         David Howells <dhowells@redhat.com>,
         linux-fsdevel <linux-fsdevel@vger.kernel.org>,
         Kernel Mailing List <linux-kernel@vger.kernel.org>
-Date:   Mon, 15 Nov 2021 10:24:16 +0800
-Message-ID: <163694289979.229789.1176392639284347792.stgit@mickey.themaw.net>
+Date:   Mon, 15 Nov 2021 10:24:28 +0800
+Message-ID: <163694306800.229789.11812765289669370510.stgit@mickey.themaw.net>
+In-Reply-To: <163694289979.229789.1176392639284347792.stgit@mickey.themaw.net>
+References: <163694289979.229789.1176392639284347792.stgit@mickey.themaw.net>
 User-Agent: StGit/0.23
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -50,25 +49,44 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-If the inode of an inline symlink is released (dropped) while a path walk
-that is in rcu-walk mode is occuring the inode ->get_link() method can be
-NULL when VFS dereferences it causing a crash. But, since the release can
-occur at any time there's a small but finite possibility the link path
-text could be freed while it's being used.
+When following an inline symlink in rcu-walk mode it's possible to
+succeed in getting the ->get_link() method pointer but the link path
+string be deallocated while it's being used.
 
-Changes since v1:
-- don't bother trying to rcu-free the link path since there could
-  be side effects from the xfs reclaim code.
+This is becuase of the xfs inode reclaim mechanism. While rcu freeing
+the link path can prevent it from being freed during use the inode
+reclaim could assign a new value to the field at any time outside of
+the path walk and result in an invalid link path pointer being
+returned. Admittedly a very small race window but possible.
+
+The best way to mitigate this risk is to return -ECHILD to the VFS
+if the inline symlink method, ->get_link(), is called in rcu-walk mode
+so the VFS can switch to ref-walk mode or redo the walk if the inode
+has become invalid.
+
+If it's discovered that staying in rcu-walk mode gives a worth while
+performance improvement (unlikely) then the link path could be freed
+under rcu once potential side effects of the xfs inode reclaim
+sub-system have been analysed and dealt with if needed.
+
+Signed-off-by: Ian Kent <raven@themaw.net>
 ---
-
-Ian Kent (2):
-      vfs: check dentry is still valid in get_link()
-      xfs: make sure link path does not go away at access
-
-
- fs/xfs/xfs_iops.c | 3 +++
+ fs/xfs/xfs_iops.c |    3 +++
  1 file changed, 3 insertions(+)
 
---
-Ian
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index a607d6aca5c4..0a96183c5381 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -520,6 +520,9 @@ xfs_vn_get_link_inline(
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	char			*link;
+ 
++	if (!dentry)
++		return ERR_PTR(-ECHILD);
++
+ 	ASSERT(ip->i_df.if_format == XFS_DINODE_FMT_LOCAL);
+ 
+ 	/*
+
 
