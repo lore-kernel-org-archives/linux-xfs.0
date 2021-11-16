@@ -2,233 +2,323 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B769C433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 16 Nov 2021 03:01:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46B47C43217
+	for <linux-xfs@archiver.kernel.org>; Tue, 16 Nov 2021 06:42:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E0C7561A03
-	for <linux-xfs@archiver.kernel.org>; Tue, 16 Nov 2021 03:01:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 26BA4632AA
+	for <linux-xfs@archiver.kernel.org>; Tue, 16 Nov 2021 06:42:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232038AbhKPDEn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 15 Nov 2021 22:04:43 -0500
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:53273 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1349011AbhKPDE1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Nov 2021 22:04:27 -0500
-Received: from dread.disaster.area (pa49-195-103-97.pa.nsw.optusnet.com.au [49.195.103.97])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 02BB0A4879;
-        Tue, 16 Nov 2021 14:01:22 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1mmoim-009M9s-MF; Tue, 16 Nov 2021 14:01:20 +1100
-Date:   Tue, 16 Nov 2021 14:01:20 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Ian Kent <raven@themaw.net>
-Cc:     Miklos Szeredi <miklos@szeredi.hu>,
-        xfs <linux-xfs@vger.kernel.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Brian Foster <bfoster@redhat.com>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        David Howells <dhowells@redhat.com>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 2/2] xfs: make sure link path does not go away at access
-Message-ID: <20211116030120.GQ449541@dread.disaster.area>
-References: <163660195990.22525.6041281669106537689.stgit@mickey.themaw.net>
- <163660197073.22525.11235124150551283676.stgit@mickey.themaw.net>
- <20211112003249.GL449541@dread.disaster.area>
- <CAJfpegvHDM_Mtc8+ASAcmNLd6RiRM+KutjBOoycun_Oq2=+p=w@mail.gmail.com>
- <20211114231834.GM449541@dread.disaster.area>
- <CAJfpegu4BwJD1JKngsrzUs7h82cYDGpxv0R1om=WGhOOb6pZ2Q@mail.gmail.com>
- <20211115222417.GO449541@dread.disaster.area>
- <f8425d1270fe011897e7e14eaa6ba8a77c1ed077.camel@themaw.net>
+        id S234500AbhKPGky (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 16 Nov 2021 01:40:54 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44244 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234449AbhKPGkj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Nov 2021 01:40:39 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC568C061766;
+        Mon, 15 Nov 2021 22:33:07 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=S/CnjLRmgrSJADzeSbJCuEHmdmqJFE1veuDvGJX4T0w=; b=liU1ijFWSLfKahYQGg2gMlonlg
+        Bg7Rint2QOON83r70iUvpcTYk6ZZidEU2FvzFtr2hG9LYfdOceXdjlbOGv8cswIjaWg3CoUBkUgAO
+        lWQReuAm9M/kdt8Iysm3EX/HmxRblzBwnarqHkzV/mVYcpUhS70o/SQFQVOGcsik20hTGpqlkO7ob
+        Y0pToIKtTdiVxsZAnyiDY9DNHiMm41JV3k/b6Gez3tJFTqAQ09y9/wa3zZDLQFgqeKKfr+wYoR0/8
+        LrKOzfKpwPayVkSNF6m88QTZ5sg9dCybVrgm5i9SgAy40EM+SIE2v1x5CMvM4iPUyHr0BFU5rGViR
+        rRi6yiyA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1mms1d-000Qnz-6c; Tue, 16 Nov 2021 06:33:01 +0000
+Date:   Mon, 15 Nov 2021 22:33:01 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        "Darrick J . Wong " <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH v2 01/28] csky,sparc: Declare flush_dcache_folio()
+Message-ID: <YZNQnd887/TcPH7H@infradead.org>
+References: <20211108040551.1942823-1-willy@infradead.org>
+ <20211108040551.1942823-2-willy@infradead.org>
+ <YYozKaEXemjKwEar@infradead.org>
+ <YZKCx1cwBXOZcTA4@casper.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <f8425d1270fe011897e7e14eaa6ba8a77c1ed077.camel@themaw.net>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=61931f08
-        a=fP9RlOTWD4uZJjPSFnn6Ew==:117 a=fP9RlOTWD4uZJjPSFnn6Ew==:17
-        a=HsDoLlocmGUuF16g:21 a=8nJEP1OIZ-IA:10 a=vIxV3rELxO4A:10 a=7-415B0cAAAA:8
-        a=aOrxH43kqUc55-AE6OAA:9 a=wPNLvfGTeEIA:10 a=hl_xKfOxWho2XEkUDbUg:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <YZKCx1cwBXOZcTA4@casper.infradead.org>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 16, 2021 at 09:03:31AM +0800, Ian Kent wrote:
-> On Tue, 2021-11-16 at 09:24 +1100, Dave Chinner wrote:
-> > On Mon, Nov 15, 2021 at 10:21:03AM +0100, Miklos Szeredi wrote:
-> > > On Mon, 15 Nov 2021 at 00:18, Dave Chinner <david@fromorbit.com>
-> > > wrote:
-> > > > I just can't see how this race condition is XFS specific and why
-> > > > fixing it requires XFS to sepcifically handle it while we ignore
-> > > > similar theoretical issues in other filesystems...
-> > > 
-> > > It is XFS specific, because all other filesystems RCU free the in-
-> > > core
-> > > inode after eviction.
-> > > 
-> > > XFS is the only one that reuses the in-core inode object and that
-> > > is
-> > > very much different from anything the other filesystems do and what
-> > > the VFS expects.
-> > 
-> > Sure, but I was refering to the xfs_ifree issue that the patch
-> > addressed, not the re-use issue that the *first patch addressed*.
-> > 
-> > > I don't see how clearing the quick link buffer in
-> > > ext4_evict_inode()
-> > > could do anything bad.  The contents are irrelevant, the lookup
-> > > will
-> > > be restarted anyway, the important thing is that the buffer is not
-> > > freed and that it's null terminated, and both hold for the ext4,
-> > > AFAICS.
-> > 
-> > You miss the point (which, admittedly, probably wasn't clear).
-> > 
-> > I suggested just zeroing the buffer in xfs_ifree instead of zeroing
-> > it, which you seemed to suggest wouldn't work and we should move the
-> > XFS functionality to .free_inode. That's what I was refering to as
-> > "not being XFS specific" - if it is safe for ext4 to zero the link
-> > buffer in .evict while lockless lookups can still be accessing the
-> > link buffer, it is safe for XFS to do the same thing in .destroy
-> > context.
+On Mon, Nov 15, 2021 at 03:54:47PM +0000, Matthew Wilcox wrote:
+> There are three ways to implement flush_dcache_folio().  The first is
+> as a noop (this is what xtensa does, which is the only architecture
+> to define ARCH_IMPLEMENTS_FLUSH_DCACHE_FOLIO; it's also done
+> automatically by asm-generic if the architecture doesn't define
+> ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE).  The second is as a loop which calls
+> flush_dcache_page() for each page in the folio.  That's the default
+> implementation which you found in mm/util.c.  The third way, which I
+> hope architecture maintainers actually implement, is to just set the
+> needs-flush bit on the head page.  But that requires knowledge of each
+> architecture; they need to check the needs-flush bit on the head page
+> instead of the precise page.  So I've done the safe, slow thing for
+> all architectures.  The only reason that csky and sparc are "special"
+> is that they don't include asm-generic/cacheflush.h and the buildbots
+> didn't catch that before the merge window.
 > 
-> I'll need to think about that for a while.
-> 
-> Zeroing the buffer while it's being used seems like a problem to
-> me and was what this patch was trying to avoid.
+> I'm doing the exact same thing for csky and sparc that I did for
+> arc/arm/m68k/mips/nds32/nios2/parisc/sh.  Nothing more, nothing less.
 
-*nod*
+I see how this works no, but it is pretty horrible.  Why not something
+simple like the patch below?  If/when an architecture actually
+wants to override flush_dcache_folio we can find out how to best do
+it:
 
-That was my reading of the situation when I saw what ext4 was doing.
-But Miklos says that this is fine, and I don't know the code well
-enough to say he's wrong. So if it's ok for ext4, it's OK for XFS.
-If it's not OK for XFS, then it isn't OK for ext4 either, and we
-have more bugs to fix than just in XFS.
-
-> I thought all that would be needed for this to happen is for a
-> dentry drop to occur while the link walk was happening after
-> ->get_link() had returned the pointer.
-> 
-> What have I got wrong in that thinking?
-
-Nothing that I can see, but see my previous statement above.
-
-I *think* that just zeroing the buffer means the race condition
-means the link resolves as either wholly intact, partially zeroed
-with trailing zeros in the length, wholly zeroed or zero length.
-Nothing will crash, the link string is always null terminated even
-if the length is wrong, and so nothing bad should happen as a result
-of zeroing the symlink buffer when it gets evicted from the VFS
-inode cache after unlink.
-
-> > If it isn't safe for ext4 to do that, then we have a general
-> > pathwalk problem, not an XFS issue. But, as you say, it is safe
-> > to do this zeroing, so the fix to xfs_ifree() is to zero the
-> > link buffer instead of freeing it, just like ext4 does.
-> > 
-> > As a side issue, we really don't want to move what XFS does in
-> > .destroy_inode to .free_inode because that then means we need to
-> > add synchronise_rcu() calls everywhere in XFS that might need to
-> > wait on inodes being inactivated and/or reclaimed. And because
-> > inode reclaim uses lockless rcu lookups, there's substantial
-> > danger of adding rcu callback related deadlocks to XFS here.
-> > That's just not a direction we should be moving in.
-> 
-> Another reason I decided to use the ECHILD return instead is that
-> I thought synchronise_rcu() might add an unexpected delay.
-
-It depends where you put the synchronise_rcu() call. :)
-
-> Since synchronise_rcu() will only wait for processes that
-> currently have the rcu read lock do you think that could actually
-> be a problem in this code path?
-
-No, I don't think it will.  The inode recycle case in XFS inode
-lookup can trigger in two cases:
-
-1. VFS cache eviction followed by immediate lookup
-2. Inode has been unlinked and evicted, then free and reallocated by
-the filesytsem.
-
-In case #1, that's a cold cache lookup and hence delays are
-acceptible (e.g. a slightly longer delay might result in having to
-fetch the inode from disk again). Calling synchronise_rcu() in this
-case is not going to be any different from having to fetch the inode
-from disk...
-
-In case #2, there's a *lot* of CPU work being done to modify
-metadata (inode btree updates, etc), and so the operations can block
-on journal space, metadata IO, etc. Delays are acceptible, and could
-be in the order of hundreds of milliseconds if the transaction
-subsystem is bottlenecked. waiting for an RCU grace period when we
-reallocate an indoe immediately after freeing it isn't a big deal.
-
-IOWs, if synchronize_rcu() turns out to be a problem, we can
-optimise that separately - we need to correct the inode reuse
-behaviour w.r.t. VFS RCU expectations, then we can optimise the
-result if there are perf problems stemming from correct behaviour.
-
-> > I'll also point out that this would require XFS inodes to pass
-> > through *two* rcu grace periods before the memory they hold could be
-> > freed because, as I mentioned, xfs inode reclaim uses rcu protected
-> > inode lookups and so relies on inodes to be freed by rcu callback...
-> > 
-> > > I tend to agree with Brian and Ian at this point: return -ECHILD
-> > > from
-> > > xfs_vn_get_link_inline() until xfs's inode resue vs. rcu walk
-> > > implications are fully dealt with.  No way to fix this from VFS
-> > > alone.
-> > 
-> > I disagree from a fundamental process POV - this is just sweeping
-> > the issue under the table and leaving it for someone else to solve
-> > because the root cause of the inode re-use issue has not been
-> > identified. But to the person who architected the lockless XFS inode
-> > cache 15 years ago, it's pretty obvious, so let's just solve it now.
-> 
-> Sorry, I don't understand what you mean by the root cause not
-> being identified?
-
-The whole approach of "we don't know how to fix the inode reuse case
-so disable it" implies that nobody has understood where in the reuse
-case the problem lies. i.e. "inode reuse" by itself is not the root
-cause of the problem.
-
-The root cause is "allowing an inode to be reused without waiting
-for an RCU grace period to expire". This might seem pedantic, but
-"without waiting for an rcu grace period to expire" is the important
-part of the problem (i.e. the bug), not the "allowing an inode to be
-reused" bit.
-
-Once the RCU part of the problem is pointed out, the solution
-becomes obvious. As nobody had seen the obvious (wait for an RCU
-grace period when recycling an inode) it stands to reason that
-nobody really understood what the root cause of the inode reuse
-problem.
-
-> > With the xfs_ifree() problem solved by zeroing rather than freeing,
-> > then the only other problem is inode reuse *within an rcu grace
-> > period*. Immediate inode reuse tends to be rare, (we can actually
-> > trace occurrences to validate this assertion), and implementation
-> > wise reuse is isolated to a single function: xfs_iget_recycle().
-> > 
-> > xfs_iget_recycle() drops the rcu_read_lock() inode lookup context
-> > that found the inode marks it as being reclaimed (preventing other
-> > lookups from finding it), then re-initialises the inode. This is
-> > what makes .get_link change in the middle of pathwalk - we're
-> > reinitialising the inode without waiting for the RCU grace period to
-> > expire.
-> 
-> Ok, good to know that, there's a lot of icache code to look
-> through, ;)
-
-My point precisely. :)
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/arch/arc/include/asm/cacheflush.h b/arch/arc/include/asm/cacheflush.h
+index e8c2c7469e107..e201b4b1655af 100644
+--- a/arch/arc/include/asm/cacheflush.h
++++ b/arch/arc/include/asm/cacheflush.h
+@@ -36,7 +36,6 @@ void __flush_dcache_page(phys_addr_t paddr, unsigned long vaddr);
+ #define ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE 1
+ 
+ void flush_dcache_page(struct page *page);
+-void flush_dcache_folio(struct folio *folio);
+ 
+ void dma_cache_wback_inv(phys_addr_t start, unsigned long sz);
+ void dma_cache_inv(phys_addr_t start, unsigned long sz);
+diff --git a/arch/arm/include/asm/cacheflush.h b/arch/arm/include/asm/cacheflush.h
+index e68fb879e4f9d..5e56288e343bb 100644
+--- a/arch/arm/include/asm/cacheflush.h
++++ b/arch/arm/include/asm/cacheflush.h
+@@ -290,7 +290,6 @@ extern void flush_cache_page(struct vm_area_struct *vma, unsigned long user_addr
+  */
+ #define ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE 1
+ extern void flush_dcache_page(struct page *);
+-void flush_dcache_folio(struct folio *folio);
+ 
+ #define ARCH_IMPLEMENTS_FLUSH_KERNEL_VMAP_RANGE 1
+ static inline void flush_kernel_vmap_range(void *addr, int size)
+diff --git a/arch/csky/abiv1/inc/abi/cacheflush.h b/arch/csky/abiv1/inc/abi/cacheflush.h
+index 432aef1f1dc23..ed62e2066ba76 100644
+--- a/arch/csky/abiv1/inc/abi/cacheflush.h
++++ b/arch/csky/abiv1/inc/abi/cacheflush.h
+@@ -9,7 +9,6 @@
+ 
+ #define ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE 1
+ extern void flush_dcache_page(struct page *);
+-void flush_dcache_folio(struct folio *folio);
+ 
+ #define flush_cache_mm(mm)			dcache_wbinv_all()
+ #define flush_cache_page(vma, page, pfn)	cache_wbinv_all()
+diff --git a/arch/csky/abiv2/inc/abi/cacheflush.h b/arch/csky/abiv2/inc/abi/cacheflush.h
+index 7e8bef60958c6..a565e00c3f70b 100644
+--- a/arch/csky/abiv2/inc/abi/cacheflush.h
++++ b/arch/csky/abiv2/inc/abi/cacheflush.h
+@@ -25,8 +25,6 @@ static inline void flush_dcache_page(struct page *page)
+ 		clear_bit(PG_dcache_clean, &page->flags);
+ }
+ 
+-void flush_dcache_folio(struct folio *folio);
+-
+ #define flush_dcache_mmap_lock(mapping)		do { } while (0)
+ #define flush_dcache_mmap_unlock(mapping)	do { } while (0)
+ #define flush_icache_page(vma, page)		do { } while (0)
+diff --git a/arch/m68k/include/asm/cacheflush_mm.h b/arch/m68k/include/asm/cacheflush_mm.h
+index 8ab46625ddd32..1ac55e7b47f01 100644
+--- a/arch/m68k/include/asm/cacheflush_mm.h
++++ b/arch/m68k/include/asm/cacheflush_mm.h
+@@ -250,7 +250,6 @@ static inline void __flush_page_to_ram(void *vaddr)
+ 
+ #define ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE 1
+ #define flush_dcache_page(page)		__flush_page_to_ram(page_address(page))
+-void flush_dcache_folio(struct folio *folio);
+ #define flush_dcache_mmap_lock(mapping)		do { } while (0)
+ #define flush_dcache_mmap_unlock(mapping)	do { } while (0)
+ #define flush_icache_page(vma, page)	__flush_page_to_ram(page_address(page))
+diff --git a/arch/mips/include/asm/cacheflush.h b/arch/mips/include/asm/cacheflush.h
+index f207388541d50..b3dc9c589442a 100644
+--- a/arch/mips/include/asm/cacheflush.h
++++ b/arch/mips/include/asm/cacheflush.h
+@@ -61,8 +61,6 @@ static inline void flush_dcache_page(struct page *page)
+ 		SetPageDcacheDirty(page);
+ }
+ 
+-void flush_dcache_folio(struct folio *folio);
+-
+ #define flush_dcache_mmap_lock(mapping)		do { } while (0)
+ #define flush_dcache_mmap_unlock(mapping)	do { } while (0)
+ 
+diff --git a/arch/nds32/include/asm/cacheflush.h b/arch/nds32/include/asm/cacheflush.h
+index 3fc0bb7d6487c..c2a222ebfa2af 100644
+--- a/arch/nds32/include/asm/cacheflush.h
++++ b/arch/nds32/include/asm/cacheflush.h
+@@ -27,7 +27,6 @@ void flush_cache_vunmap(unsigned long start, unsigned long end);
+ 
+ #define ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE 1
+ void flush_dcache_page(struct page *page);
+-void flush_dcache_folio(struct folio *folio);
+ void copy_to_user_page(struct vm_area_struct *vma, struct page *page,
+ 		       unsigned long vaddr, void *dst, void *src, int len);
+ void copy_from_user_page(struct vm_area_struct *vma, struct page *page,
+diff --git a/arch/nios2/include/asm/cacheflush.h b/arch/nios2/include/asm/cacheflush.h
+index 1999561b22aa5..d0b71dd712872 100644
+--- a/arch/nios2/include/asm/cacheflush.h
++++ b/arch/nios2/include/asm/cacheflush.h
+@@ -29,7 +29,6 @@ extern void flush_cache_page(struct vm_area_struct *vma, unsigned long vmaddr,
+ 	unsigned long pfn);
+ #define ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE 1
+ void flush_dcache_page(struct page *page);
+-void flush_dcache_folio(struct folio *folio);
+ 
+ extern void flush_icache_range(unsigned long start, unsigned long end);
+ extern void flush_icache_page(struct vm_area_struct *vma, struct page *page);
+diff --git a/arch/parisc/include/asm/cacheflush.h b/arch/parisc/include/asm/cacheflush.h
+index da0cd4b3a28f2..859b8a34adcfb 100644
+--- a/arch/parisc/include/asm/cacheflush.h
++++ b/arch/parisc/include/asm/cacheflush.h
+@@ -50,7 +50,6 @@ void invalidate_kernel_vmap_range(void *vaddr, int size);
+ 
+ #define ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE 1
+ void flush_dcache_page(struct page *page);
+-void flush_dcache_folio(struct folio *folio);
+ 
+ #define flush_dcache_mmap_lock(mapping)		xa_lock_irq(&mapping->i_pages)
+ #define flush_dcache_mmap_unlock(mapping)	xa_unlock_irq(&mapping->i_pages)
+diff --git a/arch/sh/include/asm/cacheflush.h b/arch/sh/include/asm/cacheflush.h
+index c7a97f32432fb..481a664287e2e 100644
+--- a/arch/sh/include/asm/cacheflush.h
++++ b/arch/sh/include/asm/cacheflush.h
+@@ -43,7 +43,6 @@ extern void flush_cache_range(struct vm_area_struct *vma,
+ 				 unsigned long start, unsigned long end);
+ #define ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE 1
+ void flush_dcache_page(struct page *page);
+-void flush_dcache_folio(struct folio *folio);
+ extern void flush_icache_range(unsigned long start, unsigned long end);
+ #define flush_icache_user_range flush_icache_range
+ extern void flush_icache_page(struct vm_area_struct *vma,
+diff --git a/arch/sparc/include/asm/cacheflush_32.h b/arch/sparc/include/asm/cacheflush_32.h
+index 9991c18f4980c..41c6d734a4741 100644
+--- a/arch/sparc/include/asm/cacheflush_32.h
++++ b/arch/sparc/include/asm/cacheflush_32.h
+@@ -37,7 +37,6 @@
+ 
+ void sparc_flush_page_to_ram(struct page *page);
+ 
+-void flush_dcache_folio(struct folio *folio);
+ #define ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE 1
+ #define flush_dcache_page(page)			sparc_flush_page_to_ram(page)
+ #define flush_dcache_mmap_lock(mapping)		do { } while (0)
+diff --git a/arch/sparc/include/asm/cacheflush_64.h b/arch/sparc/include/asm/cacheflush_64.h
+index 9ab59a73c28b1..b9341836597ec 100644
+--- a/arch/sparc/include/asm/cacheflush_64.h
++++ b/arch/sparc/include/asm/cacheflush_64.h
+@@ -47,7 +47,6 @@ void flush_dcache_page_all(struct mm_struct *mm, struct page *page);
+ void __flush_dcache_range(unsigned long start, unsigned long end);
+ #define ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE 1
+ void flush_dcache_page(struct page *page);
+-void flush_dcache_folio(struct folio *folio);
+ 
+ #define flush_icache_page(vma, pg)	do { } while(0)
+ 
+diff --git a/arch/xtensa/include/asm/cacheflush.h b/arch/xtensa/include/asm/cacheflush.h
+index a8a041609c5d0..7b4359312c257 100644
+--- a/arch/xtensa/include/asm/cacheflush.h
++++ b/arch/xtensa/include/asm/cacheflush.h
+@@ -121,7 +121,6 @@ void flush_cache_page(struct vm_area_struct*,
+ 
+ #define ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE 1
+ void flush_dcache_page(struct page *);
+-void flush_dcache_folio(struct folio *);
+ 
+ void local_flush_cache_range(struct vm_area_struct *vma,
+ 		unsigned long start, unsigned long end);
+@@ -138,9 +137,7 @@ void local_flush_cache_page(struct vm_area_struct *vma,
+ #define flush_cache_vunmap(start,end)			do { } while (0)
+ 
+ #define ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE 0
+-#define ARCH_IMPLEMENTS_FLUSH_DCACHE_FOLIO
+ #define flush_dcache_page(page)				do { } while (0)
+-static inline void flush_dcache_folio(struct folio *folio) { }
+ 
+ #define flush_icache_range local_flush_icache_range
+ #define flush_cache_page(vma, addr, pfn)		do { } while (0)
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 265c7f8e71342..218df77641802 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -4,6 +4,7 @@
+  * Copyright (C) 2016-2019 Christoph Hellwig.
+  */
+ #include <linux/module.h>
++#include <linux/cacheflush.h>
+ #include <linux/compiler.h>
+ #include <linux/fs.h>
+ #include <linux/iomap.h>
+@@ -658,6 +659,7 @@ static size_t __iomap_write_end(struct inode *inode, loff_t pos, size_t len,
+ 		size_t copied, struct folio *folio)
+ {
+ 	struct iomap_page *iop = to_iomap_page(folio);
++
+ 	flush_dcache_folio(folio);
+ 
+ 	/*
+diff --git a/include/asm-generic/cacheflush.h b/include/asm-generic/cacheflush.h
+index fedc0dfa4877c..eeaea7bd97bbf 100644
+--- a/include/asm-generic/cacheflush.h
++++ b/include/asm-generic/cacheflush.h
+@@ -49,14 +49,7 @@ static inline void flush_cache_page(struct vm_area_struct *vma,
+ static inline void flush_dcache_page(struct page *page)
+ {
+ }
+-
+-static inline void flush_dcache_folio(struct folio *folio) { }
+ #define ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE 0
+-#define ARCH_IMPLEMENTS_FLUSH_DCACHE_FOLIO
+-#endif
+-
+-#ifndef ARCH_IMPLEMENTS_FLUSH_DCACHE_FOLIO
+-void flush_dcache_folio(struct folio *folio);
+ #endif
+ 
+ #ifndef flush_dcache_mmap_lock
+diff --git a/include/linux/cacheflush.h b/include/linux/cacheflush.h
+new file mode 100644
+index 0000000000000..c28359bac8aa5
+--- /dev/null
++++ b/include/linux/cacheflush.h
+@@ -0,0 +1,15 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef _LINUX_CACHEFLUSH_H
++#define _LINUX_CACHEFLUSH_H
++
++#include <asm/cacheflush.h>
++
++#if ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE
++void flush_dcache_folio(struct folio *folio);
++#else
++static inline void flush_dcache_folio(struct folio *folio)
++{
++}
++#endif /* ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE */
++
++#endif /* _LINUX_CACHEFLUSH_H */
+diff --git a/mm/util.c b/mm/util.c
+index e58151a612555..61ffa71adb644 100644
+--- a/mm/util.c
++++ b/mm/util.c
+@@ -1090,7 +1090,7 @@ void page_offline_end(void)
+ }
+ EXPORT_SYMBOL(page_offline_end);
+ 
+-#ifndef ARCH_IMPLEMENTS_FLUSH_DCACHE_FOLIO
++#if ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE
+ void flush_dcache_folio(struct folio *folio)
+ {
+ 	long i, nr = folio_nr_pages(folio);
+@@ -1098,5 +1098,4 @@ void flush_dcache_folio(struct folio *folio)
+ 	for (i = 0; i < nr; i++)
+ 		flush_dcache_page(folio_page(folio, i));
+ }
+-EXPORT_SYMBOL(flush_dcache_folio);
+ #endif
