@@ -2,2015 +2,317 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19E9FC433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 16 Nov 2021 00:32:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31D16C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 16 Nov 2021 15:59:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DC1C2619E8
-	for <linux-xfs@archiver.kernel.org>; Tue, 16 Nov 2021 00:32:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1A84161B31
+	for <linux-xfs@archiver.kernel.org>; Tue, 16 Nov 2021 15:59:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349475AbhKPAf3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 15 Nov 2021 19:35:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36130 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344028AbhKOTXI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Nov 2021 14:23:08 -0500
-Received: from buxtehude.debian.org (buxtehude.debian.org [IPv6:2607:f8f0:614:1::1274:39])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 987FAC049927
-        for <linux-xfs@vger.kernel.org>; Mon, 15 Nov 2021 10:27:11 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=bugs.debian.org; s=smtpauto.buxtehude; h=Content-Type:Date:Reply-To:
-        References:Message-ID:Subject:To:From:MIME-Version:Cc:
-        Content-Transfer-Encoding:Content-ID:Content-Description:In-Reply-To;
-        bh=hKL6weopgZdVyzrjgJxoXVYhLDyj/XN7brKWMww/0wk=; b=EFisGz5/NBX9GKF8aziMoLF/ll
-        UhozzUGri0hTCe7tLhc+AXr0xzHwzB2BItLXtiVudlGYqtqSx1uqb84rMkIGsH7V+oDprPHvt7KFK
-        ieu0zFbQ/7YIJf5gdKXGJmH7KPuCFmSe2a3/usybGo22XWYmiD8qy52irhlhzviWac900kdHRqwHB
-        o94rGkG9uoXLA0+o2lHOKxww+WWn73Ars9MGFUP9EU6u/fCYCE1+Oqg9GHAh+Kc3tae44drIyWSyv
-        fKskUaub1Hr5zfry+XOOJIKTOk82YJ1NcFSUaknK/UyKWiNnhS48nX19h6/rDY0pOG2X8pSQnGhIO
-        lmMXwhgw==;
-Received: from debbugs by buxtehude.debian.org with local (Exim 4.92)
-        (envelope-from <debbugs@buxtehude.debian.org>)
-        id 1mmghC-0004Dn-9L; Mon, 15 Nov 2021 18:27:10 +0000
+        id S238688AbhKPQCa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 16 Nov 2021 11:02:30 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:32937 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S238705AbhKPQCJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Nov 2021 11:02:09 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1637078350;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=rJKh/tDxbJLOM1jovsZTs7uOGsWHNg53u3z4dP3ZmSY=;
+        b=QaJOs5qlbnrclYNX4+iA6aC7Qy3RG3IkxCDzX9Ihe3ar4PudVpRGM5lixk/USlc6d/spio
+        cWcbzdbEM5BIiofxBdQ2OtQ3RFCoWvUDY+2vLmpeVQpguxK3Ha7VX2jwpZ1hB/ouLUtAKr
+        Vb+eAWcRF4quJxSERA+TV6d6YyC4w+Y=
+Received: from mail-qv1-f72.google.com (mail-qv1-f72.google.com
+ [209.85.219.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-21-eauVOVbAM1S6S9jPNi02tQ-1; Tue, 16 Nov 2021 10:59:09 -0500
+X-MC-Unique: eauVOVbAM1S6S9jPNi02tQ-1
+Received: by mail-qv1-f72.google.com with SMTP id kk1-20020a056214508100b003a9d1b987caso19575243qvb.4
+        for <linux-xfs@vger.kernel.org>; Tue, 16 Nov 2021 07:59:09 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to;
+        bh=rJKh/tDxbJLOM1jovsZTs7uOGsWHNg53u3z4dP3ZmSY=;
+        b=kbf+YIxRx6GmF8nmXl3fSEcX3QDTD3UU5voOMFYWibFfCR25jL38jIIMrP95Gsa9Nz
+         THMX2vgQTk2atHRMnfzagm0FCyyywwT4bCuqmpfMz3WxlJN8JkDCr3hvOfC1M3+sYSuc
+         DX2BLHOkqyJLS28Dt5s38Adz7oT3/4+t23TfhZzCov0wFkaV4kjmFI+7Ypi7T1HEr715
+         zUIn9+233xuHpg+QgnxaaxY/V3E7b/RYkz1LNSKwz8/UrRN4QpBMsmS0L/lfPZn2PMP0
+         C7u2K0677oONgDFaGoyULf166yJHSvuohJwG60wcygrApXTuyDmVWNmdmFaOBUeOS3ol
+         6G1Q==
+X-Gm-Message-State: AOAM5314sik1H5u3VxdJi94CEUwLLfAv1XmprNDY+bgwWyxyQ9vdvf6p
+        +VOY0czS8K+bK0gF8hK9APIljMVvF9LasQwYWLeTx4y9slMZFP0dRBnlyktO22qVLdRLgBz57MP
+        DGelGVh25r/uBnHFjSUI4
+X-Received: by 2002:ad4:5e87:: with SMTP id jl7mr46431007qvb.19.1637078348720;
+        Tue, 16 Nov 2021 07:59:08 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJxRfD9F8oUTPVVfk/IThpumP3GxsUzPnxyw+7w4Jb+3MfOWaFnro2Dh0MhQ3xrJipX2rYeNoQ==
+X-Received: by 2002:ad4:5e87:: with SMTP id jl7mr46430981qvb.19.1637078348396;
+        Tue, 16 Nov 2021 07:59:08 -0800 (PST)
+Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
+        by smtp.gmail.com with ESMTPSA id bl28sm9159619qkb.44.2021.11.16.07.59.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 16 Nov 2021 07:59:07 -0800 (PST)
+Date:   Tue, 16 Nov 2021 10:59:05 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Ian Kent <raven@themaw.net>, Miklos Szeredi <miklos@szeredi.hu>,
+        xfs <linux-xfs@vger.kernel.org>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        David Howells <dhowells@redhat.com>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 2/2] xfs: make sure link path does not go away at access
+Message-ID: <YZPVSTDIWroHNvFS@bfoster>
+References: <163660195990.22525.6041281669106537689.stgit@mickey.themaw.net>
+ <163660197073.22525.11235124150551283676.stgit@mickey.themaw.net>
+ <20211112003249.GL449541@dread.disaster.area>
+ <CAJfpegvHDM_Mtc8+ASAcmNLd6RiRM+KutjBOoycun_Oq2=+p=w@mail.gmail.com>
+ <20211114231834.GM449541@dread.disaster.area>
+ <CAJfpegu4BwJD1JKngsrzUs7h82cYDGpxv0R1om=WGhOOb6pZ2Q@mail.gmail.com>
+ <20211115222417.GO449541@dread.disaster.area>
+ <f8425d1270fe011897e7e14eaa6ba8a77c1ed077.camel@themaw.net>
+ <20211116030120.GQ449541@dread.disaster.area>
 MIME-Version: 1.0
-X-Mailer: MIME-tools 5.509 (Entity 5.509)
-X-Loop: owner@bugs.debian.org
-From:   "Debian Bug Tracking System" <owner@bugs.debian.org>
-To:     Bastian Germann <bage@debian.org>
-Subject: Bug#794158: marked as done (xfsprogs FTCBFS: fails to pass --host
- to configure)
-Message-ID: <handler.794158.D794158.163700072115895.ackdone@bugs.debian.org>
-References: <E1mmgfP-0004r1-ND@fasolo.debian.org>
- <20150730215021.GA32262@alf.mars>
-X-Debian-PR-Message: closed 794158
-X-Debian-PR-Package: src:xfsprogs
-X-Debian-PR-Keywords: patch
-X-Debian-PR-Source: xfsprogs
-Reply-To: 794158@bugs.debian.org
-Date:   Mon, 15 Nov 2021 18:27:10 +0000
-Content-Type: multipart/mixed; boundary="----------=_1637000830-16224-0"
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20211116030120.GQ449541@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This is a multi-part message in MIME format...
+On Tue, Nov 16, 2021 at 02:01:20PM +1100, Dave Chinner wrote:
+> On Tue, Nov 16, 2021 at 09:03:31AM +0800, Ian Kent wrote:
+> > On Tue, 2021-11-16 at 09:24 +1100, Dave Chinner wrote:
+> > > On Mon, Nov 15, 2021 at 10:21:03AM +0100, Miklos Szeredi wrote:
+> > > > On Mon, 15 Nov 2021 at 00:18, Dave Chinner <david@fromorbit.com>
+> > > > wrote:
+> > > > > I just can't see how this race condition is XFS specific and why
+> > > > > fixing it requires XFS to sepcifically handle it while we ignore
+> > > > > similar theoretical issues in other filesystems...
+> > > > 
+> > > > It is XFS specific, because all other filesystems RCU free the in-
+> > > > core
+> > > > inode after eviction.
+> > > > 
+> > > > XFS is the only one that reuses the in-core inode object and that
+> > > > is
+> > > > very much different from anything the other filesystems do and what
+> > > > the VFS expects.
+> > > 
+> > > Sure, but I was refering to the xfs_ifree issue that the patch
+> > > addressed, not the re-use issue that the *first patch addressed*.
+> > > 
+> > > > I don't see how clearing the quick link buffer in
+> > > > ext4_evict_inode()
+> > > > could do anything bad.  The contents are irrelevant, the lookup
+> > > > will
+> > > > be restarted anyway, the important thing is that the buffer is not
+> > > > freed and that it's null terminated, and both hold for the ext4,
+> > > > AFAICS.
+> > > 
+> > > You miss the point (which, admittedly, probably wasn't clear).
+> > > 
+> > > I suggested just zeroing the buffer in xfs_ifree instead of zeroing
+> > > it, which you seemed to suggest wouldn't work and we should move the
+> > > XFS functionality to .free_inode. That's what I was refering to as
+> > > "not being XFS specific" - if it is safe for ext4 to zero the link
+> > > buffer in .evict while lockless lookups can still be accessing the
+> > > link buffer, it is safe for XFS to do the same thing in .destroy
+> > > context.
+> > 
+> > I'll need to think about that for a while.
+> > 
+> > Zeroing the buffer while it's being used seems like a problem to
+> > me and was what this patch was trying to avoid.
+> 
+> *nod*
+> 
+> That was my reading of the situation when I saw what ext4 was doing.
+> But Miklos says that this is fine, and I don't know the code well
+> enough to say he's wrong. So if it's ok for ext4, it's OK for XFS.
+> If it's not OK for XFS, then it isn't OK for ext4 either, and we
+> have more bugs to fix than just in XFS.
+> 
+> > I thought all that would be needed for this to happen is for a
+> > dentry drop to occur while the link walk was happening after
+> > ->get_link() had returned the pointer.
+> > 
+> > What have I got wrong in that thinking?
+> 
+> Nothing that I can see, but see my previous statement above.
+> 
+> I *think* that just zeroing the buffer means the race condition
+> means the link resolves as either wholly intact, partially zeroed
+> with trailing zeros in the length, wholly zeroed or zero length.
+> Nothing will crash, the link string is always null terminated even
+> if the length is wrong, and so nothing bad should happen as a result
+> of zeroing the symlink buffer when it gets evicted from the VFS
+> inode cache after unlink.
+> 
+> > > If it isn't safe for ext4 to do that, then we have a general
+> > > pathwalk problem, not an XFS issue. But, as you say, it is safe
+> > > to do this zeroing, so the fix to xfs_ifree() is to zero the
+> > > link buffer instead of freeing it, just like ext4 does.
+> > > 
+> > > As a side issue, we really don't want to move what XFS does in
+> > > .destroy_inode to .free_inode because that then means we need to
+> > > add synchronise_rcu() calls everywhere in XFS that might need to
+> > > wait on inodes being inactivated and/or reclaimed. And because
+> > > inode reclaim uses lockless rcu lookups, there's substantial
+> > > danger of adding rcu callback related deadlocks to XFS here.
+> > > That's just not a direction we should be moving in.
+> > 
+> > Another reason I decided to use the ECHILD return instead is that
+> > I thought synchronise_rcu() might add an unexpected delay.
+> 
+> It depends where you put the synchronise_rcu() call. :)
+> 
+> > Since synchronise_rcu() will only wait for processes that
+> > currently have the rcu read lock do you think that could actually
+> > be a problem in this code path?
+> 
+> No, I don't think it will.  The inode recycle case in XFS inode
+> lookup can trigger in two cases:
+> 
+> 1. VFS cache eviction followed by immediate lookup
+> 2. Inode has been unlinked and evicted, then free and reallocated by
+> the filesytsem.
+> 
+> In case #1, that's a cold cache lookup and hence delays are
+> acceptible (e.g. a slightly longer delay might result in having to
+> fetch the inode from disk again). Calling synchronise_rcu() in this
+> case is not going to be any different from having to fetch the inode
+> from disk...
+> 
+> In case #2, there's a *lot* of CPU work being done to modify
+> metadata (inode btree updates, etc), and so the operations can block
+> on journal space, metadata IO, etc. Delays are acceptible, and could
+> be in the order of hundreds of milliseconds if the transaction
+> subsystem is bottlenecked. waiting for an RCU grace period when we
+> reallocate an indoe immediately after freeing it isn't a big deal.
+> 
+> IOWs, if synchronize_rcu() turns out to be a problem, we can
+> optimise that separately - we need to correct the inode reuse
+> behaviour w.r.t. VFS RCU expectations, then we can optimise the
+> result if there are perf problems stemming from correct behaviour.
+> 
+
+FWIW, with a fairly crude test on a high cpu count system, it's not that
+difficult to reproduce an observable degradation in inode allocation
+rate with a synchronous grace period in the inode reuse path, caused
+purely by a lookup heavy workload on a completely separate filesystem.
+The following is a 5m snapshot of the iget stats from a filesystem doing
+allocs/frees with an external/heavy lookup workload (which not included
+in the stats), with and without a sync grace period wait in the reuse
+path:
+
+baseline:	ig 1337026 1331541 4 5485 0 5541 1337026
+sync_rcu_test:	ig 2955 2588 0 367 0 383 2955
+
+I think this is kind of the nature of RCU and why I'm not sure it's a
+great idea to rely on update side synchronization in a codepath that
+might want to scale/perform in certain workloads. I'm not totally sure
+if this will be a problem for real users running real workloads or not,
+or if this can be easily mitigated, whether it's all rcu or a cascading
+effect, etc. This is just a quick test so that all probably requires
+more test and analysis to discern.
+
+> > > I'll also point out that this would require XFS inodes to pass
+> > > through *two* rcu grace periods before the memory they hold could be
+> > > freed because, as I mentioned, xfs inode reclaim uses rcu protected
+> > > inode lookups and so relies on inodes to be freed by rcu callback...
+> > > 
+> > > > I tend to agree with Brian and Ian at this point: return -ECHILD
+> > > > from
+> > > > xfs_vn_get_link_inline() until xfs's inode resue vs. rcu walk
+> > > > implications are fully dealt with.  No way to fix this from VFS
+> > > > alone.
+> > > 
+> > > I disagree from a fundamental process POV - this is just sweeping
+> > > the issue under the table and leaving it for someone else to solve
+> > > because the root cause of the inode re-use issue has not been
+> > > identified. But to the person who architected the lockless XFS inode
+> > > cache 15 years ago, it's pretty obvious, so let's just solve it now.
+> > 
+> > Sorry, I don't understand what you mean by the root cause not
+> > being identified?
+> 
+> The whole approach of "we don't know how to fix the inode reuse case
+> so disable it" implies that nobody has understood where in the reuse
+> case the problem lies. i.e. "inode reuse" by itself is not the root
+> cause of the problem.
+> 
+
+I don't think anybody suggested to disable inode reuse. My suggestion
+was to disable rcu walk mode on symlinks as an incremental step because
+the change to enable it appeared to be an undocumented side effect of an
+unrelated optimization. There was no real mention of it in the commit
+log for the get_link_inline() variant, no analysis that explains if or
+why it's safe to enable, and it was historical behavior since this
+change in get_link() API to expose rcu walk was introduced. It seems
+fairly reasonable to me to put that logic back in place first (while
+also providing a predictable/stable fix) before we get into the weeds of
+doing the right things with rcu to re-enable it (whether that be
+synchronize_rcu() or something else)...
+
+> The root cause is "allowing an inode to be reused without waiting
+> for an RCU grace period to expire". This might seem pedantic, but
+> "without waiting for an rcu grace period to expire" is the important
+> part of the problem (i.e. the bug), not the "allowing an inode to be
+> reused" bit.
+> 
+> Once the RCU part of the problem is pointed out, the solution
+> becomes obvious. As nobody had seen the obvious (wait for an RCU
+> grace period when recycling an inode) it stands to reason that
+> nobody really understood what the root cause of the inode reuse
+> problem.
+> 
+
+The synchronize_rcu() approach was one of the first options discussed in
+the bug report once a reproducer was available. It had been tested as a
+potential option for the broader problem (should the vfs change turn out
+problematic) before these patches landed on the list. It's a reasonable
+option and reasonable to prefer it over the most recent patch, but as
+noted above I think there are other factors at play beyond having a pure
+enough understanding of the root cause or not.
+
+AIUI, this is not currently a reproducible problem even before patch 1,
+which reduces the race window even further. Given that and the nak on
+the current patch (the justification for which I don't really
+understand), I'm starting to agree with Ian's earlier statement that
+perhaps it is best to separate this one so we can (hopefully) move patch
+1 along on its own merit..
+
+Brian
+
+> > > With the xfs_ifree() problem solved by zeroing rather than freeing,
+> > > then the only other problem is inode reuse *within an rcu grace
+> > > period*. Immediate inode reuse tends to be rare, (we can actually
+> > > trace occurrences to validate this assertion), and implementation
+> > > wise reuse is isolated to a single function: xfs_iget_recycle().
+> > > 
+> > > xfs_iget_recycle() drops the rcu_read_lock() inode lookup context
+> > > that found the inode marks it as being reclaimed (preventing other
+> > > lookups from finding it), then re-initialises the inode. This is
+> > > what makes .get_link change in the middle of pathwalk - we're
+> > > reinitialising the inode without waiting for the RCU grace period to
+> > > expire.
+> > 
+> > Ok, good to know that, there's a lot of icache code to look
+> > through, ;)
+> 
+> My point precisely. :)
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
 
-------------=_1637000830-16224-0
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="utf-8"
-
-Your message dated Mon, 15 Nov 2021 18:25:19 +0000
-with message-id <E1mmgfP-0004r1-ND@fasolo.debian.org>
-and subject line Bug#794158: fixed in xfsprogs 5.14.0-rc1-1
-has caused the Debian Bug report #794158,
-regarding xfsprogs FTCBFS: fails to pass --host to configure
-to be marked as done.
-
-This means that you claim that the problem has been dealt with.
-If this is not the case it is now your responsibility to reopen the
-Bug report if necessary, and/or fix the problem forthwith.
-
-(NB: If you are a system administrator and have no idea what this
-message is talking about, this may indicate a serious mail system
-misconfiguration somewhere. Please contact owner@bugs.debian.org
-immediately.)
-
-
---=20
-794158: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D794158
-Debian Bug Tracking System
-Contact owner@bugs.debian.org with problems
-
-------------=_1637000830-16224-0
-Content-Type: message/rfc822
-Content-Disposition: inline
-Content-Transfer-Encoding: 7bit
-
-Received: (at submit) by bugs.debian.org; 30 Jul 2015 21:50:41 +0000
-X-Spam-Checker-Version: SpamAssassin 3.4.0-bugs.debian.org_2005_01_02
-	(2014-02-07) on buxtehude.debian.org
-X-Spam-Level: 
-X-Spam-Status: No, score=-7.7 required=4.0 tests=BAYES_00,DIGITS_LETTERS,
-	FOURLA,FVGT_m_MULTI_ODD,HAS_PACKAGE,MURPHY_DRUGS_REL8,RCVD_IN_DNSWL_LOW,
-	WORD_WITHOUT_VOWELS autolearn=ham autolearn_force=no
-	version=3.4.0-bugs.debian.org_2005_01_02
-X-Spam-Bayes: score:0.0000 Tokens: new, 68; hammy, 150; neutral, 1805; spammy,
-	0. spammytokens: hammytokens:0.000-+--H*UA:2014-03-12,
-	0.000-+--H*u:2014-03-12, 0.000-+--H*UA:1.5.23, 0.000-+--H*u:1.5.23,
-	0.000-+--dpkgsource
-Return-path: <helmut@subdivi.de>
-Received: from isilmar-3.linta.de ([188.40.101.200] helo=linta.de)
-	by buxtehude.debian.org with esmtps (TLS1.2:DHE_RSA_AES_256_CBC_SHA1:256)
-	(Exim 4.84)
-	(envelope-from <helmut@subdivi.de>)
-	id 1ZKviq-0006ti-8s
-	for submit@bugs.debian.org; Thu, 30 Jul 2015 21:50:41 +0000
-Received: (qmail 31121 invoked from network); 30 Jul 2015 21:50:37 -0000
-Received: from localhost (HELO isilmar-3.linta.de) (127.0.0.1)
-  by localhost with SMTP; 30 Jul 2015 21:50:37 -0000
-Date: Thu, 30 Jul 2015 23:50:22 +0200
-From: Helmut Grohne <helmut@subdivi.de>
-To: Debian Bug Tracking System <submit@bugs.debian.org>
-Subject: xfsprogs FTCBFS: fails to pass --host to configure
-Message-ID: <20150730215021.GA32262@alf.mars>
-Mail-Followup-To: Helmut Grohne <helmut@subdivi.de>,
-	Debian Bug Tracking System <submit@bugs.debian.org>
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="pWyiEgJYm5f9v55/"
-Content-Disposition: inline
-X-Reportbug-Version: 6.6.3
-User-Agent: Mutt/1.5.23 (2014-03-12)
-Delivered-To: submit@bugs.debian.org
-
-
---pWyiEgJYm5f9v55/
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-Source: xfsprogs
-Version: 3.2.3
-Tags: patch
-User: helmutg@debian.org
-Usertags: rebootstrap
-
-xfsprogs FTCBFS, because it fails to pass --host to configure. Thus it
-selects the build architecture as host architecture and fails configure,
-because the requested libraries are only installed for the host
-architecture. Once adding the switch it fails, because it runs host
-architecture executables, which is not possible during cross
-compilation. Some programs are only used during build and need to be
-compiled with the build architecture compiler.
-
-I am attaching a failing build log and a patch that makes the cross
-build succeed
-
-Helmut
-
---pWyiEgJYm5f9v55/
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: attachment; filename="xfsprogs_3.2.3_arm64.build"
-Content-Transfer-Encoding: quoted-printable
-
-sbuild (Debian sbuild) 0.65.2 (24 Mar 2015) on misc-debomatic3
-
-=E2=95=94=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=
-=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=
-=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=
-=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=
-=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=
-=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=
-=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=
-=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=
-=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=
-=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=97
-=E2=95=91 xfsprogs 3.2.3 (CROSS host=3Darm64/build=3Damd64)              28=
- Jul 2015 03:07 =E2=95=91
-=E2=95=9A=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=
-=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=
-=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=
-=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=
-=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=
-=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=
-=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=
-=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=
-=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=90=
-=E2=95=90=E2=95=90=E2=95=90=E2=95=90=E2=95=9D
-
-Package: xfsprogs
-Version: 3.2.3
-Source Version: 3.2.3
-Distribution: unstable
-Machine Architecture: amd64
-Host Architecture: arm64
-Build Architecture: amd64
-
-I: NOTICE: Log filtering will replace 'build/xfsprogs-uNA7Yd/xfsprogs-3.2.3=
-' with '=C2=ABPKGBUILDDIR=C2=BB'
-I: NOTICE: Log filtering will replace 'build/xfsprogs-uNA7Yd' with '=C2=ABB=
-UILDDIR=C2=BB'
-I: NOTICE: Log filtering will replace 'var/lib/schroot/mount/unstable-amd64=
--debomatic-9f549ba3-d88d-4c5c-9d7d-2aea2718618b' with '=C2=ABCHROOT=C2=BB'
-
-=E2=94=8C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=90
-=E2=94=82 Chroot Setup Commands                                            =
-            =E2=94=82
-=E2=94=94=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=98
-
-
-/home/debomatic/debomatic/sbuildcommands/chroot-setup-commands/dpkg-speedup
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80
-
-
-I: Finished running '/home/debomatic/debomatic/sbuildcommands/chroot-setup-=
-commands/dpkg-speedup'.
-
-Finished processing commands.
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80
-
-=E2=94=8C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=90
-=E2=94=82 Update chroot                                                    =
-            =E2=94=82
-=E2=94=94=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=98
-
-Get:1 http://httpredir.debian.org unstable InRelease [200 kB]
-Get:2 http://httpredir.debian.org unstable/main Sources/DiffIndex [7876 B]
-Get:3 http://httpredir.debian.org unstable/contrib Sources/DiffIndex [7819 =
-B]
-Get:4 http://httpredir.debian.org unstable/non-free Sources/DiffIndex [7819=
- B]
-Get:5 http://httpredir.debian.org unstable/main amd64 Packages/DiffIndex [7=
-876 B]
-Get:6 http://httpredir.debian.org unstable/contrib amd64 Packages/DiffIndex=
- [7819 B]
-Get:7 http://httpredir.debian.org unstable/non-free amd64 Packages/DiffInde=
-x [7819 B]
-Get:8 http://httpredir.debian.org unstable/main arm64 Packages/DiffIndex [7=
-876 B]
-Get:9 http://httpredir.debian.org unstable/contrib arm64 Packages/DiffIndex=
- [7819 B]
-Get:10 http://httpredir.debian.org unstable/non-free arm64 Packages/DiffInd=
-ex [7819 B]
-Get:11 http://httpredir.debian.org unstable/contrib Translation-en/DiffInde=
-x [7819 B]
-Get:12 http://httpredir.debian.org unstable/main Translation-en/DiffIndex [=
-7876 B]
-Get:13 http://httpredir.debian.org unstable/non-free Translation-en/DiffInd=
-ex [7819 B]
-Get:14 http://httpredir.debian.org unstable/main 2015-07-20-2047.52.pdiff [=
-12.4 kB]
-Get:15 http://httpredir.debian.org unstable/main 2015-07-21-0250.43.pdiff [=
-8812 B]
-Get:16 http://httpredir.debian.org unstable/main 2015-07-21-0850.03.pdiff [=
-3397 B]
-Get:17 http://httpredir.debian.org unstable/main 2015-07-21-1449.47.pdiff [=
-18.8 kB]
-Get:18 http://httpredir.debian.org unstable/main 2015-07-21-2049.10.pdiff [=
-8292 B]
-Get:19 http://httpredir.debian.org unstable/main 2015-07-22-0250.18.pdiff [=
-12.2 kB]
-Get:20 http://httpredir.debian.org unstable/main 2015-07-22-0848.26.pdiff [=
-5555 B]
-Get:21 http://httpredir.debian.org unstable/main 2015-07-22-1449.38.pdiff [=
-13.7 kB]
-Get:22 http://httpredir.debian.org unstable/main 2015-07-22-2049.44.pdiff [=
-19.5 kB]
-Get:23 http://httpredir.debian.org unstable/main 2015-07-23-0247.58.pdiff [=
-19.4 kB]
-Get:24 http://httpredir.debian.org unstable/main 2015-07-23-0910.58.pdiff [=
-13.2 kB]
-Get:25 http://httpredir.debian.org unstable/main 2015-07-23-1448.36.pdiff [=
-16.0 kB]
-Get:26 http://httpredir.debian.org unstable/main 2015-07-23-2049.31.pdiff [=
-17.1 kB]
-Get:27 http://httpredir.debian.org unstable/main 2015-07-24-0250.04.pdiff [=
-12.6 kB]
-Get:28 http://httpredir.debian.org unstable/main 2015-07-24-0851.36.pdiff [=
-2008 B]
-Get:29 http://httpredir.debian.org unstable/main 2015-07-24-1452.49.pdiff [=
-21.2 kB]
-Get:30 http://httpredir.debian.org unstable/main 2015-07-24-2051.02.pdiff [=
-23.9 kB]
-Get:31 http://httpredir.debian.org unstable/main 2015-07-25-0251.08.pdiff [=
-4449 B]
-Get:32 http://httpredir.debian.org unstable/main 2015-07-25-0850.02.pdiff [=
-2819 B]
-Get:33 http://httpredir.debian.org unstable/main 2015-07-25-2052.33.pdiff [=
-30.1 kB]
-Get:34 http://httpredir.debian.org unstable/main 2015-07-26-0254.09.pdiff [=
-10.2 kB]
-Get:35 http://httpredir.debian.org unstable/main 2015-07-26-0850.47.pdiff [=
-4581 B]
-Get:36 http://httpredir.debian.org unstable/main 2015-07-26-1450.39.pdiff [=
-7768 B]
-Get:37 http://httpredir.debian.org unstable/main 2015-07-26-2049.45.pdiff [=
-19.0 kB]
-Get:38 http://httpredir.debian.org unstable/main 2015-07-27-0250.55.pdiff [=
-17.0 kB]
-Get:39 http://httpredir.debian.org unstable/main 2015-07-27-0850.30.pdiff [=
-5362 B]
-Get:40 http://httpredir.debian.org unstable/main 2015-07-27-1452.54.pdiff [=
-4593 B]
-Get:41 http://httpredir.debian.org unstable/main 2015-07-27-2050.33.pdiff [=
-25.0 kB]
-Get:42 http://httpredir.debian.org unstable/main 2015-07-27-2050.33.pdiff [=
-25.0 kB]
-Get:43 http://httpredir.debian.org unstable/contrib 2015-07-27-1452.54.pdif=
-f [26 B]
-Get:44 http://httpredir.debian.org unstable/contrib 2015-07-27-2050.33.pdif=
-f [707 B]
-Get:45 http://httpredir.debian.org unstable/non-free 2015-07-23-0247.58.pdi=
-ff [277 B]
-Get:46 http://httpredir.debian.org unstable/non-free 2015-07-23-1448.36.pdi=
-ff [653 B]
-Get:47 http://httpredir.debian.org unstable/non-free 2015-07-24-0250.04.pdi=
-ff [393 B]
-Get:48 http://httpredir.debian.org unstable/main amd64 2015-07-20-2047.52.p=
-diff [29.9 kB]
-Get:49 http://httpredir.debian.org unstable/main amd64 2015-07-21-0250.43.p=
-diff [48.0 kB]
-Get:50 http://httpredir.debian.org unstable/main amd64 2015-07-21-0850.03.p=
-diff [2644 B]
-Get:51 http://httpredir.debian.org unstable/main amd64 2015-07-21-1449.47.p=
-diff [28.8 kB]
-Get:52 http://httpredir.debian.org unstable/main amd64 2015-07-21-2049.10.p=
-diff [13.7 kB]
-Get:53 http://httpredir.debian.org unstable/main amd64 2015-07-22-0250.18.p=
-diff [20.9 kB]
-Get:54 http://httpredir.debian.org unstable/contrib 2015-07-27-2050.33.pdif=
-f [707 B]
-Get:55 http://httpredir.debian.org unstable/non-free 2015-07-24-0250.04.pdi=
-ff [393 B]
-Get:56 http://httpredir.debian.org unstable/main amd64 2015-07-22-0848.26.p=
-diff [6177 B]
-Get:57 http://httpredir.debian.org unstable/main amd64 2015-07-22-1449.38.p=
-diff [20.5 kB]
-Get:58 http://httpredir.debian.org unstable/main amd64 2015-07-22-2049.44.p=
-diff [21.7 kB]
-Get:59 http://httpredir.debian.org unstable/main amd64 2015-07-23-0247.58.p=
-diff [5830 B]
-Get:60 http://httpredir.debian.org unstable/main amd64 2015-07-23-0910.58.p=
-diff [27.3 kB]
-Get:61 http://httpredir.debian.org unstable/main amd64 2015-07-23-1448.36.p=
-diff [29.5 kB]
-Get:62 http://httpredir.debian.org unstable/main amd64 2015-07-23-2049.31.p=
-diff [17.6 kB]
-Get:63 http://httpredir.debian.org unstable/main amd64 2015-07-24-0250.04.p=
-diff [10.0 kB]
-Get:64 http://httpredir.debian.org unstable/main amd64 2015-07-24-0851.36.p=
-diff [9233 B]
-Get:65 http://httpredir.debian.org unstable/main amd64 2015-07-24-1452.49.p=
-diff [21.3 kB]
-Get:66 http://httpredir.debian.org unstable/main amd64 2015-07-24-2051.02.p=
-diff [28.6 kB]
-Get:67 http://httpredir.debian.org unstable/main amd64 2015-07-25-0251.08.p=
-diff [7310 B]
-Get:68 http://httpredir.debian.org unstable/main amd64 2015-07-25-0850.02.p=
-diff [2412 B]
-Get:69 http://httpredir.debian.org unstable/main amd64 2015-07-25-2052.33.p=
-diff [30.4 kB]
-Get:70 http://httpredir.debian.org unstable/main amd64 2015-07-26-0254.09.p=
-diff [7277 B]
-Get:71 http://httpredir.debian.org unstable/main amd64 2015-07-26-0850.47.p=
-diff [3111 B]
-Get:72 http://httpredir.debian.org unstable/main amd64 2015-07-26-1450.39.p=
-diff [6377 B]
-Get:73 http://httpredir.debian.org unstable/main amd64 2015-07-26-2049.45.p=
-diff [24.2 kB]
-Get:74 http://httpredir.debian.org unstable/main amd64 2015-07-27-0250.55.p=
-diff [8822 B]
-Get:75 http://httpredir.debian.org unstable/main amd64 2015-07-27-0850.30.p=
-diff [3433 B]
-Get:76 http://httpredir.debian.org unstable/main amd64 2015-07-27-1452.54.p=
-diff [2794 B]
-Get:77 http://httpredir.debian.org unstable/main amd64 2015-07-27-2050.33.p=
-diff [29.1 kB]
-Get:78 http://httpredir.debian.org unstable/main amd64 2015-07-27-2050.33.p=
-diff [29.1 kB]
-Get:79 http://httpredir.debian.org unstable/contrib amd64 2015-07-20-2047.5=
-2.pdiff [870 B]
-Get:80 http://httpredir.debian.org unstable/contrib amd64 2015-07-21-0250.4=
-3.pdiff [1237 B]
-Get:81 http://httpredir.debian.org unstable/contrib amd64 2015-07-21-0850.0=
-3.pdiff [38 B]
-Get:82 http://httpredir.debian.org unstable/contrib amd64 2015-07-21-1449.4=
-7.pdiff [518 B]
-Get:83 http://httpredir.debian.org unstable/contrib amd64 2015-07-21-2049.1=
-0.pdiff [29 B]
-Get:84 http://httpredir.debian.org unstable/contrib amd64 2015-07-22-1449.3=
-8.pdiff [388 B]
-Get:85 http://httpredir.debian.org unstable/contrib amd64 2015-07-22-2049.4=
-4.pdiff [29 B]
-Get:86 http://httpredir.debian.org unstable/contrib amd64 2015-07-26-0850.4=
-7.pdiff [423 B]
-Get:87 http://httpredir.debian.org unstable/contrib amd64 2015-07-27-0250.5=
-5.pdiff [42 B]
-Get:88 http://httpredir.debian.org unstable/contrib amd64 2015-07-27-2050.3=
-3.pdiff [811 B]
-Get:89 http://httpredir.debian.org unstable/non-free amd64 2015-07-23-0247.=
-58.pdiff [970 B]
-Get:90 http://httpredir.debian.org unstable/non-free amd64 2015-07-23-1448.=
-36.pdiff [427 B]
-Get:91 http://httpredir.debian.org unstable/contrib amd64 2015-07-27-2050.3=
-3.pdiff [811 B]
-Get:92 http://httpredir.debian.org unstable/non-free amd64 2015-07-24-0250.=
-04.pdiff [319 B]
-Get:93 http://httpredir.debian.org unstable/non-free amd64 2015-07-24-0250.=
-04.pdiff [319 B]
-Get:94 http://httpredir.debian.org unstable/main arm64 2015-07-20-2047.52.p=
-diff [21.7 kB]
-Get:95 http://httpredir.debian.org unstable/main arm64 2015-07-21-0250.43.p=
-diff [54.3 kB]
-Get:96 http://httpredir.debian.org unstable/main arm64 2015-07-21-0850.03.p=
-diff [2647 B]
-Get:97 http://httpredir.debian.org unstable/main arm64 2015-07-21-1449.47.p=
-diff [27.6 kB]
-Get:98 http://httpredir.debian.org unstable/main arm64 2015-07-21-2049.10.p=
-diff [13.7 kB]
-Get:99 http://httpredir.debian.org unstable/main arm64 2015-07-22-0250.18.p=
-diff [15.8 kB]
-Get:100 http://httpredir.debian.org unstable/main arm64 2015-07-22-0848.26.=
-pdiff [3902 B]
-Get:101 http://httpredir.debian.org unstable/main arm64 2015-07-22-1449.38.=
-pdiff [8493 B]
-Get:102 http://httpredir.debian.org unstable/main arm64 2015-07-22-2049.44.=
-pdiff [19.2 kB]
-Get:103 http://httpredir.debian.org unstable/main arm64 2015-07-23-0247.58.=
-pdiff [9265 B]
-Get:104 http://httpredir.debian.org unstable/main arm64 2015-07-23-0910.58.=
-pdiff [18.6 kB]
-Get:105 http://httpredir.debian.org unstable/main arm64 2015-07-23-1448.36.=
-pdiff [27.4 kB]
-Get:106 http://httpredir.debian.org unstable/main arm64 2015-07-23-2049.31.=
-pdiff [21.0 kB]
-Get:107 http://httpredir.debian.org unstable/main arm64 2015-07-24-0250.04.=
-pdiff [11.3 kB]
-Get:108 http://httpredir.debian.org unstable/main arm64 2015-07-24-0851.36.=
-pdiff [322 B]
-Get:109 http://httpredir.debian.org unstable/main arm64 2015-07-24-1452.49.=
-pdiff [22.9 kB]
-Get:110 http://httpredir.debian.org unstable/main arm64 2015-07-24-2051.02.=
-pdiff [25.2 kB]
-Get:111 http://httpredir.debian.org unstable/main arm64 2015-07-25-0251.08.=
-pdiff [6527 B]
-Get:112 http://httpredir.debian.org unstable/main arm64 2015-07-25-0850.02.=
-pdiff [2765 B]
-Get:113 http://httpredir.debian.org unstable/main arm64 2015-07-25-2052.33.=
-pdiff [23.1 kB]
-Get:114 http://httpredir.debian.org unstable/main arm64 2015-07-26-0254.09.=
-pdiff [3931 B]
-Get:115 http://httpredir.debian.org unstable/main arm64 2015-07-26-0850.47.=
-pdiff [3061 B]
-Get:116 http://httpredir.debian.org unstable/main arm64 2015-07-26-1450.39.=
-pdiff [4947 B]
-Get:117 http://httpredir.debian.org unstable/main arm64 2015-07-26-2049.45.=
-pdiff [20.7 kB]
-Get:118 http://httpredir.debian.org unstable/main arm64 2015-07-27-0250.55.=
-pdiff [11.2 kB]
-Get:119 http://httpredir.debian.org unstable/main arm64 2015-07-27-0850.30.=
-pdiff [3425 B]
-Get:120 http://httpredir.debian.org unstable/main arm64 2015-07-27-1452.54.=
-pdiff [3681 B]
-Get:121 http://httpredir.debian.org unstable/main arm64 2015-07-27-2050.33.=
-pdiff [25.8 kB]
-Get:122 http://httpredir.debian.org unstable/main arm64 2015-07-27-2050.33.=
-pdiff [25.8 kB]
-Get:123 http://httpredir.debian.org unstable/contrib arm64 2015-07-20-2047.=
-52.pdiff [870 B]
-Get:124 http://httpredir.debian.org unstable/contrib arm64 2015-07-21-0250.=
-43.pdiff [852 B]
-Get:125 http://httpredir.debian.org unstable/contrib arm64 2015-07-21-0850.=
-03.pdiff [637 B]
-Get:126 http://httpredir.debian.org unstable/contrib arm64 2015-07-21-1449.=
-47.pdiff [517 B]
-Get:127 http://httpredir.debian.org unstable/contrib arm64 2015-07-21-2049.=
-10.pdiff [29 B]
-Get:128 http://httpredir.debian.org unstable/contrib arm64 2015-07-22-1449.=
-38.pdiff [247 B]
-Get:129 http://httpredir.debian.org unstable/contrib arm64 2015-07-22-2049.=
-44.pdiff [252 B]
-Get:130 http://httpredir.debian.org unstable/contrib arm64 2015-07-27-0250.=
-55.pdiff [40 B]
-Get:131 http://httpredir.debian.org unstable/contrib arm64 2015-07-27-2050.=
-33.pdiff [811 B]
-Get:132 http://httpredir.debian.org unstable/non-free arm64 2015-07-23-0247=
-=2E58.pdiff [454 B]
-Get:133 http://httpredir.debian.org unstable/contrib arm64 2015-07-27-2050.=
-33.pdiff [811 B]
-Get:134 http://httpredir.debian.org unstable/contrib 2015-07-27-0250.55.pdi=
-ff [26 B]
-Get:135 http://httpredir.debian.org unstable/non-free arm64 2015-07-23-1448=
-=2E36.pdiff [427 B]
-Get:136 http://httpredir.debian.org unstable/non-free arm64 2015-07-23-1448=
-=2E36.pdiff [427 B]
-Get:137 http://httpredir.debian.org unstable/contrib 2015-07-27-2050.33.pdi=
-ff [574 B]
-Get:138 http://httpredir.debian.org unstable/contrib 2015-07-27-2050.33.pdi=
-ff [574 B]
-Get:139 http://httpredir.debian.org unstable/main 2015-07-20-2047.52.pdiff =
-[854 B]
-Get:140 http://httpredir.debian.org unstable/main 2015-07-21-0250.43.pdiff =
-[879 B]
-Get:141 http://httpredir.debian.org unstable/main 2015-07-21-0850.03.pdiff =
-[281 B]
-Get:142 http://httpredir.debian.org unstable/main 2015-07-21-1449.47.pdiff =
-[4183 B]
-Get:143 http://httpredir.debian.org unstable/main 2015-07-21-2049.10.pdiff =
-[1232 B]
-Get:144 http://httpredir.debian.org unstable/main 2015-07-22-0250.18.pdiff =
-[685 B]
-Get:145 http://httpredir.debian.org unstable/main 2015-07-22-0848.26.pdiff =
-[1080 B]
-Get:146 http://httpredir.debian.org unstable/main 2015-07-22-1449.38.pdiff =
-[1158 B]
-Get:147 http://httpredir.debian.org unstable/main 2015-07-22-2049.44.pdiff =
-[1204 B]
-Get:148 http://httpredir.debian.org unstable/main 2015-07-23-0247.58.pdiff =
-[613 B]
-Get:149 http://httpredir.debian.org unstable/main 2015-07-23-0910.58.pdiff =
-[2559 B]
-Get:150 http://httpredir.debian.org unstable/main 2015-07-23-1448.36.pdiff =
-[2957 B]
-Get:151 http://httpredir.debian.org unstable/main 2015-07-23-2049.31.pdiff =
-[1938 B]
-Get:152 http://httpredir.debian.org unstable/main 2015-07-24-0250.04.pdiff =
-[283 B]
-Get:153 http://httpredir.debian.org unstable/main 2015-07-24-1452.49.pdiff =
-[3527 B]
-Get:154 http://httpredir.debian.org unstable/main 2015-07-24-2051.02.pdiff =
-[8563 B]
-Get:155 http://httpredir.debian.org unstable/main 2015-07-25-0850.02.pdiff =
-[128 B]
-Get:156 http://httpredir.debian.org unstable/main 2015-07-25-2052.33.pdiff =
-[4674 B]
-Get:157 http://httpredir.debian.org unstable/main 2015-07-26-0254.09.pdiff =
-[966 B]
-Get:158 http://httpredir.debian.org unstable/main 2015-07-26-0850.47.pdiff =
-[55 B]
-Get:159 http://httpredir.debian.org unstable/main 2015-07-26-1450.39.pdiff =
-[845 B]
-Get:160 http://httpredir.debian.org unstable/main 2015-07-26-2049.45.pdiff =
-[662 B]
-Get:161 http://httpredir.debian.org unstable/main 2015-07-27-0250.55.pdiff =
-[2929 B]
-Get:162 http://httpredir.debian.org unstable/main 2015-07-27-0850.30.pdiff =
-[832 B]
-Get:163 http://httpredir.debian.org unstable/main 2015-07-27-1452.54.pdiff =
-[581 B]
-Get:164 http://httpredir.debian.org unstable/main 2015-07-27-2050.33.pdiff =
-[6126 B]
-Get:165 http://httpredir.debian.org unstable/main 2015-07-27-2050.33.pdiff =
-[6126 B]
-Get:166 http://httpredir.debian.org unstable/non-free 2015-07-23-1448.36.pd=
-iff [493 B]
-Get:167 http://httpredir.debian.org unstable/non-free 2015-07-23-1448.36.pd=
-iff [493 B]
-Fetched 1596 kB in 20s (77.9 kB/s)
-Reading package lists...
-Reading package lists...
-Building dependency tree...
-Reading state information...
-The following packages will be upgraded:
-  bash cpp-4.9 cpp-4.9-aarch64-linux-gnu g++-4.9 g++-4.9-aarch64-linux-gnu
-  gcc-4.9 gcc-4.9-aarch64-linux-gnu gcc-4.9-base gcc-4.9-base:arm64 libasan1
-  libdebconfclient0 libexpat1 libgcc-4.9-dev:arm64 libgcc-4.9-dev
-  libstdc++-4.9-dev libstdc++-4.9-dev:arm64
-16 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
-Need to get 48.7 MB of archives.
-After this operation, 241 kB disk space will be freed.
-Get:1 http://httpredir.debian.org/debian/ unstable/main bash amd64 4.3-13 [=
-1173 kB]
-Get:2 http://httpredir.debian.org/debian/ unstable/main gcc-4.9-aarch64-lin=
-ux-gnu amd64 4.9.3-3 [4743 kB]
-Get:3 http://httpredir.debian.org/debian/ unstable/main g++-4.9 amd64 4.9.3=
--3 [17.8 MB]
-Get:4 http://httpredir.debian.org/debian/ unstable/main g++-4.9-aarch64-lin=
-ux-gnu amd64 4.9.3-3 [4956 kB]
-Get:5 http://httpredir.debian.org/debian/ unstable/main cpp-4.9-aarch64-lin=
-ux-gnu amd64 4.9.3-3 [4683 kB]
-Get:6 http://httpredir.debian.org/debian/ unstable/main libstdc++-4.9-dev a=
-rm64 4.9.3-3 [1086 kB]
-Get:7 http://httpredir.debian.org/debian/ unstable/main libgcc-4.9-dev arm6=
-4 4.9.3-3 [181 kB]
-Get:8 http://httpredir.debian.org/debian/ unstable/main libgcc-4.9-dev amd6=
-4 4.9.3-3 [2062 kB]
-Get:9 http://httpredir.debian.org/debian/ unstable/main gcc-4.9-base arm64 =
-4.9.3-3 [162 kB]
-Get:10 http://httpredir.debian.org/debian/ unstable/main gcc-4.9 amd64 4.9.=
-3-3 [5343 kB]
-Get:11 http://httpredir.debian.org/debian/ unstable/main cpp-4.9 amd64 4.9.=
-3-3 [5005 kB]
-Get:12 http://httpredir.debian.org/debian/ unstable/main libstdc++-4.9-dev =
-amd64 4.9.3-3 [1114 kB]
-Get:13 http://httpredir.debian.org/debian/ unstable/main libasan1 amd64 4.9=
-=2E3-3 [194 kB]
-Get:14 http://httpredir.debian.org/debian/ unstable/main gcc-4.9-base amd64=
- 4.9.3-3 [162 kB]
-Get:15 http://httpredir.debian.org/debian/ unstable/main libdebconfclient0 =
-amd64 0.195 [46.3 kB]
-Get:16 http://httpredir.debian.org/debian/ unstable/main libexpat1 amd64 2.=
-1.0-7 [80.0 kB]
-debconf: delaying package configuration, since apt-utils is not installed
-Fetched 48.7 MB in 2s (16.6 MB/s)
-(Reading database ... =0D(Reading database ... 5%=0D(Reading database ... 1=
-0%=0D(Reading database ... 15%=0D(Reading database ... 20%=0D(Reading datab=
-ase ... 25%=0D(Reading database ... 30%=0D(Reading database ... 35%=0D(Read=
-ing database ... 40%=0D(Reading database ... 45%=0D(Reading database ... 50=
-%=0D(Reading database ... 55%=0D(Reading database ... 60%=0D(Reading databa=
-se ... 65%=0D(Reading database ... 70%=0D(Reading database ... 75%=0D(Readi=
-ng database ... 80%=0D(Reading database ... 85%=0D(Reading database ... 90%=
-=0D(Reading database ... 95%=0D(Reading database ... 100%=0D(Reading databa=
-se ... 14308 files and directories currently installed.)=0D
-Preparing to unpack .../archives/bash_4.3-13_amd64.deb ...=0D
-Unpacking bash (4.3-13) over (4.3-12) ...=0D
-Setting up bash (4.3-13) ...=0D
-update-alternatives: using /usr/share/man/man7/bash-builtins.7.gz to provid=
-e /usr/share/man/man7/builtins.7.gz (builtins.7.gz) in auto mode=0D
-(Reading database ... =0D(Reading database ... 5%=0D(Reading database ... 1=
-0%=0D(Reading database ... 15%=0D(Reading database ... 20%=0D(Reading datab=
-ase ... 25%=0D(Reading database ... 30%=0D(Reading database ... 35%=0D(Read=
-ing database ... 40%=0D(Reading database ... 45%=0D(Reading database ... 50=
-%=0D(Reading database ... 55%=0D(Reading database ... 60%=0D(Reading databa=
-se ... 65%=0D(Reading database ... 70%=0D(Reading database ... 75%=0D(Readi=
-ng database ... 80%=0D(Reading database ... 85%=0D(Reading database ... 90%=
-=0D(Reading database ... 95%=0D(Reading database ... 100%=0D(Reading databa=
-se ... 14308 files and directories currently installed.)=0D
-Preparing to unpack .../g++-4.9_4.9.3-3_amd64.deb ...=0D
-Unpacking g++-4.9 (4.9.3-3) over (4.9.3-2) ...=0D
-Preparing to unpack .../gcc-4.9_4.9.3-3_amd64.deb ...=0D
-Unpacking gcc-4.9 (4.9.3-3) over (4.9.3-2) ...=0D
-Preparing to unpack .../cpp-4.9_4.9.3-3_amd64.deb ...=0D
-Unpacking cpp-4.9 (4.9.3-3) over (4.9.3-2) ...=0D
-Preparing to unpack .../g++-4.9-aarch64-linux-gnu_4.9.3-3_amd64.deb ...=0D
-Unpacking g++-4.9-aarch64-linux-gnu (4.9.3-3) over (4.9.3-2) ...=0D
-Preparing to unpack .../gcc-4.9-aarch64-linux-gnu_4.9.3-3_amd64.deb ...=0D
-Unpacking gcc-4.9-aarch64-linux-gnu (4.9.3-3) over (4.9.3-2) ...=0D
-Preparing to unpack .../cpp-4.9-aarch64-linux-gnu_4.9.3-3_amd64.deb ...=0D
-Unpacking cpp-4.9-aarch64-linux-gnu (4.9.3-3) over (4.9.3-2) ...=0D
-Preparing to unpack .../libstdc++-4.9-dev_4.9.3-3_arm64.deb ...=0D
-De-configuring libstdc++-4.9-dev:amd64 (4.9.3-2) ...=0D
-Unpacking libstdc++-4.9-dev:arm64 (4.9.3-3) over (4.9.3-2) ...=0D
-Preparing to unpack .../libstdc++-4.9-dev_4.9.3-3_amd64.deb ...=0D
-Unpacking libstdc++-4.9-dev:amd64 (4.9.3-3) over (4.9.3-2) ...=0D
-Preparing to unpack .../libgcc-4.9-dev_4.9.3-3_amd64.deb ...=0D
-De-configuring libgcc-4.9-dev:arm64 (4.9.3-2) ...=0D
-Unpacking libgcc-4.9-dev:amd64 (4.9.3-3) over (4.9.3-2) ...=0D
-Preparing to unpack .../libgcc-4.9-dev_4.9.3-3_arm64.deb ...=0D
-Unpacking libgcc-4.9-dev:arm64 (4.9.3-3) over (4.9.3-2) ...=0D
-Preparing to unpack .../libasan1_4.9.3-3_amd64.deb ...=0D
-Unpacking libasan1:amd64 (4.9.3-3) over (4.9.3-2) ...=0D
-Preparing to unpack .../gcc-4.9-base_4.9.3-3_amd64.deb ...=0D
-De-configuring gcc-4.9-base:arm64 (4.9.3-2) ...=0D
-Unpacking gcc-4.9-base:amd64 (4.9.3-3) over (4.9.3-2) ...=0D
-Preparing to unpack .../gcc-4.9-base_4.9.3-3_arm64.deb ...=0D
-Unpacking gcc-4.9-base:arm64 (4.9.3-3) over (4.9.3-2) ...=0D
-Preparing to unpack .../libdebconfclient0_0.195_amd64.deb ...=0D
-Unpacking libdebconfclient0:amd64 (0.195) over (0.194) ...=0D
-Setting up libdebconfclient0:amd64 (0.195) ...=0D
-Processing triggers for libc-bin (2.21-0experimental0) ...=0D
-(Reading database ... =0D(Reading database ... 5%=0D(Reading database ... 1=
-0%=0D(Reading database ... 15%=0D(Reading database ... 20%=0D(Reading datab=
-ase ... 25%=0D(Reading database ... 30%=0D(Reading database ... 35%=0D(Read=
-ing database ... 40%=0D(Reading database ... 45%=0D(Reading database ... 50=
-%=0D(Reading database ... 55%=0D(Reading database ... 60%=0D(Reading databa=
-se ... 65%=0D(Reading database ... 70%=0D(Reading database ... 75%=0D(Readi=
-ng database ... 80%=0D(Reading database ... 85%=0D(Reading database ... 90%=
-=0D(Reading database ... 95%=0D(Reading database ... 100%=0D(Reading databa=
-se ... 14308 files and directories currently installed.)=0D
-Preparing to unpack .../libexpat1_2.1.0-7_amd64.deb ...=0D
-Unpacking libexpat1:amd64 (2.1.0-7) over (2.1.0-6+b3) ...=0D
-Setting up gcc-4.9-base:amd64 (4.9.3-3) ...=0D
-Setting up gcc-4.9-base:arm64 (4.9.3-3) ...=0D
-Setting up cpp-4.9 (4.9.3-3) ...=0D
-Setting up libasan1:amd64 (4.9.3-3) ...=0D
-Setting up libgcc-4.9-dev:amd64 (4.9.3-3) ...=0D
-Setting up libgcc-4.9-dev:arm64 (4.9.3-3) ...=0D
-Setting up gcc-4.9 (4.9.3-3) ...=0D
-Setting up libstdc++-4.9-dev:amd64 (4.9.3-3) ...=0D
-Setting up libstdc++-4.9-dev:arm64 (4.9.3-3) ...=0D
-Setting up g++-4.9 (4.9.3-3) ...=0D
-Setting up cpp-4.9-aarch64-linux-gnu (4.9.3-3) ...=0D
-Setting up gcc-4.9-aarch64-linux-gnu (4.9.3-3) ...=0D
-Setting up g++-4.9-aarch64-linux-gnu (4.9.3-3) ...=0D
-Setting up libexpat1:amd64 (2.1.0-7) ...=0D
-Processing triggers for libc-bin (2.21-0experimental0) ...=0D
-
-=E2=94=8C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=90
-=E2=94=82 Fetch source files                                               =
-            =E2=94=82
-=E2=94=94=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=98
-
-
-Local sources
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80
-
-/srv/debomatic-staging/xfsprogs_3.2.3.dsc exists in /srv/debomatic-staging;=
- copying to chroot
-
-Check architectures
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80
-
-Initial Foreign Architectures: arm64=20
-
-Check dependencies
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80
-
-Merged Build-Depends: build-essential:amd64, fakeroot:amd64, crossbuild-ess=
-ential-arm64:amd64
-Filtered Build-Depends: build-essential:amd64, fakeroot:amd64, crossbuild-e=
-ssential-arm64:amd64
-dpkg-deb: building package 'sbuild-build-depends-core-dummy' in '/=C2=ABBUI=
-LDDIR=C2=BB/resolver-bgAMr6/apt_archive/sbuild-build-depends-core-dummy.deb=
-'.
-OK
-Ign file: ./ InRelease
-Get:1 file: ./ Release.gpg [299 B]
-Get:2 file: ./ Release [2119 B]
-Ign file: ./ Translation-en
-Reading package lists...
-Reading package lists...
-
-=E2=94=8C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=90
-=E2=94=82 Install core build dependencies (apt-based resolver)             =
-            =E2=94=82
-=E2=94=94=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=98
-
-Installing build dependencies
-Reading package lists...
-Building dependency tree...
-Reading state information...
-The following NEW packages will be installed:
-  sbuild-build-depends-core-dummy:arm64
-debconf: delaying package configuration, since apt-utils is not installed
-0 upgraded, 1 newly installed, 0 to remove and 0 not upgraded.
-Need to get 0 B/774 B of archives.
-After this operation, 0 B of additional disk space will be used.
-Selecting previously unselected package sbuild-build-depends-core-dummy:arm=
-64.=0D
-(Reading database ... =0D(Reading database ... 5%=0D(Reading database ... 1=
-0%=0D(Reading database ... 15%=0D(Reading database ... 20%=0D(Reading datab=
-ase ... 25%=0D(Reading database ... 30%=0D(Reading database ... 35%=0D(Read=
-ing database ... 40%=0D(Reading database ... 45%=0D(Reading database ... 50=
-%=0D(Reading database ... 55%=0D(Reading database ... 60%=0D(Reading databa=
-se ... 65%=0D(Reading database ... 70%=0D(Reading database ... 75%=0D(Readi=
-ng database ... 80%=0D(Reading database ... 85%=0D(Reading database ... 90%=
-=0D(Reading database ... 95%=0D(Reading database ... 100%=0D(Reading databa=
-se ... 14307 files and directories currently installed.)=0D
-Preparing to unpack .../sbuild-build-depends-core-dummy.deb ...=0D
-Unpacking sbuild-build-depends-core-dummy:arm64 (0.invalid.0) ...=0D
-Setting up sbuild-build-depends-core-dummy:arm64 (0.invalid.0) ...=0D
-dpkg-deb: building package 'sbuild-build-depends-essential-dummy' in '/=C2=
-=ABBUILDDIR=C2=BB/resolver-kN7jvz/apt_archive/sbuild-build-depends-essentia=
-l-dummy.deb'.
-OK
-Ign file: ./ InRelease
-Get:1 file: ./ Release.gpg [299 B]
-Get:2 file: ./ Release [2119 B]
-Ign file: ./ Translation-en
-Reading package lists...
-Reading package lists...
-
-=E2=94=8C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=90
-=E2=94=82 Install essential build dependencies (apt-based resolver)        =
-            =E2=94=82
-=E2=94=94=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=98
-
-Installing build dependencies
-Reading package lists...
-Building dependency tree...
-Reading state information...
-The following NEW packages will be installed:
-  sbuild-build-depends-essential-dummy:arm64
-debconf: delaying package configuration, since apt-utils is not installed
-0 upgraded, 1 newly installed, 0 to remove and 0 not upgraded.
-Need to get 0 B/742 B of archives.
-After this operation, 0 B of additional disk space will be used.
-Selecting previously unselected package sbuild-build-depends-essential-dumm=
-y:arm64.=0D
-(Reading database ... =0D(Reading database ... 5%=0D(Reading database ... 1=
-0%=0D(Reading database ... 15%=0D(Reading database ... 20%=0D(Reading datab=
-ase ... 25%=0D(Reading database ... 30%=0D(Reading database ... 35%=0D(Read=
-ing database ... 40%=0D(Reading database ... 45%=0D(Reading database ... 50=
-%=0D(Reading database ... 55%=0D(Reading database ... 60%=0D(Reading databa=
-se ... 65%=0D(Reading database ... 70%=0D(Reading database ... 75%=0D(Readi=
-ng database ... 80%=0D(Reading database ... 85%=0D(Reading database ... 90%=
-=0D(Reading database ... 95%=0D(Reading database ... 100%=0D(Reading databa=
-se ... 14307 files and directories currently installed.)=0D
-Preparing to unpack .../sbuild-build-depends-essential-dummy.deb ...=0D
-Unpacking sbuild-build-depends-essential-dummy:arm64 (0.invalid.0) ...=0D
-Setting up sbuild-build-depends-essential-dummy:arm64 (0.invalid.0) ...=0D
-Merged Build-Depends: uuid-dev, dh-autoreconf, debhelper (>=3D 5), gettext,=
- libtool, libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (>=3D 2.17=
-), linux-libc-dev
-Filtered Build-Depends: uuid-dev, dh-autoreconf, debhelper (>=3D 5), gettex=
-t, libtool, libreadline-gplv2-dev, libblkid-dev (>=3D 2.17), linux-libc-dev
-dpkg-deb: building package 'sbuild-build-depends-xfsprogs-dummy' in '/=C2=
-=ABBUILDDIR=C2=BB/resolver-fUkMcS/apt_archive/sbuild-build-depends-xfsprogs=
--dummy.deb'.
-OK
-Ign file: ./ InRelease
-Get:1 file: ./ Release.gpg [299 B]
-Get:2 file: ./ Release [2119 B]
-Ign file: ./ Translation-en
-Reading package lists...
-Reading package lists...
-
-=E2=94=8C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=90
-=E2=94=82 Install xfsprogs build dependencies (apt-based resolver)         =
-            =E2=94=82
-=E2=94=94=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=98
-
-Installing build dependencies
-Reading package lists...
-Building dependency tree...
-Reading state information...
-The following NEW packages will be installed:
-  autoconf automake autopoint autotools-dev bsdmainutils debhelper
-  dh-autoreconf gettext gettext-base groff-base intltool-debian libasprintf=
-0c2
-  libblkid-dev:arm64 libblkid1:arm64 libcroco3 libffi6 libglib2.0-0 libicu52
-  libpipeline1 libreadline-gplv2-dev:arm64 libreadline5:arm64 libsigsegv2
-  libtinfo-dev:arm64 libtinfo5:arm64 libtool libunistring0 libuuid1:arm64
-  libxml2 m4 man-db po-debconf uuid-dev:arm64
-0 upgraded, 32 newly installed, 0 to remove and 0 not upgraded.
-Need to get 18.6 MB of archives.
-After this operation, 61.4 MB of additional disk space will be used.
-Get:1 http://httpredir.debian.org/debian/ unstable/main libpipeline1 amd64 =
-1.4.0-1 [27.9 kB]
-Get:2 http://httpredir.debian.org/debian/ unstable/main groff-base amd64 1.=
-22.3-1 [1205 kB]
-Get:3 http://httpredir.debian.org/debian/ unstable/main bsdmainutils amd64 =
-9.0.6 [183 kB]
-Get:4 http://httpredir.debian.org/debian/ unstable/main man-db amd64 2.7.0.=
-2-5 [1000 kB]
-Get:5 http://httpredir.debian.org/debian/ unstable/main libasprintf0c2 amd6=
-4 0.19.4-1 [31.6 kB]
-Get:6 http://httpredir.debian.org/debian/ unstable/main libicu52 amd64 52.1=
--10 [6786 kB]
-Get:7 http://httpredir.debian.org/debian/ unstable/main libuuid1 arm64 2.26=
-=2E2-6 [65.4 kB]
-Get:8 http://httpredir.debian.org/debian/ unstable/main libxml2 amd64 2.9.2=
-+dfsg1-3 [934 kB]
-Get:9 http://httpredir.debian.org/debian/ unstable/main libffi6 amd64 3.2.1=
--3 [20.1 kB]
-Get:10 http://httpredir.debian.org/debian/ unstable/main libglib2.0-0 amd64=
- 2.44.1-1.1 [2461 kB]
-Get:11 http://httpredir.debian.org/debian/ unstable/main libblkid1 arm64 2.=
-26.2-6 [142 kB]
-Get:12 http://httpredir.debian.org/debian/ unstable/main libcroco3 amd64 0.=
-6.8-3+b1 [135 kB]
-Get:13 http://httpredir.debian.org/debian/ unstable/main libsigsegv2 amd64 =
-2.10-4+b1 [29.2 kB]
-Get:14 http://httpredir.debian.org/debian/ unstable/main libunistring0 amd6=
-4 0.9.3-5.2+b1 [288 kB]
-Get:15 http://httpredir.debian.org/debian/ unstable/main uuid-dev arm64 2.2=
-6.2-6 [79.7 kB]
-Get:16 http://httpredir.debian.org/debian/ unstable/main libblkid-dev arm64=
- 2.26.2-6 [178 kB]
-Get:17 http://httpredir.debian.org/debian/ unstable/main libtinfo5 arm64 5.=
-9+20150516-2 [275 kB]
-Get:18 http://httpredir.debian.org/debian/ unstable/main gettext-base amd64=
- 0.19.4-1 [121 kB]
-Get:19 http://httpredir.debian.org/debian/ unstable/main m4 amd64 1.4.17-4 =
-[254 kB]
-Get:20 http://httpredir.debian.org/debian/ unstable/main autoconf all 2.69-=
-8 [340 kB]
-Get:21 http://httpredir.debian.org/debian/ unstable/main autotools-dev all =
-20140911.1 [70.5 kB]
-Get:22 http://httpredir.debian.org/debian/ unstable/main automake all 1:1.1=
-5-2 [735 kB]
-Get:23 http://httpredir.debian.org/debian/ unstable/main autopoint all 0.19=
-=2E4-1 [415 kB]
-Get:24 http://httpredir.debian.org/debian/ unstable/main gettext amd64 0.19=
-=2E4-1 [1241 kB]
-Get:25 http://httpredir.debian.org/debian/ unstable/main intltool-debian al=
-l 0.35.0+20060710.2 [25.9 kB]
-Get:26 http://httpredir.debian.org/debian/ unstable/main po-debconf all 1.0=
-=2E18 [248 kB]
-Get:27 http://httpredir.debian.org/debian/ unstable/main debhelper all 9.20=
-150628 [817 kB]
-Get:28 http://httpredir.debian.org/debian/ unstable/main libtool all 2.4.2-=
-1.11 [190 kB]
-Get:29 http://httpredir.debian.org/debian/ unstable/main dh-autoreconf all =
-10 [15.2 kB]
-Get:30 http://httpredir.debian.org/debian/ unstable/main libreadline5 arm64=
- 5.2+dfsg-3 [100 kB]
-Get:31 http://httpredir.debian.org/debian/ unstable/main libtinfo-dev arm64=
- 5.9+20150516-2 [71.9 kB]
-Get:32 http://httpredir.debian.org/debian/ unstable/main libreadline-gplv2-=
-dev arm64 5.2+dfsg-3 [116 kB]
-debconf: delaying package configuration, since apt-utils is not installed
-Fetched 18.6 MB in 3s (4733 kB/s)
-Selecting previously unselected package libpipeline1:amd64.=0D
-(Reading database ... =0D(Reading database ... 5%=0D(Reading database ... 1=
-0%=0D(Reading database ... 15%=0D(Reading database ... 20%=0D(Reading datab=
-ase ... 25%=0D(Reading database ... 30%=0D(Reading database ... 35%=0D(Read=
-ing database ... 40%=0D(Reading database ... 45%=0D(Reading database ... 50=
-%=0D(Reading database ... 55%=0D(Reading database ... 60%=0D(Reading databa=
-se ... 65%=0D(Reading database ... 70%=0D(Reading database ... 75%=0D(Readi=
-ng database ... 80%=0D(Reading database ... 85%=0D(Reading database ... 90%=
-=0D(Reading database ... 95%=0D(Reading database ... 100%=0D(Reading databa=
-se ... 14307 files and directories currently installed.)=0D
-Preparing to unpack .../libpipeline1_1.4.0-1_amd64.deb ...=0D
-Unpacking libpipeline1:amd64 (1.4.0-1) ...=0D
-Selecting previously unselected package groff-base.=0D
-Preparing to unpack .../groff-base_1.22.3-1_amd64.deb ...=0D
-Unpacking groff-base (1.22.3-1) ...=0D
-Selecting previously unselected package bsdmainutils.=0D
-Preparing to unpack .../bsdmainutils_9.0.6_amd64.deb ...=0D
-Unpacking bsdmainutils (9.0.6) ...=0D
-Selecting previously unselected package man-db.=0D
-Preparing to unpack .../man-db_2.7.0.2-5_amd64.deb ...=0D
-Unpacking man-db (2.7.0.2-5) ...=0D
-Selecting previously unselected package libasprintf0c2:amd64.=0D
-Preparing to unpack .../libasprintf0c2_0.19.4-1_amd64.deb ...=0D
-Unpacking libasprintf0c2:amd64 (0.19.4-1) ...=0D
-Selecting previously unselected package libicu52:amd64.=0D
-Preparing to unpack .../libicu52_52.1-10_amd64.deb ...=0D
-Unpacking libicu52:amd64 (52.1-10) ...=0D
-Selecting previously unselected package libxml2:amd64.=0D
-Preparing to unpack .../libxml2_2.9.2+dfsg1-3_amd64.deb ...=0D
-Unpacking libxml2:amd64 (2.9.2+dfsg1-3) ...=0D
-Selecting previously unselected package libffi6:amd64.=0D
-Preparing to unpack .../libffi6_3.2.1-3_amd64.deb ...=0D
-Unpacking libffi6:amd64 (3.2.1-3) ...=0D
-Selecting previously unselected package libglib2.0-0:amd64.=0D
-Preparing to unpack .../libglib2.0-0_2.44.1-1.1_amd64.deb ...=0D
-Unpacking libglib2.0-0:amd64 (2.44.1-1.1) ...=0D
-Selecting previously unselected package libcroco3:amd64.=0D
-Preparing to unpack .../libcroco3_0.6.8-3+b1_amd64.deb ...=0D
-Unpacking libcroco3:amd64 (0.6.8-3+b1) ...=0D
-Selecting previously unselected package libsigsegv2:amd64.=0D
-Preparing to unpack .../libsigsegv2_2.10-4+b1_amd64.deb ...=0D
-Unpacking libsigsegv2:amd64 (2.10-4+b1) ...=0D
-Selecting previously unselected package libunistring0:amd64.=0D
-Preparing to unpack .../libunistring0_0.9.3-5.2+b1_amd64.deb ...=0D
-Unpacking libunistring0:amd64 (0.9.3-5.2+b1) ...=0D
-Selecting previously unselected package libuuid1:arm64.=0D
-Preparing to unpack .../libuuid1_2.26.2-6_arm64.deb ...=0D
-Unpacking libuuid1:arm64 (2.26.2-6) ...=0D
-Selecting previously unselected package libblkid1:arm64.=0D
-Preparing to unpack .../libblkid1_2.26.2-6_arm64.deb ...=0D
-Unpacking libblkid1:arm64 (2.26.2-6) ...=0D
-Selecting previously unselected package uuid-dev:arm64.=0D
-Preparing to unpack .../uuid-dev_2.26.2-6_arm64.deb ...=0D
-Unpacking uuid-dev:arm64 (2.26.2-6) ...=0D
-Selecting previously unselected package libblkid-dev:arm64.=0D
-Preparing to unpack .../libblkid-dev_2.26.2-6_arm64.deb ...=0D
-Unpacking libblkid-dev:arm64 (2.26.2-6) ...=0D
-Selecting previously unselected package libtinfo5:arm64.=0D
-Preparing to unpack .../libtinfo5_5.9+20150516-2_arm64.deb ...=0D
-Unpacking libtinfo5:arm64 (5.9+20150516-2) ...=0D
-Selecting previously unselected package gettext-base.=0D
-Preparing to unpack .../gettext-base_0.19.4-1_amd64.deb ...=0D
-Unpacking gettext-base (0.19.4-1) ...=0D
-Selecting previously unselected package m4.=0D
-Preparing to unpack .../archives/m4_1.4.17-4_amd64.deb ...=0D
-Unpacking m4 (1.4.17-4) ...=0D
-Selecting previously unselected package autoconf.=0D
-Preparing to unpack .../autoconf_2.69-8_all.deb ...=0D
-Unpacking autoconf (2.69-8) ...=0D
-Selecting previously unselected package autotools-dev.=0D
-Preparing to unpack .../autotools-dev_20140911.1_all.deb ...=0D
-Unpacking autotools-dev (20140911.1) ...=0D
-Selecting previously unselected package automake.=0D
-Preparing to unpack .../automake_1%3a1.15-2_all.deb ...=0D
-Unpacking automake (1:1.15-2) ...=0D
-Selecting previously unselected package autopoint.=0D
-Preparing to unpack .../autopoint_0.19.4-1_all.deb ...=0D
-Unpacking autopoint (0.19.4-1) ...=0D
-Selecting previously unselected package gettext.=0D
-Preparing to unpack .../gettext_0.19.4-1_amd64.deb ...=0D
-Unpacking gettext (0.19.4-1) ...=0D
-Selecting previously unselected package intltool-debian.=0D
-Preparing to unpack .../intltool-debian_0.35.0+20060710.2_all.deb ...=0D
-Unpacking intltool-debian (0.35.0+20060710.2) ...=0D
-Selecting previously unselected package po-debconf.=0D
-Preparing to unpack .../po-debconf_1.0.18_all.deb ...=0D
-Unpacking po-debconf (1.0.18) ...=0D
-Selecting previously unselected package debhelper.=0D
-Preparing to unpack .../debhelper_9.20150628_all.deb ...=0D
-Unpacking debhelper (9.20150628) ...=0D
-Selecting previously unselected package libtool.=0D
-Preparing to unpack .../libtool_2.4.2-1.11_all.deb ...=0D
-Unpacking libtool (2.4.2-1.11) ...=0D
-Selecting previously unselected package dh-autoreconf.=0D
-Preparing to unpack .../dh-autoreconf_10_all.deb ...=0D
-Unpacking dh-autoreconf (10) ...=0D
-Selecting previously unselected package libreadline5:arm64.=0D
-Preparing to unpack .../libreadline5_5.2+dfsg-3_arm64.deb ...=0D
-Unpacking libreadline5:arm64 (5.2+dfsg-3) ...=0D
-Selecting previously unselected package libtinfo-dev:arm64.=0D
-Preparing to unpack .../libtinfo-dev_5.9+20150516-2_arm64.deb ...=0D
-Unpacking libtinfo-dev:arm64 (5.9+20150516-2) ...=0D
-Selecting previously unselected package libreadline-gplv2-dev:arm64.=0D
-Preparing to unpack .../libreadline-gplv2-dev_5.2+dfsg-3_arm64.deb ...=0D
-Unpacking libreadline-gplv2-dev:arm64 (5.2+dfsg-3) ...=0D
-Setting up libpipeline1:amd64 (1.4.0-1) ...=0D
-Setting up groff-base (1.22.3-1) ...=0D
-Setting up bsdmainutils (9.0.6) ...=0D
-update-alternatives: using /usr/bin/bsd-write to provide /usr/bin/write (wr=
-ite) in auto mode=0D
-update-alternatives: using /usr/bin/bsd-from to provide /usr/bin/from (from=
-) in auto mode=0D
-Setting up man-db (2.7.0.2-5) ...=0D
-Not building database; man-db/auto-update is not 'true'.=0D
-Setting up libasprintf0c2:amd64 (0.19.4-1) ...=0D
-Setting up libicu52:amd64 (52.1-10) ...=0D
-Setting up libxml2:amd64 (2.9.2+dfsg1-3) ...=0D
-Setting up libffi6:amd64 (3.2.1-3) ...=0D
-Setting up libglib2.0-0:amd64 (2.44.1-1.1) ...=0D
-No schema files found: doing nothing.=0D
-Setting up libcroco3:amd64 (0.6.8-3+b1) ...=0D
-Setting up libsigsegv2:amd64 (2.10-4+b1) ...=0D
-Setting up libunistring0:amd64 (0.9.3-5.2+b1) ...=0D
-Setting up libuuid1:arm64 (2.26.2-6) ...=0D
-Setting up libblkid1:arm64 (2.26.2-6) ...=0D
-Setting up uuid-dev:arm64 (2.26.2-6) ...=0D
-Setting up libblkid-dev:arm64 (2.26.2-6) ...=0D
-Setting up libtinfo5:arm64 (5.9+20150516-2) ...=0D
-Setting up gettext-base (0.19.4-1) ...=0D
-Setting up m4 (1.4.17-4) ...=0D
-Setting up autoconf (2.69-8) ...=0D
-Setting up autotools-dev (20140911.1) ...=0D
-Setting up automake (1:1.15-2) ...=0D
-update-alternatives: using /usr/bin/automake-1.15 to provide /usr/bin/autom=
-ake (automake) in auto mode=0D
-Setting up autopoint (0.19.4-1) ...=0D
-Setting up gettext (0.19.4-1) ...=0D
-Setting up intltool-debian (0.35.0+20060710.2) ...=0D
-Setting up po-debconf (1.0.18) ...=0D
-Setting up debhelper (9.20150628) ...=0D
-Setting up libtool (2.4.2-1.11) ...=0D
-Setting up dh-autoreconf (10) ...=0D
-Setting up libreadline5:arm64 (5.2+dfsg-3) ...=0D
-Setting up libtinfo-dev:arm64 (5.9+20150516-2) ...=0D
-Setting up libreadline-gplv2-dev:arm64 (5.2+dfsg-3) ...=0D
-Processing triggers for libc-bin (2.21-0experimental0) ...=0D
-
-=E2=94=8C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=90
-=E2=94=82 Build environment                                                =
-            =E2=94=82
-=E2=94=94=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=98
-
-Kernel: Linux 3.16.0-4-amd64 amd64 (x86_64)
-Toolchain package versions: binutils_2.25-10 dpkg-dev_1.18.1 g++-4.9_4.9.3-=
-3 gcc-4.9_4.9.3-3 libc6-dev_2.21-0experimental0 libstdc++-4.9-dev_4.9.3-3 l=
-ibstdc++6_5.2.1-11 linux-libc-dev_4.1.2-1~exp1
-Package versions: adduser_3.113+nmu3 apt_1.0.9.10 autoconf_2.69-8 automake_=
-1:1.15-2 autopoint_0.19.4-1 autotools-dev_20140911.1 base-files_9.2 base-pa=
-sswd_3.5.38 bash_4.3-13 binutils_2.25-10 binutils-aarch64-linux-gnu_2.25-8 =
-bsdmainutils_9.0.6 bsdutils_1:2.26.2-6 build-essential_11.7 bzip2_1.0.6-8 c=
-a-certificates_20150426 coreutils_8.23-4 cpp_4:4.9.2-4 cpp-4.9_4.9.3-3 cpp-=
-4.9-aarch64-linux-gnu_4.9.3-3 crossbuild-essential-arm64_12 dash_0.5.7-4+b1=
- debconf_1.5.57 debconf-i18n_1.5.57 debfoster_2.7-2 debhelper_9.20150628 de=
-bian-archive-keyring_2014.3 debianutils_4.5.1 dh-autoreconf_10 diffutils_1:=
-3.3-1+b1 dmsetup_2:1.02.99-2 dpkg_1.18.1 dpkg-cross_2.6.13 dpkg-dev_1.18.1 =
-e2fslibs_1.42.13-1 e2fsprogs_1.42.13-1 fakeroot_1.20.2-1 file_1:5.22+15-2 f=
-indutils_4.4.2-9+b1 g++_4:4.9.2-4 g++-4.9_4.9.3-3 g++-4.9-aarch64-linux-gnu=
-_4.9.3-3 g++-aarch64-linux-gnu_4.9.2-10.1 gcc_4:4.9.2-4 gcc-4.8-base_4.8.5-=
-1 gcc-4.9_4.9.3-3 gcc-4.9-aarch64-linux-gnu_4.9.3-3 gcc-4.9-base_4.9.3-3 gc=
-c-5-base_5.2.1-11 gcc-aarch64-linux-gnu_4.9.2-10.1 gettext_0.19.4-1 gettext=
--base_0.19.4-1 gnupg_1.4.19-3 gpgv_1.4.19-3 grep_2.21-2 groff-base_1.22.3-1=
- gzip_1.6-4 hostname_3.15 ifupdown_0.7.54 init_1.23 initscripts_2.88dsf-59.=
-2 insserv_1.14.0-5 intltool-debian_0.35.0+20060710.2 iproute2_4.0.0-1 isc-d=
-hcp-client_4.3.2-1 isc-dhcp-common_4.3.2-1 libacl1_2.2.52-2 libapparmor1_2.=
-9.2-3 libapt-pkg4.12_1.0.9.10 libasan1_4.9.3-3 libasprintf0c2_0.19.4-1 liba=
-tm1_1:2.5.1-1.5 libatomic1_5.2.1-11 libattr1_1:2.4.47-2 libaudit-common_1:2=
-=2E4.2-1 libaudit1_1:2.4.2-1 libauthen-sasl-perl_2.1600-1 libblkid-dev_2.26=
-=2E2-6 libblkid1_2.26.2-6 libbz2-1.0_1.0.6-8 libc-bin_2.21-0experimental0 l=
-ibc-dev-bin_2.21-0experimental0 libc6_2.21-0experimental0 libc6-dev_2.21-0e=
-xperimental0 libcap2_1:2.24-9 libcap2-bin_1:2.24-9 libcilkrts5_5.2.1-11 lib=
-cloog-isl4_0.18.3-1 libcomerr2_1.42.13-1 libconfig-auto-perl_0.44-1 libconf=
-ig-inifiles-perl_2.83-3 libcroco3_0.6.8-3+b1 libcryptsetup4_2:1.6.6-5 libdb=
-5.3_5.3.28-9 libdebconfclient0_0.195 libdebian-dpkgcross-perl_2.6.13 libdev=
-mapper1.02.1_2:1.02.99-2 libdns-export100_1:9.9.5.dfsg-10 libdpkg-perl_1.18=
-=2E1 libencode-locale-perl_1.03-1 libexpat1_2.1.0-7 libexporter-tiny-perl_0=
-=2E042-1 libfakeroot_1.20.2-1 libfdisk1_2.26.2-6 libffi6_3.2.1-3 libfile-ho=
-medir-perl_1.00-1 libfile-listing-perl_6.04-1 libfile-which-perl_1.18-1 lib=
-font-afm-perl_1.20-1 libgc1c2_1:7.2d-6.4 libgcc-4.9-dev_4.9.3-3 libgcc1_1:5=
-=2E2.1-11 libgcrypt20_1.6.3-2 libgdbm3_1.8.3-13.1 libglib2.0-0_2.44.1-1.1 l=
-ibgmp10_2:6.0.0+dfsg-7 libgomp1_5.2.1-11 libgpg-error0_1.19-2 libhtml-form-=
-perl_6.03-1 libhtml-format-perl_2.11-2 libhtml-parser-perl_3.71-2 libhtml-t=
-agset-perl_3.20-2 libhtml-tree-perl_5.03-2 libhttp-cookies-perl_6.01-1 libh=
-ttp-daemon-perl_6.01-1 libhttp-date-perl_6.02-1 libhttp-message-perl_6.06-1=
- libhttp-negotiate-perl_6.00-2 libicu52_52.1-10 libio-html-perl_1.001-1 lib=
-io-socket-ssl-perl_2.016-1 libio-string-perl_1.08-3 libirs-export91_1:9.9.5=
-=2Edfsg-10 libisc-export95_1:9.9.5.dfsg-10 libisccfg-export90_1:9.9.5.dfsg-=
-10 libisl13_0.14-2 libitm1_5.2.1-11 libkmod2_21-1 liblist-moreutils-perl_0.=
-413-1 liblocale-gettext-perl_1.05-9 liblsan0_5.2.1-11 liblwp-mediatypes-per=
-l_6.02-1 liblwp-protocol-https-perl_6.06-2 liblzma5_5.1.1alpha+20120614-2.1=
- libmagic1_1:5.22+15-2 libmailtools-perl_2.13-1 libmount1_2.26.2-6 libmpc3_=
-1.0.3-1 libmpfr4_3.1.3-1 libncurses5_5.9+20150516-2 libncursesw5_5.9+201505=
-16-2 libnet-http-perl_6.07-1 libnet-smtp-ssl-perl_1.01-3 libnet-ssleay-perl=
-_1.70-1 libpam-modules_1.1.8-3.1 libpam-modules-bin_1.1.8-3.1 libpam-runtim=
-e_1.1.8-3.1 libpam0g_1.1.8-3.1 libpcre3_2:8.35-7 libpipeline1_1.4.0-1 libpr=
-ocps4_2:3.3.10-2 libquadmath0_5.2.1-11 libreadline-gplv2-dev_5.2+dfsg-3 lib=
-readline5_5.2+dfsg-3 libreadline6_6.3-8+b3 libseccomp2_2.2.1-2 libselinux1_=
-2.3-2+b1 libsemanage-common_2.3-1 libsemanage1_2.3-1+b2 libsepol1_2.3-2 lib=
-sigsegv2_2.10-4+b1 libslang2_2.3.0-2+b1 libsmartcols1_2.26.2-6 libss2_1.42.=
-13-1 libssl1.0.0_1.0.2d-1 libstdc++-4.9-dev_4.9.3-3 libstdc++6_5.2.1-11 lib=
-systemd0_222-2 libtext-charwidth-perl_0.04-7+b3 libtext-iconv-perl_1.7-5+b2=
- libtext-wrapi18n-perl_0.06-7 libtimedate-perl_2.3000-2 libtinfo-dev_5.9+20=
-150516-2 libtinfo5_5.9+20150516-2 libtool_2.4.2-1.11 libtsan0_5.2.1-11 libu=
-bsan0_5.2.1-11 libudev1_222-2 libunistring0_0.9.3-5.2+b1 liburi-perl_1.64-1=
- libusb-0.1-4_2:0.1.12-25 libustr-1.0-1_1.0.4-5 libuuid1_2.26.2-6 libwww-pe=
-rl_6.13-1 libwww-robotrules-perl_6.01-1 libxml-namespacesupport-perl_1.11-1=
- libxml-parser-perl_2.41-3 libxml-sax-base-perl_1.07-1 libxml-sax-expat-per=
-l_0.40-2 libxml-sax-perl_0.99+dfsg-2 libxml-simple-perl_2.20-1 libxml2_2.9.=
-2+dfsg1-3 libxtables10_1.4.21-2+b1 libyaml-libyaml-perl_0.41-6 libyaml-perl=
-_1.13-1 linux-libc-dev_4.1.2-1~exp1 login_1:4.2-3 lsb-base_4.1+Debian13+nmu=
-1 m4_1.4.17-4 make_4.0-8.1 man-db_2.7.0.2-5 mawk_1.3.3-17 mount_2.26.2-6 mu=
-ltiarch-support_2.19-19 nano_2.4.2-1 ncurses-base_5.9+20150516-2 ncurses-bi=
-n_5.9+20150516-2 netbase_5.3 openssl_1.0.2d-1 passwd_1:4.2-3 patch_2.7.5-1 =
-perl_5.20.2-6 perl-base_5.20.2-6 perl-modules_5.20.2-6 po-debconf_1.0.18 pr=
-ocps_2:3.3.10-2 readline-common_6.3-8 sbuild-build-depends-core-dummy_0.inv=
-alid.0 sbuild-build-depends-essential-dummy_0.invalid.0 sed_4.2.2-6.1 sensi=
-ble-utils_0.0.9 startpar_0.59-3 systemd_222-2 systemd-sysv_222-2 sysv-rc_2.=
-88dsf-59.2 sysvinit-utils_2.88dsf-59.2 tar_1.27.1-2+b1 tzdata_2015e-1 ucf_3=
-=2E0030 udev_222-2 util-linux_2.26.2-6 uuid-dev_2.26.2-6 xz-utils_5.1.1alph=
-a+20120614-2.1 zlib1g_1:1.2.8.dfsg-2+b1
-
-=E2=94=8C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=90
-=E2=94=82 Build                                                            =
-            =E2=94=82
-=E2=94=94=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=98
-
-
-Unpack source
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80
-
-gpgv: keyblock resource `/sbuild-nonexistent/.gnupg/trustedkeys.gpg': file =
-open error
-gpgv: Signature made Mon Jun 15 01:01:58 2015 UTC using RSA key ID 36DD8C0C
-gpgv: Can't check signature: public key not found
-dpkg-source: warning: failed to verify signature on ./xfsprogs_3.2.3.dsc
-dpkg-source: info: extracting xfsprogs in xfsprogs-3.2.3
-dpkg-source: info: unpacking xfsprogs_3.2.3.tar.gz
-
-Check disc space
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80
-
-Sufficient free space for build
-
-=E2=94=8C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=90
-=E2=94=82 Starting Timed Build Commands                                    =
-            =E2=94=82
-=E2=94=94=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=98
-
-
-/home/debomatic/debomatic/sbuildcommands/starting-build-commands/no-network
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80
-
-Reading package lists...
-Building dependency tree...
-Reading state information...
-util-linux is already the newest version.
-0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
-
-I: Finished running '/home/debomatic/debomatic/sbuildcommands/starting-buil=
-d-commands/no-network'.
-
-Finished processing commands.
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80
-
-User Environment
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80
-
-CONFIG_SITE=3D/etc/dpkg-cross/cross-config.arm64
-DEB_BUILD_OPTIONS=3Dnocheck
-HOME=3D/sbuild-nonexistent
-LOGNAME=3Droot
-PATH=3D/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-SCHROOT_ALIAS_NAME=3Dunstable-amd64-debomatic
-SCHROOT_CHROOT_NAME=3Dunstable-amd64-debomatic
-SCHROOT_COMMAND=3Denv
-SCHROOT_GID=3D0
-SCHROOT_GROUP=3Droot
-SCHROOT_SESSION_ID=3Dunstable-amd64-debomatic-9f549ba3-d88d-4c5c-9d7d-2aea2=
-718618b
-SCHROOT_UID=3D0
-SCHROOT_USER=3Droot
-SHELL=3D/bin/sh
-TERM=3Dscreen
-USER=3Droot
-USERNAME=3Droot
-
-dpkg-buildpackage
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80
-
-dpkg-buildpackage: warning: using a gain-root-command while being root
-dpkg-buildpackage: source package xfsprogs
-dpkg-buildpackage: source version 3.2.3
-dpkg-buildpackage: source distribution unstable
-dpkg-architecture: warning: specified GNU system type aarch64-linux-gnu doe=
-s not match gcc system type x86_64-linux-gnu, try setting a correct CC envi=
-ronment variable
- dpkg-source --before-build xfsprogs-3.2.3
-dpkg-buildpackage: host architecture arm64
- fakeroot debian/rules clean
-=3D=3D dpkg-buildpackage: clean
-test -f debian/rules
-rm -f built .census mkfs/mkfs.xfs-xfsprogs-udeb
-/usr/bin/make distclean
-make[1]: Entering directory '/=C2=ABPKGBUILDDIR=C2=BB'
-make[1]: Leaving directory '/=C2=ABPKGBUILDDIR=C2=BB'
-rm -rf debian/xfsprogs debian/xfslibs-dev debian/xfsprogs-udeb
-rm -f debian/*substvars debian/files* debian/*.debhelper
-dh_autoreconf_clean
-dh_clean
-	rm -f debian/xfsprogs.substvars
-	rm -f debian/xfsprogs.*.debhelper
-	rm -rf debian/xfsprogs/
-	rm -f debian/xfslibs-dev.substvars
-	rm -f debian/xfslibs-dev.*.debhelper
-	rm -rf debian/xfslibs-dev/
-	rm -f debian/xfsprogs-udeb.substvars
-	rm -f debian/xfsprogs-udeb.*.debhelper
-	rm -rf debian/xfsprogs-udeb/
-	rm -rf debian/.debhelper/
-	rm -f debian/*.debhelper.log
-	rm -f debian/files
-	find .  \( \( \
-		\( -path .\*/.git -o -path .\*/.svn -o -path .\*/.bzr -o -path .\*/.hg -o=
- -path .\*/CVS \) -prune -o -type f -a \
-	        \( -name '#*#' -o -name '.*~' -o -name '*~' -o -name DEADJOE \
-		 -o -name '*.orig' -o -name '*.rej' -o -name '*.bak' \
-		 -o -name '.*.orig' -o -name .*.rej -o -name '.SUMS' \
-		 -o -name TAGS -o \( -path '*/.deps/*' -a -name '*.P' \) \
-		\) -exec rm -f {} + \) -o \
-		\( -type d -a -name autom4te.cache -prune -exec rm -rf {} + \) \)
-dpkg-buildpackage: warning: debian/rules must be updated to support the 'bu=
-ild-arch' and 'build-indep' targets (at least 'build-arch' seems to be miss=
-ing)
- debian/rules build
-test -f debian/rules
-=3D=3D dpkg-buildpackage: installer
-if [ ! -f mkfs/mkfs.xfs-xfsprogs-udeb ]; then \
-	export DEBUG=3D-DNDEBUG DISTRIBUTION=3Ddebian INSTALL_USER=3Droot INSTALL_=
-GROUP=3Droot LOCAL_CONFIGURE_OPTIONS=3D"--enable-readline=3Dyes --enable-bl=
-kid=3Dyes" ; export OPTIMIZER=3D-Os LOCAL_CONFIGURE_OPTIONS=3D"--enable-get=
-text=3Dno" ; /usr/bin/make include/platform_defs.h; \
-	for dir in include libxfs libdisk mkfs; do \
-		/usr/bin/make -C $dir; \
-	done; \
-	mv mkfs/mkfs.xfs mkfs/mkfs.xfs-xfsprogs-udeb; \
-	/usr/bin/make distclean; \
-fi
-make[1]: Entering directory '/=C2=ABPKGBUILDDIR=C2=BB'
-=2E/configure $LOCAL_CONFIGURE_OPTIONS
-configure: loading site script /etc/dpkg-cross/cross-config.arm64
-Reading Cross Config Cache (/etc/dpkg-cross/cross-config.arm64)
-Reading /etc/dpkg-cross/cross-config.cache
-checking build system type... x86_64-unknown-linux-gnu
-checking host system type... x86_64-unknown-linux-gnu
-checking how to print strings... printf
-checking for gcc... gcc
-checking whether the C compiler works... yes
-checking for C compiler default output file name... a.out
-checking for suffix of executables...=20
-checking whether we are cross compiling... no
-checking for suffix of object files... o
-checking whether we are using the GNU C compiler... yes
-checking whether gcc accepts -g... yes
-checking for gcc option to accept ISO C89... none needed
-checking for a sed that does not truncate output... /bin/sed
-checking for grep that handles long lines and -e... /bin/grep
-checking for egrep... /bin/grep -E
-checking for fgrep... /bin/grep -F
-checking for ld used by gcc... /usr/bin/ld
-checking if the linker (/usr/bin/ld) is GNU ld... yes
-checking for BSD- or MS-compatible name lister (nm)... /usr/bin/nm -B
-checking the name lister (/usr/bin/nm -B) interface... BSD nm
-checking whether ln -s works... yes
-checking the maximum length of command line arguments... 1572864
-checking whether the shell understands some XSI constructs... yes
-checking whether the shell understands "+=3D"... yes
-checking how to convert x86_64-unknown-linux-gnu file names to x86_64-unkno=
-wn-linux-gnu format... func_convert_file_noop
-checking how to convert x86_64-unknown-linux-gnu file names to toolchain fo=
-rmat... func_convert_file_noop
-checking for /usr/bin/ld option to reload object files... -r
-checking for objdump... objdump
-checking how to recognize dependent libraries... pass_all
-checking for dlltool... no
-checking how to associate runtime and link libraries... printf %s\n
-checking for ar... ar
-checking for archiver @FILE support... @
-checking for strip... strip
-checking for ranlib... ranlib
-checking for gawk... no
-checking for mawk... mawk
-checking command to parse /usr/bin/nm -B output from gcc object... ok
-checking for sysroot... no
-checking for mt... no
-checking if : is a manifest tool... no
-checking how to run the C preprocessor... gcc -E
-checking for ANSI C header files... yes
-checking for sys/types.h... yes
-checking for sys/stat.h... yes
-checking for stdlib.h... yes
-checking for string.h... yes
-checking for memory.h... yes
-checking for strings.h... yes
-checking for inttypes.h... yes
-checking for stdint.h... yes
-checking for unistd.h... yes
-checking for dlfcn.h... yes
-checking for objdir... .libs
-checking if gcc supports -fno-rtti -fno-exceptions... no
-checking for gcc option to produce PIC... -fPIC -DPIC
-checking if gcc PIC flag -fPIC -DPIC works... yes
-checking if gcc static flag -static works... yes
-checking if gcc supports -c -o file.o... yes
-checking if gcc supports -c -o file.o... (cached) yes
-checking whether the gcc linker (/usr/bin/ld -m elf_x86_64) supports shared=
- libraries... yes
-checking whether -lc should be explicitly linked in... no
-checking dynamic linker characteristics... GNU/Linux ld.so
-checking how to hardcode library paths into programs... immediate
-checking whether stripping libraries is possible... yes
-checking if libtool supports shared libraries... yes
-checking whether to build shared libraries... yes
-checking whether to build static libraries... yes
-checking for gcc... (cached) gcc
-checking whether we are using the GNU C compiler... (cached) yes
-checking whether gcc accepts -g... (cached) yes
-checking for gcc option to accept ISO C89... (cached) none needed
-checking for gcc... (cached) gcc
-checking whether we are using the GNU C compiler... (cached) yes
-checking whether gcc accepts -g... (cached) yes
-checking for gcc option to accept ISO C89... (cached) none needed
-checking for gmake... no
-checking for make... /usr/bin/make
-checking for tar... /bin/tar
-checking for gzip... /bin/gzip
-checking whether gcc -MM is supported... yes
-checking for sort... /usr/bin/sort
-checking whether ln -s works... yes
-checking for rpm... no
-checking aio.h usability... yes
-checking aio.h presence... yes
-checking for aio.h... yes
-checking for lio_listio... no
-checking for lio_listio in -lrt... yes
-checking uuid.h usability... no
-checking uuid.h presence... no
-checking for uuid.h... no
-checking sys/uuid.h usability... no
-checking sys/uuid.h presence... no
-checking for sys/uuid.h... no
-checking uuid/uuid.h usability... yes
-checking uuid/uuid.h presence... yes
-checking for uuid/uuid.h... yes
-checking for uuid_compare... no
-checking for uuid_compare in -luuid... no
-
-FATAL ERROR: could not find a valid UUID library.
-Install the Universally Unique Identifiers library package.
-Makefile:89: recipe for target 'include/builddefs' failed
-make[1]: *** [include/builddefs] Error 1
-make[1]: Leaving directory '/=C2=ABPKGBUILDDIR=C2=BB'
-make[1]: Entering directory '/=C2=ABPKGBUILDDIR=C2=BB/include'
-Makefile:19: ../include/builddefs: No such file or directory
-make[1]: *** No rule to make target '../include/builddefs'.  Stop.
-make[1]: Leaving directory '/=C2=ABPKGBUILDDIR=C2=BB/include'
-make[1]: Entering directory '/=C2=ABPKGBUILDDIR=C2=BB/libxfs'
-Makefile:6: ../include/builddefs: No such file or directory
-make[1]: *** No rule to make target '../include/builddefs'.  Stop.
-make[1]: Leaving directory '/=C2=ABPKGBUILDDIR=C2=BB/libxfs'
-make[1]: Entering directory '/=C2=ABPKGBUILDDIR=C2=BB/libdisk'
-Makefile:6: ../include/builddefs: No such file or directory
-make[1]: *** No rule to make target '../include/builddefs'.  Stop.
-make[1]: Leaving directory '/=C2=ABPKGBUILDDIR=C2=BB/libdisk'
-make[1]: Entering directory '/=C2=ABPKGBUILDDIR=C2=BB/mkfs'
-Makefile:6: ../include/builddefs: No such file or directory
-make[1]: *** No rule to make target '../include/builddefs'.  Stop.
-make[1]: Leaving directory '/=C2=ABPKGBUILDDIR=C2=BB/mkfs'
-mv: cannot stat 'mkfs/mkfs.xfs': No such file or directory
-make[1]: Entering directory '/=C2=ABPKGBUILDDIR=C2=BB'
-make[1]: Leaving directory '/=C2=ABPKGBUILDDIR=C2=BB'
-=3D=3D dpkg-buildpackage: configure
-test -f debian/rules
-AUTOHEADER=3D/bin/true dh_autoreconf
-	find ! -ipath "./debian/*" -a ! \( -path '*/.git/*' -o -path '*/.hg/*' -o =
--path '*/.bzr/*' -o -path '*/.svn/*' -o -path '*/CVS/*' \) -a  -type f -exe=
-c md5sum {} \; > debian/autoreconf.before
-	autoreconf -f -i
-libtoolize: putting auxiliary files in AC_CONFIG_AUX_DIR, `.'.
-libtoolize: copying file `./ltmain.sh'
-libtoolize: putting macros in AC_CONFIG_MACRO_DIR, `m4'.
-libtoolize: copying file `m4/libtool.m4'
-libtoolize: copying file `m4/ltoptions.m4'
-libtoolize: copying file `m4/ltsugar.m4'
-libtoolize: copying file `m4/ltversion.m4'
-libtoolize: copying file `m4/lt~obsolete.m4'
-libtoolize: Consider adding `-I m4' to ACLOCAL_AMFLAGS in Makefile.am.
-	find ! -ipath "./debian/*" -a ! \( -path '*/.git/*' -o -path '*/.hg/*' -o =
--path '*/.bzr/*' -o -path '*/.svn/*' -o -path '*/CVS/*' \) -a  -type f -exe=
-c md5sum {} \; > debian/autoreconf.after
-export DEBUG=3D-DNDEBUG DISTRIBUTION=3Ddebian INSTALL_USER=3Droot INSTALL_G=
-ROUP=3Droot LOCAL_CONFIGURE_OPTIONS=3D"--enable-readline=3Dyes --enable-blk=
-id=3Dyes" ; /usr/bin/make include/platform_defs.h
-make[1]: Entering directory '/=C2=ABPKGBUILDDIR=C2=BB'
-=2E/configure $LOCAL_CONFIGURE_OPTIONS
-configure: loading site script /etc/dpkg-cross/cross-config.arm64
-Reading Cross Config Cache (/etc/dpkg-cross/cross-config.arm64)
-Reading /etc/dpkg-cross/cross-config.cache
-checking build system type... x86_64-unknown-linux-gnu
-checking host system type... x86_64-unknown-linux-gnu
-checking how to print strings... printf
-checking for gcc... gcc
-checking whether the C compiler works... yes
-checking for C compiler default output file name... a.out
-checking for suffix of executables...=20
-checking whether we are cross compiling... no
-checking for suffix of object files... o
-checking whether we are using the GNU C compiler... yes
-checking whether gcc accepts -g... yes
-checking for gcc option to accept ISO C89... none needed
-checking for a sed that does not truncate output... /bin/sed
-checking for grep that handles long lines and -e... /bin/grep
-checking for egrep... /bin/grep -E
-checking for fgrep... /bin/grep -F
-checking for ld used by gcc... /usr/bin/ld
-checking if the linker (/usr/bin/ld) is GNU ld... yes
-checking for BSD- or MS-compatible name lister (nm)... /usr/bin/nm -B
-checking the name lister (/usr/bin/nm -B) interface... BSD nm
-checking whether ln -s works... yes
-checking the maximum length of command line arguments... 1572864
-checking whether the shell understands some XSI constructs... yes
-checking whether the shell understands "+=3D"... yes
-checking how to convert x86_64-unknown-linux-gnu file names to x86_64-unkno=
-wn-linux-gnu format... func_convert_file_noop
-checking how to convert x86_64-unknown-linux-gnu file names to toolchain fo=
-rmat... func_convert_file_noop
-checking for /usr/bin/ld option to reload object files... -r
-checking for objdump... objdump
-checking how to recognize dependent libraries... pass_all
-checking for dlltool... no
-checking how to associate runtime and link libraries... printf %s\n
-checking for ar... ar
-checking for archiver @FILE support... @
-checking for strip... strip
-checking for ranlib... ranlib
-checking for gawk... no
-checking for mawk... mawk
-checking command to parse /usr/bin/nm -B output from gcc object... ok
-checking for sysroot... no
-checking for mt... no
-checking if : is a manifest tool... no
-checking how to run the C preprocessor... gcc -E
-checking for ANSI C header files... yes
-checking for sys/types.h... yes
-checking for sys/stat.h... yes
-checking for stdlib.h... yes
-checking for string.h... yes
-checking for memory.h... yes
-checking for strings.h... yes
-checking for inttypes.h... yes
-checking for stdint.h... yes
-checking for unistd.h... yes
-checking for dlfcn.h... yes
-checking for objdir... .libs
-checking if gcc supports -fno-rtti -fno-exceptions... no
-checking for gcc option to produce PIC... -fPIC -DPIC
-checking if gcc PIC flag -fPIC -DPIC works... yes
-checking if gcc static flag -static works... yes
-checking if gcc supports -c -o file.o... yes
-checking if gcc supports -c -o file.o... (cached) yes
-checking whether the gcc linker (/usr/bin/ld -m elf_x86_64) supports shared=
- libraries... yes
-checking whether -lc should be explicitly linked in... no
-checking dynamic linker characteristics... GNU/Linux ld.so
-checking how to hardcode library paths into programs... immediate
-checking whether stripping libraries is possible... yes
-checking if libtool supports shared libraries... yes
-checking whether to build shared libraries... yes
-checking whether to build static libraries... yes
-checking for gcc... (cached) gcc
-checking whether we are using the GNU C compiler... (cached) yes
-checking whether gcc accepts -g... (cached) yes
-checking for gcc option to accept ISO C89... (cached) none needed
-checking for gcc... (cached) gcc
-checking whether we are using the GNU C compiler... (cached) yes
-checking whether gcc accepts -g... (cached) yes
-checking for gcc option to accept ISO C89... (cached) none needed
-checking for gmake... no
-checking for make... /usr/bin/make
-checking for tar... /bin/tar
-checking for gzip... /bin/gzip
-checking whether gcc -MM is supported... yes
-checking for sort... /usr/bin/sort
-checking whether ln -s works... yes
-checking for msgfmt... /usr/bin/msgfmt
-checking for msgmerge... /usr/bin/msgmerge
-checking for xgettext... /usr/bin/xgettext
-checking for rpm... no
-checking aio.h usability... yes
-checking aio.h presence... yes
-checking for aio.h... yes
-checking for lio_listio... no
-checking for lio_listio in -lrt... yes
-checking uuid.h usability... no
-checking uuid.h presence... no
-checking for uuid.h... no
-checking sys/uuid.h usability... no
-checking sys/uuid.h presence... no
-checking for sys/uuid.h... no
-checking uuid/uuid.h usability... yes
-checking uuid/uuid.h presence... yes
-checking for uuid/uuid.h... yes
-checking for uuid_compare... no
-checking for uuid_compare in -luuid... no
-
-FATAL ERROR: could not find a valid UUID library.
-Install the Universally Unique Identifiers library package.
-Makefile:89: recipe for target 'include/builddefs' failed
-make[1]: *** [include/builddefs] Error 1
-make[1]: Leaving directory '/=C2=ABPKGBUILDDIR=C2=BB'
-debian/rules:36: recipe for target '.census' failed
-make: *** [.census] Error 2
-dpkg-buildpackage: error: debian/rules build gave error exit status 2
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80
-Build finished at 20150728-0308
-
-Finished
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80
-
-E: Build failure (dpkg-buildpackage died)
-
-=E2=94=8C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=90
-=E2=94=82 Cleanup                                                          =
-            =E2=94=82
-=E2=94=94=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=98
-
-Purging /=C2=ABBUILDDIR=C2=BB
-Not cleaning session: cloned chroot in use
-
-=E2=94=8C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=90
-=E2=94=82 Summary                                                          =
-            =E2=94=82
-=E2=94=94=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=98
-
-Build Architecture: amd64
-Build-Space: 8980
-Build-Time: 21
-Distribution: unstable
-Fail-Stage: build
-Foreign Architectures: arm64
-Host Architecture: arm64
-Install-Time: 28
-Job: /srv/debomatic-staging/xfsprogs_3.2.3.dsc
-Machine Architecture: amd64
-Package: xfsprogs
-Package-Time: 89
-Source-Version: 3.2.3
-Space: 8980
-Status: attempted
-Version: 3.2.3
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80
-Finished at 20150728-0308
-Build needed 00:01:29, 8980k disc space
-
---pWyiEgJYm5f9v55/
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="xfsprogs_3.2.3+nmu1.debdiff"
-
-Binary files /tmp/xr3U_4h9in/xfsprogs-3.2.3/.configure.ac.swp and /tmp/NqIHa9bVs5/xfsprogs-3.2.3+nmu1/.configure.ac.swp differ
-diff -Nru xfsprogs-3.2.3/debian/changelog xfsprogs-3.2.3+nmu1/debian/changelog
---- xfsprogs-3.2.3/debian/changelog	2015-06-01 03:35:09.000000000 +0200
-+++ xfsprogs-3.2.3+nmu1/debian/changelog	2015-07-30 23:32:50.000000000 +0200
-@@ -1,3 +1,12 @@
-+xfsprogs (3.2.3+nmu1) UNRELEASED; urgency=medium
-+
-+  * Non-maintainer upload.
-+  * Fix FTCBFS. (Closes: #-1)
-+    + Pass --build and --host to configure.
-+    + Compile gen_crc32table and crc32selftest using CC_FOR_BUILD.
-+
-+ -- Helmut Grohne <helmut@subdivi.de>  Thu, 30 Jul 2015 23:00:34 +0200
-+
- xfsprogs (3.2.3) unstable; urgency=low
- 
-   * New upstream release
-diff -Nru xfsprogs-3.2.3/debian/rules xfsprogs-3.2.3+nmu1/debian/rules
---- xfsprogs-3.2.3/debian/rules	2014-11-10 01:51:18.000000000 +0100
-+++ xfsprogs-3.2.3+nmu1/debian/rules	2015-07-30 23:23:08.000000000 +0200
-@@ -6,6 +6,10 @@
- develop = xfslibs-dev
- bootpkg = xfsprogs-udeb
- 
-+DEB_BUILD_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
-+DEB_HOST_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
-+export CC_FOR_BUILD ?= cc
-+
- version = $(shell dpkg-parsechangelog | grep ^Version: | cut -d ' ' -f 2)
- target ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
- udebpkg = $(bootpkg)_$(version)_$(target).udeb
-@@ -18,11 +22,13 @@
- pkgdi  = DIST_ROOT=`pwd`/$(dirdi); export DIST_ROOT;
- stdenv = @GZIP=-q; export GZIP;
- 
-+configure_options = --build=$(DEB_BUILD_GNU_TYPE) --host=$(DEB_HOST_GNU_TYPE)
-+
- options = export DEBUG=-DNDEBUG DISTRIBUTION=debian \
- 	  INSTALL_USER=root INSTALL_GROUP=root \
--	  LOCAL_CONFIGURE_OPTIONS="--enable-readline=yes --enable-blkid=yes" ;
-+	  LOCAL_CONFIGURE_OPTIONS="$(configure_options) --enable-readline=yes --enable-blkid=yes" ;
- diopts  = $(options) \
--	  export OPTIMIZER=-Os LOCAL_CONFIGURE_OPTIONS="--enable-gettext=no" ;
-+	  export OPTIMIZER=-Os LOCAL_CONFIGURE_OPTIONS="$(configure_options) --enable-gettext=no" ;
- checkdir = test -f debian/rules
- 
- build: built
-diff -Nru xfsprogs-3.2.3/libxfs/Makefile xfsprogs-3.2.3+nmu1/libxfs/Makefile
---- xfsprogs-3.2.3/libxfs/Makefile	2014-05-02 02:09:15.000000000 +0200
-+++ xfsprogs-3.2.3+nmu1/libxfs/Makefile	2015-07-30 23:32:23.000000000 +0200
-@@ -67,7 +67,7 @@
- 
- crc32table.h: gen_crc32table.c
- 	@echo "    [CC]     gen_crc32table"
--	$(Q) $(CC) $(CFLAGS) -o gen_crc32table $<
-+	$(Q) $(CC_FOR_BUILD) $(CFLAGS) -o gen_crc32table $<
- 	@echo "    [GENERATE] $@"
- 	$(Q) ./gen_crc32table > crc32table.h
- 
-@@ -78,7 +78,7 @@
- # disk.
- crc32selftest: gen_crc32table.c crc32table.h crc32.c
- 	@echo "    [TEST]    CRC32"
--	$(Q) $(CC) $(CFLAGS) -D CRC32_SELFTEST=1 crc32.c -o $@
-+	$(Q) $(CC_FOR_BUILD) $(CFLAGS) -D CRC32_SELFTEST=1 crc32.c -o $@
- 	$(Q) ./$@
- 
- include $(BUILDRULES)
-
---pWyiEgJYm5f9v55/--
-
-------------=_1637000830-16224-0
-Content-Type: message/rfc822
-Content-Disposition: inline
-Content-Transfer-Encoding: 7bit
-
-Received: (at 794158-close) by bugs.debian.org; 15 Nov 2021 18:25:21 +0000
-X-Spam-Checker-Version: SpamAssassin 3.4.2-bugs.debian.org_2005_01_02
-	(2018-09-13) on buxtehude.debian.org
-X-Spam-Level: 
-X-Spam-Status: No, score=-23.1 required=4.0 tests=BAYES_00,DIGITS_LETTERS,
-	FOURLA,FVGT_m_MULTI_ODD,HAS_BUG_NUMBER,MD5_SHA1_SUM,PGPSIGNATURE,
-	RCVD_IN_DNSWL_HI,SPF_HELO_NONE,SPF_NONE,TXREP autolearn=ham
-	autolearn_force=no version=3.4.2-bugs.debian.org_2005_01_02
-X-Spam-Bayes: score:0.0000 Tokens: new, 9; hammy, 150; neutral, 237; spammy,
-	0. spammytokens: hammytokens:0.000-+--HX-Debian:DAK,
-	0.000-+--H*rp:D*ftp-master.debian.org, 0.000-+--HX-DAK:process-upload,
-	0.000-+--Hx-spam-relays-external:sk:envelop, 0.000-+--H*r:138.16.160
-Return-path: <envelope@ftp-master.debian.org>
-Received: from muffat.debian.org ([2607:f8f0:614:1::1274:33]:45768)
-	from C=NA,ST=NA,L=Ankh Morpork,O=Debian SMTP,OU=Debian SMTP CA,CN=muffat.debian.org,EMAIL=hostmaster@muffat.debian.org (verified)
-	by buxtehude.debian.org with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-	(Exim 4.92)
-	(envelope-from <envelope@ftp-master.debian.org>)
-	id 1mmgfR-00047z-Py
-	for 794158-close@bugs.debian.org; Mon, 15 Nov 2021 18:25:21 +0000
-Received: from fasolo.debian.org ([138.16.160.17]:52732)
-	from C=NA,ST=NA,L=Ankh Morpork,O=Debian SMTP,OU=Debian SMTP CA,CN=fasolo.debian.org,EMAIL=hostmaster@fasolo.debian.org (verified)
-	by muffat.debian.org with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-	(Exim 4.92)
-	(envelope-from <envelope@ftp-master.debian.org>)
-	id 1mmgfR-0005qu-85; Mon, 15 Nov 2021 18:25:21 +0000
-Received: from dak by fasolo.debian.org with local (Exim 4.92)
-	(envelope-from <envelope@ftp-master.debian.org>)
-	id 1mmgfP-0004r1-ND; Mon, 15 Nov 2021 18:25:19 +0000
-From: Debian FTP Masters <ftpmaster@ftp-master.debian.org>
-Reply-To: Bastian Germann <bage@debian.org>
-To: 794158-close@bugs.debian.org
-X-DAK: dak process-upload
-X-Debian: DAK
-X-Debian-Package: xfsprogs
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Subject: Bug#794158: fixed in xfsprogs 5.14.0-rc1-1
-Message-Id: <E1mmgfP-0004r1-ND@fasolo.debian.org>
-Date: Mon, 15 Nov 2021 18:25:19 +0000
-X-CrossAssassin-Score: 2
-
-Source: xfsprogs
-Source-Version: 5.14.0-rc1-1
-Done: Bastian Germann <bage@debian.org>
-
-We believe that the bug you reported is fixed in the latest version of
-xfsprogs, which is due to be installed in the Debian FTP archive.
-
-A summary of the changes between this version and the previous one is
-attached.
-
-Thank you for reporting the bug, which will now be closed.  If you
-have further comments please address them to 794158@bugs.debian.org,
-and the maintainer will reopen the bug report if appropriate.
-
-Debian distribution maintenance software
-pp.
-Bastian Germann <bage@debian.org> (supplier of updated xfsprogs package)
-
-(This message was generated automatically at their request; if you
-believe that there is a problem with it please contact the archive
-administrators by mailing ftpmaster@ftp-master.debian.org)
-
-
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA512
-
-Format: 1.8
-Date: Sun, 14 Nov 2021 23:18:22 +0100
-Source: xfsprogs
-Architecture: source
-Version: 5.14.0-rc1-1
-Distribution: unstable
-Urgency: medium
-Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
-Changed-By: Bastian Germann <bage@debian.org>
-Closes: 794158 997656
-Changes:
- xfsprogs (5.14.0-rc1-1) unstable; urgency=medium
- .
-   [ Dave Chinner ]
-   * New build dependency: liburcu-dev
- .
-   [ Helmut Grohne ]
-   * Fix FTCBFS (Closes: #794158)
-     + Pass --build and --host to configure
- .
-   [ Boian Bonev ]
-   * Fix FTBFS (Closes: #997656)
-     + Keep custom install-sh after autogen
-Checksums-Sha1:
- d3c15cd8386cbeb793838196efa329c31f67b170 2045 xfsprogs_5.14.0-rc1-1.dsc
- 38f986a3f49a914f81f65cf3a09553f565ac2c0d 1536948 xfsprogs_5.14.0-rc1.orig.tar.gz
- cca1668fde70c881cb28d1e0d612229150293889 14232 xfsprogs_5.14.0-rc1-1.debian.tar.xz
- 80932400488c0408da8b03f5ef3df87bea6ddd05 6251 xfsprogs_5.14.0-rc1-1_source.buildinfo
-Checksums-Sha256:
- 7ba6ebb4446bfd8257e185ef3b15172a9dec870f25dca875939fc2092792169e 2045 xfsprogs_5.14.0-rc1-1.dsc
- fccadafbf8c609fec5f6b38f452879b83647dff640a16bca939777ea4e81bc04 1536948 xfsprogs_5.14.0-rc1.orig.tar.gz
- 7eede3f2cb24fecc5419762b4e2493afc856a850f47adfc0ea4a6b044f768885 14232 xfsprogs_5.14.0-rc1-1.debian.tar.xz
- 516f6e2eb6e94804e0b7e6849507786b2af7bf5af45795c1daaefd980f250d0e 6251 xfsprogs_5.14.0-rc1-1_source.buildinfo
-Files:
- c584f503002c94b4375d63a65eeeda79 2045 admin optional xfsprogs_5.14.0-rc1-1.dsc
- 5170e9971709bb1847b2b5363d3d2807 1536948 admin optional xfsprogs_5.14.0-rc1.orig.tar.gz
- d2939ac3e1db87942907ba9b6953b016 14232 admin optional xfsprogs_5.14.0-rc1-1.debian.tar.xz
- c0a1a12e94c11239a1c696a7df4bb7bb 6251 admin optional xfsprogs_5.14.0-rc1-1_source.buildinfo
-
------BEGIN PGP SIGNATURE-----
-
-iQGzBAEBCgAdFiEEQGIgyLhVKAI3jM5BH1x6i0VWQxQFAmGSmlcACgkQH1x6i0VW
-QxRcagv+JRdcKjx/4J8TDXt6wRS9GY9Qx1AcgsjpaY5auCzCXN/l4AzkBHinlVzO
-JFUy/icg7c2jQq22rEkyMD/uHkURp/O0Kz7Ld73wghYBbTmLs+czLa66cA9eVPYQ
-cu0X/biC2DTGASHvp0FuetHgvO4KUQvTYDIINEeDnfVgwSjSHzMkHTIPlHj/X74d
-GBNH7++IV8MpqKlZBDfgKYSUeE9Hm0zssCjlgZudA4+dal/cF3gq31omcE0lFjAE
-p3OBDzn9fOOei1jEwDtwV9K3y+5NP5tBVsOSG2EkLJEhRRS+VqbpQCUUQwAzpKNF
-RpqIZ+JQZH3cyOnVpqidae/oABN/oEXAHDlZ/X52bT2tlH4wSGMRtz6rXC5hp0jd
-j2phekA8lHaW+7ACPH1rNYE7e8Vg0hUdOCAzxNu2FDnPLzC/GfInlSBoHojWhTt2
-2oBo/Z16ejjShcuuaTM2RWJSEopY2X9ouz1ea/nTdOCVV3F8kYGnORWScj16QzPo
-vdJg1PlB
-=GJZC
------END PGP SIGNATURE-----
-------------=_1637000830-16224-0--
