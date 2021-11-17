@@ -2,156 +2,134 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D893C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 17 Nov 2021 10:25:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 366FBC433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 17 Nov 2021 10:34:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 644B361BFE
-	for <linux-xfs@archiver.kernel.org>; Wed, 17 Nov 2021 10:25:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 139D961465
+	for <linux-xfs@archiver.kernel.org>; Wed, 17 Nov 2021 10:34:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236362AbhKQK2L (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 17 Nov 2021 05:28:11 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:49896 "EHLO
+        id S236421AbhKQKg7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 17 Nov 2021 05:36:59 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:39518 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S236324AbhKQK2L (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Nov 2021 05:28:11 -0500
+        by vger.kernel.org with ESMTP id S234840AbhKQKg5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Nov 2021 05:36:57 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1637144712;
+        s=mimecast20190719; t=1637145239;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=PeLytMpeobAX/Mbka1azxJ5y2EI4oXxreVBxQFm+D34=;
-        b=O3TlVrYvmVDcSKr4FXHNsZQ/cEKxfRvN/NUqJHtOZJfQ+MrVr0b6dyONH8BBFRTEOH6JXj
-        J/dDKe9+L/1Z+Ij6YVeqiC23yXkbvGXxR+Is3kJe8cXGUCHhEn0Y4xYkuD9yZURqqoNwPn
-        db0elfcktF1BeCjdOd6OSTU/8NOqKnw=
-Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
- [209.85.128.70]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-545-RSIgHPEHMbqmTTrVnQStXA-1; Wed, 17 Nov 2021 05:25:09 -0500
-X-MC-Unique: RSIgHPEHMbqmTTrVnQStXA-1
-Received: by mail-wm1-f70.google.com with SMTP id r6-20020a1c4406000000b0033119c22fdbso872458wma.4
-        for <linux-xfs@vger.kernel.org>; Wed, 17 Nov 2021 02:25:09 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=PeLytMpeobAX/Mbka1azxJ5y2EI4oXxreVBxQFm+D34=;
-        b=udHZSzqgmNutMA6l/5NVSjTgVo1dGTmUNHXGxxKs1KAfjFkHeGCwW2U83rQimknX8+
-         CyxdZQuuN8SZAblTKdjZfHV8xaghmfqtDf35PTRYlhR93ncWqFKquVP9Xhri/esTD24D
-         6gYuG4zet0aiO1sKkqo/msbjkkDxjJ71wbbz9B/0ureG+eySemowu1rPgW7B3RaIlUz6
-         m4S3Bv27RHQ3QrSs2HylWv4eayPiE3/IoWMjAIPQn4xKZI8aA8f8dUwG46947bZoWmIl
-         W2GqB44YRsAiJb7GLFtxlFJ+BLXQHND6qlmEbtSIoT50ZjF40g3NX+HbyUXmtdIZuJWl
-         aXpw==
-X-Gm-Message-State: AOAM531sY2L42UJ74Ni03tadWyRBFo5isyodrN4bWoM3YQMnDYapHKYp
-        jix/hctDxwxMNosI9oB7fEEt6uMDjgkwGGx9opG5adKxEUfRCP0mHUNQctnGBiMt+7BHFuIJEbm
-        XIn/r4JnzWgU+iljwI4dm6HoUldb6u4WTsoY6
-X-Received: by 2002:a5d:43c5:: with SMTP id v5mr19042040wrr.11.1637144708008;
-        Wed, 17 Nov 2021 02:25:08 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJxV/yzimt/rDgfIdS6R4Pe333apTi73Ff+k6sK61bEAJtugKa8lazitGgtGHk5ESX82WxjntResUX5IKf1Fx4o=
-X-Received: by 2002:a5d:43c5:: with SMTP id v5mr19042003wrr.11.1637144707799;
- Wed, 17 Nov 2021 02:25:07 -0800 (PST)
-MIME-Version: 1.0
-References: <20211111161714.584718-1-agruenba@redhat.com> <20211117053330.GU24307@magnolia>
-In-Reply-To: <20211117053330.GU24307@magnolia>
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=MZpcj2Z8HdqZb1jgsG7GAEGnobLmuYt+4j5fMfR9g4Q=;
+        b=XF1xpzwH1h/mWzNJtKqAKUJbPd2O9oFRDZxhqJp8tN52TBDNsjzZZTaNvSNTwJcpQmUU1M
+        z/LVUBP1llVr+DovVTtxxj+88Crsg9Yun8pNX4huB+eJmYVBEpFhtRcJOeiigKcRKhZF2l
+        a2NUW3k3WlFSXcIRtXPEBIrI0V6SLPI=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-399-YA-Jy2PFOpqgfJtDqLitkQ-1; Wed, 17 Nov 2021 05:32:14 -0500
+X-MC-Unique: YA-Jy2PFOpqgfJtDqLitkQ-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 09CBC8190A6;
+        Wed, 17 Nov 2021 10:32:13 +0000 (UTC)
+Received: from max.com (unknown [10.40.192.62])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 8A5C65DEFA;
+        Wed, 17 Nov 2021 10:32:03 +0000 (UTC)
 From:   Andreas Gruenbacher <agruenba@redhat.com>
-Date:   Wed, 17 Nov 2021 11:24:56 +0100
-Message-ID: <CAHc6FU4rY=G-pdKzYPVXyQ5SEhtfgh_9CK9wNKbBQRONuP=BFA@mail.gmail.com>
-Subject: Re: [5.15 REGRESSION v2] iomap: Fix inline extent handling in iomap_readpage
-To:     "Darrick J. Wong" <djwong@kernel.org>
+To:     "Darrick J . Wong" <djwong@kernel.org>
 Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        cluster-devel <cluster-devel@redhat.com>,
-        stable <stable@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com,
+        Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH] iomap: iomap_read_inline_data cleanup
+Date:   Wed, 17 Nov 2021 11:32:02 +0100
+Message-Id: <20211117103202.44346-1-agruenba@redhat.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Nov 17, 2021 at 6:33 AM Darrick J. Wong <djwong@kernel.org> wrote:
-> On Thu, Nov 11, 2021 at 05:17:14PM +0100, Andreas Gruenbacher wrote:
-> > Before commit 740499c78408 ("iomap: fix the iomap_readpage_actor return
-> > value for inline data"), when hitting an IOMAP_INLINE extent,
-> > iomap_readpage_actor would report having read the entire page.  Since
-> > then, it only reports having read the inline data (iomap->length).
-> >
-> > This will force iomap_readpage into another iteration, and the
-> > filesystem will report an unaligned hole after the IOMAP_INLINE extent.
-> > But iomap_readpage_actor (now iomap_readpage_iter) isn't prepared to
-> > deal with unaligned extents, it will get things wrong on filesystems
-> > with a block size smaller than the page size, and we'll eventually run
-> > into the following warning in iomap_iter_advance:
-> >
-> >   WARN_ON_ONCE(iter->processed > iomap_length(iter));
-> >
-> > Fix that by changing iomap_readpage_iter to return 0 when hitting an
-> > inline extent; this will cause iomap_iter to stop immediately.
->
-> I guess this means that we also only support having inline data that
-> ends at EOF?  IIRC this is true for the three(?) filesystems that have
-> expressed any interest in inline data: yours, ext4, and erofs?
+Change iomap_read_inline_data to return 0 or an error code; this
+simplifies the callers.  Add a description.
 
-Yes.
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+---
+ fs/iomap/buffered-io.c | 30 ++++++++++++++----------------
+ 1 file changed, 14 insertions(+), 16 deletions(-)
 
-> > To fix readahead as well, change iomap_readahead_iter to pass on
-> > iomap_readpage_iter return values less than or equal to zero.
-> >
-> > Fixes: 740499c78408 ("iomap: fix the iomap_readpage_actor return value for inline data")
-> > Cc: stable@vger.kernel.org # v5.15+
-> > Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-> > ---
-> >  fs/iomap/buffered-io.c | 11 +++++++++--
-> >  1 file changed, 9 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> > index 1753c26c8e76..fe10d8a30f6b 100644
-> > --- a/fs/iomap/buffered-io.c
-> > +++ b/fs/iomap/buffered-io.c
-> > @@ -256,8 +256,13 @@ static loff_t iomap_readpage_iter(const struct iomap_iter *iter,
-> >       unsigned poff, plen;
-> >       sector_t sector;
-> >
-> > -     if (iomap->type == IOMAP_INLINE)
-> > -             return min(iomap_read_inline_data(iter, page), length);
-> > +     if (iomap->type == IOMAP_INLINE) {
-> > +             loff_t ret = iomap_read_inline_data(iter, page);
->
-> Ew, iomap_read_inline_data returns loff_t.  I think I'll slip in a
-> change of return type to ssize_t, if you don't mind?
-
-Really?
-
-> > +
-> > +             if (ret < 0)
-> > +                     return ret;
->
-> ...and a comment here explaining that we only support inline data that
-> ends at EOF?
-
-I'll send a separate patch that adds a description for
-iomap_read_inline_data and cleans up its return value.
-
-Thanks,
-Andreas
-
-> If the answers to all /four/ questions are 'yes', then consider this:
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
->
-> --D
->
-> > +             return 0;
-> > +     }
-> >
-> >       /* zero post-eof blocks as the page may be mapped */
-> >       iop = iomap_page_create(iter->inode, page);
-> > @@ -370,6 +375,8 @@ static loff_t iomap_readahead_iter(const struct iomap_iter *iter,
-> >                       ctx->cur_page_in_bio = false;
-> >               }
-> >               ret = iomap_readpage_iter(iter, ctx, done);
-> > +             if (ret <= 0)
-> > +                     return ret;
-> >       }
-> >
-> >       return done;
-> > --
-> > 2.31.1
-> >
->
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index fe10d8a30f6b..f1bc9a35184d 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -205,7 +205,15 @@ struct iomap_readpage_ctx {
+ 	struct readahead_control *rac;
+ };
+ 
+-static loff_t iomap_read_inline_data(const struct iomap_iter *iter,
++/**
++ * iomap_read_inline_data - copy inline data into the page cache
++ * @iter: iteration structure
++ * @page: page to copy to
++ *
++ * Copy the inline data in @iter into @page and zero out the rest of the page.
++ * Only a single IOMAP_INLINE extent is allowed at the end of each file.
++ */
++static int iomap_read_inline_data(const struct iomap_iter *iter,
+ 		struct page *page)
+ {
+ 	const struct iomap *iomap = iomap_iter_srcmap(iter);
+@@ -214,7 +222,7 @@ static loff_t iomap_read_inline_data(const struct iomap_iter *iter,
+ 	void *addr;
+ 
+ 	if (PageUptodate(page))
+-		return PAGE_SIZE - poff;
++		return 0;
+ 
+ 	if (WARN_ON_ONCE(size > PAGE_SIZE - poff))
+ 		return -EIO;
+@@ -231,7 +239,7 @@ static loff_t iomap_read_inline_data(const struct iomap_iter *iter,
+ 	memset(addr + size, 0, PAGE_SIZE - poff - size);
+ 	kunmap_local(addr);
+ 	iomap_set_range_uptodate(page, poff, PAGE_SIZE - poff);
+-	return PAGE_SIZE - poff;
++	return 0;
+ }
+ 
+ static inline bool iomap_block_needs_zeroing(const struct iomap_iter *iter,
+@@ -256,13 +264,8 @@ static loff_t iomap_readpage_iter(const struct iomap_iter *iter,
+ 	unsigned poff, plen;
+ 	sector_t sector;
+ 
+-	if (iomap->type == IOMAP_INLINE) {
+-		loff_t ret = iomap_read_inline_data(iter, page);
+-
+-		if (ret < 0)
+-			return ret;
+-		return 0;
+-	}
++	if (iomap->type == IOMAP_INLINE)
++		return iomap_read_inline_data(iter, page);
+ 
+ 	/* zero post-eof blocks as the page may be mapped */
+ 	iop = iomap_page_create(iter->inode, page);
+@@ -587,15 +590,10 @@ static int __iomap_write_begin(const struct iomap_iter *iter, loff_t pos,
+ static int iomap_write_begin_inline(const struct iomap_iter *iter,
+ 		struct page *page)
+ {
+-	int ret;
+-
+ 	/* needs more work for the tailpacking case; disable for now */
+ 	if (WARN_ON_ONCE(iomap_iter_srcmap(iter)->offset != 0))
+ 		return -EIO;
+-	ret = iomap_read_inline_data(iter, page);
+-	if (ret < 0)
+-		return ret;
+-	return 0;
++	return iomap_read_inline_data(iter, page);
+ }
+ 
+ static int iomap_write_begin(const struct iomap_iter *iter, loff_t pos,
+-- 
+2.31.1
 
