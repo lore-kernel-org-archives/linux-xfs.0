@@ -2,62 +2,107 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C267C433FE
-	for <linux-xfs@archiver.kernel.org>; Wed, 17 Nov 2021 09:50:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1FD8C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 17 Nov 2021 09:52:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1BB2B61BD2
-	for <linux-xfs@archiver.kernel.org>; Wed, 17 Nov 2021 09:50:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 96CF861BD2
+	for <linux-xfs@archiver.kernel.org>; Wed, 17 Nov 2021 09:52:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235562AbhKQJxn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 17 Nov 2021 04:53:43 -0500
-Received: from verein.lst.de ([213.95.11.211]:49737 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232917AbhKQJxn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 17 Nov 2021 04:53:43 -0500
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 1EABF68AFE; Wed, 17 Nov 2021 10:50:42 +0100 (CET)
-Date:   Wed, 17 Nov 2021 10:50:41 +0100
-From:   Christoph Hellwig <hch@lst.de>
-To:     Alex Sierra <alex.sierra@amd.com>
-Cc:     akpm@linux-foundation.org, Felix.Kuehling@amd.com,
-        linux-mm@kvack.org, rcampbell@nvidia.com,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        hch@lst.de, jgg@nvidia.com, jglisse@redhat.com, apopple@nvidia.com,
-        willy@infradead.org
-Subject: Re: [PATCH v1 1/9] mm: add zone device coherent type memory support
-Message-ID: <20211117095041.GA9730@lst.de>
-References: <20211115193026.27568-1-alex.sierra@amd.com> <20211115193026.27568-2-alex.sierra@amd.com>
+        id S235628AbhKQJze (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 17 Nov 2021 04:55:34 -0500
+Received: from mail-vk1-f172.google.com ([209.85.221.172]:37681 "EHLO
+        mail-vk1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235627AbhKQJze (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Nov 2021 04:55:34 -0500
+Received: by mail-vk1-f172.google.com with SMTP id e64so1274204vke.4;
+        Wed, 17 Nov 2021 01:52:35 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=DaTH6dG+9OWuk5kLfq7Obj05Cb3d8CS7ODxUbCSsHLY=;
+        b=hehaOcivLeOZdPbXAUg/kY+nfhCojFZMe0c6M69o03c3uv8qcZnwFWp4IOgi1l2vt7
+         UBA7qhewIqoXF65TbLxYUt0wu/fJocko09gIk1cv+6W5CWKBEaKU4lgvKphRB+H4CPtO
+         ymmCmpCOxapu5msM5ZWnBk8FGJy6H0Z7SW38cHvQxPBS097I5hovy+IrLnumlvm8IL0p
+         mRhPJEYOnw3hD1QKyzODDbLDSJywakOeaspcDHimCRL3oLHTrJIJVfM0guZXpnFoxhzQ
+         xGQbGwB8FJvPuSOzDUKJ5493f4wUgLrMj0RQRsoniRfuqFvnrIuphrBhvdhVamyCkQAM
+         nyIA==
+X-Gm-Message-State: AOAM531VjGmBN0Q5SnBJW3xHrVUD+kCul7nmBo0TPepYRRLju62p/dKN
+        GUF44W7PiXotyGI2lcW055/eVwzdnuY42g==
+X-Google-Smtp-Source: ABdhPJxssKJnTS7lyevwjlZazaFRI63UxBqJV9h9WuFWesZ19yrFdAj3a41H0urJq5N56aVs1v0HBg==
+X-Received: by 2002:a05:6122:1696:: with SMTP id 22mr86804241vkl.2.1637142755296;
+        Wed, 17 Nov 2021 01:52:35 -0800 (PST)
+Received: from mail-ua1-f43.google.com (mail-ua1-f43.google.com. [209.85.222.43])
+        by smtp.gmail.com with ESMTPSA id y22sm12106344vsy.33.2021.11.17.01.52.34
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 17 Nov 2021 01:52:34 -0800 (PST)
+Received: by mail-ua1-f43.google.com with SMTP id ay21so4488549uab.12;
+        Wed, 17 Nov 2021 01:52:34 -0800 (PST)
+X-Received: by 2002:a05:6102:2910:: with SMTP id cz16mr66332901vsb.9.1637142754433;
+ Wed, 17 Nov 2021 01:52:34 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20211115193026.27568-2-alex.sierra@amd.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+References: <20211108040551.1942823-1-willy@infradead.org> <20211108040551.1942823-2-willy@infradead.org>
+ <YYozKaEXemjKwEar@infradead.org> <YZKCx1cwBXOZcTA4@casper.infradead.org>
+ <YZNQnd887/TcPH7H@infradead.org> <YZQnWU9ABBlXJKa5@casper.infradead.org>
+In-Reply-To: <YZQnWU9ABBlXJKa5@casper.infradead.org>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Wed, 17 Nov 2021 10:52:23 +0100
+X-Gmail-Original-Message-ID: <CAMuHMdXhUbMK8Sp1Zj-cNMSK2Tq1bZ3egX_LXihQpmHULkBk_Q@mail.gmail.com>
+Message-ID: <CAMuHMdXhUbMK8Sp1Zj-cNMSK2Tq1bZ3egX_LXihQpmHULkBk_Q@mail.gmail.com>
+Subject: Re: [PATCH v2 01/28] csky,sparc: Declare flush_dcache_folio()
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        Linux FS Devel <linux-fsdevel@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Nov 15, 2021 at 01:30:18PM -0600, Alex Sierra wrote:
-> @@ -5695,8 +5695,8 @@ static int mem_cgroup_move_account(struct page *page,
->   *   2(MC_TARGET_SWAP): if the swap entry corresponding to this pte is a
->   *     target for charge migration. if @target is not NULL, the entry is stored
->   *     in target->ent.
-> - *   3(MC_TARGET_DEVICE): like MC_TARGET_PAGE  but page is MEMORY_DEVICE_PRIVATE
-> - *     (so ZONE_DEVICE page and thus not on the lru).
-> + *   3(MC_TARGET_DEVICE): like MC_TARGET_PAGE  but page is MEMORY_DEVICE_COHERENT
-> + *     or MEMORY_DEVICE_PRIVATE (so ZONE_DEVICE page and thus not on the lru).
+On Wed, Nov 17, 2021 at 2:22 AM Matthew Wilcox <willy@infradead.org> wrote:
+> On Mon, Nov 15, 2021 at 10:33:01PM -0800, Christoph Hellwig wrote:
+> > I see how this works no, but it is pretty horrible.  Why not something
+> > simple like the patch below?  If/when an architecture actually
+> > wants to override flush_dcache_folio we can find out how to best do
+> > it:
+>
+> I'll stick this one into -next and see if anything blows up:
+>
+> From 14f55de74c68a3eb058cfdbf81414148b9bdaac7 Mon Sep 17 00:00:00 2001
+> From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+> Date: Sat, 6 Nov 2021 17:13:35 -0400
+> Subject: [PATCH] Add linux/cacheflush.h
+>
+> Many architectures do not include asm-generic/cacheflush.h, so turn
+> the includes on their head and add linux/cacheflush.h which includes
+> asm/cacheflush.h.
+>
+> Move the flush_dcache_folio() declaration from asm-generic/cacheflush.h
+> to linux/cacheflush.h and change linux/highmem.h to include
+> linux/cacheflush.h instead of asm/cacheflush.h so that all necessary
+> places will see flush_dcache_folio().
+>
+> More functions should have their default implementations moved in the
+> future, but those are for follow-on patches.  This fixes csky, sparc and
+> sparc64 which were missed in the commit which added flush_dcache_folio().
+>
+> Fixes: 08b0b0059bf1 ("mm: Add flush_dcache_folio()")
+> Suggested-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 
-Please avoid the overly long line.  But I don't think we we need to mention
-the exact enum, but rather do something like:
+>  arch/m68k/include/asm/cacheflush_mm.h |  1 -
 
- *   3(MC_TARGET_DEVICE): like MC_TARGET_PAGE  but page is device memory and
- *     thus not on the lru.
+Acked-by: Geert Uytterhoeven <geert@linux-m68k.org>
 
-> +	switch (pgmap->type) {
-> +	case MEMORY_DEVICE_PRIVATE:
-> +	case MEMORY_DEVICE_COHERENT:
->  		/*
->  		 * TODO: Handle HMM pages which may need coordination
->  		 * with device-side memory.
+Gr{oetje,eeting}s,
 
-This might be a good opportunity for doing a s/HMM/device/ here.
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
