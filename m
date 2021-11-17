@@ -2,278 +2,232 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2715C433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 16 Nov 2021 21:49:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BCD1C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 17 Nov 2021 00:22:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8974D61B08
-	for <linux-xfs@archiver.kernel.org>; Tue, 16 Nov 2021 21:49:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F5A261BC1
+	for <linux-xfs@archiver.kernel.org>; Wed, 17 Nov 2021 00:22:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229904AbhKPVwP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 16 Nov 2021 16:52:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56652 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229593AbhKPVwO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Nov 2021 16:52:14 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A1A7C061570;
-        Tue, 16 Nov 2021 13:49:17 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=k0Jx0lZyit7GgPrACTRTUTWqBfozWFKayPWsmq2Q7SE=; b=bTbEQGuhgQlVmg8K1YPfgdWw8x
-        UU8njoCUZjUfiiKlIGUUZYtdoh2E63f7g6j438M7juZsSk9T+jP3Ge0YB3JRUDTnQzps4v/wbioqe
-        4zlNObPDfXHx0sndZ955cE6WyNC9ke4+tyj1EWkhUYU36pFpyGM6nHZ1GtdkI3XnbHOlGTAZkoZal
-        af88UWhF7xls9oUCTE1JWG3868Kh3CiinBICXKxyoATxXlUIiQDqeqvSEoxwVzDpJrQSsy4k0c4kN
-        lScTCcw6gkJdJtvRmNfr+Wu8MFn3lG22dlBlxA+lPLMOpJYyw5MmcF8VfG/ghMYmDjRoDUMuYAZPz
-        8Y6Aoaig==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mn6KH-00775n-VM; Tue, 16 Nov 2021 21:49:14 +0000
-Date:   Tue, 16 Nov 2021 21:49:13 +0000
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     "Darrick J . Wong " <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH v2 01/28] csky,sparc: Declare flush_dcache_folio()
-Message-ID: <YZQnWU9ABBlXJKa5@casper.infradead.org>
-References: <20211108040551.1942823-1-willy@infradead.org>
- <20211108040551.1942823-2-willy@infradead.org>
- <YYozKaEXemjKwEar@infradead.org>
- <YZKCx1cwBXOZcTA4@casper.infradead.org>
- <YZNQnd887/TcPH7H@infradead.org>
+        id S230366AbhKQAZz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 16 Nov 2021 19:25:55 -0500
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:59811 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229544AbhKQAZy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Nov 2021 19:25:54 -0500
+Received: from dread.disaster.area (pa49-195-103-97.pa.nsw.optusnet.com.au [49.195.103.97])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 586E488B6A7;
+        Wed, 17 Nov 2021 11:22:52 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1mn8ix-009hoL-BG; Wed, 17 Nov 2021 11:22:51 +1100
+Date:   Wed, 17 Nov 2021 11:22:51 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     Ian Kent <raven@themaw.net>, Miklos Szeredi <miklos@szeredi.hu>,
+        xfs <linux-xfs@vger.kernel.org>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        David Howells <dhowells@redhat.com>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 2/2] xfs: make sure link path does not go away at access
+Message-ID: <20211117002251.GR449541@dread.disaster.area>
+References: <163660195990.22525.6041281669106537689.stgit@mickey.themaw.net>
+ <163660197073.22525.11235124150551283676.stgit@mickey.themaw.net>
+ <20211112003249.GL449541@dread.disaster.area>
+ <CAJfpegvHDM_Mtc8+ASAcmNLd6RiRM+KutjBOoycun_Oq2=+p=w@mail.gmail.com>
+ <20211114231834.GM449541@dread.disaster.area>
+ <CAJfpegu4BwJD1JKngsrzUs7h82cYDGpxv0R1om=WGhOOb6pZ2Q@mail.gmail.com>
+ <20211115222417.GO449541@dread.disaster.area>
+ <f8425d1270fe011897e7e14eaa6ba8a77c1ed077.camel@themaw.net>
+ <20211116030120.GQ449541@dread.disaster.area>
+ <YZPVSTDIWroHNvFS@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YZNQnd887/TcPH7H@infradead.org>
+In-Reply-To: <YZPVSTDIWroHNvFS@bfoster>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=61944b5f
+        a=fP9RlOTWD4uZJjPSFnn6Ew==:117 a=fP9RlOTWD4uZJjPSFnn6Ew==:17
+        a=HsDoLlocmGUuF16g:21 a=kj9zAlcOel0A:10 a=vIxV3rELxO4A:10 a=7-415B0cAAAA:8
+        a=whnCjyx-wMjf9fUidEsA:9 a=CjuIK1q_8ugA:10 a=hl_xKfOxWho2XEkUDbUg:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Nov 15, 2021 at 10:33:01PM -0800, Christoph Hellwig wrote:
-> I see how this works no, but it is pretty horrible.  Why not something
-> simple like the patch below?  If/when an architecture actually
-> wants to override flush_dcache_folio we can find out how to best do
-> it:
+On Tue, Nov 16, 2021 at 10:59:05AM -0500, Brian Foster wrote:
+> On Tue, Nov 16, 2021 at 02:01:20PM +1100, Dave Chinner wrote:
+> > On Tue, Nov 16, 2021 at 09:03:31AM +0800, Ian Kent wrote:
+> > > On Tue, 2021-11-16 at 09:24 +1100, Dave Chinner wrote:
+> > > > If it isn't safe for ext4 to do that, then we have a general
+> > > > pathwalk problem, not an XFS issue. But, as you say, it is safe
+> > > > to do this zeroing, so the fix to xfs_ifree() is to zero the
+> > > > link buffer instead of freeing it, just like ext4 does.
+> > > > 
+> > > > As a side issue, we really don't want to move what XFS does in
+> > > > .destroy_inode to .free_inode because that then means we need to
+> > > > add synchronise_rcu() calls everywhere in XFS that might need to
+> > > > wait on inodes being inactivated and/or reclaimed. And because
+> > > > inode reclaim uses lockless rcu lookups, there's substantial
+> > > > danger of adding rcu callback related deadlocks to XFS here.
+> > > > That's just not a direction we should be moving in.
+> > > 
+> > > Another reason I decided to use the ECHILD return instead is that
+> > > I thought synchronise_rcu() might add an unexpected delay.
+> > 
+> > It depends where you put the synchronise_rcu() call. :)
+> > 
+> > > Since synchronise_rcu() will only wait for processes that
+> > > currently have the rcu read lock do you think that could actually
+> > > be a problem in this code path?
+> > 
+> > No, I don't think it will.  The inode recycle case in XFS inode
+> > lookup can trigger in two cases:
+> > 
+> > 1. VFS cache eviction followed by immediate lookup
+> > 2. Inode has been unlinked and evicted, then free and reallocated by
+> > the filesytsem.
+> > 
+> > In case #1, that's a cold cache lookup and hence delays are
+> > acceptible (e.g. a slightly longer delay might result in having to
+> > fetch the inode from disk again). Calling synchronise_rcu() in this
+> > case is not going to be any different from having to fetch the inode
+> > from disk...
+> > 
+> > In case #2, there's a *lot* of CPU work being done to modify
+> > metadata (inode btree updates, etc), and so the operations can block
+> > on journal space, metadata IO, etc. Delays are acceptible, and could
+> > be in the order of hundreds of milliseconds if the transaction
+> > subsystem is bottlenecked. waiting for an RCU grace period when we
+> > reallocate an indoe immediately after freeing it isn't a big deal.
+> > 
+> > IOWs, if synchronize_rcu() turns out to be a problem, we can
+> > optimise that separately - we need to correct the inode reuse
+> > behaviour w.r.t. VFS RCU expectations, then we can optimise the
+> > result if there are perf problems stemming from correct behaviour.
+> > 
+> 
+> FWIW, with a fairly crude test on a high cpu count system, it's not that
+> difficult to reproduce an observable degradation in inode allocation
+> rate with a synchronous grace period in the inode reuse path, caused
+> purely by a lookup heavy workload on a completely separate filesystem.
+>
+> The following is a 5m snapshot of the iget stats from a filesystem doing
+> allocs/frees with an external/heavy lookup workload (which not included
+> in the stats), with and without a sync grace period wait in the reuse
+> path:
+> 
+> baseline:	ig 1337026 1331541 4 5485 0 5541 1337026
+> sync_rcu_test:	ig 2955 2588 0 367 0 383 2955
 
-I'll stick this one into -next and see if anything blows up:
+The alloc/free part of the workload is a single threaded
+create/unlink in a tight loop, yes?
 
-From 14f55de74c68a3eb058cfdbf81414148b9bdaac7 Mon Sep 17 00:00:00 2001
-From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
-Date: Sat, 6 Nov 2021 17:13:35 -0400
-Subject: [PATCH] Add linux/cacheflush.h
+This smells like a side effect of agressive reallocation of
+just-freed XFS_IRECLAIMABLE inodes from the finobt that haven't had
+their unlink state written back to disk yet. i.e. this is a corner
+case in #2 above where a small set of inodes is being repeated
+allocated and freed by userspace and hence being agressively reused
+and never needing to wait for IO. i.e. a tempfile workload
+optimisation...
 
-Many architectures do not include asm-generic/cacheflush.h, so turn
-the includes on their head and add linux/cacheflush.h which includes
-asm/cacheflush.h.
+> I think this is kind of the nature of RCU and why I'm not sure it's a
+> great idea to rely on update side synchronization in a codepath that
+> might want to scale/perform in certain workloads.
 
-Move the flush_dcache_folio() declaration from asm-generic/cacheflush.h
-to linux/cacheflush.h and change linux/highmem.h to include
-linux/cacheflush.h instead of asm/cacheflush.h so that all necessary
-places will see flush_dcache_folio().
+The problem here is not update side synchronisation. Root cause is
+aggressive reallocation of recently freed VFS inodes via physical
+inode allocation algorithms. Unfortunately, the RCU grace period
+requirements of the VFS inode life cycle dictate that we can't
+aggressively re-allocate and reuse freed inodes like this. i.e.
+reallocation of a just-freed inode also has to wait for an RCU grace
+period to pass before the in memory inode can be re-instantiated as
+a newly allocated inode.
 
-More functions should have their default implementations moved in the
-future, but those are for follow-on patches.  This fixes csky, sparc and
-sparc64 which were missed in the commit which added flush_dcache_folio().
+(Hmmmm - I wonder if of the other filesystems might have similar
+problems with physical inode reallocation inside a RCU grace period?
+i.e. without inode instance re-use, the VFS could potentially see
+multiple in-memory instances of the same physical inode at the same
+time.)
 
-Fixes: 08b0b0059bf1 ("mm: Add flush_dcache_folio()")
-Suggested-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
----
- arch/arc/include/asm/cacheflush.h     |  1 -
- arch/arm/include/asm/cacheflush.h     |  1 -
- arch/m68k/include/asm/cacheflush_mm.h |  1 -
- arch/mips/include/asm/cacheflush.h    |  2 --
- arch/nds32/include/asm/cacheflush.h   |  1 -
- arch/nios2/include/asm/cacheflush.h   |  1 -
- arch/parisc/include/asm/cacheflush.h  |  1 -
- arch/sh/include/asm/cacheflush.h      |  1 -
- arch/xtensa/include/asm/cacheflush.h  |  3 ---
- include/asm-generic/cacheflush.h      |  6 ------
- include/linux/cacheflush.h            | 18 ++++++++++++++++++
- include/linux/highmem.h               |  3 +--
- 12 files changed, 19 insertions(+), 20 deletions(-)
- create mode 100644 include/linux/cacheflush.h
+> I'm not totally sure
+> if this will be a problem for real users running real workloads or not,
+> or if this can be easily mitigated, whether it's all rcu or a cascading
+> effect, etc. This is just a quick test so that all probably requires
+> more test and analysis to discern.
 
-diff --git a/arch/arc/include/asm/cacheflush.h b/arch/arc/include/asm/cacheflush.h
-index e8c2c7469e10..e201b4b1655a 100644
---- a/arch/arc/include/asm/cacheflush.h
-+++ b/arch/arc/include/asm/cacheflush.h
-@@ -36,7 +36,6 @@ void __flush_dcache_page(phys_addr_t paddr, unsigned long vaddr);
- #define ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE 1
- 
- void flush_dcache_page(struct page *page);
--void flush_dcache_folio(struct folio *folio);
- 
- void dma_cache_wback_inv(phys_addr_t start, unsigned long sz);
- void dma_cache_inv(phys_addr_t start, unsigned long sz);
-diff --git a/arch/arm/include/asm/cacheflush.h b/arch/arm/include/asm/cacheflush.h
-index e68fb879e4f9..5e56288e343b 100644
---- a/arch/arm/include/asm/cacheflush.h
-+++ b/arch/arm/include/asm/cacheflush.h
-@@ -290,7 +290,6 @@ extern void flush_cache_page(struct vm_area_struct *vma, unsigned long user_addr
-  */
- #define ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE 1
- extern void flush_dcache_page(struct page *);
--void flush_dcache_folio(struct folio *folio);
- 
- #define ARCH_IMPLEMENTS_FLUSH_KERNEL_VMAP_RANGE 1
- static inline void flush_kernel_vmap_range(void *addr, int size)
-diff --git a/arch/m68k/include/asm/cacheflush_mm.h b/arch/m68k/include/asm/cacheflush_mm.h
-index 8ab46625ddd3..1ac55e7b47f0 100644
---- a/arch/m68k/include/asm/cacheflush_mm.h
-+++ b/arch/m68k/include/asm/cacheflush_mm.h
-@@ -250,7 +250,6 @@ static inline void __flush_page_to_ram(void *vaddr)
- 
- #define ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE 1
- #define flush_dcache_page(page)		__flush_page_to_ram(page_address(page))
--void flush_dcache_folio(struct folio *folio);
- #define flush_dcache_mmap_lock(mapping)		do { } while (0)
- #define flush_dcache_mmap_unlock(mapping)	do { } while (0)
- #define flush_icache_page(vma, page)	__flush_page_to_ram(page_address(page))
-diff --git a/arch/mips/include/asm/cacheflush.h b/arch/mips/include/asm/cacheflush.h
-index f207388541d5..b3dc9c589442 100644
---- a/arch/mips/include/asm/cacheflush.h
-+++ b/arch/mips/include/asm/cacheflush.h
-@@ -61,8 +61,6 @@ static inline void flush_dcache_page(struct page *page)
- 		SetPageDcacheDirty(page);
- }
- 
--void flush_dcache_folio(struct folio *folio);
--
- #define flush_dcache_mmap_lock(mapping)		do { } while (0)
- #define flush_dcache_mmap_unlock(mapping)	do { } while (0)
- 
-diff --git a/arch/nds32/include/asm/cacheflush.h b/arch/nds32/include/asm/cacheflush.h
-index 3fc0bb7d6487..c2a222ebfa2a 100644
---- a/arch/nds32/include/asm/cacheflush.h
-+++ b/arch/nds32/include/asm/cacheflush.h
-@@ -27,7 +27,6 @@ void flush_cache_vunmap(unsigned long start, unsigned long end);
- 
- #define ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE 1
- void flush_dcache_page(struct page *page);
--void flush_dcache_folio(struct folio *folio);
- void copy_to_user_page(struct vm_area_struct *vma, struct page *page,
- 		       unsigned long vaddr, void *dst, void *src, int len);
- void copy_from_user_page(struct vm_area_struct *vma, struct page *page,
-diff --git a/arch/nios2/include/asm/cacheflush.h b/arch/nios2/include/asm/cacheflush.h
-index 1999561b22aa..d0b71dd71287 100644
---- a/arch/nios2/include/asm/cacheflush.h
-+++ b/arch/nios2/include/asm/cacheflush.h
-@@ -29,7 +29,6 @@ extern void flush_cache_page(struct vm_area_struct *vma, unsigned long vmaddr,
- 	unsigned long pfn);
- #define ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE 1
- void flush_dcache_page(struct page *page);
--void flush_dcache_folio(struct folio *folio);
- 
- extern void flush_icache_range(unsigned long start, unsigned long end);
- extern void flush_icache_page(struct vm_area_struct *vma, struct page *page);
-diff --git a/arch/parisc/include/asm/cacheflush.h b/arch/parisc/include/asm/cacheflush.h
-index da0cd4b3a28f..859b8a34adcf 100644
---- a/arch/parisc/include/asm/cacheflush.h
-+++ b/arch/parisc/include/asm/cacheflush.h
-@@ -50,7 +50,6 @@ void invalidate_kernel_vmap_range(void *vaddr, int size);
- 
- #define ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE 1
- void flush_dcache_page(struct page *page);
--void flush_dcache_folio(struct folio *folio);
- 
- #define flush_dcache_mmap_lock(mapping)		xa_lock_irq(&mapping->i_pages)
- #define flush_dcache_mmap_unlock(mapping)	xa_unlock_irq(&mapping->i_pages)
-diff --git a/arch/sh/include/asm/cacheflush.h b/arch/sh/include/asm/cacheflush.h
-index c7a97f32432f..481a664287e2 100644
---- a/arch/sh/include/asm/cacheflush.h
-+++ b/arch/sh/include/asm/cacheflush.h
-@@ -43,7 +43,6 @@ extern void flush_cache_range(struct vm_area_struct *vma,
- 				 unsigned long start, unsigned long end);
- #define ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE 1
- void flush_dcache_page(struct page *page);
--void flush_dcache_folio(struct folio *folio);
- extern void flush_icache_range(unsigned long start, unsigned long end);
- #define flush_icache_user_range flush_icache_range
- extern void flush_icache_page(struct vm_area_struct *vma,
-diff --git a/arch/xtensa/include/asm/cacheflush.h b/arch/xtensa/include/asm/cacheflush.h
-index a8a041609c5d..7b4359312c25 100644
---- a/arch/xtensa/include/asm/cacheflush.h
-+++ b/arch/xtensa/include/asm/cacheflush.h
-@@ -121,7 +121,6 @@ void flush_cache_page(struct vm_area_struct*,
- 
- #define ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE 1
- void flush_dcache_page(struct page *);
--void flush_dcache_folio(struct folio *);
- 
- void local_flush_cache_range(struct vm_area_struct *vma,
- 		unsigned long start, unsigned long end);
-@@ -138,9 +137,7 @@ void local_flush_cache_page(struct vm_area_struct *vma,
- #define flush_cache_vunmap(start,end)			do { } while (0)
- 
- #define ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE 0
--#define ARCH_IMPLEMENTS_FLUSH_DCACHE_FOLIO
- #define flush_dcache_page(page)				do { } while (0)
--static inline void flush_dcache_folio(struct folio *folio) { }
- 
- #define flush_icache_range local_flush_icache_range
- #define flush_cache_page(vma, addr, pfn)		do { } while (0)
-diff --git a/include/asm-generic/cacheflush.h b/include/asm-generic/cacheflush.h
-index fedc0dfa4877..4f07afacbc23 100644
---- a/include/asm-generic/cacheflush.h
-+++ b/include/asm-generic/cacheflush.h
-@@ -50,13 +50,7 @@ static inline void flush_dcache_page(struct page *page)
- {
- }
- 
--static inline void flush_dcache_folio(struct folio *folio) { }
- #define ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE 0
--#define ARCH_IMPLEMENTS_FLUSH_DCACHE_FOLIO
--#endif
--
--#ifndef ARCH_IMPLEMENTS_FLUSH_DCACHE_FOLIO
--void flush_dcache_folio(struct folio *folio);
- #endif
- 
- #ifndef flush_dcache_mmap_lock
-diff --git a/include/linux/cacheflush.h b/include/linux/cacheflush.h
-new file mode 100644
-index 000000000000..fef8b607f97e
---- /dev/null
-+++ b/include/linux/cacheflush.h
-@@ -0,0 +1,18 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+#ifndef _LINUX_CACHEFLUSH_H
-+#define _LINUX_CACHEFLUSH_H
-+
-+#include <asm/cacheflush.h>
-+
-+#if ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE
-+#ifndef ARCH_IMPLEMENTS_FLUSH_DCACHE_FOLIO
-+void flush_dcache_folio(struct folio *folio);
-+#endif
-+#else
-+static inline void flush_dcache_folio(struct folio *folio)
-+{
-+}
-+#define ARCH_IMPLEMENTS_FLUSH_DCACHE_FOLIO 0
-+#endif /* ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE */
-+
-+#endif /* _LINUX_CACHEFLUSH_H */
-diff --git a/include/linux/highmem.h b/include/linux/highmem.h
-index 25aff0f2ed0b..c944b3b70ee7 100644
---- a/include/linux/highmem.h
-+++ b/include/linux/highmem.h
-@@ -5,12 +5,11 @@
- #include <linux/fs.h>
- #include <linux/kernel.h>
- #include <linux/bug.h>
-+#include <linux/cacheflush.h>
- #include <linux/mm.h>
- #include <linux/uaccess.h>
- #include <linux/hardirq.h>
- 
--#include <asm/cacheflush.h>
--
- #include "highmem-internal.h"
- 
- /**
+This looks like a similar problem to what busy extents address - we
+can't reuse a newly freed extent until the transaction containing
+the EFI/EFD hit stable storage (and the discard operation on the
+range is complete). Hence while a newly freed extent is
+marked free in the allocbt, they can't be reused until they are
+released from the busy extent tree.
+
+I can think of several ways to address this, but let me think on it
+a bit more.  I suspect there's a trick we can use to avoid needing
+synchronise_rcu() completely by using the spare radix tree tag and
+rcu grace period state checks with get_state_synchronize_rcu() and
+poll_state_synchronize_rcu() to clear the radix tree tags via a
+periodic radix tree tag walk (i.e. allocation side polling for "can
+we use this inode" rather than waiting for the grace period to
+expire once an inode has been selected and allocated.)
+
+> > > 
+> > > Sorry, I don't understand what you mean by the root cause not
+> > > being identified?
+> > 
+> > The whole approach of "we don't know how to fix the inode reuse case
+> > so disable it" implies that nobody has understood where in the reuse
+> > case the problem lies. i.e. "inode reuse" by itself is not the root
+> > cause of the problem.
+> > 
+> 
+> I don't think anybody suggested to disable inode reuse.
+
+Nobody did, so that's not what I was refering to. I was refering to
+the patches for and comments advocating disabling .get_link for RCU
+pathwalk because of the apparently unsolved problems stemming from
+inode reuse...
+
+> > The root cause is "allowing an inode to be reused without waiting
+> > for an RCU grace period to expire". This might seem pedantic, but
+> > "without waiting for an rcu grace period to expire" is the important
+> > part of the problem (i.e. the bug), not the "allowing an inode to be
+> > reused" bit.
+> > 
+> > Once the RCU part of the problem is pointed out, the solution
+> > becomes obvious. As nobody had seen the obvious (wait for an RCU
+> > grace period when recycling an inode) it stands to reason that
+> > nobody really understood what the root cause of the inode reuse
+> > problem.
+> > 
+> 
+> The synchronize_rcu() approach was one of the first options discussed in
+> the bug report once a reproducer was available.
+
+What bug report would that be? :/
+
+It's not one that I've read, and I don't recall seeing a pointer to
+it anywhere in the path posting. IOWs, whatever discussion happened
+in a private distro bug report can't be assumed as "general
+knowledge" in an upstream discussion...
+
+> AIUI, this is not currently a reproducible problem even before patch 1,
+> which reduces the race window even further. Given that and the nak on
+> the current patch (the justification for which I don't really
+> understand), I'm starting to agree with Ian's earlier statement that
+> perhaps it is best to separate this one so we can (hopefully) move patch
+> 1 along on its own merit..
+
+*nod*
+
+The problem seems pretty rare, the pathwalk patch makes it
+even rarer, so I think they can be separated just fine.
+
+Cheers,
+
+Dave.
 -- 
-2.33.0
-
+Dave Chinner
+david@fromorbit.com
