@@ -2,29 +2,28 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA62AC433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 17 Nov 2021 21:08:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 266DFC433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 17 Nov 2021 21:49:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8E18F63268
-	for <linux-xfs@archiver.kernel.org>; Wed, 17 Nov 2021 21:08:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0C7F4610D1
+	for <linux-xfs@archiver.kernel.org>; Wed, 17 Nov 2021 21:49:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240771AbhKQVLI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 17 Nov 2021 16:11:08 -0500
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:53362 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S240773AbhKQVJ3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Nov 2021 16:09:29 -0500
+        id S240825AbhKQVwB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 17 Nov 2021 16:52:01 -0500
+Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:47177 "EHLO
+        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232181AbhKQVv4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Nov 2021 16:51:56 -0500
 Received: from dread.disaster.area (pa49-195-103-97.pa.nsw.optusnet.com.au [49.195.103.97])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 1A353A8815;
-        Thu, 18 Nov 2021 08:06:26 +1100 (AEDT)
+        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id C134E1099F2;
+        Thu, 18 Nov 2021 08:48:52 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1mnS8N-00A376-KU; Thu, 18 Nov 2021 08:06:23 +1100
-Date:   Thu, 18 Nov 2021 08:06:23 +1100
+        id 1mnSnU-00A3lF-2Z; Thu, 18 Nov 2021 08:48:52 +1100
+Date:   Thu, 18 Nov 2021 08:48:52 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     Ian Kent <raven@themaw.net>
-Cc:     Brian Foster <bfoster@redhat.com>,
-        Miklos Szeredi <miklos@szeredi.hu>,
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     Ian Kent <raven@themaw.net>, Miklos Szeredi <miklos@szeredi.hu>,
         xfs <linux-xfs@vger.kernel.org>,
         "Darrick J. Wong" <djwong@kernel.org>,
         Al Viro <viro@zeniv.linux.org.uk>,
@@ -32,7 +31,7 @@ Cc:     Brian Foster <bfoster@redhat.com>,
         linux-fsdevel <linux-fsdevel@vger.kernel.org>,
         Kernel Mailing List <linux-kernel@vger.kernel.org>
 Subject: Re: [PATCH 2/2] xfs: make sure link path does not go away at access
-Message-ID: <20211117210623.GT449541@dread.disaster.area>
+Message-ID: <20211117214852.GU449541@dread.disaster.area>
 References: <20211112003249.GL449541@dread.disaster.area>
  <CAJfpegvHDM_Mtc8+ASAcmNLd6RiRM+KutjBOoycun_Oq2=+p=w@mail.gmail.com>
  <20211114231834.GM449541@dread.disaster.area>
@@ -42,111 +41,87 @@ References: <20211112003249.GL449541@dread.disaster.area>
  <20211116030120.GQ449541@dread.disaster.area>
  <YZPVSTDIWroHNvFS@bfoster>
  <20211117002251.GR449541@dread.disaster.area>
- <4253c446d98f9800b43d5966636bddabb3c6b1a0.camel@themaw.net>
+ <YZVQUSCWWgOs+cRB@bfoster>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <4253c446d98f9800b43d5966636bddabb3c6b1a0.camel@themaw.net>
+In-Reply-To: <YZVQUSCWWgOs+cRB@bfoster>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=epq8cqlX c=1 sm=1 tr=0 ts=61956ed4
+X-Optus-CM-Analysis: v=2.4 cv=epq8cqlX c=1 sm=1 tr=0 ts=619578c5
         a=fP9RlOTWD4uZJjPSFnn6Ew==:117 a=fP9RlOTWD4uZJjPSFnn6Ew==:17
-        a=HsDoLlocmGUuF16g:21 a=8nJEP1OIZ-IA:10 a=vIxV3rELxO4A:10 a=7-415B0cAAAA:8
-        a=5Hh4-gWYXWfbCYL41wkA:9 a=wPNLvfGTeEIA:10 a=hl_xKfOxWho2XEkUDbUg:22
+        a=HsDoLlocmGUuF16g:21 a=kj9zAlcOel0A:10 a=vIxV3rELxO4A:10 a=7-415B0cAAAA:8
+        a=Rvtx8xgJL0KSF6fQXvAA:9 a=CjuIK1q_8ugA:10 a=hl_xKfOxWho2XEkUDbUg:22
         a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Nov 17, 2021 at 10:19:46AM +0800, Ian Kent wrote:
-> On Wed, 2021-11-17 at 11:22 +1100, Dave Chinner wrote:
+On Wed, Nov 17, 2021 at 01:56:17PM -0500, Brian Foster wrote:
+> On Wed, Nov 17, 2021 at 11:22:51AM +1100, Dave Chinner wrote:
 > > On Tue, Nov 16, 2021 at 10:59:05AM -0500, Brian Foster wrote:
 > > > On Tue, Nov 16, 2021 at 02:01:20PM +1100, Dave Chinner wrote:
 > > > > On Tue, Nov 16, 2021 at 09:03:31AM +0800, Ian Kent wrote:
 > > > > > On Tue, 2021-11-16 at 09:24 +1100, Dave Chinner wrote:
 > > > > > > If it isn't safe for ext4 to do that, then we have a general
-> > > > > > pathwalk problem, not an XFS issue. But, as you say, it is
-> > > > > > safe
+> > > > > > pathwalk problem, not an XFS issue. But, as you say, it is safe
 > > > > > > to do this zeroing, so the fix to xfs_ifree() is to zero the
 > > > > > > link buffer instead of freeing it, just like ext4 does.
 > > > > > > 
-> > > > > > As a side issue, we really don't want to move what XFS does
-> > > > > > in
-> > > > > > .destroy_inode to .free_inode because that then means we need
-> > > > > > to
-> > > > > > add synchronise_rcu() calls everywhere in XFS that might need
-> > > > > > to
-> > > > > > wait on inodes being inactivated and/or reclaimed. And
-> > > > > > because
+> > > > > > As a side issue, we really don't want to move what XFS does in
+> > > > > > .destroy_inode to .free_inode because that then means we need to
+> > > > > > add synchronise_rcu() calls everywhere in XFS that might need to
+> > > > > > wait on inodes being inactivated and/or reclaimed. And because
 > > > > > > inode reclaim uses lockless rcu lookups, there's substantial
 > > > > > > danger of adding rcu callback related deadlocks to XFS here.
 > > > > > > That's just not a direction we should be moving in.
 > > > > > 
-> > > > > Another reason I decided to use the ECHILD return instead is
-> > > > > that
+> > > > > Another reason I decided to use the ECHILD return instead is that
 > > > > > I thought synchronise_rcu() might add an unexpected delay.
 > > > > 
 > > > > It depends where you put the synchronise_rcu() call. :)
 > > > > 
 > > > > > Since synchronise_rcu() will only wait for processes that
-> > > > > currently have the rcu read lock do you think that could
-> > > > > actually
+> > > > > currently have the rcu read lock do you think that could actually
 > > > > > be a problem in this code path?
 > > > > 
-> > > > No, I don't think it will.  The inode recycle case in XFS inode
+> > > > No, I don't think it will.  The inode recycle case in XFS inode
 > > > > lookup can trigger in two cases:
 > > > > 
 > > > > 1. VFS cache eviction followed by immediate lookup
-> > > > 2. Inode has been unlinked and evicted, then free and reallocated
-> > > > by
+> > > > 2. Inode has been unlinked and evicted, then free and reallocated by
 > > > > the filesytsem.
 > > > > 
 > > > > In case #1, that's a cold cache lookup and hence delays are
-> > > > acceptible (e.g. a slightly longer delay might result in having
-> > > > to
-> > > > fetch the inode from disk again). Calling synchronise_rcu() in
-> > > > this
-> > > > case is not going to be any different from having to fetch the
-> > > > inode
+> > > > acceptible (e.g. a slightly longer delay might result in having to
+> > > > fetch the inode from disk again). Calling synchronise_rcu() in this
+> > > > case is not going to be any different from having to fetch the inode
 > > > > from disk...
 > > > > 
 > > > > In case #2, there's a *lot* of CPU work being done to modify
-> > > > metadata (inode btree updates, etc), and so the operations can
-> > > > block
-> > > > on journal space, metadata IO, etc. Delays are acceptible, and
-> > > > could
+> > > > metadata (inode btree updates, etc), and so the operations can block
+> > > > on journal space, metadata IO, etc. Delays are acceptible, and could
 > > > > be in the order of hundreds of milliseconds if the transaction
-> > > > subsystem is bottlenecked. waiting for an RCU grace period when
-> > > > we
-> > > > reallocate an indoe immediately after freeing it isn't a big
-> > > > deal.
+> > > > subsystem is bottlenecked. waiting for an RCU grace period when we
+> > > > reallocate an indoe immediately after freeing it isn't a big deal.
 > > > > 
 > > > > IOWs, if synchronize_rcu() turns out to be a problem, we can
 > > > > optimise that separately - we need to correct the inode reuse
 > > > > behaviour w.r.t. VFS RCU expectations, then we can optimise the
-> > > > result if there are perf problems stemming from correct
-> > > > behaviour.
+> > > > result if there are perf problems stemming from correct behaviour.
 > > > > 
 > > > 
-> > > FWIW, with a fairly crude test on a high cpu count system, it's not
-> > > that
-> > > difficult to reproduce an observable degradation in inode
-> > > allocation
-> > > rate with a synchronous grace period in the inode reuse path,
-> > > caused
-> > > purely by a lookup heavy workload on a completely separate
-> > > filesystem.
-> > > 
-> > > The following is a 5m snapshot of the iget stats from a filesystem
-> > > doing
-> > > allocs/frees with an external/heavy lookup workload (which not
-> > > included
-> > > in the stats), with and without a sync grace period wait in the
-> > > reuse
+> > > FWIW, with a fairly crude test on a high cpu count system, it's not that
+> > > difficult to reproduce an observable degradation in inode allocation
+> > > rate with a synchronous grace period in the inode reuse path, caused
+> > > purely by a lookup heavy workload on a completely separate filesystem.
+> > >
+> > > The following is a 5m snapshot of the iget stats from a filesystem doing
+> > > allocs/frees with an external/heavy lookup workload (which not included
+> > > in the stats), with and without a sync grace period wait in the reuse
 > > > path:
 > > > 
-> > > baseline:       ig 1337026 1331541 4 5485 0 5541 1337026
-> > > sync_rcu_test:  ig 2955 2588 0 367 0 383 2955
+> > > baseline:	ig 1337026 1331541 4 5485 0 5541 1337026
+> > > sync_rcu_test:	ig 2955 2588 0 367 0 383 2955
 > > 
 > > The alloc/free part of the workload is a single threaded
 > > create/unlink in a tight loop, yes?
@@ -159,10 +134,12 @@ On Wed, Nov 17, 2021 at 10:19:46AM +0800, Ian Kent wrote:
 > > and never needing to wait for IO. i.e. a tempfile workload
 > > optimisation...
 > > 
-> > > I think this is kind of the nature of RCU and why I'm not sure it's
-> > > a
-> > > great idea to rely on update side synchronization in a codepath
-> > > that
+> 
+> Yes, that was the point of the test.. to stress inode reuse against
+> known rcu activity.
+> 
+> > > I think this is kind of the nature of RCU and why I'm not sure it's a
+> > > great idea to rely on update side synchronization in a codepath that
 > > > might want to scale/perform in certain workloads.
 > > 
 > > The problem here is not update side synchronisation. Root cause is
@@ -174,6 +151,11 @@ On Wed, Nov 17, 2021 at 10:19:46AM +0800, Ian Kent wrote:
 > > period to pass before the in memory inode can be re-instantiated as
 > > a newly allocated inode.
 > > 
+> 
+> I'm just showing that insertion of an synchronous rcu grace period wait
+> in the iget codepath is not without side effect, because that was the
+> proposal.
+> 
 > > (Hmmmm - I wonder if of the other filesystems might have similar
 > > problems with physical inode reallocation inside a RCU grace period?
 > > i.e. without inode instance re-use, the VFS could potentially see
@@ -181,12 +163,9 @@ On Wed, Nov 17, 2021 at 10:19:46AM +0800, Ian Kent wrote:
 > > time.)
 > > 
 > > > I'm not totally sure
-> > > if this will be a problem for real users running real workloads or
-> > > not,
-> > > or if this can be easily mitigated, whether it's all rcu or a
-> > > cascading
-> > > effect, etc. This is just a quick test so that all probably
-> > > requires
+> > > if this will be a problem for real users running real workloads or not,
+> > > or if this can be easily mitigated, whether it's all rcu or a cascading
+> > > effect, etc. This is just a quick test so that all probably requires
 > > > more test and analysis to discern.
 > > 
 > > This looks like a similar problem to what busy extents address - we
@@ -197,52 +176,107 @@ On Wed, Nov 17, 2021 at 10:19:46AM +0800, Ian Kent wrote:
 > > released from the busy extent tree.
 > > 
 > > I can think of several ways to address this, but let me think on it
-> > a bit more.  I suspect there's a trick we can use to avoid needing
+> > a bit more.  I suspect there's a trick we can use to avoid needing
 > > synchronise_rcu() completely by using the spare radix tree tag and
 > > rcu grace period state checks with get_state_synchronize_rcu() and
 > > poll_state_synchronize_rcu() to clear the radix tree tags via a
 > > periodic radix tree tag walk (i.e. allocation side polling for "can
 > > we use this inode" rather than waiting for the grace period to
 > > expire once an inode has been selected and allocated.)
+> > 
 > 
-> The synchronise_rcu() seems like it's too broad a brush.
+> Yeah, and same. It's just a matter of how to break things down. I can
+> sort of see where you're going with the above, though I'm not totally
+> convinced that rcu gp polling is an advantage over explicit use of
+> existing infrastructure/apis.
 
-It has always been a big hammer. But correctness comes first, speed
-second.
+RCU gp polling is existing infrastructure/apis. It's used in several
+places to explicitly elide unnecessary calls to
+synchronise_rcu()....
 
-> It sounds like there are relatively simple ways to avoid the link
-> path race which I won't go into again but there's still a chance
-> inode re-use can cause confusion if done at the wrong time.
+> It seems more important that we avoid
+> overly crude things like sync waits in the alloc path vs. optimize away
+> potentially multiple async grace periods in the free path. Of course,
+> it's worth thinking about options regardless.
 > 
-> So it sounds like per-object (inode) granularity is needed for the
-> wait and that means answering the question "how do we know when it's
-> ok to re-use the inode" when we come to alloc the inode and want to
-> re-use one.
+> That said, is deferred inactivation still a thing? If so, then we've
 
-When we free the inode, we simply mark it with a radix tree tag and
-record the rcu grace sequence in the inode via
-get_state_synchronize_rcu().  Then when allocation selects an inode
-for allocation, we do a radix tree tag lookup on that inode number,
-and if it is set we move to the next free inode in the finobt. Every
-so often we sweep the radix tree clearing the tags for inodes with
-expired grace periods, allowing them to be reallocated again. The
-radix tree lookups during allocation would be fairly cheap
-(lockless, read-only, just checking for a tag, not dereferencing the
-slot) - I added two lookups on this tree per unlinked inode to turn
-the list into a double linked list in memory and didn't see any
-significant increase in overhead. If allocation succeeds then we are
-going to insert/lookup the inode in that slot in the near future, so
-we are going to take the hit of bringing that radix tree node into
-CPU caches anyway...
+Already merged.
 
-> There'd be a need to know when not to wait at all too ... mmm.
+> already decided to defer/batch inactivations from the point the vfs
+> calls our ->destroy_inode() based on our own hueristic (which is likely
+> longer than a grace period already in most cases, making this even less
+> of an issue).
 
-Yup, that's what get_state_synchronize_rcu and
-poll_state_synchronize_rcu give us.
+No, Performance problems with large/long queues dictated a solution
+in the other direction, into lockless, minimal depth, low delay
+per-cpu deferred batching. IOWs, batch scheduling has significatly
+faster scheduling requirements than RCU grace periods provide.
+
+> That includes deferral of the physical free and inobt
+> updates, which means inode reuse can't occur until the inactivation
+> workqueue task runs.
+
+Which can happen the moment the inode is queued for inactivation
+on CONFIG_PREEMPT configs, long before a RCU grace period has
+expired.
+
+> Only a single grace period is required to cover
+> (from the rcuwalk perspective) the entire set of inodes queued for
+> inactivation. That leaves at least a few fairly straightforward options:
+> 
+> 1. Use queue_rcu_work() to schedule the inactivation task. We'd probably
+> have to isolate the list to process first from the queueing context
+> rather than from workqueue context to ensure we don't process recently
+> added inodes that haven't sat for a grace period.
+
+No, that takes too long. Long queues simply mean deferred
+inactivation is working on cold CPU caches and that means we take a
+30-50% performance hit on inode eviction overhead for inodes that
+need inactivation (e.g. unlinked inodes) just by having to load all
+the inode state into CPU caches again.
+
+Numbers I recorded at the time indicate that inactivation that
+doesn't block on IO or the log typically takes between 200-500us
+of CPU time, so the deferred batch sizes are sized to run about
+10-15ms worth of deferred processing at a time. Filling a batch
+takes memory reclaim about 200uS to fill when running
+dispose_list() to evict inodes.
+
+The problem with using RCU grace periods is that they delay the
+start of the work for at least 10ms, sometimes hundreds of ms.
+Using queue_rcu_work() means we will need to go back to unbound
+depth queues to avoid blocking waiting for grace period expiry to
+maintain perfomrance. THis means having tens of thousands of inodes
+queued for inactivation before the workqueue starts running. These
+are the sorts of numbers that caused all the problems Darrick was
+having with performance, and that was all cold cache loading
+overhead which is unavoidable with such large queue depths....
+
+> 2. Drop a synchronize_rcu() in the workqueue task before it starts
+> processing items.
+
+Same problem. The per-cpu queue currently has a hard throttle at 256
+inodes and that means nothing will be able to queue inodes for
+inactivation on that CPU until the current RCU grace period expires.
+
+> 3. Incorporate something like the above with an rcu grace period cookie
+> to selectively process inodes (or batches thereof).
+
+The use of lockless linked lists in the per-cpu queues makes that
+difficult. Lockless dequeue requires removing the entire list from
+the shared list head atomically, and it's a single linked list so we
+can't selectively remove inodes from the list without a full
+traversal. And selective removal from the list can't be done
+locklessly.
+
+We could, potentially, use a separate lockless queue for unlinked
+inodes and defer that to after a grace period, but then rm -rf
+workloads will go much, much slower.
 
 Cheers,
 
-Dave
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
