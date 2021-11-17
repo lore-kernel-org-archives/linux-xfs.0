@@ -2,79 +2,83 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4C43C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 17 Nov 2021 14:21:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6A6AC4332F
+	for <linux-xfs@archiver.kernel.org>; Wed, 17 Nov 2021 14:31:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AD7D061A79
-	for <linux-xfs@archiver.kernel.org>; Wed, 17 Nov 2021 14:21:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 90E0A61BFA
+	for <linux-xfs@archiver.kernel.org>; Wed, 17 Nov 2021 14:31:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238793AbhKQOYV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 17 Nov 2021 09:24:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54724 "EHLO
+        id S238573AbhKQOec (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 17 Nov 2021 09:34:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57400 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238466AbhKQOXG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Nov 2021 09:23:06 -0500
+        with ESMTP id S235076AbhKQOe2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Nov 2021 09:34:28 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68CA6C061202;
-        Wed, 17 Nov 2021 06:20:03 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A96B8C061570;
+        Wed, 17 Nov 2021 06:31:29 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=QxDXKUsIeeQXsGJtxCK0ye+WBei0gFIht+c8mPpLNOo=; b=l6dxzR9cDj6QFjwoGMhRQ/U0Z4
-        Qe0rySRzKDd/K0ZR0eOeUvPK/3zwakcv4THeVD4DG+2t4KDRgxXsrXdvHOAkCDGdICcsDIh9t9x1q
-        2kmePETjUPgHH15X8puTNr+0qJ8w4K06ZQkiXxnq2IlfSg6SVyCLR5uVudXU1/X/CPa/wJXKmJFHv
-        o8LONHFdQk6HJxSuEiflfjUW48zYwvp5YeD8FMiMqUWQR70yiOohKLA4zRFIoFK8PyzLbx8zZT9X4
-        oX5htLNvZjB/z0hLPUnbC8KfHWDpTt8htYVZ3F5eqsPJl015nD2ryaoDBXmvBJ9dklCZgOs0bIG3m
-        8MjZS6aQ==;
+        bh=H4bB6JtajRihCQwe9/p1L6wP+6CkaZyC/lV4Gg4tmXM=; b=YSun8BX0UKQ0J2y2SXQ8KhIlbj
+        05e64lOL1DNzm/0U77uXqObjzaEnVXO0FqRfNV9O5zFVhN9Wj76OYOusjWPM4wMC/9fSA018cOXV2
+        yzl7SZhRttJe+Q2mKqSuaRJi7aZ9aOULBOmRW8SS+AQ5Ub9XUXwkZf7R419UIeeDH73X/RUcM+YBS
+        2grlLvyo8f8h4uJWiF8mrQkpSYPsVVxfqAcE4YsCcXMM+ihZQPi5/xuuOQnWPylDcY8HAMFpXQ0GT
+        nmrDX/Uer7HMBjel9FiY9HxqP0rRDQxCadr9zlbJvWUlXDjT2gJ6lN8t64TTr9UZ4ZhVn7Lu3qcYN
+        DJD0XIBw==;
 Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mnLn6-007fSa-8K; Wed, 17 Nov 2021 14:20:00 +0000
-Date:   Wed, 17 Nov 2021 14:20:00 +0000
+        id 1mnLyA-007fzM-Ib; Wed, 17 Nov 2021 14:31:26 +0000
+Date:   Wed, 17 Nov 2021 14:31:26 +0000
 From:   Matthew Wilcox <willy@infradead.org>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
         Jens Axboe <axboe@kernel.dk>,
-        Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 19/28] iomap: Convert __iomap_zero_iter to use a folio
-Message-ID: <YZUPkCMO6NbGYLjG@casper.infradead.org>
+        Christoph Hellwig <hch@infradead.org>,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v2 20/28] iomap: Convert iomap_write_begin() and
+ iomap_write_end() to folios
+Message-ID: <YZUSPga7V797gY4Z@casper.infradead.org>
 References: <20211108040551.1942823-1-willy@infradead.org>
- <20211108040551.1942823-20-willy@infradead.org>
- <20211117022424.GJ24307@magnolia>
+ <20211108040551.1942823-21-willy@infradead.org>
+ <20211117043127.GK24307@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211117022424.GJ24307@magnolia>
+In-Reply-To: <20211117043127.GK24307@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 16, 2021 at 06:24:24PM -0800, Darrick J. Wong wrote:
-> On Mon, Nov 08, 2021 at 04:05:42AM +0000, Matthew Wilcox (Oracle) wrote:
-> > The zero iterator can work in folio-sized chunks instead of page-sized
-> > chunks.  This will save a lot of page cache lookups if the file is cached
-> > in multi-page folios.
-> > 
-> > Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+On Tue, Nov 16, 2021 at 08:31:27PM -0800, Darrick J. Wong wrote:
+> > @@ -764,16 +761,17 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+> >  			break;
+> >  		}
+> >  
+> > -		status = iomap_write_begin(iter, pos, bytes, &page);
+> > +		status = iomap_write_begin(iter, pos, bytes, &folio);
+> >  		if (unlikely(status))
+> >  			break;
+> >  
+> > +		page = folio_file_page(folio, pos >> PAGE_SHIFT);
+> >  		if (mapping_writably_mapped(iter->inode->i_mapping))
+> >  			flush_dcache_page(page);
+> >  
+> >  		copied = copy_page_from_iter_atomic(page, offset, bytes, i);
 > 
-> hch's dax decoupling series notwithstanding,
+> Hrmm.  In principle (or I guess even a subsequent patch), if we had
+> multi-page folios, could we simply loop the pages in the folio instead
+> of doing a single page and then calling back into iomap_write_begin to
+> get (probably) the same folio?
 > 
-> Though TBH I am kinda wondering how the two of you plan to resolve those
-> kinds of differences -- I haven't looked at that series, though I think
-> this one's been waiting in the wings for longer?
+> This looks like a fairly straightforward conversion, but I was wondering
+> about that one little point...
 
-I haven't looked at that series either
-
-> Heck, I wonder how Matthew plans to merge all this given that it touches
-> mm, fs, block, and iomap...?
-
-I'm planning on sending a pull request to Linus on Monday for the first
-few patches in this series:
-https://git.infradead.org/users/willy/pagecache.git/shortlog/refs/heads/for-next
-
-Then I was hoping you'd take the block + fs/buffer + iomap pieces for
-the next merge window.
-
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
-Thanks!  Going through and collecting all these now ...
+Theoretically, yes, we should be able to do that.  But all of this code
+is pretty subtle ("What if we hit a page fault?  What if we're writing
+to part of this folio from an mmap of a different part of this folio?
+What if it's !Uptodate?  What if we hit this weird ARM super-mprotect
+memory tag thing?  What if ...") and, frankly, I got scared.  So I've
+left that as future work; someone else can try to wrap their brain around
+all of this.
