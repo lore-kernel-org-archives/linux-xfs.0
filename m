@@ -2,179 +2,330 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5AD1C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 17 Nov 2021 01:58:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 279A7C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 17 Nov 2021 02:19:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BA13863222
-	for <linux-xfs@archiver.kernel.org>; Wed, 17 Nov 2021 01:58:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0F81A61C12
+	for <linux-xfs@archiver.kernel.org>; Wed, 17 Nov 2021 02:19:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232357AbhKQCBJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 16 Nov 2021 21:01:09 -0500
-Received: from mail.kernel.org ([198.145.29.99]:41516 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229629AbhKQCBJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 16 Nov 2021 21:01:09 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 9F41261507;
-        Wed, 17 Nov 2021 01:58:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1637114291;
-        bh=qDteq7fJLGkOPY5wKNBQkh9GOB8n/n6FzEHO09gWBoQ=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=E/sPNuYb2joYmkCGvijBdIXC45JCXl1LpbqwzD82V2BHZRGPxzygETHB/1lrfjxGy
-         zGtOaxuS2882hb3gNiSExIkU88TcnNdeP3lvWyE/P8bMINzflikPWYsrIUFEuVWRn9
-         Fz2QQdnGL8+9vTgVFgjKRg1ZVpv68fBUDWjdkTdxjgfqzsgbxbdHt6ubD/fPH3WBZT
-         m6gNi33zUujY5obx5+4nCUZ+cwZkcTFxsd9whTFCbNIjIS2v2PDe0Owy5Iv4ZUraiq
-         CzXhoQrBmI7b5LQd4hRSqZPM6HqYQrd05z/euBI+80BAeoDxf52R+27OFz7YhcgMkT
-         v5iXfd6jNxYaw==
-Date:   Tue, 16 Nov 2021 17:58:11 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     "xuyang2018.jy@fujitsu.com" <xuyang2018.jy@fujitsu.com>
-Cc:     "allison.henderson@oracle.com" <allison.henderson@oracle.com>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "fstests@vger.kernel.org" <fstests@vger.kernel.org>
-Subject: Re: [PATCH v2] xfs: Fix the free logic of state in
- xfs_attr_node_hasname
-Message-ID: <20211117015811.GO24282@magnolia>
-References: <20211029185024.GF24307@magnolia>
- <1635750020-2275-1-git-send-email-xuyang2018.jy@fujitsu.com>
- <6184A132.3090901@fujitsu.com>
- <6191B7A8.9080903@fujitsu.com>
+        id S232357AbhKQCWx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 16 Nov 2021 21:22:53 -0500
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:48463 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232716AbhKQCWx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Nov 2021 21:22:53 -0500
+Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
+        by mailout.nyi.internal (Postfix) with ESMTP id 39A185C025E;
+        Tue, 16 Nov 2021 21:19:55 -0500 (EST)
+Received: from mailfrontend1 ([10.202.2.162])
+  by compute1.internal (MEProxy); Tue, 16 Nov 2021 21:19:55 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=themaw.net; h=
+        message-id:subject:from:to:cc:date:in-reply-to:references
+        :content-type:mime-version:content-transfer-encoding; s=fm1; bh=
+        M4FKKcTT/ML1XAuZ1GKscw1aefj/Z27iEFUKiEJ1d9k=; b=jWPAuU5IPa4GrhBx
+        BTHX5Td6KQ3yG8u0YIHAZLTDZBgeemzN9G8qVbCaou5zS66oMD4a3+2JCGx6Sks5
+        IJ/odbVD7dnQuzEdts+odDCyNepHtMdZLkxJQUzN/nw6Rq9W8lkjoncPZ6qSIR7d
+        2+mhlLxtZRr7JK8U2Ci6LtrTqXyhMFvkcZRqLeMgtnNuEacymIjIg4wgpBnmyTip
+        uaefi0TI7MzMIG1C0og2MwmdBjx56cGI+GtJiATk4pWi3Lis+txFN8UKQl8w51N4
+        5DHc613nVJgyRY2Y0yya+7JTlqJlYGpfs5IYfN/N8Vse+YDuTByOPbq1i4icn90L
+        xODooA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:content-transfer-encoding:content-type
+        :date:from:in-reply-to:message-id:mime-version:references
+        :subject:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
+        :x-sasl-enc; s=fm1; bh=M4FKKcTT/ML1XAuZ1GKscw1aefj/Z27iEFUKiEJ1d
+        9k=; b=d4I/HzLQZYIbWwYX41y+Xkpa12IPXjkZphM19jSO6BspcxDkT6YuxSYs2
+        fteESyFtuC06+27bnZVHyZEXU02EFzKhP61KB/92wnkSiPU8nkMGCnMZfJoudS+I
+        ptFfRxdXXzH9eK6KDBNV3uZIs6/m41FueVoGcpjHqLelPYQ2+eGAB6YCENsSQFbL
+        Q0SazXmfeX1fyBNW8GXKNvUWi8rjCgLhFH3adGnQqc1vFJUbyx7gUOSoSNAxYLNb
+        LnwxvoqHV6+pru4Ghp0MuE5tDfvGH98coy6w3fVdGbzwE7nMR7HTxIMrgQHfEylJ
+        VqJqRFajRNmgzKRpokSkNcQ5SYcng==
+X-ME-Sender: <xms:ymaUYVK3Fo6YRmekWBj4vo7ue-8i_DRGqFi-cWEfENH2o30jRrD8Ag>
+    <xme:ymaUYRLW7UtyQ2QbPq7rq-43J4KZNAuxis4ynencI_-dbSwEhX7JHDz9wwFxAY01M
+    iT0q2-E-CjN>
+X-ME-Received: <xmr:ymaUYdupkO4rRkmFCsY6CQhUxtWyQcSv-eSTUOfyD2AwJLuXBpH4P-euvUZUFSI56NjRoHo>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvuddrfeefgdeggecutefuodetggdotefrodftvf
+    curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
+    uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
+    fjughrpefkuffhvfffjghftggfggfgsehtkeertddtreejnecuhfhrohhmpefkrghnucfm
+    vghnthcuoehrrghvvghnsehthhgvmhgrfidrnhgvtheqnecuggftrfgrthhtvghrnhepgf
+    elleekteehleegheeujeeuudfhueffgfelhefgvedthefhhffhhfdtudfgfeehnecuvehl
+    uhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomheprhgrvhgvnhesth
+    hhvghmrgifrdhnvght
+X-ME-Proxy: <xmx:ymaUYWaA-lBtsN635-3XXxh7J4bo3avTJRBHV4CjHP_0OVS_Rh7ovQ>
+    <xmx:ymaUYcYTUJh-_JIVbPiGgq_vC_fM9_jcaHjylNmxSLvrIqtar_GXJg>
+    <xmx:ymaUYaDrSjurvHpHtpuSrOtT62V9Xqza9jJkYdx6lPJdO_hUfd7auA>
+    <xmx:y2aUYROVyL2KXJ_VPKMp7oWDUFEqn1rj6adIGRWucTEEycWOtLI9Gw>
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
+ 16 Nov 2021 21:19:51 -0500 (EST)
+Message-ID: <4253c446d98f9800b43d5966636bddabb3c6b1a0.camel@themaw.net>
+Subject: Re: [PATCH 2/2] xfs: make sure link path does not go away at access
+From:   Ian Kent <raven@themaw.net>
+To:     Dave Chinner <david@fromorbit.com>,
+        Brian Foster <bfoster@redhat.com>
+Cc:     Miklos Szeredi <miklos@szeredi.hu>,
+        xfs <linux-xfs@vger.kernel.org>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        David Howells <dhowells@redhat.com>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Kernel Mailing List <linux-kernel@vger.kernel.org>
+Date:   Wed, 17 Nov 2021 10:19:46 +0800
+In-Reply-To: <20211117002251.GR449541@dread.disaster.area>
+References: <163660195990.22525.6041281669106537689.stgit@mickey.themaw.net>
+         <163660197073.22525.11235124150551283676.stgit@mickey.themaw.net>
+         <20211112003249.GL449541@dread.disaster.area>
+         <CAJfpegvHDM_Mtc8+ASAcmNLd6RiRM+KutjBOoycun_Oq2=+p=w@mail.gmail.com>
+         <20211114231834.GM449541@dread.disaster.area>
+         <CAJfpegu4BwJD1JKngsrzUs7h82cYDGpxv0R1om=WGhOOb6pZ2Q@mail.gmail.com>
+         <20211115222417.GO449541@dread.disaster.area>
+         <f8425d1270fe011897e7e14eaa6ba8a77c1ed077.camel@themaw.net>
+         <20211116030120.GQ449541@dread.disaster.area> <YZPVSTDIWroHNvFS@bfoster>
+         <20211117002251.GR449541@dread.disaster.area>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.38.4 (3.38.4-1.fc33) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <6191B7A8.9080903@fujitsu.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Nov 15, 2021 at 01:27:28AM +0000, xuyang2018.jy@fujitsu.com wrote:
-> on 2021/11/5 11:12, xuyang2018.jy@fujitsu.com wrote:
-> > Hi Darrick, Allison
+On Wed, 2021-11-17 at 11:22 +1100, Dave Chinner wrote:
+> On Tue, Nov 16, 2021 at 10:59:05AM -0500, Brian Foster wrote:
+> > On Tue, Nov 16, 2021 at 02:01:20PM +1100, Dave Chinner wrote:
+> > > On Tue, Nov 16, 2021 at 09:03:31AM +0800, Ian Kent wrote:
+> > > > On Tue, 2021-11-16 at 09:24 +1100, Dave Chinner wrote:
+> > > > > If it isn't safe for ext4 to do that, then we have a general
+> > > > > pathwalk problem, not an XFS issue. But, as you say, it is
+> > > > > safe
+> > > > > to do this zeroing, so the fix to xfs_ifree() is to zero the
+> > > > > link buffer instead of freeing it, just like ext4 does.
+> > > > > 
+> > > > > As a side issue, we really don't want to move what XFS does
+> > > > > in
+> > > > > .destroy_inode to .free_inode because that then means we need
+> > > > > to
+> > > > > add synchronise_rcu() calls everywhere in XFS that might need
+> > > > > to
+> > > > > wait on inodes being inactivated and/or reclaimed. And
+> > > > > because
+> > > > > inode reclaim uses lockless rcu lookups, there's substantial
+> > > > > danger of adding rcu callback related deadlocks to XFS here.
+> > > > > That's just not a direction we should be moving in.
+> > > > 
+> > > > Another reason I decided to use the ECHILD return instead is
+> > > > that
+> > > > I thought synchronise_rcu() might add an unexpected delay.
+> > > 
+> > > It depends where you put the synchronise_rcu() call. :)
+> > > 
+> > > > Since synchronise_rcu() will only wait for processes that
+> > > > currently have the rcu read lock do you think that could
+> > > > actually
+> > > > be a problem in this code path?
+> > > 
+> > > No, I don't think it will.  The inode recycle case in XFS inode
+> > > lookup can trigger in two cases:
+> > > 
+> > > 1. VFS cache eviction followed by immediate lookup
+> > > 2. Inode has been unlinked and evicted, then free and reallocated
+> > > by
+> > > the filesytsem.
+> > > 
+> > > In case #1, that's a cold cache lookup and hence delays are
+> > > acceptible (e.g. a slightly longer delay might result in having
+> > > to
+> > > fetch the inode from disk again). Calling synchronise_rcu() in
+> > > this
+> > > case is not going to be any different from having to fetch the
+> > > inode
+> > > from disk...
+> > > 
+> > > In case #2, there's a *lot* of CPU work being done to modify
+> > > metadata (inode btree updates, etc), and so the operations can
+> > > block
+> > > on journal space, metadata IO, etc. Delays are acceptible, and
+> > > could
+> > > be in the order of hundreds of milliseconds if the transaction
+> > > subsystem is bottlenecked. waiting for an RCU grace period when
+> > > we
+> > > reallocate an indoe immediately after freeing it isn't a big
+> > > deal.
+> > > 
+> > > IOWs, if synchronize_rcu() turns out to be a problem, we can
+> > > optimise that separately - we need to correct the inode reuse
+> > > behaviour w.r.t. VFS RCU expectations, then we can optimise the
+> > > result if there are perf problems stemming from correct
+> > > behaviour.
+> > > 
 > > 
-> > Any comment?
-> Ping.
+> > FWIW, with a fairly crude test on a high cpu count system, it's not
+> > that
+> > difficult to reproduce an observable degradation in inode
+> > allocation
+> > rate with a synchronous grace period in the inode reuse path,
+> > caused
+> > purely by a lookup heavy workload on a completely separate
+> > filesystem.
+> > 
+> > The following is a 5m snapshot of the iget stats from a filesystem
+> > doing
+> > allocs/frees with an external/heavy lookup workload (which not
+> > included
+> > in the stats), with and without a sync grace period wait in the
+> > reuse
+> > path:
+> > 
+> > baseline:       ig 1337026 1331541 4 5485 0 5541 1337026
+> > sync_rcu_test:  ig 2955 2588 0 367 0 383 2955
+> 
+> The alloc/free part of the workload is a single threaded
+> create/unlink in a tight loop, yes?
+> 
+> This smells like a side effect of agressive reallocation of
+> just-freed XFS_IRECLAIMABLE inodes from the finobt that haven't had
+> their unlink state written back to disk yet. i.e. this is a corner
+> case in #2 above where a small set of inodes is being repeated
+> allocated and freed by userspace and hence being agressively reused
+> and never needing to wait for IO. i.e. a tempfile workload
+> optimisation...
+> 
+> > I think this is kind of the nature of RCU and why I'm not sure it's
+> > a
+> > great idea to rely on update side synchronization in a codepath
+> > that
+> > might want to scale/perform in certain workloads.
+> 
+> The problem here is not update side synchronisation. Root cause is
+> aggressive reallocation of recently freed VFS inodes via physical
+> inode allocation algorithms. Unfortunately, the RCU grace period
+> requirements of the VFS inode life cycle dictate that we can't
+> aggressively re-allocate and reuse freed inodes like this. i.e.
+> reallocation of a just-freed inode also has to wait for an RCU grace
+> period to pass before the in memory inode can be re-instantiated as
+> a newly allocated inode.
+> 
+> (Hmmmm - I wonder if of the other filesystems might have similar
+> problems with physical inode reallocation inside a RCU grace period?
+> i.e. without inode instance re-use, the VFS could potentially see
+> multiple in-memory instances of the same physical inode at the same
+> time.)
+> 
+> > I'm not totally sure
+> > if this will be a problem for real users running real workloads or
+> > not,
+> > or if this can be easily mitigated, whether it's all rcu or a
+> > cascading
+> > effect, etc. This is just a quick test so that all probably
+> > requires
+> > more test and analysis to discern.
+> 
+> This looks like a similar problem to what busy extents address - we
+> can't reuse a newly freed extent until the transaction containing
+> the EFI/EFD hit stable storage (and the discard operation on the
+> range is complete). Hence while a newly freed extent is
+> marked free in the allocbt, they can't be reused until they are
+> released from the busy extent tree.
+> 
+> I can think of several ways to address this, but let me think on it
+> a bit more.  I suspect there's a trick we can use to avoid needing
+> synchronise_rcu() completely by using the spare radix tree tag and
+> rcu grace period state checks with get_state_synchronize_rcu() and
+> poll_state_synchronize_rcu() to clear the radix tree tags via a
+> periodic radix tree tag walk (i.e. allocation side polling for "can
+> we use this inode" rather than waiting for the grace period to
+> expire once an inode has been selected and allocated.)
 
-FWIW I think it looks fine, but I was kinda wondering if Allison had any
-input?
+The synchronise_rcu() seems like it's too broad a brush.
 
---D
+It sounds like there are relatively simple ways to avoid the link
+path race which I won't go into again but there's still a chance
+inode re-use can cause confusion if done at the wrong time.
 
+So it sounds like per-object (inode) granularity is needed for the
+wait and that means answering the question "how do we know when it's
+ok to re-use the inode" when we come to alloc the inode and want to
+re-use one.
+
+I don't know the answer to that question but introducing an XFS flag
+to indicate the inode is in transition (or altering the meaning of an
+an existing one) so we know to wait should be straight forward.
+
+Perhaps the start of the rcu grace period for the object is a
+suitable beginning then we just need to know if the grace period
+for the object has expired to complete the wait ... possibly via
+an xfs owned rcu call back on free to update the xfs flags ...
+
+But I'm just thinking out loud here ...
+
+There'd be a need to know when not to wait at all too ... mmm.
+
+Ian
+> 
+> > > > 
+> > > > Sorry, I don't understand what you mean by the root cause not
+> > > > being identified?
+> > > 
+> > > The whole approach of "we don't know how to fix the inode reuse
+> > > case
+> > > so disable it" implies that nobody has understood where in the
+> > > reuse
+> > > case the problem lies. i.e. "inode reuse" by itself is not the
+> > > root
+> > > cause of the problem.
+> > > 
 > > 
-> > Best Regards
-> > Yang Xu
-> >> When testing xfstests xfs/126 on lastest upstream kernel, it will hang on some machine.
-> >> Adding a getxattr operation after xattr corrupted, I can reproduce it 100%.
-> >>
-> >> The deadlock as below:
-> >> [983.923403] task:setfattr        state:D stack:    0 pid:17639 ppid: 14687 flags:0x00000080
-> >> [  983.923405] Call Trace:
-> >> [  983.923410]  __schedule+0x2c4/0x700
-> >> [  983.923412]  schedule+0x37/0xa0
-> >> [  983.923414]  schedule_timeout+0x274/0x300
-> >> [  983.923416]  __down+0x9b/0xf0
-> >> [  983.923451]  ? xfs_buf_find.isra.29+0x3c8/0x5f0 [xfs]
-> >> [  983.923453]  down+0x3b/0x50
-> >> [  983.923471]  xfs_buf_lock+0x33/0xf0 [xfs]
-> >> [  983.923490]  xfs_buf_find.isra.29+0x3c8/0x5f0 [xfs]
-> >> [  983.923508]  xfs_buf_get_map+0x4c/0x320 [xfs]
-> >> [  983.923525]  xfs_buf_read_map+0x53/0x310 [xfs]
-> >> [  983.923541]  ? xfs_da_read_buf+0xcf/0x120 [xfs]
-> >> [  983.923560]  xfs_trans_read_buf_map+0x1cf/0x360 [xfs]
-> >> [  983.923575]  ? xfs_da_read_buf+0xcf/0x120 [xfs]
-> >> [  983.923590]  xfs_da_read_buf+0xcf/0x120 [xfs]
-> >> [  983.923606]  xfs_da3_node_read+0x1f/0x40 [xfs]
-> >> [  983.923621]  xfs_da3_node_lookup_int+0x69/0x4a0 [xfs]
-> >> [  983.923624]  ? kmem_cache_alloc+0x12e/0x270
-> >> [  983.923637]  xfs_attr_node_hasname+0x6e/0xa0 [xfs]
-> >> [  983.923651]  xfs_has_attr+0x6e/0xd0 [xfs]
-> >> [  983.923664]  xfs_attr_set+0x273/0x320 [xfs]
-> >> [  983.923683]  xfs_xattr_set+0x87/0xd0 [xfs]
-> >> [  983.923686]  __vfs_removexattr+0x4d/0x60
-> >> [  983.923688]  __vfs_removexattr_locked+0xac/0x130
-> >> [  983.923689]  vfs_removexattr+0x4e/0xf0
-> >> [  983.923690]  removexattr+0x4d/0x80
-> >> [  983.923693]  ? __check_object_size+0xa8/0x16b
-> >> [  983.923695]  ? strncpy_from_user+0x47/0x1a0
-> >> [  983.923696]  ? getname_flags+0x6a/0x1e0
-> >> [  983.923697]  ? _cond_resched+0x15/0x30
-> >> [  983.923699]  ? __sb_start_write+0x1e/0x70
-> >> [  983.923700]  ? mnt_want_write+0x28/0x50
-> >> [  983.923701]  path_removexattr+0x9b/0xb0
-> >> [  983.923702]  __x64_sys_removexattr+0x17/0x20
-> >> [  983.923704]  do_syscall_64+0x5b/0x1a0
-> >> [  983.923705]  entry_SYSCALL_64_after_hwframe+0x65/0xca
-> >> [  983.923707] RIP: 0033:0x7f080f10ee1b
-> >>
-> >> When getxattr calls xfs_attr_node_get function, xfs_da3_node_lookup_int fails with EFSCORRUPTED in
-> >> xfs_attr_node_hasname because we have use blocktrash to random it in xfs/126. So it
-> >> free state in internal and xfs_attr_node_get doesn't do xfs_buf_trans release job.
-> >>
-> >> Then subsequent removexattr will hang because of it.
-> >>
-> >> This bug was introduced by kernel commit 07120f1abdff ("xfs: Add xfs_has_attr and subroutines").
-> >> It adds xfs_attr_node_hasname helper and said caller will be responsible for freeing the state
-> >> in this case. But xfs_attr_node_hasname will free state itself instead of caller if
-> >> xfs_da3_node_lookup_int fails.
-> >>
-> >> Fix this bug by moving the step of free state into caller.
-> >>
-> >> Also, use "goto error/out" instead of returning error directly in xfs_attr_node_addname_find_attr and
-> >> xfs_attr_node_removename_setup function because we should free state ourselves.
-> >>
-> >> Fixes: 07120f1abdff ("xfs: Add xfs_has_attr and subroutines")
-> >> Signed-off-by: Yang Xu<xuyang2018.jy@fujitsu.com>
-> >> ---
-> >>    fs/xfs/libxfs/xfs_attr.c | 17 +++++++----------
-> >>    1 file changed, 7 insertions(+), 10 deletions(-)
-> >>
-> >> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> >> index fbc9d816882c..23523b802539 100644
-> >> --- a/fs/xfs/libxfs/xfs_attr.c
-> >> +++ b/fs/xfs/libxfs/xfs_attr.c
-> >> @@ -1077,21 +1077,18 @@ xfs_attr_node_hasname(
-> >>
-> >>    	state = xfs_da_state_alloc(args);
-> >>    	if (statep != NULL)
-> >> -		*statep = NULL;
-> >> +		*statep = state;
-> >>
-> >>    	/*
-> >>    	 * Search to see if name exists, and get back a pointer to it.
-> >>    	 */
-> >>    	error = xfs_da3_node_lookup_int(state,&retval);
-> >> -	if (error) {
-> >> -		xfs_da_state_free(state);
-> >> -		return error;
-> >> -	}
-> >> +	if (error)
-> >> +		retval = error;
-> >>
-> >> -	if (statep != NULL)
-> >> -		*statep = state;
-> >> -	else
-> >> +	if (!statep)
-> >>    		xfs_da_state_free(state);
-> >> +
-> >>    	return retval;
-> >>    }
-> >>
-> >> @@ -1112,7 +1109,7 @@ xfs_attr_node_addname_find_attr(
-> >>    	 */
-> >>    	retval = xfs_attr_node_hasname(args,&dac->da_state);
-> >>    	if (retval != -ENOATTR&&   retval != -EEXIST)
-> >> -		return retval;
-> >> +		goto error;
-> >>
-> >>    	if (retval == -ENOATTR&&   (args->attr_flags&   XATTR_REPLACE))
-> >>    		goto error;
-> >> @@ -1337,7 +1334,7 @@ int xfs_attr_node_removename_setup(
-> >>
-> >>    	error = xfs_attr_node_hasname(args, state);
-> >>    	if (error != -EEXIST)
-> >> -		return error;
-> >> +		goto out;
-> >>    	error = 0;
-> >>
-> >>    	ASSERT((*state)->path.blk[(*state)->path.active - 1].bp != NULL);
+> > I don't think anybody suggested to disable inode reuse.
+> 
+> Nobody did, so that's not what I was refering to. I was refering to
+> the patches for and comments advocating disabling .get_link for RCU
+> pathwalk because of the apparently unsolved problems stemming from
+> inode reuse...
+> 
+> > > The root cause is "allowing an inode to be reused without waiting
+> > > for an RCU grace period to expire". This might seem pedantic, but
+> > > "without waiting for an rcu grace period to expire" is the
+> > > important
+> > > part of the problem (i.e. the bug), not the "allowing an inode to
+> > > be
+> > > reused" bit.
+> > > 
+> > > Once the RCU part of the problem is pointed out, the solution
+> > > becomes obvious. As nobody had seen the obvious (wait for an RCU
+> > > grace period when recycling an inode) it stands to reason that
+> > > nobody really understood what the root cause of the inode reuse
+> > > problem.
+> > > 
 > > 
-> > 
+> > The synchronize_rcu() approach was one of the first options
+> > discussed in
+> > the bug report once a reproducer was available.
+> 
+> What bug report would that be? :/
+> 
+> It's not one that I've read, and I don't recall seeing a pointer to
+> it anywhere in the path posting. IOWs, whatever discussion happened
+> in a private distro bug report can't be assumed as "general
+> knowledge" in an upstream discussion...
+> 
+> > AIUI, this is not currently a reproducible problem even before
+> > patch 1,
+> > which reduces the race window even further. Given that and the nak
+> > on
+> > the current patch (the justification for which I don't really
+> > understand), I'm starting to agree with Ian's earlier statement
+> > that
+> > perhaps it is best to separate this one so we can (hopefully) move
+> > patch
+> > 1 along on its own merit..
+> 
+> *nod*
+> 
+> The problem seems pretty rare, the pathwalk patch makes it
+> even rarer, so I think they can be separated just fine.
+> 
+> Cheers,
+> 
+> Dave.
+
+
