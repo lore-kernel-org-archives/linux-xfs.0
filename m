@@ -2,115 +2,176 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ACFA1C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 17 Nov 2021 04:50:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A69EC433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 17 Nov 2021 04:56:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8DBFC619E5
-	for <linux-xfs@archiver.kernel.org>; Wed, 17 Nov 2021 04:50:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 422B663212
+	for <linux-xfs@archiver.kernel.org>; Wed, 17 Nov 2021 04:56:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231538AbhKQExn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 16 Nov 2021 23:53:43 -0500
-Received: from mail.kernel.org ([198.145.29.99]:51794 "EHLO mail.kernel.org"
+        id S231425AbhKQE7X (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 16 Nov 2021 23:59:23 -0500
+Received: from mail.kernel.org ([198.145.29.99]:54972 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230255AbhKQExn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 16 Nov 2021 23:53:43 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 84111619E5;
-        Wed, 17 Nov 2021 04:50:45 +0000 (UTC)
+        id S231344AbhKQE7W (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 16 Nov 2021 23:59:22 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C049F61BFE;
+        Wed, 17 Nov 2021 04:56:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1637124645;
-        bh=vFK9zSnapv1NfrLDOh2k6qsvbkpNMFFlHJ0LI4xjb5c=;
+        s=k20201202; t=1637124984;
+        bh=7PaqW7/Oi1Ro7hQT21Ik/dNGQyscIaFWPm1T9KsZck8=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=AgSzuVcsIaGQCoxaOo0v/gqycvdAc43GnKPjtwClxpFc1BYA6F7G3tykT2yFXa9mg
-         d8bO8HUH8fEOsWpmCEKbxdeQ19ItzIVqW9QoRSazeDBBA9ClEVoK2j7KgCH+oYY7sj
-         YIt1NdnJgdLEybVFR0FL8aNdMWdOjhMjVr+B4jSy3pPKtBrUOPH4g/qOjXrM8YnwQq
-         zhIICknRJ9kJKv/Tv6J7lQknlrdDCKd6dC7pK1ZccQmcBoyWayaJ18t8AnJ6SLEbdu
-         n2R5uhu1AKZsZiBu+tLa9jxmffMuReeAE3B/hxd249a9rPcdrm9adZ256UTMPoKS63
-         TpRRQbIX445Zw==
-Date:   Tue, 16 Nov 2021 20:50:45 -0800
+        b=hILXVi5c++u5GHvEYZQ1nljoO/44RN05YrSgO3vYDsnLKQjy8QFXLKYyR8iPSHcuB
+         5VfH8BvP3hloszUsjRBG8vnZ7lyW3+3nBt8PMk6XVXVSzoVTpw8m2D93j86/Mvkg97
+         mShTHrRPe1SLw6HLD2R7+RklDVplMQepf4pYkdRLSdBmTBeTVI4Xr0GQQCAl/4NeRJ
+         e0lk6Q+scqFkqRW7VyN6Fgd/dVPDnOSYy6mZw5VDsZ/JS0jP7OfoDGAp+97eeD9pSu
+         Nk7zAtmWGT6uicHa0f7mDZKzXwzqYk16AyH7X9MW3Mx3nPjxBqIocvdnZX/Fx1LE9d
+         eauUoOA/2XLRw==
+Date:   Tue, 16 Nov 2021 20:56:24 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 10/16] xfs: change the type of ic_datap
-Message-ID: <20211117045045.GR24307@magnolia>
+Subject: Re: [PATCH 11/16] xfs: introduce xlog_write_full()
+Message-ID: <20211117045624.GS24307@magnolia>
 References: <20211109015055.1547604-1-david@fromorbit.com>
- <20211109015055.1547604-11-david@fromorbit.com>
+ <20211109015055.1547604-12-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211109015055.1547604-11-david@fromorbit.com>
+In-Reply-To: <20211109015055.1547604-12-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 09, 2021 at 12:50:49PM +1100, Dave Chinner wrote:
-> From: Christoph Hellwig <hch@lst.de>
+On Tue, Nov 09, 2021 at 12:50:50PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Turn ic_datap from a char into a void pointer given that it points
-> to arbitrary data.
+> Introduce an optimised version of xlog_write() that is used when the
+> entire write will fit in a single iclog. This greatly simplifies the
+> implementation of writing a log vector chain into an iclog, and sets
+> the ground work for a much more understandable xlog_write()
+> implementation.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-> Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
-> [dgc: also remove (char *) cast in xlog_alloc_log()]
-> Signed-off-by: Dave Chinner <david@fromorbit.com>
+> This incorporates some factoring and simplifications proposed by
+> Christoph Hellwig.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Gosh, I actually like the syntax highlighting in lore for reading
-patches.
-
+Looks cleaner than last time... :)
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/xfs/xfs_log.c      | 7 +++----
->  fs/xfs/xfs_log_priv.h | 2 +-
->  2 files changed, 4 insertions(+), 5 deletions(-)
+>  fs/xfs/xfs_log.c | 71 ++++++++++++++++++++++++++++++++++++++++++++++--
+>  1 file changed, 68 insertions(+), 3 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index 76d5a743f6fb..f26c85dbc765 100644
+> index f26c85dbc765..44134f8e699c 100644
 > --- a/fs/xfs/xfs_log.c
 > +++ b/fs/xfs/xfs_log.c
-> @@ -1658,7 +1658,7 @@ xlog_alloc_log(
->  		iclog->ic_log = log;
->  		atomic_set(&iclog->ic_refcnt, 0);
->  		INIT_LIST_HEAD(&iclog->ic_callbacks);
-> -		iclog->ic_datap = (char *)iclog->ic_data + log->l_iclog_hsize;
-> +		iclog->ic_datap = (void *)iclog->ic_data + log->l_iclog_hsize;
+> @@ -2224,6 +2224,60 @@ xlog_print_trans(
+>  	}
+>  }
 >  
->  		init_waitqueue_head(&iclog->ic_force_wait);
->  		init_waitqueue_head(&iclog->ic_write_wait);
-> @@ -3678,7 +3678,7 @@ xlog_verify_iclog(
->  		if (field_offset & 0x1ff) {
->  			clientid = ophead->oh_clientid;
->  		} else {
-> -			idx = BTOBBT((char *)&ophead->oh_clientid - iclog->ic_datap);
-> +			idx = BTOBBT((void *)&ophead->oh_clientid - iclog->ic_datap);
->  			if (idx >= (XLOG_HEADER_CYCLE_SIZE / BBSIZE)) {
->  				j = idx / (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
->  				k = idx % (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
-> @@ -3701,8 +3701,7 @@ xlog_verify_iclog(
->  		if (field_offset & 0x1ff) {
->  			op_len = be32_to_cpu(ophead->oh_len);
->  		} else {
-> -			idx = BTOBBT((uintptr_t)&ophead->oh_len -
-> -				    (uintptr_t)iclog->ic_datap);
-> +			idx = BTOBBT((void *)&ophead->oh_len - iclog->ic_datap);
->  			if (idx >= (XLOG_HEADER_CYCLE_SIZE / BBSIZE)) {
->  				j = idx / (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
->  				k = idx % (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
-> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-> index 56df86d62430..51254d7f38d6 100644
-> --- a/fs/xfs/xfs_log_priv.h
-> +++ b/fs/xfs/xfs_log_priv.h
-> @@ -190,7 +190,7 @@ typedef struct xlog_in_core {
->  	u32			ic_offset;
->  	enum xlog_iclog_state	ic_state;
->  	unsigned int		ic_flags;
-> -	char			*ic_datap;	/* pointer to iclog data */
-> +	void			*ic_datap;	/* pointer to iclog data */
->  	struct list_head	ic_callbacks;
+> +static inline void
+> +xlog_write_iovec(
+> +	struct xlog_in_core	*iclog,
+> +	uint32_t		*log_offset,
+> +	void			*data,
+> +	uint32_t		write_len,
+> +	int			*bytes_left,
+> +	uint32_t		*record_cnt,
+> +	uint32_t		*data_cnt)
+> +{
+> +	ASSERT(*log_offset % sizeof(int32_t) == 0);
+> +	ASSERT(write_len % sizeof(int32_t) == 0);
+> +
+> +	memcpy(iclog->ic_datap + *log_offset, data, write_len);
+> +	*log_offset += write_len;
+> +	*bytes_left -= write_len;
+> +	(*record_cnt)++;
+> +	*data_cnt += write_len;
+> +}
+> +
+> +/*
+> + * Write log vectors into a single iclog which is guaranteed by the caller
+> + * to have enough space to write the entire log vector into.
+> + */
+> +static void
+> +xlog_write_full(
+> +	struct xfs_log_vec	*lv,
+> +	struct xlog_ticket	*ticket,
+> +	struct xlog_in_core	*iclog,
+> +	uint32_t		*log_offset,
+> +	uint32_t		*len,
+> +	uint32_t		*record_cnt,
+> +	uint32_t		*data_cnt)
+> +{
+> +	int			index;
+> +
+> +	ASSERT(*log_offset + *len <= iclog->ic_size);
+> +
+> +	/*
+> +	 * Ordered log vectors have no regions to write so this
+> +	 * loop will naturally skip them.
+> +	 */
+> +	for (index = 0; index < lv->lv_niovecs; index++) {
+> +		struct xfs_log_iovec	*reg = &lv->lv_iovecp[index];
+> +		struct xlog_op_header	*ophdr = reg->i_addr;
+> +
+> +		ophdr->oh_tid = cpu_to_be32(ticket->t_tid);
+> +		ophdr->oh_len = cpu_to_be32(reg->i_len -
+> +					sizeof(struct xlog_op_header));
+> +		xlog_write_iovec(iclog, log_offset, reg->i_addr,
+> +				reg->i_len, len, record_cnt, data_cnt);
+> +	}
+> +}
+> +
+>  static xlog_op_header_t *
+>  xlog_write_setup_ophdr(
+>  	struct xlog_op_header	*ophdr,
+> @@ -2388,8 +2442,8 @@ xlog_write(
+>  	int			partial_copy = 0;
+>  	int			partial_copy_len = 0;
+>  	int			contwr = 0;
+> -	int			record_cnt = 0;
+> -	int			data_cnt = 0;
+> +	uint32_t		record_cnt = 0;
+> +	uint32_t		data_cnt = 0;
+>  	int			error = 0;
 >  
->  	/* reference counts need their own cacheline */
+>  	if (ticket->t_curr_res < 0) {
+> @@ -2409,7 +2463,6 @@ xlog_write(
+>  			return error;
+>  
+>  		ASSERT(log_offset <= iclog->ic_size - 1);
+> -		ptr = iclog->ic_datap + log_offset;
+>  
+>  		/*
+>  		 * If we have a context pointer, pass it the first iclog we are
+> @@ -2421,10 +2474,22 @@ xlog_write(
+>  			ctx = NULL;
+>  		}
+>  
+> +		/* If this is a single iclog write, go fast... */
+> +		if (!contwr && lv == log_vector) {
+> +			while (lv) {
+> +				xlog_write_full(lv, ticket, iclog, &log_offset,
+> +						 &len, &record_cnt, &data_cnt);
+> +				lv = lv->lv_next;
+> +			}
+> +			data_cnt = 0;
+> +			break;
+> +		}
+> +
+>  		/*
+>  		 * This loop writes out as many regions as can fit in the amount
+>  		 * of space which was allocated by xlog_state_get_iclog_space().
+>  		 */
+> +		ptr = iclog->ic_datap + log_offset;
+>  		while (lv && (!lv->lv_niovecs || index < lv->lv_niovecs)) {
+>  			struct xfs_log_iovec	*reg;
+>  			struct xlog_op_header	*ophdr;
 > -- 
 > 2.33.0
 > 
