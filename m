@@ -2,107 +2,156 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1FD8C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 17 Nov 2021 09:52:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D893C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 17 Nov 2021 10:25:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 96CF861BD2
-	for <linux-xfs@archiver.kernel.org>; Wed, 17 Nov 2021 09:52:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 644B361BFE
+	for <linux-xfs@archiver.kernel.org>; Wed, 17 Nov 2021 10:25:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235628AbhKQJze (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 17 Nov 2021 04:55:34 -0500
-Received: from mail-vk1-f172.google.com ([209.85.221.172]:37681 "EHLO
-        mail-vk1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235627AbhKQJze (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Nov 2021 04:55:34 -0500
-Received: by mail-vk1-f172.google.com with SMTP id e64so1274204vke.4;
-        Wed, 17 Nov 2021 01:52:35 -0800 (PST)
+        id S236362AbhKQK2L (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 17 Nov 2021 05:28:11 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:49896 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S236324AbhKQK2L (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Nov 2021 05:28:11 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1637144712;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=PeLytMpeobAX/Mbka1azxJ5y2EI4oXxreVBxQFm+D34=;
+        b=O3TlVrYvmVDcSKr4FXHNsZQ/cEKxfRvN/NUqJHtOZJfQ+MrVr0b6dyONH8BBFRTEOH6JXj
+        J/dDKe9+L/1Z+Ij6YVeqiC23yXkbvGXxR+Is3kJe8cXGUCHhEn0Y4xYkuD9yZURqqoNwPn
+        db0elfcktF1BeCjdOd6OSTU/8NOqKnw=
+Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
+ [209.85.128.70]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-545-RSIgHPEHMbqmTTrVnQStXA-1; Wed, 17 Nov 2021 05:25:09 -0500
+X-MC-Unique: RSIgHPEHMbqmTTrVnQStXA-1
+Received: by mail-wm1-f70.google.com with SMTP id r6-20020a1c4406000000b0033119c22fdbso872458wma.4
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Nov 2021 02:25:09 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=DaTH6dG+9OWuk5kLfq7Obj05Cb3d8CS7ODxUbCSsHLY=;
-        b=hehaOcivLeOZdPbXAUg/kY+nfhCojFZMe0c6M69o03c3uv8qcZnwFWp4IOgi1l2vt7
-         UBA7qhewIqoXF65TbLxYUt0wu/fJocko09gIk1cv+6W5CWKBEaKU4lgvKphRB+H4CPtO
-         ymmCmpCOxapu5msM5ZWnBk8FGJy6H0Z7SW38cHvQxPBS097I5hovy+IrLnumlvm8IL0p
-         mRhPJEYOnw3hD1QKyzODDbLDSJywakOeaspcDHimCRL3oLHTrJIJVfM0guZXpnFoxhzQ
-         xGQbGwB8FJvPuSOzDUKJ5493f4wUgLrMj0RQRsoniRfuqFvnrIuphrBhvdhVamyCkQAM
-         nyIA==
-X-Gm-Message-State: AOAM531VjGmBN0Q5SnBJW3xHrVUD+kCul7nmBo0TPepYRRLju62p/dKN
-        GUF44W7PiXotyGI2lcW055/eVwzdnuY42g==
-X-Google-Smtp-Source: ABdhPJxssKJnTS7lyevwjlZazaFRI63UxBqJV9h9WuFWesZ19yrFdAj3a41H0urJq5N56aVs1v0HBg==
-X-Received: by 2002:a05:6122:1696:: with SMTP id 22mr86804241vkl.2.1637142755296;
-        Wed, 17 Nov 2021 01:52:35 -0800 (PST)
-Received: from mail-ua1-f43.google.com (mail-ua1-f43.google.com. [209.85.222.43])
-        by smtp.gmail.com with ESMTPSA id y22sm12106344vsy.33.2021.11.17.01.52.34
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 17 Nov 2021 01:52:34 -0800 (PST)
-Received: by mail-ua1-f43.google.com with SMTP id ay21so4488549uab.12;
-        Wed, 17 Nov 2021 01:52:34 -0800 (PST)
-X-Received: by 2002:a05:6102:2910:: with SMTP id cz16mr66332901vsb.9.1637142754433;
- Wed, 17 Nov 2021 01:52:34 -0800 (PST)
+        bh=PeLytMpeobAX/Mbka1azxJ5y2EI4oXxreVBxQFm+D34=;
+        b=udHZSzqgmNutMA6l/5NVSjTgVo1dGTmUNHXGxxKs1KAfjFkHeGCwW2U83rQimknX8+
+         CyxdZQuuN8SZAblTKdjZfHV8xaghmfqtDf35PTRYlhR93ncWqFKquVP9Xhri/esTD24D
+         6gYuG4zet0aiO1sKkqo/msbjkkDxjJ71wbbz9B/0ureG+eySemowu1rPgW7B3RaIlUz6
+         m4S3Bv27RHQ3QrSs2HylWv4eayPiE3/IoWMjAIPQn4xKZI8aA8f8dUwG46947bZoWmIl
+         W2GqB44YRsAiJb7GLFtxlFJ+BLXQHND6qlmEbtSIoT50ZjF40g3NX+HbyUXmtdIZuJWl
+         aXpw==
+X-Gm-Message-State: AOAM531sY2L42UJ74Ni03tadWyRBFo5isyodrN4bWoM3YQMnDYapHKYp
+        jix/hctDxwxMNosI9oB7fEEt6uMDjgkwGGx9opG5adKxEUfRCP0mHUNQctnGBiMt+7BHFuIJEbm
+        XIn/r4JnzWgU+iljwI4dm6HoUldb6u4WTsoY6
+X-Received: by 2002:a5d:43c5:: with SMTP id v5mr19042040wrr.11.1637144708008;
+        Wed, 17 Nov 2021 02:25:08 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJxV/yzimt/rDgfIdS6R4Pe333apTi73Ff+k6sK61bEAJtugKa8lazitGgtGHk5ESX82WxjntResUX5IKf1Fx4o=
+X-Received: by 2002:a5d:43c5:: with SMTP id v5mr19042003wrr.11.1637144707799;
+ Wed, 17 Nov 2021 02:25:07 -0800 (PST)
 MIME-Version: 1.0
-References: <20211108040551.1942823-1-willy@infradead.org> <20211108040551.1942823-2-willy@infradead.org>
- <YYozKaEXemjKwEar@infradead.org> <YZKCx1cwBXOZcTA4@casper.infradead.org>
- <YZNQnd887/TcPH7H@infradead.org> <YZQnWU9ABBlXJKa5@casper.infradead.org>
-In-Reply-To: <YZQnWU9ABBlXJKa5@casper.infradead.org>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Wed, 17 Nov 2021 10:52:23 +0100
-X-Gmail-Original-Message-ID: <CAMuHMdXhUbMK8Sp1Zj-cNMSK2Tq1bZ3egX_LXihQpmHULkBk_Q@mail.gmail.com>
-Message-ID: <CAMuHMdXhUbMK8Sp1Zj-cNMSK2Tq1bZ3egX_LXihQpmHULkBk_Q@mail.gmail.com>
-Subject: Re: [PATCH v2 01/28] csky,sparc: Declare flush_dcache_folio()
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        Linux FS Devel <linux-fsdevel@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
+References: <20211111161714.584718-1-agruenba@redhat.com> <20211117053330.GU24307@magnolia>
+In-Reply-To: <20211117053330.GU24307@magnolia>
+From:   Andreas Gruenbacher <agruenba@redhat.com>
+Date:   Wed, 17 Nov 2021 11:24:56 +0100
+Message-ID: <CAHc6FU4rY=G-pdKzYPVXyQ5SEhtfgh_9CK9wNKbBQRONuP=BFA@mail.gmail.com>
+Subject: Re: [5.15 REGRESSION v2] iomap: Fix inline extent handling in iomap_readpage
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        cluster-devel <cluster-devel@redhat.com>,
+        stable <stable@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Nov 17, 2021 at 2:22 AM Matthew Wilcox <willy@infradead.org> wrote:
-> On Mon, Nov 15, 2021 at 10:33:01PM -0800, Christoph Hellwig wrote:
-> > I see how this works no, but it is pretty horrible.  Why not something
-> > simple like the patch below?  If/when an architecture actually
-> > wants to override flush_dcache_folio we can find out how to best do
-> > it:
+On Wed, Nov 17, 2021 at 6:33 AM Darrick J. Wong <djwong@kernel.org> wrote:
+> On Thu, Nov 11, 2021 at 05:17:14PM +0100, Andreas Gruenbacher wrote:
+> > Before commit 740499c78408 ("iomap: fix the iomap_readpage_actor return
+> > value for inline data"), when hitting an IOMAP_INLINE extent,
+> > iomap_readpage_actor would report having read the entire page.  Since
+> > then, it only reports having read the inline data (iomap->length).
+> >
+> > This will force iomap_readpage into another iteration, and the
+> > filesystem will report an unaligned hole after the IOMAP_INLINE extent.
+> > But iomap_readpage_actor (now iomap_readpage_iter) isn't prepared to
+> > deal with unaligned extents, it will get things wrong on filesystems
+> > with a block size smaller than the page size, and we'll eventually run
+> > into the following warning in iomap_iter_advance:
+> >
+> >   WARN_ON_ONCE(iter->processed > iomap_length(iter));
+> >
+> > Fix that by changing iomap_readpage_iter to return 0 when hitting an
+> > inline extent; this will cause iomap_iter to stop immediately.
 >
-> I'll stick this one into -next and see if anything blows up:
+> I guess this means that we also only support having inline data that
+> ends at EOF?  IIRC this is true for the three(?) filesystems that have
+> expressed any interest in inline data: yours, ext4, and erofs?
+
+Yes.
+
+> > To fix readahead as well, change iomap_readahead_iter to pass on
+> > iomap_readpage_iter return values less than or equal to zero.
+> >
+> > Fixes: 740499c78408 ("iomap: fix the iomap_readpage_actor return value for inline data")
+> > Cc: stable@vger.kernel.org # v5.15+
+> > Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+> > ---
+> >  fs/iomap/buffered-io.c | 11 +++++++++--
+> >  1 file changed, 9 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> > index 1753c26c8e76..fe10d8a30f6b 100644
+> > --- a/fs/iomap/buffered-io.c
+> > +++ b/fs/iomap/buffered-io.c
+> > @@ -256,8 +256,13 @@ static loff_t iomap_readpage_iter(const struct iomap_iter *iter,
+> >       unsigned poff, plen;
+> >       sector_t sector;
+> >
+> > -     if (iomap->type == IOMAP_INLINE)
+> > -             return min(iomap_read_inline_data(iter, page), length);
+> > +     if (iomap->type == IOMAP_INLINE) {
+> > +             loff_t ret = iomap_read_inline_data(iter, page);
 >
-> From 14f55de74c68a3eb058cfdbf81414148b9bdaac7 Mon Sep 17 00:00:00 2001
-> From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
-> Date: Sat, 6 Nov 2021 17:13:35 -0400
-> Subject: [PATCH] Add linux/cacheflush.h
+> Ew, iomap_read_inline_data returns loff_t.  I think I'll slip in a
+> change of return type to ssize_t, if you don't mind?
+
+Really?
+
+> > +
+> > +             if (ret < 0)
+> > +                     return ret;
 >
-> Many architectures do not include asm-generic/cacheflush.h, so turn
-> the includes on their head and add linux/cacheflush.h which includes
-> asm/cacheflush.h.
+> ...and a comment here explaining that we only support inline data that
+> ends at EOF?
+
+I'll send a separate patch that adds a description for
+iomap_read_inline_data and cleans up its return value.
+
+Thanks,
+Andreas
+
+> If the answers to all /four/ questions are 'yes', then consider this:
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 >
-> Move the flush_dcache_folio() declaration from asm-generic/cacheflush.h
-> to linux/cacheflush.h and change linux/highmem.h to include
-> linux/cacheflush.h instead of asm/cacheflush.h so that all necessary
-> places will see flush_dcache_folio().
+> --D
 >
-> More functions should have their default implementations moved in the
-> future, but those are for follow-on patches.  This fixes csky, sparc and
-> sparc64 which were missed in the commit which added flush_dcache_folio().
+> > +             return 0;
+> > +     }
+> >
+> >       /* zero post-eof blocks as the page may be mapped */
+> >       iop = iomap_page_create(iter->inode, page);
+> > @@ -370,6 +375,8 @@ static loff_t iomap_readahead_iter(const struct iomap_iter *iter,
+> >                       ctx->cur_page_in_bio = false;
+> >               }
+> >               ret = iomap_readpage_iter(iter, ctx, done);
+> > +             if (ret <= 0)
+> > +                     return ret;
+> >       }
+> >
+> >       return done;
+> > --
+> > 2.31.1
+> >
 >
-> Fixes: 08b0b0059bf1 ("mm: Add flush_dcache_folio()")
-> Suggested-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 
->  arch/m68k/include/asm/cacheflush_mm.h |  1 -
-
-Acked-by: Geert Uytterhoeven <geert@linux-m68k.org>
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
