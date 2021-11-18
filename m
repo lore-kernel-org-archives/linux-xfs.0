@@ -2,116 +2,133 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 690D7C433FE
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Nov 2021 15:55:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E837C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 18 Nov 2021 17:26:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 425E3613DB
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Nov 2021 15:55:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 17B3861A0C
+	for <linux-xfs@archiver.kernel.org>; Thu, 18 Nov 2021 17:26:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232731AbhKRP6R (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 18 Nov 2021 10:58:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36006 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232464AbhKRP6Q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Nov 2021 10:58:16 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B4CAC061574;
-        Thu, 18 Nov 2021 07:55:16 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=X6u5jOtxjpZsL1qWxw9nRGO399G6h4RYQJk7HMGPx1I=; b=mLGqp9ZQsddZj0NmjOe+oo8jBc
-        /J31ihLpooVSx/YC9y/QkUo9Ami7jMajKHrYuVm/s56eou9/mPA48aPjSLZFwvZiQGu0GTyF+Dfw9
-        iq5/ZgHn7ewV/3ZpqwGEa3dWiOi+HoPxs7GjRvjZ20opoEn1GZcfW3CN3NRrte5whq42Zxk6BV+7Q
-        ClAVVwfQ/drf4Q5EBy81nslpfcCQzK3K+MbfWLseFwjgvZ4x3iItFxKoIvwym+65t7hEvMLCJt+wb
-        Yvb3GVe+DhRF+fIDWFp8qYSpTgntZdoyPSCEP6uMSciLKLJscmgbU0kBaa/7Y8kt0HAmRnWy6clQX
-        uN08tu4A==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mnjkm-008bOy-3L; Thu, 18 Nov 2021 15:55:12 +0000
-Date:   Thu, 18 Nov 2021 15:55:12 +0000
-From:   Matthew Wilcox <willy@infradead.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
+        id S234086AbhKRR3S (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 18 Nov 2021 12:29:18 -0500
+Received: from mail.kernel.org ([198.145.29.99]:37212 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S234079AbhKRR3Q (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 18 Nov 2021 12:29:16 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2082361A07;
+        Thu, 18 Nov 2021 17:26:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1637256376;
+        bh=QE4r16+cz7m3BK89h/Sjb1ZqaoOg/LCERqDrH6tb69Y=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=oAA+BTIPwj1adxXFbA5+bQGhBP32aJ1fDxcdEl60hrmRyXDRXH5SK8ucWoVXYYOqv
+         oIv3bz01ICv3R2TXeLiTZfXhQJ/zRwfRhElcF/1MAgbR6+KHGhLURtF0yoW/9JDorz
+         HpWmoliNaGsGZf9j6/fLbZwqxYxTbxB0ua9PUvdtk7OGTpyeET9KmSwTRocXr2NqhL
+         D6h263kakpuVQYWYFuNmVBG24ZNomOZRiN7qH3uEp2ZEE4C/+T4FkRKJZLesdJOoU7
+         D//wsaBt4SrwQLMEtbT0a4LMP6mhRMjBba20MXgoqivoDPQ4TVMUTZw0iug/C289ZR
+         SgKMwgFKWGfDQ==
+Date:   Thu, 18 Nov 2021 09:26:15 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Matthew Wilcox <willy@infradead.org>
 Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
         Jens Axboe <axboe@kernel.dk>,
         Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH v2 02/28] mm: Add functions to zero portions of a folio
-Message-ID: <YZZ3YJucR/WOpOaF@casper.infradead.org>
+Message-ID: <20211118172615.GA24307@magnolia>
 References: <20211108040551.1942823-1-willy@infradead.org>
  <20211108040551.1942823-3-willy@infradead.org>
  <20211117044527.GO24307@magnolia>
  <YZUMhDDHott2Q4W+@casper.infradead.org>
  <20211117170707.GW24307@magnolia>
+ <YZZ3YJucR/WOpOaF@casper.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211117170707.GW24307@magnolia>
+In-Reply-To: <YZZ3YJucR/WOpOaF@casper.infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Nov 17, 2021 at 09:07:07AM -0800, Darrick J. Wong wrote:
-> I've started using 'next', or changing the code to make 'end' be the
-> last element in the range the caller wants to act upon.  The thing is,
-> those are all iterators, so 'next' fits, whereas it doesn't fit so well
-> for range zeroing where that might have been all the zeroing we wanted
-> to do.
+On Thu, Nov 18, 2021 at 03:55:12PM +0000, Matthew Wilcox wrote:
+> On Wed, Nov 17, 2021 at 09:07:07AM -0800, Darrick J. Wong wrote:
+> > I've started using 'next', or changing the code to make 'end' be the
+> > last element in the range the caller wants to act upon.  The thing is,
+> > those are all iterators, so 'next' fits, whereas it doesn't fit so well
+> > for range zeroing where that might have been all the zeroing we wanted
+> > to do.
+> 
+> Yeah, it doesn't really work so well for one of the patches in this
+> series:
+> 
+>                         if (buffer_new(bh)) {
+> ...
+>                                         folio_zero_segments(folio,
+>                                                 to, block_end,
+>                                                 block_start, from);
+> 
+> ("zero between block_start and block_end, except for the region
+> specified by 'from' and 'to'").  Except that for some reason the
+> ranges are specified backwards, so it's not obvious what's going on.
+> Converting that to folio_zero_ranges() would be a possibility, at the
+> expense of complexity in the caller, or using 'max' instead of 'end'
+> would also add complexity to the callers.
 
-Yeah, it doesn't really work so well for one of the patches in this
-series:
+The call above looks like it is preparing to copy some data into the
+middle of a buffer by zero-initializing the bytes before and the bytes
+after that middle region.
 
-                        if (buffer_new(bh)) {
-...
-                                        folio_zero_segments(folio,
-                                                to, block_end,
-                                                block_start, from);
+Admittedly my fs-addled brain actually finds this hot mess easier to
+understand:
 
-("zero between block_start and block_end, except for the region
-specified by 'from' and 'to'").  Except that for some reason the
-ranges are specified backwards, so it's not obvious what's going on.
-Converting that to folio_zero_ranges() would be a possibility, at the
-expense of complexity in the caller, or using 'max' instead of 'end'
-would also add complexity to the callers.
+folio_zero_segments(folio, to, blocksize - 1, block_start, from - 1);
 
-> Though.  'xend' (shorthand for 'excluded end') is different enough to
-> signal that the reader should pay attention.  Ok, how about xend then?
+but I suppose the xend method involves less subtraction everywhere.
 
-Done!
+> 
+> > Though.  'xend' (shorthand for 'excluded end') is different enough to
+> > signal that the reader should pay attention.  Ok, how about xend then?
+> 
+> Done!
+> 
+> @@ -367,26 +367,26 @@ static inline void memzero_page(struct page *page, size_t
+> offset, size_t len)
+>   * folio_zero_segments() - Zero two byte ranges in a folio.
+>   * @folio: The folio to write to.
+>   * @start1: The first byte to zero.
+> - * @end1: One more than the last byte in the first range.
+> + * @xend1: One more than the last byte in the first range.
+>   * @start2: The first byte to zero in the second range.
+> - * @end2: One more than the last byte in the second range.
+> + * @xend2: One more than the last byte in the second range.
+>   */
+>  static inline void folio_zero_segments(struct folio *folio,
+> -               size_t start1, size_t end1, size_t start2, size_t end2)
+> +               size_t start1, size_t xend1, size_t start2, size_t xend2)
+>  {
+> -       zero_user_segments(&folio->page, start1, end1, start2, end2);
+> +       zero_user_segments(&folio->page, start1, xend1, start2, xend2);
+>  }
+> 
+>  /**
+>   * folio_zero_segment() - Zero a byte range in a folio.
+>   * @folio: The folio to write to.
+>   * @start: The first byte to zero.
+> - * @end: One more than the last byte in the first range.
+> + * @xend: One more than the last byte to zero.
+>   */
+>  static inline void folio_zero_segment(struct folio *folio,
+> -               size_t start, size_t end)
+> +               size_t start, size_t xend)
+>  {
+> -       zero_user_segments(&folio->page, start, end, 0, 0);
+> +       zero_user_segments(&folio->page, start, xend, 0, 0);
 
-@@ -367,26 +367,26 @@ static inline void memzero_page(struct page *page, size_t
-offset, size_t len)
-  * folio_zero_segments() - Zero two byte ranges in a folio.
-  * @folio: The folio to write to.
-  * @start1: The first byte to zero.
-- * @end1: One more than the last byte in the first range.
-+ * @xend1: One more than the last byte in the first range.
-  * @start2: The first byte to zero in the second range.
-- * @end2: One more than the last byte in the second range.
-+ * @xend2: One more than the last byte in the second range.
-  */
- static inline void folio_zero_segments(struct folio *folio,
--               size_t start1, size_t end1, size_t start2, size_t end2)
-+               size_t start1, size_t xend1, size_t start2, size_t xend2)
- {
--       zero_user_segments(&folio->page, start1, end1, start2, end2);
-+       zero_user_segments(&folio->page, start1, xend1, start2, xend2);
- }
+Works for me,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
- /**
-  * folio_zero_segment() - Zero a byte range in a folio.
-  * @folio: The folio to write to.
-  * @start: The first byte to zero.
-- * @end: One more than the last byte in the first range.
-+ * @xend: One more than the last byte to zero.
-  */
- static inline void folio_zero_segment(struct folio *folio,
--               size_t start, size_t end)
-+               size_t start, size_t xend)
- {
--       zero_user_segments(&folio->page, start, end, 0, 0);
-+       zero_user_segments(&folio->page, start, xend, 0, 0);
- }
+--D
 
- /**
-
+>  }
+> 
+>  /**
+> 
