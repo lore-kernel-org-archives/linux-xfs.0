@@ -2,75 +2,101 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF24EC433F5
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Nov 2021 17:13:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3919C43217
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Nov 2021 17:21:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D524061A56
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Nov 2021 17:13:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9BB2961A62
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Nov 2021 17:21:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229811AbhKSRQP convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 19 Nov 2021 12:16:15 -0500
-Received: from sender11-of-o53.zoho.eu ([31.186.226.239]:21860 "EHLO
-        sender11-of-o53.zoho.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236357AbhKSRQO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 Nov 2021 12:16:14 -0500
-ARC-Seal: i=1; a=rsa-sha256; t=1637341982; cv=none; 
-        d=zohomail.eu; s=zohoarc; 
-        b=XMsXFQaFzDePjRuLvxLAYs6oOXoZWZl82K2c+2//onF1Q0ogAMGMHLy+snHuiQsvaxq9LfaeQnktUCGd/932oTk8UeuGEGa0Vb8t39u2u27tqVEQZkUEnFFq/6lQPQygTtpLpP0HdHdbME4vk0y0j+vgxf3tXVaYDK+5ljFkpjI=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-        t=1637341982; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
-        bh=33keUX5B+eGQkVt2MCjQNk/oCUikdemzpDOuatxyk/E=; 
-        b=cGXbVKh2v0afPtAeMR3xIaempzdW0Ewf+lpZD5aqc2H1cVPKLyItSe8YXWMR8yL2urXU3az8tKC/RMP7NtKXE+87j+CBTBPvotOHhhQ5DvUxHCZihMP6chMb37j8UbrfMXf4YEuu3WUIKWy9g5Bdh6TTOECjYEInwMXsfng57mk=
-ARC-Authentication-Results: i=1; mx.zohomail.eu;
-        spf=pass  smtp.mailfrom=hostmaster@neglo.de;
-        dmarc=pass header.from=<bage@debian.org>
-Received: from adam.tec.linutronix.de (port-92-200-1-46.dynamic.as20676.net [92.200.1.46]) by mx.zoho.eu
-        with SMTPS id 1637341979742448.76393405943054; Fri, 19 Nov 2021 18:12:59 +0100 (CET)
-From:   Bastian Germann <bage@debian.org>
-To:     linux-xfs@vger.kernel.org
-Cc:     Bastian Germann <bage@debian.org>,
-        Helmut Grohne <helmut@subdivi.de>
-Message-ID: <20211119171241.102173-3-bage@debian.org>
-Subject: [PATCH 2/2] debian: Fix FTCBFS: Skip crc32 test (Closes: #999879)
-Date:   Fri, 19 Nov 2021 18:12:41 +0100
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20211119171241.102173-1-bage@debian.org>
-References: <20211119171241.102173-1-bage@debian.org>
+        id S236210AbhKSRYX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 19 Nov 2021 12:24:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43006 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236555AbhKSRYW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 Nov 2021 12:24:22 -0500
+Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8BDBFC06173E
+        for <linux-xfs@vger.kernel.org>; Fri, 19 Nov 2021 09:21:20 -0800 (PST)
+Received: by mail-pl1-x633.google.com with SMTP id b11so8602933pld.12
+        for <linux-xfs@vger.kernel.org>; Fri, 19 Nov 2021 09:21:20 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20210112.gappssmtp.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=2U/4HYKnAZR7qNMIeDCg5S//595luEluzFk14uv4gBU=;
+        b=FQ6M7eMMvPf80QsdTpoBZi0VrX8bn7QeX7OvbRABdgkNvCMNjXzl7/FKjSfSUjRkzX
+         F1usfPnFQYNtajLRg0QRwSSgzt8mzXj0XCG2cnk0+F0m/6Zhw3KmrGwYuAHqWjDxU8h7
+         LoqDBYl4kQUeXb8kAZzT8ViJ+hkv5vLV1Goy6Yaluym7CVIoftX3Jldatma/nAYXl27p
+         pclrbJHG5C0Blu/232w4rLGJUG53x/PsyFdu4/UMHnSQZ8XMlr5FFqwE0la2E0Wy9pBi
+         QLaClBcQjJDmbuAEv+kCOvcY8AEg2J0pE5d377NWsFamWj8v0zJjbYMN2j8PjhK8WH2h
+         Pe+w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=2U/4HYKnAZR7qNMIeDCg5S//595luEluzFk14uv4gBU=;
+        b=ionHyyM9CnseIuEMYyjPNn+sKtF1uk6CNVKJV7rXm6K6jci3B+gY7ReBf2hWSy89+t
+         ZQPZnuvEMFLujnduFSNmpjRl+MWKW/p7+CBe1Zb6QNvJ3GZYlVvRiAcJYWKwaijbJo5V
+         ajPogk6Mi5C8fcKA8xwiq4XsEiBu9N65MRnqoS45wanreVH+AdSmpzy9KXR76a30LAkG
+         /3xmL8pj8T6pGrHA15icqh5agCXI0WJYEOEAEXTwhneO0z72id7gVMqDhUtgcpNsCjtB
+         y6t9ST3arBH/DoAnPGsEOof8WXBOPqCxpZP5DJM7b3VPLhsitDs05KMGftW2i+BAGzBp
+         HCIA==
+X-Gm-Message-State: AOAM533fGKi1VRaSwDFm3h5yauovTVmzzR53wOYbOQnCv/9B546Y5+H5
+        v0Nprctr67Wgy8u9ct7LSfXXuYSAKdx/8/6i157uWw==
+X-Google-Smtp-Source: ABdhPJxOTsb7kpZ1mbQBZyHvrw/GjkoPNdlC1Mnmi7QTa5v33P77eZ447VYbGdz8Hsj3aBiYzZhGTejFWOktm98P3BA=
+X-Received: by 2002:a17:90b:1e49:: with SMTP id pi9mr1505670pjb.220.1637342480174;
+ Fri, 19 Nov 2021 09:21:20 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8BIT
-Content-Type: text/plain; charset=utf8
+References: <20211109083309.584081-1-hch@lst.de> <20211109083309.584081-2-hch@lst.de>
+ <CAPcyv4ijKTcABMs2tZEuPWo1WDOux+4XWN=DNF5v8SrQRSbfDg@mail.gmail.com> <20211119065645.GB15524@lst.de>
+In-Reply-To: <20211119065645.GB15524@lst.de>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Fri, 19 Nov 2021 09:21:09 -0800
+Message-ID: <CAPcyv4iFG0n-vdaEi4h5ken6mPrgW6Kz6UXCTRfaHi-c99GBnw@mail.gmail.com>
+Subject: Re: [PATCH 01/29] nvdimm/pmem: move dax_attribute_group from dax to pmem
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Mike Snitzer <snitzer@redhat.com>, Ira Weiny <ira.weiny@intel.com>,
+        device-mapper development <dm-devel@redhat.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Linux NVDIMM <nvdimm@lists.linux.dev>,
+        linux-s390 <linux-s390@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-erofs@lists.ozlabs.org,
+        linux-ext4 <linux-ext4@vger.kernel.org>,
+        virtualization@lists.linux-foundation.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-xfsprogs fails to cross build from source, because it attempts to build
-its crc32 test with the build architecture compiler and thus fails
-finding the liburcu, which is only requested for the host architecture.
-While this test is useful for native builds, it is not that useful for
-cross builds. Skip it by pre-creating the output file.
+On Thu, Nov 18, 2021 at 10:56 PM Christoph Hellwig <hch@lst.de> wrote:
+>
+> On Wed, Nov 17, 2021 at 09:44:25AM -0800, Dan Williams wrote:
+> > On Tue, Nov 9, 2021 at 12:33 AM Christoph Hellwig <hch@lst.de> wrote:
+> > >
+> > > dax_attribute_group is only used by the pmem driver, and can avoid the
+> > > completely pointless lookup by the disk name if moved there.  This
+> > > leaves just a single caller of dax_get_by_host, so move dax_get_by_host
+> > > into the same ifdef block as that caller.
+> > >
+> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > > Reviewed-by: Dan Williams <dan.j.williams@intel.com>
+> > > Link: https://lore.kernel.org/r/20210922173431.2454024-3-hch@lst.de
+> > > Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> >
+> > This one already made v5.16-rc1.
+>
+> Yes, but 5.16-rc1 did not exist yet when I pointed the series.
+>
+> Note that the series also has a conflict against 5.16-rc1 in pmem.c,
+> and buildbot pointed out the file systems need explicit dax.h
+> includes in a few files for some configurations.
+>
+> The current branch is here, I just did not bother to repost without
+> any comments:
+>
+>    http://git.infradead.org/users/hch/misc.git/shortlog/refs/heads/dax-block-cleanup
+>
+> no functional changes.
 
-Reported-by: Helmut Grohne <helmut@subdivi.de>
-Signed-off-by: Bastian Germann <bage@debian.org>
----
- debian/rules | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/debian/rules b/debian/rules
-index 6d5b82a8..28cc414d 100755
---- a/debian/rules
-+++ b/debian/rules
-@@ -40,6 +40,9 @@ build-arch: built
- build-indep: built
- built: dibuild config
- 	@echo "== dpkg-buildpackage: build" 1>&2
-+ifneq ($(DEB_BUILD_ARCH),$(DEB_HOST_ARCH))
-+	touch --date=+3day libfrog/crc32selftest
-+endif
- 	$(MAKE) $(PMAKEFLAGS) default
- 	touch built
- 
--- 
-2.30.2
-
-
+Do you just want to send me a pull request after you add all the acks?
