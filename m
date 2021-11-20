@@ -2,53 +2,76 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F6DEC433F5
-	for <linux-xfs@archiver.kernel.org>; Sat, 20 Nov 2021 22:31:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D9CAC433EF
+	for <linux-xfs@archiver.kernel.org>; Sat, 20 Nov 2021 22:31:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236552AbhKTWez (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 20 Nov 2021 17:34:55 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:53598 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S236491AbhKTWez (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 20 Nov 2021 17:34:55 -0500
-Received: from dread.disaster.area (pa49-195-103-97.pa.nsw.optusnet.com.au [49.195.103.97])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 19B6B8A1144;
-        Sun, 21 Nov 2021 09:31:50 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1moYth-00BFyW-H5; Sun, 21 Nov 2021 09:31:49 +1100
-Date:   Sun, 21 Nov 2021 09:31:49 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     bugzilla-daemon@bugzilla.kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [Bug 214767] xfs seems to hang due to race condition? maybe
- related to (gratuitous) thaw.
-Message-ID: <20211120223149.GD449541@dread.disaster.area>
+        id S236566AbhKTWe6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 20 Nov 2021 17:34:58 -0500
+Received: from mail.kernel.org ([198.145.29.99]:35604 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S236491AbhKTWe6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 20 Nov 2021 17:34:58 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPS id 7411060E9C
+        for <linux-xfs@vger.kernel.org>; Sat, 20 Nov 2021 22:31:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1637447514;
+        bh=VRj2wmraq0pcA4bowdV4ANBrH9KdFHmJhp2Vjb7HkDM=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=Fi5hWIetEl5PYJa8C1mFJReA2IMT7lQWe9Zvvzv0tFxe9qKiXf9tkIEj54KnShXn0
+         PYMR9TY4F5HKbV+aeZK4swxfbTHyU1r/M3ct7IJRtGvrQoO5/1RD/IMjmKxSw1PRkN
+         lcnftDtVhIeN36+ZowmlepHOZ6Sk8bFDbf+TONJlWYBGs2UJ9UoNID/xzVOviMnbcQ
+         qeH1i0LM99XmXkQzSx3y5V5hCRj+5RypQ089V+GI2kNOyVwCk8cjJJOm48pyJzi1ZE
+         B7hqL53o0/jZg5ZuRGwXRWFg7JqomSFWUALPs+8xiwIbWCpshaLtLZ0IBOj+QQFNdo
+         tE8mkWWqhOJYA==
+Received: by pdx-korg-bugzilla-2.web.codeaurora.org (Postfix, from userid 48)
+        id 7064961104; Sat, 20 Nov 2021 22:31:54 +0000 (UTC)
+From:   bugzilla-daemon@bugzilla.kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 214767] xfs seems to hang due to race condition? maybe related
+ to (gratuitous) thaw.
+Date:   Sat, 20 Nov 2021 22:31:53 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: david@fromorbit.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-214767-201763-75ZeSKlXLU@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-214767-201763@https.bugzilla.kernel.org/>
 References: <bug-214767-201763@https.bugzilla.kernel.org/>
- <bug-214767-201763-cXpP1tlDle@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <bug-214767-201763-cXpP1tlDle@https.bugzilla.kernel.org/>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=61997756
-        a=fP9RlOTWD4uZJjPSFnn6Ew==:117 a=fP9RlOTWD4uZJjPSFnn6Ew==:17
-        a=Y7pbzP1Hdpi20SMr:21 a=kj9zAlcOel0A:10 a=vIxV3rELxO4A:10 a=VwQbUJbxAAAA:8
-        a=7-415B0cAAAA:8 a=jlcF1eKb1ws7MjrhuLEA:9 a=CjuIK1q_8ugA:10
-        a=W4iUb41TIiNtaFHdFdN3:22 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Nov 10, 2021 at 03:16:35PM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=214767
-> 
+https://bugzilla.kernel.org/show_bug.cgi?id=3D214767
+
+--- Comment #17 from Dave Chinner (david@fromorbit.com) ---
+On Wed, Nov 10, 2021 at 03:16:35PM +0000, bugzilla-daemon@bugzilla.kernel.o=
+rg
+wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=3D214767
+>=20
 > --- Comment #16 from Christian Theune (ct@flyingcircus.io) ---
-> I started trying out the fix that Dave and am using it with 5.10.76 (applied
+> I started trying out the fix that Dave and am using it with 5.10.76 (appl=
+ied
 > clean with a bit of fuzzing).
-> 
-> @Dave do you happen do know whether there's a helper that can stress test live
+>=20
+> @Dave do you happen do know whether there's a helper that can stress test
+> live
 > systems in this regard?
 
 fstests has some tests in the "freeze" group that stress
@@ -59,6 +82,9 @@ a full "auto" group pass rather than just the freeze group....
 Cheers,
 
 Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
