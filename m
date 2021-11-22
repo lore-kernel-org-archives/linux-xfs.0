@@ -2,210 +2,262 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7ED9FC433FE
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Nov 2021 02:40:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DA01C433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Nov 2021 10:48:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229775AbhKVCnz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 21 Nov 2021 21:43:55 -0500
-Received: from mail-bn8nam11on2067.outbound.protection.outlook.com ([40.107.236.67]:2272
-        "EHLO NAM11-BN8-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S229686AbhKVCnz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 21 Nov 2021 21:43:55 -0500
+        id S239373AbhKVKvy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 Nov 2021 05:51:54 -0500
+Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:55418 "EHLO
+        mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S239381AbhKVKvx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Nov 2021 05:51:53 -0500
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1AM9aTeU019952;
+        Mon, 22 Nov 2021 10:48:46 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=references : from :
+ to : cc : subject : message-id : in-reply-to : date : content-type :
+ mime-version; s=corp-2021-07-09;
+ bh=Yu7uR/ggKbAoMrf2upDw6ZUL4qikhrsfmFAryBvvX1c=;
+ b=xBzb73EnZpxHA35tuzsgiyXi0cuYeb0eUy9GIyerceWcs34zXPaLea8uVRD48gNrD9Rm
+ T8RCi266MWatxh/3tKr/3DSb38XUfdltWOBSIM4VCMyWXXXn+RlHb0spKwkc5olj3r67
+ xlrmBuPQkC6CWmZnWz69TyHq1G5o9y/49lKxeWg14am66B0qfPOuM6KxCIB5j27sitFM
+ 3AJGAAmlstNL9gDvgFT045nQPE4pmCc8y6tHow3U75hO4ZOVLGYRCtrY4O94XoV/HCJg
+ +6ESxiuqSUVZ6xKzUSoEiBJ8Jy5+Pk9oB7R5YRXV73vXOdep8Ppt7T1B5wG66gu3qFzI gQ== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3cg55fs99p-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 22 Nov 2021 10:48:46 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 1AMAiwp3065462;
+        Mon, 22 Nov 2021 10:48:45 GMT
+Received: from nam10-bn7-obe.outbound.protection.outlook.com (mail-bn7nam10lp2106.outbound.protection.outlook.com [104.47.70.106])
+        by aserp3020.oracle.com with ESMTP id 3ceru3ap5r-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 22 Nov 2021 10:48:45 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=LwNlKaszaTEPoNWBiTySpFuENKK1mtTs150lyrtAxb3GAj0qf5g7s9oDZtwiT8oS5my2Jy8ynn/bnHQMWoYU8gk8GGOcvV3/75li0N2vyciGyDb4m9IRKvbfvnni4IEBzZTgDbOYQk5aztJFWQtOszdHCbJLUHMj2Nmj9VLWoLcvg76FepuwdHqBaJbXYtsLbgQEU2rARSdRBfDsAOpIg2VkSqJXA5RLgJWpcWmmxi0IXJntPwRYPduUjHIAKOrU9vW+IERH1gmu3IIbsJ+yTw3luJmH78qSD8ZcjNyo3Qr3bv5YzOiR3K+eZlrfQa+5ld/hXRxwXZa2V7W736BKyg==
+ b=SyPOxe/t8XwzD9eYirjkcS+wRiBUGd0yphSatOey2DCBc625zjS31fRxTBP5RvT0Ejs2YhHS2BraO2FJN7v/v1nQLaU5A8VSpeR0+3Aba9u8PPf6c3bIGYIYg8s+OLgjiTOnCez7juHSk8S2rpq9HkFFZUWLSXQHX8XbjivjPAuMNU1CU3egxswWOzJnMZaA6MxJVuLDu1JbIiapeXQfJ/UGy4cQIdQzp44mNhxtkcylF2P6pl/0bOHKcSWas/AMoOeIZmdVhPOvNqMnBCqtinmIPPh/f/wYdmAQ6pKbSHouZ98dBgnOguzFM6vBjhyopZvi/Son0UPTbfB+DKyZcg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=gKNa+nF+2JDLJehCd98fAVoaWpAzArM2OAp7ay1k7ec=;
- b=Ra9s4x3r6Nv8ZQwfGL4jUQJ6vC3TNyavwsJxpvzhCkmwlV+nituNa49O+NuVIhfO4pngWnM2GkyLUmX4INIMqrJvIiMQGr8X29AL2gfTdjJ50ROieeiCPrLLHVx0m7bnXlw8on/i1YdZV4CFzFlwaXX/2fKkwu5rx/TADEMTFXfuZFFE/F7+0W5tH+KHULYkCxbbtWIuI2t4z2V1s2kyV4qN8sMRz9t3mhKC02UGQiro16/kUEJ7wVpgVJK7OxR8jhCPR11PTMtqJZY2XqHwi14tw4HPAFbeCI8bjISb7PX8L7sARA4zaYLd1gcbopcgmptcxdjd7NktlImp4B/MDQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.112.34) smtp.rcpttodomain=infradead.org smtp.mailfrom=nvidia.com;
- dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
- header.from=nvidia.com; dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
+ bh=Yu7uR/ggKbAoMrf2upDw6ZUL4qikhrsfmFAryBvvX1c=;
+ b=iwZ64Zd4cXwEWl4rniAshb3xyVh2HkfvLi0Kl+1V5O+3ml5/L+6HjAwJqmt0onEQ88hz0uI+ruy31EuAlyTM8ve6vxrqz/Tp95vt4OqYDJzXsCfiMk1EeYG4mAYmuoTKSA1/oZkojzeXKI2DMIoHSzt/vKIstUUHfux/WSFqndNaqbUDgxX4lvYIZHMAXwEX65hCZFg1rMQlGR5olp7/kllblSMWIuzW9tLkwO1wmMs89uWGrywpiNJ/KV+zArnXh16fwwVCZer6Tp9n1XdgAlSKYxFKpWV5loqtGq6ONzXqJcrU4IGixkJ8aQ8jRSuUr5gl/sVoLUTJPbzIHYrmVA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=gKNa+nF+2JDLJehCd98fAVoaWpAzArM2OAp7ay1k7ec=;
- b=RjRadBRBirn1k5nLbO0MsslmGChxDD3mkYHwkurbsO5mZB9dvE28mrnI+r28eZXgMgeEB0YFgFiXxiIE/GEmzlR1foV0kxQ5jN3U3j+4AJfOyP6doPhMk1YcpHHLlqxEnJ2tkYyE/HOVguDy5tefJM4RlNudMcShH/a0wkibOBMEcttqoBGQ+ZRR37vxFYHHJe2pwfeTK36mBdtsgJiwuCiB1SeEpynZniPwSVSLawum+Hc+nS+bjpjsd6CktLUmz56GYhw8r6mlnUQpD/fRTGOvxLFboOd3GOTFETJETcxhVmfMFUWGNB4scUeWAlO+jEwAU0La+pDjZxr2YHHPPg==
-Received: from MW4P220CA0019.NAMP220.PROD.OUTLOOK.COM (2603:10b6:303:115::24)
- by DM6PR12MB4482.namprd12.prod.outlook.com (2603:10b6:5:2a8::23) with
+ bh=Yu7uR/ggKbAoMrf2upDw6ZUL4qikhrsfmFAryBvvX1c=;
+ b=KpwveJ/+zP+SvyFCqL1+hOxEbJE64wASwRVAqdtuK1t/YIpy4FwwlxyartOmgGgNDlcvj2Q4BauTc7S52XvpYA9lqjsCcyTy7+tY8A1rOrPexulv3binMUjFbeHlAHyEu8Zlc7M+JzsVT3knyb5cbwNBBvn8T4EKb8AG7vgLWZo=
+Received: from SA2PR10MB4587.namprd10.prod.outlook.com (2603:10b6:806:114::12)
+ by SA2PR10MB4460.namprd10.prod.outlook.com (2603:10b6:806:118::23) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4713.19; Mon, 22 Nov
- 2021 02:40:47 +0000
-Received: from CO1NAM11FT040.eop-nam11.prod.protection.outlook.com
- (2603:10b6:303:115:cafe::66) by MW4P220CA0019.outlook.office365.com
- (2603:10b6:303:115::24) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4713.21 via Frontend
- Transport; Mon, 22 Nov 2021 02:40:47 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.112.34)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.112.34 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.112.34; helo=mail.nvidia.com;
-Received: from mail.nvidia.com (216.228.112.34) by
- CO1NAM11FT040.mail.protection.outlook.com (10.13.174.140) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.20.4713.20 via Frontend Transport; Mon, 22 Nov 2021 02:40:46 +0000
-Received: from nvdebian.localnet (172.20.187.5) by HQMAIL107.nvidia.com
- (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Mon, 22 Nov
- 2021 02:40:43 +0000
-From:   Alistair Popple <apopple@nvidia.com>
-To:     <akpm@linux-foundation.org>, <linux-mm@kvack.org>,
-        <rcampbell@nvidia.com>, <linux-ext4@vger.kernel.org>,
-        <linux-xfs@vger.kernel.org>, Alex Sierra <alex.sierra@amd.com>,
-        Felix Kuehling <felix.kuehling@amd.com>
-CC:     <amd-gfx@lists.freedesktop.org>, <willy@infradead.org>,
-        <jglisse@redhat.com>, <dri-devel@lists.freedesktop.org>,
-        <jgg@nvidia.com>, <hch@lst.de>
-Subject: Re: [PATCH v1 1/9] mm: add zone device coherent type memory support
-Date:   Mon, 22 Nov 2021 13:40:40 +1100
-Message-ID: <4157439.BacSOyMZPU@nvdebian>
-In-Reply-To: <637b19c0-5ec4-b96b-f6f6-c17313f03762@amd.com>
-References: <20211115193026.27568-1-alex.sierra@amd.com> <1997502.P62F5Z1OZk@nvdebian> <637b19c0-5ec4-b96b-f6f6-c17313f03762@amd.com>
+ 2021 10:48:43 +0000
+Received: from SA2PR10MB4587.namprd10.prod.outlook.com
+ ([fe80::e8c6:b020:edfa:d87f]) by SA2PR10MB4587.namprd10.prod.outlook.com
+ ([fe80::e8c6:b020:edfa:d87f%9]) with mapi id 15.20.4713.025; Mon, 22 Nov 2021
+ 10:48:43 +0000
+References: <20211118231352.2051947-1-david@fromorbit.com>
+ <20211118231352.2051947-2-david@fromorbit.com>
+User-agent: mu4e 1.4.15; emacs 27.1
+From:   Chandan Babu R <chandan.babu@oracle.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 01/16] xfs: factor out the CIL transaction header building
+Message-ID: <87czmtvp10.fsf@debian-BULLSEYE-live-builder-AMD64>
+In-reply-to: <20211118231352.2051947-2-david@fromorbit.com>
+Date:   Mon, 22 Nov 2021 16:18:32 +0530
+Content-Type: text/plain
+X-ClientProxiedBy: TYCPR01CA0022.jpnprd01.prod.outlook.com (2603:1096:405::34)
+ To SA2PR10MB4587.namprd10.prod.outlook.com (2603:10b6:806:114::12)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
-X-Originating-IP: [172.20.187.5]
-X-ClientProxiedBy: HQMAIL105.nvidia.com (172.20.187.12) To
- HQMAIL107.nvidia.com (172.20.187.13)
-X-EOPAttributedMessage: 0
+Received: from nandi (138.3.205.57) by TYCPR01CA0022.jpnprd01.prod.outlook.com (2603:1096:405::34) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4713.19 via Frontend Transport; Mon, 22 Nov 2021 10:48:41 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 833acfce-1089-43ca-2fec-08d9ad617ce9
-X-MS-TrafficTypeDiagnostic: DM6PR12MB4482:
-X-Microsoft-Antispam-PRVS: <DM6PR12MB44827AFD68F04F25D442D165DF9F9@DM6PR12MB4482.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:10000;
+X-MS-Office365-Filtering-Correlation-Id: e16d8c34-6764-46d2-27a4-08d9ada5a6a2
+X-MS-TrafficTypeDiagnostic: SA2PR10MB4460:
+X-Microsoft-Antispam-PRVS: <SA2PR10MB4460B33BF4988B1F12E3B518F69F9@SA2PR10MB4460.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:612;
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: GBgblEUomPv5/TGilCRx28tHDLC+CM+KWaQUAjZLQNqEV/Ptwj45AK/FTOXgJL7ezAocCKldeIhD+JT7A2CvyYhzFtf/HC6bvDOqEaYYb00Ksvtge5iXQxpRcQbYew5SacNDIhHts23vXGHHAdguX/vYbkkkVMcGTQVfM78ieRGXMoQr62Ert02LVqTiVK4AdfU1m0UB0Y2/CIVhUyWFUJ7T3xg6G6Ncs1QNxGmJNrYFgo3uGr1Ob4fk8ew/x9AVXvjcoeaeetM9R6VjxAu/nRkqBddmGMG7LbfEjkDAFs7o4eLtmmrxdfh3ijKMQhmSJx6/1i6MOFYiP8m1SSXDzXffiVdUVO0qxpPsTVserGBAkjnjoHwK91f8NtaspCzFFxiRtbtLYvl4yR52evfWPXvI79XwnvbBTkcHUu1Qb5UzvjO0/NTNEX3BFf+USNA6OKAuxmcPn22t9OFeAaTz+NEFYSwhyPls5pKCkALL4sIVjkWH5JyeSyp/NDsZ7edv1/Iie5MvrhIlbVRJfEqXk3NEQR7SiTtLDTMFq8KdGRInF5OZXTyclF5kzXzbIxxBtg/SsJZXcWtsX3rHr/5k6xSEdchOMoyHYdgeUsBoBWBqQ7sT4lGGMuDtF0aT6yJCrWHOiau4i+Xm7mNT/892NwL5p2f4XGtemgynqMUYfDt0M5CmQqgi1VqUkpMkPlNQues1OWh4Ri2n59bO4Qhoaj0nov0S8m6ssZdaPXqhilRJBGEUnRBtF9aCiDNxYBZ4FAdL2JybZ6QhhXENLfD26slMuTTpxUUqOwWCfK1kr5w=
-X-Forefront-Antispam-Report: CIP:216.228.112.34;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:schybrid03.nvidia.com;CAT:NONE;SFS:(4636009)(36840700001)(46966006)(26005)(2906002)(9686003)(16526019)(83380400001)(8676002)(54906003)(186003)(86362001)(7636003)(82310400003)(8936002)(36860700001)(7416002)(70206006)(110136005)(508600001)(70586007)(4326008)(336012)(36906005)(426003)(33716001)(966005)(47076005)(5660300002)(356005)(9576002)(316002);DIR:OUT;SFP:1101;
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Nov 2021 02:40:46.5987
+X-Microsoft-Antispam-Message-Info: QcyLmBSYS1Ot7B7TWbm/Dik7+0iBKPR2SS/d0pPXqrlxIfOhkSRaPmCEDKqYUolDzL2m+LQ8npgN4emRCVVCV2zvX1ox0032xS5UWnjE1I+sgpzMSWJ6o/agOL+HSh2iQ9tk28umLbKbHGwoBGhF1J8y2OIm2skezHTDlUo4d6Zz/Z9Y1dvkJwloJejTgZhLdPJub6uaK/QEwCb4FnG08eF5JP3kGk16NhsHsTsahRNkRa8YUR3HYdXh0VlGCXsugiO1j27m0CZ9JQ+Wlww2jFvqsnFSTh6MCqeo/4/mBPGJPuUSgJ0xAo9MmyTJTSEpcgXnr08CGvnrfh8vxSIjASu4ppaIW9s1d4BEZI+dx8cCc8slLEIhFxtfijntkTlOUh8FBBxRXiZjLa1io5C+Pl2c0shbLCNZRn4tGfd4KfdZ3MahL9mp+KqYKSsTay//Mq+cpFSHjbyAQKid4llUkRj3eDygZUfZO9oZ1v0LtuxZznY3NtJQ5FWBRzy9Rrrel1OggAmNXmDYvUUbhBFSvwTGO/S4rsyAnf2RHsH8VjGgF7b2TCh2/xuqBOp7MLa+piLib9MmLzPWreOX/OOPLJpprNb1DWjt1a7hIDaD0GGi65gjAjcteL6Po2AuaE/AK2cPSGBfV/9XDeDd4ZfdOAKW0DaPTrMgR0ejSwWhEKbofXNJXUR7rt41yTd11OWB4SuEWElfynIGimq9eZDk8Q==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(7916004)(366004)(8676002)(53546011)(2906002)(83380400001)(316002)(6486002)(33716001)(66476007)(66556008)(508600001)(66946007)(6666004)(8936002)(6496006)(4326008)(956004)(5660300002)(6916009)(52116002)(9686003)(186003)(38350700002)(38100700002)(26005)(86362001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?K9aSYeq2kQSr15cPfSTL1D0bRR0yQsoWUXa7zKy8uF6HAPWpQM0Jgy7iUblM?=
+ =?us-ascii?Q?QEMiz0UDfTodQCOM7+vP7tuQwArTqO7j39Wwn/PYN4E0tJSz4NwcNukEoBne?=
+ =?us-ascii?Q?YdATBvJfITAhAMToK1memhnHslbVmWIXr93r7exgVEuVpnf01FpdMLPjtBvj?=
+ =?us-ascii?Q?7dBAn5gWIQzAdNkiZ7gtRZD2kHHajr6qFNL/nsgkl1TP0rPRkIq0EHzTXMf5?=
+ =?us-ascii?Q?Lla97DqtIASUUmjO3+km7GDE2bkZbZ4M/1TPWw1weqkg8j4ZgjCvdv2mYno/?=
+ =?us-ascii?Q?YNtTksvwpZiphAc1mzLQ6Z9KShBHxos6GqkGauKKK7esdAVfFiKIPAxRl1rk?=
+ =?us-ascii?Q?iQ0ydF4sVAx9+DMbPWP6yeQhkxlCW5j/mOgq56J8Iz9CTeW14Eb6le8xkaC8?=
+ =?us-ascii?Q?3ZRFVqdNnPkyRHE1UFcgDbzvH2QM69ymL5zq4vrRUGH92Lrdh5AvQkq8mnFN?=
+ =?us-ascii?Q?qT+36UfuvAWI8A9UzrLPtZTxF6VF1bysb2KWvEon+dQm+FywSaT7Yv1uxKsG?=
+ =?us-ascii?Q?Wp3xU/x/gXqXPXpgO0sLKjHqUGEcz4a1UHIIKXBJPi4D4e7GYYmgrRt6wdb7?=
+ =?us-ascii?Q?MZIk9ZS49WIZMIwzpBmLcQq4a9MMIhfk6EHtE1BJNADB2ArSK9MNStumUM2T?=
+ =?us-ascii?Q?6hGG2Tc72+EGeMPPblcea27DZGtPVIYwxrOgwAJADMS8oxjWLBSoYWi5Z3et?=
+ =?us-ascii?Q?s5DHDeO2kSb4aJUgxt7GkoAnHCwjooMML5jkJ7LYphs2z/QhZ6LVTWjYfFZM?=
+ =?us-ascii?Q?UGAQdnyIbONFXmKnzz5Ipv8P+2PtDJgIiaBs9VwK+69puG+eTgzE9D6G2NFj?=
+ =?us-ascii?Q?w7T/NAz39G39VGkRzp0QIGbNJhCH3XrEyxej3lOy6s3Eq9DIwzytrLjbRoRw?=
+ =?us-ascii?Q?TgJEAN3ogrbTjBvDT+5qRh2gVl9qzzgW9E0Y5yPBOLejM1mC6HA/2Xg3lSk3?=
+ =?us-ascii?Q?Y+L8XsQmP9meh8HfMhn3nr1/ZjyTkRVy53W+d+8cctUpsZpcCrczBFYfipby?=
+ =?us-ascii?Q?bw9kNxebR3NapSPPNkrparBQCVQ/qG1PVWXqR5U+d4YIqc0+DknAbnXBlE3j?=
+ =?us-ascii?Q?vwAswufyZLpzl0GzcaSaGy4XMcHokmm5JeU6etgv2UbYx8OpKPKCtN7OjJ1V?=
+ =?us-ascii?Q?gERjQrsezu12DQpvjvQ1qj7nwch+Ff11dPZLjFtu4lhNiwJshraASGPCeVBI?=
+ =?us-ascii?Q?+vfV53zzLTusPV+qRyXaAsgfUDOPn+ICuIXOLfiQOA7J/L35xmA9HuTBa+My?=
+ =?us-ascii?Q?f/PitSeeIckdBYGQogRDrMkvb3x5SIiQn3gu2Hpwsq3/G9x8AzhA0uwcx7l3?=
+ =?us-ascii?Q?jgpMNn5MNpW3FY4FXQKZ9rbmO86lWR+5tb8XFSCzkSA4p7dul+c6lJMHhg/T?=
+ =?us-ascii?Q?or0M/n68vcGVF8xRvoH4rmSWzgc1OSNkE2c3GfldKoYx7/iD6XBAspEB+4Dm?=
+ =?us-ascii?Q?cYSC69/krTqReorTAyy9xU3fHT5tK8Rh13W8Y97l6wArs8LlPKKZmpL1BCVx?=
+ =?us-ascii?Q?mOhlQ202aBuM4Dkx7k36kKViJUjJi2rNSl5pO8/L5l+RG9pfmE3+i4HGl61Y?=
+ =?us-ascii?Q?+eoviGMg0y7k46GJHG8XU4nTb2c6t82KAIuCEUSUMXe20QnnEMeS6vuUUZ/S?=
+ =?us-ascii?Q?loFpyFvRKQ0SETUJ6gPtcoU=3D?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: e16d8c34-6764-46d2-27a4-08d9ada5a6a2
+X-MS-Exchange-CrossTenant-AuthSource: SA2PR10MB4587.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Nov 2021 10:48:42.9317
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 833acfce-1089-43ca-2fec-08d9ad617ce9
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.112.34];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT040.eop-nam11.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB4482
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: cYdncWfScp5T2PJWcKLTbuF9MOP+Ml04HH0DeZk0a+1J+17XEJB/2wncUaUJ7TdozuYklWzqu3QZrepPCOnTVQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA2PR10MB4460
+X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10175 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxscore=0 spamscore=0
+ mlxlogscore=999 malwarescore=0 phishscore=0 adultscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2110150000
+ definitions=main-2111220056
+X-Proofpoint-ORIG-GUID: DsKnyO9dzkWtJ3tddxDX6xN8eM3OpnX_
+X-Proofpoint-GUID: DsKnyO9dzkWtJ3tddxDX6xN8eM3OpnX_
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> >> diff --git a/mm/migrate.c b/mm/migrate.c
-> >> index 1852d787e6ab..f74422a42192 100644
-> >> --- a/mm/migrate.c
-> >> +++ b/mm/migrate.c
-> >> @@ -362,7 +362,7 @@ static int expected_page_refs(struct address_space *mapping, struct page *page)
-> >>  	 * Device private pages have an extra refcount as they are
-> >>  	 * ZONE_DEVICE pages.
-> >>  	 */
-> >> -	expected_count += is_device_private_page(page);
-> >> +	expected_count += is_device_page(page);
-> >>  	if (mapping)
-> >>  		expected_count += thp_nr_pages(page) + page_has_private(page);
-> >>  
-> >> @@ -2503,7 +2503,7 @@ static bool migrate_vma_check_page(struct page *page)
-> >>  		 * FIXME proper solution is to rework migration_entry_wait() so
-> >>  		 * it does not need to take a reference on page.
-> >>  		 */
-> > Note that I have posted a patch to fix this - see
-> > https://lore.kernel.org/all/20211118020754.954425-1-apopple@nvidia.com/ This
-> > looks ok for now assuming coherent pages can never be pinned.
-> >
-> > However that raises a question - what happens when something calls
-> > get_user_pages() on a pfn pointing to a coherent device page? I can't see
-> > anything in this series that prevents pinning of coherent device pages, so we
-> > can't just assume they aren't pinned.
-> 
-> I agree. I think we need to depend on your patch to go in first.
-> 
-> I'm also wondering if we need to do something to prevent get_user_pages
-> from pinning device pages. And by "pin", I think migrate_vma_check_page
-> is not talking about FOLL_PIN, but any get_user_pages call. As far as I
-> can tell, there should be nothing fundamentally wrong with pinning
-> device pages for a short time. But I think we'll want to avoid
-> FOLL_LONGTERM because that would affect our memory manager's ability to
-> evict device memory.
+On 19 Nov 2021 at 04:43, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+>
+> It is static code deep in the middle of the CIL push logic. Factor
+> it out into a helper so that it is clear and easy to modify
+> separately.
+>
 
-Right, so long as my fix goes in I don't think there is anything wrong with
-pinning device public pages. Agree that we should avoid FOLL_LONGTERM pins for
-device memory though. I think the way to do that is update is_pinnable_page()
-so we treat device pages the same as other unpinnable pages ie. long-term pins
-will migrate the page.
+A straight forward abstraction of existing code into a new helper.
 
-> >
-> > In the case of device-private pages this is enforced by the fact they never
-> > have present pte's, so any attempt to GUP them results in a fault. But if I'm
-> > understanding this series correctly that won't be the case for coherent device
-> > pages right?
-> 
-> Right.
-> 
-> Regards,
->   Felix
-> 
-> 
-> >
-> >> -		return is_device_private_page(page);
-> >> +		return is_device_page(page);
-> >>  	}
-> >>  
-> >>  	/* For file back page */
-> >> @@ -2791,7 +2791,7 @@ EXPORT_SYMBOL(migrate_vma_setup);
-> >>   *     handle_pte_fault()
-> >>   *       do_anonymous_page()
-> >>   * to map in an anonymous zero page but the struct page will be a ZONE_DEVICE
-> >> - * private page.
-> >> + * private or coherent page.
-> >>   */
-> >>  static void migrate_vma_insert_page(struct migrate_vma *migrate,
-> >>  				    unsigned long addr,
-> >> @@ -2867,10 +2867,15 @@ static void migrate_vma_insert_page(struct migrate_vma *migrate,
-> >>  				swp_entry = make_readable_device_private_entry(
-> >>  							page_to_pfn(page));
-> >>  			entry = swp_entry_to_pte(swp_entry);
-> >> +		} else if (is_device_page(page)) {
-> > How about adding an explicit `is_device_coherent_page()` helper? It would make
-> > the test more explicit that this is expected to handle just coherent pages and
-> > I bet there will be future changes that need to differentiate between private
-> > and coherent pages anyway.
-> >
-> >> +			entry = pte_mkold(mk_pte(page,
-> >> +						 READ_ONCE(vma->vm_page_prot)));
-> >> +			if (vma->vm_flags & VM_WRITE)
-> >> +				entry = pte_mkwrite(pte_mkdirty(entry));
-> >>  		} else {
-> >>  			/*
-> >> -			 * For now we only support migrating to un-addressable
-> >> -			 * device memory.
-> >> +			 * We support migrating to private and coherent types
-> >> +			 * for device zone memory.
-> >>  			 */
-> >>  			pr_warn_once("Unsupported ZONE_DEVICE page type.\n");
-> >>  			goto abort;
-> >> @@ -2976,10 +2981,10 @@ void migrate_vma_pages(struct migrate_vma *migrate)
-> >>  		mapping = page_mapping(page);
-> >>  
-> >>  		if (is_zone_device_page(newpage)) {
-> >> -			if (is_device_private_page(newpage)) {
-> >> +			if (is_device_page(newpage)) {
-> >>  				/*
-> >> -				 * For now only support private anonymous when
-> >> -				 * migrating to un-addressable device memory.
-> >> +				 * For now only support private and coherent
-> >> +				 * anonymous when migrating to device memory.
-> >>  				 */
-> >>  				if (mapping) {
-> >>  					migrate->src[i] &= ~MIGRATE_PFN_MIGRATE;
-> >>
-> >
-> >
-> 
+Reviewed-by: Chandan Babu R <chandan.babu@oracle.com>
+
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  fs/xfs/xfs_log_cil.c | 61 ++++++++++++++++++++++++++++----------------
+>  1 file changed, 39 insertions(+), 22 deletions(-)
+>
+> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> index 6c93c8ada6f3..28f8104fbef1 100644
+> --- a/fs/xfs/xfs_log_cil.c
+> +++ b/fs/xfs/xfs_log_cil.c
+> @@ -834,6 +834,41 @@ xlog_cil_write_commit_record(
+>  	return error;
+>  }
+>  
+> +struct xlog_cil_trans_hdr {
+> +	struct xfs_trans_header	thdr;
+> +	struct xfs_log_iovec	lhdr;
+> +};
+> +
+> +/*
+> + * Build a checkpoint transaction header to begin the journal transaction.  We
+> + * need to account for the space used by the transaction header here as it is
+> + * not accounted for in xlog_write().
+> + */
+> +static void
+> +xlog_cil_build_trans_hdr(
+> +	struct xfs_cil_ctx	*ctx,
+> +	struct xlog_cil_trans_hdr *hdr,
+> +	struct xfs_log_vec	*lvhdr,
+> +	int			num_iovecs)
+> +{
+> +	struct xlog_ticket	*tic = ctx->ticket;
+> +
+> +	memset(hdr, 0, sizeof(*hdr));
+> +
+> +	hdr->thdr.th_magic = XFS_TRANS_HEADER_MAGIC;
+> +	hdr->thdr.th_type = XFS_TRANS_CHECKPOINT;
+> +	hdr->thdr.th_tid = tic->t_tid;
+> +	hdr->thdr.th_num_items = num_iovecs;
+> +	hdr->lhdr.i_addr = &hdr->thdr;
+> +	hdr->lhdr.i_len = sizeof(xfs_trans_header_t);
+> +	hdr->lhdr.i_type = XLOG_REG_TYPE_TRANSHDR;
+> +	tic->t_curr_res -= hdr->lhdr.i_len + sizeof(struct xlog_op_header);
+> +
+> +	lvhdr->lv_niovecs = 1;
+> +	lvhdr->lv_iovecp = &hdr->lhdr;
+> +	lvhdr->lv_next = ctx->lv_chain;
+> +}
+> +
+>  /*
+>   * Push the Committed Item List to the log.
+>   *
+> @@ -858,11 +893,9 @@ xlog_cil_push_work(
+>  	struct xlog		*log = cil->xc_log;
+>  	struct xfs_log_vec	*lv;
+>  	struct xfs_cil_ctx	*new_ctx;
+> -	struct xlog_ticket	*tic;
+>  	int			num_iovecs;
+>  	int			error = 0;
+> -	struct xfs_trans_header thdr;
+> -	struct xfs_log_iovec	lhdr;
+> +	struct xlog_cil_trans_hdr thdr;
+>  	struct xfs_log_vec	lvhdr = { NULL };
+>  	xfs_lsn_t		preflush_tail_lsn;
+>  	xfs_csn_t		push_seq;
+> @@ -1011,24 +1044,8 @@ xlog_cil_push_work(
+>  	 * Build a checkpoint transaction header and write it to the log to
+>  	 * begin the transaction. We need to account for the space used by the
+>  	 * transaction header here as it is not accounted for in xlog_write().
+> -	 *
+> -	 * The LSN we need to pass to the log items on transaction commit is
+> -	 * the LSN reported by the first log vector write. If we use the commit
+> -	 * record lsn then we can move the tail beyond the grant write head.
+>  	 */
+> -	tic = ctx->ticket;
+> -	thdr.th_magic = XFS_TRANS_HEADER_MAGIC;
+> -	thdr.th_type = XFS_TRANS_CHECKPOINT;
+> -	thdr.th_tid = tic->t_tid;
+> -	thdr.th_num_items = num_iovecs;
+> -	lhdr.i_addr = &thdr;
+> -	lhdr.i_len = sizeof(xfs_trans_header_t);
+> -	lhdr.i_type = XLOG_REG_TYPE_TRANSHDR;
+> -	tic->t_curr_res -= lhdr.i_len + sizeof(xlog_op_header_t);
+> -
+> -	lvhdr.lv_niovecs = 1;
+> -	lvhdr.lv_iovecp = &lhdr;
+> -	lvhdr.lv_next = ctx->lv_chain;
+> +	xlog_cil_build_trans_hdr(ctx, &thdr, &lvhdr, num_iovecs);
+>  
+>  	/*
+>  	 * Before we format and submit the first iclog, we have to ensure that
+> @@ -1044,7 +1061,7 @@ xlog_cil_push_work(
+>  	if (error)
+>  		goto out_abort_free_ticket;
+>  
+> -	xfs_log_ticket_ungrant(log, tic);
+> +	xfs_log_ticket_ungrant(log, ctx->ticket);
+>  
+>  	/*
+>  	 * If the checkpoint spans multiple iclogs, wait for all previous iclogs
+> @@ -1108,7 +1125,7 @@ xlog_cil_push_work(
+>  	return;
+>  
+>  out_abort_free_ticket:
+> -	xfs_log_ticket_ungrant(log, tic);
+> +	xfs_log_ticket_ungrant(log, ctx->ticket);
+>  	ASSERT(xlog_is_shutdown(log));
+>  	if (!ctx->commit_iclog) {
+>  		xlog_cil_committed(ctx);
 
 
-
-
+-- 
+chandan
