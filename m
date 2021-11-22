@@ -2,50 +2,51 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0009EC433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Nov 2021 23:32:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6E1DC433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Nov 2021 23:55:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231776AbhKVXfW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 Nov 2021 18:35:22 -0500
-Received: from mail.kernel.org ([198.145.29.99]:40456 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231550AbhKVXfW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 22 Nov 2021 18:35:22 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id CA33360F48;
-        Mon, 22 Nov 2021 23:32:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1637623934;
-        bh=7mvwBCqU1RVd7InNv/a8rYsJBzqBjajU+75dLuUO/y0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=h1aqRkM5hNP/+FMq96ydo/uxeaXT+nGo/wLN5+gvJps8spYftsNh0kySFwfxDMLNs
-         hcGWAxPyNm7RkaZkFWlJ0ytSUnusME1LEXvDoRSzX58B8bm+kYmS++Po8KfO2pqEnG
-         56iB7u0bnIWUW1lZjI6Dblrx5mMtleXSLr3/Cb+5mdUQXsuv2ThxB7oaM8vaIK6lH2
-         KNw9BO2e1FcT6mP1s0vI8b2Js8j943GmrDHv0LiiK2okHrxzpNvWOdNissEbR+NObD
-         hmMsquj97PgG+k5mxw/+v4JTMuF2DDCoVJ7YPk6OF8QhMyir4oUiLSsW45sS95jYHP
-         DZj4W6ErTLqSQ==
-Date:   Mon, 22 Nov 2021 15:32:14 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
+        id S229793AbhKVX63 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 Nov 2021 18:58:29 -0500
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:52390 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229553AbhKVX62 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Nov 2021 18:58:28 -0500
+Received: from dread.disaster.area (pa49-195-103-97.pa.nsw.optusnet.com.au [49.195.103.97])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id F12518A1203;
+        Tue, 23 Nov 2021 10:55:17 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1mpIsO-00C3vT-BM; Tue, 23 Nov 2021 10:37:32 +1100
+Date:   Tue, 23 Nov 2021 10:37:32 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     Helmut Grohne <helmut@subdivi.de>,
         Bastian Germann <bage@debian.org>, linux-xfs@vger.kernel.org
 Subject: Re: [PATCH 2/2] debian: Fix FTCBFS: Skip crc32 test (Closes: #999879)
-Message-ID: <20211122233214.GB266024@magnolia>
+Message-ID: <20211122233732.GG449541@dread.disaster.area>
 References: <20211119171241.102173-1-bage@debian.org>
  <20211119171241.102173-3-bage@debian.org>
  <20211119231105.GA449541@dread.disaster.area>
  <YZikmB1aLZUX8FC7@alf.mars>
  <20211120171548.GB24307@magnolia>
  <20211120222009.GB449541@dread.disaster.area>
- <20211120222719.GC449541@dread.disaster.area>
+ <20211122233113.GA266024@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211120222719.GC449541@dread.disaster.area>
+In-Reply-To: <20211122233113.GA266024@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=epq8cqlX c=1 sm=1 tr=0 ts=619c2de8
+        a=fP9RlOTWD4uZJjPSFnn6Ew==:117 a=fP9RlOTWD4uZJjPSFnn6Ew==:17
+        a=kj9zAlcOel0A:10 a=vIxV3rELxO4A:10 a=3_uRt0xjAAAA:8 a=xNf9USuDAAAA:8
+        a=7-415B0cAAAA:8 a=oxcdDREvlJLLaJENnwoA:9 a=CjuIK1q_8ugA:10
+        a=z1SuboXgGPGzQ8_2mWib:22 a=SEwjQc04WA-l_NiBhQ7s:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Nov 21, 2021 at 09:27:19AM +1100, Dave Chinner wrote:
+On Mon, Nov 22, 2021 at 03:31:13PM -0800, Darrick J. Wong wrote:
 > On Sun, Nov 21, 2021 at 09:20:09AM +1100, Dave Chinner wrote:
 > > On Sat, Nov 20, 2021 at 09:15:48AM -0800, Darrick J. Wong wrote:
 > > > On Sat, Nov 20, 2021 at 08:32:40AM +0100, Helmut Grohne wrote:
@@ -88,35 +89,29 @@ On Sun, Nov 21, 2021 at 09:27:19AM +1100, Dave Chinner wrote:
 > > > the package.
 > > 
 > > Yup, that's pretty much what I was getting at.
+> > 
+> > > The selftest code is modular enough that it's included in xfs_io and it
+> > > seems to run in under 500us even on my ancient raspberry pi 3b+
+> > > downclocked to 600mhz.  Why don't we just add it to mkfs and repair?
+> > > Those tools shouldn't be run all that frequently, and now we'll know
+> > > immediately if crc32c is broken on a user's system.
+> > > 
+> > > Then we don't need the build-time selftest at all.
+> > 
+> > Sounds reasonable, my only concern is what do users do when
+> > xfs-repair fails the self test and they need to fix their
+> > filesystem?
 > 
-> Though this is pretty simple and should just work, too:
-> 
-> --- a/libfrog/crc32.c
-> +++ b/libfrog/crc32.c
-> @@ -29,10 +29,11 @@
->   * match the hardware acceleration available on Intel CPUs.
->   */
->  
-> +#include <stdio.h>
-> +#include <sys/types.h>
->  #include <inttypes.h>
->  #include <asm/types.h>
->  #include <sys/time.h>
-> -#include "platform_defs.h"
->  /* For endian conversion routines */
->  #include "xfs_arch.h"
->  #include "crc32defs.h"
+> Find a system with a non-broken CPU, or complain to their support rep or
+> the upstream mailing list.  I'd rather they do that than let repair
+> erroneously obliterate all the metadata with incorrect crc validation,
+> or write garbage out that fails to mount immediately after.
 
-That works for my system, though I don't do cross builds frequently so I
-don't really know if it fixes those outside of my toy environment.  I'll
-send a bigger patch to add selftest to mkfs/repair tomorrow.
+Ok, sounds like a man page update is in order, then :)
 
---D
+Cheers,
 
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
