@@ -2,269 +2,610 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1723C433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Nov 2021 11:40:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38096C433FE
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Nov 2021 15:07:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234377AbhKVLn1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 Nov 2021 06:43:27 -0500
-Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:42626 "EHLO
-        mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231697AbhKVLn0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Nov 2021 06:43:26 -0500
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1AMBaViP029237;
-        Mon, 22 Nov 2021 11:40:19 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=references : from :
- to : cc : subject : in-reply-to : message-id : date : content-type :
- mime-version; s=corp-2021-07-09;
- bh=W1y4nJGrweG4TpUVjUxRXakbgHtfhiIeVj1Nn3VnIBQ=;
- b=Gj2FZWcPzbyip+8410toPMF9eUqezeX9UO0TC4cWvieisjNUI2BwWnb03iS/VCALc+Sc
- wftzA5SsM8X54CsJQCPsXBV5a5gz32A/MXEfA2kQdf0rqbLAl0SANQbkqjM/EssCxy10
- qVeXQFFdxm/OGzJe3Bk7Z160pi/q7uoiHmZgmwC+cWF7J6qKpvxcqwjgNe5Vf9MIfqKa
- cXySSLbtIXFtcL2Cm8z1ZNgbHOONlw+VNy6NOBa72Pcsa7+E9mObcugmBCXhGjcz6yKw
- hxxV0LQjv1GwzpNsRreukSpI9TbKcLze10XPxIIHbLxKIp0kncAm9ghlauDVyYTOQ4uh 3g== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3cg5gj1d0j-1
+        id S232194AbhKVPKF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 Nov 2021 10:10:05 -0500
+Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:30660 "EHLO
+        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229542AbhKVPKF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Nov 2021 10:10:05 -0500
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1AMEEsgw007646;
+        Mon, 22 Nov 2021 15:06:41 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : references : in-reply-to : content-type :
+ content-id : content-transfer-encoding : mime-version; s=corp-2021-07-09;
+ bh=LE5T/Zf3aYJhIqYXtCqAfGREqmL57zmQdUIC8CY/jSc=;
+ b=iFPu+haWrtZLr3FCWc2Fs3R+H24Dqllt2EXhxI0Oj84TMnNPjRdYuohkb7wKsZrLkdTA
+ HbrFELlrq2Wvboi1AxI0r3Bm/d0kZ796/qG+xvcum83eD+FTITB2VSwE+nugVyVXgWZH
+ 488/9Np2rOSbVKG8EtWFyugCIsLCurJ4qSMjAdWIfFYbLd3NQ5lj+lGOiuZ5a0AUGUfx
+ CrF4aR6jA8kfDwvDzxf/XYpX2JbL3sPeSbZ8MrgS7Y3utFhGXHBL7fChAWKV3sB9zgsv
+ DqBrLscSk2ERGpnOESFiJGefV5SLAQGcwd7AmPQn6pMKsEs1vB1EqIybSWvSlJpgxlCG xQ== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3cg461ak12-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 22 Nov 2021 11:40:19 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 1AMBVMnj193561;
-        Mon, 22 Nov 2021 11:40:18 GMT
-Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2170.outbound.protection.outlook.com [104.47.58.170])
-        by userp3020.oracle.com with ESMTP id 3cfasqhdp6-1
+        Mon, 22 Nov 2021 15:06:40 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 1AMF6Yco123932;
+        Mon, 22 Nov 2021 15:06:37 GMT
+Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2109.outbound.protection.outlook.com [104.47.58.109])
+        by userp3030.oracle.com with ESMTP id 3cep4wtr2s-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 22 Nov 2021 11:40:18 +0000
+        Mon, 22 Nov 2021 15:06:37 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=M9tkb33hcxzavPW0svADQvpea/h1hRp5cmM0+w1GvQ821qs6gq1tJxUO/JvqajDoi+lZpCMxfKligIGvZ9N9aRDvR30HNbSJkPzTj5UbsUIwVJx3zv5DQUKJnZDK4xIQLK6LqbR94TBSe9xz+W7LHmkc2oFVHd7jXP92g2bi9Ps4T5LEN5fOCq7n1h0T4UB9ZXu39bhkaxRs+1j8vrolYZ7s/57SVXD6tpEoNJILc8dWghb1z4sZhhGjNxOiJBjFban0gUNd9zpEgSZx4OC/jM2yxuBptrh2tQUWHvY06Qa+HVMFTy67oqEUjyXvsfyiDgr94INyo/n+jC8eavEM6Q==
+ b=Lkbgf3vWrfdnxgb8r82LNHlulPiTZOKhVULbVDx70+Q/grwbpVIw22+F/cuSzZRMuMEjGkhmP5lkDRhcBdpTZpaw2pfks2+635SEo0eBQPozdDfk8srBZK4+ICPFEzy6IWCTQrd/xACL5sHp8E1Bl/hTs4bb/4e+y3xogDQmrEe0f2us/hqm98+s+YpQY0AVrcITjpZyNc2Jmm8d6eZ7XdeEtNrLxHZEytBx/v8ntoYn2rsHpI9sxBW2XuVRHl/2Zr5/LRYNXMLz6nb5IsqMhM6RAOBs/uluyYbosHN5cWfgBuMngHqa4nEhrqCl6QfM6AnfIStocIzVgFYHoworCw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=W1y4nJGrweG4TpUVjUxRXakbgHtfhiIeVj1Nn3VnIBQ=;
- b=JS7qYVkMKiRizCHiuFMSPC79LjkNoc92BGnqpTfTu1YXdpGCDiPKnYDi/ugqrde4QbIVV4iZMRTxfqxAAeAQVsT2T26kHmWmo2e8QicRS0h5uOXtglc2rtN2ydipgbQpH50h27zvgN0P5n2JSWbwZYLGrjgzpUBcfDnQNXt4kNc2NI3dd++8yYWEGTTokdePnyWLVmB2clE6SQya/HLVqyj2GS73weUUoI7GyF/XhhTZ0rXzkl4MKTdqnl3xznx04edmeHXRpPgw5ukQtvyvxX3BqtjrNnMip5lX4HGtEDuhSZNIenPgKhxuzEUDoHcAac0RSIJNiu+uZejyh/0Kcw==
+ bh=LE5T/Zf3aYJhIqYXtCqAfGREqmL57zmQdUIC8CY/jSc=;
+ b=fshv/+2OJ6tLNusrSb7bAmkThyZU+OMCZUxb8D/gY+d3b2cTboFO06tITjO+1UDtYs0GMcHIXbdmF46p3dmA9GTfzskU4iQUFuANu8aQZXN8eJF0LwC+H7Dz4ArNLsZIIQ5gp6z7qlqQ/bNrXdhahyJP8Qwjru9agU/OWlnAUKCyhFG8j5iw6ngxW3TgX03jU+fX3wtV+0K4Ec9XkLSW3tuCtNsGgLwPv4Thos2yog4pBonAfaaqcUArHxWESm0Mzsq5KrdBVVX7tkTrG+DPtaug7GrHZGU7Po6U6+6SG3CUxZU72b7gs7k2yaR+FX0e3G0T/DE18XIWnDG4HoqAAQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=W1y4nJGrweG4TpUVjUxRXakbgHtfhiIeVj1Nn3VnIBQ=;
- b=gWxonKMjoWeCFxcuS8NtQxpnUFm9pGGpmgcj/cjnZA8symHU7a5goOnCawxtulAa62aLVPcCUi59xPDaR5a5Vs4OAMCXN1cnA8rUn5QTC4dlQjCXKhqmczaWNgmGE4CFBILqu2KkWVJFJyym2z3pbUequfKqNxILJ7OOfVTkxV8=
-Received: from SA2PR10MB4587.namprd10.prod.outlook.com (2603:10b6:806:114::12)
- by SN6PR10MB2496.namprd10.prod.outlook.com (2603:10b6:805:47::29) with
+ bh=LE5T/Zf3aYJhIqYXtCqAfGREqmL57zmQdUIC8CY/jSc=;
+ b=fbU0vcwzZ06IVVY0qxFEHgaFa2EfTA1G5zOomsgePFQKYE4AsBXyqXWN8aKYeC91WPOaM5s794F+5iIN7mD02trilppAExFleHpWeVB1JsZDfBw2Gd6UY/UoBcBwEXQhuYCmJ5AyJ4rhNV6Qkq0BNuPL9LredHAcC+Bh3QCVKQI=
+Received: from SJ0PR10MB4688.namprd10.prod.outlook.com (2603:10b6:a03:2db::24)
+ by BYAPR10MB3463.namprd10.prod.outlook.com (2603:10b6:a03:118::28) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4713.22; Mon, 22 Nov
- 2021 11:40:16 +0000
-Received: from SA2PR10MB4587.namprd10.prod.outlook.com
- ([fe80::e8c6:b020:edfa:d87f]) by SA2PR10MB4587.namprd10.prod.outlook.com
- ([fe80::e8c6:b020:edfa:d87f%9]) with mapi id 15.20.4713.025; Mon, 22 Nov 2021
- 11:40:16 +0000
-References: <20211118231352.2051947-1-david@fromorbit.com>
- <20211118231352.2051947-12-david@fromorbit.com>
-User-agent: mu4e 1.4.15; emacs 27.1
-From:   Chandan Babu R <chandan.babu@oracle.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 11/16] xfs: introduce xlog_write_full()
-In-reply-to: <20211118231352.2051947-12-david@fromorbit.com>
-Message-ID: <87r1b8v2p2.fsf@debian-BULLSEYE-live-builder-AMD64>
-Date:   Mon, 22 Nov 2021 17:10:09 +0530
-Content-Type: text/plain
-X-ClientProxiedBy: TY2PR06CA0005.apcprd06.prod.outlook.com
- (2603:1096:404:42::17) To SA2PR10MB4587.namprd10.prod.outlook.com
- (2603:10b6:806:114::12)
+ 2021 15:06:33 +0000
+Received: from SJ0PR10MB4688.namprd10.prod.outlook.com
+ ([fe80::48f2:bb64:cb4b:372f]) by SJ0PR10MB4688.namprd10.prod.outlook.com
+ ([fe80::48f2:bb64:cb4b:372f%7]) with mapi id 15.20.4713.025; Mon, 22 Nov 2021
+ 15:06:33 +0000
+From:   Chuck Lever III <chuck.lever@oracle.com>
+To:     Neil Brown <neilb@suse.de>
+CC:     Dave Chinner <david@fromorbit.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Michal Hocko <mhocko@suse.com>, Theodore Ts'o <tytso@mit.edu>,
+        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
+        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "linux-f2fs-devel@lists.sourceforge.net" 
+        <linux-f2fs-devel@lists.sourceforge.net>,
+        Linux NFS Mailing List <linux-nfs@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2] MM: introduce memalloc_retry_wait()
+Thread-Topic: [PATCH v2] MM: introduce memalloc_retry_wait()
+Thread-Index: AQHX3z5z7K9wSNEtN0mv2FiO5P+VlqwPppQA
+Date:   Mon, 22 Nov 2021 15:06:33 +0000
+Message-ID: <286F4A23-74EC-44E7-8734-CD378C2B5298@oracle.com>
+References: <163712329077.13692.12796971766360881401@noble.neil.brown.name>
+ <20211117055311.GS449541@dread.disaster.area>
+ <163754371968.13692.1277530886009912421@noble.neil.brown.name>
+In-Reply-To: <163754371968.13692.1277530886009912421@noble.neil.brown.name>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-mailer: Apple Mail (2.3654.120.0.1.13)
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: b789f3e5-f150-4b21-603f-08d9adc9abde
+x-ms-traffictypediagnostic: BYAPR10MB3463:
+x-microsoft-antispam-prvs: <BYAPR10MB3463FEFCC0D15E4C98676761939F9@BYAPR10MB3463.namprd10.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:1107;
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: oYFTRdl45lqU7ZLBERIeiMgkKu9mOn5O8V6kJpntpFjuIi6G5lvYWt9STjDFWfpFACOvdIbyFlx+QIuBaostJjjOzF38lpjydBnpoBFa3jFF2PHP5nSWfXFKrDjWuqUgM5w9GXGO7vhF2PoltUKClXOQr9je6DABQdekx5I9AqMwr8JhSJ6+I+RwujTqx3jzroqoZw3Nw8DG7rF98CftEU38qc2cXtXO/KFyyPKAJ0fwimGecHK1k73/GN1VnCDaGNFy/oXlqa7c9GLPLuVNe9kvPxGMJl4frkOcvnmasEX1iOlYIUNcapf/MejYl9//M+Pa4gqfHHO48VNtJGc49BB8iKEuMBTMeIN4BQh1pDyue5oNL2e3XwwgzTwYqvSIorvtqYxzsuqr7hWB7e4gyUgVGZqULYyjerYvJdM2AdX2MNvsYFmSPraesq0xvVv/YxxEWPqPDtwz4Pf/I2Uy1QXoONE+sOM6e77x4E1a97LKfckiQ7ABP/eh1o9QJ+Q0p/4Wq4pC+ohckBNaui27Govj23KuKCRuCsOlPQYN5XUWNuODnQ90sYiTPgOtHApUOh/MdrcjcW0OgqvTLu1Kdyr5fS/bNm3FRdKAqTfOGOpxQHV2X5f4YLiemMcwLNqpdXByN6pRqqEAaaWih0BQYvtUyd1nqfiefDowfinQ7OGDltjSkm+VPKZ17J+AdCoW9+4JooTo9qFtM6vF+hVoUeHBZ9730gKIVkB3xTy+lnJTtQrrqcmKarMLyrOErwmF
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ0PR10MB4688.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(6512007)(7416002)(2906002)(6916009)(6486002)(33656002)(30864003)(64756008)(66446008)(91956017)(36756003)(83380400001)(4326008)(53546011)(6506007)(71200400001)(54906003)(66946007)(186003)(38100700002)(66476007)(66556008)(2616005)(76116006)(38070700005)(316002)(122000001)(508600001)(5660300002)(26005)(8936002)(86362001)(8676002)(45980500001);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?sPp2iDm3cEhWgyyeM3Ach8AFy1i/2DDZMzPBbxRW+Cwx9sQjAJElqgE1inzz?=
+ =?us-ascii?Q?MTjNk3B+1SIZ70/9ZaIs+hWfd87HQ1z8jkJ7snIvXL1WdDOb53BpW6NtdQsu?=
+ =?us-ascii?Q?IMvz8Sq5PfW/Z7+Ska/JnsDJiu/VsjGvTjthQlGSXR22as1GEp13bArEL+eG?=
+ =?us-ascii?Q?pmJd+69jPTt7I8GkWsWuAtm91vr/OsogtQMOCamWy3Upv6jPaxk/nHLafI/+?=
+ =?us-ascii?Q?RxjrKB7GqH2V/YLX7qh7sv7PNiScvgc5nPkf+zTiQR2jv5fWf+b2/u5dwvaz?=
+ =?us-ascii?Q?mO/Gg9ZB6YLP956usLRgtAkNJ9tloX6QUnGR76vbTeHDqlImVrKzf8wwt6BM?=
+ =?us-ascii?Q?15Yw4uvk7TNKKNutobOaxyLmurfznFoyrmywJaMF+A4W6bOtQu3ZPi7Hvh84?=
+ =?us-ascii?Q?k3G4YNw656x67y0Q87iHJ3yW0v16cw7NQfRjyrMN3REIYct5QLBvmIirHVk6?=
+ =?us-ascii?Q?pbntNbAnOhMYGYkKHZcU5wn8VeOXRTcmPgGf/nSmqysgSN/dPiC8NYycTrGv?=
+ =?us-ascii?Q?ACo1wKV3mi7Wb2z9WwBE1+/9YWTGj9okb5nUJ44/AOFOwj1drBGp+P7ruOVX?=
+ =?us-ascii?Q?P9Nsy/KVPeE7gFpeUUppteBMg5CqjFRbIX/PhS8f9xe0phpOBciJ/OYworaI?=
+ =?us-ascii?Q?vztygIuu7FEKkzF0ZwfwjQzvqXYqMe9aY01N+RJ2Pqcp3mSsg3rjwrAUrubG?=
+ =?us-ascii?Q?rRTc7E0FheH5ZPyRXZisNDIpvyRUTQiBvc6ENzeCBUrkXyk7mA+F9ocDv0fy?=
+ =?us-ascii?Q?GZwmrsNcuU3hIvCzOPQq7UFVVZ45TsD9sB+a5E05KNYg84rRDYb6h5JlaAev?=
+ =?us-ascii?Q?qIBtckE1hq5GsBw0RKdCV0JvOhkmzBn9758wkL1L4o8LLwvqcbsSerdzQ+Ly?=
+ =?us-ascii?Q?+wclv4ixsSHQklYqOYTKmKjrXKqtXhvbzNFyuR2SJLAwpeU+X+tWzlfxecL6?=
+ =?us-ascii?Q?HBEVYPj234RMUcakdaBYwGcS66PfPz6jCUYdK8NFvg7N6jxV63ILJhTmcr8b?=
+ =?us-ascii?Q?KbkIQ0zKvEV5QwR3GlUMysBf085kFnTVdxHrG1LzaDCO9Swk/MtzOg0kY3QY?=
+ =?us-ascii?Q?Qp3CpsiuMk/rdk1dJXiEbuD9rpoDJQgmrRAIkCjbDq6RSjWU6blndQ82PpYP?=
+ =?us-ascii?Q?34ya8papNKx4lHpFiZaT9jtwdjaBgnzZA6cl7L54Yjhb0wNLAl7ZqhC2gNrh?=
+ =?us-ascii?Q?oDJVh3zZhsoPc0wXHwmLMPmjEtB6xRZErtlr9y1mXJIONC9RYBlIyprnwU4e?=
+ =?us-ascii?Q?DWfzQ/7DUQs05KsO0W/H3CdBCUAbDr+tAw/j9yzrTTmAJRo0sU+2FbHY2YHp?=
+ =?us-ascii?Q?VeBID4zMCe+Ymw3zoXGjYi/T9DFEN6NM+X6tuqTPAV9LBjd1z4QfJD2qYLvD?=
+ =?us-ascii?Q?Qs267InWZiFkQ8EreDY/vhG5qKBnKI8uHCe9UP3qy4RpCqEqcygiO22XEdXS?=
+ =?us-ascii?Q?6NHdI1Pg3Sf8Az5nEvplU/dbEQ8BVV9jtZrYv/Z3eZwwpIon1hu/S7LpHmRL?=
+ =?us-ascii?Q?O+MK1YwclkAcBlATJsmAJCDm2hvyr6UFsvXduzzdV/tVNG3G9mgflj0JL+T5?=
+ =?us-ascii?Q?Te3IDUE3rQ0DqxW6ApJPUUNHbkW1vv/TmkJjPuxUbjEUurmT7WBcSSYYqGhh?=
+ =?us-ascii?Q?nK3vQa1jdDdxLK056TlCFLM=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <01CB2425B80EFE4CA6E6E1315F06A05C@namprd10.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Received: from nandi (138.3.205.57) by TY2PR06CA0005.apcprd06.prod.outlook.com (2603:1096:404:42::17) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4713.19 via Frontend Transport; Mon, 22 Nov 2021 11:40:15 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 10cb5b69-1b9a-412f-3a8b-08d9adacda91
-X-MS-TrafficTypeDiagnostic: SN6PR10MB2496:
-X-Microsoft-Antispam-PRVS: <SN6PR10MB2496D871549720BD84728436F69F9@SN6PR10MB2496.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:6430;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: E3xJW3SfyPwW7y0gN8d5QxzwWgRKAfVx2LH+trzXqiJg3JR5uAuw0J5CorFZuzjt7adk27KclhStEkwGja2Pz388PlsDZAF0qnvAC3BRRKn3lk7v4TcMry3mVmQXsyOOkHGC3GaSNLgQ2Ny6unxt+Sl0FRoBy0TGtooFdWn8NxfQvysZG49/TiH2lyOcPbuzPLWNPvb3+I8snq6Rn85CZazPTC7Npq7/BnURY9Pf2ET89xXg5hfhTMzEjJzwfM6b+4ta6oictikXWz0aQCJ0xRlBPuyu2dtzdhXYPp2NuAo/SprzuuO/pttm9M6cwSojaxf3QTiDhvY+oAsr0CPEp1WvWKgNXAFWWlG5aRfv4Cb1gx8lu7fnXwijMVKjO3z/YivU1L42TFORZ1Eihh3lI5XFP59GWRCsMs8k/iqTiBAx4vcEICNfFxkgW/F8UVKBEfUNxSkgfCOd7PLv7gGG4DWFMK93PW1TCgSjZg+BKY1Ihscm+/Mfyy2dX4TfDY3T4ir2rHz8KVgDdZdAR32k/AfjT3kFZ3XKrXoxuDxZZVM1Sjg3Y/gxwK/Mr4axAmkfJ2I7wcj71Ij4iUG+e/N7SluNtlbfREBJI5QnML+yzFZibyRMdMc3x14VkvWlnKH+2lY8FB++wXc0iGjCijx9mHIFfnq3KtibOSsvuXV8rqgkmzRKrxJDKO1YwBEVEI0ivn1NcvcUAtJDU7Y1ofFbqw==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(7916004)(366004)(2906002)(9686003)(38350700002)(8676002)(6486002)(52116002)(316002)(86362001)(6916009)(5660300002)(6666004)(83380400001)(4326008)(6496006)(38100700002)(66556008)(66476007)(53546011)(66946007)(956004)(186003)(33716001)(8936002)(508600001)(26005);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?rcYVhozCSM2arX1hf/FCXVYLb74fwgTlR8E+SurvX9D4pEEk9zg9ab2v81aI?=
- =?us-ascii?Q?iOWP7y+YM1NzkX4tMD58Ghe6XaZy6S2z8fixLIj/zfSCSkLfppZreKHrvwv/?=
- =?us-ascii?Q?F5a4PpUZqhc4A4h5OI1lZNANo9WsTSfcIXYeIgp8tRlQ+XNZmj1Agq+mxJwd?=
- =?us-ascii?Q?Sjye5KcZ8gxOlK3/Ub4Rzf8A/5fSYnwNPJue0dJkYZPhD6ue8Lu6bElL8R1/?=
- =?us-ascii?Q?gBmyIOdXwZRpDti06DcREaW/luGCGeybmKyPxDOF/HQmPLbMieTn0j0yXO7q?=
- =?us-ascii?Q?oV6skdiLQ7tymy6ZdxW3849hE/Ef/UR+x5XegyTlLoThbOwzv6s8Zcxmfhj2?=
- =?us-ascii?Q?CwP+Ikb7GS1J27ZVelxOSoOVOBKKpepO92d8aS55HSWgBymlSGS0uY2rGUjb?=
- =?us-ascii?Q?7VF9zugxE/Q6jfhsRtTD3h0gcNLOCM4kQEZzp5aPuePVemjbsyaRI8OFF1nV?=
- =?us-ascii?Q?KLJ93JQpiSjz3C5n6BuQg0x/Mgo5O12OiJQE6OxDZreSd9BRa2AX1+spjHRA?=
- =?us-ascii?Q?9N8ETgTvcXvUsDHVS+17/H53F8lqc2hSwvg/HyItCtYzBOcdn6toMD+cs7Ww?=
- =?us-ascii?Q?t7uMjHutRpi/mhflgJDSe3mgdLipQWC/b+Zs+QCBVfnX+Mxs4S9e4ixgxnyY?=
- =?us-ascii?Q?BQ/4JgOgG1G8mxektWTEAo9YRWZzlA3Ol3rTQvuHMrAQMB188/CZ2Gpm63YG?=
- =?us-ascii?Q?6opHZYUNawlUrYyIDw7YTsnb5cjzuYgqMERTfzPx4HfFR/Hz6BR9AWFx7LJr?=
- =?us-ascii?Q?X6CkMosq/nfR2fzJgi4ZtuByzGP+P1vPcWRZC5pxJsUXInQ1HIGTuMS36Sy0?=
- =?us-ascii?Q?sBB1Qs7uuCNNCV6WY0b8Jv0w2FBtOgHoukQMxd37hN3l9IE4kU99W1ZBaqNr?=
- =?us-ascii?Q?gL6eXg+KrKbV/t76ksUT3TLQEKqtGGuJK2ETaPRMdd+Ml7Cy4oGaEDqfN/8J?=
- =?us-ascii?Q?ZVg3KHQKF3JYQDXZxU9Cjrgh1Y5bZPCb8uHhLObH3wnFvoPJ2Krtf1FEq09Y?=
- =?us-ascii?Q?Muks46vv/s1oN1UkZ7yAQ8sVrpZy/we+eYSMrwqPhwh2OiqXZNGnRqHgi3jp?=
- =?us-ascii?Q?JdVLRziakLSyACNvspC0D5Ntli+zvqUfb0JEJWSBkHKP+co7n1oOe75C/COV?=
- =?us-ascii?Q?e9EyCd5bcJBw7VcHijKztmwzx+Gun8LBaW7i/kjM/FJJTd30FG1sAV1C7CBx?=
- =?us-ascii?Q?dqe/Oo1D9XqG2MW3RX0WzRbgD2Z/Jmw/0PiatJVMv4DcliA/M8BmMqZY0Fmj?=
- =?us-ascii?Q?pwyl+fhFOJpLbif7UNTvlPStvJ8GAZZYNEivru0ltYhxwVo7oPz/biLzC9m0?=
- =?us-ascii?Q?usZvc3tMjeehC1B9oWTno6vn3NhdsfZWkm0nzbT83vTg6e057TlIIiVvH11J?=
- =?us-ascii?Q?poCabtg7r7D2D1M8VxKC7l1GPrmGFacTR5XbrTK4MFwJ6o3gUdwp2spaxSx2?=
- =?us-ascii?Q?qp0xN8iYCfybnMqMYU9lpi4N6lnfpF79+GsfbGIkLTtk/JG9CtlHzWD/rZ3W?=
- =?us-ascii?Q?aD+DZP7gI4wiU5t3/LzeCaeRWsW6MYQFVeDBH8Dv5OimuXrzvdZTYzerTRsy?=
- =?us-ascii?Q?rilfTwiFNjgyZmJZdwzeVYQxvpvDF4qdQXdzuQbiL3/ttzzkr07irKzi35cD?=
- =?us-ascii?Q?F1WnkNO9m/7PUiCI9BCFbJQ=3D?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 10cb5b69-1b9a-412f-3a8b-08d9adacda91
-X-MS-Exchange-CrossTenant-AuthSource: SA2PR10MB4587.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Nov 2021 11:40:16.5493
+X-MS-Exchange-CrossTenant-AuthSource: SJ0PR10MB4688.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: b789f3e5-f150-4b21-603f-08d9adc9abde
+X-MS-Exchange-CrossTenant-originalarrivaltime: 22 Nov 2021 15:06:33.1372
  (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: OCHHy7wYunZNaUNV7LaBVuE3muizYtktjLDr5/4GgE8m80/gmj+phqqu/j8w+JgLyb2t2hjVWBvG0GvyRsW99g==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR10MB2496
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: LBWJs6U8BiPvBd6gAhyWQWRaBvcgm0qWZvkQejmPm310LZ365Ghcu8NlUlrcDoMmArbwhN/8wsH9cVdGWkzZeA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR10MB3463
 X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10175 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adultscore=0 phishscore=0
- bulkscore=0 suspectscore=0 malwarescore=0 mlxscore=0 mlxlogscore=999
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 malwarescore=0
+ mlxlogscore=999 bulkscore=0 mlxscore=0 suspectscore=0 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2110150000
- definitions=main-2111220060
-X-Proofpoint-GUID: qRxF37F95HEBg-Kkdo4hvijw2QUUn5zZ
-X-Proofpoint-ORIG-GUID: qRxF37F95HEBg-Kkdo4hvijw2QUUn5zZ
+ definitions=main-2111220080
+X-Proofpoint-GUID: e6w476ha3vDUKwgf8FxQxHoxmv_CGzSw
+X-Proofpoint-ORIG-GUID: e6w476ha3vDUKwgf8FxQxHoxmv_CGzSw
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 19 Nov 2021 at 04:43, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
->
-> Introduce an optimised version of xlog_write() that is used when the
-> entire write will fit in a single iclog. This greatly simplifies the
-> implementation of writing a log vector chain into an iclog, and sets
-> the ground work for a much more understandable xlog_write()
-> implementation.
->
-> This incorporates some factoring and simplifications proposed by
-> Christoph Hellwig.
->
 
-Looks good.
 
-Reviewed-by: Chandan Babu R <chandan.babu@oracle.com>
-
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> On Nov 21, 2021, at 8:15 PM, NeilBrown <neilb@suse.de> wrote:
+>=20
+>=20
+> Various places in the kernel - largely in filesystems - respond to a
+> memory allocation failure by looping around and re-trying.
+> Some of these cannot conveniently use __GFP_NOFAIL, for reasons such as:
+> - a GFP_ATOMIC allocation, which __GFP_NOFAIL doesn't work on
+> - a need to check for the process being signalled between failures
+> - the possibility that other recovery actions could be performed
+> - the allocation is quite deep in support code, and passing down an
+>   extra flag to say if __GFP_NOFAIL is wanted would be clumsy.
+>=20
+> Many of these currently use congestion_wait() which (in almost all
+> cases) simply waits the given timeout - congestion isn't tracked for
+> most devices.
+>=20
+> It isn't clear what the best delay is for loops, but it is clear that
+> the various filesystems shouldn't be responsible for choosing a timeout.
+>=20
+> This patch introduces memalloc_retry_wait() with takes on that
+> responsibility.  Code that wants to retry a memory allocation can call
+> this function passing the GFP flags that were used.  It will wait
+> however is appropriate.
+>=20
+> For now, it only considers __GFP_NORETRY and whatever
+> gfpflags_allow_blocking() tests.  If blocking is allowed without
+> __GFP_NORETRY, then alloc_page either made some reclaim progress, or
+> waited for a while, before failing.  So there is no need for much
+> further waiting.  memalloc_retry_wait() will wait until the current
+> jiffie ends.  If this condition is not met, then alloc_page() won't have
+> waited much if at all.  In that case memalloc_retry_wait() waits about
+> 200ms.  This is the delay that most current loops uses.
+>=20
+> linux/sched/mm.h needs to be included in some files now,
+> but linux/backing-dev.h does not.
+>=20
+> Signed-off-by: NeilBrown <neilb@suse.de>
 > ---
->  fs/xfs/xfs_log.c | 69 +++++++++++++++++++++++++++++++++++++++++++++---
->  1 file changed, 66 insertions(+), 3 deletions(-)
->
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index f26c85dbc765..6d93b2c96262 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -2224,6 +2224,58 @@ xlog_print_trans(
->  	}
->  }
->  
-> +static inline void
-> +xlog_write_iovec(
-> +	struct xlog_in_core	*iclog,
-> +	uint32_t		*log_offset,
-> +	void			*data,
-> +	uint32_t		write_len,
-> +	int			*bytes_left,
-> +	uint32_t		*record_cnt,
-> +	uint32_t		*data_cnt)
-> +{
-> +	ASSERT(*log_offset % sizeof(int32_t) == 0);
-> +	ASSERT(write_len % sizeof(int32_t) == 0);
-> +
-> +	memcpy(iclog->ic_datap + *log_offset, data, write_len);
-> +	*log_offset += write_len;
-> +	*bytes_left -= write_len;
-> +	(*record_cnt)++;
-> +	*data_cnt += write_len;
-> +}
-> +
-> +/*
-> + * Write log vectors into a single iclog which is guaranteed by the caller
-> + * to have enough space to write the entire log vector into.
+>=20
+> Switched to io_schedule_timeout(), and added some missing #includes.
+>=20
+> fs/ext4/extents.c        |  8 +++-----
+> fs/ext4/inline.c         |  5 ++---
+> fs/ext4/page-io.c        |  9 +++++----
+> fs/f2fs/data.c           |  4 ++--
+> fs/f2fs/gc.c             |  5 ++---
+> fs/f2fs/inode.c          |  4 ++--
+> fs/f2fs/node.c           |  4 ++--
+> fs/f2fs/recovery.c       |  6 +++---
+> fs/f2fs/segment.c        |  9 +++------
+> fs/f2fs/super.c          |  5 ++---
+> fs/xfs/kmem.c            |  3 +--
+> fs/xfs/xfs_buf.c         |  2 +-
+> include/linux/sched/mm.h | 26 ++++++++++++++++++++++++++
+> net/sunrpc/svc_xprt.c    |  3 ++-
+> 14 files changed, 56 insertions(+), 37 deletions(-)
+>=20
+> diff --git a/fs/ext4/extents.c b/fs/ext4/extents.c
+> index 0ecf819bf189..5582fba36b44 100644
+> --- a/fs/ext4/extents.c
+> +++ b/fs/ext4/extents.c
+> @@ -27,8 +27,8 @@
+> #include <linux/slab.h>
+> #include <linux/uaccess.h>
+> #include <linux/fiemap.h>
+> -#include <linux/backing-dev.h>
+> #include <linux/iomap.h>
+> +#include <linux/sched/mm.h>
+> #include "ext4_jbd2.h"
+> #include "ext4_extents.h"
+> #include "xattr.h"
+> @@ -4407,8 +4407,7 @@ int ext4_ext_truncate(handle_t *handle, struct inod=
+e *inode)
+> 	err =3D ext4_es_remove_extent(inode, last_block,
+> 				    EXT_MAX_BLOCKS - last_block);
+> 	if (err =3D=3D -ENOMEM) {
+> -		cond_resched();
+> -		congestion_wait(BLK_RW_ASYNC, HZ/50);
+> +		memalloc_retry_wait(GFP_ATOMIC);
+> 		goto retry;
+> 	}
+> 	if (err)
+> @@ -4416,8 +4415,7 @@ int ext4_ext_truncate(handle_t *handle, struct inod=
+e *inode)
+> retry_remove_space:
+> 	err =3D ext4_ext_remove_space(inode, last_block, EXT_MAX_BLOCKS - 1);
+> 	if (err =3D=3D -ENOMEM) {
+> -		cond_resched();
+> -		congestion_wait(BLK_RW_ASYNC, HZ/50);
+> +		memalloc_retry_wait(GFP_ATOMIC);
+> 		goto retry_remove_space;
+> 	}
+> 	return err;
+> diff --git a/fs/ext4/inline.c b/fs/ext4/inline.c
+> index 39a1ab129fdc..635bcf68a67e 100644
+> --- a/fs/ext4/inline.c
+> +++ b/fs/ext4/inline.c
+> @@ -7,7 +7,7 @@
+> #include <linux/iomap.h>
+> #include <linux/fiemap.h>
+> #include <linux/iversion.h>
+> -#include <linux/backing-dev.h>
+> +#include <linux/sched/mm.h>
+>=20
+> #include "ext4_jbd2.h"
+> #include "ext4.h"
+> @@ -1929,8 +1929,7 @@ int ext4_inline_data_truncate(struct inode *inode, =
+int *has_inline)
+> retry:
+> 			err =3D ext4_es_remove_extent(inode, 0, EXT_MAX_BLOCKS);
+> 			if (err =3D=3D -ENOMEM) {
+> -				cond_resched();
+> -				congestion_wait(BLK_RW_ASYNC, HZ/50);
+> +				memalloc_retry_wait(GFP_ATOMIC);
+> 				goto retry;
+> 			}
+> 			if (err)
+> diff --git a/fs/ext4/page-io.c b/fs/ext4/page-io.c
+> index 9cb261714991..1d370364230e 100644
+> --- a/fs/ext4/page-io.c
+> +++ b/fs/ext4/page-io.c
+> @@ -24,7 +24,7 @@
+> #include <linux/kernel.h>
+> #include <linux/slab.h>
+> #include <linux/mm.h>
+> -#include <linux/backing-dev.h>
+> +#include <linux/sched/mm.h>
+>=20
+> #include "ext4_jbd2.h"
+> #include "xattr.h"
+> @@ -523,12 +523,13 @@ int ext4_bio_write_page(struct ext4_io_submit *io,
+> 			ret =3D PTR_ERR(bounce_page);
+> 			if (ret =3D=3D -ENOMEM &&
+> 			    (io->io_bio || wbc->sync_mode =3D=3D WB_SYNC_ALL)) {
+> -				gfp_flags =3D GFP_NOFS;
+> +				gfp_t new_gfp_flags =3D GFP_NOFS;
+> 				if (io->io_bio)
+> 					ext4_io_submit(io);
+> 				else
+> -					gfp_flags |=3D __GFP_NOFAIL;
+> -				congestion_wait(BLK_RW_ASYNC, HZ/50);
+> +					new_gfp_flags |=3D __GFP_NOFAIL;
+> +				memalloc_retry_wait(gfp_flags);
+> +				gfp_flags =3D new_gfp_flags;
+> 				goto retry_encrypt;
+> 			}
+>=20
+> diff --git a/fs/f2fs/data.c b/fs/f2fs/data.c
+> index 9f754aaef558..aacf5e4dcc57 100644
+> --- a/fs/f2fs/data.c
+> +++ b/fs/f2fs/data.c
+> @@ -8,9 +8,9 @@
+> #include <linux/fs.h>
+> #include <linux/f2fs_fs.h>
+> #include <linux/buffer_head.h>
+> +#include <linux/sched/mm.h>
+> #include <linux/mpage.h>
+> #include <linux/writeback.h>
+> -#include <linux/backing-dev.h>
+> #include <linux/pagevec.h>
+> #include <linux/blkdev.h>
+> #include <linux/bio.h>
+> @@ -2542,7 +2542,7 @@ int f2fs_encrypt_one_page(struct f2fs_io_info *fio)
+> 		/* flush pending IOs and wait for a while in the ENOMEM case */
+> 		if (PTR_ERR(fio->encrypted_page) =3D=3D -ENOMEM) {
+> 			f2fs_flush_merged_writes(fio->sbi);
+> -			congestion_wait(BLK_RW_ASYNC, DEFAULT_IO_TIMEOUT);
+> +			memalloc_retry_wait(GFP_NOFS);
+> 			gfp_flags |=3D __GFP_NOFAIL;
+> 			goto retry_encrypt;
+> 		}
+> diff --git a/fs/f2fs/gc.c b/fs/f2fs/gc.c
+> index a946ce0ead34..374bbb5294d9 100644
+> --- a/fs/f2fs/gc.c
+> +++ b/fs/f2fs/gc.c
+> @@ -7,7 +7,6 @@
+>  */
+> #include <linux/fs.h>
+> #include <linux/module.h>
+> -#include <linux/backing-dev.h>
+> #include <linux/init.h>
+> #include <linux/f2fs_fs.h>
+> #include <linux/kthread.h>
+> @@ -15,6 +14,7 @@
+> #include <linux/freezer.h>
+> #include <linux/sched/signal.h>
+> #include <linux/random.h>
+> +#include <linux/sched/mm.h>
+>=20
+> #include "f2fs.h"
+> #include "node.h"
+> @@ -1375,8 +1375,7 @@ static int move_data_page(struct inode *inode, bloc=
+k_t bidx, int gc_type,
+> 		if (err) {
+> 			clear_page_private_gcing(page);
+> 			if (err =3D=3D -ENOMEM) {
+> -				congestion_wait(BLK_RW_ASYNC,
+> -						DEFAULT_IO_TIMEOUT);
+> +				memalloc_retry_wait(GFP_NOFS);
+> 				goto retry;
+> 			}
+> 			if (is_dirty)
+> diff --git a/fs/f2fs/inode.c b/fs/f2fs/inode.c
+> index 0f8b2df3e1e0..4c11254a07d4 100644
+> --- a/fs/f2fs/inode.c
+> +++ b/fs/f2fs/inode.c
+> @@ -8,8 +8,8 @@
+> #include <linux/fs.h>
+> #include <linux/f2fs_fs.h>
+> #include <linux/buffer_head.h>
+> -#include <linux/backing-dev.h>
+> #include <linux/writeback.h>
+> +#include <linux/sched/mm.h>
+>=20
+> #include "f2fs.h"
+> #include "node.h"
+> @@ -562,7 +562,7 @@ struct inode *f2fs_iget_retry(struct super_block *sb,=
+ unsigned long ino)
+> 	inode =3D f2fs_iget(sb, ino);
+> 	if (IS_ERR(inode)) {
+> 		if (PTR_ERR(inode) =3D=3D -ENOMEM) {
+> -			congestion_wait(BLK_RW_ASYNC, DEFAULT_IO_TIMEOUT);
+> +			memalloc_retry_wait(GFP_NOFS);
+> 			goto retry;
+> 		}
+> 	}
+> diff --git a/fs/f2fs/node.c b/fs/f2fs/node.c
+> index 556fcd8457f3..219506ca9a97 100644
+> --- a/fs/f2fs/node.c
+> +++ b/fs/f2fs/node.c
+> @@ -8,7 +8,7 @@
+> #include <linux/fs.h>
+> #include <linux/f2fs_fs.h>
+> #include <linux/mpage.h>
+> -#include <linux/backing-dev.h>
+> +#include <linux/sched/mm.h>
+> #include <linux/blkdev.h>
+> #include <linux/pagevec.h>
+> #include <linux/swap.h>
+> @@ -2750,7 +2750,7 @@ int f2fs_recover_inode_page(struct f2fs_sb_info *sb=
+i, struct page *page)
+> retry:
+> 	ipage =3D f2fs_grab_cache_page(NODE_MAPPING(sbi), ino, false);
+> 	if (!ipage) {
+> -		congestion_wait(BLK_RW_ASYNC, DEFAULT_IO_TIMEOUT);
+> +		memalloc_retry_wait(GFP_NOFS);
+> 		goto retry;
+> 	}
+>=20
+> diff --git a/fs/f2fs/recovery.c b/fs/f2fs/recovery.c
+> index 6a1b4668d933..d1664a0567ef 100644
+> --- a/fs/f2fs/recovery.c
+> +++ b/fs/f2fs/recovery.c
+> @@ -8,6 +8,7 @@
+> #include <asm/unaligned.h>
+> #include <linux/fs.h>
+> #include <linux/f2fs_fs.h>
+> +#include <linux/sched/mm.h>
+> #include "f2fs.h"
+> #include "node.h"
+> #include "segment.h"
+> @@ -587,7 +588,7 @@ static int do_recover_data(struct f2fs_sb_info *sbi, =
+struct inode *inode,
+> 	err =3D f2fs_get_dnode_of_data(&dn, start, ALLOC_NODE);
+> 	if (err) {
+> 		if (err =3D=3D -ENOMEM) {
+> -			congestion_wait(BLK_RW_ASYNC, DEFAULT_IO_TIMEOUT);
+> +			memalloc_retry_wait(GFP_NOFS);
+> 			goto retry_dn;
+> 		}
+> 		goto out;
+> @@ -670,8 +671,7 @@ static int do_recover_data(struct f2fs_sb_info *sbi, =
+struct inode *inode,
+> 			err =3D check_index_in_prev_nodes(sbi, dest, &dn);
+> 			if (err) {
+> 				if (err =3D=3D -ENOMEM) {
+> -					congestion_wait(BLK_RW_ASYNC,
+> -							DEFAULT_IO_TIMEOUT);
+> +					memalloc_retry_wait(GFP_NOFS);
+> 					goto retry_prev;
+> 				}
+> 				goto err;
+> diff --git a/fs/f2fs/segment.c b/fs/f2fs/segment.c
+> index df9ed75f0b7a..40fdb4a8daeb 100644
+> --- a/fs/f2fs/segment.c
+> +++ b/fs/f2fs/segment.c
+> @@ -9,6 +9,7 @@
+> #include <linux/f2fs_fs.h>
+> #include <linux/bio.h>
+> #include <linux/blkdev.h>
+> +#include <linux/sched/mm.h>
+> #include <linux/prefetch.h>
+> #include <linux/kthread.h>
+> #include <linux/swap.h>
+> @@ -245,9 +246,7 @@ static int __revoke_inmem_pages(struct inode *inode,
+> 								LOOKUP_NODE);
+> 			if (err) {
+> 				if (err =3D=3D -ENOMEM) {
+> -					congestion_wait(BLK_RW_ASYNC,
+> -							DEFAULT_IO_TIMEOUT);
+> -					cond_resched();
+> +					memalloc_retry_wait(GFP_NOFS);
+> 					goto retry;
+> 				}
+> 				err =3D -EAGAIN;
+> @@ -424,9 +423,7 @@ static int __f2fs_commit_inmem_pages(struct inode *in=
+ode)
+> 			err =3D f2fs_do_write_data_page(&fio);
+> 			if (err) {
+> 				if (err =3D=3D -ENOMEM) {
+> -					congestion_wait(BLK_RW_ASYNC,
+> -							DEFAULT_IO_TIMEOUT);
+> -					cond_resched();
+> +					memalloc_retry_wait(GFP_NOFS);
+> 					goto retry;
+> 				}
+> 				unlock_page(page);
+> diff --git a/fs/f2fs/super.c b/fs/f2fs/super.c
+> index 040b6d02e1d8..3bace24f8800 100644
+> --- a/fs/f2fs/super.c
+> +++ b/fs/f2fs/super.c
+> @@ -8,9 +8,9 @@
+> #include <linux/module.h>
+> #include <linux/init.h>
+> #include <linux/fs.h>
+> +#include <linux/sched/mm.h>
+> #include <linux/statfs.h>
+> #include <linux/buffer_head.h>
+> -#include <linux/backing-dev.h>
+> #include <linux/kthread.h>
+> #include <linux/parser.h>
+> #include <linux/mount.h>
+> @@ -2415,8 +2415,7 @@ static ssize_t f2fs_quota_read(struct super_block *=
+sb, int type, char *data,
+> 		page =3D read_cache_page_gfp(mapping, blkidx, GFP_NOFS);
+> 		if (IS_ERR(page)) {
+> 			if (PTR_ERR(page) =3D=3D -ENOMEM) {
+> -				congestion_wait(BLK_RW_ASYNC,
+> -						DEFAULT_IO_TIMEOUT);
+> +				memalloc_retry_wait(GFP_NOFS);
+> 				goto repeat;
+> 			}
+> 			set_sbi_flag(F2FS_SB(sb), SBI_QUOTA_NEED_REPAIR);
+> diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
+> index 6f49bf39183c..c557a030acfe 100644
+> --- a/fs/xfs/kmem.c
+> +++ b/fs/xfs/kmem.c
+> @@ -4,7 +4,6 @@
+>  * All Rights Reserved.
+>  */
+> #include "xfs.h"
+> -#include <linux/backing-dev.h>
+> #include "xfs_message.h"
+> #include "xfs_trace.h"
+>=20
+> @@ -26,6 +25,6 @@ kmem_alloc(size_t size, xfs_km_flags_t flags)
+> 	"%s(%u) possible memory allocation deadlock size %u in %s (mode:0x%x)",
+> 				current->comm, current->pid,
+> 				(unsigned int)size, __func__, lflags);
+> -		congestion_wait(BLK_RW_ASYNC, HZ/50);
+> +		memalloc_retry_wait(lflags);
+> 	} while (1);
+> }
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 631c5a61d89b..6c45e3fa56f4 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -394,7 +394,7 @@ xfs_buf_alloc_pages(
+> 		}
+>=20
+> 		XFS_STATS_INC(bp->b_mount, xb_page_retries);
+> -		congestion_wait(BLK_RW_ASYNC, HZ / 50);
+> +		memalloc_retry_wait(gfp_mask);
+> 	}
+> 	return 0;
+> }
+> diff --git a/include/linux/sched/mm.h b/include/linux/sched/mm.h
+> index aca874d33fe6..aa5f09ca5bcf 100644
+> --- a/include/linux/sched/mm.h
+> +++ b/include/linux/sched/mm.h
+> @@ -214,6 +214,32 @@ static inline void fs_reclaim_acquire(gfp_t gfp_mask=
+) { }
+> static inline void fs_reclaim_release(gfp_t gfp_mask) { }
+> #endif
+>=20
+> +/* Any memory-allocation retry loop should use
+> + * memalloc_retry_wait(), and pass the flags for the most
+> + * constrained allocation attempt that might have failed.
+> + * This provides useful documentation of where loops are,
+
+"useful documentation" is a good thing, but to me that means
+there's some auditing mechanism like a trace point. Getting
+to this function seems like an exceptional event that should
+be noted externally.
+
+If memalloc_retry_wait() had a trace point, I'd be inclined
+to remove trace_svc_alloc_arg_err().
+
+(This comment is not an objection to your patch).
+
+
+> + * and a central place to fine tune the waiting as the MM
+> + * implementation changes.
 > + */
-> +static void
-> +xlog_write_full(
-> +	struct xfs_log_vec	*lv,
-> +	struct xlog_ticket	*ticket,
-> +	struct xlog_in_core	*iclog,
-> +	uint32_t		*log_offset,
-> +	uint32_t		*len,
-> +	uint32_t		*record_cnt,
-> +	uint32_t		*data_cnt)
+> +static inline void memalloc_retry_wait(gfp_t gfp_flags)
 > +{
-> +	int			index;
-> +
-> +	ASSERT(*log_offset + *len <= iclog->ic_size);
-> +
-> +	/*
-> +	 * Ordered log vectors have no regions to write so this
-> +	 * loop will naturally skip them.
+> +	/* We use io_schedule_timeout because waiting for memory
+> +	 * typically included waiting for dirty pages to be
+> +	 * written out, which requires IO.
 > +	 */
-> +	for (index = 0; index < lv->lv_niovecs; index++) {
-> +		struct xfs_log_iovec	*reg = &lv->lv_iovecp[index];
-> +		struct xlog_op_header	*ophdr = reg->i_addr;
-> +
-> +		ophdr->oh_tid = cpu_to_be32(ticket->t_tid);
-> +		xlog_write_iovec(iclog, log_offset, reg->i_addr,
-> +				reg->i_len, len, record_cnt, data_cnt);
-> +	}
+> +	__set_current_state(TASK_UNINTERRUPTIBLE);
+> +	gfp_flags =3D current_gfp_context(gfp_flags);
+> +	if (gfpflags_allow_blocking(gfp_flags) &&
+> +	    !(gfp_flags & __GFP_NORETRY))
+> +		/* Probably waited already, no need for much more */
+> +		io_schedule_timeout(1);
+> +	else
+> +		/* Probably didn't wait, and has now released a lock,
+> +		 * so now is a good time to wait
+> +		 */
+> +		io_schedule_timeout(HZ/50);
 > +}
 > +
->  static xlog_op_header_t *
->  xlog_write_setup_ophdr(
->  	struct xlog_op_header	*ophdr,
-> @@ -2388,8 +2440,8 @@ xlog_write(
->  	int			partial_copy = 0;
->  	int			partial_copy_len = 0;
->  	int			contwr = 0;
-> -	int			record_cnt = 0;
-> -	int			data_cnt = 0;
-> +	uint32_t		record_cnt = 0;
-> +	uint32_t		data_cnt = 0;
->  	int			error = 0;
->  
->  	if (ticket->t_curr_res < 0) {
-> @@ -2409,7 +2461,6 @@ xlog_write(
->  			return error;
->  
->  		ASSERT(log_offset <= iclog->ic_size - 1);
-> -		ptr = iclog->ic_datap + log_offset;
->  
->  		/*
->  		 * If we have a context pointer, pass it the first iclog we are
-> @@ -2421,10 +2472,22 @@ xlog_write(
->  			ctx = NULL;
->  		}
->  
-> +		/* If this is a single iclog write, go fast... */
-> +		if (!contwr && lv == log_vector) {
-> +			while (lv) {
-> +				xlog_write_full(lv, ticket, iclog, &log_offset,
-> +						 &len, &record_cnt, &data_cnt);
-> +				lv = lv->lv_next;
-> +			}
-> +			data_cnt = 0;
-> +			break;
-> +		}
-> +
->  		/*
->  		 * This loop writes out as many regions as can fit in the amount
->  		 * of space which was allocated by xlog_state_get_iclog_space().
->  		 */
-> +		ptr = iclog->ic_datap + log_offset;
->  		while (lv && (!lv->lv_niovecs || index < lv->lv_niovecs)) {
->  			struct xfs_log_iovec	*reg;
->  			struct xlog_op_header	*ophdr;
+> /**
+>  * might_alloc - Mark possible allocation sites
+>  * @gfp_mask: gfp_t flags that would be used to allocate
+> diff --git a/net/sunrpc/svc_xprt.c b/net/sunrpc/svc_xprt.c
+> index 1e99ba1b9d72..9cb18b822ab2 100644
+> --- a/net/sunrpc/svc_xprt.c
+> +++ b/net/sunrpc/svc_xprt.c
+> @@ -6,6 +6,7 @@
+>  */
+>=20
+> #include <linux/sched.h>
+> +#include <linux/sched/mm.h>
+> #include <linux/errno.h>
+> #include <linux/freezer.h>
+> #include <linux/kthread.h>
+> @@ -688,7 +689,7 @@ static int svc_alloc_arg(struct svc_rqst *rqstp)
+> 			return -EINTR;
+> 		}
+> 		trace_svc_alloc_arg_err(pages);
+> -		schedule_timeout(msecs_to_jiffies(500));
+> +		memalloc_retry_wait(GFP_KERNEL);
+> 	}
+> 	rqstp->rq_page_end =3D &rqstp->rq_pages[pages];
+> 	rqstp->rq_pages[pages] =3D NULL; /* this might be seen in nfsd_splice_ac=
+tor() */
+> --=20
+> 2.33.1
+>=20
+
+--
+Chuck Lever
 
 
--- 
-chandan
+
