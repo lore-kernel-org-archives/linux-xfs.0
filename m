@@ -2,135 +2,135 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A6A0C433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Nov 2021 11:39:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65BF4C433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Nov 2021 11:39:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234364AbhKVLmq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 Nov 2021 06:42:46 -0500
-Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:53124 "EHLO
-        mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231697AbhKVLmo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Nov 2021 06:42:44 -0500
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1AMB6A9S019932;
-        Mon, 22 Nov 2021 11:39:37 GMT
+        id S233849AbhKVLnE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 Nov 2021 06:43:04 -0500
+Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:11290 "EHLO
+        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231697AbhKVLnD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Nov 2021 06:43:03 -0500
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1AMAkxTt007646;
+        Mon, 22 Nov 2021 11:39:56 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=references : from :
- to : cc : subject : message-id : in-reply-to : date : content-type :
+ to : cc : subject : in-reply-to : message-id : date : content-type :
  mime-version; s=corp-2021-07-09;
- bh=ysTphv5Mr40XeqWko3rzad8p4P8IFeA6KbOSsNnzBJ0=;
- b=qj1qv3Hxf2rO5zfYADTdAIGM3B+/9DnXrm166GiMHfxe5zjh3EfjHvkIokjMDrpQK4iA
- a078aXfpA86c9003C1WrtUtzbQ20mvTp77nEiPUwBaQOXmKXRgWM97sVk0jXC+KmROHr
- QZYFemdr9N3B7NpYcBR5hW+Ho09K/rJc7D0Isfhow/oZO/Ujn1HPVPG/8L4iovZeBdFK
- qP2uh/zFMB92dNng4iwV+/sUZXMkjSw7h2XpPKW9/H8x9Z0jYkO1EWupkZ0mdOm1KzKi
- HgaD2SJjHNvIr1plLjruziB2sDMspfP+b0+1c/M9ll5jCzcJK/wweH4VQPnXXcHJ4m4r Vw== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3cg55fsga3-1
+ bh=6nhQyY7zPdtocDgd9lOcanN32XfDGaCIzy+zoNnZON4=;
+ b=Ki2lphTQOrfpglZahJmsa1Paj+HrN8ID/ot8x56Hkfk7BJZN7CSNg8muvj1Fdx3NJDae
+ JNRaszQIIIxHGa7fLCkIey4f5GJw1ql6Y6wpELl7b80h4vII9UgIVI+yiA6pKV/TyZcN
+ J6uoEYKfEBeXpkZ6Cs0qVcLrnTo1jhnvLbiKDpXztp7JuVu73ZBzTmk4zUqNKCJKLgw0
+ JcbOKFCUph+HakSg3Ghj+HsLun9nQ3Krt0c1/pFmGaWbQ0eIZX7fTs+w5y1Rjnu3nLEb
+ FN/fZ+pXxQrkOto83o6z7mGFrDcubQ2LN2Uec+VccgqosG/CmVAxeNfNx5/00qWESFKb IQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3cg4619k2a-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 22 Nov 2021 11:39:37 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 1AMBUj5Q114763;
-        Mon, 22 Nov 2021 11:39:35 GMT
-Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2173.outbound.protection.outlook.com [104.47.58.173])
-        by aserp3030.oracle.com with ESMTP id 3ceq2cf2yu-1
+        Mon, 22 Nov 2021 11:39:56 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 1AMBVMn1193556;
+        Mon, 22 Nov 2021 11:39:55 GMT
+Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2176.outbound.protection.outlook.com [104.47.58.176])
+        by userp3020.oracle.com with ESMTP id 3cfasqhcuh-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 22 Nov 2021 11:39:35 +0000
+        Mon, 22 Nov 2021 11:39:54 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=lA9KrK82wiLt8sHvyEaz/i2pA5eWx7HfqYjNiHTTBJVgII36BK9rl1QQstJlrFaikV+vTN8RRktCnVI/YAYyk9+CkY1JRWVKMgi2WnTL6x5xcUJjFk0o+SEmqMcgZybdDgxhdbtucMJ0YaJPdxwwhuDLKTVM2xsbTYXdmFWeoA/qi40dlW9CcjeytfSrxZbzD9seTqVdgf3vfymfBxupu+iQGyUbPW7aRL73P2IWBC8xofKRq+hpew1z/rVSnYUlBibiVGY930mFAjTyNBDsUVJ5Lm0M+byh1KOCPTeZn9KFtIpf18A2T2p0q/cJOjRVPEtsvOcifBhJdGVH+qN1gw==
+ b=N8fHbxUU/sNv3nY9vAwv7Ync3hvW7qTQFcnIQ41NuOdZwYugNdLXt3i5N0E7ULqDslUBL5C9o+a/WoF92QiZSkiENyHxVDYWbwEeJ5f6YaOmcqdSm24HfTBF0mnjBvXZugVIIclYiNszJRgpHBAWRYAxTgayM7gGs8+AFfXgJSAEXvGayLCEa+Q4K1+FsxtSGZ53od3k/vr5+EkC4AxggvmfTZ+RCJs0Ib8Mnw8vKuV2O0Nvz5EJlqwZrgkNrLyVSU0/GpW9zkl+11eySi9hBZwdTW6rFE3ECGkvHSKLO0y1Fsj2Qn8woWraA+n7jeFgX00WPE/aAxJcpe2snMBKTQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ysTphv5Mr40XeqWko3rzad8p4P8IFeA6KbOSsNnzBJ0=;
- b=Hab4zqzoINs5INCYLAO2XVNOMvVAq1S3fNac4oB7t+6g2POa7kAYAFBaMNuYfRBwCiAq6MTIVBs+olZ0ilwRfu5kdgHzlU6d/QVgGk9ZLn2hFm8eUYTxOj4amd4k18HeZqjyf04iHcBcFczeGn2IuJ6hUEmCGPzs9WNQXTxV3hTn3j7u/u9qdTsIsqs+GzVo28tnyic34sEh92su2kvyTdL3XWOwBim/FBa/Z2EatFtN+1QIUTrLJUXKmBTsYSrMOIbPpqz0dQ0iass22+A5MxDqy1N/ToH1w0SE2XvJmzNjmRpj1KtKNvzsKd3Wj0FjPGXHg2DBL9qypXEcJooliw==
+ bh=6nhQyY7zPdtocDgd9lOcanN32XfDGaCIzy+zoNnZON4=;
+ b=bd5N50Xh6xKzIlaFK7IXfVsXnS9Bk1GvpZ+zTbSi9EgNmYacrcEIgXXwo5UXslKmO0Kp70WEKhyTY3pOLdRxbfNyb+T/qN7krDTcG5C1mHUo/XNhZS9+uXyIn0q5wPC7QHWx+Bbac/cSJ937+FuxknhJIzgWwFXuX9MXthIBBK2Al4bCYrNBldGgPi8lQajrBLRQ5tFEIcbQZ6rbHu19zAEFgo4h8jLqfGoF9YJIOQn4U/sQ4nfh5jscChAygvDmPA3wQDwE0RSxQkBbCL23dmAg/sXToYZj/MGUGnS/G/PEs2FG40Gl5tIvLSawgsn0DF9M7KkqqLIZJ+r/JxLAnQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ysTphv5Mr40XeqWko3rzad8p4P8IFeA6KbOSsNnzBJ0=;
- b=ivKoVh64gMwOIzctYJJ9fPptNZvts0XDG7rXe/0rKIHrd7QCD8MBilZIRUWIWa0PdXZLpMuexBgCzFPXOZ4ji36zIJeTJ91vNyuqzs1iC1aw8NZvddnpKQs/OiwAVcd/mgXEynhj7a3Xi9pK1N0MqBliFGJSnBVFi0NQIl4WcCo=
+ bh=6nhQyY7zPdtocDgd9lOcanN32XfDGaCIzy+zoNnZON4=;
+ b=YbaXFib4FgHoxzcp6UcIMTKsxU+On1ADY+GmVcgvvwenNSJvt/08KjReK1wek5MaKMsD9+1rXc9k5/ZmeB8UIH5ckmw23G+CLOjEnPgrYlKfCuEs79e7Qp2sDw4W29pqUYNiYvvTMY8cESG1TESOuvLWwD4BhPyKmWTb3vOMjQs=
 Received: from SA2PR10MB4587.namprd10.prod.outlook.com (2603:10b6:806:114::12)
  by SN6PR10MB2496.namprd10.prod.outlook.com (2603:10b6:805:47::29) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4713.22; Mon, 22 Nov
- 2021 11:39:33 +0000
+ 2021 11:39:53 +0000
 Received: from SA2PR10MB4587.namprd10.prod.outlook.com
  ([fe80::e8c6:b020:edfa:d87f]) by SA2PR10MB4587.namprd10.prod.outlook.com
  ([fe80::e8c6:b020:edfa:d87f%9]) with mapi id 15.20.4713.025; Mon, 22 Nov 2021
- 11:39:33 +0000
+ 11:39:53 +0000
 References: <20211118231352.2051947-1-david@fromorbit.com>
- <20211118231352.2051947-9-david@fromorbit.com>
+ <20211118231352.2051947-10-david@fromorbit.com>
 User-agent: mu4e 1.4.15; emacs 27.1
 From:   Chandan Babu R <chandan.babu@oracle.com>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 08/16] xfs: log ticket region debug is largely useless
-Message-ID: <871r39v9sv.fsf@debian-BULLSEYE-live-builder-AMD64>
-In-reply-to: <20211118231352.2051947-9-david@fromorbit.com>
-Date:   Mon, 22 Nov 2021 17:09:26 +0530
+Subject: Re: [PATCH 09/16] xfs: pass lv chain length into xlog_write()
+In-reply-to: <20211118231352.2051947-10-david@fromorbit.com>
+Message-ID: <87tug4v2pr.fsf@debian-BULLSEYE-live-builder-AMD64>
+Date:   Mon, 22 Nov 2021 17:09:44 +0530
 Content-Type: text/plain
-X-ClientProxiedBy: TY2PR04CA0021.apcprd04.prod.outlook.com
- (2603:1096:404:f6::33) To SA2PR10MB4587.namprd10.prod.outlook.com
+X-ClientProxiedBy: TYAPR01CA0106.jpnprd01.prod.outlook.com
+ (2603:1096:404:2a::22) To SA2PR10MB4587.namprd10.prod.outlook.com
  (2603:10b6:806:114::12)
 MIME-Version: 1.0
-Received: from nandi (138.3.205.57) by TY2PR04CA0021.apcprd04.prod.outlook.com (2603:1096:404:f6::33) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4713.19 via Frontend Transport; Mon, 22 Nov 2021 11:39:32 +0000
+Received: from nandi (138.3.205.57) by TYAPR01CA0106.jpnprd01.prod.outlook.com (2603:1096:404:2a::22) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4713.19 via Frontend Transport; Mon, 22 Nov 2021 11:39:51 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 46ef532e-bbd2-4487-076e-08d9adacc0fb
+X-MS-Office365-Filtering-Correlation-Id: 8b6a1e7e-9cf4-4fb3-c4e0-08d9adaccc94
 X-MS-TrafficTypeDiagnostic: SN6PR10MB2496:
-X-Microsoft-Antispam-PRVS: <SN6PR10MB24960721247A0F16021546FEF69F9@SN6PR10MB2496.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
+X-Microsoft-Antispam-PRVS: <SN6PR10MB2496E08683B5A2ED67FD5D17F69F9@SN6PR10MB2496.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:1443;
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 76zJ8/QXz2dKcIX4e/KwrlvCh1jFaKtq7ka24e1NBpew9ZsWuYvXyhsDAplHE/9GKGQ4jgbVyRj8Unr48t55O2j7mnHgqbW/qWzdyGV6i60/+QyAiFVg0nndaBGZOa8hQRkexZnPV46IE8oeY2svRdlhIT2807gbM4YEtXQgEab6hdX9rDT826/v9agiTzfdhK/bBX2bjYGbjqVpvF5LwgJbbhv4CBlzbjNa7QNYiA4GmEwTpH/NJn+RquCKVfd4AYiuNzz5B++iP+YuDNuh0T9PL3S2sOyKE3tKA+FMGCZx1Uu3iUnW4FTZ+nZnDmIB2miIsMsByDHWNh2KnCgbzQ0VjNXbAFciSvRTW9vg0aKgBFIVntevb7KptPAga2vqiz7O0qQ8KFaTOYdBM5bBpqmNyqhUcrO0h6jzwbwf3o3Q9ZoH+s93mVZ6pHPm/IE4fW1dKKjnbEWJXdSMBS4bnx4pTIlL/+Wi0QGp9cIqW0op92KYfNkE2e122q52R6HtfDSDN05bGXohKCOaTliZ4l2eNSkHaBRi0NegbihiCC4htYEv7USaz/9Bcu+wnnE3pK5Sx/oqxeGvDFol7MBN5peuBDvvduyqvJlh5tpSqM7lan3GtBcFhy7K9yrBquI12ZzdNMY/pk+sFAeCnFZXiZ74nzG8CXGmp2zPbBkAcPhjfnhfuse/FCuld8xJ37E2GgkXkWfBrYY8sGjXQmgQsw==
+X-Microsoft-Antispam-Message-Info: 9lkUK73nW+/KYb5Tw2qJnU+kXn+mD+LShGZpC0alkXg1tdgQmB9NUDMzXU7/YYPLWPwWWbE/LxRhb09oDPwZMBy8WwHwmRK7aBW9zxgrsCUOnFftZRc5dTKyPCIaIrLWhL5flYfoEaSNEOSX5HeySVFOVcQscCelzChtMIYbXZTyRakxOfQYBLhJdulU/SkRD8hmHscthwj1mGnaHv4Yt1DuMMy6S5D73N3kK5xX9cFXCFzDfWmLWADXD5/ju/Rw5u6yLG+Wm5UJJFYfbbWgGwp6kF3DHUgGyU6oR5xaamd/Q4lCoNtXJF7LINjANhIv5Sn/pdUWYNJ4z8m2Dfkif7g76aWZ/ue/2aRXfeXUs+ajm3XfTwQZ5bMOkREk38hwXv8e3tkeataRCNxjPmjZirUwpNx+9fkYVtSr+bLRra6f3yWDiA8kWQ1wqHgIytf/t5TYDGMoFPvSVNft7ddg1fZtFxcoIdXHGd3xPFRZ8S4GoKdmonB9itl8zbD30srMlxm4GLOraSxf2leHj5GYVzc2s779ar/zJEMpougRu/uLqqZwVIdjUkDtMdN2xXpZsxL7yoOAvnIBodYIwlBZnJEd3rhDtZCrJuTN3pl2HYqF1Uhkh2bG/fmWDpUULu+lbQZ5p8caC1manQwwUbk/zMhj8ixrOdohk3kxMLfCC4UtQ3zL+KrjtlyKVF2itirocdzATVlX2TVFBaLvF9XLMw==
 X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(7916004)(366004)(2906002)(9686003)(38350700002)(8676002)(6486002)(52116002)(316002)(86362001)(6916009)(5660300002)(6666004)(83380400001)(4326008)(6496006)(38100700002)(66556008)(66476007)(53546011)(66946007)(956004)(186003)(33716001)(8936002)(508600001)(26005);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?4hxvvtulnzFi0X3+zLf73jwk8IJvqnCnqV37foMmEw/d5f2JfSGfCqD/Q+TP?=
- =?us-ascii?Q?Bep7gQo7yFdguzvEGtb4HI1gD/fkJvg2H+K1GiDLoGXcVfbBXjq5xdiDshFu?=
- =?us-ascii?Q?5Etyi78yApbxsDSJl49NWrtWKWcy/9EVK7c37x4vsoC5nNkl0tEA8qNX4ikh?=
- =?us-ascii?Q?kTS3XNPd6tujVq+y4ZOGlYLzdLKilg7KbJJb8GkQPanZhKtkl9zHG9fFhrDg?=
- =?us-ascii?Q?LA2wIYpT3isMJn7pTmeSeJ/KkjzUW3kPOVVSmIjsGRVhAQsWpgPXOvos575E?=
- =?us-ascii?Q?q6zjW/dbQnIV5Cx+6f4yMYC9z6wOEazTAYLoP3OHpu+AoBDtuVsx8k5xHbJM?=
- =?us-ascii?Q?QAXNTZqVPboRJ5CdtX9Tj52MtT6okY9pO2W/aHUp2by+6q10tMnfYYwk6W+A?=
- =?us-ascii?Q?AKlplFAX1MX0vSuMotUgrAhGPwpgsXd3ppgGlxe5kzy+1vqrhgcXLJ//5K5d?=
- =?us-ascii?Q?wMzUN1N52HT96GmG1MDfVE1b6XKWOJJZCOHsSsCTBASxgifeqqbfFpdRCfQF?=
- =?us-ascii?Q?1NeW1P7oyi344iX7jpvBtwukiLhccCtlNUU43mGDcXb9Qrntcyp2Z20lTFce?=
- =?us-ascii?Q?6XpIU0jgigaKiNpzGo/0uhclLQJPBAHjMnmmTjWOZs3dggWKtBM83bC+87G4?=
- =?us-ascii?Q?cIHyZAslGntYIHdmBi5aiI8kd6ZBPB0d/gQj4/FaokSILr/Jf0vmTSKixzQB?=
- =?us-ascii?Q?iT/wkT3TxyYGqrZV8j9hcy9g1G2OGTDub/klNPhTTWFshvvHpNo0X5K1BGqz?=
- =?us-ascii?Q?xeqSn1i2xwVAfrMOKJN5Z5Fg3rMisu3NJ7bJpvbhXwLgHDOcJDejnnfTJQg+?=
- =?us-ascii?Q?sY4czoCacZe7NXTyH8g0IBX5JDXtWJbuLvr/KHIGHkBwl+cSQ4XSZF4/PuH/?=
- =?us-ascii?Q?5QJniw1Z/eUZpMAEbKOO/sf2tDo6oxYLfvHMUXWXZaqxea1K7etGe1jYhgNv?=
- =?us-ascii?Q?T4t5jVPwAxTPFTWAcJNQ5h16qeTAkqaY8GSTczAuNn9CbJ68NBg4DVFub7KL?=
- =?us-ascii?Q?++BK1BDAp1izRL2lAsC5plQgRN6GO3+AX1fu+/hkdedjv7lpDsoIEcxzQ37o?=
- =?us-ascii?Q?mtmwoUV0MIK7hPJbBDZRMmFUXZrNCWaVbFWqdR0ZTd3BjOVx0GQT8vf/Axu3?=
- =?us-ascii?Q?4nYUFyuUVDo8uSer/kWitduJVh4t3NCLNCJV/PLyIOsp2A2GtkqJg+Ybxv4c?=
- =?us-ascii?Q?EtvCdfmVpXqxCVd7Uw/ZCYvOXBoQRHGxPO9eVyMzZEbSpz/mNBFEkW7LySWR?=
- =?us-ascii?Q?KHeIcJ1TsjzUP4nKFrkMjDnFjPjgET7RjlnzZI7al/9DKbUNcrQVdi7yIs5I?=
- =?us-ascii?Q?S+OMWa4wGcOL9Wk5KY4aJy1MIOEBSGug0NZB6S3UZY66EotLO6yHTECkv5xB?=
- =?us-ascii?Q?ZRZHcJRPuuq/5FwlXhNAIF3JWWssBjwuXKMjh1Z5SsJTKqUMH5zreml5mP0f?=
- =?us-ascii?Q?OnHDJZBzznzQn99C35HrPT5M7BKuS6SoQSeOg3GjAINkLI9FM1GUFlldJipi?=
- =?us-ascii?Q?Vpff5HXZhLwP2cUgCHd0gV/o840eHP0ttCodhPdvchgRCbBXT2cXBgfPTx1S?=
- =?us-ascii?Q?scogOdvft7/nnr316H8wS2VhLx9dQsLOQ6oeho0RJ2VrU1fUqQLgKAaOqNgM?=
- =?us-ascii?Q?DDVJkh9O+1It2IByrhp4A/k=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?8afZi/1Ndstp1b2XtHHoJ+Iq6kyhY5HW+sFJU6K9j+8Ana0bOxiRrC5dP0E1?=
+ =?us-ascii?Q?rDoJIIwB3lEgl8SoKS4XMpoOhz0/thhoCiG7GJmtNWgxZ+7qOql91yD130uU?=
+ =?us-ascii?Q?LumoPfbAlNB4Ka6z7qg53sErZqdimN8FG105wUo0crSYs41kXItjg0V6Iotk?=
+ =?us-ascii?Q?MaGaPPwQ/OWuMgoLmMMKyAMSAq8M4R3qie41Od+9b3UTUhQIWga09thqHHWO?=
+ =?us-ascii?Q?5He33EAX6KJPP5OE6LdVb2uP9lx0W1u3iyqL+JaHAvzLGgDI6TEHNuQdhkjv?=
+ =?us-ascii?Q?S0DnOUHLTYWxR+eZqQPmaexan0yFq2owvttS6mm0lO7W93ExSkL63igryVyr?=
+ =?us-ascii?Q?ebkoL5EHDQOKhwj0gRdm4v3fiG3rOsI3bBtVBpmHjCFan+lYhsQqXa2SCZVZ?=
+ =?us-ascii?Q?zRZaB7xKd4P0YZJSyMUZ0C58SmtMLSlu23A212khcGXCwmDlx4jXAOBZlbZp?=
+ =?us-ascii?Q?2fS+iDTvfyLBfVgTiIHlQai04jpLkXnh9iQcnpFz7tZD57GdvhFi6cPUGQoO?=
+ =?us-ascii?Q?6iHeFx7CjzrqNheYjMvXtd8/Pv3dNn0lFu/3cUkUNF7hsa+NQbeHbtsp8nhP?=
+ =?us-ascii?Q?kilsQV49HdQP7vz8zzGXOTNiu3nMchGakRnFkbMrWpgKrH3TQOWN4/WRC0du?=
+ =?us-ascii?Q?DWbf56Bm0SBFHK08MN7b+rvcLvPIPx8wteoSQGwwly9z24GnOMnRA8TdA2Uy?=
+ =?us-ascii?Q?/zg7ciFukcNvtOHYlPBvXmQjXD56pvty2LTk5MYL5WQwfeO1X4MoKHl/X5qT?=
+ =?us-ascii?Q?TU2B6XA1kzylrD44geYZgtbmdOk6Tk8W9DKwnNGUkiZpECwtYlJHn8XPT3zl?=
+ =?us-ascii?Q?4M1Zxs9VY6Xs5S98Q7rDpVkV8Cv44XF5KYpG7SkwtByNJvSYsh6UVUllfdLG?=
+ =?us-ascii?Q?e81EKqbBEgchCRsR9dbMiYFWX7fFzZavGZN1UMw34yTe2CBnWr8F0P+/XVbN?=
+ =?us-ascii?Q?mRV8G79JCLOrTLhL5kg2ItgZTnIyAZMutNsFkoqWTwPfW33P0c3QpHhbEmij?=
+ =?us-ascii?Q?tyXSjU9oTPfrZ/AnDINGzvA89WxoLObbLhgoJOgO/UMM5C3ea0bjc859zuQm?=
+ =?us-ascii?Q?C4ZJrNDepi9J+HId7sCULgQJ8EdCO8hdWBuJTNMMo8nIcWznqHNNeeIKs+V6?=
+ =?us-ascii?Q?xumHBoXe006FX1R0pwWaVdTZlMElQ7G1PU7hF1UEh8U5Frtx1ld6KSlpiM+R?=
+ =?us-ascii?Q?8z+2N2yOqujFVCM8jIsJzzLxaGsQ8rOlUeJx+bXdAavwrjdBzprsKbyTaIjH?=
+ =?us-ascii?Q?zgJq3H0HeGHrvwVclBxI08ok1aNE77uuvCXAy4UPAsJPSuLkBBvY/thTVq2F?=
+ =?us-ascii?Q?z2SIU5BlZ/iZrOo2V5jPWNsfib3KG8rE09K3QoM76x9ArY5p+1/q6GG77dTp?=
+ =?us-ascii?Q?C4xVvsllCSEX6Jl1I2hae+3Yt+nsn/TeXAQYWwKsMlHtiZkz7j14+y6IwJJW?=
+ =?us-ascii?Q?4eAY1k2HxDfx1705no2sZBv2fISJnYV0bnhLembEuUznOwEEhFlpJ4AGEXcF?=
+ =?us-ascii?Q?qIftPIuBJAtMWSBknUYTs+Wp8KP2alv5zuEU7/SbJ6zQQqUazTj3opBe5gnm?=
+ =?us-ascii?Q?XcC1PuZo3b+MOtgxff66Q5Ij2YF3Ww/IjRc3SMMJvUqfja45LOD0w00vY25L?=
+ =?us-ascii?Q?kxAki83S5/lWaPmG/u/uWWg=3D?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 46ef532e-bbd2-4487-076e-08d9adacc0fb
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8b6a1e7e-9cf4-4fb3-c4e0-08d9adaccc94
 X-MS-Exchange-CrossTenant-AuthSource: SA2PR10MB4587.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Nov 2021 11:39:33.7892
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Nov 2021 11:39:53.1412
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: d6xFSvWKsJA628Nc4TS9uar55PRvXwLAnNTYMCJDumfDRCUrccNcpnJqkS5sbztd5AqvOA2ilBKCccdBTFi0eg==
+X-MS-Exchange-CrossTenant-UserPrincipalName: v18igzLG8SDnxmgt0tU/YoJJ1MOeY+meji6qtyJ6uYa+SWUv27HC7yC8SjPG6RQtrSQbC1tpXs+BsSXE+yNoqg==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR10MB2496
 X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10175 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 adultscore=0 spamscore=0
- bulkscore=0 suspectscore=0 mlxscore=0 mlxlogscore=999 phishscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adultscore=0 phishscore=0
+ bulkscore=0 suspectscore=0 malwarescore=0 mlxscore=0 mlxlogscore=999
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2110150000
  definitions=main-2111220060
-X-Proofpoint-ORIG-GUID: paIPtbj4aXiWjHd9H6oCLGGOuR2D_OUk
-X-Proofpoint-GUID: paIPtbj4aXiWjHd9H6oCLGGOuR2D_OUk
+X-Proofpoint-GUID: OSuouaqhx2OVyDULfki2ZmTeNaotVB4M
+X-Proofpoint-ORIG-GUID: OSuouaqhx2OVyDULfki2ZmTeNaotVB4M
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -138,42 +138,16 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 19 Nov 2021 at 04:43, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 >
-> xlog_tic_add_region() is used to trace the regions being added to a
-> log ticket to provide information in the situation where a ticket
-> reservation overrun occurs. The information gathered is stored int
-> the ticket, and dumped if xlog_print_tic_res() is called.
+> The caller of xlog_write() usually has a close accounting of the
+> aggregated vector length contained in the log vector chain passed to
+> xlog_write(). There is no need to iterate the chain to calculate he
+> length of the data in xlog_write_calculate_len() if the caller is
+> already iterating that chain to build it.
 >
-> For a front end struct xfs_trans overrun, the ticket only contains
-> reservation tracking information - the ticket is never handed to the
-> log so has no regions attached to it. The overrun debug information in this
-> case comes from xlog_print_trans(), which walks the items attached
-> to the transaction and dumps their attached formatted log vectors
-> directly. It also dumps the ticket state, but that only contains
-> reservation accounting and nothing else. Hence xlog_print_tic_res()
-> never dumps region or overrun information from this path.
->
-> xlog_tic_add_region() is actually called from xlog_write(), which
-> means it is being used to track the regions seen in a
-> CIL checkpoint log vector chain. In looking at CIL behaviour
-> recently, I've seen 32MB checkpoints regularly exceed 250,000
-> regions in the LV chain. The log ticket debug code can track *15*
-> regions. IOWs, if there is a ticket overrun in the CIL code, the
-> ticket region tracking code is going to be completely useless for
-> determining what went wrong. The only thing it can tell us is how
-> much of an overrun occurred, and we really don't need extra debug
-> information in the log ticket to tell us that.
->
-> Indeed, the main place we call xlog_tic_add_region() is also adding
-> up the number of regions and the space used so that xlog_write()
-> knows how much will be written to the log. This is exactly the same
-> information that log ticket is storing once we take away the useless
-> region tracking array. Hence xlog_tic_add_region() is not useful,
-> but can be called 250,000 times a CIL push...
->
-> Just strip all that debug "information" out of the of the log ticket
-> and only have it report reservation space information when an
-> overrun occurs. This also reduces the size of a log ticket down by
-> about 150 bytes...
+> Passing in the vector length avoids doing an extra chain iteration,
+> which can be a significant amount of work given that large CIL
+> commits can have hundreds of thousands of vectors attached to the
+> chain.
 >
 
 Looks good.
@@ -181,234 +155,193 @@ Looks good.
 Reviewed-by: Chandan Babu R <chandan.babu@oracle.com>
 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
 > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/xfs_log.c      | 107 +++---------------------------------------
->  fs/xfs/xfs_log_priv.h |  20 --------
->  2 files changed, 6 insertions(+), 121 deletions(-)
+>  fs/xfs/xfs_log.c      | 35 +++++------------------------------
+>  fs/xfs/xfs_log_cil.c  | 25 +++++++++++++++++--------
+>  fs/xfs/xfs_log_priv.h |  2 +-
+>  3 files changed, 23 insertions(+), 39 deletions(-)
 >
 > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index 0923bee8d4e2..bd2e50804cb4 100644
+> index bd2e50804cb4..76d5a743f6fb 100644
 > --- a/fs/xfs/xfs_log.c
 > +++ b/fs/xfs/xfs_log.c
-> @@ -378,30 +378,6 @@ xlog_grant_head_check(
->  	return error;
->  }
+> @@ -972,7 +972,8 @@ xlog_write_unmount_record(
+>  	/* account for space used by record data */
+>  	ticket->t_curr_res -= sizeof(unmount_rec);
 >  
-> -static void
-> -xlog_tic_reset_res(xlog_ticket_t *tic)
-> -{
-> -	tic->t_res_num = 0;
-> -	tic->t_res_arr_sum = 0;
-> -	tic->t_res_num_ophdrs = 0;
-> -}
-> -
-> -static void
-> -xlog_tic_add_region(xlog_ticket_t *tic, uint len, uint type)
-> -{
-> -	if (tic->t_res_num == XLOG_TIC_LEN_MAX) {
-> -		/* add to overflow and start again */
-> -		tic->t_res_o_flow += tic->t_res_arr_sum;
-> -		tic->t_res_num = 0;
-> -		tic->t_res_arr_sum = 0;
-> -	}
-> -
-> -	tic->t_res_arr[tic->t_res_num].r_len = len;
-> -	tic->t_res_arr[tic->t_res_num].r_type = type;
-> -	tic->t_res_arr_sum += len;
-> -	tic->t_res_num++;
-> -}
-> -
->  bool
->  xfs_log_writable(
->  	struct xfs_mount	*mp)
-> @@ -451,8 +427,6 @@ xfs_log_regrant(
->  	xlog_grant_push_ail(log, tic->t_unit_res);
->  
->  	tic->t_curr_res = tic->t_unit_res;
-> -	xlog_tic_reset_res(tic);
-> -
->  	if (tic->t_cnt > 0)
->  		return 0;
->  
-> @@ -2192,63 +2166,11 @@ xlog_print_tic_res(
->  	struct xfs_mount	*mp,
->  	struct xlog_ticket	*ticket)
->  {
-> -	uint i;
-> -	uint ophdr_spc = ticket->t_res_num_ophdrs * (uint)sizeof(xlog_op_header_t);
-> -
-> -	/* match with XLOG_REG_TYPE_* in xfs_log.h */
-> -#define REG_TYPE_STR(type, str)	[XLOG_REG_TYPE_##type] = str
-> -	static char *res_type_str[] = {
-> -	    REG_TYPE_STR(BFORMAT, "bformat"),
-> -	    REG_TYPE_STR(BCHUNK, "bchunk"),
-> -	    REG_TYPE_STR(EFI_FORMAT, "efi_format"),
-> -	    REG_TYPE_STR(EFD_FORMAT, "efd_format"),
-> -	    REG_TYPE_STR(IFORMAT, "iformat"),
-> -	    REG_TYPE_STR(ICORE, "icore"),
-> -	    REG_TYPE_STR(IEXT, "iext"),
-> -	    REG_TYPE_STR(IBROOT, "ibroot"),
-> -	    REG_TYPE_STR(ILOCAL, "ilocal"),
-> -	    REG_TYPE_STR(IATTR_EXT, "iattr_ext"),
-> -	    REG_TYPE_STR(IATTR_BROOT, "iattr_broot"),
-> -	    REG_TYPE_STR(IATTR_LOCAL, "iattr_local"),
-> -	    REG_TYPE_STR(QFORMAT, "qformat"),
-> -	    REG_TYPE_STR(DQUOT, "dquot"),
-> -	    REG_TYPE_STR(QUOTAOFF, "quotaoff"),
-> -	    REG_TYPE_STR(LRHEADER, "LR header"),
-> -	    REG_TYPE_STR(UNMOUNT, "unmount"),
-> -	    REG_TYPE_STR(COMMIT, "commit"),
-> -	    REG_TYPE_STR(TRANSHDR, "trans header"),
-> -	    REG_TYPE_STR(ICREATE, "inode create"),
-> -	    REG_TYPE_STR(RUI_FORMAT, "rui_format"),
-> -	    REG_TYPE_STR(RUD_FORMAT, "rud_format"),
-> -	    REG_TYPE_STR(CUI_FORMAT, "cui_format"),
-> -	    REG_TYPE_STR(CUD_FORMAT, "cud_format"),
-> -	    REG_TYPE_STR(BUI_FORMAT, "bui_format"),
-> -	    REG_TYPE_STR(BUD_FORMAT, "bud_format"),
-> -	};
-> -	BUILD_BUG_ON(ARRAY_SIZE(res_type_str) != XLOG_REG_TYPE_MAX + 1);
-> -#undef REG_TYPE_STR
-> -
->  	xfs_warn(mp, "ticket reservation summary:");
-> -	xfs_warn(mp, "  unit res    = %d bytes",
-> -		 ticket->t_unit_res);
-> -	xfs_warn(mp, "  current res = %d bytes",
-> -		 ticket->t_curr_res);
-> -	xfs_warn(mp, "  total reg   = %u bytes (o/flow = %u bytes)",
-> -		 ticket->t_res_arr_sum, ticket->t_res_o_flow);
-> -	xfs_warn(mp, "  ophdrs      = %u (ophdr space = %u bytes)",
-> -		 ticket->t_res_num_ophdrs, ophdr_spc);
-> -	xfs_warn(mp, "  ophdr + reg = %u bytes",
-> -		 ticket->t_res_arr_sum + ticket->t_res_o_flow + ophdr_spc);
-> -	xfs_warn(mp, "  num regions = %u",
-> -		 ticket->t_res_num);
-> -
-> -	for (i = 0; i < ticket->t_res_num; i++) {
-> -		uint r_type = ticket->t_res_arr[i].r_type;
-> -		xfs_warn(mp, "region[%u]: %s - %u bytes", i,
-> -			    ((r_type <= 0 || r_type > XLOG_REG_TYPE_MAX) ?
-> -			    "bad-rtype" : res_type_str[r_type]),
-> -			    ticket->t_res_arr[i].r_len);
-> -	}
-> +	xfs_warn(mp, "  unit res    = %d bytes", ticket->t_unit_res);
-> +	xfs_warn(mp, "  current res = %d bytes", ticket->t_curr_res);
-> +	xfs_warn(mp, "  original count  = %d", ticket->t_ocnt);
-> +	xfs_warn(mp, "  remaining count = %d", ticket->t_cnt);
+> -	return xlog_write(log, NULL, &vec, ticket, XLOG_UNMOUNT_TRANS);
+> +	return xlog_write(log, NULL, &vec, ticket, XLOG_UNMOUNT_TRANS,
+> +			reg.i_len);
 >  }
 >  
 >  /*
-> @@ -2313,7 +2235,6 @@ xlog_write_calc_vec_length(
->  	uint			optype)
+> @@ -2223,32 +2224,6 @@ xlog_print_trans(
+>  	}
+>  }
+>  
+> -/*
+> - * Calculate the potential space needed by the log vector. All regions contain
+> - * their own opheaders and they are accounted for in region space so we don't
+> - * need to add them to the vector length here.
+> - */
+> -static int
+> -xlog_write_calc_vec_length(
+> -	struct xlog_ticket	*ticket,
+> -	struct xfs_log_vec	*log_vector,
+> -	uint			optype)
+> -{
+> -	struct xfs_log_vec	*lv;
+> -	int			len = 0;
+> -	int			i;
+> -
+> -	for (lv = log_vector; lv; lv = lv->lv_next) {
+> -		/* we don't write ordered log vectors */
+> -		if (lv->lv_buf_len == XFS_LOG_VEC_ORDERED)
+> -			continue;
+> -
+> -		for (i = 0; i < lv->lv_niovecs; i++)
+> -			len += lv->lv_iovecp[i].i_len;
+> -	}
+> -	return len;
+> -}
+> -
+>  static xlog_op_header_t *
+>  xlog_write_setup_ophdr(
+>  	struct xlog_op_header	*ophdr,
+> @@ -2402,13 +2377,14 @@ xlog_write(
+>  	struct xfs_cil_ctx	*ctx,
+>  	struct xfs_log_vec	*log_vector,
+>  	struct xlog_ticket	*ticket,
+> -	uint			optype)
+> +	uint			optype,
+> +	uint32_t		len)
+> +
 >  {
+>  	struct xlog_in_core	*iclog = NULL;
+>  	struct xfs_log_vec	*lv = log_vector;
+>  	struct xfs_log_iovec	*vecp = lv->lv_iovecp;
+>  	int			index = 0;
+> -	int			len;
+>  	int			partial_copy = 0;
+>  	int			partial_copy_len = 0;
+>  	int			contwr = 0;
+> @@ -2423,7 +2399,6 @@ xlog_write(
+>  		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
+>  	}
+>  
+> -	len = xlog_write_calc_vec_length(ticket, log_vector, optype);
+>  	while (lv && (!lv->lv_niovecs || index < lv->lv_niovecs)) {
+>  		void		*ptr;
+>  		int		log_offset;
+> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> index 90a0e9b9d3e0..99ef13f1b248 100644
+> --- a/fs/xfs/xfs_log_cil.c
+> +++ b/fs/xfs/xfs_log_cil.c
+> @@ -791,7 +791,8 @@ xlog_cil_order_write(
+>  static int
+>  xlog_cil_write_chain(
+>  	struct xfs_cil_ctx	*ctx,
+> -	struct xfs_log_vec	*chain)
+> +	struct xfs_log_vec	*chain,
+> +	uint32_t		chain_len)
+>  {
+>  	struct xlog		*log = ctx->cil->xc_log;
+>  	int			error;
+> @@ -799,7 +800,8 @@ xlog_cil_write_chain(
+>  	error = xlog_cil_order_write(ctx->cil, ctx->sequence, _START_RECORD);
+>  	if (error)
+>  		return error;
+> -	return xlog_write(log, ctx, chain, ctx->ticket, XLOG_START_TRANS);
+> +	return xlog_write(log, ctx, chain, ctx->ticket, XLOG_START_TRANS,
+> +			chain_len);
+>  }
+>  
+>  /*
+> @@ -838,7 +840,8 @@ xlog_cil_write_commit_record(
+>  
+>  	/* account for space used by record data */
+>  	ctx->ticket->t_curr_res -= reg.i_len;
+> -	error = xlog_write(log, ctx, &vec, ctx->ticket, XLOG_COMMIT_TRANS);
+> +	error = xlog_write(log, ctx, &vec, ctx->ticket, XLOG_COMMIT_TRANS,
+> +			reg.i_len);
+>  	if (error)
+>  		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
+>  	return error;
+> @@ -901,11 +904,12 @@ xlog_cil_build_trans_hdr(
+>  				sizeof(struct xfs_trans_header);
+>  	hdr->lhdr[1].i_type = XLOG_REG_TYPE_TRANSHDR;
+>  
+> -	tic->t_curr_res -= hdr->lhdr[0].i_len + hdr->lhdr[1].i_len;
+> -
+>  	lvhdr->lv_niovecs = 2;
+>  	lvhdr->lv_iovecp = &hdr->lhdr[0];
+> +	lvhdr->lv_bytes = hdr->lhdr[0].i_len + hdr->lhdr[1].i_len;
+>  	lvhdr->lv_next = ctx->lv_chain;
+> +
+> +	tic->t_curr_res -= lvhdr->lv_bytes;
+>  }
+>  
+>  /*
+> @@ -932,7 +936,8 @@ xlog_cil_push_work(
+>  	struct xlog		*log = cil->xc_log;
 >  	struct xfs_log_vec	*lv;
-> -	int			headers = 0;
->  	int			len = 0;
->  	int			i;
->  
-> @@ -2322,17 +2243,9 @@ xlog_write_calc_vec_length(
->  		if (lv->lv_buf_len == XFS_LOG_VEC_ORDERED)
->  			continue;
->  
-> -		headers += lv->lv_niovecs;
-> -
-> -		for (i = 0; i < lv->lv_niovecs; i++) {
-> -			struct xfs_log_iovec	*vecp = &lv->lv_iovecp[i];
-> -
-> -			len += vecp->i_len;
-> -			xlog_tic_add_region(ticket, vecp->i_len, vecp->i_type);
-> -		}
-> +		for (i = 0; i < lv->lv_niovecs; i++)
-> +			len += lv->lv_iovecp[i].i_len;
->  	}
-> -	ticket->t_res_num_ophdrs += headers;
-> -
->  	return len;
->  }
->  
-> @@ -2391,7 +2304,6 @@ xlog_write_setup_copy(
->  
->  	/* account for new log op header */
->  	ticket->t_curr_res -= sizeof(struct xlog_op_header);
-> -	ticket->t_res_num_ophdrs++;
->  
->  	return sizeof(struct xlog_op_header);
->  }
-> @@ -3039,9 +2951,6 @@ xlog_state_get_iclog_space(
+>  	struct xfs_cil_ctx	*new_ctx;
+> -	int			num_iovecs;
+> +	int			num_iovecs = 0;
+> +	int			num_bytes = 0;
+>  	int			error = 0;
+>  	struct xlog_cil_trans_hdr thdr;
+>  	struct xfs_log_vec	lvhdr = { NULL };
+> @@ -1033,7 +1038,6 @@ xlog_cil_push_work(
+>  	 * by the flush lock.
 >  	 */
->  	if (log_offset == 0) {
->  		ticket->t_curr_res -= log->l_iclog_hsize;
-> -		xlog_tic_add_region(ticket,
-> -				    log->l_iclog_hsize,
-> -				    XLOG_REG_TYPE_LRHEADER);
->  		head->h_cycle = cpu_to_be32(log->l_curr_cycle);
->  		head->h_lsn = cpu_to_be64(
->  			xlog_assign_lsn(log->l_curr_cycle, log->l_curr_block));
-> @@ -3121,7 +3030,6 @@ xfs_log_ticket_regrant(
->  	xlog_grant_sub_space(log, &log->l_write_head.grant,
->  					ticket->t_curr_res);
->  	ticket->t_curr_res = ticket->t_unit_res;
-> -	xlog_tic_reset_res(ticket);
+>  	lv = NULL;
+> -	num_iovecs = 0;
+>  	while (!list_empty(&cil->xc_cil)) {
+>  		struct xfs_log_item	*item;
 >  
->  	trace_xfs_log_ticket_regrant_sub(log, ticket);
->  
-> @@ -3132,7 +3040,6 @@ xfs_log_ticket_regrant(
->  		trace_xfs_log_ticket_regrant_exit(log, ticket);
->  
->  		ticket->t_curr_res = ticket->t_unit_res;
-> -		xlog_tic_reset_res(ticket);
+> @@ -1047,6 +1051,10 @@ xlog_cil_push_work(
+>  		lv = item->li_lv;
+>  		item->li_lv = NULL;
+>  		num_iovecs += lv->lv_niovecs;
+> +
+> +		/* we don't write ordered log vectors */
+> +		if (lv->lv_buf_len != XFS_LOG_VEC_ORDERED)
+> +			num_bytes += lv->lv_bytes;
 >  	}
 >  
->  	xfs_log_ticket_put(ticket);
-> @@ -3642,8 +3549,6 @@ xlog_ticket_alloc(
->  	if (permanent)
->  		tic->t_flags |= XLOG_TIC_PERM_RESERV;
+>  	/*
+> @@ -1085,6 +1093,7 @@ xlog_cil_push_work(
+>  	 * transaction header here as it is not accounted for in xlog_write().
+>  	 */
+>  	xlog_cil_build_trans_hdr(ctx, &thdr, &lvhdr, num_iovecs);
+> +	num_bytes += lvhdr.lv_bytes;
 >  
-> -	xlog_tic_reset_res(tic);
-> -
->  	return tic;
->  }
+>  	/*
+>  	 * Before we format and submit the first iclog, we have to ensure that
+> @@ -1092,7 +1101,7 @@ xlog_cil_push_work(
+>  	 */
+>  	wait_for_completion(&bdev_flush);
+>  
+> -	error = xlog_cil_write_chain(ctx, &lvhdr);
+> +	error = xlog_cil_write_chain(ctx, &lvhdr, num_bytes);
+>  	if (error)
+>  		goto out_abort_free_ticket;
 >  
 > diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-> index 65fb97d596dd..47165c4d2a49 100644
+> index 47165c4d2a49..56df86d62430 100644
 > --- a/fs/xfs/xfs_log_priv.h
 > +++ b/fs/xfs/xfs_log_priv.h
-> @@ -142,19 +142,6 @@ enum xlog_iclog_state {
->  
->  #define XLOG_COVER_OPS		5
->  
-> -/* Ticket reservation region accounting */ 
-> -#define XLOG_TIC_LEN_MAX	15
-> -
-> -/*
-> - * Reservation region
-> - * As would be stored in xfs_log_iovec but without the i_addr which
-> - * we don't care about.
-> - */
-> -typedef struct xlog_res {
-> -	uint	r_len;	/* region length		:4 */
-> -	uint	r_type;	/* region's transaction type	:4 */
-> -} xlog_res_t;
-> -
->  typedef struct xlog_ticket {
->  	struct list_head   t_queue;	 /* reserve/write queue */
->  	struct task_struct *t_task;	 /* task that owns this ticket */
-> @@ -165,13 +152,6 @@ typedef struct xlog_ticket {
->  	char		   t_ocnt;	 /* original count		 : 1  */
->  	char		   t_cnt;	 /* current count		 : 1  */
->  	char		   t_flags;	 /* properties of reservation	 : 1  */
-> -
-> -        /* reservation array fields */
-> -	uint		   t_res_num;                    /* num in array : 4 */
-> -	uint		   t_res_num_ophdrs;		 /* num op hdrs  : 4 */
-> -	uint		   t_res_arr_sum;		 /* array sum    : 4 */
-> -	uint		   t_res_o_flow;		 /* sum overflow : 4 */
-> -	xlog_res_t	   t_res_arr[XLOG_TIC_LEN_MAX];  /* array of res : 8 * 15 */ 
->  } xlog_ticket_t;
->  
->  /*
+> @@ -492,7 +492,7 @@ void	xlog_print_tic_res(struct xfs_mount *mp, struct xlog_ticket *ticket);
+>  void	xlog_print_trans(struct xfs_trans *);
+>  int	xlog_write(struct xlog *log, struct xfs_cil_ctx *ctx,
+>  		struct xfs_log_vec *log_vector, struct xlog_ticket *tic,
+> -		uint optype);
+> +		uint optype, uint32_t len);
+>  void	xfs_log_ticket_ungrant(struct xlog *log, struct xlog_ticket *ticket);
+>  void	xfs_log_ticket_regrant(struct xlog *log, struct xlog_ticket *ticket);
 
 
 -- 
