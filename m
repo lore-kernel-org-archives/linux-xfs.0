@@ -2,226 +2,65 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A1FCC433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Nov 2021 19:45:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E054FC433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Nov 2021 19:53:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234434AbhKWTsT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 Nov 2021 14:48:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53134 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233425AbhKWTsS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Nov 2021 14:48:18 -0500
-Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31615C061746
-        for <linux-xfs@vger.kernel.org>; Tue, 23 Nov 2021 11:45:10 -0800 (PST)
-Received: by mail-pf1-x42a.google.com with SMTP id r130so354582pfc.1
-        for <linux-xfs@vger.kernel.org>; Tue, 23 Nov 2021 11:45:10 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20210112.gappssmtp.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=w+rFmLhgbnDpLxCzHmV2glN1Ln3seAnXjsHProy9jpQ=;
-        b=8TuMlU3us3235PZEUw3+wIh4bMh3IEosMWINytQJPA8EsImL389OAaoHvBi2CGGdSf
-         Rh9yn/jAP3LDfN6pR6SaRHTOUUOMLxOtUmam8reDwGSfD4w6FZveFANrjn8s/jihbP8a
-         /9V60kc9Qtf+3Dml6kBEgRntEDh+nU+GrodQG++rP8I/zmuwILZOgR3w9QCJOIZ0g5zH
-         9zH2kBIZ/cPSJQRWiB/2Y/XDrzvPyF3Hv3bN8XyfkxJRgVz69+M/RXyGlI55Xt+WpWs9
-         wMU+SWPcM07FWqrOx/09zV4DI9sUcLhs84CFSiM/9XDv/STaLOihgU7ct0RV7chhixuh
-         VA4g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=w+rFmLhgbnDpLxCzHmV2glN1Ln3seAnXjsHProy9jpQ=;
-        b=i2GEZM5YzDiIRg45lesBwlq+zApGURvZBrBwpzVFgUaZdKE49XHsWgjHDhpJo6ykmv
-         rVpZ1u+6fwGbBKSS2N4UB3u9mJbueQXA9z0Tv4BRypkSwbHogqRI1UNJvtQBCQ9jlgX7
-         x8oD+qrw2TQAH6KJTQs4XioT/D0vm4L1J8thbdztRUYVVaxP9we5MQDUGLTaJfcl9ZS5
-         4dzQcNO3/kBbqlaMG/JY7TLtLmoz2EQEnfwdMj8yjjor7sVVRwb4/X6J3H1woZTA4BE6
-         tT3eu10ZTfYQsDUqsgcCFHwNANQQyJ32rIsESCf93BRwiVxBS4HwFn4dnuImJhjk/LC6
-         /7bw==
-X-Gm-Message-State: AOAM532N67oQUiFyrUbghZrwvIlJxZZV/l0Hcw8yk2D9JpxDkXUf9Hyr
-        VuM8Y+ACg7Hg0bZLJRRRLod4FzyKiBcLG7hEfKsFzA==
-X-Google-Smtp-Source: ABdhPJyXaOgPCWXg03K7i5Yu4pkRtA/C9CDsmT0Wx6XfkWLs2OyDjuogWwUi8QvAPldXDBn8n1H52ogjjyzkBt9HYEc=
-X-Received: by 2002:aa7:8d0a:0:b0:4a2:82d7:1695 with SMTP id
- j10-20020aa78d0a000000b004a282d71695mr8142364pfe.86.1637696709602; Tue, 23
- Nov 2021 11:45:09 -0800 (PST)
+        id S231683AbhKWT45 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 Nov 2021 14:56:57 -0500
+Received: from mail.kernel.org ([198.145.29.99]:37602 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230491AbhKWT45 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 23 Nov 2021 14:56:57 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id BCAF46023D;
+        Tue, 23 Nov 2021 19:53:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1637697228;
+        bh=NBtLKElha1XAkce6fnPRQHhGmniVwAGwATa3UqA+fsE=;
+        h=Subject:From:To:Cc:Date:From;
+        b=Znthio4arj/TAqOsIM6m8j45KVSk+wI+sVCaXOMgkIY1769bk9VLhpU/dh6NIlcMI
+         ru3OEpLnp2vHvCOyeiB/rF1WgvRkn+g70sxvYUBjkpTqVZfKUYhunF+6MdhaE1uDs2
+         8XypkpTzb8ooLR8Smh5qgpMxF+2qs5d/cdDZYesf7eoatNSukgqC4QF+kjjFAmjdXB
+         KRIiCqnfEUeJ6te3SE/yfguVvMVmgILvt86vgwmTfUVFNoybTJUDTkegkAo5reeqhI
+         Xrd/Dl/FnpSHRf/kVEW/eSZsTVCLXGcaHmwO6uiYKSHCpe503S+3hKePO4LZKrOakT
+         JUYGyTJ9rDMqg==
+Subject: [PATCHSET 0/2] xfs: fixes for 5.14.1
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     sandeen@sandeen.net, djwong@kernel.org
+Cc:     Bastian Germann <bage@debian.org>,
+        Helmut Grohne <helmut@subdivi.de>,
+        Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Date:   Tue, 23 Nov 2021 11:53:48 -0800
+Message-ID: <163769722838.871940.2491721496902879716.stgit@magnolia>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-References: <20211109083309.584081-1-hch@lst.de> <20211109083309.584081-15-hch@lst.de>
-In-Reply-To: <20211109083309.584081-15-hch@lst.de>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Tue, 23 Nov 2021 11:44:59 -0800
-Message-ID: <CAPcyv4gVjR05Go=WpK9k-FYO53o+X9PZz2nFL9gniz85nCXu4w@mail.gmail.com>
-Subject: Re: [PATCH 14/29] fsdax: simplify the pgoff calculation
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Mike Snitzer <snitzer@redhat.com>, Ira Weiny <ira.weiny@intel.com>,
-        device-mapper development <dm-devel@redhat.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Linux NVDIMM <nvdimm@lists.linux.dev>,
-        linux-s390 <linux-s390@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-erofs@lists.ozlabs.org,
-        linux-ext4 <linux-ext4@vger.kernel.org>,
-        virtualization@lists.linux-foundation.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 9, 2021 at 12:33 AM Christoph Hellwig <hch@lst.de> wrote:
->
-> Replace the two steps of dax_iomap_sector and bdev_dax_pgoff with a
-> single dax_iomap_pgoff helper that avoids lots of cumbersome sector
-> conversions.
+Hi all,
 
-Looks good,
+This quick series fixes some build problems in xfsprogs 5.14.0.
 
-Reviewed-by: Dan Williams <dan.j.williams@intel.com>
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/dax/super.c | 14 --------------
->  fs/dax.c            | 35 ++++++++++-------------------------
->  include/linux/dax.h |  1 -
->  3 files changed, 10 insertions(+), 40 deletions(-)
->
-> diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-> index 803942586d1b6..c0910687fbcb2 100644
-> --- a/drivers/dax/super.c
-> +++ b/drivers/dax/super.c
-> @@ -67,20 +67,6 @@ void dax_remove_host(struct gendisk *disk)
->  }
->  EXPORT_SYMBOL_GPL(dax_remove_host);
->
-> -int bdev_dax_pgoff(struct block_device *bdev, sector_t sector, size_t size,
-> -               pgoff_t *pgoff)
-> -{
-> -       sector_t start_sect = bdev ? get_start_sect(bdev) : 0;
-> -       phys_addr_t phys_off = (start_sect + sector) * 512;
-> -
-> -       if (pgoff)
-> -               *pgoff = PHYS_PFN(phys_off);
-> -       if (phys_off % PAGE_SIZE || size % PAGE_SIZE)
-> -               return -EINVAL;
-> -       return 0;
-> -}
-> -EXPORT_SYMBOL(bdev_dax_pgoff);
-> -
->  /**
->   * dax_get_by_host() - temporary lookup mechanism for filesystem-dax
->   * @bdev: block device to find a dax_device for
-> diff --git a/fs/dax.c b/fs/dax.c
-> index e51b4129d1b65..5364549d67a48 100644
-> --- a/fs/dax.c
-> +++ b/fs/dax.c
-> @@ -709,23 +709,22 @@ int dax_invalidate_mapping_entry_sync(struct address_space *mapping,
->         return __dax_invalidate_entry(mapping, index, false);
->  }
->
-> -static sector_t dax_iomap_sector(const struct iomap *iomap, loff_t pos)
-> +static pgoff_t dax_iomap_pgoff(const struct iomap *iomap, loff_t pos)
->  {
-> -       return (iomap->addr + (pos & PAGE_MASK) - iomap->offset) >> 9;
-> +       phys_addr_t paddr = iomap->addr + (pos & PAGE_MASK) - iomap->offset;
-> +
-> +       if (iomap->bdev)
-> +               paddr += (get_start_sect(iomap->bdev) << SECTOR_SHIFT);
-> +       return PHYS_PFN(paddr);
->  }
->
->  static int copy_cow_page_dax(struct vm_fault *vmf, const struct iomap_iter *iter)
->  {
-> -       sector_t sector = dax_iomap_sector(&iter->iomap, iter->pos);
-> +       pgoff_t pgoff = dax_iomap_pgoff(&iter->iomap, iter->pos);
->         void *vto, *kaddr;
-> -       pgoff_t pgoff;
->         long rc;
->         int id;
->
-> -       rc = bdev_dax_pgoff(iter->iomap.bdev, sector, PAGE_SIZE, &pgoff);
-> -       if (rc)
-> -               return rc;
-> -
->         id = dax_read_lock();
->         rc = dax_direct_access(iter->iomap.dax_dev, pgoff, 1, &kaddr, NULL);
->         if (rc < 0) {
-> @@ -1013,14 +1012,10 @@ EXPORT_SYMBOL_GPL(dax_writeback_mapping_range);
->  static int dax_iomap_pfn(const struct iomap *iomap, loff_t pos, size_t size,
->                          pfn_t *pfnp)
->  {
-> -       const sector_t sector = dax_iomap_sector(iomap, pos);
-> -       pgoff_t pgoff;
-> +       pgoff_t pgoff = dax_iomap_pgoff(iomap, pos);
->         int id, rc;
->         long length;
->
-> -       rc = bdev_dax_pgoff(iomap->bdev, sector, size, &pgoff);
-> -       if (rc)
-> -               return rc;
->         id = dax_read_lock();
->         length = dax_direct_access(iomap->dax_dev, pgoff, PHYS_PFN(size),
->                                    NULL, pfnp);
-> @@ -1129,7 +1124,7 @@ static vm_fault_t dax_pmd_load_hole(struct xa_state *xas, struct vm_fault *vmf,
->  s64 dax_iomap_zero(loff_t pos, u64 length, struct iomap *iomap)
->  {
->         sector_t sector = iomap_sector(iomap, pos & PAGE_MASK);
-> -       pgoff_t pgoff;
-> +       pgoff_t pgoff = dax_iomap_pgoff(iomap, pos);
->         long rc, id;
->         void *kaddr;
->         bool page_aligned = false;
-> @@ -1140,10 +1135,6 @@ s64 dax_iomap_zero(loff_t pos, u64 length, struct iomap *iomap)
->             (size == PAGE_SIZE))
->                 page_aligned = true;
->
-> -       rc = bdev_dax_pgoff(iomap->bdev, sector, PAGE_SIZE, &pgoff);
-> -       if (rc)
-> -               return rc;
-> -
->         id = dax_read_lock();
->
->         if (page_aligned)
-> @@ -1169,7 +1160,6 @@ static loff_t dax_iomap_iter(const struct iomap_iter *iomi,
->         const struct iomap *iomap = &iomi->iomap;
->         loff_t length = iomap_length(iomi);
->         loff_t pos = iomi->pos;
-> -       struct block_device *bdev = iomap->bdev;
->         struct dax_device *dax_dev = iomap->dax_dev;
->         loff_t end = pos + length, done = 0;
->         ssize_t ret = 0;
-> @@ -1203,9 +1193,8 @@ static loff_t dax_iomap_iter(const struct iomap_iter *iomi,
->         while (pos < end) {
->                 unsigned offset = pos & (PAGE_SIZE - 1);
->                 const size_t size = ALIGN(length + offset, PAGE_SIZE);
-> -               const sector_t sector = dax_iomap_sector(iomap, pos);
-> +               pgoff_t pgoff = dax_iomap_pgoff(iomap, pos);
->                 ssize_t map_len;
-> -               pgoff_t pgoff;
->                 void *kaddr;
->
->                 if (fatal_signal_pending(current)) {
-> @@ -1213,10 +1202,6 @@ static loff_t dax_iomap_iter(const struct iomap_iter *iomi,
->                         break;
->                 }
->
-> -               ret = bdev_dax_pgoff(bdev, sector, size, &pgoff);
-> -               if (ret)
-> -                       break;
-> -
->                 map_len = dax_direct_access(dax_dev, pgoff, PHYS_PFN(size),
->                                 &kaddr, NULL);
->                 if (map_len < 0) {
-> diff --git a/include/linux/dax.h b/include/linux/dax.h
-> index 439c3c70e347b..324363b798ecd 100644
-> --- a/include/linux/dax.h
-> +++ b/include/linux/dax.h
-> @@ -107,7 +107,6 @@ static inline bool daxdev_mapping_supported(struct vm_area_struct *vma,
->  #endif
->
->  struct writeback_control;
-> -int bdev_dax_pgoff(struct block_device *, sector_t, size_t, pgoff_t *pgoff);
->  #if IS_ENABLED(CONFIG_FS_DAX)
->  int dax_add_host(struct dax_device *dax_dev, struct gendisk *disk);
->  void dax_remove_host(struct gendisk *disk);
-> --
-> 2.30.2
->
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=xfsprogs-5.14-fixes
+---
+ configure.ac         |    1 +
+ include/atomic.h     |   46 ++++++++++++++++++++++++++++++++++++++++++++++
+ include/builddefs.in |    4 ++++
+ include/libxlog.h    |    4 ++--
+ libfrog/crc32.c      |    7 ++++++-
+ libxfs/init.c        |    4 ++++
+ m4/package_urcu.m4   |   19 +++++++++++++++++++
+ repair/phase2.c      |    2 +-
+ 8 files changed, 83 insertions(+), 4 deletions(-)
+
