@@ -2,93 +2,149 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40B61C433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Nov 2021 21:19:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BC55C4332F
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Nov 2021 21:22:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239687AbhKWVWR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 Nov 2021 16:22:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46070 "EHLO
+        id S240524AbhKWVZe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 Nov 2021 16:25:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46880 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232745AbhKWVWJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Nov 2021 16:22:09 -0500
-Received: from mailly.debian.org (mailly.debian.org [IPv6:2001:41b8:202:deb:6564:a62:52c3:4b72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DF89C061574
-        for <linux-xfs@vger.kernel.org>; Tue, 23 Nov 2021 13:19:01 -0800 (PST)
-Received: from fasolo.debian.org ([138.16.160.17]:59048)
-        from C=NA,ST=NA,L=Ankh Morpork,O=Debian SMTP,OU=Debian SMTP CA,CN=fasolo.debian.org,EMAIL=hostmaster@fasolo.debian.org (verified)
-        by mailly.debian.org with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <envelope@ftp-master.debian.org>)
-        id 1mpdBr-0002tH-KL; Tue, 23 Nov 2021 21:18:59 +0000
-Received: from dak by fasolo.debian.org with local (Exim 4.92)
-        (envelope-from <envelope@ftp-master.debian.org>)
-        id 1mpdBq-0006s9-Eq; Tue, 23 Nov 2021 21:18:58 +0000
-From:   Debian FTP Masters <ftpmaster@ftp-master.debian.org>
-To:     <bage@linutronix.de>,
-        XFS Development Team <linux-xfs@vger.kernel.org>,
-        Bastian Germann <bage@debian.org>
-X-DAK:  dak process-upload
-X-Debian: DAK
-X-Debian-Package: xfsprogs
-Auto-Submitted: auto-generated
+        with ESMTP id S240509AbhKWVZd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Nov 2021 16:25:33 -0500
+Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B07CFC061714
+        for <linux-xfs@vger.kernel.org>; Tue, 23 Nov 2021 13:22:24 -0800 (PST)
+Received: by mail-pf1-x434.google.com with SMTP id i12so547195pfd.6
+        for <linux-xfs@vger.kernel.org>; Tue, 23 Nov 2021 13:22:24 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20210112.gappssmtp.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=bLSToY/Rn4QaplrUteOdrUS7Uug3uZWr/TlOz9Y1nF0=;
+        b=b/hUI3hQLxDR2Xk9r7lQxFzBrg/2/5tGZW+JSVwNYrq8dmNWS3P9ynBIU8RZmfFHUI
+         Xgm0552sZFP2+qPF3soghwDd7XxX6FGNBFe395T6bvF+N1dr29Lop15wmWK8lt8m87yV
+         9vAVuWAMC6kkIO1VclhYl3oilFONamQuNci0i1jGGdKo0v4NlKYSPdpcWln2MSBf1py8
+         eotcm4rw3pNPGNJSmy6HW2en9pvx0GUA8KH3ho166JTJ5FG5ph7IQpvk6v1nkInbqZW5
+         YGsf77VgzBkZO6x5IA8KcT5QTl5SnWc54c+GTeaTywwpW3otwTRaZbbIpfY5ylF9vOkP
+         iFPw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=bLSToY/Rn4QaplrUteOdrUS7Uug3uZWr/TlOz9Y1nF0=;
+        b=ySxqtbctliecTBxRWSE/6Z5FZkbE3UrLDuznyMicFWybZPkIqvOCDlH5fvBvfsUOVT
+         16UXKj1TcbLjqmK47Td7+6MShfZ97vwJDfQ4ytETfmHVCV5h3zKiKYA7+P+b4+eJLNjU
+         2m287fI1MZye0U26X4l/bbmiBvr/PbKyXRzCSRzXmfwjeyTp/LatPNlzF+F9G98NNZCS
+         NSnrE+KXcRR8LCMfyCZHIUACGDIl2ngtkIYtXEIfCJL5Au67ihPPopY6Z2iIJMwpXaYO
+         yE8BV36L/RHpcaZAbg69DPsRJcureAgANiQsGHSzm6lEc4vyTVT2gKNXxUdqAwOo4ec+
+         c/jw==
+X-Gm-Message-State: AOAM5315tlok5fZygg7Nvhs4O/fwwfNouviCx9Aru1LJ+Uo/ptlhqUer
+        rKWUVHgRwtLTObqMpGgPLfvK28rltMx1RsVUVWiLoQ==
+X-Google-Smtp-Source: ABdhPJynvi8g71RwjaWWgFjo9LaoTAJgYi1+7huNhjnlJVCNZL4JsPbOJLOogDISiszVaR5xm5B316tq/pqSlm2ohsA=
+X-Received: by 2002:a05:6a00:140e:b0:444:b077:51ef with SMTP id
+ l14-20020a056a00140e00b00444b07751efmr476612pfu.61.1637702544283; Tue, 23 Nov
+ 2021 13:22:24 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Subject: xfsprogs_5.14.0-release-2_source.changes ACCEPTED into unstable
-Message-Id: <E1mpdBq-0006s9-Eq@fasolo.debian.org>
-Date:   Tue, 23 Nov 2021 21:18:58 +0000
+References: <20211109083309.584081-1-hch@lst.de> <20211109083309.584081-18-hch@lst.de>
+In-Reply-To: <20211109083309.584081-18-hch@lst.de>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Tue, 23 Nov 2021 13:22:13 -0800
+Message-ID: <CAPcyv4imPgBEbhDCQpDwCQUTxOQy=RT9ZkAueBQdPKXOLNmrAQ@mail.gmail.com>
+Subject: Re: [PATCH 17/29] fsdax: factor out a dax_memzero helper
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Mike Snitzer <snitzer@redhat.com>, Ira Weiny <ira.weiny@intel.com>,
+        device-mapper development <dm-devel@redhat.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Linux NVDIMM <nvdimm@lists.linux.dev>,
+        linux-s390 <linux-s390@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-erofs@lists.ozlabs.org,
+        linux-ext4 <linux-ext4@vger.kernel.org>,
+        virtualization@lists.linux-foundation.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Tue, Nov 9, 2021 at 12:34 AM Christoph Hellwig <hch@lst.de> wrote:
+>
+> Factor out a helper for the "manual" zeroing of a DAX range to clean
+> up dax_iomap_zero a lot.
+>
 
+Small / optional fixup below:
 
-Accepted:
+Reviewed-by: Dan Williams <dan.j.williams@intel.com>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA512
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/dax.c | 36 +++++++++++++++++++-----------------
+>  1 file changed, 19 insertions(+), 17 deletions(-)
+>
+> diff --git a/fs/dax.c b/fs/dax.c
+> index d7a923d152240..dc9ebeff850ab 100644
+> --- a/fs/dax.c
+> +++ b/fs/dax.c
+> @@ -1121,34 +1121,36 @@ static vm_fault_t dax_pmd_load_hole(struct xa_state *xas, struct vm_fault *vmf,
+>  }
+>  #endif /* CONFIG_FS_DAX_PMD */
+>
+> +static int dax_memzero(struct dax_device *dax_dev, pgoff_t pgoff,
+> +               unsigned int offset, size_t size)
+> +{
+> +       void *kaddr;
+> +       long rc;
+> +
+> +       rc = dax_direct_access(dax_dev, pgoff, 1, &kaddr, NULL);
+> +       if (rc >= 0) {
 
-Format: 1.8
-Date: Tue, 23 Nov 2021 21:31:02 +0100
-Source: xfsprogs
-Architecture: source
-Version: 5.14.0-release-2
-Distribution: unstable
-Urgency: medium
-Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
-Changed-By: Bastian Germann <bage@debian.org>
-Changes:
- xfsprogs (5.14.0-release-2) unstable; urgency=medium
- .
-   * Replace the Debian-only #999879 fix by upstream patch
-   * Patch: libxfs: fix atomic64_t poorly for 32-bit architectures
-Checksums-Sha1:
- 4816accd926e15a9e72e99fa3d1061e9991b6d75 2073 xfsprogs_5.14.0-release-2.dsc
- a4f063bd1a0bd8a71b3d20aff00acb2962c8bcda 17416 xfsprogs_5.14.0-release-2.debian.tar.xz
- 635bd8038e845addc15a0bbea0cd1124d216096f 6421 xfsprogs_5.14.0-release-2_source.buildinfo
-Checksums-Sha256:
- 3ff18cc6975c9d90edb0430a92956183eee55a702f95e408640c217631164582 2073 xfsprogs_5.14.0-release-2.dsc
- 07b222b39e87ea218da03342f2a69cad50c7ff77fbd54d3aa37e7204fe6e6a7c 17416 xfsprogs_5.14.0-release-2.debian.tar.xz
- 9b949cada04009a7c7d9db120aeb60d4b0599eba067b89fc97fbb8dfb54d8042 6421 xfsprogs_5.14.0-release-2_source.buildinfo
-Files:
- 2f7cb366abf69f99ea2721f8a278fbab 2073 admin optional xfsprogs_5.14.0-release-2.dsc
- d16cc94ef82ec47879a2cdb5410e2cd6 17416 admin optional xfsprogs_5.14.0-release-2.debian.tar.xz
- 2f5c8d0be39aa835af77efddfa0ed53b 6421 admin optional xfsprogs_5.14.0-release-2_source.buildinfo
+Technically this should be "> 0" because dax_direct_access() returns
+nr_available_pages @pgoff, but this isn't broken because
+dax_direct_access() converts the "zero pages available" case into
+-ERANGE.
 
------BEGIN PGP SIGNATURE-----
-
-iQGzBAEBCgAdFiEEQGIgyLhVKAI3jM5BH1x6i0VWQxQFAmGdVXgACgkQH1x6i0VW
-QxSv+Av/arLmgp9FpT/39URQmojUbKfkcgnp2XDsqJAcnAbRGllBpPtndIUxz6O7
-e8jpNGlLv5+2l3tW6tzgAhzzElY8M1wjwdpjtMzq33vO6cLe603onGXSfjBe2apK
-zzOTVTDNAe+HfHRBs6mJSLB2I97jyfsr7yz8vfr3fBB9i23POA4z5ypgpkz2Ek8X
-Bg9V1iHDHbuRxVk2cy4TRLaIb2ABYBnFATldB61hq6h6Z1X7jkrpfuwNctWmyEZN
-T48H6Slgb1Y2y2VrSJYkRKKzxyRGTM1ZS6SO3waZ7XwMnDboCZWPms+Zg6kRJWaQ
-rQRW6iAsH8cKsXdeHmPDhyTWwRtKNGFaNt5fyIk+wHcm2QmynrzqYXTtY/uLVSHy
-OF/J0ZzTkWoQzgOlx2ugjLuNqAfPA3oC2Pi3Z2FS+IxM2A1C4pAHfQ8zAlD+g51e
-KDefbQKVPyl6D7OszTG3lTpQN4Y72NJ7+GDXaBfq/3KSwHZ3Cnlf1T9f7WKMdrPg
-SFGuaoDj
-=SlW/
------END PGP SIGNATURE-----
-
-
-Thank you for your contribution to Debian.
+> +               memset(kaddr + offset, 0, size);
+> +               dax_flush(dax_dev, kaddr + offset, size);
+> +       }
+> +       return rc;
+> +}
+> +
+>  s64 dax_iomap_zero(loff_t pos, u64 length, struct iomap *iomap)
+>  {
+>         pgoff_t pgoff = dax_iomap_pgoff(iomap, pos);
+>         long rc, id;
+> -       void *kaddr;
+> -       bool page_aligned = false;
+>         unsigned offset = offset_in_page(pos);
+>         unsigned size = min_t(u64, PAGE_SIZE - offset, length);
+>
+> -       if (IS_ALIGNED(pos, PAGE_SIZE) && size == PAGE_SIZE)
+> -               page_aligned = true;
+> -
+>         id = dax_read_lock();
+> -
+> -       if (page_aligned)
+> +       if (IS_ALIGNED(pos, PAGE_SIZE) && size == PAGE_SIZE)
+>                 rc = dax_zero_page_range(iomap->dax_dev, pgoff, 1);
+>         else
+> -               rc = dax_direct_access(iomap->dax_dev, pgoff, 1, &kaddr, NULL);
+> -       if (rc < 0) {
+> -               dax_read_unlock(id);
+> -               return rc;
+> -       }
+> -
+> -       if (!page_aligned) {
+> -               memset(kaddr + offset, 0, size);
+> -               dax_flush(iomap->dax_dev, kaddr + offset, size);
+> -       }
+> +               rc = dax_memzero(iomap->dax_dev, pgoff, offset, size);
+>         dax_read_unlock(id);
+> +
+> +       if (rc < 0)
+> +               return rc;
+>         return size;
+>  }
+>
+> --
+> 2.30.2
+>
