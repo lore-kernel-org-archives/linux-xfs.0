@@ -2,88 +2,95 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59D2CC433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Nov 2021 20:01:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 977A8C433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Nov 2021 20:08:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233560AbhKWUET (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 Nov 2021 15:04:19 -0500
-Received: from sender11-of-o53.zoho.eu ([31.186.226.239]:21863 "EHLO
-        sender11-of-o53.zoho.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239609AbhKWUER (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Nov 2021 15:04:17 -0500
-ARC-Seal: i=1; a=rsa-sha256; t=1637697665; cv=none; 
-        d=zohomail.eu; s=zohoarc; 
-        b=DzM2eRzt0L8TikhhmZMPzT3iVOsRmyYllmVjtkv0q8WLcPgO0y64rJLNBMxCJYsEhjwc17rGBuCevJbzHW8MqgUk1FwukQvwJMy9uAUOyXc2OENGP9zaGP/UG2ANfu9VbrTAJbtBVQYk7zq1HTzD5zrK2pLP6LZZX8A6wrlW9/4=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-        t=1637697665; h=Content-Type:Content-Transfer-Encoding:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
-        bh=d6PChhahJC0zWQeWe2yIJJUO0ZqtAzmoUgqHNbubrXo=; 
-        b=KEFecSSbFsA1NGtt1y4pwJ3j4vEC6llyl/ohLkPogZsiQ1SbC1h4K0OqcgkBtA1vDPdqcWUbKhO2s0tNm5SScPOH6irUKSvl0SavXmthXd5rsrfoX/qEKYyWSeSzog7ApI5dniAw4huGrHW87vyOo6GWUFjFxKouNzESebk/bZA=
-ARC-Authentication-Results: i=1; mx.zohomail.eu;
-        spf=pass  smtp.mailfrom=hostmaster@neglo.de;
-        dmarc=pass header.from=<bage@debian.org>
-Received: from [192.168.178.23] (pd95445e6.dip0.t-ipconnect.de [217.84.69.230]) by mx.zoho.eu
-        with SMTPS id 1637697663692421.13677058679446; Tue, 23 Nov 2021 21:01:03 +0100 (CET)
+        id S239308AbhKWULU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 Nov 2021 15:11:20 -0500
+Received: from mail.kernel.org ([198.145.29.99]:41652 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S236505AbhKWULU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 23 Nov 2021 15:11:20 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A55586056B;
+        Tue, 23 Nov 2021 20:08:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1637698091;
+        bh=wflllseVxY4W52dnzv5ITiu2TFr4Q+E+gxXbqZJglrk=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=gUSyQKbIHrTJSA1aaT83A0l0hz1ZdGouG0jF865DxSNRDo/B7RVT/yeJMvJ1uD+2i
+         l6JEyPyXB2oEGY3s66/LM+/jAJQmYKSPUYmhFbl3fBXuCsDVluQ6d8hnAFpn/YNmQX
+         Fa1BzeKVqCmMih70eRuUEJ0UiullxfSvurA/TvflDwdrSmwxU8+xqjaaxALkkjY7+5
+         SDatr5AfB6CRLqQaluK/omTPxJluunY5cOnTib8oEzP7qWtT2uQq94mmmVzqssVyJX
+         TQSguMCz2xCahm9vP7SWZ7IzEKujc7y8TErQbNDtT/ANnu798PAm6puUF2xRcEi4jf
+         jfkeQ5t5DWVyA==
+Date:   Tue, 23 Nov 2021 12:08:11 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Bastian Germann <bage@debian.org>
+Cc:     linux-xfs@vger.kernel.org
 Subject: Re: [PATCH 1/2] debian: Generate .gitcensus instead of .census
  (Closes: #999743)
-To:     linux-xfs@vger.kernel.org
+Message-ID: <20211123200811.GC266024@magnolia>
 References: <20211119171241.102173-1-bage@debian.org>
  <20211119171241.102173-2-bage@debian.org>
-From:   Bastian Germann <bage@debian.org>
-Message-ID: <b4690ab9-540a-758b-475d-a849feacdd3a@debian.org>
-Date:   Tue, 23 Nov 2021 21:01:01 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.14.0
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 In-Reply-To: <20211119171241.102173-2-bage@debian.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: de-DE-frami
-Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-@Darrick: Thanks for caring about the 2nd patch. Is anyone up to review this patch?
-
-Am 19.11.21 um 18:12 schrieb Bastian Germann:
+On Fri, Nov 19, 2021 at 06:12:40PM +0100, Bastian Germann wrote:
 > Fix the Debian build outside a git tree (e.g., Debian archive builds) by
 > creating an empty .gitcensus instead of .census file on config.
 > 
 > Signed-off-by: Bastian Germann <bage@debian.org>
+
+Heh.  I used to have a patch that more or less did this, until I
+switched to building development packages only from git.  Sorry I forgot
+to come back to this one.
+
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+
+--D
+
 > ---
->   debian/rules | 8 ++++----
->   1 file changed, 4 insertions(+), 4 deletions(-)
+>  debian/rules | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
 > 
 > diff --git a/debian/rules b/debian/rules
 > index 615289b4..6d5b82a8 100755
 > --- a/debian/rules
 > +++ b/debian/rules
 > @@ -43,15 +43,15 @@ built: dibuild config
->   	$(MAKE) $(PMAKEFLAGS) default
->   	touch built
->   
+>  	$(MAKE) $(PMAKEFLAGS) default
+>  	touch built
+>  
 > -config: .census
 > -.census:
 > +config: .gitcensus
 > +.gitcensus:
->   	@echo "== dpkg-buildpackage: configure" 1>&2
->   	$(checkdir)
->   	AUTOHEADER=/bin/true dh_autoreconf
->   	dh_update_autotools_config
->   	$(options) $(MAKE) $(PMAKEFLAGS) include/platform_defs.h
->   	cp -f include/install-sh .
+>  	@echo "== dpkg-buildpackage: configure" 1>&2
+>  	$(checkdir)
+>  	AUTOHEADER=/bin/true dh_autoreconf
+>  	dh_update_autotools_config
+>  	$(options) $(MAKE) $(PMAKEFLAGS) include/platform_defs.h
+>  	cp -f include/install-sh .
 > -	touch .census
 > +	touch .gitcensus
->   
->   dibuild:
->   	$(checkdir)
+>  
+>  dibuild:
+>  	$(checkdir)
 > @@ -72,7 +72,7 @@ dibuild:
->   clean:
->   	@echo "== dpkg-buildpackage: clean" 1>&2
->   	$(checkdir)
+>  clean:
+>  	@echo "== dpkg-buildpackage: clean" 1>&2
+>  	$(checkdir)
 > -	-rm -f built .census mkfs/mkfs.xfs-$(bootpkg)
 > +	-rm -f built .gitcensus mkfs/mkfs.xfs-$(bootpkg)
->   	$(MAKE) distclean
->   	-rm -rf $(dirme) $(dirdev) $(dirdi)
->   	-rm -f debian/*substvars debian/files* debian/*.debhelper
+>  	$(MAKE) distclean
+>  	-rm -rf $(dirme) $(dirdev) $(dirdi)
+>  	-rm -f debian/*substvars debian/files* debian/*.debhelper
+> -- 
+> 2.30.2
 > 
-
+> 
