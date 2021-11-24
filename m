@@ -2,469 +2,248 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C523C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Nov 2021 20:56:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4B6BC433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Nov 2021 22:03:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245121AbhKXU7S (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 24 Nov 2021 15:59:18 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:27458 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S244892AbhKXU7R (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Nov 2021 15:59:17 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1637787366;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=/yH2tEOPG3Ul9vdPrtND/5A4t8ZhOw75oQyfcGIZR9Q=;
-        b=MZyUSDCMk95yb6gvBolPwX7e8vl33uCWpD9vteytVyZH3IVfF9xIZInL23W/J8BLC0uJSJ
-        YiUqS6xXbty/EpEkrtbD95wUWZkm69y8OxJF3sndxYz7W19GNZkK/9klt4ROrcYAJquOvb
-        zGIcYseeUrPG8w4pi7D/c0RnvWNAUDQ=
-Received: from mail-qk1-f198.google.com (mail-qk1-f198.google.com
- [209.85.222.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-407-dgwOctKlMXmFbvpBS4TJ-g-1; Wed, 24 Nov 2021 15:56:05 -0500
-X-MC-Unique: dgwOctKlMXmFbvpBS4TJ-g-1
-Received: by mail-qk1-f198.google.com with SMTP id j6-20020a05620a288600b0045e5d85ca17so3356941qkp.16
-        for <linux-xfs@vger.kernel.org>; Wed, 24 Nov 2021 12:56:05 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=/yH2tEOPG3Ul9vdPrtND/5A4t8ZhOw75oQyfcGIZR9Q=;
-        b=EJ7crm0+Of/8LuRM7bTObK36j0gtyeePutVRzSdlWB977y9leyN8YbEwzmXTzh4O5Z
-         a/RJA0AHWPiJfvqVgCp4hpPTuSYuVWYvafITpnvhqcH7TFSgPyJweaOa5uKitiTPRVEF
-         R4pSKeOp5TGjmDzGYPhPyPaxKZyVE8xCqV0d4WKfchw8lA2PSktNfE92ZxjwInQDA7Rf
-         J+DoOnxd8NE4AP8uWx6pCsAn6dDhUwKOnFDvwQj52Xz52pecw9/0wOZnc+yAt2Ww51kF
-         pZ3kbWZqUNFoviym8tlkc8uvXRRrQlJ+lAJ2zjBO+ABcVLfnz/9EBYhbW29RZx17ZYv8
-         Rdcg==
-X-Gm-Message-State: AOAM533oEHfydF2gMugjP+XxUTwEEWH/3MwGqX/S5qU/V1uvUT7CU4qa
-        MfIzCwF8aDgZrkyvcvCdrvpJlImSnnzxFQXQVRBjrbBRWyzFjVPD3sBTmW1LPcpaxJezp2BAtU3
-        1278wDGfzjXuA4Y6TL9tJ
-X-Received: by 2002:a05:6214:240e:: with SMTP id fv14mr2707972qvb.56.1637787364932;
-        Wed, 24 Nov 2021 12:56:04 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJwo5Z4keP+dp+ooaDojGXV11tfUi4BuECjORc43yL/8zU6RuXZIws3zHvJvOevJINWkmw+R6A==
-X-Received: by 2002:a05:6214:240e:: with SMTP id fv14mr2707924qvb.56.1637787364528;
-        Wed, 24 Nov 2021 12:56:04 -0800 (PST)
-Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
-        by smtp.gmail.com with ESMTPSA id e17sm504781qtw.18.2021.11.24.12.56.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 24 Nov 2021 12:56:03 -0800 (PST)
-Date:   Wed, 24 Nov 2021 15:56:01 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Ian Kent <raven@themaw.net>, Miklos Szeredi <miklos@szeredi.hu>,
-        xfs <linux-xfs@vger.kernel.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        David Howells <dhowells@redhat.com>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 2/2] xfs: make sure link path does not go away at access
-Message-ID: <YZ6m4ZyUDt5SaICI@bfoster>
-References: <f8425d1270fe011897e7e14eaa6ba8a77c1ed077.camel@themaw.net>
- <20211116030120.GQ449541@dread.disaster.area>
- <YZPVSTDIWroHNvFS@bfoster>
- <20211117002251.GR449541@dread.disaster.area>
- <YZVQUSCWWgOs+cRB@bfoster>
- <20211117214852.GU449541@dread.disaster.area>
- <YZf+lRsb0lBWdYgN@bfoster>
- <20211122000851.GE449541@dread.disaster.area>
- <YZvvP9RFXi3/jX0q@bfoster>
- <20211122232657.GF449541@dread.disaster.area>
+        id S1343717AbhKXWGm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 24 Nov 2021 17:06:42 -0500
+Received: from sandeen.net ([63.231.237.45]:40664 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231322AbhKXWGl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 24 Nov 2021 17:06:41 -0500
+Received: from [10.215.1.55] (204-195-8-65.wavecable.com [204.195.8.65])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id E06382540;
+        Wed, 24 Nov 2021 16:03:06 -0600 (CST)
+Message-ID: <fdb9e5d3-5b1b-135d-2e04-4d933ce33f34@sandeen.net>
+Date:   Wed, 24 Nov 2021 14:03:28 -0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20211122232657.GF449541@dread.disaster.area>
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.3.2
+Content-Language: en-US
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+References: <163769722838.871940.2491721496902879716.stgit@magnolia>
+ <163769723942.871940.11962039327000044904.stgit@magnolia>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: [PATCH 2/2] libxfs: fix atomic64_t poorly for 32-bit
+ architectures
+In-Reply-To: <163769723942.871940.11962039327000044904.stgit@magnolia>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 23, 2021 at 10:26:57AM +1100, Dave Chinner wrote:
-> On Mon, Nov 22, 2021 at 02:27:59PM -0500, Brian Foster wrote:
-> > On Mon, Nov 22, 2021 at 11:08:51AM +1100, Dave Chinner wrote:
-> > > On Fri, Nov 19, 2021 at 02:44:21PM -0500, Brian Foster wrote:
-> > > > In
-> > > > any event, another experiment I ran in light of the above results that
-> > > > might be similar was to put the inode queueing component of
-> > > > destroy_inode() behind an rcu callback. This reduces the single threaded
-> > > > perf hit from the previous approach by about 50%. So not entirely
-> > > > baseline performance, but it's back closer to baseline if I double the
-> > > > throttle threshold (and actually faster at 4x). Perhaps my crude
-> > > > prototype logic could be optimized further to not rely on percpu
-> > > > threshold changes to match the baseline.
-> > > > 
-> > > > My overall takeaway from these couple hacky experiments is that the
-> > > > unconditional synchronous rcu wait is indeed probably too heavy weight,
-> > > > as you point out. The polling or callback (or perhaps your separate
-> > > > queue) approach seems to be in the ballpark of viability, however,
-> > > > particularly when we consider the behavior of scaled or mixed workloads
-> > > > (since inactive queue processing seems to be size driven vs. latency
-> > > > driven).
-> > > > 
-> > > > So I dunno.. if you consider the various severity and complexity
-> > > > tradeoffs, this certainly seems worth more consideration to me. I can
-> > > > think of other potentially interesting ways to experiment with
-> > > > optimizing the above or perhaps tweak queueing to better facilitate
-> > > > taking advantage of grace periods, but it's not worth going too far down
-> > > > that road if you're wedded to the "busy inodes" approach.
-> > > 
-> > > I'm not wedded to "busy inodes" but, as your experiments are
-> > > indicating, trying to handle rcu grace periods into the deferred
-> > > inactivation path isn't completely mitigating the impact of having
-> > > to wait for a grace period for recycling of inodes.
-> > > 
-> > 
-> > What I'm seeing so far is that the impact seems to be limited to the
-> > single threaded workload and largely mitigated by an increase in the
-> > percpu throttle limit. IOW, it's not completely free right out of the
-> > gate, but the impact seems isolated and potentially mitigated by
-> > adjustment of the pipeline.
-> > 
-> > I realize the throttle is a percpu value, so that is what has me
-> > wondering about some potential for gains in efficiency to try and get
-> > more of that single-threaded performance back in other ways, or perhaps
-> > enhancements that might be more broadly beneficial to deferred
-> > inactivations in general (i.e. some form of adaptive throttling
-> > thresholds to balance percpu thresholds against a global threshold).
+On 11/23/21 1:53 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> I ran experiments on queue depth early on. Once we go over a few
-> tens of inodes we start to lose the "hot cache" effect and
-> performance starts to go backwards. By queue depths of hundreds,
-> we've lost all the hot cache and nothing else gets that performance
-> back because we can't avoid the latency of all the memory writes
-> from cache eviction and the followup memory loads that result.
+> In commit de555f66, we converted the atomic64_t implementation to use
+> the liburcu uatomic_* functions.  Regrettably, nobody tried to build
+> xfsprogs on a 32-bit architecture (hint: maintainers don't scale well
+> anymore) so nobody noticed that the build fails due to the unknown
+> symbol _uatomic_link_error.  This is what happens when liburcu doesn't
+> know how to perform atomic updates to a variable of a certain size, due
+> to some horrid macro magic in urcu.h.
 > 
-
-Admittedly my testing is simple/crude as I'm just exploring the
-potential viability of a concept, not fine tuning a workload, etc. That
-said, I'm curious to know what your tests for this look like because I
-suspect I'm running into different conditions. My tests frequently hit
-the percpu throttle threshold (256 inodes), which is beyond your ideal
-tens of inodes range (and probably more throttle limited than cpu cache
-limited).
-
-> Making the per-cpu queues longer or shorter based on global state
-> won't gain us anything. ALl it will do is slow down local operations
-> that don't otherwise need slowing down....
+> Rather than a strict revert to non-atomic updates for these platforms or
+> (which would introduce a landmine) or roll everything back for the sake
+> of older platforms, I went with providing a custom atomic64_t
+> implementation that uses a single pthread mutex.  This enables us to
+> work around the fact that the kernel atomic64_t API doesn't require a
+> special initializer function, and is probably good enough since there
+> are only a handful of atomic64_t counters in the kernel.
 > 
-
-This leaves out context. The increase in throttle threshold mitigates
-the delays I've introduced via the rcu callback. That happens to produce
-observable results comparable to my baseline test, but it's more of a
-measure of the impact of the delay than a direct proposal. If there's a
-more fine grained test worth running here (re: above), please describe
-it.
-
-> > > I suspect a rethink on the inode recycling mechanism is needed. THe
-> > > way it is currently implemented was a brute force solution - it is
-> > > simple and effective. However, we need more nuance in the recycling
-> > > logic now.  That is, if we are recycling an inode that is clean, has
-> > > nlink >=1 and has not been unlinked, it means the VFS evicted it too
-> > > soon and we are going to re-instantiate it as the identical inode
-> > > that was evicted from cache.
-> > > 
-> > 
-> > Probably. How advantageous is inode memory reuse supposed to be in the
-> > first place? I've more considered it a necessary side effect of broader
-> > architecture (i.e. deferred reclaim, etc.) as opposed to a primary
-> > optimization.
+> Clean up the type declarations of a couple of variables in libxlog to
+> match the kernel usage, though that's probably overkill.
 > 
-> Yes, it's an architectural feature resulting from the filesystem
-> inode life cycle being different to the VFS inode life cycle. This
-> was inherited from Irix - it had separate inactivation vs reclaim
-> states and action steps for vnodes - inactivation occurred when the
-> vnode refcount went to zero, reclaim occurred when the vnode was to
-> be freed.
+> Eventually we'll want to decide if we're deprecating 32-bit, but this
+> fixes them in the mean time.
 > 
-> Architecturally, Linux doesn't have this two-step infrastructure; it
-> just has evict() that runs everything when the inode needs to be
-> reclaimed. Hence we hide the two-phase reclaim architecture of XFS
-> behind that, and so we always had this troublesome impedence
-> mismatch on Linux.
+> Fixes: de555f66 ("atomic: convert to uatomic")
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+
+After a brief sidebar w/ Darrick I think we should change atomic64_add to take
+an int64_t, I can fix that on commit. It shouldn't matter for our current usage.
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+> ---
+>   configure.ac         |    1 +
+>   include/atomic.h     |   46 ++++++++++++++++++++++++++++++++++++++++++++++
+>   include/builddefs.in |    4 ++++
+>   include/libxlog.h    |    4 ++--
+>   libxfs/init.c        |    4 ++++
+>   m4/package_urcu.m4   |   19 +++++++++++++++++++
+>   repair/phase2.c      |    2 +-
+>   7 files changed, 77 insertions(+), 3 deletions(-)
 > 
-
-Ok, that was generally how I viewed it.
-
-> Thinking a bit about this, maybe there is a more integrated way to
-> handle this life cycle impedence mismatch by making the way we
-> interact with the linux inode cache to be more ...  Irix like. Linux
-> does actually give us a a callback when the last reference to an
-> inode goes away: .drop_inode()
 > 
-> i.e. Maybe we should look to triggering inactivation work from
-> ->drop_inode instead of ->destroy_inode and hence always leaving
-> unreferenced, reclaimable inodes in the VFS cache on the LRU. i.e.
-> rather than hiding the two-phase XFS inode inactivation+reclaim
-> algorithm from the VFS, move it up into the VFS.  If we prevent
-> inodes from being reclaimed from the LRU until they have finished
-> inactivation and are clean (easy enough just by marking the inode as
-> dirty), that would allow us to immediately reclaim and free inodes
-> in evict() context. Integration with __wait_on_freeing_inode() would
-> like solve the RCU reuse/recycling issues.
+> diff --git a/configure.ac b/configure.ac
+> index 89a53170..6adbee8c 100644
+> --- a/configure.ac
+> +++ b/configure.ac
+> @@ -238,6 +238,7 @@ AC_CHECK_SIZEOF([long])
+>   AC_CHECK_SIZEOF([char *])
+>   AC_TYPE_UMODE_T
+>   AC_MANUAL_FORMAT
+> +AC_HAVE_LIBURCU_ATOMIC64
+>   
+>   AC_CONFIG_FILES([include/builddefs])
+>   AC_OUTPUT
+> diff --git a/include/atomic.h b/include/atomic.h
+> index 2804815e..79e58dfe 100644
+> --- a/include/atomic.h
+> +++ b/include/atomic.h
+> @@ -60,11 +60,57 @@ static inline bool atomic_dec_and_lock(atomic_t *a, spinlock_t *lock)
+>   	return 0;
+>   }
+>   
+> +#ifdef HAVE_LIBURCU_ATOMIC64
+> +/*
+> + * On most (64-bit) platforms, liburcu can handle 64-bit atomic counter
+> + * updates, so we preferentially use that.
+> + */
+>   #define atomic64_read(a)	uatomic_read(a)
+>   #define atomic64_set(a, v)	uatomic_set(a, v)
+>   #define atomic64_add(v, a)	uatomic_add(a, v)
+>   #define atomic64_sub(v, a)	uatomic_sub(a, v)
+>   #define atomic64_inc(a)		uatomic_inc(a)
+>   #define atomic64_dec(a)		uatomic_dec(a)
+> +#else
+> +/*
+> + * If we don't detect support for that, emulate it with a lock.  Currently
+> + * there are only three atomic64_t counters in userspace and none of them are
+> + * performance critical, so we serialize them all with a single mutex since
+> + * the kernel atomic64_t API doesn't have an _init call.
+> + */
+> +extern pthread_mutex_t	atomic64_lock;
+> +
+> +static inline int64_t
+> +atomic64_read(atomic64_t *a)
+> +{
+> +	int64_t	ret;
+> +
+> +	pthread_mutex_lock(&atomic64_lock);
+> +	ret = *a;
+> +	pthread_mutex_unlock(&atomic64_lock);
+> +	return ret;
+> +}
+> +
+> +static inline void
+> +atomic64_add(int v, atomic64_t *a)
+> +{
+> +	pthread_mutex_lock(&atomic64_lock);
+> +	(*a) += v;
+> +	pthread_mutex_unlock(&atomic64_lock);
+> +}
+> +
+> +static inline void
+> +atomic64_set(atomic64_t *a, int64_t v)
+> +{
+> +	pthread_mutex_lock(&atomic64_lock);
+> +	(*a) = v;
+> +	pthread_mutex_unlock(&atomic64_lock);
+> +}
+> +
+> +#define atomic64_inc(a)		atomic64_add(1, (a))
+> +#define atomic64_dec(a)		atomic64_add(-1, (a))
+> +#define atomic64_sub(v, a)	atomic64_add(-(v), (a))
+> +
+> +#endif /* HAVE_URCU_ATOMIC64 */
+>   
+>   #endif /* __ATOMIC_H__ */
+> diff --git a/include/builddefs.in b/include/builddefs.in
+> index 78eddf4a..9d0b0800 100644
+> --- a/include/builddefs.in
+> +++ b/include/builddefs.in
+> @@ -122,6 +122,7 @@ HAVE_SYSTEMD = @have_systemd@
+>   SYSTEMD_SYSTEM_UNIT_DIR = @systemd_system_unit_dir@
+>   HAVE_CROND = @have_crond@
+>   CROND_DIR = @crond_dir@
+> +HAVE_LIBURCU_ATOMIC64 = @have_liburcu_atomic64@
+>   
+>   GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
+>   #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
+> @@ -159,6 +160,9 @@ endif
+>   
+>   LIBICU_LIBS = @libicu_LIBS@
+>   LIBICU_CFLAGS = @libicu_CFLAGS@
+> +ifeq ($(HAVE_LIBURCU_ATOMIC64),yes)
+> +PCFLAGS += -DHAVE_LIBURCU_ATOMIC64
+> +endif
+>   
+>   SANITIZER_CFLAGS += @addrsan_cflags@ @threadsan_cflags@ @ubsan_cflags@
+>   SANITIZER_LDFLAGS += @addrsan_ldflags@ @threadsan_ldflags@ @ubsan_ldflags@
+> diff --git a/include/libxlog.h b/include/libxlog.h
+> index adaa9963..3ade7ffa 100644
+> --- a/include/libxlog.h
+> +++ b/include/libxlog.h
+> @@ -11,8 +11,8 @@
+>    * the need to define any exotic kernel types in userland.
+>    */
+>   struct xlog {
+> -	xfs_lsn_t	l_tail_lsn;     /* lsn of 1st LR w/ unflush buffers */
+> -	xfs_lsn_t	l_last_sync_lsn;/* lsn of last LR on disk */
+> +	atomic64_t	l_tail_lsn;     /* lsn of 1st LR w/ unflush buffers */
+> +	atomic64_t	l_last_sync_lsn;/* lsn of last LR on disk */
+>   	xfs_mount_t	*l_mp;	        /* mount point */
+>   	struct xfs_buftarg *l_dev;	        /* dev_t of log */
+>   	xfs_daddr_t	l_logBBstart;   /* start block of log */
+> diff --git a/libxfs/init.c b/libxfs/init.c
+> index 0f7e8950..75ff4d49 100644
+> --- a/libxfs/init.c
+> +++ b/libxfs/init.c
+> @@ -25,6 +25,10 @@
+>   
+>   #include "libxfs.h"		/* for now */
+>   
+> +#ifndef HAVE_LIBURCU_ATOMIC64
+> +pthread_mutex_t	atomic64_lock = PTHREAD_MUTEX_INITIALIZER;
+> +#endif
+> +
+>   char *progname = "libxfs";	/* default, changed by each tool */
+>   
+>   struct cache *libxfs_bcache;	/* global buffer cache */
+> diff --git a/m4/package_urcu.m4 b/m4/package_urcu.m4
+> index f0337f34..f8e798b6 100644
+> --- a/m4/package_urcu.m4
+> +++ b/m4/package_urcu.m4
+> @@ -20,3 +20,22 @@ AC_DEFUN([AC_PACKAGE_NEED_RCU_INIT],
+>          AC_MSG_RESULT(no))
+>       AC_SUBST(liburcu)
+>     ])
+> +
+> +#
+> +# Make sure that calling uatomic_inc on a 64-bit integer doesn't cause a link
+> +# error on _uatomic_link_error, which is how liburcu signals that it doesn't
+> +# support atomic operations on 64-bit data types.
+> +#
+> +AC_DEFUN([AC_HAVE_LIBURCU_ATOMIC64],
+> +  [ AC_MSG_CHECKING([for atomic64_t support in liburcu])
+> +    AC_TRY_LINK([
+> +#define _GNU_SOURCE
+> +#include <urcu.h>
+> +    ], [
+> +       long long f = 3;
+> +       uatomic_inc(&f);
+> +    ], have_liburcu_atomic64=yes
+> +       AC_MSG_RESULT(yes),
+> +       AC_MSG_RESULT(no))
+> +    AC_SUBST(have_liburcu_atomic64)
+> +  ])
+> diff --git a/repair/phase2.c b/repair/phase2.c
+> index cb9adf1d..32ffe18b 100644
+> --- a/repair/phase2.c
+> +++ b/repair/phase2.c
+> @@ -128,7 +128,7 @@ zero_log(
+>   	 * is a v5 filesystem.
+>   	 */
+>   	if (xfs_sb_version_hascrc(&mp->m_sb))
+> -		libxfs_max_lsn = log->l_last_sync_lsn;
+> +		libxfs_max_lsn = atomic64_read(&log->l_last_sync_lsn);
+>   }
+>   
+>   static bool
 > 
-
-Hmm.. this is the point where we decide whether the inode remains
-cached, which is currently basically whether the inode has a link count
-or not. That makes me curious what (can) happens with an
-unlinked/inactivated inode on the lru. I'm not sure any other fs' do
-anything like that currently..?
-
-> There's more to it than just this, but perhaps the longer term
-> direction should be closer integration with the Linux inode cache
-> life cycle rather than trying to solve all these problems underneath
-> the VFS cache whilst still trying to play by it's rules...
-> 
-
-Yeah. Caching logic details aside, I think that makes sense.
-
-> > I still see reuse occur with deferred inactivation, we
-> > just end up cycling through the same set of inodes as they fall through
-> > the queue rather than recycling the same one over and over. I'm sort of
-> > wondering what the impact would be if we didn't do this at all (for the
-> > new allocation case at least).
-> 
-> We end up with a larger pool of free inodes in the finobt. This is
-> basically what my "busy inode check" proposal is based on - inodes
-> that we can't allocate without recycling just remain on the finobt
-> for longer before they can be used. This would be awful if we didn't
-> have the finobt to efficiently locate free inodes - the finobt
-> record iteration makes it pretty low overhead to scan inodes here.
-> 
-
-I get the idea. That last bit is what I'm skeptical about. The finobt is
-based on the premise that free inode lookup becomes a predictable tree
-lookup instead of the old searching algorithm on the inobt, which we
-still support and can be awful in its own right under worst case
-conditions. I agree that this would be bad on the inobt (which raises
-the question on how we'd provide these recycling correctness guarantees
-on !finobt fs'). What I'm more concerned about is whether this could
-make finobt enabled fs' (transiently) just as poor as the old algo under
-certain workloads/conditions.
-
-I think there needs to be at least some high level description of the
-search algorithm before we can sufficiently reason about it's behavior..
-
-> > > So how much re-initialisation do we actually need for that inode?
-> > > Almost everything in the inode is still valid; the problems come
-> > > from inode_init_always() resetting the entire internal inode state
-> > > and XFS then having to set them up again.  The internal state is
-> > > already largely correct when we start recycling, and the identity of
-> > > the recycled inode does not change when nlink >= 1. Hence eliding
-> > > inode_init_always() would also go a long way to avoiding the need
-> > > for a RCU grace period to pass before we can make the inode visible
-> > > to the VFS again.
-> > > 
-> > > If we can do that, then the only indoes that need a grace period
-> > > before they can be recycled are unlinked inodes as they change
-> > > identity when being recycled. That identity change absolutely
-> > > requires a grace period to expire before the new instantiation can
-> > > be made visible.  Given the arbitrary delay that this can introduce
-> > > for an inode allocation operation, it seems much better suited to
-> > > detecting busy inodes than waiting for a global OS state change to
-> > > occur...
-> > > 
-> > 
-> > Maybe..? The experiments I've been doing are aimed at simplicity and
-> > reducing the scope of the changes. Part of the reason for this is tbh
-> > I'm not totally convinced we really need to do anything more complex
-> > than preserve the inline symlink buffer one way or another (for example,
-> > see the rfc patch below for an alternative to the inline symlink rcuwalk
-> > disable patch). Maybe we should consider something like this anyways.
-> > 
-> > With busy inodes, we need to alter inode allocation to some degree to
-> > accommodate. We can have (tens of?) thousands of inodes under the grace
-> > period at any time based on current batching behavior, so it's not
-> > totally evident to me that we won't end up with some of the same
-> > fundamental issues to deal with here, just needing to be accommodated in
-> > the inode allocation algorithm rather than the teardown sequence.
-> 
-> Sure, but the purpose of the allocation selection
-> policy is to select the best inode to allocate for the current
-> context.  The cost of not being able to use an inode immediately
-> needs to be factored into that allocation policy. i.e. if the
-> selected inode has an associated delay with it before it can be
-> reused and other free inodes don't, then we should not be selecting
-> the inode with a delay associcated with it.
-> 
-
-We still have to find those "no delay" inodes. AFAICT the worst case
-conditions on the system I've been playing with can have something like
-20k free && busy inodes. That could cover all or most of the finobt at
-the time of an inode allocation. What happens from there depends on the
-search algorithm.
-
-> This is exactly the reasoning and logic we use for busy extents.  We
-> only take the blocking penalty for resolving busy extent state if we
-> run out of free extents to search before we've found an allocation
-> candidate. I think it makes sense for inode allocation, too.
-> 
-
-Sure, the idea makes sense and it's worth looking into. But there are
-enough contextual differences that I wouldn't just assume the same logic
-translates over to the finobt without potential for performance impact.
-For example, extent allocation has some advantages with things like
-delalloc (physical block allocation occurs async from buffered write
-syscall time) and the fact that metadata allocs can reuse busy blocks.
-The finobt only tracks existing chunks with free inodes, so it's easily
-possible to have conditions where the finobt is 100% (or majority)
-populated with busy inodes (whether it be one inode or several
-thousand).
-
-This raises questions like at what point does search cost become a
-factor? At what point and with what frequency do we suffer the blocking
-penalty? Do we opt to allocate new chunks based on gp state? Something
-else? We don't need to answer these questions here (this thread is long
-enough :P). I'm just trying to say that it's one thing to consider the
-approach a viable option, but it isn't automatically preferable just
-because we use it for extents. Further details beyond "detect busy
-inodes" would be nice to objectively reason about.
-
-> > --- 8< ---
-> > 
-> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > index 64b9bf334806..058e3fc69ff7 100644
-> > --- a/fs/xfs/xfs_inode.c
-> > +++ b/fs/xfs/xfs_inode.c
-> > @@ -2644,7 +2644,7 @@ xfs_ifree(
-> >  	 * already been freed by xfs_attr_inactive.
-> >  	 */
-> >  	if (ip->i_df.if_format == XFS_DINODE_FMT_LOCAL) {
-> > -		kmem_free(ip->i_df.if_u1.if_data);
-> > +		kfree_rcu(ip->i_df.if_u1.if_data);
-> >  		ip->i_df.if_u1.if_data = NULL;
-> 
-> That would need to be rcu_assign_pointer(ip->i_df.if_u1.if_data,
-> NULL) to put the correct memory barriers in place, right? Also, I
-> think ip->i_df.if_u1.if_data needs to be set to NULL before calling
-> kfree_rcu() so racing lookups will always see NULL before
-> the object is freed.
-> 
-
-I think rcu_assign_pointer() is intended to be paired with the
-associated rcu deref and for scenarios like making sure an object isn't
-made available until it's completely initialized (i.e. such as for rcu
-protected list traversals, etc.).
-
-With regard to ordering, we no longer access if_data in rcuwalk mode
-with this change. Thus I think all we need here is the
-WRITE_ONCE(i_link, NULL) that pairs with the READ_ONCE() in the vfs, and
-that happens earlier in xfs_inactive_symlink() before we rcu free the
-memory here. With that, ISTM a racing lookup should either see an rcu
-protected i_link or NULL, the latter of which calls into ->get_link()
-and triggers refwalk mode. Hm?
-
-> But again, as I asked up front, why do we even need to free this
-> memory buffer here? It will be freed in xfs_inode_free_callback()
-> after the current RCU grace period expires, so what do we gain by
-> freeing it separately here?
-> 
-
-One prevented memory leak? ;)
-
-It won't be freed in xfs_inode_free_callback() because we change the
-data fork format type (and clear i_mode) in this path. Perhaps that
-could use an audit, but that's a separate issue.
-
-> >  		ip->i_df.if_bytes = 0;
-> >  	}
-> > diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> > index a607d6aca5c4..e98d7f10ba7d 100644
-> > --- a/fs/xfs/xfs_iops.c
-> > +++ b/fs/xfs/xfs_iops.c
-> > @@ -511,27 +511,6 @@ xfs_vn_get_link(
-> >  	return ERR_PTR(error);
-> >  }
-> >  
-> > -STATIC const char *
-> > -xfs_vn_get_link_inline(
-> > -	struct dentry		*dentry,
-> > -	struct inode		*inode,
-> > -	struct delayed_call	*done)
-> > -{
-> > -	struct xfs_inode	*ip = XFS_I(inode);
-> > -	char			*link;
-> > -
-> > -	ASSERT(ip->i_df.if_format == XFS_DINODE_FMT_LOCAL);
-> > -
-> > -	/*
-> > -	 * The VFS crashes on a NULL pointer, so return -EFSCORRUPTED if
-> > -	 * if_data is junk.
-> > -	 */
-> > -	link = ip->i_df.if_u1.if_data;
-> > -	if (XFS_IS_CORRUPT(ip->i_mount, !link))
-> > -		return ERR_PTR(-EFSCORRUPTED);
-> > -	return link;
-> > -}
-> > -
-> >  static uint32_t
-> >  xfs_stat_blksize(
-> >  	struct xfs_inode	*ip)
-> > @@ -1250,14 +1229,6 @@ static const struct inode_operations xfs_symlink_inode_operations = {
-> >  	.update_time		= xfs_vn_update_time,
-> >  };
-> >  
-> > -static const struct inode_operations xfs_inline_symlink_inode_operations = {
-> > -	.get_link		= xfs_vn_get_link_inline,
-> > -	.getattr		= xfs_vn_getattr,
-> > -	.setattr		= xfs_vn_setattr,
-> > -	.listxattr		= xfs_vn_listxattr,
-> > -	.update_time		= xfs_vn_update_time,
-> > -};
-> > -
-> >  /* Figure out if this file actually supports DAX. */
-> >  static bool
-> >  xfs_inode_supports_dax(
-> > @@ -1409,9 +1380,8 @@ xfs_setup_iops(
-> >  		break;
-> >  	case S_IFLNK:
-> >  		if (ip->i_df.if_format == XFS_DINODE_FMT_LOCAL)
-> > -			inode->i_op = &xfs_inline_symlink_inode_operations;
-> > -		else
-> > -			inode->i_op = &xfs_symlink_inode_operations;
-> > +			inode->i_link = ip->i_df.if_u1.if_data;
-> > +		inode->i_op = &xfs_symlink_inode_operations;
-> 
-> This still needs corruption checks - ip->i_df.if_u1.if_data can be
-> null if there's some kind of inode corruption detected.
-> 
-
-It's fine for i_link to be NULL. We'd just fall into the get_link() call
-and have to handle it there like the current callback does.
-
-However, this does need to restore some of the code removed from
-xfs_vn_get_link() in commit 30ee052e12b9 ("xfs: optimize inline
-symlinks") to handle the local format case. If if_data can be NULL we'll
-obviously need to handle it there anyways.
-
-If there's no fundamental objection I'll address these issues, give it
-some proper testing and send a real patch..
-
-Brian
-
-> >  		break;
-> >  	default:
-> >  		inode->i_op = &xfs_inode_operations;
-> > diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-> > index fc2c6a404647..20ec2f450c56 100644
-> > --- a/fs/xfs/xfs_symlink.c
-> > +++ b/fs/xfs/xfs_symlink.c
-> > @@ -497,6 +497,7 @@ xfs_inactive_symlink(
-> >  	 * do here in that case.
-> >  	 */
-> >  	if (ip->i_df.if_format == XFS_DINODE_FMT_LOCAL) {
-> > +		WRITE_ONCE(VFS_I(ip)->i_link, NULL);
-> 
-> Again, rcu_assign_pointer(), yes?
-> 
-> >  		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> >  		return 0;
-> >  	}
-> > 
-> > 
-> 
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-
