@@ -2,83 +2,66 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B607AC433F5
-	for <linux-xfs@archiver.kernel.org>; Sat, 27 Nov 2021 20:08:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA670C433F5
+	for <linux-xfs@archiver.kernel.org>; Sat, 27 Nov 2021 21:05:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240428AbhK0ULX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 27 Nov 2021 15:11:23 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:57840 "EHLO
+        id S1356247AbhK0VI2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 27 Nov 2021 16:08:28 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:48916 "EHLO
         dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229663AbhK0UJW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 27 Nov 2021 15:09:22 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        with ESMTP id S229634AbhK0VG1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 27 Nov 2021 16:06:27 -0500
+Received: from mail.kernel.org (unknown [198.145.29.99])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id C6B3960F05;
-        Sat, 27 Nov 2021 20:06:07 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2BFE2C53FBF;
-        Sat, 27 Nov 2021 20:06:07 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8C6AB60F1A;
+        Sat, 27 Nov 2021 21:03:12 +0000 (UTC)
+Received: by mail.kernel.org (Postfix) with ESMTPS id E77B260230;
+        Sat, 27 Nov 2021 21:03:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1638043567;
-        bh=AeByrAcKKhJkicFs97CoiA4t6vzFEZxDmMuAEu1F8jE=;
-        h=Date:From:To:Cc:Subject:From;
-        b=CY94MyNePeku8my7+Dhp7Tvm2XLypdpYZEQl2h3wNW7LzDmqdZEzW/uBbaD7m8IV9
-         PivzmFGYfF7ghwTpmFjf/jZyjnaAomlwoyJ/8WF9wQ3DPOLZJFXSUs2ljtD+l+/b7c
-         RjQIRS15dkqS49dc1qbaukn0IYm+J6ZP0ejKrwKuMREMkvQd6pnA12RCFJ/ayaaFQF
-         T/RBW+UOYh5OohbF/QWgmSuNCO2VwQrQKNC1IyiIlXiS0+wwyhd3Rdvpy2G7xxeT1E
-         cnJm6vpSXgcBag4iRAmHhzxNBxNjIMu/fdUkOEsVdfEVXRh/TWEQGCjo84aP/dURJh
-         OnBrCYWFFjOCQ==
-Date:   Sat, 27 Nov 2021 12:06:06 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        s=k20201202; t=1638046991;
+        bh=WARZ0x0eASHQpFWRjb73JcBkMXgwfCp5XhgO0AzLT+Q=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=GrNThQNidVM+gkexe9J2/7WKN2ed+B3gaELO6BgP3G5/K43jENq9jNReGSIgRS618
+         iXBgZar2/kGsVOKNobWzdZyG9J+i/2Ie08o8hV8h8UPOidS5PVURL9TlyXFsRVlR7p
+         ei7ys/QjvzgIQvWrfXrY6dOMSA4DTKIXrIbjhO+FnFLcBf2/c9DTJTxmeX9zAunIND
+         RLpBh8mS6YJHPDKy9zcovPBXrIHg3+/kr0/mCg5WPE7cxMwsOLgroAYAfhy3vBTHVB
+         NJUkoAAbRec5yupafxnDzKaW9OSBpnR1O1HDLZHeavSVfRF0AavRs4P05TxQjSJ4C9
+         wuu+fU/jWQzUw==
+Received: from pdx-korg-docbuild-2.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by pdx-korg-docbuild-2.ci.codeaurora.org (Postfix) with ESMTP id DC45B609D2;
+        Sat, 27 Nov 2021 21:03:11 +0000 (UTC)
+Subject: Re: [GIT PULL] xfs: bug fixes for 5.16-rc2
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <20211127200606.GB8467@magnolia>
+References: <20211127200606.GB8467@magnolia>
+X-PR-Tracked-List-Id: <linux-fsdevel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20211127200606.GB8467@magnolia>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.16-fixes-1
+X-PR-Tracked-Commit-Id: 1090427bf18f9835b3ccbd36edf43f2509444e27
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 4f0dda359c4563cbb1b0f97b0dbbcdc553156541
+Message-Id: <163804699189.3764.12554584751673448384.pr-tracker-bot@kernel.org>
+Date:   Sat, 27 Nov 2021 21:03:11 +0000
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
         david@fromorbit.com, linux-kernel@vger.kernel.org,
         sandeen@sandeen.net, hch@lst.de
-Subject: [GIT PULL] xfs: bug fixes for 5.16-rc2
-Message-ID: <20211127200606.GB8467@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Linus,
+The pull request you sent on Sat, 27 Nov 2021 12:06:06 -0800:
 
-Please pull this branch containing fixes for a resource leak and a
-build robot complaint about totally dead code for 5.16-rc2.
+> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.16-fixes-1
 
-The branch merges cleanly against upstream as of a few minutes ago.
-Please let me know if anything else strange happens during the merge
-process.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/4f0dda359c4563cbb1b0f97b0dbbcdc553156541
 
---D
+Thank you!
 
-The following changes since commit 136057256686de39cc3a07c2e39ef6bc43003ff6:
-
-  Linux 5.16-rc2 (2021-11-21 13:47:39 -0800)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.16-fixes-1
-
-for you to fetch changes up to 1090427bf18f9835b3ccbd36edf43f2509444e27:
-
-  xfs: remove xfs_inew_wait (2021-11-24 10:06:02 -0800)
-
-----------------------------------------------------------------
-Fixes for 5.16-rc2:
- - Fix buffer resource leak that could lead to livelock on corrupt fs.
- - Remove unused function xfs_inew_wait to shut up the build robots.
-
-----------------------------------------------------------------
-Christoph Hellwig (1):
-      xfs: remove xfs_inew_wait
-
-Yang Xu (1):
-      xfs: Fix the free logic of state in xfs_attr_node_hasname
-
- fs/xfs/libxfs/xfs_attr.c | 27 ++++++++++++---------------
- fs/xfs/xfs_icache.c      | 21 ---------------------
- fs/xfs/xfs_inode.h       |  4 +---
- 3 files changed, 13 insertions(+), 39 deletions(-)
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
