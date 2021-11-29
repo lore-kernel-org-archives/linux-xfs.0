@@ -2,31 +2,31 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0380FC433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 29 Nov 2021 11:07:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAEFCC433FE
+	for <linux-xfs@archiver.kernel.org>; Mon, 29 Nov 2021 11:07:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352759AbhK2LKz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 29 Nov 2021 06:10:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51052 "EHLO
+        id S1376942AbhK2LK6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 29 Nov 2021 06:10:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51068 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1376997AbhK2LIz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Nov 2021 06:08:55 -0500
+        with ESMTP id S234955AbhK2LI6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Nov 2021 06:08:58 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8FAEC08E8BB;
-        Mon, 29 Nov 2021 02:22:17 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D859C08E90B;
+        Mon, 29 Nov 2021 02:22:18 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=EtUdF5ha7yqxEKuy3O5Q7OCQvEJW4CJkzYemIeRo6WA=; b=PdlpNBCuXiytsVQKYpLT7CRD2o
-        vEQZzU8QZisqWnYNsF3U7RXEsM0okrG4lcJF2rqIbTMjOZGu/ePZRNhPIik+2y2KudRYX2MwutPYJ
-        xptsVQsYDVCDiFsR+c0O/BkjvCKhGmyyjkOhf7g+/eptXbTBwyr/2JiLcOPf+v61JvE1IBi6BaPkR
-        dlkaVJdcgkdaY1gmXlH9RB7XWWgNwMSqrXXt4b7gsTveo89MI8AxCoNUFny5gPGyJsCdUzA3Dcdjk
-        ZHSV7cMfHvQk89MvdMwJlZj6DUfe5C1dXU9+z7SO1+2EAtkPF2BPCPGQWdo5WDb8QZgXzxW5LHaNz
-        ULZl3aSw==;
+        bh=3l7FLtzAqnYh4gF+Ec/d9OSuDMjLokSs8f79jM8yBAE=; b=dFflzIo0AA/DU/9aMi6QPwtNhr
+        5GIHF36SJArozdQryqg5utOMEdpIE+RdBiIhAzfx3HDhmEfVNpWthQvTD+P8Mj3aY3hWFt3gX1SZg
+        pXIW4nYaWd3RSBYfXpg/z1mwBi8fkeM0/s68yIZ4fKeCCnylRVMH5zyqakroauNowO+h+VS3pBzU8
+        FsKzaSOiVpS/WyyMhuRPKBzzzuM9tkW9E4i6VAjndNiqsPbPwmYtnE6lNsg7RKg0E93kzc6VMkhPM
+        l5hj4VX9PjEWCR6m32bNrlDMVJ1sBRpS+auVWQ2RReQRu8bA6qImk9rENhP/heQg6MhukJE/5leIb
+        ggNbP+yg==;
 Received: from [2001:4bb8:184:4a23:724a:c057:c7bf:4643] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mrdnT-0073JW-Re; Mon, 29 Nov 2021 10:22:08 +0000
+        id 1mrdnZ-0073LD-CV; Mon, 29 Nov 2021 10:22:14 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Dan Williams <dan.j.williams@intel.com>
 Cc:     Mike Snitzer <snitzer@redhat.com>, Ira Weiny <ira.weiny@intel.com>,
@@ -34,10 +34,11 @@ Cc:     Mike Snitzer <snitzer@redhat.com>, Ira Weiny <ira.weiny@intel.com>,
         nvdimm@lists.linux.dev, linux-s390@vger.kernel.org,
         linux-fsdevel@vger.kernel.org, linux-erofs@lists.ozlabs.org,
         linux-ext4@vger.kernel.org,
-        virtualization@lists.linux-foundation.org
-Subject: [PATCH 03/29] dax: remove CONFIG_DAX_DRIVER
-Date:   Mon, 29 Nov 2021 11:21:37 +0100
-Message-Id: <20211129102203.2243509-4-hch@lst.de>
+        virtualization@lists.linux-foundation.org,
+        "Darrick J . Wong" <djwong@kernel.org>
+Subject: [PATCH 07/29] xfs: factor out a xfs_setup_dax_always helper
+Date:   Mon, 29 Nov 2021 11:21:41 +0100
+Message-Id: <20211129102203.2243509-8-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20211129102203.2243509-1-hch@lst.de>
 References: <20211129102203.2243509-1-hch@lst.de>
@@ -48,69 +49,83 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-CONFIG_DAX_DRIVER only selects CONFIG_DAX now, so remove it.
+Factor out another DAX setup helper to simplify future changes.  Also
+move the experimental warning after the checks to not clutter the log
+too much if the setup failed.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Dan Williams <dan.j.williams@intel.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- drivers/dax/Kconfig        | 4 ----
- drivers/nvdimm/Kconfig     | 2 +-
- drivers/s390/block/Kconfig | 2 +-
- fs/fuse/Kconfig            | 2 +-
- 4 files changed, 3 insertions(+), 7 deletions(-)
+ fs/xfs/xfs_super.c | 47 +++++++++++++++++++++++++++-------------------
+ 1 file changed, 28 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/dax/Kconfig b/drivers/dax/Kconfig
-index d2834c2cfa10d..954ab14ba7778 100644
---- a/drivers/dax/Kconfig
-+++ b/drivers/dax/Kconfig
-@@ -1,8 +1,4 @@
- # SPDX-License-Identifier: GPL-2.0-only
--config DAX_DRIVER
--	select DAX
--	bool
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index e21459f9923a8..875fd3151d6c9 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -340,6 +340,32 @@ xfs_buftarg_is_dax(
+ 			bdev_nr_sectors(bt->bt_bdev));
+ }
+ 
++static int
++xfs_setup_dax_always(
++	struct xfs_mount	*mp)
++{
++	struct super_block	*sb = mp->m_super;
++
++	if (!xfs_buftarg_is_dax(sb, mp->m_ddev_targp) &&
++	   (!mp->m_rtdev_targp || !xfs_buftarg_is_dax(sb, mp->m_rtdev_targp))) {
++		xfs_alert(mp,
++			"DAX unsupported by block device. Turning off DAX.");
++		goto disable_dax;
++	}
++
++	if (xfs_has_reflink(mp)) {
++		xfs_alert(mp, "DAX and reflink cannot be used together!");
++		return -EINVAL;
++	}
++
++	xfs_warn(mp, "DAX enabled. Warning: EXPERIMENTAL, use at your own risk");
++	return 0;
++
++disable_dax:
++	xfs_mount_set_dax_mode(mp, XFS_DAX_NEVER);
++	return 0;
++}
++
+ STATIC int
+ xfs_blkdev_get(
+ 	xfs_mount_t		*mp,
+@@ -1593,26 +1619,9 @@ xfs_fs_fill_super(
+ 		sb->s_flags |= SB_I_VERSION;
+ 
+ 	if (xfs_has_dax_always(mp)) {
+-		bool rtdev_is_dax = false, datadev_is_dax;
 -
- menuconfig DAX
- 	tristate "DAX: direct access to differentiated memory"
- 	select SRCU
-diff --git a/drivers/nvdimm/Kconfig b/drivers/nvdimm/Kconfig
-index b7d1eb38b27d4..347fe7afa5830 100644
---- a/drivers/nvdimm/Kconfig
-+++ b/drivers/nvdimm/Kconfig
-@@ -22,7 +22,7 @@ if LIBNVDIMM
- config BLK_DEV_PMEM
- 	tristate "PMEM: Persistent memory block device support"
- 	default LIBNVDIMM
--	select DAX_DRIVER
-+	select DAX
- 	select ND_BTT if BTT
- 	select ND_PFN if NVDIMM_PFN
- 	help
-diff --git a/drivers/s390/block/Kconfig b/drivers/s390/block/Kconfig
-index d0416dbd0cd81..e3710a762abae 100644
---- a/drivers/s390/block/Kconfig
-+++ b/drivers/s390/block/Kconfig
-@@ -5,7 +5,7 @@ comment "S/390 block device drivers"
- config DCSSBLK
- 	def_tristate m
- 	select FS_DAX_LIMITED
--	select DAX_DRIVER
-+	select DAX
- 	prompt "DCSSBLK support"
- 	depends on S390 && BLOCK
- 	help
-diff --git a/fs/fuse/Kconfig b/fs/fuse/Kconfig
-index 40ce9a1c12e5d..038ed0b9aaa5d 100644
---- a/fs/fuse/Kconfig
-+++ b/fs/fuse/Kconfig
-@@ -45,7 +45,7 @@ config FUSE_DAX
- 	select INTERVAL_TREE
- 	depends on VIRTIO_FS
- 	depends on FS_DAX
--	depends on DAX_DRIVER
-+	depends on DAX
- 	help
- 	  This allows bypassing guest page cache and allows mapping host page
- 	  cache directly in guest address space.
+-		xfs_warn(mp,
+-		"DAX enabled. Warning: EXPERIMENTAL, use at your own risk");
+-
+-		datadev_is_dax = xfs_buftarg_is_dax(sb, mp->m_ddev_targp);
+-		if (mp->m_rtdev_targp)
+-			rtdev_is_dax = xfs_buftarg_is_dax(sb,
+-						mp->m_rtdev_targp);
+-		if (!rtdev_is_dax && !datadev_is_dax) {
+-			xfs_alert(mp,
+-			"DAX unsupported by block device. Turning off DAX.");
+-			xfs_mount_set_dax_mode(mp, XFS_DAX_NEVER);
+-		}
+-		if (xfs_has_reflink(mp)) {
+-			xfs_alert(mp,
+-		"DAX and reflink cannot be used together!");
+-			error = -EINVAL;
++		error = xfs_setup_dax_always(mp);
++		if (error)
+ 			goto out_filestream_unmount;
+-		}
+ 	}
+ 
+ 	if (xfs_has_discard(mp)) {
 -- 
 2.30.2
 
