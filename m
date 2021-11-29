@@ -2,31 +2,31 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31998C4167B
-	for <linux-xfs@archiver.kernel.org>; Mon, 29 Nov 2021 11:08:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 690B6C433FE
+	for <linux-xfs@archiver.kernel.org>; Mon, 29 Nov 2021 11:08:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349381AbhK2LML (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 29 Nov 2021 06:12:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50870 "EHLO
+        id S1377207AbhK2LMN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 29 Nov 2021 06:12:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50864 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349934AbhK2LKE (ORCPT
+        with ESMTP id S235669AbhK2LKE (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Nov 2021 06:10:04 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4005BC08E9B9;
-        Mon, 29 Nov 2021 02:22:35 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A6482C08EC3E;
+        Mon, 29 Nov 2021 02:22:32 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=zD/HXhciUyG9/+3ZZWalAQ9G/73Tl0D4bOXK8TN7K4k=; b=Fey6yeKxtDXlGwd0VBFiu2ErVR
-        Zrrmqpwah4nDOKUfTpI5uoTu2Xb3OW5xV9l8MThOhiPP2cGBG3cpMeg1lKXKEaWkM3gZZnGDfanvG
-        C2Tr6Slixt1gB6RIbjQyXfT0LV5Ymu9WNwXbsrEzKjMh0eh6CrlBDx2L8cNMhpm/pBYuxglWQO+tn
-        MBdBg6SSjViJVclmD8otGLwrqvT1z2DyFgK9S1R5yAFMPEPZX3zrpecK1561osGXb3Xom4wo+gjOs
-        JJiAwzHCeo2Gl5bNA6uniryh2Yj2uBxIvkf+fIg/Ht+IaJKVbpkQlBwH/+8ejJETfD2+l61RN8FXa
-        pLpb2Tzg==;
+        bh=SFLYg18cvij6fU/3A8zFWrjXsu/Zx4DYVn4elv8lvPs=; b=uB944Rw+yKwWNNyIUgm2y7f92e
+        nNzmWSGyjlKa1IN1nAvs4ne0Kq2Je3alGtGlu7CyfQckv73HtbRv78vo0UbB4VQ4kH0bGG/7TrSQl
+        lF5vs7LCw65hs31wWSArmMuopqBCYmTmPm0Mc/4zraDKVFzFN0hShN6O+rZOWU1WVRq2kc3kT8AOb
+        Kxm/r6DwhK6yetiqjs02YbQail0yT68daR+d6LLKvj8Ln9M3K/R41h23aSDikFSwt7HUJy8JzBTMC
+        +gUWf24Ik0bwO/HMS9mSAmHzTn7FHgcEkqbIM0mF3ttEnHkPf0HTn6znk9hCSSPyBMxNI8m3Yfx9C
+        pVDFv2AA==;
 Received: from [2001:4bb8:184:4a23:724a:c057:c7bf:4643] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mrdnq-0073SH-3A; Mon, 29 Nov 2021 10:22:31 +0000
+        id 1mrdnm-0073Qh-SZ; Mon, 29 Nov 2021 10:22:28 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Dan Williams <dan.j.williams@intel.com>
 Cc:     Mike Snitzer <snitzer@redhat.com>, Ira Weiny <ira.weiny@intel.com>,
@@ -36,9 +36,9 @@ Cc:     Mike Snitzer <snitzer@redhat.com>, Ira Weiny <ira.weiny@intel.com>,
         linux-ext4@vger.kernel.org,
         virtualization@lists.linux-foundation.org,
         "Darrick J . Wong" <djwong@kernel.org>
-Subject: [PATCH 19/29] ext2: cleanup the dax handling in ext2_fill_super
-Date:   Mon, 29 Nov 2021 11:21:53 +0100
-Message-Id: <20211129102203.2243509-20-hch@lst.de>
+Subject: [PATCH 17/29] fsdax: factor out a dax_memzero helper
+Date:   Mon, 29 Nov 2021 11:21:51 +0100
+Message-Id: <20211129102203.2243509-18-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20211129102203.2243509-1-hch@lst.de>
 References: <20211129102203.2243509-1-hch@lst.de>
@@ -49,69 +49,72 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Only call fs_dax_get_by_bdev once the sbi has been allocated and remove
-the need for the dax_dev local variable.
+Factor out a helper for the "manual" zeroing of a DAX range to clean
+up dax_iomap_zero a lot.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Dan Williams <dan.j.williams@intel.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/ext2/super.c | 12 +++++-------
- 1 file changed, 5 insertions(+), 7 deletions(-)
+ fs/dax.c | 36 +++++++++++++++++++-----------------
+ 1 file changed, 19 insertions(+), 17 deletions(-)
 
-diff --git a/fs/ext2/super.c b/fs/ext2/super.c
-index a964066a80aa7..7e23482862e69 100644
---- a/fs/ext2/super.c
-+++ b/fs/ext2/super.c
-@@ -802,7 +802,6 @@ static unsigned long descriptor_loc(struct super_block *sb,
+diff --git a/fs/dax.c b/fs/dax.c
+index d7a923d152240..d5db1297a0bb6 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -1121,34 +1121,36 @@ static vm_fault_t dax_pmd_load_hole(struct xa_state *xas, struct vm_fault *vmf,
+ }
+ #endif /* CONFIG_FS_DAX_PMD */
  
- static int ext2_fill_super(struct super_block *sb, void *data, int silent)
++static int dax_memzero(struct dax_device *dax_dev, pgoff_t pgoff,
++		unsigned int offset, size_t size)
++{
++	void *kaddr;
++	long ret;
++
++	ret = dax_direct_access(dax_dev, pgoff, 1, &kaddr, NULL);
++	if (ret > 0) {
++		memset(kaddr + offset, 0, size);
++		dax_flush(dax_dev, kaddr + offset, size);
++	}
++	return ret;
++}
++
+ s64 dax_iomap_zero(loff_t pos, u64 length, struct iomap *iomap)
  {
--	struct dax_device *dax_dev = fs_dax_get_by_bdev(sb->s_bdev);
- 	struct buffer_head * bh;
- 	struct ext2_sb_info * sbi;
- 	struct ext2_super_block * es;
-@@ -822,17 +821,17 @@ static int ext2_fill_super(struct super_block *sb, void *data, int silent)
+ 	pgoff_t pgoff = dax_iomap_pgoff(iomap, pos);
+ 	long rc, id;
+-	void *kaddr;
+-	bool page_aligned = false;
+ 	unsigned offset = offset_in_page(pos);
+ 	unsigned size = min_t(u64, PAGE_SIZE - offset, length);
  
- 	sbi = kzalloc(sizeof(*sbi), GFP_KERNEL);
- 	if (!sbi)
--		goto failed;
-+		return -ENOMEM;
- 
- 	sbi->s_blockgroup_lock =
- 		kzalloc(sizeof(struct blockgroup_lock), GFP_KERNEL);
- 	if (!sbi->s_blockgroup_lock) {
- 		kfree(sbi);
--		goto failed;
-+		return -ENOMEM;
- 	}
- 	sb->s_fs_info = sbi;
- 	sbi->s_sb_block = sb_block;
--	sbi->s_daxdev = dax_dev;
-+	sbi->s_daxdev = fs_dax_get_by_bdev(sb->s_bdev);
- 
- 	spin_lock_init(&sbi->s_lock);
- 	ret = -EINVAL;
-@@ -946,7 +945,7 @@ static int ext2_fill_super(struct super_block *sb, void *data, int silent)
- 	blocksize = BLOCK_SIZE << le32_to_cpu(sbi->s_es->s_log_block_size);
- 
- 	if (test_opt(sb, DAX)) {
--		if (!dax_dev) {
-+		if (!sbi->s_daxdev) {
- 			ext2_msg(sb, KERN_ERR,
- 				"DAX unsupported by block device. Turning off DAX.");
- 			clear_opt(sbi->s_mount_opt, DAX);
-@@ -1201,11 +1200,10 @@ static int ext2_fill_super(struct super_block *sb, void *data, int silent)
- failed_mount:
- 	brelse(bh);
- failed_sbi:
-+	fs_put_dax(sbi->s_daxdev);
- 	sb->s_fs_info = NULL;
- 	kfree(sbi->s_blockgroup_lock);
- 	kfree(sbi);
--failed:
--	fs_put_dax(dax_dev);
- 	return ret;
+-	if (IS_ALIGNED(pos, PAGE_SIZE) && size == PAGE_SIZE)
+-		page_aligned = true;
+-
+ 	id = dax_read_lock();
+-
+-	if (page_aligned)
++	if (IS_ALIGNED(pos, PAGE_SIZE) && size == PAGE_SIZE)
+ 		rc = dax_zero_page_range(iomap->dax_dev, pgoff, 1);
+ 	else
+-		rc = dax_direct_access(iomap->dax_dev, pgoff, 1, &kaddr, NULL);
+-	if (rc < 0) {
+-		dax_read_unlock(id);
+-		return rc;
+-	}
+-
+-	if (!page_aligned) {
+-		memset(kaddr + offset, 0, size);
+-		dax_flush(iomap->dax_dev, kaddr + offset, size);
+-	}
++		rc = dax_memzero(iomap->dax_dev, pgoff, offset, size);
+ 	dax_read_unlock(id);
++
++	if (rc < 0)
++		return rc;
+ 	return size;
  }
  
 -- 
