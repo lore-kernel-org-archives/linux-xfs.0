@@ -2,84 +2,84 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D07E6C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Dec 2021 10:45:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E572C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Dec 2021 16:45:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348653AbhLAKtT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 1 Dec 2021 05:49:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50850 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348320AbhLAKtS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Dec 2021 05:49:18 -0500
-Received: from mail-yb1-xb2e.google.com (mail-yb1-xb2e.google.com [IPv6:2607:f8b0:4864:20::b2e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39BD5C061574
-        for <linux-xfs@vger.kernel.org>; Wed,  1 Dec 2021 02:45:58 -0800 (PST)
-Received: by mail-yb1-xb2e.google.com with SMTP id j2so61903130ybg.9
-        for <linux-xfs@vger.kernel.org>; Wed, 01 Dec 2021 02:45:58 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:from:date:message-id:subject:to
-         :content-transfer-encoding;
-        bh=UHYcdyWm1JaGYSPdCaksjsmvc0WqcBJjN/tMfuSlkeY=;
-        b=o0zhJk6mO//BZO8H+23UW4kI8BZmA/RL6lFMR7nvpff9y1lRHcoBvnccv2fyWiz1lB
-         CSxO80PsFFRJUnWJXdRUaDMe8ykZB3K2pgViiddPa0oPtcB1icjpr85f51h6iWofdBo0
-         wcJr6uZmZkc7W0pftV3YvC4kRSQg4ZTo+vfDvPanF/8GVrXTj5Dfeo7q7VivFy2MIlDK
-         mLAgqh+IGgGZryVxWtKCPFTFtjBorQmbBpGwtYH6leZ5qh9a1m021x09cqFt7RbFt4Cb
-         Xvou+7TRMwe71pUifTTPTdOmfd1hnaErsYlhM3vv8rB0QsoqlMeHwq0ORvhHS9tgvmKm
-         Aolw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to
-         :content-transfer-encoding;
-        bh=UHYcdyWm1JaGYSPdCaksjsmvc0WqcBJjN/tMfuSlkeY=;
-        b=v9305STy+WjJ48YZLFUc89BWmt9y1eHJtMVduiEKhlAIf/ed0nX+aPfLQpPLqPeLXd
-         505oY8aJfvZJJNp+X4M3TOzhfeeeizLAPx5oeu7MP0ra/CIjYiIqHcShol0diWugizdk
-         Rf2rk+6Ah8p0jS0cNaqfQ3RhavTyHPDJxCPi6VJdxb7M3wVVaRP7ZIKpgLMonMAEOde/
-         hl3EWeM11YHH3u/hgJzASsAHUdkOaQytwNlyfo8//vVbUWOL7R3RgRnpAeHErvLwz2O1
-         jD3i+0UxScP5Vs4N56n5XoCX9jWpgbjGk2ZG/SwHJ/UhuaEaxeJH6abayfA4/Y6GZQLs
-         NOFQ==
-X-Gm-Message-State: AOAM5333vET8ZedlnwcP3R8ppWpLasQQmUg/hhgIZq8ffyPh6id45XZu
-        fdomw01sxT2Rq/z6xjmOKBvWL1hG7cuhL/FQmnMVj86+6/7+mBy4PwJ7bA==
-X-Google-Smtp-Source: ABdhPJy+i9KMwRbcKUi1vGC7OIRSEUdeCJLeY56plMH6vNirRQwJLayBs6kzzuDDEkWBlRC9pN96aA8MoXJrxCfdEyM=
-X-Received: by 2002:a25:2a89:: with SMTP id q131mr6952886ybq.436.1638355557296;
- Wed, 01 Dec 2021 02:45:57 -0800 (PST)
+        id S1351658AbhLAQsc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 1 Dec 2021 11:48:32 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:51921 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1351517AbhLAQqV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Dec 2021 11:46:21 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1638376975;
+        h=from:from:reply-to:reply-to:subject:subject:date:date:
+         message-id:message-id:to:to:cc:mime-version:mime-version:
+         content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=fuWponqes6VhO075r7aSGZGmq+5KvEV3psFaKe37cZg=;
+        b=gqqBsL1VBhACUzBhyIqlUfOTWMXxujSICBR8pAbGNlSRE+ob825SMuEarbjA4QfsD+FuoT
+        XNDx5z2Qsh4Oh6FDxYtuSyn2rsWtD3njeBW3PDNNTEpQTvBMyEvf6lkRdrI6U4mrUoaCPW
+        0dl4LSEa0lqO6krhHUwOYtkNhHLwwSw=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-415-9FgcmBxUN9K7gXOkCmFwrA-1; Wed, 01 Dec 2021 11:42:52 -0500
+X-MC-Unique: 9FgcmBxUN9K7gXOkCmFwrA-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 8193681CCBF;
+        Wed,  1 Dec 2021 16:42:51 +0000 (UTC)
+Received: from [127.0.0.1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 4CEAA4EC37;
+        Wed,  1 Dec 2021 16:42:51 +0000 (UTC)
+Message-ID: <2106770b-5977-47b6-8b91-22b829cc5bf7@redhat.com>
+Date:   Wed, 1 Dec 2021 10:42:50 -0600
 MIME-Version: 1.0
-From:   Kang Chen <void0red@gmail.com>
-Date:   Wed, 1 Dec 2021 18:45:46 +0800
-Message-ID: <CANE+tVp9Au=beERRjy9mp90-=5S9ErjEDT=E7i5E3dWvFP928g@mail.gmail.com>
-Subject: Why 'fallocate' clear the file's SUID flag?
-To:     linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.3.2
+Subject: Re: [PATCH] xfs: remove incorrect ASSERT in xfs_rename
+Content-Language: en-US
+From:   Eric Sandeen <esandeen@redhat.com>
+To:     xfs <linux-xfs@vger.kernel.org>,
+        "Darrick J. Wong" <djwong@kernel.org>
+References: <bbb4b6d5-744c-11c8-fcda-62777e8d7b19@redhat.com>
+Reply-To: sandeen@redhat.com
+In-Reply-To: <bbb4b6d5-744c-11c8-fcda-62777e8d7b19@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-I found that the 'xfs_update_prealloc_flags' function is called
-during the =E2=80=98fallocate=E2=80=99 syscall and the SUID flag is cleared
-when the 'XFS_PREALLOC_INVISIBLE' flag is not set.
-I am a beginner and have some questions about it.
+On 11/30/21 11:17 PM, Eric Sandeen wrote:
+> This ASSERT in xfs_rename is a) incorrect, because
+> (RENAME_WHITEOUT|RENAME_NOREPLACE) is a valid combination, and
+> b) unnecessary, because actual invalid flag combinations are already
+> handled at the vfs level in do_renameat2() before we get called.
+> So, remove it.
+> 
+> Reported-by: Paolo Bonzini <pbonzini@redhat.com>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 64b9bf3..6771f35 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -3122,7 +3122,6 @@ struct xfs_iunlink {
+>        * appropriately.
+>        */
+>       if (flags & RENAME_WHITEOUT) {
+> -        ASSERT(!(flags & (RENAME_NOREPLACE | RENAME_EXCHANGE)));
+>           error = xfs_rename_alloc_whiteout(mnt_userns, target_dp, &wip);
+>           if (error)
+>               return error;
+> 
 
-1. What does XFS_PREALLOC_INVISIBLE mean and
-why should the SUID flag be cleared
-when XFS_PREALLOC_INVISIBLE is not set?
+Ugh, I don't understand this flavor of whitespace mangling I'm getting now,
+I'm sorry :(
 
-2. The behavior of XFS in handling the fallocate syscall is
-a bit strange and not quite the same as other file systems,
-such as ext4 and btrfs.
-
-Here is an example:
-foo is a normal file.
-chmod set the SUID and SGID flag.
-The last two parameters of fallocate are irrelevant to this problem.
-After running, ext4 and btrfs set mode o6000, but xfs set mode o2000.
-```
-int fd =3D open("foo", 2, 0);
-chmod("foo", o6000);
-fallocate(fd, 3, 6549, 1334);
-fsync(fd);
-```
-
-Can you give me some help?
-
-Best wishes.
