@@ -2,131 +2,149 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FD8FC433F5
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Dec 2021 01:50:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE20FC433F5
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Dec 2021 08:49:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344712AbhLBBxV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 1 Dec 2021 20:53:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34240 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348448AbhLBBxI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Dec 2021 20:53:08 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B78CEC061574;
-        Wed,  1 Dec 2021 17:49:45 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 5BF6FB82192;
-        Thu,  2 Dec 2021 01:49:44 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13494C00446;
-        Thu,  2 Dec 2021 01:49:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1638409783;
-        bh=/nOyWz9FD57Yc7ekcAIzmjiWYNDVCKOsggfbBTVN6EA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=CUmf+GZlPXI21yYAs0MDsPMgA59CtWzchsX09RJ/ZRMeLy4fTzpKWz6wfMGlvQ3mI
-         VSCE+wgYSg1gAX81ligONH8m8F8fGtrzV2dks8+XRF4RPf8CGDz/R51FxNkBaAGCMc
-         zv0QZnO64QbzUT1590dNrFZchE1aZ/uhctFu9qDF1MQ0KMDR0nOkn4rxixf6VorqiH
-         QhXKocj56WxBPsdZnnthBEHrwpVSQ4IfPAAuNeuNW2IENYWfbmBWDq71BeRcsOovs1
-         y5cotxAI7U4wBeHn7hnd41VcnhBwrNShUf3rk++0RYe4JQpd/L+8Trr8bqkc2Bw+PT
-         vST6HrzyiMfpg==
-Date:   Wed, 1 Dec 2021 17:49:42 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-mm@kvack.org, linux-kernel@vger.kernel.org
-Subject: Re: iomap folio conversion for 5.17
-Message-ID: <20211202014942.GB8492@magnolia>
-References: <20211124183905.GE266024@magnolia>
- <YZ/7O9Zb3PSsCbk9@casper.infradead.org>
+        id S1356249AbhLBIwd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 2 Dec 2021 03:52:33 -0500
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:24741 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1356241AbhLBIw3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Dec 2021 03:52:29 -0500
+IronPort-Data: =?us-ascii?q?A9a23=3ALXqL0qlJ5BP5P7dvvAs162/o5gzqJ0RdPkR7XQ2?=
+ =?us-ascii?q?eYbTBsI5bpzwPz2IcUG6BbPmLazf1c9snOoXn9U5QvZPUnNBqHlFr+CA2RRqmi?=
+ =?us-ascii?q?+KfW43BcR2Y0wB+jyH7ZBs+qZ1YM7EsFehsJpPnjkrrYueJQUVUj/nSH+OmULS?=
+ =?us-ascii?q?cY0ideCc/IMsfoUM68wIGqt4w6TSJK1vlVeLa+6UzCnf8s9JHGj58B5a4lf9al?=
+ =?us-ascii?q?K+aVAX0EbAJTasjUFf2zxH5BX+ETE27ByOQroJ8RoZWSwtfpYxV8F81/z91Yj+?=
+ =?us-ascii?q?kur39NEMXQL/OJhXIgX1TM0SgqkEa4HVsjeBgb7xBAatUo2zhc9RZ0shEs4ehD?=
+ =?us-ascii?q?wkvJbHklvkfUgVDDmd1OqguFLrveCHv6pXClhWaG5fr67A0ZK0sBqUU8/h2DUl?=
+ =?us-ascii?q?A7/sdLyoHbwzFjOWzqJq7QelEh8ItNsDnMYoT/HZ6wlnxAf8gB5KFXKTO4d5R2?=
+ =?us-ascii?q?SwYh8ZSEPKYbM0cARJjbgvHZRJnOVoNDp862uCyiRHXdzxetULQoK8f4Hbaxw8?=
+ =?us-ascii?q?316LiWPLTZNCLQMB9mkeDunmA+2X/HwFcONGBoRKH+3ShwOTPgAv8QosZELD+/?=
+ =?us-ascii?q?flv6HWXx2oOGFgYTle2v/S9olCxVsgZKEEO/Ccq668o+ySDStj7Qg39o3OeuBM?=
+ =?us-ascii?q?Yc8RfHvd86wyXzKfQpQGDCQAsSj9HdcxjpMEtbSIl20XPnN7zAzFr9rqPRhqgG?=
+ =?us-ascii?q?h28xd+pEXFNazZcOmlfFk1Yi+QPabob1nrnJuuP2obv5jEtJQzN/g=3D=3D?=
+IronPort-HdrOrdr: =?us-ascii?q?A9a23=3AfTq0Zq11/TLF874yE6mKAgqjBI4kLtp133Aq?=
+ =?us-ascii?q?2lEZdPU1SL39qynKppkmPHDP5gr5J0tLpTntAsi9qBDnhPtICOsqTNSftWDd0Q?=
+ =?us-ascii?q?PGEGgI1/qB/9SPIU3D398Y/aJhXow7M9foEGV95PyQ3CCIV/om3/mLmZrFudvj?=
+X-IronPort-AV: E=Sophos;i="5.87,281,1631548800"; 
+   d="scan'208";a="118319104"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 02 Dec 2021 16:49:04 +0800
+Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
+        by cn.fujitsu.com (Postfix) with ESMTP id BBB024D13A13;
+        Thu,  2 Dec 2021 16:49:00 +0800 (CST)
+Received: from G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.85) by
+ G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.23; Thu, 2 Dec 2021 16:49:01 +0800
+Received: from irides.mr.mr.mr (10.167.225.141) by
+ G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
+ id 15.0.1497.23 via Frontend Transport; Thu, 2 Dec 2021 16:48:58 +0800
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <nvdimm@lists.linux.dev>, <linux-mm@kvack.org>,
+        <linux-fsdevel@vger.kernel.org>
+CC:     <djwong@kernel.org>, <dan.j.williams@intel.com>,
+        <david@fromorbit.com>, <hch@infradead.org>, <jane.chu@oracle.com>
+Subject: [RESEND PATCH v8 0/9] fsdax: introduce fs query to support reflink
+Date:   Thu, 2 Dec 2021 16:48:47 +0800
+Message-ID: <20211202084856.1285285-1-ruansy.fnst@fujitsu.com>
+X-Mailer: git-send-email 2.34.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YZ/7O9Zb3PSsCbk9@casper.infradead.org>
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-yoursite-MailScanner-ID: BBB024D13A13.A0354
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Nov 25, 2021 at 09:08:11PM +0000, Matthew Wilcox wrote:
-> On Wed, Nov 24, 2021 at 10:39:05AM -0800, Darrick J. Wong wrote:
-> > Hi folks,
-> > 
-> > The iomap-for-next branch of the xfs-linux repository at:
-> > 
-> > 	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
-> > 
-> > has just been updated.
-> 
-> Hi Darrick,
-> 
-> Would you like to pull the folio changes from my git tree?
-> They are generally as posted previously, with minor tweaks to match
-> upstream changes.  They do not introduce any new xfstests problems
-> in my testing.
+This patchset is aimed to support shared pages tracking for fsdax.
 
-Since you've rebased against 5.16-rc3, would you mind sending a fresh
-pull request (in a new thread), please?  Particularly since the tag
-commit id isn't the same anymore...
+Christoph has posted "decouple DAX from block devices v2", I need to
+rebase to his tree.  And since my v8 patchset sent before hasn't been
+reviewed yet.  So, I send this patchset as a RESEND of v8.
 
---D
+Changes from V8:
+  - Rebased to "decouple DAX from block devices v2"
+  - Patch8(implementation in XFS): Separate dax part to Patch7
+  - Patch9: add FS_DAX_MAPPING_COW flag to distinguish CoW with normal
 
-> The following changes since commit b501b85957deb17f1fe0a861fee820255519d526:
-> 
->   Merge tag 'asm-generic-5.16-2' of git://git.kernel.org/pub/scm/linux/kernel/git/arnd/asm-generic (2021-11-25 10:41:28 -0800)
-> 
-> are available in the Git repository at:
-> 
->   git://git.infradead.org/users/willy/linux.git tags/iomap-folio-5.17
-> 
-> for you to fetch changes up to 979fe192e8a935968fd739983217128b431f6268:
-> 
->   xfs: Support large folios (2021-11-25 14:03:56 -0500)
-> 
-> ----------------------------------------------------------------
-> Convert fs/iomap to use folios
-> 
-> These patches prepare XFS to use large folios to cache files.
-> There are some preliminary patches to add folio interfaces to the
-> block layer & buffer layer, then all the iomap functions are
-> converted to use folios instead of pages.
-> 
-> ----------------------------------------------------------------
-> Matthew Wilcox (Oracle) (24):
->       block: Add bio_add_folio()
->       block: Add bio_for_each_folio_all()
->       fs/buffer: Convert __block_write_begin_int() to take a folio
->       iomap: Convert to_iomap_page to take a folio
->       iomap: Convert iomap_page_create to take a folio
->       iomap: Convert iomap_page_release to take a folio
->       iomap: Convert iomap_releasepage to use a folio
->       iomap: Add iomap_invalidate_folio
->       iomap: Pass the iomap_page into iomap_set_range_uptodate
->       iomap: Convert bio completions to use folios
->       iomap: Use folio offsets instead of page offsets
->       iomap: Convert iomap_read_inline_data to take a folio
->       iomap: Convert readahead and readpage to use a folio
->       iomap: Convert iomap_page_mkwrite to use a folio
->       iomap: Convert __iomap_zero_iter to use a folio
->       iomap: Convert iomap_write_begin() and iomap_write_end() to folios
->       iomap: Convert iomap_write_end_inline to take a folio
->       iomap,xfs: Convert ->discard_page to ->discard_folio
->       iomap: Simplify iomap_writepage_map()
->       iomap: Simplify iomap_do_writepage()
->       iomap: Convert iomap_add_to_ioend() to take a folio
->       iomap: Convert iomap_migrate_page() to use folios
->       iomap: Support large folios in invalidatepage
->       xfs: Support large folios
-> 
->  Documentation/core-api/kernel-api.rst |   1 +
->  block/bio.c                           |  22 ++
->  fs/buffer.c                           |  23 +-
->  fs/internal.h                         |   2 +-
->  fs/iomap/buffered-io.c                | 506 +++++++++++++++++-----------------
->  fs/xfs/xfs_aops.c                     |  24 +-
->  fs/xfs/xfs_icache.c                   |   2 +
->  include/linux/bio.h                   |  56 +++-
->  include/linux/iomap.h                 |   3 +-
->  9 files changed, 363 insertions(+), 276 deletions(-)
-> 
+Changes from V7:
+  - Change dax lock from global rwsem to per-device percpu_rwsem
+  - Change type of range length from size_t to u64
+  - Rename 'flags' to 'mf_flags'
+  - Fix mistakes in XFS code
+  - Add cow branch for dax_assocaite_entry()
+
+This patchset moves owner tracking from dax_assocaite_entry() to pmem
+device driver, by introducing an interface ->memory_failure() for struct
+pagemap.  This interface is called by memory_failure() in mm, and
+implemented by pmem device.
+
+Then call holder operations to find the filesystem which the corrupted
+data located in, and call filesystem handler to track files or metadata
+associated with this page.
+
+Finally we are able to try to fix the corrupted data in filesystem and
+do other necessary processing, such as killing processes who are using
+the files affected.
+
+The call trace is like this:
+memory_failure()
+|* fsdax case
+|------------
+|pgmap->ops->memory_failure()      => pmem_pgmap_memory_failure()
+| dax_holder_notify_failure()      =>
+|  dax_device->holder_ops->notify_failure() =>
+|                                     - xfs_dax_notify_failure()
+|  |* xfs_dax_notify_failure()
+|  |--------------------------
+|  |   xfs_rmap_query_range()
+|  |    xfs_dax_notify_failure_fn()
+|  |    * corrupted on metadata
+|  |       try to recover data, call xfs_force_shutdown()
+|  |    * corrupted on file data
+|  |       try to recover data, call mf_dax_kill_procs()
+|* normal case
+|-------------
+|mf_generic_kill_procs()
+
+==
+Shiyang Ruan (9):
+  dax: Use percpu rwsem for dax_{read,write}_lock()
+  dax: Introduce holder for dax_device
+  mm: factor helpers for memory_failure_dev_pagemap
+  pagemap,pmem: Introduce ->memory_failure()
+  fsdax: Introduce dax_lock_mapping_entry()
+  mm: Introduce mf_dax_kill_procs() for fsdax case
+  dax: add dax holder helper for filesystems
+  xfs: Implement ->notify_failure() for XFS
+  fsdax: set a CoW flag when associate reflink mappings
+
+ drivers/dax/device.c        |  11 +-
+ drivers/dax/super.c         | 120 ++++++++++++++++---
+ drivers/md/dm-writecache.c  |   7 +-
+ drivers/nvdimm/pmem.c       |  16 +++
+ fs/dax.c                    | 172 +++++++++++++++++++++------
+ fs/fuse/dax.c               |   6 +-
+ fs/xfs/Makefile             |   1 +
+ fs/xfs/xfs_buf.c            |   4 +
+ fs/xfs/xfs_fsops.c          |   3 +
+ fs/xfs/xfs_mount.h          |   1 +
+ fs/xfs/xfs_notify_failure.c | 224 +++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_notify_failure.h |  15 +++
+ include/linux/dax.h         |  73 +++++++++++-
+ include/linux/memremap.h    |   9 ++
+ include/linux/mm.h          |   2 +
+ mm/memory-failure.c         | 226 +++++++++++++++++++++++++-----------
+ 16 files changed, 757 insertions(+), 133 deletions(-)
+ create mode 100644 fs/xfs/xfs_notify_failure.c
+ create mode 100644 fs/xfs/xfs_notify_failure.h
+
+-- 
+2.34.0
+
+
+
