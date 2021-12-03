@@ -2,46 +2,107 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EE24C433EF
-	for <linux-xfs@archiver.kernel.org>; Fri,  3 Dec 2021 07:26:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7521C433F5
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Dec 2021 18:48:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243705AbhLCHaG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 3 Dec 2021 02:30:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40946 "EHLO
+        id S1343582AbhLCSva (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 3 Dec 2021 13:51:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56762 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343808AbhLCH37 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Dec 2021 02:29:59 -0500
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C21DEC06174A
-        for <linux-xfs@vger.kernel.org>; Thu,  2 Dec 2021 23:26:35 -0800 (PST)
+        with ESMTP id S233187AbhLCSva (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Dec 2021 13:51:30 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B17BC061751;
+        Fri,  3 Dec 2021 10:48:06 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=J8ZpJ7IEUIssWYiGn4JUZV8YSFiAwMHHgkpgEGYWdV8=; b=EcBXeU6KKgp3c+0n1TowsuTVe7
-        M+qOrOi4ZhWSV2+OJ8lmkcgzojziH8ickey96KZv4KReYa8u+Suk6qxdwFjwevKR3GD61J1X6TKZb
-        NIH+TZ9LD5J6+Bm+CVmv4dmhqWQlFUKYhPnucwo0w1BC0WSTdvItH0mnnQmdhzwVYoawBF+XYWw9/
-        C34sup6dzheoMfwse2np3WNHMnmeYylRdiUV4BWu25zNKa+t0s08eBl6lm4PuMWMPf3q0SQxyAK9K
-        ZFZM6l3UZJTsgUQXy1CXcswSyAg8W7fJDHH/E8XKZmMESsq4DpuwkzznEQ6XyXBn/SneJD16fosTb
-        jOsdiMUw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mt2xj-00Eggr-VI; Fri, 03 Dec 2021 07:26:31 +0000
-Date:   Thu, 2 Dec 2021 23:26:31 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] libxcmd: use emacs mode for command history editing
-Message-ID: <YanGp5QnaC++Kjs2@infradead.org>
-References: <20211201175846.GM8467@magnolia>
+        d=infradead.org; s=casper.20170209; h=Content-Type:MIME-Version:Message-ID:
+        Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+        Content-Description:In-Reply-To:References;
+        bh=kF6dmKlPKnjUDrUnQOFbFf+3qy5XKLqFHNl3T/IoT5I=; b=HrIXJSAhpv5A42dLxSAvzmFi2l
+        i4Upfw202xAcBuWfW8eLIHpzOCYwb5mWQh3Y4RiKwoaOltJoMvEo485AtvZLPQMd9De7UxVF8uGFY
+        YOha9TFu8gwOhpZMIbdxCz3Okdk/dfQuDtD5bz6kE9t7gTDrU3VgL0VCuRN6nXpUTTEsb0iFKay2C
+        l4zQehntOL7UKleJy2EHltIJm6Txkc0vZ+wGZVEX8BOvKGhlNRgxO6mOwl8Xj7MzTXVCwdMCNdbvy
+        uBAuKDq7/B69hXM6fPFgrW20jeuJfnXbdlJ1R3S+Tk4UyqXEGQdmG1+trEW6fLtnLIVOJ+JtL6kzY
+        Z6/p1/DQ==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1mtDbG-009pzR-Q8; Fri, 03 Dec 2021 18:48:02 +0000
+Date:   Fri, 3 Dec 2021 18:48:02 +0000
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Christoph Hellwig <hch@infradead.org>,
+        "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Cc:     linux-kernel@vger.kernel.org
+Subject: [GIT PULL] iomap folio conversion for 5.17
+Message-ID: <YapmYhfP3Vx2m9CJ@casper.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211201175846.GM8467@magnolia>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Looks fine:
+Hi Darrick,
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Would you like to pull the folio changes from my git tree?
+They are generally as posted previously, with minor tweaks to match
+upstream changes.  They do not introduce any new xfstests problems
+in my testing.
+
+The following changes since commit d58071a8a76d779eedab38033ae4c821c30295a5:
+
+  Linux 5.16-rc3 (2021-11-28 14:09:19 -0800)
+
+are available in the Git repository at:
+
+  git://git.infradead.org/users/willy/linux.git tags/iomap-folio-5.17
+
+for you to fetch changes up to 0976b3cc2108b11c106ecad72459cceb35158553:
+
+  xfs: Support large folios (2021-11-29 08:30:52 -0500)
+
+----------------------------------------------------------------
+Convert fs/iomap to use folios
+
+These patches prepare XFS to use large folios to cache files.
+There are some preliminary patches to add folio interfaces to the
+block layer & buffer layer, then all the iomap functions are
+converted to use folios instead of pages.
+
+----------------------------------------------------------------
+Matthew Wilcox (Oracle) (24):
+      block: Add bio_add_folio()
+      block: Add bio_for_each_folio_all()
+      fs/buffer: Convert __block_write_begin_int() to take a folio
+      iomap: Convert to_iomap_page to take a folio
+      iomap: Convert iomap_page_create to take a folio
+      iomap: Convert iomap_page_release to take a folio
+      iomap: Convert iomap_releasepage to use a folio
+      iomap: Add iomap_invalidate_folio
+      iomap: Pass the iomap_page into iomap_set_range_uptodate
+      iomap: Convert bio completions to use folios
+      iomap: Use folio offsets instead of page offsets
+      iomap: Convert iomap_read_inline_data to take a folio
+      iomap: Convert readahead and readpage to use a folio
+      iomap: Convert iomap_page_mkwrite to use a folio
+      iomap: Convert __iomap_zero_iter to use a folio
+      iomap: Convert iomap_write_begin() and iomap_write_end() to folios
+      iomap: Convert iomap_write_end_inline to take a folio
+      iomap,xfs: Convert ->discard_page to ->discard_folio
+      iomap: Simplify iomap_writepage_map()
+      iomap: Simplify iomap_do_writepage()
+      iomap: Convert iomap_add_to_ioend() to take a folio
+      iomap: Convert iomap_migrate_page() to use folios
+      iomap: Support large folios in invalidatepage
+      xfs: Support large folios
+
+ Documentation/core-api/kernel-api.rst |   1 +
+ block/bio.c                           |  22 ++
+ fs/buffer.c                           |  23 +-
+ fs/internal.h                         |   2 +-
+ fs/iomap/buffered-io.c                | 510 +++++++++++++++++-----------------
+ fs/xfs/xfs_aops.c                     |  24 +-
+ fs/xfs/xfs_icache.c                   |   2 +
+ include/linux/bio.h                   |  56 +++-
+ include/linux/iomap.h                 |   3 +-
+ 9 files changed, 365 insertions(+), 278 deletions(-)
+
