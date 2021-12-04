@@ -2,38 +2,43 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7521C433F5
-	for <linux-xfs@archiver.kernel.org>; Fri,  3 Dec 2021 18:48:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D353DC433EF
+	for <linux-xfs@archiver.kernel.org>; Sat,  4 Dec 2021 23:50:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343582AbhLCSva (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 3 Dec 2021 13:51:30 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56762 "EHLO
+        id S242688AbhLDXxs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 4 Dec 2021 18:53:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43730 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233187AbhLCSva (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Dec 2021 13:51:30 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B17BC061751;
-        Fri,  3 Dec 2021 10:48:06 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Type:MIME-Version:Message-ID:
-        Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
-        Content-Description:In-Reply-To:References;
-        bh=kF6dmKlPKnjUDrUnQOFbFf+3qy5XKLqFHNl3T/IoT5I=; b=HrIXJSAhpv5A42dLxSAvzmFi2l
-        i4Upfw202xAcBuWfW8eLIHpzOCYwb5mWQh3Y4RiKwoaOltJoMvEo485AtvZLPQMd9De7UxVF8uGFY
-        YOha9TFu8gwOhpZMIbdxCz3Okdk/dfQuDtD5bz6kE9t7gTDrU3VgL0VCuRN6nXpUTTEsb0iFKay2C
-        l4zQehntOL7UKleJy2EHltIJm6Txkc0vZ+wGZVEX8BOvKGhlNRgxO6mOwl8Xj7MzTXVCwdMCNdbvy
-        uBAuKDq7/B69hXM6fPFgrW20jeuJfnXbdlJ1R3S+Tk4UyqXEGQdmG1+trEW6fLtnLIVOJ+JtL6kzY
-        Z6/p1/DQ==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mtDbG-009pzR-Q8; Fri, 03 Dec 2021 18:48:02 +0000
-Date:   Fri, 3 Dec 2021 18:48:02 +0000
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Christoph Hellwig <hch@infradead.org>,
-        "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org
-Subject: [GIT PULL] iomap folio conversion for 5.17
-Message-ID: <YapmYhfP3Vx2m9CJ@casper.infradead.org>
+        with ESMTP id S237288AbhLDXxs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 4 Dec 2021 18:53:48 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53A3CC061751;
+        Sat,  4 Dec 2021 15:50:22 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 282AF60F38;
+        Sat,  4 Dec 2021 23:50:21 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 858D7C341C2;
+        Sat,  4 Dec 2021 23:50:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1638661820;
+        bh=lPaMoq+uYE2nvrehPrXnlxNMoWmUyyxs7MiDVXwMv28=;
+        h=Date:From:To:Cc:Subject:From;
+        b=DQEwIFOBJgrKBSmsQimXnHKF5VDak81Zyy7qKlsc56eGjYgISW+UVV+qOdF4yp4/v
+         wis/l49FDZuMVWNuRXsCFj2hjX5AT0KMb3CTMKhjuUoJuPuO+o3eZM3LCgk70HlRp4
+         fj9LiMryDd2XcsfmwG0ho0q98gWLHn3u32WGSfzlZEgzcMT2444bva29ppGO234vmo
+         hbcLHHAwWoDIy7k+sdAf5mqt+UpzxpQBBA+ikkUXCgM8p5wjJDB+H6mFJkD/N9EhGQ
+         zpp/rhDxpTOskc9vkbVYU4VsKp8SlKfFYoaVrGVSyOCst42R/cQevviT4I9EU9s9IX
+         q0g1B0biSUvug==
+Date:   Sat, 4 Dec 2021 15:50:20 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        david@fromorbit.com, linux-kernel@vger.kernel.org,
+        sandeen@sandeen.net, hch@lst.de
+Subject: [GIT PULL] xfs: bug fixes for 5.16-rc3
+Message-ID: <20211204235020.GO8467@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -41,68 +46,37 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Darrick,
+Hi Linus,
 
-Would you like to pull the folio changes from my git tree?
-They are generally as posted previously, with minor tweaks to match
-upstream changes.  They do not introduce any new xfstests problems
-in my testing.
+Please pull this branch for 5.16-rc3 which removes a broken and
+pointless debugging assertion.
 
-The following changes since commit d58071a8a76d779eedab38033ae4c821c30295a5:
+The branch merges cleanly against upstream as of a few minutes ago.
+Please let me know if anything else strange happens during the merge
+process.
 
-  Linux 5.16-rc3 (2021-11-28 14:09:19 -0800)
+--D
+
+The following changes since commit 1090427bf18f9835b3ccbd36edf43f2509444e27:
+
+  xfs: remove xfs_inew_wait (2021-11-24 10:06:02 -0800)
 
 are available in the Git repository at:
 
-  git://git.infradead.org/users/willy/linux.git tags/iomap-folio-5.17
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.16-fixes-2
 
-for you to fetch changes up to 0976b3cc2108b11c106ecad72459cceb35158553:
+for you to fetch changes up to e445976537ad139162980bee015b7364e5b64fff:
 
-  xfs: Support large folios (2021-11-29 08:30:52 -0500)
-
-----------------------------------------------------------------
-Convert fs/iomap to use folios
-
-These patches prepare XFS to use large folios to cache files.
-There are some preliminary patches to add folio interfaces to the
-block layer & buffer layer, then all the iomap functions are
-converted to use folios instead of pages.
+  xfs: remove incorrect ASSERT in xfs_rename (2021-12-01 17:27:48 -0800)
 
 ----------------------------------------------------------------
-Matthew Wilcox (Oracle) (24):
-      block: Add bio_add_folio()
-      block: Add bio_for_each_folio_all()
-      fs/buffer: Convert __block_write_begin_int() to take a folio
-      iomap: Convert to_iomap_page to take a folio
-      iomap: Convert iomap_page_create to take a folio
-      iomap: Convert iomap_page_release to take a folio
-      iomap: Convert iomap_releasepage to use a folio
-      iomap: Add iomap_invalidate_folio
-      iomap: Pass the iomap_page into iomap_set_range_uptodate
-      iomap: Convert bio completions to use folios
-      iomap: Use folio offsets instead of page offsets
-      iomap: Convert iomap_read_inline_data to take a folio
-      iomap: Convert readahead and readpage to use a folio
-      iomap: Convert iomap_page_mkwrite to use a folio
-      iomap: Convert __iomap_zero_iter to use a folio
-      iomap: Convert iomap_write_begin() and iomap_write_end() to folios
-      iomap: Convert iomap_write_end_inline to take a folio
-      iomap,xfs: Convert ->discard_page to ->discard_folio
-      iomap: Simplify iomap_writepage_map()
-      iomap: Simplify iomap_do_writepage()
-      iomap: Convert iomap_add_to_ioend() to take a folio
-      iomap: Convert iomap_migrate_page() to use folios
-      iomap: Support large folios in invalidatepage
-      xfs: Support large folios
+Fixes for 5.16-rc3:
+ - Remove an unnecessary (and backwards) rename flags check that
+   duplicates a VFS level check.
 
- Documentation/core-api/kernel-api.rst |   1 +
- block/bio.c                           |  22 ++
- fs/buffer.c                           |  23 +-
- fs/internal.h                         |   2 +-
- fs/iomap/buffered-io.c                | 510 +++++++++++++++++-----------------
- fs/xfs/xfs_aops.c                     |  24 +-
- fs/xfs/xfs_icache.c                   |   2 +
- include/linux/bio.h                   |  56 +++-
- include/linux/iomap.h                 |   3 +-
- 9 files changed, 365 insertions(+), 278 deletions(-)
+----------------------------------------------------------------
+Eric Sandeen (1):
+      xfs: remove incorrect ASSERT in xfs_rename
 
+ fs/xfs/xfs_inode.c | 1 -
+ 1 file changed, 1 deletion(-)
