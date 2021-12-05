@@ -2,20 +2,44 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D95CC433FE
-	for <linux-xfs@archiver.kernel.org>; Sun,  5 Dec 2021 17:49:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DBA5FC433FE
+	for <linux-xfs@archiver.kernel.org>; Sun,  5 Dec 2021 17:57:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236689AbhLERxU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 5 Dec 2021 12:53:20 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:56210 "EHLO
-        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231867AbhLERxU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 5 Dec 2021 12:53:20 -0500
+        id S236991AbhLESAc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 5 Dec 2021 13:00:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52640 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236986AbhLESAc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 5 Dec 2021 13:00:32 -0500
+Received: from buxtehude.debian.org (buxtehude.debian.org [IPv6:2607:f8f0:614:1::1274:39])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CCA96C061714
+        for <linux-xfs@vger.kernel.org>; Sun,  5 Dec 2021 09:57:04 -0800 (PST)
+Received: from debbugs by buxtehude.debian.org with local (Exim 4.92)
+        (envelope-from <debbugs@buxtehude.debian.org>)
+        id 1mtvl2-0008LG-4j; Sun, 05 Dec 2021 17:57:04 +0000
+X-Loop: owner@bugs.debian.org
+Subject: Bug#1000974: [PATCH xfsprogs-5.14.2 URGENT] libxfs: hide the drainbamaged fallthrough macro from xfslibs
+Reply-To: "Darrick J. Wong" <djwong@kernel.org>, 1000974@bugs.debian.org
+X-Loop: owner@bugs.debian.org
+X-Debian-PR-Message: followup 1000974
+X-Debian-PR-Package: xfslibs-dev
+X-Debian-PR-Keywords: 
+References: <163839370805.58768.6385074074873965943.reportbug@zbuz.infomaniak.ch>
+X-Debian-PR-Source: xfsprogs
+Received: via spool by 1000974-submit@bugs.debian.org id=B1000974.163872698831903
+          (code B ref 1000974); Sun, 05 Dec 2021 17:57:03 +0000
+Received: (at 1000974) by bugs.debian.org; 5 Dec 2021 17:56:28 +0000
+Received: from dfw.source.kernel.org ([2604:1380:4641:c500::1]:49354)
+        by buxtehude.debian.org with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <djwong@kernel.org>)
+        id 1mtvkS-0008IJ-64
+        for 1000974@bugs.debian.org; Sun, 05 Dec 2021 17:56:28 +0000
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8991261125
-        for <linux-xfs@vger.kernel.org>; Sun,  5 Dec 2021 17:49:52 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7F6866111F;
+        Sun,  5 Dec 2021 17:49:52 +0000 (UTC)
 Received: by smtp.kernel.org (Postfix) with ESMTPSA id D8282C00446;
         Sun,  5 Dec 2021 17:49:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
@@ -35,15 +59,15 @@ Cc:     Thomas Goirand <zigo@debian.org>, 1000974@bugs.debian.org,
         Giovanni Mascellani <gio@debian.org>,
         xfslibs-dev@packages.debian.org, xfs <linux-xfs@vger.kernel.org>,
         gustavoars@kernel.org, keescook@chromium.org
-Subject: [PATCH xfsprogs-5.14.2 URGENT] libxfs: hide the drainbamaged
- fallthrough macro from xfslibs
 Message-ID: <20211205174951.GQ8467@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+X-Greylist: delayed 393 seconds by postgrey-1.36 at buxtehude; Sun, 05 Dec 2021 17:56:27 UTC
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
+Message-ID: <20211205174951.Mgyb6I6-3Ltk7qZPwKaX6rkN4UJBW2XFCYI_I2GBZHo@z>
 
 From: Darrick J. Wong <djwong@kernel.org>
 
