@@ -2,81 +2,66 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D353DC433EF
-	for <linux-xfs@archiver.kernel.org>; Sat,  4 Dec 2021 23:50:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA4B5C433EF
+	for <linux-xfs@archiver.kernel.org>; Sun,  5 Dec 2021 01:28:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242688AbhLDXxs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 4 Dec 2021 18:53:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43730 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237288AbhLDXxs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 4 Dec 2021 18:53:48 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53A3CC061751;
-        Sat,  4 Dec 2021 15:50:22 -0800 (PST)
+        id S230415AbhLEBba (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 4 Dec 2021 20:31:30 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:36128 "EHLO
+        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230204AbhLEBb3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 4 Dec 2021 20:31:29 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 282AF60F38;
-        Sat,  4 Dec 2021 23:50:21 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 858D7C341C2;
-        Sat,  4 Dec 2021 23:50:20 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 5680DB80D40;
+        Sun,  5 Dec 2021 01:28:02 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id F3BE2C341C0;
+        Sun,  5 Dec 2021 01:28:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1638661820;
-        bh=lPaMoq+uYE2nvrehPrXnlxNMoWmUyyxs7MiDVXwMv28=;
-        h=Date:From:To:Cc:Subject:From;
-        b=DQEwIFOBJgrKBSmsQimXnHKF5VDak81Zyy7qKlsc56eGjYgISW+UVV+qOdF4yp4/v
-         wis/l49FDZuMVWNuRXsCFj2hjX5AT0KMb3CTMKhjuUoJuPuO+o3eZM3LCgk70HlRp4
-         fj9LiMryDd2XcsfmwG0ho0q98gWLHn3u32WGSfzlZEgzcMT2444bva29ppGO234vmo
-         hbcLHHAwWoDIy7k+sdAf5mqt+UpzxpQBBA+ikkUXCgM8p5wjJDB+H6mFJkD/N9EhGQ
-         zpp/rhDxpTOskc9vkbVYU4VsKp8SlKfFYoaVrGVSyOCst42R/cQevviT4I9EU9s9IX
-         q0g1B0biSUvug==
-Date:   Sat, 4 Dec 2021 15:50:20 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        s=k20201202; t=1638667681;
+        bh=x/fGfUY2oNx8jHFZm5dAp1OimT43bokcJgnNjwjavi4=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=T/M9tDnUIHJJ60Ydd5tYm/7fJo4FQQK1VTEh07RMGTxg0Ya0eIRXxG5D9LX76IMOe
+         C344sE2kHfOj8dEKna6dy+svoNu2wgvQMBHRmgW7N7UW86jwxcWFlJg2egzfDjIVh7
+         pZwUvqcFmwK/AulvG7udR0EEdVIPFM7YqhVkZmoktcXrymc0TT5nqkHgJrW9PggDYy
+         uodKOd6xBIElh+cloNWemCET12BZJBZSwfYNNTLRXwYdTeDPLjliVrLcwfXlPka0ez
+         RHsCm1jdsRRv7+iyDYeqW0aeBc8VE7yR4W/9CENgH/d3dff9X/AC7b8zDPvD61gceX
+         09RAJ27PFWBow==
+Received: from pdx-korg-docbuild-2.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by pdx-korg-docbuild-2.ci.codeaurora.org (Postfix) with ESMTP id C2F5A60A7E;
+        Sun,  5 Dec 2021 01:28:00 +0000 (UTC)
+Subject: Re: [GIT PULL] xfs: bug fixes for 5.16-rc3
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <20211204235020.GO8467@magnolia>
+References: <20211204235020.GO8467@magnolia>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20211204235020.GO8467@magnolia>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.16-fixes-2
+X-PR-Tracked-Commit-Id: e445976537ad139162980bee015b7364e5b64fff
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 79a72162048e42a677bc7336a9f5d86fc3ff9558
+Message-Id: <163866768073.6146.4028609779231917827.pr-tracker-bot@kernel.org>
+Date:   Sun, 05 Dec 2021 01:28:00 +0000
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
         david@fromorbit.com, linux-kernel@vger.kernel.org,
         sandeen@sandeen.net, hch@lst.de
-Subject: [GIT PULL] xfs: bug fixes for 5.16-rc3
-Message-ID: <20211204235020.GO8467@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Linus,
+The pull request you sent on Sat, 4 Dec 2021 15:50:20 -0800:
 
-Please pull this branch for 5.16-rc3 which removes a broken and
-pointless debugging assertion.
+> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.16-fixes-2
 
-The branch merges cleanly against upstream as of a few minutes ago.
-Please let me know if anything else strange happens during the merge
-process.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/79a72162048e42a677bc7336a9f5d86fc3ff9558
 
---D
+Thank you!
 
-The following changes since commit 1090427bf18f9835b3ccbd36edf43f2509444e27:
-
-  xfs: remove xfs_inew_wait (2021-11-24 10:06:02 -0800)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.16-fixes-2
-
-for you to fetch changes up to e445976537ad139162980bee015b7364e5b64fff:
-
-  xfs: remove incorrect ASSERT in xfs_rename (2021-12-01 17:27:48 -0800)
-
-----------------------------------------------------------------
-Fixes for 5.16-rc3:
- - Remove an unnecessary (and backwards) rename flags check that
-   duplicates a VFS level check.
-
-----------------------------------------------------------------
-Eric Sandeen (1):
-      xfs: remove incorrect ASSERT in xfs_rename
-
- fs/xfs/xfs_inode.c | 1 -
- 1 file changed, 1 deletion(-)
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
