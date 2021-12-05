@@ -2,66 +2,84 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA4B5C433EF
-	for <linux-xfs@archiver.kernel.org>; Sun,  5 Dec 2021 01:28:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 004A6C433F5
+	for <linux-xfs@archiver.kernel.org>; Sun,  5 Dec 2021 15:57:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230415AbhLEBba (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 4 Dec 2021 20:31:30 -0500
-Received: from ams.source.kernel.org ([145.40.68.75]:36128 "EHLO
-        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230204AbhLEBb3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 4 Dec 2021 20:31:29 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 5680DB80D40;
-        Sun,  5 Dec 2021 01:28:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id F3BE2C341C0;
-        Sun,  5 Dec 2021 01:28:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1638667681;
-        bh=x/fGfUY2oNx8jHFZm5dAp1OimT43bokcJgnNjwjavi4=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=T/M9tDnUIHJJ60Ydd5tYm/7fJo4FQQK1VTEh07RMGTxg0Ya0eIRXxG5D9LX76IMOe
-         C344sE2kHfOj8dEKna6dy+svoNu2wgvQMBHRmgW7N7UW86jwxcWFlJg2egzfDjIVh7
-         pZwUvqcFmwK/AulvG7udR0EEdVIPFM7YqhVkZmoktcXrymc0TT5nqkHgJrW9PggDYy
-         uodKOd6xBIElh+cloNWemCET12BZJBZSwfYNNTLRXwYdTeDPLjliVrLcwfXlPka0ez
-         RHsCm1jdsRRv7+iyDYeqW0aeBc8VE7yR4W/9CENgH/d3dff9X/AC7b8zDPvD61gceX
-         09RAJ27PFWBow==
-Received: from pdx-korg-docbuild-2.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by pdx-korg-docbuild-2.ci.codeaurora.org (Postfix) with ESMTP id C2F5A60A7E;
-        Sun,  5 Dec 2021 01:28:00 +0000 (UTC)
-Subject: Re: [GIT PULL] xfs: bug fixes for 5.16-rc3
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <20211204235020.GO8467@magnolia>
-References: <20211204235020.GO8467@magnolia>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20211204235020.GO8467@magnolia>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.16-fixes-2
-X-PR-Tracked-Commit-Id: e445976537ad139162980bee015b7364e5b64fff
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 79a72162048e42a677bc7336a9f5d86fc3ff9558
-Message-Id: <163866768073.6146.4028609779231917827.pr-tracker-bot@kernel.org>
-Date:   Sun, 05 Dec 2021 01:28:00 +0000
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        david@fromorbit.com, linux-kernel@vger.kernel.org,
-        sandeen@sandeen.net, hch@lst.de
+        id S229838AbhLEQAk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 5 Dec 2021 11:00:40 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54786 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235777AbhLEQAj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 5 Dec 2021 11:00:39 -0500
+Received: from buxtehude.debian.org (buxtehude.debian.org [IPv6:2607:f8f0:614:1::1274:39])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5DBCC061751
+        for <linux-xfs@vger.kernel.org>; Sun,  5 Dec 2021 07:57:11 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=bugs.debian.org; s=smtpauto.buxtehude; h=Date:References:Message-ID:Subject
+        :CC:To:From:Content-Type:MIME-Version:Content-Transfer-Encoding:Reply-To:
+        Content-ID:Content-Description:In-Reply-To;
+        bh=s92JIsqE7tK9oqfvEvF7lLW7fk9RSEo//s62g3OtueY=; b=oIwfmTxhpNjq5ipuavHWUQslwx
+        /jioSO6YPoOV9mzu4q/N3KQ9LJjqZz2yuZwJnvlyESvMTepCc2MO7XYyOEnwRvx+1ozoGWt6aoDGE
+        y1MCiSsqcqld9QXUjv6iYW4a4xUsTofTujt6ar+LprpKMXf9Iy5kDlpQwlZWJqiH51KJoxgr+14gT
+        NjCEX2cX7Lj2n4Gep3rSPqWN2k8xd8iTHmMx9PCVDmJgfzyrWto11aq8KzrY/TENbSwixwia3B18L
+        7fWQoetGDw+GhSqZObkkaHS2/N2K0wnjVHHqhHPAwBsAl9+GHsyfVm+fD1yeMpx/3IImSnNmiWPEg
+        pnD2cihw==;
+Received: from debbugs by buxtehude.debian.org with local (Exim 4.92)
+        (envelope-from <debbugs@buxtehude.debian.org>)
+        id 1mttsx-0000j2-Vo; Sun, 05 Dec 2021 15:57:07 +0000
+X-Loop: owner@bugs.debian.org
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-Mailer: MIME-tools 5.509 (Entity 5.509)
+Content-Type: text/plain; charset=utf-8
+From:   "Debian Bug Tracking System" <owner@bugs.debian.org>
+To:     Giovanni Mascellani <gio@debian.org>
+CC:     linux-xfs@vger.kernel.org, team+boost@tracker.debian.org
+Subject: Processed (with 1 error): Re: Bug#1000974: copy_move_algo.hpp:1083:10:
+ error: =?UTF-8?Q?=E2=80=98=5F=5Ffallthrough=5F=5F=E2=80=99?= was not
+ declared in this scope; did you mean =?UTF-8?Q?=E2=80=98fallthrough=E2=80=99=3F?=
+Message-ID: <handler.s.C.16387197672501.transcript@bugs.debian.org>
+References: <c7ccff50-c177-7f96-2d99-2077f77374ad@debian.org>
+X-Debian-PR-Package: libboost1.74-dev xfslibs-dev
+X-Debian-PR-Source: boost1.74 xfsprogs
+X-Debian-PR-Message: transcript
+X-Loop: owner@bugs.debian.org
+Date:   Sun, 05 Dec 2021 15:57:07 +0000
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The pull request you sent on Sat, 4 Dec 2021 15:50:20 -0800:
+Processing commands for control@bugs.debian.org:
 
-> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.16-fixes-2
+> reassign 1000974 xfslibs-dev
+Bug #1000974 [libboost1.74-dev] copy_move_algo.hpp:1083:10: error: =E2=80=
+=98__fallthrough__=E2=80=99 was not declared in this scope; did you mean =
+=E2=80=98fallthrough=E2=80=99?
+Bug reassigned from package 'libboost1.74-dev' to 'xfslibs-dev'.
+No longer marked as found in versions boost1.74/1.74.0-13.
+Ignoring request to alter fixed versions of bug #1000974 to the same values=
+ previously set
+> severity 1000974 important
+Bug #1000974 [xfslibs-dev] copy_move_algo.hpp:1083:10: error: =E2=80=98__fa=
+llthrough__=E2=80=99 was not declared in this scope; did you mean =E2=80=98=
+fallthrough=E2=80=99?
+Ignoring request to change severity of Bug 1000974 to the same value.
+> retitle 1000974 xfs/linux.h defines common word "fallthrough" breaking
+Bug #1000974 [xfslibs-dev] copy_move_algo.hpp:1083:10: error: =E2=80=98__fa=
+llthrough__=E2=80=99 was not declared in this scope; did you mean =E2=80=98=
+fallthrough=E2=80=99?
+Changed Bug title to 'xfs/linux.h defines common word "fallthrough" breakin=
+g' from 'copy_move_algo.hpp:1083:10: error: =E2=80=98__fallthrough__=E2=80=
+=99 was not declared in this scope; did you mean =E2=80=98fallthrough=E2=80=
+=99?'.
+> unrelated headers
+Unknown command or malformed arguments to command.
+> thanks
+Stopping processing here.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/79a72162048e42a677bc7336a9f5d86fc3ff9558
-
-Thank you!
-
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+Please contact me if you need assistance.
+--=20
+1000974: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D1000974
+Debian Bug Tracking System
+Contact owner@bugs.debian.org with problems
