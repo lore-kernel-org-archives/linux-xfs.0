@@ -2,188 +2,98 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8670FC433EF
-	for <linux-xfs@archiver.kernel.org>; Mon,  6 Dec 2021 22:43:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15A62C433EF
+	for <linux-xfs@archiver.kernel.org>; Mon,  6 Dec 2021 23:26:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237871AbhLFWrJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 6 Dec 2021 17:47:09 -0500
-Received: from sandeen.net ([63.231.237.45]:41108 "EHLO sandeen.net"
+        id S245470AbhLFXa0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 6 Dec 2021 18:30:26 -0500
+Received: from sandeen.net ([63.231.237.45]:41790 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1351120AbhLFWrI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 6 Dec 2021 17:47:08 -0500
+        id S240529AbhLFXaX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 6 Dec 2021 18:30:23 -0500
 Received: from [10.0.0.146] (liberator.sandeen.net [10.0.0.146])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 21F1817DC7;
-        Mon,  6 Dec 2021 16:43:32 -0600 (CST)
-Message-ID: <76f4c73d-6251-2a66-84d8-5807c9b52c29@sandeen.net>
-Date:   Mon, 6 Dec 2021 16:43:37 -0600
+        by sandeen.net (Postfix) with ESMTPSA id F0EFC17DC7
+        for <linux-xfs@vger.kernel.org>; Mon,  6 Dec 2021 17:26:46 -0600 (CST)
+Message-ID: <36f98577-5316-5b96-a2b5-ba5b9f839b8d@sandeen.net>
+Date:   Mon, 6 Dec 2021 17:26:52 -0600
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
  Gecko/20100101 Thunderbird/91.3.2
 Content-Language: en-US
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-References: <0c94c1ed-0f3f-ad3f-d57a-158ea681ce19@sandeen.net>
- <20211206223301.GJ449541@dread.disaster.area>
+To:     xfs <linux-xfs@vger.kernel.org>
 From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: mkfs.xfs ignores data stripe on 4k devices?
-In-Reply-To: <20211206223301.GJ449541@dread.disaster.area>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Subject: [ANNOUNCE] xfsprogs xfsprogs 5.14.2 released (really)
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="------------HyjS7a8nhH5t7XUuikvDzRKA"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 12/6/21 4:33 PM, Dave Chinner wrote:
-> On Mon, Dec 06, 2021 at 01:16:07PM -0600, Eric Sandeen wrote:
->> This seems odd, and unusual to me, but it's been there so long I'm wondering
->> if it's intentional.
->>
->> We have various incarnations of this in mkfs since 2003:
->>
->>          } else if (lsectorsize > XFS_MIN_SECTORSIZE && !lsu && !lsunit) {
->>                  lsu = blocksize;
->>                  logversion = 2;
->>          }
->>
->> which sets the log stripe unit before we query the device geometry, and so
->> with the log stripe unit already set, we ignore subsequent device geometry
->> that may be discovered:
->>
->> # modprobe scsi_debug dev_size_mb=1024 opt_xferlen_exp=10 physblk_exp=3
->>
->> # mkfs.xfs -f /dev/sdh
->> meta-data=/dev/sdh               isize=512    agcount=8, agsize=32768 blks
->>           =                       sectsz=4096  attr=2, projid32bit=1
->>           =                       crc=1        finobt=1, sparse=1, rmapbt=0
->>           =                       reflink=1    bigtime=0 inobtcount=0
->> data     =                       bsize=4096   blocks=262144, imaxpct=25
->>           =                       sunit=128    swidth=128 blks
->>                                   ^^^^^^^^^
-> 
-> su = 512kB.
-> 
-> Max XFS log stripe unit = 256kB.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------------HyjS7a8nhH5t7XUuikvDzRKA
+Content-Type: multipart/mixed; boundary="------------SO6sJU10wMxpZbgJrFclHEAL";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: xfs <linux-xfs@vger.kernel.org>
+Message-ID: <36f98577-5316-5b96-a2b5-ba5b9f839b8d@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs xfsprogs 5.14.2 released (really)
 
-Ok, but I should have showed you another example with a smaller stripe unit,
-sorry.  4k sector device:
+--------------SO6sJU10wMxpZbgJrFclHEAL
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: base64
 
-# modprobe scsi_debug dev_size_mb=1024 opt_xferlen_exp=8 physblk_exp=3
+SGkgZm9sa3MsDQoNClRoZSB4ZnNwcm9ncyByZXBvc2l0b3J5IGF0Og0KDQogICAgIGdpdDov
+L2dpdC5rZXJuZWwub3JnL3B1Yi9zY20vZnMveGZzL3hmc3Byb2dzLWRldi5naXQNCg0KaGFz
+IGp1c3QgYmVlbiB1cGRhdGVkLg0KDQpQYXRjaGVzIG9mdGVuIGdldCBtaXNzZWQsIHNvIHBs
+ZWFzZSBjaGVjayBpZiB5b3VyIG91dHN0YW5kaW5nDQpwYXRjaGVzIHdlcmUgaW4gdGhpcyB1
+cGRhdGUuIElmIHRoZXkgaGF2ZSBub3QgYmVlbiBpbiB0aGlzIHVwZGF0ZSwNCnBsZWFzZSBy
+ZXN1Ym1pdCB0aGVtIHRvIGxpbnV4LXhmc0B2Z2VyLmtlcm5lbC5vcmcgc28gdGhleSBjYW4g
+YmUNCnBpY2tlZCB1cCBpbiB0aGUgbmV4dCB1cGRhdGUuDQoNClRoaXMgaXMgYSBtaW5vciBi
+dXQgaW1wb3J0YW50IHVwZGF0ZSB0byBmaXggbWFjcm8gY29udGFtaW5hdGlvbiBpbiB0aGUN
+CmxpbnV4LmggaGVhZGVyIGZpbGUgc2hpcHBlZCBpbiB0aGUgZGV2ZWxvcG1lbnQgcGFja2Fn
+ZXMuDQpUaGFua3MgYWdhaW4gRGFycmljayENCg0KVGFyYmFsbHMgYXJlIGF2YWlsYWJsZSBh
+dDoNCg0KaHR0cHM6Ly93d3cua2VybmVsLm9yZy9wdWIvbGludXgvdXRpbHMvZnMveGZzL3hm
+c3Byb2dzL3hmc3Byb2dzLTUuMTQuMi50YXIuZ3oNCmh0dHBzOi8vd3d3Lmtlcm5lbC5vcmcv
+cHViL2xpbnV4L3V0aWxzL2ZzL3hmcy94ZnNwcm9ncy94ZnNwcm9ncy01LjE0LjIudGFyLnh6
+DQpodHRwczovL3d3dy5rZXJuZWwub3JnL3B1Yi9saW51eC91dGlscy9mcy94ZnMveGZzcHJv
+Z3MveGZzcHJvZ3MtNS4xNC4yLnRhci5zaWduDQoNClRoZSBuZXcgaGVhZCBvZiB0aGUgbWFz
+dGVyIGJyYW5jaCBpcyBjb21taXQ6DQoNCjBjZGM2OGMzIHhmc3Byb2dzOiBSZWxlYXNlIHY1
+LjE0LjINCg0KTmV3IENvbW1pdHM6DQoNCkRhcnJpY2sgSi4gV29uZyAoMSk6DQogICAgICAg
+WzEzNWNlMWVkXSBsaWJ4ZnM6IGhpZGUgdGhlIGRyYWluYmFtYWdlZCBmYWxsdGhyb3VnaCBt
+YWNybyBmcm9tIHhmc2xpYnMNCg0KRXJpYyBTYW5kZWVuICgxKToNCiAgICAgICBbMGNkYzY4
+YzNdIHhmc3Byb2dzOiBSZWxlYXNlIHY1LjE0LjINCg0KDQpDb2RlIERpZmZzdGF0Og0KDQog
+IFZFUlNJT04gICAgICAgICAgICAgICAgICAgIHwgIDIgKy0NCiAgY29uZmlndXJlLmFjICAg
+ICAgICAgICAgICAgfCAgMiArLQ0KICBkZWJpYW4vY2hhbmdlbG9nICAgICAgICAgICB8ICA3
+ICsrKysrKysNCiAgZG9jL0NIQU5HRVMgICAgICAgICAgICAgICAgfCAgMyArKysNCiAgaW5j
+bHVkZS9saW51eC5oICAgICAgICAgICAgfCAyNSArKysrKysrLS0tLS0tLS0tLS0tLS0tLS0t
+DQogIGluY2x1ZGUvcGxhdGZvcm1fZGVmcy5oLmluIHwgMjEgKysrKysrKysrKysrKysrKysr
+KysrDQogIDYgZmlsZXMgY2hhbmdlZCwgNDAgaW5zZXJ0aW9ucygrKSwgMjAgZGVsZXRpb25z
+KC0pDQoNCg==
 
-# mkfs.xfs -f /dev/sdh
-meta-data=/dev/sdh               isize=512    agcount=8, agsize=32736 blks
-          =                       sectsz=4096  attr=2, projid32bit=1
-          =                       crc=1        finobt=1, sparse=1, rmapbt=0
-          =                       reflink=1    bigtime=0 inobtcount=0
-data     =                       bsize=4096   blocks=261888, imaxpct=25
-          =                       sunit=32     swidth=128 blks
-                                  ^^^^^^^^
-naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-log      =internal log           bsize=4096   blocks=1221, version=2
-          =                       sectsz=4096  sunit=1 blks, lazy-count=1
-                                               ^^^^^^^
-realtime =none                   extsz=4096   blocks=0, rtextents=0
+--------------SO6sJU10wMxpZbgJrFclHEAL--
 
+--------------HyjS7a8nhH5t7XUuikvDzRKA
+Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="OpenPGP_signature"
 
-512b sector device:
+-----BEGIN PGP SIGNATURE-----
 
-# modprobe scsi_debug dev_size_mb=1024 opt_xferlen_exp=8 physblk_exp=0
+wsF5BAABCAAjFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAmGunDwFAwAAAAAACgkQIK4WkuE93uB4
+bhAAxS7LR10kWMtFNPV7ZS6Wd5UE8Y08tLsiZWtdemaS++CXMRZdpvHqH3wqlQmIQoW29z4lQgdo
+vS59dJuy/vF3amDwFuAoSfDcDeDhGq2MXJGj5BrcYisPQSu770lbCgKc3hcm4Y1UPKZDAp0Y1zJQ
+jRnKZHoq8LHWGq9tecGfe2MthY82c1ZqKSijJYawmEBftaeRRHtWWn3x7a8BLGg/kwKBHvUMBOaA
+Avgl/GwMx8PRQ5U//+IxYJt5OxLm3HahwKNFoz2wAfQsjDgCs7JsaWiJyVsU6j1Mc5qcHy/pbmHY
+KTF6NV9mxEmNbU9R/E32ZBKqTQuPBUTXjm/zC8t93suFFFAHtxviucTL1B70jAZxrVP8PnNEqZtG
+39Rub9ea4uG6bSSQxnZbQZ3wEV1SNKi9YvQFW4l4/5/kKxAbrJFDA6Pa6zFVNMJpdPys2wla4cYp
+wgBQf9WnPovneigZhFAXGxZAgo3uYntEjGIKxjzrZMNoFVcZeKjUpKhlQFmIEDMyEIq4CH2BFvBa
+/nTVFZ91YxNOJ0Bh9XfGqYhOODkk53fKT+o4CSLr69g09KX7mMfW6Q4B13fO7S0abj4DR2liNxZR
+sFprOzW6FeRAb33DHeBbkqtGLnJ69Fdd/wDQhM7cgWuu/0wzaIKaRP4CUZ+ZdI+05/AfoCZf9Y0I
+vBw=
+=EC3I
+-----END PGP SIGNATURE-----
 
-# mkfs.xfs -f /dev/sdh
-meta-data=/dev/sdh               isize=512    agcount=8, agsize=32736 blks
-          =                       sectsz=512   attr=2, projid32bit=1
-          =                       crc=1        finobt=1, sparse=1, rmapbt=0
-          =                       reflink=1    bigtime=0 inobtcount=0
-data     =                       bsize=4096   blocks=261888, imaxpct=25
-          =                       sunit=32     swidth=128 blks
-                                  ^^^^^^^^
-naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-log      =internal log           bsize=4096   blocks=2784, version=2
-          =                       sectsz=512   sunit=32 blks, lazy-count=1
-                                               ^^^^^^^
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-
-we're only ignoring the device geometry on 4k devices, for the reason indicated
-in my original email.
-
-> It used to emit a warning and set the lsu=32kB, but we decided that
-> the error message was harmful for automatically calculated values.
-> I wonder who decided to remove that?
-
-That's not my complaint though. I do think that if we auto-reduce, we should
-not emit warnings the user can't do anything about.  Hence my change. ;)
-
-> commit 392e896e41fdaffd6fcc51e270a61b91bf9ff2fe
-> Author: Eric Sandeen <sandeen@sandeen.net>
-> Date:   Wed Oct 29 16:35:02 2014 +1100
-> 
->      mkfs: don't warn about log sunit size if it was auto-discovered
-
-<snip>
-
-> 
-> :)
-
-:P
-  
->> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
->> log      =internal log           bsize=4096   blocks=2560, version=2
->>           =                       sectsz=4096  sunit=1 blks, lazy-count=1
->>                                                ^^^^^^^^^^^^
->> realtime =none                   extsz=4096   blocks=0, rtextents=0
->>
->> surely this is unintentional and suboptimal? But please sanity-check me,
->> I don't know how this could have stood since 2003 w/o being noticed...
-> 
-> As for why we drop back to teh default non-stripe aligned value
-> rather than 32kB now?
-
-we actually still do. Just not on 4k drives.
-
-> Well, 32kB was completely arbitrary, and any non-zero log stripe
-> unit is known to be detrimental to fsync heavy workloads because all
-> the iclog padding consumed all the available disk bandwidth rather
-> than actual data or metadata changes. So lsu=32kB is not necessarily
-> better than lsu=4kB for storage with large stripe units.
-> 
-> That's especially true now that we only issue flush/FUA operations for
-> start/commit iclog writes and not for all the intermediate iclogs in
-> a checkpoint.  Hence iclogs writes will get merged much more often
-> and optimised by the block layer for RAID stripes regardless of
-> their alignment.
-> 
-> Whether the change was intentional? Probably not. the stripe unit
-> code was spaghettied through the mkfs code, and the commit that
-> cleaned this up:
-> 
-> commit 2f44b1b0e5adc46616b096c7b1e52b60c4461029
-> Author: Dave Chinner <dchinner@redhat.com>
-> Date:   Wed Dec 6 17:14:27 2017 -0600
-> 
->      mkfs: rework stripe calculations
->      
->      The data and log stripe calculations a spaghettied all over the mkfs
->      code. This patch pulls all of the different chunks of code together
->      into calc_stripe_factors() and removes all the redundant/repeated
->      checks and calculations that are made.
->      
->      Signed-Off-By: Dave Chinner <dchinner@redhat.com>
->      Reviewed-by: Eric Sandeen <sandeen@redhat.com>
->      Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-> 
-> Appears to have changed this specific case as large sector sizes
-> now set the default lsunit long before we try to apply the default
-> stripe aligned value for a filesystem with no specific lsunit being
-> set.
-> 
-> As much as there may be an unintentional difference here, I'll argue
-> that the current behaviour has less potential negative effects on
-> performance than the old one of defaulting to 32kB for such
-> configurations....
-
-Ok, but surely it should not differ between 512b and 4k devices.
-That was my (poorly communicated) concern.
-
-Thanks,
--Eric
+--------------HyjS7a8nhH5t7XUuikvDzRKA--
