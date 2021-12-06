@@ -2,107 +2,150 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E92ABC433F5
-	for <linux-xfs@archiver.kernel.org>; Mon,  6 Dec 2021 17:29:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21FF6C43217
+	for <linux-xfs@archiver.kernel.org>; Mon,  6 Dec 2021 18:53:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241476AbhLFRdD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 6 Dec 2021 12:33:03 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:46160 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S236887AbhLFRdC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Dec 2021 12:33:02 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1638811773;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type;
-        bh=pluou9dkTfeERh9h0sY468HkUZGgU4PhxIEm9kg/E4c=;
-        b=iRwsjFLpXAL61ZTMBy2ehnE9CDJX/5hePaIFqGctecCO8aJg6Pun/7oPUnfmKYhOLli6CZ
-        c3qGCeoLxB+2gB2QtdfCHDPg/Ymp0g4Fx3TkezKhmFYFy6UaJqo/oM2VNgMknjYppSEmoL
-        Yc3kmDc5e2rTNMbpbHxNs3XYNVUmc7k=
-Received: from mail-qv1-f71.google.com (mail-qv1-f71.google.com
- [209.85.219.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-66-x8Fv0pLcM0Cg9Cw4QnY-iQ-1; Mon, 06 Dec 2021 12:29:32 -0500
-X-MC-Unique: x8Fv0pLcM0Cg9Cw4QnY-iQ-1
-Received: by mail-qv1-f71.google.com with SMTP id q9-20020ad45749000000b003bdeb0612c5so13041565qvx.8
-        for <linux-xfs@vger.kernel.org>; Mon, 06 Dec 2021 09:29:32 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition;
-        bh=pluou9dkTfeERh9h0sY468HkUZGgU4PhxIEm9kg/E4c=;
-        b=BXB8+UpOihtkAVvkGYD3xFkLRWEIYABkMcU/++nzVrVoRQ9+/uu4Qu9LAJ5iDKJb9c
-         +uTYALF5NUTfID4fafKCx2tbnHCsRvgdld/Qajj4BdQV+8iI1hg1a38taPrmb6LboTNc
-         +iENafbdqgwE6irsBaKkBSY6KC+tgyq8r2WJJZWOf/WqLySSd4vi/kvIjBmTR5IbUABG
-         Y+o8pUQKnoAzSQt0M6CXeK3zGDnd8Gx5hBNQqIKwC8M2GXPdBli7vnZausoX1zNlhBjb
-         ZSdNHRv5naG/EsFLhycVMxkpNf4toEZsa2kZm3etIcFcXSkcfnFx6H+DPnyLNv9gt9UZ
-         Yuqg==
-X-Gm-Message-State: AOAM530slYtqO1xe589DkO6MhtR4C7KRUYmewfnBnBgkGrHfhzMbm0S+
-        dSy5mampQgdxn1Pt5+ymvZtH5z2znGNi65q83UrB0ips13hsHg/CeAi8U0mjsIe1aQZwdeoEQjy
-        HxFW57AFWm4WRpqMnIV6/6FukF5/rii+fvd3/9K9HwmFGGs8RKBVFQs8SlkYF1Xxs+JaA2o4=
-X-Received: by 2002:a05:6214:e66:: with SMTP id jz6mr38609867qvb.20.1638811771754;
-        Mon, 06 Dec 2021 09:29:31 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJyvbdh9YZT4N8DhBSleru2VC9+oXuAlUNTGr+zSmXmYTsDmrMaksJ4xrxr9dJns4eVYOjjzAw==
-X-Received: by 2002:a05:6214:e66:: with SMTP id jz6mr38609833qvb.20.1638811771455;
-        Mon, 06 Dec 2021 09:29:31 -0800 (PST)
-Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
-        by smtp.gmail.com with ESMTPSA id l15sm8054678qtx.77.2021.12.06.09.29.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 06 Dec 2021 09:29:31 -0800 (PST)
-Date:   Mon, 6 Dec 2021 12:29:28 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     Dave Chinner <dchinner@redhat.com>,
-        Gonzalo Siero Humet <gsierohu@redhat.com>
-Subject: [RFD] XFS inode reclaim (inactivation) under fs freeze
-Message-ID: <Ya5IeB3iBBcpD1z+@bfoster>
+        id S1347816AbhLFS4k (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 6 Dec 2021 13:56:40 -0500
+Received: from mail-dm6nam10on2084.outbound.protection.outlook.com ([40.107.93.84]:3425
+        "EHLO NAM10-DM6-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1348025AbhLFS4e (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 6 Dec 2021 13:56:34 -0500
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=nV+qFWor7OHD2Q/kFKPO94HDl1WsIVaw+bbJRwpgga7HSs+X4kctVpdkZLGSwy653+QyfwSIEkko8mh6kGfLgVoiZZXivAFZLWJQQPC1yzyE6ek6D+3OqRDgY7FrSaPBjdmcbg+7u+OtsIpkxBtk88lfovtF6lOWqxk/Yh6aywkWORF9Z4tq5gvDlxPGas7tVSjFe9xE3Nt6GI2Zki/0XbLOU5Ot6Rkm1sHXLHc6sN5CkSZ7lDKPGJfwx29tFUn+2ZO1X+kp/EEBjOqITnp4KJ+I7Napyg5GDkibLR0TKFLl0JpBLKxtpaWTAM843o5wdqWLKsaOUEugx+kyusfPNw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=SN4TZuTqTKm3s0l6VB7Pala5pjfNrTVsDcquCXNhKko=;
+ b=mk4dZ+L2shHNlyRHXrl2e7D3HJIuTIIgN4kprAIKl2UMaiXDjMaKQPY5QuBhnGmHmnoc5Bz4c17jxzGLNrC0JZyG2rf3Lz0dW4xJsFWFnU8ya8Fcc9sAUm49Xj/OrqU7rpJbW21O99XSEHoAGdMf1rDlNHQQ5txJHVOGIKEyom6lT2x+DWpvk9Zcb15eMrqiU2eRpFpsf1oNuVwgZEL2/t21i8/MYk3cGzS7j+loEDoBuUBrepBth8APEk4bhQTI7zzowBYueGuPccjF3Py/B+8o7Y7eyiaSlHkhw/irShZD9V/U97h00V0tNRgxs6HUWRRKkBykS8Ht44zAwMscNQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=linux-foundation.org smtp.mailfrom=amd.com;
+ dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
+ header.from=amd.com; dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=SN4TZuTqTKm3s0l6VB7Pala5pjfNrTVsDcquCXNhKko=;
+ b=ApOYXAklk/55JuPCJN5r5M+vCJTHm8NhaBb4a2LZv9kx6FsUUd1ADj+O9oy3K/6oyEe39HCWzH1onMJspFwL0EGERSnfvhKcF2KMuNwYA8mQ/8BirCp2Vs9XUswcDVB2gBqUZzOtIMdXaUeZ96dAnQRimBIeG1fzuU+tDatU3/Y=
+Received: from DM5PR15CA0050.namprd15.prod.outlook.com (2603:10b6:3:ae::12) by
+ CY4PR12MB1160.namprd12.prod.outlook.com (2603:10b6:903:38::12) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.4734.22; Mon, 6 Dec 2021 18:53:03 +0000
+Received: from DM6NAM11FT050.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:3:ae:cafe::a8) by DM5PR15CA0050.outlook.office365.com
+ (2603:10b6:3:ae::12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4755.17 via Frontend
+ Transport; Mon, 6 Dec 2021 18:53:03 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=SATLEXMB04.amd.com;
+Received: from SATLEXMB04.amd.com (165.204.84.17) by
+ DM6NAM11FT050.mail.protection.outlook.com (10.13.173.111) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.4755.13 via Frontend Transport; Mon, 6 Dec 2021 18:53:03 +0000
+Received: from alex-MS-7B09.amd.com (10.180.168.240) by SATLEXMB04.amd.com
+ (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.17; Mon, 6 Dec
+ 2021 12:53:01 -0600
+From:   Alex Sierra <alex.sierra@amd.com>
+To:     <akpm@linux-foundation.org>, <Felix.Kuehling@amd.com>,
+        <linux-mm@kvack.org>, <rcampbell@nvidia.com>,
+        <linux-ext4@vger.kernel.org>, <linux-xfs@vger.kernel.org>
+CC:     <amd-gfx@lists.freedesktop.org>, <dri-devel@lists.freedesktop.org>,
+        <hch@lst.de>, <jgg@nvidia.com>, <jglisse@redhat.com>,
+        <apopple@nvidia.com>, <willy@infradead.org>
+Subject: [PATCH v2 02/11] mm: add device coherent vma selection for memory migration
+Date:   Mon, 6 Dec 2021 12:52:42 -0600
+Message-ID: <20211206185251.20646-3-alex.sierra@amd.com>
+X-Mailer: git-send-email 2.32.0
+In-Reply-To: <20211206185251.20646-1-alex.sierra@amd.com>
+References: <20211206185251.20646-1-alex.sierra@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.180.168.240]
+X-ClientProxiedBy: SATLEXMB03.amd.com (10.181.40.144) To SATLEXMB04.amd.com
+ (10.181.40.145)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: bdb10641-ec2b-4a8e-0d65-08d9b8e9a200
+X-MS-TrafficTypeDiagnostic: CY4PR12MB1160:EE_
+X-Microsoft-Antispam-PRVS: <CY4PR12MB1160A785CB9FA30BACE7564DFD6D9@CY4PR12MB1160.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:635;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: u6C19BgRxo0bBTH0pjwACnstoFHPqGqngupRo+puvt/3gCYRVhBWDwKNWo7pKhs5nG36iox6VvLkFZlr1H89GuGchRKmgjX/lXJlbymugWanVvyCPSpRZFQl/Gr4GbKOhyDMnSJ9nUmUH9+fbhCkqv5ijqdfz4xwdSR6N4r3lWcQs5SIfP7dcQKL/lQDKjq4L3P2qmXBgEKz4OLbGUtqiYGRc1Khvb9+Ta1+Gm4eGGoQwEd/tpadTB1qcOb54/M8DpuFcfKQP4d1hhiAjXHT69RXi3iiVx4q1JVZn3FtwS43OoNakGx1ozv/gnKyOcdSc7VO8nY70wbgZvhbOE1Wbq3U00AwQcPIZltYiGL0ZnSwSJWQAqeTW948O8z8F0sHDoOwqmgNIKgLESuS/6TWmexJnT4DF1wKUg+f3pxgUuPR6Cn1nKunfiQVKgnsA9C9+wqShjUDUUs7oOsRIZRU5JNtejIvsLSV4LMGWbc6L0qnw9LFFlR8pV8XRugxUEZ7fuLOl0p2tAHW5bif4An5SSgMbSU02ZBagMwqOefYbz96fnOtAI/4iqrw0uK5YPa9kmD/93M5wzXBF/U0yfRb8iFwutKWoFsU9RVK0eRm1Cx/PlsYRnBeuSiij8mvUPmSTABtAIPEDjqAoCBpZSodPHr2B8NFA/GaU/zDwHrNbbJIvynk5dxuL61Fh4l/2P/iyYKHCdOoEFvEyROWqCLA8vdV4t0p4QYXq5IxFHBwCzkoN0OE5fKXjnc3jl/X1iLlnm6YVJtWTE+zkphmseZTIpIS5SmdRRmiEC8Knf4lrr4=
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(4636009)(36840700001)(46966006)(40470700001)(16526019)(508600001)(81166007)(83380400001)(186003)(426003)(7416002)(36756003)(336012)(4326008)(40460700001)(36860700001)(26005)(6666004)(47076005)(1076003)(44832011)(8676002)(82310400004)(70586007)(86362001)(54906003)(316002)(110136005)(356005)(2906002)(5660300002)(2616005)(7696005)(8936002)(70206006)(36900700001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Dec 2021 18:53:03.3814
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: bdb10641-ec2b-4a8e-0d65-08d9b8e9a200
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT050.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR12MB1160
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi,
+This case is used to migrate pages from device memory, back to system
+memory. Device coherent type memory is cache coherent from device and CPU
+point of view.
 
-We have reports on distro (pre-deferred inactivation) kernels that inode
-reclaim (i.e. via drop_caches) can deadlock on the s_umount lock when
-invoked on a frozen XFS fs. This occurs because drop_caches acquires the
-lock and then blocks in xfs_inactive() on transaction alloc for an inode
-that requires an eofb trim. Unfreeze blocks on the same lock and thus
-the fs is deadlocked (in a frozen state). As far as I'm aware, this has
-been broken for some time and probably just not observed because reclaim
-under freeze is a rare and unusual situation.
-    
-With deferred inactivation, the deadlock problem actually goes away
-because ->destroy_inode() will never block when the filesystem is
-frozen. There is new/odd behavior, however, in that lookups of a pending
-inactive inode spin loop waiting for the pending inactive state to
-clear. That won't happen until the fs is unfrozen.
+Signed-off-by: Alex Sierra <alex.sierra@amd.com>
+---
+v2:
+condition added when migrations from device coherent pages.
+---
+ include/linux/migrate.h | 1 +
+ mm/migrate.c            | 9 +++++++--
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
-Also, the deferred inactivation queues are not consistently flushed on
-freeze. I've observed that xfs_freeze invokes an xfs_inodegc_flush()
-indirectly via xfs_fs_statfs(), but fsfreeze does not. Therefore, I
-suspect it may be possible to land in this state from the onset of a
-freeze based on prior reclaim behavior. (I.e., we may want to make this
-flush explicit on freeze, depending on the eventual solution.)
-
-Some internal discussion followed on potential improvements in response
-to the deadlock report. Dave suggested potentially preventing reclaim of
-inodes that would require inactivation, keeping them in cache, but it
-appears we may not have enough control in the local fs to guarantee this
-behavior out of the vfs and shrinkers (Dave can chime in on details, if
-needed). He also suggested skipping eofb trims and sending such inodes
-directly to reclaim. My current preference is to invoke an inodegc flush
-and blockgc scan during the freeze sequence so presumably no pending
-inactive but potentially accessible (i.e. not unlinked) inodes can
-reside in the queues for the duration of a freeze. Perhaps others have
-different ideas or thoughts on these.
-
-In any event, this is an FYI/RFD given that deferred inactivation is
-fairly new and I'm not sure we have a concrete sense of whether the
-resulting changes in behavior might be more or less observable (and/or
-disruptive) to users than the historical, more severe problem.
-
-Brian
+diff --git a/include/linux/migrate.h b/include/linux/migrate.h
+index c8077e936691..e74bb0978f6f 100644
+--- a/include/linux/migrate.h
++++ b/include/linux/migrate.h
+@@ -138,6 +138,7 @@ static inline unsigned long migrate_pfn(unsigned long pfn)
+ enum migrate_vma_direction {
+ 	MIGRATE_VMA_SELECT_SYSTEM = 1 << 0,
+ 	MIGRATE_VMA_SELECT_DEVICE_PRIVATE = 1 << 1,
++	MIGRATE_VMA_SELECT_DEVICE_COHERENT = 1 << 2,
+ };
+ 
+ struct migrate_vma {
+diff --git a/mm/migrate.c b/mm/migrate.c
+index 91018880dc7f..0367f471211a 100644
+--- a/mm/migrate.c
++++ b/mm/migrate.c
+@@ -2340,8 +2340,6 @@ static int migrate_vma_collect_pmd(pmd_t *pmdp,
+ 			if (is_writable_device_private_entry(entry))
+ 				mpfn |= MIGRATE_PFN_WRITE;
+ 		} else {
+-			if (!(migrate->flags & MIGRATE_VMA_SELECT_SYSTEM))
+-				goto next;
+ 			pfn = pte_pfn(pte);
+ 			if (is_zero_pfn(pfn)) {
+ 				mpfn = MIGRATE_PFN_MIGRATE;
+@@ -2349,6 +2347,13 @@ static int migrate_vma_collect_pmd(pmd_t *pmdp,
+ 				goto next;
+ 			}
+ 			page = vm_normal_page(migrate->vma, addr, pte);
++			if (page && !is_zone_device_page(page) &&
++			    !(migrate->flags & MIGRATE_VMA_SELECT_SYSTEM))
++				goto next;
++			if (page && is_device_coherent_page(page) &&
++			    (!(migrate->flags & MIGRATE_VMA_SELECT_DEVICE_COHERENT) ||
++			     page->pgmap->owner != migrate->pgmap_owner))
++				goto next;
+ 			mpfn = migrate_pfn(pfn) | MIGRATE_PFN_MIGRATE;
+ 			mpfn |= pte_write(pte) ? MIGRATE_PFN_WRITE : 0;
+ 		}
+-- 
+2.32.0
 
