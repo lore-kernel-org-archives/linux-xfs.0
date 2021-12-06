@@ -2,40 +2,41 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B338C43219
-	for <linux-xfs@archiver.kernel.org>; Mon,  6 Dec 2021 18:53:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E177C433F5
+	for <linux-xfs@archiver.kernel.org>; Mon,  6 Dec 2021 18:53:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348020AbhLFS4q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 6 Dec 2021 13:56:46 -0500
-Received: from mail-bn8nam11on2055.outbound.protection.outlook.com ([40.107.236.55]:44640
-        "EHLO NAM11-BN8-obe.outbound.protection.outlook.com"
+        id S1348051AbhLFS4r (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 6 Dec 2021 13:56:47 -0500
+Received: from mail-dm6nam11on2076.outbound.protection.outlook.com ([40.107.223.76]:3424
+        "EHLO NAM11-DM6-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1347938AbhLFS4l (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S1347780AbhLFS4l (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Mon, 6 Dec 2021 13:56:41 -0500
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Dq8OXMmIP7s9BVDJ5+5uxLNF0SmMtnamJLeAfxAmj3F0XGsxlHkm704EthWGjZxVC7KgI6bGMeRj/0pPSzI8ixEOk72eLYlqzer9fg7QwQgPz2+xm+v7hKjfxx+U8ubmf1M15ksgC980dzaWeomal5ohLPWObS/zfbmJGF2S/BFHNZ0CLojeIllXUpKeOjEnuC5iw274upkr6j+WFurFhWlkQ6YDw3MW9AYW21FPWp+Fa0OyMSuolFyrIScy3KW1MFzR1GjtKUXFMDzXYb9KSHiQJ8toOVNpPt11jfCbwcVUfHCxLNormihwAjhd2zRfXlXIFlbyBJCcGzufa5B3nw==
+ b=HiZdfTY9icg9ChrHb87kwCp6vo7gmL6GSDAr0NWm34NNcCxLfUznxdisn1lIboC0+ZX+zZkInVcdpjTzEGK0scQvK4JzjQ+KahsrHUrYLj8asqnMBrbiEtE3zrWede57phW3MyvOaAhC1mHsxZ0thm8bKhCJ0cdPee5/xmAbIv53rIL8mZimx0NgrMqbCX3h+e66hHDwgEOoz2vttjx3xRnO+Gy+a4lLkrdimCDQJUQlh/CMzmXWOtwFrdUtmHb7IV/aHkqXRo4ofJ/eO9Ko6mijllctlLL//K/fXqbXVOrnM81dh0q00KZX1SH1/kGPFNbUSdU9z9XeaY9XurN70A==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=dd1gqU23taV2RuOXaFgROP6Az4Jec/HPM4h/VMMEzbI=;
- b=Qovkb3sd9ftj8VYTlOOORnir+ZorUXNyd/LIWhaHlQRcKOeW2Yo36RvIGTlmdBfzLSP65WMr6nll+FYvwe7BVUaW/gWJ/XOQIIyECOrZVL7TrC8fUDKqw9A4LuPq5GsBQKZRQbHMsqgU5Szffz/Fxbr4MD5Jg+x9uQe6mwwonqu7rlTWoD1ogS8e1i1b5zenTiFNdK4l6HFykUhAQacSiGtlcZUBJPFgnXjyPUBsq9tZSt8uKT5KgfIsIb7oSFDAjNxm7Bu0aXUTLr1QpwPdVfHILVEkS8VtcEg6ajXPodGc65A77UGzTEcqlD+svJ5rACqHnBxbf6/nfP4/qOgZ4Q==
+ bh=v23c+NYRLLX9+OBWXEU4kBva73Qsu4tzloWOJ3a/F4U=;
+ b=i2b74TB4vRb1fdsAjCfu2KXq7U7POd0xDiX5PuIy4S9AU3vD/m3NWSK1eQLWLyWlJzKsDEV7v/SAQr+Wov9VMO926A42VHoVf0CMx+3RekeVh8969zPYXWSf5k2/mw0CBNKXvF4uhr3WdKrkkCCrmdpZS3tY8TF+YIKQv3dPZlyUbf5G+uodvFctzfHPDP8MHKShxp+C/N6OYloGxfqzCaPOl0bp6UEqJjtPiPFdDIVymph0M5NpGOuZsNdqdkTjzSRw2Fcxno5jkL1IesMH4Eb6BVJmvFiKS1svjNWSKYuc21DEYW0o6eFsPdXb6Cn/zE5sGHlfExza3JUTW8VvtA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=linux-foundation.org smtp.mailfrom=amd.com;
  dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
  header.from=amd.com; dkim=none (message not signed); arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=dd1gqU23taV2RuOXaFgROP6Az4Jec/HPM4h/VMMEzbI=;
- b=S3i+b8hEjvdzsCfc8hU3UNEMppAsmReVtUIHxPHc4SaqvyLAoTcX9y9AT9wVjhOSBRoCvl20KUGGn7PiW9g8nOcRVwx+YCv/97Mhz2q1SMaIaEvoNZtxpgkduUJv9eCbY2LaI7vgbkw+H94u2emfBJkwiRQ7k/+G5U8yoHMV92Q=
-Received: from DM5PR15CA0053.namprd15.prod.outlook.com (2603:10b6:3:ae::15) by
- DM6PR12MB2698.namprd12.prod.outlook.com (2603:10b6:5:42::12) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.4755.21; Mon, 6 Dec 2021 18:53:10 +0000
+ bh=v23c+NYRLLX9+OBWXEU4kBva73Qsu4tzloWOJ3a/F4U=;
+ b=pcC2BMj59Ioicawl3moVjalWpYVOVqgTEybETUmqwo/ZSBuh6b7MwlFUqiabqqgigyYOSUWM1nDVXh20jrH3TiqHEyxkMkVtM925rO4YysW79MNxMO/2TaM9+B54FbHjhjc0GMmZQjFCI1s4i+Fk1/SkmAjM8SM6NtQyFr+Jq/Q=
+Received: from DM5PR15CA0060.namprd15.prod.outlook.com (2603:10b6:3:ae::22) by
+ MN2PR12MB3919.namprd12.prod.outlook.com (2603:10b6:208:16a::16) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4755.16; Mon, 6 Dec
+ 2021 18:53:04 +0000
 Received: from DM6NAM11FT050.eop-nam11.prod.protection.outlook.com
- (2603:10b6:3:ae:cafe::7) by DM5PR15CA0053.outlook.office365.com
- (2603:10b6:3:ae::15) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4755.19 via Frontend
- Transport; Mon, 6 Dec 2021 18:53:10 +0000
+ (2603:10b6:3:ae:cafe::d8) by DM5PR15CA0060.outlook.office365.com
+ (2603:10b6:3:ae::22) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4755.17 via Frontend
+ Transport; Mon, 6 Dec 2021 18:53:04 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
  smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -45,11 +46,11 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
 Received: from SATLEXMB04.amd.com (165.204.84.17) by
  DM6NAM11FT050.mail.protection.outlook.com (10.13.173.111) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.4755.13 via Frontend Transport; Mon, 6 Dec 2021 18:53:10 +0000
+ 15.20.4755.13 via Frontend Transport; Mon, 6 Dec 2021 18:53:04 +0000
 Received: from alex-MS-7B09.amd.com (10.180.168.240) by SATLEXMB04.amd.com
  (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.17; Mon, 6 Dec
- 2021 12:53:08 -0600
+ 2021 12:53:02 -0600
 From:   Alex Sierra <alex.sierra@amd.com>
 To:     <akpm@linux-foundation.org>, <Felix.Kuehling@amd.com>,
         <linux-mm@kvack.org>, <rcampbell@nvidia.com>,
@@ -57,9 +58,9 @@ To:     <akpm@linux-foundation.org>, <Felix.Kuehling@amd.com>,
 CC:     <amd-gfx@lists.freedesktop.org>, <dri-devel@lists.freedesktop.org>,
         <hch@lst.de>, <jgg@nvidia.com>, <jglisse@redhat.com>,
         <apopple@nvidia.com>, <willy@infradead.org>
-Subject: [PATCH v2 11/11] tools: add hmm gup test for long term pinned device pages
-Date:   Mon, 6 Dec 2021 12:52:51 -0600
-Message-ID: <20211206185251.20646-12-alex.sierra@amd.com>
+Subject: [PATCH v2 03/11] mm/gup: migrate PIN_LONGTERM dev coherent pages to system
+Date:   Mon, 6 Dec 2021 12:52:43 -0600
+Message-ID: <20211206185251.20646-4-alex.sierra@amd.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20211206185251.20646-1-alex.sierra@amd.com>
 References: <20211206185251.20646-1-alex.sierra@amd.com>
@@ -71,155 +72,119 @@ X-ClientProxiedBy: SATLEXMB03.amd.com (10.181.40.144) To SATLEXMB04.amd.com
  (10.181.40.145)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: b48d376e-b3a9-4f37-fdfc-08d9b8e9a656
-X-MS-TrafficTypeDiagnostic: DM6PR12MB2698:EE_
-X-Microsoft-Antispam-PRVS: <DM6PR12MB269867CCB4710E20F847F6D7FD6D9@DM6PR12MB2698.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:7691;
+X-MS-Office365-Filtering-Correlation-Id: cde9e761-44fd-40be-1771-08d9b8e9a28f
+X-MS-TrafficTypeDiagnostic: MN2PR12MB3919:EE_
+X-Microsoft-Antispam-PRVS: <MN2PR12MB39196B03AE8B15D7146B901EFD6D9@MN2PR12MB3919.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:2331;
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: PzzdunYPS3Tiw0GKArGjLJ9poDKemaH+y5xKaSWXkQnZMqZYH0FXt9aJXZ2cJTEVeGvPnXrdgFqThQ9Mn/AWwa16Lbb0QfnVungkqo/22CWycXKXLROOuImluLmGEhxrMFwlXUZRj4x4eDRbyztzgNl5i6yde1XOBrj23lfeQncPmuYGIzZCihyyUQnd7Xy49K+ZsuyE2Q3rjtlH7Vao0hQpbzakO8Fd1VJ1sWtvAt3Al/qlSB5Vuvf4oPkVqqEowpel5SjBNSI17rirjQVvCIgUVqFLLvGXnBZ+rSrHJXiut/y7Tuh5rrWmKRz7BHnM8HHw09aPYMzGpwctKI8W/lcjDxgv7bgZCdwAQIHfJuRegu7zYaIzwX8ieo2EfjmN6ibBzCzs+LX3Xa0nyHtjMuWpVHMlkdW0v9vt3XtZs+foLloJsLOr0/evosLMkQHUsrbGdF5lzI9KclNGStiNe9agne/jVVwhJDgFkOGgebIkxVYMo9ZLp38PyYfaDGbBQfKStS7NeS6vGGIAZj2YUa3Q47+bSYPx0dXIhRYXBtpU7DnPlvAozUqK1k9dsdhx1sxUDN2QtfPM+CqlorpDAl4Lz/v9mqLlskWagDxXfW57hHsufkdwn65yyIXGLKc915WG7YvWG7bpgVi8Wjdlc0RbVxpjBWPuCCvwh4s0jfESKsQKEyhIc6ix81q7sp4cL3XXUTCMUOIVvTMbQJmTrBsq2tqLldpIJRoXp8qaAvDf1H1NG11xDpjgL+aUGPWHClkiYQYPslLBJYHSLyWSno6UYXndn+MzQUhB8sqDepg=
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(4636009)(36840700001)(46966006)(40470700001)(426003)(7696005)(16526019)(186003)(2616005)(26005)(40460700001)(7416002)(336012)(82310400004)(4326008)(5660300002)(36860700001)(6666004)(54906003)(1076003)(36756003)(2906002)(81166007)(44832011)(356005)(83380400001)(508600001)(86362001)(110136005)(70586007)(8676002)(8936002)(70206006)(316002)(47076005)(36900700001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: DeyWUFX6pfGHIAs/N9DIyhPMFGmzsU52iBulv7lB/TrnTs6C1/HPOlajvgAbj2b0+aF0fPWJK1wl2nz9eF+mQyCaVB0A4R9Ai6ZbHXWXO+Hp7EyaVrf1+bv2QYbqR+y/dxjVO+MrCRn0FSzrJySoimSZF994mPepPP4INCt++MYX+TBaAertJ0BNj/bDIF5eYgTzjTVbx5VLSMfVQX1PCJLPU6V8ESulDNCce1Z5RRzhy2VLoBHBMFLVOSdLLNDS3Nx0kzvUgJK/QTY8DyfknFC3YllduPVzlcAqYqLs72oRDn3qBlwekDYkoOoHDBqZSwbyLdDTeugMYdy8ZW9USRoz+lg3vyAWVNTPuPZpEHxcAD7vlmDpoNBuE38zU5o8anVJGz3ddDeS2ADlOJtwiji+UUyMCGqLNWBZ5z76GEyjewzRGvd9nVb+d03vkTsjKcNNM+ouMheRM3Ou/nYLNcsUbxVjG9Q3v7VYjTXvTZ5lOaSuMU9sZSsf4P9xtS8yBwPSwXrSvT79xGKBpD3sdVtJjNNg2Tg6oCnmFNiZp2WClmqbQ/C8vgIHedDV1DOS3Dk2Hfgo2JA4u+jF07M3HRBioB9sCNUeTJR3yrIz3rdNDYF+J8WSqqbF6p6w7In/7GTbxenJQMTlFwPlNSCBpHC2PdLCBL+my6R8M4m9YdcHCna84B/DQZfG66q/N3119eDH8TXjOHMUNdB2BXOtjALgLVx3dayzid9vJQs9SIyPCnD/jd3z0uStEYlSx9+E5O1lAXyM4GylwBKxqdTBUB2UML44wnSH6CY0HusF6Rk=
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(4636009)(46966006)(36840700001)(40470700001)(1076003)(47076005)(4326008)(8936002)(86362001)(70206006)(40460700001)(186003)(82310400004)(2906002)(6666004)(356005)(316002)(54906003)(2616005)(7696005)(5660300002)(36860700001)(36756003)(336012)(426003)(81166007)(7416002)(16526019)(110136005)(8676002)(83380400001)(44832011)(508600001)(70586007)(26005)(36900700001);DIR:OUT;SFP:1101;
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Dec 2021 18:53:10.6620
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Dec 2021 18:53:04.3032
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: b48d376e-b3a9-4f37-fdfc-08d9b8e9a656
+X-MS-Exchange-CrossTenant-Network-Message-Id: cde9e761-44fd-40be-1771-08d9b8e9a28f
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
 X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT050.eop-nam11.prod.protection.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB2698
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR12MB3919
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The intention is to test device coherent type pages that have been
-called through get user pages with PIN_LONGTERM flag set.
+Avoid long term pinning for Coherent device type pages. This could
+interfere with their own device memory manager.
+If caller tries to get user device coherent pages with PIN_LONGTERM flag
+set, those pages will be migrated back to system memory.
 
 Signed-off-by: Alex Sierra <alex.sierra@amd.com>
 ---
- tools/testing/selftests/vm/Makefile    |  2 +-
- tools/testing/selftests/vm/hmm-tests.c | 81 ++++++++++++++++++++++++++
- 2 files changed, 82 insertions(+), 1 deletion(-)
+ mm/gup.c | 32 ++++++++++++++++++++++++++++++--
+ 1 file changed, 30 insertions(+), 2 deletions(-)
 
-diff --git a/tools/testing/selftests/vm/Makefile b/tools/testing/selftests/vm/Makefile
-index d9605bd10f2d..527a7bfd80bd 100644
---- a/tools/testing/selftests/vm/Makefile
-+++ b/tools/testing/selftests/vm/Makefile
-@@ -141,7 +141,7 @@ $(OUTPUT)/mlock-random-test $(OUTPUT)/memfd_secret: LDLIBS += -lcap
+diff --git a/mm/gup.c b/mm/gup.c
+index 886d6148d3d0..1572eacf07f4 100644
+--- a/mm/gup.c
++++ b/mm/gup.c
+@@ -1689,17 +1689,37 @@ struct page *get_dump_page(unsigned long addr)
+ #endif /* CONFIG_ELF_CORE */
  
- $(OUTPUT)/gup_test: ../../../../mm/gup_test.h
- 
--$(OUTPUT)/hmm-tests: local_config.h
-+$(OUTPUT)/hmm-tests: local_config.h ../../../../mm/gup_test.h
- 
- # HMM_EXTRA_LIBS may get set in local_config.mk, or it may be left empty.
- $(OUTPUT)/hmm-tests: LDLIBS += $(HMM_EXTRA_LIBS)
-diff --git a/tools/testing/selftests/vm/hmm-tests.c b/tools/testing/selftests/vm/hmm-tests.c
-index 8eb81dfba4b3..9a0b7e44a674 100644
---- a/tools/testing/selftests/vm/hmm-tests.c
-+++ b/tools/testing/selftests/vm/hmm-tests.c
-@@ -36,6 +36,7 @@
-  * in the usual include/uapi/... directory.
-  */
- #include "../../../../lib/test_hmm_uapi.h"
-+#include "../../../../mm/gup_test.h"
- 
- struct hmm_buffer {
- 	void		*ptr;
-@@ -60,6 +61,8 @@ enum {
- #define NTIMES		10
- 
- #define ALIGN(x, a) (((x) + (a - 1)) & (~((a) - 1)))
-+/* Just the flags we need, copied from mm.h: */
-+#define FOLL_WRITE	0x01	/* check pte is writable */
- 
- FIXTURE(hmm)
- {
-@@ -1723,4 +1726,82 @@ TEST_F(hmm, exclusive_cow)
- 	hmm_buffer_free(buffer);
- }
- 
-+/*
-+ * Test get user device pages through gup_test. Setting PIN_LONGTERM flag.
-+ * This should trigger a migration back to system memory for both, private
-+ * and coherent type pages.
-+ * This test makes use of gup_test module. Make sure GUP_TEST_CONFIG is added
-+ * to your configuration before you run it.
-+ */
-+TEST_F(hmm, hmm_gup_test)
+ #ifdef CONFIG_MIGRATION
++static int migrate_device_page(unsigned long address,
++				struct page *page)
 +{
-+	struct hmm_buffer *buffer;
-+	struct gup_test gup;
-+	int gup_fd;
-+	unsigned long npages;
-+	unsigned long size;
-+	unsigned long i;
-+	int *ptr;
-+	int ret;
-+	unsigned char *m;
++	struct vm_area_struct *vma = find_vma(current->mm, address);
++	struct vm_fault vmf = {
++		.vma = vma,
++		.address = address & PAGE_MASK,
++		.flags = FAULT_FLAG_USER,
++		.pgoff = linear_page_index(vma, address),
++		.gfp_mask = GFP_KERNEL,
++		.page = page,
++	};
++	if (page->pgmap && page->pgmap->ops->migrate_to_ram)
++		return page->pgmap->ops->migrate_to_ram(&vmf);
 +
-+	gup_fd = open("/sys/kernel/debug/gup_test", O_RDWR);
-+	if (gup_fd == -1)
-+		SKIP(return, "Skipping test, could not find gup_test driver");
-+
-+	npages = 4;
-+	ASSERT_NE(npages, 0);
-+	size = npages << self->page_shift;
-+
-+	buffer = malloc(sizeof(*buffer));
-+	ASSERT_NE(buffer, NULL);
-+
-+	buffer->fd = -1;
-+	buffer->size = size;
-+	buffer->mirror = malloc(size);
-+	ASSERT_NE(buffer->mirror, NULL);
-+
-+	buffer->ptr = mmap(NULL, size,
-+			   PROT_READ | PROT_WRITE,
-+			   MAP_PRIVATE | MAP_ANONYMOUS,
-+			   buffer->fd, 0);
-+	ASSERT_NE(buffer->ptr, MAP_FAILED);
-+
-+	/* Initialize buffer in system memory. */
-+	for (i = 0, ptr = buffer->ptr; i < size / sizeof(*ptr); ++i)
-+		ptr[i] = i;
-+
-+	/* Migrate memory to device. */
-+	ret = hmm_migrate_sys_to_dev(self->fd, buffer, npages);
-+	ASSERT_EQ(ret, 0);
-+	ASSERT_EQ(buffer->cpages, npages);
-+	/* Check what the device read. */
-+	for (i = 0, ptr = buffer->mirror; i < size / sizeof(*ptr); ++i)
-+		ASSERT_EQ(ptr[i], i);
-+
-+	gup.nr_pages_per_call = npages;
-+	gup.addr = (unsigned long)buffer->ptr;
-+	gup.gup_flags = FOLL_WRITE;
-+	gup.size = size;
-+	/*
-+	 * Calling gup_test ioctl. It will try to PIN_LONGTERM these device pages
-+	 * causing a migration back to system memory for both, private and coherent
-+	 * type pages.
-+	 */
-+	if (ioctl(gup_fd, PIN_LONGTERM_BENCHMARK, &gup)) {
-+		perror("ioctl on PIN_LONGTERM_BENCHMARK\n");
-+		goto out_test;
-+	}
-+
-+	/* Take snapshot to make sure pages have been migrated to sys memory */
-+	ret = hmm_dmirror_cmd(self->fd, HMM_DMIRROR_SNAPSHOT, buffer, npages);
-+	ASSERT_EQ(ret, 0);
-+	ASSERT_EQ(buffer->cpages, npages);
-+	m = buffer->mirror;
-+	for (i = 0; i < npages; i++)
-+		ASSERT_EQ(m[i], HMM_DMIRROR_PROT_WRITE);
-+out_test:
-+	close(gup_fd);
-+	hmm_buffer_free(buffer);
++	return -EBUSY;
 +}
- TEST_HARNESS_MAIN
++
+ /*
+  * Check whether all pages are pinnable, if so return number of pages.  If some
+  * pages are not pinnable, migrate them, and unpin all pages. Return zero if
+  * pages were migrated, or if some pages were not successfully isolated.
+  * Return negative error if migration fails.
+  */
+-static long check_and_migrate_movable_pages(unsigned long nr_pages,
++static long check_and_migrate_movable_pages(unsigned long start,
++					    unsigned long nr_pages,
+ 					    struct page **pages,
+ 					    unsigned int gup_flags)
+ {
+ 	unsigned long i;
++	unsigned long page_index;
+ 	unsigned long isolation_error_count = 0;
+ 	bool drain_allow = true;
+ 	LIST_HEAD(movable_page_list);
+@@ -1720,6 +1740,10 @@ static long check_and_migrate_movable_pages(unsigned long nr_pages,
+ 		 * If we get a movable page, since we are going to be pinning
+ 		 * these entries, try to move them out if possible.
+ 		 */
++		if (is_device_page(head)) {
++			page_index = i;
++			goto unpin_pages;
++		}
+ 		if (!is_pinnable_page(head)) {
+ 			if (PageHuge(head)) {
+ 				if (!isolate_huge_page(head, &movable_page_list))
+@@ -1750,12 +1774,16 @@ static long check_and_migrate_movable_pages(unsigned long nr_pages,
+ 	if (list_empty(&movable_page_list) && !isolation_error_count)
+ 		return nr_pages;
+ 
++unpin_pages:
+ 	if (gup_flags & FOLL_PIN) {
+ 		unpin_user_pages(pages, nr_pages);
+ 	} else {
+ 		for (i = 0; i < nr_pages; i++)
+ 			put_page(pages[i]);
+ 	}
++	if (is_device_page(head))
++		return migrate_device_page(start + page_index * PAGE_SIZE, head);
++
+ 	if (!list_empty(&movable_page_list)) {
+ 		ret = migrate_pages(&movable_page_list, alloc_migration_target,
+ 				    NULL, (unsigned long)&mtc, MIGRATE_SYNC,
+@@ -1798,7 +1826,7 @@ static long __gup_longterm_locked(struct mm_struct *mm,
+ 					     NULL, gup_flags);
+ 		if (rc <= 0)
+ 			break;
+-		rc = check_and_migrate_movable_pages(rc, pages, gup_flags);
++		rc = check_and_migrate_movable_pages(start, rc, pages, gup_flags);
+ 	} while (!rc);
+ 	memalloc_pin_restore(flags);
+ 
 -- 
 2.32.0
 
