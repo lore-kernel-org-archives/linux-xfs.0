@@ -2,96 +2,78 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04147C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Dec 2021 12:50:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 105B8C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Dec 2021 13:26:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229533AbhLGMy1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Dec 2021 07:54:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49504 "EHLO
+        id S229815AbhLGN3s (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Dec 2021 08:29:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57894 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229463AbhLGMy1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Dec 2021 07:54:27 -0500
-Received: from muffat.debian.org (muffat.debian.org [IPv6:2607:f8f0:614:1::1274:33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2761DC061574
-        for <linux-xfs@vger.kernel.org>; Tue,  7 Dec 2021 04:50:57 -0800 (PST)
-Received: from fasolo.debian.org ([138.16.160.17]:57012)
-        from C=NA,ST=NA,L=Ankh Morpork,O=Debian SMTP,OU=Debian SMTP CA,CN=fasolo.debian.org,EMAIL=hostmaster@fasolo.debian.org (verified)
-        by muffat.debian.org with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <envelope@ftp-master.debian.org>)
-        id 1muZvr-00063M-5N; Tue, 07 Dec 2021 12:50:55 +0000
-Received: from dak by fasolo.debian.org with local (Exim 4.92)
-        (envelope-from <envelope@ftp-master.debian.org>)
-        id 1muZvp-000DCk-UF; Tue, 07 Dec 2021 12:50:53 +0000
-From:   Debian FTP Masters <ftpmaster@ftp-master.debian.org>
-To:     XFS Development Team <linux-xfs@vger.kernel.org>,
-        <bage@linutronix.de>, Nathan Scott <nathans@debian.org>
-X-DAK:  dak process-upload
-X-Debian: DAK
-X-Debian-Package: xfsprogs
-Auto-Submitted: auto-generated
+        with ESMTP id S230374AbhLGN3s (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Dec 2021 08:29:48 -0500
+Received: from mail-ua1-x935.google.com (mail-ua1-x935.google.com [IPv6:2607:f8b0:4864:20::935])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05D24C061574
+        for <linux-xfs@vger.kernel.org>; Tue,  7 Dec 2021 05:26:18 -0800 (PST)
+Received: by mail-ua1-x935.google.com with SMTP id j14so26408799uan.10
+        for <linux-xfs@vger.kernel.org>; Tue, 07 Dec 2021 05:26:17 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:from:date:message-id:subject:to;
+        bh=Fb6VKJy87SAnSS5qugiCgwfRBDIqEu6cr8Crb4Jq8z8=;
+        b=SH4Xkzk+CgNcCMTQOqJN6tQ/839tVvcDhVWYsHBVsE6ZvKDX1IWo6vsgiNLjNtElQ9
+         mgBrbiqpTc0eE4Iry+SWfh+7+oX6J2nE7aw/5DoVzOyeE89ed6OgYK8jbjvnyWXqzFqe
+         1I/y8ggc4GMV6QZtztHruAIsmSD68k0lUZqJ90xp0/mVIQxjMl8FDoNAwE1/sazR9vhL
+         Qcmovrlf7hS5/Yn9WYQ9B88mOCLIC8xi5BuiLkTF5ShueDAWrG/8qGFp+5mUXyP/wy1x
+         nsqQ+to7CvQ4haEA4GyJD1zjCmxnI0OAV5+e9neBOG0ZP0KbnoqmL7U74HdhPxVpNxDX
+         YXbA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
+        bh=Fb6VKJy87SAnSS5qugiCgwfRBDIqEu6cr8Crb4Jq8z8=;
+        b=BEXTYpunb9cz/ssc6mf3l5Ea6jhi53EYoKJjIE7zg7R88ReI0og+Cnn63I42vV494m
+         LgYCr72C2kwr7AtFNjJy29YTfJk/r6bHdFIZoInSpa0mpcejUq0xwFvWhlJDb1ybytVq
+         /8FTAg7GZV83hc54FL8o5kGnJnTT9kG86fI5V3EnpBMwN+XCH/74CvjS9ZnpiJJGvqz3
+         WEGs9/jiZge33V9jQoANvqHoKH+LvtTrjK5cG8zwNgaU7G2L2Mqf8b8G6Sjv5nvw4G+f
+         wsyzjDelZ9QU/CZpA/jznK7IOtPNGSrMEKxIF81KxD6gh4GPXBFGVtNaNvbdu6/0Jenh
+         xq5Q==
+X-Gm-Message-State: AOAM530LZSjgbiFiHZh0sOIv+8ExzbXJ+OElQcyTXy8XMx8TbsxRpPsZ
+        uvfdkb2CCEgx5T/LAK2oCGdyA7Ir7z2KGAmqbb5cIFe3ioA=
+X-Google-Smtp-Source: ABdhPJynWyPQTZWTOrm2ksLSaDCj6fjnN4VwPwS9UgIEwVOYIG7nmrebYju449XjKs5UMdbZIKUm5c3hnl+5zzrNWV8=
+X-Received: by 2002:ab0:74c1:: with SMTP id f1mr50316663uaq.109.1638883577111;
+ Tue, 07 Dec 2021 05:26:17 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Subject: xfsprogs_5.14.2-1_source.changes ACCEPTED into unstable
-Message-Id: <E1muZvp-000DCk-UF@fasolo.debian.org>
-Date:   Tue, 07 Dec 2021 12:50:53 +0000
+From:   tiandi huang <juanfengpy@gmail.com>
+Date:   Tue, 7 Dec 2021 21:26:06 +0800
+Message-ID: <CAPmgiULFc3w__JxXmbLdqvaC+shxwCFrwjfA9ubY8UjZjxbQQA@mail.gmail.com>
+Subject: hang on shrink_dcache_sb at remount of directories inside container
+To:     linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+Hi, guys!
+Recently, We have met a problem that systemd insides docker always
+hang at below stack, stays inside shrink_dcache_sb as long as hours.
+ __dentry_kill+0x124/0x170
+shrink_dentry_list+0x64/0xb0
+shrink_dcache_sb+0xb2/0x140
+reconfigure_super+0x85/0x220
+do_mount+0x90e/0x980
+ksys_mount+0xb6/0xd0
+ __x64_sys_mount+0x25/0x30
+do_syscall_64+0x47/0x140
+entry_SYSCALL_64_after_hwframe+0x44/0xa9
 
-
-Accepted:
-
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA512
-
-Format: 1.8
-Date: Mon, 06 Dec 2021 14:26:57 -0500
-Source: xfsprogs
-Architecture: source
-Version: 5.14.2-1
-Distribution: unstable
-Urgency: medium
-Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
-Changed-By: Nathan Scott <nathans@debian.org>
-Closes: 1000974
-Changes:
- xfsprogs (5.14.2-1) unstable; urgency=medium
- .
-   * New upstream release
-     - Move rogue fallthrough macro out of linux.h (Closes: #1000974)
-Checksums-Sha1:
- 7d58d8887618f090bfc2b5c0d9c309da788ba960 2017 xfsprogs_5.14.2-1.dsc
- 035e552cf4a08d5dbe1330ec1e3e6ceeb21b6bc9 1308912 xfsprogs_5.14.2.orig.tar.xz
- ef951cda194275eee5c3975cfd46544cf0f70a67 14316 xfsprogs_5.14.2-1.debian.tar.xz
- 2d71d75e23c654180f1c794e4d5c8c569f62873f 6141 xfsprogs_5.14.2-1_source.buildinfo
-Checksums-Sha256:
- 6fcd3408e1c1edc0d776f54323424dd36eeaffc148191911c464d5a02b2bad6b 2017 xfsprogs_5.14.2-1.dsc
- 01ccd3ef9df2837753a5d876b8da84ea957d13d7a461b8c46e8afa4eb09aabc8 1308912 xfsprogs_5.14.2.orig.tar.xz
- 9581848bd59128cdd38ccaa4c92d82d5ddd66c74baa9dc2fc76fb5146497af4a 14316 xfsprogs_5.14.2-1.debian.tar.xz
- 4d20924cfc79905a769dbff0aca10eab696536aab5f591e36e9e35001f63a5f6 6141 xfsprogs_5.14.2-1_source.buildinfo
-Files:
- 14d5f362b8d4ea4bee80edb78a36ad9e 2017 admin optional xfsprogs_5.14.2-1.dsc
- 597e7067b8aa24d440bc87c29e987377 1308912 admin optional xfsprogs_5.14.2.orig.tar.xz
- 89ea7c8a994352dcecd267a0ec13136c 14316 admin optional xfsprogs_5.14.2-1.debian.tar.xz
- 4e41a97053eeb8ec0c6547e293683776 6141 admin optional xfsprogs_5.14.2-1_source.buildinfo
-
------BEGIN PGP SIGNATURE-----
-
-iQGzBAEBCgAdFiEEQGIgyLhVKAI3jM5BH1x6i0VWQxQFAmGvU4sACgkQH1x6i0VW
-QxS0egv9HwfcbxyRn43bj+CxNKMCdKtgIPfV0SZxejKwarbdDg3d8f4/1i7gNVpJ
-+isPdnKvVULyxEhQxdoYfsjWaTCCX3YMlyrd6i5+2nrn6J9cwXrrJJdjPWvMgXR2
-o2u+brvm9cPYllAbbEVUYe6dtHY+/cH1c16W1SYK3yln7MWWWCTvAT0a7YrnrZQj
-7FVdd0qcbM+PU/m2qwpUxz2KmtVjJ8RfiF+a/X7P1zeAxAoODFx3GRRY9cTyvgnV
-tDwAdlSu4W6UgiKwgTpDFUT6EPRigEEqjTk3k0BgvYeFEidX57TsknQXwWKn3dI/
-Dxfo5wxGVlDIywj4iN9EugsYCBwW8ggm60St/BiJhuNpgup339yUBGtszm/x97RM
-XLKTOgb642bqTVu1Otee+Bdd5VSMwlmkyUnDDvuh52EPF3uFNf55sgiYsv02ATrB
-jb8rcN1zeqUZ9r+9m6w65pp2wQX6HAWqZSUEl2HToPITse3OPwwCPUKZja+BYpT5
-bGdytpiC
-=ORx6
------END PGP SIGNATURE-----
-
-
-Thank you for your contribution to Debian.
+We run many containers onside /data which is a xfs file system.
+Directories on /data are bind mounted inside containers, sometimes,
+systemd inside containers may do remount operations with these bind
+directories. Each remount would cause a reconfigure on /data and
+shrink_dcache_sb is called to shrink the s_dentry_lru list, as data is
+shared by all containers, processes may still produce dentries on this
+list, which may cause a long time to wait shrinking ends.
+So, We mailed to wonder  is it possible to skip this shrink operation
+for containers as lower xfs file system is still running, or is it
+possible to optimize shrink_dcache_sb function to scan only once of
+the dentry lru list, do not wait the list to become empty.
+We appreciate for a response, Thanks!
