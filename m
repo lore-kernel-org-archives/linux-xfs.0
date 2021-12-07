@@ -2,149 +2,79 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05E72C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Dec 2021 17:56:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11563C433F5
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Dec 2021 18:35:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235313AbhLGSAU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Dec 2021 13:00:20 -0500
-Received: from ams.source.kernel.org ([145.40.68.75]:37762 "EHLO
-        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235627AbhLGSAU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Dec 2021 13:00:20 -0500
+        id S240321AbhLGSjN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Dec 2021 13:39:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48114 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236023AbhLGSjN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Dec 2021 13:39:13 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E59B2C061574
+        for <linux-xfs@vger.kernel.org>; Tue,  7 Dec 2021 10:35:42 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 3CD06B81DAE
-        for <linux-xfs@vger.kernel.org>; Tue,  7 Dec 2021 17:56:49 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id E1947C341CB
-        for <linux-xfs@vger.kernel.org>; Tue,  7 Dec 2021 17:56:47 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 9D326B81DAD
+        for <linux-xfs@vger.kernel.org>; Tue,  7 Dec 2021 18:35:41 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5891EC341C1;
+        Tue,  7 Dec 2021 18:35:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1638899807;
-        bh=7NdeRBDVA7ynBbvewsWi7NrMHABwYqe8eJEK88uN2P4=;
-        h=From:To:Subject:Date:From;
-        b=lhaZtEV/fmT6+L500DqBzPN4HGfOqi+Gw+0Nsj+766Qau9ZC1XkkZJTMd6u0GBBQb
-         lGa8jDGLYi8aogGF2LkYKN7yOtut+sZ/XYW7MKENBIVt+vnzjqYZdS1GGPjcMwU1DS
-         GVkkoBjnw5am1bFBwOYRKZ+e2kxXlgn6pWH/xGMFJcaxrDYICKkm/btrJaUNhYxQy2
-         DyYHjMeFIrg3O6X7HFsScnrwgBzsK6evdtqbiLxYDvLds9+vr+YyBki/RSt3rv8C2o
-         fIh+GffEzB1GvjSOLb/EztXNVmVFqFS/LfU/5/T9zNO9Y9xtyLt/3ifXO7qyUDCroq
-         PV5BgP5Jr2vUQ==
-Received: by pdx-korg-bugzilla-2.web.codeaurora.org (Postfix, from userid 48)
-        id D3B7660F4F; Tue,  7 Dec 2021 17:56:47 +0000 (UTC)
-From:   bugzilla-daemon@bugzilla.kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 215261] New: [xfstests xfs/177] test still fails after merge
- f38a032b165d ("xfs: fix I_DONTCACHE")
-Date:   Tue, 07 Dec 2021 17:56:47 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: new
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: zlang@redhat.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: bug_id short_desc product version
- cf_kernel_version rep_platform op_sys cf_tree bug_status bug_severity
- priority component assigned_to reporter cf_regression
-Message-ID: <bug-215261-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        s=k20201202; t=1638902140;
+        bh=TlIOLPLVfVPu2YJb1yMjlfOW2CryGvwA3q3JPKnOvG0=;
+        h=Subject:From:To:Cc:Date:From;
+        b=EQwEBtD3aCG3524I6ylcs0Bm+1/PNTcCh3SvdMNDWKp/t/aaqbnvCC2/r1zUBSXey
+         QFsgDRKs2E+VXDMpMTVd45LrQ5PGRWWXSWXsKOOxZd3Dakm5R/DlLvKS6JU/RbTWT2
+         wcY2N/RoW9daCxrGSx/EnTJTw5jC7XfiQc1p0d8+JCp66uneHrKTpExxvz9tepNX0e
+         nRyePkGfc1xOabsJDyPPssavZAQavBuDVA5AIynD7c8d1EiPhDkbzeIcpqGq4BHQDZ
+         I9cmbh84rA5m/E8Nf496JJppXuwWyYCgK6zrDCdZT3hhXq5N4tHtJIr2GfMs31Wfh8
+         yDpT4tR3pKzrQ==
+Subject: [PATCHSET 5.16-rcX 0/2] xfs: fix data corruption when cycling ro/rw
+ mounts
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     djwong@kernel.org
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com,
+        wen.gang.wang@oracle.com
+Date:   Tue, 07 Dec 2021 10:35:39 -0800
+Message-ID: <163890213974.3375879.451653865403812137.stgit@magnolia>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D215261
+Hi all,
 
-            Bug ID: 215261
-           Summary: [xfstests xfs/177] test still fails after merge
-                    f38a032b165d ("xfs: fix I_DONTCACHE")
-           Product: File System
-           Version: 2.5
-    Kernel Version: v5.16-rc2 + xfs-5.16-fixes-2
-          Hardware: All
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: XFS
-          Assignee: filesystem_xfs@kernel-bugs.kernel.org
-          Reporter: zlang@redhat.com
-        Regression: No
+As part of a large customer escalation, I've been combing through the
+XFS copy on write code to try to find sources of (mostly) silent data
+corruption.  I found a nasty problem in the remount code, wherein a ro
+remount can race with file reader threads and fail to clean out cached
+inode COW forks.  A subsequent rw remount calls the COW staging extent
+recovery code, which frees the space but does not update the records in
+the cached inode COW forks.  This leads to massive fs corruption.
 
-xfstests xfs/177 still fails on xfs-5.16-fixes-2 sometimes, e.g [1][2]. The
-kernel has merged f38a032b165d ("xfs: fix I_DONTCACHE").
+The first patch in this series is the critical fix for the race
+condition.  The second patch is defensive in that it moves the COW
+staging extent recovery so that it always happens at mount time to
+protect us against future screwups.
 
-[1]
-FSTYP         -- xfs (debug)
-PLATFORM      -- Linux/x86_64 ibm-x3650m4-xxx-vm-xx 5.16.0-rc2+ #1 SMP PREE=
-MPT
-Sun Nov 28 06:43:30 EST 2021
-MKFS_OPTIONS  -- -f -m crc=3D1,finobt=3D1,rmapbt=3D0,reflink=3D1,bigtime=3D=
-1,inobtcount=3D1
-/dev/vda3
-MOUNT_OPTIONS -- -o context=3Dsystem_u:object_r:root_t:s0 /dev/vda3
-/mnt/xfstests/scratch
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
-xfs/177 - output mismatch (see /var/lib/xfstests/results//xfs/177.out.bad)
-    --- tests/xfs/177.out       2021-11-28 09:56:52.236830568 -0500
-    +++ /var/lib/xfstests/results//xfs/177.out.bad      2021-11-30
-04:21:03.282699626 -0500
-    @@ -2,11 +2,14 @@
-     new file count is in range
-     inodes after creating files is in range
-     Round 1
-    -inodes after bulkstat is in range
-    +inodes after bulkstat has value of 102
-    +inodes after bulkstat is NOT in range 1023 .. 1033
-     inodes after expire is in range
-    ...
-    (Run 'diff -u /var/lib/xfstests/tests/xfs/177.out
-/var/lib/xfstests/results//xfs/177.out.bad'  to see the entire diff)
-Ran: xfs/177
-Failures: xfs/177
-Failed 1 of 1 tests
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
 
-[2]
-FSTYP         -- xfs (debug)
-PLATFORM      -- Linux/aarch64 hpe-apollo-cnxxxx-xx-vm-xx 5.16.0-rc2+ #1 SMP
-Sun Nov 28 06:10:24 EST 2021
-MKFS_OPTIONS  -- -f -m crc=3D1,finobt=3D1,rmapbt=3D0,reflink=3D1,bigtime=3D=
-1,inobtcount=3D1
-/dev/vda3
-MOUNT_OPTIONS -- -o context=3Dsystem_u:object_r:root_t:s0 /dev/vda3
-/mnt/xfstests/scratch
+--D
 
-xfs/177 - output mismatch (see /var/lib/xfstests/results//xfs/177.out.bad)
-    --- tests/xfs/177.out       2021-11-28 10:04:49.415509327 -0500
-    +++ /var/lib/xfstests/results//xfs/177.out.bad      2021-11-29
-04:47:32.148868974 -0500
-    @@ -2,7 +2,8 @@
-     new file count is in range
-     inodes after creating files is in range
-     Round 1
-    -inodes after bulkstat is in range
-    +inodes after bulkstat has value of 575
-    +inodes after bulkstat is NOT in range 1023 .. 1033
-     inodes after expire is in range
-    ...
-    (Run 'diff -u /var/lib/xfstests/tests/xfs/177.out
-/var/lib/xfstests/results//xfs/177.out.bad'  to see the entire diff)
-Ran: xfs/177
-Failures: xfs/177
-Failed 1 of 1 tests
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=remount-fixes-5.16
+---
+ fs/xfs/xfs_mount.c   |   37 ++++++++++++++++++++++++++++---------
+ fs/xfs/xfs_reflink.c |    4 +++-
+ fs/xfs/xfs_super.c   |   23 +++++++++++------------
+ 3 files changed, 42 insertions(+), 22 deletions(-)
 
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
