@@ -2,39 +2,40 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E2E1C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Dec 2021 23:15:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7892CC433F5
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Dec 2021 23:15:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237922AbhLHXSr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Dec 2021 18:18:47 -0500
-Received: from sin.source.kernel.org ([145.40.73.55]:60424 "EHLO
-        sin.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233080AbhLHXSq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Dec 2021 18:18:46 -0500
+        id S241099AbhLHXSw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Dec 2021 18:18:52 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:41082 "EHLO
+        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233080AbhLHXSv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Dec 2021 18:18:51 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 25C08CE2417
-        for <linux-xfs@vger.kernel.org>; Wed,  8 Dec 2021 23:15:13 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1755CC00446;
-        Wed,  8 Dec 2021 23:15:11 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id E1ADAB82325
+        for <linux-xfs@vger.kernel.org>; Wed,  8 Dec 2021 23:15:17 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 923E9C00446;
+        Wed,  8 Dec 2021 23:15:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1639005311;
-        bh=1tyTSay/2+w4nHcwmm/rikv5PmftHtvDSP1FwIUCNfY=;
+        s=k20201202; t=1639005316;
+        bh=8itlwooVJUB54RcM8AWOkfDWek3uhuUaJxv6B2Id+oU=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=Fp/YkCg3M3orJz7x657Cp4nNv33et3dSQPacvt2e6MYeKCZIWk3mvj788p/+SnP48
-         ExQ4Gu5AUxpta6c9KBtMvpRycnQIFyv+zvFWlpEdhhvwZ+WoZQePLeCv8MWo7ZG0Mc
-         olcN1pZCwEUYmYaRxMMCLT12wddGy1lBAN2WYPu8arHMgBhh5s2zqMeAlRfep6VKFL
-         kOlG6RILdQCs9wRSG+rfqiC+Px2Ymk4xPMC7a/IfXCD6i14iPYgOhXyjdPjAHrus2M
-         F6MLecjBFw5ZtywsuPTOKNlsYxK3aNtMIKADjAxWvl5x4/wFbqk2o7CIc0989VQ57N
-         jkWhymj9gYQlA==
-Subject: [PATCH 1/2] xfs: remove all COW fork extents when remounting readonly
+        b=V57rPJU6ypeEhWk9Nz3fWAtu670HvRZ8xX9JK2/Q8h1vof9J6WZDUJKEI/MUiuXpU
+         lc65qwwYR6LWPJyhaHvPhIjFM91DDdhjkVDQ8c+hs6AwoZKYwhVedLcnwJpKEIr9LS
+         9HVS2Xw7zTilA9ZlIqrCgfivlMafCVFUsoaARV7yQBHrJrffVaObGJ26ECx92CvZOC
+         a0m67X078kDTX/18FLe/H3tKFeznaM5xBSx8jnaaCM/0DaDVjWNb6uFR6J7Brn3968
+         2XGCarqG+Mn7l+PRaSCATbMGYMIN9XjvOqEXRdUDzDbiWnlc2A6+0TH8nRABaS1aRI
+         drJ2l+pefWbUg==
+Subject: [PATCH 2/2] xfs: only run COW extent recovery when there are no live
+ extents
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
-Cc:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
-        david@fromorbit.com, wen.gang.wang@oracle.com
-Date:   Wed, 08 Dec 2021 15:15:10 -0800
-Message-ID: <163900531080.374528.2313143590834038321.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com,
+        wen.gang.wang@oracle.com
+Date:   Wed, 08 Dec 2021 15:15:16 -0800
+Message-ID: <163900531629.374528.14641806907962114873.stgit@magnolia>
 In-Reply-To: <163900530491.374528.3847809977076817523.stgit@magnolia>
 References: <163900530491.374528.3847809977076817523.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -78,49 +79,149 @@ dirty data will be written into (B) and once that's done, those blocks
 will be transferred to (A)'s data fork without bumping the refcount.
 
 The results are catastrophic -- file (B) and the refcount btree are now
-corrupt.  Solve this race by forcing the xfs_blockgc_free_space to run
-synchronously, which causes xfs_icwalk to return to inodes that were
-skipped because the blockgc code couldn't take the IOLOCK.  This is safe
-to do here because the VFS has already prohibited new writer threads.
+corrupt.  In the first patch, we fixed the race condition in (2) so that
+(A) will always flush the COW fork.  In this second patch, we move the
+_recover_cow call to the initial mount call in (0) for safety.
 
-Fixes: 10ddf64e420f ("xfs: remove leftover CoW reservations when remounting ro")
+As mentioned previously, xfs_reflink_recover_cow walks the refcount
+btree looking for COW staging extents, and frees them.  This was
+intended to be run at mount time (when we know there are no live inodes)
+to clean up any leftover staging events that may have been left behind
+during an unclean shutdown.  As a time "optimization" for readonly
+mounts, we deferred this to the ro->rw transition, not realizing that
+any failure to clean all COW forks during a rw->ro transition would
+result in catastrophic corruption.
+
+Therefore, remove this optimization and only run the recovery routine
+when we're guaranteed not to have any COW staging extents anywhere,
+which means we always run this at mount time.  While we're at it, move
+the callsite to xfs_log_mount_finish because any refcount btree
+expansion (however unlikely given that we're removing records from the
+right side of the index) must be fed by a per-AG reservation, which
+doesn't exist in its current location.
+
+Fixes: 174edb0e46e5 ("xfs: store in-progress CoW allocations in the refcount btree")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_super.c |   14 +++++++++++---
- 1 file changed, 11 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_log.c     |   23 ++++++++++++++++++++++-
+ fs/xfs/xfs_mount.c   |   10 ----------
+ fs/xfs/xfs_reflink.c |    5 ++++-
+ fs/xfs/xfs_super.c   |    9 ---------
+ 4 files changed, 26 insertions(+), 21 deletions(-)
 
 
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 89fec9a18c34..c17344fc1275 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -10,6 +10,7 @@
+ #include "xfs_log_format.h"
+ #include "xfs_trans_resv.h"
+ #include "xfs_mount.h"
++#include "xfs_inode.h"
+ #include "xfs_errortag.h"
+ #include "xfs_error.h"
+ #include "xfs_trans.h"
+@@ -20,6 +21,7 @@
+ #include "xfs_sysfs.h"
+ #include "xfs_sb.h"
+ #include "xfs_health.h"
++#include "xfs_reflink.h"
+ 
+ struct kmem_cache	*xfs_log_ticket_cache;
+ 
+@@ -847,9 +849,28 @@ xfs_log_mount_finish(
+ 	/* Make sure the log is dead if we're returning failure. */
+ 	ASSERT(!error || xlog_is_shutdown(log));
+ 
+-	return error;
++	if (error)
++		return error;
++
++	/*
++	 * Recover any CoW staging blocks that are still referenced by the
++	 * ondisk refcount metadata.  During mount there cannot be any live
++	 * staging extents as we have not permitted any user modifications.
++	 * Therefore, it is safe to free them all right now, even on a
++	 * read-only mount.
++	 */
++	error = xfs_reflink_recover_cow(mp);
++	if (error) {
++		xfs_err(mp, "Error %d recovering leftover CoW allocations.",
++				error);
++		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
++		return error;
++	}
++
++	return 0;
+ }
+ 
++
+ /*
+  * The mount has failed. Cancel the recovery if it hasn't completed and destroy
+  * the log.
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 359109b6f0d3..bed73e8002a5 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -936,15 +936,6 @@ xfs_mountfs(
+ 			xfs_warn(mp,
+ 	"Unable to allocate reserve blocks. Continuing without reserve pool.");
+ 
+-		/* Recover any CoW blocks that never got remapped. */
+-		error = xfs_reflink_recover_cow(mp);
+-		if (error) {
+-			xfs_err(mp,
+-	"Error %d recovering leftover CoW allocations.", error);
+-			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+-			goto out_quota;
+-		}
+-
+ 		/* Reserve AG blocks for future btree expansion. */
+ 		error = xfs_fs_reserve_ag_blocks(mp);
+ 		if (error && error != -ENOSPC)
+@@ -955,7 +946,6 @@ xfs_mountfs(
+ 
+  out_agresv:
+ 	xfs_fs_unreserve_ag_blocks(mp);
+- out_quota:
+ 	xfs_qm_unmount_quotas(mp);
+  out_rtunmount:
+ 	xfs_rtunmount_inodes(mp);
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index cb0edb1d68ef..8b6c7163f684 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -749,7 +749,10 @@ xfs_reflink_end_cow(
+ }
+ 
+ /*
+- * Free leftover CoW reservations that didn't get cleaned out.
++ * Free all CoW staging blocks that are still referenced by the ondisk refcount
++ * metadata.  The ondisk metadata does not track which inode created the
++ * staging extent, so callers must ensure that there are no cached inodes with
++ * live CoW staging extents.
+  */
+ int
+ xfs_reflink_recover_cow(
 diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index e21459f9923a..778b57b1f020 100644
+index 778b57b1f020..c7ac486ca5d3 100644
 --- a/fs/xfs/xfs_super.c
 +++ b/fs/xfs/xfs_super.c
-@@ -1765,7 +1765,10 @@ static int
- xfs_remount_ro(
- 	struct xfs_mount	*mp)
- {
--	int error;
-+	struct xfs_icwalk	icw = {
-+		.icw_flags	= XFS_ICWALK_FLAG_SYNC,
-+	};
-+	int			error;
- 
- 	/*
- 	 * Cancel background eofb scanning so it cannot race with the final
-@@ -1773,8 +1776,13 @@ xfs_remount_ro(
+@@ -1739,15 +1739,6 @@ xfs_remount_rw(
  	 */
- 	xfs_blockgc_stop(mp);
+ 	xfs_restore_resvblks(mp);
+ 	xfs_log_work_queue(mp);
+-
+-	/* Recover any CoW blocks that never got remapped. */
+-	error = xfs_reflink_recover_cow(mp);
+-	if (error) {
+-		xfs_err(mp,
+-			"Error %d recovering leftover CoW allocations.", error);
+-		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+-		return error;
+-	}
+ 	xfs_blockgc_start(mp);
  
--	/* Get rid of any leftover CoW reservations... */
--	error = xfs_blockgc_free_space(mp, NULL);
-+	/*
-+	 * Clear out all remaining COW staging extents and speculative post-EOF
-+	 * preallocations so that we don't leave inodes requiring inactivation
-+	 * cleanups during reclaim on a read-only mount.  We must process every
-+	 * cached inode, so this requires a synchronous cache scan.
-+	 */
-+	error = xfs_blockgc_free_space(mp, &icw);
- 	if (error) {
- 		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
- 		return error;
+ 	/* Create the per-AG metadata reservation pool .*/
 
