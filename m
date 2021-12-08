@@ -2,100 +2,82 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7EDDC433EF
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Dec 2021 21:33:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54550C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Dec 2021 23:15:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236971AbhLHVhQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Dec 2021 16:37:16 -0500
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:52520 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S234396AbhLHVhQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Dec 2021 16:37:16 -0500
-Received: from dread.disaster.area (pa49-181-243-119.pa.nsw.optusnet.com.au [49.181.243.119])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 1D10A86B206;
-        Thu,  9 Dec 2021 08:33:41 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1mv4ZI-000kRx-0M; Thu, 09 Dec 2021 08:33:40 +1100
-Date:   Thu, 9 Dec 2021 08:33:39 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Chris Murphy <lists@colorremedies.com>
-Cc:     xfs list <linux-xfs@vger.kernel.org>
-Subject: Re: VMs getting into stuck states since kernel ~5.13
-Message-ID: <20211208213339.GM449541@dread.disaster.area>
-References: <CAJCQCtQdXZEXC+4iDgG9h5ETmytfaU1+mzAQ+sA9TfQ1qo3Y_w@mail.gmail.com>
+        id S237837AbhLHXSl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Dec 2021 18:18:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50760 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233080AbhLHXSl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Dec 2021 18:18:41 -0500
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2CCA6C061746
+        for <linux-xfs@vger.kernel.org>; Wed,  8 Dec 2021 15:15:09 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 785ABCE2417
+        for <linux-xfs@vger.kernel.org>; Wed,  8 Dec 2021 23:15:07 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 93C83C00446;
+        Wed,  8 Dec 2021 23:15:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1639005305;
+        bh=E5KpBSKMF3XGef+jsfwQqMvET0MFCQ9yvrwgi2Xn+WA=;
+        h=Subject:From:To:Cc:Date:From;
+        b=ssiX4nrascc5EHSgZqfpGI+ZuyuuZkrqX0NAkhZyFWmb0rZWe4gLxa2uZqrTDNP+r
+         5fOvhJXm3aHuGj0LKSQ7W8VDvqgwHz06P2qmxdNmTnr/2v6KFa3wviAUpXO2SpOzv3
+         MHImfwlcMB+AhfoUcyAGP29LMG7aUjptcuN0cJHX2aJ/7wix5lpVfgSZlZR5RRUx3F
+         dhd8up/CcwPY9wTc0wBuMtQ4wXqF0odDkBP0WZwWpFxVvzD65BGOaX4Xdrw5n8GxPa
+         KxqxexagGmZWuJB09+zRl34fMg+QjjTF6wlCTncZ0uQu7H39wb8OQPQ2EEi4D2FtUa
+         /CbIJkoKAuXDA==
+Subject: [PATCHSET V2 for-5.16 0/2] xfs: fix data corruption when cycling
+ ro/rw mounts
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     djwong@kernel.org
+Cc:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
+        david@fromorbit.com, wen.gang.wang@oracle.com
+Date:   Wed, 08 Dec 2021 15:15:04 -0800
+Message-ID: <163900530491.374528.3847809977076817523.stgit@magnolia>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAJCQCtQdXZEXC+4iDgG9h5ETmytfaU1+mzAQ+sA9TfQ1qo3Y_w@mail.gmail.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=61b124b6
-        a=BEa52nrBdFykVEm6RU8P4g==:117 a=BEa52nrBdFykVEm6RU8P4g==:17
-        a=kj9zAlcOel0A:10 a=IOMw9HtfNCkA:10 a=20KFwNOVAAAA:8 a=nt1UNTH2AAAA:8
-        a=7-415B0cAAAA:8 a=pACB8zbwR2vHINvUsHsA:9 a=CjuIK1q_8ugA:10
-        a=1jnEqRSf4vEA:10 a=7AW3Uk2BEroXwU7YnAE8:22 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Dec 08, 2021 at 01:54:02PM -0500, Chris Murphy wrote:
-> Hi,
-> 
-> I'm trying to help progress a kernel regression hitting Fedora
-> infrastructure in which dozens of VMs run concurrently to execute QA
-> testing. The problem doesn't happen immediately, but all the VM's get
-> stuck and then any new process also gets stuck, so extracting
-> information from the system has been difficult and there's not a lot
-> to go on, but this is what I've got so far.
-> 
-> Systems (Fedora openQA worker hosts) on kernel 5.12.12+ wind up in a
-> state where forking does not work correctly, breaking most things
-> https://bugzilla.redhat.com/show_bug.cgi?id=2009585
-> 
-> In that bug some items of interest ...
-> 
-> This megaraid_sas trace. The hang hasn't happened at this point
-> though, so it may not be related at all or it might be an instigator.
-> https://bugzilla.redhat.com/show_bug.cgi?id=2009585#c31
+Hi all,
 
-That's indicative of a bio handling bug somewhere in the storage
-stack, likely the MD RAID layer...
+As part of a large customer escalation, I've been combing through the
+XFS copy on write code to try to find sources of (mostly) silent data
+corruption.  I found a nasty problem in the remount code, wherein a ro
+remount can race with file reader threads and fail to clean out cached
+inode COW forks.  A subsequent rw remount calls the COW staging extent
+recovery code, which frees the space but does not update the records in
+the cached inode COW forks.  This leads to massive fs corruption.
 
-> Once there is a hang, we have these traces from reducing the time for
-> the kernel to report blocked tasks. Much of the messages I'm told from
-> kvm/qemu folks are pretty ordinary/expected locks. But the XFS
-> portions might give a clue what's going on?
-> 
-> 5.15-rc7
-> https://bugzilla-attachments.redhat.com/attachment.cgi?id=1840941
+The first patch in this series is the critical fix for the race
+condition.  The second patch is defensive in that it moves the COW
+staging extent recovery so that it always happens at mount time to
+protect us against future screwups.
 
-So you have processes waiting on both journal IO completion,
-(xlog_wait_on_iclog()) and data IO completion
-(wait_on_page_writeback()).
+v2: rework comments, move xfs_reflink_recover_cow to xfs_log_mount_finish
 
-> 5.15+
-> https://bugzilla-attachments.redhat.com/attachment.cgi?id=1840939
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
-And same here, except it is folio_wait_writeback() in this one.
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
 
-They are all waiting for the storage to complete IOs.
+--D
 
-> So I can imagine the VM's are stuck because XFS is stuck. And XFS is
-> stuck because something in the block layer or megaraid driver is
-> stuck, but I don't know that for certain.
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=remount-fixes-5.16
+---
+ fs/xfs/xfs_log.c     |   23 ++++++++++++++++++++++-
+ fs/xfs/xfs_mount.c   |   10 ----------
+ fs/xfs/xfs_reflink.c |    5 ++++-
+ fs/xfs/xfs_super.c   |   23 +++++++++++------------
+ 4 files changed, 37 insertions(+), 24 deletions(-)
 
-Looking at the traces, I'd say IO is really slow, but not stuck.
-`iostat -dxm 5` output for a few minutes will tell you if IO is
-actually making progress or not.
-
-Can you please provide the hardware configuration for these machines
-and iostat output before we go any further here?
-
-https://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
