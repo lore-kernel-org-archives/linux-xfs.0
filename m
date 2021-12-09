@@ -2,69 +2,64 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CBAEC433F5
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Dec 2021 18:10:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0E5FC433EF
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Dec 2021 18:19:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234322AbhLISN4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 9 Dec 2021 13:13:56 -0500
-Received: from ams.source.kernel.org ([145.40.68.75]:45734 "EHLO
+        id S241980AbhLISXG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Dec 2021 13:23:06 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:49352 "EHLO
         ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243210AbhLISNz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Dec 2021 13:13:55 -0500
+        with ESMTP id S237501AbhLISXG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Dec 2021 13:23:06 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 49EAAB825F5
-        for <linux-xfs@vger.kernel.org>; Thu,  9 Dec 2021 18:10:21 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DF7D7C004DD
-        for <linux-xfs@vger.kernel.org>; Thu,  9 Dec 2021 18:10:19 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id D6199B825F1;
+        Thu,  9 Dec 2021 18:19:31 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D11DC004DD;
+        Thu,  9 Dec 2021 18:19:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1639073420;
-        bh=ziwB1UaZ7ZI0W6T5JC8IOnIQ1TUawwSre4zoZAU5QQE=;
-        h=Date:From:To:Subject:From;
-        b=JH8YptAizWeVHwyE7KtwE/UXhLYW6IGrfqq2BSdfCJ2kH6yxd34YGHK7KKgtJ46zO
-         K2FJykg+HxLKBdaAxEhYSrUTtKOkPfdSOlUn9TH/frJik6xKqhMidj6FZlo5B2ND6b
-         m7cTxfcZY8UIOZ435ejJpWWd3Hjp+QpbTFvZMRmLcJYJNkYjqwdCgaXm0OFJ/qsULf
-         CsTNF4fmA2zXaUfhGfjTM6nJSgx2FRMARuZJCKtJQHhyFwpEfxL60nBULYuKoC/3ph
-         27rQ4V+cbDug5tsN8hHp9EKinOkLPBBRGC/K+PP6ubZgAlXxqh9v2Hg5LDTNCB/F6J
-         lriJiyZDxWdQA==
-Date:   Thu, 9 Dec 2021 10:10:19 -0800
+        s=k20201202; t=1639073970;
+        bh=UdeYhbV9l0tKRDbL8vuhki8dKl96fnKdID+Dmx0iHX8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=JqrIC9zfMsQL56VD9xW56jg4+Kc1bWrcHWS3B8l8UytVcC25ZXMnRTLe2WrVP0/jC
+         QTBFwNN2L3HwVz+xvMKuIj4TQcAc+0mE0hY0fMZ+oMl7CZvHUxGnqpPtBYinDbuAtE
+         t2pXC3ND1Z+THDP/f5E1H3aTIKZzPj+O3kH8rW4ALMDEFK6rvsia1ejM/OrNVVNuB/
+         YVbkfu+c/BDJJZp92JArW42vf+vBbcNeszepPrIQiYEV3pytQipLE7F9GeLjG2vYYd
+         nmH+rpD1yTJttJPqMGE5jxLGVEqoxc7iv/QFRjQglvvI9FBCCQo9PhKYxIFOsTADt1
+         HlvGUWERLEiAQ==
+Date:   Thu, 9 Dec 2021 10:19:29 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     xfs <linux-xfs@vger.kernel.org>
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 089558bc7ba7
-Message-ID: <20211209181019.GB69235@magnolia>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     dan.j.williams@intel.com, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, nvdimm@lists.linux.dev,
+        Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [PATCH] iomap: turn the byte variable in iomap_zero_iter into a
+ ssize_t
+Message-ID: <20211209181929.GC69235@magnolia>
+References: <20211208091203.2927754-1-hch@lst.de>
+ <20211209004846.GA69193@magnolia>
+ <20211209005559.GB69193@magnolia>
+ <20211209061118.GA31368@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20211209061118.GA31368@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+On Thu, Dec 09, 2021 at 07:11:19AM +0100, Christoph Hellwig wrote:
+> On Wed, Dec 08, 2021 at 04:55:59PM -0800, Darrick J. Wong wrote:
+> > Ok, so ... I don't know what I'm supposed to apply this to?  Is this
+> > something that should go in Christoph's development branch?
+> 
+> This is against the decouple DAX from block devices series, which also
+> decouples DAX zeroing from iomap buffered I/O zeroing.  It is in nvdimm.git
+> and has been reviewed by you as well:
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/djbw/nvdimm.git/log/?h=libnvdimm-pending
 
-The for-next branch of the xfs-linux repository at:
+Ah, ok.  IOWs, this is a 5.17 thing, not a critical fix for 5.16-rcX.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
-
-has just been updated.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.  This is the last bugfix for 5.16 before I move on to
-the 5.17 merge.
-
-The new head of the for-next branch is commit:
-
-089558bc7ba7 xfs: remove all COW fork extents when remounting readonly
-
-New Commits:
-
-Darrick J. Wong (1):
-      [089558bc7ba7] xfs: remove all COW fork extents when remounting readonly
-
-
-Code Diffstat:
-
- fs/xfs/xfs_super.c | 14 +++++++++++---
- 1 file changed, 11 insertions(+), 3 deletions(-)
+--D
