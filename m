@@ -2,109 +2,117 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EA6FC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Dec 2021 00:56:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A48D7C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Dec 2021 01:45:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241647AbhLIA7f (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Dec 2021 19:59:35 -0500
-Received: from ams.source.kernel.org ([145.40.68.75]:38074 "EHLO
-        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240543AbhLIA7f (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Dec 2021 19:59:35 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 8B27FB82346;
-        Thu,  9 Dec 2021 00:56:01 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3AF94C00446;
-        Thu,  9 Dec 2021 00:56:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1639011360;
-        bh=0Qbd6pnoKep9PNXa8MnEXlrP1XPI1fzykn2+If23HC4=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=cwH5kjdT+ZrSgp1QJ5JzDwZteTzSABNYgvXh5fvoT7maj1keKRq7OKSwn5wHlNReK
-         DlZ+utWnr1WP72lUzs1D9KPMBeTLE6pnyFX6bjfITB76PxwwzVaQLQ/5LqkyhI+vLC
-         6/Py7x04YTa2iH/57ZRqkYdizrk9/+vKPCd3BrYnn8SGaNtYjCSMN8w+MVahKr7t+Z
-         QYq8X5skWZl22WiSXofTzLDft88WB4oroc5jX/PJPLYOMkguxlBaXZq94HXE4BykOL
-         3AOO9MexN/6OwwaVjUPHjviGgOolhDjtLzJQRCivpRUnHKn2mh1ZXMMHfP2CFCC5cH
-         KEIWMJw6UtwNA==
-Date:   Wed, 8 Dec 2021 16:55:59 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     dan.j.williams@intel.com, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, nvdimm@lists.linux.dev,
-        Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [PATCH] iomap: turn the byte variable in iomap_zero_iter into a
- ssize_t
-Message-ID: <20211209005559.GB69193@magnolia>
-References: <20211208091203.2927754-1-hch@lst.de>
- <20211209004846.GA69193@magnolia>
+        id S233461AbhLIBtI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Dec 2021 20:49:08 -0500
+Received: from mail-mw2nam12on2056.outbound.protection.outlook.com ([40.107.244.56]:49793
+        "EHLO NAM12-MW2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S229680AbhLIBtH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 8 Dec 2021 20:49:07 -0500
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=jFwamrN+acnf51V9itEVZaabZQlA//DmD5xMbQZYVL/IDVmE6LhuaMWHe0v8fLa8f4CFNmJOFK12P3gmjvh+/7wIQVTPFkDl2cuSUxyJ3hPWQYhSIsyJyQF0qLuR8+BrfIsqv03KVu/HfLdafSGu5pyEE5HNmFgxPvWh27xU7uM6xJ3t6sw+GWCaAIi1/IVDqVnQcK3lwuMKRpVoalaoTor07M/XTlKfjqYW7sSwW+X5mzOVDO3peSf0rjRdUw/9LtpxZP16X3hBK29bQeBD012sjP7yPxNGE3VoQBLqd1fyTKoippLyYlSsaB7AKaVbz37olJTf01eQjtG6pjCKSw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=xwUBwTTD6eMyUmidV+05of0MgoF7nwOYHtAHvU6N0Sg=;
+ b=ZdCVrC+RevN0RgwhiK6sZRPh1HTUMOD+knMMYP+OjaHWewsw13Szo0FI93tzLBM7ov7ntoaZzG9YGnGN8fzBTAuDwVEbwInKS48crhFJHVO0gnsew16RcEeFSu3F13TSdRz4R7sKg84sjQ1ydrWIVsCqUWROYW0gyAbBoZOySqe38r/wMhEbLeHCV1SKYKA/w8BZkS3FSTF0yriiaCG2k6h9mRszuQEVOMvaY+FVBPcxoX1d8/K/FB7nGgtuzACJuG58g3Mqb8F5uKSTsAQvu9AW2lGrySz3uTMtc3vnMerWQMFrkFF692313qe1uJjSmsgXZYCINRoTwnO7u3mouQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 203.18.50.12) smtp.rcpttodomain=lists.freedesktop.org
+ smtp.mailfrom=nvidia.com; dmarc=pass (p=quarantine sp=quarantine pct=100)
+ action=none header.from=nvidia.com; dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=xwUBwTTD6eMyUmidV+05of0MgoF7nwOYHtAHvU6N0Sg=;
+ b=nJbux1Qw5Je2ZWXKLkM0PncpYRHutKyOrXE7GZZPPPEzvdtXi4QxzST0o1DSZRd7ZIJMhOqRv8TKwX5Es3/h3rvkeRUyNCxfaJ6HNwikte6rlq1Hk5hF/PgbB1XzjynpPV3g5mDVWt24ns79WLOb9HErENvXG1pShuHEnaqjWmIUKBksnJ4+7VXCZ1MYD+eStInnK5pM4FgHOJZ99WMNMJVoes5PoPXE0qjjbt5STkZQVu8SlEhlf+06kqoXmNbOboUItghW/kuiCs1dtR16pZAcWhLniKMJ/58yzeXBgGuXKJazHZubwd1DDl3am589kE3/E3BmPy1BfCNkwqTKpg==
+Received: from MW2PR16CA0060.namprd16.prod.outlook.com (2603:10b6:907:1::37)
+ by PH0PR12MB5465.namprd12.prod.outlook.com (2603:10b6:510:ec::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4755.19; Thu, 9 Dec
+ 2021 01:45:33 +0000
+Received: from CO1NAM11FT012.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:907:1:cafe::73) by MW2PR16CA0060.outlook.office365.com
+ (2603:10b6:907:1::37) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4755.16 via Frontend
+ Transport; Thu, 9 Dec 2021 01:45:33 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 203.18.50.12)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 203.18.50.12 as permitted sender) receiver=protection.outlook.com;
+ client-ip=203.18.50.12; helo=mail.nvidia.com;
+Received: from mail.nvidia.com (203.18.50.12) by
+ CO1NAM11FT012.mail.protection.outlook.com (10.13.175.192) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ 15.20.4755.13 via Frontend Transport; Thu, 9 Dec 2021 01:45:32 +0000
+Received: from rnnvmail201.nvidia.com (10.129.68.8) by HKMAIL101.nvidia.com
+ (10.18.16.10) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Thu, 9 Dec
+ 2021 01:45:31 +0000
+Received: from nvdebian.localnet (172.20.187.5) by rnnvmail201.nvidia.com
+ (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.9; Wed, 8 Dec 2021
+ 17:45:26 -0800
+From:   Alistair Popple <apopple@nvidia.com>
+To:     Jason Gunthorpe <jgg@ziepe.ca>
+CC:     <akpm@linux-foundation.org>, <Felix.Kuehling@amd.com>,
+        <linux-mm@kvack.org>, <rcampbell@nvidia.com>,
+        <linux-ext4@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        Alex Sierra <alex.sierra@amd.com>,
+        <amd-gfx@lists.freedesktop.org>, <dri-devel@lists.freedesktop.org>,
+        <hch@lst.de>, <jglisse@redhat.com>, <willy@infradead.org>
+Subject: Re: [PATCH v2 03/11] mm/gup: migrate PIN_LONGTERM dev coherent pages to system
+Date:   Thu, 9 Dec 2021 12:45:24 +1100
+Message-ID: <117075453.Ddeq1f3ylz@nvdebian>
+In-Reply-To: <20211208135345.GC6467@ziepe.ca>
+References: <20211206185251.20646-1-alex.sierra@amd.com> <2858338.J0npWUQLIM@nvdebian> <20211208135345.GC6467@ziepe.ca>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20211209004846.GA69193@magnolia>
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
+X-Originating-IP: [172.20.187.5]
+X-ClientProxiedBy: HQMAIL101.nvidia.com (172.20.187.10) To
+ rnnvmail201.nvidia.com (10.129.68.8)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 8face818-25b4-4b88-7b71-08d9bab5968e
+X-MS-TrafficTypeDiagnostic: PH0PR12MB5465:EE_
+X-Microsoft-Antispam-PRVS: <PH0PR12MB546575A97EC67D418FA8DEF4DF709@PH0PR12MB5465.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:5236;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 61859y8NJ0Ntt5/r7EgRvwsDN5dHeI8FzC6C4ACjhC9FHv00bR8RiZUS5kibLdzaok1Jz+mrBX/HdjCg6tpuB7t5R096gQdQ4/khv+O+b9jWmusMJfqnc5CTJsewQzS6NIqqpo58psmtnN9neaAOD140LUDE/IveJLCaqFQ89xSQ0p8W//jAGseHgU4Zgm6v5L6wUnQ75k1L8q57Fyve/of+Y1SFJlfzEjlLjjH/o4ilTHkiQRIzAVByyEunum87q0iwV1EEZk6yN/12+fctos+sPHhNbPZ8FXFvW+QQxMGoYCkLuSZdAMvHTT3tbezmCM6z2+ZWK1OAzPvVDM1apj8w4cnIp/GuEeMwyTtNugUT+dnW0ORUx6GimWqtLQX9OT8HsjzuNlC6FbLvUZ23ol+JUqsbAYRFWHnUA9viafRqzdb9KPh/T8/KuYlDs6I5EV4CGTFi/2jD0oPc+FfLrd7I1EY1JVFNECcdEqEodeBsWV7EOrSmV8CS4JA+lxp//0X4DesoeS01Q7X/kpRmL2hDGlOZC34S7SIrqPSmQuLaHbbZoT6kYVomB7GJTzJHhL6kIJ8ZM3I8VdE8rBPe/cCRgCL1/UbxUwc80lRLUSk3ZzNqyiWgFq+WGFX4WGjY45Cxcg5NX4hkIyOAd3kIxWSXoMlbKThmv+EqQXqOnd9Nmg5cCYz3ytp2L0A3TBWyOYbAROFX3UQirrStNV3X991HoXTn2+4OakoN9+wu4PTkpvgjDPa3tqQIhgaLgEwRTfOExXN+4F/JaLQUn924Apa0XgSg/6Kq4QPGSQnnE/S+H2JixcHL7xYcieR/cppNc/Xduh1UQItjGrlRsHN6gT/GApgtppMQPvoquk7EqaQA/lp8eY5MWB3v0pUCOV9+
+X-Forefront-Antispam-Report: CIP:203.18.50.12;CTRY:HK;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:hkhybrid01.nvidia.com;CAT:NONE;SFS:(4636009)(46966006)(36840700001)(40470700001)(4744005)(6916009)(336012)(54906003)(426003)(7416002)(316002)(7636003)(186003)(5660300002)(966005)(70206006)(70586007)(26005)(47076005)(9576002)(8936002)(16526019)(8676002)(4326008)(508600001)(36860700001)(86362001)(40460700001)(9686003)(34070700002)(83380400001)(356005)(82310400004)(33716001)(2906002);DIR:OUT;SFP:1101;
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Dec 2021 01:45:32.3904
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8face818-25b4-4b88-7b71-08d9bab5968e
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[203.18.50.12];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT012.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR12MB5465
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Dec 08, 2021 at 04:48:46PM -0800, Darrick J. Wong wrote:
-> On Wed, Dec 08, 2021 at 10:12:03AM +0100, Christoph Hellwig wrote:
-> > bytes also hold the return value from iomap_write_end, which can contain
-> > a negative error value.  As bytes is always less than the page size even
-> > the signed type can hold the entire possible range.
-> > 
-> > Fixes: c6f40468657d ("fsdax: decouple zeroing from the iomap buffered I/O code")
-
-...waitaminute, ^^^^^^ in what tree is this commit?  Did Linus merge
-the dax decoupling series into upstream without telling me?
-
-/me checks... no?
-
-Though I searched for it on gitweb and came up with this bizarre plot
-twist:
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=c6f40468657d16e4010ef84bf32a761feb3469ea
-
-(Is this the same as that github thing a few months ago where
-everybody's commits get deduplicated into the same realm and hence
-anyone can make trick the frontend into sort of making it look like
-their rando commits end up in Linus' tree?  Or did it get merged and
-push -f reverted?)
-
-Ok, so ... I don't know what I'm supposed to apply this to?  Is this
-something that should go in Christoph's development branch?
-
-<confused, going to run away now>
-
-On the plus side, that means I /can/ go test-merge willy's iomap folios
-for 5.17 stuff tonight.
-
---D
-
-> > Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Thursday, 9 December 2021 12:53:45 AM AEDT Jason Gunthorpe wrote:
+> > I think a similar problem exists for device private fault handling as well and
+> > it has been on my list of things to fix for a while. I think the solution is to
+> > call try_get_page(), except it doesn't work with device pages due to the whole
+> > refcount thing. That issue is blocking a fair bit of work now so I've started
+> > looking into it.
 > 
-> Looks good,
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> 
-> --D
-> 
-> > ---
-> >  fs/iomap/buffered-io.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> > index b1511255b4df8..ac040d607f4fe 100644
-> > --- a/fs/iomap/buffered-io.c
-> > +++ b/fs/iomap/buffered-io.c
-> > @@ -883,7 +883,7 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
-> >  
-> >  	do {
-> >  		unsigned offset = offset_in_page(pos);
-> > -		size_t bytes = min_t(u64, PAGE_SIZE - offset, length);
-> > +		ssize_t bytes = min_t(u64, PAGE_SIZE - offset, length);
-> >  		struct page *page;
-> >  		int status;
-> >  
-> > -- 
-> > 2.30.2
-> > 
+> Where is this?
+ 
+Nothing posted yet. I've been going through the mailing list and the old
+thread[1] to get an understanding of what is left to do. If you have any
+suggestions they would be welcome.
+
+[1] https://lore.kernel.org/all/20211014153928.16805-3-alex.sierra@amd.com/
+
+
+
