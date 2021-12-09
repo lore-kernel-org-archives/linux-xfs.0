@@ -2,131 +2,169 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DB4FC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Dec 2021 02:53:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C54AC433EF
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Dec 2021 05:41:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230401AbhLIC46 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Dec 2021 21:56:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43244 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230480AbhLIC45 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Dec 2021 21:56:57 -0500
-Received: from mail-qt1-x829.google.com (mail-qt1-x829.google.com [IPv6:2607:f8b0:4864:20::829])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5630C061746
-        for <linux-xfs@vger.kernel.org>; Wed,  8 Dec 2021 18:53:24 -0800 (PST)
-Received: by mail-qt1-x829.google.com with SMTP id t34so4115922qtc.7
-        for <linux-xfs@vger.kernel.org>; Wed, 08 Dec 2021 18:53:24 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=9lZzV6uRxUvt0RqeIyM4DCy//4WwHZcCj15yKoRWKv0=;
-        b=MuH7fGvI/9AD+8Jf3135+Y84ksGN91yCSTt0zoUDEqseX7B2K0YN6lCaPdgDeOMRpm
-         GOe7MfuQdBr+Z4wyPuK/X3Oq+E11gqhW44bDipD/o7JNOnqwTqyXLLafarAjz6Qto1ro
-         aG+jBeBbWAiByCuS0S6B9hU+pATvx85RKkpkIAQIfLRbW2qUaPcS9Uu6YIpp8W008vUj
-         AvLKcneW2BuqADAMC9NC6N/Val8HXTIHMS7sQv01juWNQbBHSKaBSpUv61IEYCjx2r7c
-         hWVEXyKPTi4aa/SWCsc4zb+EUhNMyK5Z6Ko/CgGa+RO3zAgIsW2+q5scXiLYdGdjXPHA
-         IZ9w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=9lZzV6uRxUvt0RqeIyM4DCy//4WwHZcCj15yKoRWKv0=;
-        b=y56uIjU+v5P94//p1GHMr5Ygaw9WvyXQN/G6HzZ5WxMGtdbdBdlnKfBP4NtYOXCRfk
-         ezzHw0E+GNA9yQBK5ZN4Wn36dN6TUDzeF6ko1UpQJfVKnB8geJ1nsTBbPgz0X6tGcDB/
-         n4rIA75uBenIcoU95J0hIGybjDMddG7wtLAo/ZQeQ5nPwBLmV8mUPi7yPJrWaR7JjZF5
-         a0w4Iucfp1S5OvMKXK98FuNKf8N3x9z2F4931NrsurgKsm/jjiRTI18IguFMBsF/0TCP
-         yeGn+fVfCzEPa8W2THN01qB7yhgTO8p/Bp4GfyCxovDSsSE4xz4971+GW8RTg/NwKsqc
-         tvWQ==
-X-Gm-Message-State: AOAM5304BUXE8dmXFSPcgDqPMWom+rIHuWdnPVDxBeRxXg4w5mpUFZdd
-        ZJ8IV/lGsFF25yhcG8WpXsCpoI4Xw+j6mg==
-X-Google-Smtp-Source: ABdhPJzd7PgIaK+OliA8j4qPmgBHphO7odQ23RlPROnXGhIchmoXCBqWvKGTqHwv0CnaCCZT+fN4FA==
-X-Received: by 2002:a05:622a:8d:: with SMTP id o13mr13208686qtw.574.1639018404025;
-        Wed, 08 Dec 2021 18:53:24 -0800 (PST)
-Received: from ziepe.ca (hlfxns017vw-142-162-113-129.dhcp-dynamic.fibreop.ns.bellaliant.net. [142.162.113.129])
-        by smtp.gmail.com with ESMTPSA id m1sm2800768qtk.34.2021.12.08.18.53.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 08 Dec 2021 18:53:23 -0800 (PST)
-Received: from jgg by mlx with local (Exim 4.94)
-        (envelope-from <jgg@ziepe.ca>)
-        id 1mv9Yg-000zXC-FC; Wed, 08 Dec 2021 22:53:22 -0400
-Date:   Wed, 8 Dec 2021 22:53:22 -0400
-From:   Jason Gunthorpe <jgg@ziepe.ca>
-To:     Alistair Popple <apopple@nvidia.com>
-Cc:     akpm@linux-foundation.org, Felix.Kuehling@amd.com,
-        linux-mm@kvack.org, rcampbell@nvidia.com,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Alex Sierra <alex.sierra@amd.com>,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        hch@lst.de, jglisse@redhat.com, willy@infradead.org
-Subject: Re: [PATCH v2 03/11] mm/gup: migrate PIN_LONGTERM dev coherent pages
- to system
-Message-ID: <20211209025322.GE6467@ziepe.ca>
-References: <20211206185251.20646-1-alex.sierra@amd.com>
- <2858338.J0npWUQLIM@nvdebian>
- <20211208135345.GC6467@ziepe.ca>
- <117075453.Ddeq1f3ylz@nvdebian>
+        id S232328AbhLIFp0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Dec 2021 00:45:26 -0500
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:37214 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232157AbhLIFpZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Dec 2021 00:45:25 -0500
+Received: from dread.disaster.area (pa49-181-243-119.pa.nsw.optusnet.com.au [49.181.243.119])
+        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id B070F8688E6;
+        Thu,  9 Dec 2021 16:41:50 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1mvCBh-000sdl-8J; Thu, 09 Dec 2021 16:41:49 +1100
+Date:   Thu, 9 Dec 2021 16:41:49 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, wen.gang.wang@oracle.com
+Subject: Re: [PATCH 2/2] xfs: only run COW extent recovery when there are no
+ live extents
+Message-ID: <20211209054149.GN449541@dread.disaster.area>
+References: <163900530491.374528.3847809977076817523.stgit@magnolia>
+ <163900531629.374528.14641806907962114873.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <117075453.Ddeq1f3ylz@nvdebian>
+In-Reply-To: <163900531629.374528.14641806907962114873.stgit@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=61b1971f
+        a=BEa52nrBdFykVEm6RU8P4g==:117 a=BEa52nrBdFykVEm6RU8P4g==:17
+        a=kj9zAlcOel0A:10 a=IOMw9HtfNCkA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=xnGX_mindpNQCRvscnUA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Dec 09, 2021 at 12:45:24PM +1100, Alistair Popple wrote:
-> On Thursday, 9 December 2021 12:53:45 AM AEDT Jason Gunthorpe wrote:
-> > > I think a similar problem exists for device private fault handling as well and
-> > > it has been on my list of things to fix for a while. I think the solution is to
-> > > call try_get_page(), except it doesn't work with device pages due to the whole
-> > > refcount thing. That issue is blocking a fair bit of work now so I've started
-> > > looking into it.
-> > 
-> > Where is this?
+On Wed, Dec 08, 2021 at 03:15:16PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> As part of multiple customer escalations due to file data corruption
+> after copy on write operations, I wrote some fstests that use fsstress
+> to hammer on COW to shake things loose.  Regrettably, I caught some
+> filesystem shutdowns due to incorrect rmap operations with the following
+> loop:
+> 
+> mount <filesystem>				# (0)
+> fsstress <run only readonly ops> &		# (1)
+> while true; do
+> 	fsstress <run all ops>
+> 	mount -o remount,ro			# (2)
+> 	fsstress <run only readonly ops>
+> 	mount -o remount,rw			# (3)
+> done
+> 
+> When (2) happens, notice that (1) is still running.  xfs_remount_ro will
+> call xfs_blockgc_stop to walk the inode cache to free all the COW
+> extents, but the blockgc mechanism races with (1)'s reader threads to
+> take IOLOCKs and loses, which means that it doesn't clean them all out.
+> Call such a file (A).
+> 
+> When (3) happens, xfs_remount_rw calls xfs_reflink_recover_cow, which
+> walks the ondisk refcount btree and frees any COW extent that it finds.
+> This function does not check the inode cache, which means that incore
+> COW forks of inode (A) is now inconsistent with the ondisk metadata.  If
+> one of those former COW extents are allocated and mapped into another
+> file (B) and someone triggers a COW to the stale reservation in (A), A's
+> dirty data will be written into (B) and once that's done, those blocks
+> will be transferred to (A)'s data fork without bumping the refcount.
+> 
+> The results are catastrophic -- file (B) and the refcount btree are now
+> corrupt.  In the first patch, we fixed the race condition in (2) so that
+> (A) will always flush the COW fork.  In this second patch, we move the
+> _recover_cow call to the initial mount call in (0) for safety.
+> 
+> As mentioned previously, xfs_reflink_recover_cow walks the refcount
+> btree looking for COW staging extents, and frees them.  This was
+> intended to be run at mount time (when we know there are no live inodes)
+> to clean up any leftover staging events that may have been left behind
+> during an unclean shutdown.  As a time "optimization" for readonly
+> mounts, we deferred this to the ro->rw transition, not realizing that
+> any failure to clean all COW forks during a rw->ro transition would
+> result in catastrophic corruption.
+> 
+> Therefore, remove this optimization and only run the recovery routine
+> when we're guaranteed not to have any COW staging extents anywhere,
+> which means we always run this at mount time.  While we're at it, move
+> the callsite to xfs_log_mount_finish because any refcount btree
+> expansion (however unlikely given that we're removing records from the
+> right side of the index) must be fed by a per-AG reservation, which
+> doesn't exist in its current location.
+> 
+> Fixes: 174edb0e46e5 ("xfs: store in-progress CoW allocations in the refcount btree")
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  fs/xfs/xfs_log.c     |   23 ++++++++++++++++++++++-
+>  fs/xfs/xfs_mount.c   |   10 ----------
+>  fs/xfs/xfs_reflink.c |    5 ++++-
+>  fs/xfs/xfs_super.c   |    9 ---------
+>  4 files changed, 26 insertions(+), 21 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index 89fec9a18c34..c17344fc1275 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -10,6 +10,7 @@
+>  #include "xfs_log_format.h"
+>  #include "xfs_trans_resv.h"
+>  #include "xfs_mount.h"
+> +#include "xfs_inode.h"
+>  #include "xfs_errortag.h"
+>  #include "xfs_error.h"
+>  #include "xfs_trans.h"
+> @@ -20,6 +21,7 @@
+>  #include "xfs_sysfs.h"
+>  #include "xfs_sb.h"
+>  #include "xfs_health.h"
+> +#include "xfs_reflink.h"
 >  
-> Nothing posted yet. I've been going through the mailing list and the old
-> thread[1] to get an understanding of what is left to do. If you have any
-> suggestions they would be welcome.
+>  struct kmem_cache	*xfs_log_ticket_cache;
+>  
+> @@ -847,9 +849,28 @@ xfs_log_mount_finish(
+>  	/* Make sure the log is dead if we're returning failure. */
+>  	ASSERT(!error || xlog_is_shutdown(log));
+>  
+> -	return error;
+> +	if (error)
+> +		return error;
+> +
+> +	/*
+> +	 * Recover any CoW staging blocks that are still referenced by the
+> +	 * ondisk refcount metadata.  During mount there cannot be any live
+> +	 * staging extents as we have not permitted any user modifications.
+> +	 * Therefore, it is safe to free them all right now, even on a
+> +	 * read-only mount.
+> +	 */
+> +	error = xfs_reflink_recover_cow(mp);
+> +	if (error) {
+> +		xfs_err(mp, "Error %d recovering leftover CoW allocations.",
+> +				error);
+> +		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+> +		return error;
+> +	}
+> +
+> +	return 0;
+>  }
 
-Oh, that
+THis is after we've emitted an "Ending recovery ...." log message.
+I kinda expected you to move this up to just after the
+evict_inodes() call before we force the log, push the AIL, drain
+the buffers used during recovery and potentially turn the
+"filesystem is read-only" flag back on.
 
-Joao's series here is the first step:
+i.e. if this is a recovery operation, it should be done before we
+finish recovery....
 
-https://lore.kernel.org/linux-mm/20211202204422.26777-1-joao.m.martins@oracle.com/
+Other than that, the change is fine.
 
-I already sent a patch to remove the DRM usage of PUD/PMD -
-0d979509539e ("drm/ttm: remove ttm_bo_vm_insert_huge()")
+Cheers,
 
-Next, someone needs to change FSDAX to have a folio covering the
-ZONE_DEVICE pages before it installs a PUD or PMD. I don't know
-anything about FS's to know how to do this at all.
-
-Thus all PUD/PMD entries will point at a head page or larger of a
-compound. This is important because all the existing machinery for THP
-assumes 1 PUD/PMD means 1 struct page to manipulate.
-
-Then, consolidate all the duplicated code that runs when a page is
-removed from a PTE/PMD/PUD etc into a function. Figure out why the
-duplications are different to make them the same (I have some rough
-patches for this step)
-
-Start with PUD and have zap on PUD call the consolidated function and
-make vmf_insert_pfn_pud_prot() accept a struct page not pfn and incr
-the refcount. PUD is easy because there is no THP
-
-Then do the same to PMD without breaking the THP code
-
-Then make the PTE also incr the refcount on insert and zap
-
-Exterminate vma_is_special_huge() along the way, there is no such
-thing as a special huge VMA without a pud/pmd_special flag so all
-things installed here must be struct page and not special.
-
-Then the patches that are already posted are applicable and we can
-kill the refcount == 1 stuff. No 0 ref count pages installed in page
-tables.
-
-Once all of that is done it is fairly straightforward to remove
-pud/pmd/pte_devmap entirely and the pgmap stuff from gup.c
-
-Jason
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
