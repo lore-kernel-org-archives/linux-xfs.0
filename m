@@ -2,179 +2,341 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54687C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Dec 2021 10:53:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 071F8C433F5
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Dec 2021 12:42:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236258AbhLIK5A (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 9 Dec 2021 05:57:00 -0500
-Received: from mail-dm3nam07on2067.outbound.protection.outlook.com ([40.107.95.67]:22112
-        "EHLO NAM02-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S236359AbhLIK44 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 9 Dec 2021 05:56:56 -0500
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=NJIk6BJ0Pz8UO5lPwvuID/PmNIisSBpR9iLooc4XbLGfPEpC4yz6H9otMi5IH4tQgbbLzGGLzCJQp4kGr00+FvwKIw/6XHfJbpQMPi9MAtpiOprvoCGV3lEpfYVpUe3gQPrWLnqqxAs2gZDxH6Mt5BjdHJddR5NKkWZSKXWPC331QSPrvQYPZD7hkWmi6Xi/cM4ObFDA7WUbKy8dlTMoKGdBxlC8owGKJuXGmQpq1HZAskPvMYn9XyxgcsNaQbkPEKV5Xi4yt7yORNA06tF95rsTGiT1bSOu8koS4Rpfvh7ZOI7rX6Jb7ZycFQOImzPnY8Get0R6M/orz55UpHAF5Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=OxkNY6q++y/FT9Sq+BwUn4Q3sk8rLT1vE6MTEsaT3NA=;
- b=aNfuTtj3FaM/MupmpciL1Sw6P0alRT9SlaQHvWjiLDbnPXmlKL5zcL7mpJ1o0kq/jdxzr3IlHnZBF0w0l2f7dAt63obdpZHdt6QNijKqIvkcPGr+fmPQiv4YAsPGN1VivdEmDonHBQ5tghZWpOm9MjaQ6Vt5sBEYjYvfu+a3h8RnxmpIGIpovcJifuYflW8irSIxzdrcobeDeLtIT7qVlRXQMdhY1U4q5iqJFTnHXyDtCbDWuveNKllO7NJ5sJiuWvtGmKsevEw/zeGwrsdufM1hItTVkbPYRG0OvItTcz92uaI/BHPpo2l3nPfyHkEsUZSXCwOUedi2VT3jhRP/yA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 203.18.50.13) smtp.rcpttodomain=infradead.org smtp.mailfrom=nvidia.com;
- dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
- header.from=nvidia.com; dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=OxkNY6q++y/FT9Sq+BwUn4Q3sk8rLT1vE6MTEsaT3NA=;
- b=G7sZF/AvwcFSyL+5RasI2whs4YB6lpNEGKWH8E5izeda/ydQATe1uzRGyASLtI613ppqPtSNt0TX0RaJoNVjoeu/ZwljtRz3GpVuyhTw7S7oXvw1GBXM8CWzGxpSAXz4rU5KKl4iwNGEtPsP1TzeJTTVEetZKD9I9VNjUi26HzDw8CIt5O2RYJic69F8pUeQcNXkZfHNHdTBcu6npU4B9Gx5jFCoKchUDbSp/SU95xE/Nj1vJGrMe0LTKi+eROhwKMVVdPive5t7og/qfj8xKIvjPDXMbb89pRM0nNzK2W/qrmUw7MFXL7P5RW+fkA16wjJwFHBbM9r2kAWXWg5LIQ==
-Received: from CO2PR06CA0071.namprd06.prod.outlook.com (2603:10b6:104:3::29)
- by DM5PR12MB1228.namprd12.prod.outlook.com (2603:10b6:3:74::19) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4755.16; Thu, 9 Dec
- 2021 10:53:21 +0000
-Received: from CO1NAM11FT063.eop-nam11.prod.protection.outlook.com
- (2603:10b6:104:3:cafe::1a) by CO2PR06CA0071.outlook.office365.com
- (2603:10b6:104:3::29) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4778.12 via Frontend
- Transport; Thu, 9 Dec 2021 10:53:21 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 203.18.50.13)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 203.18.50.13 as permitted sender) receiver=protection.outlook.com;
- client-ip=203.18.50.13; helo=mail.nvidia.com;
-Received: from mail.nvidia.com (203.18.50.13) by
- CO1NAM11FT063.mail.protection.outlook.com (10.13.175.37) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.20.4755.13 via Frontend Transport; Thu, 9 Dec 2021 10:53:20 +0000
-Received: from rnnvmail201.nvidia.com (10.129.68.8) by HKMAIL102.nvidia.com
- (10.18.16.11) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Thu, 9 Dec
- 2021 10:53:20 +0000
-Received: from nvdebian.localnet (172.20.187.6) by rnnvmail201.nvidia.com
- (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.9; Thu, 9 Dec 2021
- 02:53:15 -0800
-From:   Alistair Popple <apopple@nvidia.com>
-To:     Felix Kuehling <felix.kuehling@amd.com>,
-        <akpm@linux-foundation.org>, <linux-mm@kvack.org>,
-        <rcampbell@nvidia.com>, <linux-ext4@vger.kernel.org>,
-        <linux-xfs@vger.kernel.org>,
-        "Sierra Guiza, Alejandro (Alex)" <alex.sierra@amd.com>
-CC:     <amd-gfx@lists.freedesktop.org>, <willy@infradead.org>,
-        <jglisse@redhat.com>, <dri-devel@lists.freedesktop.org>,
-        <jgg@nvidia.com>, <hch@lst.de>
-Subject: Re: [PATCH v2 03/11] mm/gup: migrate PIN_LONGTERM dev coherent pages to system
-Date:   Thu, 9 Dec 2021 21:53:12 +1100
-Message-ID: <2497746.4npHOaMrmn@nvdebian>
-In-Reply-To: <3f8a48d6-7ee7-fb30-5942-29054c34aac5@amd.com>
-References: <20211206185251.20646-1-alex.sierra@amd.com> <2b996383-ebe6-e9d8-d794-58ecfd4a16e8@amd.com> <3f8a48d6-7ee7-fb30-5942-29054c34aac5@amd.com>
+        id S237428AbhLIMpr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Dec 2021 07:45:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37144 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234578AbhLIMpr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Dec 2021 07:45:47 -0500
+Received: from mail-lj1-x22c.google.com (mail-lj1-x22c.google.com [IPv6:2a00:1450:4864:20::22c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B95DAC061746
+        for <linux-xfs@vger.kernel.org>; Thu,  9 Dec 2021 04:42:13 -0800 (PST)
+Received: by mail-lj1-x22c.google.com with SMTP id a37so7692204ljq.13
+        for <linux-xfs@vger.kernel.org>; Thu, 09 Dec 2021 04:42:13 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:references
+         :content-language:to:from:in-reply-to:content-transfer-encoding;
+        bh=QGQWma2uEzDNIdt+r3u6ciostCHK2Om3GcZZD9LLSKQ=;
+        b=KYp937/IxYhwdFPV1keQTp3DfsUx7BS5VJwgeOD7nbCi8TQItveCacWOhjZ1jeaNEi
+         60+c+WKtuxpEL8aqsj5DfmHMRjXJpA+MNXOWO8CPPNYFD/FTHtxWMV9RgPbNWst0PVvK
+         aA1H/4JSBcXG3+pyuOxL9CUUiZmbh0mXuZuPepWHdSmCFlSMTEuMITr6A1P1zbmOW26i
+         oWtTtHScXotREjtsKQeLjuPMmx8yr/ktSX8tydaXckM+p4o3JiAOQw0q1pGxTO/disSd
+         tpxTBq1h9JEBxTyEQyfn53EH6viYLhPZkCLk9WeFCQRTFHc+EzD6I/R88XN9lHYRdnLh
+         agfg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :references:content-language:to:from:in-reply-to
+         :content-transfer-encoding;
+        bh=QGQWma2uEzDNIdt+r3u6ciostCHK2Om3GcZZD9LLSKQ=;
+        b=aKiepYCpDHKh85EwQAYH3fDhc44txJyCCieI8HqjGxzrj9mu0v/gYOybaw7UBOFlx4
+         TINVsaQbG4x/SWTXisERg2B61fzNIJfTE0MvfrJP+1V82CGFmSxzy3BZTXATlmk0HKxD
+         MdSd1TMxJ3Mx2bEVwGvTi9/kMvWr83CfMJI8vc7nGDfztwaCTHZ6hnyb24EC+8KMd1Do
+         ZM99BYyD3fCigpKGpPYyRhvo3rvzM5ML21M4TkYSFLXZEvrFcL6JEe7V/o+i474rzRxf
+         Gd6hFH6tOfWEZiGjiA0ewQfbWGOVjkC3s1MPLiAaIWppQPq5kvalyT2FoHCISY6JwwlR
+         43VQ==
+X-Gm-Message-State: AOAM53371FvfB6PWgPn2J+jd2nyoo8yiQHE0KfihL7WLD3GJ4dmY+tRf
+        gT7g/Lto69w8MXQb/NwzSMvIjgxDaeE=
+X-Google-Smtp-Source: ABdhPJyxVx7SffmFMU9ZJPTutkyY2/suu0rDtGxMQNGc6wpkOnLRbq7IVc+CqczgsvzmbKodDYE9nQ==
+X-Received: by 2002:a05:651c:12c9:: with SMTP id 9mr6080832lje.474.1639053731617;
+        Thu, 09 Dec 2021 04:42:11 -0800 (PST)
+Received: from [192.168.68.135] (user-94-254-232-26.play-internet.pl. [94.254.232.26])
+        by smtp.gmail.com with ESMTPSA id x3sm519500lfq.238.2021.12.09.04.42.10
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 09 Dec 2021 04:42:10 -0800 (PST)
+Message-ID: <fbd06eb0-5d01-a01b-fb5a-af1f8a1ba053@gmail.com>
+Date:   Thu, 9 Dec 2021 13:42:09 +0100
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
-X-Originating-IP: [172.20.187.6]
-X-ClientProxiedBy: HQMAIL107.nvidia.com (172.20.187.13) To
- rnnvmail201.nvidia.com (10.129.68.8)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 67640458-1c38-42ff-80f8-08d9bb021da8
-X-MS-TrafficTypeDiagnostic: DM5PR12MB1228:EE_
-X-Microsoft-Antispam-PRVS: <DM5PR12MB1228B442E6B148341F5CE1C9DF709@DM5PR12MB1228.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: CS7Ti9uliB2LOKuv4TVrRzPIi6xamrevZU0k7KufNpKtXED7Ip6cX36RpxqFHAKGxXOEGoS5I5y1FygeY723zg7m4tpNPh6RAFF1LLuKobY35L0U0IjKPrdA3BllcCEJh8w0Me26P4B2D1idPoKbeGnsZutMcWdWSV5ZFZuBGsJU9ntjZkzKDQBMBxtQxfRzapBva7c0izYs8Pdr6nOjVZeRinqlpSd5X1aDkAl2cvz/DPgAgKHPcIWlpFa52VvFVwzDHXsmCrvAG2rjH6aW85AbEamJ25h16fDwQdC3SvYnBmBclzjH11myzwvB6XN48lMtwlenflcIMjXFiOS00pcIL2LMPIDMPqCduJpzLVTHzYuzXTnUhlmSQbmdUQJeZ5UjOaIiMihR9PdfSpMEArTSlEDDCi4B3GLS5BKPRbEJ6rSr3o6bab9cInevibSwgg7BTHW2526D/A8IG1z553hPOQrgS3vdTix/ostlPMwtbR1D4268eiWbkZX5ziBrNs1RCO0Csgipf9awjoC03d0O1MmzxBU4WU66D64S7ERn3WT1dNbibRXtnsoNJEkPmXic06Wi59K9kGayxh60/uj96ZFGBVEjI+y8qTiUXQGgtjYsEV6q2LJao9gCyq+kXZ9WIOCdhjQz00TGfhZOMG/3GoJD4iM/2qK/yqiztMbxu6HZd6+6rEHTxWHbbfbtr1CZxvVx1p/Qs6BEmPpNl1+kyNs0m5Z1H5kaygW33IfKMUvT17bheQcWBxbhi8gi79IcWefDVNC+kp3Fhv+EEUHS3kezMdTxx1qCvclT43S3X18N6iL4XLsOiLJkbp0waNYgtEIxAHOu5LwOKG6sow==
-X-Forefront-Antispam-Report: CIP:203.18.50.13;CTRY:HK;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:hkhybrid02.nvidia.com;CAT:NONE;SFS:(4636009)(46966006)(36840700001)(40470700001)(7416002)(356005)(110136005)(54906003)(6666004)(86362001)(47076005)(336012)(5660300002)(7636003)(9576002)(426003)(26005)(8676002)(2906002)(53546011)(33716001)(36860700001)(8936002)(186003)(16526019)(34070700002)(70206006)(508600001)(9686003)(316002)(70586007)(82310400004)(40460700001)(83380400001)(4326008)(39026012);DIR:OUT;SFP:1101;
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Dec 2021 10:53:20.8109
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 67640458-1c38-42ff-80f8-08d9bb021da8
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[203.18.50.13];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT063.eop-nam11.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR12MB1228
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.4.0
+Subject: Fwd: [PATCH] xfs_quota: Support XFS_GETNEXTQUOTA in range calls
+References: <20211209123934.736295-1-arekm@maven.pl>
+Content-Language: pl
+To:     linux-xfs@vger.kernel.org
+From:   =?UTF-8?Q?Arkadiusz_Mi=c5=9bkiewicz?= <a.miskiewicz@gmail.com>
+In-Reply-To: <20211209123934.736295-1-arekm@maven.pl>
+X-Forwarded-Message-Id: <20211209123934.736295-1-arekm@maven.pl>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thursday, 9 December 2021 5:55:26 AM AEDT Sierra Guiza, Alejandro (Alex) wrote:
-> 
-> On 12/8/2021 11:30 AM, Felix Kuehling wrote:
-> > Am 2021-12-08 um 11:58 a.m. schrieb Felix Kuehling:
-> >> Am 2021-12-08 um 6:31 a.m. schrieb Alistair Popple:
-> >>> On Tuesday, 7 December 2021 5:52:43 AM AEDT Alex Sierra wrote:
-> >>>> Avoid long term pinning for Coherent device type pages. This could
-> >>>> interfere with their own device memory manager.
-> >>>> If caller tries to get user device coherent pages with PIN_LONGTERM flag
-> >>>> set, those pages will be migrated back to system memory.
-> >>>>
-> >>>> Signed-off-by: Alex Sierra <alex.sierra@amd.com>
-> >>>> ---
-> >>>>   mm/gup.c | 32 ++++++++++++++++++++++++++++++--
-> >>>>   1 file changed, 30 insertions(+), 2 deletions(-)
-> >>>>
-> >>>> diff --git a/mm/gup.c b/mm/gup.c
-> >>>> index 886d6148d3d0..1572eacf07f4 100644
-> >>>> --- a/mm/gup.c
-> >>>> +++ b/mm/gup.c
-> >>>> @@ -1689,17 +1689,37 @@ struct page *get_dump_page(unsigned long addr)
-> >>>>   #endif /* CONFIG_ELF_CORE */
-> >>>>   
-> >>>>   #ifdef CONFIG_MIGRATION
-> >>>> +static int migrate_device_page(unsigned long address,
-> >>>> +				struct page *page)
-> >>>> +{
-> >>>> +	struct vm_area_struct *vma = find_vma(current->mm, address);
-> >>>> +	struct vm_fault vmf = {
-> >>>> +		.vma = vma,
-> >>>> +		.address = address & PAGE_MASK,
-> >>>> +		.flags = FAULT_FLAG_USER,
-> >>>> +		.pgoff = linear_page_index(vma, address),
-> >>>> +		.gfp_mask = GFP_KERNEL,
-> >>>> +		.page = page,
-> >>>> +	};
-> >>>> +	if (page->pgmap && page->pgmap->ops->migrate_to_ram)
-> >>>> +		return page->pgmap->ops->migrate_to_ram(&vmf);
-> >>> How does this synchronise against pgmap being released? As I understand things
-> >>> at this point we're not holding a reference on either the page or pgmap, so
-> >>> the page and therefore the pgmap may have been freed.
-> >>>
-> >>> I think a similar problem exists for device private fault handling as well and
-> >>> it has been on my list of things to fix for a while. I think the solution is to
-> >>> call try_get_page(), except it doesn't work with device pages due to the whole
-> >>> refcount thing. That issue is blocking a fair bit of work now so I've started
-> >>> looking into it.
-> >> At least the page should have been pinned by the __get_user_pages_locked
-> >> call in __gup_longterm_locked. That refcount is dropped in
-> >> check_and_migrate_movable_pages when it returns 0 or an error.
-> > Never mind. We unpin the pages first. Alex, would the migration work if
-> > we unpinned them afterwards? Also, the normal CPU page fault code path
-> > seems to make sure the page is locked (check in pfn_swap_entry_to_page)
-> > before calling migrate_to_ram.
 
-I don't think that's true. The check in pfn_swap_entry_to_page() is only for
-migration entries:
-
-	BUG_ON(is_migration_entry(entry) && !PageLocked(p));
-
-As this is coherent memory though why do we have to call into a device driver
-to do the migration? Couldn't this all be done in the kernel?
-
-> No, you can not unpinned after migration. Due to the expected_count VS 
-> page_count condition at migrate_page_move_mapping, during migrate_page call.
-> 
-> Regards,
-> Alex Sierra
-> 
-> > Regards,
-> >    Felix
-> >
-> >
-> 
+vger still blocks my default domain, so I hope this forward via
+thundebird from another domain will get thru and patch won't get corrupted.
 
 
+--- Treść przekazanej wiadomości ---
+Temat: [PATCH] xfs_quota: Support XFS_GETNEXTQUOTA in range calls
+Data: Thu,  9 Dec 2021 13:39:34 +0100
+Nadawca: Arkadiusz Miśkiewicz <arekm@maven.pl>
+Adresat: linux-xfs@vger.kernel.org
+Kopia: Arkadiusz Miśkiewicz <arekm@maven.pl>
 
+Use XFS_GETNEXTQUOTA in range call with -L/-U limits. This makes them
+perform very fast comparing to current iteration over each (existing
+and not existing) ID.
+
+dump_file() and report_mount() take upper agrument which is taken
+into account only when GETNEXTQUOTA_MATCH_FLAG is requested and don't
+print anything if upper limit is crossed.
+
+Signed-off-by: Arkadiusz Miśkiewicz <arekm@maven.pl>
+---
+ quota/quota.h  |   1 +
+ quota/report.c | 118 ++++++++++++++++++++++++++++++-------------------
+ 2 files changed, 74 insertions(+), 45 deletions(-)
+
+diff --git a/quota/quota.h b/quota/quota.h
+index 78b0d66d..310812f4 100644
+--- a/quota/quota.h
++++ b/quota/quota.h
+@@ -65,6 +65,7 @@ enum {
+ 	ABSOLUTE_FLAG =		0x0200, /* absolute time, not related to now */
+ 	NO_LOOKUP_FLAG =	0x0400, /* skip name lookups, just report ID */
+ 	GETNEXTQUOTA_FLAG =	0x0800, /* use getnextquota quotactl */
++	GETNEXTQUOTA_MATCH_FLAG =	0x1000,	/* report only if matches range */
+ };
+  /*
+diff --git a/quota/report.c b/quota/report.c
+index 6ac55490..39b5286b 100644
+--- a/quota/report.c
++++ b/quota/report.c
+@@ -65,6 +65,7 @@ static int
+ dump_file(
+ 	FILE		*fp,
+ 	uint		id,
++	uint		upper,
+ 	uint		*oid,
+ 	uint		type,
+ 	char		*dev,
+@@ -91,6 +92,9 @@ dump_file(
+ 		/* Did kernelspace wrap? */
+ 		if (*oid < id)
+ 			return 0;
++		/* Range limit was requested */
++		if (flags & GETNEXTQUOTA_MATCH_FLAG && *oid > upper)
++			return 0;
+ 	}
+  	if (!d.d_blk_softlimit && !d.d_blk_hardlimit &&
+@@ -137,29 +141,36 @@ dump_limits_any_type(
+ 		return;
+ 	}
+ -	/* Range was specified; query everything in it */
+-	if (upper) {
+-		for (id = lower; id <= upper; id++)
+-			dump_file(fp, id, NULL, type, mount->fs_name, 0);
+-		return;
+-	}
++	/* Range was specified */
++	if (lower)
++		id = lower;
+  	/* Use GETNEXTQUOTA if it's available */
+-	if (dump_file(fp, id, &oid, type, mount->fs_name, GETNEXTQUOTA_FLAG)) {
++	if (dump_file(fp, id, upper, &oid, type, mount->fs_name,
++				GETNEXTQUOTA_FLAG|GETNEXTQUOTA_MATCH_FLAG)) {
+ 		id = oid + 1;
+-		while (dump_file(fp, id, &oid, type, mount->fs_name,
+-				 GETNEXTQUOTA_FLAG))
++		while (dump_file(fp, id, upper, &oid, type, mount->fs_name,
++				 GETNEXTQUOTA_FLAG|GETNEXTQUOTA_MATCH_FLAG))
+ 			id = oid + 1;
+ 		return;
+         }
+  	/* Otherwise fall back to iterating over each uid/gid/prjid */
++
++	/* Range was specified; query everything in it */
++	if (upper) {
++		for (id = lower; id <= upper; id++)
++			dump_file(fp, id, 0, NULL, type, mount->fs_name, 0);
++		return;
++	}
++
++	/* No range */
+ 	switch (type) {
+ 	case XFS_GROUP_QUOTA: {
+ 			struct group *g;
+ 			setgrent();
+ 			while ((g = getgrent()) != NULL)
+-				dump_file(fp, g->gr_gid, NULL, type,
++				dump_file(fp, 0, g->gr_gid, NULL, type,
+ 					  mount->fs_name, 0);
+ 			endgrent();
+ 			break;
+@@ -168,7 +179,7 @@ dump_limits_any_type(
+ 			struct fs_project *p;
+ 			setprent();
+ 			while ((p = getprent()) != NULL)
+-				dump_file(fp, p->pr_prid, NULL, type,
++				dump_file(fp, 0, p->pr_prid, NULL, type,
+ 					  mount->fs_name, 0);
+ 			endprent();
+ 			break;
+@@ -177,7 +188,7 @@ dump_limits_any_type(
+ 			struct passwd *u;
+ 			setpwent();
+ 			while ((u = getpwent()) != NULL)
+-				dump_file(fp, u->pw_uid, NULL, type,
++				dump_file(fp, 0, u->pw_uid, NULL, type,
+ 					  mount->fs_name, 0);
+ 			endpwent();
+ 			break;
+@@ -322,6 +333,7 @@ static int
+ report_mount(
+ 	FILE		*fp,
+ 	uint32_t	id,
++	uint32_t	upper,
+ 	char		*name,
+ 	uint32_t	*oid,
+ 	uint		form,
+@@ -355,6 +367,9 @@ report_mount(
+ 		/* Did kernelspace wrap? */
+ 		if (* oid < id)
+ 			return 0;
++		 /* Upper range was specified */
++		if (upper && * oid > upper)
++			return 0;
+ 	}
+  	if (flags & TERSE_FLAG) {
+@@ -479,26 +494,31 @@ report_user_mount(
+ 	struct passwd	*u;
+ 	uint		id = 0, oid;
+ -	if (upper) {	/* identifier range specified */
+-		for (id = lower; id <= upper; id++) {
+-			if (report_mount(fp, id, NULL, NULL,
+-					form, XFS_USER_QUOTA, mount, flags))
+-				flags |= NO_HEADER_FLAG;
+-		}
+-	} else if (report_mount(fp, id, NULL, &oid, form,
++	/* Range was specified */
++	if (lower)
++		id = lower;
++	if (upper)
++		flags |= GETNEXTQUOTA_MATCH_FLAG;
++
++	if (report_mount(fp, id, upper, NULL, &oid, form,
+ 				XFS_USER_QUOTA, mount,
+ 				flags|GETNEXTQUOTA_FLAG)) {
+ 		id = oid + 1;
+ 		flags |= GETNEXTQUOTA_FLAG;
+ 		flags |= NO_HEADER_FLAG;
+-		while (report_mount(fp, id, NULL, &oid, form, XFS_USER_QUOTA,
+-				    mount, flags)) {
++		while (report_mount(fp, id, upper, NULL, &oid, form, XFS_USER_QUOTA,
++				    mount, flags))
+ 			id = oid + 1;
++	} else if (upper) {	/* identifier range specified */
++		for (id = lower; id <= upper; id++) {
++			if (report_mount(fp, id, upper, NULL, NULL,
++					form, XFS_USER_QUOTA, mount, flags))
++				flags |= NO_HEADER_FLAG;
+ 		}
+ 	} else {
+ 		setpwent();
+ 		while ((u = getpwent()) != NULL) {
+-			if (report_mount(fp, u->pw_uid, u->pw_name, NULL,
++			if (report_mount(fp, u->pw_uid, 0, u->pw_name, NULL,
+ 					form, XFS_USER_QUOTA, mount, flags))
+ 				flags |= NO_HEADER_FLAG;
+ 		}
+@@ -521,26 +541,30 @@ report_group_mount(
+ 	struct group	*g;
+ 	uint		id = 0, oid;
+ -	if (upper) {	/* identifier range specified */
+-		for (id = lower; id <= upper; id++) {
+-			if (report_mount(fp, id, NULL, NULL,
+-					form, XFS_GROUP_QUOTA, mount, flags))
+-				flags |= NO_HEADER_FLAG;
+-		}
+-	} else if (report_mount(fp, id, NULL, &oid, form,
+-				XFS_GROUP_QUOTA, mount,
++	/* Range was specified */
++	if (lower)
++		id = lower;
++	if (upper)
++		flags |= GETNEXTQUOTA_MATCH_FLAG;
++
++	if (report_mount(fp, id, upper, NULL, &oid, form, XFS_GROUP_QUOTA, mount,
+ 				flags|GETNEXTQUOTA_FLAG)) {
+ 		id = oid + 1;
+ 		flags |= GETNEXTQUOTA_FLAG;
+ 		flags |= NO_HEADER_FLAG;
+-		while (report_mount(fp, id, NULL, &oid, form, XFS_GROUP_QUOTA,
+-				    mount, flags)) {
++		while (report_mount(fp, id, upper, NULL, &oid, form, XFS_GROUP_QUOTA,
++				    mount, flags))
+ 			id = oid + 1;
++	}  else if (upper) {	/* identifier range specified */
++		for (id = lower; id <= upper; id++) {
++			if (report_mount(fp, id, upper, NULL, NULL,
++					form, XFS_GROUP_QUOTA, mount, flags))
++				flags |= NO_HEADER_FLAG;
+ 		}
+ 	} else {
+ 		setgrent();
+ 		while ((g = getgrent()) != NULL) {
+-			if (report_mount(fp, g->gr_gid, g->gr_name, NULL,
++			if (report_mount(fp, g->gr_gid, 0, g->gr_name, NULL,
+ 					form, XFS_GROUP_QUOTA, mount, flags))
+ 				flags |= NO_HEADER_FLAG;
+ 		}
+@@ -562,21 +586,25 @@ report_project_mount(
+ 	fs_project_t	*p;
+ 	uint		id = 0, oid;
+ -	if (upper) {	/* identifier range specified */
+-		for (id = lower; id <= upper; id++) {
+-			if (report_mount(fp, id, NULL, NULL,
+-					form, XFS_PROJ_QUOTA, mount, flags))
+-				flags |= NO_HEADER_FLAG;
+-		}
+-	} else if (report_mount(fp, id, NULL, &oid, form,
+-				XFS_PROJ_QUOTA, mount,
++	/* Range was specified */
++	if (lower)
++		id = lower;
++	if (upper)
++		flags |= GETNEXTQUOTA_MATCH_FLAG;
++
++	if (report_mount(fp, id, upper, NULL, &oid, form, XFS_PROJ_QUOTA, mount,
+ 				flags|GETNEXTQUOTA_FLAG)) {
+ 		id = oid + 1;
+ 		flags |= GETNEXTQUOTA_FLAG;
+ 		flags |= NO_HEADER_FLAG;
+-		while (report_mount(fp, id, NULL, &oid, form, XFS_PROJ_QUOTA,
+-				    mount, flags)) {
++		while (report_mount(fp, id, upper, NULL, &oid, form, XFS_PROJ_QUOTA,
++				    mount, flags))
+ 			id = oid + 1;
++	} else if (upper) {	/* identifier range specified */
++		for (id = lower; id <= upper; id++) {
++			if (report_mount(fp, id, upper, NULL, NULL,
++					form, XFS_PROJ_QUOTA, mount, flags))
++				flags |= NO_HEADER_FLAG;
+ 		}
+ 	} else {
+ 		if (!getprprid(0)) {
+@@ -584,14 +612,14 @@ report_project_mount(
+ 			 * Print default project quota, even if projid 0
+ 			 * isn't defined
+ 			 */
+-			if (report_mount(fp, 0, NULL, NULL,
++			if (report_mount(fp, 0, 0, NULL, NULL,
+ 					form, XFS_PROJ_QUOTA, mount, flags))
+ 				flags |= NO_HEADER_FLAG;
+ 		}
+  		setprent();
+ 		while ((p = getprent()) != NULL) {
+-			if (report_mount(fp, p->pr_prid, p->pr_name, NULL,
++			if (report_mount(fp, p->pr_prid, 0, p->pr_name, NULL,
+ 					form, XFS_PROJ_QUOTA, mount, flags))
+ 				flags |= NO_HEADER_FLAG;
+ 		}
+-- 
+2.33.1
 
