@@ -2,191 +2,149 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4858EC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Dec 2021 21:38:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98E10C433F5
+	for <linux-xfs@archiver.kernel.org>; Fri, 10 Dec 2021 00:32:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231573AbhLIVln (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 9 Dec 2021 16:41:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52368 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229505AbhLIVlm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Dec 2021 16:41:42 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2EE84C061746;
-        Thu,  9 Dec 2021 13:38:08 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=P2aQ91d+0Nay119c7Hm3YaZibGVAqClk58OZHKt3Xl4=; b=cnU75D1qm7eep+zg67cBjnjU5u
-        lEicByKXRIZocx5wZq6zz69Ru+PEst/T/YMAfJlX9bjLZTJ8RFLbUZKTb7yq0FGSeTxuxDF318g3Y
-        8bDeqcD4guFJ52AXIO0Ol8Ursu1fyiEL9Fp/krOOOBTH3HOk2GMcRtjxSB5RzR8ZNL9nkRwlqzYVQ
-        J45nCMz4FrZPTnutzDjny73jdO6DYA3AS5OPoFC1bjbRmniOLrddvCkhqnTDaOBBoaMPlby6StiVt
-        aI9kKhleNDxAgoxqQbGxfIEGg2Hmgi85JF43BUH+QueHj7/+g31cgvjKM0v661QxPAY3HpdxM6Xws
-        eNT/Cpag==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mvR75-009kVO-PD; Thu, 09 Dec 2021 21:38:04 +0000
-Date:   Thu, 9 Dec 2021 21:38:03 +0000
-From:   Matthew Wilcox <willy@infradead.org>
-To:     "Darrick J . Wong " <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
-        Jens Axboe <axboe@kernel.dk>,
-        Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 19/28] iomap: Convert __iomap_zero_iter to use a folio
-Message-ID: <YbJ3O1qf+9p/HWka@casper.infradead.org>
-References: <20211108040551.1942823-1-willy@infradead.org>
- <20211108040551.1942823-20-willy@infradead.org>
+        id S234874AbhLJAgM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Dec 2021 19:36:12 -0500
+Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:55481 "EHLO
+        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S234840AbhLJAgM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Dec 2021 19:36:12 -0500
+Received: from dread.disaster.area (pa49-181-243-119.pa.nsw.optusnet.com.au [49.181.243.119])
+        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id A12C5E0DAC7;
+        Fri, 10 Dec 2021 11:32:36 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1mvTU4-001BoW-RV; Fri, 10 Dec 2021 11:09:56 +1100
+Date:   Fri, 10 Dec 2021 11:09:56 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     "Darrick J. Wong" <djwong@kernel.org>
+Subject: [GIT PULL] xfs: xlog_write rework and CIL scalability
+Message-ID: <20211210000956.GO449541@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211108040551.1942823-20-willy@infradead.org>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=epq8cqlX c=1 sm=1 tr=0 ts=61b2a024
+        a=BEa52nrBdFykVEm6RU8P4g==:117 a=BEa52nrBdFykVEm6RU8P4g==:17
+        a=kj9zAlcOel0A:10 a=IOMw9HtfNCkA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=ygoPz_a7nZXkr0Gp71UA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Nov 08, 2021 at 04:05:42AM +0000, Matthew Wilcox (Oracle) wrote:
-> +++ b/fs/iomap/buffered-io.c
-> @@ -881,17 +881,20 @@ EXPORT_SYMBOL_GPL(iomap_file_unshare);
->  
->  static s64 __iomap_zero_iter(struct iomap_iter *iter, loff_t pos, u64 length)
->  {
-> +	struct folio *folio;
->  	struct page *page;
->  	int status;
-> -	unsigned offset = offset_in_page(pos);
-> -	unsigned bytes = min_t(u64, PAGE_SIZE - offset, length);
-> +	size_t offset, bytes;
->  
-> -	status = iomap_write_begin(iter, pos, bytes, &page);
-> +	status = iomap_write_begin(iter, pos, length, &page);
+Hi Darrick,
 
-This turned out to be buggy.  Darrick and I figured out why his tests
-were failing and mine weren't; this only shows up with a 4kB block
-size filesystem and I was only testing with 1kB block size filesystems.
-(at least on x86; I haven't figured out why it passes with 1kB block size
-filesystems, so I'm not sure what would be true on other filesystems).
-iomap_write_begin() is not prepared to deal with a length that spans a
-page boundary.  So I'm replacing this patch with the following patches
-(whitespace damaged; pick them up from
-https://git.infradead.org/users/willy/linux.git/tag/refs/tags/iomap-folio-5.17c
-if you want to compile them):
+Can you please pull the following changes from the tag listed below
+for the XFS dev tree?
 
-commit 412212960b72
-Author: Matthew Wilcox (Oracle) <willy@infradead.org>
-Date:   Thu Dec 9 15:47:44 2021 -0500
+Cheers,
 
-    iomap: Allow iomap_write_begin() to be called with the full length
+Dave.
 
-    In the future, we want write_begin to know the entire length of the
-    write so that it can choose to allocate large folios.  Pass the full
-    length in from __iomap_zero_iter() and limit it where necessary.
+The following changes since commit 0fcfb00b28c0b7884635dacf38e46d60bf3d4eb1:
 
-    Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+  Linux 5.16-rc4 (2021-12-05 14:08:22 -0800)
 
-diff --git a/fs/gfs2/bmap.c b/fs/gfs2/bmap.c
-index d67108489148..9270db17c435 100644
---- a/fs/gfs2/bmap.c
-+++ b/fs/gfs2/bmap.c
-@@ -968,6 +968,9 @@ static int gfs2_iomap_page_prepare(struct inode *inode, loff_t pos,
-        struct gfs2_sbd *sdp = GFS2_SB(inode);
-        unsigned int blocks;
+are available in the Git repository at:
 
-+       /* gfs2 does not support large folios yet */
-+       if (len > PAGE_SIZE)
-+               len = PAGE_SIZE;
-        blocks = ((pos & blockmask) + len + blockmask) >> inode->i_blkbits;
-        return gfs2_trans_begin(sdp, RES_DINODE + blocks, 0);
- }
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 8d7a67655b60..67fcd3b9928d 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -632,6 +632,8 @@ static int iomap_write_begin(const struct iomap_iter *iter, loff_t pos,
-                goto out_no_page;
-        }
-        folio = page_folio(page);
-+       if (pos + len > folio_pos(folio) + folio_size(folio))
-+               len = folio_pos(folio) + folio_size(folio) - pos;
+  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git tags/xfs-cil-scale-3-tag
 
-        if (srcmap->type == IOMAP_INLINE)
-                status = iomap_write_begin_inline(iter, page);
-@@ -891,16 +893,19 @@ static s64 __iomap_zero_iter(struct iomap_iter *iter, loff
-_t pos, u64 length)
-        struct page *page;
-        int status;
-        unsigned offset = offset_in_page(pos);
--       unsigned bytes = min_t(u64, PAGE_SIZE - offset, length);
+for you to fetch changes up to 3b5181b310e0f2064f2aafb6143cdb0e920f5858:
 
--       status = iomap_write_begin(iter, pos, bytes, &page);
-+       if (length > UINT_MAX)
-+               length = UINT_MAX;
-+       status = iomap_write_begin(iter, pos, length, &page);
-        if (status)
-                return status;
-+       if (length > PAGE_SIZE - offset)
-+               length = PAGE_SIZE - offset;
+  xfs: expanding delayed logging design with background material (2021-12-09 10:22:36 +1100)
 
--       zero_user(page, offset, bytes);
-+       zero_user(page, offset, length);
-        mark_page_accessed(page);
+----------------------------------------------------------------
+xfs: CIL and log scalability improvements
 
--       return iomap_write_end(iter, pos, bytes, bytes, page);
-+       return iomap_write_end(iter, pos, length, length, page);
- }
+xlog_write() is code that causes severe eye bleeding. It's extremely
+difficult to understand the way it is structured, and extremely easy
+to break because of all the weird parameters it passes between
+functions that do very non-obvious things. state is set in
+xlog_write_finish_copy() that is carried across both outer and inner
+loop iterations that is used by xlog_write_setup_copy(), which also
+sets state that xlog_write_finish_copy() needs. The way iclog space
+was obtained affects the accounting logic that ends up being passed
+to xlog_state_finish_copy(). The code that handles commit iclogs is
+spread over multiple functions and is obfuscated by the set/finish
+copy code.
 
- static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
+It's just a mess.
 
+It's also extremely inefficient.
 
-commit 78c747a1b3a1
-Author: Matthew Wilcox (Oracle) <willy@infradead.org>
-Date:   Fri Nov 5 14:24:09 2021 -0400
+That's why I've rewritten the code. I think the code I've written is
+much easier to understand and there's less of it.  The compiled code
+is smaller and faster. It has much fewer subtleties and outside
+dependencies, and is easier to reason about and modify.
 
-    iomap: Convert __iomap_zero_iter to use a folio
-    
-    The zero iterator can work in folio-sized chunks instead of page-sized
-    chunks.  This will save a lot of page cache lookups if the file is cached
-    in large folios.
-    
-    Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
-    Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Built on top of this is the CIL scalability improvements. My 32p
+machine hits lock contention limits in xlog_cil_commit() at about
+700,000 transaction commits a section. It hits this at 16 thread
+workloads, and 32 thread workloads go no faster and just burn CPU on
+the CIL spinlocks.
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 67fcd3b9928d..bbde6d4f27cd 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -890,20 +890,23 @@ EXPORT_SYMBOL_GPL(iomap_file_unshare);
- 
- static s64 __iomap_zero_iter(struct iomap_iter *iter, loff_t pos, u64 length)
- {
-+       struct folio *folio;
-        struct page *page;
-        int status;
--       unsigned offset = offset_in_page(pos);
-+       size_t offset;
- 
-        if (length > UINT_MAX)
-                length = UINT_MAX;
-        status = iomap_write_begin(iter, pos, length, &page);
-        if (status)
-                return status;
--       if (length > PAGE_SIZE - offset)
--               length = PAGE_SIZE - offset;
-+       folio = page_folio(page);
- 
--       zero_user(page, offset, length);
--       mark_page_accessed(page);
-+       offset = offset_in_folio(folio, pos);
-+       if (length > folio_size(folio) - offset)
-+               length = folio_size(folio) - offset;
-+       folio_zero_range(folio, offset, length);
-+       folio_mark_accessed(folio);
- 
-        return iomap_write_end(iter, pos, length, length, page);
- }
+This patchset gets rid of spinlocks and global serialisation points
+in the xlog_cil_commit() path. It does this by moving to a
+combination of per-cpu counters, unordered per-cpu lists and
+post-ordered per-cpu lists, and is built upon the xlog_write()
+simplifications introduced earlier in the rewrite of that function.
 
+This results in transaction commit rates exceeding 2 million
+commits/s under unlink certain workloads, but in general the
+improvements are smaller than this as the scalability limitations
+simply move from xlog_cil_commit() to global VFS lock contexts.
 
-The xfstests that Darrick identified as failing all passed.  Running a
-full sweep now; then I'll re-run with a 1kB filesystem to be sure that
-still passes.  Then I'll send another pull request.
+----------------------------------------------------------------
+Christoph Hellwig (2):
+      xfs: change the type of ic_datap
+      xfs: remove xlog_verify_dest_ptr
+
+Dave Chinner (28):
+      xfs: factor out the CIL transaction header building
+      xfs: only CIL pushes require a start record
+      xfs: embed the xlog_op_header in the unmount record
+      xfs: embed the xlog_op_header in the commit record
+      xfs: log tickets don't need log client id
+      xfs: move log iovec alignment to preparation function
+      xfs: reserve space and initialise xlog_op_header in item formatting
+      xfs: log ticket region debug is largely useless
+      xfs: pass lv chain length into xlog_write()
+      xfs: introduce xlog_write_full()
+      xfs: introduce xlog_write_partial()
+      xfs: xlog_write() no longer needs contwr state
+      xfs: xlog_write() doesn't need optype anymore
+      xfs: CIL context doesn't need to count iovecs
+      xfs: use the CIL space used counter for emptiness checks
+      xfs: lift init CIL reservation out of xc_cil_lock
+      xfs: rework per-iclog header CIL reservation
+      xfs: introduce per-cpu CIL tracking structure
+      xfs: implement percpu cil space used calculation
+      xfs: track CIL ticket reservation in percpu structure
+      xfs: convert CIL busy extents to per-cpu
+      xfs: Add order IDs to log items in CIL
+      xfs: convert CIL to unordered per cpu lists
+      xfs: convert log vector chain to use list heads
+      xfs: move CIL ordering to the logvec chain
+      xfs: avoid cil push lock if possible
+      xfs: xlog_sync() manually adjusts grant head space
+      xfs: expanding delayed logging design with background material
+
+ Documentation/filesystems/xfs-delayed-logging-design.rst | 361 +++++++++++++++++++++++++++++++++----
+ fs/xfs/libxfs/xfs_log_format.h                           |   1 -
+ fs/xfs/xfs_log.c                                         | 809 ++++++++++++++++++++++++++++++++++++----------------------------------------------
+ fs/xfs/xfs_log.h                                         |  58 ++----
+ fs/xfs/xfs_log_cil.c                                     | 550 +++++++++++++++++++++++++++++++++++++++-----------------
+ fs/xfs/xfs_log_priv.h                                    | 103 +++++------
+ fs/xfs/xfs_super.c                                       |   1 +
+ fs/xfs/xfs_trans.c                                       |  10 +-
+ fs/xfs/xfs_trans.h                                       |   1 +
+ fs/xfs/xfs_trans_priv.h                                  |   3 +-
+ 10 files changed, 1134 insertions(+), 763 deletions(-)
+
+-- 
+Dave Chinner
+david@fromorbit.com
