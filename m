@@ -2,86 +2,94 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CCB8C433F5
-	for <linux-xfs@archiver.kernel.org>; Fri, 10 Dec 2021 19:57:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC55BC433F5
+	for <linux-xfs@archiver.kernel.org>; Fri, 10 Dec 2021 20:07:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234616AbhLJUAz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 10 Dec 2021 15:00:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50214 "EHLO
+        id S235150AbhLJUL2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 10 Dec 2021 15:11:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52852 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243472AbhLJUAv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Dec 2021 15:00:51 -0500
-Received: from mail-yb1-xb32.google.com (mail-yb1-xb32.google.com [IPv6:2607:f8b0:4864:20::b32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E62D0C0617A1
-        for <linux-xfs@vger.kernel.org>; Fri, 10 Dec 2021 11:57:15 -0800 (PST)
-Received: by mail-yb1-xb32.google.com with SMTP id v138so23785783ybb.8
-        for <linux-xfs@vger.kernel.org>; Fri, 10 Dec 2021 11:57:15 -0800 (PST)
+        with ESMTP id S232906AbhLJUL2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Dec 2021 15:11:28 -0500
+Received: from mail-yb1-xb2d.google.com (mail-yb1-xb2d.google.com [IPv6:2607:f8b0:4864:20::b2d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD484C061746
+        for <linux-xfs@vger.kernel.org>; Fri, 10 Dec 2021 12:07:52 -0800 (PST)
+Received: by mail-yb1-xb2d.google.com with SMTP id d10so23977170ybn.0
+        for <linux-xfs@vger.kernel.org>; Fri, 10 Dec 2021 12:07:52 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=colorremedies-com.20210112.gappssmtp.com; s=20210112;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=dBKi6HQxwWvRYMSgc6jDMkVgEiAkjfFEykJbQr8uLHA=;
-        b=4jAK1KAMKjrNNWRZMcDiAi7X9bSDK97shh0gE9/rWqKL0twouN3hY2vTMZWo3saVcx
-         +VyY5vnAk0/u7tjc4LtBj1pUN7VJxn+XNLmV+BdiZi+OgxWiRKNQX8Sz8x5vvxmGcWKy
-         aiJFek+XZ1idC1Zmxi0/1cnF7wx3Dig3vuuQFMh+94jkPYaZskIS04LMdwv9bUyhjLgP
-         0XPEszy0YKmyMdAA0/38jVPyxaTPUnsK6HaGlf72tQOBFLeDi9n9sSPpRkH8Gpzlgpb7
-         q743Anams8qp30KFAKWQuiVNX8PpFcLIdjh2c70K1Fm48xQ1oGJKQa7GnG6zMcR0x974
-         B5WA==
+         :cc;
+        bh=NC0AbFVpzUbsgioFaxV8T5WM4vEEaYqZagPZ7n9n4nA=;
+        b=FDX3K8uOyfmIPZ93BB6TdePbgW/VJMxMwdfZsemGwVk8uH1KUoDdhRDYespZL1GZBr
+         +k+8m7GoJh8ur3ZjgzIY9UoF1HPmbEE89kv8dtgiMUuBKx/tcyKSRi/nXwlLI5X2oP/U
+         77S07gI+MqPH6jJsaMkpoCJglF5HkOqkEAnEEj1GfJeHfZnufnoDy/w5ob95il91CZIp
+         9X4ludz3MHVuuFiVvrKHL/oiAjkp+1rdHf4FjXjy+rd98lhPeERAgtZ2rwtSDM58fgRk
+         2918JF0uT6vJZLYiho+joQo5Oq5incK33auwd6OaB3ilhhsXT5Mz3IHm4wlLx2Sd2I3s
+         jhyQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=dBKi6HQxwWvRYMSgc6jDMkVgEiAkjfFEykJbQr8uLHA=;
-        b=DivrLzKc+QOw+wX/HU8Ag96ztaubwZxAffws7AJ1wQLLon1z1YiHL5tq+/CfrDvRNQ
-         IMSlwA20hPSMBxFhN+CqE7zOGuQVksyT05RcyGx0wsC7hcQg0Hz34WfuWv7PXvIwxBmQ
-         bXpyxSPGsYTuDVTDFPYwvzVOob0cRi2Xmp7fQgyrKA2QAMalWaF9BjIqHM5MlXXOurcX
-         JRucix+b751rBtzH1m1rPrnhJuoYT9O68Uwl/3iXBxfJkpZVESev+2gjhdEGJYpYbpvq
-         hT2QA0IuvMhmYceyU/S2o/MhyCWEHZMV07TgTov1QNb4fX6XxKXmCK+VwZLdqLOH0d6O
-         9C1A==
-X-Gm-Message-State: AOAM532OUHlDlodunBSKfyy2wbPO2LpPXpJBR/1ysP/dkMvktagTQBoB
-        bgagMR5KgZqN7BzjxVSSJzkvr36NZrk7e8vfLXC0kg==
-X-Google-Smtp-Source: ABdhPJyq2SWGzVS/XUp61en39MHxkIccSHtatBDyiFyt/LEdKleRabgFH0dSvbjv5CTh/jYdzor4qsqt7rwcL7e4Qps=
-X-Received: by 2002:a25:e057:: with SMTP id x84mr16207664ybg.385.1639166235148;
- Fri, 10 Dec 2021 11:57:15 -0800 (PST)
+         :message-id:subject:to:cc;
+        bh=NC0AbFVpzUbsgioFaxV8T5WM4vEEaYqZagPZ7n9n4nA=;
+        b=jvQkSh0MZ4R+3FWX71gfwhpUgLDHief1OvTIHwaGnq1qR74kKJZTvnF3cY+a3UcBkq
+         8GnnyuXU8SKSrvlmpqhO5SBSjV3TDcYb+9RCsId6a+x6CKfebOm9juozGGrjvL37Nd8y
+         gSGai7Gu4cVPKLUxAVm0g8z0CIs2o0sBWF862NXYQiXrjUyJW6Ryxl9cBo+bgOKrYhvq
+         EjvoW1geRnsjkoPdlFaHDEv7M9DJfFGO8hZ8E1SjUhz1MRmKdcF+BbrDSdxqV/80eT7t
+         9/JgoMDgpcQt8VW/vZsV49TuYcMQxktCaUAI9z2BCS2uzdoyIPx8V273IUXvtblRcrJf
+         /auA==
+X-Gm-Message-State: AOAM533oVhVq9oxaWfH1N1CPcafTDXgeIowLKRwFFMUfMYFQFw49IttI
+        +YZ6sEnrip/DpQHuh03Z9UgM8Z3XqBXYM+MTBGwGpfGAHyOVieoBLd8=
+X-Google-Smtp-Source: ABdhPJzR9macioCcHtpPZRulSJ8tIiO4cAV9OUfX69KyLx8UyBUvowxrTZFOXccyXx+hbsrqgXIuryeFDiQp4XbU5ac=
+X-Received: by 2002:a25:71d7:: with SMTP id m206mr17084884ybc.695.1639166872067;
+ Fri, 10 Dec 2021 12:07:52 -0800 (PST)
 MIME-Version: 1.0
 References: <CAJCQCtQdXZEXC+4iDgG9h5ETmytfaU1+mzAQ+sA9TfQ1qo3Y_w@mail.gmail.com>
- <054e4e59-a585-5375-e80b-5db3ade2f633@gmail.com>
-In-Reply-To: <054e4e59-a585-5375-e80b-5db3ade2f633@gmail.com>
+ <20211208213339.GM449541@dread.disaster.area>
+In-Reply-To: <20211208213339.GM449541@dread.disaster.area>
 From:   Chris Murphy <lists@colorremedies.com>
-Date:   Fri, 10 Dec 2021 14:56:59 -0500
-Message-ID: <CAJCQCtSneTaMQXGxoopvnkZ7mu9zPYFLRx4iPo_33m+4-QkdnQ@mail.gmail.com>
+Date:   Fri, 10 Dec 2021 15:06:37 -0500
+Message-ID: <CAJCQCtR5NjF61B4g4KkjBgdmV8rK8tWLNxtVvNbm4gzm9kdrhg@mail.gmail.com>
 Subject: Re: VMs getting into stuck states since kernel ~5.13
-To:     =?UTF-8?Q?Arkadiusz_Mi=C5=9Bkiewicz?= <a.miskiewicz@gmail.com>
+To:     Dave Chinner <david@fromorbit.com>
 Cc:     Chris Murphy <lists@colorremedies.com>,
         xfs list <linux-xfs@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Dec 9, 2021 at 9:56 AM Arkadiusz Mi=C5=9Bkiewicz
-<a.miskiewicz@gmail.com> wrote:
->
-> W dniu 08.12.2021 o 19:54, Chris Murphy pisze:
-> > Hi,
-> >
-> > I'm trying to help progress a kernel regression hitting Fedora
-> > infrastructure in which dozens of VMs run concurrently to execute QA
-> > testing. The problem doesn't happen immediately, but all the VM's get
-> > stuck and then any new process also gets stuck, so extracting
-> > information from the system has been difficult and there's not a lot
-> > to go on, but this is what I've got so far.
->
-> Does qemu there have this fix?
->
-> https://github.com/qemu/qemu/commit/cc071629539dc1f303175a7e2d4ab854c0a8b=
-20f
+On Wed, Dec 8, 2021 at 4:33 PM Dave Chinner <david@fromorbit.com> wrote:
+> Looking at the traces, I'd say IO is really slow, but not stuck.
+> `iostat -dxm 5` output for a few minutes will tell you if IO is
+> actually making progress or not.
 
-I don't think so. The problem appeared in Fedora 34 which had
-qemu-5.2.0 and now Fedora 35 which has qemu-6.1.0. I'll see about
-backporting that patch if it hasn't already been in 6.1.0-13.fc35
+Pretty sure like everything else we run once the hang happens, iostat
+will just hang too. But I'll ask.
+
+>
+> Can you please provide the hardware configuration for these machines
+> and iostat output before we go any further here?
+
+Dell PERC H730P
+megaraid sas controller, to 10x 600G sas drives, BFQ ioscheduler, and
+the stack is:
+
+partition->mdadm raid6, 512KiB chunk->dm-crypt->LVM->XFS
+
+meta-data=/dev/mapper/vg_guests-LogVol00 isize=512    agcount=180,
+agsize=1638272 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=0
+         =                       reflink=1    bigtime=0 inobtcount=0
+data     =                       bsize=4096   blocks=294649856, imaxpct=25
+         =                       sunit=128    swidth=512 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=4096   blocks=12800, version=2
+         =                       sectsz=512   sunit=8 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
 
---=20
+
+-- 
 Chris Murphy
