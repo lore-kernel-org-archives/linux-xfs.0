@@ -2,67 +2,69 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1FD0C433F5
-	for <linux-xfs@archiver.kernel.org>; Sat, 11 Dec 2021 17:51:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9144C4332F
+	for <linux-xfs@archiver.kernel.org>; Sun, 12 Dec 2021 00:34:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229999AbhLKRvA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 11 Dec 2021 12:51:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56434 "EHLO
+        id S232310AbhLLAev (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 11 Dec 2021 19:34:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59258 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229952AbhLKRvA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 11 Dec 2021 12:51:00 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69B2FC061714;
-        Sat, 11 Dec 2021 09:51:00 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=NeLcXd3rCUW11H5q6lj3WBajFaZ0nROX1lQbEfPAe50=; b=AUem481ZozwyJeZxF1t/0jRGCP
-        LSpDUjvS0AYcGLu0C05bPH5cbhuQxpUU38yTaKgOC2dldabdYRFWdO7fy0mK6Lo/46uzWBWN/O6z2
-        b8csLu9awk6SQ6zpySsCQ/CwsUToDSnsLTktVs0l0ufrIvQWqcZHzwoInj7ns4LlS9n76bwwPfgkW
-        c5R02ti75YTvfMl4zTq9Y5wjzpYSwl01qdgDW4S1YlkvfP/3RERtCkj9CNnFeafBCOj5g2y2yqy9M
-        qYoqODoRYjrCTgyDOnGElyDVVOO3YV9Ted7scILgznTOQFvYuxcqWBwsNwPpVthn3/384gGtTUYTA
-        PkXRKKeQ==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mw6WJ-00BMwC-B4; Sat, 11 Dec 2021 17:50:51 +0000
-Date:   Sat, 11 Dec 2021 17:50:51 +0000
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     dan.j.williams@intel.com, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, nvdimm@lists.linux.dev,
-        Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [PATCH] iomap: turn the byte variable in iomap_zero_iter into a
- ssize_t
-Message-ID: <YbTk+1I4VFQpgjM/@casper.infradead.org>
-References: <20211208091203.2927754-1-hch@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20211208091203.2927754-1-hch@lst.de>
+        with ESMTP id S231836AbhLLAet (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 11 Dec 2021 19:34:49 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 105D4C061714;
+        Sat, 11 Dec 2021 16:34:49 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id DEA3FB80B81;
+        Sun, 12 Dec 2021 00:34:46 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 8B0CFC004DD;
+        Sun, 12 Dec 2021 00:34:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1639269285;
+        bh=WWyIsTZJSHNdano2d10Xl2eOTOGo/zid2rQWi4FFiZQ=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=Y8yqPDGExPDwRwawD9I+hPtV1q1ddHj7OtnC08zotb/rnmNFm2BBQ6sMAF/4BctbM
+         av+29zkZ+wAqZIMO68oQ9MsIks0RLZ0eleTIMYE7cFuUgzvCuCU9RimSS6oJdrmxxX
+         TSUsvIY72Boystgiyu1mcHxZXNO8xcr7rspxT/wRX6/Bl2uf6+Wpx2l6NAbPYYc3LG
+         8aSfOq1bwTick7w5OUa7GRHkGN58FdgeaEVItIMjNNiCqUfGDz/2cQwSgXq5SY1XdS
+         1D4IqIWvyu6URnofG2RHzfmbVBZN1Zt94+DawpvjzLKUEwDReGrKE2lcYs74cUupIQ
+         E4uWWmXDkjl8A==
+Received: from pdx-korg-docbuild-2.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by pdx-korg-docbuild-2.ci.codeaurora.org (Postfix) with ESMTP id 7424960A4D;
+        Sun, 12 Dec 2021 00:34:45 +0000 (UTC)
+Subject: Re: [GIT PULL] xfs: bug fixes for 5.16-rc4
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <20211211172242.GH1218082@magnolia>
+References: <20211211172242.GH1218082@magnolia>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20211211172242.GH1218082@magnolia>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.16-fixes-3
+X-PR-Tracked-Commit-Id: 089558bc7ba785c03815a49c89e28ad9b8de51f9
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: e034d9cbf9f17613c954541f65390be5c35807fc
+Message-Id: <163926928546.10000.18339109912268195117.pr-tracker-bot@kernel.org>
+Date:   Sun, 12 Dec 2021 00:34:45 +0000
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        david@fromorbit.com, linux-kernel@vger.kernel.org,
+        sandeen@sandeen.net, hch@lst.de
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Dec 08, 2021 at 10:12:03AM +0100, Christoph Hellwig wrote:
-> bytes also hold the return value from iomap_write_end, which can contain
-> a negative error value.  As bytes is always less than the page size even
-> the signed type can hold the entire possible range.
+The pull request you sent on Sat, 11 Dec 2021 09:22:42 -0800:
 
-iomap_write_end() can't return an errno.  I went through and checked as
-part of the folio conversion.  It actually has two return values -- 0
-on error and 'len' on success.  And it can't have an error because
-that only occurs if 'copied' is less than 'length'.
+> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.16-fixes-3
 
-So I think this should actually be:
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/e034d9cbf9f17613c954541f65390be5c35807fc
 
--               bytes = iomap_write_end(iter, pos, bytes, bytes, folio);
--               if (bytes < 0)
--                       return bytes;
-+               status = iomap_write_end(iter, pos, bytes, bytes, folio);
-+               if (WARN_ON_ONCE(status == 0))
-+                       return -EIO;
+Thank you!
 
-just like its counterpart loop in iomap_unshare_iter()
-
-(ok this won't apply to Dan's tree, but YKWIM)
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
