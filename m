@@ -2,91 +2,169 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 786B9C433F5
-	for <linux-xfs@archiver.kernel.org>; Sun, 12 Dec 2021 14:21:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBC52C433EF
+	for <linux-xfs@archiver.kernel.org>; Sun, 12 Dec 2021 23:09:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231375AbhLLOVb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 12 Dec 2021 09:21:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39880 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231359AbhLLOV3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 12 Dec 2021 09:21:29 -0500
-Received: from mail-yb1-xb2f.google.com (mail-yb1-xb2f.google.com [IPv6:2607:f8b0:4864:20::b2f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D5D0C061714
-        for <linux-xfs@vger.kernel.org>; Sun, 12 Dec 2021 06:21:29 -0800 (PST)
-Received: by mail-yb1-xb2f.google.com with SMTP id q74so32433444ybq.11
-        for <linux-xfs@vger.kernel.org>; Sun, 12 Dec 2021 06:21:29 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=colorremedies-com.20210112.gappssmtp.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=1fQiWUkIyzToTBAbQ/ekyM+3RjbLcaO35r6gfICY1yc=;
-        b=DLc7i+UY5vFijtAkoB5tVg8jWBcipSljIIEy7Klc/XNZGeU2/x+z2D/AHGJE/FXT8y
-         0REzSTfW45wlZc4jNlKW1KdMT6ZM6Rfl1KK4zXVTnD+OZgLit51+lRTzNoi09GgIcAac
-         uZHRf0Q8Hm/mhYOHu8/sNnkfzY4kQ1Nz23DkflOnLV/9EUTfU0cKw4MWM7SZQceboZJ7
-         cKDux3d32vIM7krjXJ1a8oTea73XjyanWuATlj+NHq7ir+li1FXADNsyJsTESiY2smLE
-         lj8hzUZOONv5YP78jscCumacZC9IftOga6pMJN6U8lO4k/J4gnX7lQR3Y7kX8+a9MVzb
-         ZvQA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=1fQiWUkIyzToTBAbQ/ekyM+3RjbLcaO35r6gfICY1yc=;
-        b=vg7My7/b/7A/mQ15qQZ5JQR3cMbazfXC/Hpq4HSa0sj5Npa4Ui/zFoOt0rAcBcRwEP
-         9jZBXXm04bmTTUY5LAFS7hnMQkCyPr5ZBq7OD6ERcPoRfdR1O1vO+vIKXbp8urFnq37e
-         z8I+UYdRcRfIYF9MbOEgguAdMakD4X7WWlqqq1HfY5Lt9vf7Y2Gks0UPhgeLv9o6nvQk
-         FkySWlQHLMU9AlFZtXjhhZvHtM3O17DCju7gg3u5e/qJG5yeRg4aAVFqsZzGoUeEJEWN
-         1p/90N6fe+H3BeS/9j6uzjc57Gm98LYo4+JGEBxYedtDYb4ZVrdWeqsZ+pkJR3sCj068
-         nhCg==
-X-Gm-Message-State: AOAM53154jbi/wi5eBMP3gQSdnFhbnxPeSMTWEh7g9KQxsHdksvqttDR
-        lxtXjWQ0hlt5wKHlrrRr0wcWMX1qmzkIlOFT0uyYjQ==
-X-Google-Smtp-Source: ABdhPJysgraFZdgFILz22CS3472BuSjp8L5D6jfbLREYcXmbsFA8ZMB7PGNzSNQo5aP1iNOLGKdNe+Tkte8LtnIf6zk=
-X-Received: by 2002:a25:2601:: with SMTP id m1mr3065763ybm.695.1639318888777;
- Sun, 12 Dec 2021 06:21:28 -0800 (PST)
+        id S229697AbhLLXJJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 12 Dec 2021 18:09:09 -0500
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:36961 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229532AbhLLXJJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 12 Dec 2021 18:09:09 -0500
+Received: from dread.disaster.area (pa49-181-243-119.pa.nsw.optusnet.com.au [49.181.243.119])
+        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id D494886B190;
+        Mon, 13 Dec 2021 10:09:06 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1mwXxe-002M2g-IE; Mon, 13 Dec 2021 10:08:54 +1100
+Date:   Mon, 13 Dec 2021 10:08:54 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Chanchal Mathew <chanch13@gmail.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: XFS journal log resetting
+Message-ID: <20211212230854.GR449541@dread.disaster.area>
+References: <20211210213649.GQ449541@dread.disaster.area>
+ <F6A3B616-EF69-4AFF-BB12-17D6E53AC8D3@gmail.com>
 MIME-Version: 1.0
-References: <CAJCQCtQdXZEXC+4iDgG9h5ETmytfaU1+mzAQ+sA9TfQ1qo3Y_w@mail.gmail.com>
- <054e4e59-a585-5375-e80b-5db3ade2f633@gmail.com>
-In-Reply-To: <054e4e59-a585-5375-e80b-5db3ade2f633@gmail.com>
-From:   Chris Murphy <lists@colorremedies.com>
-Date:   Sun, 12 Dec 2021 09:21:12 -0500
-Message-ID: <CAJCQCtQ=-XC-6sLnZgi23hkA7L2Pn7=pYf-Mqv43bm6fyxbN0g@mail.gmail.com>
-Subject: Re: VMs getting into stuck states since kernel ~5.13
-To:     =?UTF-8?Q?Arkadiusz_Mi=C5=9Bkiewicz?= <a.miskiewicz@gmail.com>
-Cc:     Chris Murphy <lists@colorremedies.com>,
-        xfs list <linux-xfs@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <F6A3B616-EF69-4AFF-BB12-17D6E53AC8D3@gmail.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=epq8cqlX c=1 sm=1 tr=0 ts=61b68113
+        a=BEa52nrBdFykVEm6RU8P4g==:117 a=BEa52nrBdFykVEm6RU8P4g==:17
+        a=IkcTkHD0fZMA:10 a=IOMw9HtfNCkA:10 a=7-415B0cAAAA:8 a=nt1UNTH2AAAA:8
+        a=rxauI3Egz9cH9F7IEyYA:9 a=QEXdDO2ut3YA:10 a=1jnEqRSf4vEA:10
+        a=biEYGPWJfzWAr4FL6Ov7:22 a=7AW3Uk2BEroXwU7YnAE8:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Dec 9, 2021 at 9:56 AM Arkadiusz Mi=C5=9Bkiewicz
-<a.miskiewicz@gmail.com> wrote:
->
-> W dniu 08.12.2021 o 19:54, Chris Murphy pisze:
-> > Hi,
-> >
-> > I'm trying to help progress a kernel regression hitting Fedora
-> > infrastructure in which dozens of VMs run concurrently to execute QA
-> > testing. The problem doesn't happen immediately, but all the VM's get
-> > stuck and then any new process also gets stuck, so extracting
-> > information from the system has been difficult and there's not a lot
-> > to go on, but this is what I've got so far.
->
-> Does qemu there have this fix?
->
-> https://github.com/qemu/qemu/commit/cc071629539dc1f303175a7e2d4ab854c0a8b=
-20f
->
-> block: introduce max_hw_iov for use in scsi-generic
+On Fri, Dec 10, 2021 at 04:04:59PM -0800, Chanchal Mathew wrote:
+> 
+> Thank you for the explanation! My response in-line.
+> 
+> >> Hi
+> >> 
+> >> A question for the developers -
+> >> 
+> >> Is there a reason why a clean unmount on an XFS filesystem
+> >> would not reset the log numbers to 0? The xfs_logprint output
+> >> shows the head and tail log numbers to have the same number > 0
+> >> and as CLEAN. But the log number is not reset to 0 without
+> >> running a xfs_repair -L. Is there a reason it’s not done as
+> >> part of the unmount?
+> > 
+> > Yes.
+> > 
+> > Log sequence numbers are a persistent record of when a given
+> > metadata object was modified. They are stored in all metadata,
+> > not just the log, and are used to determine if the modification
+> > in the log found at recovery time is already present in the
+> > on-disk metadata or not.
+> > 
+> > Resetting the number back to zero basically breaks this recovery
+> > ordering verification, and takes us back to the bad old days of
+> > the v4 filesystem format where log recovery could overwrite
+> > newer changes in metadata. That could cause data loss and
+> > corruption problems when recovering newly allocated inodes and
+> > subsequent changes....
+> 
+> Wouldn’t we expect zero pending modification or no unwritten data
+> when a device is cleanly unmounted?
 
-OK this worker is running a version of qemu with this fix backported
-now, and the problem still happens.
+Yes, but how do we determine that when mounting the filesystem?
 
-I'll try to get answers to Dave's other questions (I don't have direct
-access to this system, so there's a suboptimal relay happening in the
-conversation).
+> Or do you mean, a successful
+> ‘umount’ run on the device doesn’t guarantee there are no pending
+> changes?
 
+No, the log is left clean via an unmount record that is written to
+the log during unmount.
 
---=20
-Chris Murphy
+IOWs, to determine there is zero pending modification at mount time,
+the next mount *has to find that unmount record* to determine
+that the log was cleanly unmounted and does not require recovery.
+That's what xlog_find_tail() does.
+
+> >> The problem I’m noticing is, the higher the log number, it takes
+> >> longer for it to be mounted. Most time seems spent on the
+> >> xlog_find_tail() call. 
+> > 
+> > The log sequence number has nothign to do with how long
+> > xlog_find_tail() takes to run. entirely dependent on the size
+> > of the log and time it takes to binary search the journal to find
+> > the head. The head then points at the tail, which then gets
+> > verified. Once the head and tail are found, the journal contents
+> > between the head and tail are CRC checked, and the time this takes
+> > is entirely dependent on the distance between the head and tail of
+> > the log (i.e. up to 2GB of journal space might get CRC'd here).
+> > 
+> > But at no point do larger LSNs make this take any longer.  The upper
+> > 32 bits of the LSN is just a cycle number, and it is always
+> > interpreted as "past, current, next" by the xlog_find_tail()
+> > process no matter what it's magnitude is. i.e. log recvoery only has
+> > 3 cycle states it cares about, regardless of how many cycles the log
+> > has actually run.
+> > 
+> > -Dave.
+> > -- 
+> > Dave Chinner
+> > david@fromorbit.com
+> 
+> The devices I’m testing on are image files with same amount of data. One with lower log number is quicker to mount. 
+> 
+> $ sudo xfs_logprint -t /dev/mapper/loop0p1
+> …
+>     log tail: 451 head: 451 state: <CLEAN>
+> 
+> Whereas, the one with higher log number, such as the one below, is about 4-5 times slower running xlog_find_tail().
+
+This log hasn't even been written once. 
+
+> $ sudo xfs_logprint -t /dev/mapper/loop0p1
+> …
+>     log tail: 17658 head: 17658 state: <CLEAN>
+> 
+> The images are of same size, and have same amount of data as well (as verified by df and df -i once mounted)
+
+And this log hasn't even been written once here, either.
+
+As the cycle number is zero in both cases, that means it is likely
+that the only difference between the two cases is the number of IOs
+performed in the binary search to find the unmount record. i.e. we
+have a IO count and seek pattern difference.
+
+Absent any timing information, I would only expect the difference
+here to be a few tens of milliseconds between the two cases as it
+will only be a handful of disk seeks that are different.
+
+However, I can only guess at this, because you're not including raw
+timing information or any other information about the filesystem or
+starage.  Can you please attach the scripts the timing information
+that you are using to determine that xlog_find_tail() is slower?
+i.e. post the commands *and the output* of the scripts you are using
+so that we can run the tests ourselves to try to replicate the
+problem you are seeing.
+
+We'll also need to know what storage this is running on, etc:
+
+https://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+
+> The only way I can work around this delay for an instance started
+> from an image file with higher log number is, to reset it to 0
+> with xfs_repair.
+
+Which, since v4.3.0 was released in ~October 2015, xfs_repair does
+not do do on v5 filesystems because it can corrupt the filesystem
+(as I previously described). Hence I have to guess that you are
+either using the deprecated v4 filesystem format or your xfs_repair
+version is older than v4.3.0. Either way, you've got a problem when
+you upgrade these systems to newer OS versions...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
