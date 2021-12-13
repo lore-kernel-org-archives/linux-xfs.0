@@ -2,121 +2,59 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 017D9C433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 13 Dec 2021 07:04:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94DB1C433FE
+	for <linux-xfs@archiver.kernel.org>; Mon, 13 Dec 2021 07:35:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232329AbhLMHEU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 13 Dec 2021 02:04:20 -0500
-Received: from smtp-out2.suse.de ([195.135.220.29]:35556 "EHLO
-        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230479AbhLMHET (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Dec 2021 02:04:19 -0500
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id D09C81F3B0;
-        Mon, 13 Dec 2021 07:04:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1639379057; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=aEqBV9gaFo2wyx1G4xG19C/0b13L1C/hoEvYE9B85GE=;
-        b=l/hLlA5w3OBwKRP+sBt/ehoVB3EoaTuRtFJa9WBwUg8DKSN0+dWtXmPaULZ5nea0glf+3i
-        /y099EP4z9wGokt1s7ezqdFqw780FOZu/+ajH8HFYxpYwantjdLh91yQrYkA6XOijRd/n1
-        sLfk1JR2eSud6NM0G4BZ3LPOJ7i0/y8=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1639379057;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=aEqBV9gaFo2wyx1G4xG19C/0b13L1C/hoEvYE9B85GE=;
-        b=fbIFNrfIGETnM5AYz2WyO2gy+fZNb61dtNZ2rejU57HQMud9rQbH2LfXezo8Za7bUX9l4C
-        gqceDp2a6mOOzNCw==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id A220013B51;
-        Mon, 13 Dec 2021 07:04:13 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id 0YQoF23wtmFUaQAAMHmgww
-        (envelope-from <neilb@suse.de>); Mon, 13 Dec 2021 07:04:13 +0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+        id S232533AbhLMHe7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 13 Dec 2021 02:34:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54568 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230053AbhLMHe6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Dec 2021 02:34:58 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B7ACC06173F;
+        Sun, 12 Dec 2021 23:34:58 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=z5Pb345+1U5ovcXdOFAfP24g/IrGCHyslWbHwzGxwMU=; b=NvX6vO2uvf4aIxjW5C/z1RBKH2
+        nv9ey6ctZFG3qHSw+pdEypY5xkQTo34LHAVvoLExwYifypTiJtF2hGgNr2BywkCgakvCUtwEhNG+o
+        cwCSX85e4f1VUoqqTm3n3qVS6ENVLT0wGA8ieho3GC+VEcpkyuDVQ5As5xgWymTWi8FHNKd9kaKQJ
+        k7kYXkU3qaWFYG9NT08zyStyQk5+kAFiuxm3MBu0nowp14iWROwrz5BI2dWCIWt02KKUffu2DNSH8
+        STzr8LyZDMa8vTe4WgsUpqfmatfEoJdoBfl6d95ly7232fAOI2JUrcHGwMuUPFMAK2U0LTT+rGx3d
+        BEAoblbg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1mwfrK-0086qN-4F; Mon, 13 Dec 2021 07:34:54 +0000
+Date:   Sun, 12 Dec 2021 23:34:54 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     "Darrick J . Wong " <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2 19/28] iomap: Convert __iomap_zero_iter to use a folio
+Message-ID: <Ybb3nmf0hPXhlnOu@infradead.org>
+References: <20211108040551.1942823-1-willy@infradead.org>
+ <20211108040551.1942823-20-willy@infradead.org>
+ <YbJ3O1qf+9p/HWka@casper.infradead.org>
+ <YbN+KqqCG0032NMG@casper.infradead.org>
 MIME-Version: 1.0
-From:   "NeilBrown" <neilb@suse.de>
-To:     "Dave Chinner" <david@fromorbit.com>
-Cc:     "Andrew Morton" <akpm@linux-foundation.org>,
-        "Mel Gorman" <mgorman@suse.de>,
-        "Philipp Reisner" <philipp.reisner@linbit.com>,
-        "Lars Ellenberg" <lars.ellenberg@linbit.com>,
-        "Jan Kara" <jack@suse.com>,
-        "Ryusuke Konishi" <konishi.ryusuke@gmail.com>,
-        "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-nilfs@vger.kernel.org,
-        linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] Remove bdi_congested() and wb_congested() and related
- functions
-In-reply-to: <20211213050736.GS449541@dread.disaster.area>
-References: <163936868317.23860.5037433897004720387.stgit@noble.brown>,
- <163936886727.23860.5245364396572576756.stgit@noble.brown>,
- <20211213050736.GS449541@dread.disaster.area>
-Date:   Mon, 13 Dec 2021 18:04:10 +1100
-Message-id: <163937905049.22433.10716750573737410875@noble.neil.brown.name>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YbN+KqqCG0032NMG@casper.infradead.org>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, 13 Dec 2021, Dave Chinner wrote:
-> On Mon, Dec 13, 2021 at 03:14:27PM +1100, NeilBrown wrote:
-> > These functions are no longer useful as the only bdis that report
-> > congestion are in ceph, fuse, and nfs.  None of those bdis can be the
-> > target of the calls in drbd, ext2, nilfs2, or xfs.
-> > 
-> > Removing the test on bdi_write_contested() in current_may_throttle()
-> > could cause a small change in behaviour, but only when PF_LOCAL_THROTTLE
-> > is set.
-> > 
-> > So replace the calls by 'false' and simplify the code - and remove the
-> > functions.
-> > 
-> > Signed-off-by: NeilBrown <neilb@suse.de>
-> ....
-> > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> > index 631c5a61d89b..22f73b3e888e 100644
-> > --- a/fs/xfs/xfs_buf.c
-> > +++ b/fs/xfs/xfs_buf.c
-> > @@ -843,9 +843,6 @@ xfs_buf_readahead_map(
-> >  {
-> >  	struct xfs_buf		*bp;
-> >  
-> > -	if (bdi_read_congested(target->bt_bdev->bd_disk->bdi))
-> > -		return;
-> 
-> Ok, but this isn't a "throttle writeback" test here - it's trying to
-> avoid having speculative readahead blocking on a full request queue
-> instead of just skipping the readahead IO. i.e. prevent readahead
-> thrashing and/or adding unnecessary read load when we already have a
-> full read queue...
-> 
-> So what is the replacement for that? We want to skip the entire
-> buffer lookup/setup/read overhead if we're likely to block on IO
-> submission - is there anything we can use to do this these days?
+On Fri, Dec 10, 2021 at 04:19:54PM +0000, Matthew Wilcox wrote:
+> After attempting the merge with Christoph's ill-timed refactoring,
 
-I don't think there is a concept of a "full read queue" any more.
-There are things that can block an IO submission though.
-There is allocation of the bio from a mempool, and there is
-rq_qos_throttle, and there are probably other places where submission
-can block.  I don't think you can tell in advance if a submission is
-likely to block.
+I did give you a headsup before..
 
-I think the idea is that the top level of the submission stack should
-rate-limit based on the estimated throughput of the stack.  I think
-write-back does this.  I don't know about read-ahead.
+> I decided that eliding the use of 'bytes' here was the wrong approach,
+> because it very much needs to be put back in for the merge.
 
-NeilBrown
+Is there any good reason to not just delay the iomp_zero_iter folio
+conversion for now?
