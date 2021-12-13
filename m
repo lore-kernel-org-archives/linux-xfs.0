@@ -2,59 +2,68 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41D27C433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 13 Dec 2021 07:38:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DEE28C433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 13 Dec 2021 18:08:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231258AbhLMHiM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 13 Dec 2021 02:38:12 -0500
-Received: from verein.lst.de ([213.95.11.211]:46426 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230053AbhLMHiM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 13 Dec 2021 02:38:12 -0500
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id CD55C68AA6; Mon, 13 Dec 2021 08:38:08 +0100 (CET)
-Date:   Mon, 13 Dec 2021 08:38:08 +0100
-From:   Christoph Hellwig <hch@lst.de>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Christoph Hellwig <hch@lst.de>, dan.j.williams@intel.com,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        nvdimm@lists.linux.dev, Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [PATCH] iomap: turn the byte variable in iomap_zero_iter into
- a ssize_t
-Message-ID: <20211213073808.GA20684@lst.de>
-References: <20211208091203.2927754-1-hch@lst.de> <YbTk+1I4VFQpgjM/@casper.infradead.org>
+        id S236422AbhLMSIw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 13 Dec 2021 13:08:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36004 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S241633AbhLMSIv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Dec 2021 13:08:51 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2BA73C061574;
+        Mon, 13 Dec 2021 10:08:51 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=8oozV1IRwA/A2R6zNk07Fx/Spsm9jrjC4UBxcDZXjf8=; b=a6vpnrKVMF7x9NRBbcUvJJkaGU
+        RWh+pCMAqyR7ZiLSPPNcT98z7kIFfBf76Sqay4RnDh6+ugjgoWZ5sIX7XG5eFA2Cwip4P3s6Ntze9
+        Fja3JFi7V/R7KbQBODnprlW9WRKXx+Oxsbx8Mv5I9kTgeNAI0Js8pmN/ghN4SkLbov4UbrEOJSZNC
+        IFDopsbq4RMY821Yuh1RERU4vC8BEeyCfXb9ds/0vI7FfqyfgT6X7azS5w03GEKJVeul/XXOrczsb
+        z42C93gofmG/ain5V80l4WRqk/RvlQnREstO2qSp1Ycd3SvyvM8FMoH9apeXSCFxsB/uD+wrJiIHd
+        9CEqXj+w==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1mwpkl-00D2OR-QG; Mon, 13 Dec 2021 18:08:47 +0000
+Date:   Mon, 13 Dec 2021 18:08:47 +0000
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     "Darrick J . Wong " <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH v2 19/28] iomap: Convert __iomap_zero_iter to use a folio
+Message-ID: <YbeML8UdqwsooSPb@casper.infradead.org>
+References: <20211108040551.1942823-1-willy@infradead.org>
+ <20211108040551.1942823-20-willy@infradead.org>
+ <YbJ3O1qf+9p/HWka@casper.infradead.org>
+ <YbN+KqqCG0032NMG@casper.infradead.org>
+ <Ybb3nmf0hPXhlnOu@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YbTk+1I4VFQpgjM/@casper.infradead.org>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <Ybb3nmf0hPXhlnOu@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Dec 11, 2021 at 05:50:51PM +0000, Matthew Wilcox wrote:
-> On Wed, Dec 08, 2021 at 10:12:03AM +0100, Christoph Hellwig wrote:
-> > bytes also hold the return value from iomap_write_end, which can contain
-> > a negative error value.  As bytes is always less than the page size even
-> > the signed type can hold the entire possible range.
+On Sun, Dec 12, 2021 at 11:34:54PM -0800, Christoph Hellwig wrote:
+> On Fri, Dec 10, 2021 at 04:19:54PM +0000, Matthew Wilcox wrote:
+> > After attempting the merge with Christoph's ill-timed refactoring,
 > 
-> iomap_write_end() can't return an errno.  I went through and checked as
-> part of the folio conversion.  It actually has two return values -- 0
-> on error and 'len' on success.  And it can't have an error because
-> that only occurs if 'copied' is less than 'length'.
-> 
-> So I think this should actually be:
-> 
-> -               bytes = iomap_write_end(iter, pos, bytes, bytes, folio);
-> -               if (bytes < 0)
-> -                       return bytes;
-> +               status = iomap_write_end(iter, pos, bytes, bytes, folio);
-> +               if (WARN_ON_ONCE(status == 0))
-> +                       return -EIO;
-> 
-> just like its counterpart loop in iomap_unshare_iter()
-> 
-> (ok this won't apply to Dan's tree, but YKWIM)
+> I did give you a headsup before..
 
-Indeed.  It might make sense to eventually switch to actually return
-an errno or a bool as the current calling convention is rather confusing.
+I thought that was going in via Darrick's tree.  I had no idea Dan was
+going to take it.
+
+> > I decided that eliding the use of 'bytes' here was the wrong approach,
+> > because it very much needs to be put back in for the merge.
+> 
+> Is there any good reason to not just delay the iomp_zero_iter folio
+> conversion for now?
+
+It would hold up about half of the iomap folio conversion (~10 patches).
+I don't understand what the benefit is of your patch series.  Moving
+filesystems away from being bdev based just doesn't seem interesting
+to me.  Having DAX as an optional feature that some bdevs have seems
+like a far superior option.
