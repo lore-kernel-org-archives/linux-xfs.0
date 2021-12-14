@@ -2,69 +2,69 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BB05C433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Dec 2021 08:50:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 646AEC433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Dec 2021 08:50:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230258AbhLNIuY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Dec 2021 03:50:24 -0500
-Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:47528 "EHLO
-        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229577AbhLNIuY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Dec 2021 03:50:24 -0500
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1BE7LE8F022068;
-        Tue, 14 Dec 2021 08:50:21 GMT
+        id S231931AbhLNIud (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Dec 2021 03:50:33 -0500
+Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:20574 "EHLO
+        mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231709AbhLNIud (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Dec 2021 03:50:33 -0500
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1BE7MkId004563;
+        Tue, 14 Dec 2021 08:50:30 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references :
  content-transfer-encoding : content-type : mime-version;
- s=corp-2021-07-09; bh=qJaR9aYPUdMDay2IHt8rgVgOhxvq61yKuwGDyIJql+0=;
- b=omWnlmkN2RzWQhhVZWALpwh0Xdod/GpjOXjO7HNkMXUj/Q8+LIVorqyPr9c02JbXL96e
- WlXkcQZJnZM8kqrHGsVPg3CsF0I2YVQGCGXo+/O99eupM7crMD3BMves4rPgYWk/R24N
- g75NwtGpmTpDo7SdiEo/ecMo6bfiwCqfYEN1bLnGLoDwT0EHVfkFWnKOVg/xajTGbrQG
- qB+ckVZE1Tzp5c8xp01YfsY8D/WToCmbXGYgqzLOoxFwG0aGusMTLGcpfvpy9vVllrFZ
- q0s95jL2nXzk1JljV5stPPoQl/JVb7iw5g78cOhppIHTIxa7HHRqCJRAPmS+VJJk8Gr9 hw== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3cx2nfb6me-1
+ s=corp-2021-07-09; bh=JRI21QCjDV+vJVKtFKVlGMW6DCaOiQnQBBVcF5nJzqU=;
+ b=YsWiyQtsMQR/3/g6lePtonjrvDgqxapU8ZZsW8owHVoUrTBHyCRXGQRGW2y0moyb7GRp
+ EUBt6WnY8SePq/Oz+hTuTftgfKUYAeNNoHANlWIaoGXBS/JCWY64dru+QojV/o56RIAy
+ ZiEvaVqgFYv9L8ez0v11zPjiuXg6CZ8/BjL8Rmu8Sce99NcOl98r+PduNoM5+cVyYUP5
+ h9LOtY4jWD5HsY+WFU49c/TuRPv7gqXQmI5h/Zf2CPV0bN3NjNN7O5E3nxd/EWdPn07M
+ 94YoWuvVu9UEGehrxajIEUWFc25W6bxHGD7GWsn5DyhZKhPTIB7h4hY4J0w0mGi6Gz+L qg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3cx3mru63w-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 14 Dec 2021 08:50:21 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 1BE8fXjt156399;
-        Tue, 14 Dec 2021 08:50:20 GMT
-Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2175.outbound.protection.outlook.com [104.47.55.175])
-        by userp3030.oracle.com with ESMTP id 3cvh3wy897-1
+        Tue, 14 Dec 2021 08:50:29 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 1BE8oS16104895;
+        Tue, 14 Dec 2021 08:50:28 GMT
+Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2177.outbound.protection.outlook.com [104.47.55.177])
+        by aserp3020.oracle.com with ESMTP id 3cxmr9yk5c-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 14 Dec 2021 08:50:20 +0000
+        Tue, 14 Dec 2021 08:50:28 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=ku5wGeX3zzQ5wl0ZHg3dN3arHQev3bP6bAFn/a6kc4RqpQpk8jzIy8X5OM6Gm8Pg+ms2H0JNiEt14AEWOz8o7Y+lXwhxuKkquRhCg0QTwqRh+qSI0bDR/UuHZlaVVbPp1ha73BVdHxGYxRiwJRH15s7LahdxSMW1TwXlvJmQX57YX1DeFgm2aOg0gCGMch7UH+51qmDcYewqyU80gOhTZSjzpOf7Ny0R7rCzoEgajoFS2uXqDRvDevzzza2XizzPlMrBj/7IyaKWaupgJ9Kj39AzuT+jlLFYpEnYMD/0QneLazkBXh/j+gNgWkTfF+2geU1P9zYLfdoLLAmy2LBrGQ==
+ b=nfLowsqLGoYMxdKE0ywtSv6FL1wYzBYyZuOKyeg8ytNGCKHHcnUu7lpwbmnN28UNJmeeaL9HNZXuxNLPME9SGfcfPjGOwYh3WfJTG2uVe8+xTEILWbVvk64Qx2pHg8k05fd2gM3a6S9H4SwT0JMTE9bNS4mX0DExTf3X0UDA++O7Qn39imt7BRLM6EH8gIZYHsJlm/hYtgdrxqyRZ1E2UAifEWfjq9BD2SSjVecx/dqoMEzeUeamwJB5A70YVg5hAh+oDvKmXWiOX7Gw/7yRfM3l6HJLCg/J9FfKt1QEYcUgIBgRMlPs7IUC62tGgZ3LLKB9aGCq8MgSV/5PiZYlOw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=qJaR9aYPUdMDay2IHt8rgVgOhxvq61yKuwGDyIJql+0=;
- b=hfTo0qyXDv2QYu9pTLVQyCsIjHI3PuMaI2ykOuWJ6Gh/PVvQqyKpNXCquL6Juv7iJOS9HS6i9E5b3WERbpQcsKqX5F+hdRaYnhbWQ0AimmgrC0zOdsofpSZpLD4ragELarDpHznaeya9Ydtc4L9cNJ7ZpHn5czn7dq5Hilz48t9f/+Rx+eC4Cqsq1XJS2xvc0HZGPP58RsiD7BK//lFGTXZPHwciFpOmQwSsb0JCQIxF8ExScOtYqUdRWx+alTtCvZTuQ+2HqB7zFFCuHujogwB6JiD03G/GYTT11F8ONGRQbNZ4nT7nmhMZS15Wi1sNGOVFX1UawoJJmi970N97Cg==
+ bh=JRI21QCjDV+vJVKtFKVlGMW6DCaOiQnQBBVcF5nJzqU=;
+ b=JhyXdY1kUj90ZMdVzZHhVROfsSB94Zrx91CAKKuotsfcX6X8uYCnCsmX15dm6V5kZVVMSLQzlJ2T1Td9j9ysjGXT6EKPp6mBdTRHOid6aPWCms/7beGiYnbnna4K9L+xmxZB+9nGkK68AJjYhwzEGBWo3PNvxx29SvdlrmkVDMljkDuv0OJm7VPa9ofQJZ4IHI5aZ/L8NZIudHxwr2ibAnsydr8bevJW+axAhqHxAYkrTlQbLmZzt7KJ6puKMDx22p6cuzW2xgKmuZKLsPUtW0iovSA1xoShujB9c6KmWC2ge6r3geEkOBLpmNU/KLDWGdfy1iIa//Cr4T8ht9eA7A==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=qJaR9aYPUdMDay2IHt8rgVgOhxvq61yKuwGDyIJql+0=;
- b=FiW40mAgLk5Qt5h2hI/PYHj4i1yAe3PA/SB/a86ks5FHMBm1rDyr5sEnDsYmJfHfnaWXcSyk6JYnlJnoiq29HzMsPggp1BOP6ioHBDyBfIH+5mmG6ygvkA9dN1TFbNlxcRqxe/PnTNXguqt8mdsTNHHdpZZlaSiatCLo8/KhA70=
+ bh=JRI21QCjDV+vJVKtFKVlGMW6DCaOiQnQBBVcF5nJzqU=;
+ b=aJXcVcxX352xtTyPk8d9+kz/r5u5GcAgDirjwmsVWbITnhdcRylvQWyqFCn6J7s1FF/HEfjAQBUHprTWOTpFcAnlqndzyoNnr+jD9m7zILeFJ+MbSWQk+THoQll+98aGWmF/tL/+cNawJtU+AKlekEiijJ56eRYsLHoZJBROdIc=
 Received: from SA2PR10MB4587.namprd10.prod.outlook.com (2603:10b6:806:114::12)
  by SA2PR10MB4555.namprd10.prod.outlook.com (2603:10b6:806:115::6) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4778.17; Tue, 14 Dec
- 2021 08:50:18 +0000
+ 2021 08:50:20 +0000
 Received: from SA2PR10MB4587.namprd10.prod.outlook.com
  ([fe80::75ca:e478:6788:d21d]) by SA2PR10MB4587.namprd10.prod.outlook.com
  ([fe80::75ca:e478:6788:d21d%6]) with mapi id 15.20.4778.018; Tue, 14 Dec 2021
- 08:50:18 +0000
+ 08:50:20 +0000
 From:   Chandan Babu R <chandan.babu@oracle.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     Chandan Babu R <chandan.babu@oracle.com>, djwong@kernel.org,
         david@fromorbit.com
-Subject: [PATCH V4 19/20] xfsprogs: Add support for upgrading to NREXT64 feature
-Date:   Tue, 14 Dec 2021 14:18:10 +0530
-Message-Id: <20211214084811.764481-20-chandan.babu@oracle.com>
+Subject: [PATCH V4 20/20] xfsprogs: Define max extent length based on on-disk format definition
+Date:   Tue, 14 Dec 2021 14:18:11 +0530
+Message-Id: <20211214084811.764481-21-chandan.babu@oracle.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20211214084811.764481-1-chandan.babu@oracle.com>
 References: <20211214084811.764481-1-chandan.babu@oracle.com>
@@ -75,211 +75,438 @@ X-ClientProxiedBy: MAXPR0101CA0069.INDPRD01.PROD.OUTLOOK.COM
  (2603:10b6:806:114::12)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 998621d8-f6b5-4af0-2c20-08d9bedec10c
+X-MS-Office365-Filtering-Correlation-Id: e315c867-f874-4220-5fac-08d9bedec268
 X-MS-TrafficTypeDiagnostic: SA2PR10MB4555:EE_
-X-Microsoft-Antispam-PRVS: <SA2PR10MB45554C47DFC23ECF6F63BDC7F6759@SA2PR10MB4555.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:256;
+X-Microsoft-Antispam-PRVS: <SA2PR10MB45557CCDE1A381374B343ABEF6759@SA2PR10MB4555.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:2089;
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: qhcTIFYrdmEcbT+LbvlizDM+GIB+Kt+1dpip1OiyDLMUV73vY3Yn4zIpryToENPnshxGEVB4VvnsaxwsorlA1yhd2KLSDVGmXX/lP8b/fBI5z7lbkpUSqkEPpmsWFPeNkU+tLK+/nhyTufEAjRAVFvimQRNahYmxP3zTvXGj6l0xXSw5AWHRyYEOi5F7L2sDB8y+dkPn9sH1R5ZBSr2+y+Z72Ct7SQkzH0VTBUIHDdn+cSpQ+OOWfBRX/UVrAlAxE2GoGQ84GXe4ELjCQYnX2tjwDv/zAMggfwfarmTV+6Eydx14tuag2KZPuhyvZfPRib7WkBtfW7cVMG9chKAFQ4UoTwYOeXo+68XZMOLOs+7GMB/RduqhVZkwWE/Ghqh+O6f6yOYR6n8b44FAwp1wxwKf2yvPO/l0KElgEFpx/S93OprEa4yPm8qEDu3c3W+3/D3Ln0Q/HVS7gVeYHArFZhM4YzLiHZ+vffkoiKaZI5GCilOYlBOyjgyIcVgke4CEY5LlJADlemHNWGOPwZnZMdlMlou/f0GPYWfxj7ys+BfspPYN1PUy6nvjMP/Vp78HxDWVPCp0DlS1ndxXgB5delBmCPVVyEeHsfz/bpf3ECzTsz8x4J697++8ybH9XtlbjACB5FQK6oqzbIFd89D0207VHF495aYA1cEVyovbkzo9+aUKm3fmlH2Amg2l5AtddiRTKqM/5XI2qKEFe/YLfg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(5660300002)(52116002)(38350700002)(8676002)(38100700002)(26005)(508600001)(316002)(2616005)(8936002)(36756003)(66476007)(66946007)(1076003)(6506007)(2906002)(6486002)(6916009)(86362001)(6666004)(83380400001)(186003)(4326008)(6512007)(66556008);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: tImxLVNdQ+j99Q23QeqJUNk3ozi/uCPALGn/VL0Qc3z6TLr3bNpU2zHekp7HjMVUz9w/pdq+qvOZdWTqqb/+UzBcv9DZ9nX8iQiyw7VtjVsDLytbseEkBWPoHBqh90vta2GKVL/St8Lmj52c+X1iZ0LMjShgqKVvEsYhTb2bawjpDGJKFznLFZ3BYLvMO2fS57EM+akPZtK9bMgzSjH+A3ngHX3pGMr+vrTfIFdbD+KOgyiutSYGmfUaBNBFkmaDhaMjtwjLmTip1CN7942ZTwPJP6cMg9iNUOZk7Zgoz2cLhlxF8qDAEGfyQhXLBCzypH72n2An0mKq5oIbe4rSB/dVJvn/6Afiv+D3w4GmdES1tmFIWNzXPK6KjYELs/Xh1ugwhhT37mQliWb+UghJz1e9Mgt8bUBZifERJEiMU/9CmwZpq20e15osXRebFs9xKMmnuGcO2YKZ7DlfuAnTec257vlRuDH3neZIgJUBKiIG407XrynAiHj183GsrHxnUacy2l8SZfAxldgY17YiWwnkJlmjYOGUxwsUYEM/XJwV6XZMnayngqlvrnRckAAc+8OGXxYaOmOXFKKe1ZyEwuRTKW9HhqO3kS3haaIPa+MEAu7Y1H3r5WyGVpnTrYddh2VWcOQgvyOQgC6JkqiOI/R0nCFmtkVv2uxika6o+I0eeJKFWUX/TBIV/vBSSckWVmev+9yKsDdAlYyZZoj1mA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(5660300002)(52116002)(38350700002)(8676002)(38100700002)(26005)(508600001)(316002)(2616005)(8936002)(36756003)(66476007)(66946007)(1076003)(6506007)(2906002)(6486002)(30864003)(6916009)(86362001)(6666004)(83380400001)(186003)(4326008)(6512007)(66556008);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?nAzASAigz4NoGnGyDwzQ3oRI3RIyiGrNTxZ8spBdZ7Z+XCRyLSj5D5SKW4or?=
- =?us-ascii?Q?5MgE7r77p8uggpy2GQt4Pp1Ts7/jA8InAEUHvWue7URFcr61TlZZnXOP4C1Z?=
- =?us-ascii?Q?Gaa0tEIsSVEZp2f4O7c32QYQqHg0MFWYNlR7TCCqAn7N7TlN6Vw5yDVApMab?=
- =?us-ascii?Q?9eVCkiT8q0RhgRp1CW35C/pKbmrnQ5No+VQyRCiv3CssWv742esx8yViBuah?=
- =?us-ascii?Q?eNoWycx5VD7tCHkrfinSKYP5XmkDwzHUE/hZxVYLCS7vwIfE1g6PdFRcRT1o?=
- =?us-ascii?Q?Rth4G5BOZimO97Q2UpVUCM7+DbeyLmqVO+T+VeAqQrrnCRwyO+3KNFzS+2u3?=
- =?us-ascii?Q?v72pgAt+JFv2FO1qf9gBaTfi6PaRQ0xJgtIe0l3zJf4BQD9Eh7LRjgfdR+Oa?=
- =?us-ascii?Q?yTXcYGClpQPYerAlezmd/dGB34ohteTcG8Z/d94F/E3coSQQrWIiCBT0mPqR?=
- =?us-ascii?Q?5xKQN9DRlNnzjDS0nOIJ7ls46QJBWiRILe474xNOgHLt51bUZ4xRJMGSlYah?=
- =?us-ascii?Q?i7O/uaIQGzS/V/neAfFK4dUFfxBl9Bqk1yAwMacIASUnNp/15w34FKxTWPIs?=
- =?us-ascii?Q?WQMH2SRDp1d1yTEViaKyTlnJ/03eZtdc/iQCICRYlOPsyniFSYvvndAUxbmS?=
- =?us-ascii?Q?2zeLufTr6BvOL78pSn7ZKN+ynTOGRVVdTQCIFey4scLKYQ6jBQqMMkBQii6H?=
- =?us-ascii?Q?oa7dYVhq0XPIpncEEtDWi1J0XfuOVm1IzX9urbB7EjQiEInAr8cBRtAEmrOi?=
- =?us-ascii?Q?/1Lp2E07IWNJUdxG0tu54s8ee4MhtZ7xh2OSycdy66E95py+/WLnaX3x3zge?=
- =?us-ascii?Q?KJHOK7gx/1NsrMukfmni1Ae/l/yWDkvClM+OLYuVv8m+qtkAcdxWSIEo5so8?=
- =?us-ascii?Q?vpZCfMsRAIw35X0Hmmy+uzv9V2EiLE2VeozFcGhl5dmqQyPRZaJ83JSk4Nnx?=
- =?us-ascii?Q?a60OIIIgOvSBbpVgUn2TvCuaeOGZ98BCNckiQtVlnCxA3Fqyc52NJ4ak4qQz?=
- =?us-ascii?Q?G513auEFYRHb3jd1cZzjI/OxiIEVoUJ7ZJqJ2/OH4zGSfItKnwtHyezvaoon?=
- =?us-ascii?Q?LwBqVeg6Kx4x2Fk4BurSMNCQRv2/bJ/BRa5BeNfUSE4E6D7HF5LtlpaZ/fyg?=
- =?us-ascii?Q?2YkqnNqEXKuksqhAP3WON1Ece+eRXxemrtqdhfTHqcEdsWk5zGINPEjJ9SGn?=
- =?us-ascii?Q?NRNHwAK6eAy+PZD9YFIa67ldpl1QW/W2woGuvqe1mbLo/TnFUgoN0BNbCcOe?=
- =?us-ascii?Q?cRdW2UA+5KeO5ym2R2RclL+uQ7kAY+ywMAP+xnmTd1GP2Eu7UEPlYFOynMqr?=
- =?us-ascii?Q?DcG0l4qqyZrYUOrniUmZ/co6G4Kb3CBYELonXHt4786BfzSbdOUFoxHHhEZ6?=
- =?us-ascii?Q?KIjWBCE2YKgwn5meAgro0MFWmw2zEeL77FnCCDjGRBWmEnAocqN7mWywGn3a?=
- =?us-ascii?Q?but7NxPRC8wQIlEiwOaLXR3ARW4Eve0VjtOBdsFQYxpzn8uFK7+AIFdQsL2D?=
- =?us-ascii?Q?2IfIupJ8Sxg65Tu1a+FunFNGJjHcbBRp1+GElY5xN0NQsPZqMBsDoLPD2Qnq?=
- =?us-ascii?Q?OQNU/6VNeLuWJGk7SlBEdCIt6iiRnnEyIl5luSVtP/3WcMb2rKo0hoQ+gUOc?=
- =?us-ascii?Q?mfhfXm/moU9WFFEiuwYE+pU=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?d1MYkEdYChL7yjHbPw+3a4EWZMZ5W3tKCl4t2L08tAS6tSRFHsEl8q1X7Vor?=
+ =?us-ascii?Q?9OQOqQE3+rHFxOw1nEhd+3mhDU8Cv2atm0w5GnuS1sVQMAAXGW9XjNXmqXfb?=
+ =?us-ascii?Q?/YKozOP9Ctwd13ddZqXgpK6nc8WBOopRzhdnM8NN1C8GLUVYzsML0/W0Wa0p?=
+ =?us-ascii?Q?snpeW2KzFxCK5QuJwamzSAdxnvHiYPV0Yw329iDyyf5+xQSg0GpipvtU7ls0?=
+ =?us-ascii?Q?Kwk0U0J1goFEQTeB+/WEffVZxm9au4Vp0Tt759XdocvKI9T7Vt3IotCGkoIM?=
+ =?us-ascii?Q?Ncq9RWwaJ7tyIjq2bU/WTXH76Wt9jxZTzAFki812i9fDpzxx6bWRYrPhFO9N?=
+ =?us-ascii?Q?yDARLteSEihKXlbFIZljpyXfwILYx0aQmPnTcMC9tJAKcIJ6xwFO6j95Iw5L?=
+ =?us-ascii?Q?g4iLhGAPO0MohpIDZfeqhCqH72V0sa/sEwtbybcj3lUdBuxmdbhhrhqVLZar?=
+ =?us-ascii?Q?3i4zsNEuXDr8NcvF3XXaMmSL9glHDtDI6RTIVJiDJjMMyhbFhOQYIzSrf87L?=
+ =?us-ascii?Q?jjkKomvgqi0VU9iynGxdwX8U+5lPrrsGx3WmTld3VBQUG1CKi4NMeR/KhsVh?=
+ =?us-ascii?Q?BIEnM0bFf6bx4jdTkw7hRlSpyB8jkP6qGv2iNzIzQBWCLuM/yFAm0VbRsyQz?=
+ =?us-ascii?Q?Y5UedEFraj/KZRi8jacsQVZq2rWJWW/IyBnDV4FUpNCX5NL1BjtK3OWk55/v?=
+ =?us-ascii?Q?udIl2E8ElRFKjXM8HDmmidr/nR+ONairdxhVD2xyCi+X7iK1IiHZ1V2JAFPx?=
+ =?us-ascii?Q?CXIghslX0ZLh68zJtSc+ZWnMd33Ulh6yTzbEwh8QCXmXlr8wHHUMfQIGeNUS?=
+ =?us-ascii?Q?eXsFxAPmiclUixwVYE8Oy8n8kEtQ1MWpSYdwnudUnS4S2FVTBeL04t+cR3bA?=
+ =?us-ascii?Q?ca5/XzWPrVN01AyaxFu3Aia7+fvuEtZbOZEAiGXHBJnuZcXd/hnc/IQrjuUX?=
+ =?us-ascii?Q?D8GbfB8uDHbO301X5jVlegqBko2xk8LS/yDk/+Z7PlhqXJLcsBBKGX13mASF?=
+ =?us-ascii?Q?HCrm6f2C19OjeTEIT/etiZxVwvGmKg8XFFcYBue/BmprR8GQxqIxr78SR9hS?=
+ =?us-ascii?Q?6c5iZXO97fbRCCEB4cj34l9hitK4ZaiAW28B8cu05ZxVinnPTJ1+5Us72p3r?=
+ =?us-ascii?Q?zVXS+KHT+LKw5a3OlxNK/MHxfk62J3Xs7VuA50tU6UlwaZhofAEs+utPxV6w?=
+ =?us-ascii?Q?nA08Jcdgc1tskAnsqqteALNyF+uBSq4MOv0ZvT+SEwe6O17k7KL5QLW9LN0E?=
+ =?us-ascii?Q?T2VrAJnIsIClJwjzhw3HtDxewRT6pTdb2nGREmIpU3LPEAHpesME+F3Y13XB?=
+ =?us-ascii?Q?dD7d137Xt9BeAzZoHMAIXra11FQEe8VqgUMjw0PiuUjwmCIu2e6NbsuWO/Oe?=
+ =?us-ascii?Q?ff0/ATUcN/WFie3K9T0GEH8p3mPBHHwfyPWeyfJJtwlfNDlvtKMxBmMrVFRi?=
+ =?us-ascii?Q?cnReXsxG74frMmPznMTeowI9qjfX80nKQq1HAC11ko9IqZCL5X4qIgX1DeBi?=
+ =?us-ascii?Q?kdpYB4IvJdYivFjnKbbevr6BazHcdWVvgtKAIE+stCvZGICXuco6jjm/PBv3?=
+ =?us-ascii?Q?kxiEkgRz29SoWsaKici9cXYFlzHM3trIyo93iVO8W6K3Zl7FkFHlCmS8a+rU?=
+ =?us-ascii?Q?wx0Abf1gNdHC6Rie2NoN2cY=3D?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 998621d8-f6b5-4af0-2c20-08d9bedec10c
+X-MS-Exchange-CrossTenant-Network-Message-Id: e315c867-f874-4220-5fac-08d9bedec268
 X-MS-Exchange-CrossTenant-AuthSource: SA2PR10MB4587.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Dec 2021 08:50:18.3838
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Dec 2021 08:50:20.7006
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: BvplRemWvVopLX8/f4/wnTZOKNzxnBA7TCbUjXurpgj160C9tGxoqGmWaPMax3qBc9l2drb2KtrI+clO2XcR6Q==
+X-MS-Exchange-CrossTenant-UserPrincipalName: pls5xzH7xl1zdrQa0xVmYpKtA9upnn4PkkuSVSMB6s+MSOrYOpPIZEmopTgiJ1wr+5Lp+OlbUNVCaFjRHtFKOQ==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA2PR10MB4555
 X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10197 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 suspectscore=0
- malwarescore=0 mlxlogscore=999 bulkscore=0 mlxscore=0 adultscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 spamscore=0
+ mlxlogscore=999 suspectscore=0 adultscore=0 malwarescore=0 phishscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2110150000
- definitions=main-2112140049
-X-Proofpoint-ORIG-GUID: 4vcyLBQNE_2F0nOHew2GzTcZC2DYx0pB
-X-Proofpoint-GUID: 4vcyLBQNE_2F0nOHew2GzTcZC2DYx0pB
+ definitions=main-2112140050
+X-Proofpoint-ORIG-GUID: c3LOYzPjZcXd-gYdG6xKFxxSfu6q5tWC
+X-Proofpoint-GUID: c3LOYzPjZcXd-gYdG6xKFxxSfu6q5tWC
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This commit adds support to xfs_repair to allow upgrading an existing
-filesystem to support per-inode large extent counters.
+The maximum extent length depends on maximum block count that can be stored in
+a BMBT record. Hence this commit defines MAXEXTLEN based on
+BMBT_BLOCKCOUNT_BITLEN.
 
+While at it, the commit also renames MAXEXTLEN to XFS_MAX_BMBT_EXTLEN.
+
+Suggested-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
 ---
- repair/globals.c    |  1 +
- repair/globals.h    |  1 +
- repair/phase2.c     | 35 ++++++++++++++++++++++++++++++++++-
- repair/xfs_repair.c | 11 +++++++++++
- 4 files changed, 47 insertions(+), 1 deletion(-)
+ db/metadump.c           |  2 +-
+ libxfs/xfs_bmap.c       | 53 +++++++++++++++++++++--------------------
+ libxfs/xfs_format.h     | 23 +++++++++---------
+ libxfs/xfs_inode_buf.c  |  4 ++--
+ libxfs/xfs_trans_resv.c | 10 ++++----
+ mkfs/xfs_mkfs.c         |  6 ++---
+ repair/phase4.c         |  2 +-
+ 7 files changed, 51 insertions(+), 49 deletions(-)
 
-diff --git a/repair/globals.c b/repair/globals.c
-index d89507b1..2f29391a 100644
---- a/repair/globals.c
-+++ b/repair/globals.c
-@@ -53,6 +53,7 @@ bool	add_bigtime;		/* add support for timestamps up to 2486 */
- bool	add_finobt;		/* add free inode btrees */
- bool	add_reflink;		/* add reference count btrees */
- bool	add_rmapbt;		/* add reverse mapping btrees */
-+bool	add_nrext64;
+diff --git a/db/metadump.c b/db/metadump.c
+index 8a9aec75..3ed4d81a 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -20,7 +20,7 @@
+ #include "field.h"
+ #include "dir2.h"
  
- /* misc status variables */
+-#define DEFAULT_MAX_EXT_SIZE	MAXEXTLEN
++#define DEFAULT_MAX_EXT_SIZE	XFS_MAX_BMBT_EXTLEN
  
-diff --git a/repair/globals.h b/repair/globals.h
-index 53ff2532..af0bcb6b 100644
---- a/repair/globals.h
-+++ b/repair/globals.h
-@@ -94,6 +94,7 @@ extern bool	add_bigtime;		/* add support for timestamps up to 2486 */
- extern bool	add_finobt;		/* add free inode btrees */
- extern bool	add_reflink;		/* add reference count btrees */
- extern bool	add_rmapbt;		/* add reverse mapping btrees */
-+extern bool	add_nrext64;
+ /* copy all metadata structures to/from a file */
  
- /* misc status variables */
+diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+index 9dd24678..ac66a33d 100644
+--- a/libxfs/xfs_bmap.c
++++ b/libxfs/xfs_bmap.c
+@@ -536,7 +536,7 @@ __xfs_bmap_add_free(
  
-diff --git a/repair/phase2.c b/repair/phase2.c
-index c811ed5d..c9db3281 100644
---- a/repair/phase2.c
-+++ b/repair/phase2.c
-@@ -191,6 +191,7 @@ check_new_v5_geometry(
- 	struct xfs_perag	*pag;
- 	xfs_agnumber_t		agno;
- 	xfs_ino_t		rootino;
-+	uint			old_bm_maxlevels[2];
- 	int			min_logblocks;
- 	int			error;
+ 	ASSERT(bno != NULLFSBLOCK);
+ 	ASSERT(len > 0);
+-	ASSERT(len <= MAXEXTLEN);
++	ASSERT(len <= XFS_MAX_BMBT_EXTLEN);
+ 	ASSERT(!isnullstartblock(bno));
+ 	agno = XFS_FSB_TO_AGNO(mp, bno);
+ 	agbno = XFS_FSB_TO_AGBNO(mp, bno);
+@@ -1493,7 +1493,7 @@ xfs_bmap_add_extent_delay_real(
+ 	    LEFT.br_startoff + LEFT.br_blockcount == new->br_startoff &&
+ 	    LEFT.br_startblock + LEFT.br_blockcount == new->br_startblock &&
+ 	    LEFT.br_state == new->br_state &&
+-	    LEFT.br_blockcount + new->br_blockcount <= MAXEXTLEN)
++	    LEFT.br_blockcount + new->br_blockcount <= XFS_MAX_BMBT_EXTLEN)
+ 		state |= BMAP_LEFT_CONTIG;
  
-@@ -201,6 +202,12 @@ check_new_v5_geometry(
- 	memcpy(&old_sb, &mp->m_sb, sizeof(struct xfs_sb));
- 	memcpy(&mp->m_sb, new_sb, sizeof(struct xfs_sb));
+ 	/*
+@@ -1511,13 +1511,13 @@ xfs_bmap_add_extent_delay_real(
+ 	    new_endoff == RIGHT.br_startoff &&
+ 	    new->br_startblock + new->br_blockcount == RIGHT.br_startblock &&
+ 	    new->br_state == RIGHT.br_state &&
+-	    new->br_blockcount + RIGHT.br_blockcount <= MAXEXTLEN &&
++	    new->br_blockcount + RIGHT.br_blockcount <= XFS_MAX_BMBT_EXTLEN &&
+ 	    ((state & (BMAP_LEFT_CONTIG | BMAP_LEFT_FILLING |
+ 		       BMAP_RIGHT_FILLING)) !=
+ 		      (BMAP_LEFT_CONTIG | BMAP_LEFT_FILLING |
+ 		       BMAP_RIGHT_FILLING) ||
+ 	     LEFT.br_blockcount + new->br_blockcount + RIGHT.br_blockcount
+-			<= MAXEXTLEN))
++			<= XFS_MAX_BMBT_EXTLEN))
+ 		state |= BMAP_RIGHT_CONTIG;
  
-+	old_bm_maxlevels[0] = mp->m_bm_maxlevels[0];
-+	old_bm_maxlevels[1] = mp->m_bm_maxlevels[1];
-+
-+	xfs_bmap_compute_maxlevels(mp, XFS_DATA_FORK);
-+	xfs_bmap_compute_maxlevels(mp, XFS_ATTR_FORK);
-+
- 	/* Do we have a big enough log? */
- 	min_logblocks = libxfs_log_calc_minimum_size(mp);
- 	if (old_sb.sb_logblocks < min_logblocks) {
-@@ -288,6 +295,9 @@ check_new_v5_geometry(
- 		pag->pagi_init = 0;
+ 	error = 0;
+@@ -2041,7 +2041,7 @@ xfs_bmap_add_extent_unwritten_real(
+ 	    LEFT.br_startoff + LEFT.br_blockcount == new->br_startoff &&
+ 	    LEFT.br_startblock + LEFT.br_blockcount == new->br_startblock &&
+ 	    LEFT.br_state == new->br_state &&
+-	    LEFT.br_blockcount + new->br_blockcount <= MAXEXTLEN)
++	    LEFT.br_blockcount + new->br_blockcount <= XFS_MAX_BMBT_EXTLEN)
+ 		state |= BMAP_LEFT_CONTIG;
+ 
+ 	/*
+@@ -2059,13 +2059,13 @@ xfs_bmap_add_extent_unwritten_real(
+ 	    new_endoff == RIGHT.br_startoff &&
+ 	    new->br_startblock + new->br_blockcount == RIGHT.br_startblock &&
+ 	    new->br_state == RIGHT.br_state &&
+-	    new->br_blockcount + RIGHT.br_blockcount <= MAXEXTLEN &&
++	    new->br_blockcount + RIGHT.br_blockcount <= XFS_MAX_BMBT_EXTLEN &&
+ 	    ((state & (BMAP_LEFT_CONTIG | BMAP_LEFT_FILLING |
+ 		       BMAP_RIGHT_FILLING)) !=
+ 		      (BMAP_LEFT_CONTIG | BMAP_LEFT_FILLING |
+ 		       BMAP_RIGHT_FILLING) ||
+ 	     LEFT.br_blockcount + new->br_blockcount + RIGHT.br_blockcount
+-			<= MAXEXTLEN))
++			<= XFS_MAX_BMBT_EXTLEN))
+ 		state |= BMAP_RIGHT_CONTIG;
+ 
+ 	/*
+@@ -2551,15 +2551,15 @@ xfs_bmap_add_extent_hole_delay(
+ 	 */
+ 	if ((state & BMAP_LEFT_VALID) && (state & BMAP_LEFT_DELAY) &&
+ 	    left.br_startoff + left.br_blockcount == new->br_startoff &&
+-	    left.br_blockcount + new->br_blockcount <= MAXEXTLEN)
++	    left.br_blockcount + new->br_blockcount <= XFS_MAX_BMBT_EXTLEN)
+ 		state |= BMAP_LEFT_CONTIG;
+ 
+ 	if ((state & BMAP_RIGHT_VALID) && (state & BMAP_RIGHT_DELAY) &&
+ 	    new->br_startoff + new->br_blockcount == right.br_startoff &&
+-	    new->br_blockcount + right.br_blockcount <= MAXEXTLEN &&
++	    new->br_blockcount + right.br_blockcount <= XFS_MAX_BMBT_EXTLEN &&
+ 	    (!(state & BMAP_LEFT_CONTIG) ||
+ 	     (left.br_blockcount + new->br_blockcount +
+-	      right.br_blockcount <= MAXEXTLEN)))
++	      right.br_blockcount <= XFS_MAX_BMBT_EXTLEN)))
+ 		state |= BMAP_RIGHT_CONTIG;
+ 
+ 	/*
+@@ -2702,17 +2702,17 @@ xfs_bmap_add_extent_hole_real(
+ 	    left.br_startoff + left.br_blockcount == new->br_startoff &&
+ 	    left.br_startblock + left.br_blockcount == new->br_startblock &&
+ 	    left.br_state == new->br_state &&
+-	    left.br_blockcount + new->br_blockcount <= MAXEXTLEN)
++	    left.br_blockcount + new->br_blockcount <= XFS_MAX_BMBT_EXTLEN)
+ 		state |= BMAP_LEFT_CONTIG;
+ 
+ 	if ((state & BMAP_RIGHT_VALID) && !(state & BMAP_RIGHT_DELAY) &&
+ 	    new->br_startoff + new->br_blockcount == right.br_startoff &&
+ 	    new->br_startblock + new->br_blockcount == right.br_startblock &&
+ 	    new->br_state == right.br_state &&
+-	    new->br_blockcount + right.br_blockcount <= MAXEXTLEN &&
++	    new->br_blockcount + right.br_blockcount <= XFS_MAX_BMBT_EXTLEN &&
+ 	    (!(state & BMAP_LEFT_CONTIG) ||
+ 	     left.br_blockcount + new->br_blockcount +
+-	     right.br_blockcount <= MAXEXTLEN))
++	     right.br_blockcount <= XFS_MAX_BMBT_EXTLEN))
+ 		state |= BMAP_RIGHT_CONTIG;
+ 
+ 	error = 0;
+@@ -2947,15 +2947,15 @@ xfs_bmap_extsize_align(
+ 
+ 	/*
+ 	 * For large extent hint sizes, the aligned extent might be larger than
+-	 * MAXEXTLEN. In that case, reduce the size by an extsz so that it pulls
+-	 * the length back under MAXEXTLEN. The outer allocation loops handle
++	 * XFS_MAX_BMBT_EXTLEN. In that case, reduce the size by an extsz so that it pulls
++	 * the length back under XFS_MAX_BMBT_EXTLEN. The outer allocation loops handle
+ 	 * short allocation just fine, so it is safe to do this. We only want to
+ 	 * do it when we are forced to, though, because it means more allocation
+ 	 * operations are required.
+ 	 */
+-	while (align_alen > MAXEXTLEN)
++	while (align_alen > XFS_MAX_BMBT_EXTLEN)
+ 		align_alen -= extsz;
+-	ASSERT(align_alen <= MAXEXTLEN);
++	ASSERT(align_alen <= XFS_MAX_BMBT_EXTLEN);
+ 
+ 	/*
+ 	 * If the previous block overlaps with this proposed allocation
+@@ -3045,9 +3045,9 @@ xfs_bmap_extsize_align(
+ 			return -EINVAL;
+ 	} else {
+ 		ASSERT(orig_off >= align_off);
+-		/* see MAXEXTLEN handling above */
++		/* see XFS_MAX_BMBT_EXTLEN handling above */
+ 		ASSERT(orig_end <= align_off + align_alen ||
+-		       align_alen + extsz > MAXEXTLEN);
++		       align_alen + extsz > XFS_MAX_BMBT_EXTLEN);
  	}
  
-+	mp->m_bm_maxlevels[0] = old_bm_maxlevels[0];
-+	mp->m_bm_maxlevels[1] = old_bm_maxlevels[1];
-+
- 	/*
- 	 * Put back the old superblock.
+ #ifdef DEBUG
+@@ -4012,7 +4012,7 @@ xfs_bmapi_reserve_delalloc(
+ 	 * Cap the alloc length. Keep track of prealloc so we know whether to
+ 	 * tag the inode before we return.
  	 */
-@@ -366,6 +376,28 @@ set_rmapbt(
+-	alen = XFS_FILBLKS_MIN(len + prealloc, MAXEXTLEN);
++	alen = XFS_FILBLKS_MIN(len + prealloc, XFS_MAX_BMBT_EXTLEN);
+ 	if (!eof)
+ 		alen = XFS_FILBLKS_MIN(alen, got->br_startoff - aoff);
+ 	if (prealloc && alen >= len)
+@@ -4145,7 +4145,7 @@ xfs_bmapi_allocate(
+ 		if (!xfs_iext_peek_prev_extent(ifp, &bma->icur, &bma->prev))
+ 			bma->prev.br_startoff = NULLFILEOFF;
+ 	} else {
+-		bma->length = XFS_FILBLKS_MIN(bma->length, MAXEXTLEN);
++		bma->length = XFS_FILBLKS_MIN(bma->length, XFS_MAX_BMBT_EXTLEN);
+ 		if (!bma->eof)
+ 			bma->length = XFS_FILBLKS_MIN(bma->length,
+ 					bma->got.br_startoff - bma->offset);
+@@ -4465,8 +4465,8 @@ xfs_bmapi_write(
+ 			 * xfs_extlen_t and therefore 32 bits. Hence we have to
+ 			 * check for 32-bit overflows and handle them here.
+ 			 */
+-			if (len > (xfs_filblks_t)MAXEXTLEN)
+-				bma.length = MAXEXTLEN;
++			if (len > (xfs_filblks_t)XFS_MAX_BMBT_EXTLEN)
++				bma.length = XFS_MAX_BMBT_EXTLEN;
+ 			else
+ 				bma.length = len;
+ 
+@@ -4601,7 +4601,8 @@ xfs_bmapi_convert_delalloc(
+ 	bma.ip = ip;
+ 	bma.wasdel = true;
+ 	bma.offset = bma.got.br_startoff;
+-	bma.length = max_t(xfs_filblks_t, bma.got.br_blockcount, MAXEXTLEN);
++	bma.length = max_t(xfs_filblks_t, bma.got.br_blockcount,
++			XFS_MAX_BMBT_EXTLEN);
+ 	bma.minleft = xfs_bmapi_minleft(tp, ip, whichfork);
+ 
+ 	/*
+@@ -4682,7 +4683,7 @@ xfs_bmapi_remap(
+ 
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	ASSERT(len > 0);
+-	ASSERT(len <= (xfs_filblks_t)MAXEXTLEN);
++	ASSERT(len <= (xfs_filblks_t)XFS_MAX_BMBT_EXTLEN);
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+ 	ASSERT(!(flags & ~(XFS_BMAPI_ATTRFORK | XFS_BMAPI_PREALLOC |
+ 			   XFS_BMAPI_NORMAP)));
+@@ -5682,7 +5683,7 @@ xfs_bmse_can_merge(
+ 	if ((left->br_startoff + left->br_blockcount != startoff) ||
+ 	    (left->br_startblock + left->br_blockcount != got->br_startblock) ||
+ 	    (left->br_state != got->br_state) ||
+-	    (left->br_blockcount + got->br_blockcount > MAXEXTLEN))
++	    (left->br_blockcount + got->br_blockcount > XFS_MAX_BMBT_EXTLEN))
+ 		return false;
+ 
  	return true;
+diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
+index 0ed9d5ac..ac6aa23e 100644
+--- a/libxfs/xfs_format.h
++++ b/libxfs/xfs_format.h
+@@ -1073,15 +1073,6 @@ enum xfs_dinode_fmt {
+ 	{ XFS_DINODE_FMT_BTREE,		"btree" }, \
+ 	{ XFS_DINODE_FMT_UUID,		"uuid" }
+ 
+-/*
+- * Max values for extlen, extnum, aextnum.
+- */
+-#define	MAXEXTLEN			((xfs_extlen_t)0x1fffff)	/* 21 bits */
+-#define XFS_MAX_EXTCNT_DATA_FORK	((xfs_extnum_t)0xffffffffffff)	/* Unsigned 48-bits */
+-#define XFS_MAX_EXTCNT_ATTR_FORK	((xfs_aextnum_t)0xffffffff)	/* Unsigned 32-bits */
+-#define XFS_MAX_EXTCNT_DATA_FORK_OLD	((xfs_extnum_t)0x7fffffff)	/* Signed 32-bits */
+-#define XFS_MAX_EXTCNT_ATTR_FORK_OLD	((xfs_aextnum_t)0x7fff)		/* Signed 16-bits */
+-
+ /*
+  * Inode minimum and maximum sizes.
+  */
+@@ -1810,8 +1801,18 @@ typedef struct xfs_bmdr_block {
+ #define BMBT_STARTBLOCK_BITLEN	52
+ #define BMBT_BLOCKCOUNT_BITLEN	21
+ 
+-#define BMBT_STARTOFF_MASK	((1ULL << BMBT_STARTOFF_BITLEN) - 1)
+-#define BMBT_BLOCKCOUNT_MASK	((1ULL << BMBT_BLOCKCOUNT_BITLEN) - 1)
++#define BMBT_STARTOFF_MASK ((1ULL << BMBT_STARTOFF_BITLEN) - 1)
++
++/*
++ * Max values for extlen, extnum, aextnum.
++ */
++#define XFS_MAX_BMBT_EXTLEN		((xfs_extlen_t)(1ULL << BMBT_BLOCKCOUNT_BITLEN) - 1)
++#define XFS_MAX_EXTCNT_DATA_FORK	((xfs_extnum_t)0xffffffffffff)	/* Unsigned 48-bits */
++#define XFS_MAX_EXTCNT_ATTR_FORK	((xfs_aextnum_t)0xffffffff)	/* Unsigned 32-bits */
++#define XFS_MAX_EXTCNT_DATA_FORK_OLD	((xfs_extnum_t)0x7fffffff)	/* Signed 32-bits */
++#define XFS_MAX_EXTCNT_ATTR_FORK_OLD	((xfs_aextnum_t)0x7fff)		/* Signed 16-bits */
++
++#define BMBT_BLOCKCOUNT_MASK	XFS_MAX_BMBT_EXTLEN
+ 
+ /*
+  * bmbt records have a file offset (block) field that is 54 bits wide, so this
+diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
+index a484e14b..601ca604 100644
+--- a/libxfs/xfs_inode_buf.c
++++ b/libxfs/xfs_inode_buf.c
+@@ -666,7 +666,7 @@ xfs_inode_validate_extsize(
+ 	if (extsize_bytes % blocksize_bytes)
+ 		return __this_address;
+ 
+-	if (extsize > MAXEXTLEN)
++	if (extsize > XFS_MAX_BMBT_EXTLEN)
+ 		return __this_address;
+ 
+ 	if (!rt_flag && extsize > mp->m_sb.sb_agblocks / 2)
+@@ -723,7 +723,7 @@ xfs_inode_validate_cowextsize(
+ 	if (cowextsize_bytes % mp->m_sb.sb_blocksize)
+ 		return __this_address;
+ 
+-	if (cowextsize > MAXEXTLEN)
++	if (cowextsize > XFS_MAX_BMBT_EXTLEN)
+ 		return __this_address;
+ 
+ 	if (cowextsize > mp->m_sb.sb_agblocks / 2)
+diff --git a/libxfs/xfs_trans_resv.c b/libxfs/xfs_trans_resv.c
+index 4fd2c62b..559879e5 100644
+--- a/libxfs/xfs_trans_resv.c
++++ b/libxfs/xfs_trans_resv.c
+@@ -198,8 +198,8 @@ xfs_calc_inode_chunk_res(
+ /*
+  * Per-extent log reservation for the btree changes involved in freeing or
+  * allocating a realtime extent.  We have to be able to log as many rtbitmap
+- * blocks as needed to mark inuse MAXEXTLEN blocks' worth of realtime extents,
+- * as well as the realtime summary block.
++ * blocks as needed to mark inuse XFS_MAX_BMBT_EXTLEN blocks' worth of realtime
++ * extents, as well as the realtime summary block.
+  */
+ static unsigned int
+ xfs_rtalloc_log_count(
+@@ -209,7 +209,7 @@ xfs_rtalloc_log_count(
+ 	unsigned int		blksz = XFS_FSB_TO_B(mp, 1);
+ 	unsigned int		rtbmp_bytes;
+ 
+-	rtbmp_bytes = (MAXEXTLEN / mp->m_sb.sb_rextsize) / NBBY;
++	rtbmp_bytes = (XFS_MAX_BMBT_EXTLEN / mp->m_sb.sb_rextsize) / NBBY;
+ 	return (howmany(rtbmp_bytes, blksz) + 1) * num_ops;
  }
  
-+static bool
-+set_nrext64(
-+	struct xfs_mount	*mp,
-+	struct xfs_sb		*new_sb)
-+{
-+	if (!xfs_sb_version_hascrc(&mp->m_sb)) {
-+		printf(
-+	_("Nrext64 only supported on V5 filesystems.\n"));
-+		exit(0);
-+	}
-+
-+	if (xfs_sb_version_hasnrext64(&mp->m_sb)) {
-+		printf(_("Filesystem already supports nrext64.\n"));
-+		exit(0);
-+	}
-+
-+	printf(_("Adding nrext64 to filesystem.\n"));
-+	new_sb->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_NREXT64;
-+	new_sb->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
-+	return true;
-+}
-+
- /* Perform the user's requested upgrades on filesystem. */
- static void
- upgrade_filesystem(
-@@ -388,7 +420,8 @@ upgrade_filesystem(
- 		dirty |= set_reflink(mp, &new_sb);
- 	if (add_rmapbt)
- 		dirty |= set_rmapbt(mp, &new_sb);
--
-+	if (add_nrext64)
-+		dirty |= set_nrext64(mp, &new_sb);
- 	if (!dirty)
- 		return;
+@@ -246,7 +246,7 @@ xfs_rtalloc_log_count(
+  *    the inode's bmap btree: max depth * block size
+  *    the agfs of the ags from which the extents are allocated: 2 * sector
+  *    the superblock free block counter: sector size
+- *    the realtime bitmap: ((MAXEXTLEN / rtextsize) / NBBY) bytes
++ *    the realtime bitmap: ((XFS_MAX_BMBT_EXTLEN / rtextsize) / NBBY) bytes
+  *    the realtime summary: 1 block
+  *    the allocation btrees: 2 trees * (2 * max depth - 1) * block size
+  * And the bmap_finish transaction can free bmap blocks in a join (t3):
+@@ -298,7 +298,7 @@ xfs_calc_write_reservation(
+  *    the agf for each of the ags: 2 * sector size
+  *    the agfl for each of the ags: 2 * sector size
+  *    the super block to reflect the freed blocks: sector size
+- *    the realtime bitmap: 2 exts * ((MAXEXTLEN / rtextsize) / NBBY) bytes
++ *    the realtime bitmap: 2 exts * ((XFS_MAX_BMBT_EXTLEN / rtextsize) / NBBY) bytes
+  *    the realtime summary: 2 exts * 1 block
+  *    worst case split in allocation btrees per extent assuming 2 extents:
+  *		2 exts * 2 trees * (2 * max depth - 1) * block size
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 6609776f..deb3b070 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -2399,7 +2399,7 @@ validate_extsize_hint(
+ 		fprintf(stderr,
+ _("illegal extent size hint %lld, must be less than %u.\n"),
+ 				(long long)cli->fsx.fsx_extsize,
+-				min(MAXEXTLEN, mp->m_sb.sb_agblocks / 2));
++				min(XFS_MAX_BMBT_EXTLEN, mp->m_sb.sb_agblocks / 2));
+ 		usage();
+ 	}
  
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index e250a5bf..96c9bb56 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -70,6 +70,7 @@ enum c_opt_nums {
- 	CONVERT_FINOBT,
- 	CONVERT_REFLINK,
- 	CONVERT_RMAPBT,
-+	CONVERT_NREXT64,
- 	C_MAX_OPTS,
- };
- 
-@@ -80,6 +81,7 @@ static char *c_opts[] = {
- 	[CONVERT_FINOBT]	= "finobt",
- 	[CONVERT_REFLINK]	= "reflink",
- 	[CONVERT_RMAPBT]	= "rmapbt",
-+	[CONVERT_NREXT64]	= "nrext64",
- 	[C_MAX_OPTS]		= NULL,
- };
- 
-@@ -357,6 +359,15 @@ process_args(int argc, char **argv)
- 		_("-c rmapbt only supports upgrades\n"));
- 					add_rmapbt = true;
- 					break;
-+				case CONVERT_NREXT64:
-+					if (!val)
-+						do_abort(
-+		_("-c nrext64 requires a parameter\n"));
-+					if (strtol(val, NULL, 0) != 1)
-+						do_abort(
-+		_("-c nrext64 only supports upgrades\n"));
-+					add_nrext64 = true;
-+					break;
- 				default:
- 					unknown('c', val);
- 					break;
+@@ -2422,7 +2422,7 @@ _("illegal extent size hint %lld, must be less than %u.\n"),
+ 		fprintf(stderr,
+ _("illegal extent size hint %lld, must be less than %u and a multiple of %u.\n"),
+ 				(long long)cli->fsx.fsx_extsize,
+-				min(MAXEXTLEN, mp->m_sb.sb_agblocks / 2),
++				min(XFS_MAX_BMBT_EXTLEN, mp->m_sb.sb_agblocks / 2),
+ 				mp->m_sb.sb_rextsize);
+ 		usage();
+ 	}
+@@ -2451,7 +2451,7 @@ validate_cowextsize_hint(
+ 		fprintf(stderr,
+ _("illegal CoW extent size hint %lld, must be less than %u.\n"),
+ 				(long long)cli->fsx.fsx_cowextsize,
+-				min(MAXEXTLEN, mp->m_sb.sb_agblocks / 2));
++				min(XFS_MAX_BMBT_EXTLEN, mp->m_sb.sb_agblocks / 2));
+ 		usage();
+ 	}
+ }
+diff --git a/repair/phase4.c b/repair/phase4.c
+index eb043002..8cad2b80 100644
+--- a/repair/phase4.c
++++ b/repair/phase4.c
+@@ -372,7 +372,7 @@ phase4(xfs_mount_t *mp)
+ 			if (rt_start == 0)  {
+ 				rt_start = bno;
+ 				rt_len = 1;
+-			} else if (rt_len == MAXEXTLEN)  {
++			} else if (rt_len == XFS_MAX_BMBT_EXTLEN)  {
+ 				/*
+ 				 * large extent case
+ 				 */
 -- 
 2.30.2
 
