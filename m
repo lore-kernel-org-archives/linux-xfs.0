@@ -2,68 +2,96 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DEE28C433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 13 Dec 2021 18:08:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CC0CC433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Dec 2021 03:23:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236422AbhLMSIw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 13 Dec 2021 13:08:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36004 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241633AbhLMSIv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Dec 2021 13:08:51 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2BA73C061574;
-        Mon, 13 Dec 2021 10:08:51 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=8oozV1IRwA/A2R6zNk07Fx/Spsm9jrjC4UBxcDZXjf8=; b=a6vpnrKVMF7x9NRBbcUvJJkaGU
-        RWh+pCMAqyR7ZiLSPPNcT98z7kIFfBf76Sqay4RnDh6+ugjgoWZ5sIX7XG5eFA2Cwip4P3s6Ntze9
-        Fja3JFi7V/R7KbQBODnprlW9WRKXx+Oxsbx8Mv5I9kTgeNAI0Js8pmN/ghN4SkLbov4UbrEOJSZNC
-        IFDopsbq4RMY821Yuh1RERU4vC8BEeyCfXb9ds/0vI7FfqyfgT6X7azS5w03GEKJVeul/XXOrczsb
-        z42C93gofmG/ain5V80l4WRqk/RvlQnREstO2qSp1Ycd3SvyvM8FMoH9apeXSCFxsB/uD+wrJiIHd
-        9CEqXj+w==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mwpkl-00D2OR-QG; Mon, 13 Dec 2021 18:08:47 +0000
-Date:   Mon, 13 Dec 2021 18:08:47 +0000
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     "Darrick J . Wong " <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH v2 19/28] iomap: Convert __iomap_zero_iter to use a folio
-Message-ID: <YbeML8UdqwsooSPb@casper.infradead.org>
-References: <20211108040551.1942823-1-willy@infradead.org>
- <20211108040551.1942823-20-willy@infradead.org>
- <YbJ3O1qf+9p/HWka@casper.infradead.org>
- <YbN+KqqCG0032NMG@casper.infradead.org>
- <Ybb3nmf0hPXhlnOu@infradead.org>
+        id S230467AbhLNDXX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 13 Dec 2021 22:23:23 -0500
+Received: from prt-mail.chinatelecom.cn ([42.123.76.226]:38641 "EHLO
+        chinatelecom.cn" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S229766AbhLNDXX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Dec 2021 22:23:23 -0500
+X-Greylist: delayed 438 seconds by postgrey-1.27 at vger.kernel.org; Mon, 13 Dec 2021 22:23:22 EST
+HMM_SOURCE_IP: 172.18.0.218:40440.34997284
+HMM_ATTACHE_NUM: 0000
+HMM_SOURCE_TYPE: SMTP
+Received: from clientip-182.42.116.25 (unknown [172.18.0.218])
+        by chinatelecom.cn (HERMES) with SMTP id 329C32801B4;
+        Tue, 14 Dec 2021 11:15:51 +0800 (CST)
+X-189-SAVE-TO-SEND: +renlei1@chinatelecom.cn
+Received: from  ([172.18.0.218])
+        by app0025 with ESMTP id 30ac11a29d4845bbaf02b14e60180864 for djwong@kernel.org;
+        Tue, 14 Dec 2021 11:15:57 CST
+X-Transaction-ID: 30ac11a29d4845bbaf02b14e60180864
+X-Real-From: renlei1@chinatelecom.cn
+X-Receive-IP: 172.18.0.218
+X-MEDUSA-Status: 0
+Sender: renlei1@chinatelecom.cn
+From:   renlei1@chinatelecom.cn
+To:     djwong@kernel.org
+Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Ren Lei <renlei1@chinatelecom.cn>
+Subject: [PATCH] xfs: not allow rename if src is quota enabled and project IDs are different
+Date:   Tue, 14 Dec 2021 11:15:17 +0800
+Message-Id: <20211214031517.508012-1-renlei1@chinatelecom.cn>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Ybb3nmf0hPXhlnOu@infradead.org>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Dec 12, 2021 at 11:34:54PM -0800, Christoph Hellwig wrote:
-> On Fri, Dec 10, 2021 at 04:19:54PM +0000, Matthew Wilcox wrote:
-> > After attempting the merge with Christoph's ill-timed refactoring,
-> 
-> I did give you a headsup before..
+From: Ren Lei <renlei1@chinatelecom.cn>
 
-I thought that was going in via Darrick's tree.  I had no idea Dan was
-going to take it.
+xfs not allow rename if target is using project inheritance and
+project IDs are different to avoid tree quota mechanism not work.
 
-> > I decided that eliding the use of 'bytes' here was the wrong approach,
-> > because it very much needs to be put back in for the merge.
-> 
-> Is there any good reason to not just delay the iomp_zero_iter folio
-> conversion for now?
+But if only src with directory quota enabled, rename to other directory
+without quota enabled can succeed and skip quota mechanism. which might
+result to unexpected quota behavior.
 
-It would hold up about half of the iomap folio conversion (~10 patches).
-I don't understand what the benefit is of your patch series.  Moving
-filesystems away from being bdev based just doesn't seem interesting
-to me.  Having DAX as an optional feature that some bdevs have seems
-like a far superior option.
+This patch fix this by disable rename if src is using project inheritance
+and the project IDs are not the same.
+
+following steps can easy reproduce this issue:
+1. first init a directory quota /mnt/test
+	mount -o prjquota /dev/sdb  /mnt
+	mkdir /mnt/test
+	echo 1:/mnt/test >> /etc/projects
+	echo test:1 >> /etc/projid
+	xfs_quota -x -c 'project -s test' /mnt
+	xfs_quota -x -c 'limit -p bhard=10m test' /mnt
+
+2. fill /mnt/test with tesfile util directory full:
+	[root@rhost1 test]# dd if=/dev/zero of=/mnt/test/testfile
+	dd: writing to '/mnt/test/testfile': No space left on device
+
+3. mv testfile out to /mnt,  test is empty but cannot create files:
+	[root@rhost1 test]# mv testfile ../
+	[root@rhost1 test]# ls -a
+	.  ..
+	[root@rhost1 test]# touch aaa
+	touch: cannot touch 'aaa': Disk quota exceeded
+
+Signed-off-by: Ren Lei <renlei1@chinatelecom.cn>
+---
+ fs/xfs/xfs_inode.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 6771f357ad2c..f8c115b014f9 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -3177,7 +3177,8 @@ xfs_rename(
+ 	 * into our tree when the project IDs are the same; else the
+ 	 * tree quota mechanism would be circumvented.
+ 	 */
+-	if (unlikely((target_dp->i_diflags & XFS_DIFLAG_PROJINHERIT) &&
++	if (unlikely((target_dp->i_diflags & XFS_DIFLAG_PROJINHERIT ||
++		     src_dp->i_diflags & XFS_DIFLAG_PROJINHERIT) &&
+ 		     target_dp->i_projid != src_ip->i_projid)) {
+ 		error = -EXDEV;
+ 		goto out_trans_cancel;
+-- 
+2.27.0
+
