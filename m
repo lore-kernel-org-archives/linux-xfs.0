@@ -2,93 +2,115 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3ECBC433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Dec 2021 04:49:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13B3AC433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Dec 2021 06:04:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229674AbhLNEtO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 13 Dec 2021 23:49:14 -0500
-Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:50066 "EHLO
-        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229652AbhLNEtO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Dec 2021 23:49:14 -0500
-Received: from dread.disaster.area (pa49-181-243-119.pa.nsw.optusnet.com.au [49.181.243.119])
-        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id 120533EB690;
-        Tue, 14 Dec 2021 15:49:11 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1mwzkU-002qH7-3l; Tue, 14 Dec 2021 15:49:10 +1100
-Date:   Tue, 14 Dec 2021 15:49:10 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     renlei1@chinatelecom.cn
-Cc:     djwong@kernel.org, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] xfs: not allow rename if src is quota enabled and
- project IDs are different
-Message-ID: <20211214044910.GT449541@dread.disaster.area>
-References: <20211214031517.508012-1-renlei1@chinatelecom.cn>
+        id S230282AbhLNGD7 convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Dec 2021 01:03:59 -0500
+Received: from prt-mail.chinatelecom.cn ([42.123.76.223]:40727 "EHLO
+        chinatelecom.cn" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S230238AbhLNGD5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Dec 2021 01:03:57 -0500
+HMM_SOURCE_IP: 172.18.0.48:58330.1093354738
+HMM_ATTACHE_NUM: 0000
+HMM_SOURCE_TYPE: SMTP
+Received: from clientip-182.150.57.243 (unknown [172.18.0.48])
+        by chinatelecom.cn (HERMES) with SMTP id 0AE942800F1;
+        Tue, 14 Dec 2021 14:02:57 +0800 (CST)
+X-189-SAVE-TO-SEND: renlei1@chinatelecom.cn
+Received: from  ([172.18.0.48])
+        by app0024 with ESMTP id 7524f4eb91b54d7dbeb0d30380fbbb3a for david@fromorbit.com;
+        Tue, 14 Dec 2021 14:03:38 CST
+X-Transaction-ID: 7524f4eb91b54d7dbeb0d30380fbbb3a
+X-Real-From: renlei1@chinatelecom.cn
+X-Receive-IP: 172.18.0.48
+X-MEDUSA-Status: 0
+Sender: renlei1@chinatelecom.cn
+From:   <renlei1@chinatelecom.cn>
+To:     <david@fromorbit.com>
+Cc:     <djwong@kernel.org>, <linux-xfs@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+References: <20211214031517.508012-1-renlei1@chinatelecom.cn> <20211214044910.GT449541@dread.disaster.area>
+In-Reply-To: <20211214044910.GT449541@dread.disaster.area>
+Subject: =?gb2312?B?u9i4tDogW1BBVENIXSB4ZnM6IG5vdCBhbGxvdyByZW5hbWUgaWYgcw==?=
+        =?gb2312?B?cmMgaXMgcXVvdGEgZW5hYmxlZCBhbmQgcHJvamVjdCBJRHMgYXJlIGRpZmY=?=
+        =?gb2312?B?ZXJlbnQ=?=
+Date:   Tue, 14 Dec 2021 14:02:57 +0800
+Message-ID: <001301d7f0b0$58cb7c80$0a627580$@chinatelecom.cn>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20211214031517.508012-1-renlei1@chinatelecom.cn>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=61b82248
-        a=BEa52nrBdFykVEm6RU8P4g==:117 a=BEa52nrBdFykVEm6RU8P4g==:17
-        a=kj9zAlcOel0A:10 a=IOMw9HtfNCkA:10 a=7-415B0cAAAA:8
-        a=rG3u2JI8YdbEqDxu-5gA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Type: text/plain;
+        charset="gb2312"
+Content-Transfer-Encoding: 8BIT
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQIhmVxlPsWW/XjW+beLtPQhB5gnxwFkd06Gq5MJexA=
+Content-Language: zh-cn
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+That's make sense, thanks very much for your detailed response!
+
+Regards,
+RenLei
+
+-----邮件原件-----
+发件人: david@fromorbit.com <david@fromorbit.com> 
+发送时间: 2021年12月14日 12:49
+收件人: renlei1@chinatelecom.cn
+抄送: djwong@kernel.org; linux-xfs@vger.kernel.org;
+linux-kernel@vger.kernel.org
+主题: Re: [PATCH] xfs: not allow rename if src is quota enabled and project
+IDs are different
+
 On Tue, Dec 14, 2021 at 11:15:17AM +0800, renlei1@chinatelecom.cn wrote:
 > From: Ren Lei <renlei1@chinatelecom.cn>
 > 
-> xfs not allow rename if target is using project inheritance and
+> xfs not allow rename if target is using project inheritance and 
 > project IDs are different to avoid tree quota mechanism not work.
 
 Lesson #1: project quotas are *not* directory quotas.
 
-> But if only src with directory quota enabled, rename to other directory
-> without quota enabled can succeed and skip quota mechanism. which might
-> result to unexpected quota behavior.
+> But if only src with directory quota enabled, rename to other 
+> directory without quota enabled can succeed and skip quota mechanism. 
+> which might result to unexpected quota behavior.
 
-Yes, this is explicitly done this way, because project quotas are
-not directory quotas.
+Yes, this is explicitly done this way, because project quotas are not
+directory quotas.
 
-Lesson #2: directory tree semantics use PROJINHERIT to define an
-entry barrier to the directory, not an exit barrier.
+Lesson #2: directory tree semantics use PROJINHERIT to define an entry
+barrier to the directory, not an exit barrier.
 
-That is, we restrict moving inodes with incompatible project IDs
-into a directory that might be used as a directory tree, but we
-don't prevent moving inodes out of PROJINHERIT directories into
-locations that have no PROJINHERIT set.
+That is, we restrict moving inodes with incompatible project IDs into a
+directory that might be used as a directory tree, but we don't prevent
+moving inodes out of PROJINHERIT directories into locations that have no
+PROJINHERIT set.
 
-The reason for this is simple: destinations that don't have
-PROJINHERIT set are unrestricted and can contain inodes with any
-valid projid. This is the traditional use of project quotas,
-because...
+The reason for this is simple: destinations that don't have PROJINHERIT set
+are unrestricted and can contain inodes with any valid projid. This is the
+traditional use of project quotas, because...
 
 Lesson #3a: PROJINHERIT only defines the default project ID for newly
 created inodes in a directory.
 
-Lesson #3b: Unprivileged users in the init namespace are allowed to
-change PROJINHERIT and projid on any inode they have write
-permissions on.
+Lesson #3b: Unprivileged users in the init namespace are allowed to change
+PROJINHERIT and projid on any inode they have write permissions on.
 
-That is, PROJINHERIT does not prevent users from changing the
-project ID of files within the directory, or even that of the
-directory so that it no longer matches the projid of the existing
-directory contents. Hence directory tree quotas will only remain
-valid with the co-operation of unprivileged users, as project ID and
-PROJINHERIT are user modifiable inode attributes.
+That is, PROJINHERIT does not prevent users from changing the project ID of
+files within the directory, or even that of the directory so that it no
+longer matches the projid of the existing directory contents. Hence
+directory tree quotas will only remain valid with the co-operation of
+unprivileged users, as project ID and PROJINHERIT are user modifiable inode
+attributes.
 
-Lesson #4: Using project quotas to provide directory tree quotas
-does not result in an access-based space usage enforcement mechanism
-without some other mechanism for preventing users from accessing and
-changing project quota information. (e.g. containers and user
+Lesson #4: Using project quotas to provide directory tree quotas does not
+result in an access-based space usage enforcement mechanism without some
+other mechanism for preventing users from accessing and changing project
+quota information. (e.g. containers and user
 namespaces)
 
-> This patch fix this by disable rename if src is using project inheritance
-> and the project IDs are not the same.
+> This patch fix this by disable rename if src is using project 
+> inheritance and the project IDs are not the same.
 > 
 > following steps can easy reproduce this issue:
 > 1. first init a directory quota /mnt/test
@@ -101,18 +123,17 @@ namespaces)
 >
 > 2. fill /mnt/test with tesfile util directory full:
 > 	[root@rhost1 test]# dd if=/dev/zero of=/mnt/test/testfile
-> 	dd: writing to '/mnt/test/testfile': No space left on device
-> 3. mv testfile out to /mnt,  test is empty but cannot create files:
+> 	dd: writing to '/mnt/test/testfile': No space left on device 3. mv 
+> testfile out to /mnt,  test is empty but cannot create files:
 > 	[root@rhost1 test]# mv testfile ../
 > 	[root@rhost1 test]# ls -a
 > 	.  ..
 > 	[root@rhost1 test]# touch aaa
 > 	touch: cannot touch 'aaa': Disk quota exceeded
 
-Yup, exfiltration is not prohibited, as per above. What you need to
-do here is prevent infiltration to the "../" directory by use of
-a default directory quota for all the "non-controlled" part of the
-directory heirarchy. That is:
+Yup, exfiltration is not prohibited, as per above. What you need to do here
+is prevent infiltration to the "../" directory by use of a default directory
+quota for all the "non-controlled" part of the directory heirarchy. That is:
 
 > 	mount -o prjquota /dev/sdb  /mnt
 > 	mkdir /mnt/test
@@ -124,11 +145,11 @@ directory heirarchy. That is:
 > 	xfs_quota -x -c 'project -s test' /mnt
 > 	xfs_quota -x -c 'limit -p bhard=10m test' /mnt
 
-So now you have the default "unlimited" directory quota on the
-entire filesytem, with the sub-tree "test" set up with a hard limit.
-Now step #3 in your test will behave as you expect, because ".." has
-a PROJINHERIT w/ projid = 1 set and that will trigger the
-"destination directory has directory quota and different projid"
+So now you have the default "unlimited" directory quota on the entire
+filesytem, with the sub-tree "test" set up with a hard limit.
+Now step #3 in your test will behave as you expect, because ".." has a
+PROJINHERIT w/ projid = 1 set and that will trigger the "destination
+directory has directory quota and different projid"
 -EXDEV error case in rename.
 
 i.e. you fix this problem by setting up the directory tree quota
@@ -139,12 +160,13 @@ via:
 
 # mkfs.xfs -f -d projinherit=42 /dev/sdb
 
-So you don't actually need to set up a default project in
-/etc/projects to make this work correctly.
+So you don't actually need to set up a default project in /etc/projects to
+make this work correctly.
 
 Cheers,
 
 Dave.
--- 
+--
 Dave Chinner
 david@fromorbit.com
+
