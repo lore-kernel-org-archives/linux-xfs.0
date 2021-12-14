@@ -2,69 +2,69 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15022C433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Dec 2021 08:47:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25619C433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Dec 2021 08:47:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231904AbhLNIrR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Dec 2021 03:47:17 -0500
-Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:6278 "EHLO
+        id S231902AbhLNIrT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Dec 2021 03:47:19 -0500
+Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:8906 "EHLO
         mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231742AbhLNIrR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Dec 2021 03:47:17 -0500
+        by vger.kernel.org with ESMTP id S230007AbhLNIrT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Dec 2021 03:47:19 -0500
 Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1BE74QUc021566;
-        Tue, 14 Dec 2021 08:47:14 GMT
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1BE748BR021570;
+        Tue, 14 Dec 2021 08:47:17 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references :
  content-transfer-encoding : content-type : mime-version;
- s=corp-2021-07-09; bh=DvtgW30n2Ht22QmIUNF20buE1KvnlTh+ebiYPN/J/cc=;
- b=iReDRtbejCZmeo935VadzR2MtBqx1jggNO5ZoD6OtHMybnfjxlhpIMM2OFqwulPWjfv6
- JMBjQlrHenXtMc9jWdHgyRxTmqi6Z9p2CjJw0//aBMVo6Oikm5MIOKTMAgikTZFZAakw
- GcYPYrW7E+FAY9z1uOkWmN6tqRElfV/nbxExj2xM34w2YobLS/EqRwtIvsp1Ope1bGah
- GhE0GSMgjKPb6BrtEPxsNQxHMCMXGfYYbHTmPNbuPUQksXrqbxaYnwKGPzXEo2lIvXlm
- NL0LwmSMNSeCBvHo7hXNX4Up+7qHm16U9OwXIgeoeAmza/0KDU5d3ugRYDpuTCKqClLo uQ== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3cx3ukb2sm-1
+ s=corp-2021-07-09; bh=AkjMJqdXY8NQDzFN3yMR8HPGoQLk0h3Bp1mLNMfq9JU=;
+ b=BlZBrE8dANASX1zP75waFsRnPf7WMa6OAWc15mWbtmHYIAdYmEr0iXNBg0kXMX++rQuZ
+ lFqCsgORcbGquz2I7gCrCrZsT0IURcQGrRnTBx9IaJMRAiriHhaKXDh3sGtXxQgQkG4K
+ 0VFzErXm6m+WIAoaeYxrTsh1iGpLpvchcINW0C2TFW/EEo4wpPRjxxoilRdVMPwU866Z
+ nom4kadavcWB5X6l7/rTvytbQx4iW2Ydgrmc++iTjnULhmINSCWaQKimEQ/5kTGWMuzU
+ ULz6CV7t6Og/nKaI21HiRpECjGMfV3nDkteu9feSkOTGTw+NP1Y9hGJIKpOHHHdJkVe5 7w== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3cx3ukb2sq-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 14 Dec 2021 08:47:14 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 1BE8fYbZ156468;
-        Tue, 14 Dec 2021 08:47:13 GMT
-Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2168.outbound.protection.outlook.com [104.47.57.168])
-        by userp3030.oracle.com with ESMTP id 3cvh3wy53h-1
+        Tue, 14 Dec 2021 08:47:16 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 1BE8f5MD107713;
+        Tue, 14 Dec 2021 08:47:15 GMT
+Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2174.outbound.protection.outlook.com [104.47.57.174])
+        by userp3020.oracle.com with ESMTP id 3cvnepm066-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 14 Dec 2021 08:47:13 +0000
+        Tue, 14 Dec 2021 08:47:15 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=WTKR6Ka1iq02j9H+I0OfOdH/UCfEPgUdAEiqe4HDHLTU8Jxu3NBh9lXRexpF+YM22AJeAZ1BG2HcXO4jNKF8zGp1dNujVii5E9tEq+tqO6WgzxFZybfOA5lu3TIEST9M2efe6AdWaO/6Sm5YPKCqMkQx/s8HHva9XlKfUjUysicetCDLtQuxFg47XfPjHNeCXvoqlf86HGVNuA3cmrSRsDzAzbLQW0LprsHr5Z7zXKsLXNg5+2hB14vx3tXV2mfrQbXZ9L9UTca5cMTJb1MHvxcRe/lxrPg8j4QFfD/0nq+a3xCpguu2JZ032ajK0MSNtZpP0d4ARTaN/OdyTlsEkA==
+ b=nZedjB/Ij+t+CBBLXrnbBM4V2NfgB6T3KeLKfwgfNuRCklb7haiw5Q6nI8wLPfvxna3ObhwIpITDDm3v5XiKfv4gElNbQugTilIJVWc766/hv/PV40wbiq1F01QzEdp4Ht4ngo9qq5W64SJj6sw3bCEuTsFWD2y0awm81p75gB2JqXphPKVSoqL60xHrOG0X5KjqDyZ3Ybun22LMzw7XY0agEmUcENcNNY18MSYfTG+pAPBsxl8VoTUFswJRa52XOv+Q1/x//4nTA4XBieD8a4TutaAqUCbfzpBuMleO5DzboK2NvDVG4KHr44zbc+3cIHEqlNK5lATfaGYEsydNrA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=DvtgW30n2Ht22QmIUNF20buE1KvnlTh+ebiYPN/J/cc=;
- b=mc3BPdVemkAwuBVJ38rbl6teEQui7RaEoOKl5lqvZdEunFK382RF/AWWtBvT1GOCvcjt+jbo4vqqnrDXjX0Efx2jAv9LcbxtTRvRz/AHP1Y0Y6+F731BLNxFpYuOt0YMVA2XiaN7GZ+uWJNPQ4oVkdq39JqR9yNajmPxxbAz4RtFSeZ1Cj6/Trh2Z3HRLVA3QvjFZflxJGlHiz5EoJ47/9yzonCmEScQUgqKiEUx6hhEMo7278HyHi6HLe262rgKLSnUjym7ydD2kKcUSdZk0uLV9mzxuSWgy4HJZv9vWrNuFwYqzvP1pqGG/dm1WN5YCmQ/1D/Q2mwMut26Dp2Osw==
+ bh=AkjMJqdXY8NQDzFN3yMR8HPGoQLk0h3Bp1mLNMfq9JU=;
+ b=LFG49jW9Nfs1Cebasqgohz8QTVqZfj5e+MSo6K/aovTQn59A3KUF+2V/+C6uQGzSreFD49fgOqHh72/DJQDU/GHdCtD2jtHfizsQQ+VHrKhN9owE04ZIppagJvYV5o1beQaln/eyryH6ux3jpbRPBF+EC1Cka2F74uuJymtMoncxA5uj3i7+wySucuDvUcSskXO8NEeDoYx6/RWL1YJUJSuw8kpqqEwHO+WP7yGJoUtJg1hPlxbb+6z6K/hHjQXbK5Hg6/LcocUWZwTS22EpIzv1ECiSa4jVfftZX7tj4lIJ7yefCyiu6odx/2SDUxH2PC2hL8CwUoXDlfENhHaDyQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=DvtgW30n2Ht22QmIUNF20buE1KvnlTh+ebiYPN/J/cc=;
- b=0F14fhuMH8rt549s8McZ3WnwNLHx7aF/QY4gbbfrsxDaEBbyr9uTjYzIsvh3fe16Uzb81ChL8yIuzlBdp8DmtoP9k0C4IE++Ya29VO5g+scghJ9Rjl3gkJSAucWCcISO5dmRrbmBALSmnlKDGmsnNPJenFt1sa2LCmf6jDoK93A=
+ bh=AkjMJqdXY8NQDzFN3yMR8HPGoQLk0h3Bp1mLNMfq9JU=;
+ b=fj7UHXowAO63DdCGz7QGi+X53nBglvRFNdA1UJW+yEN9oC/nw0dB7uITjIDwmXXH2kn1unx+NlFsnHY5Q90Yc0pWFaMFzBulIjPZWgUCs7oJHeLvCBPMWfhzt/sN48m0BNkooKxh3lvwcPqBJJYiAzKIcGARI3PCd6zz5UzX02Y=
 Received: from SA2PR10MB4587.namprd10.prod.outlook.com (2603:10b6:806:114::12)
  by SN6PR10MB3054.namprd10.prod.outlook.com (2603:10b6:805:d1::22) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4778.17; Tue, 14 Dec
- 2021 08:47:11 +0000
+ 2021 08:47:14 +0000
 Received: from SA2PR10MB4587.namprd10.prod.outlook.com
  ([fe80::75ca:e478:6788:d21d]) by SA2PR10MB4587.namprd10.prod.outlook.com
  ([fe80::75ca:e478:6788:d21d%6]) with mapi id 15.20.4778.018; Tue, 14 Dec 2021
- 08:47:11 +0000
+ 08:47:14 +0000
 From:   Chandan Babu R <chandan.babu@oracle.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     Chandan Babu R <chandan.babu@oracle.com>, djwong@kernel.org,
         david@fromorbit.com
-Subject: [PATCH V4 07/16] xfs: Introduce XFS_SB_FEAT_INCOMPAT_NREXT64 and associated per-fs feature bit
-Date:   Tue, 14 Dec 2021 14:15:10 +0530
-Message-Id: <20211214084519.759272-8-chandan.babu@oracle.com>
+Subject: [PATCH V4 08/16] xfs: Introduce XFS_FSOP_GEOM_FLAGS_NREXT64
+Date:   Tue, 14 Dec 2021 14:15:11 +0530
+Message-Id: <20211214084519.759272-9-chandan.babu@oracle.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20211214084519.759272-1-chandan.babu@oracle.com>
 References: <20211214084519.759272-1-chandan.babu@oracle.com>
@@ -75,124 +75,100 @@ X-ClientProxiedBy: MA1PR0101CA0052.INDPRD01.PROD.OUTLOOK.COM
  (2603:10b6:806:114::12)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: d904d44d-d7d6-4604-8f06-08d9bede51d3
+X-MS-Office365-Filtering-Correlation-Id: 2f682772-20dc-4bf6-8814-08d9bede5329
 X-MS-TrafficTypeDiagnostic: SN6PR10MB3054:EE_
-X-Microsoft-Antispam-PRVS: <SN6PR10MB30544D8DFD9C5F5ED0DA30FEF6759@SN6PR10MB3054.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:186;
+X-Microsoft-Antispam-PRVS: <SN6PR10MB3054AA20DAEE3C06936C3CA8F6759@SN6PR10MB3054.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:3513;
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: QK51y/3Re3RvXMIQJviBAlPzd+vo/RadhpPZhTjKOxMwfhnDiiStcIIfuOaGrm/l9M7xzwxq7iV50Vd0bAbHdx/4TNgA8zUIfk2FTiuo0mFSo6tBLVVz0tTPboO3y6dWueypr+SfNK+hIMDKyY1fUNoc87S37eFxeCIVC6UZOTW6hA4saK5bQ6b79iEp3wuvDOjuPuyhG5GKa/TYdmeR9uVbgZPVpFwNkvvMFMV51zV6Ed4xcsF7jBh9plhud336DVklF24hEDMrTtg6Xb9TDgAZIGxYdcgZo/A6HMJCLJzWI+cPiWSEsunw041adhVd12mfCREBeSfSrPb3xZWyOEhB2bnc6/+yOv8yhN8vRfVbKuaQo3Jbsx2NNF4mjij5S2YGHW1+qMhVTP0vhE5Di5hhMqAA024HkaEjTXNrAwPsLVE6vE81tYBX339vgOP4GXrU3XAbPUxd49Yixefvb4do1wKy1kSJgk0vdopzUlh8h3uaYVfP3MphPXjINHHmpCGrrDew/2NKyFDIE7TU3+kCZ6DG4ht8CecHe12OhfJuNYfbK7ZDIWVAtOA8TPjPGSCUdM61MoGVnpLHw2MLbHQZqHZGm1+GLvkb/4iNaCesznOcpJy6sTwLJl0UfK18jU36vNSEXpyDacPQGEZ1k+3l2AD4yMNxxsCl2VFeiUH4jrEvLY2kyYoGnmVuAuBA
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(8936002)(8676002)(66556008)(66476007)(6486002)(316002)(6916009)(6512007)(186003)(5660300002)(2906002)(36756003)(83380400001)(26005)(66946007)(2616005)(1076003)(4326008)(6506007)(508600001)(52116002)(38350700002)(86362001)(38100700002);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: rxOKSIeerGmsG0QcS3nMWt9DSstBB/KpBbCGuHQj4Jr8kEyCzCGk2u+B9g9Z1c5oCo2Y37bcvmW5xwcDWKaldcEALIwbfqjovGq00PVUqcHd6u9FrdsUZkAVuAFT8AwgfbAaSAgqh7ZkzsypLEQMSk4ZXSEG9QkcjYp/OgKbRyetwFx5m7pO7o7IzWTuSStfSptl6Xxa+X3cq2dpSSLDsV5CbkAz21SHRgeY6KKHDK7el5Q02Aeg4ctdrN4alL9AZAJMG3OWVsqZIeu1R2A4N/lBE0gt1PERvQX4h49a+R+zqbrnJ+AOuZNNnXGf/kkmWC5ko3D1+dPETawq/85/uZ2LhTqhmFRENjAeU1Cuu71chC245tJKkhVRqkvQFOv1gUcPt/XWtbMHChyZX/2P0sqsA9y8bFDlP1owRab6W+L1pQ1k+7l2XFMn4pt/FvQ3xknkY8etkbW14pfvxXQxCLGUdS7Xzgf4iC7y3JkKyaS6VNEF7+d4dMDeaABIVqbZ9zFeGTWycHFXt+r9TeIY/lfA0OkqaNIE6oYCGZFFDGVxnJDxv+ZxrZ/U5uWq24kEYSqo6u+asq9bpVw4gJJk/1hmYMLWM+ct7lBnJ02lpafsnLBGJiuwi06Oee+UCC8dL0vqd/v2COVZ+7EGrbef4OzbaYup+ZL5Koj8vkafREUUpZOo3tUjpATOWsC4HmsXyOX7iUtqYPkqjyl6rJzowA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(8936002)(8676002)(66556008)(66476007)(6486002)(316002)(6916009)(6512007)(186003)(5660300002)(2906002)(36756003)(83380400001)(26005)(66946007)(2616005)(6666004)(1076003)(4326008)(6506007)(508600001)(52116002)(38350700002)(86362001)(38100700002);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?XyR/kXV6mcLHe0d8kYdUdfqC9RH9/RhqMxgQ830jPHBVbSkh7MDWn/XHQGXa?=
- =?us-ascii?Q?njM/YVaa3FgMBaCaVWmkumaqSqFKs/Z7RTeofa81GBiAfQoIXaJh6Jju/hxW?=
- =?us-ascii?Q?Cibj2UO5tGJlvlFAHCgzsPFAGoqhJhPoxXDWqYeOY5UTnnhUvHbtPAn3IbWt?=
- =?us-ascii?Q?d1kNJdc/TK5lCHkwFJ45rfzNW/fXFWWb78vWP0BOGEM9Jshd2uVXwg9O1PlZ?=
- =?us-ascii?Q?vNYYW4XzHoPUKIsA6OdLWrPlqX6JhVNUk63BU9sYVS78yNv3zzfvA2yvKXrq?=
- =?us-ascii?Q?DC48pIqxkYL4PBUAa+5mnQ7NuNWd6zxfxoKmaY1e4ca2UkGgfHTWctK22LNm?=
- =?us-ascii?Q?GN8HgAP59UPRx5vH5ljHTj4TXhvcKyNSyyiBl+sh3VEPaaR07lWDkZyKuwEN?=
- =?us-ascii?Q?9awbCOuitOb3ddOySUayJAV8p7ZHpKeAxd4xhvHUF6j9W+j+c6dn9YyP3s7N?=
- =?us-ascii?Q?6ih3VEEWV+wlei+1wR4E47zQopLNw2skI2imvaoj6DOs5IZazVoz6IHXuGH0?=
- =?us-ascii?Q?4wBIcbajOGkLrX+ffz8Wk2N7LR1uRv1H9K+HC6hdLvcdSa6qOmC7d+MKBRRP?=
- =?us-ascii?Q?qkB76ry8iViQBtx0iuhDcG6bg/HAqRteVuHtuvQgHCa48jr/NLUcv0LxwiZM?=
- =?us-ascii?Q?KQZffp4d0+i8uCag45OrCyVXupLYhzPIJHyl9RKS7jWusQR0CU9D5ufZKN18?=
- =?us-ascii?Q?aORG7tFC7X1SXfcFo01DDa/FXyT03MsWbGBmuXpJkLUQEwfhxt1QFgNdvVMO?=
- =?us-ascii?Q?AtKVUROKv9UCCEmhhP1rEckgvOz8I/mrLc2bbPfKrur4wdAtqsKSqnFsX8K+?=
- =?us-ascii?Q?GgDiicaa8PgMT2QkRfzu291qXX+rOo2lhBVWSLf5qFVnnPez/BLJvX1uRvvo?=
- =?us-ascii?Q?zeuCY76RMOUO1g+dxWZxkFhyhoX+2rXdJ7WtVm+Hm4UHJR61lWQLHwWdpjbV?=
- =?us-ascii?Q?Owq0Qo63naqYvcLBztWFAoU64cPK74tE1eKC0/XQ8OdJMSvWMdGqpIuY17by?=
- =?us-ascii?Q?Nw3pboR0acCCNbkiuisNkzBnGcLnN34yYmwTOkNch76AcHFyqIIk8TNRecYI?=
- =?us-ascii?Q?LY7+Nez5T542dPkmhT4Rhb7OmCja5GFESai0gfyL+LwS1LlxC13KBdGtjCFq?=
- =?us-ascii?Q?7+JY3l0w8bWbVStTIjjdODmxgz0l6bSiTjAAWI2UfThQtJH9OYSY4PcSi0IV?=
- =?us-ascii?Q?Tm3l5Y0qrtx3p/nKwvF6xXxz/j9Iu6NSlxjsFqMqC3Sb9si3m0IkyKZGMid5?=
- =?us-ascii?Q?SjmJAEw0CzQOSQ2MVFRoCxtvvxWxOyoYshODOP/JMrajV7+K/1bWsEFtsTbe?=
- =?us-ascii?Q?lou2a1G1Ec8hy5KIHTrIfgleb+EKO7vjF5lyNFC2q/TzvR5IfTewz0DbJu6i?=
- =?us-ascii?Q?9rleUeVRzmhCP4yhWF6P/01RGi2zg1LXsuFR2FXyACdFQpRoNjSPUGa4HfJK?=
- =?us-ascii?Q?yRtEzwAjilZv5s5Hv70gcPTBwpvVPmvDIax8CHITVsF1BP2BHodHSm4nlBjb?=
- =?us-ascii?Q?VungY2ZylnsF+lkEZ9Auna3LtG4H6DiikdUGW9uh2r20ugJpV5QVPPZoYPSn?=
- =?us-ascii?Q?Ob0z9j1gobIaCQb9Tt5y3vW1Kx0PEzyaB0GAO4AmhrNmRr5BsaJtGbSTshgK?=
- =?us-ascii?Q?BqXIxSWCZV9Lmopahu6BBA8=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?hei/1ajCNlEA1lgSwmbq7H6/j9Xm00VlxeqqUx3XQ3SlDqMRPJe7P0izwpAN?=
+ =?us-ascii?Q?3bJqZ522EGrI5+XmBzxpr9D+UPJeqSkNyonHxOzTBpI4WXMyC49shGypJaER?=
+ =?us-ascii?Q?yl9UZcp+KPUAwgUvRAXLjL4IAF1G9POxhf8jij/tMmRAeqekJfcDotf42hYw?=
+ =?us-ascii?Q?bi4SBOD6qg0G/QrKF7VmfdxmiJ1jJqT0nk6qaqLJGjb9U3Og+nFPZ+P68Ouz?=
+ =?us-ascii?Q?yBxqxfjVhaVMLn4OPG4/TIcGjLalxO5uEbgqBeJjI76E4lHSpeRNNNuee0Lx?=
+ =?us-ascii?Q?noqHEPWFP4+Ach0oNH/OT3DOtYnsq59dkqabT+w8uYVYExFDuxagcI6MAMrz?=
+ =?us-ascii?Q?2uy1ngxN3Q6enecDFlwoce5YuKi/qhaAwCRzVnUauFlhweS4zolt2gTQqN7d?=
+ =?us-ascii?Q?roz+IcSiU+PF9wh5gK0krMbkGO6a3AnDfBT/5poSlkTTf18+yPGtYommMczk?=
+ =?us-ascii?Q?R/5OQXmJYXQeCec6xQVz03vaAkC9DdxuE1o58RhElKDTxwoJ402x7MIN2q6a?=
+ =?us-ascii?Q?sbQCyf9ULG6mr5NpbZtPHjJu3UYf05Au2268Vvz7q4eKw3yCQrV/U1CSv7sO?=
+ =?us-ascii?Q?ZqQ8e60RDL9/l1PYEj/6S6Xmc3HbFoCcKMwUh6pMQeo15vMr5Q430jf31t6K?=
+ =?us-ascii?Q?OkZoZuIq5Wq9Oz/fMahHy+xErEIIIeVYwUp7jR9LsAmNR9AKR+ttm4cGfKM9?=
+ =?us-ascii?Q?MRySazuN7JBOmlaIl1sL6vnoNd0D6dNh5V561An+mQkIsR4oP1zTF8dWol+M?=
+ =?us-ascii?Q?+O5kEqVvQ70/KaSWRvX98m09hv0CgXgWBO07j2k0Q7+Y2bswKvhoef4iz0vz?=
+ =?us-ascii?Q?U6vpCevnQW702ruB7VpCkn8/YZ13yGVoeOcOKAWI3AbhzxpYTaglvYosEg3T?=
+ =?us-ascii?Q?KOu3J4LEtnvaJZCSPw6HccegHBdJVh0OvYY+6BN/W7w/4ZhAHG0jHz+vIwYn?=
+ =?us-ascii?Q?g2a6/hrI0DqHkJ3NOLKj7846rg6x5jP6TIF7vsf3/eFwL/XRdAO7nzOcJbtB?=
+ =?us-ascii?Q?PlMOxfUzlmvg6nMl/N0YOuwOO9ksWSeEQR91tWxrLmPu5KZYwVrU4PnNfmIW?=
+ =?us-ascii?Q?aZ0UgA8SzoTWCzxtmnTvqXmmFYKnHw22RBrq5OPzyYLSewhOoJUWEJfjsi0n?=
+ =?us-ascii?Q?MSFtZn4OO7u4ZVnFSZy4Y1B8WwdBmY6VKBsUIyOTIGm1IDqFq8nMgOmADfkj?=
+ =?us-ascii?Q?qj6tuZHn1C2xfyMMpojJOg7ocOHfX3n6dSbB6VZVEJRRdJGtjOk5l/u4KzwP?=
+ =?us-ascii?Q?tTYRjPhjobv7nb+/nJfB7JkfJ4dppf2UKXcKaEZtTuoln3V5w6ZnfGCV2CT4?=
+ =?us-ascii?Q?DqpUKvqGFw3F4jBt6qrVb9AdKu8C69I3cGpT0elSsLHoPF/HUk0+ysH5aeAX?=
+ =?us-ascii?Q?A7i62iBhcS3TY1/ckfwO6RoeT8Zz8X6dlHFH+Ez+1M9HHrYNQQ+KRX7fa2H5?=
+ =?us-ascii?Q?IfDKEAz5oz88CZXKBxI1sh3wg+h0BQJU//YY5B9KU7+lNZShMc6Tu6Mg5rc4?=
+ =?us-ascii?Q?3NXonAjiy+6Ty3daTBTEUeGseDZ4GzePT0aVD9W+6DZEL9LEvidGWNRPIC24?=
+ =?us-ascii?Q?MKCq0vsb4dhwACKqS3Ff7prV3TIuafDK63psbHWn5joFVbnd3LlmvrgCN3c8?=
+ =?us-ascii?Q?TtgQTwyE3CzEkgPmW1D3Fg4=3D?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d904d44d-d7d6-4604-8f06-08d9bede51d3
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2f682772-20dc-4bf6-8814-08d9bede5329
 X-MS-Exchange-CrossTenant-AuthSource: SA2PR10MB4587.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Dec 2021 08:47:11.7936
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Dec 2021 08:47:14.0308
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: pNxUMoEqlOsr13P9hGGEBtJ6vEOeiap9NcvKU/nZhtxNkHdO5E/ymM8iYVOdYWyQJgltJouqMumc7LAyusVH8w==
+X-MS-Exchange-CrossTenant-UserPrincipalName: /KuReTc2YONPyuP6CV8N4Q3IViRzUXTgIim+9f2H1RK/PBrRgpg1i9VwovkUK8MIjeDfMLJ9+Ikk94hx1vBljA==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR10MB3054
 X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10197 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 suspectscore=0
- malwarescore=0 mlxlogscore=999 bulkscore=0 mlxscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2110150000
- definitions=main-2112140049
-X-Proofpoint-GUID: HMe0gI77JWJc4jsadsVdJ0QO3QOlYEoZ
-X-Proofpoint-ORIG-GUID: HMe0gI77JWJc4jsadsVdJ0QO3QOlYEoZ
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 adultscore=0
+ malwarescore=0 bulkscore=0 spamscore=0 mlxlogscore=999 mlxscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2110150000 definitions=main-2112140049
+X-Proofpoint-GUID: 6ZkHY1ysoouBcy-7SDTbTqIex_bpRpyp
+X-Proofpoint-ORIG-GUID: 6ZkHY1ysoouBcy-7SDTbTqIex_bpRpyp
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-XFS_SB_FEAT_INCOMPAT_NREXT64 incompat feature bit will be set on filesystems
-which support large per-inode extent counters. This commit defines the new
-incompat feature bit and the corresponding per-fs feature bit (along with
-inline functions to work on it).
+XFS_FSOP_GEOM_FLAGS_NREXT64 indicates that the current filesystem instance
+supports 64-bit per-inode extent counters.
 
 Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
 ---
- fs/xfs/libxfs/xfs_format.h | 1 +
- fs/xfs/libxfs/xfs_sb.c     | 3 +++
- fs/xfs/xfs_mount.h         | 2 ++
- 3 files changed, 6 insertions(+)
+ fs/xfs/libxfs/xfs_fs.h | 1 +
+ fs/xfs/libxfs/xfs_sb.c | 2 ++
+ 2 files changed, 3 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index e5654b578ec0..7972cbc22608 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -372,6 +372,7 @@ xfs_sb_has_ro_compat_feature(
- #define XFS_SB_FEAT_INCOMPAT_META_UUID	(1 << 2)	/* metadata UUID */
- #define XFS_SB_FEAT_INCOMPAT_BIGTIME	(1 << 3)	/* large timestamps */
- #define XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR (1 << 4)	/* needs xfs_repair */
-+#define XFS_SB_FEAT_INCOMPAT_NREXT64	(1 << 5)	/* 64-bit data fork extent counter */
- #define XFS_SB_FEAT_INCOMPAT_ALL \
- 		(XFS_SB_FEAT_INCOMPAT_FTYPE|	\
- 		 XFS_SB_FEAT_INCOMPAT_SPINODES|	\
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index f4e84aa1d50a..bd632389ae92 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -124,6 +124,9 @@ xfs_sb_version_to_features(
- 		features |= XFS_FEAT_BIGTIME;
- 	if (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR)
- 		features |= XFS_FEAT_NEEDSREPAIR;
-+	if (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_NREXT64)
-+		features |= XFS_FEAT_NREXT64;
-+
- 	return features;
- }
- 
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 00720a02e761..10941481f7e6 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -276,6 +276,7 @@ typedef struct xfs_mount {
- #define XFS_FEAT_INOBTCNT	(1ULL << 23)	/* inobt block counts */
- #define XFS_FEAT_BIGTIME	(1ULL << 24)	/* large timestamps */
- #define XFS_FEAT_NEEDSREPAIR	(1ULL << 25)	/* needs xfs_repair */
-+#define XFS_FEAT_NREXT64	(1ULL << 26)	/* 64-bit inode extent counters */
- 
- /* Mount features */
- #define XFS_FEAT_NOATTR2	(1ULL << 48)	/* disable attr2 creation */
-@@ -338,6 +339,7 @@ __XFS_HAS_FEAT(realtime, REALTIME)
- __XFS_HAS_FEAT(inobtcounts, INOBTCNT)
- __XFS_HAS_FEAT(bigtime, BIGTIME)
- __XFS_HAS_FEAT(needsrepair, NEEDSREPAIR)
-+__XFS_HAS_FEAT(nrext64, NREXT64)
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index c43877c8a279..42bc39501d81 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -251,6 +251,7 @@ typedef struct xfs_fsop_resblks {
+ #define XFS_FSOP_GEOM_FLAGS_REFLINK	(1 << 20) /* files can share blocks */
+ #define XFS_FSOP_GEOM_FLAGS_BIGTIME	(1 << 21) /* 64-bit nsec timestamps */
+ #define XFS_FSOP_GEOM_FLAGS_INOBTCNT	(1 << 22) /* inobt btree counter */
++#define XFS_FSOP_GEOM_FLAGS_NREXT64	(1 << 23) /* 64-bit extent counter */
  
  /*
-  * Mount features
+  * Minimum and maximum sizes need for growth checks.
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index bd632389ae92..0c1add39177f 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -1138,6 +1138,8 @@ xfs_fs_geometry(
+ 	} else {
+ 		geo->logsectsize = BBSIZE;
+ 	}
++	if (xfs_has_nrext64(mp))
++		geo->flags |= XFS_FSOP_GEOM_FLAGS_NREXT64;
+ 	geo->rtsectsize = sbp->sb_blocksize;
+ 	geo->dirblocksize = xfs_dir2_dirblock_bytes(sbp);
+ 
 -- 
 2.30.2
 
