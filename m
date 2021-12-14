@@ -2,70 +2,72 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A17EC433FE
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Dec 2021 08:49:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BEFD1C433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Dec 2021 08:49:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230098AbhLNItl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Dec 2021 03:49:41 -0500
-Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:28222 "EHLO
+        id S230085AbhLNItn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Dec 2021 03:49:43 -0500
+Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:29738 "EHLO
         mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229577AbhLNItl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Dec 2021 03:49:41 -0500
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1BE7tcR6005519;
-        Tue, 14 Dec 2021 08:49:37 GMT
+        by vger.kernel.org with ESMTP id S229577AbhLNItm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Dec 2021 03:49:42 -0500
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1BE75Q1G004559;
+        Tue, 14 Dec 2021 08:49:40 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : content-transfer-encoding : content-type :
- mime-version; s=corp-2021-07-09;
- bh=aeuw1vLa3Rj5RKvHc7DuPlqJkq+4b7QKcwzOt5xqddQ=;
- b=QwKonevke3YzSyu5SDmlZRSwSY0j/IC4tgZcjVx3h2jBlpeAWhOKUthFrfR5NKj6YNlo
- EhzF8JSXqHnnktOdogkDsUJJv3vhhNtm12wzWc2JgGxq6iefdRrXm6Gir1fClooMa1Uk
- o4nf+95k7jVbHinL3hLibM0Jlp2L3e2QwxU+l8oL/qw+L+hqQVQBwldKOCSNrW0is9qZ
- C9IdjomiuTHwDaQb3fDxf6oZu0aB2RHu/mUhHoRlAxQ9BzCyAc88HWjPiidhEeM9N0sG
- B20Zcdp4YZ7/N+aQ+5E4ko/ml85TV34JvQYPmVxy4TSCTLXh6qe6y9MJdeIPwMAWQ0eu AA== 
+ subject : date : message-id : in-reply-to : references :
+ content-transfer-encoding : content-type : mime-version;
+ s=corp-2021-07-09; bh=NVvX1kVHR/aKzuSjnoX2nyn3dQOWqPDM6Z54DEFPN/Y=;
+ b=a0gQypvTtTiCu6sgkb+7ltZSrKPvZSMfL0DMhKHjYidKIHIqZsNducCFNbYbjm2XFF+D
+ z/0DkolyRMt/Lqs3WJrBqoa2vH7nvT2Kmk20e8kzysdOnUqABMS/xbL9x+wghS2RB92O
+ dOR4S82eJ3gik/HU/1nRwYzne1uF7ar6/wTBRm0guHZJXpTC6nMYAgaiJATjMqOIPrd+
+ 3IsRjZNK5lX/zX9A/rfls/PvHkmycFzjYosngIPwscLK00FhSBmQxfZcOSRc6V0X+XJf
+ vCWqfTCO4ao/kWSK+MDB9+hTry6Xi58buONmVRpChJPsl+TKLUxJtF/im1eS2II5c/i5 sQ== 
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3cx56u2sw7-1
+        by mx0b-00069f02.pphosted.com with ESMTP id 3cx3mru626-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 14 Dec 2021 08:49:37 +0000
+        Tue, 14 Dec 2021 08:49:39 +0000
 Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 1BE8eS6a074155;
-        Tue, 14 Dec 2021 08:49:36 GMT
-Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2169.outbound.protection.outlook.com [104.47.58.169])
-        by aserp3020.oracle.com with ESMTP id 3cxmr9yjas-1
+        by aserp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 1BE8eS4F074188;
+        Tue, 14 Dec 2021 08:49:38 GMT
+Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2170.outbound.protection.outlook.com [104.47.58.170])
+        by aserp3020.oracle.com with ESMTP id 3cxmr9yjbx-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 14 Dec 2021 08:49:36 +0000
+        Tue, 14 Dec 2021 08:49:38 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=cLXiaN1V35neNaCFQjDZSDKjOaYAtDMfeoZWKYOn/ZD7KUoAymddrafORy8WfL4Klax/BRujTnrVGkGDJBkNH4HHsBF1vLKAA2NG63+/k9ee2sZK4XwmRJqpwwlsJM6z0eAG6Pk+uBGL9078iUb6yugf4dsd0WlBe3GFi2WsrF5C5dlUiQom/hXSH44sicgubErUO4/RtGfIyjKb0Saf7EMM60TnBQofJ5+wSnKtQLJtUKmhJvpX7eAYWgR8lcZLCJuQVZPkwjzl7AyKP8szbcJYjnuabAJhcbXYtuB+Iy5HP8wkURyDhN+X3wW+DtGXv6QiC+FjkXCVDyRKaKR2DA==
+ b=eOfksEG27kHJ9xqE9h+oG0dQMNOiQQdzBx5O1wAka0VqGX6LIf9HSR8pkkF6U31vXbFEkoS9aCIsKOVuRpjHvBua7dgnrH5LNeVJkrfoOheb3N7g84MDADGz4SziYX7kYvYe165Qyxb7qgweaG8kR9P1ntEH6QMHmIb6FvYesFAfzR6bGlSBkRU7BBvwjwyvsjYUNPvEvt75usQhi3JeYLugdrb8yKo0MzRDlKAY9TobHJg5DUWk5gZnTrCcHBEPrH5uOKYGaei5wFvwjnCOMFHe2LApinqYnamvWExYrt3Ee5tQji0EAPAkAYo+rqvds5LTGycNydNDGnrXc1+Acg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=aeuw1vLa3Rj5RKvHc7DuPlqJkq+4b7QKcwzOt5xqddQ=;
- b=mrueOWGgWuNbdVLZFydmqIBGRlWiPezFhvByHDKoi/Kvrf7hlwcF4SkWMvKA4iN43im1+Kzh5WkFrW/30iXhDQYaX1vNisXyTuHIWtIpRoGB8qA8VxTZrJwibCoVRqFzzWZTvO71e8wHStN3HeQD+13oLn/e5z2N1wynpuMgRz5KdYFf/9xVht4ozC+JM/HAIimgXMMA5t3T4cA4v1AV7KpRhAKDG+KWHjuUssrWFwToyAF5I89z7TW1WyCZCDhbXrW3VB44yQhWu8Dp+7nBPhYooiXI5QRuJPW6yFr4g7cjkCsIKzufgr/Sb1AgJnT2p8R1/hULePgoF7TihRVQgQ==
+ bh=NVvX1kVHR/aKzuSjnoX2nyn3dQOWqPDM6Z54DEFPN/Y=;
+ b=NZZ/ypubk0qW8odZIwxqW8EUI7jbmSXqY2/CmC+cDarcOAPcs4tEDotaZXSCMed26qzjz9+0Tle/X88t+w878serftOmsOnF9urhOVZEqAcQS+cDmQcwcx5hqQd5xdiAq1O/Q0gcNjNmLNpIldRKalI+huW5UjeekuEc9vCZWaNi/PiwWlO1CYE0t08gPrZY+6TYZy1xHiL4CuEzVb92tBzek77BrqrCAvpuotLY45LQA4uvGflbs7QygEncmP/iCFi0B3uRftpCqRn/Wa3VIQSlQe5O84wKDCRhiMbhHU4c4Rd/5NT76lEDQV6649PuhLnAcg9TVGvKUIfJGfFt/A==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=aeuw1vLa3Rj5RKvHc7DuPlqJkq+4b7QKcwzOt5xqddQ=;
- b=Ns5f9mkS1/XRs3qpdMsD4n4rEjHOy6os24QnfKmM/D9QLeGC1aEVXpJZxoX6IQs2ffbe263s43kRlB5Tr3N8wotq095ANgaelh35ik4zL3miHxI7QVgpp+3GBH/FlptTByFVuA+Lmbml49thjCjdvAwOyqLrNsiwC7zLWI9fdi8=
+ bh=NVvX1kVHR/aKzuSjnoX2nyn3dQOWqPDM6Z54DEFPN/Y=;
+ b=GGD2kanoA9GlGSyQ91jq/ykdGcyl2ddxy8XBuAFG7Ni7dwY2T0xY/kNGPqGnQDBrbUjL1T3cRLVaC8Sf1m2KXjXLpDN+JCMB78AMhmg0UVjl14RGDJLsuASEHeSibyVRknOM+VD7xARVkN+napBJalEDGf6IxNZ5ylpUCTmvdTY=
 Received: from SA2PR10MB4587.namprd10.prod.outlook.com (2603:10b6:806:114::12)
  by SN6PR10MB2656.namprd10.prod.outlook.com (2603:10b6:805:42::17) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4778.16; Tue, 14 Dec
- 2021 08:49:34 +0000
+ 2021 08:49:36 +0000
 Received: from SA2PR10MB4587.namprd10.prod.outlook.com
  ([fe80::75ca:e478:6788:d21d]) by SA2PR10MB4587.namprd10.prod.outlook.com
  ([fe80::75ca:e478:6788:d21d%6]) with mapi id 15.20.4778.018; Tue, 14 Dec 2021
- 08:49:34 +0000
+ 08:49:36 +0000
 From:   Chandan Babu R <chandan.babu@oracle.com>
 To:     linux-xfs@vger.kernel.org
-Cc:     Chandan Babu R <chandan.babu@oracle.com>, djwong@kernel.org,
-        david@fromorbit.com
-Subject: [PATCH V4 00/20] xfsprogs: Extend per-inode extent counters
-Date:   Tue, 14 Dec 2021 14:17:51 +0530
-Message-Id: <20211214084811.764481-1-chandan.babu@oracle.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>, david@fromorbit.com,
+        Chandan Babu R <chandan.babu@oracle.com>
+Subject: [PATCH V4 01/20] xfsprogs: xfs_repair: allow administrators to add older v5 features
+Date:   Tue, 14 Dec 2021 14:17:52 +0530
+Message-Id: <20211214084811.764481-2-chandan.babu@oracle.com>
 X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20211214084811.764481-1-chandan.babu@oracle.com>
+References: <20211214084811.764481-1-chandan.babu@oracle.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 X-ClientProxiedBy: MAXPR0101CA0069.INDPRD01.PROD.OUTLOOK.COM
@@ -73,177 +75,523 @@ X-ClientProxiedBy: MAXPR0101CA0069.INDPRD01.PROD.OUTLOOK.COM
  (2603:10b6:806:114::12)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 94304ed5-401a-4928-8b3e-08d9bedea6c9
+X-MS-Office365-Filtering-Correlation-Id: ec0a6a5f-776d-44a2-53fa-08d9bedea828
 X-MS-TrafficTypeDiagnostic: SN6PR10MB2656:EE_
-X-Microsoft-Antispam-PRVS: <SN6PR10MB2656650803300A1DD3E80B63F6759@SN6PR10MB2656.namprd10.prod.outlook.com>
+X-Microsoft-Antispam-PRVS: <SN6PR10MB26563A2FEA93E4859FA3ABE3F6759@SN6PR10MB2656.namprd10.prod.outlook.com>
 X-MS-Oob-TLC-OOBClassifiers: OLM:7691;
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: G2HJ8rw41566tLMe6ogloQxh9flc3ZHeemQb/o2rty/puoMRBpBgUYEAlVhGEs6JMPj6noRx6bL2ZvP5U0HRSKQnOx6w7UcyoQ5iLD/j9N84nML9bdxi5MZdwayEq0W6RyI+f9XXot2pSHn5DQVhCy9RQ0vgs6NJxfS+nlLcsBams+NOVRyGWmoKO0dKRjpxdMnkYbpxjaB2IOEsI5mpqTVVeoHrjX7rMIx1LAfbjiqW3ZKJYbvi+pbdqh8OBEo9kxJ5s7fGHc11aawzO/43cLsK59hRnGLGnflvk3q+vmj87XYnEt2759P/0DGeELv+81ultcEFFkq4q3td04vERZwPHYrjWsg/qwB94g4yxy8BIV3fWijve3YV6FIfg1zI9oqhtBTpSLftHHuUHt/d7b5+czjC8HdSidyStT+M31IW9OdZsbZyHUSXi2jdZg0fxdLlrOcPxHLsO1xIYn9X8jRT8wTlpXQDFW2yamdrZse8iS6nk56f+n/ESDuQZpXo4wzp79bVqCSh/5Vei0WZsrhF4QhhXFKeDkiQBAaHfOr3G+L8t28e43yICszEuIog3f3plHRktcQz/7HPoeEZI1LrEMjnMG7MwUmRnxgJAoLYSh3MqF/b9phLdCXZ3nXraZ6k3qh8sMVCc9iNg8a+k5ZJEqcpGOwO4tYN5XPtHzUTBL6z9a/lf8Zd0jh1MYrpVd80symNayivpJDjBolVQIciV9IQECKnsqCMUnskHS4qwjSxhmgQ91W/0MLv8AkItRlC2OkPlb0pXaG9kg8j0/v/G12A3Qe2mHQXUD2rIWc=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(6506007)(508600001)(52116002)(86362001)(186003)(6512007)(8936002)(6916009)(66946007)(38100700002)(38350700002)(5660300002)(6486002)(316002)(8676002)(66556008)(66476007)(2906002)(1076003)(966005)(83380400001)(2616005)(36756003)(4326008)(26005)(6666004);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: /bdC4xbLQQNttUGrN9EPIxOkCAEsj/H25nyqTE04DVenub60Pz5+7MoQaaWHJkSmlWsnjEkN7MJT4RaEzMvLinhukCNUsmi49tkpKWxtMBLNWZgmBWrmXCG0XDPejb0vN2847j3AWiJtEnmxzc4wVyxYTD4q2kcuq3dlArt08ZbGymVMyn7ku+VZGfV+msT04e+OC0/uW6bNx8hLkKV+jJIVKYqOpvG0cAGw0Ol2IIGZ/jbWz261c1I4omfeHpX8OtqFWOBjjff1OImOAP2XSxaKrnMoDy0Wj25LnAx8HYhCE5APzMWlrtq+hul5OVfNaALuPE3L4ZiGQuRty26hdhfEXM0m+U2cd/ghEizt+mKj+Gn7pgm1KULsaYcdJGrdvT4f09MGtlmxaRkeUnbRShm7FP+NNUZrTucK0H0nm/Qw8M2Qza909GgC/6zCeZKLubHVbnBd3ZsTUGudLt2uh2KRHLdZnpny2woQ+l0h3TzxkNkuv39Q/Is+lmpH6BHrqBnJcdYUIQiB+bdfkruBm5RjKT3ykpT3omcgJ6kq4Y2lcgZZaldoxvmJoxdKAp1QIJsStdn611YF21pMOw/JVAPtht/P4X/oKDgxFnGTmavHhY9zng2ldGhaNWByGB1nUk/Jypm55NJt4HsyN3E4F1xM0cDuhEXZ8smimh1iLBjCXpz7+NkOSZF+FQr/Nnh3E9JIeyBFse3mnzSPk2sSoA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(6506007)(54906003)(508600001)(52116002)(86362001)(186003)(6512007)(8936002)(6916009)(66946007)(38100700002)(38350700002)(5660300002)(6486002)(316002)(8676002)(66556008)(66476007)(2906002)(1076003)(83380400001)(2616005)(36756003)(4326008)(30864003)(107886003)(26005)(6666004);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?DeQSa+5oHLrfwXvEGMKS/hZZUYudbMMl3D1HzA16iVLq0S3rx/EI3xHefvg2?=
- =?us-ascii?Q?NNdzNHzBHFpJtC7RqJ8cn4sHCwcEC5UrNgxmk8BB3KPOOY9SIOyIVKth8GJi?=
- =?us-ascii?Q?ielv6Rs5PDPPmfZyC/UPNRjQb7MUTGsPrTLcxhvFlT+Klq2oL6ZVtI9hwso8?=
- =?us-ascii?Q?418tAWk5Q3B/fFoCe5KS39A7JrQAzpS0Nr/HxFQIXQw8MJ/YnamawyL3egOf?=
- =?us-ascii?Q?95TVYRDrMgrdI1GZpZZovxlaFiHgkUsXx4o+fronxO4sXMryawBPIhOdxenn?=
- =?us-ascii?Q?8aSLqYroB+/aIvfEWDCrw5a5UduJaenYwtkopSP/3K3M2FwhhAp29SanEh3O?=
- =?us-ascii?Q?b6TkGX8cyQCFuCo/kuQw7zdgm4GTHPhWbEIByhn35QP0tCP1GKRF/CJzCLAh?=
- =?us-ascii?Q?/tusS2AWoglcRBGuFxeAyXohh8yaiPt8mp+EIuHXdEZ4OVHP7A7D2axnAjEA?=
- =?us-ascii?Q?EFDsK6QrRKPg1L43ole/rifh854WAfKdUL8M0FEKFl4wmiLttOg5MxoETa1x?=
- =?us-ascii?Q?NPeziCMHtwIFUI8yrkGGMtNMmmmv9/q70f7SaUe3FvKUeMp67eEWbhX4JA1D?=
- =?us-ascii?Q?WmXU2pCsv6Q9EPtGlUlVoqdUxhjc1ng4aB7vhyT76mXpf9P9bEsDtiTMzanr?=
- =?us-ascii?Q?HbQe6YgB3kWPd4IQ9PIWSQiNDgBDWbMWtI/GDeWIN6LZ4psJFM+AhoqsYOgN?=
- =?us-ascii?Q?x2PbDFsT7ENJfuaggtXypwFG9gdXvCZIgI7jStoe7d8HRp8tPnGgK5sGlUam?=
- =?us-ascii?Q?atL87hcnCrW+dnX1P37XwSPhFK/CpCWK+GTXIDU752tXreEYK6P3WQHoDIoo?=
- =?us-ascii?Q?Oj6MQa/bRxKr1H+dZcmA3wF+rmf1pOIWBSzJ2BT3TrIcvHU6o4AiKt1HbWaE?=
- =?us-ascii?Q?a9uefDx15ErWtiP9CE+j8ZQN46dE75OeITb+O3MA0eIWt1Oh4IHVMKYw57hI?=
- =?us-ascii?Q?8UtZmpzYo0X7eG/SvJGkspMnL5xZ7k089/Me3lmDpi2EVdNdG+lQgaoELoao?=
- =?us-ascii?Q?2E8VZu23eDSu8jmgKFsrrRsO0a0tQrAxwSPMFyTTQX9SRck7/c18pEcuBudE?=
- =?us-ascii?Q?KWZrXuCsJz1MT/tK8Qy3OwnO9wax3T5GRAVM7MyEGc3xZqonkPlyCW4tdvRQ?=
- =?us-ascii?Q?1Yev6HAbHhW6Su8K1rZBD32kd5KE88RtTeFJ0MlKur/Ou8ZzYkJp8u8iYi/z?=
- =?us-ascii?Q?9cf/IOWM53FHk8V1qgHx6stdszDIx/cfcmQL3Sb3WuZGvwpMJOaayf1V5K6h?=
- =?us-ascii?Q?nbSPcQ8LjUflCgLUEUfrHTWlI4ZPdYREBAQwbhVlFsOt8aqwxpfqRqmyPE57?=
- =?us-ascii?Q?6pMkfX5kqK1ERwlPo5BCfBh7BPYr5cjgodisx8s7R3PW3odVoUDWQraSQSfW?=
- =?us-ascii?Q?8jPqjt2pKggTEvc6WfJljWqUCVueZYxLhjdyCRl9ePR/hnzFOQyurdAYGK9t?=
- =?us-ascii?Q?K30gHaryZU0COzGnHP5li0M3hTdLffq0sOT4ABUCPNtpYzuX9jng+jykFENH?=
- =?us-ascii?Q?qoLMHrdMi8z13omgvp5XTYz1nN72l0/QBpiKOC+hhoBohzDMWF0RO6JvbxQF?=
- =?us-ascii?Q?/avdANBHXTKk+x5ygsGn77PtWWi7RQ5aMdMmwQ/fDFjeNOP7Lg9eGg2BKW30?=
- =?us-ascii?Q?UP6cdQm8i7XP43gv+tsBdFM=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?/u+DEvyr/fdAI3Ek4kztwg18XtP3lsp0fRqF6dJuCUle8ygQfnp8WtZFUjuk?=
+ =?us-ascii?Q?p2sSuvnBeTzUONLzb5jO+jsG6E8N3k5ZEv6PVreVejnP3ArDEzWLsDz+FmnF?=
+ =?us-ascii?Q?3OHUcf5rgyAGQvStTsB3oI78d03ae22F5w7A86fg59jlMPt4nL5mVenYlni7?=
+ =?us-ascii?Q?GunhWtLuRPwEoajnaMxB3nT55NjFyrfh5h+D8ln3YZGM2zdF8YWBf0wqE+mq?=
+ =?us-ascii?Q?jOF2qaQ+UdC790kQ/OKFyZum7+VML04CQwqbJfgsPf1Ee+WTIpi4krNzPiTh?=
+ =?us-ascii?Q?ia0pMdxEMwsKK4fk5vwtgNoQGX0lgvjnVqA/1lT6B9QWY2FIM05nNk+smI3B?=
+ =?us-ascii?Q?GKZSXoUpDK+F4HM8/iNehJ0OEwlyvFRLBBtkPKn1SG3Y3N0lc71RbOkBlTQX?=
+ =?us-ascii?Q?9HN07ozb5MbSfCq5k0Z+L3xeGW5ik3LQvHUrCOCuJQKZ9dYZGVr/sF6L7K8Z?=
+ =?us-ascii?Q?1W5yTFQreYl2IfcVM3d2vCGPph43ptoA0fVPFTo3xbRrYtN6NmAsShXo+ADm?=
+ =?us-ascii?Q?SkMHTuAjxCQGwX1Ol47W684pCReEgzHw8ZXUye22osUyaFd5ul0cS1Xm9HX1?=
+ =?us-ascii?Q?IoBI3vKdnrV0kuSkpuwAUDFx05596BAi6WK0nGBJP3x37nFAHkKbZwzVPStN?=
+ =?us-ascii?Q?iHUtQBhnLtr8uMeJRjSLs5EKTmi7F/cXaBIuHrusR3NUClMvdDUuXb0GKjBn?=
+ =?us-ascii?Q?zxocDwdOf24Ie1ooIhb61DxiDMLFmjvF+SKOv7Uc2dVtqJSXOgqRD3qrj2w4?=
+ =?us-ascii?Q?wXLwdIbvmMzGR/U7hhRZ9nFr2qtP3/TCJ6GeoW1dd8E/tAtDTFYkOwpTgdBL?=
+ =?us-ascii?Q?rta6IRrGJF5QtxMNtIPHcqM0M9AnNfEvniqroFqJv6ypVWPhGHy98kTu1SpN?=
+ =?us-ascii?Q?AaSBLnY55gDp7hzJYa2k8vd4eGreQX6WBkpsP4RNFnf694eiW3avg/QPN6fP?=
+ =?us-ascii?Q?pcp/WbFaB1Om2MBBUrjrTM7QvnW4Cfsl83NgWZq0F13FdJd94c683O+HuNxT?=
+ =?us-ascii?Q?1zpCGfcsR26EIyu0ME0y1kqF/Kkd/9Yw6nuVsKowiJmDETmkbGDsdZqhaX3C?=
+ =?us-ascii?Q?GGJgiEIrd1f6H52oXL2T6xTUV1n5TsbUQD3+g4T5KcJT4bLbSxV9qmysPKZH?=
+ =?us-ascii?Q?YLlZBt1heYuXcEvJExajowxy4c5tS+UhIsGre/cHRSiHaxTPcY2havghnkX3?=
+ =?us-ascii?Q?GW9Fd6eShuzmfb8498mZiBJz79gQkrAzBj0VBr5e9MbK4uzvd4r2V5NZnF7b?=
+ =?us-ascii?Q?0GT7N9J1DxIkQK++2DZt02e/g5rUfub6WFFS9w+gpY9HOKHEGbrXpXUlG0my?=
+ =?us-ascii?Q?ogEraEFtrvXClMxgNWgOSwBxpgmpr7x53fMjJdGcXYqLLEu45jUOqd8xLHU8?=
+ =?us-ascii?Q?Tf0jI7XJxGpCLBkbz6WSqDoRM/lI6bX6x+W4DylihUxuZl0pdMdhDd19TZH9?=
+ =?us-ascii?Q?q3Ei0XzW15O7PvhJIe5alByf0i8oQVq4nMO1jQgypisTeVSw+7xsVcmbaIzU?=
+ =?us-ascii?Q?aGbcGGfkLdglrX+BbFJXiUyvcz0gHD+ZgvowThi20Gdb1xs4/a+fLMAPDszB?=
+ =?us-ascii?Q?0GtdSBVRfiuvyGlh2eflSaPBKjt88UhST/vl+uhQFJpJz+kVbpEJ/yHDWEyi?=
+ =?us-ascii?Q?Z/bZyOxy0pplQdPOrD+Jt0k=3D?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 94304ed5-401a-4928-8b3e-08d9bedea6c9
+X-MS-Exchange-CrossTenant-Network-Message-Id: ec0a6a5f-776d-44a2-53fa-08d9bedea828
 X-MS-Exchange-CrossTenant-AuthSource: SA2PR10MB4587.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Dec 2021 08:49:34.3393
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Dec 2021 08:49:36.6860
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: eK79UX7LVDY8VPZ4CscDuUcGS6Qw4/t9clF6b9Sm8cp/QNO8CDydnNijphQPSA4m5+MeavNqptPeAUmmM6yjyQ==
+X-MS-Exchange-CrossTenant-UserPrincipalName: h8GQtzyeIyNYpj2e1txYLJ0NhkAZ2tBL+Ec8kMnFYEFX8blbTyLbiqBG0Snwmq6l5Lcn13WrjUAQDPTr8NvJ4A==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR10MB2656
 X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10197 signatures=668683
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 spamscore=0
- mlxlogscore=706 suspectscore=0 adultscore=0 malwarescore=0 phishscore=0
+ mlxlogscore=999 suspectscore=0 adultscore=0 malwarescore=0 phishscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2110150000
  definitions=main-2112140049
-X-Proofpoint-ORIG-GUID: euMLvWkKwxHi98gqwQmhUC8tnoIcvGTv
-X-Proofpoint-GUID: euMLvWkKwxHi98gqwQmhUC8tnoIcvGTv
+X-Proofpoint-ORIG-GUID: Hh_L1kAY60BEbdQ1PYgw3PcHNuOgbcrq
+X-Proofpoint-GUID: Hh_L1kAY60BEbdQ1PYgw3PcHNuOgbcrq
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This patchset implements the changes to userspace programs that are
-required to support extending inode's data and attr fork extent
-counter fields. These changes allow programs in xfsprogs to be able to
-create and work with filesystem instances with 64-bit data fork extent
-counter and 32-bit attr fork extent counter fields.
+From: "Darrick J. Wong" <djwong@kernel.org>
 
-The patchset can also be obtained from
-https://github.com/chandanr/xfsprogs-dev.git at branch
-xfs-incompat-extend-extcnt-v4.
+Add to xfs_db the ability to add certain existing features (finobt,
+reflink, and rmapbt) to an existing filesystem if it's eligible.
 
-Changelog:
-V3 -> V4:
-1. Rebase patchset on top of Darrick's "xfs: kill XFS_BTREE_MAXLEVELS"
-   patchset. 
-2. Carve out a 64-bit inode field out of the existing di_pad and
-   di_flushiter fields to hold the 64-bit data fork extent counter.
-3. Use the existing 32-bit inode data fork extent counter to hold the
-   attr fork extent counter.
-4. Pass XFS_BULK_IREQ_NREXT64 flag to the bulkstat ioctl if the
-   underlying filesystem support for large exent counters is detected
-   by the presence of XFS_FSOP_GEOM_FLAGS_NREXT64 bit.
-
-V2 -> V3:
-1. Introduce the ability to upgrade existing filesystems to use 64-bit
-   extent counters if it is feasible to do so.
-2. Report presence of 64-bit extent counters via xfs_info.
-3. Add XFS_SB_FEAT_INCOMPAT_NREXT64 to XFS_SB_FEAT_INCOMPAT_ALL in a
-   separate patch.
-4. Rename mkfs.xfs option from extcnt64bit to nrext64.
-
-V1 -> V2:
-1. Rebase patches on top of Darrick's btree-dynamic-depth branch.
-2. Add support for using the new bulkstat ioctl version to support
-   64-bit data fork extent counter field.
-
-Chandan Babu R (19):
-  xfsprogs: Move extent count limits to xfs_format.h
-  xfsprogs: Introduce xfs_iext_max_nextents() helper
-  xfsprogs: Use xfs_extnum_t instead of basic data types
-  xfsprogs: Introduce xfs_dfork_nextents() helper
-  xfsprogs: Use basic types to define xfs_log_dinode's di_nextents and
-    di_anextents
-  xfsprogs: Promote xfs_extnum_t and xfs_aextnum_t to 64 and 32-bits
-    respectively
-  xfsprogs: Introduce XFS_SB_FEAT_INCOMPAT_NREXT64 and associated per-fs
-    feature bit
-  xfsprogs: Introduce XFS_FSOP_GEOM_FLAGS_NREXT64
-  xfsprogs: Introduce XFS_DIFLAG2_NREXT64 and associated helpers
-  xfsprogs: Use xfs_rfsblock_t to count maximum blocks that can be used
-    by BMBT
-  xfsprogs: Introduce macros to represent new maximum extent counts for
-    data/attr forks
-  xfsprogs: Introduce per-inode 64-bit extent counters
-  xfsprogs: Conditionally upgrade existing inodes to use 64-bit extent
-    counters
-  xfsprogs: Enable bulkstat ioctl to support 64-bit extent counters
-  xfsprogs: Add XFS_SB_FEAT_INCOMPAT_NREXT64 to the list of supported
-    flags
-  xfsprogs: xfs_info: Report NREXT64 feature status
-  xfsprogs: Add mkfs option to create filesystem with large extent
-    counters
-  xfsprogs: Add support for upgrading to NREXT64 feature
-  xfsprogs: Define max extent length based on on-disk format definition
-
-Darrick J. Wong (1):
-  xfsprogs: xfs_repair: allow administrators to add older v5 features
-
- db/bmap.c                |   8 +-
- db/btdump.c              |   4 +-
- db/check.c               |  28 +++--
- db/field.c               |   4 -
- db/field.h               |   2 -
- db/frag.c                |   8 +-
- db/inode.c               | 187 ++++++++++++++++++++++++++--
- db/metadump.c            |   6 +-
- fsr/xfs_fsr.c            |   4 +-
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
+---
  include/libxfs.h         |   1 +
- include/xfs_inode.h      |   5 +
- io/bulkstat.c            |   1 +
- libfrog/bulkstat.c       |  29 ++++-
- libfrog/fsgeom.c         |   6 +-
  libxfs/libxfs_api_defs.h |   3 +
- libxfs/xfs_bmap.c        |  75 ++++++------
- libxfs/xfs_format.h      |  60 +++++++--
- libxfs/xfs_fs.h          |  13 +-
- libxfs/xfs_ialloc.c      |   2 +
- libxfs/xfs_inode_buf.c   |  62 +++++++---
- libxfs/xfs_inode_fork.c  |  13 +-
- libxfs/xfs_inode_fork.h  |  59 ++++++++-
- libxfs/xfs_log_format.h  |  22 +++-
- libxfs/xfs_sb.c          |   3 +
- libxfs/xfs_trans_resv.c  |  10 +-
- libxfs/xfs_types.h       |  11 +-
- logprint/log_misc.c      |  20 ++-
- logprint/log_print_all.c |  18 ++-
- man/man8/mkfs.xfs.8      |   7 ++
- man/man8/xfs_admin.8     |  30 +++++
- mkfs/xfs_mkfs.c          |  29 ++++-
- repair/attr_repair.c     |   2 +-
- repair/dinode.c          |  95 +++++++++------
- repair/dinode.h          |   4 +-
- repair/globals.c         |   4 +
- repair/globals.h         |   4 +
- repair/phase2.c          | 254 +++++++++++++++++++++++++++++++++++++--
- repair/phase4.c          |   2 +-
- repair/prefetch.c        |   2 +-
+ man/man8/xfs_admin.8     |  30 ++++++
+ repair/globals.c         |   3 +
+ repair/globals.h         |   3 +
+ repair/phase2.c          | 221 +++++++++++++++++++++++++++++++++++++--
  repair/rmap.c            |   4 +-
- repair/scan.c            |   6 +-
- repair/xfs_repair.c      |  44 +++++++
- 42 files changed, 944 insertions(+), 207 deletions(-)
+ repair/xfs_repair.c      |  33 ++++++
+ 8 files changed, 286 insertions(+), 12 deletions(-)
 
+diff --git a/include/libxfs.h b/include/libxfs.h
+index 24424d0e..9ca1ed86 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -77,6 +77,7 @@ struct iomap;
+ #include "xfs_refcount_btree.h"
+ #include "xfs_refcount.h"
+ #include "xfs_btree_staging.h"
++#include "xfs_ag_resv.h"
+ 
+ #ifndef ARRAY_SIZE
+ #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index b76e6380..c8a4a8a0 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -21,6 +21,8 @@
+ 
+ #define xfs_ag_init_headers		libxfs_ag_init_headers
+ #define xfs_ag_block_count		libxfs_ag_block_count
++#define xfs_ag_resv_free		libxfs_ag_resv_free
++#define xfs_ag_resv_init		libxfs_ag_resv_init
+ 
+ #define xfs_alloc_ag_max_usable		libxfs_alloc_ag_max_usable
+ #define xfs_allocbt_maxrecs		libxfs_allocbt_maxrecs
+@@ -109,6 +111,7 @@
+ #define xfs_highbit32			libxfs_highbit32
+ #define xfs_highbit64			libxfs_highbit64
+ #define xfs_ialloc_calc_rootino		libxfs_ialloc_calc_rootino
++#define xfs_ialloc_read_agi		libxfs_ialloc_read_agi
+ #define xfs_idata_realloc		libxfs_idata_realloc
+ #define xfs_idestroy_fork		libxfs_idestroy_fork
+ #define xfs_iext_lookup_extent		libxfs_iext_lookup_extent
+diff --git a/man/man8/xfs_admin.8 b/man/man8/xfs_admin.8
+index ad28e0f6..4f3c882a 100644
+--- a/man/man8/xfs_admin.8
++++ b/man/man8/xfs_admin.8
+@@ -149,6 +149,36 @@ Upgrade a filesystem to support larger timestamps up to the year 2486.
+ The filesystem cannot be downgraded after this feature is enabled.
+ Once enabled, the filesystem will not be mountable by older kernels.
+ This feature was added to Linux 5.10.
++.TP 0.4i
++.B finobt
++Track free inodes through a separate free inode btree index to speed up inode
++allocation on old filesystems.
++This upgrade can fail if any AG has less than 1% free space remaining.
++The filesystem cannot be downgraded after this feature is enabled.
++This feature was added to Linux 3.16.
++.TP 0.4i
++.B reflink
++Enable sharing of file data blocks.
++This upgrade can fail if any AG has less than 2% free space remaining.
++The filesystem cannot be downgraded after this feature is enabled.
++This feature was added to Linux 4.9.
++.TP 0.4i
++.B rmapbt
++Store an index of the owners of on-disk blocks.
++This enables much stronger cross-referencing of various metadata structures
++and online repairs to space usage metadata.
++The filesystem cannot be downgraded after this feature is enabled.
++This upgrade can fail if any AG has less than 5% free space remaining.
++This feature was added to Linux 4.8.
++.TP 0.4i
++.B metadir
++Create a directory tree of metadata inodes instead of storing them all in the
++superblock.
++This is required for reverse mapping btrees and reflink support on the realtime
++device.
++The filesystem cannot be downgraded after this feature is enabled.
++This upgrade can fail if any AG has less than 5% free space remaining.
++This feature is not upstream yet.
+ .RE
+ .TP
+ .BI \-U " uuid"
+diff --git a/repair/globals.c b/repair/globals.c
+index 506a4e72..d89507b1 100644
+--- a/repair/globals.c
++++ b/repair/globals.c
+@@ -50,6 +50,9 @@ int	convert_lazy_count;	/* Convert lazy-count mode on/off */
+ int	lazy_count;		/* What to set if to if converting */
+ bool	add_inobtcount;		/* add inode btree counts to AGI */
+ bool	add_bigtime;		/* add support for timestamps up to 2486 */
++bool	add_finobt;		/* add free inode btrees */
++bool	add_reflink;		/* add reference count btrees */
++bool	add_rmapbt;		/* add reverse mapping btrees */
+ 
+ /* misc status variables */
+ 
+diff --git a/repair/globals.h b/repair/globals.h
+index 929b82be..53ff2532 100644
+--- a/repair/globals.h
++++ b/repair/globals.h
+@@ -91,6 +91,9 @@ extern int	convert_lazy_count;	/* Convert lazy-count mode on/off */
+ extern int	lazy_count;		/* What to set if to if converting */
+ extern bool	add_inobtcount;		/* add inode btree counts to AGI */
+ extern bool	add_bigtime;		/* add support for timestamps up to 2486 */
++extern bool	add_finobt;		/* add free inode btrees */
++extern bool	add_reflink;		/* add reference count btrees */
++extern bool	add_rmapbt;		/* add reverse mapping btrees */
+ 
+ /* misc status variables */
+ 
+diff --git a/repair/phase2.c b/repair/phase2.c
+index cb9adf1d..c811ed5d 100644
+--- a/repair/phase2.c
++++ b/repair/phase2.c
+@@ -133,7 +133,8 @@ zero_log(
+ 
+ static bool
+ set_inobtcount(
+-	struct xfs_mount	*mp)
++	struct xfs_mount	*mp,
++	struct xfs_sb		*new_sb)
+ {
+ 	if (!xfs_sb_version_hascrc(&mp->m_sb)) {
+ 		printf(
+@@ -153,14 +154,15 @@ set_inobtcount(
+ 	}
+ 
+ 	printf(_("Adding inode btree counts to filesystem.\n"));
+-	mp->m_sb.sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_INOBTCNT;
+-	mp->m_sb.sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
++	new_sb->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_INOBTCNT;
++	new_sb->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
+ 	return true;
+ }
+ 
+ static bool
+ set_bigtime(
+-	struct xfs_mount	*mp)
++	struct xfs_mount	*mp,
++	struct xfs_sb		*new_sb)
+ {
+ 	if (!xfs_sb_version_hascrc(&mp->m_sb)) {
+ 		printf(
+@@ -174,8 +176,193 @@ set_bigtime(
+ 	}
+ 
+ 	printf(_("Adding large timestamp support to filesystem.\n"));
+-	mp->m_sb.sb_features_incompat |= (XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR |
+-					  XFS_SB_FEAT_INCOMPAT_BIGTIME);
++	new_sb->sb_features_incompat |= (XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR |
++					 XFS_SB_FEAT_INCOMPAT_BIGTIME);
++	return true;
++}
++
++/* Make sure we can actually upgrade this (v5) filesystem. */
++static void
++check_new_v5_geometry(
++	struct xfs_mount	*mp,
++	struct xfs_sb		*new_sb)
++{
++	struct xfs_sb		old_sb;
++	struct xfs_perag	*pag;
++	xfs_agnumber_t		agno;
++	xfs_ino_t		rootino;
++	int			min_logblocks;
++	int			error;
++
++	/*
++	 * Save the current superblock, then copy in the new one to do log size
++	 * and root inode checks.
++	 */
++	memcpy(&old_sb, &mp->m_sb, sizeof(struct xfs_sb));
++	memcpy(&mp->m_sb, new_sb, sizeof(struct xfs_sb));
++
++	/* Do we have a big enough log? */
++	min_logblocks = libxfs_log_calc_minimum_size(mp);
++	if (old_sb.sb_logblocks < min_logblocks) {
++		printf(
++	_("Filesystem log too small to upgrade filesystem; need %u blocks, have %u.\n"),
++				min_logblocks, old_sb.sb_logblocks);
++		exit(0);
++	}
++
++	rootino = libxfs_ialloc_calc_rootino(mp, new_sb->sb_unit);
++	if (old_sb.sb_rootino != rootino) {
++		printf(
++	_("Cannot upgrade filesystem, root inode (%llu) cannot be moved to %llu.\n"),
++				(unsigned long long)old_sb.sb_rootino,
++				(unsigned long long)rootino);
++		exit(0);
++	}
++
++	/* Make sure we have enough space for per-AG reservations. */
++	for_each_perag(mp, agno, pag) {
++		struct xfs_trans	*tp;
++		struct xfs_agf		*agf;
++		struct xfs_buf		*agi_bp, *agf_bp;
++		unsigned int		avail, agblocks;
++
++		/*
++		 * Create a dummy transaction so that we can load the AGI and
++		 * AGF buffers in memory with the old fs geometry and pin them
++		 * there while we try to make a per-AG reservation with the new
++		 * geometry.
++		 */
++		error = -libxfs_trans_alloc_empty(mp, &tp);
++		if (error)
++			do_error(
++	_("Cannot reserve resources for upgrade check, err=%d.\n"),
++					error);
++
++		error = -libxfs_ialloc_read_agi(mp, tp, agno, &agi_bp);
++		if (error)
++			do_error(
++	_("Cannot read AGI %u for upgrade check, err=%d.\n"),
++					agno, error);
++
++		error = -libxfs_alloc_read_agf(mp, tp, agno, 0, &agf_bp);
++		if (error)
++			do_error(
++	_("Cannot read AGF %u for upgrade check, err=%d.\n"),
++					agno, error);
++		agf = agf_bp->b_addr;
++		agblocks = be32_to_cpu(agf->agf_length);
++
++		error = -libxfs_ag_resv_init(pag, tp);
++		if (error == ENOSPC) {
++			printf(
++	_("Not enough free space would remain in AG %u for metadata.\n"),
++					agno);
++			exit(0);
++		}
++		if (error)
++			do_error(
++	_("Error %d while checking AG %u space reservation.\n"),
++					error, agno);
++
++		/*
++		 * Would we have at least 10% free space in this AG after
++		 * making per-AG reservations?
++		 */
++		avail = pag->pagf_freeblks + pag->pagf_flcount;
++		avail -= pag->pag_meta_resv.ar_reserved;
++		avail -= pag->pag_rmapbt_resv.ar_asked;
++		if (avail < agblocks / 10)
++			printf(
++	_("AG %u will be low on space after upgrade.\n"),
++					agno);
++
++		libxfs_ag_resv_free(pag);
++
++		/*
++		 * Mark the per-AG structure as uninitialized so that we don't
++		 * trip over stale cached counters after the upgrade, and
++		 * release all the resources.
++		 */
++		libxfs_trans_cancel(tp);
++		pag->pagf_init = 0;
++		pag->pagi_init = 0;
++	}
++
++	/*
++	 * Put back the old superblock.
++	 */
++	memcpy(&mp->m_sb, &old_sb, sizeof(struct xfs_sb));
++}
++
++static bool
++set_finobt(
++	struct xfs_mount	*mp,
++	struct xfs_sb		*new_sb)
++{
++	if (!xfs_sb_version_hascrc(&mp->m_sb)) {
++		printf(
++	_("Free inode btree feature only supported on V5 filesystems.\n"));
++		exit(0);
++	}
++
++	if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
++		printf(_("Filesystem already supports free inode btrees.\n"));
++		exit(0);
++	}
++
++	printf(_("Adding free inode btrees to filesystem.\n"));
++	new_sb->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_FINOBT;
++	new_sb->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
++	return true;
++}
++
++static bool
++set_reflink(
++	struct xfs_mount	*mp,
++	struct xfs_sb		*new_sb)
++{
++	if (!xfs_sb_version_hascrc(&mp->m_sb)) {
++		printf(
++	_("Reflink feature only supported on V5 filesystems.\n"));
++		exit(0);
++	}
++
++	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
++		printf(_("Filesystem already supports reflink.\n"));
++		exit(0);
++	}
++
++	printf(_("Adding reflink support to filesystem.\n"));
++	new_sb->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_REFLINK;
++	new_sb->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
++	return true;
++}
++
++static bool
++set_rmapbt(
++	struct xfs_mount	*mp,
++	struct xfs_sb		*new_sb)
++{
++	if (!xfs_sb_version_hascrc(&mp->m_sb)) {
++		printf(
++	_("Reverse mapping btree feature only supported on V5 filesystems.\n"));
++		exit(0);
++	}
++
++	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
++		printf(
++	_("Reverse mapping btrees cannot be added when reflink is enabled.\n"));
++		exit(0);
++	}
++
++	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
++		printf(_("Filesystem already supports reverse mapping btrees.\n"));
++		exit(0);
++	}
++
++	printf(_("Adding reverse mapping btrees to filesystem.\n"));
++	new_sb->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_RMAPBT;
++	new_sb->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
+ 	return true;
+ }
+ 
+@@ -184,16 +371,30 @@ static void
+ upgrade_filesystem(
+ 	struct xfs_mount	*mp)
+ {
++	struct xfs_sb		new_sb;
+ 	struct xfs_buf		*bp;
+ 	bool			dirty = false;
+ 	int			error;
+ 
++	memcpy(&new_sb, &mp->m_sb, sizeof(struct xfs_sb));
++
+ 	if (add_inobtcount)
+-		dirty |= set_inobtcount(mp);
++		dirty |= set_inobtcount(mp, &new_sb);
+ 	if (add_bigtime)
+-		dirty |= set_bigtime(mp);
+-
+-        if (no_modify || !dirty)
++		dirty |= set_bigtime(mp, &new_sb);
++	if (add_finobt)
++		dirty |= set_finobt(mp, &new_sb);
++	if (add_reflink)
++		dirty |= set_reflink(mp, &new_sb);
++	if (add_rmapbt)
++		dirty |= set_rmapbt(mp, &new_sb);
++
++	if (!dirty)
++		return;
++
++	check_new_v5_geometry(mp, &new_sb);
++	memcpy(&mp->m_sb, &new_sb, sizeof(struct xfs_sb));
++	if (no_modify)
+                 return;
+ 
+         bp = libxfs_getsb(mp);
+diff --git a/repair/rmap.c b/repair/rmap.c
+index 12fe7442..1e8948a6 100644
+--- a/repair/rmap.c
++++ b/repair/rmap.c
+@@ -49,8 +49,8 @@ bool
+ rmap_needs_work(
+ 	struct xfs_mount	*mp)
+ {
+-	return xfs_sb_version_hasreflink(&mp->m_sb) ||
+-	       xfs_sb_version_hasrmapbt(&mp->m_sb);
++	return xfs_sb_version_hasreflink(&mp->m_sb) || add_reflink ||
++		xfs_sb_version_hasrmapbt(&mp->m_sb) || add_rmapbt;
+ }
+ 
+ /*
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index 38406eea..e250a5bf 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -67,6 +67,9 @@ enum c_opt_nums {
+ 	CONVERT_LAZY_COUNT = 0,
+ 	CONVERT_INOBTCOUNT,
+ 	CONVERT_BIGTIME,
++	CONVERT_FINOBT,
++	CONVERT_REFLINK,
++	CONVERT_RMAPBT,
+ 	C_MAX_OPTS,
+ };
+ 
+@@ -74,6 +77,9 @@ static char *c_opts[] = {
+ 	[CONVERT_LAZY_COUNT]	= "lazycount",
+ 	[CONVERT_INOBTCOUNT]	= "inobtcount",
+ 	[CONVERT_BIGTIME]	= "bigtime",
++	[CONVERT_FINOBT]	= "finobt",
++	[CONVERT_REFLINK]	= "reflink",
++	[CONVERT_RMAPBT]	= "rmapbt",
+ 	[C_MAX_OPTS]		= NULL,
+ };
+ 
+@@ -324,6 +330,33 @@ process_args(int argc, char **argv)
+ 		_("-c bigtime only supports upgrades\n"));
+ 					add_bigtime = true;
+ 					break;
++				case CONVERT_FINOBT:
++					if (!val)
++						do_abort(
++		_("-c finobt requires a parameter\n"));
++					if (strtol(val, NULL, 0) != 1)
++						do_abort(
++		_("-c finobt only supports upgrades\n"));
++					add_finobt = true;
++					break;
++				case CONVERT_REFLINK:
++					if (!val)
++						do_abort(
++		_("-c reflink requires a parameter\n"));
++					if (strtol(val, NULL, 0) != 1)
++						do_abort(
++		_("-c reflink only supports upgrades\n"));
++					add_reflink = true;
++					break;
++				case CONVERT_RMAPBT:
++					if (!val)
++						do_abort(
++		_("-c rmapbt requires a parameter\n"));
++					if (strtol(val, NULL, 0) != 1)
++						do_abort(
++		_("-c rmapbt only supports upgrades\n"));
++					add_rmapbt = true;
++					break;
+ 				default:
+ 					unknown('c', val);
+ 					break;
 -- 
 2.30.2
 
