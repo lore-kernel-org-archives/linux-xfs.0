@@ -2,597 +2,176 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CFE7C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Dec 2021 05:06:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 053C2C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Dec 2021 09:20:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239818AbhLOFGW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Dec 2021 00:06:22 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:39056 "EHLO
-        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239777AbhLOFGV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Dec 2021 00:06:21 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1111E617F6;
-        Wed, 15 Dec 2021 05:06:21 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F792C34604;
-        Wed, 15 Dec 2021 05:06:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1639544780;
-        bh=ROfNpUhavXtK3i+z6uzVAM8or/1wIuotU5/XoVi2MuQ=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=V8Cr7/571APUusDmVb4wrlSdHrPtyMxK4WiSG/DO+Dw7DMU8lZlXUbbHVomZx5sKT
-         7tkSz01o+NB+wc0Z9qbvREX+HqaU7kTA1Bpn6rfNJXHskjJF7aQHgKeKsoWXEPGY6U
-         oG72j2V1GXQTJNIh7wR25VC7ySKMy4hU1rXUMYmjIAMSWChrUDa0tqX3Ya1YecMz5B
-         LT4B6B000s9KsJ4aL/vIVwT0regy7cfeQq/ilW+J6NcFhgHr2MbrllSVAx7hYfQ6gO
-         gG0V6+KSX6ulZ9bFNctRh80JODZDwOOj+LMrWTHbNcCqcVSEcPdNVAolAxPXWdo70a
-         z1RELkdfgoq+g==
-Date:   Tue, 14 Dec 2021 21:06:19 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Ian Kent <raven@themaw.net>
-Cc:     Brian Foster <bfoster@redhat.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        xfs <linux-xfs@vger.kernel.org>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        David Howells <dhowells@redhat.com>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 2/2] xfs: make sure link path does not go away at access
-Message-ID: <20211215050619.GJ1218082@magnolia>
-References: <YZPVSTDIWroHNvFS@bfoster>
- <20211117002251.GR449541@dread.disaster.area>
- <YZVQUSCWWgOs+cRB@bfoster>
- <20211117214852.GU449541@dread.disaster.area>
- <YZf+lRsb0lBWdYgN@bfoster>
- <20211122000851.GE449541@dread.disaster.area>
- <YZvvP9RFXi3/jX0q@bfoster>
- <20211122232657.GF449541@dread.disaster.area>
- <YZ6m4ZyUDt5SaICI@bfoster>
- <54f47924fbb3c3af17497fd6d1b1c5326a2d7c3d.camel@themaw.net>
+        id S241090AbhLOJUV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Dec 2021 04:20:21 -0500
+Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:52520 "EHLO
+        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S236374AbhLOJUU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Dec 2021 04:20:20 -0500
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1BF97jdZ007065;
+        Wed, 15 Dec 2021 09:20:14 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=references : from :
+ to : cc : subject : in-reply-to : message-id : date : content-type :
+ mime-version; s=corp-2021-07-09;
+ bh=YoICHYdzfng9ydhYPFti2NGM0cwIehLPKOfNNJ8Obg0=;
+ b=vDUg1yymPKz/0CB5z43V4I5KsOCWG3piUj4Cafr5ZMBDV60s7mGkK3mX/RD3UiSjZ7MV
+ hWjahBpDIsg3MpYqc8YK9oMczTTrJoLNjVZXkWQCnXMjO4MrqwQzxJ3/JNC+eDwxpY+p
+ wfOIYTNDgqga3W8fTLPcYz+foryGbvzeeM9dsJ2rmed4gz/e2kbSv34t9MG6WgUXVpxl
+ x4niVoE9NDEzkI1ZKbrQbgo2kCLRcnHvKNkcf6NF4QWVhs97M95wUzy2/L5hASwcGKYC
+ tEoRcHdiFf+wVpHK4t1hS/ogOOX5E63vyJzXpHGnxVrRYatV1EPd9mvwAu+xPBNakry/ Aw== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3cx2nfe8xm-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 15 Dec 2021 09:20:14 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 1BF9AIOc051307;
+        Wed, 15 Dec 2021 09:20:13 GMT
+Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2176.outbound.protection.outlook.com [104.47.58.176])
+        by userp3030.oracle.com with ESMTP id 3cvh3yv560-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 15 Dec 2021 09:20:13 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=eu6Q2c4vT5SK1EVC2JNLNpaz2bs4sRzwLiNMJSRUzSNurcoai+c7q47N4BbtcuRhufUrRn2oPOndlPgbxHIvZMzsAPCOIvgSRU/8NlVx+8juaRFrbg3KOkzqv296lrVb+oyqN4YLWO9MXphPi3sVgyBOW9d4AW8HhzB3Z5zt4HqwA4fhAuEuHQCI0w0z/h+aL5uqHN3NqfoEtaj9YRlxXf6g1bkC3c05q5FO3cwH6v7hREsP7U2W4r729iAQ0epNltknM4mXDPIhixqonwasqu5YVAAZSIiU0RHd59Hd7eyKhW8LdofrPDLqtj/KuNj25RaVNx4R49sKqU6O1xVm6g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=YoICHYdzfng9ydhYPFti2NGM0cwIehLPKOfNNJ8Obg0=;
+ b=WdplrFNlkn0EfoZ22M4YAiALcGkEwK/pau8smM2HIorgf20k9UYB7W8HOOJ+NDEAmYw31tWSMuLPe0itZPrC6cF1yrUT4L2mMXzwzEvFl7dQyFKJAz1S6PY698bdo8RvDzaN7CfsiKzwRWojKsIH7USFdhWuz7TZEz20UHwEH6HEPw1k6Hhw9dud4Gn5R2PThtY9wDZ+vtsDv7jJdKEcvaXybE9HyXfP45KCGeWaMMNc+vKgC9n14VADfVlIJZyVqdvPpUihDQXfYEUhUEkzGN+odxHiesgvlfKkAzqp50OpWZ0FtzOs67M/g1SpVKFHz3oN5pL7k2SUvCZj/FMzDQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=YoICHYdzfng9ydhYPFti2NGM0cwIehLPKOfNNJ8Obg0=;
+ b=thy9JEEJfB4ZrFZWtBVQsywfyv5dkXZnoC/E9QA0bJ3qxW4BxYtC5ozgmhpdi4UoKXk7Xoo6Hr+jNFW9WvcBe5T5aFpXysngZP70zAOdjNLzhh/TG8M/vY3OJJcxDhunALIHjeW+7xkuLyqaBDWo6AVhvovgSoxGgJocDB/TQGg=
+Received: from SA2PR10MB4587.namprd10.prod.outlook.com (20.182.117.12) by
+ SN4PR10MB5608.namprd10.prod.outlook.com (20.183.99.104) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.4755.11; Wed, 15 Dec 2021 09:20:03 +0000
+Received: from SA2PR10MB4587.namprd10.prod.outlook.com
+ ([fe80::75ca:e478:6788:d21d]) by SA2PR10MB4587.namprd10.prod.outlook.com
+ ([fe80::75ca:e478:6788:d21d%6]) with mapi id 15.20.4778.018; Wed, 15 Dec 2021
+ 09:20:03 +0000
+References: <20211214084519.759272-7-chandan.babu@oracle.com>
+ <202112142335.O3Nu0vQI-lkp@intel.com>
+User-agent: mu4e 1.4.15; emacs 27.1
+From:   Chandan Babu R <chandan.babu@oracle.com>
+To:     kernel test robot <lkp@intel.com>
+Cc:     linux-xfs@vger.kernel.org, kbuild-all@lists.01.org,
+        djwong@kernel.org, david@fromorbit.com
+Subject: Re: [PATCH V4 06/16] xfs: Promote xfs_extnum_t and xfs_aextnum_t to
+ 64 and 32-bits respectively
+In-reply-to: <202112142335.O3Nu0vQI-lkp@intel.com>
+Message-ID: <87a6h22pjf.fsf@debian-BULLSEYE-live-builder-AMD64>
+Date:   Wed, 15 Dec 2021 14:49:48 +0530
+Content-Type: text/plain
+X-ClientProxiedBy: SG2PR04CA0151.apcprd04.prod.outlook.com (2603:1096:4::13)
+ To SA2PR10MB4587.namprd10.prod.outlook.com (2603:10b6:806:114::12)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <54f47924fbb3c3af17497fd6d1b1c5326a2d7c3d.camel@themaw.net>
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: f84533c2-8a1e-4525-77dd-08d9bfac136a
+X-MS-TrafficTypeDiagnostic: SN4PR10MB5608:EE_
+X-Microsoft-Antispam-PRVS: <SN4PR10MB56081517899BF8ED50589C87F6769@SN4PR10MB5608.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:4714;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: uweZu6Xh/JDsElLdX2l9/cb4kPUjR/o4bufAOhc3B8o6sPfqJ2HLfpjqVmPb4nuUC8bmLdksWryvshcLPpMSi4HhaEOO0A16Yu6Dp0DEjShFWblPotDk8CaCetd+PrKkS+d82AWmmTUhT1S24U2XCvQYgxs+Yt3r1xUZUylJsoJjUnPoMMhmCjnXbrZG5SIVs1BskETfrDlKUGKjbIUu/xW/EdMPEdD0RpujkYpXRMMN6wO35FbIBK7K5IJUL3Hq+2QnzSsiNFJhuclpdxuUM/n4rBhfsPv8kRjZHdSh36WstVX5reBzxuX0WwFcfHyyatOWiKfixUJRIbnFMGdpwuC0m0jPn+2GrBSCWRVDLThs4axTk1Ut64h4+/tbbDu7xFwoNzJxK/HcpGvpnjpvGi+R4/Ukc2ECm/r9hosfzwZ2t4BVkgR68IYC09wAP/VTfTDoWkdMm+a/Q8LHVEybCn6pdjKFpqWSOM5Q1CH+01XQBJrZAsqJWGMKj7t0xVDQdH6Yd+D9dUi9Jk1M88rtHWO3JltDXV1zR+GxONl/A1gQdSl78QAaAvHqOKwCzDL1xdOV3eJWezwe9bcNGn3/b/tMKLOMmer6gEPjc3juEViSwdxgN0AsmW40PGTeZX70ge2ERkmepEMv20h8thad3ijAM/uZp+kNIfVNSRU0RvoRKonG9loWtplveMhoIx5TsPsQMV1do+lxmSBsgI9WSx4cDFwllHy6OhANrrBzhwNOiYXNz3fL2j/A8Bhl3R6etzsxloMMt5dK/bGjBU24s1Wf2+adHee7rNgdAEhQr33v8hKBdN6cmFziDSLXcBN5
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(7916004)(366004)(508600001)(8676002)(966005)(4326008)(9686003)(186003)(53546011)(66946007)(66556008)(26005)(6512007)(6506007)(316002)(66476007)(86362001)(33716001)(6486002)(2906002)(38350700002)(5660300002)(6916009)(83380400001)(8936002)(6666004)(38100700002)(52116002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?+y8EdO2F9GAjMDyorsevy/9igG/HoKqAnROMnwswTzM0eNrKMYKmscxU/8Pk?=
+ =?us-ascii?Q?DUb6s2F32twrPrZVRKVEevZr88AiUUHOL9xEQDjB1SQg3kYpypqfjnykWhRO?=
+ =?us-ascii?Q?7+CNkKZmOs0v8+beljGcpy/RXId5ut5FRI3CAaviWz32gpX1iRBo3zEbQMgO?=
+ =?us-ascii?Q?IrrDDsMgWr1tvWzKX/+ODAcR6rAcQtstjIApFC0t8H+0WbEgT4pReXPdKQMm?=
+ =?us-ascii?Q?pLOsuMZwnDU6EnldMlE+ARQNFEC7MtKgjxKGYIsbey7HSJJaskkWplwcXlkJ?=
+ =?us-ascii?Q?t7yRj5k18l14PUDS6qOIGQV9gCrUkGD+c5u/gaHAR6p+ITajpKhjQ6WrLaeY?=
+ =?us-ascii?Q?RvPsZoLGvGOi8axzZSmnXTFkaXAwNnBxCpd+GkCTqJsOmRYdKMQjW38HSH/0?=
+ =?us-ascii?Q?ZC2aTJjmIYkFHL3avD3bOism3MlOcSc7TI8/rc8+nwzqSBbFM3XzUT6q70wk?=
+ =?us-ascii?Q?2DV0an2KWb7n7ibZo9JTXLgFasvxAQBTeZHmXltrv+Ox3s7crrBdEZXBNJHP?=
+ =?us-ascii?Q?0oDxK32vOcx2etfJWokcMDftkSAHJqRzep97PBBZvSz6jUDjioJUGdCahItB?=
+ =?us-ascii?Q?roOZWQOmtHH7JXRaJJfg7AnYDqYM5E4uknHEhO24NqcDl7wi/CPGpyD+LK0l?=
+ =?us-ascii?Q?h31hRB7JGl4SNwjmlMzx7UJrVmRhHvHTXG4ZlQt9Sy3q422C9yZZVQBmnBAN?=
+ =?us-ascii?Q?VNJJljHCHntbpnCbqY1dCmKH/QlbL1EqW5Y3wfgJAlAPewjXVvwVfwx04nhO?=
+ =?us-ascii?Q?9Xx1CZzm/7O/OjY29X9Woqfy3WuFpxsgyKwdkRjgSF7jazQf8kjqlToCBUA/?=
+ =?us-ascii?Q?OqKVvYJ2kCFjeIapZZ7q+BhKuXYE+Sor8ANUDZUOprMshaGVc+ih51waZJBa?=
+ =?us-ascii?Q?gGHha/dNDCN0c6pBzgsvXzClJiGpuR7npIHPFUYurf0NWj63/zKsJ3qMtmoA?=
+ =?us-ascii?Q?QFPh2P6jXioKFJvZhqcpmpZaRv0WwmOzVpa5gksd8rMdoYHE9AmpBA4p5SrY?=
+ =?us-ascii?Q?t6/J+QnrJGqqlcTaUsNr02uJT8EiG4kP5aolFwj442xAZcJJOmZ+XcnFSXqs?=
+ =?us-ascii?Q?duW8ZR3XA4gMygijCDuFGM+nDQkmeONor6RAOrpYyzjNwKjNmyP5i9gQOTCl?=
+ =?us-ascii?Q?anfX5qgHg3pQ7llUklVGCKk3I+cBCCmW+UFt84iBI/1JsNqnPHz2KLBy5N0E?=
+ =?us-ascii?Q?l7kXrdfIYkZHYoxH5IePdTnLBxIUSIlmTyij0+jaOfeRculUZgbGzAZ/anjA?=
+ =?us-ascii?Q?kUDtsCLMYfukYguuf3SpcyaOPfWomSLBUyr4xCnF+XdyZ45xC+0W/jYQcodQ?=
+ =?us-ascii?Q?tL6lG1a7zzJBh8w6+ZX+NyKLnWQ1xtoNHROOHMkYuHIEt2qGwv2YWaq9lwGq?=
+ =?us-ascii?Q?zMPW0JGsU15qIsJMxan6jZdBMN7uC6SSFgDs9Ne+GkluvKRcSEwOA57vwLvp?=
+ =?us-ascii?Q?wxRjarapeTskaiS1i/xwciaOP1LXsBIi5UdEVA00zL4HAomqxhHq/HMkCg3W?=
+ =?us-ascii?Q?wn/ubiRgZYKo9i78iS7RqRDc49LpDCFEvf+jpwzKdB6/OVJtThjhc7gU8nlw?=
+ =?us-ascii?Q?Ycu32yl3eRPHLQaMTdROv5kuvYiR+Bhun0mXq3Tr5ry+XUg4zIcUaznbHP1E?=
+ =?us-ascii?Q?GujzU0DEz+Hio0pYSM2PzWw=3D?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f84533c2-8a1e-4525-77dd-08d9bfac136a
+X-MS-Exchange-CrossTenant-AuthSource: SA2PR10MB4587.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Dec 2021 09:20:03.4095
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: QFA0UNiOelB61jt9AGM/CpSPviFLo0Em0LZobFOVk0oevnOVTGbH7jILPKvPu40mDliOAM/mqtXknF4kXWCqKw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN4PR10MB5608
+X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10198 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 suspectscore=0
+ malwarescore=0 mlxlogscore=999 bulkscore=0 mlxscore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2110150000
+ definitions=main-2112150051
+X-Proofpoint-ORIG-GUID: 8IQo9RuvHMt8N11eFEH_JJ5xRFSu10GI
+X-Proofpoint-GUID: 8IQo9RuvHMt8N11eFEH_JJ5xRFSu10GI
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Dec 15, 2021 at 11:54:11AM +0800, Ian Kent wrote:
-> On Wed, 2021-11-24 at 15:56 -0500, Brian Foster wrote:
-> > On Tue, Nov 23, 2021 at 10:26:57AM +1100, Dave Chinner wrote:
-> > > On Mon, Nov 22, 2021 at 02:27:59PM -0500, Brian Foster wrote:
-> > > > On Mon, Nov 22, 2021 at 11:08:51AM +1100, Dave Chinner wrote:
-> > > > > On Fri, Nov 19, 2021 at 02:44:21PM -0500, Brian Foster wrote:
-> > > > > > In
-> > > > > > any event, another experiment I ran in light of the above
-> > > > > > results that
-> > > > > > might be similar was to put the inode queueing component of
-> > > > > > destroy_inode() behind an rcu callback. This reduces the
-> > > > > > single threaded
-> > > > > > perf hit from the previous approach by about 50%. So not
-> > > > > > entirely
-> > > > > > baseline performance, but it's back closer to baseline if I
-> > > > > > double the
-> > > > > > throttle threshold (and actually faster at 4x). Perhaps my
-> > > > > > crude
-> > > > > > prototype logic could be optimized further to not rely on
-> > > > > > percpu
-> > > > > > threshold changes to match the baseline.
-> > > > > > 
-> > > > > > My overall takeaway from these couple hacky experiments is
-> > > > > > that the
-> > > > > > unconditional synchronous rcu wait is indeed probably too
-> > > > > > heavy weight,
-> > > > > > as you point out. The polling or callback (or perhaps your
-> > > > > > separate
-> > > > > > queue) approach seems to be in the ballpark of viability,
-> > > > > > however,
-> > > > > > particularly when we consider the behavior of scaled or mixed
-> > > > > > workloads
-> > > > > > (since inactive queue processing seems to be size driven vs.
-> > > > > > latency
-> > > > > > driven).
-> > > > > > 
-> > > > > > So I dunno.. if you consider the various severity and
-> > > > > > complexity
-> > > > > > tradeoffs, this certainly seems worth more consideration to
-> > > > > > me. I can
-> > > > > > think of other potentially interesting ways to experiment
-> > > > > > with
-> > > > > > optimizing the above or perhaps tweak queueing to better
-> > > > > > facilitate
-> > > > > > taking advantage of grace periods, but it's not worth going
-> > > > > > too far down
-> > > > > > that road if you're wedded to the "busy inodes" approach.
-> > > > > 
-> > > > > I'm not wedded to "busy inodes" but, as your experiments are
-> > > > > indicating, trying to handle rcu grace periods into the
-> > > > > deferred
-> > > > > inactivation path isn't completely mitigating the impact of
-> > > > > having
-> > > > > to wait for a grace period for recycling of inodes.
-> > > > > 
-> > > > 
-> > > > What I'm seeing so far is that the impact seems to be limited to
-> > > > the
-> > > > single threaded workload and largely mitigated by an increase in
-> > > > the
-> > > > percpu throttle limit. IOW, it's not completely free right out of
-> > > > the
-> > > > gate, but the impact seems isolated and potentially mitigated by
-> > > > adjustment of the pipeline.
-> > > > 
-> > > > I realize the throttle is a percpu value, so that is what has me
-> > > > wondering about some potential for gains in efficiency to try and
-> > > > get
-> > > > more of that single-threaded performance back in other ways, or
-> > > > perhaps
-> > > > enhancements that might be more broadly beneficial to deferred
-> > > > inactivations in general (i.e. some form of adaptive throttling
-> > > > thresholds to balance percpu thresholds against a global
-> > > > threshold).
-> > > 
-> > > I ran experiments on queue depth early on. Once we go over a few
-> > > tens of inodes we start to lose the "hot cache" effect and
-> > > performance starts to go backwards. By queue depths of hundreds,
-> > > we've lost all the hot cache and nothing else gets that performance
-> > > back because we can't avoid the latency of all the memory writes
-> > > from cache eviction and the followup memory loads that result.
-> > > 
-> > 
-> > Admittedly my testing is simple/crude as I'm just exploring the
-> > potential viability of a concept, not fine tuning a workload, etc.
-> > That
-> > said, I'm curious to know what your tests for this look like because
-> > I
-> > suspect I'm running into different conditions. My tests frequently
-> > hit
-> > the percpu throttle threshold (256 inodes), which is beyond your
-> > ideal
-> > tens of inodes range (and probably more throttle limited than cpu
-> > cache
-> > limited).
-> > 
-> > > Making the per-cpu queues longer or shorter based on global state
-> > > won't gain us anything. ALl it will do is slow down local
-> > > operations
-> > > that don't otherwise need slowing down....
-> > > 
-> > 
-> > This leaves out context. The increase in throttle threshold mitigates
-> > the delays I've introduced via the rcu callback. That happens to
-> > produce
-> > observable results comparable to my baseline test, but it's more of a
-> > measure of the impact of the delay than a direct proposal. If there's
-> > a
-> > more fine grained test worth running here (re: above), please
-> > describe
-> > it.
-> > 
-> > > > > I suspect a rethink on the inode recycling mechanism is needed.
-> > > > > THe
-> > > > > way it is currently implemented was a brute force solution - it
-> > > > > is
-> > > > > simple and effective. However, we need more nuance in the
-> > > > > recycling
-> > > > > logic now.  That is, if we are recycling an inode that is
-> > > > > clean, has
-> > > > > nlink >=1 and has not been unlinked, it means the VFS evicted
-> > > > > it too
-> > > > > soon and we are going to re-instantiate it as the identical
-> > > > > inode
-> > > > > that was evicted from cache.
-> > > > > 
-> > > > 
-> > > > Probably. How advantageous is inode memory reuse supposed to be
-> > > > in the
-> > > > first place? I've more considered it a necessary side effect of
-> > > > broader
-> > > > architecture (i.e. deferred reclaim, etc.) as opposed to a
-> > > > primary
-> > > > optimization.
-> > > 
-> > > Yes, it's an architectural feature resulting from the filesystem
-> > > inode life cycle being different to the VFS inode life cycle. This
-> > > was inherited from Irix - it had separate inactivation vs reclaim
-> > > states and action steps for vnodes - inactivation occurred when the
-> > > vnode refcount went to zero, reclaim occurred when the vnode was to
-> > > be freed.
-> > > 
-> > > Architecturally, Linux doesn't have this two-step infrastructure;
-> > > it
-> > > just has evict() that runs everything when the inode needs to be
-> > > reclaimed. Hence we hide the two-phase reclaim architecture of XFS
-> > > behind that, and so we always had this troublesome impedence
-> > > mismatch on Linux.
-> > > 
-> > 
-> > Ok, that was generally how I viewed it.
-> > 
-> > > Thinking a bit about this, maybe there is a more integrated way to
-> > > handle this life cycle impedence mismatch by making the way we
-> > > interact with the linux inode cache to be more ...  Irix like.
-> > > Linux
-> > > does actually give us a a callback when the last reference to an
-> > > inode goes away: .drop_inode()
-> > > 
-> > > i.e. Maybe we should look to triggering inactivation work from
-> > > ->drop_inode instead of ->destroy_inode and hence always leaving
-> > > unreferenced, reclaimable inodes in the VFS cache on the LRU. i.e.
-> > > rather than hiding the two-phase XFS inode inactivation+reclaim
-> > > algorithm from the VFS, move it up into the VFS.  If we prevent
-> > > inodes from being reclaimed from the LRU until they have finished
-> > > inactivation and are clean (easy enough just by marking the inode
-> > > as
-> > > dirty), that would allow us to immediately reclaim and free inodes
-> > > in evict() context. Integration with __wait_on_freeing_inode()
-> > > would
-> > > like solve the RCU reuse/recycling issues.
-> > > 
-> > 
-> > Hmm.. this is the point where we decide whether the inode remains
-> > cached, which is currently basically whether the inode has a link
-> > count
-> > or not. That makes me curious what (can) happens with an
-> > unlinked/inactivated inode on the lru. I'm not sure any other fs' do
-> > anything like that currently..?
-> > 
-> > > There's more to it than just this, but perhaps the longer term
-> > > direction should be closer integration with the Linux inode cache
-> > > life cycle rather than trying to solve all these problems
-> > > underneath
-> > > the VFS cache whilst still trying to play by it's rules...
-> > > 
-> > 
-> > Yeah. Caching logic details aside, I think that makes sense.
-> > 
-> > > > I still see reuse occur with deferred inactivation, we
-> > > > just end up cycling through the same set of inodes as they fall
-> > > > through
-> > > > the queue rather than recycling the same one over and over. I'm
-> > > > sort of
-> > > > wondering what the impact would be if we didn't do this at all
-> > > > (for the
-> > > > new allocation case at least).
-> > > 
-> > > We end up with a larger pool of free inodes in the finobt. This is
-> > > basically what my "busy inode check" proposal is based on - inodes
-> > > that we can't allocate without recycling just remain on the finobt
-> > > for longer before they can be used. This would be awful if we
-> > > didn't
-> > > have the finobt to efficiently locate free inodes - the finobt
-> > > record iteration makes it pretty low overhead to scan inodes here.
-> > > 
-> > 
-> > I get the idea. That last bit is what I'm skeptical about. The finobt
-> > is
-> > based on the premise that free inode lookup becomes a predictable
-> > tree
-> > lookup instead of the old searching algorithm on the inobt, which we
-> > still support and can be awful in its own right under worst case
-> > conditions. I agree that this would be bad on the inobt (which raises
-> > the question on how we'd provide these recycling correctness
-> > guarantees
-> > on !finobt fs'). What I'm more concerned about is whether this could
-> > make finobt enabled fs' (transiently) just as poor as the old algo
-> > under
-> > certain workloads/conditions.
-> > 
-> > I think there needs to be at least some high level description of the
-> > search algorithm before we can sufficiently reason about it's
-> > behavior..
-> > 
-> > > > > So how much re-initialisation do we actually need for that
-> > > > > inode?
-> > > > > Almost everything in the inode is still valid; the problems
-> > > > > come
-> > > > > from inode_init_always() resetting the entire internal inode
-> > > > > state
-> > > > > and XFS then having to set them up again.  The internal state
-> > > > > is
-> > > > > already largely correct when we start recycling, and the
-> > > > > identity of
-> > > > > the recycled inode does not change when nlink >= 1. Hence
-> > > > > eliding
-> > > > > inode_init_always() would also go a long way to avoiding the
-> > > > > need
-> > > > > for a RCU grace period to pass before we can make the inode
-> > > > > visible
-> > > > > to the VFS again.
-> > > > > 
-> > > > > If we can do that, then the only indoes that need a grace
-> > > > > period
-> > > > > before they can be recycled are unlinked inodes as they change
-> > > > > identity when being recycled. That identity change absolutely
-> > > > > requires a grace period to expire before the new instantiation
-> > > > > can
-> > > > > be made visible.  Given the arbitrary delay that this can
-> > > > > introduce
-> > > > > for an inode allocation operation, it seems much better suited
-> > > > > to
-> > > > > detecting busy inodes than waiting for a global OS state change
-> > > > > to
-> > > > > occur...
-> > > > > 
-> > > > 
-> > > > Maybe..? The experiments I've been doing are aimed at simplicity
-> > > > and
-> > > > reducing the scope of the changes. Part of the reason for this is
-> > > > tbh
-> > > > I'm not totally convinced we really need to do anything more
-> > > > complex
-> > > > than preserve the inline symlink buffer one way or another (for
-> > > > example,
-> > > > see the rfc patch below for an alternative to the inline symlink
-> > > > rcuwalk
-> > > > disable patch). Maybe we should consider something like this
-> > > > anyways.
-> > > > 
-> > > > With busy inodes, we need to alter inode allocation to some
-> > > > degree to
-> > > > accommodate. We can have (tens of?) thousands of inodes under the
-> > > > grace
-> > > > period at any time based on current batching behavior, so it's
-> > > > not
-> > > > totally evident to me that we won't end up with some of the same
-> > > > fundamental issues to deal with here, just needing to be
-> > > > accommodated in
-> > > > the inode allocation algorithm rather than the teardown sequence.
-> > > 
-> > > Sure, but the purpose of the allocation selection
-> > > policy is to select the best inode to allocate for the current
-> > > context.  The cost of not being able to use an inode immediately
-> > > needs to be factored into that allocation policy. i.e. if the
-> > > selected inode has an associated delay with it before it can be
-> > > reused and other free inodes don't, then we should not be selecting
-> > > the inode with a delay associcated with it.
-> > > 
-> > 
-> > We still have to find those "no delay" inodes. AFAICT the worst case
-> > conditions on the system I've been playing with can have something
-> > like
-> > 20k free && busy inodes. That could cover all or most of the finobt
-> > at
-> > the time of an inode allocation. What happens from there depends on
-> > the
-> > search algorithm.
-> > 
-> > > This is exactly the reasoning and logic we use for busy extents. 
-> > > We
-> > > only take the blocking penalty for resolving busy extent state if
-> > > we
-> > > run out of free extents to search before we've found an allocation
-> > > candidate. I think it makes sense for inode allocation, too.
-> > > 
-> > 
-> > Sure, the idea makes sense and it's worth looking into. But there are
-> > enough contextual differences that I wouldn't just assume the same
-> > logic
-> > translates over to the finobt without potential for performance
-> > impact.
-> > For example, extent allocation has some advantages with things like
-> > delalloc (physical block allocation occurs async from buffered write
-> > syscall time) and the fact that metadata allocs can reuse busy
-> > blocks.
-> > The finobt only tracks existing chunks with free inodes, so it's
-> > easily
-> > possible to have conditions where the finobt is 100% (or majority)
-> > populated with busy inodes (whether it be one inode or several
-> > thousand).
-> > 
-> > This raises questions like at what point does search cost become a
-> > factor? At what point and with what frequency do we suffer the
-> > blocking
-> > penalty? Do we opt to allocate new chunks based on gp state?
-> > Something
-> > else? We don't need to answer these questions here (this thread is
-> > long
-> > enough :P). I'm just trying to say that it's one thing to consider
-> > the
-> > approach a viable option, but it isn't automatically preferable just
-> > because we use it for extents. Further details beyond "detect busy
-> > inodes" would be nice to objectively reason about.
-> > 
-> > > > --- 8< ---
-> > > > 
-> > > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > > > index 64b9bf334806..058e3fc69ff7 100644
-> > > > --- a/fs/xfs/xfs_inode.c
-> > > > +++ b/fs/xfs/xfs_inode.c
-> > > > @@ -2644,7 +2644,7 @@ xfs_ifree(
-> > > >          * already been freed by xfs_attr_inactive.
-> > > >          */
-> > > >         if (ip->i_df.if_format == XFS_DINODE_FMT_LOCAL) {
-> > > > -               kmem_free(ip->i_df.if_u1.if_data);
-> > > > +               kfree_rcu(ip->i_df.if_u1.if_data);
-> > > >                 ip->i_df.if_u1.if_data = NULL;
-> > > 
-> > > That would need to be rcu_assign_pointer(ip->i_df.if_u1.if_data,
-> > > NULL) to put the correct memory barriers in place, right? Also, I
-> > > think ip->i_df.if_u1.if_data needs to be set to NULL before calling
-> > > kfree_rcu() so racing lookups will always see NULL before
-> > > the object is freed.
-> > > 
-> > 
-> > I think rcu_assign_pointer() is intended to be paired with the
-> > associated rcu deref and for scenarios like making sure an object
-> > isn't
-> > made available until it's completely initialized (i.e. such as for
-> > rcu
-> > protected list traversals, etc.).
-> > 
-> > With regard to ordering, we no longer access if_data in rcuwalk mode
-> > with this change. Thus I think all we need here is the
-> > WRITE_ONCE(i_link, NULL) that pairs with the READ_ONCE() in the vfs,
-> > and
-> > that happens earlier in xfs_inactive_symlink() before we rcu free the
-> > memory here. With that, ISTM a racing lookup should either see an rcu
-> > protected i_link or NULL, the latter of which calls into ->get_link()
-> > and triggers refwalk mode. Hm?
-> > 
-> > > But again, as I asked up front, why do we even need to free this
-> > > memory buffer here? It will be freed in xfs_inode_free_callback()
-> > > after the current RCU grace period expires, so what do we gain by
-> > > freeing it separately here?
-> > > 
-> 
-> The thing that's been bugging me is not knowing if the VFS has
-> finished using the link string.
-> 
-> The link itself can be removed while the link path could still
-> be valid and the VFS will then walk that path. So rcu grace time
-> might not be sufficient but stashing the pointer and rcu freeing
-> it ensures the pointer won't go away while the walk is under way
-> without any grace period guessing. Relating this to the current
-> path walk via an rcu delayed free is a reliable way to do what's
-> needed.
-> 
-> The only problem here is that path string remaining while it is
-> being used. If there aren't any other known problems with the
-> xfs inode re-use sub system I don't see any worth in complicating
-> it to cater for this special case.
-> 
-> Brian's patch is a variation on the original patch and is all
-> that's really needed. IMHO going this way (whatever we end up
-> with) is the sensible thing to do.
+On 14 Dec 2021 at 20:45, kernel test robot wrote:
+> Hi Chandan,
+>
+> Thank you for the patch! Yet something to improve:
+>
+> [auto build test ERROR on xfs-linux/for-next]
+> [also build test ERROR on v5.16-rc5]
+> [If your patch is applied to the wrong git tree, kindly drop us a note.
+> And when submitting patch, we suggest to use '--base' as documented in
+> https://git-scm.com/docs/git-format-patch]
+>
+> url:    https://github.com/0day-ci/linux/commits/Chandan-Babu-R/xfs-Extend-per-inode-extent-counters/20211214-164920
+> base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
+> config: microblaze-randconfig-r016-20211214 (https://download.01.org/0day-ci/archive/20211214/202112142335.O3Nu0vQI-lkp@intel.com/config)
+> compiler: microblaze-linux-gcc (GCC) 11.2.0
+> reproduce (this is a W=1 build):
+>         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+>         chmod +x ~/bin/make.cross
+>         # https://github.com/0day-ci/linux/commit/db28da144803c4262c0d8622d736a7d20952ef6b
+>         git remote add linux-review https://github.com/0day-ci/linux
+>         git fetch --no-tags linux-review Chandan-Babu-R/xfs-Extend-per-inode-extent-counters/20211214-164920
+>         git checkout db28da144803c4262c0d8622d736a7d20952ef6b
+>         # save the config file to linux build tree
+>         mkdir build_dir
+>         COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.2.0 make.cross O=build_dir ARCH=microblaze SHELL=/bin/bash
+>
+> If you fix the issue, kindly add following tag as appropriate
+> Reported-by: kernel test robot <lkp@intel.com>
+>
+> All errors (new ones prefixed by >>):
+>
+>    microblaze-linux-ld: fs/xfs/libxfs/xfs_bmap.o: in function `xfs_bmap_compute_maxlevels':
+>>> (.text+0x10cc0): undefined reference to `__udivdi3'
+>
 
-Why not simply change xfs_readlink to memcpy ip->i_df.if_u1.if_data into
-the caller's link buffer?  We shouldn't be exposing internal XFS
-metadata buffers to the VFS to scribble on without telling us; this gets
-rid of the dual inode_operations for symlinks; and we're probably
-breaking a locking rule somewhere by not taking any locks AFAICT.  That
-seems a lot less complex than adding rcu freeing rules to understand how
-to handle local format file forks.
+The fix for the compilation error on 32-bit systems involved invoking do_div()
+instead of using the regular division operator. I will include the fix in the
+next version of the patchset.
 
-(I say this from the vantage point of online repair, which will try to
-salvage damaged symlinks, for which we actually /do/ want to be able to
-lock out readers and change the data fork after symlink creation... but
-I was saving that for 2022 because I'm too overwhelmed to try to send
-that again.)
-
---D
-
-> 
-> Ian
-> > 
-> > One prevented memory leak? ;)
-> > 
-> > It won't be freed in xfs_inode_free_callback() because we change the
-> > data fork format type (and clear i_mode) in this path. Perhaps that
-> > could use an audit, but that's a separate issue.
-> > 
-> > > >                 ip->i_df.if_bytes = 0;
-> > > >         }
-> > > > diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> > > > index a607d6aca5c4..e98d7f10ba7d 100644
-> > > > --- a/fs/xfs/xfs_iops.c
-> > > > +++ b/fs/xfs/xfs_iops.c
-> > > > @@ -511,27 +511,6 @@ xfs_vn_get_link(
-> > > >         return ERR_PTR(error);
-> > > >  }
-> > > >  
-> > > > -STATIC const char *
-> > > > -xfs_vn_get_link_inline(
-> > > > -       struct dentry           *dentry,
-> > > > -       struct inode            *inode,
-> > > > -       struct delayed_call     *done)
-> > > > -{
-> > > > -       struct xfs_inode        *ip = XFS_I(inode);
-> > > > -       char                    *link;
-> > > > -
-> > > > -       ASSERT(ip->i_df.if_format == XFS_DINODE_FMT_LOCAL);
-> > > > -
-> > > > -       /*
-> > > > -        * The VFS crashes on a NULL pointer, so return -
-> > > > EFSCORRUPTED if
-> > > > -        * if_data is junk.
-> > > > -        */
-> > > > -       link = ip->i_df.if_u1.if_data;
-> > > > -       if (XFS_IS_CORRUPT(ip->i_mount, !link))
-> > > > -               return ERR_PTR(-EFSCORRUPTED);
-> > > > -       return link;
-> > > > -}
-> > > > -
-> > > >  static uint32_t
-> > > >  xfs_stat_blksize(
-> > > >         struct xfs_inode        *ip)
-> > > > @@ -1250,14 +1229,6 @@ static const struct inode_operations
-> > > > xfs_symlink_inode_operations = {
-> > > >         .update_time            = xfs_vn_update_time,
-> > > >  };
-> > > >  
-> > > > -static const struct inode_operations
-> > > > xfs_inline_symlink_inode_operations = {
-> > > > -       .get_link               = xfs_vn_get_link_inline,
-> > > > -       .getattr                = xfs_vn_getattr,
-> > > > -       .setattr                = xfs_vn_setattr,
-> > > > -       .listxattr              = xfs_vn_listxattr,
-> > > > -       .update_time            = xfs_vn_update_time,
-> > > > -};
-> > > > -
-> > > >  /* Figure out if this file actually supports DAX. */
-> > > >  static bool
-> > > >  xfs_inode_supports_dax(
-> > > > @@ -1409,9 +1380,8 @@ xfs_setup_iops(
-> > > >                 break;
-> > > >         case S_IFLNK:
-> > > >                 if (ip->i_df.if_format == XFS_DINODE_FMT_LOCAL)
-> > > > -                       inode->i_op =
-> > > > &xfs_inline_symlink_inode_operations;
-> > > > -               else
-> > > > -                       inode->i_op =
-> > > > &xfs_symlink_inode_operations;
-> > > > +                       inode->i_link = ip->i_df.if_u1.if_data;
-> > > > +               inode->i_op = &xfs_symlink_inode_operations;
-> > > 
-> > > This still needs corruption checks - ip->i_df.if_u1.if_data can be
-> > > null if there's some kind of inode corruption detected.
-> > > 
-> > 
-> > It's fine for i_link to be NULL. We'd just fall into the get_link()
-> > call
-> > and have to handle it there like the current callback does.
-> > 
-> > However, this does need to restore some of the code removed from
-> > xfs_vn_get_link() in commit 30ee052e12b9 ("xfs: optimize inline
-> > symlinks") to handle the local format case. If if_data can be NULL
-> > we'll
-> > obviously need to handle it there anyways.
-> > 
-> > If there's no fundamental objection I'll address these issues, give
-> > it
-> > some proper testing and send a real patch..
-> > 
-> > Brian
-> > 
-> > > >                 break;
-> > > >         default:
-> > > >                 inode->i_op = &xfs_inode_operations;
-> > > > diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-> > > > index fc2c6a404647..20ec2f450c56 100644
-> > > > --- a/fs/xfs/xfs_symlink.c
-> > > > +++ b/fs/xfs/xfs_symlink.c
-> > > > @@ -497,6 +497,7 @@ xfs_inactive_symlink(
-> > > >          * do here in that case.
-> > > >          */
-> > > >         if (ip->i_df.if_format == XFS_DINODE_FMT_LOCAL) {
-> > > > +               WRITE_ONCE(VFS_I(ip)->i_link, NULL);
-> > > 
-> > > Again, rcu_assign_pointer(), yes?
-> > > 
-> > > >                 xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > > >                 return 0;
-> > > >         }
-> > > > 
-> > > > 
-> > > 
-> > > -- 
-> > > Dave Chinner
-> > > david@fromorbit.com
-> > > 
-> > 
-> 
-> 
+-- 
+chandan
