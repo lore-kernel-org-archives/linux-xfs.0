@@ -2,93 +2,99 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02FDEC433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Dec 2021 18:26:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48686C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Dec 2021 02:06:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234217AbhLNS04 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Dec 2021 13:26:56 -0500
-Received: from mga01.intel.com ([192.55.52.88]:47685 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231875AbhLNS04 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 14 Dec 2021 13:26:56 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1639506416; x=1671042416;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=H7uHZCqi1IA4ojLTjn0q4ABLsHNv9WMkjFZYbn0ZApA=;
-  b=UodVaalhTQCGU7Vu22PNRYiPMTS25+X31MWpMbBL9A4Wun4UmUcN5DEz
-   AOqRYrE7vnoDkFTbkAw4seOoYvyYx1pfJ4jxw6Tk+kzC34Vry5sr27k00
-   K3IWGFehq+kbvhZk0x57PMElz+W2MhyNPmwTg54bJMhLyoj+/8iolUbmt
-   tT/eeuwkIA4DfufkvCpEEw8rMKFrmLZsivxgKVXAofbFOQ2he8jsiZHH5
-   MBfRRPZ0jApNtuCKXZ4/qTzBgSCAlb5s17ML1k0C3WGjz9ta8FB3bKNIa
-   62RurVlBIFrCE0O6lzpXz/4nTnpdbAl8/Nzjam+P5Ug1uduvyrvzb3r2o
-   A==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10197"; a="263190240"
-X-IronPort-AV: E=Sophos;i="5.88,205,1635231600"; 
-   d="scan'208";a="263190240"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Dec 2021 10:16:18 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.88,205,1635231600"; 
-   d="scan'208";a="482059461"
-Received: from lkp-server02.sh.intel.com (HELO 9f38c0981d9f) ([10.239.97.151])
-  by orsmga002.jf.intel.com with ESMTP; 14 Dec 2021 10:16:16 -0800
-Received: from kbuild by 9f38c0981d9f with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1mxCLX-0000cZ-Es; Tue, 14 Dec 2021 18:16:15 +0000
-Date:   Wed, 15 Dec 2021 02:15:21 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
-Cc:     kbuild-all@lists.01.org, Chandan Babu R <chandan.babu@oracle.com>,
-        djwong@kernel.org, david@fromorbit.com
-Subject: Re: [PATCH V4 10/16] xfs: Use xfs_rfsblock_t to count maximum blocks
- that can be used by BMBT
-Message-ID: <202112150258.palxcNEy-lkp@intel.com>
-References: <20211214084519.759272-11-chandan.babu@oracle.com>
+        id S235485AbhLOCGg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Dec 2021 21:06:36 -0500
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:50287 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S233007AbhLOCGf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Dec 2021 21:06:35 -0500
+IronPort-Data: =?us-ascii?q?A9a23=3AUpdg86CuEMmTlBVW/0Liw5YqxClBgxIJ4g17XOL?=
+ =?us-ascii?q?fB1K41T1z02dVmjEWCm2Ab/uJNDb3LdwiOYTl9h8HuJOAx9UxeLYW3SszFioV8?=
+ =?us-ascii?q?6IpJjg4wn/YZnrUdouaJK5ex512huLocYZkHhcwmj/3auK49CMliPnRLlbBILW?=
+ =?us-ascii?q?s1h5ZFFYMpBgJ2UoLd94R2uaEsPDha++/kYqaT/73ZDdJ7wVJ3lc8sMpvnv/AU?=
+ =?us-ascii?q?MPa41v0tnRmDRxCUcS3e3M9VPrzLonpR5f0rxU9IwK0ewrD5OnREmLx9BFrBM6?=
+ =?us-ascii?q?nk6rgbwsBRbu60Qqm0yIQAvb9xEMZ4HFaPqUTbZLwbW9NljyPhME3xtNWqbS+V?=
+ =?us-ascii?q?AUoIrbR3u8aVnG0FgknZP0XoO6XcCHXXcu7iheun2HX6/lnEkA6FYMC/eNwG2t?=
+ =?us-ascii?q?P6boTLzVlRhCIh8q3xryhQ+Vhj8hlK9PkVKsTs3cmz3fGDPIiQJnGWI3L48NV2?=
+ =?us-ascii?q?HE7gcUmNfrceM0fZhJsYQ7GbhkJPU0YYLo6neG1ljz6dhVbtluepuww+We75Ap?=
+ =?us-ascii?q?v3LnoNfLRe8eWXoNRn0CFtiTK8nqRKhMTMtHZwjqY2nW2j+TLkGXwX4d6PLm58?=
+ =?us-ascii?q?ON6xVOIymENBRk+S1S2u7+6h1S4VtYZLFYbkgIqrK4v5AmoQ8P7UhmQvnGJpFg?=
+ =?us-ascii?q?fVsBWHul87xuCooLQ4gCEFi0UQCVpdtMrrok1SCYs21vPmMnmbQGDGpX9pWm1r?=
+ =?us-ascii?q?+/S9G3tf3NOazJqWMPNdiNdi/GLnW35pkunog5fLZOI?=
+IronPort-HdrOrdr: =?us-ascii?q?A9a23=3A0OkHXq44M1qxe04nYwPXwCzXdLJyesId70hD?=
+ =?us-ascii?q?6qhwISYlEPBw8Pre5cjztCWE7gr5N0tOpTntAtjlfZqYz+8T3WBzB9mftWvd1F?=
+ =?us-ascii?q?dARbsKheCJrgEIWReOk9K1vp0BT0ERMqySMbE3t6fHCReDYqsd6ejC4Ka1nv3f?=
+ =?us-ascii?q?0nsoaQlrbptr5wB/Bh3zKDwMeCB2QYo+CIGH5tdK4x6peXEsZMy9AXUfG8fZod?=
+ =?us-ascii?q?mjruOdXTc2Qw4g9BKVjS6lrJrzEx2j1B8YVD9VhZcOmFK16zDE2g=3D=3D?=
+X-IronPort-AV: E=Sophos;i="5.88,207,1635177600"; 
+   d="scan'208";a="118909891"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 15 Dec 2021 10:06:33 +0800
+Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
+        by cn.fujitsu.com (Postfix) with ESMTP id 17B884D144CA;
+        Wed, 15 Dec 2021 10:06:30 +0800 (CST)
+Received: from G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) by
+ G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.23; Wed, 15 Dec 2021 10:06:30 +0800
+Received: from [10.167.216.64] (10.167.216.64) by
+ G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
+ id 15.0.1497.23 via Frontend Transport; Wed, 15 Dec 2021 10:06:29 +0800
+Message-ID: <bc5743cb-f79e-2f67-d594-85b56f05bda3@fujitsu.com>
+Date:   Wed, 15 Dec 2021 10:06:29 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20211214084519.759272-11-chandan.babu@oracle.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.4.0
+Subject: Re: [PATCH v8 1/9] dax: Use percpu rwsem for dax_{read,write}_lock()
+To:     Christoph Hellwig <hch@infradead.org>
+CC:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <nvdimm@lists.linux.dev>, <linux-mm@kvack.org>,
+        <linux-fsdevel@vger.kernel.org>, <djwong@kernel.org>,
+        <dan.j.williams@intel.com>, <david@fromorbit.com>,
+        <jane.chu@oracle.com>
+References: <20211202084856.1285285-1-ruansy.fnst@fujitsu.com>
+ <20211202084856.1285285-2-ruansy.fnst@fujitsu.com>
+ <Ybi69MCK5sP4ebwG@infradead.org>
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+In-Reply-To: <Ybi69MCK5sP4ebwG@infradead.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-yoursite-MailScanner-ID: 17B884D144CA.A4B8D
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Chandan,
 
-Thank you for the patch! Yet something to improve:
 
-[auto build test ERROR on xfs-linux/for-next]
-[also build test ERROR on v5.16-rc5 next-20211213]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch]
+在 2021/12/14 23:40, Christoph Hellwig 写道:
+> On Thu, Dec 02, 2021 at 04:48:48PM +0800, Shiyang Ruan wrote:
+>> In order to introduce dax holder registration, we need a write lock for
+>> dax.  Change the current lock to percpu_rw_semaphore and introduce a
+>> write lock for registration.
+> 
+> Why do we need to change the existing, global locking for that?
 
-url:    https://github.com/0day-ci/linux/commits/Chandan-Babu-R/xfs-Extend-per-inode-extent-counters/20211214-164920
-base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
-config: microblaze-randconfig-r016-20211214 (https://download.01.org/0day-ci/archive/20211215/202112150258.palxcNEy-lkp@intel.com/config)
-compiler: microblaze-linux-gcc (GCC) 11.2.0
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/0day-ci/linux/commit/f682028d9c9681363db692733e244a8e2e5b767f
-        git remote add linux-review https://github.com/0day-ci/linux
-        git fetch --no-tags linux-review Chandan-Babu-R/xfs-Extend-per-inode-extent-counters/20211214-164920
-        git checkout f682028d9c9681363db692733e244a8e2e5b767f
-        # save the config file to linux build tree
-        mkdir build_dir
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.2.0 make.cross O=build_dir ARCH=microblaze SHELL=/bin/bash
+I think we have talked about this in the previous v7 patchset:
 
-If you fix the issue, kindly add following tag as appropriate
-Reported-by: kernel test robot <lkp@intel.com>
+ 
+https://lore.kernel.org/nvdimm/20210924130959.2695749-1-ruansy.fnst@fujitsu.com/T/#m4031bc3dc49dcbaac6f8d99877f910fa9a6f998a
 
-All errors (new ones prefixed by >>):
+If it is a global lock, any write lock will block other dax devices.
 
-   microblaze-linux-ld: fs/xfs/libxfs/xfs_bmap.o: in function `xfs_bmap_compute_maxlevels':
-   (.text+0x10cbc): undefined reference to `__udivdi3'
->> microblaze-linux-ld: (.text+0x10dc0): undefined reference to `__udivdi3'
+> 
+> What is the impact of this to benchmarks?  Also if we stop using srcu
+> protection, we should be able to get rid of grace periods or RCU frees.
 
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+I didn't test in benchmarks for now.  Could you show me which one I 
+should test this code on?  I am not familiar with this...
+
+
+--
+Thanks,
+Ruan.
+
+
