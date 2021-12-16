@@ -2,107 +2,70 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BBB2CC433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Dec 2021 21:45:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31813C4332F
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Dec 2021 22:04:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241626AbhLPVpJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Dec 2021 16:45:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33000 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237631AbhLPVoZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Dec 2021 16:44:25 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DDC2AC08E6DF;
-        Thu, 16 Dec 2021 13:43:17 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7B8F161F9A;
-        Thu, 16 Dec 2021 21:43:17 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB210C36AE2;
-        Thu, 16 Dec 2021 21:43:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1639690996;
-        bh=+OesseL9+8IhwYVrl5VuIRe5XfUosJ8w79J9FNaaKXk=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=SVD6AztPK7hK9N7qAbWvqRRQuaOpZEqldpPwoYClQfQku+aQvNZheTq3HyRFnj0mC
-         WPR0Bx/20rSossdAKJ9UPe3+rBzQWJw9Crm6+gpheRs3yZmoAnxY0A6vkJs8A1PVUn
-         A5syAIhxyqiuPWnMu3qo/H/rNFJGwjOiCMJHZKAOOYkR5IKqe/HFkkLOieLZnfyo99
-         bs2wMYZh2ad2yNPdNNgZRUDYRB5Tu562PRHWGCg8FsEuPM8G3fVM7oyDvEbNSeZly7
-         c0srGBES0CP0Jo6LLjz+j1Y8JNF3Tw7S12u7/1QAeY6bo4B69TQpCPvUsB1T4dOkPY
-         AY/llqietP2Pg==
-Date:   Thu, 16 Dec 2021 13:43:16 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 15/25] iomap: Allow iomap_write_begin() to be called
- with the full length
-Message-ID: <20211216214316.GE27664@magnolia>
-References: <20211216210715.3801857-1-willy@infradead.org>
- <20211216210715.3801857-16-willy@infradead.org>
+        id S237477AbhLPWEL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Dec 2021 17:04:11 -0500
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:42068 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S236184AbhLPWEI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Dec 2021 17:04:08 -0500
+Received: from dread.disaster.area (pa49-181-243-119.pa.nsw.optusnet.com.au [49.181.243.119])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 4AD8D8A53EC;
+        Fri, 17 Dec 2021 09:04:06 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1mxyr7-003v8F-3W; Fri, 17 Dec 2021 09:04:05 +1100
+Date:   Fri, 17 Dec 2021 09:04:05 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/7] xfs: fix a bug in the online fsck directory leaf1
+ bestcount check
+Message-ID: <20211216220405.GF449541@dread.disaster.area>
+References: <163961695502.3129691.3496134437073533141.stgit@magnolia>
+ <163961697197.3129691.1911552605195534271.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211216210715.3801857-16-willy@infradead.org>
+In-Reply-To: <163961697197.3129691.1911552605195534271.stgit@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=61bbb7d6
+        a=BEa52nrBdFykVEm6RU8P4g==:117 a=BEa52nrBdFykVEm6RU8P4g==:17
+        a=AZK8MRsvVoKhbS40:21 a=kj9zAlcOel0A:10 a=IOMw9HtfNCkA:10 a=VwQbUJbxAAAA:8
+        a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=YEyCIqqpebTs7pEFxUMA:9
+        a=CjuIK1q_8ugA:10 a=wYxC10UHL_r354hrDE_9:22 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Dec 16, 2021 at 09:07:05PM +0000, Matthew Wilcox (Oracle) wrote:
-> In the future, we want write_begin to know the entire length of the
-> write so that it can choose to allocate large folios.  Pass the full
-> length in from __iomap_zero_iter() and limit it where necessary.
+On Wed, Dec 15, 2021 at 05:09:32PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-
-Seems reasonable,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
---D
-
-> ---
->  fs/iomap/buffered-io.c | 9 ++++++++-
->  1 file changed, 8 insertions(+), 1 deletion(-)
+> When xfs_scrub encounters a directory with a leaf1 block, it tries to
+> validate that the leaf1 block's bestcount (aka the best free count of
+> each directory data block) is the correct size.  Previously, this author
+> believed that comparing bestcount to the directory isize (since
+> directory data blocks are under isize, and leaf/bestfree blocks are
+> above it) was sufficient.
 > 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 8d7a67655b60..b1ded5204d1c 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -619,6 +619,9 @@ static int iomap_write_begin(const struct iomap_iter *iter, loff_t pos,
->  	if (fatal_signal_pending(current))
->  		return -EINTR;
->  
-> +	if (!mapping_large_folio_support(iter->inode->i_mapping))
-> +		len = min_t(size_t, len, PAGE_SIZE - offset_in_page(pos));
-> +
->  	if (page_ops && page_ops->page_prepare) {
->  		status = page_ops->page_prepare(iter->inode, pos, len);
->  		if (status)
-> @@ -632,6 +635,8 @@ static int iomap_write_begin(const struct iomap_iter *iter, loff_t pos,
->  		goto out_no_page;
->  	}
->  	folio = page_folio(page);
-> +	if (pos + len > folio_pos(folio) + folio_size(folio))
-> +		len = folio_pos(folio) + folio_size(folio) - pos;
->  
->  	if (srcmap->type == IOMAP_INLINE)
->  		status = iomap_write_begin_inline(iter, page);
-> @@ -891,11 +896,13 @@ static s64 __iomap_zero_iter(struct iomap_iter *iter, loff_t pos, u64 length)
->  	struct page *page;
->  	int status;
->  	unsigned offset = offset_in_page(pos);
-> -	unsigned bytes = min_t(u64, PAGE_SIZE - offset, length);
-> +	unsigned bytes = min_t(u64, UINT_MAX, length);
->  
->  	status = iomap_write_begin(iter, pos, bytes, &page);
->  	if (status)
->  		return status;
-> +	if (bytes > PAGE_SIZE - offset)
-> +		bytes = PAGE_SIZE - offset;
->  
->  	zero_user(page, offset, bytes);
->  	mark_page_accessed(page);
-> -- 
-> 2.33.0
+> Unfortunately during testing of online repair, it was discovered that it
+> is possible to create a directory with a hole between the last directory
+> block and isize.  The directory code seems to handle this situation just
+> fine and xfs_repair doesn't complain, which effectively makes this quirk
+> part of the disk format.
 > 
+> Fix the check to work properly.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+
+With the "we're not sure how this happens" discussion out of the
+way, the change to handle the empty space between the last block and
+isize looks fine.
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+-- 
+Dave Chinner
+david@fromorbit.com
