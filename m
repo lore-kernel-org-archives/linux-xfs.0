@@ -2,42 +2,42 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83108C433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Dec 2021 01:09:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 797C7C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Dec 2021 01:09:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229888AbhLPBJq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Dec 2021 20:09:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58298 "EHLO
+        id S229772AbhLPBJw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Dec 2021 20:09:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58328 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229907AbhLPBJo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Dec 2021 20:09:44 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52FAFC061574
-        for <linux-xfs@vger.kernel.org>; Wed, 15 Dec 2021 17:09:44 -0800 (PST)
+        with ESMTP id S229441AbhLPBJv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Dec 2021 20:09:51 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48F5DC061574
+        for <linux-xfs@vger.kernel.org>; Wed, 15 Dec 2021 17:09:51 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E7E9261BB8
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Dec 2021 01:09:43 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4FEACC36AE1;
-        Thu, 16 Dec 2021 01:09:43 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 12303B8226C
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Dec 2021 01:09:50 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C76C0C36AE0;
+        Thu, 16 Dec 2021 01:09:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1639616983;
-        bh=yIIFDdIbod588gBMZ0B3qCiTukToiOPvPxFHRRU6mUA=;
+        s=k20201202; t=1639616988;
+        bh=FZUTNG5EFGJx+rII8bxVz9Ui5NlHWS8npk+Z2sLBgC0=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=aqubLzOpuKvoBvfC4SH0nxX0mKpvvoSK5fvyTF7QKyMq9/FQUcDtUWj6+B2Un3pOX
-         CgDOL5ClpIbg1BugXOlZ+Yor4zX96l8gWEqZ3Ke0XzINTqQwp5Ll6Lndj8WR3nuYLq
-         q1lOPnMeQ65isBs8ryxDVzq7sSSSDCrs6I/1p1ldGK+h8K8Q09nIRySvC/5/MRZpBU
-         eHOVXPFpojf8RUQEF6GpiUV0t88rHN8t88JOuRGjzrtRcxz9VHGQCcOPP0n+G4bdHB
-         LnovHpJloB5BOV2HADsiUj2WEeiybJjbnsEPnjr12Fn2+1eff7Drr/C0wRLyCQ/fR0
-         vGy/uuRp5kmMQ==
-Subject: [PATCH 5/7] xfs: fix quotaoff mutex usage now that we don't support
- disabling it
+        b=bYlWCZxFSuZVJpFF4XeV8pvJZFIw+FgLAXLAxsFnBf12XFwTJeTIe/VMDp07UEmOl
+         BkB2RPLE5K2tXo1fb3f/I6QIYV+Su23mUdv4L8pFq14gU0ZWMhPDRlmInB2pmkbniP
+         qVdvuOVcGYK2ZqkvQw9LPAbLSMl1LBUvLZ87zn2wWRQJd5nrI+iK8hq0yC+3waiJH/
+         0wLwJgoy0bjNqA/CS3QlkoW7d5vcmMzWv+zae3ELJfNPmDiGGIpjEVCqxjwILHGmVM
+         KNEHTVXbISMcLsU/pyDKy2fUIdGmdwXCkOJR7AfTe2y9TxWY3hQByrXu3LLH8T0rQf
+         C1/EHpgXOn4ug==
+Subject: [PATCH 6/7] xfs: don't expose internal symlink metadata buffers to
+ the vfs
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Date:   Wed, 15 Dec 2021 17:09:43 -0800
-Message-ID: <163961698300.3129691.4408918955613874796.stgit@magnolia>
+Cc:     Ian Kent <raven@themaw.net>, linux-xfs@vger.kernel.org
+Date:   Wed, 15 Dec 2021 17:09:48 -0800
+Message-ID: <163961698851.3129691.1262560189729839928.stgit@magnolia>
 In-Reply-To: <163961695502.3129691.3496134437073533141.stgit@magnolia>
 References: <163961695502.3129691.3496134437073533141.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,131 +50,141 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Prior to commit 40b52225e58c ("xfs: remove support for disabling quota
-accounting on a mounted file system"), we used the quotaoff mutex to
-protect dquot operations against quotaoff trying to pull down dquots as
-part of disabling quota.
+Ian Kent reported that for inline symlinks, it's possible for
+vfs_readlink to hang on to the target buffer returned by
+_vn_get_link_inline long after it's been freed by xfs inode reclaim.
+This is a layering violation -- we should never expose XFS internals to
+the VFS.
 
-Now that we only support turning off quota enforcement, the quotaoff
-mutex only protects changes in m_qflags/sb_qflags.  We don't need it to
-protect dquots, which means we can remove it from setqlimits and the
-dquot scrub code.  While we're at it, fix the function that forces
-quotacheck, since it should have been taking the quotaoff mutex.
+When the symlink has a remote target, we allocate a separate buffer,
+copy the internal information, and let the VFS manage the new buffer's
+lifetime.  Let's adapt the inline code paths to do this too.  It's
+less efficient, but fixes the layering violation and avoids the need to
+adapt the if_data lifetime to rcu rules.  Clearly I don't care about
+readlink benchmarks.
 
+As a side note, this fixes the minor locking violation where we can
+access the inode data fork without taking any locks; proper locking (and
+eliminating the possibility of having to switch inode_operations on a
+live inode) is essential to online repair coordinating repairs
+correctly.
+
+Reported-by: Ian Kent <raven@themaw.net>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/quota.c     |    4 ++--
- fs/xfs/scrub/repair.c    |    3 +++
- fs/xfs/scrub/scrub.c     |    4 ----
- fs/xfs/scrub/scrub.h     |    1 -
- fs/xfs/xfs_qm_syscalls.c |   11 +----------
- 5 files changed, 6 insertions(+), 17 deletions(-)
+ fs/xfs/xfs_iops.c    |   34 +---------------------------------
+ fs/xfs/xfs_symlink.c |   19 ++++++++++++++-----
+ 2 files changed, 15 insertions(+), 38 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
-index d6c1b00a4fc8..3c7506c7553c 100644
---- a/fs/xfs/scrub/quota.c
-+++ b/fs/xfs/scrub/quota.c
-@@ -48,10 +48,10 @@ xchk_setup_quota(
- 	dqtype = xchk_quota_to_dqtype(sc);
- 	if (dqtype == 0)
- 		return -EINVAL;
--	sc->flags |= XCHK_HAS_QUOTAOFFLOCK;
--	mutex_lock(&sc->mp->m_quotainfo->qi_quotaofflock);
-+
- 	if (!xfs_this_quota_on(sc->mp, dqtype))
- 		return -ENOENT;
-+
- 	error = xchk_setup_fs(sc);
- 	if (error)
- 		return error;
-diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-index 8f3cba14ada3..1e7b6b209ee8 100644
---- a/fs/xfs/scrub/repair.c
-+++ b/fs/xfs/scrub/repair.c
-@@ -25,6 +25,7 @@
- #include "xfs_ag.h"
- #include "xfs_ag_resv.h"
- #include "xfs_quota.h"
-+#include "xfs_qm.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
- #include "scrub/trace.h"
-@@ -912,11 +913,13 @@ xrep_force_quotacheck(
- 	if (!(flag & sc->mp->m_qflags))
- 		return;
- 
-+	mutex_lock(&sc->mp->m_quotainfo->qi_quotaofflock);
- 	sc->mp->m_qflags &= ~flag;
- 	spin_lock(&sc->mp->m_sb_lock);
- 	sc->mp->m_sb.sb_qflags &= ~flag;
- 	spin_unlock(&sc->mp->m_sb_lock);
- 	xfs_log_sb(sc->tp);
-+	mutex_unlock(&sc->mp->m_quotainfo->qi_quotaofflock);
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index a607d6aca5c4..72bdd7c79e93 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -511,27 +511,6 @@ xfs_vn_get_link(
+ 	return ERR_PTR(error);
  }
  
- /*
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 8d528d35b725..b11870d07c56 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -173,10 +173,6 @@ xchk_teardown(
- 		mnt_drop_write_file(sc->file);
- 	if (sc->flags & XCHK_REAPING_DISABLED)
- 		xchk_start_reaping(sc);
--	if (sc->flags & XCHK_HAS_QUOTAOFFLOCK) {
--		mutex_unlock(&sc->mp->m_quotainfo->qi_quotaofflock);
--		sc->flags &= ~XCHK_HAS_QUOTAOFFLOCK;
--	}
- 	if (sc->buf) {
- 		kmem_free(sc->buf);
- 		sc->buf = NULL;
-diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index 80e5026bba44..3de5287e98d8 100644
---- a/fs/xfs/scrub/scrub.h
-+++ b/fs/xfs/scrub/scrub.h
-@@ -88,7 +88,6 @@ struct xfs_scrub {
- 
- /* XCHK state flags grow up from zero, XREP state flags grown down from 2^31 */
- #define XCHK_TRY_HARDER		(1 << 0)  /* can't get resources, try again */
--#define XCHK_HAS_QUOTAOFFLOCK	(1 << 1)  /* we hold the quotaoff lock */
- #define XCHK_REAPING_DISABLED	(1 << 2)  /* background block reaping paused */
- #define XREP_ALREADY_FIXED	(1 << 31) /* checking our repair work */
- 
-diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-index 47fe60e1a887..7d5a31827681 100644
---- a/fs/xfs/xfs_qm_syscalls.c
-+++ b/fs/xfs/xfs_qm_syscalls.c
-@@ -302,13 +302,6 @@ xfs_qm_scall_setqlim(
- 	if ((newlim->d_fieldmask & XFS_QC_MASK) == 0)
- 		return 0;
- 
--	/*
--	 * We don't want to race with a quotaoff so take the quotaoff lock.
--	 * We don't hold an inode lock, so there's nothing else to stop
--	 * a quotaoff from happening.
--	 */
--	mutex_lock(&q->qi_quotaofflock);
+-STATIC const char *
+-xfs_vn_get_link_inline(
+-	struct dentry		*dentry,
+-	struct inode		*inode,
+-	struct delayed_call	*done)
+-{
+-	struct xfs_inode	*ip = XFS_I(inode);
+-	char			*link;
 -
- 	/*
- 	 * Get the dquot (locked) before we start, as we need to do a
- 	 * transaction to allocate it if it doesn't exist. Once we have the
-@@ -319,7 +312,7 @@ xfs_qm_scall_setqlim(
- 	error = xfs_qm_dqget(mp, id, type, true, &dqp);
- 	if (error) {
- 		ASSERT(error != -ENOENT);
--		goto out_unlock;
-+		return error;
+-	ASSERT(ip->i_df.if_format == XFS_DINODE_FMT_LOCAL);
+-
+-	/*
+-	 * The VFS crashes on a NULL pointer, so return -EFSCORRUPTED if
+-	 * if_data is junk.
+-	 */
+-	link = ip->i_df.if_u1.if_data;
+-	if (XFS_IS_CORRUPT(ip->i_mount, !link))
+-		return ERR_PTR(-EFSCORRUPTED);
+-	return link;
+-}
+-
+ static uint32_t
+ xfs_stat_blksize(
+ 	struct xfs_inode	*ip)
+@@ -1250,14 +1229,6 @@ static const struct inode_operations xfs_symlink_inode_operations = {
+ 	.update_time		= xfs_vn_update_time,
+ };
+ 
+-static const struct inode_operations xfs_inline_symlink_inode_operations = {
+-	.get_link		= xfs_vn_get_link_inline,
+-	.getattr		= xfs_vn_getattr,
+-	.setattr		= xfs_vn_setattr,
+-	.listxattr		= xfs_vn_listxattr,
+-	.update_time		= xfs_vn_update_time,
+-};
+-
+ /* Figure out if this file actually supports DAX. */
+ static bool
+ xfs_inode_supports_dax(
+@@ -1408,10 +1379,7 @@ xfs_setup_iops(
+ 		inode->i_fop = &xfs_dir_file_operations;
+ 		break;
+ 	case S_IFLNK:
+-		if (ip->i_df.if_format == XFS_DINODE_FMT_LOCAL)
+-			inode->i_op = &xfs_inline_symlink_inode_operations;
+-		else
+-			inode->i_op = &xfs_symlink_inode_operations;
++		inode->i_op = &xfs_symlink_inode_operations;
+ 		break;
+ 	default:
+ 		inode->i_op = &xfs_inode_operations;
+diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+index fc2c6a404647..4868bd986f52 100644
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -22,6 +22,7 @@
+ #include "xfs_trace.h"
+ #include "xfs_trans.h"
+ #include "xfs_ialloc.h"
++#include "xfs_error.h"
+ 
+ /* ----- Kernel only functions below ----- */
+ int
+@@ -101,12 +102,10 @@ xfs_readlink(
+ {
+ 	struct xfs_mount *mp = ip->i_mount;
+ 	xfs_fsize_t	pathlen;
+-	int		error = 0;
++	int		error = -EFSCORRUPTED;
+ 
+ 	trace_xfs_readlink(ip);
+ 
+-	ASSERT(ip->i_df.if_format != XFS_DINODE_FMT_LOCAL);
+-
+ 	if (xfs_is_shutdown(mp))
+ 		return -EIO;
+ 
+@@ -121,12 +120,22 @@ xfs_readlink(
+ 			 __func__, (unsigned long long) ip->i_ino,
+ 			 (long long) pathlen);
+ 		ASSERT(0);
+-		error = -EFSCORRUPTED;
+ 		goto out;
  	}
  
- 	defq = xfs_get_defquota(q, xfs_dquot_type(dqp));
-@@ -415,8 +408,6 @@ xfs_qm_scall_setqlim(
++	if (ip->i_df.if_format == XFS_DINODE_FMT_LOCAL) {
++		/*
++		 * The VFS crashes on a NULL pointer, so return -EFSCORRUPTED if
++		 * if_data is junk.
++		 */
++		if (XFS_IS_CORRUPT(ip->i_mount, !ip->i_df.if_u1.if_data))
++			goto out;
  
- out_rele:
- 	xfs_qm_dqrele(dqp);
--out_unlock:
--	mutex_unlock(&q->qi_quotaofflock);
- 	return error;
- }
+-	error = xfs_readlink_bmap_ilocked(ip, link);
++		memcpy(link, ip->i_df.if_u1.if_data, ip->i_disk_size + 1);
++		error = 0;
++	} else {
++		error = xfs_readlink_bmap_ilocked(ip, link);
++	}
  
+  out:
+ 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
 
