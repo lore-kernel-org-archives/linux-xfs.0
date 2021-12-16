@@ -2,105 +2,93 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49979C433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Dec 2021 16:35:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DBC56C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Dec 2021 19:25:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232272AbhLPQfd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Dec 2021 11:35:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46730 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230441AbhLPQfd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Dec 2021 11:35:33 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E25CC061574
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Dec 2021 08:35:33 -0800 (PST)
+        id S240902AbhLPTZv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Dec 2021 14:25:51 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:52140 "EHLO
+        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231376AbhLPTZu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Dec 2021 14:25:50 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0965861EA7
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Dec 2021 16:35:33 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60892C36AE5;
-        Thu, 16 Dec 2021 16:35:32 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id A419861F2A
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Dec 2021 19:25:50 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 024C4C36AE3;
+        Thu, 16 Dec 2021 19:25:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1639672532;
-        bh=eEOW7SWW2OEXh00B9oTL4JMwRwvmq8AhuXsF362Fk1w=;
+        s=k20201202; t=1639682750;
+        bh=bqkoxqojgixNXaZ4wDoQ/5873zRznHIbizGsVw1N1C8=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=sKEvwPjZElMlAVLQtYn5zOU9U9V+kOb8utzS6gXqv5N85GzxPgZI/AV2D/1A+Rl4P
-         8vY7He6eJdnsv6CBX2UXezpw98ei3futh5YTZwM+U04IpjLJrA6dvvEWb5R/ta+8GX
-         /MTyv9CBvA0a7panDtIjh+KMrQ7Pas0nR6OUOzNF2RBEEp0vpFitI1/prsOEK9T6qr
-         Dc6vvuSCFN+9+IXrmVxsz4R0CMidYuksluttZFSqlE4TuKUhkpzeSByGuzUrOu/2BQ
-         PlkoqkoD0KOFVARmJruXtXt5kkvzwqaLOty0C70+zFW5Vivg62ECPmi1hDSb3ogfzi
-         Y2tpq/bHI3DAQ==
-Date:   Thu, 16 Dec 2021 08:35:31 -0800
+        b=VrKBqSBr/YDdAbON4MT90Iq60FT90mxR00gRUtbjR7AbEz5NH3UlF/82qSIto/EQW
+         BLao6lPwg2EBjX/W3EzgAV4yrDzQ8L20iBr4zts+IRFpdYb7cCELtjX0dlbCo9Ijqr
+         A+VM7h72hrObn4W3pqftyg8dk200MYi71Bi2zz3CIWr7Zh0K3PpMxO0daVjJU4EIab
+         sSIrW4XVXPqvOCJRbttfyfyz2VVgWQlV//FN/ZJH5hucTI6zb3RC9tiPOgRSv0VY9H
+         wcUo0TYrm2VkV5TXoWzd2/T5zd1EseRAw2y8ZZPHk2xhVVvGffHhamQlYv9DCmGRZo
+         v+Pv2RL/NP54Q==
+Date:   Thu, 16 Dec 2021 11:25:49 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/7] xfs: prevent UAF in xfs_log_item_in_current_chkpt
-Message-ID: <20211216163531.GB27664@magnolia>
+Subject: Re: [PATCH 3/7] xfs: fix a bug in the online fsck directory leaf1
+ bestcount check
+Message-ID: <20211216192549.GC27664@magnolia>
 References: <163961695502.3129691.3496134437073533141.stgit@magnolia>
- <163961697749.3129691.10072192517670663885.stgit@magnolia>
- <20211216043607.GW449541@dread.disaster.area>
+ <163961697197.3129691.1911552605195534271.stgit@magnolia>
+ <20211216050537.GA449541@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211216043607.GW449541@dread.disaster.area>
+In-Reply-To: <20211216050537.GA449541@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Dec 16, 2021 at 03:36:07PM +1100, Dave Chinner wrote:
-> On Wed, Dec 15, 2021 at 05:09:37PM -0800, Darrick J. Wong wrote:
+On Thu, Dec 16, 2021 at 04:05:37PM +1100, Dave Chinner wrote:
+> On Wed, Dec 15, 2021 at 05:09:32PM -0800, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > While I was running with KASAN and lockdep enabled, I stumbled upon an
-> > KASAN report about a UAF to a freed CIL checkpoint.  Looking at the
-> > comment for xfs_log_item_in_current_chkpt, it seems pretty obvious to me
-> > that the original patch to xfs_defer_finish_noroll should have done
-> > something to lock the CIL to prevent it from switching the CIL contexts
-> > while the predicate runs.
+> > When xfs_scrub encounters a directory with a leaf1 block, it tries to
+> > validate that the leaf1 block's bestcount (aka the best free count of
+> > each directory data block) is the correct size.  Previously, this author
+> > believed that comparing bestcount to the directory isize (since
+> > directory data blocks are under isize, and leaf/bestfree blocks are
+> > above it) was sufficient.
 > > 
-> > For upper level code that needs to know if a given log item is new
-> > enough not to need relogging, add a new wrapper that takes the CIL
-> > context lock long enough to sample the current CIL context.  This is
-> > kind of racy in that the CIL can switch the contexts immediately after
-> > sampling, but that's ok because the consequence is that the defer ops
-> > code is a little slow to relog items.
-> > 
+> > Unfortunately during testing of online repair, it was discovered that it
+> > is possible to create a directory with a hole between the last directory
+> > block and isize.
 > 
-> I see the problem, but I don't think this is the right way to fix
-> it.  The CIL context lock is already a major contention point in the
-> transaction commit code when it is only taken once per
-> xfs_trans_commit() call.  If we now potentially take it once per
-> intent item per xfs_trans_commit() call, we're going to make the
-> contention even worse than it already is.
-> 
-> The current sequence is always available from the CIL itself via
-> cil->xc_current_sequence, and we can read that without needing any
-> locking to provide existence guarantees of the CIL structure.
-> 
-> So....
-> 
-> bool
-> xfs_log_item_in_current_chkpt(
-> 	struct xfs_log_item *lip)
-> {
-> 	struct xfs_cil	*cil = lip->li_mountp->m_log->l_cilp;
-> 
-> 	if (list_empty(&lip->li_cil))
-> 		return false;
-> 
-> 	/*
-> 	 * li_seq is written on the first commit of a log item to record the
-> 	 * first checkpoint it is written to. Hence if it is different to the
-> 	 * current sequence, we're in a new checkpoint.
-> 	 */
-> 	return lip->li_seq == READ_ONCE(cil->xc_current_sequence);
+> We have xfs_da3_swap_lastblock() that can leave an -empty- da block
+> between the last referenced block and isize, but that's not a "hole"
+> in the file. If you don't mean xfs_da3_swap_lastblock(), then can
+> you clarify what you mean by a "hole" here and explain to me how the
+> situation it occurs in comes about?
 
-Ooh, much better!
+I don't actually know how it comes about.  I wrote a test that sets up
+fsstress to expand and contract directories and races xfs_scrub -n, and
+noticed that I'd periodically get complaints about directories (usually
+$SCRATCH_MNT/p$CPU) where the last block(s) before i_size were actually
+holes.
+
+I began reading the dir2 code to try to figure out how this came about
+(clearly we're not updating i_size somewhere) but then took the shortcut
+of seeing if xfs_repair or xfs_check complained about this situation.
+Neither of them did, and I found a couple more directories in a similar
+situation on my crash test dummy machine, and concluded "Wellllp, I
+guess this is part of the ondisk format!" and committed the patch.
+
+Also, I thought xfs_da3_swap_lastblock only operates on leaf and da
+btree blocks, not the blocks containing directory entries?  I /think/
+the actual explanation is that something goes wrong in
+xfs_dir2_shrink_inode (maybe?) such that the mapping goes away but
+i_disk_size doesn't get updated?  Not sure how /that/ can happen,
+though...
 
 --D
 
-> }
 > 
 > Cheers,
 > 
