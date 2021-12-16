@@ -2,42 +2,42 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 797C7C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Dec 2021 01:09:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33CBAC433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Dec 2021 01:09:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229772AbhLPBJw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Dec 2021 20:09:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58328 "EHLO
+        id S229907AbhLPBJz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Dec 2021 20:09:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58348 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229441AbhLPBJv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Dec 2021 20:09:51 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48F5DC061574
-        for <linux-xfs@vger.kernel.org>; Wed, 15 Dec 2021 17:09:51 -0800 (PST)
+        with ESMTP id S229441AbhLPBJz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Dec 2021 20:09:55 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E3B6C061574
+        for <linux-xfs@vger.kernel.org>; Wed, 15 Dec 2021 17:09:55 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 12303B8226C
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Dec 2021 01:09:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C76C0C36AE0;
-        Thu, 16 Dec 2021 01:09:48 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E49E261BB8
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Dec 2021 01:09:54 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48F7BC36AE1;
+        Thu, 16 Dec 2021 01:09:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1639616988;
-        bh=FZUTNG5EFGJx+rII8bxVz9Ui5NlHWS8npk+Z2sLBgC0=;
+        s=k20201202; t=1639616994;
+        bh=68tLunglQaUDru1VRnVnSNOlJ+lStU8jjkicUwo/NuY=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=bYlWCZxFSuZVJpFF4XeV8pvJZFIw+FgLAXLAxsFnBf12XFwTJeTIe/VMDp07UEmOl
-         BkB2RPLE5K2tXo1fb3f/I6QIYV+Su23mUdv4L8pFq14gU0ZWMhPDRlmInB2pmkbniP
-         qVdvuOVcGYK2ZqkvQw9LPAbLSMl1LBUvLZ87zn2wWRQJd5nrI+iK8hq0yC+3waiJH/
-         0wLwJgoy0bjNqA/CS3QlkoW7d5vcmMzWv+zae3ELJfNPmDiGGIpjEVCqxjwILHGmVM
-         KNEHTVXbISMcLsU/pyDKy2fUIdGmdwXCkOJR7AfTe2y9TxWY3hQByrXu3LLH8T0rQf
-         C1/EHpgXOn4ug==
-Subject: [PATCH 6/7] xfs: don't expose internal symlink metadata buffers to
- the vfs
+        b=XK6kM+qse4a33UdUpfIAjhfGEiUSBrhz9XkowRRqEOvoxXUu+x6r3kh/J9ry/+e/I
+         ocTq5onrt+2rOlLiIeKhFQuXzKrnjib4OgN1bKM173Lf4GQ8oKHTxgpaDCeISQ8pRq
+         stzowCqMmkhw/qRR9E9ymefbHFepYquWWINdcBi0FsCOqtcaXck58SayxzzYy+pKfp
+         jgm744Xh1cnbD1OEPYP8OItn66aZGL8gw7tbKqTPzocGPQP1P7k5yJTGW01ea9biDC
+         OVjMXxCOSh0Z41SQvYcrv9zK31yQokLDRtWrkF5lO717JRlJ432pz6/Y6fQrOU50rH
+         h8JLsQUrT2i7w==
+Subject: [PATCH 7/7] xfs: only run COW extent recovery when there are no live
+ extents
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
-Cc:     Ian Kent <raven@themaw.net>, linux-xfs@vger.kernel.org
-Date:   Wed, 15 Dec 2021 17:09:48 -0800
-Message-ID: <163961698851.3129691.1262560189729839928.stgit@magnolia>
+Cc:     Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
+Date:   Wed, 15 Dec 2021 17:09:54 -0800
+Message-ID: <163961699399.3129691.9449691191051808697.stgit@magnolia>
 In-Reply-To: <163961695502.3129691.3496134437073533141.stgit@magnolia>
 References: <163961695502.3129691.3496134437073533141.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,141 +50,173 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Ian Kent reported that for inline symlinks, it's possible for
-vfs_readlink to hang on to the target buffer returned by
-_vn_get_link_inline long after it's been freed by xfs inode reclaim.
-This is a layering violation -- we should never expose XFS internals to
-the VFS.
+As part of multiple customer escalations due to file data corruption
+after copy on write operations, I wrote some fstests that use fsstress
+to hammer on COW to shake things loose.  Regrettably, I caught some
+filesystem shutdowns due to incorrect rmap operations with the following
+loop:
 
-When the symlink has a remote target, we allocate a separate buffer,
-copy the internal information, and let the VFS manage the new buffer's
-lifetime.  Let's adapt the inline code paths to do this too.  It's
-less efficient, but fixes the layering violation and avoids the need to
-adapt the if_data lifetime to rcu rules.  Clearly I don't care about
-readlink benchmarks.
+mount <filesystem>				# (0)
+fsstress <run only readonly ops> &		# (1)
+while true; do
+	fsstress <run all ops>
+	mount -o remount,ro			# (2)
+	fsstress <run only readonly ops>
+	mount -o remount,rw			# (3)
+done
 
-As a side note, this fixes the minor locking violation where we can
-access the inode data fork without taking any locks; proper locking (and
-eliminating the possibility of having to switch inode_operations on a
-live inode) is essential to online repair coordinating repairs
-correctly.
+When (2) happens, notice that (1) is still running.  xfs_remount_ro will
+call xfs_blockgc_stop to walk the inode cache to free all the COW
+extents, but the blockgc mechanism races with (1)'s reader threads to
+take IOLOCKs and loses, which means that it doesn't clean them all out.
+Call such a file (A).
 
-Reported-by: Ian Kent <raven@themaw.net>
+When (3) happens, xfs_remount_rw calls xfs_reflink_recover_cow, which
+walks the ondisk refcount btree and frees any COW extent that it finds.
+This function does not check the inode cache, which means that incore
+COW forks of inode (A) is now inconsistent with the ondisk metadata.  If
+one of those former COW extents are allocated and mapped into another
+file (B) and someone triggers a COW to the stale reservation in (A), A's
+dirty data will be written into (B) and once that's done, those blocks
+will be transferred to (A)'s data fork without bumping the refcount.
+
+The results are catastrophic -- file (B) and the refcount btree are now
+corrupt.  In the first patch, we fixed the race condition in (2) so that
+(A) will always flush the COW fork.  In this second patch, we move the
+_recover_cow call to the initial mount call in (0) for safety.
+
+As mentioned previously, xfs_reflink_recover_cow walks the refcount
+btree looking for COW staging extents, and frees them.  This was
+intended to be run at mount time (when we know there are no live inodes)
+to clean up any leftover staging events that may have been left behind
+during an unclean shutdown.  As a time "optimization" for readonly
+mounts, we deferred this to the ro->rw transition, not realizing that
+any failure to clean all COW forks during a rw->ro transition would
+result in catastrophic corruption.
+
+Therefore, remove this optimization and only run the recovery routine
+when we're guaranteed not to have any COW staging extents anywhere,
+which means we always run this at mount time.  While we're at it, move
+the callsite to xfs_log_mount_finish because any refcount btree
+expansion (however unlikely given that we're removing records from the
+right side of the index) must be fed by a per-AG reservation, which
+doesn't exist in its current location.
+
+Fixes: 174edb0e46e5 ("xfs: store in-progress CoW allocations in the refcount btree")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Chandan Babu R <chandan.babu@oracle.com>
 ---
- fs/xfs/xfs_iops.c    |   34 +---------------------------------
- fs/xfs/xfs_symlink.c |   19 ++++++++++++++-----
- 2 files changed, 15 insertions(+), 38 deletions(-)
+ fs/xfs/xfs_log_recover.c |   24 +++++++++++++++++++++++-
+ fs/xfs/xfs_mount.c       |   10 ----------
+ fs/xfs/xfs_reflink.c     |    5 ++++-
+ fs/xfs/xfs_super.c       |    9 ---------
+ 4 files changed, 27 insertions(+), 21 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index a607d6aca5c4..72bdd7c79e93 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -511,27 +511,6 @@ xfs_vn_get_link(
- 	return ERR_PTR(error);
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 53366cc0bc9e..8ecb9a8567b7 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -27,7 +27,7 @@
+ #include "xfs_buf_item.h"
+ #include "xfs_ag.h"
+ #include "xfs_quota.h"
+-
++#include "xfs_reflink.h"
+ 
+ #define BLK_AVG(blk1, blk2)	((blk1+blk2) >> 1)
+ 
+@@ -3498,6 +3498,28 @@ xlog_recover_finish(
+ 
+ 	xlog_recover_process_iunlinks(log);
+ 	xlog_recover_check_summary(log);
++
++	/*
++	 * Recover any CoW staging blocks that are still referenced by the
++	 * ondisk refcount metadata.  During mount there cannot be any live
++	 * staging extents as we have not permitted any user modifications.
++	 * Therefore, it is safe to free them all right now, even on a
++	 * read-only mount.
++	 */
++	error = xfs_reflink_recover_cow(log->l_mp);
++	if (error) {
++		xfs_alert(log->l_mp,
++	"Failed to recover leftover CoW staging extents, err %d.",
++				error);
++		/*
++		 * If we get an error here, make sure the log is shut down
++		 * but return zero so that any log items committed since the
++		 * end of intents processing can be pushed through the CIL
++		 * and AIL.
++		 */
++		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
++	}
++
+ 	return 0;
  }
  
--STATIC const char *
--xfs_vn_get_link_inline(
--	struct dentry		*dentry,
--	struct inode		*inode,
--	struct delayed_call	*done)
--{
--	struct xfs_inode	*ip = XFS_I(inode);
--	char			*link;
--
--	ASSERT(ip->i_df.if_format == XFS_DINODE_FMT_LOCAL);
--
--	/*
--	 * The VFS crashes on a NULL pointer, so return -EFSCORRUPTED if
--	 * if_data is junk.
--	 */
--	link = ip->i_df.if_u1.if_data;
--	if (XFS_IS_CORRUPT(ip->i_mount, !link))
--		return ERR_PTR(-EFSCORRUPTED);
--	return link;
--}
--
- static uint32_t
- xfs_stat_blksize(
- 	struct xfs_inode	*ip)
-@@ -1250,14 +1229,6 @@ static const struct inode_operations xfs_symlink_inode_operations = {
- 	.update_time		= xfs_vn_update_time,
- };
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 359109b6f0d3..bed73e8002a5 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -936,15 +936,6 @@ xfs_mountfs(
+ 			xfs_warn(mp,
+ 	"Unable to allocate reserve blocks. Continuing without reserve pool.");
  
--static const struct inode_operations xfs_inline_symlink_inode_operations = {
--	.get_link		= xfs_vn_get_link_inline,
--	.getattr		= xfs_vn_getattr,
--	.setattr		= xfs_vn_setattr,
--	.listxattr		= xfs_vn_listxattr,
--	.update_time		= xfs_vn_update_time,
--};
+-		/* Recover any CoW blocks that never got remapped. */
+-		error = xfs_reflink_recover_cow(mp);
+-		if (error) {
+-			xfs_err(mp,
+-	"Error %d recovering leftover CoW allocations.", error);
+-			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+-			goto out_quota;
+-		}
 -
- /* Figure out if this file actually supports DAX. */
- static bool
- xfs_inode_supports_dax(
-@@ -1408,10 +1379,7 @@ xfs_setup_iops(
- 		inode->i_fop = &xfs_dir_file_operations;
- 		break;
- 	case S_IFLNK:
--		if (ip->i_df.if_format == XFS_DINODE_FMT_LOCAL)
--			inode->i_op = &xfs_inline_symlink_inode_operations;
--		else
--			inode->i_op = &xfs_symlink_inode_operations;
-+		inode->i_op = &xfs_symlink_inode_operations;
- 		break;
- 	default:
- 		inode->i_op = &xfs_inode_operations;
-diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-index fc2c6a404647..4868bd986f52 100644
---- a/fs/xfs/xfs_symlink.c
-+++ b/fs/xfs/xfs_symlink.c
-@@ -22,6 +22,7 @@
- #include "xfs_trace.h"
- #include "xfs_trans.h"
- #include "xfs_ialloc.h"
-+#include "xfs_error.h"
+ 		/* Reserve AG blocks for future btree expansion. */
+ 		error = xfs_fs_reserve_ag_blocks(mp);
+ 		if (error && error != -ENOSPC)
+@@ -955,7 +946,6 @@ xfs_mountfs(
  
- /* ----- Kernel only functions below ----- */
+  out_agresv:
+ 	xfs_fs_unreserve_ag_blocks(mp);
+- out_quota:
+ 	xfs_qm_unmount_quotas(mp);
+  out_rtunmount:
+ 	xfs_rtunmount_inodes(mp);
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index cb0edb1d68ef..8b6c7163f684 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -749,7 +749,10 @@ xfs_reflink_end_cow(
+ }
+ 
+ /*
+- * Free leftover CoW reservations that didn't get cleaned out.
++ * Free all CoW staging blocks that are still referenced by the ondisk refcount
++ * metadata.  The ondisk metadata does not track which inode created the
++ * staging extent, so callers must ensure that there are no cached inodes with
++ * live CoW staging extents.
+  */
  int
-@@ -101,12 +102,10 @@ xfs_readlink(
- {
- 	struct xfs_mount *mp = ip->i_mount;
- 	xfs_fsize_t	pathlen;
--	int		error = 0;
-+	int		error = -EFSCORRUPTED;
- 
- 	trace_xfs_readlink(ip);
- 
--	ASSERT(ip->i_df.if_format != XFS_DINODE_FMT_LOCAL);
+ xfs_reflink_recover_cow(
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 778b57b1f020..c7ac486ca5d3 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1739,15 +1739,6 @@ xfs_remount_rw(
+ 	 */
+ 	xfs_restore_resvblks(mp);
+ 	xfs_log_work_queue(mp);
 -
- 	if (xfs_is_shutdown(mp))
- 		return -EIO;
+-	/* Recover any CoW blocks that never got remapped. */
+-	error = xfs_reflink_recover_cow(mp);
+-	if (error) {
+-		xfs_err(mp,
+-			"Error %d recovering leftover CoW allocations.", error);
+-		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+-		return error;
+-	}
+ 	xfs_blockgc_start(mp);
  
-@@ -121,12 +120,22 @@ xfs_readlink(
- 			 __func__, (unsigned long long) ip->i_ino,
- 			 (long long) pathlen);
- 		ASSERT(0);
--		error = -EFSCORRUPTED;
- 		goto out;
- 	}
- 
-+	if (ip->i_df.if_format == XFS_DINODE_FMT_LOCAL) {
-+		/*
-+		 * The VFS crashes on a NULL pointer, so return -EFSCORRUPTED if
-+		 * if_data is junk.
-+		 */
-+		if (XFS_IS_CORRUPT(ip->i_mount, !ip->i_df.if_u1.if_data))
-+			goto out;
- 
--	error = xfs_readlink_bmap_ilocked(ip, link);
-+		memcpy(link, ip->i_df.if_u1.if_data, ip->i_disk_size + 1);
-+		error = 0;
-+	} else {
-+		error = xfs_readlink_bmap_ilocked(ip, link);
-+	}
- 
-  out:
- 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+ 	/* Create the per-AG metadata reservation pool .*/
 
