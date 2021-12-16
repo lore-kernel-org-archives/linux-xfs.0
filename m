@@ -2,38 +2,38 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79DC6C4321E
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F1D5C4332F
 	for <linux-xfs@archiver.kernel.org>; Thu, 16 Dec 2021 21:08:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242020AbhLPVIV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Dec 2021 16:08:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53488 "EHLO
+        id S241566AbhLPVIU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Dec 2021 16:08:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53518 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241550AbhLPVHV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Dec 2021 16:07:21 -0500
+        with ESMTP id S241588AbhLPVHY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Dec 2021 16:07:24 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5768FC06173F;
-        Thu, 16 Dec 2021 13:07:21 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB40AC061751;
+        Thu, 16 Dec 2021 13:07:23 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=19L35JVLRTrAp5NKOV2Bx+UpgN8Jr6QXV+BBWJ4TIk8=; b=Sf8pSMfs8U7OMZoqcbrgs8SS/3
-        r6WbdCSnY9eAAsb7URV2bsHQpfA5pw+fk+PYDON0KNZpQRbZjynvC7JQ6/iEP8no4yPR5Zb9f2Q6X
-        ttraZOUOflo0v3yI5RyXMHIF/GVXfl1V9FjJmyW5qMpFemkHdGHHS2/Phaf15y2ayc+dn4OMd3bFD
-        oCdwHwQ33WSsRTkye1yDD/DTEiIIKabmBCKPG0wKMt3q48kqxrqAKCb1v3nn9UViSOYkRhSIPbEFh
-        8Miof6DKPP+WC7R0BKDYdr6bxUgIvPpfzn8mNRNh6WJO6OvHQnQoptswa7mjBTTi9uwM5zu3epH+x
-        I6OrOopA==;
+        bh=C/aEEIUI8R1IaR4jIAxLPfTciBIfzrBXc1+qsDU9LWQ=; b=aBSQ2v/hS8CUP+5vmDxnEbfDm2
+        xNkZzKlEY251Gwp3szPLCYi1bdov1Nu8pYaqMxObQJoSWMp6K4j4MeBuhXIRue07oDRPP9wK6Y6lf
+        W4itzeHSKgawVtnubEkqjdH7+ux9w4+n35RkF7hUVEV9/IOyJ3BEE+JgTaM4s8ynEyvCveDDhxQ9C
+        7dj225p7o/WDzITGYj46OR6lin5M63FTJ9PHiSn3+119t834sFKZvxoaOHhQuFhVV28uC3Tsncf+J
+        O35ziU7uZGD4txO3uFHWPq/OhZwI+GzZ3SH8mOYxdw2AeY53O4XjxhKRRoS5Nh9lu5uYq7LBowsxe
+        6PrZGACw==;
 Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mxxyB-00Fx3a-Jr; Thu, 16 Dec 2021 21:07:19 +0000
+        id 1mxxyD-00Fx5o-V0; Thu, 16 Dec 2021 21:07:22 +0000
 From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
         linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v3 07/25] iomap: Convert iomap_releasepage to use a folio
-Date:   Thu, 16 Dec 2021 21:06:57 +0000
-Message-Id: <20211216210715.3801857-8-willy@infradead.org>
+Subject: [PATCH v3 25/25] xfs: Support large folios
+Date:   Thu, 16 Dec 2021 21:07:15 +0000
+Message-Id: <20211216210715.3801857-26-willy@infradead.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20211216210715.3801857-1-willy@infradead.org>
 References: <20211216210715.3801857-1-willy@infradead.org>
@@ -43,39 +43,36 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This is an address_space operation, so its argument must remain as a
-struct page, but we can use a folio internally.
+Now that iomap has been converted, XFS is large folio safe.
+Indicate to the VFS that it can now create large folios for XFS.
 
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/iomap/buffered-io.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_icache.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 16604f605357..b0192b148c9f 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -464,15 +464,15 @@ iomap_releasepage(struct page *page, gfp_t gfp_mask)
- {
- 	struct folio *folio = page_folio(page);
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index da4af2142a2b..cdc39f576ca1 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -87,6 +87,7 @@ xfs_inode_alloc(
+ 	/* VFS doesn't initialise i_mode or i_state! */
+ 	VFS_I(ip)->i_mode = 0;
+ 	VFS_I(ip)->i_state = 0;
++	mapping_set_large_folios(VFS_I(ip)->i_mapping);
  
--	trace_iomap_releasepage(page->mapping->host, page_offset(page),
--			PAGE_SIZE);
-+	trace_iomap_releasepage(folio->mapping->host, folio_pos(folio),
-+			folio_size(folio));
+ 	XFS_STATS_INC(mp, vn_active);
+ 	ASSERT(atomic_read(&ip->i_pincount) == 0);
+@@ -320,6 +321,7 @@ xfs_reinit_inode(
+ 	inode->i_rdev = dev;
+ 	inode->i_uid = uid;
+ 	inode->i_gid = gid;
++	mapping_set_large_folios(inode->i_mapping);
+ 	return error;
+ }
  
- 	/*
- 	 * mm accommodates an old ext3 case where clean pages might not have had
- 	 * the dirty bit cleared. Thus, it can send actual dirty pages to
- 	 * ->releasepage() via shrink_active_list(); skip those here.
- 	 */
--	if (PageDirty(page) || PageWriteback(page))
-+	if (folio_test_dirty(folio) || folio_test_writeback(folio))
- 		return 0;
- 	iomap_page_release(folio);
- 	return 1;
 -- 
 2.33.0
 
