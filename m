@@ -2,39 +2,38 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C36EC433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Dec 2021 21:08:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79DC6C4321E
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Dec 2021 21:08:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241617AbhLPVIU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Dec 2021 16:08:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53522 "EHLO
+        id S242020AbhLPVIV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Dec 2021 16:08:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53488 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235454AbhLPVHY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Dec 2021 16:07:24 -0500
+        with ESMTP id S241550AbhLPVHV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Dec 2021 16:07:21 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3DA21C061759;
-        Thu, 16 Dec 2021 13:07:24 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5768FC06173F;
+        Thu, 16 Dec 2021 13:07:21 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=9yx1uM3IgMq95UhqybQy+4eLkKdDKXGRUpPaw12iJ9Q=; b=ju6rjF/d1yjj/3tHRJNwSllSRo
-        dYK94EWF3eLWYVvV2cnhGDp/odpgJzcbaIbJSyvdTL74dS/ZrlHR+NmM+zlaFKfZSaQgWOLvsJcdw
-        5s+ljgkAD13+hPkG7C2YGTfAtGLyXQYgFDtJFPLrQqAjwd+4QrYBlHWy1AYvTRCr8k/htnO/8S7Oo
-        FLD6BidvJWcDujrldJm3zKn1Nd1UhEqS+dRp7cBdGOMbauUC3lhTcNNjl4i9TdaOXc3aKkt0dSpGA
-        +FpT/ArScSqyN4fzOgmPy0EbimIqX092cTIaKd3c6anX3lOvNhPKlQOgBCz8+aihk0s3P/Yb3HWlC
-        wzGeKREQ==;
+        bh=19L35JVLRTrAp5NKOV2Bx+UpgN8Jr6QXV+BBWJ4TIk8=; b=Sf8pSMfs8U7OMZoqcbrgs8SS/3
+        r6WbdCSnY9eAAsb7URV2bsHQpfA5pw+fk+PYDON0KNZpQRbZjynvC7JQ6/iEP8no4yPR5Zb9f2Q6X
+        ttraZOUOflo0v3yI5RyXMHIF/GVXfl1V9FjJmyW5qMpFemkHdGHHS2/Phaf15y2ayc+dn4OMd3bFD
+        oCdwHwQ33WSsRTkye1yDD/DTEiIIKabmBCKPG0wKMt3q48kqxrqAKCb1v3nn9UViSOYkRhSIPbEFh
+        8Miof6DKPP+WC7R0BKDYdr6bxUgIvPpfzn8mNRNh6WJO6OvHQnQoptswa7mjBTTi9uwM5zu3epH+x
+        I6OrOopA==;
 Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mxxyB-00Fx38-1v; Thu, 16 Dec 2021 21:07:19 +0000
+        id 1mxxyB-00Fx3a-Jr; Thu, 16 Dec 2021 21:07:19 +0000
 From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
         linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v3 02/25] block: Add bio_for_each_folio_all()
-Date:   Thu, 16 Dec 2021 21:06:52 +0000
-Message-Id: <20211216210715.3801857-3-willy@infradead.org>
+        linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+Subject: [PATCH v3 07/25] iomap: Convert iomap_releasepage to use a folio
+Date:   Thu, 16 Dec 2021 21:06:57 +0000
+Message-Id: <20211216210715.3801857-8-willy@infradead.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20211216210715.3801857-1-willy@infradead.org>
 References: <20211216210715.3801857-1-willy@infradead.org>
@@ -44,101 +43,39 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Allow callers to iterate over each folio instead of each page.  The
-bio need not have been constructed using folios originally.
+This is an address_space operation, so its argument must remain as a
+struct page, but we can use a folio internally.
 
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-Reviewed-by: Jens Axboe <axboe@kernel.dk>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- Documentation/core-api/kernel-api.rst |  1 +
- include/linux/bio.h                   | 53 ++++++++++++++++++++++++++-
- 2 files changed, 53 insertions(+), 1 deletion(-)
+ fs/iomap/buffered-io.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/Documentation/core-api/kernel-api.rst b/Documentation/core-api/kernel-api.rst
-index 2e7186805148..7f0cb604b6ab 100644
---- a/Documentation/core-api/kernel-api.rst
-+++ b/Documentation/core-api/kernel-api.rst
-@@ -279,6 +279,7 @@ Accounting Framework
- Block Devices
- =============
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 16604f605357..b0192b148c9f 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -464,15 +464,15 @@ iomap_releasepage(struct page *page, gfp_t gfp_mask)
+ {
+ 	struct folio *folio = page_folio(page);
  
-+.. kernel-doc:: include/linux/bio.h
- .. kernel-doc:: block/blk-core.c
-    :export:
+-	trace_iomap_releasepage(page->mapping->host, page_offset(page),
+-			PAGE_SIZE);
++	trace_iomap_releasepage(folio->mapping->host, folio_pos(folio),
++			folio_size(folio));
  
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index a783cac49978..e3c9e8207f12 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -166,7 +166,7 @@ static inline void bio_advance(struct bio *bio, unsigned int nbytes)
-  */
- #define bio_for_each_bvec_all(bvl, bio, i)		\
- 	for (i = 0, bvl = bio_first_bvec_all(bio);	\
--	     i < (bio)->bi_vcnt; i++, bvl++)		\
-+	     i < (bio)->bi_vcnt; i++, bvl++)
- 
- #define bio_iter_last(bvec, iter) ((iter).bi_size == (bvec).bv_len)
- 
-@@ -260,6 +260,57 @@ static inline struct bio_vec *bio_last_bvec_all(struct bio *bio)
- 	return &bio->bi_io_vec[bio->bi_vcnt - 1];
- }
- 
-+/**
-+ * struct folio_iter - State for iterating all folios in a bio.
-+ * @folio: The current folio we're iterating.  NULL after the last folio.
-+ * @offset: The byte offset within the current folio.
-+ * @length: The number of bytes in this iteration (will not cross folio
-+ *	boundary).
-+ */
-+struct folio_iter {
-+	struct folio *folio;
-+	size_t offset;
-+	size_t length;
-+	/* private: for use by the iterator */
-+	size_t _seg_count;
-+	int _i;
-+};
-+
-+static inline void bio_first_folio(struct folio_iter *fi, struct bio *bio,
-+				   int i)
-+{
-+	struct bio_vec *bvec = bio_first_bvec_all(bio) + i;
-+
-+	fi->folio = page_folio(bvec->bv_page);
-+	fi->offset = bvec->bv_offset +
-+			PAGE_SIZE * (bvec->bv_page - &fi->folio->page);
-+	fi->_seg_count = bvec->bv_len;
-+	fi->length = min(folio_size(fi->folio) - fi->offset, fi->_seg_count);
-+	fi->_i = i;
-+}
-+
-+static inline void bio_next_folio(struct folio_iter *fi, struct bio *bio)
-+{
-+	fi->_seg_count -= fi->length;
-+	if (fi->_seg_count) {
-+		fi->folio = folio_next(fi->folio);
-+		fi->offset = 0;
-+		fi->length = min(folio_size(fi->folio), fi->_seg_count);
-+	} else if (fi->_i + 1 < bio->bi_vcnt) {
-+		bio_first_folio(fi, bio, fi->_i + 1);
-+	} else {
-+		fi->folio = NULL;
-+	}
-+}
-+
-+/**
-+ * bio_for_each_folio_all - Iterate over each folio in a bio.
-+ * @fi: struct folio_iter which is updated for each folio.
-+ * @bio: struct bio to iterate over.
-+ */
-+#define bio_for_each_folio_all(fi, bio)				\
-+	for (bio_first_folio(&fi, bio, 0); fi.folio; bio_next_folio(&fi, bio))
-+
- enum bip_flags {
- 	BIP_BLOCK_INTEGRITY	= 1 << 0, /* block layer owns integrity data */
- 	BIP_MAPPED_INTEGRITY	= 1 << 1, /* ref tag has been remapped */
+ 	/*
+ 	 * mm accommodates an old ext3 case where clean pages might not have had
+ 	 * the dirty bit cleared. Thus, it can send actual dirty pages to
+ 	 * ->releasepage() via shrink_active_list(); skip those here.
+ 	 */
+-	if (PageDirty(page) || PageWriteback(page))
++	if (folio_test_dirty(folio) || folio_test_writeback(folio))
+ 		return 0;
+ 	iomap_page_release(folio);
+ 	return 1;
 -- 
 2.33.0
 
