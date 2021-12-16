@@ -2,97 +2,207 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBC56C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Dec 2021 19:25:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A77A4C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Dec 2021 19:36:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240902AbhLPTZv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Dec 2021 14:25:51 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:52140 "EHLO
-        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231376AbhLPTZu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Dec 2021 14:25:50 -0500
+        id S241022AbhLPTgQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Dec 2021 14:36:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60848 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230188AbhLPTgQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Dec 2021 14:36:16 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4505AC061574;
+        Thu, 16 Dec 2021 11:36:16 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A419861F2A
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Dec 2021 19:25:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 024C4C36AE3;
-        Thu, 16 Dec 2021 19:25:49 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D85A461F56;
+        Thu, 16 Dec 2021 19:36:15 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C2F0C36AE7;
+        Thu, 16 Dec 2021 19:36:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1639682750;
-        bh=bqkoxqojgixNXaZ4wDoQ/5873zRznHIbizGsVw1N1C8=;
+        s=k20201202; t=1639683375;
+        bh=XYnENVWX+t/nsTdqIGGKpVqYRQAVeLyh8aT//mTOS3A=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=VrKBqSBr/YDdAbON4MT90Iq60FT90mxR00gRUtbjR7AbEz5NH3UlF/82qSIto/EQW
-         BLao6lPwg2EBjX/W3EzgAV4yrDzQ8L20iBr4zts+IRFpdYb7cCELtjX0dlbCo9Ijqr
-         A+VM7h72hrObn4W3pqftyg8dk200MYi71Bi2zz3CIWr7Zh0K3PpMxO0daVjJU4EIab
-         sSIrW4XVXPqvOCJRbttfyfyz2VVgWQlV//FN/ZJH5hucTI6zb3RC9tiPOgRSv0VY9H
-         wcUo0TYrm2VkV5TXoWzd2/T5zd1EseRAw2y8ZZPHk2xhVVvGffHhamQlYv9DCmGRZo
-         v+Pv2RL/NP54Q==
-Date:   Thu, 16 Dec 2021 11:25:49 -0800
+        b=QtTcM8L2QH3VtjpGERJHzEPIkwXHyY2Sudl0Zyby7cdQBbKU5euOKAcvzA25//NJ1
+         wmpamRKgynzun8QhHV0OLeUcMYKYRF6n1qYvlBRzTQjHu9IVZuNCmIlsIdIt5LuSru
+         pE3xACQEux175tL2tmo+RtFd/dM93rUW0fSX2pf486n0FXChi+/n65CzCabtzeSN7s
+         mhBQpBwE1Xi7RljJdPk7yB4u0WwPO/l8qfvVQDWsqNaDFpDVJdxE4w4TKyb4zpO8bp
+         qBd+ax17pif9NKjxBQ7HTATUU8eQs2mpj7YRvGRvL8utUbyf0XPOBT7oeCMcmztvZd
+         OCMHHoLSMweAA==
+Date:   Thu, 16 Dec 2021 11:36:14 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/7] xfs: fix a bug in the online fsck directory leaf1
- bestcount check
-Message-ID: <20211216192549.GC27664@magnolia>
-References: <163961695502.3129691.3496134437073533141.stgit@magnolia>
- <163961697197.3129691.1911552605195534271.stgit@magnolia>
- <20211216050537.GA449541@dread.disaster.area>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
+        Jens Axboe <axboe@kernel.dk>,
+        Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2 19/28] iomap: Convert __iomap_zero_iter to use a folio
+Message-ID: <20211216193614.GA27676@magnolia>
+References: <20211108040551.1942823-1-willy@infradead.org>
+ <20211108040551.1942823-20-willy@infradead.org>
+ <YbJ3O1qf+9p/HWka@casper.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211216050537.GA449541@dread.disaster.area>
+In-Reply-To: <YbJ3O1qf+9p/HWka@casper.infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Dec 16, 2021 at 04:05:37PM +1100, Dave Chinner wrote:
-> On Wed, Dec 15, 2021 at 05:09:32PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > When xfs_scrub encounters a directory with a leaf1 block, it tries to
-> > validate that the leaf1 block's bestcount (aka the best free count of
-> > each directory data block) is the correct size.  Previously, this author
-> > believed that comparing bestcount to the directory isize (since
-> > directory data blocks are under isize, and leaf/bestfree blocks are
-> > above it) was sufficient.
-> > 
-> > Unfortunately during testing of online repair, it was discovered that it
-> > is possible to create a directory with a hole between the last directory
-> > block and isize.
+On Thu, Dec 09, 2021 at 09:38:03PM +0000, Matthew Wilcox wrote:
+> On Mon, Nov 08, 2021 at 04:05:42AM +0000, Matthew Wilcox (Oracle) wrote:
+> > +++ b/fs/iomap/buffered-io.c
+> > @@ -881,17 +881,20 @@ EXPORT_SYMBOL_GPL(iomap_file_unshare);
+> >  
+> >  static s64 __iomap_zero_iter(struct iomap_iter *iter, loff_t pos, u64 length)
+> >  {
+> > +	struct folio *folio;
+> >  	struct page *page;
+> >  	int status;
+> > -	unsigned offset = offset_in_page(pos);
+> > -	unsigned bytes = min_t(u64, PAGE_SIZE - offset, length);
+> > +	size_t offset, bytes;
+> >  
+> > -	status = iomap_write_begin(iter, pos, bytes, &page);
+> > +	status = iomap_write_begin(iter, pos, length, &page);
 > 
-> We have xfs_da3_swap_lastblock() that can leave an -empty- da block
-> between the last referenced block and isize, but that's not a "hole"
-> in the file. If you don't mean xfs_da3_swap_lastblock(), then can
-> you clarify what you mean by a "hole" here and explain to me how the
-> situation it occurs in comes about?
+> This turned out to be buggy.  Darrick and I figured out why his tests
+> were failing and mine weren't; this only shows up with a 4kB block
+> size filesystem and I was only testing with 1kB block size filesystems.
+> (at least on x86; I haven't figured out why it passes with 1kB block size
+> filesystems, so I'm not sure what would be true on other filesystems).
+> iomap_write_begin() is not prepared to deal with a length that spans a
+> page boundary.  So I'm replacing this patch with the following patches
+> (whitespace damaged; pick them up from
+> https://git.infradead.org/users/willy/linux.git/tag/refs/tags/iomap-folio-5.17c
+> if you want to compile them):
+> 
+> commit 412212960b72
+> Author: Matthew Wilcox (Oracle) <willy@infradead.org>
+> Date:   Thu Dec 9 15:47:44 2021 -0500
+> 
+>     iomap: Allow iomap_write_begin() to be called with the full length
+> 
+>     In the future, we want write_begin to know the entire length of the
+>     write so that it can choose to allocate large folios.  Pass the full
+>     length in from __iomap_zero_iter() and limit it where necessary.
+> 
+>     Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+> 
+> diff --git a/fs/gfs2/bmap.c b/fs/gfs2/bmap.c
+> index d67108489148..9270db17c435 100644
+> --- a/fs/gfs2/bmap.c
+> +++ b/fs/gfs2/bmap.c
+> @@ -968,6 +968,9 @@ static int gfs2_iomap_page_prepare(struct inode *inode, loff_t pos,
+>         struct gfs2_sbd *sdp = GFS2_SB(inode);
+>         unsigned int blocks;
+> 
+> +       /* gfs2 does not support large folios yet */
+> +       if (len > PAGE_SIZE)
+> +               len = PAGE_SIZE;
 
-I don't actually know how it comes about.  I wrote a test that sets up
-fsstress to expand and contract directories and races xfs_scrub -n, and
-noticed that I'd periodically get complaints about directories (usually
-$SCRATCH_MNT/p$CPU) where the last block(s) before i_size were actually
-holes.
-
-I began reading the dir2 code to try to figure out how this came about
-(clearly we're not updating i_size somewhere) but then took the shortcut
-of seeing if xfs_repair or xfs_check complained about this situation.
-Neither of them did, and I found a couple more directories in a similar
-situation on my crash test dummy machine, and concluded "Wellllp, I
-guess this is part of the ondisk format!" and committed the patch.
-
-Also, I thought xfs_da3_swap_lastblock only operates on leaf and da
-btree blocks, not the blocks containing directory entries?  I /think/
-the actual explanation is that something goes wrong in
-xfs_dir2_shrink_inode (maybe?) such that the mapping goes away but
-i_disk_size doesn't get updated?  Not sure how /that/ can happen,
-though...
+This is awkward -- gfs2 doesn't set the mapping flag to indicate that it
+supports large folios, so it should never be asked to deal with more
+than a page at a time.  Shouldn't iomap_write_begin clamp its len
+argument to PAGE_SIZE at the start if the mapping doesn't have the large
+folios flag set?
 
 --D
 
+>         blocks = ((pos & blockmask) + len + blockmask) >> inode->i_blkbits;
+>         return gfs2_trans_begin(sdp, RES_DINODE + blocks, 0);
+>  }
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 8d7a67655b60..67fcd3b9928d 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -632,6 +632,8 @@ static int iomap_write_begin(const struct iomap_iter *iter, loff_t pos,
+>                 goto out_no_page;
+>         }
+>         folio = page_folio(page);
+> +       if (pos + len > folio_pos(folio) + folio_size(folio))
+> +               len = folio_pos(folio) + folio_size(folio) - pos;
 > 
-> Cheers,
+>         if (srcmap->type == IOMAP_INLINE)
+>                 status = iomap_write_begin_inline(iter, page);
+> @@ -891,16 +893,19 @@ static s64 __iomap_zero_iter(struct iomap_iter *iter, loff
+> _t pos, u64 length)
+>         struct page *page;
+>         int status;
+>         unsigned offset = offset_in_page(pos);
+> -       unsigned bytes = min_t(u64, PAGE_SIZE - offset, length);
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> -       status = iomap_write_begin(iter, pos, bytes, &page);
+> +       if (length > UINT_MAX)
+> +               length = UINT_MAX;
+> +       status = iomap_write_begin(iter, pos, length, &page);
+>         if (status)
+>                 return status;
+> +       if (length > PAGE_SIZE - offset)
+> +               length = PAGE_SIZE - offset;
+> 
+> -       zero_user(page, offset, bytes);
+> +       zero_user(page, offset, length);
+>         mark_page_accessed(page);
+> 
+> -       return iomap_write_end(iter, pos, bytes, bytes, page);
+> +       return iomap_write_end(iter, pos, length, length, page);
+>  }
+> 
+>  static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
+> 
+> 
+> commit 78c747a1b3a1
+> Author: Matthew Wilcox (Oracle) <willy@infradead.org>
+> Date:   Fri Nov 5 14:24:09 2021 -0400
+> 
+>     iomap: Convert __iomap_zero_iter to use a folio
+>     
+>     The zero iterator can work in folio-sized chunks instead of page-sized
+>     chunks.  This will save a lot of page cache lookups if the file is cached
+>     in large folios.
+>     
+>     Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+>     Reviewed-by: Christoph Hellwig <hch@lst.de>
+>     Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> 
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 67fcd3b9928d..bbde6d4f27cd 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -890,20 +890,23 @@ EXPORT_SYMBOL_GPL(iomap_file_unshare);
+>  
+>  static s64 __iomap_zero_iter(struct iomap_iter *iter, loff_t pos, u64 length)
+>  {
+> +       struct folio *folio;
+>         struct page *page;
+>         int status;
+> -       unsigned offset = offset_in_page(pos);
+> +       size_t offset;
+>  
+>         if (length > UINT_MAX)
+>                 length = UINT_MAX;
+>         status = iomap_write_begin(iter, pos, length, &page);
+>         if (status)
+>                 return status;
+> -       if (length > PAGE_SIZE - offset)
+> -               length = PAGE_SIZE - offset;
+> +       folio = page_folio(page);
+>  
+> -       zero_user(page, offset, length);
+> -       mark_page_accessed(page);
+> +       offset = offset_in_folio(folio, pos);
+> +       if (length > folio_size(folio) - offset)
+> +               length = folio_size(folio) - offset;
+> +       folio_zero_range(folio, offset, length);
+> +       folio_mark_accessed(folio);
+>  
+>         return iomap_write_end(iter, pos, length, length, page);
+>  }
+> 
+> 
+> The xfstests that Darrick identified as failing all passed.  Running a
+> full sweep now; then I'll re-run with a 1kB filesystem to be sure that
+> still passes.  Then I'll send another pull request.
