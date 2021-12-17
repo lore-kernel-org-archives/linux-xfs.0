@@ -2,67 +2,82 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FB8EC433EF
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Dec 2021 21:05:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2783FC433F5
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Dec 2021 21:38:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235541AbhLQVFk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Dec 2021 16:05:40 -0500
-Received: from sandeen.net ([63.231.237.45]:35992 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229461AbhLQVFk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 17 Dec 2021 16:05:40 -0500
-Received: from [10.0.0.146] (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S229683AbhLQVim (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Dec 2021 16:38:42 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:42304 "EHLO
+        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229720AbhLQVim (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Dec 2021 16:38:42 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 55A014905;
-        Fri, 17 Dec 2021 15:05:15 -0600 (CST)
-Message-ID: <86a01a07-630a-6bc3-749d-678037221b1d@sandeen.net>
-Date:   Fri, 17 Dec 2021 15:05:38 -0600
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.4.0
-Content-Language: en-US
-To:     "Darrick J. Wong" <djwong@kernel.org>,
-        Eric Sandeen <sandeen@redhat.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-References: <20211217203900.GQ27664@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
+        by ams.source.kernel.org (Postfix) with ESMTPS id 56693B82AE4
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Dec 2021 21:38:41 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C269C36AE2;
+        Fri, 17 Dec 2021 21:38:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1639777120;
+        bh=N0KiOQdxrBQRX138YnhZAMNoJxFaC9bMsXYiwD75tbk=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=tnPNNusvjQqKUo/i5e6e0i5P54fzDmcWgURWWc28g59C8p1hiEuqjKbgBDJOgjuu5
+         qCrF8/XaLT3APsdtwTxmxlT+sphM2WbOJz3yiaB+Sszbgc+2KxiWcSxPfKaeL7Owt6
+         9QfdBd89Gt19Sbatg8sDMR1tr4Do0kaDsKClyRxwaBsvbl+cJOoWZl74Wfs5pjmid8
+         CzIV4qAHuyHVYqaOuJJsXyhHlYgcclYhX7LsD6YqlQdH4RgDQlms1Zbavw0wAPSXWY
+         c5vGPQuROJqVCwDYvML3uk43WEirjt0cNzclAFupIOw5e6cOFxxmERcMRaj5505QKK
+         zmrPkQhoY2qVg==
+Date:   Fri, 17 Dec 2021 13:38:39 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
 Subject: Re: mkfs: document sample configuration file location
-In-Reply-To: <20211217203900.GQ27664@magnolia>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Message-ID: <20211217213839.GR27664@magnolia>
+References: <20211217203900.GQ27664@magnolia>
+ <86a01a07-630a-6bc3-749d-678037221b1d@sandeen.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <86a01a07-630a-6bc3-749d-678037221b1d@sandeen.net>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 12/17/21 2:39 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Fri, Dec 17, 2021 at 03:05:38PM -0600, Eric Sandeen wrote:
 > 
-> Update the documentation to note where one can find sample configuration
-> files.
 > 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->   man/man8/mkfs.xfs.8 |    1 +
->   1 file changed, 1 insertion(+)
+> On 12/17/21 2:39 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Update the documentation to note where one can find sample configuration
+> > files.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >   man/man8/mkfs.xfs.8 |    1 +
+> >   1 file changed, 1 insertion(+)
+> > 
+> > diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
+> > index 4d292dbe..7984f818 100644
+> > --- a/man/man8/mkfs.xfs.8
+> > +++ b/man/man8/mkfs.xfs.8
+> > @@ -159,6 +159,7 @@ The configuration options will be sourced from the file specified by the
+> >   option string.
+> >   This option can be use either an absolute or relative path to the configuration
+> >   file to be read.
+> > +Sample configuration files can be found in /usr/share/xfsprogs/mkfs/.
 > 
-> diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
-> index 4d292dbe..7984f818 100644
-> --- a/man/man8/mkfs.xfs.8
-> +++ b/man/man8/mkfs.xfs.8
-> @@ -159,6 +159,7 @@ The configuration options will be sourced from the file specified by the
->   option string.
->   This option can be use either an absolute or relative path to the configuration
->   file to be read.
-> +Sample configuration files can be found in /usr/share/xfsprogs/mkfs/.
+> That path is actually configure-time configurable, right, so ... sorry
+> for being a PITA but I'm not sure we should cite a definitive location
+> like that in the manpage ..?
 
-That path is actually configure-time configurable, right, so ... sorry
-for being a PITA but I'm not sure we should cite a definitive location
-like that in the manpage ..?
+Yeah, you're right, this should be autogenerated via sed or something.
 
->   .RE
->   .PP
->   .PD 0
+--D
+
 > 
+> >   .RE
+> >   .PP
+> >   .PD 0
+> > 
