@@ -2,122 +2,168 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51A4CC433F5
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Dec 2021 17:05:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98D92C4332F
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Dec 2021 17:07:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239630AbhLQRF1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Dec 2021 12:05:27 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:47208 "EHLO
-        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239619AbhLQRFY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Dec 2021 12:05:24 -0500
+        id S239619AbhLQRHC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Dec 2021 12:07:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52970 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236055AbhLQRHC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Dec 2021 12:07:02 -0500
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 869BBC061574;
+        Fri, 17 Dec 2021 09:07:01 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4E02462313;
-        Fri, 17 Dec 2021 17:05:24 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3F7BC36AE1;
-        Fri, 17 Dec 2021 17:05:23 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id CC907CE2597;
+        Fri, 17 Dec 2021 17:06:59 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B81DCC36AE1;
+        Fri, 17 Dec 2021 17:06:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1639760723;
-        bh=HGHIpmA0yzJfm35X6d4VhUpxnuLa9XOigADxb408EUM=;
+        s=k20201202; t=1639760817;
+        bh=a48+sPRP2ez+GWMoiUQjK4IcJC/NpLdtFA1qN4JerbE=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Rg5afhcXiVCBjBanS4lOzia/BtDVwiBQSBxFHhL3AZQTu8JWfqBPS8yhXEr+2oEkV
-         y3Zko+BAQ+P5Cp3pxPfYQmCtCc/U7GT9pfWrLLY8Vz7rAzmFAexzlmh5KRkKYnVle2
-         m89IXzdY49Ce2kHGkxnCI0slit00Rm+JDbvuCeMcd6iQJAAbm1SaAVZEvbiROSzM41
-         aKTHf4Bq7sNrVkTJiKY6RByeA1lhM6553eeh0jyzp/ZWYIzuTblQsglbq0h4MafOP+
-         XD+IygridJZ7205AnvDHI5rbRS0sVZybdzNBlVbjHrwYXkNjsUs0ZrMiOP393imTBB
-         iSNBjBCzXhIvA==
-Date:   Fri, 17 Dec 2021 09:05:23 -0800
+        b=klYFFJ01+S9tFzq46+5eScuOuxn0nJDB+Di4/Qb5SpdnXt0aUmtKQVe/5MFBgKenX
+         3kO14XlUn4LH3yffraImERW24yvMRD3GB6JRHYSj1EbFU9vnpajdod3W80jjApyDje
+         DBe7YxEsmK7Ih2N+byGaDMGpB8GVs0nTsVWy41SqZjd71yoYYxE6/JZjvk74o4sb4O
+         4+jJ4HspPwYAyYFl2Kl0ybQGuSabhoc3l5mXxWG/NYpMJGcUNwHYV+FxvcgHixGR+Z
+         W3u8vRf6hujlFSJaxekAvBvfl0yZt/ndvR8mKrMh3awc8upjvsynTugVbbngYVABKc
+         drpc5xLJqotlw==
+Date:   Fri, 17 Dec 2021 09:06:57 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dan Carpenter <dan.carpenter@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH] xfs: prevent a WARN_ONCE() in xfs_ioc_attr_list()
-Message-ID: <20211217170523.GG27664@magnolia>
-References: <20211217065453.GB26548@kili>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v3] tests/xfs: test COW writeback failure when
+ overlapping non-shared blocks
+Message-ID: <20211217170657.GH27664@magnolia>
+References: <20211217153234.279540-1-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211217065453.GB26548@kili>
+In-Reply-To: <20211217153234.279540-1-bfoster@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Dec 17, 2021 at 09:54:53AM +0300, Dan Carpenter wrote:
-> The "bufsize" comes from the root user.  If "bufsize" is negative then,
-> because of type promotion, neither of the validation checks at the start
-> of the function are able to catch it:
+On Fri, Dec 17, 2021 at 10:32:34AM -0500, Brian Foster wrote:
+> Test that COW writeback that overlaps non-shared delalloc blocks
+> does not leave around stale delalloc blocks on I/O failure. This
+> triggers assert failures and free space accounting corruption on
+> XFS.
 > 
-> 	if (bufsize < sizeof(struct xfs_attrlist) ||
-> 	    bufsize > XFS_XATTR_LIST_MAX)
-> 		return -EINVAL;
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
 > 
-> This means "bufsize" will trigger (WARN_ON_ONCE(size > INT_MAX)) in
-> kvmalloc_node().  Fix this by changing the type from int to size_t.
+> v3:
+> - Use fsync and sync_range to avoid spurious failure caused by log I/O
+>   errors.
+> - Add kernel commit reference.
+> v2: https://lore.kernel.org/fstests/20211025130053.8343-1-bfoster@redhat.com/
+> - Explicitly set COW extent size hint.
+> - Move to tests/xfs.
+> - Various minor cleanups.
+> v1: https://lore.kernel.org/fstests/20211021163959.1887011-1-bfoster@redhat.com/
 > 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+>  tests/xfs/999     | 67 +++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/999.out |  2 ++
+>  2 files changed, 69 insertions(+)
+>  create mode 100755 tests/xfs/999
+>  create mode 100644 tests/xfs/999.out
+> 
+> diff --git a/tests/xfs/999 b/tests/xfs/999
+> new file mode 100755
+> index 00000000..4308c0da
+> --- /dev/null
+> +++ b/tests/xfs/999
+> @@ -0,0 +1,67 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2021 Red Hat, Inc.  All Rights Reserved.
+> +#
+> +# FS QA Test 999
+> +#
+> +# Test that COW writeback that overlaps non-shared delalloc blocks does not
+> +# leave around stale delalloc blocks on I/O failure. This triggers assert
+> +# failures and free space accounting corruption on XFS. Fixed by upstream kernel
+> +# commit 5ca5916b6bc9 ("xfs: punch out data fork delalloc blocks on COW
+> +# writeback failure").
+> +#
+> +. ./common/preamble
+> +_begin_fstest auto quick clone
+> +
+> +_cleanup()
+> +{
+> +	_cleanup_flakey
+> +	cd /
+> +	rm -r -f $tmp.*
+> +}
+> +
+> +# Import common functions.
+> +. ./common/reflink
+> +. ./common/dmflakey
+> +
+> +# real QA test starts here
+> +_supported_fs xfs
+> +_require_scratch_reflink
+> +_require_cp_reflink
+> +_require_xfs_io_command "cowextsize"
+> +_require_flakey_with_error_writes
+> +
+> +_scratch_mkfs >> $seqres.full
+> +_init_flakey
+> +_mount_flakey
+> +
+> +blksz=$(_get_file_block_size $SCRATCH_MNT)
+> +
+> +# Set the COW extent size hint to guarantee COW fork preallocation occurs over a
+> +# bordering block offset.
+> +$XFS_IO_PROG -c "cowextsize $((blksz * 2))" $SCRATCH_MNT >> $seqres.full
+> +
+> +# create two files that share a single block
+> +$XFS_IO_PROG -fc "pwrite $blksz $blksz" $SCRATCH_MNT/file1 >> $seqres.full
+> +$XFS_IO_PROG -fc "reflink $SCRATCH_MNT/file1" \
+> +	-c fsync $SCRATCH_MNT/file2 >> $seqres.full
+> +
+> +# Perform a buffered write across the shared and non-shared blocks. On XFS, this
+> +# creates a COW fork extent that covers the shared block as well as the just
+> +# created non-shared delalloc block. Fail the writeback to verify that all
+> +# delayed allocation is cleaned up properly.
+> +_load_flakey_table $FLAKEY_ERROR_WRITES
+> +len=$((blksz * 2))
+> +$XFS_IO_PROG -c "pwrite 0 $len" \
+> +	-c "sync_range -w 0 $len" $SCRATCH_MNT/file2 \
+> +	-c "sync_range -a 0 $len" >> $seqres.full
 
-Makes sense, particularly since the only caller supplies a u32 anyway.
+Nit: put $SCRATCH_MNT/file2 at the end?
+
+Otherwise looks ok to me, so I'll give this one a spin on my test
+infrastructure tonight.  In the mean time,
 
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-> ---
-> It's sort of hard to figure out which Fixes tag to use...  Maybe:
-> 
-> Fixes: 7661809d493b ("mm: don't allow oversized kvmalloc() calls")
-> 
-> so it gets backported to the kernels which have the warning?
-
-But that's just the warning, right?  I think the root problem here is
-turning the ioctl's u32 length argument into a signed int for parameter
-passing, and then promoting it back to unsigned types for validation and
-memory allocation.  I would have suggested:
-
-Fixes: 3e7a779937a2 ("xfs: move the legacy xfs_attr_list to xfs_ioctl.c")
-
-to trigger the autobackport robots, though that's a 2020 commit and
-hence not so useful for spelunking.
-
-Looking through the multiple reorganiziations of the git tree I think
-the validation error itself dates to before 2013, but patching old
-kernels will require the human touch.
-
 --D
 
-> 
->  fs/xfs/xfs_ioctl.c | 2 +-
->  fs/xfs/xfs_ioctl.h | 5 +++--
->  2 files changed, 4 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 174cd8950cb6..29231a8c8a45 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -372,7 +372,7 @@ int
->  xfs_ioc_attr_list(
->  	struct xfs_inode		*dp,
->  	void __user			*ubuf,
-> -	int				bufsize,
-> +	size_t				bufsize,
->  	int				flags,
->  	struct xfs_attrlist_cursor __user *ucursor)
->  {
-> diff --git a/fs/xfs/xfs_ioctl.h b/fs/xfs/xfs_ioctl.h
-> index 28453a6d4461..845d3bcab74b 100644
-> --- a/fs/xfs/xfs_ioctl.h
-> +++ b/fs/xfs/xfs_ioctl.h
-> @@ -38,8 +38,9 @@ xfs_readlink_by_handle(
->  int xfs_ioc_attrmulti_one(struct file *parfilp, struct inode *inode,
->  		uint32_t opcode, void __user *uname, void __user *value,
->  		uint32_t *len, uint32_t flags);
-> -int xfs_ioc_attr_list(struct xfs_inode *dp, void __user *ubuf, int bufsize,
-> -	int flags, struct xfs_attrlist_cursor __user *ucursor);
-> +int xfs_ioc_attr_list(struct xfs_inode *dp, void __user *ubuf,
-> +		      size_t bufsize, int flags,
-> +		      struct xfs_attrlist_cursor __user *ucursor);
->  
->  extern struct dentry *
->  xfs_handle_to_dentry(
+
+> +_load_flakey_table $FLAKEY_ALLOW_WRITES
+> +
+> +# Try a post-fail reflink and then unmount. Both of these are known to produce
+> +# errors and/or assert failures on XFS if we trip over a stale delalloc block.
+> +_cp_reflink $SCRATCH_MNT/file2 $SCRATCH_MNT/file3
+> +_unmount_flakey
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/999.out b/tests/xfs/999.out
+> new file mode 100644
+> index 00000000..95d64cf0
+> --- /dev/null
+> +++ b/tests/xfs/999.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 999
+> +sync_file_range: Input/output error
 > -- 
-> 2.20.1
+> 2.31.1
 > 
