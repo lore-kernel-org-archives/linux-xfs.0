@@ -2,38 +2,38 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA5FDC433EF
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Dec 2021 19:09:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28091C433F5
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Dec 2021 19:10:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234448AbhLQTJE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Dec 2021 14:09:04 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:44748 "EHLO
-        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231704AbhLQTJD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Dec 2021 14:09:03 -0500
+        id S232124AbhLQTKu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Dec 2021 14:10:50 -0500
+Received: from sin.source.kernel.org ([145.40.73.55]:36714 "EHLO
+        sin.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231704AbhLQTKu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Dec 2021 14:10:50 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3982962390
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Dec 2021 19:09:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9BDF3C36AE2;
-        Fri, 17 Dec 2021 19:09:02 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id DE29BCE2676
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Dec 2021 19:10:48 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CCC72C36AE5;
+        Fri, 17 Dec 2021 19:10:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1639768142;
-        bh=DdbQKzu1p33hhtdqayI6sm066OqWi2K8bgimfW+pufM=;
+        s=k20201202; t=1639768246;
+        bh=SyQTjl8X44LJfJpqLY57qX7Ac6mPgG+pUnmtwGhMv1w=;
         h=Date:From:To:Cc:Subject:From;
-        b=gxJrelsIUBopuZz5bVoilmKGCpzYh4SGCdu7TgabQ7Rr5okMVyxBzD+ipj/rDru9s
-         //maNdBP8DfrBih87P++IIpgMj4qRCAjcXOJZN1AYA0lxffiAtZycC6hSpc0/C4zsA
-         Wg4tapwWBTQXPSkc/EUPU79udFb291+SNgykPQAoKorwlibBXjL5GyCubp5qEgMjyL
-         zeUyO8v4TwWmoac33DGwOxr7Ch5bXLQpvOR4IpulF6YYBIQqFSRrP545w5xhUbq8q9
-         p6BDQF8oAm5ddA8HTd4oL5GaK9H2D1a/KV13UYyB7DNZNKZ0Dgnjybj6uN4jbx+KNV
-         eKibzH0gEBliQ==
-Date:   Fri, 17 Dec 2021 11:09:02 -0800
+        b=t272D/hu8Ily7nzpI71rgHOG7yt0KPlwDgeWLF8H9T4+7lEqKEyAsbaL6gmdjhozd
+         GngJjJwWlD+flXKbHKHX/SrkILoE6kXSnWSqQp002zbM3y/qa6jdRzbSOAyuTLzaS3
+         Vw6K+fa6J+xMdQQgUOUdkImJsR75tMwxK3lDCV7Xt0gXOXSKVhbTPxmgnEhg0t8nSQ
+         VCzxplK3CDiRINm2Vwmo00l9T+fgi3d6u0DlNsG73KqU3Z9wQTikG18eZMXoyPJuIB
+         j+ni5sfQ8D7bzlTlYEGWkGXL2bDFzciRMubKy8d2VFLs7BG+OI1BcSI67txdsr3uuw
+         sDTd6XGXnt3Qw==
+Date:   Fri, 17 Dec 2021 11:10:46 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Eric Sandeen <sandeen@redhat.com>
 Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: [PATCH] mkfs: prevent corruption of passed-in suboption string values
-Message-ID: <20211217190902.GL27664@magnolia>
+Subject: [PATCH] mkfs: add configuration files for the last few LTS kernels
+Message-ID: <20211217191046.GM27664@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -43,63 +43,117 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Eric and I were trying to play with mkfs.configuration files, when I
-spotted this (with the libini package from Ubuntu 20.04):
+Add some sample mkfs configuration files that capture the mkfs feature
+defaults at the time of the release of the last three upstream LTS
+kernels.
 
-# cat << EOF > /tmp/r
-[data]
-su=2097152
-sw=1
-EOF
-# mkfs.xfs -f -c options=/tmp/r /dev/sda
-Parameters parsed from config file /tmp/r successfully
--d su option requires a value
-
-It turns out that libini's parser uses stack variables(!) to store the
-value of a key=value pair that it parses, and passes this stack array to
-the parse_cfgopt function.  If the particular option calls getstr(),
-then we save the value of that pointer (not its contents) to the
-cli_params.  Being a stack array, the contents will be overwritten by
-other function calls, which means that our value of '2097152' has been
-destroyed by the time we actually call getnum when we're validating the
-new fs config.
-
-We never noticed this until now because the only other caller was
-getsubopt on the argv array, which gets chopped up but left intact in
-memory.  The solution is to make a private copy of those strings if we
-ever save them for later.  For now we'll be lazy and let the memory
-leak, since mkfs is not a long-running process.
-
-Fixes: 33c62516 ("mkfs: add initial ini format config file parsing support")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- mkfs/xfs_mkfs.c |   11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+ include/builddefs.in |    1 +
+ mkfs/Makefile        |    6 +++++-
+ mkfs/lts_4.19.conf   |   13 +++++++++++++
+ mkfs/lts_5.10.conf   |   13 +++++++++++++
+ mkfs/lts_5.15.conf   |   13 +++++++++++++
+ 5 files changed, 45 insertions(+), 1 deletion(-)
+ create mode 100644 mkfs/lts_4.19.conf
+ create mode 100644 mkfs/lts_5.10.conf
+ create mode 100644 mkfs/lts_5.15.conf
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 3a41e17f..fcad6b55 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -1438,12 +1438,21 @@ getstr(
- 	struct opt_params	*opts,
- 	int			index)
- {
-+	char			*ret;
-+
- 	check_opt(opts, index, true);
+diff --git a/include/builddefs.in b/include/builddefs.in
+index f10d1796..ca4b5fcc 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -66,6 +66,7 @@ DK_INC_DIR	= @includedir@/disk
+ PKG_MAN_DIR	= @mandir@
+ PKG_DOC_DIR	= @datadir@/doc/@pkg_name@
+ PKG_LOCALE_DIR	= @datadir@/locale
++PKG_DATA_DIR	= @datadir@/@pkg_name@
  
- 	/* empty strings for string options are not valid */
- 	if (!str || *str == '\0')
- 		reqval(opts->name, opts->subopts, index);
--	return (char *)str;
-+
-+	ret = strdup(str);
-+	if (!ret) {
-+		fprintf(stderr, _("Out of memory while saving suboptions.\n"));
-+		exit(1);
-+	}
-+
-+	return ret;
- }
+ CC		= @cc@
+ BUILD_CC	= @BUILD_CC@
+diff --git a/mkfs/Makefile b/mkfs/Makefile
+index 811ba9db..04d17fdb 100644
+--- a/mkfs/Makefile
++++ b/mkfs/Makefile
+@@ -9,19 +9,23 @@ LTCOMMAND = mkfs.xfs
  
- static int
+ HFILES =
+ CFILES = proto.c xfs_mkfs.c
++CFGFILES = lts_4.19.conf lts_5.10.conf lts_5.15.conf
+ 
+ LLDLIBS += $(LIBXFS) $(LIBXCMD) $(LIBFROG) $(LIBRT) $(LIBPTHREAD) $(LIBBLKID) \
+ 	$(LIBUUID) $(LIBINIH) $(LIBURCU)
+ LTDEPENDENCIES += $(LIBXFS) $(LIBXCMD) $(LIBFROG)
+ LLDFLAGS = -static-libtool-libs
+ 
+-default: depend $(LTCOMMAND)
++default: depend $(LTCOMMAND) $(CFGFILES)
+ 
+ include $(BUILDRULES)
+ 
+ install: default
+ 	$(INSTALL) -m 755 -d $(PKG_ROOT_SBIN_DIR)
+ 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_ROOT_SBIN_DIR)
++	$(INSTALL) -m 755 -d $(PKG_DATA_DIR)/mkfs
++	$(INSTALL) -m 644 $(CFGFILES) $(PKG_DATA_DIR)/mkfs
++
+ install-dev:
+ 
+ -include .dep
+diff --git a/mkfs/lts_4.19.conf b/mkfs/lts_4.19.conf
+new file mode 100644
+index 00000000..74144790
+--- /dev/null
++++ b/mkfs/lts_4.19.conf
+@@ -0,0 +1,13 @@
++# V5 features that were the mkfs defaults when the upstream Linux 4.19 LTS
++# kernel was released at the end of 2019.
++
++[metadata]
++bigtime=0
++crc=1
++finobt=1
++inobtcount=0
++reflink=0
++rmapbt=0
++
++[inode]
++sparse=1
+diff --git a/mkfs/lts_5.10.conf b/mkfs/lts_5.10.conf
+new file mode 100644
+index 00000000..ac00960e
+--- /dev/null
++++ b/mkfs/lts_5.10.conf
+@@ -0,0 +1,13 @@
++# V5 features that were the mkfs defaults when the upstream Linux 5.10 LTS
++# kernel was released at the end of 2020.
++
++[metadata]
++bigtime=0
++crc=1
++finobt=1
++inobtcount=0
++reflink=1
++rmapbt=0
++
++[inode]
++sparse=1
+diff --git a/mkfs/lts_5.15.conf b/mkfs/lts_5.15.conf
+new file mode 100644
+index 00000000..32082958
+--- /dev/null
++++ b/mkfs/lts_5.15.conf
+@@ -0,0 +1,13 @@
++# V5 features that were the mkfs defaults when the upstream Linux 5.15 LTS
++# kernel was released at the end of 2021.
++
++[metadata]
++bigtime=1
++crc=1
++finobt=1
++inobtcount=1
++reflink=1
++rmapbt=0
++
++[inode]
++sparse=1
