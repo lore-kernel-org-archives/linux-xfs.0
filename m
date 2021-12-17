@@ -2,70 +2,120 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31813C4332F
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Dec 2021 22:04:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E80D2C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Dec 2021 02:01:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237477AbhLPWEL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Dec 2021 17:04:11 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:42068 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S236184AbhLPWEI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Dec 2021 17:04:08 -0500
-Received: from dread.disaster.area (pa49-181-243-119.pa.nsw.optusnet.com.au [49.181.243.119])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 4AD8D8A53EC;
-        Fri, 17 Dec 2021 09:04:06 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1mxyr7-003v8F-3W; Fri, 17 Dec 2021 09:04:05 +1100
-Date:   Fri, 17 Dec 2021 09:04:05 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/7] xfs: fix a bug in the online fsck directory leaf1
- bestcount check
-Message-ID: <20211216220405.GF449541@dread.disaster.area>
-References: <163961695502.3129691.3496134437073533141.stgit@magnolia>
- <163961697197.3129691.1911552605195534271.stgit@magnolia>
+        id S232237AbhLQCBp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Dec 2021 21:01:45 -0500
+Received: from mail1.bemta36.messagelabs.com ([85.158.142.113]:26166 "EHLO
+        mail1.bemta36.messagelabs.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232386AbhLQCBp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Dec 2021 21:01:45 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fujitsu.com;
+        s=170520fj; t=1639706503; i=@fujitsu.com;
+        bh=31g8bw5Ftd07IiS0hoOwHbq8lIXZfgmSMzTNA0Rou4Y=;
+        h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type;
+        b=S4tkTzIJ3W+pXgwcGPzW0UNvucja6kWWq9a8BLClaExt6MZyTvGplxOgHb4T+qdX2
+         WAfoRHKMbZOyLJrPMYCYNaSHgJEmKGsAn4gNx4e3N6JIl9fLGavK7Y/iyY6lmX0+nA
+         xg+USxctB9aWDCURbPDNyGnL9TlSy5+W7HWsZ0x09VjvdX2vrPsm8/QZ8ubMvoaccU
+         ReBPH425gsJmMggm9pQMefHBGZtzfZGWhyw2QZElXOqsTNc7jFCBtXS0uUsTQQiHXY
+         W+ebgzug6Q9c/pS3yRV5O/oK306gwjKacCwEfu8NFcDRbqc2NGfQUdfufio7g3hvdO
+         eRTSkr2r1I/og==
+Received: from [100.115.68.153] (using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256 bits))
+        by server-4.bemta.az-a.eu-central-1.aws.ess.symcld.net id 46/2F-07141-78FEBB16; Fri, 17 Dec 2021 02:01:43 +0000
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrBIsWRWlGSWpSXmKPExsViZ8MxSbf9/e5
+  Egy9T2SwuP+Gz2PVnB7sDk8emVZ1sHp83yQUwRbFm5iXlVySwZqxryC7o5q14fu8uYwPjZ64u
+  Ri4OIYEtjBKTNu9jhXAWMEk039/BBOHsYZTYtHcRexcjJwebgKbEs84FzCC2iIC4xONFt5hAb
+  GYBF4k9W56ygNjCAhYSS5bOB6rh4GARUJU4uE4JJMwr4CFx/d4qsFYJAQWJKQ/fM0PEBSVOzn
+  zCAjFGQuLgixdQNYoSlzq+MULYFRKzZrUxQdhqElfPbWKewMg/C0n7LCTtCxiZVjHaJhVlpme
+  U5CZm5ugaGhjoGhqa6ppZ6BqZ6CVW6SbqpZbqJqfmlRQlAmX1EsuL9VKLi/WKK3OTc1L08lJL
+  NjECAzWl2EViB+PNvp96hxglOZiURHnjL+xOFOJLyk+pzEgszogvKs1JLT7EKMPBoSTB+/oNU
+  E6wKDU9tSItMwcYNTBpCQ4eJRHepS+A0rzFBYm5xZnpEKlTjLocl6/PW8QsxJKXn5cqJc4b/w
+  6oSACkKKM0D24ELIIvMcpKCfMyMjAwCPEUpBblZpagyr9iFOdgVBLmfQcyhSczrwRu0yugI5i
+  AjghPAjuiJBEhJdXAdOz/Exvh1O8JFzP5Z7pce6m2yWzD89vRupouevUyJr++NPps2j9Np7bh
+  wtuIdw/aizVnmV6MkBFv/1UqV5VcsrZ5zpwj90oyeRsFYiyeNTg+Mmh3MHCZ66L5eFcNYxIv7
+  8V7RQt+qQeVfS23cVx6cb8p/7JFH7Xm8HpOPJOas2ibwtd7fFZKa/R0JhtaHMvWOGv7pq3Mim
+  +l5IN7mx86ZF4X+e1hkP750oolUwMunZi42Sf78KINCxdwXrVdZ6N9dXvs2gt8ER8vmK8oXRr
+  986WDV9MblXWdTPaG8expeTqfXhYtyOmJ+RPcFO1e/3PGTI+eZC/Zjl87H2WxBrpzck2eq33F
+  Z7IPh8aR0ncblFiKMxINtZiLihMBnxHlM1sDAAA=
+X-Env-Sender: xuyang2018.jy@fujitsu.com
+X-Msg-Ref: server-18.tower-528.messagelabs.com!1639706502!14709!1
+X-Originating-IP: [62.60.8.146]
+X-SYMC-ESS-Client-Auth: outbound-route-from=pass
+X-StarScan-Received: 
+X-StarScan-Version: 9.81.7; banners=-,-,-
+X-VirusChecked: Checked
+Received: (qmail 15274 invoked from network); 17 Dec 2021 02:01:43 -0000
+Received: from unknown (HELO n03ukasimr02.n03.fujitsu.local) (62.60.8.146)
+  by server-18.tower-528.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 17 Dec 2021 02:01:43 -0000
+Received: from n03ukasimr02.n03.fujitsu.local (localhost [127.0.0.1])
+        by n03ukasimr02.n03.fujitsu.local (Postfix) with ESMTP id A376910044A;
+        Fri, 17 Dec 2021 02:01:42 +0000 (GMT)
+Received: from R01UKEXCASM126.r01.fujitsu.local (unknown [10.183.43.178])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by n03ukasimr02.n03.fujitsu.local (Postfix) with ESMTPS id 95D7D100440;
+        Fri, 17 Dec 2021 02:01:42 +0000 (GMT)
+Received: from localhost.localdomain (10.167.220.84) by
+ R01UKEXCASM126.r01.fujitsu.local (10.183.43.178) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.26; Fri, 17 Dec 2021 02:01:20 +0000
+From:   Yang Xu <xuyang2018.jy@fujitsu.com>
+To:     <djwong@kernel.org>
+CC:     <linux-xfs@vger.kernel.org>, Yang Xu <xuyang2018.jy@fujitsu.com>
+Subject: [PATCH] xfs: Fix comments mentioning xfs_ialloc
+Date:   Fri, 17 Dec 2021 10:01:59 +0800
+Message-ID: <1639706519-2239-1-git-send-email-xuyang2018.jy@fujitsu.com>
+X-Mailer: git-send-email 1.8.3.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <163961697197.3129691.1911552605195534271.stgit@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=61bbb7d6
-        a=BEa52nrBdFykVEm6RU8P4g==:117 a=BEa52nrBdFykVEm6RU8P4g==:17
-        a=AZK8MRsvVoKhbS40:21 a=kj9zAlcOel0A:10 a=IOMw9HtfNCkA:10 a=VwQbUJbxAAAA:8
-        a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=YEyCIqqpebTs7pEFxUMA:9
-        a=CjuIK1q_8ugA:10 a=wYxC10UHL_r354hrDE_9:22 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Type: text/plain
+X-Originating-IP: [10.167.220.84]
+X-ClientProxiedBy: G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) To
+ R01UKEXCASM126.r01.fujitsu.local (10.183.43.178)
+X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Dec 15, 2021 at 05:09:32PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> When xfs_scrub encounters a directory with a leaf1 block, it tries to
-> validate that the leaf1 block's bestcount (aka the best free count of
-> each directory data block) is the correct size.  Previously, this author
-> believed that comparing bestcount to the directory isize (since
-> directory data blocks are under isize, and leaf/bestfree blocks are
-> above it) was sufficient.
-> 
-> Unfortunately during testing of online repair, it was discovered that it
-> is possible to create a directory with a hole between the last directory
-> block and isize.  The directory code seems to handle this situation just
-> fine and xfs_repair doesn't complain, which effectively makes this quirk
-> part of the disk format.
-> 
-> Fix the check to work properly.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Since kernel commit 1abcf261016e ("xfs: move on-disk inode allocation out of xfs_ialloc()"),
+xfs_ialloc has been renamed to xfs_init_new_inode. So update this in comments.
 
-With the "we're not sure how this happens" discussion out of the
-way, the change to handle the empty space between the last block and
-isize looks fine.
+Signed-off-by: Yang Xu <xuyang2018.jy@fujitsu.com>
+---
+ fs/xfs/xfs_icache.c | 3 ++-
+ fs/xfs/xfs_iops.c   | 6 +++---
+ 2 files changed, 5 insertions(+), 4 deletions(-)
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index e1472004170e..39758015f302 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -770,7 +770,8 @@ xfs_iget(
+ 
+ 	/*
+ 	 * If we have a real type for an on-disk inode, we can setup the inode
+-	 * now.	 If it's a new inode being created, xfs_ialloc will handle it.
++	 * now.	 If it's a new inode being created, xfs_init_new_inode will
++	 * handle it.
+ 	 */
+ 	if (xfs_iflags_test(ip, XFS_INEW) && VFS_I(ip)->i_mode != 0)
+ 		xfs_setup_existing_inode(ip);
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index a607d6aca5c4..f2ceb6c3fc50 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -1332,9 +1332,9 @@ xfs_diflags_to_iflags(
+  * Initialize the Linux inode.
+  *
+  * When reading existing inodes from disk this is called directly from xfs_iget,
+- * when creating a new inode it is called from xfs_ialloc after setting up the
+- * inode. These callers have different criteria for clearing XFS_INEW, so leave
+- * it up to the caller to deal with unlocking the inode appropriately.
++ * when creating a new inode it is called from xfs_init_new_inode after setting
++ * up the inode. These callers have different criteria for clearing XFS_INEW, so
++ * leave it up to the caller to deal with unlocking the inode appropriately.
+  */
+ void
+ xfs_setup_inode(
 -- 
-Dave Chinner
-david@fromorbit.com
+2.23.0
+
