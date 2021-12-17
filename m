@@ -2,120 +2,126 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E80D2C433EF
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Dec 2021 02:01:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5960C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Dec 2021 02:59:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232237AbhLQCBp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Dec 2021 21:01:45 -0500
-Received: from mail1.bemta36.messagelabs.com ([85.158.142.113]:26166 "EHLO
-        mail1.bemta36.messagelabs.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232386AbhLQCBp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Dec 2021 21:01:45 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fujitsu.com;
-        s=170520fj; t=1639706503; i=@fujitsu.com;
-        bh=31g8bw5Ftd07IiS0hoOwHbq8lIXZfgmSMzTNA0Rou4Y=;
-        h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type;
-        b=S4tkTzIJ3W+pXgwcGPzW0UNvucja6kWWq9a8BLClaExt6MZyTvGplxOgHb4T+qdX2
-         WAfoRHKMbZOyLJrPMYCYNaSHgJEmKGsAn4gNx4e3N6JIl9fLGavK7Y/iyY6lmX0+nA
-         xg+USxctB9aWDCURbPDNyGnL9TlSy5+W7HWsZ0x09VjvdX2vrPsm8/QZ8ubMvoaccU
-         ReBPH425gsJmMggm9pQMefHBGZtzfZGWhyw2QZElXOqsTNc7jFCBtXS0uUsTQQiHXY
-         W+ebgzug6Q9c/pS3yRV5O/oK306gwjKacCwEfu8NFcDRbqc2NGfQUdfufio7g3hvdO
-         eRTSkr2r1I/og==
-Received: from [100.115.68.153] (using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256 bits))
-        by server-4.bemta.az-a.eu-central-1.aws.ess.symcld.net id 46/2F-07141-78FEBB16; Fri, 17 Dec 2021 02:01:43 +0000
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrBIsWRWlGSWpSXmKPExsViZ8MxSbf9/e5
-  Egy9T2SwuP+Gz2PVnB7sDk8emVZ1sHp83yQUwRbFm5iXlVySwZqxryC7o5q14fu8uYwPjZ64u
-  Ri4OIYEtjBKTNu9jhXAWMEk039/BBOHsYZTYtHcRexcjJwebgKbEs84FzCC2iIC4xONFt5hAb
-  GYBF4k9W56ygNjCAhYSS5bOB6rh4GARUJU4uE4JJMwr4CFx/d4qsFYJAQWJKQ/fM0PEBSVOzn
-  zCAjFGQuLgixdQNYoSlzq+MULYFRKzZrUxQdhqElfPbWKewMg/C0n7LCTtCxiZVjHaJhVlpme
-  U5CZm5ugaGhjoGhqa6ppZ6BqZ6CVW6SbqpZbqJqfmlRQlAmX1EsuL9VKLi/WKK3OTc1L08lJL
-  NjECAzWl2EViB+PNvp96hxglOZiURHnjL+xOFOJLyk+pzEgszogvKs1JLT7EKMPBoSTB+/oNU
-  E6wKDU9tSItMwcYNTBpCQ4eJRHepS+A0rzFBYm5xZnpEKlTjLocl6/PW8QsxJKXn5cqJc4b/w
-  6oSACkKKM0D24ELIIvMcpKCfMyMjAwCPEUpBblZpagyr9iFOdgVBLmfQcyhSczrwRu0yugI5i
-  AjghPAjuiJBEhJdXAdOz/Exvh1O8JFzP5Z7pce6m2yWzD89vRupouevUyJr++NPps2j9Np7bh
-  wtuIdw/aizVnmV6MkBFv/1UqV5VcsrZ5zpwj90oyeRsFYiyeNTg+Mmh3MHCZ66L5eFcNYxIv7
-  8V7RQt+qQeVfS23cVx6cb8p/7JFH7Xm8HpOPJOas2ibwtd7fFZKa/R0JhtaHMvWOGv7pq3Mim
-  +l5IN7mx86ZF4X+e1hkP750oolUwMunZi42Sf78KINCxdwXrVdZ6N9dXvs2gt8ER8vmK8oXRr
-  986WDV9MblXWdTPaG8expeTqfXhYtyOmJ+RPcFO1e/3PGTI+eZC/Zjl87H2WxBrpzck2eq33F
-  Z7IPh8aR0ncblFiKMxINtZiLihMBnxHlM1sDAAA=
-X-Env-Sender: xuyang2018.jy@fujitsu.com
-X-Msg-Ref: server-18.tower-528.messagelabs.com!1639706502!14709!1
-X-Originating-IP: [62.60.8.146]
-X-SYMC-ESS-Client-Auth: outbound-route-from=pass
-X-StarScan-Received: 
-X-StarScan-Version: 9.81.7; banners=-,-,-
-X-VirusChecked: Checked
-Received: (qmail 15274 invoked from network); 17 Dec 2021 02:01:43 -0000
-Received: from unknown (HELO n03ukasimr02.n03.fujitsu.local) (62.60.8.146)
-  by server-18.tower-528.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 17 Dec 2021 02:01:43 -0000
-Received: from n03ukasimr02.n03.fujitsu.local (localhost [127.0.0.1])
-        by n03ukasimr02.n03.fujitsu.local (Postfix) with ESMTP id A376910044A;
-        Fri, 17 Dec 2021 02:01:42 +0000 (GMT)
-Received: from R01UKEXCASM126.r01.fujitsu.local (unknown [10.183.43.178])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by n03ukasimr02.n03.fujitsu.local (Postfix) with ESMTPS id 95D7D100440;
-        Fri, 17 Dec 2021 02:01:42 +0000 (GMT)
-Received: from localhost.localdomain (10.167.220.84) by
- R01UKEXCASM126.r01.fujitsu.local (10.183.43.178) with Microsoft SMTP Server
- (TLS) id 15.0.1497.26; Fri, 17 Dec 2021 02:01:20 +0000
-From:   Yang Xu <xuyang2018.jy@fujitsu.com>
-To:     <djwong@kernel.org>
-CC:     <linux-xfs@vger.kernel.org>, Yang Xu <xuyang2018.jy@fujitsu.com>
-Subject: [PATCH] xfs: Fix comments mentioning xfs_ialloc
-Date:   Fri, 17 Dec 2021 10:01:59 +0800
-Message-ID: <1639706519-2239-1-git-send-email-xuyang2018.jy@fujitsu.com>
-X-Mailer: git-send-email 1.8.3.1
+        id S231934AbhLQC7F (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Dec 2021 21:59:05 -0500
+Received: from wout3-smtp.messagingengine.com ([64.147.123.19]:56661 "EHLO
+        wout3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229471AbhLQC7E (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Dec 2021 21:59:04 -0500
+Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
+        by mailout.west.internal (Postfix) with ESMTP id 623423201E4C;
+        Thu, 16 Dec 2021 21:59:03 -0500 (EST)
+Received: from mailfrontend2 ([10.202.2.163])
+  by compute1.internal (MEProxy); Thu, 16 Dec 2021 21:59:03 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=themaw.net; h=
+        message-id:subject:from:to:cc:date:in-reply-to:references
+        :content-type:mime-version:content-transfer-encoding; s=fm2; bh=
+        NuNxwxs65yJhqNj+SK6LJonq2I+vhfD/m1CzQnW5/1s=; b=CjyuFmAJoeL++G6R
+        ZnKcwHAkh1NJGAvy2p3QuWlrBB2rCPdNhBpLJwU7c5+vd2N8B+rGMoo6yyS8bTlC
+        rEJtGxbYAxb1udcwTdQ0DHXd0VzQExxeMGyFulWIlexqvfD7EVGefTcWm7/vCItw
+        OYt6V9IT52vEee1EY1shVU49dlt6HFecJXQ0SsRvmrJSnloBeQ52aCBwselNpA5m
+        HB6219/zYhKTLoFKHSAvIo7yPirHqRzyhwOMELRJk96A7fFYsPJm2XnAS/JpjQxA
+        xkuw1I2yhUwoLXJdqpGRYDPU0Iq3NNSVobuBAS3ZPbGBcRXEKI5hd1uuobYGZbwx
+        n1XqyA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:content-transfer-encoding:content-type
+        :date:from:in-reply-to:message-id:mime-version:references
+        :subject:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
+        :x-sasl-enc; s=fm1; bh=NuNxwxs65yJhqNj+SK6LJonq2I+vhfD/m1CzQnW5/
+        1s=; b=J07pZu4iiF3zSdYBwyr5ICAHBOJBGnjPA+QkxI+TtCQnP+lmx5EQ3HSyk
+        zuxdgS7uTClfvrPRD9nBrPnbWZR/y7yZ0/6uVBijK3M+19djrCmvr1XNC10PhEYN
+        TxreQuKVy0Qjn6MceQ1K7T5MWJ3Pp3z6dJBPNt2fPGDEOueUO1r6SY8JBqVeeVFY
+        J+EYki5H3AKrUJn/oGr3ENtjURt5FKHwKIWwBcvz4HR6lyIxGCpRFS5bs2QnQZU9
+        DulPhGnq/SQcr8iO1k2Eid2QOhpVTZVAWXscbRY5ED9gBiJ7GN9rM40BH9F9X4Yv
+        M+4QuK1URRP+9LUX4Fv5/9M7YPi2Q==
+X-ME-Sender: <xms:9vy7YSPD8XpzK7qqeXYHTVqYo-qSpHtyXeujrQkNY188NswOaHeoNg>
+    <xme:9vy7YQ-kexTymPUUJzvoz5u79ULFwSiDQLTqMvaW8n9plCWrXWG1UekRsAjKyizea
+    8_WNFULJ8f2>
+X-ME-Received: <xmr:9vy7YZSsPgW5vbLcY3uktjWxsT_scpXlibR5oOrbZygK4EwiItpM0fDGAkEF_PRy_SNAtsOqeZvv8uoRUtWjysQv6UdpyeamDsSh8c-4CW3snXc3yaG19Q>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvuddrleehgdehvdcutefuodetggdotefrodftvf
+    curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
+    uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
+    fjughrpefkuffhvfffjghftggfggfgsehtkeertddtreejnecuhfhrohhmpefkrghnucfm
+    vghnthcuoehrrghvvghnsehthhgvmhgrfidrnhgvtheqnecuggftrfgrthhtvghrnhepgf
+    elleekteehleegheeujeeuudfhueffgfelhefgvedthefhhffhhfdtudfgfeehnecuvehl
+    uhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomheprhgrvhgvnhesth
+    hhvghmrgifrdhnvght
+X-ME-Proxy: <xmx:9vy7YSvfD0A6UuZVkr7LCaufhJq_JXQ78V1UfEcSNBpvvAmFKAFZvg>
+    <xmx:9vy7YadrKstEj3iAV9181QasMY0qsneFrYdJ6Q75J1HYagYgzKhRWw>
+    <xmx:9vy7YW18oi4nvwLiPtKyTduz7JZmYnFd3G2iPWo26qsqK2ddV0UtJA>
+    <xmx:9vy7YSlI9Z_c6I6brFJ_CXWE1NLPtvvJjkYbTkCqNwN7RjUbd9_dOw>
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
+ 16 Dec 2021 21:59:00 -0500 (EST)
+Message-ID: <6e03d852484b04acb8f516c91aa1ac983f2574c3.camel@themaw.net>
+Subject: Re: [PATCH 6/7] xfs: don't expose internal symlink metadata buffers
+ to the vfs
+From:   Ian Kent <raven@themaw.net>
+To:     Dave Chinner <david@fromorbit.com>,
+        "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Date:   Fri, 17 Dec 2021 10:58:56 +0800
+In-Reply-To: <20211216051123.GC449541@dread.disaster.area>
+References: <163961695502.3129691.3496134437073533141.stgit@magnolia>
+         <163961698851.3129691.1262560189729839928.stgit@magnolia>
+         <20211216051123.GC449541@dread.disaster.area>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.38.4 (3.38.4-1.fc33) 
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.167.220.84]
-X-ClientProxiedBy: G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) To
- R01UKEXCASM126.r01.fujitsu.local (10.183.43.178)
-X-Virus-Scanned: ClamAV using ClamSMTP
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Since kernel commit 1abcf261016e ("xfs: move on-disk inode allocation out of xfs_ialloc()"),
-xfs_ialloc has been renamed to xfs_init_new_inode. So update this in comments.
+On Thu, 2021-12-16 at 16:11 +1100, Dave Chinner wrote:
+> On Wed, Dec 15, 2021 at 05:09:48PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Ian Kent reported that for inline symlinks, it's possible for
+> > vfs_readlink to hang on to the target buffer returned by
+> > _vn_get_link_inline long after it's been freed by xfs inode
+> > reclaim.
+> > This is a layering violation -- we should never expose XFS
+> > internals to
+> > the VFS.
+> > 
+> > When the symlink has a remote target, we allocate a separate
+> > buffer,
+> > copy the internal information, and let the VFS manage the new
+> > buffer's
+> > lifetime.  Let's adapt the inline code paths to do this too.  It's
+> > less efficient, but fixes the layering violation and avoids the
+> > need to
+> > adapt the if_data lifetime to rcu rules.  Clearly I don't care
+> > about
+> > readlink benchmarks.
+> > 
+> > As a side note, this fixes the minor locking violation where we can
+> > access the inode data fork without taking any locks; proper locking
+> > (and
+> > eliminating the possibility of having to switch inode_operations on
+> > a
+> > live inode) is essential to online repair coordinating repairs
+> > correctly.
+> > 
+> > Reported-by: Ian Kent <raven@themaw.net>
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> 
+> Looks fine, nicely avoids all the nasty RCU interactions trying to
+> handle this after the fact.
+> 
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> 
 
-Signed-off-by: Yang Xu <xuyang2018.jy@fujitsu.com>
----
- fs/xfs/xfs_icache.c | 3 ++-
- fs/xfs/xfs_iops.c   | 6 +++---
- 2 files changed, 5 insertions(+), 4 deletions(-)
+Yes, I like it too and that original rcu gymnastics was always due
+to the unclear ownership and lifetime of the link path buffer.
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index e1472004170e..39758015f302 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -770,7 +770,8 @@ xfs_iget(
- 
- 	/*
- 	 * If we have a real type for an on-disk inode, we can setup the inode
--	 * now.	 If it's a new inode being created, xfs_ialloc will handle it.
-+	 * now.	 If it's a new inode being created, xfs_init_new_inode will
-+	 * handle it.
- 	 */
- 	if (xfs_iflags_test(ip, XFS_INEW) && VFS_I(ip)->i_mode != 0)
- 		xfs_setup_existing_inode(ip);
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index a607d6aca5c4..f2ceb6c3fc50 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -1332,9 +1332,9 @@ xfs_diflags_to_iflags(
-  * Initialize the Linux inode.
-  *
-  * When reading existing inodes from disk this is called directly from xfs_iget,
-- * when creating a new inode it is called from xfs_ialloc after setting up the
-- * inode. These callers have different criteria for clearing XFS_INEW, so leave
-- * it up to the caller to deal with unlocking the inode appropriately.
-+ * when creating a new inode it is called from xfs_init_new_inode after setting
-+ * up the inode. These callers have different criteria for clearing XFS_INEW, so
-+ * leave it up to the caller to deal with unlocking the inode appropriately.
-  */
- void
- xfs_setup_inode(
--- 
-2.23.0
+And I don't think needing to switch to ref-walk mode (due to the
+memory allocation possibly blocking) is such a big performance
+drawback as might be thought.
+
+Acked-by: Ian Kent <raven@themaw.net>
+
 
