@@ -2,158 +2,172 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AB83C433EF
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Dec 2021 20:29:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2A33C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Dec 2021 20:30:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240833AbhLQU30 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Dec 2021 15:29:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42742 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240819AbhLQU3S (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Dec 2021 15:29:18 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6BB7C061574
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Dec 2021 12:29:17 -0800 (PST)
+        id S234328AbhLQUaF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Dec 2021 15:30:05 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:54864 "EHLO
+        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233195AbhLQUaF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Dec 2021 15:30:05 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7424F62384
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Dec 2021 20:29:17 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA2C4C36AE5;
-        Fri, 17 Dec 2021 20:29:16 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id AD2A4623BC
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Dec 2021 20:30:04 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 106D4C36AE2;
+        Fri, 17 Dec 2021 20:30:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1639772956;
-        bh=ExDTGK7D9bk4ltdJ8mYF6sD8UU4tOBIF+0yzXgii8cM=;
+        s=k20201202; t=1639773004;
+        bh=8wxac0vsEbiC+LeN7Qt13rtbkELBYP992XUZVyherF8=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=eTE7wIchZ2mIyofGT0Hmm4y35v8mY9NnHJeAC5YNWXosJmYlNj7nz2rfiyGu+Kxvc
-         S/otKQNshpLpblNwrLM/kMXQ3PeTA6WX78fqHmmZt02fUayLxfA7xuC8ZsYnalpSEa
-         /niTfoMF3DxHfPPXuRiyEoSy5sxKJcbbrNbDqbAEpjtK3MD98/IilWgC0CzJu3Ut6y
-         O+n33N64oiEtefCNW5QDyRkib+oEt0i9X/IijNa9tAollxOiCq3w38/p8bWu6C+ato
-         jlagYuVgxF8IqUI1wq/U9f64i7ybY8Z08IRsrJouSmEWWjWPieA2iD3DMI9wiWdfyn
-         B1awKdSNY6Mxw==
-Date:   Fri, 17 Dec 2021 12:29:16 -0800
+        b=tpW0+FqjA41q9uwghERmg7JPEyZEUDnzt+PFacFtwGt+U8OlBuwpiwtM75Hs3Ze2c
+         lUpUpG4NadD0c/68cCnaCybsJLc31AT4DB0VspL/VO4fpoumNneQW2U9RgwgxlEHkj
+         Qv05Zjow+Tp4L/NPrKSawRX0btQ5aVJClBgGUxKvZ3gKpVpOJ7isRXbF0aZgFmXoDe
+         CEdaLBLMBD368vGS3uk/bnaQrXJjVg26rrff+ib6E1Y3nL1Y/lttXoi5cZMmT0zL8x
+         28bzXivLUT9NtCghgEbjipf+Ng9f0FWs7EAGwCA+dIBWL9TGDCUFR9P5SViliMOisE
+         CkyMtpnTgO9Iw==
+Date:   Fri, 17 Dec 2021 12:30:03 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs_quota: fix up dump and report documentation
-Message-ID: <20211217202916.GN27664@magnolia>
-References: <20211217202050.14922-1-sandeen@sandeen.net>
+To:     Eric Sandeen <sandeen@redhat.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] mkfs: add configuration files for the last few LTS
+ kernels
+Message-ID: <20211217203003.GO27664@magnolia>
+References: <20211217191046.GM27664@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211217202050.14922-1-sandeen@sandeen.net>
+In-Reply-To: <20211217191046.GM27664@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Dec 17, 2021 at 02:20:50PM -0600, Eric Sandeen wrote:
-> From: Eric Sandeen <sandeen@redhat.com>
+On Fri, Dec 17, 2021 at 11:10:46AM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Documentation for these commands was a bit of a mess.
+> Add some sample mkfs configuration files that capture the mkfs feature
+> defaults at the time of the release of the last three upstream LTS
+> kernels.
 > 
-> 1) The help args were respecified in the _help() functions, overwriting
->    the strings which had been set up in the _init functions as all
->    other commands do. Worse, in the report case, they differed.
-> 
-> 2) The -L/-U dump options were not present in either short help string.
-> 
-> 3) The -L/-U dump options were not documented in the xfs_quota manpage.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  include/builddefs.in |    1 +
+>  mkfs/Makefile        |    6 +++++-
+>  mkfs/lts_4.19.conf   |   13 +++++++++++++
+>  mkfs/lts_5.10.conf   |   13 +++++++++++++
+>  mkfs/lts_5.15.conf   |   13 +++++++++++++
 
-Looks good to me,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+NAK, this is missing a config file for 5.4.
+
+Also Eric prodded me to add a comment to the default feature config
+structure definition reminding people to keep the conffiles up to date.
+
+v2 on its way...
 
 --D
 
-> ---
->  man/man8/xfs_quota.8 |  9 ++++++++-
->  quota/report.c       | 10 ++++------
->  2 files changed, 12 insertions(+), 7 deletions(-)
+>  5 files changed, 45 insertions(+), 1 deletion(-)
+>  create mode 100644 mkfs/lts_4.19.conf
+>  create mode 100644 mkfs/lts_5.10.conf
+>  create mode 100644 mkfs/lts_5.15.conf
 > 
-> diff --git a/man/man8/xfs_quota.8 b/man/man8/xfs_quota.8
-> index 59e603f0..fd4562a1 100644
-> --- a/man/man8/xfs_quota.8
-> +++ b/man/man8/xfs_quota.8
-> @@ -393,7 +393,7 @@ option outputs the numeric ID instead of the name. The
->  .B \-L
->  and
->  .B \-U
-> -options specify lower and upper ID bounds to report on.  If upper/lower
-> +options specify lower and/or upper ID bounds to report on.  If upper/lower
->  bounds are specified, then by default only the IDs will be displayed
->  in output; with the
->  .B \-l
-> @@ -558,6 +558,8 @@ report an error.
->  [
->  .BR \-g " | " \-p " | " \-u
->  ] [
-> +.BR \-L " | " \-U
-> +] [
->  .B \-f
->  .I file
->  ]
-> @@ -565,6 +567,11 @@ report an error.
->  Dump out quota limit information for backup utilities, either to
->  standard output (default) or to a
->  .IR file .
-> +The
-> +.B \-L
-> +and
-> +.B \-U
-> +options specify lower and/or upper ID bounds to dump.
->  This is only the limits, not the usage information, of course.
->  .HP
->  .B restore
-> diff --git a/quota/report.c b/quota/report.c
-> index 6ac55490..2eb5b5a9 100644
-> --- a/quota/report.c
-> +++ b/quota/report.c
-> @@ -18,14 +18,14 @@ static cmdinfo_t report_cmd;
->  static void
->  dump_help(void)
->  {
-> -	dump_cmd.args = _("[-g|-p|-u] [-f file]");
-> -	dump_cmd.oneline = _("dump quota information for backup utilities");
->  	printf(_(
->  "\n"
->  " create a backup file which contains quota limits information\n"
->  " -g -- dump out group quota limits\n"
->  " -p -- dump out project quota limits\n"
->  " -u -- dump out user quota limits (default)\n"
-> +" -L -- lower ID bound to dump\n"
-> +" -U -- upper ID bound to dump\n"
->  " -f -- write the dump out to the specified file\n"
->  "\n"));
->  }
-> @@ -33,8 +33,6 @@ dump_help(void)
->  static void
->  report_help(void)
->  {
-> -	report_cmd.args = _("[-bir] [-gpu] [-ahntlLNU] [-f file]");
-> -	report_cmd.oneline = _("report filesystem quota information");
->  	printf(_(
->  "\n"
->  " report used space and inodes, and quota limits, for a filesystem\n"
-> @@ -757,7 +755,7 @@ report_init(void)
->  	dump_cmd.cfunc = dump_f;
->  	dump_cmd.argmin = 0;
->  	dump_cmd.argmax = -1;
-> -	dump_cmd.args = _("[-g|-p|-u] [-f file]");
-> +	dump_cmd.args = _("[-g|-p|-u] [-LU] [-f file]");
->  	dump_cmd.oneline = _("dump quota information for backup utilities");
->  	dump_cmd.help = dump_help;
->  	dump_cmd.flags = CMD_FLAG_FOREIGN_OK;
-> @@ -767,7 +765,7 @@ report_init(void)
->  	report_cmd.cfunc = report_f;
->  	report_cmd.argmin = 0;
->  	report_cmd.argmax = -1;
-> -	report_cmd.args = _("[-bir] [-gpu] [-ahnt] [-f file]");
-> +	report_cmd.args = _("[-bir] [-gpu] [-ahntlLNU] [-f file]");
->  	report_cmd.oneline = _("report filesystem quota information");
->  	report_cmd.help = report_help;
->  	report_cmd.flags = CMD_FLAG_ONESHOT | CMD_FLAG_FOREIGN_OK;
-> -- 
-> 2.33.1
-> 
+> diff --git a/include/builddefs.in b/include/builddefs.in
+> index f10d1796..ca4b5fcc 100644
+> --- a/include/builddefs.in
+> +++ b/include/builddefs.in
+> @@ -66,6 +66,7 @@ DK_INC_DIR	= @includedir@/disk
+>  PKG_MAN_DIR	= @mandir@
+>  PKG_DOC_DIR	= @datadir@/doc/@pkg_name@
+>  PKG_LOCALE_DIR	= @datadir@/locale
+> +PKG_DATA_DIR	= @datadir@/@pkg_name@
+>  
+>  CC		= @cc@
+>  BUILD_CC	= @BUILD_CC@
+> diff --git a/mkfs/Makefile b/mkfs/Makefile
+> index 811ba9db..04d17fdb 100644
+> --- a/mkfs/Makefile
+> +++ b/mkfs/Makefile
+> @@ -9,19 +9,23 @@ LTCOMMAND = mkfs.xfs
+>  
+>  HFILES =
+>  CFILES = proto.c xfs_mkfs.c
+> +CFGFILES = lts_4.19.conf lts_5.10.conf lts_5.15.conf
+>  
+>  LLDLIBS += $(LIBXFS) $(LIBXCMD) $(LIBFROG) $(LIBRT) $(LIBPTHREAD) $(LIBBLKID) \
+>  	$(LIBUUID) $(LIBINIH) $(LIBURCU)
+>  LTDEPENDENCIES += $(LIBXFS) $(LIBXCMD) $(LIBFROG)
+>  LLDFLAGS = -static-libtool-libs
+>  
+> -default: depend $(LTCOMMAND)
+> +default: depend $(LTCOMMAND) $(CFGFILES)
+>  
+>  include $(BUILDRULES)
+>  
+>  install: default
+>  	$(INSTALL) -m 755 -d $(PKG_ROOT_SBIN_DIR)
+>  	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_ROOT_SBIN_DIR)
+> +	$(INSTALL) -m 755 -d $(PKG_DATA_DIR)/mkfs
+> +	$(INSTALL) -m 644 $(CFGFILES) $(PKG_DATA_DIR)/mkfs
+> +
+>  install-dev:
+>  
+>  -include .dep
+> diff --git a/mkfs/lts_4.19.conf b/mkfs/lts_4.19.conf
+> new file mode 100644
+> index 00000000..74144790
+> --- /dev/null
+> +++ b/mkfs/lts_4.19.conf
+> @@ -0,0 +1,13 @@
+> +# V5 features that were the mkfs defaults when the upstream Linux 4.19 LTS
+> +# kernel was released at the end of 2019.
+> +
+> +[metadata]
+> +bigtime=0
+> +crc=1
+> +finobt=1
+> +inobtcount=0
+> +reflink=0
+> +rmapbt=0
+> +
+> +[inode]
+> +sparse=1
+> diff --git a/mkfs/lts_5.10.conf b/mkfs/lts_5.10.conf
+> new file mode 100644
+> index 00000000..ac00960e
+> --- /dev/null
+> +++ b/mkfs/lts_5.10.conf
+> @@ -0,0 +1,13 @@
+> +# V5 features that were the mkfs defaults when the upstream Linux 5.10 LTS
+> +# kernel was released at the end of 2020.
+> +
+> +[metadata]
+> +bigtime=0
+> +crc=1
+> +finobt=1
+> +inobtcount=0
+> +reflink=1
+> +rmapbt=0
+> +
+> +[inode]
+> +sparse=1
+> diff --git a/mkfs/lts_5.15.conf b/mkfs/lts_5.15.conf
+> new file mode 100644
+> index 00000000..32082958
+> --- /dev/null
+> +++ b/mkfs/lts_5.15.conf
+> @@ -0,0 +1,13 @@
+> +# V5 features that were the mkfs defaults when the upstream Linux 5.15 LTS
+> +# kernel was released at the end of 2021.
+> +
+> +[metadata]
+> +bigtime=1
+> +crc=1
+> +finobt=1
+> +inobtcount=1
+> +reflink=1
+> +rmapbt=0
+> +
+> +[inode]
+> +sparse=1
