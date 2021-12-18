@@ -2,38 +2,42 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32028C433EF
-	for <linux-xfs@archiver.kernel.org>; Sat, 18 Dec 2021 00:19:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3F13C433F5
+	for <linux-xfs@archiver.kernel.org>; Sat, 18 Dec 2021 00:20:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230039AbhLRATF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Dec 2021 19:19:05 -0500
-Received: from ams.source.kernel.org ([145.40.68.75]:48536 "EHLO
-        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229643AbhLRATF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Dec 2021 19:19:05 -0500
+        id S229563AbhLRAUO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Dec 2021 19:20:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38358 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229470AbhLRAUO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Dec 2021 19:20:14 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB6ECC061574
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Dec 2021 16:20:13 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 875A7B82B2B
-        for <linux-xfs@vger.kernel.org>; Sat, 18 Dec 2021 00:19:04 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4628AC36AE2;
-        Sat, 18 Dec 2021 00:19:03 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 74EFAB82B2B
+        for <linux-xfs@vger.kernel.org>; Sat, 18 Dec 2021 00:20:12 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32491C36AE2;
+        Sat, 18 Dec 2021 00:20:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1639786743;
-        bh=02c4/FXR1sE3xrBEBQBoY5JgWTxagUWLAnu1O45Z02A=;
+        s=k20201202; t=1639786811;
+        bh=DdbQKzu1p33hhtdqayI6sm066OqWi2K8bgimfW+pufM=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=EW4izEfsDK6+xvsIoKNzvQG5nrPRwUB3L6eWYwJOaAYj8ku11CuUVSRdWNhMZipSz
-         aD1gmJKL5mCmZ8aLbb7TFcCVkafzIS5j2i2zYILHPOa+deN5REYKk5GYIw+1H6fkKX
-         SZfAhfb9rskEbM+kDNKsw1E98tgHIKV8/CZr/01/tWY+g9lNM2PKJsLK4Kcoa1VRKA
-         orGZEZoE00zYVL8gYoP7Ly5mNvljwBHKnA17l8O53RWgCTTW8qqDEhcO0b8KvL2VN8
-         jsVC2H+no6AqLPY/ZkRnZGI8p9vBGErXBU84tfZbQ7BEHqPCl2XnWmPu9521ASvsPr
-         3FWyFrXecP+1g==
-Date:   Fri, 17 Dec 2021 16:19:02 -0800
+        b=mIwb+Z0UieRDinCiwo/TybUJ6fHJNjYsaKokq9lJYaIfzQ7P0CE51TpsgBewqhKsD
+         I0xhzMl2f5uwU4DwadUKbti4p2xiz56JnCaxinS+4phn1xupwKddU56fpih5GyffcT
+         oRk+RHlMP5lniqE1B3RtAZErpx6qBbdkkZDB/AKO8F3J3Qcs12896aiUg82LwrhbPU
+         ZlbfIzAPLDqDbJnOVw7A6p87h1vcXbPpDHnO5yGB34U0d/+XWRsYMkKwToHGeMGBkc
+         YXEjsiCdLjQajSSVBXuy2K1X/SkDi8omJP0FRimAz7PrVPMF41qYDE1AIbRabH0nBH
+         +lJvPd+M8oIgw==
+Date:   Fri, 17 Dec 2021 16:20:10 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Eric Sandeen <sandeen@redhat.com>
 Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: [PATCH 1/3] libxcmd: use emacs mode for command history editing
-Message-ID: <20211218001902.GS27664@magnolia>
+Subject: [PATCH 2/3] mkfs: prevent corruption of passed-in suboption string
+ values
+Message-ID: <20211218002010.GT27664@magnolia>
 References: <20211218001616.GB27676@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -45,46 +49,63 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Prior to xfsprogs 5.7.0, we built xfsprogs with libreadline support by
-default.  In its default configuration, that library interpreted various
-keystrokes in a direct manner (e.g. backspace deletes the character to
-the left of the cursor), which seems consistent with how emacs behaves.
+Eric and I were trying to play with mkfs.configuration files, when I
+spotted this (with the libini package from Ubuntu 20.04):
 
-However, libeditline's default keybindings are consistent with vim,
-which means that suddenly users are presented with not the same line
-editing interface that they had before.  Since libeditline is
-configurable (put "bind -v" in editrc if you really want vim mode),
-let's put things back the way they were.  At least as much as we can.
+# cat << EOF > /tmp/r
+[data]
+su=2097152
+sw=1
+EOF
+# mkfs.xfs -f -c options=/tmp/r /dev/sda
+Parameters parsed from config file /tmp/r successfully
+-d su option requires a value
 
-Fixes: bbe12eb9 ("xfsprogs: remove libreadline support")
+It turns out that libini's parser uses stack variables(!) to store the
+value of a key=value pair that it parses, and passes this stack array to
+the parse_cfgopt function.  If the particular option calls getstr(),
+then we save the value of that pointer (not its contents) to the
+cli_params.  Being a stack array, the contents will be overwritten by
+other function calls, which means that our value of '2097152' has been
+destroyed by the time we actually call getnum when we're validating the
+new fs config.
+
+We never noticed this until now because the only other caller was
+getsubopt on the argv array, which gets chopped up but left intact in
+memory.  The solution is to make a private copy of those strings if we
+ever save them for later.  For now we'll be lazy and let the memory
+leak, since mkfs is not a long-running process.
+
+Fixes: 33c62516 ("mkfs: add initial ini format config file parsing support")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- db/input.c      |    1 +
- libxcmd/input.c |    1 +
- 2 files changed, 2 insertions(+)
+ mkfs/xfs_mkfs.c |   11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
-diff --git a/db/input.c b/db/input.c
-index 448e84b0..d8113599 100644
---- a/db/input.c
-+++ b/db/input.c
-@@ -227,6 +227,7 @@ fetchline(void)
- 		el_set(el, EL_SIGNAL, 1);
- 		el_set(el, EL_PROMPT, el_get_prompt);
- 		el_set(el, EL_HIST, history, (const char *)hist);
-+		el_set(el, EL_EDITOR, "emacs");
- 	}
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 3a41e17f..fcad6b55 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -1438,12 +1438,21 @@ getstr(
+ 	struct opt_params	*opts,
+ 	int			index)
+ {
++	char			*ret;
++
+ 	check_opt(opts, index, true);
  
- 	if (inputstacksize == 1) {
-diff --git a/libxcmd/input.c b/libxcmd/input.c
-index e3fa626a..fa80e5ab 100644
---- a/libxcmd/input.c
-+++ b/libxcmd/input.c
-@@ -45,6 +45,7 @@ fetchline(void)
- 		el_set(el, EL_SIGNAL, 1);
- 		el_set(el, EL_PROMPT, el_get_prompt);
- 		el_set(el, EL_HIST, history, (const char *)hist);
-+		el_set(el, EL_EDITOR, "emacs");
- 	}
- 	cmd = el_gets(el, &count);
- 	if (!cmd)
+ 	/* empty strings for string options are not valid */
+ 	if (!str || *str == '\0')
+ 		reqval(opts->name, opts->subopts, index);
+-	return (char *)str;
++
++	ret = strdup(str);
++	if (!ret) {
++		fprintf(stderr, _("Out of memory while saving suboptions.\n"));
++		exit(1);
++	}
++
++	return ret;
+ }
+ 
+ static int
