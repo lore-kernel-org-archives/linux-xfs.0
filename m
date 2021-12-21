@@ -2,76 +2,198 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 159D1C433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Dec 2021 08:48:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AF94C433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Dec 2021 17:01:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235821AbhLUIsz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 21 Dec 2021 03:48:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51654 "EHLO
+        id S240193AbhLURBj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 21 Dec 2021 12:01:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53666 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233569AbhLUIsy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Dec 2021 03:48:54 -0500
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41CD7C061574;
-        Tue, 21 Dec 2021 00:48:54 -0800 (PST)
+        with ESMTP id S240196AbhLURBh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Dec 2021 12:01:37 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3605AC061747;
+        Tue, 21 Dec 2021 09:01:37 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=5sNRK7eak2tna64oFZaxQtUv30cBHlHdDha2g9J+6XE=; b=akbQMUgNdDQpa6emCnYiLroiEO
-        NeCw+yt7z3/+UEQkkBfJzEeHH7rdyG1KvDLCKRWx8ZvLeUC0c5nDFYIjv4kTuzVKEel8CQ6GBWrDJ
-        KpURrzLBLdCu4PadpP1ERk4QRCRw5NqcXDl9u7UqVLUWrU/m8OImS8wPLX5BZS3PVyd/rAVZVdcGl
-        gX0/puxTRQIlGYW1Ox8MqXhnB8DIpppqF0mkAL/twThymucKliTaimCUiDZeBkXi/ib/tsr8+Arvr
-        YVo8s4at+wsufH7ureeF4wOD9LkgK32HMDfOzcFu5KPMUO+ZK/sYu+mUE3nzTr51qJekCsZ/GWfTK
-        z9n/L31A==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mzapF-005yRg-Se; Tue, 21 Dec 2021 08:48:49 +0000
-Date:   Tue, 21 Dec 2021 00:48:49 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     NeilBrown <neilb@suse.de>
-Cc:     Anna Schumaker <anna.schumaker@netapp.com>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        Chuck Lever <chuck.lever@oracle.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Mel Gorman <mgorman@suse.de>,
-        Christoph Hellwig <hch@infradead.org>,
-        David Howells <dhowells@redhat.com>,
-        Linux NFS Mailing List <linux-nfs@vger.kernel.org>,
-        linux-mm@kvack.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org
-Subject: Re: [PATCH 00/18 V2] Repair SWAP-over-NFS
-Message-ID: <YcGU8W6+hEfRAVY9@infradead.org>
-References: <163969801519.20885.3977673503103544412.stgit@noble.brown>
- <CAFX2Jfn8jER-aV_ttiAe1tkh8f+m=5-whEBTWbHO1uVwf=B4bw@mail.gmail.com>
- <163994803576.25899.6298619065481174544@noble.neil.brown.name>
+        bh=87hwk5i0bYjBDiuG7ta/mairPC/v5KjosO0WqlSlnlM=; b=vTd5Bt7BWbTvbpB0IZyYn6w+B8
+        iF7NW5/0rPKjyTfUH1tnH6rK5zpdZYPaf5aTXpqFKW/6GBioOZXiDlo9rXK28tTu1+A3nU11vYCPO
+        FRbDOMDn8LRvEWuyhMKOppJEcQFKabFusRq6K1SW2ihoqRh/PjGmferAjnpdu9ZONR6jofP3hH9Cd
+        wSth8bC0nmDB743VocqTZcbPA/K/H+feLSFAWYDV+mzMBXPKQ2VowN2PcjY0XijBu2SMpJkfUOISz
+        Lizym1SBF7jgiouTvEsS011YJA5O0euAiFwGP2YyE18Cu/I1jms+alEPuLJXiLWa3S+KDZk8oHk91
+        b5jOlAbw==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1mziW6-002eS7-8g; Tue, 21 Dec 2021 17:01:34 +0000
+Date:   Tue, 21 Dec 2021 17:01:34 +0000
+From:   Matthew Wilcox <willy@infradead.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: iomap-folio & nvdimm merge
+Message-ID: <YcIIbtKhOulAL4s4@casper.infradead.org>
+References: <20211216210715.3801857-1-willy@infradead.org>
+ <20211216210715.3801857-17-willy@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <163994803576.25899.6298619065481174544@noble.neil.brown.name>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20211216210715.3801857-17-willy@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Dec 20, 2021 at 08:07:15AM +1100, NeilBrown wrote:
-> > Thanks for fixing swap-over-NFS! Looks like it passes all the
-> > swap-related xfstests except for generic/357 on NFS v4.2. This test
-> > checks that we get -EINVAL on a reflinked swapfile, but I'm not sure
-> > if there is a way to check for that on the client side but if you have
-> > any ideas it would be nice to get that test passing while you're at
-> > it!
-> 
-> Thanks for testing!.
-> I think that testing that swap fails on a reflinked file is bogus.  This
-> isn't an important part of the API, it is just an internal
-> implementation detail.
-> I certainly understand that it could be problematic implementing swap on
-> a reflinked file within XFS and it is perfectly acceptable to fail such
-> a request.  But if one day someone decided to implement it - should that
-> be seen as a regression?
+On Thu, Dec 16, 2021 at 09:07:06PM +0000, Matthew Wilcox (Oracle) wrote:
+> The zero iterator can work in folio-sized chunks instead of page-sized
+> chunks.  This will save a lot of page cache lookups if the file is cached
+> in large folios.
 
-Yes, there is really no fundamental reason not to support swap to
-reflinked files, especially for NFS.  We'll need some kind of opt-in/out
-for this test.
+This patch (and a few others) end up conflicting with what Christoph did
+that's now in the nvdimm tree.  In an effort to make the merge cleaner,
+I took the next-20211220 tag and did the following:
+
+Revert de291b590286
+Apply: https://lore.kernel.org/linux-xfs/20211221044450.517558-1-willy@infradead.org/
+(these two things are likely to happen in the nvdimm tree imminently)
+
+I then checked out iomap-folio-5.17e and added this patch:
+
+    iomap: Inline __iomap_zero_iter into its caller
+
+    To make the merge easier, replicate the inlining of __iomap_zero_iter()
+    into iomap_zero_iter() that is currently in the nvdimm tree.
+
+    Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index ba80bedd9590..c6b3a148e898 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -895,27 +895,6 @@ iomap_file_unshare(struct inode *inode, loff_t pos, loff_t len,
+ }
+ EXPORT_SYMBOL_GPL(iomap_file_unshare);
+ 
+-static s64 __iomap_zero_iter(struct iomap_iter *iter, loff_t pos, u64 length)
+-{
+-       struct folio *folio;
+-       int status;
+-       size_t offset;
+-       size_t bytes = min_t(u64, SIZE_MAX, length);
+-
+-       status = iomap_write_begin(iter, pos, bytes, &folio);
+-       if (status)
+-               return status;
+-
+-       offset = offset_in_folio(folio, pos);
+-       if (bytes > folio_size(folio) - offset)
+-               bytes = folio_size(folio) - offset;
+-
+-       folio_zero_range(folio, offset, bytes);
+-       folio_mark_accessed(folio);
+-
+-       return iomap_write_end(iter, pos, bytes, bytes, folio);
+-}
+-
+ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
+ {
+        struct iomap *iomap = &iter->iomap;
+@@ -929,14 +908,34 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
+                return length;
+ 
+        do {
+-               s64 bytes;
++               struct folio *folio;
++               int status;
++               size_t offset;
++               size_t bytes = min_t(u64, SIZE_MAX, length);
++
++               if (IS_DAX(iter->inode)) {
++                       s64 tmp = dax_iomap_zero(pos, bytes, iomap);
++                       if (tmp < 0)
++                               return tmp;
++                       bytes = tmp;
++                       goto good;
++               }
+ 
+-               if (IS_DAX(iter->inode))
+-                       bytes = dax_iomap_zero(pos, length, iomap);
+-               else
+-                       bytes = __iomap_zero_iter(iter, pos, length);
+-               if (bytes < 0)
+-                       return bytes;
++               status = iomap_write_begin(iter, pos, bytes, &folio);
++               if (status)
++                       return status;
++
++               offset = offset_in_folio(folio, pos);
++               if (bytes > folio_size(folio) - offset)
++                       bytes = folio_size(folio) - offset;
++
++               folio_zero_range(folio, offset, bytes);
++               folio_mark_accessed(folio);
++
++               bytes = iomap_write_end(iter, pos, bytes, bytes, folio);
++good:
++               if (WARN_ON_ONCE(bytes == 0))
++                       return -EIO;
+ 
+                pos += bytes;
+                length -= bytes;
+
+
+
+Then I did the merge, and the merge commit looks pretty sensible
+afterwards:
+
+    Merge branch 'iomap-folio-5.17f' into fixup
+
+diff --cc fs/iomap/buffered-io.c
+index 955f51f94b3f,c6b3a148e898..c938bbad075e
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@@ -888,19 -908,32 +907,23 @@@ static loff_t iomap_zero_iter(struct io
+                return length;
+
+        do {
+-               unsigned offset = offset_in_page(pos);
+-               size_t bytes = min_t(u64, PAGE_SIZE - offset, length);
+-               struct page *page;
++               struct folio *folio;
+                int status;
++               size_t offset;
++               size_t bytes = min_t(u64, SIZE_MAX, length);
+
+-               status = iomap_write_begin(iter, pos, bytes, &page);
+ -              if (IS_DAX(iter->inode)) {
+ -                      s64 tmp = dax_iomap_zero(pos, bytes, iomap);
+ -                      if (tmp < 0)
+ -                              return tmp;
+ -                      bytes = tmp;
+ -                      goto good;
+ -              }
+ -
++               status = iomap_write_begin(iter, pos, bytes, &folio);
+                if (status)
+                        return status;
+
+-               zero_user(page, offset, bytes);
+-               mark_page_accessed(page);
++               offset = offset_in_folio(folio, pos);
++               if (bytes > folio_size(folio) - offset)
++                       bytes = folio_size(folio) - offset;
++
++               folio_zero_range(folio, offset, bytes);
++               folio_mark_accessed(folio);
+
+-               bytes = iomap_write_end(iter, pos, bytes, bytes, page);
++               bytes = iomap_write_end(iter, pos, bytes, bytes, folio);
+ -good:
+                if (WARN_ON_ONCE(bytes == 0))
+                        return -EIO;
+
+
+
+Shall I push out a version of this patch series which includes the
+"iomap: Inline __iomap_zero_iter into its caller" patch I pasted above?
