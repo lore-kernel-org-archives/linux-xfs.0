@@ -2,95 +2,77 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6040C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Dec 2021 03:46:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DC7FC433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Dec 2021 22:08:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242164AbhLVDqq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 21 Dec 2021 22:46:46 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:37600 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229997AbhLVDqp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Dec 2021 22:46:45 -0500
-Received: from dread.disaster.area (pa49-181-243-119.pa.nsw.optusnet.com.au [49.181.243.119])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id D73738A62EC;
-        Wed, 22 Dec 2021 14:46:43 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1mzsaQ-005yrY-FC; Wed, 22 Dec 2021 14:46:42 +1100
-Date:   Wed, 22 Dec 2021 14:46:42 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH v2] xfs: prevent UAF in xfs_log_item_in_current_chkpt
-Message-ID: <20211222034642.GD945095@dread.disaster.area>
-References: <20211217174500.GI27664@magnolia>
+        id S234122AbhLVWIe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 22 Dec 2021 17:08:34 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:40148 "EHLO
+        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230063AbhLVWId (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Dec 2021 17:08:33 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id B8C10B81CFE
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Dec 2021 22:08:27 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7399DC36AE5;
+        Wed, 22 Dec 2021 22:08:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1640210906;
+        bh=pLXNVpLHl2Lz6gE62PZTOGS40oPaX6m/H41TSwbX6lg=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=presPs1/jgBYQT/xZfoahLPCZReeDvIIZZ4DyADAc3V7yeJsMcEwHQfhdgLfdcfHC
+         V5EAsOtCMKuPw5yAPymwLQK+ZCShf7UKjOS4k9RdKWNIDxW9ifdo3brDreK9fEniJd
+         QGbRcTSOC+Cs1MV0zs1TLwMKfuLwr5DYaL94HP8pV1DMdq3i4M4fFFuCS55rXG5yi8
+         KpVzBLvCWhyqj+3dkT6w1bbubfv3CktVUPE0CBuYGH65KDUXKzjEffpl31btLB4q/Q
+         epvVasVeBsxroxzYV5xkH3q/kqUNJbftpnYqQ+Nov1hcvzBJKs4BRw9GtSecUr0LgY
+         nl+cP+xz2c18Q==
+Date:   Wed, 22 Dec 2021 14:08:26 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     xfs <linux-xfs@vger.kernel.org>
+Cc:     Wengang Wang <wen.gang.wang@oracle.com>
+Subject: Re: [PATCH] design: fix computation of buffer log item bitmap size
+Message-ID: <20211222220826.GD27664@magnolia>
+References: <20211110015820.GX24307@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211217174500.GI27664@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=61c29fa4
-        a=BEa52nrBdFykVEm6RU8P4g==:117 a=BEa52nrBdFykVEm6RU8P4g==:17
-        a=kj9zAlcOel0A:10 a=IOMw9HtfNCkA:10 a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8
-        a=7-415B0cAAAA:8 a=YfZ6WuxZou2Z4fkI1OwA:9 a=CjuIK1q_8ugA:10
-        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20211110015820.GX24307@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Dec 17, 2021 at 09:45:00AM -0800, Darrick J. Wong wrote:
+On Tue, Nov 09, 2021 at 05:58:20PM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> While I was running with KASAN and lockdep enabled, I stumbled upon an
-> KASAN report about a UAF to a freed CIL checkpoint.  Looking at the
-> comment for xfs_log_item_in_current_chkpt, it seems pretty obvious to me
-> that the original patch to xfs_defer_finish_noroll should have done
-> something to lock the CIL to prevent it from switching the CIL contexts
-> while the predicate runs.
+> Wengang Wang was trying to work through a buffer log item by consulting
+> the ondisk format documentation, and was confused by the formula given
+> in section 14.3.14 regarding the size of blf_data_map, aka the dirty
+> bitmap for buffer log items.  We noticed that the documentation doesn't
+> match what the kernel actually does, so let's fix this.
 > 
-> For upper level code that needs to know if a given log item is new
-> enough not to need relogging, add a new wrapper that takes the CIL
-> context lock long enough to sample the current CIL context.  This is
-> kind of racy in that the CIL can switch the contexts immediately after
-> sampling, but that's ok because the consequence is that the defer ops
-> code is a little slow to relog items.
-....
-> 
-> Fixes: 4e919af7827a ("xfs: periodically relog deferred intent items")
+> Reported-by: Wengang Wang <wen.gang.wang@oracle.com>
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+
+This is probably a bad time for this, but... ping?
+
+--D
+
 > ---
-> v2: use READ_ONCE on CIL instead of taking locks to get cil ctx
-> ---
->  fs/xfs/xfs_log_cil.c |    6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
+>  .../journaling_log.asciidoc                        |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index 6c93c8ada6f3..b59cc9c0961c 100644
-> --- a/fs/xfs/xfs_log_cil.c
-> +++ b/fs/xfs/xfs_log_cil.c
-> @@ -1442,9 +1442,9 @@ xlog_cil_force_seq(
->   */
->  bool
->  xfs_log_item_in_current_chkpt(
-> -	struct xfs_log_item *lip)
-> +	struct xfs_log_item	*lip)
->  {
-> -	struct xfs_cil_ctx *ctx = lip->li_mountp->m_log->l_cilp->xc_ctx;
-> +	struct xfs_cil		*cil = lip->li_mountp->m_log->l_cilp;
+> diff --git a/design/XFS_Filesystem_Structure/journaling_log.asciidoc b/design/XFS_Filesystem_Structure/journaling_log.asciidoc
+> index 1dba56e..894d3e5 100644
+> --- a/design/XFS_Filesystem_Structure/journaling_log.asciidoc
+> +++ b/design/XFS_Filesystem_Structure/journaling_log.asciidoc
+> @@ -992,7 +992,7 @@ The size of +blf_data_map+, in 32-bit words.
+>  This variable-sized array acts as a dirty bitmap for the logged buffer.  Each
+>  1 bit represents a dirty region in the buffer, and each run of 1 bits
+>  corresponds to a subsequent log item containing the new contents of the buffer
+> -area.  Each bit represents +(blf_len * 512) / (blf_map_size * NBBY)+ bytes.
+> +area.  Each bit represents +(blf_len * 512) / (blf_map_size * sizeof(unsigned int) * NBBY)+ bytes.
 >  
->  	if (list_empty(&lip->li_cil))
->  		return false;
-> @@ -1454,7 +1454,7 @@ xfs_log_item_in_current_chkpt(
->  	 * first checkpoint it is written to. Hence if it is different to the
->  	 * current sequence, we're in a new checkpoint.
->  	 */
-> -	return lip->li_seq == ctx->sequence;
-> +	return lip->li_seq == READ_ONCE(cil->xc_current_sequence);
->  }
-
-Looks good.
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
--- 
-Dave Chinner
-david@fromorbit.com
+>  [[Buffer_Data_Log_Item]]
+>  === Buffer Data Log Item
