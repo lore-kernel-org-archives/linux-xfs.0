@@ -2,47 +2,65 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93E08C433EF
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Dec 2021 07:05:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCF17C433F5
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Dec 2021 07:06:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351702AbhLXHFL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 24 Dec 2021 02:05:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39612 "EHLO
+        id S1351648AbhLXHGG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 24 Dec 2021 02:06:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39816 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241206AbhLXHFJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Dec 2021 02:05:09 -0500
+        with ESMTP id S241206AbhLXHGF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Dec 2021 02:06:05 -0500
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7CB33C061401
-        for <linux-xfs@vger.kernel.org>; Thu, 23 Dec 2021 23:05:09 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BFDDCC061401
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Dec 2021 23:06:05 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=l2WBiCb5duYJRA9nKpihqrJOH1Qjg6utSrFiu8qAdtc=; b=Yx1DqXlm6p5B4WN8+OtzvA3j4R
-        6/Q8dDenSvJcIAjYJbez0/L5b23l4nqioCRU5FxuaxZe6x9/dyMEAsM5/pes3USFKsxHVoU3U3WY0
-        2L0Te/YMy2xGvgbU4xHEyXSAILKqtTK1FoCSkyCYkb+frszEJRqGJt8vZgf6Xdq7HKNxj4zs98iHb
-        nqneNrlju1D7sTetFozzh5W9+BTo6/rrCy1EyYFoeOJ77+mZqTKUOaWA3pE/mcN94z0dWFEe0gUeS
-        p8d6GbcQGqAzOBjFRjw0StifNpdGPgHyT3hC7XP/9J5eSJ2g8WNxe0JdkULnjOUhvy+DZuOlXtmjf
-        Hg3ZtH0Q==;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Transfer-Encoding
+        :Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
+        Sender:Reply-To:Content-ID:Content-Description;
+        bh=b7maIXCJ0kNGbhIK1DG0w8mC3/QhEhjSsLDfhy0Q1Us=; b=GbtVDUSb97hraCET3IDfBnGRUY
+        +UCkpt5BHnf+tK40SPPQRnwChXnZ4GiTeiezbZaqyCeJYS60BtasVXvJZERjmC3I1Qmti/hE06t1I
+        qv9Ng20ug8CXXBKKuykbgMkIcA1xbQwgyA5HiObUdNCGgtILHugEn6ssrrJvQbYDeiYWIJJmogrgU
+        OzQInWAgrn79fYETrfDWyH0uIsKp/stapD1VP2aKXzlO+5wMrTpzidT6NZR0gfnuPD1QDul/ZhgLA
+        4PYtBAxhIbGw2FBHWijUPBDw9ly15FjScGJombc07PhGi8ReDwN6Fl50uMv450Sr831uMEroP25K+
+        XDTG3COQ==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1n0edX-00DpV6-RH; Fri, 24 Dec 2021 07:05:07 +0000
-Date:   Thu, 23 Dec 2021 23:05:07 -0800
+        id 1n0eeT-00DpWC-5D; Fri, 24 Dec 2021 07:06:05 +0000
+Date:   Thu, 23 Dec 2021 23:06:05 -0800
 From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH v2 4/3] mkfs: document sample configuration file location
-Message-ID: <YcVxIxAtWoNzP0mK@infradead.org>
-References: <20211218001616.GB27676@magnolia>
- <20211218002305.GV27664@magnolia>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs_quota: fix up dump and report documentation
+Message-ID: <YcVxXWKsT7OSMCi0@infradead.org>
+References: <20211217202050.14922-1-sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20211218002305.GV27664@magnolia>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20211217202050.14922-1-sandeen@sandeen.net>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Looks good,
+On Fri, Dec 17, 2021 at 02:20:50PM -0600, Eric Sandeen wrote:
+> From: Eric Sandeen <sandeen@redhat.com>
+> 
+> Documentation for these commands was a bit of a mess.
+> 
+> 1) The help args were respecified in the _help() functions, overwriting
+>    the strings which had been set up in the _init functions as all
+>    other commands do. Worse, in the report case, they differed.
+> 
+> 2) The -L/-U dump options were not present in either short help string.
+> 
+> 3) The -L/-U dump options were not documented in the xfs_quota manpage.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+
+Why the double₋signoff?
+
+Otherwise looks good:
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
