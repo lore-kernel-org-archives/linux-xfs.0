@@ -2,252 +2,153 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AAD34C433F5
-	for <linux-xfs@archiver.kernel.org>; Sun, 26 Dec 2021 14:35:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06F4AC433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Dec 2021 14:46:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229996AbhLZOfj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 26 Dec 2021 09:35:39 -0500
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:18864 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S233752AbhLZOfR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 Dec 2021 09:35:17 -0500
-IronPort-Data: =?us-ascii?q?A9a23=3AZWqqgaC+rSajUhVW/1biw5YqxClBgxIJ4g17XOL?=
- =?us-ascii?q?fVAK90D5x0zxTzGQYDW+FaP+DazGje4hxO9vk/EpX68WAx9UxeLYW3SszFioV8?=
- =?us-ascii?q?6IpJjg4wn/YZnrUdouaJK5ex512huLocYZkHhcwmj/3auK49CMmi/nRLlbBILW?=
- =?us-ascii?q?s1h5ZFFYMpBgJ2UoLd94R2uaEsPDha++/kYqaT/73ZDdJ7wVJ3lc8sMpvnv/AU?=
- =?us-ascii?q?MPa41v0tnRmDRxCUcS3e3M9VPrzLonpR5f0rxU9IwK0ewrD5OnREmLx9BFrBM6?=
- =?us-ascii?q?nk6rgbwsBRbu60Qqm0yIQAvb9xEMZ4HFaPqUTbZLwbW9NljyPhME3xtNWqbS+V?=
- =?us-ascii?q?AUoIrbR3u8aVnG0FgknZPwbpuSXfijXXcu7iheun2HX6/lnEkA6FYMC/eNwG2t?=
- =?us-ascii?q?P6boTLzVlRhCIh8q3xryhQ+Vhj8hlK9PkVKsTs3cmz3fGDPIiQJnGWI3L48NV2?=
- =?us-ascii?q?HE7gcUmNfrceM0fZhJsYQ7GbhkJPU0YYLo6neG1ljz6dhVbtluepuww+We75Ap?=
- =?us-ascii?q?v3LnoNfLRe8eWXoNRn0CFtiTK8nqRKhERNPSb0ibD/n/Eru3Gmy69U4IPPLqi/?=
- =?us-ascii?q?/VujRuYwWl7IBkXU0ar5PeihkOgVtZ3NUMZ4GwtoLI0+UjtScPyNzW8oXiZrls?=
- =?us-ascii?q?fVsBWHukS9g6A0OzX7hyfC2xCSSROAPQitckrVXk62EShgdzkH3psvaeTRHbb8?=
- =?us-ascii?q?a2bxQ5ekwB9wXQqPHdCFFVapYK45txbs/4Gdf47eIbdszE/MW6YL+i2kRUD?=
-IronPort-HdrOrdr: =?us-ascii?q?A9a23=3Av6gTsKCVxuPpMprlHemQ55DYdb4zR+YMi2TD?=
- =?us-ascii?q?tnoBLSC9F/b0qynAppomPGDP4gr5NEtApTniAtjkfZq/z+8X3WB5B97LMzUO01?=
- =?us-ascii?q?HYTr2Kg7GD/xTQXwX69sN4kZxrarVCDrTLZmRSvILX5xaZHr8brOW6zA=3D=3D?=
-X-IronPort-AV: E=Sophos;i="5.88,237,1635177600"; 
-   d="scan'208";a="119563878"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 26 Dec 2021 22:35:10 +0800
-Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
-        by cn.fujitsu.com (Postfix) with ESMTP id 237F94D13BFD;
-        Sun, 26 Dec 2021 22:35:04 +0800 (CST)
-Received: from G08CNEXJMPEKD02.g08.fujitsu.local (10.167.33.202) by
- G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
- (TLS) id 15.0.1497.23; Sun, 26 Dec 2021 22:35:06 +0800
-Received: from G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.85) by
- G08CNEXJMPEKD02.g08.fujitsu.local (10.167.33.202) with Microsoft SMTP Server
- (TLS) id 15.0.1497.23; Sun, 26 Dec 2021 22:35:06 +0800
-Received: from irides.mr.mr (10.167.225.141) by
- G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.23 via Frontend Transport; Sun, 26 Dec 2021 22:35:01 +0800
-From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        <nvdimm@lists.linux.dev>, <linux-mm@kvack.org>,
-        <linux-fsdevel@vger.kernel.org>
-CC:     <djwong@kernel.org>, <dan.j.williams@intel.com>,
-        <david@fromorbit.com>, <hch@infradead.org>, <jane.chu@oracle.com>,
-        Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v9 03/10] mm: factor helpers for memory_failure_dev_pagemap
-Date:   Sun, 26 Dec 2021 22:34:32 +0800
-Message-ID: <20211226143439.3985960-4-ruansy.fnst@fujitsu.com>
+        id S231551AbhL1Oqr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Dec 2021 09:46:47 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:36438 "EHLO
+        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229480AbhL1Oqr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Dec 2021 09:46:47 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E3F8561206;
+        Tue, 28 Dec 2021 14:46:46 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C649FC36AE7;
+        Tue, 28 Dec 2021 14:46:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1640702806;
+        bh=7QmQFTuH0XTu0e1hnmgspwVA25nkTIM2NllnaBShhUo=;
+        h=From:To:Cc:Subject:Date:From;
+        b=yiXPeZXy8tKOGrjMzxK2vBAeju64zY0yq9HOgAS3v9qLx0XrKPSsMgq2IS14kIPGw
+         swPR+7RK20i6b/TYj37MOKG01mLErC38PsItdt+Vb0fRvS04elGZ1lb1Ds0bgyTHcK
+         RcQsGf0IpCqzECCnaTMARLkvMwMvFIR97oHJTOR0=
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     linux-kernel@vger.kernel.org
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: [PATCH] xfs: sysfs: use default_groups in kobj_type
+Date:   Tue, 28 Dec 2021 15:46:41 +0100
+Message-Id: <20211228144641.392347-1-gregkh@linuxfoundation.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20211226143439.3985960-1-ruansy.fnst@fujitsu.com>
-References: <20211226143439.3985960-1-ruansy.fnst@fujitsu.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: 237F94D13BFD.AFF50
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3106; h=from:subject; bh=7QmQFTuH0XTu0e1hnmgspwVA25nkTIM2NllnaBShhUo=; b=owGbwMvMwCRo6H6F97bub03G02pJDImnlQN3vtJ4FRoc+m5C6aKbmf8/Kzib7k+o8V946/jt345x WtyPOmJZGASZGGTFFFm+bOM5ur/ikKKXoe1pmDmsTCBDGLg4BWAiLp8Z5hnMXVF5T3HOZJeZh71n3f 7j7NBZ2sYwP02yMGdWtO/6zc93bmNW/2uRae70FQA=
+X-Developer-Key: i=gregkh@linuxfoundation.org; a=openpgp; fpr=F4B60CC5BF78C2214A313DCB3147D40DDB2DFB29
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-memory_failure_dev_pagemap code is a bit complex before introduce RMAP
-feature for fsdax.  So it is needed to factor some helper functions to
-simplify these code.
+There are currently 2 ways to create a set of sysfs files for a
+kobj_type, through the default_attrs field, and the default_groups
+field.  Move the xfs sysfs code to use default_groups field which has
+been the preferred way since aa30f47cf666 ("kobject: Add support for
+default attribute groups to kobj_type") so that we can soon get rid of
+the obsolete default_attrs field.
 
-Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Cc: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- mm/memory-failure.c | 141 ++++++++++++++++++++++++--------------------
- 1 file changed, 77 insertions(+), 64 deletions(-)
+ fs/xfs/xfs_error.c |  3 ++-
+ fs/xfs/xfs_sysfs.c | 16 ++++++++++------
+ 2 files changed, 12 insertions(+), 7 deletions(-)
 
-diff --git a/mm/memory-failure.c b/mm/memory-failure.c
-index 07c875fdeaf0..1ee7d626fed7 100644
---- a/mm/memory-failure.c
-+++ b/mm/memory-failure.c
-@@ -1449,6 +1449,80 @@ static int try_to_split_thp_page(struct page *page, const char *msg)
- 	return 0;
- }
+diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+index 81c445e9489b..749fd18c4f32 100644
+--- a/fs/xfs/xfs_error.c
++++ b/fs/xfs/xfs_error.c
+@@ -213,11 +213,12 @@ static struct attribute *xfs_errortag_attrs[] = {
+ 	XFS_ERRORTAG_ATTR_LIST(ag_resv_fail),
+ 	NULL,
+ };
++ATTRIBUTE_GROUPS(xfs_errortag);
  
-+static void unmap_and_kill(struct list_head *to_kill, unsigned long pfn,
-+		struct address_space *mapping, pgoff_t index, int flags)
-+{
-+	struct to_kill *tk;
-+	unsigned long size = 0;
-+
-+	list_for_each_entry(tk, to_kill, nd)
-+		if (tk->size_shift)
-+			size = max(size, 1UL << tk->size_shift);
-+
-+	if (size) {
-+		/*
-+		 * Unmap the largest mapping to avoid breaking up device-dax
-+		 * mappings which are constant size. The actual size of the
-+		 * mapping being torn down is communicated in siginfo, see
-+		 * kill_proc()
-+		 */
-+		loff_t start = (index << PAGE_SHIFT) & ~(size - 1);
-+
-+		unmap_mapping_range(mapping, start, size, 0);
-+	}
-+
-+	kill_procs(to_kill, flags & MF_MUST_KILL, false, pfn, flags);
-+}
-+
-+static int mf_generic_kill_procs(unsigned long long pfn, int flags,
-+		struct dev_pagemap *pgmap)
-+{
-+	struct page *page = pfn_to_page(pfn);
-+	LIST_HEAD(to_kill);
-+	dax_entry_t cookie;
-+
-+	/*
-+	 * Prevent the inode from being freed while we are interrogating
-+	 * the address_space, typically this would be handled by
-+	 * lock_page(), but dax pages do not use the page lock. This
-+	 * also prevents changes to the mapping of this pfn until
-+	 * poison signaling is complete.
-+	 */
-+	cookie = dax_lock_page(page);
-+	if (!cookie)
-+		return -EBUSY;
-+
-+	if (hwpoison_filter(page))
-+		return 0;
-+
-+	if (pgmap->type == MEMORY_DEVICE_PRIVATE) {
-+		/*
-+		 * TODO: Handle HMM pages which may need coordination
-+		 * with device-side memory.
-+		 */
-+		return -EBUSY;
-+	}
-+
-+	/*
-+	 * Use this flag as an indication that the dax page has been
-+	 * remapped UC to prevent speculative consumption of poison.
-+	 */
-+	SetPageHWPoison(page);
-+
-+	/*
-+	 * Unlike System-RAM there is no possibility to swap in a
-+	 * different physical page at a given virtual address, so all
-+	 * userspace consumption of ZONE_DEVICE memory necessitates
-+	 * SIGBUS (i.e. MF_MUST_KILL)
-+	 */
-+	flags |= MF_ACTION_REQUIRED | MF_MUST_KILL;
-+	collect_procs(page, &to_kill, true);
-+
-+	unmap_and_kill(&to_kill, pfn, page->mapping, page->index, flags);
-+	dax_unlock_page(page, cookie);
-+	return 0;
-+}
-+
- static int memory_failure_hugetlb(unsigned long pfn, int flags)
- {
- 	struct page *p = pfn_to_page(pfn);
-@@ -1538,12 +1612,8 @@ static int memory_failure_dev_pagemap(unsigned long pfn, int flags,
- 		struct dev_pagemap *pgmap)
- {
- 	struct page *page = pfn_to_page(pfn);
--	unsigned long size = 0;
--	struct to_kill *tk;
- 	LIST_HEAD(tokill);
--	int rc = -EBUSY;
--	loff_t start;
--	dax_entry_t cookie;
-+	int rc = -ENXIO;
+ static struct kobj_type xfs_errortag_ktype = {
+ 	.release = xfs_sysfs_release,
+ 	.sysfs_ops = &xfs_errortag_sysfs_ops,
+-	.default_attrs = xfs_errortag_attrs,
++	.default_groups = xfs_errortag_groups,
+ };
  
- 	if (flags & MF_COUNT_INCREASED)
- 		/*
-@@ -1552,67 +1622,10 @@ static int memory_failure_dev_pagemap(unsigned long pfn, int flags,
- 		put_page(page);
+ int
+diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+index 8608f804388f..574b80c29fe1 100644
+--- a/fs/xfs/xfs_sysfs.c
++++ b/fs/xfs/xfs_sysfs.c
+@@ -67,11 +67,12 @@ static const struct sysfs_ops xfs_sysfs_ops = {
+ static struct attribute *xfs_mp_attrs[] = {
+ 	NULL,
+ };
++ATTRIBUTE_GROUPS(xfs_mp);
  
- 	/* device metadata space is not recoverable */
--	if (!pgmap_pfn_valid(pgmap, pfn)) {
--		rc = -ENXIO;
--		goto out;
--	}
--
--	/*
--	 * Prevent the inode from being freed while we are interrogating
--	 * the address_space, typically this would be handled by
--	 * lock_page(), but dax pages do not use the page lock. This
--	 * also prevents changes to the mapping of this pfn until
--	 * poison signaling is complete.
--	 */
--	cookie = dax_lock_page(page);
--	if (!cookie)
-+	if (!pgmap_pfn_valid(pgmap, pfn))
- 		goto out;
+ struct kobj_type xfs_mp_ktype = {
+ 	.release = xfs_sysfs_release,
+ 	.sysfs_ops = &xfs_sysfs_ops,
+-	.default_attrs = xfs_mp_attrs,
++	.default_groups = xfs_mp_groups,
+ };
  
--	if (hwpoison_filter(page)) {
--		rc = 0;
--		goto unlock;
--	}
+ #ifdef DEBUG
+@@ -239,11 +240,12 @@ static struct attribute *xfs_dbg_attrs[] = {
+ #endif
+ 	NULL,
+ };
++ATTRIBUTE_GROUPS(xfs_dbg);
+ 
+ struct kobj_type xfs_dbg_ktype = {
+ 	.release = xfs_sysfs_release,
+ 	.sysfs_ops = &xfs_sysfs_ops,
+-	.default_attrs = xfs_dbg_attrs,
++	.default_groups = xfs_dbg_groups,
+ };
+ 
+ #endif /* DEBUG */
+@@ -296,11 +298,12 @@ static struct attribute *xfs_stats_attrs[] = {
+ 	ATTR_LIST(stats_clear),
+ 	NULL,
+ };
++ATTRIBUTE_GROUPS(xfs_stats);
+ 
+ struct kobj_type xfs_stats_ktype = {
+ 	.release = xfs_sysfs_release,
+ 	.sysfs_ops = &xfs_sysfs_ops,
+-	.default_attrs = xfs_stats_attrs,
++	.default_groups = xfs_stats_groups,
+ };
+ 
+ /* xlog */
+@@ -381,11 +384,12 @@ static struct attribute *xfs_log_attrs[] = {
+ 	ATTR_LIST(write_grant_head),
+ 	NULL,
+ };
++ATTRIBUTE_GROUPS(xfs_log);
+ 
+ struct kobj_type xfs_log_ktype = {
+ 	.release = xfs_sysfs_release,
+ 	.sysfs_ops = &xfs_sysfs_ops,
+-	.default_attrs = xfs_log_attrs,
++	.default_groups = xfs_log_groups,
+ };
+ 
+ /*
+@@ -534,12 +538,12 @@ static struct attribute *xfs_error_attrs[] = {
+ 	ATTR_LIST(retry_timeout_seconds),
+ 	NULL,
+ };
 -
--	if (pgmap->type == MEMORY_DEVICE_PRIVATE) {
--		/*
--		 * TODO: Handle HMM pages which may need coordination
--		 * with device-side memory.
--		 */
--		goto unlock;
--	}
--
--	/*
--	 * Use this flag as an indication that the dax page has been
--	 * remapped UC to prevent speculative consumption of poison.
--	 */
--	SetPageHWPoison(page);
--
--	/*
--	 * Unlike System-RAM there is no possibility to swap in a
--	 * different physical page at a given virtual address, so all
--	 * userspace consumption of ZONE_DEVICE memory necessitates
--	 * SIGBUS (i.e. MF_MUST_KILL)
--	 */
--	flags |= MF_ACTION_REQUIRED | MF_MUST_KILL;
--	collect_procs(page, &tokill, flags & MF_ACTION_REQUIRED);
--
--	list_for_each_entry(tk, &tokill, nd)
--		if (tk->size_shift)
--			size = max(size, 1UL << tk->size_shift);
--	if (size) {
--		/*
--		 * Unmap the largest mapping to avoid breaking up
--		 * device-dax mappings which are constant size. The
--		 * actual size of the mapping being torn down is
--		 * communicated in siginfo, see kill_proc()
--		 */
--		start = (page->index << PAGE_SHIFT) & ~(size - 1);
--		unmap_mapping_range(page->mapping, start, size, 0);
--	}
--	kill_procs(&tokill, flags & MF_MUST_KILL, false, pfn, flags);
--	rc = 0;
--unlock:
--	dax_unlock_page(page, cookie);
-+	rc = mf_generic_kill_procs(pfn, flags, pgmap);
- out:
- 	/* drop pgmap ref acquired in caller */
- 	put_dev_pagemap(pgmap);
++ATTRIBUTE_GROUPS(xfs_error);
+ 
+ static struct kobj_type xfs_error_cfg_ktype = {
+ 	.release = xfs_sysfs_release,
+ 	.sysfs_ops = &xfs_sysfs_ops,
+-	.default_attrs = xfs_error_attrs,
++	.default_groups = xfs_error_groups,
+ };
+ 
+ static struct kobj_type xfs_error_ktype = {
 -- 
 2.34.1
-
-
 
