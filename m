@@ -2,116 +2,95 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 011BFC433EF
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Jan 2022 19:23:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89282C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Jan 2022 20:46:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234888AbiADTXZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Jan 2022 14:23:25 -0500
-Received: from ams.source.kernel.org ([145.40.68.75]:56896 "EHLO
-        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235922AbiADTXY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Jan 2022 14:23:24 -0500
+        id S233207AbiADUq2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Jan 2022 15:46:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57214 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233112AbiADUq1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Jan 2022 15:46:27 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1AFBC061761
+        for <linux-xfs@vger.kernel.org>; Tue,  4 Jan 2022 12:46:27 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 4E595B817DE;
-        Tue,  4 Jan 2022 19:23:23 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1731AC36AE9;
-        Tue,  4 Jan 2022 19:23:22 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 58BEC615A7
+        for <linux-xfs@vger.kernel.org>; Tue,  4 Jan 2022 20:46:27 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ACECDC36AE0;
+        Tue,  4 Jan 2022 20:46:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1641324202;
-        bh=kFXhcxSguP4J87bclpOKVk/E7FEOX2MRw/6e/KBHsS8=;
+        s=k20201202; t=1641329186;
+        bh=lwGqY+vdihyVnjDFSK/VS+dlssqOiO7O4icAnfqkKBU=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=G6/+BCSeOkPFqxKfWdAOvubSEitoNbJ0VdCkSPZEzI47gpIoED6IJXEmhrvbZ7u9B
-         LFzuvEVcQnkQR6kIzxvoWx7IXAqv63+FSqf26DABkxYcD1B4pL2l5MxePkuVYdAKld
-         jjtjNtpHT5li0zcpAHf7AB7rE3bUjPX+jPjFnau8ZBAOOJeHWVunYUoqom9t4nnYaK
-         HrD2f+v5noUYTIyOBfujyjOoorVHxmG9gFu/u8/x3LmovycVt6WIhdn4moQMOTmqwH
-         e4vCbD1IKMF0hlS1XuH5iRZSq+Cu3xn5XtW4B1MTuDt5Eaew1Ga+q8pN/svoxIR5w9
-         biK1EVg/XYkZw==
-Date:   Tue, 4 Jan 2022 11:23:21 -0800
+        b=q3N0f9SYvVBQTzmeTIca4EBEVgJ8Ti0H+s9jGIZyffjC3gL0J0dDz7MtI02gu/fGI
+         x9CIfKjnZfgnQiCfK8unt60uvtRexLE9bsFgU5bZN13/ocHhBSO7mml9rRiajTEZMS
+         /Pnw4N59KZy6BIcXvughhxIT6At/A1LqK9v6z0AQgSXTLLmGPwOGo3QKxzdDctfElS
+         NtKNRWSPEkJnsRNIf7zvifR2bpTa0qgMzM9k2K6VYziIVuTPPEi0Xgvymmh7eOi/4w
+         gIPGHuVnus8il8SwpPiZMieeR26LL47o5+L2quC1zYnNGKQS5Dr+Ct//MPTGGCSvGI
+         gtSNK4Xdk7QHQ==
+Date:   Tue, 4 Jan 2022 12:46:26 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     Trond Myklebust <trondmy@hammerspace.com>,
-        "david@fromorbit.com" <david@fromorbit.com>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "trondmy@kernel.org" <trondmy@kernel.org>,
-        "hch@infradead.org" <hch@infradead.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "willy@infradead.org" <willy@infradead.org>
-Subject: Re: [PATCH] iomap: Address soft lockup in iomap_finish_ioend()
-Message-ID: <20220104192321.GF31606@magnolia>
-References: <20211230193522.55520-1-trondmy@kernel.org>
- <Yc5f/C1I+N8MPHcd@casper.infradead.org>
- <6f746786a3928844fbe644e7e409008b4f50c239.camel@hammerspace.com>
- <20220101035516.GE945095@dread.disaster.area>
- <fb964769132eb01ed4e8b67d6972d50ee3387e24.camel@hammerspace.com>
- <YdRNasL3WFugVe8c@bfoster>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     "xuyang2018.jy@fujitsu.com" <xuyang2018.jy@fujitsu.com>,
+        xfs <linux-xfs@vger.kernel.org>
+Subject: Re: The question of Q_XQUOTARM ioctl
+Message-ID: <20220104204626.GF31583@magnolia>
+References: <616F9367.3030801@fujitsu.com>
+ <20220104023456.GE31606@magnolia>
+ <YdP1Y8FAeu871lr7@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YdRNasL3WFugVe8c@bfoster>
+In-Reply-To: <YdP1Y8FAeu871lr7@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jan 04, 2022 at 08:36:42AM -0500, Brian Foster wrote:
-> On Sat, Jan 01, 2022 at 05:39:45PM +0000, Trond Myklebust wrote:
-> ...
+On Mon, Jan 03, 2022 at 11:21:07PM -0800, Christoph Hellwig wrote:
+> On Mon, Jan 03, 2022 at 06:34:56PM -0800, Darrick J. Wong wrote:
+> > > 
+> > > I don't know the right intention for Q_XQUOTARM now. Can you give me
+> > > some advise? Or, we should remove Q_XQUOTARM ioctl and
+> > > xfs_qm_scall_trunc_qfile code.
 > > 
-> > Fair enough. As long as someone is working on a solution, then I'm
-> > happy. Just a couple of things:
+> > I think xfs_qm_scall_trunc_qfiles probably should be doing:
 > > 
-> > Firstly, we've verified that the cond_resched() in the bio loop does
-> > suffice to resolve the issue with XFS, which would tend to confirm what
-> > you're saying above about the underlying issue being the ioend chain
-> > length.
+> > 	if (xfs_has_quota(mp) || flags == 0 ||
+> > 	    (flags & ~XFS_QMOPT_QUOTALL)) {
+> > 		xfs_debug(...);
+> > 		return -EINVAL;
+> > 	}
 > > 
-> > Secondly, note that we've tested this issue with a variety of older
-> > kernels, including 4.18.x, 5.1.x and 5.15.x, so please bear in mind
-> > that it would be useful for any fix to be backward portable through the
-> > stable mechanism.
-> > 
-> 
-> I've sent a couple or so different variants of this in the past. The
-> last I believe was here [1], but still never seemed to go anywhere
-> (despite having reviews on the first couple patches). That one was
-> essentially a sequence of adding a cond_resched() call in the iomap code
-> to address the soft lockup warning followed by capping the ioend size
-> for latency reasons.
+> > Note the inversion in the has_quota test.  That would make it so that
+> > you can truncate the quota files if quota is not on.
 
-Huh.  I wonder why I didn't ever merge that?  I said I was going to do
-that for 5.14 and ... never did.  ISTR Matthew saying something about
-wanting to key the decision off of the number of pages/folios we'd have
-to touch, and then musing about adding QOS metrics, me getting fussy
-about that, trying to figure out if there was a way to make
-iomap_finish_page_writeback cheaper, and ...
+NAK, that's wrong.  xfs_has_quota tells us if the superblock feature bit
+is set.  The feature bit guards the sb_[ugp]uotino fields, so the above
+code causes us to bail out with EINVAL if the filesystem doesn't have
+quota inodes at all.  Thus, inverting the check (to make it so that we
+only try to truncate if the fields are garbage) is not correct.
 
-<checks notes>
+> Yes, that sounds reasonable.  Although I'd split the xfs_has_quota
+> file into a separate check with a separate debug message.
 
-...and decided that since the folio merge was imminent (HA!) I would
-merge it after all the dust settled.  Add several months of Things I
-Still Cannot Talk About and now it's 2022. :(
+So I think the fix here is to fix the testcases.  xfs/220 becomes:
 
-Ah, ok, I'll go reply elsewhere in the thread since I think my thinking
-on all this has evolved somewhat since then.
+# turn off quota accounting...
+$XFS_QUOTA_PROG -x -c off $SCRATCH_DEV
+
+# ...but if the kernel doesn't support turning off accounting, remount with
+# noquota option to turn it off...
+if $XFS_QUOTA_PROG -x -c 'state -u' $SCRATCH_DEV | grep -q 'Accounting: ON'; then
+	_scratch_unmount
+	_scratch_mount -o noquota
+fi
+
+# ...and remove space allocated to the quota files
+# (this used to give wrong ENOSYS returns in 2.6.31)
+$XFS_QUOTA_PROG -x -c remove $SCRATCH_DEV
+
 
 --D
-
-> 
-> Brian
-> 
-> [1] https://lore.kernel.org/linux-xfs/20210517171722.1266878-1-bfoster@redhat.com/
-> 
-> > 
-> > Thanks, and Happy New Year!
-> > 
-> >   Trond
-> > 
-> > -- 
-> > Trond Myklebust
-> > Linux NFS client maintainer, Hammerspace
-> > trond.myklebust@hammerspace.com
-> > 
-> > 
-> 
