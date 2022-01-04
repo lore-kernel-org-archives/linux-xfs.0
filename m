@@ -2,100 +2,65 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DD08C433F5
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Jan 2022 07:09:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2443C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Jan 2022 07:21:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233119AbiADHJA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Jan 2022 02:09:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37272 "EHLO
+        id S233125AbiADHVL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Jan 2022 02:21:11 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39886 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233043AbiADHJA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Jan 2022 02:09:00 -0500
+        with ESMTP id S230349AbiADHVK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Jan 2022 02:21:10 -0500
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A9C7C061761;
-        Mon,  3 Jan 2022 23:09:00 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9652C061761
+        for <linux-xfs@vger.kernel.org>; Mon,  3 Jan 2022 23:21:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=I882NzauQGXLjuI/i1qh0BNtaLV5MK8W8+b5TPgZlTM=; b=ySEzd+8PegA1+4ObKwW7OIJu3/
-        aRPi+Ef1O8UP2Ajmln4zDfL+3VcNgfwJpjcrZpOrNnsZ7dvUK2dU2uAtWdmbR41KeEzw6RvP8s3l4
-        N1/N0OLqpOqoH8fXV4YhKfTNaxT61QJXiNol2EakMB0ptvVLKyGDyQmg5bLTMrO1WIwRuQtnHvsdt
-        /rzpwl8RN/V4GZiVMf6oHAWPWDeScIOkRKsgZeD00clfd6UaWWG89J46zzC/H6azPp27R2bSGiYur
-        OkrHwVV9l8reNV+BWxX66AKS1EtbXA8fyxUwFsSyv+SRBOiN/YC0oPhJoLM3gSzDgRjtt2Pj5Dibk
-        5HXTNIrQ==;
+        bh=XL+yW9beFujKJoKyGvOSz1BjuS/186Zxc6HZFkXmtKg=; b=eiFv1qvwCnspM9IhQKfzDk0nid
+        +GVZzsg2LF3qd5HmlSeYE3xDtS7ea3Qjt0UYP9MhS910Mx92cblmaSEpt5qsjv8wLJ4RCezEeKWwj
+        4jw3w3htUl/L9ifJw9MYaCjjvMlq0MLWpAFTiuxoXP4UMQXlBxd24E2gf0mulhpUnbeHg5O0Y0G12
+        hXl0xHkV608Ox8lLhZfT8Yk6WYr8Y6c3JNRRJ5QMUw40ewtlOGwdijyJfmufJpX395NClaEKBZE0I
+        vNW68nyCH+9holB3/1doxToNM8EImmFLLp3lPFDwYG42zbJTABuBneVH6uDAQ1ieHlyPB9UOxY4Uh
+        mctEjGRg==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1n4dwE-00AUa2-3u; Tue, 04 Jan 2022 07:08:54 +0000
-Date:   Mon, 3 Jan 2022 23:08:54 -0800
-From:   "hch@infradead.org" <hch@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Trond Myklebust <trondmy@hammerspace.com>,
-        "bfoster@redhat.com" <bfoster@redhat.com>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "trondmy@kernel.org" <trondmy@kernel.org>,
-        "hch@infradead.org" <hch@infradead.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "djwong@kernel.org" <djwong@kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "willy@infradead.org" <willy@infradead.org>
-Subject: Re: [PATCH] iomap: Address soft lockup in iomap_finish_ioend()
-Message-ID: <YdPyhpdxykDscMtJ@infradead.org>
-References: <20211230193522.55520-1-trondmy@kernel.org>
- <Yc5f/C1I+N8MPHcd@casper.infradead.org>
- <6f746786a3928844fbe644e7e409008b4f50c239.camel@hammerspace.com>
- <20220101035516.GE945095@dread.disaster.area>
- <fb964769132eb01ed4e8b67d6972d50ee3387e24.camel@hammerspace.com>
- <20220103220310.GG945095@dread.disaster.area>
- <9f51fa6169f4c67d54dd8563b52c540c94c7703a.camel@hammerspace.com>
- <20220104012215.GH945095@dread.disaster.area>
+        id 1n4e83-00AVRP-Q1; Tue, 04 Jan 2022 07:21:07 +0000
+Date:   Mon, 3 Jan 2022 23:21:07 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     "xuyang2018.jy@fujitsu.com" <xuyang2018.jy@fujitsu.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        xfs <linux-xfs@vger.kernel.org>
+Subject: Re: The question of Q_XQUOTARM ioctl
+Message-ID: <YdP1Y8FAeu871lr7@infradead.org>
+References: <616F9367.3030801@fujitsu.com>
+ <20220104023456.GE31606@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220104012215.GH945095@dread.disaster.area>
+In-Reply-To: <20220104023456.GE31606@magnolia>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jan 04, 2022 at 12:22:15PM +1100, Dave Chinner wrote:
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -1098,6 +1098,15 @@ iomap_ioend_can_merge(struct iomap_ioend *ioend, struct iomap_ioend *next)
->  		return false;
->  	if (ioend->io_offset + ioend->io_size != next->io_offset)
->  		return false;
-> +	/*
-> +	 * Do not merge physically discontiguous ioends. The filesystem
-> +	 * completion functions will have to iterate the physical
-> +	 * discontiguities even if we merge the ioends at a logical level, so
-> +	 * we don't gain anything by merging physical discontiguities here.
-> +	 */
-> +	if (ioend->io_inline_bio.bi_iter.bi_sector + (ioend->io_size >> 9) !=
+On Mon, Jan 03, 2022 at 06:34:56PM -0800, Darrick J. Wong wrote:
+> > 
+> > I don't know the right intention for Q_XQUOTARM now. Can you give me
+> > some advise? Or, we should remove Q_XQUOTARM ioctl and
+> > xfs_qm_scall_trunc_qfile code.
+> 
+> I think xfs_qm_scall_trunc_qfiles probably should be doing:
+> 
+> 	if (xfs_has_quota(mp) || flags == 0 ||
+> 	    (flags & ~XFS_QMOPT_QUOTALL)) {
+> 		xfs_debug(...);
+> 		return -EINVAL;
+> 	}
+> 
+> Note the inversion in the has_quota test.  That would make it so that
+> you can truncate the quota files if quota is not on.
 
-This open codes bio_end_sector()
-
-> +	    next->io_inline_bio.bi_iter.bi_sector)
-
-But more importantly I don't think just using the inline_bio makes sense
-here as the ioend can have multiple bios.  Fortunately we should always
-have the last built bio available in ->io_bio.
-
-> +		return false;
->  	return true;
->  }
->  
-> @@ -1241,6 +1250,13 @@ iomap_can_add_to_ioend(struct iomap_writepage_ctx *wpc, loff_t offset,
->  		return false;
->  	if (sector != bio_end_sector(wpc->ioend->io_bio))
->  		return false;
-> +	/*
-> +	 * Limit ioend bio chain lengths to minimise IO completion latency. This
-> +	 * also prevents long tight loops ending page writeback on all the pages
-> +	 * in the ioend.
-> +	 */
-> +	if (wpc->ioend->io_size >= 4096 * PAGE_SIZE)
-> +		return false;
-
-And this stops making sense with the impending additions of large folio
-support.  I think we need to count the pages/folios instead as the
-operations are once per page/folio.
+Yes, that sounds reasonable.  Although I'd split the xfs_has_quota
+file into a separate check with a separate debug message.
