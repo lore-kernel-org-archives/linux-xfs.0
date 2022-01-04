@@ -2,86 +2,103 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3731C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Jan 2022 23:50:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBC63C433F5
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Jan 2022 23:55:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234238AbiADXuQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Jan 2022 18:50:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42520 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232956AbiADXuP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Jan 2022 18:50:15 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD2CDC061761
-        for <linux-xfs@vger.kernel.org>; Tue,  4 Jan 2022 15:50:15 -0800 (PST)
+        id S236024AbiADXzA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Jan 2022 18:55:00 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:51666 "EHLO
+        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235661AbiADXy7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Jan 2022 18:54:59 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 668B6615ED
-        for <linux-xfs@vger.kernel.org>; Tue,  4 Jan 2022 23:50:15 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C172FC36AEB;
-        Tue,  4 Jan 2022 23:50:14 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id DD251B81846
+        for <linux-xfs@vger.kernel.org>; Tue,  4 Jan 2022 23:54:58 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 86AFAC36AE0;
+        Tue,  4 Jan 2022 23:54:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1641340214;
-        bh=tO1XTSL4cEU/+RAJsDiBilt0UcT+MsF9xZ1II7fWHNE=;
+        s=k20201202; t=1641340497;
+        bh=UT6H0diP8UjH2vU4tTakPE5C2sNlVxK4LCIwekID6Fo=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=cRZPPPRwDVZHZeF2bRhO/VwUvRZAN0oi2XG3w1GJ4aA5jJO9CsGQBpQHRPMJiES1t
-         7HxwVlcY1exeYOcPmLJH+9cPHsxUSbeKmJuc89zsGm2uvojj8Yrnga3Z+w1FMmAkQN
-         NPrjiyc3y6mFIZ5JL9nPyKCauAFkt5mTFBhguTBirH9zcU9wsJsW43ALcVkMNeYXEs
-         YJTD9h7N7WBo6haqMBVgu3sxVj8fbDZNZjQ7CqIBfTYR+wUCuz8Wi7Nr5kYIAygA4E
-         syKZI9opX3YHneAT7mNBXVda3S9PP+ymjYgO7I+UJd+tP0eJ0y8jt0SIJ4yxVZbS1t
-         XJ6Xy/NRDNZSg==
-Date:   Tue, 4 Jan 2022 15:50:14 -0800
+        b=A8HRLD0ZX/hoLcECAxrotQgLEIpzZtLMEe8bgHuT4w9iaxkj+oR2V+angnNKfZ/Rg
+         q3yYDFw3HyVreGyrqIdCSxq+9cMNqeHnZFdxc1PCybDFCXEb5/Sz8+sR2TX1rBlubS
+         w7Fw00CYeEkubebSberyxFLlyt5pX5ieKhqa5PRjzvTetBDhGdjjJvTtvj4zZ+CIOv
+         hvGTlXTLzjQDCqUfrKDVEM800cUq2Vqli1J1iB8dqjdxlwGGsg1P4ESk893lo91Knd
+         +gmT7ZTYt4bMlilDumHYWGamdh8ylT9S+mhvOewshwyCRJisk9ha6qovHH+8uTVg28
+         im9mrswz9wH9A==
+Date:   Tue, 4 Jan 2022 15:54:57 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Chandan Babu R <chandan.babu@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
-Subject: Re: [PATCH V4 05/16] xfs: Use basic types to define xfs_log_dinode's
- di_nextents and di_anextents
-Message-ID: <20220104235014.GL31583@magnolia>
-References: <20211214084519.759272-1-chandan.babu@oracle.com>
- <20211214084519.759272-6-chandan.babu@oracle.com>
+Cc:     kernel test robot <lkp@intel.com>, linux-xfs@vger.kernel.org,
+        kbuild-all@lists.01.org, david@fromorbit.com
+Subject: Re: [PATCH V4 06/16] xfs: Promote xfs_extnum_t and xfs_aextnum_t to
+ 64 and 32-bits respectively
+Message-ID: <20220104235457.GM31583@magnolia>
+References: <20211214084519.759272-7-chandan.babu@oracle.com>
+ <202112142335.O3Nu0vQI-lkp@intel.com>
+ <87a6h22pjf.fsf@debian-BULLSEYE-live-builder-AMD64>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211214084519.759272-6-chandan.babu@oracle.com>
+In-Reply-To: <87a6h22pjf.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 14, 2021 at 02:15:08PM +0530, Chandan Babu R wrote:
-> A future commit will increase the width of xfs_extnum_t in order to facilitate
-> larger per-inode extent counters. Hence this patch now uses basic types to
-> define xfs_log_dinode->[di_nextents|dianextents].
+On Wed, Dec 15, 2021 at 02:49:48PM +0530, Chandan Babu R wrote:
+> On 14 Dec 2021 at 20:45, kernel test robot wrote:
+> > Hi Chandan,
+> >
+> > Thank you for the patch! Yet something to improve:
+> >
+> > [auto build test ERROR on xfs-linux/for-next]
+> > [also build test ERROR on v5.16-rc5]
+> > [If your patch is applied to the wrong git tree, kindly drop us a note.
+> > And when submitting patch, we suggest to use '--base' as documented in
+> > https://git-scm.com/docs/git-format-patch]
+> >
+> > url:    https://github.com/0day-ci/linux/commits/Chandan-Babu-R/xfs-Extend-per-inode-extent-counters/20211214-164920
+> > base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
+> > config: microblaze-randconfig-r016-20211214 (https://download.01.org/0day-ci/archive/20211214/202112142335.O3Nu0vQI-lkp@intel.com/config)
+> > compiler: microblaze-linux-gcc (GCC) 11.2.0
+> > reproduce (this is a W=1 build):
+> >         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+> >         chmod +x ~/bin/make.cross
+> >         # https://github.com/0day-ci/linux/commit/db28da144803c4262c0d8622d736a7d20952ef6b
+> >         git remote add linux-review https://github.com/0day-ci/linux
+> >         git fetch --no-tags linux-review Chandan-Babu-R/xfs-Extend-per-inode-extent-counters/20211214-164920
+> >         git checkout db28da144803c4262c0d8622d736a7d20952ef6b
+> >         # save the config file to linux build tree
+> >         mkdir build_dir
+> >         COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.2.0 make.cross O=build_dir ARCH=microblaze SHELL=/bin/bash
+> >
+> > If you fix the issue, kindly add following tag as appropriate
+> > Reported-by: kernel test robot <lkp@intel.com>
+> >
+> > All errors (new ones prefixed by >>):
+> >
+> >    microblaze-linux-ld: fs/xfs/libxfs/xfs_bmap.o: in function `xfs_bmap_compute_maxlevels':
+> >>> (.text+0x10cc0): undefined reference to `__udivdi3'
+> >
 > 
-> Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
+> The fix for the compilation error on 32-bit systems involved invoking do_div()
+> instead of using the regular division operator. I will include the fix in the
+> next version of the patchset.
 
-I wonder how this didn't trip the xfs_ondisk.h checks in the last
-revision of the patches, but ... who cares, let's see what I think of
-how /this/ version handles the field enlargements.
+So, uh, how did you resolve this in the end?
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+	maxblocks = roundup_64(maxleafents, minleafrecs);
+
+and
+
+	maxblocks = roundup_64(maxblocks, minnodrecs);
+
+?
 
 --D
 
-> ---
->  fs/xfs/libxfs/xfs_log_format.h | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
-> index b322db523d65..fd66e70248f7 100644
-> --- a/fs/xfs/libxfs/xfs_log_format.h
-> +++ b/fs/xfs/libxfs/xfs_log_format.h
-> @@ -396,8 +396,8 @@ struct xfs_log_dinode {
->  	xfs_fsize_t	di_size;	/* number of bytes in file */
->  	xfs_rfsblock_t	di_nblocks;	/* # of direct & btree blocks used */
->  	xfs_extlen_t	di_extsize;	/* basic/minimum extent size for file */
-> -	xfs_extnum_t	di_nextents;	/* number of extents in data fork */
-> -	xfs_aextnum_t	di_anextents;	/* number of extents in attribute fork*/
-> +	uint32_t	di_nextents;	/* number of extents in data fork */
-> +	uint16_t	di_anextents;	/* number of extents in attribute fork*/
->  	uint8_t		di_forkoff;	/* attr fork offs, <<3 for 64b align */
->  	int8_t		di_aformat;	/* format of attr fork's data */
->  	uint32_t	di_dmevmask;	/* DMIG event mask */
 > -- 
-> 2.30.2
-> 
+> chandan
