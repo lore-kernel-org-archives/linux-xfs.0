@@ -2,144 +2,86 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08535C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Jan 2022 19:10:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3E20C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Jan 2022 19:11:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243362AbiAETKC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Jan 2022 14:10:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50120 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243363AbiAETJ7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jan 2022 14:09:59 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE7A3C061245;
-        Wed,  5 Jan 2022 11:09:58 -0800 (PST)
+        id S243380AbiAETLj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Jan 2022 14:11:39 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:45548 "EHLO
+        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S243385AbiAETLh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jan 2022 14:11:37 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 60F50618E1;
-        Wed,  5 Jan 2022 19:09:58 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B9F22C36AE0;
-        Wed,  5 Jan 2022 19:09:57 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 163C6B81CF9;
+        Wed,  5 Jan 2022 19:11:36 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF928C36AE9;
+        Wed,  5 Jan 2022 19:11:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1641409797;
-        bh=1m7JNzEs6h7AUbdTf9WL1gJ+URfwbVnYu243vT+/00E=;
-        h=Date:From:To:Subject:References:In-Reply-To:From;
-        b=fCiw785/QNNK/3p6u3BjCIuLHg8GUtllV7ZcMi51Eu2LQwiQlefLJ9iOCQna1I8qI
-         UxN2PW6qdzTYX+gL1BCBKhITJw7VQA//3P3DwsXb59hOYUdVGhCKBErNygEXI8noPE
-         lmoYiltSwOtAMB9wA2PvQTwI/SFz/PUagTaFXHPnF9tUrMSBbizibQ4VLdcbW7cPvJ
-         xdc4b1fLNZYPUq3cTiAGkhzT1jwWLOrnuWz2fLiyQeHVv2XkOSP3Ptarm74YFa9Uzl
-         SffWzU3u+P+ZBGHy4Xb4boBHVO57BLhga1sls2NCAcOTvnbpu/SbnmLxBMI1sUqg2s
-         iV9lcVf1GpMbA==
-Date:   Wed, 5 Jan 2022 11:09:57 -0800
+        s=k20201202; t=1641409894;
+        bh=dWZ4e/BHVrqhZwbYEpDz5SoVifZJyHKACDqjzB5SKvg=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=kC6/7VcYpcw/+03KiteHJ3eJBVkgS9jrd1FJcE+TaiLCtYVvLgoe07by0Xup0Wg0Y
+         8ex4BelDmNFUPF+fcJzXJO2MH43xdMqc2ls5sO8RRocEjzNi/Vmt9Gju5c+tZEMS5+
+         jFn4+bke0aBZItmkVcOwnIAoYS/ho9DfCJdoqy5mWqjx2E1xpJi6U3eWudf0gvlC5D
+         knjNM0ap5X4GXv0K4CVOxcGSBjOCSfXLW7EQSJUPVekp0fs8K+hqG6r1bSR8A/2EOp
+         XubZLUEgKxWLwkaY6F78teCvSOtIl5di1lvqY3OHbYSU7fxNomdy5zJ+UgAuUsE+Du
+         pzdkcEOaIwfFg==
+Date:   Wed, 5 Jan 2022 11:11:34 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Eryu Guan <guaneryu@gmail.com>, fstests@vger.kernel.org,
-        xfs <linux-xfs@vger.kernel.org>, zlang@redhat.com
-Subject: Re: [PATCH] xfs/014: try a few times to create speculative
- preallocations
-Message-ID: <20220105190957.GJ656707@magnolia>
-References: <20220104020417.GB31566@magnolia>
- <20220105161905.jaobft32wosjy3fv@zlang-mailbox>
+To:     Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Abaci Robot <abaci@linux.alibaba.com>
+Subject: Re: [PATCH v2] xfs: Remove redundant assignment of mp
+Message-ID: <20220105191134.GK656707@magnolia>
+References: <20220105151536.39062-1-jiapeng.chong@linux.alibaba.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220105161905.jaobft32wosjy3fv@zlang-mailbox>
+In-Reply-To: <20220105151536.39062-1-jiapeng.chong@linux.alibaba.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jan 06, 2022 at 12:19:05AM +0800, Zorro Lang wrote:
-> On Mon, Jan 03, 2022 at 06:04:17PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > This test checks that speculative file preallocations are transferred to
-> > threads writing other files when space is low.  Since we have background
-> > threads to clear those preallocations, it's possible that the test
-> > program might not get a speculative preallocation on the first try.
-> > 
-> > This problem has become more pronounced since the introduction of
-> > background inode inactivation since userspace no longer has direct
-> > control over the timing of file blocks being released from unlinked
-> > files.  As a result, the author has seen an increase in sporadic
-> > warnings from this test about speculative preallocations not appearing.
-> > 
-> > Therefore, modify the function to try up to five times to create the
-> > speculative preallocation before emitting warnings that then cause
-> > golden output failures.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  tests/xfs/014 |   41 +++++++++++++++++++++++++----------------
-> >  1 file changed, 25 insertions(+), 16 deletions(-)
-> > 
-> > diff --git a/tests/xfs/014 b/tests/xfs/014
-> > index a605b359..1f0ebac3 100755
-> > --- a/tests/xfs/014
-> > +++ b/tests/xfs/014
-> > @@ -33,27 +33,36 @@ _cleanup()
-> >  # failure.
-> >  _spec_prealloc_file()
-> >  {
-> > -	file=$1
-> > +	local file=$1
-> > +	local prealloc_size=0
-> > +	local i=0
-> >  
-> > -	rm -f $file
-> > +	# Now that we have background garbage collection processes that can be
-> > +	# triggered by low space/quota conditions, it's possible that we won't
-> > +	# succeed in creating a speculative preallocation on the first try.
-> > +	for ((tries = 0; tries < 5 && prealloc_size == 0; tries++)); do
-> > +		rm -f $file
-> >  
-> > -	# a few file extending open-write-close cycles should be enough to
-> > -	# trigger the fs to retain preallocation. write 256k in 32k intervals to
-> > -	# be sure
-> > -	for i in $(seq 0 32768 262144); do
-> > -		$XFS_IO_PROG -f -c "pwrite $i 32k" $file >> $seqres.full
-> > +		# a few file extending open-write-close cycles should be enough
-> > +		# to trigger the fs to retain preallocation. write 256k in 32k
-> > +		# intervals to be sure
-> > +		for i in $(seq 0 32768 262144); do
-> > +			$XFS_IO_PROG -f -c "pwrite $i 32k" $file >> $seqres.full
-> > +		done
-> > +
-> > +		# write a 4k aligned amount of data to keep the calculations
-> > +		# simple
-> > +		$XFS_IO_PROG -c "pwrite 0 128m" $file >> $seqres.full
-> > +
-> > +		size=`_get_filesize $file`
-> > +		blocks=`stat -c "%b" $file`
-> > +		blocksize=`stat -c "%B" $file`
-> > +
-> > +		prealloc_size=$((blocks * blocksize - size))
+On Wed, Jan 05, 2022 at 11:15:36PM +0800, Jiapeng Chong wrote:
+> mp is being initialized to log->l_mp but this is never read
+> as record is overwritten later on. Remove the redundant
+> assignment.
 > 
-> So we only try same pwrite operations 5 times, and only check the prealloc_size after 5
-> times done? Should we break from this loop once prealloc_size > 0?
+> Cleans up the following clang-analyzer warning:
+> 
+> fs/xfs/xfs_log_recover.c:3543:20: warning: Value stored to 'mp' during
+> its initialization is never read [clang-analyzer-deadcode.DeadStores].
+> 
+> Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+> Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
 
-The second clause of the for loop tests for that, does it not?
+Much improved, thank you.
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
+> ---
+> Changes in v2:
+>  -Remove mp = log->l_mp.
 > 
-> Thanks,
-> Zorro
+>  fs/xfs/xfs_log_recover.c | 2 --
+>  1 file changed, 2 deletions(-)
 > 
-> >  	done
-> >  
-> > -	# write a 4k aligned amount of data to keep the calculations simple
-> > -	$XFS_IO_PROG -c "pwrite 0 128m" $file >> $seqres.full
-> > -
-> > -	size=`_get_filesize $file`
-> > -	blocks=`stat -c "%b" $file`
-> > -	blocksize=`stat -c "%B" $file`
-> > -
-> > -	prealloc_size=$((blocks * blocksize - size))
-> >  	if [ $prealloc_size -eq 0 ]; then
-> > -		echo "Warning: No speculative preallocation for $file." \
-> > +		echo "Warning: No speculative preallocation for $file after $tries iterations." \
-> >  			"Check use of the allocsize= mount option."
-> >  	fi
-> >  
-> > 
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index 8ecb9a8567b7..96c997ed2ec8 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -3550,8 +3550,6 @@ xlog_recover_check_summary(
+>  	uint64_t		ifree;
+>  	int			error;
+>  
+> -	mp = log->l_mp;
+> -
+>  	freeblks = 0LL;
+>  	itotal = 0LL;
+>  	ifree = 0LL;
+> -- 
+> 2.20.1.7.g153144c
 > 
