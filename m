@@ -2,153 +2,84 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CF83C433FE
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Jan 2022 00:09:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA898C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Jan 2022 00:18:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236663AbiAEAJw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Jan 2022 19:09:52 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:35070 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S234151AbiAEAJv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Jan 2022 19:09:51 -0500
-Received: from dread.disaster.area (pa49-181-243-119.pa.nsw.optusnet.com.au [49.181.243.119])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 477E862C09F;
-        Wed,  5 Jan 2022 11:09:49 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1n4tsB-00BQq6-Ra; Wed, 05 Jan 2022 11:09:47 +1100
-Date:   Wed, 5 Jan 2022 11:09:47 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/7] xfs: take the ILOCK when accessing the inode core
-Message-ID: <20220105000947.GK945095@dread.disaster.area>
-References: <163961695502.3129691.3496134437073533141.stgit@magnolia>
- <163961696098.3129691.10143704907338536631.stgit@magnolia>
- <20211216045609.GY449541@dread.disaster.area>
+        id S236695AbiAEASK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Jan 2022 19:18:10 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:34002 "EHLO
+        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235499AbiAEASJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Jan 2022 19:18:09 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id B3F57B81899
+        for <linux-xfs@vger.kernel.org>; Wed,  5 Jan 2022 00:18:08 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77F57C36AEF;
+        Wed,  5 Jan 2022 00:18:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1641341887;
+        bh=Pbu9q9HDCBvQpxMjmgPS5f2hQbuXiazPFRc2DSnn81Q=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Lj41p6FKNeF+0jNrnFWtjmHKcoWEVTw80e5UZw+UcBK+ekTfRuSR2AjrdIvF2ZyLA
+         DnKbrzS+Ghd4uV3jeVkCW4M82HQ6mq9dZ5/jhXbs+fI4+gXu6ljt3X6D0Hl2Zv0iu2
+         mJKt9La/S7nLX/k9OLMthCabaqUfiXysfs5fgdoY2Kk8gw/1wzDJ8sekM0xCUfF425
+         3xdgx5XawSb9kydvARopBNNZK3GSvDPt0GFYkgecMg5PE6mZQim9zDE40mCi9gCqIm
+         e5sUHsmFBqYTKeJDY1cT9BQP6LjcoGCZH5/gIzZF5e1S/hFWafT07m/psbRiMTGsYp
+         p/6/YxubkpWow==
+Date:   Tue, 4 Jan 2022 16:18:06 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Chandan Babu R <chandan.babu@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
+Subject: Re: [PATCH V4 13/16] xfs: Conditionally upgrade existing inodes to
+ use 64-bit extent counters
+Message-ID: <20220105001806.GP31583@magnolia>
+References: <20211214084519.759272-1-chandan.babu@oracle.com>
+ <20211214084519.759272-14-chandan.babu@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211216045609.GY449541@dread.disaster.area>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=61d4e1cd
-        a=BEa52nrBdFykVEm6RU8P4g==:117 a=BEa52nrBdFykVEm6RU8P4g==:17
-        a=kj9zAlcOel0A:10 a=DghFqjY3_ZEA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=9DtGVnLvfIO_uSwMzEAA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20211214084519.759272-14-chandan.babu@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Dec 16, 2021 at 03:56:09PM +1100, Dave Chinner wrote:
-> On Wed, Dec 15, 2021 at 05:09:21PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > I was poking around in the directory code while diagnosing online fsck
-> > bugs, and noticed that xfs_readdir doesn't actually take the directory
-> > ILOCK when it calls xfs_dir2_isblock.  xfs_dir_open most probably loaded
-> > the data fork mappings
+On Tue, Dec 14, 2021 at 02:15:16PM +0530, Chandan Babu R wrote:
+> This commit upgrades inodes to use 64-bit extent counters when they are read
+> from disk. Inodes are upgraded only when the filesystem instance has
+> XFS_SB_FEAT_INCOMPAT_NREXT64 incompat flag set.
 > 
-> Yup, that is pretty much guaranteed. If the inode is extent or btree form as the
-> extent count will be non-zero, hence we can only get to the
-> xfs_dir2_isblock() check if the inode has moved from local to block
-> form between the open and xfs_dir2_isblock() get in the getdents
-> code.
+> Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_inode_buf.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
 > 
-> > and the VFS took i_rwsem (aka IOLOCK_SHARED) so
-> > we're protected against writer threads, but we really need to follow the
-> > locking model like we do in other places.  The same applies to the
-> > shortform getdents function.
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> index fe21e9808f80..b8e4e1f69989 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> @@ -253,6 +253,12 @@ xfs_inode_from_disk(
+>  	}
+>  	if (xfs_is_reflink_inode(ip))
+>  		xfs_ifork_init_cow(ip);
+> +
+> +	if ((from->di_version == 3) &&
+> +		xfs_has_nrext64(ip->i_mount) &&
+> +		!xfs_dinode_has_nrext64(from))
+> +		ip->i_diflags2 |= XFS_DIFLAG2_NREXT64;
+
+The indentation levels of the if test should not be aligned with the if
+body, and this should be in xfs_trans_log_inode so that the metadata
+update is staged properly with a transaction.  V3 did it this way, so
+I'm a little surprised to see V4 regressing that...?
+
+--D
+
+> +
+>  	return 0;
+>  
+>  out_destroy_data_fork:
+> -- 
+> 2.30.2
 > 
-> Locking rules should be the same as xfs_dir_lookup().....
-
-Ok, I assumed the locking in xfs_dir_lookup() is optimal....
-
-.... which it turns out it isn't. All calls to xfs_dir_lookup()
-occur with the directory locked at the VFS level, so the internal
-contents of the directory can never change during a lookup. Hence
-holding the ILOCK across the entire lookup is both unnecessary and
-excessive.
-
-What xfs_dir_lookup() should be doing is what xfs_readdir() is
-largely already doing - just locking the ILOCK around buffer read
-operations when we are mapping directory offsets to physical disk
-locations and reading them from disk.  Changing this is a
-significant set of changes, so it's not something that needs to be
-done right now.
-
-However, we still need to protect the xfs_dir2_isblock() lookup call
-in xfs_readdir().
-
-> > While we're at it, clean up the somewhat strange structure of this
-> > function.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  fs/xfs/xfs_dir2_readdir.c |   28 +++++++++++++++++-----------
-> >  1 file changed, 17 insertions(+), 11 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-> > index 8310005af00f..25560151c273 100644
-> > --- a/fs/xfs/xfs_dir2_readdir.c
-> > +++ b/fs/xfs/xfs_dir2_readdir.c
-> > @@ -507,8 +507,9 @@ xfs_readdir(
-> >  	size_t			bufsize)
-> >  {
-> >  	struct xfs_da_args	args = { NULL };
-> > -	int			rval;
-> > -	int			v;
-> > +	unsigned int		lock_mode;
-> > +	int			error;
-> > +	int			isblock;
-> >  
-> >  	trace_xfs_readdir(dp);
-> >  
-> > @@ -522,14 +523,19 @@ xfs_readdir(
-> >  	args.geo = dp->i_mount->m_dir_geo;
-> >  	args.trans = tp;
-> >  
-> > -	if (dp->i_df.if_format == XFS_DINODE_FMT_LOCAL)
-> > -		rval = xfs_dir2_sf_getdents(&args, ctx);
-> > -	else if ((rval = xfs_dir2_isblock(&args, &v)))
-> > -		;
-> > -	else if (v)
-> > -		rval = xfs_dir2_block_getdents(&args, ctx);
-> > -	else
-> > -		rval = xfs_dir2_leaf_getdents(&args, ctx, bufsize);
-> > +	lock_mode = xfs_ilock_data_map_shared(dp);
-> > +	if (dp->i_df.if_format == XFS_DINODE_FMT_LOCAL) {
-> > +		xfs_iunlock(dp, lock_mode);
-> > +		return xfs_dir2_sf_getdents(&args, ctx);
-> > +	}
-
-Directory inode format cannot change here, so we don't need to
-hold the ILOCK at all to do shortform checks.
-
-> >  
-> > -	return rval;
-> > +	error = xfs_dir2_isblock(&args, &isblock);
-> > +	xfs_iunlock(dp, lock_mode);
-> > +	if (error)
-> > +		return error;
-> > +
-> > +	if (isblock)
-> > +		return xfs_dir2_block_getdents(&args, ctx);
-
-Can the xfs_dir2_isblock() call be moved into
-xfs_dir2_block_getdents() where it already takes the ILOCK to read
-the block?
-
-> > +
-> > +	return xfs_dir2_leaf_getdents(&args, ctx, bufsize);
-
-Otherwise this patch is correct and this is where we should start
-fixing the directory locking mess...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
