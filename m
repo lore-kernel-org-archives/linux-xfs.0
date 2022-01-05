@@ -2,200 +2,187 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4164EC433EF
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Jan 2022 19:20:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCDC1C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Jan 2022 19:52:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243472AbiAETUY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Jan 2022 14:20:24 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52552 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243459AbiAETUY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jan 2022 14:20:24 -0500
-Received: from mail-pf1-x42d.google.com (mail-pf1-x42d.google.com [IPv6:2607:f8b0:4864:20::42d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD84AC061245
-        for <linux-xfs@vger.kernel.org>; Wed,  5 Jan 2022 11:20:23 -0800 (PST)
-Received: by mail-pf1-x42d.google.com with SMTP id v13so249930pfi.3
-        for <linux-xfs@vger.kernel.org>; Wed, 05 Jan 2022 11:20:23 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20210112.gappssmtp.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=Dve+wxxw9ty3Px2ty9l66SiGhuevpIEjzTRbcfS2h4g=;
-        b=8IJNIV4LzcZk4Gk1i5TwJ2/pjHaI5I/ZxjVO81zSvC7oeyj65UIb0m9RgbG8gz6Kp0
-         59mKq0TZ/S9FE0NHhMPgo6Nc/C8C0i2PbWkg7IqNVvQJUIj/VMEch0dRlzvvSTuPhsbR
-         dnICrGDtoYXsQq1BitIaSDpchHQK7QHrwe36S7aSMD0JSiKV6KmDUqRqHpc6hAr4jywd
-         XwI146AjdrfxzR2kdmIyuvZFzDzCRmYFhNABMaWpQZpI0Gzx3na1ykEIAUjZ/aXuNKEg
-         rv17ogtvQ6wW98kRgo5eNawBaWAq1psKDYwgPIMKF4m/zH5bqOV7s8wJvS0XTTuQvuu7
-         JB8Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=Dve+wxxw9ty3Px2ty9l66SiGhuevpIEjzTRbcfS2h4g=;
-        b=njs1+Enmbj8hjHncImat2sYJADM4QH+Ww9yXOlCym+q5os3p/72mR1v70ESCXJeFDb
-         dWjnNwNHatml67nf379L0ZW4LKdW/G6suF3+ruTF0U+MXXXs3kFnd5sAHiZUHnZ4vy68
-         pj5Deg+6NuVZ4bMgeorDN1f88hQcMxE8POpUPkJed89FUYvlLNqZGkM3gZzYUFB9OFlZ
-         AoU9nOT49RnHx3Toe+MEw3KIgxAzF2McnxiWqS9p4Yckd9vmew32QaI8EbOVRLiYcqJY
-         f3j5ykITj2RQgKYxsYQOdEQXOjteOkTBC1+/HaqsdNN2aJJf7XxiRvc9VcFjRjsnp1PW
-         dFXg==
-X-Gm-Message-State: AOAM532nEKaVkvKCr3ithgjdR/JJZ+jle/EsY3q+HLzo2Xk7exU2ZZTR
-        pdcRW05SXlG2ciqkLZjRyA8vehE1mOS6bQPMwWPWpA==
-X-Google-Smtp-Source: ABdhPJz3U6I17PcLMJRT9nNHOY2Hml0MXvZXbyzvuHrppEa6CJQNVUp/+QSIaW561mi0Aw4p76wcTbR7GWuXBpuqFko=
-X-Received: by 2002:a63:ab01:: with SMTP id p1mr1426162pgf.437.1641410423361;
- Wed, 05 Jan 2022 11:20:23 -0800 (PST)
+        id S243763AbiAETwi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Jan 2022 14:52:38 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:33440 "EHLO
+        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S243764AbiAETw3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jan 2022 14:52:29 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id C62E1B81DA0
+        for <linux-xfs@vger.kernel.org>; Wed,  5 Jan 2022 19:52:27 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6D987C36AE0;
+        Wed,  5 Jan 2022 19:52:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1641412346;
+        bh=kHQLLc3c1tRDknxHzWy2QSN5QS6xPRKbwUvPQ8nbvbE=;
+        h=Date:From:To:Cc:Subject:From;
+        b=rxwBOnovjJuT0L/iDAcfC/aTnCeF+0GTcYbhJfqUGRqZSIS7VJ77vyFMIXci9O/jk
+         XC9uWZ9Y/KYue2sMxo6xqKkIAjtmoME0Ol1ObfsYjMrwJ8Uuq1+APD+1xUpUsDgCBh
+         8SBzeROlDyHkMAtJG0cR0HdxDAx7uIeajOeeOt1PBtOXEtczmzMx0iZY+MaZpwbVJO
+         QcQaCiM2pFDtoDAWSOFx2+DvG+HTytenjmKN9SLd830iVHWmSTAMNeZkBzUJ7grjyR
+         q/rwlGvXz5BTax1cSGj4Lxr6iyQ1c9/MbEPGz8jNd6GGoLikMf/aROihrreK5yg0bm
+         dSPfahxxlGjGQ==
+Date:   Wed, 5 Jan 2022 11:52:26 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: [PATCH v2] xfs: take the ILOCK when accessing the inode core
+Message-ID: <20220105195226.GL656707@magnolia>
 MIME-Version: 1.0
-References: <20211226143439.3985960-1-ruansy.fnst@fujitsu.com>
- <20211226143439.3985960-3-ruansy.fnst@fujitsu.com> <20220105181230.GC398655@magnolia>
- <CAPcyv4iTaneUgdBPnqcvLr4Y_nAxQp31ZdUNkSRPsQ=9CpMWHg@mail.gmail.com> <20220105185626.GE398655@magnolia>
-In-Reply-To: <20220105185626.GE398655@magnolia>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Wed, 5 Jan 2022 11:20:12 -0800
-Message-ID: <CAPcyv4h3M9f1-C5e9kHTfPaRYR_zN4gzQWgR+ZyhNmG_SL-u+A@mail.gmail.com>
-Subject: Re: [PATCH v9 02/10] dax: Introduce holder for dax_device
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Shiyang Ruan <ruansy.fnst@fujitsu.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Linux NVDIMM <nvdimm@lists.linux.dev>,
-        Linux MM <linux-mm@kvack.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        david <david@fromorbit.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Jane Chu <jane.chu@oracle.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 5, 2022 at 10:56 AM Darrick J. Wong <djwong@kernel.org> wrote:
->
-> On Wed, Jan 05, 2022 at 10:23:08AM -0800, Dan Williams wrote:
-> > On Wed, Jan 5, 2022 at 10:12 AM Darrick J. Wong <djwong@kernel.org> wrote:
-> > >
-> > > On Sun, Dec 26, 2021 at 10:34:31PM +0800, Shiyang Ruan wrote:
-> > > > To easily track filesystem from a pmem device, we introduce a holder for
-> > > > dax_device structure, and also its operation.  This holder is used to
-> > > > remember who is using this dax_device:
-> > > >  - When it is the backend of a filesystem, the holder will be the
-> > > >    instance of this filesystem.
-> > > >  - When this pmem device is one of the targets in a mapped device, the
-> > > >    holder will be this mapped device.  In this case, the mapped device
-> > > >    has its own dax_device and it will follow the first rule.  So that we
-> > > >    can finally track to the filesystem we needed.
-> > > >
-> > > > The holder and holder_ops will be set when filesystem is being mounted,
-> > > > or an target device is being activated.
-> > > >
-> > > > Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
-> > > > ---
-> > > >  drivers/dax/super.c | 62 +++++++++++++++++++++++++++++++++++++++++++++
-> > > >  include/linux/dax.h | 29 +++++++++++++++++++++
-> > > >  2 files changed, 91 insertions(+)
-> > > >
-> > > > diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-> > > > index c46f56e33d40..94c51f2ee133 100644
-> > > > --- a/drivers/dax/super.c
-> > > > +++ b/drivers/dax/super.c
-> > > > @@ -20,15 +20,20 @@
-> > > >   * @inode: core vfs
-> > > >   * @cdev: optional character interface for "device dax"
-> > > >   * @private: dax driver private data
-> > > > + * @holder_data: holder of a dax_device: could be filesystem or mapped device
-> > > >   * @flags: state and boolean properties
-> > > > + * @ops: operations for dax_device
-> > > > + * @holder_ops: operations for the inner holder
-> > > >   */
-> > > >  struct dax_device {
-> > > >       struct inode inode;
-> > > >       struct cdev cdev;
-> > > >       void *private;
-> > > >       struct percpu_rw_semaphore rwsem;
-> > > > +     void *holder_data;
-> > > >       unsigned long flags;
-> > > >       const struct dax_operations *ops;
-> > > > +     const struct dax_holder_operations *holder_ops;
-> > > >  };
-> > > >
-> > > >  static dev_t dax_devt;
-> > > > @@ -192,6 +197,29 @@ int dax_zero_page_range(struct dax_device *dax_dev, pgoff_t pgoff,
-> > > >  }
-> > > >  EXPORT_SYMBOL_GPL(dax_zero_page_range);
-> > > >
-> > > > +int dax_holder_notify_failure(struct dax_device *dax_dev, u64 off,
-> > > > +                           u64 len, int mf_flags)
-> > > > +{
-> > > > +     int rc;
-> > > > +
-> > > > +     dax_read_lock(dax_dev);
-> > > > +     if (!dax_alive(dax_dev)) {
-> > > > +             rc = -ENXIO;
-> > > > +             goto out;
-> > > > +     }
-> > > > +
-> > > > +     if (!dax_dev->holder_ops) {
-> > > > +             rc = -EOPNOTSUPP;
-> > > > +             goto out;
-> > > > +     }
-> > > > +
-> > > > +     rc = dax_dev->holder_ops->notify_failure(dax_dev, off, len, mf_flags);
-> > > > +out:
-> > > > +     dax_read_unlock(dax_dev);
-> > > > +     return rc;
-> > > > +}
-> > > > +EXPORT_SYMBOL_GPL(dax_holder_notify_failure);
-> > > > +
-> > > >  #ifdef CONFIG_ARCH_HAS_PMEM_API
-> > > >  void arch_wb_cache_pmem(void *addr, size_t size);
-> > > >  void dax_flush(struct dax_device *dax_dev, void *addr, size_t size)
-> > > > @@ -254,6 +282,10 @@ void kill_dax(struct dax_device *dax_dev)
-> > > >               return;
-> > > >       dax_write_lock(dax_dev);
-> > > >       clear_bit(DAXDEV_ALIVE, &dax_dev->flags);
-> > > > +
-> > > > +     /* clear holder data */
-> > > > +     dax_dev->holder_ops = NULL;
-> > > > +     dax_dev->holder_data = NULL;
-> > > >       dax_write_unlock(dax_dev);
-> > > >  }
-> > > >  EXPORT_SYMBOL_GPL(kill_dax);
-> > > > @@ -401,6 +433,36 @@ void put_dax(struct dax_device *dax_dev)
-> > > >  }
-> > > >  EXPORT_SYMBOL_GPL(put_dax);
-> > > >
-> > > > +void dax_register_holder(struct dax_device *dax_dev, void *holder,
-> > > > +             const struct dax_holder_operations *ops)
-> > > > +{
-> > > > +     if (!dax_alive(dax_dev))
-> > > > +             return;
-> > > > +
-> > > > +     dax_dev->holder_data = holder;
-> > > > +     dax_dev->holder_ops = ops;
-> > >
-> > > Shouldn't this return an error code if the dax device is dead or if
-> > > someone already registered a holder?  I'm pretty sure XFS should not
-> > > bind to a dax device if someone else already registered for it...
-> >
-> > Agree, yes.
-> >
-> > >
-> > > ...unless you want to use a notifier chain for failure events so that
-> > > there can be multiple consumers of dax failure events?
-> >
-> > No, I would hope not. It should be 1:1 holders to dax-devices. Similar
-> > ownership semantics like bd_prepare_to_claim().
->
-> Does each partition on a pmem device still have its own dax_device?
+From: Darrick J. Wong <djwong@kernel.org>
 
-No, it never did...
+I was poking around in the directory code while diagnosing online fsck
+bugs, and noticed that xfs_readdir doesn't actually take the directory
+ILOCK when it calls xfs_dir2_isblock.  xfs_dir_open most probably loaded
+the data fork mappings and the VFS took i_rwsem (aka IOLOCK_SHARED) so
+we're protected against writer threads, but we really need to follow the
+locking model like we do in other places.
 
-Just as before, each dax-device is still associated with a gendisk /
-whole-block_device. The recent change is that instead of needing that
-partition-block_device plumbed to convert a relative block number to
-its absolute whole-block_device offset the filesystem now handles that
-at iomap_begin() time. See:
+To avoid unnecessarily cycling the ILOCK for fairly small directories,
+change the block/leaf _getdents functions to consume the ILOCK hold that
+the parent readdir function took to decide on a _getdents implementation.
 
-                if (mapping_flags & IOMAP_DAX)
-                        iomap->addr += target->bt_dax_part_off;
+It is ok to cycle the ILOCK in readdir because the VFS takes the IOLOCK
+in the appropriate mode during lookups and writes, and we don't want to
+be holding the ILOCK when we copy directory entries to userspace in case
+there's a page fault.  We really only need it to protect against data
+fork lookups, like we do for other files.
 
-...in xfs_bmbt_to_iomap() (in -next). I.e. bdev_dax_pgoff() is gone
-with the lead-in reworks.
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+v2: reduce the scope of the locked region, and reduce lock cycling
+---
+ fs/xfs/xfs_dir2_readdir.c |   52 +++++++++++++++++++++++++++++----------------
+ 1 file changed, 33 insertions(+), 19 deletions(-)
+
+diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
+index 8310005af00f..74844edd86a7 100644
+--- a/fs/xfs/xfs_dir2_readdir.c
++++ b/fs/xfs/xfs_dir2_readdir.c
+@@ -138,7 +138,8 @@ xfs_dir2_sf_getdents(
+ STATIC int
+ xfs_dir2_block_getdents(
+ 	struct xfs_da_args	*args,
+-	struct dir_context	*ctx)
++	struct dir_context	*ctx,
++	unsigned int		*lock_mode)
+ {
+ 	struct xfs_inode	*dp = args->dp;	/* incore directory inode */
+ 	struct xfs_buf		*bp;		/* buffer for block */
+@@ -146,7 +147,6 @@ xfs_dir2_block_getdents(
+ 	int			wantoff;	/* starting block offset */
+ 	xfs_off_t		cook;
+ 	struct xfs_da_geometry	*geo = args->geo;
+-	int			lock_mode;
+ 	unsigned int		offset, next_offset;
+ 	unsigned int		end;
+ 
+@@ -156,12 +156,13 @@ xfs_dir2_block_getdents(
+ 	if (xfs_dir2_dataptr_to_db(geo, ctx->pos) > geo->datablk)
+ 		return 0;
+ 
+-	lock_mode = xfs_ilock_data_map_shared(dp);
+ 	error = xfs_dir3_block_read(args->trans, dp, &bp);
+-	xfs_iunlock(dp, lock_mode);
+ 	if (error)
+ 		return error;
+ 
++	xfs_iunlock(dp, *lock_mode);
++	*lock_mode = 0;
++
+ 	/*
+ 	 * Extract the byte offset we start at from the seek pointer.
+ 	 * We'll skip entries before this.
+@@ -344,7 +345,8 @@ STATIC int
+ xfs_dir2_leaf_getdents(
+ 	struct xfs_da_args	*args,
+ 	struct dir_context	*ctx,
+-	size_t			bufsize)
++	size_t			bufsize,
++	unsigned int		*lock_mode)
+ {
+ 	struct xfs_inode	*dp = args->dp;
+ 	struct xfs_mount	*mp = dp->i_mount;
+@@ -356,7 +358,6 @@ xfs_dir2_leaf_getdents(
+ 	xfs_dir2_off_t		curoff;		/* current overall offset */
+ 	int			length;		/* temporary length value */
+ 	int			byteoff;	/* offset in current block */
+-	int			lock_mode;
+ 	unsigned int		offset = 0;
+ 	int			error = 0;	/* error return value */
+ 
+@@ -390,13 +391,16 @@ xfs_dir2_leaf_getdents(
+ 				bp = NULL;
+ 			}
+ 
+-			lock_mode = xfs_ilock_data_map_shared(dp);
++			if (*lock_mode == 0)
++				*lock_mode = xfs_ilock_data_map_shared(dp);
+ 			error = xfs_dir2_leaf_readbuf(args, bufsize, &curoff,
+ 					&rablk, &bp);
+-			xfs_iunlock(dp, lock_mode);
+ 			if (error || !bp)
+ 				break;
+ 
++			xfs_iunlock(dp, *lock_mode);
++			*lock_mode = 0;
++
+ 			xfs_dir3_data_check(dp, bp);
+ 			/*
+ 			 * Find our position in the block.
+@@ -507,8 +511,9 @@ xfs_readdir(
+ 	size_t			bufsize)
+ {
+ 	struct xfs_da_args	args = { NULL };
+-	int			rval;
+-	int			v;
++	unsigned int		lock_mode;
++	int			isblock;
++	int			error;
+ 
+ 	trace_xfs_readdir(dp);
+ 
+@@ -523,13 +528,22 @@ xfs_readdir(
+ 	args.trans = tp;
+ 
+ 	if (dp->i_df.if_format == XFS_DINODE_FMT_LOCAL)
+-		rval = xfs_dir2_sf_getdents(&args, ctx);
+-	else if ((rval = xfs_dir2_isblock(&args, &v)))
+-		;
+-	else if (v)
+-		rval = xfs_dir2_block_getdents(&args, ctx);
+-	else
+-		rval = xfs_dir2_leaf_getdents(&args, ctx, bufsize);
+-
+-	return rval;
++		return xfs_dir2_sf_getdents(&args, ctx);
++
++	lock_mode = xfs_ilock_data_map_shared(dp);
++	error = xfs_dir2_isblock(&args, &isblock);
++	if (error)
++		goto out_unlock;
++
++	if (isblock) {
++		error = xfs_dir2_block_getdents(&args, ctx, &lock_mode);
++		goto out_unlock;
++	}
++
++	error = xfs_dir2_leaf_getdents(&args, ctx, bufsize, &lock_mode);
++
++out_unlock:
++	if (lock_mode)
++		xfs_iunlock(dp, lock_mode);
++	return error;
+ }
