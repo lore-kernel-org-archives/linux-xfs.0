@@ -2,201 +2,156 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1011C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Jan 2022 00:42:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DC84C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Jan 2022 00:43:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235357AbiAEAmI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Jan 2022 19:42:08 -0500
-Received: from ams.source.kernel.org ([145.40.68.75]:44652 "EHLO
-        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232884AbiAEAmI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Jan 2022 19:42:08 -0500
+        id S235622AbiAEAnJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Jan 2022 19:43:09 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54288 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232884AbiAEAnJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Jan 2022 19:43:09 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A88D7C061761
+        for <linux-xfs@vger.kernel.org>; Tue,  4 Jan 2022 16:43:08 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 09BC7B81851
-        for <linux-xfs@vger.kernel.org>; Wed,  5 Jan 2022 00:42:07 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC139C36AEB;
-        Wed,  5 Jan 2022 00:42:05 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4FE0D61615
+        for <linux-xfs@vger.kernel.org>; Wed,  5 Jan 2022 00:43:08 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B106AC36AEB;
+        Wed,  5 Jan 2022 00:43:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1641343325;
-        bh=WCU5IvukzFBEPIhAvOkHrXlcKxhXNJWstY3mH5ij0QQ=;
+        s=k20201202; t=1641343387;
+        bh=U04jGeDerVKs/LMTmIAWQ/qXOYkSfmir1y39ZWs/3yA=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=P6UvlHkvvyimcl/Yy655iN+r1GZYwZBohf1QJ4v/ik7NGY4W+H8k+6RPx63g+pzPi
-         j4MeMUFtZB8DkVoRzOLi7kC2lYKLb9qZi3W64n2j6NVx+uPnVuqk2GFkvlwvmrp5qV
-         4oKStmLVvVsW19/SMCg+xCx+LEiVdtAyXOXgKdEJIFr5gjrGhbSVNYrd3RLnUxpMX8
-         qiAfQ8xbE7XJAUhvsAALYTZyGxJ2IGEJVbsIg5/PJDp246qHfDWdRGsxtjv7T1V/GQ
-         FEbz9pQbECxFCFls3U016i79d7It3U6GIwD+vuLgeTjtvgLniGJrzuegOlG+SI+3t8
-         UVUMdrwo1cCRA==
-Date:   Tue, 4 Jan 2022 16:42:05 -0800
+        b=Bin7PCyhbcjqN5f23EkU5ZqgW9VYTsSDTzSfIEOensD3hLlmzrOEVeDsKRcdtHzBl
+         w3betxKvEFO1TCi7TRSTt9lBqThB/w4YeUgMLRWUEjEX1YbHPwmfmCGuptZxJhZxjI
+         d5aqb/XeRmd2Fg+9M5GrQemRqtSpcOo9VwMXs7ZrL/kByc/ffUibT+jhrYUNvaWMyb
+         pCxBe5WSoKjh4lq7AUTJNSr3NRfqzeCDbMB4tyQdGRLvD2/7qLmm36FurfOP8nYEZJ
+         daeXIZC8cRXhNoFJpIebSUDNKwbPU1IX5dJRtIx0OxJ1OO8oQVLt/boXVB6PSsE3UJ
+         BKV/8MN1xhqqQ==
+Date:   Tue, 4 Jan 2022 16:43:07 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Chandan Babu R <chandan.babu@oracle.com>
 Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
-Subject: Re: [PATCH V4 11/16] xfs: Introduce macros to represent new maximum
- extent counts for data/attr forks
-Message-ID: <20220105004205.GR31583@magnolia>
+Subject: Re: [PATCH V4 09/16] xfs: Introduce XFS_DIFLAG2_NREXT64 and
+ associated helpers
+Message-ID: <20220105004307.GS31583@magnolia>
 References: <20211214084519.759272-1-chandan.babu@oracle.com>
- <20211214084519.759272-12-chandan.babu@oracle.com>
+ <20211214084519.759272-10-chandan.babu@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211214084519.759272-12-chandan.babu@oracle.com>
+In-Reply-To: <20211214084519.759272-10-chandan.babu@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 14, 2021 at 02:15:14PM +0530, Chandan Babu R wrote:
-> This commit defines new macros to represent maximum extent counts allowed by
-> filesystems which have support for large per-inode extent counters.
+On Tue, Dec 14, 2021 at 02:15:12PM +0530, Chandan Babu R wrote:
+> This commit adds the new per-inode flag XFS_DIFLAG2_NREXT64 to indicate that
+> an inode supports 64-bit extent counters. This flag is also enabled by default
+> on newly created inodes when the corresponding filesystem has large extent
+> counter feature bit (i.e. XFS_FEAT_NREXT64) set.
 > 
 > Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_bmap.c       |  8 +++-----
->  fs/xfs/libxfs/xfs_bmap_btree.c |  2 +-
->  fs/xfs/libxfs/xfs_format.h     |  8 +++++---
->  fs/xfs/libxfs/xfs_inode_buf.c  |  3 ++-
->  fs/xfs/libxfs/xfs_inode_fork.c |  2 +-
->  fs/xfs/libxfs/xfs_inode_fork.h | 19 +++++++++++++++----
->  6 files changed, 27 insertions(+), 15 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 4113622e9733..0ce58e4a9c44 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -61,10 +61,8 @@ xfs_bmap_compute_maxlevels(
->  	int		sz;		/* root block size */
->  
->  	/*
-> -	 * The maximum number of extents in a file, hence the maximum number of
-> -	 * leaf entries, is controlled by the size of the on-disk extent count,
-> -	 * either a signed 32-bit number for the data fork, or a signed 16-bit
-> -	 * number for the attr fork.
-> +	 * The maximum number of extents in a fork, hence the maximum number of
-> +	 * leaf entries, is controlled by the size of the on-disk extent count.
->  	 *
->  	 * Note that we can no longer assume that if we are in ATTR1 that the
->  	 * fork offset of all the inodes will be
-> @@ -74,7 +72,7 @@ xfs_bmap_compute_maxlevels(
->  	 * ATTR2 we have to assume the worst case scenario of a minimum size
->  	 * available.
->  	 */
-> -	maxleafents = xfs_iext_max_nextents(whichfork);
-> +	maxleafents = xfs_iext_max_nextents(xfs_has_nrext64(mp), whichfork);
->  	if (whichfork == XFS_DATA_FORK)
->  		sz = XFS_BMDR_SPACE_CALC(MINDBTPTRS);
->  	else
-> diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-> index 453309fc85f2..e8d21d69b9ff 100644
-> --- a/fs/xfs/libxfs/xfs_bmap_btree.c
-> +++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-> @@ -611,7 +611,7 @@ xfs_bmbt_maxlevels_ondisk(void)
->  	minrecs[1] = xfs_bmbt_block_maxrecs(blocklen, false) / 2;
->  
->  	/* One extra level for the inode root. */
-> -	return xfs_btree_compute_maxlevels(minrecs, MAXEXTNUM) + 1;
-> +	return xfs_btree_compute_maxlevels(minrecs, XFS_MAX_EXTCNT_DATA_FORK) + 1;
->  }
->  
->  /*
-> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> index 9934c320bf01..eff86f6c4c99 100644
-> --- a/fs/xfs/libxfs/xfs_format.h
-> +++ b/fs/xfs/libxfs/xfs_format.h
-> @@ -873,9 +873,11 @@ enum xfs_dinode_fmt {
->  /*
->   * Max values for extlen, extnum, aextnum.
->   */
-> -#define	MAXEXTLEN	((xfs_extlen_t)0x001fffff)	/* 21 bits */
-> -#define	MAXEXTNUM	((xfs_extnum_t)0x7fffffff)	/* signed int */
-> -#define	MAXAEXTNUM	((xfs_aextnum_t)0x7fff)		/* signed short */
-> +#define	MAXEXTLEN			((xfs_extlen_t)0x1fffff)	/* 21 bits */
-> +#define XFS_MAX_EXTCNT_DATA_FORK	((xfs_extnum_t)0xffffffffffff)	/* Unsigned 48-bits */
-> +#define XFS_MAX_EXTCNT_ATTR_FORK	((xfs_aextnum_t)0xffffffff)	/* Unsigned 32-bits */
-> +#define XFS_MAX_EXTCNT_DATA_FORK_OLD	((xfs_extnum_t)0x7fffffff)	/* Signed 32-bits */
-> +#define XFS_MAX_EXTCNT_ATTR_FORK_OLD	((xfs_aextnum_t)0x7fff)		/* Signed 16-bits */
 
-Could you change the #define value to a shift and subtract like you do
-for MAXEXTLEN^WXFS_MAX_BMBT_EXTLEN in patch 16?
+Seems pretty straightforward so far; let's see what I think as I keep
+going...
 
-e.g.
-
-#define XFS_MAX_EXTCNT_DATA_FORK	((xfs_extnum_t)((1ULL << 48) - 1))
-
-Also, you might want to document briefly in this header file why it is
-that the bmbt is limited to 2^48 extents even though the dinode fields
-are 64 bits wide and there can be up to 2^54 blocks mapped by a fork.
-ISTR the reason is to avoid having the bmbt cursor cache have to handle
-a 12-level btree or something, right?
-
-(Sorry, it's been a while...)
-
->  
->  /*
->   * Inode minimum and maximum sizes.
-> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> index 860d32816909..34f360a38603 100644
-> --- a/fs/xfs/libxfs/xfs_inode_buf.c
-> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> @@ -361,7 +361,8 @@ xfs_dinode_verify_fork(
->  			return __this_address;
->  		break;
->  	case XFS_DINODE_FMT_BTREE:
-> -		max_extents = xfs_iext_max_nextents(whichfork);
-> +		max_extents = xfs_iext_max_nextents(xfs_dinode_has_nrext64(dip),
-> +					whichfork);
->  		if (di_nextents > max_extents)
->  			return __this_address;
->  		break;
-> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-> index ce690abe5dce..a3a3b54f9c55 100644
-> --- a/fs/xfs/libxfs/xfs_inode_fork.c
-> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
-> @@ -746,7 +746,7 @@ xfs_iext_count_may_overflow(
->  	if (whichfork == XFS_COW_FORK)
->  		return 0;
->  
-> -	max_exts = xfs_iext_max_nextents(whichfork);
-> +	max_exts = xfs_iext_max_nextents(xfs_inode_has_nrext64(ip), whichfork);
->  
->  	if (XFS_TEST_ERROR(false, ip->i_mount, XFS_ERRTAG_REDUCE_MAX_IEXTENTS))
->  		max_exts = 10;
-> diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-> index 4a8b77d425df..0cfc351648f9 100644
-> --- a/fs/xfs/libxfs/xfs_inode_fork.h
-> +++ b/fs/xfs/libxfs/xfs_inode_fork.h
-> @@ -133,12 +133,23 @@ static inline int8_t xfs_ifork_format(struct xfs_ifork *ifp)
->  	return ifp->if_format;
->  }
->  
-> -static inline xfs_extnum_t xfs_iext_max_nextents(int whichfork)
-> +static inline xfs_extnum_t xfs_iext_max_nextents(bool has_big_extcnt,
-
-has_nrext64, to be consistent with most everywhere else?
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> +				int whichfork)
->  {
-> -	if (whichfork == XFS_DATA_FORK || whichfork == XFS_COW_FORK)
-> -		return MAXEXTNUM;
-> +	switch (whichfork) {
-> +	case XFS_DATA_FORK:
-> +	case XFS_COW_FORK:
-> +		return has_big_extcnt ? XFS_MAX_EXTCNT_DATA_FORK
-> +			: XFS_MAX_EXTCNT_DATA_FORK_OLD;
-> +
-> +	case XFS_ATTR_FORK:
-> +		return has_big_extcnt ? XFS_MAX_EXTCNT_ATTR_FORK
-> +			: XFS_MAX_EXTCNT_ATTR_FORK_OLD;
+> ---
+>  fs/xfs/libxfs/xfs_format.h      | 10 +++++++++-
+>  fs/xfs/libxfs/xfs_ialloc.c      |  2 ++
+>  fs/xfs/xfs_inode.h              |  5 +++++
+>  fs/xfs/xfs_inode_item_recover.c |  6 ++++++
+>  4 files changed, 22 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index 7972cbc22608..9934c320bf01 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -992,15 +992,17 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
+>  #define XFS_DIFLAG2_REFLINK_BIT	1	/* file's blocks may be shared */
+>  #define XFS_DIFLAG2_COWEXTSIZE_BIT   2  /* copy on write extent size hint */
+>  #define XFS_DIFLAG2_BIGTIME_BIT	3	/* big timestamps */
+> +#define XFS_DIFLAG2_NREXT64_BIT 4	/* 64-bit extent counter enabled */
 >  
-> -	return MAXAEXTNUM;
-> +	default:
-> +		ASSERT(0);
-> +		return 0;
-> +	}
+>  #define XFS_DIFLAG2_DAX		(1 << XFS_DIFLAG2_DAX_BIT)
+>  #define XFS_DIFLAG2_REFLINK     (1 << XFS_DIFLAG2_REFLINK_BIT)
+>  #define XFS_DIFLAG2_COWEXTSIZE  (1 << XFS_DIFLAG2_COWEXTSIZE_BIT)
+>  #define XFS_DIFLAG2_BIGTIME	(1 << XFS_DIFLAG2_BIGTIME_BIT)
+> +#define XFS_DIFLAG2_NREXT64	(1 << XFS_DIFLAG2_NREXT64_BIT)
+>  
+>  #define XFS_DIFLAG2_ANY \
+>  	(XFS_DIFLAG2_DAX | XFS_DIFLAG2_REFLINK | XFS_DIFLAG2_COWEXTSIZE | \
+> -	 XFS_DIFLAG2_BIGTIME)
+> +	 XFS_DIFLAG2_BIGTIME | XFS_DIFLAG2_NREXT64)
+>  
+>  static inline bool xfs_dinode_has_bigtime(const struct xfs_dinode *dip)
+>  {
+> @@ -1008,6 +1010,12 @@ static inline bool xfs_dinode_has_bigtime(const struct xfs_dinode *dip)
+>  	       (dip->di_flags2 & cpu_to_be64(XFS_DIFLAG2_BIGTIME));
 >  }
 >  
->  static inline xfs_extnum_t
+> +static inline bool xfs_dinode_has_nrext64(const struct xfs_dinode *dip)
+> +{
+> +	return dip->di_version >= 3 &&
+> +	       (dip->di_flags2 & cpu_to_be64(XFS_DIFLAG2_NREXT64));
+> +}
+> +
+>  /*
+>   * Inode number format:
+>   * low inopblog bits - offset in block
+> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+> index b418fe0c0679..1d2ba51483ec 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc.c
+> +++ b/fs/xfs/libxfs/xfs_ialloc.c
+> @@ -2772,6 +2772,8 @@ xfs_ialloc_setup_geometry(
+>  	igeo->new_diflags2 = 0;
+>  	if (xfs_has_bigtime(mp))
+>  		igeo->new_diflags2 |= XFS_DIFLAG2_BIGTIME;
+> +	if (xfs_has_nrext64(mp))
+> +		igeo->new_diflags2 |= XFS_DIFLAG2_NREXT64;
+>  
+>  	/* Compute inode btree geometry. */
+>  	igeo->agino_log = sbp->sb_inopblog + sbp->sb_agblklog;
+> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> index c447bf04205a..97946156359d 100644
+> --- a/fs/xfs/xfs_inode.h
+> +++ b/fs/xfs/xfs_inode.h
+> @@ -218,6 +218,11 @@ static inline bool xfs_inode_has_bigtime(struct xfs_inode *ip)
+>  	return ip->i_diflags2 & XFS_DIFLAG2_BIGTIME;
+>  }
+>  
+> +static inline bool xfs_inode_has_nrext64(struct xfs_inode *ip)
+> +{
+> +	return ip->i_diflags2 & XFS_DIFLAG2_NREXT64;
+> +}
+> +
+>  /*
+>   * Return the buftarg used for data allocations on a given inode.
+>   */
+> diff --git a/fs/xfs/xfs_inode_item_recover.c b/fs/xfs/xfs_inode_item_recover.c
+> index 239dd2e3384e..767a551816a0 100644
+> --- a/fs/xfs/xfs_inode_item_recover.c
+> +++ b/fs/xfs/xfs_inode_item_recover.c
+> @@ -142,6 +142,12 @@ xfs_log_dinode_to_disk_ts(
+>  	return ts;
+>  }
+>  
+> +static inline bool xfs_log_dinode_has_nrext64(const struct xfs_log_dinode *ld)
+> +{
+> +	return ld->di_version >= 3 &&
+> +	       (ld->di_flags2 & XFS_DIFLAG2_NREXT64);
+> +}
+> +
+>  STATIC void
+>  xfs_log_dinode_to_disk(
+>  	struct xfs_log_dinode	*from,
 > -- 
 > 2.30.2
 > 
