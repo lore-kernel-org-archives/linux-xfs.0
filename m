@@ -2,102 +2,91 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CD89C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Jan 2022 17:22:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72901C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Jan 2022 17:45:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242202AbiAERWV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Jan 2022 12:22:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53472 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242200AbiAERWS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jan 2022 12:22:18 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44870C061201
-        for <linux-xfs@vger.kernel.org>; Wed,  5 Jan 2022 09:22:18 -0800 (PST)
+        id S242461AbiAERpX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Jan 2022 12:45:23 -0500
+Received: from sin.source.kernel.org ([145.40.73.55]:58606 "EHLO
+        sin.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237699AbiAERpU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jan 2022 12:45:20 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 03ED2B81113
-        for <linux-xfs@vger.kernel.org>; Wed,  5 Jan 2022 17:22:17 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B77B8C36AE3;
-        Wed,  5 Jan 2022 17:22:15 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 02AC0CE0451;
+        Wed,  5 Jan 2022 17:45:19 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5C534C36AE0;
+        Wed,  5 Jan 2022 17:45:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1641403335;
-        bh=TxmjTvhetJtI76K+LXxgkUSwQgr56yzFFrGDdqHpZhM=;
+        s=k20201202; t=1641404717;
+        bh=Q3V6GchDz78dmmg78l3g/qEnjx4BoPVZZK1V2rhQnWg=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ntFzg7cp8lBwgzLGWdjFnPLTxb6fiCueRjhKuXdTOs4QeHiHZFsQ4Zz1ZW01fYZXv
-         7Y1y6Cd+y1UyOlK0vMPiT01LNIY5Wg0kWIT15/P1zZZTQayR1M03xknk+GxnI8c+nO
-         RXl9209bQXOcUkyiTS0D3L+O0CFjmOs5bJiySKY67WpbZYR/OaFh43XxV51ToUfuA7
-         PAzX8UyIejrx4Phv9R9z8cOZdTDoQYNGtiGrao+tMEL4AV79Vn67BpVL/RSPBJdVag
-         wR6fFYeXpQ4LUMTRKBg5rUW7Q926ukqZBYlDTypiVdpySjtKQss9q2yN132ou6fuGD
-         SAWsXc6RU87Og==
-Date:   Wed, 5 Jan 2022 09:22:15 -0800
+        b=Ofv2KE4rUB3IDE5zL0LXmcN71knBnGoHLvDV2Kto/Au/uS6xKi4fnQx0ec7kw172w
+         BbDNFOrbPnuJOnu/tQCE3V9lQ2JSWQ1I1m7/yWycIU8F9uEsfOdXaldGfOgLh1Xgpb
+         D3biVEQT9XNIZXsP9hMsWsnfhqjojMiwV0zHGZ1smVOUaE0AlOMQDfH+Vwpzjde+IZ
+         4EI8Mn5CNoE2cfdgQzkACRm6y5W/dHKF/2rQvfDraCSyxaoyV29AuGF8wzBFLrrjtU
+         Mhcf9BXbMVP9aEwYgBR/xsrhHli0xmRbJ4N5MsmsisGMstkwuV+eqF9nmkciju8Qzq
+         y0rPZl0QRkSeA==
+Date:   Wed, 5 Jan 2022 09:45:17 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Chandan Babu R <chandan.babu@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
-Subject: Re: [PATCH V4 08/16] xfs: Introduce XFS_FSOP_GEOM_FLAGS_NREXT64
-Message-ID: <20220105172215.GI656707@magnolia>
-References: <20211214084519.759272-1-chandan.babu@oracle.com>
- <20211214084519.759272-9-chandan.babu@oracle.com>
- <20220105000524.GO31583@magnolia>
- <87y23u8fft.fsf@debian-BULLSEYE-live-builder-AMD64>
+To:     Dan Williams <dan.j.williams@intel.com>
+Cc:     Shiyang Ruan <ruansy.fnst@fujitsu.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Linux NVDIMM <nvdimm@lists.linux.dev>,
+        Linux MM <linux-mm@kvack.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        david <david@fromorbit.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Jane Chu <jane.chu@oracle.com>
+Subject: Re: [PATCH v9 01/10] dax: Use percpu rwsem for
+ dax_{read,write}_lock()
+Message-ID: <20220105174517.GI31606@magnolia>
+References: <20211226143439.3985960-1-ruansy.fnst@fujitsu.com>
+ <20211226143439.3985960-2-ruansy.fnst@fujitsu.com>
+ <CAPcyv4gkxuFRGh57nYrpS8mXo+5j-7=KGNn-gULgLGthZQPo2g@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <87y23u8fft.fsf@debian-BULLSEYE-live-builder-AMD64>
+In-Reply-To: <CAPcyv4gkxuFRGh57nYrpS8mXo+5j-7=KGNn-gULgLGthZQPo2g@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 05, 2022 at 07:14:55PM +0530, Chandan Babu R wrote:
-> On 05 Jan 2022 at 05:35, Darrick J. Wong wrote:
-> > On Tue, Dec 14, 2021 at 02:15:11PM +0530, Chandan Babu R wrote:
-> >> XFS_FSOP_GEOM_FLAGS_NREXT64 indicates that the current filesystem instance
-> >> supports 64-bit per-inode extent counters.
-> >> 
-> >> Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
-> >> ---
-> >>  fs/xfs/libxfs/xfs_fs.h | 1 +
-> >>  fs/xfs/libxfs/xfs_sb.c | 2 ++
-> >>  2 files changed, 3 insertions(+)
-> >> 
-> >> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> >> index c43877c8a279..42bc39501d81 100644
-> >> --- a/fs/xfs/libxfs/xfs_fs.h
-> >> +++ b/fs/xfs/libxfs/xfs_fs.h
-> >> @@ -251,6 +251,7 @@ typedef struct xfs_fsop_resblks {
-> >>  #define XFS_FSOP_GEOM_FLAGS_REFLINK	(1 << 20) /* files can share blocks */
-> >>  #define XFS_FSOP_GEOM_FLAGS_BIGTIME	(1 << 21) /* 64-bit nsec timestamps */
-> >>  #define XFS_FSOP_GEOM_FLAGS_INOBTCNT	(1 << 22) /* inobt btree counter */
-> >> +#define XFS_FSOP_GEOM_FLAGS_NREXT64	(1 << 23) /* 64-bit extent counter */
-> >>  
-> >>  /*
-> >>   * Minimum and maximum sizes need for growth checks.
-> >> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> >> index bd632389ae92..0c1add39177f 100644
-> >> --- a/fs/xfs/libxfs/xfs_sb.c
-> >> +++ b/fs/xfs/libxfs/xfs_sb.c
-> >> @@ -1138,6 +1138,8 @@ xfs_fs_geometry(
-> >>  	} else {
-> >>  		geo->logsectsize = BBSIZE;
-> >>  	}
-> >> +	if (xfs_has_nrext64(mp))
-> >> +		geo->flags |= XFS_FSOP_GEOM_FLAGS_NREXT64;
-> >>  	geo->rtsectsize = sbp->sb_blocksize;
-> >>  	geo->dirblocksize = xfs_dir2_dirblock_bytes(sbp);
-> >>  
-> >> -- 
-> >> 2.30.2
-> >> 
+On Tue, Jan 04, 2022 at 02:44:08PM -0800, Dan Williams wrote:
+> On Sun, Dec 26, 2021 at 6:35 AM Shiyang Ruan <ruansy.fnst@fujitsu.com> wrote:
+> >
+> > In order to introduce dax holder registration, we need a write lock for
+> > dax.
 > 
-> I think you accidently missed typing your response to this patch?
+> As far as I can see, no, a write lock is not needed while the holder
+> is being registered.
+> 
+> The synchronization that is needed is to make sure that the device
+> stays live over the registration event, and that any in-flight holder
+> operations are flushed before the device transitions from live to
+> dead, and that in turn relates to the live state of the pgmap.
+> 
+> The dax device cannot switch from live to dead without first flushing
+> all readers, so holding dax_read_lock() over the register holder event
+> should be sufficient.
 
-Yep.
-
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+...and perhaps add a comment describing that this is what the
+synchronization primitive is really protecting against?  The first time
+I read through this patchset, I assumed the rwsem was protecting
+&dax_hosts and was confused when I saw the one use of dax_write_lock.
 
 --D
 
+> If you are worried about 2 or more potential
+> holders colliding at registration time, I would expect that's already
+> prevented by block device exclusive holder synchronization, but you
+> could also use cmpxchg and a single pointer to a 'struct dax_holder {
+> void *holder_data, struct dax_holder_operations *holder_ops }'. If you
+> are worried about memory_failure triggering while the filesystem is
+> shutting down it can do a synchronize_srcu(&dax_srcu) if it really
+> needs to ensure that the notify path is idle after removing the holder
+> registration.
 > 
-> -- 
-> chandan
+> ...are there any cases remaining not covered by the above suggestions?
