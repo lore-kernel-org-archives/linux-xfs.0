@@ -2,267 +2,360 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A502EC433F5
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Jan 2022 20:45:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3201C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Jan 2022 21:17:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244173AbiAEUpK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Jan 2022 15:45:10 -0500
-Received: from mail-dm6nam12on2119.outbound.protection.outlook.com ([40.107.243.119]:21920
-        "EHLO NAM12-DM6-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S231591AbiAEUpI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 5 Jan 2022 15:45:08 -0500
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=N0jbQvrc/w+E3lVSiTla/GpBecsy1xrwICmvMKGTO8WqPVhKlVafsrUJS8rYpRH8uarD4xHlrO7TCdFB11JSEDsAhElo32w0jyLgmvIhbvSKGXoykYpq4wQH00+d6/SEQOdlfNXWUN/JfWX7jJpS+XeuXiPkZ9bgnswvN7d31OQvlqAR0I1KaGvbgAYPST31DSQ22MCyXMOIAJdodDenyJpQOlUSUKLFEEENta7TmJWRGSlaEdMipjV/v8VyN010V9hUi3BQV4owUgiTVFh48q3mw3XI/MmnuFIqMNIfGJRFDwo9FVBl+aa5N6E1qiTAPn37MrQ27Ufo7ZtaaCZyww==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=4rRIoJWYOVf8RVtVa0KFXpattoD2vgXINwTOT7ixWGU=;
- b=bD+VHvBTSgwVK5aMDKB+XZqt5aFsbWqvBQNGX9zWs+Y6PevlUFDUEFZs8pE7ltBlGkhwajKMxxoUA/rlG0eB7VXGhB6+9zCipnibZFTP3xdGEYVFXHn5P4P0GGjrsX8NO206LS0PIuWwzmbjFM6SUamQhMO3Sga8Do76Z/dojEAhLS9kdPu+BySp2S+GllCCr8Y5pKX7thdHMWyUVU2QZhuK/F25rmFM76hHpvI01BmsZBs63fQT2ZPA8GWA6XO0sL0qQyduRExfqAW85O7Yf55DyBhlnb3CnNVmCDhtA/kQDf9RV+UsKCpDY7XJWNtJDj+n8voNaUOGoRaXVSKt/A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=hammerspace.com; dmarc=pass action=none
- header.from=hammerspace.com; dkim=pass header.d=hammerspace.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hammerspace.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=4rRIoJWYOVf8RVtVa0KFXpattoD2vgXINwTOT7ixWGU=;
- b=fisLwdYq/30Zmbsb97R04t3/AQyn1tSh41MIVfMYt91rgJQug6g0uKCvtbM3z+RJngXAPk61+s+dagvTdXy6FxEtnkAFHNm58kKLRKMehEeCj1SFRZ8wXB0WSP5gKPbAvH4ddzWLuU9DsQ0lfkp+dxVy8Qy6Gie3ve+sxa1+v4Q=
-Received: from CH0PR13MB5084.namprd13.prod.outlook.com (2603:10b6:610:111::7)
- by CH0PR13MB4729.namprd13.prod.outlook.com (2603:10b6:610:d9::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4888.4; Wed, 5 Jan
- 2022 20:45:05 +0000
-Received: from CH0PR13MB5084.namprd13.prod.outlook.com
- ([fe80::288c:e4f1:334a:a08]) by CH0PR13MB5084.namprd13.prod.outlook.com
- ([fe80::288c:e4f1:334a:a08%4]) with mapi id 15.20.4867.007; Wed, 5 Jan 2022
- 20:45:05 +0000
-From:   Trond Myklebust <trondmy@hammerspace.com>
-To:     "david@fromorbit.com" <david@fromorbit.com>
-CC:     "bfoster@redhat.com" <bfoster@redhat.com>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "trondmy@kernel.org" <trondmy@kernel.org>,
-        "hch@infradead.org" <hch@infradead.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "djwong@kernel.org" <djwong@kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "willy@infradead.org" <willy@infradead.org>
-Subject: Re: [PATCH] iomap: Address soft lockup in iomap_finish_ioend()
-Thread-Topic: [PATCH] iomap: Address soft lockup in iomap_finish_ioend()
-Thread-Index: AQHX/bVbnIYKv9Eyz0mlbt/BPMOEG6xL0+EAgABMs4CAAWrGAIAA5lqAgANuRQCAACHbgIAAFcSAgAGffQCAATe6gA==
-Date:   Wed, 5 Jan 2022 20:45:05 +0000
-Message-ID: <c9d9b7850c6086b123b4add4de7b1992cb62f6ad.camel@hammerspace.com>
-References: <20211230193522.55520-1-trondmy@kernel.org>
-         <Yc5f/C1I+N8MPHcd@casper.infradead.org>
-         <6f746786a3928844fbe644e7e409008b4f50c239.camel@hammerspace.com>
-         <20220101035516.GE945095@dread.disaster.area>
-         <fb964769132eb01ed4e8b67d6972d50ee3387e24.camel@hammerspace.com>
-         <20220103220310.GG945095@dread.disaster.area>
-         <9f51fa6169f4c67d54dd8563b52c540c94c7703a.camel@hammerspace.com>
-         <20220104012215.GH945095@dread.disaster.area>
-         <0996c40657b5873dda5119344bf74556491e27b9.camel@hammerspace.com>
-In-Reply-To: <0996c40657b5873dda5119344bf74556491e27b9.camel@hammerspace.com>
-Accept-Language: en-US, en-GB
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=hammerspace.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 8f4a7031-354b-47c3-9a85-08d9d08c4115
-x-ms-traffictypediagnostic: CH0PR13MB4729:EE_
-x-microsoft-antispam-prvs: <CH0PR13MB47295F1C08D7E23BF1399665B84B9@CH0PR13MB4729.namprd13.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:9508;
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: n1bdoYIv//b7Eh6FQYho+VPok7QOgU7JNrjv+mUGOhh0t+68OhdldkxN5yEDOCbRShUCvIfzrbTv/OUa/SnGnPYkhURF2akMmXmb5Z6piLTjVBu2nmTpVJeIRJXqeOinPrAkw8G70Azsor4Ry0OQnl6PgvortwfSA3CAMOTQ/gr5pW0IneppKYVWRmPoEt9kZIAl8qMoAxnplglOeKgGHxYF5FyNwXlgQXWHzf9mdcf25RlhDzmI74r6fb42hscDYRSRRhnCGU3u1E0yEyrlhYVdK7iPnOJMqoQY8C9Qj+q/5pwCiukTswrhnD51QIIw6HtsoC0jwAfNvcwxCgvsiPYtXoSJOMQCLh4stR5eApD6CKFNTywUly91yonwSQyK5xdkrCQlBO5hu2xp5g7ikC2nQc5gfpj2L1E48wjBuL1Mso1vthqsawTFOsjW5DINitWwb7Eh5DsmeRzXHLvt/B3XCM+6lkkfkVAh42Qd+UE9Bx2P3Pd35qSYDrGVSfzgNg9Rj68y/Ng5HEk4P61GBxB7FDtZ/iy1t9B+RWwAq2UuYQvv6ef1LB7Vbi5JDBL0xkAqTOB4iB/E0ns/BjgR2nt1Nq7ITYVS13V1ZtkCcS1H4sIn5ILw7uzNf+wRgM1xF/m3dJ9zCxKGXVgxy9cq7UowjIN0ZRMN3O7VTCQQz9257dKZ6LAios6A/LWbh6JEQQsSCPencTKUixqxnYfw6ZCvNCuHtUPCPkkHtIttHu8t1Hxoziw4hooJM2FL2Vv7NKJ+ETOOrSXWTp5/MKss8hKSBCUFkOP5E39hRrbeMh5kHDSwPogrP3UV6o4/al33eJxihZLYPMKsUyCgPggP3Q==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH0PR13MB5084.namprd13.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(346002)(376002)(396003)(136003)(366004)(39830400003)(86362001)(6486002)(6506007)(83380400001)(6512007)(2616005)(26005)(186003)(15974865002)(508600001)(71200400001)(45080400002)(36756003)(316002)(4326008)(5660300002)(8676002)(66446008)(66946007)(38070700005)(66556008)(66476007)(64756008)(8936002)(122000001)(76116006)(6916009)(38100700002)(2906002)(54906003)(20210929001);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?azRCY3hpaTFSb0g2UXJ3WXBXNHF5MUhBR0V3MkpvUWZPbDNuY3g3OU5kUE5G?=
- =?utf-8?B?R2xoMytwd2duaVVXVDRTVjcxNFRXN21sRXBHWnZUSWdxMzNhbjhYSGxQWTlZ?=
- =?utf-8?B?OS92YVBuZy9ZTTRNZm1nQisxeE5rNm5NcWJjTjZFbzJzS0VMd1dhUjRGUlVX?=
- =?utf-8?B?aFVBSUQ0akdOL2UzY2J4ZThBcGwvUnJBOEhWWS9vN1VhaStSajNBZjgxN0Zw?=
- =?utf-8?B?U25CUUpyYzJMazNySHEzYkNkTTl4d29GeGcreThscUE1aEt1KzNRditsNm5N?=
- =?utf-8?B?SksyMUxDaHV4UVR2UitpVS8xTVcwbC9OellFb0xGRE5pOCtFM1hhS0grQ2x0?=
- =?utf-8?B?YjErNHlWQ2lQZmF6d00vVXpzK3Bjekc0WXY2TzBWUUNxUXp3dE1vbXM0OGwv?=
- =?utf-8?B?ZTJtdW5FMU9wVHV2K0cxVTFlZHZJa0dLQmFTT2NQL3ZZeGNVV3BUeDJRd0FD?=
- =?utf-8?B?SkE3RVRvczlFRExTQnVrTHcvK2dQTUZZbDZtK0NKV1lHLzBMbEJ2UWVlc2o2?=
- =?utf-8?B?cXNGK1NRTEZOaHVJblVBSlJYUW16ZytiTHQ3RGIwaXRFUXc4VHkrS2srZnVE?=
- =?utf-8?B?Ty9UemxoU3BTY2hJOUg5ZzNwdENDbGhmaHg5MW10NThCUWc2VElNWkVJa1g0?=
- =?utf-8?B?bSs3QVBuODVBOGRKYTNOSUREUVBXcitEQmVuZVZTSTdUdEV0YVgyRTcreDZT?=
- =?utf-8?B?SFNMVmZrc0dBS0hsbk1xSDVKdE1nOVRqR0hISzhMRXNGaC94OVBBYzRlV2ti?=
- =?utf-8?B?SlhFRjZqdEl3WWpqZ2JERnRsMmJyaC9xcDI5NEZYQzJhUDRMOUxNMTdpM2w4?=
- =?utf-8?B?UTRjdGFialEvUzBkTjVaRzE1cFpnMnlRcW0wTkxqcDFRVDk4QXBIL0dKM2lH?=
- =?utf-8?B?K2ttZkRwR3NkQWUvOUl6QVNhazdQbFlaL21uRzlldUJrUkp2V3VBNnZkTXlK?=
- =?utf-8?B?NGNWRmwxaGprNnJCQmtaYitScnlFaUhFR1FYY3o5dmd3QXhtamMxdy9iZlNI?=
- =?utf-8?B?RlBET2JCMzVLZDhGQ29zKzhja2FQSUN4aHFFU3VheTV3UWQ3MHAyMVlYdkNx?=
- =?utf-8?B?cjVsSzJVZkdCV24wRFdrQ2w2RGwvNXRGUXpuanNvamd4N3E5ODNvb292S2Zx?=
- =?utf-8?B?YzAyNjlGckVoWjZiWWJTNlhmVTdOb1RvZ2g2bnJPeURkYzVPZHlOK0Jnb3NN?=
- =?utf-8?B?ZG91L1JQWjJPU0dRVDVoWHVlT1JyMnkrcTBPRStVRWprOTNuUFk0dmJYWWl1?=
- =?utf-8?B?RlVsTlRsMFB1b3l6VFp2c1hsTXpwbUVIVFdsRmZQY0dkUHpkamlZeXlmamh4?=
- =?utf-8?B?Q1ZTU0N2Wk80eDV5YXlvb0Y5RDNubi9ZazROd0lERTNRUUNxck1pdDBvV3RB?=
- =?utf-8?B?MmZBU3piTzN6UzllM2pIMFlQVnQ0dFBONkZOMEpSWk9COFpVbnoxVnlUbzR4?=
- =?utf-8?B?d1NzSkp3WTZTbUkrTEZneDgyZ3NrME9nMys2U05MRHZkQ1RWRHJ0SmxNeXBI?=
- =?utf-8?B?ZHJEbVhCdlFMbWhZRDY5TGxrVmtmVFo5L0daSnpWc3RNVVJsOVQ4bEdXcitr?=
- =?utf-8?B?dDQ4akwxMVRGS3lCbk1HUmdKbDIzNzZvNCsvRUxpNko0MG10cmlFSkllb3V2?=
- =?utf-8?B?bzNJRGJLNmVqem1ua2I2bkhMb3l6eFVxV2dLNjRORVJIRzZndG9Ub0ZmZW0w?=
- =?utf-8?B?c3RhMi91dU1mbnJLUXhuZ0ROUWNqaC9wZmJmbnNGc0UvL3o3OEg2dmloaHBG?=
- =?utf-8?B?aU43TkRadXNwQThxUkM1Y2w0dzdQakN5bWgrZFpDVEFHaXdTdm14U1hlWVRt?=
- =?utf-8?B?WHNHWFdRMHlMczZCWXJtdVRFMU95NUprZzhzQTc4aktzS3ZFNEFpNVdMdERs?=
- =?utf-8?B?bjBQY1BoTm5zeTAvV1RWdmtFN3NTbi9wYTE4QThzQVdOVEZzK3QvQWx0MDJ5?=
- =?utf-8?B?TkczdHVkajJLWS9nTWFUVzZ0OHcrSEpoeUtJMkxqcW92YnFva1JZMkd5aU9u?=
- =?utf-8?B?V2FXdmlVV2tTc3FEc2xqQWFJMVcra1FoUTRGMzJobHh6SWoyK29yU0ZvcXRz?=
- =?utf-8?B?dnZJMUgyTGZkRldlcGVQODROTlJTMGhJRHczV2pKZ1Y1LzlQeVJZTzBWYU9x?=
- =?utf-8?B?a3J2SVJXb1ZhaHN1SUlldWtiQlZzdWpaSXFCWW1GY1pidG1uUDc4cW4zTWpn?=
- =?utf-8?Q?7wikfONn5adC2ktnAP5x0oM=3D?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <335E19791B17474BB0658C60A4D6F08A@namprd13.prod.outlook.com>
-Content-Transfer-Encoding: base64
+        id S244392AbiAEVRt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Jan 2022 16:17:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51050 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S244387AbiAEVRt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jan 2022 16:17:49 -0500
+Received: from mail-pg1-x532.google.com (mail-pg1-x532.google.com [IPv6:2607:f8b0:4864:20::532])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAA9EC061201
+        for <linux-xfs@vger.kernel.org>; Wed,  5 Jan 2022 13:17:48 -0800 (PST)
+Received: by mail-pg1-x532.google.com with SMTP id x194so296721pgx.4
+        for <linux-xfs@vger.kernel.org>; Wed, 05 Jan 2022 13:17:48 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20210112.gappssmtp.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=ncCC9L0WeEGzChuvJR0/68WabesH5+cAdTHSnuR8eYQ=;
+        b=fRuWCBZ33gONpGtMPl8wsjLgCQiQy7Wmiy3X1oq/2DBXxwzbc4JDSM+0dbA2bKYlRV
+         Jq/bdCQ6RUtk4h7PVQuIl80f7fC6jXCldD9VSMLz9HFNzNZTHc1lfTZtw3zL8aem+raD
+         PTrMTA9G9XJj0okCXm8iQlPaEceCAnAllllMDBzrdP4NrPOc30RmhB9ceW6DJjO0feeG
+         hgtQNE4oIj03MDPpj9yEQi3mi4VsbDUmbwHNCxgs2AXWAyUFoPKzAN89Oe/pSF+YfQ3f
+         1SjTD/MJrDfctrNx4II3BgN9/kWH6/zdeK9hrvd725mro2a3Qha4nanF0fk3yOsUSYNY
+         2Ezg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=ncCC9L0WeEGzChuvJR0/68WabesH5+cAdTHSnuR8eYQ=;
+        b=F+5S/m9knBcrQ4/LOesLBRahClnFt4OKLtmP8u0nZ7f7pbcw5aLjoU0pXOZvGsAE+9
+         B8wIjezAS0R94hM4P0NDlHArS1H6qR3aZ57qo8G64jYHGKx0EufPKqeNz3Aea3Bv4HRv
+         DrO7G/dyN1oHbPccX91+aMh3/x934Rx5zv5fU1Fl4PsMr9F4iTnD1zW6m4x5mapXq62f
+         MSHR3s/aXjBmtUhoFA/WRpY81G9pTIq/zzIKHGExlIeWYse1STcEsJz1VZ127vj94aKm
+         Ivd+pWuXXEjxgEpL72TkLJQe2HVFtAdkecllgVXnL9Isjeq5tBUpavCyW461NmUzc2de
+         vzhA==
+X-Gm-Message-State: AOAM531v9vZlm5IXLdYDxoJ98lX9xusoAgQKAZpF3Hrl3h25JtabdjGl
+        9MJId8J/23ZS0Ic9gLk8Br1Js8Lv34qLc2KtNH3buw==
+X-Google-Smtp-Source: ABdhPJxgli9znNEolSNy97di7dIxA0jaBSFzjSHHHebIOCoYgJOYK/Ii+cU9k3sIosh4ktBtiagjcEUcU+NH0sLpGo0=
+X-Received: by 2002:a63:ab01:: with SMTP id p1mr1770235pgf.437.1641417468262;
+ Wed, 05 Jan 2022 13:17:48 -0800 (PST)
 MIME-Version: 1.0
-X-OriginatorOrg: hammerspace.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: CH0PR13MB5084.namprd13.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8f4a7031-354b-47c3-9a85-08d9d08c4115
-X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Jan 2022 20:45:05.4454
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 0d4fed5c-3a70-46fe-9430-ece41741f59e
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: fSn4YOcUn9E5YOEpOO555yRFQIavE41L2nDCYNMoxDWHEsZTaNznVKmcmpkJwcKVxZKQW4bX2lmgpLyjwfQc7g==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH0PR13MB4729
+References: <20211226143439.3985960-1-ruansy.fnst@fujitsu.com>
+ <20211226143439.3985960-10-ruansy.fnst@fujitsu.com> <20220105185334.GD398655@magnolia>
+In-Reply-To: <20220105185334.GD398655@magnolia>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Wed, 5 Jan 2022 13:17:37 -0800
+Message-ID: <CAPcyv4jYOvK57LqGzvZwyHo=4sEKmdAV1jgCzDw5eeCySPGS6w@mail.gmail.com>
+Subject: Re: [PATCH v9 09/10] xfs: Implement ->notify_failure() for XFS
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Shiyang Ruan <ruansy.fnst@fujitsu.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Linux NVDIMM <nvdimm@lists.linux.dev>,
+        Linux MM <linux-mm@kvack.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        david <david@fromorbit.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Jane Chu <jane.chu@oracle.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-T24gVHVlLCAyMDIyLTAxLTA0IGF0IDIxOjA5IC0wNTAwLCBUcm9uZCBNeWtsZWJ1c3Qgd3JvdGU6
-DQo+IE9uIFR1ZSwgMjAyMi0wMS0wNCBhdCAxMjoyMiArMTEwMCwgRGF2ZSBDaGlubmVyIHdyb3Rl
-Og0KPiA+IE9uIFR1ZSwgSmFuIDA0LCAyMDIyIGF0IDEyOjA0OjIzQU0gKzAwMDAsIFRyb25kIE15
-a2xlYnVzdCB3cm90ZToNCj4gPiA+IE9uIFR1ZSwgMjAyMi0wMS0wNCBhdCAwOTowMyArMTEwMCwg
-RGF2ZSBDaGlubmVyIHdyb3RlOg0KPiA+ID4gPiBPbiBTYXQsIEphbiAwMSwgMjAyMiBhdCAwNToz
-OTo0NVBNICswMDAwLCBUcm9uZCBNeWtsZWJ1c3QNCj4gPiA+ID4gd3JvdGU6DQo+ID4gPiA+ID4g
-T24gU2F0LCAyMDIyLTAxLTAxIGF0IDE0OjU1ICsxMTAwLCBEYXZlIENoaW5uZXIgd3JvdGU6DQo+
-ID4gPiA+ID4gPiBBcyBpdCBpcywgaWYgeW91IGFyZSBnZXR0aW5nIHNvZnQgbG9ja3VwcyBpbiB0
-aGlzIGxvY2F0aW9uLA0KPiA+ID4gPiA+ID4gdGhhdCdzDQo+ID4gPiA+ID4gPiBhbiBpbmRpY2F0
-aW9uIHRoYXQgdGhlIGlvZW5kIGNoYWluIHRoYXQgaXMgYmVpbmcgYnVpbHQgYnkNCj4gPiA+ID4g
-PiA+IFhGUw0KPiA+ID4gPiA+ID4gaXMNCj4gPiA+ID4gPiA+IHdheSwgd2F5IHRvbyBsb25nLiBJ
-T1dzLCB0aGUgY29tcGxldGlvbiBsYXRlbmN5IHByb2JsZW0gaXMNCj4gPiA+ID4gPiA+IGNhdXNl
-ZA0KPiA+ID4gPiA+ID4gYnkNCj4gPiA+ID4gPiA+IGEgbGFjayBvZiBzdWJtaXQgc2lkZSBpb2Vu
-ZCBjaGFpbiBsZW5ndGggYm91bmRpbmcgaW4NCj4gPiA+ID4gPiA+IGNvbWJpbmF0aW9uDQo+ID4g
-PiA+ID4gPiB3aXRoIHVuYm91bmQgY29tcGxldGlvbiBzaWRlIG1lcmdpbmcgaW4geGZzX2VuZF9i
-aW8gLSBpdCdzDQo+ID4gPiA+ID4gPiBub3QgYQ0KPiA+ID4gPiA+ID4gcHJvYmxlbSB3aXRoIHRo
-ZSBnZW5lcmljIGlvbWFwIGNvZGUuLi4uDQo+ID4gPiA+ID4gPiANCj4gPiA+ID4gPiA+IExldCdz
-IHRyeSB0byBhZGRyZXNzIHRoaXMgaW4gdGhlIFhGUyBjb2RlLCByYXRoZXIgdGhhbiBoYWNrDQo+
-ID4gPiA+ID4gPiB1bm5lY2Vzc2FyeSBiYW5kLWFpZHMgb3ZlciB0aGUgcHJvYmxlbSBpbiB0aGUg
-Z2VuZXJpYw0KPiA+ID4gPiA+ID4gY29kZS4uLg0KPiA+ID4gPiA+ID4gDQo+ID4gPiA+ID4gPiBD
-aGVlcnMsDQo+ID4gPiA+ID4gPiANCj4gPiA+ID4gPiA+IERhdmUuDQo+ID4gPiA+ID4gDQo+ID4g
-PiA+ID4gRmFpciBlbm91Z2guIEFzIGxvbmcgYXMgc29tZW9uZSBpcyB3b3JraW5nIG9uIGEgc29s
-dXRpb24sDQo+ID4gPiA+ID4gdGhlbg0KPiA+ID4gPiA+IEknbQ0KPiA+ID4gPiA+IGhhcHB5LiBK
-dXN0IGEgY291cGxlIG9mIHRoaW5nczoNCj4gPiA+ID4gPiANCj4gPiA+ID4gPiBGaXJzdGx5LCB3
-ZSd2ZSB2ZXJpZmllZCB0aGF0IHRoZSBjb25kX3Jlc2NoZWQoKSBpbiB0aGUgYmlvDQo+ID4gPiA+
-ID4gbG9vcA0KPiA+ID4gPiA+IGRvZXMNCj4gPiA+ID4gPiBzdWZmaWNlIHRvIHJlc29sdmUgdGhl
-IGlzc3VlIHdpdGggWEZTLCB3aGljaCB3b3VsZCB0ZW5kIHRvDQo+ID4gPiA+ID4gY29uZmlybQ0K
-PiA+ID4gPiA+IHdoYXQNCj4gPiA+ID4gPiB5b3UncmUgc2F5aW5nIGFib3ZlIGFib3V0IHRoZSB1
-bmRlcmx5aW5nIGlzc3VlIGJlaW5nIHRoZQ0KPiA+ID4gPiA+IGlvZW5kDQo+ID4gPiA+ID4gY2hh
-aW4NCj4gPiA+ID4gPiBsZW5ndGguDQo+ID4gPiA+ID4gDQo+ID4gPiA+ID4gU2Vjb25kbHksIG5v
-dGUgdGhhdCB3ZSd2ZSB0ZXN0ZWQgdGhpcyBpc3N1ZSB3aXRoIGEgdmFyaWV0eSBvZg0KPiA+ID4g
-PiA+IG9sZGVyDQo+ID4gPiA+ID4ga2VybmVscywgaW5jbHVkaW5nIDQuMTgueCwgNS4xLnggYW5k
-IDUuMTUueCwgc28gcGxlYXNlIGJlYXINCj4gPiA+ID4gPiBpbg0KPiA+ID4gPiA+IG1pbmQNCj4g
-PiA+ID4gPiB0aGF0IGl0IHdvdWxkIGJlIHVzZWZ1bCBmb3IgYW55IGZpeCB0byBiZSBiYWNrd2Fy
-ZCBwb3J0YWJsZQ0KPiA+ID4gPiA+IHRocm91Z2gNCj4gPiA+ID4gPiB0aGUNCj4gPiA+ID4gPiBz
-dGFibGUgbWVjaGFuaXNtLg0KPiA+ID4gPiANCj4gPiA+ID4gVGhlIGluZnJhc3RydWN0dXJlIGhh
-c24ndCBjaGFuZ2VkIHRoYXQgbXVjaCwgc28gd2hhdGV2ZXIgdGhlDQo+ID4gPiA+IHJlc3VsdA0K
-PiA+ID4gPiBpcyBpdCBzaG91bGQgYmUgYmFja3BvcnRhYmxlLg0KPiA+ID4gPiANCj4gPiA+ID4g
-QXMgaXQgaXMsIGlzIHRoZXJlIGEgc3BlY2lmaWMgd29ya2xvYWQgdGhhdCB0cmlnZ2VycyB0aGlz
-DQo+ID4gPiA+IGlzc3VlPw0KPiA+ID4gPiBPcg0KPiA+ID4gPiBhIHNwZWNpZmljIG1hY2hpbmUg
-Y29uZmlnIChlLmcuIGxhcmdlIG1lbW9yeSwgc2xvdyBzdG9yYWdlKS4NCj4gPiA+ID4gQXJlDQo+
-ID4gPiA+IHRoZXJlIGxhcmdlIGZyYWdtZW50ZWQgZmlsZXMgaW4gdXNlIChlLmcuIHJhbmRvbWx5
-IHdyaXR0ZW4gVk0NCj4gPiA+ID4gaW1hZ2UNCj4gPiA+ID4gZmlsZXMpPyBUaGVyZSBhcmUgYSBm
-ZXcgZmFjdG9ycyB0aGF0IGNhbiBleGFjZXJiYXRlIHRoZSBpb2VuZA0KPiA+ID4gPiBjaGFpbg0K
-PiA+ID4gPiBsZW5ndGhzLCBzbyBpdCB3b3VsZCBiZSBoYW5keSB0byBoYXZlIHNvbWUgaWRlYSBv
-ZiB3aGF0IGlzDQo+ID4gPiA+IGFjdHVhbGx5DQo+ID4gPiA+IHRyaWdnZXJpbmcgdGhpcyBiZWhh
-dmlvdXIuLi4NCj4gPiA+ID4gDQo+ID4gPiA+IENoZWVycywNCj4gPiA+ID4gDQo+ID4gPiA+IERh
-dmUuDQo+ID4gPiANCj4gPiA+IFdlIGhhdmUgZGlmZmVyZW50IHJlcHJvZHVjZXJzLiBUaGUgY29t
-bW9uIGZlYXR1cmUgYXBwZWFycyB0byBiZQ0KPiA+ID4gdGhlDQo+ID4gPiBuZWVkIGZvciBhIGRl
-Y2VudGx5IGZhc3QgYm94IHdpdGggZmFpcmx5IGxhcmdlIG1lbW9yeSAoMTI4R0IgaW4NCj4gPiA+
-IG9uZQ0KPiA+ID4gY2FzZSwgNDAwR0IgaW4gdGhlIG90aGVyKS4gSXQgaGFzIGJlZW4gcmVwcm9k
-dWNlZCB3aXRoIEhEcywgU1NEcw0KPiA+ID4gYW5kDQo+ID4gPiBOVk1FIHN5c3RlbXMuDQo+ID4g
-PiANCj4gPiA+IE9uIHRoZSAxMjhHQiBib3gsIHdlIGhhZCBpdCBzZXQgdXAgd2l0aCAxMCsgZGlz
-a3MgaW4gYSBKQk9EDQo+ID4gPiBjb25maWd1cmF0aW9uIGFuZCB3ZXJlIHJ1bm5pbmcgdGhlIEFK
-QSBzeXN0ZW0gdGVzdHMuDQo+ID4gPiANCj4gPiA+IE9uIHRoZSA0MDBHQiBib3gsIHdlIHdlcmUg
-anVzdCBzZXJpYWxseSBjcmVhdGluZyBsYXJnZSAoPiA2R0IpDQo+ID4gPiBmaWxlcw0KPiA+ID4g
-dXNpbmcgZmlvIGFuZCB0aGF0IHdhcyBvY2Nhc2lvbmFsbHkgdHJpZ2dlcmluZyB0aGUgaXNzdWUu
-IEhvd2V2ZXINCj4gPiA+IGRvaW5nDQo+ID4gPiBhbiBzdHJhY2Ugb2YgdGhhdCB3b3JrbG9hZCB0
-byBkaXNrIHJlcHJvZHVjZWQgdGhlIHByb2JsZW0gZmFzdGVyDQo+ID4gPiA6LQ0KPiA+ID4gKS4N
-Cj4gPiANCj4gPiBPaywgdGhhdCBtYXRjaGVzIHVwIHdpdGggdGhlICJsb3RzIG9mIGxvZ2ljYWxs
-eSBzZXF1ZW50aWFsIGRpcnR5DQo+ID4gZGF0YSBvbiBhIHNpbmdsZSBpbm9kZSBpbiBjYWNoZSIg
-dmVjdG9yIHRoYXQgaXMgcmVxdWlyZWQgdG8gY3JlYXRlDQo+ID4gcmVhbGx5IGxvbmcgYmlvIGNo
-YWlucyBvbiBpbmRpdmlkdWFsIGlvZW5kcy4NCj4gPiANCj4gPiBDYW4geW91IHRyeSB0aGUgcGF0
-Y2ggYmVsb3cgYW5kIHNlZSBpZiBhZGRyZXNzZXMgdGhlIGlzc3VlPw0KPiA+IA0KPiANCj4gVGhh
-dCBwYXRjaCBkb2VzIHNlZW0gdG8gZml4IHRoZSBzb2Z0IGxvY2t1cHMuDQo+IA0KDQpPb3BzLi4u
-IFN0cmlrZSB0aGF0LCBhcHBhcmVudGx5IG91ciB0ZXN0cyBqdXN0IGhpdCB0aGUgZm9sbG93aW5n
-IHdoZW4NCnJ1bm5pbmcgb24gQVdTIHdpdGggdGhhdCBwYXRjaC4NCg0KW1dlZCBKYW4gIDUgMjA6
-MzQ6NDYgMjAyMl0gd2F0Y2hkb2c6IEJVRzogc29mdCBsb2NrdXAgLSBDUFUjNCBzdHVjayBmb3IN
-CjQ4cyEgW2t3b3JrZXIvNDoxOjMxMzE1XQ0KW1dlZCBKYW4gIDUgMjA6MzQ6NDYgMjAyMl0gTW9k
-dWxlcyBsaW5rZWQgaW46IG5mc3YzIGF1dGhfbmFtZQ0KYnBmX3ByZWxvYWQgeHRfbmF0IHZldGgg
-bmZzX2xheW91dF9mbGV4ZmlsZXMgcnBjc2VjX2dzc19rcmI1IG5mc3Y0DQpkbnNfcmVzb2x2ZXIg
-bmZzaWRtYXAgbmZzIGZzY2FjaGUgbmV0ZnMgZG1fbXVsdGlwYXRoIG5mc2QgYXV0aF9ycGNnc3MN
-Cm5mc19hY2wgbG9ja2QgZ3JhY2Ugc3VucnBjIHh0X01BU1FVRVJBREUgbmZfY29ubnRyYWNrX25l
-dGxpbmsNCnh0X2FkZHJ0eXBlIGJyX25ldGZpbHRlciBicmlkZ2Ugc3RwIGxsYyBvdmVybGF5IHh0
-X3NjdHANCm5mX2Nvbm50cmFja19uZXRiaW9zX25zIG5mX2Nvbm50cmFja19icm9hZGNhc3QgbmZf
-bmF0X2Z0cA0KbmZfY29ubnRyYWNrX2Z0cCB4dF9DVCBpcDZ0X3JwZmlsdGVyIGlwNnRfUkVKRUNU
-IG5mX3JlamVjdF9pcHY2DQppcHRfUkVKRUNUIG5mX3JlamVjdF9pcHY0IHh0X2Nvbm50cmFjayBp
-cDZ0YWJsZV9uYXQgaXA2dGFibGVfbWFuZ2xlDQppcDZ0YWJsZV9zZWN1cml0eSBpcDZ0YWJsZV9y
-YXcgaXB0YWJsZV9uYXQgbmZfbmF0IGlwdGFibGVfbWFuZ2xlDQppcHRhYmxlX3NlY3VyaXR5IGlw
-dGFibGVfcmF3IG5mX2Nvbm50cmFjayBuZl9kZWZyYWdfaXB2NiBuZl9kZWZyYWdfaXB2NA0KaXBf
-c2V0IG5mbmV0bGluayBpcDZ0YWJsZV9maWx0ZXIgaXA2X3RhYmxlcyBpcHRhYmxlX2ZpbHRlciBi
-b25kaW5nIHRscw0KaXBtaV9tc2doYW5kbGVyIGludGVsX3JhcGxfbXNyIGludGVsX3JhcGxfY29t
-bW9uIGlzc3RfaWZfY29tbW9uIG5maXQNCmxpYm52ZGltbSBjcmN0MTBkaWZfcGNsbXVsIGNyYzMy
-X3BjbG11bCBnaGFzaF9jbG11bG5pX2ludGVsIGkyY19waWl4NA0KcmFwbCBpcF90YWJsZXMgeGZz
-IG52bWUgY3JjMzJjX2ludGVsIGVuYSBudm1lX2NvcmUNCltXZWQgSmFuICA1IDIwOjM0OjQ2IDIw
-MjJdIENQVTogNCBQSUQ6IDMxMzE1IENvbW06IGt3b3JrZXIvNDoxIEtkdW1wOg0KbG9hZGVkIFRh
-aW50ZWQ6IEcgICAgICAgIFcgICAgTCAgICA1LjE1LjEyLTIwMC5wZC4xNzcxOC5lbDcueDg2XzY0
-ICMxDQpbV2VkIEphbiAgNSAyMDozNDo0NiAyMDIyXSBIYXJkd2FyZSBuYW1lOiBBbWF6b24gRUMy
-IHI1Yi4yeGxhcmdlLywgQklPUw0KMS4wIDEwLzE2LzIwMTcNCltXZWQgSmFuICA1IDIwOjM0OjQ2
-IDIwMjJdIFdvcmtxdWV1ZTogeGZzLWNvbnYvbnZtZTFuMSB4ZnNfZW5kX2lvIFt4ZnNdDQpbV2Vk
-IEphbiAgNSAyMDozNDo0NiAyMDIyXSBSSVA6DQowMDEwOl9yYXdfc3Bpbl91bmxvY2tfaXJxcmVz
-dG9yZSsweDFjLzB4MjANCltXZWQgSmFuICA1IDIwOjM0OjQ2IDIwMjJdIENvZGU6IDkyIGNjIGNj
-IGNjIGNjIGNjIGNjIGNjIGNjIGNjIGNjIGNjIGNjDQpjYyAwZiAxZiA0NCAwMCAwMCBjNiAwNyAw
-MCAwZiAxZiA0MCAwMCBmNyBjNiAwMCAwMiAwMCAwMCA3NSAwMSBjMyBmYiA2Ng0KMGYgMWYgNDQg
-MDAgMDAgPGMzPiAwZiAxZiAwMCAwZiAxZiA0NCAwMCAwMCA4YiAwNyBhOSBmZiAwMSAwMCAwMCA3
-NSAyMQ0KYjggMDAgMDIgMDANCltXZWQgSmFuICA1IDIwOjM0OjQ2IDIwMjJdIFJTUDogMDAxODpm
-ZmZmYjk3Mzg5ODNmZDEwIEVGTEFHUzogMDAwMDAyMDYNCltXZWQgSmFuICA1IDIwOjM0OjQ2IDIw
-MjJdIFJBWDogMDAwMDAwMDAwMDAwMDAwMSBSQlg6IDAwMDAwMDAwMDAwMDBkYjANClJDWDogZmZm
-ZmZmZmZmZmZmZjkwZg0KW1dlZCBKYW4gIDUgMjA6MzQ6NDYgMjAyMl0gUkRYOiBmZmZmZmZmZmEz
-ODA4OTM4IFJTSTogMDAwMDAwMDAwMDAwMDIwNg0KUkRJOiBmZmZmZmZmZmEzODA4OTMwDQpbV2Vk
-IEphbiAgNSAyMDozNDo0NiAyMDIyXSBSQlA6IDAwMDAwMDAwMDAwMDAyMDYgUjA4OiBmZmZmYjk3
-Mzg2MDFmYzgwDQpSMDk6IGZmZmZiOTczODYwMWZjODANCltXZWQgSmFuICA1IDIwOjM0OjQ2IDIw
-MjJdIFIxMDogMDAwMDAwMDAwMDAwMDAwMCBSMTE6IDAwMDAwMDAwMDAwMDAwMDANClIxMjogZmZm
-ZmZmZmZhMzgwODkzMA0KW1dlZCBKYW4gIDUgMjA6MzQ6NDYgMjAyMl0gUjEzOiBmZmZmZGRhM2Ri
-NDBkZDQwIFIxNDogZmZmZjkzMGUxYzYyZjUzOA0KUjE1OiBmZmZmZGRhM2RiNDBkZDQwDQpbV2Vk
-IEphbiAgNSAyMDozNDo0NiAyMDIyXSBGUzogIDAwMDAwMDAwMDAwMDAwMDAoMDAwMCkNCkdTOmZm
-ZmY5MzE2NGRkMDAwMDAoMDAwMCkga25sR1M6MDAwMDAwMDAwMDAwMDAwMA0KW1dlZCBKYW4gIDUg
-MjA6MzQ6NDYgMjAyMl0gQ1M6ICAwMDEwIERTOiAwMDAwIEVTOiAwMDAwIENSMDoNCjAwMDAwMDAw
-ODAwNTAwMzMNCltXZWQgSmFuICA1IDIwOjM0OjQ2IDIwMjJdIENSMjogMDAwMDdmZmU0MWY1YzA4
-MCBDUjM6IDAwMDAwMDA1YTU4MTAwMDENCkNSNDogMDAwMDAwMDAwMDc3MDZlMA0KW1dlZCBKYW4g
-IDUgMjA6MzQ6NDYgMjAyMl0gRFIwOiAwMDAwMDAwMDAwMDAwMDAwIERSMTogMDAwMDAwMDAwMDAw
-MDAwMA0KRFIyOiAwMDAwMDAwMDAwMDAwMDAwDQpbV2VkIEphbiAgNSAyMDozNDo0NiAyMDIyXSBE
-UjM6IDAwMDAwMDAwMDAwMDAwMDAgRFI2OiAwMDAwMDAwMGZmZmUwZmYwDQpEUjc6IDAwMDAwMDAw
-MDAwMDA0MDANCltXZWQgSmFuICA1IDIwOjM0OjQ2IDIwMjJdIFBLUlU6IDU1NTU1NTU0DQpbV2Vk
-IEphbiAgNSAyMDozNDo0NiAyMDIyXSBDYWxsIFRyYWNlOg0KW1dlZCBKYW4gIDUgMjA6MzQ6NDYg
-MjAyMl0gIDxUQVNLPg0KW1dlZCBKYW4gIDUgMjA6MzQ6NDYgMjAyMl0gIHdha2VfdXBfcGFnZV9i
-aXQrMHg3OS8weGUwDQpbV2VkIEphbiAgNSAyMDozNDo0NiAyMDIyXSAgZW5kX3BhZ2Vfd3JpdGVi
-YWNrKzB4YzQvMHhmMA0KW1dlZCBKYW4gIDUgMjA6MzQ6NDYgMjAyMl0gIGlvbWFwX2ZpbmlzaF9p
-b2VuZCsweDEzMC8weDI2MA0KW1dlZCBKYW4gIDUgMjA6MzQ6NDYgMjAyMl0gIGlvbWFwX2Zpbmlz
-aF9pb2VuZHMrMHg3MS8weDkwDQpbV2VkIEphbiAgNSAyMDozNDo0NiAyMDIyXSAgeGZzX2VuZF9p
-b2VuZCsweDVhLzB4MTIwIFt4ZnNdDQpbV2VkIEphbiAgNSAyMDozNDo0NiAyMDIyXSAgeGZzX2Vu
-ZF9pbysweGExLzB4YzAgW3hmc10NCltXZWQgSmFuICA1IDIwOjM0OjQ2IDIwMjJdICBwcm9jZXNz
-X29uZV93b3JrKzB4MWYxLzB4MzkwDQpbV2VkIEphbiAgNSAyMDozNDo0NiAyMDIyXSAgd29ya2Vy
-X3RocmVhZCsweDUzLzB4M2UwDQpbV2VkIEphbiAgNSAyMDozNDo0NiAyMDIyXSAgPyBwcm9jZXNz
-X29uZV93b3JrKzB4MzkwLzB4MzkwDQpbV2VkIEphbiAgNSAyMDozNDo0NiAyMDIyXSAga3RocmVh
-ZCsweDEyNy8weDE1MA0KW1dlZCBKYW4gIDUgMjA6MzQ6NDYgMjAyMl0gID8gc2V0X2t0aHJlYWRf
-c3RydWN0KzB4NDAvMHg0MA0KW1dlZCBKYW4gIDUgMjA6MzQ6NDYgMjAyMl0gIHJldF9mcm9tX2Zv
-cmsrMHgyMi8weDMwDQpbV2VkIEphbiAgNSAyMDozNDo0NiAyMDIyXSAgPC9UQVNLPg0KDQoNClNv
-IGl0IHdhcyBoYXJkZXIgdG8gaGl0LCBidXQgd2Ugc3RpbGwgZGlkIGV2ZW50dWFsbHkuDQoNCi0t
-IA0KVHJvbmQgTXlrbGVidXN0DQpDVE8sIEhhbW1lcnNwYWNlIEluYw0KNDk4NCBFbCBDYW1pbm8g
-UmVhbCwgU3VpdGUgMjA4DQpMb3MgQWx0b3MsIENBIDk0MDIyDQrigIsNCnd3dy5oYW1tZXIuc3Bh
-Y2UNCg0K
+On Wed, Jan 5, 2022 at 10:53 AM Darrick J. Wong <djwong@kernel.org> wrote:
+>
+> On Sun, Dec 26, 2021 at 10:34:38PM +0800, Shiyang Ruan wrote:
+> > Introduce xfs_notify_failure.c to handle failure related works, such as
+> > implement ->notify_failure(), register/unregister dax holder in xfs, and
+> > so on.
+> >
+> > If the rmap feature of XFS enabled, we can query it to find files and
+> > metadata which are associated with the corrupt data.  For now all we do
+> > is kill processes with that file mapped into their address spaces, but
+> > future patches could actually do something about corrupt metadata.
+> >
+> > After that, the memory failure needs to notify the processes who are
+> > using those files.
+> >
+> > Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+> > ---
+> >  fs/xfs/Makefile             |   1 +
+> >  fs/xfs/xfs_buf.c            |  15 +++
+> >  fs/xfs/xfs_fsops.c          |   3 +
+> >  fs/xfs/xfs_mount.h          |   1 +
+> >  fs/xfs/xfs_notify_failure.c | 189 ++++++++++++++++++++++++++++++++++++
+> >  fs/xfs/xfs_notify_failure.h |  10 ++
+> >  6 files changed, 219 insertions(+)
+> >  create mode 100644 fs/xfs/xfs_notify_failure.c
+> >  create mode 100644 fs/xfs/xfs_notify_failure.h
+> >
+> > diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+> > index 04611a1068b4..389970b3e13b 100644
+> > --- a/fs/xfs/Makefile
+> > +++ b/fs/xfs/Makefile
+> > @@ -84,6 +84,7 @@ xfs-y                               += xfs_aops.o \
+> >                                  xfs_message.o \
+> >                                  xfs_mount.o \
+> >                                  xfs_mru_cache.o \
+> > +                                xfs_notify_failure.o \
+> >                                  xfs_pwork.o \
+> >                                  xfs_reflink.o \
+> >                                  xfs_stats.o \
+> > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> > index bbb0fbd34e64..d0df7604fa9e 100644
+> > --- a/fs/xfs/xfs_buf.c
+> > +++ b/fs/xfs/xfs_buf.c
+> > @@ -19,6 +19,7 @@
+> >  #include "xfs_errortag.h"
+> >  #include "xfs_error.h"
+> >  #include "xfs_ag.h"
+> > +#include "xfs_notify_failure.h"
+> >
+> >  static struct kmem_cache *xfs_buf_cache;
+> >
+> > @@ -1892,6 +1893,8 @@ xfs_free_buftarg(
+> >       list_lru_destroy(&btp->bt_lru);
+> >
+> >       blkdev_issue_flush(btp->bt_bdev);
+> > +     if (btp->bt_daxdev)
+> > +             dax_unregister_holder(btp->bt_daxdev);
+> >       fs_put_dax(btp->bt_daxdev);
+> >
+> >       kmem_free(btp);
+> > @@ -1946,6 +1949,18 @@ xfs_alloc_buftarg(
+> >       btp->bt_dev =  bdev->bd_dev;
+> >       btp->bt_bdev = bdev;
+> >       btp->bt_daxdev = fs_dax_get_by_bdev(bdev, &btp->bt_dax_part_off);
+> > +     if (btp->bt_daxdev) {
+> > +             dax_write_lock(btp->bt_daxdev);
+> > +             if (dax_get_holder(btp->bt_daxdev)) {
+> > +                     dax_write_unlock(btp->bt_daxdev);
+> > +                     xfs_err(mp, "DAX device already in use?!");
+> > +                     goto error_free;
+> > +             }
+> > +
+> > +             dax_register_holder(btp->bt_daxdev, mp,
+> > +                             &xfs_dax_holder_operations);
+> > +             dax_write_unlock(btp->bt_daxdev);
+> > +     }
+> >
+> >       /*
+> >        * Buffer IO error rate limiting. Limit it to no more than 10 messages
+> > diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> > index 33e26690a8c4..d4d36c5bef11 100644
+> > --- a/fs/xfs/xfs_fsops.c
+> > +++ b/fs/xfs/xfs_fsops.c
+> > @@ -542,6 +542,9 @@ xfs_do_force_shutdown(
+> >       } else if (flags & SHUTDOWN_CORRUPT_INCORE) {
+> >               tag = XFS_PTAG_SHUTDOWN_CORRUPT;
+> >               why = "Corruption of in-memory data";
+> > +     } else if (flags & SHUTDOWN_CORRUPT_ONDISK) {
+> > +             tag = XFS_PTAG_SHUTDOWN_CORRUPT;
+> > +             why = "Corruption of on-disk metadata";
+> >       } else {
+> >               tag = XFS_PTAG_SHUTDOWN_IOERROR;
+> >               why = "Metadata I/O Error";
+> > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> > index 00720a02e761..47ff4ac53c4c 100644
+> > --- a/fs/xfs/xfs_mount.h
+> > +++ b/fs/xfs/xfs_mount.h
+> > @@ -435,6 +435,7 @@ void xfs_do_force_shutdown(struct xfs_mount *mp, int flags, char *fname,
+> >  #define SHUTDOWN_LOG_IO_ERROR        0x0002  /* write attempt to the log failed */
+> >  #define SHUTDOWN_FORCE_UMOUNT        0x0004  /* shutdown from a forced unmount */
+> >  #define SHUTDOWN_CORRUPT_INCORE      0x0008  /* corrupt in-memory data structures */
+> > +#define SHUTDOWN_CORRUPT_ONDISK      0x0010  /* corrupt metadata on device */
+> >
+> >  #define XFS_SHUTDOWN_STRINGS \
+> >       { SHUTDOWN_META_IO_ERROR,       "metadata_io" }, \
+> > diff --git a/fs/xfs/xfs_notify_failure.c b/fs/xfs/xfs_notify_failure.c
+> > new file mode 100644
+> > index 000000000000..a87bd08365f4
+> > --- /dev/null
+> > +++ b/fs/xfs/xfs_notify_failure.c
+> > @@ -0,0 +1,189 @@
+> > +// SPDX-License-Identifier: GPL-2.0
+> > +/*
+> > + * Copyright (c) 2021 Fujitsu.  All Rights Reserved.
+> > + */
+> > +
+> > +#include "xfs.h"
+> > +#include "xfs_shared.h"
+> > +#include "xfs_format.h"
+> > +#include "xfs_log_format.h"
+> > +#include "xfs_trans_resv.h"
+> > +#include "xfs_mount.h"
+> > +#include "xfs_alloc.h"
+> > +#include "xfs_bit.h"
+> > +#include "xfs_btree.h"
+> > +#include "xfs_inode.h"
+> > +#include "xfs_icache.h"
+> > +#include "xfs_rmap.h"
+> > +#include "xfs_rmap_btree.h"
+> > +#include "xfs_rtalloc.h"
+> > +#include "xfs_trans.h"
+> > +
+> > +#include <linux/mm.h>
+> > +#include <linux/dax.h>
+> > +
+> > +struct failure_info {
+> > +     xfs_agblock_t           startblock;
+> > +     xfs_filblks_t           blockcount;
+> > +     int                     mf_flags;
+>
+> Why is blockcount a 64-bit quantity, when the failure information is
+> dealt with on a per-AG basis?  I think "xfs_extlen_t blockcount" should
+> be large enough here.  (I'll get back to this further down.)
+>
+> > +};
+> > +
+> > +static pgoff_t
+> > +xfs_failure_pgoff(
+> > +     struct xfs_mount                *mp,
+> > +     const struct xfs_rmap_irec      *rec,
+> > +     const struct failure_info       *notify)
+> > +{
+> > +     uint64_t pos = rec->rm_offset;
+>
+> Nit: indenting ^^^^^ here.
+>
+> > +
+> > +     if (notify->startblock > rec->rm_startblock)
+> > +             pos += XFS_FSB_TO_B(mp,
+> > +                             notify->startblock - rec->rm_startblock);
+> > +     return pos >> PAGE_SHIFT;
+> > +}
+> > +
+> > +static unsigned long
+> > +xfs_failure_pgcnt(
+> > +     struct xfs_mount                *mp,
+> > +     const struct xfs_rmap_irec      *rec,
+> > +     const struct failure_info       *notify)
+> > +{
+> > +     xfs_agblock_t start_rec = rec->rm_startblock;
+> > +     xfs_agblock_t end_rec = rec->rm_startblock + rec->rm_blockcount;
+> > +     xfs_agblock_t start_notify = notify->startblock;
+> > +     xfs_agblock_t end_notify = notify->startblock + notify->blockcount;
+> > +     xfs_agblock_t start_cross = max(start_rec, start_notify);
+> > +     xfs_agblock_t end_cross = min(end_rec, end_notify);
+>
+> Indenting and rather more local variables than we need?
+>
+> static unsigned long
+> xfs_failure_pgcnt(
+>         struct xfs_mount                *mp,
+>         const struct xfs_rmap_irec      *rec,
+>         const struct failure_info       *notify)
+> {
+>         xfs_agblock_t                   end_rec;
+>         xfs_agblock_t                   end_notify;
+>         xfs_agblock_t                   start_cross;
+>         xfs_agblock_t                   end_cross;
+>
+>         start_cross = max(rec->rm_startblock, notify->startblock);
+>
+>         end_rec = rec->rm_startblock + rec->rm_blockcount;
+>         end_notify = notify->startblock + notify->blockcount;
+>         end_cross = min(end_rec, end_notify);
+>
+>         return XFS_FSB_TO_B(mp, end_cross - start_cross) >> PAGE_SHIFT;
+> }
+>
+> > +
+> > +     return XFS_FSB_TO_B(mp, end_cross - start_cross) >> PAGE_SHIFT;
+> > +}
+> > +
+> > +static int
+> > +xfs_dax_failure_fn(
+> > +     struct xfs_btree_cur            *cur,
+> > +     const struct xfs_rmap_irec      *rec,
+> > +     void                            *data)
+> > +{
+> > +     struct xfs_mount                *mp = cur->bc_mp;
+> > +     struct xfs_inode                *ip;
+> > +     struct address_space            *mapping;
+> > +     struct failure_info             *notify = data;
+> > +     int                             error = 0;
+> > +
+> > +     if (XFS_RMAP_NON_INODE_OWNER(rec->rm_owner) ||
+> > +         (rec->rm_flags & (XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK))) {
+> > +             /* TODO check and try to fix metadata */
+> > +             xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_ONDISK);
+> > +             return -EFSCORRUPTED;
+> > +     }
+> > +
+> > +     /* Get files that incore, filter out others that are not in use. */
+> > +     error = xfs_iget(mp, cur->bc_tp, rec->rm_owner, XFS_IGET_INCORE,
+> > +                      0, &ip);
+> > +     /* Continue the rmap query if the inode isn't incore */
+> > +     if (error == -ENODATA)
+> > +             return 0;
+> > +     if (error)
+> > +             return error;
+> > +
+> > +     mapping = VFS_I(ip)->i_mapping;
+> > +     if (IS_ENABLED(CONFIG_MEMORY_FAILURE)) {
+>
+> Is there a situation where we can receive media failure notices from DAX
+> but CONFIG_MEMORY_FAILURE is not enabled?  (I think the answer is yes?)
+
+Good catch, yes, I was planning to reuse this notification
+infrastructure for the "whoops you ripped out your CXL card that was
+being used with FSDAX" case. Although, if someone builds the kernel
+with CONFIG_MEMORY_FAILURE=n then I think a lack of notification for
+that case is to be expected? Perhaps CONFIG_FSDAX should just depend
+on CONFIG_MEMORY_FAILURE when that "hot remove" failure case is added.
+For now, CONFIG_MEMORY_FAILURE is the only source of errors.
+
+>
+> > +             pgoff_t off = xfs_failure_pgoff(mp, rec, notify);
+> > +             unsigned long cnt = xfs_failure_pgcnt(mp, rec, notify);
+> > +
+> > +             error = mf_dax_kill_procs(mapping, off, cnt, notify->mf_flags);
+> > +     }
+>
+> If so, then we ought to do /something/ besides silently dropping the
+> error, right?  Even if that something is rudely shutting down the fs,
+> like we do for attr/bmbt mappings above?
+>
+> What I'm getting at is that I think this function should be:
+>
+> #if IS_ENABLED(CONFIG_MEMORY_FAILURE)
+> static int
+> xfs_dax_failure_fn(
+>         struct xfs_btree_cur            *cur,
+>         const struct xfs_rmap_irec      *rec,
+>         void                            *data)
+> {
+>         /* shut down if attr/bmbt record like above */
+>
+>         error = xfs_iget(...);
+>         if (error == -ENODATA)
+>                 return 0;
+>         if (error)
+>                 return error;
+>
+>         off = xfs_failure_pgoff(mp, rec, notify);
+>         cnt = xfs_failure_pgcnt(mp, rec, notify);
+>
+>         error = mf_dax_kill_procs(mapping, off, cnt, notify->mf_flags);
+>         xfs_irele(ip);
+>         return error;
+> }
+> #else
+> static int
+> xfs_dax_failure_fn(
+>         struct xfs_btree_cur            *cur,
+>         const struct xfs_rmap_irec      *rec,
+>         void                            *data)
+> {
+>         /* No other option besides shutting down the fs. */
+>         xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_ONDISK);
+>         return -EFSCORRUPTED;
+> }
+> #endif /* CONFIG_MEMORY_FAILURE */
+
+Oh, yeah that makes sense to me.
