@@ -2,218 +2,201 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68B6AC433EF
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Jan 2022 00:28:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1011C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Jan 2022 00:42:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231168AbiAEA2Z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Jan 2022 19:28:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50982 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236756AbiAEA2W (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Jan 2022 19:28:22 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0AFAEC061761
-        for <linux-xfs@vger.kernel.org>; Tue,  4 Jan 2022 16:28:22 -0800 (PST)
+        id S235357AbiAEAmI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Jan 2022 19:42:08 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:44652 "EHLO
+        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232884AbiAEAmI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Jan 2022 19:42:08 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 97A96B810B6
-        for <linux-xfs@vger.kernel.org>; Wed,  5 Jan 2022 00:28:20 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58F31C36AEB;
-        Wed,  5 Jan 2022 00:28:19 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 09BC7B81851
+        for <linux-xfs@vger.kernel.org>; Wed,  5 Jan 2022 00:42:07 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC139C36AEB;
+        Wed,  5 Jan 2022 00:42:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1641342499;
-        bh=laPcnHxa90FRaU5C0YTPlDlCeCQZcsiKalmiHNMUuAg=;
+        s=k20201202; t=1641343325;
+        bh=WCU5IvukzFBEPIhAvOkHrXlcKxhXNJWstY3mH5ij0QQ=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Lrc2Jp6MQwTJ1ExvjuTVJ5Y/XO+Z/QIQXVJ50B0SVxSshwiRihaL1/9zwxhtKYaFo
-         +tLH4LogqSJO+bY7Bidmh5rGETgIkr6RXRs2jZKbyCMIWF59pvwXoNni8B30rKyzU5
-         TmSrq9O6IBLLr9aHh33ccNiANVsqmZ7v8IBFweB3AjDTIWI67or6P4IKzHOy1VXG3T
-         JSUp71/7LB2nv9xEBPsiPDgRuNLvTBVAvEdeLkqa1DQYT9r0ZkIORWONlGI8IZtlqu
-         orIZN/AkOd6XWD7TpnkG5UwZ29+I8ezfDCFJbEyxbYj3EabJIFSdtVmFtqBc8w36dk
-         HgKIZzRzz3gYA==
-Date:   Tue, 4 Jan 2022 16:28:19 -0800
+        b=P6UvlHkvvyimcl/Yy655iN+r1GZYwZBohf1QJ4v/ik7NGY4W+H8k+6RPx63g+pzPi
+         j4MeMUFtZB8DkVoRzOLi7kC2lYKLb9qZi3W64n2j6NVx+uPnVuqk2GFkvlwvmrp5qV
+         4oKStmLVvVsW19/SMCg+xCx+LEiVdtAyXOXgKdEJIFr5gjrGhbSVNYrd3RLnUxpMX8
+         qiAfQ8xbE7XJAUhvsAALYTZyGxJ2IGEJVbsIg5/PJDp246qHfDWdRGsxtjv7T1V/GQ
+         FEbz9pQbECxFCFls3U016i79d7It3U6GIwD+vuLgeTjtvgLniGJrzuegOlG+SI+3t8
+         UVUMdrwo1cCRA==
+Date:   Tue, 4 Jan 2022 16:42:05 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Chandan Babu R <chandan.babu@oracle.com>
 Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
-Subject: Re: [PATCH V4 14/16] xfs: Enable bulkstat ioctl to support 64-bit
- per-inode extent counters
-Message-ID: <20220105002819.GQ31583@magnolia>
+Subject: Re: [PATCH V4 11/16] xfs: Introduce macros to represent new maximum
+ extent counts for data/attr forks
+Message-ID: <20220105004205.GR31583@magnolia>
 References: <20211214084519.759272-1-chandan.babu@oracle.com>
- <20211214084519.759272-15-chandan.babu@oracle.com>
+ <20211214084519.759272-12-chandan.babu@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211214084519.759272-15-chandan.babu@oracle.com>
+In-Reply-To: <20211214084519.759272-12-chandan.babu@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 14, 2021 at 02:15:17PM +0530, Chandan Babu R wrote:
-> The following changes are made to enable userspace to obtain 64-bit extent
-> counters,
-> 1. Carve out a new 64-bit field xfs_bulkstat->bs_extents64 from
->    xfs_bulkstat->bs_pad[] to hold 64-bit extent counter.
-> 2. Define the new flag XFS_BULK_IREQ_BULKSTAT for userspace to indicate that
->    it is capable of receiving 64-bit extent counters.
+On Tue, Dec 14, 2021 at 02:15:14PM +0530, Chandan Babu R wrote:
+> This commit defines new macros to represent maximum extent counts allowed by
+> filesystems which have support for large per-inode extent counters.
 > 
-> Suggested-by: Darrick J. Wong <djwong@kernel.org>
 > Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
 > ---
->  fs/xfs/libxfs/xfs_fs.h | 12 ++++++++----
->  fs/xfs/xfs_ioctl.c     |  3 +++
->  fs/xfs/xfs_itable.c    | 24 +++++++++++++++++++++++-
->  fs/xfs/xfs_itable.h    |  2 ++
->  fs/xfs/xfs_iwalk.h     |  7 +++++--
->  5 files changed, 41 insertions(+), 7 deletions(-)
+>  fs/xfs/libxfs/xfs_bmap.c       |  8 +++-----
+>  fs/xfs/libxfs/xfs_bmap_btree.c |  2 +-
+>  fs/xfs/libxfs/xfs_format.h     |  8 +++++---
+>  fs/xfs/libxfs/xfs_inode_buf.c  |  3 ++-
+>  fs/xfs/libxfs/xfs_inode_fork.c |  2 +-
+>  fs/xfs/libxfs/xfs_inode_fork.h | 19 +++++++++++++++----
+>  6 files changed, 27 insertions(+), 15 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> index 42bc39501d81..4e12530eb518 100644
-> --- a/fs/xfs/libxfs/xfs_fs.h
-> +++ b/fs/xfs/libxfs/xfs_fs.h
-> @@ -393,7 +393,7 @@ struct xfs_bulkstat {
->  	uint32_t	bs_extsize_blks; /* extent size hint, blocks	*/
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 4113622e9733..0ce58e4a9c44 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -61,10 +61,8 @@ xfs_bmap_compute_maxlevels(
+>  	int		sz;		/* root block size */
 >  
->  	uint32_t	bs_nlink;	/* number of links		*/
-> -	uint32_t	bs_extents;	/* number of extents		*/
-> +	uint32_t	bs_extents;	/* 32-bit data fork extent counter */
->  	uint32_t	bs_aextents;	/* attribute number of extents	*/
->  	uint16_t	bs_version;	/* structure version		*/
->  	uint16_t	bs_forkoff;	/* inode fork offset in bytes	*/
-> @@ -402,8 +402,9 @@ struct xfs_bulkstat {
->  	uint16_t	bs_checked;	/* checked inode metadata	*/
->  	uint16_t	bs_mode;	/* type and mode		*/
->  	uint16_t	bs_pad2;	/* zeroed			*/
-> +	uint64_t	bs_extents64;	/* 64-bit data fork extent counter */
+>  	/*
+> -	 * The maximum number of extents in a file, hence the maximum number of
+> -	 * leaf entries, is controlled by the size of the on-disk extent count,
+> -	 * either a signed 32-bit number for the data fork, or a signed 16-bit
+> -	 * number for the attr fork.
+> +	 * The maximum number of extents in a fork, hence the maximum number of
+> +	 * leaf entries, is controlled by the size of the on-disk extent count.
+>  	 *
+>  	 * Note that we can no longer assume that if we are in ATTR1 that the
+>  	 * fork offset of all the inodes will be
+> @@ -74,7 +72,7 @@ xfs_bmap_compute_maxlevels(
+>  	 * ATTR2 we have to assume the worst case scenario of a minimum size
+>  	 * available.
+>  	 */
+> -	maxleafents = xfs_iext_max_nextents(whichfork);
+> +	maxleafents = xfs_iext_max_nextents(xfs_has_nrext64(mp), whichfork);
+>  	if (whichfork == XFS_DATA_FORK)
+>  		sz = XFS_BMDR_SPACE_CALC(MINDBTPTRS);
+>  	else
+> diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+> index 453309fc85f2..e8d21d69b9ff 100644
+> --- a/fs/xfs/libxfs/xfs_bmap_btree.c
+> +++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+> @@ -611,7 +611,7 @@ xfs_bmbt_maxlevels_ondisk(void)
+>  	minrecs[1] = xfs_bmbt_block_maxrecs(blocklen, false) / 2;
 >  
-> -	uint64_t	bs_pad[7];	/* zeroed			*/
-> +	uint64_t	bs_pad[6];	/* zeroed			*/
->  };
->  
->  #define XFS_BULKSTAT_VERSION_V1	(1)
-> @@ -484,8 +485,11 @@ struct xfs_bulk_ireq {
->   */
->  #define XFS_BULK_IREQ_SPECIAL	(1 << 1)
->  
-> -#define XFS_BULK_IREQ_FLAGS_ALL	(XFS_BULK_IREQ_AGNO | \
-> -				 XFS_BULK_IREQ_SPECIAL)
-> +#define XFS_BULK_IREQ_NREXT64	(1 << 2)
-> +
-> +#define XFS_BULK_IREQ_FLAGS_ALL	(XFS_BULK_IREQ_AGNO |	 \
-> +				 XFS_BULK_IREQ_SPECIAL | \
-> +				 XFS_BULK_IREQ_NREXT64)
->  
->  /* Operate on the root directory inode. */
->  #define XFS_BULK_IREQ_SPECIAL_ROOT	(1)
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 174cd8950cb6..d9e9a805b67b 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -893,6 +893,9 @@ xfs_bulk_ireq_setup(
->  	if (XFS_INO_TO_AGNO(mp, breq->startino) >= mp->m_sb.sb_agcount)
->  		return -ECANCELED;
->  
-> +	if (hdr->flags & XFS_BULK_IREQ_NREXT64)
-> +		breq->flags |= XFS_IBULK_NREXT64;
-> +
->  	return 0;
+>  	/* One extra level for the inode root. */
+> -	return xfs_btree_compute_maxlevels(minrecs, MAXEXTNUM) + 1;
+> +	return xfs_btree_compute_maxlevels(minrecs, XFS_MAX_EXTCNT_DATA_FORK) + 1;
 >  }
 >  
-> diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-> index c08c79d9e311..53ec0afebdc9 100644
-> --- a/fs/xfs/xfs_itable.c
-> +++ b/fs/xfs/xfs_itable.c
-> @@ -20,6 +20,7 @@
->  #include "xfs_icache.h"
->  #include "xfs_health.h"
->  #include "xfs_trans.h"
-> +#include "xfs_errortag.h"
+>  /*
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index 9934c320bf01..eff86f6c4c99 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -873,9 +873,11 @@ enum xfs_dinode_fmt {
+>  /*
+>   * Max values for extlen, extnum, aextnum.
+>   */
+> -#define	MAXEXTLEN	((xfs_extlen_t)0x001fffff)	/* 21 bits */
+> -#define	MAXEXTNUM	((xfs_extnum_t)0x7fffffff)	/* signed int */
+> -#define	MAXAEXTNUM	((xfs_aextnum_t)0x7fff)		/* signed short */
+> +#define	MAXEXTLEN			((xfs_extlen_t)0x1fffff)	/* 21 bits */
+> +#define XFS_MAX_EXTCNT_DATA_FORK	((xfs_extnum_t)0xffffffffffff)	/* Unsigned 48-bits */
+> +#define XFS_MAX_EXTCNT_ATTR_FORK	((xfs_aextnum_t)0xffffffff)	/* Unsigned 32-bits */
+> +#define XFS_MAX_EXTCNT_DATA_FORK_OLD	((xfs_extnum_t)0x7fffffff)	/* Signed 32-bits */
+> +#define XFS_MAX_EXTCNT_ATTR_FORK_OLD	((xfs_aextnum_t)0x7fff)		/* Signed 16-bits */
+
+Could you change the #define value to a shift and subtract like you do
+for MAXEXTLEN^WXFS_MAX_BMBT_EXTLEN in patch 16?
+
+e.g.
+
+#define XFS_MAX_EXTCNT_DATA_FORK	((xfs_extnum_t)((1ULL << 48) - 1))
+
+Also, you might want to document briefly in this header file why it is
+that the bmbt is limited to 2^48 extents even though the dinode fields
+are 64 bits wide and there can be up to 2^54 blocks mapped by a fork.
+ISTR the reason is to avoid having the bmbt cursor cache have to handle
+a 12-level btree or something, right?
+
+(Sorry, it's been a while...)
+
 >  
 >  /*
->   * Bulk Stat
-> @@ -64,6 +65,7 @@ xfs_bulkstat_one_int(
->  	struct xfs_inode	*ip;		/* incore inode pointer */
->  	struct inode		*inode;
->  	struct xfs_bulkstat	*buf = bc->buf;
-> +	xfs_extnum_t		nextents;
->  	int			error = -EINVAL;
+>   * Inode minimum and maximum sizes.
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> index 860d32816909..34f360a38603 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> @@ -361,7 +361,8 @@ xfs_dinode_verify_fork(
+>  			return __this_address;
+>  		break;
+>  	case XFS_DINODE_FMT_BTREE:
+> -		max_extents = xfs_iext_max_nextents(whichfork);
+> +		max_extents = xfs_iext_max_nextents(xfs_dinode_has_nrext64(dip),
+> +					whichfork);
+>  		if (di_nextents > max_extents)
+>  			return __this_address;
+>  		break;
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> index ce690abe5dce..a3a3b54f9c55 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+> @@ -746,7 +746,7 @@ xfs_iext_count_may_overflow(
+>  	if (whichfork == XFS_COW_FORK)
+>  		return 0;
 >  
->  	if (xfs_internal_inum(mp, ino))
-> @@ -102,7 +104,27 @@ xfs_bulkstat_one_int(
+> -	max_exts = xfs_iext_max_nextents(whichfork);
+> +	max_exts = xfs_iext_max_nextents(xfs_inode_has_nrext64(ip), whichfork);
 >  
->  	buf->bs_xflags = xfs_ip2xflags(ip);
->  	buf->bs_extsize_blks = ip->i_extsize;
-> -	buf->bs_extents = xfs_ifork_nextents(&ip->i_df);
-> +
-> +	nextents = xfs_ifork_nextents(&ip->i_df);
-> +	if (!(bc->breq->flags & XFS_IBULK_NREXT64)) {
-> +		xfs_extnum_t max_nextents = XFS_MAX_EXTCNT_DATA_FORK_OLD;
-> +
-> +		if (unlikely(XFS_TEST_ERROR(false, mp,
-> +				XFS_ERRTAG_REDUCE_MAX_IEXTENTS)))
-> +			max_nextents = 10;
-> +
-> +		if (nextents > max_nextents) {
-> +			xfs_iunlock(ip, XFS_ILOCK_SHARED);
-> +			xfs_irele(ip);
-> +			error = -EOVERFLOW;
-> +			goto out;
-> +		}
-> +
-> +		buf->bs_extents = nextents;
-> +	} else {
-> +		buf->bs_extents64 = nextents;
-> +	}
-> +
->  	xfs_bulkstat_health(ip, buf);
->  	buf->bs_aextents = xfs_ifork_nextents(ip->i_afp);
->  	buf->bs_forkoff = XFS_IFORK_BOFF(ip);
-> diff --git a/fs/xfs/xfs_itable.h b/fs/xfs/xfs_itable.h
-> index 7078d10c9b12..a561acd95383 100644
-> --- a/fs/xfs/xfs_itable.h
-> +++ b/fs/xfs/xfs_itable.h
-> @@ -19,6 +19,8 @@ struct xfs_ibulk {
->  /* Only iterate within the same AG as startino */
->  #define XFS_IBULK_SAME_AG	(XFS_IWALK_SAME_AG)
+>  	if (XFS_TEST_ERROR(false, ip->i_mount, XFS_ERRTAG_REDUCE_MAX_IEXTENTS))
+>  		max_exts = 10;
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+> index 4a8b77d425df..0cfc351648f9 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.h
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.h
+> @@ -133,12 +133,23 @@ static inline int8_t xfs_ifork_format(struct xfs_ifork *ifp)
+>  	return ifp->if_format;
+>  }
 >  
-> +#define XFS_IBULK_NREXT64	(XFS_IWALK_NREXT64)
-> +
->  /*
->   * Advance the user buffer pointer by one record of the given size.  If the
->   * buffer is now full, return the appropriate error code.
-> diff --git a/fs/xfs/xfs_iwalk.h b/fs/xfs/xfs_iwalk.h
-> index 37a795f03267..11be9dbb45c7 100644
-> --- a/fs/xfs/xfs_iwalk.h
-> +++ b/fs/xfs/xfs_iwalk.h
-> @@ -26,9 +26,12 @@ int xfs_iwalk_threaded(struct xfs_mount *mp, xfs_ino_t startino,
->  		unsigned int inode_records, bool poll, void *data);
->  
->  /* Only iterate inodes within the same AG as @startino. */
-> -#define XFS_IWALK_SAME_AG	(0x1)
-> +#define XFS_IWALK_SAME_AG	(1 << 0)
->  
-> -#define XFS_IWALK_FLAGS_ALL	(XFS_IWALK_SAME_AG)
-> +#define XFS_IWALK_NREXT64	(1 << 1)
+> -static inline xfs_extnum_t xfs_iext_max_nextents(int whichfork)
+> +static inline xfs_extnum_t xfs_iext_max_nextents(bool has_big_extcnt,
 
-The ability of the caller to handle 64-bit extent counters is not
-relevant to the internal inode walking code, so I don't think this
-belongs in the iwalk flags namespace.
-
-IOWs, XFS_IBULK_NREXT64 should be defined like this:
-
-#define XFS_IBULK_NREXT64	(1U << 31)
-
-and xfs_bulkstat should be changed to translate only the relevant
-breq->flags into the appropriate IWALK bits.  Sorry for the code
-smell...
+has_nrext64, to be consistent with most everywhere else?
 
 --D
 
+> +				int whichfork)
+>  {
+> -	if (whichfork == XFS_DATA_FORK || whichfork == XFS_COW_FORK)
+> -		return MAXEXTNUM;
+> +	switch (whichfork) {
+> +	case XFS_DATA_FORK:
+> +	case XFS_COW_FORK:
+> +		return has_big_extcnt ? XFS_MAX_EXTCNT_DATA_FORK
+> +			: XFS_MAX_EXTCNT_DATA_FORK_OLD;
 > +
-> +#define XFS_IWALK_FLAGS_ALL	(XFS_IWALK_SAME_AG |	\
-> +				 XFS_IWALK_NREXT64)
+> +	case XFS_ATTR_FORK:
+> +		return has_big_extcnt ? XFS_MAX_EXTCNT_ATTR_FORK
+> +			: XFS_MAX_EXTCNT_ATTR_FORK_OLD;
 >  
->  /* Walk all inode btree records in the filesystem starting from @startino. */
->  typedef int (*xfs_inobt_walk_fn)(struct xfs_mount *mp, struct xfs_trans *tp,
+> -	return MAXAEXTNUM;
+> +	default:
+> +		ASSERT(0);
+> +		return 0;
+> +	}
+>  }
+>  
+>  static inline xfs_extnum_t
 > -- 
 > 2.30.2
 > 
