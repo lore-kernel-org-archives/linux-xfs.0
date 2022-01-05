@@ -2,360 +2,479 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3201C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Jan 2022 21:17:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42F9BC433F5
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Jan 2022 22:04:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244392AbiAEVRt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Jan 2022 16:17:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51050 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244387AbiAEVRt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jan 2022 16:17:49 -0500
-Received: from mail-pg1-x532.google.com (mail-pg1-x532.google.com [IPv6:2607:f8b0:4864:20::532])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAA9EC061201
-        for <linux-xfs@vger.kernel.org>; Wed,  5 Jan 2022 13:17:48 -0800 (PST)
-Received: by mail-pg1-x532.google.com with SMTP id x194so296721pgx.4
-        for <linux-xfs@vger.kernel.org>; Wed, 05 Jan 2022 13:17:48 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20210112.gappssmtp.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=ncCC9L0WeEGzChuvJR0/68WabesH5+cAdTHSnuR8eYQ=;
-        b=fRuWCBZ33gONpGtMPl8wsjLgCQiQy7Wmiy3X1oq/2DBXxwzbc4JDSM+0dbA2bKYlRV
-         Jq/bdCQ6RUtk4h7PVQuIl80f7fC6jXCldD9VSMLz9HFNzNZTHc1lfTZtw3zL8aem+raD
-         PTrMTA9G9XJj0okCXm8iQlPaEceCAnAllllMDBzrdP4NrPOc30RmhB9ceW6DJjO0feeG
-         hgtQNE4oIj03MDPpj9yEQi3mi4VsbDUmbwHNCxgs2AXWAyUFoPKzAN89Oe/pSF+YfQ3f
-         1SjTD/MJrDfctrNx4II3BgN9/kWH6/zdeK9hrvd725mro2a3Qha4nanF0fk3yOsUSYNY
-         2Ezg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=ncCC9L0WeEGzChuvJR0/68WabesH5+cAdTHSnuR8eYQ=;
-        b=F+5S/m9knBcrQ4/LOesLBRahClnFt4OKLtmP8u0nZ7f7pbcw5aLjoU0pXOZvGsAE+9
-         B8wIjezAS0R94hM4P0NDlHArS1H6qR3aZ57qo8G64jYHGKx0EufPKqeNz3Aea3Bv4HRv
-         DrO7G/dyN1oHbPccX91+aMh3/x934Rx5zv5fU1Fl4PsMr9F4iTnD1zW6m4x5mapXq62f
-         MSHR3s/aXjBmtUhoFA/WRpY81G9pTIq/zzIKHGExlIeWYse1STcEsJz1VZ127vj94aKm
-         Ivd+pWuXXEjxgEpL72TkLJQe2HVFtAdkecllgVXnL9Isjeq5tBUpavCyW461NmUzc2de
-         vzhA==
-X-Gm-Message-State: AOAM531v9vZlm5IXLdYDxoJ98lX9xusoAgQKAZpF3Hrl3h25JtabdjGl
-        9MJId8J/23ZS0Ic9gLk8Br1Js8Lv34qLc2KtNH3buw==
-X-Google-Smtp-Source: ABdhPJxgli9znNEolSNy97di7dIxA0jaBSFzjSHHHebIOCoYgJOYK/Ii+cU9k3sIosh4ktBtiagjcEUcU+NH0sLpGo0=
-X-Received: by 2002:a63:ab01:: with SMTP id p1mr1770235pgf.437.1641417468262;
- Wed, 05 Jan 2022 13:17:48 -0800 (PST)
+        id S244708AbiAEWE2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Jan 2022 17:04:28 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:33967 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S244705AbiAEWE1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jan 2022 17:04:27 -0500
+Received: from dread.disaster.area (pa49-181-243-119.pa.nsw.optusnet.com.au [49.181.243.119])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 7436B10C004C;
+        Thu,  6 Jan 2022 09:04:22 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1n5EOL-00BnGg-MX; Thu, 06 Jan 2022 09:04:21 +1100
+Date:   Thu, 6 Jan 2022 09:04:21 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        "hch@infradead.org" <hch@infradead.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Trond Myklebust <trondmy@hammerspace.com>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "trondmy@kernel.org" <trondmy@kernel.org>,
+        "axboe@kernel.dk" <axboe@kernel.dk>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] iomap: Address soft lockup in iomap_finish_ioend()
+Message-ID: <20220105220421.GM945095@dread.disaster.area>
+References: <9f51fa6169f4c67d54dd8563b52c540c94c7703a.camel@hammerspace.com>
+ <20220104012215.GH945095@dread.disaster.area>
+ <YdPyhpdxykDscMtJ@infradead.org>
+ <YdSNGAupnxF/ouis@casper.infradead.org>
+ <YdSOgyvDnZadYpUP@infradead.org>
+ <20220104192227.GA398655@magnolia>
+ <20220104215227.GJ945095@dread.disaster.area>
+ <20220104231230.GG31606@magnolia>
+ <20220105021022.GL945095@dread.disaster.area>
+ <YdWjkW7hhbTl4TQa@bfoster>
 MIME-Version: 1.0
-References: <20211226143439.3985960-1-ruansy.fnst@fujitsu.com>
- <20211226143439.3985960-10-ruansy.fnst@fujitsu.com> <20220105185334.GD398655@magnolia>
-In-Reply-To: <20220105185334.GD398655@magnolia>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Wed, 5 Jan 2022 13:17:37 -0800
-Message-ID: <CAPcyv4jYOvK57LqGzvZwyHo=4sEKmdAV1jgCzDw5eeCySPGS6w@mail.gmail.com>
-Subject: Re: [PATCH v9 09/10] xfs: Implement ->notify_failure() for XFS
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Shiyang Ruan <ruansy.fnst@fujitsu.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Linux NVDIMM <nvdimm@lists.linux.dev>,
-        Linux MM <linux-mm@kvack.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        david <david@fromorbit.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Jane Chu <jane.chu@oracle.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YdWjkW7hhbTl4TQa@bfoster>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=61d615e9
+        a=BEa52nrBdFykVEm6RU8P4g==:117 a=BEa52nrBdFykVEm6RU8P4g==:17
+        a=kj9zAlcOel0A:10 a=DghFqjY3_ZEA:10 a=7-415B0cAAAA:8 a=20KFwNOVAAAA:8
+        a=0Z3UcInKYyOX7bYbSYwA:9 a=CjuIK1q_8ugA:10 a=DiKeHqHhRZ4A:10
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 5, 2022 at 10:53 AM Darrick J. Wong <djwong@kernel.org> wrote:
->
-> On Sun, Dec 26, 2021 at 10:34:38PM +0800, Shiyang Ruan wrote:
-> > Introduce xfs_notify_failure.c to handle failure related works, such as
-> > implement ->notify_failure(), register/unregister dax holder in xfs, and
-> > so on.
-> >
-> > If the rmap feature of XFS enabled, we can query it to find files and
-> > metadata which are associated with the corrupt data.  For now all we do
-> > is kill processes with that file mapped into their address spaces, but
-> > future patches could actually do something about corrupt metadata.
-> >
-> > After that, the memory failure needs to notify the processes who are
-> > using those files.
-> >
-> > Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
-> > ---
-> >  fs/xfs/Makefile             |   1 +
-> >  fs/xfs/xfs_buf.c            |  15 +++
-> >  fs/xfs/xfs_fsops.c          |   3 +
-> >  fs/xfs/xfs_mount.h          |   1 +
-> >  fs/xfs/xfs_notify_failure.c | 189 ++++++++++++++++++++++++++++++++++++
-> >  fs/xfs/xfs_notify_failure.h |  10 ++
-> >  6 files changed, 219 insertions(+)
-> >  create mode 100644 fs/xfs/xfs_notify_failure.c
-> >  create mode 100644 fs/xfs/xfs_notify_failure.h
-> >
-> > diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-> > index 04611a1068b4..389970b3e13b 100644
-> > --- a/fs/xfs/Makefile
-> > +++ b/fs/xfs/Makefile
-> > @@ -84,6 +84,7 @@ xfs-y                               += xfs_aops.o \
-> >                                  xfs_message.o \
-> >                                  xfs_mount.o \
-> >                                  xfs_mru_cache.o \
-> > +                                xfs_notify_failure.o \
-> >                                  xfs_pwork.o \
-> >                                  xfs_reflink.o \
-> >                                  xfs_stats.o \
-> > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> > index bbb0fbd34e64..d0df7604fa9e 100644
-> > --- a/fs/xfs/xfs_buf.c
-> > +++ b/fs/xfs/xfs_buf.c
-> > @@ -19,6 +19,7 @@
-> >  #include "xfs_errortag.h"
-> >  #include "xfs_error.h"
-> >  #include "xfs_ag.h"
-> > +#include "xfs_notify_failure.h"
-> >
-> >  static struct kmem_cache *xfs_buf_cache;
-> >
-> > @@ -1892,6 +1893,8 @@ xfs_free_buftarg(
-> >       list_lru_destroy(&btp->bt_lru);
-> >
-> >       blkdev_issue_flush(btp->bt_bdev);
-> > +     if (btp->bt_daxdev)
-> > +             dax_unregister_holder(btp->bt_daxdev);
-> >       fs_put_dax(btp->bt_daxdev);
-> >
-> >       kmem_free(btp);
-> > @@ -1946,6 +1949,18 @@ xfs_alloc_buftarg(
-> >       btp->bt_dev =  bdev->bd_dev;
-> >       btp->bt_bdev = bdev;
-> >       btp->bt_daxdev = fs_dax_get_by_bdev(bdev, &btp->bt_dax_part_off);
-> > +     if (btp->bt_daxdev) {
-> > +             dax_write_lock(btp->bt_daxdev);
-> > +             if (dax_get_holder(btp->bt_daxdev)) {
-> > +                     dax_write_unlock(btp->bt_daxdev);
-> > +                     xfs_err(mp, "DAX device already in use?!");
-> > +                     goto error_free;
-> > +             }
-> > +
-> > +             dax_register_holder(btp->bt_daxdev, mp,
-> > +                             &xfs_dax_holder_operations);
-> > +             dax_write_unlock(btp->bt_daxdev);
-> > +     }
-> >
-> >       /*
-> >        * Buffer IO error rate limiting. Limit it to no more than 10 messages
-> > diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> > index 33e26690a8c4..d4d36c5bef11 100644
-> > --- a/fs/xfs/xfs_fsops.c
-> > +++ b/fs/xfs/xfs_fsops.c
-> > @@ -542,6 +542,9 @@ xfs_do_force_shutdown(
-> >       } else if (flags & SHUTDOWN_CORRUPT_INCORE) {
-> >               tag = XFS_PTAG_SHUTDOWN_CORRUPT;
-> >               why = "Corruption of in-memory data";
-> > +     } else if (flags & SHUTDOWN_CORRUPT_ONDISK) {
-> > +             tag = XFS_PTAG_SHUTDOWN_CORRUPT;
-> > +             why = "Corruption of on-disk metadata";
-> >       } else {
-> >               tag = XFS_PTAG_SHUTDOWN_IOERROR;
-> >               why = "Metadata I/O Error";
-> > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> > index 00720a02e761..47ff4ac53c4c 100644
-> > --- a/fs/xfs/xfs_mount.h
-> > +++ b/fs/xfs/xfs_mount.h
-> > @@ -435,6 +435,7 @@ void xfs_do_force_shutdown(struct xfs_mount *mp, int flags, char *fname,
-> >  #define SHUTDOWN_LOG_IO_ERROR        0x0002  /* write attempt to the log failed */
-> >  #define SHUTDOWN_FORCE_UMOUNT        0x0004  /* shutdown from a forced unmount */
-> >  #define SHUTDOWN_CORRUPT_INCORE      0x0008  /* corrupt in-memory data structures */
-> > +#define SHUTDOWN_CORRUPT_ONDISK      0x0010  /* corrupt metadata on device */
-> >
-> >  #define XFS_SHUTDOWN_STRINGS \
-> >       { SHUTDOWN_META_IO_ERROR,       "metadata_io" }, \
-> > diff --git a/fs/xfs/xfs_notify_failure.c b/fs/xfs/xfs_notify_failure.c
-> > new file mode 100644
-> > index 000000000000..a87bd08365f4
-> > --- /dev/null
-> > +++ b/fs/xfs/xfs_notify_failure.c
-> > @@ -0,0 +1,189 @@
-> > +// SPDX-License-Identifier: GPL-2.0
-> > +/*
-> > + * Copyright (c) 2021 Fujitsu.  All Rights Reserved.
-> > + */
-> > +
-> > +#include "xfs.h"
-> > +#include "xfs_shared.h"
-> > +#include "xfs_format.h"
-> > +#include "xfs_log_format.h"
-> > +#include "xfs_trans_resv.h"
-> > +#include "xfs_mount.h"
-> > +#include "xfs_alloc.h"
-> > +#include "xfs_bit.h"
-> > +#include "xfs_btree.h"
-> > +#include "xfs_inode.h"
-> > +#include "xfs_icache.h"
-> > +#include "xfs_rmap.h"
-> > +#include "xfs_rmap_btree.h"
-> > +#include "xfs_rtalloc.h"
-> > +#include "xfs_trans.h"
-> > +
-> > +#include <linux/mm.h>
-> > +#include <linux/dax.h>
-> > +
-> > +struct failure_info {
-> > +     xfs_agblock_t           startblock;
-> > +     xfs_filblks_t           blockcount;
-> > +     int                     mf_flags;
->
-> Why is blockcount a 64-bit quantity, when the failure information is
-> dealt with on a per-AG basis?  I think "xfs_extlen_t blockcount" should
-> be large enough here.  (I'll get back to this further down.)
->
-> > +};
-> > +
-> > +static pgoff_t
-> > +xfs_failure_pgoff(
-> > +     struct xfs_mount                *mp,
-> > +     const struct xfs_rmap_irec      *rec,
-> > +     const struct failure_info       *notify)
-> > +{
-> > +     uint64_t pos = rec->rm_offset;
->
-> Nit: indenting ^^^^^ here.
->
-> > +
-> > +     if (notify->startblock > rec->rm_startblock)
-> > +             pos += XFS_FSB_TO_B(mp,
-> > +                             notify->startblock - rec->rm_startblock);
-> > +     return pos >> PAGE_SHIFT;
-> > +}
-> > +
-> > +static unsigned long
-> > +xfs_failure_pgcnt(
-> > +     struct xfs_mount                *mp,
-> > +     const struct xfs_rmap_irec      *rec,
-> > +     const struct failure_info       *notify)
-> > +{
-> > +     xfs_agblock_t start_rec = rec->rm_startblock;
-> > +     xfs_agblock_t end_rec = rec->rm_startblock + rec->rm_blockcount;
-> > +     xfs_agblock_t start_notify = notify->startblock;
-> > +     xfs_agblock_t end_notify = notify->startblock + notify->blockcount;
-> > +     xfs_agblock_t start_cross = max(start_rec, start_notify);
-> > +     xfs_agblock_t end_cross = min(end_rec, end_notify);
->
-> Indenting and rather more local variables than we need?
->
-> static unsigned long
-> xfs_failure_pgcnt(
->         struct xfs_mount                *mp,
->         const struct xfs_rmap_irec      *rec,
->         const struct failure_info       *notify)
-> {
->         xfs_agblock_t                   end_rec;
->         xfs_agblock_t                   end_notify;
->         xfs_agblock_t                   start_cross;
->         xfs_agblock_t                   end_cross;
->
->         start_cross = max(rec->rm_startblock, notify->startblock);
->
->         end_rec = rec->rm_startblock + rec->rm_blockcount;
->         end_notify = notify->startblock + notify->blockcount;
->         end_cross = min(end_rec, end_notify);
->
->         return XFS_FSB_TO_B(mp, end_cross - start_cross) >> PAGE_SHIFT;
-> }
->
-> > +
-> > +     return XFS_FSB_TO_B(mp, end_cross - start_cross) >> PAGE_SHIFT;
-> > +}
-> > +
-> > +static int
-> > +xfs_dax_failure_fn(
-> > +     struct xfs_btree_cur            *cur,
-> > +     const struct xfs_rmap_irec      *rec,
-> > +     void                            *data)
-> > +{
-> > +     struct xfs_mount                *mp = cur->bc_mp;
-> > +     struct xfs_inode                *ip;
-> > +     struct address_space            *mapping;
-> > +     struct failure_info             *notify = data;
-> > +     int                             error = 0;
-> > +
-> > +     if (XFS_RMAP_NON_INODE_OWNER(rec->rm_owner) ||
-> > +         (rec->rm_flags & (XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK))) {
-> > +             /* TODO check and try to fix metadata */
-> > +             xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_ONDISK);
-> > +             return -EFSCORRUPTED;
-> > +     }
-> > +
-> > +     /* Get files that incore, filter out others that are not in use. */
-> > +     error = xfs_iget(mp, cur->bc_tp, rec->rm_owner, XFS_IGET_INCORE,
-> > +                      0, &ip);
-> > +     /* Continue the rmap query if the inode isn't incore */
-> > +     if (error == -ENODATA)
-> > +             return 0;
-> > +     if (error)
-> > +             return error;
-> > +
-> > +     mapping = VFS_I(ip)->i_mapping;
-> > +     if (IS_ENABLED(CONFIG_MEMORY_FAILURE)) {
->
-> Is there a situation where we can receive media failure notices from DAX
-> but CONFIG_MEMORY_FAILURE is not enabled?  (I think the answer is yes?)
+On Wed, Jan 05, 2022 at 08:56:33AM -0500, Brian Foster wrote:
+> On Wed, Jan 05, 2022 at 01:10:22PM +1100, Dave Chinner wrote:
+> > On Tue, Jan 04, 2022 at 03:12:30PM -0800, Darrick J. Wong wrote:
+> > > So looking at xfs_end_io:
+> > > 
+> > > /* Finish all pending io completions. */
+> > > void
+> > > xfs_end_io(
+> > > 	struct work_struct	*work)
+> > > {
+> > > 	struct xfs_inode	*ip =
+> > > 		container_of(work, struct xfs_inode, i_ioend_work);
+> > > 	struct iomap_ioend	*ioend;
+> > > 	struct list_head	tmp;
+> > > 	unsigned long		flags;
+> > > 
+> > > 	spin_lock_irqsave(&ip->i_ioend_lock, flags);
+> > > 	list_replace_init(&ip->i_ioend_list, &tmp);
+> > > 	spin_unlock_irqrestore(&ip->i_ioend_lock, flags);
+> > > 
+> > > 	iomap_sort_ioends(&tmp);
+> > > 	while ((ioend = list_first_entry_or_null(&tmp, struct iomap_ioend,
+> > > 			io_list))) {
+> > > 		list_del_init(&ioend->io_list);
+> > > 
+> > > Here we pull the first ioend off the sorted list of ioends.
+> > > 
+> > > 		iomap_ioend_try_merge(ioend, &tmp);
+> > > 
+> > > Now we've merged that first ioend with as many subsequent ioends as we
+> > > could merge.  Let's say there were 200 ioends, each 100MB.  Now ioend
+> > 
+> > Ok, so how do we get to this completion state right now?
+> > 
+> > 1. an ioend is a physically contiguous extent so submission is
+> >    broken down into an ioend per physical extent.
+> > 2. we merge logically contiguous ioends at completion.
+> > 
+> > So, if we have 200 ioends of 100MB each that are logically
+> > contiguous we'll currently always merge them into a single 20GB
+> > ioend that gets processed as a single entity even if submission
+> > broke them up because they were physically discontiguous.
+> > 
+> > Now, with this patch we add:
+> > 
+> > 3. Individual ioends are limited to 16MB.
+> > 4. completion can only merge physically contiguous ioends.
+> > 5. we cond_resched() between physically contiguous ioend completion.
+> > 
+> > Submission will break that logically contiguous 20GB dirty range
+> > down into 200x6x16MB ioends.
+> > 
+> > Now completion will only merge ioends that are both physically and
+> > logically contiguous. That results in a maximum merged ioend chain
+> > size of 100MB at completion. They'll get merged one 100MB chunk at a
+> > time.
+> > 
+> 
+> I'm missing something with the reasoning here.. how does a contiguity
+> check in the ioend merge code guarantee we don't construct an
+> excessively large list of pages via a chain of merged ioends? Obviously
+> it filters out the discontig case, but what if the extents are
+> physically contiguous?
 
-Good catch, yes, I was planning to reuse this notification
-infrastructure for the "whoops you ripped out your CXL card that was
-being used with FSDAX" case. Although, if someone builds the kernel
-with CONFIG_MEMORY_FAILURE=n then I think a lack of notification for
-that case is to be expected? Perhaps CONFIG_FSDAX should just depend
-on CONFIG_MEMORY_FAILURE when that "hot remove" failure case is added.
-For now, CONFIG_MEMORY_FAILURE is the only source of errors.
+It doesn't. I keep saying there are two aspects of this problem -
+one is the filesystem looping doing considerable work over multiple
+physical extents (would be 200 extent conversions in a tight loop
+via xfs_iomap_write_unwritten()) before we even call into
+iomap_finish_ioends() to process the pages in the merged ioend
+chain.
 
->
-> > +             pgoff_t off = xfs_failure_pgoff(mp, rec, notify);
-> > +             unsigned long cnt = xfs_failure_pgcnt(mp, rec, notify);
-> > +
-> > +             error = mf_dax_kill_procs(mapping, off, cnt, notify->mf_flags);
-> > +     }
->
-> If so, then we ought to do /something/ besides silently dropping the
-> error, right?  Even if that something is rudely shutting down the fs,
-> like we do for attr/bmbt mappings above?
->
-> What I'm getting at is that I think this function should be:
->
-> #if IS_ENABLED(CONFIG_MEMORY_FAILURE)
-> static int
-> xfs_dax_failure_fn(
->         struct xfs_btree_cur            *cur,
->         const struct xfs_rmap_irec      *rec,
->         void                            *data)
-> {
->         /* shut down if attr/bmbt record like above */
->
->         error = xfs_iget(...);
->         if (error == -ENODATA)
->                 return 0;
->         if (error)
->                 return error;
->
->         off = xfs_failure_pgoff(mp, rec, notify);
->         cnt = xfs_failure_pgcnt(mp, rec, notify);
->
->         error = mf_dax_kill_procs(mapping, off, cnt, notify->mf_flags);
->         xfs_irele(ip);
->         return error;
-> }
-> #else
-> static int
-> xfs_dax_failure_fn(
->         struct xfs_btree_cur            *cur,
->         const struct xfs_rmap_irec      *rec,
->         void                            *data)
-> {
->         /* No other option besides shutting down the fs. */
->         xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_ONDISK);
->         return -EFSCORRUPTED;
-> }
-> #endif /* CONFIG_MEMORY_FAILURE */
+Darrick is trying to address with the cond_resched() calls in
+iomap_finish_ioends(), but is missing the looping being done in
+xfs_end_ioend() prior to calling iomap_finish_ioends().  Badly
+fragmented merged ioend completion will loop for much longer in
+xfs_iomap_write_unwritten() than they will in
+iomap_finish_ioends()....
 
-Oh, yeah that makes sense to me.
+> > >  * Mark writeback finished on a chain of ioends.  Caller must not call
+> > >  * this function from atomic/softirq context.
+> > >  */
+> > > void
+> > > iomap_finish_ioends(struct iomap_ioend *ioend, int error)
+> > > {
+> > > 	struct list_head tmp;
+> > > 
+> > > 	list_replace_init(&ioend->io_list, &tmp);
+> > > 	iomap_finish_ioend(ioend, error);
+> > > 
+> > > 	while (!list_empty(&tmp)) {
+> > > 		cond_resched();
+> > > 
+> > > So I propose doing it ^^^ here instead.
+> > > 
+> > > 		ioend = list_first_entry(&tmp, struct iomap_ioend, io_list);
+> > > 		list_del_init(&ioend->io_list);
+> > > 		iomap_finish_ioend(ioend, error);
+> > > 	}
+> > > }
+> 
+> Hmm.. I'm not seeing how this is much different from Dave's patch, and
+> I'm not totally convinced the cond_resched() in Dave's patch is
+> effective without something like Darrick's earlier suggestion to limit
+> the $object (page/folio/whatever) count of the entire merged mapping (to
+> ensure that iomap_finish_ioend() is no longer a soft lockup vector by
+> itself).
+
+Yes, that's what I did immediately after posting the first patch for
+Trond to test a couple of days ago.  The original patch was an
+attempt to make a simple, easily backportable fix to mitigate the
+issue without excessive cond_resched() overhead, not a "perfect
+solution".
+
+> Trond reports that the test patch mitigates his reproducer, but that
+> patch also includes the ioend size cap and so the test doesn't
+> necessarily isolate whether the cond_resched() is effective or whether
+> the additional submission/completion overhead is enough to avoid the
+> pathological conditions that enable it via the XFS merging code. I'd be
+> curious to have a more tangible datapoint on that. The easiest way to
+> test without getting into the weeds of looking at merging behavior is
+> probably just see whether the problem returns with the cond_resched()
+> removed and all of the other changes in place. Trond, is that something
+> you can test?
+
+Trond has already reported a new softlockup that indicates we still
+need a cond_resched() in iomap_finish_ioends() even with the patch I
+posted. So we've got the feedback we needed from Trond already, from
+both the original patch (fine grained cond_resched()) and from the
+patch I sent for him to test.
+
+What this tells us is we actually need *3* layers of co-ordination
+here:
+
+1. bio chains per ioend need to be bound in length. Pure overwrites
+go straight to iomap_finish_ioend() in softirq context with the
+exact bio chain attached to the ioend by submission. Hence the only
+way to prevent long holdoffs here is to bound ioend submission
+sizes.
+
+2. iomap_finish_ioends() has to handle unbound merged ioend chains
+correctly. This relies on any one call to iomap_finish_ioend() being
+bound in runtime so that cond_resched() can be issued regularly as
+the long ioend chain is processed. i.e. this relies on mechanism #1
+to limit individual ioend sizes to work correctly.
+
+3. filesystems have to loop over the merged ioends to process
+physical extent manipulations. This means they can loop internally,
+and so we break merging at physical extent boundaries so the
+filesystem can easily insert reschedule points between individual
+extent manipulations.
+
+See the patch below.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+xfs: limit individual ioend chain length in writeback
+
+From: Dave Chinner <dchinner@redhat.com>
+
+Trond Myklebust reported soft lockups in XFS IO completion such as
+this:
+
+ watchdog: BUG: soft lockup - CPU#12 stuck for 23s! [kworker/12:1:3106]
+ CPU: 12 PID: 3106 Comm: kworker/12:1 Not tainted 4.18.0-305.10.2.el8_4.x86_64 #1
+ Workqueue: xfs-conv/md127 xfs_end_io [xfs]
+ RIP: 0010:_raw_spin_unlock_irqrestore+0x11/0x20
+ Call Trace:
+  wake_up_page_bit+0x8a/0x110
+  iomap_finish_ioend+0xd7/0x1c0
+  iomap_finish_ioends+0x7f/0xb0
+  xfs_end_ioend+0x6b/0x100 [xfs]
+  xfs_end_io+0xb9/0xe0 [xfs]
+  process_one_work+0x1a7/0x360
+  worker_thread+0x1fa/0x390
+  kthread+0x116/0x130
+  ret_from_fork+0x35/0x40
+
+Ioends are processed as an atomic completion unit when all the
+chained bios in the ioend have completed their IO. Logically
+contiguous ioends can also be merged and completed as a single,
+larger unit.  Both of these things can be problematic as both the
+bio chains per ioend and the size of the merged ioends processed as
+a single completion are both unbound.
+
+If we have a large sequential dirty region in the page cache,
+write_cache_pages() will keep feeding us sequential pages and we
+will keep mapping them into ioends and bios until we get a dirty
+page at a non-sequential file offset. These large sequential runs
+can will result in bio and ioend chaining to optimise the io
+patterns. The pages iunder writeback are pinned within these chains
+until the submission chaining is broken, allowing the entire chain
+to be completed. This can result in huge chains being processed
+in IO completion context.
+
+We get deep bio chaining if we have large contiguous physical
+extents. We will keep adding pages to the current bio until it is
+full, then we'll chain a new bio to keep adding pages for writeback.
+Hence we can build bio chains that map millions of pages and tens of
+gigabytes of RAM if the page cache contains big enough contiguous
+dirty file regions. This long bio chain pins those pages until the
+final bio in the chain completes and the ioend can iterate all the
+chained bios and complete them.
+
+OTOH, if we have a physically fragmented file, we end up submitting
+one ioend per physical fragment that each have a small bio or bio
+chain attached to them. We do not chain these at IO submission time,
+but instead we chain them at completion time based on file
+offset via iomap_ioend_try_merge(). Hence we can end up with unbound
+ioend chains being built via completion merging.
+
+XFS can then do COW remapping or unwritten extent conversion on that
+merged chain, which involves walking an extent fragment at a time
+and running a transaction to modify the physical extent information.
+IOWs, we merge all the discontiguous ioends together into a
+contiguous file range, only to then process them individually as
+discontiguous extents.
+
+This extent manipulation is computationally expensive and can run in
+a tight loop, so merging logically contiguous but physically
+discontigous ioends gains us nothing except for hiding the fact the
+fact we broke the ioends up into individual physical extents at
+submission and then need to loop over those individual physical
+extents at completion.
+
+Hence we need to have mechanisms to limit ioend sizes and
+to break up completion processing of large merged ioend chains:
+
+1. bio chains per ioend need to be bound in length. Pure overwrites
+go straight to iomap_finish_ioend() in softirq context with the
+exact bio chain attached to the ioend by submission. Hence the only
+way to prevent long holdoffs here is to bound ioend submission
+sizes because we can't reschedule in softirq context.
+
+2. iomap_finish_ioends() has to handle unbound merged ioend chains
+correctly. This relies on any one call to iomap_finish_ioend() being
+bound in runtime so that cond_resched() can be issued regularly as
+the long ioend chain is processed. i.e. this relies on mechanism #1
+to limit individual ioend sizes to work correctly.
+
+3. filesystems have to loop over the merged ioends to process
+physical extent manipulations. This means they can loop internally,
+and so we break merging at physical extent boundaries so the
+filesystem can easily insert reschedule points between individual
+extent manipulations.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/iomap/buffered-io.c | 47 +++++++++++++++++++++++++++++++++++++++++++----
+ fs/xfs/xfs_aops.c      | 16 +++++++++++++++-
+ include/linux/iomap.h  |  1 +
+ 3 files changed, 59 insertions(+), 5 deletions(-)
+
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 71a36ae120ee..39214577bc46 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -1066,17 +1066,34 @@ iomap_finish_ioend(struct iomap_ioend *ioend, int error)
+ 	}
+ }
+ 
++/*
++ * Ioend completion routine for merged bios. This can only be called from task
++ * contexts as merged ioends can be of unbound length. Hence we have to break up
++ * the page writeback completion into manageable chunks to avoid long scheduler
++ * holdoffs. We aim to keep scheduler holdoffs down below 10ms so that we get
++ * good batch processing throughput without creating adverse scheduler latency
++ * conditions.
++ */
+ void
+ iomap_finish_ioends(struct iomap_ioend *ioend, int error)
+ {
+ 	struct list_head tmp;
++	int segments;
++
++	might_sleep();
+ 
+ 	list_replace_init(&ioend->io_list, &tmp);
++	segments = ioend->io_segments;
+ 	iomap_finish_ioend(ioend, error);
+ 
+ 	while (!list_empty(&tmp)) {
++		if (segments > 32768) {
++			cond_resched();
++			segments = 0;
++		}
+ 		ioend = list_first_entry(&tmp, struct iomap_ioend, io_list);
+ 		list_del_init(&ioend->io_list);
++		segments += ioend->io_segments;
+ 		iomap_finish_ioend(ioend, error);
+ 	}
+ }
+@@ -1098,6 +1115,15 @@ iomap_ioend_can_merge(struct iomap_ioend *ioend, struct iomap_ioend *next)
+ 		return false;
+ 	if (ioend->io_offset + ioend->io_size != next->io_offset)
+ 		return false;
++	/*
++	 * Do not merge physically discontiguous ioends. The filesystem
++	 * completion functions will have to iterate the physical
++	 * discontiguities even if we merge the ioends at a logical level, so
++	 * we don't gain anything by merging physical discontiguities here.
++	 */
++	if (ioend->io_inline_bio.bi_iter.bi_sector + (ioend->io_size >> 9) !=
++	    next->io_inline_bio.bi_iter.bi_sector)
++		return false;
+ 	return true;
+ }
+ 
+@@ -1175,6 +1201,7 @@ iomap_submit_ioend(struct iomap_writepage_ctx *wpc, struct iomap_ioend *ioend,
+ 		return error;
+ 	}
+ 
++	ioend->io_segments += bio_segments(ioend->io_bio);
+ 	submit_bio(ioend->io_bio);
+ 	return 0;
+ }
+@@ -1199,6 +1226,7 @@ iomap_alloc_ioend(struct inode *inode, struct iomap_writepage_ctx *wpc,
+ 	ioend->io_flags = wpc->iomap.flags;
+ 	ioend->io_inode = inode;
+ 	ioend->io_size = 0;
++	ioend->io_segments = 0;
+ 	ioend->io_offset = offset;
+ 	ioend->io_bio = bio;
+ 	return ioend;
+@@ -1211,11 +1239,14 @@ iomap_alloc_ioend(struct inode *inode, struct iomap_writepage_ctx *wpc,
+  * so that the bi_private linkage is set up in the right direction for the
+  * traversal in iomap_finish_ioend().
+  */
+-static struct bio *
+-iomap_chain_bio(struct bio *prev)
++static void
++iomap_chain_bio(struct iomap_ioend *ioend)
+ {
++	struct bio *prev = ioend->io_bio;
+ 	struct bio *new;
+ 
++	ioend->io_segments += bio_segments(prev);
++
+ 	new = bio_alloc(GFP_NOFS, BIO_MAX_VECS);
+ 	bio_copy_dev(new, prev);/* also copies over blkcg information */
+ 	new->bi_iter.bi_sector = bio_end_sector(prev);
+@@ -1225,7 +1256,8 @@ iomap_chain_bio(struct bio *prev)
+ 	bio_chain(prev, new);
+ 	bio_get(prev);		/* for iomap_finish_ioend */
+ 	submit_bio(prev);
+-	return new;
++
++	ioend->io_bio = new;
+ }
+ 
+ static bool
+@@ -1241,6 +1273,13 @@ iomap_can_add_to_ioend(struct iomap_writepage_ctx *wpc, loff_t offset,
+ 		return false;
+ 	if (sector != bio_end_sector(wpc->ioend->io_bio))
+ 		return false;
++	/*
++	 * Limit ioend bio chain lengths to minimise IO completion latency. This
++	 * also prevents long tight loops ending page writeback on all the pages
++	 * in the ioend.
++	 */
++	if (wpc->ioend->io_segments >= 4096)
++		return false;
+ 	return true;
+ }
+ 
+@@ -1264,7 +1303,7 @@ iomap_add_to_ioend(struct inode *inode, loff_t offset, struct page *page,
+ 	}
+ 
+ 	if (bio_add_page(wpc->ioend->io_bio, page, len, poff) != len) {
+-		wpc->ioend->io_bio = iomap_chain_bio(wpc->ioend->io_bio);
++		iomap_chain_bio(wpc->ioend);
+ 		__bio_add_page(wpc->ioend->io_bio, page, len, poff);
+ 	}
+ 
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index c8c15c3c3147..148a8fce7029 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -136,7 +136,20 @@ xfs_end_ioend(
+ 	memalloc_nofs_restore(nofs_flag);
+ }
+ 
+-/* Finish all pending io completions. */
++/*
++ * Finish all pending IO completions that require transactional modifications.
++ *
++ * We try to merge physical and logically contiguous ioends before completion to
++ * minimise the number of transactions we need to perform during IO completion.
++ * Both unwritten extent conversion and COW remapping need to iterate and modify
++ * one physical extent at a time, so we gain nothing by merging physically
++ * discontiguous extents here.
++ *
++ * The ioend chain length that we can be processing here is largely unbound in
++ * length and we may have to perform significant amounts of work on each ioend
++ * to complete it. Hence we have to be careful about holding the CPU for too
++ * long in this loop.
++ */
+ void
+ xfs_end_io(
+ 	struct work_struct	*work)
+@@ -157,6 +170,7 @@ xfs_end_io(
+ 		list_del_init(&ioend->io_list);
+ 		iomap_ioend_try_merge(ioend, &tmp);
+ 		xfs_end_ioend(ioend);
++		cond_resched();
+ 	}
+ }
+ 
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 6d1b08d0ae93..bfdba72f4e30 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -257,6 +257,7 @@ struct iomap_ioend {
+ 	struct list_head	io_list;	/* next ioend in chain */
+ 	u16			io_type;
+ 	u16			io_flags;	/* IOMAP_F_* */
++	u32			io_segments;
+ 	struct inode		*io_inode;	/* file being written to */
+ 	size_t			io_size;	/* size of the extent */
+ 	loff_t			io_offset;	/* offset in the file */
