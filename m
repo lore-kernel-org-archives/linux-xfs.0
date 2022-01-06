@@ -2,103 +2,243 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42651C433FE
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 Jan 2022 00:12:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE9C2C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu,  6 Jan 2022 01:01:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343519AbiAFAMR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Jan 2022 19:12:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34614 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343510AbiAFAMQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jan 2022 19:12:16 -0500
-Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BEA1DC061201
-        for <linux-xfs@vger.kernel.org>; Wed,  5 Jan 2022 16:12:15 -0800 (PST)
-Received: by mail-pl1-x630.google.com with SMTP id h6so914664plf.6
-        for <linux-xfs@vger.kernel.org>; Wed, 05 Jan 2022 16:12:15 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20210112.gappssmtp.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=O5SiWExPLldaEfWo8lBT3rXCxgET/LcnPrCSIpHHBGY=;
-        b=Bq3tbFj0hQ4W0bZUht09ZhxVqUleX9C8+RT6vooive/TZHMenBfn2h9ba5rAepK8JR
-         u45P/p02Sl1548csvwm9DUxhoFiN9Z/NvtPVPQ2ndKB8LRHEKBy+d3+LSBdXNuUXGEJm
-         SawqfZprxK+VpI5grQlefZ/TXCgpEusljjCTfd01AZLksR4hzneHwkFC+xdaU4gXkiak
-         5kkrFu3di7XcwM+7rImHqHHggj5M2LaDQZJUq733NKbfxWv54vq6AGgrVKxKbiF1T5sD
-         VodQG0B5NQwF1cbjRV/Vnk9nRRM349Q3VP0BMj2jzhrRf+3sfngswHWxe/v0q4Exl3yo
-         lo+w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=O5SiWExPLldaEfWo8lBT3rXCxgET/LcnPrCSIpHHBGY=;
-        b=1XtPo4/gkhZnt9UkA1SVxRz9aEWbkORNDeZgl1OEasc9bt82+G758uQL335Y0eE93w
-         OPjvwk1cqXNfxbzmzo8M/WDg/60zV3IpQsFKowEEbqcbBA3eDuH6AzUagKdA9wm8gQlo
-         RUv3/3nIyhKxcHmNknIFNtSIKNGIK8DBElQYNxY1MejqAibqyeRFq8Wty/OhGuPtGEEK
-         KI9eFEmLEnHEDLu8wh9PSfvl/fdeQLRgVPZ8p3+gGL0Zc9gc/niJewluNacr0SNzu4k1
-         UzDKkWRQPfKFvDwNS7rrx6aHgsZqHCMYm3mkOLuFYsepZK6I8fAQsA4s+J6mZwYfdk3u
-         mrfg==
-X-Gm-Message-State: AOAM5309woSy8nJuzergMVxVWq60ONoKL0gOi+faL0CxLa0LVmwMkVYv
-        FEOfIha/PtuC4UBD6TUnRBp5dKIOt3GAiRcAohZQYg==
-X-Google-Smtp-Source: ABdhPJzy4aXmWdEyOp/zErYWN3Ia55r7xQeUNljZBrq2+3BZwPZ5oD55Al+wNqk/tcS+EUPIR/EaCp9SNGZdIGsCntE=
-X-Received: by 2002:a17:902:8488:b0:149:8545:5172 with SMTP id
- c8-20020a170902848800b0014985455172mr42149927plo.132.1641427935261; Wed, 05
- Jan 2022 16:12:15 -0800 (PST)
+        id S240032AbiAFBB2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Jan 2022 20:01:28 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:55295 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S240018AbiAFBB1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jan 2022 20:01:27 -0500
+Received: from dread.disaster.area (pa49-181-243-119.pa.nsw.optusnet.com.au [49.181.243.119])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 1B71110C00D5;
+        Thu,  6 Jan 2022 12:01:25 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1n5H9f-00BqJY-LV; Thu, 06 Jan 2022 12:01:23 +1100
+Date:   Thu, 6 Jan 2022 12:01:23 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Krister Johansen <kjlx@templeofstupid.com>
+Cc:     linux-xfs@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: xfs_bmap_extents_to_btree allocation warnings
+Message-ID: <20220106010123.GP945095@dread.disaster.area>
+References: <20220105071052.GD20464@templeofstupid.com>
 MIME-Version: 1.0
-References: <20211226143439.3985960-1-ruansy.fnst@fujitsu.com>
- <20211226143439.3985960-3-ruansy.fnst@fujitsu.com> <20220105181230.GC398655@magnolia>
- <CAPcyv4iTaneUgdBPnqcvLr4Y_nAxQp31ZdUNkSRPsQ=9CpMWHg@mail.gmail.com>
- <20220105185626.GE398655@magnolia> <CAPcyv4h3M9f1-C5e9kHTfPaRYR_zN4gzQWgR+ZyhNmG_SL-u+A@mail.gmail.com>
- <20220105224727.GG398655@magnolia> <CAPcyv4iZ88FPeZC1rt_bNdWHDZ5oh7ua31NuET2-oZ1UcMrH2Q@mail.gmail.com>
- <20220105235407.GN656707@magnolia>
-In-Reply-To: <20220105235407.GN656707@magnolia>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Wed, 5 Jan 2022 16:12:04 -0800
-Message-ID: <CAPcyv4gUmpDnGkhd+WdhcJVMP07u+CT8NXRjzcOTp5KF-5Yo5g@mail.gmail.com>
-Subject: Re: [PATCH v9 02/10] dax: Introduce holder for dax_device
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Shiyang Ruan <ruansy.fnst@fujitsu.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Linux NVDIMM <nvdimm@lists.linux.dev>,
-        Linux MM <linux-mm@kvack.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        david <david@fromorbit.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Jane Chu <jane.chu@oracle.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220105071052.GD20464@templeofstupid.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=61d63f66
+        a=BEa52nrBdFykVEm6RU8P4g==:117 a=BEa52nrBdFykVEm6RU8P4g==:17
+        a=kj9zAlcOel0A:10 a=DghFqjY3_ZEA:10 a=7-415B0cAAAA:8
+        a=j3tFSnce2iJBKk_aEHIA:9 a=7Zwj6sZBwVKJAoWSPKxL6X1jA+E=:19
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 5, 2022 at 3:54 PM Darrick J. Wong <djwong@kernel.org> wrote:
-[..]
-> > Yes, I think we should just fail the holder registration and
-> > DAX+reflink unless the FS being mounted on a whole device. I know Ted
-> > and others had reservations about moving filesystems to be mounted on
-> > dax-devices directly, but hopefully the whole-block_device requirement
-> > is a workable middle ground?
->
-> I think you have to be /very/ careful about that kind of statement --
->
-> Take ext4 for example.  It has a lot of statically allocated ondisk
-> metadata.  Someone could decide that it's a good idea to wire up a media
-> failure notification so that we shut down the fs if (say) a giant hole
-> opens up in the middle of the inode table.  However, registering any
-> kind of media failure handler brings along this requirement for not
-> having partitions.
->
-> This means that if ext4 finds a filesystem on a partition on a pmem
-> device and someone else has already registered a media failure handler,
-> it will have to choose between foregoing media failure notifications or
-> failing the mount outright.
+On Tue, Jan 04, 2022 at 11:10:52PM -0800, Krister Johansen wrote:
+> Hi,
+> I've been running into occasional WARNs related to allocating a block to
+> hold the new btree that XFS is attempting to create when calling this
+> function.  The problem is sporadic -- once every 10-40 days and a
+> different system each time.
 
-...good example.
+The warning is:
 
-> Or you could support notification call chains...
+> WARNING: CPU: 4 PID: 115756 at fs/xfs/libxfs/xfs_bmap.c:716 xfs_bmap_extents_to_btree+0x3dc/0x610 [xfs]
+> RIP: 0010:xfs_bmap_extents_to_btree+0x3dc/0x610 [xfs]
+> Call Trace:
+>  xfs_bmap_add_extent_hole_real+0x7d9/0x8f0 [xfs]
+>  xfs_bmapi_allocate+0x2a8/0x2d0 [xfs]
+>  xfs_bmapi_write+0x3a9/0x5f0 [xfs]
+>  xfs_iomap_write_direct+0x293/0x3c0 [xfs]
+>  xfs_file_iomap_begin+0x4d2/0x5c0 [xfs]
+>  iomap_apply+0x68/0x160
+>  iomap_dio_rw+0x2c1/0x450
+>  xfs_file_dio_aio_write+0x103/0x2e0 [xfs]
+>  xfs_file_write_iter+0x99/0xe0 [xfs]
+>  new_sync_write+0x125/0x1c0
+>  __vfs_write+0x29/0x40
+>  vfs_write+0xb9/0x1a0
+>  ksys_write+0x67/0xe0
+>  __x64_sys_write+0x1a/0x20
+>  do_syscall_64+0x57/0x190
+>  entry_SYSCALL_64_after_hwframe+0x44/0xa9
 
-We ended up with explicit callbacks after hch balked at a notifier
-call-chain, but I think we're back to that now. The partition mistake
-might be unfixable, but at least bdev_dax_pgoff() is dead. Notifier
-call chains have their own locking so, Ruan, this still does not need
-to touch dax_read_lock().
+Which is indicative of a multi-extent allocation (i.e. data extent +
+BMBT indexing btree block allocations) not selecting an AG that has
+enough space for both data and BMBT blocks to be allocated.
+
+That's likely because args.total was not set correctly before AG
+selection was made. This exact sort of bug can be seen in the fix
+for recent error injection debug code in commit 6e8bd39d7227 ("xfs:
+Initialize xfs_alloc_arg->total correctly when allocating minlen
+extents"). You're not running a CONFIG_XFS_DEBUG=y kernel are you?
+
+In this case:
+
+> The process that's triggering the problem is dd punching a hole into
+> file via direct I/O.  It's doing this as part of a watchdog process to
+> ensure that the system remains able to issue read and write requests.
+> The direct I/O is an attempt to avoid reading/writing cached data from
+> this process.
+> 
+> I'm hardly an expert; however, after some digging it appears that the
+> direct I/O path for this particular workload is more susceptible to the
+> problem because its tp->t_firstblock is always set to a block in an
+> existing AG,
+
+Which is always true for BMBT block allocation - we've already
+allocated the data extent in the transaction in
+xfs_bmap_add_extent_hole_real(), and now we are doing the BMBT block
+allocation needed to convert the extent list inline in the inode
+literal area into external btree block format.
+
+> while the rest of the I/O on this filesystem goes through
+> the page cache and uses the delayed allocation mechanism by default.
+> (IOW, t_firstblock is NULLFSBLOCK most of the time.)
+
+Has nothing to do with delayed allocation - the physical allocation
+that occurs in writeback will do exactly the same thing as direct IO
+allocation....
+
+> It seemed like one reason for keeping the bmap and the inode in the same
+> AG might be that with 32-bit block pointers in an inode there wouldn't
+> be space to store the AG and the block if the btree were allocated in a
+> different AG.
+
+The BMBT is a 64 bit btree so can index blocks anywhere in the
+filesystem. 32 bit btree indexes are only used for internal
+references within an AG, not for user data.
+
+> It also seemed like there were lock order concerns when
+> iterating over multiple AGs.
+
+yes, that's what t_firstblock is used to avoid - AGFs must be locked
+in ascending order only.
+
+> However, linux is using 64-bit block
+> pointers in the inode now and the XFS_ALLOCTYPE_START_BNO case in
+> xfs_alloc_vextent() seems to try to ensure that it never considers an AG
+> that's less than the agno for the fsbno passed in via args.
+
+Because otherwise allocations ABBA deadlock on AG locking.
+
+> Would something like this:
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 4dccd4d90622..5d949ac1ecae 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -664,6 +664,13 @@ xfs_bmap_extents_to_btree(
+>  	if (error)
+>  		goto out_root_realloc;
+>  
+> +	if (args.fsbno == NULLFSBLOCK && args.type == XFS_ALLOCTYPE_NEAR_BNO) {
+> +		args.type = XFS_ALLOCTYPE_START_BNO;
+> +		error = xfs_alloc_vextent(&args);
+> +		if (error)
+> +			goto out_root_realloc;
+> +	}
+> +
+>  	if (WARN_ON_ONCE(args.fsbno == NULLFSBLOCK)) {
+>  		error = -ENOSPC;
+>  		goto out_root_realloc;
+
+It might, but it doesn't fix the root cause which is that we
+selected an AG without enough space in it for the entire chain of
+allocations in the first place.
+
+> Or this:
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 4dccd4d90622..94e4ecb75561 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -647,14 +647,10 @@ xfs_bmap_extents_to_btree(
+>  	args.tp = tp;
+>  	args.mp = mp;
+>  	xfs_rmap_ino_bmbt_owner(&args.oinfo, ip->i_ino, whichfork);
+> +	args.type = XFS_ALLOCTYPE_START_BNO;
+>  	if (tp->t_firstblock == NULLFSBLOCK) {
+> -		args.type = XFS_ALLOCTYPE_START_BNO;
+>  		args.fsbno = XFS_INO_TO_FSB(mp, ip->i_ino);
+> -	} else if (tp->t_flags & XFS_TRANS_LOWMODE) {
+> -		args.type = XFS_ALLOCTYPE_START_BNO;
+> -		args.fsbno = tp->t_firstblock;
+>  	} else {
+> -		args.type = XFS_ALLOCTYPE_NEAR_BNO;
+>  		args.fsbno = tp->t_firstblock;
+>  	}
+>  	args.minlen = args.maxlen = args.prod = 1;
+
+Same again - hides the symptom, doesn't address the root cause.
+
+> be a reasonable way to address the WARN?  Or does this open a box of
+> problems that obvious to the experienced, but just subtle enough to
+> elude the unfamiliar?
+
+No, yes, and yes.
+
+> I ask because these filesystems are pretty busy on a day to day basis
+> and the path where t_firstblock is NULLFSBLOCK is never hitting this
+> problem.  The overall workload is a btree based database.  Lots of
+> random reads and writes to many files that all live in the same
+> directory.
+
+Which indicates that you are likely hitting AG full conditions more
+frequently than not.
+
+> meta-data=/dev/mapper/db-vol     isize=512    agcount=32, agsize=228849020 blks
+>          =                       sectsz=512   attr=2, projid32bit=1
+>          =                       crc=1        finobt=1, sparse=1, rmapbt=0
+>          =                       reflink=1
+....
+> The xfs_db freesp report after the problem occurred.  (N.B. it was a few
+> hours before I was able to get to this machine to investigate)
+> 
+> xfs_db -r -c 'freesp -a 47 -s' /dev/mapper/db-vol
+>    from      to extents  blocks    pct
+>       1       1      48      48   0.00
+>       2       3     119     303   0.02
+>       4       7      46     250   0.01
+>       8      15      22     255   0.01
+>      16      31      17     374   0.02
+>      32      63      16     728   0.04
+>      64     127       9     997   0.05
+>     128     255     149   34271   1.83
+>     256     511       7    2241   0.12
+>     512    1023       4    2284   0.12
+>    1024    2047       1    1280   0.07
+>    2048    4095       1    3452   0.18
+> 1048576 2097151       1 1825182  97.52
+> total free extents 440
+> total free blocks 1871665
+> average free extent size 4253.78
+
+So 1,871,665 of 228,849,020 blocks free in the AG. That's 99.2%
+full, so it's extremely likely you are hitting a full AG condition.
+
+/me goes and looks at xfs_iomap_write_direct()....
+
+.... and notices that it passes "0" as the total allocation block
+count, which means it isn't reserving space in the AG for both the
+data extent and the BMBT blocks...
+
+... and several other xfs_bmapi_write() callers have the same
+issue...
+
+Ok, let me spend a bit more looking into this in more depth, but it
+looks like the problem is at the xfs_bmapi_write() caller level, not
+deep in the allocator itself.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
