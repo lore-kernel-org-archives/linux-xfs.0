@@ -2,215 +2,163 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA052C433FE
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 Jan 2022 20:07:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6478CC433F5
+	for <linux-xfs@archiver.kernel.org>; Thu,  6 Jan 2022 20:31:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232343AbiAFUH7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 6 Jan 2022 15:07:59 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:45874 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231401AbiAFUH6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Jan 2022 15:07:58 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1641499678;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=Eim3UDcPYBHr/me/rHdRrqYhxCR08CSHkZPgGhAtWLo=;
-        b=bxmLQ4LcEaIoDVSJamfu+CELX59p+yp+OP8D5ErvH4n9FfhaAbuHKLCq/dVJNrfkIN6wMU
-        0qTq5E7vMSNH4Yz9cHLhIRFAhwjgpx1yb9rdnbWJ6XDxCiWC7Cymo5jjldmGAq5qJ2QQo+
-        a2MAIbHgJyAjlL1N7I2Jmc3tNPVlZ8U=
-Received: from mail-qv1-f69.google.com (mail-qv1-f69.google.com
- [209.85.219.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-597-lRPmfy2JPPed61mUkuNRrw-1; Thu, 06 Jan 2022 15:07:57 -0500
-X-MC-Unique: lRPmfy2JPPed61mUkuNRrw-1
-Received: by mail-qv1-f69.google.com with SMTP id 13-20020a0562140d0d00b00411590233e8so3073352qvh.15
-        for <linux-xfs@vger.kernel.org>; Thu, 06 Jan 2022 12:07:56 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=Eim3UDcPYBHr/me/rHdRrqYhxCR08CSHkZPgGhAtWLo=;
-        b=4mJWgxu4xUtgD6GihzUqZ7rvK7Ht/PJK7mken1LBDH26tGWckVLgt7Iw44FnqPdf1J
-         lnnKntilOjFVgkcwaIati6fvx/zXrIVY8aIbx1gixPf0E5XUmmdF+iwt809BKriRpPIe
-         2MDd2+csrF/xQ2Y47yp39gMq1cpKNZlfb6JPqXfzbXsVHsz2wMhuWdlkS9B8cXd30sxq
-         ww9NeZgijfWHj3IQ2Kw6r/Z4uCLj4yCz3sx/nAkUUpjhiFsOIit2ICiucUT68RKkNGxX
-         nsgcOQAyoskLV8n+CCagL39+02dpmXC3n3JcOGszThJFhlqT/lgfPGW3Di1ITaQXtbWZ
-         NsaA==
-X-Gm-Message-State: AOAM531QSDf2EhpDKDzcRCAVAsPJlz7Rtw3HOEN3S3B708Sx3vEPDo5V
-        Q498ogE7d2WzfTOY9BUmlEjAzCnhXX+Chss95CQaXsfHjOEpnKdn+ZvkSwKeJkuBI/xi+3z8/uj
-        enLHUoER2Uw1DOzOFeZvr
-X-Received: by 2002:a05:6214:401a:: with SMTP id kd26mr33623820qvb.30.1641499676200;
-        Thu, 06 Jan 2022 12:07:56 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJzDCDZ4Kv/wPQ0cuOzh5XgF9r9sRIVj+c1Ja6rWRjJ21Zty8ZRvB9IoK0HdS+82u0N0mZUhCQ==
-X-Received: by 2002:a05:6214:401a:: with SMTP id kd26mr33623794qvb.30.1641499675959;
-        Thu, 06 Jan 2022 12:07:55 -0800 (PST)
-Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
-        by smtp.gmail.com with ESMTPSA id b11sm2293050qtx.85.2022.01.06.12.07.55
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 06 Jan 2022 12:07:55 -0800 (PST)
-Date:   Thu, 6 Jan 2022 15:07:53 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     Trond Myklebust <trondmy@hammerspace.com>
-Cc:     "david@fromorbit.com" <david@fromorbit.com>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "trondmy@kernel.org" <trondmy@kernel.org>,
-        "hch@infradead.org" <hch@infradead.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "djwong@kernel.org" <djwong@kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "willy@infradead.org" <willy@infradead.org>
-Subject: Re: [PATCH] iomap: Address soft lockup in iomap_finish_ioend()
-Message-ID: <YddMGRQrYOWr6V9A@bfoster>
-References: <6f746786a3928844fbe644e7e409008b4f50c239.camel@hammerspace.com>
- <20220101035516.GE945095@dread.disaster.area>
- <fb964769132eb01ed4e8b67d6972d50ee3387e24.camel@hammerspace.com>
- <20220103220310.GG945095@dread.disaster.area>
- <9f51fa6169f4c67d54dd8563b52c540c94c7703a.camel@hammerspace.com>
- <20220104012215.GH945095@dread.disaster.area>
- <0996c40657b5873dda5119344bf74556491e27b9.camel@hammerspace.com>
- <c9d9b7850c6086b123b4add4de7b1992cb62f6ad.camel@hammerspace.com>
- <20220105224829.GO945095@dread.disaster.area>
- <28e975e8235a41c529bccb2bc0e73b4bb2d1e45e.camel@hammerspace.com>
+        id S243787AbiAFUbe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 6 Jan 2022 15:31:34 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:53478 "EHLO
+        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S243719AbiAFUbe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Jan 2022 15:31:34 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 086FA61D95
+        for <linux-xfs@vger.kernel.org>; Thu,  6 Jan 2022 20:31:34 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65D26C36AE3;
+        Thu,  6 Jan 2022 20:31:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1641501093;
+        bh=cBXDuWh2DNk27nk9Sn+DnE5atLk+f9geEC24F5e/G6w=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=SJY1xY0QejWASiftkOdb/VDj5CE7FaJUrPNNF7M/EKGqq7aLUkHxs/+Fc05kdj+ga
+         v3e+ShivHIv/IuymzyPujq4lqnFByC/VEuPiuaDFPf3NMqRkfdi40A+VOOXazEmiSK
+         pfiS8DRob/rAYVcuDxjvnlQcgWC6PoukQu7HJbx1CdS9IoyiYvyUTCnaElPyZBp+YN
+         RISS1kcoiX/7ezS8656T5XZM9dFNFTWkIFshHuHP2b8oHhGa3iNAYAwaSLu21PTxWy
+         ucVmqMizFX06NG0PRr7tmNIyRegmvPlmxfjcn/rt7SnLntCekD6GYmXOk+ek+GdzIE
+         tzBZbKMSCNWKQ==
+Date:   Thu, 6 Jan 2022 12:31:32 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Chandan Babu R <chandan.babu@oracle.com>
+Cc:     kernel test robot <lkp@intel.com>, linux-xfs@vger.kernel.org,
+        kbuild-all@lists.01.org, david@fromorbit.com
+Subject: Re: [PATCH V4 06/16] xfs: Promote xfs_extnum_t and xfs_aextnum_t to
+ 64 and 32-bits respectively
+Message-ID: <20220106203132.GQ656707@magnolia>
+References: <20211214084519.759272-7-chandan.babu@oracle.com>
+ <202112142335.O3Nu0vQI-lkp@intel.com>
+ <87a6h22pjf.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <20220104235457.GM31583@magnolia>
+ <87h7ai8e2o.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <20220105172117.GH656707@magnolia>
+ <87r19lwdky.fsf@debian-BULLSEYE-live-builder-AMD64>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <28e975e8235a41c529bccb2bc0e73b4bb2d1e45e.camel@hammerspace.com>
+In-Reply-To: <87r19lwdky.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jan 06, 2022 at 06:36:52PM +0000, Trond Myklebust wrote:
-> On Thu, 2022-01-06 at 09:48 +1100, Dave Chinner wrote:
-> > On Wed, Jan 05, 2022 at 08:45:05PM +0000, Trond Myklebust wrote:
-> > > On Tue, 2022-01-04 at 21:09 -0500, Trond Myklebust wrote:
-> > > > On Tue, 2022-01-04 at 12:22 +1100, Dave Chinner wrote:
-> > > > > On Tue, Jan 04, 2022 at 12:04:23AM +0000, Trond Myklebust
-> > > > > wrote:
-> > > > > > We have different reproducers. The common feature appears to
-> > > > > > be
-> > > > > > the
-> > > > > > need for a decently fast box with fairly large memory (128GB
-> > > > > > in
-> > > > > > one
-> > > > > > case, 400GB in the other). It has been reproduced with HDs,
-> > > > > > SSDs
-> > > > > > and
-> > > > > > NVME systems.
-> > > > > > 
-> > > > > > On the 128GB box, we had it set up with 10+ disks in a JBOD
-> > > > > > configuration and were running the AJA system tests.
-> > > > > > 
-> > > > > > On the 400GB box, we were just serially creating large (>
-> > > > > > 6GB)
-> > > > > > files
-> > > > > > using fio and that was occasionally triggering the issue.
-> > > > > > However
-> > > > > > doing
-> > > > > > an strace of that workload to disk reproduced the problem
-> > > > > > faster
-> > > > > > :-
-> > > > > > ).
-> > > > > 
-> > > > > Ok, that matches up with the "lots of logically sequential
-> > > > > dirty
-> > > > > data on a single inode in cache" vector that is required to
-> > > > > create
-> > > > > really long bio chains on individual ioends.
-> > > > > 
-> > > > > Can you try the patch below and see if addresses the issue?
-> > > > > 
-> > > > 
-> > > > That patch does seem to fix the soft lockups.
-> > > > 
-> > > 
-> > > Oops... Strike that, apparently our tests just hit the following
-> > > when
-> > > running on AWS with that patch.
-> > 
-> > OK, so there are also large contiguous physical extents being
-> > allocated in some cases here.
-> > 
-> > > So it was harder to hit, but we still did eventually.
-> > 
-> > Yup, that's what I wanted to know - it indicates that both the
-> > filesystem completion processing and the iomap page processing play
-> > a role in the CPU usage. More complex patch for you to try below...
-> > 
-> > Cheers,
-> > 
-> > Dave.
+On Thu, Jan 06, 2022 at 12:33:25PM +0530, Chandan Babu R wrote:
+> On 05 Jan 2022 at 22:51, Darrick J. Wong wrote:
+> > On Wed, Jan 05, 2022 at 07:44:23PM +0530, Chandan Babu R wrote:
+> >> On 05 Jan 2022 at 05:24, Darrick J. Wong wrote:
+> >> > On Wed, Dec 15, 2021 at 02:49:48PM +0530, Chandan Babu R wrote:
+> >> >> On 14 Dec 2021 at 20:45, kernel test robot wrote:
+> >> >> > Hi Chandan,
+> >> >> >
+> >> >> > Thank you for the patch! Yet something to improve:
+> >> >> >
+> >> >> > [auto build test ERROR on xfs-linux/for-next]
+> >> >> > [also build test ERROR on v5.16-rc5]
+> >> >> > [If your patch is applied to the wrong git tree, kindly drop us a note.
+> >> >> > And when submitting patch, we suggest to use '--base' as documented in
+> >> >> > https://git-scm.com/docs/git-format-patch]
+> >> >> >
+> >> >> > url:    https://github.com/0day-ci/linux/commits/Chandan-Babu-R/xfs-Extend-per-inode-extent-counters/20211214-164920
+> >> >> > base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
+> >> >> > config: microblaze-randconfig-r016-20211214 (https://download.01.org/0day-ci/archive/20211214/202112142335.O3Nu0vQI-lkp@intel.com/config)
+> >> >> > compiler: microblaze-linux-gcc (GCC) 11.2.0
+> >> >> > reproduce (this is a W=1 build):
+> >> >> >         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+> >> >> >         chmod +x ~/bin/make.cross
+> >> >> >         # https://github.com/0day-ci/linux/commit/db28da144803c4262c0d8622d736a7d20952ef6b
+> >> >> >         git remote add linux-review https://github.com/0day-ci/linux
+> >> >> >         git fetch --no-tags linux-review Chandan-Babu-R/xfs-Extend-per-inode-extent-counters/20211214-164920
+> >> >> >         git checkout db28da144803c4262c0d8622d736a7d20952ef6b
+> >> >> >         # save the config file to linux build tree
+> >> >> >         mkdir build_dir
+> >> >> >         COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.2.0 make.cross O=build_dir ARCH=microblaze SHELL=/bin/bash
+> >> >> >
+> >> >> > If you fix the issue, kindly add following tag as appropriate
+> >> >> > Reported-by: kernel test robot <lkp@intel.com>
+> >> >> >
+> >> >> > All errors (new ones prefixed by >>):
+> >> >> >
+> >> >> >    microblaze-linux-ld: fs/xfs/libxfs/xfs_bmap.o: in function `xfs_bmap_compute_maxlevels':
+> >> >> >>> (.text+0x10cc0): undefined reference to `__udivdi3'
+> >> >> >
+> >> >> 
+> >> >> The fix for the compilation error on 32-bit systems involved invoking do_div()
+> >> >> instead of using the regular division operator. I will include the fix in the
+> >> >> next version of the patchset.
+> >> >
+> >> > So, uh, how did you resolve this in the end?
+> >> >
+> >> > 	maxblocks = roundup_64(maxleafents, minleafrecs);
+> >> >
+> >> > and
+> >> >
+> >> > 	maxblocks = roundup_64(maxblocks, minnodrecs);
+> >> >
+> >> > ?
+> >> 
+> >> I had made the following changes,
+> >> 
+> >> 	maxblocks = maxleafents + minleafrecs - 1;
+> >> 	do_div(maxblocks, minleafrecs);
+> >> 
+> >> and
+> >> 	maxblocks += minnoderecs - 1;
+> >> 	do_div(maxblocks, minnoderecs);
+> >> 
+> >> roundup_64() would cause maxleafents to have a value >= its previous value
+> >> right?
 > 
-> Hi Dave,
+> Sorry, I meant to say "The result of roundup_64(maxleafents, minleafrecs) will
+> be >= than maxleafents".
 > 
-> This patch got further than the previous one. However it too failed on
-> the same AWS setup after we started creating larger (in this case 52GB)
-> files. The previous patch failed at 15GB.
+> The original statement was,
+> maxblocks = (maxleafents + minleafrecs - 1) / minleafrecs;
+> i.e. maxblocks would contain the number of leaf blocks required to hold
+> maxleafents number of records.
 > 
-
-Care to try my old series [1] that attempted to address this, assuming
-it still applies to your kernel? You should only need patches 1 and 2.
-You can toss in patch 3 if you'd like, but as Dave's earlier patch has
-shown, this can just make it harder to reproduce.
-
-I don't know if this will go anywhere as is, but I was never able to get
-any sort of confirmation from the previous reporter to understand at
-least whether it is effective. I agree with Jens' earlier concern that
-the per-page yields are probably overkill, but if it were otherwise
-effective it shouldn't be that hard to add filtering. Patch 3 could also
-technically be used in place of patch 1 if we really wanted to go that
-route, but I wouldn't take that step until there was some verification
-that the yielding heuristic is effective.
-
-Brian
-
-[1] https://lore.kernel.org/linux-xfs/20210517171722.1266878-1-bfoster@redhat.com/
-
-> NR_06-18:00:17 pm-46088DSX1 /mnt/data-portal/data $ ls -lh
-> total 59G
-> -rw-r----- 1 root root  52G Jan  6 18:20 100g
-> -rw-r----- 1 root root 9.8G Jan  6 17:38 10g
-> -rw-r----- 1 root root   29 Jan  6 17:36 file
-> NR_06-18:20:10 pm-46088DSX1 /mnt/data-portal/data $
-> Message from syslogd@pm-46088DSX1 at Jan  6 18:22:44 ...
->  kernel:[ 5548.082987] watchdog: BUG: soft lockup - CPU#10 stuck for
-> 24s! [kworker/10:0:18995]
-> Message from syslogd@pm-46088DSX1 at Jan  6 18:23:44 ...
->  kernel:[ 5608.082895] watchdog: BUG: soft lockup - CPU#10 stuck for
-> 23s! [kworker/10:0:18995]
-> Message from syslogd@pm-46088DSX1 at Jan  6 18:27:08 ...
->  kernel:[ 5812.082587] watchdog: BUG: soft lockup - CPU#10 stuck for
-> 22s! [kworker/10:0:18995]
-> Message from syslogd@pm-46088DSX1 at Jan  6 18:27:36 ...
->  kernel:[ 5840.082533] watchdog: BUG: soft lockup - CPU#10 stuck for
-> 21s! [kworker/10:0:18995]
-> Message from syslogd@pm-46088DSX1 at Jan  6 18:28:08 ...
->  kernel:[ 5872.082455] watchdog: BUG: soft lockup - CPU#10 stuck for
-> 21s! [kworker/10:0:18995]
-> Message from syslogd@pm-46088DSX1 at Jan  6 18:28:40 ...
->  kernel:[ 5904.082400] watchdog: BUG: soft lockup - CPU#10 stuck for
-> 21s! [kworker/10:0:18995]
-> Message from syslogd@pm-46088DSX1 at Jan  6 18:29:16 ...
->  kernel:[ 5940.082243] watchdog: BUG: soft lockup - CPU#10 stuck for
-> 21s! [kworker/10:0:18995]
-> Message from syslogd@pm-46088DSX1 at Jan  6 18:29:44 ...
->  kernel:[ 5968.082249] watchdog: BUG: soft lockup - CPU#10 stuck for
-> 22s! [kworker/10:0:18995]
-> Message from syslogd@pm-46088DSX1 at Jan  6 18:30:24 ...
->  kernel:[ 6008.082204] watchdog: BUG: soft lockup - CPU#10 stuck for
-> 21s! [kworker/10:0:18995]
-> Message from syslogd@pm-46088DSX1 at Jan  6 18:31:08 ...
->  kernel:[ 6052.082194] watchdog: BUG: soft lockup - CPU#10 stuck for
-> 24s! [kworker/10:0:18995]
-> Message from syslogd@pm-46088DSX1 at Jan  6 18:31:48 ...
->  kernel:[ 6092.082010] watchdog: BUG: soft lockup - CPU#10 stuck for
-> 21s! [kworker/10:0:18995]
+> With maxleafents = 2^48, minleafrecs = minnoderecs = 125,
+> "maxblocks = (maxleafents + minleafrecs - 1) / minleafrecs" would result in,
+> maxblocks = (2^48 + 125 - 1) / 125
+>           = ~2^41
 > 
+> >
+> > roundup_64 doesn't alter its parameters, if I'm not mistaken:
+> >
+> > static inline uint64_t roundup_64(uint64_t x, uint32_t y)
+> > {
+> > 	x += y - 1;
+> > 	do_div(x, y);
+> > 	return x * y;
+> > }
+> >
+>           
+> A call to roundup_64(maxleafents, minleafrecs) would result in,
+> x = 2^48 + 125 - 1
+> x = do_div((2^48 + 125 - 1), 125) = ~2^41
+> x = 2^41 * 125 = ~2^48
+> 
+> i.e. maxblocks will not have the number of required leaf blocks.
+
+Arrrgh.  I meant to say "howmany_64", not "roundup_64".  Sorry for
+wasting everybody's time. :(
+
+static inline uint64_t howmany_64(uint64_t x, uint32_t y)
+{
+	x += y - 1;
+	do_div(x, y);
+	return x;	// <-- we don't multiply by (y)
+}
+
+--D
+
 > -- 
-> Trond Myklebust
-> Linux NFS client maintainer, Hammerspace
-> trond.myklebust@hammerspace.com
-> 
-> 
-
+> chandan
