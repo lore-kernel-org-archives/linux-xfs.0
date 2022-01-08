@@ -2,178 +2,191 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CB7FC433F5
-	for <linux-xfs@archiver.kernel.org>; Sat,  8 Jan 2022 23:22:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B614C433EF
+	for <linux-xfs@archiver.kernel.org>; Sat,  8 Jan 2022 23:23:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233699AbiAHXWI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 8 Jan 2022 18:22:08 -0500
-Received: from ams.source.kernel.org ([145.40.68.75]:55664 "EHLO
-        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233615AbiAHXWI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 8 Jan 2022 18:22:08 -0500
+        id S230453AbiAHXXl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 8 Jan 2022 18:23:41 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:40698 "EHLO
+        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229761AbiAHXXl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 8 Jan 2022 18:23:41 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id CD5CBB80972
-        for <linux-xfs@vger.kernel.org>; Sat,  8 Jan 2022 23:22:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6BE3EC36AE5;
-        Sat,  8 Jan 2022 23:22:05 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1F9FF60EA9
+        for <linux-xfs@vger.kernel.org>; Sat,  8 Jan 2022 23:23:41 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78296C36AE9;
+        Sat,  8 Jan 2022 23:23:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1641684125;
-        bh=LZS84ZFtEfdHRs+KQCtFhv/10MnFJ6jm6gVW/0m68gw=;
-        h=Date:From:To:Cc:Subject:From;
-        b=oxBg/U6j8W1m7HHUxQRLLvnYN8pPNaG1IY0Co5t4rCEWNLgpLm6+uvPC1G5hYEVwB
-         QqECHWNva3PU5dj+yoGLEcPwWN9FFubhL/r2iahxdsjPflJTiQW26+N8EzbPBfL3l1
-         P6s5cku1TWOF0qNYMBURdAfnPIbsr4Yy73iHM0Izp0i9VrRhig3Mkq35vomgjcRl+u
-         4L/l1gOTfyhUSzUS8pPtKnGPtuSRW126cFKb2UTltchbAEEzttJv4+gr6TmAew7qb2
-         ohnZsijGMszX9tzYn7P1vlea/6ezemapA+3/IaDPeaq88BKETE5+oDfiQbkP/t1ekh
-         Q76RhWOON04ow==
-Date:   Sat, 8 Jan 2022 15:22:03 -0800
+        s=k20201202; t=1641684220;
+        bh=iGxN0NFemHXe6rtknE8RkcJDEQ+nI+Hka/OCK+F3gB4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=hHkbry4t+s05Upqr9mcbkJrBfSeJgk2NB/b+RWp5iDmf+IHtzk9jxLtbb/0qyyFaY
+         215BokWkF9WYfN0bnd6ivr9dS5nMXoux8MZ3wBcBA5Dqjy9aYT/i7Y2gVfb9gsbuwE
+         j3uOi40j8cSf31oA99X+eECeZOFi5MGS+kJWKgSxXTIrIvT76ur/HbKW9/lQWB9UaO
+         v0I03it7qaYvVB0K3cIkXt6br1GnolK1OnetEfiWoPL5w0Q5h0kLL1d5qJYLj5pGAT
+         yZt1uNc6vFQHJklMGsXa0wEEdytteSRRS78XKycvZpMT72ESI1cdZTahttVuN9aDIr
+         qQpCwySaWfojg==
+Date:   Sat, 8 Jan 2022 15:23:38 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: [PATCH] xfs: fix online fsck handling of v5 feature bits on
- secondary supers
-Message-ID: <20220108232203.GU656707@magnolia>
+To:     Theodore Ts'o <tytso@mit.edu>
+Cc:     Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfsprogs: fix static build problems caused by liburcu
+Message-ID: <20220108232338.GV656707@magnolia>
+References: <20220108195739.1212901-1-tytso@mit.edu>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20220108195739.1212901-1-tytso@mit.edu>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Sat, Jan 08, 2022 at 02:57:39PM -0500, Theodore Ts'o wrote:
+> The liburcu library has a dependency on pthreads.  Hence, in order for
+> static builds of xfsprogs to work, $(LIBPTHREAD) needs to appear
+> *after* $(LUBURCU) in LLDLIBS.  Otherwise, static links of xfs_* will
+> fail due to undefined references of pthread_create, pthread_exit,
+> et. al.
+> 
+> Signed-off-by: Theodore Ts'o <tytso@mit.edu>
 
-While I was auditing the code in xfs_repair that adds feature bits to
-existing V5 filesystems, I decided to have a look at how online fsck
-handles feature bits, and I found a few problems:
+Ugh, I keep forgetting that ld wants library dependencies in reverse
+order nowadays...
 
-1) ATTR2 is added to the primary super when an xattr is set to a file,
-but that isn't consistently propagated to secondary supers.  This isn't
-a corruption, merely a discrepancy that repair will fix if it ever has
-to restore the primary from a secondary.  Hence, if we find a mismatch
-on a secondary, this is a preen condition, not a corruption.
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-2) There are more compat and ro_compat features now than there used to
-be, but we mask off the newer features from testing.  This means we
-ignore inconsistencies in the INOBTCOUNT and BIGTIME features, which is
-wrong.  Get rid of the masking and compare directly.
+--D
 
-3) NEEDSREPAIR, when set on a secondary, is ignored by everyone.  Hence
-a mismatch here should also be flagged for preening, and online repair
-should clear the flag.  Right now we ignore it due to (2).
-
-4) log_incompat features are ephemeral, since we can clear the feature
-bit as soon as the log no longer contains live records for a particular
-log feature.  As such, the only copy we care about is the one in the
-primary super.  If we find any bits set in the secondary super, we
-should flag that for preening, and clear the bits if the user elects to
-repair it.
-
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/scrub/agheader.c        |   53 ++++++++++++++++++++--------------------
- fs/xfs/scrub/agheader_repair.c |   12 +++++++++
- 2 files changed, 38 insertions(+), 27 deletions(-)
-
-diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-index bed798792226..90aebfe9dc5f 100644
---- a/fs/xfs/scrub/agheader.c
-+++ b/fs/xfs/scrub/agheader.c
-@@ -281,7 +281,7 @@ xchk_superblock(
- 	features_mask = cpu_to_be32(XFS_SB_VERSION2_ATTR2BIT);
- 	if ((sb->sb_features2 & features_mask) !=
- 	    (cpu_to_be32(mp->m_sb.sb_features2) & features_mask))
--		xchk_block_set_corrupt(sc, bp);
-+		xchk_block_set_preen(sc, bp);
- 
- 	if (!xfs_has_crc(mp)) {
- 		/* all v5 fields must be zero */
-@@ -290,39 +290,38 @@ xchk_superblock(
- 				offsetof(struct xfs_dsb, sb_features_compat)))
- 			xchk_block_set_corrupt(sc, bp);
- 	} else {
--		/* Check compat flags; all are set at mkfs time. */
--		features_mask = cpu_to_be32(XFS_SB_FEAT_COMPAT_UNKNOWN);
--		if ((sb->sb_features_compat & features_mask) !=
--		    (cpu_to_be32(mp->m_sb.sb_features_compat) & features_mask))
-+		/* compat features must match */
-+		if (sb->sb_features_compat !=
-+				cpu_to_be32(mp->m_sb.sb_features_compat))
- 			xchk_block_set_corrupt(sc, bp);
- 
--		/* Check ro compat flags; all are set at mkfs time. */
--		features_mask = cpu_to_be32(XFS_SB_FEAT_RO_COMPAT_UNKNOWN |
--					    XFS_SB_FEAT_RO_COMPAT_FINOBT |
--					    XFS_SB_FEAT_RO_COMPAT_RMAPBT |
--					    XFS_SB_FEAT_RO_COMPAT_REFLINK);
--		if ((sb->sb_features_ro_compat & features_mask) !=
--		    (cpu_to_be32(mp->m_sb.sb_features_ro_compat) &
--		     features_mask))
-+		/* ro compat features must match */
-+		if (sb->sb_features_ro_compat !=
-+				cpu_to_be32(mp->m_sb.sb_features_ro_compat))
- 			xchk_block_set_corrupt(sc, bp);
- 
--		/* Check incompat flags; all are set at mkfs time. */
--		features_mask = cpu_to_be32(XFS_SB_FEAT_INCOMPAT_UNKNOWN |
--					    XFS_SB_FEAT_INCOMPAT_FTYPE |
--					    XFS_SB_FEAT_INCOMPAT_SPINODES |
--					    XFS_SB_FEAT_INCOMPAT_META_UUID);
--		if ((sb->sb_features_incompat & features_mask) !=
--		    (cpu_to_be32(mp->m_sb.sb_features_incompat) &
--		     features_mask))
--			xchk_block_set_corrupt(sc, bp);
-+		/*
-+		 * NEEDSREPAIR is ignored on a secondary super, so we should
-+		 * clear it when we find it, though it's not a corruption.
-+		 */
-+		features_mask = cpu_to_be32(XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR);
-+		if ((cpu_to_be32(mp->m_sb.sb_features_incompat) ^
-+				sb->sb_features_incompat) & features_mask)
-+			xchk_block_set_preen(sc, bp);
- 
--		/* Check log incompat flags; all are set at mkfs time. */
--		features_mask = cpu_to_be32(XFS_SB_FEAT_INCOMPAT_LOG_UNKNOWN);
--		if ((sb->sb_features_log_incompat & features_mask) !=
--		    (cpu_to_be32(mp->m_sb.sb_features_log_incompat) &
--		     features_mask))
-+		/* all other incompat features must match */
-+		if ((cpu_to_be32(mp->m_sb.sb_features_incompat) ^
-+				sb->sb_features_incompat) & ~features_mask)
- 			xchk_block_set_corrupt(sc, bp);
- 
-+		/*
-+		 * log incompat features protect newer log record types from
-+		 * older log recovery code.  Log recovery doesn't check the
-+		 * secondary supers, so we can clear these if needed.
-+		 */
-+		if (sb->sb_features_log_incompat)
-+			xchk_block_set_preen(sc, bp);
-+
- 		/* Don't care about sb_crc */
- 
- 		if (sb->sb_spino_align != cpu_to_be32(mp->m_sb.sb_spino_align))
-diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
-index d7bfed52f4cd..6da7f2ca77de 100644
---- a/fs/xfs/scrub/agheader_repair.c
-+++ b/fs/xfs/scrub/agheader_repair.c
-@@ -52,6 +52,18 @@ xrep_superblock(
- 	xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
- 	xfs_sb_to_disk(bp->b_addr, &mp->m_sb);
- 
-+	/*
-+	 * Don't write out a secondary super with NEEDSREPAIR or log incompat
-+	 * features set, since both are ignored when set on a secondary.
-+	 */
-+	if (xfs_has_crc(mp)) {
-+		struct xfs_dsb		*sb = bp->b_addr;
-+
-+		sb->sb_features_incompat &=
-+				~cpu_to_be32(XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR);
-+		sb->sb_features_log_incompat = 0;
-+	}
-+
- 	/* Write this to disk. */
- 	xfs_trans_buf_set_type(sc->tp, bp, XFS_BLFT_SB_BUF);
- 	xfs_trans_log_buf(sc->tp, bp, 0, BBTOB(bp->b_length) - 1);
+> ---
+>  copy/Makefile      | 4 ++--
+>  db/Makefile        | 4 ++--
+>  growfs/Makefile    | 4 ++--
+>  logprint/Makefile  | 4 ++--
+>  mdrestore/Makefile | 3 +--
+>  mkfs/Makefile      | 4 ++--
+>  repair/Makefile    | 2 +-
+>  scrub/Makefile     | 4 ++--
+>  8 files changed, 14 insertions(+), 15 deletions(-)
+> 
+> diff --git a/copy/Makefile b/copy/Makefile
+> index 1b00cd0d..55160f84 100644
+> --- a/copy/Makefile
+> +++ b/copy/Makefile
+> @@ -9,8 +9,8 @@ LTCOMMAND = xfs_copy
+>  CFILES = xfs_copy.c
+>  HFILES = xfs_copy.h
+>  
+> -LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBPTHREAD) $(LIBRT) \
+> -	  $(LIBURCU)
+> +LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBURCU) \
+> +	  $(LIBPTHREAD)
+>  LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG) $(LIBFROG)
+>  LLDFLAGS = -static-libtool-libs
+>  
+> diff --git a/db/Makefile b/db/Makefile
+> index 5c017898..b2e01174 100644
+> --- a/db/Makefile
+> +++ b/db/Makefile
+> @@ -18,8 +18,8 @@ CFILES = $(HFILES:.h=.c) btdump.c btheight.c convert.c info.c namei.c \
+>  	timelimit.c
+>  LSRCFILES = xfs_admin.sh xfs_ncheck.sh xfs_metadump.sh
+>  
+> -LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD) \
+> -	  $(LIBURCU)
+> +LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBURCU) \
+> +	  $(LIBPTHREAD)
+>  LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG) $(LIBFROG)
+>  LLDFLAGS += -static-libtool-libs
+>  
+> diff --git a/growfs/Makefile b/growfs/Makefile
+> index 08601de7..2f4cc66a 100644
+> --- a/growfs/Makefile
+> +++ b/growfs/Makefile
+> @@ -9,8 +9,8 @@ LTCOMMAND = xfs_growfs
+>  
+>  CFILES = xfs_growfs.c
+>  
+> -LLDLIBS = $(LIBXFS) $(LIBXCMD) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD) \
+> -	  $(LIBURCU)
+> +LLDLIBS = $(LIBXFS) $(LIBXCMD) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBURCU) \
+> +	  $(LIBPTHREAD)
+>  
+>  ifeq ($(ENABLE_EDITLINE),yes)
+>  LLDLIBS += $(LIBEDITLINE) $(LIBTERMCAP)
+> diff --git a/logprint/Makefile b/logprint/Makefile
+> index cdedbd0d..bbbed5d2 100644
+> --- a/logprint/Makefile
+> +++ b/logprint/Makefile
+> @@ -12,8 +12,8 @@ CFILES = logprint.c \
+>  	 log_copy.c log_dump.c log_misc.c \
+>  	 log_print_all.c log_print_trans.c log_redo.c
+>  
+> -LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD) \
+> -	  $(LIBURCU)
+> +LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBURCU) \
+> +	  $(LIBPTHREAD)
+>  LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG) $(LIBFROG)
+>  LLDFLAGS = -static-libtool-libs
+>  
+> diff --git a/mdrestore/Makefile b/mdrestore/Makefile
+> index 8f28ddab..4a932efb 100644
+> --- a/mdrestore/Makefile
+> +++ b/mdrestore/Makefile
+> @@ -8,8 +8,7 @@ include $(TOPDIR)/include/builddefs
+>  LTCOMMAND = xfs_mdrestore
+>  CFILES = xfs_mdrestore.c
+>  
+> -LLDLIBS = $(LIBXFS) $(LIBFROG) $(LIBRT) $(LIBPTHREAD) $(LIBUUID) \
+> -	  $(LIBURCU)
+> +LLDLIBS = $(LIBXFS) $(LIBFROG) $(LIBRT) $(LIBUUID) $(LIBURCU) $(LIBPTHREAD)
+>  LTDEPENDENCIES = $(LIBXFS) $(LIBFROG)
+>  LLDFLAGS = -static
+>  
+> diff --git a/mkfs/Makefile b/mkfs/Makefile
+> index 811ba9db..9f6a4fad 100644
+> --- a/mkfs/Makefile
+> +++ b/mkfs/Makefile
+> @@ -10,8 +10,8 @@ LTCOMMAND = mkfs.xfs
+>  HFILES =
+>  CFILES = proto.c xfs_mkfs.c
+>  
+> -LLDLIBS += $(LIBXFS) $(LIBXCMD) $(LIBFROG) $(LIBRT) $(LIBPTHREAD) $(LIBBLKID) \
+> -	$(LIBUUID) $(LIBINIH) $(LIBURCU)
+> +LLDLIBS += $(LIBXFS) $(LIBXCMD) $(LIBFROG) $(LIBRT) $(LIBBLKID) \
+> +	$(LIBUUID) $(LIBINIH) $(LIBURCU) $(LIBPTHREAD)
+>  LTDEPENDENCIES += $(LIBXFS) $(LIBXCMD) $(LIBFROG)
+>  LLDFLAGS = -static-libtool-libs
+>  
+> diff --git a/repair/Makefile b/repair/Makefile
+> index 47536ca1..2c40e59a 100644
+> --- a/repair/Makefile
+> +++ b/repair/Makefile
+> @@ -72,7 +72,7 @@ CFILES = \
+>  	xfs_repair.c
+>  
+>  LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBXCMD) $(LIBFROG) $(LIBUUID) $(LIBRT) \
+> -	$(LIBPTHREAD) $(LIBBLKID) $(LIBURCU)
+> +	$(LIBBLKID) $(LIBURCU) $(LIBPTHREAD)
+>  LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG) $(LIBXCMD) $(LIBFROG)
+>  LLDFLAGS = -static-libtool-libs
+>  
+> diff --git a/scrub/Makefile b/scrub/Makefile
+> index 849e3afd..fd6bb679 100644
+> --- a/scrub/Makefile
+> +++ b/scrub/Makefile
+> @@ -71,8 +71,8 @@ spacemap.c \
+>  vfs.c \
+>  xfs_scrub.c
+>  
+> -LLDLIBS += $(LIBHANDLE) $(LIBFROG) $(LIBPTHREAD) $(LIBICU_LIBS) $(LIBRT) \
+> -	$(LIBURCU)
+> +LLDLIBS += $(LIBHANDLE) $(LIBFROG) $(LIBICU_LIBS) $(LIBRT) $(LIBURCU) \
+> +	$(LIBPTHREAD)
+>  LTDEPENDENCIES += $(LIBHANDLE) $(LIBFROG)
+>  LLDFLAGS = -static
+>  
+> -- 
+> 2.31.0
+> 
