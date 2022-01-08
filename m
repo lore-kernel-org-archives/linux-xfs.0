@@ -2,50 +2,50 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92C9EC433F5
-	for <linux-xfs@archiver.kernel.org>; Sat,  8 Jan 2022 12:43:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30632C433EF
+	for <linux-xfs@archiver.kernel.org>; Sat,  8 Jan 2022 14:27:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234221AbiAHMnH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 8 Jan 2022 07:43:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57074 "EHLO
+        id S229797AbiAHO12 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 8 Jan 2022 09:27:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51560 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234193AbiAHMnG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 8 Jan 2022 07:43:06 -0500
-Received: from mail-yb1-xb2a.google.com (mail-yb1-xb2a.google.com [IPv6:2607:f8b0:4864:20::b2a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67E91C061574
-        for <linux-xfs@vger.kernel.org>; Sat,  8 Jan 2022 04:43:06 -0800 (PST)
-Received: by mail-yb1-xb2a.google.com with SMTP id y130so24612631ybe.8
-        for <linux-xfs@vger.kernel.org>; Sat, 08 Jan 2022 04:43:06 -0800 (PST)
+        with ESMTP id S229717AbiAHO12 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 8 Jan 2022 09:27:28 -0500
+Received: from mail-yb1-xb29.google.com (mail-yb1-xb29.google.com [IPv6:2607:f8b0:4864:20::b29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14797C061574
+        for <linux-xfs@vger.kernel.org>; Sat,  8 Jan 2022 06:27:28 -0800 (PST)
+Received: by mail-yb1-xb29.google.com with SMTP id i3so25140116ybh.11
+        for <linux-xfs@vger.kernel.org>; Sat, 08 Jan 2022 06:27:28 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=mime-version:from:date:message-id:subject:to;
         bh=NbloQuDXxv9yCGm1Y+NUh3k6t+5dbCpRh/scTKQSVsY=;
-        b=IM574gMqUzNZjLzPEezNtmZEicgqddZmzPaCa3O+aqXdeaHMpX6e1lP+/0g/Grypw7
-         hdn6IK/szPmfBEjjM5ec9Epz25uAgnkVaw/lrEgiJUdI94bcHvEiotD5jCE+oxNNERLi
-         v5gtrm4nVQmC7jiDesUwAy+hSFVzWV7JcqJ+kTHMy5MWlimoRmOnUW607DiPD+gHCsHu
-         QwvKe4Zt9sTWzkVCIEgXvn1XHrarnsalhbNRWV+ZwCyps7dr6aZodfsh1eq1WmLhQew4
-         32xZmhcHnRjvdDf+seYIrMrNv37nqt1XmuLz7HLvZN/bXfDjB2cELx/LI08hwkQLPiE2
-         Z2AQ==
+        b=YgEnXLEHspI34/ObrUB56/NrdcAQ4kQHOf096/N2dzDF02nigbp/hxkANv4JIbrV57
+         XggV+4rIBoBu6tHj9KooqAZhDJkwGBPhHrT7Vlf+42q6wsCvnRdjHDUgTg2c67wQwXIb
+         NxsO6AIcrISJ2ZlMk7uVPIo7unsNxurfZGQMiQMFuvq83HIkcQZa1hw5GdfJeOic4lB5
+         Z97RJNUO0XDmZr5cr/oUshCAJVZy6mwUsMVWCogKQE+M2XblVehLYQIs38yDLljZ28rq
+         UyEarx0fc/iUkm0OsWI3oh4SxD3VZcQJuro96+mMkg6XpmcDlaGW/HJif1YmciThVVG3
+         qUMg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
         bh=NbloQuDXxv9yCGm1Y+NUh3k6t+5dbCpRh/scTKQSVsY=;
-        b=zsAk5iD6yX41mzNNDNPEzbY+4uC2CgoOLB3EKovK2JxGMVvJcjmN++GKvQVaYOTrGv
-         awYHSm3ueH8fLWCVmrEwd+V+rs6Dttsxmw/LqbLbc9AvmVxud0oLLHQpGCNi7lpdJHPC
-         sgsaNCX24sTzijl/3oIdmZI4zts/PeTEh7MMQV2TGG+2qyTDqdLpwIKKOYQn8ag/DTJH
-         0ZcKpkgwgmI1wZnEjbZHyPB43x1VvqLF4A4HW80QNmV2trWRS82TXpl1YzrK1jQa60JN
-         Myh5W253SlcgK/SOoD+KImLRgwJcYdXQEkol5nVXahXM/v5892mMu0LNea1R6ZCp4MBb
-         NIYA==
-X-Gm-Message-State: AOAM530GXP6sZpFa0me66P3zlP6m/rDL9G6SGVo8LaOuNch3J0/Iv79w
-        J8qY2gBwyrWFrdnVGMhbJoHb5/wT8TjLn5BI4l1WTfjHbOQ=
-X-Google-Smtp-Source: ABdhPJzxivDMXJONzp+CUUkZ6u6BBMr9ASkxiSneWCEtX/NHbyFOHfqOOai+RWwpQBtLzqRgoLABaxBSKFXN7V7sHrU=
-X-Received: by 2002:a25:9347:: with SMTP id g7mr72681023ybo.255.1641645784854;
- Sat, 08 Jan 2022 04:43:04 -0800 (PST)
+        b=qVtXGlMC0S+eN4G0BK8uVQsV5PNqNwi5hCqGLymA2Ee2+JAu7vJjSTTCQnk9vldxqF
+         nKdMQXtnsNvPxI3n6lk+7Qv0HSCCebt5rW9W9IHA0cNcVWfWsSBxTmQPANvArqIJO2kt
+         A1FJb34fF3g+pWRLQNZc5I4MD/SjFNRyFm8N9MCNpN92myPX1I1R9bBKKUYoYCw6Pd3s
+         2iCzCrA5fu65Hsiw4iHuQPhSDswd9nwX2ENUv499JCXaBuvFtS9I2WQzV4KuoJxQwwTH
+         HtOu7vumvO0XpQG4db4WWtJJo8oydVeNnmGcMwlqnlRJwdTDCcpBNh/aFU+1nIJ6udfn
+         wHiQ==
+X-Gm-Message-State: AOAM5313PxcFVP4W0d6Ad1F1BPkeyYn3tXMGcIUi/nXWTs2AWA0C2BVl
+        ITM5BJBiFDZXw+zmbT1N/anpad2BBsZwNWV3HePTxBBjH/E=
+X-Google-Smtp-Source: ABdhPJyDdWMgFqUjYdKHIDxQMZWFA8Dg/gDnBBniniodYE/ERpJxy66TeuVNKa9yBiPXE4oVA7cOPs4BBFyvmrEwI6Y=
+X-Received: by 2002:a25:c50a:: with SMTP id v10mr62180678ybe.659.1641652047116;
+ Sat, 08 Jan 2022 06:27:27 -0800 (PST)
 MIME-Version: 1.0
 From:   =?UTF-8?Q?Juan_Sim=C3=B3n?= <decedion@gmail.com>
-Date:   Sat, 8 Jan 2022 13:42:29 +0100
-Message-ID: <CAMQzBqCGTw8+Fg7ErAOeC7t_vjAhBVjUzk_eB9qTnAL_xzykOg@mail.gmail.com>
-Subject: recommended scheduler for HDD drives
+Date:   Sat, 8 Jan 2022 15:26:51 +0100
+Message-ID: <CAMQzBqDkrnvdDZOULB1u_327W1ZDERaHN+kxBXSSLZHyQH=upw@mail.gmail.com>
+Subject: recommended scheduler for HDD drive and Linux kernel 5
 To:     linux-xfs@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
