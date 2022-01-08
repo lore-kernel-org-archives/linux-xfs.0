@@ -2,151 +2,171 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3858C433EF
-	for <linux-xfs@archiver.kernel.org>; Sat,  8 Jan 2022 18:28:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1F45C433F5
+	for <linux-xfs@archiver.kernel.org>; Sat,  8 Jan 2022 19:57:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230061AbiAHS2Q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 8 Jan 2022 13:28:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47502 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229933AbiAHS2P (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 8 Jan 2022 13:28:15 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D4EAC06173F
-        for <linux-xfs@vger.kernel.org>; Sat,  8 Jan 2022 10:28:15 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 886CF60A5F
-        for <linux-xfs@vger.kernel.org>; Sat,  8 Jan 2022 18:28:14 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1C21C36AE0;
-        Sat,  8 Jan 2022 18:28:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1641666493;
-        bh=E9ljhlXar2dFLAVDsfFshaZ2YPq0FqmlGzCb8SBGpgM=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=twZPRrYynRlXm9fNAoI5JzuU59s5G4Tok9TdPJzBycl3GIK9fH/mo+WBD+CI7lqty
-         lHxfP7Gb1FLlJPWU//qIYqBNgrQXTjJ9No7mrSMSj8clCwm4wAqvZTDnmMtSIuoM6q
-         wFfuzc7kP1PxZNdarlUai4BICIolJFAGgTO4DYXMnZcgpdBAf8kyu0Y6X9w3HC+n7Q
-         m2QxpHss5o5jgLKZDur5nuUndDHHY3vrFwfUwmFDtqCi6rxvPSeCzo3z1ajRMrE/ZY
-         t4THlMYbhWfwJTOzzBDER/5w3wxovYIXq4HCrAQ5DhSBC+qLsGrLgh4XXdeNieEhO0
-         CKS9kS1nwfV6g==
-Date:   Sat, 8 Jan 2022 10:28:13 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Chandan Babu R <chandan.babu@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
-Subject: Re: [PATCH V4 19/20] xfsprogs: Add support for upgrading to NREXT64
- feature
-Message-ID: <20220108182813.GT656707@magnolia>
-References: <20211214084811.764481-1-chandan.babu@oracle.com>
- <20211214084811.764481-20-chandan.babu@oracle.com>
- <20220105011731.GF656707@magnolia>
- <8735lzwmex.fsf@debian-BULLSEYE-live-builder-AMD64>
- <20220107190346.GS656707@magnolia>
- <87sftyursn.fsf@debian-BULLSEYE-live-builder-AMD64>
+        id S232505AbiAHT5r (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 8 Jan 2022 14:57:47 -0500
+Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:49588 "EHLO
+        outgoing.mit.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S230057AbiAHT5q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 8 Jan 2022 14:57:46 -0500
+Received: from cwcc.thunk.org (pool-108-7-220-252.bstnma.fios.verizon.net [108.7.220.252])
+        (authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 208JvgMC029875
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Sat, 8 Jan 2022 14:57:43 -0500
+Received: by cwcc.thunk.org (Postfix, from userid 15806)
+        id 64F7D15C33E5; Sat,  8 Jan 2022 14:57:42 -0500 (EST)
+From:   "Theodore Ts'o" <tytso@mit.edu>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     linux-xfs@vger.kernel.org, "Theodore Ts'o" <tytso@mit.edu>
+Subject: [PATCH] xfsprogs: fix static build problems caused by liburcu
+Date:   Sat,  8 Jan 2022 14:57:39 -0500
+Message-Id: <20220108195739.1212901-1-tytso@mit.edu>
+X-Mailer: git-send-email 2.31.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <87sftyursn.fsf@debian-BULLSEYE-live-builder-AMD64>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Jan 08, 2022 at 09:46:08PM +0530, Chandan Babu R wrote:
-> On 08 Jan 2022 at 00:33, Darrick J. Wong wrote:
-> > On Fri, Jan 07, 2022 at 09:47:10PM +0530, Chandan Babu R wrote:
-> >> On 05 Jan 2022 at 06:47, Darrick J. Wong wrote:
-> >> > On Tue, Dec 14, 2021 at 02:18:10PM +0530, Chandan Babu R wrote:
-> >> >> This commit adds support to xfs_repair to allow upgrading an existing
-> >> >> filesystem to support per-inode large extent counters.
-> >> >> 
-> >> >> Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
-> >> >> ---
-> >> >>  repair/globals.c    |  1 +
-> >> >>  repair/globals.h    |  1 +
-> >> >>  repair/phase2.c     | 35 ++++++++++++++++++++++++++++++++++-
-> >> >>  repair/xfs_repair.c | 11 +++++++++++
-> >> >>  4 files changed, 47 insertions(+), 1 deletion(-)
-> >> >> 
-> >> >> diff --git a/repair/globals.c b/repair/globals.c
-> >> >> index d89507b1..2f29391a 100644
-> >> >> --- a/repair/globals.c
-> >> >> +++ b/repair/globals.c
-> >> >> @@ -53,6 +53,7 @@ bool	add_bigtime;		/* add support for timestamps up to 2486 */
-> >> >>  bool	add_finobt;		/* add free inode btrees */
-> >> >>  bool	add_reflink;		/* add reference count btrees */
-> >> >>  bool	add_rmapbt;		/* add reverse mapping btrees */
-> >> >> +bool	add_nrext64;
-> >> >>  
-> >> >>  /* misc status variables */
-> >> >>  
-> >> >> diff --git a/repair/globals.h b/repair/globals.h
-> >> >> index 53ff2532..af0bcb6b 100644
-> >> >> --- a/repair/globals.h
-> >> >> +++ b/repair/globals.h
-> >> >> @@ -94,6 +94,7 @@ extern bool	add_bigtime;		/* add support for timestamps up to 2486 */
-> >> >>  extern bool	add_finobt;		/* add free inode btrees */
-> >> >>  extern bool	add_reflink;		/* add reference count btrees */
-> >> >>  extern bool	add_rmapbt;		/* add reverse mapping btrees */
-> >> >> +extern bool	add_nrext64;
-> >> >>  
-> >> >>  /* misc status variables */
-> >> >>  
-> >> >> diff --git a/repair/phase2.c b/repair/phase2.c
-> >> >> index c811ed5d..c9db3281 100644
-> >> >> --- a/repair/phase2.c
-> >> >> +++ b/repair/phase2.c
-> >> >> @@ -191,6 +191,7 @@ check_new_v5_geometry(
-> >> >>  	struct xfs_perag	*pag;
-> >> >>  	xfs_agnumber_t		agno;
-> >> >>  	xfs_ino_t		rootino;
-> >> >> +	uint			old_bm_maxlevels[2];
-> >> >>  	int			min_logblocks;
-> >> >>  	int			error;
-> >> >>  
-> >> >> @@ -201,6 +202,12 @@ check_new_v5_geometry(
-> >> >>  	memcpy(&old_sb, &mp->m_sb, sizeof(struct xfs_sb));
-> >> >>  	memcpy(&mp->m_sb, new_sb, sizeof(struct xfs_sb));
-> >> >>  
-> >> >> +	old_bm_maxlevels[0] = mp->m_bm_maxlevels[0];
-> >> >> +	old_bm_maxlevels[1] = mp->m_bm_maxlevels[1];
-> >> >> +
-> >> >> +	xfs_bmap_compute_maxlevels(mp, XFS_DATA_FORK);
-> >> >> +	xfs_bmap_compute_maxlevels(mp, XFS_ATTR_FORK);
-> >> >
-> >> > Ahh... I see why you added my (evil) patch that allows upgrading a
-> >> > filesystem to reflink -- you need the check_new_v5_geometry function so
-> >> > that you can check if the log size is big enough to handle larger bmbt
-> >> > trees.
-> >> >
-> >> > Hmm, I guess I should work on separating this from the actual
-> >> > rmap/reflink/finobt upgrade code, since I have no idea if we /ever/ want
-> >> > to support that.
-> >> >
-> >> 
-> >> I can do that. I will include the trimmed down version of the patch before
-> >> posting the patchset once again.
-> >
-> > I separated that megapatch into smaller pieces yesterday, so I'll point
-> > you to it once it all goes through QA.
-> >
-> 
-> Ok. I will wait.
+The liburcu library has a dependency on pthreads.  Hence, in order for
+static builds of xfsprogs to work, $(LIBPTHREAD) needs to appear
+*after* $(LUBURCU) in LLDLIBS.  Otherwise, static links of xfs_* will
+fail due to undefined references of pthread_create, pthread_exit,
+et. al.
 
-Here's one patch to fix a bug I found in the upgrade code, because
-apparently we weren't resyncing the secondary superblocks
+Signed-off-by: Theodore Ts'o <tytso@mit.edu>
+---
+ copy/Makefile      | 4 ++--
+ db/Makefile        | 4 ++--
+ growfs/Makefile    | 4 ++--
+ logprint/Makefile  | 4 ++--
+ mdrestore/Makefile | 3 +--
+ mkfs/Makefile      | 4 ++--
+ repair/Makefile    | 2 +-
+ scrub/Makefile     | 4 ++--
+ 8 files changed, 14 insertions(+), 15 deletions(-)
 
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git/commit/?h=upgrade-older-features&id=e0f4bff35adcae98943ee95701c207c628940d8f
+diff --git a/copy/Makefile b/copy/Makefile
+index 1b00cd0d..55160f84 100644
+--- a/copy/Makefile
++++ b/copy/Makefile
+@@ -9,8 +9,8 @@ LTCOMMAND = xfs_copy
+ CFILES = xfs_copy.c
+ HFILES = xfs_copy.h
+ 
+-LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBPTHREAD) $(LIBRT) \
+-	  $(LIBURCU)
++LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBURCU) \
++	  $(LIBPTHREAD)
+ LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG) $(LIBFROG)
+ LLDFLAGS = -static-libtool-libs
+ 
+diff --git a/db/Makefile b/db/Makefile
+index 5c017898..b2e01174 100644
+--- a/db/Makefile
++++ b/db/Makefile
+@@ -18,8 +18,8 @@ CFILES = $(HFILES:.h=.c) btdump.c btheight.c convert.c info.c namei.c \
+ 	timelimit.c
+ LSRCFILES = xfs_admin.sh xfs_ncheck.sh xfs_metadump.sh
+ 
+-LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD) \
+-	  $(LIBURCU)
++LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBURCU) \
++	  $(LIBPTHREAD)
+ LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG) $(LIBFROG)
+ LLDFLAGS += -static-libtool-libs
+ 
+diff --git a/growfs/Makefile b/growfs/Makefile
+index 08601de7..2f4cc66a 100644
+--- a/growfs/Makefile
++++ b/growfs/Makefile
+@@ -9,8 +9,8 @@ LTCOMMAND = xfs_growfs
+ 
+ CFILES = xfs_growfs.c
+ 
+-LLDLIBS = $(LIBXFS) $(LIBXCMD) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD) \
+-	  $(LIBURCU)
++LLDLIBS = $(LIBXFS) $(LIBXCMD) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBURCU) \
++	  $(LIBPTHREAD)
+ 
+ ifeq ($(ENABLE_EDITLINE),yes)
+ LLDLIBS += $(LIBEDITLINE) $(LIBTERMCAP)
+diff --git a/logprint/Makefile b/logprint/Makefile
+index cdedbd0d..bbbed5d2 100644
+--- a/logprint/Makefile
++++ b/logprint/Makefile
+@@ -12,8 +12,8 @@ CFILES = logprint.c \
+ 	 log_copy.c log_dump.c log_misc.c \
+ 	 log_print_all.c log_print_trans.c log_redo.c
+ 
+-LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD) \
+-	  $(LIBURCU)
++LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBURCU) \
++	  $(LIBPTHREAD)
+ LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG) $(LIBFROG)
+ LLDFLAGS = -static-libtool-libs
+ 
+diff --git a/mdrestore/Makefile b/mdrestore/Makefile
+index 8f28ddab..4a932efb 100644
+--- a/mdrestore/Makefile
++++ b/mdrestore/Makefile
+@@ -8,8 +8,7 @@ include $(TOPDIR)/include/builddefs
+ LTCOMMAND = xfs_mdrestore
+ CFILES = xfs_mdrestore.c
+ 
+-LLDLIBS = $(LIBXFS) $(LIBFROG) $(LIBRT) $(LIBPTHREAD) $(LIBUUID) \
+-	  $(LIBURCU)
++LLDLIBS = $(LIBXFS) $(LIBFROG) $(LIBRT) $(LIBUUID) $(LIBURCU) $(LIBPTHREAD)
+ LTDEPENDENCIES = $(LIBXFS) $(LIBFROG)
+ LLDFLAGS = -static
+ 
+diff --git a/mkfs/Makefile b/mkfs/Makefile
+index 811ba9db..9f6a4fad 100644
+--- a/mkfs/Makefile
++++ b/mkfs/Makefile
+@@ -10,8 +10,8 @@ LTCOMMAND = mkfs.xfs
+ HFILES =
+ CFILES = proto.c xfs_mkfs.c
+ 
+-LLDLIBS += $(LIBXFS) $(LIBXCMD) $(LIBFROG) $(LIBRT) $(LIBPTHREAD) $(LIBBLKID) \
+-	$(LIBUUID) $(LIBINIH) $(LIBURCU)
++LLDLIBS += $(LIBXFS) $(LIBXCMD) $(LIBFROG) $(LIBRT) $(LIBBLKID) \
++	$(LIBUUID) $(LIBINIH) $(LIBURCU) $(LIBPTHREAD)
+ LTDEPENDENCIES += $(LIBXFS) $(LIBXCMD) $(LIBFROG)
+ LLDFLAGS = -static-libtool-libs
+ 
+diff --git a/repair/Makefile b/repair/Makefile
+index 47536ca1..2c40e59a 100644
+--- a/repair/Makefile
++++ b/repair/Makefile
+@@ -72,7 +72,7 @@ CFILES = \
+ 	xfs_repair.c
+ 
+ LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBXCMD) $(LIBFROG) $(LIBUUID) $(LIBRT) \
+-	$(LIBPTHREAD) $(LIBBLKID) $(LIBURCU)
++	$(LIBBLKID) $(LIBURCU) $(LIBPTHREAD)
+ LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG) $(LIBXCMD) $(LIBFROG)
+ LLDFLAGS = -static-libtool-libs
+ 
+diff --git a/scrub/Makefile b/scrub/Makefile
+index 849e3afd..fd6bb679 100644
+--- a/scrub/Makefile
++++ b/scrub/Makefile
+@@ -71,8 +71,8 @@ spacemap.c \
+ vfs.c \
+ xfs_scrub.c
+ 
+-LLDLIBS += $(LIBHANDLE) $(LIBFROG) $(LIBPTHREAD) $(LIBICU_LIBS) $(LIBRT) \
+-	$(LIBURCU)
++LLDLIBS += $(LIBHANDLE) $(LIBFROG) $(LIBICU_LIBS) $(LIBRT) $(LIBURCU) \
++	$(LIBPTHREAD)
+ LTDEPENDENCIES += $(LIBHANDLE) $(LIBFROG)
+ LLDFLAGS = -static
+ 
+-- 
+2.31.0
 
-And here's an updated version of xfs_repair infrastructure you need to
-add nrext64, without the extraneous code to add other features.  It also
-now recomputes m_features and the maxlevels values so you don't have to
-do that anymore.
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git/commit/?h=upgrade-older-features&id=acaf9c0355ee09da035845f15b4e44ba2ec24a6e
-
---D
-
-> 
-> -- 
-> chandan
