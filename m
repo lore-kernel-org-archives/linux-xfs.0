@@ -2,118 +2,109 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C4A6C433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 10 Jan 2022 19:59:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1ED75C433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 10 Jan 2022 21:08:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245149AbiAJT7L (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 10 Jan 2022 14:59:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55102 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243444AbiAJT7I (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jan 2022 14:59:08 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76424C06173F
-        for <linux-xfs@vger.kernel.org>; Mon, 10 Jan 2022 11:59:08 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 3F8E3B817D2
-        for <linux-xfs@vger.kernel.org>; Mon, 10 Jan 2022 19:59:07 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E5E40C36AE9;
-        Mon, 10 Jan 2022 19:59:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1641844746;
-        bh=E0HE9WwGHlWoDwrARTmMUiPw2q2ACe9tTuQg7iS5PYE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=he+nk0uf/cQuNxbdX/bFlP49Q/ax+0qdyeoXRhhSUpA0w3ATGC9rhpr0IkkpiZBOq
-         E++y2R4DkBiiY1RMn10kS4P/keNHieCi0lXkbD4X6Bra+ltYvZnWZwJZnWtg05bgde
-         7zyFDO0szrlDxLPuAC0wnGUp8K6EZAMqJfZBn1ZceL0CctRqvZ8x9Gq4VzMpMUDxWF
-         NgXC2RVMWPpOtDdMaPb2idSS3eXwzvzZ9YBpF2wBi5FWIwCKdo03Djv3ZjI1jGYGWF
-         NxALvfppbKPNHeUBxTKNJQuxtN+VWn3y+4vqh1QrpN7f1Uy4xrWGayRfWsf0mzTqrg
-         2IoaqsfAwOjag==
-Date:   Mon, 10 Jan 2022 11:59:05 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Eric Sandeen <esandeen@redhat.com>
-Cc:     Dave Chinner <david@fromorbit.com>, xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH 2/2] xfs: hide the XFS_IOC_{ALLOC,FREE}SP* definitions
-Message-ID: <20220110195905.GZ656707@magnolia>
+        id S1343778AbiAJVIf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 10 Jan 2022 16:08:35 -0500
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:44987 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1343788AbiAJVIf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jan 2022 16:08:35 -0500
+Received: from dread.disaster.area (pa49-181-243-119.pa.nsw.optusnet.com.au [49.181.243.119])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 13B7662C0DB;
+        Tue, 11 Jan 2022 08:08:32 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1n71u3-00DkQ4-8B; Tue, 11 Jan 2022 08:08:31 +1100
+Date:   Tue, 11 Jan 2022 08:08:31 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH 1/2] xfs: kill the XFS_IOC_{ALLOC,FREE}SP* ioctls
+Message-ID: <20220110210831.GZ945095@dread.disaster.area>
 References: <20220110174827.GW656707@magnolia>
- <20220110175154.GX656707@magnolia>
- <ea019905-ebbe-9082-0399-7ea0e6be553c@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ea019905-ebbe-9082-0399-7ea0e6be553c@redhat.com>
+In-Reply-To: <20220110174827.GW656707@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=61dca051
+        a=BEa52nrBdFykVEm6RU8P4g==:117 a=BEa52nrBdFykVEm6RU8P4g==:17
+        a=kj9zAlcOel0A:10 a=DghFqjY3_ZEA:10 a=VwQbUJbxAAAA:8 a=Oh2cFVv5AAAA:8
+        a=7-415B0cAAAA:8 a=C6iWn-t2eLV4mpphddYA:9 a=CjuIK1q_8ugA:10
+        a=AjGcO6oz07-iQ99wixmX:22 a=7KeoIwV6GZqOttXkcoxL:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 10, 2022 at 12:39:59PM -0600, Eric Sandeen wrote:
-> On 1/10/22 11:51 AM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Now that we've made these ioctls defunct, move them from xfs_fs.h to
-> > xfs_ioctl.c, which effectively removes them from the publicly supported
-> > ioctl interfaces for XFS.
+On Mon, Jan 10, 2022 at 09:48:27AM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> You pointed out on IRC that you need to hide the 32-bit/compat ones too,
-> so I'll wait for a V2 on that?  (XFS_IOC_ALLOCSP_32 & friends).
+> According to Dave lore, these ioctls originated in the early 1990s in
+> Irix EFS as a (somewhat clunky) way to preallocate space at the end of a
+> file.
 
-Will send.
+Heh. "Dave lore".
 
---D
+Better reference - glibc Irix v4 compatibility header file from
+1997:
 
-> But the approach seems fine.
+https://chromium.googlesource.com/chromiumos/third_party/glibc-ports/+/master/sysdeps/unix/sysv/irix4/bits/fcntl.h
+
+What it tells us is that fcntl(F_ALLOCSP) was supported on Irix 4.0
+and the release dates for Irix 4 were 09/91 to 04/93. So there's the
+"for EFS in the early 1990s" date in a more concrete form...
+
+XFS was first released 18 months later in Irix 5.3 in December
+1994....
+
+> Irix XFS, naturally, picked up these ioctls to maintain
+> compatibility, which meant that they were ported to Linux in the early
+> 2000s.
 > 
-> Thanks,
-> -Eric
+> Recently it was pointed out to me they still lurk in the kernel, even
+> though the Linux fallocate syscall supplanted the functionality a long
+> time ago.  fstests doesn't seem to include any real functional or stress
+> tests for these ioctls, which means that the code quality is ... very
+> questionable.  Most notably, it was a stale disk block exposure vector
+> for 21 years and nobody noticed or complained.  As mature programmers
+> say, "If you're not testing it, it's broken."
 > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >   fs/xfs/libxfs/xfs_fs.h |    8 ++++----
-> >   fs/xfs/xfs_ioctl.c     |    9 +++++++++
-> >   2 files changed, 13 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> > index c43877c8a279..49c0e583d6bb 100644
-> > --- a/fs/xfs/libxfs/xfs_fs.h
-> > +++ b/fs/xfs/libxfs/xfs_fs.h
-> > @@ -781,13 +781,13 @@ struct xfs_scrub_metadata {
-> >    * For 'documentation' purposed more than anything else,
-> >    * the "cmd #" field reflects the IRIX fcntl number.
-> >    */
-> > -#define XFS_IOC_ALLOCSP		_IOW ('X', 10, struct xfs_flock64)
-> > -#define XFS_IOC_FREESP		_IOW ('X', 11, struct xfs_flock64)
-> > +/*	XFS_IOC_ALLOCSP ------- deprecated 10	 */
-> > +/*	XFS_IOC_FREESP -------- deprecated 11	 */
-> >   #define XFS_IOC_DIOINFO		_IOR ('X', 30, struct dioattr)
-> >   #define XFS_IOC_FSGETXATTR	FS_IOC_FSGETXATTR
-> >   #define XFS_IOC_FSSETXATTR	FS_IOC_FSSETXATTR
-> > -#define XFS_IOC_ALLOCSP64	_IOW ('X', 36, struct xfs_flock64)
-> > -#define XFS_IOC_FREESP64	_IOW ('X', 37, struct xfs_flock64)
-> > +/*	XFS_IOC_ALLOCSP64 ----- deprecated 36	 */
-> > +/*	XFS_IOC_FREESP64 ------ deprecated 37	 */
-> >   #define XFS_IOC_GETBMAP		_IOWR('X', 38, struct getbmap)
-> >   #define XFS_IOC_FSSETDM		_IOW ('X', 39, struct fsdmidata)
-> >   #define XFS_IOC_RESVSP		_IOW ('X', 40, struct xfs_flock64)
-> > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> > index 38b2a1e881a6..15ec3d4a1516 100644
-> > --- a/fs/xfs/xfs_ioctl.c
-> > +++ b/fs/xfs/xfs_ioctl.c
-> > @@ -1854,6 +1854,15 @@ xfs_fs_eofblocks_from_user(
-> >   	return 0;
-> >   }
-> > +/*
-> > + * These long-unused ioctls were removed from the official ioctl API in 5.17,
-> > + * but retain these definitions so that we can log warnings about them.
-> > + */
-> > +#define XFS_IOC_ALLOCSP		_IOW ('X', 10, struct xfs_flock64)
-> > +#define XFS_IOC_FREESP		_IOW ('X', 11, struct xfs_flock64)
-> > +#define XFS_IOC_ALLOCSP64	_IOW ('X', 36, struct xfs_flock64)
-> > +#define XFS_IOC_FREESP64	_IOW ('X', 37, struct xfs_flock64)
-> > +
-> >   /*
-> >    * Note: some of the ioctl's return positive numbers as a
-> >    * byte count indicating success, such as readlink_by_handle.
-> > 
-> 
+> Given all that, let's withdraw these ioctls from the XFS userspace API.
+> Normally we'd set a long deprecation process, but I estimate that there
+> aren't any real users, so let's trigger a warning in dmesg and return
+> -ENOTTY.
+
+*nod*
+
+> @@ -1965,13 +1884,10 @@ xfs_file_ioctl(
+>  	case XFS_IOC_ALLOCSP:
+>  	case XFS_IOC_FREESP:
+>  	case XFS_IOC_ALLOCSP64:
+> -	case XFS_IOC_FREESP64: {
+> -		xfs_flock64_t		bf;
+> -
+> -		if (copy_from_user(&bf, arg, sizeof(bf)))
+> -			return -EFAULT;
+> -		return xfs_ioc_space(filp, &bf);
+> -	}
+> +	case XFS_IOC_FREESP64:
+> +		xfs_warn_once(mp,
+> +	"dangerous XFS_IOC_{ALLOC,FREE}SP ioctls no longer supported");
+> +		return -ENOTTY;
+
+I wouldn't even say "dangerous", just that they are no longer
+supported. I would dump the process name, too, so we can identify
+what application (if any) is still using this, and maybe even append
+"Use fallocate(2) instead."
+
+Otherwise looks good.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
