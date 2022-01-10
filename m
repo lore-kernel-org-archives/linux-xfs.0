@@ -2,485 +2,196 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 977EAC433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 10 Jan 2022 21:22:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7535FC433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 10 Jan 2022 21:22:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240270AbiAJVV7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 10 Jan 2022 16:21:59 -0500
-Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:47764 "EHLO
-        mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S241222AbiAJVV7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jan 2022 16:21:59 -0500
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 20AJm2lf026247;
-        Mon, 10 Jan 2022 21:21:55 GMT
+        id S241420AbiAJVWD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 10 Jan 2022 16:22:03 -0500
+Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:33704 "EHLO
+        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S241546AbiAJVWC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jan 2022 16:22:02 -0500
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 20AJliVg007280;
+        Mon, 10 Jan 2022 21:22:00 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
- date : message-id : in-reply-to : references : content-transfer-encoding :
- content-type : mime-version; s=corp-2021-07-09;
- bh=jpjRJmQCHCAczjUBvv+Vx4qvftiuzICWY71vOyBnIiY=;
- b=XQDEzhC3crDhkViherRjskS5whbDZ4sYmD2Sk2gvTckp9GXaFZ3S4/ELtsAVWBVXlEvk
- kDgKtQtO5ZUYl6kyCq9Y5HRGs/6LWZPKiKv5C+V658cWR3y6W0/PH3TnSHMiL7KdtttO
- LI4qo/gOBvBQ9ByW0rlqk7cpDgJb6y94Y5WgKpblCTzPhtxBiOtvaI2Z4QidZv7M/wNI
- Ksz0nGoZcUZbcPMAyGDNiorGHmu2jebvRc8P1GrrtcZSU/OumIdVE7jhGFJmsaQG2zxM
- nHXJv+gruOuvH9xVkeWa3MQuJf3/ZCVN7UWpnSrsTe7aM6PCB8QHS+ujlwcgvf4Y4Jo2 pA== 
+ date : message-id : content-type : content-transfer-encoding :
+ mime-version; s=corp-2021-07-09;
+ bh=XF3rWE19sH4kVI1NPw+52jGNrrT82VaYtaGYjfOnm5A=;
+ b=uM2OiPbbvc1MDXz7ZrYSbdboxNM20PWWwipQihJGmM4ORDAUkRzFE7gLeKdRdiX4IJ6Z
+ 8C9zioowl+pR/7oqR9pLwGrQVRke/86Del3DoUrAZ1D7jnAge26eGqGIyDv0yqxFDHTM
+ Z2BlXsyrDOU96Ob+8XkY1NZhvv9ZVKVBBjwkedsZ2VWvuOFFHp/HTF1BaTkooVhiuiIH
+ uFSPDEbnDmfxRnNL5nHrIoDuRoBYP/oxpI90eldaGgKpLIv81WBBmutkQwzG7kUI6AmN
+ Af9qsK3xcl+60r7j6rjhujC43ryI3MwLAlu+hhpPN9ystYuZ447H4p606VlPqEd66OZ4 uQ== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3dgp7nh7pg-1
+        by mx0b-00069f02.pphosted.com with ESMTP id 3dgkhx1hj0-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 10 Jan 2022 21:21:54 +0000
+        Mon, 10 Jan 2022 21:21:59 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 20AL1ZRq062250;
+        by userp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 20AL1ZRp062250;
         Mon, 10 Jan 2022 21:21:53 GMT
 Received: from nam02-dm3-obe.outbound.protection.outlook.com (mail-dm3nam07lp2042.outbound.protection.outlook.com [104.47.56.42])
-        by userp3020.oracle.com with ESMTP id 3df42kkbq5-2
+        by userp3020.oracle.com with ESMTP id 3df42kkbq5-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
         Mon, 10 Jan 2022 21:21:53 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=kONKclaPhlNVq+e9ESmkj64oTXnmMu3N0/Y0EE+8ecqPwTAGMy6OvJMmP2PXtp2sIHPKCaIpDS8QaOLmzxU5nvyxp+jxKCMuaieIjXkqOP/8opdfpyV6hoN/xpiLVsSRK05qCCYzPOwA/+luCyP3y9K/tsOkAM6G14NhNrXqqNjunybs3URnimHdh+PqbPKyl5wNdmk8YPbIzPTaM2fPxWzmir4aioZLduYK8gZTByPb1OOnhN54MLJRWVbzRJGQtDCqlVDv4p+IJQ0oMP5ymSP/qtJgcqLePoEtOfo2rJqwb4/R5rOAV4Epu8Or0OHUusWcrG3Nt3PV4cJY4EuxAQ==
+ b=f/BItOXH95FuCVb5AAwu6qh9s3ZxMf224w8lvFcZvGZQl3bIStk+StKQACLFMTk57lavSBM9TG5YOFPL4NnPTEtE1zGorUzVA3Fc7Lfjeo7INt5KjxRBI7zXVOaOFj9xVusWnS/8jwRMkXG/Gh/xBFFm9L9nq7s53thOdZIftvBb08/xbkP2WOkZ4qwVmoYhJil+oBvey5c/ffJQdimOFnHFf7WnhO8VKUd6oQGEf8FqyuuV3eGd+YlwKv/TpSOajwjL1VubWfBc5u+7A4/ouz+akQ+U+gNxIXJlGDQSi/G1dMdrpWoTkPcTL+2LeDmECE1QTbDuuJOL5YWb/Lb1qA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=jpjRJmQCHCAczjUBvv+Vx4qvftiuzICWY71vOyBnIiY=;
- b=Lp7CXbY5wW0bKNe4SEvmf+bqk0HBt/QfcQb7MAYJCiq+wH+6vOmp50Kp6aXYRq0+tDnRHiWHFu3yP5J6BXDKGjc+GRiZPaD8sLI0XWRrfSeT83xsmHn16cGYr0pPG/ifk8n3TkYd2AAtB2vWS36BDIFop79oNdzn77jEo56sfy7GG1t3wjde+D0p2Q63xYAa8dMyLqrBuxS9xTnBmKvfD9EmN5Lai9JHUwPJCPQzSXt1wdMTr/X2WjlEHJhPgEDGUcWRHqslEzPzjFT7W2xuwTcNWFe84O0D0T/1S4T1AsZIjFoauCY3SyxqApWE0c/cyAxWtR7t80QGbbxk/lyxmA==
+ bh=XF3rWE19sH4kVI1NPw+52jGNrrT82VaYtaGYjfOnm5A=;
+ b=jWwNVYlObLyO+zLz7pg6eyslv+4MPmlrUWnYBjj/zC4/h+jq+8HhruPxNrotKA6KHUMuimGum5lP2z6J/PV+Jsppe71WC59p2D9OVBou3+q+XUSbJ8bB0SJuKqiLvjojCpCQSLlwsB1teOnDP0fUz712jb0QMSg2s1l5bBVU3v5ZwNsCLEq0f5ka6zvWTXktHATUh7tvDZ1PVgOro9toT+7JUcfg6QylIQvb8Iqyo+fgZY1cMbe8Tbn+xb/py5JlJTzglkRC3tCUpuVio9JniC/8ALQzhcioSRypcPIe2itI8lt9QvL3kfFxGFvXxrRDIriqCzl+1F/VDfouyfH3Jg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=jpjRJmQCHCAczjUBvv+Vx4qvftiuzICWY71vOyBnIiY=;
- b=QgzmSSQJ+D9qKagL8JEDB1/1tU+LFpeib3A36lKySszVeQ1p1DyfbuS160ufsq9npD8mt3eoVXNIzlWt3Xd1hcF3qAysDB84rNnCvKks/qBOwOgQa5k+h9L2plt+XsznVcL5WQ9QY3vUsGcndOZ69aRwnI+kCrQk9pSY4Ij2rjo=
+ bh=XF3rWE19sH4kVI1NPw+52jGNrrT82VaYtaGYjfOnm5A=;
+ b=beVQr/fjFvHL+7DCc1P1Fr5mD3zfhagjvb3xwwSu81yh623Gocs9mATs5mV1uxkmqhQIJkoHtCOQioR+g4pa5KNKppTPLu2AyyWfsxB1plgDP/9I5wUxFyahmU/vo93uWl6tY/bZTZv1oygrmQSRuqjyQ0i7GsL/NFp6+k0zqs0=
 Received: from DM6PR10MB2795.namprd10.prod.outlook.com (2603:10b6:5:70::21) by
  DM6PR10MB2652.namprd10.prod.outlook.com (2603:10b6:5:ab::33) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.4867.9; Mon, 10 Jan 2022 21:21:52 +0000
+ 15.20.4867.9; Mon, 10 Jan 2022 21:21:51 +0000
 Received: from DM6PR10MB2795.namprd10.prod.outlook.com
  ([fe80::ad2b:bc5:20b:ee97]) by DM6PR10MB2795.namprd10.prod.outlook.com
  ([fe80::ad2b:bc5:20b:ee97%5]) with mapi id 15.20.4867.011; Mon, 10 Jan 2022
- 21:21:52 +0000
+ 21:21:51 +0000
 From:   Catherine Hoang <catherine.hoang@oracle.com>
 To:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: [PATCH v5 1/1] xfstests: Add Log Attribute Replay test
-Date:   Mon, 10 Jan 2022 21:21:43 +0000
-Message-Id: <20220110212143.359663-2-catherine.hoang@oracle.com>
+Subject: [PATCH v5 0/1] xfstests: add log attribute replay test
+Date:   Mon, 10 Jan 2022 21:21:42 +0000
+Message-Id: <20220110212143.359663-1-catherine.hoang@oracle.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220110212143.359663-1-catherine.hoang@oracle.com>
-References: <20220110212143.359663-1-catherine.hoang@oracle.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
 X-ClientProxiedBy: BYAPR07CA0068.namprd07.prod.outlook.com
  (2603:10b6:a03:60::45) To DM6PR10MB2795.namprd10.prod.outlook.com
  (2603:10b6:5:70::21)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: c6bd654d-5e74-4f36-fe12-08d9d47f3832
+X-MS-Office365-Filtering-Correlation-Id: d4e998f5-402a-4615-858b-08d9d47f37a8
 X-MS-TrafficTypeDiagnostic: DM6PR10MB2652:EE_
-X-Microsoft-Antispam-PRVS: <DM6PR10MB265273B2D97764BB2ED9E23089509@DM6PR10MB2652.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:569;
+X-Microsoft-Antispam-PRVS: <DM6PR10MB2652869AE8125490518DD6C889509@DM6PR10MB2652.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:7691;
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: snAQGAvJoMXeXQz8XKWWNccZRjrUBtGkDm64HYsK+Z3Xt2A7a+fQEvkh99jprHQfBrEIb/M+mqtvV1ztnhAtvaB3BjEOkMLKygpM90xt8ygsV/FaZ73cLAE0MP2+CPtENiBwSt9al4Mc/hbMd1Wa7W7gepbhR1DefGiZ3KKIhTXH2XZrnqlrRBXRVyQbjG2WswNjDkY+t6QWKlLzIhtUcY5O8wGyCgTlZfrOrYGy+Z2tLRhAEMDrCKMeF0f9R7NMljhTZ4CcdifVZubrK1VBzWxFpF8Vp4Y1TB+f4YAbaR7PtLIL3Skt7+kGxBrQoNVd3we0d5KmUGw8pCshvoWbvBZ+NOPeCpMJiU8m8c5d+1jUemEaNUzX88Euku99nIZus99ACPsFYS/LnAyuYfz92QGQ8dafzswA3+whzujn1iBaIkS5j4JdWtcR+4U/p6dDwc5IITxzxS7a7eO74uHHGmig07pKGa9DNRiUvpYsB0ZlPZWGsqCcF4dwZIyAHxP8XXFsBDu8ye/irDMOHFQi7jCqDYm+S4UcYYhNsrKcQZrhguUHsZDi7cmwQSB9PX0SsSIxFZDEDPjIbRA3CZ5eaFtWRpv1W9kUXjyq4XEv0BBkBvqlcV5nagUVh5/XUrCg2Da+AzUHH2kYdAdDMehWKrYmUxM8ekFzqv+ANakUvPRkNe3+JaZd6WGD8jiFxdSqimCzVxwcYfTDKu6PxiWwD1V+8Mzsc8v5Rr/RYjS1u3Y=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB2795.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(450100002)(186003)(38100700002)(1076003)(44832011)(316002)(26005)(36756003)(52116002)(8676002)(6506007)(8936002)(5660300002)(6512007)(86362001)(2616005)(508600001)(66946007)(2906002)(83380400001)(66476007)(66556008)(6666004)(6486002)(30864003)(38350700002)(357404004);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: 8cI6NNaruyq44L34FyXFqZJDh3dyvhhDjO6sgo7GyCI1WstRO4Qc8PUONS5W0aBeNLK8Zm+vSSGd32rWQc0Whfbf6K3vvZIiit1lQMvNrA6RM/LHq8KEVqj7qbi1p2oQRwLtlAVsTxFcXrIXrPgYfuISgL4/oZ76VXjwwIBbV/yHR1lfaljMvbNNvDpQFpsDKWrJpnQ8kXlr3prVAFvyEa8XKKlTy6FWfTOVJjm8EzLL6jp/vImRhVZJwSvbT+wroQCRaPcdMLRTwIwlD17RQ8lZPSkB7EgMHP7T9yQd3XCoZGmpk8LgNq3WEsDvG2aUBDVag4/Uh92+Hu7ONcJDk95sZACh+8ESgLSD3JLdTr61vgimgZeHoiXrqzYmZY8ZXjzfctDMddEJL3o8RDXMZpTEZku4qZIZHZgGoNijhQ2bIsOqw0yfryIsIvHstpNJRhWY3mK9NlRvht66w21FlUFYvhLZ2AUZX372/YY7zfjlTcmz1ngy31ISO23pI+B0UvnNhujqKj/1DlS3VCGZOo3JCGIHa/fd8tguYIn77S7oJ2L2jiE32rUczRqX9lJeN+5nYndcRnkcZ7ADAchMf5vMPFRHH73dYLzIeEs3oSisdHtM4vwrX70oX9gBH3QaE1ZBSXO5JEGgIN09lOWGlj22pWpOMpk3+dXEXwQgrZyopvMETkPpCq4PH8SPeuUXI1M11A/apwFvEKx4VM80zA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB2795.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(450100002)(186003)(38100700002)(1076003)(44832011)(316002)(26005)(36756003)(52116002)(8676002)(6506007)(8936002)(5660300002)(6512007)(86362001)(2616005)(508600001)(66946007)(2906002)(66476007)(66556008)(6666004)(6486002)(38350700002);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?L8aTKqez32Jb1DrN/gIDkI140Ol4/PE4gq4vYVKIEsLpwpms7ISXtkENaSE7?=
- =?us-ascii?Q?//7+mIRooPlBP0RTZqM/sIAClIzns6t7DppTenCuYS0A8hstna7Ff8B7eiJP?=
- =?us-ascii?Q?UwmTDiKNcqCZXA5qYwCxZBIaI+1qGK8TyG6nZZi1Gs0osWn2GV0DZuc4l4Pl?=
- =?us-ascii?Q?qwSAcs5ZPrfrfGGS5SH/ufqOzm4aAgyoKLL6jAJKSS9rqr7tV+3lAc3leS4g?=
- =?us-ascii?Q?J0nUxD8m5NTvU4CJ0onAkwgR5/LdLC7EomRbl9zZf4u8+NJp/5gudjlFiyFg?=
- =?us-ascii?Q?55NI+PG7ydAOmESgLa6sT9Gh00eRov5Jp6nxyWWB0Vajj4JtuCbPq3KCZ9AI?=
- =?us-ascii?Q?YBIMrRTNsyP60fKFW3kqwqGeHYBEgJZ80txqC85IPiepslSPpwIOhZMdPLJm?=
- =?us-ascii?Q?S43pd/iGba92egdeyWYPCTjr6HZ2/HxZNz2MiFE/Uhzy7zRCtVR/jsBkMlm4?=
- =?us-ascii?Q?afI1e5CNF1jC+7yDWvwnosb9kzafr+sWMXb/QIyMRqkVtrT2cVp5SP79EhaL?=
- =?us-ascii?Q?CeboPmSuiPLkNmRFevmfY4JKFQ4dkEW8DKL9UL8kKxTresOSAkOUVpYb8rON?=
- =?us-ascii?Q?OceE/vFBxZl9+4/eEJbDMG32ePE4LFthcnZXx7roF/RRpwWSzE46c5S0c4Po?=
- =?us-ascii?Q?Lx7d0cTOeZDR+fFDx28SF1sOzDeZnkV3IVJfgtqoN4z+hPwx/9cvu641cYvY?=
- =?us-ascii?Q?ypY7cZbOy5R0X//g+KqI8uT29CEo5ixJMDeeTYyG42TZ6GA7dcmSG/xOu5jC?=
- =?us-ascii?Q?bhMMylsmljlr5wu82nrdMLziQjSwrHZNHMePjOh8ehtix+Og85tR7bv3Koer?=
- =?us-ascii?Q?jT/ZKTWriP0LFXPh6HjEV7gsO4Of8eqc/k4pwtgn1MA4wOlphDQmROlvHe+A?=
- =?us-ascii?Q?rJs/YRw2nzevd9R6wwm649Z+G0OPvRnbGVE89mpl5mng3FBgQb8SvDMnmvd3?=
- =?us-ascii?Q?/BRZZAzhZAvdSqy0cTOPjNsuf/bH0gW1eG6u5ojUfvD0U2p6F6Cj+dJiumNm?=
- =?us-ascii?Q?mqmh3YaPswNtLiV+Jh0psGcxEf57F2Zvse6jbLNt6j+JujV8v/6e17sZDRll?=
- =?us-ascii?Q?ZwjAjtMWrwjTFPBvKQBJXxhwnw20jCsAYea5Yx91TD+9Q3tVBDbv+A9ByHds?=
- =?us-ascii?Q?uv5SOU+1mKmEy5ocGuhYcNzlz63LiRc/34HY1W1NQ++UGALMd258J3yVtV0l?=
- =?us-ascii?Q?CLb9xZmIR1IOwi6ohG5obnOQRB1vUe48gL3kGIwppKBM8QlkYd6NGrki+4yz?=
- =?us-ascii?Q?JAq3qMwuLDoenyujjXFi0qiVeN+K4l+6Rv6gUBmiy1+Pb75d1185JV5BoBCP?=
- =?us-ascii?Q?tW4AGjf14Eks30GRz9X/lKJS6NsU71DhkpOLz0jdv9g+IyJ0vfPcZpMem1LV?=
- =?us-ascii?Q?2gRrqFMLxIv6obb26zBZEuRDMPpxUSZPiT6Mflo6k7fgdQPDFIyIm/zr5ORo?=
- =?us-ascii?Q?/ylEN0d8nx7rv4SVftSq0qwp/jouLPwnn+LDcl/sRO5bTxPg/el/vgPHPSV7?=
- =?us-ascii?Q?XMGsZja6vLPsO9G36u+kPEdTD9xFb4OABWO5T9gB/7VMqX+Q24H8QSlUZk3g?=
- =?us-ascii?Q?H+y1qqqgNnHm7ouD0jp3QlGcpAU+eQoF4CcZfqg2PcV6YJu1vRfjx6E6Zl7+?=
- =?us-ascii?Q?I+0XOQX93solqQU9u5kS9eF2guJyCx9MqP9sHsb7fWVoCerMf9QT2FMUC454?=
- =?us-ascii?Q?hWS+pA=3D=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?YWR5VytCMzhhR2YrSGxGY3pCVk5JcXpCRGwxUy9qN3ZpWEhTeWxXYTNkdnlQ?=
+ =?utf-8?B?ck1SUVlWc1owa09VeG9kWmJOQ1NaaGoxbDB5b0xhY3ViMnF0N2pXUjZBc29T?=
+ =?utf-8?B?eEowRERydk13bFZFOGJyOGU5MEtockk0clVjL2hUa0hVR3MxK0xpWmZzSXhH?=
+ =?utf-8?B?cDZkd3lLYXRITXN5SUhzVjlkQTYxSGFZS1RwK1pLSjBRUm5UdE9BWS84VTR3?=
+ =?utf-8?B?Y3BGbWFNMnRGV21qSEdMT3VTS2c0dGhibFZ3YXAwNGNKZ203L1VUWW54enVo?=
+ =?utf-8?B?MVN2WER0M3h6UWw0MFR0SjYwSW9NbG9CSk4rbkt5ZkFwSnRabXgvb2ljWVZv?=
+ =?utf-8?B?THJoODNtTEtoQXdJUXZkSU5zeEkyeUYySnptN2hkTk5iZGVZZUNkYVN5c00r?=
+ =?utf-8?B?RWlxMmY4ZXg0MHRxQXY4aHY1V2JFWmVUdnZjcWVIeFYyWXRKb1BLV1YzMThp?=
+ =?utf-8?B?Y1lsWjBxVjVacDR5b21MZXIyQUNDWm1YYlFYUEVLdlE3ZHpydDBIOUxGN0gx?=
+ =?utf-8?B?ekt4dWtaT0Zrc1RTVUZHYjE3RWllajIwUm5mVjloWUN0TGRzclRlWnpBUER3?=
+ =?utf-8?B?NEZYMlNrdXA4ZFdpak5qYmluVWQzcVJ6VHQyVTFRMUlzTWVVRkg5YVNWcisr?=
+ =?utf-8?B?KzY4SmQ4WEJLR2djclNVcm9ZVDE0anhDbHVWUFlVRHN6RC9DbHlvenBsOVhJ?=
+ =?utf-8?B?Rjh6ZXQrTTB0Z2FuUmorSUZrK3hQQStvMkRZTHV1ejJEN0N0QnNpT0hkVDFj?=
+ =?utf-8?B?Z3RlNVFmNytwcGVObVVDc0JiUTNmcHB0bjFZcTU3SVBGOVdKTzZEZkRjNTlW?=
+ =?utf-8?B?OWUrS2lIUmR2dzJzeWYyaWpGUmZpZk9tcnZKZmxxLzRXU1NmSjdKVTg3cDVv?=
+ =?utf-8?B?dW81dzZKMjVPODdheDA2MVpuYjQyUTdHN1JHdlJIbU5LY0huN2R1SExHWS9V?=
+ =?utf-8?B?TEJMWG1OK0F6QkcrcXRqSVVpa0RaSkNYN25sQSs1aHd3TTFjZU16WXc3K2xH?=
+ =?utf-8?B?OFpVMnFmZUlBck9XTFErSndiaitIQTZUSVRvOFdRMVdvZ2Z4T3B3ZFc3RDZ2?=
+ =?utf-8?B?azJiOWFXT3F2clUrQ1FBSEkvcFJ5MEc1c09jZW0vOWFUUGlJN1Z3NWVVRkNa?=
+ =?utf-8?B?d2tHcE9SdmpzSXNYQkJGWEdwNlR2bmVQSlUwSFdLMjB1cm84SVpTVE12TkUx?=
+ =?utf-8?B?YzVrR01yK3Nob2Vxa2xneVIvdnhYZ253QngrVG8rUEttaThKc3FzdExJRy9E?=
+ =?utf-8?B?ZS9XZUxXTmNBd29KaitUd0FqSlRNYWpzSG43YTJHVzFpTVdKRFFZcDBid3d3?=
+ =?utf-8?B?enJLNHhZQXN0dkJickpDdkVlRFJaRkhsc1RRZDNBaE9RYXBUTHVqd2xxTFBh?=
+ =?utf-8?B?N2I4WGpBUmcxeGEwZlROQWtiWURlMEZlWndkclRzYmdDdndtMWZmZ0MxTHRu?=
+ =?utf-8?B?M0dwRXp3VU0zdFZ5MGFvb0hKN3g3MDl0R21NcXVPWTJpZlNobFBUWVdqQVUx?=
+ =?utf-8?B?WDBaR1AyandjNTE4VDRLNlBGcWxVbUZQaUtTTXpiejM5Wk5mMWdBRm0wcEJI?=
+ =?utf-8?B?S3U1bWsvVFg4cmVXY1Y1U2IvQ1RUcmpsdHhFYTRTb2RONFhUQVcwdVhCdjFS?=
+ =?utf-8?B?UHc2UnNXQ1hnTzBheXBQUnladG9xWjk2MnkyMlExdEhFb2RYOFBod1Vjbmdo?=
+ =?utf-8?B?NXNQOGJyOWFadVdTT3lhN2RGUThlUU00bitybC9GQnY0dzFDVjZzTVdyMWtn?=
+ =?utf-8?B?SEhOdHZ5SWlaQUhXUGpUbVFnajZaWWVhNlpNRTZ5QnBFM0E2RG5rWnA4RXhw?=
+ =?utf-8?B?U01pNmZhOVVLd1hHY0lQeXdqQTBibGJHWkh6MjFoQm1iQVI2a1ZkbVA2SHZT?=
+ =?utf-8?B?NjF5QjRQcmQyWlBBSzNHTkxONG5QeVNVUjVvWXNiZXg4TzlES3JuY2pycXBv?=
+ =?utf-8?B?RnlrZUhTMGU0elI2OFd4K3VQRzRiMjRwTjRCeDJucisxZUhYQjJEeUlaK3la?=
+ =?utf-8?B?V3RDS3JGYjg3alZ1WkRXM2laQjRxTnFqWlAvcUNRblU2aWplU2N5cHF1RlJF?=
+ =?utf-8?B?eHdsSWhCSzZlS1UySUJ5YkxLbWlMTStUZytta1hiRlZWMTYwaGdLTzZTcHFj?=
+ =?utf-8?B?aGFRQkJFRDAxVzNKUk0wSzZNdE5qMGUyZzRleHJMaGVhRXlpck5hZmVMWDhE?=
+ =?utf-8?B?bkRCN2hERVA5aFpkRFFyQXRjQW41eDIwK0laa1l2MnE0WkM5TnB3RVZFdXFT?=
+ =?utf-8?B?N29iT3l2RzNMVlBFYjcrK3kvdk5nPT0=?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c6bd654d-5e74-4f36-fe12-08d9d47f3832
+X-MS-Exchange-CrossTenant-Network-Message-Id: d4e998f5-402a-4615-858b-08d9d47f37a8
 X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB2795.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Jan 2022 21:21:52.0475
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Jan 2022 21:21:51.1550
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 4r9x1YofdNizrC3SvXsW6ZgF38QePnxoZbHim4ytsTfPhxa/6CAyUHUaH/zX50oOpljW2AMruKyIFN7kEdwYAx+1kdwGxJ6HDcxTaFAREEQ=
+X-MS-Exchange-CrossTenant-UserPrincipalName: Rmmnsg5c0o0n9s3hgPRtrR74n6ZiRG1sVjMUfKlEXpHOtkBf/adOKMax7NtsUz4hbnZJEnP7owDm1ZsyLveSxn0lE7cBdww10g7ITGQrFIs=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR10MB2652
 X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10223 signatures=668683
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxscore=0 phishscore=0
- mlxlogscore=999 spamscore=0 bulkscore=0 malwarescore=0 suspectscore=0
+ mlxlogscore=836 spamscore=0 bulkscore=0 malwarescore=0 suspectscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2110150000
  definitions=main-2201100141
-X-Proofpoint-GUID: ySTdiyAN5hbrcpyIBeEuICpONzWqo3ZT
-X-Proofpoint-ORIG-GUID: ySTdiyAN5hbrcpyIBeEuICpONzWqo3ZT
+X-Proofpoint-GUID: v9NPzIQ0XP1oBjJvovoIpI4Jq3KRUrl4
+X-Proofpoint-ORIG-GUID: v9NPzIQ0XP1oBjJvovoIpI4Jq3KRUrl4
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Allison Henderson <allison.henderson@oracle.com>
+Hi all,
 
-This patch adds tests to exercise the log attribute error
-inject and log replay. These tests aim to cover cases where attributes
-are added, removed, and overwritten in each format (shortform, leaf,
-node). Error inject is used to replay these operations from the log.
+Just wanted to get this sent out again after the holidays. Original text
+below:
 
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
----
+This patch aims to provide better test coverage for Allison’s delayed
+attribute set. These tests aim to cover cases where attributes are added,
+removed, and overwritten in each format (shortform, leaf, node). Error
+inject is used to replay these operations from the log.
+
+The following cases are covered in this test:
+- empty, add/remove inline attr		(64 bytes)
+- empty, add/remove internal attr	(1kB)
+- empty, add/remove remote attr		(64kB)
+- inline, add/remove inline attr	(64 bytes)
+- inline, add/remove internal attr	(1kB)
+- inline, add/remove remote attr	(64kB)
+- extent, add/remove internal attr	(1kB)
+- extent, add multiple internal attr	(inject error on split operation)
+- extent, add multiple internal attr	(inject error on transition to node)
+- extent, add/remove remote attr	(64kB)
+- btree, add/remove multiple internal	(1kB)
+- btree, add/remove remote attr         (64kB)
+- overwrite shortform attr
+- overwrite leaf attr
+- overwrite node attr 
+
+Running these tests require the corresponding kernel and xfsprogs changes
+that add the new error tags larp_leaf_split and larp_leaf_to_node.
+
+v4->v5 changes:
+- Changed mode of 543.out to 644
+
+v3->v4 changes:
+- Removed leading underscores on functions
+- Filtered $SCRATCH_MNT on md5sum check
+- Removed unnecessary unmount code
+- Replaced _scratch_mkfs_xfs with _scratch_mkfs
+
+Suggestions and feedback are appreciated!
+
+Catherine
+
+Allison Henderson (1):
+  xfstests: Add Log Attribute Replay test
+
  tests/xfs/543     | 171 ++++++++++++++++++++++++++++++++++++++++++++++
  tests/xfs/543.out | 149 ++++++++++++++++++++++++++++++++++++++++
  2 files changed, 320 insertions(+)
  create mode 100755 tests/xfs/543
  create mode 100644 tests/xfs/543.out
 
-diff --git a/tests/xfs/543 b/tests/xfs/543
-new file mode 100755
-index 00000000..29bd5b77
---- /dev/null
-+++ b/tests/xfs/543
-@@ -0,0 +1,171 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2021, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# FS QA Test 543
-+#
-+# Log attribute replay test
-+#
-+. ./common/preamble
-+_begin_fstest auto quick attr
-+
-+# get standard environment, filters and checks
-+. ./common/filter
-+. ./common/attr
-+. ./common/inject
-+
-+_cleanup()
-+{
-+	rm -f $tmp.*
-+	echo 0 > /sys/fs/xfs/debug/larp
-+}
-+
-+test_attr_replay()
-+{
-+	testfile=$SCRATCH_MNT/$1
-+	attr_name=$2
-+	attr_value=$3
-+	flag=$4
-+	error_tag=$5
-+
-+	# Inject error
-+	_scratch_inject_error $error_tag
-+
-+	# Set attribute
-+	echo "$attr_value" | ${ATTR_PROG} -$flag "$attr_name" $testfile 2>&1 | \
-+			    _filter_scratch
-+
-+	# FS should be shut down, touch will fail
-+	touch $testfile 2>&1 | _filter_scratch
-+
-+	# Remount to replay log
-+	_scratch_remount_dump_log >> $seqres.full
-+
-+	# FS should be online, touch should succeed
-+	touch $testfile
-+
-+	# Verify attr recovery
-+	{ $ATTR_PROG -g $attr_name $testfile | md5sum; } 2>&1 | _filter_scratch
-+
-+	echo ""
-+}
-+
-+create_test_file()
-+{
-+	filename=$SCRATCH_MNT/$1
-+	count=$2
-+	attr_value=$3
-+
-+	touch $filename
-+
-+	for i in `seq $count`
-+	do
-+		$ATTR_PROG -s "attr_name$i" -V $attr_value $filename >> \
-+			$seqres.full
-+	done
-+}
-+
-+# real QA test starts here
-+_supported_fs xfs
-+
-+_require_scratch
-+_require_attrs
-+_require_xfs_io_error_injection "larp"
-+_require_xfs_io_error_injection "larp_leaf_split"
-+_require_xfs_io_error_injection "larp_leaf_to_node"
-+_require_xfs_sysfs debug/larp
-+
-+# turn on log attributes
-+echo 1 > /sys/fs/xfs/debug/larp
-+
-+attr16="0123456789ABCDEF"
-+attr64="$attr16$attr16$attr16$attr16"
-+attr256="$attr64$attr64$attr64$attr64"
-+attr1k="$attr256$attr256$attr256$attr256"
-+attr4k="$attr1k$attr1k$attr1k$attr1k"
-+attr8k="$attr4k$attr4k"
-+attr16k="$attr8k$attr8k"
-+attr32k="$attr16k$attr16k"
-+attr64k="$attr32k$attr32k"
-+
-+echo "*** mkfs"
-+_scratch_mkfs >/dev/null
-+
-+echo "*** mount FS"
-+_scratch_mount
-+
-+# empty, inline
-+create_test_file empty_file1 0
-+test_attr_replay empty_file1 "attr_name" $attr64 "s" "larp"
-+test_attr_replay empty_file1 "attr_name" $attr64 "r" "larp"
-+
-+# empty, internal
-+create_test_file empty_file2 0
-+test_attr_replay empty_file2 "attr_name" $attr1k "s" "larp"
-+test_attr_replay empty_file2 "attr_name" $attr1k "r" "larp"
-+
-+# empty, remote
-+create_test_file empty_file3 0
-+test_attr_replay empty_file3 "attr_name" $attr64k "s" "larp"
-+test_attr_replay empty_file3 "attr_name" $attr64k "r" "larp"
-+
-+# inline, inline
-+create_test_file inline_file1 1 $attr16
-+test_attr_replay inline_file1 "attr_name2" $attr64 "s" "larp"
-+test_attr_replay inline_file1 "attr_name2" $attr64 "r" "larp"
-+
-+# inline, internal
-+create_test_file inline_file2 1 $attr16
-+test_attr_replay inline_file2 "attr_name2" $attr1k "s" "larp"
-+test_attr_replay inline_file2 "attr_name2" $attr1k "r" "larp"
-+
-+# inline, remote
-+create_test_file inline_file3 1 $attr16
-+test_attr_replay inline_file3 "attr_name2" $attr64k "s" "larp"
-+test_attr_replay inline_file3 "attr_name2" $attr64k "r" "larp"
-+
-+# extent, internal
-+create_test_file extent_file1 1 $attr1k
-+test_attr_replay extent_file1 "attr_name2" $attr1k "s" "larp"
-+test_attr_replay extent_file1 "attr_name2" $attr1k "r" "larp"
-+
-+# extent, inject error on split
-+create_test_file extent_file2 3 $attr1k
-+test_attr_replay extent_file2 "attr_name4" $attr1k "s" "larp_leaf_split"
-+
-+# extent, inject error on fork transition
-+create_test_file extent_file3 3 $attr1k
-+test_attr_replay extent_file3 "attr_name4" $attr1k "s" "larp_leaf_to_node"
-+
-+# extent, remote
-+create_test_file extent_file4 1 $attr1k
-+test_attr_replay extent_file4 "attr_name2" $attr64k "s" "larp"
-+test_attr_replay extent_file4 "attr_name2" $attr64k "r" "larp"
-+
-+# remote, internal
-+create_test_file remote_file1 1 $attr64k
-+test_attr_replay remote_file1 "attr_name2" $attr1k "s" "larp"
-+test_attr_replay remote_file1 "attr_name2" $attr1k "r" "larp"
-+
-+# remote, remote
-+create_test_file remote_file2 1 $attr64k
-+test_attr_replay remote_file2 "attr_name2" $attr64k "s" "larp"
-+test_attr_replay remote_file2 "attr_name2" $attr64k "r" "larp"
-+
-+# replace shortform
-+create_test_file sf_file 2 $attr64
-+test_attr_replay sf_file "attr_name2" $attr64 "s" "larp"
-+
-+# replace leaf
-+create_test_file leaf_file 2 $attr1k
-+test_attr_replay leaf_file "attr_name2" $attr1k "s" "larp"
-+
-+# replace node
-+create_test_file node_file 1 $attr64k
-+$ATTR_PROG -s "attr_name2" -V $attr1k $SCRATCH_MNT/node_file \
-+		>> $seqres.full
-+test_attr_replay node_file "attr_name2" $attr1k "s" "larp"
-+
-+echo "*** done"
-+status=0
-+exit
-diff --git a/tests/xfs/543.out b/tests/xfs/543.out
-new file mode 100644
-index 00000000..075eecb3
---- /dev/null
-+++ b/tests/xfs/543.out
-@@ -0,0 +1,149 @@
-+QA output created by 543
-+*** mkfs
-+*** mount FS
-+attr_set: Input/output error
-+Could not set "attr_name" for SCRATCH_MNT/empty_file1
-+touch: cannot touch 'SCRATCH_MNT/empty_file1': Input/output error
-+db6747306e971b6e3fd474aae10159a1  -
-+
-+attr_remove: Input/output error
-+Could not remove "attr_name" for SCRATCH_MNT/empty_file1
-+touch: cannot touch 'SCRATCH_MNT/empty_file1': Input/output error
-+attr_get: No data available
-+Could not get "attr_name" for SCRATCH_MNT/empty_file1
-+d41d8cd98f00b204e9800998ecf8427e  -
-+
-+attr_set: Input/output error
-+Could not set "attr_name" for SCRATCH_MNT/empty_file2
-+touch: cannot touch 'SCRATCH_MNT/empty_file2': Input/output error
-+d489897d7ba99c2815052ae7dca29097  -
-+
-+attr_remove: Input/output error
-+Could not remove "attr_name" for SCRATCH_MNT/empty_file2
-+touch: cannot touch 'SCRATCH_MNT/empty_file2': Input/output error
-+attr_get: No data available
-+Could not get "attr_name" for SCRATCH_MNT/empty_file2
-+d41d8cd98f00b204e9800998ecf8427e  -
-+
-+attr_set: Input/output error
-+Could not set "attr_name" for SCRATCH_MNT/empty_file3
-+touch: cannot touch 'SCRATCH_MNT/empty_file3': Input/output error
-+0ba8b18d622a11b5ff89336761380857  -
-+
-+attr_remove: Input/output error
-+Could not remove "attr_name" for SCRATCH_MNT/empty_file3
-+touch: cannot touch 'SCRATCH_MNT/empty_file3': Input/output error
-+attr_get: No data available
-+Could not get "attr_name" for SCRATCH_MNT/empty_file3
-+d41d8cd98f00b204e9800998ecf8427e  -
-+
-+attr_set: Input/output error
-+Could not set "attr_name2" for SCRATCH_MNT/inline_file1
-+touch: cannot touch 'SCRATCH_MNT/inline_file1': Input/output error
-+49f4f904e12102a3423d8ab3f845e6e8  -
-+
-+attr_remove: Input/output error
-+Could not remove "attr_name2" for SCRATCH_MNT/inline_file1
-+touch: cannot touch 'SCRATCH_MNT/inline_file1': Input/output error
-+attr_get: No data available
-+Could not get "attr_name2" for SCRATCH_MNT/inline_file1
-+d41d8cd98f00b204e9800998ecf8427e  -
-+
-+attr_set: Input/output error
-+Could not set "attr_name2" for SCRATCH_MNT/inline_file2
-+touch: cannot touch 'SCRATCH_MNT/inline_file2': Input/output error
-+6a0bd8b5aaa619bcd51f2ead0208f1bb  -
-+
-+attr_remove: Input/output error
-+Could not remove "attr_name2" for SCRATCH_MNT/inline_file2
-+touch: cannot touch 'SCRATCH_MNT/inline_file2': Input/output error
-+attr_get: No data available
-+Could not get "attr_name2" for SCRATCH_MNT/inline_file2
-+d41d8cd98f00b204e9800998ecf8427e  -
-+
-+attr_set: Input/output error
-+Could not set "attr_name2" for SCRATCH_MNT/inline_file3
-+touch: cannot touch 'SCRATCH_MNT/inline_file3': Input/output error
-+3276329baa72c32f0a4a5cb0dbf813df  -
-+
-+attr_remove: Input/output error
-+Could not remove "attr_name2" for SCRATCH_MNT/inline_file3
-+touch: cannot touch 'SCRATCH_MNT/inline_file3': Input/output error
-+attr_get: No data available
-+Could not get "attr_name2" for SCRATCH_MNT/inline_file3
-+d41d8cd98f00b204e9800998ecf8427e  -
-+
-+attr_set: Input/output error
-+Could not set "attr_name2" for SCRATCH_MNT/extent_file1
-+touch: cannot touch 'SCRATCH_MNT/extent_file1': Input/output error
-+8c6a952b2dbecaa5a308a00d2022e599  -
-+
-+attr_remove: Input/output error
-+Could not remove "attr_name2" for SCRATCH_MNT/extent_file1
-+touch: cannot touch 'SCRATCH_MNT/extent_file1': Input/output error
-+attr_get: No data available
-+Could not get "attr_name2" for SCRATCH_MNT/extent_file1
-+d41d8cd98f00b204e9800998ecf8427e  -
-+
-+attr_set: Input/output error
-+Could not set "attr_name4" for SCRATCH_MNT/extent_file2
-+touch: cannot touch 'SCRATCH_MNT/extent_file2': Input/output error
-+c5ae4d474e547819a8807cfde66daba2  -
-+
-+attr_set: Input/output error
-+Could not set "attr_name4" for SCRATCH_MNT/extent_file3
-+touch: cannot touch 'SCRATCH_MNT/extent_file3': Input/output error
-+17bae95be35ce7a0e6d4327b67da932b  -
-+
-+attr_set: Input/output error
-+Could not set "attr_name2" for SCRATCH_MNT/extent_file4
-+touch: cannot touch 'SCRATCH_MNT/extent_file4': Input/output error
-+d17d94c39a964409b8b8173a51f8e951  -
-+
-+attr_remove: Input/output error
-+Could not remove "attr_name2" for SCRATCH_MNT/extent_file4
-+touch: cannot touch 'SCRATCH_MNT/extent_file4': Input/output error
-+attr_get: No data available
-+Could not get "attr_name2" for SCRATCH_MNT/extent_file4
-+d41d8cd98f00b204e9800998ecf8427e  -
-+
-+attr_set: Input/output error
-+Could not set "attr_name2" for SCRATCH_MNT/remote_file1
-+touch: cannot touch 'SCRATCH_MNT/remote_file1': Input/output error
-+4104e21da013632e636cdd044884ca94  -
-+
-+attr_remove: Input/output error
-+Could not remove "attr_name2" for SCRATCH_MNT/remote_file1
-+touch: cannot touch 'SCRATCH_MNT/remote_file1': Input/output error
-+attr_get: No data available
-+Could not get "attr_name2" for SCRATCH_MNT/remote_file1
-+d41d8cd98f00b204e9800998ecf8427e  -
-+
-+attr_set: Input/output error
-+Could not set "attr_name2" for SCRATCH_MNT/remote_file2
-+touch: cannot touch 'SCRATCH_MNT/remote_file2': Input/output error
-+9ac16e37ecd6f6c24de3f724c49199a8  -
-+
-+attr_remove: Input/output error
-+Could not remove "attr_name2" for SCRATCH_MNT/remote_file2
-+touch: cannot touch 'SCRATCH_MNT/remote_file2': Input/output error
-+attr_get: No data available
-+Could not get "attr_name2" for SCRATCH_MNT/remote_file2
-+d41d8cd98f00b204e9800998ecf8427e  -
-+
-+attr_set: Input/output error
-+Could not set "attr_name2" for SCRATCH_MNT/sf_file
-+touch: cannot touch 'SCRATCH_MNT/sf_file': Input/output error
-+33bc798a506b093a7c2cdea122a738d7  -
-+
-+attr_set: Input/output error
-+Could not set "attr_name2" for SCRATCH_MNT/leaf_file
-+touch: cannot touch 'SCRATCH_MNT/leaf_file': Input/output error
-+dec146c586813046f4b876bcecbaa713  -
-+
-+attr_set: Input/output error
-+Could not set "attr_name2" for SCRATCH_MNT/node_file
-+touch: cannot touch 'SCRATCH_MNT/node_file': Input/output error
-+e97ce3d15f9f28607b51f76bf8b7296c  -
-+
-+*** done
 -- 
 2.25.1
 
