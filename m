@@ -2,102 +2,73 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 582D4C433FE
-	for <linux-xfs@archiver.kernel.org>; Mon, 10 Jan 2022 17:51:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46161C433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 10 Jan 2022 18:11:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238561AbiAJRvz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 10 Jan 2022 12:51:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52776 "EHLO
+        id S238765AbiAJSL3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 10 Jan 2022 13:11:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57234 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238605AbiAJRvz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jan 2022 12:51:55 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 730E9C061748
-        for <linux-xfs@vger.kernel.org>; Mon, 10 Jan 2022 09:51:55 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 107ED60A27
-        for <linux-xfs@vger.kernel.org>; Mon, 10 Jan 2022 17:51:55 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61D9AC36AE3;
-        Mon, 10 Jan 2022 17:51:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1641837114;
-        bh=3sV3aqUSxekODf+OYrcrmCU5YJdQPPJAgSHRImBmzLc=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=t/wy6AEePSyxCeXJofkfGLaqFcDfJVdDsHISadxq+BI29PEO2by3+RB7wNPk2vgcm
-         eQNfvogsIPQP0dl1LQIli4qHag/I5zWMScer1PYCwobVQKcWGkOPlNZewKxJ7Q7b2l
-         GBGBIB/zDoNT8J5bJAyOuBl2/jqxiWjWfTel3e4ne+npv6EiIwBR37ZSwG64jZj9jF
-         htepJgjbBg0AsLRTXVgg6A0fV04P1IigpevuJ8LjfGysAjeS9VLjabOxWsNG60jOc2
-         d7rtzYy4kjyFzt4oXoC7DYv38hSXbpDGYKUNvvL4/dV4huXBoPITpwbOhiVvEwmITK
-         B72SbiU7fvCRQ==
-Date:   Mon, 10 Jan 2022 09:51:54 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>,
-        Eric Sandeen <sandeen@redhat.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: [PATCH 2/2] xfs: hide the XFS_IOC_{ALLOC,FREE}SP* definitions
-Message-ID: <20220110175154.GX656707@magnolia>
-References: <20220110174827.GW656707@magnolia>
+        with ESMTP id S238764AbiAJSL3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jan 2022 13:11:29 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EEEB0C06173F;
+        Mon, 10 Jan 2022 10:11:28 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=IXDclvvGfX8g/ZBckJ/3SLWrdaDRKpz0LF1OPGXVzvI=; b=ff+m+P71beGj0MkK/YASQ9YUEQ
+        6eQGd4BXDI642TW373K/AecrqG2BPxwVOprIKkkjlP70PP7awfl7CTMA6I7YbEop3wWuddvBz0Tlr
+        w66cIGirclHcNqmgQiHr2CJvcJx+SKYjTSzTJjwCZFrlT0dJPsdFXvZ9CibBXuWnHcSlW+0TPBklH
+        LFEAfaW63NFoBQEG9MhZCdDRHOi52p6SWuc4V79Fy+VAP1UfgAy6nQbSvuJVRFsrGrZz0NLtU07dJ
+        h4lyedzaF5yBW8OA/yAvUSf/ms70Mk2agPsxwzmwOZgd1CBnmOCHG1ooJOBe3AgSZfP21flP9asVi
+        3FtJ2plg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1n6z8Y-00Cgu5-33; Mon, 10 Jan 2022 18:11:18 +0000
+Date:   Mon, 10 Jan 2022 10:11:18 -0800
+From:   "hch@infradead.org" <hch@infradead.org>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        "hch@infradead.org" <hch@infradead.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Trond Myklebust <trondmy@hammerspace.com>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "trondmy@kernel.org" <trondmy@kernel.org>,
+        "axboe@kernel.dk" <axboe@kernel.dk>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] iomap: Address soft lockup in iomap_finish_ioend()
+Message-ID: <Ydx2xtqMpGBO6vlW@infradead.org>
+References: <YdSOgyvDnZadYpUP@infradead.org>
+ <20220104192227.GA398655@magnolia>
+ <20220104215227.GJ945095@dread.disaster.area>
+ <20220104231230.GG31606@magnolia>
+ <20220105021022.GL945095@dread.disaster.area>
+ <YdWjkW7hhbTl4TQa@bfoster>
+ <20220105220421.GM945095@dread.disaster.area>
+ <YdccZ4Ut3VlJhSMS@bfoster>
+ <20220110081847.GW945095@dread.disaster.area>
+ <YdxwnaT0nYHgGQZR@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220110174827.GW656707@magnolia>
+In-Reply-To: <YdxwnaT0nYHgGQZR@bfoster>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Mon, Jan 10, 2022 at 12:45:01PM -0500, Brian Foster wrote:
+> With regard to the iterators, my understanding was that
+> bio_for_each_segment_all() walks the multipage bvecs but
+> bio_for_each_segment() does not, but that could certainly be wrong as I
+> find the iterators a bit confusing. Either way, the most recent test
+> with the ioend granular filter implies that a single ioend can still
+> become a soft lockup vector from non-atomic context.
 
-Now that we've made these ioctls defunct, move them from xfs_fs.h to
-xfs_ioctl.c, which effectively removes them from the publicly supported
-ioctl interfaces for XFS.
-
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/libxfs/xfs_fs.h |    8 ++++----
- fs/xfs/xfs_ioctl.c     |    9 +++++++++
- 2 files changed, 13 insertions(+), 4 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index c43877c8a279..49c0e583d6bb 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -781,13 +781,13 @@ struct xfs_scrub_metadata {
-  * For 'documentation' purposed more than anything else,
-  * the "cmd #" field reflects the IRIX fcntl number.
-  */
--#define XFS_IOC_ALLOCSP		_IOW ('X', 10, struct xfs_flock64)
--#define XFS_IOC_FREESP		_IOW ('X', 11, struct xfs_flock64)
-+/*	XFS_IOC_ALLOCSP ------- deprecated 10	 */
-+/*	XFS_IOC_FREESP -------- deprecated 11	 */
- #define XFS_IOC_DIOINFO		_IOR ('X', 30, struct dioattr)
- #define XFS_IOC_FSGETXATTR	FS_IOC_FSGETXATTR
- #define XFS_IOC_FSSETXATTR	FS_IOC_FSSETXATTR
--#define XFS_IOC_ALLOCSP64	_IOW ('X', 36, struct xfs_flock64)
--#define XFS_IOC_FREESP64	_IOW ('X', 37, struct xfs_flock64)
-+/*	XFS_IOC_ALLOCSP64 ----- deprecated 36	 */
-+/*	XFS_IOC_FREESP64 ------ deprecated 37	 */
- #define XFS_IOC_GETBMAP		_IOWR('X', 38, struct getbmap)
- #define XFS_IOC_FSSETDM		_IOW ('X', 39, struct fsdmidata)
- #define XFS_IOC_RESVSP		_IOW ('X', 40, struct xfs_flock64)
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 38b2a1e881a6..15ec3d4a1516 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1854,6 +1854,15 @@ xfs_fs_eofblocks_from_user(
- 	return 0;
- }
- 
-+/*
-+ * These long-unused ioctls were removed from the official ioctl API in 5.17,
-+ * but retain these definitions so that we can log warnings about them.
-+ */
-+#define XFS_IOC_ALLOCSP		_IOW ('X', 10, struct xfs_flock64)
-+#define XFS_IOC_FREESP		_IOW ('X', 11, struct xfs_flock64)
-+#define XFS_IOC_ALLOCSP64	_IOW ('X', 36, struct xfs_flock64)
-+#define XFS_IOC_FREESP64	_IOW ('X', 37, struct xfs_flock64)
-+
- /*
-  * Note: some of the ioctl's return positive numbers as a
-  * byte count indicating success, such as readlink_by_handle.
+the segment iterators iterate over the pages segments, the
+bvec iterators over the multi-page bvecs.  The _all suffix means
+it iterates over the whole bio independent of clones and partial
+submission state and is for use in the cmpletion handlers.  The
+version without it are for use in the block drivers.
