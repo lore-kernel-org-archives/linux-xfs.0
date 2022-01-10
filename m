@@ -2,184 +2,168 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE29BC433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 10 Jan 2022 08:18:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA31AC433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 10 Jan 2022 08:44:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240010AbiAJISz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 10 Jan 2022 03:18:55 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:54987 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231458AbiAJISw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jan 2022 03:18:52 -0500
+        id S241963AbiAJIoB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 10 Jan 2022 03:44:01 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:56885 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S242013AbiAJIl7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jan 2022 03:41:59 -0500
 Received: from dread.disaster.area (pa49-181-243-119.pa.nsw.optusnet.com.au [49.181.243.119])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 5569E62C1B7;
-        Mon, 10 Jan 2022 19:18:49 +1100 (AEDT)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 49CFE10C0769;
+        Mon, 10 Jan 2022 19:41:53 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1n6pt9-00DX9k-J0; Mon, 10 Jan 2022 19:18:47 +1100
-Date:   Mon, 10 Jan 2022 19:18:47 +1100
+        id 1n6qFU-00DXbS-EB; Mon, 10 Jan 2022 19:41:52 +1100
+Date:   Mon, 10 Jan 2022 19:41:52 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        "hch@infradead.org" <hch@infradead.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Trond Myklebust <trondmy@hammerspace.com>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "trondmy@kernel.org" <trondmy@kernel.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] iomap: Address soft lockup in iomap_finish_ioend()
-Message-ID: <20220110081847.GW945095@dread.disaster.area>
-References: <YdPyhpdxykDscMtJ@infradead.org>
- <YdSNGAupnxF/ouis@casper.infradead.org>
- <YdSOgyvDnZadYpUP@infradead.org>
- <20220104192227.GA398655@magnolia>
- <20220104215227.GJ945095@dread.disaster.area>
- <20220104231230.GG31606@magnolia>
- <20220105021022.GL945095@dread.disaster.area>
- <YdWjkW7hhbTl4TQa@bfoster>
- <20220105220421.GM945095@dread.disaster.area>
- <YdccZ4Ut3VlJhSMS@bfoster>
+To:     Krister Johansen <kjlx@templeofstupid.com>
+Cc:     linux-xfs@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: xfs_bmap_extents_to_btree allocation warnings
+Message-ID: <20220110084152.GX945095@dread.disaster.area>
+References: <20220105071052.GD20464@templeofstupid.com>
+ <20220106010123.GP945095@dread.disaster.area>
+ <20220106085228.GA19131@templeofstupid.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YdccZ4Ut3VlJhSMS@bfoster>
+In-Reply-To: <20220106085228.GA19131@templeofstupid.com>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=61dbebea
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=61dbf153
         a=BEa52nrBdFykVEm6RU8P4g==:117 a=BEa52nrBdFykVEm6RU8P4g==:17
         a=kj9zAlcOel0A:10 a=DghFqjY3_ZEA:10 a=7-415B0cAAAA:8
-        a=thn2x24IeB6EKl0Mb6oA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=J4HbylmhB1wtlE8kDu4A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jan 06, 2022 at 11:44:23AM -0500, Brian Foster wrote:
-> On Thu, Jan 06, 2022 at 09:04:21AM +1100, Dave Chinner wrote:
-> > On Wed, Jan 05, 2022 at 08:56:33AM -0500, Brian Foster wrote:
-> > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> > index 71a36ae120ee..39214577bc46 100644
-> > --- a/fs/iomap/buffered-io.c
-> > +++ b/fs/iomap/buffered-io.c
-> > @@ -1066,17 +1066,34 @@ iomap_finish_ioend(struct iomap_ioend *ioend, int error)
-> >  	}
-> >  }
-> >  
-> > +/*
-> > + * Ioend completion routine for merged bios. This can only be called from task
-> > + * contexts as merged ioends can be of unbound length. Hence we have to break up
-> > + * the page writeback completion into manageable chunks to avoid long scheduler
-> > + * holdoffs. We aim to keep scheduler holdoffs down below 10ms so that we get
-> > + * good batch processing throughput without creating adverse scheduler latency
-> > + * conditions.
-> > + */
-> >  void
-> >  iomap_finish_ioends(struct iomap_ioend *ioend, int error)
-> >  {
-> >  	struct list_head tmp;
-> > +	int segments;
-> > +
-> > +	might_sleep();
-> >  
-> >  	list_replace_init(&ioend->io_list, &tmp);
-> > +	segments = ioend->io_segments;
-> >  	iomap_finish_ioend(ioend, error);
-> >  
-> >  	while (!list_empty(&tmp)) {
-> > +		if (segments > 32768) {
-> > +			cond_resched();
-> > +			segments = 0;
-> > +		}
+On Thu, Jan 06, 2022 at 12:52:28AM -0800, Krister Johansen wrote:
+> On Thu, Jan 06, 2022 at 12:01:23PM +1100, Dave Chinner wrote:
+> > On Tue, Jan 04, 2022 at 11:10:52PM -0800, Krister Johansen wrote:
+> > > However, linux is using 64-bit block
+> > > pointers in the inode now and the XFS_ALLOCTYPE_START_BNO case in
+> > > xfs_alloc_vextent() seems to try to ensure that it never considers an AG
+> > > that's less than the agno for the fsbno passed in via args.
+> > 
+> > Because otherwise allocations ABBA deadlock on AG locking.
 > 
-> How is this intended to address the large bi_vec scenario? AFAICT
-> bio_segments() doesn't account for multipage bvecs so the above logic
-> can allow something like 34b (?) 4k pages before a yield.
+> Sorry, what I'm really trying to ask is: are there still cases in XFS
+> where using XFS_ALLOCTYPE_START_BNO can give you this kind of deadlock?
 
-Right now the bvec segment iteration in iomap_finish_ioend() is
-completely unaware of multipage bvecs - as per above
-bio_for_each_segment_all() iterates by PAGE_SIZE within a bvec,
-regardless of whether they are stored in a multipage bvec or not.
-Hence it always iterates the entire bio a single page at a time.
+I'd say yes - I can think of several scenarios where we make
+multiple allocations per transaction (directory and attribute code)
+and I think that they don't actually use t_firstblock correctly to
+avoid AGF locking issues. i.e. I think that tp->t_firstblock should
+actually be tracking the highest locked AGF in the transaction, not
+the first AGF we locked...
 
-IOWs, we don't use multi-page bvecs in iomap writeback, nor is it
-aware of them at all. We're adding single pages to bios via
-bio_add_page() which may merge them internally into multipage bvecs.
-However, all our iterators use single page interfaces, hence we
-don't see the internal multi-page structure of the bio at all.
-As such, bio_segments() should return the number of PAGE_SIZE pages
-attached to the bio regardless of it's internal structure.
+> There's some deadlock avoidance in the START_BNO implementation, but
+> there are plenty of places where XFS_ALLOCTYPE_NEAR_BNO is still used if
+> t_firstblock is not NULLFSBLOCK.
 
-That is what I see on a trace from a large single file submission,
-comparing bio_segments() output from the page count on an ioend:
+Right, NEAR_BNO is used because we likely have physical locality
+constraints (e.g. seek minimisation by placing related blocks as
+close to each other as possible) and potentially other limits, like
+the allocations are for per-AG data and therefore must be placed
+within the specified AG...
 
-   kworker/u67:2-187   [017] 13530.753548: iomap_do_writepage: 2. bios 4096, pages 4096, start sector 0x370400 bi_vcnt 1, bi_size 16777216
-   kworker/u67:2-187   [017] 13530.759706: iomap_do_writepage: 2. bios 4096, pages 4096, start sector 0x378400 bi_vcnt 1, bi_size 16777216
-   kworker/u67:2-187   [017] 13530.766326: iomap_do_writepage: 2. bios 4096, pages 4096, start sector 0x380400 bi_vcnt 1, bi_size 16777216
-   kworker/u67:2-187   [017] 13530.770689: iomap_do_writepage: 2. bios 4096, pages 4096, start sector 0x388400 bi_vcnt 1, bi_size 16777216
-   kworker/u67:2-187   [017] 13530.774716: iomap_do_writepage: 2. bios 4096, pages 4096, start sector 0x390400 bi_vcnt 1, bi_size 16777216
-   kworker/u67:2-187   [017] 13530.777157: iomap_writepages: 3. bios 2048, pages 2048, start sector 0x398400 bi_vcnt 1, bi_size 8388608
+> I'm trying to work out if that code
+> still exists because of concerns about deadlocks, or if its an attempt
+> to limit the number of AGs searched instead.  (Or some other policy
+> choice, even.)
 
-Which shows we are building ioends with a single bio with a single
-bvec, containing 4096 pages and 4096 bio segments. So, as expected,
-bio_segments() matches the page count and we submit 4096 page ioends
-with a single bio attached to it.
+All of the above, and more... :(
 
-This is clearly a case where we are getting physically contiguous
-page cache page allocation during write() syscalls, and the result
-is a single contiguous bvec from bio_add_page() doing physical page
-merging at the bvec level. Hence we see bio->bi_vcnt = 1 and a
-physically contiguous 4096 multipage bvec being dispatched. The
-lower layers slice and dice these huge bios to what the hardware can
-handle...
+> > > be a reasonable way to address the WARN?  Or does this open a box of
+> > > problems that obvious to the experienced, but just subtle enough to
+> > > elude the unfamiliar?
+> > 
+> > No, yes, and yes.
+> 
+> Thank you humoring my questions nonetheless.
+> 
+> > > The xfs_db freesp report after the problem occurred.  (N.B. it was a few
+> > > hours before I was able to get to this machine to investigate)
+> > > 
+> > > xfs_db -r -c 'freesp -a 47 -s' /dev/mapper/db-vol
+> > >    from      to extents  blocks    pct
+> > >       1       1      48      48   0.00
+> > >       2       3     119     303   0.02
+> > >       4       7      46     250   0.01
+> > >       8      15      22     255   0.01
+> > >      16      31      17     374   0.02
+> > >      32      63      16     728   0.04
+> > >      64     127       9     997   0.05
+> > >     128     255     149   34271   1.83
+> > >     256     511       7    2241   0.12
+> > >     512    1023       4    2284   0.12
+> > >    1024    2047       1    1280   0.07
+> > >    2048    4095       1    3452   0.18
+> > > 1048576 2097151       1 1825182  97.52
+> > > total free extents 440
+> > > total free blocks 1871665
+> > > average free extent size 4253.78
+> > 
+> > So 1,871,665 of 228,849,020 blocks free in the AG. That's 99.2%
+> > full, so it's extremely likely you are hitting a full AG condition.
+> > 
+> > /me goes and looks at xfs_iomap_write_direct()....
+> > 
+> > .... and notices that it passes "0" as the total allocation block
+> > count, which means it isn't reserving space in the AG for both the
+> > data extent and the BMBT blocks...
+> > 
+> > ... and several other xfs_bmapi_write() callers have the same
+> > issue...
+> > 
+> > Ok, let me spend a bit more looking into this in more depth, but it
+> > looks like the problem is at the xfs_bmapi_write() caller level, not
+> > deep in the allocator itself.
+> 
+> At least on 5.4 xfs_bmapi_write is still passing resblks instead of
+> zero, which is computed in xfs_iomap_write_direct.
 
-What I'm not yet reproducing is whatever vector that Trond is seeing
-that is causing the multi-second hold-offs. I get page completion
-processed at a rate of about a million pages per second per CPU, but
-I'm bandwidth limited to about 400,000 pages per second due to
-mapping->i_pages lock contention (reclaim vs page cache
-instantiation vs writeback completion). I'm not seeing merged ioend
-batches of larger than about 40,000 pages being processed at once.
-Hence I can't yet see where the millions of pages in a single ioend
-completion that would be required to hold a CPU for tens of seconds
-is coming from yet...
+yup, I missed commit da781e64b28c ("xfs: don't set bmapi total block
+req where minleft is") back in 2019 where that behaviour was
+changed, and instead it changes xfs_bmapi_write() to implcitly
+manage space for BMBT blocks via args->minleft whilst still
+explicitly requiring the caller to reserve those blocks at
+transaction allocation time.
 
-> That aside, I find the approach odd in that we calculate the segment
-> count for each bio via additional iteration (which is how bio_segments()
-> works) and track the summation of the chain in the ioend only to provide
-> iomap_finish_ioends() with a subtly inaccurate view of how much work
-> iomap_finish_ioend() is doing as the loop iterates.
+Bit of a mess, really, because multi-allocation transactions are
+still required to pass both the data blocks + the possible BMBT
+blocks that might be needed to xfs_bmapi_write(). I suspect that for
+this case the implicit args->minleft reservation is double
+accounted...
 
-I just did that so I didn't have to count pages as the bio is built.
-Easy to change - in fact I have changed it to check that
-bio_segments() was returning the page count I expected it should be
-returning....
+> Related to your comment about alloc_args.total, I did a bit of tracing
+> of the xfs_alloc tracepoints on my system and found that total seems to
+> be getting set in both cases, but that a) it's actually a larger value
+> for directio; and b) in the buffered write case the code is requesting
+> more blocks at one time which causes a larger allocation to occur.  I'm
+> not certain, but wondered if this could be causing us to select an AG
+> with more space by luck.
+> 
+> directio:
+> 
+>               dd-102229  [005] .... 4969662.383215: xfs_alloc_exact_done: dev 253:1 agno 0 agbno 14240 minlen 4 maxlen 4 mod 0 prod 1 minleft 2 total 8 alignment 1 minalignslop 3 len 4 type THIS_BNO otype THIS_BNO wasdel 0 wasfromfl 0 resv 0 datatype 0x9 firstblock 0xffffffffffffffff
 
-I also changed the completion side to just count
-end_page_writeback() calls, and I get the same number of
-cond_resched() calls being made as the bio_segment. So AFAICT
-there's no change of behaviour or accounting between the two
-methods, and I'm not sure where the latest problem Trond reported
-is...
+That one is correct - 4 extra blocks on top of the data extent...
 
-> We already have this
-> information in completion context and iomap_finish_ioends() is just a
-> small iterator function, so I don't understand why we wouldn't do
-> something like factor these two loops into a non-atomic context only
-> variant that yields based on the actual amount of page processing work
-> being done (i.e. including multipage bvecs). That seems more robust and
-> simple to me, but that's just my .02.
+> buffered write + fsync:
+> 
+>               dd-109921  [010] .... 4972814.844429: xfs_alloc_exact_done: dev 253:1 agno 0 agbno 21280 minlen 16 maxlen 16 mod 0 prod 1 minleft 2 total 4 alignment 1 minalignslop 3 len 16 type THIS_BNO otype THIS_BNO wasdel 1 wasfromfl 0 resv 0 datatype 0x9 firstblock 0xffffffffffffffff
 
-iomap_finish_ioends() is pretty much that non-atomic version of
-the ioend completion code. Merged ioend chains cannot be sanely
-handled in atomic context and so it has to be called from task
-context. Hence the "might_sleep()" I added to ensure that we get
-warnings if it is called from atomic contexts.
-
-As for limiting atomic context completion processing, we've
-historically done that by limiting the size of individual IO chains
-submitted during writeback. This means that atomic completion
-contexts don't need any special signalling (i.e. conditional
-"in_atomic()" behaviour) because they aren't given anything to
-process that would cause problems in atomic contexts...
+But that one is clearly wrong - we're asking for 16 blocks for the
+data extent, and a total block count of the allocation of 4 blocks.
+Even though we've reserved 16 blocks during the initial delayed
+allocation, we've still got to have 16 + 4 blocks free in the AG for
+the allocation to succced. That's one of the bugs the commit I
+mentioned above fixed...
 
 Cheers,
 
