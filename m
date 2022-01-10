@@ -2,307 +2,304 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A71AEC433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 10 Jan 2022 17:45:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B86F5C433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 10 Jan 2022 17:48:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238536AbiAJRpI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 10 Jan 2022 12:45:08 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:24286 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S238533AbiAJRpH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jan 2022 12:45:07 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1641836706;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=KH1SvETr963XJ47PT0NIJyMKwpzkzjQS6lMIcgLUvOI=;
-        b=IcsrmCQOVaUhMimmDdZj+/CSktmVJqpmCAQYmKtTuxdcpFb+RKrSTF5l4WVzZELY+4+WLs
-        8+Jm3o5hIUmRRKZfsOc6MxDnzKHqy7bdysyc0SW2/wNQ7SQLTduia9EzuJruaQ0C9nqNXD
-        kO5L8DKhw94aXyy3R/MjhtyUlxYL808=
-Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com
- [209.85.222.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-287-tQtFa9VpOJOjXfwA4BQV4w-1; Mon, 10 Jan 2022 12:45:05 -0500
-X-MC-Unique: tQtFa9VpOJOjXfwA4BQV4w-1
-Received: by mail-qk1-f197.google.com with SMTP id 84-20020a370857000000b00477967ac6c1so6562010qki.8
-        for <linux-xfs@vger.kernel.org>; Mon, 10 Jan 2022 09:45:05 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=KH1SvETr963XJ47PT0NIJyMKwpzkzjQS6lMIcgLUvOI=;
-        b=EheZ98RoBGXHr3kNtyIo2Xs46tlWqqeVEzzYCr7kEFE9Ubh7+TOj+3UQejegqXeRwo
-         7lHEHVBL2OOZpHmy1GFTSshWKSLVn/G3tSpsTTY8VTqzimwZbuAnGvAFIxckElE65Tw/
-         hP/72ukFk9rKZWTyQeGE4sYeymBZbxfRhZj6ZCwZHxI4GlbnVnilrdwAD/eqG+q0ctBc
-         eXsuNcYs3or91Vb8TI+PpBhnEFhaSD1KO0fH6PIKDTso1l5ZUBEMWY9EXEgpQ0EnX/Hz
-         mr0OS/xR5n5OOWXMjzQOR80sX57cYzEWMFOWICYqffLNJcr44n7Cf5LICd4jrcRHO4VV
-         p23A==
-X-Gm-Message-State: AOAM532/7fOhscuaEVl4vEiHj/wKKgZWLXQO1Qg3k2hpkcOPpHQOmVXn
-        fo94EoJkcpxfnZt0Ryrl6lkhsmVNF0EYRNDGU5kP3wavqjvBIYujfGv0RAhkJsjuAxN1JEIKvgl
-        DJbqvwNmaJ99C1HtESp3m
-X-Received: by 2002:a05:622a:1c6:: with SMTP id t6mr677957qtw.271.1641836704141;
-        Mon, 10 Jan 2022 09:45:04 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJyzeQB2c3M0FFSkYCcyRGzcAT8bBP4KSdi+bh0jBbKBDeurAHnmBPj5sd6C/H+5lFabjhTA8w==
-X-Received: by 2002:a05:622a:1c6:: with SMTP id t6mr677937qtw.271.1641836703822;
-        Mon, 10 Jan 2022 09:45:03 -0800 (PST)
-Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
-        by smtp.gmail.com with ESMTPSA id g19sm5016531qtg.82.2022.01.10.09.45.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 10 Jan 2022 09:45:03 -0800 (PST)
-Date:   Mon, 10 Jan 2022 12:45:01 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        "hch@infradead.org" <hch@infradead.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Trond Myklebust <trondmy@hammerspace.com>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "trondmy@kernel.org" <trondmy@kernel.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] iomap: Address soft lockup in iomap_finish_ioend()
-Message-ID: <YdxwnaT0nYHgGQZR@bfoster>
-References: <YdSNGAupnxF/ouis@casper.infradead.org>
- <YdSOgyvDnZadYpUP@infradead.org>
- <20220104192227.GA398655@magnolia>
- <20220104215227.GJ945095@dread.disaster.area>
- <20220104231230.GG31606@magnolia>
- <20220105021022.GL945095@dread.disaster.area>
- <YdWjkW7hhbTl4TQa@bfoster>
- <20220105220421.GM945095@dread.disaster.area>
- <YdccZ4Ut3VlJhSMS@bfoster>
- <20220110081847.GW945095@dread.disaster.area>
+        id S238584AbiAJRsa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 10 Jan 2022 12:48:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52006 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238561AbiAJRs3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jan 2022 12:48:29 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5EEAEC06173F
+        for <linux-xfs@vger.kernel.org>; Mon, 10 Jan 2022 09:48:29 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E388660E06
+        for <linux-xfs@vger.kernel.org>; Mon, 10 Jan 2022 17:48:28 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46542C36AE3;
+        Mon, 10 Jan 2022 17:48:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1641836908;
+        bh=klyMI7AvQYdotWin7ECkBS1SVzrmXn6V5MHCC1EBSuc=;
+        h=Date:From:To:Cc:Subject:From;
+        b=R0Ibe4IKcv+wcX/kkCxM7MSFR+LJMHrDJbtm5r6eCtFCRxw2iO1MraWk4n44O9wgB
+         Vy6f0nJrvjEmDkQGYrV1Jc+mXfIEnuvA3jWK6gwRdwu6h3JToyaemH1q3FXaApah7f
+         dE+DSuiBvk5ok1XLKagXZaetVtxDXEMl/aCRh4YNZqi6rEbo/Y0Q/uclYmbtnQH/Xx
+         Y3cQluGSh4Fopf9uMWiFHAo8NJkzmDg0hmLAF7es223fCnEb3FA6wsdfz45A05KKy6
+         CmGKTJJI0lN9qDfxr71TNtall+79iO0hhXXE2r4CEBVJp9HzwzLhbXEDWxeQbcyof/
+         hfMiaB9gYDIog==
+Date:   Mon, 10 Jan 2022 09:48:27 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>,
+        Eric Sandeen <sandeen@redhat.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH 1/2] xfs: kill the XFS_IOC_{ALLOC,FREE}SP* ioctls
+Message-ID: <20220110174827.GW656707@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220110081847.GW945095@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 10, 2022 at 07:18:47PM +1100, Dave Chinner wrote:
-> On Thu, Jan 06, 2022 at 11:44:23AM -0500, Brian Foster wrote:
-> > On Thu, Jan 06, 2022 at 09:04:21AM +1100, Dave Chinner wrote:
-> > > On Wed, Jan 05, 2022 at 08:56:33AM -0500, Brian Foster wrote:
-> > > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> > > index 71a36ae120ee..39214577bc46 100644
-> > > --- a/fs/iomap/buffered-io.c
-> > > +++ b/fs/iomap/buffered-io.c
-> > > @@ -1066,17 +1066,34 @@ iomap_finish_ioend(struct iomap_ioend *ioend, int error)
-> > >  	}
-> > >  }
-> > >  
-> > > +/*
-> > > + * Ioend completion routine for merged bios. This can only be called from task
-> > > + * contexts as merged ioends can be of unbound length. Hence we have to break up
-> > > + * the page writeback completion into manageable chunks to avoid long scheduler
-> > > + * holdoffs. We aim to keep scheduler holdoffs down below 10ms so that we get
-> > > + * good batch processing throughput without creating adverse scheduler latency
-> > > + * conditions.
-> > > + */
-> > >  void
-> > >  iomap_finish_ioends(struct iomap_ioend *ioend, int error)
-> > >  {
-> > >  	struct list_head tmp;
-> > > +	int segments;
-> > > +
-> > > +	might_sleep();
-> > >  
-> > >  	list_replace_init(&ioend->io_list, &tmp);
-> > > +	segments = ioend->io_segments;
-> > >  	iomap_finish_ioend(ioend, error);
-> > >  
-> > >  	while (!list_empty(&tmp)) {
-> > > +		if (segments > 32768) {
-> > > +			cond_resched();
-> > > +			segments = 0;
-> > > +		}
-> > 
-> > How is this intended to address the large bi_vec scenario? AFAICT
-> > bio_segments() doesn't account for multipage bvecs so the above logic
-> > can allow something like 34b (?) 4k pages before a yield.
-> 
-> Right now the bvec segment iteration in iomap_finish_ioend() is
-> completely unaware of multipage bvecs - as per above
-> bio_for_each_segment_all() iterates by PAGE_SIZE within a bvec,
-> regardless of whether they are stored in a multipage bvec or not.
-> Hence it always iterates the entire bio a single page at a time.
-> 
-> IOWs, we don't use multi-page bvecs in iomap writeback, nor is it
-> aware of them at all. We're adding single pages to bios via
-> bio_add_page() which may merge them internally into multipage bvecs.
-> However, all our iterators use single page interfaces, hence we
-> don't see the internal multi-page structure of the bio at all.
-> As such, bio_segments() should return the number of PAGE_SIZE pages
-> attached to the bio regardless of it's internal structure.
-> 
+From: Darrick J. Wong <djwong@kernel.org>
 
-That is pretty much the point. The completion loop doesn't really care
-whether the amount of page processing work is due to a large bio chain,
-multipage bi_bvec(s), merged ioends, or some odd combination thereof. As
-you note, these conditions can manifest from various layers above or
-below iomap. I don't think iomap really needs to know or care about any
-of this. It just needs to yield when it has spent "too much" time
-processing pages.
+According to Dave lore, these ioctls originated in the early 1990s in
+Irix EFS as a (somewhat clunky) way to preallocate space at the end of a
+file.  Irix XFS, naturally, picked up these ioctls to maintain
+compatibility, which meant that they were ported to Linux in the early
+2000s.
 
-With regard to the iterators, my understanding was that
-bio_for_each_segment_all() walks the multipage bvecs but
-bio_for_each_segment() does not, but that could certainly be wrong as I
-find the iterators a bit confusing. Either way, the most recent test
-with the ioend granular filter implies that a single ioend can still
-become a soft lockup vector from non-atomic context.
+Recently it was pointed out to me they still lurk in the kernel, even
+though the Linux fallocate syscall supplanted the functionality a long
+time ago.  fstests doesn't seem to include any real functional or stress
+tests for these ioctls, which means that the code quality is ... very
+questionable.  Most notably, it was a stale disk block exposure vector
+for 21 years and nobody noticed or complained.  As mature programmers
+say, "If you're not testing it, it's broken."
 
-> That is what I see on a trace from a large single file submission,
-> comparing bio_segments() output from the page count on an ioend:
-> 
->    kworker/u67:2-187   [017] 13530.753548: iomap_do_writepage: 2. bios 4096, pages 4096, start sector 0x370400 bi_vcnt 1, bi_size 16777216
->    kworker/u67:2-187   [017] 13530.759706: iomap_do_writepage: 2. bios 4096, pages 4096, start sector 0x378400 bi_vcnt 1, bi_size 16777216
->    kworker/u67:2-187   [017] 13530.766326: iomap_do_writepage: 2. bios 4096, pages 4096, start sector 0x380400 bi_vcnt 1, bi_size 16777216
->    kworker/u67:2-187   [017] 13530.770689: iomap_do_writepage: 2. bios 4096, pages 4096, start sector 0x388400 bi_vcnt 1, bi_size 16777216
->    kworker/u67:2-187   [017] 13530.774716: iomap_do_writepage: 2. bios 4096, pages 4096, start sector 0x390400 bi_vcnt 1, bi_size 16777216
->    kworker/u67:2-187   [017] 13530.777157: iomap_writepages: 3. bios 2048, pages 2048, start sector 0x398400 bi_vcnt 1, bi_size 8388608
-> 
-> Which shows we are building ioends with a single bio with a single
-> bvec, containing 4096 pages and 4096 bio segments. So, as expected,
-> bio_segments() matches the page count and we submit 4096 page ioends
-> with a single bio attached to it.
-> 
-> This is clearly a case where we are getting physically contiguous
-> page cache page allocation during write() syscalls, and the result
-> is a single contiguous bvec from bio_add_page() doing physical page
-> merging at the bvec level. Hence we see bio->bi_vcnt = 1 and a
-> physically contiguous 4096 multipage bvec being dispatched. The
-> lower layers slice and dice these huge bios to what the hardware can
-> handle...
-> 
+Given all that, let's withdraw these ioctls from the XFS userspace API.
+Normally we'd set a long deprecation process, but I estimate that there
+aren't any real users, so let's trigger a warning in dmesg and return
+-ENOTTY.
 
-I think we're in violent agreement here. That is the crux of multipage
-bvecs and what I've been trying to point out [1]. Ming (who I believe
-implemented it) pointed this out back when the problem was first
-reported. This is also why I asked Trond to test out the older patch
-series, because that was intended to cover this case.
+See: CVE-2021-4155
 
-[1] https://lore.kernel.org/linux-xfs/20220104192321.GF31606@magnolia/T/#mc08ffe4b619c1b503b2c1342157bdaa9823167c1
+Augments: 983d8e60f508 ("xfs: map unwritten blocks in XFS_IOC_{ALLOC,FREE}SP just like fallocate")
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+ fs/xfs/xfs_bmap_util.c |    7 ++--
+ fs/xfs/xfs_bmap_util.h |    2 +
+ fs/xfs/xfs_file.c      |    3 +-
+ fs/xfs/xfs_ioctl.c     |   92 ++----------------------------------------------
+ fs/xfs/xfs_ioctl.h     |    6 ---
+ fs/xfs/xfs_ioctl32.c   |   27 --------------
+ 6 files changed, 9 insertions(+), 128 deletions(-)
 
-> What I'm not yet reproducing is whatever vector that Trond is seeing
-> that is causing the multi-second hold-offs. I get page completion
-> processed at a rate of about a million pages per second per CPU, but
-> I'm bandwidth limited to about 400,000 pages per second due to
-> mapping->i_pages lock contention (reclaim vs page cache
-> instantiation vs writeback completion). I'm not seeing merged ioend
-> batches of larger than about 40,000 pages being processed at once.
-> Hence I can't yet see where the millions of pages in a single ioend
-> completion that would be required to hold a CPU for tens of seconds
-> is coming from yet...
-> 
-
-I was never able to reproduce the actual warning either (only construct
-the unexpectedly large page sequences through various means), so I'm
-equally as curious about that aspect of the problem. My only guess at
-the moment is that perhaps hardware is enough of a factor to increase
-the cost (i.e. slow cpu, cacheline misses, etc.)? I dunno..
-
-> > That aside, I find the approach odd in that we calculate the segment
-> > count for each bio via additional iteration (which is how bio_segments()
-> > works) and track the summation of the chain in the ioend only to provide
-> > iomap_finish_ioends() with a subtly inaccurate view of how much work
-> > iomap_finish_ioend() is doing as the loop iterates.
-> 
-> I just did that so I didn't have to count pages as the bio is built.
-> Easy to change - in fact I have changed it to check that
-> bio_segments() was returning the page count I expected it should be
-> returning....
-> 
-> I also changed the completion side to just count
-> end_page_writeback() calls, and I get the same number of
-> cond_resched() calls being made as the bio_segment. So AFAICT
-> there's no change of behaviour or accounting between the two
-> methods, and I'm not sure where the latest problem Trond reported
-> is...
-> 
-> > We already have this
-> > information in completion context and iomap_finish_ioends() is just a
-> > small iterator function, so I don't understand why we wouldn't do
-> > something like factor these two loops into a non-atomic context only
-> > variant that yields based on the actual amount of page processing work
-> > being done (i.e. including multipage bvecs). That seems more robust and
-> > simple to me, but that's just my .02.
-> 
-> iomap_finish_ioends() is pretty much that non-atomic version of
-> the ioend completion code. Merged ioend chains cannot be sanely
-> handled in atomic context and so it has to be called from task
-> context. Hence the "might_sleep()" I added to ensure that we get
-> warnings if it is called from atomic contexts.
-> 
-
-We don't need to call iomap_finish_ioends() from atomic context. The
-issue is the use of iomap_finish_ioend() in non-atomic context because
-(if we assume atomic context usage is addressed by ioend size limits) it
-can perform too much work without yielding the cpu. If we want to track
-the number of pages across an arbitrary set of ioends/bios/bvecs, all we
-need is something like:
-
-iomap_finish_ioend(..., *count)
-{
-	for (bio = &ioend->io_inline_bio; bio; bio = next) {
-		...
-		bio_for_each_segment_all(bv, bio, iter_all) {
-			...
-			if (count && ++(*count) > MAGIC_VALUE) {
-				cond_resched();
-				*count = 0;
-			}
-		}
-	}
-}
-
-iomap_finish_ioends()
-{
-	int count = 0;
-
-	...
-
-	while (...) {
-		...
-		iomap_finish_ioend(..., &count);
-	}
-}
-
-... and you can slap a might_sleep() in either function for a sanity
-check.
-
-This doesn't require any additional counting in the submission path,
-doesn't require increasing the size of the ioend, doesn't require
-changes to the ioend merging code, doesn't impact non-atomic context
-processing, and doesn't really impact any code outside of these couple
-of functions (iomap_finish_ioend() is already static). It's also more
-natural to remove if something like folios eliminates the need for it.
-
-> As for limiting atomic context completion processing, we've
-> historically done that by limiting the size of individual IO chains
-> submitted during writeback. This means that atomic completion
-> contexts don't need any special signalling (i.e. conditional
-> "in_atomic()" behaviour) because they aren't given anything to
-> process that would cause problems in atomic contexts...
-> 
-
-I've no real preference on the I/O splitting vs. queueing approach. Part
-of the reason my last series implemented both is because there was
-conflicting feedback. Some wanted to submit the large ioends as
-constructed and complete them in wq context. Others wanted to split them
-up and avoid the problem that way. Since an ioend size limit only
-applied to the atomic context variant, I thought it made some sense to
-break the problem down. I don't know where folks stand on these various
-things atm.
-
-Brian
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 73a36b7be3bd..575060a7c768 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -771,8 +771,7 @@ int
+ xfs_alloc_file_space(
+ 	struct xfs_inode	*ip,
+ 	xfs_off_t		offset,
+-	xfs_off_t		len,
+-	int			alloc_type)
++	xfs_off_t		len)
+ {
+ 	xfs_mount_t		*mp = ip->i_mount;
+ 	xfs_off_t		count;
+@@ -865,8 +864,8 @@ xfs_alloc_file_space(
+ 			goto error;
+ 
+ 		error = xfs_bmapi_write(tp, ip, startoffset_fsb,
+-					allocatesize_fsb, alloc_type, 0, imapp,
+-					&nimaps);
++				allocatesize_fsb, XFS_BMAPI_PREALLOC, 0, imapp,
++				&nimaps);
+ 		if (error)
+ 			goto error;
+ 
+diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
+index 9f993168b55b..24b37d211f1d 100644
+--- a/fs/xfs/xfs_bmap_util.h
++++ b/fs/xfs/xfs_bmap_util.h
+@@ -54,7 +54,7 @@ int	xfs_bmap_last_extent(struct xfs_trans *tp, struct xfs_inode *ip,
+ 
+ /* preallocation and hole punch interface */
+ int	xfs_alloc_file_space(struct xfs_inode *ip, xfs_off_t offset,
+-			     xfs_off_t len, int alloc_type);
++			     xfs_off_t len);
+ int	xfs_free_file_space(struct xfs_inode *ip, xfs_off_t offset,
+ 			    xfs_off_t len);
+ int	xfs_collapse_file_space(struct xfs_inode *, xfs_off_t offset,
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 27594738b0d1..d81a28cada35 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -1052,8 +1052,7 @@ xfs_file_fallocate(
+ 		}
+ 
+ 		if (!xfs_is_always_cow_inode(ip)) {
+-			error = xfs_alloc_file_space(ip, offset, len,
+-						     XFS_BMAPI_PREALLOC);
++			error = xfs_alloc_file_space(ip, offset, len);
+ 			if (error)
+ 				goto out_unlock;
+ 		}
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 8ea47a9d5aad..38b2a1e881a6 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -627,87 +627,6 @@ xfs_attrmulti_by_handle(
+ 	return error;
+ }
+ 
+-int
+-xfs_ioc_space(
+-	struct file		*filp,
+-	xfs_flock64_t		*bf)
+-{
+-	struct inode		*inode = file_inode(filp);
+-	struct xfs_inode	*ip = XFS_I(inode);
+-	struct iattr		iattr;
+-	enum xfs_prealloc_flags	flags = XFS_PREALLOC_CLEAR;
+-	uint			iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
+-	int			error;
+-
+-	if (inode->i_flags & (S_IMMUTABLE|S_APPEND))
+-		return -EPERM;
+-
+-	if (!(filp->f_mode & FMODE_WRITE))
+-		return -EBADF;
+-
+-	if (!S_ISREG(inode->i_mode))
+-		return -EINVAL;
+-
+-	if (xfs_is_always_cow_inode(ip))
+-		return -EOPNOTSUPP;
+-
+-	if (filp->f_flags & O_DSYNC)
+-		flags |= XFS_PREALLOC_SYNC;
+-	if (filp->f_mode & FMODE_NOCMTIME)
+-		flags |= XFS_PREALLOC_INVISIBLE;
+-
+-	error = mnt_want_write_file(filp);
+-	if (error)
+-		return error;
+-
+-	xfs_ilock(ip, iolock);
+-	error = xfs_break_layouts(inode, &iolock, BREAK_UNMAP);
+-	if (error)
+-		goto out_unlock;
+-	inode_dio_wait(inode);
+-
+-	switch (bf->l_whence) {
+-	case 0: /*SEEK_SET*/
+-		break;
+-	case 1: /*SEEK_CUR*/
+-		bf->l_start += filp->f_pos;
+-		break;
+-	case 2: /*SEEK_END*/
+-		bf->l_start += XFS_ISIZE(ip);
+-		break;
+-	default:
+-		error = -EINVAL;
+-		goto out_unlock;
+-	}
+-
+-	if (bf->l_start < 0 || bf->l_start > inode->i_sb->s_maxbytes) {
+-		error = -EINVAL;
+-		goto out_unlock;
+-	}
+-
+-	if (bf->l_start > XFS_ISIZE(ip)) {
+-		error = xfs_alloc_file_space(ip, XFS_ISIZE(ip),
+-				bf->l_start - XFS_ISIZE(ip),
+-				XFS_BMAPI_PREALLOC);
+-		if (error)
+-			goto out_unlock;
+-	}
+-
+-	iattr.ia_valid = ATTR_SIZE;
+-	iattr.ia_size = bf->l_start;
+-	error = xfs_vn_setattr_size(file_mnt_user_ns(filp), file_dentry(filp),
+-				    &iattr);
+-	if (error)
+-		goto out_unlock;
+-
+-	error = xfs_update_prealloc_flags(ip, flags);
+-
+-out_unlock:
+-	xfs_iunlock(ip, iolock);
+-	mnt_drop_write_file(filp);
+-	return error;
+-}
+-
+ /* Return 0 on success or positive error */
+ int
+ xfs_fsbulkstat_one_fmt(
+@@ -1965,13 +1884,10 @@ xfs_file_ioctl(
+ 	case XFS_IOC_ALLOCSP:
+ 	case XFS_IOC_FREESP:
+ 	case XFS_IOC_ALLOCSP64:
+-	case XFS_IOC_FREESP64: {
+-		xfs_flock64_t		bf;
+-
+-		if (copy_from_user(&bf, arg, sizeof(bf)))
+-			return -EFAULT;
+-		return xfs_ioc_space(filp, &bf);
+-	}
++	case XFS_IOC_FREESP64:
++		xfs_warn_once(mp,
++	"dangerous XFS_IOC_{ALLOC,FREE}SP ioctls no longer supported");
++		return -ENOTTY;
+ 	case XFS_IOC_DIOINFO: {
+ 		struct xfs_buftarg	*target = xfs_inode_buftarg(ip);
+ 		struct dioattr		da;
+diff --git a/fs/xfs/xfs_ioctl.h b/fs/xfs/xfs_ioctl.h
+index 845d3bcab74b..d4abba2c13c1 100644
+--- a/fs/xfs/xfs_ioctl.h
++++ b/fs/xfs/xfs_ioctl.h
+@@ -10,12 +10,6 @@ struct xfs_bstat;
+ struct xfs_ibulk;
+ struct xfs_inogrp;
+ 
+-
+-extern int
+-xfs_ioc_space(
+-	struct file		*filp,
+-	xfs_flock64_t		*bf);
+-
+ int
+ xfs_ioc_swapext(
+ 	xfs_swapext_t	*sxp);
+diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+index 8783af203cfc..004ed2a251e8 100644
+--- a/fs/xfs/xfs_ioctl32.c
++++ b/fs/xfs/xfs_ioctl32.c
+@@ -27,22 +27,6 @@
+ 	  _IOC(_IOC_DIR(cmd), _IOC_TYPE(cmd), _IOC_NR(cmd), sizeof(type))
+ 
+ #ifdef BROKEN_X86_ALIGNMENT
+-STATIC int
+-xfs_compat_flock64_copyin(
+-	xfs_flock64_t		*bf,
+-	compat_xfs_flock64_t	__user *arg32)
+-{
+-	if (get_user(bf->l_type,	&arg32->l_type) ||
+-	    get_user(bf->l_whence,	&arg32->l_whence) ||
+-	    get_user(bf->l_start,	&arg32->l_start) ||
+-	    get_user(bf->l_len,		&arg32->l_len) ||
+-	    get_user(bf->l_sysid,	&arg32->l_sysid) ||
+-	    get_user(bf->l_pid,		&arg32->l_pid) ||
+-	    copy_from_user(bf->l_pad,	&arg32->l_pad,	4*sizeof(u32)))
+-		return -EFAULT;
+-	return 0;
+-}
+-
+ STATIC int
+ xfs_compat_ioc_fsgeometry_v1(
+ 	struct xfs_mount	  *mp,
+@@ -445,17 +429,6 @@ xfs_file_compat_ioctl(
+ 
+ 	switch (cmd) {
+ #if defined(BROKEN_X86_ALIGNMENT)
+-	case XFS_IOC_ALLOCSP_32:
+-	case XFS_IOC_FREESP_32:
+-	case XFS_IOC_ALLOCSP64_32:
+-	case XFS_IOC_FREESP64_32: {
+-		struct xfs_flock64	bf;
+-
+-		if (xfs_compat_flock64_copyin(&bf, arg))
+-			return -EFAULT;
+-		cmd = _NATIVE_IOC(cmd, struct xfs_flock64);
+-		return xfs_ioc_space(filp, &bf);
+-	}
+ 	case XFS_IOC_FSGEOMETRY_V1_32:
+ 		return xfs_compat_ioc_fsgeometry_v1(ip->i_mount, arg);
+ 	case XFS_IOC_FSGROWFSDATA_32: {
