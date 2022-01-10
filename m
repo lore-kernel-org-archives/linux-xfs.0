@@ -2,168 +2,146 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA31AC433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 10 Jan 2022 08:44:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F5C7C433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 10 Jan 2022 08:52:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241963AbiAJIoB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 10 Jan 2022 03:44:01 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:56885 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S242013AbiAJIl7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jan 2022 03:41:59 -0500
+        id S238643AbiAJIwo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 10 Jan 2022 03:52:44 -0500
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:52888 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S241880AbiAJIuj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jan 2022 03:50:39 -0500
 Received: from dread.disaster.area (pa49-181-243-119.pa.nsw.optusnet.com.au [49.181.243.119])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 49CFE10C0769;
-        Mon, 10 Jan 2022 19:41:53 +1100 (AEDT)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 360E062C1B7;
+        Mon, 10 Jan 2022 19:50:37 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1n6qFU-00DXbS-EB; Mon, 10 Jan 2022 19:41:52 +1100
-Date:   Mon, 10 Jan 2022 19:41:52 +1100
+        id 1n6qNw-00DXh9-AR; Mon, 10 Jan 2022 19:50:36 +1100
+Date:   Mon, 10 Jan 2022 19:50:36 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     Krister Johansen <kjlx@templeofstupid.com>
 Cc:     linux-xfs@vger.kernel.org,
         "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@lst.de>
+        Christoph Hellwig <hch@lst.de>,
+        Brian Foster <bfoster@redhat.com>
 Subject: Re: xfs_bmap_extents_to_btree allocation warnings
-Message-ID: <20220110084152.GX945095@dread.disaster.area>
+Message-ID: <20220110085036.GY945095@dread.disaster.area>
 References: <20220105071052.GD20464@templeofstupid.com>
  <20220106010123.GP945095@dread.disaster.area>
- <20220106085228.GA19131@templeofstupid.com>
+ <20220108054014.GA3611@templeofstupid.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220106085228.GA19131@templeofstupid.com>
+In-Reply-To: <20220108054014.GA3611@templeofstupid.com>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=61dbf153
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=61dbf35d
         a=BEa52nrBdFykVEm6RU8P4g==:117 a=BEa52nrBdFykVEm6RU8P4g==:17
         a=kj9zAlcOel0A:10 a=DghFqjY3_ZEA:10 a=7-415B0cAAAA:8
-        a=J4HbylmhB1wtlE8kDu4A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=QwsbgIsdJNw6LhbZA2wA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jan 06, 2022 at 12:52:28AM -0800, Krister Johansen wrote:
+On Fri, Jan 07, 2022 at 09:40:14PM -0800, Krister Johansen wrote:
 > On Thu, Jan 06, 2022 at 12:01:23PM +1100, Dave Chinner wrote:
 > > On Tue, Jan 04, 2022 at 11:10:52PM -0800, Krister Johansen wrote:
-> > > However, linux is using 64-bit block
-> > > pointers in the inode now and the XFS_ALLOCTYPE_START_BNO case in
-> > > xfs_alloc_vextent() seems to try to ensure that it never considers an AG
-> > > that's less than the agno for the fsbno passed in via args.
-> > 
-> > Because otherwise allocations ABBA deadlock on AG locking.
+> I wondered if perhaps the problem was related to other problems in
+> xfs_alloc_fix_freelist.  Taking inspiration from some of the fixes that
+> Brian made here, it looks like there's a possibility of the freelist
+> refill code grabbing blocks that were assumed to be available by
+> previous checks in that function.
 > 
-> Sorry, what I'm really trying to ask is: are there still cases in XFS
-> where using XFS_ALLOCTYPE_START_BNO can give you this kind of deadlock?
-
-I'd say yes - I can think of several scenarios where we make
-multiple allocations per transaction (directory and attribute code)
-and I think that they don't actually use t_firstblock correctly to
-avoid AGF locking issues. i.e. I think that tp->t_firstblock should
-actually be tracking the highest locked AGF in the transaction, not
-the first AGF we locked...
-
-> There's some deadlock avoidance in the START_BNO implementation, but
-> there are plenty of places where XFS_ALLOCTYPE_NEAR_BNO is still used if
-> t_firstblock is not NULLFSBLOCK.
-
-Right, NEAR_BNO is used because we likely have physical locality
-constraints (e.g. seek minimisation by placing related blocks as
-close to each other as possible) and potentially other limits, like
-the allocations are for per-AG data and therefore must be placed
-within the specified AG...
-
-> I'm trying to work out if that code
-> still exists because of concerns about deadlocks, or if its an attempt
-> to limit the number of AGs searched instead.  (Or some other policy
-> choice, even.)
-
-All of the above, and more... :(
-
-> > > be a reasonable way to address the WARN?  Or does this open a box of
-> > > problems that obvious to the experienced, but just subtle enough to
-> > > elude the unfamiliar?
-> > 
-> > No, yes, and yes.
+> For example, using some values from a successful trace of a directio
+> allocation:
 > 
-> Thank you humoring my questions nonetheless.
+>               dd-102227  [027] .... 4969662.381037: xfs_alloc_near_first: dev 25
+> 3:1 agno 0 agbno 5924 minlen 4 maxlen 4 mod 0 prod 1 minleft 1 total 8 alignment
+>  4 minalignslop 0 len 4 type NEAR_BNO otype START_BNO wasdel 0 wasfromfl 0 resv
+> 0 datatype 0x9 firstblock 0xffffffffffffffff
 > 
-> > > The xfs_db freesp report after the problem occurred.  (N.B. it was a few
-> > > hours before I was able to get to this machine to investigate)
-> > > 
-> > > xfs_db -r -c 'freesp -a 47 -s' /dev/mapper/db-vol
-> > >    from      to extents  blocks    pct
-> > >       1       1      48      48   0.00
-> > >       2       3     119     303   0.02
-> > >       4       7      46     250   0.01
-> > >       8      15      22     255   0.01
-> > >      16      31      17     374   0.02
-> > >      32      63      16     728   0.04
-> > >      64     127       9     997   0.05
-> > >     128     255     149   34271   1.83
-> > >     256     511       7    2241   0.12
-> > >     512    1023       4    2284   0.12
-> > >    1024    2047       1    1280   0.07
-> > >    2048    4095       1    3452   0.18
-> > > 1048576 2097151       1 1825182  97.52
-> > > total free extents 440
-> > > total free blocks 1871665
-> > > average free extent size 4253.78
-> > 
-> > So 1,871,665 of 228,849,020 blocks free in the AG. That's 99.2%
-> > full, so it's extremely likely you are hitting a full AG condition.
-> > 
-> > /me goes and looks at xfs_iomap_write_direct()....
-> > 
-> > .... and notices that it passes "0" as the total allocation block
-> > count, which means it isn't reserving space in the AG for both the
-> > data extent and the BMBT blocks...
-> > 
-> > ... and several other xfs_bmapi_write() callers have the same
-> > issue...
-> > 
-> > Ok, let me spend a bit more looking into this in more depth, but it
-> > looks like the problem is at the xfs_bmapi_write() caller level, not
-> > deep in the allocator itself.
+>               dd-102227  [027] .... 4969662.381047: xfs_alloc_near_first: dev 25
+> 3:1 agno 0 agbno 5921 minlen 1 maxlen 1 mod 0 prod 1 minleft 0 total 0 alignment
+>  1 minalignslop 0 len 1 type NEAR_BNO otype NEAR_BNO wasdel 0 wasfromfl 0 resv 0
+>  datatype 0x0 firstblock 0x1724
 > 
-> At least on 5.4 xfs_bmapi_write is still passing resblks instead of
-> zero, which is computed in xfs_iomap_write_direct.
-
-yup, I missed commit da781e64b28c ("xfs: don't set bmapi total block
-req where minleft is") back in 2019 where that behaviour was
-changed, and instead it changes xfs_bmapi_write() to implcitly
-manage space for BMBT blocks via args->minleft whilst still
-explicitly requiring the caller to reserve those blocks at
-transaction allocation time.
-
-Bit of a mess, really, because multi-allocation transactions are
-still required to pass both the data blocks + the possible BMBT
-blocks that might be needed to xfs_bmapi_write(). I suspect that for
-this case the implicit args->minleft reservation is double
-accounted...
-
-> Related to your comment about alloc_args.total, I did a bit of tracing
-> of the xfs_alloc tracepoints on my system and found that total seems to
-> be getting set in both cases, but that a) it's actually a larger value
-> for directio; and b) in the buffered write case the code is requesting
-> more blocks at one time which causes a larger allocation to occur.  I'm
-> not certain, but wondered if this could be causing us to select an AG
-> with more space by luck.
+> [first is the bmap alloc, second is the extents_to_btree alloc]
+>  
+> if agflcount = min(pagf_flcount, min_free)
+>    agflcount = min(3, 8)
 > 
-> directio:
+> and available = pagf_freeblks + agflcount - reservation - min_free - minleft
+>     available = 14 + 3 - 0 - 8 - 1
 > 
->               dd-102229  [005] .... 4969662.383215: xfs_alloc_exact_done: dev 253:1 agno 0 agbno 14240 minlen 4 maxlen 4 mod 0 prod 1 minleft 2 total 8 alignment 1 minalignslop 3 len 4 type THIS_BNO otype THIS_BNO wasdel 0 wasfromfl 0 resv 0 datatype 0x9 firstblock 0xffffffffffffffff
-
-That one is correct - 4 extra blocks on top of the data extent...
-
-> buffered write + fsync:
+>     available = 8
 > 
->               dd-109921  [010] .... 4972814.844429: xfs_alloc_exact_done: dev 253:1 agno 0 agbno 21280 minlen 16 maxlen 16 mod 0 prod 1 minleft 2 total 4 alignment 1 minalignslop 3 len 16 type THIS_BNO otype THIS_BNO wasdel 1 wasfromfl 0 resv 0 datatype 0x9 firstblock 0xffffffffffffffff
+> which satisfies the total from the first allocation request; however, if
+> this code path needs to refill the freelists and the ag btree is full
+> because a lot of space is allocated and not much is free, then inserts
+> here may trigger rebalances.  Usage might look something like this:
+> 
+>    pagf_freeblks = 14
+>    allocate 5 blocks to fill freelist
+>    pags_freeblks = 9
+>    fill of freelist triggers split that requires 4 nodes
+>    next iteration allocates 4 blocks to refill freelist
+>    pages_freeblks = 5
+>    refill requires rebalance and another node
+>    next iteration allocates 1 block to refill freelist
+>    pages_freeblks = 4
+>    freelist filled; return to caller
+> 
+>    caller consumes remaining 4 blocks for bmap allocation
+> 
+>    pages_freeblks = 0
+> 
+>    no blocks available for xfs_bmap_extents_to_btree
 
-But that one is clearly wrong - we're asking for 16 blocks for the
-data extent, and a total block count of the allocation of 4 blocks.
-Even though we've reserved 16 blocks during the initial delayed
-allocation, we've still got to have 16 + 4 blocks free in the AG for
-the allocation to succced. That's one of the bugs the commit I
-mentioned above fixed...
+No, can't happen.
+
+When the AG is nearly empty, there is only one block in the AG
+freespace trees - the root block. Those root blocks can hold ~500
+free space extents. Hence if there are only 14 free blocks left in
+the AG, then by definition we have a single level tree and a split
+cannot ever occur.
+
+Remember, the AGFL is for space management btree splits and merges,
+not for BMBT splits/merges. BMBT blocks are user metadata and have
+to be reserved up front from the AG, they are not allocated
+from/accounted via the free lists that the AGF freespace and rmap
+btrees use for their block management.
+
+
+> I'm not sure if this is possible, but I thought I'd mention it since
+> Brian's prior work here got me thinking about it.  If this does sound
+> plausible, what do you think about re-validating the space_available
+> conditions after refilling the freelist?  Something like:
+> 
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index 353e53b..d235744 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -2730,6 +2730,16 @@ xfs_alloc_fix_freelist(
+>  		}
+>  	}
+>  	xfs_trans_brelse(tp, agflbp);
+> +
+> +	/*
+> +	 * Freelist refill may have consumed blocks from pagf_freeblks.  Ensure
+> +	 * that this allocation still meets its requested constraints by
+> +	 * revalidating the min_freelist and space_available checks.
+> +	 */
+> +	need = xfs_alloc_min_freelist(mp, pag);
+> +	if (!xfs_alloc_space_available(args, need, flags))
+> +		goto out_agbp_relse;
+
+No, that will just lead to a filesystem shutdown because at ENOSPC
+we'll have a transaction containing a dirty AGF/AGFL and freespace
+btrees. At that point, the transaction cancellation will see that it
+can't cleanly back out and at that point it's all over...
+
+This is also an AGF ABBA deadlock vector, because now we have
+a dirty AGF locked in the transaction that we haven't tracked via
+t_firstblock....
 
 Cheers,
 
