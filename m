@@ -2,42 +2,38 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B07FAC433FE
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Jan 2022 21:50:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02A99C433FE
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Jan 2022 21:50:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245513AbiAKVuj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 11 Jan 2022 16:50:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47856 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245510AbiAKVuj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Jan 2022 16:50:39 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8643C06173F;
-        Tue, 11 Jan 2022 13:50:38 -0800 (PST)
+        id S245523AbiAKVuo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 11 Jan 2022 16:50:44 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:37312 "EHLO
+        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S245518AbiAKVuo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Jan 2022 16:50:44 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 72307B81D54;
-        Tue, 11 Jan 2022 21:50:37 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36A27C36AEF;
-        Tue, 11 Jan 2022 21:50:36 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 10496B81D57;
+        Tue, 11 Jan 2022 21:50:43 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B121BC36AE3;
+        Tue, 11 Jan 2022 21:50:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1641937836;
-        bh=S8PiKOjopX5QkjIFMRCuD6pmN5FP2l5q0denN37/Pwk=;
+        s=k20201202; t=1641937841;
+        bh=xoQqAE1wPQG96TIrahEbkQ7eV72i1Zk2u6dt+bCkF8s=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=NJrzvyyucej4sZyIu52r2MhUMk2XRVCu/vnzfVeuTWfNV+LbjIZJxRsqr8E8LEL4/
-         USQF0SbgrwkHK+T0NCDqebEgjGgppiFxXLfyq3U/uO6Lak27vXBKiJDDbCwy7kePbc
-         KQca3ThmUNWIeb37T5PLoebAPVylqjrl9mrJy85N+nHrnIpemVA86gr5H4J8vucfwY
-         CsV4F9p5QLTqxh1Yl7gXF9RmEOBz3QB6pSCttmcpZGl6eMnuyvQZpPSA3eI7kCgAO6
-         pVu1DaX4QxdiT08yt5ByEzPPkDIxliq0SMzrKxlegQzSdP74Px+/VUR6IYWLu/Et4/
-         bqCEoRutw6tZA==
-Subject: [PATCH 5/8] xfs: regression test for allocsp handing out stale disk
- contents
+        b=fHK0BoO9vlnr783wkJPIrC9OPxh77/WbQU9rOuUHT1sln4MP00hD73qO2ADj1SLrS
+         qu7DIjGbAOuYno2oAOmuO6Ko13YC7aQkcj3N3BXwveMftJq0UoUwrGlcGnpUyrIEAe
+         Yt0VWqddermcYxY1UeV4VPVQLFJ+dmItIsdG5xRwyincRo+q92cqnigM9T+m3Pwjn6
+         obZpByDoG2qPfMCHjrLj9Kbr9FqRyXW+2wPCq7Wdoi3gWKPixkVwaPAgJsyttT7fc7
+         qT0kLq+QpPASjDmlhragepRitAmtUtKTRS33FZ+79hAUpyIRol9ZYiNJLDlLz2Uuxx
+         gvQp0ylOuVL7Q==
+Subject: [PATCH 6/8] fsx: add support for XFS_IOC_ALLOCSP
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 11 Jan 2022 13:50:35 -0800
-Message-ID: <164193783590.3008286.3623476203965250828.stgit@magnolia>
+Date:   Tue, 11 Jan 2022 13:50:41 -0800
+Message-ID: <164193784141.3008286.16249748010203337264.stgit@magnolia>
 In-Reply-To: <164193780808.3008286.598879710489501860.stgit@magnolia>
 References: <164193780808.3008286.598879710489501860.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,238 +46,203 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add a regression test to check that XFS_IOC_ALLOCSP isn't handing out
-stale disk blocks for preallocation.
+Add support for this old ioctl before we remove it.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- .gitignore        |    1 
- src/Makefile      |    2 -
- src/allocstale.c  |  117 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/832     |   56 +++++++++++++++++++++++++
- tests/xfs/832.out |    2 +
- 5 files changed, 177 insertions(+), 1 deletion(-)
- create mode 100644 src/allocstale.c
- create mode 100755 tests/xfs/832
- create mode 100644 tests/xfs/832.out
+ ltp/fsx.c |  110 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 108 insertions(+), 2 deletions(-)
 
 
-diff --git a/.gitignore b/.gitignore
-index 65b93307..ba0c572b 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -56,6 +56,7 @@ tags
- # src/ binaries
- /src/af_unix
- /src/alloc
-+/src/allocstale
- /src/append_reader
- /src/append_writer
- /src/attr_replace_test
-diff --git a/src/Makefile b/src/Makefile
-index 1737ed0e..111ce1d9 100644
---- a/src/Makefile
-+++ b/src/Makefile
-@@ -18,7 +18,7 @@ TARGETS = dirstress fill fill2 getpagesize holes lstat64 \
- 	t_ext4_dax_journal_corruption t_ext4_dax_inline_corruption \
- 	t_ofd_locks t_mmap_collision mmap-write-concurrent \
- 	t_get_file_time t_create_short_dirs t_create_long_dirs t_enospc \
--	t_mmap_writev_overlap checkpoint_journal mmap-rw-fault
-+	t_mmap_writev_overlap checkpoint_journal mmap-rw-fault allocstale
+diff --git a/ltp/fsx.c b/ltp/fsx.c
+index 12c2cc33..520e53a2 100644
+--- a/ltp/fsx.c
++++ b/ltp/fsx.c
+@@ -111,6 +111,7 @@ enum {
+ 	OP_CLONE_RANGE,
+ 	OP_DEDUPE_RANGE,
+ 	OP_COPY_RANGE,
++	OP_ALLOCSP,
+ 	OP_MAX_FULL,
  
- LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
- 	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
-diff --git a/src/allocstale.c b/src/allocstale.c
-new file mode 100644
-index 00000000..6253fe4c
---- /dev/null
-+++ b/src/allocstale.c
-@@ -0,0 +1,117 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (C) 2022 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ *
-+ * Test program to try to trip over XFS_IOC_ALLOCSP mapping stale disk blocks
-+ * into a file.
-+ */
-+#include <xfs/xfs.h>
-+#include <stdlib.h>
-+#include <stdio.h>
-+#include <unistd.h>
-+#include <sys/types.h>
-+#include <sys/stat.h>
-+#include <fcntl.h>
-+#include <errno.h>
-+#include <unistd.h>
-+#include <string.h>
+ 	/* integrity operations */
+@@ -165,6 +166,7 @@ int	randomoplen = 1;		/* -O flag disables it */
+ int	seed = 1;			/* -S flag */
+ int     mapped_writes = 1;              /* -W flag disables */
+ int     fallocate_calls = 1;            /* -F flag disables */
++int     allocsp_calls = 1;		/* -F flag disables */
+ int     keep_size_calls = 1;            /* -K flag disables */
+ int     punch_hole_calls = 1;           /* -H flag disables */
+ int     zero_range_calls = 1;           /* -z flag disables */
+@@ -268,6 +270,7 @@ static const char *op_names[] = {
+ 	[OP_DEDUPE_RANGE] = "dedupe_range",
+ 	[OP_COPY_RANGE] = "copy_range",
+ 	[OP_FSYNC] = "fsync",
++	[OP_ALLOCSP] = "allocsp",
+ };
+ 
+ static const char *op_name(int operation)
+@@ -410,6 +413,15 @@ logdump(void)
+ 			if (overlap)
+ 				prt("\t******WWWW");
+ 			break;
++		case OP_ALLOCSP:
++			down = lp->args[1] < lp->args[2];
++			prt("ALLOCSP  %s\tfrom 0x%x to 0x%x",
++			    down ? "DOWN" : "UP", lp->args[2], lp->args[1]);
++			overlap = badoff >= lp->args[1 + !down] &&
++				  badoff < lp->args[1 + !!down];
++			if (overlap)
++				prt("\t******NNNN");
++			break;
+ 		case OP_FALLOCATE:
+ 			/* 0: offset 1: length 2: where alloced */
+ 			prt("FALLOC   0x%x thru 0x%x\t(0x%x bytes) ",
+@@ -1695,6 +1707,51 @@ do_copy_range(unsigned offset, unsigned length, unsigned dest)
+ }
+ #endif
+ 
++#ifdef XFS_IOC_ALLOCSP
++/* allocsp is an old Irix ioctl that either truncates or does extending preallocaiton */
++void
++do_allocsp(unsigned new_size)
++{
++	struct xfs_flock64	fl;
 +
-+#ifndef XFS_IOC_ALLOCSP
-+# define XFS_IOC_ALLOCSP	_IOW ('X', 10, struct xfs_flock64)
++	if (new_size > biggest) {
++		biggest = new_size;
++		if (!quiet && testcalls > simulatedopcount)
++			prt("allocsping to largest ever: 0x%x\n", new_size);
++	}
++
++	log4(OP_ALLOCSP, 0, new_size, FL_NONE);
++
++	if (new_size > file_size)
++		memset(good_buf + file_size, '\0', new_size - file_size);
++	file_size = new_size;
++
++	if (testcalls <= simulatedopcount)
++		return;
++
++	if ((progressinterval && testcalls % progressinterval == 0) ||
++	    (debug && (monitorstart == -1 || monitorend == -1 ||
++		      new_size <= monitorend)))
++		prt("%lld allocsp\tat 0x%x\n", testcalls, new_size);
++
++	fl.l_whence = SEEK_SET;
++	fl.l_start = new_size;
++	fl.l_len = 0;
++
++	if (ioctl(fd, XFS_IOC_ALLOCSP, &fl) == -1) {
++	        prt("allocsp: 0x%x\n", new_size);
++		prterr("do_allocsp: allocsp");
++		report_failure(161);
++	}
++}
++#else
++void
++do_allocsp(unsigned new_isize)
++{
++	return;
++}
 +#endif
 +
+ #ifdef HAVE_LINUX_FALLOC_H
+ /* fallocate is basically a no-op unless extending, then a lot like a truncate */
+ void
+@@ -2040,6 +2097,8 @@ test(void)
+ 		if (fallocate_calls && size && keep_size_calls)
+ 			keep_size = random() % 2;
+ 		break;
++	case OP_ALLOCSP:
++		break;
+ 	case OP_ZERO_RANGE:
+ 		if (zero_range_calls && size && keep_size_calls)
+ 			keep_size = random() % 2;
+@@ -2066,6 +2125,12 @@ test(void)
+ 		if (!mapped_writes)
+ 			op = OP_WRITE;
+ 		break;
++	case OP_ALLOCSP:
++		if (!allocsp_calls) {
++			log4(OP_FALLOCATE, 0, size, FL_SKIPPED);
++			goto out;
++		}
++		break;
+ 	case OP_FALLOCATE:
+ 		if (!fallocate_calls) {
+ 			log4(OP_FALLOCATE, offset, size, FL_SKIPPED);
+@@ -2141,6 +2206,10 @@ test(void)
+ 		dotruncate(size);
+ 		break;
+ 
++	case OP_ALLOCSP:
++		do_allocsp(size);
++		break;
++
+ 	case OP_FALLOCATE:
+ 		TRIM_OFF_LEN(offset, size, maxfilelen);
+ 		do_preallocate(offset, size, keep_size);
+@@ -2270,8 +2339,8 @@ usage(void)
+ "	-U: Use the IO_URING system calls, -U excludes -A\n"
+  #endif
+ "	-D startingop: debug output starting at specified operation\n"
+-#ifdef HAVE_LINUX_FALLOC_H
+-"	-F: Do not use fallocate (preallocation) calls\n"
++#if defined(HAVE_LINUX_FALLOC_H) || defined(XFS_IOC_ALLOCSP)
++"	-F: Do not use fallocate (preallocation) or XFS_IOC_ALLOCSP calls\n"
+ #endif
+ #ifdef FALLOC_FL_PUNCH_HOLE
+ "	-H: Do not use punch hole calls\n"
+@@ -2587,6 +2656,41 @@ __test_fallocate(int mode, const char *mode_str)
+ #endif
+ }
+ 
 +int
-+main(
-+	int		argc,
-+	char		*argv[])
++test_allocsp()
 +{
-+	struct stat	sb;
-+	char		*buf, *zeroes;
-+	unsigned long	i;
-+	unsigned long	iterations;
-+	int		fd, ret;
++#ifdef XFS_IOC_ALLOCSP
++	struct xfs_flock64	fl;
++	int			ret = 0;
 +
-+	if (argc != 3) {
-+		fprintf(stderr, "Usage: %s filename iterations\n", argv[0]);
-+		return 1;
++	if (lite)
++		return 0;
++
++	fl.l_whence = SEEK_SET;
++	fl.l_start = 1;
++	fl.l_len = 0;
++
++	ret = ioctl(fd, XFS_IOC_ALLOCSP, &fl);
++	if (ret == -1 && (errno == ENOTTY || errno == EOPNOTSUPP)) {
++		if (!quiet)
++			fprintf(stderr,
++				"main: filesystem does not support "
++				"XFS_IOC_ALLOCSP, disabling!\n");
++		return 0;
 +	}
 +
-+	errno = 0;
-+	iterations = strtoul(argv[2], NULL, 0);
-+	if (errno) {
-+		perror(argv[2]);
-+		return 1;
-+	}
-+
-+	fd = open(argv[1], O_RDWR | O_CREAT | O_TRUNC, 0600);
-+	if (fd < 0) {
-+		perror(argv[1]);
-+		return 1;
-+	}
-+
-+	ret = fstat(fd, &sb);
++	ret = ftruncate(fd, file_size);
 +	if (ret) {
-+		perror(argv[1]);
-+		return 1;
++		warn("main: ftruncate");
++		exit(132);
 +	}
 +
-+	buf = malloc(sb.st_blksize);
-+	if (!buf) {
-+		perror("pread buffer");
-+		return 1;
-+	}
-+
-+	zeroes = calloc(1, sb.st_blksize);
-+	if (!zeroes) {
-+		perror("zeroes buffer");
-+		return 1;
-+	}
-+
-+	for (i = 1; i <= iterations; i++) {
-+		struct xfs_flock64	arg = { };
-+		ssize_t			read_bytes;
-+		off_t			offset = sb.st_blksize * i;
-+
-+		/* Ensure the last block of the file is a hole... */
-+		ret = ftruncate(fd, offset - 1);
-+		if (ret) {
-+			perror("truncate");
-+			return 1;
-+		}
-+
-+		/*
-+		 * ...then use ALLOCSP to allocate the last block in the file.
-+		 * An unpatched kernel neglects to mark the new mapping
-+		 * unwritten or to zero the ondisk block, so...
-+		 */
-+		arg.l_whence = SEEK_SET;
-+		arg.l_start = offset;
-+		ret = ioctl(fd, XFS_IOC_ALLOCSP, &arg);
-+		if (ret < 0) {
-+			perror("ioctl");
-+			return 1;
-+		}
-+
-+		/* ... we can read old disk contents here. */
-+		read_bytes = pread(fd, buf, sb.st_blksize,
-+						offset - sb.st_blksize);
-+		if (read_bytes < 0) {
-+			perror(argv[1]);
-+			return 1;
-+		}
-+		if (read_bytes != sb.st_blksize) {
-+			fprintf(stderr, "%s: short read of %zd bytes\n",
-+					argv[1], read_bytes);
-+			return 1;
-+		}
-+
-+		if (memcmp(zeroes, buf, sb.st_blksize) != 0) {
-+			fprintf(stderr, "%s: found junk near offset %zd!\n",
-+					argv[1], offset - sb.st_blksize);
-+			return 2;
-+		}
-+	}
-+
++	return 1;
++#else
 +	return 0;
++#endif
 +}
-diff --git a/tests/xfs/832 b/tests/xfs/832
-new file mode 100755
-index 00000000..3820ff8c
---- /dev/null
-+++ b/tests/xfs/832
-@@ -0,0 +1,56 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2022 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test 832
-+#
-+# Regression test for commit:
-+#
-+# 983d8e60f508 ("xfs: map unwritten blocks in XFS_IOC_{ALLOC,FREE}SP just like fallocate")
-+#
-+. ./common/preamble
-+_begin_fstest auto quick prealloc
 +
-+# Import common functions.
-+. ./common/filter
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs xfs
-+_require_test
-+_require_scratch
-+
-+size_mb=32
-+# Write a known pattern to the disk so that we can detect stale disk blocks
-+# being mapped into the file.  In the test author's experience, the bug will
-+# reproduce within the first 500KB's worth of ALLOCSP calls, so running up
-+# to 16MB should suffice.
-+$XFS_IO_PROG -d -c "pwrite -S 0x58 -b 8m 0 ${size_mb}m" $SCRATCH_DEV > $seqres.full
-+MKFS_OPTIONS="-K $MKFS_OPTIONS" _scratch_mkfs_sized $((size_mb * 1048576)) >> $seqres.full
-+
-+_scratch_mount
-+
-+# Force the file to be created on the data device, which we pre-initialized
-+# with a known pattern.  The bug exists in the generic bmap code, so the choice
-+# of backing device does not matter, and ignoring the rt device gets us out of
-+# needing to detect things like rt extent size.
-+_xfs_force_bdev data $SCRATCH_MNT
-+testfile=$SCRATCH_MNT/a
-+
-+# Allow the test program to expand the file to consume half the free space.
-+blksz=$(_get_file_block_size $SCRATCH_MNT)
-+iterations=$(( (size_mb / 2) * 1048576 / blksz))
-+echo "Setting up $iterations runs for block size $blksz" >> $seqres.full
-+
-+# Run reproducer program and dump file contents if we see stale data.  Full
-+# details are in the source for the C program, but in a nutshell we run ALLOCSP
-+# one block at a time to see if it'll give us blocks full of 'X'es.
-+$here/src/allocstale $testfile $iterations
-+res=$?
-+test $res -eq 2 && od -tx1 -Ad -c $testfile
-+
-+# success, all done
-+echo Silence is golden
-+status=0
-+exit
-diff --git a/tests/xfs/832.out b/tests/xfs/832.out
-new file mode 100644
-index 00000000..bb8a6c12
---- /dev/null
-+++ b/tests/xfs/832.out
-@@ -0,0 +1,2 @@
-+QA output created by 832
-+Silence is golden
+ static struct option longopts[] = {
+ 	{"replay-ops", required_argument, 0, 256},
+ 	{"record-ops", optional_argument, 0, 255},
+@@ -2972,6 +3076,8 @@ main(int argc, char **argv)
+ 
+ 	if (fallocate_calls)
+ 		fallocate_calls = test_fallocate(0);
++	if (allocsp_calls)
++		allocsp_calls = test_allocsp(0);
+ 	if (keep_size_calls)
+ 		keep_size_calls = test_fallocate(FALLOC_FL_KEEP_SIZE);
+ 	if (punch_hole_calls)
 
