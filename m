@@ -2,115 +2,167 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87951C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Jan 2022 16:24:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE5D1C433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Jan 2022 17:39:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241052AbiAKQYn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 11 Jan 2022 11:24:43 -0500
-Received: from sandeen.net ([63.231.237.45]:49240 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1349966AbiAKQYj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 11 Jan 2022 11:24:39 -0500
-Received: from [10.0.0.147] (liberator.sandeen.net [10.0.0.147])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1344512AbiAKRj5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 11 Jan 2022 12:39:57 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:49250 "EHLO
+        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1344444AbiAKRj5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Jan 2022 12:39:57 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id BCAD348FB;
-        Tue, 11 Jan 2022 10:23:34 -0600 (CST)
-Message-ID: <ba30642f-9b0d-c2f2-c89e-eddb2c0f2165@sandeen.net>
-Date:   Tue, 11 Jan 2022 10:24:36 -0600
+        by ams.source.kernel.org (Postfix) with ESMTPS id 76C38B81C18
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Jan 2022 17:39:56 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C50DC36AF2;
+        Tue, 11 Jan 2022 17:39:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1641922795;
+        bh=UI/65aC+uoU06TZfUyYU3DdtXYdNdf1LQFitp8PCLkU=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=hEVxcTa+IjD9mLquHmSlolfyVSXymsO5Mi9C9ctgmD/by7C27P6rejuBHASscqjqh
+         /W/uiSXFUs+fvQDwdG5IAfC43bdi8uhKiUjMe+O1wuJPL/fYU8R+vaCYUq7YTzW3a/
+         +fZ/Fi2wzXBLqadYDXskkV/Su/BJ7WbMuqGtSUECnKEg4A8c+YfPUKo6eJ5FC3fbbh
+         99eNJk+tvgd6nvo6mPVdmqZ4TaU27OvUvM6FuIPGWJvATA2W667O1usvA60iXL6W41
+         wPcXRPzd4R3VsIcjraOQrE1xr6djtkQQCEQVnkKbeNwVHUCXno8um5B+lNPO/begEQ
+         8ZpqrGNOCrGpA==
+Date:   Tue, 11 Jan 2022 09:39:54 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] libxfs-apply: support filterdiff >= 0.4.2 only
+Message-ID: <20220111173954.GB656707@magnolia>
+References: <20210713235330.2591572-1-david@fromorbit.com>
+ <a3ee5c0b-5507-395f-30f5-db3340b46e0d@sandeen.net>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.4.1
-Subject: Re: [PATCH v2 2/2] xfs: hide the XFS_IOC_{ALLOC,FREE}SP* definitions
-Content-Language: en-US
-To:     "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Eric Sandeen <sandeen@redhat.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-References: <20220110174827.GW656707@magnolia>
- <20220110175154.GX656707@magnolia> <20220110195854.GY656707@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-In-Reply-To: <20220110195854.GY656707@magnolia>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <a3ee5c0b-5507-395f-30f5-db3340b46e0d@sandeen.net>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 1/10/22 1:58 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Mon, Jan 10, 2022 at 07:30:26PM -0600, Eric Sandeen wrote:
+> On 7/13/21 6:53 PM, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > We currently require filterdiff v0.3.4 as a minimum for handling git
+> > based patches. This was the first version to handle git diff
+> > metadata well enough to do patch reformatting. It was, however, very
+> > buggy and required several workarounds to get it to do what we
+> > needed.
+> > 
+> > However, these bugs have been fixed and on a machine with v0.4.2,
+> > the workarounds result in libxfs-apply breaking and creating corrupt
+> > patches. Rather than try to carry around workarounds for a broken
+> > filterdiff version and one that just works, just increase the
+> > minimum required version to 0.4.2 and remove all the workarounds for
+> > the bugs in 0.3.4.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > 
-> Now that we've made these ioctls defunct, move them from xfs_fs.h to
-> xfs_ioctl.c, which effectively removes them from the publicly supported
-> ioctl interfaces for XFS.
+> I had missed this, sorry. I'm using it now, seems to work fine.
 > 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
-> v2: nuke the 32-bit compat definitions too
+> Darrick is still on the older version, so we probably need to come
+> to agreement on requiring something newer.  Thanks for working through
+> this!
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+/me built 0.4.2 for his local systems and drops his objections.  The
+plan is to update to Ubuntu 2022 in May, but we'll see how much of
+Ubuntu gets borg'd^Wsnapify'd in that timeframe.
 
-> ---
->   fs/xfs/libxfs/xfs_fs.h |    8 ++++----
->   fs/xfs/xfs_ioctl.c     |    9 +++++++++
->   fs/xfs/xfs_ioctl32.h   |    4 ----
->   3 files changed, 13 insertions(+), 8 deletions(-)
+--D
+
+> -Eric
 > 
-> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> index c43877c8a279..49c0e583d6bb 100644
-> --- a/fs/xfs/libxfs/xfs_fs.h
-> +++ b/fs/xfs/libxfs/xfs_fs.h
-> @@ -781,13 +781,13 @@ struct xfs_scrub_metadata {
->    * For 'documentation' purposed more than anything else,
->    * the "cmd #" field reflects the IRIX fcntl number.
->    */
-> -#define XFS_IOC_ALLOCSP		_IOW ('X', 10, struct xfs_flock64)
-> -#define XFS_IOC_FREESP		_IOW ('X', 11, struct xfs_flock64)
-> +/*	XFS_IOC_ALLOCSP ------- deprecated 10	 */
-> +/*	XFS_IOC_FREESP -------- deprecated 11	 */
->   #define XFS_IOC_DIOINFO		_IOR ('X', 30, struct dioattr)
->   #define XFS_IOC_FSGETXATTR	FS_IOC_FSGETXATTR
->   #define XFS_IOC_FSSETXATTR	FS_IOC_FSSETXATTR
-> -#define XFS_IOC_ALLOCSP64	_IOW ('X', 36, struct xfs_flock64)
-> -#define XFS_IOC_FREESP64	_IOW ('X', 37, struct xfs_flock64)
-> +/*	XFS_IOC_ALLOCSP64 ----- deprecated 36	 */
-> +/*	XFS_IOC_FREESP64 ------ deprecated 37	 */
->   #define XFS_IOC_GETBMAP		_IOWR('X', 38, struct getbmap)
->   #define XFS_IOC_FSSETDM		_IOW ('X', 39, struct fsdmidata)
->   #define XFS_IOC_RESVSP		_IOW ('X', 40, struct xfs_flock64)
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 38b2a1e881a6..15ec3d4a1516 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -1854,6 +1854,15 @@ xfs_fs_eofblocks_from_user(
->   	return 0;
->   }
->   
-> +/*
-> + * These long-unused ioctls were removed from the official ioctl API in 5.17,
-> + * but retain these definitions so that we can log warnings about them.
-> + */
-> +#define XFS_IOC_ALLOCSP		_IOW ('X', 10, struct xfs_flock64)
-> +#define XFS_IOC_FREESP		_IOW ('X', 11, struct xfs_flock64)
-> +#define XFS_IOC_ALLOCSP64	_IOW ('X', 36, struct xfs_flock64)
-> +#define XFS_IOC_FREESP64	_IOW ('X', 37, struct xfs_flock64)
-> +
->   /*
->    * Note: some of the ioctl's return positive numbers as a
->    * byte count indicating success, such as readlink_by_handle.
-> diff --git a/fs/xfs/xfs_ioctl32.h b/fs/xfs/xfs_ioctl32.h
-> index 9929482bf358..fc5a91f3a5e0 100644
-> --- a/fs/xfs/xfs_ioctl32.h
-> +++ b/fs/xfs/xfs_ioctl32.h
-> @@ -154,10 +154,6 @@ typedef struct compat_xfs_flock64 {
->   	__s32		l_pad[4];	/* reserve area */
->   } compat_xfs_flock64_t;
->   
-> -#define XFS_IOC_ALLOCSP_32	_IOW('X', 10, struct compat_xfs_flock64)
-> -#define XFS_IOC_FREESP_32	_IOW('X', 11, struct compat_xfs_flock64)
-> -#define XFS_IOC_ALLOCSP64_32	_IOW('X', 36, struct compat_xfs_flock64)
-> -#define XFS_IOC_FREESP64_32	_IOW('X', 37, struct compat_xfs_flock64)
->   #define XFS_IOC_RESVSP_32	_IOW('X', 40, struct compat_xfs_flock64)
->   #define XFS_IOC_UNRESVSP_32	_IOW('X', 41, struct compat_xfs_flock64)
->   #define XFS_IOC_RESVSP64_32	_IOW('X', 42, struct compat_xfs_flock64)
-> 
+> > ---
+> >   tools/libxfs-apply | 42 +++++++++++++++++-------------------------
+> >   1 file changed, 17 insertions(+), 25 deletions(-)
+> > 
+> > diff --git a/tools/libxfs-apply b/tools/libxfs-apply
+> > index 9271db380198..097a695f942b 100755
+> > --- a/tools/libxfs-apply
+> > +++ b/tools/libxfs-apply
+> > @@ -30,21 +30,22 @@ fail()
+> >   	exit
+> >   }
+> > -# filterdiff 0.3.4 is the first version that handles git diff metadata (almost)
+> > -# correctly. It just doesn't work properly in prior versions, so those versions
+> > -# can't be used to extract the commit message prior to the diff. Hence just
+> > -# abort and tell the user to upgrade if an old version is detected. We need to
+> > +# filterdiff didn't start handling git diff metadata correctly until some time
+> > +# after 0.3.4. The handling in 0.3.4 was buggy and broken, requiring working
+> > +# around that bugs to use it. Now that 0.4.2 has fixed all those bugs, the
+> > +# work-arounds for 0.3.4 do not work. Hence set 0.4.2 as the minimum required
+> > +# version and tell the user to upgrade if an old version is detected. We need to
+> >   # check against x.y.z version numbers here.
+> >   _version=`filterdiff --version | cut -d " " -f 5`
+> >   _major=`echo $_version | cut -d "." -f 1`
+> >   _minor=`echo $_version | cut -d "." -f 2`
+> >   _patch=`echo $_version | cut -d "." -f 3`
+> >   if [ $_major -eq 0 ]; then
+> > -	if [ $_minor -lt 3 ]; then
+> > -		fail "filterdiff $_version found. 0.3.4 or greater is required."
+> > +	if [ $_minor -lt 4 ]; then
+> > +		fail "filterdiff $_version found. 0.4.2 or greater is required."
+> >   	fi
+> > -	if [ $_minor -eq 3 -a $_patch -le 3 ]; then
+> > -		fail "filterdiff $_version found. 0.3.4 or greater is required."
+> > +	if [ $_minor -eq 4 -a $_patch -lt 2 ]; then
+> > +		fail "filterdiff $_version found. 0.4.2 or greater is required."
+> >   	fi
+> >   fi
+> > @@ -158,8 +159,7 @@ filter_kernel_patch()
+> >   			--addoldprefix=a/fs/xfs/ \
+> >   			--addnewprefix=b/fs/xfs/ \
+> >   			$_patch | \
+> > -		sed -e 's, [ab]\/fs\/xfs\/\(\/dev\/null\), \1,' \
+> > -		    -e '/^diff --git/d'
+> > +		sed -e 's, [ab]\/fs\/xfs\/\(\/dev\/null\), \1,'
+> >   	rm -f $_libxfs_files
+> > @@ -187,8 +187,7 @@ filter_xfsprogs_patch()
+> >   			--addoldprefix=a/ \
+> >   			--addnewprefix=b/ \
+> >   			$_patch | \
+> > -		sed -e 's, [ab]\/\(\/dev\/null\), \1,' \
+> > -		    -e '/^diff --git/d'
+> > +		sed -e 's, [ab]\/\(\/dev\/null\), \1,'
+> >   	rm -f $_libxfs_files
+> >   }
+> > @@ -209,30 +208,23 @@ fixup_header_format()
+> >   	local _diff=`mktemp`
+> >   	local _new_hdr=$_hdr.new
+> > -	# there's a bug in filterdiff that leaves a line at the end of the
+> > -	# header in the filtered git show output like:
+> > -	#
+> > -	# difflibxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> > -	#
+> > -	# split the header on that (convenient!)
+> > -	sed -e /^difflib/q $_patch > $_hdr
+> > +	# Split the header on the first ^diff --git line (convenient!)
+> > +	sed -e /^diff/q $_patch > $_hdr
+> >   	cat $_patch | awk '
+> > -		BEGIN { difflib_seen = 0; index_seen = 0 }
+> > -		/^difflib/ { difflib_seen++; next }
+> > +		BEGIN { diff_seen = 0; index_seen = 0 }
+> > +		/^diff/ { diff_seen++; next }
+> >   		/^index/ { if (++index_seen == 1) { next } }
+> > -		// { if (difflib_seen) { print $0 } }' > $_diff
+> > +		// { if (diff_seen) { print $0 } }' > $_diff
+> >   	# the header now has the format:
+> >   	# commit 0d5a75e9e23ee39cd0d8a167393dcedb4f0f47b2
+> >   	# Author: Eric Sandeen <sandeen@sandeen.net>
+> >   	# Date:   Wed Jun 1 17:38:15 2016 +1000
+> > -	#
+> > +	#
+> >   	#     xfs: make several functions static
+> >   	#....
+> >   	#     Signed-off-by: Dave Chinner <david@fromorbit.com>
+> >   	#
+> > -	#difflibxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> > -	#
+> >   	# We want to format it like a normal patch with a line to say what repo
+> >   	# and commit it was sourced from:
+> >   	#
