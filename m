@@ -2,78 +2,95 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE8F4C433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 10 Jan 2022 23:40:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F7C5C433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Jan 2022 00:08:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241878AbiAJXki (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 10 Jan 2022 18:40:38 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:34640 "EHLO
+        id S1345820AbiAKAIN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 10 Jan 2022 19:08:13 -0500
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:58226 "EHLO
         mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S241114AbiAJXki (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jan 2022 18:40:38 -0500
+        by vger.kernel.org with ESMTP id S242685AbiAKAIM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jan 2022 19:08:12 -0500
 Received: from dread.disaster.area (pa49-181-243-119.pa.nsw.optusnet.com.au [49.181.243.119])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id EC7EE62C288;
-        Tue, 11 Jan 2022 10:40:35 +1100 (AEDT)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id CF03E62C003;
+        Tue, 11 Jan 2022 11:08:10 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1n74HC-00Dn0f-Lx; Tue, 11 Jan 2022 10:40:34 +1100
-Date:   Tue, 11 Jan 2022 10:40:34 +1100
+        id 1n74hs-00DnUR-7j; Tue, 11 Jan 2022 11:08:08 +1100
+Date:   Tue, 11 Jan 2022 11:08:08 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     Krister Johansen <kjlx@templeofstupid.com>
-Cc:     linux-xfs@vger.kernel.org,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: xfs_bmap_extents_to_btree allocation warnings
-Message-ID: <20220110234034.GC945095@dread.disaster.area>
-References: <20220105071052.GD20464@templeofstupid.com>
- <20220106010123.GP945095@dread.disaster.area>
- <20220106085228.GA19131@templeofstupid.com>
- <20220110084152.GX945095@dread.disaster.area>
+To:     Trond Myklebust <trondmy@hammerspace.com>
+Cc:     "bfoster@redhat.com" <bfoster@redhat.com>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "trondmy@kernel.org" <trondmy@kernel.org>,
+        "hch@infradead.org" <hch@infradead.org>,
+        "axboe@kernel.dk" <axboe@kernel.dk>,
+        "djwong@kernel.org" <djwong@kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "willy@infradead.org" <willy@infradead.org>
+Subject: Re: [PATCH] iomap: Address soft lockup in iomap_finish_ioend()
+Message-ID: <20220111000808.GD945095@dread.disaster.area>
+References: <20220101035516.GE945095@dread.disaster.area>
+ <fb964769132eb01ed4e8b67d6972d50ee3387e24.camel@hammerspace.com>
+ <20220103220310.GG945095@dread.disaster.area>
+ <9f51fa6169f4c67d54dd8563b52c540c94c7703a.camel@hammerspace.com>
+ <20220104012215.GH945095@dread.disaster.area>
+ <0996c40657b5873dda5119344bf74556491e27b9.camel@hammerspace.com>
+ <c9d9b7850c6086b123b4add4de7b1992cb62f6ad.camel@hammerspace.com>
+ <20220105224829.GO945095@dread.disaster.area>
+ <28e975e8235a41c529bccb2bc0e73b4bb2d1e45e.camel@hammerspace.com>
+ <20220110233746.GB945095@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220110084152.GX945095@dread.disaster.area>
+In-Reply-To: <20220110233746.GB945095@dread.disaster.area>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=61dcc3f4
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=61dcca6b
         a=BEa52nrBdFykVEm6RU8P4g==:117 a=BEa52nrBdFykVEm6RU8P4g==:17
         a=kj9zAlcOel0A:10 a=DghFqjY3_ZEA:10 a=7-415B0cAAAA:8
-        a=qKF-TjJs3tvgpoR8_qAA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=tzrAO7XPkmZgBS5PYtwA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 10, 2022 at 07:41:52PM +1100, Dave Chinner wrote:
-> On Thu, Jan 06, 2022 at 12:52:28AM -0800, Krister Johansen wrote:
-> > On Thu, Jan 06, 2022 at 12:01:23PM +1100, Dave Chinner wrote:
-> > > On Tue, Jan 04, 2022 at 11:10:52PM -0800, Krister Johansen wrote:
-> > > So 1,871,665 of 228,849,020 blocks free in the AG. That's 99.2%
-> > > full, so it's extremely likely you are hitting a full AG condition.
-> > > 
-> > > /me goes and looks at xfs_iomap_write_direct()....
-> > > 
-> > > .... and notices that it passes "0" as the total allocation block
-> > > count, which means it isn't reserving space in the AG for both the
-> > > data extent and the BMBT blocks...
-> > > 
-> > > ... and several other xfs_bmapi_write() callers have the same
-> > > issue...
-> > > 
-> > > Ok, let me spend a bit more looking into this in more depth, but it
-> > > looks like the problem is at the xfs_bmapi_write() caller level, not
-> > > deep in the allocator itself.
-> > 
-> > At least on 5.4 xfs_bmapi_write is still passing resblks instead of
-> > zero, which is computed in xfs_iomap_write_direct.
-> 
-> yup, I missed commit da781e64b28c ("xfs: don't set bmapi total block
-> req where minleft is") back in 2019 where that behaviour was
-> changed, and instead it changes xfs_bmapi_write() to implcitly
-> manage space for BMBT blocks via args->minleft whilst still
-> explicitly requiring the caller to reserve those blocks at
-> transaction allocation time.
+On Tue, Jan 11, 2022 at 10:37:46AM +1100, Dave Chinner wrote:
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index c8c15c3c3147..82515d1ad4e0 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -136,7 +136,20 @@ xfs_end_ioend(
+>  	memalloc_nofs_restore(nofs_flag);
+>  }
+>  
+> -/* Finish all pending io completions. */
+> +/*
+> + * Finish all pending IO completions that require transactional modifications.
+> + *
+> + * We try to merge physical and logically contiguous ioends before completion to
+> + * minimise the number of transactions we need to perform during IO completion.
+> + * Both unwritten extent conversion and COW remapping need to iterate and modify
+> + * one physical extent at a time, so we gain nothing by merging physically
+> + * discontiguous extents here.
+> + *
+> + * The ioend chain length that we can be processing here is largely unbound in
+> + * length and we may have to perform significant amounts of work on each ioend
+> + * to complete it. Hence we have to be careful about holding the CPU for too
+> + * long in this loop.
+> + */
+>  void
+>  xfs_end_io(
+>  	struct work_struct	*work)
+> @@ -147,6 +160,7 @@ xfs_end_io(
+>  	struct list_head	tmp;
+>  	unsigned long		flags;
+>  
+> +	msleep(5000);
+>  	spin_lock_irqsave(&ip->i_ioend_lock, flags);
+>  	list_replace_init(&ip->i_ioend_list, &tmp);
+>  	spin_unlock_irqrestore(&ip->i_ioend_lock, flags);
 
-FWIW, I should have said here that you should really add that commit
-to your current tree and see if that fixes the problem...
+You might want to comment that 5s completion delay out before you
+run the patch, Trond...
 
 Cheers,
 
