@@ -2,38 +2,42 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2D4CC433FE
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Jan 2022 21:50:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B07FAC433FE
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Jan 2022 21:50:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245501AbiAKVuc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 11 Jan 2022 16:50:32 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:43000 "EHLO
-        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245510AbiAKVub (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Jan 2022 16:50:31 -0500
+        id S245513AbiAKVuj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 11 Jan 2022 16:50:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47856 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S245510AbiAKVuj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Jan 2022 16:50:39 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8643C06173F;
+        Tue, 11 Jan 2022 13:50:38 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5AA77617BB;
-        Tue, 11 Jan 2022 21:50:31 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B08A2C36AE3;
-        Tue, 11 Jan 2022 21:50:30 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 72307B81D54;
+        Tue, 11 Jan 2022 21:50:37 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36A27C36AEF;
+        Tue, 11 Jan 2022 21:50:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1641937830;
-        bh=cgrcmsN3xn8OYdW9Utr7c6frv7Qf4ER3N8cLlYqmuS8=;
+        s=k20201202; t=1641937836;
+        bh=S8PiKOjopX5QkjIFMRCuD6pmN5FP2l5q0denN37/Pwk=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=t0ZqNj7kNnYlAVzL6DnPM9Rn8iitpzmWyAze60Yf6lYiPPdsKVoaFEgeULfSy/1ji
-         IqXvIpFNtgIgLqof7S8LMX1ggOe2nzQQogGTo+1NxRyvoWFLPEt8PlX3rZa7hIwnMP
-         tVPQHEPeUiG3hTUGV6pPGXwLNrURrKRSsmnQYVld0qmGj2CSMuRVUS4wZMQZh8ufS5
-         hn+LU6/2kSt3wIOC3b/uLcpQorSHy8ljaW303AyIBSfVdDpiEJk+j7cNvlNIIVoUA9
-         lCOzeOgPjE7miFnrE/ipnGZ9Ixc6xEoiXOQbx+prSiEezMqyF1GyD12JukEI4KLutZ
-         rrFr2kx8ksF7w==
-Subject: [PATCH 4/8] xfs: test fixes for new 5.17 behaviors
+        b=NJrzvyyucej4sZyIu52r2MhUMk2XRVCu/vnzfVeuTWfNV+LbjIZJxRsqr8E8LEL4/
+         USQF0SbgrwkHK+T0NCDqebEgjGgppiFxXLfyq3U/uO6Lak27vXBKiJDDbCwy7kePbc
+         KQca3ThmUNWIeb37T5PLoebAPVylqjrl9mrJy85N+nHrnIpemVA86gr5H4J8vucfwY
+         CsV4F9p5QLTqxh1Yl7gXF9RmEOBz3QB6pSCttmcpZGl6eMnuyvQZpPSA3eI7kCgAO6
+         pVu1DaX4QxdiT08yt5ByEzPPkDIxliq0SMzrKxlegQzSdP74Px+/VUR6IYWLu/Et4/
+         bqCEoRutw6tZA==
+Subject: [PATCH 5/8] xfs: regression test for allocsp handing out stale disk
+ contents
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 11 Jan 2022 13:50:30 -0800
-Message-ID: <164193783042.3008286.2591850180591285713.stgit@magnolia>
+Date:   Tue, 11 Jan 2022 13:50:35 -0800
+Message-ID: <164193783590.3008286.3623476203965250828.stgit@magnolia>
 In-Reply-To: <164193780808.3008286.598879710489501860.stgit@magnolia>
 References: <164193780808.3008286.598879710489501860.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -46,118 +50,238 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-xfs/308 and xfs/130 are two tests that tried to mess with the refcount
-btree to try to trip up the COW recovery code.  Now that we've made COW
-recovery only happen during log recovery, we must adjust these tests to
-force a log recovery.  Older kernels should be ok with this, since they
-unconditionally try to recover COW on mount.
-
-Add a helper function to unmount the filesystem with a dirty log and
-convert the two tests to use it.  While we're at it, remove an xfs_check
-test because xfs_check refuses to run on a dirty fs, and nobody cares
-about xfs_check anymore.
+Add a regression test to check that XFS_IOC_ALLOCSP isn't handing out
+stale disk blocks for preallocation.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- common/xfs        |   12 ++++++++++++
- tests/xfs/130     |    6 +++++-
- tests/xfs/130.out |    1 +
- tests/xfs/308     |    5 +----
- tests/xfs/308.out |    2 --
- 5 files changed, 19 insertions(+), 7 deletions(-)
+ .gitignore        |    1 
+ src/Makefile      |    2 -
+ src/allocstale.c  |  117 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/832     |   56 +++++++++++++++++++++++++
+ tests/xfs/832.out |    2 +
+ 5 files changed, 177 insertions(+), 1 deletion(-)
+ create mode 100644 src/allocstale.c
+ create mode 100755 tests/xfs/832
+ create mode 100644 tests/xfs/832.out
 
 
-diff --git a/common/xfs b/common/xfs
-index bfb1bf1e..713e9fe7 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -776,6 +776,18 @@ _reset_xfs_sysfs_error_handling()
- 	done
- }
+diff --git a/.gitignore b/.gitignore
+index 65b93307..ba0c572b 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -56,6 +56,7 @@ tags
+ # src/ binaries
+ /src/af_unix
+ /src/alloc
++/src/allocstale
+ /src/append_reader
+ /src/append_writer
+ /src/attr_replace_test
+diff --git a/src/Makefile b/src/Makefile
+index 1737ed0e..111ce1d9 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -18,7 +18,7 @@ TARGETS = dirstress fill fill2 getpagesize holes lstat64 \
+ 	t_ext4_dax_journal_corruption t_ext4_dax_inline_corruption \
+ 	t_ofd_locks t_mmap_collision mmap-write-concurrent \
+ 	t_get_file_time t_create_short_dirs t_create_long_dirs t_enospc \
+-	t_mmap_writev_overlap checkpoint_journal mmap-rw-fault
++	t_mmap_writev_overlap checkpoint_journal mmap-rw-fault allocstale
  
-+# Unmount an XFS with a dirty log
-+_scratch_xfs_unmount_dirty()
+ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
+ 	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
+diff --git a/src/allocstale.c b/src/allocstale.c
+new file mode 100644
+index 00000000..6253fe4c
+--- /dev/null
++++ b/src/allocstale.c
+@@ -0,0 +1,117 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (C) 2022 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <djwong@kernel.org>
++ *
++ * Test program to try to trip over XFS_IOC_ALLOCSP mapping stale disk blocks
++ * into a file.
++ */
++#include <xfs/xfs.h>
++#include <stdlib.h>
++#include <stdio.h>
++#include <unistd.h>
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <fcntl.h>
++#include <errno.h>
++#include <unistd.h>
++#include <string.h>
++
++#ifndef XFS_IOC_ALLOCSP
++# define XFS_IOC_ALLOCSP	_IOW ('X', 10, struct xfs_flock64)
++#endif
++
++int
++main(
++	int		argc,
++	char		*argv[])
 +{
-+	local f="$SCRATCH_MNT/.dirty_umount"
++	struct stat	sb;
++	char		*buf, *zeroes;
++	unsigned long	i;
++	unsigned long	iterations;
++	int		fd, ret;
 +
-+	rm -f "$f"
-+	echo "test" > "$f"
-+	sync
-+	_scratch_shutdown
-+	_scratch_unmount
++	if (argc != 3) {
++		fprintf(stderr, "Usage: %s filename iterations\n", argv[0]);
++		return 1;
++	}
++
++	errno = 0;
++	iterations = strtoul(argv[2], NULL, 0);
++	if (errno) {
++		perror(argv[2]);
++		return 1;
++	}
++
++	fd = open(argv[1], O_RDWR | O_CREAT | O_TRUNC, 0600);
++	if (fd < 0) {
++		perror(argv[1]);
++		return 1;
++	}
++
++	ret = fstat(fd, &sb);
++	if (ret) {
++		perror(argv[1]);
++		return 1;
++	}
++
++	buf = malloc(sb.st_blksize);
++	if (!buf) {
++		perror("pread buffer");
++		return 1;
++	}
++
++	zeroes = calloc(1, sb.st_blksize);
++	if (!zeroes) {
++		perror("zeroes buffer");
++		return 1;
++	}
++
++	for (i = 1; i <= iterations; i++) {
++		struct xfs_flock64	arg = { };
++		ssize_t			read_bytes;
++		off_t			offset = sb.st_blksize * i;
++
++		/* Ensure the last block of the file is a hole... */
++		ret = ftruncate(fd, offset - 1);
++		if (ret) {
++			perror("truncate");
++			return 1;
++		}
++
++		/*
++		 * ...then use ALLOCSP to allocate the last block in the file.
++		 * An unpatched kernel neglects to mark the new mapping
++		 * unwritten or to zero the ondisk block, so...
++		 */
++		arg.l_whence = SEEK_SET;
++		arg.l_start = offset;
++		ret = ioctl(fd, XFS_IOC_ALLOCSP, &arg);
++		if (ret < 0) {
++			perror("ioctl");
++			return 1;
++		}
++
++		/* ... we can read old disk contents here. */
++		read_bytes = pread(fd, buf, sb.st_blksize,
++						offset - sb.st_blksize);
++		if (read_bytes < 0) {
++			perror(argv[1]);
++			return 1;
++		}
++		if (read_bytes != sb.st_blksize) {
++			fprintf(stderr, "%s: short read of %zd bytes\n",
++					argv[1], read_bytes);
++			return 1;
++		}
++
++		if (memcmp(zeroes, buf, sb.st_blksize) != 0) {
++			fprintf(stderr, "%s: found junk near offset %zd!\n",
++					argv[1], offset - sb.st_blksize);
++			return 2;
++		}
++	}
++
++	return 0;
 +}
+diff --git a/tests/xfs/832 b/tests/xfs/832
+new file mode 100755
+index 00000000..3820ff8c
+--- /dev/null
++++ b/tests/xfs/832
+@@ -0,0 +1,56 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2022 Oracle.  All Rights Reserved.
++#
++# FS QA Test 832
++#
++# Regression test for commit:
++#
++# 983d8e60f508 ("xfs: map unwritten blocks in XFS_IOC_{ALLOC,FREE}SP just like fallocate")
++#
++. ./common/preamble
++_begin_fstest auto quick prealloc
 +
- # Skip if we are running an older binary without the stricter input checks.
- # Make multiple checks to be sure that there is no regression on the one
- # selected feature check, which would skew the result.
-diff --git a/tests/xfs/130 b/tests/xfs/130
-index 0eb7d9c0..9465cbb0 100755
---- a/tests/xfs/130
-+++ b/tests/xfs/130
-@@ -44,12 +44,16 @@ _pwrite_byte 0x62 0 $((blksz * 64)) "${SCRATCH_MNT}/file0" >> "$seqres.full"
- _pwrite_byte 0x61 0 $((blksz * 64)) "${SCRATCH_MNT}/file1" >> "$seqres.full"
- _cp_reflink "${SCRATCH_MNT}/file0" "${SCRATCH_MNT}/file2"
- _cp_reflink "${SCRATCH_MNT}/file1" "${SCRATCH_MNT}/file3"
--umount "${SCRATCH_MNT}"
-+_scratch_unmount
- 
- echo "+ check fs"
- _scratch_xfs_repair -n >> "$seqres.full" 2>&1 || \
- 	_fail "xfs_repair should not fail"
- 
-+echo "+ force log recovery"
++# Import common functions.
++. ./common/filter
++
++# real QA test starts here
++
++# Modify as appropriate.
++_supported_fs xfs
++_require_test
++_require_scratch
++
++size_mb=32
++# Write a known pattern to the disk so that we can detect stale disk blocks
++# being mapped into the file.  In the test author's experience, the bug will
++# reproduce within the first 500KB's worth of ALLOCSP calls, so running up
++# to 16MB should suffice.
++$XFS_IO_PROG -d -c "pwrite -S 0x58 -b 8m 0 ${size_mb}m" $SCRATCH_DEV > $seqres.full
++MKFS_OPTIONS="-K $MKFS_OPTIONS" _scratch_mkfs_sized $((size_mb * 1048576)) >> $seqres.full
++
 +_scratch_mount
-+_scratch_xfs_unmount_dirty
 +
- echo "+ corrupt image"
- seq 0 $((agcount - 1)) | while read ag; do
- 	_scratch_xfs_db -x -c "agf ${ag}" -c "agf ${ag}" -c "addr refcntroot" \
-diff --git a/tests/xfs/130.out b/tests/xfs/130.out
-index a0eab987..6ca21ad6 100644
---- a/tests/xfs/130.out
-+++ b/tests/xfs/130.out
-@@ -3,6 +3,7 @@ QA output created by 130
- + mount fs image
- + make some files
- + check fs
-++ force log recovery
- + corrupt image
- + mount image
- + repair fs
-diff --git a/tests/xfs/308 b/tests/xfs/308
-index de5ee5c1..d0f47f50 100755
---- a/tests/xfs/308
-+++ b/tests/xfs/308
-@@ -23,7 +23,7 @@ echo "Format"
- _scratch_mkfs > $seqres.full 2>&1
- _scratch_mount >> $seqres.full
- is_rmap=$($XFS_INFO_PROG $SCRATCH_MNT | grep -c "rmapbt=1")
--_scratch_unmount
-+_scratch_xfs_unmount_dirty
- 
- _get_agf_data() {
- 	field="$1"
-@@ -121,9 +121,6 @@ fi
- 
- _dump_status "broken fs config" >> $seqres.full
- 
--echo "Look for leftover warning in xfs_check"
--_scratch_xfs_check | _filter_leftover
--
- echo "Look for leftover warning in xfs_repair"
- _scratch_xfs_repair -n 2>&1 | _filter_leftover
- 
-diff --git a/tests/xfs/308.out b/tests/xfs/308.out
-index bea1de81..383cd07e 100644
---- a/tests/xfs/308.out
-+++ b/tests/xfs/308.out
-@@ -4,8 +4,6 @@ We need AG1 to have a single free extent
- Find our extent and old counter values
- Remove the extent from the freesp btrees
- Add the extent to the refcount btree
--Look for leftover warning in xfs_check
--leftover CoW extent (NR/NR) len NR
- Look for leftover warning in xfs_repair
- leftover CoW extent (NR/NR) len NR
- Mount filesystem
++# Force the file to be created on the data device, which we pre-initialized
++# with a known pattern.  The bug exists in the generic bmap code, so the choice
++# of backing device does not matter, and ignoring the rt device gets us out of
++# needing to detect things like rt extent size.
++_xfs_force_bdev data $SCRATCH_MNT
++testfile=$SCRATCH_MNT/a
++
++# Allow the test program to expand the file to consume half the free space.
++blksz=$(_get_file_block_size $SCRATCH_MNT)
++iterations=$(( (size_mb / 2) * 1048576 / blksz))
++echo "Setting up $iterations runs for block size $blksz" >> $seqres.full
++
++# Run reproducer program and dump file contents if we see stale data.  Full
++# details are in the source for the C program, but in a nutshell we run ALLOCSP
++# one block at a time to see if it'll give us blocks full of 'X'es.
++$here/src/allocstale $testfile $iterations
++res=$?
++test $res -eq 2 && od -tx1 -Ad -c $testfile
++
++# success, all done
++echo Silence is golden
++status=0
++exit
+diff --git a/tests/xfs/832.out b/tests/xfs/832.out
+new file mode 100644
+index 00000000..bb8a6c12
+--- /dev/null
++++ b/tests/xfs/832.out
+@@ -0,0 +1,2 @@
++QA output created by 832
++Silence is golden
 
