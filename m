@@ -2,75 +2,70 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84C6CC433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Jan 2022 17:57:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E492CC433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Jan 2022 21:07:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344053AbiALR5d (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 12 Jan 2022 12:57:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39414 "EHLO
+        id S232856AbiALVHR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 12 Jan 2022 16:07:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55612 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242192AbiALR5c (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Jan 2022 12:57:32 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66C5AC06173F
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Jan 2022 09:57:32 -0800 (PST)
+        with ESMTP id S232647AbiALVHQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Jan 2022 16:07:16 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03CA3C06173F;
+        Wed, 12 Jan 2022 13:07:16 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 07949B8202A
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Jan 2022 17:57:31 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7100C36AEA
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Jan 2022 17:57:29 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8C90E619DD;
+        Wed, 12 Jan 2022 21:07:15 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id E5088C36AE9;
+        Wed, 12 Jan 2022 21:07:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642010249;
-        bh=0FtJwtz1ht9EQEue+JadJKxWy6gUE2PDvbfAQBUiNv0=;
-        h=Date:From:To:Subject:From;
-        b=hgjG2pYYGuc13icM8DvKduLf4PBawoEQzdGWzpGUe+q69ciXz56RuxXQFp8DrJ+Uz
-         TDPtzX8SHxR0wIrbmFxGc16JTn1JqyQ/2eUgkRoXUv9XIUEdtoHLGhHrXnv+EVJsf2
-         zAbggmcyGTpj39TDXuOGWrdaiRF49gwlKch9CNJNOynw5LKTUg/8EECnqf0K0hBMRl
-         9UpR5lwUV1khq1BVrCk4/zKGIABwDI+hBcucl4csrCSB68Zv4aMWU1plrrnQP5Gv1f
-         7p2brIONRzKZwTIWs1bkbfvWHQJSEYUc9dn9HsJNsRntX8K8+sP+W8kITnzB0jgFb/
-         tQV54HQlfhwvQ==
-Date:   Wed, 12 Jan 2022 09:57:29 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     xfs <linux-xfs@vger.kernel.org>
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 4a9bca86806f
-Message-ID: <20220112175729.GB19198@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+        s=k20201202; t=1642021635;
+        bh=Q4wnYuehSQfT7lgJVtKDm/o6jqZcPN9o8LkY698vJZg=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=Fd8uFCNDvYYxsVa8FxDN4ZwsoMHVqSLngP/iQUHxaq3rNmscUt7ZVFDlIBqSLjkR/
+         RRIGJe5gvl49MT3ol/Yy3/sh/HIhW3NNVcbmCZSjl4M61ldIM2FyWfiHbmFNF+NL4c
+         Ix5efFyHXO3j1sEjo8sZlxs77kG8J3jtYTxBWuAX55L5PPZSq5YYo/vlU2+6LPV8DF
+         wTRT0r8lQ+y2v3Vf51QXxTaxLgP0LHEXDW5Wt9V09g/6gIe/FP/glwR9T0CXFEmG89
+         6NcSEKXZtfPMgysyQWtg/JVuqugrp8qX9j59ojQHXMPlgPAJZDn9pp5KQxXlYeWZK4
+         u0GR1DHlrjkkQ==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id D428AF6078C;
+        Wed, 12 Jan 2022 21:07:14 +0000 (UTC)
+Subject: Re: [GIT PULL] iomap for 5.17
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <YdyoN7RU/JMOk/lW@casper.infradead.org>
+References: <YdyoN7RU/JMOk/lW@casper.infradead.org>
+X-PR-Tracked-List-Id: <nvdimm.lists.linux.dev>
+X-PR-Tracked-Message-Id: <YdyoN7RU/JMOk/lW@casper.infradead.org>
+X-PR-Tracked-Remote: git://git.infradead.org/users/willy/linux.git tags/iomap-5.17
+X-PR-Tracked-Commit-Id: 4d7bd0eb72e5831ddb1288786a96448b48440825
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: f079ab01b5609fb0c9acc52c88168bf1eed82373
+Message-Id: <164202163486.6701.11106784098359730682.pr-tracker-bot@kernel.org>
+Date:   Wed, 12 Jan 2022 21:07:14 +0000
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        nvdimm@lists.linux.dev, Dan Williams <dan.j.williams@intel.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+The pull request you sent on Mon, 10 Jan 2022 21:42:15 +0000:
 
-The for-next branch of the xfs-linux repository at:
+> git://git.infradead.org/users/willy/linux.git tags/iomap-5.17
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/f079ab01b5609fb0c9acc52c88168bf1eed82373
 
-has just been updated.
+Thank you!
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.  This posting is all bug fixes, but I /would/ like to
-complete reviews of the ioctl removal series that I posted yesterday.
-
-The new head of the for-next branch is commit:
-
-4a9bca86806f xfs: fix online fsck handling of v5 feature bits on secondary supers
-
-New Commits:
-
-Darrick J. Wong (2):
-      [65552b02a10a] xfs: take the ILOCK when readdir inspects directory mapping data
-      [4a9bca86806f] xfs: fix online fsck handling of v5 feature bits on secondary supers
-
-
-Code Diffstat:
-
- fs/xfs/scrub/agheader.c        | 53 ++++++++++++++++++++--------------------
- fs/xfs/scrub/agheader_repair.c | 12 +++++++++
- fs/xfs/xfs_dir2_readdir.c      | 55 +++++++++++++++++++++++++++---------------
- 3 files changed, 73 insertions(+), 47 deletions(-)
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
