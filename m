@@ -2,67 +2,63 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E492CC433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Jan 2022 21:07:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D33D9C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Jan 2022 23:49:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232856AbiALVHR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 12 Jan 2022 16:07:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55612 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232647AbiALVHQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Jan 2022 16:07:16 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03CA3C06173F;
-        Wed, 12 Jan 2022 13:07:16 -0800 (PST)
+        id S235825AbiALXtt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 12 Jan 2022 18:49:49 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:58990 "EHLO
+        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235713AbiALXtU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Jan 2022 18:49:20 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8C90E619DD;
-        Wed, 12 Jan 2022 21:07:15 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id E5088C36AE9;
-        Wed, 12 Jan 2022 21:07:14 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 478B961B8C;
+        Wed, 12 Jan 2022 23:49:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id ABD5BC36AEC;
+        Wed, 12 Jan 2022 23:49:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642021635;
-        bh=Q4wnYuehSQfT7lgJVtKDm/o6jqZcPN9o8LkY698vJZg=;
+        s=k20201202; t=1642031359;
+        bh=6LIOU8YFSzbKtOEIq3Eni0RCENIgNqvsOWfA8tRJcO0=;
         h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=Fd8uFCNDvYYxsVa8FxDN4ZwsoMHVqSLngP/iQUHxaq3rNmscUt7ZVFDlIBqSLjkR/
-         RRIGJe5gvl49MT3ol/Yy3/sh/HIhW3NNVcbmCZSjl4M61ldIM2FyWfiHbmFNF+NL4c
-         Ix5efFyHXO3j1sEjo8sZlxs77kG8J3jtYTxBWuAX55L5PPZSq5YYo/vlU2+6LPV8DF
-         wTRT0r8lQ+y2v3Vf51QXxTaxLgP0LHEXDW5Wt9V09g/6gIe/FP/glwR9T0CXFEmG89
-         6NcSEKXZtfPMgysyQWtg/JVuqugrp8qX9j59ojQHXMPlgPAJZDn9pp5KQxXlYeWZK4
-         u0GR1DHlrjkkQ==
+        b=p1dgzmulzPS/LrKCor7Kd78cQ0L2pSOE+UsIbXM4a4Q+0GomTVdIvjYyjUwBsk8IF
+         4EgD4kxmaruxesutjh8fd2gWUwAlRQFZyb+5ZrXSjFweyZhZfXhQ4oSI2jXKyV6mzd
+         Ti/F6nKiM1L0Avp5U/VQfilr0kEuiZrvLCajnkrOH3CS2Rp+6KoUJbEg4W+Tm7d8Kj
+         Y2Ex9/z5AiSx75zTaQGIk+56oIPLYdJBOyxpILa7eQM9+Cz1hRma80XZtYWXBpMiTI
+         Jp7v6cK95jdO8zpM0gFpVdMsJnis+l+x4Jl0/CvMYIww28qt13vFAkgP/IY7YujToV
+         e751h4IlZRmgA==
 Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id D428AF6078C;
-        Wed, 12 Jan 2022 21:07:14 +0000 (UTC)
-Subject: Re: [GIT PULL] iomap for 5.17
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 99BD9F6078C;
+        Wed, 12 Jan 2022 23:49:19 +0000 (UTC)
+Subject: Re: [GIT PULL] DAX / LIBNVDIMM update for v5.17
 From:   pr-tracker-bot@kernel.org
-In-Reply-To: <YdyoN7RU/JMOk/lW@casper.infradead.org>
-References: <YdyoN7RU/JMOk/lW@casper.infradead.org>
-X-PR-Tracked-List-Id: <nvdimm.lists.linux.dev>
-X-PR-Tracked-Message-Id: <YdyoN7RU/JMOk/lW@casper.infradead.org>
-X-PR-Tracked-Remote: git://git.infradead.org/users/willy/linux.git tags/iomap-5.17
-X-PR-Tracked-Commit-Id: 4d7bd0eb72e5831ddb1288786a96448b48440825
+In-Reply-To: <CAPcyv4jWm57gAL_P2JiU1vm3-CaJwzRQsoNhh_A2C-Jh1trk+w@mail.gmail.com>
+References: <CAPcyv4jWm57gAL_P2JiU1vm3-CaJwzRQsoNhh_A2C-Jh1trk+w@mail.gmail.com>
+X-PR-Tracked-List-Id: <linux-xfs.vger.kernel.org>
+X-PR-Tracked-Message-Id: <CAPcyv4jWm57gAL_P2JiU1vm3-CaJwzRQsoNhh_A2C-Jh1trk+w@mail.gmail.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/nvdimm/nvdimm tags/libnvdimm-for-5.17
+X-PR-Tracked-Commit-Id: 9e05e95ca8dae8de4a7a1645014e1bbd9c8a4dab
 X-PR-Merge-Tree: torvalds/linux.git
 X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: f079ab01b5609fb0c9acc52c88168bf1eed82373
-Message-Id: <164202163486.6701.11106784098359730682.pr-tracker-bot@kernel.org>
-Date:   Wed, 12 Jan 2022 21:07:14 +0000
-To:     Matthew Wilcox <willy@infradead.org>
+X-PR-Merge-Commit-Id: 3acbdbf42e943d85174401357a6b6243479d4c76
+Message-Id: <164203135961.22460.18259836821302118281.pr-tracker-bot@kernel.org>
+Date:   Wed, 12 Jan 2022 23:49:19 +0000
+To:     Dan Williams <dan.j.williams@intel.com>
 Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        nvdimm@lists.linux.dev, Dan Williams <dan.j.williams@intel.com>
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Linux NVDIMM <nvdimm@lists.linux.dev>,
+        linux-xfs <linux-xfs@vger.kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The pull request you sent on Mon, 10 Jan 2022 21:42:15 +0000:
+The pull request you sent on Tue, 11 Jan 2022 12:58:11 -0800:
 
-> git://git.infradead.org/users/willy/linux.git tags/iomap-5.17
+> git://git.kernel.org/pub/scm/linux/kernel/git/nvdimm/nvdimm tags/libnvdimm-for-5.17
 
 has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/f079ab01b5609fb0c9acc52c88168bf1eed82373
+https://git.kernel.org/torvalds/c/3acbdbf42e943d85174401357a6b6243479d4c76
 
 Thank you!
 
