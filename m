@@ -2,74 +2,73 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B986C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Jan 2022 03:47:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A972C433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Jan 2022 03:53:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232304AbiAMDrP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 12 Jan 2022 22:47:15 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:44213 "EHLO
+        id S232390AbiAMDxa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 12 Jan 2022 22:53:30 -0500
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:45358 "EHLO
         mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232272AbiAMDrO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Jan 2022 22:47:14 -0500
+        by vger.kernel.org with ESMTP id S232383AbiAMDx1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Jan 2022 22:53:27 -0500
 Received: from dread.disaster.area (pa49-181-243-119.pa.nsw.optusnet.com.au [49.181.243.119])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 90D1362C0E0;
-        Thu, 13 Jan 2022 14:47:12 +1100 (AEDT)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 40CF562C229;
+        Thu, 13 Jan 2022 14:53:26 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1n7r4y-00Ee7R-0b; Thu, 13 Jan 2022 14:47:12 +1100
-Date:   Thu, 13 Jan 2022 14:47:12 +1100
+        id 1n7rAz-00EeBN-LO; Thu, 13 Jan 2022 14:53:25 +1100
+Date:   Thu, 13 Jan 2022 14:53:25 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/3] xfs: kill the XFS_IOC_{ALLOC,FREE}SP* ioctls
-Message-ID: <20220113034712.GD3290465@dread.disaster.area>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/3] xfs: remove the XFS_IOC_FSSETDM definitions
+Message-ID: <20220113035325.GE3290465@dread.disaster.area>
 References: <164194336019.3069025.16691952615002573445.stgit@magnolia>
- <164194336605.3069025.17152203611076954599.stgit@magnolia>
+ <164194337697.3069025.4831414268040360601.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <164194336605.3069025.17152203611076954599.stgit@magnolia>
+In-Reply-To: <164194337697.3069025.4831414268040360601.stgit@magnolia>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=61dfa0c1
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=61dfa236
         a=BEa52nrBdFykVEm6RU8P4g==:117 a=BEa52nrBdFykVEm6RU8P4g==:17
         a=kj9zAlcOel0A:10 a=DghFqjY3_ZEA:10 a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8
-        a=7-415B0cAAAA:8 a=Wb0oWCF6pdWcZF2cXSgA:9 a=CjuIK1q_8ugA:10
+        a=7-415B0cAAAA:8 a=1w2l5visoEp6LV_LYIEA:9 a=CjuIK1q_8ugA:10
         a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jan 11, 2022 at 03:22:46PM -0800, Darrick J. Wong wrote:
+On Tue, Jan 11, 2022 at 03:22:57PM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> According to the glibc compat header for Irix 4, these ioctls originated
-> in April 1991 as a (somewhat clunky) way to preallocate space at the end
-> of a file on an EFS filesystem.  XFS, which was released in Irix 5.3 in
-> December 1993, picked up these ioctls to maintain compatibility and they
-> were ported to Linux in the early 2000s.
+> Remove the definitions for these ioctls, since the functionality (and,
+> weirdly, the 32-bit compat ioctl definitions) were removed from the
+> kernel in November 2019.
 > 
-> Recently it was pointed out to me they still lurk in the kernel, even
-> though the Linux fallocate syscall supplanted the functionality a long
-> time ago.  fstests doesn't seem to include any real functional or stress
-> tests for these ioctls, which means that the code quality is ... very
-> questionable.  Most notably, it was a stale disk block exposure vector
-> for 21 years and nobody noticed or complained.  As mature programmers
-> say, "If you're not testing it, it's broken."
-> 
-> Given all that, let's withdraw these ioctls from the XFS userspace API.
-> Normally we'd set a long deprecation process, but I estimate that there
-> aren't any real users, so let's trigger a warning in dmesg and return
-> -ENOTTY.
-> 
-> See: CVE-2021-4155
-> 
-> Augments: 983d8e60f508 ("xfs: map unwritten blocks in XFS_IOC_{ALLOC,FREE}SP just like fallocate")
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_fs.h |   29 ++++-------------------------
+>  1 file changed, 4 insertions(+), 25 deletions(-)
 
-Looks good now.
+Looks fine to me.
+
+THe only user I know of is xfsdump, and it will only use this
+functionality if a special CLI option is given to it. Given that
+this would just be writing zeros as this is what will be in the
+inodes that are backed up by xfsdump, I don't see it a big problem
+if this fails now.
+
+Nothing else out there is likely to be using this ioctl - the DMAPI
+state was specific to a long dead proprietary SGI HSM product and
+that's the only thing I know of that used this ioctl to set non-zero
+values in the first place. 
+
+Hence I think removing this ioctl has very little risk of userspace
+regression.
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
 -- 
 Dave Chinner
 david@fromorbit.com
