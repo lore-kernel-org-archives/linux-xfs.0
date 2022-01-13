@@ -2,73 +2,78 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A972C433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Jan 2022 03:53:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6558C4332F
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Jan 2022 08:00:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232390AbiAMDxa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 12 Jan 2022 22:53:30 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:45358 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232383AbiAMDx1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Jan 2022 22:53:27 -0500
-Received: from dread.disaster.area (pa49-181-243-119.pa.nsw.optusnet.com.au [49.181.243.119])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 40CF562C229;
-        Thu, 13 Jan 2022 14:53:26 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1n7rAz-00EeBN-LO; Thu, 13 Jan 2022 14:53:25 +1100
-Date:   Thu, 13 Jan 2022 14:53:25 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/3] xfs: remove the XFS_IOC_FSSETDM definitions
-Message-ID: <20220113035325.GE3290465@dread.disaster.area>
-References: <164194336019.3069025.16691952615002573445.stgit@magnolia>
- <164194337697.3069025.4831414268040360601.stgit@magnolia>
+        id S229912AbiAMIA4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 13 Jan 2022 03:00:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59542 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232564AbiAMIAy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jan 2022 03:00:54 -0500
+Received: from mail-wm1-x336.google.com (mail-wm1-x336.google.com [IPv6:2a00:1450:4864:20::336])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E964C06173F
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Jan 2022 00:00:54 -0800 (PST)
+Received: by mail-wm1-x336.google.com with SMTP id p1-20020a1c7401000000b00345c2d068bdso4898338wmc.3
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Jan 2022 00:00:54 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:content-language:to:from
+         :subject:content-transfer-encoding;
+        bh=5WmYASBRiTVteKV4tc6fRJET7fcDZ4u4T6/OLs3tnIE=;
+        b=AS4HagltFt7GPKVuYIjO1IThjhgBSyPoDiLVF9hx6jA8dxZQSM4vLam8cbZoJZquvq
+         8uExZhYDY6Q8lNbVbM33DJC5qMrJanyHvMZv5YwkmgnYNyqDN9Am6bCUYn9S0Gbzh9Ha
+         oogbF7gGqOR6IoA+ucu561TUaNmHgyHHnywCleIt6iNFbS7oXnNAWWxGhQ44zpL0fEMD
+         0NXhvUkDoMFq8bnD2M/bcpZPEI05UTEx0gFGEAg9EIcECK+ukmUppRz08Eax0NuUDwXi
+         P8UPnADjAwvMYcKFV3lTHe8vh0/KXgOIg+ZNN/dsEAqDSTTnpD8QhNA8Mp7u+oTduGXI
+         VAhw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent
+         :content-language:to:from:subject:content-transfer-encoding;
+        bh=5WmYASBRiTVteKV4tc6fRJET7fcDZ4u4T6/OLs3tnIE=;
+        b=8CVGCrRoaaoo0bhFjZrvXmXOjQ6ft3Ukos3JnFq6UGj+dSXftgXL85DG59XSSDbfH6
+         vWy1+sZt3o7NrTw/h+kS7TgcodusTjeo0IwtkL0+N17Wb1ZZ7pFoNFOXzhPtMX+80jg3
+         ZrSOdg1byiJRV9SEMo1J0ndO49xVoiaelS6KQ2x0+pUc9pVPx04HudSzUzAl053BdMQH
+         pLytznI6WftkJ1CP013zXQ4gEdImoy/6SQbw/UdsI9GhdlwlNYtGYBuBKdpdN99CcM0v
+         leJs6NQlFMf2HL6/UnnwTpYvMY1pgiy0r1BFy2hVijzWzXfYvZTg18EFY1DATxgjqSpQ
+         BU/Q==
+X-Gm-Message-State: AOAM532oIdVNEiad6wpvojgrayMbNURJzrXB8WEIsv/alldPkDg95FGw
+        lKrJeHU58h4HSQp8jqPM9MthRE4h5U4=
+X-Google-Smtp-Source: ABdhPJxvJglH0zsp7tVnYnKylSuKYKSnFAbl02y18P/cpp7vox0TGR/3teTUHcXle/6O6UOj137SKg==
+X-Received: by 2002:a05:600c:220f:: with SMTP id z15mr2768572wml.30.1642060853196;
+        Thu, 13 Jan 2022 00:00:53 -0800 (PST)
+Received: from [10.10.6.102] ([41.190.94.198])
+        by smtp.gmail.com with ESMTPSA id k31sm889715wms.15.2022.01.13.00.00.52
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 13 Jan 2022 00:00:52 -0800 (PST)
+Message-ID: <0587a4f6-a0d5-811a-4fdf-fc6bf5f45852@gmail.com>
+Date:   Thu, 13 Jan 2022 10:00:50 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <164194337697.3069025.4831414268040360601.stgit@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=61dfa236
-        a=BEa52nrBdFykVEm6RU8P4g==:117 a=BEa52nrBdFykVEm6RU8P4g==:17
-        a=kj9zAlcOel0A:10 a=DghFqjY3_ZEA:10 a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8
-        a=7-415B0cAAAA:8 a=1w2l5visoEp6LV_LYIEA:9 a=CjuIK1q_8ugA:10
-        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+Content-Language: en-US
+To:     linux-xfs@vger.kernel.org
+From:   Well Loaded <wellloaded@gmail.com>
+Subject: Re: XFS volume unmounts itself with lots of kernel logs generated
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jan 11, 2022 at 03:22:57PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Remove the definitions for these ioctls, since the functionality (and,
-> weirdly, the 32-bit compat ioctl definitions) were removed from the
-> kernel in November 2019.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  fs/xfs/libxfs/xfs_fs.h |   29 ++++-------------------------
->  1 file changed, 4 insertions(+), 25 deletions(-)
+Not full but it's 80% currently.
 
-Looks fine to me.
 
-THe only user I know of is xfsdump, and it will only use this
-functionality if a special CLI option is given to it. Given that
-this would just be writing zeros as this is what will be in the
-inodes that are backed up by xfsdump, I don't see it a big problem
-if this fails now.
+The metadata dump of this broken XFS volume can be found at the link 
+here below:
 
-Nothing else out there is likely to be using this ioctl - the DMAPI
-state was specific to a long dead proprietary SGI HSM product and
-that's the only thing I know of that used this ioctl to set non-zero
-values in the first place. 
+https://ufile.io/5gzf475e
 
-Hence I think removing this ioctl has very little risk of userspace
-regression.
+(60MB compressed)
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
--- 
-Dave Chinner
-david@fromorbit.com
+On this topic I have a question. As I have a brother system with 
+identical hardware, partition size etc, could I benefit from a 
+dump/import of the brother (working) system?
