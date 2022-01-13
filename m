@@ -2,78 +2,107 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6558C4332F
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Jan 2022 08:00:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84952C4332F
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Jan 2022 13:24:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229912AbiAMIA4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 13 Jan 2022 03:00:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59542 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232564AbiAMIAy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jan 2022 03:00:54 -0500
-Received: from mail-wm1-x336.google.com (mail-wm1-x336.google.com [IPv6:2a00:1450:4864:20::336])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E964C06173F
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Jan 2022 00:00:54 -0800 (PST)
-Received: by mail-wm1-x336.google.com with SMTP id p1-20020a1c7401000000b00345c2d068bdso4898338wmc.3
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Jan 2022 00:00:54 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:content-language:to:from
-         :subject:content-transfer-encoding;
-        bh=5WmYASBRiTVteKV4tc6fRJET7fcDZ4u4T6/OLs3tnIE=;
-        b=AS4HagltFt7GPKVuYIjO1IThjhgBSyPoDiLVF9hx6jA8dxZQSM4vLam8cbZoJZquvq
-         8uExZhYDY6Q8lNbVbM33DJC5qMrJanyHvMZv5YwkmgnYNyqDN9Am6bCUYn9S0Gbzh9Ha
-         oogbF7gGqOR6IoA+ucu561TUaNmHgyHHnywCleIt6iNFbS7oXnNAWWxGhQ44zpL0fEMD
-         0NXhvUkDoMFq8bnD2M/bcpZPEI05UTEx0gFGEAg9EIcECK+ukmUppRz08Eax0NuUDwXi
-         P8UPnADjAwvMYcKFV3lTHe8vh0/KXgOIg+ZNN/dsEAqDSTTnpD8QhNA8Mp7u+oTduGXI
-         VAhw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent
-         :content-language:to:from:subject:content-transfer-encoding;
-        bh=5WmYASBRiTVteKV4tc6fRJET7fcDZ4u4T6/OLs3tnIE=;
-        b=8CVGCrRoaaoo0bhFjZrvXmXOjQ6ft3Ukos3JnFq6UGj+dSXftgXL85DG59XSSDbfH6
-         vWy1+sZt3o7NrTw/h+kS7TgcodusTjeo0IwtkL0+N17Wb1ZZ7pFoNFOXzhPtMX+80jg3
-         ZrSOdg1byiJRV9SEMo1J0ndO49xVoiaelS6KQ2x0+pUc9pVPx04HudSzUzAl053BdMQH
-         pLytznI6WftkJ1CP013zXQ4gEdImoy/6SQbw/UdsI9GhdlwlNYtGYBuBKdpdN99CcM0v
-         leJs6NQlFMf2HL6/UnnwTpYvMY1pgiy0r1BFy2hVijzWzXfYvZTg18EFY1DATxgjqSpQ
-         BU/Q==
-X-Gm-Message-State: AOAM532oIdVNEiad6wpvojgrayMbNURJzrXB8WEIsv/alldPkDg95FGw
-        lKrJeHU58h4HSQp8jqPM9MthRE4h5U4=
-X-Google-Smtp-Source: ABdhPJxvJglH0zsp7tVnYnKylSuKYKSnFAbl02y18P/cpp7vox0TGR/3teTUHcXle/6O6UOj137SKg==
-X-Received: by 2002:a05:600c:220f:: with SMTP id z15mr2768572wml.30.1642060853196;
-        Thu, 13 Jan 2022 00:00:53 -0800 (PST)
-Received: from [10.10.6.102] ([41.190.94.198])
-        by smtp.gmail.com with ESMTPSA id k31sm889715wms.15.2022.01.13.00.00.52
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 13 Jan 2022 00:00:52 -0800 (PST)
-Message-ID: <0587a4f6-a0d5-811a-4fdf-fc6bf5f45852@gmail.com>
-Date:   Thu, 13 Jan 2022 10:00:50 +0200
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Content-Language: en-US
-To:     linux-xfs@vger.kernel.org
-From:   Well Loaded <wellloaded@gmail.com>
-Subject: Re: XFS volume unmounts itself with lots of kernel logs generated
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        id S235121AbiAMNYu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 13 Jan 2022 08:24:50 -0500
+Received: from c.mx.filmlight.ltd.uk ([54.76.112.217]:50168 "EHLO
+        c.mx.filmlight.ltd.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235092AbiAMNYt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jan 2022 08:24:49 -0500
+X-Greylist: delayed 561 seconds by postgrey-1.27 at vger.kernel.org; Thu, 13 Jan 2022 08:24:48 EST
+Received: from localhost (localhost [127.0.0.1])
+        by omni.filmlight.ltd.uk (Postfix) with ESMTP id 808E940004A5;
+        Thu, 13 Jan 2022 13:15:24 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 omni.filmlight.ltd.uk 808E940004A5
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=filmlight.ltd.uk;
+        s=default; t=1642079724;
+        bh=SsvmpGbuxLS0hJDElHHBN0UYCfEqNVwpDnsPWFYV2Do=;
+        h=Subject:From:In-Reply-To:Date:Cc:References:To:From;
+        b=yDSASWEX15HtifIQZj1kgDNDIJQhXETrAwTtUsv2k1KWng/lksgwq1I8t4fPfIbqk
+         Qv+nXoHSorak0vdBuD1wjlNZs9gzJzx1IE6H3LcDgaev8UZF6w9FkvwgjvWtd+RguD
+         Ri51r3MNv1Jtg/PdOsNM+7H9pdaeoiMvBZabVmI4=
+Received: from smtpclient.apple (cpc122860-stev8-2-0-cust234.9-2.cable.virginm.net [81.111.212.235])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (Client did not present a certificate)
+        (Authenticated sender: roger)
+        by omni.filmlight.ltd.uk (Postfix) with ESMTPSA id 477848880E1;
+        Thu, 13 Jan 2022 13:15:24 +0000 (GMT)
+Content-Type: text/plain;
+        charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 15.0 \(3693.20.0.1.32\))
+Subject: Re: [PATCH 1/3] xfs: kill the XFS_IOC_{ALLOC,FREE}SP* ioctls
+From:   Roger Willcocks <roger@filmlight.ltd.uk>
+In-Reply-To: <20220113034712.GD3290465@dread.disaster.area>
+Date:   Thu, 13 Jan 2022 13:15:23 +0000
+Cc:     Roger Willcocks <roger@filmlight.ltd.uk>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <49FC71F0-82F4-4852-BF3D-92A755AC8AFA@filmlight.ltd.uk>
+References: <164194336019.3069025.16691952615002573445.stgit@magnolia>
+ <164194336605.3069025.17152203611076954599.stgit@magnolia>
+ <20220113034712.GD3290465@dread.disaster.area>
+To:     Dave Chinner <david@fromorbit.com>
+X-Mailer: Apple Mail (2.3693.20.0.1.32)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Not full but it's 80% currently.
+I will just mention in passing that we augment the XFS_IOC_ALLOC ioctl =
+to perform explicit near-to-block allocation. I=E2=80=99m not suggesting =
+you shouldn=E2=80=99t withdraw the ioctls, just referencing xkcd 1172.
+
+=E2=80=94
+Roger
 
 
-The metadata dump of this broken XFS volume can be found at the link 
-here below:
+> On 13 Jan 2022, at 03:47, Dave Chinner <david@fromorbit.com> wrote:
+>=20
+> On Tue, Jan 11, 2022 at 03:22:46PM -0800, Darrick J. Wong wrote:
+>> From: Darrick J. Wong <djwong@kernel.org>
+>>=20
+>> According to the glibc compat header for Irix 4, these ioctls =
+originated
+>> in April 1991 as a (somewhat clunky) way to preallocate space at the =
+end
+>> of a file on an EFS filesystem.  XFS, which was released in Irix 5.3 =
+in
+>> December 1993, picked up these ioctls to maintain compatibility and =
+they
+>> were ported to Linux in the early 2000s.
+>>=20
+>> Recently it was pointed out to me they still lurk in the kernel, even
+>> though the Linux fallocate syscall supplanted the functionality a =
+long
+>> time ago.  fstests doesn't seem to include any real functional or =
+stress
+>> tests for these ioctls, which means that the code quality is ... very
+>> questionable.  Most notably, it was a stale disk block exposure =
+vector
+>> for 21 years and nobody noticed or complained.  As mature programmers
+>> say, "If you're not testing it, it's broken."
+>>=20
+>> Given all that, let's withdraw these ioctls from the XFS userspace =
+API.
+>> Normally we'd set a long deprecation process, but I estimate that =
+there
+>> aren't any real users, so let's trigger a warning in dmesg and return
+>> -ENOTTY.
+>>=20
+>> See: CVE-2021-4155
+>>=20
+>> Augments: 983d8e60f508 ("xfs: map unwritten blocks in =
+XFS_IOC_{ALLOC,FREE}SP just like fallocate")
+>> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+>> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+>=20
+> Looks good now.
+>=20
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> --=20
+> Dave Chinner
+> david@fromorbit.com
+>=20
 
-https://ufile.io/5gzf475e
-
-(60MB compressed)
-
-
-On this topic I have a question. As I have a brother system with 
-identical hardware, partition size etc, could I benefit from a 
-dump/import of the brother (working) system?
