@@ -2,61 +2,24 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90B16C433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 17 Jan 2022 14:36:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E14CEC433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 17 Jan 2022 16:29:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234681AbiAQOgE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 17 Jan 2022 09:36:04 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:36040 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231905AbiAQOgD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Jan 2022 09:36:03 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1642430163;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=0GXsjvYqgApuYgej4CjFXthDC/WRS/ARzY7AF/+YP/U=;
-        b=XhRv/AnighVqNZdqFYkSXOYz/45D712SuKpQOUHLDcO12XTsCuHpO/8+dzqtue/BnQLEwC
-        34ukwZeve53+NzLmxatq2zC18vaRVMUYTv+r0onVojkGbRKMYx+2gI7Io9GX7rMFvMF5+d
-        o1f+yqMhiumNB/GRLH8OQE5EBAWSoJc=
-Received: from mail-qt1-f200.google.com (mail-qt1-f200.google.com
- [209.85.160.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-173-466vyVguO0atyKBkljGd4w-1; Mon, 17 Jan 2022 09:36:02 -0500
-X-MC-Unique: 466vyVguO0atyKBkljGd4w-1
-Received: by mail-qt1-f200.google.com with SMTP id x10-20020ac8700a000000b002c3ef8fc44cso12678174qtm.8
-        for <linux-xfs@vger.kernel.org>; Mon, 17 Jan 2022 06:36:02 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=0GXsjvYqgApuYgej4CjFXthDC/WRS/ARzY7AF/+YP/U=;
-        b=1m6zvXkn7/+Fkl3t4ji84JoJEnME5v+16MzCCQQJ/kMMsmaa/3voQXOfTv1wtLmeVM
-         nhShceaBMeSIsUBRGrrTsWwAL7byz+h5Lgs6eHaY9Yu9pC8oN8IpHwomtNzOlTs1bGzm
-         r7za+T9YQBVmabOQZDAYf01/U2gLQRMXidl5P8vMgu2ka0U7+ZoLhIzbkROaqk2cP9GT
-         WPAZ53UEq3IAV8OUIa7X8T2UybRAiMJ7tSgdnAXh/DM+eYEAqqugqB4Z1rZi8nK5hoRX
-         0tXzYlzAKNcMqj8dZ7Dm6cCu1IJhTopjzE5uHW9aEa4iQ6yc5Y5CIjl7YeRGXvLa7jg8
-         gMnA==
-X-Gm-Message-State: AOAM5323VAAZ3ih8+nYLyBRpKAhhZ9p1SDFyw2SC3Nh/URosw/R7W1+4
-        rtvWRcKQhyj3r5RvPtbow8Kf7yxvxUWx8keqt43u4F48ed1aHizvvIv+yqVuvdil+AjIQiNS+n4
-        bAtpRTajouuR5mrK1Qzqx
-X-Received: by 2002:ac8:7f12:: with SMTP id f18mr6216821qtk.643.1642430161599;
-        Mon, 17 Jan 2022 06:36:01 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJz8KukT/ZNmG+VATMnw8vtIzAkw+sVuNtD7kejW9XkeoQXxY5HdrfRHqFeFmzHPUSRco0+oKw==
-X-Received: by 2002:ac8:7f12:: with SMTP id f18mr6216795qtk.643.1642430161298;
-        Mon, 17 Jan 2022 06:36:01 -0800 (PST)
-Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
-        by smtp.gmail.com with ESMTPSA id b6sm9056207qtk.91.2022.01.17.06.36.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 17 Jan 2022 06:36:01 -0800 (PST)
-Date:   Mon, 17 Jan 2022 09:35:58 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     Ian Kent <raven@themaw.net>
-Cc:     Al Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J. Wong" <djwong@kernel.org>,
+        id S240832AbiAQQ3I (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 17 Jan 2022 11:29:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37892 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235289AbiAQQ3G (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Jan 2022 11:29:06 -0500
+Received: from zeniv-ca.linux.org.uk (zeniv-ca.linux.org.uk [IPv6:2607:5300:60:148a::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 704DEC061574;
+        Mon, 17 Jan 2022 08:29:06 -0800 (PST)
+Received: from viro by zeniv-ca.linux.org.uk with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1n9UsG-002bJA-Sc; Mon, 17 Jan 2022 16:28:53 +0000
+Date:   Mon, 17 Jan 2022 16:28:52 +0000
+From:   Al Viro <viro@zeniv.linux.org.uk>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     Ian Kent <raven@themaw.net>, "Darrick J. Wong" <djwong@kernel.org>,
         Christoph Hellwig <hch@lst.de>,
         Miklos Szeredi <miklos@szeredi.hu>,
         David Howells <dhowells@redhat.com>,
@@ -64,124 +27,92 @@ Cc:     Al Viro <viro@zeniv.linux.org.uk>,
         linux-fsdevel <linux-fsdevel@vger.kernel.org>,
         xfs <linux-xfs@vger.kernel.org>
 Subject: Re: [PATCH] vfs: check dentry is still valid in get_link()
-Message-ID: <YeV+zseKGNqnSuKR@bfoster>
+Message-ID: <YeWZRL88KPtLWlkI@zeniv-ca.linux.org.uk>
 References: <164180589176.86426.501271559065590169.stgit@mickey.themaw.net>
  <YeJr7/E+9stwEb3t@zeniv-ca.linux.org.uk>
  <275358741c4ee64b5e4e008d514876ed4ec1071c.camel@themaw.net>
+ <YeV+zseKGNqnSuKR@bfoster>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <275358741c4ee64b5e4e008d514876ed4ec1071c.camel@themaw.net>
+In-Reply-To: <YeV+zseKGNqnSuKR@bfoster>
+Sender: Al Viro <viro@ftp.linux.org.uk>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 17, 2022 at 10:55:32AM +0800, Ian Kent wrote:
-> On Sat, 2022-01-15 at 06:38 +0000, Al Viro wrote:
-> > On Mon, Jan 10, 2022 at 05:11:31PM +0800, Ian Kent wrote:
-> > > When following a trailing symlink in rcu-walk mode it's possible
-> > > for
-> > > the dentry to become invalid between the last dentry seq lock check
-> > > and getting the link (eg. an unlink) leading to a backtrace similar
-> > > to this:
-> > > 
-> > > crash> bt
-> > > PID: 10964  TASK: ffff951c8aa92f80  CPU: 3   COMMAND: "TaniumCX"
-> > > …
-> > >  #7 [ffffae44d0a6fbe0] page_fault at ffffffff8d6010fe
-> > >     [exception RIP: unknown or invalid address]
-> > >     RIP: 0000000000000000  RSP: ffffae44d0a6fc90  RFLAGS: 00010246
-> > >     RAX: ffffffff8da3cc80  RBX: ffffae44d0a6fd30  RCX:
-> > > 0000000000000000
-> > >     RDX: ffffae44d0a6fd98  RSI: ffff951aa9af3008  RDI:
-> > > 0000000000000000
-> > >     RBP: 0000000000000000   R8: ffffae44d0a6fb94   R9:
-> > > 0000000000000000
-> > >     R10: ffff951c95d8c318  R11: 0000000000080000  R12:
-> > > ffffae44d0a6fd98
-> > >     R13: ffff951aa9af3008  R14: ffff951c8c9eb840  R15:
-> > > 0000000000000000
-> > >     ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
-> > >  #8 [ffffae44d0a6fc90] trailing_symlink at ffffffff8cf24e61
-> > >  #9 [ffffae44d0a6fcc8] path_lookupat at ffffffff8cf261d1
-> > > #10 [ffffae44d0a6fd28] filename_lookup at ffffffff8cf2a700
-> > > #11 [ffffae44d0a6fe40] vfs_statx at ffffffff8cf1dbc4
-> > > #12 [ffffae44d0a6fe98] __do_sys_newstat at ffffffff8cf1e1f9
-> > > #13 [ffffae44d0a6ff38] do_syscall_64 at ffffffff8cc0420b
-> > > 
-> > > Most of the time this is not a problem because the inode is
-> > > unchanged
-> > > while the rcu read lock is held.
-> > > 
-> > > But xfs can re-use inodes which can result in the inode -
-> > > >get_link()
-> > > method becoming invalid (or NULL).
-> > 
-> > Without an RCU delay?  Then we have much worse problems...
-> 
-> Sorry for the delay.
-> 
-> That was a problem that was discussed at length with the original post
-> of this patch that included a patch for this too (misguided though it
-> was).
-> 
+On Mon, Jan 17, 2022 at 09:35:58AM -0500, Brian Foster wrote:
 
-To Al's question, at the end of the day there is no rcu delay involved
-with inode reuse in XFS. We do use call_rcu() for eventual freeing of
-inodes (see __xfs_inode_free()), but inode reuse occurs for inodes that
-have been put into a "reclaim" state before getting to the point of
-freeing the struct inode memory. This lead to the long discussion [1]
-Ian references around ways to potentially deal with that. I think the
-TLDR of that thread is there are various potential options for
-improvement, such as to rcu wait on inode creation/reuse (either
-explicitly or via more open coded grace period cookie tracking), to rcu
-wait somewhere in the destroy sequence before inodes become reuse
-candidates, etc., but none of them seemingly agreeable for varying
-reasons (IIRC mostly stemming from either performance or compexity) [2].
+> To Al's question, at the end of the day there is no rcu delay involved
+> with inode reuse in XFS. We do use call_rcu() for eventual freeing of
+> inodes (see __xfs_inode_free()), but inode reuse occurs for inodes that
+> have been put into a "reclaim" state before getting to the point of
+> freeing the struct inode memory. This lead to the long discussion [1]
+> Ian references around ways to potentially deal with that. I think the
+> TLDR of that thread is there are various potential options for
+> improvement, such as to rcu wait on inode creation/reuse (either
+> explicitly or via more open coded grace period cookie tracking), to rcu
+> wait somewhere in the destroy sequence before inodes become reuse
+> candidates, etc., but none of them seemingly agreeable for varying
+> reasons (IIRC mostly stemming from either performance or compexity) [2].
+> 
+> The change that has been made so far in XFS is to turn rcuwalk for
+> symlinks off once again, which looks like landed in Linus' tree as
+> commit 7b7820b83f23 ("xfs: don't expose internal symlink metadata
+> buffers to the vfs"). The hope is that between that patch and this
+> prospective vfs tweak, we can have a couple incremental fixes that at
+> least address the practical problem users have been running into (which
+> is a crash due to a NULL ->get_link() callback pointer due to inode
+> reuse). The inode reuse vs. rcu thing might still be a broader problem,
+> but AFAIA that mechanism has been in place in XFS on Linux pretty much
+> forever.
 
-The change that has been made so far in XFS is to turn rcuwalk for
-symlinks off once again, which looks like landed in Linus' tree as
-commit 7b7820b83f23 ("xfs: don't expose internal symlink metadata
-buffers to the vfs"). The hope is that between that patch and this
-prospective vfs tweak, we can have a couple incremental fixes that at
-least address the practical problem users have been running into (which
-is a crash due to a NULL ->get_link() callback pointer due to inode
-reuse). The inode reuse vs. rcu thing might still be a broader problem,
-but AFAIA that mechanism has been in place in XFS on Linux pretty much
-forever.
+My problem with that is that pathname resolution very much relies upon
+the assumption that any inode it observes will *not* change its nature
+until the final rcu_read_unlock().  Papering over ->i_op->get_link reads
+in symlink case might be sufficient at the moment (I'm still not certain
+about that, though), but that's rather brittle.  E.g. if some XFS change
+down the road adds ->permission() on some inodes, you'll get the same
+problem in do_inode_permission().  We also have places where we rely upon
+	sample ->d_seq
+	fetch ->d_flags
+	fetch ->d_inode
+	validate ->d_seq
+	...
+	assume that inode type matches the information in flags
 
-Brian
+How painful would it be to make xfs_destroy_inode() a ->free_inode() instance?
+IOW, how far is xfs_inode_mark_reclaimable() from being callable in RCU
+callback context?  Note that ->destroy_inode() is called via
 
-[1] https://lore.kernel.org/linux-fsdevel/163660197073.22525.11235124150551283676.stgit@mickey.themaw.net/
+static void destroy_inode(struct inode *inode)
+{
+	const struct super_operations *ops = inode->i_sb->s_op;
 
-[2] Yet another idea could be a mix of two of the previously discussed
-approaches: stamp the current rcu gp marker in the xfs_inode somewhere
-on destroy and check it on reuse to conditionally rcu wait when
-necessary. Perhaps that might provide enough batching to mitigate
-performance impact when compared to an unconditional create side wait.
+	BUG_ON(!list_empty(&inode->i_lru));
+	__destroy_inode(inode);
+	if (ops->destroy_inode) {
+		ops->destroy_inode(inode);
+		if (!ops->free_inode)
+			return;
+	}
+	inode->free_inode = ops->free_inode;
+	call_rcu(&inode->i_rcu, i_callback);
+}
 
-> That discussion resulted in Darrick merging the problem xfs inline
-> symlink handling with the xfs normal symlink handling.
-> 
-> Another problem with these inline syslinks was they would hand a
-> pointer to internal xfs storage to the VFS. Darrick's change
-> allocates and copies the link then hands it to the VFS to free
-> after use. And since there's an allocation in the symlink handler
-> the rcu-walk case returns -ECHILD (on passed NULL dentry) so the
-> VFS will call unlazy before that next call which I think is itself
-> enough to resolve this problem.
-> 
-> The only thing I think might be questionable is the VFS copy of the
-> inode pointer but I think the inode is rcu freed so it will be
-> around and the seq count will have changed so I think it should be
-> ok.
-> 
-> If I'm missing something please say so, ;)
-> 
-> Darrick's patch is (was last I looked) in his xfs-next tree.
-> 
-> Ian
-> 
-> 
+with
 
+static void i_callback(struct rcu_head *head)
+{
+        struct inode *inode = container_of(head, struct inode, i_rcu);
+	if (inode->free_inode)
+		inode->free_inode(inode);
+	else   
+		free_inode_nonrcu(inode);
+}
+
+IOW, ->free_inode() is RCU-delayed part of ->destroy_inode().  If both
+are present, ->destroy_inode() will be called synchronously, followed
+by ->free_inode() from RCU callback, so you can have both - moving just
+the "finally mark for reuse" part into ->free_inode() would be OK.
+Any blocking stuff (if any) can be left in ->destroy_inode()...
