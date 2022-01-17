@@ -2,68 +2,86 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3CE2C433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 17 Jan 2022 19:32:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F658C433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 17 Jan 2022 19:48:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242447AbiAQTce (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 17 Jan 2022 14:32:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52018 "EHLO
+        id S243022AbiAQTs6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 17 Jan 2022 14:48:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55604 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230136AbiAQTcd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Jan 2022 14:32:33 -0500
-Received: from mail-ed1-x533.google.com (mail-ed1-x533.google.com [IPv6:2a00:1450:4864:20::533])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F20FC061574
-        for <linux-xfs@vger.kernel.org>; Mon, 17 Jan 2022 11:32:33 -0800 (PST)
-Received: by mail-ed1-x533.google.com with SMTP id b13so70086527edn.0
-        for <linux-xfs@vger.kernel.org>; Mon, 17 Jan 2022 11:32:33 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language
-         :from:to:references:cc:in-reply-to:content-transfer-encoding;
-        bh=6QwBAhvG2NB12Pu4h1OSTAy0qqffWGrIfhyaHy9ccFw=;
-        b=gYGv9VO0HhHbkjCGK51aNdEsjhzZkuA+EtEnOOh6PtP7Z1QeJr99/CokrNI4ckP4Oy
-         danSj4zV6Gu5AaQ8LZTkRIjz5xFFJH0pYO36nuN1qGFMR7E7QhZEYuJz79dVzkTFdQld
-         6KGNLnyfCbEwDIST6DxjIhz1zfugqEQTpC445tSLiuP4Iug6DhfsDcnf2R7AcnHFZ8Gu
-         Oc43fX51jiINYDEEDfOMS6VLwswkj9DES6Ga14QqoGq2gZCeQLHTANjJm3aeaePXrlsm
-         r3+OVgo63Gsp9gh8D7ptdH965OZwv3hE3/7RWge1xccqzoDueYTZJbFl7gE2YFbvVLSv
-         3IgQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:from:to:references:cc:in-reply-to
-         :content-transfer-encoding;
-        bh=6QwBAhvG2NB12Pu4h1OSTAy0qqffWGrIfhyaHy9ccFw=;
-        b=ejO6ZyXeMz6Z1GP1SmXW24qFhHWgz5XBoMceWwhBfWkX+OeC8l4yal1iRondx8Wx0c
-         s4da9x9iH2uvuIc6Gn131WV8WnibjzN8bvlvlj2+Ac+eh4oyP3qc+BWmGFCBqd12x5gi
-         j2LbT9rtwSLFby8wvjEjISsmmd5k817Zi5oFCOt4xw9FpZeGVJPB9FERIzOcxSb9N6aD
-         0b3fVlIsKB2XGAub0gENAm0oD4nEAlDnbYQfq3nataNcdNrzXRAWjvfUpUr9g+2T5vIX
-         xEL479ugzvBmhwK45p/fBc9t/XthIXgY4uVzv8Iyc03784oFyfxZUSSc3EwA5/Khiu/7
-         +OZQ==
-X-Gm-Message-State: AOAM530AAh4C40Q8bStjOhIxlHdvFtjZ9FfX5KlZ1UAgtjQzTnc1lcc7
-        DNzPFwZQ1B0AF4ZY9XCIGuIeTkw2NBQ=
-X-Google-Smtp-Source: ABdhPJzUC0404AG7xCOMPxxsk5MIQ+epUBLHrWPxEk2s738aCFthBUjZgHlnDVWDi69KpnJ/5Lr4tA==
-X-Received: by 2002:aa7:c79a:: with SMTP id n26mr15628953eds.350.1642447951965;
-        Mon, 17 Jan 2022 11:32:31 -0800 (PST)
-Received: from [10.10.6.103] ([41.190.94.55])
-        by smtp.gmail.com with ESMTPSA id v2sm4638931ejd.185.2022.01.17.11.32.30
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 17 Jan 2022 11:32:31 -0800 (PST)
-Message-ID: <3c16ab63-3542-c810-dd5f-6e1dd70d5b6c@gmail.com>
-Date:   Mon, 17 Jan 2022 21:32:27 +0200
+        with ESMTP id S235639AbiAQTs5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Jan 2022 14:48:57 -0500
+Received: from zeniv-ca.linux.org.uk (zeniv-ca.linux.org.uk [IPv6:2607:5300:60:148a::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA6E1C06161C;
+        Mon, 17 Jan 2022 11:48:57 -0800 (PST)
+Received: from viro by zeniv-ca.linux.org.uk with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1n9Xzl-002dQo-IP; Mon, 17 Jan 2022 19:48:49 +0000
+Date:   Mon, 17 Jan 2022 19:48:49 +0000
+From:   Al Viro <viro@zeniv.linux.org.uk>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     Ian Kent <raven@themaw.net>, "Darrick J. Wong" <djwong@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        David Howells <dhowells@redhat.com>,
+        Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] vfs: check dentry is still valid in get_link()
+Message-ID: <YeXIIf6/jChv7JN6@zeniv-ca.linux.org.uk>
+References: <164180589176.86426.501271559065590169.stgit@mickey.themaw.net>
+ <YeJr7/E+9stwEb3t@zeniv-ca.linux.org.uk>
+ <275358741c4ee64b5e4e008d514876ed4ec1071c.camel@themaw.net>
+ <YeV+zseKGNqnSuKR@bfoster>
+ <YeWZRL88KPtLWlkI@zeniv-ca.linux.org.uk>
+ <YeWxHPDbdSfBDtyX@zeniv-ca.linux.org.uk>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: XFS volume unmounts itself with lots of kernel logs generated
-Content-Language: en-US
-From:   Well Loaded <wellloaded@gmail.com>
-To:     linux-xfs@vger.kernel.org
-References: <0587a4f6-a0d5-811a-4fdf-fc6bf5f45852@gmail.com>
-Cc:     bf0b1c63-8fee-112b-fc6c-801593ef4f23@gmail.com
-In-Reply-To: <0587a4f6-a0d5-811a-4fdf-fc6bf5f45852@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YeWxHPDbdSfBDtyX@zeniv-ca.linux.org.uk>
+Sender: Al Viro <viro@ftp.linux.org.uk>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-I am really stuck with this, can I please get some help?
+On Mon, Jan 17, 2022 at 06:10:36PM +0000, Al Viro wrote:
+> On Mon, Jan 17, 2022 at 04:28:52PM +0000, Al Viro wrote:
+> 
+> > IOW, ->free_inode() is RCU-delayed part of ->destroy_inode().  If both
+> > are present, ->destroy_inode() will be called synchronously, followed
+> > by ->free_inode() from RCU callback, so you can have both - moving just
+> > the "finally mark for reuse" part into ->free_inode() would be OK.
+> > Any blocking stuff (if any) can be left in ->destroy_inode()...
+> 
+> BTW, we *do* have a problem with ext4 fast symlinks.  Pathwalk assumes that
+> strings it parses are not changing under it.  There are rather delicate
+> dances in dcache lookups re possibility of ->d_name contents changing under
+> it, but the search key is assumed to be stable.
+> 
+> What's more, there's a correctness issue even if we do not oops.  Currently
+> we do not recheck ->d_seq of symlink dentry when we dismiss the symlink from
+> the stack.  After all, we'd just finished traversing what used to be the
+> contents of a symlink that used to be in the right place.  It might have been
+> unlinked while we'd been traversing it, but that's not a correctness issue.
+> 
+> But that critically depends upon the contents not getting mangled.  If it
+> *can* be screwed by such unlink, we risk successful lookup leading to the
+> wrong place, with nothing to tell us that it's happening.  We could handle
+> that by adding a check to fs/namei.c:put_link(), and propagating the error
+> to callers.  It's not impossible, but it won't be pretty.
+> 
+> And that assumes we avoid oopsen on string changing under us in the first
+> place.  Which might or might not be true - I hadn't finished the audit yet.
+> Note that it's *NOT* just fs/namei.c + fs/dcache.c + some fs methods -
+> we need to make sure that e.g. everything called by ->d_hash() instances
+> is OK with strings changing right under them.  Including utf8_to_utf32(),
+> crc32_le(), utf8_casefold_hash(), etc.
+
+And AFAICS, ext4, xfs and possibly ubifs (I'm unfamiliar with that one and
+the call chains there are deep enough for me to miss something) have the
+"bugger the contents of string returned by RCU ->get_link() if unlink()
+happens" problem.
+
+I would very much prefer to have them deal with that crap, especially
+since I don't see why does ext4_evict_inode() need to do that memset() -
+can't we simply check ->i_op in ext4_can_truncate() and be done with
+that?
