@@ -2,93 +2,74 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5980C433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 17 Jan 2022 17:37:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A19F0C433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 17 Jan 2022 18:10:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241795AbiAQRhA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 17 Jan 2022 12:37:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54168 "EHLO
+        id S238138AbiAQSKn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 17 Jan 2022 13:10:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33756 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241703AbiAQRg6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Jan 2022 12:36:58 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 278C7C06161C;
-        Mon, 17 Jan 2022 09:36:58 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id D9893B81055;
-        Mon, 17 Jan 2022 17:36:56 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9530DC36AE7;
-        Mon, 17 Jan 2022 17:36:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642441015;
-        bh=UzJhQ0AKfaTOBAIKVFEkFv4qjL1yQovrHGMFvlWtiSE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=rzFg1p7KQSLRjAvAvEX47s6FXHk6GCMvsdDJm6whcQFjL9CSqvbM2kxWoPUKZWWdP
-         ZTmlcxncM71us6hP7im+f5nVW6aOhsd51C5zmjUmuocKLYRuYfVQ2Cs23SREP84i4r
-         MG54olTlPugZ73zm5Q4Hi6XMdG3PIzhMEbfCpx17TTB5bILrdnJMPXDrQTbV8tznr2
-         2PWyakt/uO3PsaoJE/A326e3vJuj9L8g4aKahsFA5NJXdYvO/HJYOabpF8tj+Pp4pO
-         NpJErxbnOtMZd1rFxJkiAb25WKV9h3az1/4iGyOhbF7cpgFMlL+7FKhfdOQw1UyHzM
-         HOzvy0npta+Zg==
-Date:   Mon, 17 Jan 2022 09:36:55 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Trond Myklebust <trondmy@hammerspace.com>,
-        "david@fromorbit.com" <david@fromorbit.com>
-Cc:     "bfoster@redhat.com" <bfoster@redhat.com>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "trondmy@kernel.org" <trondmy@kernel.org>,
-        "hch@infradead.org" <hch@infradead.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "willy@infradead.org" <willy@infradead.org>
-Subject: Re: [PATCH] iomap: Address soft lockup in iomap_finish_ioend()
-Message-ID: <20220117173655.GA13563@magnolia>
-References: <20220103220310.GG945095@dread.disaster.area>
- <9f51fa6169f4c67d54dd8563b52c540c94c7703a.camel@hammerspace.com>
- <20220104012215.GH945095@dread.disaster.area>
- <0996c40657b5873dda5119344bf74556491e27b9.camel@hammerspace.com>
- <c9d9b7850c6086b123b4add4de7b1992cb62f6ad.camel@hammerspace.com>
- <20220105224829.GO945095@dread.disaster.area>
- <28e975e8235a41c529bccb2bc0e73b4bb2d1e45e.camel@hammerspace.com>
- <20220110233746.GB945095@dread.disaster.area>
- <ac3d6ea486e9992fe38bc76426070b38d712e44a.camel@hammerspace.com>
- <47240d293a6ce4d0119563989cba42f46dcaa4e3.camel@hammerspace.com>
+        with ESMTP id S232426AbiAQSKn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Jan 2022 13:10:43 -0500
+Received: from zeniv-ca.linux.org.uk (zeniv-ca.linux.org.uk [IPv6:2607:5300:60:148a::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FB59C061574;
+        Mon, 17 Jan 2022 10:10:43 -0800 (PST)
+Received: from viro by zeniv-ca.linux.org.uk with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1n9WSi-002cYU-40; Mon, 17 Jan 2022 18:10:36 +0000
+Date:   Mon, 17 Jan 2022 18:10:36 +0000
+From:   Al Viro <viro@zeniv.linux.org.uk>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     Ian Kent <raven@themaw.net>, "Darrick J. Wong" <djwong@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        David Howells <dhowells@redhat.com>,
+        Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] vfs: check dentry is still valid in get_link()
+Message-ID: <YeWxHPDbdSfBDtyX@zeniv-ca.linux.org.uk>
+References: <164180589176.86426.501271559065590169.stgit@mickey.themaw.net>
+ <YeJr7/E+9stwEb3t@zeniv-ca.linux.org.uk>
+ <275358741c4ee64b5e4e008d514876ed4ec1071c.camel@themaw.net>
+ <YeV+zseKGNqnSuKR@bfoster>
+ <YeWZRL88KPtLWlkI@zeniv-ca.linux.org.uk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <47240d293a6ce4d0119563989cba42f46dcaa4e3.camel@hammerspace.com>
+In-Reply-To: <YeWZRL88KPtLWlkI@zeniv-ca.linux.org.uk>
+Sender: Al Viro <viro@ftp.linux.org.uk>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 17, 2022 at 05:24:50PM +0000, Trond Myklebust wrote:
-> Hi Dave & Brian,
-> 
-> On Thu, 2022-01-13 at 12:01 -0500, Trond Myklebust wrote:
-> > 
-> > Yesterday I figured out a testing issue that was causing confusion
-> > among the people doing the actual testing. They were seeing hangs,
-> > which were not soft lockups, and which turned out to be artifacts of
-> > the testing methodology.
-> > 
-> > With this patch, it appears that we are not reproducing the soft
-> > lockups.
-> > 
-> 
-> What are the next steps you need from me at this point?
+On Mon, Jan 17, 2022 at 04:28:52PM +0000, Al Viro wrote:
 
-Can someone (Dave?) please re-send whatever the latest version of the
-fixpatch is to the list as a new thread?  With Tested-by tags, etc.?
-Once that's done I'll push it to for-next as a 5.17 bugfix.
+> IOW, ->free_inode() is RCU-delayed part of ->destroy_inode().  If both
+> are present, ->destroy_inode() will be called synchronously, followed
+> by ->free_inode() from RCU callback, so you can have both - moving just
+> the "finally mark for reuse" part into ->free_inode() would be OK.
+> Any blocking stuff (if any) can be left in ->destroy_inode()...
 
-(/me is on vacation today; see you all tomorrow.)
+BTW, we *do* have a problem with ext4 fast symlinks.  Pathwalk assumes that
+strings it parses are not changing under it.  There are rather delicate
+dances in dcache lookups re possibility of ->d_name contents changing under
+it, but the search key is assumed to be stable.
 
---D
+What's more, there's a correctness issue even if we do not oops.  Currently
+we do not recheck ->d_seq of symlink dentry when we dismiss the symlink from
+the stack.  After all, we'd just finished traversing what used to be the
+contents of a symlink that used to be in the right place.  It might have been
+unlinked while we'd been traversing it, but that's not a correctness issue.
 
-> -- 
-> Trond Myklebust
-> Linux NFS client maintainer, Hammerspace
-> trond.myklebust@hammerspace.com
-> 
-> 
+But that critically depends upon the contents not getting mangled.  If it
+*can* be screwed by such unlink, we risk successful lookup leading to the
+wrong place, with nothing to tell us that it's happening.  We could handle
+that by adding a check to fs/namei.c:put_link(), and propagating the error
+to callers.  It's not impossible, but it won't be pretty.
+
+And that assumes we avoid oopsen on string changing under us in the first
+place.  Which might or might not be true - I hadn't finished the audit yet.
+Note that it's *NOT* just fs/namei.c + fs/dcache.c + some fs methods -
+we need to make sure that e.g. everything called by ->d_hash() instances
+is OK with strings changing right under them.  Including utf8_to_utf32(),
+crc32_le(), utf8_casefold_hash(), etc.
