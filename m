@@ -2,86 +2,96 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F658C433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 17 Jan 2022 19:48:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52B9DC433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 17 Jan 2022 22:30:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243022AbiAQTs6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 17 Jan 2022 14:48:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55604 "EHLO
+        id S231617AbiAQWao (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 17 Jan 2022 17:30:44 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34456 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235639AbiAQTs5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Jan 2022 14:48:57 -0500
-Received: from zeniv-ca.linux.org.uk (zeniv-ca.linux.org.uk [IPv6:2607:5300:60:148a::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA6E1C06161C;
-        Mon, 17 Jan 2022 11:48:57 -0800 (PST)
-Received: from viro by zeniv-ca.linux.org.uk with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1n9Xzl-002dQo-IP; Mon, 17 Jan 2022 19:48:49 +0000
-Date:   Mon, 17 Jan 2022 19:48:49 +0000
-From:   Al Viro <viro@zeniv.linux.org.uk>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     Ian Kent <raven@themaw.net>, "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        David Howells <dhowells@redhat.com>,
-        Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] vfs: check dentry is still valid in get_link()
-Message-ID: <YeXIIf6/jChv7JN6@zeniv-ca.linux.org.uk>
-References: <164180589176.86426.501271559065590169.stgit@mickey.themaw.net>
- <YeJr7/E+9stwEb3t@zeniv-ca.linux.org.uk>
- <275358741c4ee64b5e4e008d514876ed4ec1071c.camel@themaw.net>
- <YeV+zseKGNqnSuKR@bfoster>
- <YeWZRL88KPtLWlkI@zeniv-ca.linux.org.uk>
- <YeWxHPDbdSfBDtyX@zeniv-ca.linux.org.uk>
+        with ESMTP id S229546AbiAQWao (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Jan 2022 17:30:44 -0500
+Received: from gandalf.ozlabs.org (gandalf.ozlabs.org [IPv6:2404:9400:2:0:216:3eff:fee2:21ea])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BEBE9C061574;
+        Mon, 17 Jan 2022 14:30:43 -0800 (PST)
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mail.ozlabs.org (Postfix) with ESMTPSA id 4Jd6756MYFz4y3q;
+        Tue, 18 Jan 2022 09:30:41 +1100 (AEDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canb.auug.org.au;
+        s=201702; t=1642458642;
+        bh=S/vRHnr813JVAuZLgX3lfRw7+YkXFFaRXlxnMiBOuxg=;
+        h=Date:From:To:Cc:Subject:From;
+        b=Lz7qo8VovCNS5QA0Uwm7QFlaFA7yJsSRnm8jUvXC1KgjUzKQmARbgWFcjSKV6bvQl
+         Ku1Ro3chQqKq4ZXBh87dfMq5ewpRZLmUevQK0GPUEo8oFQ/IvRdndyQMPUfEc+jf8g
+         o8ZnFGEAHE3iYTynyjS4voLO/VF3w0zCaZ/TKhRLNMkmoSwpzrgtNLQJNnD22bwVTo
+         O4l7u0YLJRJDiIvlc/6ZJTcFVGHytnzWwC7iEXfWCdNPTRfeNdHsPbT9fhcO/+WiyX
+         14A7a0YaXFo77h+lvFJTlW0N7i780DSiUIndIycsTCiR2akjZzPtT27jNq8gmrViat
+         D8uKZmHz/xWBw==
+Date:   Tue, 18 Jan 2022 09:30:41 +1100
+From:   Stephen Rothwell <sfr@canb.auug.org.au>
+To:     "Darrick J. Wong" <djwong@kernel.org>,
+        David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Next Mailing List <linux-next@vger.kernel.org>
+Subject: linux-next: manual merge of the xfs tree with Linus' tree
+Message-ID: <20220118093041.7d964a13@canb.auug.org.au>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YeWxHPDbdSfBDtyX@zeniv-ca.linux.org.uk>
-Sender: Al Viro <viro@ftp.linux.org.uk>
+Content-Type: multipart/signed; boundary="Sig_/qiycWsTUvJ/nKIuquKX8fev";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 17, 2022 at 06:10:36PM +0000, Al Viro wrote:
-> On Mon, Jan 17, 2022 at 04:28:52PM +0000, Al Viro wrote:
-> 
-> > IOW, ->free_inode() is RCU-delayed part of ->destroy_inode().  If both
-> > are present, ->destroy_inode() will be called synchronously, followed
-> > by ->free_inode() from RCU callback, so you can have both - moving just
-> > the "finally mark for reuse" part into ->free_inode() would be OK.
-> > Any blocking stuff (if any) can be left in ->destroy_inode()...
-> 
-> BTW, we *do* have a problem with ext4 fast symlinks.  Pathwalk assumes that
-> strings it parses are not changing under it.  There are rather delicate
-> dances in dcache lookups re possibility of ->d_name contents changing under
-> it, but the search key is assumed to be stable.
-> 
-> What's more, there's a correctness issue even if we do not oops.  Currently
-> we do not recheck ->d_seq of symlink dentry when we dismiss the symlink from
-> the stack.  After all, we'd just finished traversing what used to be the
-> contents of a symlink that used to be in the right place.  It might have been
-> unlinked while we'd been traversing it, but that's not a correctness issue.
-> 
-> But that critically depends upon the contents not getting mangled.  If it
-> *can* be screwed by such unlink, we risk successful lookup leading to the
-> wrong place, with nothing to tell us that it's happening.  We could handle
-> that by adding a check to fs/namei.c:put_link(), and propagating the error
-> to callers.  It's not impossible, but it won't be pretty.
-> 
-> And that assumes we avoid oopsen on string changing under us in the first
-> place.  Which might or might not be true - I hadn't finished the audit yet.
-> Note that it's *NOT* just fs/namei.c + fs/dcache.c + some fs methods -
-> we need to make sure that e.g. everything called by ->d_hash() instances
-> is OK with strings changing right under them.  Including utf8_to_utf32(),
-> crc32_le(), utf8_casefold_hash(), etc.
+--Sig_/qiycWsTUvJ/nKIuquKX8fev
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-And AFAICS, ext4, xfs and possibly ubifs (I'm unfamiliar with that one and
-the call chains there are deep enough for me to miss something) have the
-"bugger the contents of string returned by RCU ->get_link() if unlink()
-happens" problem.
+Hi all,
 
-I would very much prefer to have them deal with that crap, especially
-since I don't see why does ext4_evict_inode() need to do that memset() -
-can't we simply check ->i_op in ext4_can_truncate() and be done with
-that?
+Today's linux-next merge of the xfs tree got a conflict in:
+
+  fs/xfs/xfs_ioctl.c
+
+between commit:
+
+  983d8e60f508 ("xfs: map unwritten blocks in XFS_IOC_{ALLOC,FREE}SP just l=
+ike fallocate")
+
+from Linus' tree and commit:
+
+  4d1b97f9ce7c ("xfs: kill the XFS_IOC_{ALLOC,FREE}SP* ioctls")
+
+from the xfs tree.
+
+I fixed it up (the latter removed the code modified by the former, so I
+did that) and can carry the fix as necessary. This is now fixed as far as
+linux-next is concerned, but any non trivial conflicts should be mentioned
+to your upstream maintainer when your tree is submitted for merging.
+You may also want to consider cooperating with the maintainer of the
+conflicting tree to minimise any particularly complex conflicts.
+
+--=20
+Cheers,
+Stephen Rothwell
+
+--Sig_/qiycWsTUvJ/nKIuquKX8fev
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAmHl7hEACgkQAVBC80lX
+0GziMQgAnbFf6fxZhkFBqTytHndz1NVTZ2aG2gVMMBPORWgwLM6x37m4odw4hhsu
+M4vSRkX11ZctaGELZ3FZjLNEGlskTZ15C7TJ2ITTZ2hh/+g1R+rPii/60LGGfcS8
+WVMQxLER1bl01OfkJndqW2e6Mi+3Wokzlxuz/9A2MiZBCcKEMIsT0DrbjxnTrVaD
+M0FthzAvoKZ42gwHD0yJmZe8FtqbQ0pnMSVcUpg2RX1QMZ5pDG74INN6djLb1YRw
+jQNu3VtOVNLiWidAvdxWs1EbHQTbh3YPMyHF1ON0OIo/ukrCas3coX9tHXN3K5VR
+JJSN7da8lW8MyMnpvOt9a+lWIcTqiw==
+=g3xX
+-----END PGP SIGNATURE-----
+
+--Sig_/qiycWsTUvJ/nKIuquKX8fev--
