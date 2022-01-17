@@ -2,117 +2,162 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E14CEC433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 17 Jan 2022 16:29:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF149C433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 17 Jan 2022 17:20:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240832AbiAQQ3I (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 17 Jan 2022 11:29:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37892 "EHLO
+        id S236246AbiAQRUe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 17 Jan 2022 12:20:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49620 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235289AbiAQQ3G (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Jan 2022 11:29:06 -0500
-Received: from zeniv-ca.linux.org.uk (zeniv-ca.linux.org.uk [IPv6:2607:5300:60:148a::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 704DEC061574;
-        Mon, 17 Jan 2022 08:29:06 -0800 (PST)
-Received: from viro by zeniv-ca.linux.org.uk with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1n9UsG-002bJA-Sc; Mon, 17 Jan 2022 16:28:53 +0000
-Date:   Mon, 17 Jan 2022 16:28:52 +0000
-From:   Al Viro <viro@zeniv.linux.org.uk>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     Ian Kent <raven@themaw.net>, "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        David Howells <dhowells@redhat.com>,
-        Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] vfs: check dentry is still valid in get_link()
-Message-ID: <YeWZRL88KPtLWlkI@zeniv-ca.linux.org.uk>
-References: <164180589176.86426.501271559065590169.stgit@mickey.themaw.net>
- <YeJr7/E+9stwEb3t@zeniv-ca.linux.org.uk>
- <275358741c4ee64b5e4e008d514876ed4ec1071c.camel@themaw.net>
- <YeV+zseKGNqnSuKR@bfoster>
+        with ESMTP id S243333AbiAQRTx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Jan 2022 12:19:53 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7BFE8C061762;
+        Mon, 17 Jan 2022 09:15:19 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 34FC5B81055;
+        Mon, 17 Jan 2022 17:15:18 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AE730C36AE7;
+        Mon, 17 Jan 2022 17:15:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1642439716;
+        bh=75yaY9Pq+ooKGV7+JWC4GaaZxOsupv8TErb7SGe5Be8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=rOqpWlri+5u0q36NWqyagJf4U9uI1RAeKxX289WmRmKepyBrXZubbm2I7ihVZB/lH
+         KtLFEyZp95T2fzjloGQMlhFnu80Zl2PjAoA+7VRwQl1BN98VLnRMCpwaccd/bXJaen
+         TuLdYH7JNolEy9QjsJ+pXeTzxCYVrWlaH1yIvxKBTtetdCZpMGiipjyYqx5hnWNSps
+         Z088CgXjLCNdZeDYR6BILuH6J/tNHz1RQdku5B31qity0z7qpFs51hXrtDMUH9D0Qw
+         WdGHaedhhMGhka34XgMYpQ19WKt/DlEKb3RgAkOLPf5NkEXX7KEE3RFwyAAly91DJI
+         C+s6HH/E0kxsQ==
+Date:   Mon, 17 Jan 2022 09:15:16 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Eryu Guan <guan@eryu.me>
+Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org
+Subject: Re: [PATCH 7/8] iogen: upgrade to fallocate
+Message-ID: <20220117171516.GB13514@magnolia>
+References: <164193780808.3008286.598879710489501860.stgit@magnolia>
+ <164193784690.3008286.8689130816813600863.stgit@magnolia>
+ <YePCz96eXSb66ppd@desktop>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YeV+zseKGNqnSuKR@bfoster>
-Sender: Al Viro <viro@ftp.linux.org.uk>
+In-Reply-To: <YePCz96eXSb66ppd@desktop>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 17, 2022 at 09:35:58AM -0500, Brian Foster wrote:
-
-> To Al's question, at the end of the day there is no rcu delay involved
-> with inode reuse in XFS. We do use call_rcu() for eventual freeing of
-> inodes (see __xfs_inode_free()), but inode reuse occurs for inodes that
-> have been put into a "reclaim" state before getting to the point of
-> freeing the struct inode memory. This lead to the long discussion [1]
-> Ian references around ways to potentially deal with that. I think the
-> TLDR of that thread is there are various potential options for
-> improvement, such as to rcu wait on inode creation/reuse (either
-> explicitly or via more open coded grace period cookie tracking), to rcu
-> wait somewhere in the destroy sequence before inodes become reuse
-> candidates, etc., but none of them seemingly agreeable for varying
-> reasons (IIRC mostly stemming from either performance or compexity) [2].
+On Sun, Jan 16, 2022 at 03:01:35PM +0800, Eryu Guan wrote:
+> On Tue, Jan 11, 2022 at 01:50:46PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Update this utility to use fallocate to preallocate/reserve space to a
+> > file so that we're not so dependent on legacy XFS ioctls.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  ltp/iogen.c |   32 ++++++++++++++++++++++----------
+> >  1 file changed, 22 insertions(+), 10 deletions(-)
+> > 
+> > 
+> > diff --git a/ltp/iogen.c b/ltp/iogen.c
+> > index 2b6644d5..6c2c1534 100644
+> > --- a/ltp/iogen.c
+> > +++ b/ltp/iogen.c
+> > @@ -928,7 +928,15 @@ bozo!
+> >  		   fd, f.l_whence, (long long)f.l_start, (long long)f.l_len);*/
+> >  
+> >  	    /* non-zeroing reservation */
+> > -#ifdef XFS_IOC_RESVSP
+> > +#if defined(HAVE_FALLOCATE)
+> > +	    if (fallocate(fd, 0, 0, nbytes) == -1) {
 > 
-> The change that has been made so far in XFS is to turn rcuwalk for
-> symlinks off once again, which looks like landed in Linus' tree as
-> commit 7b7820b83f23 ("xfs: don't expose internal symlink metadata
-> buffers to the vfs"). The hope is that between that patch and this
-> prospective vfs tweak, we can have a couple incremental fixes that at
-> least address the practical problem users have been running into (which
-> is a crash due to a NULL ->get_link() callback pointer due to inode
-> reuse). The inode reuse vs. rcu thing might still be a broader problem,
-> but AFAIA that mechanism has been in place in XFS on Linux pretty much
-> forever.
+> Seems this is not a identical replacement for XFS_IOC_RESVSP (is that
+> what we want here?), as fallocate(2) here zeros space and change i_size
+> as well.
 
-My problem with that is that pathname resolution very much relies upon
-the assumption that any inode it observes will *not* change its nature
-until the final rcu_read_unlock().  Papering over ->i_op->get_link reads
-in symlink case might be sufficient at the moment (I'm still not certain
-about that, though), but that's rather brittle.  E.g. if some XFS change
-down the road adds ->permission() on some inodes, you'll get the same
-problem in do_inode_permission().  We also have places where we rely upon
-	sample ->d_seq
-	fetch ->d_flags
-	fetch ->d_inode
-	validate ->d_seq
-	...
-	assume that inode type matches the information in flags
+Doh, you're right, the second parameter should follow what the kernel
+does and specify FALLOC_FL_KEEP_SIZE.  I'll fix that and resubmit.
+Thanks for taking the rest of the series. :)
 
-How painful would it be to make xfs_destroy_inode() a ->free_inode() instance?
-IOW, how far is xfs_inode_mark_reclaimable() from being callable in RCU
-callback context?  Note that ->destroy_inode() is called via
+--D
 
-static void destroy_inode(struct inode *inode)
-{
-	const struct super_operations *ops = inode->i_sb->s_op;
-
-	BUG_ON(!list_empty(&inode->i_lru));
-	__destroy_inode(inode);
-	if (ops->destroy_inode) {
-		ops->destroy_inode(inode);
-		if (!ops->free_inode)
-			return;
-	}
-	inode->free_inode = ops->free_inode;
-	call_rcu(&inode->i_rcu, i_callback);
-}
-
-with
-
-static void i_callback(struct rcu_head *head)
-{
-        struct inode *inode = container_of(head, struct inode, i_rcu);
-	if (inode->free_inode)
-		inode->free_inode(inode);
-	else   
-		free_inode_nonrcu(inode);
-}
-
-IOW, ->free_inode() is RCU-delayed part of ->destroy_inode().  If both
-are present, ->destroy_inode() will be called synchronously, followed
-by ->free_inode() from RCU callback, so you can have both - moving just
-the "finally mark for reuse" part into ->free_inode() would be OK.
-Any blocking stuff (if any) can be left in ->destroy_inode()...
+> And from xfsctl(3), after XFS_IOC_RESVSP "The blocks are allocated, but
+> not zeroed, and the file size does not change." And the comments above
+> indicates "non-zeroing reservation" as well.
+> 
+> If identical replacement is not required, we could drop "non-zeroing"
+> part, but add FALLOC_FL_KEEP_SIZE?
+> 
+> Thanks,
+> Eryu
+> 
+> > +		fprintf(stderr,
+> > +			"iogen%s:  Could not fallocate %d bytes in file %s: %s (%d)\n",
+> > +			TagName, nbytes, path, SYSERR, errno);
+> > +		close(fd);
+> > +		return -1;
+> > +	    }
+> > +#elif defined(XFS_IOC_RESVSP)
+> >  	    if( xfsctl( path, fd, XFS_IOC_RESVSP, &f ) == -1) {
+> >  		fprintf(stderr,
+> >  			"iogen%s:  Could not xfsctl(XFS_IOC_RESVSP) %d bytes in file %s: %s (%d)\n",
+> > @@ -936,8 +944,7 @@ bozo!
+> >  		close(fd);
+> >  		return -1;
+> >  	    }
+> > -#else
+> > -#ifdef F_RESVSP
+> > +#elif defined(F_RESVSP)
+> >  	    if( fcntl( fd, F_RESVSP, &f ) == -1) {
+> >  		fprintf(stderr,
+> >  			"iogen%s:  Could not fcntl(F_RESVSP) %d bytes in file %s: %s (%d)\n",
+> > @@ -946,8 +953,7 @@ bozo!
+> >  		return -1;
+> >  	    }
+> >  #else
+> > -bozo!
+> > -#endif
+> > +# error Dont know how to reserve space!
+> >  #endif
+> >  	}
+> >  
+> > @@ -962,7 +968,15 @@ bozo!
+> >  		    (long long)f.l_len);*/
+> >  
+> >  	    /* zeroing reservation */
+> > -#ifdef XFS_IOC_ALLOCSP
+> > +#if defined(HAVE_FALLOCATE)
+> > +	    if (fallocate(fd, 0, sbuf.st_size, nbytes - sbuf.st_size) == -1) {
+> > +		fprintf(stderr,
+> > +			"iogen%s:  Could not fallocate %d bytes in file %s: %s (%d)\n",
+> > +			TagName, nbytes, path, SYSERR, errno);
+> > +		close(fd);
+> > +		return -1;
+> > +	    }
+> > +#elif defined(XFS_IOC_ALLOCSP)
+> >  	    if( xfsctl( path, fd, XFS_IOC_ALLOCSP, &f ) == -1) {
+> >  		fprintf(stderr,
+> >  			"iogen%s:  Could not xfsctl(XFS_IOC_ALLOCSP) %d bytes in file %s: %s (%d)\n",
+> > @@ -970,8 +984,7 @@ bozo!
+> >  		close(fd);
+> >  		return -1;
+> >  	    }
+> > -#else
+> > -#ifdef F_ALLOCSP
+> > +#elif defined(F_ALLOCSP)
+> >  	    if ( fcntl(fd, F_ALLOCSP, &f) < 0) {
+> >  		fprintf(stderr,
+> >  			"iogen%s:  Could not fcntl(F_ALLOCSP) %d bytes in file %s: %s (%d)\n",
+> > @@ -980,8 +993,7 @@ bozo!
+> >  		return -1;
+> >  	    }
+> >  #else
+> > -bozo!
+> > -#endif
+> > +# error Dont know how to (pre)allocate space!
+> >  #endif
+> >  	}
+> >  #endif
