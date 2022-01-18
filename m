@@ -2,156 +2,178 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36FF2C4321E
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Jan 2022 20:58:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D653DC433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Jan 2022 23:25:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349422AbiARU6K (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 Jan 2022 15:58:10 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:25397 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S245691AbiARU6J (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jan 2022 15:58:09 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1642539488;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=b9WqescKjIAzil7l6cr9HCVfXjlyRssVLY+HORpld6I=;
-        b=P9DFD4AhQ0K4pJNR6xp/gxMmBN47oT4FQMkqt8dRyvC7sFcCdi4MTXtQx9KfegvtznSHj/
-        8jAIbPvmRg7/OJCq0omnjTSc5pNmVwuu2XRFm0eLv/eOrxvbdJf8RrnWLGkPEo69CGTXNP
-        9Z391aBiJlEfBg7O/Ifj5lGxPvwZEbM=
-Received: from mail-qv1-f72.google.com (mail-qv1-f72.google.com
- [209.85.219.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-193-j65_gYlQNT2IuYjPSeyQjQ-1; Tue, 18 Jan 2022 15:58:07 -0500
-X-MC-Unique: j65_gYlQNT2IuYjPSeyQjQ-1
-Received: by mail-qv1-f72.google.com with SMTP id jn6-20020ad45de6000000b004146a2f1f97so446107qvb.19
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Jan 2022 12:58:07 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=b9WqescKjIAzil7l6cr9HCVfXjlyRssVLY+HORpld6I=;
-        b=eXeGATRPdOq+ux4K+DTtHoXBIodSTMBPsM75aXlor58KXDyeGneF46MxGzFn9mQ4bt
-         gTY0zUFUbXwgzSOWN4Jr2vaiZHcGyKwkmpdAHoHRF2DISmWXfhNjG8hB0iFoRK63VqDO
-         cjAeeMvcazPd9x7EkOQxTQYV6h1h6W0fmMstaQL1ieU2p4McXw/YQufEPXLgT+CUew+D
-         JhnRQKv2OFCGOiqUpTntek8j4grSB21vDbNmbU5yS2SjuIJW3n6jUNMtzURGSnr2+u7a
-         xgyYtGJdxeHXPiQ0K5R6qrzmDUqg77vww/LPSwYSM8pr18vvQ4ZNxlq7anIUoqemCLDl
-         QbIQ==
-X-Gm-Message-State: AOAM532ItmbmL3phCQ4iezyX3xLiC6aldqDO6LSIt808/s7iBo+0V67s
-        2bc4uRaHtvpcVEXCsSgT6+F6ngzdgve/i3c/PionSA/kXWTpClZwiQKVzZvPPUx7oEo/mkL3a5n
-        2MR5psw+tSk2JE6KAWrwS
-X-Received: by 2002:a05:620a:2448:: with SMTP id h8mr4958214qkn.231.1642539487280;
-        Tue, 18 Jan 2022 12:58:07 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJxq3Ndqgu/1eSPl8H1/GfW4nW+qGmp6SP+v18upZ87Y6BP23e5HdqaD5fVe/w9z/YJHEmEHtw==
-X-Received: by 2002:a05:620a:2448:: with SMTP id h8mr4958206qkn.231.1642539487045;
-        Tue, 18 Jan 2022 12:58:07 -0800 (PST)
-Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
-        by smtp.gmail.com with ESMTPSA id az15sm5128276qkb.124.2022.01.18.12.58.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 18 Jan 2022 12:58:06 -0800 (PST)
-Date:   Tue, 18 Jan 2022 15:58:04 -0500
-From:   Brian Foster <bfoster@redhat.com>
+        id S1346506AbiARXZy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 Jan 2022 18:25:54 -0500
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:51961 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S234491AbiARXZx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jan 2022 18:25:53 -0500
+Received: from dread.disaster.area (pa49-179-45-11.pa.nsw.optusnet.com.au [49.179.45.11])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 21DA262C2BA;
+        Wed, 19 Jan 2022 10:25:48 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1n9xrH-001StL-Oc; Wed, 19 Jan 2022 10:25:47 +1100
+Date:   Wed, 19 Jan 2022 10:25:47 +1100
+From:   Dave Chinner <david@fromorbit.com>
 To:     Al Viro <viro@zeniv.linux.org.uk>
-Cc:     Ian Kent <raven@themaw.net>, "Darrick J. Wong" <djwong@kernel.org>,
+Cc:     Brian Foster <bfoster@redhat.com>, Ian Kent <raven@themaw.net>,
+        "Darrick J. Wong" <djwong@kernel.org>,
         Christoph Hellwig <hch@lst.de>,
         Miklos Szeredi <miklos@szeredi.hu>,
         David Howells <dhowells@redhat.com>,
         Kernel Mailing List <linux-kernel@vger.kernel.org>,
         linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        xfs <linux-xfs@vger.kernel.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
+        xfs <linux-xfs@vger.kernel.org>
 Subject: Re: [PATCH] vfs: check dentry is still valid in get_link()
-Message-ID: <Yecp3DspJOkhaDGV@bfoster>
-References: <YeJr7/E+9stwEb3t@zeniv-ca.linux.org.uk>
+Message-ID: <20220118232547.GD59729@dread.disaster.area>
+References: <164180589176.86426.501271559065590169.stgit@mickey.themaw.net>
+ <YeJr7/E+9stwEb3t@zeniv-ca.linux.org.uk>
  <275358741c4ee64b5e4e008d514876ed4ec1071c.camel@themaw.net>
  <YeV+zseKGNqnSuKR@bfoster>
  <YeWZRL88KPtLWlkI@zeniv-ca.linux.org.uk>
- <YeWxHPDbdSfBDtyX@zeniv-ca.linux.org.uk>
- <YeXIIf6/jChv7JN6@zeniv-ca.linux.org.uk>
- <YeYYp89adipRN64k@zeniv-ca.linux.org.uk>
- <YebFCeLcbziyMjbA@bfoster>
- <YecGC06UrGrfonS0@bfoster>
- <YecTA9nclOowdDEu@zeniv-ca.linux.org.uk>
+ <20220118030041.GB59729@dread.disaster.area>
+ <YeYxOadA0HgYfBjt@zeniv-ca.linux.org.uk>
+ <20220118041253.GC59729@dread.disaster.area>
+ <YeZW9s7x2uCBfNJD@zeniv-ca.linux.org.uk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YecTA9nclOowdDEu@zeniv-ca.linux.org.uk>
+In-Reply-To: <YeZW9s7x2uCBfNJD@zeniv-ca.linux.org.uk>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=61e74c7f
+        a=Eslsx4mF8WGvnV49LKizaA==:117 a=Eslsx4mF8WGvnV49LKizaA==:17
+        a=kj9zAlcOel0A:10 a=DghFqjY3_ZEA:10 a=7-415B0cAAAA:8
+        a=sC8CWpTUz8-MwOmwIq8A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jan 18, 2022 at 07:20:35PM +0000, Al Viro wrote:
-> On Tue, Jan 18, 2022 at 01:25:15PM -0500, Brian Foster wrote:
+On Tue, Jan 18, 2022 at 05:58:14AM +0000, Al Viro wrote:
+> On Tue, Jan 18, 2022 at 03:12:53PM +1100, Dave Chinner wrote:
 > 
-> > If I go back to the inactive -> reclaimable grace period variant and
-> > also insert a start_poll_synchronize_rcu() and
-> > poll_state_synchronize_rcu() pair across the inactive processing
-> > sequence, I start seeing numbers closer to ~36k cycles. IOW, the
-> > xfs_inodegc_inactivate() helper looks something like this:
+> > No, that just creates a black hole where the VFS inode has been
+> > destroyed but the XFS inode cache doesn't know it's been trashed.
+> > Hence setting XFS_IRECLAIMABLE needs to remain in the during
+> > ->destroy_inode, otherwise the ->lookup side of the cache will think
+> > that are currently still in use by the VFS and hand them straight
+> > back out without going through the inode recycling code.
 > > 
-> >         if (poll_state_synchronize_rcu(ip->i_destroy_gp))
-> >                 xfs_inodegc_set_reclaimable(ip);
-> >         else
-> >                 call_rcu(&VFS_I(ip)->i_rcu, xfs_inodegc_set_reclaimable_callback);
-> > 
-> > ... to skip the rcu grace period if one had already passed while the
-> > inode sat on the inactivation queue and was processed.
-> > 
-> > However my box went haywire shortly after with rcu stall reports or
-> > something if I let that continue to run longer, so I'll probably have to
-> > look into that lockdep splat (complaining about &pag->pag_ici_lock in
-> > rcu context, perhaps needs to become irq safe?) or see if something else
-> > is busted..
+> > i.e. XFS_IRECLAIMABLE is the flag that tells xfs_iget() that the VFS
+> > part of the inode has been torn down, and that it must go back
+> > through VFS re-initialisation before it can be re-instantiated as a
+> > VFS inode.
 > 
-> Umm...  Could you (or Dave) describe where does the mainline do the
-> RCU delay mentioned several times in these threads, in case of
-> 	* unlink()
-> 	* overwriting rename()
-> 	* open() + unlink() + close() (that one, obviously, for regular files)
+> OK...
 > 
+> > It would also mean that the inode will need to go through two RCU
+> > grace periods before it gets reclaimed, because XFS uses RCU
+> > protected inode cache lookups internally (e.g. for clustering dirty
+> > inode writeback) and so freeing the inode from the internal
+> > XFS inode cache requires RCU freeing...
+> 
+> Wait a minute.  Where is that RCU delay of yours, relative to
+> xfs_vn_unlink() and xfs_vn_rename() (for target)?
 
-If you're referring to the existing rcu delay in XFS, I suspect that
-refers to xfs_reclaim_inode(). The last bits of that function remove the
-inode from the perag tree and then calls __xfs_inode_free(), which frees
-the inode via rcu callback.
+Both of those drop the inode on an on-disk unlinked list. When the
+last reference goes away, ->destroy_inode then runs inactivation.
 
-BTW, I think the experiment above is either going to require an audit to
-make the various _set_reclaimable() locks irq safe or something a bit
-more ugly like putting the inode back on a workqueue after the rcu delay
-to make the state transition. Given the incremental improvement from
-using start_poll_synchronize_rcu(), I replaced the above destroy side
-code with a cond_synchronize_rcu(ip->i_destroy_gp) call on the
-iget/recycle side and see similar results (~36k cycles per 60s, but so
-far without any explosions).
+Inactivation then runs transactions to free all the space attached
+to the inode and then removes the inode from the unlinked list and
+frees it. It then goes into the XFS_IRECLAIMABLE state and is dirty
+in memory. It can't be reclaimed until the inode is written to disk
+or the whole inode cluster is freed and the inode marked XFS_ISTALE
+(so won't get written back).
 
-Brian
+At that point, a background inode reclaim thread (runs every 5s)
+does a RCU protected lockless radix tree walk to find
+XFS_IRECLAIMABLE inodes (via radix tree tags). If they are clean, it
+moves them to XFS_IRECLAIM state, deletes them from the radix tree
+and frees them via a call_rcu() callback.
 
-> The thing is, if we already do have an RCU delay in there, there might be
-> a better solution - making sure it happens downstream of d_drop() (in case
-> when dentry has other references) or dentry going negative (in case we are
-> holding the sole reference to it).
-> 
-> If we can do that, RCU'd dcache lookups won't run into inode reuse at all.
-> Sure, right now d_delete() comes last *and* we want the target inode to stay
-> around past the call of ->unlink().  But if you look at do_unlinkat() you'll
-> see an interesting-looking wart with ihold/iput around vfs_unlink().  Not
-> sure if you remember the story on that one; basically, it's "we'd rather
-> have possible IO on inode freeing to happen outside of the lock on parent".
-> 
-> nfsd and mqueue do the same thing; ksmbd does not.  OTOH, ksmbd appears to
-> force the "make victim go unhashed, sole reference or not".  ecryptfs
-> definitely does that forcing (deliberately so).
-> 
-> That area could use some rethinking, and if we can deal with the inode reuse
-> delay while we are at it...
-> 
-> Overwriting rename() is also interesting in that respect, of course.
-> 
-> I can go and try to RTFS my way through xfs iget-related code, but I'd
-> obviously prefer to do so with at least some overview of that thing
-> from the folks familiar with it.  Seeing that it's a lockless search
-> structure, missing something subtle there is all too easy, especially
-> with the lookup-by-fhandle stuff in the mix...
-> 
+If memory reclaim comes along sooner than this, the
+->free_cached_objects() superblock shrinker callback runs that RCU
+protected lockless radix tree walk to find XFS_IRECLAIMABLE inodes.
 
+> And where does
+> it happen in case of e.g. open() + unlink() + close()?
+
+Same thing - close() drops the last reference, the unlinked inode
+goes through inactivation, then moves into the XFS_IRECLAIMABLE
+state.
+
+The problem is not -quite- open-unlink-close. The problem case is
+the reallocation of an on-disk inode in the case of
+unlink-close-open(O_CREATE) operations because of the on-disk inode
+allocator policy of aggressive reuse of recently freed inodes.  In
+that case the xfs_iget() lookup will reinstantiate the inode via
+xfs_iget_recycle() and the inode will change identity between VFS
+instantiations.
+
+This is where a RCU grace period is absolutely required, and we
+don't currently have one. The bug was introduced with RCU freeing of
+inodes (what, 15 years ago now?) and it's only recently that we've
+realised this bug exists via code inspection. We really have no
+evidence that it's actually been tripped over in the wild....
+
+Unfortunately, the simple fix of adding syncronize_rcu() to
+xfs_iget_recycle() causes significant performance regressions
+because we hit this path quite frequently when workloads use lots of
+temporary files - the on-disk inode allocator policy tends towards
+aggressive re-use of inodes for small sets of temporary files.
+
+The problem XFS is trying to address is that the VFS inode lifecycle
+does not cater for filesystems that need to both dirty and then
+clean unlinked inodes between iput_final() and ->destroy_inode. It's
+too late to be able to put the inode back on the LRU once we've
+decided to drop the inode if we need to dirty it again. ANd because
+evict() is part of the non-blocking memory reclaim, we aren't
+supposed to block for arbitrarily long periods of time or create
+unbound memory demand processing inode eviction (both of which XFS
+can do in inactivation).
+
+IOWs, XFS can't free the inode until it's journal releases the
+internal reference on the dirty inode. ext4 doesn't track inodes in
+it's journal - it only tracks inode buffers that contain the changes
+made to the inode, so once the transaction is committed in
+ext4_evict_inode() the inode can be immediately freed via either
+->destroy_inode or ->free_inode. That option does not exist for XFS
+because we have to wait for the journal to finish with the inode
+before it can be freed. Hence all the background reclaim stuff.
+
+We've recently solved several of the problems we need to solve to
+reduce the mismatch; avoiding blocking on inode writeback in reclaim
+and background inactivation are two of the major pieces of work we
+needed done before we could even consider more closely aligning XFS
+to the VFS inode cache life cycle model.
+
+The next step is to move the background inode inactivation triggers
+up into ->drop_inode so we can catch inodes that need to be dirtied
+by the filesysetm before they have been marked for eviction by the
+VFS. This will allow us to keep the inode on the VFS LRU (probably
+marked with I_WILL_FREE so everyone else keeps away from it) whilst
+we are waiting for the background inactivation work to be done, the
+journal flushed and the metadata written back. Once clean, we can
+directly evict the inode from the VFS ourselves.
+
+This would mean we only get clean, reclaimable inodes hitting the
+evict() path, and so at that point we can just remove the inode
+directly from the XFS inode cache from either ->destroy_inode or
+->free_inode and RCU free it. The recycling of in-memory inodes in
+xfs_iget_cache_hit can go away entirely because no inodes will
+linger in the XFS inode cache without being visible at the VFS
+layer as they do now...
+
+That's going to take a fair bit of work to realise, and I'm not sure
+yet exactly what mods are going to be needed to either the VFS inode
+infrastructure or the XFS inode cache. 
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
