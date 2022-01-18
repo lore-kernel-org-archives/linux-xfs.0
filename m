@@ -2,38 +2,42 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6705C433FE
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Jan 2022 18:29:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86DEFC433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Jan 2022 18:30:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347960AbiARS3O (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 Jan 2022 13:29:14 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:55448 "EHLO
-        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244209AbiARS3N (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jan 2022 13:29:13 -0500
+        id S1348021AbiARSaJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 Jan 2022 13:30:09 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56492 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1347746AbiARSaI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jan 2022 13:30:08 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FE59C061574
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Jan 2022 10:30:08 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id C02A46151F;
-        Tue, 18 Jan 2022 18:29:12 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB56BC36AE9;
-        Tue, 18 Jan 2022 18:29:11 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id F162EB8173F
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Jan 2022 18:30:06 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 87890C340E0;
+        Tue, 18 Jan 2022 18:30:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642530551;
-        bh=Shc/zIlRh4rielm96p+ts4LgCHpUmZPeFVTWBw1CgxY=;
+        s=k20201202; t=1642530605;
+        bh=fHroJTZpdnIHRc0uuHibqmSnjtTUPJCtec7Own1v8Fs=;
         h=Date:From:To:Cc:Subject:From;
-        b=H/jjq1zzP7NqNH0EtEPQQ7ZKQJH6JOry5R3A2lhqp7NIYkToFoB5zKGhBuHKXWnNm
-         YrTgEXlJ7gVZNaZIOYwMVB2CU6UrYrjECyX9BE9T4l0l00Sl05TP4uvxv+oVTV/Fjq
-         XCnb2SQzWUmKnoEyLNmZaVLPvsMyakKhOaPqac2U2CK1bVa7x1AWJMzg4mpGgKsimX
-         t1BwXrbVKyHqJ07FCSWVXebN8BTQGtTGJeE49kXMz0XDL1p/moJDoGm29hsdrnquxD
-         yvdeIolMjAkPU4rSp26yG4EeohKN/F2v27IMeIx9Ew4sYpWvaSaqis+ACAVKRRjVVU
-         aIG9V4QcrAbFA==
-Date:   Tue, 18 Jan 2022 10:29:10 -0800
+        b=ePhINX3G2ir7OfJ5sI3e2qWgSxB22UT3NywxsGJhLp211juRFQ4mevtaKStnrYsvJ
+         0xsCcdHuq/GwIuA0OFA5IkPSEQm0bm8caQdpyCSj4TKXrbagLorHegb669R8AaTgV0
+         hmDZn/8qeEFgMkAWBvpL3PF7rHXECbZ9W1PQRoWQrygL6NN2BT0vXHs0OzuH/Ba2/d
+         CELMkS0PvkuYXli2pWR9hCPqmBuIMOqnz3wnIU6/IX5phZfUfHT/SSVq4EAiJhK9Fy
+         k0EuQy2eRJmAj1nQza5hO0ZVsC8L0P3JpBBe7RIcmvu8VTe3Y8RqJPe0yhmw8bVMKm
+         2OkOZnKESDWkQ==
+Date:   Tue, 18 Jan 2022 10:30:05 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     guaneryu@gmail.com
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Subject: [PATCH v2] iogen: upgrade to fallocate
-Message-ID: <20220118182910.GC13514@magnolia>
+To:     Dave Chinner <david@fromorbit.com>,
+        Eric Sandeen <sandeen@redhat.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH] xfs: remove unused xfs_ioctl32.h declarations
+Message-ID: <20220118183005.GD13540@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -43,99 +47,40 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Update this utility to use fallocate to preallocate/reserve space to a
-file so that we're not so dependent on legacy XFS ioctls.  Fix a minor
-whitespace error while we're at it.
+Remove these unused ia32 compat declarations; all the bits involved have
+either been withdrawn or hoisted to the VFS.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
-v2: fix the fallocate flags for the resvsp replacement code
----
- ltp/iogen.c |   34 +++++++++++++++++++++++-----------
- 1 file changed, 23 insertions(+), 11 deletions(-)
+ fs/xfs/xfs_ioctl32.h |   18 ------------------
+ 1 file changed, 18 deletions(-)
 
-diff --git a/ltp/iogen.c b/ltp/iogen.c
-index 2b6644d5..c43cc1d0 100644
---- a/ltp/iogen.c
-+++ b/ltp/iogen.c
-@@ -922,13 +922,21 @@ bozo!
- 	    f.l_whence = SEEK_SET;
- 	    f.l_start = 0;
- 	    f.l_len = nbytes;
--	    
-+
- 	    /*fprintf(stderr,
- 		    "create_file: xfsctl(%d, RESVSP, { %d, %lld, %lld })\n",
- 		   fd, f.l_whence, (long long)f.l_start, (long long)f.l_len);*/
+diff --git a/fs/xfs/xfs_ioctl32.h b/fs/xfs/xfs_ioctl32.h
+index fc5a91f3a5e0..c14852362fce 100644
+--- a/fs/xfs/xfs_ioctl32.h
++++ b/fs/xfs/xfs_ioctl32.h
+@@ -142,24 +142,6 @@ typedef struct compat_xfs_fsop_attrmulti_handlereq {
+ 	_IOW('X', 123, struct compat_xfs_fsop_attrmulti_handlereq)
  
- 	    /* non-zeroing reservation */
--#ifdef XFS_IOC_RESVSP
-+#if defined(FALLOCATE)
-+	    if (fallocate(fd, FALLOC_FL_KEEP_SIZE, 0, nbytes) == -1) {
-+		fprintf(stderr,
-+			"iogen%s:  Could not fallocate %d bytes in file %s: %s (%d)\n",
-+			TagName, nbytes, path, SYSERR, errno);
-+		close(fd);
-+		return -1;
-+	    }
-+#elif defined(XFS_IOC_RESVSP)
- 	    if( xfsctl( path, fd, XFS_IOC_RESVSP, &f ) == -1) {
- 		fprintf(stderr,
- 			"iogen%s:  Could not xfsctl(XFS_IOC_RESVSP) %d bytes in file %s: %s (%d)\n",
-@@ -936,8 +944,7 @@ bozo!
- 		close(fd);
- 		return -1;
- 	    }
--#else
--#ifdef F_RESVSP
-+#elif defined(F_RESVSP)
- 	    if( fcntl( fd, F_RESVSP, &f ) == -1) {
- 		fprintf(stderr,
- 			"iogen%s:  Could not fcntl(F_RESVSP) %d bytes in file %s: %s (%d)\n",
-@@ -946,8 +953,7 @@ bozo!
- 		return -1;
- 	    }
- #else
--bozo!
--#endif
-+# error Dont know how to reserve space!
- #endif
- 	}
- 
-@@ -962,7 +968,15 @@ bozo!
- 		    (long long)f.l_len);*/
- 
- 	    /* zeroing reservation */
--#ifdef XFS_IOC_ALLOCSP
-+#if defined(FALLOCATE)
-+	    if (fallocate(fd, 0, sbuf.st_size, nbytes - sbuf.st_size) == -1) {
-+		fprintf(stderr,
-+			"iogen%s:  Could not fallocate %d bytes in file %s: %s (%d)\n",
-+			TagName, nbytes, path, SYSERR, errno);
-+		close(fd);
-+		return -1;
-+	    }
-+#elif defined(XFS_IOC_ALLOCSP)
- 	    if( xfsctl( path, fd, XFS_IOC_ALLOCSP, &f ) == -1) {
- 		fprintf(stderr,
- 			"iogen%s:  Could not xfsctl(XFS_IOC_ALLOCSP) %d bytes in file %s: %s (%d)\n",
-@@ -970,8 +984,7 @@ bozo!
- 		close(fd);
- 		return -1;
- 	    }
--#else
--#ifdef F_ALLOCSP
-+#elif defined(F_ALLOCSP)
- 	    if ( fcntl(fd, F_ALLOCSP, &f) < 0) {
- 		fprintf(stderr,
- 			"iogen%s:  Could not fcntl(F_ALLOCSP) %d bytes in file %s: %s (%d)\n",
-@@ -980,8 +993,7 @@ bozo!
- 		return -1;
- 	    }
- #else
--bozo!
--#endif
-+# error Dont know how to (pre)allocate space!
- #endif
- 	}
- #endif
+ #ifdef BROKEN_X86_ALIGNMENT
+-/* on ia32 l_start is on a 32-bit boundary */
+-typedef struct compat_xfs_flock64 {
+-	__s16		l_type;
+-	__s16		l_whence;
+-	__s64		l_start	__attribute__((packed));
+-			/* len == 0 means until end of file */
+-	__s64		l_len __attribute__((packed));
+-	__s32		l_sysid;
+-	__u32		l_pid;
+-	__s32		l_pad[4];	/* reserve area */
+-} compat_xfs_flock64_t;
+-
+-#define XFS_IOC_RESVSP_32	_IOW('X', 40, struct compat_xfs_flock64)
+-#define XFS_IOC_UNRESVSP_32	_IOW('X', 41, struct compat_xfs_flock64)
+-#define XFS_IOC_RESVSP64_32	_IOW('X', 42, struct compat_xfs_flock64)
+-#define XFS_IOC_UNRESVSP64_32	_IOW('X', 43, struct compat_xfs_flock64)
+-#define XFS_IOC_ZERO_RANGE_32	_IOW('X', 57, struct compat_xfs_flock64)
+-
+ typedef struct compat_xfs_fsop_geom_v1 {
+ 	__u32		blocksize;	/* filesystem (data) block size */
+ 	__u32		rtextsize;	/* realtime extent size		*/
