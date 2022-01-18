@@ -2,23 +2,35 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06CD5C433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Jan 2022 05:58:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1F57C43219
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Jan 2022 08:29:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239856AbiARF6X (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 Jan 2022 00:58:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52246 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235645AbiARF6W (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jan 2022 00:58:22 -0500
-Received: from zeniv-ca.linux.org.uk (zeniv-ca.linux.org.uk [IPv6:2607:5300:60:148a::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA0FEC061574;
-        Mon, 17 Jan 2022 21:58:22 -0800 (PST)
-Received: from viro by zeniv-ca.linux.org.uk with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1n9hVW-002k2l-CE; Tue, 18 Jan 2022 05:58:14 +0000
-Date:   Tue, 18 Jan 2022 05:58:14 +0000
-From:   Al Viro <viro@zeniv.linux.org.uk>
-To:     Dave Chinner <david@fromorbit.com>
+        id S234806AbiARI3T (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 Jan 2022 03:29:19 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:46398 "EHLO
+        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1344364AbiARI3R (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jan 2022 03:29:17 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 17D16613F9;
+        Tue, 18 Jan 2022 08:29:17 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46AF6C340E4;
+        Tue, 18 Jan 2022 08:29:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1642494556;
+        bh=RAQ8U6MFEu51ITZP1wP47dn7g6hCRWOKwdwVbfE6DKQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=cNXthNkVcBk1bNhH1Xj0Fzri4j4JnM6FdfS61Eg79P6SNmA+esMC0Y4ygPJTzCP2/
+         uyaj/rLV21w4LJL6hF1NXC31+dnd9Llb29CoDSNWOyLXjg9Ezuvmh2WtxUhrN+n2pK
+         ALkPL2Ha6xE49ouHZkI5H5tIhvlr/nqRpR6/kGb24fg47K3GZ+NYJSohMIiySlMLGL
+         wsDEY5n2NxvUWzj70P2B1X8viAujg7n6LeyzTSrZ8V0Xez2x/hbSUP4M91Sfxt85wM
+         FxvHOKRZx4jJrbbxRE/SSPx765FPbM9WeHqxI4IVsxDJHoe6Z4A9PCpWkrnWSo7lEl
+         RrNKW57V+r43A==
+Date:   Tue, 18 Jan 2022 09:29:11 +0100
+From:   Christian Brauner <brauner@kernel.org>
+To:     Al Viro <viro@zeniv.linux.org.uk>
 Cc:     Brian Foster <bfoster@redhat.com>, Ian Kent <raven@themaw.net>,
         "Darrick J. Wong" <djwong@kernel.org>,
         Christoph Hellwig <hch@lst.de>,
@@ -28,46 +40,44 @@ Cc:     Brian Foster <bfoster@redhat.com>, Ian Kent <raven@themaw.net>,
         linux-fsdevel <linux-fsdevel@vger.kernel.org>,
         xfs <linux-xfs@vger.kernel.org>
 Subject: Re: [PATCH] vfs: check dentry is still valid in get_link()
-Message-ID: <YeZW9s7x2uCBfNJD@zeniv-ca.linux.org.uk>
+Message-ID: <20220118082911.rsmv5m2pjeyt6wpg@wittgenstein>
 References: <164180589176.86426.501271559065590169.stgit@mickey.themaw.net>
  <YeJr7/E+9stwEb3t@zeniv-ca.linux.org.uk>
  <275358741c4ee64b5e4e008d514876ed4ec1071c.camel@themaw.net>
  <YeV+zseKGNqnSuKR@bfoster>
  <YeWZRL88KPtLWlkI@zeniv-ca.linux.org.uk>
- <20220118030041.GB59729@dread.disaster.area>
- <YeYxOadA0HgYfBjt@zeniv-ca.linux.org.uk>
- <20220118041253.GC59729@dread.disaster.area>
+ <YeWxHPDbdSfBDtyX@zeniv-ca.linux.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20220118041253.GC59729@dread.disaster.area>
-Sender: Al Viro <viro@ftp.linux.org.uk>
+In-Reply-To: <YeWxHPDbdSfBDtyX@zeniv-ca.linux.org.uk>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jan 18, 2022 at 03:12:53PM +1100, Dave Chinner wrote:
-
-> No, that just creates a black hole where the VFS inode has been
-> destroyed but the XFS inode cache doesn't know it's been trashed.
-> Hence setting XFS_IRECLAIMABLE needs to remain in the during
-> ->destroy_inode, otherwise the ->lookup side of the cache will think
-> that are currently still in use by the VFS and hand them straight
-> back out without going through the inode recycling code.
+On Mon, Jan 17, 2022 at 06:10:36PM +0000, Al Viro wrote:
+> On Mon, Jan 17, 2022 at 04:28:52PM +0000, Al Viro wrote:
 > 
-> i.e. XFS_IRECLAIMABLE is the flag that tells xfs_iget() that the VFS
-> part of the inode has been torn down, and that it must go back
-> through VFS re-initialisation before it can be re-instantiated as a
-> VFS inode.
+> > IOW, ->free_inode() is RCU-delayed part of ->destroy_inode().  If both
+> > are present, ->destroy_inode() will be called synchronously, followed
+> > by ->free_inode() from RCU callback, so you can have both - moving just
+> > the "finally mark for reuse" part into ->free_inode() would be OK.
+> > Any blocking stuff (if any) can be left in ->destroy_inode()...
+> 
+> BTW, we *do* have a problem with ext4 fast symlinks.  Pathwalk assumes that
+> strings it parses are not changing under it.  There are rather delicate
+> dances in dcache lookups re possibility of ->d_name contents changing under
+> it, but the search key is assumed to be stable.
+> 
+> What's more, there's a correctness issue even if we do not oops.  Currently
+> we do not recheck ->d_seq of symlink dentry when we dismiss the symlink from
+> the stack.  After all, we'd just finished traversing what used to be the
+> contents of a symlink that used to be in the right place.  It might have been
+> unlinked while we'd been traversing it, but that's not a correctness issue.
+> 
+> But that critically depends upon the contents not getting mangled.  If it
+> *can* be screwed by such unlink, we risk successful lookup leading to the
 
-OK...
-
-> It would also mean that the inode will need to go through two RCU
-> grace periods before it gets reclaimed, because XFS uses RCU
-> protected inode cache lookups internally (e.g. for clustering dirty
-> inode writeback) and so freeing the inode from the internal
-> XFS inode cache requires RCU freeing...
-
-Wait a minute.  Where is that RCU delay of yours, relative to
-xfs_vn_unlink() and xfs_vn_rename() (for target)?  And where does
-it happen in case of e.g. open() + unlink() + close()?
+Out of curiosity: whether or not it can get mangled depends on the
+filesystem and how it implements fast symlinks or do fast symlinks
+currently guarantee that contents are mangled?
