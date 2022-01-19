@@ -2,214 +2,418 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B06A0C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Jan 2022 03:08:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5BFEC433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Jan 2022 04:07:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351189AbiASDIh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 Jan 2022 22:08:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60434 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238949AbiASDIg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jan 2022 22:08:36 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F17BC061574
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Jan 2022 19:08:36 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0E7C061547
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Jan 2022 03:08:35 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 742BCC340E9
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Jan 2022 03:08:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642561714;
-        bh=sBM/TtbLAE1G+vWyoVLbHfsqJDVOfKyWVPeve4jO3KY=;
-        h=From:To:Subject:Date:From;
-        b=IQv0BHQHblceQDShzbhwJlVsQyeitXC81qlNXwECLESmNEoDXxrhQ2+NNe8FVAluk
-         T1wZKtKtXwtg5gB0fjaRNUnijpxmt1Y3OvnfERImwsgQkMMrfBc75ljxpnh2qdf9Kc
-         tDRiEg2+yxP+bX1WwMy7xbQToApt7XJ3gCh0xYfLiyqJuhE0yI/JQ/3djVRkdbzjgQ
-         jERC4Se62U3leE2JfwK1slxwgZ2P0R4Uo3RG6VCVZ2RMr6kXIaUzr61MZA/nGKLt2G
-         qKvm9iXC319xLWZZQdO5+yKM/FOsuaMOb27jxeifhWxpn3+DTtQBkydDILcgcFJlUn
-         CiQYUlCKYNU1w==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id 6160CCC13A6; Wed, 19 Jan 2022 03:08:34 +0000 (UTC)
-From:   bugzilla-daemon@bugzilla.kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 215506] New: Internal error !ino_ok at line 200 of file
- fs/xfs/libxfs/xfs_dir2.c.  Caller xfs_dir_ino_validate+0x5d/0xd0 [xfs]
-Date:   Wed, 19 Jan 2022 03:08:33 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: new
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: yanming@tju.edu.cn
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: bug_id short_desc product version
- cf_kernel_version rep_platform op_sys cf_tree bug_status bug_severity
- priority component assigned_to reporter cf_regression attachments.created
-Message-ID: <bug-215506-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        id S1351499AbiASEHb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 Jan 2022 23:07:31 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:31640 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1351481AbiASEHP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jan 2022 23:07:15 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1642565234;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=SaCBSyFolYlgbRxqvWZmAe9IPFFidWjncUBzbKCuX0U=;
+        b=C18XkREThUJYItVcdGTgxXjAaGMZWhQXb6zTNhfbmMhDRybkyaZxoDTLzBezWOhTLtceaw
+        zTjPyml+rtdeBCC6d+jZx5vW7eUo3jbu9zZGFD2mlO0jQv6ZhMwZN5rlJr8HpCyGPq75pA
+        7kNZnkFuR0/HfbfIH84G7sMwilE1GQo=
+Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com
+ [209.85.215.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-551-3LMtvnonOoKvi1_xC25n2g-1; Tue, 18 Jan 2022 23:07:12 -0500
+X-MC-Unique: 3LMtvnonOoKvi1_xC25n2g-1
+Received: by mail-pg1-f198.google.com with SMTP id z20-20020a63d014000000b0034270332922so786251pgf.1
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Jan 2022 20:07:12 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id
+         :mail-followup-to:references:mime-version:content-disposition
+         :in-reply-to;
+        bh=SaCBSyFolYlgbRxqvWZmAe9IPFFidWjncUBzbKCuX0U=;
+        b=C0PdHYJ8jHprPaQ5KktEEEshIo7BML+aUPh6vad5rMgGSczLoIYSmFdDlvcaixxpu7
+         lkto72di1Czyd5B+HzwcTknSUCcVsk0iu6SsFPG847jm1kQFncQr79/pcmL49NtYh/Bz
+         mZ8lJjRPXqv0dUq74CwGPqIFq8XFVAWHQAybKsrBcCdjBoNMx1RTPFiVRbC4ixAQOAwE
+         9sUJEHmO7ITWXninIC0WBQ/FeJLg3Ku/LVYuM5S9ybEbigI4sjwXs4ggs79ETieZRBOf
+         8TRwoa/rYkMECHYIvz8tY0//bwRTOH3Jp+Wa2TI5EQyISu152oOFwHE/3maD0RrW25ha
+         CEug==
+X-Gm-Message-State: AOAM530ikee/GRILG1Pf/CYGf5+NDGNQHZWpPzHdjt8mpGuEb0ITuv1m
+        h1DLtgWWcP0F7UsHOTK4Ni0VtNmgug2dB/4QQZEJncaSz2H+dLzNQ8L1uc7boMiJEySVDJleRpS
+        yY01EbXd572sn5SxblP7n
+X-Received: by 2002:a63:cf13:: with SMTP id j19mr25261533pgg.279.1642565231167;
+        Tue, 18 Jan 2022 20:07:11 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJw3XrOAGNzKKMH3JZNQ0fDrta4UOGSMOON8HibdcvPDo3iBASZA/SlXNUfr8KPdJ0I0Ua2ZEQ==
+X-Received: by 2002:a63:cf13:: with SMTP id j19mr25261514pgg.279.1642565230663;
+        Tue, 18 Jan 2022 20:07:10 -0800 (PST)
+Received: from zlang-mailbox ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id i123sm15771634pfe.13.2022.01.18.20.07.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 18 Jan 2022 20:07:10 -0800 (PST)
+Date:   Wed, 19 Jan 2022 12:07:06 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 5/8] xfs: regression test for allocsp handing out stale
+ disk contents
+Message-ID: <20220119040706.abyxl3b2s2crnz37@zlang-mailbox>
+Mail-Followup-To: "Darrick J. Wong" <djwong@kernel.org>,
+        linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+References: <164193780808.3008286.598879710489501860.stgit@magnolia>
+ <164193783590.3008286.3623476203965250828.stgit@magnolia>
+ <20220118033735.kva56rre5iahnnnc@zlang-mailbox>
+ <20220118180911.GB13540@magnolia>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220118180911.GB13540@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D215506
+On Tue, Jan 18, 2022 at 10:09:11AM -0800, Darrick J. Wong wrote:
+> On Tue, Jan 18, 2022 at 11:37:35AM +0800, Zorro Lang wrote:
+> > On Tue, Jan 11, 2022 at 01:50:35PM -0800, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > > 
+> > > Add a regression test to check that XFS_IOC_ALLOCSP isn't handing out
+> > > stale disk blocks for preallocation.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > ---
+> > 
+> > Hi Darrick,
+> > 
+> > This case is easily failed on some multi-striped storage[1]. The full output
+> > as [2], the out.bad output as [3].
+> > 
+> > Thanks,
+> > Zorro
+> > 
+> > [1]
+> > FSTYP         -- xfs (non-debug)
+> > PLATFORM      -- Linux/x86_64 xxx-xxxxx-xx 5.14.0-xxx #1 SMP PREEMPT Fri Jan 14 09:24:44 UTC 2022
+> > MKFS_OPTIONS  -- -f -m crc=1,finobt=1,rmapbt=0,reflink=1,bigtime=1,inobtcount=1 -i sparse=1 /dev/sda4
+> > MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/sda4 /mnt/xfstests/scratch
+> > 
+> > xfs/832	_check_xfs_filesystem: filesystem on /dev/sda4 is inconsistent (r)
+> > (see /var/lib/xfstests/results//xfs/832.full for details)
+> > - output mismatch (see /var/lib/xfstests/results//xfs/832.out.bad)
+> >     --- tests/xfs/832.out	2022-01-15 22:18:35.175245791 -0500
+> >     +++ /var/lib/xfstests/results//xfs/832.out.bad	2022-01-15 22:20:46.630697627 -0500
+> >     @@ -1,2 +1,3 @@
+> >      QA output created by 832
+> >     +ioctl: No space left on device
+> >      Silence is golden
+> >     ...
+> >     (Run 'diff -u /var/lib/xfstests/tests/xfs/832.out /var/lib/xfstests/results//xfs/832.out.bad'  to see the entire diff)
+> > Ran: xfs/832
+> > Failures: xfs/832
+> > Failed 1 of 1 tests
+> > 
+> > [2]
+> > wrote 33554432/33554432 bytes at offset 0
+> > 32 MiB, 4 ops; 0.1368 sec (233.848 MiB/sec and 29.2310 ops/sec)
+> > meta-data=/dev/sda4              isize=512    agcount=1, agsize=4112 blks
+> 
+> Single AG filesystems aren't a supported configuration.  Is sda4
+> actually 16MB?  I'm a little surprised that this was the outcome of
+> "_scratch_mkfs_sized 33554432" on line 32.
 
-            Bug ID: 215506
-           Summary: Internal error !ino_ok at line 200 of file
-                    fs/xfs/libxfs/xfs_dir2.c.  Caller
-                    xfs_dir_ino_validate+0x5d/0xd0 [xfs]
-           Product: File System
-           Version: 2.5
-    Kernel Version: 5.15.4
-          Hardware: All
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: XFS
-          Assignee: filesystem_xfs@kernel-bugs.kernel.org
-          Reporter: yanming@tju.edu.cn
-        Regression: No
+Sure, I'll try to reserve that test machine, to figure out if SCRATCH_DEV
+is 16MB.
 
-Created attachment 300288
-  --> https://bugzilla.kernel.org/attachment.cgi?id=3D300288&action=3Dedit
-tmp.c
+BTW some other testing hit log size too small error[1], the SCRATCH_DEV
+information as [2]. And it can be reproduced manually by [3].
 
-I have encountered a bug in xfs file system.
+Thanks,
+Zorro
 
-I created a disk image and modified some properties. After that I mount the
-image and run some commands related to file operations, and the bug occured.
+[1]
+# cat results//xfs/832.out.bad
+QA output created by 832
+log size 4085 blocks too small, minimum size is 4608 blocks
+...
 
-The file operations are in the "tmp.c" file, and a modified image named
-"tmp.img" can be found in
-(https://drive.google.com/file/d/1SujibjuGYcBA-jjZ5FtR-rSi7koVt0_d/view?usp=
-=3Dsharing).
-You can simply reproduce the bug by running the following commands:
+[2]
+# mkfs.xfs -f $SCRATCH_DEV
+meta-data=/dev/mapper/rhel8_hp--xfscratch isize=512    agcount=16, agsize=8192000 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=0
+         =                       reflink=1    bigtime=0 inobtcount=0
+data     =                       bsize=4096   blocks=131072000, imaxpct=25
+         =                       sunit=64     swidth=64 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=4096   blocks=64000, version=2
+         =                       sectsz=512   sunit=64 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
-gcc -o tmp tmp.c
-losetup /dev/loop7 tmp.img
-mount -o
-"attr2,discard,grpid,filestreams,noikeep,inode32,largeio,logbufs=3D5,noalig=
-n,nouuid,noquota,loop"
--t xfs /dev/loop7 /root/mnt
-./tmp
+[3]
+# mkfs.xfs -f -d size=33554432 /dev/mapper/rhel_hp--dl380pg8--01-xfscratch
+log size 4085 blocks too small, minimum size is 4608 blocks
+Usage: mkfs.xfs
+/* metadata */          [-m crc=0|1,finobt=0|1,uuid=xxx,rmapbt=0|1,reflink=0|1,
+                            inobtcount=0|1,bigtime=0|1]
+...
 
-The kernel message is shown below:
+> 
+> --D
+> 
+> >          =                       sectsz=512   attr=2, projid32bit=1
+> >          =                       crc=1        finobt=1, sparse=1, rmapbt=0
+> >          =                       reflink=1    bigtime=1 inobtcount=1
+> > data     =                       bsize=4096   blocks=4112, imaxpct=25
+> >          =                       sunit=16     swidth=32 blks
+> > naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+> > log      =internal log           bsize=4096   blocks=1872, version=2
+> >          =                       sectsz=512   sunit=16 blks, lazy-count=1
+> > realtime =none                   extsz=4096   blocks=0, rtextents=0
+> > Setting up 4096 runs for block size 4096
+> > _check_xfs_filesystem: filesystem on /dev/sda4 is inconsistent (r)
+> > *** xfs_repair -n output ***
+> > Phase 1 - find and verify superblock...
+> > Only one AG detected - cannot validate filesystem geometry.
+> > Use the -o force_geometry option to proceed.
+> > *** end xfs_repair output
+> > ...
+> > 
+> > [3]
+> > QA output created by 832
+> > ioctl: No space left on device
+> > Silence is golden
+> > 
+> > 
+> > >  .gitignore        |    1 
+> > >  src/Makefile      |    2 -
+> > >  src/allocstale.c  |  117 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+> > >  tests/xfs/832     |   56 +++++++++++++++++++++++++
+> > >  tests/xfs/832.out |    2 +
+> > >  5 files changed, 177 insertions(+), 1 deletion(-)
+> > >  create mode 100644 src/allocstale.c
+> > >  create mode 100755 tests/xfs/832
+> > >  create mode 100644 tests/xfs/832.out
+> > > 
+> > > 
+> > > diff --git a/.gitignore b/.gitignore
+> > > index 65b93307..ba0c572b 100644
+> > > --- a/.gitignore
+> > > +++ b/.gitignore
+> > > @@ -56,6 +56,7 @@ tags
+> > >  # src/ binaries
+> > >  /src/af_unix
+> > >  /src/alloc
+> > > +/src/allocstale
+> > >  /src/append_reader
+> > >  /src/append_writer
+> > >  /src/attr_replace_test
+> > > diff --git a/src/Makefile b/src/Makefile
+> > > index 1737ed0e..111ce1d9 100644
+> > > --- a/src/Makefile
+> > > +++ b/src/Makefile
+> > > @@ -18,7 +18,7 @@ TARGETS = dirstress fill fill2 getpagesize holes lstat64 \
+> > >  	t_ext4_dax_journal_corruption t_ext4_dax_inline_corruption \
+> > >  	t_ofd_locks t_mmap_collision mmap-write-concurrent \
+> > >  	t_get_file_time t_create_short_dirs t_create_long_dirs t_enospc \
+> > > -	t_mmap_writev_overlap checkpoint_journal mmap-rw-fault
+> > > +	t_mmap_writev_overlap checkpoint_journal mmap-rw-fault allocstale
+> > >  
+> > >  LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
+> > >  	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
+> > > diff --git a/src/allocstale.c b/src/allocstale.c
+> > > new file mode 100644
+> > > index 00000000..6253fe4c
+> > > --- /dev/null
+> > > +++ b/src/allocstale.c
+> > > @@ -0,0 +1,117 @@
+> > > +// SPDX-License-Identifier: GPL-2.0
+> > > +/*
+> > > + * Copyright (C) 2022 Oracle.  All Rights Reserved.
+> > > + * Author: Darrick J. Wong <djwong@kernel.org>
+> > > + *
+> > > + * Test program to try to trip over XFS_IOC_ALLOCSP mapping stale disk blocks
+> > > + * into a file.
+> > > + */
+> > > +#include <xfs/xfs.h>
+> > > +#include <stdlib.h>
+> > > +#include <stdio.h>
+> > > +#include <unistd.h>
+> > > +#include <sys/types.h>
+> > > +#include <sys/stat.h>
+> > > +#include <fcntl.h>
+> > > +#include <errno.h>
+> > > +#include <unistd.h>
+> > > +#include <string.h>
+> > > +
+> > > +#ifndef XFS_IOC_ALLOCSP
+> > > +# define XFS_IOC_ALLOCSP	_IOW ('X', 10, struct xfs_flock64)
+> > > +#endif
+> > > +
+> > > +int
+> > > +main(
+> > > +	int		argc,
+> > > +	char		*argv[])
+> > > +{
+> > > +	struct stat	sb;
+> > > +	char		*buf, *zeroes;
+> > > +	unsigned long	i;
+> > > +	unsigned long	iterations;
+> > > +	int		fd, ret;
+> > > +
+> > > +	if (argc != 3) {
+> > > +		fprintf(stderr, "Usage: %s filename iterations\n", argv[0]);
+> > > +		return 1;
+> > > +	}
+> > > +
+> > > +	errno = 0;
+> > > +	iterations = strtoul(argv[2], NULL, 0);
+> > > +	if (errno) {
+> > > +		perror(argv[2]);
+> > > +		return 1;
+> > > +	}
+> > > +
+> > > +	fd = open(argv[1], O_RDWR | O_CREAT | O_TRUNC, 0600);
+> > > +	if (fd < 0) {
+> > > +		perror(argv[1]);
+> > > +		return 1;
+> > > +	}
+> > > +
+> > > +	ret = fstat(fd, &sb);
+> > > +	if (ret) {
+> > > +		perror(argv[1]);
+> > > +		return 1;
+> > > +	}
+> > > +
+> > > +	buf = malloc(sb.st_blksize);
+> > > +	if (!buf) {
+> > > +		perror("pread buffer");
+> > > +		return 1;
+> > > +	}
+> > > +
+> > > +	zeroes = calloc(1, sb.st_blksize);
+> > > +	if (!zeroes) {
+> > > +		perror("zeroes buffer");
+> > > +		return 1;
+> > > +	}
+> > > +
+> > > +	for (i = 1; i <= iterations; i++) {
+> > > +		struct xfs_flock64	arg = { };
+> > > +		ssize_t			read_bytes;
+> > > +		off_t			offset = sb.st_blksize * i;
+> > > +
+> > > +		/* Ensure the last block of the file is a hole... */
+> > > +		ret = ftruncate(fd, offset - 1);
+> > > +		if (ret) {
+> > > +			perror("truncate");
+> > > +			return 1;
+> > > +		}
+> > > +
+> > > +		/*
+> > > +		 * ...then use ALLOCSP to allocate the last block in the file.
+> > > +		 * An unpatched kernel neglects to mark the new mapping
+> > > +		 * unwritten or to zero the ondisk block, so...
+> > > +		 */
+> > > +		arg.l_whence = SEEK_SET;
+> > > +		arg.l_start = offset;
+> > > +		ret = ioctl(fd, XFS_IOC_ALLOCSP, &arg);
+> > > +		if (ret < 0) {
+> > > +			perror("ioctl");
+> > > +			return 1;
+> > > +		}
+> > > +
+> > > +		/* ... we can read old disk contents here. */
+> > > +		read_bytes = pread(fd, buf, sb.st_blksize,
+> > > +						offset - sb.st_blksize);
+> > > +		if (read_bytes < 0) {
+> > > +			perror(argv[1]);
+> > > +			return 1;
+> > > +		}
+> > > +		if (read_bytes != sb.st_blksize) {
+> > > +			fprintf(stderr, "%s: short read of %zd bytes\n",
+> > > +					argv[1], read_bytes);
+> > > +			return 1;
+> > > +		}
+> > > +
+> > > +		if (memcmp(zeroes, buf, sb.st_blksize) != 0) {
+> > > +			fprintf(stderr, "%s: found junk near offset %zd!\n",
+> > > +					argv[1], offset - sb.st_blksize);
+> > > +			return 2;
+> > > +		}
+> > > +	}
+> > > +
+> > > +	return 0;
+> > > +}
+> > > diff --git a/tests/xfs/832 b/tests/xfs/832
+> > > new file mode 100755
+> > > index 00000000..3820ff8c
+> > > --- /dev/null
+> > > +++ b/tests/xfs/832
+> > > @@ -0,0 +1,56 @@
+> > > +#! /bin/bash
+> > > +# SPDX-License-Identifier: GPL-2.0
+> > > +# Copyright (c) 2022 Oracle.  All Rights Reserved.
+> > > +#
+> > > +# FS QA Test 832
+> > > +#
+> > > +# Regression test for commit:
+> > > +#
+> > > +# 983d8e60f508 ("xfs: map unwritten blocks in XFS_IOC_{ALLOC,FREE}SP just like fallocate")
+> > > +#
+> > > +. ./common/preamble
+> > > +_begin_fstest auto quick prealloc
+> > > +
+> > > +# Import common functions.
+> > > +. ./common/filter
+> > > +
+> > > +# real QA test starts here
+> > > +
+> > > +# Modify as appropriate.
+> > > +_supported_fs xfs
+> > > +_require_test
+> > > +_require_scratch
+> > > +
+> > > +size_mb=32
+> > > +# Write a known pattern to the disk so that we can detect stale disk blocks
+> > > +# being mapped into the file.  In the test author's experience, the bug will
+> > > +# reproduce within the first 500KB's worth of ALLOCSP calls, so running up
+> > > +# to 16MB should suffice.
+> > > +$XFS_IO_PROG -d -c "pwrite -S 0x58 -b 8m 0 ${size_mb}m" $SCRATCH_DEV > $seqres.full
+> > > +MKFS_OPTIONS="-K $MKFS_OPTIONS" _scratch_mkfs_sized $((size_mb * 1048576)) >> $seqres.full
+> > > +
+> > > +_scratch_mount
+> > > +
+> > > +# Force the file to be created on the data device, which we pre-initialized
+> > > +# with a known pattern.  The bug exists in the generic bmap code, so the choice
+> > > +# of backing device does not matter, and ignoring the rt device gets us out of
+> > > +# needing to detect things like rt extent size.
+> > > +_xfs_force_bdev data $SCRATCH_MNT
+> > > +testfile=$SCRATCH_MNT/a
+> > > +
+> > > +# Allow the test program to expand the file to consume half the free space.
+> > > +blksz=$(_get_file_block_size $SCRATCH_MNT)
+> > > +iterations=$(( (size_mb / 2) * 1048576 / blksz))
+> > > +echo "Setting up $iterations runs for block size $blksz" >> $seqres.full
+> > > +
+> > > +# Run reproducer program and dump file contents if we see stale data.  Full
+> > > +# details are in the source for the C program, but in a nutshell we run ALLOCSP
+> > > +# one block at a time to see if it'll give us blocks full of 'X'es.
+> > > +$here/src/allocstale $testfile $iterations
+> > > +res=$?
+> > > +test $res -eq 2 && od -tx1 -Ad -c $testfile
+> > > +
+> > > +# success, all done
+> > > +echo Silence is golden
+> > > +status=0
+> > > +exit
+> > > diff --git a/tests/xfs/832.out b/tests/xfs/832.out
+> > > new file mode 100644
+> > > index 00000000..bb8a6c12
+> > > --- /dev/null
+> > > +++ b/tests/xfs/832.out
+> > > @@ -0,0 +1,2 @@
+> > > +QA output created by 832
+> > > +Silence is golden
+> > > 
+> > 
+> 
 
-6,2489,54115223218,-;loop7: detected capacity change from 0 to 131072
-6,2490,54115436921,-;loop8: detected capacity change from 0 to 131072
-5,2491,54115497587,-;XFS (loop8): Mounting V5 Filesystem
-1,2492,54115636142,-;XFS (loop8): Internal error !ino_ok at line 200 of file
-fs/xfs/libxfs/xfs_dir2.c.  Caller xfs_dir_ino_validate+0x5d/0xd0 [xfs]
-4,2493,54115637100,-;CPU: 0 PID: 17928 Comm: mount Tainted: G        W    L=
-=20=20=20
-5.15.4 #3
-4,2494,54115637493,-;Hardware name: LENOVO 20J6A00NHH/20J6A00NHH, BIOS R0FE=
-T24W
-(1.04 ) 12/21/2016
-4,2495,54115637742,-;Call Trace:
-4,2496,54115637857,-; <TASK>
-4,2497,54115638019,-; dump_stack_lvl+0xea/0x130
-4,2498,54115638586,-; dump_stack+0x1c/0x25
-4,2499,54115639082,-; xfs_error_report+0xd3/0xe0 [xfs]
-4,2500,54115639769,-; ? xfs_dir_ino_validate+0x5d/0xd0 [xfs]
-4,2501,54115640025,-; ? xfs_dir_ino_validate+0x5d/0xd0 [xfs]
-4,2502,54115640025,-; xfs_corruption_error+0xab/0x120 [xfs]
-4,2503,54115640025,-; ? write_comp_data+0x37/0xc0
-4,2504,54115640025,-; xfs_dir_ino_validate+0xa2/0xd0 [xfs]
-4,2505,54115640025,-; ? xfs_dir_ino_validate+0x5d/0xd0 [xfs]
-4,2506,54115640025,-; xfs_dir2_sf_verify+0x5d2/0xb50 [xfs]
-4,2507,54115640025,-; xfs_ifork_verify_local_data+0xd6/0x180 [xfs]
-4,2508,54115640025,-; ? __sanitizer_cov_trace_pc+0x31/0x80
-4,2509,54115640025,-; xfs_iformat_data_fork+0x3ff/0x4c0 [xfs]
-4,2510,54115640025,-; xfs_inode_from_disk+0xb5a/0x1460 [xfs]
-4,2511,54115640025,-; xfs_iget+0x1281/0x2850 [xfs]
-4,2512,54115640025,-; ? _raw_write_lock_bh+0x130/0x130
-4,2513,54115640025,-; ? xfs_verify_icount+0x31a/0x3f0 [xfs]
-4,2514,54115640025,-; ? write_comp_data+0x37/0xc0
-4,2515,54115640025,-; ? write_comp_data+0x37/0xc0
-4,2516,54115640025,-; ? xfs_perag_get+0x260/0x260 [xfs]
-4,2517,54115640025,-; ? xfs_inode_free+0xe0/0xe0 [xfs]
-4,2518,54115640025,-; ? xfs_mountfs+0x1227/0x1ff0 [xfs]
-4,2519,54115640025,-; ? xfs_blockgc_start+0x76/0x490 [xfs]
-4,2520,54115640025,-; ? write_comp_data+0x37/0xc0
-4,2521,54115640025,-; xfs_mountfs+0x12f5/0x1ff0 [xfs]
-4,2522,54115640025,-; ? xfs_mount_reset_sbqflags+0x1a0/0x1a0 [xfs]
-4,2523,54115640025,-; ? __sanitizer_cov_trace_pc+0x31/0x80
-4,2524,54115640025,-; ? xfs_mru_cache_create+0x4d2/0x690 [xfs]
-4,2525,54115640025,-; ? xfs_filestream_get_ag+0x90/0x90 [xfs]
-4,2526,54115640025,-; ? write_comp_data+0x37/0xc0
-4,2527,54115640025,-; xfs_fs_fill_super+0x1198/0x2030 [xfs]
-4,2528,54115640025,-; get_tree_bdev+0x494/0x850
-4,2529,54115640025,-; ? xfs_fs_parse_param+0x1920/0x1920 [xfs]
-4,2530,54115640025,-; xfs_fs_get_tree+0x2a/0x40 [xfs]
-4,2531,54115640025,-; vfs_get_tree+0x9a/0x380
-4,2532,54115640025,-; path_mount+0x7e3/0x24c0
-4,2533,54115640025,-; ? __kasan_slab_free+0x147/0x1f0
-4,2534,54115640025,-; ? finish_automount+0x860/0x860
-4,2535,54115640025,-; ? __sanitizer_cov_trace_pc+0x31/0x80
-4,2536,54115640025,-; ? putname+0x165/0x1e0
-4,2537,54115640025,-; ? write_comp_data+0x37/0xc0
-4,2538,54115640025,-; do_mount+0x11b/0x140
-4,2539,54115640025,-; ? path_mount+0x24c0/0x24c0
-4,2540,54115640025,-; ? write_comp_data+0x37/0xc0
-4,2541,54115640025,-; ? __sanitizer_cov_trace_pc+0x31/0x80
-4,2542,54115640025,-; ? write_comp_data+0x37/0xc0
-4,2543,54115640025,-; __x64_sys_mount+0x1c3/0x2c0
-4,2544,54115640025,-; do_syscall_64+0x3b/0xc0
-4,2545,54115640025,-; entry_SYSCALL_64_after_hwframe+0x44/0xae
-4,2546,54115640025,-;RIP: 0033:0x7fa63cbb0dde
-4,2547,54115640025,-;Code: 48 8b 0d b5 80 0c 00 f7 d8 64 89 01 48 83 c8 ff =
-c3
-66 2e 0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa 49 89 ca b8 a5 00 00 00 0f 05 =
-<48>
-3d 01 f0 ff ff 73 01 c3 48 8b 0d 82 80 0c 00 f7 d8 64 89 01 48
-4,2548,54115640025,-;RSP: 002b:00007ffcd394f958 EFLAGS: 00000246 ORIG_RAX:
-00000000000000a5
-4,2549,54115640025,-;RAX: ffffffffffffffda RBX: 00007fa63ccdf204 RCX:
-00007fa63cbb0dde
-4,2550,54115640025,-;RDX: 000056155b8a6d10 RSI: 000056155b8a6d90 RDI:
-000056155b8af870
-4,2551,54115640025,-;RBP: 000056155b8a6b00 R08: 0000000000000000 R09:
-000056155b8af980
-4,2552,54115640025,-;R10: 0000000000000000 R11: 0000000000000246 R12:
-0000000000000000
-4,2553,54115640025,-;R13: 000056155b8af870 R14: 000056155b8a6d10 R15:
-000056155b8a6b00
-4,2554,54115640025,-; </TASK>
-1,2555,54115662742,-;XFS (loop8): Corruption detected. Unmount and run
-xfs_repair
-4,2556,54115663126,-;XFS (loop8): Invalid inode number 0x2000000
-1,2557,54115663448,-;XFS (loop8): Metadata corruption detected at
-xfs_dir2_sf_verify+0x906/0xb50 [xfs], inode 0x60 data fork
-1,2558,54115664625,-;XFS (loop8): Unmount and run xfs_repair
-1,2559,54115665007,-;XFS (loop8): First 17 bytes of corrupted metadata buff=
-er:
-1,2560,54115665553,-;00000000: 01 00 00 00 00 60 03 00 60 66 6f 6f 02 00 00=
- 00=20
-.....`..`foo....
-1,2561,54115666121,-;00000010: 63=20=20=20=20=20=20=20=20=20=20=20=20=20=20=
-=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=
-=20=20=20=20=20=20=20
-c
-4,2562,54115666649,-;XFS (loop8): Failed to read root inode 0x60, error 117
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
