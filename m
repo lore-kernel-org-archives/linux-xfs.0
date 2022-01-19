@@ -2,247 +2,510 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 384D1C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Jan 2022 21:52:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0310AC433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Jan 2022 21:54:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343623AbiASVwz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Jan 2022 16:52:55 -0500
-Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:18972 "EHLO
-        mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1343606AbiASVwz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jan 2022 16:52:55 -0500
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 20JJZtQE010641;
-        Wed, 19 Jan 2022 21:52:53 GMT
+        id S1357415AbiASVyT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Jan 2022 16:54:19 -0500
+Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:47358 "EHLO
+        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1343606AbiASVyT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jan 2022 16:54:19 -0500
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 20JJecQf031235;
+        Wed, 19 Jan 2022 21:54:16 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : references : in-reply-to : content-type :
  content-id : content-transfer-encoding : mime-version; s=corp-2021-07-09;
- bh=OUThrM7P13t9eWbn7lABlY7SGD7yZub7E8YBOE+xXWo=;
- b=RjSq8tKM+GMlMiyzmN4hza96TTbn0eQCiYHtMNPR4EEs+b/XCQRJ0BplRCSeiFuJLs5D
- 5dPiQXdygCAcnA52bIr2OgThgq2aLXvyvHKjKt2Efkdo/L3p87hIZhm9PhSVoXtHAaLK
- j6XUEQQ+emPnczqyrqTge1hNtDVJpSlTjxkRPzRcuI5hXPRTLPjfiO8701fDt5xMF2l+
- yKxcg87oYswCNt2apYo8Kbtnr6RWTMohgNZ2OoqYGDhebTRKOKrF+RMV3HxH7XpPjWFd
- azCh+R0CwDRxhVskPkuXyr8Bh2bPIymMz1XxhrGe7TR/b1ht82jpUlkfS6xWT4pm826S wQ== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3dnc52xf0p-1
+ bh=unkcvevkN7lUF3G1oO6+6MARpVL/91Eo8Mo7LQQWhb8=;
+ b=y7geTWxdT3TuB/vNVKoCGM4X1JwInqPyXNxrH+vHg4hONmT9yUcN79Bf77PW1dUE61C6
+ QV7NYHZ0BsJ2a6O14NRNi1O6qvUndg0pW4vfTd4c6l7wvbgQ6jN2Q50wf6fcLLg/vemc
+ tm7HC2M1Ond6SNzzu5cD9KqCD4nkKI6COMxL0gtJprbfKeWqNH9q8IdjNcfsF5IoocjZ
+ L/+xgJw6TryPuztVrQn/GdZPnq5WOi6o7pdUq28qfMn1Un7FVt66xXw97CNi600ktcPI
+ ZLGctKJwgpK6S1sNF8ifSJauiJkdnx2JALTli7KhJ3rESklaxF8eh6qDf2y3wRO9LX/Q lg== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3dnbrnxbrh-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 19 Jan 2022 21:52:53 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 20JLaT7N030950;
-        Wed, 19 Jan 2022 21:52:52 GMT
-Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2172.outbound.protection.outlook.com [104.47.56.172])
-        by aserp3020.oracle.com with ESMTP id 3dkp36ktm0-1
+        Wed, 19 Jan 2022 21:54:15 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 20JLauMM147136;
+        Wed, 19 Jan 2022 21:54:15 GMT
+Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2173.outbound.protection.outlook.com [104.47.56.173])
+        by aserp3030.oracle.com with ESMTP id 3dkmaebkmb-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 19 Jan 2022 21:52:51 +0000
+        Wed, 19 Jan 2022 21:54:15 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=WEu9bcEHz8dHM1sFipM3+9yufgm9HSnZUNmuBXNi2HbJQ1zkuF5Y0YnnhIdI3bvYbIERhJ7xfW1vSGnMxHidgTT1uTW8zO//yONAt1uW1H8+F8Qx/kdK04SJvDpLu8kD5gLRytKSt/yH6RvdZ8bOlKsyaLLTDAtlmKYoQeWIgSrwlYzJo0e0hj0kTCyNcg6TFdlvC+cETpq5BchU0C4jtc/HocEN8MYZr6yjNxjCmYO0dNT5qPjX/RD3UHf8X44aqV9V1NGvx/3+JXME+JiLOQ5nOk6ey5455u+me+WqziGcJUaCCzN8LVP56kwf+ZTkeZpwFTXZqOc4+74aWmZvGA==
+ b=Gt/T6ajtX8INslNQ/p5MI3vBU2Y/UtgfnA8Idcb10uxJUewdvAD2s5ABgQtgMx9PoIR4BUh2hIqSa8VSy4r1mDMGuUpYvyX8BD+5CCmuN5VnCUhlhwBeTqMaBQbdPnTicCuyzc5XP8iRrGpbBG4Wy9iNhgSZa8A6TkQi7xkbcMUMPtRAblh8MVry1duC5lSqhWYdUMlDR1n2/bNhB8wtDrLYU2Z81yX2TI5Umc+Pmqei5yUsc37rjcbB9nW7BRrfYAizF88iAhWM3yWYdFOyQAcUGzJRd++FUWEvPHPfi9JS+S7Po9A58ZXNNOg4hLvyT1o+fZKBcghy2Mn9mAs7vQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=OUThrM7P13t9eWbn7lABlY7SGD7yZub7E8YBOE+xXWo=;
- b=feKr0edhh7n+FOjiGOe7V/yW5alVo4iBSFdbx6D/ds2hqC151gPG/M09nF+acJnJH1IorPQ1XPUBN6E0wC5Um0auFxraBixrAJg977p3IoLrU9xR305GmpVRh5sHqmG/ua2ZuhRNGjOCzE39Sr1h11HczM9n4BmC2kgbA+rSRuNZaxE8HDDcB799l6xvhZdF6l7CeLuRrdO8QhhitVjvO3UI90Uo2gxBIBH23/UzVjaYMqBtiqrz0Ag6HTGPuFIfYFc/ZGz5oeCe0wHl8uy5hQcL3Zw3yURz2MBEHDVR6ANG/dyCcLs5KhkEb8CigXWIhM9Fv10X3gPQccpmbr/vQQ==
+ bh=unkcvevkN7lUF3G1oO6+6MARpVL/91Eo8Mo7LQQWhb8=;
+ b=ADPClQvQ8r21gEFZXFYyDAm+LV8cmcShZU7AqSjDizI3jIWOMUHpR1VycFwKORJlYAnNlKa0eLa3ojrplKGUgyi9ggZOU3FD/JwS62aR79w0XmI1CbCbnj0ATkPzkse5KHJVgJXmJJ+ay01oDIiC3vjSkBmmloGE8EECFhepB4ePe9thPrW9Ssd9DHFzOfPsoUBVQhsecyxj2Oo2566EA3CHcMzgybHjeyQE7GPtBOzdDI+jUEo5OatAKfT5SAfVSGLP96jbaE/IS+rbOVoAKGGQZqxrKGnFfh+IvC49z/KdcSml1beYGCmfJECFnUUUPm5qAkwNfQnQVyolSwhLAw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
  dkim=none; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=OUThrM7P13t9eWbn7lABlY7SGD7yZub7E8YBOE+xXWo=;
- b=AGTI7SiB9/kYUQwr6RsT2M7Rw0MQ8b2QtO+R86Rx1+Cunr/CSScpdGlD2MoaFQ8DG+Vipc2oPCjkGYdWIHMYy33Sc//vmfCCYUUxZgiwhDgDcyzLWFXRbi/cAowapOJh8Kg2tsGhkMMl5rnjRuSF0eRkGuQPkiGeqX/jErxSdoA=
+ bh=unkcvevkN7lUF3G1oO6+6MARpVL/91Eo8Mo7LQQWhb8=;
+ b=uBO8WiNu2Nc8mdKObfCrWMjuPZdUchWr8qEc9rj+RwVaM99rupVZDAUL97fKOyNIfWvOvgA1OX3TvW7jVh8ufPh8OrWRW5peHuTOVuo8N2atPqOL3aiPA7Mk8w+r8rs/+NYeCos98z9/sgALnrf6NczOss+QA+A734VIAZfCppM=
 Received: from DM6PR10MB2795.namprd10.prod.outlook.com (2603:10b6:5:70::21) by
  BN0PR10MB5335.namprd10.prod.outlook.com (2603:10b6:408:127::23) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4888.11; Wed, 19 Jan
- 2022 21:52:49 +0000
+ 2022 21:54:12 +0000
 Received: from DM6PR10MB2795.namprd10.prod.outlook.com
  ([fe80::ad2b:bc5:20b:ee97]) by DM6PR10MB2795.namprd10.prod.outlook.com
  ([fe80::ad2b:bc5:20b:ee97%5]) with mapi id 15.20.4888.014; Wed, 19 Jan 2022
- 21:52:49 +0000
+ 21:54:12 +0000
 From:   Catherine Hoang <catherine.hoang@oracle.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-CC:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: [External] : Re: [RFC PATCH v2 2/2] xfs: add leaf to node error
- tag
-Thread-Topic: [External] : Re: [RFC PATCH v2 2/2] xfs: add leaf to node error
- tag
-Thread-Index: AQHYBmiGRpAhoMFX2UOHbleGsB+uWKxp0uwAgAEeD4A=
-Date:   Wed, 19 Jan 2022 21:52:49 +0000
-Message-ID: <89354D8C-7459-4869-9CCB-8364F638D5DD@oracle.com>
-References: <20220110212454.359752-1-catherine.hoang@oracle.com>
- <20220110212454.359752-3-catherine.hoang@oracle.com>
- <20220119044858.GG13540@magnolia>
-In-Reply-To: <20220119044858.GG13540@magnolia>
+CC:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "fstests@vger.kernel.org" <fstests@vger.kernel.org>
+Subject: Re: [PATCH v5 1/1] xfstests: Add Log Attribute Replay test
+Thread-Topic: [PATCH v5 1/1] xfstests: Add Log Attribute Replay test
+Thread-Index: AQHYDX8XLMVm7r3HhUibhfP5u6Nm+A==
+Date:   Wed, 19 Jan 2022 21:54:11 +0000
+Message-ID: <CDA2BC8C-A657-4720-AE11-3127EE30199A@oracle.com>
+References: <20220110212143.359663-1-catherine.hoang@oracle.com>
+ <20220110212143.359663-2-catherine.hoang@oracle.com>
+ <20220119045118.GH13540@magnolia>
+In-Reply-To: <20220119045118.GH13540@magnolia>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
 x-mailer: Apple Mail (2.3654.120.0.1.13)
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 1335190b-a1f3-4c92-3c0b-08d9db96092b
+x-ms-office365-filtering-correlation-id: a78da7d5-5d82-4949-c51e-08d9db963a65
 x-ms-traffictypediagnostic: BN0PR10MB5335:EE_
-x-microsoft-antispam-prvs: <BN0PR10MB5335979E51A91AD69E480C2189599@BN0PR10MB5335.namprd10.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:8882;
+x-microsoft-antispam-prvs: <BN0PR10MB533578F79780E4818BED45BA89599@BN0PR10MB5335.namprd10.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:1775;
 x-ms-exchange-senderadcheck: 1
 x-ms-exchange-antispam-relay: 0
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: AFg0cXprFbmbfAJ37Ey0d1BmIG0raJxJfvDF4sVUTx47PjOiorCbE/xnAUBNyhZ0FWsjepyhwa+cwhwbxkMvf9Pr/C0ibXP5DkEUGWNQAfGxLRz61hDoSYkFBrkDhVPiasEnZ9JCecZ2V51wQJovlloK4V1P5SCR7BQpaLQaJkLnxvnpr2UzqRxuq0xdfWIEObX+raZt9eaYViucObk2vY6lqTfjGRZYTXy0YqrSjGEI7hEdHRd4x9b126+0fYGRcJBKxx5e1BcV2czakvG1BMGRmvijpovwd7Vt1rTqpdGaEM2bsc/zT1/yubcRzGA3rbXik3L0+ehfxlGqcKXMXs6R8fkAQ7nlzQveTWbL9VdKJoR9y/LRodncRS9B4bRP1eyYe2eSQLY4/5HKBUifi83nVtAH58SeHSDsWkbyE9vnYcYJnBpDa/0Kg5Sy86+3JdZN7PhUBwvSggt8mim7r0tSd7CtnVoqr5fm1+uc4tmvTQub2SBr2VSqm8c6DQoy0mVkM+amGoVlk2bfIhVMSgZlohZaplr4THZp0S/ge78V8C2z2VMotRf4ejihrDZRwdHc+RfrNcds66m75TOxHA9XnkgZG4kN6SawRu8Iw8gbQ+fRjuFdI+7H3BLkmnPyDncmxO09hb4b2aBXS1W10NvBfSFy4GE920czY0kbSb9AR8uO09diXV9XFDw+v2KPahKMojjtT+LoHfa6qWLTiQHPATdF54W+xgZmOan0P3z7Rw/QBTyCqAxi/6VXsefb
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB2795.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(6506007)(5660300002)(53546011)(508600001)(8676002)(33656002)(66556008)(6512007)(186003)(6486002)(71200400001)(64756008)(38070700005)(44832011)(316002)(122000001)(2906002)(83380400001)(8936002)(6916009)(66946007)(91956017)(86362001)(76116006)(4326008)(2616005)(38100700002)(36756003)(66446008)(66476007)(45980500001);DIR:OUT;SFP:1101;
+x-microsoft-antispam-message-info: NdxpxvCoq5NKMMavKCq6D2Y1uhfDbKxBB6XPlTCYx7cG5mJBT0EtbfIEA9eX46+3AMECYikU5nsE0FS0/NQzICte+MyEyk1mSo2wQUpKcKoPknDAxqbxsTK4tDKxGCxGMJ/YC2s9juHzI62qhc1IP7MCK7TnlSgQ6HJoyCEkkNNBHa/IIlM0rvSFwun6eQOxqHxuc3dZEMNYYmqk+ac9hfUb5q8pteId/zr2Q5w3OTwzmsFNkpAR1moSeYOjCZE0TbC3l59nIX8vFcOGRHwjhYqVy5HVR79LVn5olzC90gdeOJAzvWeQEOVVmMR5OONNZeroiaf2nFzVxc7LIkgjnde+73fD855IwWqk0RFG+h6sTNHbDzPK9NP2T7DUCi9miO3pRQQ4EpFoLSHZ1d9/KLJ77RQEYgEfM1kT4IFyBWEs4E/szZePgKPM4S7jCyNcfDZ63dzQGWxGmo+oOTRsxetxr3gtTDs2UKfZXRbVbL38jDl4rzp3vEHwDTu/oUhdPWa8HcAGDBRdmdy7SZioJGlVN/WVcULfkYdWHk8iamoONrsIWHshOBJMhHPKq5VJcNo7mIq0/8xbUsfXOvlGJREROVzpqscHabauwuydw3OvHq8/Vj4nE7rp04U+aQjN7aAI5DigpoQzDwYzTBp15ceMWbiIISP7l8dYrVN8cPsH60kDhY1/PVs5iq/nKG/SLujgR6l5xGjOJBkbEOmA2Dk36u/m9UHmKhT6R1HAG4uVDiMKqK5ohZrXx5K/aRQfaK2F7uEzsOuwpS4I0O2sbg==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB2795.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(6506007)(5660300002)(53546011)(508600001)(8676002)(33656002)(66556008)(6512007)(186003)(6486002)(71200400001)(30864003)(64756008)(38070700005)(44832011)(316002)(122000001)(2906002)(83380400001)(8936002)(6916009)(66946007)(91956017)(54906003)(86362001)(76116006)(4326008)(2616005)(38100700002)(36756003)(66446008)(66476007)(45980500001)(357404004);DIR:OUT;SFP:1101;
 x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?NVGZ+Yt6VCN09O+TBROYs4AVJcREJsavmC6V3dCBvcqBksBOiP7gR0L2S8yl?=
- =?us-ascii?Q?FDTH2zNcuv1dDr7t4Gug78t8BDjZUa8gy0Y0YlCywZXIEjJAGNuaLstWbuIp?=
- =?us-ascii?Q?CoRl3x9u8qtBHMaz3Ctuw5zWvS1j47fyMOyPt1Nd7/hyMGUQ6t69+pEbhELk?=
- =?us-ascii?Q?csfgNWA7dVYhbOJw+clOl8QLmk/jO1sl7idyzxDDP4SpOYWF4RDVIuRnWuUU?=
- =?us-ascii?Q?MMTQM5pBhv2GA6rHWLUARKAdGLjpli57SQu4LkJ08hV46NV38Wz+21zxFisP?=
- =?us-ascii?Q?x+zdrwQg9ywcN0usQpnere106VWVes/eEUE4Oa7XrrE3jvNitvMXcAMRiw63?=
- =?us-ascii?Q?12K6mvR5R9S1Y9pDJ7N9Em5B0H3omlRP/IMoM83C9wkik3o2nDOhwTYmdycp?=
- =?us-ascii?Q?VBLmtn/aS3ehqPn2STz3+KIWVW8s5pl9CBK5dQjKymhVjlZSFfMp8k3IJRoj?=
- =?us-ascii?Q?F8JanrEyKToqD+sT8faXS58E/v5+v8s7b+sosQ6qYFbSkmgXv8FsVX9QWawu?=
- =?us-ascii?Q?XJ2H66XROHYNwA5ddjv0M6Z/fIxrzrPacDn5NuPVbqNg9vcfy24PCQPv8q+c?=
- =?us-ascii?Q?F+xrxOilSecO1AcIYd089DCSRw5RwUajCb5Fvi+FzDBjZjTqUeEem0vJ3ayO?=
- =?us-ascii?Q?Sc2+KOQ9kebw3XleyLutU02OxBPuagt8GoaJ1D+SPihGPnPl9FVhVYkXvK+H?=
- =?us-ascii?Q?yBNKPOLiQV4diiuXSADcPMCr4HlVQaRPiFIJIaPYMuIHa8ICcC/wnPEbcpyf?=
- =?us-ascii?Q?e7HSmmn+eq+IJjbOf3Bk8LllWRUbTGhnlZ4LG3THqIpsAPVV2cSlTlWVouOc?=
- =?us-ascii?Q?tWNsPzWMmGQXpekbSZgnmcEBzRE91jrpdrMXdtKHgDNf9rwLr1eYnUXkW12U?=
- =?us-ascii?Q?tc4kp7cxUXvxS6of6qZB/VjhD8MbX6WAEpo+yqciZfJt8r4LkwUjRg+UVfdv?=
- =?us-ascii?Q?HKHPe1tS3eK8sG/Lil1wv1SFNS7XtrpDNwfJ8zj0KmesHv8CLzhlLZJwI82l?=
- =?us-ascii?Q?0xUWERu+UDkCwxcR9lhmBPu/RwD3NDHyjhzUnMEnm03e12eif5PXnvOWeyyF?=
- =?us-ascii?Q?47lcUJ9h8KxsVSLt3jE725aHFnqwUY0QA+lDfQm1y/iIC0vnMGGtwHaX9PfL?=
- =?us-ascii?Q?deQfWRuCVt2CHIXhAZu0rmXZcWB+kD0F1R7AeGHJB0GwNyNwHl2gxSzDuNwE?=
- =?us-ascii?Q?HH52w1FESTrv220RMJ3gmhNPQiGxOVxE5wFX9HY2pHSXf6UrUl6DzrsPBYUf?=
- =?us-ascii?Q?nI/i0nAMX10hZtbxYpogLhe5OS2gRr+krph1R/3qtjx5aYHwYnq/ONI4XEne?=
- =?us-ascii?Q?FJPDcmySLjij1RgxQdGT8Fu6xq/E7NxV2ePieF0jPw8ISRqi+sw4OWyHeAAz?=
- =?us-ascii?Q?l27WblkNbP+2okvZEz8dUODG0aQjOn/8H5Pc1Y228iTIyeuyVbyQ581aX1mn?=
- =?us-ascii?Q?L5rnRariVMN4lS07ExXGOf3sdcNbzSf43RQAiRIBC676nMB5yWJ8aUOJM0wz?=
- =?us-ascii?Q?EL5EuFLXSxHf9Wmm0NkWuNAQsVIyKxR8huX/ktZ5dd0vwZ/1v2vYwtdHyEEp?=
- =?us-ascii?Q?6CrmZr9RAcZiovND5vKPWRk68qDh30lxbYUib4+IukOkgjeMCjMosnbVFA+N?=
- =?us-ascii?Q?L+2QF7zXV0r3N54VfG8CQI5q9feg1IPZBnLhKpHDr+4GGgSK46yjrfUHK7oP?=
- =?us-ascii?Q?fX0fxpmCVOAJh6fWQCzI45XdsKnHVdJir3o+Vg5+T+yXL+eBilcP54eFF6ga?=
- =?us-ascii?Q?FnizSSbaOaJwVwgWpOQJII2ueirnhJ0=3D?=
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?0syfV79BUtSC5YQZHYc7hMq4gDSJVeLw9yHBbrciZi0b6925nZNqOCbOpsBn?=
+ =?us-ascii?Q?aZ/hHSFDifCWOwA9DvjIdXX4Ekj9yUWSHCJUIAb1wGXoNrXBFYTUheJ3MVz4?=
+ =?us-ascii?Q?n/yzvDoq04genO0CW4/YKfeqMcRKrlCInDKMLRcRUKxYPV913NADboLPTjxC?=
+ =?us-ascii?Q?Bfn+FzQY2DYE/Bd5JEpgDC6wXgT6ALCtD58vFKMKK44HMZzAaCuxwgjyHiQJ?=
+ =?us-ascii?Q?UxvICqKL5h8WZjsowq8e8kOnHoi4msCMzM2QkJFuLq2Yg9uUXjMPWWb/E6b1?=
+ =?us-ascii?Q?W2hW+gjz3hOVV2VjOaoTkMgaBqQi+pULIW9xg1dnJiaS2mFZQGHMdjo0YBHM?=
+ =?us-ascii?Q?ofZ1mgULBDL3sr/5Lwz/0y6N/Tzt36hAIP1Y4NNCdfNBKbbZeKhztxiaxWgd?=
+ =?us-ascii?Q?OSCiIef9b8l4fqm/eo3rjCJpl0Fm6PqqHSuC3CidAZlR59z0LrwaZ10MEKW1?=
+ =?us-ascii?Q?DM8wEd38Nl/fxN0u/Fx8MCAr1sK9QIuSPZ86RkWwaWdiQiZ0f3irvRGW4haB?=
+ =?us-ascii?Q?P/ZF1Tq3KtvX8atA7BG3eHv66W5gBvjTC6XSnS6BtzWt1aSTlz2DXP4yk/9X?=
+ =?us-ascii?Q?BVm7ZodZAEamqNDS21QuwIz4zowXC7sZ5BiPRcwsQH8T+TAryzzzqQytc8f+?=
+ =?us-ascii?Q?iQNLRmjnqPifT7RPlrIxVoZwjxQYCQRQdk0AaLb6IL1c1BA2ERFHNMijtVG5?=
+ =?us-ascii?Q?7J5tpFNgC61UIjMqM5K+IvsQRZHI4UFRADplRg6HE26stug/GOcL1uuHCast?=
+ =?us-ascii?Q?+MuaUX6oUut1vNMIefuHP0hT+9RMwoU6LvK14VsGug5seDNQOqvdnuzcex+T?=
+ =?us-ascii?Q?rrcaTzsG/GFIlOyFBEXXW4cTTWXQGuki6yKqm8c+fds+ToKlCAufMJBuuK0V?=
+ =?us-ascii?Q?eSD6FgZ0FoVfbtdLyiwIH9HZCDj9/KOHSPZX/b8ApkJZWHJOLFh3xnoqnU0n?=
+ =?us-ascii?Q?/sS65KNu900CBQnhL4rSkXwIquvvc8LqjOmambvGKODf18NWhYIQMaaoVQ37?=
+ =?us-ascii?Q?tluQMLQLnBAh1nkqanAuZcjwj6eJy9IcPr4c6v3TjWguvtwJiE5LAs/ymZjk?=
+ =?us-ascii?Q?6QV0+xhTtAi2BPm3Fpuo05rl0IQXtxqjNQIpQ65b315gQKIx1k5mEWjJBOmh?=
+ =?us-ascii?Q?poMlCfck33eq4Atm8fVhG5r5HGtEwdcJJZQ8voHBIjbaBaMrFmWKp1KzI8cj?=
+ =?us-ascii?Q?YswxBQvk5ZesYcfiDwNqnKTPogV6xUdEwoW0sMVziZvstS148SgE9upgG6Zw?=
+ =?us-ascii?Q?eyf7mFhfKcfuLWuUlX36l6u3kX0tPBRKU+AJGMJVu8wzGxv6YBW0CLoR1njw?=
+ =?us-ascii?Q?6PN6bhLvjIG2RikD13iwcOrbdfAxtLr2Vr4WT6qlUj2h5y0sOWIY7H7/dKsJ?=
+ =?us-ascii?Q?SS4OupxqCb/XpbSGXUa9fN7VVz3kFhmIxPEhkFUu2Sf4f/TlVJs3lbz5jTtt?=
+ =?us-ascii?Q?HdryhVgfs3l73zFLejRHjE0R4QhluRG1oJTMSfYCHN6RsMRvR2t8BBNBe4t2?=
+ =?us-ascii?Q?CnSnPf7/rRMvCxZo9AcnwIaLpvy9zLgMG2LT7aPA6zfLoB/Ags7UegC0FJpz?=
+ =?us-ascii?Q?RyHuRsO4Mf7t/AvOrlAIG1Pp8atq+83elupQGQ71aBCaUYCj8iHLJPs4xqhw?=
+ =?us-ascii?Q?3NChO7PGmKNZ6bSFzxo/dGfz9e2zQAfw06yVvqCtdv39NIZZLx/ERzN++FZ5?=
+ =?us-ascii?Q?4CnDdI0Ri3kX0LZIT+Zm5Pqy4e1rZQ03fOHcqKyjlXoAURXPFJeZp/MXgVWu?=
+ =?us-ascii?Q?oc4oIjPZfQUHHCWwAGeT7GuskInZyds=3D?=
 Content-Type: text/plain; charset="us-ascii"
-Content-ID: <E7FF656783E3374A843C2AA9C086AB9B@namprd10.prod.outlook.com>
+Content-ID: <4835232DADE8D24593320BC1A20C529E@namprd10.prod.outlook.com>
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: oracle.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB2795.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1335190b-a1f3-4c92-3c0b-08d9db96092b
-X-MS-Exchange-CrossTenant-originalarrivaltime: 19 Jan 2022 21:52:49.3462
+X-MS-Exchange-CrossTenant-Network-Message-Id: a78da7d5-5d82-4949-c51e-08d9db963a65
+X-MS-Exchange-CrossTenant-originalarrivaltime: 19 Jan 2022 21:54:11.9921
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: X6tZpIBV+PfHQIcaqyNJxqgUzayjkRlnxBiBklMhuSb9iFrHwhj01iR8dAOsQ6pVuKmSB7BDx0RylBDOKDKKFHd6FEnc+eN8i61nwrzvZAE=
+X-MS-Exchange-CrossTenant-userprincipalname: ryfTrDz7jx9dvPoMDUNyp8rrBO5W8L/G7enQqSckfbYkM2iyIu2GcjsOT9aSJL3VVTovpSRjiFT+Nx1KWYhbCQjny+rSq2Df5wfwUU82OwI=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN0PR10MB5335
 X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10232 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 bulkscore=0
- mlxlogscore=999 adultscore=0 suspectscore=0 malwarescore=0 mlxscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2110150000 definitions=main-2201190117
-X-Proofpoint-GUID: qBad8dnKIpDM0pzuErQBDEZ-3T25kNrm
-X-Proofpoint-ORIG-GUID: qBad8dnKIpDM0pzuErQBDEZ-3T25kNrm
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxscore=0 suspectscore=0
+ phishscore=0 malwarescore=0 mlxlogscore=999 spamscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2110150000
+ definitions=main-2201190117
+X-Proofpoint-GUID: wCx4em5LJErdvEJH0cXGT6DhjFWwWb_q
+X-Proofpoint-ORIG-GUID: wCx4em5LJErdvEJH0cXGT6DhjFWwWb_q
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> On Jan 18, 2022, at 8:48 PM, Darrick J. Wong <djwong@kernel.org> wrote:
+> On Jan 18, 2022, at 8:51 PM, Darrick J. Wong <djwong@kernel.org> wrote:
 >=20
-> On Mon, Jan 10, 2022 at 09:24:54PM +0000, Catherine Hoang wrote:
->> Add an error tag on xfs_attr3_leaf_to_node to test log attribute
->> recovery and replay.
+> On Mon, Jan 10, 2022 at 09:21:43PM +0000, Catherine Hoang wrote:
+>> From: Allison Henderson <allison.henderson@oracle.com>
 >>=20
+>> This patch adds tests to exercise the log attribute error
+>> inject and log replay. These tests aim to cover cases where attributes
+>> are added, removed, and overwritten in each format (shortform, leaf,
+>> node). Error inject is used to replay these operations from the log.
+>>=20
+>> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 >> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
->> Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+>> ---
+>> tests/xfs/543     | 171 ++++++++++++++++++++++++++++++++++++++++++++++
+>> tests/xfs/543.out | 149 ++++++++++++++++++++++++++++++++++++++++
+>> 2 files changed, 320 insertions(+)
+>> create mode 100755 tests/xfs/543
+>> create mode 100644 tests/xfs/543.out
+>>=20
+>> diff --git a/tests/xfs/543 b/tests/xfs/543
+>> new file mode 100755
+>> index 00000000..29bd5b77
+>> --- /dev/null
+>> +++ b/tests/xfs/543
+>> @@ -0,0 +1,171 @@
+>> +#! /bin/bash
+>> +# SPDX-License-Identifier: GPL-2.0
+>> +# Copyright (c) 2021, Oracle and/or its affiliates.  All Rights Reserve=
+d.
 >=20
-> This one actually /is/ an error injection knob for specific xattr
-> activities, so the naming is appropriate.
->=20
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> Silly nit: please change the copyright year to 2022 for all the
+> patches sent this year.
 >=20
 > --D
 
-Thanks for the review!
+Will fix in the next one, thanks for catching this
 >=20
->> ---
->> fs/xfs/libxfs/xfs_attr_leaf.c | 6 ++++++
->> fs/xfs/libxfs/xfs_errortag.h  | 4 +++-
->> fs/xfs/xfs_error.c            | 3 +++
->> 3 files changed, 12 insertions(+), 1 deletion(-)
->>=20
->> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf=
-.c
->> index 74b76b09509f..0fe028d95c77 100644
->> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
->> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
->> @@ -28,6 +28,7 @@
->> #include "xfs_dir2.h"
->> #include "xfs_log.h"
->> #include "xfs_ag.h"
->> +#include "xfs_errortag.h"
->>=20
->>=20
->> /*
->> @@ -1189,6 +1190,11 @@ xfs_attr3_leaf_to_node(
->>=20
->> 	trace_xfs_attr_leaf_to_node(args);
->>=20
->> +	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_LARP_LEAF_TO_NODE)) {
->> +		error =3D -EIO;
->> +		goto out;
->> +	}
+>> +#
+>> +# FS QA Test 543
+>> +#
+>> +# Log attribute replay test
+>> +#
+>> +. ./common/preamble
+>> +_begin_fstest auto quick attr
 >> +
->> 	error =3D xfs_da_grow_inode(args, &blkno);
->> 	if (error)
->> 		goto out;
->> diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
->> index 970f3a3f3750..6d90f06442e8 100644
->> --- a/fs/xfs/libxfs/xfs_errortag.h
->> +++ b/fs/xfs/libxfs/xfs_errortag.h
->> @@ -61,7 +61,8 @@
->> #define XFS_ERRTAG_AG_RESV_FAIL				38
->> #define XFS_ERRTAG_LARP					39
->> #define XFS_ERRTAG_LARP_LEAF_SPLIT			40
->> -#define XFS_ERRTAG_MAX					41
->> +#define XFS_ERRTAG_LARP_LEAF_TO_NODE			41
->> +#define XFS_ERRTAG_MAX					42
->>=20
->> /*
->>  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
->> @@ -107,5 +108,6 @@
->> #define XFS_RANDOM_AG_RESV_FAIL				1
->> #define XFS_RANDOM_LARP					1
->> #define XFS_RANDOM_LARP_LEAF_SPLIT			1
->> +#define XFS_RANDOM_LARP_LEAF_TO_NODE			1
->>=20
->> #endif /* __XFS_ERRORTAG_H_ */
->> diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
->> index 9cb6743a5ae3..ae2003a95324 100644
->> --- a/fs/xfs/xfs_error.c
->> +++ b/fs/xfs/xfs_error.c
->> @@ -59,6 +59,7 @@ static unsigned int xfs_errortag_random_default[] =3D =
-{
->> 	XFS_RANDOM_AG_RESV_FAIL,
->> 	XFS_RANDOM_LARP,
->> 	XFS_RANDOM_LARP_LEAF_SPLIT,
->> +	XFS_RANDOM_LARP_LEAF_TO_NODE,
->> };
->>=20
->> struct xfs_errortag_attr {
->> @@ -174,6 +175,7 @@ XFS_ERRORTAG_ATTR_RW(bmap_alloc_minlen_extent,	XFS_E=
-RRTAG_BMAP_ALLOC_MINLEN_EXTE
->> XFS_ERRORTAG_ATTR_RW(ag_resv_fail, XFS_ERRTAG_AG_RESV_FAIL);
->> XFS_ERRORTAG_ATTR_RW(larp,		XFS_ERRTAG_LARP);
->> XFS_ERRORTAG_ATTR_RW(larp_leaf_split,	XFS_ERRTAG_LARP_LEAF_SPLIT);
->> +XFS_ERRORTAG_ATTR_RW(larp_leaf_to_node,	XFS_ERRTAG_LARP_LEAF_TO_NODE);
->>=20
->> static struct attribute *xfs_errortag_attrs[] =3D {
->> 	XFS_ERRORTAG_ATTR_LIST(noerror),
->> @@ -217,6 +219,7 @@ static struct attribute *xfs_errortag_attrs[] =3D {
->> 	XFS_ERRORTAG_ATTR_LIST(ag_resv_fail),
->> 	XFS_ERRORTAG_ATTR_LIST(larp),
->> 	XFS_ERRORTAG_ATTR_LIST(larp_leaf_split),
->> +	XFS_ERRORTAG_ATTR_LIST(larp_leaf_to_node),
->> 	NULL,
->> };
->>=20
+>> +# get standard environment, filters and checks
+>> +. ./common/filter
+>> +. ./common/attr
+>> +. ./common/inject
+>> +
+>> +_cleanup()
+>> +{
+>> +	rm -f $tmp.*
+>> +	echo 0 > /sys/fs/xfs/debug/larp
+>> +}
+>> +
+>> +test_attr_replay()
+>> +{
+>> +	testfile=3D$SCRATCH_MNT/$1
+>> +	attr_name=3D$2
+>> +	attr_value=3D$3
+>> +	flag=3D$4
+>> +	error_tag=3D$5
+>> +
+>> +	# Inject error
+>> +	_scratch_inject_error $error_tag
+>> +
+>> +	# Set attribute
+>> +	echo "$attr_value" | ${ATTR_PROG} -$flag "$attr_name" $testfile 2>&1 |=
+ \
+>> +			    _filter_scratch
+>> +
+>> +	# FS should be shut down, touch will fail
+>> +	touch $testfile 2>&1 | _filter_scratch
+>> +
+>> +	# Remount to replay log
+>> +	_scratch_remount_dump_log >> $seqres.full
+>> +
+>> +	# FS should be online, touch should succeed
+>> +	touch $testfile
+>> +
+>> +	# Verify attr recovery
+>> +	{ $ATTR_PROG -g $attr_name $testfile | md5sum; } 2>&1 | _filter_scratc=
+h
+>> +
+>> +	echo ""
+>> +}
+>> +
+>> +create_test_file()
+>> +{
+>> +	filename=3D$SCRATCH_MNT/$1
+>> +	count=3D$2
+>> +	attr_value=3D$3
+>> +
+>> +	touch $filename
+>> +
+>> +	for i in `seq $count`
+>> +	do
+>> +		$ATTR_PROG -s "attr_name$i" -V $attr_value $filename >> \
+>> +			$seqres.full
+>> +	done
+>> +}
+>> +
+>> +# real QA test starts here
+>> +_supported_fs xfs
+>> +
+>> +_require_scratch
+>> +_require_attrs
+>> +_require_xfs_io_error_injection "larp"
+>> +_require_xfs_io_error_injection "larp_leaf_split"
+>> +_require_xfs_io_error_injection "larp_leaf_to_node"
+>> +_require_xfs_sysfs debug/larp
+>> +
+>> +# turn on log attributes
+>> +echo 1 > /sys/fs/xfs/debug/larp
+>> +
+>> +attr16=3D"0123456789ABCDEF"
+>> +attr64=3D"$attr16$attr16$attr16$attr16"
+>> +attr256=3D"$attr64$attr64$attr64$attr64"
+>> +attr1k=3D"$attr256$attr256$attr256$attr256"
+>> +attr4k=3D"$attr1k$attr1k$attr1k$attr1k"
+>> +attr8k=3D"$attr4k$attr4k"
+>> +attr16k=3D"$attr8k$attr8k"
+>> +attr32k=3D"$attr16k$attr16k"
+>> +attr64k=3D"$attr32k$attr32k"
+>> +
+>> +echo "*** mkfs"
+>> +_scratch_mkfs >/dev/null
+>> +
+>> +echo "*** mount FS"
+>> +_scratch_mount
+>> +
+>> +# empty, inline
+>> +create_test_file empty_file1 0
+>> +test_attr_replay empty_file1 "attr_name" $attr64 "s" "larp"
+>> +test_attr_replay empty_file1 "attr_name" $attr64 "r" "larp"
+>> +
+>> +# empty, internal
+>> +create_test_file empty_file2 0
+>> +test_attr_replay empty_file2 "attr_name" $attr1k "s" "larp"
+>> +test_attr_replay empty_file2 "attr_name" $attr1k "r" "larp"
+>> +
+>> +# empty, remote
+>> +create_test_file empty_file3 0
+>> +test_attr_replay empty_file3 "attr_name" $attr64k "s" "larp"
+>> +test_attr_replay empty_file3 "attr_name" $attr64k "r" "larp"
+>> +
+>> +# inline, inline
+>> +create_test_file inline_file1 1 $attr16
+>> +test_attr_replay inline_file1 "attr_name2" $attr64 "s" "larp"
+>> +test_attr_replay inline_file1 "attr_name2" $attr64 "r" "larp"
+>> +
+>> +# inline, internal
+>> +create_test_file inline_file2 1 $attr16
+>> +test_attr_replay inline_file2 "attr_name2" $attr1k "s" "larp"
+>> +test_attr_replay inline_file2 "attr_name2" $attr1k "r" "larp"
+>> +
+>> +# inline, remote
+>> +create_test_file inline_file3 1 $attr16
+>> +test_attr_replay inline_file3 "attr_name2" $attr64k "s" "larp"
+>> +test_attr_replay inline_file3 "attr_name2" $attr64k "r" "larp"
+>> +
+>> +# extent, internal
+>> +create_test_file extent_file1 1 $attr1k
+>> +test_attr_replay extent_file1 "attr_name2" $attr1k "s" "larp"
+>> +test_attr_replay extent_file1 "attr_name2" $attr1k "r" "larp"
+>> +
+>> +# extent, inject error on split
+>> +create_test_file extent_file2 3 $attr1k
+>> +test_attr_replay extent_file2 "attr_name4" $attr1k "s" "larp_leaf_split=
+"
+>> +
+>> +# extent, inject error on fork transition
+>> +create_test_file extent_file3 3 $attr1k
+>> +test_attr_replay extent_file3 "attr_name4" $attr1k "s" "larp_leaf_to_no=
+de"
+>> +
+>> +# extent, remote
+>> +create_test_file extent_file4 1 $attr1k
+>> +test_attr_replay extent_file4 "attr_name2" $attr64k "s" "larp"
+>> +test_attr_replay extent_file4 "attr_name2" $attr64k "r" "larp"
+>> +
+>> +# remote, internal
+>> +create_test_file remote_file1 1 $attr64k
+>> +test_attr_replay remote_file1 "attr_name2" $attr1k "s" "larp"
+>> +test_attr_replay remote_file1 "attr_name2" $attr1k "r" "larp"
+>> +
+>> +# remote, remote
+>> +create_test_file remote_file2 1 $attr64k
+>> +test_attr_replay remote_file2 "attr_name2" $attr64k "s" "larp"
+>> +test_attr_replay remote_file2 "attr_name2" $attr64k "r" "larp"
+>> +
+>> +# replace shortform
+>> +create_test_file sf_file 2 $attr64
+>> +test_attr_replay sf_file "attr_name2" $attr64 "s" "larp"
+>> +
+>> +# replace leaf
+>> +create_test_file leaf_file 2 $attr1k
+>> +test_attr_replay leaf_file "attr_name2" $attr1k "s" "larp"
+>> +
+>> +# replace node
+>> +create_test_file node_file 1 $attr64k
+>> +$ATTR_PROG -s "attr_name2" -V $attr1k $SCRATCH_MNT/node_file \
+>> +		>> $seqres.full
+>> +test_attr_replay node_file "attr_name2" $attr1k "s" "larp"
+>> +
+>> +echo "*** done"
+>> +status=3D0
+>> +exit
+>> diff --git a/tests/xfs/543.out b/tests/xfs/543.out
+>> new file mode 100644
+>> index 00000000..075eecb3
+>> --- /dev/null
+>> +++ b/tests/xfs/543.out
+>> @@ -0,0 +1,149 @@
+>> +QA output created by 543
+>> +*** mkfs
+>> +*** mount FS
+>> +attr_set: Input/output error
+>> +Could not set "attr_name" for SCRATCH_MNT/empty_file1
+>> +touch: cannot touch 'SCRATCH_MNT/empty_file1': Input/output error
+>> +db6747306e971b6e3fd474aae10159a1  -
+>> +
+>> +attr_remove: Input/output error
+>> +Could not remove "attr_name" for SCRATCH_MNT/empty_file1
+>> +touch: cannot touch 'SCRATCH_MNT/empty_file1': Input/output error
+>> +attr_get: No data available
+>> +Could not get "attr_name" for SCRATCH_MNT/empty_file1
+>> +d41d8cd98f00b204e9800998ecf8427e  -
+>> +
+>> +attr_set: Input/output error
+>> +Could not set "attr_name" for SCRATCH_MNT/empty_file2
+>> +touch: cannot touch 'SCRATCH_MNT/empty_file2': Input/output error
+>> +d489897d7ba99c2815052ae7dca29097  -
+>> +
+>> +attr_remove: Input/output error
+>> +Could not remove "attr_name" for SCRATCH_MNT/empty_file2
+>> +touch: cannot touch 'SCRATCH_MNT/empty_file2': Input/output error
+>> +attr_get: No data available
+>> +Could not get "attr_name" for SCRATCH_MNT/empty_file2
+>> +d41d8cd98f00b204e9800998ecf8427e  -
+>> +
+>> +attr_set: Input/output error
+>> +Could not set "attr_name" for SCRATCH_MNT/empty_file3
+>> +touch: cannot touch 'SCRATCH_MNT/empty_file3': Input/output error
+>> +0ba8b18d622a11b5ff89336761380857  -
+>> +
+>> +attr_remove: Input/output error
+>> +Could not remove "attr_name" for SCRATCH_MNT/empty_file3
+>> +touch: cannot touch 'SCRATCH_MNT/empty_file3': Input/output error
+>> +attr_get: No data available
+>> +Could not get "attr_name" for SCRATCH_MNT/empty_file3
+>> +d41d8cd98f00b204e9800998ecf8427e  -
+>> +
+>> +attr_set: Input/output error
+>> +Could not set "attr_name2" for SCRATCH_MNT/inline_file1
+>> +touch: cannot touch 'SCRATCH_MNT/inline_file1': Input/output error
+>> +49f4f904e12102a3423d8ab3f845e6e8  -
+>> +
+>> +attr_remove: Input/output error
+>> +Could not remove "attr_name2" for SCRATCH_MNT/inline_file1
+>> +touch: cannot touch 'SCRATCH_MNT/inline_file1': Input/output error
+>> +attr_get: No data available
+>> +Could not get "attr_name2" for SCRATCH_MNT/inline_file1
+>> +d41d8cd98f00b204e9800998ecf8427e  -
+>> +
+>> +attr_set: Input/output error
+>> +Could not set "attr_name2" for SCRATCH_MNT/inline_file2
+>> +touch: cannot touch 'SCRATCH_MNT/inline_file2': Input/output error
+>> +6a0bd8b5aaa619bcd51f2ead0208f1bb  -
+>> +
+>> +attr_remove: Input/output error
+>> +Could not remove "attr_name2" for SCRATCH_MNT/inline_file2
+>> +touch: cannot touch 'SCRATCH_MNT/inline_file2': Input/output error
+>> +attr_get: No data available
+>> +Could not get "attr_name2" for SCRATCH_MNT/inline_file2
+>> +d41d8cd98f00b204e9800998ecf8427e  -
+>> +
+>> +attr_set: Input/output error
+>> +Could not set "attr_name2" for SCRATCH_MNT/inline_file3
+>> +touch: cannot touch 'SCRATCH_MNT/inline_file3': Input/output error
+>> +3276329baa72c32f0a4a5cb0dbf813df  -
+>> +
+>> +attr_remove: Input/output error
+>> +Could not remove "attr_name2" for SCRATCH_MNT/inline_file3
+>> +touch: cannot touch 'SCRATCH_MNT/inline_file3': Input/output error
+>> +attr_get: No data available
+>> +Could not get "attr_name2" for SCRATCH_MNT/inline_file3
+>> +d41d8cd98f00b204e9800998ecf8427e  -
+>> +
+>> +attr_set: Input/output error
+>> +Could not set "attr_name2" for SCRATCH_MNT/extent_file1
+>> +touch: cannot touch 'SCRATCH_MNT/extent_file1': Input/output error
+>> +8c6a952b2dbecaa5a308a00d2022e599  -
+>> +
+>> +attr_remove: Input/output error
+>> +Could not remove "attr_name2" for SCRATCH_MNT/extent_file1
+>> +touch: cannot touch 'SCRATCH_MNT/extent_file1': Input/output error
+>> +attr_get: No data available
+>> +Could not get "attr_name2" for SCRATCH_MNT/extent_file1
+>> +d41d8cd98f00b204e9800998ecf8427e  -
+>> +
+>> +attr_set: Input/output error
+>> +Could not set "attr_name4" for SCRATCH_MNT/extent_file2
+>> +touch: cannot touch 'SCRATCH_MNT/extent_file2': Input/output error
+>> +c5ae4d474e547819a8807cfde66daba2  -
+>> +
+>> +attr_set: Input/output error
+>> +Could not set "attr_name4" for SCRATCH_MNT/extent_file3
+>> +touch: cannot touch 'SCRATCH_MNT/extent_file3': Input/output error
+>> +17bae95be35ce7a0e6d4327b67da932b  -
+>> +
+>> +attr_set: Input/output error
+>> +Could not set "attr_name2" for SCRATCH_MNT/extent_file4
+>> +touch: cannot touch 'SCRATCH_MNT/extent_file4': Input/output error
+>> +d17d94c39a964409b8b8173a51f8e951  -
+>> +
+>> +attr_remove: Input/output error
+>> +Could not remove "attr_name2" for SCRATCH_MNT/extent_file4
+>> +touch: cannot touch 'SCRATCH_MNT/extent_file4': Input/output error
+>> +attr_get: No data available
+>> +Could not get "attr_name2" for SCRATCH_MNT/extent_file4
+>> +d41d8cd98f00b204e9800998ecf8427e  -
+>> +
+>> +attr_set: Input/output error
+>> +Could not set "attr_name2" for SCRATCH_MNT/remote_file1
+>> +touch: cannot touch 'SCRATCH_MNT/remote_file1': Input/output error
+>> +4104e21da013632e636cdd044884ca94  -
+>> +
+>> +attr_remove: Input/output error
+>> +Could not remove "attr_name2" for SCRATCH_MNT/remote_file1
+>> +touch: cannot touch 'SCRATCH_MNT/remote_file1': Input/output error
+>> +attr_get: No data available
+>> +Could not get "attr_name2" for SCRATCH_MNT/remote_file1
+>> +d41d8cd98f00b204e9800998ecf8427e  -
+>> +
+>> +attr_set: Input/output error
+>> +Could not set "attr_name2" for SCRATCH_MNT/remote_file2
+>> +touch: cannot touch 'SCRATCH_MNT/remote_file2': Input/output error
+>> +9ac16e37ecd6f6c24de3f724c49199a8  -
+>> +
+>> +attr_remove: Input/output error
+>> +Could not remove "attr_name2" for SCRATCH_MNT/remote_file2
+>> +touch: cannot touch 'SCRATCH_MNT/remote_file2': Input/output error
+>> +attr_get: No data available
+>> +Could not get "attr_name2" for SCRATCH_MNT/remote_file2
+>> +d41d8cd98f00b204e9800998ecf8427e  -
+>> +
+>> +attr_set: Input/output error
+>> +Could not set "attr_name2" for SCRATCH_MNT/sf_file
+>> +touch: cannot touch 'SCRATCH_MNT/sf_file': Input/output error
+>> +33bc798a506b093a7c2cdea122a738d7  -
+>> +
+>> +attr_set: Input/output error
+>> +Could not set "attr_name2" for SCRATCH_MNT/leaf_file
+>> +touch: cannot touch 'SCRATCH_MNT/leaf_file': Input/output error
+>> +dec146c586813046f4b876bcecbaa713  -
+>> +
+>> +attr_set: Input/output error
+>> +Could not set "attr_name2" for SCRATCH_MNT/node_file
+>> +touch: cannot touch 'SCRATCH_MNT/node_file': Input/output error
+>> +e97ce3d15f9f28607b51f76bf8b7296c  -
+>> +
+>> +*** done
 >> --=20
 >> 2.25.1
 >>=20
