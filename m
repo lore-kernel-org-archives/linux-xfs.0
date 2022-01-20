@@ -2,39 +2,42 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C0E7C433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 00:18:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CA90C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 00:18:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345047AbiATASm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Jan 2022 19:18:42 -0500
-Received: from ams.source.kernel.org ([145.40.68.75]:45910 "EHLO
-        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233210AbiATASm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jan 2022 19:18:42 -0500
+        id S233210AbiATASr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Jan 2022 19:18:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38030 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1345061AbiATASq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jan 2022 19:18:46 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B0B2FC061574
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Jan 2022 16:18:46 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 64179B81C34
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Jan 2022 00:18:41 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2EFBEC004E1;
-        Thu, 20 Jan 2022 00:18:40 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 50C1561510
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jan 2022 00:18:46 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB285C004E1;
+        Thu, 20 Jan 2022 00:18:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642637920;
-        bh=flvviJq7izhwh0sWKoxrLVzR1rvB9KAUe1BDsuEAa34=;
+        s=k20201202; t=1642637925;
+        bh=V9KED14WUY/JT8WgSJwuQfvFxK/DgkFv/Kstl4Y4NW4=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=MGumtDcNwsBqw8wXAbpUiwr0qAfmyelmr4/EZuUxJ517jgwlCPOjXW6UsypqWPNIW
-         FtjXN4ldhH2fNGX/fsIYBnWywByEVK3MunO25BMiOECDDMwMeZqjfeoEsr0ztT4x24
-         qA3H0nYTyX+pt8W18jIZuebjJswWhzZk/T1A3fE9LKxD4LtIQ7+ieKIOGN0VKkDEP3
-         JRSayTJgJTjbrxYxpOWde0v//86NYeAmrHAyhbNkaR/kE8gEP/4TYyrBMepJVy96Vi
-         7rNqzIVlmmZfTj0YoScjD/ir3jJ6fA5Yf9MZei52OzP4YrXs63aJKym9LrWWvXGF85
-         Ra/80Syhng+jw==
-Subject: [PATCH 14/45] xfs: make the keys and records passed to btree inorder
- functions const
+        b=o009PDAMG+my/U3auLy8b4HhHw41iUnoTQ4sO+GYDKH3rF3fk0J7wkTV/t37Um+iq
+         Z068SpDUaXIYJ1mkQpPPNOUffMCxk0lFk1ScGy3QLiRtgZBXQXSnyIHlw0K+Xm2Fbg
+         fYmbGOazEYfw/nIcO2I3FD4D9CbJJkJOQzCKOFcLVKDdVvwVoK5cB6H8SgToSSDGGt
+         MLZjPqV36Aj5wENed8/ZiMAOG3SaT1BGMKQubRbBQqWPuvlH/9obqTQboXU0tD6l9O
+         FEfeUo9W+FWVzpCWzQlO6TZePCjv0xjYgPTRwSt7tu8SanbYm7CBVstsCC6ahBcLko
+         2J9WVhtLQ1+PA==
+Subject: [PATCH 15/45] xfs: mark the record passed into xchk_btree functions
+ as const
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
 Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Date:   Wed, 19 Jan 2022 16:18:39 -0800
-Message-ID: <164263791991.860211.3190861713093208231.stgit@magnolia>
+Date:   Wed, 19 Jan 2022 16:18:45 -0800
+Message-ID: <164263792538.860211.10681620497227990371.stgit@magnolia>
 In-Reply-To: <164263784199.860211.7509808171577819673.stgit@magnolia>
 References: <164263784199.860211.7509808171577819673.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -47,220 +50,76 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 8e38dc88a67b3c7475cbe8a132d03542717c1e27
+Source kernel commit: 22ece4e836beff1df528ee09cf21ca5fab7235f5
 
-The inorder functions are simple predicates, which means that they don't
-modify the parameters.  Mark them all const.
+xchk_btree calls a user-supplied function to validate each btree record
+that it finds.  Those functions are not supposed to change the record
+data, so mark the parameter const.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/xfs_alloc_btree.c    |   24 ++++++++++++------------
- libxfs/xfs_bmap_btree.c     |   12 ++++++------
- libxfs/xfs_btree.h          |    8 ++++----
- libxfs/xfs_ialloc_btree.c   |   12 ++++++------
- libxfs/xfs_refcount_btree.c |   12 ++++++------
- libxfs/xfs_rmap_btree.c     |   12 ++++++------
- 6 files changed, 40 insertions(+), 40 deletions(-)
+ include/xfs_arch.h      |   10 +++++-----
+ libxfs/xfs_bmap_btree.c |    2 +-
+ libxfs/xfs_bmap_btree.h |    3 ++-
+ 3 files changed, 8 insertions(+), 7 deletions(-)
 
 
-diff --git a/libxfs/xfs_alloc_btree.c b/libxfs/xfs_alloc_btree.c
-index fb2fdb4a..79130125 100644
---- a/libxfs/xfs_alloc_btree.c
-+++ b/libxfs/xfs_alloc_btree.c
-@@ -374,9 +374,9 @@ const struct xfs_buf_ops xfs_cntbt_buf_ops = {
+diff --git a/include/xfs_arch.h b/include/xfs_arch.h
+index 7f973249..d46ae470 100644
+--- a/include/xfs_arch.h
++++ b/include/xfs_arch.h
+@@ -232,19 +232,19 @@ static inline void be64_add_cpu(__be64 *a, __s64 b)
+ 	*a = cpu_to_be64(be64_to_cpu(*a) + b);
+ }
  
- STATIC int
- xfs_bnobt_keys_inorder(
--	struct xfs_btree_cur	*cur,
--	union xfs_btree_key	*k1,
--	union xfs_btree_key	*k2)
-+	struct xfs_btree_cur		*cur,
-+	const union xfs_btree_key	*k1,
-+	const union xfs_btree_key	*k2)
+-static inline uint16_t get_unaligned_be16(void *p)
++static inline uint16_t get_unaligned_be16(const void *p)
  {
- 	return be32_to_cpu(k1->alloc.ar_startblock) <
- 	       be32_to_cpu(k2->alloc.ar_startblock);
-@@ -384,9 +384,9 @@ xfs_bnobt_keys_inorder(
+-	uint8_t *__p = p;
++	const uint8_t *__p = p;
+ 	return __p[0] << 8 | __p[1];
+ }
  
- STATIC int
- xfs_bnobt_recs_inorder(
--	struct xfs_btree_cur	*cur,
--	union xfs_btree_rec	*r1,
--	union xfs_btree_rec	*r2)
-+	struct xfs_btree_cur		*cur,
-+	const union xfs_btree_rec	*r1,
-+	const union xfs_btree_rec	*r2)
+-static inline uint32_t get_unaligned_be32(void *p)
++static inline uint32_t get_unaligned_be32(const void *p)
  {
- 	return be32_to_cpu(r1->alloc.ar_startblock) +
- 		be32_to_cpu(r1->alloc.ar_blockcount) <=
-@@ -395,9 +395,9 @@ xfs_bnobt_recs_inorder(
+-	uint8_t *__p = p;
++	const uint8_t *__p = p;
+         return (uint32_t)__p[0] << 24 | __p[1] << 16 | __p[2] << 8 | __p[3];
+ }
  
- STATIC int
- xfs_cntbt_keys_inorder(
--	struct xfs_btree_cur	*cur,
--	union xfs_btree_key	*k1,
--	union xfs_btree_key	*k2)
-+	struct xfs_btree_cur		*cur,
-+	const union xfs_btree_key	*k1,
-+	const union xfs_btree_key	*k2)
+-static inline uint64_t get_unaligned_be64(void *p)
++static inline uint64_t get_unaligned_be64(const void *p)
  {
- 	return be32_to_cpu(k1->alloc.ar_blockcount) <
- 		be32_to_cpu(k2->alloc.ar_blockcount) ||
-@@ -408,9 +408,9 @@ xfs_cntbt_keys_inorder(
- 
- STATIC int
- xfs_cntbt_recs_inorder(
--	struct xfs_btree_cur	*cur,
--	union xfs_btree_rec	*r1,
--	union xfs_btree_rec	*r2)
-+	struct xfs_btree_cur		*cur,
-+	const union xfs_btree_rec	*r1,
-+	const union xfs_btree_rec	*r2)
- {
- 	return be32_to_cpu(r1->alloc.ar_blockcount) <
- 		be32_to_cpu(r2->alloc.ar_blockcount) ||
+ 	return (uint64_t)get_unaligned_be32(p) << 32 |
+ 			   get_unaligned_be32(p + 4);
 diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
-index 73e387f5..acaf2941 100644
+index acaf2941..9e2e9926 100644
 --- a/libxfs/xfs_bmap_btree.c
 +++ b/libxfs/xfs_bmap_btree.c
-@@ -495,9 +495,9 @@ const struct xfs_buf_ops xfs_bmbt_buf_ops = {
+@@ -56,7 +56,7 @@ xfs_bmdr_to_bmbt(
  
- STATIC int
- xfs_bmbt_keys_inorder(
--	struct xfs_btree_cur	*cur,
--	union xfs_btree_key	*k1,
--	union xfs_btree_key	*k2)
-+	struct xfs_btree_cur		*cur,
-+	const union xfs_btree_key	*k1,
-+	const union xfs_btree_key	*k2)
+ void
+ xfs_bmbt_disk_get_all(
+-	struct xfs_bmbt_rec	*rec,
++	const struct xfs_bmbt_rec *rec,
+ 	struct xfs_bmbt_irec	*irec)
  {
- 	return be64_to_cpu(k1->bmbt.br_startoff) <
- 		be64_to_cpu(k2->bmbt.br_startoff);
-@@ -505,9 +505,9 @@ xfs_bmbt_keys_inorder(
+ 	uint64_t		l0 = get_unaligned_be64(&rec->l0);
+diff --git a/libxfs/xfs_bmap_btree.h b/libxfs/xfs_bmap_btree.h
+index 209ded1e..eda85512 100644
+--- a/libxfs/xfs_bmap_btree.h
++++ b/libxfs/xfs_bmap_btree.h
+@@ -90,7 +90,8 @@ extern void xfs_bmdr_to_bmbt(struct xfs_inode *, xfs_bmdr_block_t *, int,
+ void xfs_bmbt_disk_set_all(struct xfs_bmbt_rec *r, struct xfs_bmbt_irec *s);
+ extern xfs_filblks_t xfs_bmbt_disk_get_blockcount(const struct xfs_bmbt_rec *r);
+ extern xfs_fileoff_t xfs_bmbt_disk_get_startoff(const struct xfs_bmbt_rec *r);
+-extern void xfs_bmbt_disk_get_all(xfs_bmbt_rec_t *r, xfs_bmbt_irec_t *s);
++void xfs_bmbt_disk_get_all(const struct xfs_bmbt_rec *r,
++		struct xfs_bmbt_irec *s);
  
- STATIC int
- xfs_bmbt_recs_inorder(
--	struct xfs_btree_cur	*cur,
--	union xfs_btree_rec	*r1,
--	union xfs_btree_rec	*r2)
-+	struct xfs_btree_cur		*cur,
-+	const union xfs_btree_rec	*r1,
-+	const union xfs_btree_rec	*r2)
- {
- 	return xfs_bmbt_disk_get_startoff(&r1->bmbt) +
- 		xfs_bmbt_disk_get_blockcount(&r1->bmbt) <=
-diff --git a/libxfs/xfs_btree.h b/libxfs/xfs_btree.h
-index c4c701fd..4b95373c 100644
---- a/libxfs/xfs_btree.h
-+++ b/libxfs/xfs_btree.h
-@@ -154,13 +154,13 @@ struct xfs_btree_ops {
- 
- 	/* check that k1 is lower than k2 */
- 	int	(*keys_inorder)(struct xfs_btree_cur *cur,
--				union xfs_btree_key *k1,
--				union xfs_btree_key *k2);
-+				const union xfs_btree_key *k1,
-+				const union xfs_btree_key *k2);
- 
- 	/* check that r1 is lower than r2 */
- 	int	(*recs_inorder)(struct xfs_btree_cur *cur,
--				union xfs_btree_rec *r1,
--				union xfs_btree_rec *r2);
-+				const union xfs_btree_rec *r1,
-+				const union xfs_btree_rec *r2);
- };
- 
- /*
-diff --git a/libxfs/xfs_ialloc_btree.c b/libxfs/xfs_ialloc_btree.c
-index e7b19d2a..14b54f13 100644
---- a/libxfs/xfs_ialloc_btree.c
-+++ b/libxfs/xfs_ialloc_btree.c
-@@ -359,9 +359,9 @@ const struct xfs_buf_ops xfs_finobt_buf_ops = {
- 
- STATIC int
- xfs_inobt_keys_inorder(
--	struct xfs_btree_cur	*cur,
--	union xfs_btree_key	*k1,
--	union xfs_btree_key	*k2)
-+	struct xfs_btree_cur		*cur,
-+	const union xfs_btree_key	*k1,
-+	const union xfs_btree_key	*k2)
- {
- 	return be32_to_cpu(k1->inobt.ir_startino) <
- 		be32_to_cpu(k2->inobt.ir_startino);
-@@ -369,9 +369,9 @@ xfs_inobt_keys_inorder(
- 
- STATIC int
- xfs_inobt_recs_inorder(
--	struct xfs_btree_cur	*cur,
--	union xfs_btree_rec	*r1,
--	union xfs_btree_rec	*r2)
-+	struct xfs_btree_cur		*cur,
-+	const union xfs_btree_rec	*r1,
-+	const union xfs_btree_rec	*r2)
- {
- 	return be32_to_cpu(r1->inobt.ir_startino) + XFS_INODES_PER_CHUNK <=
- 		be32_to_cpu(r2->inobt.ir_startino);
-diff --git a/libxfs/xfs_refcount_btree.c b/libxfs/xfs_refcount_btree.c
-index 04bc5816..b088c4a0 100644
---- a/libxfs/xfs_refcount_btree.c
-+++ b/libxfs/xfs_refcount_btree.c
-@@ -268,9 +268,9 @@ const struct xfs_buf_ops xfs_refcountbt_buf_ops = {
- 
- STATIC int
- xfs_refcountbt_keys_inorder(
--	struct xfs_btree_cur	*cur,
--	union xfs_btree_key	*k1,
--	union xfs_btree_key	*k2)
-+	struct xfs_btree_cur		*cur,
-+	const union xfs_btree_key	*k1,
-+	const union xfs_btree_key	*k2)
- {
- 	return be32_to_cpu(k1->refc.rc_startblock) <
- 	       be32_to_cpu(k2->refc.rc_startblock);
-@@ -278,9 +278,9 @@ xfs_refcountbt_keys_inorder(
- 
- STATIC int
- xfs_refcountbt_recs_inorder(
--	struct xfs_btree_cur	*cur,
--	union xfs_btree_rec	*r1,
--	union xfs_btree_rec	*r2)
-+	struct xfs_btree_cur		*cur,
-+	const union xfs_btree_rec	*r1,
-+	const union xfs_btree_rec	*r2)
- {
- 	return  be32_to_cpu(r1->refc.rc_startblock) +
- 		be32_to_cpu(r1->refc.rc_blockcount) <=
-diff --git a/libxfs/xfs_rmap_btree.c b/libxfs/xfs_rmap_btree.c
-index 294d4a41..6d28a469 100644
---- a/libxfs/xfs_rmap_btree.c
-+++ b/libxfs/xfs_rmap_btree.c
-@@ -362,9 +362,9 @@ const struct xfs_buf_ops xfs_rmapbt_buf_ops = {
- 
- STATIC int
- xfs_rmapbt_keys_inorder(
--	struct xfs_btree_cur	*cur,
--	union xfs_btree_key	*k1,
--	union xfs_btree_key	*k2)
-+	struct xfs_btree_cur		*cur,
-+	const union xfs_btree_key	*k1,
-+	const union xfs_btree_key	*k2)
- {
- 	uint32_t		x;
- 	uint32_t		y;
-@@ -392,9 +392,9 @@ xfs_rmapbt_keys_inorder(
- 
- STATIC int
- xfs_rmapbt_recs_inorder(
--	struct xfs_btree_cur	*cur,
--	union xfs_btree_rec	*r1,
--	union xfs_btree_rec	*r2)
-+	struct xfs_btree_cur		*cur,
-+	const union xfs_btree_rec	*r1,
-+	const union xfs_btree_rec	*r2)
- {
- 	uint32_t		x;
- 	uint32_t		y;
+ extern void xfs_bmbt_to_bmdr(struct xfs_mount *, struct xfs_btree_block *, int,
+ 			xfs_bmdr_block_t *, int);
 
