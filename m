@@ -2,40 +2,41 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 475BAC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 00:24:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB411C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 00:24:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240596AbiATAYV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Jan 2022 19:24:21 -0500
-Received: from ams.source.kernel.org ([145.40.68.75]:47890 "EHLO
-        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345268AbiATAYV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jan 2022 19:24:21 -0500
+        id S1345269AbiATAYZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Jan 2022 19:24:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39340 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1345222AbiATAYZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jan 2022 19:24:25 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 27B3DC061574
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Jan 2022 16:24:25 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id EE2E4B81A85
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Jan 2022 00:24:19 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9868DC004E1;
-        Thu, 20 Jan 2022 00:24:18 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B88D26150C
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jan 2022 00:24:24 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1DD0DC004E1;
+        Thu, 20 Jan 2022 00:24:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642638258;
-        bh=JAec7AUGvrm0SRaNuT9s4Px5J2p9f7Kbr9NsOjvPspE=;
+        s=k20201202; t=1642638264;
+        bh=eThtSgh6puhCDl2tK7Spv6x0YBKzRogBFmeU4mq/iwo=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=pK7seHISgajp349Uu2CgJdi5TJ/EaOyQEnjZL1dnzjtGKxSienDtZ0OuWKNIYHPzc
-         reE+rCbc37Z+x2i8Ev0YEawKgsZIPdkM4GVR2sqwKFauL72q3wivDGDR0HD3I1Ja3V
-         8CLXJrFouI6HqfoQ14f+cklinmE0+Pr5x17qfyN5LdclFz/Qw4MmylQIfbxhOaFuJT
-         Wt52ObRBoedRgV0mOXN5fvrueigsKEna6rDaHg4pOs4RFjKqy+DRHJ0jJ4wNwP2JFA
-         ZOvoVJIETeYjXxfTR30BSLak4W6WJeuG/RIykpSvObtU1TDeFdRHOApG/w3JZM/WQW
-         T6hoC0tWHLK0g==
-Subject: [PATCH 12/48] xfs: fix perag reference leak on iteration race with
- growfs
+        b=BCgA7aFIHSmuLkDg/ddnA6rsqs4rJX0aqCRuWHGkAHruYeu2fjrg7ZZRLrwHcEpkR
+         HuX2mr2qLwjpuwWbHDUxQDPwPKLgz0g7fJ9WhiexyRlOb20S4X++PLOHqoSDlQ4YJQ
+         bAudZ/n+BJ/gjtEZc8Ope3lZaB6+HetxLy2CAw8KQGOSehCVqk+UhLzmutik2zJkel
+         7+jK6TeAi5O5sLXv4QTUx9G+KsjiUPtz+e+1B+QNDAdbrSZ7PCZcQ3rISjno/YZJEz
+         QEwSQbNGowlVKzgx5N/s2tQ+xlOFWDoU76Vx+WWf1By3XfLKHZXLHcGt8xi4kspYP3
+         3+RSTj7SXPrJw==
+Subject: [PATCH 13/48] xfs: remove xfs_btree_cur.bc_blocklog
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
-Cc:     Brian Foster <bfoster@redhat.com>,
-        Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
-Date:   Wed, 19 Jan 2022 16:24:18 -0800
-Message-ID: <164263825835.865554.16091663428028357322.stgit@magnolia>
+Cc:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
+Date:   Wed, 19 Jan 2022 16:24:23 -0800
+Message-ID: <164263826380.865554.7368372957111538202.stgit@magnolia>
 In-Reply-To: <164263819185.865554.6000499997543946756.stgit@magnolia>
 References: <164263819185.865554.6000499997543946756.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -46,86 +47,96 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Brian Foster <bfoster@redhat.com>
+From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 892a666fafa19ab04b5e948f6c92f98f1dafb489
+Source kernel commit: cc411740472d958b718b9c6a7791ba00d88f7cef
 
-The for_each_perag*() set of macros are hacky in that some (i.e.
-those based on sb_agcount) rely on the assumption that perag
-iteration terminates naturally with a NULL perag at the specified
-end_agno. Others allow for the final AG to have a valid perag and
-require the calling function to clean up any potential leftover
-xfs_perag reference on termination of the loop.
+This field isn't used by anyone, so get rid of it.
 
-Aside from providing a subtly inconsistent interface, the former
-variant is racy with growfs because growfs can create discoverable
-post-eofs perags before the final superblock update that completes
-the grow operation and increases sb_agcount. This leads to the
-following assert failure (reproduced by xfs/104) in the perag free
-path during unmount:
-
-XFS: Assertion failed: atomic_read(&pag->pag_ref) == 0, file: fs/xfs/libxfs/xfs_ag.c, line: 195
-
-This occurs because one of the many for_each_perag() loops in the
-code that is expected to terminate with a NULL pag (and thus has no
-post-loop xfs_perag_put() check) raced with a growfs and found a
-non-NULL post-EOFS perag, but terminated naturally based on the
-end_agno check without releasing the post-EOFS perag.
-
-Rework the iteration logic to lift the agno check from the main for
-loop conditional to the iteration helper function. The for loop now
-purely terminates on a NULL pag and xfs_perag_next() avoids taking a
-reference to any perag beyond end_agno in the first place.
-
-Fixes: f250eedcf762 ("xfs: make for_each_perag... a first class citizen")
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/xfs_ag.h |   16 ++++++----------
- 1 file changed, 6 insertions(+), 10 deletions(-)
+ libxfs/xfs_alloc_btree.c    |    1 -
+ libxfs/xfs_bmap_btree.c     |    1 -
+ libxfs/xfs_btree.h          |    1 -
+ libxfs/xfs_ialloc_btree.c   |    2 --
+ libxfs/xfs_refcount_btree.c |    1 -
+ libxfs/xfs_rmap_btree.c     |    1 -
+ 6 files changed, 7 deletions(-)
 
 
-diff --git a/libxfs/xfs_ag.h b/libxfs/xfs_ag.h
-index fae2a38e..e411d51c 100644
---- a/libxfs/xfs_ag.h
-+++ b/libxfs/xfs_ag.h
-@@ -118,30 +118,26 @@ void xfs_perag_put(struct xfs_perag *pag);
+diff --git a/libxfs/xfs_alloc_btree.c b/libxfs/xfs_alloc_btree.c
+index 03ebefc3..46d0f229 100644
+--- a/libxfs/xfs_alloc_btree.c
++++ b/libxfs/xfs_alloc_btree.c
+@@ -480,7 +480,6 @@ xfs_allocbt_init_common(
+ 	cur->bc_tp = tp;
+ 	cur->bc_mp = mp;
+ 	cur->bc_btnum = btnum;
+-	cur->bc_blocklog = mp->m_sb.sb_blocklog;
+ 	cur->bc_ag.abt.active = false;
  
- /*
-  * Perag iteration APIs
-- *
-- * XXX: for_each_perag_range() usage really needs an iterator to clean up when
-- * we terminate at end_agno because we may have taken a reference to the perag
-- * beyond end_agno. Right now callers have to be careful to catch and clean that
-- * up themselves. This is not necessary for the callers of for_each_perag() and
-- * for_each_perag_from() because they terminate at sb_agcount where there are
-- * no perag structures in tree beyond end_agno.
-  */
- static inline struct xfs_perag *
- xfs_perag_next(
- 	struct xfs_perag	*pag,
--	xfs_agnumber_t		*agno)
-+	xfs_agnumber_t		*agno,
-+	xfs_agnumber_t		end_agno)
- {
- 	struct xfs_mount	*mp = pag->pag_mount;
+ 	if (btnum == XFS_BTNUM_CNT) {
+diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
+index aea9b5a8..565e8af7 100644
+--- a/libxfs/xfs_bmap_btree.c
++++ b/libxfs/xfs_bmap_btree.c
+@@ -556,7 +556,6 @@ xfs_bmbt_init_cursor(
+ 	cur->bc_mp = mp;
+ 	cur->bc_nlevels = be16_to_cpu(ifp->if_broot->bb_level) + 1;
+ 	cur->bc_btnum = XFS_BTNUM_BMAP;
+-	cur->bc_blocklog = mp->m_sb.sb_blocklog;
+ 	cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_bmbt_2);
  
- 	*agno = pag->pag_agno + 1;
- 	xfs_perag_put(pag);
-+	if (*agno > end_agno)
-+		return NULL;
- 	return xfs_perag_get(mp, *agno);
- }
+ 	cur->bc_ops = &xfs_bmbt_ops;
+diff --git a/libxfs/xfs_btree.h b/libxfs/xfs_btree.h
+index 513ade4a..49ecc496 100644
+--- a/libxfs/xfs_btree.h
++++ b/libxfs/xfs_btree.h
+@@ -229,7 +229,6 @@ struct xfs_btree_cur
+ #define	XFS_BTCUR_LEFTRA	1	/* left sibling has been read-ahead */
+ #define	XFS_BTCUR_RIGHTRA	2	/* right sibling has been read-ahead */
+ 	uint8_t		bc_nlevels;	/* number of levels in the tree */
+-	uint8_t		bc_blocklog;	/* log2(blocksize) of btree blocks */
+ 	xfs_btnum_t	bc_btnum;	/* identifies which btree type */
+ 	int		bc_statoff;	/* offset of btre stats array */
  
- #define for_each_perag_range(mp, agno, end_agno, pag) \
- 	for ((pag) = xfs_perag_get((mp), (agno)); \
--		(pag) != NULL && (agno) <= (end_agno); \
--		(pag) = xfs_perag_next((pag), &(agno)))
-+		(pag) != NULL; \
-+		(pag) = xfs_perag_next((pag), &(agno), (end_agno)))
+diff --git a/libxfs/xfs_ialloc_btree.c b/libxfs/xfs_ialloc_btree.c
+index 1a5289ce..f1e03cfd 100644
+--- a/libxfs/xfs_ialloc_btree.c
++++ b/libxfs/xfs_ialloc_btree.c
+@@ -443,8 +443,6 @@ xfs_inobt_init_common(
+ 		cur->bc_ops = &xfs_finobt_ops;
+ 	}
  
- #define for_each_perag_from(mp, agno, pag) \
- 	for_each_perag_range((mp), (agno), (mp)->m_sb.sb_agcount - 1, (pag))
+-	cur->bc_blocklog = mp->m_sb.sb_blocklog;
+-
+ 	if (xfs_has_crc(mp))
+ 		cur->bc_flags |= XFS_BTREE_CRC_BLOCKS;
+ 
+diff --git a/libxfs/xfs_refcount_btree.c b/libxfs/xfs_refcount_btree.c
+index 62ef048c..f7f99cbd 100644
+--- a/libxfs/xfs_refcount_btree.c
++++ b/libxfs/xfs_refcount_btree.c
+@@ -325,7 +325,6 @@ xfs_refcountbt_init_common(
+ 	cur->bc_tp = tp;
+ 	cur->bc_mp = mp;
+ 	cur->bc_btnum = XFS_BTNUM_REFC;
+-	cur->bc_blocklog = mp->m_sb.sb_blocklog;
+ 	cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_refcbt_2);
+ 
+ 	cur->bc_flags |= XFS_BTREE_CRC_BLOCKS;
+diff --git a/libxfs/xfs_rmap_btree.c b/libxfs/xfs_rmap_btree.c
+index ca72324b..bba29eea 100644
+--- a/libxfs/xfs_rmap_btree.c
++++ b/libxfs/xfs_rmap_btree.c
+@@ -455,7 +455,6 @@ xfs_rmapbt_init_common(
+ 	/* Overlapping btree; 2 keys per pointer. */
+ 	cur->bc_btnum = XFS_BTNUM_RMAP;
+ 	cur->bc_flags = XFS_BTREE_CRC_BLOCKS | XFS_BTREE_OVERLAPPING;
+-	cur->bc_blocklog = mp->m_sb.sb_blocklog;
+ 	cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_rmap_2);
+ 	cur->bc_ops = &xfs_rmapbt_ops;
+ 
 
