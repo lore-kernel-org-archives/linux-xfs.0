@@ -2,41 +2,40 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CEFD5C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 00:19:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D907FC433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 00:20:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1357755AbiATAT7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Jan 2022 19:19:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38308 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233299AbiATAT6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jan 2022 19:19:58 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6AE05C061574
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Jan 2022 16:19:58 -0800 (PST)
+        id S1357734AbiATAUE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Jan 2022 19:20:04 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:57996 "EHLO
+        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233299AbiATAUD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jan 2022 19:20:03 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0BB5261512
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Jan 2022 00:19:58 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 64D8FC004E1;
-        Thu, 20 Jan 2022 00:19:57 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 92BA561514
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jan 2022 00:20:03 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8021C004E1;
+        Thu, 20 Jan 2022 00:20:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642637997;
-        bh=f4JvEd2SDdPCMya4o2fYmXzDI5lRD9y3GraUXs6LWd0=;
+        s=k20201202; t=1642638003;
+        bh=hPKIA8sy5+U7xHk6OK388JWVpWLk2Lv+JPcnMNNBOXw=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=pwquM6Ub1hbitIc2UQ/6A7dgO0TwZ7L8PB21zBKVmPB3wRiOdJ+5fa5FYYpqgHppy
-         9FEEMph0xff4OQl1qp11xp8G2NTZc0CoORDUwr6MkB/hGsKOGHVg/BvECAmdaacG6G
-         VmjzSjwFUJiHDJET2tL0r1yT0Ofq6xhceMGjabkUbsuT0cg0SISi9LU55zgQB8J/to
-         eeCNZiqOiGwy9bXcHdgExlDZlwZEtkZhgxunGMnfvNHVy6k0o1528n+DhlBEIr3HaP
-         0oNp8/ro+to6bdLhqkCrW6pXq7VnEqTyL9J9Nod+00KYhO/TGtE2+spJTRVSqPF9s8
-         c/tk6QiJGxlJA==
-Subject: [PATCH 28/45] xfs: replace XFS_FORCED_SHUTDOWN with xfs_is_shutdown
+        b=KuK3Cre4f/XK40VDkSNJiQPQeGWvLdIXJLpoLtcFZ1yBQFUnkGI27Hf0glZUGT13S
+         rNBHxD3JHCROme5Lg37a5ey0svkuQejg09+je42vusVWaeTefhZ6H8lFB987Ek6eCC
+         jE19cmjal/vcnkmJNNySdg25byH4b4yaN336FnEKg8agwzMHcWs2YWUXxlkLQTVJUh
+         5SEPXZHPks0DTI44JgjjYCzd05/GnMt8+rf3MzMir6M+B9t3DIw1qvwdhITy+MWYyc
+         oLNVxDp5usRTonvEh2M61SMZMiYvVy0cANBTj8UY1Ohwo6Q4s2VnajaT0NDaCGNUZB
+         1PaLGBZUlQRxw==
+Subject: [PATCH 29/45] xfs: convert xfs_fs_geometry to use mount feature
+ checks
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
-Cc:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
-Date:   Wed, 19 Jan 2022 16:19:57 -0800
-Message-ID: <164263799708.860211.6150741709952304038.stgit@magnolia>
+Cc:     Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>,
+        linux-xfs@vger.kernel.org
+Date:   Wed, 19 Jan 2022 16:20:02 -0800
+Message-ID: <164263800259.860211.4053587252148975871.stgit@magnolia>
 In-Reply-To: <164263784199.860211.7509808171577819673.stgit@magnolia>
 References: <164263784199.860211.7509808171577819673.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,203 +48,159 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Source kernel commit: 75c8c50fa16a23f8ac89ea74834ae8ddd1558d75
+Source kernel commit: 03288b19093b9bcff72f0d5f90c578daf053f759
 
-Remove the shouty macro and instead use the inline function that
-matches other state/feature check wrapper naming. This conversion
-was done with sed.
+Reporting filesystem features to userspace is currently superblock
+based. Now we have a general mount-based feature infrastructure,
+switch to using the xfs_mount rather than the superblock directly.
+
+This reduces the size of the function by over 300 bytes.
+
+$ size -t fs/xfs/built-in.a
+text    data     bss     dec     hex filename
+before  1127855  311352     484 1439691  15f7cb (TOTALS)
+after   1127535  311352     484 1439371  15f68b (TOTALS)
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- include/xfs_mount.h  |    1 +
- libxfs/libxfs_priv.h |    1 -
- libxfs/xfs_alloc.c   |    2 +-
- libxfs/xfs_attr.c    |    4 ++--
- libxfs/xfs_bmap.c    |   16 ++++++++--------
- libxfs/xfs_btree.c   |    2 +-
- libxfs/xfs_ialloc.c  |    6 +++---
- 7 files changed, 16 insertions(+), 16 deletions(-)
+ db/info.c       |    2 +-
+ libxfs/xfs_sb.c |   46 ++++++++++++++++++++++++----------------------
+ libxfs/xfs_sb.h |    2 +-
+ mkfs/xfs_mkfs.c |    2 +-
+ 4 files changed, 27 insertions(+), 25 deletions(-)
 
 
-diff --git a/include/xfs_mount.h b/include/xfs_mount.h
-index 97a1a808..97e27724 100644
---- a/include/xfs_mount.h
-+++ b/include/xfs_mount.h
-@@ -241,6 +241,7 @@ static inline bool xfs_is_ ## name (struct xfs_mount *mp) \
- 	return false; \
- }
- __XFS_UNSUPP_OPSTATE(readonly)
-+__XFS_UNSUPP_OPSTATE(shutdown)
+diff --git a/db/info.c b/db/info.c
+index fdee76ba..b69bae91 100644
+--- a/db/info.c
++++ b/db/info.c
+@@ -29,7 +29,7 @@ info_f(
+ {
+ 	struct xfs_fsop_geom	geo;
  
- #define LIBXFS_MOUNT_DEBUGGER		0x0001
- #define LIBXFS_MOUNT_32BITINODES	0x0002
-diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-index 0214919c..fd15ed78 100644
---- a/libxfs/libxfs_priv.h
-+++ b/libxfs/libxfs_priv.h
-@@ -161,7 +161,6 @@ enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
- 	(unlikely(expr) ? XFS_WARN_CORRUPT((mp), (expr)) : false)
- 
- #define XFS_ERRLEVEL_LOW		1
--#define XFS_FORCED_SHUTDOWN(mp)		0
- #define XFS_ILOCK_EXCL			0
- #define XFS_STATS_INC(mp, count)	do { (mp) = (mp); } while (0)
- #define XFS_STATS_DEC(mp, count, x)	do { (mp) = (mp); } while (0)
-diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
-index 163c726f..c6159743 100644
---- a/libxfs/xfs_alloc.c
-+++ b/libxfs/xfs_alloc.c
-@@ -3075,7 +3075,7 @@ xfs_alloc_read_agf(
- 			atomic64_add(allocbt_blks, &mp->m_allocbt_blks);
- 	}
- #ifdef DEBUG
--	else if (!XFS_FORCED_SHUTDOWN(mp)) {
-+	else if (!xfs_is_shutdown(mp)) {
- 		ASSERT(pag->pagf_freeblks == be32_to_cpu(agf->agf_freeblks));
- 		ASSERT(pag->pagf_btreeblks == be32_to_cpu(agf->agf_btreeblks));
- 		ASSERT(pag->pagf_flcount == be32_to_cpu(agf->agf_flcount));
-diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index 3a712e36..00f3ecb5 100644
---- a/libxfs/xfs_attr.c
-+++ b/libxfs/xfs_attr.c
-@@ -146,7 +146,7 @@ xfs_attr_get(
- 
- 	XFS_STATS_INC(args->dp->i_mount, xs_attr_get);
- 
--	if (XFS_FORCED_SHUTDOWN(args->dp->i_mount))
-+	if (xfs_is_shutdown(args->dp->i_mount))
- 		return -EIO;
- 
- 	args->geo = args->dp->i_mount->m_attr_geo;
-@@ -710,7 +710,7 @@ xfs_attr_set(
- 	int			rmt_blks = 0;
- 	unsigned int		total;
- 
--	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
-+	if (xfs_is_shutdown(dp->i_mount))
- 		return -EIO;
- 
- 	error = xfs_qm_dqattach(dp);
-diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index bea9340a..1735717c 100644
---- a/libxfs/xfs_bmap.c
-+++ b/libxfs/xfs_bmap.c
-@@ -3931,7 +3931,7 @@ xfs_bmapi_read(
- 	    XFS_TEST_ERROR(false, mp, XFS_ERRTAG_BMAPIFORMAT))
- 		return -EFSCORRUPTED;
- 
--	if (XFS_FORCED_SHUTDOWN(mp))
-+	if (xfs_is_shutdown(mp))
- 		return -EIO;
- 
- 	XFS_STATS_INC(mp, xs_blk_mapr);
-@@ -4413,7 +4413,7 @@ xfs_bmapi_write(
- 		return -EFSCORRUPTED;
- 	}
- 
--	if (XFS_FORCED_SHUTDOWN(mp))
-+	if (xfs_is_shutdown(mp))
- 		return -EIO;
- 
- 	XFS_STATS_INC(mp, xs_blk_mapw);
-@@ -4696,7 +4696,7 @@ xfs_bmapi_remap(
- 		return -EFSCORRUPTED;
- 	}
- 
--	if (XFS_FORCED_SHUTDOWN(mp))
-+	if (xfs_is_shutdown(mp))
- 		return -EIO;
- 
- 	error = xfs_iread_extents(tp, ip, whichfork);
-@@ -5354,7 +5354,7 @@ __xfs_bunmapi(
- 	ifp = XFS_IFORK_PTR(ip, whichfork);
- 	if (XFS_IS_CORRUPT(mp, !xfs_ifork_has_extents(ifp)))
- 		return -EFSCORRUPTED;
--	if (XFS_FORCED_SHUTDOWN(mp))
-+	if (xfs_is_shutdown(mp))
- 		return -EIO;
- 
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-@@ -5845,7 +5845,7 @@ xfs_bmap_collapse_extents(
- 		return -EFSCORRUPTED;
- 	}
- 
--	if (XFS_FORCED_SHUTDOWN(mp))
-+	if (xfs_is_shutdown(mp))
- 		return -EIO;
- 
- 	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL));
-@@ -5923,7 +5923,7 @@ xfs_bmap_can_insert_extents(
- 
- 	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
- 
--	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
-+	if (xfs_is_shutdown(ip->i_mount))
- 		return -EIO;
- 
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
-@@ -5960,7 +5960,7 @@ xfs_bmap_insert_extents(
- 		return -EFSCORRUPTED;
- 	}
- 
--	if (XFS_FORCED_SHUTDOWN(mp))
-+	if (xfs_is_shutdown(mp))
- 		return -EIO;
- 
- 	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL));
-@@ -6063,7 +6063,7 @@ xfs_bmap_split_extent(
- 		return -EFSCORRUPTED;
- 	}
- 
--	if (XFS_FORCED_SHUTDOWN(mp))
-+	if (xfs_is_shutdown(mp))
- 		return -EIO;
- 
- 	/* Read in all the extents */
-diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
-index 817d6123..cfa36d5d 100644
---- a/libxfs/xfs_btree.c
-+++ b/libxfs/xfs_btree.c
-@@ -371,7 +371,7 @@ xfs_btree_del_cursor(
- 	}
- 
- 	ASSERT(cur->bc_btnum != XFS_BTNUM_BMAP || cur->bc_ino.allocated == 0 ||
--	       XFS_FORCED_SHUTDOWN(cur->bc_mp));
-+	       xfs_is_shutdown(cur->bc_mp));
- 	if (unlikely(cur->bc_flags & XFS_BTREE_STAGING))
- 		kmem_free(cur->bc_ops);
- 	if (!(cur->bc_flags & XFS_BTREE_LONG_PTRS) && cur->bc_ag.pag)
-diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
-index 4075ff5a..7ba6b5e9 100644
---- a/libxfs/xfs_ialloc.c
-+++ b/libxfs/xfs_ialloc.c
-@@ -236,7 +236,7 @@ xfs_check_agi_freecount(
- 			}
- 		} while (i == 1);
- 
--		if (!XFS_FORCED_SHUTDOWN(cur->bc_mp))
-+		if (!xfs_is_shutdown(cur->bc_mp))
- 			ASSERT(freecount == cur->bc_ag.pag->pagi_freecount);
- 	}
- 	return 0;
-@@ -1779,7 +1779,7 @@ xfs_dialloc(
- 				break;
- 		}
- 
--		if (XFS_FORCED_SHUTDOWN(mp)) {
-+		if (xfs_is_shutdown(mp)) {
- 			error = -EFSCORRUPTED;
- 			break;
- 		}
-@@ -2619,7 +2619,7 @@ xfs_ialloc_read_agi(
- 	 * we are in the middle of a forced shutdown.
- 	 */
- 	ASSERT(pag->pagi_freecount == be32_to_cpu(agi->agi_freecount) ||
--		XFS_FORCED_SHUTDOWN(mp));
-+		xfs_is_shutdown(mp));
+-	libxfs_fs_geometry(&mp->m_sb, &geo, XFS_FS_GEOM_MAX_STRUCT_VER);
++	libxfs_fs_geometry(mp, &geo, XFS_FS_GEOM_MAX_STRUCT_VER);
+ 	xfs_report_geom(&geo, fsdevice, x.logname, x.rtname);
  	return 0;
  }
+diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
+index d2de96d1..bc226208 100644
+--- a/libxfs/xfs_sb.c
++++ b/libxfs/xfs_sb.c
+@@ -1014,10 +1014,12 @@ xfs_sync_sb_buf(
  
+ void
+ xfs_fs_geometry(
+-	struct xfs_sb		*sbp,
++	struct xfs_mount	*mp,
+ 	struct xfs_fsop_geom	*geo,
+ 	int			struct_version)
+ {
++	struct xfs_sb		*sbp = &mp->m_sb;
++
+ 	memset(geo, 0, sizeof(struct xfs_fsop_geom));
+ 
+ 	geo->blocksize = sbp->sb_blocksize;
+@@ -1048,51 +1050,51 @@ xfs_fs_geometry(
+ 	geo->flags = XFS_FSOP_GEOM_FLAGS_NLINK |
+ 		     XFS_FSOP_GEOM_FLAGS_DIRV2 |
+ 		     XFS_FSOP_GEOM_FLAGS_EXTFLG;
+-	if (xfs_sb_version_hasattr(sbp))
++	if (xfs_has_attr(mp))
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_ATTR;
+-	if (xfs_sb_version_hasquota(sbp))
++	if (xfs_has_quota(mp))
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_QUOTA;
+-	if (xfs_sb_version_hasalign(sbp))
++	if (xfs_has_align(mp))
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_IALIGN;
+-	if (xfs_sb_version_hasdalign(sbp))
++	if (xfs_has_dalign(mp))
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_DALIGN;
+-	if (xfs_sb_version_hassector(sbp))
+-		geo->flags |= XFS_FSOP_GEOM_FLAGS_SECTOR;
+-	if (xfs_sb_version_hasasciici(sbp))
++	if (xfs_has_asciici(mp))
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_DIRV2CI;
+-	if (xfs_sb_version_haslazysbcount(sbp))
++	if (xfs_has_lazysbcount(mp))
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_LAZYSB;
+-	if (xfs_sb_version_hasattr2(sbp))
++	if (xfs_has_attr2(mp))
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_ATTR2;
+-	if (xfs_sb_version_hasprojid32(sbp))
++	if (xfs_has_projid32(mp))
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_PROJID32;
+-	if (xfs_sb_version_hascrc(sbp))
++	if (xfs_has_crc(mp))
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_V5SB;
+-	if (xfs_sb_version_hasftype(sbp))
++	if (xfs_has_ftype(mp))
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_FTYPE;
+-	if (xfs_sb_version_hasfinobt(sbp))
++	if (xfs_has_finobt(mp))
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_FINOBT;
+-	if (xfs_sb_version_hassparseinodes(sbp))
++	if (xfs_has_sparseinodes(mp))
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_SPINODES;
+-	if (xfs_sb_version_hasrmapbt(sbp))
++	if (xfs_has_rmapbt(mp))
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_RMAPBT;
+-	if (xfs_sb_version_hasreflink(sbp))
++	if (xfs_has_reflink(mp))
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_REFLINK;
+-	if (xfs_sb_version_hasbigtime(sbp))
++	if (xfs_has_bigtime(mp))
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_BIGTIME;
+-	if (xfs_sb_version_hasinobtcounts(sbp))
++	if (xfs_has_inobtcounts(mp))
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_INOBTCNT;
+-	if (xfs_sb_version_hassector(sbp))
++	if (xfs_has_sector(mp)) {
++		geo->flags |= XFS_FSOP_GEOM_FLAGS_SECTOR;
+ 		geo->logsectsize = sbp->sb_logsectsize;
+-	else
++	} else {
+ 		geo->logsectsize = BBSIZE;
++	}
+ 	geo->rtsectsize = sbp->sb_blocksize;
+ 	geo->dirblocksize = xfs_dir2_dirblock_bytes(sbp);
+ 
+ 	if (struct_version < 4)
+ 		return;
+ 
+-	if (xfs_sb_version_haslogv2(sbp))
++	if (xfs_has_logv2(mp))
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_LOGV2;
+ 
+ 	geo->logsunit = sbp->sb_logsunit;
+diff --git a/libxfs/xfs_sb.h b/libxfs/xfs_sb.h
+index d2dd99cb..8902f4bf 100644
+--- a/libxfs/xfs_sb.h
++++ b/libxfs/xfs_sb.h
+@@ -25,7 +25,7 @@ extern uint64_t	xfs_sb_version_to_features(struct xfs_sb *sbp);
+ extern int	xfs_update_secondary_sbs(struct xfs_mount *mp);
+ 
+ #define XFS_FS_GEOM_MAX_STRUCT_VER	(4)
+-extern void	xfs_fs_geometry(struct xfs_sb *sbp, struct xfs_fsop_geom *geo,
++extern void	xfs_fs_geometry(struct xfs_mount *mp, struct xfs_fsop_geom *geo,
+ 				int struct_version);
+ extern int	xfs_sb_read_secondary(struct xfs_mount *mp,
+ 				struct xfs_trans *tp, xfs_agnumber_t agno,
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 2340b7b1..63895f28 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -4038,7 +4038,7 @@ main(
+ 	if (!quiet || dry_run) {
+ 		struct xfs_fsop_geom	geo;
+ 
+-		libxfs_fs_geometry(sbp, &geo, XFS_FS_GEOM_MAX_STRUCT_VER);
++		libxfs_fs_geometry(mp, &geo, XFS_FS_GEOM_MAX_STRUCT_VER);
+ 		xfs_report_geom(&geo, dfile, logfile, rtfile);
+ 		if (dry_run)
+ 			exit(0);
 
