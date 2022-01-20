@@ -2,39 +2,41 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B72B6C433FE
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 00:23:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7D5DC433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 00:23:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345184AbiATAXA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Jan 2022 19:23:00 -0500
-Received: from ams.source.kernel.org ([145.40.68.75]:47500 "EHLO
-        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345140AbiATAW7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jan 2022 19:22:59 -0500
+        id S1345193AbiATAXG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Jan 2022 19:23:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39026 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1345140AbiATAXF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jan 2022 19:23:05 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3D14C061574
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Jan 2022 16:23:05 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id D35FCB81A85
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Jan 2022 00:22:58 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F727C004E1;
-        Thu, 20 Jan 2022 00:22:57 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 705B8B81911
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jan 2022 00:23:04 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20CC6C004E1;
+        Thu, 20 Jan 2022 00:23:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642638177;
-        bh=Ua8bISk1CltjDRTsc5gfjGBxbxwg1ntoHanPWUth40w=;
+        s=k20201202; t=1642638183;
+        bh=QgZnbGTEBqGHrvwLn99e0Q/ElJFVSKNRRvAxLp81QZI=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=kk2csPx2G19LibQB3Cm/eq3wgGxwx6FFLo2qgT9KQwAAilcYKrCA7TkGkF+acKR9n
-         2giUVUZt4xekavevnNaRllRZo1F3Qpch7GzDNaygHEXNQUHkunQto/WR4uHpOJvd8y
-         RWnluj4dUQfAj6/GP8mKvDjaE4+BTu1MYaxQ0JRdGVnlo+kI+OsFXenAcAfULTzfNb
-         bQoYGBuYF472jkpFBib5M3pwazj2oiFyRjx3yxgb5TgxQpQsgj1rqDt0e9zn5KgOdk
-         CIjfn/0R0KppZzY9/7yEWYCzdE87Hli0Qnwcz1NKl/ac+dW09BuzDEh736zhX+r+ZD
-         lo3R5idnImD+A==
-Subject: [PATCH 15/17] mkfs: document sample configuration file location
+        b=NBX7W4FU1uQUbh+VTQ8ezR6dQlZT+peWAPBty9zCNsRJfNo3a6bCdVogW5TLuwzd2
+         Pyz7Z0NxeR8A88PUGB+arz3kAMX6i9jf6g5U1T5HDpvHEjkB+jJqjkACVjLqp212Xm
+         5Xc3+1DaK24ro6t6fCa6pPkPjQ6qwaeUuymeacPDBByMOZbuj/MZ5P+8d9kIicC4n/
+         ilLxJHrC/kL6Bme5+oSBHKBc9wXMDNzz3XraIOLSnUUii/echKHjoSb2NnbSVP8rhn
+         9jD7i+gc5fR6H1hUsN5FP/X3SmtpAkxBFvFh5MXhpJBFQkEwi8jPRb8JdIteZGVu56
+         FdnsPSpLwWXmA==
+Subject: [PATCH 16/17] mkfs: add a config file for x86_64 pmem filesystems
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        allison.henderson@oracle.com
-Date:   Wed, 19 Jan 2022 16:22:57 -0800
-Message-ID: <164263817728.863810.8217395681158803767.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org, allison.henderson@oracle.com
+Date:   Wed, 19 Jan 2022 16:23:02 -0800
+Message-ID: <164263818283.863810.4750810429299999067.stgit@magnolia>
 In-Reply-To: <164263809453.863810.8908193461297738491.stgit@magnolia>
 References: <164263809453.863810.8908193461297738491.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -47,67 +49,55 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Update the documentation to note where one can find sample configuration
-files.  While we're at it, add -c to the topmost list of mkfs.xfs
-options.
+We have a handful of users who continually ping the maintainer with
+questions about why pmem and dax don't work quite the way they want
+(which is to say 2MB extents and PMD mappings) because they copy-pasted
+some garbage from Google that's wrong.  Encode the correct defaults into
+a mkfs config file and ship that.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- man/man8/Makefile      |    7 +++++++
- man/man8/mkfs.xfs.8.in |    4 ++++
- 2 files changed, 11 insertions(+)
- rename man/man8/{mkfs.xfs.8 => mkfs.xfs.8.in} (99%)
+ mkfs/Makefile        |    1 +
+ mkfs/dax_x86_64.conf |   19 +++++++++++++++++++
+ 2 files changed, 20 insertions(+)
+ create mode 100644 mkfs/dax_x86_64.conf
 
 
-diff --git a/man/man8/Makefile b/man/man8/Makefile
-index e6a55729..272e45ae 100644
---- a/man/man8/Makefile
-+++ b/man/man8/Makefile
-@@ -12,8 +12,10 @@ ifneq ("$(ENABLE_SCRUB)","yes")
- else
-   MAN_PAGES = $(shell echo *.$(MAN_SECTION))
- endif
-+MAN_PAGES	+= mkfs.xfs.8
- MAN_DEST	= $(PKG_MAN_DIR)/man$(MAN_SECTION)
- LSRCFILES	= $(MAN_PAGES)
-+DIRT		= mkfs.xfs.8
- 
- default : $(MAN_PAGES)
- 
-@@ -22,4 +24,9 @@ include $(BUILDRULES)
- install : default
- 	$(INSTALL) -m 755 -d $(MAN_DEST)
- 	$(INSTALL_MAN)
+diff --git a/mkfs/Makefile b/mkfs/Makefile
+index 0aaf9d06..55d9362f 100644
+--- a/mkfs/Makefile
++++ b/mkfs/Makefile
+@@ -10,6 +10,7 @@ LTCOMMAND = mkfs.xfs
+ HFILES =
+ CFILES = proto.c xfs_mkfs.c
+ CFGFILES = \
++	dax_x86_64.conf \
+ 	lts_4.19.conf \
+ 	lts_5.4.conf \
+ 	lts_5.10.conf \
+diff --git a/mkfs/dax_x86_64.conf b/mkfs/dax_x86_64.conf
+new file mode 100644
+index 00000000..bc3f3c9a
+--- /dev/null
++++ b/mkfs/dax_x86_64.conf
+@@ -0,0 +1,19 @@
++# mkfs.xfs configuration file for persistent memory on x86_64.
++# Block size must match page size (4K) and we require V5 for the DAX inode
++# flag.  Set extent size hints and stripe units to encourage the filesystem to
++# allocate PMD sized (2MB) blocks.
 +
-+mkfs.xfs.8: mkfs.xfs.8.in
-+	@echo "    [SED]    $@"
-+	$(Q)$(SED) -e 's|@mkfs_cfg_dir@|$(MKFS_CFG_DIR)|g' < $^ > $@
++[block]
++size=4096
 +
- install-dev :
-diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8.in
-similarity index 99%
-rename from man/man8/mkfs.xfs.8
-rename to man/man8/mkfs.xfs.8.in
-index 880e949b..a3526753 100644
---- a/man/man8/mkfs.xfs.8
-+++ b/man/man8/mkfs.xfs.8.in
-@@ -7,6 +7,9 @@ mkfs.xfs \- construct an XFS filesystem
- .B \-b
- .I block_size_options
- ] [
-+.B \-c
-+.I config_file_options
-+] [
- .B \-m
- .I global_metadata_options
- ] [
-@@ -159,6 +162,7 @@ The configuration options will be sourced from the file specified by the
- option string.
- This option can be use either an absolute or relative path to the configuration
- file to be read.
-+Sample configuration files can be found in @mkfs_cfg_dir@.
- .RE
- .PP
- .PD 0
++[metadata]
++crc=1
++
++[data]
++sunit=4096
++swidth=4096
++extszinherit=512
++daxinherit=1
++
++[realtime]
++extsize=2097152
 
