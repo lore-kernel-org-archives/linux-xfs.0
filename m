@@ -2,32 +2,35 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6ABD0C43217
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CEC89C43219
 	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 07:16:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1358981AbiATHQ0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1358987AbiATHQ0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Thu, 20 Jan 2022 02:16:26 -0500
-Received: from sin.source.kernel.org ([145.40.73.55]:41246 "EHLO
-        sin.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1358745AbiATHQU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jan 2022 02:16:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45072 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1358963AbiATHQT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jan 2022 02:16:19 -0500
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F0F6C061574;
+        Wed, 19 Jan 2022 23:16:18 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 4F529CE2001;
-        Thu, 20 Jan 2022 07:16:18 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49A38C340F1;
-        Thu, 20 Jan 2022 07:16:16 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 4D593CE1FFE;
+        Thu, 20 Jan 2022 07:16:17 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 42E14C340EF;
+        Thu, 20 Jan 2022 07:16:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642662976;
-        bh=G1gWsQedwA04fsGDZAwPwBO++Xa6hjRhpWotinFU33I=;
+        s=k20201202; t=1642662975;
+        bh=uVj1c8LpzrOMIafyi1Y9BE84r5VGaLUz8mtiVeWL7Ww=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Qntr6frtkWdoYANiGYBoYFWCngoe1Tqpb4LMgVGZo/VIozOGZKOHGhT0M4tTXfG3R
-         MrkewIH3DvjpV50jaBAbSXmFf0ndRZwHrm1GoxjiQ1ZzHGlqLnAm4US6Pqgpfeq951
-         3qPMZtuR4kjF01tEPO/Tru3aMlNE3IbFEITQig41CUclxJf+blJMxZdeVXSU60P5+c
-         nuDmDiq9jYF40EnNTxGKaHzY/Sbd8rhJEqDsDCTJihfNFX7jOSZrZnoq11YB01mQUe
-         l4ZV5UjiuuhWAWIkFF1luMgmtyAabJweWcavoI4NB7xul4jyN1GX0Vce/EwobNQVRO
-         d1v0Xef6p+2Yg==
+        b=Ad1EEixYJg4EzYsY4I7YdGlRV5zEpaWGSQqpm0KdN+F6YDMbVFJkbugFsizhGp2dV
+         6BDVee4niP/qVIr0nS8VL9Jy2QpHO+USAPbFlw+e10QcBeG8ej6sz+lrsuaBJZuNh2
+         Zw+nAD1Al7HeGkHWfwKxpZN2mCQKM93n416hqymbZLFPuHGZQ2y1HMBvvPOob1LGyW
+         dyeIjma0u8GAjbyIwjd2h/6Vgjuv6EarWKTgW9jxgpO+G+k2u0YbHALPF168qRt++U
+         EG60d3grANejWoomnSZNeTCtFCiqe9MPDQ5BsjYI1n3Vy0bdY/AEzCdacgLBPogqgt
+         pUiNhJxhXg3ew==
 From:   Eric Biggers <ebiggers@kernel.org>
 To:     linux-fscrypt@vger.kernel.org
 Cc:     linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
@@ -36,10 +39,11 @@ Cc:     linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
         Dave Chinner <david@fromorbit.com>,
         "Darrick J . Wong" <djwong@kernel.org>,
         Theodore Ts'o <tytso@mit.edu>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>
-Subject: [PATCH v10 5/5] fscrypt: update documentation for direct I/O support
-Date:   Wed, 19 Jan 2022 23:12:15 -0800
-Message-Id: <20220120071215.123274-6-ebiggers@kernel.org>
+        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
+        Satya Tangirala <satyat@google.com>
+Subject: [PATCH v10 3/5] ext4: support direct I/O with fscrypt using blk-crypto
+Date:   Wed, 19 Jan 2022 23:12:13 -0800
+Message-Id: <20220120071215.123274-4-ebiggers@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220120071215.123274-1-ebiggers@kernel.org>
 References: <20220120071215.123274-1-ebiggers@kernel.org>
@@ -51,57 +55,86 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Eric Biggers <ebiggers@google.com>
 
-Now that direct I/O is supported on encrypted files in some cases,
-document what these cases are.
+Encrypted files traditionally haven't supported DIO, due to the need to
+encrypt/decrypt the data.  However, when the encryption is implemented
+using inline encryption (blk-crypto) instead of the traditional
+filesystem-layer encryption, it is straightforward to support DIO.
 
+Therefore, make ext4 support DIO on files that are using inline
+encryption.  Since ext4 uses iomap for DIO, and fscrypt support was
+already added to iomap DIO, this just requires two small changes:
+
+- Let DIO proceed when supported, by using fscrypt_dio_unsupported()
+  instead of assuming that encrypted files never support DIO.
+
+- In ext4_iomap_begin(), use fscrypt_limit_io_blocks() to limit the
+  length of the mapping in the rare case where a DUN discontiguity
+  occurs in the middle of an extent.  The iomap DIO implementation
+  requires this, since it assumes that it can submit a bio covering (up
+  to) the whole mapping, without checking fscrypt constraints itself.
+
+Co-developed-by: Satya Tangirala <satyat@google.com>
+Signed-off-by: Satya Tangirala <satyat@google.com>
 Signed-off-by: Eric Biggers <ebiggers@google.com>
 ---
- Documentation/filesystems/fscrypt.rst | 25 +++++++++++++++++++++++--
- 1 file changed, 23 insertions(+), 2 deletions(-)
+ fs/ext4/file.c  | 10 ++++++----
+ fs/ext4/inode.c |  7 +++++++
+ 2 files changed, 13 insertions(+), 4 deletions(-)
 
-diff --git a/Documentation/filesystems/fscrypt.rst b/Documentation/filesystems/fscrypt.rst
-index 4d5d50dca65c6..6ccd5efb25b77 100644
---- a/Documentation/filesystems/fscrypt.rst
-+++ b/Documentation/filesystems/fscrypt.rst
-@@ -1047,8 +1047,8 @@ astute users may notice some differences in behavior:
-   may be used to overwrite the source files but isn't guaranteed to be
-   effective on all filesystems and storage devices.
+diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+index 8cc11715518ac..2b520e99bee74 100644
+--- a/fs/ext4/file.c
++++ b/fs/ext4/file.c
+@@ -36,9 +36,11 @@
+ #include "acl.h"
+ #include "truncate.h"
  
--- Direct I/O is not supported on encrypted files.  Attempts to use
--  direct I/O on such files will fall back to buffered I/O.
-+- Direct I/O is supported on encrypted files only under some
-+  circumstances.  For details, see `Direct I/O support`_.
+-static bool ext4_dio_supported(struct inode *inode)
++static bool ext4_dio_supported(struct kiocb *iocb, struct iov_iter *iter)
+ {
+-	if (IS_ENABLED(CONFIG_FS_ENCRYPTION) && IS_ENCRYPTED(inode))
++	struct inode *inode = file_inode(iocb->ki_filp);
++
++	if (fscrypt_dio_unsupported(iocb, iter))
+ 		return false;
+ 	if (fsverity_active(inode))
+ 		return false;
+@@ -61,7 +63,7 @@ static ssize_t ext4_dio_read_iter(struct kiocb *iocb, struct iov_iter *to)
+ 		inode_lock_shared(inode);
+ 	}
  
- - The fallocate operations FALLOC_FL_COLLAPSE_RANGE and
-   FALLOC_FL_INSERT_RANGE are not supported on encrypted files and will
-@@ -1179,6 +1179,27 @@ Inline encryption doesn't affect the ciphertext or other aspects of
- the on-disk format, so users may freely switch back and forth between
- using "inlinecrypt" and not using "inlinecrypt".
+-	if (!ext4_dio_supported(inode)) {
++	if (!ext4_dio_supported(iocb, to)) {
+ 		inode_unlock_shared(inode);
+ 		/*
+ 		 * Fallback to buffered I/O if the operation being performed on
+@@ -509,7 +511,7 @@ static ssize_t ext4_dio_write_iter(struct kiocb *iocb, struct iov_iter *from)
+ 	}
  
-+Direct I/O support
-+==================
+ 	/* Fallback to buffered I/O if the inode does not support direct I/O. */
+-	if (!ext4_dio_supported(inode)) {
++	if (!ext4_dio_supported(iocb, from)) {
+ 		if (ilock_shared)
+ 			inode_unlock_shared(inode);
+ 		else
+diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+index 5f79d265d06a0..7af1bba34b8b8 100644
+--- a/fs/ext4/inode.c
++++ b/fs/ext4/inode.c
+@@ -3409,6 +3409,13 @@ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
+ 	if (ret < 0)
+ 		return ret;
+ out:
++	/*
++	 * When inline encryption is enabled, sometimes I/O to an encrypted file
++	 * has to be broken up to guarantee DUN contiguity.  Handle this by
++	 * limiting the length of the mapping returned.
++	 */
++	map.m_len = fscrypt_limit_io_blocks(inode, map.m_lblk, map.m_len);
 +
-+For direct I/O on an encrypted file to work, the following conditions
-+must be met (in addition to the conditions for direct I/O on an
-+unencrypted file):
-+
-+* The file must be using inline encryption.  Usually this means that
-+  the filesystem must be mounted with ``-o inlinecrypt`` and inline
-+  encryption hardware must be present.  However, a software fallback
-+  is also available.  For details, see `Inline encryption support`_.
-+
-+* The I/O request must be fully aligned to the filesystem block size.
-+  This means that the file position the I/O is targeting, the lengths
-+  of all I/O segments, and the memory addresses of all I/O buffers
-+  must be multiples of this value.  Note that the filesystem block
-+  size may be greater than the logical block size of the block device.
-+
-+If either of the above conditions is not met, then direct I/O on the
-+encrypted file will fall back to buffered I/O.
-+
- Implementation details
- ======================
+ 	ext4_set_iomap(inode, iomap, &map, offset, length, flags);
  
+ 	return 0;
 -- 
 2.34.1
 
