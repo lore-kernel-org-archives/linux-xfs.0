@@ -2,38 +2,41 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 720E2C433FE
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 00:17:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D01EC433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 00:18:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344835AbiATARz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Jan 2022 19:17:55 -0500
-Received: from ams.source.kernel.org ([145.40.68.75]:45658 "EHLO
+        id S1357748AbiATASF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Jan 2022 19:18:05 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:45704 "EHLO
         ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344962AbiATARw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jan 2022 19:17:52 -0500
+        with ESMTP id S1344962AbiATAR6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jan 2022 19:17:58 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id C0EC7B81AD5
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Jan 2022 00:17:51 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D955C004E1;
-        Thu, 20 Jan 2022 00:17:50 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 40BF9B81B2B
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jan 2022 00:17:57 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0B121C004E1;
+        Thu, 20 Jan 2022 00:17:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642637870;
-        bh=TC0+bI10sRzI7q/WJAxRZEUzqUbRPCLWai4qeq1S6gE=;
+        s=k20201202; t=1642637876;
+        bh=X5ogbnVjcveGrsscnUsS9u6ZVa/diJ/mSITaysyn854=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=WqOfx+LI5QtAjjAQJBDymnzQlqWKlL7EZtpysrAxhFqV6hiQ659g7Yhne6lYZUQo1
-         boAVj0gmFArocKLpR09uBWdGke+fZu6WFHe+g3JFeVYGE8gZ3EFOaYx8pPab56/nkZ
-         LCuORO32EyrXZLqdVW4IUaaEtz6nAcTQ3ud79C9UiiO8tit0qujKa+AKyzpj6LFFci
-         p35b/xbzQu1kk0pbuCXrcndBl/6988XMAaeQx3TGKszXzoTojo2d/IFEUzHa+9YInM
-         I5GAIM5CyHaatEn1CEz0CRKt21bNx0FK5rN3DKz1WeMuj9umholt/LfBU2B5A63O5u
-         dicyOj4GJz3Sw==
-Subject: [PATCH 05/45] xfs: replace kmem_alloc_large() with kvmalloc()
+        b=g05rrFoDCLZ681in93CBrNja+bKPaVNDvt4dW4XVg1+mhDnIamDK0Hvpa/sMcp1sZ
+         795zHjyutpgH/Ud3Z7v+ZK/iUDSV6RTEy2iKOyk02mMMff2RUE4nr3GkQcPaoN4jbm
+         pzoUimMx02E5IFYzWInYICkNsUY3MuesZxWyq3ju/zobH4CoDouqu7HWAtSiUxNbsE
+         pYbgmgRR/Uxu+eubF8+HBTT49VLv4jbdcgzCnHLluIg6KEEpbcvDNfjaOW4xUKP13J
+         zTp0ZAO0o/a+ptmyfgEBzzgVkcbnb69XKlbBwHNs/Cj9kGFrj7hsHaMoryg55snMDx
+         hp3fw2gMixgbw==
+Subject: [PATCH 06/45] xfs: allow setting and clearing of log incompat feature
+ flags
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
-Cc:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
-Date:   Wed, 19 Jan 2022 16:17:50 -0800
-Message-ID: <164263787023.860211.1423482778506639589.stgit@magnolia>
+Cc:     Allison Henderson <allison.henderson@oracle.com>,
+        Chandan Babu R <chandanrlinux@gmail.com>,
+        linux-xfs@vger.kernel.org
+Date:   Wed, 19 Jan 2022 16:17:55 -0800
+Message-ID: <164263787575.860211.5138078235431743876.stgit@magnolia>
 In-Reply-To: <164263784199.860211.7509808171577819673.stgit@magnolia>
 References: <164263784199.860211.7509808171577819673.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -44,76 +47,55 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: d634525db63e9e946c3229fb93c8d9b763afbaf3
+Source kernel commit: 908ce71e54f8265fa909200410d6c50ab9a2d302
 
-There is no reason for this wrapper existing anymore. All the places
-that use KM_NOFS allocation are within transaction contexts and
-hence covered by memalloc_nofs_save/restore contexts. Hence we don't
-need any special handling of vmalloc for large IOs anymore and
-so special casing this code isn't necessary.
+Log incompat feature flags in the superblock exist for one purpose: to
+protect the contents of a dirty log from replay on a kernel that isn't
+prepared to handle those dirty contents.  This means that they can be
+cleared if (a) we know the log is clean and (b) we know that there
+aren't any other threads in the system that might be setting or relying
+upon a log incompat flag.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Therefore, clear the log incompat flags when we've finished recovering
+the log, when we're unmounting cleanly, remounting read-only, or
+freezing; and provide a function so that subsequent patches can start
+using this.
+
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- include/kmem.h         |    3 ++-
- libxfs/kmem.c          |    6 ++++--
- libxfs/xfs_attr_leaf.c |    2 +-
- 3 files changed, 7 insertions(+), 4 deletions(-)
+ libxfs/xfs_format.h |   15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
 
-diff --git a/include/kmem.h b/include/kmem.h
-index 383284ea..6d317256 100644
---- a/include/kmem.h
-+++ b/include/kmem.h
-@@ -22,6 +22,7 @@ typedef unsigned int __bitwise gfp_t;
- #define GFP_KERNEL	((__force gfp_t)0)
- #define GFP_NOFS	((__force gfp_t)0)
- #define __GFP_NOFAIL	((__force gfp_t)0)
-+#define __GFP_NOLOCKDEP	((__force gfp_t)0)
- 
- #define __GFP_ZERO	(__force gfp_t)1
- 
-@@ -38,7 +39,7 @@ kmem_cache_free(kmem_zone_t *zone, void *ptr)
+diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
+index 37570cf0..5d8a1291 100644
+--- a/libxfs/xfs_format.h
++++ b/libxfs/xfs_format.h
+@@ -495,6 +495,21 @@ xfs_sb_has_incompat_log_feature(
+ 	return (sbp->sb_features_log_incompat & feature) != 0;
  }
  
- extern void	*kmem_alloc(size_t, int);
--extern void	*kmem_alloc_large(size_t, int);
-+extern void	*kvmalloc(size_t, gfp_t);
- extern void	*kmem_zalloc(size_t, int);
- 
- static inline void
-diff --git a/libxfs/kmem.c b/libxfs/kmem.c
-index ee50ab66..3d72ac94 100644
---- a/libxfs/kmem.c
-+++ b/libxfs/kmem.c
-@@ -76,9 +76,11 @@ kmem_alloc(size_t size, int flags)
- }
- 
- void *
--kmem_alloc_large(size_t size, int flags)
-+kvmalloc(size_t size, gfp_t flags)
- {
--	return kmem_alloc(size, flags);
-+	if (flags & __GFP_ZERO)
-+		return kmem_zalloc(size, 0);
-+	return kmem_alloc(size, 0);
- }
- 
- void *
-diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
-index cfb6bf17..6499f16f 100644
---- a/libxfs/xfs_attr_leaf.c
-+++ b/libxfs/xfs_attr_leaf.c
-@@ -486,7 +486,7 @@ xfs_attr_copy_value(
- 	}
- 
- 	if (!args->value) {
--		args->value = kmem_alloc_large(valuelen, KM_NOLOCKDEP);
-+		args->value = kvmalloc(valuelen, GFP_KERNEL | __GFP_NOLOCKDEP);
- 		if (!args->value)
- 			return -ENOMEM;
- 	}
++static inline void
++xfs_sb_remove_incompat_log_features(
++	struct xfs_sb	*sbp)
++{
++	sbp->sb_features_log_incompat &= ~XFS_SB_FEAT_INCOMPAT_LOG_ALL;
++}
++
++static inline void
++xfs_sb_add_incompat_log_features(
++	struct xfs_sb	*sbp,
++	unsigned int	features)
++{
++	sbp->sb_features_log_incompat |= features;
++}
++
+ /*
+  * V5 superblock specific feature checks
+  */
 
