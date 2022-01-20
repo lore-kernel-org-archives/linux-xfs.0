@@ -2,89 +2,48 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A97DDC433FE
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 00:49:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D84CCC433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 01:17:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1357920AbiATAtr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Jan 2022 19:49:47 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:47480 "EHLO
-        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1357980AbiATAtp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jan 2022 19:49:45 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0040361529;
-        Thu, 20 Jan 2022 00:49:44 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58FD6C004E1;
-        Thu, 20 Jan 2022 00:49:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642639784;
-        bh=nmWTlKQBQfT3gKCNY9A5s22AhfewmRLot2G8joSGE60=;
-        h=Date:From:To:Cc:Subject:From;
-        b=nZQCYbeX5WD6XVqSB7hrnGIEmOd25Vihjsw/zlpGGgk8cMp5ZayiZWNHyNwQKP5Hj
-         DGeRV0Fi8q7RDm7O6s2DqWiF//2hlTMoi0SzL+tdlD5QK9c5sCMSJEdwf6pMVyUthm
-         NAAFsdhEcNIlIOSZx7P8L1ToOaXDoWt4ABNh+s/Bf9NTxVmjRATZQxvJmx1RFuyWn4
-         3xqPAvG4wj/gXAX8iv2ZJ//M9/pzPVFbGwbu96wTJxQnfHjeRWQhJ5JSSCHqcZfPFI
-         2oSuQ1c5Sf347ohuXr+EpLMbxbMJm188ESgRpvAt1KcmD4Kb/CTGjrU7L46QDyKwbS
-         /PIS3+1+KD/MQ==
-Date:   Wed, 19 Jan 2022 16:49:44 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Cc:     Zorro Lang <zlang@redhat.com>
-Subject: [PATCH] xfs/107: fix formatting failures
-Message-ID: <20220120004944.GD13514@magnolia>
+        id S240687AbiATBRM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Jan 2022 20:17:12 -0500
+Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:37034 "EHLO
+        outgoing.mit.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S231224AbiATBRM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jan 2022 20:17:12 -0500
+Received: from cwcc.thunk.org (pool-108-7-220-252.bstnma.fios.verizon.net [108.7.220.252])
+        (authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 20K1Guq4007957
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 19 Jan 2022 20:16:57 -0500
+Received: by cwcc.thunk.org (Postfix, from userid 15806)
+        id CE5C315C40F6; Wed, 19 Jan 2022 20:16:56 -0500 (EST)
+Date:   Wed, 19 Jan 2022 20:16:56 -0500
+From:   "Theodore Ts'o" <tytso@mit.edu>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org,
+        allison.henderson@oracle.com
+Subject: Re: [PATCH 12/17] xfs_scrub: report optional features in version
+ string
+Message-ID: <Yei4CAWLzMmG33cf@mit.edu>
+References: <164263809453.863810.8908193461297738491.stgit@magnolia>
+ <164263816090.863810.16834243121150635355.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <164263816090.863810.16834243121150635355.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Wed, Jan 19, 2022 at 04:22:40PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Ted T'so reported brittleness in the fstests logic in generic/45[34] to
 
-Zorro Lang reported that the _scratch_mkfs_sized call in the new xfs/107
-fstest sometimes fails on more exotic storage due to insufficient log
-size on account of raid stripes, etc.   These are side effects of the
-filesystem being too small.
+Not a super big deal, but my last name is "Ts'o".
 
-Change the filesystem size to 256M to avoid these problems, and change
-the allocstale parameters to use the same file size (16M) as before.
-Given that ALLOCSP produces stale disk contents pretty quickly this
-shouldn't affect the test runtime too much.
+Thanks,
 
-Reported-by: Zorro Lang <zlang@redhat.com>
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- tests/xfs/107 |   10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
-
-diff --git a/tests/xfs/107 b/tests/xfs/107
-index 6034dbc2..577094b2 100755
---- a/tests/xfs/107
-+++ b/tests/xfs/107
-@@ -22,7 +22,10 @@ _require_test
- _require_scratch
- _require_test_program allocstale
- 
--size_mb=32
-+# Create a 256MB filesystem to avoid running into mkfs problems with too-small
-+# filesystems.
-+size_mb=256
-+
- # Write a known pattern to the disk so that we can detect stale disk blocks
- # being mapped into the file.  In the test author's experience, the bug will
- # reproduce within the first 500KB's worth of ALLOCSP calls, so running up
-@@ -39,9 +42,10 @@ _scratch_mount
- _xfs_force_bdev data $SCRATCH_MNT
- testfile=$SCRATCH_MNT/a
- 
--# Allow the test program to expand the file to consume half the free space.
-+# Allow the test program to expand the file to 32MB.  If we can't find any
-+# stale blocks at that point, the kernel has probably been patched.
- blksz=$(_get_file_block_size $SCRATCH_MNT)
--iterations=$(( (size_mb / 2) * 1048576 / blksz))
-+iterations=$(( (size_mb / 16) * 1048576 / blksz))
- echo "Setting up $iterations runs for block size $blksz" >> $seqres.full
- 
- # Run reproducer program and dump file contents if we see stale data.  Full
+						- Ted
