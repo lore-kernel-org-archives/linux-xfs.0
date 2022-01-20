@@ -2,122 +2,123 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1850FC4332F
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 17:10:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 789DCC433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 18:02:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346538AbiATRKa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 20 Jan 2022 12:10:30 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41442 "EHLO
+        id S236851AbiATSCc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 20 Jan 2022 13:02:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53704 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236190AbiATRKa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jan 2022 12:10:30 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A3BEC061574;
-        Thu, 20 Jan 2022 09:10:30 -0800 (PST)
+        with ESMTP id S233185AbiATSCc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jan 2022 13:02:32 -0500
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BBD14C061574;
+        Thu, 20 Jan 2022 10:02:31 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id C885CB81DB6;
-        Thu, 20 Jan 2022 17:10:28 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 95112C340E3;
-        Thu, 20 Jan 2022 17:10:27 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 37657CE217B;
+        Thu, 20 Jan 2022 18:02:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E7BAC340E0;
+        Thu, 20 Jan 2022 18:02:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642698627;
-        bh=9PrP2YPwXIw91H36sa+ARSocJ1Cu1ipD8VSQgbT6nsA=;
+        s=k20201202; t=1642701748;
+        bh=c0TE2ZLod1lZ+/G5RUqHJqsSZ6N1yhRmxVbalsZEfV8=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=bhOy/kkCPk22TFeoPt2RuBI8RgWYvZQ4Q+WFtZjvDyGcYQVZUpqdG5f0VUgm48K0h
-         MAJ5Td5mQTsGy6R0nKSPKNAuHmiQRFPMWGOJK0pWRMbGTYMDpHnksDXZGhe+pFPQ2d
-         2bRQbwL3T+pLDBMnj01EyoieNkhV45F1Lhh+r8UZIrzDKk3rGWTMRZ8eBzL1W/BOxs
-         K4eeC/S6bq53oHhxE60pa3B/MiQmgmzr/9Z4AzvnfHWnNqy5BEjJG3IXdYfiP2Cr91
-         RQPzfu7rc3eq7EC08CEIDJzpjFAiTI8wtD7IcmJ6LCNRyIcL3jl6mSk+xkPhQS/8FW
-         ZcRex+d8Jee8A==
-Date:   Thu, 20 Jan 2022 09:10:27 -0800
+        b=fXJTL90xd3OLAf0XAutbwJyhVrQjqfiyamiX9JJlxJJTS7evPA/b1mM5jC+1CKhZk
+         fre4nyiF4fpvau11SotovHv/ku7dgAwZjYSc2yfHxnrq9UgkK8bR4brw5CSOMYGJyU
+         hwMCSbTNenJJk9BCSLFNrjDAZCHNf6i/d99peSnK9FfK0bcgNMkyGVDBLF+Auhu116
+         RESXq2vPngejw1N0LMCR1UnkNQ0tugJ5ln9TheZhNHpILyj0zSOGOU7F649v7Kx71q
+         FR4Hton4VtFDSn+anek0GK/OxgIGIt4erb5sUfEiRnsa6Ti1TVEVCu9QqYf4C6nGIw
+         VfG/gEShPr6NA==
+Date:   Thu, 20 Jan 2022 10:02:28 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Eric Biggers <ebiggers@kernel.org>, linux-fscrypt@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
-        Dave Chinner <david@fromorbit.com>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>
-Subject: Re: [PATCH v10 0/5] add support for direct I/O with fscrypt using
- blk-crypto
-Message-ID: <20220120171027.GL13540@magnolia>
-References: <20220120071215.123274-1-ebiggers@kernel.org>
- <YekdnxpeunTGfXqX@infradead.org>
+To:     Andrea Tomassetti <andrea.tomassetti@devo.com>
+Cc:     fstests@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>
+Subject: Re: xfs/311 test pass but leave block device unusable
+Message-ID: <20220120180228.GE13514@magnolia>
+References: <CAG2S0o-wJc-2_wm=35mE5Lt0e4idXwb3g5ezc9=LdWrLHfRM_Q@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <YekdnxpeunTGfXqX@infradead.org>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAG2S0o-wJc-2_wm=35mE5Lt0e4idXwb3g5ezc9=LdWrLHfRM_Q@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jan 20, 2022 at 12:30:23AM -0800, Christoph Hellwig wrote:
-> On Wed, Jan 19, 2022 at 11:12:10PM -0800, Eric Biggers wrote:
-> > 
-> > Given the above, as far as I know the only remaining objection to this
-> > patchset would be that DIO constraints aren't sufficiently discoverable
-> > by userspace.  Now, to put this in context, this is a longstanding issue
-> > with all Linux filesystems, except XFS which has XFS_IOC_DIOINFO.  It's
-> > not specific to this feature, and it doesn't actually seem to be too
-> > important in practice; many other filesystem features place constraints
-> > on DIO, and f2fs even *only* allows fully FS block size aligned DIO.
-> > (And for better or worse, many systems using fscrypt already have
-> > out-of-tree patches that enable DIO support, and people don't seem to
-> > have trouble with the FS block size alignment requirement.)
+[cc xfs list]
+
+On Thu, Jan 20, 2022 at 12:04:47PM +0100, Andrea Tomassetti wrote:
+> Hi all,
+> I was using the (x)fstest utility on the Kernel 5.11 to try to
+> reproduce some xfs-related issues:
+>   INFO: task xfs-conv/dm-3:1360 blocked for more than 120 seconds.
+>   Workqueue: xfs-conv/dm-3 xfs_end_io [xfs]
+>    Call Trace:
+>     __schedule+0x44c/0x8a0
+>     schedule+0x4f/0xc0
+>     xlog_grant_head_wait+0xb5/0x1a0 [xfs]
+>     xlog_grant_head_check+0xe1/0x100 [xfs]
+
+Threads are stuck waiting for log space; can you post the full dmesg?
+And the xfs_info output of the test device?
+
+> When I realized that xfs test n. 311 was passing correctly but every
+> further attempt to use the block device (e.g. mount it) was failing.
+> The issue is reproducible after reboot.
 > 
-> It might make sense to use this as an opportunity to implement
-> XFS_IOC_DIOINFO for ext4 and f2fs.
-
-Hmm.  A potential problem with DIOINFO is that it doesn't explicitly
-list the /file/ position alignment requirement:
-
-struct dioattr {
-	__u32		d_mem;		/* data buffer memory alignment */
-	__u32		d_miniosz;	/* min xfer size		*/
-	__u32		d_maxiosz;	/* max xfer size		*/
-};
-
-Since I /think/ fscrypt requires that directio writes be aligned to file
-block size, right?
-
-> > I plan to propose a new generic ioctl to address the issue of DIO
-> > constraints being insufficiently discoverable.  But until then, I'm
-
-Which is what I suspect Eric meant by this sentence. :)
-
-> > wondering if people are willing to consider this patchset again, or
-> > whether it is considered blocked by this issue alone.  (And if this
-> > patchset is still unacceptable, would it be acceptable with f2fs support
-> > only, given that f2fs *already* only allows FS block size aligned DIO?)
+> Test passed:
+>   ./check xfs/311
+>   FSTYP         -- xfs (non-debug)
+>   PLATFORM      -- Linux/x86_64 test 5.11.0-1021-aws
+> #22~20.04.2-Ubuntu SMP Wed Oct 27 21:27:13 UTC 2021
+>   MKFS_OPTIONS  -- -f /dev/xvdz
+>   MOUNT_OPTIONS -- /dev/xvdz /home/test/z
 > 
-> I think the patchset looks fine, but I'd really love to have a way for
-> the alignment restrictions to be discoverable from the start.
+>   xfs/311 25s ...  25s
+>   Ran: xfs/311
+>   Passed all 1 tests
+> 
+> Fail:
+>   # mount /dev/xvdz /home/test/z/
+>     mount: /home/test/z: /dev/xvdz already mounted or mount point busy.
+>     [ 2222.028417] /dev/xvdz: Can't open blockdev
+> 
+> lsof does not show anything that is using either /dev/xvdz or /home/test/z
+> 
+> Any idea why is this happening?
 
-I agree.  The mechanics of the patchset look ok to me, but it's very
-unfortunate that there's no way for userspace programs to ask the kernel
-about the directio geometry for a file.
+xfs-conv handles unwritten extent conversion after writeback, so I would
+speculate (without dmesg data) that everyone got wedged trying to start
+a transaction, and the log is blocked up for whatever reason.
 
-Ever since we added reflink to XFS I've wanted to add a way to tell
-userspace that direct writes to a reflink(able) file will be much more
-efficient if they can align the io request to 1 fs block instead of 1
-sector.
+> The `xlog_grant_head_wait` race issue has been resolved in a later
+> Kernel version, am I right?
 
-How about something like this:
+Beats me.
 
-struct dioattr2 {
-	__u32		d_mem;		/* data buffer memory alignment */
-	__u32		d_miniosz;	/* min xfer size		*/
-	__u32		d_maxiosz;	/* max xfer size		*/
+> Best regards,
+> Andrea
+> 
+> -- 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> The contents of this email are confidential. If the reader of this 
 
-	/* file range must be aligned to this value */
-	__u32		d_min_fpos;
-
-	/* for optimal performance, align file range to this */
-	__u32		d_opt_fpos;
-
-	__u32		d_padding[11];
-};
+Not anymore they aren't.
 
 --D
+
+> message is not the intended recipient, you are hereby notified that any 
+> dissemination, distribution or copying of this communication is strictly 
+> prohibited. If you have received this communication in error, please notify 
+> us immediately by replying to this message and deleting it from your 
+> computer. Thank you. Devo, Inc; arco@devo.com <mailto:arco@devo.com>;  
+> Calle Estébanez Calderón 3-5, 5th Floor. Madrid, Spain 28020
+> 
