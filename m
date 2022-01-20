@@ -2,41 +2,39 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CB19C433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 00:20:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C66D4C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 00:20:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232026AbiATAUu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Jan 2022 19:20:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38512 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231831AbiATAUu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jan 2022 19:20:50 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB8CDC061574
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Jan 2022 16:20:49 -0800 (PST)
+        id S231831AbiATAUy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Jan 2022 19:20:54 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:58436 "EHLO
+        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233192AbiATAUx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jan 2022 19:20:53 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 9CEDFB81A85
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Jan 2022 00:20:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 623A4C004E1;
-        Thu, 20 Jan 2022 00:20:47 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8C57C61506
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jan 2022 00:20:53 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E7430C004E1;
+        Thu, 20 Jan 2022 00:20:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642638047;
-        bh=UfwaX1wawSS4MvI4eLc7y/Ctu3bYSlGOpHJuTQ3utX4=;
+        s=k20201202; t=1642638053;
+        bh=dIeexqpe88caIAJzJbbeLds7nA3qMrWytROx26yV18g=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=hsX9ASWlh49WnL6v3+U3tUeZesmbCxPlzrjagoB8hYQzihRdS8wM4RVHGlUMMexSy
-         KVxrjl9O+8At8/DKIqOdUIwxAC/Js126YRTEAljxZVhU1nZC0iDSCci+2oOlDDikdT
-         WYSmQFSGgAOWk4JBqBCFOhA6s0Twv8NE5RjVDOEoOvgHeLjp0NtJnHOvRnrtoLpN4G
-         A8LDD4mnJ4LJiwLZxMBgq9BZEIoTaMBIOZybF8b8kY9rJyVYynZDiCm42jB0gVbIMO
-         IVAy5ODMdx9MqX7YbTFQn55I0DN1nMLLUeV33vJ8pavPoVWvY4pF+E2PFdA4fLHKAE
-         px8JXossUqkkw==
-Subject: [PATCH 37/45] xfs: kill xfs_sb_version_has_v3inode()
+        b=RunBXTFJWyhULnPVtkWFMKmzvTkrLP96v7LSkBeBu+Ek6XeEg6/7qA/gGGbodKG8v
+         v/CYKcncVc3Zp7D+9VREEhELZthj5bar2rg0ke96PMjhnX0yTCfumRS6z94ucMNput
+         Zp7k7OMi4aV+Mm3vuzawCivB+JOUZhadUFT6AJToPct8JpMsL42dYHXg0TqcbmgP8M
+         2prI1LgDnsx5mQ0M77s1f4+3fPpk9AnrHeV36RdnwOvV1j8ULCzzfz4k0N+awePe1+
+         Z4gJynTp8CAkN/pa8ep98O7eqWossDhtK/OfjziqLDId9sAx0GuwiNOw/sKsQ2k7hG
+         w7yk31Vonuq/A==
+Subject: [PATCH 38/45] libxfs: use opstate flags and functions for libxfs
+ mount options
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
-Cc:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
-Date:   Wed, 19 Jan 2022 16:20:47 -0800
-Message-ID: <164263804705.860211.9491933488012909884.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org
+Date:   Wed, 19 Jan 2022 16:20:52 -0800
+Message-ID: <164263805261.860211.1342663364051871462.stgit@magnolia>
 In-Reply-To: <164263784199.860211.7509808171577819673.stgit@magnolia>
 References: <164263784199.860211.7509808171577819673.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -47,171 +45,169 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: cf28e17c9186c83e7e8702f844bc40b6e782ce6c
+Port the three LIBXFS_MOUNT flags that actually do anything to set
+opstate flags in preparation for removing m_flags in a later patch.
+Retain the LIBXFS_MOUNT #defines so that libxfs clients can pass them
+into libxfs_mount.
 
-All callers to xfs_dinode_good_version() and XFS_DINODE_SIZE() in
-both the kernel and userspace have a xfs_mount structure available
-which means they can use mount features checks instead looking
-directly are the superblock.
-
-Convert these functions to take a mount and use a xfs_has_v3inodes()
-check and move it out of the libxfs/xfs_format.h file as it really
-doesn't have anything to do with the definition of the on-disk
-format.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- db/check.c             |    2 +-
- libxfs/xfs_format.h    |   18 +++---------------
- libxfs/xfs_ialloc.c    |    3 +--
- libxfs/xfs_inode_buf.c |    2 +-
- libxfs/xfs_inode_buf.h |   11 ++++++++++-
- repair/dinode.c        |    2 +-
- repair/prefetch.c      |    2 +-
- 7 files changed, 18 insertions(+), 22 deletions(-)
+ include/xfs_mount.h  |    7 ++++++-
+ libxfs/init.c        |   21 ++++++++++++---------
+ libxfs/libxfs_priv.h |    2 +-
+ repair/xfs_repair.c  |    2 +-
+ 4 files changed, 20 insertions(+), 12 deletions(-)
 
 
-diff --git a/db/check.c b/db/check.c
-index a078e948..368f80c0 100644
---- a/db/check.c
-+++ b/db/check.c
-@@ -2796,7 +2796,7 @@ process_inode(
- 		error++;
- 		return;
- 	}
--	if (!libxfs_dinode_good_version(&mp->m_sb, dip->di_version)) {
-+	if (!libxfs_dinode_good_version(mp, dip->di_version)) {
- 		if (isfree || v)
- 			dbprintf(_("bad version number %#x for inode %lld\n"),
- 				dip->di_version, ino);
-diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
-index ee479feb..2d7057b7 100644
---- a/libxfs/xfs_format.h
-+++ b/libxfs/xfs_format.h
-@@ -414,18 +414,6 @@ xfs_sb_add_incompat_log_features(
+diff --git a/include/xfs_mount.h b/include/xfs_mount.h
+index 97e27724..52b699f1 100644
+--- a/include/xfs_mount.h
++++ b/include/xfs_mount.h
+@@ -212,6 +212,9 @@ __XFS_UNSUPP_FEAT(readonly)
+ 
+ /* Operational mount state flags */
+ #define XFS_OPSTATE_INODE32		0	/* inode32 allocator active */
++#define XFS_OPSTATE_DEBUGGER		1	/* is this the debugger? */
++#define XFS_OPSTATE_REPORT_CORRUPTION	2	/* report buffer corruption? */
++#define XFS_OPSTATE_PERAG_DATA_LOADED	3	/* per-AG data initialized? */
+ 
+ #define __XFS_IS_OPSTATE(name, NAME) \
+ static inline bool xfs_is_ ## name (struct xfs_mount *mp) \
+@@ -234,6 +237,9 @@ static inline bool xfs_set_ ## name (struct xfs_mount *mp) \
  }
  
+ __XFS_IS_OPSTATE(inode32, INODE32)
++__XFS_IS_OPSTATE(debugger, DEBUGGER)
++__XFS_IS_OPSTATE(reporting_corruption, REPORT_CORRUPTION)
++__XFS_IS_OPSTATE(perag_data_loaded, PERAG_DATA_LOADED)
  
--/*
-- * v5 file systems support V3 inodes only, earlier file systems support
-- * v2 and v1 inodes.
-- */
--static inline bool xfs_dinode_good_version(struct xfs_sb *sbp,
--		uint8_t version)
--{
--	if (xfs_sb_is_v5(sbp))
--		return version == 3;
--	return version == 1 || version == 2;
--}
--
- static inline bool
- xfs_is_quota_inode(struct xfs_sb *sbp, xfs_ino_t ino)
- {
-@@ -892,12 +880,12 @@ enum xfs_dinode_fmt {
- /*
-  * Inode size for given fs.
-  */
--#define XFS_DINODE_SIZE(sbp) \
--	(xfs_sb_is_v5(sbp) ? \
-+#define XFS_DINODE_SIZE(mp) \
-+	(xfs_has_v3inodes(mp) ? \
- 		sizeof(struct xfs_dinode) : \
- 		offsetof(struct xfs_dinode, di_crc))
- #define XFS_LITINO(mp) \
--	((mp)->m_sb.sb_inodesize - XFS_DINODE_SIZE(&(mp)->m_sb))
-+	((mp)->m_sb.sb_inodesize - XFS_DINODE_SIZE(mp))
+ #define __XFS_UNSUPP_OPSTATE(name) \
+ static inline bool xfs_is_ ## name (struct xfs_mount *mp) \
+@@ -249,7 +255,6 @@ __XFS_UNSUPP_OPSTATE(shutdown)
+ #define LIBXFS_MOUNT_COMPAT_ATTR	0x0008
+ #define LIBXFS_MOUNT_ATTR2		0x0010
+ #define LIBXFS_MOUNT_WANT_CORRUPTED	0x0020
+-#define LIBXFS_MOUNT_PERAG_DATA_LOADED	0x0040
  
- /*
-  * Inode data & attribute fork sizes, per inode.
-diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
-index cbccc072..3b96e828 100644
---- a/libxfs/xfs_ialloc.c
-+++ b/libxfs/xfs_ialloc.c
-@@ -332,7 +332,6 @@ xfs_ialloc_inode_init(
- 		xfs_buf_zero(fbuf, 0, BBTOB(fbuf->b_length));
- 		for (i = 0; i < M_IGEO(mp)->inodes_per_cluster; i++) {
- 			int	ioffset = i << mp->m_sb.sb_inodelog;
--			uint	isize = XFS_DINODE_SIZE(&mp->m_sb);
+ #define LIBXFS_BHASHSIZE(sbp) 		(1<<10)
  
- 			free = xfs_make_iptr(mp, fbuf, i);
- 			free->di_magic = cpu_to_be16(XFS_DINODE_MAGIC);
-@@ -349,7 +348,7 @@ xfs_ialloc_inode_init(
- 			} else if (tp) {
- 				/* just log the inode core */
- 				xfs_trans_log_buf(tp, fbuf, ioffset,
--						  ioffset + isize - 1);
-+					  ioffset + XFS_DINODE_SIZE(mp) - 1);
- 			}
- 		}
- 
-diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
-index 2638e515..dfff5979 100644
---- a/libxfs/xfs_inode_buf.c
-+++ b/libxfs/xfs_inode_buf.c
-@@ -55,7 +55,7 @@ xfs_inode_buf_verify(
- 		dip = xfs_buf_offset(bp, (i << mp->m_sb.sb_inodelog));
- 		unlinked_ino = be32_to_cpu(dip->di_next_unlinked);
- 		di_ok = xfs_verify_magic16(bp, dip->di_magic) &&
--			xfs_dinode_good_version(&mp->m_sb, dip->di_version) &&
-+			xfs_dinode_good_version(mp, dip->di_version) &&
- 			xfs_verify_agino_or_null(mp, agno, unlinked_ino);
- 		if (unlikely(XFS_TEST_ERROR(!di_ok, mp,
- 						XFS_ERRTAG_ITOBP_INOTOBP))) {
-diff --git a/libxfs/xfs_inode_buf.h b/libxfs/xfs_inode_buf.h
-index 7f865bb4..585ed5a1 100644
---- a/libxfs/xfs_inode_buf.h
-+++ b/libxfs/xfs_inode_buf.h
-@@ -21,7 +21,7 @@ struct xfs_imap {
- 
- int	xfs_imap_to_bp(struct xfs_mount *mp, struct xfs_trans *tp,
- 		       struct xfs_imap *imap, struct xfs_buf **bpp);
--void	xfs_dinode_calc_crc(struct xfs_mount *, struct xfs_dinode *);
-+void	xfs_dinode_calc_crc(struct xfs_mount *mp, struct xfs_dinode *dip);
- void	xfs_inode_to_disk(struct xfs_inode *ip, struct xfs_dinode *to,
- 			  xfs_lsn_t lsn);
- int	xfs_inode_from_disk(struct xfs_inode *ip, struct xfs_dinode *from);
-@@ -42,4 +42,13 @@ static inline uint64_t xfs_inode_encode_bigtime(struct timespec64 tv)
- struct timespec64 xfs_inode_from_disk_ts(struct xfs_dinode *dip,
- 		const xfs_timestamp_t ts);
- 
-+static inline bool
-+xfs_dinode_good_version(struct xfs_mount *mp, uint8_t version)
-+{
-+	if (xfs_has_v3inodes(mp))
-+		return version == 3;
-+	return version == 1 || version == 2;
-+}
-+
-+
- #endif	/* __XFS_INODE_BUF_H__ */
-diff --git a/repair/dinode.c b/repair/dinode.c
-index 3a79e18e..4da39dcc 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -2329,7 +2329,7 @@ process_dinode_int(xfs_mount_t *mp,
- 		}
+diff --git a/libxfs/init.c b/libxfs/init.c
+index ee49aeb8..e9235a35 100644
+--- a/libxfs/init.c
++++ b/libxfs/init.c
+@@ -449,7 +449,7 @@ rtmount_init(
+ 		return -1;
  	}
  
--	if (!libxfs_dinode_good_version(&mp->m_sb, dino->di_version)) {
-+	if (!libxfs_dinode_good_version(mp, dino->di_version)) {
- 		retval = 1;
- 		if (!uncertain)
- 			do_warn(_("bad version number 0x%x on inode %" PRIu64 "%c"),
-diff --git a/repair/prefetch.c b/repair/prefetch.c
-index 22a0c0c9..b5266b8f 100644
---- a/repair/prefetch.c
-+++ b/repair/prefetch.c
-@@ -441,7 +441,7 @@ pf_read_inode_dirs(
- 		if (be16_to_cpu(dino->di_magic) != XFS_DINODE_MAGIC)
- 			continue;
+-	if (mp->m_rtdev_targp->bt_bdev == 0 && !(flags & LIBXFS_MOUNT_DEBUGGER)) {
++	if (mp->m_rtdev_targp->bt_bdev == 0 && !xfs_is_debugger(mp)) {
+ 		fprintf(stderr, _("%s: filesystem has a realtime subvolume\n"),
+ 			progname);
+ 		return -1;
+@@ -464,7 +464,7 @@ rtmount_init(
+ 	/*
+ 	 * Allow debugger to be run without the realtime device present.
+ 	 */
+-	if (flags & LIBXFS_MOUNT_DEBUGGER)
++	if (xfs_is_debugger(mp))
+ 		return 0;
  
--		if (!libxfs_dinode_good_version(&mp->m_sb, dino->di_version))
-+		if (!libxfs_dinode_good_version(mp, dino->di_version))
- 			continue;
+ 	/*
+@@ -723,10 +723,13 @@ libxfs_mount(
+ 	struct xfs_buf		*bp;
+ 	struct xfs_sb		*sbp;
+ 	xfs_daddr_t		d;
+-	bool			debugger = (flags & LIBXFS_MOUNT_DEBUGGER);
+ 	int			error;
  
- 		if (be64_to_cpu(dino->di_size) <= XFS_DFORK_DSIZE(dino, mp))
+ 	mp->m_features = xfs_sb_version_to_features(sb);
++	if (flags & LIBXFS_MOUNT_DEBUGGER)
++		xfs_set_debugger(mp);
++	if (flags & LIBXFS_MOUNT_WANT_CORRUPTED)
++		xfs_set_reporting_corruption(mp);
+ 	libxfs_buftarg_init(mp, dev, logdev, rtdev);
+ 
+ 	mp->m_finobt_nores = true;
+@@ -761,7 +764,7 @@ libxfs_mount(
+ 	d = (xfs_daddr_t) XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
+ 	if (XFS_BB_TO_FSB(mp, d) != mp->m_sb.sb_dblocks) {
+ 		fprintf(stderr, _("%s: size check failed\n"), progname);
+-		if (!(flags & LIBXFS_MOUNT_DEBUGGER))
++		if (!xfs_is_debugger(mp))
+ 			return NULL;
+ 	}
+ 
+@@ -810,7 +813,7 @@ libxfs_mount(
+ 			XFS_FSS_TO_BB(mp, 1), 0, &bp, NULL);
+ 	if (error) {
+ 		fprintf(stderr, _("%s: data size check failed\n"), progname);
+-		if (!debugger)
++		if (!xfs_is_debugger(mp))
+ 			return NULL;
+ 	} else
+ 		libxfs_buf_relse(bp);
+@@ -824,7 +827,7 @@ libxfs_mount(
+ 				0, &bp, NULL)) {
+ 			fprintf(stderr, _("%s: log size checks failed\n"),
+ 					progname);
+-			if (!debugger)
++			if (!xfs_is_debugger(mp))
+ 				return NULL;
+ 		}
+ 		if (bp)
+@@ -852,7 +855,7 @@ libxfs_mount(
+ 		if (error) {
+ 			fprintf(stderr, _("%s: read of AG %u failed\n"),
+ 						progname, sbp->sb_agcount);
+-			if (!debugger)
++			if (!xfs_is_debugger(mp))
+ 				return NULL;
+ 			fprintf(stderr, _("%s: limiting reads to AG 0\n"),
+ 								progname);
+@@ -867,7 +870,7 @@ libxfs_mount(
+ 			progname);
+ 		exit(1);
+ 	}
+-	mp->m_flags |= LIBXFS_MOUNT_PERAG_DATA_LOADED;
++	xfs_set_perag_data_loaded(mp);
+ 
+ 	return mp;
+ }
+@@ -989,7 +992,7 @@ libxfs_umount(
+ 	 * Only try to free the per-AG structures if we set them up in the
+ 	 * first place.
+ 	 */
+-	if (mp->m_flags & LIBXFS_MOUNT_PERAG_DATA_LOADED)
++	if (xfs_is_perag_data_loaded(mp))
+ 		libxfs_free_perag(mp);
+ 
+ 	kmem_free(mp->m_attr_geo);
+diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+index fd15ed78..2b72751d 100644
+--- a/libxfs/libxfs_priv.h
++++ b/libxfs/libxfs_priv.h
+@@ -153,7 +153,7 @@ enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
+ } while (0)
+ 
+ #define XFS_WARN_CORRUPT(mp, expr) \
+-	( ((mp)->m_flags & LIBXFS_MOUNT_WANT_CORRUPTED) ? \
++	( xfs_is_reporting_corruption(mp) ? \
+ 	   (printf("%s: XFS_WARN_CORRUPT at %s:%d", #expr, \
+ 		   __func__, __LINE__), true) : true)
+ 
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index abde6fe8..bcd44cd5 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -979,7 +979,7 @@ main(int argc, char **argv)
+ 
+ 	/* Spit out function & line on these corruption macros */
+ 	if (verbose > 2)
+-		mp->m_flags |= LIBXFS_MOUNT_WANT_CORRUPTED;
++		xfs_set_reporting_corruption(mp);
+ 
+ 	/* Capture the first writeback so that we can set needsrepair. */
+ 	if (xfs_has_crc(mp))
 
