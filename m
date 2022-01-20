@@ -2,45 +2,43 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3215C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 00:17:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCDB7C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 00:17:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1357750AbiATAR3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Jan 2022 19:17:29 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:55736 "EHLO
-        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1357717AbiATARZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jan 2022 19:17:25 -0500
+        id S1357683AbiATARb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Jan 2022 19:17:31 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37712 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1344962AbiATAR3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jan 2022 19:17:29 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B944C06161C
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Jan 2022 16:17:29 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id AD7CA61518
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Jan 2022 00:17:23 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07CB5C004E1;
-        Thu, 20 Jan 2022 00:17:22 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2AE8B614F4
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jan 2022 00:17:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 84905C004E1;
+        Thu, 20 Jan 2022 00:17:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642637843;
-        bh=Nm4vXnuzat5kTtx9Hi7W7jAV+W6Y8nTaDqyfIMp8uS4=;
-        h=Subject:From:To:Cc:Date:From;
-        b=gyywKlxnbCmXSDWRL8ZWzhK0oSHfZK0lHZZkZNWNLaoqsOm9whb4kR2FrRJhIjrlm
-         jAjF2mrXsXq4QM9iSRxkvQBqypGIfrG2FKhmVAjWrS1E7Vx2TBncz+5kQS+/0ZDmLQ
-         q0bjJ1EOL5RCjBxcK8NqgXGaou5CVQR/kDUEyJCoqVK5KV7LYd2UKies0rszeHiMGs
-         7rVmqgP6fLHDyBwU4zgFCGi1LbUEpnd2SLXb6kXGQq4+Eh7L0nSTEjhEf9PKzmXprr
-         W1SqaAP3ywAuJIKXaIMJ2HXonyWmY28aPdc4aTT8pKfo6qNsopHMECJUYscP3XrGnT
-         XUxqvM42BgBAg==
-Subject: [PATCHSET 00/45] xfsprogs: sync libxfs with 5.15
+        s=k20201202; t=1642637848;
+        bh=TjxJAMg6xpzzmPzyhTPLRMGSBNvC6IFMV/8k8wWGkog=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=RT0Va1URL29Ft59JGUK3KiiTPghu0nCSd8tmMm84nR9irfA7seuPLc1q1o8exz5zg
+         6//+TVyjkkuiXRwnvBwUl+8i5RpZIDM45FfB0oVRFvOe30raywEDPylnB5F6NXC5Bl
+         5GGcX/vKsK8zpCwGphREzWjt/aqsuigGveh/iNvJiR5eJZs2YidNI3wI73cEJQm/ew
+         Qwhf0YJDuemZf8rCF+qfwO5pRC5cFdFNNre7Sx2wkTb2WQ+nvwDwcZhWFV2Ve3IUOm
+         RLq0EhrNgpEFFT7+0fshHBynwHtnLZYAsSxRyYNi/Sb5EF29X6cYIec5Y7Evt1smIo
+         0RePGtcmPfbkQ==
+Subject: [PATCH 01/45] xfsprogs: fix static build problems caused by liburcu
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
-Cc:     Christoph Hellwig <hch@lst.de>,
-        Allison Henderson <allison.henderson@oracle.com>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Carlos Maiolino <cmaiolino@redhat.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        Chandan Babu R <chandanrlinux@gmail.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org
-Date:   Wed, 19 Jan 2022 16:17:22 -0800
-Message-ID: <164263784199.860211.7509808171577819673.stgit@magnolia>
+Cc:     Theodore Ts'o <tytso@mit.edu>, linux-xfs@vger.kernel.org
+Date:   Wed, 19 Jan 2022 16:17:28 -0800
+Message-ID: <164263784824.860211.4356217439516535488.stgit@magnolia>
+In-Reply-To: <164263784199.860211.7509808171577819673.stgit@magnolia>
+References: <164263784199.860211.7509808171577819673.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -49,137 +47,144 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Theodore Ts'o <tytso@mit.edu>
 
-Backport libxfs changes for 5.15.  The xfs_buf changes and the reworking
-of the function predicates made things kind of messy, so I'm sending my
-version of this to the list for evaluation so that Eric doesn't have to
-stumble around wondering what I was smoking... ;)
+The liburcu library has a dependency on pthreads.  Hence, in order for
+static builds of xfsprogs to work, $(LIBPTHREAD) needs to appear
+*after* $(LUBURCU) in LLDLIBS.  Otherwise, static links of xfs_* will
+fail due to undefined references of pthread_create, pthread_exit,
+et. al.
 
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
-
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=libxfs-5.15-sync
+Signed-off-by: Theodore Ts'o <tytso@mit.edu>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- copy/Makefile               |    4 -
- copy/xfs_copy.c             |   34 +++---
- db/Makefile                 |    4 -
- db/attrset.c                |    4 -
- db/btblock.c                |    2 
- db/btdump.c                 |    4 -
- db/check.c                  |   20 ++-
- db/crc.c                    |    2 
- db/frag.c                   |    2 
- db/fsmap.c                  |   10 +-
- db/fuzz.c                   |    4 -
- db/info.c                   |    2 
- db/init.c                   |    6 -
- db/inode.c                  |    6 -
- db/io.c                     |    4 -
- db/logformat.c              |    4 -
- db/metadump.c               |   24 ++--
- db/namei.c                  |    2 
- db/sb.c                     |   82 +++++++------
- db/timelimit.c              |    2 
- db/write.c                  |    4 -
- growfs/Makefile             |    4 -
- include/kmem.h              |    3 
- include/libxfs.h            |   56 +++++++++
- include/xfs_arch.h          |   10 +-
- include/xfs_mount.h         |  145 ++++++++++++++++++++++--
- include/xfs_trace.h         |    6 +
- libxfs/init.c               |   55 ++++-----
- libxfs/kmem.c               |    6 +
- libxfs/libxfs_api_defs.h    |    1 
- libxfs/libxfs_io.h          |   14 ++
- libxfs/libxfs_priv.h        |   23 +---
- libxfs/logitem.c            |    4 -
- libxfs/rdwr.c               |   26 ++--
- libxfs/util.c               |   14 +-
- libxfs/xfs_ag.c             |   25 ++--
- libxfs/xfs_alloc.c          |   56 +++++----
- libxfs/xfs_alloc.h          |   12 +-
- libxfs/xfs_alloc_btree.c    |  100 ++++++++--------
- libxfs/xfs_alloc_btree.h    |    2 
- libxfs/xfs_attr.c           |   56 +++++++--
- libxfs/xfs_attr.h           |    1 
- libxfs/xfs_attr_leaf.c      |   55 +++++----
- libxfs/xfs_attr_remote.c    |   21 ++-
- libxfs/xfs_attr_remote.h    |    2 
- libxfs/xfs_bmap.c           |   38 +++---
- libxfs/xfs_bmap_btree.c     |   56 +++++----
- libxfs/xfs_bmap_btree.h     |    9 +
- libxfs/xfs_btree.c          |  141 ++++++++++++-----------
- libxfs/xfs_btree.h          |   56 +++++----
- libxfs/xfs_btree_staging.c  |   14 +-
- libxfs/xfs_da_btree.c       |   18 +--
- libxfs/xfs_da_format.h      |    2 
- libxfs/xfs_dir2.c           |    6 -
- libxfs/xfs_dir2_block.c     |   14 +-
- libxfs/xfs_dir2_data.c      |   20 ++-
- libxfs/xfs_dir2_leaf.c      |   14 +-
- libxfs/xfs_dir2_node.c      |   20 ++-
- libxfs/xfs_dir2_priv.h      |    2 
- libxfs/xfs_dir2_sf.c        |   12 +-
- libxfs/xfs_dquot_buf.c      |    8 +
- libxfs/xfs_format.h         |  224 +++----------------------------------
- libxfs/xfs_ialloc.c         |   67 +++++------
- libxfs/xfs_ialloc.h         |    3 
- libxfs/xfs_ialloc_btree.c   |   88 +++++++-------
- libxfs/xfs_ialloc_btree.h   |    2 
- libxfs/xfs_inode_buf.c      |   22 ++--
- libxfs/xfs_inode_buf.h      |   11 ++
- libxfs/xfs_log_format.h     |    6 -
- libxfs/xfs_log_rlimit.c     |    2 
- libxfs/xfs_quota_defs.h     |   30 +----
- libxfs/xfs_refcount.c       |   12 +-
- libxfs/xfs_refcount.h       |    2 
- libxfs/xfs_refcount_btree.c |   54 ++++-----
- libxfs/xfs_rmap.c           |   34 +++---
- libxfs/xfs_rmap.h           |   11 +-
- libxfs/xfs_rmap_btree.c     |   72 ++++++------
- libxfs/xfs_rtbitmap.c       |   14 +-
- libxfs/xfs_sb.c             |  263 +++++++++++++++++++++++++++++++------------
- libxfs/xfs_sb.h             |    4 -
- libxfs/xfs_symlink_remote.c |   14 +-
- libxfs/xfs_trans_inode.c    |    2 
- libxfs/xfs_trans_resv.c     |   48 +-------
- libxfs/xfs_trans_resv.h     |    2 
- libxfs/xfs_trans_space.h    |    6 -
- libxfs/xfs_types.c          |    2 
- libxfs/xfs_types.h          |    5 +
- libxlog/util.c              |    6 -
- libxlog/xfs_log_recover.c   |   17 +--
- logprint/Makefile           |    4 -
- logprint/logprint.c         |    3 
- mdrestore/Makefile          |    3 
- mkfs/Makefile               |    4 -
- mkfs/xfs_mkfs.c             |    8 +
- repair/Makefile             |    2 
- repair/agbtree.c            |   10 +-
- repair/agheader.c           |    6 -
- repair/attr_repair.c        |   10 +-
- repair/dino_chunks.c        |    6 -
- repair/dinode.c             |   26 ++--
- repair/incore.h             |    4 -
- repair/incore_ino.c         |    2 
- repair/phase2.c             |   25 ++--
- repair/phase4.c             |    2 
- repair/phase5.c             |   30 ++---
- repair/phase6.c             |   22 ++--
- repair/prefetch.c           |   22 ++--
- repair/quotacheck.c         |    4 -
- repair/rmap.c               |   16 +--
- repair/scan.c               |   32 +++--
- repair/versions.c           |   87 +++++++-------
- repair/versions.h           |    4 -
- repair/xfs_repair.c         |   14 +-
- scrub/Makefile              |    4 -
- 114 files changed, 1424 insertions(+), 1302 deletions(-)
+ copy/Makefile      |    4 ++--
+ db/Makefile        |    4 ++--
+ growfs/Makefile    |    4 ++--
+ logprint/Makefile  |    4 ++--
+ mdrestore/Makefile |    3 +--
+ mkfs/Makefile      |    4 ++--
+ repair/Makefile    |    2 +-
+ scrub/Makefile     |    4 ++--
+ 8 files changed, 14 insertions(+), 15 deletions(-)
+
+
+diff --git a/copy/Makefile b/copy/Makefile
+index 1b00cd0d..55160f84 100644
+--- a/copy/Makefile
++++ b/copy/Makefile
+@@ -9,8 +9,8 @@ LTCOMMAND = xfs_copy
+ CFILES = xfs_copy.c
+ HFILES = xfs_copy.h
+ 
+-LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBPTHREAD) $(LIBRT) \
+-	  $(LIBURCU)
++LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBURCU) \
++	  $(LIBPTHREAD)
+ LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG) $(LIBFROG)
+ LLDFLAGS = -static-libtool-libs
+ 
+diff --git a/db/Makefile b/db/Makefile
+index 5c017898..b2e01174 100644
+--- a/db/Makefile
++++ b/db/Makefile
+@@ -18,8 +18,8 @@ CFILES = $(HFILES:.h=.c) btdump.c btheight.c convert.c info.c namei.c \
+ 	timelimit.c
+ LSRCFILES = xfs_admin.sh xfs_ncheck.sh xfs_metadump.sh
+ 
+-LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD) \
+-	  $(LIBURCU)
++LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBURCU) \
++	  $(LIBPTHREAD)
+ LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG) $(LIBFROG)
+ LLDFLAGS += -static-libtool-libs
+ 
+diff --git a/growfs/Makefile b/growfs/Makefile
+index 08601de7..2f4cc66a 100644
+--- a/growfs/Makefile
++++ b/growfs/Makefile
+@@ -9,8 +9,8 @@ LTCOMMAND = xfs_growfs
+ 
+ CFILES = xfs_growfs.c
+ 
+-LLDLIBS = $(LIBXFS) $(LIBXCMD) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD) \
+-	  $(LIBURCU)
++LLDLIBS = $(LIBXFS) $(LIBXCMD) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBURCU) \
++	  $(LIBPTHREAD)
+ 
+ ifeq ($(ENABLE_EDITLINE),yes)
+ LLDLIBS += $(LIBEDITLINE) $(LIBTERMCAP)
+diff --git a/logprint/Makefile b/logprint/Makefile
+index cdedbd0d..bbbed5d2 100644
+--- a/logprint/Makefile
++++ b/logprint/Makefile
+@@ -12,8 +12,8 @@ CFILES = logprint.c \
+ 	 log_copy.c log_dump.c log_misc.c \
+ 	 log_print_all.c log_print_trans.c log_redo.c
+ 
+-LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD) \
+-	  $(LIBURCU)
++LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBURCU) \
++	  $(LIBPTHREAD)
+ LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG) $(LIBFROG)
+ LLDFLAGS = -static-libtool-libs
+ 
+diff --git a/mdrestore/Makefile b/mdrestore/Makefile
+index 8f28ddab..4a932efb 100644
+--- a/mdrestore/Makefile
++++ b/mdrestore/Makefile
+@@ -8,8 +8,7 @@ include $(TOPDIR)/include/builddefs
+ LTCOMMAND = xfs_mdrestore
+ CFILES = xfs_mdrestore.c
+ 
+-LLDLIBS = $(LIBXFS) $(LIBFROG) $(LIBRT) $(LIBPTHREAD) $(LIBUUID) \
+-	  $(LIBURCU)
++LLDLIBS = $(LIBXFS) $(LIBFROG) $(LIBRT) $(LIBUUID) $(LIBURCU) $(LIBPTHREAD)
+ LTDEPENDENCIES = $(LIBXFS) $(LIBFROG)
+ LLDFLAGS = -static
+ 
+diff --git a/mkfs/Makefile b/mkfs/Makefile
+index 811ba9db..9f6a4fad 100644
+--- a/mkfs/Makefile
++++ b/mkfs/Makefile
+@@ -10,8 +10,8 @@ LTCOMMAND = mkfs.xfs
+ HFILES =
+ CFILES = proto.c xfs_mkfs.c
+ 
+-LLDLIBS += $(LIBXFS) $(LIBXCMD) $(LIBFROG) $(LIBRT) $(LIBPTHREAD) $(LIBBLKID) \
+-	$(LIBUUID) $(LIBINIH) $(LIBURCU)
++LLDLIBS += $(LIBXFS) $(LIBXCMD) $(LIBFROG) $(LIBRT) $(LIBBLKID) \
++	$(LIBUUID) $(LIBINIH) $(LIBURCU) $(LIBPTHREAD)
+ LTDEPENDENCIES += $(LIBXFS) $(LIBXCMD) $(LIBFROG)
+ LLDFLAGS = -static-libtool-libs
+ 
+diff --git a/repair/Makefile b/repair/Makefile
+index 47536ca1..2c40e59a 100644
+--- a/repair/Makefile
++++ b/repair/Makefile
+@@ -72,7 +72,7 @@ CFILES = \
+ 	xfs_repair.c
+ 
+ LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBXCMD) $(LIBFROG) $(LIBUUID) $(LIBRT) \
+-	$(LIBPTHREAD) $(LIBBLKID) $(LIBURCU)
++	$(LIBBLKID) $(LIBURCU) $(LIBPTHREAD)
+ LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG) $(LIBXCMD) $(LIBFROG)
+ LLDFLAGS = -static-libtool-libs
+ 
+diff --git a/scrub/Makefile b/scrub/Makefile
+index 849e3afd..fd6bb679 100644
+--- a/scrub/Makefile
++++ b/scrub/Makefile
+@@ -71,8 +71,8 @@ spacemap.c \
+ vfs.c \
+ xfs_scrub.c
+ 
+-LLDLIBS += $(LIBHANDLE) $(LIBFROG) $(LIBPTHREAD) $(LIBICU_LIBS) $(LIBRT) \
+-	$(LIBURCU)
++LLDLIBS += $(LIBHANDLE) $(LIBFROG) $(LIBICU_LIBS) $(LIBRT) $(LIBURCU) \
++	$(LIBPTHREAD)
+ LTDEPENDENCIES += $(LIBHANDLE) $(LIBFROG)
+ LLDFLAGS = -static
+ 
 
