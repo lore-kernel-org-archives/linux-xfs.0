@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71B88C433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 00:22:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B61EEC433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 00:22:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345128AbiATAWA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Jan 2022 19:22:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38782 "EHLO
+        id S240571AbiATAWE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Jan 2022 19:22:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38796 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240471AbiATAWA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jan 2022 19:22:00 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4700C061574
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Jan 2022 16:21:59 -0800 (PST)
+        with ESMTP id S240471AbiATAWD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jan 2022 19:22:03 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1AE2C061574
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Jan 2022 16:22:03 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 7A394B81AD5
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Jan 2022 00:21:58 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C6F2C004E1;
-        Thu, 20 Jan 2022 00:21:57 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5192961506
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jan 2022 00:22:03 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B050DC004E1;
+        Thu, 20 Jan 2022 00:22:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642638117;
-        bh=9Te8Ht4mzMt/Q0TZ3ySb1iYnfRbw1sIZ7D4aQBV/4FE=;
+        s=k20201202; t=1642638122;
+        bh=5n4ZkWH+JI/IYrokl+kVljjTICrlfxtchkfbLiDcpaU=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=iNl3Hiy8AfaI24fyw/H2QiZubPkounBpSWhyjnHpkgOgFPvV6iKDEamOrUXUk4JHs
-         fP9oJdLo7K02aRubT5pStEKXB5qygYHHtg31SiCpcAJbkDNnMVSg/nYCROdIBp5GS8
-         cv3EY4hQztk5mb5VxXMxZ0gZb0kjhfLydbe/D1ixp/FDsCBt9DGFydxVpo4imXWpK1
-         7CySfDr4QQ0u9rNjYzhPfpyxsJnsGHGl8vhVwpbiQDrjFL5uJFwqPdJ5B0MVIf8y+I
-         VkPRlL1F8vTgxe4CAuMWFWCdmr+MLNdhrBnyyUMYfsncSq5EUVbEOwL4KR3uZT8ZoL
-         XDO/B32W/U+Sg==
-Subject: [PATCH 04/17] libfrog: move the GETFSMAP definitions into libfrog
+        b=bKeTQBm0EQjgBKf2IuyfgQkLsoIkLfqOalFwCxRYYMZLeToim6VS8c45gvE94sOz3
+         hutjwJEziSyWDModz+gmopWgej9TZPvTTdLm/POy8W8cx2q/DBanEfpgyE7PlE+1kX
+         sOdwmDqLCDh+EbtslkzutnPZLmU/F+fbmB0w33vDA0o6oRIm3VwmjsaPm91U263bRm
+         OMrr9SW18r0uVQXgMO53rEl5XsTCBGY2LtpU7caKgKV+EAjttQQjB87f/lFVyFClM2
+         6N1ySLnQj0pEm1cUITFx2i2Qp5reXg4t1HZ4ibd8PvfifttG0t3HuTNXizquEjO8iS
+         /Zsw1jwMVp2PA==
+Subject: [PATCH 05/17] misc: add a crc32c self test to mkfs and repair
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, allison.henderson@oracle.com
-Date:   Wed, 19 Jan 2022 16:21:56 -0800
-Message-ID: <164263811682.863810.12064586264139896800.stgit@magnolia>
+Date:   Wed, 19 Jan 2022 16:22:02 -0800
+Message-ID: <164263812233.863810.8941848920301589525.stgit@magnolia>
 In-Reply-To: <164263809453.863810.8908193461297738491.stgit@magnolia>
 References: <164263809453.863810.8908193461297738491.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,369 +49,169 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Move our private copy of the GETFSMAP definition into a libfrog header
-file that (preferentially) uses the system header files.  We have no
-business shipping kernel headers in the xfslibs package, but this shim
-is still needed to build fully functional xfsprogs on old userspace.
+Enhance mkfs and xfs_repair to run the crc32c self test when they start
+up, and refuse to continue if the self test fails.   We don't want to
+format a filesystem if the checksum algorithm produces incorrect
+results, and we especially don't want repair to tear a filesystem apart
+because it thinks the checksum is wrong.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- include/linux.h   |  105 ------------------------------------------------
- io/fsmap.c        |    1 
- io/io.h           |    5 --
- libfrog/Makefile  |    1 
- libfrog/fsmap.h   |  117 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/phase6.c    |    1 
- scrub/phase7.c    |    1 
- scrub/spacemap.c  |    1 
- spaceman/freesp.c |    1 
- spaceman/space.h  |    4 --
- 10 files changed, 123 insertions(+), 114 deletions(-)
- create mode 100644 libfrog/fsmap.h
+ io/crc32cselftest.c      |    2 +-
+ libfrog/crc32.c          |    2 +-
+ libfrog/crc32cselftest.h |   21 ++++++++++++++-------
+ man/man8/mkfs.xfs.8      |    4 ++++
+ man/man8/xfs_repair.8    |    4 ++++
+ mkfs/xfs_mkfs.c          |    8 ++++++++
+ repair/init.c            |    5 +++++
+ 7 files changed, 37 insertions(+), 9 deletions(-)
 
 
-diff --git a/include/linux.h b/include/linux.h
-index de8a7122..3d9f4e3d 100644
---- a/include/linux.h
-+++ b/include/linux.h
-@@ -251,111 +251,6 @@ struct fsxattr {
- #define FS_XFLAG_COWEXTSIZE	0x00010000	/* CoW extent size allocator hint */
- #endif
+diff --git a/io/crc32cselftest.c b/io/crc32cselftest.c
+index f8f757f6..49eb5b6d 100644
+--- a/io/crc32cselftest.c
++++ b/io/crc32cselftest.c
+@@ -16,7 +16,7 @@ crc32cselftest_f(
+ 	int		argc,
+ 	char		**argv)
+ {
+-	return crc32c_test() != 0;
++	return crc32c_test(0) != 0;
+ }
  
--#ifdef HAVE_GETFSMAP
--# include <linux/fsmap.h>
--#else
--/*
-- *	Structure for FS_IOC_GETFSMAP.
-- *
-- *	The memory layout for this call are the scalar values defined in
-- *	struct fsmap_head, followed by two struct fsmap that describe
-- *	the lower and upper bound of mappings to return, followed by an
-- *	array of struct fsmap mappings.
-- *
-- *	fmh_iflags control the output of the call, whereas fmh_oflags report
-- *	on the overall record output.  fmh_count should be set to the
-- *	length of the fmh_recs array, and fmh_entries will be set to the
-- *	number of entries filled out during each call.  If fmh_count is
-- *	zero, the number of reverse mappings will be returned in
-- *	fmh_entries, though no mappings will be returned.  fmh_reserved
-- *	must be set to zero.
-- *
-- *	The two elements in the fmh_keys array are used to constrain the
-- *	output.  The first element in the array should represent the
-- *	lowest disk mapping ("low key") that the user wants to learn
-- *	about.  If this value is all zeroes, the filesystem will return
-- *	the first entry it knows about.  For a subsequent call, the
-- *	contents of fsmap_head.fmh_recs[fsmap_head.fmh_count - 1] should be
-- *	copied into fmh_keys[0] to have the kernel start where it left off.
-- *
-- *	The second element in the fmh_keys array should represent the
-- *	highest disk mapping ("high key") that the user wants to learn
-- *	about.  If this value is all ones, the filesystem will not stop
-- *	until it runs out of mapping to return or runs out of space in
-- *	fmh_recs.
-- *
-- *	fmr_device can be either a 32-bit cookie representing a device, or
-- *	a 32-bit dev_t if the FMH_OF_DEV_T flag is set.  fmr_physical,
-- *	fmr_offset, and fmr_length are expressed in units of bytes.
-- *	fmr_owner is either an inode number, or a special value if
-- *	FMR_OF_SPECIAL_OWNER is set in fmr_flags.
-- */
--struct fsmap {
--	__u32		fmr_device;	/* device id */
--	__u32		fmr_flags;	/* mapping flags */
--	__u64		fmr_physical;	/* device offset of segment */
--	__u64		fmr_owner;	/* owner id */
--	__u64		fmr_offset;	/* file offset of segment */
--	__u64		fmr_length;	/* length of segment */
--	__u64		fmr_reserved[3];	/* must be zero */
--};
--
--struct fsmap_head {
--	__u32		fmh_iflags;	/* control flags */
--	__u32		fmh_oflags;	/* output flags */
--	__u32		fmh_count;	/* # of entries in array incl. input */
--	__u32		fmh_entries;	/* # of entries filled in (output). */
--	__u64		fmh_reserved[6];	/* must be zero */
--
--	struct fsmap	fmh_keys[2];	/* low and high keys for the mapping search */
--	struct fsmap	fmh_recs[];	/* returned records */
--};
--
--/* Size of an fsmap_head with room for nr records. */
--static inline size_t
--fsmap_sizeof(
--	unsigned int	nr)
--{
--	return sizeof(struct fsmap_head) + nr * sizeof(struct fsmap);
--}
--
--/* Start the next fsmap query at the end of the current query results. */
--static inline void
--fsmap_advance(
--	struct fsmap_head	*head)
--{
--	head->fmh_keys[0] = head->fmh_recs[head->fmh_entries - 1];
--}
--
--/*	fmh_iflags values - set by XFS_IOC_GETFSMAP caller in the header. */
--/* no flags defined yet */
--#define FMH_IF_VALID		0
--
--/*	fmh_oflags values - returned in the header segment only. */
--#define FMH_OF_DEV_T		0x1	/* fmr_device values will be dev_t */
--
--/*	fmr_flags values - returned for each non-header segment */
--#define FMR_OF_PREALLOC		0x1	/* segment = unwritten pre-allocation */
--#define FMR_OF_ATTR_FORK	0x2	/* segment = attribute fork */
--#define FMR_OF_EXTENT_MAP	0x4	/* segment = extent map */
--#define FMR_OF_SHARED		0x8	/* segment = shared with another file */
--#define FMR_OF_SPECIAL_OWNER	0x10	/* owner is a special value */
--#define FMR_OF_LAST		0x20	/* segment is the last in the FS */
--
--/* Each FS gets to define its own special owner codes. */
--#define FMR_OWNER(type, code)	(((__u64)type << 32) | \
--				 ((__u64)code & 0xFFFFFFFFULL))
--#define FMR_OWNER_TYPE(owner)	((__u32)((__u64)owner >> 32))
--#define FMR_OWNER_CODE(owner)	((__u32)(((__u64)owner & 0xFFFFFFFFULL)))
--#define FMR_OWN_FREE		FMR_OWNER(0, 1) /* free space */
--#define FMR_OWN_UNKNOWN		FMR_OWNER(0, 2) /* unknown owner */
--#define FMR_OWN_METADATA	FMR_OWNER(0, 3) /* metadata */
--
--#define FS_IOC_GETFSMAP		_IOWR('X', 59, struct fsmap_head)
--
--#define HAVE_GETFSMAP
--#endif /* HAVE_GETFSMAP */
--
- #ifndef HAVE_MAP_SYNC
- #define MAP_SYNC 0
- #define MAP_SHARED_VALIDATE 0
-diff --git a/io/fsmap.c b/io/fsmap.c
-index f540a7c0..9ff36bf4 100644
---- a/io/fsmap.c
-+++ b/io/fsmap.c
+ static const cmdinfo_t	crc32cselftest_cmd = {
+diff --git a/libfrog/crc32.c b/libfrog/crc32.c
+index 6a273b71..2499615d 100644
+--- a/libfrog/crc32.c
++++ b/libfrog/crc32.c
+@@ -202,7 +202,7 @@ int main(int argc, char **argv)
+ 
+ 	printf("CRC_LE_BITS = %d\n", CRC_LE_BITS);
+ 
+-	errors = crc32c_test();
++	errors = crc32c_test(0);
+ 
+ 	return errors != 0;
+ }
+diff --git a/libfrog/crc32cselftest.h b/libfrog/crc32cselftest.h
+index 08284153..447a7f7d 100644
+--- a/libfrog/crc32cselftest.h
++++ b/libfrog/crc32cselftest.h
+@@ -661,18 +661,22 @@ static struct crc_test {
+ 	{0xb18a0319, 0x00000026, 0x000007db, 0x9dc0bb48},
+ };
+ 
++/* Don't print anything to stdout. */
++#define CRC32CTEST_QUIET	(1U << 0)
++
+ static int
+-crc32c_test(void)
++crc32c_test(
++	unsigned int	flags)
+ {
+-	int i;
+-	int errors = 0;
+-	int bytes = 0;
+-	struct timeval start, stop;
+-	uint64_t usec;
++	int		i;
++	int		errors = 0;
++	int		bytes = 0;
++	struct timeval	start, stop;
++	uint64_t	usec;
+ 
+ 	/* keep static to prevent cache warming code from
+ 	 * getting eliminated by the compiler */
+-	static uint32_t crc;
++	static uint32_t	crc;
+ 
+ 	/* pre-warm the cache */
+ 	for (i = 0; i < 100; i++) {
+@@ -693,6 +697,9 @@ crc32c_test(void)
+ 	usec = stop.tv_usec - start.tv_usec +
+ 		1000000 * (stop.tv_sec - start.tv_sec);
+ 
++	if (flags & CRC32CTEST_QUIET)
++		return errors;
++
+ 	if (errors)
+ 		printf("crc32c: %d self tests failed\n", errors);
+ 	else {
+diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
+index a7f70285..880e949b 100644
+--- a/man/man8/mkfs.xfs.8
++++ b/man/man8/mkfs.xfs.8
+@@ -121,6 +121,10 @@ If the size of the block or sector is not specified, the default sizes
+ .PP
+ Many feature options allow an optional argument of 0 or 1, to explicitly
+ disable or enable the functionality.
++
++The correctness of the crc32c checksum implementation will be tested
++before formatting the filesystem.
++If the test fails, the format will abort.
+ .SH OPTIONS
+ Options may be specified either on the command line or in a configuration file.
+ Not all command line options can be specified in configuration files; only the
+diff --git a/man/man8/xfs_repair.8 b/man/man8/xfs_repair.8
+index cc6a2be8..6625b47a 100644
+--- a/man/man8/xfs_repair.8
++++ b/man/man8/xfs_repair.8
+@@ -184,6 +184,10 @@ usual 0. This option cannot be used together with
+ .B \-V
+ Prints the version number and exits.
+ .SS Checks Performed
++The correctness of the crc32c checksum implementation will be tested
++before examining the filesystem.
++If the test fails, the program will abort.
++
+ Inconsistencies corrected include the following:
+ .IP 1.
+ Inode and inode blockmap (addressing) checks:
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 057b3b09..3a41e17f 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
 @@ -10,6 +10,7 @@
- #include "io.h"
- #include "input.h"
+ #include "libxcmd.h"
  #include "libfrog/fsgeom.h"
-+#include "libfrog/fsmap.h"
+ #include "libfrog/convert.h"
++#include "libfrog/crc32cselftest.h"
+ #include "proto.h"
+ #include <ini.h>
  
- static cmdinfo_t	fsmap_cmd;
- static dev_t		xfs_data_dev;
-diff --git a/io/io.h b/io/io.h
-index 49db902f..39fb5878 100644
---- a/io/io.h
-+++ b/io/io.h
-@@ -167,12 +167,7 @@ extern void		readdir_init(void);
- extern void		reflink_init(void);
+@@ -4044,6 +4045,13 @@ main(
+ 			exit(0);
+ 	}
  
- extern void		cowextsize_init(void);
--
--#ifdef HAVE_GETFSMAP
- extern void		fsmap_init(void);
--#else
--# define fsmap_init()	do { } while (0)
--#endif
++	/* Make sure our checksum algorithm really works. */
++	if (crc32c_test(CRC32CTEST_QUIET) != 0) {
++		fprintf(stderr,
++ _("crc32c self-test failed, will not create a filesystem here.\n"));
++		return 1;
++	}
++
+ 	/*
+ 	 * All values have been validated, discard the old device layout.
+ 	 */
+diff --git a/repair/init.c b/repair/init.c
+index 55f226e9..3a320b4f 100644
+--- a/repair/init.c
++++ b/repair/init.c
+@@ -14,6 +14,7 @@
+ #include "bmap.h"
+ #include "incore.h"
+ #include "prefetch.h"
++#include "libfrog/crc32cselftest.h"
+ #include <sys/resource.h>
  
- #ifdef HAVE_DEVMAPPER
- extern void		log_writes_init(void);
-diff --git a/libfrog/Makefile b/libfrog/Makefile
-index 01107082..d6044455 100644
---- a/libfrog/Makefile
-+++ b/libfrog/Makefile
-@@ -40,6 +40,7 @@ crc32cselftest.h \
- crc32defs.h \
- crc32table.h \
- fsgeom.h \
-+fsmap.h \
- logging.h \
- paths.h \
- projects.h \
-diff --git a/libfrog/fsmap.h b/libfrog/fsmap.h
-new file mode 100644
-index 00000000..dc290962
---- /dev/null
-+++ b/libfrog/fsmap.h
-@@ -0,0 +1,117 @@
-+#ifdef HAVE_GETFSMAP
-+# include <linux/fsmap.h>
-+#endif
+ static void
+@@ -100,4 +101,8 @@ _("Unmount or use the dangerous (-d) option to repair a read-only mounted filesy
+ 	ts_create();
+ 	increase_rlimit();
+ 	pftrace_init();
 +
-+/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
-+/*
-+ * FS_IOC_GETFSMAP ioctl infrastructure.
-+ *
-+ * Copyright (C) 2017 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#ifndef _LINUX_FSMAP_H
-+#define _LINUX_FSMAP_H
-+
-+#include <linux/types.h>
-+
-+/*
-+ *	Structure for FS_IOC_GETFSMAP.
-+ *
-+ *	The memory layout for this call are the scalar values defined in
-+ *	struct fsmap_head, followed by two struct fsmap that describe
-+ *	the lower and upper bound of mappings to return, followed by an
-+ *	array of struct fsmap mappings.
-+ *
-+ *	fmh_iflags control the output of the call, whereas fmh_oflags report
-+ *	on the overall record output.  fmh_count should be set to the
-+ *	length of the fmh_recs array, and fmh_entries will be set to the
-+ *	number of entries filled out during each call.  If fmh_count is
-+ *	zero, the number of reverse mappings will be returned in
-+ *	fmh_entries, though no mappings will be returned.  fmh_reserved
-+ *	must be set to zero.
-+ *
-+ *	The two elements in the fmh_keys array are used to constrain the
-+ *	output.  The first element in the array should represent the
-+ *	lowest disk mapping ("low key") that the user wants to learn
-+ *	about.  If this value is all zeroes, the filesystem will return
-+ *	the first entry it knows about.  For a subsequent call, the
-+ *	contents of fsmap_head.fmh_recs[fsmap_head.fmh_count - 1] should be
-+ *	copied into fmh_keys[0] to have the kernel start where it left off.
-+ *
-+ *	The second element in the fmh_keys array should represent the
-+ *	highest disk mapping ("high key") that the user wants to learn
-+ *	about.  If this value is all ones, the filesystem will not stop
-+ *	until it runs out of mapping to return or runs out of space in
-+ *	fmh_recs.
-+ *
-+ *	fmr_device can be either a 32-bit cookie representing a device, or
-+ *	a 32-bit dev_t if the FMH_OF_DEV_T flag is set.  fmr_physical,
-+ *	fmr_offset, and fmr_length are expressed in units of bytes.
-+ *	fmr_owner is either an inode number, or a special value if
-+ *	FMR_OF_SPECIAL_OWNER is set in fmr_flags.
-+ */
-+struct fsmap {
-+	__u32		fmr_device;	/* device id */
-+	__u32		fmr_flags;	/* mapping flags */
-+	__u64		fmr_physical;	/* device offset of segment */
-+	__u64		fmr_owner;	/* owner id */
-+	__u64		fmr_offset;	/* file offset of segment */
-+	__u64		fmr_length;	/* length of segment */
-+	__u64		fmr_reserved[3];	/* must be zero */
-+};
-+
-+struct fsmap_head {
-+	__u32		fmh_iflags;	/* control flags */
-+	__u32		fmh_oflags;	/* output flags */
-+	__u32		fmh_count;	/* # of entries in array incl. input */
-+	__u32		fmh_entries;	/* # of entries filled in (output). */
-+	__u64		fmh_reserved[6];	/* must be zero */
-+
-+	struct fsmap	fmh_keys[2];	/* low and high keys for the mapping search */
-+	struct fsmap	fmh_recs[];	/* returned records */
-+};
-+
-+/* Size of an fsmap_head with room for nr records. */
-+static __inline__ size_t
-+fsmap_sizeof(
-+	unsigned int	nr)
-+{
-+	return sizeof(struct fsmap_head) + nr * sizeof(struct fsmap);
-+}
-+
-+/* Start the next fsmap query at the end of the current query results. */
-+static __inline__ void
-+fsmap_advance(
-+	struct fsmap_head	*head)
-+{
-+	head->fmh_keys[0] = head->fmh_recs[head->fmh_entries - 1];
-+}
-+
-+/*	fmh_iflags values - set by FS_IOC_GETFSMAP caller in the header. */
-+/* no flags defined yet */
-+#define FMH_IF_VALID		0
-+
-+/*	fmh_oflags values - returned in the header segment only. */
-+#define FMH_OF_DEV_T		0x1	/* fmr_device values will be dev_t */
-+
-+/*	fmr_flags values - returned for each non-header segment */
-+#define FMR_OF_PREALLOC		0x1	/* segment = unwritten pre-allocation */
-+#define FMR_OF_ATTR_FORK	0x2	/* segment = attribute fork */
-+#define FMR_OF_EXTENT_MAP	0x4	/* segment = extent map */
-+#define FMR_OF_SHARED		0x8	/* segment = shared with another file */
-+#define FMR_OF_SPECIAL_OWNER	0x10	/* owner is a special value */
-+#define FMR_OF_LAST		0x20	/* segment is the last in the dataset */
-+
-+/* Each FS gets to define its own special owner codes. */
-+#define FMR_OWNER(type, code)	(((__u64)type << 32) | \
-+				 ((__u64)code & 0xFFFFFFFFULL))
-+#define FMR_OWNER_TYPE(owner)	((__u32)((__u64)owner >> 32))
-+#define FMR_OWNER_CODE(owner)	((__u32)(((__u64)owner & 0xFFFFFFFFULL)))
-+#define FMR_OWN_FREE		FMR_OWNER(0, 1) /* free space */
-+#define FMR_OWN_UNKNOWN		FMR_OWNER(0, 2) /* unknown owner */
-+#define FMR_OWN_METADATA	FMR_OWNER(0, 3) /* metadata */
-+
-+#define FS_IOC_GETFSMAP		_IOWR('X', 59, struct fsmap_head)
-+
-+#endif /* _LINUX_FSMAP_H */
-diff --git a/scrub/phase6.c b/scrub/phase6.c
-index 87828b60..dd42b66c 100644
---- a/scrub/phase6.c
-+++ b/scrub/phase6.c
-@@ -10,6 +10,7 @@
- #include "handle.h"
- #include "libfrog/paths.h"
- #include "libfrog/workqueue.h"
-+#include "libfrog/fsmap.h"
- #include "xfs_scrub.h"
- #include "common.h"
- #include "libfrog/bitmap.h"
-diff --git a/scrub/phase7.c b/scrub/phase7.c
-index bc652ab6..e24906d1 100644
---- a/scrub/phase7.c
-+++ b/scrub/phase7.c
-@@ -9,6 +9,7 @@
- #include <sys/statvfs.h>
- #include "libfrog/paths.h"
- #include "libfrog/ptvar.h"
-+#include "libfrog/fsmap.h"
- #include "list.h"
- #include "xfs_scrub.h"
- #include "common.h"
-diff --git a/scrub/spacemap.c b/scrub/spacemap.c
-index a5508d56..b7f17e57 100644
---- a/scrub/spacemap.c
-+++ b/scrub/spacemap.c
-@@ -10,6 +10,7 @@
- #include <sys/statvfs.h>
- #include "libfrog/workqueue.h"
- #include "libfrog/paths.h"
-+#include "libfrog/fsmap.h"
- #include "xfs_scrub.h"
- #include "common.h"
- #include "spacemap.h"
-diff --git a/spaceman/freesp.c b/spaceman/freesp.c
-index de301c19..4e46ab26 100644
---- a/spaceman/freesp.c
-+++ b/spaceman/freesp.c
-@@ -9,6 +9,7 @@
- #include "libxfs.h"
- #include <linux/fiemap.h>
- #include "libfrog/fsgeom.h"
-+#include "libfrog/fsmap.h"
- #include "command.h"
- #include "init.h"
- #include "libfrog/paths.h"
-diff --git a/spaceman/space.h b/spaceman/space.h
-index 723209ed..a8055535 100644
---- a/spaceman/space.h
-+++ b/spaceman/space.h
-@@ -26,11 +26,7 @@ extern void	help_init(void);
- extern void	prealloc_init(void);
- extern void	quit_init(void);
- extern void	trim_init(void);
--#ifdef HAVE_GETFSMAP
- extern void	freesp_init(void);
--#else
--# define freesp_init()	do { } while (0)
--#endif
- extern void	info_init(void);
- extern void	health_init(void);
- 
++	if (crc32c_test(CRC32CTEST_QUIET) != 0)
++		do_error(
++ _("crc32c self-test failed, will not examine filesystem.\n"));
+ }
 
