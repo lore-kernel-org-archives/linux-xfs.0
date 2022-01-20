@@ -2,43 +2,40 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72D6BC433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 00:23:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81BB7C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 00:23:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345210AbiATAXT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Jan 2022 19:23:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39074 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345209AbiATAXT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jan 2022 19:23:19 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2056CC061574
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Jan 2022 16:23:19 -0800 (PST)
+        id S1345209AbiATAXZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Jan 2022 19:23:25 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:59928 "EHLO
+        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S240495AbiATAXY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jan 2022 19:23:24 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B43BF61515
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Jan 2022 00:23:18 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1821AC004E1;
-        Thu, 20 Jan 2022 00:23:18 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 38D9661515
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jan 2022 00:23:24 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B7F4C004E1;
+        Thu, 20 Jan 2022 00:23:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642638198;
-        bh=PpgI70vMegCa+NwOgwSrH+l+Eqz7j5stHqIbVxxZXxs=;
+        s=k20201202; t=1642638203;
+        bh=/kpl9NPpfxagooowStok9BODKRRebKbb/MA65iSv4mE=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=VhbbQR9tL4HaAQuzQWCESfHKzNcKC0GgRIU7BLbmb2MHS5v2+uR+y6GKUnYuLOQ9k
-         yzzLtmIE0BKcnvonZEHbyKhQFrK7pivK0AFdiQpIrQssphc7AKcaNwNQFz5HClWRcB
-         xkLulcSp3krsEWXaN9XwgNpch4n9uAW59RmQik7uevy5GXxpO/4pEcqGc8M00RFHVj
-         6VQ+T3bwzjF31tjc0ddTNcgaOil1DLsgndW1PLHcGXpEcDRr+FqMsEZeqDx5OJjrCN
-         REylzQjUayWTXDCSHCkmSUlvrPZrwPihuQ3vtzuLfvXhg2W2ykx1wTTIt9NN35hSJb
-         X/2dvgaOSY7DA==
-Subject: [PATCH 01/48] xfs: formalize the process of holding onto resources
- across a defer roll
+        b=hzDnUyddUWAk3tOpCE8Thp7kleqF66654sxSNcn4efMQPjI7zvOLs8widbcZDoHlG
+         f4eKA+0b08zz1aZZnEvCsCAnphG3Ux1SNsg5n8Te+mAPxwjAMCnHxg5iKVKvX3Fjdv
+         nSElrq8p8d9EIMbTZR2O2xyItdz9oyGdsVsh52DI0MEI6FF3NPVC9MALAv1RYx+zce
+         gkVoteutLX7PvqjhuQg1M6oJDEK4Q8TeIkdQK+WWWNuqEV2TAHnSXS7dnAJc6QdZKY
+         WWy5UG1kXxc4xDy0bEUTtqqRezOf8pnVNkdnxyj8G4RM+Mh0ub5oRAIHJXl8FUKHE7
+         jkNeqvIFhzFbQ==
+Subject: [PATCH 02/48] xfs: port the defer ops capture and continue to
+ resource capture
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
 Cc:     Allison Henderson <allison.henderson@oracle.com>,
         linux-xfs@vger.kernel.org
-Date:   Wed, 19 Jan 2022 16:23:17 -0800
-Message-ID: <164263819776.865554.18114406966594175432.stgit@magnolia>
+Date:   Wed, 19 Jan 2022 16:23:23 -0800
+Message-ID: <164263820326.865554.8930683632348589030.stgit@magnolia>
 In-Reply-To: <164263819185.865554.6000499997543946756.stgit@magnolia>
 References: <164263819185.865554.6000499997543946756.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -51,212 +48,232 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: c5db9f937b2971c78d6c6bbaa61a6450efa8b845
+Source kernel commit: 512edfac85d243ed6a5a5f42f513ebb7c2d32863
 
-Transaction users are allowed to flag up to two buffers and two inodes
-for ownership preservation across a deferred transaction roll.  Hoist
-the variables and code responsible for this out of xfs_defer_trans_roll
-so that we can use it for the defer capture mechanism.
+When log recovery tries to recover a transaction that had log intent
+items attached to it, it has to save certain parts of the transaction
+state (reservation, dfops chain, inodes with no automatic unlock) so
+that it can finish single-stepping the recovered transactions before
+finishing the chains.
+
+This is done with the xfs_defer_ops_capture and xfs_defer_ops_continue
+functions.  Right now they open-code this functionality, so let's port
+this to the formalized resource capture structure that we introduced in
+the previous patch.  This enables us to hold up to two inodes and two
+buffers during log recovery, the same way we do for regular runtime.
+
+With this patch applied, we'll be ready to support atomic extent swap
+which holds two inodes; and logged xattrs which holds one inode and one
+xattr leaf buffer.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- include/xfs_trans.h |    3 --
- libxfs/xfs_defer.c  |   85 ++++++++++++++++++++++++++++++++-------------------
- libxfs/xfs_defer.h  |   24 ++++++++++++++
- 3 files changed, 78 insertions(+), 34 deletions(-)
+ libxfs/libxfs_priv.h |    2 +
+ libxfs/xfs_defer.c   |   86 ++++++++++++++++++++++++++++++++++++++------------
+ libxfs/xfs_defer.h   |   14 +++-----
+ 3 files changed, 73 insertions(+), 29 deletions(-)
 
 
-diff --git a/include/xfs_trans.h b/include/xfs_trans.h
-index 2c55bb85..690759ec 100644
---- a/include/xfs_trans.h
-+++ b/include/xfs_trans.h
-@@ -58,9 +58,6 @@ typedef struct xfs_qoff_logitem {
- 	xfs_qoff_logformat_t	qql_format;	/* logged structure */
- } xfs_qoff_logitem_t;
+diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+index b94ff41e..466865f7 100644
+--- a/libxfs/libxfs_priv.h
++++ b/libxfs/libxfs_priv.h
+@@ -468,6 +468,8 @@ void __xfs_buf_mark_corrupt(struct xfs_buf *bp, xfs_failaddr_t fa);
+ 	__mode = __mode; /* no set-but-unused warning */	\
+ })
  
--#define XFS_DEFER_OPS_NR_INODES	2	/* join up to two inodes */
--#define XFS_DEFER_OPS_NR_BUFS	2	/* join up to two buffers */
--
- typedef struct xfs_trans {
- 	unsigned int		t_log_res;	/* amt of log space resvd */
- 	unsigned int		t_log_count;	/* count for perm log res */
++#define xfs_lock_two_inodes(ip1, mode1, ip2, mode2)	((void) 0)
++
+ /* space allocation */
+ #define XFS_EXTENT_BUSY_DISCARDED	0x01	/* undergoing a discard op. */
+ #define XFS_EXTENT_BUSY_SKIP_DISCARD	0x02	/* do not discard */
 diff --git a/libxfs/xfs_defer.c b/libxfs/xfs_defer.c
-index 1fdf6c72..35f51f87 100644
+index 35f51f87..40d49abc 100644
 --- a/libxfs/xfs_defer.c
 +++ b/libxfs/xfs_defer.c
-@@ -228,23 +228,20 @@ xfs_defer_trans_abort(
- 	}
- }
- 
--/* Roll a transaction so we can do some deferred op processing. */
--STATIC int
--xfs_defer_trans_roll(
--	struct xfs_trans		**tpp)
-+/*
-+ * Capture resources that the caller said not to release ("held") when the
-+ * transaction commits.  Caller is responsible for zero-initializing @dres.
-+ */
-+static int
-+xfs_defer_save_resources(
-+	struct xfs_defer_resources	*dres,
+@@ -646,10 +646,11 @@ xfs_defer_move(
+  */
+ static struct xfs_defer_capture *
+ xfs_defer_ops_capture(
+-	struct xfs_trans		*tp,
+-	struct xfs_inode		*capture_ip)
 +	struct xfs_trans		*tp)
  {
--	struct xfs_trans		*tp = *tpp;
- 	struct xfs_buf_log_item		*bli;
- 	struct xfs_inode_log_item	*ili;
- 	struct xfs_log_item		*lip;
--	struct xfs_buf			*bplist[XFS_DEFER_OPS_NR_BUFS];
--	struct xfs_inode		*iplist[XFS_DEFER_OPS_NR_INODES];
--	unsigned int			ordered = 0; /* bitmap */
--	int				bpcount = 0, ipcount = 0;
--	int				i;
--	int				error;
+ 	struct xfs_defer_capture	*dfc;
++	unsigned short			i;
++	int				error;
  
--	BUILD_BUG_ON(NBBY * sizeof(ordered) < XFS_DEFER_OPS_NR_BUFS);
-+	BUILD_BUG_ON(NBBY * sizeof(dres->dr_ordered) < XFS_DEFER_OPS_NR_BUFS);
+ 	if (list_empty(&tp->t_dfops))
+ 		return NULL;
+@@ -673,27 +674,48 @@ xfs_defer_ops_capture(
+ 	/* Preserve the log reservation size. */
+ 	dfc->dfc_logres = tp->t_log_res;
  
- 	list_for_each_entry(lip, &tp->t_items, li_trans) {
- 		switch (lip->li_type) {
-@@ -252,28 +249,29 @@ xfs_defer_trans_roll(
- 			bli = container_of(lip, struct xfs_buf_log_item,
- 					   bli_item);
- 			if (bli->bli_flags & XFS_BLI_HOLD) {
--				if (bpcount >= XFS_DEFER_OPS_NR_BUFS) {
-+				if (dres->dr_bufs >= XFS_DEFER_OPS_NR_BUFS) {
- 					ASSERT(0);
- 					return -EFSCORRUPTED;
- 				}
- 				if (bli->bli_flags & XFS_BLI_ORDERED)
--					ordered |= (1U << bpcount);
-+					dres->dr_ordered |=
-+							(1U << dres->dr_bufs);
- 				else
- 					xfs_trans_dirty_buf(tp, bli->bli_buf);
--				bplist[bpcount++] = bli->bli_buf;
-+				dres->dr_bp[dres->dr_bufs++] = bli->bli_buf;
- 			}
- 			break;
- 		case XFS_LI_INODE:
- 			ili = container_of(lip, struct xfs_inode_log_item,
- 					   ili_item);
- 			if (ili->ili_lock_flags == 0) {
--				if (ipcount >= XFS_DEFER_OPS_NR_INODES) {
-+				if (dres->dr_inos >= XFS_DEFER_OPS_NR_INODES) {
- 					ASSERT(0);
- 					return -EFSCORRUPTED;
- 				}
- 				xfs_trans_log_inode(tp, ili->ili_inode,
- 						    XFS_ILOG_CORE);
--				iplist[ipcount++] = ili->ili_inode;
-+				dres->dr_ip[dres->dr_inos++] = ili->ili_inode;
- 			}
- 			break;
- 		default:
-@@ -281,7 +279,43 @@ xfs_defer_trans_roll(
- 		}
++	error = xfs_defer_save_resources(&dfc->dfc_held, tp);
++	if (error) {
++		/*
++		 * Resource capture should never fail, but if it does, we
++		 * still have to shut down the log and release things
++		 * properly.
++		 */
++		xfs_force_shutdown(tp->t_mountp, SHUTDOWN_CORRUPT_INCORE);
++	}
++
+ 	/*
+-	 * Grab an extra reference to this inode and attach it to the capture
+-	 * structure.
++	 * Grab extra references to the inodes and buffers because callers are
++	 * expected to release their held references after we commit the
++	 * transaction.
+ 	 */
+-	if (capture_ip) {
+-		ihold(VFS_I(capture_ip));
+-		dfc->dfc_capture_ip = capture_ip;
++	for (i = 0; i < dfc->dfc_held.dr_inos; i++) {
++		ASSERT(xfs_isilocked(dfc->dfc_held.dr_ip[i], XFS_ILOCK_EXCL));
++		ihold(VFS_I(dfc->dfc_held.dr_ip[i]));
  	}
  
--	trace_xfs_defer_trans_roll(tp, _RET_IP_);
-+	return 0;
-+}
++	for (i = 0; i < dfc->dfc_held.dr_bufs; i++)
++		xfs_buf_hold(dfc->dfc_held.dr_bp[i]);
 +
-+/* Attach the held resources to the transaction. */
-+static void
-+xfs_defer_restore_resources(
-+	struct xfs_trans		*tp,
+ 	return dfc;
+ }
+ 
+ /* Release all resources that we used to capture deferred ops. */
+ void
+-xfs_defer_ops_release(
++xfs_defer_ops_capture_free(
+ 	struct xfs_mount		*mp,
+ 	struct xfs_defer_capture	*dfc)
+ {
++	unsigned short			i;
++
+ 	xfs_defer_cancel_list(mp, &dfc->dfc_dfops);
+-	if (dfc->dfc_capture_ip)
+-		xfs_irele(dfc->dfc_capture_ip);
++
++	for (i = 0; i < dfc->dfc_held.dr_bufs; i++)
++		xfs_buf_relse(dfc->dfc_held.dr_bp[i]);
++
++	for (i = 0; i < dfc->dfc_held.dr_inos; i++)
++		xfs_irele(dfc->dfc_held.dr_ip[i]);
++
+ 	kmem_free(dfc);
+ }
+ 
+@@ -708,24 +730,21 @@ xfs_defer_ops_release(
+ int
+ xfs_defer_ops_capture_and_commit(
+ 	struct xfs_trans		*tp,
+-	struct xfs_inode		*capture_ip,
+ 	struct list_head		*capture_list)
+ {
+ 	struct xfs_mount		*mp = tp->t_mountp;
+ 	struct xfs_defer_capture	*dfc;
+ 	int				error;
+ 
+-	ASSERT(!capture_ip || xfs_isilocked(capture_ip, XFS_ILOCK_EXCL));
+-
+ 	/* If we don't capture anything, commit transaction and exit. */
+-	dfc = xfs_defer_ops_capture(tp, capture_ip);
++	dfc = xfs_defer_ops_capture(tp);
+ 	if (!dfc)
+ 		return xfs_trans_commit(tp);
+ 
+ 	/* Commit the transaction and add the capture structure to the list. */
+ 	error = xfs_trans_commit(tp);
+ 	if (error) {
+-		xfs_defer_ops_release(mp, dfc);
++		xfs_defer_ops_capture_free(mp, dfc);
+ 		return error;
+ 	}
+ 
+@@ -743,17 +762,19 @@ void
+ xfs_defer_ops_continue(
+ 	struct xfs_defer_capture	*dfc,
+ 	struct xfs_trans		*tp,
+-	struct xfs_inode		**captured_ipp)
++	struct xfs_defer_resources	*dres)
+ {
+ 	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
+ 	ASSERT(!(tp->t_flags & XFS_TRANS_DIRTY));
+ 
+ 	/* Lock and join the captured inode to the new transaction. */
+-	if (dfc->dfc_capture_ip) {
+-		xfs_ilock(dfc->dfc_capture_ip, XFS_ILOCK_EXCL);
+-		xfs_trans_ijoin(tp, dfc->dfc_capture_ip, 0);
+-	}
+-	*captured_ipp = dfc->dfc_capture_ip;
++	if (dfc->dfc_held.dr_inos == 2)
++		xfs_lock_two_inodes(dfc->dfc_held.dr_ip[0], XFS_ILOCK_EXCL,
++				    dfc->dfc_held.dr_ip[1], XFS_ILOCK_EXCL);
++	else if (dfc->dfc_held.dr_inos == 1)
++		xfs_ilock(dfc->dfc_held.dr_ip[0], XFS_ILOCK_EXCL);
++	xfs_defer_restore_resources(tp, &dfc->dfc_held);
++	memcpy(dres, &dfc->dfc_held, sizeof(struct xfs_defer_resources));
+ 
+ 	/* Move captured dfops chain and state to the transaction. */
+ 	list_splice_init(&dfc->dfc_dfops, &tp->t_dfops);
+@@ -761,3 +782,26 @@ xfs_defer_ops_continue(
+ 
+ 	kmem_free(dfc);
+ }
++
++/* Release the resources captured and continued during recovery. */
++void
++xfs_defer_resources_rele(
 +	struct xfs_defer_resources	*dres)
 +{
 +	unsigned short			i;
 +
-+	/* Rejoin the joined inodes. */
-+	for (i = 0; i < dres->dr_inos; i++)
-+		xfs_trans_ijoin(tp, dres->dr_ip[i], 0);
-+
-+	/* Rejoin the buffers and dirty them so the log moves forward. */
-+	for (i = 0; i < dres->dr_bufs; i++) {
-+		xfs_trans_bjoin(tp, dres->dr_bp[i]);
-+		if (dres->dr_ordered & (1U << i))
-+			xfs_trans_ordered_buf(tp, dres->dr_bp[i]);
-+		xfs_trans_bhold(tp, dres->dr_bp[i]);
++	for (i = 0; i < dres->dr_inos; i++) {
++		xfs_iunlock(dres->dr_ip[i], XFS_ILOCK_EXCL);
++		xfs_irele(dres->dr_ip[i]);
++		dres->dr_ip[i] = NULL;
 +	}
++
++	for (i = 0; i < dres->dr_bufs; i++) {
++		xfs_buf_relse(dres->dr_bp[i]);
++		dres->dr_bp[i] = NULL;
++	}
++
++	dres->dr_inos = 0;
++	dres->dr_bufs = 0;
++	dres->dr_ordered = 0;
 +}
-+
-+/* Roll a transaction so we can do some deferred op processing. */
-+STATIC int
-+xfs_defer_trans_roll(
-+	struct xfs_trans		**tpp)
-+{
-+	struct xfs_defer_resources	dres = { };
-+	int				error;
-+
-+	error = xfs_defer_save_resources(&dres, *tpp);
-+	if (error)
-+		return error;
-+
-+	trace_xfs_defer_trans_roll(*tpp, _RET_IP_);
- 
- 	/*
- 	 * Roll the transaction.  Rolling always given a new transaction (even
-@@ -291,22 +325,11 @@ xfs_defer_trans_roll(
- 	 * happened.
- 	 */
- 	error = xfs_trans_roll(tpp);
--	tp = *tpp;
- 
--	/* Rejoin the joined inodes. */
--	for (i = 0; i < ipcount; i++)
--		xfs_trans_ijoin(tp, iplist[i], 0);
--
--	/* Rejoin the buffers and dirty them so the log moves forward. */
--	for (i = 0; i < bpcount; i++) {
--		xfs_trans_bjoin(tp, bplist[i]);
--		if (ordered & (1U << i))
--			xfs_trans_ordered_buf(tp, bplist[i]);
--		xfs_trans_bhold(tp, bplist[i]);
--	}
-+	xfs_defer_restore_resources(*tpp, &dres);
- 
- 	if (error)
--		trace_xfs_defer_trans_roll_error(tp, error);
-+		trace_xfs_defer_trans_roll_error(*tpp, error);
- 	return error;
- }
- 
 diff --git a/libxfs/xfs_defer.h b/libxfs/xfs_defer.h
-index 05472f71..e095abb9 100644
+index e095abb9..7952695c 100644
 --- a/libxfs/xfs_defer.h
 +++ b/libxfs/xfs_defer.h
-@@ -64,6 +64,30 @@ extern const struct xfs_defer_op_type xfs_rmap_update_defer_type;
- extern const struct xfs_defer_op_type xfs_extent_free_defer_type;
- extern const struct xfs_defer_op_type xfs_agfl_free_defer_type;
+@@ -107,11 +107,7 @@ struct xfs_defer_capture {
+ 	/* Log reservation saved from the transaction. */
+ 	unsigned int		dfc_logres;
  
-+/*
-+ * Deferred operation item relogging limits.
-+ */
-+#define XFS_DEFER_OPS_NR_INODES	2	/* join up to two inodes */
-+#define XFS_DEFER_OPS_NR_BUFS	2	/* join up to two buffers */
-+
-+/* Resources that must be held across a transaction roll. */
-+struct xfs_defer_resources {
-+	/* held buffers */
-+	struct xfs_buf		*dr_bp[XFS_DEFER_OPS_NR_BUFS];
-+
-+	/* inodes with no unlock flags */
-+	struct xfs_inode	*dr_ip[XFS_DEFER_OPS_NR_INODES];
-+
-+	/* number of held buffers */
-+	unsigned short		dr_bufs;
-+
-+	/* bitmap of ordered buffers */
-+	unsigned short		dr_ordered;
-+
-+	/* number of held inodes */
-+	unsigned short		dr_inos;
-+};
-+
+-	/*
+-	 * An inode reference that must be maintained to complete the deferred
+-	 * work.
+-	 */
+-	struct xfs_inode	*dfc_capture_ip;
++	struct xfs_defer_resources dfc_held;
+ };
+ 
  /*
-  * This structure enables a dfops user to detach the chain of deferred
-  * operations from a transaction so that they can be continued later.
+@@ -119,9 +115,11 @@ struct xfs_defer_capture {
+  * This doesn't normally happen except log recovery.
+  */
+ int xfs_defer_ops_capture_and_commit(struct xfs_trans *tp,
+-		struct xfs_inode *capture_ip, struct list_head *capture_list);
++		struct list_head *capture_list);
+ void xfs_defer_ops_continue(struct xfs_defer_capture *d, struct xfs_trans *tp,
+-		struct xfs_inode **captured_ipp);
+-void xfs_defer_ops_release(struct xfs_mount *mp, struct xfs_defer_capture *d);
++		struct xfs_defer_resources *dres);
++void xfs_defer_ops_capture_free(struct xfs_mount *mp,
++		struct xfs_defer_capture *d);
++void xfs_defer_resources_rele(struct xfs_defer_resources *dres);
+ 
+ #endif /* __XFS_DEFER_H__ */
 
