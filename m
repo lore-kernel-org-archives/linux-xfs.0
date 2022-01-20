@@ -2,41 +2,42 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B61EEC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 00:22:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EEE2C433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 00:22:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240571AbiATAWE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Jan 2022 19:22:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38796 "EHLO
+        id S1345141AbiATAWJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Jan 2022 19:22:09 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38820 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240471AbiATAWD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jan 2022 19:22:03 -0500
+        with ESMTP id S240471AbiATAWJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jan 2022 19:22:09 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1AE2C061574
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Jan 2022 16:22:03 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E6B0C061574
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Jan 2022 16:22:09 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5192961506
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Jan 2022 00:22:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B050DC004E1;
-        Thu, 20 Jan 2022 00:22:02 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D2E7F61516
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jan 2022 00:22:08 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 35F79C340E3;
+        Thu, 20 Jan 2022 00:22:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642638122;
-        bh=5n4ZkWH+JI/IYrokl+kVljjTICrlfxtchkfbLiDcpaU=;
+        s=k20201202; t=1642638128;
+        bh=YJTp3cRwBoKpyFEyR8g0QuI1AOD9njSmO12skqT7J+g=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=bKeTQBm0EQjgBKf2IuyfgQkLsoIkLfqOalFwCxRYYMZLeToim6VS8c45gvE94sOz3
-         hutjwJEziSyWDModz+gmopWgej9TZPvTTdLm/POy8W8cx2q/DBanEfpgyE7PlE+1kX
-         sOdwmDqLCDh+EbtslkzutnPZLmU/F+fbmB0w33vDA0o6oRIm3VwmjsaPm91U263bRm
-         OMrr9SW18r0uVQXgMO53rEl5XsTCBGY2LtpU7caKgKV+EAjttQQjB87f/lFVyFClM2
-         6N1ySLnQj0pEm1cUITFx2i2Qp5reXg4t1HZ4ibd8PvfifttG0t3HuTNXizquEjO8iS
-         /Zsw1jwMVp2PA==
-Subject: [PATCH 05/17] misc: add a crc32c self test to mkfs and repair
+        b=O1ZJDRqmyBwTVMBNBVsyXeB2Tqa81clUqZDjbuYpCYgwblSWuKsNNQllZI0Gsxwjq
+         0pk3miEQ0ZQ4265XuBdEzTniYmPhurwJe2w4RDy+wsSrCTSihoXjsOWWNpJx02rytT
+         LGUWaIlBfBqwsKMN/mnMXrVmw78GrfHIo0tTa3+OO+u9v78RMMFfeL8H8hXXKJodtc
+         CU30huO9J0vEPEJ8TlV9TdxH+emJfGc0BgAiYw1f1HRzoJbeiQCLQHrPg+lNmPikwO
+         rl+UDMjdqKw4MtLjP3Q7n8kU3l/z9oBTDy370+BigdUFNU25cTmwqG/r3CKwQJdTqF
+         b5vAbf5NEiXYg==
+Subject: [PATCH 06/17] libxfs-apply: support filterdiff >= 0.4.2 only
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org, allison.henderson@oracle.com
-Date:   Wed, 19 Jan 2022 16:22:02 -0800
-Message-ID: <164263812233.863810.8941848920301589525.stgit@magnolia>
+Cc:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
+        allison.henderson@oracle.com
+Date:   Wed, 19 Jan 2022 16:22:07 -0800
+Message-ID: <164263812790.863810.4865922459784834091.stgit@magnolia>
 In-Reply-To: <164263809453.863810.8908193461297738491.stgit@magnolia>
 References: <164263809453.863810.8908193461297738491.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -47,171 +48,119 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+From: Dave Chinner <dchinner@redhat.com>
 
-Enhance mkfs and xfs_repair to run the crc32c self test when they start
-up, and refuse to continue if the self test fails.   We don't want to
-format a filesystem if the checksum algorithm produces incorrect
-results, and we especially don't want repair to tear a filesystem apart
-because it thinks the checksum is wrong.
+We currently require filterdiff v0.3.4 as a minimum for handling git
+based patches. This was the first version to handle git diff
+metadata well enough to do patch reformatting. It was, however, very
+buggy and required several workarounds to get it to do what we
+needed.
 
+However, these bugs have been fixed and on a machine with v0.4.2,
+the workarounds result in libxfs-apply breaking and creating corrupt
+patches. Rather than try to carry around workarounds for a broken
+filterdiff version and one that just works, just increase the
+minimum required version to 0.4.2 and remove all the workarounds for
+the bugs in 0.3.4.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- io/crc32cselftest.c      |    2 +-
- libfrog/crc32.c          |    2 +-
- libfrog/crc32cselftest.h |   21 ++++++++++++++-------
- man/man8/mkfs.xfs.8      |    4 ++++
- man/man8/xfs_repair.8    |    4 ++++
- mkfs/xfs_mkfs.c          |    8 ++++++++
- repair/init.c            |    5 +++++
- 7 files changed, 37 insertions(+), 9 deletions(-)
+ tools/libxfs-apply |   42 +++++++++++++++++-------------------------
+ 1 file changed, 17 insertions(+), 25 deletions(-)
 
 
-diff --git a/io/crc32cselftest.c b/io/crc32cselftest.c
-index f8f757f6..49eb5b6d 100644
---- a/io/crc32cselftest.c
-+++ b/io/crc32cselftest.c
-@@ -16,7 +16,7 @@ crc32cselftest_f(
- 	int		argc,
- 	char		**argv)
- {
--	return crc32c_test() != 0;
-+	return crc32c_test(0) != 0;
+diff --git a/tools/libxfs-apply b/tools/libxfs-apply
+index 9271db38..097a695f 100755
+--- a/tools/libxfs-apply
++++ b/tools/libxfs-apply
+@@ -30,21 +30,22 @@ fail()
+ 	exit
  }
  
- static const cmdinfo_t	crc32cselftest_cmd = {
-diff --git a/libfrog/crc32.c b/libfrog/crc32.c
-index 6a273b71..2499615d 100644
---- a/libfrog/crc32.c
-+++ b/libfrog/crc32.c
-@@ -202,7 +202,7 @@ int main(int argc, char **argv)
+-# filterdiff 0.3.4 is the first version that handles git diff metadata (almost)
+-# correctly. It just doesn't work properly in prior versions, so those versions
+-# can't be used to extract the commit message prior to the diff. Hence just
+-# abort and tell the user to upgrade if an old version is detected. We need to
++# filterdiff didn't start handling git diff metadata correctly until some time
++# after 0.3.4. The handling in 0.3.4 was buggy and broken, requiring working
++# around that bugs to use it. Now that 0.4.2 has fixed all those bugs, the
++# work-arounds for 0.3.4 do not work. Hence set 0.4.2 as the minimum required
++# version and tell the user to upgrade if an old version is detected. We need to
+ # check against x.y.z version numbers here.
+ _version=`filterdiff --version | cut -d " " -f 5`
+ _major=`echo $_version | cut -d "." -f 1`
+ _minor=`echo $_version | cut -d "." -f 2`
+ _patch=`echo $_version | cut -d "." -f 3`
+ if [ $_major -eq 0 ]; then
+-	if [ $_minor -lt 3 ]; then
+-		fail "filterdiff $_version found. 0.3.4 or greater is required."
++	if [ $_minor -lt 4 ]; then
++		fail "filterdiff $_version found. 0.4.2 or greater is required."
+ 	fi
+-	if [ $_minor -eq 3 -a $_patch -le 3 ]; then
+-		fail "filterdiff $_version found. 0.3.4 or greater is required."
++	if [ $_minor -eq 4 -a $_patch -lt 2 ]; then
++		fail "filterdiff $_version found. 0.4.2 or greater is required."
+ 	fi
+ fi
  
- 	printf("CRC_LE_BITS = %d\n", CRC_LE_BITS);
+@@ -158,8 +159,7 @@ filter_kernel_patch()
+ 			--addoldprefix=a/fs/xfs/ \
+ 			--addnewprefix=b/fs/xfs/ \
+ 			$_patch | \
+-		sed -e 's, [ab]\/fs\/xfs\/\(\/dev\/null\), \1,' \
+-		    -e '/^diff --git/d'
++		sed -e 's, [ab]\/fs\/xfs\/\(\/dev\/null\), \1,'
  
--	errors = crc32c_test();
-+	errors = crc32c_test(0);
  
- 	return errors != 0;
+ 	rm -f $_libxfs_files
+@@ -187,8 +187,7 @@ filter_xfsprogs_patch()
+ 			--addoldprefix=a/ \
+ 			--addnewprefix=b/ \
+ 			$_patch | \
+-		sed -e 's, [ab]\/\(\/dev\/null\), \1,' \
+-		    -e '/^diff --git/d'
++		sed -e 's, [ab]\/\(\/dev\/null\), \1,'
+ 
+ 	rm -f $_libxfs_files
  }
-diff --git a/libfrog/crc32cselftest.h b/libfrog/crc32cselftest.h
-index 08284153..447a7f7d 100644
---- a/libfrog/crc32cselftest.h
-+++ b/libfrog/crc32cselftest.h
-@@ -661,18 +661,22 @@ static struct crc_test {
- 	{0xb18a0319, 0x00000026, 0x000007db, 0x9dc0bb48},
- };
+@@ -209,30 +208,23 @@ fixup_header_format()
+ 	local _diff=`mktemp`
+ 	local _new_hdr=$_hdr.new
  
-+/* Don't print anything to stdout. */
-+#define CRC32CTEST_QUIET	(1U << 0)
-+
- static int
--crc32c_test(void)
-+crc32c_test(
-+	unsigned int	flags)
- {
--	int i;
--	int errors = 0;
--	int bytes = 0;
--	struct timeval start, stop;
--	uint64_t usec;
-+	int		i;
-+	int		errors = 0;
-+	int		bytes = 0;
-+	struct timeval	start, stop;
-+	uint64_t	usec;
+-	# there's a bug in filterdiff that leaves a line at the end of the
+-	# header in the filtered git show output like:
+-	#
+-	# difflibxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+-	#
+-	# split the header on that (convenient!)
+-	sed -e /^difflib/q $_patch > $_hdr
++	# Split the header on the first ^diff --git line (convenient!)
++	sed -e /^diff/q $_patch > $_hdr
+ 	cat $_patch | awk '
+-		BEGIN { difflib_seen = 0; index_seen = 0 }
+-		/^difflib/ { difflib_seen++; next }
++		BEGIN { diff_seen = 0; index_seen = 0 }
++		/^diff/ { diff_seen++; next }
+ 		/^index/ { if (++index_seen == 1) { next } }
+-		// { if (difflib_seen) { print $0 } }' > $_diff
++		// { if (diff_seen) { print $0 } }' > $_diff
  
- 	/* keep static to prevent cache warming code from
- 	 * getting eliminated by the compiler */
--	static uint32_t crc;
-+	static uint32_t	crc;
- 
- 	/* pre-warm the cache */
- 	for (i = 0; i < 100; i++) {
-@@ -693,6 +697,9 @@ crc32c_test(void)
- 	usec = stop.tv_usec - start.tv_usec +
- 		1000000 * (stop.tv_sec - start.tv_sec);
- 
-+	if (flags & CRC32CTEST_QUIET)
-+		return errors;
-+
- 	if (errors)
- 		printf("crc32c: %d self tests failed\n", errors);
- 	else {
-diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
-index a7f70285..880e949b 100644
---- a/man/man8/mkfs.xfs.8
-+++ b/man/man8/mkfs.xfs.8
-@@ -121,6 +121,10 @@ If the size of the block or sector is not specified, the default sizes
- .PP
- Many feature options allow an optional argument of 0 or 1, to explicitly
- disable or enable the functionality.
-+
-+The correctness of the crc32c checksum implementation will be tested
-+before formatting the filesystem.
-+If the test fails, the format will abort.
- .SH OPTIONS
- Options may be specified either on the command line or in a configuration file.
- Not all command line options can be specified in configuration files; only the
-diff --git a/man/man8/xfs_repair.8 b/man/man8/xfs_repair.8
-index cc6a2be8..6625b47a 100644
---- a/man/man8/xfs_repair.8
-+++ b/man/man8/xfs_repair.8
-@@ -184,6 +184,10 @@ usual 0. This option cannot be used together with
- .B \-V
- Prints the version number and exits.
- .SS Checks Performed
-+The correctness of the crc32c checksum implementation will be tested
-+before examining the filesystem.
-+If the test fails, the program will abort.
-+
- Inconsistencies corrected include the following:
- .IP 1.
- Inode and inode blockmap (addressing) checks:
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 057b3b09..3a41e17f 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -10,6 +10,7 @@
- #include "libxcmd.h"
- #include "libfrog/fsgeom.h"
- #include "libfrog/convert.h"
-+#include "libfrog/crc32cselftest.h"
- #include "proto.h"
- #include <ini.h>
- 
-@@ -4044,6 +4045,13 @@ main(
- 			exit(0);
- 	}
- 
-+	/* Make sure our checksum algorithm really works. */
-+	if (crc32c_test(CRC32CTEST_QUIET) != 0) {
-+		fprintf(stderr,
-+ _("crc32c self-test failed, will not create a filesystem here.\n"));
-+		return 1;
-+	}
-+
- 	/*
- 	 * All values have been validated, discard the old device layout.
- 	 */
-diff --git a/repair/init.c b/repair/init.c
-index 55f226e9..3a320b4f 100644
---- a/repair/init.c
-+++ b/repair/init.c
-@@ -14,6 +14,7 @@
- #include "bmap.h"
- #include "incore.h"
- #include "prefetch.h"
-+#include "libfrog/crc32cselftest.h"
- #include <sys/resource.h>
- 
- static void
-@@ -100,4 +101,8 @@ _("Unmount or use the dangerous (-d) option to repair a read-only mounted filesy
- 	ts_create();
- 	increase_rlimit();
- 	pftrace_init();
-+
-+	if (crc32c_test(CRC32CTEST_QUIET) != 0)
-+		do_error(
-+ _("crc32c self-test failed, will not examine filesystem.\n"));
- }
+ 	# the header now has the format:
+ 	# commit 0d5a75e9e23ee39cd0d8a167393dcedb4f0f47b2
+ 	# Author: Eric Sandeen <sandeen@sandeen.net>
+ 	# Date:   Wed Jun 1 17:38:15 2016 +1000
+-	# 
++	#
+ 	#     xfs: make several functions static
+ 	#....
+ 	#     Signed-off-by: Dave Chinner <david@fromorbit.com>
+ 	#
+-	#difflibxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+-	#
+ 	# We want to format it like a normal patch with a line to say what repo
+ 	# and commit it was sourced from:
+ 	#
 
