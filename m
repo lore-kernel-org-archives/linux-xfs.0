@@ -2,42 +2,38 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E922C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 00:25:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 718F8C433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 00:25:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345290AbiATAZL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Jan 2022 19:25:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39502 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345343AbiATAZJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jan 2022 19:25:09 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3BE96C061574
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Jan 2022 16:25:09 -0800 (PST)
+        id S1345289AbiATAZR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Jan 2022 19:25:17 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:48184 "EHLO
+        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1345320AbiATAZQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jan 2022 19:25:16 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D0C6361518
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Jan 2022 00:25:08 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2EEF7C004E1;
-        Thu, 20 Jan 2022 00:25:08 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id E7AA3B81A85
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jan 2022 00:25:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A93D8C004E1;
+        Thu, 20 Jan 2022 00:25:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642638308;
-        bh=zfIjo2AYK3h2apZJv7sKGAeIJpwLOPVFWfVYLpStuaw=;
+        s=k20201202; t=1642638313;
+        bh=RmqhmWznKC3FJJE5sbX/QvO++2Ed1Mv+5ILNtl2NLa0=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=ojs2jSi6vxIJ7opnT7sOpTY+7i4NndURL1sBWV7P2q56YzAw41y1VtoDLxNPESQnk
-         CN/GA+fVDejHzZ3+zerBO/niUFsf0sqWBZC3/sQrHEhAEamec46BbRLhKNe5C40KRj
-         qSLrLSvW2FMVtI+V94VZcUTU6XDY3J/VoCWZqqnEHBWCE/9rIjk8wMnwe9DgFZrPaO
-         ijsqSlHeV8X7NpPbDMzeWw4wnMhthO2Vhuezw9m7jogh9asBFMvSvOG9pAlctSa852
-         VXilVxZtzgCSHJW3E8k6vAWg2aVrPsLHdULf+uWB8e8HYdAvZxZ+sp2YY2Z9E0esvE
-         svjndjqmOLgvw==
-Subject: [PATCH 21/48] xfs: compute maximum AG btree height for critical
- reservation calculation
+        b=boYRWtvJ4EkT1IKeFI1YFQLD0X3u9gXRPBjb1pvk9IBgoWEnNU5xPAs7mPrfah7Sq
+         BugP0FA8W2IkPDCda6fnVF3sdu9ol4G/np0DveGobbpk4fGYQFtHMAdYVPWn81hWSj
+         /TLB40VSouD1IZbYIcZIJN4sbONhbxVEANMIk/zcQ4yIwkfFmqUp70D9CeNlQ3CnI9
+         djAmdFUwPWvHwV1WB2fH2Zajw43c82lTskKjypbAuHaWE/NucwhsLkpLSnvLSznuo3
+         AZiloiF6OaI+bJWGayNYv2X6wdt88WMfxvYYtX3HbFL6jhO1XlNpIFl6ZeAeDXrB/l
+         49wsA81/Jbmpw==
+Subject: [PATCH 22/48] xfs: clean up xfs_btree_{calc_size,compute_maxlevels}
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
 Cc:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
-Date:   Wed, 19 Jan 2022 16:25:07 -0800
-Message-ID: <164263830791.865554.9300818337239981326.stgit@magnolia>
+Date:   Wed, 19 Jan 2022 16:25:13 -0800
+Message-ID: <164263831338.865554.13825367472651263860.stgit@magnolia>
 In-Reply-To: <164263819185.865554.6000499997543946756.stgit@magnolia>
 References: <164263819185.865554.6000499997543946756.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,80 +46,135 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: b74e15d720d0764345934ebb599a99a077c52533
+Source kernel commit: 1b236ad7ba800bc3e9994881a8a453eb8bf5ca0f
 
-Compute the actual maximum AG btree height for deciding if a per-AG
-block reservation is critically low.  This only affects the sanity check
-condition, since we /generally/ will trigger on the 10% threshold.  This
-is a long-winded way of saying that we're removing one more usage of
-XFS_BTREE_MAXLEVELS.
+During review of the next patch, Dave remarked that he found these two
+btree geometry calculation functions lacking in documentation and that
+they performed more work than was really necessary.
+
+These functions take the same parameters and have nearly the same logic;
+the only real difference is in the return values.  Reword the function
+comment to make it clearer what each function does, and move them to be
+adjacent to reinforce their relation.
+
+Clean up both of them to stop opencoding the howmany functions, stop
+using the uint typedefs, and make them both support computations for
+more than 2^32 leaf records, since we're going to need all of the above
+for files with large data forks and large rmap btrees.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- include/xfs_mount.h  |    1 +
- libxfs/init.c        |   14 ++++++++++++++
- libxfs/xfs_ag_resv.c |    3 ++-
- 3 files changed, 17 insertions(+), 1 deletion(-)
+ libxfs/xfs_btree.c |   67 ++++++++++++++++++++++++++--------------------------
+ libxfs/xfs_btree.h |    6 +++--
+ 2 files changed, 37 insertions(+), 36 deletions(-)
 
 
-diff --git a/include/xfs_mount.h b/include/xfs_mount.h
-index 308ceff0..bd464fbb 100644
---- a/include/xfs_mount.h
-+++ b/include/xfs_mount.h
-@@ -75,6 +75,7 @@ typedef struct xfs_mount {
- 	uint			m_bm_maxlevels[2]; /* XFS_BM_MAXLEVELS */
- 	uint			m_rmap_maxlevels; /* max rmap btree levels */
- 	uint			m_refc_maxlevels; /* max refc btree levels */
-+	unsigned int		m_agbtree_maxlevels; /* max level of all AG btrees */
- 	xfs_extlen_t		m_ag_prealloc_blocks; /* reserved ag blocks */
- 	uint			m_alloc_set_aside; /* space we can't use */
- 	uint			m_ag_max_usable; /* max space per AG */
-diff --git a/libxfs/init.c b/libxfs/init.c
-index f59444ab..12e25379 100644
---- a/libxfs/init.c
-+++ b/libxfs/init.c
-@@ -703,6 +703,18 @@ libxfs_buftarg_init(
- 	mp->m_rtdev_targp = libxfs_buftarg_alloc(mp, rtdev, rfail);
+diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
+index 6a049c64..5ada6cc4 100644
+--- a/libxfs/xfs_btree.c
++++ b/libxfs/xfs_btree.c
+@@ -4515,21 +4515,43 @@ xfs_btree_sblock_verify(
  }
  
-+/* Compute maximum possible height for per-AG btree types for this fs. */
-+static inline void
-+xfs_agbtree_compute_maxlevels(
-+	struct xfs_mount	*mp)
-+{
-+	unsigned int		levels;
+ /*
+- * Calculate the number of btree levels needed to store a given number of
+- * records in a short-format btree.
++ * For the given limits on leaf and keyptr records per block, calculate the
++ * height of the tree needed to index the number of leaf records.
+  */
+-uint
++unsigned int
+ xfs_btree_compute_maxlevels(
+-	uint			*limits,
+-	unsigned long		len)
++	const unsigned int	*limits,
++	unsigned long long	records)
+ {
+-	uint			level;
+-	unsigned long		maxblocks;
++	unsigned long long	level_blocks = howmany_64(records, limits[0]);
++	unsigned int		height = 1;
+ 
+-	maxblocks = (len + limits[0] - 1) / limits[0];
+-	for (level = 1; maxblocks > 1; level++)
+-		maxblocks = (maxblocks + limits[1] - 1) / limits[1];
+-	return level;
++	while (level_blocks > 1) {
++		level_blocks = howmany_64(level_blocks, limits[1]);
++		height++;
++	}
 +
-+	levels = max(mp->m_alloc_maxlevels, M_IGEO(mp)->inobt_maxlevels);
-+	levels = max(levels, mp->m_rmap_maxlevels);
-+	mp->m_agbtree_maxlevels = max(levels, mp->m_refc_maxlevels);
++	return height;
 +}
 +
- /*
-  * Mount structure initialization, provides a filled-in xfs_mount_t
-  * such that the numerous XFS_* macros can be used.  If dev is zero,
-@@ -754,6 +766,8 @@ libxfs_mount(
- 	xfs_rmapbt_compute_maxlevels(mp);
- 	xfs_refcountbt_compute_maxlevels(mp);
- 
-+	xfs_agbtree_compute_maxlevels(mp);
++/*
++ * For the given limits on leaf and keyptr records per block, calculate the
++ * number of blocks needed to index the given number of leaf records.
++ */
++unsigned long long
++xfs_btree_calc_size(
++	const unsigned int	*limits,
++	unsigned long long	records)
++{
++	unsigned long long	level_blocks = howmany_64(records, limits[0]);
++	unsigned long long	blocks = level_blocks;
 +
- 	/*
- 	 * Check that the data (and log if separate) are an ok size.
- 	 */
-diff --git a/libxfs/xfs_ag_resv.c b/libxfs/xfs_ag_resv.c
-index b1392cda..546f34e8 100644
---- a/libxfs/xfs_ag_resv.c
-+++ b/libxfs/xfs_ag_resv.c
-@@ -90,7 +90,8 @@ xfs_ag_resv_critical(
- 	trace_xfs_ag_resv_critical(pag, type, avail);
- 
- 	/* Critically low if less than 10% or max btree height remains. */
--	return XFS_TEST_ERROR(avail < orig / 10 || avail < XFS_BTREE_MAXLEVELS,
-+	return XFS_TEST_ERROR(avail < orig / 10 ||
-+			      avail < pag->pag_mount->m_agbtree_maxlevels,
- 			pag->pag_mount, XFS_ERRTAG_AG_RESV_CRITICAL);
++	while (level_blocks > 1) {
++		level_blocks = howmany_64(level_blocks, limits[1]);
++		blocks += level_blocks;
++	}
++
++	return blocks;
  }
  
+ /*
+@@ -4823,29 +4845,6 @@ xfs_btree_query_all(
+ 	return xfs_btree_simple_query_range(cur, &low_key, &high_key, fn, priv);
+ }
+ 
+-/*
+- * Calculate the number of blocks needed to store a given number of records
+- * in a short-format (per-AG metadata) btree.
+- */
+-unsigned long long
+-xfs_btree_calc_size(
+-	uint			*limits,
+-	unsigned long long	len)
+-{
+-	int			level;
+-	int			maxrecs;
+-	unsigned long long	rval;
+-
+-	maxrecs = limits[0];
+-	for (level = 0, rval = 0; len > 1; level++) {
+-		len += maxrecs - 1;
+-		do_div(len, maxrecs);
+-		maxrecs = limits[1];
+-		rval += len;
+-	}
+-	return rval;
+-}
+-
+ static int
+ xfs_btree_count_blocks_helper(
+ 	struct xfs_btree_cur	*cur,
+diff --git a/libxfs/xfs_btree.h b/libxfs/xfs_btree.h
+index b46cd983..3bd69fe4 100644
+--- a/libxfs/xfs_btree.h
++++ b/libxfs/xfs_btree.h
+@@ -487,8 +487,10 @@ xfs_failaddr_t xfs_btree_lblock_v5hdr_verify(struct xfs_buf *bp,
+ xfs_failaddr_t xfs_btree_lblock_verify(struct xfs_buf *bp,
+ 		unsigned int max_recs);
+ 
+-uint xfs_btree_compute_maxlevels(uint *limits, unsigned long len);
+-unsigned long long xfs_btree_calc_size(uint *limits, unsigned long long len);
++unsigned int xfs_btree_compute_maxlevels(const unsigned int *limits,
++		unsigned long long records);
++unsigned long long xfs_btree_calc_size(const unsigned int *limits,
++		unsigned long long records);
+ 
+ /*
+  * Return codes for the query range iterator function are 0 to continue
 
