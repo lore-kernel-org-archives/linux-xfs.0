@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5660C433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 00:26:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98A1DC433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 00:26:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345514AbiATA0p (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Jan 2022 19:26:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39864 "EHLO
+        id S1345480AbiATA0t (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Jan 2022 19:26:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39880 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231437AbiATA0o (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jan 2022 19:26:44 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F9D6C061574
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Jan 2022 16:26:44 -0800 (PST)
+        with ESMTP id S231437AbiATA0s (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jan 2022 19:26:48 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4660EC061574
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Jan 2022 16:26:48 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id E5B99B81A7C
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Jan 2022 00:26:42 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC2E6C004E1;
-        Thu, 20 Jan 2022 00:26:41 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D8524614DF
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jan 2022 00:26:47 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39B93C004E1;
+        Thu, 20 Jan 2022 00:26:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642638401;
-        bh=HuPeDHf3POVAQfKUcIGEgYDntQZy6e7lw//stzd8okM=;
+        s=k20201202; t=1642638407;
+        bh=EfAzIboOJK8hxfhKkPnScIuacFXejO8fBXpxG0nT2Bg=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=SQIjZlsl3zV+2312Rgt7s3hCT2JbcqiZR1T2KIzYmxBuk/5+ie1LUGO+eO466vuIY
-         1nZ+ZniC2z1G6eYKKSjw4AFhS6dgQr/Wu4d+buk0UyRbv8hOfG120BihAhC/BobSNK
-         vHdUf1lMrshqlNxwH+7nfCzWveB9tm3vzn3SMRsrOFN9B9aY0VEF3T5IOQbZkMzSdy
-         BwwTjdLIV6hlISrfIHHmvs8UJvcjXfJ7PGfJZ8y6sAr4rB4tloUyzEE2qPbmyoS6di
-         d7RCiabIL5I3yCGO06DGBOnU7rUPE2IuMwnc0Z2qjr+tnmmEJFpuKM+glev9X2vISi
-         RUo5tMbG8cemg==
-Subject: [PATCH 38/48] xfs: rename _zone variables to _cache
+        b=nTP4Wt0EQh1pg5YIIOHj346m9mu9tIwPYAZFjQdnOCOQiVpxgLt+3de+PTyCOf1v6
+         +s+QX9K7ZElwH/rpo0xZ8VVJbLFwEzVP5/3jRfq3dM8Z0QdcoOSDI3UaYp1dieMiXH
+         2LFAFALlLnEauRvjB2Xb0Uz5EOdNpgdrlmARxxs8chuhRZNr6GajaLAw+goHIvrwDp
+         osOzXvhoRi2bdGho6REwAJYeEoca7XkTbrqYZSpepvMIg4iKRrDiFE26rp5wEBRG5X
+         kkWi1OY/MpbEle4wOt9O0UUhBC8hSnnWe8AbK9Ai+iEb63uScs/t0TxungxJNMDODD
+         LdoAeCK6QovgA==
+Subject: [PATCH 39/48] libxfs: rename all the other _zone variables to _cache
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
-Cc:     Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
-Date:   Wed, 19 Jan 2022 16:26:41 -0800
-Message-ID: <164263840138.865554.3713835353478500099.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org
+Date:   Wed, 19 Jan 2022 16:26:46 -0800
+Message-ID: <164263840689.865554.257197920220925329.stgit@magnolia>
 In-Reply-To: <164263819185.865554.6000499997543946756.stgit@magnolia>
 References: <164263819185.865554.6000499997543946756.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,269 +49,275 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 182696fb021fc196e5cbe641565ca40fcf0f885a
+Convert all the other _zone variables that we didn't catch in the libxfs
+porting patches.
 
-Now that we've gotten rid of the kmem_zone_t typedef, rename the
-variables to _cache since that's what they are.
-
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Chandan Babu R <chandan.babu@oracle.com>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/init.c           |   12 ++++++------
- libxfs/rdwr.c           |    4 ++--
- libxfs/xfs_alloc.c      |    6 +++---
- libxfs/xfs_attr_leaf.c  |    2 +-
- libxfs/xfs_bmap.c       |    6 +++---
- libxfs/xfs_bmap.h       |    2 +-
- libxfs/xfs_da_btree.c   |    6 +++---
- libxfs/xfs_da_btree.h   |    3 +--
- libxfs/xfs_inode_fork.c |    8 ++++----
- libxfs/xfs_inode_fork.h |    2 +-
- 10 files changed, 25 insertions(+), 26 deletions(-)
+ libxfs/init.c        |   24 ++++++++++++------------
+ libxfs/libxfs_priv.h |   10 +++++-----
+ libxfs/logitem.c     |    8 ++++----
+ libxfs/rdwr.c        |   16 ++++++++--------
+ libxfs/trans.c       |   14 +++++++-------
+ 5 files changed, 36 insertions(+), 36 deletions(-)
 
 
 diff --git a/libxfs/init.c b/libxfs/init.c
-index 155b12fa..4a5b0d2e 100644
+index 4a5b0d2e..1978a01f 100644
 --- a/libxfs/init.c
 +++ b/libxfs/init.c
-@@ -238,13 +238,13 @@ init_zones(void)
+@@ -229,20 +229,20 @@ check_open(char *path, int flags, char **rawfile, char **blockfile)
+  * Initialize/destroy all of the zone allocators we use.
+  */
+ static void
+-init_zones(void)
++init_caches(void)
+ {
+ 	int		error;
+ 
+ 	/* initialise zone allocation */
+-	xfs_buf_zone = kmem_cache_create("xfs_buffer",
++	xfs_buf_cache = kmem_cache_create("xfs_buffer",
  			sizeof(struct xfs_buf), 0, 0, NULL);
- 	xfs_inode_zone = kmem_cache_create("xfs_inode",
+-	xfs_inode_zone = kmem_cache_create("xfs_inode",
++	xfs_inode_cache = kmem_cache_create("xfs_inode",
  			sizeof(struct xfs_inode), 0, 0, NULL);
--	xfs_ifork_zone = kmem_cache_create("xfs_ifork",
-+	xfs_ifork_cache = kmem_cache_create("xfs_ifork",
+ 	xfs_ifork_cache = kmem_cache_create("xfs_ifork",
  			sizeof(struct xfs_ifork), 0, 0, NULL);
- 	xfs_ili_zone = kmem_cache_create("xfs_inode_log_item",
+-	xfs_ili_zone = kmem_cache_create("xfs_inode_log_item",
++	xfs_ili_cache = kmem_cache_create("xfs_inode_log_item",
  			sizeof(struct xfs_inode_log_item), 0, 0, NULL);
- 	xfs_buf_item_zone = kmem_cache_create("xfs_buf_log_item",
+-	xfs_buf_item_zone = kmem_cache_create("xfs_buf_log_item",
++	xfs_buf_item_cache = kmem_cache_create("xfs_buf_log_item",
  			sizeof(struct xfs_buf_log_item), 0, 0, NULL);
--	xfs_da_state_zone = kmem_cache_create("xfs_da_state",
-+	xfs_da_state_cache = kmem_cache_create("xfs_da_state",
+ 	xfs_da_state_cache = kmem_cache_create("xfs_da_state",
  			sizeof(struct xfs_da_state), 0, 0, NULL);
+@@ -255,22 +255,22 @@ init_zones(void)
  
- 	error = xfs_btree_init_cur_caches();
-@@ -253,7 +253,7 @@ init_zones(void)
- 		abort();
- 	}
- 
--	xfs_bmap_free_item_zone = kmem_cache_create("xfs_bmap_free_item",
-+	xfs_bmap_free_item_cache = kmem_cache_create("xfs_bmap_free_item",
+ 	xfs_bmap_free_item_cache = kmem_cache_create("xfs_bmap_free_item",
  			sizeof(struct xfs_extent_free_item), 0, 0, NULL);
- 	xfs_trans_zone = kmem_cache_create("xfs_trans",
+-	xfs_trans_zone = kmem_cache_create("xfs_trans",
++	xfs_trans_cache = kmem_cache_create("xfs_trans",
  			sizeof(struct xfs_trans), 0, 0, NULL);
-@@ -265,11 +265,11 @@ destroy_kmem_caches(void)
- 	kmem_cache_destroy(xfs_buf_zone);
- 	kmem_cache_destroy(xfs_ili_zone);
- 	kmem_cache_destroy(xfs_inode_zone);
--	kmem_cache_destroy(xfs_ifork_zone);
-+	kmem_cache_destroy(xfs_ifork_cache);
- 	kmem_cache_destroy(xfs_buf_item_zone);
--	kmem_cache_destroy(xfs_da_state_zone);
-+	kmem_cache_destroy(xfs_da_state_cache);
- 	xfs_btree_destroy_cur_caches();
--	kmem_cache_destroy(xfs_bmap_free_item_zone);
-+	kmem_cache_destroy(xfs_bmap_free_item_cache);
- 	kmem_cache_destroy(xfs_trans_zone);
  }
  
+ static void
+ destroy_kmem_caches(void)
+ {
+-	kmem_cache_destroy(xfs_buf_zone);
+-	kmem_cache_destroy(xfs_ili_zone);
+-	kmem_cache_destroy(xfs_inode_zone);
++	kmem_cache_destroy(xfs_buf_cache);
++	kmem_cache_destroy(xfs_ili_cache);
++	kmem_cache_destroy(xfs_inode_cache);
+ 	kmem_cache_destroy(xfs_ifork_cache);
+-	kmem_cache_destroy(xfs_buf_item_zone);
++	kmem_cache_destroy(xfs_buf_item_cache);
+ 	kmem_cache_destroy(xfs_da_state_cache);
+ 	xfs_btree_destroy_cur_caches();
+ 	kmem_cache_destroy(xfs_bmap_free_item_cache);
+-	kmem_cache_destroy(xfs_trans_zone);
++	kmem_cache_destroy(xfs_trans_cache);
+ }
+ 
+ static void
+@@ -405,7 +405,7 @@ libxfs_init(libxfs_init_t *a)
+ 				   &libxfs_bcache_operations);
+ 	use_xfs_buf_lock = a->usebuflock;
+ 	xfs_dir_startup();
+-	init_zones();
++	init_caches();
+ 	rval = 1;
+ done:
+ 	if (dpath[0])
+diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+index 5b04db84..67d9a8bb 100644
+--- a/libxfs/libxfs_priv.h
++++ b/libxfs/libxfs_priv.h
+@@ -59,11 +59,11 @@
+ #include <sys/xattr.h>
+ 
+ /* Zones used in libxfs allocations that aren't in shared header files */
+-extern struct kmem_cache *xfs_buf_item_zone;
+-extern struct kmem_cache *xfs_ili_zone;
+-extern struct kmem_cache *xfs_buf_zone;
+-extern struct kmem_cache *xfs_inode_zone;
+-extern struct kmem_cache *xfs_trans_zone;
++extern struct kmem_cache *xfs_buf_item_cache;
++extern struct kmem_cache *xfs_ili_cache;
++extern struct kmem_cache *xfs_buf_cache;
++extern struct kmem_cache *xfs_inode_cache;
++extern struct kmem_cache *xfs_trans_cache;
+ 
+ /* fake up iomap, (not) used in xfs_bmap.[ch] */
+ #define IOMAP_F_SHARED			0x04
+diff --git a/libxfs/logitem.c b/libxfs/logitem.c
+index dde90502..98ccdaef 100644
+--- a/libxfs/logitem.c
++++ b/libxfs/logitem.c
+@@ -16,8 +16,8 @@
+ #include "xfs_inode.h"
+ #include "xfs_trans.h"
+ 
+-struct kmem_cache	*xfs_buf_item_zone;
+-struct kmem_cache	*xfs_ili_zone;		/* inode log item zone */
++struct kmem_cache	*xfs_buf_item_cache;
++struct kmem_cache	*xfs_ili_cache;		/* inode log item cache */
+ 
+ /*
+  * Following functions from fs/xfs/xfs_trans_buf.c
+@@ -96,7 +96,7 @@ xfs_buf_item_init(
+ 		}
+ 	}
+ 
+-	bip = kmem_cache_zalloc(xfs_buf_item_zone, 0);
++	bip = kmem_cache_zalloc(xfs_buf_item_cache, 0);
+ #ifdef LI_DEBUG
+ 	fprintf(stderr, "adding buf item %p for not-logged buffer %p\n",
+ 		bip, bp);
+@@ -138,7 +138,7 @@ xfs_inode_item_init(
+ 	struct xfs_inode_log_item	*iip;
+ 
+ 	ASSERT(ip->i_itemp == NULL);
+-	iip = ip->i_itemp = kmem_cache_zalloc(xfs_ili_zone, 0);
++	iip = ip->i_itemp = kmem_cache_zalloc(xfs_ili_cache, 0);
+ #ifdef LI_DEBUG
+ 	fprintf(stderr, "inode_item_init for inode %llu, iip=%p\n",
+ 		ip->i_ino, iip);
 diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index 315e6d1f..c6a2c607 100644
+index c6a2c607..7f4aa45f 100644
 --- a/libxfs/rdwr.c
 +++ b/libxfs/rdwr.c
-@@ -1115,11 +1115,11 @@ libxfs_idestroy(xfs_inode_t *ip)
- 	}
- 	if (ip->i_afp) {
- 		libxfs_idestroy_fork(ip->i_afp);
--		kmem_cache_free(xfs_ifork_zone, ip->i_afp);
-+		kmem_cache_free(xfs_ifork_cache, ip->i_afp);
- 	}
- 	if (ip->i_cowfp) {
- 		libxfs_idestroy_fork(ip->i_cowfp);
--		kmem_cache_free(xfs_ifork_zone, ip->i_cowfp);
-+		kmem_cache_free(xfs_ifork_cache, ip->i_cowfp);
+@@ -161,7 +161,7 @@ libxfs_getsb(
+ 	return bp;
+ }
+ 
+-struct kmem_cache			*xfs_buf_zone;
++struct kmem_cache			*xfs_buf_cache;
+ 
+ static struct cache_mru		xfs_buf_freelist =
+ 	{{&xfs_buf_freelist.cm_list, &xfs_buf_freelist.cm_list},
+@@ -327,7 +327,7 @@ __libxfs_getbufr(int blen)
+ 			bp->b_maps = NULL;
+ 		}
+ 	} else
+-		bp = kmem_cache_zalloc(xfs_buf_zone, 0);
++		bp = kmem_cache_zalloc(xfs_buf_cache, 0);
+ 	pthread_mutex_unlock(&xfs_buf_freelist.cm_mutex);
+ 	bp->b_ops = NULL;
+ 	if (bp->b_flags & LIBXFS_B_DIRTY)
+@@ -961,7 +961,7 @@ libxfs_bcache_free(void)
+ 		free(bp->b_addr);
+ 		if (bp->b_maps != &bp->__b_map)
+ 			free(bp->b_maps);
+-		kmem_cache_free(xfs_buf_zone, bp);
++		kmem_cache_free(xfs_buf_cache, bp);
  	}
  }
  
-diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
-index c99497fd..06e870a8 100644
---- a/libxfs/xfs_alloc.c
-+++ b/libxfs/xfs_alloc.c
-@@ -23,7 +23,7 @@
- #include "xfs_ag_resv.h"
- #include "xfs_bmap.h"
+@@ -1053,8 +1053,8 @@ xfs_verify_magic16(
+  * Inode cache stubs.
+  */
  
--extern struct kmem_cache	*xfs_bmap_free_item_zone;
-+extern struct kmem_cache	*xfs_bmap_free_item_cache;
+-struct kmem_cache		*xfs_inode_zone;
+-extern struct kmem_cache	*xfs_ili_zone;
++struct kmem_cache		*xfs_inode_cache;
++extern struct kmem_cache	*xfs_ili_cache;
  
- struct workqueue_struct *xfs_alloc_wq;
+ int
+ libxfs_iget(
+@@ -1068,7 +1068,7 @@ libxfs_iget(
+ 	struct xfs_buf		*bp;
+ 	int			error = 0;
  
-@@ -2455,10 +2455,10 @@ xfs_defer_agfl_block(
- 	struct xfs_mount		*mp = tp->t_mountp;
- 	struct xfs_extent_free_item	*new;		/* new element */
+-	ip = kmem_cache_zalloc(xfs_inode_zone, 0);
++	ip = kmem_cache_zalloc(xfs_inode_cache, 0);
+ 	if (!ip)
+ 		return -ENOMEM;
  
--	ASSERT(xfs_bmap_free_item_zone != NULL);
-+	ASSERT(xfs_bmap_free_item_cache != NULL);
- 	ASSERT(oinfo != NULL);
+@@ -1098,7 +1098,7 @@ libxfs_iget(
+ 	return 0;
  
--	new = kmem_cache_alloc(xfs_bmap_free_item_zone,
-+	new = kmem_cache_alloc(xfs_bmap_free_item_cache,
- 			       GFP_KERNEL | __GFP_NOFAIL);
- 	new->xefi_startblock = XFS_AGB_TO_FSB(mp, agno, agbno);
- 	new->xefi_blockcount = 1;
-diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
-index 76a52573..31eddb54 100644
---- a/libxfs/xfs_attr_leaf.c
-+++ b/libxfs/xfs_attr_leaf.c
-@@ -767,7 +767,7 @@ xfs_attr_fork_remove(
- 	ASSERT(ip->i_afp->if_nextents == 0);
- 
- 	xfs_idestroy_fork(ip->i_afp);
--	kmem_cache_free(xfs_ifork_zone, ip->i_afp);
-+	kmem_cache_free(xfs_ifork_cache, ip->i_afp);
- 	ip->i_afp = NULL;
- 	ip->i_forkoff = 0;
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index ecf79e24..0514d6e5 100644
---- a/libxfs/xfs_bmap.c
-+++ b/libxfs/xfs_bmap.c
-@@ -31,7 +31,7 @@
- #include "xfs_refcount.h"
- 
- 
--struct kmem_cache		*xfs_bmap_free_item_zone;
-+struct kmem_cache		*xfs_bmap_free_item_cache;
- 
- /*
-  * Miscellaneous helper functions
-@@ -548,9 +548,9 @@ __xfs_bmap_add_free(
- 	ASSERT(len < mp->m_sb.sb_agblocks);
- 	ASSERT(agbno + len <= mp->m_sb.sb_agblocks);
- #endif
--	ASSERT(xfs_bmap_free_item_zone != NULL);
-+	ASSERT(xfs_bmap_free_item_cache != NULL);
- 
--	new = kmem_cache_alloc(xfs_bmap_free_item_zone,
-+	new = kmem_cache_alloc(xfs_bmap_free_item_cache,
- 			       GFP_KERNEL | __GFP_NOFAIL);
- 	new->xefi_startblock = bno;
- 	new->xefi_blockcount = (xfs_extlen_t)len;
-diff --git a/libxfs/xfs_bmap.h b/libxfs/xfs_bmap.h
-index 171a72ee..2cd7717c 100644
---- a/libxfs/xfs_bmap.h
-+++ b/libxfs/xfs_bmap.h
-@@ -13,7 +13,7 @@ struct xfs_inode;
- struct xfs_mount;
- struct xfs_trans;
- 
--extern struct kmem_cache	*xfs_bmap_free_item_zone;
-+extern struct kmem_cache	*xfs_bmap_free_item_cache;
- 
- /*
-  * Argument structure for xfs_bmap_alloc.
-diff --git a/libxfs/xfs_da_btree.c b/libxfs/xfs_da_btree.c
-index f1ae5d4d..50f3ec66 100644
---- a/libxfs/xfs_da_btree.c
-+++ b/libxfs/xfs_da_btree.c
-@@ -69,7 +69,7 @@ STATIC int	xfs_da3_blk_unlink(xfs_da_state_t *state,
- 				  xfs_da_state_blk_t *save_blk);
- 
- 
--struct kmem_cache *xfs_da_state_zone;	/* anchor for state struct zone */
-+struct kmem_cache	*xfs_da_state_cache;	/* anchor for dir/attr state */
- 
- /*
-  * Allocate a dir-state structure.
-@@ -81,7 +81,7 @@ xfs_da_state_alloc(
- {
- 	struct xfs_da_state	*state;
- 
--	state = kmem_cache_zalloc(xfs_da_state_zone, GFP_NOFS | __GFP_NOFAIL);
-+	state = kmem_cache_zalloc(xfs_da_state_cache, GFP_NOFS | __GFP_NOFAIL);
- 	state->args = args;
- 	state->mp = args->dp->i_mount;
- 	return state;
-@@ -110,7 +110,7 @@ xfs_da_state_free(xfs_da_state_t *state)
- #ifdef DEBUG
- 	memset((char *)state, 0, sizeof(*state));
- #endif /* DEBUG */
--	kmem_cache_free(xfs_da_state_zone, state);
-+	kmem_cache_free(xfs_da_state_cache, state);
- }
- 
- static inline int xfs_dabuf_nfsb(struct xfs_mount *mp, int whichfork)
-diff --git a/libxfs/xfs_da_btree.h b/libxfs/xfs_da_btree.h
-index da845e32..0faf7d9a 100644
---- a/libxfs/xfs_da_btree.h
-+++ b/libxfs/xfs_da_btree.h
-@@ -9,7 +9,6 @@
- 
- struct xfs_inode;
- struct xfs_trans;
--struct zone;
- 
- /*
-  * Directory/attribute geometry information. There will be one of these for each
-@@ -227,6 +226,6 @@ void	xfs_da3_node_hdr_from_disk(struct xfs_mount *mp,
- void	xfs_da3_node_hdr_to_disk(struct xfs_mount *mp,
- 		struct xfs_da_intnode *to, struct xfs_da3_icnode_hdr *from);
- 
--extern struct kmem_cache *xfs_da_state_zone;
-+extern struct kmem_cache	*xfs_da_state_cache;
- 
- #endif	/* __XFS_DA_BTREE_H__ */
-diff --git a/libxfs/xfs_inode_fork.c b/libxfs/xfs_inode_fork.c
-index c80b4066..d6ac13ee 100644
---- a/libxfs/xfs_inode_fork.c
-+++ b/libxfs/xfs_inode_fork.c
-@@ -24,7 +24,7 @@
- #include "xfs_types.h"
- #include "xfs_errortag.h"
- 
--struct kmem_cache *xfs_ifork_zone;
-+struct kmem_cache *xfs_ifork_cache;
- 
- void
- xfs_init_local_fork(
-@@ -282,7 +282,7 @@ xfs_ifork_alloc(
- {
- 	struct xfs_ifork	*ifp;
- 
--	ifp = kmem_cache_zalloc(xfs_ifork_zone, GFP_NOFS | __GFP_NOFAIL);
-+	ifp = kmem_cache_zalloc(xfs_ifork_cache, GFP_NOFS | __GFP_NOFAIL);
- 	ifp->if_format = format;
- 	ifp->if_nextents = nextents;
- 	return ifp;
-@@ -323,7 +323,7 @@ xfs_iformat_attr_fork(
- 	}
- 
- 	if (error) {
--		kmem_cache_free(xfs_ifork_zone, ip->i_afp);
-+		kmem_cache_free(xfs_ifork_cache, ip->i_afp);
- 		ip->i_afp = NULL;
- 	}
+ out_destroy:
+-	kmem_cache_free(xfs_inode_zone, ip);
++	kmem_cache_free(xfs_inode_cache, ip);
+ 	*ipp = NULL;
  	return error;
-@@ -674,7 +674,7 @@ xfs_ifork_init_cow(
- 	if (ip->i_cowfp)
- 		return;
- 
--	ip->i_cowfp = kmem_cache_zalloc(xfs_ifork_zone,
-+	ip->i_cowfp = kmem_cache_zalloc(xfs_ifork_cache,
- 				       GFP_NOFS | __GFP_NOFAIL);
- 	ip->i_cowfp->if_format = XFS_DINODE_FMT_EXTENTS;
  }
-diff --git a/libxfs/xfs_inode_fork.h b/libxfs/xfs_inode_fork.h
-index cb296bd5..3d64a3ac 100644
---- a/libxfs/xfs_inode_fork.h
-+++ b/libxfs/xfs_inode_fork.h
-@@ -221,7 +221,7 @@ static inline bool xfs_iext_peek_prev_extent(struct xfs_ifork *ifp,
- 	     xfs_iext_get_extent((ifp), (ext), (got));	\
- 	     xfs_iext_next((ifp), (ext)))
+@@ -1132,7 +1132,7 @@ libxfs_irele(
+ 	if (VFS_I(ip)->i_count == 0) {
+ 		ASSERT(ip->i_itemp == NULL);
+ 		libxfs_idestroy(ip);
+-		kmem_cache_free(xfs_inode_zone, ip);
++		kmem_cache_free(xfs_inode_cache, ip);
+ 	}
+ }
  
--extern struct kmem_cache	*xfs_ifork_zone;
-+extern struct kmem_cache	*xfs_ifork_cache;
+diff --git a/libxfs/trans.c b/libxfs/trans.c
+index f87a65c5..50d9c23d 100644
+--- a/libxfs/trans.c
++++ b/libxfs/trans.c
+@@ -30,7 +30,7 @@ static int __xfs_trans_commit(struct xfs_trans *tp, bool regrant);
+  * Simple transaction interface
+  */
  
- extern void xfs_ifork_init_cow(struct xfs_inode *ip);
+-struct kmem_cache	*xfs_trans_zone;
++struct kmem_cache	*xfs_trans_cache;
  
+ /*
+  * Initialize the precomputed transaction reservation values
+@@ -124,7 +124,7 @@ static void
+ xfs_trans_free(
+ 	struct xfs_trans	*tp)
+ {
+-	kmem_cache_free(xfs_trans_zone, tp);
++	kmem_cache_free(xfs_trans_cache, tp);
+ }
+ 
+ /*
+@@ -141,7 +141,7 @@ xfs_trans_dup(
+ {
+ 	struct xfs_trans	*ntp;
+ 
+-	ntp = kmem_cache_zalloc(xfs_trans_zone, 0);
++	ntp = kmem_cache_zalloc(xfs_trans_cache, 0);
+ 
+ 	/*
+ 	 * Initialize the new transaction structure.
+@@ -259,7 +259,7 @@ libxfs_trans_alloc(
+ 	struct xfs_trans	*tp;
+ 	int			error;
+ 
+-	tp = kmem_cache_zalloc(xfs_trans_zone, 0);
++	tp = kmem_cache_zalloc(xfs_trans_cache, 0);
+ 	tp->t_mountp = mp;
+ 	INIT_LIST_HEAD(&tp->t_items);
+ 	INIT_LIST_HEAD(&tp->t_dfops);
+@@ -354,7 +354,7 @@ xfs_buf_item_put(
+ 	struct xfs_buf		*bp = bip->bli_buf;
+ 
+ 	bp->b_log_item = NULL;
+-	kmem_cache_free(xfs_buf_item_zone, bip);
++	kmem_cache_free(xfs_buf_item_cache, bip);
+ }
+ 
+ /* from xfs_trans_buf.c */
+@@ -816,7 +816,7 @@ xfs_inode_item_put(
+ 	ip->i_itemp = NULL;
+ 
+ 	list_del_init(&iip->ili_item.li_bio_list);
+-	kmem_cache_free(xfs_ili_zone, iip);
++	kmem_cache_free(xfs_ili_cache, iip);
+ }
+ 
+ 
+@@ -868,7 +868,7 @@ buf_item_done(
+ {
+ 	struct xfs_buf		*bp;
+ 	int			hold;
+-	extern struct kmem_cache	*xfs_buf_item_zone;
++	extern struct kmem_cache	*xfs_buf_item_cache;
+ 
+ 	bp = bip->bli_buf;
+ 	ASSERT(bp != NULL);
 
