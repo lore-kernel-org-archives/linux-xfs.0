@@ -2,120 +2,68 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17FA3C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 05:01:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5D1DC433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 05:18:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229450AbiATFBm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 20 Jan 2022 00:01:42 -0500
-Received: from mail-dm6nam10on2070.outbound.protection.outlook.com ([40.107.93.70]:50401
-        "EHLO NAM10-DM6-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S229446AbiATFBl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 20 Jan 2022 00:01:41 -0500
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=GmfND6qG36ugzFIdL+Co7QoAa8y3UIiymblwF4hry41PVj7t/T1ow4EY5gtFQ5iHqAmJGcj3dyAUHCF89hf+slAgRiI5dkZJ6rZ1jBS9XWKZi9XUW4EXKCzZmFSAbrv9oReC/YW63kA5rzrylMsrKtvb9VK8rvELHI4sbOymUM6iDPHLPUhnnC5vamEQQP/SO8+slvk5Fcx4fAsutwyPVDg2zDGHovvBezCBQ+fUyWTQPVCTvjq2HGXcyfQzOqJsM6i2lE0gdvCMZA5zn0OQ30WWUGnq9SyJJXWiLlz+4+zUQk9hlY78ebnbiqOMJjpZmwYS/LnSc2p7dIW4Fo0waA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Wqta+qxoz2lRmi6B9DBY8cUfeaPCpnUJMfO2iWegnu8=;
- b=Ntl+IEaJyEa9piGPBeiUC86/jAV7teOq99T1TC9Pciuko5idiaC2CyJmD4MC5bs3hCXV7wF0qODMz8VR/eXtxx3745gKQ9IzPED8EU8j6dRWlbDnBIR23bNz2AP7EcVfBxTgFHJx61v/NcXI5T92oc+1NtpBUVkw3HgtzJtUsr3u1RQGsKVkbuMX6ON9GWEGfjo7D2kpC121JQaSSJPoIA4gVxbR6pLEJPDJ01jPwQ05hia37fCIN2nDt4HdDvz3qktCjM4cQGwld95p1oSntX0CSexPtyM0aIEiDI+y9mnB7DD13Sxh60LRlLPxw2l9Eg53chCIZsUJy3ojunCKAw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 12.22.5.236) smtp.rcpttodomain=lists.freedesktop.org
- smtp.mailfrom=nvidia.com; dmarc=pass (p=reject sp=reject pct=100) action=none
- header.from=nvidia.com; dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Wqta+qxoz2lRmi6B9DBY8cUfeaPCpnUJMfO2iWegnu8=;
- b=EdqUsx+frWubHEL/7eK07yJCOuKhPSsxE9LOuQl3kpaDd04xTA1ADPARZpt0kX+4/j1de8es/erx6T99c/mEbCMotUNxb+0tNJNwUYQpfIz4VNo5Ciu3+/SbcaUWoGIcz44R+063QcfplUYU4Z6mIkHtAgl5nQd4IREzNFBj7dqgfvrZbaWNdvuhGZpz5xV/jwGMXmOzUC50SMZ06zZklKmiDaiKt/XIaGdcTBfTMuksNyDKPz17WSfastyArHQ4TN3CjpKYy1MCOiAWxgbmyRZvF/wluf6twf25Zw0cbDKDfI37ol4XykXIpPjLAM7dc5o3+YXLCsVGwvVduxX6Lg==
-Received: from BN0PR03CA0025.namprd03.prod.outlook.com (2603:10b6:408:e6::30)
- by DM6PR12MB3338.namprd12.prod.outlook.com (2603:10b6:5:11f::16) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4888.12; Thu, 20 Jan
- 2022 05:01:39 +0000
-Received: from BN8NAM11FT064.eop-nam11.prod.protection.outlook.com
- (2603:10b6:408:e6:cafe::67) by BN0PR03CA0025.outlook.office365.com
- (2603:10b6:408:e6::30) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4909.8 via Frontend
- Transport; Thu, 20 Jan 2022 05:01:39 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 12.22.5.236)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 12.22.5.236 as permitted sender) receiver=protection.outlook.com;
- client-ip=12.22.5.236; helo=mail.nvidia.com;
-Received: from mail.nvidia.com (12.22.5.236) by
- BN8NAM11FT064.mail.protection.outlook.com (10.13.176.160) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.20.4909.7 via Frontend Transport; Thu, 20 Jan 2022 05:01:38 +0000
-Received: from rnnvmail201.nvidia.com (10.129.68.8) by DRHQMAIL109.nvidia.com
- (10.27.9.19) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Thu, 20 Jan
- 2022 05:01:36 +0000
-Received: from nvdebian.localnet (10.126.230.35) by rnnvmail201.nvidia.com
- (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.9; Wed, 19 Jan 2022
- 21:01:33 -0800
-From:   Alistair Popple <apopple@nvidia.com>
-To:     <akpm@linux-foundation.org>, <Felix.Kuehling@amd.com>,
-        <linux-mm@kvack.org>, <rcampbell@nvidia.com>,
-        <linux-ext4@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        Alex Sierra <alex.sierra@amd.com>
-CC:     <amd-gfx@lists.freedesktop.org>, <dri-devel@lists.freedesktop.org>,
-        <hch@lst.de>, <jgg@nvidia.com>, <jglisse@redhat.com>,
-        <willy@infradead.org>
-Subject: Re: [PATCH v3 06/10] lib: test_hmm add ioctl to get zone device type
-Date:   Thu, 20 Jan 2022 16:01:31 +1100
-Message-ID: <2652278.CYUQLKzMqb@nvdebian>
-In-Reply-To: <20220110223201.31024-7-alex.sierra@amd.com>
-References: <20220110223201.31024-1-alex.sierra@amd.com> <20220110223201.31024-7-alex.sierra@amd.com>
+        id S1358554AbiATFSt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 20 Jan 2022 00:18:49 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:43217 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S236290AbiATFSt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jan 2022 00:18:49 -0500
+Received: from dread.disaster.area (pa49-179-45-11.pa.nsw.optusnet.com.au [49.179.45.11])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 6B21210C277B;
+        Thu, 20 Jan 2022 16:18:46 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nAPqP-001xGJ-Vl; Thu, 20 Jan 2022 16:18:46 +1100
+Date:   Thu, 20 Jan 2022 16:18:45 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] xfs: run blockgc on freeze to avoid iget stalls
+ after reclaim
+Message-ID: <20220120051845.GG59729@dread.disaster.area>
+References: <20220113133701.629593-1-bfoster@redhat.com>
+ <20220113133701.629593-3-bfoster@redhat.com>
+ <20220113223810.GG3290465@dread.disaster.area>
+ <20220114173535.GA90423@magnolia>
+ <YeHSxg3HrZipaLJg@bfoster>
+ <20220114213043.GB90423@magnolia>
+ <YeVxCXE6hXa1S/ic@bfoster>
+ <20220118185647.GB13563@magnolia>
+ <Yehvc4g+WakcG1mP@bfoster>
+ <20220120003636.GF13563@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
-X-Originating-IP: [10.126.230.35]
-X-ClientProxiedBy: HQMAIL101.nvidia.com (172.20.187.10) To
- rnnvmail201.nvidia.com (10.129.68.8)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 442bcf7e-9026-4da7-6e6b-08d9dbd1f11f
-X-MS-TrafficTypeDiagnostic: DM6PR12MB3338:EE_
-X-Microsoft-Antispam-PRVS: <DM6PR12MB333874C8B10D2C3BA8038B3FDF5A9@DM6PR12MB3338.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:1923;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: wbcLprc0LIKlh4IE10yp6YQUXHI4CXmwEJkTQ1j0kT2P6Hpnh7PnGCMEfbKOirASviTpQhbzH5md+thUGugOvm/LDCLkogv6Faka1gCelKddT5lia0IEVB707R8WT57qZ3rsgVIn0t8laxYpp8iTiFjfKYheE3fQ8KLyIzgg/64Ly6DjKNq1ONtjOQlPkJk4qDwuk/AvLg8yo8vy0ihXdWrNSzDVjJACjGf6GwcdOrnsm8xjUi1PvzdZN4zoOkR0oC3ZbCkM5Y526V4qvF/1i8cg4oB1gILeLh/a3VGjrFJ5d61r9N2u1JRzshWCEBduKWwy3lKPfKb0cpCYUsvkXZn4KNaVjbonOxLIxr2IMHaZI7sbYX0fMpwjBa02l34ANzmuDCwTtVyZezp/TaSH6kh8waJU4yZjncxL9u+ldtfW3ZxtkTSagpcduE2YzPEBVU2q/GmHZrd5sisJz/yNYC8OIzuscIgeSoLxEt30p8LfTnUdxGt8nzcUta5EmPpRTIjRWOWTbgCb2shf54LSPAChv5R1xkRheZg8mPpKHhRZyuIcdbDbLQMwV+c38/rmRWuC7r5Eu225dp/8/MsWb3JBcLVkB5bUdBykxJEtlMqYCrWQv1z2HsuYqfNmdMGOrrpUjU+3rOfzKTH0lndwE22MDZz9Y7eFyCtQZoo1H/B5rbszktzdm/itE2B0oZzCWG14FBohqWXRTqI+c5Gm2PhQ7U4qWDeRsiOjZLEO9jSBMXePvbwrAuM7ayhEF/2FzBwIrxDnLem9z72IFDGL65Z5zgzen0q1zQFHJZ8im8w=
-X-Forefront-Antispam-Report: CIP:12.22.5.236;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:mail.nvidia.com;PTR:InfoNoRecords;CAT:NONE;SFS:(4636009)(36840700001)(46966006)(40470700002)(4744005)(54906003)(36860700001)(33716001)(186003)(356005)(4326008)(9576002)(9686003)(2906002)(47076005)(70206006)(508600001)(26005)(316002)(8936002)(70586007)(82310400004)(81166007)(336012)(86362001)(110136005)(426003)(7416002)(16526019)(5660300002)(8676002)(40460700001)(36900700001);DIR:OUT;SFP:1101;
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Jan 2022 05:01:38.7933
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 442bcf7e-9026-4da7-6e6b-08d9dbd1f11f
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[12.22.5.236];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT064.eop-nam11.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB3338
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220120003636.GF13563@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=61e8f0b7
+        a=Eslsx4mF8WGvnV49LKizaA==:117 a=Eslsx4mF8WGvnV49LKizaA==:17
+        a=kj9zAlcOel0A:10 a=DghFqjY3_ZEA:10 a=7-415B0cAAAA:8
+        a=htVLzlCoyyC1mfYpE6oA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tuesday, 11 January 2022 9:31:57 AM AEDT Alex Sierra wrote:
+On Wed, Jan 19, 2022 at 04:36:36PM -0800, Darrick J. Wong wrote:
+> OTOH I tried to figure out how to deal with the lockless list that those
+> inodes are put on, and I couldn't figure out how to get them off the
+> list safely, so that might be a dead end.  If you have any ideas I'm all
+> ears. :)
 
-[...]
+You can't get them off the middle of the llist without adding
+locking to all the llist operations. I chose llist because it's
+lockless primitives matched the "add single/remove all" pattern of
+batch processing that the per-cpu inactive queue implementation
+required.  Hence if you want to do anything other that "single
+add/remove all" with the inactive queue, you're going to have to
+replace it with a different queue implementation....
 
-> +enum {
-> +	/* 0 is reserved to catch uninitialized type fields */
+Cheers,
 
-This seems unnecessary and can be dropped to start at zero.
-
-Reviewed-by: Alistair Popple <apopple@nvidia.com>
-
-> +	HMM_DMIRROR_MEMORY_DEVICE_PRIVATE = 1,
-> +};
-> +
->  #endif /* _LIB_TEST_HMM_UAPI_H */
-> 
-
-
-
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
