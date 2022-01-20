@@ -2,151 +2,233 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D38CFC433FE
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 13:18:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 017FEC433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 16:03:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1359583AbiATNSY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 20 Jan 2022 08:18:24 -0500
-Received: from mail-mw2nam10on2081.outbound.protection.outlook.com ([40.107.94.81]:42272
-        "EHLO NAM10-MW2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S230246AbiATNSX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 20 Jan 2022 08:18:23 -0500
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=kJt+t/E+W1oizAjojUlEhPRL35vHO+rO/EeAt7FDX4Mk61xVLGQ2tUqxoUbj2tdmytwRDRCI+//WsZTG8eUfTyNHA6K4rR8UYNWhnvr3TuOWuXrntOqklJqeaH8JMpRVVru6gwci7sF9chN2JPYMbI1vxDA4GhxhJyua39nbFJRvU6QAz+kJV8mTt3SnccrcA8KGaPLciNw8PxMlNt5wvmrZtsLqlY0exmJgZpsaiCNsLFp5KiOSMHSTC7ffGrq6uy84l1PGVWBpDSayuRBXImp5Z2LfeVC0wEmRG6LqJxkL+mfebG5p2AmrUq9kMsIqpodWeNqHe7PJU/4SW2pWtw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=nepc3Y2HTNDMj+dBQ9ABzJu2k/FiUKmg30JJbke4DBY=;
- b=VgGpHr9Gqg7Vqf96xiwqK8dR3ehtJOi5F8/nYZzMTa9NeJS0OYyIz1XxAy7LnpYezzqEB4Q6i3pUv/GPemI/w6xpkY/6dOxROurGYW7yAQ52PE/DvW/j9RcKr7nMQ6KNyNjcQcDqucm+MsK6fr4/3L3w+/ugX8Dl8pfZ7Z75REjvxkduRZ3QWL/hDgzUigLKlHRlXrA9wpzTJShOOWwHPzqfwYOeJDLwjV8VsH9b0HHrNSoL0NY9oD0LqjKf/Ci5EqEPJDVYdWV19PxRP8FJCtEtH8Jtmqsc/CbOt+9xhSk381z0xW3CRxLTEXNLIvUIBczgKoczdcFZVsM88hUFDw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 12.22.5.235) smtp.rcpttodomain=amd.com smtp.mailfrom=nvidia.com; dmarc=pass
- (p=reject sp=reject pct=100) action=none header.from=nvidia.com; dkim=none
- (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=nepc3Y2HTNDMj+dBQ9ABzJu2k/FiUKmg30JJbke4DBY=;
- b=AkLc0cWQ2a2H/2ilprYU5oWbHCF06FwBzHWKq1AAshQo4Je0y/UJFvQuoCMXtCNVPiEKECdiKrmywBEjs+kJ0KBMCSIywf9GReIPsbsdgJ6uNA0jh81xwWX6bQf0v8KNGEJZZ1YNt7E5hu4KsD7Hv8GdPHqjvyplHOFOVq9WG6O6FLaceF16WxVTuWvdznEsSIMmAMu63qUCCuaK6OgV+0vVENLTNnzbs/wqPtuIFO1Cdr59kCgCgsxvfXCo5JDZRtTa+afjgjSuaoYwN2234flRxe6Z5Enr1NiDPCoYoTb1rr8BGIpIrjxeMOBiHn6XTAVTNtJ5wCWM4K6B7hgXFQ==
-Received: from BN6PR14CA0038.namprd14.prod.outlook.com (2603:10b6:404:13f::24)
- by CH0PR12MB5043.namprd12.prod.outlook.com (2603:10b6:610:e2::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4909.7; Thu, 20 Jan
- 2022 13:18:21 +0000
-Received: from BN8NAM11FT013.eop-nam11.prod.protection.outlook.com
- (2603:10b6:404:13f:cafe::f4) by BN6PR14CA0038.outlook.office365.com
- (2603:10b6:404:13f::24) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4909.7 via Frontend
- Transport; Thu, 20 Jan 2022 13:18:21 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 12.22.5.235)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 12.22.5.235 as permitted sender) receiver=protection.outlook.com;
- client-ip=12.22.5.235; helo=mail.nvidia.com;
-Received: from mail.nvidia.com (12.22.5.235) by
- BN8NAM11FT013.mail.protection.outlook.com (10.13.176.182) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.20.4909.7 via Frontend Transport; Thu, 20 Jan 2022 13:18:21 +0000
-Received: from rnnvmail201.nvidia.com (10.129.68.8) by DRHQMAIL107.nvidia.com
- (10.27.9.16) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Thu, 20 Jan
- 2022 13:18:20 +0000
-Received: from nvdebian.localnet (10.126.231.35) by rnnvmail201.nvidia.com
- (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.9; Thu, 20 Jan 2022
- 05:18:17 -0800
-From:   Alistair Popple <apopple@nvidia.com>
-To:     Alex Sierra <alex.sierra@amd.com>,
-        Joao Martins <joao.m.martins@oracle.com>
-CC:     <amd-gfx@lists.freedesktop.org>, <dri-devel@lists.freedesktop.org>,
-        <hch@lst.de>, <jglisse@redhat.com>, <willy@infradead.org>,
-        <akpm@linux-foundation.org>, <Felix.Kuehling@amd.com>,
-        <linux-mm@kvack.org>, <rcampbell@nvidia.com>,
-        <linux-ext4@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        <jgg@nvidia.com>
-Subject: Re: [PATCH v3 03/10] mm/gup: fail get_user_pages for LONGTERM dev coherent type
-Date:   Fri, 21 Jan 2022 00:18:15 +1100
-Message-ID: <2432841.uOC12ROH9Y@nvdebian>
-In-Reply-To: <008b5ff4-dd53-d652-46dd-5ce771c69a0a@oracle.com>
-References: <20220110223201.31024-1-alex.sierra@amd.com> <20220110223201.31024-4-alex.sierra@amd.com> <008b5ff4-dd53-d652-46dd-5ce771c69a0a@oracle.com>
+        id S1376838AbiATQDf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 20 Jan 2022 11:03:35 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:56577 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S233024AbiATQDe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jan 2022 11:03:34 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1642694613;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=lWK6mOLVuSBAqdv9PppVl2SL9//AaFHm4Tq1BXMZidw=;
+        b=ZndJI6oHYpcN4Wlj4Z0Nxi1eM/G2Z2xFCSM2ocYoVTu/5vaHdvkDyPK6psSsVGDGOYaISd
+        fV4lbDKarpcShRLQ1EZXjdBUfE8YjanwyPIcPQh63K8wWRNQQyDa1A7++x0QOMbef+Q3iR
+        UXLqL204J+s6TOGFQuAqaos9tz6WMzE=
+Received: from mail-qt1-f199.google.com (mail-qt1-f199.google.com
+ [209.85.160.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-283-9Oyf4gCiN4OpuWDC-hJLXQ-1; Thu, 20 Jan 2022 11:03:32 -0500
+X-MC-Unique: 9Oyf4gCiN4OpuWDC-hJLXQ-1
+Received: by mail-qt1-f199.google.com with SMTP id z27-20020ac8431b000000b002c99e993a95so4281034qtm.2
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jan 2022 08:03:32 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=lWK6mOLVuSBAqdv9PppVl2SL9//AaFHm4Tq1BXMZidw=;
+        b=sz4Q4IiOt95Z3Q7luxfxLgSDxsHJvZEo34knHTpF+/o8E9K9n1580Fz+uLBuOeI42r
+         8vr9pd15ZbT2rbSE3aGjeGFrhaS+D5JQbfAPG3o4khEZ3yKWcZnSatizhHJ51UGdwYHB
+         9vNSs16y2Mk/f9dhlnr+Qo6N1e7GXz/JCWF4lFM+pXwe7Gl5rp2Pu99yhUiQnWU33LlW
+         NMrJ4DNQfexhiclYnhYO+Hqa+KsUF0NQ/8kGyMIM1B5CsEBpsoJFRzSRpJty1VaZC3cF
+         rdDUGYgTOZMQ2eCE2Yuz89Urlsk2+caLdJ/QphF6K5jAJwtQ7zFFgddaUTyDPdDaNusN
+         Kgbw==
+X-Gm-Message-State: AOAM531Jn7MaXKQUttfRpA3p898zDlAgjYHlCAfUaja2RL9xIvrCnYPH
+        uyKehbfgTXA09TGtwUGnpwOfQO9aBa6wiPn8qiESK/rYdXQDCYFg5gGq0CI37+piLdqEuhon4gR
+        evmrL2pKRWjMBaGlcaIf2
+X-Received: by 2002:a05:620a:24cf:: with SMTP id m15mr8241854qkn.242.1642694611561;
+        Thu, 20 Jan 2022 08:03:31 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJwPGDUIi+QpPfPSg35xmqUAoY8i3/Af3ku6LwYOSnIcQSfjV7gJC9etLCLOD6jF4MI9m5tO5A==
+X-Received: by 2002:a05:620a:24cf:: with SMTP id m15mr8241813qkn.242.1642694611092;
+        Thu, 20 Jan 2022 08:03:31 -0800 (PST)
+Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
+        by smtp.gmail.com with ESMTPSA id h189sm1652470qkc.35.2022.01.20.08.03.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 20 Jan 2022 08:03:30 -0800 (PST)
+Date:   Thu, 20 Jan 2022 11:03:28 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Al Viro <viro@zeniv.linux.org.uk>, Ian Kent <raven@themaw.net>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        David Howells <dhowells@redhat.com>,
+        Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] vfs: check dentry is still valid in get_link()
+Message-ID: <YemH0LML9ZVUnrEX@bfoster>
+References: <275358741c4ee64b5e4e008d514876ed4ec1071c.camel@themaw.net>
+ <YeV+zseKGNqnSuKR@bfoster>
+ <YeWZRL88KPtLWlkI@zeniv-ca.linux.org.uk>
+ <20220118030041.GB59729@dread.disaster.area>
+ <YeYxOadA0HgYfBjt@zeniv-ca.linux.org.uk>
+ <20220118041253.GC59729@dread.disaster.area>
+ <YeZW9s7x2uCBfNJD@zeniv-ca.linux.org.uk>
+ <20220118232547.GD59729@dread.disaster.area>
+ <YegbVhxSNtQFlSCr@bfoster>
+ <20220119220747.GF59729@dread.disaster.area>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
-X-Originating-IP: [10.126.231.35]
-X-ClientProxiedBy: HQMAIL101.nvidia.com (172.20.187.10) To
- rnnvmail201.nvidia.com (10.129.68.8)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 7c433adb-d488-4440-8849-08d9dc1754f9
-X-MS-TrafficTypeDiagnostic: CH0PR12MB5043:EE_
-X-Microsoft-Antispam-PRVS: <CH0PR12MB504351A69486B9972E11DF0FDF5A9@CH0PR12MB5043.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:8273;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: IIxsW9LG0yM6CIPdXy9Qtde2yw6axnIR8idS5AiQQSsP3Sy7caeHVIWEAOCZOBVAHbCiFGkFJbE3DQuq6HzDx+JqbvIGwj8L1P6hRUsKAF1Oryx1p/2eK4eSjML6yBrxZYx7g4fbA4+iru1BJRO4NPRvL4CoQmQijzaSVfEMhXepOMnTHvpjXAXp4Dh8izgIWBW8FZCtMgMb9qGpMOGhqppBWaObezuuuSVQn8xhWI1dVr+ctB4PE0W6ZpU+A1KmRMfpKFJVsCu5q7aBmnXw8RsvwZ0BJvRgXOSExx1/S7yRl9qb8Lo96EQllLTpmElN8uCqET2ZoHsuHV2cYGeAlSdH3SbhgQmnldAYjdBJt7uOfth3nKP3jFiw7+zEvD7UfI62WUZ++zPOUTYw4KwROrkc7qparsper8FiZZ1ZjXhmKFNeiq2PY/Ed840LFJv7Fq2qDP9NRnfZMhtOkDXR2jz0L6qkXgdXW11f2q2xSBR2zs8B9irveuAKTLIAn4N4TGafGiMedhQOXaDuLReQLZUTvv1douAF3LhdKf4JXppFCN8Fl3zMTFfEPf/lyfXgdJajW36DS3tzh8/GJFEqEaxD+wGiPNATtUWDM9V/25Kb5npDHC7PEIEYVhDUtdErqdyMEhEUUjCQleP1q0maSUdWlji0Mk8tKxa+TWOu1WwGI0ZMyLyO9PoSYI2LZIhnr4mcmu5lYtA+zKhdGoVQfprk2Ot7s4MHpwHPU8O5aJtg+iVGLanBZjcR1mhPrtOcYM2pVOBC9cuYv5U2Sim9NV6o6fgvunbHBRjPC4W3JHzDihOv1ReGAdlp5HxDTcmOOFwhYnBClnduJZz0g2eHQQBYRGtYT0Fm0oWMQ9xcbMurRMYOnB6lzevIceQyyzHi1bFtyEMseHQbF0ghpbhRRzDGDnW4LnMlP7soOyqa7tsV1wRlr/SczVdUzP410mbt
-X-Forefront-Antispam-Report: CIP:12.22.5.235;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:mail.nvidia.com;PTR:InfoNoRecords;CAT:NONE;SFS:(4636009)(36840700001)(40470700002)(46966006)(8676002)(26005)(107886003)(53546011)(5660300002)(110136005)(83380400001)(54906003)(426003)(9686003)(8936002)(70586007)(86362001)(336012)(316002)(70206006)(9576002)(4326008)(966005)(82310400004)(186003)(36860700001)(16526019)(7416002)(81166007)(47076005)(40460700001)(33716001)(2906002)(508600001)(356005)(39026012)(36900700001);DIR:OUT;SFP:1101;
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Jan 2022 13:18:21.6071
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7c433adb-d488-4440-8849-08d9dc1754f9
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[12.22.5.235];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT013.eop-nam11.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH0PR12MB5043
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220119220747.GF59729@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thursday, 20 January 2022 11:36:21 PM AEDT Joao Martins wrote:
-> On 1/10/22 22:31, Alex Sierra wrote:
-> > Avoid long term pinning for Coherent device type pages. This could
-> > interfere with their own device memory manager. For now, we are just
-> > returning error for PIN_LONGTERM Coherent device type pages. Eventually,
-> > these type of pages will get migrated to system memory, once the device
-> > migration pages support is added.
+On Thu, Jan 20, 2022 at 09:07:47AM +1100, Dave Chinner wrote:
+> On Wed, Jan 19, 2022 at 09:08:22AM -0500, Brian Foster wrote:
+> > On Wed, Jan 19, 2022 at 10:25:47AM +1100, Dave Chinner wrote:
+> > > On Tue, Jan 18, 2022 at 05:58:14AM +0000, Al Viro wrote:
+> > > > On Tue, Jan 18, 2022 at 03:12:53PM +1100, Dave Chinner wrote:
+> > > Unfortunately, the simple fix of adding syncronize_rcu() to
+> > > xfs_iget_recycle() causes significant performance regressions
+> > > because we hit this path quite frequently when workloads use lots of
+> > > temporary files - the on-disk inode allocator policy tends towards
+> > > aggressive re-use of inodes for small sets of temporary files.
+> > > 
+> > > The problem XFS is trying to address is that the VFS inode lifecycle
+> > > does not cater for filesystems that need to both dirty and then
+> > > clean unlinked inodes between iput_final() and ->destroy_inode. It's
+> > > too late to be able to put the inode back on the LRU once we've
+> > > decided to drop the inode if we need to dirty it again. ANd because
+> > > evict() is part of the non-blocking memory reclaim, we aren't
+> > > supposed to block for arbitrarily long periods of time or create
+> > > unbound memory demand processing inode eviction (both of which XFS
+> > > can do in inactivation).
+> > > 
+> > > IOWs, XFS can't free the inode until it's journal releases the
+> > > internal reference on the dirty inode. ext4 doesn't track inodes in
+> > > it's journal - it only tracks inode buffers that contain the changes
+> > > made to the inode, so once the transaction is committed in
+> > > ext4_evict_inode() the inode can be immediately freed via either
+> > > ->destroy_inode or ->free_inode. That option does not exist for XFS
+> > > because we have to wait for the journal to finish with the inode
+> > > before it can be freed. Hence all the background reclaim stuff.
+> > > 
+> > > We've recently solved several of the problems we need to solve to
+> > > reduce the mismatch; avoiding blocking on inode writeback in reclaim
+> > > and background inactivation are two of the major pieces of work we
+> > > needed done before we could even consider more closely aligning XFS
+> > > to the VFS inode cache life cycle model.
+> > > 
 > > 
-> > Signed-off-by: Alex Sierra <alex.sierra@amd.com>
-> > ---
-> >  mm/gup.c | 7 +++++++
-> >  1 file changed, 7 insertions(+)
+> > The background inactivation work facilitates an incremental improvement
+> > by nature because destroyed inodes go directly to a queue instead of
+> > being processed synchronously. My most recent test to stamp the grace
+> > period info at inode destroy time and conditionally sync at reuse time
+> > shows pretty much no major cost because the common case is that a grace
+> > period has already expired by the time the queue populates, is processed
+> > and said inodes become reclaimable and reallocated.
+> 
+> Yup. Remember that I suggested these conditional variants in the
+> first place - I do understand what this code does...
+> 
+> > To go beyond just
+> > the performance result, if I open code the conditional sync for tracking
+> > purposes I only see something like 10-15 rcu waits out of the 36k
+> > allocation cycles. If I increase the background workload 4x, the
+> > allocation rate drops to ~33k cycles (which is still pretty much in line
+> > with baseline) and the rcu sync count increases to 70, which again is
+> > relatively nominal over tens of thousands of cycles.
+> 
+> Yup. But that doesn't mean that the calls that trigger are free from
+> impact. The cost and latency of waiting for an RCU grace period to
+> expire goes up as the CPU count goes up. e.g. it requires every CPU
+> running a task goes through a context switch before it returns.
+> Hence if we end up with situations like, say, the ioend completion
+> scheduling holdoffs, then that will prevent the RCU sync from
+> returning for seconds.
+> 
+
+Sure... this is part of the reason the tests I've run so far have all
+tried to incorporate background rcuwalk activity, run on a higher cpu
+count box, etc. And from the XFS side of the coin, the iget code can
+invoke xfs_inodegc_queue_all() in the needs_inactive case before
+reclaimable state is a possibility, which queues a work on every cpu
+with pending inactive inodes. That is probably unlikely in the
+free/alloc case (since needs_inactive inodes are not yet free on disk),
+but the broader points are that the inactive processing work has to
+complete one way or another before reclaimable state is possible and
+that we can probably accommodate a synchronization point here if it's
+reasonably filtered. Otherwise...
+
+> IOWs, we're effectively adding unpredictable and non-deterministic
+> latency into the recycle path that is visible to userspace
+> applications, and those latencies can be caused by subsystem
+> functionality not related to XFS. Hence we need to carefully
+> consider unexpected side-effects of adding a kernel global
+> synchronisation point into a XFS icache lookup fast path, and these
+> issues may not be immediately obvious from testing...
+> 
+
+... agreed. I think at this point we've also discussed various potential
+ways to shift or minimize latency/cost further, so there's probably
+still room for refinement if such unexpected things crop up before...
+
+> > This all requires some more thorough testing, but I'm sure it won't be
+> > absolutely free for every possible workload or environment. But given
+> > that we know this infrastructure is fundamentally broken (by subtle
+> > compatibilities between XFS and the VFS that have evolved over time),
+> > will require some thought and time to fix properly in the filesystem,
+> > that users are running into problems very closely related to it, why not
+> > try to address the fundamental breakage if we can do so with an isolated
+> > change with minimal (but probably not zero) performance impact?
 > > 
-> > diff --git a/mm/gup.c b/mm/gup.c
-> > index 886d6148d3d0..9c8a075d862d 100644
-> > --- a/mm/gup.c
-> > +++ b/mm/gup.c
-> > @@ -1720,6 +1720,12 @@ static long check_and_migrate_movable_pages(unsigned long nr_pages,
-> >  		 * If we get a movable page, since we are going to be pinning
-> >  		 * these entries, try to move them out if possible.
-> >  		 */
-> > +		if (is_device_page(head)) {
-> > +			WARN_ON_ONCE(is_device_private_page(head));
-> > +			ret = -EFAULT;
-> > +			goto unpin_pages;
-> > +		}
-> > +
+> > I agree that the unconditional synchronize_rcu() on reuse approach is
+> > just not viable, but so far tests using cond_synchronize_rcu() seem
+> > fairly reasonable. Is there some other problem or concern with such an
+> > approach?
 > 
-> Wouldn't be more efficient for you failing earlier instead of after all the pages are pinned?
-
-Rather than failing I think the plan is to migrate the device coherent pages
-like we do for ZONE_MOVABLE, so leaving this here is a good place holder until
-that is done. Currently we are missing some functionality required to do that
-but I am hoping to post a series fixing that soon.
-
-> Filesystem DAX suffers from a somewhat similar issue[0] -- albeit it's more related to
-> blocking FOLL_LONGTERM in gup-fast while gup-slow can still do it. Coherent devmap appears
-> to want to block it in all gup.
+> Just that the impact of adding RCU sync points means that bad
+> behaviour outside XFS have a new point where they can adversely
+> impact on applications doing filesystem operations.
 > 
-> On another thread Jason was suggesting about having different pgmap::flags to capture
-> these special cases[1] instead of selecting what different pgmap types can do in various
-> different places.
-> 
-> [0] https://lore.kernel.org/linux-mm/6a18179e-65f7-367d-89a9-d5162f10fef0@oracle.com/
-> [1] https://lore.kernel.org/linux-mm/20211019160136.GH3686969@ziepe.ca/
+> As a temporary mitigation strategy I think it will probably be fine,
+> but I'd much prefer we get rid of the need for such an RCU sync
+> point rather than try to maintain a mitigation like this in fast
+> path code forever.
 > 
 
+... we end up here. All in all, this is intended to be a
+practical/temporary step toward functional correctness that minimizes
+performance impact and disruption (i.e. just as easy to remove when made
+unnecessary).
 
+Al,
 
+The caveat to this is I think the practicality of a conditional sync in
+the iget recycle code sort of depends on the queueing/batching nature of
+inactive inode processing in XFS. If you look at xfs_fs_destroy_inode()
+for example, you'll see this is all fairly recent feature/infrastructure
+code and that historically we completed most of this transition to
+reclaimable state before ->destroy_inode() returns. Therefore, the
+concern I have is that on older/stable kernels (where users are hitting
+this NULL ->get_link() BUG) the reuse code is far more likely to stall
+and slow down here with this change alone (see my earlier numbers on the
+unconditional sync_rcu() test for prospective worst case). For that
+reason, I'm not sure this is really a backportable solution.
+
+So getting back to your concern around Ian's patch being a
+stopgap/bandaid type solution, would you be willing to pull something
+like Ian's patch to the vfs if upstream XFS adopts this conditional rcu
+sync in the iget reuse code? I think that would ensure that no further
+bandaid fixes will be required in the vfs due to XFS inode reuse, but
+would also provide an isolated variant of the fix in the VFS that is
+more easily backported to stable kernels. Thoughts?
+
+Brian
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
 
