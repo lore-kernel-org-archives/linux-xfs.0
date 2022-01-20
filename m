@@ -2,325 +2,355 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94C14C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 03:47:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AF87C433FE
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 04:09:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236276AbiATDrh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Jan 2022 22:47:37 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:53142 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229787AbiATDrh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jan 2022 22:47:37 -0500
-Received: from dread.disaster.area (pa49-179-45-11.pa.nsw.optusnet.com.au [49.179.45.11])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 3F5FF62C0B1;
-        Thu, 20 Jan 2022 14:47:34 +1100 (AEDT)
-Received: from discord.disaster.area ([192.168.253.110])
-        by dread.disaster.area with esmtp (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nAOQ9-001vkE-HU; Thu, 20 Jan 2022 14:47:33 +1100
-Received: from dave by discord.disaster.area with local (Exim 4.95)
-        (envelope-from <david@fromorbit.com>)
-        id 1nAOQ9-000vgc-G6;
-        Thu, 20 Jan 2022 14:47:33 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     linux-fsdevel@vger.kernel.org
-Subject: [PATCH] xfs, iomap: limit individual ioend chain lengths in writeback
-Date:   Thu, 20 Jan 2022 14:47:33 +1100
-Message-Id: <20220120034733.221737-1-david@fromorbit.com>
-X-Mailer: git-send-email 2.33.0
+        id S232351AbiATEJJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Jan 2022 23:09:09 -0500
+Received: from mail-mw2nam10on2079.outbound.protection.outlook.com ([40.107.94.79]:1793
+        "EHLO NAM10-MW2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S229787AbiATEJI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 19 Jan 2022 23:09:08 -0500
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=VQbezYFUX7jX2oWrWjAB71Hj9/WM+lDuYpkSk87EjbtKqtG5h4/9DasVqIXCLIcMvJGe5RUQbia7xfLqLIGBaT6kpTBQ7MWHXBGAleeBtN9/hJWaD34cZsW6O4zsrQQTPC/Dl0jg0xBUFf911EXBT4P5opoYN8x74RY8f+GXuCDJHlBd9CnnqkolifyDR7XlqTBSpAGpeJT90FIy98UiRQWNVeFaf3EueW3Y5zO1KNbTvWtg+2Bz8DDAvHt5nUXD2rYvmgANxwp0bezS4SfVHc4f9bzVmrVzRJ8HLO1aQB0CcS8twbtRa+s2MzRE9CGXU3YwItj4AZZ39oWWmxFHKA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=bxkg+qIwCptWddUzl0PUjXe9A2yyPzhXBQM/exoYHgg=;
+ b=JsBs9HsHHGOVfehAZ+oKUFzG+HkGHCIcw76Ha1ePxOiwDTnf9KM1pzYq8WiZjUVfKsPV4C880Qk1GUFfny6YC9WDGghWh+W8+YWjX9kpfO5qPel/xnOoS09D0Jb7m9YYAOtnDgS/n2cQlbwFlXd0mbAofjZd6W27RmG2lcOLy4wu2y2to2jnc/5dH10lljantWXnTj0kf4+y3v4Cpajp1bYYX6kSdqgvG5P8RzabByZFKkoTHvicYxqwJZxBNZhbmoPVRq/KNz7iT12gt09u2drJgYkX8xshUD6GCT26YDeGnZx1SAFAvPxSeDUUrNFyznt3/Wz4+PChwRqWgUJBNQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 12.22.5.236) smtp.rcpttodomain=lists.freedesktop.org
+ smtp.mailfrom=nvidia.com; dmarc=pass (p=reject sp=reject pct=100) action=none
+ header.from=nvidia.com; dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=bxkg+qIwCptWddUzl0PUjXe9A2yyPzhXBQM/exoYHgg=;
+ b=DukAuc76nsQup9QepgJOMRsadXemrn/QEKw43lNUBxjhZQzM7MLZm/eiHbZZZ8KWNNd7FudpY1kUczR3Um0e7aQu0aaH9a2a/SeKFU1gF8nrYL5b7MR1yS1hfLul4xJWrHIVIdmTzVinKVx2tV4HCMiTI3+/1mqvNwrLmSwvRI5J2Ye1EgVUfq9OHhcEpwCoDxrxWNrDLLtzQK8ltHICQtkxCeXc6PXmp0U+rq6MXZO4nqpNolWh5dGUUGqatAMavBlRzv4EDiygNIswIklgsyW5XS6oqxk2KDuKodtxknKZwqHarsYvRNvWJGw7BtLZqFVoWPKpLynhV7XJ0ZgrVA==
+Received: from BN6PR19CA0111.namprd19.prod.outlook.com (2603:10b6:404:a0::25)
+ by BYAPR12MB3592.namprd12.prod.outlook.com (2603:10b6:a03:db::25) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4909.7; Thu, 20 Jan
+ 2022 04:09:04 +0000
+Received: from BN8NAM11FT054.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:404:a0:cafe::ad) by BN6PR19CA0111.outlook.office365.com
+ (2603:10b6:404:a0::25) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4909.7 via Frontend
+ Transport; Thu, 20 Jan 2022 04:09:03 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 12.22.5.236)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 12.22.5.236 as permitted sender) receiver=protection.outlook.com;
+ client-ip=12.22.5.236; helo=mail.nvidia.com;
+Received: from mail.nvidia.com (12.22.5.236) by
+ BN8NAM11FT054.mail.protection.outlook.com (10.13.177.102) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ 15.20.4909.7 via Frontend Transport; Thu, 20 Jan 2022 04:09:03 +0000
+Received: from rnnvmail201.nvidia.com (10.129.68.8) by DRHQMAIL109.nvidia.com
+ (10.27.9.19) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Thu, 20 Jan
+ 2022 04:09:01 +0000
+Received: from nvdebian.localnet (10.126.230.35) by rnnvmail201.nvidia.com
+ (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.9; Wed, 19 Jan 2022
+ 20:08:58 -0800
+From:   Alistair Popple <apopple@nvidia.com>
+To:     <akpm@linux-foundation.org>, <Felix.Kuehling@amd.com>,
+        <linux-mm@kvack.org>, <rcampbell@nvidia.com>,
+        <linux-ext4@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        Alex Sierra <alex.sierra@amd.com>
+CC:     <amd-gfx@lists.freedesktop.org>, <dri-devel@lists.freedesktop.org>,
+        <hch@lst.de>, <jgg@nvidia.com>, <jglisse@redhat.com>,
+        <willy@infradead.org>
+Subject: Re: [PATCH v3 01/10] mm: add zone device coherent type memory support
+Date:   Thu, 20 Jan 2022 15:08:56 +1100
+Message-ID: <29335901.2ltahdNQJ0@nvdebian>
+In-Reply-To: <20220110223201.31024-2-alex.sierra@amd.com>
+References: <20220110223201.31024-1-alex.sierra@amd.com> <20220110223201.31024-2-alex.sierra@amd.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=61e8db57
-        a=Eslsx4mF8WGvnV49LKizaA==:117 a=Eslsx4mF8WGvnV49LKizaA==:17
-        a=DghFqjY3_ZEA:10 a=20KFwNOVAAAA:8 a=SEtKQCMJAAAA:8
-        a=v8rV-j-W9F5Gn6uOn9UA:9 a=kyTSok1ft720jgMXX5-3:22
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
+X-Originating-IP: [10.126.230.35]
+X-ClientProxiedBy: HQMAIL101.nvidia.com (172.20.187.10) To
+ rnnvmail201.nvidia.com (10.129.68.8)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 2261f8c5-810a-4515-cf89-08d9dbca9852
+X-MS-TrafficTypeDiagnostic: BYAPR12MB3592:EE_
+X-Microsoft-Antispam-PRVS: <BYAPR12MB359279FC4D59C4F014AEFFE8DF5A9@BYAPR12MB3592.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:10000;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: XHXxKWgasEKsapzexEM0Glomj8BqYdAqCu0LXiOTpkculJdQoVRilT/Le4f4uS/aSCkOBa+SuZSD/aX6XDZtQTIJS+b/z2g+KtDVpZ9RofydNHAVPetowGHXbTgAFrK3a+b3KzP+XVYy/CL0j35mwSZm+Jea8m+077a1rPUoCGoZoP7sUeL+D83eiS7RPYGeEQz4TNrTxkqJl+dqqLPOBC4luFRUWmaGu8r2dwOJB45cdMd072DRv1ISZte0yI1NF0YGU3hv+66DsHdurLNtfe0xDMxnaYPa6Fe+X2e3/wNjB/ymOA3f6LFWWDC1si7BAn0WO4foV9Sn5sjUBPAA57Bo77f2tHLiqy9dmP0xd8+/vG5up9HgqhwF3TFLq7/VXrF8gWj8SfX2imDctSr4uoLwJZDGYUZ2hqYlBufXMTh++FyxVj2wXOwRevikVDH5Zmr2H8gZymKmq0jNwgAiv/CnGTx6rnuNVPRWpvaYe/3o2Y51wZPc1RzM9iLhKp2qzT88FWRUZDFvH2qpwZvC7z/oCUT6um6zuDSnBlcYtdP8jFb9wOJ2C289iHr289Azej3BFvJWbEZv5vZYU/hCba0/MlMPBHQCB49oxYUkKnkyWu1CShhi9JLiIKNo73VnSFhJC8jp+oiTGaXGv1E86fPDw5zFIJsbjHRQdn/KAgjdAMiCv6KBwhWLkp9viSpzxw3CYgFVBVkvSBYRfdJWsbgt0Lgyz0Z1mZpAuJXv2tu1Jcfwsm+O+jdqB9TXcHXPrQQq2iJ7WmKlSHo+qHQvcr0xhXlNnrBJOjAwMgIioT5UBYPiCLsA0BGXjAfU7jIL3YePJxUz0CBcvKU1OX0mYA==
+X-Forefront-Antispam-Report: CIP:12.22.5.236;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:mail.nvidia.com;PTR:InfoNoRecords;CAT:NONE;SFS:(4636009)(36840700001)(40470700002)(46966006)(110136005)(81166007)(9576002)(8676002)(9686003)(36860700001)(70586007)(86362001)(426003)(83380400001)(8936002)(356005)(336012)(40460700001)(70206006)(82310400004)(316002)(7416002)(54906003)(4326008)(33716001)(16526019)(2906002)(508600001)(5660300002)(186003)(47076005)(26005)(39026012)(36900700001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Jan 2022 04:09:03.3357
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2261f8c5-810a-4515-cf89-08d9dbca9852
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[12.22.5.236];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT054.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR12MB3592
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Tuesday, 11 January 2022 9:31:52 AM AEDT Alex Sierra wrote:
+> Device memory that is cache coherent from device and CPU point of view.
+> This is used on platforms that have an advanced system bus (like CAPI
+> or CXL). Any page of a process can be migrated to such memory. However,
+> no one should be allowed to pin such memory so that it can always be
+> evicted.
+> 
+> Signed-off-by: Alex Sierra <alex.sierra@amd.com>
+> ---
+>  include/linux/memremap.h |  8 ++++++++
+>  include/linux/mm.h       | 16 ++++++++++++++++
+>  mm/memcontrol.c          |  6 +++---
+>  mm/memory-failure.c      |  8 ++++++--
+>  mm/memremap.c            |  5 ++++-
+>  mm/migrate.c             | 21 +++++++++++++--------
+>  6 files changed, 50 insertions(+), 14 deletions(-)
+> 
+> diff --git a/include/linux/memremap.h b/include/linux/memremap.h
+> index c0e9d35889e8..ff4d398edf35 100644
+> --- a/include/linux/memremap.h
+> +++ b/include/linux/memremap.h
+> @@ -39,6 +39,13 @@ struct vmem_altmap {
+>   * A more complete discussion of unaddressable memory may be found in
+>   * include/linux/hmm.h and Documentation/vm/hmm.rst.
+>   *
+> + * MEMORY_DEVICE_COHERENT:
+> + * Device memory that is cache coherent from device and CPU point of view. This
+> + * is used on platforms that have an advanced system bus (like CAPI or CXL). A
+> + * driver can hotplug the device memory using ZONE_DEVICE and with that memory
+> + * type. Any page of a process can be migrated to such memory. However no one
+> + * should be allowed to pin such memory so that it can always be evicted.
+> + *
+>   * MEMORY_DEVICE_FS_DAX:
+>   * Host memory that has similar access semantics as System RAM i.e. DMA
+>   * coherent and supports page pinning. In support of coordinating page
+> @@ -59,6 +66,7 @@ struct vmem_altmap {
+>  enum memory_type {
+>  	/* 0 is reserved to catch uninitialized type fields */
+>  	MEMORY_DEVICE_PRIVATE = 1,
+> +	MEMORY_DEVICE_COHERENT,
+>  	MEMORY_DEVICE_FS_DAX,
+>  	MEMORY_DEVICE_GENERIC,
+>  	MEMORY_DEVICE_PCI_P2PDMA,
+> diff --git a/include/linux/mm.h b/include/linux/mm.h
+> index 73a52aba448f..fcf96c0fc918 100644
+> --- a/include/linux/mm.h
+> +++ b/include/linux/mm.h
+> @@ -1162,6 +1162,7 @@ static inline bool page_is_devmap_managed(struct page *page)
+>  		return false;
+>  	switch (page->pgmap->type) {
+>  	case MEMORY_DEVICE_PRIVATE:
+> +	case MEMORY_DEVICE_COHERENT:
+>  	case MEMORY_DEVICE_FS_DAX:
+>  		return true;
+>  	default:
+> @@ -1191,6 +1192,21 @@ static inline bool is_device_private_page(const struct page *page)
+>  		page->pgmap->type == MEMORY_DEVICE_PRIVATE;
+>  }
+>  
+> +static inline bool is_device_coherent_page(const struct page *page)
+> +{
+> +	return IS_ENABLED(CONFIG_DEV_PAGEMAP_OPS) &&
+> +		is_zone_device_page(page) &&
+> +		page->pgmap->type == MEMORY_DEVICE_COHERENT;
+> +}
+> +
+> +static inline bool is_device_page(const struct page *page)
 
-Trond Myklebust reported soft lockups in XFS IO completion such as
-this:
+I wish we could think of a better name for this - it's too similar to
+is_zone_device_page() so I can never remember if it includes FS_DAX pages or
+not. Unfortunately I don't have any better suggestions though.
 
- watchdog: BUG: soft lockup - CPU#12 stuck for 23s! [kworker/12:1:3106]
- CPU: 12 PID: 3106 Comm: kworker/12:1 Not tainted 4.18.0-305.10.2.el8_4.x86_64 #1
- Workqueue: xfs-conv/md127 xfs_end_io [xfs]
- RIP: 0010:_raw_spin_unlock_irqrestore+0x11/0x20
- Call Trace:
-  wake_up_page_bit+0x8a/0x110
-  iomap_finish_ioend+0xd7/0x1c0
-  iomap_finish_ioends+0x7f/0xb0
-  xfs_end_ioend+0x6b/0x100 [xfs]
-  xfs_end_io+0xb9/0xe0 [xfs]
-  process_one_work+0x1a7/0x360
-  worker_thread+0x1fa/0x390
-  kthread+0x116/0x130
-  ret_from_fork+0x35/0x40
+> +{
+> +	return IS_ENABLED(CONFIG_DEV_PAGEMAP_OPS) &&
+> +		is_zone_device_page(page) &&
+> +		(page->pgmap->type == MEMORY_DEVICE_PRIVATE ||
+> +		page->pgmap->type == MEMORY_DEVICE_COHERENT);
+> +}
+> +
+>  static inline bool is_pci_p2pdma_page(const struct page *page)
+>  {
+>  	return IS_ENABLED(CONFIG_DEV_PAGEMAP_OPS) &&
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 6da5020a8656..d0bab0747c73 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -5695,8 +5695,8 @@ static int mem_cgroup_move_account(struct page *page,
+>   *   2(MC_TARGET_SWAP): if the swap entry corresponding to this pte is a
+>   *     target for charge migration. if @target is not NULL, the entry is stored
+>   *     in target->ent.
+> - *   3(MC_TARGET_DEVICE): like MC_TARGET_PAGE  but page is MEMORY_DEVICE_PRIVATE
+> - *     (so ZONE_DEVICE page and thus not on the lru).
+> + *   3(MC_TARGET_DEVICE): like MC_TARGET_PAGE  but page is device memory and
+> + *   thus not on the lru.
+>   *     For now we such page is charge like a regular page would be as for all
+>   *     intent and purposes it is just special memory taking the place of a
+>   *     regular page.
+> @@ -5730,7 +5730,7 @@ static enum mc_target_type get_mctgt_type(struct vm_area_struct *vma,
+>  		 */
+>  		if (page_memcg(page) == mc.from) {
+>  			ret = MC_TARGET_PAGE;
+> -			if (is_device_private_page(page))
+> +			if (is_device_page(page))
+>  				ret = MC_TARGET_DEVICE;
+>  			if (target)
+>  				target->page = page;
+> diff --git a/mm/memory-failure.c b/mm/memory-failure.c
+> index 3e6449f2102a..4cf212e5f432 100644
+> --- a/mm/memory-failure.c
+> +++ b/mm/memory-failure.c
+> @@ -1554,12 +1554,16 @@ static int memory_failure_dev_pagemap(unsigned long pfn, int flags,
+>  		goto unlock;
+>  	}
+>  
+> -	if (pgmap->type == MEMORY_DEVICE_PRIVATE) {
+> +	switch (pgmap->type) {
+> +	case MEMORY_DEVICE_PRIVATE:
+> +	case MEMORY_DEVICE_COHERENT:
+>  		/*
+> -		 * TODO: Handle HMM pages which may need coordination
+> +		 * TODO: Handle device pages which may need coordination
+>  		 * with device-side memory.
+>  		 */
+>  		goto unlock;
+> +	default:
+> +		break;
+>  	}
+>  
+>  	/*
+> diff --git a/mm/memremap.c b/mm/memremap.c
+> index ed593bf87109..94d6a1e01d42 100644
+> --- a/mm/memremap.c
+> +++ b/mm/memremap.c
+> @@ -44,6 +44,7 @@ EXPORT_SYMBOL(devmap_managed_key);
+>  static void devmap_managed_enable_put(struct dev_pagemap *pgmap)
+>  {
+>  	if (pgmap->type == MEMORY_DEVICE_PRIVATE ||
+> +	    pgmap->type == MEMORY_DEVICE_COHERENT ||
+>  	    pgmap->type == MEMORY_DEVICE_FS_DAX)
+>  		static_branch_dec(&devmap_managed_key);
+>  }
+> @@ -51,6 +52,7 @@ static void devmap_managed_enable_put(struct dev_pagemap *pgmap)
+>  static void devmap_managed_enable_get(struct dev_pagemap *pgmap)
+>  {
+>  	if (pgmap->type == MEMORY_DEVICE_PRIVATE ||
+> +	    pgmap->type == MEMORY_DEVICE_COHERENT ||
+>  	    pgmap->type == MEMORY_DEVICE_FS_DAX)
+>  		static_branch_inc(&devmap_managed_key);
+>  }
+> @@ -328,6 +330,7 @@ void *memremap_pages(struct dev_pagemap *pgmap, int nid)
+>  
+>  	switch (pgmap->type) {
+>  	case MEMORY_DEVICE_PRIVATE:
+> +	case MEMORY_DEVICE_COHERENT:
+>  		if (!IS_ENABLED(CONFIG_DEVICE_PRIVATE)) {
 
-Ioends are processed as an atomic completion unit when all the
-chained bios in the ioend have completed their IO. Logically
-contiguous ioends can also be merged and completed as a single,
-larger unit.  Both of these things can be problematic as both the
-bio chains per ioend and the size of the merged ioends processed as
-a single completion are both unbound.
+This will fail if device private support isn't enabled. Does device coherent
+need to depend on that?
 
-If we have a large sequential dirty region in the page cache,
-write_cache_pages() will keep feeding us sequential pages and we
-will keep mapping them into ioends and bios until we get a dirty
-page at a non-sequential file offset. These large sequential runs
-can will result in bio and ioend chaining to optimise the io
-patterns. The pages iunder writeback are pinned within these chains
-until the submission chaining is broken, allowing the entire chain
-to be completed. This can result in huge chains being processed
-in IO completion context.
+>  			WARN(1, "Device private memory not supported\n");
+>  			return ERR_PTR(-EINVAL);
 
-We get deep bio chaining if we have large contiguous physical
-extents. We will keep adding pages to the current bio until it is
-full, then we'll chain a new bio to keep adding pages for writeback.
-Hence we can build bio chains that map millions of pages and tens of
-gigabytes of RAM if the page cache contains big enough contiguous
-dirty file regions. This long bio chain pins those pages until the
-final bio in the chain completes and the ioend can iterate all the
-chained bios and complete them.
+Also there is this check further down:
 
-OTOH, if we have a physically fragmented file, we end up submitting
-one ioend per physical fragment that each have a small bio or bio
-chain attached to them. We do not chain these at IO submission time,
-but instead we chain them at completion time based on file
-offset via iomap_ioend_try_merge(). Hence we can end up with unbound
-ioend chains being built via completion merging.
+                if (!pgmap->ops || !pgmap->ops->migrate_to_ram) {
 
-XFS can then do COW remapping or unwritten extent conversion on that
-merged chain, which involves walking an extent fragment at a time
-and running a transaction to modify the physical extent information.
-IOWs, we merge all the discontiguous ioends together into a
-contiguous file range, only to then process them individually as
-discontiguous extents.
+Device coherent pages don't use the migrate_to_ram() callback, so this should
+check for migrate_to_ram == NULL in that case.
 
-This extent manipulation is computationally expensive and can run in
-a tight loop, so merging logically contiguous but physically
-discontigous ioends gains us nothing except for hiding the fact the
-fact we broke the ioends up into individual physical extents at
-submission and then need to loop over those individual physical
-extents at completion.
+                        WARN(1, "Missing migrate_to_ram method\n");
+                        return ERR_PTR(-EINVAL);
+                }
 
-Hence we need to have mechanisms to limit ioend sizes and
-to break up completion processing of large merged ioend chains:
 
-1. bio chains per ioend need to be bound in length. Pure overwrites
-go straight to iomap_finish_ioend() in softirq context with the
-exact bio chain attached to the ioend by submission. Hence the only
-way to prevent long holdoffs here is to bound ioend submission
-sizes because we can't reschedule in softirq context.
+> @@ -498,7 +501,7 @@ EXPORT_SYMBOL_GPL(get_dev_pagemap);
+>  void free_devmap_managed_page(struct page *page)
+>  {
+>  	/* notify page idle for dax */
+> -	if (!is_device_private_page(page)) {
+> +	if (!is_device_page(page)) {
+>  		wake_up_var(&page->_refcount);
+>  		return;
+>  	}
+> diff --git a/mm/migrate.c b/mm/migrate.c
+> index 1852d787e6ab..91018880dc7f 100644
+> --- a/mm/migrate.c
+> +++ b/mm/migrate.c
+> @@ -362,7 +362,7 @@ static int expected_page_refs(struct address_space *mapping, struct page *page)
+>  	 * Device private pages have an extra refcount as they are
+>  	 * ZONE_DEVICE pages.
+>  	 */
+> -	expected_count += is_device_private_page(page);
+> +	expected_count += is_device_page(page);
+>  	if (mapping)
+>  		expected_count += thp_nr_pages(page) + page_has_private(page);
+>  
+> @@ -2503,7 +2503,7 @@ static bool migrate_vma_check_page(struct page *page)
+>  		 * FIXME proper solution is to rework migration_entry_wait() so
+>  		 * it does not need to take a reference on page.
+>  		 */
+> -		return is_device_private_page(page);
+> +		return is_device_page(page);
+>  	}
+>  	/* For file back page */
+> @@ -2791,7 +2791,7 @@ EXPORT_SYMBOL(migrate_vma_setup);
+>   *     handle_pte_fault()
+>   *       do_anonymous_page()
+>   * to map in an anonymous zero page but the struct page will be a ZONE_DEVICE
+> - * private page.
+> + * private or coherent page.
+>   */
+>  static void migrate_vma_insert_page(struct migrate_vma *migrate,
+>  				    unsigned long addr,
+> @@ -2867,10 +2867,15 @@ static void migrate_vma_insert_page(struct migrate_vma *migrate,
+>  				swp_entry = make_readable_device_private_entry(
+>  							page_to_pfn(page));
+>  			entry = swp_entry_to_pte(swp_entry);
+> +		} else if (is_device_coherent_page(page)) {
+> +			entry = pte_mkold(mk_pte(page,
+> +						 READ_ONCE(vma->vm_page_prot)));
+> +			if (vma->vm_flags & VM_WRITE)
+> +				entry = pte_mkwrite(pte_mkdirty(entry));
 
-2. iomap_finish_ioends() has to handle unbound merged ioend chains
-correctly. This relies on any one call to iomap_finish_ioend() being
-bound in runtime so that cond_resched() can be issued regularly as
-the long ioend chain is processed. i.e. this relies on mechanism #1
-to limit individual ioend sizes to work correctly.
+As I understand things device coherent pages use normal PTEs, so it would be
+good if you could consolidate this to use the same code path as for normal
+pages.
 
-3. filesystems have to loop over the merged ioends to process
-physical extent manipulations. This means they can loop internally,
-and so we break merging at physical extent boundaries so the
-filesystem can easily insert reschedule points between individual
-extent manipulations.
+>  		} else {
+>  			/*
+> -			 * For now we only support migrating to un-addressable
+> -			 * device memory.
+> +			 * We support migrating to private and coherent types
+> +			 * for device zone memory.
+>  			 */
+>  			pr_warn_once("Unsupported ZONE_DEVICE page type.\n");
+>  			goto abort;
+> @@ -2976,10 +2981,10 @@ void migrate_vma_pages(struct migrate_vma *migrate)
+>  		mapping = page_mapping(page);
+>  
+>  		if (is_zone_device_page(newpage)) {
+> -			if (is_device_private_page(newpage)) {
+> +			if (is_device_page(newpage)) {
+>  				/*
+> -				 * For now only support private anonymous when
+> -				 * migrating to un-addressable device memory.
+> +				 * For now only support private and coherent
+> +				 * anonymous when migrating to device memory.
+>  				 */
+>  				if (mapping) {
+>  					migrate->src[i] &= ~MIGRATE_PFN_MIGRATE;
+> 
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reported-and-tested-by: Trond Myklebust <trondmy@hammerspace.com>
----
- fs/iomap/buffered-io.c | 52 ++++++++++++++++++++++++++++++++++++++----
- fs/xfs/xfs_aops.c      | 16 ++++++++++++-
- include/linux/iomap.h  |  2 ++
- 3 files changed, 65 insertions(+), 5 deletions(-)
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index c938bbad075e..6c51a75d0be6 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -21,6 +21,8 @@
- 
- #include "../internal.h"
- 
-+#define IOEND_BATCH_SIZE	4096
-+
- /*
-  * Structure allocated for each folio when block size < folio size
-  * to track sub-folio uptodate status and I/O completions.
-@@ -1039,7 +1041,7 @@ static void iomap_finish_folio_write(struct inode *inode, struct folio *folio,
-  * state, release holds on bios, and finally free up memory.  Do not use the
-  * ioend after this.
-  */
--static void
-+static u32
- iomap_finish_ioend(struct iomap_ioend *ioend, int error)
- {
- 	struct inode *inode = ioend->io_inode;
-@@ -1048,6 +1050,7 @@ iomap_finish_ioend(struct iomap_ioend *ioend, int error)
- 	u64 start = bio->bi_iter.bi_sector;
- 	loff_t offset = ioend->io_offset;
- 	bool quiet = bio_flagged(bio, BIO_QUIET);
-+	u32 folio_count = 0;
- 
- 	for (bio = &ioend->io_inline_bio; bio; bio = next) {
- 		struct folio_iter fi;
-@@ -1062,9 +1065,11 @@ iomap_finish_ioend(struct iomap_ioend *ioend, int error)
- 			next = bio->bi_private;
- 
- 		/* walk all folios in bio, ending page IO on them */
--		bio_for_each_folio_all(fi, bio)
-+		bio_for_each_folio_all(fi, bio) {
- 			iomap_finish_folio_write(inode, fi.folio, fi.length,
- 					error);
-+			folio_count++;
-+		}
- 		bio_put(bio);
- 	}
- 	/* The ioend has been freed by bio_put() */
-@@ -1074,20 +1079,36 @@ iomap_finish_ioend(struct iomap_ioend *ioend, int error)
- "%s: writeback error on inode %lu, offset %lld, sector %llu",
- 			inode->i_sb->s_id, inode->i_ino, offset, start);
- 	}
-+	return folio_count;
- }
- 
-+/*
-+ * Ioend completion routine for merged bios. This can only be called from task
-+ * contexts as merged ioends can be of unbound length. Hence we have to break up
-+ * the writeback completions into manageable chunks to avoid long scheduler
-+ * holdoffs. We aim to keep scheduler holdoffs down below 10ms so that we get
-+ * good batch processing throughput without creating adverse scheduler latency
-+ * conditions.
-+ */
- void
- iomap_finish_ioends(struct iomap_ioend *ioend, int error)
- {
- 	struct list_head tmp;
-+	u32 completions;
-+
-+	might_sleep();
- 
- 	list_replace_init(&ioend->io_list, &tmp);
--	iomap_finish_ioend(ioend, error);
-+	completions = iomap_finish_ioend(ioend, error);
- 
- 	while (!list_empty(&tmp)) {
-+		if (completions > IOEND_BATCH_SIZE * 8) {
-+			cond_resched();
-+			completions = 0;
-+		}
- 		ioend = list_first_entry(&tmp, struct iomap_ioend, io_list);
- 		list_del_init(&ioend->io_list);
--		iomap_finish_ioend(ioend, error);
-+		completions += iomap_finish_ioend(ioend, error);
- 	}
- }
- EXPORT_SYMBOL_GPL(iomap_finish_ioends);
-@@ -1108,6 +1129,18 @@ iomap_ioend_can_merge(struct iomap_ioend *ioend, struct iomap_ioend *next)
- 		return false;
- 	if (ioend->io_offset + ioend->io_size != next->io_offset)
- 		return false;
-+	/*
-+	 * Do not merge physically discontiguous ioends. The filesystem
-+	 * completion functions will have to iterate the physical
-+	 * discontiguities even if we merge the ioends at a logical level, so
-+	 * we don't gain anything by merging physical discontiguities here.
-+	 *
-+	 * We cannot use bio->bi_iter.bi_sector here as it is modified during
-+	 * submission so does not point to the start sector of the bio at
-+	 * completion.
-+	 */
-+	if (ioend->io_sector + (ioend->io_size >> 9) != next->io_sector)
-+		return false;
- 	return true;
- }
- 
-@@ -1209,8 +1242,10 @@ iomap_alloc_ioend(struct inode *inode, struct iomap_writepage_ctx *wpc,
- 	ioend->io_flags = wpc->iomap.flags;
- 	ioend->io_inode = inode;
- 	ioend->io_size = 0;
-+	ioend->io_folios = 0;
- 	ioend->io_offset = offset;
- 	ioend->io_bio = bio;
-+	ioend->io_sector = sector;
- 	return ioend;
- }
- 
-@@ -1251,6 +1286,13 @@ iomap_can_add_to_ioend(struct iomap_writepage_ctx *wpc, loff_t offset,
- 		return false;
- 	if (sector != bio_end_sector(wpc->ioend->io_bio))
- 		return false;
-+	/*
-+	 * Limit ioend bio chain lengths to minimise IO completion latency. This
-+	 * also prevents long tight loops ending page writeback on all the
-+	 * folios in the ioend.
-+	 */
-+	if (wpc->ioend->io_folios >= IOEND_BATCH_SIZE)
-+		return false;
- 	return true;
- }
- 
-@@ -1335,6 +1377,8 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
- 				 &submit_list);
- 		count++;
- 	}
-+	if (count)
-+		wpc->ioend->io_folios++;
- 
- 	WARN_ON_ONCE(!wpc->ioend && !list_empty(&submit_list));
- 	WARN_ON_ONCE(!folio_test_locked(folio));
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 2705f91bdd0d..9d6a67c7d227 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -136,7 +136,20 @@ xfs_end_ioend(
- 	memalloc_nofs_restore(nofs_flag);
- }
- 
--/* Finish all pending io completions. */
-+/*
-+ * Finish all pending IO completions that require transactional modifications.
-+ *
-+ * We try to merge physical and logically contiguous ioends before completion to
-+ * minimise the number of transactions we need to perform during IO completion.
-+ * Both unwritten extent conversion and COW remapping need to iterate and modify
-+ * one physical extent at a time, so we gain nothing by merging physically
-+ * discontiguous extents here.
-+ *
-+ * The ioend chain length that we can be processing here is largely unbound in
-+ * length and we may have to perform significant amounts of work on each ioend
-+ * to complete it. Hence we have to be careful about holding the CPU for too
-+ * long in this loop.
-+ */
- void
- xfs_end_io(
- 	struct work_struct	*work)
-@@ -157,6 +170,7 @@ xfs_end_io(
- 		list_del_init(&ioend->io_list);
- 		iomap_ioend_try_merge(ioend, &tmp);
- 		xfs_end_ioend(ioend);
-+		cond_resched();
- 	}
- }
- 
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index b55bd49e55f5..97a3a2edb585 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -263,9 +263,11 @@ struct iomap_ioend {
- 	struct list_head	io_list;	/* next ioend in chain */
- 	u16			io_type;
- 	u16			io_flags;	/* IOMAP_F_* */
-+	u32			io_folios;	/* folios added to ioend */
- 	struct inode		*io_inode;	/* file being written to */
- 	size_t			io_size;	/* size of the extent */
- 	loff_t			io_offset;	/* offset in the file */
-+	sector_t		io_sector;	/* start sector of ioend */
- 	struct bio		*io_bio;	/* bio being built */
- 	struct bio		io_inline_bio;	/* MUST BE LAST! */
- };
--- 
-2.33.0
+
 
