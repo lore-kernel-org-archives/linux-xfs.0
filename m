@@ -2,76 +2,108 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92CB3C433EF
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Jan 2022 07:17:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2DC6C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Jan 2022 08:35:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1378880AbiAUHRi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 21 Jan 2022 02:17:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59292 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1378864AbiAUHRg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jan 2022 02:17:36 -0500
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D290C061574;
-        Thu, 20 Jan 2022 23:17:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=yFPxDUUe1fppNO0I1fDa7AQSMUJ89zWSqQ4St/CxUW8=; b=re5gJo5P3fM6JbXabIyQgDSFuL
-        2/c/R1kbmGwM9wnFvcVIbtFV6CPKFG9KTLSuDQkKjGa7WNFhDfqwXK8gLbDqtDaEMLLkSvfF1Rw68
-        m15Kn9nvJWBn4B4wYwj1beL1ETujNA/HHaYmLvJM1tinQimQSEbY3tHoWaFsZhrCy0q7ReWHsApIq
-        7FNG6Ycsi2kWOXn0+33z2cwtPVagIqc4tKLK2Q0YpAKyEXB6MkHql2Px/ou3XS9ptRM0ecbOxqpQB
-        qLixJ458q3LMWO/T57T734HDJV6QUdtx8nSwdkI9MtVzW4rRmkebbT/b2TvZFx5kS+5khxoY0iyXY
-        j6+9XE0A==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nAoAu-00E2IP-QD; Fri, 21 Jan 2022 07:17:32 +0000
-Date:   Thu, 20 Jan 2022 23:17:32 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Shiyang Ruan <ruansy.fnst@fujitsu.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Linux NVDIMM <nvdimm@lists.linux.dev>,
-        Linux MM <linux-mm@kvack.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        david <david@fromorbit.com>, Jane Chu <jane.chu@oracle.com>
-Subject: Re: [PATCH v9 02/10] dax: Introduce holder for dax_device
-Message-ID: <YepeDLO5VNWsmV0J@infradead.org>
-References: <CAPcyv4iTaneUgdBPnqcvLr4Y_nAxQp31ZdUNkSRPsQ=9CpMWHg@mail.gmail.com>
- <20220105185626.GE398655@magnolia>
- <CAPcyv4h3M9f1-C5e9kHTfPaRYR_zN4gzQWgR+ZyhNmG_SL-u+A@mail.gmail.com>
- <20220105224727.GG398655@magnolia>
- <CAPcyv4iZ88FPeZC1rt_bNdWHDZ5oh7ua31NuET2-oZ1UcMrH2Q@mail.gmail.com>
- <20220105235407.GN656707@magnolia>
- <CAPcyv4gUmpDnGkhd+WdhcJVMP07u+CT8NXRjzcOTp5KF-5Yo5g@mail.gmail.com>
- <YekhXENAEYJJNy7e@infradead.org>
- <76f5ed28-2df9-890e-0674-3ef2f18e2c2f@fujitsu.com>
- <20220121022200.GG13563@magnolia>
+        id S230438AbiAUIfE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 21 Jan 2022 03:35:04 -0500
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:2637 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S234198AbiAUIeV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jan 2022 03:34:21 -0500
+IronPort-Data: =?us-ascii?q?A9a23=3ATGEFKqh5CkSoF7MEZqgz4YuZX161CxEKZh0ujC4?=
+ =?us-ascii?q?5NGQNrF6WrkUAy2YXUD+ObvyMZzCmLot/bojn9h8Av8XTnIJkHgtqqnw8FHgiR?=
+ =?us-ascii?q?ejtX4rAdhiqV8+xwmwvdGo+toNGLICowPkcFhcwnT/wdOixxZVA/fvQHOCkUbS?=
+ =?us-ascii?q?dYnkZqTJME0/NtzoywobVvaY42bBVMyvV0T/Di5W31G2NglaYAUpIg063ky6Di?=
+ =?us-ascii?q?dyp0N8uUvPSUtgQ1LPWvyF94JvyvshdJVOgKmVfNrbSq+ouUNiEEm3lExcFUrt?=
+ =?us-ascii?q?Jk57wdAsEX7zTIROTzHFRXsBOgDAb/mprjPl9b6FaNC+7iB3Q9zx14M9QvJqrW?=
+ =?us-ascii?q?EEnOLbQsOoAURhECDw4NqpDkFPCCSHl6ZLNlhKaKhMAxN0rVinaJ7Yw9u9pAG1?=
+ =?us-ascii?q?m++YfLTcXZBGfwemxxdqTSuJsrsUlItPiMI4Wtjdn1z6xJfovR9bBBbrL4dtZ1?=
+ =?us-ascii?q?TIrrsFIAfvaIcEebFJHYBbfZBtAElQaEpQzmKGvnHaXWzlZrk+F4K8yy2vNxQd?=
+ =?us-ascii?q?ylr/3P7L9fMKGRMBQtkKZvX7duWD4BAwKctCS11Kt8Huqi6nEnT7TX5gbH7m1s?=
+ =?us-ascii?q?PVthTW7wm0VFQ1TW0C3rOe0jmagVN9FbU8Z4Cwjqe417kPDZt38WQCo5X2JpBg?=
+ =?us-ascii?q?RX/JOHOAgrgKA0KzZ50CeHGdsZjpAbsE28d84XhQ02VKT2dDkHzpitPuSU331y?=
+ =?us-ascii?q?1s+hVteIgBMdSlbO3BCFlBDvrHeTEgIpkqnZr5e/GSd17UZwQ3N/g0=3D?=
+IronPort-HdrOrdr: =?us-ascii?q?A9a23=3AmS58S6/PRHT7JJgFU+puk+C9I+orL9Y04lQ7?=
+ =?us-ascii?q?vn2ZKCY0TiX2ra2TdZggvyMc6wxxZJhDo7+90cC7KBu2yXcc2/hzAV7IZmXbUQ?=
+ =?us-ascii?q?WTQr1f0Q=3D=3D?=
+X-IronPort-AV: E=Sophos;i="5.88,304,1635177600"; 
+   d="scan'208";a="120661741"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 21 Jan 2022 16:34:20 +0800
+Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
+        by cn.fujitsu.com (Postfix) with ESMTP id 10D3A4D15A58;
+        Fri, 21 Jan 2022 16:34:19 +0800 (CST)
+Received: from G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.85) by
+ G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.23; Fri, 21 Jan 2022 16:34:19 +0800
+Received: from [192.168.22.28] (10.167.225.141) by
+ G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
+ id 15.0.1497.23 via Frontend Transport; Fri, 21 Jan 2022 16:34:16 +0800
+Message-ID: <b928a8cd-e9b5-46fa-20d0-e91fe53ed861@fujitsu.com>
+Date:   Fri, 21 Jan 2022 16:34:18 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220121022200.GG13563@magnolia>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.4.1
+Subject: Re: [PATCH v9 10/10] fsdax: set a CoW flag when associate reflink
+ mappings
+To:     Christoph Hellwig <hch@infradead.org>
+CC:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <nvdimm@lists.linux.dev>, <linux-mm@kvack.org>,
+        <linux-fsdevel@vger.kernel.org>, <djwong@kernel.org>,
+        <dan.j.williams@intel.com>, <david@fromorbit.com>,
+        <jane.chu@oracle.com>
+References: <20211226143439.3985960-1-ruansy.fnst@fujitsu.com>
+ <20211226143439.3985960-11-ruansy.fnst@fujitsu.com>
+ <YekkYAJ+QegoDKCJ@infradead.org>
+ <70a24c20-d7ee-064c-e863-9f012422a2f5@fujitsu.com>
+ <YepdxZ+XrAZYv1dX@infradead.org>
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+In-Reply-To: <YepdxZ+XrAZYv1dX@infradead.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-yoursite-MailScanner-ID: 10D3A4D15A58.A4165
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jan 20, 2022 at 06:22:00PM -0800, Darrick J. Wong wrote:
-> Hm, so that means XFS can only support dax+pmem when there aren't
-> partitions in use?  Ew.
 
-Yes.  Or any sensible DAX usage going forward for that matter.
 
+在 2022/1/21 15:16, Christoph Hellwig 写道:
+> On Fri, Jan 21, 2022 at 10:33:58AM +0800, Shiyang Ruan wrote:
+>>>
+>>> But different question, how does this not conflict with:
+>>>
+>>> #define PAGE_MAPPING_ANON       0x1
+>>>
+>>> in page-flags.h?
+>>
+>> Now we are treating dax pages, so I think its flags should be different from
+>> normal page.  In another word, PAGE_MAPPING_ANON is a flag of rmap mechanism
+>> for normal page, it doesn't work for dax page.  And now, we have dax rmap
+>> for dax page.  So, I think this two kinds of flags are supposed to be used
+>> in different mechanisms and won't conflect.
 > 
-> > >   (2) extent the holder mechanism to cover a rangeo
+> It just needs someone to use folio_test_anon in a place where a DAX
+> folio can be passed.  This probably should not happen, but we need to
+> clearly document that.
 > 
-> I don't think I was around for the part where "hch balked at a notifier
-> call chain" -- what were the objections there, specifically?  I would
-> hope that pmem problems would be infrequent enough that the locking
-> contention (or rcu expiration) wouldn't be an issue...?
+>>> Either way I think this flag should move to page-flags.h and be
+>>> integrated with the PAGE_MAPPING_FLAGS infrastucture.
+>>
+>> And that's why I keep them in this dax.c file.
+> 
+> But that does not integrate it with the infrastructure.  For people
+> to debug things it needs to be next to PAGE_MAPPING_ANON and have
+> documentation explaining why they are exclusive.
 
-notifiers are a nightmare untype API leading to tons of boilerplate
-code.  Open coding the notification is almost always a better idea.
+Ok, understood.
+
+
+--
+Thanks,
+Ruan.
+
+
