@@ -2,239 +2,179 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E70AAC433FE
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Jan 2022 10:20:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 981AEC433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Jan 2022 14:25:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1379955AbiAUKUi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 21 Jan 2022 05:20:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44468 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1379975AbiAUKUf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jan 2022 05:20:35 -0500
-Received: from mail-vk1-xa2f.google.com (mail-vk1-xa2f.google.com [IPv6:2607:f8b0:4864:20::a2f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6053DC06173F
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Jan 2022 02:20:35 -0800 (PST)
-Received: by mail-vk1-xa2f.google.com with SMTP id y192so1883305vkc.8
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Jan 2022 02:20:35 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=devo.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=Xc60qWdmYkDcmqCepJSEgw8PLIa0merprBFuDOJts7k=;
-        b=OYEe9BgniFj9zA5VFJqqOYmJJ1xEoaeSGsyzLdiPo6u0NflaySG4Q2Q46iPF4FKE6+
-         2n1QpOJiILQrjv1jzAqD7U/mHb1AORjYk/0jfkuGb2U6aKEBen2r991+6f8plQMF7lN7
-         R6sK2kwIoZo3YKO9HCExkhMfSknqWsBkQ2II9lfgTzrvzQHtNHXNqWX777oL7915v6ME
-         VsQKCE0oW5Jfpmrx1OtGkFt+YiJEl4GCZrNZEWzDF7U7f+JsP6MfABRKV1tm9OOgob+X
-         8zxLksMwJGuIR09PXwa4RWQjx4+/EJ5WwCEBb1lL1nN6YM23tkyCDjHiKRoRq91v1RPg
-         MPxw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=Xc60qWdmYkDcmqCepJSEgw8PLIa0merprBFuDOJts7k=;
-        b=J8T2X6L8XePHX0YpxDpg/K4aAekb2VljLqjOV87GrFaDuR2RGEw7s9tx6KunRmvDM+
-         sgInZBTiK8Bo9yQBfiL62suzyhy1RTC7gQmULGGBGQXfuqSt0bHCXI0uZQc0s+LfyiMB
-         ldhF+Da9ACo0q3NgZTL2PvOsPw2XXCNFp6g3t6TTIIQIYp5QLyy5xSuuSp8l0OeZi7rr
-         RW/A4BClsQDGz5koW7KDohpH3097L1v2tgYzrzpL3VDZcbUgDXOSEV8ZR5K26qok/EI3
-         qvcdbIAdF6jMMw4sZDYNe+aAWPJh8eYNd+FWDNdO5o75Nsixjuo42fGmXR5ELsHNgCYC
-         ftqQ==
-X-Gm-Message-State: AOAM533S2dddusvdv8Q78LzUK1+p/YBI7eMCnwSQMQb8odPjnxdh0Y9J
-        4FeWFTSWIY8FUVV1W/oHYyoQ6zEBXD019lF7tH1yvTSvxtihguK4MqGtCkgVy5mO/IR5IaldKV+
-        qXAmNMxQOaXIWWqN12B40Z9sEeg503vxZoKl/GOw=
-X-Google-Smtp-Source: ABdhPJxsU7WoDrzdWVPq2kcRV0Waoqs0yeb/sYDOXLRrYiiMFcxB3w7lJQ4us8XU0F2yD7/8ysTwNGs5yCEvPWWTKpU=
-X-Received: by 2002:a05:6122:8c6:: with SMTP id 6mr1310834vkg.5.1642760434439;
- Fri, 21 Jan 2022 02:20:34 -0800 (PST)
+        id S1380916AbiAUOZC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 21 Jan 2022 09:25:02 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:29754 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1350730AbiAUOZB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jan 2022 09:25:01 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1642775101;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=B7hvOprxHiL9qCQhIeqXVlImgIsILi7okCdTn4NbuEw=;
+        b=baOhx9jNN1nzVRcXPFcb9x2NU0B2nRA07sVLlSAaFYz5ezsuNTdx80EiOZxunFWh97iS6n
+        Sk8pIcI+t+bqZAmVCW0tti+QjtVmY0+hlpmHp1jxNAZi0hGQTB1WeGGuU/n15zxPirW3MP
+        x1sPacg8MxhFV/9PEx4Df/Gk+DGZ5Us=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-479-c3m46r3WP0-xPOtVffF6FA-1; Fri, 21 Jan 2022 09:24:57 -0500
+X-MC-Unique: c3m46r3WP0-xPOtVffF6FA-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D0D2C46864;
+        Fri, 21 Jan 2022 14:24:55 +0000 (UTC)
+Received: from bfoster.redhat.com (unknown [10.22.16.110])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 1C64E5E49C;
+        Fri, 21 Jan 2022 14:24:55 +0000 (UTC)
+From:   Brian Foster <bfoster@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Al Viro <viro@zeniv.linux.org.uk>, Ian Kent <raven@themaw.net>,
+        rcu@vger.kernel.org
+Subject: [PATCH] xfs: require an rcu grace period before inode recycle
+Date:   Fri, 21 Jan 2022 09:24:54 -0500
+Message-Id: <20220121142454.1994916-1-bfoster@redhat.com>
 MIME-Version: 1.0
-References: <CAG2S0o-wJc-2_wm=35mE5Lt0e4idXwb3g5ezc9=LdWrLHfRM_Q@mail.gmail.com>
- <20220120180228.GE13514@magnolia>
-In-Reply-To: <20220120180228.GE13514@magnolia>
-From:   Andrea Tomassetti <andrea.tomassetti@devo.com>
-Date:   Fri, 21 Jan 2022 11:20:23 +0100
-Message-ID: <CAG2S0o8GZCa0jYuryr7q+woEnjSZJDxton5xnSpNDp4fWH-WgA@mail.gmail.com>
-Subject: Re: xfs/311 test pass but leave block device unusable
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     fstests@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jan 20, 2022 at 7:02 PM Darrick J. Wong <djwong@kernel.org> wrote:
->
-> [cc xfs list]
->
-> On Thu, Jan 20, 2022 at 12:04:47PM +0100, Andrea Tomassetti wrote:
-> > Hi all,
-> > I was using the (x)fstest utility on the Kernel 5.11 to try to
-> > reproduce some xfs-related issues:
-> >   INFO: task xfs-conv/dm-3:1360 blocked for more than 120 seconds.
-> >   Workqueue: xfs-conv/dm-3 xfs_end_io [xfs]
-> >    Call Trace:
-> >     __schedule+0x44c/0x8a0
-> >     schedule+0x4f/0xc0
-> >     xlog_grant_head_wait+0xb5/0x1a0 [xfs]
-> >     xlog_grant_head_check+0xe1/0x100 [xfs]
->
-> Threads are stuck waiting for log space; can you post the full dmesg?
-> And the xfs_info output of the test device?
->
+The XFS inode allocation algorithm aggressively reuses recently
+freed inodes. This is historical behavior that has been in place for
+quite some time, since XFS was imported to mainline Linux. Once the
+VFS adopted RCUwalk path lookups (also some time ago), this behavior
+became slightly incompatible because the inode recycle path doesn't
+isolate concurrent access to the inode from the VFS.
 
-I think I maybe didn't expose correctly the problems. I mentioned two
-separated issues:
-  1. The thread stuck problem, to which the dmesg refers to. It is
-happening to us in production and we're trying to replicate it in a
-test environment but without any success at the moment.
-  2. While I was using xfstests, in the hope it could replicate the
-problem, I stepped into the buggy behaviour of the test n. 311. And I
-wanted to report this to you (and maybe get some advice on the
-production's problem that is affecting us)
+This has recently manifested as problems in the VFS when XFS happens
+to change the type or properties of a recently unlinked inode while
+still involved in an RCU lookup. For example, if the VFS refers to a
+previous incarnation of a symlink inode, obtains the ->get_link()
+callback from inode_operations, and the latter happens to change to
+a non-symlink type via a recycle event, the ->get_link() callback
+pointer is reset to NULL and the lookup results in a crash.
 
-I hope I made myself clear, sorry for the misunderstanding.
+To avoid this class of problem, isolate in-core inodes for recycling
+with an RCU grace period. This is the same level of protection the
+VFS expects for inactivated inodes that are never reused, and so
+guarantees no further concurrent access before the type or
+properties of the inode change. We don't want an unconditional
+synchronize_rcu() event here because that would result in a
+significant performance impact to mixed inode allocation workloads.
 
-Here the full dmesg, about the production's issue:
+Fortunately, we can take advantage of the recently added deferred
+inactivation mechanism to mitigate the need for an RCU wait in most
+cases. Deferred inactivation queues and batches the on-disk freeing
+of recently destroyed inodes, and so significantly increases the
+likelihood that a grace period has elapsed by the time an inode is
+freed and observable by the allocation code as a reuse candidate.
+Capture the current RCU grace period cookie at inode destroy time
+and refer to it at allocation time to conditionally wait for an RCU
+grace period if one hadn't expired in the meantime.  Since only
+unlinked inodes are recycle candidates and unlinked inodes always
+require inactivation, we only need to poll and assign RCU state in
+the inactivation codepath. Slightly adjust struct xfs_inode to fit
+the new field into padding holes that conveniently preexist in the
+same cacheline as the deferred inactivation list.
 
-  [Thu Dec 23 17:13:56 2021] INFO: task xfs-conv/dm-3:1360 blocked for
-more than 120 seconds.
-  [Thu Dec 23 17:13:56 2021]       Not tainted 5.11.0-1020-aws
-#21~20.04.2-Ubuntu
-  [Thu Dec 23 17:13:56 2021] "echo 0 >
-/proc/sys/kernel/hung_task_timeout_secs" disables this message.
-  [Thu Dec 23 17:13:56 2021] task:xfs-conv/dm-3   state:D stack:    0
-pid: 1360 ppid:     2 flags:0x00004000
-  [Thu Dec 23 17:13:56 2021] Workqueue: xfs-conv/dm-3 xfs_end_io [xfs]
-  [Thu Dec 23 17:13:56 2021] Call Trace:
-  [Thu Dec 23 17:13:56 2021]  __schedule+0x44c/0x8a0
-  [Thu Dec 23 17:13:56 2021]  schedule+0x4f/0xc0
-  [Thu Dec 23 17:13:56 2021]  xlog_grant_head_wait+0xb5/0x1a0 [xfs]
-  [Thu Dec 23 17:13:56 2021]  xlog_grant_head_check+0xe1/0x100 [xfs]
-  [Thu Dec 23 17:13:56 2021]  xfs_log_reserve+0xc2/0x1c0 [xfs]
-  [Thu Dec 23 17:13:56 2021]  xfs_trans_reserve+0x1ca/0x210 [xfs]
-  [Thu Dec 23 17:13:56 2021]  xfs_trans_alloc+0xd7/0x190 [xfs]
-  [Thu Dec 23 17:13:56 2021]  xfs_iomap_write_unwritten+0x125/0x2e0 [xfs]
-  [Thu Dec 23 17:13:56 2021]  xfs_end_ioend+0xdb/0x120 [xfs]
-  [Thu Dec 23 17:13:56 2021]  xfs_end_io+0xb7/0xe0 [xfs]
-  [Thu Dec 23 17:13:56 2021]  process_one_work+0x220/0x3c0
-  [Thu Dec 23 17:13:56 2021]  rescuer_thread+0x2ca/0x3b0
-  [Thu Dec 23 17:13:56 2021]  ? worker_thread+0x3f0/0x3f0
-  [Thu Dec 23 17:13:56 2021]  kthread+0x12b/0x150
-  [Thu Dec 23 17:13:56 2021]  ? set_kthread_struct+0x40/0x40
-  [Thu Dec 23 17:13:56 2021]  ret_from_fork+0x22/0x30
+Finally, note that the ideal long term solution here is to
+rearchitect bits of XFS' internal inode lifecycle management such
+that this additional stall point is not required, but this requires
+more thought, time and work to address. This approach restores
+functional correctness in the meantime.
 
-> > When I realized that xfs test n. 311 was passing correctly but every
-> > further attempt to use the block device (e.g. mount it) was failing.
-> > The issue is reproducible after reboot.
-> >
-> > Test passed:
-> >   ./check xfs/311
-> >   FSTYP         -- xfs (non-debug)
-> >   PLATFORM      -- Linux/x86_64 test 5.11.0-1021-aws
-> > #22~20.04.2-Ubuntu SMP Wed Oct 27 21:27:13 UTC 2021
-> >   MKFS_OPTIONS  -- -f /dev/xvdz
-> >   MOUNT_OPTIONS -- /dev/xvdz /home/test/z
-> >
-> >   xfs/311 25s ...  25s
-> >   Ran: xfs/311
-> >   Passed all 1 tests
-> >
-> > Fail:
-> >   # mount /dev/xvdz /home/test/z/
-> >     mount: /home/test/z: /dev/xvdz already mounted or mount point busy.
-> >     [ 2222.028417] /dev/xvdz: Can't open blockdev
-> >
-> > lsof does not show anything that is using either /dev/xvdz or /home/tes=
-t/z
-> >
-> > Any idea why is this happening?
->
-> xfs-conv handles unwritten extent conversion after writeback, so I would
-> speculate (without dmesg data) that everyone got wedged trying to start
-> a transaction, and the log is blocked up for whatever reason.
->
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
 
-I run the test xfs/311 with the Kernel v5.13 and the behaviour is the
-same as with the 5.11: after running it the disk becomes unusable.
+Hi all,
 
-Trying to rerun the test, after the first successful run, leads to:
+Here's the RCU fixup patch for inode reuse that I've been playing with,
+re: the vfs patch discussion [1]. I've put it in pretty much the most
+basic form, but I think there are a couple aspects worth thinking about:
 
-  FSTYP         -- xfs (non-debug)
-  PLATFORM      -- Linux/x86_64 test 5.11.0-1021-aws
-#22~20.04.2-Ubuntu SMP Wed Oct 27 21:27:13 UTC 2021
-  MKFS_OPTIONS  -- -f /dev/xvdz
-  MOUNT_OPTIONS -- /dev/xvdz /home/test/z
+1. Use and frequency of start_poll_synchronize_rcu() (vs.
+get_state_synchronize_rcu()). The former is a bit more active than the
+latter in that it triggers the start of a grace period, when necessary.
+This currently invokes per inode, which is the ideal frequency in
+theory, but could be reduced, associated with the xfs_inogegc thresholds
+in some manner, etc., if there is good reason to do that.
 
-  our local _scratch_mkfs routine ...
-  mkfs.xfs: cannot open /dev/xvdz: Device or resource busy
-  check: failed to mkfs $SCRATCH_DEV using specified options
-  Interrupted!
-  Passed all 0 tests
+2. The rcu cookie lifecycle. This variant updates it on inactivation
+queue and nowhere else because the RCU docs imply that counter rollover
+is not a significant problem. In practice, I think this means that if an
+inode is stamped at least once, and the counter rolls over, future
+(non-inactivation, non-unlinked) eviction -> repopulation cycles could
+trigger rcu syncs. I think this would require repeated
+eviction/reinstantiation cycles within a small window to be noticeable,
+so I'm not sure how likely this is to occur. We could be more defensive
+by resetting or refreshing the cookie. E.g., refresh (or reset to zero)
+at recycle time, unconditionally refresh at destroy time (using
+get_state_synchronize_rcu() for non-inactivation), etc.
 
-with no errors in dmesg.
+Otherwise testing is ongoing, but this version at least survives an
+fstests regression run.
 
-xfs_info /dev/xvdz
-meta-data=3D/dev/xvdz              isize=3D512    agcount=3D4, agsize=3D327=
-68000 blks
-         =3D                       sectsz=3D512   attr=3D2, projid32bit=3D1
-         =3D                       crc=3D1        finobt=3D1, sparse=3D1, r=
-mapbt=3D0
-         =3D                       reflink=3D1
-data     =3D                       bsize=3D4096   blocks=3D131072000, imaxp=
-ct=3D25
-         =3D                       sunit=3D0      swidth=3D0 blks
-naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0, ftype=3D1
-log      =3Dinternal log           bsize=3D4096   blocks=3D64000, version=
-=3D2
-         =3D                       sectsz=3D512   sunit=3D0 blks, lazy-coun=
-t=3D1
-realtime =3Dnone                   extsz=3D4096   blocks=3D0, rtextents=3D0
+Brian
 
-> > The `xlog_grant_head_wait` race issue has been resolved in a later
-> > Kernel version, am I right?
->
-> Beats me.
->
-> > Best regards,
-> > Andrea
-> >
-> > --
-> >
-> >
-> >
-> >
-> >
-> >
-> >
-> > The contents of this email are confidential. If the reader of this
->
-> Not anymore they aren't.
->
-> --D
->
-> > message is not the intended recipient, you are hereby notified that any
-> > dissemination, distribution or copying of this communication is strictl=
-y
-> > prohibited. If you have received this communication in error, please no=
-tify
-> > us immediately by replying to this message and deleting it from your
-> > computer. Thank you. Devo, Inc; arco@devo.com <mailto:arco@devo.com>;
-> > Calle Est=C3=A9banez Calder=C3=B3n 3-5, 5th Floor. Madrid, Spain 28020
-> >
+[1] https://lore.kernel.org/linux-fsdevel/164180589176.86426.501271559065590169.stgit@mickey.themaw.net/
 
---=20
+ fs/xfs/xfs_icache.c | 11 +++++++++++
+ fs/xfs/xfs_inode.h  |  3 ++-
+ 2 files changed, 13 insertions(+), 1 deletion(-)
 
-
-
-
-
-
-
-The contents of this email are confidential. If the reader of this=20
-message is not the intended recipient, you are hereby notified that any=20
-dissemination, distribution or copying of this communication is strictly=20
-prohibited. If you have received this communication in error, please notify=
-=20
-us immediately by replying to this message and deleting it from your=20
-computer. Thank you.=C2=A0Devo, Inc; arco@devo.com <mailto:arco@devo.com>;=
-=C2=A0=C2=A0
-Calle Est=C3=A9banez Calder=C3=B3n 3-5, 5th Floor. Madrid, Spain 28020
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index d019c98eb839..4931daa45ca4 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -349,6 +349,16 @@ xfs_iget_recycle(
+ 	spin_unlock(&ip->i_flags_lock);
+ 	rcu_read_unlock();
+ 
++	/*
++	 * VFS RCU pathwalk lookups dictate the same lifecycle rules for an
++	 * inode recycle as for freeing an inode. I.e., we cannot repurpose the
++	 * inode until a grace period has elapsed from the time the previous
++	 * version of the inode was destroyed. In most cases a grace period has
++	 * already elapsed if the inode was (deferred) inactivated, but
++	 * synchronize here as a last resort to guarantee correctness.
++	 */
++	cond_synchronize_rcu(ip->i_destroy_gp);
++
+ 	ASSERT(!rwsem_is_locked(&inode->i_rwsem));
+ 	error = xfs_reinit_inode(mp, inode);
+ 	if (error) {
+@@ -2019,6 +2029,7 @@ xfs_inodegc_queue(
+ 	trace_xfs_inode_set_need_inactive(ip);
+ 	spin_lock(&ip->i_flags_lock);
+ 	ip->i_flags |= XFS_NEED_INACTIVE;
++	ip->i_destroy_gp = start_poll_synchronize_rcu();
+ 	spin_unlock(&ip->i_flags_lock);
+ 
+ 	gc = get_cpu_ptr(mp->m_inodegc);
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index c447bf04205a..2153e3edbb86 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -40,8 +40,9 @@ typedef struct xfs_inode {
+ 	/* Transaction and locking information. */
+ 	struct xfs_inode_log_item *i_itemp;	/* logging information */
+ 	mrlock_t		i_lock;		/* inode lock */
+-	atomic_t		i_pincount;	/* inode pin count */
+ 	struct llist_node	i_gclist;	/* deferred inactivation list */
++	unsigned long		i_destroy_gp;	/* destroy rcugp cookie */
++	atomic_t		i_pincount;	/* inode pin count */
+ 
+ 	/*
+ 	 * Bitsets of inode metadata that have been checked and/or are sick.
+-- 
+2.31.1
 
