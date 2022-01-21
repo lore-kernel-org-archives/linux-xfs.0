@@ -2,166 +2,111 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3752EC433FE
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jan 2022 23:58:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3401EC433F5
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Jan 2022 01:27:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1378257AbiATX6C (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 20 Jan 2022 18:58:02 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:41823 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1378241AbiATX6B (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jan 2022 18:58:01 -0500
-Received: from dread.disaster.area (pa49-179-45-11.pa.nsw.optusnet.com.au [49.179.45.11])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id C44B210C2A68;
-        Fri, 21 Jan 2022 10:57:56 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nAhJT-002GNn-75; Fri, 21 Jan 2022 10:57:55 +1100
-Date:   Fri, 21 Jan 2022 10:57:55 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        linux-xfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>
-Subject: Re: [PATCH v10 0/5] add support for direct I/O with fscrypt using
- blk-crypto
-Message-ID: <20220120235755.GI59729@dread.disaster.area>
-References: <20220120071215.123274-1-ebiggers@kernel.org>
- <YekdnxpeunTGfXqX@infradead.org>
- <20220120171027.GL13540@magnolia>
- <YenIcshA706d/ziV@sol.localdomain>
- <20220120210027.GQ13540@magnolia>
- <20220120220414.GH59729@dread.disaster.area>
- <Yenm1Ipx87JAlyXg@sol.localdomain>
+        id S240930AbiAUB1B (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 20 Jan 2022 20:27:01 -0500
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:6978 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S235635AbiAUB1A (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jan 2022 20:27:00 -0500
+IronPort-Data: =?us-ascii?q?A9a23=3AD3gOAa2yDBqa5TPV1vbD5bhwkn2cJEfYwER7XOP?=
+ =?us-ascii?q?LsXnJhz0kgzEOm2sXDGGOaP2INmH2c9EjaYS0pBsH75fRmtA2QQE+nZ1PZygU8?=
+ =?us-ascii?q?JKaX7x1DatR0xu6d5SFFAQ+hyknQoGowPscEzmM9n9BDpC79SMmjfjSHuKnYAL?=
+ =?us-ascii?q?5EnsZqTFMGX5JZS1Ly7ZRbr5A2bBVMivV0T/Ai5S31GyNh1aYBlkpB5er83uDi?=
+ =?us-ascii?q?hhdVAQw5TTSbdgT1LPXeuJ84Jg3fcldJFOgKmVY83LTegrN8F251juxExYFAdX?=
+ =?us-ascii?q?jnKv5c1ERX/jZOg3mZnh+AvDk20Yd4HdplPtT2Pk0MC+7jx2Tgtl308QLu5qrV?=
+ =?us-ascii?q?S8nI6/NhP8AFRJfFkmSOIUfoueZfSng7JL7I0ruNiGEL+9VJE0/I4wU0uhtBmR?=
+ =?us-ascii?q?J7/YZNHYGaRXrr+K9wJq6TOd2j8guJcWtO5kQ0llsxDefD7A5QJTHQqzP/vdZ2?=
+ =?us-ascii?q?is9goZFGvO2T8Ybdj1pYzzDbgdJN1NRD4gx9M+sh3/iY3hdrXqWu6M84C7U1gM?=
+ =?us-ascii?q?Z+L7zPNvQf/SORN5JhQCcp2Tb7yL1Dw9yHN6WzzfD+XKxrujVlCj/VcQZE7jQ3?=
+ =?us-ascii?q?vprhkCDg2IIBBAIWF+Tv/a0kAi9VshZJkhS/TAhxYA29Uq2Xpz+Uge+rXqsoBE?=
+ =?us-ascii?q?RQZxTHvc85QXLzbDbiy6dB24ZXntRZscOqsA7X3op20WPktevAiZg2IB541r1G?=
+ =?us-ascii?q?qy89Gv0YHZKazRZI3JscOfM2PG7yKlbs/4FZowL/HaJs+DI?=
+IronPort-HdrOrdr: =?us-ascii?q?A9a23=3ACrA9n6BhfpRbnSvlHemQ55DYdb4zR+YMi2TD?=
+ =?us-ascii?q?tnoBLSC9F/b0qynAppomPGDP4gr5NEtApTniAtjkfZq/z+8X3WB5B97LMzUO01?=
+ =?us-ascii?q?HYTr2Kg7GD/xTQXwX69sN4kZxrarVCDrTLZmRSvILX5xaZHr8brOW6zA=3D=3D?=
+X-IronPort-AV: E=Sophos;i="5.88,303,1635177600"; 
+   d="scan'208";a="120649756"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 21 Jan 2022 09:26:58 +0800
+Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
+        by cn.fujitsu.com (Postfix) with ESMTP id 1F8CD4D15A5C;
+        Fri, 21 Jan 2022 09:26:54 +0800 (CST)
+Received: from G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.85) by
+ G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.23; Fri, 21 Jan 2022 09:26:54 +0800
+Received: from [192.168.22.28] (10.167.225.141) by
+ G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
+ id 15.0.1497.23 via Frontend Transport; Fri, 21 Jan 2022 09:26:51 +0800
+Message-ID: <76f5ed28-2df9-890e-0674-3ef2f18e2c2f@fujitsu.com>
+Date:   Fri, 21 Jan 2022 09:26:52 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Yenm1Ipx87JAlyXg@sol.localdomain>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=61e9f705
-        a=Eslsx4mF8WGvnV49LKizaA==:117 a=Eslsx4mF8WGvnV49LKizaA==:17
-        a=kj9zAlcOel0A:10 a=DghFqjY3_ZEA:10 a=7-415B0cAAAA:8
-        a=oC4KDInKSQZeXA427xcA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.4.1
+Subject: Re: [PATCH v9 02/10] dax: Introduce holder for dax_device
+To:     Christoph Hellwig <hch@infradead.org>,
+        Dan Williams <dan.j.williams@intel.com>
+CC:     "Darrick J. Wong" <djwong@kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Linux NVDIMM <nvdimm@lists.linux.dev>,
+        Linux MM <linux-mm@kvack.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        david <david@fromorbit.com>, Jane Chu <jane.chu@oracle.com>
+References: <20211226143439.3985960-1-ruansy.fnst@fujitsu.com>
+ <20211226143439.3985960-3-ruansy.fnst@fujitsu.com>
+ <20220105181230.GC398655@magnolia>
+ <CAPcyv4iTaneUgdBPnqcvLr4Y_nAxQp31ZdUNkSRPsQ=9CpMWHg@mail.gmail.com>
+ <20220105185626.GE398655@magnolia>
+ <CAPcyv4h3M9f1-C5e9kHTfPaRYR_zN4gzQWgR+ZyhNmG_SL-u+A@mail.gmail.com>
+ <20220105224727.GG398655@magnolia>
+ <CAPcyv4iZ88FPeZC1rt_bNdWHDZ5oh7ua31NuET2-oZ1UcMrH2Q@mail.gmail.com>
+ <20220105235407.GN656707@magnolia>
+ <CAPcyv4gUmpDnGkhd+WdhcJVMP07u+CT8NXRjzcOTp5KF-5Yo5g@mail.gmail.com>
+ <YekhXENAEYJJNy7e@infradead.org>
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+In-Reply-To: <YekhXENAEYJJNy7e@infradead.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-yoursite-MailScanner-ID: 1F8CD4D15A5C.A23A8
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jan 20, 2022 at 02:48:52PM -0800, Eric Biggers wrote:
-> On Fri, Jan 21, 2022 at 09:04:14AM +1100, Dave Chinner wrote:
-> > On Thu, Jan 20, 2022 at 01:00:27PM -0800, Darrick J. Wong wrote:
-> > > On Thu, Jan 20, 2022 at 12:39:14PM -0800, Eric Biggers wrote:
-> > > > On Thu, Jan 20, 2022 at 09:10:27AM -0800, Darrick J. Wong wrote:
-> > > > > On Thu, Jan 20, 2022 at 12:30:23AM -0800, Christoph Hellwig wrote:
-> > > > > > On Wed, Jan 19, 2022 at 11:12:10PM -0800, Eric Biggers wrote:
-> > > > > > > 
-> > > > > > > Given the above, as far as I know the only remaining objection to this
-> > > > > > > patchset would be that DIO constraints aren't sufficiently discoverable
-> > > > > > > by userspace.  Now, to put this in context, this is a longstanding issue
-> > > > > > > with all Linux filesystems, except XFS which has XFS_IOC_DIOINFO.  It's
-> > > > > > > not specific to this feature, and it doesn't actually seem to be too
-> > > > > > > important in practice; many other filesystem features place constraints
-> > > > > > > on DIO, and f2fs even *only* allows fully FS block size aligned DIO.
-> > > > > > > (And for better or worse, many systems using fscrypt already have
-> > > > > > > out-of-tree patches that enable DIO support, and people don't seem to
-> > > > > > > have trouble with the FS block size alignment requirement.)
-> > > > > > 
-> > > > > > It might make sense to use this as an opportunity to implement
-> > > > > > XFS_IOC_DIOINFO for ext4 and f2fs.
-> > > > > 
-> > > > > Hmm.  A potential problem with DIOINFO is that it doesn't explicitly
-> > > > > list the /file/ position alignment requirement:
-> > > > > 
-> > > > > struct dioattr {
-> > > > > 	__u32		d_mem;		/* data buffer memory alignment */
-> > > > > 	__u32		d_miniosz;	/* min xfer size		*/
-> > > > > 	__u32		d_maxiosz;	/* max xfer size		*/
-> > > > > };
-> > > > 
-> > > > Well, the comment above struct dioattr says:
-> > > > 
-> > > > 	/*
-> > > > 	 * Direct I/O attribute record used with XFS_IOC_DIOINFO
-> > > > 	 * d_miniosz is the min xfer size, xfer size multiple and file seek offset
-> > > > 	 * alignment.
-> > > > 	 */
-> > > > 
-> > > > So d_miniosz serves that purpose already.
-> > > > 
-> > > > > 
-> > > > > Since I /think/ fscrypt requires that directio writes be aligned to file
-> > > > > block size, right?
-> > > > 
-> > > > The file position must be a multiple of the filesystem block size, yes.
-> > > > Likewise for the "minimum xfer size" and "xfer size multiple", and the "data
-> > > > buffer memory alignment" for that matter.  So I think XFS_IOC_DIOINFO would be
-> > > > good enough for the fscrypt direct I/O case.
-> > > 
-> > > Oh, ok then.  In that case, just hoist XFS_IOC_DIOINFO to the VFS and
-> > > add a couple of implementations for ext4 and f2fs, and I think that'll
-> > > be enough to get the fscrypt patchset moving again.
-> > 
-> > On the contrary, I'd much prefer to see this information added to
-> > statx(). The file offset alignment info is a property of the current
-> > file (e.g. XFS can have different per-file requirements depending on
-> > whether the file data is hosted on the data or RT device, etc) and
-> > so it's not a fixed property of the filesystem.
-> > 
-> > statx() was designed to be extended with per-file property
-> > information, and we already have stuff like filesystem block size in
-> > that syscall. Hence I would much prefer that we extend it with the
-> > DIO properties we need to support rather than "create" a new VFS
-> > ioctl to extract this information. We already have statx(), so let's
-> > use it for what it was intended for.
-> > 
+
+
+在 2022/1/20 16:46, Christoph Hellwig 写道:
+> On Wed, Jan 05, 2022 at 04:12:04PM -0800, Dan Williams wrote:
+>> We ended up with explicit callbacks after hch balked at a notifier
+>> call-chain, but I think we're back to that now. The partition mistake
+>> might be unfixable, but at least bdev_dax_pgoff() is dead. Notifier
+>> call chains have their own locking so, Ruan, this still does not need
+>> to touch dax_read_lock().
 > 
-> I assumed that XFS_IOC_DIOINFO *was* per-file.  XFS's *implementation* of it
-> looks at the filesystem only,
+> I think we have a few options here:
+> 
+>   (1) don't allow error notifications on partitions.  And error return from
+>       the holder registration with proper error handling in the file
+>       system would give us that
+>   (2) extent the holder mechanism to cover a range
+>   (3) bite the bullet and create a new stacked dax_device for each
+>       partition
+> 
+> I think (1) is the best option for now.  If people really do need
+> partitions we'll have to go for (3)
 
-You've got that wrong.
+Yes, I agree.  I'm doing it the first way right now.
 
-        case XFS_IOC_DIOINFO: {
->>>>>>          struct xfs_buftarg      *target = xfs_inode_buftarg(ip);
-                struct dioattr          da;
+I think that since we can use namespace to divide a big NVDIMM into 
+multiple pmems, partition on a pmem seems not so meaningful.
 
-                da.d_mem =  da.d_miniosz = target->bt_logical_sectorsize;
 
-xfs_inode_buftarg() is determining which block device the inode is
-storing it's data on, so the returned dioattr values can be
-different for different inodes in the filesystem...
+--
+Thanks,
+Ruan.
 
-It's always been that way since the early Irix days - XFS RT devices
-could have very different IO constraints than the data device and
-DIO had to conform to the hardware limits underlying the filesystem.
-Hence the dioattr information has -always- been per-inode
-information.
 
-> (Per-file state is required for encrypted
-> files.  It's also required for other filesystem features; e.g., files that use
-> compression or fs-verity don't support direct I/O at all.)
-
-Which is exactly why is should be a property of statx(), rather than
-try to re-use a ~30 year old filesystem specific API from a
-different OS that was never intended to indicate things like "DIO
-not supported on this file at all"....
-
-We've been bitten many times by this "lift a rarely used filesystem
-specific ioctl to the VFS because it exists" method of API
-promotion. It almost always ends up in us discovering further down
-the track that there's something wrong with the API, it doesn't
-quite do what we need, we have to extend it anyway, or it's just
-plain borken, etc. And then we have to create a new, fit for purpose
-API anyway, and there's two VFS APIs we have to maintain forever
-instead of just one...
-
-Can we learn from past mistakes this time instead of repeating them
-yet again?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
