@@ -2,144 +2,55 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58309C433FE
-	for <linux-xfs@archiver.kernel.org>; Sun, 23 Jan 2022 13:19:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BD20C433EF
+	for <linux-xfs@archiver.kernel.org>; Sun, 23 Jan 2022 21:34:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236329AbiAWNTL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 23 Jan 2022 08:19:11 -0500
-Received: from out20-51.mail.aliyun.com ([115.124.20.51]:48605 "EHLO
-        out20-51.mail.aliyun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234572AbiAWNTL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Jan 2022 08:19:11 -0500
-X-Alimail-AntiSpam: AC=CONTINUE;BC=0.07494468|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.565865-0.00182176-0.432313;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047203;MF=guan@eryu.me;NM=1;PH=DS;RN=4;RT=4;SR=0;TI=SMTPD_---.Mh9qlv6_1642943948;
-Received: from localhost(mailfrom:guan@eryu.me fp:SMTPD_---.Mh9qlv6_1642943948)
-          by smtp.aliyun-inc.com(10.147.41.178);
-          Sun, 23 Jan 2022 21:19:08 +0800
-Date:   Sun, 23 Jan 2022 21:19:08 +0800
-From:   Eryu Guan <guan@eryu.me>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org
-Subject: Re: [PATCH v2] iogen: upgrade to fallocate
-Message-ID: <Ye1VzD76z0K/oWOt@desktop>
-References: <20220118182910.GC13514@magnolia>
+        id S240231AbiAWVeJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 23 Jan 2022 16:34:09 -0500
+Received: from host195-56-237-212.serverdedicati.aruba.it ([212.237.56.195]:62922
+        "EHLO plutone.assyoma.it" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S235024AbiAWVeJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Jan 2022 16:34:09 -0500
+X-Greylist: delayed 395 seconds by postgrey-1.27 at vger.kernel.org; Sun, 23 Jan 2022 16:34:09 EST
+Received: from webmail.assyoma.it (localhost [IPv6:::1])
+        by plutone.assyoma.it (Postfix) with ESMTPA id 031CBDDDCBCF
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Jan 2022 22:27:32 +0100 (CET)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220118182910.GC13514@magnolia>
+Date:   Sun, 23 Jan 2022 22:27:32 +0100
+From:   Gionatan Danti <g.danti@assyoma.it>
+To:     linux-xfs@vger.kernel.org
+Subject: CFQ or BFQ scheduler and XFS
+User-Agent: Roundcube Webmail/1.4.12
+Message-ID: <8bb2c601dfffd38c2809c7c6f6a369a5@assyoma.it>
+X-Sender: g.danti@assyoma.it
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jan 18, 2022 at 10:29:10AM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Update this utility to use fallocate to preallocate/reserve space to a
-> file so that we're not so dependent on legacy XFS ioctls.  Fix a minor
-> whitespace error while we're at it.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
-> v2: fix the fallocate flags for the resvsp replacement code
-> ---
->  ltp/iogen.c |   34 +++++++++++++++++++++++-----------
->  1 file changed, 23 insertions(+), 11 deletions(-)
-> 
-> diff --git a/ltp/iogen.c b/ltp/iogen.c
-> index 2b6644d5..c43cc1d0 100644
-> --- a/ltp/iogen.c
-> +++ b/ltp/iogen.c
-> @@ -922,13 +922,21 @@ bozo!
->  	    f.l_whence = SEEK_SET;
->  	    f.l_start = 0;
->  	    f.l_len = nbytes;
-> -	    
-> +
->  	    /*fprintf(stderr,
->  		    "create_file: xfsctl(%d, RESVSP, { %d, %lld, %lld })\n",
->  		   fd, f.l_whence, (long long)f.l_start, (long long)f.l_len);*/
->  
->  	    /* non-zeroing reservation */
-> -#ifdef XFS_IOC_RESVSP
-> +#if defined(FALLOCATE)
-> +	    if (fallocate(fd, FALLOC_FL_KEEP_SIZE, 0, nbytes) == -1) {
+Hi list,
+I have a question about CFQ scheduler and the old warning one can find 
+on the faq page: "As of kernel 3.2.12, the default i/o scheduler, CFQ, 
+will defeat much of the parallelization in XFS".
 
-gcc warns about
+Can I ask for more information about the bad interaction between CFQ and 
+XFS, and especially why it does defeat filesystem parallelization? Is 
+this warning still valid? What about the newer BFQ?
 
-iogen.c: In function 'create_file':                   
-iogen.c:820:20: warning: variable 'f' set but not used [-Wunused-but-set-variable]
-  820 |     struct flock64 f;                           
-      |                    ^
+Note: I always used deadline or noop with XFS, but I am facing a disk 
+with random read starvation when NCQ is enabled and a mixed sequential & 
+random load happens. So far I saw that the only scheduler (somewhat) 
+immune to the issue is CFQ, probably because it does not mix IO from 
+multiple processes (it issue IO from one process at time, if I 
+understand it correctly).
 
-So I replaced 'nbytes' with 'f.l_len' in above fallocate(2) call.
+Thanks.
 
-Thanks,
-Eryu
-
-> +		fprintf(stderr,
-> +			"iogen%s:  Could not fallocate %d bytes in file %s: %s (%d)\n",
-> +			TagName, nbytes, path, SYSERR, errno);
-> +		close(fd);
-> +		return -1;
-> +	    }
-> +#elif defined(XFS_IOC_RESVSP)
->  	    if( xfsctl( path, fd, XFS_IOC_RESVSP, &f ) == -1) {
->  		fprintf(stderr,
->  			"iogen%s:  Could not xfsctl(XFS_IOC_RESVSP) %d bytes in file %s: %s (%d)\n",
-> @@ -936,8 +944,7 @@ bozo!
->  		close(fd);
->  		return -1;
->  	    }
-> -#else
-> -#ifdef F_RESVSP
-> +#elif defined(F_RESVSP)
->  	    if( fcntl( fd, F_RESVSP, &f ) == -1) {
->  		fprintf(stderr,
->  			"iogen%s:  Could not fcntl(F_RESVSP) %d bytes in file %s: %s (%d)\n",
-> @@ -946,8 +953,7 @@ bozo!
->  		return -1;
->  	    }
->  #else
-> -bozo!
-> -#endif
-> +# error Dont know how to reserve space!
->  #endif
->  	}
->  
-> @@ -962,7 +968,15 @@ bozo!
->  		    (long long)f.l_len);*/
->  
->  	    /* zeroing reservation */
-> -#ifdef XFS_IOC_ALLOCSP
-> +#if defined(FALLOCATE)
-> +	    if (fallocate(fd, 0, sbuf.st_size, nbytes - sbuf.st_size) == -1) {
-> +		fprintf(stderr,
-> +			"iogen%s:  Could not fallocate %d bytes in file %s: %s (%d)\n",
-> +			TagName, nbytes, path, SYSERR, errno);
-> +		close(fd);
-> +		return -1;
-> +	    }
-> +#elif defined(XFS_IOC_ALLOCSP)
->  	    if( xfsctl( path, fd, XFS_IOC_ALLOCSP, &f ) == -1) {
->  		fprintf(stderr,
->  			"iogen%s:  Could not xfsctl(XFS_IOC_ALLOCSP) %d bytes in file %s: %s (%d)\n",
-> @@ -970,8 +984,7 @@ bozo!
->  		close(fd);
->  		return -1;
->  	    }
-> -#else
-> -#ifdef F_ALLOCSP
-> +#elif defined(F_ALLOCSP)
->  	    if ( fcntl(fd, F_ALLOCSP, &f) < 0) {
->  		fprintf(stderr,
->  			"iogen%s:  Could not fcntl(F_ALLOCSP) %d bytes in file %s: %s (%d)\n",
-> @@ -980,8 +993,7 @@ bozo!
->  		return -1;
->  	    }
->  #else
-> -bozo!
-> -#endif
-> +# error Dont know how to (pre)allocate space!
->  #endif
->  	}
->  #endif
+-- 
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
