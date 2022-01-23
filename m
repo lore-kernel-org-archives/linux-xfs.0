@@ -2,96 +2,144 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84CBFC433F5
-	for <linux-xfs@archiver.kernel.org>; Sat, 22 Jan 2022 16:56:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58309C433FE
+	for <linux-xfs@archiver.kernel.org>; Sun, 23 Jan 2022 13:19:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234557AbiAVQ4C (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 22 Jan 2022 11:56:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55390 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230136AbiAVQ4B (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 22 Jan 2022 11:56:01 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02524C06173B;
-        Sat, 22 Jan 2022 08:56:01 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id BD627B80917;
-        Sat, 22 Jan 2022 16:55:59 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5C1A1C004E1;
-        Sat, 22 Jan 2022 16:55:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642870558;
-        bh=etDQxPI3s/HzeW+iAu/0gOZXdv9GZeRBZzPSolI+6LU=;
-        h=Date:From:To:Cc:Subject:Reply-To:References:In-Reply-To:From;
-        b=UM6GVdJtcHEoAdda150uWQgUf4lKL82phaC0OO+rCmfQMBTYAN+swJH+h7VxQHMUi
-         3MkNm+5xAFhycIe2BuTtVgZd5L0fGBzaSNM3zBI6jaq1OrF9Zel13rrrBgeKwVQ2UO
-         DIWmBjQnTRIIMQ2CZ9eChsQxC/qHwpTMUbZenWHBS+PLO05MMVAw3IhbNBi865iaiA
-         ir7ql+eLPszi5gM1EsVYm0Nb0lItfLci7qNvV9s5CggCCn1APotSrUmN51BAFJ57an
-         /pLv3bvdvxkKWbkHL63OI1IKqX6t/oWeP/pwSq1ljcfsErFf9hagbcAVh4BMHONLsY
-         jKdJa6c8Dky9g==
-Received: by paulmck-ThinkPad-P17-Gen-1.home (Postfix, from userid 1000)
-        id 154A25C0F71; Sat, 22 Jan 2022 08:55:58 -0800 (PST)
-Date:   Sat, 22 Jan 2022 08:55:58 -0800
-From:   "Paul E. McKenney" <paulmck@kernel.org>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        Dave Chinner <david@fromorbit.com>,
-        Al Viro <viro@zeniv.linux.org.uk>, Ian Kent <raven@themaw.net>,
-        rcu@vger.kernel.org
-Subject: Re: [PATCH] xfs: require an rcu grace period before inode recycle
-Message-ID: <20220122165558.GA827430@paulmck-ThinkPad-P17-Gen-1>
-Reply-To: paulmck@kernel.org
-References: <20220121142454.1994916-1-bfoster@redhat.com>
- <20220121172603.GR13540@magnolia>
- <Yer8iqBIcwfLwh5s@bfoster>
- <20220122053019.GE947480@paulmck-ThinkPad-P17-Gen-1>
+        id S236329AbiAWNTL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 23 Jan 2022 08:19:11 -0500
+Received: from out20-51.mail.aliyun.com ([115.124.20.51]:48605 "EHLO
+        out20-51.mail.aliyun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234572AbiAWNTL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Jan 2022 08:19:11 -0500
+X-Alimail-AntiSpam: AC=CONTINUE;BC=0.07494468|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.565865-0.00182176-0.432313;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047203;MF=guan@eryu.me;NM=1;PH=DS;RN=4;RT=4;SR=0;TI=SMTPD_---.Mh9qlv6_1642943948;
+Received: from localhost(mailfrom:guan@eryu.me fp:SMTPD_---.Mh9qlv6_1642943948)
+          by smtp.aliyun-inc.com(10.147.41.178);
+          Sun, 23 Jan 2022 21:19:08 +0800
+Date:   Sun, 23 Jan 2022 21:19:08 +0800
+From:   Eryu Guan <guan@eryu.me>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org
+Subject: Re: [PATCH v2] iogen: upgrade to fallocate
+Message-ID: <Ye1VzD76z0K/oWOt@desktop>
+References: <20220118182910.GC13514@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220122053019.GE947480@paulmck-ThinkPad-P17-Gen-1>
+In-Reply-To: <20220118182910.GC13514@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jan 21, 2022 at 09:30:19PM -0800, Paul E. McKenney wrote:
-> On Fri, Jan 21, 2022 at 01:33:46PM -0500, Brian Foster wrote:
+On Tue, Jan 18, 2022 at 10:29:10AM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Update this utility to use fallocate to preallocate/reserve space to a
+> file so that we're not so dependent on legacy XFS ioctls.  Fix a minor
+> whitespace error while we're at it.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+> v2: fix the fallocate flags for the resvsp replacement code
+> ---
+>  ltp/iogen.c |   34 +++++++++++++++++++++++-----------
+>  1 file changed, 23 insertions(+), 11 deletions(-)
+> 
+> diff --git a/ltp/iogen.c b/ltp/iogen.c
+> index 2b6644d5..c43cc1d0 100644
+> --- a/ltp/iogen.c
+> +++ b/ltp/iogen.c
+> @@ -922,13 +922,21 @@ bozo!
+>  	    f.l_whence = SEEK_SET;
+>  	    f.l_start = 0;
+>  	    f.l_len = nbytes;
+> -	    
+> +
+>  	    /*fprintf(stderr,
+>  		    "create_file: xfsctl(%d, RESVSP, { %d, %lld, %lld })\n",
+>  		   fd, f.l_whence, (long long)f.l_start, (long long)f.l_len);*/
+>  
+>  	    /* non-zeroing reservation */
+> -#ifdef XFS_IOC_RESVSP
+> +#if defined(FALLOCATE)
+> +	    if (fallocate(fd, FALLOC_FL_KEEP_SIZE, 0, nbytes) == -1) {
 
-[ . . . ]
+gcc warns about
 
-> > My previous experiments on a teardown grace period had me thinking
-> > batching would occur, but I don't recall which RCU call I was using at
-> > the time so I'd probably have to throw a tracepoint in there to dump
-> > some of the grace period values and double check to be sure. (If this is
-> > not the case, that might be a good reason to tweak things as discussed
-> > above).
-> 
-> An RCU grace period typically takes some milliseconds to complete, so a
-> great many inodes would end up being tagged for the same grace period.
-> For example, if "rm -rf" could delete one file per microsecond, the
-> first few thousand files would be tagged with one grace period,
-> the next few thousand with the next grace period, and so on.
-> 
-> In the unlikely event that RCU was totally idle when the "rm -rf"
-> started, the very first file might get its own grace period, but
-> they would batch in the thousands thereafter.
-> 
-> On start_poll_synchronize_rcu() vs. get_state_synchronize_rcu(), if
-> there is always other RCU update activity, get_state_synchronize_rcu()
-> is just fine.  So if XFS does a call_rcu() or synchronize_rcu() every
-> so often, all you need here is get_state_synchronize_rcu()().
-> 
-> Another approach is to do a start_poll_synchronize_rcu() every 1,000
-> events, and use get_state_synchronize_rcu() otherwise.  And there are
-> a lot of possible variations on that theme.
-> 
-> But why not just try always doing start_poll_synchronize_rcu() and
-> only bother with get_state_synchronize_rcu() if that turns out to
-> be too slow?
+iogen.c: In function 'create_file':                   
+iogen.c:820:20: warning: variable 'f' set but not used [-Wunused-but-set-variable]
+  820 |     struct flock64 f;                           
+      |                    ^
 
-Plus there are a few optimizations I could apply that would speed up
-get_state_synchronize_rcu(), for example, reducing lock contention.
-But I would of course have to see a need before increasing complexity.
+So I replaced 'nbytes' with 'f.l_len' in above fallocate(2) call.
 
-							Thanx, Paul
+Thanks,
+Eryu
+
+> +		fprintf(stderr,
+> +			"iogen%s:  Could not fallocate %d bytes in file %s: %s (%d)\n",
+> +			TagName, nbytes, path, SYSERR, errno);
+> +		close(fd);
+> +		return -1;
+> +	    }
+> +#elif defined(XFS_IOC_RESVSP)
+>  	    if( xfsctl( path, fd, XFS_IOC_RESVSP, &f ) == -1) {
+>  		fprintf(stderr,
+>  			"iogen%s:  Could not xfsctl(XFS_IOC_RESVSP) %d bytes in file %s: %s (%d)\n",
+> @@ -936,8 +944,7 @@ bozo!
+>  		close(fd);
+>  		return -1;
+>  	    }
+> -#else
+> -#ifdef F_RESVSP
+> +#elif defined(F_RESVSP)
+>  	    if( fcntl( fd, F_RESVSP, &f ) == -1) {
+>  		fprintf(stderr,
+>  			"iogen%s:  Could not fcntl(F_RESVSP) %d bytes in file %s: %s (%d)\n",
+> @@ -946,8 +953,7 @@ bozo!
+>  		return -1;
+>  	    }
+>  #else
+> -bozo!
+> -#endif
+> +# error Dont know how to reserve space!
+>  #endif
+>  	}
+>  
+> @@ -962,7 +968,15 @@ bozo!
+>  		    (long long)f.l_len);*/
+>  
+>  	    /* zeroing reservation */
+> -#ifdef XFS_IOC_ALLOCSP
+> +#if defined(FALLOCATE)
+> +	    if (fallocate(fd, 0, sbuf.st_size, nbytes - sbuf.st_size) == -1) {
+> +		fprintf(stderr,
+> +			"iogen%s:  Could not fallocate %d bytes in file %s: %s (%d)\n",
+> +			TagName, nbytes, path, SYSERR, errno);
+> +		close(fd);
+> +		return -1;
+> +	    }
+> +#elif defined(XFS_IOC_ALLOCSP)
+>  	    if( xfsctl( path, fd, XFS_IOC_ALLOCSP, &f ) == -1) {
+>  		fprintf(stderr,
+>  			"iogen%s:  Could not xfsctl(XFS_IOC_ALLOCSP) %d bytes in file %s: %s (%d)\n",
+> @@ -970,8 +984,7 @@ bozo!
+>  		close(fd);
+>  		return -1;
+>  	    }
+> -#else
+> -#ifdef F_ALLOCSP
+> +#elif defined(F_ALLOCSP)
+>  	    if ( fcntl(fd, F_ALLOCSP, &f) < 0) {
+>  		fprintf(stderr,
+>  			"iogen%s:  Could not fcntl(F_ALLOCSP) %d bytes in file %s: %s (%d)\n",
+> @@ -980,8 +993,7 @@ bozo!
+>  		return -1;
+>  	    }
+>  #else
+> -bozo!
+> -#endif
+> +# error Dont know how to (pre)allocate space!
+>  #endif
+>  	}
+>  #endif
