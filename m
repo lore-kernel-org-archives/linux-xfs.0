@@ -2,80 +2,67 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67F35C433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Jan 2022 07:55:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 082A5C433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Jan 2022 09:01:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241940AbiAXHzm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Jan 2022 02:55:42 -0500
-Received: from host195-56-237-212.serverdedicati.aruba.it ([212.237.56.195]:57893
-        "EHLO plutone.assyoma.it" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S236059AbiAXHzl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jan 2022 02:55:41 -0500
-Received: from webmail.assyoma.it (localhost [IPv6:::1])
-        by plutone.assyoma.it (Postfix) with ESMTPA id 7D82FDDDDDF6;
-        Mon, 24 Jan 2022 08:55:38 +0100 (CET)
+        id S242567AbiAXJBm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Jan 2022 04:01:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45034 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236347AbiAXJBk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jan 2022 04:01:40 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B68BC06173B;
+        Mon, 24 Jan 2022 01:01:40 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=b1/8izjUm0n2+N8ysi9Q6kNMaHYdwfsdc+0uzdhqR28=; b=Gr3E0sYWvpmlukvGcIyCeWMCn5
+        Z/apR0XnbVs4OKm3O2+z2bVwYO2l4NzxFftyAoa/uRuPSxs1UtDosMVd5ASvn4oXVZaMg8dC+ZsrE
+        qBaoD08HVUAsm9u7S2kaHTqv1NUzl54YnQ9enXBC1Wv2GU33tXVNa2lrgMeyPsZwNGo0douzIRJfZ
+        nDupwsD1kUitnDyzhbXy+yBe15kU9ncPnfi6E/UdahQ6wNuJUIRX7i7LEPyA1HFx5V5x0qyRnxo8r
+        ls1Hpe+/LnnvR2/s4fnCbH6BibGaUDH2v27pkTPtbOBOKyQkqq3/S7jRZ4qumRy3mMY8Cdb1UWmWg
+        exxXrKnQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nBvEC-002iR9-UK; Mon, 24 Jan 2022 09:01:32 +0000
+Date:   Mon, 24 Jan 2022 01:01:32 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Jane Chu <jane.chu@oracle.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        "david@fromorbit.com" <david@fromorbit.com>,
+        "djwong@kernel.org" <djwong@kernel.org>,
+        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
+        "vishal.l.verma@intel.com" <vishal.l.verma@intel.com>,
+        "dave.jiang@intel.com" <dave.jiang@intel.com>,
+        "agk@redhat.com" <agk@redhat.com>,
+        "snitzer@redhat.com" <snitzer@redhat.com>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "ira.weiny@intel.com" <ira.weiny@intel.com>,
+        "willy@infradead.org" <willy@infradead.org>,
+        "vgoyal@redhat.com" <vgoyal@redhat.com>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "nvdimm@lists.linux.dev" <nvdimm@lists.linux.dev>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH v3 0/7] DAX poison recovery
+Message-ID: <Ye5q7MSypmwdV4iT@infradead.org>
+References: <20220111185930.2601421-1-jane.chu@oracle.com>
+ <Yekxd1/MboidZo4C@infradead.org>
+ <4e8c454f-ae48-d4a2-27c4-be6ee89fc9b3@oracle.com>
 MIME-Version: 1.0
-Date:   Mon, 24 Jan 2022 08:55:38 +0100
-From:   Gionatan Danti <g.danti@assyoma.it>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: CFQ or BFQ scheduler and XFS
-In-Reply-To: <20220123225201.GK59729@dread.disaster.area>
-References: <8bb2c601dfffd38c2809c7c6f6a369a5@assyoma.it>
- <20220123225201.GK59729@dread.disaster.area>
-User-Agent: Roundcube Webmail/1.4.12
-Message-ID: <cc75ce7be96964eb1b95783b3fb16158@assyoma.it>
-X-Sender: g.danti@assyoma.it
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4e8c454f-ae48-d4a2-27c4-be6ee89fc9b3@oracle.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Il 2022-01-23 23:52 Dave Chinner ha scritto:
-> CFQ doesn't understand that IO from different threads/tasks are
-> related and so it cannot account for/control multi-threaded IO
-> workloads.  Given that XFS's journal IO is inherently a
-> multi-threaded IO workload, CFQ IO accounting and throttling simply
-> does not work properly with XFS or any other filesystem that
-> decouples IO from the user task context that requires the IO to be
-> done on it's behalf.
-
-Hi Dave,
-ah, so it forces all threads under the same time slice? I thought it was 
-thread aware...
-Is it the same even for BFQ?
-
-> And, as per above, that's exactly why it doesn't work well with XFS...
+On Fri, Jan 21, 2022 at 01:33:40AM +0000, Jane Chu wrote:
+> > What tree is this against? I can't apply it to either 5.16 or Linus'
+> > current tree.
 > 
-> Read starvation during sequential writes sounds more like a problem
-> with the block layer writeback throttle or something you need to
-> use an IO controller (blk-cgroups) to address, not try to fix with a
-> IO scheduler...
+> It was based on your 'dax-block-cleanup' branch a while back.
 
-To tell the truth, I simply disabled NCQ on the affected drive. I don't 
-think anything is wrong with the block layer simply because I can 
-constantly replicate the random read starvation by running, at the same 
-time, the following fio commands against the raw block device:
-
-fio --name=test --filename=/dev/sda --direct=1 --rw=read --runtime=30    
-  #seq read
-fio --name=test --filename=/dev/sda --direct=1 --rw=randread 
---runtime=30 #rnd read
-
-The first fio sucks almost any resources, leaving the randread process 
-with ~2 IOPS with frequent drops to 0.
-Using CFQ seems to avoid total starvation, but I then remembered it has 
-some scalability and performance issues.
-Disabling NCQ solves the issue, at the cost of not using any hardware 
-queue (obviously).
-
-Thanks.
-
--- 
-Danti Gionatan
-Supporto Tecnico
-Assyoma S.r.l. - www.assyoma.it
-email: g.danti@assyoma.it - info@assyoma.it
-GPG public key ID: FF5F32A8
+Do you have a git tree with your patches included available somewhere?
