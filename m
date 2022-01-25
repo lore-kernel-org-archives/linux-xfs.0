@@ -2,70 +2,89 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3860C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Jan 2022 02:11:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5908C433FE
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Jan 2022 02:11:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351167AbiAYCKg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Jan 2022 21:10:36 -0500
-Received: from host195-56-237-212.serverdedicati.aruba.it ([212.237.56.195]:56910
-        "EHLO plutone.assyoma.it" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S3414081AbiAYAmp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jan 2022 19:42:45 -0500
-Received: from webmail.assyoma.it (localhost [IPv6:::1])
-        by plutone.assyoma.it (Postfix) with ESMTPA id AA40BDC97CC2;
-        Tue, 25 Jan 2022 01:42:42 +0100 (CET)
+        id S245661AbiAYCKy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Jan 2022 21:10:54 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57214 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S3415801AbiAYBv7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jan 2022 20:51:59 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22067C049663
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Jan 2022 16:31:28 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B5A4660E87
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Jan 2022 00:31:27 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10317C340E4;
+        Tue, 25 Jan 2022 00:31:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1643070687;
+        bh=mrukIniQSXcidsraiSa/8xlo+L05qCbgjbh+tGS+5T0=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=lIN4CTnPy/mNj5aOb23bALUGpzo6zpEUcOKMkg64XuXuKdFLoCWNR/WnOZrogkSdZ
+         6/bbRF11jlV2+MW0Y2yR8QasUfLG9KREDRJIVYgv01Zbu5rNd74yHFHiXorLuIq2H3
+         0iDXQp3LkCUO3hPtqY4NGLvnkq9UzivwkCgTYxEVM5FOpET7yH5YsXnL0GG/Iqf8oZ
+         CRr7ypNeZAGqsg3JQamNO3KUe/9fRdk8Amf3F4CnoKZ6/x1Reyw7asdBaIZaY/NgaT
+         44ZLaPrAHc77y7Kym8Q8BGqrdVzmdnobIb1iFTgaIpbzCmmlyM9zT9itVcqMdTpJp6
+         0rVGbfjrItx0w==
+Date:   Mon, 24 Jan 2022 16:31:26 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Chandan Babu R <chandan.babu@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com,
+        kernel test robot <lkp@intel.com>
+Subject: Re: [PATCH V5 10/16] xfs: Use xfs_rfsblock_t to count maximum blocks
+ that can be used by BMBT
+Message-ID: <20220125003126.GV13540@magnolia>
+References: <20220121051857.221105-1-chandan.babu@oracle.com>
+ <20220121051857.221105-11-chandan.babu@oracle.com>
 MIME-Version: 1.0
-Date:   Tue, 25 Jan 2022 01:42:42 +0100
-From:   Gionatan Danti <g.danti@assyoma.it>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: CFQ or BFQ scheduler and XFS
-In-Reply-To: <20220124211329.GM59729@dread.disaster.area>
-References: <8bb2c601dfffd38c2809c7c6f6a369a5@assyoma.it>
- <20220123225201.GK59729@dread.disaster.area>
- <cc75ce7be96964eb1b95783b3fb16158@assyoma.it>
- <20220124211329.GM59729@dread.disaster.area>
-User-Agent: Roundcube Webmail/1.4.13
-Message-ID: <f9b5cb7a4f874c63843bbbed37d02375@assyoma.it>
-X-Sender: g.danti@assyoma.it
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220121051857.221105-11-chandan.babu@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Il 2022-01-24 22:13 Dave Chinner ha scritto:
-> No, the opposite. e.g. thread A does IO and then runs fsync(), which
-> needs to force the log, that triggers CIL push work which runs in a
-> different thread B.  Thread A blocks waiting for the CIL push,
-> thread B runs immediately.  Thread B then issues log IO, but the IO
-> from thread B is queued by CFQ because thread A's timeslice hasn't
-> expired. Hence log force is delayed until thread A's timeslice
-> expires, even though it is being done on behalf of thread A and
-> thread A is blocked until the IO from Thread B is scheduled and
-> completed.
+On Fri, Jan 21, 2022 at 10:48:51AM +0530, Chandan Babu R wrote:
+> Reported-by: kernel test robot <lkp@intel.com>
+> Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
 
-Hi Dave,
-ok, I can see now why it is so bad (especially when multiple threads are 
-involved).
+Looks good,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
+--D
+
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> No idea - I use noop for everything these days because IO schedulers
-> often cause more problems than they solve on SSDs, sparse virtual
-> machine images, thinly provisioned storage, etc....
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 6cc7817ff425..1948af000c97 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -53,8 +53,8 @@ xfs_bmap_compute_maxlevels(
+>  	int		whichfork)	/* data or attr fork */
+>  {
+>  	xfs_extnum_t	maxleafents;	/* max leaf entries possible */
+> +	xfs_rfsblock_t	maxblocks;	/* max blocks at this level */
+>  	int		level;		/* btree level */
+> -	uint		maxblocks;	/* max blocks at this level */
+>  	int		maxrootrecs;	/* max records in root block */
+>  	int		minleafrecs;	/* min records in leaf block */
+>  	int		minnoderecs;	/* min records in node block */
+> @@ -88,7 +88,7 @@ xfs_bmap_compute_maxlevels(
+>  		if (maxblocks <= maxrootrecs)
+>  			maxblocks = 1;
+>  		else
+> -			maxblocks = (maxblocks + minnoderecs - 1) / minnoderecs;
+> +			maxblocks = howmany_64(maxblocks, minnoderecs);
+>  	}
+>  	mp->m_bm_maxlevels[whichfork] = level;
+>  	ASSERT(mp->m_bm_maxlevels[whichfork] <= xfs_bmbt_maxlevels_ondisk());
+> -- 
+> 2.30.2
 > 
-> Cheers,
-> 
-> Dave.
-
-Right...
-
-Thank you so much for the clear explanation.
-
--- 
-Danti Gionatan
-Supporto Tecnico
-Assyoma S.r.l. - www.assyoma.it
-email: g.danti@assyoma.it - info@assyoma.it
-GPG public key ID: FF5F32A8
