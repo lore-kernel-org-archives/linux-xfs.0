@@ -2,198 +2,177 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 278B8C433FE
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Jan 2022 02:10:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00B95C433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Jan 2022 02:10:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S3417651AbiAYCKa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Jan 2022 21:10:30 -0500
-Received: from ams.source.kernel.org ([145.40.68.75]:37058 "EHLO
+        id S1347470AbiAYCKU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Jan 2022 21:10:20 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:35036 "EHLO
         ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S3412107AbiAYAfr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jan 2022 19:35:47 -0500
+        with ESMTP id S1848545AbiAYAcL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jan 2022 19:32:11 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 6FB6BB810A8
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Jan 2022 00:35:45 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 23374C340E4;
-        Tue, 25 Jan 2022 00:35:44 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 7EA9BB81229
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Jan 2022 00:32:07 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C004C340E4;
+        Tue, 25 Jan 2022 00:32:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1643070944;
-        bh=79eRaG3OOqvJkPY/zMHOfgoHIUM/ZEpgZdkspxVOXKs=;
+        s=k20201202; t=1643070726;
+        bh=UO5qwXEdPMcRNp2Sxmpe+LbhbSQYyFplp/T+6zkJDrc=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=p60gHMQQpZnZHJiutZmN/oh/ZiAHzNpIrNOCeN7Jo/CfjUGBFU7xTwQ5T709Zvgck
-         y+dDdF7mMOHPAPrBtFHvMFqckC6FDe1Bbs5/J6pGTWyKHvEfE4iLAgkPlm2fGGeq2g
-         pmsGLRLEOk32lJ072ExxSbfbzxLLm/YLmuUusNRrFqKV43e4iQBciiW/DW5yav2K/u
-         Xi/8M2yhq4xxKl9kexuJIOiiW1cTZ/G2yr59PoA7X8OOLw6OH2xY8h/+RGzYUIMdF6
-         5LmaLVEVEp6+CfJqARhJtdr3+tSIinWrAW6ePQ5S70BQSdEkOEL6Hterr99yzSgDs7
-         etsCsnPVwRhJA==
-Date:   Mon, 24 Jan 2022 16:35:43 -0800
+        b=RDlmPTw2tG9drhy/sZMrORuBsjzZOG5UzB5a2E6B7vD6rFY3qhWu6ux8q2ZGGxpb7
+         TGi+sX7bwAOpevkN6urPPLrpNCcAU8XsWdFGDN/GbeuikDyfSXXGmWGr0UTFyoBwv7
+         2Gn3Wazvdxxp3YDi+qIzl3lzj10sf9LwE41OxfHxf2WpcPj3kzFtTYVUjs7h3HR+mf
+         NIImjXOhML6wGOm0FlWdd08+T6zGyGrU+AW9Kri6+uAGVg3KJCvPWTck4Z0Dj3atnM
+         IZODSyV2BPtf4l8rO9VKFODNM2ghnLrTnrmXhlmUVzAKL0g/jB0ywXnlYGixDXdftw
+         Tt/IuP0ziF0Jw==
+Date:   Mon, 24 Jan 2022 16:32:05 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Chandan Babu R <chandan.babu@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
-Subject: Re: [PATCH V5 19/20] xfsprogs: Add support for upgrading to NREXT64
- feature
-Message-ID: <20220125003543.GY13540@magnolia>
-References: <20220121052019.224605-1-chandan.babu@oracle.com>
- <20220121052019.224605-20-chandan.babu@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com,
+        kernel test robot <lkp@intel.com>
+Subject: Re: [PATCH V5 06/16] xfs: Promote xfs_extnum_t and xfs_aextnum_t to
+ 64 and 32-bits respectively
+Message-ID: <20220125003205.GW13540@magnolia>
+References: <20220121051857.221105-1-chandan.babu@oracle.com>
+ <20220121051857.221105-7-chandan.babu@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220121052019.224605-20-chandan.babu@oracle.com>
+In-Reply-To: <20220121051857.221105-7-chandan.babu@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> xfsprogs: Add support for upgrading to NREXT64 feature
-
-Please shorten the subject line of this patch as well:
-
-"xfs_repair: add suppport for upgrading to nrext64 feature"
-
-On Fri, Jan 21, 2022 at 10:50:18AM +0530, Chandan Babu R wrote:
-> This commit adds support to xfs_repair to allow upgrading an existing
-> filesystem to support per-inode large extent counters.
+On Fri, Jan 21, 2022 at 10:48:47AM +0530, Chandan Babu R wrote:
+> A future commit will introduce a 64-bit on-disk data extent counter and a
+> 32-bit on-disk attr extent counter. This commit promotes xfs_extnum_t and
+> xfs_aextnum_t to 64 and 32-bits in order to correctly handle in-core versions
+> of these quantities.
 > 
+> Reported-by: kernel test robot <lkp@intel.com>
 > Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
-> ---
->  man/man8/xfs_admin.8 |  7 +++++++
->  repair/globals.c     |  1 +
->  repair/globals.h     |  1 +
->  repair/phase2.c      | 24 ++++++++++++++++++++++++
->  repair/xfs_repair.c  | 11 +++++++++++
->  5 files changed, 44 insertions(+)
-> 
-> diff --git a/man/man8/xfs_admin.8 b/man/man8/xfs_admin.8
-> index ad28e0f6..d64ed45b 100644
-> --- a/man/man8/xfs_admin.8
-> +++ b/man/man8/xfs_admin.8
-> @@ -149,6 +149,13 @@ Upgrade a filesystem to support larger timestamps up to the year 2486.
->  The filesystem cannot be downgraded after this feature is enabled.
->  Once enabled, the filesystem will not be mountable by older kernels.
->  This feature was added to Linux 5.10.
-> +.TP 0.4i
-> +.B nrext64
-> +Upgrade a filesystem to support large per-inode extent counters. Maximum data
 
-Nit: sentence needs an article, e.g.
-
-"The maximum data fork extent count..."
-
-With that fixed,
+Looks good now,
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> +fork extent count will be 2^48 while the maximum attribute fork extent count
-> +will be 2^32. The filesystem cannot be downgraded after this feature is
-> +enabled. Once enabled, the filesystem will not be mountable by older kernels.
-> +This feature was added to Linux 5.18.
->  .RE
->  .TP
->  .BI \-U " uuid"
-> diff --git a/repair/globals.c b/repair/globals.c
-> index f8d4f1e4..c4084985 100644
-> --- a/repair/globals.c
-> +++ b/repair/globals.c
-> @@ -51,6 +51,7 @@ int	lazy_count;		/* What to set if to if converting */
->  bool	features_changed;	/* did we change superblock feature bits? */
->  bool	add_inobtcount;		/* add inode btree counts to AGI */
->  bool	add_bigtime;		/* add support for timestamps up to 2486 */
-> +bool	add_nrext64;
->  
->  /* misc status variables */
->  
-> diff --git a/repair/globals.h b/repair/globals.h
-> index 0f98bd2b..b65e4a2d 100644
-> --- a/repair/globals.h
-> +++ b/repair/globals.h
-> @@ -92,6 +92,7 @@ extern int	lazy_count;		/* What to set if to if converting */
->  extern bool	features_changed;	/* did we change superblock feature bits? */
->  extern bool	add_inobtcount;		/* add inode btree counts to AGI */
->  extern bool	add_bigtime;		/* add support for timestamps up to 2486 */
-> +extern bool	add_nrext64;
->  
->  /* misc status variables */
->  
-> diff --git a/repair/phase2.c b/repair/phase2.c
-> index 4c315055..979e281d 100644
-> --- a/repair/phase2.c
-> +++ b/repair/phase2.c
-> @@ -181,6 +181,28 @@ set_bigtime(
->  	return true;
->  }
->  
-> +static bool
-> +set_nrext64(
-> +	struct xfs_mount	*mp,
-> +	struct xfs_sb		*new_sb)
-> +{
-> +	if (!xfs_has_crc(mp)) {
-> +		printf(
-> +	_("Nrext64 only supported on V5 filesystems.\n"));
-> +		exit(0);
-> +	}
-> +
-> +	if (xfs_has_nrext64(mp)) {
-> +		printf(_("Filesystem already supports nrext64.\n"));
-> +		exit(0);
-> +	}
-> +
-> +	printf(_("Adding nrext64 to filesystem.\n"));
-> +	new_sb->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_NREXT64;
-> +	new_sb->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
-> +	return true;
-> +}
-> +
->  struct check_state {
->  	struct xfs_sb		sb;
->  	uint64_t		features;
-> @@ -380,6 +402,8 @@ upgrade_filesystem(
->  		dirty |= set_inobtcount(mp, &new_sb);
->  	if (add_bigtime)
->  		dirty |= set_bigtime(mp, &new_sb);
-> +	if (add_nrext64)
-> +		dirty |= set_nrext64(mp, &new_sb);
->  	if (!dirty)
->  		return;
->  
-> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-> index de8617ba..c4705cf2 100644
-> --- a/repair/xfs_repair.c
-> +++ b/repair/xfs_repair.c
-> @@ -67,6 +67,7 @@ enum c_opt_nums {
->  	CONVERT_LAZY_COUNT = 0,
->  	CONVERT_INOBTCOUNT,
->  	CONVERT_BIGTIME,
-> +	CONVERT_NREXT64,
->  	C_MAX_OPTS,
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c       | 6 +++---
+>  fs/xfs/libxfs/xfs_inode_fork.c | 2 +-
+>  fs/xfs/libxfs/xfs_inode_fork.h | 2 +-
+>  fs/xfs/libxfs/xfs_types.h      | 4 ++--
+>  fs/xfs/xfs_inode.c             | 4 ++--
+>  fs/xfs/xfs_trace.h             | 2 +-
+>  6 files changed, 10 insertions(+), 10 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 6a0da0a2b3fd..6cc7817ff425 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -52,9 +52,9 @@ xfs_bmap_compute_maxlevels(
+>  	xfs_mount_t	*mp,		/* file system mount structure */
+>  	int		whichfork)	/* data or attr fork */
+>  {
+> +	xfs_extnum_t	maxleafents;	/* max leaf entries possible */
+>  	int		level;		/* btree level */
+>  	uint		maxblocks;	/* max blocks at this level */
+> -	xfs_extnum_t	maxleafents;	/* max leaf entries possible */
+>  	int		maxrootrecs;	/* max records in root block */
+>  	int		minleafrecs;	/* min records in leaf block */
+>  	int		minnoderecs;	/* min records in node block */
+> @@ -83,7 +83,7 @@ xfs_bmap_compute_maxlevels(
+>  	maxrootrecs = xfs_bmdr_maxrecs(sz, 0);
+>  	minleafrecs = mp->m_bmap_dmnr[0];
+>  	minnoderecs = mp->m_bmap_dmnr[1];
+> -	maxblocks = (maxleafents + minleafrecs - 1) / minleafrecs;
+> +	maxblocks = howmany_64(maxleafents, minleafrecs);
+>  	for (level = 1; maxblocks > 1; level++) {
+>  		if (maxblocks <= maxrootrecs)
+>  			maxblocks = 1;
+> @@ -467,7 +467,7 @@ xfs_bmap_check_leaf_extents(
+>  	if (bp_release)
+>  		xfs_trans_brelse(NULL, bp);
+>  error_norelse:
+> -	xfs_warn(mp, "%s: BAD after btree leaves for %d extents",
+> +	xfs_warn(mp, "%s: BAD after btree leaves for %llu extents",
+>  		__func__, i);
+>  	xfs_err(mp, "%s: CORRUPTED BTREE OR SOMETHING", __func__);
+>  	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> index 829739e249b6..ce690abe5dce 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+> @@ -117,7 +117,7 @@ xfs_iformat_extents(
+>  	 * we just bail out rather than crash in kmem_alloc() or memcpy() below.
+>  	 */
+>  	if (unlikely(size < 0 || size > XFS_DFORK_SIZE(dip, mp, whichfork))) {
+> -		xfs_warn(ip->i_mount, "corrupt inode %Lu ((a)extents = %d).",
+> +		xfs_warn(ip->i_mount, "corrupt inode %llu ((a)extents = %llu).",
+>  			(unsigned long long) ip->i_ino, nex);
+>  		xfs_inode_verifier_error(ip, -EFSCORRUPTED,
+>  				"xfs_iformat_extents(1)", dip, sizeof(*dip),
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+> index 7ed2ecb51bca..4a8b77d425df 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.h
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.h
+> @@ -21,9 +21,9 @@ struct xfs_ifork {
+>  		void		*if_root;	/* extent tree root */
+>  		char		*if_data;	/* inline file data */
+>  	} if_u1;
+> +	xfs_extnum_t		if_nextents;	/* # of extents in this fork */
+>  	short			if_broot_bytes;	/* bytes allocated for root */
+>  	int8_t			if_format;	/* format of this fork */
+> -	xfs_extnum_t		if_nextents;	/* # of extents in this fork */
 >  };
 >  
-> @@ -74,6 +75,7 @@ static char *c_opts[] = {
->  	[CONVERT_LAZY_COUNT]	= "lazycount",
->  	[CONVERT_INOBTCOUNT]	= "inobtcount",
->  	[CONVERT_BIGTIME]	= "bigtime",
-> +	[CONVERT_NREXT64]	= "nrext64",
->  	[C_MAX_OPTS]		= NULL,
->  };
+>  /*
+> diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
+> index 794a54cbd0de..373f64a492a4 100644
+> --- a/fs/xfs/libxfs/xfs_types.h
+> +++ b/fs/xfs/libxfs/xfs_types.h
+> @@ -12,8 +12,8 @@ typedef uint32_t	xfs_agblock_t;	/* blockno in alloc. group */
+>  typedef uint32_t	xfs_agino_t;	/* inode # within allocation grp */
+>  typedef uint32_t	xfs_extlen_t;	/* extent length in blocks */
+>  typedef uint32_t	xfs_agnumber_t;	/* allocation group number */
+> -typedef int32_t		xfs_extnum_t;	/* # of extents in a file */
+> -typedef int16_t		xfs_aextnum_t;	/* # extents in an attribute fork */
+> +typedef uint64_t	xfs_extnum_t;	/* # of extents in a file */
+> +typedef uint32_t	xfs_aextnum_t;	/* # extents in an attribute fork */
+>  typedef int64_t		xfs_fsize_t;	/* bytes in a file */
+>  typedef uint64_t	xfs_ufsize_t;	/* unsigned bytes in a file */
 >  
-> @@ -324,6 +326,15 @@ process_args(int argc, char **argv)
->  		_("-c bigtime only supports upgrades\n"));
->  					add_bigtime = true;
->  					break;
-> +				case CONVERT_NREXT64:
-> +					if (!val)
-> +						do_abort(
-> +		_("-c nrext64 requires a parameter\n"));
-> +					if (strtol(val, NULL, 0) != 1)
-> +						do_abort(
-> +		_("-c nrext64 only supports upgrades\n"));
-> +					add_nrext64 = true;
-> +					break;
->  				default:
->  					unknown('c', val);
->  					break;
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 6771f357ad2c..6813c2337da7 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -3495,8 +3495,8 @@ xfs_iflush(
+>  	if (XFS_TEST_ERROR(ip->i_df.if_nextents + xfs_ifork_nextents(ip->i_afp) >
+>  				ip->i_nblocks, mp, XFS_ERRTAG_IFLUSH_5)) {
+>  		xfs_alert_tag(mp, XFS_PTAG_IFLUSH,
+> -			"%s: detected corrupt incore inode %Lu, "
+> -			"total extents = %d, nblocks = %Ld, ptr "PTR_FMT,
+> +			"%s: detected corrupt incore inode %llu, "
+> +			"total extents = %llu nblocks = %lld, ptr "PTR_FMT,
+>  			__func__, ip->i_ino,
+>  			ip->i_df.if_nextents + xfs_ifork_nextents(ip->i_afp),
+>  			ip->i_nblocks, ip);
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 3153db29de40..6b4a7f197308 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -2182,7 +2182,7 @@ DECLARE_EVENT_CLASS(xfs_swap_extent_class,
+>  		__entry->broot_size = ip->i_df.if_broot_bytes;
+>  		__entry->fork_off = XFS_IFORK_BOFF(ip);
+>  	),
+> -	TP_printk("dev %d:%d ino 0x%llx (%s), %s format, num_extents %d, "
+> +	TP_printk("dev %d:%d ino 0x%llx (%s), %s format, num_extents %llu, "
+>  		  "broot size %d, forkoff 0x%x",
+>  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+>  		  __entry->ino,
 > -- 
 > 2.30.2
 > 
