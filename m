@@ -2,43 +2,61 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3820C433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Jan 2022 14:44:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68DCFC433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Jan 2022 18:30:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1578962AbiAYOoN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 Jan 2022 09:44:13 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:46226 "EHLO
-        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1579893AbiAYOkp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jan 2022 09:40:45 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 93301615F4;
-        Tue, 25 Jan 2022 14:40:45 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04D02C340E0;
-        Tue, 25 Jan 2022 14:40:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1643121645;
-        bh=56FBDb7ypflZVLsO38MZpqlHMT6rQRfJ+LSM4LriV4c=;
-        h=Date:From:To:Cc:Subject:Reply-To:References:In-Reply-To:From;
-        b=T+yanODraZ7hEs/y5Y9ppC7xzelQYTmT3wlUzmAJrS4UxPm0HLImMs8wLhKrmPcv9
-         e/1PN7anePI3CeRFAnRyi2wtpSuH4qTD9FMvzzsZmirvguvaZt4mVlBKbsCn9BGM8O
-         N4H2QsLXQmOgCYUe60ZWFH73gUZlUvGL/1h3PXibE3EKi0sLwO+rerH/HeBz1mJebI
-         Dmrf0gm49mlMuZVi3qYolO7z8mow7gfv+pWYmrETrAfnOuxSNxpmebUk9ISEb8mTV0
-         iL6uFWwm/nmllcD5GeKD7Zgi/aVSuncPqkRvpwBhUi917gCc4M/WTuM+rYocVudZ/I
-         er1wRynTUuO0w==
-Received: by paulmck-ThinkPad-P17-Gen-1.home (Postfix, from userid 1000)
-        id BE8E05C043B; Tue, 25 Jan 2022 06:40:44 -0800 (PST)
-Date:   Tue, 25 Jan 2022 06:40:44 -0800
-From:   "Paul E. McKenney" <paulmck@kernel.org>
+        id S232228AbiAYSap (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 Jan 2022 13:30:45 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:28692 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232191AbiAYSan (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jan 2022 13:30:43 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1643135442;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=/e0a+5HrKHOBNvI1PZDCmx3Xe//5Y7Jt5G2as4trqKw=;
+        b=H84p083ZwiTDNN/X2xFyMtjDFH+iOCpswZvH0+R76uNfF9xFcPowAq7Q/2OJDyHtSVoaeY
+        lbVqAQ5qJFjvmBgvAbqTmILNnDTxp3nYMAHSnRwVcoLll3eVHL28lGYGSfyOp571NHUUho
+        v1xVdtMlKPQBAJXvudlQtvBE7/zcuUo=
+Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com
+ [209.85.222.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-520-1G1S7UO_N4acGoqn978o2g-1; Tue, 25 Jan 2022 13:30:40 -0500
+X-MC-Unique: 1G1S7UO_N4acGoqn978o2g-1
+Received: by mail-qk1-f199.google.com with SMTP id h10-20020a05620a284a00b0047649c94bc7so15386312qkp.20
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Jan 2022 10:30:40 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=/e0a+5HrKHOBNvI1PZDCmx3Xe//5Y7Jt5G2as4trqKw=;
+        b=lKdJu+YfmPPdL+iTtzdaR1ZcGAu/J+UZwiPE6Evdfp8jtJhm04SlSkram2/U0lCYUG
+         eSD3KZYmkS0THcWpk9g6qs0EVYJNxAsMmlKKv/DrBZSki8PmUDoV+zfRZYbhLmEYpzAZ
+         t7SYK/eVCoxi/aJP8JCNcct0ntn8eB+4/SLYK56IzpzjdDlYhwK+qrSFHcXvCos68RhF
+         k30VwBuHz0psaTlsoo3keqo+h36s9jHIHV+4e3sYw64Nhq2W6s7/sIj9HVBLL1fBZwhr
+         VWpReBjSgqM/QbayNQmDjL9+z40SmbokjXJ02jpfEAc8b5+EQCxOEA5GWV5FFuL/P+ae
+         sjMg==
+X-Gm-Message-State: AOAM532aFDlodrpslxTHmFL+oEhHTK+cNsb5DgkCQklfSKJSJXlBRV/h
+        glIbIs9NnnPyAMloJm1XhKcMMVA7ijXyzl3BUa+b3803i20/IJv1iSX89Xv3MgQ1i6DMx6g5u70
+        O0edDvsh2K9ljAyJA0bNP
+X-Received: by 2002:a05:6214:e6c:: with SMTP id jz12mr12886531qvb.42.1643135439572;
+        Tue, 25 Jan 2022 10:30:39 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJxT/O4hH8WE0OaOC1Z3oBqKR/Zb+xiWOotm4QWB1TzUQoCCF7mrOEYRP+9cljNB25NisH90cQ==
+X-Received: by 2002:a05:6214:e6c:: with SMTP id jz12mr12886497qvb.42.1643135439194;
+        Tue, 25 Jan 2022 10:30:39 -0800 (PST)
+Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
+        by smtp.gmail.com with ESMTPSA id bs33sm1164242qkb.103.2022.01.25.10.30.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 25 Jan 2022 10:30:38 -0800 (PST)
+Date:   Tue, 25 Jan 2022 13:30:36 -0500
+From:   Brian Foster <bfoster@redhat.com>
 To:     Dave Chinner <david@fromorbit.com>
-Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org,
-        Al Viro <viro@zeniv.linux.org.uk>, Ian Kent <raven@themaw.net>,
-        rcu@vger.kernel.org
+Cc:     linux-xfs@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>,
+        Ian Kent <raven@themaw.net>, rcu@vger.kernel.org
 Subject: Re: [PATCH] xfs: require an rcu grace period before inode recycle
-Message-ID: <20220125144044.GM4285@paulmck-ThinkPad-P17-Gen-1>
-Reply-To: paulmck@kernel.org
+Message-ID: <YfBBzHascwVnefYY@bfoster>
 References: <20220121142454.1994916-1-bfoster@redhat.com>
  <Ye6/g+XMSyp9vYvY@bfoster>
  <20220124220853.GN59729@dread.disaster.area>
@@ -96,6 +114,47 @@ On Tue, Jan 25, 2022 at 11:31:20AM +1100, Dave Chinner wrote:
 > overhead to create the file. But you can't play tricks like that to
 > replace rm:
 > 
+
+I had used 'exec' to open an fd (same idea) in the single file case and
+tested with that, saw that the increase was consistent and took that
+along with the increasing performance as batch sizes increased to mean
+that the application overhead wasn't a factor as the test scaled. That
+was clearly wrong, because if I port the whole thing to a C program the
+baseline numbers are way off. I think what also threw me off is that the
+single file test kernel case is actually fairly accurate between the two
+tests. Anyways, here's a series of (single run, no averaging, etc.) test
+runs with the updated test. Note that I reduced the runtime to 10s here
+since the test was running so much faster. Otherwise this is the same
+batched open/close -> unlink behavior:
+
+                baseline        test
+batch:  1       files:  893579  files:  41841
+batch:  2       files:  912502  files:  41922
+batch:  4       files:  930424  files:  42084
+batch:  8       files:  932072  files:  41536
+batch:  16      files:  930624  files:  41616
+batch:  32      files:  777088  files:  41120
+batch:  64      files:  567936  files:  57216
+batch:  128     files:  579840  files:  96256
+batch:  256     files:  548608  files:  174080
+batch:  512     files:  546816  files:  246784
+batch:  1024    files:  509952  files:  328704
+batch:  2048    files:  505856  files:  399360
+batch:  4096    files:  479232  files:  438272
+
+So this shows that the performance delta is actually massive from the
+start. For reference, a single threaded, empty file, non syncing,
+fs_mark workload stabilizes at around ~55k files/sec on this fs. Both
+kernels sort of converge to that rate as the batch size increases, only
+the baseline kernel starts much faster and normalizes while the test
+kernel starts much slower and improves (and still really doesn't hit the
+mark even at a 4k batch size).
+
+My takeaway from this is that we may need to find a way to mitigate this
+overhead somewhat better than what the current patch does. Otherwise,
+this is a significant dropoff from even a pure allocation workload in
+simple mixed workload scenarios...
+
 > $ time for ((i=0;i<1000;i++)); do touch /mnt/scratch/foo; rm /mnt/scratch/foo ; done
 > 
 > real    0m2.653s
@@ -177,10 +236,52 @@ On Tue, Jan 25, 2022 at 11:31:20AM +1100, Dave Chinner wrote:
 > CPU bound workload and hence any reduction in cache residency
 > results in a reduction of the number of concurrent jobs that can be
 > run.
+> 
 
-Curiosity and all that, but has this work produced any intuition on
-the sensitivity of the performance/scalability to the delays?  As in
-the effect of microseconds vs. tens of microsecond vs. hundreds of
-microseconds?
+Ok, so if I (single threaded) create (via fs_mark), sync and remove 5m
+empty files, the remove takes about a minute. If I just bump out the
+current queue and block thresholds by 10x and repeat, that time
+increases to about ~1m24s. If I hack up a kernel to disable queueing
+entirely (i.e. fully synchronous inactivation), then I'm back to about a
+minute again. So I'm not producing any performance benefit with
+queueing/batching in this single threaded scenario, but I suspect the
+10x threshold delta is at least measuring the negative effect of poor
+caching..? (Any decent way to confirm that..?).
 
-							Thanx, Paul
+And of course if I take the baseline kernel and stick a
+cond_synchronize_rcu() in xfs_inactive_ifree() it brings the batch test
+numbers right back but slows the removal test way down. What I find
+interesting however is that if I hack up something more mild like invoke
+cond_synchronize_rcu() on the oldest inode in the current inactivation
+batch, bump out the blocking threshold as above (but leave the queueing
+threshold at 32), and leave the iget side cond_sync_rcu() to catch
+whatever falls through, my 5m file remove test now completes ~5-10s
+faster than baseline and I see the following results from the batched
+alloc/free test:
+
+batch:  1       files:  731923
+batch:  2       files:  693020
+batch:  4       files:  750948
+batch:  8       files:  743296
+batch:  16      files:  738720
+batch:  32      files:  746240
+batch:  64      files:  598464
+batch:  128     files:  672896
+batch:  256     files:  633856
+batch:  512     files:  605184
+batch:  1024    files:  569344
+batch:  2048    files:  555008
+batch:  4096    files:  524288
+
+Hm?
+
+Brian
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+
