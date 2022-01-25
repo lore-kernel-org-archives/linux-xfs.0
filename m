@@ -2,173 +2,198 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34EBFC433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Jan 2022 02:10:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 278B8C433FE
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Jan 2022 02:10:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S3417627AbiAYCKP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Jan 2022 21:10:15 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:56982 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S3410981AbiAYAb2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jan 2022 19:31:28 -0500
-Received: from dread.disaster.area (pa49-179-45-11.pa.nsw.optusnet.com.au [49.179.45.11])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id D14C410C30E1;
-        Tue, 25 Jan 2022 11:31:22 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nC9k0-003qOb-Rk; Tue, 25 Jan 2022 11:31:20 +1100
-Date:   Tue, 25 Jan 2022 11:31:20 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>,
-        Ian Kent <raven@themaw.net>, rcu@vger.kernel.org
-Subject: Re: [PATCH] xfs: require an rcu grace period before inode recycle
-Message-ID: <20220125003120.GO59729@dread.disaster.area>
-References: <20220121142454.1994916-1-bfoster@redhat.com>
- <Ye6/g+XMSyp9vYvY@bfoster>
- <20220124220853.GN59729@dread.disaster.area>
- <Ye82TgBY0VmtTjMc@bfoster>
+        id S3417651AbiAYCKa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Jan 2022 21:10:30 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:37058 "EHLO
+        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S3412107AbiAYAfr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jan 2022 19:35:47 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 6FB6BB810A8
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Jan 2022 00:35:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 23374C340E4;
+        Tue, 25 Jan 2022 00:35:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1643070944;
+        bh=79eRaG3OOqvJkPY/zMHOfgoHIUM/ZEpgZdkspxVOXKs=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=p60gHMQQpZnZHJiutZmN/oh/ZiAHzNpIrNOCeN7Jo/CfjUGBFU7xTwQ5T709Zvgck
+         y+dDdF7mMOHPAPrBtFHvMFqckC6FDe1Bbs5/J6pGTWyKHvEfE4iLAgkPlm2fGGeq2g
+         pmsGLRLEOk32lJ072ExxSbfbzxLLm/YLmuUusNRrFqKV43e4iQBciiW/DW5yav2K/u
+         Xi/8M2yhq4xxKl9kexuJIOiiW1cTZ/G2yr59PoA7X8OOLw6OH2xY8h/+RGzYUIMdF6
+         5LmaLVEVEp6+CfJqARhJtdr3+tSIinWrAW6ePQ5S70BQSdEkOEL6Hterr99yzSgDs7
+         etsCsnPVwRhJA==
+Date:   Mon, 24 Jan 2022 16:35:43 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Chandan Babu R <chandan.babu@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
+Subject: Re: [PATCH V5 19/20] xfsprogs: Add support for upgrading to NREXT64
+ feature
+Message-ID: <20220125003543.GY13540@magnolia>
+References: <20220121052019.224605-1-chandan.babu@oracle.com>
+ <20220121052019.224605-20-chandan.babu@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Ye82TgBY0VmtTjMc@bfoster>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=61ef44db
-        a=Eslsx4mF8WGvnV49LKizaA==:117 a=Eslsx4mF8WGvnV49LKizaA==:17
-        a=kj9zAlcOel0A:10 a=DghFqjY3_ZEA:10 a=7-415B0cAAAA:8
-        a=Xbp24aNU5GC-INWE7skA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20220121052019.224605-20-chandan.babu@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 24, 2022 at 06:29:18PM -0500, Brian Foster wrote:
-> On Tue, Jan 25, 2022 at 09:08:53AM +1100, Dave Chinner wrote:
-> > > FYI, I modified my repeated alloc/free test to do some batching and form
-> > > it into something more able to measure the potential side effect / cost
-> > > of the grace period sync. The test is a single threaded, file alloc/free
-> > > loop using a variable per iteration batch size. The test runs for ~60s
-> > > and reports how many total files were allocated/freed in that period
-> > > with the specified batch size. Note that this particular test ran
-> > > without any background workload. Results are as follows:
-> > > 
-> > > 	files		baseline	test
-> > > 
-> > > 	1		38480		38437
-> > > 	4		126055		111080
-> > > 	8		218299		134469
-> > > 	16		306619		141968
-> > > 	32		397909		152267
-> > > 	64		418603		200875
-> > > 	128		469077		289365
-> > > 	256		684117		566016
-> > > 	512		931328		878933
-> > > 	1024		1126741		1118891
-> > 
-> > Can you post the test code, because 38,000 alloc/unlinks in 60s is
-> > extremely slow for a single tight open-unlink-close loop. I'd be
-> > expecting at least ~10,000 alloc/unlink iterations per second, not
-> > 650/second.
-> > 
+> xfsprogs: Add support for upgrading to NREXT64 feature
+
+Please shorten the subject line of this patch as well:
+
+"xfs_repair: add suppport for upgrading to nrext64 feature"
+
+On Fri, Jan 21, 2022 at 10:50:18AM +0530, Chandan Babu R wrote:
+> This commit adds support to xfs_repair to allow upgrading an existing
+> filesystem to support per-inode large extent counters.
 > 
-> Hm, Ok. My test was just a bash script doing a 'touch <files>; rm
-> <files>' loop. I know there was application overhead because if I
-> tweaked the script to open an fd directly rather than use touch, the
-> single file performance jumped up a bit, but it seemed to wash away as I
-> increased the file count so I kept running it with larger sizes. This
-> seems off so I'll port it over to C code and see how much the numbers
-> change.
-
-Yeah, using touch/rm becomes fork/exec bound very quickly. You'll
-find that using "echo > <file>" is much faster than "touch <file>"
-because it runs a shell built-in operation without fork/exec
-overhead to create the file. But you can't play tricks like that to
-replace rm:
-
-$ time for ((i=0;i<1000;i++)); do touch /mnt/scratch/foo; rm /mnt/scratch/foo ; done
-
-real    0m2.653s
-user    0m0.910s
-sys     0m2.051s
-$ time for ((i=0;i<1000;i++)); do echo > /mnt/scratch/foo; rm /mnt/scratch/foo ; done
-
-real    0m1.260s
-user    0m0.452s
-sys     0m0.913s
-$ time ./open-unlink 1000 /mnt/scratch/foo
-
-real    0m0.037s
-user    0m0.001s
-sys     0m0.030s
-$
-
-Note the difference in system time between the three operations -
-almost all the difference in system CPU time is the overhead of
-fork/exec to run the touch/rm binaries, not do the filesystem
-operations....
-
-> > > That's just a test of a quick hack, however. Since there is no real
-> > > urgency to inactivate an unlinked inode (it has no potential users until
-> > > it's freed),
-> > 
-> > On the contrary, there is extreme urgency to inactivate inodes
-> > quickly.
-> > 
+> Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
+> ---
+>  man/man8/xfs_admin.8 |  7 +++++++
+>  repair/globals.c     |  1 +
+>  repair/globals.h     |  1 +
+>  repair/phase2.c      | 24 ++++++++++++++++++++++++
+>  repair/xfs_repair.c  | 11 +++++++++++
+>  5 files changed, 44 insertions(+)
 > 
-> Ok, I think we're talking about slightly different things. What I mean
-> above is that if a task removes a file and goes off doing unrelated
-> $work, that inode will just sit on the percpu queue indefinitely. That's
-> fine, as there's no functional need for us to process it immediately
-> unless we're around -ENOSPC thresholds or some such that demand reclaim
-> of the inode.
+> diff --git a/man/man8/xfs_admin.8 b/man/man8/xfs_admin.8
+> index ad28e0f6..d64ed45b 100644
+> --- a/man/man8/xfs_admin.8
+> +++ b/man/man8/xfs_admin.8
+> @@ -149,6 +149,13 @@ Upgrade a filesystem to support larger timestamps up to the year 2486.
+>  The filesystem cannot be downgraded after this feature is enabled.
+>  Once enabled, the filesystem will not be mountable by older kernels.
+>  This feature was added to Linux 5.10.
+> +.TP 0.4i
+> +.B nrext64
+> +Upgrade a filesystem to support large per-inode extent counters. Maximum data
 
-Yup, an occasional unlink sitting around for a while on an unlinked
-list isn't going to cause a performance problem.  Indeed, such
-workloads are more likely to benefit from the reduced unlink()
-syscall overhead and won't even notice the increase in background
-CPU overhead for inactivation of those occasional inodes.
+Nit: sentence needs an article, e.g.
 
-> It sounds like what you're talking about is specifically
-> the behavior/performance of sustained file removal (which is important
-> obviously), where apparently there is a notable degradation if the
-> queues become deep enough to push the inode batches out of CPU cache. So
-> that makes sense...
+"The maximum data fork extent count..."
 
-Yup, sustained bulk throughput is where cache residency really
-matters. And for unlink, sustained unlink workloads are quite
-common; they often are something people wait for on the command line
-or make up a performance critical component of a highly concurrent
-workload so it's pretty important to get this part right.
+With that fixed,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-> > Darrick made the original assumption that we could delay
-> > inactivation indefinitely and so he allowed really deep queues of up
-> > to 64k deferred inactivations. But with queues this deep, we could
-> > never get that background inactivation code to perform anywhere near
-> > the original synchronous background inactivation code. e.g. I
-> > measured 60-70% performance degradataions on my scalability tests,
-> > and nothing stood out in the profiles until I started looking at
-> > CPU data cache misses.
-> > 
+--D
+
+> +fork extent count will be 2^48 while the maximum attribute fork extent count
+> +will be 2^32. The filesystem cannot be downgraded after this feature is
+> +enabled. Once enabled, the filesystem will not be mountable by older kernels.
+> +This feature was added to Linux 5.18.
+>  .RE
+>  .TP
+>  .BI \-U " uuid"
+> diff --git a/repair/globals.c b/repair/globals.c
+> index f8d4f1e4..c4084985 100644
+> --- a/repair/globals.c
+> +++ b/repair/globals.c
+> @@ -51,6 +51,7 @@ int	lazy_count;		/* What to set if to if converting */
+>  bool	features_changed;	/* did we change superblock feature bits? */
+>  bool	add_inobtcount;		/* add inode btree counts to AGI */
+>  bool	add_bigtime;		/* add support for timestamps up to 2486 */
+> +bool	add_nrext64;
+>  
+>  /* misc status variables */
+>  
+> diff --git a/repair/globals.h b/repair/globals.h
+> index 0f98bd2b..b65e4a2d 100644
+> --- a/repair/globals.h
+> +++ b/repair/globals.h
+> @@ -92,6 +92,7 @@ extern int	lazy_count;		/* What to set if to if converting */
+>  extern bool	features_changed;	/* did we change superblock feature bits? */
+>  extern bool	add_inobtcount;		/* add inode btree counts to AGI */
+>  extern bool	add_bigtime;		/* add support for timestamps up to 2486 */
+> +extern bool	add_nrext64;
+>  
+>  /* misc status variables */
+>  
+> diff --git a/repair/phase2.c b/repair/phase2.c
+> index 4c315055..979e281d 100644
+> --- a/repair/phase2.c
+> +++ b/repair/phase2.c
+> @@ -181,6 +181,28 @@ set_bigtime(
+>  	return true;
+>  }
+>  
+> +static bool
+> +set_nrext64(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_sb		*new_sb)
+> +{
+> +	if (!xfs_has_crc(mp)) {
+> +		printf(
+> +	_("Nrext64 only supported on V5 filesystems.\n"));
+> +		exit(0);
+> +	}
+> +
+> +	if (xfs_has_nrext64(mp)) {
+> +		printf(_("Filesystem already supports nrext64.\n"));
+> +		exit(0);
+> +	}
+> +
+> +	printf(_("Adding nrext64 to filesystem.\n"));
+> +	new_sb->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_NREXT64;
+> +	new_sb->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
+> +	return true;
+> +}
+> +
+>  struct check_state {
+>  	struct xfs_sb		sb;
+>  	uint64_t		features;
+> @@ -380,6 +402,8 @@ upgrade_filesystem(
+>  		dirty |= set_inobtcount(mp, &new_sb);
+>  	if (add_bigtime)
+>  		dirty |= set_bigtime(mp, &new_sb);
+> +	if (add_nrext64)
+> +		dirty |= set_nrext64(mp, &new_sb);
+>  	if (!dirty)
+>  		return;
+>  
+> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+> index de8617ba..c4705cf2 100644
+> --- a/repair/xfs_repair.c
+> +++ b/repair/xfs_repair.c
+> @@ -67,6 +67,7 @@ enum c_opt_nums {
+>  	CONVERT_LAZY_COUNT = 0,
+>  	CONVERT_INOBTCOUNT,
+>  	CONVERT_BIGTIME,
+> +	CONVERT_NREXT64,
+>  	C_MAX_OPTS,
+>  };
+>  
+> @@ -74,6 +75,7 @@ static char *c_opts[] = {
+>  	[CONVERT_LAZY_COUNT]	= "lazycount",
+>  	[CONVERT_INOBTCOUNT]	= "inobtcount",
+>  	[CONVERT_BIGTIME]	= "bigtime",
+> +	[CONVERT_NREXT64]	= "nrext64",
+>  	[C_MAX_OPTS]		= NULL,
+>  };
+>  
+> @@ -324,6 +326,15 @@ process_args(int argc, char **argv)
+>  		_("-c bigtime only supports upgrades\n"));
+>  					add_bigtime = true;
+>  					break;
+> +				case CONVERT_NREXT64:
+> +					if (!val)
+> +						do_abort(
+> +		_("-c nrext64 requires a parameter\n"));
+> +					if (strtol(val, NULL, 0) != 1)
+> +						do_abort(
+> +		_("-c nrext64 only supports upgrades\n"));
+> +					add_nrext64 = true;
+> +					break;
+>  				default:
+>  					unknown('c', val);
+>  					break;
+> -- 
+> 2.30.2
 > 
-> ... but could you elaborate on the scalability tests involved here so I
-> can get a better sense of it in practice and perhaps observe the impact
-> of changes in this path?
-
-The same conconrrent fsmark create/traverse/unlink workloads I've
-been running for the past decade+ demonstrates it pretty simply. I
-also saw regressions with dbench (both op latency and throughput) as
-the clinet count (concurrency) increased, and with compilebench.  I
-didn't look much further because all the common benchmarks I ran
-showed perf degradations with arbitrary delays that went away with
-the current code we have.  ISTR that parts of aim7/reaim scalability
-workloads that the intel zero-day infrastructure runs are quite
-sensitive to background inactivation delays as well because that's a
-CPU bound workload and hence any reduction in cache residency
-results in a reduction of the number of concurrent jobs that can be
-run.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
