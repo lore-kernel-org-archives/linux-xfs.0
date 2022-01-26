@@ -2,70 +2,80 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7ABBAC2BA4C
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Jan 2022 17:26:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB481C2BA4C
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Jan 2022 18:05:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243645AbiAZR06 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 26 Jan 2022 12:26:58 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:56746 "EHLO
-        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237164AbiAZR0z (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jan 2022 12:26:55 -0500
+        id S244069AbiAZSFL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 26 Jan 2022 13:05:11 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53538 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229491AbiAZSFK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jan 2022 13:05:10 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C7FFC06161C;
+        Wed, 26 Jan 2022 10:05:10 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 6666361B14;
-        Wed, 26 Jan 2022 17:26:55 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B1D5AC340E3;
-        Wed, 26 Jan 2022 17:26:54 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id EAB58B80EB0;
+        Wed, 26 Jan 2022 18:05:08 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A5813C340E3;
+        Wed, 26 Jan 2022 18:05:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1643218014;
-        bh=mMIWyUTHQDSsqUQPq5ufrDRlrhsXFeY9O8Hp9Xd8VUQ=;
-        h=Date:From:To:Subject:From;
-        b=rEmxCYe4PfhuE4XH8Mj5axVkQIOAYA08kA9lxzE2MiR1sUWIKNMleLEycG18Ug6Da
-         zMfZtcsKo6UhS+B9PLxF6pJFqCUaSMzTbYzeyE5sAz0/q84nCP+aPo3kgrC21uecy7
-         Aa4egpNzQNRAU3+Cs/Xh6jgvKjAywjm8UooCY/gmddSldpaFCPOgqrCeeKX9itktSt
-         gcCQ0KF8G8E4iXz866/mKIQGQAyWso6cXswByH/QWZDS5EQAV2JFGHGsbcxaUHjwnO
-         fiANWAWOnfA91POoV8pjVpMouH6wZBiDVledRywFvvOtO+vtStrbFs8e83WGnXDsyP
-         gmcGLEsOeeVHQ==
-Date:   Wed, 26 Jan 2022 09:26:54 -0800
+        s=k20201202; t=1643220307;
+        bh=0a2V7J6xaCLaV5Cod9PsPrvBBg8SjjTYVv4EL30ji0Q=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Wnj9CmvCHRfhEf8acSJ9ypKyoWP3qxKMeC3MHpll5wFxOHYfZw/DqvNJ5t8Qg8+tP
+         CCRDd86oNizYSKbDU74H+MeDgNgXzqCn5j8OvnDTrRa5VL0orf4ATAe/XNNqzDk42Z
+         sHtZRn+uZpKoW2pXGGgYhYSYtzA1xl+NOwkcPlPSBGpoR5c07tQXazKxFLx6btGxom
+         tBv60WG1oKQNNKUVtKwWkDShk2g4OEn5tKquy9arOrKOtJ5vt9D2XTdyMloI1Wbo+w
+         xisPFuqpHnPFaOvG3wmBaIj9g4h9dpBZUp7rwSfiBqyTxNAmh46Co0xRIs/OfCVly7
+         sZuNQi6wIUoLw==
+Date:   Wed, 26 Jan 2022 10:05:07 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Subject: [ANNOUNCE] xfs-linux: iomap-for-next updated to ebb7fb1557b1
-Message-ID: <20220126172654.GB13540@magnolia>
+To:     Christian Brauner <brauner@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        jack@suse.com
+Subject: Re: [PATCHSET 0/4] vfs: actually return fs errors from ->sync_fs
+Message-ID: <20220126180507.GB13499@magnolia>
+References: <164316348940.2600168.17153575889519271710.stgit@magnolia>
+ <20220126082153.mz5prdistkkvc6bc@wittgenstein>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20220126082153.mz5prdistkkvc6bc@wittgenstein>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+On Wed, Jan 26, 2022 at 09:21:53AM +0100, Christian Brauner wrote:
+> On Tue, Jan 25, 2022 at 06:18:09PM -0800, Darrick J. Wong wrote:
+> > Hi all,
+> > 
+> > While auditing the VFS code, I noticed that while ->sync_fs is allowed
+> > to return error codes to reflect some sort of internal filesystem error,
+> > none of the callers actually check the return value.  Back when this
+> > callout was introduced for sync_filesystem in 2.5 this didn't matter
+> 
+> (Also, it looks like that most(/none?) of the filesystems that
+> implemented ->sync_fs around 2.5/2.6 (ext3, jfs, jffs2, reiserfs etc.)
+> actually did return an error?
 
-The iomap-for-next branch of the xfs-linux repository at:
+Yes, some of them do -- ext4 will bubble up jbd2 errors and the results
+of flushing the bdev write cache.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+> In fact, 5.8 seems to be the first kernel to report other errors than
+> -EBADF since commit 735e4ae5ba28 ("vfs: track per-sb writeback errors
+> and report them to syncfs"?)
 
-has just been updated.
+Yeah.  I think the bdev pagecache flush might occasionally return errors
+if there happened to be dirty pages, but (a) that doesn't help XFS which
+has its own buffer cache and (b) that doesn't capture the state "fs has
+errored out but media is fine".
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
+As it is I think the ext4 syncfs needs to start returning EIO if someone
+forced a shutdown, and probably some auditing for dropped error codes
+due to the 'traditional' vfs behavior.  btrfs probably ought to return
+the result of filemap_flush too.
 
-The new head of the iomap-for-next branch is commit:
-
-ebb7fb1557b1 xfs, iomap: limit individual ioend chain lengths in writeback
-
-1 new commit:
-
-Dave Chinner (1):
-      [ebb7fb1557b1] xfs, iomap: limit individual ioend chain lengths in writeback
-
-Code Diffstat:
-
- fs/iomap/buffered-io.c | 52 ++++++++++++++++++++++++++++++++++++++++++++++----
- fs/xfs/xfs_aops.c      | 16 +++++++++++++++-
- include/linux/iomap.h  |  2 ++
- 3 files changed, 65 insertions(+), 5 deletions(-)
+--D
