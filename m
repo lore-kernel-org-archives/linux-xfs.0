@@ -2,83 +2,139 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 346AFC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Jan 2022 09:11:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95BA4C433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Jan 2022 12:41:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231878AbiA0JLJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Jan 2022 04:11:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58474 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231837AbiA0JLJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jan 2022 04:11:09 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E89AAC061714;
-        Thu, 27 Jan 2022 01:11:08 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 81CD161AA8;
-        Thu, 27 Jan 2022 09:11:08 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0B89C340E4;
-        Thu, 27 Jan 2022 09:11:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1643274667;
-        bh=hzv6BBLBmy3v1zyFdlGFfXIlH/vYw+ko+X4k+Zwpdb0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=lytURb+uK4yu32zgERAJBLoC3F/nHoC+NIY5i8kN7AqkSiJnN2kOj46tyuAtUbKME
-         vXh6ru25JsfHnDF6KcyBOIlLSXhkDDNBnJN593umDr6CKQB2kRXIW9vr4N8TRTJCz/
-         K8/8EfmrsIXvD8anW9n7vlvE7ib7Uo0nx4eIuHXIfuawHbLNSYj9Djzs31D3zoAhdD
-         jgohlWp6qhfHdtT7itwnB0zcW+lheU76aA0LEMxGX69muue8Z2nsm8+2JMVadpJttn
-         qlyF+9Yguo/o5crqm/zAqaQviOb/M9C9TNIpyBA2iJcej0SmE2bV9fsVCxpJ+hN+zj
-         O5iikH0o8Fjsw==
-Date:   Thu, 27 Jan 2022 10:11:03 +0100
-From:   Christian Brauner <brauner@kernel.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        jack@suse.com
-Subject: Re: [PATCHSET 0/4] vfs: actually return fs errors from ->sync_fs
-Message-ID: <20220127091103.yfmqj3u3fzxegrq3@wittgenstein>
-References: <164316348940.2600168.17153575889519271710.stgit@magnolia>
- <20220126082153.mz5prdistkkvc6bc@wittgenstein>
- <20220126180507.GB13499@magnolia>
+        id S241207AbiA0MlE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Jan 2022 07:41:04 -0500
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:49987 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S241186AbiA0MlE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jan 2022 07:41:04 -0500
+IronPort-Data: =?us-ascii?q?A9a23=3A7op5waJWE0AXQMIYFE+RupQlxSXFcZb7ZxGrkP8?=
+ =?us-ascii?q?bfHDo0jhz12QFnWoXWGHSa/aKYDSmeNp0YN6w8kpVuMLVn4NqS1BcGVNFFSwT8?=
+ =?us-ascii?q?ZWfbTi6wuYcBwvLd4ubChsPA/w2MrEsF+hpCC+MzvuRGuK59yMkjPvXHuOU5NP?=
+ =?us-ascii?q?sYUideyc1EU/Ntjozw4bVsqYw6TSIK1vlVeHa+qUzC3f5s9JACV/43orYwP9ZU?=
+ =?us-ascii?q?FsejxtD1rA2TagjUFYzDBD5BrpHTU26ByOQroW5goeHq+j/ILGRpgs1/j8mDJW?=
+ =?us-ascii?q?rj7T6blYXBLXVOGBiiFIPA+773EcE/Xd0j87XN9JFAatToy+UltZq2ZNDs4esY?=
+ =?us-ascii?q?Qk0PKzQg/lbWB5de817FfQcoO6eeiLi4KR/yGWDKRMA2c5GAEgoPIEw9PxwBGZ?=
+ =?us-ascii?q?U//0EbjsKa3irh+m26LO9RPNliskqII/sJox3kn1py3fbS+knRZTCSqDRzd5ew?=
+ =?us-ascii?q?Do0wMtJGJ72a8gGbjxgRBfNeRtCPhEQEp1WtOOpgGTvNjhdgFGLrKE0pW/Jw2R?=
+ =?us-ascii?q?Z1qbhMd/QUtiLXtlO2EKZoH/WuWj0HHkyNtWZxHyO8m+EgfXGlif2HokVEdWQ8?=
+ =?us-ascii?q?v9snU3WyHcfBQMbUXOlrvSjzE2zQdRSLwoT4CVGhawz8lG7C9rwRRu1pFaasRM?=
+ =?us-ascii?q?GHdldCes37EeK0KW8ywKYAHUUCy5Pc/Q4u8IsAz8nzFmEm5XuHzMHjVE/YRpx7?=
+ =?us-ascii?q?Z/N9XXrZ3dTdjREOEc5ocI+y4GLiOkOYtjnF76PyJKIs+A=3D?=
+IronPort-HdrOrdr: =?us-ascii?q?A9a23=3A2AjC+a2EZlq+c3kS2RMuSAqjBI4kLtp133Aq?=
+ =?us-ascii?q?2lEZdPU1SL39qynKppkmPHDP5gr5J0tLpTntAsi9qBDnhPtICOsqTNSftWDd0Q?=
+ =?us-ascii?q?PGEGgI1/qB/9SPIU3D398Y/aJhXow7M9foEGV95PyQ3CCIV/om3/mLmZrFudvj?=
+X-IronPort-AV: E=Sophos;i="5.88,320,1635177600"; 
+   d="scan'208";a="120913259"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 27 Jan 2022 20:41:01 +0800
+Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
+        by cn.fujitsu.com (Postfix) with ESMTP id ED70A4D169C7;
+        Thu, 27 Jan 2022 20:40:59 +0800 (CST)
+Received: from G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.85) by
+ G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.23; Thu, 27 Jan 2022 20:41:01 +0800
+Received: from irides.mr.mr (10.167.225.141) by
+ G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
+ id 15.0.1497.23 via Frontend Transport; Thu, 27 Jan 2022 20:40:57 +0800
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <nvdimm@lists.linux.dev>, <linux-mm@kvack.org>,
+        <linux-fsdevel@vger.kernel.org>
+CC:     <djwong@kernel.org>, <dan.j.williams@intel.com>,
+        <david@fromorbit.com>, <hch@infradead.org>, <jane.chu@oracle.com>
+Subject: [PATCH v10 0/9] fsdax: introduce fs query to support reflink
+Date:   Thu, 27 Jan 2022 20:40:49 +0800
+Message-ID: <20220127124058.1172422-1-ruansy.fnst@fujitsu.com>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20220126180507.GB13499@magnolia>
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-yoursite-MailScanner-ID: ED70A4D169C7.A1DE6
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 26, 2022 at 10:05:07AM -0800, Darrick J. Wong wrote:
-> On Wed, Jan 26, 2022 at 09:21:53AM +0100, Christian Brauner wrote:
-> > On Tue, Jan 25, 2022 at 06:18:09PM -0800, Darrick J. Wong wrote:
-> > > Hi all,
-> > > 
-> > > While auditing the VFS code, I noticed that while ->sync_fs is allowed
-> > > to return error codes to reflect some sort of internal filesystem error,
-> > > none of the callers actually check the return value.  Back when this
-> > > callout was introduced for sync_filesystem in 2.5 this didn't matter
-> > 
-> > (Also, it looks like that most(/none?) of the filesystems that
-> > implemented ->sync_fs around 2.5/2.6 (ext3, jfs, jffs2, reiserfs etc.)
-> > actually did return an error?
-> 
-> Yes, some of them do -- ext4 will bubble up jbd2 errors and the results
-> of flushing the bdev write cache.
-> 
-> > In fact, 5.8 seems to be the first kernel to report other errors than
-> > -EBADF since commit 735e4ae5ba28 ("vfs: track per-sb writeback errors
-> > and report them to syncfs"?)
-> 
-> Yeah.  I think the bdev pagecache flush might occasionally return errors
-> if there happened to be dirty pages, but (a) that doesn't help XFS which
-> has its own buffer cache and (b) that doesn't capture the state "fs has
-> errored out but media is fine".
-> 
-> As it is I think the ext4 syncfs needs to start returning EIO if someone
-> forced a shutdown, and probably some auditing for dropped error codes
-> due to the 'traditional' vfs behavior.  btrfs probably ought to return
-> the result of filemap_flush too.
+This patchset is aimed to support shared pages tracking for fsdax.
 
-Makes sense. Fwiw,
-Acked-by: Christian Brauner <brauner@kernel.org>
+Changes since V9:
+  - Remove dax write/read lock patch
+  - Remove dax_lock_entry() in dax_lock_mapping_entry() and rename it to
+      dax_load_page()
+  - Wrap dax code in memory-failure.c with #if IS_ENABLED(CONFIG_FS_DAX)
+  - Wrap xfs_dax_failure_fn() with #if IS_ENABLED(CONFIG_MEMORY_FAILURE)
+  - Move PAGE_MAPPING_DAX_COW into page-flags.h
+
+This patchset moves owner tracking from dax_assocaite_entry() to pmem
+device driver, by introducing an interface ->memory_failure() for struct
+pagemap.  This interface is called by memory_failure() in mm, and
+implemented by pmem device.
+
+Then call holder operations to find the filesystem which the corrupted
+data located in, and call filesystem handler to track files or metadata
+associated with this page.
+
+Finally we are able to try to fix the corrupted data in filesystem and
+do other necessary processing, such as killing processes who are using
+the files affected.
+
+The call trace is like this:
+memory_failure()
+|* fsdax case
+|------------
+|pgmap->ops->memory_failure()      => pmem_pgmap_memory_failure()
+| dax_holder_notify_failure()      =>
+|  dax_device->holder_ops->notify_failure() =>
+|                                     - xfs_dax_notify_failure()
+|  |* xfs_dax_notify_failure()
+|  |--------------------------
+|  |   xfs_rmap_query_range()
+|  |    xfs_dax_failure_fn()
+|  |    * corrupted on metadata
+|  |       try to recover data, call xfs_force_shutdown()
+|  |    * corrupted on file data
+|  |       try to recover data, call mf_dax_kill_procs()
+|* normal case
+|-------------
+|mf_generic_kill_procs()
+
+==
+Shiyang Ruan (9):
+  dax: Introduce holder for dax_device
+  mm: factor helpers for memory_failure_dev_pagemap
+  pagemap,pmem: Introduce ->memory_failure()
+  fsdax: fix function description
+  fsdax: Introduce dax_load_page()
+  mm: move pgoff_address() to vma_pgoff_address()
+  mm: Introduce mf_dax_kill_procs() for fsdax case
+  xfs: Implement ->notify_failure() for XFS
+  fsdax: set a CoW flag when associate reflink mappings
+
+ drivers/dax/super.c         |  62 ++++++++++
+ drivers/nvdimm/pmem.c       |  16 +++
+ fs/dax.c                    | 123 +++++++++++++++----
+ fs/xfs/Makefile             |   1 +
+ fs/xfs/xfs_buf.c            |  12 ++
+ fs/xfs/xfs_fsops.c          |   3 +
+ fs/xfs/xfs_mount.h          |   1 +
+ fs/xfs/xfs_notify_failure.c | 222 ++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_notify_failure.h |  10 ++
+ include/linux/dax.h         |  37 ++++++
+ include/linux/memremap.h    |  12 ++
+ include/linux/mm.h          |  17 +++
+ include/linux/page-flags.h  |   6 +
+ mm/memory-failure.c         | 234 +++++++++++++++++++++++++-----------
+ 14 files changed, 666 insertions(+), 90 deletions(-)
+ create mode 100644 fs/xfs/xfs_notify_failure.c
+ create mode 100644 fs/xfs/xfs_notify_failure.h
+
+-- 
+2.34.1
+
+
+
