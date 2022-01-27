@@ -2,129 +2,211 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C8BFC433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Jan 2022 05:26:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59EB2C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Jan 2022 05:38:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236140AbiA0F0O (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Jan 2022 00:26:14 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:54576 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232519AbiA0F0O (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jan 2022 00:26:14 -0500
-Received: from dread.disaster.area (pa49-179-45-11.pa.nsw.optusnet.com.au [49.179.45.11])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 23FF610C3A3C;
-        Thu, 27 Jan 2022 16:26:10 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nCxIP-004iFi-2x; Thu, 27 Jan 2022 16:26:09 +1100
-Date:   Thu, 27 Jan 2022 16:26:09 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Al Viro <viro@zeniv.linux.org.uk>
-Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org,
-        Ian Kent <raven@themaw.net>, rcu@vger.kernel.org
-Subject: Re: [PATCH] xfs: require an rcu grace period before inode recycle
-Message-ID: <20220127052609.GR59729@dread.disaster.area>
-References: <20220121142454.1994916-1-bfoster@redhat.com>
- <Ye6/g+XMSyp9vYvY@bfoster>
- <20220124220853.GN59729@dread.disaster.area>
- <Ye82TgBY0VmtTjMc@bfoster>
- <20220125003120.GO59729@dread.disaster.area>
- <YfBBzHascwVnefYY@bfoster>
- <20220125224551.GQ59729@dread.disaster.area>
- <YfIdVq6R6xEWxy0K@zeniv-ca.linux.org.uk>
+        id S229963AbiA0Fil (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Jan 2022 00:38:41 -0500
+Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:11288 "EHLO
+        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229801AbiA0Fil (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jan 2022 00:38:41 -0500
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 20R1LAgg012687;
+        Thu, 27 Jan 2022 05:38:38 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=references : from :
+ to : cc : subject : in-reply-to : message-id : date : content-type :
+ mime-version; s=corp-2021-07-09;
+ bh=/mDVx6WYa7RPaWPRTBLHSKHVs9/kVFTnirOjPuFmDa4=;
+ b=0Io/yEB/IwEbERr4uADfD0DcXAGy7eZwqJ+QY8RL45q4FjIFfBcr3qXLHGGHauK1E0fG
+ YyqFCGn2xvrpG7g3Y+gWGlSciaxmsRQDcXnZ8tLlO3hIR68UbVLopFoFywxDUqQtPAlc
+ qIO3CVvWNJsXpIEkIDRjxM05cE3bwwbTrHVQ10c73cFzTCPkIF2nF4fyz/UmetvkHT8G
+ pOJDqg88SOGTKgbX2jPbJLqNhnXk8uOi+DO5DemV7uQU7ifD2CvY9c+xeUBdKxvSXx2l
+ V1GvJ5E0Rfkeky93SetAMA3ju8dETa5leXb/R3/an1V4Mnpsy1vxKFozpW/BsEFEktNX Ag== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3dsvmjgq7h-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 27 Jan 2022 05:38:37 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 20R5aq52034138;
+        Thu, 27 Jan 2022 05:38:36 GMT
+Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2105.outbound.protection.outlook.com [104.47.58.105])
+        by aserp3020.oracle.com with ESMTP id 3dtax9qbfw-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 27 Jan 2022 05:38:36 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=caxzG+T1PjmaXiDFFOH8Ibpp882Vs9WukZF7FXbm64+zzrf+78iYqxyrd6LG6rRdh+2I/W+LaR1jd8Aj3oGoG3ESL7Gxl9kLjlbaiyB4moPXsnboeSQgiKHS3W114SQF/GaiQHe7e5N0KrJHm/Ki6Kx4E5yUJdiaNejkB8wpM5tOCvZZPLyvxo+gnDoPQEXuSXLHY6rpxL1f3oc+ibxU5ejM6OVWkWOr3TuKkeiZqQQdlIIWrbMr0ZymNG6JqUaW2E9S1bTD7g2lhYhGjoOgcH3y08jQd1gfDnCio6oWEHTLZaLHmos92D0hQa8Ozj/fXEr2FWgDUwomcfrjOuOERQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=/mDVx6WYa7RPaWPRTBLHSKHVs9/kVFTnirOjPuFmDa4=;
+ b=EU6qw5zr2XXOi1suO1FitoSsrmQuHhiFqlN2zVhYE78NLWZyeHVguuUvzfQtIHe+0IZe2k5WdWwRkOLWz90dE6/I0qdUeqrAYPvQOihPfXZawVAgObDDHog5NZLFskqzQkSY1FNQMs6zmqXjiSK4l0HO5QnXfp8zOfpDCczRxNgh8EmgHP2Mye9VGtb/eXnvtKstr3JoVk2vu+EQ2f9Nvz+h4qQiC9BTzArw+TlXf1nhd43E3wclF+j+MZsP9B8UsNoDaApE0fjjTMw56IswcYF1Emc0mcrJmbAQc4Xrd70B7P5feQD9mQW6LoZm0FYQi6/iMexKPKpmBB35rSUsGg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=/mDVx6WYa7RPaWPRTBLHSKHVs9/kVFTnirOjPuFmDa4=;
+ b=cvRV55cUCU96c0dhOjiRWEOt7EmWrcorXv02n2l8Reuvck0v3T+0yYCiKaSoN0LOIlec3OQ5xErxTP2MdD0svoo9ZQZxlAJL27CeQCbGaGtFHImBeoBaLE+qIi2vIRQVeoYv6ISODTzuUMxNUFpcEexImZ3Z/jDLuNUK1jIfQoM=
+Received: from SA2PR10MB4587.namprd10.prod.outlook.com (2603:10b6:806:114::12)
+ by SN6PR10MB2654.namprd10.prod.outlook.com (2603:10b6:805:40::17) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4909.12; Thu, 27 Jan
+ 2022 05:38:35 +0000
+Received: from SA2PR10MB4587.namprd10.prod.outlook.com
+ ([fe80::3d38:fa18:9768:6237]) by SA2PR10MB4587.namprd10.prod.outlook.com
+ ([fe80::3d38:fa18:9768:6237%4]) with mapi id 15.20.4930.017; Thu, 27 Jan 2022
+ 05:38:35 +0000
+References: <20220124052708.580016-1-allison.henderson@oracle.com>
+ <20220124052708.580016-2-allison.henderson@oracle.com>
+User-agent: mu4e 1.4.15; emacs 27.1
+From:   Chandan Babu R <chandan.babu@oracle.com>
+To:     Allison Henderson <allison.henderson@oracle.com>, djwong@kernel.org
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v26 01/12] xfs: Fix double unlock in defer capture code
+In-reply-to: <20220124052708.580016-2-allison.henderson@oracle.com>
+Message-ID: <877dalwxf0.fsf@debian-BULLSEYE-live-builder-AMD64>
+Date:   Thu, 27 Jan 2022 11:08:27 +0530
+Content-Type: text/plain
+X-ClientProxiedBy: TY2PR06CA0036.apcprd06.prod.outlook.com
+ (2603:1096:404:2e::24) To SA2PR10MB4587.namprd10.prod.outlook.com
+ (2603:10b6:806:114::12)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YfIdVq6R6xEWxy0K@zeniv-ca.linux.org.uk>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=61f22cf4
-        a=Eslsx4mF8WGvnV49LKizaA==:117 a=Eslsx4mF8WGvnV49LKizaA==:17
-        a=kj9zAlcOel0A:10 a=DghFqjY3_ZEA:10 a=7-415B0cAAAA:8
-        a=nZltufVJPc1T6_cCs24A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 0870691c-6f0b-4c46-8fe4-08d9e15742af
+X-MS-TrafficTypeDiagnostic: SN6PR10MB2654:EE_
+X-Microsoft-Antispam-PRVS: <SN6PR10MB2654195CF4842E3DA49505ADF6219@SN6PR10MB2654.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:514;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: +1w/1Vwz9pRL6JHNhQJsE+4aNXkdqwwsuepMCpaD7gKr878DEwB6I5TKqSBIIpONAKmx6ffmZqj7ua4Gmc0ynd2oS1fs9xeW8I3IKaJ1fq2vbmQngguw4IuxqMLvEYmZiqQp/udkPBFPQIFrwwE9L+LpVoXTvIvcjR+lKmfd/zH6M0MKcewVH4oM57t1h4k07OpBv6yK6+WJ7he+XwshfasZC711LDhIO8wpg8sTHLoahR67JyGcrVL+3Icc9RHd8FscH6NtORJ7WqyDcwgxvEQ739fzmjW/rRPKbN5DjeH/45zNf75SMmyjub56sBCnHlwvEheziUn0A6QevPeoZxVKlf0Y32le7g2DRPmQoaDIRlw6L3qH26qmstquDnoa/mw1FpRTlyQgPY4g0zaYSIqocGqR9dgGVdaZ3HXnMkdRSTrOxhDStG9BDY2Wu13zJL1PRV382WQCmFv8WOdN+ls7mguJwmjgPhQBg4YKLHEziUX1TAHkL+kLoMwTqxRQh4Tt5Kv8aKelOcscUKzmBhWtqbz+iWsBxgof7OeQSb9f+BOlW37+BBtsZN/aKKoVRI5GvMqpaKfJVizftjzIxrGmIa0yZTlzTBvdQExJhbObz8t/LkRn5cKH9z3V7iXEoKJT0oPsKgkdAlIBJll127H9YyNbNj+13d7Juy+NeUOqzesAgQCxmcg69G/cgYVfk8Q9eLBYgwV/0noWvRnYiw==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(7916004)(366004)(186003)(26005)(86362001)(38350700002)(38100700002)(33716001)(6486002)(316002)(6512007)(9686003)(66946007)(5660300002)(66556008)(66476007)(6506007)(508600001)(53546011)(8936002)(4326008)(2906002)(6666004)(52116002)(8676002)(83380400001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?ntGmRB+ghwOgFgSYqiBLeggHced+dtrm4AopM64qkxrgdc/Ltes3kZC54Izi?=
+ =?us-ascii?Q?EOQp42r3SjVdndtq/leqJIwA4+88Q43ha/8aBbflf/2qFuqCpGoPt5tJlhxl?=
+ =?us-ascii?Q?MKSB4KppNk/F/QCt26gHJYO9/tPlP459ZSpooHOw1NK/6b2nKF9XlJ+CDq1Q?=
+ =?us-ascii?Q?vUI1H5S+nXyN3SYj2RRmj3TWIC4PFTLvWEYftuxzvxvvP9eq0e/3VIVMn0sp?=
+ =?us-ascii?Q?5/Kw0Hpavduso9W4xab6WTRDni8quavKZoHXs+D1MokKLLgayPDKFMoBMPf4?=
+ =?us-ascii?Q?RRfE474hS0PaUl1j3AUCv6UWkRP/U7rP356djkK5+3rVl1Id3n2qJnEHWv+5?=
+ =?us-ascii?Q?vj2A0ZMb2+iu0zMq/9JPKSQ5vrq3aW7ovQigmLX1oDcg9RMokpBfPhX8r8t/?=
+ =?us-ascii?Q?46Nz7/VHHwkTo8+HJZEO92hzxYjkwrF6J1Lpx2q/dFGSshxY6LRGG1Pp1N6S?=
+ =?us-ascii?Q?Sda/6TJHol1QSYysZSy2m9L+6vJfhEjgQwVCc8tIZ6is2+CWOmd5HYK1OFTX?=
+ =?us-ascii?Q?lRZtGEH3kDJiqnUXEZDWcuqw0+ZxPBH0yi4tozNnfUd9tSKPS+YcpOhp/I8q?=
+ =?us-ascii?Q?u/4M0ZFY1w3baQpl5tnrQ6k31ATsVXYKNBf4G4tKk78KtSeFVqXoJ5leLfTK?=
+ =?us-ascii?Q?93qNDSleAgeaiuwAcBXaiozU7S+rhXFl8pnrSJ+q8b++/hXIzDxKKeIGUj32?=
+ =?us-ascii?Q?tRf1/XepwosLkb5qKxPKR4oNAUQK1ubglEaxdKwjt9vBVVqKlxY/GDL6Z2UJ?=
+ =?us-ascii?Q?hINE9FZU0uSiO1DUPGnnVmapzAsDm9MmZZJkOSnJUp3GAwxyM+ZWyos8Tqia?=
+ =?us-ascii?Q?rEtgNQfdUL/A+ThXCePAI8IWjndlQAtV7UOJmjI3bEJxr88nCv6VFp8vqCII?=
+ =?us-ascii?Q?dJw+RNb36XEnOaImnanCKVDqmPvzeN7WFGtXVEiDOQshR370TANoYac5hwmi?=
+ =?us-ascii?Q?KyvdpnlaKVybyLFyXxKqSl1FXsK1XAamJLPX6MShtMnm7BowDCa9KRkjC4mM?=
+ =?us-ascii?Q?Sf6MFb13pHfXliulhdYiF7wHJMFSZg7ELXitc9r/FSrNg521BHbn7FkVBZYP?=
+ =?us-ascii?Q?mA8BdfFtzcL+23IBJ4DCVnjTcow+tkF/0DDDqyv4yipRIkNIh2IS1cH1bCeb?=
+ =?us-ascii?Q?5vhH5HidbD2+Aeyr8qV1ctFLFOAhIDv/CMKDG6AYFaMzk03+GYNwsUDsUP2d?=
+ =?us-ascii?Q?TS28NguTF0lx4Op+5hz+8dylHK0MoUReWEdlFJRF1jHCNlkBvceSpoJmKQBJ?=
+ =?us-ascii?Q?+hUcN6+iBLav4y/JJ5PavCyGOVLIrkWUaRQgJUMr3K8/Qwnw/Wx+3xBiNxeq?=
+ =?us-ascii?Q?C32DJnx+P/0BU/H4+1Ho3oe77hSDVRnLZWclRHtg1hMyCisgS0qCB+FmXJ/g?=
+ =?us-ascii?Q?XIlx297Y9zmSLHqyKi9wApha0tHvyscEAYi+fK8kS8aNHBwoLClMlypbXg5D?=
+ =?us-ascii?Q?jGvV2G8l8lViyfbv2oiJ+suJIKKk5S13Skr5KMRTDc9ddLDoStI/XDGhuGqd?=
+ =?us-ascii?Q?lYEHlfxbs+ri0YGmU4fspEXzVaKsA1vOgP3LdRpuCXxFB1hVQXKUJd2lxqKq?=
+ =?us-ascii?Q?btSnpgZGfCHL6Cj1DIg6LXW1G8PgIhAhL+vu4ZSlM7/UO/eLwTOl44/Lh7FH?=
+ =?us-ascii?Q?/mj0pKHruEg5J9CyVzg4keg=3D?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0870691c-6f0b-4c46-8fe4-08d9e15742af
+X-MS-Exchange-CrossTenant-AuthSource: SA2PR10MB4587.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Jan 2022 05:38:35.0435
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: SemW8qYt7sflnS1hSRbk1bGLUxLp4Dl7yADUgU0Lffn0u09e6vcIeztY9tQt6Vyp+o7oDjUgZBfJwABV6LApMQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR10MB2654
+X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10239 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 bulkscore=0 mlxscore=0
+ phishscore=0 suspectscore=0 spamscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2201110000
+ definitions=main-2201270031
+X-Proofpoint-GUID: uCSRu2VogNEeR99GBh1Sl10EjZaXB2xL
+X-Proofpoint-ORIG-GUID: uCSRu2VogNEeR99GBh1Sl10EjZaXB2xL
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jan 27, 2022 at 04:19:34AM +0000, Al Viro wrote:
-> On Wed, Jan 26, 2022 at 09:45:51AM +1100, Dave Chinner wrote:
-> 
-> > Right, background inactivation does not improve performance - it's
-> > necessary to get the transactions out of the evict() path. All we
-> > wanted was to ensure that there were no performance degradations as
-> > a result of background inactivation, not that it was faster.
-> > 
-> > If you want to confirm that there is an increase in cold cache
-> > access when the batch size is increased, cpu profiles with 'perf
-> > top'/'perf record/report' and CPU cache performance metric reporting
-> > via 'perf stat -dddd' are your friend. See elsewhere in the thread
-> > where I mention those things to Paul.
-> 
-> Dave, do you see a plausible way to eventually drop Ian's bandaid?
-> I'm not asking for that to happen this cycle and for backports Ian's
-> patch is obviously fine.
+On 24 Jan 2022 at 10:56, Allison Henderson wrote:
+> The new deferred attr patch set uncovered a double unlock in the
+> recent port of the defer ops capture and continue code.  During log
+> recovery, we're allowed to hold buffers to a transaction that's being
+> used to replay an intent item.  When we capture the resources as part
+> of scheduling a continuation of an intent chain, we call xfs_buf_hold
+> to retain our reference to the buffer beyond the transaction commit,
+> but we do /not/ call xfs_trans_bhold to maintain the buffer lock.
 
-Yes, but not in the near term.
+As part of recovering an intent item, xfs_defer_ops_capture_and_commit()
+invokes xfs_defer_save_resources(). Here we save/capture those xfs_bufs which
+have XFS_BLI_HOLD flag set. AFAICT, these xfs_bufs are already locked. When
+the transaction is committed to the CIL, iop_committing()
+(i.e. xfs_buf_item_committing()) routine is invoked. Here we refrain from
+unlocking an xfs_buf if XFS_BLI_HOLD flag is set. Hence the xfs_buf continues
+to be in locked state.
 
-> What I really want to avoid is the situation when we are stuck with
-> keeping that bandaid in fs/namei.c, since all ways to avoid seeing
-> reused inodes would hurt XFS too badly.  And the benchmarks in this
-> thread do look like that.
+Later, When processing the captured list (via xlog_finish_defer_ops()),
+wouldn't locking the same xfs_buf by xfs_defer_ops_continue() cause a
+deadlock?
 
-The simplest way I think is to have the XFS inode allocation track
-"busy inodes" in the same way we track "busy extents". A busy extent
-is an extent that has been freed by the user, but is not yet marked
-free in the journal/on disk. If we try to reallocate that busy
-extent, we either select a different free extent to allocate, or if
-we can't find any we force the journal to disk, wait for it to
-complete (hence unbusying the extents) and retry the allocation
-again.
+> This means that xfs_defer_ops_continue needs to relock the buffers
+> before xfs_defer_restore_resources joins then tothe new transaction.
+>
+> Additionally, the buffers should not be passed back via the dres
+> structure since they need to remain locked unlike the inodes.  So
+> simply set dr_bufs to zero after populating the dres structure.
+>
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_defer.c | 11 ++++++++++-
+>  1 file changed, 10 insertions(+), 1 deletion(-)
+>
+> diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+> index 0805ade2d300..6dac8d6b8c21 100644
+> --- a/fs/xfs/libxfs/xfs_defer.c
+> +++ b/fs/xfs/libxfs/xfs_defer.c
+> @@ -22,6 +22,7 @@
+>  #include "xfs_refcount.h"
+>  #include "xfs_bmap.h"
+>  #include "xfs_alloc.h"
+> +#include "xfs_buf.h"
+>  
+>  static struct kmem_cache	*xfs_defer_pending_cache;
+>  
+> @@ -774,17 +775,25 @@ xfs_defer_ops_continue(
+>  	struct xfs_trans		*tp,
+>  	struct xfs_defer_resources	*dres)
+>  {
+> +	unsigned int			i;
+> +
+>  	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
+>  	ASSERT(!(tp->t_flags & XFS_TRANS_DIRTY));
+>  
+> -	/* Lock and join the captured inode to the new transaction. */
+> +	/* Lock the captured resources to the new transaction. */
+>  	if (dfc->dfc_held.dr_inos == 2)
+>  		xfs_lock_two_inodes(dfc->dfc_held.dr_ip[0], XFS_ILOCK_EXCL,
+>  				    dfc->dfc_held.dr_ip[1], XFS_ILOCK_EXCL);
+>  	else if (dfc->dfc_held.dr_inos == 1)
+>  		xfs_ilock(dfc->dfc_held.dr_ip[0], XFS_ILOCK_EXCL);
+> +
+> +	for (i = 0; i < dfc->dfc_held.dr_bufs; i++)
+> +		xfs_buf_lock(dfc->dfc_held.dr_bp[i]);
+> +
+> +	/* Join the captured resources to the new transaction. */
+>  	xfs_defer_restore_resources(tp, &dfc->dfc_held);
+>  	memcpy(dres, &dfc->dfc_held, sizeof(struct xfs_defer_resources));
+> +	dres->dr_bufs = 0;
+>  
+>  	/* Move captured dfops chain and state to the transaction. */
+>  	list_splice_init(&dfc->dfc_dfops, &tp->t_dfops);
 
-We can do something similar for inode allocation - it's actually a
-lockless tag lookup on the radix tree entry for the candidate inode
-number. If we find the reclaimable radix tree tag set, the we select
-a different inode. If we can't allocate a new inode, then we kick
-synchronize_rcu() and retry the allocation, allowing inodes to be
-recycled this time.
 
-> Are there any realistic prospects of having xfs_iget() deal with
-> reuse case by allocating new in-core inode and flipping whatever
-> references you've got in XFS journalling data structures to the
-> new copy?  If I understood what you said on IRC correctly, that is...
-
-That's ... much harder.
-
-One of the problems is that once an inode has a log item attached to
-it, it assumes that it can be accessed without specific locking,
-etc. see xfs_inode_clean(), for example. So there's some life-cycle
-stuff that needs to be taken care of in XFS first, and the inode <->
-log item relationship is tangled.
-
-I've been working towards removing that tangle - but taht stuff is
-quite a distance down my logging rework patch queue. THat queue has
-been stuck now for a year trying to get the first handful of rework
-and scalability modifications reviewed and merged, so I'm not
-holding my breathe as to how long a more substantial rework of
-internal logging code will take to review and merge.
-
-Really, though, we need the inactivation stuff to be done as part of
-the VFS inode lifecycle. I have some ideas on what to do here, but I
-suspect we'll need some changes to iput_final()/evict() to allow us
-to process final unlinks in the bakground and then call evict()
-ourselves when the unlink completes. That way ->destroy_inode() can
-just call xfs_reclaim_inode() to free it directly, which also helps
-us get rid of background inode freeing and hence inode recycling
-from XFS altogether. I think we _might_ be able to do this without
-needing to change any of the logging code in XFS, but I haven't
-looked any further than this into it as yet.
-
-> Again, I'm not asking if it can be done this cycle; having a
-> realistic path to doing that eventually would be fine by me.
-
-We're talking a year at least, probably two, before we get there...
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+chandan
