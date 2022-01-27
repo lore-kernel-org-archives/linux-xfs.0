@@ -2,52 +2,52 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BC3FC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Jan 2022 16:14:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D87FC433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Jan 2022 16:45:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243586AbiA0QOM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Jan 2022 11:14:12 -0500
-Received: from mga06.intel.com ([134.134.136.31]:5381 "EHLO mga06.intel.com"
+        id S244074AbiA0QpI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Jan 2022 11:45:08 -0500
+Received: from mga11.intel.com ([192.55.52.93]:21456 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S243566AbiA0QOL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 27 Jan 2022 11:14:11 -0500
+        id S244072AbiA0QpI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 27 Jan 2022 11:45:08 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1643300051; x=1674836051;
+  t=1643301908; x=1674837908;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=3bb9JoZDY5PZwbc2+qweKuL9rGbUODs3lF1L0htuqdY=;
-  b=RMCcOzadZHRxFsWu/M12Efnw3Hm7xsCFU0AI9Tke1FIvpYJHmqOfUmq6
-   uIqgzaIENRBU1sX7bzbJrDVtRt5JwEa01iXNPKsd4fS2VHrIqeM0/EAJY
-   /W1C29KnAOfYXoehVLmh1H4l2SqJSeJVpPtpv0rhKKuMMpobxa6uqUrrL
-   fJa7Xex9wVVsEwF6ILpDjMfw635Cg20SGe17jUFaRLXvr3OjAGMgIVisd
-   M0lT9OqkMrg/JlCNOdC9+uwoLwIIybuvrFu6eVWOizG/1RHefebx6YDI1
-   +4liKlrzYIXJ4nEBCNp7fhW8KljqKNEekobQ0G2cf8HTNuROZGRT+M9CJ
-   Q==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10239"; a="307609977"
+  bh=0XYCULJz8eCwunpqt4WW86gJKS6aVCwiIa+rTXc0vrY=;
+  b=YUpUQhuP2P2ONDNu4UHFwQJz3C8gKeIwbv2Vx8nQgLz/ReIXjxEID2Ky
+   0Jph+dEdAQQqGcvt0XFhWQTyWBHWg157Ti94RXIry4Z/nT61+boVAypni
+   xGsMDgaVjCz8NDhlbPnfs2y8wx8lq3S6RQEDLZhFvp4F+RlApPiRMpPod
+   petoW8eQmz5jGdW3KTw9nYhYGDm36P2kr6y1rFhqJ+dtccCT+lmaaiZze
+   etRAVh8xAjcKU2Pe3tIemI1n1SV+LgGhMM+0aQOjRuIlFLfDnjGqnlN7q
+   Lc6u9VRbUHWD+gzttJNs2IqYsujht23Skitdpch+9ccRd7KRtqe9XtWtk
+   A==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10239"; a="244510328"
 X-IronPort-AV: E=Sophos;i="5.88,321,1635231600"; 
-   d="scan'208";a="307609977"
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jan 2022 08:14:11 -0800
+   d="scan'208";a="244510328"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jan 2022 08:45:07 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.88,321,1635231600"; 
-   d="scan'208";a="674765149"
+   d="scan'208";a="477935447"
 Received: from lkp-server01.sh.intel.com (HELO 276f1b88eecb) ([10.239.97.150])
-  by fmsmga001.fm.intel.com with ESMTP; 27 Jan 2022 08:14:07 -0800
+  by orsmga003.jf.intel.com with ESMTP; 27 Jan 2022 08:45:04 -0800
 Received: from kbuild by 276f1b88eecb with local (Exim 4.92)
         (envelope-from <lkp@intel.com>)
-        id 1nD7PN-000Mm0-Ua; Thu, 27 Jan 2022 16:14:01 +0000
-Date:   Fri, 28 Jan 2022 00:13:31 +0800
+        id 1nD7tP-000MoH-LD; Thu, 27 Jan 2022 16:45:03 +0000
+Date:   Fri, 28 Jan 2022 00:44:02 +0800
 From:   kernel test robot <lkp@intel.com>
 To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>,
         linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
         nvdimm@lists.linux.dev, linux-mm@kvack.org,
         linux-fsdevel@vger.kernel.org
-Cc:     llvm@lists.linux.dev, kbuild-all@lists.01.org, djwong@kernel.org,
+Cc:     kbuild-all@lists.01.org, djwong@kernel.org,
         dan.j.williams@intel.com, david@fromorbit.com, hch@infradead.org,
         jane.chu@oracle.com
 Subject: Re: [PATCH v10 1/9] dax: Introduce holder for dax_device
-Message-ID: <202201280053.mWAlT70p-lkp@intel.com>
+Message-ID: <202201280035.A565CZYV-lkp@intel.com>
 References: <20220127124058.1172422-2-ruansy.fnst@fujitsu.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -64,38 +64,35 @@ Thank you for the patch! Perhaps something to improve:
 
 [auto build test WARNING on linux/master]
 [also build test WARNING on linus/master v5.17-rc1 next-20220127]
-[cannot apply to xfs-linux/for-next]
+[cannot apply to xfs-linux/for-next hnaz-mm/master]
 [If your patch is applied to the wrong git tree, kindly drop us a note.
 And when submitting patch, we suggest to use '--base' as documented in
 https://git-scm.com/docs/git-format-patch]
 
 url:    https://github.com/0day-ci/linux/commits/Shiyang-Ruan/fsdax-introduce-fs-query-to-support-reflink/20220127-204239
 base:   https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git 2c271fe77d52a0555161926c232cd5bc07178b39
-config: arm-imx_v4_v5_defconfig (https://download.01.org/0day-ci/archive/20220128/202201280053.mWAlT70p-lkp@intel.com/config)
-compiler: clang version 14.0.0 (https://github.com/llvm/llvm-project f32dccb9a43b02ce4e540d6ba5dbbdb188f2dc7d)
+config: powerpc-allnoconfig (https://download.01.org/0day-ci/archive/20220128/202201280035.A565CZYV-lkp@intel.com/config)
+compiler: powerpc-linux-gcc (GCC) 11.2.0
 reproduce (this is a W=1 build):
         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
         chmod +x ~/bin/make.cross
-        # install arm cross compiling tool for clang build
-        # apt-get install binutils-arm-linux-gnueabi
         # https://github.com/0day-ci/linux/commit/57669ed05e93b37d995c5247eebe218ab2058c9a
         git remote add linux-review https://github.com/0day-ci/linux
         git fetch --no-tags linux-review Shiyang-Ruan/fsdax-introduce-fs-query-to-support-reflink/20220127-204239
         git checkout 57669ed05e93b37d995c5247eebe218ab2058c9a
         # save the config file to linux build tree
         mkdir build_dir
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=arm SHELL=/bin/bash fs/iomap/
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.2.0 make.cross O=build_dir ARCH=powerpc SHELL=/bin/bash
 
 If you fix the issue, kindly add following tag as appropriate
 Reported-by: kernel test robot <lkp@intel.com>
 
 All warnings (new ones prefixed by >>):
 
-   In file included from fs/iomap/buffered-io.c:13:
->> include/linux/dax.h:73:16: warning: declaration of 'struct dax_holder_operations' will not be visible outside of this function [-Wvisibility]
-                   const struct dax_holder_operations *ops)
-                                ^
-   1 warning generated.
+   In file included from mm/filemap.c:15:
+>> include/linux/dax.h:73:30: warning: 'struct dax_holder_operations' declared inside parameter list will not be visible outside of this definition or declaration
+      73 |                 const struct dax_holder_operations *ops)
+         |                              ^~~~~~~~~~~~~~~~~~~~~
 
 
 vim +73 include/linux/dax.h
