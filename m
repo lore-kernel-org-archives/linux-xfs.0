@@ -2,205 +2,451 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59EF0C433F5
-	for <linux-xfs@archiver.kernel.org>; Fri, 28 Jan 2022 09:33:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BD0BC433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 28 Jan 2022 14:11:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347612AbiA1JdB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 28 Jan 2022 04:33:01 -0500
-Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:21898 "EHLO
-        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233524AbiA1JdA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Jan 2022 04:33:00 -0500
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 20S7K2V4015216;
-        Fri, 28 Jan 2022 09:32:55 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=references : from :
- to : cc : subject : in-reply-to : message-id : date : content-type :
- mime-version; s=corp-2021-07-09;
- bh=CKu5MnOsIU1mTtgQMa3gm/BXa1FHdeqncpblFkvgQ4g=;
- b=vU6kUWUbvjPQQwxi/P8u8n8YoQdr5YLYJUAL8PCXFl6DDGKnMvo9BiouqkeEKySsjNl8
- cW/IOn98MGm/JtQRTTwBbBTYgNstOXsEGaYYOO2efyT0hYpyTcq65tDw3GwcUjMEIfiq
- mx/flRK1FklZwRcGc2q4K351KaaYi/0e5kPaLSbKqUKf6V4qCfB7bZm4/AsmJGWk8XfZ
- NvZi9f9GbX+P+Q+IhOvVRjMcbN22mL7f0e8Vsd4yOGWzbCIAaA0FiYD3HNuNEFulndje
- nOFva9igoIQEe9syrvw3qTnEdx1wc6koZmORxlFMzV4mlwmovHHyDa8GN9PBk2cKKeH6 Hg== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3duvsj2p9x-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 28 Jan 2022 09:32:55 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 20S9V7hW004506;
-        Fri, 28 Jan 2022 09:32:54 GMT
-Received: from nam10-bn7-obe.outbound.protection.outlook.com (mail-bn7nam10lp2108.outbound.protection.outlook.com [104.47.70.108])
-        by userp3030.oracle.com with ESMTP id 3dr72579he-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 28 Jan 2022 09:32:54 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Aw/pCpi5SPYI1W9ggMtj+nQHvZUqRro2gm28AIH+5109OnRbmaC7Bcb+PTF/iRakcolxUHV0uoKLbsxVtMkAvU0rQ4ctXKDANTX6/PHm6ZPwBD7+GwGeMQ1yXVwFbrFjXII7iAIE63B0LFZ93mRha0PlXq+KgrdaW9PHiEOl/fYxlOgeeuuv6YnGjG3VSDxVBhsgqKKX96Ft7fionGMfOfrZT1cVvW0Cj0sZb3PFx4BrJYluGNbIiGijXT/VFau8ZVd7/rgmrcPRhXvMQPUGD2+TPV6vhHmr1ScPKFt3YnpGJ2Be+/tpIQiJV43ONwTP617ESS+ipSH2hTQQsufhyA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=CKu5MnOsIU1mTtgQMa3gm/BXa1FHdeqncpblFkvgQ4g=;
- b=A4uCNUy2/uiVnDWqy9fYTIRK6nt/+usxTObD2KF+wgxsgMnf/JfZ4Ok2/v8vKT6gpn2JTZHxsZD2QEjMmP1nMvu9+zN5B+pAXwRrwXV11hgd8jwJYP126c+cDD2TfgyEy5GH9LGFybGEe3ZJw5TIfANGVc4lBdmn2KPzpgj1Mqh9mOEWjRezBjl044hK7WhQzXWDGP2OjIS0LCn6KGCxHbazOBJo194uq76epPA8WNA+ta0y8FkKTHjuElJSxo9WP4Db1fxjQ/RqqbFAKrf0xmJeGKMNFvD7U2kDcBRhPzTxybZg/u4K5OYkalBEu8xEtG0aMdUQAIXBQcZpgqyO9A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=CKu5MnOsIU1mTtgQMa3gm/BXa1FHdeqncpblFkvgQ4g=;
- b=Wh7EcqKXsitFA3CCBmRITJ1pt2BVDvT//ZFOzSvi3H1FAOEpgD7ybyH6ees+9BWEsuQPx5Kk0wdPSHI9PCLkI2HC7rkgFMi0tgqx0QW8AyvBBN/SpFpwzQPEL8edPOFgBIk+G7m12e89LDGbpVv+rdIODNAnWJYDJ4nkpv9AoVQ=
-Received: from SA2PR10MB4587.namprd10.prod.outlook.com (2603:10b6:806:114::12)
- by DM6PR10MB2491.namprd10.prod.outlook.com (2603:10b6:5:b6::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4930.18; Fri, 28 Jan
- 2022 09:32:52 +0000
-Received: from SA2PR10MB4587.namprd10.prod.outlook.com
- ([fe80::3d38:fa18:9768:6237]) by SA2PR10MB4587.namprd10.prod.outlook.com
- ([fe80::3d38:fa18:9768:6237%4]) with mapi id 15.20.4930.019; Fri, 28 Jan 2022
- 09:32:52 +0000
-References: <164316352410.2600373.17669839881121774801.stgit@magnolia>
- <164316352961.2600373.9191916389107843284.stgit@magnolia>
-User-agent: mu4e 1.4.15; emacs 27.1
-From:   Chandan Babu R <chandan.babu@oracle.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 1/3] xfs: use vfs helper to update file attributes after
- fallocate
-In-reply-to: <164316352961.2600373.9191916389107843284.stgit@magnolia>
-Message-ID: <87k0ekciiv.fsf@debian-BULLSEYE-live-builder-AMD64>
-Date:   Fri, 28 Jan 2022 15:02:40 +0530
-Content-Type: text/plain
-X-ClientProxiedBy: SGXP274CA0002.SGPP274.PROD.OUTLOOK.COM (2603:1096:4:b8::14)
- To SA2PR10MB4587.namprd10.prod.outlook.com (2603:10b6:806:114::12)
+        id S1346936AbiA1OLQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 28 Jan 2022 09:11:16 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:40418 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S235208AbiA1OLO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Jan 2022 09:11:14 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1643379073;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=YomwWvemuiPREr7uDt/d+Gf1MNGWkmf5x3I7VNXSPjs=;
+        b=b81cu1Rbd+LJ5CADOeEpONAu/CclQ816jOx//ALS0lrn48nHkJk4yq2c+jDf+NFSKBwsyz
+        ggmVVV/ez15Dhn73fiOTyMktMiVrTHzPStSjSQ01CsXtc9DUfvObcs5mscN1XM158s4Uok
+        3rqldi1YRbFFKpvq2bd08uiyUk4pyFk=
+Received: from mail-qt1-f199.google.com (mail-qt1-f199.google.com
+ [209.85.160.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-553-3fp2cTvwPp2E97E1kqpR0A-1; Fri, 28 Jan 2022 09:11:12 -0500
+X-MC-Unique: 3fp2cTvwPp2E97E1kqpR0A-1
+Received: by mail-qt1-f199.google.com with SMTP id b7-20020ac85bc7000000b002b65aee118bso4571163qtb.13
+        for <linux-xfs@vger.kernel.org>; Fri, 28 Jan 2022 06:11:12 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=YomwWvemuiPREr7uDt/d+Gf1MNGWkmf5x3I7VNXSPjs=;
+        b=LG9VhUfnIkCA43WOcWUr5m08pYJZtoUH9k4Fod/zcDS9us4eGs2U+8tY5Q/333BoMI
+         p5f6qoo1MNFgqRf9FgZzsQ4SA9GAt7dC+TzeucJL2NGMbJ2wNk0tNphjHZ1Z/xiQva/T
+         YdsrDYmib8cO3sGM3NXhjtFIMP0JZZzQnNOo1HuEnxbRUzFq6MF5dukokjYXC8WFoyNw
+         6T9Oyi9pXM85HexuI9Nvb4ibIQZ+MP6u+vL16EsZagvYaUvrkSsdI//VpS8goMmoVpzA
+         +1w2cpBS8RqpQs1qdWPDRvCzgQ/p558p+dEN/j+g9SrHHMqhJknXDJcTYfGupCdEsjO+
+         COjQ==
+X-Gm-Message-State: AOAM532QQYF+nwekaJlAId4m1ASmgK38QFUbFfJXy1/LEagkRjIlUaAM
+        TAVr7rgpz0tt80ILHSYjKjlMo1k5SjxmfcBpqxxexqg1Z1PQjIJA4mFui8N0j6xBk5UARImw25N
+        o2qvmeTCtupCCdgbQIRNI
+X-Received: by 2002:a05:620a:424e:: with SMTP id w14mr5843517qko.26.1643379070048;
+        Fri, 28 Jan 2022 06:11:10 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJyhOYBtgdut5A0hltokMXqYZvCduuab+hmjn8sSPBHpttpU5coHa0RJdF7+I3I34WuC9aShow==
+X-Received: by 2002:a05:620a:424e:: with SMTP id w14mr5843472qko.26.1643379069418;
+        Fri, 28 Jan 2022 06:11:09 -0800 (PST)
+Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
+        by smtp.gmail.com with ESMTPSA id i13sm3554655qko.91.2022.01.28.06.11.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 28 Jan 2022 06:11:09 -0800 (PST)
+Date:   Fri, 28 Jan 2022 09:11:07 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Al Viro <viro@zeniv.linux.org.uk>, linux-xfs@vger.kernel.org,
+        Ian Kent <raven@themaw.net>, rcu@vger.kernel.org
+Subject: Re: [PATCH] xfs: require an rcu grace period before inode recycle
+Message-ID: <YfP5e6Y1bQ2V/NwN@bfoster>
+References: <Ye6/g+XMSyp9vYvY@bfoster>
+ <20220124220853.GN59729@dread.disaster.area>
+ <Ye82TgBY0VmtTjMc@bfoster>
+ <20220125003120.GO59729@dread.disaster.area>
+ <YfBBzHascwVnefYY@bfoster>
+ <20220125224551.GQ59729@dread.disaster.area>
+ <YfIdVq6R6xEWxy0K@zeniv-ca.linux.org.uk>
+ <20220127052609.GR59729@dread.disaster.area>
+ <YfLsBdPBSsyPFgHJ@bfoster>
+ <20220127221817.GS59729@dread.disaster.area>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 920973a2-4bdb-4bbf-ecc0-08d9e24127b9
-X-MS-TrafficTypeDiagnostic: DM6PR10MB2491:EE_
-X-Microsoft-Antispam-PRVS: <DM6PR10MB2491EF62AE28499173785236F6229@DM6PR10MB2491.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:4303;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: p6B3ABrpBNUS+CH47R8healGY1mwccOj+QVebTdfsHfxBPIM1rwE4yaWNc9HX7uWYkpqFYKQwMBuVKBUsEi3d84mjIB8NfeN3X4S2XcO/fQrHTqUjZBPEswOWvw0c6uBghViNJbZWMlQCnPdfgWpho1F5jfjQxwZ4lOvnsZO2S+ER9MSCRK0zvHKc0QbmAspk3HBLZ4y54ZSkOUNlBqzt2EMObZw3GIFIoITb6TiZfDnlm3ZxHjMvzk69/PvmTRDpGep+VBJ7K7STAi45VJKObLAaLM+yVlB+CSIQ/iRfaF9X6AMWZJlcYQXWpI/N5JKYeYMp9S8UrJJswCSESYrXxpwUqT5bVeNkd1c9pqns43ProidBzGnvpXWTsyhlpDOdqAfcFU3MZUpf5B3pIndXi8utrXkY2q1SyrQ8yu9JyTTDk0o3jyMkrzbKrUYp7uJdkDlCw8fRkXoEh1N0YW7yHkQlvLzaZKa3uPRXp41dNRqxkUQsgo5OpfehifIOvQbxDIKVcz8zFUycD/V9NqE4HrAq8FClT1pSicMw6vFa2z80W1HNa9aKdG4XvwmSJ0Xx1inRK3d+e4vcKb8pc/uUzwECbVX5CfOMzmtKjT9H4LJFWogH5jB/BFyR99sJqd4RtuYo8zgSHJHbujXJZK8EZBabT1UZsdVFq+c2EuNHl8wGKQBko4TCRE8ZrGCfHyUfldNvN6xbl1tW7er51455A==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(7916004)(366004)(66556008)(66476007)(33716001)(66946007)(8936002)(8676002)(4326008)(9686003)(86362001)(15650500001)(6512007)(5660300002)(53546011)(6506007)(52116002)(26005)(186003)(6666004)(2906002)(83380400001)(6916009)(508600001)(38100700002)(6486002)(316002)(38350700002)(20210929001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?PlF85O9xZwL1aAsZiZg15dbJ0pBmlIf6o0E2rdCtg9Oa4PelSbEV0WLcOuxn?=
- =?us-ascii?Q?uL/0H8jC2UIu/djaUqQXTmXTfMln9nEogkQGncP5hhF29qd59Yc03uxAEvO9?=
- =?us-ascii?Q?pS3FHJQ1sQ8grpxWtSl+RbTmN2pIAhknW9bGeMIn6xh9u5hsckBgwPV4Lbdx?=
- =?us-ascii?Q?tkWJVoine0XOce3oJIgh3gSBgUukbUe12NPTLP0nOsyXT61ehTFAjG8nYS39?=
- =?us-ascii?Q?jXC96MFZy/LMXdO9Yy95tL1yRWxP9U7BTtpbO3OzMmZmTdngpAO6gn/2u5s8?=
- =?us-ascii?Q?WK2Wj/97kR7vh2fBWeL2cmW8R28PgsQXvdevUl+MzISWzz9Q1tE3Ilc4YDBz?=
- =?us-ascii?Q?Z8CLXF7xA3kUrZLgj/Ue9d28Zjtp3xKExyWuda3wMQmyQTkOJ8Cw9JuNBl8C?=
- =?us-ascii?Q?TdE4m25NEKpOJIEj8FJ/S3zqHgBovohocH/6JytFqp2fBAHFFHqZ3TW6rZxn?=
- =?us-ascii?Q?+3mHHbft/BSCLD1kd3UUqmHPIdg/EBTMcDDbTQwwsZVIMAgYI3hA+dmXL0xT?=
- =?us-ascii?Q?wVnWXkMiaccwrC8Zu9bTSw1TjjHZ811iap8AaEfsd8VmNTxnQ6J/617vN6Md?=
- =?us-ascii?Q?0SNsMRbdYoYAOMovJDu9lmKTTrBMhKsJts9/Vq3mXUWNw2aAjqzhcxKpIlhD?=
- =?us-ascii?Q?s5/WUaf4AH+CiyYYKMcX0i50g68b2Po/pLlYhTEYp5zEmZGwjqK2/HWBJrQ4?=
- =?us-ascii?Q?GrVsx+nLOZpQdxQpUvdR7q1Zav24i/x6oE2ZT+RidjROHzWUxFJUPa5e///h?=
- =?us-ascii?Q?DXmUq1kQ+LIjluY3Vkntd9ZfzvL+SGcbsVrpQ7S50/SuB28W4fWNDVtyR8d6?=
- =?us-ascii?Q?yRFYdOTuDbxaRqNtXce0hZ6lfIjxjfvB3WYEzgD99JHSMSsi94Yge2VXo7AD?=
- =?us-ascii?Q?KYJqfuNMY5h8Mi7dWbWCwJBFtjiDZeceRUsRvYiPRIqkuQOqBeix1u64e+Cy?=
- =?us-ascii?Q?R2ACSybr9YCaB5lEIxvveyZFtO4+Duj33lYOGZHNFBSqu66iSPC496uWV7xF?=
- =?us-ascii?Q?MgvgYTrpL0rtT0OdIEtTs7eF5lSO6YAvRdT+a8xK7xhDjVQ/N5mlxLJOnUWA?=
- =?us-ascii?Q?3EMpx0OCeNZq88l07f5XrivPAZ78hVYqnkOaRHsInNroRWkzyvsSuQyuwn4j?=
- =?us-ascii?Q?4RRP8rK5VX1k+CB4nEkrvZtIYiuIsEUUsxRvv8US3aNyL0PdZZqNzg6HH04b?=
- =?us-ascii?Q?jI80fOiNwfpksPzu0DzA/lMFbuG+zcwx+3FJJn+tR9RHKgHSWlFyH6VA2rzZ?=
- =?us-ascii?Q?EO3m4Z60eAGZO9wxOXKbX6BG+CTn4+Jj2QxMdFwYNVE2eiR29azmM1lK6lD+?=
- =?us-ascii?Q?x1smxlq3J7zZS0aQpKLngvmBgeLkLdF020smdJ6eqeOFib9GvqhpEzl8Y2hz?=
- =?us-ascii?Q?06P+C4E3z9xHqpquk+qIgAYOlFNlTCdbICeJ7cPkcnh0K7G3RONGF8GPW30U?=
- =?us-ascii?Q?UZ1KLETb9cowSCkN5egTSuextEXo5If2cKp+4S55fo5lgbXCu9lynZ+7Sjcf?=
- =?us-ascii?Q?nDx3s2Xv0ZhkZnbDQh5JtvjZGjqOpydzxaYyqXM57/P16Rwt11Xo5tnCEE57?=
- =?us-ascii?Q?+9bmdacn6H/7S87+vp3jFjKdRuSAEqI6U16V7htJb/QVxpBHDwHyy5Skv25m?=
- =?us-ascii?Q?PLGJiqkF2QlvpY3oLC/SW7I=3D?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 920973a2-4bdb-4bbf-ecc0-08d9e24127b9
-X-MS-Exchange-CrossTenant-AuthSource: SA2PR10MB4587.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Jan 2022 09:32:52.0643
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: QZz4d4EDNYi6X14IuUF16B0ZcQmalcHLE01US47U2S+vFGT9JWSwTeO6dc24NcvzhPhZmcXO2qrA+FSb6RuFvQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR10MB2491
-X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10240 signatures=669575
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxlogscore=999
- adultscore=0 spamscore=0 bulkscore=0 mlxscore=0 phishscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2201110000 definitions=main-2201280058
-X-Proofpoint-ORIG-GUID: I9JEtUkGLBUuuOhB38mPhrgL6JelqCx_
-X-Proofpoint-GUID: I9JEtUkGLBUuuOhB38mPhrgL6JelqCx_
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220127221817.GS59729@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 26 Jan 2022 at 07:48, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
->
-> In XFS, we always update the inode change and modification time when any
-> preallocation operation succeeds.  Furthermore, as various fallocate
-> modes can change the file contents (extending EOF, punching holes,
-> zeroing things, shifting extents), we should drop file privileges like
-> suid just like we do for a regular write().  There's already a VFS
-> helper that figures all this out for us, so use that.
->
-> The net effect of this is that we no longer drop suid/sgid if the caller
-> is root, but we also now drop file capabilities.
->
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  fs/xfs/xfs_file.c |   23 +++++++++++++++++++----
->  1 file changed, 19 insertions(+), 4 deletions(-)
->
->
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 22ad207bedf4..eee5fb20cf8d 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1057,13 +1057,28 @@ xfs_file_fallocate(
->  		}
->  	}
->  
-> -	if (file->f_flags & O_DSYNC)
-> -		flags |= XFS_PREALLOC_SYNC;
-> -
+On Fri, Jan 28, 2022 at 09:18:17AM +1100, Dave Chinner wrote:
+> On Thu, Jan 27, 2022 at 02:01:25PM -0500, Brian Foster wrote:
+> > On Thu, Jan 27, 2022 at 04:26:09PM +1100, Dave Chinner wrote:
+> > > On Thu, Jan 27, 2022 at 04:19:34AM +0000, Al Viro wrote:
+> > > > On Wed, Jan 26, 2022 at 09:45:51AM +1100, Dave Chinner wrote:
+> > > > 
+> > > > > Right, background inactivation does not improve performance - it's
+> > > > > necessary to get the transactions out of the evict() path. All we
+> > > > > wanted was to ensure that there were no performance degradations as
+> > > > > a result of background inactivation, not that it was faster.
+> > > > > 
+> > > > > If you want to confirm that there is an increase in cold cache
+> > > > > access when the batch size is increased, cpu profiles with 'perf
+> > > > > top'/'perf record/report' and CPU cache performance metric reporting
+> > > > > via 'perf stat -dddd' are your friend. See elsewhere in the thread
+> > > > > where I mention those things to Paul.
+> > > > 
+> > > > Dave, do you see a plausible way to eventually drop Ian's bandaid?
+> > > > I'm not asking for that to happen this cycle and for backports Ian's
+> > > > patch is obviously fine.
+> > > 
+> > > Yes, but not in the near term.
+> > > 
+> > > > What I really want to avoid is the situation when we are stuck with
+> > > > keeping that bandaid in fs/namei.c, since all ways to avoid seeing
+> > > > reused inodes would hurt XFS too badly.  And the benchmarks in this
+> > > > thread do look like that.
+> > > 
+> > > The simplest way I think is to have the XFS inode allocation track
+> > > "busy inodes" in the same way we track "busy extents". A busy extent
+> > > is an extent that has been freed by the user, but is not yet marked
+> > > free in the journal/on disk. If we try to reallocate that busy
+> > > extent, we either select a different free extent to allocate, or if
+> > > we can't find any we force the journal to disk, wait for it to
+> > > complete (hence unbusying the extents) and retry the allocation
+> > > again.
+> > > 
+> > > We can do something similar for inode allocation - it's actually a
+> > > lockless tag lookup on the radix tree entry for the candidate inode
+> > > number. If we find the reclaimable radix tree tag set, the we select
+> > > a different inode. If we can't allocate a new inode, then we kick
+> > > synchronize_rcu() and retry the allocation, allowing inodes to be
+> > > recycled this time.
+> > > 
+> > 
+> > I'm starting to poke around this area since it's become clear that the
+> > currently proposed scheme just involves too much latency (unless Paul
+> > chimes in with his expedited grace period variant, at which point I will
+> > revisit) in the fast allocation/recycle path. ISTM so far that a simple
+> > "skip inodes in the radix tree, sync rcu if unsuccessful" algorithm will
+> > have pretty much the same pattern of behavior as this patch: one
+> > synchronize_rcu() per batch.
+> 
+> That's not really what I proposed - what I suggested was that if we
+> can't allocate a usable inode from the finobt, and we can't allocate
+> a new inode cluster from the AG (i.e. populate the finobt with more
+> inodes), only then call synchronise_rcu() and recycle an inode.
+> 
 
-Without the above change, if fallocate() is invoked with FALLOC_FL_PUNCH_HOLE,
-FALLOC_FL_COLLAPSE_RANGE or FALLOC_FL_INSERT_RANGE, we used to update inode's
-timestamp, remove setuid/setgid bits and then perform a synchronous
-transaction commit if O_DSYNC flag is set.
+That's not how I read it... Regardless, that was my suggestion as well,
+so we're on the same page on that front.
 
-However, with this patch applied, the transaction (inside
-xfs_vn_update_time()) that updates file's inode contents (i.e. timestamps and
-setuid/setgid bits) is not synchronous and hence the O_DSYNC flag is not
-honored if the fallocate operation is one of FALLOC_FL_PUNCH_HOLE,
-FALLOC_FL_COLLAPSE_RANGE or FALLOC_FL_INSERT_RANGE.
+> We don't need to scan the inode cache or the finobt to determine if
+> there are reclaimable inodes immediately available - do a gang tag
+> lookup on the radix tree for newino.
+> If it comes back with an inode number that is not
+> equal to the node number we looked up, then we can allocate an
+> newino immediately.
+> 
+> If it comes back with newino, then check the first inode in the
+> finobt. If that comes back with an inode that is not the first inode
+> in the finobt, we can immediately allocate the first inode in the
+> finobt. If not, check the last inode. if that fails, assume all
+> inodes in the finobt need recycling and allocate a new cluster,
+> pointing newino at it.
+> 
 
-> -	error = xfs_update_prealloc_flags(ip, flags);
-> +	/* Update [cm]time and drop file privileges like a regular write. */
-> +	error = file_modified(file);
->  	if (error)
->  		goto out_unlock;
->  
-> +	/*
-> +	 * If we need to change the PREALLOC flag, do so.  We already updated
-> +	 * the timestamps and cleared the suid flags, so we don't need to do
-> +	 * that again.  This must be committed before the size change so that
-> +	 * we don't trim post-EOF preallocations.
-> +	 */
-> +	if (flags) {
-> +		flags |= XFS_PREALLOC_INVISIBLE;
-> +
-> +		if (file->f_flags & O_DSYNC)
-> +			flags |= XFS_PREALLOC_SYNC;
-> +
-> +		error = xfs_update_prealloc_flags(ip, flags);
-> +		if (error)
-> +			goto out_unlock;
-> +	}
-> +
->  	/* Change file size if needed */
->  	if (new_size) {
->  		struct iattr iattr;
+Hrm, I'll have to think about this some more. I don't mind something
+like this as a possible scanning allocation algorithm, but I don't love
+the idea of doing a few predictable btree/radix tree lookups and
+inferring broader AG state from that, particularly when I think it's
+possible to get more accurate information in a way that's easier and
+probably more efficient.
 
--- 
-chandan
+For example, we already have counts of the number of reclaimable and
+free inodes in the perag. We could fairly easily add a counter to track
+the subset of reclaimable inodes that are unlinked. With something like
+that, it's easier to make higher level decisions like when to just
+allocate a new inode chunk (because the free inode pool consists mostly
+of reclaimable inodes) or just scanning through the finobt for a good
+candidate (because there are none or very few unlinked reclaimable
+inodes relative to the number of free inodes in the btree).
+
+So in general I think the two obvious ends of the spectrum (i.e. the
+repeated alloc/free workload I'm testing above vs. the tar/cp use case
+where there are many allocs and few unlinks) are probably the most
+straightforward to handle and don't require major search algorithm
+changes.  It's the middle ground (i.e. a large number of free inodes
+with half or whatever more sitting in the radix tree) that I think
+requires some more thought and I don't quite have an answer for atm. I
+don't want to go off allocating new inode chunks too aggressively, but
+also don't want to turn the finobt allocation algorithm into something
+like the historical inobt search algorithm with poor worst case
+behavior.
+
+> Then we get another 64 inodes starting at the newino cursor we can
+> allocate from while we wait for the current RCU grace period to
+> expire for inodes already in the reclaimable state. An algorithm
+> like this will allow the free inode pool to resize automatically
+> based on the unlink frequency of the workload and RCU grace period
+> latency...
+> 
+> > IOW, background reclaim only kicks in after 30s by default,
+> 
+> 5 seconds, by default, not 30s.
+> 
+
+xfs_reclaim_work_queue() keys off xfs_syncd_centisecs, which corresponds
+to xfs_params.syncd_timer, which is initialized as:
+
+        .syncd_timer    = {     1*100,          30*100,         7200*100},
+
+Am I missing something? Not that it really matters much for this
+discussion anyways. Whether it's 30s or 5s, either way the reallocation
+workload is going to pretty much always recycle these inodes long before
+background reclaim gets to them.
+
+> > so the pool
+> > of free inodes pretty much always consists of 100% reclaimable inodes.
+> > On top of that, at smaller batch sizes, the pool tends to have a uniform
+> > (!elapsed) grace period cookie, so a stall is required to be able to
+> > allocate any of them. As the batch size increases, I do see the
+> > population of free inodes start to contain a mix of expired and
+> > non-expired grace period cookies. It's fairly easy to hack up an
+> > internal icwalk scan to locate already expired inodes,
+> 
+> We don't want or need to do exhaustive, exactly correct scans here.
+> We want *fast and loose* because this is a critical performance fast
+> path. We don't care if we skip the occasional recyclable inode, what
+> we need to to is minimise the CPU overhead and search latency for
+> the case where recycling will never occur.
+> 
+
+Agreed. That's what I meant by my comment about having heuristics to
+avoid large/long scans.
+
+> > but the problem
+> > is that the recycle rate is so much faster than the grace period latency
+> > that it doesn't really matter. We'll still have to stall by the time we
+> > get to the non-expired inodes, and so we're back to one stall per batch
+> > and the same general performance characteristic of this patch.
+> 
+> Yes, but that's why I suggested that we allocate a new inode cluster
+> rather than calling synchronise_rcu() when we don't have a
+> recyclable inode candidate.
+> 
+
+Ok.
+
+> > So given all of this, I'm wondering about something like the following
+> > high level inode allocation algorithm:
+> > 
+> > 1. If the AG has any reclaimable inodes, scan for one with an expired
+> > grace period. If found, target that inode for physical allocation.
+> 
+> How do you efficiently discriminate between "reclaimable w/ nlink >
+> 0" and "reclaimable w/ nlink == 0" so we don't get hung up searching
+> millions of reclaimable inodes for the one that has been unlinked
+> and has an expired grace period?
+> 
+
+A counter or some other form of hinting structure..
+
+> Also, this will need to be done on every inode allocation when we
+> have inodes in reclaimable state (which is almost always on a busy
+> system).  Workloads with sequential allocation (as per untar, rsync,
+> git checkout, cp -r, etc) will do this scan unnecessarily as they
+> will almost never hit this inode recycle path as there aren't a lot
+> of unlinks occurring while they are working.
+> 
+
+I'm not necessarily suggesting a full radix tree scan per inode
+allocation. I was more thinking about an occasionally updated hinting
+structure to efficiently locate the least recently freed inode numbers,
+or something similar. This would serve no purpose in scenarios where it
+just makes more sense to allocate new chunks, but otherwise could just
+serve as an allocation target, a metric to determine likelihood of
+reclaimable inodes w/ expired grace periods being present, or just a
+starting point for a finobt search algorithm like what you describe
+above, etc.
+
+> > 2. If the AG free inode count == the AG reclaimable count and we know
+> > all reclaimable inodes are most likely pending a grace period (because
+> > the previous step failed), allocate a new inode chunk (and target it in
+> > this allocation).
+> 
+> That's good for the allocation that allocates the chunk, but...
+> 
+> > 3. If the AG free inode count > the reclaimable count, scan the finobt
+> > for an inode that is not present in the radix tree (i.e. Dave's logic
+> > above).
+> 
+> ... now we are repeating the radix tree walk that we've already done
+> in #1 to find the newly allocated inodes we allocated in #2.
+> 
+> We don't need to walk the inodes in the inode radix tree to look at
+> individual inode state - we can use the reclaimable radix tree tag
+> to shortcut those walks and minimise the number of actual lookups we
+> need to do. By definition, and inode in the finobt and
+> XFS_IRECLAIMABLE state is an inode that needs recycling, so we can
+> just use the finobt and the inode radix tree tags to avoid inodes
+> that need recycling altogether.  i.e. If we fail a tag lookup, we
+> have no reclaimable inodes in the range we asked the lookup to
+> search so we can immediately allocate - we don't need to actually
+> need to look at the inode in the fast path no-recycling case at all. 
+> 
+
+This is starting to make some odd (to me) assumptions about thus far
+undefined implementation details. For example, the very little amount of
+code I have already for experimentation purposes only scans tagged
+reclaimable inodes, so that you suggest doing exactly that instead of
+full radix tree scans suggests to me that there are some details here
+that are clearly not getting across in email. ;)
+
+That's fine, I'm not trying to cover details. Details are easier to work
+through with code, and TBH I don't have enough concrete ideas to hash
+through details in email just yet anyways. The primary concepts in my
+previous description were that we should prioritize allocation of new
+chunks over taking RCU stalls whenever possible, and that there might be
+ways to use existing radix tree state to maintain predictable worst case
+performance for finobt searches (TBD). With regard to the general
+principles you mention of avoiding repeated large scans, maintaing
+common workload and fast path performance, etc., I think we're pretty
+much on the same page.
+
+> Keep in mind that the fast path we really care about is not the
+> unlink/allocate looping case, it's the allocation case where no
+> recycling will ever occur and so that's the one we really have to
+> try hard to minimise the overhead for. The moment we get into
+> reclaimable inodes within the finobt range  we're hitting the "lots
+> of temp files" use case, so we can detect that and keep the overhead
+> of that algorithm as separate as we possibly can.
+> 
+> Hence we need the initial "can we allocate this inode number"
+> decision to be as fast and as low overhead as possible so we can
+> determine which algorithm we need to run. A lockless radix tree gang
+> tag lookup will give us that and if the lookup finds a reclaimable
+> inode only then do we move into the "recycle RCU avoidance"
+> algorithm path....
+> 
+> > > > Are there any realistic prospects of having xfs_iget() deal with
+> > > > reuse case by allocating new in-core inode and flipping whatever
+> > > > references you've got in XFS journalling data structures to the
+> > > > new copy?  If I understood what you said on IRC correctly, that is...
+> > > 
+> > > That's ... much harder.
+> > > 
+> > > One of the problems is that once an inode has a log item attached to
+> > > it, it assumes that it can be accessed without specific locking,
+> > > etc. see xfs_inode_clean(), for example. So there's some life-cycle
+> > > stuff that needs to be taken care of in XFS first, and the inode <->
+> > > log item relationship is tangled.
+> > > 
+> > > I've been working towards removing that tangle - but taht stuff is
+> > > quite a distance down my logging rework patch queue. THat queue has
+> > > been stuck now for a year trying to get the first handful of rework
+> > > and scalability modifications reviewed and merged, so I'm not
+> > > holding my breathe as to how long a more substantial rework of
+> > > internal logging code will take to review and merge.
+> > > 
+> > > Really, though, we need the inactivation stuff to be done as part of
+> > > the VFS inode lifecycle. I have some ideas on what to do here, but I
+> > > suspect we'll need some changes to iput_final()/evict() to allow us
+> > > to process final unlinks in the bakground and then call evict()
+> > > ourselves when the unlink completes. That way ->destroy_inode() can
+> > > just call xfs_reclaim_inode() to free it directly, which also helps
+> > > us get rid of background inode freeing and hence inode recycling
+> > > from XFS altogether. I think we _might_ be able to do this without
+> > > needing to change any of the logging code in XFS, but I haven't
+> > > looked any further than this into it as yet.
+> > > 
+> > 
+> > ... of whatever this ends up looking like.
+> > 
+> > Can you elaborate on what you mean by processing unlinks in the
+> > background? I can see the value of being able to eliminate the recycle
+> > code in XFS, but wouldn't we still have to limit and throttle against
+> > background work to maintain sustained removal performance?
+> 
+> Yes, but that's irrelevant because all we would be doing is slightly
+> changing where that throttling occurs (i.e. in
+> iput_final->drop_inode instead of iput_final->evict->destroy_inode).
+> 
+> However, moving the throttling up the stack is a good thing because
+> it gets rid of the current problem with the inactivation throttling
+> blocking the shrinker via shrinker->super_cache_scan->
+> prune_icache_sb->dispose_list->evict-> destroy_inode->throttle on
+> full inactivation queue because all the inodes need EOF block
+> trimming to be done.
+> 
+
+What I'm trying to understand is whether inodes will have cycled through
+the requisite grace period before ->destroy_inode() or not, and if so,
+how that is done to avoid the sustained removal performance problem
+we've run into here (caused by the extra latency leading to increasing
+cacheline misses)..?
+
+> > IOW, what's
+> > the general teardown behavior you're getting at here, aside from what
+> > parts push into the vfs or not?
+> 
+> ->drop_inode() triggers background inactivation for both blockgc and
+> inode unlink. For unlink, we set I_WILL_FREE so the VFS will not
+> attempt to re-use it, add the inode # to the internal AG "busy
+> inode" tree and return drop = true and the VFS then stops processing
+> that inode. For blockgc, we queue the work and return drop = false
+> and the VFS puts it onto the LRU. Now we have asynchronous
+> inactivation while the inode is still present and visible at the VFS
+> level.
+> 
+> For background blockgc - that now happens while the inode is idle on
+> the LRU before it gets reclaimed by the shrinker. i.e. we trigger
+> block gc when the last reference to the inode goes away instead of
+> when it gets removed from memory by the shrinker.
+> 
+> For unlink, that now runs in the bacgrkoud until the inode unlink
+> has been journalled and the cleared inode written to the backing
+> inode cluster buffer. The inode is then no longer visisble to the
+> journal and it can't be reallocated because it is still busy. We
+> then change the inode state from I_WILL_FREE to I_FREEING and call
+> evict(). The inode then gets torn down, and in ->destroy_inode we
+> remove the inode from the radix tree, clear the per-ag busy record
+> and free the inode via RCU as expected by the VFS.
+> 
+
+Ok, so this sort of sounds like these are separate things. I'm all for
+creating more flexibility with the VFS to allow XFS to remove or
+simplify codepaths, but this still depends on some form of grace period
+tracking to avoid allocation of inodes that are free in the btrees but
+still might have in-core struct inode's laying around, yes?
+
+The reason I'm asking about this is because as this patch to avoid
+recycling non-expired inodes becomes more complex in order to satisfy
+performance requirements, longer term usefulness becomes more relevant.
+I don't want us to come up with some complex scheme to avoid RCU stalls
+when there's already a plan to rip it out and replace it in a year or
+so. OTOH if the resulting logic is part of that longer term strategy,
+then this is less of a concern.
+
+Brian
+
+> Another possible mechanism instead of exporting evict() is that
+> background inactivation takes a new reference to the inode from
+> ->drop_inode so that even if we put it on the LRU the inode cache
+> shrinker will skip it while we are doing background inactivation.
+> That would mean that when background inactivation is done, we call
+> iput_final() again. The inode will either then be left on the LRU or
+> go through the normal evict() path.
+> 
+> This also it gets the memory demand and overhead of EOF block
+> trimming out of the memory reclaim path, and it also gets rid of
+> the need for the special superblock shrinker hooks that XFS has for
+> reclaiming it's internal inode cache.
+> 
+> Overall, lifting this stuff up to the VFS is full of "less
+> complexity in XFS" wins if we can make it work...
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+
