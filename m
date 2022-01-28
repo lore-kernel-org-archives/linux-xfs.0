@@ -2,141 +2,122 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E91FBC433F5
-	for <linux-xfs@archiver.kernel.org>; Fri, 28 Jan 2022 22:23:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8FA5C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 28 Jan 2022 22:28:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347321AbiA1WXG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 28 Jan 2022 17:23:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38780 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350036AbiA1WXE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Jan 2022 17:23:04 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2D41C06173B;
-        Fri, 28 Jan 2022 14:23:03 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S241343AbiA1W2P (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 28 Jan 2022 17:28:15 -0500
+Received: from sandeen.net ([63.231.237.45]:43020 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S235188AbiA1W1g (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 28 Jan 2022 17:27:36 -0500
+Received: from [10.0.0.147] (liberator.sandeen.net [10.0.0.147])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 4AF4CB80D50;
-        Fri, 28 Jan 2022 22:23:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E0194C340E7;
-        Fri, 28 Jan 2022 22:23:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1643408581;
-        bh=Y8FxnAdX9n8TxRkQk5LvtXGKosxm4BS7eqBiMD65ByQ=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ZTfM2zWOLRYFEH25Aw9j8R4WbZsZabZ5sjIueAaAyaJcKZPArpQPQxsnZcl8AeCgm
-         HE/saeGpzbtoKawDale/41m9c4PaNrgZSXOn8VpkpGccgYkV3deFnbrJkaUKkVYCnL
-         u3tDTUtNgkrWnifL/9+PMuBTGwP16kcDPRuis2e6A0nX7WtTBAraPBgdM9SrP8krgk
-         +LvjFDZki1L7u0Ooy3hrykCIg/zzIXAm61cG6aNvJPxKgoP413OhLynWT7hE85Y2PJ
-         Km97SuJkut8rSMQFLVOy7oDw3d9oovHeKTxjHudOqAECqziPmTtF/p08wlXZ3pQGXL
-         8S2mnU+3NfMzw==
-Date:   Fri, 28 Jan 2022 14:23:00 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Chandan Babu R <chandan.babu@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 1/3] xfs: use vfs helper to update file attributes after
- fallocate
-Message-ID: <20220128222300.GO13563@magnolia>
-References: <164316352410.2600373.17669839881121774801.stgit@magnolia>
- <164316352961.2600373.9191916389107843284.stgit@magnolia>
- <87k0ekciiv.fsf@debian-BULLSEYE-live-builder-AMD64>
+        by sandeen.net (Postfix) with ESMTPSA id B5E2D78FD;
+        Fri, 28 Jan 2022 16:27:22 -0600 (CST)
+Message-ID: <3c99180d-4ae2-a2dc-003d-c8efbdc1fd7f@sandeen.net>
+Date:   Fri, 28 Jan 2022 16:27:35 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <87k0ekciiv.fsf@debian-BULLSEYE-live-builder-AMD64>
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.5.1
+Subject: Re: [PATCH 41/45] libxfs: always initialize internal buffer map
+Content-Language: en-US
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+References: <164263784199.860211.7509808171577819673.stgit@magnolia>
+ <164263806915.860211.11553766371419430734.stgit@magnolia>
+ <b9f69740-0671-ab4d-a4c7-4fd158f1cab8@sandeen.net>
+ <20220128220325.GH13540@magnolia>
+From:   Eric Sandeen <sandeen@sandeen.net>
+In-Reply-To: <20220128220325.GH13540@magnolia>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jan 28, 2022 at 03:02:40PM +0530, Chandan Babu R wrote:
-> On 26 Jan 2022 at 07:48, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> >
-> > In XFS, we always update the inode change and modification time when any
-> > preallocation operation succeeds.  Furthermore, as various fallocate
-> > modes can change the file contents (extending EOF, punching holes,
-> > zeroing things, shifting extents), we should drop file privileges like
-> > suid just like we do for a regular write().  There's already a VFS
-> > helper that figures all this out for us, so use that.
-> >
-> > The net effect of this is that we no longer drop suid/sgid if the caller
-> > is root, but we also now drop file capabilities.
-> >
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  fs/xfs/xfs_file.c |   23 +++++++++++++++++++----
-> >  1 file changed, 19 insertions(+), 4 deletions(-)
-> >
-> >
-> > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> > index 22ad207bedf4..eee5fb20cf8d 100644
-> > --- a/fs/xfs/xfs_file.c
-> > +++ b/fs/xfs/xfs_file.c
-> > @@ -1057,13 +1057,28 @@ xfs_file_fallocate(
-> >  		}
-> >  	}
-> >  
-> > -	if (file->f_flags & O_DSYNC)
-> > -		flags |= XFS_PREALLOC_SYNC;
-> > -
+On 1/28/22 4:03 PM, Darrick J. Wong wrote:
+> On Fri, Jan 28, 2022 at 02:31:11PM -0600, Eric Sandeen wrote:
+>> On 1/19/22 6:21 PM, Darrick J. Wong wrote:
+>>> From: Darrick J. Wong <djwong@kernel.org>
+>>>
+>>> The __initbuf function is responsible for initializing the fields of an
+>>> xfs_buf.  Buffers are always required to have a mapping, though in the
+>>> typical case there's only one mapping, so we can use the internal one.
+>>>
+>>> The single-mapping b_maps init code at the end of the function doesn't
+>>> quite get this right though -- if a single-mapping buffer in the cache
+>>> was allowed to expire and now is being repurposed, it'll come out with
+>>> b_maps == &__b_map, in which case we incorrectly skip initializing the
+>>> map.
+>>
+>> In this case b_nmaps must already be 1, right. And it's the bn and
+>> length in b_maps[0] that fail to be initialized?
+>>
+>> I wonder, then, if it's any more clear to reorganize it just a little bit,
+>> like:
+>>
+>>          if (!bp->b_maps) {
+>>                  bp->b_maps = &bp->__b_map;
+>>                  bp->b_nmaps = 1;
+>>          }
+>>
+>>          if (bp->b_maps == &bp->__b_map) {
+>>                  bp->b_maps[0].bm_bn = bp->b_bn;
+>>                  bp->b_maps[0].bm_len = bp->b_length;
+>>          }
+>>
+>> because AFAICT b_nmaps only needs to be reset to 1 if we didn't already
+>> get here with b_maps == &__b_map?
 > 
-> Without the above change, if fallocate() is invoked with FALLOC_FL_PUNCH_HOLE,
-> FALLOC_FL_COLLAPSE_RANGE or FALLOC_FL_INSERT_RANGE, we used to update inode's
-> timestamp, remove setuid/setgid bits and then perform a synchronous
-> transaction commit if O_DSYNC flag is set.
+> That would also work, though it's less obvious (to me anyway) that
+> b_nmaps is always 1 when bp->b_maps == &bp->__b_map.
+
+Ok. I'll leave it alone.
+
+-Eric
+
 > 
-> However, with this patch applied, the transaction (inside
-> xfs_vn_update_time()) that updates file's inode contents (i.e. timestamps and
-> setuid/setgid bits) is not synchronous and hence the O_DSYNC flag is not
-> honored if the fallocate operation is one of FALLOC_FL_PUNCH_HOLE,
-> FALLOC_FL_COLLAPSE_RANGE or FALLOC_FL_INSERT_RANGE.
-
-Ah, right.  This bug is covered up by the changes in the last patch, but
-it would break bisection, so I'll clean that up and resubmit.  Thanks
-for the comments!
-
-> > -	error = xfs_update_prealloc_flags(ip, flags);
-> > +	/* Update [cm]time and drop file privileges like a regular write. */
-> > +	error = file_modified(file);
-> >  	if (error)
-> >  		goto out_unlock;
-> >  
-> > +	/*
-> > +	 * If we need to change the PREALLOC flag, do so.  We already updated
-> > +	 * the timestamps and cleared the suid flags, so we don't need to do
-> > +	 * that again.  This must be committed before the size change so that
-> > +	 * we don't trim post-EOF preallocations.
-> > +	 */
-
-So the code ends up looking like:
-
-	if (file->f_flags & O_DSYNC)
-		flags |= XFS_PREALLOC_SYNC;
-	if (flags) {
-		flags |= XFS_PREALLOC_INVISIBLE;
-
-		error = xfs_update_prealloc_flags(ip, flags);
-		if (error)
-			goto out_unlock;
-	}
-
---D
-
-> > +	if (flags) {
-> > +		flags |= XFS_PREALLOC_INVISIBLE;
-> > +
-> > +		if (file->f_flags & O_DSYNC)
-> > +			flags |= XFS_PREALLOC_SYNC;
-> > +
-> > +		error = xfs_update_prealloc_flags(ip, flags);
-> > +		if (error)
-> > +			goto out_unlock;
-> > +	}
-> > +
-> >  	/* Change file size if needed */
-> >  	if (new_size) {
-> >  		struct iattr iattr;
+> --D
 > 
-> -- 
-> chandan
+>> If this is just navel-gazing I can leave it as is. If you think it's
+>> any clearer, I'll make the change. (or if I've gotten it completely wrong,
+>> sorry!)
+>>
+>> Thanks,
+>> -Eric
+>>
+>>> This has gone unnoticed until now because (AFAICT) the code paths
+>>> that use b_maps are the same ones that are called with multi-mapping
+>>> buffers, which are initialized correctly.
+>>>
+>>> Anyway, the improperly initialized single-mappings will cause problems
+>>> in upcoming patches where we turn b_bn into the cache key and require
+>>> the use of b_maps[0].bm_bn for the buffer LBA.  Fix this.
+>>>
+>>> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+>>> ---
+>>>    libxfs/rdwr.c |    6 ++++--
+>>>    1 file changed, 4 insertions(+), 2 deletions(-)
+>>>
+>>>
+>>> diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+>>> index 5086bdbc..a55e3a79 100644
+>>> --- a/libxfs/rdwr.c
+>>> +++ b/libxfs/rdwr.c
+>>> @@ -251,9 +251,11 @@ __initbuf(struct xfs_buf *bp, struct xfs_buftarg *btp, xfs_daddr_t bno,
+>>>    	bp->b_ops = NULL;
+>>>    	INIT_LIST_HEAD(&bp->b_li_list);
+>>> -	if (!bp->b_maps) {
+>>> -		bp->b_nmaps = 1;
+>>> +	if (!bp->b_maps)
+>>>    		bp->b_maps = &bp->__b_map;
+>>> +
+>>> +	if (bp->b_maps == &bp->__b_map) {
+>>> +		bp->b_nmaps = 1;
+>>>    		bp->b_maps[0].bm_bn = bp->b_bn;
+>>>    		bp->b_maps[0].bm_len = bp->b_length;
+>>>    	}
+>>>
+> 
