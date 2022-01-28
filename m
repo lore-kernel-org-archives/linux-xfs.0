@@ -2,154 +2,111 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83EEFC433FE
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Jan 2022 23:20:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C089AC433FE
+	for <linux-xfs@archiver.kernel.org>; Fri, 28 Jan 2022 00:54:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235188AbiA0XUt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Jan 2022 18:20:49 -0500
-Received: from mail-bn7nam10on2082.outbound.protection.outlook.com ([40.107.92.82]:50288
-        "EHLO NAM10-BN7-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S234804AbiA0XUt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 27 Jan 2022 18:20:49 -0500
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=eQphgeQHQEkCDwNbOcDfDmS9Zm1qN8ysReuvb/sHnaP3D7AtlXKbL/YH+8UalUZcPvkmBEgmxM4mIlhWGZnc5XHQb2M5NmWCLCVXLBAIB6QNpjfrc5CTR4UWSvA8AxZCM69VYT4H4z5tiKxhzdQOhH+UCEPwwo5tRRc2EA4VI2yER8AjPATFRDe4TKBsuCH77mzUA61TYofjN06G0rabp9r24MZZ2MPWVe1VLMRrC/WUgHo2ujs850pO2pZ08pzdPjf1xMtq/5xTUp+1FAwswkf8ezNcru8UTNXIbZyeirqZP8KmpltHJdzku5mwMqpPoyggYeMV+snHYxHSugiRtw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=uBqx0Fn4Vh36FVinfK2gLhSIoJo3k2vJu6MuEzsuVFQ=;
- b=N3CKW7W9vRsGhS5Rvsq7EFqBTmDHiUxcopXpL+6saPuvtGGffp0yTTBgmDgWhGke4rGKQd3aPba2H42d4v8mREXwYlNZYTBltDjeHfEyrIUqpHialFdUyURd7xSNJ+lnqptpS5avw4MgC3oAmjrPb6ZD0iSxEE6wRPmFHRcz/cF02jhvuwW+jNOp1eQsTOoRfKmn87tWkciDcgBiMcmpAzeKw4re50fib6t80d60zn2qfcPXts6ZL1byXSbeBWHPwuFXKOEysWjXYloeCmR6CYQlmepglGS4S3krmPOsWY64A81UTj+PwsSZSSZElA1vkSJJ41doyJoWpPWHnxyO0A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=uBqx0Fn4Vh36FVinfK2gLhSIoJo3k2vJu6MuEzsuVFQ=;
- b=T0RqzBB4fiM0qc9+dA095bkOsjNPR8lAY0Xk7oxMZnqsnOuyK/7A1olo9WmyhWDa/G6o/vF7fwMTY5ct2DHhEFkQNxtNqhq/v3YINeeov8v/3HKfBkX8GIaJLPLcbl4NH/d7qp2QPpRdJEjs5k0+Bw2sdrtDHpNag+zHqbY+MT4=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from SN6PR12MB2717.namprd12.prod.outlook.com (2603:10b6:805:68::29)
- by CH0PR12MB5235.namprd12.prod.outlook.com (2603:10b6:610:d2::5) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4930.18; Thu, 27 Jan
- 2022 23:20:45 +0000
-Received: from SN6PR12MB2717.namprd12.prod.outlook.com
- ([fe80::d461:50bd:ac0c:8c37]) by SN6PR12MB2717.namprd12.prod.outlook.com
- ([fe80::d461:50bd:ac0c:8c37%3]) with mapi id 15.20.4909.019; Thu, 27 Jan 2022
- 23:20:45 +0000
-Message-ID: <6434ba24-a219-6a5a-d902-0b48974a0e43@amd.com>
-Date:   Thu, 27 Jan 2022 17:20:40 -0600
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: [PATCH v4 00/10] Add MEMORY_DEVICE_COHERENT for coherent device
- memory mapping
-Content-Language: en-US
-To:     Andrew Morton <akpm@linux-foundation.org>
-Cc:     Felix.Kuehling@amd.com, linux-mm@kvack.org, rcampbell@nvidia.com,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        hch@lst.de, jgg@nvidia.com, jglisse@redhat.com, apopple@nvidia.com,
-        willy@infradead.org,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>
-References: <20220127030949.19396-1-alex.sierra@amd.com>
- <20220127143258.8da663659948ad1e6f0c0ea8@linux-foundation.org>
-From:   "Sierra Guiza, Alejandro (Alex)" <alex.sierra@amd.com>
-In-Reply-To: <20220127143258.8da663659948ad1e6f0c0ea8@linux-foundation.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: BL0PR05CA0014.namprd05.prod.outlook.com
- (2603:10b6:208:91::24) To SN6PR12MB2717.namprd12.prod.outlook.com
- (2603:10b6:805:68::29)
+        id S1345030AbiA1AyG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Jan 2022 19:54:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53292 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1345063AbiA1Axy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jan 2022 19:53:54 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 400A5C0613E5
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Jan 2022 16:53:44 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id A5239B8241D
+        for <linux-xfs@vger.kernel.org>; Fri, 28 Jan 2022 00:53:42 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65DBAC340E4;
+        Fri, 28 Jan 2022 00:53:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1643331221;
+        bh=LdbdFT56KDhygCVkXpDkRzQJDevxpJqiiN8o20BX7Qg=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=oMyo5Z0QWj83FGXd1j4/uhueU23/iWTwO6qT1hp4qvW1uTQR9YbEZnXaetoZqBH03
+         Qb1kuFv/7A8C+AtpYJQc41SJnIW74ZCChfAzQ2/vb+RzHXNARpJdcrCiBU9f8UNDE4
+         e12hbpAZEDDeUt2UoUUPwRsktTmEyYZOv2Q7tOBjEvKp42QGWPk7S9FwMHz5mn52oH
+         1EucmQtzP+RC5hQfcGhIhu2ENeGteknj/0AVp+hqpyLNFKf4rag+0G/HN6e+mPgi3B
+         EES667ooiObE0R5EyDbGomIeClCI+VPIta//xcHl3ht4RY6f9y6Nf9TvPLQucAxLm/
+         fTNa0XGnUQnRQ==
+Date:   Thu, 27 Jan 2022 16:53:40 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 39/45] libxfs: remove pointless *XFS_MOUNT* flags
+Message-ID: <20220128005340.GF13540@magnolia>
+References: <164263784199.860211.7509808171577819673.stgit@magnolia>
+ <164263805814.860211.18062742237091017727.stgit@magnolia>
+ <bfeb58f9-b55a-c208-b7b3-4986f1f8971a@sandeen.net>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: d1b50743-0872-48b4-fe6e-08d9e1eba509
-X-MS-TrafficTypeDiagnostic: CH0PR12MB5235:EE_
-X-Microsoft-Antispam-PRVS: <CH0PR12MB5235866576050E3ADD4CB77FFD219@CH0PR12MB5235.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:7691;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: tegecmldYu36aB/nO61uG4zETJkFdIIf80jICJcF2rtvlXRS9kSmhG0WKWy4jK4+cm/Aex6ZizkWMAGov1y+NnAmzkC5S3wiS23xkpJfXSYHDsAJJwnI0yRyHwK31ADTHP1OirqVZplOXn0+n55WLqEYOd12DspiP6vOl7/BKh8PV0WVNnHsodLB1us9+4+UxW/4sXAQTAanmZlhUZjbMf2hQbG1jiDOvb91kCinhWta9VyeoDmeupSp1TWn0Ske/kMPCZVlxmUvNGItHn0+sbGntocHuxiKKbihtyKQ682uAa5WzcYu92Bhsc1n7jPQAGgJS8teDGYsW1rYXuKG/4e2mE4cl9pPdDj5Pimg9snMJ/C6QR932XP4W8HkU07nZpfGomadTDDCfFi8ST3DUQ+3hnJ7dnwkGiHI9bwdJFePNKXYzoU2GxB4+LmvosjkRMKFG8NhDvjahDlD1uCF3/uwu2NCEutq/WQHDPDAQlVxmt1WyliYZqqa0tOXrjnrYxAbsHiZX9OfQ1WTVypfsKRgE41TrD2MFjCLRJRmRgG4ETkRucx/7U/4Z+ez24uWsDxVFi3gWZm7XFTXHeOTsTDS59bARskYXFAlYNGYVrFXCcejNnk3NCT1TK96xA/2BjRPk3Yg/yLwLPfHBnxVXedkm+yXXrWF9cvkDVAlMWipm6aT4mTCgBN7951qLRxrWjgHfqPpo+kf085qyCz/CBSXl5orVzupEQ3jfyb9ox0=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR12MB2717.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(4326008)(31696002)(8676002)(7416002)(66476007)(8936002)(4744005)(66946007)(66556008)(6512007)(6666004)(26005)(53546011)(6506007)(86362001)(186003)(5660300002)(38100700002)(316002)(508600001)(6916009)(36756003)(2616005)(2906002)(6486002)(31686004)(45980500001)(43740500002)(20210929001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?SkxSVnYyVDNqdDBvYkdGczhOSmNlU2RVeThsUDc2bzZMbUYzM3c5Vll3b05G?=
- =?utf-8?B?VWw1cDFaeEVZd0xYbkwycjlyV1NPNWtMSFYreFpCRGU3S0NQWk01clpLWG9i?=
- =?utf-8?B?cHk1ZTZtOXF4UGVOajNvNTVoYU9RUjdVTG10T3BmM1VEWTNpRjEvUXFEMWVY?=
- =?utf-8?B?KzAxcFRJUUlEVFl0NE1NMjRYY1Bud2xwZ3Uxclc1dU9QMU9zbW9WK2VVZyt3?=
- =?utf-8?B?ZzF1dzk0dURPbGhvcktVRXhsVk5FRXJoWFVjRVNmeVJUd1IrVVNsQ25kSzV6?=
- =?utf-8?B?UmdnZ2dGY3h2SHlCRzNFODBCaDg3b0xxSGtVd1dyWmpBYlY5OWJVMWZZaEc1?=
- =?utf-8?B?V0x0eTVVU1lLWXlyUWc5MGxTaG93VEx2ZHV3WWpQYklpdDlXdVBVdHFBOXNL?=
- =?utf-8?B?WHdDOWhwaEp3ZHppb1VjRnBhNVFXZFRNVkcrSVlvaXZyR3IrNUdQQkdxNDlF?=
- =?utf-8?B?Z29PY0ZLUW5lTHZzZkIyVGY1WjY4ZU8zNTNncTVyTUhRYURZTHJRY0NFbEhK?=
- =?utf-8?B?dUtHaU9KZTMvZEc1Zi84R0pKemhJZ2d4SW9vUFBPUzJSVnpkRVhTRnFRUG1s?=
- =?utf-8?B?Y0RQNjBzZ3QwdEhxRkxhRHY4ZEZkamdmd3BUYzhBckMxbzhaOUZ4RzdxTlFo?=
- =?utf-8?B?QktISzl2V3FoUEFTcVdjWmJQb3hNS25rZXhVV1Y1Zk9ZMjBrTW1FaE9sSU5F?=
- =?utf-8?B?RnNYVUdyU2U1ZDdjS2g3RllQd0V1SWU3QmVid3B0UWxJaTRTNExVcTBMbk85?=
- =?utf-8?B?UzB0ZXQrZFBLRlVkRi85WW5DMjJLbGljeTVMekpKSHlKSUtFZmVPeE5oUTZM?=
- =?utf-8?B?V2JncGg4Uk5RV3IxaEJkcUVtTm41Q2FHZExUTTVNVFQ5S1ExNzVnT2xCWE9Y?=
- =?utf-8?B?eXpQNXB5UTh0N3VycUliQmVoeDVzM1JZNkM0U0UraVlkcWdhUVA5K1VoTTJl?=
- =?utf-8?B?dFFNRXFiNVI0UCtTZDRDeEgraUtEZGdOYytaWlBWeFNRWVVZVkJVQlM2Z3My?=
- =?utf-8?B?TldJd1pFb3VJSk9BSUhqV29GT3g3K2FZdmsrcXZmVkErMDE3VVpRYWxWQVFp?=
- =?utf-8?B?U2ZlcWNPMWl3U0h0WWgxTTNHcmpYc2FCVXZsWGhpYzNici94RVZmZmRCMHgy?=
- =?utf-8?B?ZE5HZU55aVlBNEkvRFhObXVDaG1ZMTVPMm5BNkRQOGVjOEQrWTJNaUVIbzZl?=
- =?utf-8?B?ajhsa3psVXE4UTNDOHBSSUY4VDRQa1hoWlpvbEFWVDlLeXNGM3JySTlLS3Ju?=
- =?utf-8?B?QjFRdDg0TEY5aVhFSVlMWTRTb3hERG0rWTRvTWk1S0EzeFpDSFJWYWIwcENv?=
- =?utf-8?B?MndzaFo5TGx4b0p5eGx1dDdLaTM5NHBONjE5aDdHeURXK1RkVXlPY1JVYmsr?=
- =?utf-8?B?NHlJRmdSczN0NDJYcTlmUjh3cnVMUDFrUW5rbGJKN01JNklmVlY4VEx6WFdZ?=
- =?utf-8?B?cjBSOU1oTlRscjdyVGJsUTRhSVBhVU8rZmhXM3h0QXBVUlJEOCtwMFZpTEZp?=
- =?utf-8?B?VUlpYlNLVEJZUUxpUm8vbjBDQ1hhVjFaUXNFK1NSSE44MExTVTc5ZTFjeGpJ?=
- =?utf-8?B?bWdjeWs1UXIrTkV5TE9Jdms0cWJlTnM3VHNDUzRmditqYnBaSzZmQVRUL20v?=
- =?utf-8?B?NFBVQzJSMk0wYThUMThUcFVLQnlCajJrTTRraE5OUXlCcXZUS2dxUEdQejdH?=
- =?utf-8?B?a3BvWUJQRUdqQmNTUjJEcWt0QlFEc1BBdGJsMGttQ3RielpSbHJrMFcrYVJO?=
- =?utf-8?B?SjRaOWtWWkp2TEs1WmlOZGRPSkI4TldCaE1sTnNORU5mOURBeGwrM09ML0Rs?=
- =?utf-8?B?dHZadTQ4ZVVmaEJCd0d4L2hVMDZPZ0JNWU9tTlBVTk9pSHVTM0cxZDQrNHFx?=
- =?utf-8?B?MWJNM3ZwU1BYblpiOUMzTjB4RlFxbjNUU29nVzN3N2srQUpyV2JkeFZBdXd3?=
- =?utf-8?B?Y2dQVkttbElzbzVuVFp4amdvZ1BJWjM0N2FPbHVLRXBUM3lBNTBxcGNVYmdo?=
- =?utf-8?B?ZlF4UjFDVFNTaU1ESkZkWkthU01kckdjOGNsYjJsMFMzakFWV1JGVHhwRWtK?=
- =?utf-8?B?a0pvRTFoanRRRDlrbU1hUTNzc29ZSmJjVXlHVkdWSHB2bUpETU9McXNIUEhS?=
- =?utf-8?B?WVRLREZ6WEhYNkJhQ0dvcE9Ec2ExcFJGRVZpeHhUQktiakVlajdRZmphUXhz?=
- =?utf-8?Q?nwJzG8rMoUHCu7QjCGv5fSg=3D?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d1b50743-0872-48b4-fe6e-08d9e1eba509
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR12MB2717.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Jan 2022 23:20:45.3794
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: M8nRhJ3gyWhTmzYNlf5EqO0E9GD1LDK4d/VCtTBKJhDxyJDENtlOE3NcOf0aeGqLa2NpiA/vNSR503h0uSyWCQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH0PR12MB5235
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <bfeb58f9-b55a-c208-b7b3-4986f1f8971a@sandeen.net>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Andrew,
-We're somehow new on this procedure. Are you referring to rebase this 
-patch series to
-git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git 
-<5.17-rc1 tag>?
+On Thu, Jan 27, 2022 at 05:03:22PM -0600, Eric Sandeen wrote:
+> On 1/19/22 6:20 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Get rid of these flags and the m_flags field, since none of them do
+> > anything anymore.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> 
+> ...
+> 
+> > diff --git a/libxfs/init.c b/libxfs/init.c
+> > index e9235a35..093ce878 100644
+> > --- a/libxfs/init.c
+> > +++ b/libxfs/init.c
+> > @@ -540,13 +540,10 @@ xfs_set_inode_alloc(
+> >   	 * sufficiently large, set XFS_MOUNT_32BITINODES if we must alter
+> >   	 * the allocator to accommodate the request.
+> >   	 */
+> > -	if ((mp->m_flags & XFS_MOUNT_SMALL_INUMS) && ino > XFS_MAXINUMBER_32) {
+> > +	if (ino > XFS_MAXINUMBER_32)
+> >   		xfs_set_inode32(mp);
+> > -		mp->m_flags |= XFS_MOUNT_32BITINODES;
+> > -	} else {
+> > +	else
+> >   		xfs_clear_inode32(mp);
+> > -		mp->m_flags &= ~XFS_MOUNT_32BITINODES;
+> > -	}
+> 
+> Hm, so this just removes the "XFS_MOUNT_SMALL_INUMS" test. In the last
+> release, nothing ever set this flag in userspace, so the first part of
+> the conditional was always false, so we always cleared the 32bitinode
+> setting.
+> 
+> So I think this is a change in behavior, and if we get a request for a
+> large inode, we'll enable inode32, at least for this session?
+> 
+> But maybe that's ok, since there is no "inode32 mount option" in
+> userspace, and maybe we *shouldn't* be allocating 64-bit inodes in
+> userspace?  <thinking>
+> 
+> <thinking some more>
+> 
+> I'll get back to this :)
 
-Regards,
-Alex Sierra
+Ooh, good catch.  MOUNT_SMALL_INUMS was zero, so the first part of the
+if test was alway zero, which means that we always call the else clause.
+IOWs, inode64 should always be enabled, not inode32.
 
-Alex Deucher,
-Just a quick heads up. This patch series contains changes to the amdgpu 
-driver which we're
-planning to merge through Andrew's tree, If that's ok with you.
+Maybe there's an argument for only using inode32 mode in userspace
+(though userspace never adds user-visible files) so that a system that
+has inode32 in fstab will never ever have big inodes?
 
-Regards,
-Alex Sierra
+Dunno, but that's a separate patch if people really want that.
 
-On 1/27/2022 4:32 PM, Andrew Morton wrote:
-> On Wed, 26 Jan 2022 21:09:39 -0600 Alex Sierra <alex.sierra@amd.com> wrote:
->
->> This patch series introduces MEMORY_DEVICE_COHERENT, a type of memory
->> owned by a device that can be mapped into CPU page tables like
->> MEMORY_DEVICE_GENERIC and can also be migrated like
->> MEMORY_DEVICE_PRIVATE.
-> Some more reviewer input appears to be desirable here.
->
-> I was going to tentatively add it to -mm and -next, but problems.
-> 5.17-rc1's mm/migrate.c:migrate_vma_check_page() is rather different
-> from the tree you patched.  Please redo, refresh and resend?
->
+I'll respin this patch with fixed logic.  I'll also fix the comments.
+
+--D
+
+> -Eric
+> 
+> 
