@@ -2,117 +2,149 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5F02C433F5
-	for <linux-xfs@archiver.kernel.org>; Sun, 30 Jan 2022 22:30:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82386C4332F
+	for <linux-xfs@archiver.kernel.org>; Mon, 31 Jan 2022 06:32:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233723AbiA3Wab (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 30 Jan 2022 17:30:31 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:54639 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233616AbiA3Wab (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 30 Jan 2022 17:30:31 -0500
-Received: from dread.disaster.area (pa49-180-69-7.pa.nsw.optusnet.com.au [49.180.69.7])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 4803662C2CA;
-        Mon, 31 Jan 2022 09:30:29 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nEIiK-006Aoi-25; Mon, 31 Jan 2022 09:30:28 +1100
-Date:   Mon, 31 Jan 2022 09:30:28 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, chandan.babu@oracle.com,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 1/3] xfs: use vfs helper to update file attributes after
- fallocate
-Message-ID: <20220130223028.GV59729@dread.disaster.area>
-References: <164351876356.4177728.10148216594418485828.stgit@magnolia>
- <164351876914.4177728.15972280389302582854.stgit@magnolia>
+        id S236194AbiAaGcs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 31 Jan 2022 01:32:48 -0500
+Received: from mail-co1nam11on2046.outbound.protection.outlook.com ([40.107.220.46]:52128
+        "EHLO NAM11-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S235726AbiAaGcq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 31 Jan 2022 01:32:46 -0500
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=gvVvXSGe1qDwwi4cpkR2oNbLmtvBwqr6BP2iu3Wy/IeeRyXBJPwzIKHaWYyuhe/nx4Os/JxNM6sGQrBcTGACpaTIXddG5sM8hmmCVBx3nHH1TUaPyIjf+HWAcpcGnCYZgwzUy9qnLVBK3Jnbrgvtmod3Z9/lSPUouQRiqW1eeJstzQuO1HwHZN9gfWtzbTLnGWTSl3krixs4Ar91wJRkYglsSdmiZ3ZOLneg3nbEwk7+8JEq6TbW8NJ/FuGwt3e12HHNiUM7SRjUEFnZMmiG/Xj8EJL6B4Jy5CGHWoHe37YiSBMhWDv+4Kf4iM60EBTVR3xlT2wOx5DauDEZS6EKkQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=XF1tQEnt7Y+Wzg/b2wgNlDuGIXR9GwjBxX2hjzQN5u0=;
+ b=eYMQ8asDzK8XMp23tX/YThG+Bsn3tx2rRV2v6G1yjaZiLga2PrLgv/L4JQryvSDS54j0huA+WCRPL9wylqe3yE56I2mHwomnrXQDY55uJaO0SdHwhx3YZ59ZNcTOUSjrQHAaAjGHWUAzU1fxFpNTLp5ezek1hbg2LTSV22D3h0joBNQsdiJJwcCskRP8Ik+LDSWypELzziLSf2On83D3oQWX7PtWOuxIhT5Isvbhc746+VNauIyHJYBIPnd1L1I3HsPQalEcRqdJCnMO9UeBuV79B5sGTuoSGRm/XnGEytWpmZIyX5V0jEvMGC1ZkHey/wefkhw0p32OTPeIiyYSyQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 12.22.5.236) smtp.rcpttodomain=lists.freedesktop.org
+ smtp.mailfrom=nvidia.com; dmarc=pass (p=reject sp=reject pct=100) action=none
+ header.from=nvidia.com; dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=XF1tQEnt7Y+Wzg/b2wgNlDuGIXR9GwjBxX2hjzQN5u0=;
+ b=Ux6NmGP5qf9vgSppOlaq9fc/g+gq6GYnMpoFYjo4odz22TZkW9y0Guv1GBGfYXwTMIcHYoUbdpDWwgElmzeMD98/wl2DYvh3tZJxx+GlDHH2qWJwDfNdhwiU3OP8BiSqKRmMf8uj2+qxDLTAuDobImq5UbhFTewhFB9pKF8caNcSZoTB38OatbW/idHXOcu2I7Zdr+VJjZn5OGpH5eOPodlqDoRR90CcPp5dGhsVyAAMlVENfUh4pvXY7PrD/VLIS2Gcl758s42l832d4tYuuPOFqkkMrBHIdqzlbrMrkvkk50EkPcGHP8h1dtJawYxY3RbTxplv5bXbkoN6PiAPFA==
+Received: from MW4PR04CA0261.namprd04.prod.outlook.com (2603:10b6:303:88::26)
+ by DM6PR12MB4634.namprd12.prod.outlook.com (2603:10b6:5:165::32) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4930.20; Mon, 31 Jan
+ 2022 06:32:44 +0000
+Received: from CO1NAM11FT009.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:303:88:cafe::56) by MW4PR04CA0261.outlook.office365.com
+ (2603:10b6:303:88::26) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4930.15 via Frontend
+ Transport; Mon, 31 Jan 2022 06:32:44 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 12.22.5.236)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 12.22.5.236 as permitted sender) receiver=protection.outlook.com;
+ client-ip=12.22.5.236; helo=mail.nvidia.com;
+Received: from mail.nvidia.com (12.22.5.236) by
+ CO1NAM11FT009.mail.protection.outlook.com (10.13.175.61) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ 15.20.4930.15 via Frontend Transport; Mon, 31 Jan 2022 06:32:43 +0000
+Received: from rnnvmail201.nvidia.com (10.129.68.8) by DRHQMAIL109.nvidia.com
+ (10.27.9.19) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Mon, 31 Jan
+ 2022 06:32:42 +0000
+Received: from nvdebian.localnet (10.126.230.35) by rnnvmail201.nvidia.com
+ (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.9; Sun, 30 Jan 2022
+ 22:32:39 -0800
+From:   Alistair Popple <apopple@nvidia.com>
+To:     <akpm@linux-foundation.org>, <Felix.Kuehling@amd.com>,
+        <linux-mm@kvack.org>, <rcampbell@nvidia.com>,
+        <linux-ext4@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        Alex Sierra <alex.sierra@amd.com>
+CC:     <amd-gfx@lists.freedesktop.org>, <dri-devel@lists.freedesktop.org>,
+        <hch@lst.de>, <jgg@nvidia.com>, <jglisse@redhat.com>,
+        <willy@infradead.org>
+Subject: Re: [PATCH v5 02/10] mm: add device coherent vma selection for memory migration
+Date:   Mon, 31 Jan 2022 17:32:09 +1100
+Message-ID: <1761055.EOaAWAZ9kn@nvdebian>
+In-Reply-To: <20220128200825.8623-3-alex.sierra@amd.com>
+References: <20220128200825.8623-1-alex.sierra@amd.com> <20220128200825.8623-3-alex.sierra@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <164351876914.4177728.15972280389302582854.stgit@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=61f71185
-        a=NB+Ng1P8A7U24Uo7qoRq4Q==:117 a=NB+Ng1P8A7U24Uo7qoRq4Q==:17
-        a=kj9zAlcOel0A:10 a=DghFqjY3_ZEA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=XgmmCzSYVHu_Ghu3Hc8A:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
+X-Originating-IP: [10.126.230.35]
+X-ClientProxiedBy: drhqmail202.nvidia.com (10.126.190.181) To
+ rnnvmail201.nvidia.com (10.129.68.8)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 428c4fc8-8571-4807-f705-08d9e4837d0b
+X-MS-TrafficTypeDiagnostic: DM6PR12MB4634:EE_
+X-Microsoft-Antispam-PRVS: <DM6PR12MB46346FF5B38114C79CD567BDDF259@DM6PR12MB4634.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:7219;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: hJ1PUShyShlk0fTp1g6E9VvXoeCpImw9IfsEelKsS1vDeIyljNzz+JYQCM6/VZBNoXKg3aqRVk75OSlViqBNNr+GYk1HR1bN1ltaGAn1vtqaT7XiKk6JeTTl3YOo8Yzy9TSv57UBuyKNgR+zrA4/jEZXlIFhyWh624BEWWCrU2ib1/mA6EPOHMSLKMA8uqZA4IVr/+kKRrMkcZJfugf8kBiJR1vF6k3M3iD3qTY1D3Xx5R949yqKLlHZRpk5LH2I4B+ZJ6OD9XjHnVCATaogoJYEOFlkgp3eP6yi4D90VV5OIWkLyFH+DIZCt73hqbeHJLdaPVRxxQC+oq0TQzFwBH9DlWFJtO9oROls6YBqVlyg5Wj+0y8TZhcbnJiKUybBYbmPyJz7htAaNBoxLunlJX5+y3lB3OXDpkL4KTQKANUtLl+ZQ0zXfAytVyFbSzeRG5OjbFEekt350tME5LPwn2vTfKdrHjPo8BUWsULQtrH6tu78+hUP7LdTSOPxaAThPd+OSL9AVmTiaAiGnH43DqihISC9RPMn6Nzh+zRB0ZEVftU0UZ7OnJIjOV+cUlE5tHSKFV8UVpyDqStPGzE5wuFr4H2A5kSaewf3rSveKoIhHS8ZspxhQCoC2IeQDMqG8hLMt0VfGTuNKSFFQgwyUANw4Hc7kebdVHjFYsFOtNmzrIkRn4DXIQ7pXBmRnilkA3/6K2qROG/XzS+WrEZ8kpzv+WoK7CxD/i36uqe7n2P6dCs8ybduBTZL9AVnlPMK
+X-Forefront-Antispam-Report: CIP:12.22.5.236;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:mail.nvidia.com;PTR:InfoNoRecords;CAT:NONE;SFS:(13230001)(4636009)(46966006)(36840700001)(40470700004)(356005)(4326008)(2906002)(9576002)(6666004)(81166007)(9686003)(7416002)(8676002)(5660300002)(8936002)(33716001)(82310400004)(86362001)(70206006)(508600001)(40460700003)(110136005)(47076005)(36860700001)(54906003)(16526019)(70586007)(186003)(26005)(426003)(336012)(316002)(39026012)(36900700001)(20210929001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 31 Jan 2022 06:32:43.8327
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 428c4fc8-8571-4807-f705-08d9e4837d0b
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[12.22.5.236];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT009.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB4634
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Jan 29, 2022 at 08:59:29PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> In XFS, we always update the inode change and modification time when any
-> preallocation operation succeeds.  Furthermore, as various fallocate
-> modes can change the file contents (extending EOF, punching holes,
-> zeroing things, shifting extents), we should drop file privileges like
-> suid just like we do for a regular write().  There's already a VFS
-> helper that figures all this out for us, so use that.
-> 
-> The net effect of this is that we no longer drop suid/sgid if the caller
-> is root, but we also now drop file capabilities.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  fs/xfs/xfs_file.c |   20 +++++++++++++++++---
->  1 file changed, 17 insertions(+), 3 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 22ad207bedf4..3b0d026396e5 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1057,12 +1057,26 @@ xfs_file_fallocate(
+On Saturday, 29 January 2022 7:08:17 AM AEDT Alex Sierra wrote:
+
+[...]
+
+>  struct migrate_vma {
+> diff --git a/mm/migrate.c b/mm/migrate.c
+> index cd137aedcfe5..d3cc3589e1e8 100644
+> --- a/mm/migrate.c
+> +++ b/mm/migrate.c
+> @@ -2264,7 +2264,8 @@ static int migrate_vma_collect_pmd(pmd_t *pmdp,
+>  			if (is_writable_device_private_entry(entry))
+>  				mpfn |= MIGRATE_PFN_WRITE;
+>  		} else {
+> -			if (!(migrate->flags & MIGRATE_VMA_SELECT_SYSTEM))
+> +			if (!(migrate->flags & MIGRATE_VMA_SELECT_SYSTEM) &&
+> +			    !(migrate->flags & MIGRATE_VMA_SELECT_DEVICE_COHERENT))
+>  				goto next;
+>  			pfn = pte_pfn(pte);
+>  			if (is_zero_pfn(pfn)) {
+
+Sorry, but I still don't think this is quite right.
+
+When specifying MIGRATE_VMA_SELECT_DEVICE_COHERENT we are looking for pages to
+migrate from the device back to system memory. But as currently written I think
+this can also select the zero pfn when MIGRATE_VMA_SELECT_DEVICE_COHERENT is
+specified. As far as I know that can never point to device memory so migration
+of a zero pfn should be also be skipped in that case.
+
+We should only migrate the zero pfn if MIGRATE_VMA_SELECT_SYSTEM is specified.
+
+> @@ -2273,6 +2274,13 @@ static int migrate_vma_collect_pmd(pmd_t *pmdp,
+>  				goto next;
+>  			}
+>  			page = vm_normal_page(migrate->vma, addr, pte);
+> +			if (page && !is_zone_device_page(page) &&
+> +			    !(migrate->flags & MIGRATE_VMA_SELECT_SYSTEM))
+> +				goto next;
+> +			if (page && is_device_coherent_page(page) &&
+> +			    (!(migrate->flags & MIGRATE_VMA_SELECT_DEVICE_COHERENT) ||
+> +			     page->pgmap->owner != migrate->pgmap_owner))
+> +				goto next;
+>  			mpfn = migrate_pfn(pfn) | MIGRATE_PFN_MIGRATE;
+>  			mpfn |= pte_write(pte) ? MIGRATE_PFN_WRITE : 0;
 >  		}
->  	}
->  
-> +	/* Update [cm]time and drop file privileges like a regular write. */
-> +	error = file_modified(file);
-> +	if (error)
-> +		goto out_unlock;
-> +
-> +	/*
-> +	 * If we need to change the PREALLOC flag or flush the log, do so.
-> +	 * We already updated the timestamps and cleared the suid flags, so we
-> +	 * don't need to do that again.  This must be committed before the size
-> +	 * change so that we don't trim post-EOF preallocations.
-> +	 */
->  	if (file->f_flags & O_DSYNC)
->  		flags |= XFS_PREALLOC_SYNC;
-> +	if (flags) {
-> +		flags |= XFS_PREALLOC_INVISIBLE;
-> -	error = xfs_update_prealloc_flags(ip, flags);
-> -	if (error)
-> -		goto out_unlock;
-> +		error = xfs_update_prealloc_flags(ip, flags);
-> +		if (error)
-> +			goto out_unlock;
-> +	}
+> 
 
-That's a change of behaviour in that if O_DSYNC is not used, we
-won't call xfs_update_prealloc_flags() and so won't always log the
-inode here, regardless of whether the timestamps are changed or not.
 
-Regardless, the only other caller of xfs_update_prealloc_flags() is
-xfs_fs_map_blocks(), and that clearly modifies the layout of the
-file so it has the same issue w.r.t. stripping privileges via
-xfs_update_prealloc_flags(). So it should really also
-and not the open coded stripping done in
-xfs_update_prealloc_flags().
 
-As such, I think that the use of XFS_PREALLOC_INVISIBLE here is not
-a very nice workaround to avoid repeating the work done by
-file_modified(). All the code that does direct extent modification
-should perform the same actions for the same reasons. And if you
-xfs_fs_map_blocks() to use xfs_log_force_inode() like patch 3 in
-this series does for fallocate(), then XFS_PREALLOC_SYNC and that
-code in xfs_update_prealloc_flags() can go away as well....
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
