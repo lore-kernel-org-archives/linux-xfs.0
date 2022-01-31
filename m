@@ -2,116 +2,144 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72DFEC433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 31 Jan 2022 17:27:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CCCFAC433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 31 Jan 2022 17:30:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1380136AbiAaR1H (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 31 Jan 2022 12:27:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49950 "EHLO
+        id S1380981AbiAaRaE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 31 Jan 2022 12:30:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50642 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1380085AbiAaR1G (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Jan 2022 12:27:06 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8365C061714
-        for <linux-xfs@vger.kernel.org>; Mon, 31 Jan 2022 09:27:06 -0800 (PST)
+        with ESMTP id S236516AbiAaRaD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Jan 2022 12:30:03 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96D17C061714
+        for <linux-xfs@vger.kernel.org>; Mon, 31 Jan 2022 09:30:03 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 752B560F54
-        for <linux-xfs@vger.kernel.org>; Mon, 31 Jan 2022 17:27:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C824FC340E8;
-        Mon, 31 Jan 2022 17:27:05 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 550D0B82BB2
+        for <linux-xfs@vger.kernel.org>; Mon, 31 Jan 2022 17:30:02 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 16233C340E8;
+        Mon, 31 Jan 2022 17:30:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1643650025;
-        bh=8e4j0CTXkbQr52hpCyJka9l93CMVbQoaG+lRKXnaX8M=;
+        s=k20201202; t=1643650201;
+        bh=TLL/CUwfyXXQ9mwmUZtEJJ162wTboSlFYTozimmO3JU=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=nQyF64+JA2lLcUhC1tHDsLWEMKvCdfgQaZg1TBdZa+yGVZqCMgilvLNZPCn0VA7B1
-         JIma8KoCwu3RhmvT5WfNlhp0wfbALZ6rdQQcf74Dq1cHiJGSjNPX2qZNM0oUhg9iFB
-         iq38WWnQ9yBiIFV5K/flJWV5bgodmnW5xJk+HjteyDWZuGa3iPyclq+xnwkyC3mF3h
-         2ZzGSM57eSiFceWZpyROC3kQ4cK7O3k+PARixXGfgLTZrL+qwRHXlEukWd7WySJf1R
-         Bi0Ve15wh0Ev9SAhcaJ41TT1YCcCzRxyCg3xYBQg52uOEYchQBpUqYwKi7STkQuXEJ
-         rdWa0XyBgX1iA==
-Date:   Mon, 31 Jan 2022 09:27:05 -0800
+        b=LacvdSAgnh8rCLmYtUeEvVz48b8hdxQ/OCPq1Onrg1j1gFadGqpFLshB1fVHDdpmy
+         Kgx/aApjIF4JtaryFLpf/6BCTP1nDq9uns3+IsXBaZtguoOy+sF4qJGI5a3/+qaZqd
+         Yx8bFvSqn55xYOQVkpziN+KsWdTb2QBBQQaHE5TDknjKQaUdhS+4GZSmZg4J60ft2C
+         B5qE9TT0J14khkApnFFn5A6YJQ2tftT6wF2/evtWYP12X6ASoNj3UWAPPESCjtxiJC
+         IZU/IlgfWdpjjSC7j3g7bgY980a4k5nnKmNk6wrDJIqHfVS3uFoID7T8YQ7bFPuCC9
+         wkD2KVmDb910g==
+Date:   Mon, 31 Jan 2022 09:30:00 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/5] xfs: fallocate() should call file_modified()
-Message-ID: <20220131172705.GB8313@magnolia>
+Subject: Re: [PATCH v1.1 3/5] xfs: set prealloc flag in xfs_alloc_file_space()
+Message-ID: <20220131173000.GC8313@magnolia>
 References: <164351876356.4177728.10148216594418485828.stgit@magnolia>
  <20220131064350.739863-1-david@fromorbit.com>
- <20220131064350.739863-3-david@fromorbit.com>
+ <20220131064350.739863-4-david@fromorbit.com>
+ <20220131070226.GW59729@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220131064350.739863-3-david@fromorbit.com>
+In-Reply-To: <20220131070226.GW59729@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 31, 2022 at 05:43:47PM +1100, Dave Chinner wrote:
+On Mon, Jan 31, 2022 at 06:02:26PM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> In XFS, we always update the inode change and modification time when
-> any fallocate() operation succeeds.  Furthermore, as various
-> fallocate modes can change the file contents (extending EOF,
-> punching holes, zeroing things, shifting extents), we should drop
-> file privileges like suid just like we do for a regular write().
-> There's already a VFS helper that figures all this out for us, so
-> use that.
+> Now that we only call xfs_update_prealloc_flags() from
+> xfs_file_fallocate() in the case where we need to set the
+> preallocation flag, do this in xfs_alloc_file_space() where we
+> already have the inode joined into a transaction and get
+> rid of the call to xfs_update_prealloc_flags() from the fallocate
+> code.
 > 
-> The net effect of this is that we no longer drop suid/sgid if the
-> caller is root, but we also now drop file capabilities.
-> 
-> We also move the xfs_update_prealloc_flags() function so that it now
-> is only called by the scope that needs to set the the prealloc flag.
-> 
-> Based on a patch from Darrick Wong.
+> This also means that we now correctly avoid setting the
+> XFS_DIFLAG_PREALLOC flag when xfs_is_always_cow_inode() is true, as
+> these inodes will never have preallocated extents.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-I think you can get rid of @flags entirely, right?
+Aha, there's the @flags elision.
 
-With that fixed, I think this looks good.
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/xfs/xfs_file.c | 13 +++++++++----
->  1 file changed, 9 insertions(+), 4 deletions(-)
+> V1.1
+> - fix whitespace damage
+> - remove redundant comments in xfs_alloc_file_space().
 > 
+>  fs/xfs/xfs_bmap_util.c | 9 +++------
+>  fs/xfs/xfs_file.c      | 8 --------
+>  2 files changed, 3 insertions(+), 14 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index d4a387d3d0ce..eb2e387ba528 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -850,9 +850,6 @@ xfs_alloc_file_space(
+>  			rblocks = 0;
+>  		}
+>  
+> -		/*
+> -		 * Allocate and setup the transaction.
+> -		 */
+>  		error = xfs_trans_alloc_inode(ip, &M_RES(mp)->tr_write,
+>  				dblocks, rblocks, false, &tp);
+>  		if (error)
+> @@ -869,9 +866,9 @@ xfs_alloc_file_space(
+>  		if (error)
+>  			goto error;
+>  
+> -		/*
+> -		 * Complete the transaction
+> -		 */
+> +		ip->i_diflags |= XFS_DIFLAG_PREALLOC;
+> +		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+> +
+>  		error = xfs_trans_commit(tp);
+>  		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+>  		if (error)
 > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 6eda41710a5a..223996822d84 100644
+> index 223996822d84..ae6f5b15a023 100644
 > --- a/fs/xfs/xfs_file.c
 > +++ b/fs/xfs/xfs_file.c
-> @@ -953,6 +953,10 @@ xfs_file_fallocate(
->  			goto out_unlock;
->  	}
->  
-> +	error = file_modified(file);
-> +	if (error)
-> +		goto out_unlock;
-> +
->  	if (mode & FALLOC_FL_PUNCH_HOLE) {
->  		error = xfs_free_file_space(ip, offset, len);
->  		if (error)
-> @@ -1053,11 +1057,12 @@ xfs_file_fallocate(
+> @@ -908,7 +908,6 @@ xfs_file_fallocate(
+>  	struct inode		*inode = file_inode(file);
+>  	struct xfs_inode	*ip = XFS_I(inode);
+>  	long			error;
+> -	enum xfs_prealloc_flags	flags = 0;
+>  	uint			iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
+>  	loff_t			new_size = 0;
+>  	bool			do_file_insert = false;
+> @@ -1006,8 +1005,6 @@ xfs_file_fallocate(
+>  		}
+>  		do_file_insert = true;
+>  	} else {
+> -		flags |= XFS_PREALLOC_SET;
+> -
+>  		if (!(mode & FALLOC_FL_KEEP_SIZE) &&
+>  		    offset + len > i_size_read(inode)) {
+>  			new_size = offset + len;
+> @@ -1057,11 +1054,6 @@ xfs_file_fallocate(
 >  			if (error)
 >  				goto out_unlock;
 >  		}
-> -	}
->  
-> -	error = xfs_update_prealloc_flags(ip, flags);
-> -	if (error)
-> -		goto out_unlock;
-> +		error = xfs_update_prealloc_flags(ip, XFS_PREALLOC_SET);
-> +		if (error)
-> +			goto out_unlock;
-> +
-> +	}
+> -
+> -		error = xfs_update_prealloc_flags(ip, XFS_PREALLOC_SET);
+> -		if (error)
+> -			goto out_unlock;
+> -
+>  	}
 >  
 >  	/* Change file size if needed */
->  	if (new_size) {
 > -- 
-> 2.33.0
-> 
+> Dave Chinner
+> david@fromorbit.com
