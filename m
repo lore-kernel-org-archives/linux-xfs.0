@@ -2,188 +2,468 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E4E8C433F5
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Feb 2022 21:59:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67A4BC433FE
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Feb 2022 22:00:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236700AbiBAV67 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Feb 2022 16:58:59 -0500
-Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:18842 "EHLO
-        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S236439AbiBAV65 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Feb 2022 16:58:57 -0500
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 211KSwjE026641;
-        Tue, 1 Feb 2022 21:58:48 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : references : in-reply-to : content-type :
- content-id : content-transfer-encoding : mime-version; s=corp-2021-07-09;
- bh=yH9IUZdYaFTFfsVoH3DNsnM5+okdm05KpDgv/oB6a7o=;
- b=v/hmE0hCajgWhnBfgdHaLKTQfPSTuh4CxeD8JDIcLjovx5lCl2Y4KhR845agGAoN6IcQ
- /wWQ6hEKtwNgONz70J2LgK8A4/wyZlliXuTWQffZljWofJM3Mj3q0NrFyTYMbab9Zv2l
- Ob+9OjuycyV4RQ/6L0xRvFdDgm1qrbJfdBLTbd6Fjx1v0DUfKRGEpx9SlnP1fr0D42fp
- FkvfO9bVXA7spJheckcd7Hx7mTklFc/yAbm/n0T0k7SYx1Y31tbVpk5fbhE7wkyjMvJ5
- poxPKQ+Eo0y8kxI8LtdxdnkRPKprPYn6FGwTfjJiMYyfrOZ7EuDqgb7UvOtw0qYzZQF+ 2A== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3dxj9vcc2m-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 01 Feb 2022 21:58:47 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 211LvAgx076624;
-        Tue, 1 Feb 2022 21:58:47 GMT
-Received: from nam04-dm6-obe.outbound.protection.outlook.com (mail-dm6nam08lp2042.outbound.protection.outlook.com [104.47.73.42])
-        by aserp3020.oracle.com with ESMTP id 3dvwd6y3dk-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 01 Feb 2022 21:58:46 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=oAw1DJz6QyGV5rHcTOiru87w9rz9Ncm+yhkP9wbejD7yicA+kjpQVoOW3ysgcx9w7P5XjvAYUnONVGF41KrU3zHuxkSX1we4zMNQjXXaQLwqBkhzUv0y19kwbxVEilsj9B2XG3v77HjI0bzCL09rD4X5DQktfalefZIWq5bfzQFN7avGmjzfAAFhc6gNFFWjYJPSXNi36TaHvulry/aGH36QiGHPqcFICoP8A6M5/fvmSF2Vhxkt1Pd1tiHTK6OkWS01024AGhX+YVGmuZLbQDg0v6VHbc9XwFYJtatXKfDecg+eORPxWpFBQEmc+CzAHR6fi0Cc+70fYsU/jB30tw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=yH9IUZdYaFTFfsVoH3DNsnM5+okdm05KpDgv/oB6a7o=;
- b=mXDgiXvvz3WS7oxcwEhzxNGOJbrsxAYYgbWkotlU4YKQLZD86udaIfnVppsLvRnZ5LL0ngj8Ue0mLsRGpDxr0yv9RkAFnhi2V41Zyp796JOaFsuLlIS2BkihJBlRSU4WxNoQ2Hv9iTk8A8+cKCVXXpFEYWuav1XmzvH3NGhU+VLL1oujvirfN+H46v/WonaLXGeuwox4lUSii5Br5zGcEoZuOLPLfAVZfkKms7CDRsovPLPJ62QQM3jDS7ezc7l+9au4DAaYWZldjrYJg2Kn74V/xe8UjJ9hb6nxs2mvxAu4X6X2njCP0rToR9A9qMCOpPq6qu6p8YYssU38Pw6w/A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=yH9IUZdYaFTFfsVoH3DNsnM5+okdm05KpDgv/oB6a7o=;
- b=EipsjalJUofs2BQ3IL7ZnmdPHev3WT1Dz2PuvouL8ahwfXz2XtGaLY9sWnSREJwHHybxCeQRuI0MVdpG+kHR3SPp5aR08nwYal5EklKeuE2U7dOrXHeRW6hEvUYk/B8II3MjStq8xQyNTiYdDo2UhSIxMyzhS862junL+bubVrQ=
-Received: from DM6PR10MB2795.namprd10.prod.outlook.com (2603:10b6:5:70::21) by
- BN8PR10MB3506.namprd10.prod.outlook.com (2603:10b6:408:ad::19) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.4930.17; Tue, 1 Feb 2022 21:58:45 +0000
-Received: from DM6PR10MB2795.namprd10.prod.outlook.com
- ([fe80::2927:5d4f:3a19:5f0b]) by DM6PR10MB2795.namprd10.prod.outlook.com
- ([fe80::2927:5d4f:3a19:5f0b%3]) with mapi id 15.20.4930.022; Tue, 1 Feb 2022
- 21:58:45 +0000
-From:   Catherine Hoang <catherine.hoang@oracle.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-CC:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH 1/1] xfs: reject crazy array sizes being fed to
- XFS_IOC_GETBMAP*
-Thread-Topic: [PATCH 1/1] xfs: reject crazy array sizes being fed to
- XFS_IOC_GETBMAP*
-Thread-Index: AQHYElsO+Eh2UNY6KUeIIXhVRZP7wqx/SQwA
-Date:   Tue, 1 Feb 2022 21:58:45 +0000
-Message-ID: <DB7EE8C6-6EB8-4F85-815F-B9A831E30BAC@oracle.com>
-References: <164316351504.2600306.5900193386929839795.stgit@magnolia>
- <164316352054.2600306.4346155831671217356.stgit@magnolia>
-In-Reply-To: <164316352054.2600306.4346155831671217356.stgit@magnolia>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-mailer: Apple Mail (2.3654.120.0.1.13)
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 36273443-c535-4bbd-64aa-08d9e5ce04a8
-x-ms-traffictypediagnostic: BN8PR10MB3506:EE_
-x-microsoft-antispam-prvs: <BN8PR10MB350678BB0960EF3E2163B22189269@BN8PR10MB3506.namprd10.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:983;
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: yGBi6voISmgLZOaz1uKWAjP7FPbzltae2gI0qLNWuVZ07xXQ6O9xD6T41kkr4rS6Sla7aSIV0HMYvWfRlZwP1JYCbJKnjfkz+kNFUUzL/9pbZTvskJQumguKzBvppl6dk3mfTviQB2h9/KjbaZ7COrGAb+l36R6RzWonEIWh8Ytktc7+/bp0EA4tx2OOA78qq56bPnyyFCZDLI9hFgPgkl5O1R6fCP6D8P3/OH5zHwSF3A6PPdax0aNU21R6ugOswGr5IWPDRSqF5MAPv2V69gqJmasQLEzmubjkL4IVvzkOZkTAJhdi7bh6t1wNDQMvc/Lu1lG5UXqMZPlesXTvhokC4lY1FC0XH4QITkPS08kfdpjtfI8xMys7CRCkeh0ARddd/u0MQv3PhtULCVOW91jRzd4p/yskp0UwgUwrHJk/3/kUn4yRR3V/M4xCvwxYz1LRRPu6Dj/j+JMH1zxlFykXBLLkp75rki84o9jwrqBAnOsHSeI4Ds2QMTr/i/fI1iDE95GP70KhUvBXxhlD87UyA3a/MA8LNvrxmhUF2ILz3r3TG9SL6EqWqMbQwEkSWsMICdroxr8Ebkc8GHgxEBX2unmrJka11zq+Sq+cYNDLko65Oce2PfpR0v7OUfnd6EWiZ+YdDS1Qj6JgA7VqsOHUsNZ8AtJSUXm9D4K1vkBp58wd4pK+wGOhDr/kpLFKGL3MR4lwb0DDseDy6HG7vBdWzJsYRLja+YNtEnR8uT4=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB2795.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(8936002)(8676002)(53546011)(66446008)(66476007)(71200400001)(6506007)(6916009)(4326008)(2616005)(76116006)(66946007)(2906002)(66556008)(64756008)(186003)(508600001)(44832011)(6486002)(91956017)(83380400001)(36756003)(38070700005)(38100700002)(33656002)(6512007)(5660300002)(316002)(86362001)(122000001)(45980500001);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?V65VYjveIMBNtzTiPpUMKw5yNti9T0YIz43pKvxOBX8EAhbpcG9bPju9ATwU?=
- =?us-ascii?Q?gw4SiW/eeTzfFqgsiKDRSqO3orAw11jo3nr1Mt2Jq1satUEg+NoiABAkQhER?=
- =?us-ascii?Q?5/p2CPKMjOpvhbCLFYhZ1oyLoXvMmzUxzhOxXBETfemV2IrpxyvJ5f3ww+Zr?=
- =?us-ascii?Q?qQlgl9kGqm3IbXC0aseI/li6MbStUlFrR3wV189gBdUrTChy+tI9tUAQ4b4C?=
- =?us-ascii?Q?iL2W/sfi+tUPeTGaykwlzCP6GZo1dgc06M/uPzKrr36zm17HL0EIUUzw7q6J?=
- =?us-ascii?Q?TW4VbbXq4MwRDTNdwLdyf/gc0V4nFEHeVYl/177AMtJ2BbU6DktSDEEJtal5?=
- =?us-ascii?Q?bHgiGggsyOIrYOqWqDgPKvxdpJhVw4MrVDeN8usqyAM6PgTn+voBszpOAaPv?=
- =?us-ascii?Q?pEw8/Yb4/nN1u6wWDVcqYOlYlVg4dplSrb0a+k0wdAeSOcDiAmHM5SN7oz5I?=
- =?us-ascii?Q?j1rND3/+CkyyPZmsGQqeTzZcgqh7jRqYAT1EPPiuKFTguO0Y9I9e2vcMQtiS?=
- =?us-ascii?Q?GNf7Vaiumr4BhDdzS0B1kk71F9ZIVDuhC+OVu7jUbbJGHOM3LqYqr0eXWpoy?=
- =?us-ascii?Q?j5pTYhvz+AJrXBN1XT3fF1PQJtZW58c0egILLOr/sjCJOm+3SUHvqjx2TYW3?=
- =?us-ascii?Q?guLvHW/2YsMutiNdElILTgTB6qLATcP5DxrBwVm9O2LcG8mjJFN77M9EmeHq?=
- =?us-ascii?Q?Op1MfI8YT1u+QzdQwKea/c1GJPIUaWT0NwpMXcia3gdkrRTl8063ja6Mjhak?=
- =?us-ascii?Q?X1+c5KQdRrRXUaAEIfHa1zdQkNVS8GstfWswCMqlbwgAU9BvIAciPceuv5zZ?=
- =?us-ascii?Q?VZupMqTheWyRCv5XWQRSjhSHSm1I1eBId8CdA1gytkDlYZI64gO9ekI2oMUo?=
- =?us-ascii?Q?Saqu/wt1SYIH45evPIdfTmq6v/5qAbN3IhkqXdwUapkdXP177LaRzuH/f7CI?=
- =?us-ascii?Q?2p6EKMlIfiid2q1/0rT3tOxVLJDvclyqifsgMJH0MbfejYhpfxIwcr+WpEVU?=
- =?us-ascii?Q?vdXpCPfEYxXv4in34uSEMnvW00TOZn0txFsi3aCFxs2LresPdG1VXDjZduDX?=
- =?us-ascii?Q?GNvZ3FHkzBcbFoYGDtNSUC5IWbI+lx0jmj5Q0XMtbwx8yn6McNf+Qfd+XLX8?=
- =?us-ascii?Q?dILtS2F8Hcvzy6dYB/3Vf7ZqjkGORILeDjcMJllAXj1KpVVSIulwJiAcGp3b?=
- =?us-ascii?Q?fHLKl+dqOW6lY4f6KQGAP0Z+OonoZRZk4cYNg7h+wLkFvfq00xrayCAkzHaV?=
- =?us-ascii?Q?3p7BccpCXcHvIHL+jDqCPYlBG/TMmzoOoOl+sChhB5iTDPcEqWkHaazFHsyQ?=
- =?us-ascii?Q?LHkoXFMr/FckAmu4FcXDNTowHGbUMaObAdknxgP8+JEH0a3iG9jAQmmj+jkl?=
- =?us-ascii?Q?59jFfyn/ek51BWWBtV/5QGFXIgvsUx9tOgn3aY6lcLF1pwO5fQul/bHEy5Ak?=
- =?us-ascii?Q?8B+ID6axN9gEdlScjoSxWsOMbgLStGCDsWb/XczOIwI//mzQLBFbG5id+Nbm?=
- =?us-ascii?Q?vMOzP8DkehxGQVoltjR18mH5OKA3zL7c+qurn7cGFe+TFQUfaTv+VgGBnP4T?=
- =?us-ascii?Q?mMLdjXafMNItmoyKEfVJj+xtECF6B3q5Jd8pejsTj07vIC/9zfZhSawST3XS?=
- =?us-ascii?Q?k7BYeo80QkXYMZkU3fymTAxt6SftwMJWOlOeQrbi5XhGeLN0yqd1lGg4kTva?=
- =?us-ascii?Q?5f4nDpB2OW16PI/L35lIrVBstreMuOqUEh/y+8rbRqY4GT/WnaNBjNYJehDH?=
- =?us-ascii?Q?MNBJCvNBfoYiexJLX7oxUQceBL5B5Yk=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <75A9593B23215E41B6163DAE7BCD6029@namprd10.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+        id S233601AbiBAWAa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Feb 2022 17:00:30 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:39158 "EHLO
+        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231178AbiBAWAa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Feb 2022 17:00:30 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B626160C09;
+        Tue,  1 Feb 2022 22:00:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 28652C340EC;
+        Tue,  1 Feb 2022 22:00:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1643752829;
+        bh=egskwNSSdKdn+sOWw8MiLB+1OslmVahQ/GbjW1qoiy0=;
+        h=Date:From:To:Cc:Subject:Reply-To:References:In-Reply-To:From;
+        b=LwaL/Z160ZzxCDffS3Km90fWggzAYf4VU0keO9l49qI6y9q+WyNR+/M7MTmWMZJOV
+         cSY1IPny6jxCsQOO5STFuZ6B319IcEap4sXlBJY7MY6hX4+Nb2COfUzc41scD6pZkW
+         rD+7Hb6xcY0+g1RXO6zWaGk+ByqC+B0+3wVNTqKKJXEKMWl/6ynPcCrQ+Pto+/AvFq
+         9NjH+CDUHZ+ay0d48PUoj58MYqn2GP3EaZsBEku/n70zgJVUUNsKXIEWw6E/dFFZkJ
+         J1Q0zjOsklzSVKIWPr5fL5uFBMZtjf3m37/wzij0A2F1ZneqwLu3FtMWn28k6FPX/K
+         F/kgAFpnaGcQw==
+Received: by paulmck-ThinkPad-P17-Gen-1.home (Postfix, from userid 1000)
+        id B306B5C0326; Tue,  1 Feb 2022 14:00:28 -0800 (PST)
+Date:   Tue, 1 Feb 2022 14:00:28 -0800
+From:   "Paul E. McKenney" <paulmck@kernel.org>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Al Viro <viro@zeniv.linux.org.uk>, linux-xfs@vger.kernel.org,
+        Ian Kent <raven@themaw.net>, rcu@vger.kernel.org
+Subject: Re: [PATCH] xfs: require an rcu grace period before inode recycle
+Message-ID: <20220201220028.GH4285@paulmck-ThinkPad-P17-Gen-1>
+Reply-To: paulmck@kernel.org
+References: <20220124220853.GN59729@dread.disaster.area>
+ <Ye82TgBY0VmtTjMc@bfoster>
+ <20220125003120.GO59729@dread.disaster.area>
+ <YfBBzHascwVnefYY@bfoster>
+ <20220125224551.GQ59729@dread.disaster.area>
+ <YfIdVq6R6xEWxy0K@zeniv-ca.linux.org.uk>
+ <20220127052609.GR59729@dread.disaster.area>
+ <YfLsBdPBSsyPFgHJ@bfoster>
+ <20220128213911.GO4285@paulmck-ThinkPad-P17-Gen-1>
+ <Yffioz+t9cjZbIBv@bfoster>
 MIME-Version: 1.0
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB2795.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 36273443-c535-4bbd-64aa-08d9e5ce04a8
-X-MS-Exchange-CrossTenant-originalarrivaltime: 01 Feb 2022 21:58:45.3179
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: dMoYfuOjajFe6tGhMMQ+giuEyAE8mFz/1sb6O/UFJ9vCv0rhvX6j519ttwSj11pSmt+yaolYlE3zHIl1tlB3DTIQ6s1biSiyWXXC7dxCIIU=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN8PR10MB3506
-X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10245 signatures=673430
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
- suspectscore=0 malwarescore=0 bulkscore=0 mlxscore=0 spamscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2201110000 definitions=main-2202010120
-X-Proofpoint-ORIG-GUID: VQIB6p2CYTxSNvYum7jsW8t4ET-OXvWE
-X-Proofpoint-GUID: VQIB6p2CYTxSNvYum7jsW8t4ET-OXvWE
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Yffioz+t9cjZbIBv@bfoster>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> On Jan 25, 2022, at 6:18 PM, Darrick J. Wong <djwong@kernel.org> wrote:
->=20
-> From: Darrick J. Wong <djwong@kernel.org>
->=20
-> Syzbot tripped over the following complaint from the kernel:
->=20
-> WARNING: CPU: 2 PID: 15402 at mm/util.c:597 kvmalloc_node+0x11e/0x125 mm/=
-util.c:597
->=20
-> While trying to run XFS_IOC_GETBMAP against the following structure:
->=20
-> struct getbmap fubar =3D {
-> 	.bmv_count	=3D 0x22dae649,
-> };
->=20
-> Obviously, this is a crazy huge value since the next thing that the
-> ioctl would do is allocate 37GB of memory.  This is enough to make
-> kvmalloc mad, but isn't large enough to trip the validation functions.
-> In other words, I'm fussing with checks that were **already sufficient**
-> because that's easier than dealing with 644 internal bug reports.  Yes,
-> that's right, six hundred and forty-four.
->=20
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
-> fs/xfs/xfs_ioctl.c |    2 +-
-> 1 file changed, 1 insertion(+), 1 deletion(-)
->=20
+On Mon, Jan 31, 2022 at 08:22:43AM -0500, Brian Foster wrote:
+> On Fri, Jan 28, 2022 at 01:39:11PM -0800, Paul E. McKenney wrote:
+> > On Thu, Jan 27, 2022 at 02:01:25PM -0500, Brian Foster wrote:
+> > > On Thu, Jan 27, 2022 at 04:26:09PM +1100, Dave Chinner wrote:
+> > > > On Thu, Jan 27, 2022 at 04:19:34AM +0000, Al Viro wrote:
+> > > > > On Wed, Jan 26, 2022 at 09:45:51AM +1100, Dave Chinner wrote:
+> > > > > 
+> > > > > > Right, background inactivation does not improve performance - it's
+> > > > > > necessary to get the transactions out of the evict() path. All we
+> > > > > > wanted was to ensure that there were no performance degradations as
+> > > > > > a result of background inactivation, not that it was faster.
+> > > > > > 
+> > > > > > If you want to confirm that there is an increase in cold cache
+> > > > > > access when the batch size is increased, cpu profiles with 'perf
+> > > > > > top'/'perf record/report' and CPU cache performance metric reporting
+> > > > > > via 'perf stat -dddd' are your friend. See elsewhere in the thread
+> > > > > > where I mention those things to Paul.
+> > > > > 
+> > > > > Dave, do you see a plausible way to eventually drop Ian's bandaid?
+> > > > > I'm not asking for that to happen this cycle and for backports Ian's
+> > > > > patch is obviously fine.
+> > > > 
+> > > > Yes, but not in the near term.
+> > > > 
+> > > > > What I really want to avoid is the situation when we are stuck with
+> > > > > keeping that bandaid in fs/namei.c, since all ways to avoid seeing
+> > > > > reused inodes would hurt XFS too badly.  And the benchmarks in this
+> > > > > thread do look like that.
+> > > > 
+> > > > The simplest way I think is to have the XFS inode allocation track
+> > > > "busy inodes" in the same way we track "busy extents". A busy extent
+> > > > is an extent that has been freed by the user, but is not yet marked
+> > > > free in the journal/on disk. If we try to reallocate that busy
+> > > > extent, we either select a different free extent to allocate, or if
+> > > > we can't find any we force the journal to disk, wait for it to
+> > > > complete (hence unbusying the extents) and retry the allocation
+> > > > again.
+> > > > 
+> > > > We can do something similar for inode allocation - it's actually a
+> > > > lockless tag lookup on the radix tree entry for the candidate inode
+> > > > number. If we find the reclaimable radix tree tag set, the we select
+> > > > a different inode. If we can't allocate a new inode, then we kick
+> > > > synchronize_rcu() and retry the allocation, allowing inodes to be
+> > > > recycled this time.
+> > > 
+> > > I'm starting to poke around this area since it's become clear that the
+> > > currently proposed scheme just involves too much latency (unless Paul
+> > > chimes in with his expedited grace period variant, at which point I will
+> > > revisit) in the fast allocation/recycle path. ISTM so far that a simple
+> > > "skip inodes in the radix tree, sync rcu if unsuccessful" algorithm will
+> > > have pretty much the same pattern of behavior as this patch: one
+> > > synchronize_rcu() per batch.
+> > 
+> > Apologies for being slow, but there have been some distractions.
+> > One of the distractions was trying to put together atheoretically
+> > attractive but massively overcomplicated implementation of
+> > poll_state_synchronize_rcu_expedited().  It currently looks like a
+> > somewhat suboptimal but much simpler approach is available.  This
+> > assumes that XFS is not in the picture until after both the scheduler
+> > and workqueues are operational.
+> > 
+> 
+> No worries.. I don't think that would be a roadblock for us. ;)
+> 
+> > And yes, the complicated version might prove necessary, but let's
+> > see if this whole thing is even useful first.  ;-)
+> > 
+> 
+> Indeed. This patch only really requires a single poll/sync pair of
+> calls, so assuming the expedited grace period usage plays nice enough
+> with typical !expedited usage elsewhere in the kernel for some basic
+> tests, it would be fairly trivial to port this over and at least get an
+> idea of what the worst case behavior might be with expedited grace
+> periods, whether it satisfies the existing latency requirements, etc.
+> 
+> Brian
+> 
+> > In the meantime, if you want to look at an extremely unbaked view,
+> > here you go:
+> > 
+> > https://docs.google.com/document/d/1RNKWW9jQyfjxw2E8dsXVTdvZYh0HnYeSHDKog9jhdN8/edit?usp=sharing
 
-Looks good,
-Reviewed-by: Catherine Hoang <catherine.hoang@oracle.com>
->=20
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 03a6198c97f6..2515fe8299e1 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -1464,7 +1464,7 @@ xfs_ioc_getbmap(
->=20
-> 	if (bmx.bmv_count < 2)
-> 		return -EINVAL;
-> -	if (bmx.bmv_count > ULONG_MAX / recsize)
-> +	if (bmx.bmv_count >=3D INT_MAX / recsize)
-> 		return -ENOMEM;
->=20
-> 	buf =3D kvcalloc(bmx.bmv_count, sizeof(*buf), GFP_KERNEL);
->=20
+And here is a version that passes moderate rcutorture testing.  So no
+obvious bugs.  Probably a few non-obvious ones, though!  ;-)
 
+This commit is on -rcu's "dev" branch along with this rcutorture
+addition:
+
+cd7bd64af59f ("EXP rcutorture: Test polled expedited grace-period primitives")
+
+I will carry these in -rcu's "dev" branch until at least the upcoming
+merge window, fixing bugs as and when they becom apparent.  If I don't
+hear otherwise by that time, I will create a tag for it and leave
+it behind.
+
+The backport to v5.17-rc2 just requires removing:
+
+	mutex_init(&rnp->boost_kthread_mutex);
+
+From rcu_init_one().  This line is added by this -rcu commit:
+
+02a50b09c31f ("rcu: Add mutex for rcu boost kthread spawning and affinity setting")
+
+Please let me know how it goes!
+
+							Thanx, Paul
+
+------------------------------------------------------------------------
+
+commit dd896a86aebc5b225ceee13fcf1375c7542a5e2d
+Author: Paul E. McKenney <paulmck@kernel.org>
+Date:   Mon Jan 31 16:55:52 2022 -0800
+
+    EXP rcu: Add polled expedited grace-period primitives
+    
+    This is an experimental proof of concept of polled expedited grace-period
+    functions.  These functions are get_state_synchronize_rcu_expedited(),
+    start_poll_synchronize_rcu_expedited(), poll_state_synchronize_rcu_expedited(),
+    and cond_synchronize_rcu_expedited(), which are similar to
+    get_state_synchronize_rcu(), start_poll_synchronize_rcu(),
+    poll_state_synchronize_rcu(), and cond_synchronize_rcu(), respectively.
+    
+    One limitation is that start_poll_synchronize_rcu_expedited() cannot
+    be invoked before workqueues are initialized.
+    
+    Cc: Brian Foster <bfoster@redhat.com>
+    Cc: Dave Chinner <david@fromorbit.com>
+    Cc: Al Viro <viro@zeniv.linux.org.uk>
+    Cc: Ian Kent <raven@themaw.net>
+    Signed-off-by: Paul E. McKenney <paulmck@kernel.org>
+
+diff --git a/include/linux/rcutiny.h b/include/linux/rcutiny.h
+index 858f4d429946d..ca139b4b2d25f 100644
+--- a/include/linux/rcutiny.h
++++ b/include/linux/rcutiny.h
+@@ -23,6 +23,26 @@ static inline void cond_synchronize_rcu(unsigned long oldstate)
+ 	might_sleep();
+ }
+ 
++static inline unsigned long get_state_synchronize_rcu_expedited(void)
++{
++	return get_state_synchronize_rcu();
++}
++
++static inline unsigned long start_poll_synchronize_rcu_expedited(void)
++{
++	return start_poll_synchronize_rcu();
++}
++
++static inline bool poll_state_synchronize_rcu_expedited(unsigned long oldstate)
++{
++	return poll_state_synchronize_rcu(oldstate);
++}
++
++static inline void cond_synchronize_rcu_expedited(unsigned long oldstate)
++{
++	cond_synchronize_rcu(oldstate);
++}
++
+ extern void rcu_barrier(void);
+ 
+ static inline void synchronize_rcu_expedited(void)
+diff --git a/include/linux/rcutree.h b/include/linux/rcutree.h
+index 76665db179fa1..eb774e9be21bf 100644
+--- a/include/linux/rcutree.h
++++ b/include/linux/rcutree.h
+@@ -40,6 +40,10 @@ bool rcu_eqs_special_set(int cpu);
+ void rcu_momentary_dyntick_idle(void);
+ void kfree_rcu_scheduler_running(void);
+ bool rcu_gp_might_be_stalled(void);
++unsigned long get_state_synchronize_rcu_expedited(void);
++unsigned long start_poll_synchronize_rcu_expedited(void);
++bool poll_state_synchronize_rcu_expedited(unsigned long oldstate);
++void cond_synchronize_rcu_expedited(unsigned long oldstate);
+ unsigned long get_state_synchronize_rcu(void);
+ unsigned long start_poll_synchronize_rcu(void);
+ bool poll_state_synchronize_rcu(unsigned long oldstate);
+diff --git a/kernel/rcu/rcu.h b/kernel/rcu/rcu.h
+index 24b5f2c2de87b..5b61cf20c91e9 100644
+--- a/kernel/rcu/rcu.h
++++ b/kernel/rcu/rcu.h
+@@ -23,6 +23,13 @@
+ #define RCU_SEQ_CTR_SHIFT	2
+ #define RCU_SEQ_STATE_MASK	((1 << RCU_SEQ_CTR_SHIFT) - 1)
+ 
++/*
++ * Low-order bit definitions for polled grace-period APIs.
++ */
++#define RCU_GET_STATE_FROM_EXPEDITED	0x1
++#define RCU_GET_STATE_USE_NORMAL	0x2
++#define RCU_GET_STATE_BAD_FOR_NORMAL	(RCU_GET_STATE_FROM_EXPEDITED | RCU_GET_STATE_USE_NORMAL)
++
+ /*
+  * Return the counter portion of a sequence number previously returned
+  * by rcu_seq_snap() or rcu_seq_current().
+diff --git a/kernel/rcu/tree.c b/kernel/rcu/tree.c
+index e6ad532cffe78..5de36abcd7da1 100644
+--- a/kernel/rcu/tree.c
++++ b/kernel/rcu/tree.c
+@@ -3871,7 +3871,8 @@ EXPORT_SYMBOL_GPL(start_poll_synchronize_rcu);
+  */
+ bool poll_state_synchronize_rcu(unsigned long oldstate)
+ {
+-	if (rcu_seq_done(&rcu_state.gp_seq, oldstate)) {
++	if (rcu_seq_done(&rcu_state.gp_seq, oldstate) &&
++	    !WARN_ON_ONCE(oldstate & RCU_GET_STATE_BAD_FOR_NORMAL)) {
+ 		smp_mb(); /* Ensure GP ends before subsequent accesses. */
+ 		return true;
+ 	}
+@@ -3900,7 +3901,8 @@ EXPORT_SYMBOL_GPL(poll_state_synchronize_rcu);
+  */
+ void cond_synchronize_rcu(unsigned long oldstate)
+ {
+-	if (!poll_state_synchronize_rcu(oldstate))
++	if (!poll_state_synchronize_rcu(oldstate) &&
++	    !WARN_ON_ONCE(oldstate & RCU_GET_STATE_BAD_FOR_NORMAL))
+ 		synchronize_rcu();
+ }
+ EXPORT_SYMBOL_GPL(cond_synchronize_rcu);
+@@ -4593,6 +4595,9 @@ static void __init rcu_init_one(void)
+ 			init_waitqueue_head(&rnp->exp_wq[3]);
+ 			spin_lock_init(&rnp->exp_lock);
+ 			mutex_init(&rnp->boost_kthread_mutex);
++			raw_spin_lock_init(&rnp->exp_poll_lock);
++			rnp->exp_seq_poll_rq = 0x1;
++			INIT_WORK(&rnp->exp_poll_wq, sync_rcu_do_polled_gp);
+ 		}
+ 	}
+ 
+diff --git a/kernel/rcu/tree.h b/kernel/rcu/tree.h
+index 926673ebe355f..19fc9acce3ce2 100644
+--- a/kernel/rcu/tree.h
++++ b/kernel/rcu/tree.h
+@@ -128,6 +128,10 @@ struct rcu_node {
+ 	wait_queue_head_t exp_wq[4];
+ 	struct rcu_exp_work rew;
+ 	bool exp_need_flush;	/* Need to flush workitem? */
++	raw_spinlock_t exp_poll_lock;
++				/* Lock and data for polled expedited grace periods. */
++	unsigned long exp_seq_poll_rq;
++	struct work_struct exp_poll_wq;
+ } ____cacheline_internodealigned_in_smp;
+ 
+ /*
+@@ -476,3 +480,6 @@ static void rcu_iw_handler(struct irq_work *iwp);
+ static void check_cpu_stall(struct rcu_data *rdp);
+ static void rcu_check_gp_start_stall(struct rcu_node *rnp, struct rcu_data *rdp,
+ 				     const unsigned long gpssdelay);
++
++/* Forward declarations for tree_exp.h. */
++static void sync_rcu_do_polled_gp(struct work_struct *wp);
+diff --git a/kernel/rcu/tree_exp.h b/kernel/rcu/tree_exp.h
+index 1a45667402260..728896f374fee 100644
+--- a/kernel/rcu/tree_exp.h
++++ b/kernel/rcu/tree_exp.h
+@@ -871,3 +871,154 @@ void synchronize_rcu_expedited(void)
+ 		destroy_work_on_stack(&rew.rew_work);
+ }
+ EXPORT_SYMBOL_GPL(synchronize_rcu_expedited);
++
++/**
++ * get_state_synchronize_rcu_expedited - Snapshot current expedited RCU state
++ *
++ * Returns a cookie to pass to a call to cond_synchronize_rcu_expedited()
++ * or poll_state_synchronize_rcu_expedited(), allowing them to determine
++ * whether or not a full expedited grace period has elapsed in the meantime.
++ */
++unsigned long get_state_synchronize_rcu_expedited(void)
++{
++	if (rcu_gp_is_normal())
++	return get_state_synchronize_rcu() |
++	       RCU_GET_STATE_FROM_EXPEDITED | RCU_GET_STATE_USE_NORMAL;
++
++	// Any prior manipulation of RCU-protected data must happen
++	// before the load from ->expedited_sequence.
++	smp_mb();  /* ^^^ */
++	return rcu_exp_gp_seq_snap() | RCU_GET_STATE_FROM_EXPEDITED;
++}
++EXPORT_SYMBOL_GPL(get_state_synchronize_rcu_expedited);
++
++/*
++ * Ensure that start_poll_synchronize_rcu_expedited() has the expedited
++ * RCU grace periods that it needs.
++ */
++static void sync_rcu_do_polled_gp(struct work_struct *wp)
++{
++	unsigned long flags;
++	struct rcu_node *rnp = container_of(wp, struct rcu_node, exp_poll_wq);
++	unsigned long s;
++
++	raw_spin_lock_irqsave(&rnp->exp_poll_lock, flags);
++	s = rnp->exp_seq_poll_rq;
++	rnp->exp_seq_poll_rq |= 0x1;
++	raw_spin_unlock_irqrestore(&rnp->exp_poll_lock, flags);
++	if (s & 0x1)
++		return;
++	while (!sync_exp_work_done(s))
++		synchronize_rcu_expedited();
++	raw_spin_lock_irqsave(&rnp->exp_poll_lock, flags);
++	s = rnp->exp_seq_poll_rq;
++	if (!(s & 0x1) && !sync_exp_work_done(s))
++		queue_work(rcu_gp_wq, &rnp->exp_poll_wq);
++	else
++		rnp->exp_seq_poll_rq |= 0x1;
++	raw_spin_unlock_irqrestore(&rnp->exp_poll_lock, flags);
++}
++
++/**
++ * start_poll_synchronize_rcu_expedited - Snapshot current expedited RCU state and start grace period
++ *
++ * Returns a cookie to pass to a call to cond_synchronize_rcu_expedited()
++ * or poll_state_synchronize_rcu_expedited(), allowing them to determine
++ * whether or not a full expedited grace period has elapsed in the meantime.
++ * If the needed grace period is not already slated to start, initiates
++ * that grace period.
++ */
++
++unsigned long start_poll_synchronize_rcu_expedited(void)
++{
++	unsigned long flags;
++	struct rcu_data *rdp;
++	struct rcu_node *rnp;
++	unsigned long s;
++
++	if (rcu_gp_is_normal())
++		return start_poll_synchronize_rcu_expedited() |
++		       RCU_GET_STATE_FROM_EXPEDITED | RCU_GET_STATE_USE_NORMAL;
++
++	s = rcu_exp_gp_seq_snap();
++	rdp = per_cpu_ptr(&rcu_data, raw_smp_processor_id());
++	rnp = rdp->mynode;
++	raw_spin_lock_irqsave(&rnp->exp_poll_lock, flags);
++	if ((rnp->exp_seq_poll_rq & 0x1) || ULONG_CMP_LT(rnp->exp_seq_poll_rq, s)) {
++		rnp->exp_seq_poll_rq = s;
++		queue_work(rcu_gp_wq, &rnp->exp_poll_wq);
++	}
++	raw_spin_unlock_irqrestore(&rnp->exp_poll_lock, flags);
++
++	return s | RCU_GET_STATE_FROM_EXPEDITED;
++}
++EXPORT_SYMBOL_GPL(start_poll_synchronize_rcu_expedited);
++
++/**
++ * poll_state_synchronize_rcu_expedited - Conditionally wait for an expedited RCU grace period
++ *
++ * @oldstate: value from get_state_synchronize_rcu_expedited() or start_poll_synchronize_rcu_expedited()
++ *
++ * If a full expedited RCU grace period has elapsed since the earlier call
++ * from which oldstate was obtained, return @true, otherwise return @false.
++ * If @false is returned, it is the caller's responsibility to invoke
++ * this function later on until it does return @true.  Alternatively,
++ * the caller can explicitly wait for a grace period, for example, by
++ * passing @oldstate to cond_synchronize_rcu_expedited() or by directly
++ * invoking synchronize_rcu_expedited().
++ *
++ * Yes, this function does not take counter wrap into account.
++ * But counter wrap is harmless.  If the counter wraps, we have waited for
++ * more than 2 billion grace periods (and way more on a 64-bit system!).
++ * Those needing to keep oldstate values for very long time periods
++ * (several hours even on 32-bit systems) should check them occasionally
++ * and either refresh them or set a flag indicating that the grace period
++ * has completed.
++ *
++ * This function provides the same memory-ordering guarantees that would
++ * be provided by a synchronize_rcu_expedited() that was invoked at the
++ * call to the function that provided @oldstate, and that returned at the
++ * end of this function.
++ */
++bool poll_state_synchronize_rcu_expedited(unsigned long oldstate)
++{
++	WARN_ON_ONCE(!(oldstate & RCU_GET_STATE_FROM_EXPEDITED));
++	if (oldstate & RCU_GET_STATE_USE_NORMAL)
++		return poll_state_synchronize_rcu(oldstate & ~RCU_GET_STATE_BAD_FOR_NORMAL);
++	if (!rcu_exp_gp_seq_done(oldstate & ~RCU_SEQ_STATE_MASK))
++		return false;
++	smp_mb(); /* Ensure GP ends before subsequent accesses. */
++	return true;
++}
++EXPORT_SYMBOL_GPL(poll_state_synchronize_rcu_expedited);
++
++/**
++ * cond_synchronize_rcu_expedited - Conditionally wait for an expedited RCU grace period
++ *
++ * @oldstate: value from get_state_synchronize_rcu_expedited() or start_poll_synchronize_rcu_expedited()
++ *
++ * If a full expedited RCU grace period has elapsed since the earlier
++ * call from which oldstate was obtained, just return.  Otherwise, invoke
++ * synchronize_rcu_expedited() to wait for a full grace period.
++ *
++ * Yes, this function does not take counter wrap into account.  But
++ * counter wrap is harmless.  If the counter wraps, we have waited for
++ * more than 2 billion grace periods (and way more on a 64-bit system!),
++ * so waiting for one additional grace period should be just fine.
++ *
++ * This function provides the same memory-ordering guarantees that would
++ * be provided by a synchronize_rcu_expedited() that was invoked at the
++ * call to the function that provided @oldstate, and that returned at the
++ * end of this function.
++ */
++void cond_synchronize_rcu_expedited(unsigned long oldstate)
++{
++	WARN_ON_ONCE(!(oldstate & RCU_GET_STATE_FROM_EXPEDITED));
++	if (poll_state_synchronize_rcu_expedited(oldstate))
++		return;
++	if (oldstate & RCU_GET_STATE_USE_NORMAL)
++		synchronize_rcu_expedited();
++	else
++		synchronize_rcu();
++}
++EXPORT_SYMBOL_GPL(cond_synchronize_rcu_expedited);
