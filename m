@@ -2,243 +2,163 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43B18C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Feb 2022 19:29:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16848C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Feb 2022 20:01:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232187AbiBAT3B (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Feb 2022 14:29:01 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:38744 "EHLO
+        id S234295AbiBAUB2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Feb 2022 15:01:28 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:55690 "EHLO
         dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239984AbiBAT3B (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Feb 2022 14:29:01 -0500
+        with ESMTP id S234782AbiBAUB2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Feb 2022 15:01:28 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1E21E61663
-        for <linux-xfs@vger.kernel.org>; Tue,  1 Feb 2022 19:29:01 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 80AECC340EB;
-        Tue,  1 Feb 2022 19:29:00 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1C1D56167C
+        for <linux-xfs@vger.kernel.org>; Tue,  1 Feb 2022 20:01:27 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6C8DAC340EB;
+        Tue,  1 Feb 2022 20:01:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1643743740;
-        bh=G+njHgTXJFxyA1uwgk0O20lLhlGVrqWHfpOLw0V7zZk=;
+        s=k20201202; t=1643745686;
+        bh=4NCbuAyBPX7nBFGBinEycc0FQq0rT91sLuyJKSW7rO4=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=IcipyKxffNzEos9ivBlDqkJQszOYeuW0tn2/mjnjZb7kHaDzAndcw4SVGFfBkf3eh
-         HioF0+lhru1Sj4A+B53JoizWnfxuBUsUJmNviockDVqo8yR6HJPEtLHrozAmGfAZq5
-         nzWTxfQWMbEgIRSWvwSAsQ57RZvDC9JMDYui7ldGPEjs6DoBe4o+7htFt/zySKrQPY
-         yVYr0/cWQajH9a8hgRbOYhZ5BKdIgL14wnlvjPaADHgkRIxDaOoWfqdlf71VNzffsg
-         vZuxezx1v64wb9ssATNCCpRc5mIqrm9Mx/FuKRBmolnseHS/iVCXZ2Wxd1LxSFhHqL
-         1zDnTpVknGOmw==
-Date:   Tue, 1 Feb 2022 11:29:00 -0800
+        b=PEHAN0F33ucbox9iAX0dj0XFbzxWp8k81MdtFqNXtbuSUS9xmWmcJPJtXdm2y6phx
+         yCxq4ZxxZrnXvy0Y20oaYgykJM3cE/8Y9lF8CptG5SH6CKKzmpv2ZKA6+Eb0BgZt1H
+         KplEJQInNHXatpp2EV5salqB2tSjPNixe1ex7/z+LEqHrGadVbOi2EaVKXXN3gm7P/
+         8DxiGgHlFVIDbLFlZF7XwiSQzlGnmJW7m9S6t+wE1vpyk5tma1XETkL247r46YX67x
+         zBt4u4XWZbZNwRPn2E1Q2qKbL90VDlqo8YzIKsGqqtTpUvZ2iyLCb1hXbm0rqKiO4F
+         1pZxgUYSPvimg==
+Date:   Tue, 1 Feb 2022 12:01:25 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Chandan Babu R <chandan.babu@oracle.com>
 Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
-Subject: Re: [PATCH V5 15/20] xfsprogs: Enable bulkstat ioctl to support
- 64-bit extent counters
-Message-ID: <20220201192900.GM8313@magnolia>
-References: <20220121052019.224605-1-chandan.babu@oracle.com>
- <20220121052019.224605-16-chandan.babu@oracle.com>
+Subject: Re: [PATCH V5 13/16] xfs: Conditionally upgrade existing inodes to
+ use 64-bit extent counters
+Message-ID: <20220201200125.GN8313@magnolia>
+References: <20220121051857.221105-1-chandan.babu@oracle.com>
+ <20220121051857.221105-14-chandan.babu@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220121052019.224605-16-chandan.babu@oracle.com>
+In-Reply-To: <20220121051857.221105-14-chandan.babu@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jan 21, 2022 at 10:50:14AM +0530, Chandan Babu R wrote:
-> This commit adds support to libfrog to enable reporting 64-bit extent counters
-> to its users. In order to do so, bulkstat ioctl is now invoked with the newly
-> introduced XFS_BULK_IREQ_NREXT64 flag if the underlying filesystem's geometry
-> supports 64-bit extent counters.
+On Fri, Jan 21, 2022 at 10:48:54AM +0530, Chandan Babu R wrote:
+> This commit upgrades inodes to use 64-bit extent counters when they are read
+> from disk. Inodes are upgraded only when the filesystem instance has
+> XFS_SB_FEAT_INCOMPAT_NREXT64 incompat flag set.
 > 
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 > Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
 > ---
->  fsr/xfs_fsr.c      |  4 ++--
->  io/bulkstat.c      |  1 +
->  libfrog/bulkstat.c | 29 +++++++++++++++++++++++++++--
->  libxfs/xfs_fs.h    | 12 ++++++++----
+>  fs/xfs/libxfs/xfs_inode_buf.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> index 2200526bcee0..767189c7c887 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> @@ -253,6 +253,12 @@ xfs_inode_from_disk(
+>  	}
+>  	if (xfs_is_reflink_inode(ip))
+>  		xfs_ifork_init_cow(ip);
+> +
+> +	if ((from->di_version == 3) &&
+> +	     xfs_has_nrext64(ip->i_mount) &&
+> +	     !xfs_dinode_has_nrext64(from))
+> +		ip->i_diflags2 |= XFS_DIFLAG2_NREXT64;
 
-On second thought: While you're adding comments to the definition of
-XFS_BULK_IREQ_NREXT64 in xfs_fs.h, can you please update
-man/man2/ioctl_xfs_bulkstat.2 as well?
+Hmm.  Last time around I asked about the oddness of updating the inode
+feature flags outside of a transaction, and then never responded. :(
+So to quote you from last time:
+
+> The following is the thought process behind upgrading an inode to
+> XFS_DIFLAG2_NREXT64 when it is read from the disk,
+>
+> 1. With support for dynamic upgrade, The extent count limits of an
+> inode needs to be determined by checking flags present within the
+> inode i.e.  we need to satisfy self-describing metadata property. This
+> helps tools like xfs_repair and scrub to verify inode's extent count
+> limits without having to refer to other metadata objects (e.g.
+> superblock feature flags).
+
+I think this makes an even /stronger/ argument for why this update
+needs to be transactional.
+
+> 2. Upgrade when performed inside xfs_trans_log_inode() may cause
+> xfs_iext_count_may_overflow() to return -EFBIG when the inode's
+> data/attr extent count is already close to 2^31/2^15 respectively.
+> Hence none of the file operations will be able to add new extents to a
+> file.
+
+Aha, there's the reason why!  You're right, xfs_iext_count_may_overflow
+will abort the operation due to !NREXT64 before we even get a chance to
+log the inode.
+
+I observe, however, that any time we call that function, we also have a
+transaction allocated and we hold the ILOCK on the inode being tested.
+*Most* of those call sites have also joined the inode to the transaction
+already.  I wonder, is that a more appropriate place to be upgrading the
+inodes?  Something like:
+
+/*
+ * Ensure that the inode has the ability to add the specified number of
+ * extents.  Caller must hold ILOCK_EXCL and have joined the inode to
+ * the transaction.  Upon return, the inode will still be in this state
+ * upon return and the transaction will be clean.
+ */
+int
+xfs_trans_inode_ensure_nextents(
+	struct xfs_trans	**tpp,
+	struct xfs_inode	*ip,
+	int			whichfork,
+	int			nr_to_add)
+{
+	int			error;
+
+	error = xfs_iext_count_may_overflow(ip, whichfork, nr_to_add);
+	if (!error)
+		return 0;
+
+	/*
+	 * Try to upgrade if the extent count fields aren't large
+	 * enough.
+	 */
+	if (!xfs_has_nrext64(ip->i_mount) ||
+	    (ip->i_diflags2 & XFS_DIFLAG2_NREXT64))
+		return error;
+
+	ip->i_diflags2 |= XFS_DIFLAG2_NREXT64;
+	xfs_trans_log_inode(*tpp, ip, XFS_ILOG_CORE);
+
+	error = xfs_trans_roll(tpp);
+	if (error)
+		return error;
+
+	return xfs_iext_count_may_overflow(ip, whichfork, nr_to_add);
+}
+
+and then the current call sites become:
+
+	error = xfs_trans_alloc_inode(ip, &M_RES(mp)->tr_write,
+			dblocks, rblocks, false, &tp);
+	if (error)
+		return error;
+
+	error = xfs_trans_inode_ensure_nextents(&tp, ip, XFS_DATA_FORK,
+			XFS_IEXT_ADD_NOSPLIT_CNT);
+	if (error)
+		goto out_cancel;
+
+What do you think about that?
 
 --D
 
->  4 files changed, 38 insertions(+), 8 deletions(-)
-> 
-> diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-> index 6cf8bfb7..ba02506d 100644
-> --- a/fsr/xfs_fsr.c
-> +++ b/fsr/xfs_fsr.c
-> @@ -590,7 +590,7 @@ cmp(const void *s1, const void *s2)
->  		(bs1->bs_version == XFS_BULKSTAT_VERSION_V5 &&
->  		bs2->bs_version == XFS_BULKSTAT_VERSION_V5));
->  
-> -	return (bs2->bs_extents - bs1->bs_extents);
-> +	return (bs2->bs_extents64 - bs1->bs_extents64);
->  }
->  
->  /*
-> @@ -655,7 +655,7 @@ fsrfs(char *mntdir, xfs_ino_t startino, int targetrange)
->  		for (p = buf, endp = (buf + buflenout); p < endp ; p++) {
->  			/* Do some obvious checks now */
->  			if (((p->bs_mode & S_IFMT) != S_IFREG) ||
-> -			     (p->bs_extents < 2))
-> +			     (p->bs_extents64 < 2))
->  				continue;
->  
->  			ret = -xfrog_bulkstat_v5_to_v1(&fsxfd, &bs1, p);
-> diff --git a/io/bulkstat.c b/io/bulkstat.c
-> index 201470b2..0c9a2b02 100644
-> --- a/io/bulkstat.c
-> +++ b/io/bulkstat.c
-> @@ -57,6 +57,7 @@ dump_bulkstat(
->  	printf("\tbs_sick = 0x%"PRIx16"\n", bstat->bs_sick);
->  	printf("\tbs_checked = 0x%"PRIx16"\n", bstat->bs_checked);
->  	printf("\tbs_mode = 0%"PRIo16"\n", bstat->bs_mode);
-> +	printf("\tbs_extents64 = %"PRIu64"\n", bstat->bs_extents64);
->  };
->  
->  static void
-> diff --git a/libfrog/bulkstat.c b/libfrog/bulkstat.c
-> index 195f6ea0..0a90947f 100644
-> --- a/libfrog/bulkstat.c
-> +++ b/libfrog/bulkstat.c
-> @@ -56,6 +56,9 @@ xfrog_bulkstat_single5(
->  	if (flags & ~(XFS_BULK_IREQ_SPECIAL))
->  		return -EINVAL;
->  
-> +	if (xfd->fsgeom.flags & XFS_FSOP_GEOM_FLAGS_NREXT64)
-> +		flags |= XFS_BULK_IREQ_NREXT64;
-> +
->  	ret = xfrog_bulkstat_alloc_req(1, ino, &req);
->  	if (ret)
->  		return ret;
-> @@ -73,6 +76,12 @@ xfrog_bulkstat_single5(
->  	}
->  
->  	memcpy(bulkstat, req->bulkstat, sizeof(struct xfs_bulkstat));
-> +
-> +	if (!(xfd->fsgeom.flags & XFS_FSOP_GEOM_FLAGS_NREXT64)) {
-> +		bulkstat->bs_extents64 = bulkstat->bs_extents;
-> +		bulkstat->bs_extents = 0;
-> +	}
-> +
->  free:
->  	free(req);
->  	return ret;
-> @@ -129,6 +138,7 @@ xfrog_bulkstat_single(
->  	switch (error) {
->  	case -EOPNOTSUPP:
->  	case -ENOTTY:
-> +		assert(!(xfd->fsgeom.flags & XFS_FSOP_GEOM_FLAGS_NREXT64));
->  		xfd->flags |= XFROG_FLAG_BULKSTAT_FORCE_V1;
->  		break;
->  	}
-> @@ -259,10 +269,23 @@ xfrog_bulkstat5(
->  	struct xfs_bulkstat_req	*req)
->  {
->  	int			ret;
-> +	int			i;
-> +
-> +	if (xfd->fsgeom.flags & XFS_FSOP_GEOM_FLAGS_NREXT64)
-> +		req->hdr.flags |= XFS_BULK_IREQ_NREXT64;
->  
->  	ret = ioctl(xfd->fd, XFS_IOC_BULKSTAT, req);
->  	if (ret)
->  		return -errno;
-> +
-> +	if (!(xfd->fsgeom.flags & XFS_FSOP_GEOM_FLAGS_NREXT64)) {
-> +		for (i = 0; i < req->hdr.ocount; i++) {
-> +			req->bulkstat[i].bs_extents64 =
-> +				req->bulkstat[i].bs_extents;
-> +			req->bulkstat[i].bs_extents = 0;
-> +		}
-> +	}
 > +
 >  	return 0;
->  }
 >  
-> @@ -316,6 +339,7 @@ xfrog_bulkstat(
->  	switch (error) {
->  	case -EOPNOTSUPP:
->  	case -ENOTTY:
-> +		assert(!(xfd->fsgeom.flags & XFS_FSOP_GEOM_FLAGS_NREXT64));
->  		xfd->flags |= XFROG_FLAG_BULKSTAT_FORCE_V1;
->  		break;
->  	}
-> @@ -342,6 +366,7 @@ xfrog_bulkstat_v5_to_v1(
->  	const struct xfs_bulkstat	*bs5)
->  {
->  	if (bs5->bs_aextents > UINT16_MAX ||
-> +	    bs5->bs_extents64 > INT32_MAX ||
->  	    cvt_off_fsb_to_b(xfd, bs5->bs_extsize_blks) > UINT32_MAX ||
->  	    cvt_off_fsb_to_b(xfd, bs5->bs_cowextsize_blks) > UINT32_MAX ||
->  	    time_too_big(bs5->bs_atime) ||
-> @@ -366,7 +391,7 @@ xfrog_bulkstat_v5_to_v1(
->  	bs1->bs_blocks = bs5->bs_blocks;
->  	bs1->bs_xflags = bs5->bs_xflags;
->  	bs1->bs_extsize = cvt_off_fsb_to_b(xfd, bs5->bs_extsize_blks);
-> -	bs1->bs_extents = bs5->bs_extents;
-> +	bs1->bs_extents = bs5->bs_extents64;
->  	bs1->bs_gen = bs5->bs_gen;
->  	bs1->bs_projid_lo = bs5->bs_projectid & 0xFFFF;
->  	bs1->bs_forkoff = bs5->bs_forkoff;
-> @@ -407,7 +432,6 @@ xfrog_bulkstat_v1_to_v5(
->  	bs5->bs_blocks = bs1->bs_blocks;
->  	bs5->bs_xflags = bs1->bs_xflags;
->  	bs5->bs_extsize_blks = cvt_b_to_off_fsbt(xfd, bs1->bs_extsize);
-> -	bs5->bs_extents = bs1->bs_extents;
->  	bs5->bs_gen = bs1->bs_gen;
->  	bs5->bs_projectid = bstat_get_projid(bs1);
->  	bs5->bs_forkoff = bs1->bs_forkoff;
-> @@ -415,6 +439,7 @@ xfrog_bulkstat_v1_to_v5(
->  	bs5->bs_checked = bs1->bs_checked;
->  	bs5->bs_cowextsize_blks = cvt_b_to_off_fsbt(xfd, bs1->bs_cowextsize);
->  	bs5->bs_aextents = bs1->bs_aextents;
-> +	bs5->bs_extents64 = bs1->bs_extents;
->  }
->  
->  /* Allocate a bulkstat request.  Returns zero or a negative error code. */
-> diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-> index 42bc3950..f65bf2da 100644
-> --- a/libxfs/xfs_fs.h
-> +++ b/libxfs/xfs_fs.h
-> @@ -393,7 +393,7 @@ struct xfs_bulkstat {
->  	uint32_t	bs_extsize_blks; /* extent size hint, blocks	*/
->  
->  	uint32_t	bs_nlink;	/* number of links		*/
-> -	uint32_t	bs_extents;	/* number of extents		*/
-> +	uint32_t	bs_extents;	/* 32-bit data fork extent counter */
->  	uint32_t	bs_aextents;	/* attribute number of extents	*/
->  	uint16_t	bs_version;	/* structure version		*/
->  	uint16_t	bs_forkoff;	/* inode fork offset in bytes	*/
-> @@ -402,8 +402,9 @@ struct xfs_bulkstat {
->  	uint16_t	bs_checked;	/* checked inode metadata	*/
->  	uint16_t	bs_mode;	/* type and mode		*/
->  	uint16_t	bs_pad2;	/* zeroed			*/
-> +	uint64_t	bs_extents64;	/* 64-bit data fork extent counter */
->  
-> -	uint64_t	bs_pad[7];	/* zeroed			*/
-> +	uint64_t	bs_pad[6];	/* zeroed			*/
->  };
->  
->  #define XFS_BULKSTAT_VERSION_V1	(1)
-> @@ -484,8 +485,11 @@ struct xfs_bulk_ireq {
->   */
->  #define XFS_BULK_IREQ_SPECIAL	(1 << 1)
->  
-> -#define XFS_BULK_IREQ_FLAGS_ALL	(XFS_BULK_IREQ_AGNO | \
-> -				 XFS_BULK_IREQ_SPECIAL)
-> +#define XFS_BULK_IREQ_NREXT64	(1 << 3)
-> +
-> +#define XFS_BULK_IREQ_FLAGS_ALL	(XFS_BULK_IREQ_AGNO |	 \
-> +				 XFS_BULK_IREQ_SPECIAL | \
-> +				 XFS_BULK_IREQ_NREXT64)
->  
->  /* Operate on the root directory inode. */
->  #define XFS_BULK_IREQ_SPECIAL_ROOT	(1)
+>  out_destroy_data_fork:
 > -- 
 > 2.30.2
 > 
