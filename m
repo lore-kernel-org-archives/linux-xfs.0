@@ -2,231 +2,152 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC594C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Feb 2022 18:49:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D0A3C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Feb 2022 18:51:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241884AbiBASta (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Feb 2022 13:49:30 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57964 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229915AbiBASt3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Feb 2022 13:49:29 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E084C061714
-        for <linux-xfs@vger.kernel.org>; Tue,  1 Feb 2022 10:49:29 -0800 (PST)
+        id S242033AbiBASvi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Feb 2022 13:51:38 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:38022 "EHLO
+        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229915AbiBASvh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Feb 2022 13:51:37 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 3AF4AB82F5C
-        for <linux-xfs@vger.kernel.org>; Tue,  1 Feb 2022 18:49:28 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E78F5C340EB;
-        Tue,  1 Feb 2022 18:49:26 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 4E751B82F60
+        for <linux-xfs@vger.kernel.org>; Tue,  1 Feb 2022 18:51:36 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E565BC340EC;
+        Tue,  1 Feb 2022 18:51:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1643741367;
-        bh=M9iOLN70Wtp0JrIJ9zYMAdNRJZucuMF1/MmmwOtJFI4=;
+        s=k20201202; t=1643741495;
+        bh=plsTqLzDSvMUpi3y24zOaVNpy9YO9tZZJQvoK2rsB+A=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=RnJidVaTMUI3D5uymGZFtg6sMG38YN3fHvDlG7AEwbxn8evFJ4BjZX7wDsN1TVgWS
-         PsaZMVipb316eQCFNjO83Xg49P/uxxGIOOA80i11UEAhV/htmI+09oSPL2TE4+ODaJ
-         hGsC8B98uKj/V6Z16JHvpIQLiWMVPnKJr44yK9OjXR+YTwDFdBH1cqkg0Msw4wzbTs
-         gWtHzccYZNlIA4XqpkrPNsxiHUF4jGONN1Dl0rM6cSs+puKyI1DjfIDLXouNj3OMla
-         obJU6BC0jGvwRdE8SwKMo5RqoVyU0DxDYHl4B2wC+2imLEKnO9sS0HO3jVYg/D0YLl
-         q9VdsqsC/91Dw==
-Date:   Tue, 1 Feb 2022 10:49:26 -0800
+        b=H1+iXZAToc6VYHEDABZoHeeoL9k0R7ZHj4uXM1ty3XWD7siiOiOSpybzjnNW/6iXL
+         JgKYWjac+isfYIBr+glkgP4Vb78r4M563Hbh3lBKZL4UGoemQb/QHOyapleEExm048
+         YrmGQ3IRH3TZB4DcJQU2JnuSFhYLbP88CrL4CI4Dtx+XKy/FtOh506MpaQbzlR7l7A
+         XJGlRd26UZUqWU7wuUdG3uelnVXjoXAI7e3cvG9ap9+m4adegmKwKwimLTW54u97Ow
+         HvmNXmazrPhzozBi/lK+72l8WO7brJSoItwi6saEGeId0Pyhr0btrrdyh451I8gd6L
+         8BG/f+SIjL7Hw==
+Date:   Tue, 1 Feb 2022 10:51:34 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Chandan Babu R <chandan.babu@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
-Subject: Re: [PATCH V5 11/16] xfs: Introduce macros to represent new maximum
- extent counts for data/attr forks
-Message-ID: <20220201184926.GA8338@magnolia>
-References: <20220121051857.221105-1-chandan.babu@oracle.com>
- <20220121051857.221105-12-chandan.babu@oracle.com>
+Cc:     kernel test robot <lkp@intel.com>, linux-xfs@vger.kernel.org,
+        kbuild-all@lists.01.org, david@fromorbit.com,
+        Dave Chinner <dchinner@redhat.com>
+Subject: Re: [PATCH V5 12/16] xfs: Introduce per-inode 64-bit extent counters
+Message-ID: <20220201185134.GJ8313@magnolia>
+References: <20220121051857.221105-13-chandan.babu@oracle.com>
+ <202201260622.XxiP4fe5-lkp@intel.com>
+ <874k5qop7g.fsf@debian-BULLSEYE-live-builder-AMD64>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220121051857.221105-12-chandan.babu@oracle.com>
+In-Reply-To: <874k5qop7g.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jan 21, 2022 at 10:48:52AM +0530, Chandan Babu R wrote:
-> This commit defines new macros to represent maximum extent counts allowed by
-> filesystems which have support for large per-inode extent counters.
+On Wed, Jan 26, 2022 at 02:20:43PM +0530, Chandan Babu R wrote:
+> On 26 Jan 2022 at 04:21, kernel test robot wrote:
+> > Hi Chandan,
+> >
+> > Thank you for the patch! Yet something to improve:
+> >
+> > [auto build test ERROR on xfs-linux/for-next]
+> > [also build test ERROR on v5.17-rc1 next-20220125]
+> > [If your patch is applied to the wrong git tree, kindly drop us a note.
+> > And when submitting patch, we suggest to use '--base' as documented in
+> > https://git-scm.com/docs/git-format-patch]
+> >
+> > url:    https://github.com/0day-ci/linux/commits/Chandan-Babu-R/xfs-Extend-per-inode-extent-counters/20220121-132128
+> > base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
+> > config: arm-randconfig-c003-20220122 (https://download.01.org/0day-ci/archive/20220126/202201260622.XxiP4fe5-lkp@intel.com/config)
+> > compiler: arm-linux-gnueabi-gcc (GCC) 11.2.0
+> > reproduce (this is a W=1 build):
+> >         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+> >         chmod +x ~/bin/make.cross
+> >         # https://github.com/0day-ci/linux/commit/f12e8b5064fc3ef50c9d26f15f4a6984db59927c
+> >         git remote add linux-review https://github.com/0day-ci/linux
+> >         git fetch --no-tags linux-review Chandan-Babu-R/xfs-Extend-per-inode-extent-counters/20220121-132128
+> >         git checkout f12e8b5064fc3ef50c9d26f15f4a6984db59927c
+> >         # save the config file to linux build tree
+> >         mkdir build_dir
+> >         COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.2.0 make.cross O=build_dir ARCH=arm SHELL=/bin/bash fs/xfs/
+> >
+> > If you fix the issue, kindly add following tag as appropriate
+> > Reported-by: kernel test robot <lkp@intel.com>
+> >
+> > All errors (new ones prefixed by >>):
+> >
+> >    In file included from <command-line>:
+> >    In function 'xfs_check_ondisk_structs',
+> >        inlined from 'init_xfs_fs' at fs/xfs/xfs_super.c:2223:2:
+> >>> include/linux/compiler_types.h:335:45: error: call to '__compiletime_assert_900' declared with attribute error: XFS: sizeof(struct xfs_dinode) is wrong, expected 176
+> >      335 |         _compiletime_assert(condition, msg, __compiletime_assert_, __COUNTER__)
+> >          |                                             ^
+> >    include/linux/compiler_types.h:316:25: note: in definition of macro '__compiletime_assert'
+> >      316 |                         prefix ## suffix();                             \
+> >          |                         ^~~~~~
+> >    include/linux/compiler_types.h:335:9: note: in expansion of macro '_compiletime_assert'
+> >      335 |         _compiletime_assert(condition, msg, __compiletime_assert_, __COUNTER__)
+> >          |         ^~~~~~~~~~~~~~~~~~~
+> >    include/linux/build_bug.h:39:37: note: in expansion of macro 'compiletime_assert'
+> >       39 | #define BUILD_BUG_ON_MSG(cond, msg) compiletime_assert(!(cond), msg)
+> >          |                                     ^~~~~~~~~~~~~~~~~~
+> >    fs/xfs/xfs_ondisk.h:10:9: note: in expansion of macro 'BUILD_BUG_ON_MSG'
+> >       10 |         BUILD_BUG_ON_MSG(sizeof(structname) != (size), "XFS: sizeof(" \
+> >          |         ^~~~~~~~~~~~~~~~
+> >    fs/xfs/xfs_ondisk.h:37:9: note: in expansion of macro 'XFS_CHECK_STRUCT_SIZE'
+> >       37 |         XFS_CHECK_STRUCT_SIZE(struct xfs_dinode,                176);
+> >          |         ^~~~~~~~~~~~~~~~~~~~~
+> >
 > 
-> Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_bmap.c       |  8 +++-----
->  fs/xfs/libxfs/xfs_bmap_btree.c |  2 +-
->  fs/xfs/libxfs/xfs_format.h     | 20 ++++++++++++++++----
->  fs/xfs/libxfs/xfs_inode_buf.c  |  3 ++-
->  fs/xfs/libxfs/xfs_inode_fork.c |  2 +-
->  fs/xfs/libxfs/xfs_inode_fork.h | 19 +++++++++++++++----
->  6 files changed, 38 insertions(+), 16 deletions(-)
+> The following newly introduced union inside "struct xfs_dinode" and the
+> corresponding one in "struct xfs_log_dinode",
+>         union {
+>                 struct {
+>                         __be32  di_big_anextents; /* NREXT64 attr extents */
+>                         __be16  di_nrext64_pad; /* NREXT64 unused, zero */
+>                 } __packed;
+>                 struct {
+>                         __be32  di_nextents;    /* !NREXT64 data extents */
+>                         __be16  di_anextents;   /* !NREXT64 attr extents */
+>                 } __packed;
+>         };
 > 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 1948af000c97..384532aac60a 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -61,10 +61,8 @@ xfs_bmap_compute_maxlevels(
->  	int		sz;		/* root block size */
->  
->  	/*
-> -	 * The maximum number of extents in a file, hence the maximum number of
-> -	 * leaf entries, is controlled by the size of the on-disk extent count,
-> -	 * either a signed 32-bit number for the data fork, or a signed 16-bit
-> -	 * number for the attr fork.
-> +	 * The maximum number of extents in a fork, hence the maximum number of
-> +	 * leaf entries, is controlled by the size of the on-disk extent count.
->  	 *
->  	 * Note that we can no longer assume that if we are in ATTR1 that the
->  	 * fork offset of all the inodes will be
-> @@ -74,7 +72,7 @@ xfs_bmap_compute_maxlevels(
->  	 * ATTR2 we have to assume the worst case scenario of a minimum size
->  	 * available.
->  	 */
-> -	maxleafents = xfs_iext_max_nextents(whichfork);
-> +	maxleafents = xfs_iext_max_nextents(xfs_has_nrext64(mp), whichfork);
->  	if (whichfork == XFS_DATA_FORK)
->  		sz = XFS_BMDR_SPACE_CALC(MINDBTPTRS);
->  	else
-> diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-> index 453309fc85f2..e8d21d69b9ff 100644
-> --- a/fs/xfs/libxfs/xfs_bmap_btree.c
-> +++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-> @@ -611,7 +611,7 @@ xfs_bmbt_maxlevels_ondisk(void)
->  	minrecs[1] = xfs_bmbt_block_maxrecs(blocklen, false) / 2;
->  
->  	/* One extra level for the inode root. */
-> -	return xfs_btree_compute_maxlevels(minrecs, MAXEXTNUM) + 1;
-> +	return xfs_btree_compute_maxlevels(minrecs, XFS_MAX_EXTCNT_DATA_FORK) + 1;
->  }
->  
->  /*
-> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> index 9934c320bf01..d3dfd45c39e0 100644
-> --- a/fs/xfs/libxfs/xfs_format.h
-> +++ b/fs/xfs/libxfs/xfs_format.h
-> @@ -872,10 +872,22 @@ enum xfs_dinode_fmt {
->  
->  /*
->   * Max values for extlen, extnum, aextnum.
-> - */
-> -#define	MAXEXTLEN	((xfs_extlen_t)0x001fffff)	/* 21 bits */
-> -#define	MAXEXTNUM	((xfs_extnum_t)0x7fffffff)	/* signed int */
-> -#define	MAXAEXTNUM	((xfs_aextnum_t)0x7fff)		/* signed short */
-> + *
-> + * The newly introduced data fork extent counter is a 64-bit field. However, the
-> + * maximum number of extents in a file is limited to 2^54 extents (assuming one
-> + * blocks per extent) by the 54-bit wide startoff field of an extent record.
-> + *
-> + * A further limitation applies as shown below,
-> + * 2^63 (max file size) / 64k (max block size) = 2^47
-> + *
-> + * Rounding up 47 to the nearest multiple of bits-per-byte results in 48. Hence
-> + * 2^48 was chosen as the maximum data fork extent count.
+> needs to be packed as well. I will include this fix in the next version of the
+> patchset.
 
-Ok.  I know I've brought up previously the fact that we leave the upper
-16 bits of di_big_nextents completely unused, AKA:
+Eughrhrghgg I hate C sometimes.
 
-It's odd that startoff is a 54-bit field, di_big_nextents is a 64-bit
-field, but we don't allow more than 2^48 data fork extents even though
-that means that one cannot populate a file on a 4k-FSB filesystem with
-one extent record for each file block.
-
-Prior to 5.16, a potential justification was that xfs_btree_cur
-supported exactly 9 levels and we didn't want to raise that all the way
-to 12 (or whatever you'd need to support a btree with 2^54 extent
-records) for *all cursor types* to handle Ultra Extreme Fragmentation.
-
-Now that we have separate cursor caches for all btree types, we could
-create one bmbt cursor cache for NREXT64 data forks and another for all
-other cases, which (in my mind anyway) assuages that concern.
-
-The other justification we've covered is that the incore btree for a
-data fork with 2^48 xfs_bmbt_irec records will consume a bit more than
-2^52 bytes of memory, which is (AFAIK) the current x64 memory limit.
-Assuming that CPU manufacturers keep adding an extra address line bit
-every other year or so, the extremely wealthy could complain about
-hitting this limit as early as 2040.  That's ~20 or so years out, which
-is probably enough time either to find a more efficient incore extent
-map structure due to customer demand or start using the upper 16 bits.
-
-So with those two factors in mind, I /think/ I'm ok with approving this
-extension to the ondisk format.
-
-IOWs, if anyone has an objection, the time to raise it is NOW.
-
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Thank you for fixing this.
 
 --D
 
-> + */
-> +#define	MAXEXTLEN			((xfs_extlen_t)((1ULL << 21) - 1)) /* 21 bits */
-> +#define XFS_MAX_EXTCNT_DATA_FORK	((xfs_extnum_t)((1ULL << 48) - 1)) /* Unsigned 48-bits */
-> +#define XFS_MAX_EXTCNT_ATTR_FORK	((xfs_extnum_t)((1ULL << 32) - 1)) /* Unsigned 32-bits */
-> +#define XFS_MAX_EXTCNT_DATA_FORK_OLD	((xfs_extnum_t)((1ULL << 31) - 1)) /* Signed 32-bits */
-> +#define XFS_MAX_EXTCNT_ATTR_FORK_OLD	((xfs_extnum_t)((1ULL << 15) - 1)) /* Signed 16-bits */
->  
->  /*
->   * Inode minimum and maximum sizes.
-> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> index 860d32816909..34f360a38603 100644
-> --- a/fs/xfs/libxfs/xfs_inode_buf.c
-> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> @@ -361,7 +361,8 @@ xfs_dinode_verify_fork(
->  			return __this_address;
->  		break;
->  	case XFS_DINODE_FMT_BTREE:
-> -		max_extents = xfs_iext_max_nextents(whichfork);
-> +		max_extents = xfs_iext_max_nextents(xfs_dinode_has_nrext64(dip),
-> +					whichfork);
->  		if (di_nextents > max_extents)
->  			return __this_address;
->  		break;
-> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-> index ce690abe5dce..a3a3b54f9c55 100644
-> --- a/fs/xfs/libxfs/xfs_inode_fork.c
-> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
-> @@ -746,7 +746,7 @@ xfs_iext_count_may_overflow(
->  	if (whichfork == XFS_COW_FORK)
->  		return 0;
->  
-> -	max_exts = xfs_iext_max_nextents(whichfork);
-> +	max_exts = xfs_iext_max_nextents(xfs_inode_has_nrext64(ip), whichfork);
->  
->  	if (XFS_TEST_ERROR(false, ip->i_mount, XFS_ERRTAG_REDUCE_MAX_IEXTENTS))
->  		max_exts = 10;
-> diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-> index 4a8b77d425df..e56803436c61 100644
-> --- a/fs/xfs/libxfs/xfs_inode_fork.h
-> +++ b/fs/xfs/libxfs/xfs_inode_fork.h
-> @@ -133,12 +133,23 @@ static inline int8_t xfs_ifork_format(struct xfs_ifork *ifp)
->  	return ifp->if_format;
->  }
->  
-> -static inline xfs_extnum_t xfs_iext_max_nextents(int whichfork)
-> +static inline xfs_extnum_t xfs_iext_max_nextents(bool has_nrext64,
-> +				int whichfork)
->  {
-> -	if (whichfork == XFS_DATA_FORK || whichfork == XFS_COW_FORK)
-> -		return MAXEXTNUM;
-> +	switch (whichfork) {
-> +	case XFS_DATA_FORK:
-> +	case XFS_COW_FORK:
-> +		return has_nrext64 ? XFS_MAX_EXTCNT_DATA_FORK
-> +			: XFS_MAX_EXTCNT_DATA_FORK_OLD;
-> +
-> +	case XFS_ATTR_FORK:
-> +		return has_nrext64 ? XFS_MAX_EXTCNT_ATTR_FORK
-> +			: XFS_MAX_EXTCNT_ATTR_FORK_OLD;
->  
-> -	return MAXAEXTNUM;
-> +	default:
-> +		ASSERT(0);
-> +		return 0;
-> +	}
->  }
->  
->  static inline xfs_extnum_t
-> -- 
-> 2.30.2
+> >
+> > vim +/__compiletime_assert_900 +335 include/linux/compiler_types.h
+> >
+> > eb5c2d4b45e3d2 Will Deacon 2020-07-21  321  
+> > eb5c2d4b45e3d2 Will Deacon 2020-07-21  322  #define _compiletime_assert(condition, msg, prefix, suffix) \
+> > eb5c2d4b45e3d2 Will Deacon 2020-07-21  323  	__compiletime_assert(condition, msg, prefix, suffix)
+> > eb5c2d4b45e3d2 Will Deacon 2020-07-21  324  
+> > eb5c2d4b45e3d2 Will Deacon 2020-07-21  325  /**
+> > eb5c2d4b45e3d2 Will Deacon 2020-07-21  326   * compiletime_assert - break build and emit msg if condition is false
+> > eb5c2d4b45e3d2 Will Deacon 2020-07-21  327   * @condition: a compile-time constant condition to check
+> > eb5c2d4b45e3d2 Will Deacon 2020-07-21  328   * @msg:       a message to emit if condition is false
+> > eb5c2d4b45e3d2 Will Deacon 2020-07-21  329   *
+> > eb5c2d4b45e3d2 Will Deacon 2020-07-21  330   * In tradition of POSIX assert, this macro will break the build if the
+> > eb5c2d4b45e3d2 Will Deacon 2020-07-21  331   * supplied condition is *false*, emitting the supplied error message if the
+> > eb5c2d4b45e3d2 Will Deacon 2020-07-21  332   * compiler has support to do so.
+> > eb5c2d4b45e3d2 Will Deacon 2020-07-21  333   */
+> > eb5c2d4b45e3d2 Will Deacon 2020-07-21  334  #define compiletime_assert(condition, msg) \
+> > eb5c2d4b45e3d2 Will Deacon 2020-07-21 @335  	_compiletime_assert(condition, msg, __compiletime_assert_, __COUNTER__)
+> > eb5c2d4b45e3d2 Will Deacon 2020-07-21  336  
+> >
+> > ---
+> > 0-DAY CI Kernel Test Service, Intel Corporation
+> > https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
 > 
+> 
+> -- 
+> chandan
