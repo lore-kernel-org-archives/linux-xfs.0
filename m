@@ -2,487 +2,243 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6984C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Feb 2022 19:26:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43B18C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Feb 2022 19:29:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242406AbiBAT0p (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Feb 2022 14:26:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38604 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242404AbiBAT0o (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Feb 2022 14:26:44 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D57D0C061714
-        for <linux-xfs@vger.kernel.org>; Tue,  1 Feb 2022 11:26:44 -0800 (PST)
+        id S232187AbiBAT3B (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Feb 2022 14:29:01 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:38744 "EHLO
+        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S239984AbiBAT3B (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Feb 2022 14:29:01 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id C3A036164A
-        for <linux-xfs@vger.kernel.org>; Tue,  1 Feb 2022 19:26:43 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 15396C340EB;
-        Tue,  1 Feb 2022 19:26:43 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1E21E61663
+        for <linux-xfs@vger.kernel.org>; Tue,  1 Feb 2022 19:29:01 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 80AECC340EB;
+        Tue,  1 Feb 2022 19:29:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1643743603;
-        bh=3NBplWUv8aTn0Ca9aF8z8VzZb4uUbJoFIbzfXVwQKj0=;
+        s=k20201202; t=1643743740;
+        bh=G+njHgTXJFxyA1uwgk0O20lLhlGVrqWHfpOLw0V7zZk=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=F99LyMFqz0ZKz0b58A8wbBIWFhXah6FWa0Khd3qv5mKqcEbu1MnGV/5CcDVTKCC8d
-         t8c4uk0n9qwXm5B+hM8aMorVx1mm7eXbYd5hfZA1Mvk6xneeetnawhuBHm/CjTjPPm
-         7yv/9E09o6mab3RxX/fQyn8+Fhtc2oDpzcejVrHN3j6y/91c1BRLu+VeEzHhS7NudF
-         gRYI2Ix3dXAsSxfIfXsbGEaoKK5BR1w579Xyzk1EMEBzDqfBEIqyveTQII7inKHgCG
-         zYyqJvqOuFUTDYm6GZxytExo/P85G8PAJ3id3PwV6ecQzWpaFT8sOcLW5n7yWFwx/B
-         fF6ZhHrwm6TUw==
-Date:   Tue, 1 Feb 2022 11:26:42 -0800
+        b=IcipyKxffNzEos9ivBlDqkJQszOYeuW0tn2/mjnjZb7kHaDzAndcw4SVGFfBkf3eh
+         HioF0+lhru1Sj4A+B53JoizWnfxuBUsUJmNviockDVqo8yR6HJPEtLHrozAmGfAZq5
+         nzWTxfQWMbEgIRSWvwSAsQ57RZvDC9JMDYui7ldGPEjs6DoBe4o+7htFt/zySKrQPY
+         yVYr0/cWQajH9a8hgRbOYhZ5BKdIgL14wnlvjPaADHgkRIxDaOoWfqdlf71VNzffsg
+         vZuxezx1v64wb9ssATNCCpRc5mIqrm9Mx/FuKRBmolnseHS/iVCXZ2Wxd1LxSFhHqL
+         1zDnTpVknGOmw==
+Date:   Tue, 1 Feb 2022 11:29:00 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Chandan Babu R <chandan.babu@oracle.com>
 Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
-Subject: Re: [PATCH V5 16/16] xfs: Define max extent length based on on-disk
- format definition
-Message-ID: <20220201192642.GL8313@magnolia>
-References: <20220121051857.221105-1-chandan.babu@oracle.com>
- <20220121051857.221105-17-chandan.babu@oracle.com>
+Subject: Re: [PATCH V5 15/20] xfsprogs: Enable bulkstat ioctl to support
+ 64-bit extent counters
+Message-ID: <20220201192900.GM8313@magnolia>
+References: <20220121052019.224605-1-chandan.babu@oracle.com>
+ <20220121052019.224605-16-chandan.babu@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220121051857.221105-17-chandan.babu@oracle.com>
+In-Reply-To: <20220121052019.224605-16-chandan.babu@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jan 21, 2022 at 10:48:57AM +0530, Chandan Babu R wrote:
-> The maximum extent length depends on maximum block count that can be stored in
-> a BMBT record. Hence this commit defines MAXEXTLEN based on
-> BMBT_BLOCKCOUNT_BITLEN.
+On Fri, Jan 21, 2022 at 10:50:14AM +0530, Chandan Babu R wrote:
+> This commit adds support to libfrog to enable reporting 64-bit extent counters
+> to its users. In order to do so, bulkstat ioctl is now invoked with the newly
+> introduced XFS_BULK_IREQ_NREXT64 flag if the underlying filesystem's geometry
+> supports 64-bit extent counters.
 > 
-> While at it, the commit also renames MAXEXTLEN to XFS_MAX_BMBT_EXTLEN.
-> 
-> Suggested-by: Darrick J. Wong <djwong@kernel.org>
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 > Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
+> ---
+>  fsr/xfs_fsr.c      |  4 ++--
+>  io/bulkstat.c      |  1 +
+>  libfrog/bulkstat.c | 29 +++++++++++++++++++++++++++--
+>  libxfs/xfs_fs.h    | 12 ++++++++----
 
-Looks good now,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+On second thought: While you're adding comments to the definition of
+XFS_BULK_IREQ_NREXT64 in xfs_fs.h, can you please update
+man/man2/ioctl_xfs_bulkstat.2 as well?
 
 --D
 
-> ---
->  fs/xfs/libxfs/xfs_alloc.c      |  2 +-
->  fs/xfs/libxfs/xfs_bmap.c       | 57 +++++++++++++++++-----------------
->  fs/xfs/libxfs/xfs_format.h     |  5 +--
->  fs/xfs/libxfs/xfs_inode_buf.c  |  4 +--
->  fs/xfs/libxfs/xfs_trans_resv.c | 11 ++++---
->  fs/xfs/scrub/bmap.c            |  2 +-
->  fs/xfs/xfs_bmap_util.c         | 14 +++++----
->  fs/xfs/xfs_iomap.c             | 28 ++++++++---------
->  8 files changed, 64 insertions(+), 59 deletions(-)
+>  4 files changed, 38 insertions(+), 8 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index 353e53b892e6..3f9b9cbfef43 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -2493,7 +2493,7 @@ __xfs_free_extent_later(
+> diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+> index 6cf8bfb7..ba02506d 100644
+> --- a/fsr/xfs_fsr.c
+> +++ b/fsr/xfs_fsr.c
+> @@ -590,7 +590,7 @@ cmp(const void *s1, const void *s2)
+>  		(bs1->bs_version == XFS_BULKSTAT_VERSION_V5 &&
+>  		bs2->bs_version == XFS_BULKSTAT_VERSION_V5));
 >  
->  	ASSERT(bno != NULLFSBLOCK);
->  	ASSERT(len > 0);
-> -	ASSERT(len <= MAXEXTLEN);
-> +	ASSERT(len <= XFS_MAX_BMBT_EXTLEN);
->  	ASSERT(!isnullstartblock(bno));
->  	agno = XFS_FSB_TO_AGNO(mp, bno);
->  	agbno = XFS_FSB_TO_AGBNO(mp, bno);
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 384532aac60a..1c3da6aac2f9 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -1449,7 +1449,7 @@ xfs_bmap_add_extent_delay_real(
->  	    LEFT.br_startoff + LEFT.br_blockcount == new->br_startoff &&
->  	    LEFT.br_startblock + LEFT.br_blockcount == new->br_startblock &&
->  	    LEFT.br_state == new->br_state &&
-> -	    LEFT.br_blockcount + new->br_blockcount <= MAXEXTLEN)
-> +	    LEFT.br_blockcount + new->br_blockcount <= XFS_MAX_BMBT_EXTLEN)
->  		state |= BMAP_LEFT_CONTIG;
->  
->  	/*
-> @@ -1467,13 +1467,13 @@ xfs_bmap_add_extent_delay_real(
->  	    new_endoff == RIGHT.br_startoff &&
->  	    new->br_startblock + new->br_blockcount == RIGHT.br_startblock &&
->  	    new->br_state == RIGHT.br_state &&
-> -	    new->br_blockcount + RIGHT.br_blockcount <= MAXEXTLEN &&
-> +	    new->br_blockcount + RIGHT.br_blockcount <= XFS_MAX_BMBT_EXTLEN &&
->  	    ((state & (BMAP_LEFT_CONTIG | BMAP_LEFT_FILLING |
->  		       BMAP_RIGHT_FILLING)) !=
->  		      (BMAP_LEFT_CONTIG | BMAP_LEFT_FILLING |
->  		       BMAP_RIGHT_FILLING) ||
->  	     LEFT.br_blockcount + new->br_blockcount + RIGHT.br_blockcount
-> -			<= MAXEXTLEN))
-> +			<= XFS_MAX_BMBT_EXTLEN))
->  		state |= BMAP_RIGHT_CONTIG;
->  
->  	error = 0;
-> @@ -1997,7 +1997,7 @@ xfs_bmap_add_extent_unwritten_real(
->  	    LEFT.br_startoff + LEFT.br_blockcount == new->br_startoff &&
->  	    LEFT.br_startblock + LEFT.br_blockcount == new->br_startblock &&
->  	    LEFT.br_state == new->br_state &&
-> -	    LEFT.br_blockcount + new->br_blockcount <= MAXEXTLEN)
-> +	    LEFT.br_blockcount + new->br_blockcount <= XFS_MAX_BMBT_EXTLEN)
->  		state |= BMAP_LEFT_CONTIG;
->  
->  	/*
-> @@ -2015,13 +2015,13 @@ xfs_bmap_add_extent_unwritten_real(
->  	    new_endoff == RIGHT.br_startoff &&
->  	    new->br_startblock + new->br_blockcount == RIGHT.br_startblock &&
->  	    new->br_state == RIGHT.br_state &&
-> -	    new->br_blockcount + RIGHT.br_blockcount <= MAXEXTLEN &&
-> +	    new->br_blockcount + RIGHT.br_blockcount <= XFS_MAX_BMBT_EXTLEN &&
->  	    ((state & (BMAP_LEFT_CONTIG | BMAP_LEFT_FILLING |
->  		       BMAP_RIGHT_FILLING)) !=
->  		      (BMAP_LEFT_CONTIG | BMAP_LEFT_FILLING |
->  		       BMAP_RIGHT_FILLING) ||
->  	     LEFT.br_blockcount + new->br_blockcount + RIGHT.br_blockcount
-> -			<= MAXEXTLEN))
-> +			<= XFS_MAX_BMBT_EXTLEN))
->  		state |= BMAP_RIGHT_CONTIG;
->  
->  	/*
-> @@ -2507,15 +2507,15 @@ xfs_bmap_add_extent_hole_delay(
->  	 */
->  	if ((state & BMAP_LEFT_VALID) && (state & BMAP_LEFT_DELAY) &&
->  	    left.br_startoff + left.br_blockcount == new->br_startoff &&
-> -	    left.br_blockcount + new->br_blockcount <= MAXEXTLEN)
-> +	    left.br_blockcount + new->br_blockcount <= XFS_MAX_BMBT_EXTLEN)
->  		state |= BMAP_LEFT_CONTIG;
->  
->  	if ((state & BMAP_RIGHT_VALID) && (state & BMAP_RIGHT_DELAY) &&
->  	    new->br_startoff + new->br_blockcount == right.br_startoff &&
-> -	    new->br_blockcount + right.br_blockcount <= MAXEXTLEN &&
-> +	    new->br_blockcount + right.br_blockcount <= XFS_MAX_BMBT_EXTLEN &&
->  	    (!(state & BMAP_LEFT_CONTIG) ||
->  	     (left.br_blockcount + new->br_blockcount +
-> -	      right.br_blockcount <= MAXEXTLEN)))
-> +	      right.br_blockcount <= XFS_MAX_BMBT_EXTLEN)))
->  		state |= BMAP_RIGHT_CONTIG;
->  
->  	/*
-> @@ -2658,17 +2658,17 @@ xfs_bmap_add_extent_hole_real(
->  	    left.br_startoff + left.br_blockcount == new->br_startoff &&
->  	    left.br_startblock + left.br_blockcount == new->br_startblock &&
->  	    left.br_state == new->br_state &&
-> -	    left.br_blockcount + new->br_blockcount <= MAXEXTLEN)
-> +	    left.br_blockcount + new->br_blockcount <= XFS_MAX_BMBT_EXTLEN)
->  		state |= BMAP_LEFT_CONTIG;
->  
->  	if ((state & BMAP_RIGHT_VALID) && !(state & BMAP_RIGHT_DELAY) &&
->  	    new->br_startoff + new->br_blockcount == right.br_startoff &&
->  	    new->br_startblock + new->br_blockcount == right.br_startblock &&
->  	    new->br_state == right.br_state &&
-> -	    new->br_blockcount + right.br_blockcount <= MAXEXTLEN &&
-> +	    new->br_blockcount + right.br_blockcount <= XFS_MAX_BMBT_EXTLEN &&
->  	    (!(state & BMAP_LEFT_CONTIG) ||
->  	     left.br_blockcount + new->br_blockcount +
-> -	     right.br_blockcount <= MAXEXTLEN))
-> +	     right.br_blockcount <= XFS_MAX_BMBT_EXTLEN))
->  		state |= BMAP_RIGHT_CONTIG;
->  
->  	error = 0;
-> @@ -2903,15 +2903,15 @@ xfs_bmap_extsize_align(
->  
->  	/*
->  	 * For large extent hint sizes, the aligned extent might be larger than
-> -	 * MAXEXTLEN. In that case, reduce the size by an extsz so that it pulls
-> -	 * the length back under MAXEXTLEN. The outer allocation loops handle
-> -	 * short allocation just fine, so it is safe to do this. We only want to
-> -	 * do it when we are forced to, though, because it means more allocation
-> -	 * operations are required.
-> +	 * XFS_BMBT_MAX_EXTLEN. In that case, reduce the size by an extsz so
-> +	 * that it pulls the length back under XFS_BMBT_MAX_EXTLEN. The outer
-> +	 * allocation loops handle short allocation just fine, so it is safe to
-> +	 * do this. We only want to do it when we are forced to, though, because
-> +	 * it means more allocation operations are required.
->  	 */
-> -	while (align_alen > MAXEXTLEN)
-> +	while (align_alen > XFS_MAX_BMBT_EXTLEN)
->  		align_alen -= extsz;
-> -	ASSERT(align_alen <= MAXEXTLEN);
-> +	ASSERT(align_alen <= XFS_MAX_BMBT_EXTLEN);
->  
->  	/*
->  	 * If the previous block overlaps with this proposed allocation
-> @@ -3001,9 +3001,9 @@ xfs_bmap_extsize_align(
->  			return -EINVAL;
->  	} else {
->  		ASSERT(orig_off >= align_off);
-> -		/* see MAXEXTLEN handling above */
-> +		/* see XFS_BMBT_MAX_EXTLEN handling above */
->  		ASSERT(orig_end <= align_off + align_alen ||
-> -		       align_alen + extsz > MAXEXTLEN);
-> +		       align_alen + extsz > XFS_MAX_BMBT_EXTLEN);
->  	}
->  
->  #ifdef DEBUG
-> @@ -3968,7 +3968,7 @@ xfs_bmapi_reserve_delalloc(
->  	 * Cap the alloc length. Keep track of prealloc so we know whether to
->  	 * tag the inode before we return.
->  	 */
-> -	alen = XFS_FILBLKS_MIN(len + prealloc, MAXEXTLEN);
-> +	alen = XFS_FILBLKS_MIN(len + prealloc, XFS_MAX_BMBT_EXTLEN);
->  	if (!eof)
->  		alen = XFS_FILBLKS_MIN(alen, got->br_startoff - aoff);
->  	if (prealloc && alen >= len)
-> @@ -4101,7 +4101,7 @@ xfs_bmapi_allocate(
->  		if (!xfs_iext_peek_prev_extent(ifp, &bma->icur, &bma->prev))
->  			bma->prev.br_startoff = NULLFILEOFF;
->  	} else {
-> -		bma->length = XFS_FILBLKS_MIN(bma->length, MAXEXTLEN);
-> +		bma->length = XFS_FILBLKS_MIN(bma->length, XFS_MAX_BMBT_EXTLEN);
->  		if (!bma->eof)
->  			bma->length = XFS_FILBLKS_MIN(bma->length,
->  					bma->got.br_startoff - bma->offset);
-> @@ -4421,8 +4421,8 @@ xfs_bmapi_write(
->  			 * xfs_extlen_t and therefore 32 bits. Hence we have to
->  			 * check for 32-bit overflows and handle them here.
->  			 */
-> -			if (len > (xfs_filblks_t)MAXEXTLEN)
-> -				bma.length = MAXEXTLEN;
-> +			if (len > (xfs_filblks_t)XFS_MAX_BMBT_EXTLEN)
-> +				bma.length = XFS_MAX_BMBT_EXTLEN;
->  			else
->  				bma.length = len;
->  
-> @@ -4557,7 +4557,8 @@ xfs_bmapi_convert_delalloc(
->  	bma.ip = ip;
->  	bma.wasdel = true;
->  	bma.offset = bma.got.br_startoff;
-> -	bma.length = max_t(xfs_filblks_t, bma.got.br_blockcount, MAXEXTLEN);
-> +	bma.length = max_t(xfs_filblks_t, bma.got.br_blockcount,
-> +			XFS_MAX_BMBT_EXTLEN);
->  	bma.minleft = xfs_bmapi_minleft(tp, ip, whichfork);
->  
->  	/*
-> @@ -4638,7 +4639,7 @@ xfs_bmapi_remap(
->  
->  	ifp = XFS_IFORK_PTR(ip, whichfork);
->  	ASSERT(len > 0);
-> -	ASSERT(len <= (xfs_filblks_t)MAXEXTLEN);
-> +	ASSERT(len <= (xfs_filblks_t)XFS_MAX_BMBT_EXTLEN);
->  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
->  	ASSERT(!(flags & ~(XFS_BMAPI_ATTRFORK | XFS_BMAPI_PREALLOC |
->  			   XFS_BMAPI_NORMAP)));
-> @@ -5638,7 +5639,7 @@ xfs_bmse_can_merge(
->  	if ((left->br_startoff + left->br_blockcount != startoff) ||
->  	    (left->br_startblock + left->br_blockcount != got->br_startblock) ||
->  	    (left->br_state != got->br_state) ||
-> -	    (left->br_blockcount + got->br_blockcount > MAXEXTLEN))
-> +	    (left->br_blockcount + got->br_blockcount > XFS_MAX_BMBT_EXTLEN))
->  		return false;
->  
->  	return true;
-> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> index b7521c1d1db2..fa11e4c1cc41 100644
-> --- a/fs/xfs/libxfs/xfs_format.h
-> +++ b/fs/xfs/libxfs/xfs_format.h
-> @@ -886,7 +886,7 @@ enum xfs_dinode_fmt {
->  	{ XFS_DINODE_FMT_UUID,		"uuid" }
->  
->  /*
-> - * Max values for extlen, extnum, aextnum.
-> + * Max values for ondisk inode's extent counters.
->   *
->   * The newly introduced data fork extent counter is a 64-bit field. However, the
->   * maximum number of extents in a file is limited to 2^54 extents (assuming one
-> @@ -898,7 +898,6 @@ enum xfs_dinode_fmt {
->   * Rounding up 47 to the nearest multiple of bits-per-byte results in 48. Hence
->   * 2^48 was chosen as the maximum data fork extent count.
->   */
-> -#define	MAXEXTLEN			((xfs_extlen_t)((1ULL << 21) - 1)) /* 21 bits */
->  #define XFS_MAX_EXTCNT_DATA_FORK	((xfs_extnum_t)((1ULL << 48) - 1)) /* Unsigned 48-bits */
->  #define XFS_MAX_EXTCNT_ATTR_FORK	((xfs_extnum_t)((1ULL << 32) - 1)) /* Unsigned 32-bits */
->  #define XFS_MAX_EXTCNT_DATA_FORK_OLD	((xfs_extnum_t)((1ULL << 31) - 1)) /* Signed 32-bits */
-> @@ -1635,6 +1634,8 @@ typedef struct xfs_bmdr_block {
->  #define BMBT_STARTOFF_MASK	((1ULL << BMBT_STARTOFF_BITLEN) - 1)
->  #define BMBT_BLOCKCOUNT_MASK	((1ULL << BMBT_BLOCKCOUNT_BITLEN) - 1)
->  
-> +#define XFS_MAX_BMBT_EXTLEN	((xfs_extlen_t)(BMBT_BLOCKCOUNT_MASK))
-> +
->  /*
->   * bmbt records have a file offset (block) field that is 54 bits wide, so this
->   * is the largest xfs_fileoff_t that we ever expect to see.
-> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> index 767189c7c887..409be63fd80d 100644
-> --- a/fs/xfs/libxfs/xfs_inode_buf.c
-> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> @@ -691,7 +691,7 @@ xfs_inode_validate_extsize(
->  	if (extsize_bytes % blocksize_bytes)
->  		return __this_address;
->  
-> -	if (extsize > MAXEXTLEN)
-> +	if (extsize > XFS_MAX_BMBT_EXTLEN)
->  		return __this_address;
->  
->  	if (!rt_flag && extsize > mp->m_sb.sb_agblocks / 2)
-> @@ -748,7 +748,7 @@ xfs_inode_validate_cowextsize(
->  	if (cowextsize_bytes % mp->m_sb.sb_blocksize)
->  		return __this_address;
->  
-> -	if (cowextsize > MAXEXTLEN)
-> +	if (cowextsize > XFS_MAX_BMBT_EXTLEN)
->  		return __this_address;
->  
->  	if (cowextsize > mp->m_sb.sb_agblocks / 2)
-> diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-> index 6f83d9b306ee..19313021fb99 100644
-> --- a/fs/xfs/libxfs/xfs_trans_resv.c
-> +++ b/fs/xfs/libxfs/xfs_trans_resv.c
-> @@ -199,8 +199,8 @@ xfs_calc_inode_chunk_res(
->  /*
->   * Per-extent log reservation for the btree changes involved in freeing or
->   * allocating a realtime extent.  We have to be able to log as many rtbitmap
-> - * blocks as needed to mark inuse MAXEXTLEN blocks' worth of realtime extents,
-> - * as well as the realtime summary block.
-> + * blocks as needed to mark inuse XFS_BMBT_MAX_EXTLEN blocks' worth of realtime
-> + * extents, as well as the realtime summary block.
->   */
->  static unsigned int
->  xfs_rtalloc_log_count(
-> @@ -210,7 +210,7 @@ xfs_rtalloc_log_count(
->  	unsigned int		blksz = XFS_FSB_TO_B(mp, 1);
->  	unsigned int		rtbmp_bytes;
->  
-> -	rtbmp_bytes = (MAXEXTLEN / mp->m_sb.sb_rextsize) / NBBY;
-> +	rtbmp_bytes = (XFS_MAX_BMBT_EXTLEN / mp->m_sb.sb_rextsize) / NBBY;
->  	return (howmany(rtbmp_bytes, blksz) + 1) * num_ops;
+> -	return (bs2->bs_extents - bs1->bs_extents);
+> +	return (bs2->bs_extents64 - bs1->bs_extents64);
 >  }
 >  
-> @@ -247,7 +247,7 @@ xfs_rtalloc_log_count(
->   *    the inode's bmap btree: max depth * block size
->   *    the agfs of the ags from which the extents are allocated: 2 * sector
->   *    the superblock free block counter: sector size
-> - *    the realtime bitmap: ((MAXEXTLEN / rtextsize) / NBBY) bytes
-> + *    the realtime bitmap: ((XFS_BMBT_MAX_EXTLEN / rtextsize) / NBBY) bytes
->   *    the realtime summary: 1 block
->   *    the allocation btrees: 2 trees * (2 * max depth - 1) * block size
->   * And the bmap_finish transaction can free bmap blocks in a join (t3):
-> @@ -299,7 +299,8 @@ xfs_calc_write_reservation(
->   *    the agf for each of the ags: 2 * sector size
->   *    the agfl for each of the ags: 2 * sector size
->   *    the super block to reflect the freed blocks: sector size
-> - *    the realtime bitmap: 2 exts * ((MAXEXTLEN / rtextsize) / NBBY) bytes
-> + *    the realtime bitmap: 2 exts * ((XFS_BMBT_MAX_EXTLEN / rtextsize) / NBBY)
-> + *    bytes
->   *    the realtime summary: 2 exts * 1 block
->   *    worst case split in allocation btrees per extent assuming 2 extents:
->   *		2 exts * 2 trees * (2 * max depth - 1) * block size
-> diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-> index a4cbbc346f60..c357593e0a02 100644
-> --- a/fs/xfs/scrub/bmap.c
-> +++ b/fs/xfs/scrub/bmap.c
-> @@ -350,7 +350,7 @@ xchk_bmap_iextent(
->  				irec->br_startoff);
+>  /*
+> @@ -655,7 +655,7 @@ fsrfs(char *mntdir, xfs_ino_t startino, int targetrange)
+>  		for (p = buf, endp = (buf + buflenout); p < endp ; p++) {
+>  			/* Do some obvious checks now */
+>  			if (((p->bs_mode & S_IFMT) != S_IFREG) ||
+> -			     (p->bs_extents < 2))
+> +			     (p->bs_extents64 < 2))
+>  				continue;
 >  
->  	/* Make sure the extent points to a valid place. */
-> -	if (irec->br_blockcount > MAXEXTLEN)
-> +	if (irec->br_blockcount > XFS_MAX_BMBT_EXTLEN)
->  		xchk_fblock_set_corrupt(info->sc, info->whichfork,
->  				irec->br_startoff);
->  	if (info->is_rt &&
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index 73a36b7be3bd..36cde254dedd 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -119,14 +119,14 @@ xfs_bmap_rtalloc(
->  	 */
->  	ralen = ap->length / mp->m_sb.sb_rextsize;
->  	/*
-> -	 * If the old value was close enough to MAXEXTLEN that
-> +	 * If the old value was close enough to XFS_BMBT_MAX_EXTLEN that
->  	 * we rounded up to it, cut it back so it's valid again.
->  	 * Note that if it's a really large request (bigger than
-> -	 * MAXEXTLEN), we don't hear about that number, and can't
-> +	 * XFS_BMBT_MAX_EXTLEN), we don't hear about that number, and can't
->  	 * adjust the starting point to match it.
->  	 */
-> -	if (ralen * mp->m_sb.sb_rextsize >= MAXEXTLEN)
-> -		ralen = MAXEXTLEN / mp->m_sb.sb_rextsize;
-> +	if (ralen * mp->m_sb.sb_rextsize >= XFS_MAX_BMBT_EXTLEN)
-> +		ralen = XFS_MAX_BMBT_EXTLEN / mp->m_sb.sb_rextsize;
+>  			ret = -xfrog_bulkstat_v5_to_v1(&fsxfd, &bs1, p);
+> diff --git a/io/bulkstat.c b/io/bulkstat.c
+> index 201470b2..0c9a2b02 100644
+> --- a/io/bulkstat.c
+> +++ b/io/bulkstat.c
+> @@ -57,6 +57,7 @@ dump_bulkstat(
+>  	printf("\tbs_sick = 0x%"PRIx16"\n", bstat->bs_sick);
+>  	printf("\tbs_checked = 0x%"PRIx16"\n", bstat->bs_checked);
+>  	printf("\tbs_mode = 0%"PRIo16"\n", bstat->bs_mode);
+> +	printf("\tbs_extents64 = %"PRIu64"\n", bstat->bs_extents64);
+>  };
 >  
->  	/*
->  	 * Lock out modifications to both the RT bitmap and summary inodes
-> @@ -840,9 +840,11 @@ xfs_alloc_file_space(
->  		 * count, hence we need to limit the number of blocks we are
->  		 * trying to reserve to avoid an overflow. We can't allocate
->  		 * more than @nimaps extents, and an extent is limited on disk
-> -		 * to MAXEXTLEN (21 bits), so use that to enforce the limit.
-> +		 * to XFS_BMBT_MAX_EXTLEN (21 bits), so use that to enforce the
-> +		 * limit.
->  		 */
-> -		resblks = min_t(xfs_fileoff_t, (e - s), (MAXEXTLEN * nimaps));
-> +		resblks = min_t(xfs_fileoff_t, (e - s),
-> +				(XFS_MAX_BMBT_EXTLEN * nimaps));
->  		if (unlikely(rt)) {
->  			dblocks = XFS_DIOSTRAT_SPACE_RES(mp, 0);
->  			rblocks = resblks;
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 093758440ad5..6835adc8d62f 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -395,7 +395,7 @@ xfs_iomap_prealloc_size(
->  	 */
->  	plen = prev.br_blockcount;
->  	while (xfs_iext_prev_extent(ifp, &ncur, &got)) {
-> -		if (plen > MAXEXTLEN / 2 ||
-> +		if (plen > XFS_MAX_BMBT_EXTLEN / 2 ||
->  		    isnullstartblock(got.br_startblock) ||
->  		    got.br_startoff + got.br_blockcount != prev.br_startoff ||
->  		    got.br_startblock + got.br_blockcount != prev.br_startblock)
-> @@ -407,23 +407,23 @@ xfs_iomap_prealloc_size(
->  	/*
->  	 * If the size of the extents is greater than half the maximum extent
->  	 * length, then use the current offset as the basis.  This ensures that
-> -	 * for large files the preallocation size always extends to MAXEXTLEN
-> -	 * rather than falling short due to things like stripe unit/width
-> -	 * alignment of real extents.
-> +	 * for large files the preallocation size always extends to
-> +	 * XFS_BMBT_MAX_EXTLEN rather than falling short due to things like stripe
-> +	 * unit/width alignment of real extents.
->  	 */
->  	alloc_blocks = plen * 2;
-> -	if (alloc_blocks > MAXEXTLEN)
-> +	if (alloc_blocks > XFS_MAX_BMBT_EXTLEN)
->  		alloc_blocks = XFS_B_TO_FSB(mp, offset);
->  	qblocks = alloc_blocks;
+>  static void
+> diff --git a/libfrog/bulkstat.c b/libfrog/bulkstat.c
+> index 195f6ea0..0a90947f 100644
+> --- a/libfrog/bulkstat.c
+> +++ b/libfrog/bulkstat.c
+> @@ -56,6 +56,9 @@ xfrog_bulkstat_single5(
+>  	if (flags & ~(XFS_BULK_IREQ_SPECIAL))
+>  		return -EINVAL;
 >  
->  	/*
-> -	 * MAXEXTLEN is not a power of two value but we round the prealloc down
-> -	 * to the nearest power of two value after throttling. To prevent the
-> -	 * round down from unconditionally reducing the maximum supported
-> -	 * prealloc size, we round up first, apply appropriate throttling,
-> -	 * round down and cap the value to MAXEXTLEN.
-> +	 * XFS_BMBT_MAX_EXTLEN is not a power of two value but we round the prealloc
-> +	 * down to the nearest power of two value after throttling. To prevent
-> +	 * the round down from unconditionally reducing the maximum supported
-> +	 * prealloc size, we round up first, apply appropriate throttling, round
-> +	 * down and cap the value to XFS_BMBT_MAX_EXTLEN.
->  	 */
-> -	alloc_blocks = XFS_FILEOFF_MIN(roundup_pow_of_two(MAXEXTLEN),
-> +	alloc_blocks = XFS_FILEOFF_MIN(roundup_pow_of_two(XFS_MAX_BMBT_EXTLEN),
->  				       alloc_blocks);
+> +	if (xfd->fsgeom.flags & XFS_FSOP_GEOM_FLAGS_NREXT64)
+> +		flags |= XFS_BULK_IREQ_NREXT64;
+> +
+>  	ret = xfrog_bulkstat_alloc_req(1, ino, &req);
+>  	if (ret)
+>  		return ret;
+> @@ -73,6 +76,12 @@ xfrog_bulkstat_single5(
+>  	}
 >  
->  	freesp = percpu_counter_read_positive(&mp->m_fdblocks);
-> @@ -471,14 +471,14 @@ xfs_iomap_prealloc_size(
->  	 */
->  	if (alloc_blocks)
->  		alloc_blocks = rounddown_pow_of_two(alloc_blocks);
-> -	if (alloc_blocks > MAXEXTLEN)
-> -		alloc_blocks = MAXEXTLEN;
-> +	if (alloc_blocks > XFS_MAX_BMBT_EXTLEN)
-> +		alloc_blocks = XFS_MAX_BMBT_EXTLEN;
+>  	memcpy(bulkstat, req->bulkstat, sizeof(struct xfs_bulkstat));
+> +
+> +	if (!(xfd->fsgeom.flags & XFS_FSOP_GEOM_FLAGS_NREXT64)) {
+> +		bulkstat->bs_extents64 = bulkstat->bs_extents;
+> +		bulkstat->bs_extents = 0;
+> +	}
+> +
+>  free:
+>  	free(req);
+>  	return ret;
+> @@ -129,6 +138,7 @@ xfrog_bulkstat_single(
+>  	switch (error) {
+>  	case -EOPNOTSUPP:
+>  	case -ENOTTY:
+> +		assert(!(xfd->fsgeom.flags & XFS_FSOP_GEOM_FLAGS_NREXT64));
+>  		xfd->flags |= XFROG_FLAG_BULKSTAT_FORCE_V1;
+>  		break;
+>  	}
+> @@ -259,10 +269,23 @@ xfrog_bulkstat5(
+>  	struct xfs_bulkstat_req	*req)
+>  {
+>  	int			ret;
+> +	int			i;
+> +
+> +	if (xfd->fsgeom.flags & XFS_FSOP_GEOM_FLAGS_NREXT64)
+> +		req->hdr.flags |= XFS_BULK_IREQ_NREXT64;
 >  
->  	/*
->  	 * If we are still trying to allocate more space than is
->  	 * available, squash the prealloc hard. This can happen if we
->  	 * have a large file on a small filesystem and the above
-> -	 * lowspace thresholds are smaller than MAXEXTLEN.
-> +	 * lowspace thresholds are smaller than XFS_BMBT_MAX_EXTLEN.
->  	 */
->  	while (alloc_blocks && alloc_blocks >= freesp)
->  		alloc_blocks >>= 4;
+>  	ret = ioctl(xfd->fd, XFS_IOC_BULKSTAT, req);
+>  	if (ret)
+>  		return -errno;
+> +
+> +	if (!(xfd->fsgeom.flags & XFS_FSOP_GEOM_FLAGS_NREXT64)) {
+> +		for (i = 0; i < req->hdr.ocount; i++) {
+> +			req->bulkstat[i].bs_extents64 =
+> +				req->bulkstat[i].bs_extents;
+> +			req->bulkstat[i].bs_extents = 0;
+> +		}
+> +	}
+> +
+>  	return 0;
+>  }
+>  
+> @@ -316,6 +339,7 @@ xfrog_bulkstat(
+>  	switch (error) {
+>  	case -EOPNOTSUPP:
+>  	case -ENOTTY:
+> +		assert(!(xfd->fsgeom.flags & XFS_FSOP_GEOM_FLAGS_NREXT64));
+>  		xfd->flags |= XFROG_FLAG_BULKSTAT_FORCE_V1;
+>  		break;
+>  	}
+> @@ -342,6 +366,7 @@ xfrog_bulkstat_v5_to_v1(
+>  	const struct xfs_bulkstat	*bs5)
+>  {
+>  	if (bs5->bs_aextents > UINT16_MAX ||
+> +	    bs5->bs_extents64 > INT32_MAX ||
+>  	    cvt_off_fsb_to_b(xfd, bs5->bs_extsize_blks) > UINT32_MAX ||
+>  	    cvt_off_fsb_to_b(xfd, bs5->bs_cowextsize_blks) > UINT32_MAX ||
+>  	    time_too_big(bs5->bs_atime) ||
+> @@ -366,7 +391,7 @@ xfrog_bulkstat_v5_to_v1(
+>  	bs1->bs_blocks = bs5->bs_blocks;
+>  	bs1->bs_xflags = bs5->bs_xflags;
+>  	bs1->bs_extsize = cvt_off_fsb_to_b(xfd, bs5->bs_extsize_blks);
+> -	bs1->bs_extents = bs5->bs_extents;
+> +	bs1->bs_extents = bs5->bs_extents64;
+>  	bs1->bs_gen = bs5->bs_gen;
+>  	bs1->bs_projid_lo = bs5->bs_projectid & 0xFFFF;
+>  	bs1->bs_forkoff = bs5->bs_forkoff;
+> @@ -407,7 +432,6 @@ xfrog_bulkstat_v1_to_v5(
+>  	bs5->bs_blocks = bs1->bs_blocks;
+>  	bs5->bs_xflags = bs1->bs_xflags;
+>  	bs5->bs_extsize_blks = cvt_b_to_off_fsbt(xfd, bs1->bs_extsize);
+> -	bs5->bs_extents = bs1->bs_extents;
+>  	bs5->bs_gen = bs1->bs_gen;
+>  	bs5->bs_projectid = bstat_get_projid(bs1);
+>  	bs5->bs_forkoff = bs1->bs_forkoff;
+> @@ -415,6 +439,7 @@ xfrog_bulkstat_v1_to_v5(
+>  	bs5->bs_checked = bs1->bs_checked;
+>  	bs5->bs_cowextsize_blks = cvt_b_to_off_fsbt(xfd, bs1->bs_cowextsize);
+>  	bs5->bs_aextents = bs1->bs_aextents;
+> +	bs5->bs_extents64 = bs1->bs_extents;
+>  }
+>  
+>  /* Allocate a bulkstat request.  Returns zero or a negative error code. */
+> diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
+> index 42bc3950..f65bf2da 100644
+> --- a/libxfs/xfs_fs.h
+> +++ b/libxfs/xfs_fs.h
+> @@ -393,7 +393,7 @@ struct xfs_bulkstat {
+>  	uint32_t	bs_extsize_blks; /* extent size hint, blocks	*/
+>  
+>  	uint32_t	bs_nlink;	/* number of links		*/
+> -	uint32_t	bs_extents;	/* number of extents		*/
+> +	uint32_t	bs_extents;	/* 32-bit data fork extent counter */
+>  	uint32_t	bs_aextents;	/* attribute number of extents	*/
+>  	uint16_t	bs_version;	/* structure version		*/
+>  	uint16_t	bs_forkoff;	/* inode fork offset in bytes	*/
+> @@ -402,8 +402,9 @@ struct xfs_bulkstat {
+>  	uint16_t	bs_checked;	/* checked inode metadata	*/
+>  	uint16_t	bs_mode;	/* type and mode		*/
+>  	uint16_t	bs_pad2;	/* zeroed			*/
+> +	uint64_t	bs_extents64;	/* 64-bit data fork extent counter */
+>  
+> -	uint64_t	bs_pad[7];	/* zeroed			*/
+> +	uint64_t	bs_pad[6];	/* zeroed			*/
+>  };
+>  
+>  #define XFS_BULKSTAT_VERSION_V1	(1)
+> @@ -484,8 +485,11 @@ struct xfs_bulk_ireq {
+>   */
+>  #define XFS_BULK_IREQ_SPECIAL	(1 << 1)
+>  
+> -#define XFS_BULK_IREQ_FLAGS_ALL	(XFS_BULK_IREQ_AGNO | \
+> -				 XFS_BULK_IREQ_SPECIAL)
+> +#define XFS_BULK_IREQ_NREXT64	(1 << 3)
+> +
+> +#define XFS_BULK_IREQ_FLAGS_ALL	(XFS_BULK_IREQ_AGNO |	 \
+> +				 XFS_BULK_IREQ_SPECIAL | \
+> +				 XFS_BULK_IREQ_NREXT64)
+>  
+>  /* Operate on the root directory inode. */
+>  #define XFS_BULK_IREQ_SPECIAL_ROOT	(1)
 > -- 
 > 2.30.2
 > 
