@@ -2,144 +2,422 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03F47C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Feb 2022 15:42:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94871C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Feb 2022 18:50:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231710AbiBBPmh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Feb 2022 10:42:37 -0500
-Received: from mail-dm6nam10on2073.outbound.protection.outlook.com ([40.107.93.73]:47457
-        "EHLO NAM10-DM6-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S230307AbiBBPmg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 2 Feb 2022 10:42:36 -0500
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=LW2+kVh19B3dbfh7lckd8cnCCijYj3WUUFSipPPZsrcM9z/BdXjRC0WG6ag6PSFAPXnFoHWiO8eCrWjg+098biabNq/4bwSwP7BH+odIDdpH3rYp0l9VPuwD+inYCNR3RMCFzFyogsVmy/mPaDWnx2oMcvk68PFfpK8NLvDAUgTJK5ltF/UsgnC1hy2tI7cmwjGA8hVcGBjVDJtS51sG38uVu9el70bTRvGp69ruBkEpu5IDtHF7WxFz+vtkYc1rXEB0qaaO9pwMmDVS3nMg0wJJx+OJtrDIrRYuNOsJhBbphtkzbLZESEsek2nRtARYm4hCif+jLwXsxJG26osT/w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=84dWaMLqi0sYM3r7jHlhIXKr8PJv4KdwPh7ywKXYAr8=;
- b=al13+AnggNZl+8168U+ePL+Zye5e2RtcGEpfbfjdx/22TBDg4FLq0BoAUfyYeqNGLbwsGp//3ITlumkk4dzHcAF6JQ/PSwmUVU1k4yosox3LlNe0nKP1Ns3T4RCRqxQ3m782ixORal7qXZD6puBDOPmdhligvZea5pwfNywAlZOY6JH3e2kw+Bvvqhld8lsos5vXtFruaW6lsTlUPC4KSaytDBh20WR1bll6Dg3cx5jw2vrx8K2tvYaWLPwwK+0QEBf/pjRxNpvjMJVjV1iruVMlBUTnS1fkcPKkNFqiIOfmA5iHcmKfCDGUlzCrDzZ/O+UFKQuOsg4Fw37h+wGw/A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=84dWaMLqi0sYM3r7jHlhIXKr8PJv4KdwPh7ywKXYAr8=;
- b=FBsjB0wel/qO9zm0fRbVbfjMx8jmiKCpLY7Az90jmAREft0/qIs6RCRdJnazaDp6kmBScgL78QM4D6bSge6W1yb1XOpg7gr1n5m3a92pEhhihOr2L7/rEKXNBkzdY13Vi/AUvtTG97vPhh+InBYIFdtP+CHGZd2Dizbs6ia1C4EOQ5jsHNZTF35kt0362M/BJVGYlRYHPIdYXv95+tQQZGP+OarR68fZH3m1Sgz8h3tuLHu95ottheBe5Hk0FI+s0uXmz8ZMZ8mImERmROg13ClnZFRbnsJjgTY9tUZHWLgcLrikmS3XuDiNfCLfD7lCuzVwOME9wV+qe9A4+CwQpw==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from MN2PR12MB4192.namprd12.prod.outlook.com (2603:10b6:208:1d5::15)
- by MWHPR12MB1696.namprd12.prod.outlook.com (2603:10b6:301:8::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4951.12; Wed, 2 Feb
- 2022 15:42:34 +0000
-Received: from MN2PR12MB4192.namprd12.prod.outlook.com
- ([fe80::e8f4:9793:da37:1bd3]) by MN2PR12MB4192.namprd12.prod.outlook.com
- ([fe80::e8f4:9793:da37:1bd3%4]) with mapi id 15.20.4951.012; Wed, 2 Feb 2022
- 15:42:34 +0000
-Date:   Wed, 2 Feb 2022 11:42:32 -0400
-From:   Jason Gunthorpe <jgg@nvidia.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Alex Sierra <alex.sierra@amd.com>, Felix.Kuehling@amd.com,
-        linux-mm@kvack.org, rcampbell@nvidia.com,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        jglisse@redhat.com, apopple@nvidia.com, willy@infradead.org
-Subject: Re: [PATCH v4 00/10] Add MEMORY_DEVICE_COHERENT for coherent device
- memory mapping
-Message-ID: <20220202154232.GU1786498@nvidia.com>
-References: <20220127030949.19396-1-alex.sierra@amd.com>
- <20220127143258.8da663659948ad1e6f0c0ea8@linux-foundation.org>
- <20220202145750.GA25170@lst.de>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220202145750.GA25170@lst.de>
-X-ClientProxiedBy: BL1PR13CA0196.namprd13.prod.outlook.com
- (2603:10b6:208:2be::21) To MN2PR12MB4192.namprd12.prod.outlook.com
- (2603:10b6:208:1d5::15)
+        id S1346771AbiBBSuB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Feb 2022 13:50:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46164 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1346772AbiBBSt7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Feb 2022 13:49:59 -0500
+Received: from mail-yb1-xb36.google.com (mail-yb1-xb36.google.com [IPv6:2607:f8b0:4864:20::b36])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B914DC06173D
+        for <linux-xfs@vger.kernel.org>; Wed,  2 Feb 2022 10:49:59 -0800 (PST)
+Received: by mail-yb1-xb36.google.com with SMTP id i62so1458448ybg.5
+        for <linux-xfs@vger.kernel.org>; Wed, 02 Feb 2022 10:49:59 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=umich.edu; s=google-2016-06-03;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=P2rDVUmLLsjKyOOWo9k4nxbxl44D3YoNpTpnLXLjdLE=;
+        b=Vr5tBY1wUzk7tNUo2dw32xK/uSq3l68R7AmOVXr+IViZAUsQ7DRrislfg7XQuJLpgH
+         ApiFNO6aGVTWbtrxubFykUu6rqyXgP7jqCIUrgaBN1PnTTUFPcT5zHes4lozQS2KS8T3
+         bByTZ9rrM//xcZLaT2BpU+n1UpXxpw2XbCnoeeCY3LS2wdzqCJ1lQ4lwhSv6sddZ1QYb
+         DWKOuNAUqQjNiAdOMwbom7I/7+Ip6wIb8utc4yomZu9sqUMIbePw6jeXqtxmSOPFdQr2
+         EVbD6Me0eMl5iFgikkQYwKQoYAtxitdiBjsP1YnjglRq04j17bA7MJfYM4t0G9dd9GiX
+         RkiQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=P2rDVUmLLsjKyOOWo9k4nxbxl44D3YoNpTpnLXLjdLE=;
+        b=lT8Uv1VwR14f9OZ/JfxhvG6D90vtknwp3R4ymjl8KQNzCKruMDzyHw+UGgu1JgvP8E
+         1Qa740IB3CF9cyIsr0do+JWWtSk/b4OpW5RDqWbEAG5BcR1epvlEWsD0mM0KeAE7gsmZ
+         aqE/HiUZNGcyXniYeJFX8o973JYu96aBr+vrIjxRs2QCDUz25W7tcxoP0nvsuhzt0EOV
+         ENr4/WTn3xiH3VZGnq5px1kappwwykeF3MV1X1ZXbop0DjAQrU7eh/Tvx3xlCYJS+Xj4
+         Xbb2LHcXStXgTDUvu6OS68TR/CjO9za9S0g9+aO63m9Zbig+xPn/VTbYqv0u9ERryKMZ
+         HdAg==
+X-Gm-Message-State: AOAM5307HaBeQOhuDQ20LV3i3YBpxkMyC1zlQDX5abmOu3++9gVXGF5s
+        rAnQbGpD4x/FDqCPiJIHlYWxSGRc5qEThr+agm1Mfw==
+X-Google-Smtp-Source: ABdhPJwPbV7cHAIz5hwV085NldYRyy+9N0ch2WyT31gXz0VpTnOMH+UsKGKEgzPYueMhG7ooBw05FcAYpMUuSsZ0qrE=
+X-Received: by 2002:a25:4285:: with SMTP id p127mr40815690yba.558.1643827798853;
+ Wed, 02 Feb 2022 10:49:58 -0800 (PST)
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 5eac08dd-255c-4284-cf40-08d9e662a18d
-X-MS-TrafficTypeDiagnostic: MWHPR12MB1696:EE_
-X-Microsoft-Antispam-PRVS: <MWHPR12MB1696FC1069AEE966727D8130C2279@MWHPR12MB1696.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:9508;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: S6OdVtNV6mAIBc/ZdOJQ9CA4luomRVpuL6ZnfLkPSoFSFi7XdgoiphsLUqRsfNNrc5eEos2hEMEb6j24pWj5BNCA+DutcGZWYH8WO0Vb3KDdtJ9qvlcbkJa7WKqcB45VnSwbLkM+sVWQQ7ZjCyHko4gvb/xhaSf7iO+UQ/9sdZ6XDsz6etJZxPI4lBF9BSwnUgbM3N/V1qPLvrKQoWYZ4IRO+H2I2FD3JMRaMDWcJuuCPbrrBnylw5fvxgBA8lc8YvzuAf6Dd2CQuwkK+rXpgGer7J8GLxQDTxUvDa90hoEBlYG5pOv2R0xL6uaFuImR6oS95Tp+6TuJ0wmWA9hk/TRIz4eb3Lif25O/kzz1hTaOWSRN1AGaPk5couIs+ogEYFF1hBGqWwxH+S6GvufUFjupF1HxWmJvYWNJ5JjOnKhIgMCvkZ9aoLGcjgm/rnclrnR27OyZ0rHuggJKId6IdZMwHCcMEEzIJWEeRn0UWgKS2QeQ4oIdzMcaSYENwBcAon0b4fRVUn6pbsEp6RWv0Hxs+hdxO7Zp7YWMGEHjqS50MZEjMR9V3MrlxI73mmH9Ehy7IHhc10aOpin66YDKcSZZ/TwCg8s77OAiNzzWiLF29yoOgyGA54Q9/3+gOgnJIdA3BQAgN8kGI9VcDPkYhA==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR12MB4192.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(54906003)(36756003)(83380400001)(38100700002)(6916009)(26005)(186003)(1076003)(316002)(6512007)(6506007)(2906002)(66946007)(66556008)(4326008)(6486002)(5660300002)(33656002)(2616005)(7416002)(86362001)(508600001)(8676002)(8936002)(66476007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?MljZgnSbz9CVZMjFl6sTom3jpOuzhcAXSTSgTD+EbEzrBwU/onXe0F1o5NVD?=
- =?us-ascii?Q?GVUVqFl621IUg74hGYs5LrFh9mWcNDDFyFmm0Uu8Q0/YCk1T4QSjudzFdEOs?=
- =?us-ascii?Q?rALVI/Dd3mNWEyyQU1ZuazRhlXK9gU5+QwAIrx0ytjpbilW+EXKOfONWypqR?=
- =?us-ascii?Q?umoS2+L5OxMqqATD4i2rukhBNhArxwnL106TZ4wlIqjZEUTMO82EqeG6yOdz?=
- =?us-ascii?Q?EvvvRptWgRSWViC/u1LhjPVpaixIo8IPsowSopHAypRM/R/Rdhv8tuxqXOgq?=
- =?us-ascii?Q?UFfrldMAvTUBtP4VbQcYJcm3BZWdVY+N1QSL/UoVl1h3FRC5fjtkMAjjPfob?=
- =?us-ascii?Q?DepWo73R0q9mjrFjH83klN1RaBjoWdQqePhpBFSovklnG/H+MArn4/kyp6tT?=
- =?us-ascii?Q?gmazBREiP3h3eKf904BVBbxmY27eYGRHZy1Lx+v3RVMVgMakJo0NmCcX9pfW?=
- =?us-ascii?Q?E4CibTIxuQ3wOdyJXiHnohfkCSdRtaUjCaGmMx/34DhsjH0IaQHBImoN69ea?=
- =?us-ascii?Q?YNA9o39q7s/a0jAqX3j3EviMw+4e6mn/Kmv4P1wRds6S23Cd5nOXjqi9nFUU?=
- =?us-ascii?Q?zVEyr5t32qLYVt7SiRWefv+4E4mWWcE8gqoitmcZV4W37c+av2kIgFMJkb83?=
- =?us-ascii?Q?g5zXZKyfhVBxaLXCZjkL0nylPG2VbGsaVprNKApW3kE/QuVWiCWwg1bj0VA2?=
- =?us-ascii?Q?Kq5sQJoaauwd8IHOktySAm+1vNrN7MwK7CnSGUeWrODnRoUkD4sR+RDzagse?=
- =?us-ascii?Q?Waoi4CTNEgCgNQmvYYDwLdgOT+I2NiIJsMSfbz/Pi6kxOZOmp4Ue/VqbvMKe?=
- =?us-ascii?Q?69JIdMYndRh0T36ocNNjbqhF3pMvtmkjunHqJ5d1mWnFoDMRVi0bBW0NEwzp?=
- =?us-ascii?Q?i2otHx4jEsDHiyXu1em+17v1jq48Us9qKDP9Mzz96XICm0ZS2EitIn0FEnA+?=
- =?us-ascii?Q?pDLyDZLN9FihiZFqzMDjsLIEjU6UVqu1w88+FSMy1kDMW4Hd+cMt5ZURf+bh?=
- =?us-ascii?Q?zkiptZ4i5ffHX4r/M2fZoxGBxZi4jNBxk61y+hhlNXKvDWuwVv2i0XewCZMR?=
- =?us-ascii?Q?nXjDJHD223HvamZw+XfjhjSfNEs5oRJE32owu717m6HSe68iNS0HN0mavRD/?=
- =?us-ascii?Q?/3kMZUYKb0MnwiIS/q7xbeJRJ61FQeHqj3HDLekkD5dFM1vgY1UbGIkYkwat?=
- =?us-ascii?Q?TfE7/1rwprcDWSqE5CEyTJNS44JcROgdRh0q3+VmIyqexXqNb3UEBIbW0HD4?=
- =?us-ascii?Q?X0cS74l2xG0AQ0yCnbtLBE25FvyWmJyY644gxcv04eNZwU1hlYbW5j6cbPn4?=
- =?us-ascii?Q?DfIAWSKHH7/P9MIM/HWgql8UHBF3f9oldmct8A4W3XNBCTAUX29VV4r+gHj+?=
- =?us-ascii?Q?eWb0MTqajNT8+Fs+kbzYMLVvcsFduPbRXSbm0WzcrJga7TuGirMPNpE2LK7k?=
- =?us-ascii?Q?9TVZn9CVy4jFXVvMj7D+Lmxmb1VRR4GhGwlClvXCAd8KcBxnvJlvKZvVPtcz?=
- =?us-ascii?Q?vZFgKT4Pzc8RgllmKj7NpvFZXRqHCmAMOWkkqbpSx0BQQYNTg0arBflbUo/E?=
- =?us-ascii?Q?p8AqFVefrRUJ2oiHVng=3D?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5eac08dd-255c-4284-cf40-08d9e662a18d
-X-MS-Exchange-CrossTenant-AuthSource: MN2PR12MB4192.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Feb 2022 15:42:34.2650
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 61Tsx9IQ4xXRZnK+dqbFW5xS98Lz02L8rtzxtpy3ioSKafm7h4W0teCJz8Y9Txpu
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR12MB1696
+References: <CAA43vkVeMb0SrvLmc8MCU7K8yLUBqHOVk3=JGOi+KDh3zs9Wfw@mail.gmail.com>
+ <20220201233312.GX59729@dread.disaster.area> <CAA43vkV_nDTJjXqtWw-jpc8KVWwa2jQ8-2bNbNJZBcsBSHV8dw@mail.gmail.com>
+ <20220202024430.GZ59729@dread.disaster.area> <20220202074242.GA59729@dread.disaster.area>
+In-Reply-To: <20220202074242.GA59729@dread.disaster.area>
+From:   Sean Caron <scaron@umich.edu>
+Date:   Wed, 2 Feb 2022 13:49:47 -0500
+Message-ID: <CAA43vkXxyHmQdu-GqVukmeOqEh8g-xJDCDD6sx7t4f-MVn+BBA@mail.gmail.com>
+Subject: Re: [PATCH] metadump: handle corruption errors without aborting
+To:     Dave Chinner <david@fromorbit.com>, Sean Caron <scaron@umich.edu>
+Cc:     linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Feb 02, 2022 at 03:57:50PM +0100, Christoph Hellwig wrote:
-> On Thu, Jan 27, 2022 at 02:32:58PM -0800, Andrew Morton wrote:
-> > On Wed, 26 Jan 2022 21:09:39 -0600 Alex Sierra <alex.sierra@amd.com> wrote:
-> > 
-> > > This patch series introduces MEMORY_DEVICE_COHERENT, a type of memory
-> > > owned by a device that can be mapped into CPU page tables like
-> > > MEMORY_DEVICE_GENERIC and can also be migrated like
-> > > MEMORY_DEVICE_PRIVATE.
-> > 
-> > Some more reviewer input appears to be desirable here.
-> > 
-> > I was going to tentatively add it to -mm and -next, but problems. 
-> > 5.17-rc1's mm/migrate.c:migrate_vma_check_page() is rather different
-> > from the tree you patched.  Please redo, refresh and resend?
-> 
-> I really hate adding more types with the weird one off page refcount.
-> We need to clean that mess up first.
+Hi Dave,
 
-Is there anyone who could give an outline of what is needed to make
-fsdax use compound pages/folios for its PMD stuff?
+Thank you! I tried copying and pasting this into a file and applying it with:
 
-I already suggested removing that as a way forward, and was shot down,
-but nobody is standing up to maintain this code and fix it :(
+patch < thispatchfile
 
-We got devdax and the DRM stuff fixed now, so FSDAX is the next
-blocker on this work.
+against both the 5.14.2 release and xfsprogs-dev Git pull and I'm
+getting errors from patch.
 
-The people who want this to advance have no idea about FSs or what to
-do, unfortunately.
+I also tried using "git patch" and it told me the patch does not apply.
 
-Jason
+I tried applying the patch by hand to the 5.14.2 metadump.c but I get
+a compilation error in process_dev_inode but I'm not sure if that's
+because I made a mistake or because the patch is expecting other
+content to be there, that isn't.
+
+I'm sorry for the ignorance but how would I make use of this?
+
+Thanks,
+
+Sean
+
+On Wed, Feb 2, 2022 at 2:42 AM Dave Chinner <david@fromorbit.com> wrote:
+>
+>
+> From: Dave Chinner <dchinner@redhat.com>
+>
+> Sean Caron reported that a metadump terminated after givin gthis
+> warning:
+>
+> xfs_metadump: inode 2216156864 has unexpected extents
+>
+> Metadump is supposed to ignore corruptions and continue dumping the
+> filesystem as best it can. Whilst it warns about many situations
+> where it can't fully dump structures, it should stop processing that
+> structure and continue with the next one until the entire filesystem
+> has been processed.
+>
+> Unfortunately, some warning conditions also return an "abort" error
+> status, causing metadump to abort if that condition is hit. Most of
+> these abort conditions should really be "continue on next object"
+> conditions so that the we attempt to dump the rest of the
+> filesystem.
+>
+> Fix the returns for warnings that incorrectly cause aborts
+> such that the only abort conditions are read errors when
+> "stop-on-read-error" semantics are specified. Also make the return
+> values consistently mean abort/continue rather than returning -errno
+> to mean "stop because read error" and then trying to infer what
+> the error means in callers without the context it occurred in.
+>
+> Reported-by: Sean Caron <scaron@umich.edu>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>
+> Sean,
+>
+> Can you please apply this patch to your xfsprogs source tree and
+> rebuild it? This should let metadump continue past the corrupt
+> inodes it aborted on and run through to completion.
+>
+> -Dave.
+>
+>  db/metadump.c | 94 +++++++++++++++++++++++++++++------------------------------
+>  1 file changed, 47 insertions(+), 47 deletions(-)
+>
+> diff --git a/db/metadump.c b/db/metadump.c
+> index 96b098b0eaca..9b32b88a3c50 100644
+> --- a/db/metadump.c
+> +++ b/db/metadump.c
+> @@ -1645,7 +1645,7 @@ process_symlink_block(
+>  {
+>         struct bbmap    map;
+>         char            *link;
+> -       int             ret = 0;
+> +       int             rval = 1;
+>
+>         push_cur();
+>         map.nmaps = 1;
+> @@ -1658,8 +1658,7 @@ process_symlink_block(
+>
+>                 print_warning("cannot read %s block %u/%u (%llu)",
+>                                 typtab[btype].name, agno, agbno, s);
+> -               if (stop_on_read_error)
+> -                       ret = -1;
+> +               rval = !stop_on_read_error;
+>                 goto out_pop;
+>         }
+>         link = iocur_top->data;
+> @@ -1682,10 +1681,11 @@ process_symlink_block(
+>         }
+>
+>         iocur_top->need_crc = 1;
+> -       ret = write_buf(iocur_top);
+> +       if (write_buf(iocur_top))
+> +               rval = 0;
+>  out_pop:
+>         pop_cur();
+> -       return ret;
+> +       return rval;
+>  }
+>
+>  #define MAX_REMOTE_VALS                4095
+> @@ -1843,8 +1843,8 @@ process_single_fsb_objects(
+>         typnm_t         btype,
+>         xfs_fileoff_t   last)
+>  {
+> +       int             rval = 1;
+>         char            *dp;
+> -       int             ret = 0;
+>         int             i;
+>
+>         for (i = 0; i < c; i++) {
+> @@ -1858,8 +1858,7 @@ process_single_fsb_objects(
+>
+>                         print_warning("cannot read %s block %u/%u (%llu)",
+>                                         typtab[btype].name, agno, agbno, s);
+> -                       if (stop_on_read_error)
+> -                               ret = -EIO;
+> +                       rval = !stop_on_read_error;
+>                         goto out_pop;
+>
+>                 }
+> @@ -1925,16 +1924,17 @@ process_single_fsb_objects(
+>                 }
+>
+>  write:
+> -               ret = write_buf(iocur_top);
+> +               if (write_buf(iocur_top))
+> +                       rval = 0;
+>  out_pop:
+>                 pop_cur();
+> -               if (ret)
+> +               if (!rval)
+>                         break;
+>                 o++;
+>                 s++;
+>         }
+>
+> -       return ret;
+> +       return rval;
+>  }
+>
+>  /*
+> @@ -1952,7 +1952,7 @@ process_multi_fsb_dir(
+>         xfs_fileoff_t   last)
+>  {
+>         char            *dp;
+> -       int             ret = 0;
+> +       int             rval = 1;
+>
+>         while (c > 0) {
+>                 unsigned int    bm_len;
+> @@ -1978,8 +1978,7 @@ process_multi_fsb_dir(
+>
+>                                 print_warning("cannot read %s block %u/%u (%llu)",
+>                                                 typtab[btype].name, agno, agbno, s);
+> -                               if (stop_on_read_error)
+> -                                       ret = -1;
+> +                               rval = !stop_on_read_error;
+>                                 goto out_pop;
+>
+>                         }
+> @@ -1998,18 +1997,19 @@ process_multi_fsb_dir(
+>                         }
+>                         iocur_top->need_crc = 1;
+>  write:
+> -                       ret = write_buf(iocur_top);
+> +                       if (write_buf(iocur_top))
+> +                               rval = 0;
+>  out_pop:
+>                         pop_cur();
+>                         mfsb_map.nmaps = 0;
+> -                       if (ret)
+> +                       if (!rval)
+>                                 break;
+>                 }
+>                 c -= bm_len;
+>                 s += bm_len;
+>         }
+>
+> -       return ret;
+> +       return rval;
+>  }
+>
+>  static bool
+> @@ -2039,15 +2039,15 @@ process_multi_fsb_objects(
+>                 return process_symlink_block(o, s, c, btype, last);
+>         default:
+>                 print_warning("bad type for multi-fsb object %d", btype);
+> -               return -EINVAL;
+> +               return 1;
+>         }
+>  }
+>
+>  /* inode copy routines */
+>  static int
+>  process_bmbt_reclist(
+> -       xfs_bmbt_rec_t          *rp,
+> -       int                     numrecs,
+> +       xfs_bmbt_rec_t          *rp,
+> +       int                     numrecs,
+>         typnm_t                 btype)
+>  {
+>         int                     i;
+> @@ -2059,7 +2059,7 @@ process_bmbt_reclist(
+>         xfs_agnumber_t          agno;
+>         xfs_agblock_t           agbno;
+>         bool                    is_multi_fsb = is_multi_fsb_object(mp, btype);
+> -       int                     error;
+> +       int                     rval = 1;
+>
+>         if (btype == TYP_DATA)
+>                 return 1;
+> @@ -2123,16 +2123,16 @@ process_bmbt_reclist(
+>
+>                 /* multi-extent blocks require special handling */
+>                 if (is_multi_fsb)
+> -                       error = process_multi_fsb_objects(o, s, c, btype,
+> +                       rval = process_multi_fsb_objects(o, s, c, btype,
+>                                         last);
+>                 else
+> -                       error = process_single_fsb_objects(o, s, c, btype,
+> +                       rval = process_single_fsb_objects(o, s, c, btype,
+>                                         last);
+> -               if (error)
+> -                       return 0;
+> +               if (!rval)
+> +                       break;
+>         }
+>
+> -       return 1;
+> +       return rval;
+>  }
+>
+>  static int
+> @@ -2331,7 +2331,7 @@ process_inode_data(
+>         return 1;
+>  }
+>
+> -static int
+> +static void
+>  process_dev_inode(
+>         xfs_dinode_t            *dip)
+>  {
+> @@ -2339,15 +2339,13 @@ process_dev_inode(
+>                 if (show_warnings)
+>                         print_warning("inode %llu has unexpected extents",
+>                                       (unsigned long long)cur_ino);
+> -               return 0;
+> -       } else {
+> -               if (zero_stale_data) {
+> -                       unsigned int    size = sizeof(xfs_dev_t);
+> +               return;
+> +       }
+> +       if (zero_stale_data) {
+> +               unsigned int    size = sizeof(xfs_dev_t);
+>
+> -                       memset(XFS_DFORK_DPTR(dip) + size, 0,
+> -                                       XFS_DFORK_DSIZE(dip, mp) - size);
+> -               }
+> -               return 1;
+> +               memset(XFS_DFORK_DPTR(dip) + size, 0,
+> +                               XFS_DFORK_DSIZE(dip, mp) - size);
+>         }
+>  }
+>
+> @@ -2365,11 +2363,10 @@ process_inode(
+>         xfs_dinode_t            *dip,
+>         bool                    free_inode)
+>  {
+> -       int                     success;
+> +       int                     rval = 1;
+>         bool                    crc_was_ok = false; /* no recalc by default */
+>         bool                    need_new_crc = false;
+>
+> -       success = 1;
+>         cur_ino = XFS_AGINO_TO_INO(mp, agno, agino);
+>
+>         /* we only care about crc recalculation if we will modify the inode. */
+> @@ -2390,32 +2387,34 @@ process_inode(
+>         /* copy appropriate data fork metadata */
+>         switch (be16_to_cpu(dip->di_mode) & S_IFMT) {
+>                 case S_IFDIR:
+> -                       success = process_inode_data(dip, TYP_DIR2);
+> +                       rval = process_inode_data(dip, TYP_DIR2);
+>                         if (dip->di_format == XFS_DINODE_FMT_LOCAL)
+>                                 need_new_crc = 1;
+>                         break;
+>                 case S_IFLNK:
+> -                       success = process_inode_data(dip, TYP_SYMLINK);
+> +                       rval = process_inode_data(dip, TYP_SYMLINK);
+>                         if (dip->di_format == XFS_DINODE_FMT_LOCAL)
+>                                 need_new_crc = 1;
+>                         break;
+>                 case S_IFREG:
+> -                       success = process_inode_data(dip, TYP_DATA);
+> +                       rval = process_inode_data(dip, TYP_DATA);
+>                         break;
+>                 case S_IFIFO:
+>                 case S_IFCHR:
+>                 case S_IFBLK:
+>                 case S_IFSOCK:
+> -                       success = process_dev_inode(dip);
+> +                       process_dev_inode(dip);
+>                         need_new_crc = 1;
+>                         break;
+>                 default:
+>                         break;
+>         }
+>         nametable_clear();
+> +       if (!rval)
+> +               goto done;
+>
+>         /* copy extended attributes if they exist and forkoff is valid */
+> -       if (success && XFS_DFORK_DSIZE(dip, mp) < XFS_LITINO(mp)) {
+> +       if (XFS_DFORK_DSIZE(dip, mp) < XFS_LITINO(mp)) {
+>                 attr_data.remote_val_count = 0;
+>                 switch (dip->di_aformat) {
+>                         case XFS_DINODE_FMT_LOCAL:
+> @@ -2425,11 +2424,11 @@ process_inode(
+>                                 break;
+>
+>                         case XFS_DINODE_FMT_EXTENTS:
+> -                               success = process_exinode(dip, TYP_ATTR);
+> +                               rval = process_exinode(dip, TYP_ATTR);
+>                                 break;
+>
+>                         case XFS_DINODE_FMT_BTREE:
+> -                               success = process_btinode(dip, TYP_ATTR);
+> +                               rval = process_btinode(dip, TYP_ATTR);
+>                                 break;
+>                 }
+>                 nametable_clear();
+> @@ -2442,7 +2441,8 @@ done:
+>
+>         if (crc_was_ok && need_new_crc)
+>                 libxfs_dinode_calc_crc(mp, dip);
+> -       return success;
+> +
+> +       return rval;
+>  }
+>
+>  static uint32_t        inodes_copied;
+> @@ -2541,7 +2541,7 @@ copy_inode_chunk(
+>
+>                         /* process_inode handles free inodes, too */
+>                         if (!process_inode(agno, agino + ioff + i, dip,
+> -                           XFS_INOBT_IS_FREE_DISK(rp, ioff + i)))
+> +                                       XFS_INOBT_IS_FREE_DISK(rp, ioff + i)))
+>                                 goto pop_out;
+>
+>                         inodes_copied++;
+> @@ -2800,7 +2800,7 @@ copy_ino(
+>         xfs_agblock_t           agbno;
+>         xfs_agino_t             agino;
+>         int                     offset;
+> -       int                     rval = 0;
+> +       int                     rval = 1;
+>
+>         if (ino == 0 || ino == NULLFSINO)
+>                 return 1;
