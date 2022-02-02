@@ -2,459 +2,194 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 170F0C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Feb 2022 20:18:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6EDFC433F5
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Feb 2022 21:21:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234388AbiBBUSr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Feb 2022 15:18:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38036 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233085AbiBBUSr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Feb 2022 15:18:47 -0500
-Received: from mail-yb1-xb32.google.com (mail-yb1-xb32.google.com [IPv6:2607:f8b0:4864:20::b32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B0313C061714
-        for <linux-xfs@vger.kernel.org>; Wed,  2 Feb 2022 12:18:46 -0800 (PST)
-Received: by mail-yb1-xb32.google.com with SMTP id 23so2134460ybf.7
-        for <linux-xfs@vger.kernel.org>; Wed, 02 Feb 2022 12:18:46 -0800 (PST)
+        id S1347356AbiBBVVF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Feb 2022 16:21:05 -0500
+Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:11968 "EHLO
+        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1347316AbiBBVVC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Feb 2022 16:21:02 -0500
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 212KwasE010090;
+        Wed, 2 Feb 2022 21:20:40 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : references : in-reply-to : content-type :
+ content-id : content-transfer-encoding : mime-version; s=corp-2021-07-09;
+ bh=lK+MTrE7ZLhPhYRQV8Htnj0aE11/rlzcyw3EqGQ4XEg=;
+ b=WSltyzaFrBo2BbQ5tNEyawcuUMVnwJ7AHU3tZ9Zp96VF/bsYw0uov3W8C1qU2vRN7Eaf
+ 73c4I8pZjn+VQM0S6HmeXtOaQV26rZIHZamlPyuBFJO+xeRiTte/9G6h2sfAAP0/mMhq
+ Myq6hch3zBaFBW97WAAvSNafzmH2nai4S11CU3Dpc90ExL85nVf9xcrRPkgqt2VdKWii
+ a9DUej2Ar2a+QRFmGv5Bbbzqy5H9rZbLcPoPfuja+1SK9lIfiDePHOkwshGXgFbjEMYE
+ /DTLqvJUWvJtSvOYyUgrN4HZXAitrM8qji/ihFjVs2TXO6YWXskurwbmiUzsSvHHBpEp +Q== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3dxj9wf805-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 02 Feb 2022 21:20:39 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 212LBEFf056678;
+        Wed, 2 Feb 2022 21:20:39 GMT
+Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2043.outbound.protection.outlook.com [104.47.66.43])
+        by aserp3020.oracle.com with ESMTP id 3dvwd8yky8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 02 Feb 2022 21:20:38 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=YBwu+NHNXTp9eCdLDgSZzkeKJDDjYMv2a3Ypf72xoKXwdpgg89UIWtCZN6bOrtl8zXv6XjBOLEvxbNAyxPui2ZoCUTVknTTtthvF+qgY5ZA+qEsfH8pWrqmjsF2iPGSINRgLPnzsNqUAfst30nxidoXGdERBwkhf8Deqi1h67WBpFQyUs8BaxDcklOQ+yWSAdhlRYsgkCOzmRxhBkaqe9/GvUQ4t83wp302Cx6OKUt0q/MhPussDlMzjDWjuUx6quwyEVot11kyzJaekzowcrG09XY5nnV+YxaRQBmulQAZwygPMu9oUgoNvQ+KriFdBr3VsyL6Pf4z+DQf/AypQUQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=lK+MTrE7ZLhPhYRQV8Htnj0aE11/rlzcyw3EqGQ4XEg=;
+ b=dMvgFoTwJC7XPFDDfkVEc9iXN2sC4UI6Od9TVjWghkwcOtpRg/dAGHXbjvc4RRd9DX+gg4Dq7TU9S4ysZoxnC+Xwiw8Lsm5oiQAfnZDiMtvCEHuxqghDQUvkEa4ELP6iB6e+mCwVNnVuQthxZRsQGzJAM456nZR5wEFopUqOw9Qzy/ho7fE/sHFHssClhAOzjuEDwDLLZ4jWTAlY3dCX1FW+a/RHY8sBOL+PJtRO42PZd7tjrNJuXiLV1L+XN4UFnn4TH/fnzm0HGO7VaNSblwjCEM+aVK/54/NRYs1wdgIHcyqNPFLDQ5/QmM6Ty2ogYPxUatI70Je50sqOAtCHLw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=umich.edu; s=google-2016-06-03;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=O8LIJsvWZ9oKvoIjo+LaEXdyIoqRnxKUMx3HfgshSuY=;
-        b=dkC3+u2zOocErniPfR9ZmRhxNgLZxRQegYO8fJNdUbuYeB/7XQu2cJV9MEANpH5gmM
-         oS3VFE7+WgGCjRKZhKSZmTUkMYiAzIqkH5RdWkZ1VF9Fu/lujtWh09AvyqWWlX+BaTGn
-         3ybVJoDhzjjzUPJAkyPldpZ8XHtR8iSzHLKb25PXjpMKAerehaTN8vQxb39vVAiMajNQ
-         3nx1PT9pcUIXOYjlkOdFMLA2dy59CXget7v7aXU1+aIdF4/y2POpyXJ39/nmECkSpVbM
-         0c8wcMNPq5piszRXxwjEcsXvXlzCv+NR/PVmV4xnJeJH75GvnW430gN/CvOXYLNsyM5Y
-         Q0vw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=O8LIJsvWZ9oKvoIjo+LaEXdyIoqRnxKUMx3HfgshSuY=;
-        b=yNVpMLbnhQz62KHl5gHN1sO8NHg/7kc3ARdpnrL+h3S47O7FFFTjD8o9luQxMuL39g
-         j9p5n4UyTMR7gUEAWZEKbEsHcvCavsoRv7/3WFIvy9LzyFp94zqMxYR6pulPlRsSuTEB
-         dY7ME4BvBlLkFDguciy2Vxc+6xDSo0tW/l5yB2gg+sF2OoG/T4I3UYMveoX+A7tbof4C
-         RM44RA2FTGUCYeaQAgTIc3cnepaAmPS5PbCGnVkMAuOXKJQFqLZkOLlgg7dIcXb/N5EA
-         c0UKlnA1lV+Tv5KwS1dHcFiR40oAKfeXB/9Rya7wzr90ZVv/gBuB2W1QjxmBj/HVDAy9
-         Tr/Q==
-X-Gm-Message-State: AOAM532YXmHmSHSOl7GSlYCBMAWLp3lGVLQehl4hh2HTXIs6Uvb6VGIb
-        MDHNTckyumkvVUa6bkPXy0UWm+8yPM7QFgA6Ely3tQ==
-X-Google-Smtp-Source: ABdhPJzjeiocad3qwGEKAxo3zeLwVALESUq6gYsmsHF8FAuwacu774RQdmAID3E0iL/6D2YyKeFmzIh36N++LORMyL8=
-X-Received: by 2002:a25:c307:: with SMTP id t7mr42811782ybf.701.1643833125719;
- Wed, 02 Feb 2022 12:18:45 -0800 (PST)
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=lK+MTrE7ZLhPhYRQV8Htnj0aE11/rlzcyw3EqGQ4XEg=;
+ b=nXs93Pv+WnkB41SgR0GcE2i5mEoY1WWISEWay8XTt2Rx6YS7Ss7aRiaZAC6Cm2L36UY9ul+tQuqWCW1uZwtjju4RylCpeoaRI9DHW9VOuNuCvu7ovyz2x/9X0h7c37QBZXWg3yFJBul1oAGO7Uurx9H4gdwDmOfO7T5bu+pxbzM=
+Received: from SJ0PR10MB4429.namprd10.prod.outlook.com (2603:10b6:a03:2d1::14)
+ by CH2PR10MB4069.namprd10.prod.outlook.com (2603:10b6:610:f::25) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4951.12; Wed, 2 Feb
+ 2022 21:20:36 +0000
+Received: from SJ0PR10MB4429.namprd10.prod.outlook.com
+ ([fe80::d034:a8db:9e32:acde]) by SJ0PR10MB4429.namprd10.prod.outlook.com
+ ([fe80::d034:a8db:9e32:acde%5]) with mapi id 15.20.4930.022; Wed, 2 Feb 2022
+ 21:20:36 +0000
+From:   Jane Chu <jane.chu@oracle.com>
+To:     Christoph Hellwig <hch@infradead.org>
+CC:     "david@fromorbit.com" <david@fromorbit.com>,
+        "djwong@kernel.org" <djwong@kernel.org>,
+        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
+        "vishal.l.verma@intel.com" <vishal.l.verma@intel.com>,
+        "dave.jiang@intel.com" <dave.jiang@intel.com>,
+        "agk@redhat.com" <agk@redhat.com>,
+        "snitzer@redhat.com" <snitzer@redhat.com>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "ira.weiny@intel.com" <ira.weiny@intel.com>,
+        "willy@infradead.org" <willy@infradead.org>,
+        "vgoyal@redhat.com" <vgoyal@redhat.com>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "nvdimm@lists.linux.dev" <nvdimm@lists.linux.dev>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH v5 1/7] mce: fix set_mce_nospec to always unmap the whole
+ page
+Thread-Topic: [PATCH v5 1/7] mce: fix set_mce_nospec to always unmap the whole
+ page
+Thread-Index: AQHYFI6GHFAsB7tXYk+ZNKUkZMvm/qyARncAgACF2oA=
+Date:   Wed, 2 Feb 2022 21:20:36 +0000
+Message-ID: <d0fecaaa-8613-92d2-716d-9d462dbd3888@oracle.com>
+References: <20220128213150.1333552-1-jane.chu@oracle.com>
+ <20220128213150.1333552-2-jane.chu@oracle.com>
+ <YfqFWjFcdJSwjRaU@infradead.org>
+In-Reply-To: <YfqFWjFcdJSwjRaU@infradead.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.1
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 9e30a3f3-94ef-4a13-2ce1-08d9e691dac0
+x-ms-traffictypediagnostic: CH2PR10MB4069:EE_
+x-microsoft-antispam-prvs: <CH2PR10MB40699A5819058089A3A55A7AF3279@CH2PR10MB4069.namprd10.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:4502;
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: 374/tApiD9yJa8GfqghvmzKOEWSRDH1Q7TQUJcA96yIjbdvEya/41Vysp6kOxTJx0EFXgr8AD2ukSB5S6qn5pGJq+omZnYB3y/Eq8eAcPaYmgsBFDbTKOt9R+HNbdvaMlMDcZprDz7R4rLThScpQ1Rnb99uAXrITppP/kNaG3rAdB6EmytvSFsvF6NaiXSRLSK1q5dYiUp0ysh8BuDkbmkLiN1VNnt384bdAoC5IEv3jcnvyh4cC7toYFFUiJxgOK0sCiYIfGYiKxWHoHnNQ1MyQuQ2k+IRu7M3+pZ4r4W1/JlvwMZboa0uL5SnPz5vS6wTF1Wa5zmKsBDpkHcm8ChAklRBfE9i1/2YSG1qaba38MDNI0CPHhaFJ6H25cpCCJTHKdRMPqMYQp8QgXVCslHELFWwnkXb/XxqrMyBFNf8OQMV2WlwavqCbetnORiRbkVhJM7U4DBdrq52nhZAO+JNXbf54ojpUYvzBJ3UeW9BhXAmFVOu+suAoEmLzojhEQURTDlyG5nDly89U1g67ToeqXGC4BO2Rt5lCaIwTdKr2rsKwQB6FjZVtZ85edJ7MT+U/586VdscDHzbB9ZVMCb/4pkz3ANuEwDWXFDWM8IX2LYvMsH1MLvmB3JdNZ7h6P52QTkzp6DlKMMnWMb3eA2EYYkLtAnp9X73NP/1YvUMHWVW48FwnswbtdIjz7uYhGvwmmxtVuLsZcz6RolNGYNEQa1YhP+eiNJOKdPgOyBHFT8ZX3L4x8RC9mKXeT5MhB6YbosSPbzc8Th/uvANfLw==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ0PR10MB4429.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(508600001)(7416002)(6512007)(31686004)(54906003)(6916009)(122000001)(53546011)(316002)(6486002)(186003)(26005)(36756003)(5660300002)(8936002)(83380400001)(76116006)(66946007)(2906002)(66446008)(64756008)(91956017)(66556008)(66476007)(71200400001)(31696002)(86362001)(8676002)(4326008)(2616005)(38100700002)(6506007)(38070700005)(44832011)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?eFU2T1RLNXNUM2RCQ3oxOWhldnNTbjA3dzVwRzVNdXhQZk5RU3FXVWpERHhw?=
+ =?utf-8?B?R2NjSDltaWlGNEdUUXloa3RKOEZnQ2FqVmlCQ0pPMUx2QlkxZWsrVml6aWZ6?=
+ =?utf-8?B?ZmRna3o1VHNkUFZ4dzI5d3MybzhGQU0yZENxUFFoY1VZSXhubXBVcTRBK09y?=
+ =?utf-8?B?emVmVjRubjJhOEVZcjdUNjY1Qzk3amJqdVI1OXgzSWxjRTZrS083Yys2MzlQ?=
+ =?utf-8?B?cThVME0zczlXTCtTUFNHNjFUYUFYQzcxdHRoYk9Tc2FkeHZDTGY1UC9FaHRH?=
+ =?utf-8?B?a3Q4TjZVdUk3aEZWOVEyRFlQNVlDN0hhSWticDFFY0tPQmZ2NXUwb09RdDJx?=
+ =?utf-8?B?VmVBQTBEaUhRU3VobWZ1TDRFNG9iajZnZnFsM01KQm5SdUlGdGZYdjRyK0h5?=
+ =?utf-8?B?b1lRNE1jUG1LZFhFMzlJOGNuYWUzeXNaSUc5YW1RWGtET1RJdHBHekRIQ1Yy?=
+ =?utf-8?B?ZjFyTWhwQk1Hc2V1VG5FdnFmS2E0Mkt5WEcxaWFVRjhmeUZLRStPNnErOGdC?=
+ =?utf-8?B?c1I0RGRQSEo0WGJUNXJGMnA5VTVsWnJ4ZWUxR2NzYnZzTEFmSWxmZGNpS0JV?=
+ =?utf-8?B?c1hDWGkwejk3YndHZWFLeE1NcHh4N3JjRllhTDVzcGJQTnpZZ1Z3U2RzU085?=
+ =?utf-8?B?b2F5bHNtV1R0U2xLaE84UFN0YmdsTHppN29vNW9oZ1lZRjRpbDI2bkpJakh2?=
+ =?utf-8?B?SmV2UnM5Z0xLRFUvL1YrdVVWc241NlNyTUVNU2RpSk91aHhpZUpvWkJISFIr?=
+ =?utf-8?B?aEtSZjhuWnMrQlF5UGlFN1BRV2NnZFY3NldRNm8yYUlVMHFRMzIzTUt1djZx?=
+ =?utf-8?B?UFRCNUVCQjA4RVlKdVRtVzIxSDlXcVJPamcrSUFNTGNOWmpQYXJqWjV3VVA5?=
+ =?utf-8?B?Vlo2c2t3dDNRVDZqbUtRL05SbWVvckFtaFZkbkJuWitqTVNnRjRsRklJQnhD?=
+ =?utf-8?B?WHZUczlpaXh4NDVDOXFManNWeVpOVUh4Nms3SmxyVTRMN1lDRHo4VjBlSVhD?=
+ =?utf-8?B?UERYcnRMU2FZMnVOd0FRL2t6cnNMMFdFUHVjMzJoY0NRakQwZjRsSFVDTFl0?=
+ =?utf-8?B?bW9MR3FlWDlRN2RGWHhqUlRiSmlRTkk0VEVmSm03dGZjK1pQc3VOVFJhQmg3?=
+ =?utf-8?B?S2NndFRnbC9GTGVEckNPOHduN2pVRHB4emlUYTRBVlIxU2FmaEJSQ09iUVBy?=
+ =?utf-8?B?VEtIVWJqbFpDK0VPTFRXVFlVN05sU2RFTFNyenhBVkpzOTBvSmFHRVViVU0w?=
+ =?utf-8?B?VTVPQ1cyRDg4NW4yWnpveElqWml6NzJCTmE0Wno2Y0QrNUp3Z1pXaVpMQ1Zr?=
+ =?utf-8?B?Y1N1R0ZIVEVtR3VNTzg2cUpiYUVyNCt1a3lEa2FldzNyOFBFbFpPVnlNdXZj?=
+ =?utf-8?B?OVFpbEF0RVBuZjQ5YVJ6THQzVDBKTnNHNVdLK3VVR3dGZEhIV0JNd21wSTky?=
+ =?utf-8?B?L2x5Wmx2Y1R5cTNwd3ZtZHk1dFZwZW8vc1hjMEVtY1VZTWpnZ0hkL0xMVDJr?=
+ =?utf-8?B?SlRYK2dUMmlUbWpOa0RuMXNIcnByUDltUHNLc0hieUdKcFhkQlJ2WGVqNUlv?=
+ =?utf-8?B?SGZ1N2tDK2Y0emRBeUQ5YXJua2swZm1iTWZ4elEzQzZBY1g0WVBlY0FvUWo2?=
+ =?utf-8?B?WkJQSEY2cW1ZUW10Y3RWRm1sY1Bsb1g1SXZlOVo1eURVN1IwK3lxcWxWam1k?=
+ =?utf-8?B?NngzV1BrTlNXbTcvN3ZFYTF1ZW1QTDBEeGZaUEgwR1BzR00vR1FBZ25HTXo2?=
+ =?utf-8?B?RUNRaHF0TzduN1Q1MVdQM1ZuUEt1Q2hUNWtmblpERk8rT0x4eTNxR2VER3NJ?=
+ =?utf-8?B?blVyMzlDNEVVaVJpL3hpMk1VaUFoQUQrM0JNOXhKTWVOckRMTlpiUVV4TE5E?=
+ =?utf-8?B?UHVnZVJRSE5KZ3laVlJtclFzVFVtdUEydFdWVTc0cWUzNm1IeWdINWpjZUpP?=
+ =?utf-8?B?RXFTOTlSSHcyVnBNeE92Y3NqUE9DZkNVMFNEZWVrbHlRY2ZZUUk0QWJLSHJB?=
+ =?utf-8?B?VXhRZkxFT2F1YUMyZ3h1a1kyOU54Wk4xdEVqbVcwdzBSdExsSk05VElLY2F5?=
+ =?utf-8?B?c0l6SmZpOTBwTHBheXJNZ2FDc2ZvV3daazBjMXh5YWpwWFc3cEs4YStqMVpH?=
+ =?utf-8?B?YzY0TTFvYlBtSzZQaTFYSG4yY1hNdkU3TzRoNU5VeEpEQndFdTlXZjVmcHJR?=
+ =?utf-8?B?Q1E9PQ==?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <56C7238B3E70A947AC40D5063A519DD5@namprd10.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-References: <CAA43vkVeMb0SrvLmc8MCU7K8yLUBqHOVk3=JGOi+KDh3zs9Wfw@mail.gmail.com>
- <20220201233312.GX59729@dread.disaster.area> <CAA43vkV_nDTJjXqtWw-jpc8KVWwa2jQ8-2bNbNJZBcsBSHV8dw@mail.gmail.com>
- <20220202024430.GZ59729@dread.disaster.area> <20220202074242.GA59729@dread.disaster.area>
- <CAA43vkXxyHmQdu-GqVukmeOqEh8g-xJDCDD6sx7t4f-MVn+BBA@mail.gmail.com> <CAA43vkX6au8gmO97otOT4LQOzspomodGSO__qPMmFozzMsrRQg@mail.gmail.com>
-In-Reply-To: <CAA43vkX6au8gmO97otOT4LQOzspomodGSO__qPMmFozzMsrRQg@mail.gmail.com>
-From:   Sean Caron <scaron@umich.edu>
-Date:   Wed, 2 Feb 2022 15:18:34 -0500
-Message-ID: <CAA43vkUFW3Y_0L7dFc+iAySdf4j3cX4M9Xoz+3eU4raoavmnew@mail.gmail.com>
-Subject: Re: [PATCH] metadump: handle corruption errors without aborting
-To:     Dave Chinner <david@fromorbit.com>, Sean Caron <scaron@umich.edu>
-Cc:     linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SJ0PR10MB4429.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9e30a3f3-94ef-4a13-2ce1-08d9e691dac0
+X-MS-Exchange-CrossTenant-originalarrivaltime: 02 Feb 2022 21:20:36.3059
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 8n8EfiZTSrCBNWrYtqHne19HUufWCMCQ7QLZRmIR2GBlr+BcyYgBchwjSlRdorUROD/uHH/NAzw5mponlQbXoA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR10MB4069
+X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10246 signatures=673430
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=777 adultscore=0
+ suspectscore=0 malwarescore=0 bulkscore=0 mlxscore=0 spamscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2201110000 definitions=main-2202020116
+X-Proofpoint-ORIG-GUID: aXYmKr04kIjfYE-jkRtoz2i4q_3pzTdU
+X-Proofpoint-GUID: aXYmKr04kIjfYE-jkRtoz2i4q_3pzTdU
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Dave,
-
-It counted up to inode 13555712 and then crashed with the error:
-
-malloc_consolidate(): invalid chunk size
-
-Immediately before that, it printed:
-
-xfs_metadump: invalid block number 4358190/50414336 (1169892770398976)
-in bmap extent 0 in symlink ino 98799839421
-
-Best,
-
-Sean
-
-On Wed, Feb 2, 2022 at 2:43 PM Sean Caron <scaron@umich.edu> wrote:
->
-> OK, I got it applied with:
->
-> git apply --ignore-space-change --ignore-whitespace
->
-> I've got it running and so far it looks good. It's gotten past the
-> inode number where exited before and now just prints as an
-> informational message:
->
-> inode xx has unexpected extents
->
-> I'll let this run and follow up on this thread if I have any more
-> issues with xfs_metadump in particular.
->
-> Thanks again,
->
-> Sean
->
-> On Wed, Feb 2, 2022 at 1:49 PM Sean Caron <scaron@umich.edu> wrote:
-> >
-> > Hi Dave,
-> >
-> > Thank you! I tried copying and pasting this into a file and applying it with:
-> >
-> > patch < thispatchfile
-> >
-> > against both the 5.14.2 release and xfsprogs-dev Git pull and I'm
-> > getting errors from patch.
-> >
-> > I also tried using "git patch" and it told me the patch does not apply.
-> >
-> > I tried applying the patch by hand to the 5.14.2 metadump.c but I get
-> > a compilation error in process_dev_inode but I'm not sure if that's
-> > because I made a mistake or because the patch is expecting other
-> > content to be there, that isn't.
-> >
-> > I'm sorry for the ignorance but how would I make use of this?
-> >
-> > Thanks,
-> >
-> > Sean
-> >
-> > On Wed, Feb 2, 2022 at 2:42 AM Dave Chinner <david@fromorbit.com> wrote:
-> > >
-> > >
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > >
-> > > Sean Caron reported that a metadump terminated after givin gthis
-> > > warning:
-> > >
-> > > xfs_metadump: inode 2216156864 has unexpected extents
-> > >
-> > > Metadump is supposed to ignore corruptions and continue dumping the
-> > > filesystem as best it can. Whilst it warns about many situations
-> > > where it can't fully dump structures, it should stop processing that
-> > > structure and continue with the next one until the entire filesystem
-> > > has been processed.
-> > >
-> > > Unfortunately, some warning conditions also return an "abort" error
-> > > status, causing metadump to abort if that condition is hit. Most of
-> > > these abort conditions should really be "continue on next object"
-> > > conditions so that the we attempt to dump the rest of the
-> > > filesystem.
-> > >
-> > > Fix the returns for warnings that incorrectly cause aborts
-> > > such that the only abort conditions are read errors when
-> > > "stop-on-read-error" semantics are specified. Also make the return
-> > > values consistently mean abort/continue rather than returning -errno
-> > > to mean "stop because read error" and then trying to infer what
-> > > the error means in callers without the context it occurred in.
-> > >
-> > > Reported-by: Sean Caron <scaron@umich.edu>
-> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > ---
-> > >
-> > > Sean,
-> > >
-> > > Can you please apply this patch to your xfsprogs source tree and
-> > > rebuild it? This should let metadump continue past the corrupt
-> > > inodes it aborted on and run through to completion.
-> > >
-> > > -Dave.
-> > >
-> > >  db/metadump.c | 94 +++++++++++++++++++++++++++++------------------------------
-> > >  1 file changed, 47 insertions(+), 47 deletions(-)
-> > >
-> > > diff --git a/db/metadump.c b/db/metadump.c
-> > > index 96b098b0eaca..9b32b88a3c50 100644
-> > > --- a/db/metadump.c
-> > > +++ b/db/metadump.c
-> > > @@ -1645,7 +1645,7 @@ process_symlink_block(
-> > >  {
-> > >         struct bbmap    map;
-> > >         char            *link;
-> > > -       int             ret = 0;
-> > > +       int             rval = 1;
-> > >
-> > >         push_cur();
-> > >         map.nmaps = 1;
-> > > @@ -1658,8 +1658,7 @@ process_symlink_block(
-> > >
-> > >                 print_warning("cannot read %s block %u/%u (%llu)",
-> > >                                 typtab[btype].name, agno, agbno, s);
-> > > -               if (stop_on_read_error)
-> > > -                       ret = -1;
-> > > +               rval = !stop_on_read_error;
-> > >                 goto out_pop;
-> > >         }
-> > >         link = iocur_top->data;
-> > > @@ -1682,10 +1681,11 @@ process_symlink_block(
-> > >         }
-> > >
-> > >         iocur_top->need_crc = 1;
-> > > -       ret = write_buf(iocur_top);
-> > > +       if (write_buf(iocur_top))
-> > > +               rval = 0;
-> > >  out_pop:
-> > >         pop_cur();
-> > > -       return ret;
-> > > +       return rval;
-> > >  }
-> > >
-> > >  #define MAX_REMOTE_VALS                4095
-> > > @@ -1843,8 +1843,8 @@ process_single_fsb_objects(
-> > >         typnm_t         btype,
-> > >         xfs_fileoff_t   last)
-> > >  {
-> > > +       int             rval = 1;
-> > >         char            *dp;
-> > > -       int             ret = 0;
-> > >         int             i;
-> > >
-> > >         for (i = 0; i < c; i++) {
-> > > @@ -1858,8 +1858,7 @@ process_single_fsb_objects(
-> > >
-> > >                         print_warning("cannot read %s block %u/%u (%llu)",
-> > >                                         typtab[btype].name, agno, agbno, s);
-> > > -                       if (stop_on_read_error)
-> > > -                               ret = -EIO;
-> > > +                       rval = !stop_on_read_error;
-> > >                         goto out_pop;
-> > >
-> > >                 }
-> > > @@ -1925,16 +1924,17 @@ process_single_fsb_objects(
-> > >                 }
-> > >
-> > >  write:
-> > > -               ret = write_buf(iocur_top);
-> > > +               if (write_buf(iocur_top))
-> > > +                       rval = 0;
-> > >  out_pop:
-> > >                 pop_cur();
-> > > -               if (ret)
-> > > +               if (!rval)
-> > >                         break;
-> > >                 o++;
-> > >                 s++;
-> > >         }
-> > >
-> > > -       return ret;
-> > > +       return rval;
-> > >  }
-> > >
-> > >  /*
-> > > @@ -1952,7 +1952,7 @@ process_multi_fsb_dir(
-> > >         xfs_fileoff_t   last)
-> > >  {
-> > >         char            *dp;
-> > > -       int             ret = 0;
-> > > +       int             rval = 1;
-> > >
-> > >         while (c > 0) {
-> > >                 unsigned int    bm_len;
-> > > @@ -1978,8 +1978,7 @@ process_multi_fsb_dir(
-> > >
-> > >                                 print_warning("cannot read %s block %u/%u (%llu)",
-> > >                                                 typtab[btype].name, agno, agbno, s);
-> > > -                               if (stop_on_read_error)
-> > > -                                       ret = -1;
-> > > +                               rval = !stop_on_read_error;
-> > >                                 goto out_pop;
-> > >
-> > >                         }
-> > > @@ -1998,18 +1997,19 @@ process_multi_fsb_dir(
-> > >                         }
-> > >                         iocur_top->need_crc = 1;
-> > >  write:
-> > > -                       ret = write_buf(iocur_top);
-> > > +                       if (write_buf(iocur_top))
-> > > +                               rval = 0;
-> > >  out_pop:
-> > >                         pop_cur();
-> > >                         mfsb_map.nmaps = 0;
-> > > -                       if (ret)
-> > > +                       if (!rval)
-> > >                                 break;
-> > >                 }
-> > >                 c -= bm_len;
-> > >                 s += bm_len;
-> > >         }
-> > >
-> > > -       return ret;
-> > > +       return rval;
-> > >  }
-> > >
-> > >  static bool
-> > > @@ -2039,15 +2039,15 @@ process_multi_fsb_objects(
-> > >                 return process_symlink_block(o, s, c, btype, last);
-> > >         default:
-> > >                 print_warning("bad type for multi-fsb object %d", btype);
-> > > -               return -EINVAL;
-> > > +               return 1;
-> > >         }
-> > >  }
-> > >
-> > >  /* inode copy routines */
-> > >  static int
-> > >  process_bmbt_reclist(
-> > > -       xfs_bmbt_rec_t          *rp,
-> > > -       int                     numrecs,
-> > > +       xfs_bmbt_rec_t          *rp,
-> > > +       int                     numrecs,
-> > >         typnm_t                 btype)
-> > >  {
-> > >         int                     i;
-> > > @@ -2059,7 +2059,7 @@ process_bmbt_reclist(
-> > >         xfs_agnumber_t          agno;
-> > >         xfs_agblock_t           agbno;
-> > >         bool                    is_multi_fsb = is_multi_fsb_object(mp, btype);
-> > > -       int                     error;
-> > > +       int                     rval = 1;
-> > >
-> > >         if (btype == TYP_DATA)
-> > >                 return 1;
-> > > @@ -2123,16 +2123,16 @@ process_bmbt_reclist(
-> > >
-> > >                 /* multi-extent blocks require special handling */
-> > >                 if (is_multi_fsb)
-> > > -                       error = process_multi_fsb_objects(o, s, c, btype,
-> > > +                       rval = process_multi_fsb_objects(o, s, c, btype,
-> > >                                         last);
-> > >                 else
-> > > -                       error = process_single_fsb_objects(o, s, c, btype,
-> > > +                       rval = process_single_fsb_objects(o, s, c, btype,
-> > >                                         last);
-> > > -               if (error)
-> > > -                       return 0;
-> > > +               if (!rval)
-> > > +                       break;
-> > >         }
-> > >
-> > > -       return 1;
-> > > +       return rval;
-> > >  }
-> > >
-> > >  static int
-> > > @@ -2331,7 +2331,7 @@ process_inode_data(
-> > >         return 1;
-> > >  }
-> > >
-> > > -static int
-> > > +static void
-> > >  process_dev_inode(
-> > >         xfs_dinode_t            *dip)
-> > >  {
-> > > @@ -2339,15 +2339,13 @@ process_dev_inode(
-> > >                 if (show_warnings)
-> > >                         print_warning("inode %llu has unexpected extents",
-> > >                                       (unsigned long long)cur_ino);
-> > > -               return 0;
-> > > -       } else {
-> > > -               if (zero_stale_data) {
-> > > -                       unsigned int    size = sizeof(xfs_dev_t);
-> > > +               return;
-> > > +       }
-> > > +       if (zero_stale_data) {
-> > > +               unsigned int    size = sizeof(xfs_dev_t);
-> > >
-> > > -                       memset(XFS_DFORK_DPTR(dip) + size, 0,
-> > > -                                       XFS_DFORK_DSIZE(dip, mp) - size);
-> > > -               }
-> > > -               return 1;
-> > > +               memset(XFS_DFORK_DPTR(dip) + size, 0,
-> > > +                               XFS_DFORK_DSIZE(dip, mp) - size);
-> > >         }
-> > >  }
-> > >
-> > > @@ -2365,11 +2363,10 @@ process_inode(
-> > >         xfs_dinode_t            *dip,
-> > >         bool                    free_inode)
-> > >  {
-> > > -       int                     success;
-> > > +       int                     rval = 1;
-> > >         bool                    crc_was_ok = false; /* no recalc by default */
-> > >         bool                    need_new_crc = false;
-> > >
-> > > -       success = 1;
-> > >         cur_ino = XFS_AGINO_TO_INO(mp, agno, agino);
-> > >
-> > >         /* we only care about crc recalculation if we will modify the inode. */
-> > > @@ -2390,32 +2387,34 @@ process_inode(
-> > >         /* copy appropriate data fork metadata */
-> > >         switch (be16_to_cpu(dip->di_mode) & S_IFMT) {
-> > >                 case S_IFDIR:
-> > > -                       success = process_inode_data(dip, TYP_DIR2);
-> > > +                       rval = process_inode_data(dip, TYP_DIR2);
-> > >                         if (dip->di_format == XFS_DINODE_FMT_LOCAL)
-> > >                                 need_new_crc = 1;
-> > >                         break;
-> > >                 case S_IFLNK:
-> > > -                       success = process_inode_data(dip, TYP_SYMLINK);
-> > > +                       rval = process_inode_data(dip, TYP_SYMLINK);
-> > >                         if (dip->di_format == XFS_DINODE_FMT_LOCAL)
-> > >                                 need_new_crc = 1;
-> > >                         break;
-> > >                 case S_IFREG:
-> > > -                       success = process_inode_data(dip, TYP_DATA);
-> > > +                       rval = process_inode_data(dip, TYP_DATA);
-> > >                         break;
-> > >                 case S_IFIFO:
-> > >                 case S_IFCHR:
-> > >                 case S_IFBLK:
-> > >                 case S_IFSOCK:
-> > > -                       success = process_dev_inode(dip);
-> > > +                       process_dev_inode(dip);
-> > >                         need_new_crc = 1;
-> > >                         break;
-> > >                 default:
-> > >                         break;
-> > >         }
-> > >         nametable_clear();
-> > > +       if (!rval)
-> > > +               goto done;
-> > >
-> > >         /* copy extended attributes if they exist and forkoff is valid */
-> > > -       if (success && XFS_DFORK_DSIZE(dip, mp) < XFS_LITINO(mp)) {
-> > > +       if (XFS_DFORK_DSIZE(dip, mp) < XFS_LITINO(mp)) {
-> > >                 attr_data.remote_val_count = 0;
-> > >                 switch (dip->di_aformat) {
-> > >                         case XFS_DINODE_FMT_LOCAL:
-> > > @@ -2425,11 +2424,11 @@ process_inode(
-> > >                                 break;
-> > >
-> > >                         case XFS_DINODE_FMT_EXTENTS:
-> > > -                               success = process_exinode(dip, TYP_ATTR);
-> > > +                               rval = process_exinode(dip, TYP_ATTR);
-> > >                                 break;
-> > >
-> > >                         case XFS_DINODE_FMT_BTREE:
-> > > -                               success = process_btinode(dip, TYP_ATTR);
-> > > +                               rval = process_btinode(dip, TYP_ATTR);
-> > >                                 break;
-> > >                 }
-> > >                 nametable_clear();
-> > > @@ -2442,7 +2441,8 @@ done:
-> > >
-> > >         if (crc_was_ok && need_new_crc)
-> > >                 libxfs_dinode_calc_crc(mp, dip);
-> > > -       return success;
-> > > +
-> > > +       return rval;
-> > >  }
-> > >
-> > >  static uint32_t        inodes_copied;
-> > > @@ -2541,7 +2541,7 @@ copy_inode_chunk(
-> > >
-> > >                         /* process_inode handles free inodes, too */
-> > >                         if (!process_inode(agno, agino + ioff + i, dip,
-> > > -                           XFS_INOBT_IS_FREE_DISK(rp, ioff + i)))
-> > > +                                       XFS_INOBT_IS_FREE_DISK(rp, ioff + i)))
-> > >                                 goto pop_out;
-> > >
-> > >                         inodes_copied++;
-> > > @@ -2800,7 +2800,7 @@ copy_ino(
-> > >         xfs_agblock_t           agbno;
-> > >         xfs_agino_t             agino;
-> > >         int                     offset;
-> > > -       int                     rval = 0;
-> > > +       int                     rval = 1;
-> > >
-> > >         if (ino == 0 || ino == NULLFSINO)
-> > >                 return 1;
+T24gMi8yLzIwMjIgNToyMSBBTSwgQ2hyaXN0b3BoIEhlbGx3aWcgd3JvdGU6DQo+PiArc3RhdGlj
+IGlubGluZSBpbnQgc2V0X21jZV9ub3NwZWModW5zaWduZWQgbG9uZyBwZm4pDQo+PiAgIHsNCj4+
+ICAgCXVuc2lnbmVkIGxvbmcgZGVjb3lfYWRkcjsNCj4+ICAgCWludCByYzsNCj4+IEBAIC0xMTcs
+MTAgKzExMyw3IEBAIHN0YXRpYyBpbmxpbmUgaW50IHNldF9tY2Vfbm9zcGVjKHVuc2lnbmVkIGxv
+bmcgcGZuLCBib29sIHVubWFwKQ0KPj4gICAJICovDQo+PiAgIAlkZWNveV9hZGRyID0gKHBmbiA8
+PCBQQUdFX1NISUZUKSArIChQQUdFX09GRlNFVCBeIEJJVCg2MykpOw0KPj4gICANCj4+IC0JaWYg
+KHVubWFwKQ0KPj4gLQkJcmMgPSBzZXRfbWVtb3J5X25wKGRlY295X2FkZHIsIDEpOw0KPj4gLQll
+bHNlDQo+PiAtCQlyYyA9IHNldF9tZW1vcnlfdWMoZGVjb3lfYWRkciwgMSk7DQo+PiArCXJjID0g
+c2V0X21lbW9yeV9ucChkZWNveV9hZGRyLCAxKTsNCj4+ICAgCWlmIChyYykNCj4+ICAgCQlwcl93
+YXJuKCJDb3VsZCBub3QgaW52YWxpZGF0ZSBwZm49MHglbHggZnJvbSAxOjEgbWFwXG4iLCBwZm4p
+Ow0KPj4gICAJcmV0dXJuIHJjOw0KPj4gQEAgLTEzMCw3ICsxMjMsNyBAQCBzdGF0aWMgaW5saW5l
+IGludCBzZXRfbWNlX25vc3BlYyh1bnNpZ25lZCBsb25nIHBmbiwgYm9vbCB1bm1hcCkNCj4+ICAg
+LyogUmVzdG9yZSBmdWxsIHNwZWN1bGF0aXZlIG9wZXJhdGlvbiB0byB0aGUgcGZuLiAqLw0KPj4g
+ICBzdGF0aWMgaW5saW5lIGludCBjbGVhcl9tY2Vfbm9zcGVjKHVuc2lnbmVkIGxvbmcgcGZuKQ0K
+Pj4gICB7DQo+PiAtCXJldHVybiBzZXRfbWVtb3J5X3diKCh1bnNpZ25lZCBsb25nKSBwZm5fdG9f
+a2FkZHIocGZuKSwgMSk7DQo+PiArCXJldHVybiBfc2V0X21lbW9yeV9wcmVzZW50KCh1bnNpZ25l
+ZCBsb25nKSBwZm5fdG9fa2FkZHIocGZuKSwgMSk7DQo+PiAgIH0NCj4gDQo+IFdvdWxkbid0IGl0
+IG1ha2UgbW9yZSBzZW5zZSB0byBtb3ZlIHRoZXNlIGhlbHBlcnMgb3V0IG9mIGxpbmUgcmF0aGVy
+DQo+IHRoYW4gZXhwb3J0aW5nIF9zZXRfbWVtb3J5X3ByZXNlbnQ/DQoNCkRvIHlvdSBtZWFuIHRv
+IG1vdmUNCiAgIHJldHVybiBjaGFuZ2VfcGFnZV9hdHRyX3NldCgmYWRkciwgbnVtcGFnZXMsIF9f
+cGdwcm90KF9QQUdFX1BSRVNFTlQpLCAwKTsNCmludG8gY2xlYXJfbWNlX25vc3BlYygpIGZvciB0
+aGUgeDg2IGFyY2ggYW5kIGdldCByaWQgb2YgX3NldF9tZW1vcnlfcHJlc2VudD8NCklmIHNvLCBz
+dXJlIEknbGwgZG8gdGhhdC4NCg0KPiANCj4+ICAgLyoNCj4+IC0gKiBfc2V0X21lbW9yeV9wcm90
+IGlzIGFuIGludGVybmFsIGhlbHBlciBmb3IgY2FsbGVycyB0aGF0IGhhdmUgYmVlbiBwYXNzZWQN
+Cj4+ICsgKiBfX3NldF9tZW1vcnlfcHJvdCBpcyBhbiBpbnRlcm5hbCBoZWxwZXIgZm9yIGNhbGxl
+cnMgdGhhdCBoYXZlIGJlZW4gcGFzc2VkDQo+IA0KPiBUaGlzIGxvb2tzIHVucmVsYXRlZCB0byB0
+aGUgcGF0Y2guDQoNCk15IGJhZCwgd2lsbCByZW1vdmUgdGhlIHJlbW5hbnQuDQoNCnRoYW5rcyEN
+Ci1qYW5lDQoNCg==
