@@ -2,70 +2,81 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9218EC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Feb 2022 13:43:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD226C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Feb 2022 16:19:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245190AbiBCNnT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Feb 2022 08:43:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46778 "EHLO
+        id S1352185AbiBCQTy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Feb 2022 11:19:54 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55026 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350887AbiBCNnS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Feb 2022 08:43:18 -0500
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6A4CC061714;
-        Thu,  3 Feb 2022 05:43:18 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=L9MWc8UYxZnjnohmZnAuC5FiqjE2vmDPkIzVES+QO4s=; b=NvNnFAQXNhVp4BKwlT1g9pXVlX
-        i++xG4vlBUFNHxnL4GjhrzQveqhT1mAiSRmm5iK5SvqJF/c0HLndoNz2WHwAGPHCxoi2KKGCe2MpD
-        axH1YG3ygbSCv8eVb5ahb+RY6+Bu/jfle+dYzF3DUhoxJs3Lqm1TDr56/Rn4OhQYstWEt/H5G7BX9
-        QZVlChvvAWkTxENz9Tu8zXfoZovZZ8DSmpbF5xplo5xbiT71v7zrMrEzVFcuXBiF3YL+PgrLs879Y
-        7PLWZUFiI+zdGr8+0Ndi0m2NDmPpqKNRYfAA0yKMK5IGaKxlUuN0GEWwqr1LgNOQL13CE2fonU9fV
-        YJVOLC0g==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nFcOA-001Sld-Su; Thu, 03 Feb 2022 13:43:06 +0000
-Date:   Thu, 3 Feb 2022 05:43:06 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Jane Chu <jane.chu@oracle.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        "david@fromorbit.com" <david@fromorbit.com>,
-        "djwong@kernel.org" <djwong@kernel.org>,
-        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
-        "vishal.l.verma@intel.com" <vishal.l.verma@intel.com>,
-        "dave.jiang@intel.com" <dave.jiang@intel.com>,
-        "agk@redhat.com" <agk@redhat.com>,
-        "snitzer@redhat.com" <snitzer@redhat.com>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "ira.weiny@intel.com" <ira.weiny@intel.com>,
-        "willy@infradead.org" <willy@infradead.org>,
-        "vgoyal@redhat.com" <vgoyal@redhat.com>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "nvdimm@lists.linux.dev" <nvdimm@lists.linux.dev>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH v5 2/7] dax: introduce dax device flag DAXDEV_RECOVERY
-Message-ID: <Yfvb6l/8AJJhRXKs@infradead.org>
-References: <20220128213150.1333552-1-jane.chu@oracle.com>
- <20220128213150.1333552-3-jane.chu@oracle.com>
- <YfqFuUsvuUUUWKfu@infradead.org>
- <45b4a944-1fb1-73e2-b1f8-213e60e27a72@oracle.com>
+        with ESMTP id S1352174AbiBCQTy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Feb 2022 11:19:54 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F1EB4C061714
+        for <linux-xfs@vger.kernel.org>; Thu,  3 Feb 2022 08:19:53 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8E8F36141C
+        for <linux-xfs@vger.kernel.org>; Thu,  3 Feb 2022 16:19:53 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E0949C340E8
+        for <linux-xfs@vger.kernel.org>; Thu,  3 Feb 2022 16:19:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1643905193;
+        bh=ngU+pyj2KaiE9bfHYvz/PmC73Wq1fvcYazL50v6jFnA=;
+        h=Date:From:To:Subject:From;
+        b=aXTy92N9AE8n0EkNLoR7cc7F8JhG4+S7BiqEVKVzLDpqKfqx5mEpJH2CtFjZADgNT
+         5WxGQ8KzXrrt8NfwfpPulkXKyXsZ5vIjRsmwE9cT4FPNjshK9cYIeAOzn6MTGhAWap
+         Fjc1UXFJiyD+ntzTO2qYKVcSouvF2O1W4uMClV+6bIwMofgDNqkNir8HXCEmYQyV+b
+         uR6t9i1ZYuVM4vDTpF5ma3eNTn/1KVJTPuxEDLmMqZDp2eHM6MZ+C+sQgI5+hCYheX
+         Zfp0sLBRZqrXFJiCWV6Qjh9aN/xFkeVsHJViabch5s1CiXwHc04Vgx+sl9BgHxzQXy
+         /Oro4+TA0K0Sw==
+Date:   Thu, 3 Feb 2022 08:19:52 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     xfs <linux-xfs@vger.kernel.org>
+Subject: [ANNOUNCE] xfs-linux: for-next updated to cea267c235e1
+Message-ID: <20220203161952.GR8313@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <45b4a944-1fb1-73e2-b1f8-213e60e27a72@oracle.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Feb 02, 2022 at 09:27:42PM +0000, Jane Chu wrote:
-> Yeah, I see.  Would you suggest a way to pass the indication from
-> dax_iomap_iter to dax_direct_access that the caller intends the
-> callee to ignore poison in the range because the caller intends
-> to do recovery_write? We tried adding a flag to dax_direct_access, and 
-> that wasn't liked if I recall.
+Hi folks,
 
-To me a flag seems cleaner than this magic, but let's wait for Dan to
-chime in.
+The for-next branch of the xfs-linux repository at:
+
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+
+has just been updated.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
+
+The new head of the for-next branch is commit:
+
+cea267c235e1 xfs: ensure log flush at the end of a synchronous fallocate call
+
+6 new commits:
+
+Darrick J. Wong (1):
+      [29d650f7e3ab] xfs: reject crazy array sizes being fed to XFS_IOC_GETBMAP*
+
+Dave Chinner (5):
+      [472c6e46f589] xfs: remove XFS_PREALLOC_SYNC
+      [fbe7e5200365] xfs: fallocate() should call file_modified()
+      [0b02c8c0d75a] xfs: set prealloc flag in xfs_alloc_file_space()
+      [b39a04636fd7] xfs: move xfs_update_prealloc_flags() to xfs_pnfs.c
+      [cea267c235e1] xfs: ensure log flush at the end of a synchronous fallocate call
+
+Code Diffstat:
+
+ fs/xfs/xfs_bmap_util.c |  9 ++----
+ fs/xfs/xfs_file.c      | 86 +++++++++++++++-----------------------------------
+ fs/xfs/xfs_inode.h     |  9 ------
+ fs/xfs/xfs_ioctl.c     |  2 +-
+ fs/xfs/xfs_pnfs.c      | 42 ++++++++++++++++++++++--
+ 5 files changed, 69 insertions(+), 79 deletions(-)
