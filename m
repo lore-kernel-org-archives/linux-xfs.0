@@ -2,479 +2,298 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5EDFC433FE
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Feb 2022 18:50:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6A19C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Feb 2022 20:11:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345427AbiBCSuA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Feb 2022 13:50:00 -0500
-Received: from ams.source.kernel.org ([145.40.68.75]:56458 "EHLO
-        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235692AbiBCSuA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Feb 2022 13:50:00 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S231693AbiBCULX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Feb 2022 15:11:23 -0500
+Received: from sandeen.net ([63.231.237.45]:59332 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1353954AbiBCULT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 3 Feb 2022 15:11:19 -0500
+Received: from [10.0.0.147] (liberator.sandeen.net [10.0.0.147])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id BA7C3B83555;
-        Thu,  3 Feb 2022 18:49:58 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 764FBC340E8;
-        Thu,  3 Feb 2022 18:49:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1643914197;
-        bh=wj1UJoQ90DxvgZg2Oi/TQjbpDGuTdE19hSU0XlES1EY=;
-        h=Date:From:To:Cc:Subject:Reply-To:References:In-Reply-To:From;
-        b=P6MJYt+hMSd4Zm3Qgsrn908Xx969S1hC70J54YhGyck0YwXzK4zCwG4WjG7TGXJS/
-         n8YKHnTgqwpRS/BoqqdwGt6BvkjLDLpJqUK3tUgmESMnGaHaFUUgm2K0bx4H0C1V/q
-         WJrkqZf+1RgqZCZ4GYid0UMn9iMx2NuTE8NDjy/qFuycflsuemyeR7io3MQwVbSR+a
-         LxEo5BQVflV5Xu7Ic6ZXd4F1TvrZIUdV2N/ufdF6jvX78kpkLFRu8007CG++YQccjS
-         1GPvCHYhdMpwNsioiBOPPZjLOE0fzzvC4Vbthxla5ipm3V8gDdBVndAry164So7VgK
-         p9NiaiBWsDiyA==
-Received: by paulmck-ThinkPad-P17-Gen-1.home (Postfix, from userid 1000)
-        id 36EB95C0454; Thu,  3 Feb 2022 10:49:57 -0800 (PST)
-Date:   Thu, 3 Feb 2022 10:49:57 -0800
-From:   "Paul E. McKenney" <paulmck@kernel.org>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Al Viro <viro@zeniv.linux.org.uk>, linux-xfs@vger.kernel.org,
-        Ian Kent <raven@themaw.net>, rcu@vger.kernel.org,
-        quic_neeraju@quicinc.com
-Subject: Re: [PATCH] xfs: require an rcu grace period before inode recycle
-Message-ID: <20220203184957.GA1109647@paulmck-ThinkPad-P17-Gen-1>
-Reply-To: paulmck@kernel.org
-References: <Ye82TgBY0VmtTjMc@bfoster>
- <20220125003120.GO59729@dread.disaster.area>
- <YfBBzHascwVnefYY@bfoster>
- <20220125224551.GQ59729@dread.disaster.area>
- <YfIdVq6R6xEWxy0K@zeniv-ca.linux.org.uk>
- <20220127052609.GR59729@dread.disaster.area>
- <YfLsBdPBSsyPFgHJ@bfoster>
- <20220128213911.GO4285@paulmck-ThinkPad-P17-Gen-1>
- <Yffioz+t9cjZbIBv@bfoster>
- <20220201220028.GH4285@paulmck-ThinkPad-P17-Gen-1>
+        by sandeen.net (Postfix) with ESMTPSA id AAC1648FB
+        for <linux-xfs@vger.kernel.org>; Thu,  3 Feb 2022 14:10:56 -0600 (CST)
+Message-ID: <77c2d242-e220-1952-5d89-bf4f4a725142@sandeen.net>
+Date:   Thu, 3 Feb 2022 14:11:17 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220201220028.GH4285@paulmck-ThinkPad-P17-Gen-1>
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.5.1
+Content-Language: en-US
+To:     xfs <linux-xfs@vger.kernel.org>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs 5.15.0-rc0 released
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="------------SeaMzu6INNqta0KNH0TaPcHc"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 01, 2022 at 02:00:28PM -0800, Paul E. McKenney wrote:
-> On Mon, Jan 31, 2022 at 08:22:43AM -0500, Brian Foster wrote:
-> > On Fri, Jan 28, 2022 at 01:39:11PM -0800, Paul E. McKenney wrote:
-> > > On Thu, Jan 27, 2022 at 02:01:25PM -0500, Brian Foster wrote:
-> > > > On Thu, Jan 27, 2022 at 04:26:09PM +1100, Dave Chinner wrote:
-> > > > > On Thu, Jan 27, 2022 at 04:19:34AM +0000, Al Viro wrote:
-> > > > > > On Wed, Jan 26, 2022 at 09:45:51AM +1100, Dave Chinner wrote:
-> > > > > > 
-> > > > > > > Right, background inactivation does not improve performance - it's
-> > > > > > > necessary to get the transactions out of the evict() path. All we
-> > > > > > > wanted was to ensure that there were no performance degradations as
-> > > > > > > a result of background inactivation, not that it was faster.
-> > > > > > > 
-> > > > > > > If you want to confirm that there is an increase in cold cache
-> > > > > > > access when the batch size is increased, cpu profiles with 'perf
-> > > > > > > top'/'perf record/report' and CPU cache performance metric reporting
-> > > > > > > via 'perf stat -dddd' are your friend. See elsewhere in the thread
-> > > > > > > where I mention those things to Paul.
-> > > > > > 
-> > > > > > Dave, do you see a plausible way to eventually drop Ian's bandaid?
-> > > > > > I'm not asking for that to happen this cycle and for backports Ian's
-> > > > > > patch is obviously fine.
-> > > > > 
-> > > > > Yes, but not in the near term.
-> > > > > 
-> > > > > > What I really want to avoid is the situation when we are stuck with
-> > > > > > keeping that bandaid in fs/namei.c, since all ways to avoid seeing
-> > > > > > reused inodes would hurt XFS too badly.  And the benchmarks in this
-> > > > > > thread do look like that.
-> > > > > 
-> > > > > The simplest way I think is to have the XFS inode allocation track
-> > > > > "busy inodes" in the same way we track "busy extents". A busy extent
-> > > > > is an extent that has been freed by the user, but is not yet marked
-> > > > > free in the journal/on disk. If we try to reallocate that busy
-> > > > > extent, we either select a different free extent to allocate, or if
-> > > > > we can't find any we force the journal to disk, wait for it to
-> > > > > complete (hence unbusying the extents) and retry the allocation
-> > > > > again.
-> > > > > 
-> > > > > We can do something similar for inode allocation - it's actually a
-> > > > > lockless tag lookup on the radix tree entry for the candidate inode
-> > > > > number. If we find the reclaimable radix tree tag set, the we select
-> > > > > a different inode. If we can't allocate a new inode, then we kick
-> > > > > synchronize_rcu() and retry the allocation, allowing inodes to be
-> > > > > recycled this time.
-> > > > 
-> > > > I'm starting to poke around this area since it's become clear that the
-> > > > currently proposed scheme just involves too much latency (unless Paul
-> > > > chimes in with his expedited grace period variant, at which point I will
-> > > > revisit) in the fast allocation/recycle path. ISTM so far that a simple
-> > > > "skip inodes in the radix tree, sync rcu if unsuccessful" algorithm will
-> > > > have pretty much the same pattern of behavior as this patch: one
-> > > > synchronize_rcu() per batch.
-> > > 
-> > > Apologies for being slow, but there have been some distractions.
-> > > One of the distractions was trying to put together atheoretically
-> > > attractive but massively overcomplicated implementation of
-> > > poll_state_synchronize_rcu_expedited().  It currently looks like a
-> > > somewhat suboptimal but much simpler approach is available.  This
-> > > assumes that XFS is not in the picture until after both the scheduler
-> > > and workqueues are operational.
-> > > 
-> > 
-> > No worries.. I don't think that would be a roadblock for us. ;)
-> > 
-> > > And yes, the complicated version might prove necessary, but let's
-> > > see if this whole thing is even useful first.  ;-)
-> > > 
-> > 
-> > Indeed. This patch only really requires a single poll/sync pair of
-> > calls, so assuming the expedited grace period usage plays nice enough
-> > with typical !expedited usage elsewhere in the kernel for some basic
-> > tests, it would be fairly trivial to port this over and at least get an
-> > idea of what the worst case behavior might be with expedited grace
-> > periods, whether it satisfies the existing latency requirements, etc.
-> > 
-> > Brian
-> > 
-> > > In the meantime, if you want to look at an extremely unbaked view,
-> > > here you go:
-> > > 
-> > > https://docs.google.com/document/d/1RNKWW9jQyfjxw2E8dsXVTdvZYh0HnYeSHDKog9jhdN8/edit?usp=sharing
-> 
-> And here is a version that passes moderate rcutorture testing.  So no
-> obvious bugs.  Probably a few non-obvious ones, though!  ;-)
-> 
-> This commit is on -rcu's "dev" branch along with this rcutorture
-> addition:
-> 
-> cd7bd64af59f ("EXP rcutorture: Test polled expedited grace-period primitives")
-> 
-> I will carry these in -rcu's "dev" branch until at least the upcoming
-> merge window, fixing bugs as and when they becom apparent.  If I don't
-> hear otherwise by that time, I will create a tag for it and leave
-> it behind.
-> 
-> The backport to v5.17-rc2 just requires removing:
-> 
-> 	mutex_init(&rnp->boost_kthread_mutex);
-> 
-> From rcu_init_one().  This line is added by this -rcu commit:
-> 
-> 02a50b09c31f ("rcu: Add mutex for rcu boost kthread spawning and affinity setting")
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------------SeaMzu6INNqta0KNH0TaPcHc
+Content-Type: multipart/mixed; boundary="------------AVxThNPOz2dFe1VFWXkUTfEk";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: xfs <linux-xfs@vger.kernel.org>
+Message-ID: <77c2d242-e220-1952-5d89-bf4f4a725142@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs 5.15.0-rc0 released
 
-And with some alleged fixes of issues Neeraj found when reviewing this,
-perhaps most notably the ability to run on real-time kernels booted
-with rcupdate.rcu_normal=1.  This version passes reasonably heavy-duty
-rcutorture testing.  Must mean bugs in rcutorture...  :-/
+--------------AVxThNPOz2dFe1VFWXkUTfEk
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-f93fa07011bd ("EXP rcu: Add polled expedited grace-period primitives")
+Hi folks,
 
-Again, please let me know how it goes!
+The xfsprogs repository at:
 
-							Thanx, Paul
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
-------------------------------------------------------------------------
+has just been updated.
 
-commit f93fa07011bd2460f222e570d17968baff21fa90
-Author: Paul E. McKenney <paulmck@kernel.org>
-Date:   Mon Jan 31 16:55:52 2022 -0800
+This is primarily just the libxfs-sync from 5.15. A /GIANT/ thank you to
+djwong for much of the real work behind this.
 
-    EXP rcu: Add polled expedited grace-period primitives
-    
-    This is an experimental proof of concept of polled expedited grace-period
-    functions.  These functions are get_state_synchronize_rcu_expedited(),
-    start_poll_synchronize_rcu_expedited(), poll_state_synchronize_rcu_expedited(),
-    and cond_synchronize_rcu_expedited(), which are similar to
-    get_state_synchronize_rcu(), start_poll_synchronize_rcu(),
-    poll_state_synchronize_rcu(), and cond_synchronize_rcu(), respectively.
-    
-    One limitation is that start_poll_synchronize_rcu_expedited() cannot
-    be invoked before workqueues are initialized.
-    
-    Link: https://lore.kernel.org/all/20220121142454.1994916-1-bfoster@redhat.com/
-    Link: https://docs.google.com/document/d/1RNKWW9jQyfjxw2E8dsXVTdvZYh0HnYeSHDKog9jhdN8/edit?usp=sharing
-    Cc: Brian Foster <bfoster@redhat.com>
-    Cc: Dave Chinner <david@fromorbit.com>
-    Cc: Al Viro <viro@zeniv.linux.org.uk>
-    Cc: Ian Kent <raven@themaw.net>
-    Signed-off-by: Paul E. McKenney <paulmck@kernel.org>
+Next up I'll pull in bugfixes. I have a list from Darrick, but please fee=
+l
+free to remind me of anything else outstanding that should be considered.=
 
-diff --git a/include/linux/rcutiny.h b/include/linux/rcutiny.h
-index 858f4d429946d..ca139b4b2d25f 100644
---- a/include/linux/rcutiny.h
-+++ b/include/linux/rcutiny.h
-@@ -23,6 +23,26 @@ static inline void cond_synchronize_rcu(unsigned long oldstate)
- 	might_sleep();
- }
- 
-+static inline unsigned long get_state_synchronize_rcu_expedited(void)
-+{
-+	return get_state_synchronize_rcu();
-+}
-+
-+static inline unsigned long start_poll_synchronize_rcu_expedited(void)
-+{
-+	return start_poll_synchronize_rcu();
-+}
-+
-+static inline bool poll_state_synchronize_rcu_expedited(unsigned long oldstate)
-+{
-+	return poll_state_synchronize_rcu(oldstate);
-+}
-+
-+static inline void cond_synchronize_rcu_expedited(unsigned long oldstate)
-+{
-+	cond_synchronize_rcu(oldstate);
-+}
-+
- extern void rcu_barrier(void);
- 
- static inline void synchronize_rcu_expedited(void)
-diff --git a/include/linux/rcutree.h b/include/linux/rcutree.h
-index 76665db179fa1..eb774e9be21bf 100644
---- a/include/linux/rcutree.h
-+++ b/include/linux/rcutree.h
-@@ -40,6 +40,10 @@ bool rcu_eqs_special_set(int cpu);
- void rcu_momentary_dyntick_idle(void);
- void kfree_rcu_scheduler_running(void);
- bool rcu_gp_might_be_stalled(void);
-+unsigned long get_state_synchronize_rcu_expedited(void);
-+unsigned long start_poll_synchronize_rcu_expedited(void);
-+bool poll_state_synchronize_rcu_expedited(unsigned long oldstate);
-+void cond_synchronize_rcu_expedited(unsigned long oldstate);
- unsigned long get_state_synchronize_rcu(void);
- unsigned long start_poll_synchronize_rcu(void);
- bool poll_state_synchronize_rcu(unsigned long oldstate);
-diff --git a/kernel/rcu/rcu.h b/kernel/rcu/rcu.h
-index 24b5f2c2de87b..5b61cf20c91e9 100644
---- a/kernel/rcu/rcu.h
-+++ b/kernel/rcu/rcu.h
-@@ -23,6 +23,13 @@
- #define RCU_SEQ_CTR_SHIFT	2
- #define RCU_SEQ_STATE_MASK	((1 << RCU_SEQ_CTR_SHIFT) - 1)
- 
-+/*
-+ * Low-order bit definitions for polled grace-period APIs.
-+ */
-+#define RCU_GET_STATE_FROM_EXPEDITED	0x1
-+#define RCU_GET_STATE_USE_NORMAL	0x2
-+#define RCU_GET_STATE_BAD_FOR_NORMAL	(RCU_GET_STATE_FROM_EXPEDITED | RCU_GET_STATE_USE_NORMAL)
-+
- /*
-  * Return the counter portion of a sequence number previously returned
-  * by rcu_seq_snap() or rcu_seq_current().
-diff --git a/kernel/rcu/tree.c b/kernel/rcu/tree.c
-index e6ad532cffe78..135d5e2bce879 100644
---- a/kernel/rcu/tree.c
-+++ b/kernel/rcu/tree.c
-@@ -3871,7 +3871,8 @@ EXPORT_SYMBOL_GPL(start_poll_synchronize_rcu);
-  */
- bool poll_state_synchronize_rcu(unsigned long oldstate)
- {
--	if (rcu_seq_done(&rcu_state.gp_seq, oldstate)) {
-+	if (rcu_seq_done(&rcu_state.gp_seq, oldstate) &&
-+	    !WARN_ON_ONCE(oldstate & RCU_GET_STATE_BAD_FOR_NORMAL)) {
- 		smp_mb(); /* Ensure GP ends before subsequent accesses. */
- 		return true;
- 	}
-@@ -3900,7 +3901,8 @@ EXPORT_SYMBOL_GPL(poll_state_synchronize_rcu);
-  */
- void cond_synchronize_rcu(unsigned long oldstate)
- {
--	if (!poll_state_synchronize_rcu(oldstate))
-+	if (!poll_state_synchronize_rcu(oldstate) ||
-+	    WARN_ON_ONCE(oldstate & RCU_GET_STATE_BAD_FOR_NORMAL))
- 		synchronize_rcu();
- }
- EXPORT_SYMBOL_GPL(cond_synchronize_rcu);
-@@ -4593,6 +4595,9 @@ static void __init rcu_init_one(void)
- 			init_waitqueue_head(&rnp->exp_wq[3]);
- 			spin_lock_init(&rnp->exp_lock);
- 			mutex_init(&rnp->boost_kthread_mutex);
-+			raw_spin_lock_init(&rnp->exp_poll_lock);
-+			rnp->exp_seq_poll_rq = 0x1;
-+			INIT_WORK(&rnp->exp_poll_wq, sync_rcu_do_polled_gp);
- 		}
- 	}
- 
-diff --git a/kernel/rcu/tree.h b/kernel/rcu/tree.h
-index 926673ebe355f..19fc9acce3ce2 100644
---- a/kernel/rcu/tree.h
-+++ b/kernel/rcu/tree.h
-@@ -128,6 +128,10 @@ struct rcu_node {
- 	wait_queue_head_t exp_wq[4];
- 	struct rcu_exp_work rew;
- 	bool exp_need_flush;	/* Need to flush workitem? */
-+	raw_spinlock_t exp_poll_lock;
-+				/* Lock and data for polled expedited grace periods. */
-+	unsigned long exp_seq_poll_rq;
-+	struct work_struct exp_poll_wq;
- } ____cacheline_internodealigned_in_smp;
- 
- /*
-@@ -476,3 +480,6 @@ static void rcu_iw_handler(struct irq_work *iwp);
- static void check_cpu_stall(struct rcu_data *rdp);
- static void rcu_check_gp_start_stall(struct rcu_node *rnp, struct rcu_data *rdp,
- 				     const unsigned long gpssdelay);
-+
-+/* Forward declarations for tree_exp.h. */
-+static void sync_rcu_do_polled_gp(struct work_struct *wp);
-diff --git a/kernel/rcu/tree_exp.h b/kernel/rcu/tree_exp.h
-index 1a45667402260..4041988086830 100644
---- a/kernel/rcu/tree_exp.h
-+++ b/kernel/rcu/tree_exp.h
-@@ -871,3 +871,154 @@ void synchronize_rcu_expedited(void)
- 		destroy_work_on_stack(&rew.rew_work);
- }
- EXPORT_SYMBOL_GPL(synchronize_rcu_expedited);
-+
-+/**
-+ * get_state_synchronize_rcu_expedited - Snapshot current expedited RCU state
-+ *
-+ * Returns a cookie to pass to a call to cond_synchronize_rcu_expedited()
-+ * or poll_state_synchronize_rcu_expedited(), allowing them to determine
-+ * whether or not a full expedited grace period has elapsed in the meantime.
-+ */
-+unsigned long get_state_synchronize_rcu_expedited(void)
-+{
-+	if (rcu_gp_is_normal())
-+		return get_state_synchronize_rcu() |
-+		       RCU_GET_STATE_FROM_EXPEDITED | RCU_GET_STATE_USE_NORMAL;
-+
-+	// Any prior manipulation of RCU-protected data must happen
-+	// before the load from ->expedited_sequence, and this ordering is
-+	// provided by rcu_exp_gp_seq_snap().
-+	return rcu_exp_gp_seq_snap() | RCU_GET_STATE_FROM_EXPEDITED;
-+}
-+EXPORT_SYMBOL_GPL(get_state_synchronize_rcu_expedited);
-+
-+/*
-+ * Ensure that start_poll_synchronize_rcu_expedited() has the expedited
-+ * RCU grace periods that it needs.
-+ */
-+static void sync_rcu_do_polled_gp(struct work_struct *wp)
-+{
-+	unsigned long flags;
-+	struct rcu_node *rnp = container_of(wp, struct rcu_node, exp_poll_wq);
-+	unsigned long s;
-+
-+	raw_spin_lock_irqsave(&rnp->exp_poll_lock, flags);
-+	s = rnp->exp_seq_poll_rq;
-+	rnp->exp_seq_poll_rq |= 0x1;
-+	raw_spin_unlock_irqrestore(&rnp->exp_poll_lock, flags);
-+	if (s & 0x1)
-+		return;
-+	while (!sync_exp_work_done(s))
-+		synchronize_rcu_expedited();
-+	raw_spin_lock_irqsave(&rnp->exp_poll_lock, flags);
-+	s = rnp->exp_seq_poll_rq;
-+	if (!(s & 0x1) && !sync_exp_work_done(s))
-+		queue_work(rcu_gp_wq, &rnp->exp_poll_wq);
-+	else
-+		rnp->exp_seq_poll_rq |= 0x1;
-+	raw_spin_unlock_irqrestore(&rnp->exp_poll_lock, flags);
-+}
-+
-+/**
-+ * start_poll_synchronize_rcu_expedited - Snapshot current expedited RCU state and start grace period
-+ *
-+ * Returns a cookie to pass to a call to cond_synchronize_rcu_expedited()
-+ * or poll_state_synchronize_rcu_expedited(), allowing them to determine
-+ * whether or not a full expedited grace period has elapsed in the meantime.
-+ * If the needed grace period is not already slated to start, initiates
-+ * that grace period.
-+ */
-+
-+unsigned long start_poll_synchronize_rcu_expedited(void)
-+{
-+	unsigned long flags;
-+	struct rcu_data *rdp;
-+	struct rcu_node *rnp;
-+	unsigned long s;
-+
-+	if (rcu_gp_is_normal())
-+		return start_poll_synchronize_rcu() |
-+		       RCU_GET_STATE_FROM_EXPEDITED | RCU_GET_STATE_USE_NORMAL;
-+
-+	s = rcu_exp_gp_seq_snap();
-+	rdp = per_cpu_ptr(&rcu_data, raw_smp_processor_id());
-+	rnp = rdp->mynode;
-+	raw_spin_lock_irqsave(&rnp->exp_poll_lock, flags);
-+	if ((rnp->exp_seq_poll_rq & 0x1) || ULONG_CMP_LT(rnp->exp_seq_poll_rq, s)) {
-+		rnp->exp_seq_poll_rq = s;
-+		queue_work(rcu_gp_wq, &rnp->exp_poll_wq);
-+	}
-+	raw_spin_unlock_irqrestore(&rnp->exp_poll_lock, flags);
-+
-+	return s | RCU_GET_STATE_FROM_EXPEDITED;
-+}
-+EXPORT_SYMBOL_GPL(start_poll_synchronize_rcu_expedited);
-+
-+/**
-+ * poll_state_synchronize_rcu_expedited - Conditionally wait for an expedited RCU grace period
-+ *
-+ * @oldstate: value from get_state_synchronize_rcu_expedited() or start_poll_synchronize_rcu_expedited()
-+ *
-+ * If a full expedited RCU grace period has elapsed since the earlier call
-+ * from which oldstate was obtained, return @true, otherwise return @false.
-+ * If @false is returned, it is the caller's responsibility to invoke
-+ * this function later on until it does return @true.  Alternatively,
-+ * the caller can explicitly wait for a grace period, for example, by
-+ * passing @oldstate to cond_synchronize_rcu_expedited() or by directly
-+ * invoking synchronize_rcu_expedited().
-+ *
-+ * Yes, this function does not take counter wrap into account.
-+ * But counter wrap is harmless.  If the counter wraps, we have waited for
-+ * more than 2 billion grace periods (and way more on a 64-bit system!).
-+ * Those needing to keep oldstate values for very long time periods
-+ * (several hours even on 32-bit systems) should check them occasionally
-+ * and either refresh them or set a flag indicating that the grace period
-+ * has completed.
-+ *
-+ * This function provides the same memory-ordering guarantees that would
-+ * be provided by a synchronize_rcu_expedited() that was invoked at the
-+ * call to the function that provided @oldstate, and that returned at the
-+ * end of this function.
-+ */
-+bool poll_state_synchronize_rcu_expedited(unsigned long oldstate)
-+{
-+	WARN_ON_ONCE(!(oldstate & RCU_GET_STATE_FROM_EXPEDITED));
-+	if (oldstate & RCU_GET_STATE_USE_NORMAL)
-+		return poll_state_synchronize_rcu(oldstate & ~RCU_GET_STATE_BAD_FOR_NORMAL);
-+	if (!rcu_exp_gp_seq_done(oldstate & ~RCU_SEQ_STATE_MASK))
-+		return false;
-+	smp_mb(); /* Ensure GP ends before subsequent accesses. */
-+	return true;
-+}
-+EXPORT_SYMBOL_GPL(poll_state_synchronize_rcu_expedited);
-+
-+/**
-+ * cond_synchronize_rcu_expedited - Conditionally wait for an expedited RCU grace period
-+ *
-+ * @oldstate: value from get_state_synchronize_rcu_expedited() or start_poll_synchronize_rcu_expedited()
-+ *
-+ * If a full expedited RCU grace period has elapsed since the earlier
-+ * call from which oldstate was obtained, just return.  Otherwise, invoke
-+ * synchronize_rcu_expedited() to wait for a full grace period.
-+ *
-+ * Yes, this function does not take counter wrap into account.  But
-+ * counter wrap is harmless.  If the counter wraps, we have waited for
-+ * more than 2 billion grace periods (and way more on a 64-bit system!),
-+ * so waiting for one additional grace period should be just fine.
-+ *
-+ * This function provides the same memory-ordering guarantees that would
-+ * be provided by a synchronize_rcu_expedited() that was invoked at the
-+ * call to the function that provided @oldstate, and that returned at the
-+ * end of this function.
-+ */
-+void cond_synchronize_rcu_expedited(unsigned long oldstate)
-+{
-+	WARN_ON_ONCE(!(oldstate & RCU_GET_STATE_FROM_EXPEDITED));
-+	if (poll_state_synchronize_rcu_expedited(oldstate))
-+		return;
-+	if (oldstate & RCU_GET_STATE_USE_NORMAL)
-+		synchronize_rcu();
-+	else
-+		synchronize_rcu_expedited();
-+}
-+EXPORT_SYMBOL_GPL(cond_synchronize_rcu_expedited);
+
+I'll move on to a 5.16 release fairly quickly after that, I hope.
+
+The new head of the master branch is commit:
+
+9a31fd83 (HEAD -> for-next, tag: v5.15.0-rc0, origin/libxfs-5.15-sync, or=
+igin/for-next) xfsprogs: Release v5.15.0-rc0
+
+New Commits:
+
+Allison Henderson (2):
+      [a42f01a1] xfs: add attr state machine tracepoints
+      [4acc0d5d] xfs: Rename __xfs_attr_rmtval_remove
+
+Christoph Hellwig (2):
+      [b38197ad] xfs: remove support for disabling quota accounting on a =
+mounted file system
+      [128b8b99] xfs: remove the active vs running quota differentiation
+
+Darrick J. Wong (23):
+      [575f24e5] xfs_{copy,db,logprint,repair}: pass xfs_mount pointers i=
+nstead of xfs_sb pointers
+      [aaf3c5c9] xfs: allow setting and clearing of log incompat feature =
+flags
+      [9eb4f400] xfs: make xfs_rtalloc_query_range input parameters const=
+
+      [901acb0e] xfs: make the key parameters to all btree key comparison=
+ functions const
+      [d34c6373] xfs: make the key parameters to all btree query range fu=
+nctions const
+      [e62318a3] xfs: make the record pointer passed to query_range funct=
+ions const
+      [c65978b6] xfs: mark the record passed into btree init_key function=
+s as const
+      [141bbc5c] xfs: make the keys and records passed to btree inorder f=
+unctions const
+      [cd5f520d] xfs: mark the record passed into xchk_btree functions as=
+ const
+      [67e6075e] xfs: make the pointer passed to btree set_root functions=
+ const
+      [43cbf380] xfs: make the start pointer passed to btree alloc_block =
+functions const
+      [99c5a767] xfs: make the start pointer passed to btree update_lastr=
+ec functions const
+      [36f59768] xfs: constify btree function parameters that are not mod=
+ified
+      [b4751eea] xfs: resolve fork names in trace output
+      [04fdbc32] libxlog: replace xfs_sb_version checks with feature flag=
+ checks
+      [eefdf2ab] libxfs: replace xfs_sb_version checks with feature flag =
+checks
+      [2660e653] xfs_{copy,db,logprint,repair}: replace xfs_sb_version ch=
+ecks with feature flag checks
+      [2420d095] libxfs: use opstate flags and functions for libxfs mount=
+ options
+      [ed8f5980] Get rid of these flags and the m_flags field, since none=
+ of them do anything anymore.
+      [e42c53f3] libxfs: clean up remaining LIBXFS_MOUNT flags
+      [f043c63e] libxfs: always initialize internal buffer map
+      [a25314af] libxfs: replace XFS_BUF_SET_ADDR with a function
+      [246e2283] libxfs: rename buffer cache index variable b_bn
+
+Dave Chinner (17):
+      [5cb09fa6] xfs: replace kmem_alloc_large() with kvmalloc()
+      [b3749469] xfs: sb verifier doesn't handle uncached sb buffer
+      [57e2264b] xfs: rename xfs_has_attr()
+      [caf32c70] xfs: rework attr2 feature and mount options
+      [3bc1fdd4] xfs: reflect sb features in xfs_mount
+      [b16a427a] xfs: replace xfs_sb_version checks with feature flag che=
+cks
+      [914e2a04] xfs: convert mount flags to features
+      [0ee9753e] xfs: convert remaining mount flags to state flags
+      [93adb06a] xfs: replace XFS_FORCED_SHUTDOWN with xfs_is_shutdown
+      [fa25ff74] xfs: convert xfs_fs_geometry to use mount feature checks=
+
+      [e5f19702] xfs: open code sb verifier feature checks
+      [94541a16] xfs: convert xfs_sb_version_has checks to use mount feat=
+ures
+      [586d90c3] xfs: remove unused xfs_sb_version_has wrappers
+      [667010d6] xfs: introduce xfs_sb_is_v5 helper
+      [03d8044d] xfs: kill xfs_sb_version_has_v3inode()
+      [d4aaa66b] xfs: introduce xfs_buf_daddr()
+      [f1208396] xfs: convert bp->b_bn references to xfs_buf_daddr()
+
+Eric Sandeen (1):
+      [9a31fd83] xfsprogs: Release v5.15.0-rc0
+
+Theodore Ts'o (1):
+      [b3aba575] xfsprogs: fix static build problems caused by liburcu
+
+
+Code Diffstat:
+
+ VERSION                     |   4 +-
+ configure.ac                |   2 +-
+ copy/Makefile               |   4 +-
+ copy/xfs_copy.c             |  34 +++---
+ db/Makefile                 |   4 +-
+ db/attrset.c                |  12 +-
+ db/btblock.c                |   2 +-
+ db/btdump.c                 |   4 +-
+ db/check.c                  |  20 ++--
+ db/crc.c                    |   2 +-
+ db/frag.c                   |   2 +-
+ db/fsmap.c                  |  10 +-
+ db/fuzz.c                   |   4 +-
+ db/info.c                   |   2 +-
+ db/init.c                   |   6 +-
+ db/inode.c                  |   6 +-
+ db/io.c                     |   4 +-
+ db/logformat.c              |   4 +-
+ db/metadump.c               |  24 ++--
+ db/namei.c                  |   2 +-
+ db/sb.c                     |  82 +++++++-------
+ db/timelimit.c              |   2 +-
+ db/write.c                  |   4 +-
+ doc/CHANGES                 |   3 +
+ growfs/Makefile             |   4 +-
+ include/kmem.h              |   3 +-
+ include/libxfs.h            |  56 ++++++++++
+ include/xfs_arch.h          |  10 +-
+ include/xfs_mount.h         | 146 ++++++++++++++++++++++--
+ include/xfs_trace.h         |   6 +
+ libxfs/init.c               |  63 +++++------
+ libxfs/kmem.c               |   6 +-
+ libxfs/libxfs_api_defs.h    |   1 +
+ libxfs/libxfs_io.h          |  14 ++-
+ libxfs/libxfs_priv.h        |  23 +---
+ libxfs/logitem.c            |   4 +-
+ libxfs/rdwr.c               |  29 +++--
+ libxfs/util.c               |  14 +--
+ libxfs/xfs_ag.c             |  25 ++---
+ libxfs/xfs_alloc.c          |  56 +++++-----
+ libxfs/xfs_alloc.h          |  12 +-
+ libxfs/xfs_alloc_btree.c    | 100 ++++++++---------
+ libxfs/xfs_alloc_btree.h    |   2 +-
+ libxfs/xfs_attr.c           |  56 +++++++---
+ libxfs/xfs_attr.h           |   1 -
+ libxfs/xfs_attr_leaf.c      |  55 ++++-----
+ libxfs/xfs_attr_remote.c    |  21 ++--
+ libxfs/xfs_attr_remote.h    |   2 +-
+ libxfs/xfs_bmap.c           |  38 +++----
+ libxfs/xfs_bmap_btree.c     |  56 +++++-----
+ libxfs/xfs_bmap_btree.h     |   9 +-
+ libxfs/xfs_btree.c          | 141 ++++++++++++------------
+ libxfs/xfs_btree.h          |  56 +++++-----
+ libxfs/xfs_btree_staging.c  |  14 +--
+ libxfs/xfs_da_btree.c       |  18 +--
+ libxfs/xfs_da_format.h      |   2 +-
+ libxfs/xfs_dir2.c           |   6 +-
+ libxfs/xfs_dir2_block.c     |  14 +--
+ libxfs/xfs_dir2_data.c      |  20 ++--
+ libxfs/xfs_dir2_leaf.c      |  14 +--
+ libxfs/xfs_dir2_node.c      |  20 ++--
+ libxfs/xfs_dir2_priv.h      |   2 +-
+ libxfs/xfs_dir2_sf.c        |  12 +-
+ libxfs/xfs_dquot_buf.c      |   8 +-
+ libxfs/xfs_format.h         | 224 ++++---------------------------------
+ libxfs/xfs_ialloc.c         |  67 ++++++-----
+ libxfs/xfs_ialloc.h         |   3 +-
+ libxfs/xfs_ialloc_btree.c   |  88 +++++++--------
+ libxfs/xfs_ialloc_btree.h   |   2 +-
+ libxfs/xfs_inode_buf.c      |  22 ++--
+ libxfs/xfs_inode_buf.h      |  11 +-
+ libxfs/xfs_log_format.h     |   6 +-
+ libxfs/xfs_log_rlimit.c     |   2 +-
+ libxfs/xfs_quota_defs.h     |  30 +----
+ libxfs/xfs_refcount.c       |  12 +-
+ libxfs/xfs_refcount.h       |   2 +-
+ libxfs/xfs_refcount_btree.c |  54 ++++-----
+ libxfs/xfs_rmap.c           |  34 +++---
+ libxfs/xfs_rmap.h           |  11 +-
+ libxfs/xfs_rmap_btree.c     |  72 ++++++------
+ libxfs/xfs_rtbitmap.c       |  14 +--
+ libxfs/xfs_sb.c             | 263 +++++++++++++++++++++++++++++++-------=
+------
+ libxfs/xfs_sb.h             |   4 +-
+ libxfs/xfs_symlink_remote.c |  14 +--
+ libxfs/xfs_trans_inode.c    |   2 +-
+ libxfs/xfs_trans_resv.c     |  48 ++------
+ libxfs/xfs_trans_resv.h     |   2 -
+ libxfs/xfs_trans_space.h    |   6 +-
+ libxfs/xfs_types.c          |   2 +-
+ libxfs/xfs_types.h          |   5 +
+ libxlog/util.c              |   6 +-
+ libxlog/xfs_log_recover.c   |  24 ++--
+ logprint/Makefile           |   4 +-
+ logprint/logprint.c         |   3 +-
+ mdrestore/Makefile          |   3 +-
+ mkfs/Makefile               |   4 +-
+ mkfs/xfs_mkfs.c             |   8 +-
+ repair/Makefile             |   2 +-
+ repair/agbtree.c            |  10 +-
+ repair/agheader.c           |   6 +-
+ repair/attr_repair.c        |  10 +-
+ repair/dino_chunks.c        |   6 +-
+ repair/dinode.c             |  26 ++---
+ repair/incore.h             |   4 +-
+ repair/incore_ino.c         |   2 +-
+ repair/phase2.c             |  25 +++--
+ repair/phase4.c             |   2 +-
+ repair/phase5.c             |  30 ++---
+ repair/phase6.c             |  22 ++--
+ repair/prefetch.c           |  22 ++--
+ repair/quotacheck.c         |   4 +-
+ repair/rmap.c               |  16 +--
+ repair/scan.c               |  32 +++---
+ repair/versions.c           |  87 +++++++--------
+ repair/versions.h           |   4 +-
+ repair/xfs_repair.c         |  14 +--
+ scrub/Makefile              |   4 +-
+ 117 files changed, 1447 insertions(+), 1315 deletions(-)
+
+--------------AVxThNPOz2dFe1VFWXkUTfEk--
+
+--------------SeaMzu6INNqta0KNH0TaPcHc
+Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="OpenPGP_signature"
+
+-----BEGIN PGP SIGNATURE-----
+
+wsF5BAABCAAjFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAmH8NuUFAwAAAAAACgkQIK4WkuE93uDn
+3hAAjXGWZSIFERD1zsWzv2NtzgFMjmiR3EFjwIOgjMLob9/s+uAnXdjTptFnHYCmkspNxp/iKxEm
+VgWseSCfyQsbnXYcnEgKKi9yXGSin/NaKi6csbhNwq22krbwgvOnW9fg2S/a0IRmxN/scJP9h6Uc
+YyRZJEdyCiVCCZTv9OBQHbrtKDk6qGPNKlBwtcy5PR6uvLC7UhkrDimKdl68r0uwPxdiXEMRLxB8
+Uiogfkk/oq1z4A1PQPkjUiOCJYmMzrxbm5p7Y//GA8l8jJSR6b22CAizxhYy9gjgAVPDNgltIT1r
+uPN1A4KvAJvO764HY4djsjPgKi1MriVsGw33UvSTfy+BZCQ2dzS8uUVnZieRAEruO5LqcW3Z4s2o
+Bp2ayaIRzZEv/BRj1JYVNbJQ3sNdsOQhTeXgSV+Y+sBtbLo1Ayi8mA5ZA+In6JO63NrHfV/VpSsi
+jhl+D1rx/LeDoDX0foqzKODbWicsaYNBBaRa4UxvLcI6UHJJXu6ptbPmFJLXmHKRXGLttlNeC4xD
+3xpktRW8IpE8R/oMtCMZa4HG6iy5fsCvwxpS606/QADDBDDQOcJO40Z9P8qoFCWy1STQq9zmQ7OI
+hToZsvmhvgYULpz9uzPVynIca5bdKtSD3fHkb0ptV3OBCZI/IWrTjuzubZHOfq+3lRHQ2P3lpTqb
+PAk=
+=E0W1
+-----END PGP SIGNATURE-----
+
+--------------SeaMzu6INNqta0KNH0TaPcHc--
