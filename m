@@ -2,242 +2,112 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C312C433EF
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Feb 2022 06:21:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0AF4C433FE
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Feb 2022 21:36:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231431AbiBDGVe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 4 Feb 2022 01:21:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48560 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242626AbiBDGVa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Feb 2022 01:21:30 -0500
-Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA955C06173E
-        for <linux-xfs@vger.kernel.org>; Thu,  3 Feb 2022 22:21:29 -0800 (PST)
-Received: by mail-pj1-x102c.google.com with SMTP id h12so4595166pjq.3
-        for <linux-xfs@vger.kernel.org>; Thu, 03 Feb 2022 22:21:29 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20210112.gappssmtp.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=4pCg5LRiqmbI3TAMDbxbNyx17A118iw1ZgmwbQZNhZc=;
-        b=3V3KExznjp8wESoZXltleisSjwaUOua+bzzCIMq/fH/eo3G/62yVKSbNMwWWHQ156X
-         +ZhOVGRPeRzxJPDdiVJ8BmEWgh51BDK2dVYjq2Rh/3WelKHpJtScg+IkPbKfTun++/4Y
-         aXCY78xBIVe4k15srEh1t8FyOZ396mIU707Zcru78W3FGmItRp11+pgzL3GxHlTghRU6
-         YOdEqPV0uFkx0h5+BpLgQNPEjjSNoFxb4xijJHK5iL1sdLiUrWAESrkp3RumVt+1HDn+
-         qLWQbOB/sSLN0GIfOd/65rVWK1cqr8+H76F54LT1YbOtW0ZS92GKJOhr1IB8Ic/qcfSh
-         SnTQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=4pCg5LRiqmbI3TAMDbxbNyx17A118iw1ZgmwbQZNhZc=;
-        b=LCEbb1KPV28ZSHYb9W8mDThpaTNVPvsf3DNWyuh4LAlq9weptJu+ey+lu1VnSk0DX8
-         f325g29b2L8jJvji9eUDzTmOr8N7ZucQOjoN0fGFbbNAhaU04e0eMh9wUx8S976LgfFA
-         QJdYsw0o1iX1qCIJkdImIbHnBxwy0t9tt00SxcR7/1oAcy8tRSdcJgnul2NiSs6N6Q9R
-         8GNoctc/rHWroMLQIOnM/UQu+hDWMXnskrQPcdZFFLVWq1OU4EYeuftGZ8BFPu/vISRo
-         OBS31PTolyyFshHFe6bnkJFZWXIkXcKU5dHaHxAGF21v2ScOc24p4sI/MY1qrHS2kzeW
-         OnpQ==
-X-Gm-Message-State: AOAM533z/euu+2+opiQgk1MHEnenwqBDWWZtoq5lvjGOvQFp1np/Kh5Z
-        M8N9Fz2Lwnzp9GUkO6ZyNRQ8GEI0lB1e42Fdg2nzzg==
-X-Google-Smtp-Source: ABdhPJxJdrprINds/3WPI72ybQtRLDGdXlGnE/VTYi5U2aLnedO5jvJlRA9psGdrpnDvDKM0rxpfae7Zs/uG9uBsBds=
-X-Received: by 2002:a17:902:bcca:: with SMTP id o10mr1673853pls.147.1643955689386;
- Thu, 03 Feb 2022 22:21:29 -0800 (PST)
+        id S238685AbiBDVgV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 4 Feb 2022 16:36:21 -0500
+Received: from sandeen.net ([63.231.237.45]:52984 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233101AbiBDVgU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 4 Feb 2022 16:36:20 -0500
+Received: from [10.0.0.147] (liberator.sandeen.net [10.0.0.147])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 43EAE7BCB;
+        Fri,  4 Feb 2022 15:35:56 -0600 (CST)
+Message-ID: <40c947a4-db5c-db4d-b369-de7554f3a8a4@sandeen.net>
+Date:   Fri, 4 Feb 2022 15:36:18 -0600
 MIME-Version: 1.0
-References: <20220128213150.1333552-1-jane.chu@oracle.com> <20220128213150.1333552-6-jane.chu@oracle.com>
-In-Reply-To: <20220128213150.1333552-6-jane.chu@oracle.com>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Thu, 3 Feb 2022 22:21:17 -0800
-Message-ID: <CAPcyv4ip=JZXcQkDOtjcSsD=y7wRJEA0GdYSbx9+UrGCg8BNvQ@mail.gmail.com>
-Subject: Re: [PATCH v5 5/7] pmem: add pmem_recovery_write() dax op
-To:     Jane Chu <jane.chu@oracle.com>
-Cc:     david <david@fromorbit.com>, "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Vishal L Verma <vishal.l.verma@intel.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Alasdair Kergon <agk@redhat.com>,
-        Mike Snitzer <snitzer@redhat.com>,
-        device-mapper development <dm-devel@redhat.com>,
-        "Weiny, Ira" <ira.weiny@intel.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Vivek Goyal <vgoyal@redhat.com>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Linux NVDIMM <nvdimm@lists.linux.dev>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.5.1
+Content-Language: en-US
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, allison.henderson@oracle.com
+References: <164263809453.863810.8908193461297738491.stgit@magnolia>
+ <164263810572.863810.13209521254816975203.stgit@magnolia>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: [PATCH 02/17] libxfs: shut down filesystem if we xfs_trans_cancel
+ with deferred work items
+In-Reply-To: <164263810572.863810.13209521254816975203.stgit@magnolia>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jan 28, 2022 at 1:32 PM Jane Chu <jane.chu@oracle.com> wrote:
->
-> pmem_recovery_write() consists of clearing poison via DSM,
-> clearing page HWPoison bit, re-state _PAGE_PRESENT bit,
-> cacheflush, write, and finally clearing bad-block record.
->
-> A competing pread thread is held off during recovery write
-> by the presence of bad-block record. A competing recovery_write
-> thread is serialized by a lock.
->
-> Signed-off-by: Jane Chu <jane.chu@oracle.com>
+On 1/19/22 6:21 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> While debugging some very strange rmap corruption reports in connection
+> with the online directory repair code.  I root-caused the error to the
+> following incorrect sequence:
+> 
+> <start repair transaction>
+> <expand directory, causing a deferred rmap to be queued>
+> <roll transaction>
+> <cancel transaction>
+> 
+> Obviously, we should have committed the transaction instead of
+> cancelling it.  Thinking more broadly, however, xfs_trans_cancel should
+> have warned us that we were throwing away work item that we already
+> committed to performing.  This is not correct, and we need to shut down
+> the filesystem.
+> 
+> Change xfs_trans_cancel to complain in the loudest manner if we're
+> cancelling any transaction with deferred work items attached.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+
+So this is basically:
+
+Source kernel commit: 47a6df7cd3174b91c6c862eae0b8d4e13591df52
+
+plus the actual shutting down / aborting part 
+
+Seems ok; did you run into this in practice, in userspace?
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
 > ---
->  drivers/nvdimm/pmem.c | 82 +++++++++++++++++++++++++++++++++++++++----
->  drivers/nvdimm/pmem.h |  1 +
->  2 files changed, 77 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
-> index 638e64681db9..f2d6b34d48de 100644
-> --- a/drivers/nvdimm/pmem.c
-> +++ b/drivers/nvdimm/pmem.c
-> @@ -69,6 +69,14 @@ static void hwpoison_clear(struct pmem_device *pmem,
->         }
->  }
->
-> +static void pmem_clear_badblocks(struct pmem_device *pmem, sector_t sector,
-> +                               long cleared_blks)
-> +{
-> +       badblocks_clear(&pmem->bb, sector, cleared_blks);
-> +       if (pmem->bb_state)
-> +               sysfs_notify_dirent(pmem->bb_state);
-> +}
-> +
->  static blk_status_t pmem_clear_poison(struct pmem_device *pmem,
->                 phys_addr_t offset, unsigned int len)
+>  libxfs/trans.c |   19 ++++++++++++++++++-
+>  1 file changed, 18 insertions(+), 1 deletion(-)
+> 
+> 
+> diff --git a/libxfs/trans.c b/libxfs/trans.c
+> index fd2e6f9d..8c16cb8d 100644
+> --- a/libxfs/trans.c
+> +++ b/libxfs/trans.c
+> @@ -318,13 +318,30 @@ void
+>  libxfs_trans_cancel(
+>  	struct xfs_trans	*tp)
 >  {
-> @@ -88,9 +96,7 @@ static blk_status_t pmem_clear_poison(struct pmem_device *pmem,
->                 dev_dbg(dev, "%#llx clear %ld sector%s\n",
->                                 (unsigned long long) sector, cleared,
->                                 cleared > 1 ? "s" : "");
-> -               badblocks_clear(&pmem->bb, sector, cleared);
-> -               if (pmem->bb_state)
-> -                       sysfs_notify_dirent(pmem->bb_state);
-> +               pmem_clear_badblocks(pmem, sector, cleared);
->         }
->
->         arch_invalidate_pmem(pmem->virt_addr + offset, len);
-> @@ -257,10 +263,15 @@ static int pmem_rw_page(struct block_device *bdev, sector_t sector,
->  __weak long __pmem_direct_access(struct pmem_device *pmem, pgoff_t pgoff,
->                 long nr_pages, void **kaddr, pfn_t *pfn)
->  {
-> +       bool bad_pmem;
-> +       bool do_recovery = false;
->         resource_size_t offset = PFN_PHYS(pgoff) + pmem->data_offset;
->
-> -       if (unlikely(is_bad_pmem(&pmem->bb, PFN_PHYS(pgoff) / 512,
-> -                                       PFN_PHYS(nr_pages))))
-> +       bad_pmem = is_bad_pmem(&pmem->bb, PFN_PHYS(pgoff) / 512,
-> +                               PFN_PHYS(nr_pages));
-> +       if (bad_pmem && kaddr)
-> +               do_recovery = dax_recovery_started(pmem->dax_dev, kaddr);
-> +       if (bad_pmem && !do_recovery)
->                 return -EIO;
->
->         if (kaddr)
-> @@ -301,10 +312,68 @@ static long pmem_dax_direct_access(struct dax_device *dax_dev,
->         return __pmem_direct_access(pmem, pgoff, nr_pages, kaddr, pfn);
->  }
->
-> +/*
-> + * The recovery write thread started out as a normal pwrite thread and
-> + * when the filesystem was told about potential media error in the
-> + * range, filesystem turns the normal pwrite to a dax_recovery_write.
-> + *
-> + * The recovery write consists of clearing poison via DSM, clearing page
-> + * HWPoison bit, reenable page-wide read-write permission, flush the
-> + * caches and finally write.  A competing pread thread needs to be held
-> + * off during the recovery process since data read back might not be valid.
-> + * And that's achieved by placing the badblock records clearing after
-> + * the completion of the recovery write.
-> + *
-> + * Any competing recovery write thread needs to be serialized, and this is
-> + * done via pmem device level lock .recovery_lock.
-> + */
->  static size_t pmem_recovery_write(struct dax_device *dax_dev, pgoff_t pgoff,
->                 void *addr, size_t bytes, struct iov_iter *i)
->  {
-> -       return 0;
-> +       size_t rc, len, off;
-> +       phys_addr_t pmem_off;
-> +       struct pmem_device *pmem = dax_get_private(dax_dev);
-> +       struct device *dev = pmem->bb.dev;
-> +       sector_t sector;
-> +       long cleared, cleared_blk;
+> +	bool			dirty;
 > +
-> +       mutex_lock(&pmem->recovery_lock);
+>  	trace_xfs_trans_cancel(tp, _RET_IP_);
+>  
+>  	if (tp == NULL)
+>  		return;
+> +	dirty = (tp->t_flags & XFS_TRANS_DIRTY);
+>  
+> -	if (tp->t_flags & XFS_TRANS_PERM_LOG_RES)
+> +	/*
+> +	 * It's never valid to cancel a transaction with deferred ops attached,
+> +	 * because the transaction is effectively dirty.  Complain about this
+> +	 * loudly before freeing the in-memory defer items.
+> +	 */
+> +	if (!list_empty(&tp->t_dfops)) {
+> +		ASSERT(list_empty(&tp->t_dfops));
+> +		ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
+> +		dirty = true;
+>  		xfs_defer_cancel(tp);
+> +	}
 > +
-> +       /* If no poison found in the range, go ahead with write */
-> +       off = (unsigned long)addr & ~PAGE_MASK;
-> +       len = PFN_PHYS(PFN_UP(off + bytes));
-> +       if (!is_bad_pmem(&pmem->bb, PFN_PHYS(pgoff) / 512, len)) {
-> +               rc = _copy_from_iter_flushcache(addr, bytes, i);
-> +               goto write_done;
-> +       }
-
-is_bad_pmem() takes a seqlock so it should be safe to move the
-recovery_lock below this point.
-
-> +
-> +       /* Not page-aligned range cannot be recovered */
-> +       if (off || !(PAGE_ALIGNED(bytes))) {
-> +               dev_warn(dev, "Found poison, but addr(%p) or bytes(%#lx) not page aligned\n",
-> +                       addr, bytes);
-
-fs/dax.c will prevent this from happening, right? It seems like an
-upper layer bug if we get this far into the recovery process without
-checking if a full page is being overwritten.
-
-> +               rc = (size_t) -EIO;
-> +               goto write_done;
-> +       }
-> +
-> +       pmem_off = PFN_PHYS(pgoff) + pmem->data_offset;
-> +       sector = (pmem_off - pmem->data_offset) / 512;
-> +       cleared = nvdimm_clear_poison(dev, pmem->phys_addr + pmem_off, len);
-> +       cleared_blk = cleared / 512;
-> +       if (cleared_blk > 0) {
-> +               hwpoison_clear(pmem, pmem->phys_addr + pmem_off, cleared);
-> +       } else {
-> +               dev_warn(dev, "pmem_recovery_write: cleared_blk: %ld\n",
-> +                       cleared_blk);
-> +               rc = (size_t) -EIO;
-> +               goto write_done;
-> +       }
-> +       arch_invalidate_pmem(pmem->virt_addr + pmem_off, bytes);
-> +       rc = _copy_from_iter_flushcache(addr, bytes, i);
-> +       pmem_clear_badblocks(pmem, sector, cleared_blk);
-
-This duplicates pmem_clear_poison() can more code be shared between
-the 2 functions?
-
-
-> +
-> +write_done:
-> +       mutex_unlock(&pmem->recovery_lock);
-> +       return rc;
->  }
->
->  static const struct dax_operations pmem_dax_ops = {
-> @@ -495,6 +564,7 @@ static int pmem_attach_disk(struct device *dev,
->                 goto out_cleanup_dax;
->         dax_write_cache(dax_dev, nvdimm_has_cache(nd_region));
->         set_dax_recovery(dax_dev);
-> +       mutex_init(&pmem->recovery_lock);
->         pmem->dax_dev = dax_dev;
->
->         rc = device_add_disk(dev, disk, pmem_attribute_groups);
-> diff --git a/drivers/nvdimm/pmem.h b/drivers/nvdimm/pmem.h
-> index 59cfe13ea8a8..971bff7552d6 100644
-> --- a/drivers/nvdimm/pmem.h
-> +++ b/drivers/nvdimm/pmem.h
-> @@ -24,6 +24,7 @@ struct pmem_device {
->         struct dax_device       *dax_dev;
->         struct gendisk          *disk;
->         struct dev_pagemap      pgmap;
-> +       struct mutex            recovery_lock;
->  };
->
->  long __pmem_direct_access(struct pmem_device *pmem, pgoff_t pgoff,
-> --
-> 2.18.4
->
+> +	if (dirty) {
+> +		fprintf(stderr, _("Cancelling dirty transaction!\n"));
+> +		abort();
+> +	}
+>  
+>  	xfs_trans_free_items(tp);
+>  	xfs_trans_free(tp);
+> 
