@@ -2,69 +2,66 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96705C433F5
-	for <linux-xfs@archiver.kernel.org>; Sat,  5 Feb 2022 02:56:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E194C433F5
+	for <linux-xfs@archiver.kernel.org>; Sat,  5 Feb 2022 17:29:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240948AbiBEC4z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 4 Feb 2022 21:56:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49088 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238321AbiBEC4y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Feb 2022 21:56:54 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A5E5C061346
-        for <linux-xfs@vger.kernel.org>; Fri,  4 Feb 2022 18:56:54 -0800 (PST)
+        id S1380714AbiBER33 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 5 Feb 2022 12:29:29 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:35392 "EHLO
+        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1380708AbiBER33 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 5 Feb 2022 12:29:29 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E548060C45
-        for <linux-xfs@vger.kernel.org>; Sat,  5 Feb 2022 02:56:53 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B08AC004E1
-        for <linux-xfs@vger.kernel.org>; Sat,  5 Feb 2022 02:56:53 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id CB065B80CA4;
+        Sat,  5 Feb 2022 17:29:27 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 8E2F2C340E8;
+        Sat,  5 Feb 2022 17:29:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1644029813;
-        bh=7BuaQP9n9qrpRhlWfKQWYI9vdM0jhaz4tr0FWuRcmMc=;
-        h=Date:From:To:Subject:From;
-        b=ItxvDH91qNP+ukTuXmKBwVX4ZT2RoQj6MCaxvSmRVe/J8odc5QQbP03NQHM9cI/Hu
-         cVf5epOLxeBxHaSLszaWaoyMB/gbW2GMHCcQMS01G/gVVLlP+mqqZ9wtH6iKOJezoN
-         kd2rQd98ituj20MHcR718eFTIqpHOkVlA/WfJdbq5d8RCbdGJRrWXxgafAzHlvgdP+
-         bDCP7GGCcCquHwgNmLdYiancwqAJmqXwgD+AvjYyIh3rfeFpihZ27o+9qSVHCiG7Bn
-         g7XxOclWFrGsVOrMKb4AALp5JMabcCCFGvy7jOs9OOjMYxVL+qS5t+Nrkj1s9MukHN
-         oHuHBPgxzJVBQ==
-Date:   Fri, 4 Feb 2022 18:56:52 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     xfs <linux-xfs@vger.kernel.org>
-Subject: [PATCH] xfs: return error from sync_filesystem during remount
-Message-ID: <20220205025652.GY8313@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+        s=k20201202; t=1644082166;
+        bh=KwXWC0cRbxqx9RVPgAI5EgVNDjXauF/TZZ3h50Z9Sz4=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=q1a4zDrfkZlD1JDSL/Yuvi3cVApkriFFhfjtKiLsmM3d23zYJ2hcbAcKEmBJJ4IGj
+         PvJ07OJC+n7tAnqDM6tCiWlp81kcMZrytjF7SKeJZAICmw1+jNTxqV8ae3BgFw1mwL
+         r5kMg/Ygh+4KKlb+AHWkNVCn7P9jrTr+JeafyZtdeRDJZP1mm7KxhEp4gOwNr3zNui
+         ifI3QEf489x8ATPggWg6V9WEPP5hTbfNwPbCXT3pOKK0S2IhJOq1/ASviGd68JMAL+
+         muGkoMs2P0WY7nU6rmcJ8Rs+QKIszw5/t56+k5jyJKBslMgRved7oaLZ0l5bXp9WIY
+         Gz2itMHhl0OhA==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 7D128E5869F;
+        Sat,  5 Feb 2022 17:29:26 +0000 (UTC)
+Subject: Re: [GIT PULL] iomap: fixes for 5.17-rc3
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <20220205024613.GV8313@magnolia>
+References: <20220205024613.GV8313@magnolia>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20220205024613.GV8313@magnolia>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/iomap-5.17-fixes-1
+X-PR-Tracked-Commit-Id: ebb7fb1557b1d03b906b668aa2164b51e6b7d19a
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 524446e2179855534b425647dfc250757905aad8
+Message-Id: <164408216650.7836.5124902560305896166.pr-tracker-bot@kernel.org>
+Date:   Sat, 05 Feb 2022 17:29:26 +0000
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        david@fromorbit.com, linux-kernel@vger.kernel.org,
+        sandeen@sandeen.net, hch@lst.de
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+The pull request you sent on Fri, 4 Feb 2022 18:46:13 -0800:
 
-In xfs_fs_reconfigure, check the return value from sync_filesystem and
-fail the remount if there was an internal error.
+> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/iomap-5.17-fixes-1
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/xfs_super.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/524446e2179855534b425647dfc250757905aad8
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 4c0dee78b2f8..5f3781879c63 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1831,7 +1831,9 @@ xfs_fs_reconfigure(
- 	if (error)
- 		return error;
- 
--	sync_filesystem(mp->m_super);
-+	error = sync_filesystem(mp->m_super);
-+	if (error)
-+		return error;
- 
- 	/* inode32 -> inode64 */
- 	if (xfs_has_small_inums(mp) && !xfs_has_small_inums(new_mp)) {
+Thank you!
+
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
