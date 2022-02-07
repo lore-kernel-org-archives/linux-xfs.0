@@ -2,50 +2,50 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 806C1C43217
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Feb 2022 07:16:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E788CC4707A
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Feb 2022 07:16:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232122AbiBGHPn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Feb 2022 02:15:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45838 "EHLO
+        id S239341AbiBGHQQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Feb 2022 02:16:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45852 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238419AbiBGG4r (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Feb 2022 01:56:47 -0500
+        with ESMTP id S238449AbiBGG4t (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Feb 2022 01:56:49 -0500
 Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14BE6C043184;
-        Sun,  6 Feb 2022 22:56:47 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54309C043181;
+        Sun,  6 Feb 2022 22:56:49 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1644217006; x=1675753006;
+  t=1644217009; x=1675753009;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=TUe9FJuEf7BWKrxSIxqPYK0eG0nCVdO3BScCuHtRrAI=;
-  b=Ym+CDPpvZ5IzH5rFIajaYudXMjwDKGMM9kHbLc0gXPOVfXP39ZaTAtBu
-   FJJV3sE3yJJXckoyXDPtNJ3a1VbLIHaKRfndfSOY6a9Bm9igWeZrzEWrB
-   Bvkb2r9BMES35OZp6moF8pIWZkszfZyiq0e0fp4TPGi6gAE/Gfb6vXmyo
-   qQAYBepoyawWMTl/9GQo4GQ3aDQWOpxzBMS54ZlOPGYJmTpdVfLWm1CKW
-   5yaW6Xmb6Mk7aiH8SEMgoA1yZwdLzCruzMjtqb1Prnf8CMcmwRLLHQ/jv
-   w9uH1toR7LwNCS7wlpXsJWiXf/FtADh8oHG7cK4xsi00NjAz6lNOaVzqo
+  bh=dqFAptI4CAvK6M8wR+plx0XzaNREix5nWvG4orfRMAg=;
+  b=SIq6/T+JoZShEbAkQdqJFxjnvH6upGztAaGudqDyfUY2xg1eZTx9ZdjL
+   r0Vcp9YW0AytAVzyrlYVMMkgDDu9rfpKoCPGo7OQHuhqhsLPZnmU6XDkB
+   L+zCHKxYjRdMFYt+3viXYSKZAlKMX1giK8MCXusaYHM0L/DxvCylMjihf
+   0zy4gXnYhOfFq/QytwnmxWcr76gZFyv1vN+CeiftB16d0GKXylsRG8EJA
+   Wlud065/gZn/u/yarzM8T3MMoLMEX19ghLJqQU+PdV+OtmDqfuSwrzY/Y
+   DFUuAE2qxxnrHYavaAVvhQqFqC6sk7VIj2IYWNYbpOgcyYdvxjCejyyso
    A==;
 X-IronPort-AV: E=Sophos;i="5.88,349,1635177600"; 
-   d="scan'208";a="192305057"
+   d="scan'208";a="192305059"
 Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 07 Feb 2022 14:55:43 +0800
-IronPort-SDR: 2MREi+8FS5XRvb3YPDJ5j/wO3grSW6mB+2WMcjsGBY/pQaU3yzAmoeNbV3Pj2+i2qlaofwk7e8
- 76r8KZmpc8++CoxqPpiG/eAph4ERjp+COLKBhG0aS1fzXtm7cktlJi7IfF6idMTg7I0IU5k3Af
- Xr25E67rV/6U+5ljJ1o/8mL+HfKLjoD8gunqZX5FB01CzP9h6KMhdQvgVcsseCvD5bUsEl/RFp
- O0EXiKOZ2Wdwcs06SSKQwrRVcHqnar9oWn295Y+0sl7TQ0o5/2oWA0c4E7l5h9LcYRjhZR98IT
- sHQf/4rnabU5nSbbXQa4B3d4
+  by ob1.hgst.iphmx.com with ESMTP; 07 Feb 2022 14:55:46 +0800
+IronPort-SDR: Ogu9eFOyBtg9dM6EsmEJAQVPIZxWwTlEWDq8aR6bJLyHxQPyx6S5wpqZiXuVZz5gCks5KQizTI
+ xK0SPj/lvtkaadNLDETbX6EMGyv5jrdvEwjVTLBcHWWnuxGLa5M1DWzhRspiD4hqCZ7ZJmhqKA
+ y9E2Ix6PRpzTvqo1z7Yot3Q0raSNY7w3hZ/Y/50BYaZfEIIxqjnVvHHvMPuljyNByWGsdtRgBN
+ m/yex7j3NjgODPN23en4Lfjk5QFIWPgKdpZPva/nA1HGZZ7mu6wbu+7XlM29fA0o77oTgzk7f8
+ Zfwo2yl/1iLoNjPs9cQkfMKD
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Feb 2022 22:28:45 -0800
-IronPort-SDR: e1JXFxzveIsv04C7p2hz7i13/BR9GkuZBcQITXqrNrhqTj1THm4SleplX5Eb1I400adAe5aLTE
- KaGJNw1tq/uHEGLXPQA8OJuDs5uNz+yK9dKVroSpuebwODf5+DadFfDkZpQ4Vte2NkeuRXhw2S
- YHdbQsE3cWDcS/RpS3audoHqSV8wA9gEhzhheDfOKnpESz1nP6bwcxooaN2G9HHjmy6/P5qpmq
- JhK1QOCFpedTTAzZf2DO1IRFK/hFo0Ie+RRfKHvpaHqmLebUGpkZ8IKyLowwQwwgQtrZR+8+hI
- xXE=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Feb 2022 22:28:48 -0800
+IronPort-SDR: 7rp953d7QjEFNKLqgIeM3C8qjiiemF4hvgK0BB+vqRPd2D0tvrzCj4GySzcfK3s/k2xLDs/DLr
+ H4bFH1Kze61TgAZdKyKVCZYvLuvbyQuPKt4TKazw0F5hPc94koKnsXP1igH9/dneEA2S0NUghG
+ 7kzZODIulF2osHtXH6vDK4vemqWEjjc/GrVJ8x0ECOAiuEPukD7r8PUafasNNW1AVy4ILg8Rh5
+ iBhYWfq61Vz05rYIcHI1pBoUn7BJd/b2z4XN79NKZ0SpJuLO55FsLvjn5b5aIPdOoLHE2j9jcb
+ ECU=
 WDCIronportException: Internal
 Received: from shindev.dhcp.fujisawa.hgst.com (HELO shindev.fujisawa.hgst.com) ([10.149.52.173])
-  by uls-op-cesaip01.wdc.com with ESMTP; 06 Feb 2022 22:55:44 -0800
+  by uls-op-cesaip01.wdc.com with ESMTP; 06 Feb 2022 22:55:46 -0800
 From:   Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
 To:     fstests@vger.kernel.org, linux-btrfs@vger.kernel.org
 Cc:     linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
@@ -53,9 +53,9 @@ Cc:     linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Subject: [PATCH 1/7] common/rc: fix btrfs mixed mode usage in _scratch_mkfs_sized
-Date:   Mon,  7 Feb 2022 15:55:35 +0900
-Message-Id: <20220207065541.232685-2-shinichiro.kawasaki@wdc.com>
+Subject: [PATCH 3/7] ext4/021: check _scratch_mkfs_sized return code
+Date:   Mon,  7 Feb 2022 15:55:37 +0900
+Message-Id: <20220207065541.232685-4-shinichiro.kawasaki@wdc.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220207065541.232685-1-shinichiro.kawasaki@wdc.com>
 References: <20220207065541.232685-1-shinichiro.kawasaki@wdc.com>
@@ -65,38 +65,34 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The helper function _scratch_mkfs_sized needs a couple of improvements
-for btrfs. At first, the function adds --mixed option to mkfs.btrfs when
-the filesystem size is smaller then 256MiB, but this threshold is no
-longer correct and it should be 109MiB. Secondly, the --mixed option
-shall not be specified to mkfs.btrfs for zoned devices, since zoned
-devices does not allow mixing metadata blocks and data blocks.
+The test cases ext4/021 calls _scratch_mkfs before _scratch_mkfs_sized,
+and does not check return code of _scratch_mkfs_sized. Even if
+_scratch_mkfs_sized failed, _scratch_mount after it cannot detect the
+sized mkfs failure because _scratch_mkfs already created a file system
+on the device. This results in unexpected test condition.
+
+To avoid the unexpected test condition, check return code of
+_scratch_mkfs_sized.
 
 Suggested-by: Naohiro Aota <naohiro.aota@wdc.com>
 Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
 ---
- common/rc | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ tests/ext4/021 | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/common/rc b/common/rc
-index b3289de9..eb2493d1 100644
---- a/common/rc
-+++ b/common/rc
-@@ -1075,10 +1075,10 @@ _scratch_mkfs_sized()
- 		;;
- 	btrfs)
- 		local mixed_opt=
--		# minimum size that's needed without the mixed option.
--		# Ref: btrfs-prog: btrfs_min_dev_size()
--		# Non mixed mode is also the default option.
--		(( fssize < $((256 * 1024 *1024)) )) && mixed_opt='--mixed'
-+		# Mixed option is required when the filesystem size is small and
-+		# the device is not zoned. Ref: btrfs-progs: btrfs_min_dev_size()
-+		(( fssize < $((109 * 1024 * 1024)) )) &&
-+			! _scratch_btrfs_is_zoned && mixed_opt='--mixed'
- 		$MKFS_BTRFS_PROG $MKFS_OPTIONS $mixed_opt -b $fssize $SCRATCH_DEV
- 		;;
- 	jfs)
+diff --git a/tests/ext4/021 b/tests/ext4/021
+index 62768c60..a9277abf 100755
+--- a/tests/ext4/021
++++ b/tests/ext4/021
+@@ -24,7 +24,7 @@ _scratch_unmount
+ 
+ # With 4k block size, this amounts to 10M FS instance.
+ fssize=$((2560 * $blocksize))
+-_scratch_mkfs_sized $fssize >> $seqres.full 2>&1
++_scratch_mkfs_sized $fssize >> $seqres.full 2>&1 || _fail "mkfs failed"
+ _require_metadata_journaling $SCRATCH_DEV
+ 
+ offset=0
 -- 
 2.34.1
 
