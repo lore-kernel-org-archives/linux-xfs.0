@@ -2,50 +2,50 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1063BC4707E
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EF64C35273
 	for <linux-xfs@archiver.kernel.org>; Mon,  7 Feb 2022 07:16:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240145AbiBGHQS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Feb 2022 02:16:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45870 "EHLO
+        id S240437AbiBGHQT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Feb 2022 02:16:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45914 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238533AbiBGG4v (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Feb 2022 01:56:51 -0500
+        with ESMTP id S238631AbiBGG45 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Feb 2022 01:56:57 -0500
 Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 587C5C043184;
-        Sun,  6 Feb 2022 22:56:50 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4DBA0C043184;
+        Sun,  6 Feb 2022 22:56:55 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1644217010; x=1675753010;
+  t=1644217015; x=1675753015;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=d4ENreMGrlKCk5cIjSx96VRXwooXyBj4UXgKGLLw7K0=;
-  b=bLbm+UA3QjgYnLrvUfzpVCVOqHuSFFrjnV0WHRyEoviA95VBwIseOam3
-   kbFSjmxYyA3zgsPJrJpzzogD4W9/RzCG9Oc7zcHsY6Rl2ulRIZ6+dDu8+
-   55NtmkOF5b6ggrelNgxTCR118Nf3O8IbUu5zskWaOnlMDr1UQU7yXqVre
-   BG3OX9ngixALOvpYtirelMyrSFKSpGx6GJst5RsNUj2PqJ7vCS57Y+yto
-   jMD/tf52ZMlDZWBVvYoVw8QORpRk2Hcf4PDEV12vdPz5/fL7hd4eG3ffR
-   Tdb9oIeRiW8uzda2YTXmK7tKx+DCb6IbJbgrl0YBzk6QXOtaCyl8TzEX0
-   g==;
+  bh=78Zs28KpKxQ8bPUPZ5jK1PRmnWo6oej03te2uWqoGL8=;
+  b=LvJJWJD1fiCvDKTxHbtlVXSoTOLhD9SQgFNpO7+NMRUwRjxVq4DidYtX
+   jKBOsI8plwoNyNrg4MLxPr8IZgzI+8ow4UKlGsBD26vciiqpp48oO4WL6
+   kClafmIZAlEK++btL8P94XHEW9g6dAtIjbBUshLd3bQPtwhLywMPSyfPf
+   M4cwZ8HUcWOafGStVFr78oJv28dH8fEroHCbgcdP4lKr9x5qehII/o9ov
+   m82XHTNnEhjGzAdT6RCw5kQAARW36SyGB9LhAfp1N3E2lUQXfacnBaUIE
+   zK2kLmGSMVOq5JqtfhC3vnWbNrbcFlTEJZMNDz6+VYNMLrhy6+ZjHkJn2
+   Q==;
 X-IronPort-AV: E=Sophos;i="5.88,349,1635177600"; 
-   d="scan'208";a="192305058"
+   d="scan'208";a="192305071"
 Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 07 Feb 2022 14:55:44 +0800
-IronPort-SDR: AzHJ6gb0GNt+dfP9Spn3Ih6ZsGdIJG2OFuQ7GIAjpgYp7Od9R8Jlis2RbaEsAedP+V2SMkAlr5
- mxjLUOeig/KWg7WQsrvQcCPL2b+OQmue51j3IyabafNvtjnySRPxAOX4v+dMEUUYHtITjuCx7z
- +WRFRVpgO99X7CeKV6/CbDpzG+M3JbENGomnNjFSZGRWkyS5xy0oy7VWFrhuOnfAoshmdcnVJJ
- JVRZipFVlmpd2Z+Z+wcat+Qi4Izg2LTYtHKUaDYCeqZQvxo4R6/7oiQ9BBtkXoxgIa6fPpJ7oo
- fCGwkB6kR1w7RhJQgx2N8fOb
+  by ob1.hgst.iphmx.com with ESMTP; 07 Feb 2022 14:55:51 +0800
+IronPort-SDR: EMJgNkMWnFfkl8IJ5MjTea6OkFCwZjeZTatf/gXYHTpkC9JCNzxI4Ha6HvoqCtZ4xswEKbqj23
+ gOkPz2nrGws7WoeU84Ba5ndNmcRQqxez8XGl38Q3wMbaCcbhvK7U7kgUPGXvfVQT3OU8zVGkvO
+ Re8BSBoABIx7Em0DZKffm+AlAYPibJS4mEvXLkfGHeCGsc4ImWz9nihNxL3NPVNsyw/2tsavNG
+ X1dy/r/qsBmay03a6U62wNrOpVl7Z/gc+Xc7fKnPgPoPMlSGxEkFC9my4To9AtZp0xqY5yTJr1
+ GiBn0nosIprTflDJEDTmFNId
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Feb 2022 22:28:46 -0800
-IronPort-SDR: JlXGmo5R+Rrf+nwIvfXNcaofNNbbLBybjeVFPFgCsGHnHQqYSyTQWkz2QfCwaXHqTznXdh9WZJ
- UH5PFq8fTrULCAh4VanxcswQOq5VyruByqfZHz0t1fqMLU9koybaBuJLLFmkrA92+s+IhzPWPp
- vyJFcsEUAcXuTMxQYJOqxEuPRyjbpvY4/9fyyxj+hqeW3MadbQ0Np+goQYBKxvf3fBQj77Ukr6
- 9TojSxEw+WqoshTtevL/qkZ4LYscIlyAeoRGS299903p1Yz4d/rDKzeg1EeRgVoPv9OMmJly7Q
- Ke0=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Feb 2022 22:28:53 -0800
+IronPort-SDR: GMWIEtGmlMxmFLTe4Rb5AN6uU0cHMtnWRJhC+waZTS9hy7Au4NwNulNQZKvFrvlN26Xo4IMdDy
+ MfstK1BTqaJG3JE0Eu8p5GKbtah5dU+1qYVVwMLFrITB+N+ppNtF/diabefS9ifyGhcv8wKFy2
+ kWd7KpVTJFwYJX4ZSmHIPN4nQF/VAeh6VvJtM1lCoMgCOGfqp77sq1Npd81CHy5mbf7ZL2pQEo
+ HPOHRLUN1bRh9lA+pJ/jQdFRBUYrK4NUM8jW33EdxY6zfw3+rgV2ZNqY6mMX6sKyH4EDURkSQ6
+ gyA=
 WDCIronportException: Internal
 Received: from shindev.dhcp.fujisawa.hgst.com (HELO shindev.fujisawa.hgst.com) ([10.149.52.173])
-  by uls-op-cesaip01.wdc.com with ESMTP; 06 Feb 2022 22:55:45 -0800
+  by uls-op-cesaip01.wdc.com with ESMTP; 06 Feb 2022 22:55:52 -0800
 From:   Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
 To:     fstests@vger.kernel.org, linux-btrfs@vger.kernel.org
 Cc:     linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
@@ -53,9 +53,9 @@ Cc:     linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Subject: [PATCH 2/7] generic/{171,172,173,174,204}: check _scratch_mkfs_sized return code
-Date:   Mon,  7 Feb 2022 15:55:36 +0900
-Message-Id: <20220207065541.232685-3-shinichiro.kawasaki@wdc.com>
+Subject: [PATCH 7/7] generic/204: do xfs unique preparation only for xfs
+Date:   Mon,  7 Feb 2022 15:55:41 +0900
+Message-Id: <20220207065541.232685-8-shinichiro.kawasaki@wdc.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220207065541.232685-1-shinichiro.kawasaki@wdc.com>
 References: <20220207065541.232685-1-shinichiro.kawasaki@wdc.com>
@@ -65,92 +65,65 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The test cases generic/{171,172,173,174,204} call _scratch_mkfs before
-_scratch_mkfs_sized, and they do not check return code of
-_scratch_mkfs_sized. Even if _scratch_mkfs_sized failed, _scratch_mount
-after it cannot detect the sized mkfs failure because _scratch_mkfs
-already created a file system on the device. This results in unexpected
-test condition of the test cases.
-
-To avoid the unexpected test condition, check return code of
-_scratch_mkfs_sized in the test cases.
+The test case generic/204 formats the scratch device to get block size
+as a part of preparation. However, this preparation is required only for
+xfs. To simplify preparation for other filesystems, do the preparation
+only for xfs.
 
 Suggested-by: Naohiro Aota <naohiro.aota@wdc.com>
 Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
 ---
- tests/generic/171 | 2 +-
- tests/generic/172 | 2 +-
- tests/generic/173 | 2 +-
- tests/generic/174 | 2 +-
- tests/generic/204 | 3 ++-
- 5 files changed, 6 insertions(+), 5 deletions(-)
+ tests/generic/204 | 23 ++++++++++++++---------
+ 1 file changed, 14 insertions(+), 9 deletions(-)
 
-diff --git a/tests/generic/171 b/tests/generic/171
-index fb2a6f14..f823a454 100755
---- a/tests/generic/171
-+++ b/tests/generic/171
-@@ -42,7 +42,7 @@ sz_bytes=$((nr_blks * 8 * blksz))
- if [ $sz_bytes -lt $((32 * 1048576)) ]; then
- 	sz_bytes=$((32 * 1048576))
- fi
--_scratch_mkfs_sized $sz_bytes >> $seqres.full 2>&1
-+_scratch_mkfs_sized $sz_bytes >> $seqres.full 2>&1 || _fail "mkfs failed"
- _scratch_mount >> $seqres.full 2>&1
- rm -rf $testdir
- mkdir $testdir
-diff --git a/tests/generic/172 b/tests/generic/172
-index ab5122fa..383824b9 100755
---- a/tests/generic/172
-+++ b/tests/generic/172
-@@ -40,7 +40,7 @@ umount $SCRATCH_MNT
- 
- file_size=$((768 * 1024 * 1024))
- fs_size=$((1024 * 1024 * 1024))
--_scratch_mkfs_sized $fs_size >> $seqres.full 2>&1
-+_scratch_mkfs_sized $fs_size >> $seqres.full 2>&1 || _fail "mkfs failed"
- _scratch_mount >> $seqres.full 2>&1
- rm -rf $testdir
- mkdir $testdir
-diff --git a/tests/generic/173 b/tests/generic/173
-index 0eb313e2..e1493278 100755
---- a/tests/generic/173
-+++ b/tests/generic/173
-@@ -42,7 +42,7 @@ sz_bytes=$((nr_blks * 8 * blksz))
- if [ $sz_bytes -lt $((32 * 1048576)) ]; then
- 	sz_bytes=$((32 * 1048576))
- fi
--_scratch_mkfs_sized $sz_bytes >> $seqres.full 2>&1
-+_scratch_mkfs_sized $sz_bytes >> $seqres.full 2>&1 || _fail "mkfs failed"
- _scratch_mount >> $seqres.full 2>&1
- rm -rf $testdir
- mkdir $testdir
-diff --git a/tests/generic/174 b/tests/generic/174
-index 1505453e..c7a177b8 100755
---- a/tests/generic/174
-+++ b/tests/generic/174
-@@ -43,7 +43,7 @@ sz_bytes=$((nr_blks * 8 * blksz))
- if [ $sz_bytes -lt $((32 * 1048576)) ]; then
- 	sz_bytes=$((32 * 1048576))
- fi
--_scratch_mkfs_sized $sz_bytes >> $seqres.full 2>&1
-+_scratch_mkfs_sized $sz_bytes >> $seqres.full 2>&1 || _fail "mkfs failed"
- _scratch_mount >> $seqres.full 2>&1
- rm -rf $testdir
- mkdir $testdir
 diff --git a/tests/generic/204 b/tests/generic/204
-index a3dabb71..b5deb443 100755
+index 40d524d1..ea267760 100755
 --- a/tests/generic/204
 +++ b/tests/generic/204
-@@ -35,7 +35,8 @@ _scratch_mkfs 2> /dev/null | _filter_mkfs 2> $tmp.mkfs > /dev/null
- [ $FSTYP = "xfs" ] && MKFS_OPTIONS="$MKFS_OPTIONS -l size=16m -i maxpct=50"
+@@ -16,17 +16,18 @@ _cleanup()
+ 	sync
+ }
  
+-# Import common functions.
+-. ./common/filter
+-
+ # real QA test starts here
+ _supported_fs generic
+ 
+ _require_scratch
+ 
+-# get the block size first
+-_scratch_mkfs 2> /dev/null | _xfs_filter_mkfs 2> $tmp.mkfs > /dev/null
+-. $tmp.mkfs
++dbsize=4096
++isize=256
++if [ $FSTYP = "xfs" ]; then
++	# get the block size first
++	_scratch_mkfs 2> /dev/null | _xfs_filter_mkfs 2> $tmp.mkfs > /dev/null
++	. $tmp.mkfs
++fi
+ 
+ # For xfs, we need to handle the different default log sizes that different
+ # versions of mkfs create. All should be valid with a 16MB log, so use that.
+@@ -37,11 +38,15 @@ _scratch_mkfs 2> /dev/null | _xfs_filter_mkfs 2> $tmp.mkfs > /dev/null
  SIZE=`expr 115 \* 1024 \* 1024`
--_scratch_mkfs_sized $SIZE $dbsize 2> /dev/null > $tmp.mkfs.raw
-+_scratch_mkfs_sized $SIZE $dbsize 2> /dev/null > $tmp.mkfs.raw \
-+	|| _fail "mkfs failed"
- cat $tmp.mkfs.raw | _filter_mkfs 2> $tmp.mkfs > /dev/null
+ _scratch_mkfs_sized $SIZE $dbsize 2> /dev/null > $tmp.mkfs.raw \
+ 	|| _fail "mkfs failed"
+-cat $tmp.mkfs.raw | _xfs_filter_mkfs 2> $tmp.mkfs > /dev/null
++
++if [ $FSTYP = "xfs" ]; then
++	cat $tmp.mkfs.raw | _xfs_filter_mkfs 2> $tmp.mkfs > /dev/null
++	# Source $tmp.mkfs to get geometry
++	. $tmp.mkfs
++fi
++
  _scratch_mount
  
+-# Source $tmp.mkfs to get geometry
+-. $tmp.mkfs
+ 
+ # fix the reserve block pool to a known size so that the enospc calculations
+ # work out correctly. Space usages is based 22500 files and 1024 reserved blocks
 -- 
 2.34.1
 
