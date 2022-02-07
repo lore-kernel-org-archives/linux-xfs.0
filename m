@@ -2,978 +2,229 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01CDEC35272
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Feb 2022 07:16:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C9E8C4332F
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Feb 2022 10:05:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240306AbiBGHQS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Feb 2022 02:16:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45922 "EHLO
+        id S234561AbiBGKC3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Feb 2022 05:02:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37400 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238633AbiBGG45 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Feb 2022 01:56:57 -0500
-Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69A60C043185;
-        Sun,  6 Feb 2022 22:56:55 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1644217015; x=1675753015;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=jrDb7WChrcBycb7ZvR9SK9nmp/V2FKFvMxreqrtzbZQ=;
-  b=rORWNpV+r6DwTWHBnwgYAubljajOABCd4JirmUxQfqSXlhcPiXyDzk09
-   6rSJeY1RlBicqIumcHY3QEJg7VAv2yewYd5La8nHENUj4OZJrdil3kUay
-   DA4Mc39eM2M172WF48I1N2VnTUSchJJ6CKxxq70tS8IxdNe/lHBMIaylx
-   aWmWHAje1jdJU2UfsdroFu49jkdR8tauVzrjtUxm/64FpcsQNl2A867i4
-   G9/nsyydtp9JKMNZut8fULLEgYYXF47074BuwT4CJqMwQKDAsYBffP04M
-   P52UoL8ERtIAxMhrccLhFQw2RYi9ad224WWAE6gqOwIRxJ6ssKOerwQT5
-   w==;
-X-IronPort-AV: E=Sophos;i="5.88,349,1635177600"; 
-   d="scan'208";a="192305062"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 07 Feb 2022 14:55:49 +0800
-IronPort-SDR: kislRi1adCRXH366oXDUF8AV51NHPvzAF1H2TlnzwEe35vjX5Jpmy4ocuYZjjTr9aGTV4lOIgu
- ggPnWt0DTf/WCm8zkRt9038HijVfAyhttUM91nZNs5Ah4zu6yY8s+ZzpppTd3qNRuIviiWY/yE
- IqO66ONwdv2xfdUV8z6GLTJ8//u6ZRQoKGJYP3/NEDSSfFrMOMLEeJP0/yruARHKUTE8zAK8yN
- IKUAkKuxMsXaBWpHz44QIl0v2wyjqA4W2aYOzxucuD73II4tjIZjakENQs68wVBvptGZmrLKuy
- OJ1UcnaF5i/YZNPrAwuN+sR8
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Feb 2022 22:28:50 -0800
-IronPort-SDR: 9xLGLphWiZSQ1s9csUnQEA7JvByavxivlnavIcsiMtXkYphGubftaKu3oDEuqXT+PA++EF1cth
- xHT8dIlSt8CCxxJEiyFLd8q5H+EhVUYsCLg889LX9g53i/JkJWgOa3cAhHptp28JN6AUib1nOF
- qkSlOiYMnYTCNqPoJqtBsD05GPOQGx9zi9Ou+wztlUla555IvM19VPX3h+sa6SKnpIEbEnbpk6
- 0BcIL7BSQVurfVT+Hd2RifUcXzBfzf2gVHlZFiX4brZY4UE2EptJdCbEupOeWRP8KjD8bRAT/T
- HGY=
-WDCIronportException: Internal
-Received: from shindev.dhcp.fujisawa.hgst.com (HELO shindev.fujisawa.hgst.com) ([10.149.52.173])
-  by uls-op-cesaip01.wdc.com with ESMTP; 06 Feb 2022 22:55:49 -0800
-From:   Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-To:     fstests@vger.kernel.org, linux-btrfs@vger.kernel.org
-Cc:     linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        Naohiro Aota <naohiro.aota@wdc.com>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Subject: [PATCH 5/7] common: rename _filter_mkfs to _xfs_filter_mkfs
-Date:   Mon,  7 Feb 2022 15:55:39 +0900
-Message-Id: <20220207065541.232685-6-shinichiro.kawasaki@wdc.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220207065541.232685-1-shinichiro.kawasaki@wdc.com>
-References: <20220207065541.232685-1-shinichiro.kawasaki@wdc.com>
+        with ESMTP id S245362AbiBGJrJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Feb 2022 04:47:09 -0500
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7156C043181
+        for <linux-xfs@vger.kernel.org>; Mon,  7 Feb 2022 01:47:07 -0800 (PST)
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 2178ACXN009053;
+        Mon, 7 Feb 2022 09:47:05 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=references : from :
+ to : cc : subject : in-reply-to : message-id : date : content-type :
+ mime-version; s=corp-2021-07-09;
+ bh=cZ+8vwrs2tYkXOc6Z8SBn8An+e+pQ+nZqJ8JklQ1lBU=;
+ b=bbt5xsK8rSDUUO7VYB9BxbEiQHnxzdZD6nK5vIh1ArfMsT/1IQiaqJMWCmOw+jjf70R0
+ ZedzINKZNiW1jLX6HTJRwobsxvPfz9sX4T8rfGQl2kAxvzQZXswYrsuDClAwPZIef1vn
+ rAtNokLlOraGl1PRBeMDrjfsANNhzWwAZPcf0cQIj/dZRNYyWiaoOuwrNfsgAVkd+qiO
+ s7PweqIrDG/YE6cJBkyD+jiHSizq+ERX/aq2WWnck/MNxhpI7yARG9DnNDuqPQR1NMGj
+ 3Kwwdb8ke8Rx4egg+T03z+mi9ksKd0Z8ro0TOwkR0LSDDP3Uj7GZZuW8GjhlSqHonq6G Gg== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3e1fu2npef-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 07 Feb 2022 09:47:04 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 2179jLAA126234;
+        Mon, 7 Feb 2022 09:47:03 GMT
+Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2169.outbound.protection.outlook.com [104.47.55.169])
+        by userp3020.oracle.com with ESMTP id 3e1jpn79vq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 07 Feb 2022 09:47:02 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=ci6jy35yndPKsbLCvucHiGwlTPq64jBcF9BAdSnZ93jmma/zcmT8eznaeAGsUEUKH7CFBUUbxL8rf/moVG2t9p6Lc0/Ms18OqXCYb9Atz5OtQ+1184tVniV4fWyHxjRGRBKwpkNBoG6PwwO/SCOqWWlleDnci4Lh4nD5HHsVQc+qQxnJ+AOnDHCNKYtwBoDrZ/m6JRqu8FEULFHR8YpMue8Wu59p9QcwFrpPTYooiFJ0tmStJM57o/DhQWVeVRqEHCIzh1S8DdRARngdjKBlY4rLOwtodOh653l/9IJNdmnm2MNn9v+ACoYoHCemBCpGAihK5lT/k62KE/Dk+55VpQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=cZ+8vwrs2tYkXOc6Z8SBn8An+e+pQ+nZqJ8JklQ1lBU=;
+ b=eZYHRhKRKTpq8yd/C5k/V7vCIPowO7jkdjzfDLbd47ABtnfs8qH+zwdbS+glc4IM/13YhnRHQATs9zto67S11fujgt8kfFfRuvqXNyMvBko5oUJVla4uqIeo1uwRXi9+v5QJXLTjmcW7zvExojW8kP3DFM8Dke4q2Py+7vO9aX6Eku4nxFD4OW87WnVeru4yDocNnjE9yIQpqWndCtK3brOgk9bK+/im97mSDDWkGuwO3M0QWnJW7PECjouX1ol39V2KeQ81tocSg1y9sRIXu4ronT2fKKKSiP2qw5PJ2Ae6shlxJofFAqXcWlfkZz2M7yk5z7BxCPXMxFN9U/63Cg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=cZ+8vwrs2tYkXOc6Z8SBn8An+e+pQ+nZqJ8JklQ1lBU=;
+ b=MlREyKf9I92eR6oG6OD9f+vee8jHoCz/7a0L1TZNEBiO1WvgWI8Sh+IF8mqUtiYL0Hb5NU/ssnbZRC8sMBvFMypAnlfF8Dn2nRxnl6KvdSdd5NgBnysT4Lvjqry/s8yniHhpHR2e4G0Jc+ZpaDHapQfRlU/TNZ35ODuNev3H6rI=
+Received: from SA2PR10MB4587.namprd10.prod.outlook.com (2603:10b6:806:114::12)
+ by BY5PR10MB4355.namprd10.prod.outlook.com (2603:10b6:a03:20a::19) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4951.11; Mon, 7 Feb
+ 2022 09:47:00 +0000
+Received: from SA2PR10MB4587.namprd10.prod.outlook.com
+ ([fe80::fc8e:7310:2762:be9e]) by SA2PR10MB4587.namprd10.prod.outlook.com
+ ([fe80::fc8e:7310:2762:be9e%5]) with mapi id 15.20.4951.018; Mon, 7 Feb 2022
+ 09:47:00 +0000
+References: <20220121051857.221105-1-chandan.babu@oracle.com>
+ <20220121051857.221105-15-chandan.babu@oracle.com>
+ <20220201192449.GB8338@magnolia>
+ <87o83jmg0a.fsf@debian-BULLSEYE-live-builder-AMD64>
+User-agent: mu4e 1.4.15; emacs 27.1
+From:   Chandan Babu R <chandan.babu@oracle.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
+Subject: Re: [PATCH V5 14/16] xfs: Enable bulkstat ioctl to support 64-bit
+ per-inode extent counters
+In-reply-to: <87o83jmg0a.fsf@debian-BULLSEYE-live-builder-AMD64>
+Message-ID: <87leynm2k3.fsf@debian-BULLSEYE-live-builder-AMD64>
+Date:   Mon, 07 Feb 2022 15:16:52 +0530
+Content-Type: text/plain
+X-ClientProxiedBy: TY2PR02CA0039.apcprd02.prod.outlook.com
+ (2603:1096:404:a6::27) To SA2PR10MB4587.namprd10.prod.outlook.com
+ (2603:10b6:806:114::12)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 6aec7452-b556-4b67-a143-08d9ea1ec97c
+X-MS-TrafficTypeDiagnostic: BY5PR10MB4355:EE_
+X-Microsoft-Antispam-PRVS: <BY5PR10MB4355FF3616AE93F03CE276A7F62C9@BY5PR10MB4355.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:8273;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: tSi/9zzNWn7lh0wk6HnzQTIaoVXTaAxwaZBnwdHtSyBBqrJ/GDmBKEOqG4YD5bQfnmCyjuBOtmdKYNcfMW0/NwkqliuOXJ3kYMKre7/ekl1tUDafH89lge5zvs3BEmzrXOcWe3LcnyBy2YpmRxWDlO3Rs3dbohLMHx6hRpUvP0ZIjHcbDbKWfuzmrNQ9IZcfhIg3jw16K32OIbkVQgZgYRze/0NJFhGt/JUqqpZKgby7wkMdIfhK74FPQMxbkfYGJgy/cWVEGF+/3m4g0kHA3G5iFogpmnpKoFgJUHm0BmfhYboGiTVeYGroUmGBC8KiILCAcR8R5DrO4XluZYlurihaUkPzS+siFC5ntqHZiVrNcyurcSQ5LMIWg6n0VBiaiUNyD2T/PvMuqvypSr445DnYmE6uqZMmY/Wb+Kgllz+U4/uHi5KnT8nuBriNhhtMVgdpKKn7j2yfl2uKIXxw0hFd87buYs84mgOBwnXkZ5+y5VekImHflMzd4LvQmDZLa65Z/swjxhvFxuvA3+DjBNWnE43NRoTApQVBh9tcLh8r9BmF2Dwd48QYAYp4w9GL05IlI5jYBc4djFRMVqDUDiSr2elTCJrVNlSBCEJ6TBAZc/26KS16kdHdIN4Nr7Pk5eq5JNE8whp4NNjFLCIYINBQMX91h35pkjQGvJepi5gznparZSCkJOmxXKkQxDCh5IEofNvpmd47A/oKWd2Gpw==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(7916004)(366004)(4326008)(186003)(26005)(5660300002)(33716001)(83380400001)(86362001)(66946007)(66476007)(66556008)(6486002)(8936002)(8676002)(9686003)(6512007)(6666004)(2906002)(6506007)(38350700002)(38100700002)(53546011)(52116002)(508600001)(316002)(6916009);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?iFv83ZoX6cl6GXPtTPWHzDZKLNc1QA0hwD2km82srNR9zpIBMGn4UeQRD5I6?=
+ =?us-ascii?Q?CFL4dDXPcSHf3v26E7p3XvNazRRTd8/eiAFlyNeYovoBSjlqAxrHHeVkBdS1?=
+ =?us-ascii?Q?lCon8GfK4MsQBUtoXpkZWxTyyRQxCeGeuGYfZDsV0+F+z3SRbxfu8Gt29jsC?=
+ =?us-ascii?Q?+GgIvwjD23l43TxHcYfWdSv92hakPADrAuEdZCG3swgo/h32EyMZ2JmE5D9+?=
+ =?us-ascii?Q?vXUdcaxxeLJnyTI5gadWYgLaoL1kuvJYNt8MT3pkw4PG6buyRNw4sQ8Bsiks?=
+ =?us-ascii?Q?A2AMVk07aIIMbntRHdIgKavzqmmxLGB8NpNBRTlwyP/jCXdUjeq+/e9GJqmK?=
+ =?us-ascii?Q?7Cp2KilqIrYgnxHxQTz1WK/4/gO/U5LP/wSh6kNWE6iZ7cbQtNNbATbGAkAS?=
+ =?us-ascii?Q?A/dgA3XVCsUdzZyiMwPA3swypon7mjTv9fuytdrj3T4GmUZAOIYm6iLqMwTv?=
+ =?us-ascii?Q?hHvzQhYZR2YxoV+6Dz7ndVoS4NWaL/Nync9lqLBJ5T6bh5tBF6jJXpMb0plm?=
+ =?us-ascii?Q?FEeZpQAku4lbpPsI0sI45Xd3+ZE73HUOBW8pZXEx8TdD674ZG8Gqtxvfiu9i?=
+ =?us-ascii?Q?pgaHbLhc+iKuwRuxkqKN9Cr9ZNNudTotAhw/mCKvbGkgioHJgtvZumHKn3eJ?=
+ =?us-ascii?Q?4sCIwEFbNUZQGBrwtPRZ5G6JALdGr6EcSd6FLGHrwGZHs1mT3he17b7thSA7?=
+ =?us-ascii?Q?6L4mcA37+KUSucK/RXw/ezpQW9MGNdtzTn5apvYf9KOOgnhEkPxEUGQ5AcZN?=
+ =?us-ascii?Q?YgAXLJrlaY6fMtEvhNzHhuOnjP91lm/gRb8yMEaT2hiHQ8/ThnwHzu4Od/+z?=
+ =?us-ascii?Q?N4wFuHLES3Cgr4zuVvuFoiHf5l/Rw47pbxnBZ+mrO6HEjXzMW7DqRjA4x+6C?=
+ =?us-ascii?Q?9yJLu3GnKpndGA+6Vmk/bvhy+iSa4h8EqpXcGNRIO6MM2IdA7DhqCS/S78tq?=
+ =?us-ascii?Q?vxGagFwZuCHQXhr0eye9dwrQUnVxgIle5LnVzzvvim94Lm/YDVPM3nNj//Zw?=
+ =?us-ascii?Q?G3JBeoioQxC6wdwd+p/EUFQnEV7uaFpHcn6Jyfmr5bKva9W2GmeU9c89bCbh?=
+ =?us-ascii?Q?Rdzt0sbilGu5rO2YeUlgW9cZGsTD6r3DgJAjJmCnqYcN3J6K5mzoaD4hgiix?=
+ =?us-ascii?Q?aRQEbcVcRdAwj/+CG6zJPXQLC+2fcxU5NA2JeC96SXUsVHRmNTScIdsyeDt5?=
+ =?us-ascii?Q?mmHLxrM9mmadAszcraWqvCeaEwfOqiekXBmNeFKrDnzGJN29kZK9oMBRaVmD?=
+ =?us-ascii?Q?aOAcFqmYmD7KTDVbdee0xWAptI11PwyIyVIYAKsPd/cwZGasOM/6qy5gezYU?=
+ =?us-ascii?Q?58KrsCFnJbyx5wD9D2xvti4cltvk/1bVjKTf01fwMd4GITNi/vrP4IIUEYIT?=
+ =?us-ascii?Q?50Z6t+D538hoNlbxGG9Ts80UOhlI7pK1N+li5fLcPhNWOByruLpQhSEhC3ot?=
+ =?us-ascii?Q?N6Sq1BtxymLqb+WzEvyqRTWKYMRvBl1jpdt1tbvZ8y+VcsjlJiAqpNAM/vsc?=
+ =?us-ascii?Q?/VdNdn7ECS3YrkMjnEV1sL/bd1q3XPS6UQHUk5Ff8YM2rgQIV66XvFEY2+ra?=
+ =?us-ascii?Q?R2W1+zYLDxifPAEApWDGjAtyCKEBPxg1AXbhNbVME5d4UVicy/1b9ltkCZ3J?=
+ =?us-ascii?Q?+hhpqiX9zesOXX7yOqaPoAk=3D?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6aec7452-b556-4b67-a143-08d9ea1ec97c
+X-MS-Exchange-CrossTenant-AuthSource: SA2PR10MB4587.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Feb 2022 09:47:00.2285
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: /pDC8iTpaCAmoAqTYZcYq7FxQTDq/l59aKkwblp+kcHaQ/gEUd/qcOatlrcGbtCeczbRiiAPj7oxTR5iCz382Q==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR10MB4355
+X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10250 signatures=673430
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 mlxscore=0 bulkscore=0
+ malwarescore=0 suspectscore=0 phishscore=0 adultscore=0 spamscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2201110000
+ definitions=main-2202070063
+X-Proofpoint-ORIG-GUID: 4vYDTXW0DcNbK8Dcrpcki_v_92H01h-V
+X-Proofpoint-GUID: 4vYDTXW0DcNbK8Dcrpcki_v_92H01h-V
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The helper function works only for xfs and used only for xfs except
-generic/204. Rename the function to clearly indicate that the function
-is only for xfs.
+On 07 Feb 2022 at 10:26, Chandan Babu R wrote:
+> On 02 Feb 2022 at 00:54, Darrick J. Wong wrote:
+>> On Fri, Jan 21, 2022 at 10:48:55AM +0530, Chandan Babu R wrote:
+>>> The following changes are made to enable userspace to obtain 64-bit extent
+>>> counters,
+>>> 1. Carve out a new 64-bit field xfs_bulkstat->bs_extents64 from
+>>>    xfs_bulkstat->bs_pad[] to hold 64-bit extent counter.
+>>> 2. Define the new flag XFS_BULK_IREQ_BULKSTAT for userspace to indicate that
+>>>    it is capable of receiving 64-bit extent counters.
+>>> 
+>>> Suggested-by: Darrick J. Wong <djwong@kernel.org>
+>>> Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
+>>> ---
+>>>  fs/xfs/libxfs/xfs_fs.h | 12 ++++++++----
+>>>  fs/xfs/xfs_ioctl.c     |  3 +++
+>>>  fs/xfs/xfs_itable.c    | 27 +++++++++++++++++++++++++--
+>>>  fs/xfs/xfs_itable.h    |  7 ++++++-
+>>>  fs/xfs/xfs_iwalk.h     |  7 +++++--
+>>>  5 files changed, 47 insertions(+), 9 deletions(-)
+>>> 
+>>> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+>>> index 42bc39501d81..4e12530eb518 100644
+>>> --- a/fs/xfs/libxfs/xfs_fs.h
+>>> +++ b/fs/xfs/libxfs/xfs_fs.h
+>>> @@ -393,7 +393,7 @@ struct xfs_bulkstat {
+>>>  	uint32_t	bs_extsize_blks; /* extent size hint, blocks	*/
+>>>  
+>>>  	uint32_t	bs_nlink;	/* number of links		*/
+>>> -	uint32_t	bs_extents;	/* number of extents		*/
+>>> +	uint32_t	bs_extents;	/* 32-bit data fork extent counter */
+>>>  	uint32_t	bs_aextents;	/* attribute number of extents	*/
+>>>  	uint16_t	bs_version;	/* structure version		*/
+>>>  	uint16_t	bs_forkoff;	/* inode fork offset in bytes	*/
+>>> @@ -402,8 +402,9 @@ struct xfs_bulkstat {
+>>>  	uint16_t	bs_checked;	/* checked inode metadata	*/
+>>>  	uint16_t	bs_mode;	/* type and mode		*/
+>>>  	uint16_t	bs_pad2;	/* zeroed			*/
+>>> +	uint64_t	bs_extents64;	/* 64-bit data fork extent counter */
+>>>  
+>>> -	uint64_t	bs_pad[7];	/* zeroed			*/
+>>> +	uint64_t	bs_pad[6];	/* zeroed			*/
+>>>  };
+>>>  
+>>>  #define XFS_BULKSTAT_VERSION_V1	(1)
+>>> @@ -484,8 +485,11 @@ struct xfs_bulk_ireq {
+>>>   */
+>>>  #define XFS_BULK_IREQ_SPECIAL	(1 << 1)
+>>>  
+>>> -#define XFS_BULK_IREQ_FLAGS_ALL	(XFS_BULK_IREQ_AGNO | \
+>>> -				 XFS_BULK_IREQ_SPECIAL)
+>>> +#define XFS_BULK_IREQ_NREXT64	(1 << 2)
+>>
+>> This needs a comment specifying the behavior of this flag.
+>>
+>> If the flag is set and the data fork extent count fits in both fields,
+>> will they both be filled out?
+>
+> If the flag is set, xfs_bulkstat->bs_extents64 field will be assigned the data
+> fork extent count and xfs_bulkstat->bs_extents will be set to 0
+> (xfs_bulkstat() allocates xfs_bstat_chunk->buf by invoking kmem_zalloc()).
+>
+> If the flag is not set, xfs_bulkstat->bs_extents field will be assigned the
+> data fork extent count and xfs_bulkstat->bs_extents64 will be set to 0.
+>
+>>
+>> If the flag is set but the data fork extent count only fits in
+>> bs_extents64, what will be written to bs_extents?
+>
+> bs_extents will be set to zero.
+>
+>>
+>> If the flag is not set and the data fork extent count won't fit in
+>> bs_extents, do we return an error value?  Fill it with garbage?
+>>
+>
+> In this case, we return -EOVERFLOW and the contents of bs_extents will be set
+> to zero. This happens because xfs_bulkstat() will return success even if
+> xfs_iwalk() returned an error provided that we already have collected details
+> about one more inodes. The next call to xfs_ioc_bulkstat() will start from the
+> problematic inode. Here we allocate xfs_bstat_chunk->buf using kmem_zalloc()
+> which zeroes the contents of the allocated memory and returns -EOVERFLOW to
+> userspace.
+>
 
-Suggested-by: Naohiro Aota <naohiro.aota@wdc.com>
-Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
----
- common/attr       | 2 +-
- common/filter     | 2 +-
- common/xfs        | 2 +-
- tests/generic/204 | 4 ++--
- tests/xfs/004     | 2 +-
- tests/xfs/007     | 2 +-
- tests/xfs/010     | 2 +-
- tests/xfs/013     | 2 +-
- tests/xfs/015     | 2 +-
- tests/xfs/016     | 2 +-
- tests/xfs/029     | 2 +-
- tests/xfs/030     | 2 +-
- tests/xfs/031     | 6 +++---
- tests/xfs/033     | 4 ++--
- tests/xfs/041     | 2 +-
- tests/xfs/044     | 2 +-
- tests/xfs/050     | 2 +-
- tests/xfs/052     | 2 +-
- tests/xfs/058     | 2 +-
- tests/xfs/067     | 2 +-
- tests/xfs/070     | 2 +-
- tests/xfs/071     | 2 +-
- tests/xfs/073     | 2 +-
- tests/xfs/076     | 2 +-
- tests/xfs/078     | 2 +-
- tests/xfs/092     | 2 +-
- tests/xfs/104     | 6 +++---
- tests/xfs/108     | 2 +-
- tests/xfs/109     | 2 +-
- tests/xfs/110     | 2 +-
- tests/xfs/111     | 2 +-
- tests/xfs/144     | 2 +-
- tests/xfs/153     | 2 +-
- tests/xfs/163     | 4 ++--
- tests/xfs/168     | 6 +++---
- tests/xfs/176     | 2 +-
- tests/xfs/178     | 2 +-
- tests/xfs/186     | 2 +-
- tests/xfs/189     | 2 +-
- tests/xfs/250     | 2 +-
- tests/xfs/259     | 2 +-
- tests/xfs/276     | 2 +-
- tests/xfs/279     | 2 +-
- tests/xfs/288     | 2 +-
- tests/xfs/292     | 4 ++--
- tests/xfs/299     | 4 ++--
- tests/xfs/335     | 2 +-
- tests/xfs/336     | 2 +-
- tests/xfs/337     | 2 +-
- tests/xfs/341     | 2 +-
- tests/xfs/342     | 2 +-
- tests/xfs/443     | 2 +-
- tests/xfs/448     | 2 +-
- tests/xfs/490     | 2 +-
- tests/xfs/502     | 2 +-
- tests/xfs/513     | 2 +-
- tests/xfs/530     | 2 +-
- tests/xfs/533     | 2 +-
- 58 files changed, 69 insertions(+), 69 deletions(-)
+Sorry, I forgot to mention that I will add the above data points as a comment
+before posting the next version of the patchset.
 
-diff --git a/common/attr b/common/attr
-index 35682d7c..964c790a 100644
---- a/common/attr
-+++ b/common/attr
-@@ -13,7 +13,7 @@ _acl_get_max()
- 		# CRC format filesystems have much larger ACL counts. The actual
- 		# number is into the thousands, but testing that meany takes too
- 		# long, so just test well past the old limit of 25.
--		$XFS_INFO_PROG $TEST_DIR | _filter_mkfs > /dev/null 2> $tmp.info
-+		$XFS_INFO_PROG $TEST_DIR | _xfs_filter_mkfs > /dev/null 2> $tmp.info
- 		. $tmp.info
- 		rm $tmp.info
- 		if [ $_fs_has_crcs -eq 0 ]; then
-diff --git a/common/filter b/common/filter
-index c3db7a56..24fd0650 100644
---- a/common/filter
-+++ b/common/filter
-@@ -117,7 +117,7 @@ _filter_date()
- 
- # prints filtered output on stdout, values (use eval) on stderr
- # Non XFS filesystems always return a 4k block size and a 256 byte inode.
--_filter_mkfs()
-+_xfs_filter_mkfs()
- {
-     case $FSTYP in
-     xfs)
-diff --git a/common/xfs b/common/xfs
-index 713e9fe7..3435c706 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -832,7 +832,7 @@ _require_scratch_xfs_shrink()
- 	_require_scratch
- 	_require_command "$XFS_GROWFS_PROG" xfs_growfs
- 
--	_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs >/dev/null
-+	_scratch_mkfs_xfs | _xfs_filter_mkfs 2>$tmp.mkfs >/dev/null
- 	. $tmp.mkfs
- 	_scratch_mount
- 	# here just to check if kernel supports, no need do more extra work
-diff --git a/tests/generic/204 b/tests/generic/204
-index b5deb443..40d524d1 100755
---- a/tests/generic/204
-+++ b/tests/generic/204
-@@ -25,7 +25,7 @@ _supported_fs generic
- _require_scratch
- 
- # get the block size first
--_scratch_mkfs 2> /dev/null | _filter_mkfs 2> $tmp.mkfs > /dev/null
-+_scratch_mkfs 2> /dev/null | _xfs_filter_mkfs 2> $tmp.mkfs > /dev/null
- . $tmp.mkfs
- 
- # For xfs, we need to handle the different default log sizes that different
-@@ -37,7 +37,7 @@ _scratch_mkfs 2> /dev/null | _filter_mkfs 2> $tmp.mkfs > /dev/null
- SIZE=`expr 115 \* 1024 \* 1024`
- _scratch_mkfs_sized $SIZE $dbsize 2> /dev/null > $tmp.mkfs.raw \
- 	|| _fail "mkfs failed"
--cat $tmp.mkfs.raw | _filter_mkfs 2> $tmp.mkfs > /dev/null
-+cat $tmp.mkfs.raw | _xfs_filter_mkfs 2> $tmp.mkfs > /dev/null
- _scratch_mount
- 
- # Source $tmp.mkfs to get geometry
-diff --git a/tests/xfs/004 b/tests/xfs/004
-index f18316b3..5e83fff9 100755
---- a/tests/xfs/004
-+++ b/tests/xfs/004
-@@ -21,7 +21,7 @@ _cleanup()
- _populate_scratch()
- {
- 	echo "=== mkfs output ===" >>$seqres.full
--	_scratch_mkfs_xfs | tee -a $seqres.full | _filter_mkfs 2>$tmp.mkfs
-+	_scratch_mkfs_xfs | tee -a $seqres.full | _xfs_filter_mkfs 2>$tmp.mkfs
- 	. $tmp.mkfs
- 	_scratch_mount
- 	# This test looks at specific behaviors of the xfs_db freesp command,
-diff --git a/tests/xfs/007 b/tests/xfs/007
-index 4f864100..33a857e8 100755
---- a/tests/xfs/007
-+++ b/tests/xfs/007
-@@ -19,7 +19,7 @@ _supported_fs xfs
- _require_scratch
- _require_xfs_quota
- 
--_scratch_mkfs_xfs | _filter_mkfs > /dev/null 2> $tmp.mkfs
-+_scratch_mkfs_xfs | _xfs_filter_mkfs > /dev/null 2> $tmp.mkfs
- . $tmp.mkfs
- 
- do_test()
-diff --git a/tests/xfs/010 b/tests/xfs/010
-index 16c08b85..badac7c0 100755
---- a/tests/xfs/010
-+++ b/tests/xfs/010
-@@ -87,7 +87,7 @@ _require_scratch
- _require_xfs_mkfs_finobt
- _require_xfs_finobt
- 
--_scratch_mkfs_xfs "-m crc=1,finobt=1 -d agcount=2" | _filter_mkfs 2>$seqres.full
-+_scratch_mkfs_xfs "-m crc=1,finobt=1 -d agcount=2" | _xfs_filter_mkfs 2>$seqres.full
- 
- # sparsely populate the fs such that we create records with free inodes
- _scratch_mount
-diff --git a/tests/xfs/013 b/tests/xfs/013
-index 2d005753..dc39ffd6 100755
---- a/tests/xfs/013
-+++ b/tests/xfs/013
-@@ -89,7 +89,7 @@ _require_xfs_finobt
- _require_command "$KILLALL_PROG" killall
- 
- _scratch_mkfs_xfs "-m crc=1,finobt=1 -d agcount=2" | \
--	_filter_mkfs 2>> $seqres.full
-+	_xfs_filter_mkfs 2>> $seqres.full
- _scratch_mount
- 
- COUNT=20000	# number of files per directory
-diff --git a/tests/xfs/015 b/tests/xfs/015
-index 2bb7b8d5..72842b38 100755
---- a/tests/xfs/015
-+++ b/tests/xfs/015
-@@ -44,7 +44,7 @@ _require_fs_space $SCRATCH_MNT 131072
- _scratch_unmount
- 
- _scratch_mkfs_sized $((32 * 1024 * 1024)) > $tmp.mkfs.raw || _fail "mkfs failed"
--cat $tmp.mkfs.raw | _filter_mkfs >$seqres.full 2>$tmp.mkfs
-+cat $tmp.mkfs.raw | _xfs_filter_mkfs >$seqres.full 2>$tmp.mkfs
- # get original data blocks number and agcount
- . $tmp.mkfs
- _scratch_mount
-diff --git a/tests/xfs/016 b/tests/xfs/016
-index 6337bb1f..e8094476 100755
---- a/tests/xfs/016
-+++ b/tests/xfs/016
-@@ -66,7 +66,7 @@ _init()
-     _scratch_mkfs_xfs $force_opts >$tmp.mkfs0 2>&1
-     [ $? -ne 0 ] && \
-         _notrun "Cannot mkfs for this test using MKFS_OPTIONS specified"
--    _filter_mkfs <$tmp.mkfs0 >/dev/null 2>$tmp.mkfs
-+    _xfs_filter_mkfs <$tmp.mkfs0 >/dev/null 2>$tmp.mkfs
-     . $tmp.mkfs
-     [ $logsunit -ne 0 ] && \
-         _notrun "Cannot run this test using log MKFS_OPTIONS specified"
-diff --git a/tests/xfs/029 b/tests/xfs/029
-index 6e8aa4db..a3fb9cfc 100755
---- a/tests/xfs/029
-+++ b/tests/xfs/029
-@@ -36,7 +36,7 @@ _supported_fs xfs
- _require_scratch
- 
- echo
--_scratch_mkfs_xfs | _filter_mkfs 2>/dev/null
-+_scratch_mkfs_xfs | _xfs_filter_mkfs 2>/dev/null
- 
- echo
- _scratch_xfs_logprint | filter_logprint
-diff --git a/tests/xfs/030 b/tests/xfs/030
-index 201a9015..62066d06 100755
---- a/tests/xfs/030
-+++ b/tests/xfs/030
-@@ -83,7 +83,7 @@ $here/src/devzero -v -1 -n "$clear" $SCRATCH_DEV >/dev/null
- 
- # now kick off the real repair test...
- #
--_scratch_mkfs_xfs $DSIZE | _filter_mkfs 2>$tmp.mkfs
-+_scratch_mkfs_xfs $DSIZE | _xfs_filter_mkfs 2>$tmp.mkfs
- . $tmp.mkfs
- _check_ag 0
- _check_ag -1
-diff --git a/tests/xfs/031 b/tests/xfs/031
-index 6e3813da..e6bbc0d4 100755
---- a/tests/xfs/031
-+++ b/tests/xfs/031
-@@ -82,20 +82,20 @@ echo "$MKFS_OPTIONS" | grep -q "rtinherit" && \
- _create_proto 0
- echo "=== one entry (shortform)"
- _scratch_mkfs_xfs -p $tmp.proto >$tmp.mkfs0 2>&1
--_filter_mkfs <$tmp.mkfs0 >/dev/null 2>$tmp.mkfs
-+_xfs_filter_mkfs <$tmp.mkfs0 >/dev/null 2>$tmp.mkfs
- . $tmp.mkfs
- _check_repair
- 
- # block-form root directory & repeat
- _create_proto 20
- echo "=== twenty entries (block form)"
--_scratch_mkfs_xfs -p $tmp.proto | _filter_mkfs >/dev/null 2>&1
-+_scratch_mkfs_xfs -p $tmp.proto | _xfs_filter_mkfs >/dev/null 2>&1
- _check_repair
- 
- # leaf-form root directory & repeat
- _create_proto 1000
- echo "=== thousand entries (leaf form)"
--_scratch_mkfs_xfs -p $tmp.proto | _filter_mkfs >/dev/null 2>&1
-+_scratch_mkfs_xfs -p $tmp.proto | _xfs_filter_mkfs >/dev/null 2>&1
- _check_repair
- 
- # success, all done
-diff --git a/tests/xfs/033 b/tests/xfs/033
-index d47da0d6..61ae4004 100755
---- a/tests/xfs/033
-+++ b/tests/xfs/033
-@@ -55,10 +55,10 @@ _require_scratch
- _require_no_large_scratch_dev
- 
- # devzero blows away 512byte blocks, so make 512byte inodes (at least)
--_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs >/dev/null
-+_scratch_mkfs_xfs | _xfs_filter_mkfs 2>$tmp.mkfs >/dev/null
- . $tmp.mkfs
- if [ $isize -lt 512 ]; then
--	_scratch_mkfs_xfs -isize=512 | _filter_mkfs 2>$tmp.mkfs >/dev/null
-+	_scratch_mkfs_xfs -isize=512 | _xfs_filter_mkfs 2>$tmp.mkfs >/dev/null
- 	. $tmp.mkfs
- fi
- 
-diff --git a/tests/xfs/041 b/tests/xfs/041
-index 05de5578..135ed410 100755
---- a/tests/xfs/041
-+++ b/tests/xfs/041
-@@ -41,7 +41,7 @@ _do_die_on_error=message_only
- agsize=32
- echo -n "Make $agsize megabyte filesystem on SCRATCH_DEV and mount... "
- _scratch_mkfs_xfs -dsize=${agsize}m,agcount=1 2>&1 >/dev/null || _fail "mkfs failed"
--bsize=`_scratch_mkfs_xfs -dsize=${agsize}m,agcount=1 2>&1 | _filter_mkfs 2>&1 \
-+bsize=`_scratch_mkfs_xfs -dsize=${agsize}m,agcount=1 2>&1 | _xfs_filter_mkfs 2>&1 \
- 		| perl -ne 'if (/dbsize=(\d+)/) {print $1;}'`
- onemeginblocks=`expr 1048576 / $bsize`
- _scratch_mount
-diff --git a/tests/xfs/044 b/tests/xfs/044
-index e66c0cb3..8ffd2af4 100755
---- a/tests/xfs/044
-+++ b/tests/xfs/044
-@@ -79,7 +79,7 @@ lsize=16777216
- _scratch_mkfs_xfs -lsize=$lsize,version=$lversion >$tmp.mkfs0 2>&1
- [ $? -ne 0 ] && \
-     _notrun "Cannot mkfs for this test using MKFS_OPTIONS specified"
--_filter_mkfs <$tmp.mkfs0 2>$tmp.mkfs1
-+_xfs_filter_mkfs <$tmp.mkfs0 2>$tmp.mkfs1
- . $tmp.mkfs1
- [ $lversion -ne 1 ] && \
-     _notrun "Cannot run this test yet using MKFS_OPTIONS specified"
-diff --git a/tests/xfs/050 b/tests/xfs/050
-index 1847611b..3556c85e 100755
---- a/tests/xfs/050
-+++ b/tests/xfs/050
-@@ -65,7 +65,7 @@ _filter_and_check_blks()
- 
- _exercise()
- {
--	_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs
-+	_scratch_mkfs_xfs | _xfs_filter_mkfs 2>$tmp.mkfs
- 	cat $tmp.mkfs >>$seqres.full
- 
- 	# keep the blocksize and data size for dd later
-diff --git a/tests/xfs/052 b/tests/xfs/052
-index 75761022..e4c7ee6c 100755
---- a/tests/xfs/052
-+++ b/tests/xfs/052
-@@ -34,7 +34,7 @@ _require_nobody
- # setup a default run
- _qmount_option uquota
- 
--_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs
-+_scratch_mkfs_xfs | _xfs_filter_mkfs 2>$tmp.mkfs
- cat $tmp.mkfs >>$seqres.full
- chmod a+w $seqres.full     # arbitrary users will write here
- 
-diff --git a/tests/xfs/058 b/tests/xfs/058
-index 8751a7ac..0f87ec3c 100755
---- a/tests/xfs/058
-+++ b/tests/xfs/058
-@@ -22,7 +22,7 @@ _require_xfs_db_command "fuzz"
- rm -f "$seqres.full"
- 
- echo "Format"
--_scratch_mkfs | _filter_mkfs 2>$tmp.mkfs >> "$seqres.full"
-+_scratch_mkfs | _xfs_filter_mkfs 2>$tmp.mkfs >> "$seqres.full"
- source $tmp.mkfs
- 
- do_xfs_db()
-diff --git a/tests/xfs/067 b/tests/xfs/067
-index 3dc381bb..c733d761 100755
---- a/tests/xfs/067
-+++ b/tests/xfs/067
-@@ -22,7 +22,7 @@ _require_scratch
- 
- # set up fs for 1K inodes
- isize=0
--_scratch_mkfs_xfs | _filter_mkfs >$seqres.full 2>$tmp.mkfs
-+_scratch_mkfs_xfs | _xfs_filter_mkfs >$seqres.full 2>$tmp.mkfs
- [ $? -eq 0 ] && source $tmp.mkfs
- if [ "$isize" -lt 1024 ]; then
-     _scratch_mkfs_xfs -i size=1024 >>$seqres.full \
-diff --git a/tests/xfs/070 b/tests/xfs/070
-index 43ca7f84..9db518d7 100755
---- a/tests/xfs/070
-+++ b/tests/xfs/070
-@@ -76,7 +76,7 @@ _supported_fs xfs
- _require_scratch_nocheck
- _require_command "$KILLALL_PROG" killall
- 
--_scratch_mkfs | _filter_mkfs > /dev/null 2> $tmp.mkfs
-+_scratch_mkfs | _xfs_filter_mkfs > /dev/null 2> $tmp.mkfs
- test "${PIPESTATUS[0]}" -eq 0 || _fail "mkfs failed"
- 
- . $tmp.mkfs # import agcount
-diff --git a/tests/xfs/071 b/tests/xfs/071
-index 8373878a..9b425d9f 100755
---- a/tests/xfs/071
-+++ b/tests/xfs/071
-@@ -81,7 +81,7 @@ _supported_fs xfs
- [ -n "$XFS_IO_PROG" ] || _notrun "xfs_io executable not found"
- 
- _require_scratch
--_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs
-+_scratch_mkfs_xfs | _xfs_filter_mkfs 2>$tmp.mkfs
- . $tmp.mkfs
- echo
- _scratch_mount
-diff --git a/tests/xfs/073 b/tests/xfs/073
-index c7616b9e..d1b97313 100755
---- a/tests/xfs/073
-+++ b/tests/xfs/073
-@@ -131,7 +131,7 @@ _verify_copy $imgs.image $SCRATCH_DEV $SCRATCH_MNT
- echo 
- echo === copying scratch device to single target, large ro device
- ${MKFS_XFS_PROG} -dfile,name=$imgs.source,size=100g \
--	| _filter_mkfs 2>/dev/null
-+	| _xfs_filter_mkfs 2>/dev/null
- rmdir $imgs.source_dir 2>/dev/null
- mkdir $imgs.source_dir
- 
-diff --git a/tests/xfs/076 b/tests/xfs/076
-index eac7410e..3cdde79e 100755
---- a/tests/xfs/076
-+++ b/tests/xfs/076
-@@ -61,7 +61,7 @@ _require_xfs_io_command "fpunch"
- _require_xfs_sparse_inodes
- 
- _scratch_mkfs "-d size=50m -m crc=1 -i sparse" |
--	_filter_mkfs > /dev/null 2> $tmp.mkfs
-+	_xfs_filter_mkfs > /dev/null 2> $tmp.mkfs
- . $tmp.mkfs	# for isize
- 
- _scratch_mount
-diff --git a/tests/xfs/078 b/tests/xfs/078
-index 1f475c96..a3b75fa6 100755
---- a/tests/xfs/078
-+++ b/tests/xfs/078
-@@ -74,7 +74,7 @@ _grow_loop()
- 		mkfs_crc_opts="-m crc=0"
- 	fi
- 	$MKFS_XFS_PROG $mkfs_crc_opts -b size=$bsize $dparam $LOOP_DEV \
--		| _filter_mkfs 2>/dev/null
-+		| _xfs_filter_mkfs 2>/dev/null
- 
- 	echo "*** extend loop file"
- 	_destroy_loop_device $LOOP_DEV
-diff --git a/tests/xfs/092 b/tests/xfs/092
-index 015149e2..7e7b31fc 100755
---- a/tests/xfs/092
-+++ b/tests/xfs/092
-@@ -20,7 +20,7 @@ _require_scratch
- _require_no_large_scratch_dev
- 
- MOUNT_OPTIONS="$MOUNT_OPTIONS -o inode64"
--_scratch_mkfs_xfs | _filter_mkfs 2>/dev/null
-+_scratch_mkfs_xfs | _xfs_filter_mkfs 2>/dev/null
- echo Silence is golden
- 
- _try_scratch_mount
-diff --git a/tests/xfs/104 b/tests/xfs/104
-index d16f46d8..c21bd4e0 100755
---- a/tests/xfs/104
-+++ b/tests/xfs/104
-@@ -15,7 +15,7 @@ _begin_fstest growfs ioctl prealloc auto stress
- _create_scratch()
- {
- 	echo "*** mkfs"
--	_scratch_mkfs_xfs $@ | tee -a $seqres.full | _filter_mkfs 2>$tmp.mkfs
-+	_scratch_mkfs_xfs $@ | tee -a $seqres.full | _xfs_filter_mkfs 2>$tmp.mkfs
- 	. $tmp.mkfs
- 
- 	echo "*** mount"
-@@ -50,7 +50,7 @@ _supported_fs xfs
- _require_scratch
- _require_xfs_io_command "falloc"
- 
--_scratch_mkfs_xfs | tee -a $seqres.full | _filter_mkfs 2>$tmp.mkfs
-+_scratch_mkfs_xfs | tee -a $seqres.full | _xfs_filter_mkfs 2>$tmp.mkfs
- . $tmp.mkfs	# extract blocksize and data size for scratch device
- 
- endsize=`expr 550 \* 1048576`	# stop after growing this big
-@@ -89,7 +89,7 @@ while [ $size -le $endsize ]; do
- 	echo "*** growing filesystem"
- 	echo "*** growing to a ${sizeb} block filesystem" >> $seqres.full
- 	xfs_growfs -D ${sizeb} $SCRATCH_MNT \
--		| tee -a $seqres.full | _filter_mkfs 2>$tmp.growfs
-+		| tee -a $seqres.full | _xfs_filter_mkfs 2>$tmp.growfs
- 	. $tmp.growfs
- 	[ `expr $size % $modsize` -eq 0 ] && wait	# every 4th iteration
- 	echo AGCOUNT=$agcount | tee -a $seqres.full
-diff --git a/tests/xfs/108 b/tests/xfs/108
-index 46070005..985b989b 100755
---- a/tests/xfs/108
-+++ b/tests/xfs/108
-@@ -62,7 +62,7 @@ _require_prjquota $SCRATCH_DEV
- # real QA test starts here
- rm -f $tmp.projects $seqres.full
- _scratch_unmount 2>/dev/null
--_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs
-+_scratch_mkfs_xfs | _xfs_filter_mkfs 2>$tmp.mkfs
- cat $tmp.mkfs >>$seqres.full
- _scratch_mount
- 
-diff --git a/tests/xfs/109 b/tests/xfs/109
-index 6cb6917a..e29d4795 100755
---- a/tests/xfs/109
-+++ b/tests/xfs/109
-@@ -78,7 +78,7 @@ if [ -n "$FASTSTART" -a -f $SCRATCH_MNT/f0 ]; then
- fi
- _scratch_unmount
- 
--_scratch_mkfs_xfs -dsize=160m,agcount=4 $faststart | _filter_mkfs 2>$tmp.mkfs
-+_scratch_mkfs_xfs -dsize=160m,agcount=4 $faststart | _xfs_filter_mkfs 2>$tmp.mkfs
- cat $tmp.mkfs >>$seqres.full
- _scratch_mount
- 
-diff --git a/tests/xfs/110 b/tests/xfs/110
-index 596057ef..734d2869 100755
---- a/tests/xfs/110
-+++ b/tests/xfs/110
-@@ -18,7 +18,7 @@ _require_scratch
- 
- # real QA test starts here
- _scratch_unmount 2>/dev/null
--_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs
-+_scratch_mkfs_xfs | _xfs_filter_mkfs 2>$tmp.mkfs
- 
- STR1=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
- STR2=BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
-diff --git a/tests/xfs/111 b/tests/xfs/111
-index ede28aee..ed5a54c5 100755
---- a/tests/xfs/111
-+++ b/tests/xfs/111
-@@ -22,7 +22,7 @@ _require_scratch
- _scratch_unmount 2>/dev/null
- MKFS_OPTIONS="-bsize=4096"
- MOUNT_OPTIONS="-o noatime"
--_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs
-+_scratch_mkfs_xfs | _xfs_filter_mkfs 2>$tmp.mkfs
- _scratch_mount
- 
- echo Create some files
-diff --git a/tests/xfs/144 b/tests/xfs/144
-index 5abec9ae..d46eb1e2 100755
---- a/tests/xfs/144
-+++ b/tests/xfs/144
-@@ -24,7 +24,7 @@ _require_xfs_quota
- _require_scratch
- 
- exercise() {
--	_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs
-+	_scratch_mkfs_xfs | _xfs_filter_mkfs 2>$tmp.mkfs
- 	cat $tmp.mkfs >>$seqres.full
- 
- 	# keep the blocksize and data size for dd later
-diff --git a/tests/xfs/153 b/tests/xfs/153
-index 37303701..d410cbed 100755
---- a/tests/xfs/153
-+++ b/tests/xfs/153
-@@ -70,7 +70,7 @@ _filter_and_check_blks()
- 
- run_tests()
- {
--	_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs
-+	_scratch_mkfs_xfs | _xfs_filter_mkfs 2>$tmp.mkfs
- 	cat $tmp.mkfs >>$seqres.full
- 
- 	# keep the blocksize and data size for dd later
-diff --git a/tests/xfs/163 b/tests/xfs/163
-index 9f6dbeb8..79f420fa 100755
---- a/tests/xfs/163
-+++ b/tests/xfs/163
-@@ -24,7 +24,7 @@ test_shrink()
- 	_check_scratch_fs
- 	_scratch_mount
- 
--	$XFS_INFO_PROG $SCRATCH_MNT 2>&1 | _filter_mkfs 2>$tmp.growfs >/dev/null
-+	$XFS_INFO_PROG $SCRATCH_MNT 2>&1 | _xfs_filter_mkfs 2>$tmp.growfs >/dev/null
- 	. $tmp.growfs
- 	[ $ret -eq 0 -a $1 -eq $dblocks ]
- }
-@@ -38,7 +38,7 @@ echo "Format and mount"
- # agcount = 1 is forbidden on purpose, and need to ensure shrinking to
- # 2 AGs isn't feasible yet. So agcount = 3 is the minimum number now.
- _scratch_mkfs -dsize="$((512 * 1024 * 1024))" -dagcount=3 2>&1 | \
--	tee -a $seqres.full | _filter_mkfs 2>$tmp.mkfs >/dev/null
-+	tee -a $seqres.full | _xfs_filter_mkfs 2>$tmp.mkfs >/dev/null
- . $tmp.mkfs
- t_dblocks=$dblocks
- _scratch_mount >> $seqres.full
-diff --git a/tests/xfs/168 b/tests/xfs/168
-index ffcd0df8..6b3eee30 100755
---- a/tests/xfs/168
-+++ b/tests/xfs/168
-@@ -19,7 +19,7 @@ _begin_fstest auto growfs shrinkfs ioctl prealloc stress
- create_scratch()
- {
- 	_scratch_mkfs_xfs $@ | tee -a $seqres.full | \
--		_filter_mkfs 2>$tmp.mkfs >/dev/null
-+		_xfs_filter_mkfs 2>$tmp.mkfs >/dev/null
- 	. $tmp.mkfs
- 
- 	_scratch_mount
-@@ -48,7 +48,7 @@ _supported_fs xfs
- _require_scratch_xfs_shrink
- _require_xfs_io_command "falloc"
- 
--_scratch_mkfs_xfs | tee -a $seqres.full | _filter_mkfs 2>$tmp.mkfs >/dev/null
-+_scratch_mkfs_xfs | tee -a $seqres.full | _xfs_filter_mkfs 2>$tmp.mkfs >/dev/null
- . $tmp.mkfs	# extract blocksize and data size for scratch device
- 
- endsize=`expr 125 \* 1048576`	# stop after shrinking this big
-@@ -93,7 +93,7 @@ while [ $totalcount -gt 0 ]; do
- 		[ $decb -eq 0 ] && break
- 
- 		# get latest dblocks
--		$XFS_INFO_PROG $SCRATCH_MNT 2>&1 | _filter_mkfs 2>$tmp.growfs >/dev/null
-+		$XFS_INFO_PROG $SCRATCH_MNT 2>&1 | _xfs_filter_mkfs 2>$tmp.growfs >/dev/null
- 		. $tmp.growfs
- 
- 		size=`expr $dblocks \* $dbsize`
-diff --git a/tests/xfs/176 b/tests/xfs/176
-index ba4aae59..57e11fd7 100755
---- a/tests/xfs/176
-+++ b/tests/xfs/176
-@@ -24,7 +24,7 @@ _require_xfs_io_command "falloc"
- _require_xfs_io_command "fpunch"
- 
- _scratch_mkfs "-d size=50m -m crc=1 -i sparse" |
--	_filter_mkfs > /dev/null 2> $tmp.mkfs
-+	_xfs_filter_mkfs > /dev/null 2> $tmp.mkfs
- . $tmp.mkfs	# for isize
- cat $tmp.mkfs >> $seqres.full
- 
-diff --git a/tests/xfs/178 b/tests/xfs/178
-index a65197cd..5392b9bb 100755
---- a/tests/xfs/178
-+++ b/tests/xfs/178
-@@ -45,7 +45,7 @@ _supported_fs xfs
- #             fix filesystem, new mkfs.xfs will be fine.
- 
- _require_scratch
--_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs
-+_scratch_mkfs_xfs | _xfs_filter_mkfs 2>$tmp.mkfs
- test "${PIPESTATUS[0]}" -eq 0 || _fail "mkfs failed!"
- 
- # By executing the followint tmp file, will get on the mkfs options stored in
-diff --git a/tests/xfs/186 b/tests/xfs/186
-index b54fcf26..8a2a6995 100755
---- a/tests/xfs/186
-+++ b/tests/xfs/186
-@@ -124,7 +124,7 @@ _require_scratch
- _require_attrs
- _require_attr_v1
- 
--_scratch_mkfs -i attr=2,size=512 -l lazy-count=1 | _filter_mkfs \
-+_scratch_mkfs -i attr=2,size=512 -l lazy-count=1 | _xfs_filter_mkfs \
- 	>>$seqres.full 2>$tmp.mkfs
- # import crc status and attr version
- . $tmp.mkfs
-diff --git a/tests/xfs/189 b/tests/xfs/189
-index e601881a..437243c7 100755
---- a/tests/xfs/189
-+++ b/tests/xfs/189
-@@ -231,7 +231,7 @@ _require_noattr2
- unset SCRATCH_RTDEV
- unset SCRATCH_LOGDEV
- 
--_scratch_mkfs_xfs | _filter_mkfs 2>/dev/null
-+_scratch_mkfs_xfs | _xfs_filter_mkfs 2>/dev/null
- 
- _add_scratch_fstab
- _test_remount_rw
-diff --git a/tests/xfs/250 b/tests/xfs/250
-index 8af32711..573340bb 100755
---- a/tests/xfs/250
-+++ b/tests/xfs/250
-@@ -54,7 +54,7 @@ _test_loop()
- 
- 	echo "*** mkfs loop file (size=$size)"
- 	$MKFS_XFS_PROG -d $dparam \
--		| _filter_mkfs 2>/dev/null
-+		| _xfs_filter_mkfs 2>/dev/null
- 
- 	echo "*** mount loop filesystem"
- 	mount -t xfs -o loop $LOOP_DEV $LOOP_MNT
-diff --git a/tests/xfs/259 b/tests/xfs/259
-index 88e2f3ee..7c062c7d 100755
---- a/tests/xfs/259
-+++ b/tests/xfs/259
-@@ -49,7 +49,7 @@ for del in $sizes_to_check; do
- 			>/dev/null 2>&1 || echo "dd failed"
- 		lofile=$(losetup -f)
- 		losetup $lofile "$testfile"
--		$MKFS_XFS_PROG -l size=32m -b size=$bs $lofile |  _filter_mkfs \
-+		$MKFS_XFS_PROG -l size=32m -b size=$bs $lofile |  _xfs_filter_mkfs \
- 			>/dev/null 2> $tmp.mkfs || echo "mkfs failed!"
- 		. $tmp.mkfs
- 		sync
-diff --git a/tests/xfs/276 b/tests/xfs/276
-index 8cc48675..6774b819 100755
---- a/tests/xfs/276
-+++ b/tests/xfs/276
-@@ -29,7 +29,7 @@ _require_test_program "punch-alternating"
- rm -f "$seqres.full"
- 
- echo "Format and mount"
--_scratch_mkfs | _filter_mkfs 2> "$tmp.mkfs" >/dev/null
-+_scratch_mkfs | _xfs_filter_mkfs 2> "$tmp.mkfs" >/dev/null
- . $tmp.mkfs
- cat "$tmp.mkfs" > $seqres.full
- _scratch_mount
-diff --git a/tests/xfs/279 b/tests/xfs/279
-index 835d187f..64563237 100755
---- a/tests/xfs/279
-+++ b/tests/xfs/279
-@@ -44,7 +44,7 @@ _check_mkfs()
- 		return
- 	fi
- 	echo "Passed."
--	cat $tmp.mkfs.full | _filter_mkfs >> $seqres.full 2>$tmp.mkfs
-+	cat $tmp.mkfs.full | _xfs_filter_mkfs >> $seqres.full 2>$tmp.mkfs
- 	. $tmp.mkfs
- 	echo "Got sector size: $sectsz"
- 	device=`echo $@ | awk '{print $NF}'`
-diff --git a/tests/xfs/288 b/tests/xfs/288
-index e3d230e9..ec12d0d1 100755
---- a/tests/xfs/288
-+++ b/tests/xfs/288
-@@ -20,7 +20,7 @@ _require_scratch
- _require_attrs
- 
- # get block size ($dbsize) from the mkfs output
--_scratch_mkfs_xfs 2>/dev/null | _filter_mkfs 2>$tmp.mkfs >/dev/null
-+_scratch_mkfs_xfs 2>/dev/null | _xfs_filter_mkfs 2>$tmp.mkfs >/dev/null
- . $tmp.mkfs
- 
- _scratch_mount
-diff --git a/tests/xfs/292 b/tests/xfs/292
-index cf501571..930504ca 100755
---- a/tests/xfs/292
-+++ b/tests/xfs/292
-@@ -25,12 +25,12 @@ rm -f $fsfile
- $XFS_IO_PROG -f -c "truncate 256g" $fsfile
- 
- echo "mkfs.xfs without geometry"
--mkfs.xfs -f $fsfile | _filter_mkfs 2> $tmp.mkfs > /dev/null
-+mkfs.xfs -f $fsfile | _xfs_filter_mkfs 2> $tmp.mkfs > /dev/null
- grep -E 'ddev|agcount|agsize' $tmp.mkfs | \
-     sed -e "s:$fsfile:FILENAME:g"
- 
- echo "mkfs.xfs with cmdline geometry"
--mkfs.xfs -f -d su=16k,sw=5 $fsfile | _filter_mkfs 2> $tmp.mkfs > /dev/null
-+mkfs.xfs -f -d su=16k,sw=5 $fsfile | _xfs_filter_mkfs 2> $tmp.mkfs > /dev/null
- grep -E 'ddev|agcount|agsize' $tmp.mkfs | \
-     sed -e "s:$fsfile:FILENAME:g"
- 
-diff --git a/tests/xfs/299 b/tests/xfs/299
-index a3077b0c..e6da413a 100755
---- a/tests/xfs/299
-+++ b/tests/xfs/299
-@@ -147,7 +147,7 @@ _exercise()
- 
- }
- 
--_scratch_mkfs_xfs -m crc=1 2>/dev/null | _filter_mkfs 2>$tmp.mkfs
-+_scratch_mkfs_xfs -m crc=1 2>/dev/null | _xfs_filter_mkfs 2>$tmp.mkfs
- cat $tmp.mkfs >>$seqres.full
- # keep the blocksize and data size for dd later
- . $tmp.mkfs
-@@ -184,7 +184,7 @@ _exercise u
- echo "*** unmount"
- _scratch_unmount
- 
--_scratch_mkfs_xfs -m crc=1 2>/dev/null | _filter_mkfs 2>$tmp.mkfs
-+_scratch_mkfs_xfs -m crc=1 2>/dev/null | _xfs_filter_mkfs 2>$tmp.mkfs
- cat $tmp.mkfs >>$seqres.full
- # keep the blocksize and data size for dd later
- . $tmp.mkfs
-diff --git a/tests/xfs/335 b/tests/xfs/335
-index ccc508e7..c2bb1bde 100755
---- a/tests/xfs/335
-+++ b/tests/xfs/335
-@@ -22,7 +22,7 @@ _require_xfs_io_command "falloc"
- rm -f "$seqres.full"
- 
- echo "Format and mount"
--_scratch_mkfs | _filter_mkfs 2>$tmp.mkfs >/dev/null
-+_scratch_mkfs | _xfs_filter_mkfs 2>$tmp.mkfs >/dev/null
- . $tmp.mkfs
- cat $tmp.mkfs > "$seqres.full" 2>&1
- _scratch_mount
-diff --git a/tests/xfs/336 b/tests/xfs/336
-index 279830b5..19ed8cc6 100755
---- a/tests/xfs/336
-+++ b/tests/xfs/336
-@@ -29,7 +29,7 @@ _require_xfs_io_command "falloc"
- rm -f "$seqres.full"
- 
- echo "Format and mount"
--_scratch_mkfs | _filter_mkfs 2>$tmp.mkfs >/dev/null
-+_scratch_mkfs | _xfs_filter_mkfs 2>$tmp.mkfs >/dev/null
- . $tmp.mkfs
- cat $tmp.mkfs > "$seqres.full" 2>&1
- _scratch_mount
-diff --git a/tests/xfs/337 b/tests/xfs/337
-index a2515e36..ca476e28 100755
---- a/tests/xfs/337
-+++ b/tests/xfs/337
-@@ -23,7 +23,7 @@ _disable_dmesg_check
- rm -f "$seqres.full"
- 
- echo "+ create scratch fs"
--_scratch_mkfs | _filter_mkfs 2>$tmp.mkfs >/dev/null
-+_scratch_mkfs | _xfs_filter_mkfs 2>$tmp.mkfs >/dev/null
- . $tmp.mkfs
- cat $tmp.mkfs > "$seqres.full" 2>&1
- 
-diff --git a/tests/xfs/341 b/tests/xfs/341
-index f026aa37..dad1e0af 100755
---- a/tests/xfs/341
-+++ b/tests/xfs/341
-@@ -23,7 +23,7 @@ _require_xfs_io_command "falloc"
- rm -f "$seqres.full"
- 
- echo "Format and mount"
--_scratch_mkfs | _filter_mkfs 2>$tmp.mkfs >/dev/null
-+_scratch_mkfs | _xfs_filter_mkfs 2>$tmp.mkfs >/dev/null
- . $tmp.mkfs
- cat $tmp.mkfs > "$seqres.full" 2>&1
- _scratch_mount
-diff --git a/tests/xfs/342 b/tests/xfs/342
-index 1ae414eb..0922b3fe 100755
---- a/tests/xfs/342
-+++ b/tests/xfs/342
-@@ -22,7 +22,7 @@ _require_xfs_io_command "falloc"
- rm -f "$seqres.full"
- 
- echo "Format and mount"
--_scratch_mkfs | _filter_mkfs 2>$tmp.mkfs >/dev/null
-+_scratch_mkfs | _xfs_filter_mkfs 2>$tmp.mkfs >/dev/null
- . $tmp.mkfs
- cat $tmp.mkfs > "$seqres.full" 2>&1
- _scratch_mount
-diff --git a/tests/xfs/443 b/tests/xfs/443
-index f2390bf3..a236c8f8 100755
---- a/tests/xfs/443
-+++ b/tests/xfs/443
-@@ -31,7 +31,7 @@ _require_xfs_io_command "falloc"
- _require_xfs_io_command "fpunch"
- _require_xfs_io_command "swapext"
- 
--_scratch_mkfs | _filter_mkfs >> $seqres.full 2> $tmp.mkfs
-+_scratch_mkfs | _xfs_filter_mkfs >> $seqres.full 2> $tmp.mkfs
- _scratch_mount
- 
- # get fs block size
-diff --git a/tests/xfs/448 b/tests/xfs/448
-index 815f56cb..3cd56d4d 100755
---- a/tests/xfs/448
-+++ b/tests/xfs/448
-@@ -34,7 +34,7 @@ _require_no_xfs_bug_on_assert
- rm -f "$seqres.full"
- 
- # Format and mount
--_scratch_mkfs | _filter_mkfs > $seqres.full 2> $tmp.mkfs
-+_scratch_mkfs | _xfs_filter_mkfs > $seqres.full 2> $tmp.mkfs
- test "${PIPESTATUS[0]}" -eq 0 || _fail "mkfs failed"
- _scratch_mount
- 
-diff --git a/tests/xfs/490 b/tests/xfs/490
-index 8c3b0684..08a03261 100755
---- a/tests/xfs/490
-+++ b/tests/xfs/490
-@@ -37,7 +37,7 @@ filter_dmesg()
- # If enable free inode B+tree, this case will fail on xfs_dialloc_ag_update_inobt,
- # that's not what we want to test. Due to finobt feature is not necessary for this
- # test, so disable it directly.
--_scratch_mkfs_xfs -m finobt=0 | _filter_mkfs 2>$tmp.mkfs >> $seqres.full
-+_scratch_mkfs_xfs -m finobt=0 | _xfs_filter_mkfs 2>$tmp.mkfs >> $seqres.full
- 
- # On V5 filesystem, this case can't trigger bug because it doesn't read inodes
- # we are allocating from disk - it simply overwrites them with new inode
-diff --git a/tests/xfs/502 b/tests/xfs/502
-index fb9a82c1..464326cc 100755
---- a/tests/xfs/502
-+++ b/tests/xfs/502
-@@ -25,7 +25,7 @@ _require_xfs_io_error_injection "iunlink_fallback"
- _require_scratch
- _require_test_program "t_open_tmpfiles"
- 
--_scratch_mkfs | _filter_mkfs 2> $tmp.mkfs > /dev/null
-+_scratch_mkfs | _xfs_filter_mkfs 2> $tmp.mkfs > /dev/null
- cat $tmp.mkfs >> $seqres.full
- . $tmp.mkfs
- 
-diff --git a/tests/xfs/513 b/tests/xfs/513
-index bfdfd4f6..a13f0a03 100755
---- a/tests/xfs/513
-+++ b/tests/xfs/513
-@@ -68,7 +68,7 @@ MKFS_OPTIONS=""
- do_mkfs()
- {
- 	echo "FORMAT: $@" | filter_loop | tee -a $seqres.full
--	$MKFS_XFS_PROG -f $* $LOOP_DEV | _filter_mkfs >>$seqres.full 2>$tmp.mkfs
-+	$MKFS_XFS_PROG -f $* $LOOP_DEV | _xfs_filter_mkfs >>$seqres.full 2>$tmp.mkfs
- 	if [ "${PIPESTATUS[0]}" -ne 0 ]; then
- 		_fail "Fails on _mkfs_dev $* $LOOP_DEV"
- 	fi
-diff --git a/tests/xfs/530 b/tests/xfs/530
-index 9c6f44d7..925a7b49 100755
---- a/tests/xfs/530
-+++ b/tests/xfs/530
-@@ -38,7 +38,7 @@ _require_scratch_nocheck
- 
- echo "* Test extending rt inodes"
- 
--_scratch_mkfs | _filter_mkfs >> $seqres.full 2> $tmp.mkfs
-+_scratch_mkfs | _xfs_filter_mkfs >> $seqres.full 2> $tmp.mkfs
- . $tmp.mkfs
- 
- echo "Create fake rt volume"
-diff --git a/tests/xfs/533 b/tests/xfs/533
-index b85b5298..c7d470c9 100755
---- a/tests/xfs/533
-+++ b/tests/xfs/533
-@@ -23,7 +23,7 @@ _require_test_program "punch-alternating"
- _require_xfs_io_error_injection "reduce_max_iextents"
- _require_xfs_io_error_injection "bmap_alloc_minlen_extent"
- 
--_scratch_mkfs_sized $((1024 * 1024 * 1024)) | _filter_mkfs >> $seqres.full 2> $tmp.mkfs
-+_scratch_mkfs_sized $((1024 * 1024 * 1024)) | _xfs_filter_mkfs >> $seqres.full 2> $tmp.mkfs
- . $tmp.mkfs
- 
- # Filesystems with directory block size greater than one FSB will not be tested,
 -- 
-2.34.1
-
+chandan
