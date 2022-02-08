@@ -2,131 +2,93 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CC13C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Feb 2022 22:24:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23F50C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Feb 2022 22:53:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1386866AbiBHWYi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Feb 2022 17:24:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39640 "EHLO
+        id S234324AbiBHWxR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Feb 2022 17:53:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53876 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1386942AbiBHVZJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Feb 2022 16:25:09 -0500
-Received: from mail-yb1-xb33.google.com (mail-yb1-xb33.google.com [IPv6:2607:f8b0:4864:20::b33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B497C0612B8
-        for <linux-xfs@vger.kernel.org>; Tue,  8 Feb 2022 13:25:07 -0800 (PST)
-Received: by mail-yb1-xb33.google.com with SMTP id p19so412223ybc.6
-        for <linux-xfs@vger.kernel.org>; Tue, 08 Feb 2022 13:25:07 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=umich.edu; s=google-2016-06-03;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=kOAUxtQP3mZPMOd1OLLiMYOVL2ZtBeAuXbiunmNeOa4=;
-        b=BU7MK3BkKz82lpcnXHDc/1Uyv8nwMHJtqWFB7e3XfOHWlGbu28Ai0BLlbKRjcm885G
-         5/3lnFtvH79ulZb+N57FbHJpojIr/I4ddU1NL64ia9JReTtNkaVz3mPmnpGNxYGY8fLo
-         3JL0t6YsW/meMkSaU0kbVqOdl7nOiW8trjvsn7++PdG9X1euJbnsqbveE03GyZuhbAsg
-         53biwajRJNjl38f3XYVd36DK9r+wtIx5iUoAe/x8BEnzvc+1LThGWmrxHyF5oc0wo68M
-         sQHyh9e8XowDaodFXgtGYjW20A6dcJWjiNz7aur9wF5CT9u1MFD5egYS28wvPD5qD5qO
-         D2Dg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=kOAUxtQP3mZPMOd1OLLiMYOVL2ZtBeAuXbiunmNeOa4=;
-        b=Vlfzp4xCSJqCnfFlkoc9X0RTjX8XMR/nBPdzbmn/s7brgU7FOkd9dOziWblmXv/BdC
-         3EAN7ihpNMeun58sS9cqh4QcLCbZLCpA7EiHOuqgoouPTAky50M3VghsVEtMEh83IkFg
-         spn3LLn8AKOJ5e8m80rRwjpC8dHnQKF3oX5YB45smB9FFH1gHaocz+YdLITErfXXmYfS
-         kdj/4oPg8FvotD8os/Fxj5nvGv7UUNlrnYddCDRKj2Uh4c09C5/614RxzjDBht8ATe1d
-         6htaDpAJPcw+Oiit68ko3RgIbmNSjOh/O5/c56uTSL4Tg8ctAIfPBhAzeQq2dGGlWsj0
-         dkFg==
-X-Gm-Message-State: AOAM530Qt4J3oqZ3blbIJ6n3v8AZuoKy5wiAyNXCTpUzV80GXwjmqsbY
-        KAqNWEz3hVDFswfkorwagi9yo1XmklU7fC26YDCd2w==
-X-Google-Smtp-Source: ABdhPJw+MrXuIfJp1fGt9KPNZ+/r+Gb/B8xc5ZxJJJUYqzFicsuerrtw9OtHeXjoPO5FtrfnAhH/oCs/QrKfvWMUzlI=
-X-Received: by 2002:a25:c307:: with SMTP id t7mr6428127ybf.701.1644355506392;
- Tue, 08 Feb 2022 13:25:06 -0800 (PST)
+        with ESMTP id S234293AbiBHWxO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Feb 2022 17:53:14 -0500
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E2AF2C07D910
+        for <linux-xfs@vger.kernel.org>; Tue,  8 Feb 2022 14:50:32 -0800 (PST)
+Received: from dread.disaster.area (pa49-180-69-7.pa.nsw.optusnet.com.au [49.180.69.7])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id E454C10C6C64;
+        Wed,  9 Feb 2022 09:50:31 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nHZJf-009j3D-28; Wed, 09 Feb 2022 09:50:31 +1100
+Date:   Wed, 9 Feb 2022 09:50:31 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: only bother with sync_filesystem during readonly
+ remount
+Message-ID: <20220208225031.GK59729@dread.disaster.area>
+References: <20220208200908.GD8313@magnolia>
 MIME-Version: 1.0
-References: <CAA43vkVeMb0SrvLmc8MCU7K8yLUBqHOVk3=JGOi+KDh3zs9Wfw@mail.gmail.com>
- <20220201233312.GX59729@dread.disaster.area> <CAA43vkUQ2fb_BEO1oB=bcrsGdcFTxZxyAFUVmLwvkRiobF8EYA@mail.gmail.com>
- <20220207223352.GG59729@dread.disaster.area> <CAA43vkWz4ftLGuSvkUn3GFuc=Ca6vLqJ28Nc_CGuTyyNVtXszA@mail.gmail.com>
- <20220208015115.GI59729@dread.disaster.area> <CAA43vkXTkCJtM-kQO=GAX=TnAFkD_atygSw4scCwQ8Y-sJZsoQ@mail.gmail.com>
- <20220208205640.GJ59729@dread.disaster.area>
-In-Reply-To: <20220208205640.GJ59729@dread.disaster.area>
-From:   Sean Caron <scaron@umich.edu>
-Date:   Tue, 8 Feb 2022 16:24:55 -0500
-Message-ID: <CAA43vkVKEiW7WFOAJy16J89DT0eq3U=48Hyy9N7hz-GQvZ+JrQ@mail.gmail.com>
-Subject: Re: XFS disaster recovery
-To:     Dave Chinner <david@fromorbit.com>, Sean Caron <scaron@umich.edu>
-Cc:     linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220208200908.GD8313@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=6202f3b8
+        a=NB+Ng1P8A7U24Uo7qoRq4Q==:117 a=NB+Ng1P8A7U24Uo7qoRq4Q==:17
+        a=kj9zAlcOel0A:10 a=oGFeUVbbRNcA:10 a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8
+        a=7-415B0cAAAA:8 a=4mXSMA3tjP24DM85IOYA:9 a=CjuIK1q_8ugA:10
+        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Thank you so much for your expert consultation on this, Dave. I'm
-definitely cognizant of the fact that there may still be inter-file
-corruption while metadata is OK as well. It sounds like we've moved
-the situation along as much as we can by finding a set of parameters
-where xfs_repair will finish without hanging or crashing via
-nondestructive testing with the metadata dump and sparse image and we
-end up with a product that can be mounted.
+On Tue, Feb 08, 2022 at 12:09:08PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> In commit 02b9984d6408, we pushed a sync_filesystem() call from the VFS
+> into xfs_fs_remount.  The only time that we ever need to push dirty file
+> data or metadata to disk for a remount is if we're remounting the
+> filesystem read only, so this really could be moved to xfs_remount_ro.
+> 
+> Once we've moved the call site, actually check the return value from
+> sync_filesystem.
+> 
+> Fixes: 02b9984d6408 ("fs: push sync_filesystem() down to the file system's remount_fs()")
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  fs/xfs/xfs_super.c |    7 +++++--
+>  1 file changed, 5 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 4c0dee78b2f8..d84714e4e46a 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1753,6 +1753,11 @@ xfs_remount_ro(
+>  	};
+>  	int			error;
+>  
+> +	/* Flush all the dirty data to disk. */
+> +	error = sync_filesystem(mp->m_super);
+> +	if (error)
+> +		return error;
+> +
+>  	/*
+>  	 * Cancel background eofb scanning so it cannot race with the final
+>  	 * log force+buftarg wait and deadlock the remount.
+> @@ -1831,8 +1836,6 @@ xfs_fs_reconfigure(
+>  	if (error)
+>  		return error;
+>  
+> -	sync_filesystem(mp->m_super);
+> -
+>  	/* inode32 -> inode64 */
+>  	if (xfs_has_small_inums(mp) && !xfs_has_small_inums(new_mp)) {
+>  		mp->m_features &= ~XFS_FEAT_SMALL_INUMS;
 
-We'll move ahead with repairing the filesystem on-disk and copy off
-what we can, with the caveat that users will want to go back and check
-file integrity once the copies are finished and there may be
-additional data loss that isn't captured in what's in lost+found.
+Looks ok.
 
-Best,
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Sean
-
-
-On Tue, Feb 8, 2022 at 3:56 PM Dave Chinner <david@fromorbit.com> wrote:
->
-> On Tue, Feb 08, 2022 at 10:46:45AM -0500, Sean Caron wrote:
-> > Hi Dave,
-> >
-> > I'm sorry for some imprecise language. The array is around 450 TB raw
-> > and I will refer to it as roughly half a petabyte but factoring out
-> > RAID parity disks and spare disks it should indeed be around 384 TB
-> > formatted.
->
-> Ah, OK, looks like it was a complete dump, then.
->
-> > I found that if I ran the dev tree xfs_repair with the -P option, I
-> > could get xfs_repair to complete a run. It exits with return code 130
-> > but the resulting loopback image filesystem is mountable and I see
-> > around 27 TB in lost+found which would represent around 9% loss in
-> > terms of what was actually on the filesystem.
->
-> I'm sure that if that much ended up in lost+found, xfs_repair also
-> threw away a whole load of metadata which means data will have been
-> lost. And with this much metadata corruption occurring, it tends to
-> imply that there will be widespread data corruption, too.  Hence I
-> think it's worth pointing out (maybe unnecessarily!) that xfs_repair
-> doesn't tell you about (or fix) data corruption - it just rebuilds
-> the metadata back into a consistent state.
->
-> > Given where we started I think this is acceptable (more than
-> > acceptable, IMO, I was getting to the point of expecting to have to
-> > write off the majority of the filesystem) and it seems like a way
-> > forward to get the majority of the data off this old filesystem.
->
-> Yes, but you are still going to have to verify the data you can
-> still access is not corrupted - random offsets within files could
-> now contain garbage regardless of whether the file was moved to
-> lost+found or not.
->
-> > Is there anything further I should check or any caveats that I should
-> > bear in mind applying this xfs_repair to the real filesystem? Or does
-> > it seem reasonable to go ahead, repair this and start copying off?
->
-> Seems reasonable to repeat the process on the real filesystem, but
-> given the caveat about data corruption above, I suspect that the
-> entire dataset on the filesystem might still end up being a complete
-> write-off.
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
+-- 
+Dave Chinner
+david@fromorbit.com
