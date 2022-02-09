@@ -2,101 +2,90 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D9FBC433F5
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Feb 2022 02:39:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A3BCC433F5
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Feb 2022 07:37:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241343AbiBICjd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Feb 2022 21:39:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50044 "EHLO
+        id S238305AbiBIHhF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Feb 2022 02:37:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36246 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242048AbiBIBKM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Feb 2022 20:10:12 -0500
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93C26C061576;
-        Tue,  8 Feb 2022 17:10:10 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 25BA9CE1B70;
-        Wed,  9 Feb 2022 01:10:07 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1738FC004E1;
-        Wed,  9 Feb 2022 01:10:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1644369005;
-        bh=G5uU/wOKKaUc/jSB9K/5/TwossD5zIXWmIxvGuOzgDE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=g64r5u3/yYniiCa/eGal3suK3t2qCPO5J8yjTr+WXAz7eV8KGckCF1qJnGp4mlxhX
-         crxCbvMqVjF5t9z3Kuu1yHICd1AwKVPz3WqXQnJYZ0PF+coVPc/INbvPtR92OX3HcR
-         dBCA8/tfnlboHQALxTmSwSdkdK+N8WfRFJWOuNK5Nm6AgMGyFPkClxPMB/1pE7ZC4C
-         5PKfXBrFi/q2I57lmvcg+8rUmLtSyDlaEf77EXpbYqh+gGIXMnDUHQ7qAwldeiiq88
-         +CJL66sz2DcUB4BxmkrZ2zXSjF4uhel4U7JdVSe6+TycxOaMGjw/YzGUBLNnxgJY0o
-         R3TY12fL2xvBA==
-Date:   Tue, 8 Feb 2022 17:10:03 -0800
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        linux-xfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>
-Subject: Re: [PATCH v10 0/5] add support for direct I/O with fscrypt using
- blk-crypto
-Message-ID: <YgMUa2Cdr/QoMTPh@sol.localdomain>
-References: <20220120071215.123274-1-ebiggers@kernel.org>
- <YekdnxpeunTGfXqX@infradead.org>
- <20220120171027.GL13540@magnolia>
- <YenIcshA706d/ziV@sol.localdomain>
- <20220120210027.GQ13540@magnolia>
- <20220120220414.GH59729@dread.disaster.area>
- <Yenm1Ipx87JAlyXg@sol.localdomain>
- <20220120235755.GI59729@dread.disaster.area>
- <20220121023603.GH13563@magnolia>
- <20220123230332.GL59729@dread.disaster.area>
+        with ESMTP id S238476AbiBIHhD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Feb 2022 02:37:03 -0500
+Received: from out30-131.freemail.mail.aliyun.com (out30-131.freemail.mail.aliyun.com [115.124.30.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5FCB2C0613CA;
+        Tue,  8 Feb 2022 23:37:06 -0800 (PST)
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R601e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04394;MF=hsiangkao@linux.alibaba.com;NM=1;PH=DS;RN=3;SR=0;TI=SMTPD_---0V4-AWIs_1644392216;
+Received: from e18g06460.et15sqa.tbsite.net(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0V4-AWIs_1644392216)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Wed, 09 Feb 2022 15:37:03 +0800
+From:   Gao Xiang <hsiangkao@linux.alibaba.com>
+To:     xfs <linux-xfs@vger.kernel.org>
+Cc:     LKML <linux-kernel@vger.kernel.org>,
+        Gao Xiang <hsiangkao@linux.alibaba.com>
+Subject: [PATCH 0/3] xfs: some end COW remapping optimization
+Date:   Wed,  9 Feb 2022 15:36:52 +0800
+Message-Id: <20220209073655.22162-1-hsiangkao@linux.alibaba.com>
+X-Mailer: git-send-email 2.24.4
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20220123230332.GL59729@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 24, 2022 at 10:03:32AM +1100, Dave Chinner wrote:
-> > 
-> > 	/* 0xa0 */
-> > 
-> > 	/* File range alignment needed for best performance, in bytes. */
-> > 	__u32	stx_dio_fpos_align_opt;
-> 
-> This is a common property of both DIO and buffered IO, so no need
-> for it to be dio-only property.
-> 
-> 	__u32	stx_offset_align_optimal;
-> 
+Hi folks,
 
-Looking at this more closely: will stx_offset_align_optimal actually be useful,
-given that st[x]_blksize already exists?
+Currently, xfs_reflink_end_cow_extent() will unconditionally unmap an
+extent from DATA fork and then remap an extent from COW fork. It seems
+somewhat ineffective since for many cases we could update real bmbt
+records directly by sightly enhancing old
+xfs_bmap_add_extent_unwritten_real() implementation, thus reduce some
+measurable extra metadata overhead.
 
-From the stat(2) and statx(2) man pages:
+It's important to us since, actually, we're planing to use a modified
+alway-cow like atomic write approach internally for database
+applications, therefore it'd be nice to do some optimization over
+simple end COW approach. Also I think it's still generic and can
+benefit other reflink use cases as well.
 
-	st_blksize
-		This field  gives  the  "preferred"  block  size  for  efficient
-		filesystem I/O.
+I did some tests with ramdisk in order to measure metadata overhead:
 
-	stx_blksize
-		The "preferred" block size for efficient filesystem I/O.  (Writ‐
-		ing  to  a file in smaller chunks may cause an inefficient read-
-		modify-rewrite.)
+echo 1 > /sys/fs/xfs/debug/always_cow
+mkfs.xfs -f -mreflink=1 /dev/ram0
+mount /dev/ram0 testdir
+fio -filename=testdir/1 -size=1G -ioengine=psync -bs=4k -rw=randwrite -overwrite=1 -direct=1 -end_fsync=1 -name=job1
 
-File offsets aren't explicitly mentioned, but I think it's implied they should
-be a multiple of st[x]_blksize, just like the I/O size.  Otherwise, the I/O
-would obviously require reading/writing partial blocks.
+Test results as below:
+Vanilla:
+(1)   iops        : min= 7986, max=16434, avg=12505.76, stdev=2400.05, samples=41
+(2)   iops        : min= 7636, max=16376, avg=12474.19, stdev=2258.18, samples=42
+(3)   iops        : min= 8346, max=16439, avg=12227.95, stdev=2432.12, samples=42
+(4)   iops        : min= 8580, max=16496, avg=12779.41, stdev=2297.42, samples=41
+(5)   iops        : min= 8286, max=16556, avg=12500.76, stdev=2123.90, samples=41
 
-So, the proposed stx_offset_align_optimal field sounds like the same thing to
-me.  Is there anything I'm misunderstanding?
+Patched:
+(1)   iops        : min= 7086, max=17132, avg=12931.20, stdev=2729.10, samples=40
+(2)   iops        : min= 7704, max=17508, avg=13204.62, stdev=2507.70, samples=39
+(3)   iops        : min= 8736, max=17634, avg=13253.08, stdev=2545.18, samples=39
+(4)   iops        : min= 7188, max=17550, avg=12928.40, stdev=2633.64, samples=40
+(5)   iops        : min= 8268, max=17446, avg=12837.55, stdev=2717.98, samples=40
 
-Putting stx_offset_align_optimal behind the STATX_DIRECTIO flag would also be
-confusing if it would apply to both direct and buffered I/O.
+It's still immature so far yet xfstests seems survived.
+Comments are much welcomed and thanks for your time!
 
-- Eric
+Thanks,
+Gao Xiang
+
+Gao Xiang (3):
+  xfs: get rid of LEFT, RIGHT, PREV in
+    xfs_bmap_add_extent_unwritten_real()
+  xfs: introduce xfs_bmap_update_extent_real()
+  xfs: introduce xfs_bremapi_from_cowfork()
+
+ fs/xfs/libxfs/xfs_bmap.c | 378 +++++++++++++++++++++++++--------------
+ fs/xfs/libxfs/xfs_bmap.h |   7 +-
+ fs/xfs/xfs_reflink.c     |  24 +--
+ 3 files changed, 253 insertions(+), 156 deletions(-)
+
+-- 
+2.24.4
+
