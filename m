@@ -2,119 +2,109 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4802EC433EF
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Feb 2022 19:25:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DECCC433FE
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Feb 2022 22:31:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234218AbiBITZW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Feb 2022 14:25:22 -0500
-Received: from gmail-smtp-in.l.google.com ([23.128.96.19]:44060 "EHLO
+        id S235870AbiBIWbb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Feb 2022 17:31:31 -0500
+Received: from gmail-smtp-in.l.google.com ([23.128.96.19]:40074 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234367AbiBITZU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Feb 2022 14:25:20 -0500
-Received: from mail-wm1-x331.google.com (mail-wm1-x331.google.com [IPv6:2a00:1450:4864:20::331])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E132E015247
-        for <linux-xfs@vger.kernel.org>; Wed,  9 Feb 2022 11:25:11 -0800 (PST)
-Received: by mail-wm1-x331.google.com with SMTP id m126-20020a1ca384000000b0037bb8e379feso3818700wme.5
-        for <linux-xfs@vger.kernel.org>; Wed, 09 Feb 2022 11:25:11 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=9X6kiHxpGEazzvkQHp8JnSwgUsJv8D0X/1igB1bJ0oM=;
-        b=F+1sc9LG9Zusg8VEVpmo/a8vGlBpqMWse1p/RFAUMyYeq8iwZj3MRa7hjavr8KL9Wl
-         jEdeEg8CSnXfgTg6u+0HhVo3iieUx/mqE2aRvLDuwyghlMBvJ6dj+riFgrqwt1R3411+
-         LH/975H10YT9+feSLn8PkRoZMV8B0S/ORAWIQrR6t38RKCx/mNROV0o+pk/oLaF+ivxr
-         shuEKu8D27Sd0379yjauUYuSJbvnPQZDc5rpwQapN1ScgY21I+TSz91lMvAXDtJlvOe4
-         rxvKuPYZb4eivldj0ZoVreDkYl6QuJsstf7YlKapOeJ+mhh/P5E/lW1qfNaCgDAlQEBE
-         +ybg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=9X6kiHxpGEazzvkQHp8JnSwgUsJv8D0X/1igB1bJ0oM=;
-        b=vLuI6IJ4k0DuK/DDAihTkZ600J87ICrRYQefvLM9JSd92VZ8q+kggUxEWWv/SrhO1n
-         PLltZHswFF3zEN+XLOwj7CFuVrPjuPtA5CIpnyQ72oLlkpc8GaOpYXaAVRoFpH5VEgRU
-         gyfRaMsFiQ8MBakTBoDZzbpO8g39Z0aQ2To41AfIOWWF+WMJAKdOB9HQm22lYqBCU1Z3
-         dSl6B830tVJEADQL+zbHYqs8MH4RTZfAxptqfH5w9N40zHPhRzDMl4QVNFrJAVpYiBz3
-         bQWELO6+HbL0xRW1M23HiQBi8GKwNQiS8VVE2zI6ItKu/TCc1/J5XTQ7dfGvQ2fybB1A
-         Jesg==
-X-Gm-Message-State: AOAM532f+Al2uQusxsK05uJ0/EW6ew3t53ysizZS/KXtswLNLa2P51x8
-        Z6UspCiV5qKAC3kFCUcF1TeYvw==
-X-Google-Smtp-Source: ABdhPJxCUh4sor/h3+HFTKlhR6E08fCeHYcKOJMGBMEAnXI+4nuwI1jwNHyvV7w8k63ICgSJT0jJAg==
-X-Received: by 2002:a7b:c38b:: with SMTP id s11mr3995713wmj.8.1644434709820;
-        Wed, 09 Feb 2022 11:25:09 -0800 (PST)
-Received: from google.com (cpc155339-bagu17-2-0-cust87.1-3.cable.virginm.net. [86.27.177.88])
-        by smtp.gmail.com with ESMTPSA id z5sm6993811wmp.10.2022.02.09.11.25.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 09 Feb 2022 11:25:09 -0800 (PST)
-Date:   Wed, 9 Feb 2022 19:25:05 +0000
-From:   Lee Jones <lee.jones@linaro.org>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org,
-        Stable <stable@vger.kernel.org>,
-        Dave Chinner <dchinner@redhat.com>,
-        Goldwyn Rodrigues <rgoldwyn@suse.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Bob Peterson <rpeterso@redhat.com>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Ritesh Harjani <riteshh@linux.ibm.com>,
-        Johannes Thumshirn <jth@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        cluster-devel@redhat.com,
-        syzbot+0ed9f769264276638893@syzkaller.appspotmail.com
-Subject: Re: [PATCH 1/1] Revert "iomap: fall back to buffered writes for
- invalidation failures"
-Message-ID: <YgQVEVVOfPH/f2jQ@google.com>
-References: <20220209085243.3136536-1-lee.jones@linaro.org>
- <20220209150904.GA22025@lst.de>
- <YgPk9HhIeFM43b/a@google.com>
- <YgQSCoD5j9KbpHsA@casper.infradead.org>
+        with ESMTP id S235944AbiBIWbY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Feb 2022 17:31:24 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E4CBE018E69;
+        Wed,  9 Feb 2022 14:31:26 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E5E3461C9A;
+        Wed,  9 Feb 2022 22:31:25 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49778C340EB;
+        Wed,  9 Feb 2022 22:31:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1644445885;
+        bh=bR4sxUvE7t7/jpuP5YfFYF8Jl/pDn3BISpVtXoqsgls=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=HOMKSFwEU1krwHCm9g/ZmZ+B3M5POlN1cGehoE/AXmcb842yXuchumtanaMAoT8vR
+         CFz1jES8lcBRJm8RXhm7vIFKPfi3Gan9SsrVIktgzGnVjvHIfGEjqM2vvkrKcJH9Y/
+         6EvFxh99sh6HS3za91w0C8wbWRHdJ8Z2tlmo16NE4uN5ZX13fq6N9diGv5cXBEli5R
+         YF0u0VdhiVU+/Kl2iwam5Yv3kHdO4HO3ArnQ5mLldbezGv+B+ZYffOFOyeK73H7ZtY
+         dutGeVUpJPDe09I1Zwb4oDO+JmYkLk/g4i0PW1SLKgRxfZnJuwJy6rL32bcVsDbBUl
+         DdlS3C7MauxcA==
+Date:   Wed, 9 Feb 2022 14:31:24 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+Cc:     fstests@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        Naohiro Aota <naohiro.aota@wdc.com>,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Subject: Re: [PATCH v2 2/6] generic/204: remove unnecessary _scratch_mkfs call
+Message-ID: <20220209223124.GE8313@magnolia>
+References: <20220209123305.253038-1-shinichiro.kawasaki@wdc.com>
+ <20220209123305.253038-3-shinichiro.kawasaki@wdc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <YgQSCoD5j9KbpHsA@casper.infradead.org>
+In-Reply-To: <20220209123305.253038-3-shinichiro.kawasaki@wdc.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, 09 Feb 2022, Matthew Wilcox wrote:
-
-> On Wed, Feb 09, 2022 at 03:59:48PM +0000, Lee Jones wrote:
-> > On Wed, 09 Feb 2022, Christoph Hellwig wrote:
-> > 
-> > > On Wed, Feb 09, 2022 at 08:52:43AM +0000, Lee Jones wrote:
-> > > > This reverts commit 60263d5889e6dc5987dc51b801be4955ff2e4aa7.
-> > > > 
-> > > > Reverting since this commit opens a potential avenue for abuse.
-> > > > 
-> > > > The C-reproducer and more information can be found at the link below.
-> > > > 
-> > > > With this patch applied, I can no longer get the repro to trigger.
-> > > 
-> > > Well, maybe you should actually debug and try to understand what is
-> > > going on before blindly reverting random commits.
-> > 
-> > That is not a reasonable suggestion.
-> > 
-> > Requesting that someone becomes an area expert on a huge and complex
-> > subject such as file systems (various) in order to fix your broken
-> > code is not rational.
+On Wed, Feb 09, 2022 at 09:33:01PM +0900, Shin'ichiro Kawasaki wrote:
+> The test case generic/204 calls _scratch_mkfs to get data block size and
+> i-node size of the filesystem and obtained data block size is passed to
+> the following _scratch_mfks_sized call as an option. However, the
+> _scratch_mkfs call is unnecessary since the sizes can be obtained by
+> _scratch_mkfs_sized call without the data block size option.
 > 
-> Sending a patch to revert a change you don't understand is also
-> not rational.  If you've bisected it to a single change -- great!
-> If reverting the patch still fixes the bug -- also great!  But
-> don't send a patch when you clearly don't understand what the
-> patch did.
+> Also the _scratch_mkfs call is harmful when the _scratch_mkfs succeeds
+> and the _scratch_mkfs_sized fails. In this case, the _scratch_mkfs
+> leaves valid working filesystem on scratch device then following mount
+> and IO operations can not detect the failure of _scratch_mkfs_sized.
+> This results in the test case run with unexpected test condition.
+> 
+> Hence, remove the _scratch_mkfs call and the data block size option for
+> _scratch_mkfs_sized call.
+> 
+> Suggested-by: Darrick J. Wong <djwong@kernel.org>
+> Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
 
-If reverting isn't the correct thing to do here, please consider this
-as a bug report.
+Looks ok, assuming you've verified that fstests with FSTYP=xfs doesn't
+regress...
 
--- 
-Lee Jones [李琼斯]
-Principal Technical Lead - Developer Services
-Linaro.org │ Open source software for Arm SoCs
-Follow Linaro: Facebook | Twitter | Blog
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+
+--D
+
+> ---
+>  tests/generic/204 | 6 +-----
+>  1 file changed, 1 insertion(+), 5 deletions(-)
+> 
+> diff --git a/tests/generic/204 b/tests/generic/204
+> index a3dabb71..a33a090f 100755
+> --- a/tests/generic/204
+> +++ b/tests/generic/204
+> @@ -24,10 +24,6 @@ _supported_fs generic
+>  
+>  _require_scratch
+>  
+> -# get the block size first
+> -_scratch_mkfs 2> /dev/null | _filter_mkfs 2> $tmp.mkfs > /dev/null
+> -. $tmp.mkfs
+> -
+>  # For xfs, we need to handle the different default log sizes that different
+>  # versions of mkfs create. All should be valid with a 16MB log, so use that.
+>  # And v4/512 v5/1k xfs don't have enough free inodes, set imaxpct=50 at mkfs
+> @@ -35,7 +31,7 @@ _scratch_mkfs 2> /dev/null | _filter_mkfs 2> $tmp.mkfs > /dev/null
+>  [ $FSTYP = "xfs" ] && MKFS_OPTIONS="$MKFS_OPTIONS -l size=16m -i maxpct=50"
+>  
+>  SIZE=`expr 115 \* 1024 \* 1024`
+> -_scratch_mkfs_sized $SIZE $dbsize 2> /dev/null > $tmp.mkfs.raw
+> +_scratch_mkfs_sized $SIZE 2> /dev/null > $tmp.mkfs.raw
+>  cat $tmp.mkfs.raw | _filter_mkfs 2> $tmp.mkfs > /dev/null
+>  _scratch_mount
+>  
+> -- 
+> 2.34.1
+> 
