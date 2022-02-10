@@ -2,178 +2,214 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E128BC433FE
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Feb 2022 10:16:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C3C2C433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Feb 2022 10:53:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239516AbiBJKQl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 10 Feb 2022 05:16:41 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:36958 "EHLO
+        id S240265AbiBJKxo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 10 Feb 2022 05:53:44 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:32894 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239505AbiBJKQh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Feb 2022 05:16:37 -0500
-Received: from mail-wm1-x32a.google.com (mail-wm1-x32a.google.com [IPv6:2a00:1450:4864:20::32a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11563FD6
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Feb 2022 02:16:39 -0800 (PST)
-Received: by mail-wm1-x32a.google.com with SMTP id i19so1708890wmq.5
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Feb 2022 02:16:38 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=p2L2JMGAHF/fA4cXJq0+NeV9Ap/R7fib8dscPh33vcg=;
-        b=F27+3Ao6twgPUQ/BOE7bCH1y1UIIqmAONzGU3oxFPBf0mAFdO1zuL2KUYM1O++g2kx
-         0QthHn6iinSXUj64X8vvdhOqtR+XWYwn5E/Gw+bJlWic6yenGNohxjvoICKo1CA/v5wh
-         dZGA4pMay8u5aQAVuBZJ9srKDSwgWE/ddXN47oMMFEcWNd53Fe5zwF8cdwre7J051wLF
-         ItDcXZiEPwC7ClNhh568QmdIVrjuPnmTtWwlVTn3hykOQGuNeu6OtXK7BEc5b2gRMv6/
-         7r1aC+tQNy80dt1ZZUiEtUXIHLwa4b8xT03cNBWZKJQJ3w+AQX5CpSGRsTrvE9geY6Nj
-         P3iw==
+        with ESMTP id S240264AbiBJKxm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Feb 2022 05:53:42 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 96EA4FE9
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Feb 2022 02:53:43 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1644490422;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=JCuMYRkRk63t/uEdzFuVnTeGbIgzIgM+Be/IRayUXNE=;
+        b=HP6LiHyIbRSO5YN/ObcqE1pST1a4ifY6VCrEM2DbGTuWhsYr+2bZdaXvHhz1yMnQwaR6MZ
+        heaVIAcuT9scEk5K/M9SB1xSfq2cY/IjrLdC5VXfVhV98zWqVqoG6aXuuQGVCSnCTs06G6
+        H9kC8IlWyVOkpxxrXxfj5IrW5cyk2jg=
+Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
+ [209.85.128.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-46-Ox8pUz6QO8K-IvKSGEY2Og-1; Thu, 10 Feb 2022 05:53:41 -0500
+X-MC-Unique: Ox8pUz6QO8K-IvKSGEY2Og-1
+Received: by mail-wm1-f69.google.com with SMTP id l20-20020a05600c1d1400b0035153bf34c3so4159104wms.2
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Feb 2022 02:53:41 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=p2L2JMGAHF/fA4cXJq0+NeV9Ap/R7fib8dscPh33vcg=;
-        b=HJJQOxT3Z+iv8BF7VRw0M+Vhdxk9YCY2LllrIIuvsYu5H3iZdhkaGuK3he+qaQ12sC
-         pLBV19ciea1rxCzp18QILFTL9lQigneWEZkjagwMAhvu/PqyrVa7DOroVh6QNMYru5gW
-         X8y04hAZ0vi1axYCGLfv3yPvxp4tH1f1AZhh3/tA3UYsJUSw13NoOKMlN0l8lh5B568e
-         Xjjn5bjJPUb3xk04tbCCREbq+MjWcTrk5F7NhE1v2f9VyiEELGRMuriGX9dnqP79a4Wh
-         tTqV7fTLkUCFN6Y/fsQrCtQNfPKUVexR7mQwtBNsd7Q1AroHhFT/ANbQ4Ss0db9t26Al
-         Mgqw==
-X-Gm-Message-State: AOAM530nLSU3Kr+iTB/F9M+TwugmtGrACozsNvfqPIjHeohmXProsQdn
-        HF/rMI1GXcpBeu9QZGje9/+6kQ==
-X-Google-Smtp-Source: ABdhPJyqF2XvTy7u6DWP/6ivautdkeYnX0LG3m5hhXZW9KBraONCYgZP5/iwGcxiCbFl24LtFFh+PA==
-X-Received: by 2002:a05:600c:2058:: with SMTP id p24mr1538504wmg.3.1644488197579;
-        Thu, 10 Feb 2022 02:16:37 -0800 (PST)
-Received: from google.com (cpc155339-bagu17-2-0-cust87.1-3.cable.virginm.net. [86.27.177.88])
-        by smtp.gmail.com with ESMTPSA id y1sm1328053wmi.36.2022.02.10.02.15.53
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 10 Feb 2022 02:15:55 -0800 (PST)
-Date:   Thu, 10 Feb 2022 10:15:52 +0000
-From:   Lee Jones <lee.jones@linaro.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-kernel@vger.kernel.org, Stable <stable@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Dave Chinner <dchinner@redhat.com>,
-        Goldwyn Rodrigues <rgoldwyn@suse.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Bob Peterson <rpeterso@redhat.com>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Ritesh Harjani <riteshh@linux.ibm.com>,
-        Johannes Thumshirn <jth@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        cluster-devel@redhat.com,
-        syzbot+0ed9f769264276638893@syzkaller.appspotmail.com
-Subject: Re: [PATCH 1/1] Revert "iomap: fall back to buffered writes for
- invalidation failures"
-Message-ID: <YgTl2Lm9Vk50WNSj@google.com>
-References: <20220209085243.3136536-1-lee.jones@linaro.org>
- <20220210045911.GF8338@magnolia>
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:organization:in-reply-to
+         :content-transfer-encoding;
+        bh=JCuMYRkRk63t/uEdzFuVnTeGbIgzIgM+Be/IRayUXNE=;
+        b=aMZZ2OGZPyG9z/CM7WaPlEn4cPU8klb4YJd02PIkmtAMrTD+oFdJYYDeqM7hfgCcPG
+         xWHyD5xVKXV4p424EKI+u1lHPpjQ9guO3IuINOSCjbnTRj3qxwSYgwQKXYoxq2o2nivu
+         rCM4bQUPNINxc6T4/nGUjvIEGtLt5q2dGzlTVchX92IfyUjLPb8MOC0bbyUXzDybqFB3
+         fACpqYXT2zZEL7vHW7N/eS0M76CtQlNSLUY3UuqGlpARijmr2C1ICAXXUXEclRRkqxkV
+         +l7yoBCo6BVx6NlxUCyWr7zNsPz1r3YPO7hsa9/LutZtVL/taXccbVlL9c6ECrHZzlIA
+         XdTQ==
+X-Gm-Message-State: AOAM5305O3FvlZSUzmrWCWKoz8qwHjxDC2KS5TlHvZ69XOdBnVf+dTOp
+        xxUU1V4wPYcR7PwutyL7X5WjOi7qJZUwmtRCFPuJUcTWOCe7yLg+WH25tYF3T9ulil9sdgYMqIF
+        qHrYpZjTCwxEu/iBLLQdu
+X-Received: by 2002:a05:600c:1988:: with SMTP id t8mr1662389wmq.66.1644490419925;
+        Thu, 10 Feb 2022 02:53:39 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJwkvT5JZHYXYtY2UOZZws+goRiFcmq1p9MqivWc75eF2pkGueO44gfahvAR0YnoX7ep2nRGuw==
+X-Received: by 2002:a05:600c:1988:: with SMTP id t8mr1662365wmq.66.1644490419644;
+        Thu, 10 Feb 2022 02:53:39 -0800 (PST)
+Received: from ?IPV6:2003:cb:c70b:f900:7b04:69ec:2caf:3b42? (p200300cbc70bf9007b0469ec2caf3b42.dip0.t-ipconnect.de. [2003:cb:c70b:f900:7b04:69ec:2caf:3b42])
+        by smtp.gmail.com with ESMTPSA id 11sm21492095wrb.30.2022.02.10.02.53.38
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 10 Feb 2022 02:53:39 -0800 (PST)
+Message-ID: <9117b387-3c73-0236-51d1-9e6baf43b34e@redhat.com>
+Date:   Thu, 10 Feb 2022 11:53:38 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20220210045911.GF8338@magnolia>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.4.0
+Subject: Re: [PATCH v2 2/3] mm/gup.c: Migrate device coherent pages when
+ pinning instead of failing
+Content-Language: en-US
+To:     Alistair Popple <apopple@nvidia.com>, akpm@linux-foundation.org,
+        linux-mm@kvack.org
+Cc:     Felix.Kuehling@amd.com, rcampbell@nvidia.com,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        hch@lst.de, jgg@nvidia.com, jglisse@redhat.com,
+        willy@infradead.org, alex.sierra@amd.com, jhubbard@nvidia.com
+References: <cover.0d3c846b1c6c294e055ff7ebe221fab9964c1436.1644207242.git-series.apopple@nvidia.com>
+ <dd9960b327ca49a9103d9f97868ea7b0b81186c4.1644207242.git-series.apopple@nvidia.com>
+From:   David Hildenbrand <david@redhat.com>
+Organization: Red Hat
+In-Reply-To: <dd9960b327ca49a9103d9f97868ea7b0b81186c4.1644207242.git-series.apopple@nvidia.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, 09 Feb 2022, Darrick J. Wong wrote:
-
-> On Wed, Feb 09, 2022 at 08:52:43AM +0000, Lee Jones wrote:
-> > This reverts commit 60263d5889e6dc5987dc51b801be4955ff2e4aa7.
-> > 
-> > Reverting since this commit opens a potential avenue for abuse.
+On 07.02.22 05:26, Alistair Popple wrote:
+> Currently any attempts to pin a device coherent page will fail. This is
+> because device coherent pages need to be managed by a device driver, and
+> pinning them would prevent a driver from migrating them off the device.
 > 
-> What kind of abuse?  Did you conclude there's an avenue solely because
-> some combination of userspace rigging produced a BUG warning?  Or is
-> this a real problem that someone found?
-
-Genuine question: Is the ability for userspace to crash the kernel
-not enough to cause concern?  I would have thought that we'd want to
-prevent this.
-
-If by 'real problem' you mean; privilege escalation, memory corruption
-or data leakage, then no, I haven't found any evidence of that.
-However, that's not to say these aren't possible as a result of this
-issue, just that I do not have the skills or knowledge to be able to
-turn this into a demonstrable attack vector.
-
-However, if you say there is no issue, I'm happy to take your word.
-
-> > The C-reproducer and more information can be found at the link below.
+> However this is no reason to fail pinning of these pages. These are
+> coherent and accessible from the CPU so can be migrated just like
+> pinning ZONE_MOVABLE pages. So instead of failing all attempts to pin
+> them first try migrating them out of ZONE_DEVICE.
 > 
-> No.  Post the information and your analysis here.  I'm not going to dig
-> into some Google site to find out what happened, and I'm not going to
-> assume that future developers will be able to access that URL to learn
-> why this patch was created.
-
-The link provided doesn't contain any further analysis.  Only the
-reproducer and kernel configuration used, which are both too large to
-enter into a Git commit.
-
-> >   kernel BUG at fs/ext4/inode.c:2647!
-> >   invalid opcode: 0000 [#1] PREEMPT SMP KASAN
-> >   CPU: 0 PID: 459 Comm: syz-executor359 Tainted: G        W         5.10.93-syzkaller-01028-g0347b1658399 #0
+> Signed-off-by: Alistair Popple <apopple@nvidia.com>
+> Acked-by: Felix Kuehling <Felix.Kuehling@amd.com>
+> ---
 > 
-> What BUG on fs/ext4/inode.c:2647?
+> Changes for v2:
 > 
-> https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/ext4/inode.c?h=v5.10.93#n2647
+>  - Added Felix's Acked-by
+>  - Fixed missing check for dpage == NULL
 > 
-> All I see is a call to pagevec_release()?  There's a BUG_ON further up
-> if we wait for page writeback but then it still has Writeback set.  But
-> I don't see anything in pagevec_release that would actually result in a
-> BUG warning.
-
-Right, this BUG back-trace was taken from the kernel I received the
-bug report for.  I should have used the one I triggered in Mainline,
-apologies for that.
-
-The real source of the BUG is in the inlined call to page_buffers().
-
-Here is the link for the latest release kernel:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/ext4/inode.c?h=v5.16#n2620
-
-#define page_buffers(page)                                      \
-        ({                                                      \
-                BUG_ON(!PagePrivate(page));                     \
-                ((struct buffer_head *)page_private(page));     \
-        })
-
-> Oh, right, this is one of those inscrutable syzkaller things, where a
-> person can spend hours figuring out what the hell it set up.
-
-A link to the config used (again too big to enter into a commit
-message), can be easily sourced from the link provided.
-
-> Yeah...no, you don't get to submit patches to core kernel code, claim
-> it's not your responsibility to know anything about a subsystem that you
-> want to patch, and then expect us to do the work for you.  If you pick
-> up a syzkaller report, you get to figure out what broke, why, and how to
-> fix it in a reasonable manner.
+>  mm/gup.c | 105 ++++++++++++++++++++++++++++++++++++++++++++++++++------
+>  1 file changed, 95 insertions(+), 10 deletions(-)
 > 
-> You're a maintainer, would you accept a patch like this?
+> diff --git a/mm/gup.c b/mm/gup.c
+> index 56d9577..5e826db 100644
+> --- a/mm/gup.c
+> +++ b/mm/gup.c
+> @@ -1861,6 +1861,60 @@ struct page *get_dump_page(unsigned long addr)
+>  
+>  #ifdef CONFIG_MIGRATION
+>  /*
+> + * Migrates a device coherent page back to normal memory. Caller should have a
+> + * reference on page which will be copied to the new page if migration is
+> + * successful or dropped on failure.
+> + */
+> +static struct page *migrate_device_page(struct page *page,
+> +					unsigned int gup_flags)
+> +{
+> +	struct page *dpage;
+> +	struct migrate_vma args;
+> +	unsigned long src_pfn, dst_pfn = 0;
+> +
+> +	lock_page(page);
+> +	src_pfn = migrate_pfn(page_to_pfn(page)) | MIGRATE_PFN_MIGRATE;
+> +	args.src = &src_pfn;
+> +	args.dst = &dst_pfn;
+> +	args.cpages = 1;
+> +	args.npages = 1;
+> +	args.vma = NULL;
+> +	migrate_vma_setup(&args);
+> +	if (!(src_pfn & MIGRATE_PFN_MIGRATE))
+> +		return NULL;
+> +
+> +	dpage = alloc_pages(GFP_USER | __GFP_NOWARN, 0);
+> +
+> +	/*
+> +	 * get/pin the new page now so we don't have to retry gup after
+> +	 * migrating. We already have a reference so this should never fail.
+> +	 */
+> +	if (dpage && WARN_ON_ONCE(!try_grab_page(dpage, gup_flags))) {
+> +		__free_pages(dpage, 0);
+> +		dpage = NULL;
+> +	}
+> +
+> +	if (dpage) {
+> +		lock_page(dpage);
+> +		dst_pfn = migrate_pfn(page_to_pfn(dpage));
+> +	}
+> +
+> +	migrate_vma_pages(&args);
+> +	if (src_pfn & MIGRATE_PFN_MIGRATE)
+> +		copy_highpage(dpage, page);
+> +	migrate_vma_finalize(&args);
+> +	if (dpage && !(src_pfn & MIGRATE_PFN_MIGRATE)) {
+> +		if (gup_flags & FOLL_PIN)
+> +			unpin_user_page(dpage);
+> +		else
+> +			put_page(dpage);
+> +		dpage = NULL;
+> +	}
+> +
+> +	return dpage;
+> +}
+> +
+> +/*
+>   * Check whether all pages are pinnable, if so return number of pages.  If some
+>   * pages are not pinnable, migrate them, and unpin all pages. Return zero if
+>   * pages were migrated, or if some pages were not successfully isolated.
+> @@ -1888,15 +1942,40 @@ static long check_and_migrate_movable_pages(unsigned long nr_pages,
+>  			continue;
+>  		prev_head = head;
+>  		/*
+> -		 * If we get a movable page, since we are going to be pinning
+> -		 * these entries, try to move them out if possible.
+> +		 * Device coherent pages are managed by a driver and should not
+> +		 * be pinned indefinitely as it prevents the driver moving the
+> +		 * page. So when trying to pin with FOLL_LONGTERM instead try
+> +		 * migrating page out of device memory.
+>  		 */
+>  		if (is_dev_private_or_coherent_page(head)) {
+> +			/*
+> +			 * device private pages will get faulted in during gup
+> +			 * so it shouldn't be possible to see one here.
+> +			 */
+>  			WARN_ON_ONCE(is_device_private_page(head));
+> -			ret = -EFAULT;
+> -			goto unpin_pages;
+> +			WARN_ON_ONCE(PageCompound(head));
+> +
+> +			/*
+> +			 * migration will fail if the page is pinned, so convert
+> +			 * the pin on the source page to a normal reference.
+> +			 */
+> +			if (gup_flags & FOLL_PIN) {
+> +				get_page(head);
+> +				unpin_user_page(head);
+> +			}
+> +
+> +			pages[i] = migrate_device_page(head, gup_flags);
 
-No.  I would share my knowledge to provide a helpful review and work
-with the contributor to find a solution (if applicable).
 
-> OH WAIT, you're running this on the Android 5.10 kernel, aren't you?
-> The BUG report came from page_buffers failing to find any buffer heads
-> attached to the page.
-> https://android.googlesource.com/kernel/common/+/refs/heads/android12-5.10-2022-02/fs/ext4/inode.c#2647
 
-Yes, the H/W I have to prototype these on is a phone and the report
-that came in was specifically built against the aforementioned
-kernel.
+For ordinary migrate_pages(), we'll unpin all pages and return 0 so the
+caller will retry pinning by walking the page tables again.
 
-> Yeah, don't care.
-
-"There is nothing to worry about, as it's intended behaviour"?
+Why can't we apply the same mechanism here? This "let's avoid another
+walk" looks unnecessary complicated to me, but I might be wrong.
 
 -- 
-Lee Jones [李琼斯]
-Principal Technical Lead - Developer Services
-Linaro.org │ Open source software for Arm SoCs
-Follow Linaro: Facebook | Twitter | Blog
+Thanks,
+
+David / dhildenb
+
