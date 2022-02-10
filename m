@@ -2,188 +2,264 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18704C433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Feb 2022 23:08:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B690FC4332F
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Feb 2022 23:41:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343845AbiBJXIL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 10 Feb 2022 18:08:11 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:58048 "EHLO
+        id S235662AbiBJXlY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 10 Feb 2022 18:41:24 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:48346 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238904AbiBJXIJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Feb 2022 18:08:09 -0500
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id AD917C66
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Feb 2022 15:08:09 -0800 (PST)
-Received: from dread.disaster.area (pa49-180-69-7.pa.nsw.optusnet.com.au [49.180.69.7])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id A1F3F52C5D5;
-        Fri, 11 Feb 2022 10:08:08 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nIIXm-00AWQX-WB; Fri, 11 Feb 2022 10:08:07 +1100
-Date:   Fri, 11 Feb 2022 10:08:06 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs: run blockgc on freeze to avoid iget stalls
- after reclaim
-Message-ID: <20220210230806.GO59729@dread.disaster.area>
-References: <20220114173535.GA90423@magnolia>
- <YeHSxg3HrZipaLJg@bfoster>
- <20220114213043.GB90423@magnolia>
- <YeVxCXE6hXa1S/ic@bfoster>
- <20220118185647.GB13563@magnolia>
- <Yehvc4g+WakcG1mP@bfoster>
- <20220120003636.GF13563@magnolia>
- <Ye7aaIUvHFV18yNn@bfoster>
- <20220202022240.GY59729@dread.disaster.area>
- <YgVhe/mAQvzPIK7M@bfoster>
+        with ESMTP id S1345795AbiBJXlX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Feb 2022 18:41:23 -0500
+Received: from NAM12-DM6-obe.outbound.protection.outlook.com (mail-dm6nam12on2050.outbound.protection.outlook.com [40.107.243.50])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30E3C5F72;
+        Thu, 10 Feb 2022 15:41:20 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=YJV60lBE4e69NXJgK6CVz3vhGbhRhPGG2y4kTEDfo+vR6ZabXJczbLSmBcfowc6fZG2KjbMgso/Gr/PXs8ZU1QmqLRJSKjKxuEEfN7e4+SL5yaQUPahbTnKnMhcPYMBpMJB87Lne0dXy5CA8ovSdPAGKNl69RlAzzFZm+sB0Cmixwf6+lZvlOZaXJTWCXm9+jev7NhCK0MlKqomVkrARsBFJsGpp54jqAAif+kzo0j9Owj1Eaunm9ZtKwzQFWB1xu6HyIWglLD0HV8HJeLs2kLlphLGLsoHBlQhrEYrg7ONbUrj21f176Ee/EETuu48n61VYm0wLC723D4FnW5fLUQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=2+8KdbZKYBF8Be+CMwXZ0qBJPfP9sEca8pm7JJU7UhA=;
+ b=l+1fSIL9sykquceQQnRPLmGT80XvOLDDO+9G3ek+qOrzH/gp3hVhnmOVEmrC3Et13YM7qd6ZgOSWlFUQcRE5EEgq6o4HPlcncz/tZahg9nmWP0+7vA8FJqu2fd0HDlBahTDvDm9VmeRnXZRjYzYdq1OSnlD4KEWNsSNs4WESWsOmlwd+8j9T0G+6No6uC35EVJLmIhHe987Z+yf+n7L0WE58Lgh5H61NxQ6Z+Xqd0QyEhl6xOD+TglxAoV+m6FrjGLZwdID4w5tENGbGGb7RpKBtGd8xZnYyMgYdwuthJ7jquV+OdlML6AusOZBOn8+obQHz8+r9zNZadsYbk8vEpg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 12.22.5.234) smtp.rcpttodomain=lst.de smtp.mailfrom=nvidia.com; dmarc=pass
+ (p=reject sp=reject pct=100) action=none header.from=nvidia.com; dkim=none
+ (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=2+8KdbZKYBF8Be+CMwXZ0qBJPfP9sEca8pm7JJU7UhA=;
+ b=sxQFb1B+yRGfaGgosFf7SQ/UOnAD4A7YCetXcAKJ+t6C90pURTWus6TQpM+2EwpwSee6NSzWZG/jHQ7UtI3Wzv865uwRWGFji3AgnknQr0LVtuOXQK8c+KuZcCOriQG99BCm9cCsbnJo8Xg2XiA5RFcBr/PAPVYRZCVcbiPvYDPgtl1euL03NxKtCjrP1M3li//hUZB0S+MiQaD+kQzw0Z6AbCnY/DWHDhQDW8shr4WYNceZ5dbRSaSzmYL2XAMXbIgEMxUnu9l7+NC3HZIHGAHAn+UjEWoXt/G+OKoSuIhPQxENInNExQ16FnoWbvQQvxzg6TK3IVurlMzcGIIR5Q==
+Received: from BN0PR04CA0076.namprd04.prod.outlook.com (2603:10b6:408:ea::21)
+ by DM6PR12MB2908.namprd12.prod.outlook.com (2603:10b6:5:185::26) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4951.12; Thu, 10 Feb
+ 2022 23:41:18 +0000
+Received: from BN8NAM11FT066.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:408:ea:cafe::bd) by BN0PR04CA0076.outlook.office365.com
+ (2603:10b6:408:ea::21) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4975.14 via Frontend
+ Transport; Thu, 10 Feb 2022 23:41:18 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 12.22.5.234)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 12.22.5.234 as permitted sender) receiver=protection.outlook.com;
+ client-ip=12.22.5.234; helo=mail.nvidia.com;
+Received: from mail.nvidia.com (12.22.5.234) by
+ BN8NAM11FT066.mail.protection.outlook.com (10.13.177.138) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ 15.20.4975.11 via Frontend Transport; Thu, 10 Feb 2022 23:41:17 +0000
+Received: from rnnvmail201.nvidia.com (10.129.68.8) by DRHQMAIL101.nvidia.com
+ (10.27.9.10) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Thu, 10 Feb
+ 2022 23:41:11 +0000
+Received: from nvdebian.localnet (10.126.230.35) by rnnvmail201.nvidia.com
+ (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.9; Thu, 10 Feb 2022
+ 15:41:07 -0800
+From:   Alistair Popple <apopple@nvidia.com>
+To:     <akpm@linux-foundation.org>, <linux-mm@kvack.org>,
+        David Hildenbrand <david@redhat.com>
+CC:     <Felix.Kuehling@amd.com>, <rcampbell@nvidia.com>,
+        <linux-ext4@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <amd-gfx@lists.freedesktop.org>, <dri-devel@lists.freedesktop.org>,
+        <hch@lst.de>, <jgg@nvidia.com>, <jglisse@redhat.com>,
+        <willy@infradead.org>, <alex.sierra@amd.com>, <jhubbard@nvidia.com>
+Subject: Re: [PATCH v2 2/3] mm/gup.c: Migrate device coherent pages when pinning instead of failing
+Date:   Fri, 11 Feb 2022 10:41:05 +1100
+Message-ID: <5251686.PpEh1BJ82l@nvdebian>
+In-Reply-To: <fb557284-bcab-6d95-ac60-acd7459e9e80@redhat.com>
+References: <cover.0d3c846b1c6c294e055ff7ebe221fab9964c1436.1644207242.git-series.apopple@nvidia.com> <1894939.704c7Wv018@nvdebian> <fb557284-bcab-6d95-ac60-acd7459e9e80@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YgVhe/mAQvzPIK7M@bfoster>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62059ad9
-        a=NB+Ng1P8A7U24Uo7qoRq4Q==:117 a=NB+Ng1P8A7U24Uo7qoRq4Q==:17
-        a=kj9zAlcOel0A:10 a=oGFeUVbbRNcA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=hzFKve-40REhhot-BIAA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
+X-Originating-IP: [10.126.230.35]
+X-ClientProxiedBy: rnnvmail201.nvidia.com (10.129.68.8) To
+ rnnvmail201.nvidia.com (10.129.68.8)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 16a4bd5f-504c-415c-b966-08d9eceed59d
+X-MS-TrafficTypeDiagnostic: DM6PR12MB2908:EE_
+X-Microsoft-Antispam-PRVS: <DM6PR12MB2908AE34AF904ECA76BD5441DF2F9@DM6PR12MB2908.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:9508;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: f7wouD2riYtPX8E7ommPm+4sskDUXU1K+YsZMo4idADVG/Tj5GhYiliNjcH/xE9Q7W/dJoBWxcQwbaXvBnHalPtrr0lknho1MKDTuqZcbBk19b/hRMDjiPqe+KSDvT+qE+1qll7rYX9vVsS4nPW9YlrZJVh79rUfQnkn/+xRe2xAkTAx9BTxfTbY5QjzzhAK3yu4aDfjyVRUdLfEdCPM9v/HF+VgB5TTB5Mm9aVpe5Kf/zc2MTh1KMv6M/tuLZ0VayoPauZQqv+hgbmD+VZUGXcxuHQpc6Ebm96MFrVYHfNedKcfyxfzhPGiB9vtX0/kTORRKVSuyS1JJdf+ohz8UbZbj4hAFvubkUg0CE9YZ970koOC4I0Cbv/kgEisXEYbr5dMdZNi9awgN+lDQHrj6qXqMCh1pZwKsne/JCy+wuEmNg6ScXA2w4NwGh8OVkQdAIbOiP3wljXBIcn8uaBK/yym8pssOUP3becXsA5aiyXl3oAo248q92sc2Sue9AE5alZDHTEDbdJAdmKW7Wc8WQbSDlt6/e5Sgb3Og7fUBfpP7+T7VCwBjdN6rhSjzXBiJNfqP8c+MtbztOwtoE8J2HV7UBNJiWK/S9sjmAC+i8nBc1D73Hs+KlqH32gr3mXgghRnSlw4bFPOvnsjfzpzGQIphQZiggavup8fAGgwsiDXmxzY7/pxmS6qSiRR5ehJawjN4YbI/zx5L2fJC9IDychkoBr8qCFrFGVqYCmQwK7sxiaiIP0JJuQPbLxE0hDv
+X-Forefront-Antispam-Report: CIP:12.22.5.234;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:mail.nvidia.com;PTR:InfoNoRecords;CAT:NONE;SFS:(13230001)(4636009)(40470700004)(46966006)(36840700001)(26005)(186003)(81166007)(5660300002)(2906002)(336012)(316002)(16526019)(426003)(40460700003)(7416002)(36860700001)(107886003)(54906003)(110136005)(9686003)(70206006)(53546011)(70586007)(47076005)(83380400001)(4326008)(8936002)(8676002)(33716001)(356005)(9576002)(508600001)(82310400004)(86362001)(39026012)(36900700001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Feb 2022 23:41:17.8172
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 16a4bd5f-504c-415c-b966-08d9eceed59d
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[12.22.5.234];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT066.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB2908
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 10, 2022 at 02:03:23PM -0500, Brian Foster wrote:
-> On Wed, Feb 02, 2022 at 01:22:40PM +1100, Dave Chinner wrote:
-> > On Mon, Jan 24, 2022 at 11:57:12AM -0500, Brian Foster wrote:
-> > > On Wed, Jan 19, 2022 at 04:36:36PM -0800, Darrick J. Wong wrote:
-> > > > > Of course if you wanted to recycle inactive inodes or do something else
-> > > > > entirely, then it's probably not worth going down this path..
-> > > > 
-> > > > I'm a bit partial to /trying/ to recycle inactive inodes because (a)
-> > > > it's less tangling with -fsdevel for you and (b) inode scans in the
-> > > > online repair patchset got a little weird once xfs_iget lost the ability
-> > > > to recycle _NEEDS_INACTIVE inodes...
-> > > > 
-> > > > OTOH I tried to figure out how to deal with the lockless list that those
-> > > > inodes are put on, and I couldn't figure out how to get them off the
-> > > > list safely, so that might be a dead end.  If you have any ideas I'm all
-> > > > ears. :)
-> > > > 
-> > > 
-> > > So one of the things that I've been kind of unclear on about the current
-> > > deferred inactivation implementation is the primary goal of the percpu
-> > > optimization. I obviously can see the value of the percpu list in
-> > > general, but how much processing needs to occur in percpu context to
-> > > achieve the primary goal?
-> > > 
-> > > For example, I can see how a single or small multi threaded sustained
-> > > file removal might be batched efficiently, but what happens if said task
-> > > happens to bounce around many cpus?
+On Thursday, 10 February 2022 10:47:35 PM AEDT David Hildenbrand wrote:
+> On 10.02.22 12:39, Alistair Popple wrote:
+> > On Thursday, 10 February 2022 9:53:38 PM AEDT David Hildenbrand wrote:
+> >> On 07.02.22 05:26, Alistair Popple wrote:
+> >>> Currently any attempts to pin a device coherent page will fail. This is
+> >>> because device coherent pages need to be managed by a device driver, and
+> >>> pinning them would prevent a driver from migrating them off the device.
+> >>>
+> >>> However this is no reason to fail pinning of these pages. These are
+> >>> coherent and accessible from the CPU so can be migrated just like
+> >>> pinning ZONE_MOVABLE pages. So instead of failing all attempts to pin
+> >>> them first try migrating them out of ZONE_DEVICE.
+> >>>
+> >>> Signed-off-by: Alistair Popple <apopple@nvidia.com>
+> >>> Acked-by: Felix Kuehling <Felix.Kuehling@amd.com>
+> >>> ---
+> >>>
+> >>> Changes for v2:
+> >>>
+> >>>  - Added Felix's Acked-by
+> >>>  - Fixed missing check for dpage == NULL
+> >>>
+> >>>  mm/gup.c | 105 ++++++++++++++++++++++++++++++++++++++++++++++++++------
+> >>>  1 file changed, 95 insertions(+), 10 deletions(-)
+> >>>
+> >>> diff --git a/mm/gup.c b/mm/gup.c
+> >>> index 56d9577..5e826db 100644
+> >>> --- a/mm/gup.c
+> >>> +++ b/mm/gup.c
+> >>> @@ -1861,6 +1861,60 @@ struct page *get_dump_page(unsigned long addr)
+> >>>  
+> >>>  #ifdef CONFIG_MIGRATION
+> >>>  /*
+> >>> + * Migrates a device coherent page back to normal memory. Caller should have a
+> >>> + * reference on page which will be copied to the new page if migration is
+> >>> + * successful or dropped on failure.
+> >>> + */
+> >>> +static struct page *migrate_device_page(struct page *page,
+> >>> +					unsigned int gup_flags)
+> >>> +{
+> >>> +	struct page *dpage;
+> >>> +	struct migrate_vma args;
+> >>> +	unsigned long src_pfn, dst_pfn = 0;
+> >>> +
+> >>> +	lock_page(page);
+> >>> +	src_pfn = migrate_pfn(page_to_pfn(page)) | MIGRATE_PFN_MIGRATE;
+> >>> +	args.src = &src_pfn;
+> >>> +	args.dst = &dst_pfn;
+> >>> +	args.cpages = 1;
+> >>> +	args.npages = 1;
+> >>> +	args.vma = NULL;
+> >>> +	migrate_vma_setup(&args);
+> >>> +	if (!(src_pfn & MIGRATE_PFN_MIGRATE))
+> >>> +		return NULL;
+> >>> +
+> >>> +	dpage = alloc_pages(GFP_USER | __GFP_NOWARN, 0);
+> >>> +
+> >>> +	/*
+> >>> +	 * get/pin the new page now so we don't have to retry gup after
+> >>> +	 * migrating. We already have a reference so this should never fail.
+> >>> +	 */
+> >>> +	if (dpage && WARN_ON_ONCE(!try_grab_page(dpage, gup_flags))) {
+> >>> +		__free_pages(dpage, 0);
+> >>> +		dpage = NULL;
+> >>> +	}
+> >>> +
+> >>> +	if (dpage) {
+> >>> +		lock_page(dpage);
+> >>> +		dst_pfn = migrate_pfn(page_to_pfn(dpage));
+> >>> +	}
+> >>> +
+> >>> +	migrate_vma_pages(&args);
+> >>> +	if (src_pfn & MIGRATE_PFN_MIGRATE)
+> >>> +		copy_highpage(dpage, page);
+> >>> +	migrate_vma_finalize(&args);
+> >>> +	if (dpage && !(src_pfn & MIGRATE_PFN_MIGRATE)) {
+> >>> +		if (gup_flags & FOLL_PIN)
+> >>> +			unpin_user_page(dpage);
+> >>> +		else
+> >>> +			put_page(dpage);
+> >>> +		dpage = NULL;
+> >>> +	}
+> >>> +
+> >>> +	return dpage;
+> >>> +}
+> >>> +
+> >>> +/*
+> >>>   * Check whether all pages are pinnable, if so return number of pages.  If some
+> >>>   * pages are not pinnable, migrate them, and unpin all pages. Return zero if
+> >>>   * pages were migrated, or if some pages were not successfully isolated.
+> >>> @@ -1888,15 +1942,40 @@ static long check_and_migrate_movable_pages(unsigned long nr_pages,
+> >>>  			continue;
+> >>>  		prev_head = head;
+> >>>  		/*
+> >>> -		 * If we get a movable page, since we are going to be pinning
+> >>> -		 * these entries, try to move them out if possible.
+> >>> +		 * Device coherent pages are managed by a driver and should not
+> >>> +		 * be pinned indefinitely as it prevents the driver moving the
+> >>> +		 * page. So when trying to pin with FOLL_LONGTERM instead try
+> >>> +		 * migrating page out of device memory.
+> >>>  		 */
+> >>>  		if (is_dev_private_or_coherent_page(head)) {
+> >>> +			/*
+> >>> +			 * device private pages will get faulted in during gup
+> >>> +			 * so it shouldn't be possible to see one here.
+> >>> +			 */
+> >>>  			WARN_ON_ONCE(is_device_private_page(head));
+> >>> -			ret = -EFAULT;
+> >>> -			goto unpin_pages;
+> >>> +			WARN_ON_ONCE(PageCompound(head));
+> >>> +
+> >>> +			/*
+> >>> +			 * migration will fail if the page is pinned, so convert
+> >>> +			 * the pin on the source page to a normal reference.
+> >>> +			 */
+> >>> +			if (gup_flags & FOLL_PIN) {
+> >>> +				get_page(head);
+> >>> +				unpin_user_page(head);
+> >>> +			}
+> >>> +
+> >>> +			pages[i] = migrate_device_page(head, gup_flags);
+> >>
+> >> For ordinary migrate_pages(), we'll unpin all pages and return 0 so the
+> >> caller will retry pinning by walking the page tables again.
+> >>
+> >> Why can't we apply the same mechanism here? This "let's avoid another
+> >> walk" looks unnecessary complicated to me, but I might be wrong.
 > > 
-> > In that case we have a scheduler problem, not a per-cpu
-> > infrastructure issue.
+> > There's no reason we couldn't. I figured we have the page in the right spot
+> > anyway so it was easy to do, and looking at this rebased on top of Christoph's
+> > ZONE_DEVICE refcount simplification I'm not sure it would be any simpler
+> > anyway.
 > > 
+> > It would remove the call to try_grab_page(), but we'd still have to return an
+> > error on migration failures whilst also ensuring we putback any non-device
+> > pages that may have been isolated. I might have overlooked something though,
+> > so certainly happy for suggestions.
 > 
-> Last I tested on my box, a single threaded rm -rf had executed on
-> something like 24 of the 80 cpus available after about ~1m of runtime.
-
-Not surprising - the scheduler will select a sibling cores that
-share caches when the previous CPU the task was running on is busy
-running CPU affine tasks (i.e. the per-cpu inactive kworker thread).
-
-But how many CPUs it bounces the workload around over a long period
-is not important. What is important is the cache residency between
-the inodes when they are queued and when they are then inactivated.
-That's measured in microseconds to single digit milliseconds (i.e.
-within a single scheduling tick), and this is the metric that
-matters the most. It doesn't matter if the first batch is unlinked
-on CPU 1 and then inactived on CPU 1 while the scheduler moves the
-unlink task to CPU 2 where it queues the next batch to be
-inactivated on CPU 2, and so on. What matters is the data set in
-each batch remains on the same CPU for inactivation processing.
-
-The tracing I've done indicates taht the majority of the time that
-the scehduler bounces the tasks between two or three sibling CPUs
-repeatedly. This occurs when the inactivation is keeping up with the
-unlink queueing side. When we have lots of extents to remove in
-inactivation, the amount of inactivation work is much greater than
-the unlink() work, and so we see inactivation batch processing
-taking longer and the CPU spread of the unlink task gets larger
-because there are more CPUs running CPU-affine tasks doing
-background inactivation.
-
-IOWs, having the number of CPUs the unlink task is scheduled on
-grow over the long term is not at all unexpected - this is exactly
-what we'd expect to see when we move towards async background
-processing of complex operations...
-
-> Of course the inactivation work for an inode occurs on the cpu that the
-> rm task was running on when the inode was destroyed, but I don't think
-> there's any guarantee that kworker task will be the next task selected
-> on the cpu if the system is loaded with other runnable tasks (and then
-> whatever task is selected doesn't pollute the cache).
-
-The scheduler will select the next CPU based on phsyical machine
-topology - core latencies, shared caches, numa distances, whether
-the target CPU has affinity bound tasks already queued, etc.
-
-> For example, I
-> also noticed rm-<pidX> -> rm-<pidY> context switching on concurrent
-> remove tests. That is obviously not a caching issue in this case because
-> both tasks are still doing remove work, but behavior is less
-> deterministic of the target task happens to be something unrelated. Of
-> course, that doesn't mean the approach might not otherwise be effective
-> for the majority of common workloads..
-
-As long as the context switch rate does not substantially increase,
-having tasks migrate between sibling cores every so often isn't a
-huge problem.
-
-> > That per-ag based back end processing is exactly what Darrick's
-> > original proposals did:
-> > 
-> > https://lore.kernel.org/linux-xfs/162758431072.332903.17159226037941080971.stgit@magnolia/
-> > 
-> > It used radix tree walks run in background kworker threads to batch
-> > all the inode inactivation in a given AG via radix tree walks to
-> > find them.
-> > 
-> > It performed poorly at scale because it destroyed the CPU affinity
-> > between the unlink() operation and the inactivation operation of the
-> > unlinked inode when the last reference to the inode is dropped and
-> > the inode evicted from task syscall exit context. REgardless of
-> > whether there is a per-cpu front end or not, the per-ag based
-> > processing will destroy the CPU affinity of the data set being
-> > processed because we cannot guarantee that the per-ag objects are
-> > all local to the CPU that is processing the per-ag objects....
-> > 
+> Staring at the code, I was wondering if we could either
 > 
-> Ok. The role/significance of cpu caching was not as apparent to me when
-> I had last replied to this thread. The discussion around the rcu inode
-> lifecycle issue helped clear some of that up.
-> 
-> That said, why not conditionally tag and divert to a background worker
-> when the inodegc is disabled? That could allow NEEDS_INACTIVE inodes to
-> be claimed/recycled from other contexts in scenarios like when the fs is
-> frozen, since they won't be stuck in inaccessible and inactive percpu
-> queues, but otherwise preserves current behavior in normal runtime
-> conditions. Darrick mentioned online repair wanting to do something
-> similar earlier, but it's not clear to me if scrub could or would want
-> to disable the percpu inodegc workers in favor of a temporary/background
-> mode while repair is running. I'm just guessing that performance is
-> probably small enough of a concern in that situation that it wouldn't be
-> a mitigating factor. Hm?
+> * build a second list of device coherent pages to migrate and call a
+>   migrate_device_pages() bulk function
+> * simply use movable_page_list() and teach migrate_pages() how to handle
+>   them.
 
-WE probably could do this, but I'm not sure the complexity is
-justified by the rarity of the problem it is trying to avoid.
-Freezes are not long term, nor are they particularly common for
-performance sensitive workloads. Hence I'm just not this corner case
-is important enough to justify doing the work given that we've had
-similar freeze-will-delay-some-stuff-indefinitely behaviour for a
-long time...
+I did consider that approach. The problem is zone device pages are not LRU
+pages. In particular page->lru is not available to add the page to a list, and
+as an external API and internally migrate_pages() relies heavily on moving
+pages between lists.
 
-Cheers,
+> I'd really appreciate as little special casing as possible for the ever
+> growing list of new DEVICE types all over the place. E.g., just staring
+> at fork even before the new device coherent made my head spin.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+That's fair. We could pull the checks for device pages out into a self
+contained function (eg. check_and_migrate_device_pages()) called before
+check_and_migrate_movable_pages(). The down side of that is we'd always have an
+extra loop over all the pages just to scan for device pages, but perhaps that's
+not a concern?
+
+
+
