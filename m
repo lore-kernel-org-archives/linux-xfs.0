@@ -2,177 +2,132 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71BACC433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Feb 2022 19:43:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E37CEC433FE
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Feb 2022 20:47:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344055AbiBJTnb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 10 Feb 2022 14:43:31 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:47506 "EHLO
+        id S239020AbiBJUrT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 10 Feb 2022 15:47:19 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:58908 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240254AbiBJTn3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Feb 2022 14:43:29 -0500
-Received: from sandeen.net (sandeen.net [63.231.237.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 454F4DD1
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Feb 2022 11:43:30 -0800 (PST)
-Received: by sandeen.net (Postfix, from userid 500)
-        id 5DCC788; Thu, 10 Feb 2022 13:42:57 -0600 (CST)
-From:   Eric Sandeen <sandeen@redhat.com>
-To:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: [PATCH] xfs: test xfsdump when an inode < root inode is present
-Date:   Thu, 10 Feb 2022 13:42:57 -0600
-Message-Id: <1644522177-8908-1-git-send-email-sandeen@redhat.com>
-X-Mailer: git-send-email 1.8.3.1
+        with ESMTP id S236029AbiBJUrS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Feb 2022 15:47:18 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9C604109E
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Feb 2022 12:47:18 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1644526037;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=HwR20u8meC03NeC4tbyRsHMNKvROISOaBQ8YoHGaCfk=;
+        b=MP5Zc+AxgF5nQslT3xz22Szg+Wa0FoagORWJff6GDVFcxH4COdH1DOvwD0QxGhTToIjtGz
+        t7TX0L3oPr33Ja8JolZdsmR99Vh24AHcOVCJWiwDndiK3E/lMwnsTgKxwBhGjbEgX905vv
+        JM6YRA3KB2xMEXXi00qJMOY+OLyT3lk=
+Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
+ [209.85.222.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-655-gZjy8W6aPNe19TXrPmxJpg-1; Thu, 10 Feb 2022 15:47:16 -0500
+X-MC-Unique: gZjy8W6aPNe19TXrPmxJpg-1
+Received: by mail-qk1-f200.google.com with SMTP id z1-20020ae9f441000000b00507a22b2d00so4403308qkl.8
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Feb 2022 12:47:16 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=HwR20u8meC03NeC4tbyRsHMNKvROISOaBQ8YoHGaCfk=;
+        b=R20mmlLm2kX3Ac7kl/2IZbgecbESY31im7PfVCwKE5wPgBI0xn1EnnLawv1oB+g3e0
+         3EbZwJYaM68BKHQySt5un7AkWpSQehqxNYfeYQEsgIMtYerBf2PIGJr3AJil8S8edY5d
+         areENWUfIlzTm7qyogrWHViZJWl6iHW4iM9jvjKyw74r/rHg8Lsc3pmhlos2cMyWNmCT
+         12Vcr3uy20vX5zIhLRZqsZusoXbxXehrQxSRi4mGk3WC0RNYCRHCrffXpFbSz6LyJiTH
+         f2ThalayePpUfR7V6RnrwHontjTTEX91M7lTMAlDXtV4AHomNN6RK9tRKlOGy8+0/mhI
+         9tTA==
+X-Gm-Message-State: AOAM531WJ7NJ2TjPaKBfeOOZFuWydEbLmpyDL3mAmk6efSlGGugKuEz7
+        7Q8+QFpZGrsIJ8LCvmXbv5FzudnRyciE68nptJ/T9bYkBbcrrtR6YgbvRkW/DN/rnwlpVyR3I2E
+        gm56THvtAoBgsW2i4kamJ
+X-Received: by 2002:ae9:e850:: with SMTP id a77mr4810502qkg.239.1644526035889;
+        Thu, 10 Feb 2022 12:47:15 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJyjJH76HocPWGbiLqt0WtLoGYGGZLkPs37x844ujPaPMxNnMMSqIhTiOV6LUr4ZC8C1Kh6gEw==
+X-Received: by 2002:ae9:e850:: with SMTP id a77mr4810493qkg.239.1644526035662;
+        Thu, 10 Feb 2022 12:47:15 -0800 (PST)
+Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
+        by smtp.gmail.com with ESMTPSA id u36sm220240qtc.42.2022.02.10.12.47.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 10 Feb 2022 12:47:15 -0800 (PST)
+Date:   Thu, 10 Feb 2022 15:47:13 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Paul E. McKenney" <paulmck@kernel.org>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Al Viro <viro@zeniv.linux.org.uk>, linux-xfs@vger.kernel.org,
+        Ian Kent <raven@themaw.net>, rcu@vger.kernel.org
+Subject: Re: [PATCH] xfs: require an rcu grace period before inode recycle
+Message-ID: <YgV50a9ia0bHKTFh@bfoster>
+References: <YfIdVq6R6xEWxy0K@zeniv-ca.linux.org.uk>
+ <20220127052609.GR59729@dread.disaster.area>
+ <YfLsBdPBSsyPFgHJ@bfoster>
+ <20220128213911.GO4285@paulmck-ThinkPad-P17-Gen-1>
+ <Yffioz+t9cjZbIBv@bfoster>
+ <20220201220028.GH4285@paulmck-ThinkPad-P17-Gen-1>
+ <YgEe21z+WUvpQa0N@bfoster>
+ <20220207163621.GC4285@paulmck-ThinkPad-P17-Gen-1>
+ <20220210040917.GN59729@dread.disaster.area>
+ <20220210054544.GI4285@paulmck-ThinkPad-P17-Gen-1>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220210054544.GI4285@paulmck-ThinkPad-P17-Gen-1>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This tests a longstanding bug where xfsdumps are not properly
-created when an inode is present on the filesytsem which has
-a lower number than the root inode.
+On Wed, Feb 09, 2022 at 09:45:44PM -0800, Paul E. McKenney wrote:
+> On Thu, Feb 10, 2022 at 03:09:17PM +1100, Dave Chinner wrote:
+> > On Mon, Feb 07, 2022 at 08:36:21AM -0800, Paul E. McKenney wrote:
+> > > On Mon, Feb 07, 2022 at 08:30:03AM -0500, Brian Foster wrote:
+> > > Another approach is to use SLAB_TYPESAFE_BY_RCU.  This allows immediate
+> > > reuse of freed memory, but also requires pointer traversals to the memory
+> > > to do a revalidation operation.  (Sorry, no free lunch here!)
+> > 
+> > Can't do that with inodes - newly allocated/reused inodes have to go
+> > through inode_init_always() which is the very function that causes
+> > the problems we have now with path-walk tripping over inodes in an
+> > intermediate re-initialised state because we recycled it inside a
+> > RCU grace period.
+> 
+> So not just no free lunch, but this is also not a lunch that is consistent
+> with the code's dietary restrictions.
+> 
+> From what you said earlier in this thread, I am guessing that you have
+> some other fix in mind.
+> 
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
- common/dump       |  1 +
- tests/xfs/543     | 63 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/543.out | 47 +++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 111 insertions(+)
- create mode 100644 tests/xfs/543
- create mode 100644 tests/xfs/543.out
+Yeah.. I've got an experiment running that essentially tracks pending
+inode grace period cookies and attempts to avoid them at allocation
+time. It's crude atm, but the initial numbers I see aren't that far off
+from the results produced by your expedited grace period mechanism. I
+see numbers mostly in the 40-50k cycles per second ballpark. This is
+somewhat expected because the current baseline behavior relies on unsafe
+reuse of inodes before a grace period has elapsed. We have to rely on
+more physical allocations to get around this, so the small batch
+alloc/free patterns simply won't be able to spin as fast. The difference
+I do see with this sort of explicit gp tracking is that the results
+remain much closer to the baseline kernel when background activity is
+ramped up.
 
-diff --git a/common/dump b/common/dump
-index 3c4029f..09a0ebc 100644
---- a/common/dump
-+++ b/common/dump
-@@ -214,6 +214,7 @@ _require_tape()
- 
- _wipe_fs()
- {
-+    [[ "$WIPE_FS" = "no" ]] && return
-     _require_scratch
- 
-     _scratch_mkfs_xfs >>$seqres.full || _fail "mkfs failed"
-diff --git a/tests/xfs/543 b/tests/xfs/543
-new file mode 100644
-index 0000000..f75f8da
---- /dev/null
-+++ b/tests/xfs/543
-@@ -0,0 +1,63 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2022 Red Hat, Inc. All Rights Reserved.
-+#
-+# FS QA Test 543
-+#
-+# Create a filesystem which contains an inode with a lower number
-+# than the root inode. Ensure that xfsdump/xfsrestore handles this.
-+#
-+. ./common/preamble
-+_begin_fstest auto quick dump
-+
-+# Import common functions.
-+. ./common/dump
-+
-+_supported_fs xfs
-+_require_scratch
-+
-+# A large stripe unit will put the root inode out quite far
-+# due to alignment, leaving free blocks ahead of it.
-+_scratch_mkfs_xfs -d sunit=1024,swidth=1024 > $seqres.full
-+
-+# Mounting /without/ a stripe should allow inodes to be allocated
-+# in lower free blocks, without the stripe alignment.
-+_scratch_mount -o sunit=0,swidth=0
-+
-+root_inum=$(stat -c %i $SCRATCH_MNT)
-+
-+# Consume space after the root inode so that the blocks before
-+# root look "close" for the next inode chunk allocation
-+$XFS_IO_PROG -f -c "falloc 0 16m" $SCRATCH_MNT/fillfile
-+
-+# And make a bunch of inodes until we (hopefully) get one lower
-+# than root, in a new inode chunk.
-+echo "root_inum: $root_inum" >> $seqres.full
-+for i in $(seq 0 4096) ; do
-+	fname=$SCRATCH_MNT/$(printf "FILE_%03d" $i)
-+	touch $fname
-+	inum=$(stat -c "%i" $fname)
-+	[[ $inum -lt $root_inum ]] && break
-+done
-+
-+echo "created: $inum" >> $seqres.full
-+
-+[[ $inum -lt $root_inum ]] || _notrun "Could not set up test"
-+
-+# Now try a dump and restore. Cribbed from xfs/068
-+WIPE_FS="no"
-+_create_dumpdir_stress
-+
-+echo -n "Before: " >> $seqres.full
-+_count_dumpdir_files | tee $tmp.before >> $seqres.full
-+
-+# filter out the file count, it changes as fsstress adds new operations
-+_do_dump_restore | sed -e "/entries processed$/s/[0-9][0-9]*/NUM/g"
-+
-+echo -n "After: " >> $seqres.full
-+_count_restoredir_files | tee $tmp.after >> $seqres.full
-+diff -u $tmp.before $tmp.after
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/543.out b/tests/xfs/543.out
-new file mode 100644
-index 0000000..a5224aa
---- /dev/null
-+++ b/tests/xfs/543.out
-@@ -0,0 +1,47 @@
-+QA output created by 543
-+Creating directory system to dump using fsstress.
-+
-+-----------------------------------------------
-+fsstress : -f link=10 -f creat=10 -f mkdir=10 -f truncate=5 -f symlink=10
-+-----------------------------------------------
-+xfsdump|xfsrestore ...
-+xfsdump  -s DUMP_SUBDIR - SCRATCH_MNT | xfsrestore  - RESTORE_DIR
-+xfsrestore: using file dump (drive_simple) strategy
-+xfsrestore: searching media for dump
-+xfsrestore: examining media file 0
-+xfsrestore: dump description: 
-+xfsrestore: hostname: HOSTNAME
-+xfsrestore: mount point: SCRATCH_MNT
-+xfsrestore: volume: SCRATCH_DEV
-+xfsrestore: session time: TIME
-+xfsrestore: level: 0
-+xfsrestore: session label: ""
-+xfsrestore: media label: ""
-+xfsrestore: file system ID: ID
-+xfsrestore: session id: ID
-+xfsrestore: media ID: ID
-+xfsrestore: searching media for directory dump
-+xfsrestore: reading directories
-+xfsrestore: NUM directories and NUM entries processed
-+xfsrestore: directory post-processing
-+xfsrestore: restoring non-directory files
-+xfsrestore: restore complete: SECS seconds elapsed
-+xfsrestore: Restore Status: SUCCESS
-+xfsdump: using file dump (drive_simple) strategy
-+xfsdump: level 0 dump of HOSTNAME:SCRATCH_MNT
-+xfsdump: dump date: DATE
-+xfsdump: session id: ID
-+xfsdump: session label: ""
-+xfsdump: ino map <PHASES>
-+xfsdump: ino map construction complete
-+xfsdump: estimated dump size: NUM bytes
-+xfsdump: /var/xfsdump/inventory created
-+xfsdump: creating dump session media file 0 (media 0, file 0)
-+xfsdump: dumping ino map
-+xfsdump: dumping directories
-+xfsdump: dumping non-directory files
-+xfsdump: ending media file
-+xfsdump: media file size NUM bytes
-+xfsdump: dump size (non-dir files) : NUM bytes
-+xfsdump: dump complete: SECS seconds elapsed
-+xfsdump: Dump Status: SUCCESS
--- 
-1.8.3.1
+However, one of the things I'd like to experiment with is whether the
+combination of this approach and expedited grace periods provides any
+sort of opportunity for further optimization. For example, if we can
+identify that a grace period has elapsed between the time of
+->destroy_inode() and when the queue processing ultimately marks the
+inode reclaimable, that might allow for some optimized allocation
+behavior. I see this occur occasionally with normal grace periods, but
+not quite frequent enough to make a difference.
+
+What I observe right now is that the same test above runs at much closer
+to the baseline numbers when using the ikeep mount option, so I may need
+to look into ways to mitigate the chunk allocation overhead..
+
+Brian
+
+> 							Thanx, Paul
+> 
 
