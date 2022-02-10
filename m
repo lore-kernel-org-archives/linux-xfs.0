@@ -2,130 +2,66 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 910D2C433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Feb 2022 04:03:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59157C433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Feb 2022 04:09:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231779AbiBJEDH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Feb 2022 23:03:07 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:39620 "EHLO
+        id S230412AbiBJEJU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Feb 2022 23:09:20 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:46178 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229530AbiBJEDG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Feb 2022 23:03:06 -0500
+        with ESMTP id S233037AbiBJEJT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Feb 2022 23:09:19 -0500
 Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 66C817643;
-        Wed,  9 Feb 2022 20:03:06 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B4B151EADF
+        for <linux-xfs@vger.kernel.org>; Wed,  9 Feb 2022 20:09:20 -0800 (PST)
 Received: from dread.disaster.area (pa49-180-69-7.pa.nsw.optusnet.com.au [49.180.69.7])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id C995852CBBA;
-        Thu, 10 Feb 2022 15:03:05 +1100 (AEDT)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 8620652CDF8;
+        Thu, 10 Feb 2022 15:09:18 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1nI0fg-00ACyj-Bx; Thu, 10 Feb 2022 15:03:04 +1100
-Date:   Thu, 10 Feb 2022 15:03:04 +1100
+        id 1nI0lh-00AD2c-GS; Thu, 10 Feb 2022 15:09:17 +1100
+Date:   Thu, 10 Feb 2022 15:09:17 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        linux-xfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>
-Subject: Re: [PATCH v10 0/5] add support for direct I/O with fscrypt using
- blk-crypto
-Message-ID: <20220210040304.GM59729@dread.disaster.area>
-References: <YekdnxpeunTGfXqX@infradead.org>
- <20220120171027.GL13540@magnolia>
- <YenIcshA706d/ziV@sol.localdomain>
- <20220120210027.GQ13540@magnolia>
- <20220120220414.GH59729@dread.disaster.area>
- <Yenm1Ipx87JAlyXg@sol.localdomain>
- <20220120235755.GI59729@dread.disaster.area>
- <20220121023603.GH13563@magnolia>
- <20220123230332.GL59729@dread.disaster.area>
- <YgMUa2Cdr/QoMTPh@sol.localdomain>
+To:     "Paul E. McKenney" <paulmck@kernel.org>
+Cc:     Brian Foster <bfoster@redhat.com>,
+        Al Viro <viro@zeniv.linux.org.uk>, linux-xfs@vger.kernel.org,
+        Ian Kent <raven@themaw.net>, rcu@vger.kernel.org
+Subject: Re: [PATCH] xfs: require an rcu grace period before inode recycle
+Message-ID: <20220210040917.GN59729@dread.disaster.area>
+References: <YfBBzHascwVnefYY@bfoster>
+ <20220125224551.GQ59729@dread.disaster.area>
+ <YfIdVq6R6xEWxy0K@zeniv-ca.linux.org.uk>
+ <20220127052609.GR59729@dread.disaster.area>
+ <YfLsBdPBSsyPFgHJ@bfoster>
+ <20220128213911.GO4285@paulmck-ThinkPad-P17-Gen-1>
+ <Yffioz+t9cjZbIBv@bfoster>
+ <20220201220028.GH4285@paulmck-ThinkPad-P17-Gen-1>
+ <YgEe21z+WUvpQa0N@bfoster>
+ <20220207163621.GC4285@paulmck-ThinkPad-P17-Gen-1>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <YgMUa2Cdr/QoMTPh@sol.localdomain>
+In-Reply-To: <20220207163621.GC4285@paulmck-ThinkPad-P17-Gen-1>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62048e7a
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62048ff0
         a=NB+Ng1P8A7U24Uo7qoRq4Q==:117 a=NB+Ng1P8A7U24Uo7qoRq4Q==:17
-        a=IkcTkHD0fZMA:10 a=oGFeUVbbRNcA:10 a=7-415B0cAAAA:8
-        a=txpYLRzjzDLeYr1fpcUA:9 a=QEXdDO2ut3YA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=oGFeUVbbRNcA:10 a=7-415B0cAAAA:8
+        a=C9m1K0M7fvvbcdc01KQA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 08, 2022 at 05:10:03PM -0800, Eric Biggers wrote:
-> On Mon, Jan 24, 2022 at 10:03:32AM +1100, Dave Chinner wrote:
-> > > 
-> > > 	/* 0xa0 */
-> > > 
-> > > 	/* File range alignment needed for best performance, in bytes. */
-> > > 	__u32	stx_dio_fpos_align_opt;
-> > 
-> > This is a common property of both DIO and buffered IO, so no need
-> > for it to be dio-only property.
-> > 
-> > 	__u32	stx_offset_align_optimal;
-> > 
-> 
-> Looking at this more closely: will stx_offset_align_optimal actually be useful,
-> given that st[x]_blksize already exists?
+On Mon, Feb 07, 2022 at 08:36:21AM -0800, Paul E. McKenney wrote:
+> On Mon, Feb 07, 2022 at 08:30:03AM -0500, Brian Foster wrote:
+> Another approach is to use SLAB_TYPESAFE_BY_RCU.  This allows immediate
+> reuse of freed memory, but also requires pointer traversals to the memory
+> to do a revalidation operation.  (Sorry, no free lunch here!)
 
-Yes, because....
-
-> From the stat(2) and statx(2) man pages:
-> 
-> 	st_blksize
-> 		This field  gives  the  "preferred"  block  size  for  efficient
-> 		filesystem I/O.
-> 
-> 	stx_blksize
-> 		The "preferred" block size for efficient filesystem I/O.  (Writ‐
-> 		ing  to  a file in smaller chunks may cause an inefficient read-
-> 		modify-rewrite.)
-
-... historically speaking, this is intended to avoid RMW cycles for
-sub-block and/or sub-PAGE_SIZE write() IOs. i.e. the practical
-definition of st_blksize is the *minimum* IO size the needed to
-avoid page cache RMW cycles.
-
-However, XFS has a "-o largeio" mount option, that sets this value
-to internal optimal filesytsem alignment values such as stripe unit
-or even stripe width (-o largeio,swalloc). THis means it can be up
-to 2GB (maybe larger?) in size.
-
-THe problem with this is that many applications are not prepared to
-see a value of, say, 16MB in st_blksize rather than 4096 bytes. An
-example of such problems are applications sizing their IO buffers as
-a multiple of st_blksize - we've had applications fail because they
-try to use multi-GB sized IO buffers as a result of setting
-st_blksize to the filesystem/storage idea of optimal IO size rather
-than PAGE_SIZE.
-
-Hence, we can't really change the value of st_blksize without
-risking random breakage in userspace. hence the practical definition
-of st_blksize is the *minimum* IO size that avoids RMW cycles for an
-individual write() syscall, not the most efficient IO size.
-
-> File offsets aren't explicitly mentioned, but I think it's implied they should
-> be a multiple of st[x]_blksize, just like the I/O size.  Otherwise, the I/O
-> would obviously require reading/writing partial blocks.
-
-Of course it implies aligned file offsets - block aligned IO is
-absolutely necessary for effcient filesystem IO. It has for pretty
-much the entire of unix history...
-
-> So, the proposed stx_offset_align_optimal field sounds like the same thing to
-> me.  Is there anything I'm misunderstanding?
->
-> Putting stx_offset_align_optimal behind the STATX_DIRECTIO flag would also be
-> confusing if it would apply to both direct and buffered I/O.
-
-So just name the flag STATX_IOALIGN so that it can cover generic,
-buffered specific and DIO specific parameters in one hit. Simple,
-yes?
+Can't do that with inodes - newly allocated/reused inodes have to go
+through inode_init_always() which is the very function that causes
+the problems we have now with path-walk tripping over inodes in an
+intermediate re-initialised state because we recycled it inside a
+RCU grace period.
 
 Cheers,
 
