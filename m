@@ -2,25 +2,57 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4885AC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Feb 2022 05:48:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E128BC433FE
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Feb 2022 10:16:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234928AbiBJFsT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 10 Feb 2022 00:48:19 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:43058 "EHLO
+        id S239516AbiBJKQl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 10 Feb 2022 05:16:41 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:36958 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234428AbiBJFr7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Feb 2022 00:47:59 -0500
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98E6E10CC;
-        Wed,  9 Feb 2022 21:47:58 -0800 (PST)
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 7187268B05; Thu, 10 Feb 2022 06:47:54 +0100 (CET)
-Date:   Thu, 10 Feb 2022 06:47:54 +0100
-From:   Christoph Hellwig <hch@lst.de>
-To:     Lee Jones <lee.jones@linaro.org>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org,
-        Stable <stable@vger.kernel.org>,
+        with ESMTP id S239505AbiBJKQh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Feb 2022 05:16:37 -0500
+Received: from mail-wm1-x32a.google.com (mail-wm1-x32a.google.com [IPv6:2a00:1450:4864:20::32a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11563FD6
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Feb 2022 02:16:39 -0800 (PST)
+Received: by mail-wm1-x32a.google.com with SMTP id i19so1708890wmq.5
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Feb 2022 02:16:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=p2L2JMGAHF/fA4cXJq0+NeV9Ap/R7fib8dscPh33vcg=;
+        b=F27+3Ao6twgPUQ/BOE7bCH1y1UIIqmAONzGU3oxFPBf0mAFdO1zuL2KUYM1O++g2kx
+         0QthHn6iinSXUj64X8vvdhOqtR+XWYwn5E/Gw+bJlWic6yenGNohxjvoICKo1CA/v5wh
+         dZGA4pMay8u5aQAVuBZJ9srKDSwgWE/ddXN47oMMFEcWNd53Fe5zwF8cdwre7J051wLF
+         ItDcXZiEPwC7ClNhh568QmdIVrjuPnmTtWwlVTn3hykOQGuNeu6OtXK7BEc5b2gRMv6/
+         7r1aC+tQNy80dt1ZZUiEtUXIHLwa4b8xT03cNBWZKJQJ3w+AQX5CpSGRsTrvE9geY6Nj
+         P3iw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to;
+        bh=p2L2JMGAHF/fA4cXJq0+NeV9Ap/R7fib8dscPh33vcg=;
+        b=HJJQOxT3Z+iv8BF7VRw0M+Vhdxk9YCY2LllrIIuvsYu5H3iZdhkaGuK3he+qaQ12sC
+         pLBV19ciea1rxCzp18QILFTL9lQigneWEZkjagwMAhvu/PqyrVa7DOroVh6QNMYru5gW
+         X8y04hAZ0vi1axYCGLfv3yPvxp4tH1f1AZhh3/tA3UYsJUSw13NoOKMlN0l8lh5B568e
+         Xjjn5bjJPUb3xk04tbCCREbq+MjWcTrk5F7NhE1v2f9VyiEELGRMuriGX9dnqP79a4Wh
+         tTqV7fTLkUCFN6Y/fsQrCtQNfPKUVexR7mQwtBNsd7Q1AroHhFT/ANbQ4Ss0db9t26Al
+         Mgqw==
+X-Gm-Message-State: AOAM530nLSU3Kr+iTB/F9M+TwugmtGrACozsNvfqPIjHeohmXProsQdn
+        HF/rMI1GXcpBeu9QZGje9/+6kQ==
+X-Google-Smtp-Source: ABdhPJyqF2XvTy7u6DWP/6ivautdkeYnX0LG3m5hhXZW9KBraONCYgZP5/iwGcxiCbFl24LtFFh+PA==
+X-Received: by 2002:a05:600c:2058:: with SMTP id p24mr1538504wmg.3.1644488197579;
+        Thu, 10 Feb 2022 02:16:37 -0800 (PST)
+Received: from google.com (cpc155339-bagu17-2-0-cust87.1-3.cable.virginm.net. [86.27.177.88])
+        by smtp.gmail.com with ESMTPSA id y1sm1328053wmi.36.2022.02.10.02.15.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 10 Feb 2022 02:15:55 -0800 (PST)
+Date:   Thu, 10 Feb 2022 10:15:52 +0000
+From:   Lee Jones <lee.jones@linaro.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-kernel@vger.kernel.org, Stable <stable@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
         Dave Chinner <dchinner@redhat.com>,
         Goldwyn Rodrigues <rgoldwyn@suse.com>,
         "Darrick J . Wong" <darrick.wong@oracle.com>,
@@ -35,29 +67,113 @@ Cc:     Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org,
         syzbot+0ed9f769264276638893@syzkaller.appspotmail.com
 Subject: Re: [PATCH 1/1] Revert "iomap: fall back to buffered writes for
  invalidation failures"
-Message-ID: <20220210054754.GB3293@lst.de>
-References: <20220209085243.3136536-1-lee.jones@linaro.org> <20220209150904.GA22025@lst.de> <YgPk9HhIeFM43b/a@google.com>
+Message-ID: <YgTl2Lm9Vk50WNSj@google.com>
+References: <20220209085243.3136536-1-lee.jones@linaro.org>
+ <20220210045911.GF8338@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <YgPk9HhIeFM43b/a@google.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20220210045911.GF8338@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Feb 09, 2022 at 03:59:48PM +0000, Lee Jones wrote:
-> > Well, maybe you should actually debug and try to understand what is
-> > going on before blindly reverting random commits.
+On Wed, 09 Feb 2022, Darrick J. Wong wrote:
+
+> On Wed, Feb 09, 2022 at 08:52:43AM +0000, Lee Jones wrote:
+> > This reverts commit 60263d5889e6dc5987dc51b801be4955ff2e4aa7.
+> > 
+> > Reverting since this commit opens a potential avenue for abuse.
 > 
-> That is not a reasonable suggestion.
+> What kind of abuse?  Did you conclude there's an avenue solely because
+> some combination of userspace rigging produced a BUG warning?  Or is
+> this a real problem that someone found?
 
-In that case we fudamentally disagree what "reasonable" means.
+Genuine question: Is the ability for userspace to crash the kernel
+not enough to cause concern?  I would have thought that we'd want to
+prevent this.
 
-Sending a revert for a 2 year old commit based on a BUG in consumer of
-that subsystem based on a really old kernel without any explanation
-of why that revert is even directly related to the problem and not just
-a casuality is what I would define as completely unreasable.
+If by 'real problem' you mean; privilege escalation, memory corruption
+or data leakage, then no, I haven't found any evidence of that.
+However, that's not to say these aren't possible as a result of this
+issue, just that I do not have the skills or knowledge to be able to
+turn this into a demonstrable attack vector.
 
-Please send a proper bug report to the ext4 maintainer first, and we
-can work from there.
+However, if you say there is no issue, I'm happy to take your word.
+
+> > The C-reproducer and more information can be found at the link below.
+> 
+> No.  Post the information and your analysis here.  I'm not going to dig
+> into some Google site to find out what happened, and I'm not going to
+> assume that future developers will be able to access that URL to learn
+> why this patch was created.
+
+The link provided doesn't contain any further analysis.  Only the
+reproducer and kernel configuration used, which are both too large to
+enter into a Git commit.
+
+> >   kernel BUG at fs/ext4/inode.c:2647!
+> >   invalid opcode: 0000 [#1] PREEMPT SMP KASAN
+> >   CPU: 0 PID: 459 Comm: syz-executor359 Tainted: G        W         5.10.93-syzkaller-01028-g0347b1658399 #0
+> 
+> What BUG on fs/ext4/inode.c:2647?
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/ext4/inode.c?h=v5.10.93#n2647
+> 
+> All I see is a call to pagevec_release()?  There's a BUG_ON further up
+> if we wait for page writeback but then it still has Writeback set.  But
+> I don't see anything in pagevec_release that would actually result in a
+> BUG warning.
+
+Right, this BUG back-trace was taken from the kernel I received the
+bug report for.  I should have used the one I triggered in Mainline,
+apologies for that.
+
+The real source of the BUG is in the inlined call to page_buffers().
+
+Here is the link for the latest release kernel:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/fs/ext4/inode.c?h=v5.16#n2620
+
+#define page_buffers(page)                                      \
+        ({                                                      \
+                BUG_ON(!PagePrivate(page));                     \
+                ((struct buffer_head *)page_private(page));     \
+        })
+
+> Oh, right, this is one of those inscrutable syzkaller things, where a
+> person can spend hours figuring out what the hell it set up.
+
+A link to the config used (again too big to enter into a commit
+message), can be easily sourced from the link provided.
+
+> Yeah...no, you don't get to submit patches to core kernel code, claim
+> it's not your responsibility to know anything about a subsystem that you
+> want to patch, and then expect us to do the work for you.  If you pick
+> up a syzkaller report, you get to figure out what broke, why, and how to
+> fix it in a reasonable manner.
+> 
+> You're a maintainer, would you accept a patch like this?
+
+No.  I would share my knowledge to provide a helpful review and work
+with the contributor to find a solution (if applicable).
+
+> OH WAIT, you're running this on the Android 5.10 kernel, aren't you?
+> The BUG report came from page_buffers failing to find any buffer heads
+> attached to the page.
+> https://android.googlesource.com/kernel/common/+/refs/heads/android12-5.10-2022-02/fs/ext4/inode.c#2647
+
+Yes, the H/W I have to prototype these on is a phone and the report
+that came in was specifically built against the aforementioned
+kernel.
+
+> Yeah, don't care.
+
+"There is nothing to worry about, as it's intended behaviour"?
+
+-- 
+Lee Jones [李琼斯]
+Principal Technical Lead - Developer Services
+Linaro.org │ Open source software for Arm SoCs
+Follow Linaro: Facebook | Twitter | Blog
