@@ -2,84 +2,130 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5331C433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Feb 2022 03:33:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 910D2C433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Feb 2022 04:03:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230237AbiBJDdX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Feb 2022 22:33:23 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:57778 "EHLO
+        id S231779AbiBJEDH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Feb 2022 23:03:07 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:39620 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230059AbiBJDdU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Feb 2022 22:33:20 -0500
+        with ESMTP id S229530AbiBJEDG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Feb 2022 23:03:06 -0500
 Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5812A1163
-        for <linux-xfs@vger.kernel.org>; Wed,  9 Feb 2022 19:33:20 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 66C817643;
+        Wed,  9 Feb 2022 20:03:06 -0800 (PST)
 Received: from dread.disaster.area (pa49-180-69-7.pa.nsw.optusnet.com.au [49.180.69.7])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 5BD1952CB7F;
-        Thu, 10 Feb 2022 14:33:16 +1100 (AEDT)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id C995852CBBA;
+        Thu, 10 Feb 2022 15:03:05 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1nI0Cp-00ACTw-NN; Thu, 10 Feb 2022 14:33:15 +1100
-Date:   Thu, 10 Feb 2022 14:33:15 +1100
+        id 1nI0fg-00ACyj-Bx; Thu, 10 Feb 2022 15:03:04 +1100
+Date:   Thu, 10 Feb 2022 15:03:04 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        allison.henderson@oracle.com
-Subject: Re: [PATCH 04/17] libfrog: move the GETFSMAP definitions into libfrog
-Message-ID: <20220210033315.GL59729@dread.disaster.area>
-References: <164263809453.863810.8908193461297738491.stgit@magnolia>
- <164263811682.863810.12064586264139896800.stgit@magnolia>
- <bb88560e-bbdf-80c5-b4d6-6c00f4ab3ef1@sandeen.net>
- <20220205003618.GU8313@magnolia>
- <20220207010541.GE59729@dread.disaster.area>
- <20220207170913.GA8313@magnolia>
- <fbe0bef1-a9a7-9670-1548-9792639ae2a2@sandeen.net>
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        linux-xfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>,
+        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>
+Subject: Re: [PATCH v10 0/5] add support for direct I/O with fscrypt using
+ blk-crypto
+Message-ID: <20220210040304.GM59729@dread.disaster.area>
+References: <YekdnxpeunTGfXqX@infradead.org>
+ <20220120171027.GL13540@magnolia>
+ <YenIcshA706d/ziV@sol.localdomain>
+ <20220120210027.GQ13540@magnolia>
+ <20220120220414.GH59729@dread.disaster.area>
+ <Yenm1Ipx87JAlyXg@sol.localdomain>
+ <20220120235755.GI59729@dread.disaster.area>
+ <20220121023603.GH13563@magnolia>
+ <20220123230332.GL59729@dread.disaster.area>
+ <YgMUa2Cdr/QoMTPh@sol.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <fbe0bef1-a9a7-9670-1548-9792639ae2a2@sandeen.net>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <YgMUa2Cdr/QoMTPh@sol.localdomain>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=6204877d
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62048e7a
         a=NB+Ng1P8A7U24Uo7qoRq4Q==:117 a=NB+Ng1P8A7U24Uo7qoRq4Q==:17
-        a=kj9zAlcOel0A:10 a=oGFeUVbbRNcA:10 a=7-415B0cAAAA:8
-        a=TrKQWF5WU7bv2lRiUR0A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=IkcTkHD0fZMA:10 a=oGFeUVbbRNcA:10 a=7-415B0cAAAA:8
+        a=txpYLRzjzDLeYr1fpcUA:9 a=QEXdDO2ut3YA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Feb 07, 2022 at 03:32:10PM -0600, Eric Sandeen wrote:
-> On 2/7/22 11:09 AM, Darrick J. Wong wrote:
-> > On Mon, Feb 07, 2022 at 12:05:41PM +1100, Dave Chinner wrote:
-> >> On Fri, Feb 04, 2022 at 04:36:18PM -0800, Darrick J. Wong wrote:
-> >>> On Fri, Feb 04, 2022 at 05:18:12PM -0600, Eric Sandeen wrote:
-> 
-> ...
-> 
-> >>>> Do we /need/ to build fully functional xfsprogs on old userspace?
-> >>>> (really: systems with old kernel headers?)  How far back do we go,
-> >>>> I wonder?  Anyway...
-> >>>
-> >>> TBH we could probably get rid of these entirely, assuming nobody is
-> >>> building xfsprogs with old kernel headers for a system with a newer
-> >>> kernel?
-> >>
-> >> Just fiddle the autoconf rules to refuse to build if the system
-> >> headers we need aren't present. It just means that build systems
-> >> need to have the userspace they intend to target installed in the
-> >> build environment.
+On Tue, Feb 08, 2022 at 05:10:03PM -0800, Eric Biggers wrote:
+> On Mon, Jan 24, 2022 at 10:03:32AM +1100, Dave Chinner wrote:
+> > > 
+> > > 	/* 0xa0 */
+> > > 
+> > > 	/* File range alignment needed for best performance, in bytes. */
+> > > 	__u32	stx_dio_fpos_align_opt;
 > > 
-> > GETFSMAP premiered in 4.12, so I'm going to take this response (and the
-> > lack of any others) as a sign that I can respin this patch to require
-> > recent kernel headers instead of providing our own copy.
+> > This is a common property of both DIO and buffered IO, so no need
+> > for it to be dio-only property.
+> > 
+> > 	__u32	stx_offset_align_optimal;
+> > 
 > 
-> Sounds reasonable, thanks. Maybe in the future when we add stuff like
-> this for bleeding edge interfaces we can mark the date, and mark another
-> one in what, a year or two, as a reminder for removal.
+> Looking at this more closely: will stx_offset_align_optimal actually be useful,
+> given that st[x]_blksize already exists?
 
-That's what we've done in the past - provide our own copy until the
-system headers catch up and then remove our copy. Note that this may
-cause angst with lesser used C libraries (like musl), but they need
-to keep up with new kernel APIs to be really useful, anyway...
+Yes, because....
+
+> From the stat(2) and statx(2) man pages:
+> 
+> 	st_blksize
+> 		This field  gives  the  "preferred"  block  size  for  efficient
+> 		filesystem I/O.
+> 
+> 	stx_blksize
+> 		The "preferred" block size for efficient filesystem I/O.  (Writ‐
+> 		ing  to  a file in smaller chunks may cause an inefficient read-
+> 		modify-rewrite.)
+
+... historically speaking, this is intended to avoid RMW cycles for
+sub-block and/or sub-PAGE_SIZE write() IOs. i.e. the practical
+definition of st_blksize is the *minimum* IO size the needed to
+avoid page cache RMW cycles.
+
+However, XFS has a "-o largeio" mount option, that sets this value
+to internal optimal filesytsem alignment values such as stripe unit
+or even stripe width (-o largeio,swalloc). THis means it can be up
+to 2GB (maybe larger?) in size.
+
+THe problem with this is that many applications are not prepared to
+see a value of, say, 16MB in st_blksize rather than 4096 bytes. An
+example of such problems are applications sizing their IO buffers as
+a multiple of st_blksize - we've had applications fail because they
+try to use multi-GB sized IO buffers as a result of setting
+st_blksize to the filesystem/storage idea of optimal IO size rather
+than PAGE_SIZE.
+
+Hence, we can't really change the value of st_blksize without
+risking random breakage in userspace. hence the practical definition
+of st_blksize is the *minimum* IO size that avoids RMW cycles for an
+individual write() syscall, not the most efficient IO size.
+
+> File offsets aren't explicitly mentioned, but I think it's implied they should
+> be a multiple of st[x]_blksize, just like the I/O size.  Otherwise, the I/O
+> would obviously require reading/writing partial blocks.
+
+Of course it implies aligned file offsets - block aligned IO is
+absolutely necessary for effcient filesystem IO. It has for pretty
+much the entire of unix history...
+
+> So, the proposed stx_offset_align_optimal field sounds like the same thing to
+> me.  Is there anything I'm misunderstanding?
+>
+> Putting stx_offset_align_optimal behind the STATX_DIRECTIO flag would also be
+> confusing if it would apply to both direct and buffered I/O.
+
+So just name the flag STATX_IOALIGN so that it can cover generic,
+buffered specific and DIO specific parameters in one hit. Simple,
+yes?
 
 Cheers,
 
