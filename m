@@ -2,184 +2,88 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1B6FC433FE
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Feb 2022 22:32:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5331C433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Feb 2022 03:33:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236014AbiBIWce (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Feb 2022 17:32:34 -0500
-Received: from gmail-smtp-in.l.google.com ([23.128.96.19]:45900 "EHLO
+        id S230237AbiBJDdX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Feb 2022 22:33:23 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:57778 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236016AbiBIWcd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Feb 2022 17:32:33 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0EEDAE018E6C;
-        Wed,  9 Feb 2022 14:32:36 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9CC6A61C64;
-        Wed,  9 Feb 2022 22:32:35 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E045FC340E7;
-        Wed,  9 Feb 2022 22:32:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1644445955;
-        bh=iywApMrpIqPa/lElQVWJWYEVMYp0khUm5qZOGk4U5/E=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=mCyQW1bRQ5EVAoRvMj9Vu6cJ5h96jqnHL4d20JMzDM8yDnxeCQMAuWA/T+y5xV+9M
-         WZi/nkb7E1v53NMKBW4tKU/9Ha/ZJt4f7dV407E+aCquVBIPPy8A/9MOCNSeO6U+ny
-         Nwz5LmDK2FZ7dEnCTZEwlDw7BsoDPWogq0vQ3HckJvZSsCRuU2ns8R2PHAlOqbkWc+
-         7pgRRWGRZHLDYP7tT9RLeivzL3wJixO9pe+DtRWlTUF8ue9kpOeglIKUpxUDRKbkrO
-         ElFdewRU0Ccvt+ky08Lckp463KpAQydcwj7UzKgmUllduzy521QbYcxvGKUiT6z28e
-         KH/EW3YDJ9jhQ==
-Date:   Wed, 9 Feb 2022 14:32:34 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Cc:     fstests@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        Naohiro Aota <naohiro.aota@wdc.com>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Subject: Re: [PATCH v2 6/6] common: factor out xfs unique part from
- _filter_mkfs
-Message-ID: <20220209223234.GH8313@magnolia>
-References: <20220209123305.253038-1-shinichiro.kawasaki@wdc.com>
- <20220209123305.253038-7-shinichiro.kawasaki@wdc.com>
+        with ESMTP id S230059AbiBJDdU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Feb 2022 22:33:20 -0500
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5812A1163
+        for <linux-xfs@vger.kernel.org>; Wed,  9 Feb 2022 19:33:20 -0800 (PST)
+Received: from dread.disaster.area (pa49-180-69-7.pa.nsw.optusnet.com.au [49.180.69.7])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 5BD1952CB7F;
+        Thu, 10 Feb 2022 14:33:16 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nI0Cp-00ACTw-NN; Thu, 10 Feb 2022 14:33:15 +1100
+Date:   Thu, 10 Feb 2022 14:33:15 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        allison.henderson@oracle.com
+Subject: Re: [PATCH 04/17] libfrog: move the GETFSMAP definitions into libfrog
+Message-ID: <20220210033315.GL59729@dread.disaster.area>
+References: <164263809453.863810.8908193461297738491.stgit@magnolia>
+ <164263811682.863810.12064586264139896800.stgit@magnolia>
+ <bb88560e-bbdf-80c5-b4d6-6c00f4ab3ef1@sandeen.net>
+ <20220205003618.GU8313@magnolia>
+ <20220207010541.GE59729@dread.disaster.area>
+ <20220207170913.GA8313@magnolia>
+ <fbe0bef1-a9a7-9670-1548-9792639ae2a2@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220209123305.253038-7-shinichiro.kawasaki@wdc.com>
+In-Reply-To: <fbe0bef1-a9a7-9670-1548-9792639ae2a2@sandeen.net>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=6204877d
+        a=NB+Ng1P8A7U24Uo7qoRq4Q==:117 a=NB+Ng1P8A7U24Uo7qoRq4Q==:17
+        a=kj9zAlcOel0A:10 a=oGFeUVbbRNcA:10 a=7-415B0cAAAA:8
+        a=TrKQWF5WU7bv2lRiUR0A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Feb 09, 2022 at 09:33:05PM +0900, Shin'ichiro Kawasaki wrote:
-> Most of the code in the function _filter_mkfs is xfs unique. This is
-> misleading that the function would be dedicated for xfs. Clean up the
-> function by factoring out xfs unique part to _xfs_filter_mkfs in
-> common/xfs. While at the same time, fix indent in _xfs_filter_mkfs to be
-> consistent with other functions in common/xfs.
+On Mon, Feb 07, 2022 at 03:32:10PM -0600, Eric Sandeen wrote:
+> On 2/7/22 11:09 AM, Darrick J. Wong wrote:
+> > On Mon, Feb 07, 2022 at 12:05:41PM +1100, Dave Chinner wrote:
+> >> On Fri, Feb 04, 2022 at 04:36:18PM -0800, Darrick J. Wong wrote:
+> >>> On Fri, Feb 04, 2022 at 05:18:12PM -0600, Eric Sandeen wrote:
 > 
-> Suggested-by: Darrick J. Wong <djwong@kernel.org>
-> Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-
-Thanks!!
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
---D
-
-> ---
->  common/filter | 40 +---------------------------------------
->  common/xfs    | 41 +++++++++++++++++++++++++++++++++++++++++
->  2 files changed, 42 insertions(+), 39 deletions(-)
+> ...
 > 
-> diff --git a/common/filter b/common/filter
-> index c3db7a56..257227c2 100644
-> --- a/common/filter
-> +++ b/common/filter
-> @@ -121,53 +121,15 @@ _filter_mkfs()
->  {
->      case $FSTYP in
->      xfs)
-> +	_xfs_filter_mkfs "$@"
->  	;;
->      *)
->  	cat - >/dev/null
->  	perl -e 'print STDERR "dbsize=4096\nisize=256\n"'
->  	return ;;
->      esac
-> -
-> -    echo "_fs_has_crcs=0" >&2
-> -    set -
-> -    perl -ne '
-> -    if (/^meta-data=([\w,|\/.-]+)\s+isize=(\d+)\s+agcount=(\d+), agsize=(\d+) blks/) {
-> -	print STDERR "ddev=$1\nisize=$2\nagcount=$3\nagsize=$4\n";
-> -	print STDOUT "meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks\n";
-> -    }
-> -    if (/^\s+=\s+sectsz=(\d+)\s+attr=(\d+)/) {
-> -        print STDERR "sectsz=$1\nattr=$2\n";
-> -    }
-> -    if (/^\s+=\s+crc=(\d)/) {
-> -        print STDERR "_fs_has_crcs=$1\n";
-> -    }
-> -    if (/^data\s+=\s+bsize=(\d+)\s+blocks=(\d+), imaxpct=(\d+)/) {
-> -	print STDERR "dbsize=$1\ndblocks=$2\nimaxpct=$3\n";
-> -	print STDOUT "data     = bsize=XXX blocks=XXX, imaxpct=PCT\n";
-> -    }
-> -    if (/^\s+=\s+sunit=(\d+)\s+swidth=(\d+) blks/) {
-> -        print STDERR "sunit=$1\nswidth=$2\nunwritten=1\n";
-> -	print STDOUT "         = sunit=XXX swidth=XXX, unwritten=X\n";
-> -    }
-> -    if (/^naming\s+=version\s+(\d+)\s+bsize=(\d+)/) {
-> -	print STDERR "dirversion=$1\ndirbsize=$2\n";
-> -	print STDOUT "naming   =VERN bsize=XXX\n";
-> -    }
-> -    if (/^log\s+=(internal log|[\w|\/.-]+)\s+bsize=(\d+)\s+blocks=(\d+),\s+version=(\d+)/ ||
-> -	/^log\s+=(internal log|[\w|\/.-]+)\s+bsize=(\d+)\s+blocks=(\d+)/) {
-> -	print STDERR "ldev=\"$1\"\nlbsize=$2\nlblocks=$3\nlversion=$4\n";
-> -	print STDOUT "log      =LDEV bsize=XXX blocks=XXX\n";
-> -    }
-> -    if (/^\s+=\s+sectsz=(\d+)\s+sunit=(\d+) blks/) {
-> -	print STDERR "logsectsz=$1\nlogsunit=$2\n\n";
-> -    }
-> -    if (/^realtime\s+=([\w|\/.-]+)\s+extsz=(\d+)\s+blocks=(\d+), rtextents=(\d+)/) {
-> -	print STDERR "rtdev=$1\nrtextsz=$2\nrtblocks=$3\nrtextents=$4\n";
-> -	print STDOUT "realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX\n";
-> -    }'
->  }
->  
-> -
->  # prints the bits we care about in growfs
->  # 
->  _filter_growfs()
-> diff --git a/common/xfs b/common/xfs
-> index 713e9fe7..053b6189 100644
-> --- a/common/xfs
-> +++ b/common/xfs
-> @@ -1275,3 +1275,44 @@ _require_scratch_xfs_bigtime()
->  		_notrun "bigtime feature not advertised on mount?"
->  	_scratch_unmount
->  }
-> +
-> +_xfs_filter_mkfs()
-> +{
-> +	echo "_fs_has_crcs=0" >&2
-> +	set -
-> +	perl -ne '
-> +	if (/^meta-data=([\w,|\/.-]+)\s+isize=(\d+)\s+agcount=(\d+), agsize=(\d+) blks/) {
-> +		print STDERR "ddev=$1\nisize=$2\nagcount=$3\nagsize=$4\n";
-> +		print STDOUT "meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks\n";
-> +	}
-> +	if (/^\s+=\s+sectsz=(\d+)\s+attr=(\d+)/) {
-> +		print STDERR "sectsz=$1\nattr=$2\n";
-> +	}
-> +	if (/^\s+=\s+crc=(\d)/) {
-> +		print STDERR "_fs_has_crcs=$1\n";
-> +	}
-> +	if (/^data\s+=\s+bsize=(\d+)\s+blocks=(\d+), imaxpct=(\d+)/) {
-> +		print STDERR "dbsize=$1\ndblocks=$2\nimaxpct=$3\n";
-> +		print STDOUT "data     = bsize=XXX blocks=XXX, imaxpct=PCT\n";
-> +	}
-> +	if (/^\s+=\s+sunit=(\d+)\s+swidth=(\d+) blks/) {
-> +		print STDERR "sunit=$1\nswidth=$2\nunwritten=1\n";
-> +		print STDOUT "         = sunit=XXX swidth=XXX, unwritten=X\n";
-> +	}
-> +	if (/^naming\s+=version\s+(\d+)\s+bsize=(\d+)/) {
-> +		print STDERR "dirversion=$1\ndirbsize=$2\n";
-> +		print STDOUT "naming   =VERN bsize=XXX\n";
-> +	}
-> +	if (/^log\s+=(internal log|[\w|\/.-]+)\s+bsize=(\d+)\s+blocks=(\d+),\s+version=(\d+)/ ||
-> +		/^log\s+=(internal log|[\w|\/.-]+)\s+bsize=(\d+)\s+blocks=(\d+)/) {
-> +		print STDERR "ldev=\"$1\"\nlbsize=$2\nlblocks=$3\nlversion=$4\n";
-> +		print STDOUT "log      =LDEV bsize=XXX blocks=XXX\n";
-> +	}
-> +	if (/^\s+=\s+sectsz=(\d+)\s+sunit=(\d+) blks/) {
-> +		print STDERR "logsectsz=$1\nlogsunit=$2\n\n";
-> +	}
-> +	if (/^realtime\s+=([\w|\/.-]+)\s+extsz=(\d+)\s+blocks=(\d+), rtextents=(\d+)/) {
-> +		print STDERR "rtdev=$1\nrtextsz=$2\nrtblocks=$3\nrtextents=$4\n";
-> +		print STDOUT "realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX\n";
-> +	}'
-> +}
-> -- 
-> 2.34.1
+> >>>> Do we /need/ to build fully functional xfsprogs on old userspace?
+> >>>> (really: systems with old kernel headers?)  How far back do we go,
+> >>>> I wonder?  Anyway...
+> >>>
+> >>> TBH we could probably get rid of these entirely, assuming nobody is
+> >>> building xfsprogs with old kernel headers for a system with a newer
+> >>> kernel?
+> >>
+> >> Just fiddle the autoconf rules to refuse to build if the system
+> >> headers we need aren't present. It just means that build systems
+> >> need to have the userspace they intend to target installed in the
+> >> build environment.
+> > 
+> > GETFSMAP premiered in 4.12, so I'm going to take this response (and the
+> > lack of any others) as a sign that I can respin this patch to require
+> > recent kernel headers instead of providing our own copy.
 > 
+> Sounds reasonable, thanks. Maybe in the future when we add stuff like
+> this for bleeding edge interfaces we can mark the date, and mark another
+> one in what, a year or two, as a reminder for removal.
+
+That's what we've done in the past - provide our own copy until the
+system headers catch up and then remove our copy. Note that this may
+cause angst with lesser used C libraries (like musl), but they need
+to keep up with new kernel APIs to be really useful, anyway...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
