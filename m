@@ -2,218 +2,301 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C8D2C43217
-	for <linux-xfs@archiver.kernel.org>; Fri, 11 Feb 2022 11:45:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97C78C433F5
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Feb 2022 12:10:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349573AbiBKLpX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 11 Feb 2022 06:45:23 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:58142 "EHLO
+        id S1349850AbiBKMKt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 11 Feb 2022 07:10:49 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:53742 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230229AbiBKLpW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Feb 2022 06:45:22 -0500
-Received: from NAM10-MW2-obe.outbound.protection.outlook.com (mail-mw2nam10on2066.outbound.protection.outlook.com [40.107.94.66])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C0E1EAC;
-        Fri, 11 Feb 2022 03:45:21 -0800 (PST)
+        with ESMTP id S1349830AbiBKMKt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Feb 2022 07:10:49 -0500
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75447E64
+        for <linux-xfs@vger.kernel.org>; Fri, 11 Feb 2022 04:10:48 -0800 (PST)
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 21B9rdm4011212;
+        Fri, 11 Feb 2022 12:10:45 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=references : from :
+ to : cc : subject : in-reply-to : message-id : date : content-type :
+ mime-version; s=corp-2021-07-09;
+ bh=U54OpHHjptQmmioOnVlYN5RD1tadDPteu2fR/F/aviw=;
+ b=bE/KZxrBnk7exh5zJIwZ08Tucp2+1h/KFKSLXLh1mZVdXKLx/P0jkmT/INqPGlznty6a
+ 4lM0qwtEExznm6iiop+kVcZjzSdOItbmk53ygAplgvL9g6L/YTr4EVcbLR9fjb12i/bX
+ s7w1HO4RRJ45nwdEW6szHCyL4r20s+fnTIq/VBn+cetAyUT4i+j+dOaur6fHWuRvmI2W
+ iA48O/UCR/AniamF7qTVd7Na/Uvge5U5It4517z+hlolWSE7OwmTN1CR2Ez3rn9Qy7KH
+ aTCq09fSb5/CthMc7Pqwwy0SMElQMhSMQj/EqaeQzjLAqImfYGsQMBuXs2yNPJhfduK6 ag== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3e5njr08h4-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 11 Feb 2022 12:10:45 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 21BC6Fqa147987;
+        Fri, 11 Feb 2022 12:10:44 GMT
+Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2168.outbound.protection.outlook.com [104.47.58.168])
+        by aserp3030.oracle.com with ESMTP id 3e51rv110u-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 11 Feb 2022 12:10:43 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Yb608LqeKvKglKw0BYE+LWkwmBkbm98SkXkYYV/u69fR+8xsTDq2YHJYn867B6UqL1vWflHLjCuHyJBCbUNUuwc5x0hUHKXrD5IuphdxLMsiu6mO6dhD2ddNCwqqXmkL7cdqWgvUH3jHUmM9EKtCM7c3fx/qnf4rzkvCJOU04EUz0JF6ZRyb04BAyzmJBDLmle69h1xiCgwdd+ialbgsfsJQNyMEM/GfD2X+J6k2QlG8OBoa0yGYWZN17OiEZEqkOtHnOI9/GdSSDKTQ2yiCf6Gg6iBnZEMUq9nquHrf6BF0jIiG/dLfQS17iOVFEu/TtGhyhtOT4oIfHtBheGRHYA==
+ b=kd4ozfPE755HUKb4jkFlqnxlPp9+NGzVtRGLoi+X70jGgRnAomnc/rBDb29DD+HPcIRnZrLRpmVYbFj5tki6XheSlwiPUs0JSVBU8YUMS/XKhx9hH69abcRT02Nxq9x1OjZxMgMxl/8U/NKgbajnfI7WwzE6QrX9wgRTzvNl6h/4jSIeOvkJRhTmXOkg99pNG8XfY+SCt9gsfOO0DU+1EdHQAxL4dWwXFofOgVQ391QLCg+03Tfq852EJlSkh24s/++dhNaTYKc5pIvItsZweoy9CoxV8MXG9d8o5KQECxWFZu5webl9yuTzISazHjtc0ogF6CUW9bxh0wEOQGobcg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=CiaFfQsOw48CZUS9v+aqmHUrZlkrbGprBvfhRiOylys=;
- b=HEqlc3L23QCJwuDz5YtuRO09X/L9XGn/k3Vhs+36sYRDAcMPGFf1xAFEL7LfNc7rYlkgeN4mIacOqagbA3SmnChvAiRriC3PUKVBbt/butAakId077vVOn12Lw4QrDRsF1fWLshGcFHVP/GClv6BJO3baBXzd71bkf8ERygpKqRnibvp6W7ZVe2Cr9BLmUI2caxI9vdA67d0XmoJksedV8XVvcUrUaykPZkExe/9X8/XEpQJSojRNJLeaKGgXKSgqYOnJQ13khaz9pK7nJT23uem3gjlRkgVSmt2aFY9Z6O0Njt76hYdWKY1KCtvldhe+lLwHvVLThRgxxFNOO2c/w==
+ bh=U54OpHHjptQmmioOnVlYN5RD1tadDPteu2fR/F/aviw=;
+ b=krEQwYl9WZFE3xe6FiCacBMByFD+7F3QImbAHnQ/rixDPBzTGG7mhPqcX2sk2WSceQQqloCVP5TKnIbSkyXwbJXqaoA0I8PurBvoqfnBBEdHCADNlhDgkEUJKKWk8WZ91fWk6DVoWPeK+3/FlhicJ4qJXg+Y3ChzSFeo0ICUgOw/fcWrW/SJ3nw9RShLxNid9sk7k51KMvaRXwSru/mWYqRIlqo5zzRFAVy0h4ZIaxNZclHtrjPVUS66G7kw95lZ9IGZc4e9dCnWp2FUith/YxB6dyTtqkvxATMBTLC66Ma0GkZaFbxLb2X8rfugbpoqPiYw3+J+xN5DrscxFbegtQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
  dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=CiaFfQsOw48CZUS9v+aqmHUrZlkrbGprBvfhRiOylys=;
- b=VLW54X9QKI/Kz4haMXtA4Azki7HShnyFSg64VFigbroFa7zPFhTRMAI4oFQ7rqCTfrUggAEcg72BxfSiVn2BRRcgpVmTHt0L9HkI+YRsYSkD3GHxsFkTHPOLa+YN3IcxmjuD7hDKYmnD22/2X11iFOV4V2crwJuLjOukdOUCQjCwzt0V/cIxYbqRC0euLVZJg0TU8oIXD2UcXfweNJbNOCax9QaMu9Kw5ZeJyP0yUGgpKd6/GVIEOX/osouy4uLZqqndD8asa4NkXq/12GYFQUsPD4JApUDYqMovjOa16PTPd5gN+4VGc7+SiVdY7iIPHRRGQn5GM9gulAu/XGqWwg==
-Received: from MW2PR12MB4667.namprd12.prod.outlook.com (2603:10b6:302:12::28)
- by DM5PR12MB1883.namprd12.prod.outlook.com (2603:10b6:3:113::16) with
+ bh=U54OpHHjptQmmioOnVlYN5RD1tadDPteu2fR/F/aviw=;
+ b=KMNrZ0b6WLyAJcafYNLQoJlM3h1sSIok/8dC453NHKnT0kD0RF7VDDLkMqHxX0w8AA8HkOzdWOnabtaETyqU2N8rYsFklu722apWiyCY6/8pvTnPfjDBjFGVsAQ2Tnh50gTA/b2ApUBUwh5EePS0e8phpEg3YpccOOUCzKMU/tg=
+Received: from SA2PR10MB4587.namprd10.prod.outlook.com (2603:10b6:806:114::12)
+ by CH0PR10MB5004.namprd10.prod.outlook.com (2603:10b6:610:de::12) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4951.18; Fri, 11 Feb
- 2022 11:45:19 +0000
-Received: from MW2PR12MB4667.namprd12.prod.outlook.com
- ([fe80::846c:d3cd:5a30:c35]) by MW2PR12MB4667.namprd12.prod.outlook.com
- ([fe80::846c:d3cd:5a30:c35%5]) with mapi id 15.20.4951.019; Fri, 11 Feb 2022
- 11:45:19 +0000
-From:   Chaitanya Kulkarni <chaitanyak@nvidia.com>
-To:     Eric Biggers <ebiggers@kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
-CC:     "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
-        "linux-f2fs-devel@lists.sourceforge.net" 
-        <linux-f2fs-devel@lists.sourceforge.net>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
-        "linux-fscrypt@vger.kernel.org" <linux-fscrypt@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC PATCH 1/7] statx: add I/O alignment information
-Thread-Topic: [RFC PATCH 1/7] statx: add I/O alignment information
-Thread-Index: AQHYHw6MhkvU3aWvQUef3qvKk4R/5KyOOi4AgAABZIA=
-Date:   Fri, 11 Feb 2022 11:45:19 +0000
-Message-ID: <b05c66c5-81fe-6398-416a-1dc9bdd3469a@nvidia.com>
-References: <20220211061158.227688-1-ebiggers@kernel.org>
- <20220211061158.227688-2-ebiggers@kernel.org>
- <1762970b-94b6-1cd0-8ae2-41a5d057f72a@nvidia.com>
-In-Reply-To: <1762970b-94b6-1cd0-8ae2-41a5d057f72a@nvidia.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-user-agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 42f44365-8ff4-47bc-5acc-08d9ed53faea
-x-ms-traffictypediagnostic: DM5PR12MB1883:EE_
-x-microsoft-antispam-prvs: <DM5PR12MB1883F5D77FAC84D9E52DE782A3309@DM5PR12MB1883.namprd12.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:651;
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: bzpTvW5kj7tJgNyRc3/QymAwdoOFH0Biw9OznsLcD8iUhdvIHvNzL70kteqgpzxKEdKyeRQIBdnlMSk8ntZFQQMb3I+kxKrMp4SI28McVAYoCGf4rhJeBK1dLJeIviiV6Mm9mUmEv8/knVMQxs4F+h86shmUrvsKe1Ltx0gmy3eLU61AVNWCJmcpGxecVMycWkHaHV0dEP6XpQsQp6TBhkaFlCwTY2AX9xVR2EVV2ZOI/AwDphwm6pTdmJgQ2WRVMk78sx75tGSvfoVtq4rL3lLcL9KcyYKmQy1y+dXPGboXLTysr6hmniHHD4mKXbKJ+5NTbGL/bTny9M5sn8Y74T1m7g+5AfPAs8i9IvLeYPKJduTKX3/HviCw+F4dA5FKR80H0yI8PsP+EvsbjfWftq1oxcIfqh6YCkwv+am51uD7Ck+K4osUQ8Ll4WoQ248fiTsUaTlbvXbeHB64cOis4oc8kvmrD0rhf6XNdvbze4V6AVx2N6jZ32wukt3ax6AgbF6ko/LKOWoJv532wT+cjuXrUU3aVx1TjbydGp+JwYvWT/MQpDzVSia4lCuT+h8aagYrgIAS4anKFCipldTWoVpl1yurCMYnzd4isjUtitJLZ6QViuxm8ADLellzHgQP7vJH+c0IgJtuyAtuEkw4nYMO2SiBXFlTVrq3j1+omtdSIUT4oOAA5O/cGWGJiKQRDgbt8buCmNIACSdzWFdTy455d0oQS70nW379gEHTJA3redvBNlvWCseAykwZ3HdWZMmg+ekdj8PUCKhh4Ie+14HTcQz00wguUduwwR7PijADbG/EGgY4X0QM9fCDpTvlsE0uicuMqaOJyIcdjdpmy0+A+ZcFTh7l9RkekWkpjCIKdSt+iq6TeqF1pJ3vK1MQsSvKrjRVBIhfMVOB0MbvrVpaqT2e4/5EHuwdxOvm1T8=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW2PR12MB4667.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(6486002)(966005)(2906002)(38070700005)(31696002)(186003)(53546011)(83380400001)(54906003)(71200400001)(508600001)(31686004)(316002)(45080400002)(6512007)(91956017)(64756008)(110136005)(86362001)(76116006)(66476007)(66446008)(5660300002)(66946007)(6506007)(36756003)(8936002)(38100700002)(4326008)(8676002)(2616005)(66556008)(122000001)(21314003)(43740500002)(45980500001);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?c3lkL1JVK1hJTHBQZHZJd3AwaUJqaUk5VDgwcGY4RGNxQjEwYThEa0ZWQUNr?=
- =?utf-8?B?MEk3UWJZR2RPTjJuYWloZ2FUU09ZTzIzdktXYnhsM3dsSTR5ams5VnpTV0Na?=
- =?utf-8?B?T2RDTWVDZ2kvcjRmcTBiMDgvZnpNVDNwck5MajFLWlJ3dE5PWVFxRUxVRHNi?=
- =?utf-8?B?SitnS1NESVQ2bHlJQTgvN0JVbU5iU0duOHlrQ0xERVF5dERPWjJHck1hUzhH?=
- =?utf-8?B?S0IzUURlTC9KNmxuL25Zc3JpcVNQRUZrQWg1QzlPcEJ2QWs0TkhkeWtEZVZl?=
- =?utf-8?B?eFNXaWE1eC94a1hBWklRZzFwTXpEQkQzZEpGV2cxRFo1elpPZWV1dkdrUlB4?=
- =?utf-8?B?M0hTNmpHSTdpQmF5eVkxWHRqbGVTWnMxdEc0YWtkb3ZoMHNadXhCU0tHZzJ2?=
- =?utf-8?B?NTZWYndJYks2QnppSmdndklmcC9LdXczMkZPeFgxODM0bldMK00rL3daTG1U?=
- =?utf-8?B?NjJEZGxOZnpKQTc1clU1bElPUldiMEJoWUVBbVhFZjJtRjBGbGw3MVMxREtE?=
- =?utf-8?B?UExBMFNpQm90RnU4NXVjTFpBMXlIQVMweW43YWdlaUhHOFBJV0d4TTlHeWN1?=
- =?utf-8?B?QWNFKzhXUVpLbys0TzhMNVRsQmRkVUdRTmlXdHZMc1luSDcrN2oxeldzRUt4?=
- =?utf-8?B?a3hDWXFSVnE5QmpLbU52QlJZTEwwKzlrdVR3b2V3d2VQSStRRDRjSG1lM0Nw?=
- =?utf-8?B?UlNMSno3Z0VVTUdLS1BMb01jcDh6SUdIWXFWTE5vbmg1ZFVSUHdzVElpNFlS?=
- =?utf-8?B?cGd1US8vUXFGbXkyY0tGVUFsK2U4RXQ2a1RFZ0hsdjZWYWc2NUNqbGh5VDZS?=
- =?utf-8?B?TkFoWXRHUWE1Qm12NkdqZ0V4eGtRcGsycUxsOTkyRFAwRXdHMXFDSFk1Y2Yz?=
- =?utf-8?B?eEJCZmt4dXFCUFBjVUl6ZDE2dFN0ZXNmT0ZNQkl6cEt6dGZ0RG9KejY0VDQ0?=
- =?utf-8?B?N1k0Sm5WR1dzeml4VHNRR1QxUnJRK1pKc0YycXEzM2tOTEpwVXFzRjBnRkE4?=
- =?utf-8?B?cEVwYjZ4ZTZhK0p1U2xTcnQ1aWRjV3l2R1dFR28wRjZNNjFSMGo4Z0l2U2dQ?=
- =?utf-8?B?dVBjYzlzWnlJZ3BHS0ZlYktoOUFBR1JaOXRwUW9wZ3p4Vkt4MUFSZ2t6QkRN?=
- =?utf-8?B?eDUzMGZnbVN6ZlZkRlREWS9aN01ZZDRrc1RUSHJxQ0RKaEVHVVBlTFZJOVN3?=
- =?utf-8?B?K0dkaXFIZ1pQRVc0NGcxVGxzL0xQOVhyVHg4VjB1RFdCTGc4Mk1CVFN5aEYv?=
- =?utf-8?B?ektSVkxqMzBFdEh6VUw4ZEk5b0s0RmRaK0pyUzdkRlBQYUVUdHpqOGdkbGc4?=
- =?utf-8?B?SUlPcFZhNm8zSUdURFhza0pMLzUyaUEzbTh3eFpHd0hxT3cxcUoxQ1dMbUdm?=
- =?utf-8?B?a3ZEczdDSTd3V3Q2OFBWRFRvUUdHbktOb1h4akVhUTQvTk4yQ1ZvVGh0V1l3?=
- =?utf-8?B?NWxEWURQczJpLzN3ekYyL1VrUUJqRitseEt5TElwMWE4TElIVnlVaE5JQU1a?=
- =?utf-8?B?MmNuTnlQSlhIWEhJbExITEhSQTdUdzU4cTlRck1kYk9PRDRwRE1FYWJyNktG?=
- =?utf-8?B?YzRqeWsva1QzK3ZPWWVyc2FNWndic1RvVGovRWxycCtuQVp5cVlmMXduK1hL?=
- =?utf-8?B?VzNUSDFTa2s0blNDelVUdStnRHNyN21XTi9uSnRxZHkxSGEyZFV2T1EwenBI?=
- =?utf-8?B?R2w2em5Bc29IaXZtT1lMT0VUOS80TDR3dzdmREtXNTZ2aGpJbVp5VXluQmlG?=
- =?utf-8?B?alRzc1BEcFVTL0JRK1VMeHRrSXdvZHNnTER4ZEdpUlZ5VzZ0OFJoMFU1S2g4?=
- =?utf-8?B?NjIyM2FsdlFWV0t5ZkRFdHVyRWI1WFVWdm8wWEZaQ29hWW9sUGRLN2tWZ3p3?=
- =?utf-8?B?T0lmb3dLTmtuVFRMTTh2ekt6NktBY09Zd1kvNGJ2c3NJUnd3bndOTXNqOWRU?=
- =?utf-8?B?WFdDbXNjNXp3b1NKSWVYeEppRTl6dHVBb2FPYTNFdDNWU0o0bVY3Sy9Yem5l?=
- =?utf-8?B?dzJkUG56VWc5ekRubk9aTUJFRlZ3emtQNW8xNkltd2dBTlRPdnhodDkzSzEr?=
- =?utf-8?B?bzBBbVJLV2swUWZmWCsvalphc3FuZDRhdWJWTUgrNHR4UytORnRHY2hBd1d4?=
- =?utf-8?B?ZWZCWldmUVVmVWxGajNONGlpNVlKUGtYNlpTY0s0VWxtaDVVMFhzQnRVT0FQ?=
- =?utf-8?Q?A7SnSwQWWNmcRWHvAdPHIL6DSBk48DiNySvZH0nQF1BT?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <5E2A13B950A6894DB6AA4D39DCB0F5D5@namprd12.prod.outlook.com>
-Content-Transfer-Encoding: base64
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4951.12; Fri, 11 Feb
+ 2022 12:10:41 +0000
+Received: from SA2PR10MB4587.namprd10.prod.outlook.com
+ ([fe80::fc8e:7310:2762:be9e]) by SA2PR10MB4587.namprd10.prod.outlook.com
+ ([fe80::fc8e:7310:2762:be9e%5]) with mapi id 15.20.4951.019; Fri, 11 Feb 2022
+ 12:10:41 +0000
+References: <20220121051857.221105-1-chandan.babu@oracle.com>
+ <20220121051857.221105-14-chandan.babu@oracle.com>
+ <20220201200125.GN8313@magnolia>
+ <87v8xs9dpr.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <20220207171106.GB8313@magnolia>
+User-agent: mu4e 1.4.15; emacs 27.1
+From:   Chandan Babu R <chandan.babu@oracle.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
+Subject: Re: [PATCH V5 13/16] xfs: Conditionally upgrade existing inodes to
+ use 64-bit extent counters
+In-reply-to: <20220207171106.GB8313@magnolia>
+Message-ID: <87bkzda9jd.fsf@debian-BULLSEYE-live-builder-AMD64>
+Date:   Fri, 11 Feb 2022 17:40:30 +0530
+Content-Type: text/plain
+X-ClientProxiedBy: SG2PR02CA0028.apcprd02.prod.outlook.com
+ (2603:1096:3:18::16) To SA2PR10MB4587.namprd10.prod.outlook.com
+ (2603:10b6:806:114::12)
 MIME-Version: 1.0
-X-OriginatorOrg: Nvidia.com
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: b9d7161a-e3d4-45a8-45d9-08d9ed578597
+X-MS-TrafficTypeDiagnostic: CH0PR10MB5004:EE_
+X-Microsoft-Antispam-PRVS: <CH0PR10MB5004F7D2A1E62FC02BDAE513F6309@CH0PR10MB5004.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:2958;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: rAmjoDf0pOkUPo/YUzCmIp8DXxyx7T08jtspZxrBPZFFVUf1PKIO6FEORP2mIYp7zLf81oUFRFkLIP/bWD+nSbs/K3CiZhKrLiSGhypMANSofeMAOvPxUZp/AeyjBHDeC5jPIbud6/q+Vel0+HwnKiIrIvI6MOMlEavWVQSH3uL3Ez22Ftuix0hLp4OhnsBPbfEU7xlcNhIjZgbqezBnPg/aP16ooeHq3Md9meAliiz4T0u3S4PRVuDbtmRhLrJsfTlyQgrkTmjL8evLpBY1c7zTrFqLnsWb6Z6Bz1YtfYDIgavP0L1mQ7N10a0mWPH9gAUFuPdSEd4MezcXu4ldfHIbivL2DRtlZkeR+A0Iuq8tm6OABWK+13fZ6ExBGR5wV8sjdeYirC9xY0eUuky/yPFhLsX5LEGHJorkkFDaEuKkOlFwzRC2m6Bh3Yw96dQqgDXQ4q/1pC4AYLWSSuEI5DCwCdL+oOLz5fWM8YrIlO113AcRrQPHFaOZRZ95uwS2cALqfV5dXCDGqJBOtn240Zb0CVavByTPsp5hjcYCcAfWUvLQnIk0DEkMN5O/0CwuYlm13HI2oqYnX8W63ilwUJZVGpGmtpWUEj7X5HsrLW5Fn6bYa0wU8b7MVscCNimHEEC4NyUYiWgEqtVrCJpdf1pDTCF6i+/jw1yY4XAnDMVcXRUbS2gA8mjYdTIT9TgtS0SOW6D/3LBXbbA1dIrclg==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(7916004)(366004)(6666004)(508600001)(316002)(9686003)(6512007)(52116002)(33716001)(6506007)(2906002)(66946007)(26005)(186003)(53546011)(66556008)(8676002)(4326008)(6486002)(38350700002)(66476007)(8936002)(6916009)(86362001)(83380400001)(5660300002)(38100700002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?jMbsRSLHZq2n8cLg5EuYWTK+ZQ2/ZopUgQSDOJ7NSJkUOc5CvlT0Nk2lvmn5?=
+ =?us-ascii?Q?3KktIVGu2V+bbwENHJrqpz2gXc2sTFJuk2RmeetpDWQH50WmA62q5k4a9IrX?=
+ =?us-ascii?Q?Xw1/9QagO9fHLAuR/o8DXEEBwAXkgIG8iRDbV8zi7IgRGJ67ks/MeYVRTN7G?=
+ =?us-ascii?Q?+OK0ukuH63qlcLg2Kczub1Dc5cqrnRB0JjDwZKH2HFMRi6fKXSSDy4OLr6kE?=
+ =?us-ascii?Q?/KcuoipHpKuBgiSpRxM14Zm6tLMsidubs4HohQlpeRFymG8BvYx9xRXejrL7?=
+ =?us-ascii?Q?AsmiSoleUSeo+AUxS0/jFe9OwhN74wy/MDR15cRn3kfqaopU4EekLTOihqEy?=
+ =?us-ascii?Q?tRKOdMAuxedIrWiuUjVHxfe5D63zM8nH8iqfzwCKMAEkacTokDo3mTuv/sYv?=
+ =?us-ascii?Q?bpN+h2j4SmydqYOWf3GRz7cLvda9dchKncJMtn4anWnjYQr7dmENWArSwDIz?=
+ =?us-ascii?Q?SqXdZZbiD+NWeKGTtQcbgm/uhLB1u1yzARAC/EiL1VkXwFbbuay2j7LW9r55?=
+ =?us-ascii?Q?hI99IajjS+SqOoU0fNPO4xESzNAaWavStz4MDreynr6GlbX4g1uTwntkfTcj?=
+ =?us-ascii?Q?3jPbMES+em/LANki0fwQ7CHzAbqWeAGwBp4jHOSZSdZ0XKbDuBsuhkGL9rcQ?=
+ =?us-ascii?Q?/EVy4r96z0ZwxLjFisNCbDI7/SghYtxSSDk4AYqrF7XNSO2vsPYGZr8krwBZ?=
+ =?us-ascii?Q?8x5SweYv0cnqwiGbNfsgMe4urnXC12QsOczQLyVFviva9/AQ3E50QjCEg+UV?=
+ =?us-ascii?Q?BXCrweJYVnr8c/QSKnCW7b7nKSl/x0nYDJe+p9zpA/hzmZGI0HB51p2SeO7M?=
+ =?us-ascii?Q?EFAvJ+n43sV0mZctNK1iPH3Z00qzLBk+ns0cIVfzq8x21Aqd6kif3RxCHY/a?=
+ =?us-ascii?Q?QbTHopQyEHYxrq7d2vKwr6o+X8sPtzQ7DGlaMwW//4RR+tYABum9qbcAVcyU?=
+ =?us-ascii?Q?kp3rPzjot/QrNgAfwZgzUZ5vWLxoejuQpgFh7nln359Qa3uaX2VjDXuH6KzW?=
+ =?us-ascii?Q?UMzMI2C/1x8HGdGJPROdTRMZEjNqqugOzHU/Ek3h/QrFiEb5vxkSGh6YMgBe?=
+ =?us-ascii?Q?r/0LFnDPKDGRxDWYhX/1SGF5c4YSj5+CFFWqGYNEnzzdgknE2b+n9lUT0biN?=
+ =?us-ascii?Q?kZ2PY4smPhB0Dw6cJw3cKwaWWMGDRuJNi4HWvQGcJz224yfUCqCBZfatrfUh?=
+ =?us-ascii?Q?ylqiFnbCXUWqrLN8q12NMDBMCm5FwmklsU+1MuWaX1mTDA653i26xuWwgxKj?=
+ =?us-ascii?Q?+SAXnenAcAVT+PHjLk/72PDb2PmI0ng1AFUbWhJ8BdSfjn3dMLG1UvPSw/YG?=
+ =?us-ascii?Q?encG9lHEcoYlwPMunwFLhvldmIb5Gzz17HIWyo99MpGyV+U/BHbj/VcdDAZO?=
+ =?us-ascii?Q?7WJRfZQPya7rwhIvsGCmHwQWi9zi0cVyRK5CiHc6yyLF2hNU/AaqSffmGtvR?=
+ =?us-ascii?Q?sB6ktt/I6Qn2sen3nML0Ic/rPCqO+U5hz/8yTYeVW7escwC+UWTzWJMunOHZ?=
+ =?us-ascii?Q?TpQhBgOX1WSO+jZO+bTIFkIvHJThD9KLsJ+7eI6Z+f4k57pb1x3NFrSLeiZj?=
+ =?us-ascii?Q?qTe20A5Au9KINqBxGrt6HUFYnOTY+xSRB/2C7fl9wOxGfqPLINL4FOOAs0wv?=
+ =?us-ascii?Q?CeyzKuxI2Wn8V7EIoZhHO1c=3D?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: b9d7161a-e3d4-45a8-45d9-08d9ed578597
+X-MS-Exchange-CrossTenant-AuthSource: SA2PR10MB4587.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: MW2PR12MB4667.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 42f44365-8ff4-47bc-5acc-08d9ed53faea
-X-MS-Exchange-CrossTenant-originalarrivaltime: 11 Feb 2022 11:45:19.6585
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Feb 2022 12:10:41.4950
  (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: y1QnMqA0mtt2SfPJ3wIP8zNz4RKtHWPoA3d1YXaSyOmyn9yZfSS7Kl1/1cxvSLTrmXqum5HQ6FRULzrcMqL09A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR12MB1883
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: UIV/APfa2LRg+zNxgx5yzeWVzKdjLAwX7YcWKiqQi1PQ8oNl9Y8mkrP9yKs37MDafU6JMxgbUL3M/wlu1qZVaw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH0PR10MB5004
+X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10254 signatures=673431
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 phishscore=0
+ suspectscore=0 adultscore=0 malwarescore=0 bulkscore=0 spamscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2201110000 definitions=main-2202110070
+X-Proofpoint-GUID: XsL2ON8U5_hbNFqdGIpI5RWX9GkgskIR
+X-Proofpoint-ORIG-GUID: XsL2ON8U5_hbNFqdGIpI5RWX9GkgskIR
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-T24gMi8xMS8yMiAzOjQwIEFNLCBDaGFpdGFueWEgS3Vsa2Fybmkgd3JvdGU6DQo+IE9uIDIvMTAv
-MjIgMTA6MTEgUE0sIEVyaWMgQmlnZ2VycyB3cm90ZToNCj4+IEZyb206IEVyaWMgQmlnZ2VycyA8
-ZWJpZ2dlcnNAZ29vZ2xlLmNvbT4NCj4+DQo+PiBUcmFkaXRpb25hbGx5LCB0aGUgY29uZGl0aW9u
-cyBmb3Igd2hlbiBESU8gKGRpcmVjdCBJL08pIGlzIHN1cHBvcnRlZA0KPj4gd2VyZSBmYWlybHkg
-c2ltcGxlOiBmaWxlc3lzdGVtcyBlaXRoZXIgc3VwcG9ydGVkIERJTyBhbGlnbmVkIHRvIHRoZQ0K
-Pj4gYmxvY2sgZGV2aWNlJ3MgbG9naWNhbCBibG9jayBzaXplLCBvciBkaWRuJ3Qgc3VwcG9ydCBE
-SU8gYXQgYWxsLg0KPj4NCj4+IEhvd2V2ZXIsIGR1ZSB0byBmaWxlc3lzdGVtIGZlYXR1cmVzIHRo
-YXQgaGF2ZSBiZWVuIGFkZGVkIG92ZXIgdGltZSAoZS5nLA0KPj4gZGF0YSBqb3VybmFsbGluZywg
-aW5saW5lIGRhdGEsIGVuY3J5cHRpb24sIHZlcml0eSwgY29tcHJlc3Npb24sDQo+PiBjaGVja3Bv
-aW50IGRpc2FibGluZywgbG9nLXN0cnVjdHVyZWQgbW9kZSksIHRoZSBjb25kaXRpb25zIGZvciB3
-aGVuIERJTw0KPj4gaXMgYWxsb3dlZCBvbiBhIGZpbGUgaGF2ZSBnb3R0ZW4gaW5jcmVhc2luZ2x5
-IGNvbXBsZXguICBXaGV0aGVyIGENCj4+IHBhcnRpY3VsYXIgZmlsZSBzdXBwb3J0cyBESU8sIGFu
-ZCB3aXRoIHdoYXQgYWxpZ25tZW50LCBjYW4gZGVwZW5kIG9uDQo+PiB2YXJpb3VzIGZpbGUgYXR0
-cmlidXRlcyBhbmQgZmlsZXN5c3RlbSBtb3VudCBvcHRpb25zLCBhcyB3ZWxsIGFzIHdoaWNoDQo+
-PiBibG9jayBkZXZpY2UocykgdGhlIGZpbGUncyBkYXRhIGlzIGxvY2F0ZWQgb24uDQo+Pg0KPj4g
-WEZTIGhhcyBhbiBpb2N0bCBYRlNfSU9DX0RJT0lORk8gd2hpY2ggZXhwb3NlcyB0aGlzIGluZm9y
-bWF0aW9uIHRvDQo+PiBhcHBsaWNhdGlvbnMuICBIb3dldmVyLCBhcyBkaXNjdXNzZWQNCj4+ICho
-dHRwczovL2xvcmUua2VybmVsLm9yZy9saW51eC1mc2RldmVsLzIwMjIwMTIwMDcxMjE1LjEyMzI3
-NC0xLWViaWdnZXJzQGtlcm5lbC5vcmcvVC8jdSksDQo+PiB0aGlzIGlvY3RsIGlzIHJhcmVseSB1
-c2VkIGFuZCBub3Qga25vd24gdG8gYmUgdXNlZCBvdXRzaWRlIG9mDQo+PiBYRlMtc3BlY2lmaWMg
-Y29kZS4gIEl0IGFsc28gd2FzIG5ldmVyIGludGVuZGVkIHRvIGluZGljYXRlIHdoZW4gYSBmaWxl
-DQo+PiBkb2Vzbid0IHN1cHBvcnQgRElPIGF0IGFsbCwgYW5kIGl0IG9ubHkgZXhwb3NlcyB0aGUg
-bWluaW11bSBJL08NCj4+IGFsaWdubWVudCwgbm90IHRoZSBvcHRpbWFsIEkvTyBhbGlnbm1lbnQg
-d2hpY2ggaGFzIGJlZW4gcmVxdWVzdGVkIHRvby4NCj4+DQo+PiBUaGVyZWZvcmUsIGxldCdzIGV4
-cG9zZSB0aGlzIGluZm9ybWF0aW9uIHZpYSBzdGF0eCgpLiAgQWRkIHRoZQ0KPj4gU1RBVFhfSU9B
-TElHTiBmbGFnIGFuZCB0aHJlZSBmaWVsZHMgYXNzb2NpYXRlZCB3aXRoIGl0Og0KPj4NCj4+ICog
-c3R4X21lbV9hbGlnbl9kaW86IHRoZSBhbGlnbm1lbnQgKGluIGJ5dGVzKSByZXF1aXJlZCBmb3Ig
-dXNlciBtZW1vcnkNCj4+ICAgICBidWZmZXJzIGZvciBESU8sIG9yIDAgaWYgRElPIGlzIG5vdCBz
-dXBwb3J0ZWQgb24gdGhlIGZpbGUuDQo+Pg0KPj4gKiBzdHhfb2Zmc2V0X2FsaWduX2RpbzogdGhl
-IGFsaWdubWVudCAoaW4gYnl0ZXMpIHJlcXVpcmVkIGZvciBmaWxlDQo+PiAgICAgb2Zmc2V0cyBh
-bmQgSS9PIHNlZ21lbnQgbGVuZ3RocyBmb3IgRElPLCBvciAwIGlmIERJTyBpcyBub3Qgc3VwcG9y
-dGVkDQo+PiAgICAgb24gdGhlIGZpbGUuICBUaGlzIHdpbGwgb25seSBiZSBub256ZXJvIGlmIHN0
-eF9tZW1fYWxpZ25fZGlvIGlzDQo+PiAgICAgbm9uemVybywgYW5kIHZpY2UgdmVyc2EuDQo+Pg0K
-Pj4gKiBzdHhfb2Zmc2V0X2FsaWduX29wdGltYWw6IHRoZSBhbGlnbm1lbnQgKGluIGJ5dGVzKSBz
-dWdnZXN0ZWQgZm9yIGZpbGUNCj4+ICAgICBvZmZzZXRzIGFuZCBJL08gc2VnbWVudCBsZW5ndGhz
-IHRvIGdldCBvcHRpbWFsIHBlcmZvcm1hbmNlLiAgVGhpcw0KPj4gICAgIGFwcGxpZXMgdG8gYm90
-aCBESU8gYW5kIGJ1ZmZlcmVkIEkvTy4gIEl0IGRpZmZlcnMgZnJvbSBzdHhfYmxvY2tzaXplDQo+
-PiAgICAgaW4gdGhhdCBzdHhfb2Zmc2V0X2FsaWduX29wdGltYWwgd2lsbCBjb250YWluIHRoZSBy
-ZWFsIG9wdGltdW0gSS9PDQo+PiAgICAgc2l6ZSwgd2hpY2ggbWF5IGJlIGEgbGFyZ2UgdmFsdWUu
-ICBJbiBjb250cmFzdCwgZm9yIGNvbXBhdGliaWxpdHkNCj4+ICAgICByZWFzb25zIHN0eF9ibG9j
-a3NpemUgaXMgdGhlIG1pbmltdW0gc2l6ZSBuZWVkZWQgdG8gYXZvaWQgcGFnZSBjYWNoZQ0KPj4g
-ICAgIHJlYWQvd3JpdGUvbW9kaWZ5IGN5Y2xlcywgd2hpY2ggbWF5IGJlIG11Y2ggc21hbGxlciB0
-aGFuIHRoZSBvcHRpbXVtDQo+PiAgICAgSS9PIHNpemUuICBGb3IgbW9yZSBkZXRhaWxzIGFib3V0
-IHRoZSBtb3RpdmF0aW9uIGZvciB0aGlzIGZpZWxkLCBzZWUNCj4+ICAgICBodHRwczovL2xvcmUu
-a2VybmVsLm9yZy9yLzIwMjIwMjEwMDQwMzA0LkdNNTk3MjlAZHJlYWQuZGlzYXN0ZXIuYXJlYQ0K
-Pj4NCj4+IE5vdGUgdGhhdCBhcyB3aXRoIG90aGVyIHN0YXR4KCkgZXh0ZW5zaW9ucywgaWYgU1RB
-VFhfSU9BTElHTiBpc24ndCBzZXQNCj4+IGluIHRoZSByZXR1cm5lZCBzdGF0eCBzdHJ1Y3QsIHRo
-ZW4gdGhlc2UgbmV3IGZpZWxkcyB3b24ndCBiZSBmaWxsZWQgaW4uDQo+PiBUaGlzIHdpbGwgaGFw
-cGVuIGlmIHRoZSBmaWxlc3lzdGVtIGRvZXNuJ3Qgc3VwcG9ydCBTVEFUWF9JT0FMSUdOLCBvciBp
-Zg0KPj4gdGhlIGZpbGUgaXNuJ3QgYSByZWd1bGFyIGZpbGUuICAoSXQgbWlnaHQgYmUgc3VwcG9y
-dGVkIG9uIGJsb2NrIGRldmljZQ0KPj4gZmlsZXMgaW4gdGhlIGZ1dHVyZS4pICBJdCBtaWdodCBh
-bHNvIGhhcHBlbiBpZiB0aGUgY2FsbGVyIGRpZG4ndCBpbmNsdWRlDQo+PiBTVEFUWF9JT0FMSUdO
-IGluIHRoZSByZXF1ZXN0IG1hc2ssIHNpbmNlIHN0YXR4KCkgaXNuJ3QgcmVxdWlyZWQgdG8NCj4+
-IHJldHVybiBpbmZvcm1hdGlvbiB0aGF0IHdhc24ndCByZXF1ZXN0ZWQuDQo+Pg0KPj4gVGhpcyBj
-b21taXQgYWRkcyB0aGUgVkZTLWxldmVsIHBsdW1iaW5nIGZvciBTVEFUWF9JT0FMSUdOLiAgSW5k
-aXZpZHVhbA0KPj4gZmlsZXN5c3RlbXMgd2lsbCBzdGlsbCBuZWVkIHRvIGFkZCBjb2RlIHRvIHN1
-cHBvcnQgaXQuDQo+Pg0KPj4gU2lnbmVkLW9mZi1ieTogRXJpYyBCaWdnZXJzIDxlYmlnZ2Vyc0Bn
-b29nbGUuY29tPg0KPj4gLS0tDQo+IA0KPiANCj4gSSd2ZSBhY3R1YWxseSB3b3JrZWQgb24gc2lt
-aWxhciBzZXJpZXMgdG8gZXhwb3J0IGFsaWdubWVudCBhbmQNCj4gZ3JhbnVsYXJpdHkgZm9yIG5v
-bi10cml2aWFsIG9wZXJhdGlvbnMsIHRoaXMgaW1wbGVtZW50YXRpb24NCj4gb25seSBleHBvcnRp
-bmcgSS9PIGFsaWdubWVudHMgKG1vc3RseSBSRVFfT1BfV1JJVEUvUkVRX09QX1JFQUQpIHZpYQ0K
-PiBzdGF4Lg0KPiANCj4gU2luY2UgaXQgaXMgY29taW5nIGZyb20gOi0NCj4gYmRldl9sb2dpY2Fs
-X2Jsb2NrX3NpemUoKS0+cS0+bGltaXRzLmxvZ2ljYWxfYmxvY2tfc2l6ZSB0aGF0IGlzIHNldCB3
-aGVuDQo+IGxvdyBsZXZlbCBkcml2ZXIgbGlrZSBudm1lIGNhbGxzIGJsa19xdWV1ZV9sb2dpY2Fs
-X2Jsb2NrX3NpemUoKS4NCj4gDQo+ICAgRnJvbSBteSBleHBlcmllbmNlIGVzcGVjaWFsbHkgd2l0
-aCBTU0RzLCBhcHBsaWNhdGlvbnMgd2FudCB0bw0KPiBrbm93IHNpbWlsYXIgaW5mb3JtYXRpb24g
-YWJvdXQgZGlmZmVyZW50IG5vbi10cml2aWFsIHJlcXVlc3RzIHN1Y2ggYXMNCj4gUkVRX09QX0RJ
-U0NBUkQvUkVRX09QX1dSSVRFX1pFUk9FUy9SRVFfT1BfVkVSSUZZICh3b3JrIGluIHByb2dyZXNz
-IHNlZQ0KPiBbMV0pIGV0Yy4NCj4gDQo+IEl0IHdpbGwgYmUgZ3JlYXQgdG8gbWFrZSB0aGlzIGdl
-bmVyaWMgdXNlcnNwYWNlIGludGVyZmFjZSB3aGVyZSB1c2VyIGNhbg0KPiBhc2sgZm9yIHNwZWNp
-ZmljIFJFUV9PUF9YWFggc3VjaCBhcyBnZW5lcmljIEkvTyBSRVFfT1BfUkVBRC9SRVFfT1BfV1JJ
-VEUNCj4gYW5kIG5vbiBnZW5lcmljIFJFUV9PUF9YWCBzdWNoIGFzIFJFUV9PUF9ESVNDQVJEL1JF
-UV9PUF9WRVJJRlkgZXRjIC4uLi4NCj4gDQo+IFNpbmNlIEkndmUgd29ya2VkIG9uIGltcGxlbWVu
-dGluZyBSRVFfT1BfVkVSSUZZIHN1cHBvcnQgSSBkb24ndCB3YW50IHRvDQo+IGltcGxlbWVudCBz
-ZXBhcmF0ZSBpbnRlcmZhY2UgZm9yIHF1ZXJ5aW5nIHRoZSBSRVFfT1BfVkVSSUZZIG9yIGFueSBv
-dGhlcg0KPiBub24tdHJpdmlhbCBSRVFfT1BfWFhYIGdyYW51bGFyaXR5IG9yIGFsaWdubWVudC4N
-Cj4gDQo+IC1jaw0KPiANCj4gWzFdIGh0dHBzOi8vbmFtMTEuc2FmZWxpbmtzLnByb3RlY3Rpb24u
-b3V0bG9vay5jb20vP3VybD1odHRwcyUzQSUyRiUyRnd3dy5zcGluaWNzLm5ldCUyRmxpc3RzJTJG
-bGludXgteGZzJTJGbXNnNTY4MjYuaHRtbCZhbXA7ZGF0YT0wNCU3QzAxJTdDY2hhaXRhbnlhayU0
-MG52aWRpYS5jb20lN0MyNTJkNzhlMDA5YWQ0OWJkNTIyMjA4ZDllZDUzNGRjZiU3QzQzMDgzZDE1
-NzI3MzQwYzFiN2RiMzllZmQ5Y2NjMTdhJTdDMCU3QzAlN0M2Mzc4MDE3NjQzMTMwMTQ4NDAlN0NV
-bmtub3duJTdDVFdGcGJHWnNiM2Q4ZXlKV0lqb2lNQzR3TGpBd01EQWlMQ0pRSWpvaVYybHVNeklp
-TENKQlRpSTZJazFoYVd3aUxDSlhWQ0k2TW4wJTNEJTdDMzAwMCZhbXA7c2RhdGE9MW93cUlEbGNz
-dDRoJTJGR3I5QXp0ZWFpeTIydmZIRlpvalJpcEttazZBJTJGQ2clM0QmYW1wO3Jlc2VydmVkPTAN
-Cj4gDQoNCkFkZGluZyByaWdodCBsaW5rIGZvciBSRVFfT1BfVkVSSUZZIC4uLg0KDQpbMV0gaHR0
-cHM6Ly93d3cuc3Bpbmljcy5uZXQvbGlzdHMvbGludXgteGZzL21zZzU2ODI2Lmh0bWwNCg0K
+On 07 Feb 2022 at 22:41, Darrick J. Wong wrote:
+> On Mon, Feb 07, 2022 at 10:25:19AM +0530, Chandan Babu R wrote:
+>> On 02 Feb 2022 at 01:31, Darrick J. Wong wrote:
+>> > On Fri, Jan 21, 2022 at 10:48:54AM +0530, Chandan Babu R wrote:
+>> >> This commit upgrades inodes to use 64-bit extent counters when they are read
+>> >> from disk. Inodes are upgraded only when the filesystem instance has
+>> >> XFS_SB_FEAT_INCOMPAT_NREXT64 incompat flag set.
+>> >> 
+>> >> Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
+>> >> ---
+>> >>  fs/xfs/libxfs/xfs_inode_buf.c | 6 ++++++
+>> >>  1 file changed, 6 insertions(+)
+>> >> 
+>> >> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+>> >> index 2200526bcee0..767189c7c887 100644
+>> >> --- a/fs/xfs/libxfs/xfs_inode_buf.c
+>> >> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+>> >> @@ -253,6 +253,12 @@ xfs_inode_from_disk(
+>> >>  	}
+>> >>  	if (xfs_is_reflink_inode(ip))
+>> >>  		xfs_ifork_init_cow(ip);
+>> >> +
+>> >> +	if ((from->di_version == 3) &&
+>> >> +	     xfs_has_nrext64(ip->i_mount) &&
+>> >> +	     !xfs_dinode_has_nrext64(from))
+>> >> +		ip->i_diflags2 |= XFS_DIFLAG2_NREXT64;
+>> >
+>> > Hmm.  Last time around I asked about the oddness of updating the inode
+>> > feature flags outside of a transaction, and then never responded. :(
+>> > So to quote you from last time:
+>> >
+>> >> The following is the thought process behind upgrading an inode to
+>> >> XFS_DIFLAG2_NREXT64 when it is read from the disk,
+>> >>
+>> >> 1. With support for dynamic upgrade, The extent count limits of an
+>> >> inode needs to be determined by checking flags present within the
+>> >> inode i.e.  we need to satisfy self-describing metadata property. This
+>> >> helps tools like xfs_repair and scrub to verify inode's extent count
+>> >> limits without having to refer to other metadata objects (e.g.
+>> >> superblock feature flags).
+>> >
+>> > I think this makes an even /stronger/ argument for why this update
+>> > needs to be transactional.
+>> >
+>> >> 2. Upgrade when performed inside xfs_trans_log_inode() may cause
+>> >> xfs_iext_count_may_overflow() to return -EFBIG when the inode's
+>> >> data/attr extent count is already close to 2^31/2^15 respectively.
+>> >> Hence none of the file operations will be able to add new extents to a
+>> >> file.
+>> >
+>> > Aha, there's the reason why!  You're right, xfs_iext_count_may_overflow
+>> > will abort the operation due to !NREXT64 before we even get a chance to
+>> > log the inode.
+>> >
+>> > I observe, however, that any time we call that function, we also have a
+>> > transaction allocated and we hold the ILOCK on the inode being tested.
+>> > *Most* of those call sites have also joined the inode to the transaction
+>> > already.  I wonder, is that a more appropriate place to be upgrading the
+>> > inodes?  Something like:
+>> >
+>> > /*
+>> >  * Ensure that the inode has the ability to add the specified number of
+>> >  * extents.  Caller must hold ILOCK_EXCL and have joined the inode to
+>> >  * the transaction.  Upon return, the inode will still be in this state
+>> >  * upon return and the transaction will be clean.
+>> >  */
+>> > int
+>> > xfs_trans_inode_ensure_nextents(
+>> > 	struct xfs_trans	**tpp,
+>> > 	struct xfs_inode	*ip,
+>> > 	int			whichfork,
+>> > 	int			nr_to_add)
+>> > {
+>> > 	int			error;
+>> >
+>> > 	error = xfs_iext_count_may_overflow(ip, whichfork, nr_to_add);
+>> > 	if (!error)
+>> > 		return 0;
+>> >
+>> > 	/*
+>> > 	 * Try to upgrade if the extent count fields aren't large
+>> > 	 * enough.
+>> > 	 */
+>> > 	if (!xfs_has_nrext64(ip->i_mount) ||
+>> > 	    (ip->i_diflags2 & XFS_DIFLAG2_NREXT64))
+>> > 		return error;
+>> >
+>> > 	ip->i_diflags2 |= XFS_DIFLAG2_NREXT64;
+>> > 	xfs_trans_log_inode(*tpp, ip, XFS_ILOG_CORE);
+>> >
+>> > 	error = xfs_trans_roll(tpp);
+>> > 	if (error)
+>> > 		return error;
+>> >
+>> > 	return xfs_iext_count_may_overflow(ip, whichfork, nr_to_add);
+>> > }
+>> >
+>> > and then the current call sites become:
+>> >
+>> > 	error = xfs_trans_alloc_inode(ip, &M_RES(mp)->tr_write,
+>> > 			dblocks, rblocks, false, &tp);
+>> > 	if (error)
+>> > 		return error;
+>> >
+>> > 	error = xfs_trans_inode_ensure_nextents(&tp, ip, XFS_DATA_FORK,
+>> > 			XFS_IEXT_ADD_NOSPLIT_CNT);
+>> > 	if (error)
+>> > 		goto out_cancel;
+>> >
+>> > What do you think about that?
+>> >
+>> 
+>> I went through all the call sites of xfs_iext_count_may_overflow() and I think
+>> that your suggestion can be implemented.
+
+Sorry, I missed/overlooked the usage of xfs_iext_count_may_overflow() in
+xfs_symlink().
+
+Just after invoking xfs_iext_count_may_overflow(), we execute the following
+steps,
+
+1. Allocate inode chunk
+2. Initialize inode chunk.
+3. Insert record into inobt/finobt.
+4. Roll the transaction.
+5. Allocate ondisk inode.
+6. Add directory inode to transaction.
+7. Allocate blocks to store symbolic link path name.
+8. Log symlink's inode (data fork contains block mappings).
+9. Log data blocks containing symbolic link path name.
+10. Add name to directory and log directory's blocks.
+11. Log directory inode.
+12. Commit transaction.
+
+xfs_trans_roll() invoked in step 4 would mean that we cannot move step 6 to
+occur before step 1 since xfs_trans_roll would unlock the inode by executing
+xfs_inode_item_committing().
+
+xfs_create() has a similar flow.
+
+Hence, I think we should retain the current logic of setting
+XFS_DIFLAG2_NREXT64 just after reading the inode from the disk.
+
+>> 
+>> However, wouldn't the current approach suffice in terms of being functionally
+>> and logically correct? XFS_DIFLAG2_NREXT64 is set when inode is read from the
+>> disk and the first operation to log the changes made to the inode will make
+>> sure to include the new value of ip->i_diflags2. Hence we never end up in a
+>> situation where a disk inode has more than 2^31 data fork extents without
+>> having XFS_DIFLAG2_NREXT64 flag set.
+>> 
+>> But the approach described above does go against the convention of changing
+>> metadata within a transaction. Hence I will try to implement your suggestion
+>> and include it in the next version of the patchset.
+>
+> Ok, that sounds good. :)
+>
+
+-- 
+chandan
