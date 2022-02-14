@@ -2,126 +2,124 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02971C433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 14 Feb 2022 00:11:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E79EC4332F
+	for <linux-xfs@archiver.kernel.org>; Mon, 14 Feb 2022 02:27:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238835AbiBNALh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 13 Feb 2022 19:11:37 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:35158 "EHLO
+        id S232298AbiBNC1Y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 13 Feb 2022 21:27:24 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:43888 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230195AbiBNALh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 13 Feb 2022 19:11:37 -0500
-Received: from NAM11-DM6-obe.outbound.protection.outlook.com (mail-dm6nam11on2043.outbound.protection.outlook.com [40.107.223.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FAA651E6A;
-        Sun, 13 Feb 2022 16:11:30 -0800 (PST)
+        with ESMTP id S231635AbiBNC1Y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 13 Feb 2022 21:27:24 -0500
+Received: from NAM11-DM6-obe.outbound.protection.outlook.com (mail-dm6nam11on2065.outbound.protection.outlook.com [40.107.223.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F6E254BF2;
+        Sun, 13 Feb 2022 18:27:16 -0800 (PST)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=KTBPpmTivEisrH55gVFbpRn4z+vgy2Qh3xCzlAvrt34wmtTykFBpjpc7iUP4XZRceM6CD3UIUZ83fF2lSt9mP9aql5cSAjAgtgpfmT5MF0PVYB404KdMqLBxtaE9NjOw1014Xq+VRRRQPMiVY36nkECYHHOHCme5A8noEkq7W9nuJdZknc5P7s6Jm0VYRHpGaCz85miW/GNUtBqRHj9JfNuYhD8nY9MTCg5oxZ3zX8rga2KINo50za9Qtnq7asq5rnqbFnwCRgCYvfp5jCZCUvcUu7P5AnF3aWQOfWzsB6wwGhHEuJjA9lQAy+ZGc31pBGSEl3PuSjP9LnoNdsuI+g==
+ b=ehh5SCQgZoplycuwfh/W7FhjipI6bThHiK40rERvhEI8wVVTsy+bDZ+tbRfCLBH5uyfwYmmr1SOv1Fb0maZidKVdAykmBdcB5otSg0fZnW4fAiP1hruLm1YH4C/A1G3OW2dDR3IkiW5aFNE3bofDUxQc2o1xMn33k7uPlmD5b2yPKwB2JhfXuwV4/QW15/tvS92Z2CTWaJyE3LP/RSkiR3bcNIZmPk6/XLK0v/1WQww5n8iUabcAvEm5wR6SONQdnKfbGPKCcfshQdD7qulIFrdV+NMHo1Qn5vBhV+97PPMY5EEU1sPwb28cy5adyoveYuPKMpQCuIzKi/NiLtPiGg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=CCYrrzFoW5hAcJqejchdxoqKxYNnLW0FEatVxngRN+0=;
- b=oYVNYaR0rUk6l5jnUWz2mMVX39PpWwP0iDf2gXM2Z7wRPOjshaZTxPEAuYWxfAwj+ffIxjpgctkqoOz5x6EYAxRN6MZrJGaPvSZYj+9d+OacdcY2tlhen0GB21TeCwgJImr/I4bCcv217IIBlhMK+lN3lyAHiOlyqZ1xgueojFG8uNTbpzYHin7yhojgyPpt2sf+gd7ouy78uZKB04gJ10qwADQehMsrgs8F2hLZ9/BHxAB5X12gXWmnyw/0gF30IuPmezLvG6ywt+TTNcwWGAwBqG4P3QQSw36WsgioS0HPF/T02isGdmbhCKbfEpcDbpq2TyTxFP0curMcYtQaNQ==
+ bh=7mZKKKxR9CYxuyw5vY2DCV/ng3LXc6E8SH67yNsiSJ8=;
+ b=Fa/MmCKCuiOoUcaLg3gf6j2pZnPM/9NRQHNfZm7a5G8MHDhDtATyf5daoH2khtADqB1yAV/nmyUwCbiFMf+l96Zp1AzEOUo7psQ4+BNDYp27T6wFfCT8oXH4Ze9UXg/3ysMloIoQkIvPwd9PHFapbemceM3J30NqRk+EDDmN36EupK00ItXAq8bpTLC9/Txhimcj4B5zm1u6iH8jJh91jIrGWdlYudA4fxskGEPtU5FvkJiXJ07evXgd+DydRoljPJIPnDE9luv7SqB5z+++7JCMa3mghZ17cVnmJ/qYOdoTUYS1UtuhOW3RPLX+9Dwi9mXFxSxsQS3OOKLQNP5R3g==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
  dkim=none; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=CCYrrzFoW5hAcJqejchdxoqKxYNnLW0FEatVxngRN+0=;
- b=XCBkw6a5KGYQJVZ0gNYm+h0glPvf3MI7Z/MjzP4178/PG8ZJrKtDuO/ApLEEJQCgAfGv928QWfRWPIzAOcwFVUCHasgcB5hhaN0Pz7Gxh+sfrMzKsL6Rv0h3Im1d9uGmPq4qUzELdNVCw1jym8nAJ5INb050pxoOyBlMYNwq6M6Tr3pR9l+MDvHjkbYA8z2eWT270/77ir9pbqBweQJ9hlI4BuZpi9XUHRPGrDoyy5KErR53LHpSvJqfXWgCYBI0WGhx4k++KwtEf8B6YIiHGKRvARIV0NyNdbqZugpi1N0ZtNId9Q+77HmatrczUfu4t0QyDl16V7f3XUct7/gqRw==
+ bh=7mZKKKxR9CYxuyw5vY2DCV/ng3LXc6E8SH67yNsiSJ8=;
+ b=GkB0KiUuTFvchaB+NeokIyHvPAgOXgUVZrDOHPvIs83VMIvsLut//5PTtfX+awSx1NJhBHb/pVB4b2Rd4si6mfyC9P5ua0i1B/stMeJPd262EwxRHMo1yJSucb1LYeOZ8kt0zE7lzVYP3jsH0Oauso6uQO34OqFpvmBXjui6wNP7y5uw7uNP3wVg8DuUByVmx4qbwn/5xUCJNr79L3BDvkG1AknaOkF8ucFa+b+229/VCf9707FoAyX/Q2kUlq1t/YUWV77eRRkgHXvhHVwub9SphgUDIBigw/XFYrDD1X7wVQmJ/DtZvO8z3lF3GjsD6xKgT/XE9DV9q6We+WKgZw==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from DM6PR12MB3179.namprd12.prod.outlook.com (2603:10b6:5:183::18)
- by MWHPR12MB1760.namprd12.prod.outlook.com (2603:10b6:300:112::19) with
+Received: from BYAPR12MB3176.namprd12.prod.outlook.com (2603:10b6:a03:134::26)
+ by BYAPR12MB5704.namprd12.prod.outlook.com (2603:10b6:a03:9d::31) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4975.15; Mon, 14 Feb
- 2022 00:11:27 +0000
-Received: from DM6PR12MB3179.namprd12.prod.outlook.com
- ([fe80::8513:6328:e0a7:b9a2]) by DM6PR12MB3179.namprd12.prod.outlook.com
- ([fe80::8513:6328:e0a7:b9a2%3]) with mapi id 15.20.4975.017; Mon, 14 Feb 2022
- 00:11:27 +0000
+ 2022 02:27:14 +0000
+Received: from BYAPR12MB3176.namprd12.prod.outlook.com
+ ([fe80::1528:82a2:aa0:7aa6]) by BYAPR12MB3176.namprd12.prod.outlook.com
+ ([fe80::1528:82a2:aa0:7aa6%6]) with mapi id 15.20.4975.018; Mon, 14 Feb 2022
+ 02:27:14 +0000
 From:   Alistair Popple <apopple@nvidia.com>
-To:     John Hubbard <jhubbard@nvidia.com>
-Cc:     akpm@linux-foundation.org, linux-mm@kvack.org,
-        Felix.Kuehling@amd.com, rcampbell@nvidia.com,
+To:     Felix Kuehling <felix.kuehling@amd.com>
+Cc:     David Hildenbrand <david@redhat.com>,
+        Alex Sierra <alex.sierra@amd.com>, akpm@linux-foundation.org,
+        linux-mm@kvack.org, rcampbell@nvidia.com,
         linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
         amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        hch@lst.de, jgg@nvidia.com, jglisse@redhat.com,
-        willy@infradead.org, alex.sierra@amd.com
-Subject: Re: [PATCH v2 2/3] mm/gup.c: Migrate device coherent pages when
- pinning instead of failing
-Date:   Mon, 14 Feb 2022 11:05:50 +1100
-References: <cover.0d3c846b1c6c294e055ff7ebe221fab9964c1436.1644207242.git-series.apopple@nvidia.com>
- <dd9960b327ca49a9103d9f97868ea7b0b81186c4.1644207242.git-series.apopple@nvidia.com>
- <4b6b472d-07b6-0c96-22ed-9a77a878cf61@nvidia.com>
- <2315725.OX4gP1S1Nc@nvdebian>
- <0c7b50d3-9bca-9462-05ca-b4ef846cc49a@nvidia.com>
+        hch@lst.de, jgg@nvidia.com, jglisse@redhat.com, willy@infradead.org
+Subject: Re: [PATCH v6 01/10] mm: add zone device coherent type memory support
+Date:   Mon, 14 Feb 2022 13:04:35 +1100
+References: <20220201154901.7921-1-alex.sierra@amd.com>
+ <20220201154901.7921-2-alex.sierra@amd.com>
+ <beb38138-2266-1ff8-cc82-8fe914bed862@redhat.com>
+ <3acdebb4-310e-1edb-d7b0-a79db348f6f2@amd.com>
 User-agent: mu4e 1.6.9; emacs 27.1
-In-reply-to: <0c7b50d3-9bca-9462-05ca-b4ef846cc49a@nvidia.com>
-Message-ID: <877d9ygvdj.fsf@nvdebian.thelocal>
+In-reply-to: <3acdebb4-310e-1edb-d7b0-a79db348f6f2@amd.com>
+Message-ID: <875ypigp39.fsf@nvdebian.thelocal>
 Content-Type: multipart/mixed; boundary="=-=-="
-X-ClientProxiedBy: SYBPR01CA0203.ausprd01.prod.outlook.com
- (2603:10c6:10:16::23) To DM6PR12MB3179.namprd12.prod.outlook.com
- (2603:10b6:5:183::18)
+X-ClientProxiedBy: SY4P282CA0007.AUSP282.PROD.OUTLOOK.COM
+ (2603:10c6:10:a0::17) To BYAPR12MB3176.namprd12.prod.outlook.com
+ (2603:10b6:a03:134::26)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 6027328e-33e8-499d-fe28-08d9ef4e8b7c
-X-MS-TrafficTypeDiagnostic: MWHPR12MB1760:EE_
-X-Microsoft-Antispam-PRVS: <MWHPR12MB1760043C85306F7C4FB2D169DF339@MWHPR12MB1760.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:9508;
+X-MS-Office365-Filtering-Correlation-Id: b8c03473-421a-4f39-d062-08d9ef618301
+X-MS-TrafficTypeDiagnostic: BYAPR12MB5704:EE_
+X-Microsoft-Antispam-PRVS: <BYAPR12MB570496DC1C30071CD769E263DF339@BYAPR12MB5704.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:10000;
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: GFL5yQ73AeDEDj50lkK2gLq+uCLVI/b8k74tu4z/2FupSJwL3JFNGiomNn1T/ZIZOFWZtq5DkErBNOHJ+JoA2SxS81A20wnjpgXIPMh2bErKhwj4rYUJr3Arnj6zzyP4af/W43jZOlE+ZIfRH47Cw4gItatruE96odxltK21ZTB+OkXKDaBsqh2N45OEn4/+XtZVwdG9O3+Fjf8EfSSGgJntKi6poIBJ9GspAtyCBgK4GDBwtuPH2+Hf4z9E7ozCAB/buDHJ6oP//1o7pZoG+EMT/7HswHwbJL8Bv7vdKGnuqVSWHTl7ZH5mxo0T2wXupPJN8VNG818mSNBTduFlu74nu5uGStD/eGZf0SjBZx+vK1io0vQAb9hrGRvlKyRkvoj3IdD8tNMJictSmUlc51k6PLevARu+iNBEDfbgFb7eI82s8+dB9zEppbVKpQKzsDnN2mgn6skwpyRbucVkwRzMj23GcckKcQmiPXATlLNzpi6Uqhfi5OPnp+8NMSWexCQ6tV2TklffJqMu3hNXGgHkItXe3Y9hi+XZTJ38lDIGjDqeswP5tTwcJuvsSi4zY/X6q3EN009XD82sapdXvoO4tfayJ7OXouOKVGOip3T4JbCwPnwjAyiSDFYnKGT+dViTl/D0a2eyDOT7zA2KpA==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR12MB3179.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(4326008)(6862004)(508600001)(66946007)(66556008)(6486002)(6506007)(186003)(66476007)(316002)(6636002)(5660300002)(7416002)(8676002)(2906002)(9686003)(6512007)(26005)(86362001)(83380400001)(38100700002)(53546011)(6666004)(8936002)(33964004)(44144004);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: qyrUdsfwH72OPyQHxJ944xbRaVkQMOAXmrxUXjH7DS9hmb0NTChgSLzXoQ/mHfkmUrytY2dM+jZ09yyUaZwz4EIQW2WxdcX+RnVoGpB0qd7KA5sn4VQ63szWonLts4ize+JngtZzxEoY2SsBF/8pZDijGsoYBjBLI6j+1z6+PVdrSewZZC53asqCqBFRPCcR5BEL3IkmqLjvG4YnVOr8SDhesQdG1U4IVIvsFruO39acvbnAvGP66m045a+EFbS7Ykboqz7hcKh8sL3d3xY/dnh50r1f3B5cH8lx+tlf+E8T2dyspAEWNEjvdx705ejD1kzC9H2gp4Ra90smkU0TzuLeb4ic4r6b9JPE8JkR8VutzYhvMotWVyw8b/aorap5vxx2c6VKdbolTdZbo6VTecRdnvlftQDJH0kmKEJIvK0tt36UhJJvznScE7EbdLKIVet9kVRDHs4y4uXclJpMI8y76YvvHHKTIaaP96lxmYpeGoDsHdkW5wVPB+GrV1a2gLvoCWNe07oghHUkZ4eCBR/K0riVvyZgOQ7C52yKhIOsGdXKrJjRboi+NsS4E0bDdjwnCY1PYSFPrQ6+GPjeoshPGFvYqIdMPE2tAXI1ZgMUFQKStCvPt2zyU2t7pq4gfoEVU8XJkJqjEeXggcXMBg==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR12MB3176.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(4326008)(9686003)(8936002)(8676002)(66946007)(6916009)(316002)(54906003)(7416002)(5660300002)(2906002)(66476007)(66556008)(86362001)(38100700002)(6486002)(83380400001)(508600001)(6506007)(6512007)(6666004)(33964004)(44144004)(53546011)(26005)(186003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?NTR1aThYTG9tZ2dJMUxmOG9FcXNGMTNkTzVOVlBJZUhaQXN0Y3Bza25IUGdi?=
- =?utf-8?B?QjRFNXhIVERNL2tVK2ZNNmdIWU1tZjRrV0hkYm1HbGNlUTlXODBGSHRJb2s3?=
- =?utf-8?B?d200ckV5MU56Tm50MXN0dGdVL0NTelgweGxBMG9JWGlYUHZrdmFMZmozMWIx?=
- =?utf-8?B?amJGY2k4K2lBcHBSN3ZaUUZmTmFBVFNmTG4ybzRmRGxwN1RJQm85TWVQeXov?=
- =?utf-8?B?RExnOXM2aVhVZjVWUmcxVENndytWRnFnYm4wenNTWDVTbDkweDRzZ0JtbWRm?=
- =?utf-8?B?aDNlT2UrcE5aMEY2QVd1SHNzcEhWNVg0UjFidmxuR25Dc1NDUExwbks5clM4?=
- =?utf-8?B?N2l1MlYzZS91Z1NkV3hOWmcxWTQ1RjQ1T3VYNzk1MStWdmpwWW01V0RreE1s?=
- =?utf-8?B?VThvTjlPNmZETTEwbnRHVGFHa0E2Q2tieEwxY1VzeTFBWDJWZzNQRFVUL3d4?=
- =?utf-8?B?bUpETWMvWnovUExKV1RocWVoanRWRzBTT3ZLa0lQcmljNjM3NHUwZjRqSU9x?=
- =?utf-8?B?cExTQm5FL1kxdnNHams4eFhWUG8xSXYwWHk1ZXRTazllbTZGZ2tCUm1wd0ZZ?=
- =?utf-8?B?UndHQTVDeXE3QkFVKy9ROEFZRm5kem4wWm1aeGNkSXozQkVBK2VmTENrS2dt?=
- =?utf-8?B?RlV4VllRREtybHhTT3VlR0k3TDJqSkxmN0tLdXhka1Z0b0FtSHJOSzliQnE3?=
- =?utf-8?B?Zkc2cmg0UWRVSmE2elJ4aVAyM1RacmtZV1ZDbDUyRE14OUpDKzYxYmY0c3Y3?=
- =?utf-8?B?L0RHVTB6WGpWaTc2SWlOdzFuYmhGYWhtN0FtQzlaYWc5cWVrNVhIRzNsVkx2?=
- =?utf-8?B?bis4STd5K3ZNelFWL3g0eDN4OWFiblVoT3FjY3JLUnBOWmJ5ZG5FSjg2ZXhM?=
- =?utf-8?B?R1RWa3VlT3QyaFJkY1dJSnRXRXN3eTVjZUZieEZIM1F6WFpGdzRYUWYydVdX?=
- =?utf-8?B?ZGRTUDEySzZmbFR4UnA4b2MrOVZWWFRkOERuOXVqNWE4M0ttd1h3bitZUmx5?=
- =?utf-8?B?OFdoQS8zZkJXY2o5V2pXOXRaUGgvSEZsSHZmakE2QXZFeUZKOHVaMDYxdVhV?=
- =?utf-8?B?RTdWQWFLRjRDVXZCNVl2YjlQTjQ5bmhIMTFKZjQvYnlpVGZWVmt1UlBxajZ6?=
- =?utf-8?B?cUx5K0d3RjlweDI0MGE0ODltUmc5T3JoelBMZ1hOM1duT3pZTmMyZy9MYkxt?=
- =?utf-8?B?VVhaMFdQcmR3NjRISHRWSGNHdm9DTzE3ZjZndm1pWWFEZ0R4NkhFUk42blhy?=
- =?utf-8?B?QWZCVG9LUmprYnpkS0hqUDBKU1RxYTZsd1RjYkhOQ2syOGFYQzdpTkJaWjdz?=
- =?utf-8?B?Tm9VdnZvTHF0SFZEclozamI1NDdIekxQbktEdmFJZ3NNbnBwRFlEUWU3Y2t6?=
- =?utf-8?B?NFFZVzE4T3g5d2E4MkROS1FmRnM1eHI5Y2FVZjRuTGM3MzJzOTZvdHJwbVlU?=
- =?utf-8?B?WHUzbXI1SGRqb2l3RXc0TVhMdE5rYW00OSt6SUY5MTBGV21WMS8zQkJYczBO?=
- =?utf-8?B?dWRWS3U1K3MySVhtdm11d3JCSEI3ckJ2dE5YZjBHcHV4WHNVUEZBaCtFTnJX?=
- =?utf-8?B?d0dtLzJVS3lZRWNXOGIrTHpaQUF2OHNDSFBlcVNlZEVmU2xrM1V1S0dzNTBQ?=
- =?utf-8?B?bStWWEowSWZGcUoxck11Z0tuK1JZWGphekJJMVN6M2NaWVBOdCtac1dETkM2?=
- =?utf-8?B?ekpETURBbFZBTnRYWGVWNGNGaGVEYUdWdlJtQTJRbHdXT1Z5bCtGOW02T1hN?=
- =?utf-8?B?Tzd0eFdWZHNJM2VRNXRqUTE2NlpqZDl2U0U4RWdyUUp2bkh5SzNwdUJTTXNV?=
- =?utf-8?B?WGQ0Kzk0RlJMeEQ1elVIbEpwK1NWL2FrejV1eGlSdFNLT1RjeEtESmdaczV6?=
- =?utf-8?B?akd0N0FFcGhBZldkdG9OR0J4YStMcDVXbXhZQkhlK0xhOE5hNHdLYStmV1pC?=
- =?utf-8?B?TUtPTlJsQVFXc2FnTmdGZEFMOUFxMkExc1Z6R3FMRkg1Z3pnMWNmU3hGNXc4?=
- =?utf-8?B?S2tuMlNQRklFUXg0ODkzMFdOZk5iQUtJY29ncHZmekRTYm5IQmhyZ2k3bS9U?=
- =?utf-8?B?c0VBSm5tamJBZUJScFhld2NhQkJVK1RhNGRXOThQbHRrZEU4UENHSTVBLysx?=
- =?utf-8?B?bklMQkFHaklGU3dXRXowZ0htZlVJWmUrZDNxTWV2V1RMdS9XaW0vMGljYmxH?=
- =?utf-8?Q?QzAQ1UX2c0Aj8n3ngNBh5mo=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?UFVMcWNSOU1YMzBFeXZLOTlxOWtQNjBiRE81d1pGMHlDSXhUbWtGZFVYN2NS?=
+ =?utf-8?B?cnBuV3FXUTZhS3RlVy9FSGZxenJueDFkSG85YnFRSzlTaDZWK1ZQdEp4a05p?=
+ =?utf-8?B?Uy8rblBKYW4vcllZZTBaSFplWHg2bGtZL0hwQWNLQmxXNnlnQ2lYMnRYNE1w?=
+ =?utf-8?B?ejZua3Z1WDdCeE5GdmNqQ29PUVpEU2RYcWlhMzk5V0FOMmZEVTlrUE1aRDEv?=
+ =?utf-8?B?YVpNaU9mRWhQYklVRDZWUmhKVmtQTHcvc1d5VmdabGoxV01YWlJqSi9Cbk1M?=
+ =?utf-8?B?ZWh6MHgvMWNPa21OQzhMOWdhbTYxQmFXUkJzeGd5em04UFpsL0crbGlDbHhI?=
+ =?utf-8?B?UndqOU11ZlArelN6OFpYTldNYTd6UjI5MWtVczJoYTVnMG5sZndJWkVzMm4r?=
+ =?utf-8?B?SUw2K0pBRENwZUdEanpIOVd2emFUc1ZWTE4xcWlXUFlOdDZXTUxMZ1MvY0xJ?=
+ =?utf-8?B?NFN0QnZrdjdJWnowZktqaVdDbFllY2JRdndzZTJlMFZnNkFFVzNGUG0rTGFn?=
+ =?utf-8?B?K1pxbU9hVTFBUkRaMm5PcXZhNWIzTlJvd1Y1OHJMaU5McGYwSVk5bnY2SWxj?=
+ =?utf-8?B?YUkwdmRUVGEwTTFveGRZMUtQbXZGWHJ6ek5YcTNTR0pOanJMcHRsV2RjQ1Rh?=
+ =?utf-8?B?K01HQmZBNVNJejVvcExQRzVYcE5mcEZJQW1YTVBrdTlxd01GNytGTjJweElM?=
+ =?utf-8?B?M05RcnNUUGNoNmhCc0paRS9JUTJzYytZMFBsY1VJbnRUakdHVW5Oem00K3NS?=
+ =?utf-8?B?bWVkSEJEOGJuTENuWmNnaythTEIrcUwvZXM3OGtETVNSa0p5aG9ZWVlmQjBF?=
+ =?utf-8?B?WnJQc3Y0SXdXQjFPaG0vcVRJMzh5NkJOQmlKY0lKNDFSSkg1UUZXbG95R1NM?=
+ =?utf-8?B?RGsydzRVaVMwYXFWRjlqMWd2bHpDOUhTMnZhcUZ4NWlJTzhLQkJDdWo0ck9I?=
+ =?utf-8?B?Q2svTERZRlk2TEV0dzNzbUlFYUJocUc5Rk4zay9KS0F6cW1TUVVCT0ovbk80?=
+ =?utf-8?B?WWpESlhjTEFZQ3NvakdHN1hhMGc2TEg2RGFhZ0ZCMXd3SC9MM01HbUlEUWlp?=
+ =?utf-8?B?TDJ2eXRRWWxzZTM5WkVoNWM2TjJiVXFRVFhKcnpzSVhlM0dmaFkvSHlqcDd0?=
+ =?utf-8?B?aGRLZGFhbTJOZ2JyV0hZcngrWFJvWkxXTTZPRzUxV0g3MUtlOUFuSzVucERr?=
+ =?utf-8?B?ZWY3bHdoTUZ3VytYVnVvTC8rbjd6RE5oZ29RUWNhcU50bCtXQXU5UTZCVWcw?=
+ =?utf-8?B?V3d1UlBac016Z08xWjF6S091YXZEa2FHdWUwNlpldWxrd1lBbi8wUE1BcEd1?=
+ =?utf-8?B?SWFnRGV6QSsvSUswVW1wMmY1VFdiRGVyMDB6WTE5WjhNQk5vU0ZXVC9BTzlN?=
+ =?utf-8?B?dHFsYmlNSmlOU1pPK2RLdi9HRFJWaHhmMjk2cFlKSS9nc3EzcGZHbTNkemla?=
+ =?utf-8?B?bXlvWDZnTzBZS3lHNjJqcHZCZUdTTVVScE1rWDQvVVEvT1k4RjQ1M3U0QW9T?=
+ =?utf-8?B?Wk5TK1pLenZ1UXk4MmtUSE5zM0p0azA0V3lUNGRSa2ZWMVlpaFlvQVl0Nmxl?=
+ =?utf-8?B?Wlc3aFArcUI3d0V2U3IxY2pxb3lCbFNpcXlvcVhZbUM3T0F3eGhXWGlrWDRF?=
+ =?utf-8?B?V3diU3lsaFkwdjgxeEFCZlIrSGlCMjlRN2RYSDl2SXRXVkIxbjVybVRUTkRT?=
+ =?utf-8?B?Nm5qUzZMallTaThtYXhNZU5kOE1jajlZV2tWNFc4bEJkWFVKSDNac3d5aHRq?=
+ =?utf-8?B?TzVnTFpETjRLNjlmU2Rhb1hHUkh4bnJsTHBwaDBEa2Q1YWRLUnZNR2JGcVVM?=
+ =?utf-8?B?MktYdTQ1b0VoSUhWTVpiQjFrYXMrSGRMOFovaFU3bzRBS2pPblhpVVJZUUha?=
+ =?utf-8?B?cGlwZXhOY1dSemd6V29td2czYk9vZHlnV1NERGh0eEpHYVg3Si9hbEE3Qnhr?=
+ =?utf-8?B?eDM1MW14M3o4QkJZZzdtWk42eU91bGREWUpHNlY2T1I0cXpjeXNhV3JWTUh6?=
+ =?utf-8?B?aGducGpETFFHOUhJZlREZXZYWGNXbHIrLzdrMkk1eHkweUJKTGo2NEowQVhy?=
+ =?utf-8?B?MFJRY2JVd0xjRHpjMkx4NnlBOStwN0pkRm5HTlhKMUhJaWxkQ1lJZlFUNWQr?=
+ =?utf-8?B?WTU4aGdxL3A0QUNubi9yWVRhRExvdWtlZWU4V1FTd1c2Y05WVTIzQVBncWsx?=
+ =?utf-8?Q?7t27da3dEnjzMPLIauHlVK8=3D?=
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6027328e-33e8-499d-fe28-08d9ef4e8b7c
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR12MB3179.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: b8c03473-421a-4f39-d062-08d9ef618301
+X-MS-Exchange-CrossTenant-AuthSource: BYAPR12MB3176.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Feb 2022 00:11:27.7910
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Feb 2022 02:27:14.1092
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 4iC+Cq5y/HNz+mc2H7M7hYl8XR2k7Zy8pFfGVeAsD/3zaTyq5/rGToSeYe9sZoZySdPnrEi+okJKNR46WqNt6A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR12MB1760
+X-MS-Exchange-CrossTenant-UserPrincipalName: t2tXT5BBWikTVLRGp4QYKOSxNu/fckgm+pMryM5TzpOxVK0WUM3ZmjeRYtsf6wXIaq4eNW7dOk1MxHEbT2w4zw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR12MB5704
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -131,59 +129,162 @@ Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-John Hubbard <jhubbard@nvidia.com> writes:
+Felix Kuehling <felix.kuehling@amd.com> writes:
 
-> On 2/11/22 18:51, Alistair Popple wrote:
-
-[=E2=80=A6]
-
->>> See below=E2=80=A6
+> Am 2022-02-11 um 11:15 schrieb David Hildenbrand:
+>> On 01.02.22 16:48, Alex Sierra wrote:
+>>> Device memory that is cache coherent from device and CPU point of view.
+>>> This is used on platforms that have an advanced system bus (like CAPI
+>>> or CXL). Any page of a process can be migrated to such memory. However,
+>>> no one should be allowed to pin such memory so that it can always be
+>>> evicted.
 >>>
->>>> +			}
->>>> +
->>>> +			pages[i] =3D migrate_device_page(head, gup_flags);
->> migrate_device_page() will return a new page that has been correctly pin=
-ned
->> with gup_flags by try_grab_page(). Therefore this page can still be rele=
-ased
->> with unpin_user_page() or put_page() as appropriate for the given gup_fl=
-ags.
->> The reference we had on the source page (head) always gets dropped in
->> migrate_vma_finalize().
->
-> OK. Good.
->
-> The above would be good to have in a comment, right around here, imho.
-> Because we have this marvelous mix of references for migration (get_page(=
-))
-> and other, and it=E2=80=99s a bit hard to see that it=E2=80=99s all corre=
-ct without a
-> hint or two.
-
-Ok, will do.
-
->
-> =E2=80=A6
->> Which unless I=E2=80=99ve missed something is still the correct thing to=
- do.
+>>> Signed-off-by: Alex Sierra <alex.sierra@amd.com>
+>>> Acked-by: Felix Kuehling <Felix.Kuehling@amd.com>
+>>> Reviewed-by: Alistair Popple <apopple@nvidia.com>
+>> So, I=E2=80=99m currently messing with PageAnon() pages and CoW semantic=
+s =E2=80=A6
+>> all these PageAnon() ZONE_DEVICE variants don=E2=80=99t necessarily make=
+ my life
+>> easier but I=E2=80=99m not sure yet if they make my life harder. I hope =
+you can
+>> help me understand some of that stuff.
 >>
->>> This reminds me: out of the many things to monitor, the FOLL_PIN counts
->>> in /proc/vmstat are especially helpful, whenever making changes to code
->>> that deals with this:
->>>
->>> 	nr_foll_pin_acquired
->>> 	nr_foll_pin_released
->>>
->>> =E2=80=A6and those should normally be equal to each other when =E2=80=
-=9Cat rest=E2=80=9D.
->>>
+>> 1) What are expected CoW semantics for DEVICE_COHERENT?
+>>
+>> I assume we=E2=80=99ll share them just like other PageAnon() pages durin=
+g fork()
+>> readable, and the first sharer writing to them receives an =E2=80=9Cordi=
+nary=E2=80=9D
+>> !ZONE_DEVICE copy.
 >
-> I hope this is/was run, just to be sure?
+> Yes.
+>
+>
+>>
+>> So this would be just like DEVICE_EXCLUSIVE CoW handling I assume, just
+>> that we don=E2=80=99t have to go through the loop of restoring a device
+>> exclusive entry?
+>
+> I=E2=80=99m not sure how DEVICE_EXCLUSIVE pages are handled under CoW. As=
+ I understand
+> it, they=E2=80=99re not really in a special memory zone like DEVICE_COHER=
+ENT. Just a
+> special way of mapping an ordinary page in order to allow device-exclusiv=
+e
+> access for some time. I suspect there may even be a possibility that a pa=
+ge can
+> be both DEVICE_EXCLUSIVE and DEVICE_COHERENT.
 
-Thanks for the suggestion, these remain equal to each other after running
-hmm-tests which confirms everything is working as expected.
+Right - there aren=E2=80=99t really device exclusive pages, they are just s=
+pecial
+non-present ptes conceptually pretty similar to migration entries. The
+difference is that on CPU fault (or fork) the original entry is restored
+immediately after notifying the device that it no longer has exclusive acce=
+ss.
+
+As device exclusive entries can be turned into normal entries whenever requ=
+ired
+we handle CoW by restoring the original ptes if a device exclusive entry is
+encountered. This reduces the chances of introducing any subtle CoW bugs as=
+ it
+just gets handled the same as any normal page table entry (because the excl=
+usive
+entries will have been removed).
+
+> That said, your statement sounds correct. There is no requirement to do a=
+nything
+> with the new =E2=80=9Cordinary=E2=80=9D page after copying. What actually=
+ happens to
+> DEVICE_COHERENT pages on CoW is a bit convoluted:
+>
+> When the page is marked as CoW, it is marked R/O in the CPU page table. T=
+his
+> causes an MMU notifier that invalidates the device PTE. The next device a=
+ccess
+> in the parent process causes a page fault. If that=E2=80=99s a write faul=
+t (usually is
+> in our current driver), it will trigger CoW, which means the parent proce=
+ss now
+> gets a new system memory copy of the page, while the child process keeps =
+the
+> DEVICE_COHERENT page. The driver could decide to migrate the page back to=
+ a new
+> DEVICE_COHERENT allocation.
+>
+> In practice that means, =E2=80=9Cfork=E2=80=9D basically causes all DEVIC=
+E_COHERENT memory in
+> the parent process to be migrated to ordinary system memory, which is qui=
+te
+> disruptive. What we have today results in correct behaviour, but the perf=
+ormance
+> is far from ideal.
+>
+> We could probably mitigate it by making the driver better at mapping page=
+s R/O
+> in the device on read faults, at the potential cost of having to handle a=
+ second
+> (write) fault later.
+>
+>
+>>
+>> 2) How are these pages freed to clear/invalidate PageAnon() ?
+>>
+>> I assume for PageAnon() ZONE_DEVICE pages we=E2=80=99ll always for via
+>> free_devmap_managed_page(), correct?
+>
+> Yes. The driver depends on the the page->pgmap->ops->page_free callback t=
+o free
+> the device memory allocation backing the page.
+>
+>
+>>
+>>
+>> 3) FOLL_PIN
+>>
+>> While you write =E2=80=9Cno one should be allowed to pin such memory=E2=
+=80=9D, patch #2
+>> only blocks FOLL_LONGTERM. So I assume we allow ordinary FOLL_PIN and
+>> you might want to be a bit more precise?
+>
+> I agree. I think the paragraph was written before we fully fleshed out th=
+e
+> interaction with GUP, and the forgotten.
+>
+>
+>>
+>>
+>> =E2=80=A6 I=E2=80=99m pretty sure we cannot FOLL_PIN DEVICE_PRIVATE page=
+s,
+>
+> Right. Trying to GUP a DEVICE_PRIVATE page causes a page fault that migra=
+tes the
+> page back to normal system memory (using the page->pgmap->ops->migrate_to=
+_ram
+> callback). Then you pin the system memory page.
+>
+>
+>>   but can we
+>> FILL_PIN DEVICE_EXCLUSIVE pages? I strongly assume so?
+
+In the case of device exclusive entries GUP/PUP will fault and restore the
+original entry. It will then pin the original normal page pointed to by the
+device exclusive entry.
+
+=E2=80=A2 Alistair
 
 >
-> thanks,
+> I assume you mean DEVICE_COHERENT, not DEVICE_EXCLUSIVE? In that case the=
+ answer
+> is =E2=80=9CYes=E2=80=9D.
+>
+> Regards,
+> =C2=A0 Felix
+>
+>
+>>
+>>
+>> Thanks for any information.
+>>
 
 --=-=-=--
