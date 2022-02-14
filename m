@@ -2,279 +2,181 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81048C433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 14 Feb 2022 05:25:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E883BC433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 14 Feb 2022 11:05:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230031AbiBNFZi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 14 Feb 2022 00:25:38 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:33812 "EHLO
+        id S1345478AbiBNLGB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 14 Feb 2022 06:06:01 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:36280 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229781AbiBNFZh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Feb 2022 00:25:37 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2989A4E395
-        for <linux-xfs@vger.kernel.org>; Sun, 13 Feb 2022 21:25:30 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1644816329;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=kEEclPPTGW24yM/9beA7UxY5afGC/ppzkZfaV5b/wNY=;
-        b=abLfvskph9qz5KU9G14u3SUtqibjC4iFhtqXDbnlNXrX+/Q70p/Lm4FGCE+QDrI/tslsoO
-        LdO6eFZuuqHoYjnJ8VAQh3eZvRVvGoRL/8leynlI4erpHx5L5Ids72/UOl8ZhZKkJvvB2b
-        jfC0X5xnTGK71fFRKqXmcmD30AQhFhY=
-Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com
- [209.85.216.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-529-n8AdYQhOMlmVES4u6h_6JA-1; Mon, 14 Feb 2022 00:25:26 -0500
-X-MC-Unique: n8AdYQhOMlmVES4u6h_6JA-1
-Received: by mail-pj1-f72.google.com with SMTP id n4-20020a17090ade8400b001b8bb511c3bso10109946pjv.7
-        for <linux-xfs@vger.kernel.org>; Sun, 13 Feb 2022 21:25:26 -0800 (PST)
+        with ESMTP id S1350006AbiBNLFg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Feb 2022 06:05:36 -0500
+Received: from mail-wm1-x330.google.com (mail-wm1-x330.google.com [IPv6:2a00:1450:4864:20::330])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 775BB2BC1
+        for <linux-xfs@vger.kernel.org>; Mon, 14 Feb 2022 02:33:42 -0800 (PST)
+Received: by mail-wm1-x330.google.com with SMTP id d14-20020a05600c34ce00b0037bf4d14dc7so9863389wmq.3
+        for <linux-xfs@vger.kernel.org>; Mon, 14 Feb 2022 02:33:42 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=Y2dQkZtEBm/fDqJ75Y4aAkTg3U+ZJI5VXSRDEIIFY/0=;
+        b=jJ+OdxsyUYtXOF2bOUMhdzXGlmvvihgc5HolIejHGvoHZ4zG8+/ui8gXzwJwcDtplt
+         Hu78Df+kUVUCnuzN3sBNlqLYOUEfoKbjDbxHVAWTdUZxeX9QO58peZrdx+jo+z4mmqee
+         DAsHVXGBTyN79BLjNfRkgj5Okzu6Hz5K4p0/cAoXbLBm9bpeualDYoCutpGL1OBCXTBb
+         O/9WsGLmXrnprKOLukEVfG8gVeIfHORKI4enIzVrcmtkeas4TpM+zGt4ZoUyW+gNt9r1
+         hMsBgDlTeQS1iD+SSCoUZDub8fDK5mgrougrFwMOHFRbApurG5LmM3N4fzuiF4MhIct9
+         QQHg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id
-         :mail-followup-to:references:mime-version:content-disposition
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:content-transfer-encoding
          :in-reply-to;
-        bh=kEEclPPTGW24yM/9beA7UxY5afGC/ppzkZfaV5b/wNY=;
-        b=d1md4GV4xIEvoyCdcPAeZYIU0zU5q7cZGedsveHo5uyiOOfgb5GLPSGPqTptCWqDSf
-         O/upLqPluVrdRGNjqbSdCNlIDOhwj0YmjU1Rg7dSZVKvvs9AEKjiOMCun0otwcCnyy01
-         zl9Rnlav3/3iZPDfDD1fDELyUZAEHdbVrC1NGEko8n0f8AzIgxuCtKG1TANq7ZhKQWfd
-         U3wTzrnR+k95ETO9pwpwZrWL6zU5Hw++zoL40zBOjDj2qd726WwgbspkKvRGTnU/FwhY
-         7PUqG6SWpwfeceHas0yOTz4yLmV6eW8xSYonun0nFOqhWr2/GxUquDU7FPxwa49LKOln
-         PjsA==
-X-Gm-Message-State: AOAM532E7GlijSqOXZdGRGnDjLWqcwinxF/nGSxxx2/dsFfArTOHdvEu
-        CCSYLS0gOq3/wGHUqLTAJ+1JhY+3CUeYUmjleAQhBLqVpEOIDg0DuOnEnjR/wfZw5NGPp8ebSyK
-        /k+awb40eh4Q5chrev9Tj
-X-Received: by 2002:a17:902:a9c2:: with SMTP id b2mr12674473plr.168.1644816325602;
-        Sun, 13 Feb 2022 21:25:25 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJwaJxU8p3llHpbropd+XEkVXoyEJWyRclTvlyym7sKDijzVo1NR0QqGqV+aM+FnD5QYm0BlEg==
-X-Received: by 2002:a17:902:a9c2:: with SMTP id b2mr12674444plr.168.1644816325084;
-        Sun, 13 Feb 2022 21:25:25 -0800 (PST)
-Received: from zlang-mailbox ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id n2sm12991813pjp.56.2022.02.13.21.25.22
+        bh=Y2dQkZtEBm/fDqJ75Y4aAkTg3U+ZJI5VXSRDEIIFY/0=;
+        b=EvkMfhnHOwpZLoZmYcIqLXe3B4CDBiEdbd99kK62vUZwuwbxsWvV99TQ9B8orAj2al
+         pge6DLilO/ocb9YI4rpzIRb4wFGLkvXoDQcf79lebijF9Op+zcl8vwstYKkeIJXzjOR0
+         IZpnXMmYV2BfjmKXyn6u7hSqi6PPMY6mAimVJV5+8n8O8zzGgM8JBWJ8f8WWTGhzVsS/
+         YmmIzqDjlsx2obqBqRF8gj2/sMs6SIYmaTicsVhMoIYB8m5miMpnl4xjZjeHNPHi724x
+         rGgWfMne/XhA7+7wWqYonLlrM9qpLxy1iHCTNoZwgCiaG9xuShmBjwwBh+wFtqJSsKDZ
+         BLew==
+X-Gm-Message-State: AOAM5304sraHB3F/DDAnsN2jV3R5vls4VJtldv2CHnSG7/wWWQ0znry+
+        rcWRqKkfZLmXrt349tqM4eYa8Q==
+X-Google-Smtp-Source: ABdhPJyQCmvkhGvcGJSPK0iuX2InSha335cVaRamyENYW1Z/K2WQPdYt8MDHDpiU9vBHs4mik5e1qA==
+X-Received: by 2002:a05:600c:3552:: with SMTP id i18mr10585774wmq.90.1644834821019;
+        Mon, 14 Feb 2022 02:33:41 -0800 (PST)
+Received: from google.com (cpc155339-bagu17-2-0-cust87.1-3.cable.virginm.net. [86.27.177.88])
+        by smtp.gmail.com with ESMTPSA id h17sm9479387wrx.58.2022.02.14.02.33.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 13 Feb 2022 21:25:24 -0800 (PST)
-Date:   Mon, 14 Feb 2022 13:25:19 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     Eric Sandeen <sandeen@redhat.com>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: test xfsdump when an inode < root inode is present
-Message-ID: <20220214052519.xsmxb4d7mjcv2xod@zlang-mailbox>
-Mail-Followup-To: Eric Sandeen <sandeen@redhat.com>,
-        fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-References: <1644522177-8908-1-git-send-email-sandeen@redhat.com>
+        Mon, 14 Feb 2022 02:33:40 -0800 (PST)
+Date:   Mon, 14 Feb 2022 10:33:38 +0000
+From:   Lee Jones <lee.jones@linaro.org>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        linux-kernel@vger.kernel.org, Stable <stable@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Dave Chinner <dchinner@redhat.com>,
+        Goldwyn Rodrigues <rgoldwyn@suse.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Bob Peterson <rpeterso@redhat.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Ritesh Harjani <riteshh@linux.ibm.com>,
+        Johannes Thumshirn <jth@kernel.org>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        cluster-devel@redhat.com,
+        syzbot+0ed9f769264276638893@syzkaller.appspotmail.com
+Subject: Re: [PATCH 1/1] Revert "iomap: fall back to buffered writes for
+ invalidation failures"
+Message-ID: <YgowAl01rq5A8Sil@google.com>
+References: <20220209085243.3136536-1-lee.jones@linaro.org>
+ <20220210045911.GF8338@magnolia>
+ <YgTl2Lm9Vk50WNSj@google.com>
+ <YgZ0lyr91jw6JaHg@casper.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <1644522177-8908-1-git-send-email-sandeen@redhat.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <YgZ0lyr91jw6JaHg@casper.infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 10, 2022 at 01:42:57PM -0600, Eric Sandeen wrote:
-> This tests a longstanding bug where xfsdumps are not properly
-> created when an inode is present on the filesytsem which has
-> a lower number than the root inode.
+Let's attempt to seek beyond the mud slinging, swearing and the whiny
+amateur dramatics for just a brief moment and concentrate solely on
+the technicals please.
+
+On Fri, 11 Feb 2022, Matthew Wilcox wrote:
+> On Thu, Feb 10, 2022 at 10:15:52AM +0000, Lee Jones wrote:
+> > On Wed, 09 Feb 2022, Darrick J. Wong wrote:
+> > 
+> > > On Wed, Feb 09, 2022 at 08:52:43AM +0000, Lee Jones wrote:
+> > > > This reverts commit 60263d5889e6dc5987dc51b801be4955ff2e4aa7.
+> > > > 
+> > > > Reverting since this commit opens a potential avenue for abuse.
+> > > 
+> > > What kind of abuse?  Did you conclude there's an avenue solely because
+> > > some combination of userspace rigging produced a BUG warning?  Or is
+> > > this a real problem that someone found?
+> > 
+> > Genuine question: Is the ability for userspace to crash the kernel
+> > not enough to cause concern?  I would have thought that we'd want to
+> > prevent this.
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
+> The kernel doesn't crash.  It's a BUG().  That means it kills the
+> task which caused the BUG().  If you've specified that the kernel should
+> crash on seeing a BUG(), well, you made that decision, and you get to
+> live with the consequences.
 
-Hi Eric,
+BUG() calls are architecture specific.  If no override is provided,
+the default appears to panic ("crash") the kernel:
 
-Thanks for this patch! That's a good idea to get a inode number less than
-root inode, at least I don't know a better one :)
+ /*
+  * Don't use BUG() or BUG_ON() unless there's really no way out; one
+  * example might be detecting data structure corruption in the middle
+  * of an operation that can't be backed out of.  If the (sub)system
+  * can somehow continue operating, perhaps with reduced functionality,
+  * it's probably not BUG-worthy.
+  *
+  * If you're tempted to BUG(), think again:  is completely giving up
+  * really the *only* solution?  There are usually better options, where
+  * users don't need to reboot ASAP and can mostly shut down cleanly.
+  */
+ #ifndef HAVE_ARCH_BUG
+ #define BUG() do { \
+         printk("BUG: failure at %s:%d/%s()!\n", __FILE__, __LINE__, __func__); \
+         barrier_before_unreachable(); \
+         panic("BUG!"); \
+ } while (0)
+ #endif
 
-The source code looks good to me, just two problems as below:
-1) The mkfs might output some warning as [0], so better to filter them all.
-2) After merging this patch (got a warning [1], that's fine:), build xfstests
-   failed as [2]. By debuging, I found that your xfs/543 file miss executable
-   bit [3]. By giving it '+x' permission, `make` passed.
+The kernel I tested with panics and reboots:
 
-Thanks,
-Zorro
+ Kernel panic - not syncing: Fatal exception
 
+Here are the BUG related kernel configs I have set:
 
+ CONFIG_BUG=y                          
+ CONFIG_GENERIC_BUG=y                  
+ CONFIG_GENERIC_BUG_RELATIVE_POINTERS=y
+ # CONFIG_INPUT_EVBUG is not set       
+ CONFIG_BUG_ON_DATA_CORRUPTION=y       
 
-[0]
-# diff -u /home/xfstests-dev/tests/xfs/543.out /home/xfstests-dev/results//xfs/543.out.bad
-@@ -1,4 +1,8 @@
- QA output created by 543
-+mkfs.xfs: Specified data stripe unit 1024 is not the same as the volume stripe unit 512
-+mkfs.xfs: Specified data stripe width 1024 is not the same as the volume stripe width 512
-+log stripe unit (524288 bytes) is too large (maximum is 256KiB)
-+log stripe unit adjusted to 32KiB
-...
+Not seeing a "CONFIG_PANIC_ON_BUG" equivalent.  What is missing?
 
-[1]
-# git am /tmp/1.patch
-Applying: xfs: test xfsdump when an inode < root inode is present
-.git/rebase-apply/patch:107: trailing whitespace.
-xfsrestore: dump description:
-warning: 1 line adds whitespace errors.
+Unless of course you mean disabling BUG support entirely.  In which
+case, this is strongly advised against in the help section and I'm not
+sure of many development or production kernels that do this.
 
-[2]
-# make
-...
-Building xfs
- [GROUP] /home/xfstests-dev/tests/xfs/group.list
-gmake[3]: *** [../../include/buildgrouplist:8: group.list] Error 1
-gmake[2]: *** [../include/buildrules:31: xfs] Error 2
-gmake[1]: *** [include/buildrules:31: tests] Error 2
-make: *** [Makefile:51: default] Error 2
+ config BUG
+        bool "BUG() support" if EXPERT
+        default y
+        help
+          Disabling this option eliminates support for BUG and WARN, reducing
+          the size of your kernel image and potentially quietly ignoring
+          numerous fatal conditions. You should only consider disabling this
+          option for embedded systems with no facilities for reporting errors.
+          Just say Y.
 
-[3]
-# git ls-files -s tests/xfs/54*
-100755 55484dd3310cde1e7b26e01d0e6b97e492e14fb5 0       tests/xfs/540
-100644 094f0f63dd6ce685ec2c467f3f0eea0f9532124e 0       tests/xfs/540.out
-100755 ae2fd819d5f089cfa64ff9fee299bb59b0ea6c71 0       tests/xfs/541
-100644 d056f0532b7c5734488c84ad6f8e1592e1c794dc 0       tests/xfs/541.out
-100755 5c45eed7cdabfcb42ce1e797ac47f5f0cee55146 0       tests/xfs/542
-100644 0a0fbd524b9f699267816775b1cb2bb53ae309e9 0       tests/xfs/542.out
-100644 f75f8da3ad7ad8971dade88eb8e7bcecb2a62125 0       tests/xfs/543      <===
-100644 a5224aaf082dbdfb6c92050a25aa0ca09c045b89 0       tests/xfs/543.out
+I've always been under the impression that a BUG() call should never
+be triggerable from userspace.  However, I'm always happy to be
+incorrect and subsequently reeducated.
 
->  common/dump       |  1 +
->  tests/xfs/543     | 63 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/543.out | 47 +++++++++++++++++++++++++++++++++++++++++
->  3 files changed, 111 insertions(+)
->  create mode 100644 tests/xfs/543
->  create mode 100644 tests/xfs/543.out
-> 
-> diff --git a/common/dump b/common/dump
-> index 3c4029f..09a0ebc 100644
-> --- a/common/dump
-> +++ b/common/dump
-> @@ -214,6 +214,7 @@ _require_tape()
->  
->  _wipe_fs()
->  {
-> +    [[ "$WIPE_FS" = "no" ]] && return
->      _require_scratch
->  
->      _scratch_mkfs_xfs >>$seqres.full || _fail "mkfs failed"
-> diff --git a/tests/xfs/543 b/tests/xfs/543
-> new file mode 100644
-> index 0000000..f75f8da
-> --- /dev/null
-> +++ b/tests/xfs/543
-> @@ -0,0 +1,63 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2022 Red Hat, Inc. All Rights Reserved.
-> +#
-> +# FS QA Test 543
-> +#
-> +# Create a filesystem which contains an inode with a lower number
-> +# than the root inode. Ensure that xfsdump/xfsrestore handles this.
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto quick dump
-> +
-> +# Import common functions.
-> +. ./common/dump
-> +
-> +_supported_fs xfs
-> +_require_scratch
-> +
-> +# A large stripe unit will put the root inode out quite far
-> +# due to alignment, leaving free blocks ahead of it.
-> +_scratch_mkfs_xfs -d sunit=1024,swidth=1024 > $seqres.full
-> +
-> +# Mounting /without/ a stripe should allow inodes to be allocated
-> +# in lower free blocks, without the stripe alignment.
-> +_scratch_mount -o sunit=0,swidth=0
-> +
-> +root_inum=$(stat -c %i $SCRATCH_MNT)
-> +
-> +# Consume space after the root inode so that the blocks before
-> +# root look "close" for the next inode chunk allocation
-> +$XFS_IO_PROG -f -c "falloc 0 16m" $SCRATCH_MNT/fillfile
-> +
-> +# And make a bunch of inodes until we (hopefully) get one lower
-> +# than root, in a new inode chunk.
-> +echo "root_inum: $root_inum" >> $seqres.full
-> +for i in $(seq 0 4096) ; do
-> +	fname=$SCRATCH_MNT/$(printf "FILE_%03d" $i)
-> +	touch $fname
-> +	inum=$(stat -c "%i" $fname)
-> +	[[ $inum -lt $root_inum ]] && break
-> +done
-> +
-> +echo "created: $inum" >> $seqres.full
-> +
-> +[[ $inum -lt $root_inum ]] || _notrun "Could not set up test"
-> +
-> +# Now try a dump and restore. Cribbed from xfs/068
-> +WIPE_FS="no"
-> +_create_dumpdir_stress
-> +
-> +echo -n "Before: " >> $seqres.full
-> +_count_dumpdir_files | tee $tmp.before >> $seqres.full
-> +
-> +# filter out the file count, it changes as fsstress adds new operations
-> +_do_dump_restore | sed -e "/entries processed$/s/[0-9][0-9]*/NUM/g"
-> +
-> +echo -n "After: " >> $seqres.full
-> +_count_restoredir_files | tee $tmp.after >> $seqres.full
-> +diff -u $tmp.before $tmp.after
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/543.out b/tests/xfs/543.out
-> new file mode 100644
-> index 0000000..a5224aa
-> --- /dev/null
-> +++ b/tests/xfs/543.out
-> @@ -0,0 +1,47 @@
-> +QA output created by 543
-> +Creating directory system to dump using fsstress.
-> +
-> +-----------------------------------------------
-> +fsstress : -f link=10 -f creat=10 -f mkdir=10 -f truncate=5 -f symlink=10
-> +-----------------------------------------------
-> +xfsdump|xfsrestore ...
-> +xfsdump  -s DUMP_SUBDIR - SCRATCH_MNT | xfsrestore  - RESTORE_DIR
-> +xfsrestore: using file dump (drive_simple) strategy
-> +xfsrestore: searching media for dump
-> +xfsrestore: examining media file 0
-> +xfsrestore: dump description: 
-> +xfsrestore: hostname: HOSTNAME
-> +xfsrestore: mount point: SCRATCH_MNT
-> +xfsrestore: volume: SCRATCH_DEV
-> +xfsrestore: session time: TIME
-> +xfsrestore: level: 0
-> +xfsrestore: session label: ""
-> +xfsrestore: media label: ""
-> +xfsrestore: file system ID: ID
-> +xfsrestore: session id: ID
-> +xfsrestore: media ID: ID
-> +xfsrestore: searching media for directory dump
-> +xfsrestore: reading directories
-> +xfsrestore: NUM directories and NUM entries processed
-> +xfsrestore: directory post-processing
-> +xfsrestore: restoring non-directory files
-> +xfsrestore: restore complete: SECS seconds elapsed
-> +xfsrestore: Restore Status: SUCCESS
-> +xfsdump: using file dump (drive_simple) strategy
-> +xfsdump: level 0 dump of HOSTNAME:SCRATCH_MNT
-> +xfsdump: dump date: DATE
-> +xfsdump: session id: ID
-> +xfsdump: session label: ""
-> +xfsdump: ino map <PHASES>
-> +xfsdump: ino map construction complete
-> +xfsdump: estimated dump size: NUM bytes
-> +xfsdump: /var/xfsdump/inventory created
-> +xfsdump: creating dump session media file 0 (media 0, file 0)
-> +xfsdump: dumping ino map
-> +xfsdump: dumping directories
-> +xfsdump: dumping non-directory files
-> +xfsdump: ending media file
-> +xfsdump: media file size NUM bytes
-> +xfsdump: dump size (non-dir files) : NUM bytes
-> +xfsdump: dump complete: SECS seconds elapsed
-> +xfsdump: Dump Status: SUCCESS
-> -- 
-> 1.8.3.1
-> 
+In other words ...
 
+Is this a valid issue that you want me to report (in a different way):
+
+> Start again, write a good bug report in a new thread.
+
+Or is this expected behaviour and therefore not a concern:
+
+> > > The BUG report came from page_buffers failing to find any buffer heads
+> > > attached to the page.
+> > 
+> > > Yeah, don't care.
+
+-- 
+Lee Jones [李琼斯]
+Principal Technical Lead - Developer Services
+Linaro.org │ Open source software for Arm SoCs
+Follow Linaro: Facebook | Twitter | Blog
