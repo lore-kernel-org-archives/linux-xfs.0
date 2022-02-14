@@ -2,75 +2,80 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05356C433FE
-	for <linux-xfs@archiver.kernel.org>; Mon, 14 Feb 2022 14:25:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB7CAC433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 14 Feb 2022 14:29:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343908AbiBNOZO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 14 Feb 2022 09:25:14 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:58186 "EHLO
+        id S1354933AbiBNO3J (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 14 Feb 2022 09:29:09 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:38962 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230516AbiBNOZN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Feb 2022 09:25:13 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC8544A906;
-        Mon, 14 Feb 2022 06:25:05 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=+N8sYBj1l7vLV3pVXWOrmvpsGB19dwrA9moQCEYQRTc=; b=QKy0CmMZ9kzH7RdLpCDCfGY5yT
-        CL4Fph5u5q/b66wYVhjJdVymYcoPCZ8e34fwwdKMTNjC7bothgyt+vmNEcKlOsErLkD3sRoZQdFUJ
-        +ibISaQLqrjOxca0/SPrFSXdeJYTuoFK2DhOj3wowqfr8alXlxSHdTS8vEpq7r2kUWtJACpTa4ZDz
-        W+9rpYCnD0TNjXyiZFzerm8s6KUS+pxL5+RneuqnjXakcKLkqBJQGhx+v6SOt47COQgJqxN602pij
-        86CTpkFihVRil2YEvju6MlX5W1FM59DmcIE0AX6xJkY/alXqETno1oTeBdJwy9nmMGgninjKl14zO
-        VUjZ79bQ==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nJcHf-00Cyyq-By; Mon, 14 Feb 2022 14:24:55 +0000
-Date:   Mon, 14 Feb 2022 14:24:55 +0000
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Lee Jones <lee.jones@linaro.org>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        linux-kernel@vger.kernel.org, Stable <stable@vger.kernel.org>,
-        Dave Chinner <dchinner@redhat.com>,
-        Goldwyn Rodrigues <rgoldwyn@suse.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Bob Peterson <rpeterso@redhat.com>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Ritesh Harjani <riteshh@linux.ibm.com>,
-        Johannes Thumshirn <jth@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        cluster-devel@redhat.com,
-        syzbot+0ed9f769264276638893@syzkaller.appspotmail.com
-Subject: Re: [PATCH 1/1] Revert "iomap: fall back to buffered writes for
- invalidation failures"
-Message-ID: <YgpmN/R7jAf97PBU@casper.infradead.org>
-References: <20220209085243.3136536-1-lee.jones@linaro.org>
- <20220210045911.GF8338@magnolia>
- <YgTl2Lm9Vk50WNSj@google.com>
- <YgZ0lyr91jw6JaHg@casper.infradead.org>
- <YgowAl01rq5A8Sil@google.com>
- <20220214134206.GA29930@lst.de>
- <YgpjIustbUeRqvR2@google.com>
+        with ESMTP id S233881AbiBNO3I (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Feb 2022 09:29:08 -0500
+Received: from sandeen.net (sandeen.net [63.231.237.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id D2C1A403CD
+        for <linux-xfs@vger.kernel.org>; Mon, 14 Feb 2022 06:29:00 -0800 (PST)
+Received: from [10.0.0.147] (liberator.sandeen.net [10.0.0.147])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 49F6F504DFD;
+        Mon, 14 Feb 2022 08:28:22 -0600 (CST)
+Message-ID: <31eec545-8d42-2147-59bf-5eaffaa230d1@sandeen.net>
+Date:   Mon, 14 Feb 2022 08:28:59 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YgpjIustbUeRqvR2@google.com>
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.6.0
+Content-Language: en-US
+To:     L A Walsh <xfs@tlinx.org>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>
+References: <f2ce57bd-8558-b7dc-8379-9cf97f07f578@sandeen.net>
+ <62087125.2020704@tlinx.org>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: [ANNOUNCE] xfsdump 3.1.10 released
+In-Reply-To: <62087125.2020704@tlinx.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Feb 14, 2022 at 02:11:46PM +0000, Lee Jones wrote:
-> On Mon, 14 Feb 2022, Christoph Hellwig wrote:
+On 2/12/22 8:47 PM, L A Walsh wrote:
 > 
-> > Let me repeat myself:  Please send a proper bug report to the linux-ext4
-> > list.  Thanks!
 > 
-> Okay, so it is valid.  Question answered, thanks.
+> On 2022/02/11 12:59, Eric Sandeen wrote:
+>> Hi folks,
 > 
-> I still believe that I am unqualified to attempt to debug this myself.
+>> because I don't want to stall on getting the fix for the root inode
+>> problems out there any longer. It's been ... quite long enough.
+>>
+>> Next release we can think about the dmapi junk, and possibly the
+>> workaround for the broken dumps with the root inode problem.
+>>
+>> This should at least be generating valid dumps on those filesystems
+>> with "interesting" geometry, again.
+> ----
+> 
+> Thanks for the Cc.
+> 
+>  As near as I understand your comments, this should generate new dumps that won't
+> have the problem I'm seeing, but will still leave previous dumps in the old format
+> that may show problems upon restoration.
 
-Nobody's asking you to debug it yourself.  We're asking you to
-file a clear bug report instead of wasting everybody's time.
+Correct, I want to spend more time on the workaround to be sure we have confidence
+in it, sorry.
+
+>  FWIW, xfs/restore-dump aren't the only util to have problems with little-used geometries.
+> 
+> The BSD-DB libs of 10-15 years ago used in in perl have problems with a RAID50 setup. AFAIK, the problem was never fixed, because the perl punted the problem to the bsdlib.  Unfortunately, no one was supporting that lib anymore. I think a new db-lib was added
+> (mariadb?, I forget) that replaced the older format), so newer perls may not
+> have that bug.
+> 
+>  It only appeared when the "POSIX-Optimal-I/O" size was NOT a *power*-of-2.
+> The lib confused *factor*-of-2 alignment with Pow-of-2 for use in db-internal
+> size-allocations provided resulting in some internal allocations being of size-0, which doesn't work very well.
+> 
+>  Of course perl doesn't check for this error case, since the problem isn't considered
+> to be a problem in the perl-code.
+
+Funky ;)
+
+-Eric
