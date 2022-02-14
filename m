@@ -2,215 +2,188 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1368EC433EF
-	for <linux-xfs@archiver.kernel.org>; Sun, 13 Feb 2022 14:34:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02971C433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 14 Feb 2022 00:11:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236517AbiBMOen (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 13 Feb 2022 09:34:43 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:44180 "EHLO
+        id S238835AbiBNALh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 13 Feb 2022 19:11:37 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:35158 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236511AbiBMOen (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 13 Feb 2022 09:34:43 -0500
-Received: from mx0a-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47CB25F8C4;
-        Sun, 13 Feb 2022 06:34:37 -0800 (PST)
-Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 21DDx5UQ029940;
-        Sun, 13 Feb 2022 14:34:21 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=pp1; bh=0/mWjykeDvQHjBAUDiwDZccLK7VANuQtfTfov5zVoeQ=;
- b=ey6x0O6jb8cOdUeuYvSQvnjLdfY9Ls15A7HwEgkvu2CR9ZgdmHhSYvdK/WdZ9W+kA1XE
- h41p6ov3vzXFdebwoSDsAMsAfpSoL3L5ps5qkks+aWENwjxyhKzRjPaGXXUsGm99L7ny
- 1j9ADhb1ex0ElJMPWkwt0VNzAkxCljBaLfFzwqAMEWCvP5Z2d8tsdKiu5yRVIQvcEOyl
- spDLKZ9duW6T2uPRHU4MGdgenZq94mV3c1nlUeZSPgr3C5GEBaRzWFkko3LSS3mvq5+J
- C+rvh60xBI5pDAGjjJ1M6QYARfInt4KJECVRq+17DKohRYdnpWWacl5X0rBUd2ZammlW Mg== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 3e73bhrd7j-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Sun, 13 Feb 2022 14:34:21 +0000
-Received: from m0098416.ppops.net (m0098416.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.43/8.16.0.43) with SMTP id 21DERvKx026205;
-        Sun, 13 Feb 2022 14:34:20 GMT
-Received: from ppma04fra.de.ibm.com (6a.4a.5195.ip4.static.sl-reverse.com [149.81.74.106])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 3e73bhrd79-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Sun, 13 Feb 2022 14:34:20 +0000
-Received: from pps.filterd (ppma04fra.de.ibm.com [127.0.0.1])
-        by ppma04fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 21DEXrTh010639;
-        Sun, 13 Feb 2022 14:34:18 GMT
-Received: from b06cxnps4076.portsmouth.uk.ibm.com (d06relay13.portsmouth.uk.ibm.com [9.149.109.198])
-        by ppma04fra.de.ibm.com with ESMTP id 3e64h9eag5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Sun, 13 Feb 2022 14:34:18 +0000
-Received: from d06av22.portsmouth.uk.ibm.com (d06av22.portsmouth.uk.ibm.com [9.149.105.58])
-        by b06cxnps4076.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 21DEYGOt42271228
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 13 Feb 2022 14:34:16 GMT
-Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id E66844C044;
-        Sun, 13 Feb 2022 14:34:15 +0000 (GMT)
-Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id DA0B74C040;
-        Sun, 13 Feb 2022 14:34:13 +0000 (GMT)
-Received: from localhost (unknown [9.43.64.124])
-        by d06av22.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Sun, 13 Feb 2022 14:34:12 +0000 (GMT)
-Date:   Sun, 13 Feb 2022 20:04:10 +0530
-From:   Ritesh Harjani <riteshh@linux.ibm.com>
-To:     syzbot <syzbot+a8e049cd3abd342936b6@syzkaller.appspotmail.com>
-Cc:     djwong@kernel.org, fgheet255t@gmail.com, hch@infradead.org,
-        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        syzkaller-bugs@googlegroups.com
-Subject: Re: [syzbot] WARNING in iomap_iter
-Message-ID: <20220213143410.qdqxlixuzgtq56yl@riteshh-domain>
-References: <000000000000f2075605d04f9964@google.com>
- <00000000000011f55805d7d8352c@google.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <00000000000011f55805d7d8352c@google.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: WyJVjGNFhbaGhToKIApbY2xPE5vJzbbY
-X-Proofpoint-GUID: I_GXi0zxWlhDIoSDpncX8FWN0uAAvBT-
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+        with ESMTP id S230195AbiBNALh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 13 Feb 2022 19:11:37 -0500
+Received: from NAM11-DM6-obe.outbound.protection.outlook.com (mail-dm6nam11on2043.outbound.protection.outlook.com [40.107.223.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FAA651E6A;
+        Sun, 13 Feb 2022 16:11:30 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=KTBPpmTivEisrH55gVFbpRn4z+vgy2Qh3xCzlAvrt34wmtTykFBpjpc7iUP4XZRceM6CD3UIUZ83fF2lSt9mP9aql5cSAjAgtgpfmT5MF0PVYB404KdMqLBxtaE9NjOw1014Xq+VRRRQPMiVY36nkECYHHOHCme5A8noEkq7W9nuJdZknc5P7s6Jm0VYRHpGaCz85miW/GNUtBqRHj9JfNuYhD8nY9MTCg5oxZ3zX8rga2KINo50za9Qtnq7asq5rnqbFnwCRgCYvfp5jCZCUvcUu7P5AnF3aWQOfWzsB6wwGhHEuJjA9lQAy+ZGc31pBGSEl3PuSjP9LnoNdsuI+g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=CCYrrzFoW5hAcJqejchdxoqKxYNnLW0FEatVxngRN+0=;
+ b=oYVNYaR0rUk6l5jnUWz2mMVX39PpWwP0iDf2gXM2Z7wRPOjshaZTxPEAuYWxfAwj+ffIxjpgctkqoOz5x6EYAxRN6MZrJGaPvSZYj+9d+OacdcY2tlhen0GB21TeCwgJImr/I4bCcv217IIBlhMK+lN3lyAHiOlyqZ1xgueojFG8uNTbpzYHin7yhojgyPpt2sf+gd7ouy78uZKB04gJ10qwADQehMsrgs8F2hLZ9/BHxAB5X12gXWmnyw/0gF30IuPmezLvG6ywt+TTNcwWGAwBqG4P3QQSw36WsgioS0HPF/T02isGdmbhCKbfEpcDbpq2TyTxFP0curMcYtQaNQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=CCYrrzFoW5hAcJqejchdxoqKxYNnLW0FEatVxngRN+0=;
+ b=XCBkw6a5KGYQJVZ0gNYm+h0glPvf3MI7Z/MjzP4178/PG8ZJrKtDuO/ApLEEJQCgAfGv928QWfRWPIzAOcwFVUCHasgcB5hhaN0Pz7Gxh+sfrMzKsL6Rv0h3Im1d9uGmPq4qUzELdNVCw1jym8nAJ5INb050pxoOyBlMYNwq6M6Tr3pR9l+MDvHjkbYA8z2eWT270/77ir9pbqBweQJ9hlI4BuZpi9XUHRPGrDoyy5KErR53LHpSvJqfXWgCYBI0WGhx4k++KwtEf8B6YIiHGKRvARIV0NyNdbqZugpi1N0ZtNId9Q+77HmatrczUfu4t0QyDl16V7f3XUct7/gqRw==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from DM6PR12MB3179.namprd12.prod.outlook.com (2603:10b6:5:183::18)
+ by MWHPR12MB1760.namprd12.prod.outlook.com (2603:10b6:300:112::19) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4975.15; Mon, 14 Feb
+ 2022 00:11:27 +0000
+Received: from DM6PR12MB3179.namprd12.prod.outlook.com
+ ([fe80::8513:6328:e0a7:b9a2]) by DM6PR12MB3179.namprd12.prod.outlook.com
+ ([fe80::8513:6328:e0a7:b9a2%3]) with mapi id 15.20.4975.017; Mon, 14 Feb 2022
+ 00:11:27 +0000
+From:   Alistair Popple <apopple@nvidia.com>
+To:     John Hubbard <jhubbard@nvidia.com>
+Cc:     akpm@linux-foundation.org, linux-mm@kvack.org,
+        Felix.Kuehling@amd.com, rcampbell@nvidia.com,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        hch@lst.de, jgg@nvidia.com, jglisse@redhat.com,
+        willy@infradead.org, alex.sierra@amd.com
+Subject: Re: [PATCH v2 2/3] mm/gup.c: Migrate device coherent pages when
+ pinning instead of failing
+Date:   Mon, 14 Feb 2022 11:05:50 +1100
+References: <cover.0d3c846b1c6c294e055ff7ebe221fab9964c1436.1644207242.git-series.apopple@nvidia.com>
+ <dd9960b327ca49a9103d9f97868ea7b0b81186c4.1644207242.git-series.apopple@nvidia.com>
+ <4b6b472d-07b6-0c96-22ed-9a77a878cf61@nvidia.com>
+ <2315725.OX4gP1S1Nc@nvdebian>
+ <0c7b50d3-9bca-9462-05ca-b4ef846cc49a@nvidia.com>
+User-agent: mu4e 1.6.9; emacs 27.1
+In-reply-to: <0c7b50d3-9bca-9462-05ca-b4ef846cc49a@nvidia.com>
+Message-ID: <877d9ygvdj.fsf@nvdebian.thelocal>
+Content-Type: multipart/mixed; boundary="=-=-="
+X-ClientProxiedBy: SYBPR01CA0203.ausprd01.prod.outlook.com
+ (2603:10c6:10:16::23) To DM6PR12MB3179.namprd12.prod.outlook.com
+ (2603:10b6:5:183::18)
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.816,Hydra:6.0.425,FMLib:17.11.62.513
- definitions=2022-02-13_05,2022-02-11_01,2021-12-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 phishscore=0
- spamscore=0 priorityscore=1501 mlxlogscore=999 adultscore=0
- impostorscore=0 clxscore=1011 bulkscore=0 suspectscore=0
- lowpriorityscore=0 mlxscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2201110000 definitions=main-2202130099
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 6027328e-33e8-499d-fe28-08d9ef4e8b7c
+X-MS-TrafficTypeDiagnostic: MWHPR12MB1760:EE_
+X-Microsoft-Antispam-PRVS: <MWHPR12MB1760043C85306F7C4FB2D169DF339@MWHPR12MB1760.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:9508;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: GFL5yQ73AeDEDj50lkK2gLq+uCLVI/b8k74tu4z/2FupSJwL3JFNGiomNn1T/ZIZOFWZtq5DkErBNOHJ+JoA2SxS81A20wnjpgXIPMh2bErKhwj4rYUJr3Arnj6zzyP4af/W43jZOlE+ZIfRH47Cw4gItatruE96odxltK21ZTB+OkXKDaBsqh2N45OEn4/+XtZVwdG9O3+Fjf8EfSSGgJntKi6poIBJ9GspAtyCBgK4GDBwtuPH2+Hf4z9E7ozCAB/buDHJ6oP//1o7pZoG+EMT/7HswHwbJL8Bv7vdKGnuqVSWHTl7ZH5mxo0T2wXupPJN8VNG818mSNBTduFlu74nu5uGStD/eGZf0SjBZx+vK1io0vQAb9hrGRvlKyRkvoj3IdD8tNMJictSmUlc51k6PLevARu+iNBEDfbgFb7eI82s8+dB9zEppbVKpQKzsDnN2mgn6skwpyRbucVkwRzMj23GcckKcQmiPXATlLNzpi6Uqhfi5OPnp+8NMSWexCQ6tV2TklffJqMu3hNXGgHkItXe3Y9hi+XZTJ38lDIGjDqeswP5tTwcJuvsSi4zY/X6q3EN009XD82sapdXvoO4tfayJ7OXouOKVGOip3T4JbCwPnwjAyiSDFYnKGT+dViTl/D0a2eyDOT7zA2KpA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR12MB3179.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(4326008)(6862004)(508600001)(66946007)(66556008)(6486002)(6506007)(186003)(66476007)(316002)(6636002)(5660300002)(7416002)(8676002)(2906002)(9686003)(6512007)(26005)(86362001)(83380400001)(38100700002)(53546011)(6666004)(8936002)(33964004)(44144004);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?NTR1aThYTG9tZ2dJMUxmOG9FcXNGMTNkTzVOVlBJZUhaQXN0Y3Bza25IUGdi?=
+ =?utf-8?B?QjRFNXhIVERNL2tVK2ZNNmdIWU1tZjRrV0hkYm1HbGNlUTlXODBGSHRJb2s3?=
+ =?utf-8?B?d200ckV5MU56Tm50MXN0dGdVL0NTelgweGxBMG9JWGlYUHZrdmFMZmozMWIx?=
+ =?utf-8?B?amJGY2k4K2lBcHBSN3ZaUUZmTmFBVFNmTG4ybzRmRGxwN1RJQm85TWVQeXov?=
+ =?utf-8?B?RExnOXM2aVhVZjVWUmcxVENndytWRnFnYm4wenNTWDVTbDkweDRzZ0JtbWRm?=
+ =?utf-8?B?aDNlT2UrcE5aMEY2QVd1SHNzcEhWNVg0UjFidmxuR25Dc1NDUExwbks5clM4?=
+ =?utf-8?B?N2l1MlYzZS91Z1NkV3hOWmcxWTQ1RjQ1T3VYNzk1MStWdmpwWW01V0RreE1s?=
+ =?utf-8?B?VThvTjlPNmZETTEwbnRHVGFHa0E2Q2tieEwxY1VzeTFBWDJWZzNQRFVUL3d4?=
+ =?utf-8?B?bUpETWMvWnovUExKV1RocWVoanRWRzBTT3ZLa0lQcmljNjM3NHUwZjRqSU9x?=
+ =?utf-8?B?cExTQm5FL1kxdnNHams4eFhWUG8xSXYwWHk1ZXRTazllbTZGZ2tCUm1wd0ZZ?=
+ =?utf-8?B?UndHQTVDeXE3QkFVKy9ROEFZRm5kem4wWm1aeGNkSXozQkVBK2VmTENrS2dt?=
+ =?utf-8?B?RlV4VllRREtybHhTT3VlR0k3TDJqSkxmN0tLdXhka1Z0b0FtSHJOSzliQnE3?=
+ =?utf-8?B?Zkc2cmg0UWRVSmE2elJ4aVAyM1RacmtZV1ZDbDUyRE14OUpDKzYxYmY0c3Y3?=
+ =?utf-8?B?L0RHVTB6WGpWaTc2SWlOdzFuYmhGYWhtN0FtQzlaYWc5cWVrNVhIRzNsVkx2?=
+ =?utf-8?B?bis4STd5K3ZNelFWL3g0eDN4OWFiblVoT3FjY3JLUnBOWmJ5ZG5FSjg2ZXhM?=
+ =?utf-8?B?R1RWa3VlT3QyaFJkY1dJSnRXRXN3eTVjZUZieEZIM1F6WFpGdzRYUWYydVdX?=
+ =?utf-8?B?ZGRTUDEySzZmbFR4UnA4b2MrOVZWWFRkOERuOXVqNWE4M0ttd1h3bitZUmx5?=
+ =?utf-8?B?OFdoQS8zZkJXY2o5V2pXOXRaUGgvSEZsSHZmakE2QXZFeUZKOHVaMDYxdVhV?=
+ =?utf-8?B?RTdWQWFLRjRDVXZCNVl2YjlQTjQ5bmhIMTFKZjQvYnlpVGZWVmt1UlBxajZ6?=
+ =?utf-8?B?cUx5K0d3RjlweDI0MGE0ODltUmc5T3JoelBMZ1hOM1duT3pZTmMyZy9MYkxt?=
+ =?utf-8?B?VVhaMFdQcmR3NjRISHRWSGNHdm9DTzE3ZjZndm1pWWFEZ0R4NkhFUk42blhy?=
+ =?utf-8?B?QWZCVG9LUmprYnpkS0hqUDBKU1RxYTZsd1RjYkhOQ2syOGFYQzdpTkJaWjdz?=
+ =?utf-8?B?Tm9VdnZvTHF0SFZEclozamI1NDdIekxQbktEdmFJZ3NNbnBwRFlEUWU3Y2t6?=
+ =?utf-8?B?NFFZVzE4T3g5d2E4MkROS1FmRnM1eHI5Y2FVZjRuTGM3MzJzOTZvdHJwbVlU?=
+ =?utf-8?B?WHUzbXI1SGRqb2l3RXc0TVhMdE5rYW00OSt6SUY5MTBGV21WMS8zQkJYczBO?=
+ =?utf-8?B?dWRWS3U1K3MySVhtdm11d3JCSEI3ckJ2dE5YZjBHcHV4WHNVUEZBaCtFTnJX?=
+ =?utf-8?B?d0dtLzJVS3lZRWNXOGIrTHpaQUF2OHNDSFBlcVNlZEVmU2xrM1V1S0dzNTBQ?=
+ =?utf-8?B?bStWWEowSWZGcUoxck11Z0tuK1JZWGphekJJMVN6M2NaWVBOdCtac1dETkM2?=
+ =?utf-8?B?ekpETURBbFZBTnRYWGVWNGNGaGVEYUdWdlJtQTJRbHdXT1Z5bCtGOW02T1hN?=
+ =?utf-8?B?Tzd0eFdWZHNJM2VRNXRqUTE2NlpqZDl2U0U4RWdyUUp2bkh5SzNwdUJTTXNV?=
+ =?utf-8?B?WGQ0Kzk0RlJMeEQ1elVIbEpwK1NWL2FrejV1eGlSdFNLT1RjeEtESmdaczV6?=
+ =?utf-8?B?akd0N0FFcGhBZldkdG9OR0J4YStMcDVXbXhZQkhlK0xhOE5hNHdLYStmV1pC?=
+ =?utf-8?B?TUtPTlJsQVFXc2FnTmdGZEFMOUFxMkExc1Z6R3FMRkg1Z3pnMWNmU3hGNXc4?=
+ =?utf-8?B?S2tuMlNQRklFUXg0ODkzMFdOZk5iQUtJY29ncHZmekRTYm5IQmhyZ2k3bS9U?=
+ =?utf-8?B?c0VBSm5tamJBZUJScFhld2NhQkJVK1RhNGRXOThQbHRrZEU4UENHSTVBLysx?=
+ =?utf-8?B?bklMQkFHaklGU3dXRXowZ0htZlVJWmUrZDNxTWV2V1RMdS9XaW0vMGljYmxH?=
+ =?utf-8?Q?QzAQ1UX2c0Aj8n3ngNBh5mo=3D?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6027328e-33e8-499d-fe28-08d9ef4e8b7c
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR12MB3179.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Feb 2022 00:11:27.7910
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 4iC+Cq5y/HNz+mc2H7M7hYl8XR2k7Zy8pFfGVeAsD/3zaTyq5/rGToSeYe9sZoZySdPnrEi+okJKNR46WqNt6A==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR12MB1760
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 22/02/12 12:41PM, syzbot wrote:
-> syzbot has found a reproducer for the following issue on:
+--=-=-=
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+John Hubbard <jhubbard@nvidia.com> writes:
+
+> On 2/11/22 18:51, Alistair Popple wrote:
+
+[=E2=80=A6]
+
+>>> See below=E2=80=A6
+>>>
+>>>> +			}
+>>>> +
+>>>> +			pages[i] =3D migrate_device_page(head, gup_flags);
+>> migrate_device_page() will return a new page that has been correctly pin=
+ned
+>> with gup_flags by try_grab_page(). Therefore this page can still be rele=
+ased
+>> with unpin_user_page() or put_page() as appropriate for the given gup_fl=
+ags.
+>> The reference we had on the source page (head) always gets dropped in
+>> migrate_vma_finalize().
 >
-> HEAD commit:    83e396641110 Merge tag 'soc-fixes-5.17-1' of git://git.ker..
-> git tree:       upstream
-> console output: https://syzkaller.appspot.com/x/log.txt?x=11fe01a4700000
-> kernel config:  https://syzkaller.appspot.com/x/.config?x=88e0a6a3dbf057cf
-> dashboard link: https://syzkaller.appspot.com/bug?extid=a8e049cd3abd342936b6
-> compiler:       Debian clang version 11.0.1-2, GNU ld (GNU Binutils for Debian) 2.35.2
-> syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=14f8cad2700000
-> C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=132c16ba700000
+> OK. Good.
+>
+> The above would be good to have in a comment, right around here, imho.
+> Because we have this marvelous mix of references for migration (get_page(=
+))
+> and other, and it=E2=80=99s a bit hard to see that it=E2=80=99s all corre=
+ct without a
+> hint or two.
 
-FYI - I could reproduce with above C reproduer on my setup 5.17-rc3.
-I was also able to hit it with XFS <below stack shows that>
-
-So here is some initial analysis on this one. I haven't completely debugged it
-though. I am just putting my observations here for others too.
-
-It seems iomap_dio_rw is getting called with a negative iocb->ki_pos value.
-(I haven't yet looked into when can this happen. Is it due to negative loop
-device mapping range offset or something?)
-
-i.e.
-(gdb) p iocb->ki_pos
-$101 = -2147483648
-(gdb) p /x iocb->ki_pos
-$102 = 0xffffffff80000000
-(gdb)
-
-This when passed to ->iomap_begin() sometimes is resulting into iomap->offset
-which is a positive value and hence hitting below warn_on_once in
-iomap_iter_done().
-
-		WARN_ON_ONCE(iter->iomap.offset > iter->pos)
-
-1. So I think the question here is what does it mean when xfs/ext4_file_read_iter()
-   is called with negative iocb->ki_pos value?
-2. Also when can iocb->ki_pos be negative?
-
-<Stack Track on XFS>
-======================
-
-[  998.417802] ------------[ cut here ]------------
-[  998.420195] WARNING: CPU: 0 PID: 1579 at fs/iomap/iter.c:33
-iomap_iter+0x301/0x320
-[  998.424610] Modules linked in:
-[  998.425683] CPU: 0 PID: 1579 Comm: kworker/u2:5 Tainted:
-G        W         5.17.0-rc3+ #0
-[  998.428085] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
-1.13.0-1ubuntu1 04
-[  998.430830] Workqueue: loop0 loop_rootcg_workfn
-[  998.432300] RIP: 0010:iomap_iter+0x301/0x320
-[  998.433647] Code: 89 f2 e8 72 f1 ff ff 65 ff 0d bb d0 ce 7e 0f 85 c4 fe ff ff
-e8 2f 3e cdc
-[  998.438518] RSP: 0018:ffffc90000c13b30 EFLAGS: 00010307
-[  998.440490] RAX: 0000000000010000 RBX: ffffc90000c13bc0 RCX: 000000000000000c
-[  998.442576] RDX: ffffffff80000000 RSI: 0000000000001000 RDI: 0000000000000000
-[  998.444625] RBP: ffffc90000c13b50 R08: 0000000000000003 R09: ffff88814ceb9b00
-[  998.446768] R10: ffff88815122e000 R11: 000000000000000f R12: ffffffff82657c90
-[  998.453038] R13: ffffc90000c13be8 R14: ffffc90000c13c30 R15: ffffffff82657c90
-[  998.455533] FS:  0000000000000000(0000) GS:ffff88852bc00000(0000)
-knlGS:0000000000000000
-[  998.458136] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[  998.460069] CR2: 00007ffff4443000 CR3: 0000000105e7e000 CR4: 00000000000006f0
-[  998.462447] Call Trace:
-[  998.463108]  <TASK>
-[  998.464510]  __iomap_dio_rw+0x25b/0x840
-[  998.466005]  iomap_dio_rw+0xe/0x30
-[  998.467476]  xfs_file_dio_read+0xb9/0xf0
-[  998.469044]  xfs_file_read_iter+0xc1/0xe0
-[  998.470623]  lo_rw_aio+0x27a/0x2a0
-[  998.472042]  loop_process_work+0x2c7/0x8c0
-[  998.473621]  ? finish_task_switch+0xbc/0x260
-[  998.475232]  ? __switch_to+0x2cf/0x480
-[  998.476832]  loop_rootcg_workfn+0x1b/0x20
-[  998.478431]  process_one_work+0x1b7/0x380
-[  998.479958]  worker_thread+0x4d/0x380
-[  998.481440]  ? process_one_work+0x380/0x380
-[  998.482992]  kthread+0xff/0x130
-[  998.484420]  ? kthread_complete_and_exit+0x20/0x20
-[  998.486122]  ret_from_fork+0x22/0x30
-[  998.487616]  </TASK>
-[  998.488199] ---[ end trace 0000000000000000 ]---
-
-
--ritesh
+Ok, will do.
 
 >
-> IMPORTANT: if you fix the issue, please add the following tag to the commit:
-> Reported-by: syzbot+a8e049cd3abd342936b6@syzkaller.appspotmail.com
+> =E2=80=A6
+>> Which unless I=E2=80=99ve missed something is still the correct thing to=
+ do.
+>>
+>>> This reminds me: out of the many things to monitor, the FOLL_PIN counts
+>>> in /proc/vmstat are especially helpful, whenever making changes to code
+>>> that deals with this:
+>>>
+>>> 	nr_foll_pin_acquired
+>>> 	nr_foll_pin_released
+>>>
+>>> =E2=80=A6and those should normally be equal to each other when =E2=80=
+=9Cat rest=E2=80=9D.
+>>>
 >
-> ------------[ cut here ]------------
-> WARNING: CPU: 1 PID: 10 at fs/iomap/iter.c:33 iomap_iter_done fs/iomap/iter.c:33 [inline]
-> WARNING: CPU: 1 PID: 10 at fs/iomap/iter.c:33 iomap_iter+0x7ca/0x890 fs/iomap/iter.c:78
-> Modules linked in:
-> CPU: 1 PID: 10 Comm: kworker/u4:1 Not tainted 5.17.0-rc3-syzkaller-00247-g83e396641110 #0
-> Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
-> Workqueue: loop0 loop_rootcg_workfn
-> RIP: 0010:iomap_iter_done fs/iomap/iter.c:33 [inline]
-> RIP: 0010:iomap_iter+0x7ca/0x890 fs/iomap/iter.c:78
-> Code: e8 3b 81 83 ff eb 0c e8 34 81 83 ff eb 05 e8 2d 81 83 ff 44 89 e8 48 83 c4 40 5b 41 5c 41 5d 41 5e 41 5f 5d c3 e8 16 81 83 ff <0f> 0b e9 9e fe ff ff e8 0a 81 83 ff 0f 0b e9 d0 fe ff ff e8 fe 80
-> RSP: 0018:ffffc90000cf73c8 EFLAGS: 00010293
-> RAX: ffffffff82022d4a RBX: ffffffff80000000 RCX: ffff888011fe9d00
-> RDX: 0000000000000000 RSI: ffffffff80000000 RDI: 00000fff80000000
-> RBP: 00000fff80000000 R08: ffffffff82022be1 R09: ffffed100fd4dc19
-> R10: ffffed100fd4dc19 R11: 0000000000000000 R12: ffffc90000cf75c8
-> R13: 1ffff9200019eebe R14: 1ffff9200019eeb9 R15: ffffc90000cf75f0
-> FS:  0000000000000000(0000) GS:ffff8880b9b00000(0000) knlGS:0000000000000000
-> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> CR2: 00007fbf80df2b88 CR3: 000000007e8f6000 CR4: 00000000003506e0
-> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-> Call Trace:
->  <TASK>
->  __iomap_dio_rw+0xa8e/0x1e00 fs/iomap/direct-io.c:589
->  iomap_dio_rw+0x38/0x80 fs/iomap/direct-io.c:680
->  ext4_dio_read_iter fs/ext4/file.c:77 [inline]
->  ext4_file_read_iter+0x52f/0x6c0 fs/ext4/file.c:128
->  lo_rw_aio+0xc75/0x1060
->  loop_handle_cmd drivers/block/loop.c:1846 [inline]
->  loop_process_work+0x6a4/0x22b0 drivers/block/loop.c:1886
->  process_one_work+0x850/0x1130 kernel/workqueue.c:2307
->  worker_thread+0xab1/0x1300 kernel/workqueue.c:2454
->  kthread+0x2a3/0x2d0 kernel/kthread.c:377
->  ret_from_fork+0x1f/0x30
->  </TASK>
+> I hope this is/was run, just to be sure?
+
+Thanks for the suggestion, these remain equal to each other after running
+hmm-tests which confirms everything is working as expected.
+
 >
+> thanks,
+
+--=-=-=--
