@@ -2,218 +2,281 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1893CC433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Feb 2022 11:34:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9541C4332F
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Feb 2022 12:03:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229710AbiBOLeU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 15 Feb 2022 06:34:20 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:54584 "EHLO
+        id S237428AbiBOMDc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 15 Feb 2022 07:03:32 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:39844 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236483AbiBOLeI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Feb 2022 06:34:08 -0500
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80D751EAFE
-        for <linux-xfs@vger.kernel.org>; Tue, 15 Feb 2022 03:33:40 -0800 (PST)
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 21FBDJto032155;
-        Tue, 15 Feb 2022 11:33:31 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=references : from :
- to : cc : subject : in-reply-to : message-id : date : content-type :
- mime-version; s=corp-2021-07-09;
- bh=Hkm+ZKCRhI0BLu4pvPuAhCXVSvMk18Uur759nH6EIxU=;
- b=tOPDqNXAIbEekSsCsiNFr38zyxmn/dcMOQ/ExzUlx4YhAJEyctsaRR4ZKYW+UxMGlDkx
- FEr0As2dvcyrt/I2tvFCTnvyavF+pIfSc7nkZk1CCjk6WIFKwG1Uj27ShiZgv6vMIBMT
- xlNmpqe1OCok5Urxtxt3HQLxVRbcUUBSxXv9N8RrxOHZ1d5yja9EUsr8eXvqyAO9LoXy
- B5dPDY/41ptUsOkc9Cc+3gSqqxSMtQznspYXwW15zyA5SrN+7PoPCYXNNc5Vyg8parnX
- 7teWYhBfZRDYNay0U6mNtRl1r+/w22OVNk0Ojw6r2z3Iwkp3XArKzwcZZftEKHkPirAN gw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3e820nhe13-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 15 Feb 2022 11:33:30 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 21FBUeL0113700;
-        Tue, 15 Feb 2022 11:33:29 GMT
-Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2103.outbound.protection.outlook.com [104.47.55.103])
-        by userp3020.oracle.com with ESMTP id 3e66bndmvg-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 15 Feb 2022 11:33:29 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=XJ3fusPDxL/Dul2t9pR19ACtg4Kyfrel3Hj9OYasUHX6F0jqBfbvT0+CPiY+Y5mt2a2RKfrEhSMDKAsOkXzN4sCHz6QfZObrzD1V3IvVbzBACFydb0jRH8ZBubFBxyQkvohdXuceZeQ38DeH82vp2oWOesZCE5cIyYNhyIw0CQZnFgtPXscc6Zy6RvOptuu2WNnowO8y0uGwrzLAhJ/6+v5R/XQ1++dsIsq2z8tIqkJqpecaoPxw6CqZcTLW0Q//sVwbLbDwYZI1B1mK0xVCX8Z2O6nW7WpYOt1lsiQIpDLeIfPrIS1CmS+yx9zQOdWEdOy3Ht2f5Io5LPEzDFwMTg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Hkm+ZKCRhI0BLu4pvPuAhCXVSvMk18Uur759nH6EIxU=;
- b=KYnpmeyi7JJVUrdJlH/vC25jTNzyHFSVLHRw0PChnhr5VW4Ro/TKjVWgVNkbaOg4knb3/Z3AC0h2+qajoXmpRkAxarbCvsXkJL39GA15PdRso4O+VsNs7ZcBedUFPSS7QJ4n98dzUDszBWOFO0XMYimr3G81MLMslsKBhaI1I0PBzzUa4FVEVGmKtsPNj6kPlTsUY/2oKQDh85Zk+O42tyq1gUcX3SjWrX05vhkd1krPBcE5rKZ9T88hOowUJmYjrwbPd2YYogp6lbajDSGeRqtS73e8kYLzw6GUSIZc26TM6V8FEVyg9Lzs/D+bH/3xCpkc18FE8iL4uS6nb/qoDw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Hkm+ZKCRhI0BLu4pvPuAhCXVSvMk18Uur759nH6EIxU=;
- b=LzKy46HZe0HX9rOphRaikbDgNXZBekO05Jo5O9QmvJ5n0JzKIBW4/l20YUox6YBEW09lDgnUQBriIYAEs0M+QOwVryR5S60pCh8PjSxwSMKJF3VA/x0jDkawrvBWg/B0Ny74w/axYd3r8H2aSpcM1wGJDNa5zgl8t8MgIVbekW8=
-Received: from SA2PR10MB4587.namprd10.prod.outlook.com (2603:10b6:806:114::12)
- by BYAPR10MB3271.namprd10.prod.outlook.com (2603:10b6:a03:152::30) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4975.17; Tue, 15 Feb
- 2022 11:33:27 +0000
-Received: from SA2PR10MB4587.namprd10.prod.outlook.com
- ([fe80::46f:d52f:e31c:b552]) by SA2PR10MB4587.namprd10.prod.outlook.com
- ([fe80::46f:d52f:e31c:b552%5]) with mapi id 15.20.4975.018; Tue, 15 Feb 2022
- 11:33:26 +0000
-References: <20220121051857.221105-1-chandan.babu@oracle.com>
- <20220121051857.221105-14-chandan.babu@oracle.com>
- <20220201200125.GN8313@magnolia>
- <87v8xs9dpr.fsf@debian-BULLSEYE-live-builder-AMD64>
- <20220207171106.GB8313@magnolia>
- <87bkzda9jd.fsf@debian-BULLSEYE-live-builder-AMD64>
- <20220214170728.GI8313@magnolia>
- <87v8xglj59.fsf@debian-BULLSEYE-live-builder-AMD64>
- <20220215093301.GZ59715@dread.disaster.area>
-User-agent: mu4e 1.4.15; emacs 27.1
-From:   Chandan Babu R <chandan.babu@oracle.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH V5 13/16] xfs: Conditionally upgrade existing inodes to
- use 64-bit extent counters
-In-reply-to: <20220215093301.GZ59715@dread.disaster.area>
-Message-ID: <87sfskl5z6.fsf@debian-BULLSEYE-live-builder-AMD64>
-Date:   Tue, 15 Feb 2022 17:03:17 +0530
-Content-Type: text/plain
-X-ClientProxiedBy: TYBP286CA0046.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:404:10a::34) To SA2PR10MB4587.namprd10.prod.outlook.com
- (2603:10b6:806:114::12)
+        with ESMTP id S234984AbiBOMDb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Feb 2022 07:03:31 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9ED39D0B5B
+        for <linux-xfs@vger.kernel.org>; Tue, 15 Feb 2022 04:03:21 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1644926600;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=eJ2zSixnYCAtbdhrKQS4IEmcF85JqpZRJkneSkqAfms=;
+        b=YpH0T7+vp66qFgwTCuxazvN4c5ATYeplbLqEoKUSu6gv0lva2O2UlbsDLahEyqsokAwZ0D
+        RwQtGSTXr+FVHJm3CpmzOL9mWfRQw9Rnst7UvfYolET4lBYG/jepp1PrFs5xjo2657cj9x
+        fkwPPiKZCOsBDki/O+Pf7wYOKj+enzQ=
+Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
+ [209.85.221.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-474-9VphekbdP1yK-LqUU9IzSg-1; Tue, 15 Feb 2022 07:03:19 -0500
+X-MC-Unique: 9VphekbdP1yK-LqUU9IzSg-1
+Received: by mail-wr1-f71.google.com with SMTP id k20-20020adfc714000000b001e305cd1597so8259051wrg.19
+        for <linux-xfs@vger.kernel.org>; Tue, 15 Feb 2022 04:03:19 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent
+         :content-language:to:cc:references:from:organization:subject
+         :in-reply-to:content-transfer-encoding;
+        bh=eJ2zSixnYCAtbdhrKQS4IEmcF85JqpZRJkneSkqAfms=;
+        b=eCOr2ciKj/HN9VXKgeIeduZ+WB/TAxDSZxbhRaOpeWEEhrBsiXdJM5fhsYj384vYiG
+         zDECxsmfplnADRNOjK2D9Y5oM4NJwMweYxvjMCjn9rneCPa8UY1LsWJ3aCFe0irxrILj
+         YMFriMifAS2eC962jjb1ROfgH5KUtSNsajPlPQTntXi/AFnHPdqquHcXxdNISXGk1W12
+         wtBfle3ok9ITdaxgIdBDuXIXwkXVJFB8uz6/aDqegTVQ7b+4P7vOvjQy02WMCJHp0LeU
+         7CIGiw5NOOZOrt5RuHnPm27UvXpxkxlu/KbVaYwgNBeyGk9Ekxbb1EAq6LWRRF2qF2KZ
+         kHbA==
+X-Gm-Message-State: AOAM532D41nY+td6kny7y8uU+4p7aS3t9HfHFh6CaQTo0Ivhay/7yHZt
+        qsrI7vrnPutxtxMx/y8HICY9+2IT+LhJFXKKdX1HNLCTtdOZQ5RMsKnFpRKS1EMEtYtllpT2JX3
+        ndxm5DLLN62vSs0WfRNEv
+X-Received: by 2002:a7b:cf29:0:b0:34c:744b:9145 with SMTP id m9-20020a7bcf29000000b0034c744b9145mr2860005wmg.2.1644926598083;
+        Tue, 15 Feb 2022 04:03:18 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJyVn6arGJnSNGfD+b4A3E/kx0IOIn+MKt17+0+8YvZsz8aYYMdhfF9xxDoZPpXOOhK1bges5w==
+X-Received: by 2002:a7b:cf29:0:b0:34c:744b:9145 with SMTP id m9-20020a7bcf29000000b0034c744b9145mr2859969wmg.2.1644926597804;
+        Tue, 15 Feb 2022 04:03:17 -0800 (PST)
+Received: from ?IPV6:2003:cb:c70e:3700:9260:2fb2:742d:da3e? (p200300cbc70e370092602fb2742dda3e.dip0.t-ipconnect.de. [2003:cb:c70e:3700:9260:2fb2:742d:da3e])
+        by smtp.gmail.com with ESMTPSA id c8sm18784645wmq.39.2022.02.15.04.03.16
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 15 Feb 2022 04:03:17 -0800 (PST)
+Message-ID: <50e2ee65-98a5-fd2f-3b58-b5be5c13c18b@redhat.com>
+Date:   Tue, 15 Feb 2022 13:03:15 +0100
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 2d5130da-b293-430c-dd06-08d9f076fb50
-X-MS-TrafficTypeDiagnostic: BYAPR10MB3271:EE_
-X-Microsoft-Antispam-PRVS: <BYAPR10MB3271BDE30218DB9301AE6F56F6349@BYAPR10MB3271.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:1284;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: hmSpAtF3a5uOSTaN7fyCD7sTyKEhQGHneWVWHwTtPZTl1S7hTLdAuDbBSaS5B5RROkjhIG8UrYExulS1JysSwVQK4ivuZb0x9RuFtvJ7BM6fbIXcqsvQWxBmAv8CB19+TpnydSqbhHscmYPddhMiJ4isa62fwsRWY8TFcP+i90Rax388gt+EI9++9MrroxaSEcNTBl0VBx5vzIxRNr3etz0oKUESWZWKVpdzAgdZ4JrPjwgz6Flxu4Zycw0jK0siWtuhZSl9aLMD6XImB6TNo71fqRspu7PMkq1NkzwURwWLTh7OL+NDp5t0bLpeAGB86InS2o8eDLvMH3E4HhNWQqnE1UYDymkS8kjoZoCntGELm3d1mNcys3COTTZh6Hs05OhCIGFhaJHf0zrzFb3yReU1ogHKV+5HNYv42ZpaiwOXq983tZSiCuyQUlS8+T696dJpkQ5xzbEbFvif7RZb2dDX1CJmBkh6yPEofZcHsAkhYUHrd6z7meiyjxmNMsVxSI7GF9nu8qA6iJLBvI9yStgSNm14wKjbJpUAo6JQ3UTIu6/dcWbDuXeFrZvWTp8xMwWR/0iT1rduNvI+fzZsABsDeuycYYNvZHJcj2P4RzeW5+hNVGEAzKbUB5/U93QcGk+FefI8km+vO5j+tODf7TG7ADm8oVaNjoP6dDyxRtuXQR5gezAlmODakGUNPFOlTPpw+ntZc5aUvUUCdIV+FQ==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(7916004)(366004)(2906002)(5660300002)(83380400001)(9686003)(66556008)(66946007)(6512007)(8676002)(316002)(66476007)(6486002)(26005)(508600001)(4326008)(52116002)(186003)(53546011)(6506007)(33716001)(38100700002)(38350700002)(8936002)(86362001)(6916009)(6666004);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?beOOgDKNU8AUS6S7P5l+A0oErPwma4O94U4Qu8We7xpFwZLKgws0WyW36TqN?=
- =?us-ascii?Q?NSwESaOJFAFswoLbr8vqWo/D8QOZzdEP8lbxqaZ5zP69IskWvjzaZWv3o2/Y?=
- =?us-ascii?Q?s8Xg+ttkSfhYhDhtpAAL+uucfNK2zbhZq+gFptZs+4QQfdYTGSSbsJylCFbA?=
- =?us-ascii?Q?B79Wc6l2ZSnT/QMDr2rz/6EMGINJDRY4Je34YORoja9WZH01VGwAAxgCFUlV?=
- =?us-ascii?Q?NdW6ovU6oMeJMRAxb/j6tZikYe4GWBfkarERZegGLnrobU0AVP1fcN0hZsIG?=
- =?us-ascii?Q?xfXGVjKO7aOBMVdcMnrmBny4N7Sy0fgLvVj3Yva7yLBpkcUft/dUiWzJC2Ys?=
- =?us-ascii?Q?ZP6zH5apWnpjuwGJn6MLuHf6acUw9/f1XYzPYKZXoXlBkRuoaQQB0T/Cjijf?=
- =?us-ascii?Q?jBgxpHR4PuEJrLFvZCkQyndnoCPGl+dNeyABNuJNDQA2zgaISJsMdSn/wudr?=
- =?us-ascii?Q?zZ2Oar9gGOoq5DIghL6NbfuuGq+/LN+8u4qAaCrfbrzvlT52U5+lVnuCNZDD?=
- =?us-ascii?Q?v+b/mSZ/ACfqJVkA/iwJmhU4FroRAAKkD3hFRFsmTb41WYTc9VhKciyasVUk?=
- =?us-ascii?Q?imQ2AgyT2nmKpGufvR3N1eJqZd6f1mUk/tPRdBPJFA/DBfFYnXrAnKCVACI6?=
- =?us-ascii?Q?8ozQg4Yy3ArdBcqiTrMACAo7AHH6sYLy3f9JZylHlgsu26932SDl+dI50XqF?=
- =?us-ascii?Q?geyK0PMIzcvfd2DHGMQy0W6JXC+ZoVyiVhsnVG1mDzJWONIRArXr2Z+QeE1W?=
- =?us-ascii?Q?HoNo9YQdoNZbMUsdxyy84mbbmySfs1JXkWBMeXuDicp/8MU+6J+qshgOuca1?=
- =?us-ascii?Q?3/pNddJiJUfFmC3wOGSyfCldQqKw0hkbNrGH4LmHpaN3KRJhw/2lAEK8pDIO?=
- =?us-ascii?Q?glnHsNn68BeXuKWsRQ1eWcjQ9OTJrTQ8ns448r7doOGdmdx+dNxWINYuRWZ6?=
- =?us-ascii?Q?+KZLUBY8MsGIf8PVCRPpkRw9IseSe+fVEapyK1641hrujsjxqCA7sP8WmRwT?=
- =?us-ascii?Q?QWva/W8X42stGHu+nZ/XBL+j/+tDsFI/t0DZWO673w1eYDOKdIJvwhDvr0sR?=
- =?us-ascii?Q?D5JTJgrHnFKQWoxGLIwOz6803S9qYX69W6ZvL8dl8qOkQegemSn5dPKZ5DSU?=
- =?us-ascii?Q?3TTcUdx2ok2bxyMVzBu+hId/qDwSDXWw+PPokxX8VQXFAfi+7ZKgfJcK4HJE?=
- =?us-ascii?Q?e+8tTqmRkuFPrIG2+mXHfAKwaHFJQknIpsdaP9lv+TXW/vrcWfpAoWYCBJ5C?=
- =?us-ascii?Q?UQdH1x5FdU5CXVIoIjy5/edraHpfriNGktf6h7t/R0bpYzJ+mIlU5lZdK4Rs?=
- =?us-ascii?Q?V9YQ7gG0J8gIgvJ6c5e2aFlOp/FyfkkTo2CvtLh9XmUe64kgPreMnsdz+TpB?=
- =?us-ascii?Q?lR3PMZxYIHI99pr3jAzAwPF0C1Y9HQf+vIxABq1r8xMJMdwQ4SFODlY524D1?=
- =?us-ascii?Q?Hzs4KKhaU0cBF6IAKo6IVtI4l18xk51uCA4jvTc3lfO49dd1KDNpEQdrR79q?=
- =?us-ascii?Q?iGFC+G9IrIoM6ci9aPoKmg9H7ciY4BfKljmP86AzdBb/eKVwdNfC7M8fPLbo?=
- =?us-ascii?Q?X4yw59iXIzdMpBG70RysL4eSi///irbr0ywS43yiL9G3vZN88mnDxkLMxgal?=
- =?us-ascii?Q?/iLuxreoWVH5UdHJhhHdLwU=3D?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2d5130da-b293-430c-dd06-08d9f076fb50
-X-MS-Exchange-CrossTenant-AuthSource: SA2PR10MB4587.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Feb 2022 11:33:26.6573
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Tmdt4u90SgmwVNYQq3YM2PtMugH+ZeucnX20K37sRg9kBxTQ6LREyqr9M2SxMtMxXvmtFxP4WUYFBivLc0rAPA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR10MB3271
-X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10258 signatures=673431
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 spamscore=0
- mlxlogscore=999 phishscore=0 bulkscore=0 malwarescore=0 adultscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2201110000 definitions=main-2202150065
-X-Proofpoint-ORIG-GUID: iySaOSIaszzJBdj6JS5utVVvvA8unyXP
-X-Proofpoint-GUID: iySaOSIaszzJBdj6JS5utVVvvA8unyXP
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.4.0
+Content-Language: en-US
+To:     Alistair Popple <apopple@nvidia.com>, akpm@linux-foundation.org,
+        linux-mm@kvack.org
+Cc:     Felix.Kuehling@amd.com, rcampbell@nvidia.com,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        hch@lst.de, jgg@nvidia.com, jglisse@redhat.com,
+        willy@infradead.org, alex.sierra@amd.com, jhubbard@nvidia.com
+References: <cover.0d3c846b1c6c294e055ff7ebe221fab9964c1436.1644207242.git-series.apopple@nvidia.com>
+ <1894939.704c7Wv018@nvdebian>
+ <fb557284-bcab-6d95-ac60-acd7459e9e80@redhat.com>
+ <5251686.PpEh1BJ82l@nvdebian>
+From:   David Hildenbrand <david@redhat.com>
+Organization: Red Hat
+Subject: Re: [PATCH v2 2/3] mm/gup.c: Migrate device coherent pages when
+ pinning instead of failing
+In-Reply-To: <5251686.PpEh1BJ82l@nvdebian>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 15 Feb 2022 at 15:03, Dave Chinner wrote:
-> On Tue, Feb 15, 2022 at 12:18:50PM +0530, Chandan Babu R wrote:
->> On 14 Feb 2022 at 22:37, Darrick J. Wong wrote:
->> > On Fri, Feb 11, 2022 at 05:40:30PM +0530, Chandan Babu R wrote:
->> >> On 07 Feb 2022 at 22:41, Darrick J. Wong wrote:
->> >> > On Mon, Feb 07, 2022 at 10:25:19AM +0530, Chandan Babu R wrote:
->> >> >> On 02 Feb 2022 at 01:31, Darrick J. Wong wrote:
->> >> >> > On Fri, Jan 21, 2022 at 10:48:54AM +0530, Chandan Babu R wrote:
->> >> >> I went through all the call sites of xfs_iext_count_may_overflow() and I think
->> >> >> that your suggestion can be implemented.
->> >> 
->> >> Sorry, I missed/overlooked the usage of xfs_iext_count_may_overflow() in
->> >> xfs_symlink().
->> >> 
->> >> Just after invoking xfs_iext_count_may_overflow(), we execute the following
->> >> steps,
->> >> 
->> >> 1. Allocate inode chunk
->> >> 2. Initialize inode chunk.
->> >> 3. Insert record into inobt/finobt.
->> >> 4. Roll the transaction.
->> >> 5. Allocate ondisk inode.
->> >> 6. Add directory inode to transaction.
->> >> 7. Allocate blocks to store symbolic link path name.
->> >> 8. Log symlink's inode (data fork contains block mappings).
->> >> 9. Log data blocks containing symbolic link path name.
->> >> 10. Add name to directory and log directory's blocks.
->> >> 11. Log directory inode.
->> >> 12. Commit transaction.
->> >> 
->> >> xfs_trans_roll() invoked in step 4 would mean that we cannot move step 6 to
->> >> occur before step 1 since xfs_trans_roll would unlock the inode by executing
->> >> xfs_inode_item_committing().
->> >> 
->> >> xfs_create() has a similar flow.
->> >> 
->> >> Hence, I think we should retain the current logic of setting
->> >> XFS_DIFLAG2_NREXT64 just after reading the inode from the disk.
->> >
->> > File creation shouldn't ever run into problems with
->> > xfs_iext_count_may_overflow because (a) only symlinks get created with
->> > mapped blocks, and never more than two; and (b) we always set NREXT64
->> > (the inode flag) on new files if NREXT64 (the superblock feature bit) is
->> > enabled, so a newly created file will never require upgrading.
->> 
->> The inode representing the symbolic link being created cannot overflow its
->> data fork extent count field. However, the inode representing the directory
->> inside which the symbolic link entry is being created, might overflow its data
->> fork extent count field.
->
-> I dont' think that can happen. A directory is limited in size to 3
-> segments of 32GB each. In reality, only the data segment can ever
-> reach 32GB as both the dabtree and free space segments are just
-> compact indexes of the contents of the 32GB data segment.
->
-> Hence a directory is never likely to reach more than about 40GB of
-> blocks which is nowhere near large enough to overflowing a 32 bit
-> extent count field.
+On 11.02.22 00:41, Alistair Popple wrote:
+> On Thursday, 10 February 2022 10:47:35 PM AEDT David Hildenbrand wrote:
+>> On 10.02.22 12:39, Alistair Popple wrote:
+>>> On Thursday, 10 February 2022 9:53:38 PM AEDT David Hildenbrand wrote:
+>>>> On 07.02.22 05:26, Alistair Popple wrote:
+>>>>> Currently any attempts to pin a device coherent page will fail. This is
+>>>>> because device coherent pages need to be managed by a device driver, and
+>>>>> pinning them would prevent a driver from migrating them off the device.
+>>>>>
+>>>>> However this is no reason to fail pinning of these pages. These are
+>>>>> coherent and accessible from the CPU so can be migrated just like
+>>>>> pinning ZONE_MOVABLE pages. So instead of failing all attempts to pin
+>>>>> them first try migrating them out of ZONE_DEVICE.
+>>>>>
+>>>>> Signed-off-by: Alistair Popple <apopple@nvidia.com>
+>>>>> Acked-by: Felix Kuehling <Felix.Kuehling@amd.com>
+>>>>> ---
+>>>>>
+>>>>> Changes for v2:
+>>>>>
+>>>>>  - Added Felix's Acked-by
+>>>>>  - Fixed missing check for dpage == NULL
+>>>>>
+>>>>>  mm/gup.c | 105 ++++++++++++++++++++++++++++++++++++++++++++++++++------
+>>>>>  1 file changed, 95 insertions(+), 10 deletions(-)
+>>>>>
+>>>>> diff --git a/mm/gup.c b/mm/gup.c
+>>>>> index 56d9577..5e826db 100644
+>>>>> --- a/mm/gup.c
+>>>>> +++ b/mm/gup.c
+>>>>> @@ -1861,6 +1861,60 @@ struct page *get_dump_page(unsigned long addr)
+>>>>>  
+>>>>>  #ifdef CONFIG_MIGRATION
+>>>>>  /*
+>>>>> + * Migrates a device coherent page back to normal memory. Caller should have a
+>>>>> + * reference on page which will be copied to the new page if migration is
+>>>>> + * successful or dropped on failure.
+>>>>> + */
+>>>>> +static struct page *migrate_device_page(struct page *page,
+>>>>> +					unsigned int gup_flags)
+>>>>> +{
+>>>>> +	struct page *dpage;
+>>>>> +	struct migrate_vma args;
+>>>>> +	unsigned long src_pfn, dst_pfn = 0;
+>>>>> +
+>>>>> +	lock_page(page);
+>>>>> +	src_pfn = migrate_pfn(page_to_pfn(page)) | MIGRATE_PFN_MIGRATE;
+>>>>> +	args.src = &src_pfn;
+>>>>> +	args.dst = &dst_pfn;
+>>>>> +	args.cpages = 1;
+>>>>> +	args.npages = 1;
+>>>>> +	args.vma = NULL;
+>>>>> +	migrate_vma_setup(&args);
+>>>>> +	if (!(src_pfn & MIGRATE_PFN_MIGRATE))
+>>>>> +		return NULL;
+>>>>> +
+>>>>> +	dpage = alloc_pages(GFP_USER | __GFP_NOWARN, 0);
+>>>>> +
+>>>>> +	/*
+>>>>> +	 * get/pin the new page now so we don't have to retry gup after
+>>>>> +	 * migrating. We already have a reference so this should never fail.
+>>>>> +	 */
+>>>>> +	if (dpage && WARN_ON_ONCE(!try_grab_page(dpage, gup_flags))) {
+>>>>> +		__free_pages(dpage, 0);
+>>>>> +		dpage = NULL;
+>>>>> +	}
+>>>>> +
+>>>>> +	if (dpage) {
+>>>>> +		lock_page(dpage);
+>>>>> +		dst_pfn = migrate_pfn(page_to_pfn(dpage));
+>>>>> +	}
+>>>>> +
+>>>>> +	migrate_vma_pages(&args);
+>>>>> +	if (src_pfn & MIGRATE_PFN_MIGRATE)
+>>>>> +		copy_highpage(dpage, page);
+>>>>> +	migrate_vma_finalize(&args);
+>>>>> +	if (dpage && !(src_pfn & MIGRATE_PFN_MIGRATE)) {
+>>>>> +		if (gup_flags & FOLL_PIN)
+>>>>> +			unpin_user_page(dpage);
+>>>>> +		else
+>>>>> +			put_page(dpage);
+>>>>> +		dpage = NULL;
+>>>>> +	}
+>>>>> +
+>>>>> +	return dpage;
+>>>>> +}
+>>>>> +
+>>>>> +/*
+>>>>>   * Check whether all pages are pinnable, if so return number of pages.  If some
+>>>>>   * pages are not pinnable, migrate them, and unpin all pages. Return zero if
+>>>>>   * pages were migrated, or if some pages were not successfully isolated.
+>>>>> @@ -1888,15 +1942,40 @@ static long check_and_migrate_movable_pages(unsigned long nr_pages,
+>>>>>  			continue;
+>>>>>  		prev_head = head;
+>>>>>  		/*
+>>>>> -		 * If we get a movable page, since we are going to be pinning
+>>>>> -		 * these entries, try to move them out if possible.
+>>>>> +		 * Device coherent pages are managed by a driver and should not
+>>>>> +		 * be pinned indefinitely as it prevents the driver moving the
+>>>>> +		 * page. So when trying to pin with FOLL_LONGTERM instead try
+>>>>> +		 * migrating page out of device memory.
+>>>>>  		 */
+>>>>>  		if (is_dev_private_or_coherent_page(head)) {
+>>>>> +			/*
+>>>>> +			 * device private pages will get faulted in during gup
+>>>>> +			 * so it shouldn't be possible to see one here.
+>>>>> +			 */
+>>>>>  			WARN_ON_ONCE(is_device_private_page(head));
+>>>>> -			ret = -EFAULT;
+>>>>> -			goto unpin_pages;
+>>>>> +			WARN_ON_ONCE(PageCompound(head));
+>>>>> +
+>>>>> +			/*
+>>>>> +			 * migration will fail if the page is pinned, so convert
+>>>>> +			 * the pin on the source page to a normal reference.
+>>>>> +			 */
+>>>>> +			if (gup_flags & FOLL_PIN) {
+>>>>> +				get_page(head);
+>>>>> +				unpin_user_page(head);
+>>>>> +			}
+>>>>> +
+>>>>> +			pages[i] = migrate_device_page(head, gup_flags);
+>>>>
+>>>> For ordinary migrate_pages(), we'll unpin all pages and return 0 so the
+>>>> caller will retry pinning by walking the page tables again.
+>>>>
+>>>> Why can't we apply the same mechanism here? This "let's avoid another
+>>>> walk" looks unnecessary complicated to me, but I might be wrong.
+>>>
+>>> There's no reason we couldn't. I figured we have the page in the right spot
+>>> anyway so it was easy to do, and looking at this rebased on top of Christoph's
+>>> ZONE_DEVICE refcount simplification I'm not sure it would be any simpler
+>>> anyway.
+>>>
+>>> It would remove the call to try_grab_page(), but we'd still have to return an
+>>> error on migration failures whilst also ensuring we putback any non-device
+>>> pages that may have been isolated. I might have overlooked something though,
+>>> so certainly happy for suggestions.
+>>
+>> Staring at the code, I was wondering if we could either
+>>
+>> * build a second list of device coherent pages to migrate and call a
+>>   migrate_device_pages() bulk function
+>> * simply use movable_page_list() and teach migrate_pages() how to handle
+>>   them.
+> 
 
-I think you are right.
+(sorry for the late reply)
 
-The maximum file size that can be represented by the data fork extent counter
-in the worst case occurs when all extents are 1 block in size and each block
-is 1k in size.
+> I did consider that approach. The problem is zone device pages are not LRU
+> pages. In particular page->lru is not available to add the page to a list, and
+> as an external API and internally migrate_pages() relies heavily on moving
+> pages between lists.
 
-With 1k byte sized blocks, a file can reach upto,
-1k * (2^31) = 2048 GB
+I see, so I assume there is no way we could add them to a list? We could
+use a temporary array we'd try allocating once we stumble over over such
+a device page that needs migration.
 
-This is much larger than the asymptotic maximum size of a directory i.e.
-32GB * 3 = 96GB.
+The you'd teach is_pinnable_page() to reject
+is_dev_private_or_coherent_page() and special case
+is_dev_private_or_coherent_page() under the "if
+(!is_pinnable_page(head))" check.
+
+You'd grab an additional reference and add them to the temp array. The
+you'd just proceed as normal towards the end of the function (reverting
+the pin/ref from the input array) and would try to migrate all device
+pages in the temp array just before migrate_pages() --
+migrate_device_pages(), properly handling/indicating if either migration
+path fails.
+
+Instead of putback_movable_pages() on the list you'd had
+unref_device_pages() and supply the array.
+
+
+Just a thought to limit the impact and eventually make it a bit nicer to
+read, avoiding modifications of the input array.
+
+> 
+>> I'd really appreciate as little special casing as possible for the ever
+>> growing list of new DEVICE types all over the place. E.g., just staring
+>> at fork even before the new device coherent made my head spin.
+> 
+> That's fair. We could pull the checks for device pages out into a self
+> contained function (eg. check_and_migrate_device_pages()) called before
+> check_and_migrate_movable_pages(). The down side of that is we'd always have an
+> extra loop over all the pages just to scan for device pages, but perhaps that's
+> not a concern?
+
+I mean, they are movable ... just not "ordinarily" movable, so it smells
+like this logic belongs into check_and_migrate_movable_pages() :)
+
 
 -- 
-chandan
+Thanks,
+
+David / dhildenb
+
