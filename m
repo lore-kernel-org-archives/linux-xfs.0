@@ -2,224 +2,132 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62EDDC4332F
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Feb 2022 21:50:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDCC0C433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Feb 2022 21:51:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238776AbiBOVvB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 15 Feb 2022 16:51:01 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:47620 "EHLO
+        id S239394AbiBOVv2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 15 Feb 2022 16:51:28 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:47864 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244503AbiBOVvA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Feb 2022 16:51:00 -0500
-Received: from NAM11-DM6-obe.outbound.protection.outlook.com (mail-dm6nam11on2050.outbound.protection.outlook.com [40.107.223.50])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B21E8D64CB;
-        Tue, 15 Feb 2022 13:50:49 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Bawu3x0Z78WTONJf3Xtg/usIqEEuta6F4kQPYfXKtcUGHQYwVo27Bw98z8oumPGLiWI6emh9Ffd5uX91r4aMG6fuZh517E7+gcdiyPKo/KQn0oUVYTR3rVPs39A/wZobHLhCs/YhKA+me8yIldlWNvLs2EIKCgzi9lZ3v0qB/baWk4KTrkx31h+MLvfrO5bTZoeQF/y7Ah96FeLoIA6HZrNBUH9g4g0mrqVJ2VhtAfzzr7TiKObV5/VsxD1iRez3FQXlCntNfnuJe/P61sU1p3ZGpDUf9wjJo6FgZqNYydly/iekxmHsAHkKV6xly0kPaPaoZJutBGayiJU3qKgreA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ZSywJWj12peroQ+wVTN6Ck53E9Hf6v7ckds+ZMGCWEg=;
- b=NrkYt+xPrK16PCtwmtA7jNqJ9MjrNKzBnQHJatjc2jfwBZGCB6s6xzAfx/7PRV5J1cevmuKf272fcbYZE9pLCNzW758t3lIuw5mc+lx0yhOlS7S06EVzOV4/InzsJb93BsWK+wEjDVTCjY37w8f4Fr/kfw2tmWzVxWqWIVzykenRTQ0/5LGroit6mpGU4pdcXI+BtZoKw4lA2t0W4kW3lAh44zNe4a4NDW47Kbursv5707twWz5723m+OFqAzEEPsuL5TKc8oN0tbA1cYCzHo5PtkV/gu/1Pvzx+rCjlYbCcL4TMIC3cVvMrFQKCAlRzsjNIvxTQu1fHz98Ead2izA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ZSywJWj12peroQ+wVTN6Ck53E9Hf6v7ckds+ZMGCWEg=;
- b=sH+AFfr5esjzH/NurFcw955YoeN1kuAPJbGBHh1mwLXtuXQ2omozNLJU7pVMMBGAJttJ0EKivm6R0SCfbnok6JkaPnyY7yXozqCFFmvkGXPmuczc1CjTKah91uLItBySfgsXcJJnUyuENwhSSSKBAJqIABKJk5jnpEK02ehqNjXpPJeo4VmH469HGD6TGdniF8bgVT4QjQURj8d3MFaSIqghNDnz1tb2GaLgHw16DlrIbexifZTW6dvaZRUgbG6LtffFJKfvtXVTXfqBxFT2GyeVIZBgj0Q4KPdex2MAZdfFVkRXh1S/XFuj9LjRiiWpg6zZJil7OHwTDYpDHSK6sA==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from BY5PR12MB4130.namprd12.prod.outlook.com (2603:10b6:a03:20b::16)
- by BN8PR12MB3620.namprd12.prod.outlook.com (2603:10b6:408:49::27) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4975.12; Tue, 15 Feb
- 2022 21:50:47 +0000
-Received: from BY5PR12MB4130.namprd12.prod.outlook.com
- ([fe80::498:6469:148a:49c7]) by BY5PR12MB4130.namprd12.prod.outlook.com
- ([fe80::498:6469:148a:49c7%6]) with mapi id 15.20.4995.015; Tue, 15 Feb 2022
- 21:50:47 +0000
-Message-ID: <487fdaad-0873-142a-cf3a-a065bc8acff6@nvidia.com>
-Date:   Tue, 15 Feb 2022 13:50:44 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.0
-Subject: Re: [PATCH v2 1/3] migrate.c: Remove vma check in migrate_vma_setup()
-Content-Language: en-US
-To:     Alistair Popple <apopple@nvidia.com>, akpm@linux-foundation.org,
-        linux-mm@kvack.org
-Cc:     Felix.Kuehling@amd.com, rcampbell@nvidia.com,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        hch@lst.de, jgg@nvidia.com, jglisse@redhat.com,
-        willy@infradead.org, alex.sierra@amd.com
-References: <cover.0d3c846b1c6c294e055ff7ebe221fab9964c1436.1644207242.git-series.apopple@nvidia.com>
- <6831bf69f7c7699be83b31c9c56212b5fb07f873.1644207242.git-series.apopple@nvidia.com>
-From:   John Hubbard <jhubbard@nvidia.com>
-In-Reply-To: <6831bf69f7c7699be83b31c9c56212b5fb07f873.1644207242.git-series.apopple@nvidia.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SJ0PR03CA0126.namprd03.prod.outlook.com
- (2603:10b6:a03:33c::11) To BY5PR12MB4130.namprd12.prod.outlook.com
- (2603:10b6:a03:20b::16)
+        with ESMTP id S239182AbiBOVv2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Feb 2022 16:51:28 -0500
+Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05B3CD64EC
+        for <linux-xfs@vger.kernel.org>; Tue, 15 Feb 2022 13:51:17 -0800 (PST)
+Received: by mail-pl1-x629.google.com with SMTP id 10so305613plj.1
+        for <linux-xfs@vger.kernel.org>; Tue, 15 Feb 2022 13:51:17 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20210112.gappssmtp.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=UF22wzNFpm2IeXFXPkRt/7QTNpA2ZS3NNacg1G/BHTA=;
+        b=aLkLiUl2q3+S6eeMXpypsrxoD5fjO9umu93awZL2f4DtK7iBq9t1st5HRP4P9rgAKQ
+         vbbbxGJdWSs0YTXYqaQOXspsbJuV/Ut61sGZKXIhgZ+Ao1l2oLI2a3lopePAqvNg0AM/
+         kDMZ1kpGbiLtcFI4B2ZqtAbaAHRBWRiCwoQbOyqM63uY3euR9sdAmumj5oYMSCVi95Ns
+         1sW4wxDTlXLSh9B6p0n0D3UkJbjeDvFRKeSYt2Q+/kQzExnf7VeE2lpE7rMUEQZ5fScV
+         u6euyIJCEvIB0kJrnAAehROqriwI5p8Dq4L2NbjbKWOUOEKsNVQpkAWi+LR6NKEvikDK
+         GEWA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=UF22wzNFpm2IeXFXPkRt/7QTNpA2ZS3NNacg1G/BHTA=;
+        b=58Ora8W6ZxUJqXFhLpmsw+a6F7+Tp8QXUNZvGo4w3dczd9H/MigfoD3+4x9ExVbrjw
+         a3sT5UGOFKxjrzrFtHPE2j1MGjXXqWLaJ7uF22E4wgzfdqG0Md6YpqIN09m7L8bV04Pf
+         8Gj9fV/+yW1jzhAEREa70iURwX5+DgQYaDOLJhphSomWDT0HEzMTWvJFXoIFxfa3QzMI
+         lozGGIN7qFDpr0pCHn2wGNyxntIaeIvx9V1pnketzohCPI6jfl5SZiisOESoaHzqP8z8
+         ZJOqQn9XbdskNnWHoS/I5HcM5GgCpG5MsnqUo5N5u6chuWS1uMGKjQNOpBbR743UU+/0
+         b3jg==
+X-Gm-Message-State: AOAM531cbTEtSNpxnyf/8K/gBQeYjMt9w8gunBrZWVGOeN98ghoGp670
+        3BUVvAdFJh4ddzcBTBz/BTKjFTn2pLOseRSBG3WoXQ==
+X-Google-Smtp-Source: ABdhPJwiWSTwvDiLHvEHx5jVlkEcfKkWS636fiMP5bezJwAkxTbJWDUQr5zyAmugPr7yn16pxbnRwJ5XVgTvcXGjjUQ=
+X-Received: by 2002:a17:902:b20a:: with SMTP id t10mr753705plr.132.1644961876547;
+ Tue, 15 Feb 2022 13:51:16 -0800 (PST)
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 7fab9d82-0ce1-45fd-433b-08d9f0cd3928
-X-MS-TrafficTypeDiagnostic: BN8PR12MB3620:EE_
-X-Microsoft-Antispam-PRVS: <BN8PR12MB3620357CBCD7A4361CE11954A8349@BN8PR12MB3620.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:6790;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: NIfUHG3g9HDL4S1Wwq5Qiq6QWO9xgAEaJKczifFn+a/T1cNrLmtWE0c28YM0Sk7huWymtzUu31uAfXqGzdwPYv2Uuj+6U7NvT0/YnJK3V2LtdCFyws2SjTkol92EYA+lI3V4gY6oGefj4qLX+G2FFu95c04FXq8rc6cicUqA3StugZ8Gs08cB8sndRSrD5ccHR2N85TznYFM3LlAE0+f1UMG1sXNp9iaCyybmkXukPjgFdsppeO8d0JjU9QnUFrJGyWKFodGK1gHeQrpFaCmJx2XIpONB4vZEkkX5OKGqoJ2mUvbyPH49kQMXkqTavlR7Eftq6Es40Gizmlxh61gnGbdUq7L/1kSDZgzXTZy7HadUbQSd4+i0VN1HIE/QcNWLmHubn3rUtDZXn6vDPZ1pS3l5RAcsAxjxAXolJ6UkiJ3qDPW5J60PGegbn6SqqcEUzfjj5eXobthm01T/iE2i9x8qXU4MvjjV6kTjMBM1I1YIMvjqac5lDsqXbjF6BFdpSsdV9WGU3Q/4C6KDr63jQdJmPKOtpeT1v8llb6mZzTcjn9HS6Vy/ev5cIMwiFjJKoicpKgxuM4jKt42UNPkh9vf6vh4AO40jbeCTEtLSBBlW01NEcJ5jSsJs102KPReDjDkKMzYXmEFMmwekeQLWGtB1wFl0uALrRjxL7AJ9XCHdnK/89rY4l6nvsPhspEwiH1s58nkTrx/xqvsUjFMGbjYSoYAMVFivFh6u9ZVrSV6avjlvNMsqCDNLOq01BGb
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR12MB4130.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(83380400001)(38100700002)(86362001)(31696002)(66476007)(66556008)(66946007)(8936002)(2906002)(8676002)(316002)(31686004)(7416002)(36756003)(2616005)(6512007)(6666004)(5660300002)(4326008)(186003)(53546011)(6506007)(508600001)(26005)(6486002)(43740500002)(45980500001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?Y0o1ZVliR3MyMU9Hdk50clk2VGdIQzdBdDUzTHZsejlZeTUrWFhuWTBUdVhn?=
- =?utf-8?B?NEtienpwaE1tcGU4UUJHRGt0b1ZHUmtreW5IckFHVDdROGQ3aVFPVGJRODFR?=
- =?utf-8?B?SDc1ampDaFA4eUdMd1JtcVJCRjFRTm9FbVorZ3lYSHp1UXFvOWVPNjhKWlh4?=
- =?utf-8?B?RHR0Z2ZGR082QVhjaXBRaElMQldFU0t3NXB6WTRUdHlWZlJTdW5jbDBOeGJs?=
- =?utf-8?B?OHZCUGY0ZkRwcUdYQnB2NXE4NkExeWhPd2JYRjBtYUFnSFdpL1dEVXYxb1F2?=
- =?utf-8?B?QUtVUFYybFFqL3p3VklCcWFQUEp3VkNvMmpneExqYUFDUy9GWUg1QThweXdm?=
- =?utf-8?B?TDlEZHl6QjVsZEMzMXA0S0dSYkRkcXpleFovSzR2YUZyVWhRUUhBY2JZNnJ0?=
- =?utf-8?B?bVFGSGFmMTl2U1hsaTIvUC9jWUwxN0FxWnRMOER0RTFUTlpiSTVLbTdhVnpu?=
- =?utf-8?B?QmxuaWZ3MHhrMU90cU5KZk5YelVoNmFNOVJ6ZFpTcG8rSUMwNUp6YUQ4RnR6?=
- =?utf-8?B?RU1xeFVpNnlFQ0swd1ltdXpjNEUvbE4xT0trdHlrSmlWQUNaNTB4UXF2WG1K?=
- =?utf-8?B?MVg5KzV3VE1FU2FDRERISndDT0NKZUt3Vk1pQ0NlTWQ5Wm0xNmF0c0hBeTZ2?=
- =?utf-8?B?RVFFU2drNnRFTElhT0xCTllZdWNjOVgyNXZ3bWg5My9peWRjdWVKT3hXeGZ5?=
- =?utf-8?B?T3daRnorQytVTjJnTWx5a05vVk12K2k4RUFCc0NWRHFtdlJMeDNKbS96djBC?=
- =?utf-8?B?RVFMdFZnOTcwd1hYZkJjSnk0Wi9CT2xhUFFyTjFibStmMk9XYk85YzhtWEhH?=
- =?utf-8?B?akZ5dFdab1FiNTdxMlF6L1RRaHF2dUk2Z1N3NStmaEg1ZnRveTBLUkNYTUJy?=
- =?utf-8?B?SVlNdUlVZ2Y2WFRFTXFDRjljcWNTSmlSZzE5WFhyYlRubExyREcvdDJJQm9M?=
- =?utf-8?B?eGtMUGErMURTbE9aeXFqVG5PMThYR0RNMHJnMVcyalpKUEt2aGRzUkhaWEZI?=
- =?utf-8?B?RjhZaEN2bzJYaTNsWmN1TTlXYVFGMWdGZlFodTFrWlJsMU5zSmdUMmw0alA1?=
- =?utf-8?B?TzJ1NVVsNWtDSVN3WE9nTUE2dHRWWitmd2MyQnNWNUJjUFh2c2Q0dmhxT2ZI?=
- =?utf-8?B?WnhaVG50ckNpUUloSkd4NHRrUmpsckM2UzFuYkJBV3ZOQXlkaDREa3NjTjBU?=
- =?utf-8?B?cDZSb1RkMmtEdUhLRk51MmtDWDNrQXNzdS9oMmxOZWxPMDNvMUdWVkZqK2VM?=
- =?utf-8?B?bEUyK0ZDSHJ1U1ZpMDhESGdtNnAxQUVPMTNhMHZnUVQrV1Y1U283TDJhUUJC?=
- =?utf-8?B?NU1rUUZFWUx6djY3Yy9sMlZ6T29TZ3hGQ0x4S2xTajRabUd2RlhJQnB1bW9j?=
- =?utf-8?B?cDlhU0Zpa3k0bE9qK1RWL09MS1A2TjQwUHNOc3dkNFdlOFFDeVhmR1F6QjdI?=
- =?utf-8?B?STZvUWMySy9GUkdSN3VaN2NBa2QyaEVnLzhEVVFQQmQ4M0pFVXBFRlo0NS9j?=
- =?utf-8?B?dFdWK2xvMFZTaXdIeXFRSmc5UFRZNVVvSnNKVzBPdXoxNXV0dWVENEwvd1RI?=
- =?utf-8?B?UFJWV3ZCTjhiUFpRU1d2bzhsMTNic1k3M2FQVDkwakVub3czMXU1ZU44bG9B?=
- =?utf-8?B?Y0h2YW5ROW5SK1doRHlRdGtoUGkzL1V6RjNkNXA0VjZFTkhrTkc4eVNiaE1a?=
- =?utf-8?B?RlJOM3o5UFpIaDhrYndtbWwrSTM4MUtNRW5iOGh0ZkpvTE5TeUQwVjcvalBR?=
- =?utf-8?B?SzhCWlVyaWFseXJLcVhRK1BCamxtTUNNOEJFWkxHOEpTSkJ5ejFoODRLbENV?=
- =?utf-8?B?a0U4Tmw5TGIrTWowdVB3eTRjYUZqandNZGN6ZS9odXlCd2tKRkZUUmFKR1RI?=
- =?utf-8?B?V1UzWTMyUkZidjZiaFZHbG4rK1lkcmdTSWVPS20xZmYvZzkrR0hwZndsTUE0?=
- =?utf-8?B?RFAyVS9iMmFqUlVYRTZMTU5kRGUzODd5U0dzRWRFSTJzUFpvN3p6NVZyRmVy?=
- =?utf-8?B?aVBIMWMzRExCSnR1bnVnWk12STNkRTZMSXE5cmxYdCtLU3RTRnlEOUgxRFRa?=
- =?utf-8?B?SmVxeFRXTVBIaUVQOGhROFZnVDNFR1RLWXpucDBvTXZWb2YyMFdKczY3WGtn?=
- =?utf-8?B?UDQwY1NBY0NJNEpzY1BseGJZQ0M0Q1JSN2RTUzhZOTFad2lNY1FkTFR4bVg3?=
- =?utf-8?Q?2Af13epG7JE5NSkIAxLZL+M=3D?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7fab9d82-0ce1-45fd-433b-08d9f0cd3928
-X-MS-Exchange-CrossTenant-AuthSource: BY5PR12MB4130.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Feb 2022 21:50:46.9256
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: pbcMlCqV1Pa0dmV/cTuSc9xwfQ7+6rXCvfAbTB/dfYYBZY4pCsRbPBNiZd85QeCJh6mpvOK2PI11z1FDxodXOw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN8PR12MB3620
+References: <20220105181230.GC398655@magnolia> <CAPcyv4iTaneUgdBPnqcvLr4Y_nAxQp31ZdUNkSRPsQ=9CpMWHg@mail.gmail.com>
+ <20220105185626.GE398655@magnolia> <CAPcyv4h3M9f1-C5e9kHTfPaRYR_zN4gzQWgR+ZyhNmG_SL-u+A@mail.gmail.com>
+ <20220105224727.GG398655@magnolia> <CAPcyv4iZ88FPeZC1rt_bNdWHDZ5oh7ua31NuET2-oZ1UcMrH2Q@mail.gmail.com>
+ <20220105235407.GN656707@magnolia> <CAPcyv4gUmpDnGkhd+WdhcJVMP07u+CT8NXRjzcOTp5KF-5Yo5g@mail.gmail.com>
+ <YekhXENAEYJJNy7e@infradead.org> <76f5ed28-2df9-890e-0674-3ef2f18e2c2f@fujitsu.com>
+ <20220121022200.GG13563@magnolia>
+In-Reply-To: <20220121022200.GG13563@magnolia>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Tue, 15 Feb 2022 13:51:10 -0800
+Message-ID: <CAPcyv4gXp66bc6dkN+F8pUdxwCj=wmkOebjmPdALyKKZSOczoQ@mail.gmail.com>
+Subject: Re: [PATCH v9 02/10] dax: Introduce holder for dax_device
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Shiyang Ruan <ruansy.fnst@fujitsu.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Linux NVDIMM <nvdimm@lists.linux.dev>,
+        Linux MM <linux-mm@kvack.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        david <david@fromorbit.com>, Jane Chu <jane.chu@oracle.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2/6/22 20:26, Alistair Popple wrote:
-> migrate_vma_setup() checks that a valid vma is passed so that the page
-> tables can be walked to find the pfns associated with a given address
-> range. However in some cases the pfns are already known, such as when
-> migrating device coherent pages during pin_user_pages() meaning a valid
-> vma isn't required.
-> 
-> Signed-off-by: Alistair Popple <apopple@nvidia.com>
-> Acked-by: Felix Kuehling <Felix.Kuehling@amd.com>
-> ---
-> 
-> Changes for v2:
-> 
->   - Added Felix's Acked-by
-> 
->   mm/migrate.c | 34 +++++++++++++++++-----------------
->   1 file changed, 17 insertions(+), 17 deletions(-)
-> 
+On Thu, Jan 20, 2022 at 6:22 PM Darrick J. Wong <djwong@kernel.org> wrote:
+>
+> On Fri, Jan 21, 2022 at 09:26:52AM +0800, Shiyang Ruan wrote:
+> >
+> >
+> > =E5=9C=A8 2022/1/20 16:46, Christoph Hellwig =E5=86=99=E9=81=93:
+> > > On Wed, Jan 05, 2022 at 04:12:04PM -0800, Dan Williams wrote:
+> > > > We ended up with explicit callbacks after hch balked at a notifier
+> > > > call-chain, but I think we're back to that now. The partition mista=
+ke
+> > > > might be unfixable, but at least bdev_dax_pgoff() is dead. Notifier
+> > > > call chains have their own locking so, Ruan, this still does not ne=
+ed
+> > > > to touch dax_read_lock().
+> > >
+> > > I think we have a few options here:
+> > >
+> > >   (1) don't allow error notifications on partitions.  And error retur=
+n from
+> > >       the holder registration with proper error handling in the file
+> > >       system would give us that
+>
+> Hm, so that means XFS can only support dax+pmem when there aren't
+> partitions in use?  Ew.
+>
+> > >   (2) extent the holder mechanism to cover a rangeo
+>
+> I don't think I was around for the part where "hch balked at a notifier
+> call chain" -- what were the objections there, specifically?  I would
+> hope that pmem problems would be infrequent enough that the locking
+> contention (or rcu expiration) wouldn't be an issue...?
+>
+> > >   (3) bite the bullet and create a new stacked dax_device for each
+> > >       partition
+> > >
+> > > I think (1) is the best option for now.  If people really do need
+> > > partitions we'll have to go for (3)
+> >
+> > Yes, I agree.  I'm doing it the first way right now.
+> >
+> > I think that since we can use namespace to divide a big NVDIMM into mul=
+tiple
+> > pmems, partition on a pmem seems not so meaningful.
+>
+> I'll try to find out what will happen if pmem suddenly stops supporting
+> partitions...
 
-Hi Alistair,
+Finally catching up with this thread...
 
-Another late-breaking review question, below. :)
+Given that XFS already has the policy of disabling DAX rather than
+failing the mount in some cases, I think it is workable for XFS to
+fail a DAX mount if reflink is enabled on a partition. This should not
+regress anyone's current setup since the FS will not even mount with
+dax+reflink today. As to the specific concern about registering
+failure handlers for other purposes I expect that can be done by
+registering failure notification handlers on block devices, not dax
+devices.
 
-> diff --git a/mm/migrate.c b/mm/migrate.c
-> index a9aed12..0d6570d 100644
-> --- a/mm/migrate.c
-> +++ b/mm/migrate.c
-> @@ -2602,24 +2602,24 @@ int migrate_vma_setup(struct migrate_vma *args)
->   
->   	args->start &= PAGE_MASK;
->   	args->end &= PAGE_MASK;
-> -	if (!args->vma || is_vm_hugetlb_page(args->vma) ||
-> -	    (args->vma->vm_flags & VM_SPECIAL) || vma_is_dax(args->vma))
-> -		return -EINVAL;
-> -	if (nr_pages <= 0)
-> -		return -EINVAL;
-
-Was the above check left out intentionally? If so, then it needs a
-commit description note. And maybe even a separate patch, because it
-changes the behavior.
-
-If you do want to change the behavior:
-
-* The kerneldoc comment above this function supports such a change: it
-requires returning 0 for the case of zero pages requested. So your
-change would bring the comments into alignment with the code.
-
-* I don't think memset deals properly with a zero length input arg, so
-it's probably better to return 0, before that point.
-
-
-thanks,
--- 
-John Hubbard
-NVIDIA
-
-> -	if (args->start < args->vma->vm_start ||
-> -	    args->start >= args->vma->vm_end)
-> -		return -EINVAL;
-> -	if (args->end <= args->vma->vm_start || args->end > args->vma->vm_end)
-> -		return -EINVAL;
->   	if (!args->src || !args->dst)
->   		return -EINVAL;
-> -
-> -	memset(args->src, 0, sizeof(*args->src) * nr_pages);
-> -	args->cpages = 0;
-> -	args->npages = 0;
-> -
-> -	migrate_vma_collect(args);
-> +	if (args->vma) {
-> +		if (is_vm_hugetlb_page(args->vma) ||
-> +			(args->vma->vm_flags & VM_SPECIAL) || vma_is_dax(args->vma))
-> +			return -EINVAL;
-> +		if (args->start < args->vma->vm_start ||
-> +			args->start >= args->vma->vm_end)
-> +			return -EINVAL;
-> +		if (args->end <= args->vma->vm_start || args->end > args->vma->vm_end)
-> +			return -EINVAL;
-> +
-> +		memset(args->src, 0, sizeof(*args->src) * nr_pages);
-> +		args->cpages = 0;
-> +		args->npages = 0;
-> +
-> +		migrate_vma_collect(args);
-> +	}
->   
->   	if (args->cpages)
->   		migrate_vma_unmap(args);
-> @@ -2804,7 +2804,7 @@ void migrate_vma_pages(struct migrate_vma *migrate)
->   			continue;
->   		}
->   
-> -		if (!page) {
-> +		if (!page && migrate->vma) {
->   			if (!(migrate->src[i] & MIGRATE_PFN_MIGRATE))
->   				continue;
->   			if (!notified) {
-
+So it's not that pmem will suddenly stop supporting partitions, dax
+will simply never gain support for reflink in the presence of
+partitions.
