@@ -2,119 +2,134 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04994C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Feb 2022 17:15:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8F52C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Feb 2022 17:29:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233991AbiBPRPX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Feb 2022 12:15:23 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:34416 "EHLO
+        id S233583AbiBPR3L (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Feb 2022 12:29:11 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:51422 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233811AbiBPRPW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Feb 2022 12:15:22 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D5012A7970
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Feb 2022 09:15:10 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 38D3561B95
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Feb 2022 17:15:10 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B9BBC340E8;
-        Wed, 16 Feb 2022 17:15:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1645031709;
-        bh=i2ETiOCZ8LKbGyNfK7OBZuVH5C22FDSHK5/NwhgsH64=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=pcTKbastPsJbzCVxqyYX6UWNsInTOwIlwbYZ7RjvifR6zYQy2RHT6xSnJVl9qp5Jj
-         yRs6zQgcZds48plxkcOzl2fdvkR4e+v0e5bcnAJD3+6OVlfTD0YfFYwp7CQSWHauEF
-         YZrIaEagHCHQLI4+MBX1GoGuQb83Pz5j51QU12TE+LNh7VoWk9YQD6GH31XTqK07+5
-         NGCZuAD4UwkFLJaosHiBuXZ0YyYXFDy4BsKof+fsuMJ5UZp6N4n+HO24Pqv4z8gm74
-         Xmym/MI4zalDi5l000REH+M2kGaSY74Oe9RnwufM5qLtP8u2yyOub3rtyGHQuu+RmX
-         j543ZfolA8KMw==
-Date:   Wed, 16 Feb 2022 09:15:08 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Eric Sandeen <sandeen@redhat.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs_admin: open with O_EXCL if we will be writing
-Message-ID: <20220216171508.GL8313@magnolia>
-References: <15b6f52f-a90b-7056-8b2e-e2d4dde1ef5d@redhat.com>
-MIME-Version: 1.0
+        with ESMTP id S229934AbiBPR3L (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Feb 2022 12:29:11 -0500
+Received: from NAM12-BN8-obe.outbound.protection.outlook.com (mail-bn8nam12on2077.outbound.protection.outlook.com [40.107.237.77])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BAC5420206E;
+        Wed, 16 Feb 2022 09:28:58 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=cBO2WQCWbkJtVKlRQjdkf2BTFdZA4DTzvYuqtswX8rWd6z5sWs1oxtxEJ/gxVAK6qUedzu0PX11OJtr/sLb+Y6hp0eX89MWaT33VAZ0POl3029APH0TyEnT7S0zio5G6AlvandigvpDcweFrtZykSlOPQ4N1nfpwnjqoBGnuDJc6HoCs8iXZ3cN4NqjOht4lNppzi4VKV6DeNS6LjtDuAGgyhhFlDo4mnHGtOGS1Oskzf062bZ5NYZWPw1FMkRmvWMpw2LBgpWD5JmUZY688n5e4rt/ajL0//rpWPOuwWM7LYFC/V/CgmaOGw1+35oxmvYRASE0ZFpB8vLqg7TgUwQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=dkINBRzvNA5YZJEcNdw+3rZpbtAjo5x9RkoLuBjWvkU=;
+ b=f8dZnp4tNN1KqZBF5h4QIG6OSrwtWTZ4TFgBwlRPxxu+H2+57ekxOC0dObmLRiINT6KrLPhut0PXiM9JKyJs/U67UT4hKwnvdRnCMxhHVF22c99REC+1bfIQq5rcJtconG8aaUnevmm8ujAJuLh0KzuBvYGeINphNQ5hOWwNL0/F1gSJDyDs57SXLgXnNHoqtXdvv1phx5i5ZooHWFzEgfoHfeUVLKb15eP3WJVCJc9V/zkCwQ9dl2gt9vqUGi9nwrghT2CarcPkdjIFbCQwq6CjFSt5ndbEcfT70a2fgjblDKMn0bCrpfcg/ucY/vpJHHNA7V7KbSQoFjt79JbNxg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=dkINBRzvNA5YZJEcNdw+3rZpbtAjo5x9RkoLuBjWvkU=;
+ b=XIHd0W6qrZ1XzV4dd6Glsann61l9SOkfEIleCsWk0sLygBX3WWMuV9NY2844VqpRTDGlRdZG0LwUbg1qGVqD75jzY9K4ZOz9pPiD39AlbMzh0LJIvOkZ2apbfm5CsmqFEevPqrHMsAZlkkOrSWLZsG7axdxhW/kLDtMOa7i8aunkk9WX405YbdtL95lwRl9iPXl4cIN8FQPZbKW7V+7VjXsUueWpqIh5Jhl6X6T1KyPHY8ba9UsXVIk1NQ0oE8teHgcP+TXkgHbPe54fG1OdlyKf8E3EMzkxAUav0P5QJUQneYIkvUdJ5quXU/nncRf1MCCQJv/8afJLPDjpjyi3bg==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from MN2PR12MB4192.namprd12.prod.outlook.com (2603:10b6:208:1d5::15)
+ by CY4PR12MB1670.namprd12.prod.outlook.com (2603:10b6:910:4::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4975.17; Wed, 16 Feb
+ 2022 17:28:56 +0000
+Received: from MN2PR12MB4192.namprd12.prod.outlook.com
+ ([fe80::e8f4:9793:da37:1bd3]) by MN2PR12MB4192.namprd12.prod.outlook.com
+ ([fe80::e8f4:9793:da37:1bd3%5]) with mapi id 15.20.4995.016; Wed, 16 Feb 2022
+ 17:28:56 +0000
+Date:   Wed, 16 Feb 2022 13:28:53 -0400
+From:   Jason Gunthorpe <jgg@nvidia.com>
+To:     Felix Kuehling <felix.kuehling@amd.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        David Hildenbrand <david@redhat.com>,
+        Alex Sierra <alex.sierra@amd.com>, akpm@linux-foundation.org,
+        linux-mm@kvack.org, rcampbell@nvidia.com,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        jglisse@redhat.com, apopple@nvidia.com, willy@infradead.org
+Subject: Re: [PATCH v6 01/10] mm: add zone device coherent type memory support
+Message-ID: <20220216172853.GI4160@nvidia.com>
+References: <a24d82d9-daf9-fa1a-8b9d-5db7fe10655e@amd.com>
+ <078dd84e-ebbc-5c89-0407-f5ecc2ca3ebf@redhat.com>
+ <20220215144524.GR4160@nvidia.com>
+ <20220215183209.GA24409@lst.de>
+ <20220215194107.GZ4160@nvidia.com>
+ <ac3d5157-9251-f9fb-a973-f268ce58b4e0@amd.com>
+ <20220215214749.GA4160@nvidia.com>
+ <002ad572-4d32-7133-06f3-aa680c297be2@amd.com>
+ <20220216020100.GC4160@nvidia.com>
+ <4362b4ec-ceb5-a712-bd03-24b749d1d004@amd.com>
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <15b6f52f-a90b-7056-8b2e-e2d4dde1ef5d@redhat.com>
+In-Reply-To: <4362b4ec-ceb5-a712-bd03-24b749d1d004@amd.com>
+X-ClientProxiedBy: BL0PR0102CA0056.prod.exchangelabs.com
+ (2603:10b6:208:25::33) To MN2PR12MB4192.namprd12.prod.outlook.com
+ (2603:10b6:208:1d5::15)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: b1019c52-9f90-4c00-c4f9-08d9f171cf09
+X-MS-TrafficTypeDiagnostic: CY4PR12MB1670:EE_
+X-Microsoft-Antispam-PRVS: <CY4PR12MB1670A73492BE5946D65735FAC2359@CY4PR12MB1670.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:5236;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: TGggzd5aFAorn1Zuq5aAmHzCj7pSO07y9+XLYBBRcU2doi0Ryj0PiFFy9ZDQ6cHYx5Npn2DPgIDzALZMRObPKcLNHXfeSIBJBFqPIgYkQWoFsa26bA72c3nze3khd2gGnfRIDeGn4AFhv38xLNBdJBAdbWX4FKwSGuLLmCcKliiAUYkuBXXPprbHjX0VMHEM8OMoQEr4LDeNJ/HIJFvQsbSaW/r66Aqno9FBB6Z+6rCAOaTPWrfjxk9qyowAPNZY+YtPsLL8Ikh5PfQDeV7hNcazN+WPz3TRm8IBdfxLvFxsOAaLWCmz54jgH8ZsGX89u+tdgqp0eZpVJzRh/1NYb71Ad89CylfA264cNj0dBOsonFgN3qKLaig/WnwWTtBm7m7F1wIsQ2A6xNW50v/tizPRQG/qZxsueOnpHFJ/B+V83PZFG6EO+geK/BS/qJu7lDdUoKuhIJ6AjCL6mNw91OdNPID+nDwgDa1+J64FKrpn+cJcG2o7MdO7sSIRgmCrAhiabHX7/yAujNnrrZQ+S7SC1JqhRp66Eztd5bh9CDa3Xx4pQBxAVympubvfPce6m3skqFgt8WcV/sKOYlItaxpHHWPX+phT/oaOhuI0HfzgshB/q0sjeMbdeX7K9mZtrIkPKaAq4ye2zgQIvCJsuQ==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR12MB4192.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(6512007)(2906002)(6666004)(86362001)(7416002)(8936002)(8676002)(6506007)(5660300002)(4744005)(54906003)(508600001)(66556008)(6916009)(6486002)(36756003)(66476007)(26005)(4326008)(66946007)(316002)(2616005)(38100700002)(33656002)(186003)(1076003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?O382RcBCuWhSp8w1I3jkqh06rRD6GJviAiEunQtwDY+EH0Im6BX/4K4WYRL0?=
+ =?us-ascii?Q?WzQCQYnQgLMByiAUhAPrgUv/l13zM9J1KNWMA/T+OkS8mwthYlXEYjFx+h89?=
+ =?us-ascii?Q?KqLcoVsXJCTBVa5hC+IUWdsYOMyhd6mgzf4L7qIlFj8HVzg91ZX2tBlSfGcu?=
+ =?us-ascii?Q?zOfIB7ks1C5ObgjuzSfTb5joUy5ni6dUZ4OVQ/RmqGwR1LF0vUG0W17YdWdC?=
+ =?us-ascii?Q?USmtcF1nPsyqHfRN1o1Afb0PA5ISzINs3YaV8pVL2B2s7cCUCP0j2tAWoIW4?=
+ =?us-ascii?Q?BZjRxILIOePG5uorhrj9b1ggb+NAubI2PwjzRjuMMpKIrKMBfwKu41hIExXd?=
+ =?us-ascii?Q?bH5xvKpKmcN33NaavmzXChEpjX6xgCYhUGELA3NyTt20FPlJPglFFqPTn2yJ?=
+ =?us-ascii?Q?tgOjXWmZfSOSPOEwggo5NB8JgVG75NcnJIfslOiemf/m8i3GyAlUyx4TpyZ5?=
+ =?us-ascii?Q?OVrweBrheb7a9hn6bFCxtOSiivlx3bY6NUMmKgPuknh0j20fiHRBdyG2DkZ0?=
+ =?us-ascii?Q?v/5Ia5HjghUZyFcGF4EKaN1eNkyYZ1Y3HEMd8QaE66BJIhilv9sGz/u5dRhA?=
+ =?us-ascii?Q?GQ3XscdayvZP4gBcFN7ez7ngMfgkhXw2x7sUPbQ3LuJJokG+Kwd7djBdelt8?=
+ =?us-ascii?Q?DNbsHUFouEoGEidDWi62xs2/h6E1Se7DGbFgLciGz4zx6lAOh8QYOoGbvtUI?=
+ =?us-ascii?Q?gR0jHTUaAzRG+4niN4MaaXbOVaTxwrYDutDOK73CPZKhc4O/JhQUj4ImG8g0?=
+ =?us-ascii?Q?xianY7At04Ko/QnXtj5v7dcqCQIpNhWBDW3lXQbUuKxuwcBhblUgyF7RsnbZ?=
+ =?us-ascii?Q?j2tNDAj7YpUfeKkcHCu/+mKUCIukR+uzoFC8kc1N6050bBpkAXs/AtRZNpn7?=
+ =?us-ascii?Q?65iav2SKIP8Viph750tl85pItWHJUI7iBej3EHzLfqxR5ndkEUogTURzGXyC?=
+ =?us-ascii?Q?t5JAP2QjFUtOmB7EJcwZgJ/2GHuWEpZ8DMq8tQE/afjRt8C5Cq84pMk4piJQ?=
+ =?us-ascii?Q?COZbq6jQKHOk3SsXnmta/1pCtHJoUAv4mmhHEzE/Y8Edp+CpL6rPvjbkTo1C?=
+ =?us-ascii?Q?OA1pQRj4mH7w8vja6z9tyCav5yeb/TPdhafZXSvDtBehjL2if8/frMWE/aEJ?=
+ =?us-ascii?Q?HtC8jlq2WbuutpqmEPfmHXlsfmCsYeQNol2rDByHAeFvy3EpCoWz0VHBNhRI?=
+ =?us-ascii?Q?6Qwi1kfUCtS6mx6IoAybk/qv4WtjNyvOmecif9sV6EHUaW/Cvpl224QIqUHv?=
+ =?us-ascii?Q?to6KNv0zJEQaZDUrfjPWlZ0T+bxFwuwcvhdEASUTImrA+a5LFpiifkk01TTq?=
+ =?us-ascii?Q?Ezu7qWE+uGTS//L4iASPF3twtKEPgAvXfEAm4OXrKVOJD8hvG7iS5lBkB5tP?=
+ =?us-ascii?Q?hfpDcMJAzpo0geqQbsW5IAes2Z+ddFUfCTkPgcYX+tP3TqgNIhTbYQbxQAS8?=
+ =?us-ascii?Q?Gz56LQO3Pu5m+//awO1C79DsIdOWVTH4aQEA2kcjBQPZd11/WNSm6W/pQZUm?=
+ =?us-ascii?Q?FIYQBvoQvEx/wlkhZjAtD368eoWgInMB/oZMw2b/KROqLYFqVD3iCZfigRuI?=
+ =?us-ascii?Q?ZdxSPMrpC0ipH1ZbTrM=3D?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: b1019c52-9f90-4c00-c4f9-08d9f171cf09
+X-MS-Exchange-CrossTenant-AuthSource: MN2PR12MB4192.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Feb 2022 17:28:56.0549
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: NCgI6GOPx6kIefV7maTsQOaCZdUZr4v35UTCoiIsMyXy8tX+fvv8tadNArGqS/6V
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR12MB1670
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 15, 2022 at 11:35:23PM -0600, Eric Sandeen wrote:
-> So, coreOS has a systemd unit which changes the UUID of a filesystem
-> on first boot, and they're currently racing that with mount.
-> 
-> This leads to corruption and mount failures.
-> 
-> If xfs_db is running as xfs_admin in a mode that can write to the
-> device, open that device exclusively.
-> 
-> This might still lead to mount failures if xfs_admin wins the open race,
-> but at least it won't corrupt the filesystem along the way.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
-> (this opens plain files O_EXCL is well, which is undefined without O_CREAT.
-> I'm not sure if we need to worry about that.)
-> 
-> diff --git a/db/init.c b/db/init.c
-> index eec65d0..f43be6e 100644
-> --- a/db/init.c
-> +++ b/db/init.c
-> @@ -97,6 +97,14 @@ init(
->  	else
->  		x.dname = fsdevice;
->  
-> +	/*
-> +	 * If running as xfs_admin in RW mode, prevent concurrent
-> +	 * opens of a block device.
-> + 	 */
-> +	if (!strcmp(progname, "xfs_admin") &&
+On Wed, Feb 16, 2022 at 11:56:51AM -0500, Felix Kuehling wrote:
 
-Hmm, it seems like sort of a hack to key this off the program name.
-Though Eric mentioned on IRC that Dave or someone expressed a preference
-for xfs_db not being gated on O_EXCL when a user is trying to run the
-program for *debugging*.
+> In the case of DEVICE_COHERENT memory, the pfns correspond to real physical
+> memory addresses. I don't think they have those PFN_DEV|PFN_MAP bits set.
 
-Perhaps "if (strcmp(progname, "xfs_db") &&" here?  Just in case we add
-more shell script wrappers for xfs_db in the future?  I prefer loosening
-restrictions as new functionality asks for them, rather than risk
-breaking scripts when we discover holes in new code later on.
+So do DAX pages. The PTE flag does several things. As this would be
+the first time ZONE_DEVICE pages do not set devmap it needs a full
+audit.
 
-> +	    (x.isreadonly != LIBXFS_ISREADONLY))
+eg the gup_fast bug Alistair pointed at needs fixing at least.
 
-At first I wondered about the -i case where ISREADONLY and ISINACTIVE
-are set, but then I realized that -i ("do it even if mounted") isn't
-used by xfs_admin and expressly forbids the use of O_EXCL.  So I guess
-the equivalence test and the assignment below are ok, since x.isreadonly
-is zero at the start of xfs_db's init() function, and we'll never have
-to deal with other flags combinations that might've snuck in from
-somewhere else.  Right?
-
-> +		x.isreadonly = LIBXFS_EXCLUSIVELY;
-
-But this is still a mess.  Apparently libxfs_init_t.isdirect is for
-LIBXFS_DIRECT, but libxfs_init_t.isreadonly is for other four flags?
-But it doesn't really make much difference to libxfs_init() because it
-combines both fields?
-
-Can we turn this into a single flags field?  Not necessarily here, but
-as a general cleanup?
-
-> +
->  	x.bcache_flags = CACHE_MISCOMPARE_PURGE;
-
-...and maybe teach libxlog not to have this global variable?
-
---D
-
->  	if (!libxfs_init(&x)) {
->  		fputs(_("\nfatal error -- couldn't initialize XFS library\n"),
-> 
+Jason
