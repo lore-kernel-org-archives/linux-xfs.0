@@ -2,135 +2,105 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBBCFC433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Feb 2022 08:31:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D1FBC433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Feb 2022 09:47:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229509AbiBPIbk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Feb 2022 03:31:40 -0500
-Received: from gmail-smtp-in.l.google.com ([23.128.96.19]:39764 "EHLO
+        id S231837AbiBPJrr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Feb 2022 04:47:47 -0500
+Received: from gmail-smtp-in.l.google.com ([23.128.96.19]:55902 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229506AbiBPIbj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Feb 2022 03:31:39 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 527792A4A05
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Feb 2022 00:31:15 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1645000267;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=dMr7qMjbySmB3FKzyMaIvMtNvTUPHIVGxBY8lAVP/YQ=;
-        b=Css8yhuH6bPauD/GhKsMyoxVUh41GM4/Y8tVvtOFz+I+u0YYoP60x5eo1u5ww4ivRD215p
-        qEHbB0OX7bf8OG5AiF8k2HzPITogxfAoyXFSGw+WRXy+RdSuB8PUkg+d9BVtdrHYhTgHdC
-        4PycnhRUGkvGnpPgnp5kFJqd/v6QjOw=
-Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
- [209.85.128.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-163-neP1ZWk8N6aSaWkd1_8K1A-1; Wed, 16 Feb 2022 03:31:06 -0500
-X-MC-Unique: neP1ZWk8N6aSaWkd1_8K1A-1
-Received: by mail-wm1-f72.google.com with SMTP id n26-20020a05600c3b9a00b0037c524e6d97so209464wms.9
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Feb 2022 00:31:05 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent
-         :content-language:to:cc:references:from:organization:subject
-         :in-reply-to:content-transfer-encoding;
-        bh=dMr7qMjbySmB3FKzyMaIvMtNvTUPHIVGxBY8lAVP/YQ=;
-        b=B+3jswqDtQbxa8MR/q5lhK3ipT5j9GcybaEkUnArvn7CxG3vhGrnvB9YEnrpljWvN7
-         pp4mLImrJggVkj2TW4Y3iVYV3Ciz0KGFXz2h11MeTRq46tm00FBzi6mitOV6cfFrmAdl
-         6RTJq523BXTOuU76PD74can4H7LrCkU8srkzI/ElNG+SBHuUMTT0WSJgNALCqf9z5tFA
-         zSwapoTp3nFvuu9LcFvl5GV0tvN2GmtmtvzYEAUoCin934KhFj5u6+7owmBPOaS3IP/o
-         AnaPIiY7JyiX1Y0/9IEAYPSrclEJdImYOOEPtGPh2drWkORc398cMXSKLf6CWM3j93Kn
-         nhyg==
-X-Gm-Message-State: AOAM531VaimiYhLzcAFbCSxyGJMOpn7pUig+C5HQT9B1DJmGk6GmpkeG
-        AcpYZxaOsKdgFPI4cP/XF8aYa/msV8k0zfmkfnqliloGYFiW4B9DNJFyiJwsMGD3hrFcGALvsuw
-        Pwb/9wfrJFoLvG4t2jTDS
-X-Received: by 2002:a5d:6a03:0:b0:1e4:4055:7e35 with SMTP id m3-20020a5d6a03000000b001e440557e35mr1391872wru.495.1645000264839;
-        Wed, 16 Feb 2022 00:31:04 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJzw1zMgqtvBG1B1Fs/z6twGtOuFvl241Tm8Z6QUAB1L998Nv+s1BS79V+EKfFEFJWSxdpuYnw==
-X-Received: by 2002:a5d:6a03:0:b0:1e4:4055:7e35 with SMTP id m3-20020a5d6a03000000b001e440557e35mr1391848wru.495.1645000264537;
-        Wed, 16 Feb 2022 00:31:04 -0800 (PST)
-Received: from ?IPV6:2003:cb:c70b:600:4ff7:25c:5aad:2711? (p200300cbc70b06004ff7025c5aad2711.dip0.t-ipconnect.de. [2003:cb:c70b:600:4ff7:25c:5aad:2711])
-        by smtp.gmail.com with ESMTPSA id y17sm17260030wma.5.2022.02.16.00.31.03
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 16 Feb 2022 00:31:04 -0800 (PST)
-Message-ID: <98d8bbc5-ffc2-8966-fdc1-a844874e7ae8@redhat.com>
-Date:   Wed, 16 Feb 2022 09:31:03 +0100
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.4.0
-Content-Language: en-US
-To:     Alistair Popple <apopple@nvidia.com>,
-        Jason Gunthorpe <jgg@nvidia.com>
-Cc:     Felix Kuehling <felix.kuehling@amd.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Alex Sierra <alex.sierra@amd.com>, akpm@linux-foundation.org,
-        linux-mm@kvack.org, rcampbell@nvidia.com,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        jglisse@redhat.com, willy@infradead.org
-References: <beb38138-2266-1ff8-cc82-8fe914bed862@redhat.com>
- <877d9vd10u.fsf@nvdebian.thelocal> <20220216020357.GD4160@nvidia.com>
- <6156515.kVgMqSaHHm@nvdebian>
-From:   David Hildenbrand <david@redhat.com>
-Organization: Red Hat
-Subject: Re: [PATCH v6 01/10] mm: add zone device coherent type memory support
-In-Reply-To: <6156515.kVgMqSaHHm@nvdebian>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+        with ESMTP id S232421AbiBPJrp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Feb 2022 04:47:45 -0500
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C8A4B1AB4;
+        Wed, 16 Feb 2022 01:47:31 -0800 (PST)
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 21G7dLF0010047;
+        Wed, 16 Feb 2022 09:47:21 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=content-type :
+ mime-version : subject : from : in-reply-to : date : cc :
+ content-transfer-encoding : message-id : references : to; s=pp1;
+ bh=kR8m9EWj7jcTe1gTm3selny9gj9T7VDVcZkY1fHgLCo=;
+ b=nknqioiASeUrescXPiiEbkM8I9L8PEfcIQbhnHo1sIdWzN7wegl46xVoGLyf8akkaTyS
+ pzN7FjSSZggo06TNVrYfFW+1MjWfLlSxRnawUftFz3o3MgSX3XXPGFyyvSmuLAm+uuiX
+ 9rZt4qcfDjWKITDvhheXZT5k23xxIJzRKGuhRGMgFv6rBRcc3aOy8Ymv49vEBpccV5zT
+ tn8E1SkGSF1bmSmlVl9ztJg79hkxa5zsYZPbuG3tpvOwFlnWiXxKF+2lHXgCzQy0gg8C
+ jjMz+N2Jv/4IbY114pQpBAJfxhJKOoeb/2Q2saSDXwbzBxyJzpWxSkFc+Vn3dO/L69cS gA== 
+Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 3e8thydk11-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 16 Feb 2022 09:47:20 +0000
+Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
+        by ppma03ams.nl.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 21G9ggx9025424;
+        Wed, 16 Feb 2022 09:47:19 GMT
+Received: from b06cxnps3074.portsmouth.uk.ibm.com (d06relay09.portsmouth.uk.ibm.com [9.149.109.194])
+        by ppma03ams.nl.ibm.com with ESMTP id 3e64ha6re4-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 16 Feb 2022 09:47:19 +0000
+Received: from d06av21.portsmouth.uk.ibm.com (d06av21.portsmouth.uk.ibm.com [9.149.105.232])
+        by b06cxnps3074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 21G9lGgm45154628
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 16 Feb 2022 09:47:16 GMT
+Received: from d06av21.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id C9CED5205F;
+        Wed, 16 Feb 2022 09:47:16 +0000 (GMT)
+Received: from smtpclient.apple (unknown [9.79.185.42])
+        by d06av21.portsmouth.uk.ibm.com (Postfix) with ESMTP id 9BF015204F;
+        Wed, 16 Feb 2022 09:47:15 +0000 (GMT)
+Content-Type: text/plain;
+        charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 14.0 \(3654.120.0.1.13\))
+Subject: Re: [next-20220215] WARNING at fs/iomap/buffered-io.c:75 with
+ xfstests
+From:   Sachin Sant <sachinp@linux.ibm.com>
+In-Reply-To: <20220216183919.13b32e1e@canb.auug.org.au>
+Date:   Wed, 16 Feb 2022 15:17:14 +0530
+Cc:     linux-xfs@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        riteshh@linux.ibm.com, linux-next@vger.kernel.org
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <CF1506AF-E82B-412B-BD7B-A9F0B9971CB3@linux.ibm.com>
+References: <5AD0BD6A-2C31-450A-924E-A581CD454073@linux.ibm.com>
+ <20220216183919.13b32e1e@canb.auug.org.au>
+To:     Stephen Rothwell <sfr@canb.auug.org.au>
+X-Mailer: Apple Mail (2.3654.120.0.1.13)
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: NjCmUYVGpq2UjuWV_UIa2hlJvaZMqo1d
+X-Proofpoint-ORIG-GUID: NjCmUYVGpq2UjuWV_UIa2hlJvaZMqo1d
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.816,Hydra:6.0.425,FMLib:17.11.62.513
+ definitions=2022-02-16_04,2022-02-14_04,2021-12-02_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 phishscore=0
+ clxscore=1011 mlxscore=0 suspectscore=0 lowpriorityscore=0 mlxlogscore=842
+ impostorscore=0 spamscore=0 adultscore=0 priorityscore=1501 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2201110000
+ definitions=main-2202160054
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 16.02.22 03:36, Alistair Popple wrote:
-> On Wednesday, 16 February 2022 1:03:57 PM AEDT Jason Gunthorpe wrote:
->> On Wed, Feb 16, 2022 at 12:23:44PM +1100, Alistair Popple wrote:
->>
->>> Device private and device coherent pages are not marked with pte_devmap and they
->>> are backed by a struct page. The only way of inserting them is via migrate_vma.
->>> The refcount is decremented in zap_pte_range() on munmap() with special handling
->>> for device private pages. Looking at it again though I wonder if there is any
->>> special treatment required in zap_pte_range() for device coherent pages given
->>> they count as present pages.
->>
->> This is what I guessed, but we shouldn't be able to just drop
->> pte_devmap on these pages without any other work?? Granted it does
->> very little already..
-> 
-> Yes, I agree we need to check this more closely. For device private pages
-> not having pte_devmap is fine, because they are non-present swap entries so
-> they always get special handling in the swap entry paths but the same isn't
-> true for coherent device pages.
 
-I'm curious, how does the refcount of a PageAnon() DEVICE_COHERENT page
-look like when mapped? I'd assume it's also (currently) still offset by
-one, meaning, if it's mapped into a single page table it's always at
-least 2.
+>> While running xfstests on IBM Power10 logical partition (LPAR) booted
+>> with 5.17.0-rc4-next-20220215 following warning was seen:
+>>=20
+>> The warning is seen when test tries to unmount the file system. This =
+problem is seen
+>> while running generic/475 sub test. Have attached captured messages =
+during the test
+>> run of generic/475.
+>>=20
+>> xfstest is a recent add to upstream regression bucket. I don=E2=80=99t =
+have any previous data
+>> to attempt a git bisect.=20
+>=20
+> If you have time, could you test v5.17-rc4-2-gd567f5db412e (the commit
+> in Linus' tree that next-20220215 is based on) and if that OK, then a
+> bisect from that to 5.17.0-rc4-next-20220215 may be helpful.
 
-Just a note that if my assumption is correct and if we'd have such a
-page mapped R/O, do_wp_page() would always have to copy it
-unconditionally and would not be able to reuse it on write faults.
-(while I'm working on improving the reuse logic, I think there is also
-work in progress to avoid this additional reference on some ZONE_DEVICE
-stuff -- I'd assume that would include DEVICE_COHERENT ?)
+Unfortunately I cannot recreate the problem consistently. I tried same =
+test run with both
+mainline as well as linux-next20220215. In both attempts I wasn=E2=80=99t =
+able to recreate it.
 
-> 
->> I thought at least gup_fast needed to be touched or did this get
->> handled by scanning the page list after the fact?
-> 
-> Right, for gup I think the only special handling required is to prevent
-> pinning. I had assumed that check_and_migrate_movable_pages() would still get
-> called for gup_fast but unless I've missed something I don't think it does.
-> That means gup_fast could still pin movable and coherent pages. Technically
-> that is ok for coherent pages, but it's undesirable.
 
-We really should have the same pinning rules for GUP vs. GUP-fast.
-is_pinnable_page() should be the right place for such checks (similarly
-as indicated in my reply to the migration series).
-
--- 
-Thanks,
-
-David / dhildenb
-
+Thanks
+-Sachin=
