@@ -2,140 +2,249 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6A55C4332F
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Feb 2022 02:36:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC6F1C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Feb 2022 02:55:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343785AbiBPCgz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 15 Feb 2022 21:36:55 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:41846 "EHLO
+        id S235356AbiBPCzb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 15 Feb 2022 21:55:31 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:53112 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233597AbiBPCgy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Feb 2022 21:36:54 -0500
-Received: from NAM04-DM6-obe.outbound.protection.outlook.com (mail-dm6nam08on2070.outbound.protection.outlook.com [40.107.102.70])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12724FCA;
-        Tue, 15 Feb 2022 18:36:43 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=AOq+DMp+km0e8HC2+YOpSh5Gwp4M8cd1XIaXl0eMzd685Hsf37HUX9Ftcy0eh1dj8vybK/8scw5odBI8P+Vvj18G6FrHCWjBfXCS3Xph9SOq5wdqs/HKcUiOO0X5/xGivCU78J0xJoSwv45K/uoy6iSGUd1XGxEz1U355va7aXkLxmtw59FUQXipkRrBDrtu751ACxKN82eBXH8fM+ApB/4/7y12/0WaPyHh/I4hEu5v9Yt8oYZmejX8+aplxY1ZKlQVjrJX8eoyMdUxgPBOa9TZr2/u05G4QSA3MPdMoD0Vf5Y0MD7LKbPX9+pezHf6H4fOBmIKqZg/6mjecMinJQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=W6u4KSkTaAdZ3Y1/l8px2yzaaALzD3TCdjvTMQCo2v4=;
- b=Du6fNXqD+8bNhVh4c4+cIp+kHee4jgxmCrjhH4gi2YYlzIuDc4FTpf9w9Y4n+7lWfzU/keUjEwEArJ3e4TjKSJlFxlwzn/RjC0m+E4rGxZz/hxzo3xZblPeyXlA0oLU6iJqr3zKgOvAX+SVI+1Gkl5Hr/p3qvw5pvfol2F6o1rQOra+rXcZatJaeMMMzMBu+1rs3j1w/zB2ARfyq+qfjOrQBAgj36TCHv0gVOSNDyX1fuU4o30BomCX3qqpUs3fvmSM6iTFkbBwK4/j0YZ+I0OVhAQ8jPZhRxe/0Tig8ayBwAQrdxc3EC8OHL4N83L3/C+lk9S4QoLHCDXK1DyETFw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 12.22.5.238) smtp.rcpttodomain=lists.freedesktop.org
- smtp.mailfrom=nvidia.com; dmarc=pass (p=reject sp=reject pct=100) action=none
- header.from=nvidia.com; dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=W6u4KSkTaAdZ3Y1/l8px2yzaaALzD3TCdjvTMQCo2v4=;
- b=tgfdDFWWlxNy5M/lNqnnti0A+xqc4dBOgi3czZyG1cSrQPsbrNka3/ktzS6Obtma9gjQzrVWQf/C15gJVzzyd2v8TOVcoo3Hn+voKYABKN/5pPzOz+m7RHaXKJ5BizU4RPoJonmhB8ZQ5VoF5dz0oykJKDJaag4EN2hopO6FqqOM8PLWltWIxa/OMIxMQOOcL/9QziAhfy+rwrfwZwSUmfGDgSDkByMKoGrlHHQrnVIwn7yen0IL7QEdiO3N4Gbvcp9Z2VugXAi/YQWijRpKlKUd+KQWunHs070aZk6WMl6NhGgiLD5qsisRF+o7XkeELqFunl08kt0kl6mEqr0X/Q==
-Received: from BN6PR1201CA0021.namprd12.prod.outlook.com
- (2603:10b6:405:4c::31) by SA0PR12MB4559.namprd12.prod.outlook.com
- (2603:10b6:806:9e::23) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4975.17; Wed, 16 Feb
- 2022 02:36:41 +0000
-Received: from BN8NAM11FT036.eop-nam11.prod.protection.outlook.com
- (2603:10b6:405:4c:cafe::d) by BN6PR1201CA0021.outlook.office365.com
- (2603:10b6:405:4c::31) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4995.15 via Frontend
- Transport; Wed, 16 Feb 2022 02:36:40 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 12.22.5.238)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 12.22.5.238 as permitted sender) receiver=protection.outlook.com;
- client-ip=12.22.5.238; helo=mail.nvidia.com;
-Received: from mail.nvidia.com (12.22.5.238) by
- BN8NAM11FT036.mail.protection.outlook.com (10.13.177.168) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.20.4975.11 via Frontend Transport; Wed, 16 Feb 2022 02:36:40 +0000
-Received: from rnnvmail201.nvidia.com (10.129.68.8) by DRHQMAIL105.nvidia.com
- (10.27.9.14) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Wed, 16 Feb
- 2022 02:36:40 +0000
-Received: from nvdebian.localnet (10.126.230.35) by rnnvmail201.nvidia.com
- (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.9; Tue, 15 Feb 2022
- 18:36:35 -0800
-From:   Alistair Popple <apopple@nvidia.com>
-To:     Jason Gunthorpe <jgg@nvidia.com>
-CC:     Felix Kuehling <felix.kuehling@amd.com>,
-        Christoph Hellwig <hch@lst.de>,
-        David Hildenbrand <david@redhat.com>,
-        Alex Sierra <alex.sierra@amd.com>, <akpm@linux-foundation.org>,
-        <linux-mm@kvack.org>, <rcampbell@nvidia.com>,
-        <linux-ext4@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        <amd-gfx@lists.freedesktop.org>, <dri-devel@lists.freedesktop.org>,
-        <jglisse@redhat.com>, <willy@infradead.org>
-Subject: Re: [PATCH v6 01/10] mm: add zone device coherent type memory support
-Date:   Wed, 16 Feb 2022 13:36:30 +1100
-Message-ID: <6156515.kVgMqSaHHm@nvdebian>
-In-Reply-To: <20220216020357.GD4160@nvidia.com>
-References: <beb38138-2266-1ff8-cc82-8fe914bed862@redhat.com> <877d9vd10u.fsf@nvdebian.thelocal> <20220216020357.GD4160@nvidia.com>
+        with ESMTP id S1343937AbiBPCz3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Feb 2022 21:55:29 -0500
+Received: from heian.cn.fujitsu.com (mail.cn.fujitsu.com [183.91.158.132])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 11700FE424;
+        Tue, 15 Feb 2022 18:55:11 -0800 (PST)
+IronPort-Data: =?us-ascii?q?A9a23=3A9m4MRKosA63eGElO6wDbt+atkHxeBmJzZBIvgKr?=
+ =?us-ascii?q?LsJaIsI5as4F+vmscWjrQM/+Mamr2fNl3YYnj/UJQ7cSByYA2Tgs9+SozQiMRo?=
+ =?us-ascii?q?6IpJ/zDcB6oYHn6wu4v7a5fx5xHLIGGdajYd1eEzvuWGuWn/SkUOZ2gHOKmUra?=
+ =?us-ascii?q?eYnkpHGeIdQ964f5ds79g6mJXqYjha++9kYuaT/z3YDdJ6RYtWo4nw/7rRCdUg?=
+ =?us-ascii?q?RjHkGhwUmrSyhx8lAS2e3E9VPrzLEwqRpfyatE88uWSH44vwFwll1418SvBCvv?=
+ =?us-ascii?q?9+lr6WkYMBLDPPwmSkWcQUK+n6vRAjnVqlP9la7xHMgEK49mKt4kZJNFlr4G5T?=
+ =?us-ascii?q?xw4eKPKg/g1XQRaEj1lIOtN/7qvzX2X6JbKkh2fLie0qxlpJARsVWECwc57CH9?=
+ =?us-ascii?q?P+dQWMjcIaQqJhv7wy7W+IsFsjcQLLc/lJooTt3hsizbDAp4OTZnFBaeM+t5c2?=
+ =?us-ascii?q?DY5g9tmHPDCas5fYj1qBDzMYQJIPFg/C58kmuqswH7lfFVwrFOTuLpy5m37zxJ?=
+ =?us-ascii?q?427urN8DaEvSMW8lUm0OwomPd43+/BhAcKczZxTebmlquj+nC2yj7RaoVDrSz8?=
+ =?us-ascii?q?vMsi1qWrkQXCRsLRR61uvW0lEO6c8xQJlZS+Sc0q6U2skuxQbHVWxy+vW7BvRM?=
+ =?us-ascii?q?GXddUO/M15RvLyafO5QudQG8eQVZpbN0gqd9zVTIx/kGGksmvBjF1trCRD3WH+?=
+ =?us-ascii?q?d+pQZmaUcQOBTZaI3ZaEk1euJ++yLzfRynnFr5LeJNZRPWvcd0o/w23kQ=3D?=
+ =?us-ascii?q?=3D?=
+IronPort-HdrOrdr: =?us-ascii?q?A9a23=3A4u2axqqY7pE+olBxeO5FQmsaV5oXeYIsimQD?=
+ =?us-ascii?q?101hICG9E/bo8/xG+c536faaslgssQ4b8+xoVJPgfZq+z+8R3WByB8bAYOCOgg?=
+ =?us-ascii?q?LBQ72KhrGSoQEIdRefysdtkY9kc4VbTOb7FEVGi6/BizWQIpINx8am/cmT6dvj?=
+ =?us-ascii?q?8w=3D=3D?=
+X-IronPort-AV: E=Sophos;i="5.88,333,1635177600"; 
+   d="scan'208";a="121581540"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 16 Feb 2022 10:55:10 +0800
+Received: from G08CNEXMBPEKD06.g08.fujitsu.local (unknown [10.167.33.206])
+        by cn.fujitsu.com (Postfix) with ESMTP id 6E8234D140C6;
+        Wed, 16 Feb 2022 10:55:07 +0800 (CST)
+Received: from G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.85) by
+ G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.23; Wed, 16 Feb 2022 10:55:06 +0800
+Received: from [192.168.22.28] (10.167.225.141) by
+ G08CNEXCHPEKD09.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
+ id 15.0.1497.23 via Frontend Transport; Wed, 16 Feb 2022 10:55:06 +0800
+Message-ID: <ff0f0d8c-a4a3-6dbf-8358-67c3bb11c2d6@fujitsu.com>
+Date:   Wed, 16 Feb 2022 10:55:06 +0800
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
-X-Originating-IP: [10.126.230.35]
-X-ClientProxiedBy: rnnvmail201.nvidia.com (10.129.68.8) To
- rnnvmail201.nvidia.com (10.129.68.8)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: ba4567b3-3ec2-4bce-f67a-08d9f0f529bb
-X-MS-TrafficTypeDiagnostic: SA0PR12MB4559:EE_
-X-Microsoft-Antispam-PRVS: <SA0PR12MB4559DE6B57412D6F45E1243BDF359@SA0PR12MB4559.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:10000;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: zsrOwL6/Kf3cPfkQvFEIIPX5y/jZRCIMCj36Vr2HhNJpmB0Cezj7+ECiJ5DSu3OQedMMcp787FeP3t23OKux5BTWCtIyuD3Ef28tTVFtJCby+h3qiEhTucR2pMWd8iLBjxfE4wZYTV4coDfZ0iCi11yl3zkdkL1/+qw+OGBYQUiMo7/SHj8JaLBt5EGYXx6E7WjAlK8hvZoHrHog3gYlE1g6+tNSfjq4IXKwNsuGmC7mDncAuM6s5whOhrlEWEJTUq6HrUEyUcj1J5Jra1UPOjzc0rx+A9X7wUydwJa+CoYXYdM13ic/Dmn/zdUWtPfCRnEhrHoIHFWFdWtOQ8cv/RHahJIAHyBALv4wwnGAAZr5abdww51T66Chfif8Voq354Gxm80hiw3mRQhOikEZ2/iNBS6Gt0W0PlA+t1z4INZrk4W2VJxm/dK+MboJeX81ezEFlgmZe4+aSeB5jqoRcZpXjEP13SRNYsBsrqIu1rHNjbcMHuPBOe9cFNRuTgPoyKxwLRs8+Gb21P2TDPGLe0c24DOQQKN9QGdgYwzA+w4j9jQpsqWtFxd5+AiZ3mi2oNvrYrcy6/c8P6FTjUESC7iAhiDRLw2+E7X/GKT89RDt9w5x+Ark1e1zpqOXt+WTmn1Qha6Rru8NJyJ5u2zzObNeyD23RjwvVglbdNoZj2jnqfJLfvh+QBAyoXrNJ198JtS/HYfJ7475xbAfpL/bNg==
-X-Forefront-Antispam-Report: CIP:12.22.5.238;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:mail.nvidia.com;PTR:InfoNoRecords;CAT:NONE;SFS:(13230001)(4636009)(36840700001)(40470700004)(46966006)(356005)(70206006)(54906003)(82310400004)(426003)(6636002)(16526019)(9686003)(26005)(8936002)(316002)(40460700003)(47076005)(336012)(186003)(8676002)(81166007)(70586007)(6862004)(9576002)(83380400001)(86362001)(4326008)(2906002)(5660300002)(33716001)(508600001)(6666004)(36860700001)(7416002)(36900700001);DIR:OUT;SFP:1101;
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Feb 2022 02:36:40.5755
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: ba4567b3-3ec2-4bce-f67a-08d9f0f529bb
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[12.22.5.238];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT036.eop-nam11.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA0PR12MB4559
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.0
+Subject: Re: [PATCH v10 9/9] fsdax: set a CoW flag when associate reflink
+ mappings
+To:     Dan Williams <dan.j.williams@intel.com>
+CC:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Linux NVDIMM <nvdimm@lists.linux.dev>,
+        Linux MM <linux-mm@kvack.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        "Darrick J. Wong" <djwong@kernel.org>, david <david@fromorbit.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Jane Chu <jane.chu@oracle.com>
+References: <20220127124058.1172422-1-ruansy.fnst@fujitsu.com>
+ <20220127124058.1172422-10-ruansy.fnst@fujitsu.com>
+ <CAPcyv4iTO55BX+_v2yHRBjSppPgT23JsHg-Oagb6RwHMj-W+Ug@mail.gmail.com>
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+In-Reply-To: <CAPcyv4iTO55BX+_v2yHRBjSppPgT23JsHg-Oagb6RwHMj-W+Ug@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-yoursite-MailScanner-ID: 6E8234D140C6.AF700
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wednesday, 16 February 2022 1:03:57 PM AEDT Jason Gunthorpe wrote:
-> On Wed, Feb 16, 2022 at 12:23:44PM +1100, Alistair Popple wrote:
+
+
+在 2022/2/16 10:09, Dan Williams 写道:
+> On Thu, Jan 27, 2022 at 4:41 AM Shiyang Ruan <ruansy.fnst@fujitsu.com> wrote:
+>>
+>> Introduce a PAGE_MAPPING_DAX_COW flag to support association with CoW file
+>> mappings.  In this case, the dax-RMAP already takes the responsibility
+>> to look up for shared files by given dax page.  The page->mapping is no
+>> longer to used for rmap but for marking that this dax page is shared.
+>> And to make sure disassociation works fine, we use page->index as
+>> refcount, and clear page->mapping to the initial state when page->index
+>> is decreased to 0.
+>>
+>> With the help of this new flag, it is able to distinguish normal case
+>> and CoW case, and keep the warning in normal case.
+>>
+>> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+>> ---
+>>   fs/dax.c                   | 65 ++++++++++++++++++++++++++++++++------
+>>   include/linux/page-flags.h |  6 ++++
+>>   2 files changed, 62 insertions(+), 9 deletions(-)
+>>
+>> diff --git a/fs/dax.c b/fs/dax.c
+>> index 250794a5b789..88879c579c1f 100644
+>> --- a/fs/dax.c
+>> +++ b/fs/dax.c
+>> @@ -334,13 +334,46 @@ static unsigned long dax_end_pfn(void *entry)
+>>          for (pfn = dax_to_pfn(entry); \
+>>                          pfn < dax_end_pfn(entry); pfn++)
+>>
+>> +static inline void dax_mapping_set_cow_flag(struct address_space *mapping)
+>> +{
+>> +       mapping = (struct address_space *)PAGE_MAPPING_DAX_COW;
+>> +}
+>> +
+>> +static inline bool dax_mapping_is_cow(struct address_space *mapping)
+>> +{
+>> +       return (unsigned long)mapping == PAGE_MAPPING_DAX_COW;
+>> +}
+>> +
+>>   /*
+>> - * TODO: for reflink+dax we need a way to associate a single page with
+>> - * multiple address_space instances at different linear_page_index()
+>> - * offsets.
+>> + * Set or Update the page->mapping with FS_DAX_MAPPING_COW flag.
+>> + * Return true if it is an Update.
+>> + */
+>> +static inline bool dax_mapping_set_cow(struct page *page)
+>> +{
+>> +       if (page->mapping) {
+>> +               /* flag already set */
+>> +               if (dax_mapping_is_cow(page->mapping))
+>> +                       return false;
+>> +
+>> +               /*
+>> +                * This page has been mapped even before it is shared, just
+>> +                * need to set this FS_DAX_MAPPING_COW flag.
+>> +                */
+>> +               dax_mapping_set_cow_flag(page->mapping);
+>> +               return true;
+>> +       }
+>> +       /* Newly associate CoW mapping */
+>> +       dax_mapping_set_cow_flag(page->mapping);
+>> +       return false;
+>> +}
+>> +
+>> +/*
+>> + * When it is called in dax_insert_entry(), the cow flag will indicate that
+>> + * whether this entry is shared by multiple files.  If so, set the page->mapping
+>> + * to be FS_DAX_MAPPING_COW, and use page->index as refcount.
+>>    */
+>>   static void dax_associate_entry(void *entry, struct address_space *mapping,
+>> -               struct vm_area_struct *vma, unsigned long address)
+>> +               struct vm_area_struct *vma, unsigned long address, bool cow)
+>>   {
+>>          unsigned long size = dax_entry_size(entry), pfn, index;
+>>          int i = 0;
+>> @@ -352,9 +385,17 @@ static void dax_associate_entry(void *entry, struct address_space *mapping,
+>>          for_each_mapped_pfn(entry, pfn) {
+>>                  struct page *page = pfn_to_page(pfn);
+>>
+>> -               WARN_ON_ONCE(page->mapping);
+>> -               page->mapping = mapping;
+>> -               page->index = index + i++;
+>> +               if (cow) {
+>> +                       if (dax_mapping_set_cow(page)) {
+>> +                               /* Was normal, now updated to CoW */
+>> +                               page->index = 2;
+>> +                       } else
+>> +                               page->index++;
+>> +               } else {
+>> +                       WARN_ON_ONCE(page->mapping);
+>> +                       page->mapping = mapping;
+>> +                       page->index = index + i++;
+>> +               }
+>>          }
+>>   }
+>>
+>> @@ -370,7 +411,12 @@ static void dax_disassociate_entry(void *entry, struct address_space *mapping,
+>>                  struct page *page = pfn_to_page(pfn);
+>>
+>>                  WARN_ON_ONCE(trunc && page_ref_count(page) > 1);
+>> -               WARN_ON_ONCE(page->mapping && page->mapping != mapping);
+>> +               if (!dax_mapping_is_cow(page->mapping)) {
+>> +                       /* keep the CoW flag if this page is still shared */
+>> +                       if (page->index-- > 0)
+>> +                               continue;
+>> +               } else
+>> +                       WARN_ON_ONCE(page->mapping && page->mapping != mapping);
+>>                  page->mapping = NULL;
+>>                  page->index = 0;
+>>          }
+>> @@ -810,7 +856,8 @@ static void *dax_insert_entry(struct xa_state *xas,
+>>                  void *old;
+>>
+>>                  dax_disassociate_entry(entry, mapping, false);
+>> -               dax_associate_entry(new_entry, mapping, vmf->vma, vmf->address);
+>> +               dax_associate_entry(new_entry, mapping, vmf->vma, vmf->address,
+>> +                               false);
 > 
-> > Device private and device coherent pages are not marked with pte_devmap and they
-> > are backed by a struct page. The only way of inserting them is via migrate_vma.
-> > The refcount is decremented in zap_pte_range() on munmap() with special handling
-> > for device private pages. Looking at it again though I wonder if there is any
-> > special treatment required in zap_pte_range() for device coherent pages given
-> > they count as present pages.
+> Where is the caller that passes 'true'? Also when that caller arrives
+> introduce a separate dax_associate_cow_entry() as that's easier to
+> read than dax_associate_entry(..., true) in case someone does not
+> remember what that boolean flag means.
+
+This flag is supposed to be used when CoW support is introduced.  When 
+it is a CoW operation, which is decided by iomap & srcmap's flag, this 
+flag will be set true.
+
+I think I should describe it in detail in the commit message.
+
 > 
-> This is what I guessed, but we shouldn't be able to just drop
-> pte_devmap on these pages without any other work?? Granted it does
-> very little already..
+> However, it's not clear to me that this approach is a good idea given
+> that the filesystem is the source of truth for how many address_spaces
+> this page mapping might be duplicated. What about a iomap_page_ops for
+> fsdax to ask the filesystem when it is ok to clear the mapping
+> association for a page?
 
-Yes, I agree we need to check this more closely. For device private pages
-not having pte_devmap is fine, because they are non-present swap entries so
-they always get special handling in the swap entry paths but the same isn't
-true for coherent device pages.
+I'll think how to implement it in this way.
 
-> I thought at least gup_fast needed to be touched or did this get
-> handled by scanning the page list after the fact?
 
-Right, for gup I think the only special handling required is to prevent
-pinning. I had assumed that check_and_migrate_movable_pages() would still get
-called for gup_fast but unless I've missed something I don't think it does.
-That means gup_fast could still pin movable and coherent pages. Technically
-that is ok for coherent pages, but it's undesirable.
+--
+Thanks,
+Ruan.
 
- - Alistair
-
-> Jason
 > 
-
-
+>>                  /*
+>>                   * Only swap our new entry into the page cache if the current
+>>                   * entry is a zero page or an empty entry.  If a normal PTE or
+>> diff --git a/include/linux/page-flags.h b/include/linux/page-flags.h
+>> index 1c3b6e5c8bfd..6370d279795a 100644
+>> --- a/include/linux/page-flags.h
+>> +++ b/include/linux/page-flags.h
+>> @@ -572,6 +572,12 @@ __PAGEFLAG(Reported, reported, PF_NO_COMPOUND)
+>>   #define PAGE_MAPPING_KSM       (PAGE_MAPPING_ANON | PAGE_MAPPING_MOVABLE)
+>>   #define PAGE_MAPPING_FLAGS     (PAGE_MAPPING_ANON | PAGE_MAPPING_MOVABLE)
+>>
+>> +/*
+>> + * Different with flags above, this flag is used only for fsdax mode.  It
+>> + * indicates that this page->mapping is now under reflink case.
+>> + */
+>> +#define PAGE_MAPPING_DAX_COW   0x1
+>> +
+>>   static __always_inline int PageMappingFlags(struct page *page)
+>>   {
+>>          return ((unsigned long)page->mapping & PAGE_MAPPING_FLAGS) != 0;
+>> --
+>> 2.34.1
+>>
+>>
+>>
 
 
