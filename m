@@ -2,278 +2,146 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7083C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Feb 2022 03:09:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB99FC433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Feb 2022 03:59:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344078AbiBPDJ1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 15 Feb 2022 22:09:27 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:39670 "EHLO
+        id S232055AbiBPEAI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 15 Feb 2022 23:00:08 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:33656 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238409AbiBPDJZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Feb 2022 22:09:25 -0500
-Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E36499A9A8
-        for <linux-xfs@vger.kernel.org>; Tue, 15 Feb 2022 19:09:12 -0800 (PST)
-Received: by mail-pj1-x102a.google.com with SMTP id r64-20020a17090a43c600b001b8854e682eso1208525pjg.0
-        for <linux-xfs@vger.kernel.org>; Tue, 15 Feb 2022 19:09:12 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20210112.gappssmtp.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=k7acGQ+aoEgDpTruS21+hEnSk9frdpzFJnwztD0cF2g=;
-        b=hNE5p/Jo5xvwKQMU14u/yTNHol24XinfEBPd0Xnkxx8ckko4WXoFz8bpeB/FIumjPj
-         vCYmfonysPB1PYbjzSO8rGqKsshAXZl+chAocxjI/LgI+ScIrFr1zVkj9o6FHx2QLqcU
-         MZpp/uX3NB6q3uSF+zs0RUw8FgNRIDAvUDfBMb9xplYZ+DMkaUzDvPqkJ3DmUp4yxBpx
-         YHBa7WvldPJF321ZSnrRJGCNkeQFvKbacsQoZdjjc/nCNkR0TsapOD+/7ExjAEbdD3Ow
-         1+uNI99qHAm2pHuLdJuysPYCQcc2to7OVPDLrq02dFyiziZ54eFI/aIf8H3oJH307IW/
-         QIIA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=k7acGQ+aoEgDpTruS21+hEnSk9frdpzFJnwztD0cF2g=;
-        b=MrzYTposwnFTj/BSFI85YpXlTLQ8+xdolCIPSIUxx4kZOZANCg8xpanJKJHFUfGixf
-         1JAfFbo3t6meWWdRrfk6FsRSf0SQLgVUE+A//u0HmFqoxeBVg1W6TwMZKdnoEzT7vAlI
-         cKzcSVm8s7AWZ+qSDYYu7/5tQ0iirtIL8LD3ntmOuG2YF24iHP87uKTquHnKGhcxpeh1
-         vL0NLyIi9OdAzdoP5kxIGgAyOHIKhGe/pe4dsIMBQQrnLXEueZa/ysUjqVZe6T5exFxE
-         osA/yCizf1eZCaEUZvws/th6had5HKkt1pSzDS7lbhJeUuKQrdc9t7kCrsAKbyKCtE6G
-         Ap5A==
-X-Gm-Message-State: AOAM5319jZKyELNMafho2wsdl0R5wR1QaNcWQJZc0fOu3Uf+p8nzDbgR
-        LGumrO+klh22d5LZz/2NOfHKwH97xNUnrFWB2jye4B6zKhw=
-X-Google-Smtp-Source: ABdhPJxAp+sSnyv767mDuMDX/8tJW2jOYmiVjf2IgQHEv02eYqaN3IQQZHeRuIl68bmli9Ok0+bdx7i1Re2Il51WFsw=
-X-Received: by 2002:a17:90a:f28d:b0:1b9:975f:1a9f with SMTP id
- fs13-20020a17090af28d00b001b9975f1a9fmr591684pjb.220.1644980952458; Tue, 15
- Feb 2022 19:09:12 -0800 (PST)
+        with ESMTP id S231233AbiBPEAH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Feb 2022 23:00:07 -0500
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1AEA3FFF86
+        for <linux-xfs@vger.kernel.org>; Tue, 15 Feb 2022 19:59:56 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-85-251.pa.vic.optusnet.com.au [49.186.85.251])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 8BEC052F376;
+        Wed, 16 Feb 2022 14:59:53 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nKBTr-00CZKs-Rj; Wed, 16 Feb 2022 14:59:51 +1100
+Date:   Wed, 16 Feb 2022 14:59:51 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH V5 13/16] xfs: Conditionally upgrade existing inodes to
+ use 64-bit extent counters
+Message-ID: <20220216035951.GA59715@dread.disaster.area>
+References: <20220201200125.GN8313@magnolia>
+ <87v8xs9dpr.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <20220207171106.GB8313@magnolia>
+ <87bkzda9jd.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <20220214170728.GI8313@magnolia>
+ <87v8xglj59.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <20220215093301.GZ59715@dread.disaster.area>
+ <87sfskl5z6.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <87pmnol17j.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <20220216011633.GH8338@magnolia>
 MIME-Version: 1.0
-References: <20220127124058.1172422-1-ruansy.fnst@fujitsu.com>
- <20220127124058.1172422-10-ruansy.fnst@fujitsu.com> <CAPcyv4iTO55BX+_v2yHRBjSppPgT23JsHg-Oagb6RwHMj-W+Ug@mail.gmail.com>
- <ff0f0d8c-a4a3-6dbf-8358-67c3bb11c2d6@fujitsu.com>
-In-Reply-To: <ff0f0d8c-a4a3-6dbf-8358-67c3bb11c2d6@fujitsu.com>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Tue, 15 Feb 2022 19:09:01 -0800
-Message-ID: <CAPcyv4h7zVYu7K3j2JNEd7jTHJRvVDwqhhRCBbq6ru4+QGY9Hg@mail.gmail.com>
-Subject: Re: [PATCH v10 9/9] fsdax: set a CoW flag when associate reflink mappings
-To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Linux NVDIMM <nvdimm@lists.linux.dev>,
-        Linux MM <linux-mm@kvack.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        "Darrick J. Wong" <djwong@kernel.org>, david <david@fromorbit.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Jane Chu <jane.chu@oracle.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220216011633.GH8338@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=620c76ba
+        a=2CV4XU02g+4RbH+qqUnf+g==:117 a=2CV4XU02g+4RbH+qqUnf+g==:17
+        a=kj9zAlcOel0A:10 a=oGFeUVbbRNcA:10 a=7-415B0cAAAA:8
+        a=-DdQdLrBbeanG6uwnCQA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 15, 2022 at 6:55 PM Shiyang Ruan <ruansy.fnst@fujitsu.com> wrot=
-e:
->
->
->
-> =E5=9C=A8 2022/2/16 10:09, Dan Williams =E5=86=99=E9=81=93:
-> > On Thu, Jan 27, 2022 at 4:41 AM Shiyang Ruan <ruansy.fnst@fujitsu.com> =
-wrote:
-> >>
-> >> Introduce a PAGE_MAPPING_DAX_COW flag to support association with CoW =
-file
-> >> mappings.  In this case, the dax-RMAP already takes the responsibility
-> >> to look up for shared files by given dax page.  The page->mapping is n=
-o
-> >> longer to used for rmap but for marking that this dax page is shared.
-> >> And to make sure disassociation works fine, we use page->index as
-> >> refcount, and clear page->mapping to the initial state when page->inde=
-x
-> >> is decreased to 0.
-> >>
-> >> With the help of this new flag, it is able to distinguish normal case
-> >> and CoW case, and keep the warning in normal case.
-> >>
-> >> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
-> >> ---
-> >>   fs/dax.c                   | 65 ++++++++++++++++++++++++++++++++----=
---
-> >>   include/linux/page-flags.h |  6 ++++
-> >>   2 files changed, 62 insertions(+), 9 deletions(-)
-> >>
-> >> diff --git a/fs/dax.c b/fs/dax.c
-> >> index 250794a5b789..88879c579c1f 100644
-> >> --- a/fs/dax.c
-> >> +++ b/fs/dax.c
-> >> @@ -334,13 +334,46 @@ static unsigned long dax_end_pfn(void *entry)
-> >>          for (pfn =3D dax_to_pfn(entry); \
-> >>                          pfn < dax_end_pfn(entry); pfn++)
-> >>
-> >> +static inline void dax_mapping_set_cow_flag(struct address_space *map=
-ping)
-> >> +{
-> >> +       mapping =3D (struct address_space *)PAGE_MAPPING_DAX_COW;
-> >> +}
-> >> +
-> >> +static inline bool dax_mapping_is_cow(struct address_space *mapping)
-> >> +{
-> >> +       return (unsigned long)mapping =3D=3D PAGE_MAPPING_DAX_COW;
-> >> +}
-> >> +
-> >>   /*
-> >> - * TODO: for reflink+dax we need a way to associate a single page wit=
-h
-> >> - * multiple address_space instances at different linear_page_index()
-> >> - * offsets.
-> >> + * Set or Update the page->mapping with FS_DAX_MAPPING_COW flag.
-> >> + * Return true if it is an Update.
-> >> + */
-> >> +static inline bool dax_mapping_set_cow(struct page *page)
-> >> +{
-> >> +       if (page->mapping) {
-> >> +               /* flag already set */
-> >> +               if (dax_mapping_is_cow(page->mapping))
-> >> +                       return false;
-> >> +
-> >> +               /*
-> >> +                * This page has been mapped even before it is shared,=
- just
-> >> +                * need to set this FS_DAX_MAPPING_COW flag.
-> >> +                */
-> >> +               dax_mapping_set_cow_flag(page->mapping);
-> >> +               return true;
-> >> +       }
-> >> +       /* Newly associate CoW mapping */
-> >> +       dax_mapping_set_cow_flag(page->mapping);
-> >> +       return false;
-> >> +}
-> >> +
-> >> +/*
-> >> + * When it is called in dax_insert_entry(), the cow flag will indicat=
-e that
-> >> + * whether this entry is shared by multiple files.  If so, set the pa=
-ge->mapping
-> >> + * to be FS_DAX_MAPPING_COW, and use page->index as refcount.
-> >>    */
-> >>   static void dax_associate_entry(void *entry, struct address_space *m=
-apping,
-> >> -               struct vm_area_struct *vma, unsigned long address)
-> >> +               struct vm_area_struct *vma, unsigned long address, boo=
-l cow)
-> >>   {
-> >>          unsigned long size =3D dax_entry_size(entry), pfn, index;
-> >>          int i =3D 0;
-> >> @@ -352,9 +385,17 @@ static void dax_associate_entry(void *entry, stru=
-ct address_space *mapping,
-> >>          for_each_mapped_pfn(entry, pfn) {
-> >>                  struct page *page =3D pfn_to_page(pfn);
-> >>
-> >> -               WARN_ON_ONCE(page->mapping);
-> >> -               page->mapping =3D mapping;
-> >> -               page->index =3D index + i++;
-> >> +               if (cow) {
-> >> +                       if (dax_mapping_set_cow(page)) {
-> >> +                               /* Was normal, now updated to CoW */
-> >> +                               page->index =3D 2;
-> >> +                       } else
-> >> +                               page->index++;
-> >> +               } else {
-> >> +                       WARN_ON_ONCE(page->mapping);
-> >> +                       page->mapping =3D mapping;
-> >> +                       page->index =3D index + i++;
-> >> +               }
-> >>          }
-> >>   }
-> >>
-> >> @@ -370,7 +411,12 @@ static void dax_disassociate_entry(void *entry, s=
-truct address_space *mapping,
-> >>                  struct page *page =3D pfn_to_page(pfn);
-> >>
-> >>                  WARN_ON_ONCE(trunc && page_ref_count(page) > 1);
-> >> -               WARN_ON_ONCE(page->mapping && page->mapping !=3D mappi=
-ng);
-> >> +               if (!dax_mapping_is_cow(page->mapping)) {
-> >> +                       /* keep the CoW flag if this page is still sha=
-red */
-> >> +                       if (page->index-- > 0)
-> >> +                               continue;
-> >> +               } else
-> >> +                       WARN_ON_ONCE(page->mapping && page->mapping !=
-=3D mapping);
-> >>                  page->mapping =3D NULL;
-> >>                  page->index =3D 0;
-> >>          }
-> >> @@ -810,7 +856,8 @@ static void *dax_insert_entry(struct xa_state *xas=
-,
-> >>                  void *old;
-> >>
-> >>                  dax_disassociate_entry(entry, mapping, false);
-> >> -               dax_associate_entry(new_entry, mapping, vmf->vma, vmf-=
->address);
-> >> +               dax_associate_entry(new_entry, mapping, vmf->vma, vmf-=
->address,
-> >> +                               false);
-> >
-> > Where is the caller that passes 'true'? Also when that caller arrives
-> > introduce a separate dax_associate_cow_entry() as that's easier to
-> > read than dax_associate_entry(..., true) in case someone does not
-> > remember what that boolean flag means.
->
-> This flag is supposed to be used when CoW support is introduced.
+On Tue, Feb 15, 2022 at 05:16:33PM -0800, Darrick J. Wong wrote:
+> On Tue, Feb 15, 2022 at 06:46:16PM +0530, Chandan Babu R wrote:
+> > On 15 Feb 2022 at 17:03, Chandan Babu R wrote:
+> > > On 15 Feb 2022 at 15:03, Dave Chinner wrote:
+> > >> On Tue, Feb 15, 2022 at 12:18:50PM +0530, Chandan Babu R wrote:
+> > >>> On 14 Feb 2022 at 22:37, Darrick J. Wong wrote:
+> > >>> > On Fri, Feb 11, 2022 at 05:40:30PM +0530, Chandan Babu R wrote:
+> > >>> >> On 07 Feb 2022 at 22:41, Darrick J. Wong wrote:
+> > >>> >> > On Mon, Feb 07, 2022 at 10:25:19AM +0530, Chandan Babu R wrote:
+> > >>> >> >> On 02 Feb 2022 at 01:31, Darrick J. Wong wrote:
+> > >>> >> >> > On Fri, Jan 21, 2022 at 10:48:54AM +0530, Chandan Babu R wrote:
+> > >>> >> >> I went through all the call sites of xfs_iext_count_may_overflow() and I think
+> > >>> >> >> that your suggestion can be implemented.
+> > >>> >> 
+> > >>> >> Sorry, I missed/overlooked the usage of xfs_iext_count_may_overflow() in
+> > >>> >> xfs_symlink().
+> > >>> >> 
+> > >>> >> Just after invoking xfs_iext_count_may_overflow(), we execute the following
+> > >>> >> steps,
+> > >>> >> 
+> > >>> >> 1. Allocate inode chunk
+> > >>> >> 2. Initialize inode chunk.
+> > >>> >> 3. Insert record into inobt/finobt.
+> > >>> >> 4. Roll the transaction.
+> > >>> >> 5. Allocate ondisk inode.
+> > >>> >> 6. Add directory inode to transaction.
+> > >>> >> 7. Allocate blocks to store symbolic link path name.
+> > >>> >> 8. Log symlink's inode (data fork contains block mappings).
+> > >>> >> 9. Log data blocks containing symbolic link path name.
+> > >>> >> 10. Add name to directory and log directory's blocks.
+> > >>> >> 11. Log directory inode.
+> > >>> >> 12. Commit transaction.
+> > >>> >> 
+> > >>> >> xfs_trans_roll() invoked in step 4 would mean that we cannot move step 6 to
+> > >>> >> occur before step 1 since xfs_trans_roll would unlock the inode by executing
+> > >>> >> xfs_inode_item_committing().
+> > >>> >> 
+> > >>> >> xfs_create() has a similar flow.
+> > >>> >> 
+> > >>> >> Hence, I think we should retain the current logic of setting
+> > >>> >> XFS_DIFLAG2_NREXT64 just after reading the inode from the disk.
+> > >>> >
+> > >>> > File creation shouldn't ever run into problems with
+> > >>> > xfs_iext_count_may_overflow because (a) only symlinks get created with
+> > >>> > mapped blocks, and never more than two; and (b) we always set NREXT64
+> > >>> > (the inode flag) on new files if NREXT64 (the superblock feature bit) is
+> > >>> > enabled, so a newly created file will never require upgrading.
+> > >>> 
+> > >>> The inode representing the symbolic link being created cannot overflow its
+> > >>> data fork extent count field. However, the inode representing the directory
+> > >>> inside which the symbolic link entry is being created, might overflow its data
+> > >>> fork extent count field.
+> > >>
+> > >> I dont' think that can happen. A directory is limited in size to 3
+> > >> segments of 32GB each. In reality, only the data segment can ever
+> > >> reach 32GB as both the dabtree and free space segments are just
+> > >> compact indexes of the contents of the 32GB data segment.
+> > >>
+> > >> Hence a directory is never likely to reach more than about 40GB of
+> > >> blocks which is nowhere near large enough to overflowing a 32 bit
+> > >> extent count field.
+> > >
+> > > I think you are right.
+> > >
+> > > The maximum file size that can be represented by the data fork extent counter
+> > > in the worst case occurs when all extents are 1 block in size and each block
+> > > is 1k in size.
+> > >
+> > > With 1k byte sized blocks, a file can reach upto,
+> > > 1k * (2^31) = 2048 GB
+> > >
+> > > This is much larger than the asymptotic maximum size of a directory i.e.
+> > > 32GB * 3 = 96GB.
+> 
+> The downside of getting rid of the checks for directories is that we
+> won't be able to use the error injection knob that limits all forks to
+> 10 extents max to see what happens when that part of directory expansion
+> fails.  But if it makes it easier to handle nrext64, then that's
+> probably a good enough reason to forego that.
 
-Ok, so should this patch wait and be a part of that series? It's
-otherwise confusing to introduce a new capability in a patch set and
-not take advantage of it until a separate / later patch set.
+If you want error injection to do that, add explicit error injection
+to the directory code.
 
-> When
-> it is a CoW operation, which is decided by iomap & srcmap's flag, this
-> flag will be set true.
->
-> I think I should describe it in detail in the commit message.
+> > xfs_bmap_del_extent_real()
+> 
+> Not sure about this one, since it actually /can/ result in more extents.
 
-That could help, or move it to the COW support series.
+Yup, unlikely to ever trigger, but still necessary for correctness.
 
-> > However, it's not clear to me that this approach is a good idea given
-> > that the filesystem is the source of truth for how many address_spaces
-> > this page mapping might be duplicated. What about a iomap_page_ops for
-> > fsdax to ask the filesystem when it is ok to clear the mapping
-> > association for a page?
->
-> I'll think how to implement it in this way.
->
->
-> --
-> Thanks,
-> Ruan.
->
-> >
-> >>                  /*
-> >>                   * Only swap our new entry into the page cache if the=
- current
-> >>                   * entry is a zero page or an empty entry.  If a norm=
-al PTE or
-> >> diff --git a/include/linux/page-flags.h b/include/linux/page-flags.h
-> >> index 1c3b6e5c8bfd..6370d279795a 100644
-> >> --- a/include/linux/page-flags.h
-> >> +++ b/include/linux/page-flags.h
-> >> @@ -572,6 +572,12 @@ __PAGEFLAG(Reported, reported, PF_NO_COMPOUND)
-> >>   #define PAGE_MAPPING_KSM       (PAGE_MAPPING_ANON | PAGE_MAPPING_MOV=
-ABLE)
-> >>   #define PAGE_MAPPING_FLAGS     (PAGE_MAPPING_ANON | PAGE_MAPPING_MOV=
-ABLE)
-> >>
-> >> +/*
-> >> + * Different with flags above, this flag is used only for fsdax mode.=
-  It
-> >> + * indicates that this page->mapping is now under reflink case.
-> >> + */
-> >> +#define PAGE_MAPPING_DAX_COW   0x1
-> >> +
-> >>   static __always_inline int PageMappingFlags(struct page *page)
-> >>   {
-> >>          return ((unsigned long)page->mapping & PAGE_MAPPING_FLAGS) !=
-=3D 0;
-> >> --
-> >> 2.34.1
-> >>
-> >>
-> >>
->
->
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
