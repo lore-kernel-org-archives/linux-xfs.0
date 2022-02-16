@@ -2,169 +2,140 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE22EC433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Feb 2022 02:30:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6A55C4332F
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Feb 2022 02:36:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241563AbiBPCai (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 15 Feb 2022 21:30:38 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:37398 "EHLO
+        id S1343785AbiBPCgz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 15 Feb 2022 21:36:55 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:41846 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233821AbiBPCai (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Feb 2022 21:30:38 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE39FF5426
-        for <linux-xfs@vger.kernel.org>; Tue, 15 Feb 2022 18:30:26 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7A42961852
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Feb 2022 02:30:26 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D45B3C340EB;
-        Wed, 16 Feb 2022 02:30:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1644978625;
-        bh=HEmmx8iFsnbfmntW8Kl9vWzvlpWAvBVX00ejWk6YbF8=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=crEYPL6zIswcXOY/gB5S8VHoHQIucJ4nnHTre5OAj7HHjZHmbW7iGpScXyJMNpahj
-         cPOHoX6aVZbK1sF9I9dKGPLCMG5MP/PCIZtPKRQDfOhMdh8i6wjuepA2dBC0iE+/UC
-         u8uODTCQPMW88J3rwm8MpEhMHB7ViSOgIN+dKtMtEcCaZPwutsXSif4OkZwHtd1R5N
-         6OP21pYTEKVUFP4oCQVWHNh+96MmIUZefLOBq7kZHLx1+H6EWNTLsgaV46yoBhRxcJ
-         ZKmSLJ13kLtP/YBxBKiXybV5mgaCZqxiPHaAyjKitJi1eBn3czDo0w2qAFc3wvunKZ
-         QXsN+/+MqLCaA==
-Date:   Tue, 15 Feb 2022 18:30:25 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Allison Henderson <allison.henderson@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v27 13/15] xfs: Add helper function xfs_init_attr_trans
-Message-ID: <20220216023025.GK8313@magnolia>
-References: <20220216013713.1191082-1-allison.henderson@oracle.com>
- <20220216013713.1191082-14-allison.henderson@oracle.com>
+        with ESMTP id S233597AbiBPCgy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Feb 2022 21:36:54 -0500
+Received: from NAM04-DM6-obe.outbound.protection.outlook.com (mail-dm6nam08on2070.outbound.protection.outlook.com [40.107.102.70])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12724FCA;
+        Tue, 15 Feb 2022 18:36:43 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=AOq+DMp+km0e8HC2+YOpSh5Gwp4M8cd1XIaXl0eMzd685Hsf37HUX9Ftcy0eh1dj8vybK/8scw5odBI8P+Vvj18G6FrHCWjBfXCS3Xph9SOq5wdqs/HKcUiOO0X5/xGivCU78J0xJoSwv45K/uoy6iSGUd1XGxEz1U355va7aXkLxmtw59FUQXipkRrBDrtu751ACxKN82eBXH8fM+ApB/4/7y12/0WaPyHh/I4hEu5v9Yt8oYZmejX8+aplxY1ZKlQVjrJX8eoyMdUxgPBOa9TZr2/u05G4QSA3MPdMoD0Vf5Y0MD7LKbPX9+pezHf6H4fOBmIKqZg/6mjecMinJQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=W6u4KSkTaAdZ3Y1/l8px2yzaaALzD3TCdjvTMQCo2v4=;
+ b=Du6fNXqD+8bNhVh4c4+cIp+kHee4jgxmCrjhH4gi2YYlzIuDc4FTpf9w9Y4n+7lWfzU/keUjEwEArJ3e4TjKSJlFxlwzn/RjC0m+E4rGxZz/hxzo3xZblPeyXlA0oLU6iJqr3zKgOvAX+SVI+1Gkl5Hr/p3qvw5pvfol2F6o1rQOra+rXcZatJaeMMMzMBu+1rs3j1w/zB2ARfyq+qfjOrQBAgj36TCHv0gVOSNDyX1fuU4o30BomCX3qqpUs3fvmSM6iTFkbBwK4/j0YZ+I0OVhAQ8jPZhRxe/0Tig8ayBwAQrdxc3EC8OHL4N83L3/C+lk9S4QoLHCDXK1DyETFw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 12.22.5.238) smtp.rcpttodomain=lists.freedesktop.org
+ smtp.mailfrom=nvidia.com; dmarc=pass (p=reject sp=reject pct=100) action=none
+ header.from=nvidia.com; dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=W6u4KSkTaAdZ3Y1/l8px2yzaaALzD3TCdjvTMQCo2v4=;
+ b=tgfdDFWWlxNy5M/lNqnnti0A+xqc4dBOgi3czZyG1cSrQPsbrNka3/ktzS6Obtma9gjQzrVWQf/C15gJVzzyd2v8TOVcoo3Hn+voKYABKN/5pPzOz+m7RHaXKJ5BizU4RPoJonmhB8ZQ5VoF5dz0oykJKDJaag4EN2hopO6FqqOM8PLWltWIxa/OMIxMQOOcL/9QziAhfy+rwrfwZwSUmfGDgSDkByMKoGrlHHQrnVIwn7yen0IL7QEdiO3N4Gbvcp9Z2VugXAi/YQWijRpKlKUd+KQWunHs070aZk6WMl6NhGgiLD5qsisRF+o7XkeELqFunl08kt0kl6mEqr0X/Q==
+Received: from BN6PR1201CA0021.namprd12.prod.outlook.com
+ (2603:10b6:405:4c::31) by SA0PR12MB4559.namprd12.prod.outlook.com
+ (2603:10b6:806:9e::23) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4975.17; Wed, 16 Feb
+ 2022 02:36:41 +0000
+Received: from BN8NAM11FT036.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:405:4c:cafe::d) by BN6PR1201CA0021.outlook.office365.com
+ (2603:10b6:405:4c::31) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4995.15 via Frontend
+ Transport; Wed, 16 Feb 2022 02:36:40 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 12.22.5.238)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 12.22.5.238 as permitted sender) receiver=protection.outlook.com;
+ client-ip=12.22.5.238; helo=mail.nvidia.com;
+Received: from mail.nvidia.com (12.22.5.238) by
+ BN8NAM11FT036.mail.protection.outlook.com (10.13.177.168) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ 15.20.4975.11 via Frontend Transport; Wed, 16 Feb 2022 02:36:40 +0000
+Received: from rnnvmail201.nvidia.com (10.129.68.8) by DRHQMAIL105.nvidia.com
+ (10.27.9.14) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Wed, 16 Feb
+ 2022 02:36:40 +0000
+Received: from nvdebian.localnet (10.126.230.35) by rnnvmail201.nvidia.com
+ (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.9; Tue, 15 Feb 2022
+ 18:36:35 -0800
+From:   Alistair Popple <apopple@nvidia.com>
+To:     Jason Gunthorpe <jgg@nvidia.com>
+CC:     Felix Kuehling <felix.kuehling@amd.com>,
+        Christoph Hellwig <hch@lst.de>,
+        David Hildenbrand <david@redhat.com>,
+        Alex Sierra <alex.sierra@amd.com>, <akpm@linux-foundation.org>,
+        <linux-mm@kvack.org>, <rcampbell@nvidia.com>,
+        <linux-ext4@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <amd-gfx@lists.freedesktop.org>, <dri-devel@lists.freedesktop.org>,
+        <jglisse@redhat.com>, <willy@infradead.org>
+Subject: Re: [PATCH v6 01/10] mm: add zone device coherent type memory support
+Date:   Wed, 16 Feb 2022 13:36:30 +1100
+Message-ID: <6156515.kVgMqSaHHm@nvdebian>
+In-Reply-To: <20220216020357.GD4160@nvidia.com>
+References: <beb38138-2266-1ff8-cc82-8fe914bed862@redhat.com> <877d9vd10u.fsf@nvdebian.thelocal> <20220216020357.GD4160@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220216013713.1191082-14-allison.henderson@oracle.com>
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
+X-Originating-IP: [10.126.230.35]
+X-ClientProxiedBy: rnnvmail201.nvidia.com (10.129.68.8) To
+ rnnvmail201.nvidia.com (10.129.68.8)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: ba4567b3-3ec2-4bce-f67a-08d9f0f529bb
+X-MS-TrafficTypeDiagnostic: SA0PR12MB4559:EE_
+X-Microsoft-Antispam-PRVS: <SA0PR12MB4559DE6B57412D6F45E1243BDF359@SA0PR12MB4559.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:10000;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: zsrOwL6/Kf3cPfkQvFEIIPX5y/jZRCIMCj36Vr2HhNJpmB0Cezj7+ECiJ5DSu3OQedMMcp787FeP3t23OKux5BTWCtIyuD3Ef28tTVFtJCby+h3qiEhTucR2pMWd8iLBjxfE4wZYTV4coDfZ0iCi11yl3zkdkL1/+qw+OGBYQUiMo7/SHj8JaLBt5EGYXx6E7WjAlK8hvZoHrHog3gYlE1g6+tNSfjq4IXKwNsuGmC7mDncAuM6s5whOhrlEWEJTUq6HrUEyUcj1J5Jra1UPOjzc0rx+A9X7wUydwJa+CoYXYdM13ic/Dmn/zdUWtPfCRnEhrHoIHFWFdWtOQ8cv/RHahJIAHyBALv4wwnGAAZr5abdww51T66Chfif8Voq354Gxm80hiw3mRQhOikEZ2/iNBS6Gt0W0PlA+t1z4INZrk4W2VJxm/dK+MboJeX81ezEFlgmZe4+aSeB5jqoRcZpXjEP13SRNYsBsrqIu1rHNjbcMHuPBOe9cFNRuTgPoyKxwLRs8+Gb21P2TDPGLe0c24DOQQKN9QGdgYwzA+w4j9jQpsqWtFxd5+AiZ3mi2oNvrYrcy6/c8P6FTjUESC7iAhiDRLw2+E7X/GKT89RDt9w5x+Ark1e1zpqOXt+WTmn1Qha6Rru8NJyJ5u2zzObNeyD23RjwvVglbdNoZj2jnqfJLfvh+QBAyoXrNJ198JtS/HYfJ7475xbAfpL/bNg==
+X-Forefront-Antispam-Report: CIP:12.22.5.238;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:mail.nvidia.com;PTR:InfoNoRecords;CAT:NONE;SFS:(13230001)(4636009)(36840700001)(40470700004)(46966006)(356005)(70206006)(54906003)(82310400004)(426003)(6636002)(16526019)(9686003)(26005)(8936002)(316002)(40460700003)(47076005)(336012)(186003)(8676002)(81166007)(70586007)(6862004)(9576002)(83380400001)(86362001)(4326008)(2906002)(5660300002)(33716001)(508600001)(6666004)(36860700001)(7416002)(36900700001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Feb 2022 02:36:40.5755
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: ba4567b3-3ec2-4bce-f67a-08d9f0f529bb
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[12.22.5.238];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT036.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA0PR12MB4559
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 15, 2022 at 06:37:11PM -0700, Allison Henderson wrote:
-> Quick helper function to collapse duplicate code to initialize
-> transactions for attributes
+On Wednesday, 16 February 2022 1:03:57 PM AEDT Jason Gunthorpe wrote:
+> On Wed, Feb 16, 2022 at 12:23:44PM +1100, Alistair Popple wrote:
 > 
-> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> Suggested-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  fs/xfs/libxfs/xfs_attr.c | 32 ++++++++++++++++++++++----------
->  fs/xfs/libxfs/xfs_attr.h |  2 ++
->  fs/xfs/xfs_attr_item.c   | 12 ++----------
->  3 files changed, 26 insertions(+), 20 deletions(-)
+> > Device private and device coherent pages are not marked with pte_devmap and they
+> > are backed by a struct page. The only way of inserting them is via migrate_vma.
+> > The refcount is decremented in zap_pte_range() on munmap() with special handling
+> > for device private pages. Looking at it again though I wonder if there is any
+> > special treatment required in zap_pte_range() for device coherent pages given
+> > they count as present pages.
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index 7d6ad1d0e10b..d51aea332ca1 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -202,6 +202,27 @@ xfs_attr_calc_size(
->  	return nblks;
->  }
->  
-> +/* Initialize transaction reservation for attr operations */
-> +void xfs_init_attr_trans(
+> This is what I guessed, but we shouldn't be able to just drop
+> pte_devmap on these pages without any other work?? Granted it does
+> very little already..
 
-Nit: start the function name on a separate line.
+Yes, I agree we need to check this more closely. For device private pages
+not having pte_devmap is fine, because they are non-present swap entries so
+they always get special handling in the swap entry paths but the same isn't
+true for coherent device pages.
 
-With that fixed,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> I thought at least gup_fast needed to be touched or did this get
+> handled by scanning the page list after the fact?
 
---D
+Right, for gup I think the only special handling required is to prevent
+pinning. I had assumed that check_and_migrate_movable_pages() would still get
+called for gup_fast but unless I've missed something I don't think it does.
+That means gup_fast could still pin movable and coherent pages. Technically
+that is ok for coherent pages, but it's undesirable.
 
-> +	struct xfs_da_args	*args,
-> +	struct xfs_trans_res	*tres,
-> +	unsigned int		*total)
-> +{
-> +	struct xfs_mount	*mp = args->dp->i_mount;
-> +
-> +	if (args->value) {
-> +		tres->tr_logres = M_RES(mp)->tr_attrsetm.tr_logres +
-> +				 M_RES(mp)->tr_attrsetrt.tr_logres *
-> +				 args->total;
-> +		tres->tr_logcount = XFS_ATTRSET_LOG_COUNT;
-> +		tres->tr_logflags = XFS_TRANS_PERM_LOG_RES;
-> +		*total = args->total;
-> +	} else {
-> +		*tres = M_RES(mp)->tr_attrrm;
-> +		*total = XFS_ATTRRM_SPACE_RES(mp);
-> +	}
-> +}
-> +
->  STATIC int
->  xfs_attr_try_sf_addname(
->  	struct xfs_inode	*dp,
-> @@ -701,20 +722,10 @@ xfs_attr_set(
->  				return error;
->  		}
->  
-> -		tres.tr_logres = M_RES(mp)->tr_attrsetm.tr_logres +
-> -				 M_RES(mp)->tr_attrsetrt.tr_logres *
-> -					args->total;
-> -		tres.tr_logcount = XFS_ATTRSET_LOG_COUNT;
-> -		tres.tr_logflags = XFS_TRANS_PERM_LOG_RES;
-> -		total = args->total;
-> -
->  		if (!local)
->  			rmt_blks = xfs_attr3_rmt_blocks(mp, args->valuelen);
->  	} else {
->  		XFS_STATS_INC(mp, xs_attr_remove);
-> -
-> -		tres = M_RES(mp)->tr_attrrm;
-> -		total = XFS_ATTRRM_SPACE_RES(mp);
->  		rmt_blks = xfs_attr3_rmt_blocks(mp, XFS_XATTR_SIZE_MAX);
->  	}
->  
-> @@ -728,6 +739,7 @@ xfs_attr_set(
->  	 * Root fork attributes can use reserved data blocks for this
->  	 * operation if necessary
->  	 */
-> +	xfs_init_attr_trans(args, &tres, &total);
->  	error = xfs_trans_alloc_inode(dp, &tres, total, 0, rsvd, &args->trans);
->  	if (error)
->  		goto drop_incompat;
-> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-> index 1ef58d34eb59..f6c13d2bfbcd 100644
-> --- a/fs/xfs/libxfs/xfs_attr.h
-> +++ b/fs/xfs/libxfs/xfs_attr.h
-> @@ -519,6 +519,8 @@ int xfs_attr_set_iter(struct xfs_attr_item *attr);
->  int xfs_attr_remove_iter(struct xfs_attr_item *attr);
->  bool xfs_attr_namecheck(const void *name, size_t length);
->  int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
-> +void xfs_init_attr_trans(struct xfs_da_args *args, struct xfs_trans_res *tres,
-> +			 unsigned int *total);
->  int xfs_attr_set_deferred(struct xfs_da_args *args);
->  int xfs_attr_remove_deferred(struct xfs_da_args *args);
->  
-> diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-> index 878f50babb23..5aa7a764d95e 100644
-> --- a/fs/xfs/xfs_attr_item.c
-> +++ b/fs/xfs/xfs_attr_item.c
-> @@ -532,17 +532,9 @@ xfs_attri_item_recover(
->  		args->value = attrip->attri_value;
->  		args->valuelen = attrp->alfi_value_len;
->  		args->total = xfs_attr_calc_size(args, &local);
-> -
-> -		tres.tr_logres = M_RES(mp)->tr_attrsetm.tr_logres +
-> -				 M_RES(mp)->tr_attrsetrt.tr_logres *
-> -					args->total;
-> -		tres.tr_logcount = XFS_ATTRSET_LOG_COUNT;
-> -		tres.tr_logflags = XFS_TRANS_PERM_LOG_RES;
-> -		total = args->total;
-> -	} else {
-> -		tres = M_RES(mp)->tr_attrrm;
-> -		total = XFS_ATTRRM_SPACE_RES(mp);
->  	}
-> +
-> +	xfs_init_attr_trans(args, &tres, &total);
->  	error = xfs_trans_alloc(mp, &tres, total, 0, XFS_TRANS_RESERVE, &tp);
->  	if (error)
->  		goto out;
-> -- 
-> 2.25.1
+ - Alistair
+
+> Jason
 > 
+
+
+
+
