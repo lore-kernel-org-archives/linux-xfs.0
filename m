@@ -2,185 +2,2163 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36BC2C4332F
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Feb 2022 01:17:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77EB9C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Feb 2022 09:31:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230011AbiBQBSH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Feb 2022 20:18:07 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:60490 "EHLO
+        id S235481AbiBQJbt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Feb 2022 04:31:49 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:56014 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229854AbiBQBSH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Feb 2022 20:18:07 -0500
-Received: from NAM04-MW2-obe.outbound.protection.outlook.com (mail-mw2nam08on2076.outbound.protection.outlook.com [40.107.101.76])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8BA7229E97E;
-        Wed, 16 Feb 2022 17:17:53 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=kH4/Os6y8OYIP9HBpkt2qdDmHqEs6Rr3Uoov0bGxFJ9YU1tRtXUdDmYLUcjYnDEs/WZjEmRhYEzcHaP6WvDA3kbuwMuv8TjVwszMsQjxT2r6pwA2yLa8FI6u/1E7AxMR2NPhMlykkgMnLA35Kjawr7NtR4lB4+YjER/18Uak/TOHgGeieXS622FNoLkKugzLYlOFgprF5e5qmtMFwXk2QuFiPKchgknI1EIO92sjkrkj21rloN8ISLk2kGQAaflmq+PK54Cz+2ewoVb/kNjpQin2ACDkAPsmrOfEeSt6Z813YAQFf86SWDuxbaInBuAQjfzwji3wPHcMpA1guMiD2g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=BMEuhpmAXulDBY6QBh0+C/j+aTHwg+xI6f3mciGWO/4=;
- b=WXk2I5CJBfc8jSbuf/Xjy+4+2G5BYyUdp0rzqTW1jHZoVCctnaO91LJVK9m3RaAkFrzz7DrOlceuoIdS50cCfUhnEWGdiyJFqVI886K2Hlg1VckjUA7Z8hHQxa3N/X079ChIC8z+xnq6z1cMeRSbKrbzyd+AocvmQIzF8BgAYZgh8koTBKuvGSYAl0V7b5LSzVRQkg6vCe3qeDeZ2zSWGSvOeZt1EFGPoqwunofNFkV/8HvERsVRy+zJ7Ogd9dUUe1a1DbIN0ttFwfhK2Tn6+JhzkibvPfp2QYW7LMu0pf1deL9Abgm5Xl/tTsEzG3kxTxmv72D6fkuGw5BgISW/ig==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=BMEuhpmAXulDBY6QBh0+C/j+aTHwg+xI6f3mciGWO/4=;
- b=GWKpTPIiXHsGds6/l0PX+kmSxPY5Zznbtqg4MN+Kfg9vVB1xUqTBaTdkNapDkAPLYeHBwAabUs7DUbmBndPZfcmJOqp4Uv0L+pqBqUXKPCtpVbdVs26LscZEfHc6wq6a4Rw/daIMasSp579DbZJBcL6jHEnYZLCBsLit4Ccw6CHgUtYbr3yHgUJrHWMN/izHiBqQkZfMrYRKxRlYgpXVhgzgPwVwBNoMNbqBHC3J5sH+WWRKL8ISm72Ozd85JptE2dGmTyUbJpWqTztCjVCMZhwUnY39YHcd1fLcXzohKhYafYUxeyp/Zg73Efhh6+Yr88O2N1Xi80yguoSGXVNIEA==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from BYAPR12MB3176.namprd12.prod.outlook.com (2603:10b6:a03:134::26)
- by BYAPR12MB4776.namprd12.prod.outlook.com (2603:10b6:a03:10d::19) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4995.16; Thu, 17 Feb
- 2022 01:17:51 +0000
-Received: from BYAPR12MB3176.namprd12.prod.outlook.com
- ([fe80::1528:82a2:aa0:7aa6]) by BYAPR12MB3176.namprd12.prod.outlook.com
- ([fe80::1528:82a2:aa0:7aa6%6]) with mapi id 15.20.4975.019; Thu, 17 Feb 2022
- 01:17:51 +0000
-From:   Alistair Popple <apopple@nvidia.com>
-To:     Jason Gunthorpe <jgg@nvidia.com>
-Cc:     David Hildenbrand <david@redhat.com>,
-        Felix Kuehling <felix.kuehling@amd.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Alex Sierra <alex.sierra@amd.com>, akpm@linux-foundation.org,
-        linux-mm@kvack.org, rcampbell@nvidia.com,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        jglisse@redhat.com, willy@infradead.org
-Subject: Re: [PATCH v6 01/10] mm: add zone device coherent type memory support
-Date:   Thu, 17 Feb 2022 12:05:39 +1100
-References: <beb38138-2266-1ff8-cc82-8fe914bed862@redhat.com>
- <877d9vd10u.fsf@nvdebian.thelocal> <20220216020357.GD4160@nvidia.com>
- <6156515.kVgMqSaHHm@nvdebian>
- <98d8bbc5-ffc2-8966-fdc1-a844874e7ae8@redhat.com>
- <20220216122600.GG4160@nvidia.com>
-User-agent: mu4e 1.6.9; emacs 27.1
-In-reply-to: <20220216122600.GG4160@nvidia.com>
-Message-ID: <874k4ycmva.fsf@nvdebian.thelocal>
-Content-Type: multipart/mixed; boundary="=-=-="
-X-ClientProxiedBy: BY3PR10CA0008.namprd10.prod.outlook.com
- (2603:10b6:a03:255::13) To BYAPR12MB3176.namprd12.prod.outlook.com
- (2603:10b6:a03:134::26)
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 1f4a4e9b-8375-416d-c21a-08d9f1b35121
-X-MS-TrafficTypeDiagnostic: BYAPR12MB4776:EE_
-X-Microsoft-Antispam-PRVS: <BYAPR12MB4776C5225D5A4F55C606BC6BDF369@BYAPR12MB4776.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:9508;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: OSYGsru7tCqTqqhGWYEL2WYfCdp9E1GWbdtP1LT8vg88+Nu2kWdRh3SIYwRjXSfHyM30GQaYAVXe0RI+snffgjucqFM8DQZ9OeJU5epubGL6LsVvRM4rAw+a8c1JGcYwIiq9hEi00XDPryGx9yjs3b30y4Po+sFnNlNxREEx8WGvLEe8iWrvp7lmgtJtLHqWexBkWHihop1VG6c7oPVNcEbgxHNQlUuwYXEkfnF1Lq4sktvfDav6DI8y0tNN2fA/5G2dEhirstj2FjKlxdwWUPir2OmsuIaG+4ChfW0iRFvk3lVxOvoKGd1c6uO3zs6LoKY6Ikuls08Jb/7pNPtyUW+lHsn20mXrIk0AILlL/NuoFmz5pmynfIU7SLp+gfTe/lROd80+sVXnR0QRuv4G4wqi6mavHP0/yKLRefXDiejLxiN1TIpu3DLsV7bTnCcehMChlHXuLDFlZupjWhdgd2VuUVV1Mc3Y/z01/pkRxvS97KsJIM8k2eokCjaf0isxcfJjQdKmf2zFRmnXReq4rOz9aetkTRJPly1/0cCkLjxaUBCFg1yQb+B5Y5s154f7TWGR3P9veLGnTqykTPHt8pHS4qzUd6aG+/SlEljFYDVdthDyPzCZ65f/VniFNQMBF8LORdGqijEi0cntA/hTcw==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR12MB3176.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(6506007)(5660300002)(26005)(186003)(316002)(66556008)(66476007)(6486002)(66946007)(4326008)(2906002)(6862004)(8676002)(6512007)(7416002)(9686003)(8936002)(38100700002)(53546011)(44144004)(508600001)(6636002)(54906003)(6666004)(83380400001)(86362001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?e6fFZsIH3hnaeSVsjJ+CZm1UwjTvLxTAqRl6hedw5QECLy+g9dPl9CuKedXq?=
- =?us-ascii?Q?I8dSI8ogxYJ4UedO4P8cPqo+LVhpcSvV8WIN4+mHNKxNGooyuCN/+/Ali5Kd?=
- =?us-ascii?Q?gFnv0CJ5mQFYBuBzwBE1o53/xIgaLU2w6UzrnF8grpVsr1cRLssJLMRp4C8c?=
- =?us-ascii?Q?njBosP57mBBBsidtsh2rGHsIpSVxXP9u8+whQwGG4UY6J3Us1dNQGveQLydr?=
- =?us-ascii?Q?N67yfwU8gt+aa03SiCOTFJT/NmQOWtKiWEbCKCsyN7+iSq09UGxnb59f1Haw?=
- =?us-ascii?Q?nyOYXuTfuvvCA1SYOoiAvtoaGy3nYlTZCQpqdlRk3hQwcXbYt7Mx+UAM+eba?=
- =?us-ascii?Q?S3aCmdKjgGwU4eck/MbZ3Z+/gY/f36QfcbHbu8ZSW/nghoS0HV/EmlWlMz/o?=
- =?us-ascii?Q?sNQ6yLjkmSsDna2WdeRjbC3inzzW+Hul7IVoMDJxQHVJ+62FudwCEevEZmcp?=
- =?us-ascii?Q?Th2/esSRNSa75Yif4GvUYvDUxoUdzkEGloyI8ezlcQBkfZ45bOzzC6IFSe5K?=
- =?us-ascii?Q?CnjBnhpOMmPnZmihSsJg3RDuJwbjAgEEQBnSzCCj2gNGvL+ag9jHydG44whX?=
- =?us-ascii?Q?Nfiud8AeM2/DrhhsYxqzx3HIsAKc7nyj7GkN4Q9lOCt9ZWzewgydOOGkotWP?=
- =?us-ascii?Q?422wCi5HVZrnaKqqBm3Gx2WlBt2CeUz6zu9hNK0AT0UNy3FfK3ijt4xj2rtj?=
- =?us-ascii?Q?/Kunda9sXe3ZVrJoRYGQ4qtOnHuDt8PiGuSBzckBD9SW9O5RATztEs/zTzxv?=
- =?us-ascii?Q?CTWjR/HE+k5t7pLXzGulFofh/hUALREvY92Ver41qOE73Y7D9vcro8igSdE0?=
- =?us-ascii?Q?/v/ZlUvsZ6ZKy+q7VgD9yk2pbTb05o9WijYVHhJ/S4+x05uCxmwV8UpLKm0V?=
- =?us-ascii?Q?4+QJAnGx5cTZAGMm6D/iNZDvIa3AMVFdUs6baVIWTC+xdOPeM6H83Rt92rsT?=
- =?us-ascii?Q?4rRw3Cg9eAhf8ZfeR/WQVwr5JBskrSMKrxakFnmWQ9Psk76cipv1+2vQvJDi?=
- =?us-ascii?Q?6QU0Kw8l780rnqExUtMC8VyTuI2BxQVYNxI+awheOF2UsGTeds+LmIUgvGKx?=
- =?us-ascii?Q?OaIwH8yIP8fXbSprf8ZT1WbHkpwkU4asw9Mg+0V4orMUh/L7CTF9tqN+Obme?=
- =?us-ascii?Q?b5Q4Nzv6UrSaj/pb45VwtkyaY1qAHibTu97tQj9DpiIkw/KdTQUZvig2oOSp?=
- =?us-ascii?Q?Fn1HwNZnCce0zKeGjgyegpAVZU+qDHIZL32XNPK81+agsBVJFN3Q49Dz9g3c?=
- =?us-ascii?Q?aXFi06/wXtZCMJRlj1x7D6CuBFUTSv40DZL+AC5oaS1UmmuRgcJGPmVXJ9Km?=
- =?us-ascii?Q?b75+9laHA0uqEe88oq7T7Xzvy+TxI9i4nUmOkpvWOGDPC/FqCv5ITKSK3Hv5?=
- =?us-ascii?Q?FCjun0c5ckqPjdCF90pG1/awDawBGiRNIQqdByC6ZloTtIZeVqAYL9rU4eJJ?=
- =?us-ascii?Q?rYvSKKrZTapZQWx96Jqrd0j3ad72Z6zX3TIIQqMEjkca87ILpQl1XA6e2rl1?=
- =?us-ascii?Q?qsYiMs0H3VNLoTZAc69qh3RLTiluybr+8uu39NU5d92Xdd07/Hkje1Evnsp3?=
- =?us-ascii?Q?4ehRM8QOe21Ex/arx2FrxmH2T5Mj0VHlHAhiD0KcoiYY2QDd6aiaB8q8B5iS?=
- =?us-ascii?Q?jc+Lmslcb7oXsoSNBeCO0XQ=3D?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1f4a4e9b-8375-416d-c21a-08d9f1b35121
-X-MS-Exchange-CrossTenant-AuthSource: BYAPR12MB3176.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Feb 2022 01:17:51.4742
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: bkyKr/hikiEpFlK+d83fDj7F3PHsgAQusAk84J5lu8RPit/so5ruSBKEO54uqcEXmnUdDM3aP7BDFkmGvvGZIA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR12MB4776
+        with ESMTP id S229477AbiBQJbs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Feb 2022 04:31:48 -0500
+X-Greylist: delayed 515 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 17 Feb 2022 01:31:28 PST
+Received: from mail.flyingcircus.io (mail.flyingcircus.io [IPv6:2a02:238:f030:102::1064])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42AD4BF7
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Feb 2022 01:31:27 -0800 (PST)
+From:   Christian Theune <ct@flyingcircus.io>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flyingcircus.io;
+        s=mail; t=1645089769;
+        bh=HSNvKlQQr99DMzOp8D4RyJ3anJNA+lXfxktlLOZtvo0=;
+        h=From:Subject:Date:To;
+        b=LUnqxErgW8JUy3QTfYqBEzhFLnpHq9L0bQyg5UFwupAwfzEwdMXOmfpb+c/YZWDr+
+         Bn1iBw96qhiaMF33lqxDylGLDv6nOMhORLacWehdeC5SpZC2r5Lg3ZcGobfOknEHQj
+         yv/5zrykFS1yS8Ivmlbm25jaTELQMktAFnwQQPz8=
+Content-Type: multipart/signed;
+        boundary="Apple-Mail=_8E0FB938-1854-489B-A53A-5F14AFB2432D";
+        protocol="application/pgp-signature";
+        micalg=pgp-sha512
+Mime-Version: 1.0 (Mac OS X Mail 15.0 \(3693.60.0.1.1\))
+Subject: Help deciding about backported patch (kernel bug 214767, 19f4e7cc8197
+ xfs: Fix CIL throttle hang when CIL space used going backwards)
+Message-Id: <C1EC87A2-15B4-45B1-ACE2-F225E9E30DA9@flyingcircus.io>
+Date:   Thu, 17 Feb 2022 10:22:49 +0100
+To:     linux-xfs@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
---=-=-=
-Content-Type: text/plain
-Content-Disposition: inline
 
-Jason Gunthorpe <jgg@nvidia.com> writes:
+--Apple-Mail=_8E0FB938-1854-489B-A53A-5F14AFB2432D
+Content-Type: multipart/mixed;
+	boundary="Apple-Mail=_8774E703-FE9A-4E9B-BCC6-8F00E9CDD336"
 
-> On Wed, Feb 16, 2022 at 09:31:03AM +0100, David Hildenbrand wrote:
->> On 16.02.22 03:36, Alistair Popple wrote:
->> > On Wednesday, 16 February 2022 1:03:57 PM AEDT Jason Gunthorpe wrote:
->> >> On Wed, Feb 16, 2022 at 12:23:44PM +1100, Alistair Popple wrote:
->> >>
->> >>> Device private and device coherent pages are not marked with pte_devmap and they
->> >>> are backed by a struct page. The only way of inserting them is via migrate_vma.
->> >>> The refcount is decremented in zap_pte_range() on munmap() with special handling
->> >>> for device private pages. Looking at it again though I wonder if there is any
->> >>> special treatment required in zap_pte_range() for device coherent pages given
->> >>> they count as present pages.
->> >>
->> >> This is what I guessed, but we shouldn't be able to just drop
->> >> pte_devmap on these pages without any other work?? Granted it does
->> >> very little already..
->> >
->> > Yes, I agree we need to check this more closely. For device private pages
->> > not having pte_devmap is fine, because they are non-present swap entries so
->> > they always get special handling in the swap entry paths but the same isn't
->> > true for coherent device pages.
->>
->> I'm curious, how does the refcount of a PageAnon() DEVICE_COHERENT page
->> look like when mapped? I'd assume it's also (currently) still offset by
->> one, meaning, if it's mapped into a single page table it's always at
->> least 2.
->
-> Christoph fixed this offset by one and updated the DEVICE_COHERENT
-> patchset, I hope we will see that version merged.
->
->> >> I thought at least gup_fast needed to be touched or did this get
->> >> handled by scanning the page list after the fact?
->> >
->> > Right, for gup I think the only special handling required is to prevent
->> > pinning. I had assumed that check_and_migrate_movable_pages() would still get
->> > called for gup_fast but unless I've missed something I don't think it does.
->> > That means gup_fast could still pin movable and coherent pages. Technically
->> > that is ok for coherent pages, but it's undesirable.
->>
->> We really should have the same pinning rules for GUP vs. GUP-fast.
->> is_pinnable_page() should be the right place for such checks (similarly
->> as indicated in my reply to the migration series).
->
-> Yes, I think this is a bug too.
 
-Agreed, I will add a fix for it to my series as I was surprised the rules for
-PUP-fast were different. I can see how this happened though -
-check_and_migrate_cma_pages() (the precursor to
-check_and_migrate_movable_pages()) was added before PUP-fast and FOLL_LONGTERM
-so I guess we just never added this check there.
+--Apple-Mail=_8774E703-FE9A-4E9B-BCC6-8F00E9CDD336
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=utf-8
 
-- Alistair
+Hi,
 
-> The other place that needs careful audit is all the callers using
-> vm_normal_page() - they must all be able to accept a ZONE_DEVICE page
-> if we don't set pte_devmap.
->
-> Jason
+I=E2=80=99ve been debugging an elusive XFS issue that I could not track =
+down to any other parameters than it being an xfs internal bug. I=E2=80=99=
+ve recorded what I=E2=80=99ve seen so far in =
+https://bugzilla.kernel.org/show_bug.cgi?id=3D214767 and Dave =
+recommended that "19f4e7cc8197 xfs: Fix CIL throttle hang when CIL space =
+used going backwards=E2=80=9D is likely the issue. AFAICT this was not =
+backported to the 5.10 branch and we=E2=80=99ve been updating to vanilla =
+kernels diligently and still keep seeing this issue. Unfortunately =
+within a fleet of around 1k VMs it strikes about once every week or so =
+and there=E2=80=99s no way to predict when and where.
 
---=-=-=--
+So, I took Dave=E2=80=99s pointer and applied the patch to our 5.10 =
+series (basd on 5.10.76 at that point) and it applied cleanly. The =
+machine boots fine and I ran the XFS test suite. However, I haven=E2=80=99=
+t done any tests using the test suite before and I=E2=80=99m getting a =
+number of errors where I don=E2=80=99t know how to interpret the =
+results. Some of those seem to be due to not having the DEBUG flag set =
+in the kernel, others =E2=80=A6 I=E2=80=99m not sure.
+
+So, before rolling out this change into our fleet I=E2=80=99d like to =
+double check the results and also whether you think applying that patch =
+to the 5.10 series sounds reasonable. I=E2=80=99m also wondering whether =
+there was a specific reason this wasn=E2=80=99t backported in the first =
+place and whether others think it should be. Other input about the =
+applicability of this patch to the issue I=E2=80=99m seeing are =
+appreciated as well, of course.
+
+I=E2=80=99m attaching the test runner output, unfortunately I lost the =
+actual outputs as the test ran quite long and the outputs where cleaned =
+up by the tempfile watcher faster than I could retrieve them. I can run =
+them again, my estimation currently is it takes around 3-4 days to =
+complete them, though.
+
+
+--Apple-Mail=_8774E703-FE9A-4E9B-BCC6-8F00E9CDD336
+Content-Disposition: attachment;
+	filename=xfstests.out
+Content-Type: application/octet-stream;
+	name=xfstests.out;
+	x-unix-mode=0644
+Content-Transfer-Encoding: quoted-printable
+
+FSTYP=20=20=20=20=20=20=20=20=20--=20xfs=20(non-debug)=0APLATFORM=20=20=20=
+=20=20=20--=20Linux/x86_64=20test38=205.10.76=20#1-NixOS=20SMP=20Wed=20=
+Oct=2027=2007:56:57=20UTC=202021=0AMKFS_OPTIONS=20=20--=20-f=20/dev/vda4=0A=
+MOUNT_OPTIONS=20--=20/dev/vda4=20/mnt/scratch=0A=0Ageneric/001=09=2012s=0A=
+generic/002=09=204s=0Ageneric/003=09=2012s=0Ageneric/004=09=203s=0A=
+generic/005=09=205s=0Ageneric/006=09=203s=0Ageneric/007=09=203s=0A=
+generic/008=09=203s=0Ageneric/009=09=203s=0Ageneric/010=09[not=20run]=20=
+/tmp/xfstests.wVf4eh/src/dbtest=20not=20built=0Ageneric/011=09=205s=0A=
+generic/012=09=204s=0Ageneric/013=09=2020s=0Ageneric/014=09=207s=0A=
+generic/015=09=203s=0Ageneric/016=09=204s=0Ageneric/017=09=2075s=0A=
+generic/018=09=204s=0Ageneric/019=09[not=20run]=20=
+/sys/kernel/debug/fail_make_request=20=20not=20found.=20Seems=20that=20=
+CONFIG_FAULT_INJECTION_DEBUG_FS=20kernel=20config=20option=20not=20=
+enabled=0Ageneric/020=09=207s=0Ageneric/021=09=204s=0Ageneric/022=09=20=
+3s=0Ageneric/023=09=203s=0Ageneric/024=09=203s=0Ageneric/025=09=204s=0A=
+generic/026=09=208s=0Ageneric/027=09=2050s=0Ageneric/028=09=208s=0A=
+generic/029=09=202s=0Ageneric/030=09=203s=0Ageneric/031=09=203s=0A=
+generic/032=09=2014s=0Ageneric/033=09=202s=0Ageneric/034=09=203s=0A=
+generic/035=09no=20qualified=20output=0Ageneric/036=09=2012s=0A=
+generic/037=09=209s=0Ageneric/038=09=20181s=0Ageneric/039=09=202s=0A=
+generic/040=09=2020s=0Ageneric/041=09=2025s=0Ageneric/042=09=204s=0A=
+generic/043=09=2017s=0Ageneric/044=09=2025s=0Ageneric/045=09=2025s=0A=
+generic/046=09=2024s=0Ageneric/047=09=2050s=0Ageneric/048=09=2033s=0A=
+generic/049=09=2026s=0Ageneric/050=09no=20qualified=20output=0A=
+generic/051=09=2083s=0Ageneric/052=09=203s=0Ageneric/053=09=203s=0A=
+generic/054=09=2056s=0Ageneric/055=09=2035s=0Ageneric/056=09=203s=0A=
+generic/057=09=203s=0Ageneric/058=09=202s=0Ageneric/059=09=204s=0A=
+generic/060=09=203s=0Ageneric/061=09=202s=0Ageneric/062=09=204s=0A=
+generic/063=09=203s=0Ageneric/064=09=204s=0Ageneric/065=09=203s=0A=
+generic/066=09=203s=0Ageneric/067=09=203s=0Ageneric/068=09=2047s=0A=
+generic/069=09=2011s=0Ageneric/070=09=206s=0Ageneric/071=09=203s=0A=
+generic/072=09=2021s=0Ageneric/073=09=203s=0Ageneric/074=09=2044s=0A=
+generic/075=09=2039s=0Ageneric/076=09=206s=0Ageneric/077=09[not=20run]=20=
+fsgqa=20user=20not=20defined.=0Ageneric/078=09=203s=0Ageneric/079=09[not=20=
+run]=20daemon=20user=20not=20defined.=0Ageneric/080=09=204s=0A=
+generic/081=09=205s=0Ageneric/082=09=203s=0Ageneric/083=09=2013s=0A=
+generic/084=09=208s=0Ageneric/085=09=2013s=0Ageneric/086=09=203s=0A=
+generic/087=09=203s=0Ageneric/088=09=202s=0Ageneric/089=09=2012s=0A=
+generic/090=09=203s=0Ageneric/091=09=2061s=0Ageneric/092=09=203s=0A=
+generic/093=09[not=20run]=20fsgqa=20user=20not=20defined.=0Ageneric/094=09=
+=2094s=0Ageneric/095=09=2043s=0Ageneric/096=09=202s=0Ageneric/097=09=20=
+2s=0Ageneric/098=09=203s=0Ageneric/099=09=203s=0Ageneric/100=09=2044s=0A=
+generic/101=09=203s=0Ageneric/102=09=2010s=0Ageneric/103=09=205s=0A=
+generic/104=09=205s=0Ageneric/105=09=204s=0Ageneric/106=09=205s=0A=
+generic/107=09=204s=0Ageneric/108=09=207s=0Ageneric/109=09=206s=0A=
+generic/110=09=208s=0Ageneric/111=09=203s=0Ageneric/112=09=2036s=0A=
+generic/113=09=2035s=0Ageneric/114=09=2045s=0Ageneric/115=09=202s=0A=
+generic/116=09=203s=0Ageneric/117=09=204s=0Ageneric/118=09=203s=0A=
+generic/119=09=203s=0Ageneric/120=09=2018s=0Ageneric/121=09=203s=0A=
+generic/122=09=203s=0Ageneric/123=09[not=20run]=20fsgqa=20user=20not=20=
+defined.=0Ageneric/124=09=206s=0Ageneric/125=09[not=20run]=20fsgqa=20=
+user=20not=20defined.=0Ageneric/126=09=202s=0Ageneric/127=09=20656s=0A=
+generic/128=09[not=20run]=20fsgqa=20user=20not=20defined.=0Ageneric/129=09=
+=205s=0Ageneric/130=09=2013s=0Ageneric/131=09=203s=0Ageneric/132=09=20=
+18s=0Ageneric/133=09=20204s=0Ageneric/134=09=202s=0Ageneric/135=09=203s=0A=
+generic/136=09=203s=0Ageneric/137=09=2029s=0Ageneric/138=09=203s=0A=
+generic/139=09=203s=0Ageneric/140=09=203s=0Ageneric/141=09=203s=0A=
+generic/142=09=203s=0Ageneric/143=09=2089s=0Ageneric/144=09=2012s=0A=
+generic/145=09=207s=0Ageneric/146=09=2011s=0Ageneric/147=09=2011s=0A=
+generic/148=09=2015s=0Ageneric/149=09=2015s=0Ageneric/150=09=205s=0A=
+generic/151=09=2012s=0Ageneric/152=09=2018s=0Ageneric/153=09=2016s=0A=
+generic/154=09=2022s=0Ageneric/155=09=2025s=0Ageneric/156=09=2025s=0A=
+generic/157=09=206s=0Ageneric/158=09=207s=0Ageneric/159=09=207s=0A=
+generic/160=09=207s=0Ageneric/161=09=204s=0Ageneric/162=09=2024s=0A=
+generic/163=09=2030s=0Ageneric/164=09=2015s=0Ageneric/165=09=2022s=0A=
+generic/166=09=2064s=0Ageneric/167=09=2017s=0Ageneric/168=09=2079s=0A=
+generic/169=09=207s=0Ageneric/170=09=2097s=0Ageneric/171=09=206s=0A=
+generic/172=09=2010s=0Ageneric/173=09=207s=0Ageneric/174=09=2012s=0A=
+generic/175=09=2041s=0Ageneric/176=09=2077s=0Ageneric/177=09=205s=0A=
+generic/178=09=207s=0Ageneric/179=09=206s=0Ageneric/180=09=207s=0A=
+generic/181=09=207s=0Ageneric/182=09=209s=0Ageneric/183=09=2012s=0A=
+generic/184=09=206s=0Ageneric/185=09=205s=0Ageneric/186=09=2038s=0A=
+generic/187=09=2038s=0Ageneric/188=09=204s=0Ageneric/189=09=205s=0A=
+generic/190=09=206s=0Ageneric/191=09=205s=0Ageneric/192=09=2011s=0A=
+generic/193=09[not=20run]=20fsgqa=20user=20not=20defined.=0Ageneric/194=09=
+=204s=0Ageneric/195=09=205s=0Ageneric/196=09=205s=0Ageneric/197=09=205s=0A=
+generic/198=09=208s=0Ageneric/199=09=205s=0Ageneric/200=09=207s=0A=
+generic/201=09=204s=0Ageneric/202=09=204s=0Ageneric/203=09=205s=0A=
+generic/204=09=2046s=0Ageneric/205=09=205s=0Ageneric/206=09=206s=0A=
+generic/207=09=2015s=0Ageneric/208=09=20205s=0Ageneric/209=09=2039s=0A=
+generic/210=09=205s=0Ageneric/211=09=203s=0Ageneric/212=09=205s=0A=
+generic/213=09=203s=0Ageneric/214=09=204s=0Ageneric/215=09=205s=0A=
+generic/216=09=203s=0Ageneric/217=09=204s=0Ageneric/218=09=203s=0A=
+generic/219=09[not=20run]=20fsgqa=20user=20not=20defined.=0Ageneric/220=09=
+=203s=0Ageneric/221=09=205s=0Ageneric/222=09=208s=0Ageneric/223=09=2012s=0A=
+generic/224=09=2015s=0Ageneric/225=09=20137s=0Ageneric/226=09=2017s=0A=
+generic/227=09=204s=0Ageneric/228=09=205s=0Ageneric/229=09=209s=0A=
+generic/230=09[not=20run]=20fsgqa=20user=20not=20defined.=0Ageneric/231=09=
+[not=20run]=20fsgqa=20user=20not=20defined.=0Ageneric/232=09=2016s=0A=
+generic/233=09[not=20run]=20fsgqa=20user=20not=20defined.=0Ageneric/234=09=
+=2012s=0Ageneric/235=09[not=20run]=20fsgqa=20user=20not=20defined.=0A=
+generic/236=09=204s=0Ageneric/237=09=205s=0Ageneric/238=09=209s=0A=
+generic/239=09=2019s=0Ageneric/240=09=203s=0Ageneric/241=09[not=20run]=20=
+dbench=20not=20found=0Ageneric/242=09=2018s=0Ageneric/243=09=2019s=0A=
+generic/244=09=2012s=0Ageneric/245=09=207s=0Ageneric/246=09=203s=0A=
+generic/247=09=2015s=0Ageneric/248=09=207s=0Ageneric/249=09=205s=0A=
+generic/250=09=206s=0Ageneric/251=09=20106s=0Ageneric/252=09=206s=0A=
+generic/253=09=204s=0Ageneric/254=09=204s=0Ageneric/255=09=204s=0A=
+generic/256=09[not=20run]=20fsgqa=20user=20not=20defined.=0Ageneric/257=09=
+=206s=0Ageneric/258=09=206s=0Ageneric/259=09=204s=0Ageneric/260=09=2012s=0A=
+generic/261=09=206s=0Ageneric/262=09=206s=0Ageneric/263=09=2031s=0A=
+generic/264=09=203s=0Ageneric/265=09=205s=0Ageneric/266=09=205s=0A=
+generic/267=09=204s=0Ageneric/268=09=205s=0Ageneric/269=09=2037s=0A=
+generic/270=09[not=20run]=20fsgqa=20user=20not=20defined.=0Ageneric/271=09=
+=204s=0Ageneric/272=09=205s=0Ageneric/273=09=2014s=0Ageneric/274=09=20=
+15s=0Ageneric/275=09=205s=0Ageneric/276=09=205s=0Ageneric/277=09=204s=0A=
+generic/278=09=205s=0Ageneric/279=09=205s=0Ageneric/280=09=204s=0A=
+generic/281=09=205s=0Ageneric/282=09=205s=0Ageneric/283=09=2015s=0A=
+generic/284=09=204s=0Ageneric/285=09=202s=0Ageneric/286=09=205s=0A=
+generic/287=09=204s=0Ageneric/288=09=203s=0Ageneric/289=09=205s=0A=
+generic/290=09=204s=0Ageneric/291=09=204s=0Ageneric/292=09=205s=0A=
+generic/293=09=205s=0Ageneric/294=09=203s=0Ageneric/295=09=205s=0A=
+generic/296=09=204s=0Ageneric/297=09=2041s=0Ageneric/298=09=2038s=0A=
+generic/299=09=20113s=0Ageneric/300=09=2026s=0Ageneric/301=09=207s=0A=
+generic/302=09=2049s=0Ageneric/303=09=204s=0Ageneric/304=09=202s=0A=
+generic/305=09[not=20run]=20fsgqa=20user=20not=20defined.=0Ageneric/306=09=
+=204s=0Ageneric/307=09=205s=0Ageneric/308=09=203s=0Ageneric/309=09=203s=0A=
+generic/310=09=2083s=0Ageneric/311=09=20189s=0Ageneric/312=09=2013s=0A=
+generic/313=09=2012s=0Ageneric/314=09[not=20run]=20fsgqa=20user=20not=20=
+defined.=0Ageneric/315=09=209s=0Ageneric/316=09=204s=0Ageneric/317=09=
+[not=20run]=20fsgqa=20user=20not=20defined.=0Ageneric/318=09=203s=0A=
+generic/319=09=206s=0Ageneric/320=09=2020s=0Ageneric/321=09=205s=0A=
+generic/322=09=205s=0Ageneric/323=09=20124s=0Ageneric/324=09=2023s=0A=
+generic/325=09=208s=0Ageneric/326=09[not=20run]=20fsgqa=20user=20not=20=
+defined.=0Ageneric/327=09[not=20run]=20fsgqa=20user=20not=20defined.=0A=
+generic/328=09[not=20run]=20fsgqa=20user=20not=20defined.=0Ageneric/329=09=
+=206s=0Ageneric/330=09=209s=0Ageneric/331=09=2010s=0Ageneric/332=09=207s=0A=
+generic/333=09=20270s=0Ageneric/334=09=20104s=0Ageneric/335=09=205s=0A=
+generic/336=09=205s=0Ageneric/337=09=203s=0Ageneric/338=09=208s=0A=
+generic/339=09=2015s=0Ageneric/340=09=209s=0Ageneric/341=09=208s=0A=
+generic/342=09=208s=0Ageneric/343=09=2010s=0Ageneric/344=09=2010s=0A=
+generic/345=09=2011s=0Ageneric/346=09=208s=0Ageneric/347=09=2085s=0A=
+generic/348=09=207s=0Ageneric/349=09=207s=0Ageneric/350=09=204s=0A=
+generic/351=09=207s=0Ageneric/352=09=2039s=0Ageneric/353=09=204s=0A=
+generic/354=09=207s=0Ageneric/355=09[not=20run]=20fsgqa=20user=20not=20=
+defined.=0Ageneric/356=09=204s=0Ageneric/357=09=205s=0Ageneric/358=09=20=
+16s=0Ageneric/359=09=205s=0Ageneric/360=09=207s=0Ageneric/361=09=205s=0A=
+generic/362=09[not=20run]=20mkfs.xfs=20doesn't=20have=20richacl=20=
+feature=0Ageneric/363=09[not=20run]=20mkfs.xfs=20doesn't=20have=20=
+richacl=20feature=0Ageneric/364=09[not=20run]=20mkfs.xfs=20doesn't=20=
+have=20richacl=20feature=0Ageneric/365=09[not=20run]=20mkfs.xfs=20=
+doesn't=20have=20richacl=20feature=0Ageneric/366=09[not=20run]=20=
+mkfs.xfs=20doesn't=20have=20richacl=20feature=0Ageneric/367=09[not=20=
+run]=20mkfs.xfs=20doesn't=20have=20richacl=20feature=0Ageneric/368=09=
+[not=20run]=20mkfs.xfs=20doesn't=20have=20richacl=20feature=0A=
+generic/369=09[not=20run]=20mkfs.xfs=20doesn't=20have=20richacl=20=
+feature=0Ageneric/370=09[not=20run]=20mkfs.xfs=20doesn't=20have=20=
+richacl=20feature=0Ageneric/371=09=2030s=0Ageneric/372=09=207s=0A=
+generic/373=09=206s=0Ageneric/374=09=206s=0Ageneric/375=09=2010s=0A=
+generic/376=09=203s=0Ageneric/377=09=208s=0Ageneric/378=09[not=20run]=20=
+fsgqa=20user=20not=20defined.=0Ageneric/379=09=205s=0Ageneric/380=09=20=
+17s=0Ageneric/381=09[not=20run]=20123456-fsgqa=20user=20not=20defined.=0A=
+generic/382=09[not=20run]=20fsgqa=20user=20not=20defined.=0Ageneric/383=09=
+=203s=0Ageneric/384=09=2013s=0Ageneric/385=09=208s=0Ageneric/386=09=207s=0A=
+generic/387=09=2078s=0Ageneric/388=09=20211s=0Ageneric/389=09=2012s=0A=
+generic/390=09=2011s=0Ageneric/391=09=2021s=0Ageneric/392=09=208s=0A=
+generic/393=09=205s=0Ageneric/394=09=2010s=0Ageneric/395=09[not=20run]=20=
+No=20encryption=20support=20for=20xfs=0Ageneric/396=09[not=20run]=20No=20=
+encryption=20support=20for=20xfs=0Ageneric/397=09[not=20run]=20No=20=
+encryption=20support=20for=20xfs=0Ageneric/398=09[not=20run]=20No=20=
+encryption=20support=20for=20xfs=0Ageneric/399=09[not=20run]=20No=20=
+encryption=20support=20for=20xfs=0Ageneric/400=09=203s=0Ageneric/401=09=20=
+6s=0Ageneric/402=09=208s=0Ageneric/403=09=208s=0Ageneric/404=09=2034s=0A=
+generic/405=09=2063s=0Ageneric/406=09=208s=0Ageneric/407=09=208s=0A=
+generic/408=09=208s=0Ageneric/409=09=2017s=0Ageneric/410=09=2028s=0A=
+generic/411=09=208s=0Ageneric/412=09=204s=0Ageneric/413=09[not=20run]=20=
+mount=20/dev/vda4=20with=20dax=20failed=0Ageneric/414=09=205s=0A=
+generic/415=09=2088s=0Ageneric/416=09=20276s=0Ageneric/417=09=2023s=0A=
+generic/418=09=2068s=0Ageneric/419=09[not=20run]=20No=20encryption=20=
+support=20for=20xfs=0Ageneric/420=09=203s=0Ageneric/421=09[not=20run]=20=
+No=20encryption=20support=20for=20xfs=0Ageneric/422=09=203s=0A=
+generic/423=09=204s=0Ageneric/424=09=202s=0Ageneric/425=09=205s=0A=
+generic/426=09=2010s=0Ageneric/427=09=2012s=0Ageneric/428=09=2012s=0A=
+generic/429=09[not=20run]=20No=20encryption=20support=20for=20xfs=0A=
+generic/430=09=204s=0Ageneric/431=09=208s=0Ageneric/432=09=209s=0A=
+generic/433=09=207s=0Ageneric/434=09=207s=0Ageneric/435=09[not=20run]=20=
+No=20encryption=20support=20for=20xfs=0Ageneric/436=09=207s=0A=
+generic/437=09=207s=0Ageneric/438=09=20638s=0Ageneric/439=09=203s=0A=
+generic/440=09[not=20run]=20No=20encryption=20support=20for=20xfs=0A=
+generic/441=09=204s=0Ageneric/442=09=204s=0Ageneric/443=09=203s=0A=
+generic/444=09=203s=0Ageneric/445=09=202s=0Ageneric/446=09=2019s=0A=
+generic/447=09=2056s=0Ageneric/448=09=203s=0Ageneric/449=09=2063s=0A=
+generic/450=09=203s=0Ageneric/451=09=2033s=0Ageneric/452=09-=20output=20=
+mismatch=20(see=20/home/ctheune/results/generic/452.out.bad)=0A=20=20=20=20=
+---=20tests/generic/452.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=
+=20=20=20+++=20/home/ctheune/results/generic/452.out.bad=092022-02-01=20=
+08:23:43.356951460=20+0100=0A=20=20=20=20@@=20-1,3=20+1,5=20@@=0A=20=20=20=
+=20=20QA=20output=20created=20by=20452=0A=20=20=20=20=
+-SCRATCH_MNT/ls_on_scratch=0A=20=20=20=20-SCRATCH_MNT/ls_on_scratch=0A=20=
+=20=20=20+/mnt/scratch/ls_on_scratch:=20unknown=20program=20=
+'ls_on_scratch'=0A=20=20=20=20+Try=20'/mnt/scratch/ls_on_scratch=20=
+--help'=20for=20more=20information.=0A=20=20=20=20=
++/mnt/scratch/ls_on_scratch:=20unknown=20program=20'ls_on_scratch'=0A=20=20=
+=20=20+Try=20'/mnt/scratch/ls_on_scratch=20--help'=20for=20more=20=
+information.=0A=20=20=20=20...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/generic/452.out=20=
+/home/ctheune/results/generic/452.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Ageneric/453=09=204s=0Ageneric/454=09=205s=0Ageneric/455=09[not=20=
+run]=20This=20test=20requires=20a=20valid=20$LOGWRITES_DEV=0Ageneric/456=09=
+=204s=0Ageneric/457=09[not=20run]=20This=20test=20requires=20a=20valid=20=
+$LOGWRITES_DEV=0Ageneric/458=09=205s=0Ageneric/459=09[not=20run]=20=
+thin_check=20utility=20required,=20skipped=20this=20test=0Ageneric/460=09=
+=204s=0Ageneric/461=09=2025s=0Ageneric/462=09[not=20run]=20mount=20=
+/dev/vda4=20with=20dax=20failed=0Ageneric/463=09=203s=0Ageneric/464=09=20=
+62s=0Ageneric/465=09=2022s=0Ageneric/466=09=207s=0Ageneric/467=09=206s=0A=
+generic/468=09=207s=0Ageneric/469=09=204s=0Ageneric/470=09[not=20run]=20=
+This=20test=20requires=20a=20valid=20$LOGWRITES_DEV=0Ageneric/471=09=20=
+4s=0Ageneric/472=09=204s=0Ageneric/473=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/generic/473.out.bad)=0A=20=20=20=20---=20=
+tests/generic/473.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=
+=20+++=20/home/ctheune/results/generic/473.out.bad=092022-02-01=20=
+08:26:46.000979754=20+0100=0A=20=20=20=20@@=20-6,7=20+6,7=20@@=0A=20=20=20=
+=20=201:=20[256..287]:=20hole=0A=20=20=20=20=20Hole=20+=20Data=0A=20=20=20=
+=20=200:=20[0..127]:=20hole=0A=20=20=20=20-1:=20[128..255]:=20data=0A=20=20=
+=20=20+1:=20[128..135]:=20data=0A=20=20=20=20=20Hole=20+=20Data=20+=20=
+Hole=0A=20=20=20=20=200:=20[0..127]:=20hole=0A=20=20=20=20...=0A=20=20=20=
+=20(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/generic/473.out=20=
+/home/ctheune/results/generic/473.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Ageneric/474=09=203s=0Ageneric/475=09=20170s=0Ageneric/476=09=20=
+387s=0Ageneric/477=09=206s=0Ageneric/478=09=2023s=0Ageneric/479=09=204s=0A=
+generic/480=09=204s=0Ageneric/481=09=204s=0Ageneric/482=09[not=20run]=20=
+This=20test=20requires=20a=20valid=20$LOGWRITES_DEV=0Ageneric/483=09=20=
+9s=0Ageneric/484=09=204s=0Ageneric/485=09=205s=0Ageneric/486=09=203s=0A=
+generic/487=09[not=20run]=20This=20test=20requires=20a=20valid=20=
+$SCRATCH_LOGDEV=0Ageneric/488=09=203s=0Ageneric/489=09=203s=0A=
+generic/490=09=203s=0Ageneric/491=09=203s=0Ageneric/492=09=203s=0A=
+generic/493=09=205s=0Ageneric/494=09=205s=0Ageneric/495=09=204s=0A=
+generic/496=09=205s=0Ageneric/497=09=204s=0Ageneric/498=09=203s=0A=
+generic/499=09=204s=0Ageneric/500=09=2010s=0Ageneric/501=09=2037s=0A=
+generic/502=09=205s=0Ageneric/503=09=209s=0Ageneric/504=09=203s=0A=
+generic/505=09=204s=0Ageneric/506=09=205s=0Ageneric/507=09=207s=0A=
+generic/508=09=205s=0Ageneric/509=09=203s=0Ageneric/510=09=205s=0A=
+generic/511=09=204s=0Ageneric/512=09=204s=0Ageneric/513=09=205s=0A=
+generic/514=09[not=20run]=20fsgqa=20user=20not=20defined.=0Ageneric/515=09=
+=204s=0Ageneric/516=09=204s=0Ageneric/517=09=204s=0Ageneric/518=09=204s=0A=
+generic/519=09=204s=0Ageneric/520=09=2036s=0Ageneric/521=09=201286s=0A=
+generic/522=09=201699s=0Ageneric/523=09=203s=0Ageneric/524=09=208s=0A=
+generic/525=09=205s=0Ageneric/526=09=205s=0Ageneric/527=09=203s=0A=
+generic/528=09=204s=0Ageneric/529=09=203s=0Ageneric/530=09=2014s=0A=
+generic/531=09=2014s=0Ageneric/532=09=204s=0Ageneric/533=09=206s=0A=
+generic/534=09=203s=0Ageneric/535=09=205s=0Ageneric/536=09=206s=0A=
+generic/537=09=204s=0Ageneric/538=09=206s=0Ageneric/539=09=204s=0A=
+generic/540=09=205s=0Ageneric/541=09=206s=0Ageneric/542=09=206s=0A=
+generic/543=09=207s=0Ageneric/544=09=207s=0Ageneric/545=09=206s=0A=
+generic/546=09=205s=0Ageneric/547=09=209s=0Ageneric/548=09[not=20run]=20=
+No=20encryption=20support=20for=20xfs=0Ageneric/549=09[not=20run]=20No=20=
+encryption=20support=20for=20xfs=0Ageneric/550=09[not=20run]=20No=20=
+encryption=20support=20for=20xfs=0Ageneric/551=09=20206s=0Ageneric/552=09=
+=205s=0Ageneric/553=09=208s=0Ageneric/554=09=204s=0Ageneric/555=09=207s=0A=
+generic/556=09[not=20run]=20xfs=20does=20not=20support=20casefold=20=
+feature=0Ageneric/557=09=208s=0Ageneric/558=09=2075s=0Ageneric/559=09=
+[not=20run]=20duperemove=20utility=20required,=20skipped=20this=20test=0A=
+generic/560=09[not=20run]=20duperemove=20utility=20required,=20skipped=20=
+this=20test=0Ageneric/561=09[not=20run]=20duperemove=20utility=20=
+required,=20skipped=20this=20test=0Ageneric/562=09=20169s=0Ageneric/563=09=
+=2053s=0Ageneric/564=09=205s=0Ageneric/565=09=206s=0Ageneric/566=09[not=20=
+run]=20fsgqa=20user=20not=20defined.=0Ageneric/567=09=204s=0Ageneric/568=09=
+=204s=0Ageneric/569=09=205s=0Ageneric/570=09[not=20run]=20userspace=20=
+hibernation=20to=20swap=20is=20enabled=0Ageneric/571=09=2011s=0A=
+generic/572=09[not=20run]=20fsverity=20utility=20required,=20skipped=20=
+this=20test=0Ageneric/573=09[not=20run]=20fsverity=20utility=20required,=20=
+skipped=20this=20test=0Ageneric/574=09[not=20run]=20fsverity=20utility=20=
+required,=20skipped=20this=20test=0Ageneric/575=09[not=20run]=20fsverity=20=
+utility=20required,=20skipped=20this=20test=0Ageneric/576=09[not=20run]=20=
+fsverity=20utility=20required,=20skipped=20this=20test=0Ageneric/577=09=
+[not=20run]=20fsverity=20utility=20required,=20skipped=20this=20test=0A=
+generic/578=09=204s=0Ageneric/579=09[not=20run]=20fsverity=20utility=20=
+required,=20skipped=20this=20test=0Ageneric/580=09[not=20run]=20No=20=
+encryption=20support=20for=20xfs=0Ageneric/581=09[not=20run]=20fsgqa=20=
+user=20not=20defined.=0Ageneric/582=09[not=20run]=20No=20encryption=20=
+support=20for=20xfs=0Ageneric/583=09[not=20run]=20No=20encryption=20=
+support=20for=20xfs=0Ageneric/584=09[not=20run]=20No=20encryption=20=
+support=20for=20xfs=0Ageneric/585=09=204s=0Ageneric/586=09=206s=0A=
+generic/587=09[not=20run]=20fsgqa=20user=20not=20defined.=0Ageneric/588=09=
+=204s=0Ageneric/589=09=2020s=0Ageneric/590=09=2026s=0Ageneric/591=09=20=
+7s=0Ageneric/592=09[not=20run]=20No=20encryption=20support=20for=20xfs=0A=
+generic/593=09[not=20run]=20No=20encryption=20support=20for=20xfs=0A=
+generic/594=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/generic/594.out.bad)=0A=20=20=20=20---=20=
+tests/generic/594.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=
+=20+++=20/home/ctheune/results/generic/594.out.bad=092022-02-01=20=
+09:44:44.916917137=20+0100=0A=20=20=20=20@@=20-5,31=20+5,31=20@@=0A=20=20=
+=20=20=20***=20Report=20for=20group=20quotas=20on=20device=20SCRATCH_DEV=0A=
+=20=20=20=20=20Block=20grace=20time:=20DEF_TIME;=20Inode=20grace=20time:=20=
+DEF_TIME=0A=20=20=20=20=20***=20Report=20for=20project=20quotas=20on=20=
+device=20SCRATCH_DEV=0A=20=20=20=20-Block=20grace=20time:=2000:10;=20=
+Inode=20grace=20time:=2000:20=0A=20=20=20=20+Block=20grace=20time:=20=
+DEF_TIME;=20Inode=20grace=20time:=20DEF_TIME=0A=20=20=20=20=20=0A=20=20=20=
+=20=202.=20set=20group=20quota=20timer=0A=20=20=20=20...=0A=20=20=20=20=
+(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/generic/594.out=20=
+/home/ctheune/results/generic/594.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Ageneric/595=09[not=20run]=20No=20encryption=20support=20for=20=
+xfs=0Ageneric/596=09[not=20run]=20accton=20utility=20required,=20skipped=20=
+this=20test=0Ageneric/597=09[not=20run]=20fsgqa2=20user=20not=20defined.=0A=
+generic/598=09[not=20run]=20fsgqa2=20user=20not=20defined.=0Ageneric/599=09=
+=203s=0Ageneric/600=09[not=20run]=20fsgqa=20user=20not=20defined.=0A=
+generic/601=09[not=20run]=20fsgqa=20user=20not=20defined.=0Ageneric/602=09=
+[not=20run]=20No=20encryption=20support=20for=20xfs=0Ageneric/603=09[not=20=
+run]=20fsgqa=20user=20not=20defined.=0Ageneric/604=09=205s=0Ageneric/605=09=
+[not=20run]=20mount=20/dev/vda4=20with=20dax=3Dalways=20failed=0A=
+generic/606=09[not=20run]=20mount=20/dev/vda4=20with=20dax=3Dalways=20=
+failed=0Ageneric/607=09=205s=0Ageneric/608=09[not=20run]=20mount=20=
+/dev/vda4=20with=20dax=3Dalways=20failed=0Ageneric/609=09=205s=0A=
+generic/610=09=2040s=0Ageneric/611=09=206s=0Ageneric/612=09=208s=0A=
+generic/613=09[not=20run]=20No=20encryption=20support=20for=20xfs=0A=
+generic/614=09=203s=0Ageneric/615=09=2043s=0Ageneric/616=09[not=20run]=20=
+kernel=20does=20not=20support=20IO_URING=0Ageneric/617=09[not=20run]=20=
+kernel=20does=20not=20support=20IO_URING=0Ageneric/618=09=203s=0A=
+generic/619=09=2020s=0Ageneric/620=09=206s=0Ageneric/621=09[not=20run]=20=
+No=20encryption=20support=20for=20xfs=0Ageneric/622=09=2031s=0A=
+generic/623=09_check_dmesg:=20something=20found=20in=20dmesg=20(see=20=
+/home/ctheune/results/generic/623.dmesg)=0A=0Ageneric/624=09[not=20run]=20=
+fsverity=20utility=20required,=20skipped=20this=20test=0Ageneric/625=09=
+[not=20run]=20fsverity=20utility=20required,=20skipped=20this=20test=0A=
+generic/626=09=207s=0Ageneric/627=09=2024s=0Ageneric/628=09=204s=0A=
+generic/629=09=205s=0Ageneric/630=09=2036s=0Ageneric/631=09=2033s=0A=
+generic/632=09=2010s=0Ageneric/633=09[not=20run]=20kernel=20does=20not=20=
+support=20mount_setattr=20syscall=0Ageneric/634=09=203s=0Ageneric/635=09=20=
+6s=0Ageneric/636=09=206s=0Ageneric/637=09=209s=0Ageneric/638=09=205s=0A=
+generic/639=09=207s=0Ageneric/640=09=203s=0Ageneric/641=09=206s=0A=
+generic/642=09=2037s=0Ageneric/643=09=206s=0Ageneric/644=09[not=20run]=20=
+kernel=20does=20not=20support=20mount_setattr=20syscall=0Ageneric/645=09=
+[not=20run]=20kernel=20does=20not=20support=20mount_setattr=20syscall=0A=
+generic/646=09_check_xfs_filesystem:=20filesystem=20on=20/dev/vda4=20is=20=
+inconsistent=20(r)=0A(see=20/home/ctheune/results/generic/646.full=20for=20=
+details)=0A=0Ageneric/647=09=205s=0Ageneric/648=09=20124s=0Ageneric/649=09=
+=204s=0Ageneric/650=09=2074s=0Ageneric/651=09=204s=0Ageneric/652=09=204s=0A=
+generic/653=09=204s=0Ageneric/654=09=205s=0Ageneric/655=09=209s=0A=
+generic/656=09[not=20run]=20kernel=20does=20not=20support=20=
+mount_setattr=20syscall=0Ageneric/657=09=205s=0Ageneric/658=09=205s=0A=
+generic/659=09=205s=0Ageneric/660=09=205s=0Ageneric/661=09=206s=0A=
+generic/662=09=205s=0Ageneric/663=09=205s=0Ageneric/664=09=205s=0A=
+generic/665=09=206s=0Ageneric/666=09=205s=0Ageneric/667=09=206s=0A=
+generic/668=09=205s=0Ageneric/669=09=206s=0Ageneric/670=09=2013s=0A=
+generic/671=09=2018s=0Ageneric/672=09=2088s=0Ashared/002=09=2025s=0A=
+shared/032=09=204s=0Ashared/298=09=204s=0Axfs/001=09=209s=0Axfs/002=09=20=
+18s=0Axfs/003=09=2034s=0Axfs/004=09=203s=0Axfs/005=09=203s=0Axfs/006=09=20=
+9s=0Axfs/007=09=206s=0Axfs/008=09=205s=0Axfs/009=09=204s=0Axfs/010=09=20=
+9s=0Axfs/011=09=2019s=0Axfs/012=09=205s=0Axfs/013=09=20241s=0Axfs/014=09=
+[not=20run]=20fsgqa=20user=20not=20defined.=0Axfs/015=09=2023s=0Axfs/016=09=
+=20122s=0Axfs/017=09=209s=0Axfs/018=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/018.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/018.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/018.out.bad=092022-02-01=20=
+10:08:44.814221935=20+0100=0A=20=20=20=20@@=20-1,17=20+1,11=20@@=0A=20=20=
+=20=20=20QA=20output=20created=20by=20018=0A=20=20=20=20=20***=20init=20=
+FS=0A=20=20=20=20-***=20compare=20logprint:=20018.op=20with=20=
+018.fulldir/op.mnt-onoalign,logbsize=3D32k.mkfs-lsize=3D2000b-llazy-count=3D=
+1-lversion=3D1.filtered=0A=20=20=20=20-***=20compare=20logprint:=20=
+018.trans_inode=20with=20=
+018.fulldir/trans_inode.mnt-onoalign,logbsize=3D32k.mkfs-lsize=3D2000b-lla=
+zy-count=3D1-lversion=3D1.filtered=0A=20=20=20=20-***=20compare=20=
+logprint:=20018.trans_buf=20with=20=
+018.fulldir/trans_buf.mnt-onoalign,logbsize=3D32k.mkfs-lsize=3D2000b-llazy=
+-count=3D1-lversion=3D1.filtered=0A=20=20=20=20-***=20compare=20=
+logprint:=20018.op=20with=20=
+018.fulldir/op.mnt-onoalign,logbsize=3D32k.mkfs-lsize=3D2000b-llazy-count=3D=
+1-lversion=3D2.filtered=0A=20=20=20=20-***=20compare=20logprint:=20=
+018.trans_inode=20with=20=
+018.fulldir/trans_inode.mnt-onoalign,logbsize=3D32k.mkfs-lsize=3D2000b-lla=
+zy-count=3D1-lversion=3D2.filtered=0A=20=20=20=20...=0A=20=20=20=20(Run=20=
+'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/018.out=20=
+/home/ctheune/results/xfs/018.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/019=09=208s=0Axfs/020=09=2010s=0Axfs/021=09=203s=0Axfs/022=09=
+[not=20run]=20xfsdump=20not=20found=0Axfs/023=09[not=20run]=20xfsdump=20=
+not=20found=0Axfs/024=09[not=20run]=20xfsdump=20not=20found=0Axfs/025=09=
+[not=20run]=20xfsdump=20not=20found=0Axfs/026=09[not=20run]=20xfsdump=20=
+not=20found=0Axfs/027=09[not=20run]=20xfsdump=20not=20found=0Axfs/028=09=
+[not=20run]=20xfsdump=20not=20found=0Axfs/029=09=203s=0Axfs/030=09=2012s=0A=
+xfs/031=09_check_xfs_filesystem:=20filesystem=20on=20/dev/vda4=20is=20=
+inconsistent=20(r)=0A(see=20/home/ctheune/results/xfs/031.full=20for=20=
+details)=0A-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/031.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/031.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/031.out.bad=092022-02-01=20=
+10:09:47.472542659=20+0100=0A=20=20=20=20@@=20-38,78=20+38,12=20@@=0A=20=20=
+=20=20=20done=0A=20=20=20=20=20=0A=20=20=20=20=20=3D=3D=3D=20twenty=20=
+entries=20(block=20form)=0A=20=20=20=20+mkfs.xfs:=20cannot=20open=20=
+true:=20No=20such=20file=20or=20directory=0A=20=20=20=20=20Repairing,=20=
+iteration=201=0A=20=20=20=20-Phase=201=20-=20find=20and=20verify=20=
+superblock...=0A=20=20=20=20-Phase=202=20-=20using=20<TYPEOF>=20log=0A=20=
+=20=20=20...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/031.out=20=
+/home/ctheune/results/xfs/031.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/032=09=2026s=0Axfs/033=09no=20qualified=20output=0Axfs/034=09=
+=204s=0Axfs/035=09[not=20run]=20xfsdump=20not=20found=0Axfs/036=09[not=20=
+run]=20xfsdump=20not=20found=0Axfs/037=09[not=20run]=20xfsdump=20not=20=
+found=0Axfs/038=09[not=20run]=20xfsdump=20not=20found=0Axfs/039=09[not=20=
+run]=20xfsdump=20not=20found=0Axfs/040=09[not=20run]=20Can't=20run=20=
+libxfs-diff=20without=20KWORKAREA=20set=0Axfs/041=09=2049s=0Axfs/042=09=20=
+23s=0Axfs/043=09[not=20run]=20xfsdump=20not=20found=0Axfs/044=09[not=20=
+run]=20This=20test=20requires=20a=20valid=20$SCRATCH_LOGDEV=0Axfs/045=09=20=
+5s=0Axfs/046=09[not=20run]=20xfsdump=20not=20found=0Axfs/047=09[not=20=
+run]=20xfsdump=20not=20found=0Axfs/048=09=203s=0Axfs/049=09=207s=0A=
+xfs/050=09=2018s=0Axfs/051=09[not=20run]=20sysfs=20attribute=20=
+'debug/log_recovery_delay'=20is=20not=20supported=0Axfs/052=09=204s=0A=
+xfs/053=09=205s=0Axfs/054=09=203s=0Axfs/055=09[not=20run]=20xfsdump=20=
+not=20found=0Axfs/056=09[not=20run]=20xfsdump=20not=20found=0Axfs/057=09=
+[not=20run]=20XFS=20error=20injection=20requires=20CONFIG_XFS_DEBUG=0A=
+xfs/058=09=204s=0Axfs/059=09[not=20run]=20xfsdump=20not=20found=0A=
+xfs/060=09[not=20run]=20xfsdump=20not=20found=0Axfs/061=09[not=20run]=20=
+xfsdump=20not=20found=0Axfs/062=09=2019s=0Axfs/063=09[not=20run]=20=
+xfsdump=20not=20found=0Axfs/064=09[not=20run]=20xfsdump=20not=20found=0A=
+xfs/065=09[not=20run]=20xfsdump=20not=20found=0Axfs/066=09[not=20run]=20=
+xfsdump=20not=20found=0Axfs/067=09=204s=0Axfs/068=09[not=20run]=20=
+xfsdump=20not=20found=0Axfs/069=09=207s=0Axfs/070=09=204s=0Axfs/071=09no=20=
+qualified=20output=0Axfs/072=09=204s=0Axfs/073=09=2019s=0Axfs/074=09=20=
+4s=0Axfs/075=09=204s=0Axfs/076=09=20112s=0Axfs/077=09=2012s=0Axfs/078=09=20=
+13s=0Axfs/079=09=2018s=0Axfs/080=09=207s=0Axfs/081=09[failed,=20exit=20=
+status=201]-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/081.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/081.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/081.out.bad=092022-02-01=20=
+10:17:14.675684724=20+0100=0A=20=20=20=20@@=20-1,4=20+1,10=20@@=0A=20=20=20=
+=20=20QA=20output=20created=20by=20081=0A=20=20=20=20=20***=20init=20FS=0A=
+=20=20=20=20-***=20compare=20logprint:=20081.ugquota.trans_inode=20with=20=
+081.fulldir/trans_inode.mnt-oquota,gquota.mkfs-lsize=3D2000b-llazy-count=3D=
+1-lversion=3D1.filtered=0A=20=20=20=20+=0A=20=20=20=20+***=20Cannot=20=
+mkfs=20for=20this=20test=20using=20option=20specified:=20-l=20size=3D2000b=
+=20-l=20lazy-count=3D1=20-l=20version=3D1=20***=0A=20=20=20=20+=0A=20=20=20=
+=20+***=20compare=20logprint:=20081.ugquota.trans_inode=20with=20=
+/home/ctheune/results/xfs/081.fulldir/trans_inode.mnt-oquota,gquota.mkfs-l=
+size=3D2000b-llazy-count=3D1-lversion=3D1.filtered=0A=20=20=20=20...=0A=20=
+=20=20=20(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/081.out=20=
+/home/ctheune/results/xfs/081.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/082=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/082.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/082.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/082.out.bad=092022-02-01=20=
+10:17:21.672608619=20+0100=0A=20=20=20=20@@=20-1,39=20+1,14=20@@=0A=20=20=
+=20=20=20QA=20output=20created=20by=20082=0A=20=20=20=20=20***=20init=20=
+FS=0A=20=20=20=20=20---=20mkfs=3Dversion=3D2,=20mnt=3Dlogbsize=3D32k,=20=
+sync=3Dsync=20---=0A=20=20=20=20-***=20compare=20logprint:=20=
+082.trans_inode=20with=20=
+082.fulldir/trans_inode.mnt-ologbsize=3D32k.mkfs-lsize=3D2000b-llazy-count=
+=3D1-lversion=3D2.sync.filtered=0A=20=20=20=20-***=20compare=20logprint:=20=
+082.trans_buf=20with=20=
+082.fulldir/trans_buf.mnt-ologbsize=3D32k.mkfs-lsize=3D2000b-llazy-count=3D=
+1-lversion=3D2.sync.filtered=0A=20=20=20=20----=20=
+mkfs=3Dversion=3D2,su=3D4096,=20mnt=3Dlogbsize=3D32k,=20sync=3Dsync=20=
+---=0A=20=20=20=20-***=20compare=20logprint:=20082.trans_inode=20with=20=
+082.fulldir/trans_inode.mnt-ologbsize=3D32k.mkfs-lsize=3D2000b-llazy-count=
+=3D1-lversion=3D2,su=3D4096.sync.filtered=0A=20=20=20=20...=0A=20=20=20=20=
+(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/082.out=20=
+/home/ctheune/results/xfs/082.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/083=09=203167s=0Axfs/084=09=2064s=0Axfs/085=09=2010s=0A=
+xfs/086=09=2010s=0Axfs/087=09=2012s=0Axfs/088=09=2012s=0Axfs/089=09=20=
+13s=0Axfs/090=09[not=20run]=20External=20volumes=20not=20in=20use,=20=
+skipped=20this=20test=0Axfs/091=09=2012s=0Axfs/092=09=204s=0Axfs/093=09=20=
+11s=0Axfs/094=09[not=20run]=20External=20volumes=20not=20in=20use,=20=
+skipped=20this=20test=0Axfs/095=09=204s=0Axfs/096=09[not=20run]=20=
+Requires=20older=20mkfs=20without=20strict=20input=20checks:=20the=20=
+last=20supported=20version=20of=20xfsprogs=20is=204.5.=0Axfs/097=09=20=
+11s=0Axfs/098=09=2014s=0Axfs/099=09=206s=0Axfs/100=09=208s=0Axfs/101=09=20=
+8s=0Axfs/102=09=2025s=0Axfs/103=09=204s=0Axfs/104=09=2024s=0Axfs/105=09=20=
+25s=0Axfs/106=09[not=20run]=20fsgqa=20user=20not=20defined.=0Axfs/108=09=20=
+6s=0Axfs/109=09=2047s=0Axfs/110=09=207s=0Axfs/111=09=208s=0Axfs/112=09=20=
+22s=0Axfs/113=09=20130s=0Axfs/114=09[not=20run]=20rmapbt=20not=20=
+supported=20by=20scratch=20filesystem=20type:=20xfs=0Axfs/115=09=204s=0A=
+xfs/116=09=204s=0Axfs/117=09=2014s=0Axfs/118=09=2028s=0Axfs/119=09=2011s=0A=
+xfs/120=09=206s=0Axfs/121=09=2010s=0Axfs/122=09[not=20run]=20indent=20=
+utility=20required,=20skipped=20this=20test=0Axfs/123=09=204s=0Axfs/124=09=
+=207s=0Axfs/125=09=2011s=0Axfs/126=09=2010s=0Axfs/127=09=207s=0Axfs/128=09=
+=2025s=0Axfs/129=09=2010s=0Axfs/130=09=208s=0Axfs/131=09[not=20run]=20=
+External=20volumes=20not=20in=20use,=20skipped=20this=20test=0Axfs/132=09=
+=203s=0Axfs/133=09=205s=0Axfs/134=09=204s=0Axfs/135=09=208s=0Axfs/136=09=
+-=20output=20mismatch=20(see=20/home/ctheune/results/xfs/136.out.bad)=0A=20=
+=20=20=20---=20tests/xfs/136.out=091970-01-01=2001:00:01.000000000=20=
++0100=0A=20=20=20=20+++=20/home/ctheune/results/xfs/136.out.bad=09=
+2022-02-01=2012:19:39.365860287=20+0100=0A=20=20=20=20@@=20-1,5=20+1,5=20=
+@@=0A=20=20=20=20=20QA=20output=20created=20by=20136=0A=20=20=20=20=
+-inum=3D67=0A=20=20=20=20+inum=3D131=0A=20=20=20=20=20core.format=20=3D=20=
+2=20(extents)=0A=20=20=20=20=20core.size=20=3D=200=0A=20=20=20=20=20=
+core.extsize=20=3D=200=0A=20=20=20=20@@=20-7,6=20+7,7=20@@=0A=20=20=20=20=
+...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/136.out=20=
+/home/ctheune/results/xfs/136.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/137=09=2011s=0Axfs/138=09=205s=0Axfs/139=09=2021s=0Axfs/140=09=
+=20103s=0Axfs/141=09[not=20run]=20XFS=20error=20injection=20requires=20=
+CONFIG_XFS_DEBUG=0Axfs/142=09[not=20run]=20External=20volumes=20not=20in=20=
+use,=20skipped=20this=20test=0Axfs/143=09[not=20run]=20External=20=
+volumes=20not=20in=20use,=20skipped=20this=20test=0Axfs/144=09=208s=0A=
+xfs/145=09=204s=0Axfs/146=09[not=20run]=20External=20volumes=20not=20in=20=
+use,=20skipped=20this=20test=0Axfs/147=09[not=20run]=20External=20=
+volumes=20not=20in=20use,=20skipped=20this=20test=0Axfs/148=09=204s=0A=
+xfs/149=09=202s=0Axfs/150=09=205s=0Axfs/151=09=207s=0Axfs/152=09[not=20=
+run]=20kernel=20does=20not=20support=20mount_setattr=20syscall=0Axfs/153=09=
+[not=20run]=20fsgqa=20user=20not=20defined.=0Axfs/154=09-=20output=20=
+mismatch=20(see=20/home/ctheune/results/xfs/154.out.bad)=0A=20=20=20=20=
+---=20tests/xfs/154.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=
+=20=20+++=20/home/ctheune/results/xfs/154.out.bad=092022-02-01=20=
+12:23:24.895399427=20+0100=0A=20=20=20=20@@=20-1,4=20+1,4=20@@=0A=20=20=20=
+=20=20QA=20output=20created=20by=20154=0A=20=20=20=20=20FEATURES:=20=
+NEEDSREPAIR:YES=0A=20=20=20=20-mount:=20SCRATCH_MNT:=20mount(2)=20system=20=
+call=20failed:=20Structure=20needs=20cleaning.=0A=20=20=20=20+mount:=20=
+SCRATCH_MNT:=20wrong=20fs=20type,=20bad=20option,=20bad=20superblock=20=
+on=20SCRATCH_DEV,=20missing=20codepage=20or=20helper=20program,=20or=20=
+other=20error.=0A=20=20=20=20=20FEATURES:=20NEEDSREPAIR:NO=0A=20=20=20=20=
+...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/154.out=20=
+/home/ctheune/results/xfs/154.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/155=09=2022s=0Axfs/156=09=208s=0Axfs/157=09=207s=0Axfs/158=09=
+-=20output=20mismatch=20(see=20/home/ctheune/results/xfs/158.out.bad)=0A=20=
+=20=20=20---=20tests/xfs/158.out=091970-01-01=2001:00:01.000000000=20=
++0100=0A=20=20=20=20+++=20/home/ctheune/results/xfs/158.out.bad=09=
+2022-02-01=2012:24:12.782877275=20+0100=0A=20=20=20=20@@=20-8,7=20+8,7=20=
+@@=0A=20=20=20=20=20Fail=20partway=20through=20upgrading=0A=20=20=20=20=20=
+Adding=20inode=20btree=20counts=20to=20filesystem.=0A=20=20=20=20=20=
+FEATURES:=20NEEDSREPAIR:YES=20INOBTCNT:YES=0A=20=20=20=20-mount:=20=
+SCRATCH_MNT:=20mount(2)=20system=20call=20failed:=20Structure=20needs=20=
+cleaning.=0A=20=20=20=20+mount:=20SCRATCH_MNT:=20wrong=20fs=20type,=20=
+bad=20option,=20bad=20superblock=20on=20SCRATCH_DEV,=20missing=20=
+codepage=20or=20helper=20program,=20or=20other=20error.=0A=20=20=20=20=20=
+Re-run=20repair=20to=20finish=20upgrade=0A=20=20=20=20=20FEATURES:=20=
+NEEDSREPAIR:NO=20INOBTCNT:YES=0A=20=20=20=20...=0A=20=20=20=20(Run=20=
+'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/158.out=20=
+/home/ctheune/results/xfs/158.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/159=09=206s=0Axfs/160=09=207s=0Axfs/161=09[not=20run]=20=
+quota:=20bigtime=20support=20not=20detected=0Axfs/162=09=2055s=0Axfs/163=09=
+[not=20run]=20xfsprogs=20does=20not=20support=20shrinking=0Axfs/164=09=20=
+3s=0Axfs/165=09=202s=0Axfs/166=09=204s=0Axfs/167=09=20149s=0Axfs/168=09=
+[not=20run]=20xfsprogs=20does=20not=20support=20shrinking=0Axfs/169=09=20=
+40s=0Axfs/170=09=209s=0Axfs/171=09=2073s=0Axfs/172=09[failed,=20exit=20=
+status=201]-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/172.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/172.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/172.out.bad=092022-02-01=20=
+12:30:25.762813308=20+0100=0A=20=20=20=20@@=20-3,9=20+3,5=20@@=0A=20=20=20=
+=20=20#=20streaming=0A=20=20=20=20=20#=20sync=20AGs...=0A=20=20=20=20=20=
+#=20checking=20stream=20AGs...=0A=20=20=20=20-+=20expected=20failure,=20=
+matching=20AGs=0A=20=20=20=20-#=20testing=2064=2016=2020=2010=201=200=20=
+1=20....=0A=20=20=20=20-#=20streaming=0A=20=20=20=20-#=20sync=20AGs...=0A=
+=20=20=20=20...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/172.out=20=
+/home/ctheune/results/xfs/172.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/173=09=2047s=0Axfs/174=09=2019s=0Axfs/175=09=205s=0Axfs/176=09=
+[not=20run]=20xfsprogs=20does=20not=20support=20shrinking=0Axfs/177=09-=20=
+output=20mismatch=20(see=20/home/ctheune/results/xfs/177.out.bad)=0A=20=20=
+=20=20---=20tests/xfs/177.out=091970-01-01=2001:00:01.000000000=20+0100=0A=
+=20=20=20=20+++=20/home/ctheune/results/xfs/177.out.bad=092022-02-01=20=
+12:32:04.098742455=20+0100=0A=20=20=20=20@@=20-3,13=20+3,16=20@@=0A=20=20=
+=20=20=20inodes=20after=20creating=20files=20is=20in=20range=0A=20=20=20=20=
+=20Round=201=0A=20=20=20=20=20inodes=20after=20bulkstat=20is=20in=20=
+range=0A=20=20=20=20-inodes=20after=20expire=20is=20in=20range=0A=20=20=20=
+=20+inodes=20after=20expire=20has=20value=20of=201028=0A=20=20=20=20=
++inodes=20after=20expire=20is=20NOT=20in=20range=20-2=20..=208=0A=20=20=20=
+=20=20Round=202=0A=20=20=20=20...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/177.out=20=
+/home/ctheune/results/xfs/177.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/178=09=205s=0Axfs/179=09=206s=0Axfs/180=09=206s=0Axfs/181=09=20=
+17s=0Axfs/182=09=2016s=0Axfs/183=09=205s=0Axfs/184=09=206s=0Axfs/185=09-=20=
+output=20mismatch=20(see=20/home/ctheune/results/xfs/185.out.bad)=0A=20=20=
+=20=20---=20tests/xfs/185.out=091970-01-01=2001:00:01.000000000=20+0100=0A=
+=20=20=20=20+++=20/home/ctheune/results/xfs/185.out.bad=092022-02-01=20=
+12:33:12.312999728=20+0100=0A=20=20=20=20@@=20-1,2=20+1,4=20@@=0A=20=20=20=
+=20=20QA=20output=20created=20by=20185=0A=20=20=20=20+No=20fsmap=20=
+record=20for=20rtdev=207:1=20above=20sector=20204808=0A=20=20=20=20+No=20=
+fsmap=20record=20for=20rtdev=207:1=20ending=20at=20sector=20409599=0A=20=20=
+=20=20=20Silence=20is=20golden=0A=20=20=20=20...=0A=20=20=20=20(Run=20=
+'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/185.out=20=
+/home/ctheune/results/xfs/185.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/186=09[not=20run]=20attr=20v1=20not=20supported=20on=20=
+/dev/vda4=0Axfs/187=09[not=20run]=20External=20volumes=20not=20in=20use,=20=
+skipped=20this=20test=0Axfs/188=09=208s=0Axfs/189=09[not=20run]=20=
+noattr2=20mount=20option=20not=20supported=20on=20/dev/vda4=0Axfs/190=09=20=
+3s=0Axfs/191-input-validation=09=207s=0Axfs/192=09=2011s=0Axfs/193=09=20=
+4s=0Axfs/194=09=205s=0Axfs/195=09[not=20run]=20fsgqa=20user=20not=20=
+defined.=0Axfs/196=09[not=20run]=20XFS=20error=20injection=20requires=20=
+CONFIG_XFS_DEBUG=0Axfs/197=09[not=20run]=20This=20test=20is=20only=20=
+valid=20on=2032=20bit=20machines=0Axfs/198=09=2010s=0Axfs/199=09=205s=0A=
+xfs/200=09=205s=0Axfs/201=09=2014s=0Axfs/202=09=204s=0Axfs/203=09=204s=0A=
+xfs/204=09=2011s=0Axfs/205=09=208s=0Axfs/206=09=203s=0Axfs/207=09=204s=0A=
+xfs/208=09=207s=0Axfs/209=09=205s=0Axfs/210=09=205s=0Axfs/211=09=202430s=0A=
+xfs/212=09=205s=0Axfs/213=09[not=20run]=20fsgqa=20user=20not=20defined.=0A=
+xfs/214=09[not=20run]=20fsgqa=20user=20not=20defined.=0Axfs/215=09=205s=0A=
+xfs/216=09=206s=0Axfs/217=09=205s=0Axfs/218=09=205s=0Axfs/219=09=206s=0A=
+xfs/220=09=204s=0Axfs/221=09=206s=0Axfs/222=09=205s=0Axfs/223=09=205s=0A=
+xfs/224=09=2010s=0Axfs/225=09=208s=0Axfs/226=09=207s=0Axfs/227=09=20459s=0A=
+xfs/228=09=207s=0Axfs/229=09=2038s=0Axfs/230=09=205s=0Axfs/231=09=209s=0A=
+xfs/232=09=209s=0Axfs/233=09[not=20run]=20rmapbt=20not=20supported=20by=20=
+scratch=20filesystem=20type:=20xfs=0Axfs/234=09[not=20run]=20rmapbt=20=
+not=20supported=20by=20scratch=20filesystem=20type:=20xfs=0Axfs/235=09=
+[not=20run]=20rmapbt=20not=20supported=20by=20scratch=20filesystem=20=
+type:=20xfs=0Axfs/236=09[not=20run]=20rmapbt=20not=20supported=20by=20=
+scratch=20filesystem=20type:=20xfs=0Axfs/237=09=207s=0Axfs/238=09=206s=0A=
+xfs/239=09=207s=0Axfs/240=09=209s=0Axfs/241=09=2011s=0Axfs/242=09=209s=0A=
+xfs/243=09[not=20run]=20Require=20XFS=20built=20with=20CONFIG_XFS_DEBUG=0A=
+xfs/244=09[not=20run]=2016=20bit=20project=20IDs=20not=20supported=20on=20=
+/dev/vda4=0Axfs/245=09[not=20run]=20Require=20XFS=20built=20with=20=
+CONFIG_XFS_DEBUG=0Axfs/246=09[not=20run]=20Require=20XFS=20built=20with=20=
+CONFIG_XFS_DEBUG=0Axfs/247=09=204s=0Axfs/248=09=207s=0Axfs/249=09=206s=0A=
+xfs/250=09=2023s=0Axfs/251=09=204s=0Axfs/252=09=2010s=0Axfs/253=09=205s=0A=
+xfs/254=09=206s=0Axfs/255=09=206s=0Axfs/256=09=207s=0Axfs/257=09=208s=0A=
+xfs/258=09=208s=0Axfs/259=09=207s=0Axfs/260=09=206s=0Axfs/261=09=204s=0A=
+xfs/262=09[not=20run]=20XFS=20error=20injection=20requires=20=
+CONFIG_XFS_DEBUG=0Axfs/263=09=205s=0Axfs/264=09=2012s=0Axfs/265=09=2027s=0A=
+xfs/266=09[not=20run]=20xfsdump=20not=20found=0Axfs/267=09[not=20run]=20=
+xfsdump=20not=20found=0Axfs/268=09[not=20run]=20xfsdump=20not=20found=0A=
+xfs/269=09=203s=0Axfs/270=09=205s=0Axfs/271=09[not=20run]=20rmapbt=20not=20=
+supported=20by=20scratch=20filesystem=20type:=20xfs=0Axfs/272=09[not=20=
+run]=20rmapbt=20not=20supported=20by=20scratch=20filesystem=20type:=20=
+xfs=0Axfs/273=09=206s=0Axfs/274=09[not=20run]=20rmapbt=20not=20supported=20=
+by=20scratch=20filesystem=20type:=20xfs=0Axfs/275=09[not=20run]=20This=20=
+test=20requires=20a=20valid=20$SCRATCH_LOGDEV=0Axfs/276=09[not=20run]=20=
+External=20volumes=20not=20in=20use,=20skipped=20this=20test=0Axfs/277=09=
+[not=20run]=20rmapbt=20not=20supported=20by=20scratch=20filesystem=20=
+type:=20xfs=0Axfs/278=09=206s=0Axfs/279=09=208s=0Axfs/280=09=204s=0A=
+xfs/281=09[not=20run]=20xfsdump=20not=20found=0Axfs/282=09[not=20run]=20=
+xfsdump=20not=20found=0Axfs/283=09[not=20run]=20xfsdump=20not=20found=0A=
+xfs/284=09=205s=0Axfs/285=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/285.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/285.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/285.out.bad=092022-02-01=20=
+13:32:40.902065247=20+0100=0A=20=20=20=20@@=20-1,4=20+1,6=20@@=0A=20=20=20=
+=20=20QA=20output=20created=20by=20285=0A=20=20=20=20=20Format=20and=20=
+populate=0A=20=20=20=20+Error:=20/mnt/scratch:=20Kernel=20metadata=20=
+scrubbing=20facility=20is=20not=20available.=20(phase1.c=20line=20147)=0A=
+=20=20=20=20+/mnt/scratch:=20operational=20errors=20found:=201=0A=20=20=20=
+=20=20Concurrent=20scrub=0A=20=20=20=20=20Test=20done=0A=20=20=20=20...=0A=
+=20=20=20=20(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/285.out=20=
+/home/ctheune/results/xfs/285.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/286=09[not=20run]=20XFS=20error=20injection=20requires=20=
+CONFIG_XFS_DEBUG=0Axfs/287=09[not=20run]=20xfsdump=20not=20found=0A=
+xfs/288=09=205s=0Axfs/289=09=204s=0Axfs/290=09=203s=0Axfs/291=09=20151s=0A=
+xfs/292=09=204s=0Axfs/293=09=203s=0Axfs/294=09=20147s=0Axfs/295=09=2036s=0A=
+xfs/296=09[not=20run]=20xfsdump=20not=20found=0Axfs/297=09=2064s=0A=
+xfs/298=09=2013s=0Axfs/299=09=2015s=0Axfs/300=09[not=20run]=20SELinux=20=
+not=20enabled=0Axfs/301=09[not=20run]=20xfsdump=20not=20found=0Axfs/302=09=
+[not=20run]=20xfsdump=20not=20found=0Axfs/303=09=202s=0Axfs/304=09=204s=0A=
+xfs/305=09=2063s=0Axfs/306=09=2032s=0Axfs/307=09=207s=0Axfs/308=09=209s=0A=
+xfs/309=09=2027s=0Axfs/310=09[not=20run]=20rmapbt=20not=20supported=20by=20=
+scratch=20filesystem=20type:=20xfs=0Axfs/311=09=2025s=0Axfs/312=09[not=20=
+run]=20XFS=20error=20injection=20requires=20CONFIG_XFS_DEBUG=0Axfs/313=09=
+[not=20run]=20XFS=20error=20injection=20requires=20CONFIG_XFS_DEBUG=0A=
+xfs/314=09[not=20run]=20rmapbt=20not=20supported=20by=20scratch=20=
+filesystem=20type:=20xfs=0Axfs/315=09[not=20run]=20XFS=20error=20=
+injection=20requires=20CONFIG_XFS_DEBUG=0Axfs/316=09[not=20run]=20XFS=20=
+error=20injection=20requires=20CONFIG_XFS_DEBUG=0Axfs/317=09[not=20run]=20=
+rmapbt=20not=20supported=20by=20scratch=20filesystem=20type:=20xfs=0A=
+xfs/318=09[not=20run]=20XFS=20error=20injection=20requires=20=
+CONFIG_XFS_DEBUG=0Axfs/319=09[not=20run]=20XFS=20error=20injection=20=
+requires=20CONFIG_XFS_DEBUG=0Axfs/320=09[not=20run]=20XFS=20error=20=
+injection=20requires=20CONFIG_XFS_DEBUG=0Axfs/321=09[not=20run]=20XFS=20=
+error=20injection=20requires=20CONFIG_XFS_DEBUG=0Axfs/322=09[not=20run]=20=
+rmapbt=20not=20supported=20by=20scratch=20filesystem=20type:=20xfs=0A=
+xfs/323=09[not=20run]=20XFS=20error=20injection=20requires=20=
+CONFIG_XFS_DEBUG=0Axfs/324=09[not=20run]=20XFS=20error=20injection=20=
+requires=20CONFIG_XFS_DEBUG=0Axfs/325=09[not=20run]=20XFS=20error=20=
+injection=20requires=20CONFIG_XFS_DEBUG=0Axfs/326=09[not=20run]=20XFS=20=
+error=20injection=20requires=20CONFIG_XFS_DEBUG=0Axfs/327=09=205s=0A=
+xfs/328=09=2061s=0Axfs/329=09[not=20run]=20XFS=20error=20injection=20=
+requires=20CONFIG_XFS_DEBUG=0Axfs/330=09=205s=0Axfs/331=09[not=20run]=20=
+rmapbt=20not=20supported=20by=20scratch=20filesystem=20type:=20xfs=0A=
+xfs/332=09[not=20run]=20rmapbt=20not=20supported=20by=20scratch=20=
+filesystem=20type:=20xfs=0Axfs/333=09[not=20run]=20rmapbt=20not=20=
+supported=20by=20scratch=20filesystem=20type:=20xfs=0Axfs/334=09[not=20=
+run]=20External=20volumes=20not=20in=20use,=20skipped=20this=20test=0A=
+xfs/335=09[not=20run]=20External=20volumes=20not=20in=20use,=20skipped=20=
+this=20test=0Axfs/336=09[not=20run]=20External=20volumes=20not=20in=20=
+use,=20skipped=20this=20test=0Axfs/337=09[not=20run]=20External=20=
+volumes=20not=20in=20use,=20skipped=20this=20test=0Axfs/338=09[not=20=
+run]=20External=20volumes=20not=20in=20use,=20skipped=20this=20test=0A=
+xfs/339=09[not=20run]=20External=20volumes=20not=20in=20use,=20skipped=20=
+this=20test=0Axfs/340=09[not=20run]=20External=20volumes=20not=20in=20=
+use,=20skipped=20this=20test=0Axfs/341=09[not=20run]=20External=20=
+volumes=20not=20in=20use,=20skipped=20this=20test=0Axfs/342=09[not=20=
+run]=20External=20volumes=20not=20in=20use,=20skipped=20this=20test=0A=
+xfs/343=09[not=20run]=20External=20volumes=20not=20in=20use,=20skipped=20=
+this=20test=0Axfs/344=09=2011s=0Axfs/345=09=206s=0Axfs/346=09=2057s=0A=
+xfs/347=09=2010s=0Axfs/348=09=2023s=0Axfs/349=09-=20output=20mismatch=20=
+(see=20/home/ctheune/results/xfs/349.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/349.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/349.out.bad=092022-02-01=20=
+13:48:15.470845647=20+0100=0A=20=20=20=20@@=20-1,3=20+1,5=20@@=0A=20=20=20=
+=20=20QA=20output=20created=20by=20349=0A=20=20=20=20=20Format=20and=20=
+populate=0A=20=20=20=20=20Scrub=0A=20=20=20=20+Error:=20/mnt/scratch:=20=
+Kernel=20metadata=20scrubbing=20facility=20is=20not=20available.=20=
+(phase1.c=20line=20147)=0A=20=20=20=20+/mnt/scratch:=20operational=20=
+errors=20found:=201=0A=20=20=20=20...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/349.out=20=
+/home/ctheune/results/xfs/349.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/350=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/350.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/350.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/350.out.bad=092022-02-01=20=
+14:19:14.296063035=20+0100=0A=20=20=20=20@@=20-1,4=20+1,111=20@@=0A=20=20=
+=20=20=20QA=20output=20created=20by=20350=0A=20=20=20=20=20Format=20and=20=
+populate=0A=20=20=20=20=20Fuzz=20superblock=0A=20=20=20=20+re-repair=20=
+failed=20(1)=20with=20qflags=20=3D=20add.=0A=20=20=20=20+offline=20=
+re-scrub=20(1)=20with=20dirblklog=20=3D=20lastbit.=0A=20=20=20=20=
++re-repair=20failed=20(1)=20with=20dirblklog=20=3D=20lastbit.=0A=20=20=20=
+=20+offline=20repair=20failed=20(1)=20with=20features_compat=20=3D=20=
+ones.=0A=20=20=20=20...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/350.out=20=
+/home/ctheune/results/xfs/350.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/351=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/351.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/351.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/351.out.bad=092022-02-01=20=
+14:48:26.464173061=20+0100=0A=20=20=20=20@@=20-1,4=20+1,1376=20@@=0A=20=20=
+=20=20=20QA=20output=20created=20by=20351=0A=20=20=20=20=20Format=20and=20=
+populate=0A=20=20=20=20=20Fuzz=20superblock=0A=20=20=20=20+online=20=
+repair=20failed=20(4)=20with=20magicnum=20=3D=20zeroes.=0A=20=20=20=20=
++offline=20re-scrub=20(1)=20with=20magicnum=20=3D=20zeroes.=0A=20=20=20=20=
++online=20re-scrub=20(4)=20with=20magicnum=20=3D=20zeroes.=0A=20=20=20=20=
++re-repair=20failed=20(1)=20with=20magicnum=20=3D=20zeroes.=0A=20=20=20=20=
+...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/351.out=20=
+/home/ctheune/results/xfs/351.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/352=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/352.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/352.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/352.out.bad=092022-02-01=20=
+15:09:09.645655454=20+0100=0A=20=20=20=20@@=20-1,4=20+1,182=20@@=0A=20=20=
+=20=20=20QA=20output=20created=20by=20352=0A=20=20=20=20=20Format=20and=20=
+populate=0A=20=20=20=20=20Fuzz=20AGF=0A=20=20=20=20+online=20re-scrub=20=
+(4)=20with=20magicnum=20=3D=20zeroes.=0A=20=20=20=20+online=20re-scrub=20=
+(4)=20with=20magicnum=20=3D=20ones.=0A=20=20=20=20+online=20re-scrub=20=
+(4)=20with=20magicnum=20=3D=20firstbit.=0A=20=20=20=20+online=20re-scrub=20=
+(4)=20with=20magicnum=20=3D=20middlebit.=0A=20=20=20=20...=0A=20=20=20=20=
+(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/352.out=20=
+/home/ctheune/results/xfs/352.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/353=09_check_dmesg:=20something=20found=20in=20dmesg=20(see=20=
+/home/ctheune/results/xfs/353.dmesg)=0A-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/353.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/353.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/353.out.bad=092022-02-01=20=
+15:17:11.125042760=20+0100=0A=20=20=20=20@@=20-1,4=20+1,661=20@@=0A=20=20=
+=20=20=20QA=20output=20created=20by=20353=0A=20=20=20=20=20Format=20and=20=
+populate=0A=20=20=20=20=20Fuzz=20AGF=0A=20=20=20=20+mount=20failed=20=
+(32)=20with=20magicnum=20=3D=20zeroes.=0A=20=20=20=20+offline=20re-scrub=20=
+(1)=20with=20magicnum=20=3D=20zeroes.=0A=20=20=20=20+re-mount=20failed=20=
+(32)=20with=20magicnum=20=3D=20zeroes.=0A=20=20=20=20+re-repair=20failed=20=
+(1)=20with=20magicnum=20=3D=20zeroes.=0A=20=20=20=20...=0A=20=20=20=20=
+(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/353.out=20=
+/home/ctheune/results/xfs/353.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/354=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/354.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/354.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/354.out.bad=092022-02-01=20=
+15:21:13.018307144=20+0100=0A=20=20=20=20@@=20-1,6=20+1,57=20@@=0A=20=20=20=
+=20=20QA=20output=20created=20by=20354=0A=20=20=20=20=20Format=20and=20=
+populate=0A=20=20=20=20=20Fuzz=20AGFL=0A=20=20=20=20+online=20re-scrub=20=
+(4)=20with=20magicnum=20=3D=20zeroes.=0A=20=20=20=20+online=20re-scrub=20=
+(4)=20with=20magicnum=20=3D=20ones.=0A=20=20=20=20+online=20re-scrub=20=
+(4)=20with=20magicnum=20=3D=20firstbit.=0A=20=20=20=20+online=20re-scrub=20=
+(4)=20with=20magicnum=20=3D=20middlebit.=0A=20=20=20=20...=0A=20=20=20=20=
+(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/354.out=20=
+/home/ctheune/results/xfs/354.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/355=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/355.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/355.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/355.out.bad=092022-02-01=20=
+15:26:06.871022112=20+0100=0A=20=20=20=20@@=20-1,6=20+1,144=20@@=0A=20=20=
+=20=20=20QA=20output=20created=20by=20355=0A=20=20=20=20=20Format=20and=20=
+populate=0A=20=20=20=20=20Fuzz=20AGFL=0A=20=20=20=20+online=20repair=20=
+failed=20(4)=20with=20magicnum=20=3D=20zeroes.=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20magicnum=20=3D=20zeroes.=0A=20=20=20=20+online=20=
+repair=20failed=20(4)=20with=20magicnum=20=3D=20ones.=0A=20=20=20=20=
++online=20re-scrub=20(4)=20with=20magicnum=20=3D=20ones.=0A=20=20=20=20=
+...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/355.out=20=
+/home/ctheune/results/xfs/355.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/356=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/356.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/356.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/356.out.bad=092022-02-01=20=
+15:37:29.618466657=20+0100=0A=20=20=20=20@@=20-1,4=20+1,141=20@@=0A=20=20=
+=20=20=20QA=20output=20created=20by=20356=0A=20=20=20=20=20Format=20and=20=
+populate=0A=20=20=20=20=20Fuzz=20AGI=0A=20=20=20=20+online=20re-scrub=20=
+(4)=20with=20magicnum=20=3D=20zeroes.=0A=20=20=20=20+online=20re-scrub=20=
+(4)=20with=20magicnum=20=3D=20ones.=0A=20=20=20=20+online=20re-scrub=20=
+(4)=20with=20magicnum=20=3D=20firstbit.=0A=20=20=20=20+online=20re-scrub=20=
+(4)=20with=20magicnum=20=3D=20middlebit.=0A=20=20=20=20...=0A=20=20=20=20=
+(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/356.out=20=
+/home/ctheune/results/xfs/356.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/357=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/357.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/357.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/357.out.bad=092022-02-01=20=
+15:43:52.829264208=20+0100=0A=20=20=20=20@@=20-1,4=20+1,482=20@@=0A=20=20=
+=20=20=20QA=20output=20created=20by=20357=0A=20=20=20=20=20Format=20and=20=
+populate=0A=20=20=20=20=20Fuzz=20AGI=0A=20=20=20=20+mount=20failed=20=
+(32)=20with=20magicnum=20=3D=20zeroes.=0A=20=20=20=20+offline=20re-scrub=20=
+(1)=20with=20magicnum=20=3D=20zeroes.=0A=20=20=20=20+re-mount=20failed=20=
+(32)=20with=20magicnum=20=3D=20zeroes.=0A=20=20=20=20+re-repair=20failed=20=
+(1)=20with=20magicnum=20=3D=20zeroes.=0A=20=20=20=20...=0A=20=20=20=20=
+(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/357.out=20=
+/home/ctheune/results/xfs/357.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/358=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/358.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/358.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/358.out.bad=092022-02-01=20=
+15:51:04.579565253=20+0100=0A=20=20=20=20@@=20-1,4=20+1,95=20@@=0A=20=20=20=
+=20=20QA=20output=20created=20by=20358=0A=20=20=20=20=20Format=20and=20=
+populate=0A=20=20=20=20=20Fuzz=20bnobt=20recs=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20magic=20=3D=20ones.=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20magic=20=3D=20firstbit.=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20magic=20=3D=20middlebit.=0A=20=20=20=20...=0A=20=20=
+=20=20(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/358.out=20=
+/home/ctheune/results/xfs/358.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/359=09_check_dmesg:=20something=20found=20in=20dmesg=20(see=20=
+/home/ctheune/results/xfs/359.dmesg)=0A-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/359.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/359.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/359.out.bad=092022-02-01=20=
+15:59:29.078048929=20+0100=0A=20=20=20=20@@=20-1,4=20+1,345=20@@=0A=20=20=
+=20=20=20QA=20output=20created=20by=20359=0A=20=20=20=20=20Format=20and=20=
+populate=0A=20=20=20=20=20Fuzz=20bnobt=20recs=0A=20=20=20=20+online=20=
+repair=20failed=20(4)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20=
++offline=20re-scrub=20(1)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20=
++online=20re-scrub=20(4)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20=
++re-repair=20failed=20(1)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20=
+...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/359.out=20=
+/home/ctheune/results/xfs/359.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/360=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/360.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/360.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/360.out.bad=092022-02-01=20=
+16:07:13.678958950=20+0100=0A=20=20=20=20@@=20-1,4=20+1,103=20@@=0A=20=20=
+=20=20=20QA=20output=20created=20by=20360=0A=20=20=20=20=20Format=20and=20=
+populate=0A=20=20=20=20=20Fuzz=20bnobt=20keyptr=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20magic=20=3D=20ones.=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20magic=20=3D=20firstbit.=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20magic=20=3D=20middlebit.=0A=20=20=20=20...=0A=20=20=
+=20=20(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/360.out=20=
+/home/ctheune/results/xfs/360.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/361=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/361.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/361.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/361.out.bad=092022-02-01=20=
+16:16:43.947711293=20+0100=0A=20=20=20=20@@=20-1,4=20+1,350=20@@=0A=20=20=
+=20=20=20QA=20output=20created=20by=20361=0A=20=20=20=20=20Format=20and=20=
+populate=0A=20=20=20=20=20Fuzz=20bnobt=20keyptr=0A=20=20=20=20+online=20=
+repair=20failed=20(4)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20=
++offline=20re-scrub=20(1)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20=
++online=20re-scrub=20(4)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20=
++re-repair=20failed=20(1)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20=
+...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/361.out=20=
+/home/ctheune/results/xfs/361.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/362=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/362.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/362.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/362.out.bad=092022-02-01=20=
+16:23:51.552076723=20+0100=0A=20=20=20=20@@=20-1,4=20+1,95=20@@=0A=20=20=20=
+=20=20QA=20output=20created=20by=20362=0A=20=20=20=20=20Format=20and=20=
+populate=0A=20=20=20=20=20Fuzz=20cntbt=0A=20=20=20=20+online=20re-scrub=20=
+(4)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20+online=20re-scrub=20=
+(4)=20with=20magic=20=3D=20ones.=0A=20=20=20=20+online=20re-scrub=20(4)=20=
+with=20magic=20=3D=20firstbit.=0A=20=20=20=20+online=20re-scrub=20(4)=20=
+with=20magic=20=3D=20middlebit.=0A=20=20=20=20...=0A=20=20=20=20(Run=20=
+'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/362.out=20=
+/home/ctheune/results/xfs/362.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/363=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/363.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/363.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/363.out.bad=092022-02-01=20=
+16:32:34.634373049=20+0100=0A=20=20=20=20@@=20-1,4=20+1,331=20@@=0A=20=20=
+=20=20=20QA=20output=20created=20by=20363=0A=20=20=20=20=20Format=20and=20=
+populate=0A=20=20=20=20=20Fuzz=20cntbt=0A=20=20=20=20+online=20repair=20=
+failed=20(4)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20+offline=20=
+re-scrub=20(1)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20+re-repair=20=
+failed=20(1)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20...=0A=20=20=20=
+=20(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/363.out=20=
+/home/ctheune/results/xfs/363.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/364=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/364.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/364.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/364.out.bad=092022-02-01=20=
+16:42:42.178730778=20+0100=0A=20=20=20=20@@=20-1,4=20+1,115=20@@=0A=20=20=
+=20=20=20QA=20output=20created=20by=20364=0A=20=20=20=20=20Format=20and=20=
+populate=0A=20=20=20=20=20Fuzz=20inobt=0A=20=20=20=20+online=20re-scrub=20=
+(4)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20+online=20re-scrub=20=
+(4)=20with=20magic=20=3D=20ones.=0A=20=20=20=20+online=20re-scrub=20(4)=20=
+with=20magic=20=3D=20firstbit.=0A=20=20=20=20+online=20re-scrub=20(4)=20=
+with=20magic=20=3D=20middlebit.=0A=20=20=20=20...=0A=20=20=20=20(Run=20=
+'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/364.out=20=
+/home/ctheune/results/xfs/364.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/365=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/365.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/365.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/365.out.bad=092022-02-01=20=
+16:53:23.769559650=20+0100=0A=20=20=20=20@@=20-1,4=20+1,338=20@@=0A=20=20=
+=20=20=20QA=20output=20created=20by=20365=0A=20=20=20=20=20Format=20and=20=
+populate=0A=20=20=20=20=20Fuzz=20inobt=0A=20=20=20=20+online=20repair=20=
+failed=20(4)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20+offline=20=
+re-scrub=20(1)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20+re-repair=20=
+failed=20(1)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20...=0A=20=20=20=
+=20(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/365.out=20=
+/home/ctheune/results/xfs/365.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/366=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/366.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/366.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/366.out.bad=092022-02-01=20=
+17:06:06.509862792=20+0100=0A=20=20=20=20@@=20-1,4=20+1,117=20@@=0A=20=20=
+=20=20=20QA=20output=20created=20by=20366=0A=20=20=20=20=20Format=20and=20=
+populate=0A=20=20=20=20=20Fuzz=20finobt=0A=20=20=20=20+online=20re-scrub=20=
+(4)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20+online=20re-scrub=20=
+(4)=20with=20magic=20=3D=20ones.=0A=20=20=20=20+online=20re-scrub=20(4)=20=
+with=20magic=20=3D=20firstbit.=0A=20=20=20=20+online=20re-scrub=20(4)=20=
+with=20magic=20=3D=20middlebit.=0A=20=20=20=20...=0A=20=20=20=20(Run=20=
+'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/366.out=20=
+/home/ctheune/results/xfs/366.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/367=09_check_dmesg:=20something=20found=20in=20dmesg=20(see=20=
+/home/ctheune/results/xfs/367.dmesg)=0A-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/367.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/367.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/367.out.bad=092022-02-01=20=
+17:11:01.517558666=20+0100=0A=20=20=20=20@@=20-1,4=20+1,446=20@@=0A=20=20=
+=20=20=20QA=20output=20created=20by=20367=0A=20=20=20=20=20Format=20and=20=
+populate=0A=20=20=20=20=20Fuzz=20finobt=0A=20=20=20=20+mount=20failed=20=
+(32)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20+offline=20re-scrub=20=
+(1)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20+re-mount=20failed=20=
+(32)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20+re-repair=20failed=20=
+(1)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20...=0A=20=20=20=20(Run=20=
+'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/367.out=20=
+/home/ctheune/results/xfs/367.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/368=09[not=20run]=20rmapbt=20not=20supported=20by=20scratch=20=
+filesystem=20type:=20xfs=0Axfs/369=09[not=20run]=20rmapbt=20not=20=
+supported=20by=20scratch=20filesystem=20type:=20xfs=0Axfs/370=09[not=20=
+run]=20rmapbt=20not=20supported=20by=20scratch=20filesystem=20type:=20=
+xfs=0Axfs/371=09[not=20run]=20rmapbt=20not=20supported=20by=20scratch=20=
+filesystem=20type:=20xfs=0Axfs/372=09_check_dmesg:=20something=20found=20=
+in=20dmesg=20(see=20/home/ctheune/results/xfs/372.dmesg)=0A-=20output=20=
+mismatch=20(see=20/home/ctheune/results/xfs/372.out.bad)=0A=20=20=20=20=
+---=20tests/xfs/372.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=
+=20=20+++=20/home/ctheune/results/xfs/372.out.bad=092022-02-01=20=
+17:23:31.885199930=20+0100=0A=20=20=20=20@@=20-1,4=20+1,102=20@@=0A=20=20=
+=20=20=20QA=20output=20created=20by=20372=0A=20=20=20=20=20Format=20and=20=
+populate=0A=20=20=20=20=20Fuzz=20refcountbt=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20magic=20=3D=20ones.=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20magic=20=3D=20firstbit.=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20magic=20=3D=20middlebit.=0A=20=20=20=20...=0A=20=20=
+=20=20(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/372.out=20=
+/home/ctheune/results/xfs/372.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/373=09_check_dmesg:=20something=20found=20in=20dmesg=20(see=20=
+/home/ctheune/results/xfs/373.dmesg)=0A-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/373.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/373.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/373.out.bad=092022-02-01=20=
+17:27:25.275748379=20+0100=0A=20=20=20=20@@=20-1,4=20+1,378=20@@=0A=20=20=
+=20=20=20QA=20output=20created=20by=20373=0A=20=20=20=20=20Format=20and=20=
+populate=0A=20=20=20=20=20Fuzz=20refcountbt=0A=20=20=20=20+mount=20=
+failed=20(32)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20+offline=20=
+re-scrub=20(1)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20+re-mount=20=
+failed=20(32)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20+re-repair=20=
+failed=20(1)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20...=0A=20=20=20=
+=20(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/373.out=20=
+/home/ctheune/results/xfs/373.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/374=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/374.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/374.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/374.out.bad=092022-02-01=20=
+18:00:29.157305558=20+0100=0A=20=20=20=20@@=20-2,4=20+2,418=20@@=0A=20=20=
+=20=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20btree-format=20=
+dir=20inode=0A=20=20=20=20=20Fuzz=20inode=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20core.magic=20=3D=20zeroes.=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20core.magic=20=3D=20ones.=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20core.magic=20=3D=20firstbit.=0A=20=20=20=20=
++online=20re-scrub=20(4)=20with=20core.magic=20=3D=20middlebit.=0A=20=20=20=
+=20...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/374.out=20=
+/home/ctheune/results/xfs/374.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/375=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/375.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/375.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/375.out.bad=092022-02-01=20=
+18:27:45.864691865=20+0100=0A=20=20=20=20@@=20-2,4=20+2,1274=20@@=0A=20=20=
+=20=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20btree-format=20=
+dir=20inode=0A=20=20=20=20=20Fuzz=20inode=0A=20=20=20=20+online=20repair=20=
+failed=20(4)=20with=20core.magic=20=3D=20zeroes.=0A=20=20=20=20+offline=20=
+re-scrub=20(1)=20with=20core.magic=20=3D=20zeroes.=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20core.magic=20=3D=20zeroes.=0A=20=20=20=20=
++re-repair=20failed=20(1)=20with=20core.magic=20=3D=20zeroes.=0A=20=20=20=
+=20...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/375.out=20=
+/home/ctheune/results/xfs/375.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/376=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/376.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/376.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/376.out.bad=092022-02-01=20=
+18:59:57.062667459=20+0100=0A=20=20=20=20@@=20-2,4=20+2,418=20@@=0A=20=20=
+=20=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20extents-format=20=
+file=20inode=0A=20=20=20=20=20Fuzz=20inode=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20core.magic=20=3D=20zeroes.=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20core.magic=20=3D=20ones.=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20core.magic=20=3D=20firstbit.=0A=20=20=20=20=
++online=20re-scrub=20(4)=20with=20core.magic=20=3D=20middlebit.=0A=20=20=20=
+=20...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/376.out=20=
+/home/ctheune/results/xfs/376.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/377=09_check_dmesg:=20something=20found=20in=20dmesg=20(see=20=
+/home/ctheune/results/xfs/377.dmesg)=0A-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/377.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/377.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/377.out.bad=092022-02-01=20=
+19:28:21.678148459=20+0100=0A=20=20=20=20@@=20-2,4=20+2,1243=20@@=0A=20=20=
+=20=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20extents-format=20=
+file=20inode=0A=20=20=20=20=20Fuzz=20inode=0A=20=20=20=20+online=20=
+repair=20failed=20(4)=20with=20core.magic=20=3D=20zeroes.=0A=20=20=20=20=
++offline=20re-scrub=20(1)=20with=20core.magic=20=3D=20zeroes.=0A=20=20=20=
+=20+online=20re-scrub=20(4)=20with=20core.magic=20=3D=20zeroes.=0A=20=20=20=
+=20+re-repair=20failed=20(1)=20with=20core.magic=20=3D=20zeroes.=0A=20=20=
+=20=20...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/377.out=20=
+/home/ctheune/results/xfs/377.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/378=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/378.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/378.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/378.out.bad=092022-02-01=20=
+20:00:34.318098688=20+0100=0A=20=20=20=20@@=20-2,4=20+2,416=20@@=0A=20=20=
+=20=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20btree-format=20=
+file=20inode=0A=20=20=20=20=20Fuzz=20inode=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20core.magic=20=3D=20zeroes.=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20core.magic=20=3D=20ones.=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20core.magic=20=3D=20firstbit.=0A=20=20=20=20=
++online=20re-scrub=20(4)=20with=20core.magic=20=3D=20middlebit.=0A=20=20=20=
+=20...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/378.out=20=
+/home/ctheune/results/xfs/378.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/379=09_check_dmesg:=20something=20found=20in=20dmesg=20(see=20=
+/home/ctheune/results/xfs/379.dmesg)=0A-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/379.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/379.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/379.out.bad=092022-02-01=20=
+20:29:07.499276182=20+0100=0A=20=20=20=20@@=20-2,4=20+2,1273=20@@=0A=20=20=
+=20=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20btree-format=20=
+file=20inode=0A=20=20=20=20=20Fuzz=20inode=0A=20=20=20=20+online=20=
+repair=20failed=20(4)=20with=20core.magic=20=3D=20zeroes.=0A=20=20=20=20=
++offline=20re-scrub=20(1)=20with=20core.magic=20=3D=20zeroes.=0A=20=20=20=
+=20+online=20re-scrub=20(4)=20with=20core.magic=20=3D=20zeroes.=0A=20=20=20=
+=20+re-repair=20failed=20(1)=20with=20core.magic=20=3D=20zeroes.=0A=20=20=
+=20=20...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/379.out=20=
+/home/ctheune/results/xfs/379.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/380=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/380.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/380.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/380.out.bad=092022-02-01=20=
+20:37:21.452098166=20+0100=0A=20=20=20=20@@=20-2,4=20+2,110=20@@=0A=20=20=
+=20=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20bmbt=20block=0A=20=
+=20=20=20=20Fuzz=20bmbt=0A=20=20=20=20+online=20re-scrub=20(4)=20with=20=
+magic=20=3D=20zeroes.=0A=20=20=20=20+online=20re-scrub=20(4)=20with=20=
+magic=20=3D=20ones.=0A=20=20=20=20+online=20re-scrub=20(4)=20with=20=
+magic=20=3D=20firstbit.=0A=20=20=20=20+online=20re-scrub=20(4)=20with=20=
+magic=20=3D=20middlebit.=0A=20=20=20=20...=0A=20=20=20=20(Run=20'diff=20=
+-u=20/tmp/xfstests.wVf4eh/tests/xfs/380.out=20=
+/home/ctheune/results/xfs/380.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/381=09_check_dmesg:=20something=20found=20in=20dmesg=20(see=20=
+/home/ctheune/results/xfs/381.dmesg)=0A-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/381.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/381.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/381.out.bad=092022-02-01=20=
+20:44:19.291667214=20+0100=0A=20=20=20=20@@=20-2,4=20+2,404=20@@=0A=20=20=
+=20=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20bmbt=20block=0A=20=
+=20=20=20=20Fuzz=20bmbt=0A=20=20=20=20+online=20repair=20failed=20(4)=20=
+with=20magic=20=3D=20zeroes.=0A=20=20=20=20+offline=20re-scrub=20(1)=20=
+with=20magic=20=3D=20zeroes.=0A=20=20=20=20+online=20re-scrub=20(4)=20=
+with=20magic=20=3D=20zeroes.=0A=20=20=20=20+re-repair=20failed=20(1)=20=
+with=20magic=20=3D=20zeroes.=0A=20=20=20=20...=0A=20=20=20=20(Run=20=
+'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/381.out=20=
+/home/ctheune/results/xfs/381.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/382=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/382.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/382.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/382.out.bad=092022-02-01=20=
+20:49:30.905345712=20+0100=0A=20=20=20=20@@=20-2,4=20+2,71=20@@=0A=20=20=20=
+=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20symlink=20remote=20=
+block=0A=20=20=20=20=20Fuzz=20symlink=20remote=20block=0A=20=20=20=20=
++online=20re-scrub=20(4)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20=
++online=20re-scrub=20(4)=20with=20magic=20=3D=20ones.=0A=20=20=20=20=
++online=20re-scrub=20(4)=20with=20magic=20=3D=20firstbit.=0A=20=20=20=20=
++online=20re-scrub=20(4)=20with=20magic=20=3D=20middlebit.=0A=20=20=20=20=
+...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/382.out=20=
+/home/ctheune/results/xfs/382.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/383=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/383.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/383.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/383.out.bad=092022-02-01=20=
+20:53:52.823441335=20+0100=0A=20=20=20=20@@=20-2,4=20+2,250=20@@=0A=20=20=
+=20=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20symlink=20=
+remote=20block=0A=20=20=20=20=20Fuzz=20symlink=20remote=20block=0A=20=20=20=
+=20+online=20repair=20failed=20(4)=20with=20magic=20=3D=20zeroes.=0A=20=20=
+=20=20+offline=20re-scrub=20(1)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=
+=20+online=20re-scrub=20(4)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20=
++re-repair=20failed=20(1)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20=
+...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/383.out=20=
+/home/ctheune/results/xfs/383.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/384=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/384.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/384.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/384.out.bad=092022-02-01=20=
+21:31:07.658705606=20+0100=0A=20=20=20=20@@=20-2,4=20+2,487=20@@=0A=20=20=
+=20=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20inline-format=20=
+dir=20inode=0A=20=20=20=20=20Fuzz=20inline-format=20dir=20inode=0A=20=20=20=
+=20+online=20re-scrub=20(4)=20with=20core.magic=20=3D=20zeroes.=0A=20=20=20=
+=20+online=20re-scrub=20(4)=20with=20core.magic=20=3D=20ones.=0A=20=20=20=
+=20+online=20re-scrub=20(4)=20with=20core.magic=20=3D=20firstbit.=0A=20=20=
+=20=20+online=20re-scrub=20(4)=20with=20core.magic=20=3D=20middlebit.=0A=20=
+=20=20=20...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/384.out=20=
+/home/ctheune/results/xfs/384.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/385=09_check_dmesg:=20something=20found=20in=20dmesg=20(see=20=
+/home/ctheune/results/xfs/385.dmesg)=0A-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/385.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/385.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/385.out.bad=092022-02-01=20=
+22:04:26.599668198=20+0100=0A=20=20=20=20@@=20-2,4=20+2,1520=20@@=0A=20=20=
+=20=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20inline-format=20=
+dir=20inode=0A=20=20=20=20=20Fuzz=20inline-format=20dir=20inode=0A=20=20=20=
+=20+online=20repair=20failed=20(4)=20with=20core.magic=20=3D=20zeroes.=0A=
+=20=20=20=20+offline=20re-scrub=20(1)=20with=20core.magic=20=3D=20=
+zeroes.=0A=20=20=20=20+online=20re-scrub=20(4)=20with=20core.magic=20=3D=20=
+zeroes.=0A=20=20=20=20+re-repair=20failed=20(1)=20with=20core.magic=20=3D=20=
+zeroes.=0A=20=20=20=20...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/385.out=20=
+/home/ctheune/results/xfs/385.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/386=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/386.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/386.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/386.out.bad=092022-02-01=20=
+22:56:12.461187994=20+0100=0A=20=20=20=20@@=20-2,4=20+2,685=20@@=0A=20=20=
+=20=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20data-format=20=
+dir=20block=0A=20=20=20=20=20Fuzz=20data-format=20dir=20block=0A=20=20=20=
+=20+online=20re-scrub=20(4)=20with=20bhdr.hdr.magic=20=3D=20zeroes.=0A=20=
+=20=20=20+online=20re-scrub=20(4)=20with=20bhdr.hdr.magic=20=3D=20ones.=0A=
+=20=20=20=20+online=20re-scrub=20(4)=20with=20bhdr.hdr.magic=20=3D=20=
+firstbit.=0A=20=20=20=20+online=20re-scrub=20(4)=20with=20bhdr.hdr.magic=20=
+=3D=20middlebit.=0A=20=20=20=20...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/386.out=20=
+/home/ctheune/results/xfs/386.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/387=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/387.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/387.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/387.out.bad=092022-02-01=20=
+23:45:55.092090237=20+0100=0A=20=20=20=20@@=20-2,4=20+2,2608=20@@=0A=20=20=
+=20=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20data-format=20=
+dir=20block=0A=20=20=20=20=20Fuzz=20data-format=20dir=20block=0A=20=20=20=
+=20+online=20repair=20failed=20(4)=20with=20bhdr.hdr.magic=20=3D=20=
+zeroes.=0A=20=20=20=20+offline=20re-scrub=20(1)=20with=20bhdr.hdr.magic=20=
+=3D=20zeroes.=0A=20=20=20=20+online=20re-scrub=20(4)=20with=20=
+bhdr.hdr.magic=20=3D=20zeroes.=0A=20=20=20=20+re-repair=20failed=20(1)=20=
+with=20bhdr.hdr.magic=20=3D=20zeroes.=0A=20=20=20=20...=0A=20=20=20=20=
+(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/387.out=20=
+/home/ctheune/results/xfs/387.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/388=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/388.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/388.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/388.out.bad=092022-02-02=20=
+00:20:15.869717503=20+0100=0A=20=20=20=20@@=20-2,4=20+2,882=20@@=0A=20=20=
+=20=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20data-format=20=
+dir=20block=0A=20=20=20=20=20Fuzz=20data-format=20dir=20block=0A=20=20=20=
+=20+online=20re-scrub=20(4)=20with=20dhdr.hdr.magic=20=3D=20zeroes.=0A=20=
+=20=20=20+online=20re-scrub=20(4)=20with=20dhdr.hdr.magic=20=3D=20ones.=0A=
+=20=20=20=20+online=20re-scrub=20(4)=20with=20dhdr.hdr.magic=20=3D=20=
+firstbit.=0A=20=20=20=20+online=20re-scrub=20(4)=20with=20dhdr.hdr.magic=20=
+=3D=20middlebit.=0A=20=20=20=20...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/388.out=20=
+/home/ctheune/results/xfs/388.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/389=09_check_dmesg:=20something=20found=20in=20dmesg=20(see=20=
+/home/ctheune/results/xfs/389.dmesg)=0A-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/389.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/389.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/389.out.bad=092022-02-02=20=
+00:54:25.682300056=20+0100=0A=20=20=20=20@@=20-2,4=20+2,1910=20@@=0A=20=20=
+=20=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20data-format=20=
+dir=20block=0A=20=20=20=20=20Fuzz=20data-format=20dir=20block=0A=20=20=20=
+=20+online=20repair=20failed=20(4)=20with=20dhdr.hdr.magic=20=3D=20=
+zeroes.=0A=20=20=20=20+offline=20re-scrub=20(1)=20with=20dhdr.hdr.magic=20=
+=3D=20zeroes.=0A=20=20=20=20+online=20re-scrub=20(4)=20with=20=
+dhdr.hdr.magic=20=3D=20zeroes.=0A=20=20=20=20+re-repair=20failed=20(1)=20=
+with=20dhdr.hdr.magic=20=3D=20zeroes.=0A=20=20=20=20...=0A=20=20=20=20=
+(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/389.out=20=
+/home/ctheune/results/xfs/389.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/390=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/390.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/390.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/390.out.bad=092022-02-02=20=
+01:15:01.555835077=20+0100=0A=20=20=20=20@@=20-2,4=20+2,255=20@@=0A=20=20=
+=20=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20leaf1-format=20=
+dir=20block=0A=20=20=20=20=20Fuzz=20leaf1-format=20dir=20block=0A=20=20=20=
+=20+online=20re-scrub=20(4)=20with=20lhdr.info.hdr.forw=20=3D=20ones.=0A=20=
+=20=20=20+online=20re-scrub=20(4)=20with=20lhdr.info.hdr.forw=20=3D=20=
+firstbit.=0A=20=20=20=20+online=20re-scrub=20(4)=20with=20=
+lhdr.info.hdr.forw=20=3D=20middlebit.=0A=20=20=20=20+online=20re-scrub=20=
+(4)=20with=20lhdr.info.hdr.forw=20=3D=20lastbit.=0A=20=20=20=20...=0A=20=20=
+=20=20(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/390.out=20=
+/home/ctheune/results/xfs/390.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/391=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/391.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/391.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/391.out.bad=092022-02-02=20=
+02:21:46.360456689=20+0100=0A=20=20=20=20@@=20-2,4=20+2,992=20@@=0A=20=20=
+=20=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20leaf1-format=20=
+dir=20block=0A=20=20=20=20=20Fuzz=20leaf1-format=20dir=20block=0A=20=20=20=
+=20+online=20repair=20failed=20(4)=20with=20lhdr.info.hdr.forw=20=3D=20=
+ones.=0A=20=20=20=20+offline=20re-scrub=20(1)=20with=20=
+lhdr.info.hdr.forw=20=3D=20ones.=0A=20=20=20=20+online=20re-scrub=20(4)=20=
+with=20lhdr.info.hdr.forw=20=3D=20ones.=0A=20=20=20=20+re-repair=20=
+failed=20(1)=20with=20lhdr.info.hdr.forw=20=3D=20ones.=0A=20=20=20=20...=0A=
+=20=20=20=20(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/391.out=20=
+/home/ctheune/results/xfs/391.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/392=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/392.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/392.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/392.out.bad=092022-02-02=20=
+02:39:53.273685037=20+0100=0A=20=20=20=20@@=20-2,4=20+2,237=20@@=0A=20=20=
+=20=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20leafn-format=20=
+dir=20block=0A=20=20=20=20=20Fuzz=20leafn-format=20dir=20block=0A=20=20=20=
+=20+online=20re-scrub=20(4)=20with=20lhdr.info.hdr.forw=20=3D=20zeroes.=0A=
+=20=20=20=20+online=20re-scrub=20(4)=20with=20lhdr.info.hdr.forw=20=3D=20=
+ones.=0A=20=20=20=20+online=20re-scrub=20(4)=20with=20lhdr.info.hdr.forw=20=
+=3D=20firstbit.=0A=20=20=20=20+online=20re-scrub=20(4)=20with=20=
+lhdr.info.hdr.forw=20=3D=20middlebit.=0A=20=20=20=20...=0A=20=20=20=20=
+(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/392.out=20=
+/home/ctheune/results/xfs/392.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/393=09_check_dmesg:=20something=20found=20in=20dmesg=20(see=20=
+/home/ctheune/results/xfs/393.dmesg)=0A-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/393.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/393.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/393.out.bad=092022-02-02=20=
+02:56:13.691060255=20+0100=0A=20=20=20=20@@=20-2,4=20+2,906=20@@=0A=20=20=
+=20=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20leafn-format=20=
+dir=20block=0A=20=20=20=20=20Fuzz=20leafn-format=20dir=20block=0A=20=20=20=
+=20+online=20repair=20failed=20(4)=20with=20lhdr.info.hdr.forw=20=3D=20=
+zeroes.=0A=20=20=20=20+offline=20re-scrub=20(1)=20with=20=
+lhdr.info.hdr.forw=20=3D=20zeroes.=0A=20=20=20=20+online=20re-scrub=20=
+(4)=20with=20lhdr.info.hdr.forw=20=3D=20zeroes.=0A=20=20=20=20+re-repair=20=
+failed=20(1)=20with=20lhdr.info.hdr.forw=20=3D=20zeroes.=0A=20=20=20=20=
+...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/393.out=20=
+/home/ctheune/results/xfs/393.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/394=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/394.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/394.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/394.out.bad=092022-02-02=20=
+03:03:22.640407064=20+0100=0A=20=20=20=20@@=20-2,4=20+2,96=20@@=0A=20=20=20=
+=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20node-format=20dir=20=
+block=0A=20=20=20=20=20Fuzz=20node-format=20dir=20block=0A=20=20=20=20=
++online=20re-scrub=20(4)=20with=20nhdr.info.hdr.forw=20=3D=20ones.=0A=20=20=
+=20=20+online=20re-scrub=20(4)=20with=20nhdr.info.hdr.forw=20=3D=20=
+firstbit.=0A=20=20=20=20+online=20re-scrub=20(4)=20with=20=
+nhdr.info.hdr.forw=20=3D=20middlebit.=0A=20=20=20=20+online=20re-scrub=20=
+(4)=20with=20nhdr.info.hdr.forw=20=3D=20lastbit.=0A=20=20=20=20...=0A=20=20=
+=20=20(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/394.out=20=
+/home/ctheune/results/xfs/394.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/395=09_check_dmesg:=20something=20found=20in=20dmesg=20(see=20=
+/home/ctheune/results/xfs/395.dmesg)=0A-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/395.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/395.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/395.out.bad=092022-02-02=20=
+03:09:41.191299940=20+0100=0A=20=20=20=20@@=20-2,4=20+2,342=20@@=0A=20=20=
+=20=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20node-format=20=
+dir=20block=0A=20=20=20=20=20Fuzz=20node-format=20dir=20block=0A=20=20=20=
+=20+online=20repair=20failed=20(4)=20with=20nhdr.info.hdr.forw=20=3D=20=
+ones.=0A=20=20=20=20+offline=20re-scrub=20(1)=20with=20=
+nhdr.info.hdr.forw=20=3D=20ones.=0A=20=20=20=20+online=20re-scrub=20(4)=20=
+with=20nhdr.info.hdr.forw=20=3D=20ones.=0A=20=20=20=20+re-repair=20=
+failed=20(1)=20with=20nhdr.info.hdr.forw=20=3D=20ones.=0A=20=20=20=20...=0A=
+=20=20=20=20(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/395.out=20=
+/home/ctheune/results/xfs/395.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/396=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/396.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/396.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/396.out.bad=092022-02-02=20=
+03:15:43.935364049=20+0100=0A=20=20=20=20@@=20-2,4=20+2,81=20@@=0A=20=20=20=
+=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20freeindex-format=20=
+dir=20block=0A=20=20=20=20=20Fuzz=20freeindex-format=20dir=20block=0A=20=20=
+=20=20+online=20re-scrub=20(4)=20with=20fhdr.hdr.magic=20=3D=20zeroes.=0A=
+=20=20=20=20+online=20re-scrub=20(4)=20with=20fhdr.hdr.magic=20=3D=20=
+ones.=0A=20=20=20=20+online=20re-scrub=20(4)=20with=20fhdr.hdr.magic=20=3D=
+=20firstbit.=0A=20=20=20=20+online=20re-scrub=20(4)=20with=20=
+fhdr.hdr.magic=20=3D=20middlebit.=0A=20=20=20=20...=0A=20=20=20=20(Run=20=
+'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/396.out=20=
+/home/ctheune/results/xfs/396.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/397=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/397.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/397.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/397.out.bad=092022-02-02=20=
+03:20:43.895109289=20+0100=0A=20=20=20=20@@=20-2,4=20+2,296=20@@=0A=20=20=
+=20=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20=
+freeindex-format=20dir=20block=0A=20=20=20=20=20Fuzz=20freeindex-format=20=
+dir=20block=0A=20=20=20=20+online=20repair=20failed=20(4)=20with=20=
+fhdr.hdr.magic=20=3D=20zeroes.=0A=20=20=20=20+offline=20re-scrub=20(1)=20=
+with=20fhdr.hdr.magic=20=3D=20zeroes.=0A=20=20=20=20+online=20re-scrub=20=
+(4)=20with=20fhdr.hdr.magic=20=3D=20zeroes.=0A=20=20=20=20+re-repair=20=
+failed=20(1)=20with=20fhdr.hdr.magic=20=3D=20zeroes.=0A=20=20=20=20...=0A=
+=20=20=20=20(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/397.out=20=
+/home/ctheune/results/xfs/397.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/398=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/398.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/398.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/398.out.bad=092022-02-02=20=
+03:58:34.267468776=20+0100=0A=20=20=20=20@@=20-2,4=20+2,495=20@@=0A=20=20=
+=20=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20inline-format=20=
+attr=20inode=0A=20=20=20=20=20Fuzz=20inline-format=20attr=20inode=0A=20=20=
+=20=20+online=20re-scrub=20(4)=20with=20core.magic=20=3D=20zeroes.=0A=20=20=
+=20=20+online=20re-scrub=20(4)=20with=20core.magic=20=3D=20ones.=0A=20=20=
+=20=20+online=20re-scrub=20(4)=20with=20core.magic=20=3D=20firstbit.=0A=20=
+=20=20=20+online=20re-scrub=20(4)=20with=20core.magic=20=3D=20middlebit.=0A=
+=20=20=20=20...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/398.out=20=
+/home/ctheune/results/xfs/398.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/399=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/399.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/399.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/399.out.bad=092022-02-02=20=
+04:30:16.665693173=20+0100=0A=20=20=20=20@@=20-2,4=20+2,1496=20@@=0A=20=20=
+=20=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20inline-format=20=
+attr=20inode=0A=20=20=20=20=20Fuzz=20inline-format=20attr=20inode=0A=20=20=
+=20=20+online=20repair=20failed=20(4)=20with=20core.magic=20=3D=20=
+zeroes.=0A=20=20=20=20+offline=20re-scrub=20(1)=20with=20core.magic=20=3D=20=
+zeroes.=0A=20=20=20=20+online=20re-scrub=20(4)=20with=20core.magic=20=3D=20=
+zeroes.=0A=20=20=20=20+re-repair=20failed=20(1)=20with=20core.magic=20=3D=20=
+zeroes.=0A=20=20=20=20...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/399.out=20=
+/home/ctheune/results/xfs/399.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/400=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/400.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/400.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/400.out.bad=092022-02-02=20=
+05:06:20.550250670=20+0100=0A=20=20=20=20@@=20-2,4=20+2,474=20@@=0A=20=20=
+=20=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20leaf-format=20=
+attr=20block=0A=20=20=20=20=20Fuzz=20leaf-format=20attr=20block=0A=20=20=20=
+=20+online=20re-scrub=20(4)=20with=20hdr.info.hdr.forw=20=3D=20ones.=0A=20=
+=20=20=20+online=20re-scrub=20(4)=20with=20hdr.info.hdr.forw=20=3D=20=
+firstbit.=0A=20=20=20=20+online=20re-scrub=20(4)=20with=20=
+hdr.info.hdr.forw=20=3D=20middlebit.=0A=20=20=20=20+online=20re-scrub=20=
+(4)=20with=20hdr.info.hdr.forw=20=3D=20lastbit.=0A=20=20=20=20...=0A=20=20=
+=20=20(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/400.out=20=
+/home/ctheune/results/xfs/400.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/401=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/401.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/401.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/401.out.bad=092022-02-02=20=
+05:36:34.422505073=20+0100=0A=20=20=20=20@@=20-2,4=20+2,1620=20@@=0A=20=20=
+=20=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20leaf-format=20=
+attr=20block=0A=20=20=20=20=20Fuzz=20leaf-format=20attr=20block=0A=20=20=20=
+=20+online=20repair=20failed=20(4)=20with=20hdr.info.hdr.forw=20=3D=20=
+ones.=0A=20=20=20=20+offline=20re-scrub=20(1)=20with=20hdr.info.hdr.forw=20=
+=3D=20ones.=0A=20=20=20=20+online=20re-scrub=20(4)=20with=20=
+hdr.info.hdr.forw=20=3D=20ones.=0A=20=20=20=20+re-repair=20failed=20(1)=20=
+with=20hdr.info.hdr.forw=20=3D=20ones.=0A=20=20=20=20...=0A=20=20=20=20=
+(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/401.out=20=
+/home/ctheune/results/xfs/401.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/402=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/402.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/402.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/402.out.bad=092022-02-02=20=
+05:43:37.332901217=20+0100=0A=20=20=20=20@@=20-2,4=20+2,96=20@@=0A=20=20=20=
+=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20node-format=20attr=20=
+block=0A=20=20=20=20=20Fuzz=20node-format=20attr=20block=0A=20=20=20=20=
++online=20re-scrub=20(4)=20with=20hdr.info.hdr.forw=20=3D=20ones.=0A=20=20=
+=20=20+online=20re-scrub=20(4)=20with=20hdr.info.hdr.forw=20=3D=20=
+firstbit.=0A=20=20=20=20+online=20re-scrub=20(4)=20with=20=
+hdr.info.hdr.forw=20=3D=20middlebit.=0A=20=20=20=20+online=20re-scrub=20=
+(4)=20with=20hdr.info.hdr.forw=20=3D=20lastbit.=0A=20=20=20=20...=0A=20=20=
+=20=20(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/402.out=20=
+/home/ctheune/results/xfs/402.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/403=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/403.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/403.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/403.out.bad=092022-02-02=20=
+05:49:35.388005590=20+0100=0A=20=20=20=20@@=20-2,4=20+2,340=20@@=0A=20=20=
+=20=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20node-format=20=
+attr=20block=0A=20=20=20=20=20Fuzz=20node-format=20attr=20block=0A=20=20=20=
+=20+online=20repair=20failed=20(4)=20with=20hdr.info.hdr.forw=20=3D=20=
+ones.=0A=20=20=20=20+offline=20re-scrub=20(1)=20with=20hdr.info.hdr.forw=20=
+=3D=20ones.=0A=20=20=20=20+online=20re-scrub=20(4)=20with=20=
+hdr.info.hdr.forw=20=3D=20ones.=0A=20=20=20=20+re-repair=20failed=20(1)=20=
+with=20hdr.info.hdr.forw=20=3D=20ones.=0A=20=20=20=20...=0A=20=20=20=20=
+(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/403.out=20=
+/home/ctheune/results/xfs/403.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/404=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/404.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/404.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/404.out.bad=092022-02-02=20=
+05:54:46.149625304=20+0100=0A=20=20=20=20@@=20-2,4=20+2,70=20@@=0A=20=20=20=
+=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20external=20attr=20=
+block=0A=20=20=20=20=20Fuzz=20external=20attr=20block=0A=20=20=20=20=
++online=20re-scrub=20(4)=20with=20hdr.magic=20=3D=20zeroes.=0A=20=20=20=20=
++online=20re-scrub=20(4)=20with=20hdr.magic=20=3D=20ones.=0A=20=20=20=20=
++online=20re-scrub=20(4)=20with=20hdr.magic=20=3D=20firstbit.=0A=20=20=20=
+=20+online=20re-scrub=20(4)=20with=20hdr.magic=20=3D=20middlebit.=0A=20=20=
+=20=20...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/404.out=20=
+/home/ctheune/results/xfs/404.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/405=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/405.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/405.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/405.out.bad=092022-02-02=20=
+05:59:04.817830516=20+0100=0A=20=20=20=20@@=20-2,4=20+2,212=20@@=0A=20=20=
+=20=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20external=20attr=20=
+block=0A=20=20=20=20=20Fuzz=20external=20attr=20block=0A=20=20=20=20=
++online=20repair=20failed=20(4)=20with=20hdr.magic=20=3D=20zeroes.=0A=20=20=
+=20=20+offline=20re-scrub=20(1)=20with=20hdr.magic=20=3D=20zeroes.=0A=20=20=
+=20=20+online=20re-scrub=20(4)=20with=20hdr.magic=20=3D=20zeroes.=0A=20=20=
+=20=20+re-repair=20failed=20(1)=20with=20hdr.magic=20=3D=20zeroes.=0A=20=20=
+=20=20...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/405.out=20=
+/home/ctheune/results/xfs/405.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/406=09[not=20run]=20External=20volumes=20not=20in=20use,=20=
+skipped=20this=20test=0Axfs/407=09[not=20run]=20External=20volumes=20not=20=
+in=20use,=20skipped=20this=20test=0Axfs/408=09[not=20run]=20External=20=
+volumes=20not=20in=20use,=20skipped=20this=20test=0Axfs/409=09[not=20=
+run]=20External=20volumes=20not=20in=20use,=20skipped=20this=20test=0A=
+xfs/410=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/410.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/410.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/410.out.bad=092022-02-02=20=
+06:07:33.546323943=20+0100=0A=20=20=20=20@@=20-1,4=20+1,110=20@@=0A=20=20=
+=20=20=20QA=20output=20created=20by=20410=0A=20=20=20=20=20Format=20and=20=
+populate=0A=20=20=20=20=20Fuzz=20refcountbt=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20magic=20=3D=20ones.=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20magic=20=3D=20firstbit.=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20magic=20=3D=20middlebit.=0A=20=20=20=20...=0A=20=20=
+=20=20(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/410.out=20=
+/home/ctheune/results/xfs/410.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/411=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/411.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/411.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/411.out.bad=092022-02-02=20=
+06:14:24.829862540=20+0100=0A=20=20=20=20@@=20-1,4=20+1,398=20@@=0A=20=20=
+=20=20=20QA=20output=20created=20by=20411=0A=20=20=20=20=20Format=20and=20=
+populate=0A=20=20=20=20=20Fuzz=20refcountbt=0A=20=20=20=20+online=20=
+repair=20failed=20(4)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20=
++offline=20re-scrub=20(1)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20=
++online=20re-scrub=20(4)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20=
++re-repair=20failed=20(1)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20=
+...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/411.out=20=
+/home/ctheune/results/xfs/411.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/412=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/412.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/412.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/412.out.bad=092022-02-02=20=
+06:46:41.044999631=20+0100=0A=20=20=20=20@@=20-2,4=20+2,419=20@@=0A=20=20=
+=20=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20btree-format=20=
+attr=20inode=0A=20=20=20=20=20Fuzz=20inode=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20core.magic=20=3D=20zeroes.=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20core.magic=20=3D=20ones.=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20core.magic=20=3D=20firstbit.=0A=20=20=20=20=
++online=20re-scrub=20(4)=20with=20core.magic=20=3D=20middlebit.=0A=20=20=20=
+=20...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/412.out=20=
+/home/ctheune/results/xfs/412.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/413=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/413.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/413.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/413.out.bad=092022-02-02=20=
+07:14:57.270629197=20+0100=0A=20=20=20=20@@=20-2,4=20+2,1322=20@@=0A=20=20=
+=20=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20btree-format=20=
+attr=20inode=0A=20=20=20=20=20Fuzz=20inode=0A=20=20=20=20+online=20=
+repair=20failed=20(4)=20with=20core.magic=20=3D=20zeroes.=0A=20=20=20=20=
++offline=20re-scrub=20(1)=20with=20core.magic=20=3D=20zeroes.=0A=20=20=20=
+=20+online=20re-scrub=20(4)=20with=20core.magic=20=3D=20zeroes.=0A=20=20=20=
+=20+re-repair=20failed=20(1)=20with=20core.magic=20=3D=20zeroes.=0A=20=20=
+=20=20...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/413.out=20=
+/home/ctheune/results/xfs/413.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/414=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/414.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/414.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/414.out.bad=092022-02-02=20=
+07:45:14.411789578=20+0100=0A=20=20=20=20@@=20-2,4=20+2,392=20@@=0A=20=20=
+=20=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20blockdev=20=
+inode=0A=20=20=20=20=20Fuzz=20inode=0A=20=20=20=20+online=20re-scrub=20=
+(4)=20with=20core.magic=20=3D=20zeroes.=0A=20=20=20=20+online=20re-scrub=20=
+(4)=20with=20core.magic=20=3D=20ones.=0A=20=20=20=20+online=20re-scrub=20=
+(4)=20with=20core.magic=20=3D=20firstbit.=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20core.magic=20=3D=20middlebit.=0A=20=20=20=20...=0A=
+=20=20=20=20(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/414.out=20=
+/home/ctheune/results/xfs/414.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/415=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/415.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/415.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/415.out.bad=092022-02-02=20=
+08:10:29.916205224=20+0100=0A=20=20=20=20@@=20-2,4=20+2,1220=20@@=0A=20=20=
+=20=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20blockdev=20=
+inode=0A=20=20=20=20=20Fuzz=20inode=0A=20=20=20=20+online=20repair=20=
+failed=20(4)=20with=20core.magic=20=3D=20zeroes.=0A=20=20=20=20+offline=20=
+re-scrub=20(1)=20with=20core.magic=20=3D=20zeroes.=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20core.magic=20=3D=20zeroes.=0A=20=20=20=20=
++re-repair=20failed=20(1)=20with=20core.magic=20=3D=20zeroes.=0A=20=20=20=
+=20...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/415.out=20=
+/home/ctheune/results/xfs/415.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/416=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/416.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/416.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/416.out.bad=092022-02-02=20=
+08:40:43.787566548=20+0100=0A=20=20=20=20@@=20-2,4=20+2,392=20@@=0A=20=20=
+=20=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20local-format=20=
+symlink=20inode=0A=20=20=20=20=20Fuzz=20inode=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20core.magic=20=3D=20zeroes.=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20core.magic=20=3D=20ones.=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20core.magic=20=3D=20firstbit.=0A=20=20=20=20=
++online=20re-scrub=20(4)=20with=20core.magic=20=3D=20middlebit.=0A=20=20=20=
+=20...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/416.out=20=
+/home/ctheune/results/xfs/416.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/417=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/417.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/417.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/417.out.bad=092022-02-02=20=
+09:06:07.091985295=20+0100=0A=20=20=20=20@@=20-2,4=20+2,1234=20@@=0A=20=20=
+=20=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20local-format=20=
+symlink=20inode=0A=20=20=20=20=20Fuzz=20inode=0A=20=20=20=20+online=20=
+repair=20failed=20(4)=20with=20core.magic=20=3D=20zeroes.=0A=20=20=20=20=
++offline=20re-scrub=20(1)=20with=20core.magic=20=3D=20zeroes.=0A=20=20=20=
+=20+online=20re-scrub=20(4)=20with=20core.magic=20=3D=20zeroes.=0A=20=20=20=
+=20+re-repair=20failed=20(1)=20with=20core.magic=20=3D=20zeroes.=0A=20=20=
+=20=20...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/417.out=20=
+/home/ctheune/results/xfs/417.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/418=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/418.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/418.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/418.out.bad=092022-02-02=20=
+09:37:28.159442034=20+0100=0A=20=20=20=20@@=20-1,4=20+1,414=20@@=0A=20=20=
+=20=20=20QA=20output=20created=20by=20418=0A=20=20=20=20=20Format=20and=20=
+populate=0A=20=20=20=20=20Fuzz=20superblock=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20magicnum=20=3D=20zeroes.=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20magicnum=20=3D=20ones.=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20magicnum=20=3D=20firstbit.=0A=20=20=20=20+online=20=
+re-scrub=20(4)=20with=20magicnum=20=3D=20middlebit.=0A=20=20=20=20...=0A=20=
+=20=20=20(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/418.out=20=
+/home/ctheune/results/xfs/418.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/419=09[not=20run]=20External=20volumes=20not=20in=20use,=20=
+skipped=20this=20test=0Axfs/420=09=205s=0Axfs/421=09=206s=0Axfs/422=09=
+[not=20run]=20rmapbt=20not=20supported=20by=20scratch=20filesystem=20=
+type:=20xfs=0Axfs/423=09[not=20run]=20xfs_io=20scrub=20support=20is=20=
+missing=0Axfs/424=09=207s=0Axfs/425=09[not=20run]=20user=20quota=20=
+disabled=0Axfs/426=09[not=20run]=20user=20quota=20disabled=0Axfs/427=09=
+[not=20run]=20group=20quota=20disabled=0Axfs/428=09[not=20run]=20group=20=
+quota=20disabled=0Axfs/429=09[not=20run]=20project=20quota=20disabled=0A=
+xfs/430=09[not=20run]=20project=20quota=20disabled=0Axfs/431=09=204s=0A=
+xfs/432=09=2029s=0Axfs/433=09[not=20run]=20XFS=20error=20injection=20=
+requires=20CONFIG_XFS_DEBUG=0Axfs/434=09[not=20run]=20Require=20module=20=
+xfs=20to=20be=20unloadable=0Axfs/435=09[not=20run]=20Require=20module=20=
+xfs=20to=20be=20unloadable=0Axfs/436=09[not=20run]=20Require=20module=20=
+xfs=20to=20be=20unloadable=0Axfs/437=09[not=20run]=20Can't=20run=20=
+find-api-violations.sh=20without=20WORKAREA=20set=0Axfs/438=09[not=20=
+run]=20fsgqa=20user=20not=20defined.=0Axfs/439=09=204s=0Axfs/440=09[not=20=
+run]=20fsgqa=20user=20not=20defined.=0Axfs/441=09[not=20run]=20fsgqa=20=
+user=20not=20defined.=0Axfs/442=09=20440s=0Axfs/443=09=206s=0Axfs/444=09=20=
+30s=0Axfs/445=09=20100s=0Axfs/446=09[not=20run]=20checkbashisms=20=
+utility=20required,=20skipped=20this=20test=0Axfs/447=09[not=20run]=20=
+sysfs=20attribute=20'debug/mount_delay'=20is=20not=20supported=0Axfs/448=09=
+[not=20run]=20xfs_io=20scrub=20support=20is=20missing=0Axfs/449=09=204s=0A=
+xfs/450=09[not=20run]=20rmapbt=20not=20supported=20by=20scratch=20=
+filesystem=20type:=20xfs=0Axfs/451=09=206s=0Axfs/452=09=206s=0Axfs/453=09=
+=201098s=0Axfs/454=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/454.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/454.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/454.out.bad=092022-02-02=20=
+10:15:38.920422937=20+0100=0A=20=20=20=20@@=20-1,4=20+1,116=20@@=0A=20=20=
+=20=20=20QA=20output=20created=20by=20454=0A=20=20=20=20=20Format=20and=20=
+populate=0A=20=20=20=20=20Fuzz=20AGF=0A=20=20=20=20+re-mount=20failed=20=
+(32)=20with=20magicnum=20=3D=20zeroes.=0A=20=20=20=20+re-mount=20failed=20=
+(32)=20with=20magicnum=20=3D=20ones.=0A=20=20=20=20+re-mount=20failed=20=
+(32)=20with=20magicnum=20=3D=20firstbit.=0A=20=20=20=20+re-mount=20=
+failed=20(32)=20with=20magicnum=20=3D=20middlebit.=0A=20=20=20=20...=0A=20=
+=20=20=20(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/454.out=20=
+/home/ctheune/results/xfs/454.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/455=09=20227s=0Axfs/456=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/456.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/456.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/456.out.bad=092022-02-02=20=
+10:23:04.286564370=20+0100=0A=20=20=20=20@@=20-1,4=20+1,83=20@@=0A=20=20=20=
+=20=20QA=20output=20created=20by=20456=0A=20=20=20=20=20Format=20and=20=
+populate=0A=20=20=20=20=20Fuzz=20AGI=0A=20=20=20=20+re-mount=20failed=20=
+(32)=20with=20magicnum=20=3D=20zeroes.=0A=20=20=20=20+re-mount=20failed=20=
+(32)=20with=20magicnum=20=3D=20ones.=0A=20=20=20=20+re-mount=20failed=20=
+(32)=20with=20magicnum=20=3D=20firstbit.=0A=20=20=20=20+re-mount=20=
+failed=20(32)=20with=20magicnum=20=3D=20middlebit.=0A=20=20=20=20...=0A=20=
+=20=20=20(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/456.out=20=
+/home/ctheune/results/xfs/456.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/457=09=20364s=0Axfs/458=09=20392s=0Axfs/459=09=20348s=0A=
+xfs/460=09=20252s=0Axfs/461=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/461.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/461.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/461.out.bad=092022-02-02=20=
+10:49:08.963527657=20+0100=0A=20=20=20=20@@=20-1,4=20+1,70=20@@=0A=20=20=20=
+=20=20QA=20output=20created=20by=20461=0A=20=20=20=20=20Format=20and=20=
+populate=0A=20=20=20=20=20Fuzz=20finobt=0A=20=20=20=20+re-mount=20failed=20=
+(32)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20+re-mount=20failed=20=
+(32)=20with=20magic=20=3D=20ones.=0A=20=20=20=20+re-mount=20failed=20=
+(32)=20with=20magic=20=3D=20firstbit.=0A=20=20=20=20+re-mount=20failed=20=
+(32)=20with=20magic=20=3D=20middlebit.=0A=20=20=20=20...=0A=20=20=20=20=
+(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/461.out=20=
+/home/ctheune/results/xfs/461.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/462=09[not=20run]=20rmapbt=20not=20supported=20by=20scratch=20=
+filesystem=20type:=20xfs=0Axfs/463=09[not=20run]=20rmapbt=20not=20=
+supported=20by=20scratch=20filesystem=20type:=20xfs=0Axfs/464=09-=20=
+output=20mismatch=20(see=20/home/ctheune/results/xfs/464.out.bad)=0A=20=20=
+=20=20---=20tests/xfs/464.out=091970-01-01=2001:00:01.000000000=20+0100=0A=
+=20=20=20=20+++=20/home/ctheune/results/xfs/464.out.bad=092022-02-02=20=
+10:51:23.092066243=20+0100=0A=20=20=20=20@@=20-1,4=20+1,80=20@@=0A=20=20=20=
+=20=20QA=20output=20created=20by=20464=0A=20=20=20=20=20Format=20and=20=
+populate=0A=20=20=20=20=20Fuzz=20refcountbt=0A=20=20=20=20+re-mount=20=
+failed=20(32)=20with=20magic=20=3D=20zeroes.=0A=20=20=20=20+re-mount=20=
+failed=20(32)=20with=20magic=20=3D=20ones.=0A=20=20=20=20+re-mount=20=
+failed=20(32)=20with=20magic=20=3D=20firstbit.=0A=20=20=20=20+re-mount=20=
+failed=20(32)=20with=20magic=20=3D=20middlebit.=0A=20=20=20=20...=0A=20=20=
+=20=20(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/464.out=20=
+/home/ctheune/results/xfs/464.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/465=09=201146s=0Axfs/466=09=201170s=0Axfs/467=09=201188s=0A=
+xfs/468=09=20282s=0Axfs/469=09=20180s=0Axfs/470=09=201372s=0Axfs/471=09=20=
+1778s=0Axfs/472=09=201317s=0Axfs/473=09=203461s=0Axfs/474=09=20648s=0A=
+xfs/475=09=20251s=0Axfs/476=09=20200s=0Axfs/477=09=201310s=0Axfs/478=09=20=
+1219s=0Axfs/479=09=20241s=0Axfs/480=09=20175s=0Axfs/481=09[not=20run]=20=
+External=20volumes=20not=20in=20use,=20skipped=20this=20test=0Axfs/482=09=
+[not=20run]=20External=20volumes=20not=20in=20use,=20skipped=20this=20=
+test=0Axfs/483=09=20279s=0Axfs/484=09=201125s=0Axfs/485=09=201080s=0A=
+xfs/486=09=201069s=0Axfs/487=09[not=20run]=20user=20quota=20disabled=0A=
+xfs/488=09[not=20run]=20group=20quota=20disabled=0Axfs/489=09[not=20run]=20=
+project=20quota=20disabled=0Axfs/490=09=207s=0Axfs/491=09=207s=0Axfs/492=09=
+=206s=0Axfs/493=09=206s=0Axfs/494=09=203s=0Axfs/495=09=208s=0Axfs/496=09=
+-=20output=20mismatch=20(see=20/home/ctheune/results/xfs/496.out.bad)=0A=20=
+=20=20=20---=20tests/xfs/496.out=091970-01-01=2001:00:01.000000000=20=
++0100=0A=20=20=20=20+++=20/home/ctheune/results/xfs/496.out.bad=09=
+2022-02-02=2016:35:43.485528370=20+0100=0A=20=20=20=20@@=20-2,4=20+2,253=20=
+@@=0A=20=20=20=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20=
+single-leafn-format=20dir=20block=0A=20=20=20=20=20Fuzz=20=
+single-leafn-format=20dir=20block=0A=20=20=20=20+online=20re-scrub=20(4)=20=
+with=20lhdr.info.hdr.forw=20=3D=20ones.=0A=20=20=20=20+re-repair=20=
+failed=20(1)=20with=20lhdr.info.hdr.forw=20=3D=20ones.=0A=20=20=20=20=
++online=20re-scrub=20(4)=20with=20lhdr.info.hdr.forw=20=3D=20firstbit.=0A=
+=20=20=20=20+re-repair=20failed=20(1)=20with=20lhdr.info.hdr.forw=20=3D=20=
+firstbit.=0A=20=20=20=20...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/496.out=20=
+/home/ctheune/results/xfs/496.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/497=09_check_dmesg:=20something=20found=20in=20dmesg=20(see=20=
+/home/ctheune/results/xfs/497.dmesg)=0A-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/497.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/497.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/497.out.bad=092022-02-02=20=
+17:13:11.251902108=20+0100=0A=20=20=20=20@@=20-2,4=20+2,916=20@@=0A=20=20=
+=20=20=20Format=20and=20populate=0A=20=20=20=20=20Find=20=
+single-leafn-format=20dir=20block=0A=20=20=20=20=20Fuzz=20=
+single-leafn-format=20dir=20block=0A=20=20=20=20+online=20repair=20=
+failed=20(4)=20with=20lhdr.info.hdr.forw=20=3D=20ones.=0A=20=20=20=20=
++online=20re-scrub=20(4)=20with=20lhdr.info.hdr.forw=20=3D=20ones.=0A=20=20=
+=20=20+re-repair=20failed=20(1)=20with=20lhdr.info.hdr.forw=20=3D=20=
+ones.=0A=20=20=20=20+online=20repair=20failed=20(4)=20with=20=
+lhdr.info.hdr.forw=20=3D=20firstbit.=0A=20=20=20=20...=0A=20=20=20=20=
+(Run=20'diff=20-u=20/tmp/xfstests.wVf4eh/tests/xfs/497.out=20=
+/home/ctheune/results/xfs/497.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/498=09_check_dmesg:=20something=20found=20in=20dmesg=20(see=20=
+/home/ctheune/results/xfs/498.dmesg)=0A=0Axfs/499=09=204s=0Axfs/500=09=20=
+3s=0Axfs/501=09[not=20run]=20XFS=20error=20injection=20requires=20=
+CONFIG_XFS_DEBUG=0Axfs/502=09[not=20run]=20XFS=20error=20injection=20=
+requires=20CONFIG_XFS_DEBUG=0Axfs/503=09=2025s=0Axfs/504=09=2027s=0A=
+xfs/505=09=203s=0Axfs/506=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/506.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/506.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/506.out.bad=092022-02-02=20=
+17:45:15.583211371=20+0100=0A=20=20=20=20@@=20-1,3=20+1,17=20@@=0A=20=20=20=
+=20=20QA=20output=20created=20by=20506=0A=20=20=20=20=20Health=20status=20=
+has=20not=20been=20collected=20for=20this=20filesystem.=0A=20=20=20=20=20=
+Please=20run=20xfs_scrub(8)=20to=20remedy=20this=20situation.=0A=20=20=20=
+=20+Error:=20/mnt/scratch:=20Kernel=20metadata=20scrubbing=20facility=20=
+is=20not=20available.=20(phase1.c=20line=20147)=0A=20=20=20=20=
++/mnt/scratch:=20operational=20errors=20found:=201=0A=20=20=20=20+Health=20=
+status=20has=20not=20been=20collected=20for=20this=20filesystem.=0A=20=20=
+=20=20+Please=20run=20xfs_scrub(8)=20to=20remedy=20this=20situation.=0A=20=
+=20=20=20...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/506.out=20=
+/home/ctheune/results/xfs/506.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/507=09[not=20run]=20Require=20XFS=20built=20with=20=
+CONFIG_XFS_DEBUG=0Axfs/508=09=204s=0Axfs/509=09=2050s=0Axfs/510=09=204s=0A=
+xfs/511=09=204s=0Axfs/512=09[not=20run]=20fsgqa=20user=20not=20defined.=0A=
+xfs/513=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/513.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/513.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/513.out.bad=092022-02-02=20=
+17:46:45.776231380=20+0100=0A=20=20=20=20@@=20-77,7=20+77,11=20@@=0A=20=20=
+=20=20=20TEST:=20"-o=20usrquota"=20"pass"=20"usrquota"=20"true"=0A=20=20=20=
+=20=20TEST:=20"-o=20quota"=20"pass"=20"usrquota"=20"true"=0A=20=20=20=20=20=
+TEST:=20"-o=20uqnoenforce"=20"pass"=20"uqnoenforce"=20"true"=0A=20=20=20=20=
++[FAILED]:=20mount=20/dev/loop0=20/mnt/test/513.mnt=20-o=20uqnoenforce=0A=
+=20=20=20=20+ERROR:=20did=20not=20expect=20to=20find=20"uqnoenforce"=20=
+in=20"rw,relatime,attr2,inode64,logbufs=3D8,logbsize=3D32k,usrquota"=0A=20=
+=20=20=20=20TEST:=20"-o=20qnoenforce"=20"pass"=20"uqnoenforce"=20"true"=0A=
+=20=20=20=20+[FAILED]:=20mount=20/dev/loop0=20/mnt/test/513.mnt=20-o=20=
+qnoenforce=0A=20=20=20=20...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/513.out=20=
+/home/ctheune/results/xfs/513.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/514=09=204s=0Axfs/515=09=203s=0Axfs/516=09=2027s=0Axfs/517=09=
+[not=20run]=20rmapbt=20not=20supported=20by=20scratch=20filesystem=20=
+type:=20xfs=0Axfs/518=09=205s=0Axfs/519=09=203s=0Axfs/520=09=209s=0A=
+xfs/521=09=205s=0Axfs/522=09=205s=0Axfs/523=09=204s=0Axfs/524=09=205s=0A=
+xfs/525=09=205s=0Axfs/526=09=204s=0Axfs/527=09[not=20run]=20Require=20=
+XFS=20built=20with=20CONFIG_XFS_DEBUG=0Axfs/528=09=207s=0Axfs/529=09[not=20=
+run]=20Require=20XFS=20built=20with=20CONFIG_XFS_DEBUG=0Axfs/530=09[not=20=
+run]=20Require=20XFS=20built=20with=20CONFIG_XFS_DEBUG=0Axfs/531=09[not=20=
+run]=20Require=20XFS=20built=20with=20CONFIG_XFS_DEBUG=0Axfs/532=09[not=20=
+run]=20Require=20XFS=20built=20with=20CONFIG_XFS_DEBUG=0Axfs/533=09[not=20=
+run]=20Require=20XFS=20built=20with=20CONFIG_XFS_DEBUG=0Axfs/534=09[not=20=
+run]=20Require=20XFS=20built=20with=20CONFIG_XFS_DEBUG=0Axfs/535=09[not=20=
+run]=20Require=20XFS=20built=20with=20CONFIG_XFS_DEBUG=0Axfs/536=09[not=20=
+run]=20Require=20XFS=20built=20with=20CONFIG_XFS_DEBUG=0Axfs/537=09[not=20=
+run]=20Require=20XFS=20built=20with=20CONFIG_XFS_DEBUG=0Axfs/538=09[not=20=
+run]=20Require=20XFS=20built=20with=20CONFIG_XFS_DEBUG=0Axfs/539=09-=20=
+output=20mismatch=20(see=20/home/ctheune/results/xfs/539.out.bad)=0A=20=20=
+=20=20---=20tests/xfs/539.out=091970-01-01=2001:00:01.000000000=20+0100=0A=
+=20=20=20=20+++=20/home/ctheune/results/xfs/539.out.bad=092022-02-02=20=
+17:48:53.138846974=20+0100=0A=20=20=20=20@@=20-1,2=20+1,4=20@@=0A=20=20=20=
+=20=20QA=20output=20created=20by=20539=0A=20=20=20=20=20Silence=20is=20=
+golden.=0A=20=20=20=20+Should=20not=20be=20able=20to=20find=20=
+deprecation=20warning=20for=20attr2=0A=20=20=20=20+Should=20not=20be=20=
+able=20to=20find=20deprecation=20warning=20for=20noikeep=0A=20=20=20=20=
+...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/539.out=20=
+/home/ctheune/results/xfs/539.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/540=09-=20output=20mismatch=20(see=20=
+/home/ctheune/results/xfs/540.out.bad)=0A=20=20=20=20---=20=
+tests/xfs/540.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=20=20=
++++=20/home/ctheune/results/xfs/540.out.bad=092022-02-02=20=
+17:49:00.612765718=20+0100=0A=20=20=20=20@@=20-2,4=20+2,5=20@@=0A=20=20=20=
+=20=20Format=20and=20mount=0A=20=20=20=20=20Misconfigure=20the=20root=20=
+directory=0A=20=20=20=20=20Detect=20misconfigured=20directory=0A=20=20=20=
+=20+repair=20did=20not=20catch=20error?=0A=20=20=20=20=20Repair=20=
+misconfigured=20directory=0A=20=20=20=20...=0A=20=20=20=20(Run=20'diff=20=
+-u=20/tmp/xfstests.wVf4eh/tests/xfs/540.out=20=
+/home/ctheune/results/xfs/540.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0Axfs/541=09[not=20run]=20External=20volumes=20not=20in=20use,=20=
+skipped=20this=20test=0Axfs/542=09_check_xfs_filesystem:=20filesystem=20=
+on=20/dev/vda4=20is=20inconsistent=20(r)=0A(see=20=
+/home/ctheune/results/xfs/542.full=20for=20details)=0A-=20output=20=
+mismatch=20(see=20/home/ctheune/results/xfs/542.out.bad)=0A=20=20=20=20=
+---=20tests/xfs/542.out=091970-01-01=2001:00:01.000000000=20+0100=0A=20=20=
+=20=20+++=20/home/ctheune/results/xfs/542.out.bad=092022-02-02=20=
+17:49:08.393681121=20+0100=0A=20=20=20=20@@=20-1,2=20+1,3=20@@=0A=20=20=20=
+=20=20QA=20output=20created=20by=20542=0A=20=20=20=20=20sync_file_range:=20=
+Input/output=20error=0A=20=20=20=20+cp:=20failed=20to=20clone=20=
+'/mnt/scratch/file3'=20from=20'/mnt/scratch/file2':=20Structure=20needs=20=
+cleaning=0A=20=20=20=20...=0A=20=20=20=20(Run=20'diff=20-u=20=
+/tmp/xfstests.wVf4eh/tests/xfs/542.out=20=
+/home/ctheune/results/xfs/542.out.bad'=20=20to=20see=20the=20entire=20=
+diff)=0ARan:=20generic/001=20generic/002=20generic/003=20generic/004=20=
+generic/005=20generic/006=20generic/007=20generic/008=20generic/009=20=
+generic/010=20generic/011=20generic/012=20generic/013=20generic/014=20=
+generic/015=20generic/016=20generic/017=20generic/018=20generic/019=20=
+generic/020=20generic/021=20generic/022=20generic/023=20generic/024=20=
+generic/025=20generic/026=20generic/027=20generic/028=20generic/029=20=
+generic/030=20generic/031=20generic/032=20generic/033=20generic/034=20=
+generic/035=20generic/036=20generic/037=20generic/038=20generic/039=20=
+generic/040=20generic/041=20generic/042=20generic/043=20generic/044=20=
+generic/045=20generic/046=20generic/047=20generic/048=20generic/049=20=
+generic/050=20generic/051=20generic/052=20generic/053=20generic/054=20=
+generic/055=20generic/056=20generic/057=20generic/058=20generic/059=20=
+generic/060=20generic/061=20generic/062=20generic/063=20generic/064=20=
+generic/065=20generic/066=20generic/067=20generic/068=20generic/069=20=
+generic/070=20generic/071=20generic/072=20generic/073=20generic/074=20=
+generic/075=20generic/076=20generic/077=20generic/078=20generic/079=20=
+generic/080=20generic/081=20generic/082=20generic/083=20generic/084=20=
+generic/085=20generic/086=20generic/087=20generic/088=20generic/089=20=
+generic/090=20generic/091=20generic/092=20generic/093=20generic/094=20=
+generic/095=20generic/096=20generic/097=20generic/098=20generic/099=20=
+generic/100=20generic/101=20generic/102=20generic/103=20generic/104=20=
+generic/105=20generic/106=20generic/107=20generic/108=20generic/109=20=
+generic/110=20generic/111=20generic/112=20generic/113=20generic/114=20=
+generic/115=20generic/116=20generic/117=20generic/118=20generic/119=20=
+generic/120=20generic/121=20generic/122=20generic/123=20generic/124=20=
+generic/125=20generic/126=20generic/127=20generic/128=20generic/129=20=
+generic/130=20generic/131=20generic/132=20generic/133=20generic/134=20=
+generic/135=20generic/136=20generic/137=20generic/138=20generic/139=20=
+generic/140=20generic/141=20generic/142=20generic/143=20generic/144=20=
+generic/145=20generic/146=20generic/147=20generic/148=20generic/149=20=
+generic/150=20generic/151=20generic/152=20generic/153=20generic/154=20=
+generic/155=20generic/156=20generic/157=20generic/158=20generic/159=20=
+generic/160=20generic/161=20generic/162=20generic/163=20generic/164=20=
+generic/165=20generic/166=20generic/167=20generic/168=20generic/169=20=
+generic/170=20generic/171=20generic/172=20generic/173=20generic/174=20=
+generic/175=20generic/176=20generic/177=20generic/178=20generic/179=20=
+generic/180=20generic/181=20generic/182=20generic/183=20generic/184=20=
+generic/185=20generic/186=20generic/187=20generic/188=20generic/189=20=
+generic/190=20generic/191=20generic/192=20generic/193=20generic/194=20=
+generic/195=20generic/196=20generic/197=20generic/198=20generic/199=20=
+generic/200=20generic/201=20generic/202=20generic/203=20generic/204=20=
+generic/205=20generic/206=20generic/207=20generic/208=20generic/209=20=
+generic/210=20generic/211=20generic/212=20generic/213=20generic/214=20=
+generic/215=20generic/216=20generic/217=20generic/218=20generic/219=20=
+generic/220=20generic/221=20generic/222=20generic/223=20generic/224=20=
+generic/225=20generic/226=20generic/227=20generic/228=20generic/229=20=
+generic/230=20generic/231=20generic/232=20generic/233=20generic/234=20=
+generic/235=20generic/236=20generic/237=20generic/238=20generic/239=20=
+generic/240=20generic/241=20generic/242=20generic/243=20generic/244=20=
+generic/245=20generic/246=20generic/247=20generic/248=20generic/249=20=
+generic/250=20generic/251=20generic/252=20generic/253=20generic/254=20=
+generic/255=20generic/256=20generic/257=20generic/258=20generic/259=20=
+generic/260=20generic/261=20generic/262=20generic/263=20generic/264=20=
+generic/265=20generic/266=20generic/267=20generic/268=20generic/269=20=
+generic/270=20generic/271=20generic/272=20generic/273=20generic/274=20=
+generic/275=20generic/276=20generic/277=20generic/278=20generic/279=20=
+generic/280=20generic/281=20generic/282=20generic/283=20generic/284=20=
+generic/285=20generic/286=20generic/287=20generic/288=20generic/289=20=
+generic/290=20generic/291=20generic/292=20generic/293=20generic/294=20=
+generic/295=20generic/296=20generic/297=20generic/298=20generic/299=20=
+generic/300=20generic/301=20generic/302=20generic/303=20generic/304=20=
+generic/305=20generic/306=20generic/307=20generic/308=20generic/309=20=
+generic/310=20generic/311=20generic/312=20generic/313=20generic/314=20=
+generic/315=20generic/316=20generic/317=20generic/318=20generic/319=20=
+generic/320=20generic/321=20generic/322=20generic/323=20generic/324=20=
+generic/325=20generic/326=20generic/327=20generic/328=20generic/329=20=
+generic/330=20generic/331=20generic/332=20generic/333=20generic/334=20=
+generic/335=20generic/336=20generic/337=20generic/338=20generic/339=20=
+generic/340=20generic/341=20generic/342=20generic/343=20generic/344=20=
+generic/345=20generic/346=20generic/347=20generic/348=20generic/349=20=
+generic/350=20generic/351=20generic/352=20generic/353=20generic/354=20=
+generic/355=20generic/356=20generic/357=20generic/358=20generic/359=20=
+generic/360=20generic/361=20generic/362=20generic/363=20generic/364=20=
+generic/365=20generic/366=20generic/367=20generic/368=20generic/369=20=
+generic/370=20generic/371=20generic/372=20generic/373=20generic/374=20=
+generic/375=20generic/376=20generic/377=20generic/378=20generic/379=20=
+generic/380=20generic/381=20generic/382=20generic/383=20generic/384=20=
+generic/385=20generic/386=20generic/387=20generic/388=20generic/389=20=
+generic/390=20generic/391=20generic/392=20generic/393=20generic/394=20=
+generic/395=20generic/396=20generic/397=20generic/398=20generic/399=20=
+generic/400=20generic/401=20generic/402=20generic/403=20generic/404=20=
+generic/405=20generic/406=20generic/407=20generic/408=20generic/409=20=
+generic/410=20generic/411=20generic/412=20generic/413=20generic/414=20=
+generic/415=20generic/416=20generic/417=20generic/418=20generic/419=20=
+generic/420=20generic/421=20generic/422=20generic/423=20generic/424=20=
+generic/425=20generic/426=20generic/427=20generic/428=20generic/429=20=
+generic/430=20generic/431=20generic/432=20generic/433=20generic/434=20=
+generic/435=20generic/436=20generic/437=20generic/438=20generic/439=20=
+generic/440=20generic/441=20generic/442=20generic/443=20generic/444=20=
+generic/445=20generic/446=20generic/447=20generic/448=20generic/449=20=
+generic/450=20generic/451=20generic/452=20generic/453=20generic/454=20=
+generic/455=20generic/456=20generic/457=20generic/458=20generic/459=20=
+generic/460=20generic/461=20generic/462=20generic/463=20generic/464=20=
+generic/465=20generic/466=20generic/467=20generic/468=20generic/469=20=
+generic/470=20generic/471=20generic/472=20generic/473=20generic/474=20=
+generic/475=20generic/476=20generic/477=20generic/478=20generic/479=20=
+generic/480=20generic/481=20generic/482=20generic/483=20generic/484=20=
+generic/485=20generic/486=20generic/487=20generic/488=20generic/489=20=
+generic/490=20generic/491=20generic/492=20generic/493=20generic/494=20=
+generic/495=20generic/496=20generic/497=20generic/498=20generic/499=20=
+generic/500=20generic/501=20generic/502=20generic/503=20generic/504=20=
+generic/505=20generic/506=20generic/507=20generic/508=20generic/509=20=
+generic/510=20generic/511=20generic/512=20generic/513=20generic/514=20=
+generic/515=20generic/516=20generic/517=20generic/518=20generic/519=20=
+generic/520=20generic/521=20generic/522=20generic/523=20generic/524=20=
+generic/525=20generic/526=20generic/527=20generic/528=20generic/529=20=
+generic/530=20generic/531=20generic/532=20generic/533=20generic/534=20=
+generic/535=20generic/536=20generic/537=20generic/538=20generic/539=20=
+generic/540=20generic/541=20generic/542=20generic/543=20generic/544=20=
+generic/545=20generic/546=20generic/547=20generic/548=20generic/549=20=
+generic/550=20generic/551=20generic/552=20generic/553=20generic/554=20=
+generic/555=20generic/556=20generic/557=20generic/558=20generic/559=20=
+generic/560=20generic/561=20generic/562=20generic/563=20generic/564=20=
+generic/565=20generic/566=20generic/567=20generic/568=20generic/569=20=
+generic/570=20generic/571=20generic/572=20generic/573=20generic/574=20=
+generic/575=20generic/576=20generic/577=20generic/578=20generic/579=20=
+generic/580=20generic/581=20generic/582=20generic/583=20generic/584=20=
+generic/585=20generic/586=20generic/587=20generic/588=20generic/589=20=
+generic/590=20generic/591=20generic/592=20generic/593=20generic/594=20=
+generic/595=20generic/596=20generic/597=20generic/598=20generic/599=20=
+generic/600=20generic/601=20generic/602=20generic/603=20generic/604=20=
+generic/605=20generic/606=20generic/607=20generic/608=20generic/609=20=
+generic/610=20generic/611=20generic/612=20generic/613=20generic/614=20=
+generic/615=20generic/616=20generic/617=20generic/618=20generic/619=20=
+generic/620=20generic/621=20generic/622=20generic/623=20generic/624=20=
+generic/625=20generic/626=20generic/627=20generic/628=20generic/629=20=
+generic/630=20generic/631=20generic/632=20generic/633=20generic/634=20=
+generic/635=20generic/636=20generic/637=20generic/638=20generic/639=20=
+generic/640=20generic/641=20generic/642=20generic/643=20generic/644=20=
+generic/645=20generic/646=20generic/647=20generic/648=20generic/649=20=
+generic/650=20generic/651=20generic/652=20generic/653=20generic/654=20=
+generic/655=20generic/656=20generic/657=20generic/658=20generic/659=20=
+generic/660=20generic/661=20generic/662=20generic/663=20generic/664=20=
+generic/665=20generic/666=20generic/667=20generic/668=20generic/669=20=
+generic/670=20generic/671=20generic/672=20shared/002=20shared/032=20=
+shared/298=20xfs/001=20xfs/002=20xfs/003=20xfs/004=20xfs/005=20xfs/006=20=
+xfs/007=20xfs/008=20xfs/009=20xfs/010=20xfs/011=20xfs/012=20xfs/013=20=
+xfs/014=20xfs/015=20xfs/016=20xfs/017=20xfs/018=20xfs/019=20xfs/020=20=
+xfs/021=20xfs/022=20xfs/023=20xfs/024=20xfs/025=20xfs/026=20xfs/027=20=
+xfs/028=20xfs/029=20xfs/030=20xfs/031=20xfs/032=20xfs/033=20xfs/034=20=
+xfs/035=20xfs/036=20xfs/037=20xfs/038=20xfs/039=20xfs/040=20xfs/041=20=
+xfs/042=20xfs/043=20xfs/044=20xfs/045=20xfs/046=20xfs/047=20xfs/048=20=
+xfs/049=20xfs/050=20xfs/051=20xfs/052=20xfs/053=20xfs/054=20xfs/055=20=
+xfs/056=20xfs/057=20xfs/058=20xfs/059=20xfs/060=20xfs/061=20xfs/062=20=
+xfs/063=20xfs/064=20xfs/065=20xfs/066=20xfs/067=20xfs/068=20xfs/069=20=
+xfs/070=20xfs/071=20xfs/072=20xfs/073=20xfs/074=20xfs/075=20xfs/076=20=
+xfs/077=20xfs/078=20xfs/079=20xfs/080=20xfs/081=20xfs/082=20xfs/083=20=
+xfs/084=20xfs/085=20xfs/086=20xfs/087=20xfs/088=20xfs/089=20xfs/090=20=
+xfs/091=20xfs/092=20xfs/093=20xfs/094=20xfs/095=20xfs/096=20xfs/097=20=
+xfs/098=20xfs/099=20xfs/100=20xfs/101=20xfs/102=20xfs/103=20xfs/104=20=
+xfs/105=20xfs/106=20xfs/108=20xfs/109=20xfs/110=20xfs/111=20xfs/112=20=
+xfs/113=20xfs/114=20xfs/115=20xfs/116=20xfs/117=20xfs/118=20xfs/119=20=
+xfs/120=20xfs/121=20xfs/122=20xfs/123=20xfs/124=20xfs/125=20xfs/126=20=
+xfs/127=20xfs/128=20xfs/129=20xfs/130=20xfs/131=20xfs/132=20xfs/133=20=
+xfs/134=20xfs/135=20xfs/136=20xfs/137=20xfs/138=20xfs/139=20xfs/140=20=
+xfs/141=20xfs/142=20xfs/143=20xfs/144=20xfs/145=20xfs/146=20xfs/147=20=
+xfs/148=20xfs/149=20xfs/150=20xfs/151=20xfs/152=20xfs/153=20xfs/154=20=
+xfs/155=20xfs/156=20xfs/157=20xfs/158=20xfs/159=20xfs/160=20xfs/161=20=
+xfs/162=20xfs/163=20xfs/164=20xfs/165=20xfs/166=20xfs/167=20xfs/168=20=
+xfs/169=20xfs/170=20xfs/171=20xfs/172=20xfs/173=20xfs/174=20xfs/175=20=
+xfs/176=20xfs/177=20xfs/178=20xfs/179=20xfs/180=20xfs/181=20xfs/182=20=
+xfs/183=20xfs/184=20xfs/185=20xfs/186=20xfs/187=20xfs/188=20xfs/189=20=
+xfs/190=20xfs/191-input-validation=20xfs/192=20xfs/193=20xfs/194=20=
+xfs/195=20xfs/196=20xfs/197=20xfs/198=20xfs/199=20xfs/200=20xfs/201=20=
+xfs/202=20xfs/203=20xfs/204=20xfs/205=20xfs/206=20xfs/207=20xfs/208=20=
+xfs/209=20xfs/210=20xfs/211=20xfs/212=20xfs/213=20xfs/214=20xfs/215=20=
+xfs/216=20xfs/217=20xfs/218=20xfs/219=20xfs/220=20xfs/221=20xfs/222=20=
+xfs/223=20xfs/224=20xfs/225=20xfs/226=20xfs/227=20xfs/228=20xfs/229=20=
+xfs/230=20xfs/231=20xfs/232=20xfs/233=20xfs/234=20xfs/235=20xfs/236=20=
+xfs/237=20xfs/238=20xfs/239=20xfs/240=20xfs/241=20xfs/242=20xfs/243=20=
+xfs/244=20xfs/245=20xfs/246=20xfs/247=20xfs/248=20xfs/249=20xfs/250=20=
+xfs/251=20xfs/252=20xfs/253=20xfs/254=20xfs/255=20xfs/256=20xfs/257=20=
+xfs/258=20xfs/259=20xfs/260=20xfs/261=20xfs/262=20xfs/263=20xfs/264=20=
+xfs/265=20xfs/266=20xfs/267=20xfs/268=20xfs/269=20xfs/270=20xfs/271=20=
+xfs/272=20xfs/273=20xfs/274=20xfs/275=20xfs/276=20xfs/277=20xfs/278=20=
+xfs/279=20xfs/280=20xfs/281=20xfs/282=20xfs/283=20xfs/284=20xfs/285=20=
+xfs/286=20xfs/287=20xfs/288=20xfs/289=20xfs/290=20xfs/291=20xfs/292=20=
+xfs/293=20xfs/294=20xfs/295=20xfs/296=20xfs/297=20xfs/298=20xfs/299=20=
+xfs/300=20xfs/301=20xfs/302=20xfs/303=20xfs/304=20xfs/305=20xfs/306=20=
+xfs/307=20xfs/308=20xfs/309=20xfs/310=20xfs/311=20xfs/312=20xfs/313=20=
+xfs/314=20xfs/315=20xfs/316=20xfs/317=20xfs/318=20xfs/319=20xfs/320=20=
+xfs/321=20xfs/322=20xfs/323=20xfs/324=20xfs/325=20xfs/326=20xfs/327=20=
+xfs/328=20xfs/329=20xfs/330=20xfs/331=20xfs/332=20xfs/333=20xfs/334=20=
+xfs/335=20xfs/336=20xfs/337=20xfs/338=20xfs/339=20xfs/340=20xfs/341=20=
+xfs/342=20xfs/343=20xfs/344=20xfs/345=20xfs/346=20xfs/347=20xfs/348=20=
+xfs/349=20xfs/350=20xfs/351=20xfs/352=20xfs/353=20xfs/354=20xfs/355=20=
+xfs/356=20xfs/357=20xfs/358=20xfs/359=20xfs/360=20xfs/361=20xfs/362=20=
+xfs/363=20xfs/364=20xfs/365=20xfs/366=20xfs/367=20xfs/368=20xfs/369=20=
+xfs/370=20xfs/371=20xfs/372=20xfs/373=20xfs/374=20xfs/375=20xfs/376=20=
+xfs/377=20xfs/378=20xfs/379=20xfs/380=20xfs/381=20xfs/382=20xfs/383=20=
+xfs/384=20xfs/385=20xfs/386=20xfs/387=20xfs/388=20xfs/389=20xfs/390=20=
+xfs/391=20xfs/392=20xfs/393=20xfs/394=20xfs/395=20xfs/396=20xfs/397=20=
+xfs/398=20xfs/399=20xfs/400=20xfs/401=20xfs/402=20xfs/403=20xfs/404=20=
+xfs/405=20xfs/406=20xfs/407=20xfs/408=20xfs/409=20xfs/410=20xfs/411=20=
+xfs/412=20xfs/413=20xfs/414=20xfs/415=20xfs/416=20xfs/417=20xfs/418=20=
+xfs/419=20xfs/420=20xfs/421=20xfs/422=20xfs/423=20xfs/424=20xfs/425=20=
+xfs/426=20xfs/427=20xfs/428=20xfs/429=20xfs/430=20xfs/431=20xfs/432=20=
+xfs/433=20xfs/434=20xfs/435=20xfs/436=20xfs/437=20xfs/438=20xfs/439=20=
+xfs/440=20xfs/441=20xfs/442=20xfs/443=20xfs/444=20xfs/445=20xfs/446=20=
+xfs/447=20xfs/448=20xfs/449=20xfs/450=20xfs/451=20xfs/452=20xfs/453=20=
+xfs/454=20xfs/455=20xfs/456=20xfs/457=20xfs/458=20xfs/459=20xfs/460=20=
+xfs/461=20xfs/462=20xfs/463=20xfs/464=20xfs/465=20xfs/466=20xfs/467=20=
+xfs/468=20xfs/469=20xfs/470=20xfs/471=20xfs/472=20xfs/473=20xfs/474=20=
+xfs/475=20xfs/476=20xfs/477=20xfs/478=20xfs/479=20xfs/480=20xfs/481=20=
+xfs/482=20xfs/483=20xfs/484=20xfs/485=20xfs/486=20xfs/487=20xfs/488=20=
+xfs/489=20xfs/490=20xfs/491=20xfs/492=20xfs/493=20xfs/494=20xfs/495=20=
+xfs/496=20xfs/497=20xfs/498=20xfs/499=20xfs/500=20xfs/501=20xfs/502=20=
+xfs/503=20xfs/504=20xfs/505=20xfs/506=20xfs/507=20xfs/508=20xfs/509=20=
+xfs/510=20xfs/511=20xfs/512=20xfs/513=20xfs/514=20xfs/515=20xfs/516=20=
+xfs/517=20xfs/518=20xfs/519=20xfs/520=20xfs/521=20xfs/522=20xfs/523=20=
+xfs/524=20xfs/525=20xfs/526=20xfs/527=20xfs/528=20xfs/529=20xfs/530=20=
+xfs/531=20xfs/532=20xfs/533=20xfs/534=20xfs/535=20xfs/536=20xfs/537=20=
+xfs/538=20xfs/539=20xfs/540=20xfs/541=20xfs/542=0ANot=20run:=20=
+generic/010=20generic/019=20generic/077=20generic/079=20generic/093=20=
+generic/123=20generic/125=20generic/128=20generic/193=20generic/219=20=
+generic/230=20generic/231=20generic/233=20generic/235=20generic/241=20=
+generic/256=20generic/270=20generic/305=20generic/314=20generic/317=20=
+generic/326=20generic/327=20generic/328=20generic/355=20generic/362=20=
+generic/363=20generic/364=20generic/365=20generic/366=20generic/367=20=
+generic/368=20generic/369=20generic/370=20generic/378=20generic/381=20=
+generic/382=20generic/395=20generic/396=20generic/397=20generic/398=20=
+generic/399=20generic/413=20generic/419=20generic/421=20generic/429=20=
+generic/435=20generic/440=20generic/455=20generic/457=20generic/459=20=
+generic/462=20generic/470=20generic/482=20generic/487=20generic/514=20=
+generic/548=20generic/549=20generic/550=20generic/556=20generic/559=20=
+generic/560=20generic/561=20generic/566=20generic/570=20generic/572=20=
+generic/573=20generic/574=20generic/575=20generic/576=20generic/577=20=
+generic/579=20generic/580=20generic/581=20generic/582=20generic/583=20=
+generic/584=20generic/587=20generic/592=20generic/593=20generic/595=20=
+generic/596=20generic/597=20generic/598=20generic/600=20generic/601=20=
+generic/602=20generic/603=20generic/605=20generic/606=20generic/608=20=
+generic/613=20generic/616=20generic/617=20generic/621=20generic/624=20=
+generic/625=20generic/633=20generic/644=20generic/645=20generic/656=20=
+xfs/014=20xfs/022=20xfs/023=20xfs/024=20xfs/025=20xfs/026=20xfs/027=20=
+xfs/028=20xfs/035=20xfs/036=20xfs/037=20xfs/038=20xfs/039=20xfs/040=20=
+xfs/043=20xfs/044=20xfs/046=20xfs/047=20xfs/051=20xfs/055=20xfs/056=20=
+xfs/057=20xfs/059=20xfs/060=20xfs/061=20xfs/063=20xfs/064=20xfs/065=20=
+xfs/066=20xfs/068=20xfs/090=20xfs/094=20xfs/096=20xfs/106=20xfs/114=20=
+xfs/122=20xfs/131=20xfs/141=20xfs/142=20xfs/143=20xfs/146=20xfs/147=20=
+xfs/152=20xfs/153=20xfs/161=20xfs/163=20xfs/168=20xfs/176=20xfs/186=20=
+xfs/187=20xfs/189=20xfs/195=20xfs/196=20xfs/197=20xfs/213=20xfs/214=20=
+xfs/233=20xfs/234=20xfs/235=20xfs/236=20xfs/243=20xfs/244=20xfs/245=20=
+xfs/246=20xfs/262=20xfs/266=20xfs/267=20xfs/268=20xfs/271=20xfs/272=20=
+xfs/274=20xfs/275=20xfs/276=20xfs/277=20xfs/281=20xfs/282=20xfs/283=20=
+xfs/286=20xfs/287=20xfs/296=20xfs/300=20xfs/301=20xfs/302=20xfs/310=20=
+xfs/312=20xfs/313=20xfs/314=20xfs/315=20xfs/316=20xfs/317=20xfs/318=20=
+xfs/319=20xfs/320=20xfs/321=20xfs/322=20xfs/323=20xfs/324=20xfs/325=20=
+xfs/326=20xfs/329=20xfs/331=20xfs/332=20xfs/333=20xfs/334=20xfs/335=20=
+xfs/336=20xfs/337=20xfs/338=20xfs/339=20xfs/340=20xfs/341=20xfs/342=20=
+xfs/343=20xfs/368=20xfs/369=20xfs/370=20xfs/371=20xfs/406=20xfs/407=20=
+xfs/408=20xfs/409=20xfs/419=20xfs/422=20xfs/423=20xfs/425=20xfs/426=20=
+xfs/427=20xfs/428=20xfs/429=20xfs/430=20xfs/433=20xfs/434=20xfs/435=20=
+xfs/436=20xfs/437=20xfs/438=20xfs/440=20xfs/441=20xfs/446=20xfs/447=20=
+xfs/448=20xfs/450=20xfs/462=20xfs/463=20xfs/481=20xfs/482=20xfs/487=20=
+xfs/488=20xfs/489=20xfs/501=20xfs/502=20xfs/507=20xfs/512=20xfs/517=20=
+xfs/527=20xfs/529=20xfs/530=20xfs/531=20xfs/532=20xfs/533=20xfs/534=20=
+xfs/535=20xfs/536=20xfs/537=20xfs/538=20xfs/541=0AFailures:=20=
+generic/035=20generic/050=20generic/452=20generic/473=20generic/594=20=
+generic/623=20generic/646=20xfs/018=20xfs/031=20xfs/033=20xfs/071=20=
+xfs/081=20xfs/082=20xfs/136=20xfs/154=20xfs/158=20xfs/172=20xfs/177=20=
+xfs/185=20xfs/285=20xfs/349=20xfs/350=20xfs/351=20xfs/352=20xfs/353=20=
+xfs/354=20xfs/355=20xfs/356=20xfs/357=20xfs/358=20xfs/359=20xfs/360=20=
+xfs/361=20xfs/362=20xfs/363=20xfs/364=20xfs/365=20xfs/366=20xfs/367=20=
+xfs/372=20xfs/373=20xfs/374=20xfs/375=20xfs/376=20xfs/377=20xfs/378=20=
+xfs/379=20xfs/380=20xfs/381=20xfs/382=20xfs/383=20xfs/384=20xfs/385=20=
+xfs/386=20xfs/387=20xfs/388=20xfs/389=20xfs/390=20xfs/391=20xfs/392=20=
+xfs/393=20xfs/394=20xfs/395=20xfs/396=20xfs/397=20xfs/398=20xfs/399=20=
+xfs/400=20xfs/401=20xfs/402=20xfs/403=20xfs/404=20xfs/405=20xfs/410=20=
+xfs/411=20xfs/412=20xfs/413=20xfs/414=20xfs/415=20xfs/416=20xfs/417=20=
+xfs/418=20xfs/454=20xfs/456=20xfs/461=20xfs/464=20xfs/496=20xfs/497=20=
+xfs/498=20xfs/506=20xfs/513=20xfs/539=20xfs/540=20xfs/542=0AFailed=2094=20=
+of=201216=20tests=0A=0A=
+
+--Apple-Mail=_8774E703-FE9A-4E9B-BCC6-8F00E9CDD336
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=utf-8
+
+
+
+Kind regards and stay safe,
+Christian
+
+--
+Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
+Flying Circus Internet Operations GmbH =C2=B7 http://flyingcircus.io
+Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
+HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian Theune, =
+Christian Zagrodnick
+
+
+--Apple-Mail=_8774E703-FE9A-4E9B-BCC6-8F00E9CDD336--
+
+--Apple-Mail=_8E0FB938-1854-489B-A53A-5F14AFB2432D
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename=signature.asc
+Content-Type: application/pgp-signature;
+	name=signature.asc
+Content-Description: Message signed with OpenPGP
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEE80ZlPeF6USzYHxNLZWLmycyLMigFAmIOE+kACgkQZWLmycyL
+Mii8xRAAxGmldnyO2OIQid2nZlRyLgJY0AkyAMln2w5zeavR1x/pxkI9g+HcY8+e
+a6zkIyquuO4taaVfLgIY5Bix25cuMwcs3kSulDugud8+HWoKPTkhe8tMqEHliKom
+/JfDNRCWrnG51+xL5P5W+S/M59PIrae1AzVOmYxco+OSxyXlyAqC/iGYW7VOcfW6
+KDAe+WBARhwGGYPFYoHz1d5/O7pY5PQf2SZ0XRtdEuqhnvtckJ9YtxSfjVOiDnAl
+8QPvfSWnOwOXrRTN7HgtkgJWSyz7gkAKcj0RRYHvYMcGin8+xaNYQ2ZlhBh9UI7T
+QB4rh+G8/EyVxMhYhsB/G24zkasbt9Ov/9+MSdP3J6JhuyAqVbfdlzSU2QRnSp67
+r/bVVJ5Hd8626Bbxhmrn66aD0FEnmDrFmYJJFclodnra441jfHR/dPW027lnUGQS
+h+POBUTdXkrYOuPhGoB8C/v3vn97soW5cL7IbbeB8O0BPpaovrkR8KwveBVL3kzZ
+ttFdCy5el1r6VStbmVUXrlK7jtNtpa8yYuh+Mx0AKqVjbzF0Nc9rPZrTGOU9ETL5
+bxkQvOw52Msf0wHbOmi0A9VA7F1rA30IiyRQmb8uYuFzkALnBchx8Mvu2Fs6nTO7
+wZt7svk9qeYkpgx/EsgvFDmFV89GtVfLOyboB4r7Jgj8pNJUHCs=
+=lUHz
+-----END PGP SIGNATURE-----
+
+--Apple-Mail=_8E0FB938-1854-489B-A53A-5F14AFB2432D--
