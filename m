@@ -2,133 +2,185 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EAECAC433EF
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Feb 2022 17:46:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36BC2C4332F
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Feb 2022 01:17:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229850AbiBPRqt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Feb 2022 12:46:49 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:53212 "EHLO
+        id S230011AbiBQBSH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Feb 2022 20:18:07 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:60490 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237161AbiBPRqr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Feb 2022 12:46:47 -0500
-Received: from sandeen.net (sandeen.net [63.231.237.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id CDB7E1C11A
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Feb 2022 09:46:32 -0800 (PST)
-Received: from [10.0.0.147] (liberator.sandeen.net [10.0.0.147])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id BEDEF504E0B;
-        Wed, 16 Feb 2022 11:45:50 -0600 (CST)
-Message-ID: <c65ee741-662b-a112-b73c-a440552467ba@sandeen.net>
-Date:   Wed, 16 Feb 2022 11:46:30 -0600
+        with ESMTP id S229854AbiBQBSH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Feb 2022 20:18:07 -0500
+Received: from NAM04-MW2-obe.outbound.protection.outlook.com (mail-mw2nam08on2076.outbound.protection.outlook.com [40.107.101.76])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8BA7229E97E;
+        Wed, 16 Feb 2022 17:17:53 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=kH4/Os6y8OYIP9HBpkt2qdDmHqEs6Rr3Uoov0bGxFJ9YU1tRtXUdDmYLUcjYnDEs/WZjEmRhYEzcHaP6WvDA3kbuwMuv8TjVwszMsQjxT2r6pwA2yLa8FI6u/1E7AxMR2NPhMlykkgMnLA35Kjawr7NtR4lB4+YjER/18Uak/TOHgGeieXS622FNoLkKugzLYlOFgprF5e5qmtMFwXk2QuFiPKchgknI1EIO92sjkrkj21rloN8ISLk2kGQAaflmq+PK54Cz+2ewoVb/kNjpQin2ACDkAPsmrOfEeSt6Z813YAQFf86SWDuxbaInBuAQjfzwji3wPHcMpA1guMiD2g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=BMEuhpmAXulDBY6QBh0+C/j+aTHwg+xI6f3mciGWO/4=;
+ b=WXk2I5CJBfc8jSbuf/Xjy+4+2G5BYyUdp0rzqTW1jHZoVCctnaO91LJVK9m3RaAkFrzz7DrOlceuoIdS50cCfUhnEWGdiyJFqVI886K2Hlg1VckjUA7Z8hHQxa3N/X079ChIC8z+xnq6z1cMeRSbKrbzyd+AocvmQIzF8BgAYZgh8koTBKuvGSYAl0V7b5LSzVRQkg6vCe3qeDeZ2zSWGSvOeZt1EFGPoqwunofNFkV/8HvERsVRy+zJ7Ogd9dUUe1a1DbIN0ttFwfhK2Tn6+JhzkibvPfp2QYW7LMu0pf1deL9Abgm5Xl/tTsEzG3kxTxmv72D6fkuGw5BgISW/ig==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=BMEuhpmAXulDBY6QBh0+C/j+aTHwg+xI6f3mciGWO/4=;
+ b=GWKpTPIiXHsGds6/l0PX+kmSxPY5Zznbtqg4MN+Kfg9vVB1xUqTBaTdkNapDkAPLYeHBwAabUs7DUbmBndPZfcmJOqp4Uv0L+pqBqUXKPCtpVbdVs26LscZEfHc6wq6a4Rw/daIMasSp579DbZJBcL6jHEnYZLCBsLit4Ccw6CHgUtYbr3yHgUJrHWMN/izHiBqQkZfMrYRKxRlYgpXVhgzgPwVwBNoMNbqBHC3J5sH+WWRKL8ISm72Ozd85JptE2dGmTyUbJpWqTztCjVCMZhwUnY39YHcd1fLcXzohKhYafYUxeyp/Zg73Efhh6+Yr88O2N1Xi80yguoSGXVNIEA==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from BYAPR12MB3176.namprd12.prod.outlook.com (2603:10b6:a03:134::26)
+ by BYAPR12MB4776.namprd12.prod.outlook.com (2603:10b6:a03:10d::19) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4995.16; Thu, 17 Feb
+ 2022 01:17:51 +0000
+Received: from BYAPR12MB3176.namprd12.prod.outlook.com
+ ([fe80::1528:82a2:aa0:7aa6]) by BYAPR12MB3176.namprd12.prod.outlook.com
+ ([fe80::1528:82a2:aa0:7aa6%6]) with mapi id 15.20.4975.019; Thu, 17 Feb 2022
+ 01:17:51 +0000
+From:   Alistair Popple <apopple@nvidia.com>
+To:     Jason Gunthorpe <jgg@nvidia.com>
+Cc:     David Hildenbrand <david@redhat.com>,
+        Felix Kuehling <felix.kuehling@amd.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Alex Sierra <alex.sierra@amd.com>, akpm@linux-foundation.org,
+        linux-mm@kvack.org, rcampbell@nvidia.com,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        jglisse@redhat.com, willy@infradead.org
+Subject: Re: [PATCH v6 01/10] mm: add zone device coherent type memory support
+Date:   Thu, 17 Feb 2022 12:05:39 +1100
+References: <beb38138-2266-1ff8-cc82-8fe914bed862@redhat.com>
+ <877d9vd10u.fsf@nvdebian.thelocal> <20220216020357.GD4160@nvidia.com>
+ <6156515.kVgMqSaHHm@nvdebian>
+ <98d8bbc5-ffc2-8966-fdc1-a844874e7ae8@redhat.com>
+ <20220216122600.GG4160@nvidia.com>
+User-agent: mu4e 1.6.9; emacs 27.1
+In-reply-to: <20220216122600.GG4160@nvidia.com>
+Message-ID: <874k4ycmva.fsf@nvdebian.thelocal>
+Content-Type: multipart/mixed; boundary="=-=-="
+X-ClientProxiedBy: BY3PR10CA0008.namprd10.prod.outlook.com
+ (2603:10b6:a03:255::13) To BYAPR12MB3176.namprd12.prod.outlook.com
+ (2603:10b6:a03:134::26)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.6.0
-Content-Language: en-US
-To:     "Darrick J. Wong" <djwong@kernel.org>,
-        Eric Sandeen <sandeen@redhat.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-References: <15b6f52f-a90b-7056-8b2e-e2d4dde1ef5d@redhat.com>
- <20220216171508.GL8313@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [PATCH] xfs_admin: open with O_EXCL if we will be writing
-In-Reply-To: <20220216171508.GL8313@magnolia>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 1f4a4e9b-8375-416d-c21a-08d9f1b35121
+X-MS-TrafficTypeDiagnostic: BYAPR12MB4776:EE_
+X-Microsoft-Antispam-PRVS: <BYAPR12MB4776C5225D5A4F55C606BC6BDF369@BYAPR12MB4776.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:9508;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: OSYGsru7tCqTqqhGWYEL2WYfCdp9E1GWbdtP1LT8vg88+Nu2kWdRh3SIYwRjXSfHyM30GQaYAVXe0RI+snffgjucqFM8DQZ9OeJU5epubGL6LsVvRM4rAw+a8c1JGcYwIiq9hEi00XDPryGx9yjs3b30y4Po+sFnNlNxREEx8WGvLEe8iWrvp7lmgtJtLHqWexBkWHihop1VG6c7oPVNcEbgxHNQlUuwYXEkfnF1Lq4sktvfDav6DI8y0tNN2fA/5G2dEhirstj2FjKlxdwWUPir2OmsuIaG+4ChfW0iRFvk3lVxOvoKGd1c6uO3zs6LoKY6Ikuls08Jb/7pNPtyUW+lHsn20mXrIk0AILlL/NuoFmz5pmynfIU7SLp+gfTe/lROd80+sVXnR0QRuv4G4wqi6mavHP0/yKLRefXDiejLxiN1TIpu3DLsV7bTnCcehMChlHXuLDFlZupjWhdgd2VuUVV1Mc3Y/z01/pkRxvS97KsJIM8k2eokCjaf0isxcfJjQdKmf2zFRmnXReq4rOz9aetkTRJPly1/0cCkLjxaUBCFg1yQb+B5Y5s154f7TWGR3P9veLGnTqykTPHt8pHS4qzUd6aG+/SlEljFYDVdthDyPzCZ65f/VniFNQMBF8LORdGqijEi0cntA/hTcw==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR12MB3176.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(6506007)(5660300002)(26005)(186003)(316002)(66556008)(66476007)(6486002)(66946007)(4326008)(2906002)(6862004)(8676002)(6512007)(7416002)(9686003)(8936002)(38100700002)(53546011)(44144004)(508600001)(6636002)(54906003)(6666004)(83380400001)(86362001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?e6fFZsIH3hnaeSVsjJ+CZm1UwjTvLxTAqRl6hedw5QECLy+g9dPl9CuKedXq?=
+ =?us-ascii?Q?I8dSI8ogxYJ4UedO4P8cPqo+LVhpcSvV8WIN4+mHNKxNGooyuCN/+/Ali5Kd?=
+ =?us-ascii?Q?gFnv0CJ5mQFYBuBzwBE1o53/xIgaLU2w6UzrnF8grpVsr1cRLssJLMRp4C8c?=
+ =?us-ascii?Q?njBosP57mBBBsidtsh2rGHsIpSVxXP9u8+whQwGG4UY6J3Us1dNQGveQLydr?=
+ =?us-ascii?Q?N67yfwU8gt+aa03SiCOTFJT/NmQOWtKiWEbCKCsyN7+iSq09UGxnb59f1Haw?=
+ =?us-ascii?Q?nyOYXuTfuvvCA1SYOoiAvtoaGy3nYlTZCQpqdlRk3hQwcXbYt7Mx+UAM+eba?=
+ =?us-ascii?Q?S3aCmdKjgGwU4eck/MbZ3Z+/gY/f36QfcbHbu8ZSW/nghoS0HV/EmlWlMz/o?=
+ =?us-ascii?Q?sNQ6yLjkmSsDna2WdeRjbC3inzzW+Hul7IVoMDJxQHVJ+62FudwCEevEZmcp?=
+ =?us-ascii?Q?Th2/esSRNSa75Yif4GvUYvDUxoUdzkEGloyI8ezlcQBkfZ45bOzzC6IFSe5K?=
+ =?us-ascii?Q?CnjBnhpOMmPnZmihSsJg3RDuJwbjAgEEQBnSzCCj2gNGvL+ag9jHydG44whX?=
+ =?us-ascii?Q?Nfiud8AeM2/DrhhsYxqzx3HIsAKc7nyj7GkN4Q9lOCt9ZWzewgydOOGkotWP?=
+ =?us-ascii?Q?422wCi5HVZrnaKqqBm3Gx2WlBt2CeUz6zu9hNK0AT0UNy3FfK3ijt4xj2rtj?=
+ =?us-ascii?Q?/Kunda9sXe3ZVrJoRYGQ4qtOnHuDt8PiGuSBzckBD9SW9O5RATztEs/zTzxv?=
+ =?us-ascii?Q?CTWjR/HE+k5t7pLXzGulFofh/hUALREvY92Ver41qOE73Y7D9vcro8igSdE0?=
+ =?us-ascii?Q?/v/ZlUvsZ6ZKy+q7VgD9yk2pbTb05o9WijYVHhJ/S4+x05uCxmwV8UpLKm0V?=
+ =?us-ascii?Q?4+QJAnGx5cTZAGMm6D/iNZDvIa3AMVFdUs6baVIWTC+xdOPeM6H83Rt92rsT?=
+ =?us-ascii?Q?4rRw3Cg9eAhf8ZfeR/WQVwr5JBskrSMKrxakFnmWQ9Psk76cipv1+2vQvJDi?=
+ =?us-ascii?Q?6QU0Kw8l780rnqExUtMC8VyTuI2BxQVYNxI+awheOF2UsGTeds+LmIUgvGKx?=
+ =?us-ascii?Q?OaIwH8yIP8fXbSprf8ZT1WbHkpwkU4asw9Mg+0V4orMUh/L7CTF9tqN+Obme?=
+ =?us-ascii?Q?b5Q4Nzv6UrSaj/pb45VwtkyaY1qAHibTu97tQj9DpiIkw/KdTQUZvig2oOSp?=
+ =?us-ascii?Q?Fn1HwNZnCce0zKeGjgyegpAVZU+qDHIZL32XNPK81+agsBVJFN3Q49Dz9g3c?=
+ =?us-ascii?Q?aXFi06/wXtZCMJRlj1x7D6CuBFUTSv40DZL+AC5oaS1UmmuRgcJGPmVXJ9Km?=
+ =?us-ascii?Q?b75+9laHA0uqEe88oq7T7Xzvy+TxI9i4nUmOkpvWOGDPC/FqCv5ITKSK3Hv5?=
+ =?us-ascii?Q?FCjun0c5ckqPjdCF90pG1/awDawBGiRNIQqdByC6ZloTtIZeVqAYL9rU4eJJ?=
+ =?us-ascii?Q?rYvSKKrZTapZQWx96Jqrd0j3ad72Z6zX3TIIQqMEjkca87ILpQl1XA6e2rl1?=
+ =?us-ascii?Q?qsYiMs0H3VNLoTZAc69qh3RLTiluybr+8uu39NU5d92Xdd07/Hkje1Evnsp3?=
+ =?us-ascii?Q?4ehRM8QOe21Ex/arx2FrxmH2T5Mj0VHlHAhiD0KcoiYY2QDd6aiaB8q8B5iS?=
+ =?us-ascii?Q?jc+Lmslcb7oXsoSNBeCO0XQ=3D?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1f4a4e9b-8375-416d-c21a-08d9f1b35121
+X-MS-Exchange-CrossTenant-AuthSource: BYAPR12MB3176.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Feb 2022 01:17:51.4742
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: bkyKr/hikiEpFlK+d83fDj7F3PHsgAQusAk84J5lu8RPit/so5ruSBKEO54uqcEXmnUdDM3aP7BDFkmGvvGZIA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR12MB4776
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2/16/22 11:15 AM, Darrick J. Wong wrote:
-> On Tue, Feb 15, 2022 at 11:35:23PM -0600, Eric Sandeen wrote:
->> So, coreOS has a systemd unit which changes the UUID of a filesystem
->> on first boot, and they're currently racing that with mount.
+--=-=-=
+Content-Type: text/plain
+Content-Disposition: inline
+
+Jason Gunthorpe <jgg@nvidia.com> writes:
+
+> On Wed, Feb 16, 2022 at 09:31:03AM +0100, David Hildenbrand wrote:
+>> On 16.02.22 03:36, Alistair Popple wrote:
+>> > On Wednesday, 16 February 2022 1:03:57 PM AEDT Jason Gunthorpe wrote:
+>> >> On Wed, Feb 16, 2022 at 12:23:44PM +1100, Alistair Popple wrote:
+>> >>
+>> >>> Device private and device coherent pages are not marked with pte_devmap and they
+>> >>> are backed by a struct page. The only way of inserting them is via migrate_vma.
+>> >>> The refcount is decremented in zap_pte_range() on munmap() with special handling
+>> >>> for device private pages. Looking at it again though I wonder if there is any
+>> >>> special treatment required in zap_pte_range() for device coherent pages given
+>> >>> they count as present pages.
+>> >>
+>> >> This is what I guessed, but we shouldn't be able to just drop
+>> >> pte_devmap on these pages without any other work?? Granted it does
+>> >> very little already..
+>> >
+>> > Yes, I agree we need to check this more closely. For device private pages
+>> > not having pte_devmap is fine, because they are non-present swap entries so
+>> > they always get special handling in the swap entry paths but the same isn't
+>> > true for coherent device pages.
 >>
->> This leads to corruption and mount failures.
+>> I'm curious, how does the refcount of a PageAnon() DEVICE_COHERENT page
+>> look like when mapped? I'd assume it's also (currently) still offset by
+>> one, meaning, if it's mapped into a single page table it's always at
+>> least 2.
+>
+> Christoph fixed this offset by one and updated the DEVICE_COHERENT
+> patchset, I hope we will see that version merged.
+>
+>> >> I thought at least gup_fast needed to be touched or did this get
+>> >> handled by scanning the page list after the fact?
+>> >
+>> > Right, for gup I think the only special handling required is to prevent
+>> > pinning. I had assumed that check_and_migrate_movable_pages() would still get
+>> > called for gup_fast but unless I've missed something I don't think it does.
+>> > That means gup_fast could still pin movable and coherent pages. Technically
+>> > that is ok for coherent pages, but it's undesirable.
 >>
->> If xfs_db is running as xfs_admin in a mode that can write to the
->> device, open that device exclusively.
->>
->> This might still lead to mount failures if xfs_admin wins the open race,
->> but at least it won't corrupt the filesystem along the way.
->>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> ---
->>
->> (this opens plain files O_EXCL is well, which is undefined without O_CREAT.
->> I'm not sure if we need to worry about that.)
->>
->> diff --git a/db/init.c b/db/init.c
->> index eec65d0..f43be6e 100644
->> --- a/db/init.c
->> +++ b/db/init.c
->> @@ -97,6 +97,14 @@ init(
->>  	else
->>  		x.dname = fsdevice;
->>  
->> +	/*
->> +	 * If running as xfs_admin in RW mode, prevent concurrent
->> +	 * opens of a block device.
->> + 	 */
->> +	if (!strcmp(progname, "xfs_admin") &&
-> 
-> Hmm, it seems like sort of a hack to key this off the program name.
-> Though Eric mentioned on IRC that Dave or someone expressed a preference
-> for xfs_db not being gated on O_EXCL when a user is trying to run the
-> program for *debugging*.
-> 
-> Perhaps "if (strcmp(progname, "xfs_db") &&" here?  Just in case we add
-> more shell script wrappers for xfs_db in the future?  I prefer loosening
-> restrictions as new functionality asks for them, rather than risk
-> breaking scripts when we discover holes in new code later on.
+>> We really should have the same pinning rules for GUP vs. GUP-fast.
+>> is_pinnable_page() should be the right place for such checks (similarly
+>> as indicated in my reply to the migration series).
+>
+> Yes, I think this is a bug too.
 
-I was just thinking about that last night. I agree, thanks.
+Agreed, I will add a fix for it to my series as I was surprised the rules for
+PUP-fast were different. I can see how this happened though -
+check_and_migrate_cma_pages() (the precursor to
+check_and_migrate_movable_pages()) was added before PUP-fast and FOLL_LONGTERM
+so I guess we just never added this check there.
 
-> 
->> +	    (x.isreadonly != LIBXFS_ISREADONLY))
-> 
-> At first I wondered about the -i case where ISREADONLY and ISINACTIVE
-> are set, but then I realized that -i ("do it even if mounted") isn't
-> used by xfs_admin and expressly forbids the use of O_EXCL.  So I guess
-> the equivalence test and the assignment below are ok, since x.isreadonly
-> is zero at the start of xfs_db's init() function, and we'll never have
-> to deal with other flags combinations that might've snuck in from
-> somewhere else.  Right?
+- Alistair
 
-Hm, ok fair, let me give that more thought.
+> The other place that needs careful audit is all the callers using
+> vm_normal_page() - they must all be able to accept a ZONE_DEVICE page
+> if we don't set pte_devmap.
+>
+> Jason
 
-[ -i|r|x|F ] 
-
-sounds exclusive but I don't think it's enforced. I think it was safe for
-xfs_admin, but maybe not for db in general. I'll give it another look,
-thanks.
-
->> +		x.isreadonly = LIBXFS_EXCLUSIVELY;
-> 
-> But this is still a mess.  Apparently libxfs_init_t.isdirect is for
-> LIBXFS_DIRECT, but libxfs_init_t.isreadonly is for other four flags?
-> But it doesn't really make much difference to libxfs_init() because it
-> combines both fields?
-
-yeah, ugly isn't it. :) I definitely cringed at "isreadonly = EXCLSUSIVELY" -
-wut?
-
-> Can we turn this into a single flags field?  Not necessarily here, but
-> as a general cleanup?
-> 
->> +
->>  	x.bcache_flags = CACHE_MISCOMPARE_PURGE;
-> 
-> ...and maybe teach libxlog not to have this global variable?
-
-And a pony. :) 
-
-All good points, thanks.
--Eric
- 
-> --D
-> 
->>  	if (!libxfs_init(&x)) {
->>  		fputs(_("\nfatal error -- couldn't initialize XFS library\n"),
->>
-> 
+--=-=-=--
