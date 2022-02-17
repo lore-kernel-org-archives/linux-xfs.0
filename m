@@ -2,46 +2,46 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C47BC4332F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D99B9C43217
 	for <linux-xfs@archiver.kernel.org>; Thu, 17 Feb 2022 17:25:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243687AbiBQRZj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Feb 2022 12:25:39 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:46758 "EHLO
+        id S243696AbiBQRZk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Feb 2022 12:25:40 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:46794 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243697AbiBQRZi (ORCPT
+        with ESMTP id S243698AbiBQRZi (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Feb 2022 12:25:38 -0500
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C1A122B354D
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Feb 2022 09:25:23 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2D5A02B357C
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Feb 2022 09:25:24 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
         s=mimecast20190719; t=1645118723;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=YLX+6xw36AdkCV6ve33eZKotXM7KuJO4PDBGTJNhxjc=;
-        b=TIz5GITmtckoYS+XNaj7e0COsokJOvxg5M+9vJ+Rlf/OvWlFuLv69WJfqlEZuvVdESD4ZV
-        TgFKeKq/Nhx8DuA6d5FxqA1zeTKzfHSlJd2CbNKgH8rSwfTq7gy9pDBr6S9pyfhPkvGY+5
-        mnkKKCU4Q+MgX4lQnwZHEt/h+x7Wl2M=
+        bh=IwakkKXg+1+m/sECrlgsyD/fOQm0prk8CgYyuRENgyo=;
+        b=BtlrhRCEJDkxoiFMuj2jc+AQct1Bf8/Rjwpza4yaXYXhD9FYz3FMlD/woPO43Xz8jNDOL7
+        WUGf1xKWlX5YsQ8vkNvU6JfVJb3W+/Wyb8+bHQ4FhMAddMM0h3Maq9IMARZYn3ntCC2W+j
+        gWPAQYiTJYuoUwhylu0PmXcjBwbwQDA=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-330-pZXJC3zBORWA6rR4t-SoHA-1; Thu, 17 Feb 2022 12:25:21 -0500
-X-MC-Unique: pZXJC3zBORWA6rR4t-SoHA-1
+ us-mta-310-kFUmKbq-PS-_m5l3X_xoEQ-1; Thu, 17 Feb 2022 12:25:22 -0500
+X-MC-Unique: kFUmKbq-PS-_m5l3X_xoEQ-1
 Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B9B931091DA4
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Feb 2022 17:25:20 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 2D60F2F4A
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Feb 2022 17:25:21 +0000 (UTC)
 Received: from bfoster.redhat.com (unknown [10.22.16.110])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 778E234949
+        by smtp.corp.redhat.com (Postfix) with ESMTP id DF2A02DE6F
         for <linux-xfs@vger.kernel.org>; Thu, 17 Feb 2022 17:25:20 +0000 (UTC)
 From:   Brian Foster <bfoster@redhat.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH RFC 3/4] xfs: crude chunk allocation retry mechanism
-Date:   Thu, 17 Feb 2022 12:25:17 -0500
-Message-Id: <20220217172518.3842951-4-bfoster@redhat.com>
+Subject: [PATCH RFC 4/4] xfs: skip busy inodes on finobt inode allocation
+Date:   Thu, 17 Feb 2022 12:25:18 -0500
+Message-Id: <20220217172518.3842951-5-bfoster@redhat.com>
 In-Reply-To: <20220217172518.3842951-1-bfoster@redhat.com>
 References: <20220217172518.3842951-1-bfoster@redhat.com>
 MIME-Version: 1.0
@@ -51,80 +51,180 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The free inode btree currently tracks all inode chunk records with
-at least one free inode. This simplifies the chunk and allocation
-selection algorithms as free inode availability can be guaranteed
-after a few simple checks. This is no longer the case with busy
-inode avoidance, however, because busy inode state is tracked in the
-radix tree independent from physical allocation status.
+Experimental algorithm to skip busy inodes on finobt based inode
+allocation. This is a first pass implementation intended primarily
+for functional and performance experimentation. The logic is
+intentionally kept simple to minimize the scope of changes required
+to demonstrate functionality.
 
-A busy inode avoidance algorithm relies on the ability to fall back
-to an inode chunk allocation one way or another in the event that
-all current free inodes are busy. Hack in a crude allocation
-fallback mechanism for experimental purposes. If the inode selection
-algorithm is unable to locate a usable inode, allow it to return
--EAGAIN to perform another physical chunk allocation in the AG and
-retry the inode allocation.
+The existing finobt inode allocation algorithms are updated to
+filter out records that are covered by at least one still-busy
+inode[1] and continue scanning as appropriate based on the
+allocation mode. For example, near allocation mode continues
+scanning left and right until a usable record is found. newino mode
+checks the target record and then scans from the first record in the
+tree until a usable record is found. If the associated algorithm
+cannot find a usable record, it falls back to new chunk allocation
+to add non-busy inodes to the selection pool and restarts.
 
-The current prototype can perform this allocation and retry sequence
-repeatedly because a newly allocated chunk may still be covered by
-busy in-core inodes in the radix tree (if it were recently freed,
-for example). This is inefficient and temporary. It will be properly
-mitigated by background chunk removal. This defers freeing of inode
-chunk blocks from the free of the last used inode in the chunk to a
-background task that only frees chunks once completely idle, thereby
-providing a guarantee that a new chunk allocation always adds
-non-busy inodes to the AG.
+[1] As I write this, it occurs to me this logic could be further
+improved to compare the first busy inode against the first free
+inode in the record without disrupting the subsequent inode
+selection logic.
 
 Not-Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/libxfs/xfs_ialloc.c | 18 +++++++++++++++++-
- 1 file changed, 17 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_ialloc.c | 81 +++++++++++++++++++++++++++++++++++---
+ 1 file changed, 76 insertions(+), 5 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index b418fe0c0679..3eb41228e210 100644
+index 3eb41228e210..c79c85327cf4 100644
 --- a/fs/xfs/libxfs/xfs_ialloc.c
 +++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -27,6 +27,7 @@
- #include "xfs_log.h"
- #include "xfs_rmap.h"
- #include "xfs_ag.h"
-+#include "xfs_trans_space.h"
+@@ -1248,12 +1248,53 @@ xfs_dialloc_ag_inobt(
+ 	return error;
+ }
  
++#define XFS_LOOKUP_BATCH	XFS_INODES_PER_CHUNK
++#define XFS_ICI_BUSY_TAG	2
++STATIC bool
++xfs_dialloc_ag_inobt_rec_busy(
++	struct xfs_perag		*pag,
++	struct xfs_inobt_rec_incore	*rec)
++{
++	struct xfs_inode		*batch[XFS_LOOKUP_BATCH];
++	struct xfs_inode		*ip;
++	int				found, i;
++	xfs_agino_t			startino = rec->ir_startino;
++	bool				busy = false;
++	unsigned long			destroy_gp;
++
++	rcu_read_lock();
++	found = radix_tree_gang_lookup_tag(&pag->pag_ici_root, (void **) batch,
++					   startino, XFS_LOOKUP_BATCH,
++					   XFS_ICI_BUSY_TAG);
++	for (i = 0; i < found; i++) {
++		ip = batch[i];
++		spin_lock(&ip->i_flags_lock);
++		if (ip->i_ino >= startino + XFS_INODES_PER_CHUNK) {
++			spin_unlock(&ip->i_flags_lock);
++			break;
++		}
++		destroy_gp = ip->i_destroy_gp;
++		spin_unlock(&ip->i_flags_lock);
++
++		if (!poll_state_synchronize_rcu(destroy_gp)) {
++			busy = true;
++			break;
++		}
++	}
++	rcu_read_unlock();
++	trace_printk("%d: agno %d startino 0x%x found %d busy %d caller %pS\n",
++		     __LINE__, pag->pag_agno, startino, found, busy,
++		     (void *) _RET_IP_);
++	return busy;
++}
++
  /*
-  * Lookup a record by ino in the btree given by cur.
-@@ -1689,6 +1690,7 @@ xfs_dialloc_try_ag(
- 			goto out_release;
- 		}
+  * Use the free inode btree to allocate an inode based on distance from the
+  * parent. Note that the provided cursor may be deleted and replaced.
+  */
+ STATIC int
+ xfs_dialloc_ag_finobt_near(
++	struct xfs_perag		*pag,
+ 	xfs_agino_t			pagino,
+ 	struct xfs_btree_cur		**ocur,
+ 	struct xfs_inobt_rec_incore	*rec)
+@@ -1281,8 +1322,10 @@ xfs_dialloc_ag_finobt_near(
+ 		 * existence is enough.
+ 		 */
+ 		if (pagino >= rec->ir_startino &&
+-		    pagino < (rec->ir_startino + XFS_INODES_PER_CHUNK))
+-			return 0;
++		    pagino < (rec->ir_startino + XFS_INODES_PER_CHUNK)) {
++			if (!xfs_dialloc_ag_inobt_rec_busy(pag, rec))
++				return 0;
++		}
+ 	}
  
-+alloc:
- 		error = xfs_ialloc_ag_alloc(*tpp, agbp, pag);
- 		if (error < 0)
- 			goto out_release;
-@@ -1706,8 +1708,22 @@ xfs_dialloc_try_ag(
- 
- 	/* Allocate an inode in the found AG */
- 	error = xfs_dialloc_ag(*tpp, agbp, pag, parent, &ino);
--	if (!error)
-+	if (!error) {
- 		*new_ino = ino;
-+	} else if (error == -EAGAIN) {
-+		/*
-+		 * XXX: Temporary hack to retry allocs until background chunk
-+		 * freeing is worked out.
-+		 */
-+		error = xfs_mod_fdblocks(pag->pag_mount,
-+			       -((int64_t)XFS_IALLOC_SPACE_RES(pag->pag_mount)),
-+			       false);
+ 	error = xfs_btree_dup_cursor(lcur, &rcur);
+@@ -1306,6 +1349,21 @@ xfs_dialloc_ag_finobt_near(
+ 		error = -EFSCORRUPTED;
+ 		goto error_rcur;
+ 	}
++
++	while (i == 1 && xfs_dialloc_ag_inobt_rec_busy(pag, rec)) {
++		error = xfs_ialloc_next_rec(lcur, rec, &i, 1);
 +		if (error)
-+			goto out_release;
-+		(*tpp)->t_blk_res += XFS_IALLOC_SPACE_RES(pag->pag_mount);
-+		goto alloc;
++			goto error_rcur;
++		i = !i;
 +	}
 +
- 	return error;
++	while (j == 1 && xfs_dialloc_ag_inobt_rec_busy(pag, &rrec)) {
++		error = xfs_ialloc_next_rec(rcur, &rrec, &j, 0);
++		if (error)
++			goto error_rcur;
++		j = !j;
++	}
++
+ 	if (i == 1 && j == 1) {
+ 		/*
+ 		 * Both the left and right records are valid. Choose the closer
+@@ -1327,6 +1385,9 @@ xfs_dialloc_ag_finobt_near(
+ 	} else if (i == 1) {
+ 		/* only the left record is valid */
+ 		xfs_btree_del_cursor(rcur, XFS_BTREE_NOERROR);
++	} else {
++		error = -EAGAIN;
++		goto error_rcur;
+ 	}
  
- out_release:
+ 	return 0;
+@@ -1342,6 +1403,7 @@ xfs_dialloc_ag_finobt_near(
+  */
+ STATIC int
+ xfs_dialloc_ag_finobt_newino(
++	struct xfs_perag		*pag,
+ 	struct xfs_agi			*agi,
+ 	struct xfs_btree_cur		*cur,
+ 	struct xfs_inobt_rec_incore	*rec)
+@@ -1360,7 +1422,8 @@ xfs_dialloc_ag_finobt_newino(
+ 				return error;
+ 			if (XFS_IS_CORRUPT(cur->bc_mp, i != 1))
+ 				return -EFSCORRUPTED;
+-			return 0;
++			if (!xfs_dialloc_ag_inobt_rec_busy(pag, rec))
++				return 0;
+ 		}
+ 	}
+ 
+@@ -1379,6 +1442,14 @@ xfs_dialloc_ag_finobt_newino(
+ 	if (XFS_IS_CORRUPT(cur->bc_mp, i != 1))
+ 		return -EFSCORRUPTED;
+ 
++	while (xfs_dialloc_ag_inobt_rec_busy(pag, rec)) {
++		error = xfs_ialloc_next_rec(cur, rec, &i, 0);
++		if (error)
++			return error;
++		if (i == 1)
++			return -EAGAIN;
++	}
++
+ 	return 0;
+ }
+ 
+@@ -1470,9 +1541,9 @@ xfs_dialloc_ag(
+ 	 * not, consider the agi hint or find the first free inode in the AG.
+ 	 */
+ 	if (pag->pag_agno == pagno)
+-		error = xfs_dialloc_ag_finobt_near(pagino, &cur, &rec);
++		error = xfs_dialloc_ag_finobt_near(pag, pagino, &cur, &rec);
+ 	else
+-		error = xfs_dialloc_ag_finobt_newino(agi, cur, &rec);
++		error = xfs_dialloc_ag_finobt_newino(pag, agi, cur, &rec);
+ 	if (error)
+ 		goto error_cur;
+ 
 -- 
 2.31.1
 
