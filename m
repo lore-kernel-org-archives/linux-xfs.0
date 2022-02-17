@@ -2,46 +2,46 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC34CC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Feb 2022 17:25:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C47BC4332F
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Feb 2022 17:25:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243699AbiBQRZi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Feb 2022 12:25:38 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:46720 "EHLO
+        id S243687AbiBQRZj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Feb 2022 12:25:39 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:46758 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239214AbiBQRZi (ORCPT
+        with ESMTP id S243697AbiBQRZi (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Feb 2022 12:25:38 -0500
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 852BC2B1677
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C1A122B354D
         for <linux-xfs@vger.kernel.org>; Thu, 17 Feb 2022 09:25:23 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1645118722;
+        s=mimecast20190719; t=1645118723;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=fVsKDvpy3vIocTn0eYJ+ZrR52T4MtWnU49WFxgZ+PAg=;
-        b=FiD1YPUpyTsi3RHVNI4KNySaN3SRTXfTF8geyeeOecpSK2rRtY9Hs8c7qAmCVSqfaV2xM9
-        uFkz3PbkZTZxLWakeI8e9s34PFZyxdZXk530cuvCEDlVXvnWO2XLrbJSQE6XRtNbjowESx
-        zy7l4Oeo8B0IwEzy4A1ZTRXVDy6QWMU=
+        bh=YLX+6xw36AdkCV6ve33eZKotXM7KuJO4PDBGTJNhxjc=;
+        b=TIz5GITmtckoYS+XNaj7e0COsokJOvxg5M+9vJ+Rlf/OvWlFuLv69WJfqlEZuvVdESD4ZV
+        TgFKeKq/Nhx8DuA6d5FxqA1zeTKzfHSlJd2CbNKgH8rSwfTq7gy9pDBr6S9pyfhPkvGY+5
+        mnkKKCU4Q+MgX4lQnwZHEt/h+x7Wl2M=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-176-t5hXas6AMDCGzZEbY3tEcg-1; Thu, 17 Feb 2022 12:25:21 -0500
-X-MC-Unique: t5hXas6AMDCGzZEbY3tEcg-1
+ us-mta-330-pZXJC3zBORWA6rR4t-SoHA-1; Thu, 17 Feb 2022 12:25:21 -0500
+X-MC-Unique: pZXJC3zBORWA6rR4t-SoHA-1
 Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 5218A1091DA1
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B9B931091DA4
         for <linux-xfs@vger.kernel.org>; Thu, 17 Feb 2022 17:25:20 +0000 (UTC)
 Received: from bfoster.redhat.com (unknown [10.22.16.110])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 106DF2DE6F
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Feb 2022 17:25:19 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 778E234949
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Feb 2022 17:25:20 +0000 (UTC)
 From:   Brian Foster <bfoster@redhat.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH RFC 2/4] xfs: tag reclaimable inodes with pending RCU grace periods as busy
-Date:   Thu, 17 Feb 2022 12:25:16 -0500
-Message-Id: <20220217172518.3842951-3-bfoster@redhat.com>
+Subject: [PATCH RFC 3/4] xfs: crude chunk allocation retry mechanism
+Date:   Thu, 17 Feb 2022 12:25:17 -0500
+Message-Id: <20220217172518.3842951-4-bfoster@redhat.com>
 In-Reply-To: <20220217172518.3842951-1-bfoster@redhat.com>
 References: <20220217172518.3842951-1-bfoster@redhat.com>
 MIME-Version: 1.0
@@ -51,98 +51,80 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-In order to avoid aggressive recycling of in-core xfs_inode objects with
-pending grace periods and the subsequent RCU sync stalls involved with
-recycling, we must be able to identify them quickly and reliably at
-allocation time. Claim a new tag for the in-core inode radix tree and
-tag all inodes with a still pending grace period cookie as busy at the
-time they are made reclaimable.
+The free inode btree currently tracks all inode chunk records with
+at least one free inode. This simplifies the chunk and allocation
+selection algorithms as free inode availability can be guaranteed
+after a few simple checks. This is no longer the case with busy
+inode avoidance, however, because busy inode state is tracked in the
+radix tree independent from physical allocation status.
 
-Note that it is not necessary to maintain consistency between the tag
-and grace period status once the tag is set. The busy tag simply
-reflects that the grace period had not expired by the time the inode was
-set reclaimable and therefore any reuse of the inode must first poll the
-RCU subsystem for subsequent expiration of the grace period. Clear the
-tag when the inode is recycled or reclaimed.
+A busy inode avoidance algorithm relies on the ability to fall back
+to an inode chunk allocation one way or another in the event that
+all current free inodes are busy. Hack in a crude allocation
+fallback mechanism for experimental purposes. If the inode selection
+algorithm is unable to locate a usable inode, allow it to return
+-EAGAIN to perform another physical chunk allocation in the AG and
+retry the inode allocation.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+The current prototype can perform this allocation and retry sequence
+repeatedly because a newly allocated chunk may still be covered by
+busy in-core inodes in the radix tree (if it were recently freed,
+for example). This is inefficient and temporary. It will be properly
+mitigated by background chunk removal. This defers freeing of inode
+chunk blocks from the free of the last used inode in the chunk to a
+background task that only frees chunks once completely idle, thereby
+providing a guarantee that a new chunk allocation always adds
+non-busy inodes to the AG.
+
+Not-Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_icache.c | 18 +++++++++++++-----
- 1 file changed, 13 insertions(+), 5 deletions(-)
+ fs/xfs/libxfs/xfs_ialloc.c | 18 +++++++++++++++++-
+ 1 file changed, 17 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 693896bc690f..245ee0f6670b 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -32,6 +32,8 @@
- #define XFS_ICI_RECLAIM_TAG	0
- /* Inode has speculative preallocations (posteof or cow) to clean. */
- #define XFS_ICI_BLOCKGC_TAG	1
-+/* inode has pending RCU grace period when set reclaimable  */
-+#define XFS_ICI_BUSY_TAG	2
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index b418fe0c0679..3eb41228e210 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -27,6 +27,7 @@
+ #include "xfs_log.h"
+ #include "xfs_rmap.h"
+ #include "xfs_ag.h"
++#include "xfs_trans_space.h"
  
  /*
-  * The goal for walking incore inodes.  These can correspond with incore inode
-@@ -274,7 +276,7 @@ xfs_perag_clear_inode_tag(
- 	if (agino != NULLAGINO)
- 		radix_tree_tag_clear(&pag->pag_ici_root, agino, tag);
- 	else
--		ASSERT(tag == XFS_ICI_RECLAIM_TAG);
-+		ASSERT(tag == XFS_ICI_RECLAIM_TAG || tag == XFS_ICI_BUSY_TAG);
+  * Lookup a record by ino in the btree given by cur.
+@@ -1689,6 +1690,7 @@ xfs_dialloc_try_ag(
+ 			goto out_release;
+ 		}
  
- 	if (tag == XFS_ICI_RECLAIM_TAG)
- 		pag->pag_ici_reclaimable--;
-@@ -336,6 +338,7 @@ xfs_iget_recycle(
- {
- 	struct xfs_mount	*mp = ip->i_mount;
- 	struct inode		*inode = VFS_I(ip);
-+	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
- 	int			error;
++alloc:
+ 		error = xfs_ialloc_ag_alloc(*tpp, agbp, pag);
+ 		if (error < 0)
+ 			goto out_release;
+@@ -1706,8 +1708,22 @@ xfs_dialloc_try_ag(
  
- 	trace_xfs_iget_recycle(ip);
-@@ -392,8 +395,9 @@ xfs_iget_recycle(
- 	 */
- 	ip->i_flags &= ~XFS_IRECLAIM_RESET_FLAGS;
- 	ip->i_flags |= XFS_INEW;
--	xfs_perag_clear_inode_tag(pag, XFS_INO_TO_AGINO(mp, ip->i_ino),
--			XFS_ICI_RECLAIM_TAG);
+ 	/* Allocate an inode in the found AG */
+ 	error = xfs_dialloc_ag(*tpp, agbp, pag, parent, &ino);
+-	if (!error)
++	if (!error) {
+ 		*new_ino = ino;
++	} else if (error == -EAGAIN) {
++		/*
++		 * XXX: Temporary hack to retry allocs until background chunk
++		 * freeing is worked out.
++		 */
++		error = xfs_mod_fdblocks(pag->pag_mount,
++			       -((int64_t)XFS_IALLOC_SPACE_RES(pag->pag_mount)),
++			       false);
++		if (error)
++			goto out_release;
++		(*tpp)->t_blk_res += XFS_IALLOC_SPACE_RES(pag->pag_mount);
++		goto alloc;
++	}
 +
-+	xfs_perag_clear_inode_tag(pag, agino, XFS_ICI_BUSY_TAG);
-+	xfs_perag_clear_inode_tag(pag, agino, XFS_ICI_RECLAIM_TAG);
- 	inode->i_state = I_NEW;
- 	spin_unlock(&ip->i_flags_lock);
- 	spin_unlock(&pag->pag_ici_lock);
-@@ -931,6 +935,7 @@ xfs_reclaim_inode(
- 	if (!radix_tree_delete(&pag->pag_ici_root,
- 				XFS_INO_TO_AGINO(ip->i_mount, ino)))
- 		ASSERT(0);
-+	xfs_perag_clear_inode_tag(pag, NULLAGINO, XFS_ICI_BUSY_TAG);
- 	xfs_perag_clear_inode_tag(pag, NULLAGINO, XFS_ICI_RECLAIM_TAG);
- 	spin_unlock(&pag->pag_ici_lock);
+ 	return error;
  
-@@ -1807,6 +1812,7 @@ xfs_inodegc_set_reclaimable(
- {
- 	struct xfs_mount	*mp = ip->i_mount;
- 	struct xfs_perag	*pag;
-+	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
- 
- 	if (!xfs_is_shutdown(mp) && ip->i_delayed_blks) {
- 		xfs_check_delalloc(ip, XFS_DATA_FORK);
-@@ -1821,10 +1827,12 @@ xfs_inodegc_set_reclaimable(
- 	trace_xfs_inode_set_reclaimable(ip);
- 	if (destroy_gp)
- 		ip->i_destroy_gp = destroy_gp;
-+	if (!poll_state_synchronize_rcu(ip->i_destroy_gp))
-+		xfs_perag_set_inode_tag(pag, agino, XFS_ICI_BUSY_TAG);
-+
- 	ip->i_flags &= ~(XFS_NEED_INACTIVE | XFS_INACTIVATING);
- 	ip->i_flags |= XFS_IRECLAIMABLE;
--	xfs_perag_set_inode_tag(pag, XFS_INO_TO_AGINO(mp, ip->i_ino),
--			XFS_ICI_RECLAIM_TAG);
-+	xfs_perag_set_inode_tag(pag, agino, XFS_ICI_RECLAIM_TAG);
- 
- 	spin_unlock(&ip->i_flags_lock);
- 	spin_unlock(&pag->pag_ici_lock);
+ out_release:
 -- 
 2.31.1
 
