@@ -2,261 +2,154 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B091C433FE
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Feb 2022 17:25:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9DD4C433EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Feb 2022 19:52:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239214AbiBQRZi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Feb 2022 12:25:38 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:46718 "EHLO
+        id S245521AbiBQTxG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Feb 2022 14:53:06 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:43352 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243687AbiBQRZi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Feb 2022 12:25:38 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2F1FC2B04A8
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Feb 2022 09:25:23 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1645118722;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=HwpYCDiD1IIcuqN7MBHegrlGMOHnc0ndhLkAkKMCYFc=;
-        b=HXwTfzWREpFKGIPmybESMXgne4mtD6fXsNiOiW+LeXgZatW+FbPZr8XWdU5Tv1FCWoizsa
-        0wR96S2oKpxSDHFOFiSrq6awTkTjZups+bsV9ZPRN+NzDNc71UYh1raFYdCFfqMi87ryhi
-        UYKqMNaGCY3d2qcvCpovQ3HVrXPm/Q8=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-561-Q0V5eNC7ObCaUgMQJVPMEg-1; Thu, 17 Feb 2022 12:25:20 -0500
-X-MC-Unique: Q0V5eNC7ObCaUgMQJVPMEg-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id DFBCA18B613F
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Feb 2022 17:25:19 +0000 (UTC)
-Received: from bfoster.redhat.com (unknown [10.22.16.110])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 8702F2DE6F
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Feb 2022 17:25:19 +0000 (UTC)
-From:   Brian Foster <bfoster@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH RFC 1/4] xfs: require an rcu grace period before inode recycle
-Date:   Thu, 17 Feb 2022 12:25:15 -0500
-Message-Id: <20220217172518.3842951-2-bfoster@redhat.com>
-In-Reply-To: <20220217172518.3842951-1-bfoster@redhat.com>
-References: <20220217172518.3842951-1-bfoster@redhat.com>
+        with ESMTP id S231487AbiBQTxD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Feb 2022 14:53:03 -0500
+Received: from mail-oo1-xc2f.google.com (mail-oo1-xc2f.google.com [IPv6:2607:f8b0:4864:20::c2f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A81013195F
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Feb 2022 11:52:47 -0800 (PST)
+Received: by mail-oo1-xc2f.google.com with SMTP id s203-20020a4a3bd4000000b003191c2dcbe8so861903oos.9
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Feb 2022 11:52:47 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=stonybrook.edu; s=sbu-gmail;
+        h=mime-version:from:date:message-id:subject:to:cc
+         :content-transfer-encoding;
+        bh=vhIMbpsO4KV+NoGiNi+kBgXcb6F2SHz25M2J2WhmKQ8=;
+        b=YfiNrSRFUzi5MD9Q8jRTGXrxBWW1M03jE7IWFieCmZ0JNVJejN/SYslCJIaiQwdjbb
+         JdKpQLuHlTr5GhvBYR9UovZ4FtQ7YRUHZPkmah+XIQLH9MhAZQq9W2ikzIxGnXrkgH4w
+         XzEwN9+awdBC8BM00hc7goTSXlk5fceHqlbbs=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc
+         :content-transfer-encoding;
+        bh=vhIMbpsO4KV+NoGiNi+kBgXcb6F2SHz25M2J2WhmKQ8=;
+        b=nOGU3gj9jotmgQ1yLoVzPpGFryW9N+F6SYb8WEUIR1JtUBQ2PVpiXfTV/8sfFDvDp1
+         jznfty94SfRqzMg02KPQUxhg8MdolNsLQghV2WGSqqMtGkq1rfyGIIu1h8HRS1vOCRDd
+         R4sxm0pHqIkwR6xMD7MTJVl8HlTlWJ3WLo+FCJaPgvDSf4Q040xlyFsiJ0v4EQRx9Yrb
+         ROpS7+mUcADm+p3z9cXLHjicOlXKRJqMZDkwVKuhYBlzbI6KfFDJ/M8kkTSoN+04E07t
+         sarIRU+RyC4gOE7vippkIf7PnXaAUZ2c5TG238V22VT+PntYqO5dOa5I/4VJ3UdX7FdN
+         /wLw==
+X-Gm-Message-State: AOAM532w4guQVBsNPW37f7kpmpP4J5dOpzfjNFU1M1Kk7GQCCq003o0H
+        5oo7ZUPbfdu52XLByuqDLHIyKchbhDtu7UUfE2dnX5ynxxfBfw==
+X-Google-Smtp-Source: ABdhPJwLFKc82TcVj8IgF0nfEy/9Y/EVOwWFHI/PzVP6V0c1MusjfP7v6AxK9t9kvyItmKKcnkqroc0EaQs35lJ2B6w=
+X-Received: by 2002:a05:6871:4082:b0:d2:c693:b8be with SMTP id
+ kz2-20020a056871408200b000d2c693b8bemr1679363oab.282.1645127567194; Thu, 17
+ Feb 2022 11:52:47 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+From:   Manish Adkar <madkar@cs.stonybrook.edu>
+Date:   Thu, 17 Feb 2022 11:52:36 -0800
+Message-ID: <CAOfCjwOsS+qLc2JsKSohSFc2Uif0tWKG-e3zHj=+jBAa9cKj5Q@mail.gmail.com>
+Subject: "No space left on device" issue
+To:     linux-xfs@vger.kernel.org
+Cc:     Erez Zadok <ezk@fsl.cs.sunysb.edu>,
+        Yifei Liu <yifeliu@cs.stonybrook.edu>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The XFS inode allocation algorithm aggressively reuses recently
-freed inodes. This is historical behavior that has been in place for
-quite some time, since XFS was imported to mainline Linux. Once the
-VFS adopted RCUwalk path lookups (also some time ago), this behavior
-became slightly incompatible because the inode recycle path doesn't
-isolate concurrent access to the inode from the VFS.
+Hello,
 
-This has recently manifested as problems in the VFS when XFS happens
-to change the type or properties of a recently unlinked inode while
-still involved in an RCU lookup. For example, if the VFS refers to a
-previous incarnation of a symlink inode, obtains the ->get_link()
-callback from inode_operations, and the latter happens to change to
-a non-symlink type via a recycle event, the ->get_link() callback
-pointer is reset to NULL and the lookup results in a crash.
+We have a 16 MB XFS test partition with both plenty of free space
+and inodes (419 out of 424), but we=E2=80=99re still getting the error "No
+space left on device" when trying to create new files (After the
+free space reaches 184320 bytes). It can then only edit and append
+any existing files. (There are good reasons why we want to avoid a
+larger partition.)
 
-To avoid this class of problem, isolate in-core inodes for recycling
-with an RCU grace period. This is the same level of protection the
-VFS expects for inactivated inodes that are never reused, and so
-guarantees no further concurrent access before the type or
-properties of the inode change. We don't want an unconditional
-synchronize_rcu() event here because that would result in a
-significant performance impact to mixed inode allocation workloads.
+Mount options:
 
-Fortunately, we can take advantage of the recently added deferred
-inactivation mechanism to mitigate the need for an RCU wait in some
-cases. Deferred inactivation queues and batches the on-disk freeing
-of recently destroyed inodes, and so for non-sustained inactivation
-workloads increases the likelihood that a grace period has elapsed
-by the time an inode is freed and observable by the allocation code
-as a recycle candidate. We have to respect the lifecycle rules
-regardless of whether an inode was inactivated or not because of the
-fields modified by inode reinit. Therefore, capture the current RCU
-grace period cookie as early as possible at destroy time and use it
-at lookup time to conditionally sync an RCU grace period if one
-hadn't elapsed before the recycle attempt. Slightly adjust struct
-xfs_inode to fit the new field into padding holes that conveniently
-preexist in the same cacheline as the deferred inactivation list.
+# mount |grep xfs
+/dev/ram1 on /mnt/test-xfs type xfs (rw,noatime,attr2,inode64,
+logbufs=3D8,logbsize=3D32k,noquota)
 
-Note that this patch alone introduces a significant negative impact
-to mixed file allocation and removal workloads because the
-allocation algorithm aggressively attempts to reuse recently freed
-inodes. This results in frequent RCU grace period synchronization
-stalls in the allocation path. This problem is mitigated by
-forthcoming patches to track and avoid recycling of inodes with
-pending RCU grace periods.
+Here, the filesystem is already mounted with the inode64 option.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_icache.c | 37 ++++++++++++++++++++++++++++++++-----
- fs/xfs/xfs_inode.h  |  3 ++-
- fs/xfs/xfs_trace.h  |  8 ++++++--
- 3 files changed, 40 insertions(+), 8 deletions(-)
+Used disk space:
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 9644f938990c..693896bc690f 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -351,6 +351,19 @@ xfs_iget_recycle(
- 	spin_unlock(&ip->i_flags_lock);
- 	rcu_read_unlock();
- 
-+	/*
-+	 * VFS RCU pathwalk lookups dictate the same lifecycle rules for an
-+	 * inode recycle as for freeing an inode. I.e., we cannot reinit the
-+	 * inode structure until a grace period has elapsed from the last
-+	 * ->destroy_inode() call. In most cases a grace period has already
-+	 * elapsed if the inode was inactivated, but synchronize here as a
-+	 * last resort to guarantee correctness.
-+	 */
-+	if (!poll_state_synchronize_rcu(ip->i_destroy_gp)) {
-+		cond_synchronize_rcu(ip->i_destroy_gp);
-+		trace_xfs_iget_recycle_stall(ip);
-+	}
-+
- 	ASSERT(!rwsem_is_locked(&inode->i_rwsem));
- 	error = xfs_reinit_inode(mp, inode);
- 	if (error) {
-@@ -1789,7 +1802,8 @@ xfs_check_delalloc(
- /* Schedule the inode for reclaim. */
- static void
- xfs_inodegc_set_reclaimable(
--	struct xfs_inode	*ip)
-+	struct xfs_inode	*ip,
-+	unsigned long		destroy_gp)
- {
- 	struct xfs_mount	*mp = ip->i_mount;
- 	struct xfs_perag	*pag;
-@@ -1805,6 +1819,8 @@ xfs_inodegc_set_reclaimable(
- 	spin_lock(&ip->i_flags_lock);
- 
- 	trace_xfs_inode_set_reclaimable(ip);
-+	if (destroy_gp)
-+		ip->i_destroy_gp = destroy_gp;
- 	ip->i_flags &= ~(XFS_NEED_INACTIVE | XFS_INACTIVATING);
- 	ip->i_flags |= XFS_IRECLAIMABLE;
- 	xfs_perag_set_inode_tag(pag, XFS_INO_TO_AGINO(mp, ip->i_ino),
-@@ -1826,7 +1842,8 @@ xfs_inodegc_inactivate(
- {
- 	trace_xfs_inode_inactivating(ip);
- 	xfs_inactive(ip);
--	xfs_inodegc_set_reclaimable(ip);
-+	/* inactive inodes are assigned rcu state when first queued */
-+	xfs_inodegc_set_reclaimable(ip, 0);
- }
- 
- void
-@@ -1997,7 +2014,8 @@ xfs_inodegc_want_flush_work(
-  */
- static void
- xfs_inodegc_queue(
--	struct xfs_inode	*ip)
-+	struct xfs_inode	*ip,
-+	unsigned long		destroy_gp)
- {
- 	struct xfs_mount	*mp = ip->i_mount;
- 	struct xfs_inodegc	*gc;
-@@ -2007,6 +2025,7 @@ xfs_inodegc_queue(
- 	trace_xfs_inode_set_need_inactive(ip);
- 	spin_lock(&ip->i_flags_lock);
- 	ip->i_flags |= XFS_NEED_INACTIVE;
-+	ip->i_destroy_gp = destroy_gp;
- 	spin_unlock(&ip->i_flags_lock);
- 
- 	gc = get_cpu_ptr(mp->m_inodegc);
-@@ -2086,6 +2105,7 @@ xfs_inode_mark_reclaimable(
- {
- 	struct xfs_mount	*mp = ip->i_mount;
- 	bool			need_inactive;
-+	unsigned long		destroy_gp;
- 
- 	XFS_STATS_INC(mp, vn_reclaim);
- 
-@@ -2094,15 +2114,22 @@ xfs_inode_mark_reclaimable(
- 	 */
- 	ASSERT_ALWAYS(!xfs_iflags_test(ip, XFS_ALL_IRECLAIM_FLAGS));
- 
-+	/*
-+	 * Poll the RCU subsystem as early as possible and pass the grace
-+	 * period cookie along to assign to the inode. This grace period must
-+	 * expire before the struct inode can be recycled.
-+	 */
-+	destroy_gp = start_poll_synchronize_rcu();
-+
- 	need_inactive = xfs_inode_needs_inactive(ip);
- 	if (need_inactive) {
--		xfs_inodegc_queue(ip);
-+		xfs_inodegc_queue(ip, destroy_gp);
- 		return;
- 	}
- 
- 	/* Going straight to reclaim, so drop the dquots. */
- 	xfs_qm_dqdetach(ip);
--	xfs_inodegc_set_reclaimable(ip);
-+	xfs_inodegc_set_reclaimable(ip, destroy_gp);
- }
- 
- /*
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index b7e8f14d9fca..6ca60373ff58 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -40,8 +40,9 @@ typedef struct xfs_inode {
- 	/* Transaction and locking information. */
- 	struct xfs_inode_log_item *i_itemp;	/* logging information */
- 	mrlock_t		i_lock;		/* inode lock */
--	atomic_t		i_pincount;	/* inode pin count */
- 	struct llist_node	i_gclist;	/* deferred inactivation list */
-+	unsigned long		i_destroy_gp;	/* destroy rcugp cookie */
-+	atomic_t		i_pincount;	/* inode pin count */
- 
- 	/*
- 	 * Bitsets of inode metadata that have been checked and/or are sick.
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 4a8076ef8cb4..28ac861c3565 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -727,16 +727,19 @@ DECLARE_EVENT_CLASS(xfs_inode_class,
- 		__field(dev_t, dev)
- 		__field(xfs_ino_t, ino)
- 		__field(unsigned long, iflags)
-+		__field(unsigned long, destroy_gp)
- 	),
- 	TP_fast_assign(
- 		__entry->dev = VFS_I(ip)->i_sb->s_dev;
- 		__entry->ino = ip->i_ino;
- 		__entry->iflags = ip->i_flags;
-+		__entry->destroy_gp = ip->i_destroy_gp;
- 	),
--	TP_printk("dev %d:%d ino 0x%llx iflags 0x%lx",
-+	TP_printk("dev %d:%d ino 0x%llx iflags 0x%lx destroy_gp 0x%lx",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
- 		  __entry->ino,
--		  __entry->iflags)
-+		  __entry->iflags,
-+		  __entry->destroy_gp)
- )
- 
- #define DEFINE_INODE_EVENT(name) \
-@@ -746,6 +749,7 @@ DEFINE_EVENT(xfs_inode_class, name, \
- DEFINE_INODE_EVENT(xfs_iget_skip);
- DEFINE_INODE_EVENT(xfs_iget_recycle);
- DEFINE_INODE_EVENT(xfs_iget_recycle_fail);
-+DEFINE_INODE_EVENT(xfs_iget_recycle_stall);
- DEFINE_INODE_EVENT(xfs_iget_hit);
- DEFINE_INODE_EVENT(xfs_iget_miss);
- 
--- 
-2.31.1
+# df /dev/ram1
+Filesystem     1K-blocks  Used Available Use% Mounted on
+/dev/ram1          11500 11320       180  99% /mnt/test-xfs
 
+Used inodes:
+
+# df -i /dev/ram1
+Filesystem     Inodes IUsed IFree IUse% Mounted on
+/dev/ram1         424     5   419    2% /mnt/test-xfs
+
+xfs info:
+
+# xfs_info /dev/ram1
+meta-data=3D/dev/ram1      isize=3D512    agcount=3D1, agsize=3D4096 blks
+         =3D               sectsz=3D4096  attr=3D2, projid32bit=3D1
+         =3D               crc=3D1        finobt=3D1, sparse=3D1, rmapbt=3D=
+0
+         =3D               reflink=3D1    bigtime=3D0
+data     =3D               bsize=3D4096   blocks=3D4096, imaxpct=3D25
+         =3D               sunit=3D0      swidth=3D0 blks
+naming   =3Dversion 2      bsize=3D4096   ascii-ci=3D0, ftype=3D1
+log      =3Dinternal log   bsize=3D4096   blocks=3D1221, version=3D2
+         =3D               sectsz=3D4096  sunit=3D1 blks, lazy-count=3D1
+realtime =3Dnone           extsz=3D4096   blocks=3D0, rtextents=3D0
+
+In the below =E2=80=9Cfreesp=E2=80=9D output, we can see that there are ple=
+nty of
+contiguous blocks for inode cluster allocation and hence the disk
+is not fragmented.
+
+# xfs_db -r -c "freesp -s -a 0" /dev/ram1
+   from      to extents  blocks    pct
+      1       1       4       4   1.44
+      4       7       1       6   2.16
+    256     511       1     268  96.40
+total free extents 6
+total free blocks 278
+average free extent size 46.3333
+
+I came across an email thread from the linux-xfs mailing list that
+described a similar issue. It mentioned, inodes are allocated in
+contiguous chunks of 64. Here, in this case, 1 inode takes 512 bytes
+of space and 1 block has 4096 bytes capacity. Hence there would be 8
+inodes per block (4096 / 512). Now, to allocate 64 inodes, 8 blocks
+would be needed (64 / 8). Looking at the above =E2=80=9Cfreesp=E2=80=9D out=
+put, we
+can see there are 8 contiguous blocks available so the issue must not
+be a fragmentation one. But the thread suggests, the allocation has
+an alignment requirement, and here, the blocks must be aligned to an
+8 block boundary. To look for that,
+
+# xfs_db -r -c "freesp -s -a 0 -A 8" /dev/ram1
+   from      to extents  blocks    pct
+      1       1       1       1 100.00
+total free extents 1
+total free blocks 1
+average free extent size 1
+
+Here we can see that there is just one single block that is aligned
+to the 8 block boundary. Hence, this could be a fragmentation issue.
+My concern is that, is my understanding and calculations
+(64 / (4096 / 512)) correct about the 8-block boundary? I also tried
+this
+
+# xfs_db -r -c "freesp -s -a 0 -A 32" /dev/ram1
+   from      to extents  blocks    pct
+total free extents 0
+total free blocks 0
+average free extent size -nan
+
+And this also suggests that there are no such required blocks.
+
+I also saw the suggestion given in this thread to avoid this issue.
+It mentions that enabling =E2=80=9Csparse=E2=80=9D inode allocations will h=
+elp
+resolve this issue. But here =E2=80=9Csparse=E2=80=9D inode allocation is e=
+nabled by
+default. So probably there is another resolution to this problem.
+Can you help?
