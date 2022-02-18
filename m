@@ -2,97 +2,69 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95478C433EF
-	for <linux-xfs@archiver.kernel.org>; Fri, 18 Feb 2022 05:55:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85032C433FE
+	for <linux-xfs@archiver.kernel.org>; Fri, 18 Feb 2022 06:03:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230458AbiBRF4A (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 18 Feb 2022 00:56:00 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:35826 "EHLO
+        id S231189AbiBRGD4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 18 Feb 2022 01:03:56 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:59370 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229974AbiBRFz7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Feb 2022 00:55:59 -0500
-Received: from out30-56.freemail.mail.aliyun.com (out30-56.freemail.mail.aliyun.com [115.124.30.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F410E187E25;
-        Thu, 17 Feb 2022 21:55:41 -0800 (PST)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R201e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04395;MF=hsiangkao@linux.alibaba.com;NM=1;PH=DS;RN=3;SR=0;TI=SMTPD_---0V4npCvx_1645163738;
-Received: from B-P7TQMD6M-0146.local(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0V4npCvx_1645163738)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Fri, 18 Feb 2022 13:55:39 +0800
-Date:   Fri, 18 Feb 2022 13:55:37 +0800
-From:   Gao Xiang <hsiangkao@linux.alibaba.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     xfs <linux-xfs@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] xfs: add missing cmap->br_state = XFS_EXT_NORM update
-Message-ID: <Yg802fTm0n31FC+T@B-P7TQMD6M-0146.local>
-Mail-Followup-To: "Darrick J. Wong" <djwong@kernel.org>,
-        xfs <linux-xfs@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
-References: <20220217095542.68085-1-hsiangkao@linux.alibaba.com>
- <20220218054032.GO8313@magnolia>
+        with ESMTP id S231136AbiBRGDx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Feb 2022 01:03:53 -0500
+Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B77F15A0B;
+        Thu, 17 Feb 2022 22:03:37 -0800 (PST)
+Received: from cwcc.thunk.org (pool-108-7-220-252.bstnma.fios.verizon.net [108.7.220.252])
+        (authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 21I63DM2027234
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 18 Feb 2022 01:03:14 -0500
+Received: by cwcc.thunk.org (Postfix, from userid 15806)
+        id 495C915C34C8; Fri, 18 Feb 2022 01:03:13 -0500 (EST)
+Date:   Fri, 18 Feb 2022 01:03:13 -0500
+From:   "Theodore Ts'o" <tytso@mit.edu>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Lee Jones <lee.jones@linaro.org>, linux-ext4@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>,
+        Dave Chinner <dchinner@redhat.com>,
+        Goldwyn Rodrigues <rgoldwyn@suse.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Bob Peterson <rpeterso@redhat.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Ritesh Harjani <riteshh@linux.ibm.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Johannes Thumshirn <jth@kernel.org>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com,
+        linux-kernel@vger.kernel.org
+Subject: Re: [REPORT] kernel BUG at fs/ext4/inode.c:2620 - page_buffers()
+Message-ID: <Yg82oSHmodFHMHHI@mit.edu>
+References: <Yg0m6IjcNmfaSokM@google.com>
+ <Yg8KZvDVFJgTXm4C@mit.edu>
+ <Yg8fdCuE6RusrjIh@casper.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220218054032.GO8313@magnolia>
+In-Reply-To: <Yg8fdCuE6RusrjIh@casper.infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Darrick,
-
-On Thu, Feb 17, 2022 at 09:40:32PM -0800, Darrick J. Wong wrote:
-> On Thu, Feb 17, 2022 at 05:55:42PM +0800, Gao Xiang wrote:
-> > COW extents are already converted into written real extents after
-> > xfs_reflink_convert_cow_locked(), therefore cmap->br_state should
-> > reflect it.
-> > 
-> > Otherwise, there is another necessary unwritten convertion
-> > triggered in xfs_dio_write_end_io() for direct I/O cases.
-> > 
-> > Signed-off-by: Gao Xiang <hsiangkao@linux.alibaba.com>
+On Fri, Feb 18, 2022 at 04:24:20AM +0000, Matthew Wilcox wrote:
+> On Thu, Feb 17, 2022 at 09:54:30PM -0500, Theodore Ts'o wrote:
+> > process_vm_writev() uses [un]pin_user_pages_remote() which is the same
+> > interface uses for RDMA.  But it's not clear this is ever supposed to
+> > work for memory which is mmap'ed region backed by a file.
+> > pin_user_pages_remote() appears to assume that it is an anonymous
+> > region, since the get_user_pages functions in mm/gup.c don't call
+> > read_page() to read data into any pages that might not be mmaped in.
 > 
-> I /think/ this looks ok.  Does it test ok too?  AFAICT nothing in the
-> iomap/writeback machinery cares the incorrect state because we always
-> set IOMAP_F_SHARED (which triggers COW) so I think this is simply a fix
-> for directio, like you said?
+> ... it doesn't end up calling handle_mm_fault() in faultin_page()?
 
-Yeah, I think so, from the code logic buffered i/o seems no impacted...
-And the unnecessary unwritten convertion under direct i/o takes
-noticeable extra overhead in our workloads...
+Ah yes, sorry, I missed that.  This is what happens when a syzbot bug
+is thrown to a file system developer, who then has to wade theough
+mm code for which he is not understand....
 
-I checked my last night xfstests, it seems it stops unexpectedly (maybe
-due to some environmental problem). I will rerun tests today and
-feedback later.
-
-Thanks,
-Gao Xiang
-
-> 
-> --D
-> 
-> > ---
-> > From the logic itself and runtime tracing, IMO, it seems true.
-> > Kindly correct me here if my understanding is wrong.
-> > 
-> >  fs/xfs/xfs_reflink.c | 5 ++++-
-> >  1 file changed, 4 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> > index 75bd2e03cd5b..5f0a364739a5 100644
-> > --- a/fs/xfs/xfs_reflink.c
-> > +++ b/fs/xfs/xfs_reflink.c
-> > @@ -424,7 +424,10 @@ xfs_reflink_allocate_cow(
-> >  	if (!convert_now || cmap->br_state == XFS_EXT_NORM)
-> >  		return 0;
-> >  	trace_xfs_reflink_convert_cow(ip, cmap);
-> > -	return xfs_reflink_convert_cow_locked(ip, offset_fsb, count_fsb);
-> > +	error = xfs_reflink_convert_cow_locked(ip, offset_fsb, count_fsb);
-> > +	if (!error)
-> > +		cmap->br_state = XFS_EXT_NORM;
-> > +	return error;
-> >  
-> >  out_trans_cancel:
-> >  	xfs_trans_cancel(tp);
-> > -- 
-> > 2.24.4
-> > 
+	   	    	     	    - Ted
+			    
