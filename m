@@ -2,200 +2,160 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D34FC433FE
-	for <linux-xfs@archiver.kernel.org>; Fri, 18 Feb 2022 19:38:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A7EBC433F5
+	for <linux-xfs@archiver.kernel.org>; Fri, 18 Feb 2022 22:54:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237446AbiBRTiT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 18 Feb 2022 14:38:19 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:38124 "EHLO
+        id S239737AbiBRWzC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 18 Feb 2022 17:55:02 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:36312 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237370AbiBRTiS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Feb 2022 14:38:18 -0500
-Received: from NAM11-CO1-obe.outbound.protection.outlook.com (mail-co1nam11on2061.outbound.protection.outlook.com [40.107.220.61])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED5D360052;
-        Fri, 18 Feb 2022 11:38:00 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=IIRpaLvPmdSTFia4CP6K1KA4nPionoJwuLQMCV8qQPqv42ikZk8YB2FaO3FjaiHBt8+mEfcxABerpKet3bZm8P+bEXxqee1aGbF2tEmlLXZKIfvJbv4y9pAZx+HV5X5DtbkgEQ4nSaI7blfXxJhu3iRbqFlquvg9XbNziFjs1VfHl/LBHdr8URpGRAwTV9ICINs/kbvhjs0eQy1MJHKq2xihByREUC30tD1qpRQ/bGVJJLNCZrbQQEJIusR2R2aSTNZ4ux0ScpHhHOUMoD5tXhqFG3UPDQ45zzq+PyzNpf2EFZylW4N9FrMuNppbcquqcIOeOJj6Ps5r30cRtwD9tg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=jX4mMYS7dvbHjrsQloL6rDIudsTKokN/45NYk1VfLBQ=;
- b=WkhCjCWUEwdWdxsVUCTurBxLGBrvxyomfBFQezT2QFazLmYFWwoZEtUtDIpWbTW4NkhqDr6iEYw++pYL9cfAe6Y55zn9hUGezxc5Wyi9Sr2hMFefLnslqbK+APcMgkuWtVP6aVvM4U8CLkbJCFHey8a33Jcdw2xuhEucq3R0xLQVoLqKgrjw5/Y9N5KZXlUzzA3rDdixKJAM0hyzDwfrC2M/t8mQcNp0u2cGavL+pS82pZI8HGOSRp31N9HqBurbBiSGfd5z51fWDVtT3rdd2IC/npkE/UCYjOGC60sMQ438py5utUmIE6tL2UrIUQrYVvCKKW+dxoNHr/gK4r1NJQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=jX4mMYS7dvbHjrsQloL6rDIudsTKokN/45NYk1VfLBQ=;
- b=MKP/05o5xfKk2ElzqPaABBnA9gBPPOUqDNoNVuCJ+VJRTpg/MY6ksORHUi649w7vB9ZMe4eZ3aDNZ7Lq4jTO3Ax4TWVEcw5S/xf5kdD9XmoPMhRMADn3aFQkCtOQ42KKbqDuuU0DEaZTqehoif+zs8sHyTsOK1+NoCzSbW/ngns=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from BN9PR12MB5115.namprd12.prod.outlook.com (2603:10b6:408:118::14)
- by DM5PR12MB1882.namprd12.prod.outlook.com (2603:10b6:3:112::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4975.18; Fri, 18 Feb
- 2022 19:37:58 +0000
-Received: from BN9PR12MB5115.namprd12.prod.outlook.com
- ([fe80::38ec:3a46:f85e:6cfa]) by BN9PR12MB5115.namprd12.prod.outlook.com
- ([fe80::38ec:3a46:f85e:6cfa%4]) with mapi id 15.20.4995.016; Fri, 18 Feb 2022
- 19:37:58 +0000
-Message-ID: <fa20d3e3-0943-f336-db01-54367f8e2c1e@amd.com>
-Date:   Fri, 18 Feb 2022 14:37:55 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: [PATCH v6 01/10] mm: add zone device coherent type memory support
-Content-Language: en-US
-To:     Jason Gunthorpe <jgg@nvidia.com>
-Cc:     David Hildenbrand <david@redhat.com>,
-        Alistair Popple <apopple@nvidia.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Alex Sierra <alex.sierra@amd.com>, akpm@linux-foundation.org,
-        linux-mm@kvack.org, rcampbell@nvidia.com,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        jglisse@redhat.com, willy@infradead.org
-References: <beb38138-2266-1ff8-cc82-8fe914bed862@redhat.com>
- <877d9vd10u.fsf@nvdebian.thelocal> <20220216020357.GD4160@nvidia.com>
- <6156515.kVgMqSaHHm@nvdebian>
- <98d8bbc5-ffc2-8966-fdc1-a844874e7ae8@redhat.com>
- <20220216122600.GG4160@nvidia.com>
- <bf16195e-2570-3687-2b53-3f597ebfcfec@amd.com>
- <20220218001935.GN4160@nvidia.com>
- <2f2569d5-df0d-7975-7f4a-2d85ceaf29ef@amd.com>
- <20220218192640.GV4160@nvidia.com>
-From:   Felix Kuehling <felix.kuehling@amd.com>
-In-Reply-To: <20220218192640.GV4160@nvidia.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: YT2PR01CA0023.CANPRD01.PROD.OUTLOOK.COM
- (2603:10b6:b01:38::28) To BN9PR12MB5115.namprd12.prod.outlook.com
- (2603:10b6:408:118::14)
+        with ESMTP id S238963AbiBRWzA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Feb 2022 17:55:00 -0500
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1DD8C274CAF
+        for <linux-xfs@vger.kernel.org>; Fri, 18 Feb 2022 14:54:43 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-17-0.pa.vic.optusnet.com.au [49.186.17.0])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 2B6A710C799C;
+        Sat, 19 Feb 2022 09:54:41 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nLC9A-00DfNi-BZ; Sat, 19 Feb 2022 09:54:40 +1100
+Date:   Sat, 19 Feb 2022 09:54:40 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH RFC 3/4] xfs: crude chunk allocation retry mechanism
+Message-ID: <20220218225440.GE59715@dread.disaster.area>
+References: <20220217172518.3842951-1-bfoster@redhat.com>
+ <20220217172518.3842951-4-bfoster@redhat.com>
+ <20220217232033.GD59715@dread.disaster.area>
+ <Yg+rdFRpvra8U25D@bfoster>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 01ebe554-015f-4151-a586-08d9f3162ab6
-X-MS-TrafficTypeDiagnostic: DM5PR12MB1882:EE_
-X-Microsoft-Antispam-PRVS: <DM5PR12MB188217BD60095061AA5D0E7692379@DM5PR12MB1882.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:10000;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 3tMXzlQA0uDWarat2N85yLufrMuVzXrisMBR2eoJmX+r2rj12+4NiSxRBZYqOcQKqpd8A1/YDTvAUKH+oXd8G/sBt5jbhPUT9AnyXFwaCoVcBf24+BhrpdCMkvwLnFV4ZX3w1Kv27A8d70mAe22rGezjESOBtHGzxUabcRo0qQPP2P0Do0450womrrI/JRWxgttOQ3qH9g/juTOOcs9bTjS/0Gquc/rr0n/wQnfogDCgnjH7yV/z8kK5Y2eeFD9qk7tlfgMLAzprG6wsoO8Rm0uWs3xuhkhLIhD++b8z9G3ltb0k/Ych+HycA/ecOrvgIvEA/AUPkHqeHqBqYcgwPBQ6yCErKu2O46I54LU62z8fy7WzO3HY+d6brRs8Ne4sVKf6njUQzS8WsJNEmKgIEzEEMppblsYzLH+ScnC1sSnCNKWom6fMr5aSJXS2QQWyjfPMrrqimCUJAX7RW/lpH51cQ9PGMZ/tdhYUDAKfNbDyVtcL1VSG73VfRLrB7+kB9e0i5tWUzXL46Gr2K7IjBFGf7BDcHet1SAEmAoYto4BBf7jv7widLKisoyXMOL6PZvyM3WOR+mOhMzuZP3YueMgzx6iD+e+NWCgk7P8twPDPZRabZjAVCRdcz1a2SnE1I/gJ67wM4TIFRK6t+i7+drVvknYOn/VUam1XgTEHSBZFBbzlKsgfibFuU0cRpoE3mtvtk+6b1orb3jLWBww6OSd2pRymLh5xIU76FpnjPHU=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN9PR12MB5115.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(8936002)(6666004)(38100700002)(66946007)(508600001)(31686004)(316002)(4326008)(8676002)(6512007)(6506007)(2616005)(86362001)(5660300002)(2906002)(7416002)(36756003)(44832011)(54906003)(31696002)(6916009)(6486002)(186003)(26005)(66476007)(66556008)(83380400001)(43740500002)(45980500001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?ZnNNTUlPSXZ5VEdjMnQxYkpiZnhWT1lmZnFCSDl6a2tRc2NtRUxsUTZ5bkxr?=
- =?utf-8?B?cjdVK0lkZ0tqZ0ZURGZXR0ZyVFg4T1BHU09RTVc3Mjg1NG03NUtDRXJxSmRx?=
- =?utf-8?B?RXFYVlUrV3JtRTZnQitHZi9mUFV5RStuMlNyZnUwV3BtbUNlYnM3QU5qaWdF?=
- =?utf-8?B?ZkxWZjBPNW5zM2ZqclFCVFMvN0JJbUFCV2hEWFRFUUc4eFZaM2ZMa3JBcFZX?=
- =?utf-8?B?UURpcGtLNHh5R05IdVFPaThzd1RKN25GUlVUNml5b1ZoWWpoeDNZczMza25H?=
- =?utf-8?B?Q2ZNbzRlckd0K3JET0F5K1dtR0c3T0Q2L2F3bk11K3RiK2tLQVdmZTQrSWVR?=
- =?utf-8?B?aTNtcEgvNWpmbU1HM1NpekFMbU5SRzVBbnFjaDV0WmhIYWY0dkxzVXhybkJX?=
- =?utf-8?B?QklZYmVCMDJ0azQ1c3hqbXRLenJwZklZaUxxME9sME56dkRySUk3UGZYNjZq?=
- =?utf-8?B?WVJMOEY3eTlaUkVkbmFvd1I0VWx2U2pCK2VLTk9ZMk9BY0JSRUlRMWpRVE5l?=
- =?utf-8?B?S0hPRHVva3BiMXVUVkswcTdFWUV3TzloSEpYZ25xdDk5Z1orL251NjZuUCtz?=
- =?utf-8?B?WEFPQ0ZpdkpJMlkzb0cwbFhEckM0U04vV1dZS1M0RzVBWTZORDhDTklZT2RL?=
- =?utf-8?B?bzFzaDlVWEFFc1pkTUZYMnAwMUh2amhXdmQwRmNaTk14TlRKdW45VC9lN2xq?=
- =?utf-8?B?cWw5eEZJcDZQMmdncGRFRFVjMDlpdkVKaGNzL3hOT0FvMTJUVWEydURjWlIx?=
- =?utf-8?B?eXRHek1PSklVb1EwV1FHMXZtdXprY3RXMXlCRmY3cnY5RVVoMkUvbFc3ZDRZ?=
- =?utf-8?B?eHNkcGZxTm5NWkxiZm1GcGlOSzhmcFptT1lsckU3MGpqcGRkWXlqMnFwMkx2?=
- =?utf-8?B?T0pHa3lmZldsa0JFTkEzNFM4VXdEdHRNL0Vid3dRZW1ZeWdTVTU1ckZBN1lG?=
- =?utf-8?B?eHVCRVNqS3laMWJRamNtUHcvQkwyWDlGc0l5OGJObmVLMTEwOEdpZURJdmV4?=
- =?utf-8?B?aDdERU5WTFdacGtETnJJNzRrTWVLeW9pdzI3dTNtQnduOXhEUUlsbkIwaHNp?=
- =?utf-8?B?V1ltai9IdlVXNVZ0TEtWbmlnRHpCalI1VVZ3ZzNGamdsUWpMeG1aR0ZQT0JY?=
- =?utf-8?B?WDBQKzFJcE43TnF3cVFwN0txbDJBcnV4SkQ2UEtxLzNpVlkxaURVRUxFK29Y?=
- =?utf-8?B?VUZZUXFkS1RNR0Fvb0xEdVhybGtpZkhCU0RzQzBhUG5ZMk5lTCtjVWhiY3FR?=
- =?utf-8?B?VzlKKzZHemVZSWNJRmRkWFp6U1dZWnlSYUdvVnplYkZENzNiaWJHZ25LVUlX?=
- =?utf-8?B?b0d1ZlRFcFByNi9BQnFjaW42NWpqWENSYkI1VzNCL3pTODhzOFR4ODFTOUl4?=
- =?utf-8?B?Uk9JVmJqRkVudFFBZHZJMWJBRm9pS1ArcS9wVjRtYmU3d3UzSVNnRjhwTkww?=
- =?utf-8?B?QTZLWis2QUhxTThiV05MU25LN0VYekhScFk1YkJzK0RROXphZVRuU3k5bmc4?=
- =?utf-8?B?OE55dDZYT0duejhmbFpKL1NmWnVwT1FuSXlPM3Vuc0Z5WHlUUExqMGZwd0N6?=
- =?utf-8?B?ME1pSU9nSmRBMXA3NjVVaG43NnllTjlMbVVWbWdWdUdoTnpEVzYyWDU4MzEz?=
- =?utf-8?B?NUg0Ykg0RVlkY05tU2hRYUhaZ0dyY3l1TXBrYi9NdXh0dFhBNkVHeW1MOTgv?=
- =?utf-8?B?S2JPSUUvakFHb1lUdlAvK0xOWWZFeVk2N2Zod0h5bE1UWjhPNjc2bzdnekli?=
- =?utf-8?B?ckZUVTdldnMyNXc0SzhVSHRhZDB5WDZjU1RucDRwRk8wVmcwVzFyZ1ZSTTJG?=
- =?utf-8?B?TU5wdisyT2l4QmFFVC9wdENNWlYrd3Z2UG5EZWFORGdJTitaaWlxU0pjaUtG?=
- =?utf-8?B?S3VDeDN0U2x2ajJvVFdRWStQdjVySFhpaEF4bkl1b3EyazUyZllzcDI2UDFE?=
- =?utf-8?B?NkFLWk85VlVTZ2tDMVkvVXp6eG9wa0t3djgzZklLZkxzV0tHVXRKWER0KzVh?=
- =?utf-8?B?V0NaU3VUNmdYcllMS1Q5aURVa0ZRVHdNNm5RZ3RyL3AvV2ltVndsUysrSGJo?=
- =?utf-8?B?N1oyK01pem5uU1hyT3hEdGxsZnEwMHZpb3BNY0hPU2RzWEY1QXcxT0g4SktB?=
- =?utf-8?B?T3Fpc2pIUzhVOVRFZW1hRnh1RzRsM1JnMFhpbUxjYkNUNEhIek1icldQV29P?=
- =?utf-8?Q?FD2TRP13nAQgpjQuwJ6vIFo=3D?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 01ebe554-015f-4151-a586-08d9f3162ab6
-X-MS-Exchange-CrossTenant-AuthSource: BN9PR12MB5115.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Feb 2022 19:37:58.2172
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: hmhhXmpNyLAMuC+eKMKRqkT4Bo5rtz44DoVM6QtZReQ9lqcGfhuAseeViKyiltK8rdEiaAW0sfcPk35esxZDDw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR12MB1882
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Yg+rdFRpvra8U25D@bfoster>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=621023b2
+        a=+dVDrTVfsjPpH/ci3UuFng==:117 a=+dVDrTVfsjPpH/ci3UuFng==:17
+        a=kj9zAlcOel0A:10 a=oGFeUVbbRNcA:10 a=7-415B0cAAAA:8
+        a=cPmQaLihXzZB1QTk6A0A:9 a=7Zwj6sZBwVKJAoWSPKxL6X1jA+E=:19
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Am 2022-02-18 um 14:26 schrieb Jason Gunthorpe:
-> On Fri, Feb 18, 2022 at 02:20:45PM -0500, Felix Kuehling wrote:
->> Am 2022-02-17 um 19:19 schrieb Jason Gunthorpe:
->>> On Thu, Feb 17, 2022 at 04:12:20PM -0500, Felix Kuehling wrote:
->>>
->>>> I'm thinking of a more theoretical approach: Instead of auditing all users,
->>>> I'd ask, what are the invariants that a vm_normal_page should have. Then
->>>> check, whether our DEVICE_COHERENT pages satisfy them. But maybe the concept
->>>> of a vm_normal_page isn't defined clearly enough for that.
->>> I would say the expectation is that only 'page cache and anon' pages
->>> are returned - ie the first union in struct page
->>>
->>> This is because the first file in your list I looked at:
->>>
->>> static int madvise_cold_or_pageout_pte_range(pmd_t *pmd,
->>> 				unsigned long addr, unsigned long end,
->>> 				struct mm_walk *walk)
->>>
->>> {
->>> 		page = vm_normal_page(vma, addr, ptent);
->>> [..]
->>> 		if (pageout) {
->>> 			if (!isolate_lru_page(page)) {
->>>
->>> Uses the LRU field, so this is incompatible with all the other page
->>> types.
->>>
->>> One mitigation of this might be to formally make vm_normal_page() ==
->>> 'pte to page cache and anon page' and add a new function that is 'pte
->>> to any struct page'
->>>
->>> Then go through and sort callers as appropriate.
->>>
->>> The 'pte to page cache and anon page' can detect ZONE_DEVICE by
->>> calling is_zone_device_page() insted of pte_devmap() and then continue
->>> to return NULL. This same trick will fix GUP_fast.
->> Sounds good to me. What about vm_normal_page_pmd? Should we remove the
->> pmd_devmap check from that function as well. I'm not even sure what a huge
->> zone_device page would look like, but maybe that's a worthwhile future
->> optimization for our driver.
-> IIRC there are other problems here as PMDs are currently wired to THPs
-> and not general at all..
->
-> We have huge zone_device pages, it is just any compound page of
-> contiguous pfns - you should be aggregating any contiguous string of
-> logical PFNs together into a folio for performance. If the folio is
-> stuffed into a PMD or not is a different question..
->
->> I'd propose the function names vm_normal_page and vm_normal_or_device_page
->> for the two functions you described.
-> I wouldn't say device_page, it should be any type of page - though
-> device_page is the only other option ATM, AFIAK.
+On Fri, Feb 18, 2022 at 09:21:40AM -0500, Brian Foster wrote:
+> On Fri, Feb 18, 2022 at 10:20:33AM +1100, Dave Chinner wrote:
+> > On Thu, Feb 17, 2022 at 12:25:17PM -0500, Brian Foster wrote:
+> > > The free inode btree currently tracks all inode chunk records with
+> > > at least one free inode. This simplifies the chunk and allocation
+> > > selection algorithms as free inode availability can be guaranteed
+> > > after a few simple checks. This is no longer the case with busy
+> > > inode avoidance, however, because busy inode state is tracked in the
+> > > radix tree independent from physical allocation status.
+> > > 
+> > > A busy inode avoidance algorithm relies on the ability to fall back
+> > > to an inode chunk allocation one way or another in the event that
+> > > all current free inodes are busy. Hack in a crude allocation
+> > > fallback mechanism for experimental purposes. If the inode selection
+> > > algorithm is unable to locate a usable inode, allow it to return
+> > > -EAGAIN to perform another physical chunk allocation in the AG and
+> > > retry the inode allocation.
+> > > 
+> > > The current prototype can perform this allocation and retry sequence
+> > > repeatedly because a newly allocated chunk may still be covered by
+> > > busy in-core inodes in the radix tree (if it were recently freed,
+> > > for example). This is inefficient and temporary. It will be properly
+> > > mitigated by background chunk removal. This defers freeing of inode
+> > > chunk blocks from the free of the last used inode in the chunk to a
+> > > background task that only frees chunks once completely idle, thereby
+> > > providing a guarantee that a new chunk allocation always adds
+> > > non-busy inodes to the AG.
+> > 
+> > I think you can get rid of this simply by checking the radix tree
+> > tags for busy inodes at the location of the new inode chunk before
+> > we do the cluster allocation. If there are busy inodes in the range
+> > of the chunk (pure gang tag lookup, don't need to dereference any of
+> > the inodes), just skip to the next chunk offset and try that. Hence
+> > we only ever end up allocating a chunk that we know there are no
+> > busy inodes in and this retry mechanism is unnecessary.
+> > 
+> 
+> The retry mechanism exists in this series due to the factoring of the
+> inode allocation code moreso than whether the fallback is guaranteed to
+> provide a fully non-busy chunk or not. As the prototype is written, the
+> inode scan still needs to fall back at least once even with such a
+> guarantee (see my reply on the previous patch around cleaning up that
+> particular wart).
+> 
+> With regard to checking busy inode state, that is pretty much what I was
+> referring to by filtering or hinting the block allocation when we
+> discussed this on IRC. I'm explicitly trying to avoid that because for
+> one it unnecessarily spreads concern about busy inodes across layers. On
+> top of that, it assumes that there will always be some usable physical
+> block range available without busy inodes, which is not the case. That
+> means we now need to consider the fact that chunk allocation might fail
+> for reasons other than -ENOSPC and factor that into the inode allocation
+> algorithm. IOW, ISTM this just unnecessarily complicates things for
+> minimal benefit.
 
-Ok, then how about vm_normal_lru_page and vm_normal_any_page?
+For the moment, if inode allocation fails because we have busy
+inodes after chunk allocation has already been done, then we are
+hitting a corner case that isn't typical fast path operation. I
+think that we should not complicate things by trying to optimise
+this case unnecessarily.
 
-Regards,
-   Felix
+I'd just expedite reclaim using synchronize_rcu() and re-run the
+finobt scan as it will always succeed the second time because we
+haven't dropped the AGI log and all freed inodes have now passed
+through a grace period. Indeed, we need this expedited reclaim path
+anyway because if we fail to allocate a new chunk and there are busy
+inodes, we need to wait for busy inodes to become unbusy to avoid
+premature ENOSPC while there are still avaialbe free inodes.
 
+In the case of the updated inode lifecycle stuff I'm working on, a
+log force will replace the synchronise_rcu() call because the inodes
+will be XFS_ISTALE and journal IO completion of the cluster buffers
+will trigger the inodes to be reclaimed immediately as writeback is
+elided for XFS_ISTALE inodes. We may need an AIL push in other
+cases, but I'll cross that river when I get to it.
 
->
->> current vm_normal_page with the pte_devmap check removed. vm_normal_page
->> could be implemented as a wrapper around vm_normal_or_device_page, which
->> just adds the !is_zone_device_page() check.
-> Yes
->
-> Jason
+> The point of background freeing inode chunks was that it makes this
+> problem go away because then we ensure that inode chunks aren't freed
+> until all associated busy inodes are cleared, and so we preserve the
+> historical behavior that an inode chunk allocation guarantees immediate
+> ability to allocate an inode. I thought we agreed in the previous
+> discussion that this was the right approach since it seemed to be in the
+> long term direction for XFS anyways.. hm?
+
+Long term, yes, but we need something that works effectively and
+efficiently now, with minimal additional overhead, because we're
+going to have to live with this code in the allocation fast path for
+some time yet.
+
+Really, I want foreground inode allocation to know nothing about
+inode chunk allocation. If there are no inodes available for
+allocation, it kicks background inode chunk management and sleeps
+waiting for to be given an allocated inode it can use. It shouldn't
+even have to know about busy inodes - just work from an in-memory
+per-ag free list of inode numbers that can be immediately allocated.
+
+In this situation, inodes that have been recently unlinked don't
+show up on that list until they can be reallocated safely. This
+is all managed asynchronously in the background by the inodegc state
+machine (what I'm currently working on) and when the inode is
+finally reclaimed it is moved into the free list and allowed to be
+reallocated.
+
+IOWs, the long term direction is to make sure that the
+foreground inode allocator doesn't even know about the existence of
+busy inodes and it gets faster and simpler as we push all the mess
+into the background that runs all the slow path allocation and
+freeing algorithms.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
