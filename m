@@ -2,83 +2,76 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6E69C43219
-	for <linux-xfs@archiver.kernel.org>; Fri, 18 Feb 2022 07:52:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94B80C433F5
+	for <linux-xfs@archiver.kernel.org>; Fri, 18 Feb 2022 11:30:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232191AbiBRHwe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 18 Feb 2022 02:52:34 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:51628 "EHLO
+        id S234278AbiBRLbD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 18 Feb 2022 06:31:03 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:49448 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232171AbiBRHwd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Feb 2022 02:52:33 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62B7F580E8;
-        Thu, 17 Feb 2022 23:52:16 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id E0E7AB82537;
-        Fri, 18 Feb 2022 07:52:14 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A9F70C340ED;
-        Fri, 18 Feb 2022 07:52:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1645170733;
-        bh=V+9C48iv9XRk+MUoKRdXyp5e9Ugr2dXDUyMumpaYQ6g=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=J50nw6T8dG5KzH/M8aFe8tHATxgNAosOGLEUAPRWPC99g6+YSWDb3TC1slK7qRKWZ
-         r78c+ZEleASEcNm80gohZLsLprX9bBCL6K6KaMuVr2gqJBrcyOrVrFUF3a4hahRmSw
-         sXqJy5WNvMLvQQMBN93Q3HkJKsbSpOSsUalvBZyA=
-Date:   Fri, 18 Feb 2022 08:51:54 +0100
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Theodore Ts'o <tytso@mit.edu>
-Cc:     John Hubbard <jhubbard@nvidia.com>,
-        Lee Jones <lee.jones@linaro.org>, linux-ext4@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>,
-        Dave Chinner <dchinner@redhat.com>,
-        Goldwyn Rodrigues <rgoldwyn@suse.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Bob Peterson <rpeterso@redhat.com>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Ritesh Harjani <riteshh@linux.ibm.com>,
-        Johannes Thumshirn <jth@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com,
-        linux-kernel@vger.kernel.org
-Subject: Re: [REPORT] kernel BUG at fs/ext4/inode.c:2620 - page_buffers()
-Message-ID: <Yg9QGm2Rygrv+lMj@kroah.com>
-References: <Yg0m6IjcNmfaSokM@google.com>
- <82d0f4e4-c911-a245-4701-4712453592d9@nvidia.com>
- <Yg8bxiz02WBGf6qO@mit.edu>
+        with ESMTP id S231566AbiBRLbD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Feb 2022 06:31:03 -0500
+Received: from out30-132.freemail.mail.aliyun.com (out30-132.freemail.mail.aliyun.com [115.124.30.132])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D09E2AF906;
+        Fri, 18 Feb 2022 03:30:46 -0800 (PST)
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R131e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04400;MF=hsiangkao@linux.alibaba.com;NM=1;PH=DS;RN=3;SR=0;TI=SMTPD_---0V4p.agV_1645183842;
+Received: from B-P7TQMD6M-0146.local(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0V4p.agV_1645183842)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Fri, 18 Feb 2022 19:30:43 +0800
+Date:   Fri, 18 Feb 2022 19:30:42 +0800
+From:   Gao Xiang <hsiangkao@linux.alibaba.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>,
+        xfs <linux-xfs@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] xfs: add missing cmap->br_state = XFS_EXT_NORM update
+Message-ID: <Yg+DYkuTayILe5YA@B-P7TQMD6M-0146.local>
+Mail-Followup-To: "Darrick J. Wong" <djwong@kernel.org>,
+        xfs <linux-xfs@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+References: <20220217095542.68085-1-hsiangkao@linux.alibaba.com>
+ <20220218054032.GO8313@magnolia>
+ <Yg802fTm0n31FC+T@B-P7TQMD6M-0146.local>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <Yg8bxiz02WBGf6qO@mit.edu>
+In-Reply-To: <Yg802fTm0n31FC+T@B-P7TQMD6M-0146.local>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 17, 2022 at 11:08:38PM -0500, Theodore Ts'o wrote:
-> On Thu, Feb 17, 2022 at 05:06:45PM -0800, John Hubbard wrote:
-> > Yes. And looking at the pair of backtraces below, this looks very much
-> > like another aspect of the "get_user_pages problem" [1], originally
-> > described in Jan Kara's 2018 email [2].
+On Fri, Feb 18, 2022 at 01:55:37PM +0800, Gao Xiang wrote:
+> Hi Darrick,
 > 
-> Hmm... I just posted my analysis, which tracks with yours; but I had
-> forgotten about Jan's 2018 e-mail on the matter.
+> On Thu, Feb 17, 2022 at 09:40:32PM -0800, Darrick J. Wong wrote:
+> > On Thu, Feb 17, 2022 at 05:55:42PM +0800, Gao Xiang wrote:
+> > > COW extents are already converted into written real extents after
+> > > xfs_reflink_convert_cow_locked(), therefore cmap->br_state should
+> > > reflect it.
+> > > 
+> > > Otherwise, there is another necessary unwritten convertion
+> > > triggered in xfs_dio_write_end_io() for direct I/O cases.
+> > > 
+> > > Signed-off-by: Gao Xiang <hsiangkao@linux.alibaba.com>
+> > 
+> > I /think/ this looks ok.  Does it test ok too?  AFAICT nothing in the
+> > iomap/writeback machinery cares the incorrect state because we always
+> > set IOMAP_F_SHARED (which triggers COW) so I think this is simply a fix
+> > for directio, like you said?
 > 
-> > I'm getting close to posting an RFC for the direct IO conversion to
-> > FOLL_PIN, but even after that, various parts of the kernel (reclaim,
-> > filesystems/block layer) still need to be changed so as to use
-> > page_maybe_dma_pinned() to help avoid this problem. There's a bit
-> > more than that, actually.
+> Yeah, I think so, from the code logic buffered i/o seems no impacted...
+> And the unnecessary unwritten convertion under direct i/o takes
+> noticeable extra overhead in our workloads...
 > 
-> The challenge is that fixing this "the right away" is probably not
-> something we can backport into an LTS kernel, whether it's 5.15 or
-> 5.10... or 4.19.
+> I checked my last night xfstests, it seems it stops unexpectedly (maybe
+> due to some environmental problem). I will rerun tests today and
+> feedback later.
 
-Don't worry about stable backports to start with.  Do it the "right way"
-first and then we can consider if it needs to be backported or not.
+On my test environment machine, with linux 5.17-rc4,
+both w/ and w/o the patch, it fails:
 
-thanks,
+generic/594 generic/600 xfs/158 xfs/160
 
-greg k-h
+I think no issue with this patch.
+
+Thanks,
+Gao Xiang
