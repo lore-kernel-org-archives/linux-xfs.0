@@ -2,200 +2,149 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EBC9C4332F
-	for <linux-xfs@archiver.kernel.org>; Fri, 18 Feb 2022 01:10:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4C07C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 18 Feb 2022 02:54:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231186AbiBRBKT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Feb 2022 20:10:19 -0500
-Received: from gmail-smtp-in.l.google.com ([23.128.96.19]:41362 "EHLO
+        id S231718AbiBRCzJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Feb 2022 21:55:09 -0500
+Received: from gmail-smtp-in.l.google.com ([23.128.96.19]:60546 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230107AbiBRBKS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Feb 2022 20:10:18 -0500
-Received: from NAM12-DM6-obe.outbound.protection.outlook.com (mail-dm6nam12on2041.outbound.protection.outlook.com [40.107.243.41])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA63E3CFFF;
-        Thu, 17 Feb 2022 17:10:01 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=VXNkW2SmNMb4KFPYNTZx4rlnbFoFwiy2mI4WjPc6Oit/eB3WDGIk/O/n64Oe/ilZhfd/227fMUZc2ymYGJ8CyKh7ZVvyIaKYvlazeWgj7hLjHbFC1RHsRwPrnKEivnddIobwfDXnOsYhGDzPyEMBLszxTgtnHafGea1YAosI1Y49KOyni2eHLx2oeLQYuuy5ilBSt7KSYPpyximaEtP2ApS13fOqMwXwHJDGqYo21MO9KH+rzuEgxdhJXG49Or/v2RnlCcIqkXDY88vyoEM+BtCi0k3cZVqlvmsTDoLHpLC4EZbcpgKaClZRTJQbpAMfqDImqux78E8jnbv2g7Ny0A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=xR3ppvXIp6VkfAZu9guR5WfW9L7my/yU8rhhf9NmwOk=;
- b=PorOKQtt3nAYcli3saxCMFby7oMwvUs2Ff9MnSiPMcJEobQNO58jHyYUyhZah/dticjeLbAefhyQreBQANnjrSRgkuqfkxH6yMYYSmJEyJZ+lW90+0lWAqWYQYokozLXsxutZ81vqtACITd4bi9jNJi5QnvDvrtj2XpQ1YANIeuiThKV0C3+D4qDAXOSgd/9cPAON6zJklGMGtr+ZmUnxz7Ttcb7b26MQOkeJOetpt4yogkBmMq+aNU8yujXezCVP8gs07uEG7xRjNpIkI75Yi/MEY1JSjcjJlQTJVugozKV0p82B3GKW+cUIxoi/kyd2sZxaDb0c7HINfJK9NwuyQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=xR3ppvXIp6VkfAZu9guR5WfW9L7my/yU8rhhf9NmwOk=;
- b=kIrUsddmunGSp/hro4XWBjJ/5rmfe83pk9UOzPJSqAPqMVrreB4i694/mypPghcAiCrB+D32bm4BCA8N6EYi44E+bm0oz4Qh5AnWAEY35GiJDAYNzwMYiIJ2FS4kt1OXaaCh96kAFWw7E25S2lxE0J7xgLTB22v75a1QLfN9c0mb95DyY9wFr+1EIfiQuDhPFPje1zmlzIdWu3kiyqtlRdqLBK38+R8BugrOUEwPb8ATZNuy1WiBz9oPHyW6zYwo1z5fzQ6FQPXEmsycYU6TMYHRyLEK2tD0QRFkWW4PQ2INkGVq03WRUQFTP2Zd04BKsMowvdUKW+pHglNxs09hbA==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from BYAPR12MB3176.namprd12.prod.outlook.com (2603:10b6:a03:134::26)
- by DM6PR12MB4137.namprd12.prod.outlook.com (2603:10b6:5:218::21) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4975.19; Fri, 18 Feb
- 2022 01:09:59 +0000
-Received: from BYAPR12MB3176.namprd12.prod.outlook.com
- ([fe80::c8a0:e8df:3661:63b8]) by BYAPR12MB3176.namprd12.prod.outlook.com
- ([fe80::c8a0:e8df:3661:63b8%3]) with mapi id 15.20.4995.018; Fri, 18 Feb 2022
- 01:09:59 +0000
-From:   Alistair Popple <apopple@nvidia.com>
-To:     Felix Kuehling <felix.kuehling@amd.com>
-Cc:     Jason Gunthorpe <jgg@nvidia.com>,
-        David Hildenbrand <david@redhat.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Alex Sierra <alex.sierra@amd.com>, akpm@linux-foundation.org,
-        linux-mm@kvack.org, rcampbell@nvidia.com,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        jglisse@redhat.com, willy@infradead.org
-Subject: Re: [PATCH v6 01/10] mm: add zone device coherent type memory support
-Date:   Fri, 18 Feb 2022 11:59:37 +1100
-References: <beb38138-2266-1ff8-cc82-8fe914bed862@redhat.com>
- <877d9vd10u.fsf@nvdebian.thelocal> <20220216020357.GD4160@nvidia.com>
- <6156515.kVgMqSaHHm@nvdebian>
- <98d8bbc5-ffc2-8966-fdc1-a844874e7ae8@redhat.com>
- <20220216122600.GG4160@nvidia.com>
- <bf16195e-2570-3687-2b53-3f597ebfcfec@amd.com>
-User-agent: mu4e 1.6.9; emacs 27.1
-In-reply-to: <bf16195e-2570-3687-2b53-3f597ebfcfec@amd.com>
-Message-ID: <87y229askb.fsf@nvdebian.thelocal>
-Content-Type: multipart/mixed; boundary="=-=-="
-X-ClientProxiedBy: BY5PR03CA0012.namprd03.prod.outlook.com
- (2603:10b6:a03:1e0::22) To BYAPR12MB3176.namprd12.prod.outlook.com
- (2603:10b6:a03:134::26)
+        with ESMTP id S231715AbiBRCzJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Feb 2022 21:55:09 -0500
+Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7D05580F9;
+        Thu, 17 Feb 2022 18:54:52 -0800 (PST)
+Received: from cwcc.thunk.org (pool-108-7-220-252.bstnma.fios.verizon.net [108.7.220.252])
+        (authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 21I2sUcx031678
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 17 Feb 2022 21:54:31 -0500
+Received: by cwcc.thunk.org (Postfix, from userid 15806)
+        id 8A76415C34C8; Thu, 17 Feb 2022 21:54:30 -0500 (EST)
+Date:   Thu, 17 Feb 2022 21:54:30 -0500
+From:   "Theodore Ts'o" <tytso@mit.edu>
+To:     Lee Jones <lee.jones@linaro.org>
+Cc:     linux-ext4@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        Dave Chinner <dchinner@redhat.com>,
+        Goldwyn Rodrigues <rgoldwyn@suse.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Bob Peterson <rpeterso@redhat.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Ritesh Harjani <riteshh@linux.ibm.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Johannes Thumshirn <jth@kernel.org>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com,
+        linux-kernel@vger.kernel.org
+Subject: Re: [REPORT] kernel BUG at fs/ext4/inode.c:2620 - page_buffers()
+Message-ID: <Yg8KZvDVFJgTXm4C@mit.edu>
+References: <Yg0m6IjcNmfaSokM@google.com>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: d6e61b08-0bf2-42f9-a08e-08d9f27b6210
-X-MS-TrafficTypeDiagnostic: DM6PR12MB4137:EE_
-X-Microsoft-Antispam-PRVS: <DM6PR12MB413774529716C7C680B97B11DF379@DM6PR12MB4137.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:9508;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: ajqKC+yuoXfDqX0hL66cOQ8CUlFp3eRMxRrPltDpV+gA1gcq5XSUpZ78L9VOfxd6SOzojjJIMsqjk4y7lG/LlKOz8i6nF3aVwJ+KH5hl60+8wwYHS0mc5Bp6n6v4T0PjO9/eK2oMVulL6UbPvyQiMoQuOeMIUQ/R9DbYYKMnMug7vy/cQb5ancboM97t8ZFQVB8l47fyVuRmdRvc6YcTUWDdtCsrtpO81dOmo2HW32rVupZx+5Ls6v++W7tP5x7WYJczJHxoDdjq2qawKF2X6vwuSeqT/8A0STDc1a2Y4QsvV/koOiqXgrVJUi5Zv9Rxez9a622NLZXH5iXHxZ2HYfdYPnkAvCnZyDq9iSvE1Y/Nb45qdNQ1xoiIt0egj82+yWLUXjT1eYofBzmpXjNvGOJVFO4XtOvQ6sgq4uNfOTOc9oIxJPRJz/Dp22AK0yfDLj+XrkQGFRM5yPA9623FAlcZvAoGLdUNmw5RSCs7eM68pzVH1DtAPi7OSoeGbaIm+y4CVTTWwtx8QvoBZzLjdyRCDrmyHU5F/URoRZbEgWdrd1tlMuz8Juqtd7kHPD0Qc1n8TIK1MAfwzpK+A2cCoE92ErcDzlnZzSFzXsw+4UX0IOFS5UJBkV/WdSjhTyydmB6FHIpvmBDm8vZKXxFLFA==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR12MB3176.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(6916009)(2906002)(86362001)(4326008)(316002)(66946007)(83380400001)(66556008)(54906003)(66476007)(8676002)(8936002)(186003)(7416002)(44144004)(33964004)(6506007)(6512007)(6666004)(9686003)(26005)(5660300002)(508600001)(6486002)(38100700002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?MFdSTFVkcUthSFJoR0I1OUNTajFQNE5BcFhEQmNycENjOGR4WWdMWm9BbXhX?=
- =?utf-8?B?dEZKd1NzaXZBZm04YlBVNnZ4eGRQVndZWmZGSkVWdm5zSGNLWE94ckt1QVJ1?=
- =?utf-8?B?UzJucEg1QVVEKy9kQVJsQnMvZHRtcVdPOVF3MldXWTU3Q1hJQTZBTnNNS0hY?=
- =?utf-8?B?NVZubGRYLzg2VkVsTDN1akprZ2RWVTIyenNtRVN0cUpqVVZkN3djL09Sb0Nq?=
- =?utf-8?B?UFFDbXlKS09tbHpaZ0p4MlFNNGl0SEZ0bkN4QnpJaHd2TW9ucWdTVSt3cEdw?=
- =?utf-8?B?ZkRjTlF4S3BDbkd6QWV4RmdvRFl2c2dDMlowVTJVZVN6eDlOa2QyU1VzSllY?=
- =?utf-8?B?QWdwUzFMQVplMXE1RVJMeU4wMDlveU5YOXAybXh3cVNEaUhiSElmVDNlbUNj?=
- =?utf-8?B?cjZpN2ZTZEdIVTN2N1pKb2xQU2hDMGpuU2ZoRnltbis4N1F5Rlp3M0Q4cjl6?=
- =?utf-8?B?dHpXMzk0VU90amZmaHM1aVRpNm50YitOajNOYWhsMlpCTUducHNWTkpMRk5N?=
- =?utf-8?B?dEM4VEkwZmx0c0tweFRuQjA3b3o0bnd5OWxBVlNRbTNST2xPRElTZDdQSjd1?=
- =?utf-8?B?ZjVqZGRnaXJkaWVGU1F1U2RtaEdDa01xVUZGKy95bE9IazNLL0k4WHpNV3Jm?=
- =?utf-8?B?MjdrVFIwL1FCcER6WEJYYlRobllTOTZ4UjFiaVg1blh3ZnAxeGt6S1FTaktW?=
- =?utf-8?B?cldrbXQ1VmU3T2o4QzJjZEc1aDRsRVpyOVJIUE1acUVyVkdZOUVBU3hheGRJ?=
- =?utf-8?B?RVlIVVVwUnRhQ0lLelhTNW9zaTVhcy9uUS9mTnNQRzI4V1NFZ0ZBZjlMS2Fy?=
- =?utf-8?B?R0dkc0lFczdRRDBYMk44Ry94MHlLb0pEemtWWHl1VlVCM1dOVkIrMEJxV1Bo?=
- =?utf-8?B?U1FLa3RVaS93b05XMUR1Snl6T0hmZUFvZ0hTNWxDK212VXVKUWVPZ3RHOTB5?=
- =?utf-8?B?bTJSa05FeWN3ZGJxTHZhdGRVTythUDREc0NMbHNsOTg1OVM3QlFzV1FuV2FU?=
- =?utf-8?B?ZlBCVy9jT3A2dnFZemRDMy9LbHdaMHFXUHQ3SXVhcU5vby9HdVpIRDNCaGEv?=
- =?utf-8?B?eEhOeHJyNmczTlNqK1A3engza3V2Y3pzVWJqUmFLY3NNRmdtVXBrR2xGRlly?=
- =?utf-8?B?L0dFdTBhNnJxcmh6U0NmcmptTkdvYk5weVBXc0RHSENjYSs1T0xFQ2gvN1VE?=
- =?utf-8?B?RlZHQXhQaHNwS1p4MGdFTU5mbkFvUC9zaDk0UCtsdWIwd0pRSnpsRzV1c1U3?=
- =?utf-8?B?QzBtZ2dUa1ZITUl4emoxbVBQeEovaURuRjF3YVJJV0xNNzUvSFk2SHR3b21n?=
- =?utf-8?B?d2hSdUQzK1ZVOTc2aVBEdHh4UW51Q2R3dThET01JNmpnN2FRQ3FCYTVLNXNM?=
- =?utf-8?B?dE5VaklES3plZWJrSGFzaXpDa2g3eFBTMTJoQzJmaXR1eXpqY1ZyVGpGeTcy?=
- =?utf-8?B?VGNoelRyTXBQSWg1ZUFEMiswbHVtZXNqYTFLU0ZXMy9ZRk5GUGxSYXFMNkJK?=
- =?utf-8?B?YmFtR05uRVBaKzZJRHFKVlpPdUtUYzNRY1FCdURJWlJBYjhWMU5UZ2tMMjBO?=
- =?utf-8?B?cGprd2lkU3VUT2hJNUZLaGEvdmlYaWQ0RVhka004cFo4eld4Nzh2ZytRL3pW?=
- =?utf-8?B?MmNSaDJaVmNGRDZPVUtrQ3ExVWQva090QW9aMW02bzREQnk1UU9sSWE4bmVX?=
- =?utf-8?B?Q0F5elJsc1NOZjYzZjNmVzlSM3gyV1NCczFuVVdRNDNGSjV6eFllU1gwbDE0?=
- =?utf-8?B?SEtmKzVaM3lqa010WDhodzhRQlBwa291RW11bVRsTk9KT0VWRllCbWM3S2Mr?=
- =?utf-8?B?RFVSOEZzaGdENG5pYW1SSXZDLzFzWjZoOSs4Y2lWTTJsaE5CNjdSUGRUVFJS?=
- =?utf-8?B?azRsQnVjU3dRVzMzNHVFaGV3My9JMW5nQ3dkbHdBRDBvWlpCTzlSQnNRb044?=
- =?utf-8?B?WWEyVFl6cVFORjJIRW83bXVDS3hOcytTQ1RTbDkxVU1JS044ak1Oc0I0Mmxs?=
- =?utf-8?B?bGNQK1E4WE5Kd0dnekhOVllOemhqd0hYMnZRelFHVXpPQ0x3MDRrRHlkRTVG?=
- =?utf-8?B?WDUwVlVIMlFNZE9rK0V0eU95YXpQTXFIMFJ3Qkc5UW5IdnJMWG53TG5NTDJu?=
- =?utf-8?B?RHNJVmpTT0tzdytBckRHR3dEd1FVWWJQOXVOZ05FdlZwVFpqTHR3VS9VbnNn?=
- =?utf-8?Q?7fIpfaNfkoXiq6araxzfHto=3D?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d6e61b08-0bf2-42f9-a08e-08d9f27b6210
-X-MS-Exchange-CrossTenant-AuthSource: BYAPR12MB3176.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Feb 2022 01:09:59.7291
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: oz5aC1I4Gm72YzZtfcVMmDU8vcB+SoplxNgJ8R+x37KHgNOybSQViuJ7MuaAqn00FKoc0+Sma2Un9OnOHXpZHA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB4137
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Yg0m6IjcNmfaSokM@google.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
---=-=-=
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Wed, Feb 16, 2022 at 04:31:36PM +0000, Lee Jones wrote:
+> 
+> After recently receiving a bug report from Syzbot [0] which was raised
+> specifically against the Android v5.10 kernel, I spent some time
+> trying to get to the crux.  Firstly I reproduced the issue on the
+> reported kernel, then did the same using the latest release kernel
+> v5.16.
+> 
+> The full kernel trace can be seen below at [1].
+> 
 
-Felix Kuehling <felix.kuehling@amd.com> writes:
+Lee, thanks for your work in trimming down the syzkaller reproducer.
+The moral equivalent of what it is doing (except each system call is
+done in a separate thread, with synchronization so each gets executed
+in order, but perhaps on a different CPU) is:
 
-> Am 2022-02-16 um 07:26 schrieb Jason Gunthorpe:
->> The other place that needs careful audit is all the callers using
->> vm_normal_page() - they must all be able to accept a ZONE_DEVICE page
->> if we don't set pte_devmap.
->
-> How much code are we talking about here? A quick search finds 26 call-sit=
-es in
-> 12 files in current master:
->
->    fs/proc/task_mmu.c
->    mm/hmm.c
->    mm/gup.c
->    mm/huge_memory.c (vm_normal_page_pmd)
->    mm/khugepaged.c
->    mm/madvise.c
->    mm/mempolicy.c
->    mm/memory.c
->    mm/mlock.c
->    mm/migrate.c
->    mm/mprotect.c
->    mm/memcontrol.c
->
-> I'm thinking of a more theoretical approach: Instead of auditing all user=
-s, I'd
-> ask, what are the invariants that a vm_normal_page should have. Then chec=
-k,
-> whether our DEVICE_COHERENT pages satisfy them. But maybe the concept of =
-a
-> vm_normal_page isn't defined clearly enough for that.
->
-> That said, I think we (Alex and myself) made an implicit assumption from =
-the
-> start, that a DEVICE_COHERENT page should behave a lot like a normal page=
- in
-> terms of VMA mappings, even if we didn't know what that means in detail.
+        int dest_fd, src_fd, truncate_fd, mmap_fd;
+        pid_t tid;
+        struct iovec local_iov, remote_iov;
 
-Yes I'm afraid I made a similar mistake when reviewing this, forgetting tha=
-t
-DEVICE_COHERENT pages are not LRU pages and therefore need special treatmen=
-t in
-some places. So for now I will have to withdraw my reviewed-by until this h=
-as
-been looked at more closely, because as you note below accidentally treatin=
-g
-them as LRU pages leads to a bad time.
+        dest_fd = open("./bus", O_RDWR|O_CREAT|O_NONBLOCK|O_SYNC|
+                       O_DIRECT|O_LARGEFILE|O_NOATIME, 0);
+        src_fd = openat(AT_FDCWD, "/bin/bash", O_RDONLY);
+        truncate_fd = syscall(__NR_open, "./bus", O_RDWR|O_CREAT|O_SYNC|O_NOATIME|O_ASYNC);
+        ftruncate(truncate_fd, 0x2008002ul);
+        mmap((void *) 0x20000000ul /* addr */, 0x600000ul /* length */,
+             PROT_WRITE|PROT_EXEC|PROT_SEM||0x7ffff0, MAP_FIXED|MAP_SHARED, mmap_fd, 0);
+        sendfile(dest_fd, src_fd, 0 /* offset */, 0x80000005ul /* count */);
+        local_iov.iov_base = (void *) 0x2034afa4;
+        local_iov.iov_len = 0x1f80;
+        remote_iov.iov_base = (void *) 0x20000080;
+        remote_iov.iov_len = 0x2034afa5;
+        process_vm_writev(gettid(), &local_iov, 1, &remote_iov, 1, 0);
+        sendfile(dest_fd, src_fd, 0 /* offset */, 0x1f000005ul /* count */);
 
-> I can now at least name some differences between DEVICE_COHERENT and norm=
-al
-> pages: how the memory is allocated, how data is migrated into DEVICE_COHE=
-RENT
-> pages and that it can't be on any LRU list (because the lru list_head in =
-struct
-> page is aliased by pgmap and zone_device_data). Maybe I'll find more diff=
-erences
-> if I keep digging.
->
-> Regards,
-> =C2=A0 Felix
->
->
->>
->> Jason
+Which is then executed repeataedly over and over again.  (With the
+file descriptors closed at each loop, so the file is reopened each time.)
 
---=-=-=--
+So basically, we have a scratch file which is initialized using an
+sendfile using O_DIRECT.  The scratch file is also mmap'ed into the
+process's address space, and we then *modify* that an mmap'ed reagion
+using process_vm_writev() --- and this is where the problem starts.
+
+process_vm_writev() uses [un]pin_user_pages_remote() which is the same
+interface uses for RDMA.  But it's not clear this is ever supposed to
+work for memory which is mmap'ed region backed by a file.
+pin_user_pages_remote() appears to assume that it is an anonymous
+region, since the get_user_pages functions in mm/gup.c don't call
+read_page() to read data into any pages that might not be mmaped in.
+
+They also don't follow the mm / file system protocol of calling the
+file system's write_begin() or page_mkwrite() before modifying a page,
+and so when when process_vm_writev() calls unpin_user_pages_remote(),
+this tries to dirty the page, but since page_mkwrite() or
+write_begin() hasn't been called, buffers haven't been attached to the
+page, and so that triggers the following ext4 WARN_ON:
+
+[ 1451.095939] WARNING: CPU: 1 PID: 449 at fs/ext4/inode.c:3565 ext4_set_page_dirty+0x48/0x50
+  ...
+[ 1451.139877] Call Trace:
+[ 1451.140833]  <TASK>
+[ 1451.141889]  folio_mark_dirty+0x2f/0x60
+[ 1451.143408]  set_page_dirty_lock+0x3e/0x60
+[ 1451.145130]  unpin_user_pages_dirty_lock+0x108/0x130
+[ 1451.147405]  process_vm_rw_single_vec.constprop.0+0x1b9/0x260
+[ 1451.150135]  process_vm_rw_core.constprop.0+0x156/0x280
+[ 1451.159576]  process_vm_rw+0xc4/0x110
+
+
+Then when ext4_writepages() gets called, we trigger the BUG because
+buffers haven't been attached to the page.  We can certainly avoid the
+BUG by checking to see if buffers are attached first, and if not, skip
+writing the page trigger a WARN_ON, and then forcibly clear the page
+dirty flag so don't permanently leak memory and allow the file system
+to be unmounted.  (Note: we can't fix the problem by attaching the
+buffers in set_page_dirty(), since is occasionally called under
+spinlocks and without the page being locked, so we can't do any kind
+of allocation, so ix-nay on calling create_empty_buffers() which calls
+alloc_buffer_head().)
+
+BUT, that is really papering over the problem, since it's not clear
+it's valid to try to use get_user_pages() and friends (including
+[un]pin_user_pages_remote() on file-backed memory.
+
+And if it is supposed to be valid, then mm/gup.c needs to first call
+readpage() if the page is not present, so that if process_vm_writev()
+is only modifying a few bytes in the mmap'ed region, we need to fault
+in the page first, and then mm/gup.c needs to inform the file system
+to make sure that if pinned memory region is not yet allocated, than
+whatever needs to happen to allocate space, via page_mkwrite() has
+taken place.  (And by the way, that means that pin_user_pages_remote()
+may need to return ENOSPC if there is not free space in the file
+system, and hence ENOSPC may need to reflected all the way back to
+process_vm_writev().
+
+Alternatively, if we don't expect process_vm_writev() to work on
+file-backed memory, perhaps it and pin_user_pages_remote() should
+return some kind of error?
+
+	    	      	     	    	      - Ted
