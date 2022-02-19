@@ -2,97 +2,155 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8078C433F5
-	for <linux-xfs@archiver.kernel.org>; Sat, 19 Feb 2022 21:14:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BDF3C433EF
+	for <linux-xfs@archiver.kernel.org>; Sat, 19 Feb 2022 23:01:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243158AbiBSVOq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 19 Feb 2022 16:14:46 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:45786 "EHLO
+        id S233931AbiBSXBZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 19 Feb 2022 18:01:25 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:44766 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243167AbiBSVOm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 19 Feb 2022 16:14:42 -0500
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 747E83BFA4
-        for <linux-xfs@vger.kernel.org>; Sat, 19 Feb 2022 13:14:22 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-17-0.pa.vic.optusnet.com.au [49.186.17.0])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 246AC52FB38;
-        Sun, 20 Feb 2022 08:14:19 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nLX3b-00E25x-3k; Sun, 20 Feb 2022 08:14:19 +1100
-Date:   Sun, 20 Feb 2022 08:14:19 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Christian Theune <ct@flyingcircus.io>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: Help deciding about backported patch (kernel bug 214767,
- 19f4e7cc8197 xfs: Fix CIL throttle hang when CIL space used going backwards)
-Message-ID: <20220219211419.GG59715@dread.disaster.area>
-References: <C1EC87A2-15B4-45B1-ACE2-F225E9E30DA9@flyingcircus.io>
+        with ESMTP id S229871AbiBSXBY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 19 Feb 2022 18:01:24 -0500
+Received: from mail-il1-x134.google.com (mail-il1-x134.google.com [IPv6:2607:f8b0:4864:20::134])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 882EA506F1;
+        Sat, 19 Feb 2022 15:01:01 -0800 (PST)
+Received: by mail-il1-x134.google.com with SMTP id z7so7312529ilb.6;
+        Sat, 19 Feb 2022 15:01:01 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=JsTvQXRsbNOiGcu58U9fFMq2V+cC9hbrFYaW/h3E+1g=;
+        b=Z6v34CPkmCq2AZb1WTbW3mh6Tm48Pu3YR0j6WN/wwMs+xuHp22zD8kUHhoz3TVmfOY
+         z+qdVyKgtKySnD20XiY4UuUPARq7lbCMHyKPxma3uECUDKeh0763ogQlE3zULF2a183i
+         WIrv5A6NnC6nhREzAEKWftm+BtXYFboYrsYDmyB7lqBClTxPONUHt8aFTDZZmQSu9cUK
+         fQVjei7MWURhmlT1R0aoYg31Rhwdxn7sDgTPJ4cNdN5QfC7Lo4OSPUNiMnhvwcgkPU+Z
+         juIkgyW5aH96hluWwW9l2ci2gK0uyLRnxxprEBnxCVOiqjuP6w3pNxlhLamLNHvVhPzV
+         ObSg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=JsTvQXRsbNOiGcu58U9fFMq2V+cC9hbrFYaW/h3E+1g=;
+        b=KIjb9TgsPoAr/16501mzzAYAkFkJp4DA33vZzuqbQuWTnaWzRBfKTigK69YDWpsiFC
+         pEBMhsPnf2aEgHAb14vJNQ87AHvfQCHm4znQUTSWWL8bdWD1wL8jsfDipsArWu7H3LO1
+         qERceGSoGJk3P0Z2AsszSg6BuQ7D6T9BkkevXqiE2LlctrlHGysGpRpPGgOMwQlJHaws
+         /TqehExv/g9COIY/jYkjzoWpTwsfjjdu5tqhIflUi8GCOBstjifE00GGa7SckMelL6SN
+         1qgfD1aUzoza5Jxxpu3yGN8ULw5jS6NspNHErOe9YUxRSv4zpBjOoBoK8ay68RqlQB76
+         8o3Q==
+X-Gm-Message-State: AOAM5308AdjgW32K+iiPjsh47f5ZBU/qoU5f23ntCB8Kk5jJsqRr1jEv
+        vHWM1MfiH6eihe5JI3dsjisvkxO2dGeRNuvTtE4=
+X-Google-Smtp-Source: ABdhPJxAq6Xhci6X8EyjKISKWHQB8A7GAnQkTQsSYKWI9pTBuyyqr9uAdwughLQMbr6RkpSBKXR6D5MB/Sif6OYt2oU=
+X-Received: by 2002:a92:cd8c:0:b0:2be:abb:ec04 with SMTP id
+ r12-20020a92cd8c000000b002be0abbec04mr10635076ilb.246.1645311660937; Sat, 19
+ Feb 2022 15:01:00 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <C1EC87A2-15B4-45B1-ACE2-F225E9E30DA9@flyingcircus.io>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=62115dad
-        a=+dVDrTVfsjPpH/ci3UuFng==:117 a=+dVDrTVfsjPpH/ci3UuFng==:17
-        a=IkcTkHD0fZMA:10 a=oGFeUVbbRNcA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=P2CHeGlxbLGvncAdJl4A:9 a=QEXdDO2ut3YA:10 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+References: <CACsaVZ+mt3CfdXV0_yJh7d50tRcGcRZ12j3n6-hoX2cz3+njsg@mail.gmail.com>
+ <20220219210354.GF59715@dread.disaster.area>
+In-Reply-To: <20220219210354.GF59715@dread.disaster.area>
+From:   Kyle Sanderson <kyle.leet@gmail.com>
+Date:   Sat, 19 Feb 2022 15:00:51 -0800
+Message-ID: <CACsaVZ+LZUebtsGuiKhNV_No8fNLTv5kJywFKOigieB1cZcKUw@mail.gmail.com>
+Subject: Re: Intel QAT on A2SDi-8C-HLN4F causes massive data corruption with
+ dm-crypt + xfs
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     qat-linux@intel.com, giovanni.cabiddu@intel.com,
+        Linux-Kernal <linux-kernel@vger.kernel.org>,
+        linux-xfs@vger.kernel.org, linux-crypto@vger.kernel.org,
+        dm-devel@redhat.com,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        salvatore.benedetto@intel.com, herbert@gondor.apana.org.au,
+        pablo.marcos.oltra@intel.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 17, 2022 at 10:22:49AM +0100, Christian Theune wrote:
-> Hi,
-> 
-> I’ve been debugging an elusive XFS issue that I could not track
-> down to any other parameters than it being an xfs internal bug.
-> I’ve recorded what I’ve seen so far in
-> https://bugzilla.kernel.org/show_bug.cgi?id=214767 and Dave
-> recommended that "19f4e7cc8197 xfs: Fix CIL throttle hang when CIL
-> space used going backwards” is likely the issue. AFAICT this was
-> not backported to the 5.10 branch and we’ve been updating to
-> vanilla kernels diligently and still keep seeing this issue.
-> Unfortunately within a fleet of around 1k VMs it strikes about
-> once every week or so and there’s no way to predict when and
-> where.
-> 
-> So, I took Dave’s pointer and applied the patch to our 5.10 series
-> (basd on 5.10.76 at that point) and it applied cleanly. The
-> machine boots fine and I ran the XFS test suite. However, I
-> haven’t done any tests using the test suite before and I’m getting
-> a number of errors where I don’t know how to interpret the
-> results. Some of those seem to be due to not having the DEBUG flag
-> set in the kernel, others … I’m not sure.
+hi Dave,
 
-Run the "auto" group tests ('-g auto') only, which will weed out
-tests that are broken, likely to fail or crash the machine (i.e.
-test-to-failure scenarios). You can ignore "not run" reports - they
-aren't failures, just indicative of the kernel not supporting that
-functionality (like not being built with DEBUG functionality).
+> This really sounds like broken hardware, not a kernel problem.
 
-Then run the tests across an unmodified kernel 2-3 times to get a
-baseline set of results (should be identical each run), then do the
-same thing for the patched kernel.
+It is indeed a hardware issue, specifically the intel qat crypto
+driver that's in-tree - the hardware is fine (see below). The IQAT
+eratta documentation states that if a request is not submitted
+properly it can stall the entire device. The remediation guidance from
+2020 was "don't do that" and "don't allow unprivileged users access to
+the device". The in-tree driver is not implemented properly either for
+this SoC or board - I'm thinking it's related to QATE-7495.
 
-Now compare baseline vs patched results, looking for things that
-failed in the patched kernel that didn't fail in the baseline kernel
-- those are the regressions that need more investigation. If there
-are no regressions (very likely), you are good to go.
+https://01.org/sites/default/files/downloads//336211qatsoftwareforlinux-rn-hwversion1.7021.pdf
 
-> I’m attaching the test runner output, unfortunately I lost the
-> actual outputs as the test ran quite long and the outputs where
-> cleaned up by the tempfile watcher faster than I could retrieve
-> them. I can run them again, my estimation currently is it takes
-> around 3-4 days to complete them, though.
+> This implies a dmcrypt level problem - XFS can't make progress is dmcrypt is not completing IOs.
 
-The auto group tests should take ~3-6 hours to run a full cycle
-depending on storage config.
+That's the weird part about it. Some bio's are completing, others are
+completely dropped, with some stalling forever. I had to use
+xfs_repair to get the volumes operational again. I lost a good deal of
+files and had to recover from backup after toggling the device back on
+on a production system (silly, I know).
 
-Cheers,
+> Where are the XFS corruption reports that the subject implies is occurring?
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I think you're right, it's dm-crypt that's broken here, with
+ultimately the crypto driver causing this corruption. XFS being the
+edge to the end-user is taking the brunt of it. There's reports going
+back to late 2017 of significant issues with this mainlined stable
+driver.
+
+https://bugzilla.redhat.com/show_bug.cgi?id=1522962
+https://serverfault.com/questions/1010108/luks-hangs-on-centos-running-on-atom-c3758-cpu
+https://www.phoronix.com/forums/forum/software/distributions/1172231-fedora-33-s-enterprise-linux-next-effort-approved-testbed-for-raising-cpu-requirements-etc?p=1174560#post1174560
+
+Any guidance would be appreciated.
+Kyle.
+On Sat, Feb 19, 2022 at 1:03 PM Dave Chinner <david@fromorbit.com> wrote:
+>
+> On Fri, Feb 18, 2022 at 09:02:28PM -0800, Kyle Sanderson wrote:
+> > A2SDi-8C-HLN4F has IQAT enabled by default, when this device is
+> > attempted to be used by xfs (through dm-crypt) the entire kernel
+> > thread stalls forever. Multiple users have hit this over the years
+> > (through sporadic reporting) - I ended up trying ZFS and encryption
+> > wasn't an issue there at all because I guess they don't use this
+> > device. Returning to sanity (xfs), I was able to provision a dm-crypt
+> > volume no problem on the disk, however when running mkfs.xfs on the
+> > volume is what triggers the cascading failure (each request kills a
+> > kthread).
+>
+> Can you provide the full stack traces for these errors so we can see
+> exactly what this cascading failure looks like, please? In reality,
+> the stall messages some time after this are not interesting - it's
+> the first errors that cause the stall that need to be investigated.
+>
+> A good idea would be to provide the full storage stack decription
+> and hardware in use, as per:
+>
+> https://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+>
+> > Disabling IQAT on the south bridge results in a working
+> > system, however this is not the default configuration for the
+> > distribution of choice (Ubuntu 20.04.3 LTS), nor the motherboard. I'm
+> > convinced this never worked properly based on the lack of popularity
+> > for kernel encryption (crypto), and the embedded nature that
+> > SuperMicro has integrated this device in collaboration with intel as
+> > it looks like the primary usage is through external accelerator cards.
+>
+> This really sounds like broken hardware, not a kernel problem.
+>
+> > Kernels tried were from RHEL8 over a year ago, and this impacts the
+> > entirety of the 5.4 series on Ubuntu.
+> > Please CC me on replies as I'm not subscribed to all lists. CPU is C3758.
+>
+> [snip stalled kcryptd worker threads]
+>
+> This implies a dmcrypt level problem - XFS can't make progress is
+> dmcrypt is not completing IOs.
+>
+> Where are the XFS corruption reports that the subject implies is
+> occurring?
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
