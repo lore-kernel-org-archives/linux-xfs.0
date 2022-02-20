@@ -2,155 +2,89 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BDF3C433EF
-	for <linux-xfs@archiver.kernel.org>; Sat, 19 Feb 2022 23:01:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2A7DC43217
+	for <linux-xfs@archiver.kernel.org>; Sun, 20 Feb 2022 17:00:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233931AbiBSXBZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 19 Feb 2022 18:01:25 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:44766 "EHLO
+        id S244304AbiBTRAx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 20 Feb 2022 12:00:53 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:39790 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229871AbiBSXBY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 19 Feb 2022 18:01:24 -0500
-Received: from mail-il1-x134.google.com (mail-il1-x134.google.com [IPv6:2607:f8b0:4864:20::134])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 882EA506F1;
-        Sat, 19 Feb 2022 15:01:01 -0800 (PST)
-Received: by mail-il1-x134.google.com with SMTP id z7so7312529ilb.6;
-        Sat, 19 Feb 2022 15:01:01 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=JsTvQXRsbNOiGcu58U9fFMq2V+cC9hbrFYaW/h3E+1g=;
-        b=Z6v34CPkmCq2AZb1WTbW3mh6Tm48Pu3YR0j6WN/wwMs+xuHp22zD8kUHhoz3TVmfOY
-         z+qdVyKgtKySnD20XiY4UuUPARq7lbCMHyKPxma3uECUDKeh0763ogQlE3zULF2a183i
-         WIrv5A6NnC6nhREzAEKWftm+BtXYFboYrsYDmyB7lqBClTxPONUHt8aFTDZZmQSu9cUK
-         fQVjei7MWURhmlT1R0aoYg31Rhwdxn7sDgTPJ4cNdN5QfC7Lo4OSPUNiMnhvwcgkPU+Z
-         juIkgyW5aH96hluWwW9l2ci2gK0uyLRnxxprEBnxCVOiqjuP6w3pNxlhLamLNHvVhPzV
-         ObSg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=JsTvQXRsbNOiGcu58U9fFMq2V+cC9hbrFYaW/h3E+1g=;
-        b=KIjb9TgsPoAr/16501mzzAYAkFkJp4DA33vZzuqbQuWTnaWzRBfKTigK69YDWpsiFC
-         pEBMhsPnf2aEgHAb14vJNQ87AHvfQCHm4znQUTSWWL8bdWD1wL8jsfDipsArWu7H3LO1
-         qERceGSoGJk3P0Z2AsszSg6BuQ7D6T9BkkevXqiE2LlctrlHGysGpRpPGgOMwQlJHaws
-         /TqehExv/g9COIY/jYkjzoWpTwsfjjdu5tqhIflUi8GCOBstjifE00GGa7SckMelL6SN
-         1qgfD1aUzoza5Jxxpu3yGN8ULw5jS6NspNHErOe9YUxRSv4zpBjOoBoK8ay68RqlQB76
-         8o3Q==
-X-Gm-Message-State: AOAM5308AdjgW32K+iiPjsh47f5ZBU/qoU5f23ntCB8Kk5jJsqRr1jEv
-        vHWM1MfiH6eihe5JI3dsjisvkxO2dGeRNuvTtE4=
-X-Google-Smtp-Source: ABdhPJxAq6Xhci6X8EyjKISKWHQB8A7GAnQkTQsSYKWI9pTBuyyqr9uAdwughLQMbr6RkpSBKXR6D5MB/Sif6OYt2oU=
-X-Received: by 2002:a92:cd8c:0:b0:2be:abb:ec04 with SMTP id
- r12-20020a92cd8c000000b002be0abbec04mr10635076ilb.246.1645311660937; Sat, 19
- Feb 2022 15:01:00 -0800 (PST)
+        with ESMTP id S244302AbiBTRAv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 20 Feb 2022 12:00:51 -0500
+Received: from out20-99.mail.aliyun.com (out20-99.mail.aliyun.com [115.124.20.99])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37ED2527E8;
+        Sun, 20 Feb 2022 09:00:27 -0800 (PST)
+X-Alimail-AntiSpam: AC=CONTINUE;BC=0.08295915|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.0260975-0.00210438-0.971798;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047201;MF=guan@eryu.me;NM=1;PH=DS;RN=8;RT=8;SR=0;TI=SMTPD_---.MsrOLZg_1645376423;
+Received: from localhost(mailfrom:guan@eryu.me fp:SMTPD_---.MsrOLZg_1645376423)
+          by smtp.aliyun-inc.com(33.13.245.115);
+          Mon, 21 Feb 2022 01:00:24 +0800
+Date:   Mon, 21 Feb 2022 01:00:23 +0800
+From:   Eryu Guan <guan@eryu.me>
+To:     Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+Cc:     fstests@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        Naohiro Aota <naohiro.aota@wdc.com>,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Subject: Re: [PATCH v3 1/6] common/rc: fix btrfs mixed mode usage in
+ _scratch_mkfs_sized
+Message-ID: <YhJzp/dnfixk/nMn@desktop>
+References: <20220218073156.2179803-1-shinichiro.kawasaki@wdc.com>
+ <20220218073156.2179803-2-shinichiro.kawasaki@wdc.com>
 MIME-Version: 1.0
-References: <CACsaVZ+mt3CfdXV0_yJh7d50tRcGcRZ12j3n6-hoX2cz3+njsg@mail.gmail.com>
- <20220219210354.GF59715@dread.disaster.area>
-In-Reply-To: <20220219210354.GF59715@dread.disaster.area>
-From:   Kyle Sanderson <kyle.leet@gmail.com>
-Date:   Sat, 19 Feb 2022 15:00:51 -0800
-Message-ID: <CACsaVZ+LZUebtsGuiKhNV_No8fNLTv5kJywFKOigieB1cZcKUw@mail.gmail.com>
-Subject: Re: Intel QAT on A2SDi-8C-HLN4F causes massive data corruption with
- dm-crypt + xfs
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     qat-linux@intel.com, giovanni.cabiddu@intel.com,
-        Linux-Kernal <linux-kernel@vger.kernel.org>,
-        linux-xfs@vger.kernel.org, linux-crypto@vger.kernel.org,
-        dm-devel@redhat.com,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        salvatore.benedetto@intel.com, herbert@gondor.apana.org.au,
-        pablo.marcos.oltra@intel.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220218073156.2179803-2-shinichiro.kawasaki@wdc.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-hi Dave,
+On Fri, Feb 18, 2022 at 04:31:51PM +0900, Shin'ichiro Kawasaki wrote:
+> The helper function _scratch_mkfs_sized needs a couple of improvements
+> for btrfs. At first, the function adds --mixed option to mkfs.btrfs when
+> the filesystem size is smaller then 256MiB, but this threshold is no
+> longer correct and it should be 109MiB. Secondly, the --mixed option
 
-> This really sounds like broken hardware, not a kernel problem.
+I'm wondering if this 256M -> 109M change was made just recently or was
+made on old kernel.
 
-It is indeed a hardware issue, specifically the intel qat crypto
-driver that's in-tree - the hardware is fine (see below). The IQAT
-eratta documentation states that if a request is not submitted
-properly it can stall the entire device. The remediation guidance from
-2020 was "don't do that" and "don't allow unprivileged users access to
-the device". The in-tree driver is not implemented properly either for
-this SoC or board - I'm thinking it's related to QATE-7495.
+If it was changed just recently, say 5.14 kernel, I suspect that tests
+will fail on kernels prior to that change.
 
-https://01.org/sites/default/files/downloads//336211qatsoftwareforlinux-rn-hwversion1.7021.pdf
+But if this change was made on some acient kernels, say 4.10, then I
+think we're fine with this patch.
 
-> This implies a dmcrypt level problem - XFS can't make progress is dmcrypt is not completing IOs.
+Thanks,
+Eryu
 
-That's the weird part about it. Some bio's are completing, others are
-completely dropped, with some stalling forever. I had to use
-xfs_repair to get the volumes operational again. I lost a good deal of
-files and had to recover from backup after toggling the device back on
-on a production system (silly, I know).
-
-> Where are the XFS corruption reports that the subject implies is occurring?
-
-I think you're right, it's dm-crypt that's broken here, with
-ultimately the crypto driver causing this corruption. XFS being the
-edge to the end-user is taking the brunt of it. There's reports going
-back to late 2017 of significant issues with this mainlined stable
-driver.
-
-https://bugzilla.redhat.com/show_bug.cgi?id=1522962
-https://serverfault.com/questions/1010108/luks-hangs-on-centos-running-on-atom-c3758-cpu
-https://www.phoronix.com/forums/forum/software/distributions/1172231-fedora-33-s-enterprise-linux-next-effort-approved-testbed-for-raising-cpu-requirements-etc?p=1174560#post1174560
-
-Any guidance would be appreciated.
-Kyle.
-On Sat, Feb 19, 2022 at 1:03 PM Dave Chinner <david@fromorbit.com> wrote:
->
-> On Fri, Feb 18, 2022 at 09:02:28PM -0800, Kyle Sanderson wrote:
-> > A2SDi-8C-HLN4F has IQAT enabled by default, when this device is
-> > attempted to be used by xfs (through dm-crypt) the entire kernel
-> > thread stalls forever. Multiple users have hit this over the years
-> > (through sporadic reporting) - I ended up trying ZFS and encryption
-> > wasn't an issue there at all because I guess they don't use this
-> > device. Returning to sanity (xfs), I was able to provision a dm-crypt
-> > volume no problem on the disk, however when running mkfs.xfs on the
-> > volume is what triggers the cascading failure (each request kills a
-> > kthread).
->
-> Can you provide the full stack traces for these errors so we can see
-> exactly what this cascading failure looks like, please? In reality,
-> the stall messages some time after this are not interesting - it's
-> the first errors that cause the stall that need to be investigated.
->
-> A good idea would be to provide the full storage stack decription
-> and hardware in use, as per:
->
-> https://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
->
-> > Disabling IQAT on the south bridge results in a working
-> > system, however this is not the default configuration for the
-> > distribution of choice (Ubuntu 20.04.3 LTS), nor the motherboard. I'm
-> > convinced this never worked properly based on the lack of popularity
-> > for kernel encryption (crypto), and the embedded nature that
-> > SuperMicro has integrated this device in collaboration with intel as
-> > it looks like the primary usage is through external accelerator cards.
->
-> This really sounds like broken hardware, not a kernel problem.
->
-> > Kernels tried were from RHEL8 over a year ago, and this impacts the
-> > entirety of the 5.4 series on Ubuntu.
-> > Please CC me on replies as I'm not subscribed to all lists. CPU is C3758.
->
-> [snip stalled kcryptd worker threads]
->
-> This implies a dmcrypt level problem - XFS can't make progress is
-> dmcrypt is not completing IOs.
->
-> Where are the XFS corruption reports that the subject implies is
-> occurring?
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
+> shall not be specified to mkfs.btrfs for zoned devices, since zoned
+> devices does not allow mixing metadata blocks and data blocks.
+> 
+> Suggested-by: Naohiro Aota <naohiro.aota@wdc.com>
+> Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+> Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+> ---
+>  common/rc | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/common/rc b/common/rc
+> index de60fb7b..74d2d8bd 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -1075,10 +1075,10 @@ _scratch_mkfs_sized()
+>  		;;
+>  	btrfs)
+>  		local mixed_opt=
+> -		# minimum size that's needed without the mixed option.
+> -		# Ref: btrfs-prog: btrfs_min_dev_size()
+> -		# Non mixed mode is also the default option.
+> -		(( fssize < $((256 * 1024 *1024)) )) && mixed_opt='--mixed'
+> +		# Mixed option is required when the filesystem size is small and
+> +		# the device is not zoned. Ref: btrfs-progs: btrfs_min_dev_size()
+> +		(( fssize < $((109 * 1024 * 1024)) )) &&
+> +			! _scratch_btrfs_is_zoned && mixed_opt='--mixed'
+>  		$MKFS_BTRFS_PROG $MKFS_OPTIONS $mixed_opt -b $fssize $SCRATCH_DEV
+>  		;;
+>  	jfs)
+> -- 
+> 2.34.1
