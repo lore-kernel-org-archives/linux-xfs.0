@@ -2,253 +2,233 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 319E8C433F5
-	for <linux-xfs@archiver.kernel.org>; Sun, 20 Feb 2022 18:48:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC3FBC433FE
+	for <linux-xfs@archiver.kernel.org>; Mon, 21 Feb 2022 07:02:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244553AbiBTSsl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 20 Feb 2022 13:48:41 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:33170 "EHLO
+        id S1345781AbiBUHC5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 21 Feb 2022 02:02:57 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:43578 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243159AbiBTSsl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 20 Feb 2022 13:48:41 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A9F5049FBB
-        for <linux-xfs@vger.kernel.org>; Sun, 20 Feb 2022 10:48:16 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1645382895;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=hQOF9o9Ir9lLeGi1kIXbP3UrCSAhDCjR53Cx+Cl0DQA=;
-        b=A86gt9WhyA8Gbwlh18sFXoA0uYgasqCbr8DZNMQu0A8pE/oExvynaxpcK03UH1b/j16PGz
-        +ggvfj3lJy1cBI2Zot3qjcptV3VXTj+Ur5fJpI9b0A8E0OOvA8G6sEAC46FMMvOB7fLB8A
-        W/Uc+/CqIpgBrtXOAlctt9dM/iCJLqc=
-Received: from mail-qv1-f72.google.com (mail-qv1-f72.google.com
- [209.85.219.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-314-444wvNQENNuseY_LQaMQ2A-1; Sun, 20 Feb 2022 13:48:14 -0500
-X-MC-Unique: 444wvNQENNuseY_LQaMQ2A-1
-Received: by mail-qv1-f72.google.com with SMTP id i20-20020a056214031400b0043185095fe2so2496486qvu.10
-        for <linux-xfs@vger.kernel.org>; Sun, 20 Feb 2022 10:48:14 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=hQOF9o9Ir9lLeGi1kIXbP3UrCSAhDCjR53Cx+Cl0DQA=;
-        b=pdG/Sx9OV0Wmh5/Z1auwkIyHJlDcz3zZKPqVgTvgt2pu9noRATN1JCAS6L0PE9lW58
-         quezhJjW2DJiAx9UleoZEG9PSS0OSvb9zt77B8qZ/VHclSF9GjFO9xK9alK/7fGXGopt
-         WK/IDNjEvPDjLQa8Bk9MPQrppKVCvU6XUZGf+d73C6uA7JzmYll/YbDzxGzY84hH/t1Y
-         aUzXkmhUkEWHZx5zNYJN2neW/ZxHWZh4MsHzOkvbPVmNe3XNVPZaTQd3RMnBILgb0pk4
-         u4OGGYJyz+FSrequCojVe9SEgXYCQCanCkoK4BEgqfn9dBlH94kQYT/cEHpBM9RqfOCA
-         UQKA==
-X-Gm-Message-State: AOAM530oLzrpHOfJveWuKmijKB4aKckhgS4/nUuGNfjwF9qQjzocypNp
-        OrziapdlSKfy2pA655ltnMCC8fG0P7lxiH1TRmTfQJieFLnm3xFT4NBfpl7PPWgTs4NgBtkZ6Q8
-        K079xp3HV495oFUQF3Tns
-X-Received: by 2002:ad4:4e61:0:b0:42d:1b44:44c4 with SMTP id ec1-20020ad44e61000000b0042d1b4444c4mr12730940qvb.44.1645382893627;
-        Sun, 20 Feb 2022 10:48:13 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJzLUrBKZG+/332fT1mFQ7rUFfj7G/p24faXdH5LOdt7VaDikAltUJBir10ilt0WNBoEN4qHng==
-X-Received: by 2002:ad4:4e61:0:b0:42d:1b44:44c4 with SMTP id ec1-20020ad44e61000000b0042d1b4444c4mr12730924qvb.44.1645382893237;
-        Sun, 20 Feb 2022 10:48:13 -0800 (PST)
-Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
-        by smtp.gmail.com with ESMTPSA id w10sm30143375qtj.73.2022.02.20.10.48.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 20 Feb 2022 10:48:12 -0800 (PST)
-Date:   Sun, 20 Feb 2022 13:48:10 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH RFC 3/4] xfs: crude chunk allocation retry mechanism
-Message-ID: <YhKM6u3yuF1Ek4/w@bfoster>
-References: <20220217172518.3842951-1-bfoster@redhat.com>
- <20220217172518.3842951-4-bfoster@redhat.com>
- <20220217232033.GD59715@dread.disaster.area>
- <Yg+rdFRpvra8U25D@bfoster>
- <20220218225440.GE59715@dread.disaster.area>
+        with ESMTP id S1345757AbiBUHC4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Feb 2022 02:02:56 -0500
+Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7F1B2180;
+        Sun, 20 Feb 2022 23:02:33 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1645426953; x=1676962953;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-id:content-transfer-encoding:
+   mime-version;
+  bh=0Oxcs+yebJGfAse4aP2bc1EmL5gV/Wu/hJ8JO3TZCfQ=;
+  b=FYsIFLiTzn52Lg8Horm9Pc2Dpp6FfCeeEB6T/F+8f1wbp2L4hyR+w/oU
+   6fLfR1splM+3nX5Az6vlbEb/bcgWy3ECiJefHilbZxyOIfAabS48wXvHO
+   e3iDtw1iBjEb6f6u6VGGwI3TbqhJMPefi5UqBiCa5ckyxBge5cgK7W4z9
+   kvoxomFA5jdIcpAMyHQtlOjdXSnxLE5IgiGJzMv8S5+cekKG4iKYN2Y9V
+   J4E34xk9V5I+5b6lnXEdzlPC5QniNejq9kGTiCxk585EA40Mf2WG3tZRn
+   4vbW0bhzjAb/hgxTjmEFE+59ulkOBLIE5iaMWpnQCQ1xdxSKmvT9dtuE1
+   g==;
+X-IronPort-AV: E=Sophos;i="5.88,385,1635177600"; 
+   d="scan'208";a="192426483"
+Received: from mail-bn8nam12lp2169.outbound.protection.outlook.com (HELO NAM12-BN8-obe.outbound.protection.outlook.com) ([104.47.55.169])
+  by ob1.hgst.iphmx.com with ESMTP; 21 Feb 2022 15:02:32 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=gg8HhI11jgdYJaV54PVBBpS3jSH7kDLjeEibcr4nqjMMJDbnEDhS1MAXlzgkN8oPkkS8aUg/jsUkQa4xgCeRk5unKeUIugk85G3l26jxyFG7U9fxTGtPPNxm9jmd0pyhc6MREa+oTGFELVZLeOyjHehSPqdXf56/ZVgxjm/FFl8vA+8/R+DjQaJQTdx+jMfbugEqfrtcBq6i428wH33V9aBtpO3rr2zp9jrfCZlmfN40j7nP4G4sRZWFkwu5drWj6bHb5AFfNdIBDE/RefMPVPT8nHuFGUV0P2+E+/CDSajKA9AuGtu7usvpxy7EkjQkq+fh32wtltgObvM+LVe+7w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=s+8vSv0P2n3eEL20OS1x/ei/4k+Ud6ol2VAXejvjjG0=;
+ b=cIE3hhDElF3kCozp8u6e8SLLHN20KQ6u94C45rSaHPcc1R/3r5Z1T5vCq3VVuBDjqY5ToB3pG+V9kOfwTMVDnmWYfpWamJ8VNSFWIpHYfI/f1acJNre8itl6aBD7CdUtpXDPMMgv++5wh4pWcNWQHqlOarFuYqD/pH7SdwFpZV4thXseLI+A91B78MeouB44UE+AOjDSHwPpbeMt+8r0P3LhOsCqYqfSN0lsoyjrzqOv/M4+c2oYOtCpGjO5z4l4MQ3u1uzqhIZBvSG2vJKSZ6IxeQ8DOlsEZ+5bS1hKOAOV6BcexEi4plHoatpte8IDvC9HLmf62W7klG2AEZx/zA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=s+8vSv0P2n3eEL20OS1x/ei/4k+Ud6ol2VAXejvjjG0=;
+ b=SjinosgZcJkJrZ62Qq7AfzhmaWHZ+0z8iHGR57SqPs/34V8RPVYOMOVv7d6G7yMiMvJjupQVk4KT3S3F9cIbAqoZIMy9YqnCbyOKzxEJMx4acUls1mxZqvN+DY0S9dXZgLe6+UR11NZYs/u0g9gkyvpeLQROe9eAiGhJaP63nnc=
+Received: from SJ0PR04MB7776.namprd04.prod.outlook.com (2603:10b6:a03:300::11)
+ by BN7PR04MB4289.namprd04.prod.outlook.com (2603:10b6:406:f2::23) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4995.16; Mon, 21 Feb
+ 2022 07:02:30 +0000
+Received: from SJ0PR04MB7776.namprd04.prod.outlook.com
+ ([fe80::d179:1a80:af1d:e8ee]) by SJ0PR04MB7776.namprd04.prod.outlook.com
+ ([fe80::d179:1a80:af1d:e8ee%6]) with mapi id 15.20.4995.027; Mon, 21 Feb 2022
+ 07:02:30 +0000
+From:   Naohiro Aota <Naohiro.Aota@wdc.com>
+To:     Eryu Guan <guan@eryu.me>
+CC:     Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+        "fstests@vger.kernel.org" <fstests@vger.kernel.org>,
+        "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
+        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Subject: Re: [PATCH v3 1/6] common/rc: fix btrfs mixed mode usage in
+ _scratch_mkfs_sized
+Thread-Topic: [PATCH v3 1/6] common/rc: fix btrfs mixed mode usage in
+ _scratch_mkfs_sized
+Thread-Index: AQHYJJmjoO7DDZp/HUO2SfmtKtOnLKycrX+AgADrSIA=
+Date:   Mon, 21 Feb 2022 07:02:30 +0000
+Message-ID: <20220221070229.2hs45fqk7fbfbgpk@naota-xeon>
+References: <20220218073156.2179803-1-shinichiro.kawasaki@wdc.com>
+ <20220218073156.2179803-2-shinichiro.kawasaki@wdc.com>
+ <YhJzp/dnfixk/nMn@desktop>
+In-Reply-To: <YhJzp/dnfixk/nMn@desktop>
+Accept-Language: ja-JP, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=wdc.com;
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 3816d5c8-4c33-43f5-be1c-08d9f508207e
+x-ms-traffictypediagnostic: BN7PR04MB4289:EE_
+x-microsoft-antispam-prvs: <BN7PR04MB4289019FCB7F8DE8FFE687228C3A9@BN7PR04MB4289.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: HVjqzI/N17/g7qCoPOLb7rgOVA9B683YXN2FRPq0rykubDqYVnCJ+qm/EombXXxfrKcSGiHV9Ff7kaMnAz6NevXhLpsmHHYDFWgFvOBB9+Fmnhh7kr3f6ZBvWelbwXM+tkDNYtI9OOoegTUBhRAldhzfJ4QZTMMEQiEWl7fHkcGSeiT2yCzfR5C8WRBxqXik3cuFcnKhamoQ/L5ObVEbyNjv3i906g1JHxqwY0wtiPZWKqkugjirNjKy+BheN66ntd6ImDpdWUmrAY6A9skLwYqlqaIFYxD8hCu1+9Y68JEVGJ0DXln50Skz/Z7gFdCa+mn4yX5ZcnV1+CE0eOu5odNvq3LWgsuX1zYLh3XZCrjtsKeqNlseEmrZYXfqK0NO+O8nwPuCBSGJJMoB0Pma4YfKEYPSl9zFynh0C/CKwS4enToRaQO1U2JPNTCxxmRaWO8YfhKkAq5MgJjFRC3Hc4HLLp0TfiX9+l8uKZsGxE2TmNKoXH4uiVZIlvKOmfZFyGNX/hVSJ5lwPFKpZBdDx8JZZ7Cn+X6qaBHRjxUJjBZqCVpaoLu6gIAKwYhMK4+ulckmrxeRqFwp746xRumUAYriW1uMlTb9qqB19yLkBs8lyhpXs/YGEb6eoKrZ0XBCitLuo6+FcnPQajcldfYbSqLo/c+0bjDVAfbqLIZdDBquQCiGpPZlfLPBh7z3FtK0yBDlfFxH8dSHc19IUBpnad3eTp4DoQaE/8aP+nJP85ma4zn6CvBBWjtsahMJcFUJfd8CFuCUY4PYANyuH+nltjhlz/M+pwSfUoISEFNMBm0=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ0PR04MB7776.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(7916004)(366004)(33716001)(316002)(66446008)(66476007)(66556008)(66946007)(966005)(76116006)(64756008)(4326008)(8676002)(91956017)(508600001)(6486002)(5660300002)(6506007)(9686003)(6512007)(2906002)(38070700005)(1076003)(82960400001)(71200400001)(26005)(186003)(38100700002)(86362001)(122000001)(8936002)(54906003)(6916009)(83380400001);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?aumfUXhjLr8HWRKXdOatpnnFcPkp4CXXy6/24G38+BmjlEY/G9/wLaQfP9lx?=
+ =?us-ascii?Q?oA/sWxWntL3ZyYikq2qwwXsbYB87/3PHA6hAEmAbXpPQiShddwjxyuRo6S9f?=
+ =?us-ascii?Q?CqlN0sGfhTSXiyPm6JGz2cnWG0Y28TpSzYt0N2stsLfa+/eknD2vMQTRcyET?=
+ =?us-ascii?Q?Pjyq4Y4O3CxS0nGv9JNJ8ig+3VAKbmxlj+BUoTfdWKTKuu22QO5wEHRvG9qF?=
+ =?us-ascii?Q?KWR9jOXuSDKMNG8JUZnXRA8dMWY2gmQAwQ+xvjmvrLbVHaUE8KIbZc7vZKlY?=
+ =?us-ascii?Q?hFv4WDHE8ArQRJCjhqqXjRxf1U0/i/PCmK1vyeVcDxl7+Wm92PLBGvJv9QxL?=
+ =?us-ascii?Q?gMBYAeA5/NJ+2pUt+ixQm2Mhx/jEJ8WCRLhl7oeSZLh/h1GgPhVzrMpo836F?=
+ =?us-ascii?Q?lE95aEsU+tkyB4jRcuhgOwGiQxeY7+l3A3m9xBBzfP5lSndk1aere1ztcB81?=
+ =?us-ascii?Q?EI7qqk/MVTM+krO9rTsoKRJa9GMF091AmHxY8q++oa5zqE6Es3AQEgvhGg+/?=
+ =?us-ascii?Q?smMDiEIY2QiZZrhIk2rwXoKdTuWDBEMXguQIDYWuiVYRtg8BtLN5EvwOk7Sd?=
+ =?us-ascii?Q?vRUWEWIwAwjkxw5Z5IyH7BjT2/OC4cFzK+BhO2Uj7pem9PRXSDLwGMSioDvT?=
+ =?us-ascii?Q?yonSuktmzJcwN/z6UMofDV5saWzw6oqFc8cNEJ97pI6SVz81Po3a8LAF0F06?=
+ =?us-ascii?Q?ggunAw6mHs3Xs7zCI5Qp8PDJ7xdbp0ufq4BDaOXvpH79J8f4xGRt6qz1RdEf?=
+ =?us-ascii?Q?6WAifzCkzWiindsuGEmwObS9ZSEXUPCOfbUbOgxkXqdPDMyMGjD3mJ99k3oF?=
+ =?us-ascii?Q?bEFZeeaU6Fa0bSGDqwg7M5eMzSOmmAGP9FiXG2bod1v6Juxw+JDSvmF26n9V?=
+ =?us-ascii?Q?r4vgF6gqHQsR117pkEX5EclEbwHkjdqC30blXdmFs9RljR3YpUaF/zBVE6u+?=
+ =?us-ascii?Q?nZZJpXz0JlRHnJNRLNf134Shm8fSSYwEG87nSwytT+PYyDYuzaZw36OF+ZyJ?=
+ =?us-ascii?Q?H7BSYm+dwzDDT/toPQd+u+LHEbKvJsDzdl2RTsKMST6cQ5gIqBvTO9YwU0Wg?=
+ =?us-ascii?Q?Rv69JuY3k8lUPqXFU/t2mzAxhPrd2JQjf4tx+j/ppOYrUd6nxZdkp2FbV25o?=
+ =?us-ascii?Q?zkEGc8pwiZ3pO/ca1SyWe23t0ZREKWnsaRCcuAUpeIASxNoGtGGr6iZCQj+v?=
+ =?us-ascii?Q?gFesZQ0CgmkBfMATY+VDZJj9l0DiUEj1o1BfMiAq4N7BoloLJfAFYIEamIQk?=
+ =?us-ascii?Q?OdtXplTDq8CtpzTeJ/n9iQemmicztSjZ+r/D+VZofaxbDh5fjsCR+X1LBI+p?=
+ =?us-ascii?Q?+H92pkhJVAFfo2Jvk2dnDJ/2JJem5AH2xr2XP+JjqdR6F3vqoAovGk+O1Y7X?=
+ =?us-ascii?Q?nNZVnAo6rP/WwJj1I7Cz8L8aruDPxC+zlWaEtHM2ORVyTqJvqXRJY1cvEhaM?=
+ =?us-ascii?Q?HPiR9wQ/XSCfHr83VC8xPJsnBh5JehxRHzkYmkvql9ArteBUHhY5yzXhYbbp?=
+ =?us-ascii?Q?nROjaELQubUqRaFNYmpbXVfha5vaLiwO4fhdA6Q+Xd7VgObgcp7vhO4B8JEQ?=
+ =?us-ascii?Q?P4PQNY1LjpRKYLiIuce9WwavkRD+QrdZqlREeeLiK9xOK2kVCGL9X6164zm4?=
+ =?us-ascii?Q?Er+QV/zl7uEyBubHFPtcg7M=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <7656ADB8E9EE0C4D8F675248B50FEA5B@namprd04.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220218225440.GE59715@dread.disaster.area>
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SJ0PR04MB7776.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3816d5c8-4c33-43f5-be1c-08d9f508207e
+X-MS-Exchange-CrossTenant-originalarrivaltime: 21 Feb 2022 07:02:30.2262
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: JZY9zD6CHvgtENOuaqyisWGDYoyU5km0kVabQnZYNPjDiw9uguKib9YWGEIn1qCtL8UCTXIlqpHM2iojOFRQVA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN7PR04MB4289
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Feb 19, 2022 at 09:54:40AM +1100, Dave Chinner wrote:
-> On Fri, Feb 18, 2022 at 09:21:40AM -0500, Brian Foster wrote:
-> > On Fri, Feb 18, 2022 at 10:20:33AM +1100, Dave Chinner wrote:
-> > > On Thu, Feb 17, 2022 at 12:25:17PM -0500, Brian Foster wrote:
-> > > > The free inode btree currently tracks all inode chunk records with
-> > > > at least one free inode. This simplifies the chunk and allocation
-> > > > selection algorithms as free inode availability can be guaranteed
-> > > > after a few simple checks. This is no longer the case with busy
-> > > > inode avoidance, however, because busy inode state is tracked in the
-> > > > radix tree independent from physical allocation status.
-> > > > 
-> > > > A busy inode avoidance algorithm relies on the ability to fall back
-> > > > to an inode chunk allocation one way or another in the event that
-> > > > all current free inodes are busy. Hack in a crude allocation
-> > > > fallback mechanism for experimental purposes. If the inode selection
-> > > > algorithm is unable to locate a usable inode, allow it to return
-> > > > -EAGAIN to perform another physical chunk allocation in the AG and
-> > > > retry the inode allocation.
-> > > > 
-> > > > The current prototype can perform this allocation and retry sequence
-> > > > repeatedly because a newly allocated chunk may still be covered by
-> > > > busy in-core inodes in the radix tree (if it were recently freed,
-> > > > for example). This is inefficient and temporary. It will be properly
-> > > > mitigated by background chunk removal. This defers freeing of inode
-> > > > chunk blocks from the free of the last used inode in the chunk to a
-> > > > background task that only frees chunks once completely idle, thereby
-> > > > providing a guarantee that a new chunk allocation always adds
-> > > > non-busy inodes to the AG.
-> > > 
-> > > I think you can get rid of this simply by checking the radix tree
-> > > tags for busy inodes at the location of the new inode chunk before
-> > > we do the cluster allocation. If there are busy inodes in the range
-> > > of the chunk (pure gang tag lookup, don't need to dereference any of
-> > > the inodes), just skip to the next chunk offset and try that. Hence
-> > > we only ever end up allocating a chunk that we know there are no
-> > > busy inodes in and this retry mechanism is unnecessary.
-> > > 
-> > 
-> > The retry mechanism exists in this series due to the factoring of the
-> > inode allocation code moreso than whether the fallback is guaranteed to
-> > provide a fully non-busy chunk or not. As the prototype is written, the
-> > inode scan still needs to fall back at least once even with such a
-> > guarantee (see my reply on the previous patch around cleaning up that
-> > particular wart).
-> > 
-> > With regard to checking busy inode state, that is pretty much what I was
-> > referring to by filtering or hinting the block allocation when we
-> > discussed this on IRC. I'm explicitly trying to avoid that because for
-> > one it unnecessarily spreads concern about busy inodes across layers. On
-> > top of that, it assumes that there will always be some usable physical
-> > block range available without busy inodes, which is not the case. That
-> > means we now need to consider the fact that chunk allocation might fail
-> > for reasons other than -ENOSPC and factor that into the inode allocation
-> > algorithm. IOW, ISTM this just unnecessarily complicates things for
-> > minimal benefit.
-> 
-> For the moment, if inode allocation fails because we have busy
-> inodes after chunk allocation has already been done, then we are
-> hitting a corner case that isn't typical fast path operation. I
-> think that we should not complicate things by trying to optimise
-> this case unnecessarily.
-> 
+On Mon, Feb 21, 2022 at 01:00:23AM +0800, Eryu Guan wrote:
+> On Fri, Feb 18, 2022 at 04:31:51PM +0900, Shin'ichiro Kawasaki wrote:
+> > The helper function _scratch_mkfs_sized needs a couple of improvements
+> > for btrfs. At first, the function adds --mixed option to mkfs.btrfs whe=
+n
+> > the filesystem size is smaller then 256MiB, but this threshold is no
+> > longer correct and it should be 109MiB. Secondly, the --mixed option
+>=20
+> I'm wondering if this 256M -> 109M change was made just recently or was
+> made on old kernel.
 
-Not really, it's one of the first problems I ran into with the chunk
-allocation fallback in place.
+The check is imposed from the userland tool btrfs-progs. The value is
+calculated from a code in 31d228a2eb98 ("btrfs-progs: mkfs: Enhance
+minimal device size calculation to fix mkfs failure on small file"),
+which is released around v4.14.
 
-> I'd just expedite reclaim using synchronize_rcu() and re-run the
-> finobt scan as it will always succeed the second time because we
-> haven't dropped the AGI log and all freed inodes have now passed
-> through a grace period. Indeed, we need this expedited reclaim path
-> anyway because if we fail to allocate a new chunk and there are busy
-> inodes, we need to wait for busy inodes to become unbusy to avoid
-> premature ENOSPC while there are still avaialbe free inodes.
-> 
+But, after rechecking the code, the size part of the patch looks
+invalid to me. My bad.
 
-My experiments to this point suggest that would be extremely slow, to
-the point where there's not much value to anything beyond patch 1. The
-finobt is going to be relatively small with any sort of mixed alloc/free
-workload as records cycle in and out, so a "sync per batch" is
-effectively the behavior I already see with patch 1 alone and it's a
-performance killer (with non-expedited grace periods, at least). We do
-need the rcu sync -ENOSPC fallback as you say, but IMO it should be a
-last resort.
+https://github.com/kdave/btrfs-progs/blob/master/mkfs/common.c#L651
 
-> In the case of the updated inode lifecycle stuff I'm working on, a
-> log force will replace the synchronise_rcu() call because the inodes
-> will be XFS_ISTALE and journal IO completion of the cluster buffers
-> will trigger the inodes to be reclaimed immediately as writeback is
-> elided for XFS_ISTALE inodes. We may need an AIL push in other
-> cases, but I'll cross that river when I get to it.
-> 
+As said in 50c1905c2795 ("btrfs: _scratch_mkfs_sized fix min size
+without mixed option"), we need to consider every possible profile to
+decide the minimal value.
 
-Ok.
+That gives me:
 
-> > The point of background freeing inode chunks was that it makes this
-> > problem go away because then we ensure that inode chunks aren't freed
-> > until all associated busy inodes are cleared, and so we preserve the
-> > historical behavior that an inode chunk allocation guarantees immediate
-> > ability to allocate an inode. I thought we agreed in the previous
-> > discussion that this was the right approach since it seemed to be in the
-> > long term direction for XFS anyways.. hm?
-> 
-> Long term, yes, but we need something that works effectively and
-> efficiently now, with minimal additional overhead, because we're
-> going to have to live with this code in the allocation fast path for
-> some time yet.
-> 
+- reserved +=3D BTRFS_BLOCK_RESERVED_1M_FOR_SUPER +
+	    BTRFS_MKFS_SYSTEM_GROUP_SIZE + SZ_8M * 2;
+  --> reserved =3D 1M + 4M + 8M * 2 =3D 21M
 
-Right, but I thought this is why we were only going to do the background
-freeing part of the whole "background inode management" thing?
+- meta_size =3D SZ_8M + SZ_32M;
+- meta_size *=3D 2;
+- reserved +=3D meta_size;
+  --> reserved =3D 21M + (8M + 32M) * 2 =3D 101M
 
-Short of that, I'm not aware of a really great option atm. IMO, pushing
-explicit busy inode state/checking down into the block allocator is kind
-of a gross layering violation. The approach this series currently uses
-is simple and effective, but it's an unbound retry mechanism that just
-continues to allocate chunks until we get one we can use, which is too
-crude for production.
+- data_size =3D 64M;
+- data_size *=3D 2;
+- reserved +=3D data_size;
+  --> reserved =3D 101M + 64M * 2 =3D 229M
 
-Perhaps a simple enough short term option is to use the existing block
-alloc min/max range mechanisms (as mentioned on IRC). For example:
+We can also confirm the calculation with a zero size file:
 
-- Use the existing min/max_agbno allocation arg input values to attempt
-  one or two chunk allocs outside of the known range of busy inodes for
-  the AG (i.e., allocate blocks higher than the max busy agino or lower
-  than the min busy agino).
-- If success, then we know we've got a chunk w/o busy inodes.
-- If failure, fall back to the existing chunk alloc calls, take whatever
-  we get and retry the finobt scan (perhaps more aggressively checking
-  each record) hoping we got a usable new record.
-- If that still fails, then fall back to synchronize_rcu() as a last
-  resort and grab one of the previously busy inodes.
+   $ mkfs.btrfs -f -d DUP -m DUP btrfs.img
+   btrfs-progs v5.16=20
+   See http://btrfs.wiki.kernel.org for more information.
+  =20
+   ERROR: 'btrfs.img' is too small to make a usable filesystem
+   ERROR: minimum size for each btrfs device is 240123904
 
-I couldn't say for sure if that would be effective enough without
-playing with it a bit, but that would sort of emulate an algorithm that
-filtered chunk block allocations with at least one busy inode without
-having to modify block allocation code. If it avoids an RCU sync in the
-majority of cases it might be effective enough as a stopgap until
-background freeing exists. Thoughts?
+So, the original 256MB is roughly correct.
 
-> Really, I want foreground inode allocation to know nothing about
-> inode chunk allocation. If there are no inodes available for
-> allocation, it kicks background inode chunk management and sleeps
-> waiting for to be given an allocated inode it can use. It shouldn't
-> even have to know about busy inodes - just work from an in-memory
-> per-ag free list of inode numbers that can be immediately allocated.
-> 
-> In this situation, inodes that have been recently unlinked don't
-> show up on that list until they can be reallocated safely. This
-> is all managed asynchronously in the background by the inodegc state
-> machine (what I'm currently working on) and when the inode is
-> finally reclaimed it is moved into the free list and allowed to be
-> reallocated.
-> 
-
-I think that makes a lot of sense. That's quite similar to another
-experiment I was playing with that essentially populated a capped size
-pool of background inactivated inodes that the allocation side could
-pull directly from (i.e., so allocation actually becomes a radix tree
-lookup instead of a filtered btree scan), but so far I was kind of
-fighting with the existing mechanisms, trying not to peturb sustained
-remove performance, etc., and hadn't been able to produce a performance
-benefit yet. Perhaps this will work out better with the bigger picture
-changes to inode lifecycle and background inode management in place..
-
-Brian
-
-> IOWs, the long term direction is to make sure that the
-> foreground inode allocator doesn't even know about the existence of
-> busy inodes and it gets faster and simpler as we push all the mess
-> into the background that runs all the slow path allocation and
-> freeing algorithms.
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-
+> If it was changed just recently, say 5.14 kernel, I suspect that tests
+> will fail on kernels prior to that change.
+>=20
+> But if this change was made on some acient kernels, say 4.10, then I
+> think we're fine with this patch.
+>=20
+> Thanks,
+> Eryu
+>=20
+> > shall not be specified to mkfs.btrfs for zoned devices, since zoned
+> > devices does not allow mixing metadata blocks and data blocks.
+> >=20
+> > Suggested-by: Naohiro Aota <naohiro.aota@wdc.com>
+> > Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+> > Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+> > ---
+> >  common/rc | 8 ++++----
+> >  1 file changed, 4 insertions(+), 4 deletions(-)
+> >=20
+> > diff --git a/common/rc b/common/rc
+> > index de60fb7b..74d2d8bd 100644
+> > --- a/common/rc
+> > +++ b/common/rc
+> > @@ -1075,10 +1075,10 @@ _scratch_mkfs_sized()
+> >  		;;
+> >  	btrfs)
+> >  		local mixed_opt=3D
+> > -		# minimum size that's needed without the mixed option.
+> > -		# Ref: btrfs-prog: btrfs_min_dev_size()
+> > -		# Non mixed mode is also the default option.
+> > -		(( fssize < $((256 * 1024 *1024)) )) && mixed_opt=3D'--mixed'
+> > +		# Mixed option is required when the filesystem size is small and
+> > +		# the device is not zoned. Ref: btrfs-progs: btrfs_min_dev_size()
+> > +		(( fssize < $((109 * 1024 * 1024)) )) &&
+> > +			! _scratch_btrfs_is_zoned && mixed_opt=3D'--mixed'
+> >  		$MKFS_BTRFS_PROG $MKFS_OPTIONS $mixed_opt -b $fssize $SCRATCH_DEV
+> >  		;;
+> >  	jfs)
+> > --=20
+> > 2.34.1=
