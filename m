@@ -2,66 +2,111 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A941C433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 21 Feb 2022 18:40:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 684AAC433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 21 Feb 2022 20:55:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231841AbiBUSkt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 21 Feb 2022 13:40:49 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:56310 "EHLO
+        id S234068AbiBUUz5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 21 Feb 2022 15:55:57 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:33200 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232589AbiBUSil (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Feb 2022 13:38:41 -0500
-X-Greylist: delayed 942 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 21 Feb 2022 10:38:17 PST
-Received: from relay.sw.ru (unknown [130.117.225.111])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23DC8C2A
-        for <linux-xfs@vger.kernel.org>; Mon, 21 Feb 2022 10:38:16 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=virtuozzo.com; s=relay; h=MIME-Version:Message-Id:Date:Subject:From:
-        Content-Type; bh=tlS9GVyAwtLf0jhaq9JCh80sXEMylERk+MywO2YzoE0=; b=RFY+Y8nCLD8o
-        liEjSeJK0hOpe7E60FvXusIdSK1gOSez+92ifn7C5zvq3CbcZYwdRTRw92Rbf4ZxZjOOJ7zKUCvX+
-        SMa+CVOj9VsoXNhfaAnlMGVvAJZ9k0fTyEQfO2htLtdA1SEq3j0fD2yQDRXV42VXxwTH2/1sH1+lR
-        f9ZQA=;
-Received: from vz-out.virtuozzo.com ([185.231.240.5] helo=dptest2.perf.sw.ru)
-        by relay.sw.ru with esmtp (Exim 4.94.2)
-        (envelope-from <andrey.zhadchenko@virtuozzo.com>)
-        id 1nMDKD-002wpF-0q; Mon, 21 Feb 2022 19:22:17 +0100
-From:   Andrey Zhadchenko <andrey.zhadchenko@virtuozzo.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     christian.brauner@ubuntu.com, hch@lst.de, djwong@kernel.org
-Subject: [PATCH] xfs: do not clear S_ISUID|S_ISGID for idmapped mounts
-Date:   Mon, 21 Feb 2022 21:22:18 +0300
-Message-Id: <20220221182218.748084-1-andrey.zhadchenko@virtuozzo.com>
-X-Mailer: git-send-email 2.35.0.rc2
+        with ESMTP id S231537AbiBUUz5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Feb 2022 15:55:57 -0500
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2C90E237F1;
+        Mon, 21 Feb 2022 12:55:33 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-17-0.pa.vic.optusnet.com.au [49.186.17.0])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 80EBD10C8085;
+        Tue, 22 Feb 2022 07:55:30 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nMFiT-00EobO-F8; Tue, 22 Feb 2022 07:55:29 +1100
+Date:   Tue, 22 Feb 2022 07:55:29 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     kernel test robot <oliver.sang@intel.com>, lkp@lists.01.org,
+        lkp@intel.com, LKML <linux-kernel@vger.kernel.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+Subject: Re: [mm/readahead]  a0b99df1aa: xfstests.xfs.421.fail
+Message-ID: <20220221205529.GH59715@dread.disaster.area>
+References: <20220221080217.GB835@xsang-OptiPlex-9020>
+ <YhOaJ4cZU/1MiNI2@casper.infradead.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YhOaJ4cZU/1MiNI2@casper.infradead.org>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=6213fc44
+        a=+dVDrTVfsjPpH/ci3UuFng==:117 a=+dVDrTVfsjPpH/ci3UuFng==:17
+        a=kj9zAlcOel0A:10 a=oGFeUVbbRNcA:10 a=7-415B0cAAAA:8
+        a=Mg3Te0UgBqLNUB_3bJUA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-xfs_fileattr_set() handles idmapped mounts correctly and do not drop this
-bits.
-Unfortunately chown syscall results in different callstask:
-i_op->xfs_vn_setattr()->...->xfs_setattr_nonsize() which checks if process
-has CAP_FSETID capable in init_user_ns rather than mntns userns.
+On Mon, Feb 21, 2022 at 01:56:55PM +0000, Matthew Wilcox wrote:
+> On Mon, Feb 21, 2022 at 04:02:18PM +0800, kernel test robot wrote:
+> > commit: a0b99df1aa37d714eb80be5fb54efd56c88a3336 ("mm/readahead: Add large folio readahead")
+> 
+> > xfs/420	- output mismatch (see /lkp/benchmarks/xfstests/results//xfs/420.out.bad)
+> >     --- tests/xfs/420.out	2022-02-17 11:55:00.000000000 +0000
+> >     +++ /lkp/benchmarks/xfstests/results//xfs/420.out.bad	2022-02-20 20:34:22.430378506 +0000
+> >     @@ -13,9 +13,7 @@
+> >      Seek holes and data in file2
+> >      Whence	Result
+> >      DATA	0
+> >     -HOLE	131072
+> >     -DATA	196608
+> >     -HOLE	262144
+> >     +HOLE	524288
+> 
+> Confirm this test now fails.  I don't think it's actually a bug,
+> though.  I think the test is now using larger pages to cache the
+> file, and it fails to report that there's a hole in the file.
+> Maybe there actually isn't a hole in the file any more; using
+> larger pages to cache the file means we'll now write more data
+> than we used to.
+> 
+> Adding XFS people for their thoughts.
+> 
+> Complete output:
+> 
+> $ diff -u ../ktest/tests/xfstests/tests/xfs/420.out ktest-out/xfstests/xfs/420.out.bad
+> --- ../ktest/tests/xfstests/tests/xfs/420.out	2021-07-05 15:49:45.539887305 -0400
+> +++ ktest-out/xfstests/xfs/420.out.bad	2022-02-21 08:14:40.000000000 -0500
+> @@ -13,9 +13,7 @@
+>  Seek holes and data in file2
+>  Whence	Result
+>  DATA	0
+> -HOLE	131072
+> -DATA	196608
+> -HOLE	262144
+> +HOLE	524288
+>  Compare files
+>  c2803804acc9936eef8aab42c119bfac  SCRATCH_MNT/test-420/file1
+>  017c08a9320aad844ce86aa9631afb98  SCRATCH_MNT/test-420/file2
+> @@ -28,9 +26,7 @@
+>  Seek holes and data in file2
+>  Whence	Result
+>  DATA	0
+> -HOLE	131072
+> -DATA	196608
+> -HOLE	262144
+> +HOLE	524288
+>  Compare files
+>  c2803804acc9936eef8aab42c119bfac  SCRATCH_MNT/test-420/file1
+>  017c08a9320aad844ce86aa9631afb98  SCRATCH_MNT/test-420/file2
+> 
+> So the file checksums are right, which means I didn't break the COW
+> functionality.  But we're no longer reporting a hole at 128k.
 
-Signed-off-by: Andrey Zhadchenko <andrey.zhadchenko@virtuozzo.com>
----
- fs/xfs/xfs_iops.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Can you post the contents of the 420.full output file so we can see
+what the output of the various commands that are run are? e.g.
+things like cowextsize that is configured, etc?
 
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 09211e1d08ad..5b1fe635d153 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -774,7 +774,7 @@ xfs_setattr_nonsize(
- 		 * cleared upon successful return from chown()
- 		 */
- 		if ((inode->i_mode & (S_ISUID|S_ISGID)) &&
--		    !capable(CAP_FSETID))
-+		    !capable_wrt_inode_uidgid(mnt_userns, inode, CAP_FSETID))
- 			inode->i_mode &= ~(S_ISUID|S_ISGID);
- 
- 		/*
+Cheers,
+
+Dave.
 -- 
-2.35.0.rc2
-
+Dave Chinner
+david@fromorbit.com
