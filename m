@@ -2,113 +2,75 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4423AC433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 23 Feb 2022 20:19:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 049F8C433EF
+	for <linux-xfs@archiver.kernel.org>; Wed, 23 Feb 2022 21:10:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237636AbiBWUUH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 23 Feb 2022 15:20:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48182 "EHLO
+        id S241070AbiBWVKi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 23 Feb 2022 16:10:38 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46852 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240939AbiBWUUE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Feb 2022 15:20:04 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C53704D250;
-        Wed, 23 Feb 2022 12:19:35 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=Q1W+354r1yFrfGm0Wpiyr0IKReRKDAIj1JkhtV8ApN4=; b=YGgXRvCbpk5F8XSat9aLJERqRt
-        uvxU9fNLZ3tVFbO6wVVfcvs50nr3cf5H7gX2BPAxBcDUUy1FZ5x2mET5uqAl6wI899vPUdWM3dla0
-        OlOJtzKg0dYs+GGKKJje/t6+2AiOMJj6k1clVh+rxEjldvYDMeuGL4JPCqX25k+7VtmqxwICsqfXE
-        4HspiUas5cpLisu8rBSNd49ThEma/VF98fiC0cqT04g6/xxBcqbqBqUQKotrra0s5w7bocnrglF+b
-        +G1YTZ8ssHi4kcsvoL9V8AQJXp2DegufRmkW0cAqrAJAvwHWSyxqDOZynmtng5x0cFRtW7O+HFEm7
-        tJoV73Kg==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nMy6g-0046Ei-VH; Wed, 23 Feb 2022 20:19:26 +0000
-Date:   Wed, 23 Feb 2022 20:19:26 +0000
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     kernel test robot <oliver.sang@intel.com>, lkp@lists.01.org,
-        lkp@intel.com, LKML <linux-kernel@vger.kernel.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
-Subject: Re: [mm/readahead]  a0b99df1aa: xfstests.xfs.421.fail
-Message-ID: <YhaWzsnreHHbJcmp@casper.infradead.org>
-References: <20220221080217.GB835@xsang-OptiPlex-9020>
- <YhOaJ4cZU/1MiNI2@casper.infradead.org>
- <20220221205529.GH59715@dread.disaster.area>
- <YhP/vPUcm4lUHzrg@casper.infradead.org>
- <20220221214355.GI59715@dread.disaster.area>
- <YhaSK5C9rGVD+7OQ@casper.infradead.org>
+        with ESMTP id S232658AbiBWVKh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Feb 2022 16:10:37 -0500
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A36444DF79
+        for <linux-xfs@vger.kernel.org>; Wed, 23 Feb 2022 13:10:09 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-17-0.pa.vic.optusnet.com.au [49.186.17.0])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id C793F10E1FD5;
+        Thu, 24 Feb 2022 08:10:07 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nMyti-00Fbj0-Lp; Thu, 24 Feb 2022 08:10:06 +1100
+Date:   Thu, 24 Feb 2022 08:10:06 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Emmanuel Florac <eflorac@intellique.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: experience with very large filesystems
+Message-ID: <20220223211006.GL59715@dread.disaster.area>
+References: <20220223163513.43f1f054@harpe.intellique.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YhaSK5C9rGVD+7OQ@casper.infradead.org>
+In-Reply-To: <20220223163513.43f1f054@harpe.intellique.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=6216a2b1
+        a=+dVDrTVfsjPpH/ci3UuFng==:117 a=+dVDrTVfsjPpH/ci3UuFng==:17
+        a=kj9zAlcOel0A:10 a=oGFeUVbbRNcA:10 a=7-415B0cAAAA:8
+        a=uNa512s-Ul_eXjojblQA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Feb 23, 2022 at 07:59:39PM +0000, Matthew Wilcox wrote:
-> > > /mnt/scratch/test-420/file2:
-> > >  EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL
-> > >    0: [0..255]:        128..383          0 (128..383)         256 100000
-> > >    1: [256..1023]:     hole                                   768
-> > 
-> > So this is the extent list for file2 after the reflink. Note the
-> > hole at 128-512kB. The flags tell us the 128kB data extent is
-> > shared. There are no unwritten extents at all.
+On Wed, Feb 23, 2022 at 04:35:13PM +0100, Emmanuel Florac wrote:
+> Hi everyone,
 > 
-> My debugging indicates otherwise:
+> I have a large filesystem (1.2 PiB) that's been working flawlessly for
+> 4 years (an LV aggregating 4 300~ish TB RAID-6 arrays). However it's
+> getting really full (more than 1.1 PiB full right now), and I'm
+> considering expanding it to 1.8 PiB or more.
 > 
-> +++ b/fs/iomap/seek.c
-> @@ -15,6 +15,7 @@ static loff_t iomap_seek_hole_iter(const struct iomap_iter *it
-> er,
->  {
->         loff_t length = iomap_length(iter);
-> 
-> +printk("%s %ld %d:%lld,%lld\n", __func__, iter->inode->i_ino, iter->iomap.type, iter->iomap.length);
->         switch (iter->iomap.type) {
->         case IOMAP_UNWRITTEN:
->                 *hole_pos = mapping_seek_hole_data(iter->inode->i_mapping,
-> @@ -61,6 +62,7 @@ static loff_t iomap_seek_data_iter(const struct iomap_iter *iter,
->  {
->         loff_t length = iomap_length(iter);
-> 
-> +printk("%s %ld %d:%lld,%lld\n", __func__, iter->inode->i_ino, iter->iomap.type, iter->iomap.length);
->         switch (iter->iomap.type) {
->         case IOMAP_HOLE:
->                 return length;
-> 
-> gives me output:
-> 
-> 00016 iomap_seek_hole_iter 68 2:131072,-131387284454392
-> 00016 iomap_seek_hole_iter 68 0:393216,-131387284454392
-> 00016 iomap_seek_data_iter 68 2:131072,-131387284454392
-> 00016 iomap_seek_hole_iter 68 2:131072,-131387284454392
-> 00016 iomap_seek_hole_iter 68 0:393216,-131387284454392
-> 00016 iomap_seek_data_iter 68 0:393216,-131387284454392
-> 00016 iomap_seek_hole_iter 69 2:131072,-131387284455352
-> 00016 iomap_seek_hole_iter 69 3:393216,4503599627239424
-> 00016 iomap_seek_data_iter 69 2:131072,-131387284455352
-> 00016 iomap_seek_hole_iter 69 2:131072,-131387284455352
-> 00016 iomap_seek_hole_iter 69 3:393216,4503599627239424
+> Any thoughts, caveats or else?
 
-I forgot to print 'offset' first, so that's showing (type:len,garbage)
-With that fixed, and a call to dump_page() in folio_seek_hole_data(),
-I see:
+From the filesystem side, that should not be an issue at all.
 
-00016 iomap_seek_hole_iter 69 3:131072,65536
-00016 page:00000000f7f02915 refcount:18 mapcount:0 mapping:000000008692207c index:0x20 pfn:0x108750
-00016 head:00000000f7f02915 order:4 compound_mapcount:0 compound_pincount:0
-00016 aops:0xffffffff81c32a00 ino:45 dentry name:"file2"
-00016 flags: 0x8000000000012014(uptodate|lru|private|head|zone=2)
-00016 raw: 8000000000012014 ffffea000421e008 ffffea000421d008 ffff888103947520
-00016 raw: 0000000000000020 ffff8881051cd2a0 00000012ffffffff 0000000000000000
-00016 page dumped because: folio_seek_hole_data
+From the storage side, you really want to expand the storage with
+chunks that have the same geometry (stripe unit and stripe width)
+so that it doesn't screw up the alignment of the filesystem to the
+new storage.
 
-(inode 69 decimal is 45 hex)
+And that's where the difficultly may lie. If the existing storage
+volume the filesystem sits on doesn't end exactly on a stripe width
+boundary, you're going to have to offset the start of the new
+storage volumes part way into the first stripe width in the volumes
+to ensure that when the filesystem expands, then end of the first
+stripe width in the new volume is exactly where the filesystem
+expects it to be.
 
-So I think this explains the output?  an order-4 page is 64kB, so it'll
-report the entirety of 128kB-192kB as data.
+Other than that, there shouldn't be any filesystem level concerns
+about doubling the size of the filesystem capacity via growfs.
 
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
