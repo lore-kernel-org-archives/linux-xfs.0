@@ -2,183 +2,208 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22AD3C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 23 Feb 2022 07:01:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA813C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 23 Feb 2022 08:12:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233368AbiBWHB3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 23 Feb 2022 02:01:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58380 "EHLO
+        id S238707AbiBWIM2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 23 Feb 2022 03:12:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55106 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238513AbiBWHB2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Feb 2022 02:01:28 -0500
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 478B06E2BC
-        for <linux-xfs@vger.kernel.org>; Tue, 22 Feb 2022 23:01:01 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-17-0.pa.vic.optusnet.com.au [49.186.17.0])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 5B51152ED24;
-        Wed, 23 Feb 2022 18:01:00 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nMldy-00FNIh-UQ; Wed, 23 Feb 2022 18:00:58 +1100
-Date:   Wed, 23 Feb 2022 18:00:58 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH RFC 3/4] xfs: crude chunk allocation retry mechanism
-Message-ID: <20220223070058.GK59715@dread.disaster.area>
-References: <20220217172518.3842951-1-bfoster@redhat.com>
- <20220217172518.3842951-4-bfoster@redhat.com>
- <20220217232033.GD59715@dread.disaster.area>
- <Yg+rdFRpvra8U25D@bfoster>
- <20220218225440.GE59715@dread.disaster.area>
- <YhKM6u3yuF1Ek4/w@bfoster>
+        with ESMTP id S232535AbiBWIM2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Feb 2022 03:12:28 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E07236305
+        for <linux-xfs@vger.kernel.org>; Wed, 23 Feb 2022 00:12:00 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id C0D34B81E7F
+        for <linux-xfs@vger.kernel.org>; Wed, 23 Feb 2022 08:11:58 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1F28EC340E7;
+        Wed, 23 Feb 2022 08:11:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1645603917;
+        bh=jOTU+dGSJoWq0NNRtf77UVHIOJSgKKpvQOLINbx8TDU=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=KoL0A540cBhlPpxA8+enCBTrMjaG3svs1aEmImDRedfRMQL0AR2f7VxgES6qP2tXc
+         P9A0K7TABPYOtXP4p2cIIOivAZOHLljweAD2DhIeonAh+t2EVStRrqkBD4fTIiJNj4
+         YrqMaOxQLpo6HH9/8SuAZTnMhl5QRB6x6nkVEP2+4FInx9UUU1Mh/xLZ8Z3ddte59z
+         mhEGC8ykW2RRAHy6W8uNv1Vlxipw/+MAPVkqnvCSmr2yLU1lUVH4+vQ7e92zGxTNn3
+         RSqdjP6xRRLWx2WHPr3hoys0J2ejTBMNSkwJUIi1soKp/zTXqktG7BcQ/Q96uc3cME
+         juUSICUKCU3tA==
+Date:   Wed, 23 Feb 2022 09:11:52 +0100
+From:   Christian Brauner <brauner@kernel.org>
+To:     Andrey Zhadchenko <andrey.zhadchenko@virtuozzo.com>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+        djwong@kernel.org
+Subject: Re: [PATCH] xfs: do not clear S_ISUID|S_ISGID for idmapped mounts
+Message-ID: <20220223081152.m2vddhq7znmjhabd@wittgenstein>
+References: <20220221182218.748084-1-andrey.zhadchenko@virtuozzo.com>
+ <20220222083340.GA5899@lst.de>
+ <20220222102405.mmqlzimwabz7v67d@wittgenstein>
+ <bdfa9081-1994-95f9-6feb-6710d34b33a1@virtuozzo.com>
+ <20220222122331.ijeapomur76h7xf6@wittgenstein>
+ <20220222123656.433l67bxhv3s2vbo@wittgenstein>
+ <48bcd8ac-f9e5-a83c-604c-5af602cb362a@virtuozzo.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <YhKM6u3yuF1Ek4/w@bfoster>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=6215dbac
-        a=+dVDrTVfsjPpH/ci3UuFng==:117 a=+dVDrTVfsjPpH/ci3UuFng==:17
-        a=kj9zAlcOel0A:10 a=oGFeUVbbRNcA:10 a=7-415B0cAAAA:8
-        a=Nzppoe_MrsEVaxlPlfkA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <48bcd8ac-f9e5-a83c-604c-5af602cb362a@virtuozzo.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Feb 20, 2022 at 01:48:10PM -0500, Brian Foster wrote:
-> On Sat, Feb 19, 2022 at 09:54:40AM +1100, Dave Chinner wrote:
-> > On Fri, Feb 18, 2022 at 09:21:40AM -0500, Brian Foster wrote:
-> > > The point of background freeing inode chunks was that it makes this
-> > > problem go away because then we ensure that inode chunks aren't freed
-> > > until all associated busy inodes are cleared, and so we preserve the
-> > > historical behavior that an inode chunk allocation guarantees immediate
-> > > ability to allocate an inode. I thought we agreed in the previous
-> > > discussion that this was the right approach since it seemed to be in the
-> > > long term direction for XFS anyways.. hm?
-> > 
-> > Long term, yes, but we need something that works effectively and
-> > efficiently now, with minimal additional overhead, because we're
-> > going to have to live with this code in the allocation fast path for
-> > some time yet.
-> > 
+On Tue, Feb 22, 2022 at 05:54:07PM +0300, Andrey Zhadchenko wrote:
 > 
-> Right, but I thought this is why we were only going to do the background
-> freeing part of the whole "background inode management" thing?
 > 
-> Short of that, I'm not aware of a really great option atm. IMO, pushing
-> explicit busy inode state/checking down into the block allocator is kind
-> of a gross layering violation. The approach this series currently uses
-> is simple and effective, but it's an unbound retry mechanism that just
-> continues to allocate chunks until we get one we can use, which is too
-> crude for production.
-
-*nod*
-
-Right, that's why I want to get this whole mechanism completely
-detached from the VFS inode RCU life cycle rules and instead
-synchronised by internal IO operations such as log forces.
-
-The code I currently have is based on your changes, just without the
-fallback chunk allocation. I'm not really even scanning the irecs;
-I just look at the number of free inodes and count the number of
-busy inodes over the range of the record. If they aren't the same,
-we've got inodes in that record we can allocate from. I only do a
-free inode-by-free inode busy check once the irec we are going to
-allocate from has been selected.
-
-Essentially, I'm just scanning records in the finobt to find the
-first with a non-busy inode. If we fall off the end of the finobt,
-it issues a log force and kicks the AIL and then retries the
-allocation from the finobt. There isn't any attempt to allocate new
-inode chunks in the case, but it may end up being necessary and can
-be done without falling back to the outer loops.
-
-i.e. as long as we track whether we've allocated a new inode chunk
-or not, we can bound the finobt search to a single retry. If we
-allocated a new chunk before entering the finobt search, then all we
-need is a log force because the busy inodes, by definition, are
-XFS_ISTALE at this point and waiting for a CIL push before they can
-be reclaimed. At this point an retry of the finobt scan will find
-those inodes that were busy now available for allocation.
-
-If we haven't allocated a new chunk, then we can do so immediately
-and retry the allocation. If we still find them all busy, we force
-the log...
-
-IOWs, once we isolate this busy inode tracking from the VFS inode
-RCU requirements, we can bound the allocation behaviour because
-chunk allocation and log forces provide us with a guarantee that the
-newly allocated inode chunks contain inodes that can be immediately
-reallocated without having to care about where the new inode chunk
-is located....
-
-> Perhaps a simple enough short term option is to use the existing block
-> alloc min/max range mechanisms (as mentioned on IRC). For example:
+> On 2/22/22 15:36, Christian Brauner wrote:
+> > On Tue, Feb 22, 2022 at 01:23:31PM +0100, Christian Brauner wrote:
+> > > On Tue, Feb 22, 2022 at 02:19:16PM +0300, Andrey Zhadchenko wrote:
+> > > > On 2/22/22 13:24, Christian Brauner wrote:
+> > > > > On Tue, Feb 22, 2022 at 09:33:40AM +0100, Christoph Hellwig wrote:
+> > > > > > On Mon, Feb 21, 2022 at 09:22:18PM +0300, Andrey Zhadchenko wrote:
+> > > > > > > xfs_fileattr_set() handles idmapped mounts correctly and do not drop this
+> > > > > > > bits.
+> > > > > > > Unfortunately chown syscall results in different callstask:
+> > > > > > > i_op->xfs_vn_setattr()->...->xfs_setattr_nonsize() which checks if process
+> > > > > > > has CAP_FSETID capable in init_user_ns rather than mntns userns.
+> > > > > > 
+> > > > > > Can you add an xfstests the exercises this path?
+> > > > > > 
+> > > > > > The fix itself looks good:
+> > > > > > 
+> > > > > > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > > > > 
+> > > > > So for anything other than directories the s{g,u}id bits are cleared on
+> > > > > every chown in notify_change() by the vfs; even for the root user (Also
+> > > > > documented on chown(2) manpage).
+> > > > 
+> > > > Only exception - chown preserves setgid bit set on a non-group-executable
+> > > > file (also documented there) but do not take root privileges into account at
+> > > > vfs level.
+> > > > 
+> > > > > 
+> > > > > So the only scenario were this change would be relevant is for
+> > > > > directories afaict:
+> > > > > 
+> > > > > 1. So ext4 has the behavior:
+> > > > > 
+> > > > >      ubuntu@f2-vm|~
+> > > > >      > mkdir suid.dir
+> > > > >      ubuntu@f2-vm|~
+> > > > >      > perms ./suid.dir
+> > > > >      drwxrwxr-x 775 (1000:1000) ./suid.dir
+> > > > >      ubuntu@f2-vm|~
+> > > > >      > chmod u+s ./suid.dir/
+> > > > >      ubuntu@f2-vm|~
+> > > > >      > perms ./suid.dir
+> > > > >      drwsrwxr-x 4775 (1000:1000) ./suid.dir
+> > > > >      ubuntu@f2-vm|~
+> > > > >      > chmod g+s ./suid.dir/
+> > > > >      ubuntu@f2-vm|~
+> > > > >      > perms ./suid.dir
+> > > > >      drwsrwsr-x 6775 (1000:1000) ./suid.dir
+> > > > >      ubuntu@f2-vm|~
+> > > > >      > chown 1000:1000 ./suid.dir/
+> > > > >      ubuntu@f2-vm|~
+> > > > >      > perms ./suid.dir/
+> > > > >      drwsrwsr-x 6775 (1000:1000) ./suid.dir/
+> > > > >      meaning that both s{g,u}id bits are retained for directories. (Just to
+> > > > >      make this explicit: changing {g,u}id to the same {g,u}id still ends up
+> > > > >      calling into the filesystem.)
+> > > > > 
+> > > > > 2. Whereas xfs currently has:
+> > > > > 
+> > > > >      brauner@wittgenstein|~
+> > > > >      > mkdir suid.dir
+> > > > >      brauner@wittgenstein|~
+> > > > >      > perms ./suid.dir
+> > > > >      drwxrwxr-x 775 ./suid.dir
+> > > > >      brauner@wittgenstein|~
+> > > > >      > chmod u+s ./suid.dir/
+> > > > >      brauner@wittgenstein|~
+> > > > >      > perms ./suid.dir
+> > > > >      drwsrwxr-x 4775 ./suid.dir
+> > > > >      brauner@wittgenstein|~
+> > > > >      > chmod g+s ./suid.dir/
+> > > > >      brauner@wittgenstein|~
+> > > > >      > perms ./suid.dir
+> > > > >      drwsrwsr-x 6775 ./suid.dir
+> > > > >      brauner@wittgenstein|~
+> > > > >      > chown 1000:1000 ./suid.dir/
+> > > > >      brauner@wittgenstein|~
+> > > > >      > perms ./suid.dir/
+> > > > >      drwxrwxr-x 775 ./suid.dir/
+> > > > >      meaning that both s{g,u}id bits are cleared for directories.
+> > > > > 
+> > > > > Since the vfs will always ensure that s{g,u}id bits are stripped for
+> > > > > anything that isn't a directory in the vfs:
+> > > > > - ATTR_KILL_S{G,U}ID is raised in chown_common():
+> > > > > 
+> > > > > 	if (!S_ISDIR(inode->i_mode))
+> > > > > 		newattrs.ia_valid |=
+> > > > > 			ATTR_KILL_SUID | ATTR_KILL_SGID | ATTR_KILL_PRIV;
+> > > > > 
+> > > > > - and then in notify_change() we'll get the bits stripped and ATTR_MODE
+> > > > >     raised:
+> > > > > 
+> > > > > 	if (ia_valid & ATTR_KILL_SUID) {
+> > > > > 		if (mode & S_ISUID) {
+> > > > > 			ia_valid = attr->ia_valid |= ATTR_MODE;
+> > > > > 			attr->ia_mode = (inode->i_mode & ~S_ISUID);
+> > > > > 		}
+> > > > > 	}
+> > > > > 	if (ia_valid & ATTR_KILL_SGID) {
+> > > > > 		if ((mode & (S_ISGID | S_IXGRP)) == (S_ISGID | S_IXGRP)) {
+> > > > 
+> > > > So SGID is not killed if there is no S_IXGRP (yet no capability check)
+> > > > 
+> > > > Actually I do not really understand why do kernel expects filesystems to
+> > > > further apply restrictions with CAP_FSETID. Why not kill it here since we
+> > > > have all info?
+> > > 
+> > > Some filesystems do treat the sgid behavior of directories special (some
+> > > network filesystems do where they send that information to the server
+> > > before updating the inode afair). So I'd rather not do that in there as
+> > > we're risking breaking expectations and it's a very sensitive change.
+> > > 
+> > > Plus, the logic is encapsulated in the vfs generic setattr_copy() helper
+> > > which nearly all filesystems call.
+> > > 
+> > > > 
+> > > > > 			if (!(ia_valid & ATTR_MODE)) {
+> > > > > 				ia_valid = attr->ia_valid |= ATTR_MODE;
+> > > > > 				attr->ia_mode = inode->i_mode;
+> > > > > 			}
+> > > > > 			attr->ia_mode &= ~S_ISGID;
+> > > > > 		}
+> > > > > 	}
+> > > > > 
+> > > > > we can change this codepath to just mirror setattr_copy() or switch
+> > > > > fully to setattr_copy() (if feasible).
+> > > > > 
+> > > > > Because as of right now the code seems to imply that the xfs code itself
+> > > > > is responsible for stripping s{g,u}id bits for all files whereas it is
+> > > > > the vfs that does it for any non-directory. So I'd propose to either try
+> > > > > and switch that code to setattr_copy() or to do open-code the
+> > > > > setattr_copy() check:
 > 
-> - Use the existing min/max_agbno allocation arg input values to attempt
->   one or two chunk allocs outside of the known range of busy inodes for
->   the AG (i.e., allocate blocks higher than the max busy agino or lower
->   than the min busy agino).
-> - If success, then we know we've got a chunk w/o busy inodes.
-> - If failure, fall back to the existing chunk alloc calls, take whatever
->   we get and retry the finobt scan (perhaps more aggressively checking
->   each record) hoping we got a usable new record.
-> - If that still fails, then fall back to synchronize_rcu() as a last
->   resort and grab one of the previously busy inodes.
+> I did some more research on it and seems like modes are already stripped
+> enough.
 > 
-> I couldn't say for sure if that would be effective enough without
-> playing with it a bit, but that would sort of emulate an algorithm that
-> filtered chunk block allocations with at least one busy inode without
-> having to modify block allocation code. If it avoids an RCU sync in the
-> majority of cases it might be effective enough as a stopgap until
-> background freeing exists. Thoughts?
-
-It might work, but I'm not a fan of how many hoops we are considering
-jumping through to avoid getting tangled up in the RCU requirements
-for VFS inode life cycles. I'd much prefer just being able to say
-"all inodes busy, log force, try again" like we do with busy extent
-limited block allocation...
-
-That said, the complexity gets moved elsewhere (the VFS inode
-lifecycle management) rather than into the inode allocator, but I
-think that's a valid trade-off because the RCU requirements for
-inode reallocation come from the VFS inode lifecycle constraints.
-
-> > Really, I want foreground inode allocation to know nothing about
-> > inode chunk allocation. If there are no inodes available for
-> > allocation, it kicks background inode chunk management and sleeps
-> > waiting for to be given an allocated inode it can use. It shouldn't
-> > even have to know about busy inodes - just work from an in-memory
-> > per-ag free list of inode numbers that can be immediately allocated.
-> > 
-> > In this situation, inodes that have been recently unlinked don't
-> > show up on that list until they can be reallocated safely. This
-> > is all managed asynchronously in the background by the inodegc state
-> > machine (what I'm currently working on) and when the inode is
-> > finally reclaimed it is moved into the free list and allowed to be
-> > reallocated.
-> > 
+> notify_change() -> inode->i_op->setattr() -> xfs_vn_setattr() ->
+> xfs_vn_change_ok() -> prepare_setattr()
+> which has the following:
+>         if (!in_group_p((ia_valid & ATTR_GID) ? attr->ia_gid :
+>                          i_gid_into_mnt(mnt_userns, inode)) &&
+>              !capable_wrt_inode_uidgid(mnt_userns, inode, CAP_FSETID))
+>                  attr->ia_mode &= ~S_ISGID;
 > 
-> I think that makes a lot of sense. That's quite similar to another
-> experiment I was playing with that essentially populated a capped size
-> pool of background inactivated inodes that the allocation side could
-> pull directly from (i.e., so allocation actually becomes a radix tree
-> lookup instead of a filtered btree scan), but so far I was kind of
-> fighting with the existing mechanisms, trying not to peturb sustained
-> remove performance, etc., and hadn't been able to produce a performance
-> benefit yet. Perhaps this will work out better with the bigger picture
-> changes to inode lifecycle and background inode management in place..
+> After xfs_vn_change_ok() xfs_setattr_nonsize() is finally called and
+> additionally strips sgid and suid.
 
-*nod*
+Ok, good. Can you send a patch that removes this code and add the tests
+we talked about? That would be great!
 
-The "don't have a perf impact" side of thigns is generally why I
-test all my new code with fsmark and other scalability tests before
-I go anywhere near fstests. If it doesn't perform, it's not worth
-trying to make work correctly...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks!
+Christian
