@@ -2,72 +2,72 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13434C433EF
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Feb 2022 13:03:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6488EC433FE
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Feb 2022 13:03:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234723AbiBXNDo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 24 Feb 2022 08:03:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60152 "EHLO
+        id S234743AbiBXNDp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 24 Feb 2022 08:03:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60276 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234742AbiBXNDn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Feb 2022 08:03:43 -0500
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95E79253BCB
-        for <linux-xfs@vger.kernel.org>; Thu, 24 Feb 2022 05:03:12 -0800 (PST)
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 21OCYJj2000938;
-        Thu, 24 Feb 2022 13:03:07 GMT
+        with ESMTP id S234742AbiBXNDo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Feb 2022 08:03:44 -0500
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9038520DB22
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Feb 2022 05:03:14 -0800 (PST)
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 21OCYFnV007314;
+        Thu, 24 Feb 2022 13:03:10 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references :
  content-transfer-encoding : content-type : mime-version;
- s=corp-2021-07-09; bh=rI08DrmQKzJ3Vmx5q2tlO9EowYfZjTcnMbNUEhKpxPw=;
- b=hwKZ1NpJ70LGBVE0fBCwPqzuPjmT9dshKtXl0LoYrZeV4Q04n7F+mTLMvXgF8ypHToIT
- HSTo1jlsc+FrWL39vQsalbode8O2ie/GCYX2tcPgRXHbH3z66wNyovypPkjpumZzbKuG
- ErIGTjgk9LTGKYbcIY/5ahzzPHec4EwA3Hum9OE9RFgP1hk/te1HmTpcud493/N4ejtV
- 2cGmkxxnT+gitPBbYc7aXiMYLtRlGfso/ugYV0fU8tRq8mpr1rZv/8lvINwB4TsqdCmV
- 0i0ygKoTq5xoaP5WI+UNpj1//JnNi1w3+IrfOI704AiHd9eVN7MDuYlyrHRGi+Pvp3Ax 6A== 
+ s=corp-2021-07-09; bh=wUrsIxoJg9MJ6OUKCCNrbVZoBtrMjeAwc8VFjFaKGUE=;
+ b=02ogr7DbhR2xG5h/wqO5u3XuXrKfQK6w2H7dU3y4Ycs+CjFJeKWks3YdNZIbnNJhQQST
+ 1yDmDQkXCdViA/HuPBeKi8WztwMY8b6qBIJLXQBob/RHtHMGowTi6L/8pxZt4ssvKJSk
+ Uskc2sgtr0wHd5JcPBBGwoExJ2CszemTys+d+tRA29knwrdAM/yftFSr0c5vWweHln5R
+ 3drOGMJBd9YHl6TOnI3bPw/zUt0PrRhSrI2mIjHJUW/e7RA+7lnl3MZpc4U+njINmY42
+ cU5cP9GqlWzUkDuzrd10ep6SMwdqLy61gIv4HryRfxo6FgEmA6Q/AOBHmjEpwv3FL7Dg Qg== 
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3ect7aqa81-1
+        by mx0b-00069f02.pphosted.com with ESMTP id 3ectsx7b2x-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 24 Feb 2022 13:03:06 +0000
+        Thu, 24 Feb 2022 13:03:10 +0000
 Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 21OD0XJt120486;
-        Thu, 24 Feb 2022 13:03:05 GMT
-Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2109.outbound.protection.outlook.com [104.47.58.109])
-        by aserp3020.oracle.com with ESMTP id 3eb483k7cq-1
+        by aserp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 21OD0XXk120477;
+        Thu, 24 Feb 2022 13:03:09 GMT
+Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2108.outbound.protection.outlook.com [104.47.58.108])
+        by aserp3020.oracle.com with ESMTP id 3eb483k7em-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 24 Feb 2022 13:03:05 +0000
+        Thu, 24 Feb 2022 13:03:09 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=grAbnBqy9tlrI/2xJEOHxxsJfeu4TgLuAPLub4Xzj/UHLqzwhGCOUGQSbLd3RuUqP5vdjP52NwVHQoKdDW86TWA/SrUcpcr3zCUJWLqRsGZEaucozko+jrvHKBfFBxINOAXEO2H6ZH/ekYJuMvOATQtOvkAHow1tRVXoddd3zJoBzVssGM0jWOm3F8e3WMI863ZfUs95wSVWa995My3ombYRNG1jE3wxmEp930l9g58iPgMfPrfW/vu9eBFc83vvz7C8z0CPDXNYKcwS2GEIpkCI5cd5ZMafwVhpLGqMmSPT4Y4ihyD5bnrs+ve6lcI3Q/o0j32ZTpW0IeANKEu2qw==
+ b=gohUEdE42x/m79CZjOfgx4BU+0zvMJeZI5IZwGSzFoa/v0gNs6Ejaoi0MFNLa+XGVFfy+SDKZmWVjFxZS8xS3kQwQ3X+yEe1SmOil0Wadw2V/96hbUpFtyHhn2/hFYuPSa7GdVfcOORvSUm2MeTQORklCYBYGI0aJNVXh2P9lu3YjmE0DDBLswvuMCen2FvfxWHv14/6RNVTYV6ySkHcLp1Es7gT34wRULNJ2+nb8AjepjhBAHkjPlIPT35spIFzEtS/aMez/YCRXen0MbhqKIhSRyUTjQHLV/WNo0/cO9DaX7xZE1YU3ER7B3pD7lD+YOCe1XScorF+RfnzwWCmew==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=rI08DrmQKzJ3Vmx5q2tlO9EowYfZjTcnMbNUEhKpxPw=;
- b=GpLt4o1lhVbqduCdnO9Z9k20R1kV8c8+hQfV3l/Jr88YpXP7zYJnrKQHDfJONPML17opKj24y7hqUEMLn4PmaycGvRQ7wgNrEcusEdLPPgFB0Gcs6X5uiLpsD7oDUQuEKvQqCnl+pM3wA+2QgQ8FeA3U9Xt5Ec9dKZo/hqL5E2Y9tAZIuOTKyv9XjVs0/+73JMLdlRmf4l+LdC6+12s7hdZr+kRxB2SCqgVXmcXOo8yC6JQPwm+Knxqzg4x8arQU7SsnW8lFSN1sU08Ll/Y1lYb56YQmjkqOoG2nD9bVKKvSkOrs7ace+oTzMsibv5jqTTWC+YhAPkWMyU/Rca6JBQ==
+ bh=wUrsIxoJg9MJ6OUKCCNrbVZoBtrMjeAwc8VFjFaKGUE=;
+ b=X1IIndSuIM9ph0RTDMwe4quRF0CQmWOatzWjd7VykNpq6X2FjNindsWvqmmcdooCE/D9ZuGGADOlAT3MBBS6Fp+X5OI2Lc0Rw8XSFCQcmc0nQWTvx4cZL5BIqSXz6xluo8Cx0nqlCaSF7HVhSgcDr/H4oePV4kshA1kzT1drlLfC9glkEwVqRx1Dc42y3uB9gDQ0AabkBZZBi55hrrBluuz/oXAGZWx018W020ZVUNN9hK6O0E4jHJH+bGSZ1R0yXPGqAg0zyzaZ9P4cQkLl+gYrjfDF0grfFDhKv/Xo0edmN4wjGaSWLDSvu7r95DaK91/5YKZOzv+AZf6ADopT0A==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=rI08DrmQKzJ3Vmx5q2tlO9EowYfZjTcnMbNUEhKpxPw=;
- b=zDrmpYCzVuFq+mKfqBQyWVKeYfczdPvKWdJzIWenpRMFsBtdJby2Tni2FK52RMW+NYeeHJV4O0EsKPLNTcMI+82YFYWpFIWkVD/3Oh9dTehFA1GUN5zJdK2KQJVc8D0ZPjP2or3DZs0iafu6LcTOTZyh8DyXEi37k76WZ3naMS0=
+ bh=wUrsIxoJg9MJ6OUKCCNrbVZoBtrMjeAwc8VFjFaKGUE=;
+ b=DtZB7USVR1wg2QcS91IkLhkiz0Bn7Pz3nD+6Fkx+kn9V0oHHKRZp9lD2foM2sm9oEMMY0rkShcwO/8v+C3qcahzEOxXYFQjt3nLh0W4UFkQJwJYkKKbjEBYxskPc+FR+40P05wEK8Ef/apHfSa9gTq77DevUjo5wE8gqyQVOOeU=
 Received: from SA2PR10MB4587.namprd10.prod.outlook.com (2603:10b6:806:114::12)
  by DM5PR1001MB2172.namprd10.prod.outlook.com (2603:10b6:4:30::36) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4995.24; Thu, 24 Feb
- 2022 13:03:03 +0000
+ 2022 13:03:07 +0000
 Received: from SA2PR10MB4587.namprd10.prod.outlook.com
  ([fe80::46f:d52f:e31c:b552]) by SA2PR10MB4587.namprd10.prod.outlook.com
  ([fe80::46f:d52f:e31c:b552%7]) with mapi id 15.20.5017.024; Thu, 24 Feb 2022
- 13:03:03 +0000
+ 13:03:07 +0000
 From:   Chandan Babu R <chandan.babu@oracle.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     Chandan Babu R <chandan.babu@oracle.com>, djwong@kernel.org,
-        david@fromorbit.com, Dave Chinner <dchinner@redhat.com>
-Subject: [PATCH V6 12/17] xfs: Introduce per-inode 64-bit extent counters
-Date:   Thu, 24 Feb 2022 18:32:06 +0530
-Message-Id: <20220224130211.1346088-13-chandan.babu@oracle.com>
+        david@fromorbit.com
+Subject: [PATCH V6 14/17] xfs: Conditionally upgrade existing inodes to use 64-bit extent counters
+Date:   Thu, 24 Feb 2022 18:32:08 +0530
+Message-Id: <20220224130211.1346088-15-chandan.babu@oracle.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220224130211.1346088-1-chandan.babu@oracle.com>
 References: <20220224130211.1346088-1-chandan.babu@oracle.com>
@@ -78,508 +78,311 @@ X-ClientProxiedBy: SI2PR01CA0009.apcprd01.prod.exchangelabs.com
  (2603:10b6:806:114::12)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: f45b7282-828d-4972-9143-08d9f795fdb6
+X-MS-Office365-Filtering-Correlation-Id: 76ef49e9-834d-4760-e297-08d9f7960086
 X-MS-TrafficTypeDiagnostic: DM5PR1001MB2172:EE_
-X-Microsoft-Antispam-PRVS: <DM5PR1001MB21724102E8EFCEEB8F54F83BF63D9@DM5PR1001MB2172.namprd10.prod.outlook.com>
+X-Microsoft-Antispam-PRVS: <DM5PR1001MB2172C6DC06DBAE107BD78A1EF63D9@DM5PR1001MB2172.namprd10.prod.outlook.com>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: MQsxjsdp1qGRZuZhrX+wy6U4hYiPHDwYZ7GzqtVIyITLQgZPWGJEjeDiTShYVlcH3o+DTgQNpAcnFRjPXn/H9C2igQ4CwZf9KVPRI434+d98vWsgU95DnEGIx98Ps/1JEbUF1Vn40/cbO8WdhmtFzVmyJwaY8OxvZe9Vd0i2mE6NtG98nDboYGf9aQxWKIqUk/r/QJA7w/e0fKSdYpOl02vDPGCupNjDBC4UmkfAjWFLeelz62E6HI2/ENqRZBgGlJzlSEOFQW8GheQzMNaU3CR5O0BrxwcppPQvxTSynLPNpcCPXV8gc8fbg02PxSMQdUc8gA9zzbGl9kB+pXpdeN2D8sYB0Er82q9Lj7l/dVy+n3ELTTlU9UgEV9JE/DkmbBSO0Ju+otyHWIHolhyu7OmdhCju+LeahaWEoQJwmTO6K5U0fVOF7dQggS5TXiTdxIMMz+M6zHxwLShI1MFQ+puUP+T2xhTvLEsdRsZhTo5I9MD91SuYWvQ23dodbmL4M1/m3ojMB4tRA5toFSmIuaqASwhb2gcGWxrggu+aLVonT0p263WSrupvBLvINrycBJlvqL7IY1z/fVX1O1SYVvh8wneSEMsJ3ovBuvALsaPCFtHOiJmkC5l8o6izWUoDf6gyP4EdqC0TnAucVeSI92DsDGpSIPpeqg4FkP1Ngsz9D2Rsy5e3jXHoGXZU11b7
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(8936002)(6916009)(4326008)(508600001)(54906003)(6512007)(316002)(66946007)(66556008)(38100700002)(8676002)(66476007)(5660300002)(38350700002)(30864003)(6506007)(52116002)(86362001)(36756003)(2616005)(1076003)(83380400001)(26005)(186003)(2906002)(6486002);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: aUzWoVp0m41OKhRap8F7FNCkKD9kL2UZxzK9tc4zJMTT8crmfTWNaa8EDHkBoEiBjqZdR3jswQNtDUgt7qiZWbNxIkdG6sFGn8xteGjndEB7SpCbHZ16+j3lUfVSjG9qa0L8ysZZF2Fo8IMHzhIQ7NZyaYCv6O7lRktcMU4HFA3ENMGjrvMjaqPmv3/WHUEGnr3aSJTffAC5gdK49WTFjW58lKRXQ/tbkt9u3ye2J129v00rzR9L5zTPnOjj68rYQ7/4wA+UEfP64RYT9VPTMMdpxIIzOl3M9moy31m1ak7IDXpUTwRvL8RsQzQVvxikS1bgXSlVLXorzTu+QX/NBLUIqfQkTdbo75OhXhryeFTtn0SwdIrZUKboOZ8Xhdwft3lVcvi4PknvCp9s+SuEjT+DwMoivgJtuWFeb/D7NKNcAvuNXSNdLxV8CZGHGX7I2XUDIp8mnste4jo0I2VvhdSw8tUsSfEHkWJet422RBWLcwH/+Rpw8weGOly7vcrEsZ0RUr/U4IZcJU6KK+oH8Vf9go1aesJSrWP7QQxKv37fHQlA4XSnRBdtSiLBF9WQWD/Vt3lclq2VPreXGqwy69W0wEbB+prs4jtLg0Z1HYhBw1nY8io8jxKHb1Ih2Tx5EtIJhbP/F3Z1zxj4ONckGVQxyzmG+v3Yb9c7MxLMFqIbnYCooAXiMzohkCrhiKyTTFZDkfqR791tsdOLgGXiGw==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4587.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(8936002)(6916009)(4326008)(508600001)(6512007)(316002)(66946007)(66556008)(38100700002)(8676002)(66476007)(5660300002)(38350700002)(6506007)(52116002)(86362001)(36756003)(2616005)(1076003)(83380400001)(26005)(186003)(2906002)(6486002);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?1SFdTOs/mJOO2geRIotw0DevDLJEN+4XcLexiM/eeneV3PbP4q7We11WCsyk?=
- =?us-ascii?Q?N4Mzla1mpXkxxA2/mCJwTUiG+maUZuxYmFxYKOk/GspYjDhHUwB4ScVi1teZ?=
- =?us-ascii?Q?0ftUezQuCnPe1MqbAsccyunYSMn9GFFKG/uKmA+3AkK1moobOHQGS1/qrp20?=
- =?us-ascii?Q?2F4fsulYm3EEqGiIfO8TIHj3Wekz3ZlHRTkAPCSbKcMnq/XCfuriSBBw38qW?=
- =?us-ascii?Q?2ve7Cyw+9KYq9ish3mN3CuV1OutV81HavXYmzYZU1k8/QVbQmQJNVRtN2AmU?=
- =?us-ascii?Q?sc2BOYOKAENGpFi31DD5vc9ejCF4HjxwB3a1lyIw227alaQPnUveFmk2tycI?=
- =?us-ascii?Q?IStJ7CVczk8srHLVemGt5oQTIgHcMF8iZwQkmIVsoimGJs98Xh7KQEyk+by7?=
- =?us-ascii?Q?xhNl6Hb0DfQfYlsZiUYHPL51dxEV08iifpS0SXkOH9b2RG58k9LkRcGuPHsT?=
- =?us-ascii?Q?cxOFT/RIA+0J59t7xCSKOSbOaSLqQYI2UQYndzqvsymnwmY9vJYxH4Kyw0jA?=
- =?us-ascii?Q?h+AfGJ/ylUfbk/8AJartvQX8OL4r2DpP4Uej0S2aSqlttFsSYL2ZmLaleKZ/?=
- =?us-ascii?Q?rPaVyyBilmIx70jpaQNVb9EjiPgqDSaWGcFdJLX9UQAhmDmSTlHS+sRG5EB2?=
- =?us-ascii?Q?ble8guw07hlt9hIaDJ6q2YeEPOnZ3oIk/QalA7WezKRm66lMakrJJnnfOS29?=
- =?us-ascii?Q?5eX6HR1klFvf+GsrjmEJRyo5RaG5ra7KhXOx65x2jjHX7RwidIWjbdcvBBnO?=
- =?us-ascii?Q?fg3vvY9WRVV+Dy8NiPyT3fM+37C11Dpal2t1eD0Bh4mfyD5OBIQpACZJ7Di+?=
- =?us-ascii?Q?HL76/nROBlL9MVRdw98jhHw2jM4EA9fEp8863adKeOolgYbMF7g5SmQd0Ppa?=
- =?us-ascii?Q?DGjknIyfAKrau2lcvzU1nzGqKMttLvMB6ziXW97sCEezPVxUHjIiX1O/bHa7?=
- =?us-ascii?Q?zzBjbTShTrgI7m4vnKpr8eJ0USip52HnJcBavmWbc9LlDiNxRUXI+zVKEyIH?=
- =?us-ascii?Q?almn940ZwAMs0XBTjH5M1E5h99OM9QAC9dIgHmkOsyEpFMz4GxMVq2FokBLl?=
- =?us-ascii?Q?g8KAFJcs9DAFyGqSJLT6WBXX3nlYECgQnrb6wYiYgefseuPzub9rtydVeOAw?=
- =?us-ascii?Q?YxuFAT2cd5RPsBYuoHq+qK7quVzHjrlb65DAO5qO8y3jNVds3qST13cMhXZ6?=
- =?us-ascii?Q?fpBovVXtErsgI+EOxLPSWGdXJXI96f79BJBfZXmQkuknhizjzBLp/AbTjikX?=
- =?us-ascii?Q?GG8oaru7Q1f3BzSkXLr/SICSXlyqFmpnMrosZEL4Q7v93rahEBHqg9EOzygU?=
- =?us-ascii?Q?kR4E7LQgERkDqBbVpoXrweYZt+M2xud/RmSWhc7BL9uQm/OObb61tLd9AktN?=
- =?us-ascii?Q?l6H2VpxXhQGqhSj3DC68u0jyDLSBIqE1RS6MWQANtZYe/GXY3yg3FSVPQtOZ?=
- =?us-ascii?Q?h9HH/KIxjAH2KVYLSANjaTvJFpeRMuVrlJwrgbT8XOcYSiyT/seeEX+hDxci?=
- =?us-ascii?Q?BcFnGU7ttluDNn3Cp1+SlgrZG16SPMaEAtFaByaADyikChO/I4acGK2w04y7?=
- =?us-ascii?Q?0OsWTxEZs9khDzSrsUwAGEKYFIw8d/PafzlDoAuFJidEYruJiYpWLhdIMwd6?=
- =?us-ascii?Q?D6FkvSfOFS7Uhgjn0Vamtvs=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?fFxZKTjkhwwp5K7UCko+z7NE/3M5xMGWdmn/7biOGyyHczUA9+JNlOISJ7Yj?=
+ =?us-ascii?Q?i2uaTA/Rg5uVSwrX7ABsWSAa1esx76/CV28VNHR2LdBBxQPDzqh6FYiYBjyD?=
+ =?us-ascii?Q?G0knQMQRBDcxpI+DP8nF2BO2i1NmGW4wNNoek5PtaUKH7vcsSZ4SWOO16YFE?=
+ =?us-ascii?Q?sag4h1vGYUb/OFTnzDbcJfONg8AQI7eGseztXAavPEs1G5JT4rocomFXYvuO?=
+ =?us-ascii?Q?QQsC6f0lNMDrJxtsPAlFFyAtEOIhyZSPQvjZ+UNMGIBkVNMozMUP128yT+wU?=
+ =?us-ascii?Q?V9MoBs9TaCcZAw1D2C8Z1LmtyhGef9Nc9k6c5UBPUcM+EW/cl0GpEO5LAjBf?=
+ =?us-ascii?Q?Dj8rFp151QP55L9G0VaFVvLzWvK3fLnibN4fcWDRo3TJbFV3zkfPoDMUokkv?=
+ =?us-ascii?Q?weJaPw8mOnyD/G2FryBk3fdUee09b9h73exaPlZMD+1IhzqPTYAOG3OLjM5i?=
+ =?us-ascii?Q?MrB0HOB1fR4EC1zfeDIAz9/Ls0m6wVKPYGa6ZBXHNdosOByR3qcG91vk839k?=
+ =?us-ascii?Q?jOh2w6ohlb2Lcmo/GbGmkZMDdOBdujkmkOjCiYMRnHUcWBv1C5PwqEj86/En?=
+ =?us-ascii?Q?FXvuRmx6hA5bOWUg/Qov+O1ZCAGJ2A7A8Cqj4VlQRih9y4qb03RRZq3mw0pS?=
+ =?us-ascii?Q?N83I3L9FubOpCI8BmFEFQ6YG9HfhDqIEQ3e5khUhjT2/xvC+iDTU4b/SXiZz?=
+ =?us-ascii?Q?J/5OYso7/CvkR74yFKdkvMsfbmr146yFUE/xO3VSU+qQaOnM9VF8qt4pnyTD?=
+ =?us-ascii?Q?7ueMXUY1I2gt5KvLN92KPu5a10ZHImIpL9bc9SVinaSMOqKV6LQTKrxvcgti?=
+ =?us-ascii?Q?a3i4MofTvspexgHjytN5bGXZ4Ne4YdcN6RiMrORWQUfV8p0nwwtD99QVm6Be?=
+ =?us-ascii?Q?GJowN9njP11Lz+EaS6IhP3mTAgfvwMTDT4jQMfKVz45cqkKCrCX23P4WMrJi?=
+ =?us-ascii?Q?9h40nMd6li0UwTQpwlB0Nxgnk7eWOx4hbdq99ieJ8n9X33a/+KJWIFhiV1NB?=
+ =?us-ascii?Q?pw6qt4uXgwGKgdB5akyk+pqshG7FAcra1nXZaPfSesQlc9BOLZg50Xc35UQB?=
+ =?us-ascii?Q?6hZs8dQlPwKRRrigczEZBcrJHAGjUR3/SFaUi+dNnLFKHXONNktSlP2+Bs0A?=
+ =?us-ascii?Q?5rTjkMWk9WvFsBX6OxGWTsQWNUVvksv2VFgj9VasM7Mlhu9QCxrtW30ae1nc?=
+ =?us-ascii?Q?P8GA/F4+ErdpA3+1dgmWdn1gHhKXwl9PdgF/h5uyvwBFqDvSNXjLDZ4V/Euw?=
+ =?us-ascii?Q?Eb5vK+28Bni0ke/u3PEU1+54nvD6EyjwzcbXbaOCyeAA86Xr0uOhb7LmTFoe?=
+ =?us-ascii?Q?mrP0f1Cycx+1dCjgwH4KIxkEa+z6M/nNNtIz1OqCD56oXZSdw+Oyd+xOfLpf?=
+ =?us-ascii?Q?QTmKdoMRyk6GWFUKlx7XTfar2jw5wHeuAUMt3kRLn5CiRfOKQiAhqKPD61Gq?=
+ =?us-ascii?Q?hoS0VmjHP5UD0puv9DdyOPlopRHlh6c77QFENEhAGXt2ZEU+WapIMx294nCX?=
+ =?us-ascii?Q?y4g/vjbYf2hwZSZZGQ699hEJkrn0W9EI0Q9ITHoDWHYfJ3wB83q6HTfnWLoL?=
+ =?us-ascii?Q?NTiLvRoZ+ztVHB3DOaqKFtXCm38xAFhW5OFYIwfjoTq/NnFRQndlIv7XCfYV?=
+ =?us-ascii?Q?fa1wKJzi2icYvwict6Ukgz8=3D?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f45b7282-828d-4972-9143-08d9f795fdb6
+X-MS-Exchange-CrossTenant-Network-Message-Id: 76ef49e9-834d-4760-e297-08d9f7960086
 X-MS-Exchange-CrossTenant-AuthSource: SA2PR10MB4587.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Feb 2022 13:03:03.1704
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Feb 2022 13:03:07.8598
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: xYW47+Jmw0PBaCVKLpL3L5hz8WwvMyYHjtWZJsrArAvvTUc3bXgoMMqIsOGW7Rw0WuGj/Z2eCbzcdfGgO2GFEg==
+X-MS-Exchange-CrossTenant-UserPrincipalName: 0woUg7fwlEv0U964rZEncjf8gIeI+eZYe8fQ8zSGXfHYBHCrXeKQganN6q9vqmnMFFHth0oPJcCp8VZaFgJtwA==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR1001MB2172
 X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10267 signatures=681306
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0
  mlxlogscore=999 adultscore=0 bulkscore=0 phishscore=0 suspectscore=0
  spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2201110000 definitions=main-2202240078
-X-Proofpoint-GUID: A4h_RfnBlOdL80QDqVHW31u4jHDXNkca
-X-Proofpoint-ORIG-GUID: A4h_RfnBlOdL80QDqVHW31u4jHDXNkca
+X-Proofpoint-ORIG-GUID: Hqx5XBJyw8A5OYWulns1oxXO5CVkumxt
+X-Proofpoint-GUID: Hqx5XBJyw8A5OYWulns1oxXO5CVkumxt
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This commit introduces new fields in the on-disk inode format to support
-64-bit data fork extent counters and 32-bit attribute fork extent
-counters. The new fields will be used only when an inode has
-XFS_DIFLAG2_NREXT64 flag set. Otherwise we continue to use the regular 32-bit
-data fork extent counters and 16-bit attribute fork extent counters.
+This commit upgrades inodes to use 64-bit extent counters when they are read
+from disk. Inodes are upgraded only when the filesystem instance has
+XFS_SB_FEAT_INCOMPAT_NREXT64 incompat flag set.
 
 Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
-Suggested-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_format.h      | 33 ++++++++++++--
- fs/xfs/libxfs/xfs_inode_buf.c   | 49 ++++++++++++++++++--
- fs/xfs/libxfs/xfs_inode_fork.h  |  6 +++
- fs/xfs/libxfs/xfs_log_format.h  | 33 ++++++++++++--
- fs/xfs/xfs_inode_item.c         | 23 ++++++++--
- fs/xfs/xfs_inode_item_recover.c | 79 ++++++++++++++++++++++++++++-----
- 6 files changed, 196 insertions(+), 27 deletions(-)
+ fs/xfs/libxfs/xfs_attr.c       |  3 ++-
+ fs/xfs/libxfs/xfs_bmap.c       |  5 ++---
+ fs/xfs/libxfs/xfs_inode_fork.c | 37 ++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_inode_fork.h |  2 ++
+ fs/xfs/xfs_bmap_item.c         |  3 ++-
+ fs/xfs/xfs_bmap_util.c         | 10 ++++-----
+ fs/xfs/xfs_dquot.c             |  2 +-
+ fs/xfs/xfs_iomap.c             |  5 +++--
+ fs/xfs/xfs_reflink.c           |  5 +++--
+ fs/xfs/xfs_rtalloc.c           |  2 +-
+ 10 files changed, 58 insertions(+), 16 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index d3dfd45c39e0..1a5b194da191 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -792,16 +792,41 @@ struct xfs_dinode {
- 	__be32		di_nlink;	/* number of links to file */
- 	__be16		di_projid_lo;	/* lower part of owner's project id */
- 	__be16		di_projid_hi;	/* higher part owner's project id */
--	__u8		di_pad[6];	/* unused, zeroed space */
--	__be16		di_flushiter;	/* incremented on flush */
-+	union {
-+		/* Number of data fork extents if NREXT64 is set */
-+		__be64	di_big_nextents;
-+
-+		/* Padding for V3 inodes without NREXT64 set. */
-+		__be64	di_v3_pad;
-+
-+		/* Padding and inode flush counter for V2 inodes. */
-+		struct {
-+			__u8	di_v2_pad[6];
-+			__be16	di_flushiter;
-+		};
-+	};
- 	xfs_timestamp_t	di_atime;	/* time last accessed */
- 	xfs_timestamp_t	di_mtime;	/* time last modified */
- 	xfs_timestamp_t	di_ctime;	/* time created/inode modified */
- 	__be64		di_size;	/* number of bytes in file */
- 	__be64		di_nblocks;	/* # of direct & btree blocks used */
- 	__be32		di_extsize;	/* basic/minimum extent size for file */
--	__be32		di_nextents;	/* number of extents in data fork */
--	__be16		di_anextents;	/* number of extents in attribute fork*/
-+	union {
-+		/*
-+		 * For V2 inodes and V3 inodes without NREXT64 set, this
-+		 * is the number of data and attr fork extents.
-+		 */
-+		struct {
-+			__be32	di_nextents;
-+			__be16	di_anextents;
-+		} __packed;
-+
-+		/* Number of attr fork extents if NREXT64 is set. */
-+		struct {
-+			__be32	di_big_anextents;
-+			__be16	di_nrext64_pad;
-+		} __packed;
-+	} __packed;
- 	__u8		di_forkoff;	/* attr fork offs, <<3 for 64b align */
- 	__s8		di_aformat;	/* format of attr fork's data */
- 	__be32		di_dmevmask;	/* DMIG event mask */
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index 34f360a38603..a11d3ea5ebfe 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -279,6 +279,25 @@ xfs_inode_to_disk_ts(
- 	return ts;
- }
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 23523b802539..03a358930d74 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -774,7 +774,8 @@ xfs_attr_set(
+ 		return error;
  
-+static inline void
-+xfs_inode_to_disk_iext_counters(
+ 	if (args->value || xfs_inode_hasattr(dp)) {
+-		error = xfs_iext_count_may_overflow(dp, XFS_ATTR_FORK,
++		error = xfs_trans_inode_ensure_nextents(&args->trans, dp,
++				XFS_ATTR_FORK,
+ 				XFS_IEXT_ATTR_MANIP_CNT(rmt_blks));
+ 		if (error)
+ 			goto out_trans_cancel;
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index be7f8ebe3cd5..3a3c99ef7f13 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -4523,14 +4523,13 @@ xfs_bmapi_convert_delalloc(
+ 		return error;
+ 
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	xfs_trans_ijoin(tp, ip, 0);
+ 
+-	error = xfs_iext_count_may_overflow(ip, whichfork,
++	error = xfs_trans_inode_ensure_nextents(&tp, ip, whichfork,
+ 			XFS_IEXT_ADD_NOSPLIT_CNT);
+ 	if (error)
+ 		goto out_trans_cancel;
+ 
+-	xfs_trans_ijoin(tp, ip, 0);
+-
+ 	if (!xfs_iext_lookup_extent(ip, ifp, offset_fsb, &bma.icur, &bma.got) ||
+ 	    bma.got.br_startoff > offset_fsb) {
+ 		/*
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index a3a3b54f9c55..d1d065abeac3 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -757,3 +757,40 @@ xfs_iext_count_may_overflow(
+ 
+ 	return 0;
+ }
++
++/*
++ * Ensure that the inode has the ability to add the specified number of
++ * extents.  Caller must hold ILOCK_EXCL and have joined the inode to
++ * the transaction.  Upon return, the inode will still be in this state
++ * upon return and the transaction will be clean.
++ */
++int
++xfs_trans_inode_ensure_nextents(
++	struct xfs_trans	**tpp,
 +	struct xfs_inode	*ip,
-+	struct xfs_dinode	*to)
++	int			whichfork,
++	int			nr_to_add)
 +{
-+	if (xfs_inode_has_nrext64(ip)) {
-+		to->di_big_nextents = cpu_to_be64(xfs_ifork_nextents(&ip->i_df));
-+		to->di_big_anextents = cpu_to_be32(xfs_ifork_nextents(ip->i_afp));
-+		/*
-+		 * We might be upgrading the inode to use larger extent counters
-+		 * than was previously used. Hence zero the unused field.
-+		 */
-+		to->di_nrext64_pad = cpu_to_be16(0);
-+	} else {
-+		to->di_nextents = cpu_to_be32(xfs_ifork_nextents(&ip->i_df));
-+		to->di_anextents = cpu_to_be16(xfs_ifork_nextents(ip->i_afp));
-+	}
++	int			error;
++
++	error = xfs_iext_count_may_overflow(ip, whichfork, nr_to_add);
++	if (!error)
++		return 0;
++
++	/*
++	 * Try to upgrade if the extent count fields aren't large
++	 * enough.
++	 */
++	if (!xfs_has_nrext64(ip->i_mount) ||
++	    (ip->i_diflags2 & XFS_DIFLAG2_NREXT64))
++		return error;
++
++	ip->i_diflags2 |= XFS_DIFLAG2_NREXT64;
++	xfs_trans_log_inode(*tpp, ip, XFS_ILOG_CORE);
++
++	error = xfs_trans_roll(tpp);
++	if (error)
++		return error;
++
++	return xfs_iext_count_may_overflow(ip, whichfork, nr_to_add);
 +}
-+
- void
- xfs_inode_to_disk(
- 	struct xfs_inode	*ip,
-@@ -296,7 +315,6 @@ xfs_inode_to_disk(
- 	to->di_projid_lo = cpu_to_be16(ip->i_projid & 0xffff);
- 	to->di_projid_hi = cpu_to_be16(ip->i_projid >> 16);
- 
--	memset(to->di_pad, 0, sizeof(to->di_pad));
- 	to->di_atime = xfs_inode_to_disk_ts(ip, inode->i_atime);
- 	to->di_mtime = xfs_inode_to_disk_ts(ip, inode->i_mtime);
- 	to->di_ctime = xfs_inode_to_disk_ts(ip, inode->i_ctime);
-@@ -307,8 +325,6 @@ xfs_inode_to_disk(
- 	to->di_size = cpu_to_be64(ip->i_disk_size);
- 	to->di_nblocks = cpu_to_be64(ip->i_nblocks);
- 	to->di_extsize = cpu_to_be32(ip->i_extsize);
--	to->di_nextents = cpu_to_be32(xfs_ifork_nextents(&ip->i_df));
--	to->di_anextents = cpu_to_be16(xfs_ifork_nextents(ip->i_afp));
- 	to->di_forkoff = ip->i_forkoff;
- 	to->di_aformat = xfs_ifork_format(ip->i_afp);
- 	to->di_flags = cpu_to_be16(ip->i_diflags);
-@@ -323,11 +339,14 @@ xfs_inode_to_disk(
- 		to->di_lsn = cpu_to_be64(lsn);
- 		memset(to->di_pad2, 0, sizeof(to->di_pad2));
- 		uuid_copy(&to->di_uuid, &ip->i_mount->m_sb.sb_meta_uuid);
--		to->di_flushiter = 0;
-+		to->di_v3_pad = 0;
- 	} else {
- 		to->di_version = 2;
- 		to->di_flushiter = cpu_to_be16(ip->i_flushiter);
-+		memset(to->di_v2_pad, 0, sizeof(to->di_v2_pad));
- 	}
-+
-+	xfs_inode_to_disk_iext_counters(ip, to);
- }
- 
- static xfs_failaddr_t
-@@ -397,6 +416,24 @@ xfs_dinode_verify_forkoff(
- 	return NULL;
- }
- 
-+static xfs_failaddr_t
-+xfs_dinode_verify_nrext64(
-+	struct xfs_mount	*mp,
-+	struct xfs_dinode	*dip)
-+{
-+	if (xfs_dinode_has_nrext64(dip)) {
-+		if (!xfs_has_nrext64(mp))
-+			return __this_address;
-+		if (dip->di_nrext64_pad != 0)
-+			return __this_address;
-+	} else if (dip->di_version >= 3) {
-+		if (dip->di_v3_pad != 0)
-+			return __this_address;
-+	}
-+
-+	return NULL;
-+}
-+
- xfs_failaddr_t
- xfs_dinode_verify(
- 	struct xfs_mount	*mp,
-@@ -440,6 +477,10 @@ xfs_dinode_verify(
- 	if ((S_ISLNK(mode) || S_ISDIR(mode)) && di_size == 0)
- 		return __this_address;
- 
-+	fa = xfs_dinode_verify_nrext64(mp, dip);
-+	if (fa)
-+		return fa;
-+
- 	nextents = xfs_dfork_data_extents(dip);
- 	nextents += xfs_dfork_attr_extents(dip);
- 	nblocks = be64_to_cpu(dip->di_nblocks);
 diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-index e56803436c61..8e6221e32660 100644
+index 8e6221e32660..65265ca51b0d 100644
 --- a/fs/xfs/libxfs/xfs_inode_fork.h
 +++ b/fs/xfs/libxfs/xfs_inode_fork.h
-@@ -156,6 +156,9 @@ static inline xfs_extnum_t
- xfs_dfork_data_extents(
- 	struct xfs_dinode	*dip)
- {
-+	if (xfs_dinode_has_nrext64(dip))
-+		return be64_to_cpu(dip->di_big_nextents);
-+
- 	return be32_to_cpu(dip->di_nextents);
- }
+@@ -286,6 +286,8 @@ int xfs_ifork_verify_local_data(struct xfs_inode *ip);
+ int xfs_ifork_verify_local_attr(struct xfs_inode *ip);
+ int xfs_iext_count_may_overflow(struct xfs_inode *ip, int whichfork,
+ 		int nr_to_add);
++int xfs_trans_inode_ensure_nextents(struct xfs_trans **tpp,
++		struct xfs_inode *ip, int whichfork, int nr_to_add);
  
-@@ -163,6 +166,9 @@ static inline xfs_extnum_t
- xfs_dfork_attr_extents(
- 	struct xfs_dinode	*dip)
- {
-+	if (xfs_dinode_has_nrext64(dip))
-+		return be32_to_cpu(dip->di_big_anextents);
-+
- 	return be16_to_cpu(dip->di_anextents);
- }
+ /* returns true if the fork has extents but they are not read in yet. */
+ static inline bool xfs_need_iread_extents(struct xfs_ifork *ifp)
+diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+index e1f4d7d5a011..27bc16a2b09b 100644
+--- a/fs/xfs/xfs_bmap_item.c
++++ b/fs/xfs/xfs_bmap_item.c
+@@ -505,7 +505,8 @@ xfs_bui_item_recover(
+ 	else
+ 		iext_delta = XFS_IEXT_PUNCH_HOLE_CNT;
  
-diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
-index fd66e70248f7..12234a880e94 100644
---- a/fs/xfs/libxfs/xfs_log_format.h
-+++ b/fs/xfs/libxfs/xfs_log_format.h
-@@ -388,16 +388,41 @@ struct xfs_log_dinode {
- 	uint32_t	di_nlink;	/* number of links to file */
- 	uint16_t	di_projid_lo;	/* lower part of owner's project id */
- 	uint16_t	di_projid_hi;	/* higher part of owner's project id */
--	uint8_t		di_pad[6];	/* unused, zeroed space */
--	uint16_t	di_flushiter;	/* incremented on flush */
-+	union {
-+		/* Number of data fork extents if NREXT64 is set */
-+		uint64_t	di_big_nextents;
-+
-+		/* Padding for V3 inodes without NREXT64 set. */
-+		uint64_t	di_v3_pad;
-+
-+		/* Padding and inode flush counter for V2 inodes. */
-+		struct {
-+			uint8_t	di_v2_pad[6];	/* V2 inode zeroed space */
-+			uint16_t di_flushiter;	/* V2 inode incremented on flush */
-+		};
-+	};
- 	xfs_log_timestamp_t di_atime;	/* time last accessed */
- 	xfs_log_timestamp_t di_mtime;	/* time last modified */
- 	xfs_log_timestamp_t di_ctime;	/* time created/inode modified */
- 	xfs_fsize_t	di_size;	/* number of bytes in file */
- 	xfs_rfsblock_t	di_nblocks;	/* # of direct & btree blocks used */
- 	xfs_extlen_t	di_extsize;	/* basic/minimum extent size for file */
--	uint32_t	di_nextents;	/* number of extents in data fork */
--	uint16_t	di_anextents;	/* number of extents in attribute fork*/
-+	union {
-+		/*
-+		 * For V2 inodes and V3 inodes without NREXT64 set, this
-+		 * is the number of data and attr fork extents.
-+		 */
-+		struct {
-+			uint32_t  di_nextents;
-+			uint16_t  di_anextents;
-+		} __packed;
-+
-+		/* Number of attr fork extents if NREXT64 is set. */
-+		struct {
-+			uint32_t  di_big_anextents;
-+			uint16_t  di_nrext64_pad;
-+		} __packed;
-+	} __packed;
- 	uint8_t		di_forkoff;	/* attr fork offs, <<3 for 64b align */
- 	int8_t		di_aformat;	/* format of attr fork's data */
- 	uint32_t	di_dmevmask;	/* DMIG event mask */
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index 90d8e591baf8..0d2fe38dc6e5 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -358,6 +358,21 @@ xfs_copy_dm_fields_to_log_dinode(
+-	error = xfs_iext_count_may_overflow(ip, whichfork, iext_delta);
++	error = xfs_trans_inode_ensure_nextents(&tp, ip, whichfork,
++			iext_delta);
+ 	if (error)
+ 		goto err_cancel;
+ 
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index eb2e387ba528..8d86d8d5ad88 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -855,7 +855,7 @@ xfs_alloc_file_space(
+ 		if (error)
+ 			break;
+ 
+-		error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
++		error = xfs_trans_inode_ensure_nextents(&tp, ip, XFS_DATA_FORK,
+ 				XFS_IEXT_ADD_NOSPLIT_CNT);
+ 		if (error)
+ 			goto error;
+@@ -910,7 +910,7 @@ xfs_unmap_extent(
+ 	if (error)
+ 		return error;
+ 
+-	error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
++	error = xfs_trans_inode_ensure_nextents(&tp, ip, XFS_DATA_FORK,
+ 			XFS_IEXT_PUNCH_HOLE_CNT);
+ 	if (error)
+ 		goto out_trans_cancel;
+@@ -1191,7 +1191,7 @@ xfs_insert_file_space(
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	xfs_trans_ijoin(tp, ip, 0);
+ 
+-	error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
++	error = xfs_trans_inode_ensure_nextents(&tp, ip, XFS_DATA_FORK,
+ 			XFS_IEXT_PUNCH_HOLE_CNT);
+ 	if (error)
+ 		goto out_trans_cancel;
+@@ -1418,7 +1418,7 @@ xfs_swap_extent_rmap(
+ 			trace_xfs_swap_extent_rmap_remap_piece(tip, &uirec);
+ 
+ 			if (xfs_bmap_is_real_extent(&uirec)) {
+-				error = xfs_iext_count_may_overflow(ip,
++				error = xfs_trans_inode_ensure_nextents(&tp, ip,
+ 						XFS_DATA_FORK,
+ 						XFS_IEXT_SWAP_RMAP_CNT);
+ 				if (error)
+@@ -1426,7 +1426,7 @@ xfs_swap_extent_rmap(
+ 			}
+ 
+ 			if (xfs_bmap_is_real_extent(&irec)) {
+-				error = xfs_iext_count_may_overflow(tip,
++				error = xfs_trans_inode_ensure_nextents(&tp, tip,
+ 						XFS_DATA_FORK,
+ 						XFS_IEXT_SWAP_RMAP_CNT);
+ 				if (error)
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 5afedcbc78c7..193a2e66efc7 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -320,7 +320,7 @@ xfs_dquot_disk_alloc(
+ 		goto err_cancel;
  	}
- }
  
-+static inline void
-+xfs_inode_to_log_dinode_iext_counters(
-+	struct xfs_inode	*ip,
-+	struct xfs_log_dinode	*to)
-+{
-+	if (xfs_inode_has_nrext64(ip)) {
-+		to->di_big_nextents = xfs_ifork_nextents(&ip->i_df);
-+		to->di_big_anextents = xfs_ifork_nextents(ip->i_afp);
-+		to->di_nrext64_pad = 0;
-+	} else {
-+		to->di_nextents = xfs_ifork_nextents(&ip->i_df);
-+		to->di_anextents = xfs_ifork_nextents(ip->i_afp);
-+	}
-+}
-+
- static void
- xfs_inode_to_log_dinode(
- 	struct xfs_inode	*ip,
-@@ -373,7 +388,6 @@ xfs_inode_to_log_dinode(
- 	to->di_projid_lo = ip->i_projid & 0xffff;
- 	to->di_projid_hi = ip->i_projid >> 16;
+-	error = xfs_iext_count_may_overflow(quotip, XFS_DATA_FORK,
++	error = xfs_trans_inode_ensure_nextents(&tp, quotip, XFS_DATA_FORK,
+ 			XFS_IEXT_ADD_NOSPLIT_CNT);
+ 	if (error)
+ 		goto err_cancel;
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index e552ce541ec2..4078d5324090 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -250,7 +250,8 @@ xfs_iomap_write_direct(
+ 	if (error)
+ 		return error;
  
--	memset(to->di_pad, 0, sizeof(to->di_pad));
- 	memset(to->di_pad3, 0, sizeof(to->di_pad3));
- 	to->di_atime = xfs_inode_to_log_dinode_ts(ip, inode->i_atime);
- 	to->di_mtime = xfs_inode_to_log_dinode_ts(ip, inode->i_mtime);
-@@ -385,8 +399,6 @@ xfs_inode_to_log_dinode(
- 	to->di_size = ip->i_disk_size;
- 	to->di_nblocks = ip->i_nblocks;
- 	to->di_extsize = ip->i_extsize;
--	to->di_nextents = xfs_ifork_nextents(&ip->i_df);
--	to->di_anextents = xfs_ifork_nextents(ip->i_afp);
- 	to->di_forkoff = ip->i_forkoff;
- 	to->di_aformat = xfs_ifork_format(ip->i_afp);
- 	to->di_flags = ip->i_diflags;
-@@ -406,11 +418,14 @@ xfs_inode_to_log_dinode(
- 		to->di_lsn = lsn;
- 		memset(to->di_pad2, 0, sizeof(to->di_pad2));
- 		uuid_copy(&to->di_uuid, &ip->i_mount->m_sb.sb_meta_uuid);
--		to->di_flushiter = 0;
-+		to->di_v3_pad = 0;
- 	} else {
- 		to->di_version = 2;
- 		to->di_flushiter = ip->i_flushiter;
-+		memset(to->di_v2_pad, 0, sizeof(to->di_v2_pad));
- 	}
-+
-+	xfs_inode_to_log_dinode_iext_counters(ip, to);
- }
+-	error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK, nr_exts);
++	error = xfs_trans_inode_ensure_nextents(&tp, ip, XFS_DATA_FORK,
++			nr_exts);
+ 	if (error)
+ 		goto out_trans_cancel;
  
- /*
-diff --git a/fs/xfs/xfs_inode_item_recover.c b/fs/xfs/xfs_inode_item_recover.c
-index 767a551816a0..c35796a4e9c5 100644
---- a/fs/xfs/xfs_inode_item_recover.c
-+++ b/fs/xfs/xfs_inode_item_recover.c
-@@ -148,6 +148,22 @@ static inline bool xfs_log_dinode_has_nrext64(const struct xfs_log_dinode *ld)
- 	       (ld->di_flags2 & XFS_DIFLAG2_NREXT64);
- }
+@@ -553,7 +554,7 @@ xfs_iomap_write_unwritten(
+ 		if (error)
+ 			return error;
  
-+static inline void
-+xfs_log_dinode_to_disk_iext_counters(
-+	struct xfs_log_dinode	*from,
-+	struct xfs_dinode	*to)
-+{
-+	if (xfs_log_dinode_has_nrext64(from)) {
-+		to->di_big_nextents = cpu_to_be64(from->di_big_nextents);
-+		to->di_big_anextents = cpu_to_be32(from->di_big_anextents);
-+		to->di_nrext64_pad = cpu_to_be16(from->di_nrext64_pad);
-+	} else {
-+		to->di_nextents = cpu_to_be32(from->di_nextents);
-+		to->di_anextents = cpu_to_be16(from->di_anextents);
-+	}
-+
-+}
-+
- STATIC void
- xfs_log_dinode_to_disk(
- 	struct xfs_log_dinode	*from,
-@@ -164,7 +180,6 @@ xfs_log_dinode_to_disk(
- 	to->di_nlink = cpu_to_be32(from->di_nlink);
- 	to->di_projid_lo = cpu_to_be16(from->di_projid_lo);
- 	to->di_projid_hi = cpu_to_be16(from->di_projid_hi);
--	memcpy(to->di_pad, from->di_pad, sizeof(to->di_pad));
+-		error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
++		error = xfs_trans_inode_ensure_nextents(&tp, ip, XFS_DATA_FORK,
+ 				XFS_IEXT_WRITE_UNWRITTEN_CNT);
+ 		if (error)
+ 			goto error_on_bmapi_transaction;
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index db70060e7bf6..9d4fd2b160ff 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -615,7 +615,7 @@ xfs_reflink_end_cow_extent(
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	xfs_trans_ijoin(tp, ip, 0);
  
- 	to->di_atime = xfs_log_dinode_to_disk_ts(from, from->di_atime);
- 	to->di_mtime = xfs_log_dinode_to_disk_ts(from, from->di_mtime);
-@@ -173,8 +188,6 @@ xfs_log_dinode_to_disk(
- 	to->di_size = cpu_to_be64(from->di_size);
- 	to->di_nblocks = cpu_to_be64(from->di_nblocks);
- 	to->di_extsize = cpu_to_be32(from->di_extsize);
--	to->di_nextents = cpu_to_be32(from->di_nextents);
--	to->di_anextents = cpu_to_be16(from->di_anextents);
- 	to->di_forkoff = from->di_forkoff;
- 	to->di_aformat = from->di_aformat;
- 	to->di_dmevmask = cpu_to_be32(from->di_dmevmask);
-@@ -192,10 +205,13 @@ xfs_log_dinode_to_disk(
- 		to->di_lsn = cpu_to_be64(lsn);
- 		memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
- 		uuid_copy(&to->di_uuid, &from->di_uuid);
--		to->di_flushiter = 0;
-+		to->di_v3_pad = from->di_v3_pad;
- 	} else {
- 		to->di_flushiter = cpu_to_be16(from->di_flushiter);
-+		memcpy(to->di_v2_pad, from->di_v2_pad, sizeof(to->di_v2_pad));
- 	}
-+
-+	xfs_log_dinode_to_disk_iext_counters(from, to);
- }
+-	error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
++	error = xfs_trans_inode_ensure_nextents(&tp, ip, XFS_DATA_FORK,
+ 			XFS_IEXT_REFLINK_END_COW_CNT);
+ 	if (error)
+ 		goto out_cancel;
+@@ -1117,7 +1117,8 @@ xfs_reflink_remap_extent(
+ 	if (dmap_written)
+ 		++iext_delta;
  
- STATIC int
-@@ -209,6 +225,8 @@ xlog_recover_inode_commit_pass2(
- 	struct xfs_mount		*mp = log->l_mp;
- 	struct xfs_buf			*bp;
- 	struct xfs_dinode		*dip;
-+	xfs_extnum_t                    nextents;
-+	xfs_aextnum_t                   anextents;
- 	int				len;
- 	char				*src;
- 	char				*dest;
-@@ -348,21 +366,60 @@ xlog_recover_inode_commit_pass2(
- 			goto out_release;
- 		}
- 	}
--	if (unlikely(ldip->di_nextents + ldip->di_anextents > ldip->di_nblocks)){
--		XFS_CORRUPTION_ERROR("xlog_recover_inode_pass2(5)",
-+
-+	if (xfs_log_dinode_has_nrext64(ldip)) {
-+		if (!xfs_has_nrext64(mp) || (ldip->di_nrext64_pad != 0)) {
-+			XFS_CORRUPTION_ERROR("xlog_recover_inode_pass2(5)",
-+				     XFS_ERRLEVEL_LOW, mp, ldip,
-+				     sizeof(*ldip));
-+			xfs_alert(mp,
-+				"%s: Bad inode log record, rec ptr "PTR_FMT", "
-+				"dino ptr "PTR_FMT", dino bp "PTR_FMT", "
-+				"ino %Ld, xfs_has_nrext64(mp) = %d, "
-+				"ldip->di_nrext64_pad = %u",
-+				__func__, item, dip, bp, in_f->ilf_ino,
-+				xfs_has_nrext64(mp), ldip->di_nrext64_pad);
-+			error = -EFSCORRUPTED;
-+			goto out_release;
-+		}
-+	} else {
-+		if (ldip->di_version == 3 && ldip->di_big_nextents != 0) {
-+			XFS_CORRUPTION_ERROR("xlog_recover_inode_pass2(6)",
-+				     XFS_ERRLEVEL_LOW, mp, ldip,
-+				     sizeof(*ldip));
-+			xfs_alert(mp,
-+				"%s: Bad inode log record, rec ptr "PTR_FMT", "
-+				"dino ptr "PTR_FMT", dino bp "PTR_FMT", "
-+				"ino %Ld, ldip->di_big_dextcnt = %llu",
-+				__func__, item, dip, bp, in_f->ilf_ino,
-+				ldip->di_big_nextents);
-+			error = -EFSCORRUPTED;
-+			goto out_release;
-+		}
-+	}
-+
-+	if (xfs_log_dinode_has_nrext64(ldip)) {
-+		nextents = ldip->di_big_nextents;
-+		anextents = ldip->di_big_anextents;
-+	} else {
-+		nextents = ldip->di_nextents;
-+		anextents = ldip->di_anextents;
-+	}
-+
-+	if (unlikely(nextents + anextents > ldip->di_nblocks)) {
-+		XFS_CORRUPTION_ERROR("xlog_recover_inode_pass2(7)",
- 				     XFS_ERRLEVEL_LOW, mp, ldip,
- 				     sizeof(*ldip));
- 		xfs_alert(mp,
- 	"%s: Bad inode log record, rec ptr "PTR_FMT", dino ptr "PTR_FMT", "
--	"dino bp "PTR_FMT", ino %Ld, total extents = %d, nblocks = %Ld",
-+	"dino bp "PTR_FMT", ino %Ld, total extents = %llu, nblocks = %Ld",
- 			__func__, item, dip, bp, in_f->ilf_ino,
--			ldip->di_nextents + ldip->di_anextents,
--			ldip->di_nblocks);
-+			nextents + anextents, ldip->di_nblocks);
- 		error = -EFSCORRUPTED;
- 		goto out_release;
- 	}
- 	if (unlikely(ldip->di_forkoff > mp->m_sb.sb_inodesize)) {
--		XFS_CORRUPTION_ERROR("xlog_recover_inode_pass2(6)",
-+		XFS_CORRUPTION_ERROR("xlog_recover_inode_pass2(8)",
- 				     XFS_ERRLEVEL_LOW, mp, ldip,
- 				     sizeof(*ldip));
- 		xfs_alert(mp,
-@@ -374,7 +431,7 @@ xlog_recover_inode_commit_pass2(
- 	}
- 	isize = xfs_log_dinode_size(mp);
- 	if (unlikely(item->ri_buf[1].i_len > isize)) {
--		XFS_CORRUPTION_ERROR("xlog_recover_inode_pass2(7)",
-+		XFS_CORRUPTION_ERROR("xlog_recover_inode_pass2(9)",
- 				     XFS_ERRLEVEL_LOW, mp, ldip,
- 				     sizeof(*ldip));
- 		xfs_alert(mp,
+-	error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK, iext_delta);
++	error = xfs_trans_inode_ensure_nextents(&tp, ip, XFS_DATA_FORK,
++			iext_delta);
+ 	if (error)
+ 		goto out_cancel;
+ 
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index 379ef99722c5..4d24977d6a47 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -806,7 +806,7 @@ xfs_growfs_rt_alloc(
+ 		xfs_trans_ijoin(tp, ip, 0);
+ 		unlock_inode = true;
+ 
+-		error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
++		error = xfs_trans_inode_ensure_nextents(&tp, ip, XFS_DATA_FORK,
+ 				XFS_IEXT_ADD_NOSPLIT_CNT);
+ 		if (error)
+ 			goto out_trans_cancel;
 -- 
 2.30.2
 
