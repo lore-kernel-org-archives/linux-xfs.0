@@ -2,128 +2,89 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC771C43219
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Feb 2022 10:29:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45B59C433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Feb 2022 12:09:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233353AbiBXK3g (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 24 Feb 2022 05:29:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45964 "EHLO
+        id S229838AbiBXMKZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 24 Feb 2022 07:10:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43030 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233314AbiBXK3f (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Feb 2022 05:29:35 -0500
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4F5D11E1484;
-        Thu, 24 Feb 2022 02:29:05 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-17-0.pa.vic.optusnet.com.au [49.186.17.0])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 377EB10E3F4B;
-        Thu, 24 Feb 2022 21:29:01 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nNBMr-00FpGo-82; Thu, 24 Feb 2022 21:29:01 +1100
-Date:   Thu, 24 Feb 2022 21:29:01 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Theodore Ts'o <tytso@mit.edu>
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        John Hubbard <jhubbard@nvidia.com>,
-        Lee Jones <lee.jones@linaro.org>, linux-ext4@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>,
-        Dave Chinner <dchinner@redhat.com>,
-        Goldwyn Rodrigues <rgoldwyn@suse.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Bob Peterson <rpeterso@redhat.com>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Ritesh Harjani <riteshh@linux.ibm.com>,
-        Johannes Thumshirn <jth@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com,
-        linux-kernel@vger.kernel.org
-Subject: Re: [REPORT] kernel BUG at fs/ext4/inode.c:2620 - page_buffers()
-Message-ID: <20220224102901.GN59715@dread.disaster.area>
-References: <Yg0m6IjcNmfaSokM@google.com>
- <82d0f4e4-c911-a245-4701-4712453592d9@nvidia.com>
- <Yg8bxiz02WBGf6qO@mit.edu>
- <Yg9QGm2Rygrv+lMj@kroah.com>
- <YhbE2nocBMtLc27C@mit.edu>
- <20220224014842.GM59715@dread.disaster.area>
- <YhcAcfY1pZTl3sId@mit.edu>
+        with ESMTP id S232734AbiBXMKY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Feb 2022 07:10:24 -0500
+Received: from mail1.g1.pair.com (mail1.g1.pair.com [66.39.3.162])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EDAB215F35E
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Feb 2022 04:09:53 -0800 (PST)
+Received: from mail1.g1.pair.com (localhost [127.0.0.1])
+        by mail1.g1.pair.com (Postfix) with ESMTP id B64EA54755D;
+        Thu, 24 Feb 2022 07:09:52 -0500 (EST)
+Received: from harpe.intellique.com (unknown [195.135.69.188])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mail1.g1.pair.com (Postfix) with ESMTPSA id 0D6CC60AEBC;
+        Thu, 24 Feb 2022 07:09:51 -0500 (EST)
+Date:   Thu, 24 Feb 2022 13:09:53 +0100
+From:   Emmanuel Florac <eflorac@intellique.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: experience with very large filesystems
+Message-ID: <20220224130953.4906c7e3@harpe.intellique.com>
+In-Reply-To: <20220223211006.GL59715@dread.disaster.area>
+References: <20220223163513.43f1f054@harpe.intellique.com>
+        <20220223211006.GL59715@dread.disaster.area>
+Organization: Intellique
+X-Mailer: Claws Mail 3.17.3 (GTK+ 2.24.31; x86_64-slackware-linux-gnu)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YhcAcfY1pZTl3sId@mit.edu>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=62175def
-        a=+dVDrTVfsjPpH/ci3UuFng==:117 a=+dVDrTVfsjPpH/ci3UuFng==:17
-        a=kj9zAlcOel0A:10 a=oGFeUVbbRNcA:10 a=7-415B0cAAAA:8
-        a=nNeadVlkB5BEUYMxFkMA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/DHQwAIqUr41EbH5jggHAisG"; protocol="application/pgp-signature"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Feb 23, 2022 at 10:50:09PM -0500, Theodore Ts'o wrote:
-> On Thu, Feb 24, 2022 at 12:48:42PM +1100, Dave Chinner wrote:
-> > > Fair enough; on the other hand, we could also view this as making ext4
-> > > more robust against buggy code in other subsystems, and while other
-> > > file systems may be losing user data if they are actually trying to do
-> > > remote memory access to file-backed memory, apparently other file
-> > > systems aren't noticing and so they're not crashing.
-> > 
-> > Oh, we've noticed them, no question about that.  We've got bug
-> > reports going back years for systems being crashed, triggering BUGs
-> > and/or corrupting data on both XFS and ext4 filesystems due to users
-> > trying to run RDMA applications with file backed pages.
-> 
-> Is this issue causing XFS to crash?  I didn't know that.
+--Sig_/DHQwAIqUr41EbH5jggHAisG
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-I have no idea if crashes nowdays -  go back a few years before and
-search for XFS BUGging out in ->invalidate_page (or was it
-->release_page?) because of unexpected dirty pages. I think it could
-also trigger BUGs in writeback when ->writepages tripped over a
-dirty page without a delayed allocation mapping over the hole...
+Le Thu, 24 Feb 2022 08:10:06 +1100
+Dave Chinner <david@fromorbit.com> =C3=A9crivait:
 
-We were pretty aggressive about telling people reporting such issues
-that they get to keep all the borken bits to themselves and to stop
-wasting our time with unsolvable problems caused by their
-broken-by-design RDMA applications. Hence people have largely
-stopped bothering us with random filesystem crashes on systems using
-RDMA on file-backed pages...
+> From the storage side, you really want to expand the storage with
+> chunks that have the same geometry (stripe unit and stripe width)
+> so that it doesn't screw up the alignment of the filesystem to the
+> new storage.
 
-> I tried the Syzbot reproducer with XFS mounted, and it didn't trigger
-> any crashes.  I'm sure data was getting corrupted, but I figured I
-> should bring ext4 to the XFS level of "at least we're not reliably
-> killing the kernel".
+That part should be easy, I plan to use the same type of hardware anyway
+(12 TB Ultrastar disks).
+=20
+> And that's where the difficultly may lie. If the existing storage
+> volume the filesystem sits on doesn't end exactly on a stripe width
+> boundary, you're going to have to offset the start of the new
+> storage volumes part way into the first stripe width in the volumes
+> to ensure that when the filesystem expands, then end of the first
+> stripe width in the new volume is exactly where the filesystem
+> expects it to be.
 
-Oh, well, good to know XFS didn't die a horrible death immediately.
-Thanks for checking, Ted.
+That should be somewhat more manageable given that I've setup
+everything as an LVM volume. I may use partitions on the new devices to
+precisely align the PVs before expanding the LV.=20
 
-> On ext4, an unprivileged process can use process_vm_writev(2) to crash
-> the system.  I don't know how quickly we can get a fix into mm/gup.c,
-> but if some other kernel path tries calling set_page_dirty() on a
-> file-backed page without first asking permission from the file system,
-> it seems to be nice if the file system doesn't BUG() --- as near as I
-> can tell, xfs isn't crashing in this case, but ext4 is.
+--=20
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
 
-iomap is probably refusing to map holes for writepage - we've
-cleaned up most of the weird edge cases to return errors, so I'm
-guessing iomap is just ignoring such pages these days.
+--Sig_/DHQwAIqUr41EbH5jggHAisG
+Content-Type: application/pgp-signature
+Content-Description: Signature digitale OpenPGP
 
-Yeah, see iomap_writepage_map():
+-----BEGIN PGP SIGNATURE-----
 
-                error = wpc->ops->map_blocks(wpc, inode, pos);
-                if (error)
-                        break;
-                if (WARN_ON_ONCE(wpc->iomap.type == IOMAP_INLINE))
-                        continue;
-                if (wpc->iomap.type == IOMAP_HOLE)
-                        continue;
+iEYEARECAAYFAmIXdZEACgkQX3jQXNUicVb38ACfZJ4uNp/hqyjYIBt0XOXVnKIO
+2RMAn0BfTByXeZgWUbbZv5dCwyfkb1W3
+=oj5j
+-----END PGP SIGNATURE-----
 
-Yeah, so if writeback maps a hole rather than converts a delalloc
-region to IOMAP_MAPPED, it'll just skip over the block/page.  IIRC,
-they essentially become uncleanable pages, and I think eventually
-inode reclaim will just toss them out of memory.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--Sig_/DHQwAIqUr41EbH5jggHAisG--
