@@ -2,91 +2,133 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8065BC433FE
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Feb 2022 22:35:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C142C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Feb 2022 23:23:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238268AbiBYWfi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 25 Feb 2022 17:35:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56992 "EHLO
+        id S239327AbiBYXYT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 25 Feb 2022 18:24:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43296 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236215AbiBYWfh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Feb 2022 17:35:37 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 18E131F6BDA
-        for <linux-xfs@vger.kernel.org>; Fri, 25 Feb 2022 14:35:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1645828504;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=tdwFI8/HNO9zA57Faly0CQL2zwlJbm1DHl/wk+x1u2I=;
-        b=bm0o4Y3ohGcIBG3bpeRXTqfCdeCZfndL/LmkQO5eBHAc6KyHuFRAbzWiysu0kjoFNELpYR
-        q+HmZmKdpn1a78wndskHs4V6JmagSK5NsWKyjCTOgyl3Ho2qD+cliqbtlhvsesb1YMTsMj
-        4IaxjlsreFG532pUZv2gXwrx1/4i7aU=
-Received: from mail-il1-f200.google.com (mail-il1-f200.google.com
- [209.85.166.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-186-B085Y3rkMxW4Erh5simP7w-1; Fri, 25 Feb 2022 17:35:03 -0500
-X-MC-Unique: B085Y3rkMxW4Erh5simP7w-1
-Received: by mail-il1-f200.google.com with SMTP id o10-20020a92d4ca000000b002c27571073fso4376681ilm.10
-        for <linux-xfs@vger.kernel.org>; Fri, 25 Feb 2022 14:35:02 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:message-id:date:mime-version:user-agent
-         :subject:content-language:to:cc:references:in-reply-to
-         :content-transfer-encoding;
-        bh=tdwFI8/HNO9zA57Faly0CQL2zwlJbm1DHl/wk+x1u2I=;
-        b=6IwCThkdw+RR91+6nmm/EzEQVAiQKLdI1W+TSkDubsYduvL2yiaHtERL+aVeCngnmu
-         xvVudhjCQe6HBB+GXfF0q27uZPxr0QKyzshD2593n/Z6JY1Oa0ahOb6EFkP+86gdVZM6
-         0R5e/SXsEEyK40CLuGddgJlBEpgOJjij/bPDk3L8TbCWveDkucdsfKoicrIqvtUZvZ7A
-         EqT4C2zn2eQD2gWSEYMJ9TpZ3tpTRS59S22s1V3mF1bAa06S6ALnsnUgX9lpb2jo9BqW
-         30P8zGJRtjBXf3OUv4gsHahn6+3o/htbc0y+ir+wcvxJmdENul1cU8anhCTUdrQhop83
-         iBwg==
-X-Gm-Message-State: AOAM5331thYsNHsgdEgBgkBBQicRB7m7QsLJBL2rAfEIewsqOFP/E/7L
-        HbKy5c2Fiq9fFzmpLo8ZY2i0vDNy5k3R8YSO73pOov0Z0GMt7p0pGg/Mfg0XLGax3He4jhnXiGb
-        MVMw71Hnlpzgj+1t/9fzm
-X-Received: by 2002:a02:cace:0:b0:315:2b2e:f63b with SMTP id f14-20020a02cace000000b003152b2ef63bmr7865438jap.320.1645828502254;
-        Fri, 25 Feb 2022 14:35:02 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJy6pKn3lRW4wQAS74HImFAYUoIDlFTUFrn7tRXG8OJKb731lVfLUH5ZV7BUFuMzODLGZ8zRFQ==
-X-Received: by 2002:a02:cace:0:b0:315:2b2e:f63b with SMTP id f14-20020a02cace000000b003152b2ef63bmr7865421jap.320.1645828501997;
-        Fri, 25 Feb 2022 14:35:01 -0800 (PST)
-Received: from [10.0.0.147] (sandeen.net. [63.231.237.45])
-        by smtp.gmail.com with ESMTPSA id d4-20020a5d9504000000b006409b9a3a22sm2116238iom.39.2022.02.25.14.35.00
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 25 Feb 2022 14:35:01 -0800 (PST)
-From:   Eric Sandeen <esandeen@redhat.com>
-X-Google-Original-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <a7e204d7-83eb-d2ef-7870-b28b3769e170@redhat.com>
-Date:   Fri, 25 Feb 2022 16:35:00 -0600
+        with ESMTP id S230190AbiBYXYT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Feb 2022 18:24:19 -0500
+Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7F81BF511;
+        Fri, 25 Feb 2022 15:23:45 -0800 (PST)
+Received: from cwcc.thunk.org (pool-108-7-220-252.bstnma.fios.verizon.net [108.7.220.252])
+        (authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 21PNLLWc016897
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 25 Feb 2022 18:21:22 -0500
+Received: by cwcc.thunk.org (Postfix, from userid 15806)
+        id 6F72115C0038; Fri, 25 Feb 2022 18:21:21 -0500 (EST)
+Date:   Fri, 25 Feb 2022 18:21:21 -0500
+From:   "Theodore Ts'o" <tytso@mit.edu>
+To:     John Hubbard <jhubbard@nvidia.com>
+Cc:     Eric Biggers <ebiggers@kernel.org>,
+        Lee Jones <lee.jones@linaro.org>, linux-ext4@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>,
+        Dave Chinner <dchinner@redhat.com>,
+        Goldwyn Rodrigues <rgoldwyn@suse.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Bob Peterson <rpeterso@redhat.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Ritesh Harjani <riteshh@linux.ibm.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Johannes Thumshirn <jth@kernel.org>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH -v3] ext4: don't BUG if kernel subsystems dirty pages
+ without asking ext4 first
+Message-ID: <YhlkcYjozFmt3Kl4@mit.edu>
+References: <Yg0m6IjcNmfaSokM@google.com>
+ <Yhks88tO3Em/G370@mit.edu>
+ <YhlBUCi9O30szf6l@sol.localdomain>
+ <YhlFRoJ3OdYMIh44@mit.edu>
+ <YhlIvw00Y4MkAgxX@mit.edu>
+ <2f9933b3-a574-23e1-e632-72fc29e582cf@nvidia.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.6.1
-Subject: Re: [PATCH v1.1 04/17] libfrog: always use the kernel GETFSMAP
- definitions
-Content-Language: en-US
-To:     "Darrick J. Wong" <djwong@kernel.org>, sandeen@sandeen.net
-Cc:     linux-xfs@vger.kernel.org, allison.henderson@oracle.com,
-        Dave Chinner <david@fromorbit.com>
-References: <164263809453.863810.8908193461297738491.stgit@magnolia>
- <164263811682.863810.12064586264139896800.stgit@magnolia>
- <20220208164605.GC8313@magnolia>
-In-Reply-To: <20220208164605.GC8313@magnolia>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <2f9933b3-a574-23e1-e632-72fc29e582cf@nvidia.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2/8/22 10:46 AM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Fri, Feb 25, 2022 at 01:33:33PM -0800, John Hubbard wrote:
+> On 2/25/22 13:23, Theodore Ts'o wrote:
+> > [un]pin_user_pages_remote is dirtying pages without properly warning
+> > the file system in advance.  This was noted by Jan Kara in 2018[1] and
 > 
-> The GETFSMAP ioctl has been a part of the kernel since 4.12.  We have no
-> business shipping a stale copy of kernel header contents in the xfslibs
-> package, so get rid of it.  This means that xfs_scrub now has a hard
-> dependency on the build system having new kernel headers.
+> In 2018, [un]pin_user_pages_remote did not exist. And so what Jan reported
+> was actually that dio_bio_complete() was calling set_page_dirty_lock()
+> on pages that were not (any longer) set up for that.
+
+Fair enough, there are two problems that are getting conflated here,
+and that's my bad.  The problem which Jan pointed out is one where the
+Direct I/O read path triggered a page fault, so page_mkwrite() was
+actually called.  So in this case, the file system was actually
+notified, and the page was marked dirty after the file system was
+notified.  But then the DIO read was racing with the page cleaner,
+which would call writepage(), and then clear the page, and then remove
+the buffer_heads.  Then dio_bio_complete() would call set_page_dirty()
+a second time, and that's what would trigger the BUG.
+
+But in the syzbot reproducer, it's a different problem.  In this case,
+process_vm_writev() calling [un]pin_user_pages_remote(), and
+page_mkwrite() is never getting called.  So there is no need to race
+with the page cleaner, and so the BUG triggers much more reliably.
+
+> > more recently has resulted in bug reports by Syzbot in various Android
+> > kernels[2].
+> > 
+> > This is technically a bug in mm/gup.c, but arguably ext4 is fragile in
 > 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Is it, really? unpin_user_pages_dirty_lock() moved the set_page_dirty_lock()
+> call into mm/gup.c, but that merely refactored things. The callers are
+> all over the kernel, and those callers are what need changing in order
+> to fix this.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+From my perspective, the bug is calling set_page_dirty() without first
+calling the file system's page_mkwrite().  This is necessary since the
+file system needs to allocate file system data blocks in preparation
+for a future writeback.
 
+Now, calling page_mkwrite() by itself is not enough, since the moment
+you make the page dirty, the page cleaner could go ahead and call
+writepage() behind your back and clean it.  In actual practice, with a
+Direct I/O read request racing with writeback, this is race was quite
+hard to hit, because the that would imply that the background
+writepage() call would have to complete ahead of the synchronous read
+request, and the block layer generally prioritizes synchronous reads
+ahead of background write requests.  So in practice, this race was
+***very*** hard to hit.  Jan may have reported it in 2018, but I don't
+think I've ever seen it happen myself.
+
+For process_vm_writev() this is a case where user pages are pinned and
+then released in short order, so I suspect that race with the page
+cleaner would also be very hard to hit.  But we could completely
+remove the potential for the race, and also make things kinder for
+f2fs and btrfs's compressed file write support, by making things work
+much like the write(2) system call.  Imagine if we had a
+"pin_user_pages_local()" which calls write_begin(), and a
+"unpin_user_pages_local()" which calls write_end(), and the
+presumption with the "[un]pin_user_pages_local" API is that you don't
+hold the pinned pages for very long --- say, not across a system call
+boundary, and then it would work the same way the write(2) system call
+works does except that in the case of process_vm_writev(2) the pages
+are identified by another process's address space where they happen to
+be mapped.
+
+This obviously doesn't work when pinning pages for remote DMA, because
+in that case the time between pin_user_pages_remote() and
+unpin_user_pages_remote() could be a long, long time, so that means we
+can't use using write_begin/write_end; we'd need to call page_mkwrite()
+when the pages are first pinned and then somehow prevent the page
+cleaner from touching a dirty page which is pinned for use by the
+remote DMA.
+
+Does that make sense?
+
+							- Ted
