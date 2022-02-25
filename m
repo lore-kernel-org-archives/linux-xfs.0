@@ -2,153 +2,88 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51AC2C433EF
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Feb 2022 16:40:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A439C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Feb 2022 17:11:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239556AbiBYQk4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 25 Feb 2022 11:40:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35722 "EHLO
+        id S237401AbiBYRMF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 25 Feb 2022 12:12:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49212 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235766AbiBYQkz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Feb 2022 11:40:55 -0500
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96F41218CCD;
-        Fri, 25 Feb 2022 08:40:23 -0800 (PST)
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id 239732114D;
-        Fri, 25 Feb 2022 16:40:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1645807222; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=tWMIUHa0fBAb1sjWcQulU95T21ZKZnSq9Doda166V14=;
-        b=JuAs0dtW2wKpx+bssg4WCSeHc5mfMUwNAAGWi8XDNYurKR3sLARj4hsjyn2H0iFs+IYOr6
-        RFR2U763fOXe3DBAGG27SkFLlNUyTw0ZQJN4ojIxuCk7xv0Cl25kk01aNJG63nm+W/Rft1
-        v+t0yk988AO+naiNi2oLsRFYna6Eo4s=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1645807222;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=tWMIUHa0fBAb1sjWcQulU95T21ZKZnSq9Doda166V14=;
-        b=fpmsJkUoh+jPBaKF+/CqprBoDi2xs0cypb+JYPL6ZNxz8ceCCtHITK0r9Kk6gHWNGae0/z
-        1mCd7CFTzPJSPHBA==
-Received: from quack3.suse.cz (unknown [10.163.28.18])
+        with ESMTP id S231347AbiBYRMF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Feb 2022 12:12:05 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 179C42028A5
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Feb 2022 09:11:31 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by relay2.suse.de (Postfix) with ESMTPS id E1463A3B83;
-        Fri, 25 Feb 2022 16:40:21 +0000 (UTC)
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 0352FA05D9; Fri, 25 Feb 2022 17:40:15 +0100 (CET)
-Date:   Fri, 25 Feb 2022 17:40:15 +0100
-From:   Jan Kara <jack@suse.cz>
-To:     Chaitanya Kulkarni <chaitanyak@nvidia.com>
-Cc:     Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>,
-        Christoph Hellwig <hch@infradead.org>,
-        Dave Chinner <dchinner@redhat.com>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        John Hubbard <jhubbard@nvidia.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC PATCH 0/7] block, fs: convert Direct IO to FOLL_PIN
-Message-ID: <20220225164015.sriu6rz4hnqz25s5@quack3.lan>
-References: <20220225085025.3052894-1-jhubbard@nvidia.com>
- <20220225120522.6qctxigvowpnehxl@quack3.lan>
- <1d31ce1f-d307-fef0-8fce-84d6d96c6968@nvidia.com>
+        by ams.source.kernel.org (Postfix) with ESMTPS id C3113B832BA
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Feb 2022 17:11:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F709C340F0;
+        Fri, 25 Feb 2022 17:11:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1645809088;
+        bh=9AK6N4t+/tLekAXDdRhw+XAjdhoTuXctxRuirFlSJ9A=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=bUeNeUT4TnZqnp+Sg/io69i3VAz3oA4ZyxOGo+83CD1VlJy7v3CJ3qWXDAF4QMBY4
+         WRd949qvvRmWhesLWIR0TnheEmZT9NeWsUFbxhohEJiOFjmQYZcApoEaYWX427duMx
+         9hK29GM7YWvW3LzLv0qsKG0cuGaqqlBKxNUF/DELjRh3pIhavreKxLMOylPbK8oeST
+         C3/PHTZjnzfsgq/I2vGYcEX/x2mEFk4a4P68oZvg8aD/b2BxUVnXXCykqH+m0pcw38
+         Bo3dtL1QecE35Ak8RIuU3Esx45+EiZkNZyN3ba9e0752Ow3BbGgsFTseS7N9kvV8DT
+         H/GC3wPEPdnkw==
+Date:   Fri, 25 Feb 2022 09:11:27 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Andrey Zhadchenko <andrey.zhadchenko@virtuozzo.com>
+Cc:     Christian Brauner <brauner@kernel.org>, linux-xfs@vger.kernel.org,
+        christian.brauner@ubuntu.com, hch@lst.de
+Subject: Re: [PATCH] xfs: do not clear S_ISUID|S_ISGID for idmapped mounts
+Message-ID: <20220225171127.GR8313@magnolia>
+References: <20220221182218.748084-1-andrey.zhadchenko@virtuozzo.com>
+ <20220225015738.GP8313@magnolia>
+ <20220225094517.cd7ukcczezhspdq5@wittgenstein>
+ <e7cbc35c-386b-3323-0cef-da1ebf358f1a@virtuozzo.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1d31ce1f-d307-fef0-8fce-84d6d96c6968@nvidia.com>
+In-Reply-To: <e7cbc35c-386b-3323-0cef-da1ebf358f1a@virtuozzo.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri 25-02-22 16:14:14, Chaitanya Kulkarni wrote:
-> On 2/25/22 04:05, Jan Kara wrote:
-> > On Fri 25-02-22 00:50:18, John Hubbard wrote:
-> >> Hi,
-> >>
-> >> Summary:
-> >>
-> >> This puts some prerequisites in place, including a CONFIG parameter,
-> >> making it possible to start converting and testing the Direct IO part of
-> >> each filesystem, from get_user_pages_fast(), to pin_user_pages_fast().
-> >>
-> >> It will take "a few" kernel releases to get the whole thing done.
-> >>
-> >> Details:
-> >>
-> >> As part of fixing the "get_user_pages() + file-backed memory" problem
-> >> [1], and to support various COW-related fixes as well [2], we need to
-> >> convert the Direct IO code from get_user_pages_fast(), to
-> >> pin_user_pages_fast(). Because pin_user_pages*() calls require a
-> >> corresponding call to unpin_user_page(), the conversion is more
-> >> elaborate than just substitution.
-> >>
-> >> Further complicating the conversion, the block/bio layers get their
-> >> Direct IO pages via iov_iter_get_pages() and iov_iter_get_pages_alloc(),
-> >> each of which has a large number of callers. All of those callers need
-> >> to be audited and changed so that they call unpin_user_page(), rather
-> >> than put_page().
-> >>
-> >> After quite some time exploring and consulting with people as well, it
-> >> is clear that this cannot be done in just one patchset. That's because,
-> >> not only is this large and time-consuming (for example, Chaitanya
-> >> Kulkarni's first reaction, after looking into the details, was, "convert
-> >> the remaining filesystems to use iomap, *then* convert to FOLL_PIN..."),
-> >> but it is also spread across many filesystems.
+On Fri, Feb 25, 2022 at 01:42:26PM +0300, Andrey Zhadchenko wrote:
+> 
+> 
+> On 2/25/22 12:45, Christian Brauner wrote:
+> > On Thu, Feb 24, 2022 at 05:57:38PM -0800, Darrick J. Wong wrote:
+> > > On Mon, Feb 21, 2022 at 09:22:18PM +0300, Andrey Zhadchenko wrote:
+> > > > xfs_fileattr_set() handles idmapped mounts correctly and do not drop this
+> > > > bits.
+> > > > Unfortunately chown syscall results in different callstask:
+> > > > i_op->xfs_vn_setattr()->...->xfs_setattr_nonsize() which checks if process
+> > > > has CAP_FSETID capable in init_user_ns rather than mntns userns.
+> > > > 
+> > > > Signed-off-by: Andrey Zhadchenko <andrey.zhadchenko@virtuozzo.com>
+> > > 
+> > > LGTM...
+> > > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > With having modified fs/direct-io.c and fs/iomap/direct-io.c which
-> > filesystems do you know are missing conversion? Or is it that you just want
-> > to make sure with audit everything is fine? The only fs I could find
-> > unconverted by your changes is ceph. Am I missing something?
+> > Darrick, could I ask you to please wait with applying.
+> > The correct fix for this is either to simply remove the check here
+> > altogether as we figured out in the thread or to switch to a generic vfs
+> > helper setattr_copy().
+> > Andrey will send a new patch in the not too distant future afaict
+> > including tests.
 > 
-> if I understand your comment correctly file systems which are listed in
-> the list see [1] (all the credit goes to John to have a complete list)
-> that are not using iomap but use XXX_XXX_direct_IO() should be fine,
-> since in the callchain going from :-
-> 
-> XXX_XXX_direct_io()
->   __blkdev_direct_io()
->    do_direct_io()
-> 
->    ...
-> 
->      submit_page_selection()
->       get/put_page() <---
-> 
-> will take care of itself ?
+> Yes, please do not apply this patch for now. I am currently working on next
+> version, however it is postponed a bit due to my personal affairs.
+> Also I intend to add a second patch for xfs_fileattr_set() since it has the
+> similar flaw - it may drop S_ISUID|S_ISGID for directories and may not drop
+> S_ISUID for executable files.
+> I expect to send patches next week alongside with new xfstests.
 
-Yes, John's changes to fs/direct-io.c should take care of these
-filesystems using __blkdev_direct_io().
+Ah, fair enough.  Felipe noticed that generic/673 produced inconsistent
+outputs between btrfs and xfs last week and had asked about why the
+setuid/setgid dropping behavior was unique to xfs.  We discovered that
+xfs' omission of the setattr_copy logic was behind that...
 
-								Honza
-
-> [1]
-> 
-> jfs_direct_IO()
-> nilfs_direct_IO()
-> ntfs_dirct_IO()
-> reiserfs_direct_IO()
-> udf_direct_IO()
-> ocfs2_dirct_IO()
-> affs_direct_IO()
-> exfat_direct_IO()
-> ext2_direct_IO()
-> fat_direct_IO()
-> hfs_direct_IO()
-> hfs_plus_direct_IO()
-> 
-> -ck
-> 
-> 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+--D
