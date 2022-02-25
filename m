@@ -2,119 +2,104 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0462CC433F5
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Feb 2022 20:02:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2765C433F5
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Feb 2022 20:51:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235733AbiBYUCn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 25 Feb 2022 15:02:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43896 "EHLO
+        id S237660AbiBYUwF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 25 Feb 2022 15:52:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48480 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235698AbiBYUCn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Feb 2022 15:02:43 -0500
-Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1B801AA06C
-        for <linux-xfs@vger.kernel.org>; Fri, 25 Feb 2022 12:02:10 -0800 (PST)
+        with ESMTP id S231599AbiBYUwF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Feb 2022 15:52:05 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED2122028BA;
+        Fri, 25 Feb 2022 12:51:32 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 28A66CE2771
-        for <linux-xfs@vger.kernel.org>; Fri, 25 Feb 2022 20:02:09 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5C013C340E7;
-        Fri, 25 Feb 2022 20:02:07 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 9B586B83389;
+        Fri, 25 Feb 2022 20:51:31 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BF336C340E7;
+        Fri, 25 Feb 2022 20:51:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1645819327;
-        bh=S5wezFPtWZQku/N2E+vhIqu+FkygewkY4Co9kJg0Qe8=;
-        h=Date:From:To:Cc:Subject:From;
-        b=PQDiT84FzbIr8pcQLDGYqE32jsrcOH9EK7Q9u/1qKgCXxZfjqTLYo58ju+5aC+dC6
-         0ayEAPmxa9jv+u1nyn9yAmL9zXb8+ZCelwF9MhkhXOg/q0J3xODRxWClA2yk3yHI7B
-         UuS40v91M3haRKvZt1fIc9PpoSjdzXmmr4EQ3LbeTVtkMm4wkq72EKVbjOVMLTsFJd
-         PBYf3d+4LuobCGCidf0bTZKjXRThqvIBowqZXNIf/GVZSVR+Ij9NNefoX1UwxFMC+w
-         pegfDf0dmKR2L2fFBLd/1NZvQh5HrOqpUYnG3vU9r0oRqv8DaA7CE7Smh55gYLLrKl
-         BsX8v0caVftyQ==
-Date:   Fri, 25 Feb 2022 12:02:06 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     xfs <linux-xfs@vger.kernel.org>
-Cc:     Ondrej Mosnacek <omosnace@redhat.com>,
-        Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: don't generate selinux audit messages for capability
- testing
-Message-ID: <20220225200206.GS8313@magnolia>
+        s=k20201202; t=1645822290;
+        bh=F0J/fHQ4PH2PHbI5q93Nm/WbNth9O2hP5bMINbwsdqw=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Eyc+zwquCZ/3IDTmwCbztdnSaf+0OTEgxtAnK98OsuCbT3GDEct8oNRwS3MewY3Nk
+         YMcaEs1KaiUsbEoBbnSGEdZDz+mhuyYwmTNspFkAR+EbrSuq8FLpM2WSKHn5GnP97F
+         xDaBrcBu9WBQaJyO3Qf0dURhIvP+eDaUe4DlOw7v1k5i9C024DfzK1Tx9cRKcGrR7F
+         ETmS1LfStzM59QDQ3l99HkE7q58zaldyDcrFxCwDlj04hJpFbbGdsP3QbnKdgHvq40
+         fPajHYlcbV00WyA1RilKx81Q41KPU/JKXkZv1voJMfZPhaGEJ0wP8xG1EP/aTBZHoS
+         UsrSUoTlOAMLA==
+Date:   Fri, 25 Feb 2022 12:51:28 -0800
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Theodore Ts'o <tytso@mit.edu>
+Cc:     Lee Jones <lee.jones@linaro.org>, linux-ext4@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>,
+        Dave Chinner <dchinner@redhat.com>,
+        Goldwyn Rodrigues <rgoldwyn@suse.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Bob Peterson <rpeterso@redhat.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Ritesh Harjani <riteshh@linux.ibm.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Johannes Thumshirn <jth@kernel.org>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH -v2] ext4: don't BUG if kernel subsystems dirty pages
+ without asking ext4 first
+Message-ID: <YhlBUCi9O30szf6l@sol.localdomain>
+References: <Yg0m6IjcNmfaSokM@google.com>
+ <Yhks88tO3Em/G370@mit.edu>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <Yhks88tO3Em/G370@mit.edu>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Fri, Feb 25, 2022 at 02:24:35PM -0500, Theodore Ts'o wrote:
+> [un]pin_user_pages_remote is dirtying pages without properly warning
+> the file system in advance (or faulting in the file data if the page
+> is not yet in the page cache).  This was noted by Jan Kara in 2018[1]
+> and more recently has resulted in bug reports by Syzbot in various
+> Android kernels[2].
+> 
+> This is technically a bug in the mm/gup.c codepath, but arguably ext4
+> is fragile in that a buggy get_user_pages() implementation causes ext4
+> to crash, where as other file systems are not crashing (although in
+> some cases the user data will be lost since gup code is not properly
+> informing the file system to potentially allocate blocks or reserve
+> space when writing into a sparse portion of file).  I suspect in real
+> life it is rare that people are using RDMA into file-backed memory,
+> which is why no one has complained to ext4 developers except fuzzing
+> programs.
+> 
+> So instead of crashing with a BUG, issue a warning (since there may be
+> potential data loss) and just mark the page as clean to avoid
+> unprivileged denial of service attacks until the problem can be
+> properly fixed.  More discussion and background can be found in the
+> thread starting at [2].
+> 
+> [1] https://www.spinics.net/lists/linux-mm/msg142700.html
 
-There are a few places where we test the current process' capability set
-to decide if we're going to be more or less generous with resource
-acquisition for a system call.  If the process doesn't have the
-capability, we can continue the call, albeit in a degraded mode.
+Can you use a lore link
+(https://lore.kernel.org/linux-mm/20180103100430.GE4911@quack2.suse.cz/T/#u)?
 
-These are /not/ the actual security decisions, so it's not proper to use
-capable(), which (in certain selinux setups) causes audit messages to
-get logged.  Switch them to has_capability_noaudit.
+> +			/*
+> +			 * Should never happen but for buggy code in
+> +			 * other subsystemsa that call
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/xfs_fsmap.c  |    4 ++--
- fs/xfs/xfs_ioctl.c  |    2 +-
- fs/xfs/xfs_iops.c   |    2 +-
- kernel/capability.c |    1 +
- 4 files changed, 5 insertions(+), 4 deletions(-)
+subsystemsa => subsystems
 
-diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-index 48287caad28b..10e1cb71439e 100644
---- a/fs/xfs/xfs_fsmap.c
-+++ b/fs/xfs/xfs_fsmap.c
-@@ -864,8 +864,8 @@ xfs_getfsmap(
- 	    !xfs_getfsmap_is_valid_device(mp, &head->fmh_keys[1]))
- 		return -EINVAL;
- 
--	use_rmap = capable(CAP_SYS_ADMIN) &&
--		   xfs_has_rmapbt(mp);
-+	use_rmap = xfs_has_rmapbt(mp) &&
-+		   has_capability_noaudit(current, CAP_SYS_ADMIN);
- 	head->fmh_entries = 0;
- 
- 	/* Set up our device handlers. */
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 2515fe8299e1..83481005317a 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1189,7 +1189,7 @@ xfs_ioctl_setattr_get_trans(
- 		goto out_error;
- 
- 	error = xfs_trans_alloc_ichange(ip, NULL, NULL, pdqp,
--			capable(CAP_FOWNER), &tp);
-+			has_capability_noaudit(current, CAP_FOWNER), &tp);
- 	if (error)
- 		goto out_error;
- 
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index a56f08314a3d..e6d910a6c35f 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -723,7 +723,7 @@ xfs_setattr_nonsize(
- 	}
- 
- 	error = xfs_trans_alloc_ichange(ip, udqp, gdqp, NULL,
--			capable(CAP_FOWNER), &tp);
-+			has_capability_noaudit(current, CAP_FOWNER), &tp);
- 	if (error)
- 		goto out_dqrele;
- 
-diff --git a/kernel/capability.c b/kernel/capability.c
-index 46a361dde042..765194f5d678 100644
---- a/kernel/capability.c
-+++ b/kernel/capability.c
-@@ -360,6 +360,7 @@ bool has_capability_noaudit(struct task_struct *t, int cap)
- {
- 	return has_ns_capability_noaudit(t, &init_user_ns, cap);
- }
-+EXPORT_SYMBOL(has_capability_noaudit);
- 
- static bool ns_capable_common(struct user_namespace *ns,
- 			      int cap,
+> +			 * set_page_dirty() without properly warning
+> +			 * the file system first.  See [1] for more
+> +			 * information.
+> +			 *
+> +			 * [1] https://www.spinics.net/lists/linux-mm/msg142700.html
+
+Likewise, lore link here.
+
+- Eric
