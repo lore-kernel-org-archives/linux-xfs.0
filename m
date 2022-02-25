@@ -2,244 +2,305 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96BB4C433EF
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Feb 2022 05:10:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66ACDC433F5
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Feb 2022 05:11:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234063AbiBYFKo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 25 Feb 2022 00:10:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51098 "EHLO
+        id S234718AbiBYFLl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 25 Feb 2022 00:11:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51316 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230443AbiBYFKn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Feb 2022 00:10:43 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 982762692EA
-        for <linux-xfs@vger.kernel.org>; Thu, 24 Feb 2022 21:10:11 -0800 (PST)
+        with ESMTP id S230443AbiBYFLk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Feb 2022 00:11:40 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15F962692EA
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Feb 2022 21:11:09 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3B226618F3
-        for <linux-xfs@vger.kernel.org>; Fri, 25 Feb 2022 05:10:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91DBDC340E7;
-        Fri, 25 Feb 2022 05:10:10 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8B93F618F3
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Feb 2022 05:11:08 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E75D7C340E7;
+        Fri, 25 Feb 2022 05:11:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1645765810;
-        bh=GoYlKL9KcvFmw3kDejhbsP3NU9a9oP/mIWIJQaxTO2o=;
+        s=k20201202; t=1645765868;
+        bh=lZA8OKJ4cGzlw2KDNJtrOfWA/0sQNcavyBgHxSLXD5s=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=A+qjDVBzyyx2CTDoNCH/R3D/lWP436VPVkYkzBvlP9+9bOn04Wo8XJ6gr6ZWSU/hm
-         rqaGKLTa3fY8u1dKWQzH2Hz6OKoq+03dtiFVVDHp4OlobZjkIbQTZU6+P8V+Ld2qXM
-         +Ymb7rYpqPHl3NlPinM+2irY/uwMu16ryjgOTjZ7smBME/rZntlZ+2hzf4LyTqN9tf
-         OvXE34KLCq8ucNHwAeCifMKlux6YI1qesbbyxngpdvd2vsU76010/yg2LUeereJS1i
-         LXJfvp7bdSrcdkXYZC83xWU5Iy+oAjWhKGA6VX0il05sPBj107v6u2XDb9xo799GSB
-         4714cAIBXFm2g==
-Date:   Thu, 24 Feb 2022 21:10:10 -0800
+        b=YaTzTAU03P/efoM+2UKQ/z0SLZ17Tgj1znQF70gZQ6A1S1+PKeTWT+NlkEUFjLEhb
+         W0EESk+y8GLK6kHdB3jUG1VbPFdV6sQ6ye1pVk+G3odO4R0REMKrqlFF78vvQfeYBs
+         kZ2H4UMynQNm74+62uk8bdkAoVud/5aqp+oCij4gkvtU1TKY26hxHbcgSw+Pi0m/MU
+         eGwnXVRuha57Gz3wy2w8picxakAyhvZ5zyWMYE8E70kVt2UQLP9XEkTIlktWeMKQBv
+         +o5emHNKjp8e6+CgzGcsIi+RceBgjLsA2Xneho3dvsucZ4soVXDdFPE9I8KZZ9bvvz
+         UWWmBw22SP49Q==
+Date:   Thu, 24 Feb 2022 21:11:07 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Chandan Babu R <chandan.babu@oracle.com>
 Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
-Subject: Re: [PATCH V6 15/17] xfs: Enable bulkstat ioctl to support 64-bit
- per-inode extent counters
-Message-ID: <20220225051010.GK8338@magnolia>
+Subject: Re: [PATCH V6 14/17] xfs: Conditionally upgrade existing inodes to
+ use 64-bit extent counters
+Message-ID: <20220225051107.GL8338@magnolia>
 References: <20220224130211.1346088-1-chandan.babu@oracle.com>
- <20220224130211.1346088-16-chandan.babu@oracle.com>
+ <20220224130211.1346088-15-chandan.babu@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220224130211.1346088-16-chandan.babu@oracle.com>
+In-Reply-To: <20220224130211.1346088-15-chandan.babu@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 24, 2022 at 06:32:09PM +0530, Chandan Babu R wrote:
-> The following changes are made to enable userspace to obtain 64-bit extent
-> counters,
-> 1. Carve out a new 64-bit field xfs_bulkstat->bs_extents64 from
->    xfs_bulkstat->bs_pad[] to hold 64-bit extent counter.
-> 2. Define the new flag XFS_BULK_IREQ_BULKSTAT for userspace to indicate that
->    it is capable of receiving 64-bit extent counters.
+On Thu, Feb 24, 2022 at 06:32:08PM +0530, Chandan Babu R wrote:
+> This commit upgrades inodes to use 64-bit extent counters when they are read
+> from disk. Inodes are upgraded only when the filesystem instance has
+> XFS_SB_FEAT_INCOMPAT_NREXT64 incompat flag set.
 > 
-> Suggested-by: Darrick J. Wong <djwong@kernel.org>
 > Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_fs.h | 20 ++++++++++++++++----
->  fs/xfs/xfs_ioctl.c     |  3 +++
->  fs/xfs/xfs_itable.c    | 30 ++++++++++++++++++++++++++++--
->  fs/xfs/xfs_itable.h    |  6 ++++--
->  fs/xfs/xfs_iwalk.h     |  2 +-
->  5 files changed, 52 insertions(+), 9 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> index 2204d49d0c3a..31ccbff2f16c 100644
-> --- a/fs/xfs/libxfs/xfs_fs.h
-> +++ b/fs/xfs/libxfs/xfs_fs.h
-> @@ -378,7 +378,7 @@ struct xfs_bulkstat {
->  	uint32_t	bs_extsize_blks; /* extent size hint, blocks	*/
->  
->  	uint32_t	bs_nlink;	/* number of links		*/
-> -	uint32_t	bs_extents;	/* number of extents		*/
-> +	uint32_t	bs_extents;	/* 32-bit data fork extent counter */
->  	uint32_t	bs_aextents;	/* attribute number of extents	*/
->  	uint16_t	bs_version;	/* structure version		*/
->  	uint16_t	bs_forkoff;	/* inode fork offset in bytes	*/
-> @@ -387,8 +387,9 @@ struct xfs_bulkstat {
->  	uint16_t	bs_checked;	/* checked inode metadata	*/
->  	uint16_t	bs_mode;	/* type and mode		*/
->  	uint16_t	bs_pad2;	/* zeroed			*/
-> +	uint64_t	bs_extents64;	/* 64-bit data fork extent counter */
->  
-> -	uint64_t	bs_pad[7];	/* zeroed			*/
-> +	uint64_t	bs_pad[6];	/* zeroed			*/
->  };
->  
->  #define XFS_BULKSTAT_VERSION_V1	(1)
-> @@ -469,8 +470,19 @@ struct xfs_bulk_ireq {
->   */
->  #define XFS_BULK_IREQ_SPECIAL	(1 << 1)
->  
-> -#define XFS_BULK_IREQ_FLAGS_ALL	(XFS_BULK_IREQ_AGNO | \
-> -				 XFS_BULK_IREQ_SPECIAL)
-> +/*
-> + * Return data fork extent count via xfs_bulkstat->bs_extents64 field and assign
-> + * 0 to xfs_bulkstat->bs_extents when the flag is set.  Otherwise, use
-> + * xfs_bulkstat->bs_extents for returning data fork extent count and set
-> + * xfs_bulkstat->bs_extents64 to 0. In the second case, return -EOVERFLOW and
-> + * assign 0 to xfs_bulkstat->bs_extents if data fork extent count is larger than
-> + * XFS_MAX_EXTCNT_DATA_FORK_OLD.
-> + */
-> +#define XFS_BULK_IREQ_NREXT64	(1 << 2)
-> +
-> +#define XFS_BULK_IREQ_FLAGS_ALL	(XFS_BULK_IREQ_AGNO |	 \
-> +				 XFS_BULK_IREQ_SPECIAL | \
-> +				 XFS_BULK_IREQ_NREXT64)
->  
->  /* Operate on the root directory inode. */
->  #define XFS_BULK_IREQ_SPECIAL_ROOT	(1)
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 2515fe8299e1..22947c5ffd34 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -813,6 +813,9 @@ xfs_bulk_ireq_setup(
->  	if (XFS_INO_TO_AGNO(mp, breq->startino) >= mp->m_sb.sb_agcount)
->  		return -ECANCELED;
->  
-> +	if (hdr->flags & XFS_BULK_IREQ_NREXT64)
-> +		breq->flags |= XFS_IBULK_NREXT64;
-> +
->  	return 0;
->  }
->  
-> diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-> index c08c79d9e311..11e5245756f7 100644
-> --- a/fs/xfs/xfs_itable.c
-> +++ b/fs/xfs/xfs_itable.c
-> @@ -20,6 +20,7 @@
->  #include "xfs_icache.h"
->  #include "xfs_health.h"
->  #include "xfs_trans.h"
-> +#include "xfs_errortag.h"
->  
->  /*
->   * Bulk Stat
-> @@ -64,6 +65,7 @@ xfs_bulkstat_one_int(
->  	struct xfs_inode	*ip;		/* incore inode pointer */
->  	struct inode		*inode;
->  	struct xfs_bulkstat	*buf = bc->buf;
-> +	xfs_extnum_t		nextents;
->  	int			error = -EINVAL;
->  
->  	if (xfs_internal_inum(mp, ino))
-> @@ -102,7 +104,27 @@ xfs_bulkstat_one_int(
->  
->  	buf->bs_xflags = xfs_ip2xflags(ip);
->  	buf->bs_extsize_blks = ip->i_extsize;
-> -	buf->bs_extents = xfs_ifork_nextents(&ip->i_df);
-> +
-> +	nextents = xfs_ifork_nextents(&ip->i_df);
-> +	if (!(bc->breq->flags & XFS_IBULK_NREXT64)) {
-> +		xfs_extnum_t max_nextents = XFS_MAX_EXTCNT_DATA_FORK_OLD;
 
-Nit: space between type ^^^^^ and variable name.
-
-> +
-> +		if (unlikely(XFS_TEST_ERROR(false, mp,
-> +				XFS_ERRTAG_REDUCE_MAX_IEXTENTS)))
-> +			max_nextents = 10;
-> +
-> +		if (nextents > max_nextents) {
-> +			xfs_iunlock(ip, XFS_ILOCK_SHARED);
-> +			xfs_irele(ip);
-> +			error = -EOVERFLOW;
-> +			goto out;
-> +		}
-> +
-> +		buf->bs_extents = nextents;
-> +	} else {
-> +		buf->bs_extents64 = nextents;
-> +	}
-> +
->  	xfs_bulkstat_health(ip, buf);
->  	buf->bs_aextents = xfs_ifork_nextents(ip->i_afp);
->  	buf->bs_forkoff = XFS_IFORK_BOFF(ip);
-> @@ -256,6 +278,7 @@ xfs_bulkstat(
->  		.breq		= breq,
->  	};
->  	struct xfs_trans	*tp;
-> +	unsigned int		iwalk_flags = 0;
->  	int			error;
->  
->  	if (breq->mnt_userns != &init_user_ns) {
-> @@ -279,7 +302,10 @@ xfs_bulkstat(
->  	if (error)
->  		goto out;
->  
-> -	error = xfs_iwalk(breq->mp, tp, breq->startino, breq->flags,
-> +	if (breq->flags & XFS_IBULK_SAME_AG)
-> +		iwalk_flags |= XFS_IWALK_SAME_AG;
-> +
-> +	error = xfs_iwalk(breq->mp, tp, breq->startino, iwalk_flags,
->  			xfs_bulkstat_iwalk, breq->icount, &bc);
->  	xfs_trans_cancel(tp);
->  out:
-> diff --git a/fs/xfs/xfs_itable.h b/fs/xfs/xfs_itable.h
-> index 7078d10c9b12..2cb5611c873e 100644
-> --- a/fs/xfs/xfs_itable.h
-> +++ b/fs/xfs/xfs_itable.h
-> @@ -13,11 +13,13 @@ struct xfs_ibulk {
->  	xfs_ino_t		startino; /* start with this inode */
->  	unsigned int		icount;   /* number of elements in ubuffer */
->  	unsigned int		ocount;   /* number of records returned */
-> -	unsigned int		flags;    /* see XFS_IBULK_FLAG_* */
-> +	unsigned long long	flags;    /* see XFS_IBULK_FLAG_* */
-
-I wonder if this could have been left an unsigned int and the flags
-below assigned adjacent bits instead of widening the field...
-
->  };
->  
->  /* Only iterate within the same AG as startino */
-> -#define XFS_IBULK_SAME_AG	(XFS_IWALK_SAME_AG)
-> +#define XFS_IBULK_SAME_AG	(1ULL << 0)
-> +
-> +#define XFS_IBULK_NREXT64	(1ULL << 32)
-
-...but was your purpose here to make it really obvious that we've
-separated IWALK and IBULK?
+Yay!
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
->  /*
->   * Advance the user buffer pointer by one record of the given size.  If the
-> diff --git a/fs/xfs/xfs_iwalk.h b/fs/xfs/xfs_iwalk.h
-> index 37a795f03267..3a68766fd909 100644
-> --- a/fs/xfs/xfs_iwalk.h
-> +++ b/fs/xfs/xfs_iwalk.h
-> @@ -26,7 +26,7 @@ int xfs_iwalk_threaded(struct xfs_mount *mp, xfs_ino_t startino,
->  		unsigned int inode_records, bool poll, void *data);
+> ---
+>  fs/xfs/libxfs/xfs_attr.c       |  3 ++-
+>  fs/xfs/libxfs/xfs_bmap.c       |  5 ++---
+>  fs/xfs/libxfs/xfs_inode_fork.c | 37 ++++++++++++++++++++++++++++++++++
+>  fs/xfs/libxfs/xfs_inode_fork.h |  2 ++
+>  fs/xfs/xfs_bmap_item.c         |  3 ++-
+>  fs/xfs/xfs_bmap_util.c         | 10 ++++-----
+>  fs/xfs/xfs_dquot.c             |  2 +-
+>  fs/xfs/xfs_iomap.c             |  5 +++--
+>  fs/xfs/xfs_reflink.c           |  5 +++--
+>  fs/xfs/xfs_rtalloc.c           |  2 +-
+>  10 files changed, 58 insertions(+), 16 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index 23523b802539..03a358930d74 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -774,7 +774,8 @@ xfs_attr_set(
+>  		return error;
 >  
->  /* Only iterate inodes within the same AG as @startino. */
-> -#define XFS_IWALK_SAME_AG	(0x1)
-> +#define XFS_IWALK_SAME_AG	(1 << 0)
+>  	if (args->value || xfs_inode_hasattr(dp)) {
+> -		error = xfs_iext_count_may_overflow(dp, XFS_ATTR_FORK,
+> +		error = xfs_trans_inode_ensure_nextents(&args->trans, dp,
+> +				XFS_ATTR_FORK,
+>  				XFS_IEXT_ATTR_MANIP_CNT(rmt_blks));
+>  		if (error)
+>  			goto out_trans_cancel;
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index be7f8ebe3cd5..3a3c99ef7f13 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -4523,14 +4523,13 @@ xfs_bmapi_convert_delalloc(
+>  		return error;
 >  
->  #define XFS_IWALK_FLAGS_ALL	(XFS_IWALK_SAME_AG)
+>  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> +	xfs_trans_ijoin(tp, ip, 0);
 >  
+> -	error = xfs_iext_count_may_overflow(ip, whichfork,
+> +	error = xfs_trans_inode_ensure_nextents(&tp, ip, whichfork,
+>  			XFS_IEXT_ADD_NOSPLIT_CNT);
+>  	if (error)
+>  		goto out_trans_cancel;
+>  
+> -	xfs_trans_ijoin(tp, ip, 0);
+> -
+>  	if (!xfs_iext_lookup_extent(ip, ifp, offset_fsb, &bma.icur, &bma.got) ||
+>  	    bma.got.br_startoff > offset_fsb) {
+>  		/*
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> index a3a3b54f9c55..d1d065abeac3 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+> @@ -757,3 +757,40 @@ xfs_iext_count_may_overflow(
+>  
+>  	return 0;
+>  }
+> +
+> +/*
+> + * Ensure that the inode has the ability to add the specified number of
+> + * extents.  Caller must hold ILOCK_EXCL and have joined the inode to
+> + * the transaction.  Upon return, the inode will still be in this state
+> + * upon return and the transaction will be clean.
+> + */
+> +int
+> +xfs_trans_inode_ensure_nextents(
+> +	struct xfs_trans	**tpp,
+> +	struct xfs_inode	*ip,
+> +	int			whichfork,
+> +	int			nr_to_add)
+> +{
+> +	int			error;
+> +
+> +	error = xfs_iext_count_may_overflow(ip, whichfork, nr_to_add);
+> +	if (!error)
+> +		return 0;
+> +
+> +	/*
+> +	 * Try to upgrade if the extent count fields aren't large
+> +	 * enough.
+> +	 */
+> +	if (!xfs_has_nrext64(ip->i_mount) ||
+> +	    (ip->i_diflags2 & XFS_DIFLAG2_NREXT64))
+> +		return error;
+> +
+> +	ip->i_diflags2 |= XFS_DIFLAG2_NREXT64;
+> +	xfs_trans_log_inode(*tpp, ip, XFS_ILOG_CORE);
+> +
+> +	error = xfs_trans_roll(tpp);
+> +	if (error)
+> +		return error;
+> +
+> +	return xfs_iext_count_may_overflow(ip, whichfork, nr_to_add);
+> +}
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+> index 8e6221e32660..65265ca51b0d 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.h
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.h
+> @@ -286,6 +286,8 @@ int xfs_ifork_verify_local_data(struct xfs_inode *ip);
+>  int xfs_ifork_verify_local_attr(struct xfs_inode *ip);
+>  int xfs_iext_count_may_overflow(struct xfs_inode *ip, int whichfork,
+>  		int nr_to_add);
+> +int xfs_trans_inode_ensure_nextents(struct xfs_trans **tpp,
+> +		struct xfs_inode *ip, int whichfork, int nr_to_add);
+>  
+>  /* returns true if the fork has extents but they are not read in yet. */
+>  static inline bool xfs_need_iread_extents(struct xfs_ifork *ifp)
+> diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+> index e1f4d7d5a011..27bc16a2b09b 100644
+> --- a/fs/xfs/xfs_bmap_item.c
+> +++ b/fs/xfs/xfs_bmap_item.c
+> @@ -505,7 +505,8 @@ xfs_bui_item_recover(
+>  	else
+>  		iext_delta = XFS_IEXT_PUNCH_HOLE_CNT;
+>  
+> -	error = xfs_iext_count_may_overflow(ip, whichfork, iext_delta);
+> +	error = xfs_trans_inode_ensure_nextents(&tp, ip, whichfork,
+> +			iext_delta);
+>  	if (error)
+>  		goto err_cancel;
+>  
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index eb2e387ba528..8d86d8d5ad88 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -855,7 +855,7 @@ xfs_alloc_file_space(
+>  		if (error)
+>  			break;
+>  
+> -		error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
+> +		error = xfs_trans_inode_ensure_nextents(&tp, ip, XFS_DATA_FORK,
+>  				XFS_IEXT_ADD_NOSPLIT_CNT);
+>  		if (error)
+>  			goto error;
+> @@ -910,7 +910,7 @@ xfs_unmap_extent(
+>  	if (error)
+>  		return error;
+>  
+> -	error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
+> +	error = xfs_trans_inode_ensure_nextents(&tp, ip, XFS_DATA_FORK,
+>  			XFS_IEXT_PUNCH_HOLE_CNT);
+>  	if (error)
+>  		goto out_trans_cancel;
+> @@ -1191,7 +1191,7 @@ xfs_insert_file_space(
+>  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+>  	xfs_trans_ijoin(tp, ip, 0);
+>  
+> -	error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
+> +	error = xfs_trans_inode_ensure_nextents(&tp, ip, XFS_DATA_FORK,
+>  			XFS_IEXT_PUNCH_HOLE_CNT);
+>  	if (error)
+>  		goto out_trans_cancel;
+> @@ -1418,7 +1418,7 @@ xfs_swap_extent_rmap(
+>  			trace_xfs_swap_extent_rmap_remap_piece(tip, &uirec);
+>  
+>  			if (xfs_bmap_is_real_extent(&uirec)) {
+> -				error = xfs_iext_count_may_overflow(ip,
+> +				error = xfs_trans_inode_ensure_nextents(&tp, ip,
+>  						XFS_DATA_FORK,
+>  						XFS_IEXT_SWAP_RMAP_CNT);
+>  				if (error)
+> @@ -1426,7 +1426,7 @@ xfs_swap_extent_rmap(
+>  			}
+>  
+>  			if (xfs_bmap_is_real_extent(&irec)) {
+> -				error = xfs_iext_count_may_overflow(tip,
+> +				error = xfs_trans_inode_ensure_nextents(&tp, tip,
+>  						XFS_DATA_FORK,
+>  						XFS_IEXT_SWAP_RMAP_CNT);
+>  				if (error)
+> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> index 5afedcbc78c7..193a2e66efc7 100644
+> --- a/fs/xfs/xfs_dquot.c
+> +++ b/fs/xfs/xfs_dquot.c
+> @@ -320,7 +320,7 @@ xfs_dquot_disk_alloc(
+>  		goto err_cancel;
+>  	}
+>  
+> -	error = xfs_iext_count_may_overflow(quotip, XFS_DATA_FORK,
+> +	error = xfs_trans_inode_ensure_nextents(&tp, quotip, XFS_DATA_FORK,
+>  			XFS_IEXT_ADD_NOSPLIT_CNT);
+>  	if (error)
+>  		goto err_cancel;
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index e552ce541ec2..4078d5324090 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -250,7 +250,8 @@ xfs_iomap_write_direct(
+>  	if (error)
+>  		return error;
+>  
+> -	error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK, nr_exts);
+> +	error = xfs_trans_inode_ensure_nextents(&tp, ip, XFS_DATA_FORK,
+> +			nr_exts);
+>  	if (error)
+>  		goto out_trans_cancel;
+>  
+> @@ -553,7 +554,7 @@ xfs_iomap_write_unwritten(
+>  		if (error)
+>  			return error;
+>  
+> -		error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
+> +		error = xfs_trans_inode_ensure_nextents(&tp, ip, XFS_DATA_FORK,
+>  				XFS_IEXT_WRITE_UNWRITTEN_CNT);
+>  		if (error)
+>  			goto error_on_bmapi_transaction;
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index db70060e7bf6..9d4fd2b160ff 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -615,7 +615,7 @@ xfs_reflink_end_cow_extent(
+>  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+>  	xfs_trans_ijoin(tp, ip, 0);
+>  
+> -	error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
+> +	error = xfs_trans_inode_ensure_nextents(&tp, ip, XFS_DATA_FORK,
+>  			XFS_IEXT_REFLINK_END_COW_CNT);
+>  	if (error)
+>  		goto out_cancel;
+> @@ -1117,7 +1117,8 @@ xfs_reflink_remap_extent(
+>  	if (dmap_written)
+>  		++iext_delta;
+>  
+> -	error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK, iext_delta);
+> +	error = xfs_trans_inode_ensure_nextents(&tp, ip, XFS_DATA_FORK,
+> +			iext_delta);
+>  	if (error)
+>  		goto out_cancel;
+>  
+> diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+> index 379ef99722c5..4d24977d6a47 100644
+> --- a/fs/xfs/xfs_rtalloc.c
+> +++ b/fs/xfs/xfs_rtalloc.c
+> @@ -806,7 +806,7 @@ xfs_growfs_rt_alloc(
+>  		xfs_trans_ijoin(tp, ip, 0);
+>  		unlock_inode = true;
+>  
+> -		error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
+> +		error = xfs_trans_inode_ensure_nextents(&tp, ip, XFS_DATA_FORK,
+>  				XFS_IEXT_ADD_NOSPLIT_CNT);
+>  		if (error)
+>  			goto out_trans_cancel;
 > -- 
 > 2.30.2
 > 
