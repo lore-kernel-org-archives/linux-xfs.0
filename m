@@ -2,71 +2,89 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 617CBC433FE
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Feb 2022 12:05:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87552C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Feb 2022 13:12:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234223AbiBYMF7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 25 Feb 2022 07:05:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54682 "EHLO
+        id S241007AbiBYNNQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 25 Feb 2022 08:13:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33960 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229531AbiBYMF6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Feb 2022 07:05:58 -0500
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5280575219;
-        Fri, 25 Feb 2022 04:05:27 -0800 (PST)
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id EEFE81F383;
-        Fri, 25 Feb 2022 12:05:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1645790725; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
+        with ESMTP id S241020AbiBYNNP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Feb 2022 08:13:15 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 98958181E61
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Feb 2022 05:12:42 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1645794761;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=eAnCOUNlpv0ysOvixU+XiM/OYFni8Zhhf05M8qRwWEU=;
-        b=aaFFZkaYWOBT51HIQxzbdnm8VuoA/WoCDd8Qu/upqGIefFJk9jhikk4N9zV8xGTaJs8kHY
-        +yjgEy/Dc0JWAceihZu1YNm+fmIjDGZHVoQY70rqxK1PfJLGC+UNKNObRBKJ/dHH7+pWB4
-        Z00YB9cQ7DbBbLg9/Jd+V8DNN3em3rQ=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1645790725;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=eAnCOUNlpv0ysOvixU+XiM/OYFni8Zhhf05M8qRwWEU=;
-        b=fxvXNPiwyYmsV4yQ5iUWGJLOT+ZZNJBUXgh+gmwP7vMYMk++4m4Zvw5Y/FtcfTHXeQU9zG
-        DNhuYgTV6kAhiHDQ==
-Received: from quack3.suse.cz (unknown [10.163.28.18])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by relay2.suse.de (Postfix) with ESMTPS id 78DDAA3B84;
-        Fri, 25 Feb 2022 12:05:25 +0000 (UTC)
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 175A6A05D9; Fri, 25 Feb 2022 13:05:22 +0100 (CET)
-Date:   Fri, 25 Feb 2022 13:05:22 +0100
-From:   Jan Kara <jack@suse.cz>
-To:     John Hubbard <jhubbard@nvidia.com>
-Cc:     Jens Axboe <axboe@kernel.dk>, Jan Kara <jack@suse.cz>,
-        Christoph Hellwig <hch@infradead.org>,
+        bh=Q5m/jO7lh5udnKQzVaUijMT/vcP8DIr3AnFBCv6X8sA=;
+        b=A+whudTHBepKndncnELDJctBP6oue4vB3ufQvbGVHmaOmN0NNDVYUiY70U9rMqGdsgRxP3
+        Ehk1454R3uy3G6MRabXy6klxw8OQP0fYbFDUlY1TnHXriHha4Kgyu9/jPlNfaeTupNCJuS
+        PreZpfbiNMAyA3fZUXDuGSyiffPuIO0=
+Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
+ [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-482-6xyLQXTcMMetCi8ONTN0Og-1; Fri, 25 Feb 2022 08:12:40 -0500
+X-MC-Unique: 6xyLQXTcMMetCi8ONTN0Og-1
+Received: by mail-wm1-f70.google.com with SMTP id w3-20020a7bc743000000b0037c5168b3c4so1539809wmk.7
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Feb 2022 05:12:39 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:organization:in-reply-to
+         :content-transfer-encoding;
+        bh=Q5m/jO7lh5udnKQzVaUijMT/vcP8DIr3AnFBCv6X8sA=;
+        b=CYUQAvShiIke6D7yu+XBDNM+TF1cZS8djwzIi+wcNq4LdmLXvWFJFYl+WJpq/rUdSD
+         x21Dq7P//fgaJRnN0pz4f4seNCRJPBeioyoaGd70Sm1A6BObWovR+Zc3uadesbVfTevV
+         H+WCDsTRMw95YgC4wqIIaHeznrLtri+4D3sie2q8ytTf1YgnxHQOtlduXBLQqDHuU5/z
+         3VjZsYEOQ4mDErt73p0FH1qKeDvVAgns8Q3x9rEyQLrxq8mTgaKToo0anGZPcfrOF+mV
+         pwvuhsgzJbgyb6/Vf1Ka+GklMJ8XuEsyqqjV6rdxGRHuSpHhoqfBzGWExmzWJdDEqH2W
+         xZSQ==
+X-Gm-Message-State: AOAM530Twvr7vNYQzXtDktcjMlTrS6p5J8QOvKTBrq+DwdbI9Gdqq+fy
+        ReWlF2W05J0VttAG3gy12tukUYBqYaAytNRersFweufNDC/ayP2MfGGJpfqEI1wyzYAa5RdAk1j
+        pI+5r3syyvbHDdyStxwUB
+X-Received: by 2002:a05:600c:230d:b0:37d:5882:ec9b with SMTP id 13-20020a05600c230d00b0037d5882ec9bmr2621771wmo.162.1645794759008;
+        Fri, 25 Feb 2022 05:12:39 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJwI4b9vBHcOeQt/ZmS1/e52HNSF01bwScuFUG5ZV9CohndqVjI+TJ4cckBrt1RE2I3tNlK5oQ==
+X-Received: by 2002:a05:600c:230d:b0:37d:5882:ec9b with SMTP id 13-20020a05600c230d00b0037d5882ec9bmr2621744wmo.162.1645794758739;
+        Fri, 25 Feb 2022 05:12:38 -0800 (PST)
+Received: from ?IPV6:2003:cb:c706:1900:f2f7:d2ad:80d9:218f? (p200300cbc7061900f2f7d2ad80d9218f.dip0.t-ipconnect.de. [2003:cb:c706:1900:f2f7:d2ad:80d9:218f])
+        by smtp.gmail.com with ESMTPSA id m5-20020a05600c3b0500b00380da3ac789sm2535021wms.1.2022.02.25.05.12.37
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 25 Feb 2022 05:12:38 -0800 (PST)
+Message-ID: <ad29be74-d296-a9fb-41d7-00d2ba15ea5c@redhat.com>
+Date:   Fri, 25 Feb 2022 14:12:37 +0100
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+Subject: Re: [RFC PATCH 0/7] block, fs: convert Direct IO to FOLL_PIN
+Content-Language: en-US
+To:     John Hubbard <jhubbard@nvidia.com>, Jens Axboe <axboe@kernel.dk>,
+        Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>,
         Dave Chinner <dchinner@redhat.com>,
         "Darrick J . Wong" <djwong@kernel.org>,
         Theodore Ts'o <tytso@mit.edu>,
         Alexander Viro <viro@zeniv.linux.org.uk>,
         Miklos Szeredi <miklos@szeredi.hu>,
         Andrew Morton <akpm@linux-foundation.org>,
-        Chaitanya Kulkarni <kch@nvidia.com>,
-        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Chaitanya Kulkarni <kch@nvidia.com>
+Cc:     linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-xfs@vger.kernel.org, linux-mm@kvack.org,
         LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC PATCH 0/7] block, fs: convert Direct IO to FOLL_PIN
-Message-ID: <20220225120522.6qctxigvowpnehxl@quack3.lan>
 References: <20220225085025.3052894-1-jhubbard@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+From:   David Hildenbrand <david@redhat.com>
+Organization: Red Hat
 In-Reply-To: <20220225085025.3052894-1-jhubbard@nvidia.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri 25-02-22 00:50:18, John Hubbard wrote:
+On 25.02.22 09:50, John Hubbard wrote:
 > Hi,
 > 
 > Summary:
@@ -91,20 +109,14 @@ On Fri 25-02-22 00:50:18, John Hubbard wrote:
 > each of which has a large number of callers. All of those callers need
 > to be audited and changed so that they call unpin_user_page(), rather
 > than put_page().
-> 
-> After quite some time exploring and consulting with people as well, it
-> is clear that this cannot be done in just one patchset. That's because,
-> not only is this large and time-consuming (for example, Chaitanya
-> Kulkarni's first reaction, after looking into the details, was, "convert
-> the remaining filesystems to use iomap, *then* convert to FOLL_PIN..."),
-> but it is also spread across many filesystems.
 
-With having modified fs/direct-io.c and fs/iomap/direct-io.c which
-filesystems do you know are missing conversion? Or is it that you just want
-to make sure with audit everything is fine? The only fs I could find
-unconverted by your changes is ceph. Am I missing something?
+vmsplice is another candidate that uses iov_iter_get_pages() and should
+be converted to FOLL_PIN. For that particular user, we have to also pass
+FOLL_LONGTERM -- vmsplice as it stands can block memory hotunplug / CMA
+/ ... for all eternity.
 
-								Honza
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Thanks,
+
+David / dhildenb
+
