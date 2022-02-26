@@ -2,77 +2,128 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFF87C433F5
-	for <linux-xfs@archiver.kernel.org>; Sat, 26 Feb 2022 02:10:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C73BC433F5
+	for <linux-xfs@archiver.kernel.org>; Sat, 26 Feb 2022 02:38:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229456AbiBZCKp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 25 Feb 2022 21:10:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47290 "EHLO
+        id S229436AbiBZCjW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 25 Feb 2022 21:39:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53870 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229447AbiBZCKo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Feb 2022 21:10:44 -0500
-Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E85F824152B;
-        Fri, 25 Feb 2022 18:10:10 -0800 (PST)
-Received: from cwcc.thunk.org (pool-108-7-220-252.bstnma.fios.verizon.net [108.7.220.252])
-        (authenticated bits=0)
-        (User authenticated as tytso@ATHENA.MIT.EDU)
-        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 21Q20u42026574
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 25 Feb 2022 21:00:56 -0500
-Received: by cwcc.thunk.org (Postfix, from userid 15806)
-        id 1041C15C0038; Fri, 25 Feb 2022 21:00:56 -0500 (EST)
-Date:   Fri, 25 Feb 2022 21:00:56 -0500
-From:   "Theodore Ts'o" <tytso@mit.edu>
-To:     John Hubbard <jhubbard@nvidia.com>
-Cc:     Eric Biggers <ebiggers@kernel.org>,
-        Lee Jones <lee.jones@linaro.org>, linux-ext4@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>,
-        Dave Chinner <dchinner@redhat.com>,
-        Goldwyn Rodrigues <rgoldwyn@suse.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Bob Peterson <rpeterso@redhat.com>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Ritesh Harjani <riteshh@linux.ibm.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Johannes Thumshirn <jth@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH -v3] ext4: don't BUG if kernel subsystems dirty pages
- without asking ext4 first
-Message-ID: <YhmJ2EfZv0TqRX+h@mit.edu>
-References: <Yg0m6IjcNmfaSokM@google.com>
- <Yhks88tO3Em/G370@mit.edu>
- <YhlBUCi9O30szf6l@sol.localdomain>
- <YhlFRoJ3OdYMIh44@mit.edu>
- <YhlIvw00Y4MkAgxX@mit.edu>
- <2f9933b3-a574-23e1-e632-72fc29e582cf@nvidia.com>
- <YhlkcYjozFmt3Kl4@mit.edu>
- <303059e6-3a33-99cb-2952-82fe8079fa45@nvidia.com>
- <YhmFFMwvOaMiNBTQ@mit.edu>
+        with ESMTP id S229518AbiBZCjV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Feb 2022 21:39:21 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4506518FAFD
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Feb 2022 18:38:47 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 9BA3EB833C8
+        for <linux-xfs@vger.kernel.org>; Sat, 26 Feb 2022 02:38:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3729DC340E7;
+        Sat, 26 Feb 2022 02:38:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1645843124;
+        bh=/nrP1QwfcUxjdpnOhEdwbQ2h66jzYc6fP8uT51hJTpI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=mFiiBsJ0acKY+2Y7vRuCBJNFVqDq2Xgs8Oeo88ga7vcyjBpHai+ojIlXFU/HdeHKy
+         yw28G8waSefmufAk0MJ5JDgTHlLG+s8POK9FZ/0CVf2NBSoFM8NTcN5AmidFis4HIj
+         HL290ZqOePiu2EaT4TyXPebqvBuvTzJ0Ek+HqjE1eJskrpz8Xm4XXQpuUHB0C+FH7v
+         U/E34w1DrPsIKh/IpF9sxmmA1DayXp6Gcr6iAmZjDFF9/TbtyWpRPOl1ecuAZmFiX6
+         ixII3povM12fExwp+LUacNE8LkDKilUlK229AWiFoSoWeK9hhoM29KFl9YHbSvaGpD
+         /t4APNQ90mSiA==
+Date:   Fri, 25 Feb 2022 18:38:43 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     linux-xfs@vger.kernel.org, allison.henderson@oracle.com
+Subject: Re: [PATCH 16/17] mkfs: add a config file for x86_64 pmem filesystems
+Message-ID: <20220226023843.GU8313@magnolia>
+References: <164263809453.863810.8908193461297738491.stgit@magnolia>
+ <164263818283.863810.4750810429299999067.stgit@magnolia>
+ <ec4fef64-cc49-2f7e-069c-50d7a32610d4@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YhmFFMwvOaMiNBTQ@mit.edu>
+In-Reply-To: <ec4fef64-cc49-2f7e-069c-50d7a32610d4@sandeen.net>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Feb 25, 2022 at 08:40:36PM -0500, Theodore Ts'o wrote:
-> Well, that makes it process_vm_writev()'s is that it needs to know
-> when to call pin_user_file_pages().
+On Fri, Feb 25, 2022 at 04:21:59PM -0600, Eric Sandeen wrote:
+> On 1/19/22 6:23 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > We have a handful of users who continually ping the maintainer with
+> > questions about why pmem and dax don't work quite the way they want
+> > (which is to say 2MB extents and PMD mappings) because they copy-pasted
+> > some garbage from Google that's wrong.  Encode the correct defaults into
+> > a mkfs config file and ship that.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  mkfs/Makefile        |    1 +
+> >  mkfs/dax_x86_64.conf |   19 +++++++++++++++++++
+> >  2 files changed, 20 insertions(+)
+> >  create mode 100644 mkfs/dax_x86_64.conf
+> > 
+> > 
+> > diff --git a/mkfs/Makefile b/mkfs/Makefile
+> > index 0aaf9d06..55d9362f 100644
+> > --- a/mkfs/Makefile
+> > +++ b/mkfs/Makefile
+> > @@ -10,6 +10,7 @@ LTCOMMAND = mkfs.xfs
+> >  HFILES =
+> >  CFILES = proto.c xfs_mkfs.c
+> >  CFGFILES = \
+> > +	dax_x86_64.conf \
+> >  	lts_4.19.conf \
+> >  	lts_5.4.conf \
+> >  	lts_5.10.conf \
+> > diff --git a/mkfs/dax_x86_64.conf b/mkfs/dax_x86_64.conf
+> > new file mode 100644
+> > index 00000000..bc3f3c9a
+> > --- /dev/null
+> > +++ b/mkfs/dax_x86_64.conf
+> > @@ -0,0 +1,19 @@
+> > +# mkfs.xfs configuration file for persistent memory on x86_64.
+> > +# Block size must match page size (4K) and we require V5 for the DAX inode
+> > +# flag.  Set extent size hints and stripe units to encourage the filesystem to
+> > +# allocate PMD sized (2MB) blocks.
+> > +
+> > +[block]
+> > +size=4096
+> > +
+> > +[metadata]
+> > +crc=1
+> > +
+> > +[data]
+> > +sunit=4096
+> > +swidth=4096
+> 
+> How would you feel about:
+> 
+> su=2m
+> sw=1
+> 
+> instead, because I think that explicit units are far more obvious than
+> "4096 <handwave> 512-byte units" ?
 
-Sorry, typed too fast.  What I was trying to say is this make it
-process_vm_writev()'s problem to figure out when it should call
-pin_user_file_pages() versus some other pin_user_pages function.
+Fine with me. :)
 
-> I suspect that for many use cases
-> --- for example, if this is being used by a debugger to modify a
-> variable on a stack, or an anonymous page in the program's data
-> segment, process_vm_writev() *isn't* actually pinning a file.  So they
-> want some kind of interface that automatically DTRT regardless of
-> whether the user pages being edited are file-backed or not
-> file-backed.
+> > +extszinherit=512
+> 
+> ... though I guess this can only be specified in fsblocks, LOLZ :(
+> 
+> > +daxinherit=1
+> > +
+> > +[realtime]
+> > +extsize=2097152
+> 
+> Pretty weird to set this if you don't have a realtime device but I guess
+> it works.
 
-					- Ted
+Yeah, everything rt is weird. :)
+
+--D
+
+> 
+> -Eric
