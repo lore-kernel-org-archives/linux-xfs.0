@@ -2,113 +2,168 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D1FEC433EF
-	for <linux-xfs@archiver.kernel.org>; Sat, 26 Feb 2022 21:37:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50C88C433EF
+	for <linux-xfs@archiver.kernel.org>; Sun, 27 Feb 2022 09:34:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229749AbiBZViC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 26 Feb 2022 16:38:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59098 "EHLO
+        id S229604AbiB0JfU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 27 Feb 2022 04:35:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34270 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229726AbiBZViB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 26 Feb 2022 16:38:01 -0500
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0D8DB268
-        for <linux-xfs@vger.kernel.org>; Sat, 26 Feb 2022 13:37:24 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-17-0.pa.vic.optusnet.com.au [49.186.17.0])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id EBBE5531F9D;
-        Sun, 27 Feb 2022 08:37:21 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nO4ki-00GnUh-Fi; Sun, 27 Feb 2022 08:37:20 +1100
-Date:   Sun, 27 Feb 2022 08:37:20 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     sandeen@sandeen.net, Christoph Hellwig <hch@lst.de>,
+        with ESMTP id S229512AbiB0JfU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Feb 2022 04:35:20 -0500
+Received: from mail-qv1-xf2f.google.com (mail-qv1-xf2f.google.com [IPv6:2607:f8b0:4864:20::f2f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A6B13AA66;
+        Sun, 27 Feb 2022 01:34:44 -0800 (PST)
+Received: by mail-qv1-xf2f.google.com with SMTP id h13so10137210qvk.12;
+        Sun, 27 Feb 2022 01:34:44 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=Mni5yEHGP1qoaz/6hLvUm/V5F3W7L/m3Wwp7WeQHDBs=;
+        b=i/DtVk9P1DTHcuWOXDH9pwmZG/a6m++cXjyfgszKxoJCGq61z0Vh9V6VT7598xqiMi
+         EF1aHesjRXqFVb1MLfCyfjVLdKDjxStOIQgcFf5sdUVfVFVSgj5nzuRpk39ZssABWyKh
+         a5V1wQVAoDRNzC9Dl1gk7AqHG50JPjaqkE16unCe75SAiAEMS+WC4cVBEtbtkF7Dem5C
+         uPnBaKWJ7OQhiSUrqoI9Da0PZrEndqPQmR1OX4KId4mTUcIqvmNuHTnvKYBBLBjkQG9b
+         zfm9wn/aSeqIz2OuKsGS5Jxx5jqmvvBDJl5gDl+K45QxzWErwVzB3/emB9ggfzRG4X0z
+         Zzmw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=Mni5yEHGP1qoaz/6hLvUm/V5F3W7L/m3Wwp7WeQHDBs=;
+        b=z7gfc4HX5nXy1chSEyqmSlX1X47whTIgem/EfSk3ZBe0cD4aMk1vBlMnPGbejdoaIf
+         iq6NfBZ0RhxMgfM3VvOJdTk/BWWsojD18e3t10N7mlqDkNZrrNuK4h610LKpVoMG4/uc
+         WU8WUqzLxO24LSSV2cDcZWQF3e13drDQYnAbuQqfIwqs+rvnSVLELjfvCWT9g3ilDHMI
+         aKsA46ULKw5wUys6ArsBgKoN5+5C0ICxP3GsLc3V6FqjzjbCYWTkxC3EoF3srJgvJB2L
+         i6fgf1bQlh0sJLSPqIx1KCTqtI0QfjT73TcyDXgF6yQq9ANO04zJVxBhdoltgU7f3NZK
+         Jzmw==
+X-Gm-Message-State: AOAM5331l3AuHqqfNBB9b75j/Wz/NFgvy/wRQR1CucQzOBdQF8E1RpcS
+        Vpaynl4Wnoc9AaSkVjtp9/A=
+X-Google-Smtp-Source: ABdhPJzlq9Z9ay7IQGmu5husNkkRN/qKFoSudupKCgD7SFi/psSCUSPiOgMXvH9tuYollM3Gca/QcA==
+X-Received: by 2002:a05:6214:ca3:b0:42d:129a:5ac6 with SMTP id s3-20020a0562140ca300b0042d129a5ac6mr11161514qvs.86.1645954483191;
+        Sun, 27 Feb 2022 01:34:43 -0800 (PST)
+Received: from sandstorm.attlocal.net (76-242-90-12.lightspeed.sntcca.sbcglobal.net. [76.242.90.12])
+        by smtp.gmail.com with ESMTPSA id h3-20020a05622a170300b002e008a93f8fsm469815qtk.91.2022.02.27.01.34.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 27 Feb 2022 01:34:42 -0800 (PST)
+From:   jhubbard.send.patches@gmail.com
+X-Google-Original-From: jhubbard@nvidia.com
+To:     Jens Axboe <axboe@kernel.dk>, Jan Kara <jack@suse.cz>,
+        Christoph Hellwig <hch@infradead.org>,
         Dave Chinner <dchinner@redhat.com>,
-        Theodore Ts'o <tytso@mit.edu>, linux-xfs@vger.kernel.org,
-        allison.henderson@oracle.com
-Subject: Re: [PATCH 19/17] mkfs: increase default log size for new (aka
- bigtime) filesystems
-Message-ID: <20220226213720.GQ59715@dread.disaster.area>
-References: <164263809453.863810.8908193461297738491.stgit@magnolia>
- <20220226025450.GY8313@magnolia>
+        "Darrick J . Wong" <djwong@kernel.org>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Chaitanya Kulkarni <kch@nvidia.com>
+Cc:     linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+        LKML <linux-kernel@vger.kernel.org>,
+        John Hubbard <jhubbard@nvidia.com>
+Subject: [PATCH 0/6] block, fs: convert most Direct IO cases to FOLL_PIN
+Date:   Sun, 27 Feb 2022 01:34:28 -0800
+Message-Id: <20220227093434.2889464-1-jhubbard@nvidia.com>
+X-Mailer: git-send-email 2.35.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220226025450.GY8313@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=621a9d94
-        a=+dVDrTVfsjPpH/ci3UuFng==:117 a=+dVDrTVfsjPpH/ci3UuFng==:17
-        a=kj9zAlcOel0A:10 a=oGFeUVbbRNcA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=ATPPyKICscX_3wY5w6kA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+X-NVConfidentiality: public
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Feb 25, 2022 at 06:54:50PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Recently, the upstream kernel maintainer has been taking a lot of heat on
-> account of writer threads encountering high latency when asking for log
-> grant space when the log is small.  The reported use case is a heavily
-> threaded indexing product logging trace information to a filesystem
-> ranging in size between 20 and 250GB.  The meetings that result from the
-> complaints about latency and stall warnings in dmesg both from this use
-> case and also a large well known cloud product are now consuming 25% of
-> the maintainer's weekly time and have been for months.
+From: John Hubbard <jhubbard@nvidia.com>
 
-Is the transaction reservation space exhaustion caused by, as I
-pointed out in another thread yesterday, the unbound concurrency in
-IO completion? i.e. we have hundreds of active concurrent
-transactions that then block on common objects between them (e.g.
-inode locks) and serialise? Hence only handful of completions can
-actually run concurrently, depsite every completion holding a full
-reservation of log space to allow them to run concurrently?
+Hi,
 
-> For small filesystems, the log is small by default because we have
-> defaulted to a ratio of 1:2048 (or even less).  For grown filesystems,
-> this is even worse, because big filesystems generate big metadata.
-> However, the log size is still insufficient even if it is formatted at
-> the larger size.
-> 
-> Therefore, if we're writing a new filesystem format (aka bigtime), bump
-> the ratio unconditionally from 1:2048 to 1:256.  On a 220GB filesystem,
-> the 99.95% latencies observed with a 200-writer file synchronous append
-> workload running on a 44-AG filesystem (with 44 CPUs) spread across 4
-> hard disks showed:
-> 
-> Log Size (MB)	Latency (ms)	Throughput (MB/s)
-> 10		520		243
-> 20		220		308
-> 40		140		360
-> 80		92		363
-> 160		86		364
-> 
-> For 4 NVME, the results were:
-> 
-> 10		201		409
-> 20		177		488
-> 40		122		550
-> 80		120		549
-> 160		121		545
-> 
-> Hence we increase the ratio by 16x because there doesn't seem to be much
-> improvement beyond that, and we don't want the log to grow /too/ large.
+The feedback on the RFC [1] prompted me to convert the core Direct IO
+subsystem all at once. The key differences here, as compared to the RFC,
+are:
 
-1:2048 -> 1:256 is an 8x bump, yes?  Which means we'll get a 2GB log
-on a 512GB filesystem, and the 220GB log you tested is getting a
-~1GB log?
+    * no dio_w_*() wrapper routines,
 
-I also wonder if the right thing to do here is just set a minimum
-log size of 32MB? The worst of the long tail latencies are mitigated
-by this point, and so even small filesystems grown out to 200GB will
-have a log size that results in decent performance for this sort of
-workload.
+    * no CONFIG parameter; and
 
-Cheers,
+    * new iov_iter_pin_pages*() routines that pin pages without
+      affecting other callers of iov_iter_get_pages*(). Those other
+      callers (ceph, rds, net, ...) can be converted separately.
 
-Dave.
+Also, many pre-existing callers of unpin_user_pages_dirty_lock() are
+wrong, and this series adds a few more callers. So readers may naturally
+wonder about that. I recently had a very productive discussion with Ted
+Ts'o, who suggested a way to fix the problem, and I'm going to implement
+it, next. However, I think it's best to do that fix separately from
+this, probably layered on top, although it could go either before or
+after.
+
+As part of fixing the "get_user_pages() + file-backed memory" problem
+[2], and to support various COW-related fixes as well [3], we need to
+convert the Direct IO code from get_user_pages_fast(), to
+pin_user_pages_fast(). Because pin_user_pages*() calls require a
+corresponding call to unpin_user_page(), the conversion is more
+elaborate than just substitution.
+
+In the main patch (patch 4) I'm a little concerned about the
+bio_map_user_iov() changes, because the sole caller,
+blk_rq_map_user_iov(), has either a direct mapped case or a copy from
+user case, and I'm still not sure that these are properly kept separate,
+from an unpin pages point of view. So a close look there by reviewers
+would be welcome.
+
+Testing: this needs lots of filesystem testing.
+
+In this patchset:
+
+Patches 1, 2: provide a few new routines that will be used by
+conversion: pin_user_page(), iov_iter_pin_pages(),
+iov_iter_pin_pages_alloc().
+
+Patch 3: provide a few asserts that only user space pages are being
+passed in for Direct IO. (This patch could be folded into another
+patch.)
+
+Patch 4: Convert all Direct IO callers that use iomap, or
+blockdev_direct_IO(), or bio_iov_iter_get_pages().
+
+Patch 5, 6: convert a few other callers to the new system: NFS-Direct,
+and fuse.
+
+This is based on linux-next (next-20220225). I've also stashed it here:
+
+    https://github.com/johnhubbard/linux bio_pup_next_20220225
+
+
+[1] https://lore.kernel.org/r/20220225085025.3052894-1-jhubbard@nvidia.com
+
+[2] https://lwn.net/Articles/753027/ "The trouble with get_user_pages()"
+
+[3] https://lore.kernel.org/all/20211217113049.23850-1-david@redhat.com/T/#u
+    (David Hildenbrand's mm/COW fixes)
+
+John Hubbard (6):
+  mm/gup: introduce pin_user_page()
+  iov_iter: new iov_iter_pin_pages*(), for FOLL_PIN pages
+  block, fs: assert that key paths use iovecs, and nothing else
+  block, bio, fs: convert most filesystems to pin_user_pages_fast()
+  NFS: direct-io: convert to FOLL_PIN pages
+  fuse: convert direct IO paths to use FOLL_PIN
+
+ block/bio.c          | 29 ++++++++--------
+ block/blk-map.c      |  6 ++--
+ fs/direct-io.c       | 28 ++++++++--------
+ fs/fuse/dev.c        |  7 ++--
+ fs/fuse/file.c       | 38 +++++----------------
+ fs/iomap/direct-io.c |  2 +-
+ fs/nfs/direct.c      | 15 +++------
+ include/linux/mm.h   |  1 +
+ include/linux/uio.h  |  4 +++
+ lib/iov_iter.c       | 78 ++++++++++++++++++++++++++++++++++++++++++++
+ mm/gup.c             | 34 +++++++++++++++++++
+ 11 files changed, 170 insertions(+), 72 deletions(-)
+
+
+base-commit: 06aeb1495c39c86ccfaf1adadc1d2200179f16eb
 -- 
-Dave Chinner
-david@fromorbit.com
+2.35.1
+
