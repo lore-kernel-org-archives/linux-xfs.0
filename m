@@ -2,51 +2,51 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3988C4332F
-	for <linux-xfs@archiver.kernel.org>; Sun, 27 Feb 2022 09:34:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25C5BC43219
+	for <linux-xfs@archiver.kernel.org>; Sun, 27 Feb 2022 09:34:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229643AbiB0Jf2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 27 Feb 2022 04:35:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34440 "EHLO
+        id S229650AbiB0Jf3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 27 Feb 2022 04:35:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35058 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229620AbiB0JfV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Feb 2022 04:35:21 -0500
-Received: from mail-qv1-xf2f.google.com (mail-qv1-xf2f.google.com [IPv6:2607:f8b0:4864:20::f2f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C968D3AA66;
-        Sun, 27 Feb 2022 01:34:45 -0800 (PST)
-Received: by mail-qv1-xf2f.google.com with SMTP id j5so10129760qvs.13;
-        Sun, 27 Feb 2022 01:34:45 -0800 (PST)
+        with ESMTP id S229633AbiB0Jf1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Feb 2022 04:35:27 -0500
+Received: from mail-qt1-x844.google.com (mail-qt1-x844.google.com [IPv6:2607:f8b0:4864:20::844])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68FA73AA7B;
+        Sun, 27 Feb 2022 01:34:49 -0800 (PST)
+Received: by mail-qt1-x844.google.com with SMTP id w1so6522740qtj.2;
+        Sun, 27 Feb 2022 01:34:49 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=8zKcW8+9Hpd8/WTuKX6kJj19EN0eRYxV6CdPpWTMmWo=;
-        b=WOpg9gTO+cqDSlxgj/J7GtxzOfHFwviptZSNq675orbTb9EQJUNbTVROPdbRthWEoM
-         Va3EvQ4DJDb8avmBXaWeHbUlEPC25Ikg0lkKu5AE0MNDJypAR4SCaVcamSLf0CSBEZUp
-         uRAT1yERfWo6RlRtiepDJN/F0I5lbFwz1pnWyJSNvJiZIxKftwJ4Dk2YRqzR74Cx1VTa
-         OOPvCVOfubSkaSQxAMpXLQTkJHqnRTVy5v5WaMXw1JK/rQbwW1Zng1Mc8rVNmfyYSnfz
-         1BhBRQ9Xvbb1dVXccO7+B31VNQ4ZWU6knxSwFOWUT2PnH+jL/APNRaedSB05aG1fxw9H
-         /kgw==
+        bh=2eyP4rVDSLxrBLm0L+IwXDpvwWoEKTOhBFmzO4cexJA=;
+        b=SN1X/MqfJvhVYBUGyOf9BOYeLe+NmaeROrl70bvkK+f00RgsVrca1L7kNXuD/wcg9L
+         xKCmZ2Pz8vWSqvhZGTSGz0bn+yPC7pzdLsxbAHOC7niJ2xUIRbSdTA006UFl43cSvClB
+         Eu/WiEesp2A/IaFSnGxRHNzF65Nbr5OEyJxl/q5scyullQobittuRA9RsL64YhSAmZeE
+         yblyQp16l6Hjn1nxs1PK37HlbUKIs3dYdip0CwpH9Jr/Npemuiakh89gz0E28sfp/eVK
+         AuxWm+yRqP6ewJ+xN63QF5PgRvRcwe0IkEbB5ckzEiEAwC6gCacSZreeldbSK5SU8twf
+         hn8w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=8zKcW8+9Hpd8/WTuKX6kJj19EN0eRYxV6CdPpWTMmWo=;
-        b=zQ9xPjdpUhfuqwgD/rp0wGJzG539NeVf5/92K5JQlPPtMYYOHjlmLG8S8cuPQZbObe
-         GlQtcN2sXr1fbQUc/Y3o3Yz+ZHn9wwhqiBIvg1BDrV6GM7XdOJoi0CBpE6q2X8Vg8sc6
-         yhIi7F62jeuav42uUODO4ZswB5QugPPNFDEkD6BxefNjKW3TiJzHZMj3nh6zbE46dVDL
-         tAZo9aDipc+XhrcJsrU9rUZAEE7pUFqaOXaHQGWalLUSS0t+UxLuE89rll+iz/8lZiyF
-         wmb4817iCsN9NL2VEOBbh2358QMNJGSSaq88Iq9mjQlFlXFoREky+SH+t0ubQMXFE6wb
-         Pf3Q==
-X-Gm-Message-State: AOAM530tr1rtMryMvqo1OZGlyXyN/0fa3DpqiDJ0dhyFBWxP0asGo3/A
-        kUGgNodTS3mqaJv6U89WE/A=
-X-Google-Smtp-Source: ABdhPJwxsNO0VkI2Q6Rc/EsJGY48OCvFsl8Tm4nrId2YTjceZIBaohJzw61Max1v1+ry2LTsRNF0rw==
-X-Received: by 2002:ad4:5561:0:b0:432:bbc0:8d5d with SMTP id w1-20020ad45561000000b00432bbc08d5dmr8783186qvy.105.1645954484945;
-        Sun, 27 Feb 2022 01:34:44 -0800 (PST)
+        bh=2eyP4rVDSLxrBLm0L+IwXDpvwWoEKTOhBFmzO4cexJA=;
+        b=0PpvTNKODLTorwdWHYzIDjdlx80ZfY8EZ7gCZyIG0SBk77BjNOQfQYA1JUqiFbVLh/
+         bMmCf3qyu9RHfGjzkS86kn/m8ErqhNhxKoBiW2uYadfZqacyyq6TVTDZCsAg6p+v3zwG
+         IC2RAk/a4Y0vQ5qQNelB/YxpvHnyiaBmM4mcX2tPSOHzZci2z2hRc0KCBb9lsDeigwAM
+         E6M2o8W2MP2SwvEKMeGn+3ToATpIxbOttO8F79uqYw7lUOagYldZ+k5+Q18rKe7TjLtx
+         JUewG+phf5bJlJ00MGjHKZyuR6CWOJ8Az1dlOMk+TOjmSz+uayGgnYH1AZdmEeJrsK+G
+         qYNg==
+X-Gm-Message-State: AOAM531R8RacKMfWfEV96KA95DGWs1pzWbQRi8x38/8QWw95sHBWsrz7
+        aDsqSI4cyLxkj5mlNEXJ3SM=
+X-Google-Smtp-Source: ABdhPJyOSOodlyfcTfw39UkAF/bKoLbJjNNh1s2ZWZwG1dKH8ifuQJeJtZRTl4AMh8in27Ux3laN9Q==
+X-Received: by 2002:a05:622a:2c6:b0:2dd:2d3d:11cd with SMTP id a6-20020a05622a02c600b002dd2d3d11cdmr12732370qtx.638.1645954488604;
+        Sun, 27 Feb 2022 01:34:48 -0800 (PST)
 Received: from sandstorm.attlocal.net (76-242-90-12.lightspeed.sntcca.sbcglobal.net. [76.242.90.12])
-        by smtp.gmail.com with ESMTPSA id h3-20020a05622a170300b002e008a93f8fsm469815qtk.91.2022.02.27.01.34.43
+        by smtp.gmail.com with ESMTPSA id h3-20020a05622a170300b002e008a93f8fsm469815qtk.91.2022.02.27.01.34.46
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 27 Feb 2022 01:34:44 -0800 (PST)
+        Sun, 27 Feb 2022 01:34:48 -0800 (PST)
 From:   jhubbard.send.patches@gmail.com
 X-Google-Original-From: jhubbard@nvidia.com
 To:     Jens Axboe <axboe@kernel.dk>, Jan Kara <jack@suse.cz>,
@@ -62,9 +62,9 @@ Cc:     linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-xfs@vger.kernel.org, linux-mm@kvack.org,
         LKML <linux-kernel@vger.kernel.org>,
         John Hubbard <jhubbard@nvidia.com>
-Subject: [PATCH 1/6] mm/gup: introduce pin_user_page()
-Date:   Sun, 27 Feb 2022 01:34:29 -0800
-Message-Id: <20220227093434.2889464-2-jhubbard@nvidia.com>
+Subject: [PATCH 3/6] block, fs: assert that key paths use iovecs, and nothing else
+Date:   Sun, 27 Feb 2022 01:34:31 -0800
+Message-Id: <20220227093434.2889464-4-jhubbard@nvidia.com>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220227093434.2889464-1-jhubbard@nvidia.com>
 References: <20220227093434.2889464-1-jhubbard@nvidia.com>
@@ -77,77 +77,54 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: John Hubbard <jhubbard@nvidia.com>
 
-pin_user_page() is an externally-usable version of try_grab_page(), but
-with semantics that match get_page(), so that it can act as a drop-in
-replacement for get_page(). Specifically, pin_user_page() has a void
-return type.
+Upcoming changes to Direct IO will change it from acquiring pages via
+get_user_pages_fast(), to calling pin_user_pages_fast() instead.
 
-pin_user_page() elevates a page's refcount is using FOLL_PIN rules. This
-means that the caller must release the page via unpin_user_page().
+Place a few assertions at key points, that the pages are IOVEC (user
+pages), to enforce the assumptions that there are no kernel or pipe or
+other odd variations being passed.
 
 Signed-off-by: John Hubbard <jhubbard@nvidia.com>
 ---
- include/linux/mm.h |  1 +
- mm/gup.c           | 34 ++++++++++++++++++++++++++++++++++
- 2 files changed, 35 insertions(+)
+ block/bio.c    | 4 ++++
+ fs/direct-io.c | 2 ++
+ 2 files changed, 6 insertions(+)
 
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index c9bada4096ac..367d7fd28fd0 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -1946,6 +1946,7 @@ long pin_user_pages_remote(struct mm_struct *mm,
- long get_user_pages(unsigned long start, unsigned long nr_pages,
- 			    unsigned int gup_flags, struct page **pages,
- 			    struct vm_area_struct **vmas);
-+void pin_user_page(struct page *page);
- long pin_user_pages(unsigned long start, unsigned long nr_pages,
- 		    unsigned int gup_flags, struct page **pages,
- 		    struct vm_area_struct **vmas);
-diff --git a/mm/gup.c b/mm/gup.c
-index 428c587acfa2..13c0dced2aee 100644
---- a/mm/gup.c
-+++ b/mm/gup.c
-@@ -3035,6 +3035,40 @@ long pin_user_pages(unsigned long start, unsigned long nr_pages,
- }
- EXPORT_SYMBOL(pin_user_pages);
+diff --git a/block/bio.c b/block/bio.c
+index b15f5466ce08..4679d6539e2d 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -1167,6 +1167,8 @@ static int __bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
+ 	BUILD_BUG_ON(PAGE_PTRS_PER_BVEC < 2);
+ 	pages += entries_left * (PAGE_PTRS_PER_BVEC - 1);
  
-+/**
-+ * pin_user_page() - apply a FOLL_PIN reference to a page ()
-+ *
-+ * @page: the page to be pinned.
-+ *
-+ * Similar to get_user_pages(), in that the page's refcount is elevated using
-+ * FOLL_PIN rules.
-+ *
-+ * IMPORTANT: That means that the caller must release the page via
-+ * unpin_user_page().
-+ *
-+ */
-+void pin_user_page(struct page *page)
-+{
-+	struct folio *folio = page_folio(page);
++	WARN_ON_ONCE(!iter_is_iovec(iter));
 +
-+	WARN_ON_ONCE(folio_ref_count(folio) <= 0);
+ 	size = iov_iter_get_pages(iter, pages, LONG_MAX, nr_pages, &offset);
+ 	if (unlikely(size <= 0))
+ 		return size ? size : -EFAULT;
+@@ -1217,6 +1219,8 @@ static int __bio_iov_append_get_pages(struct bio *bio, struct iov_iter *iter)
+ 	BUILD_BUG_ON(PAGE_PTRS_PER_BVEC < 2);
+ 	pages += entries_left * (PAGE_PTRS_PER_BVEC - 1);
+ 
++	WARN_ON_ONCE(!iter_is_iovec(iter));
 +
-+	/*
-+	 * Similar to try_grab_page(): be sure to *also*
-+	 * increment the normal page refcount field at least once,
-+	 * so that the page really is pinned.
-+	 */
-+	if (folio_test_large(folio)) {
-+		folio_ref_add(folio, 1);
-+		atomic_add(1, folio_pincount_ptr(folio));
-+	} else {
-+		folio_ref_add(folio, GUP_PIN_COUNTING_BIAS);
-+	}
+ 	size = iov_iter_get_pages(iter, pages, LONG_MAX, nr_pages, &offset);
+ 	if (unlikely(size <= 0))
+ 		return size ? size : -EFAULT;
+diff --git a/fs/direct-io.c b/fs/direct-io.c
+index 38bca4980a1c..7dbbbfef300d 100644
+--- a/fs/direct-io.c
++++ b/fs/direct-io.c
+@@ -169,6 +169,8 @@ static inline int dio_refill_pages(struct dio *dio, struct dio_submit *sdio)
+ {
+ 	ssize_t ret;
+ 
++	WARN_ON_ONCE(!iter_is_iovec(sdio->iter));
 +
-+	node_stat_mod_folio(folio, NR_FOLL_PIN_ACQUIRED, 1);
-+}
-+EXPORT_SYMBOL(pin_user_page);
-+
- /*
-  * pin_user_pages_unlocked() is the FOLL_PIN variant of
-  * get_user_pages_unlocked(). Behavior is the same, except that this one sets
+ 	ret = iov_iter_get_pages(sdio->iter, dio->pages, LONG_MAX, DIO_PAGES,
+ 				&sdio->from);
+ 
 -- 
 2.35.1
 
