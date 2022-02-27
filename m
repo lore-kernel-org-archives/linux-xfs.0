@@ -2,51 +2,51 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25C5BC43219
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3F7AC4167E
 	for <linux-xfs@archiver.kernel.org>; Sun, 27 Feb 2022 09:34:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229650AbiB0Jf3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 27 Feb 2022 04:35:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35058 "EHLO
+        id S229698AbiB0Jfa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 27 Feb 2022 04:35:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35060 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229633AbiB0Jf1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Feb 2022 04:35:27 -0500
-Received: from mail-qt1-x844.google.com (mail-qt1-x844.google.com [IPv6:2607:f8b0:4864:20::844])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68FA73AA7B;
-        Sun, 27 Feb 2022 01:34:49 -0800 (PST)
-Received: by mail-qt1-x844.google.com with SMTP id w1so6522740qtj.2;
-        Sun, 27 Feb 2022 01:34:49 -0800 (PST)
+        with ESMTP id S229659AbiB0Jf3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Feb 2022 04:35:29 -0500
+Received: from mail-qt1-x835.google.com (mail-qt1-x835.google.com [IPv6:2607:f8b0:4864:20::835])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2DF483AA69;
+        Sun, 27 Feb 2022 01:34:53 -0800 (PST)
+Received: by mail-qt1-x835.google.com with SMTP id f18so6513806qtb.3;
+        Sun, 27 Feb 2022 01:34:53 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=2eyP4rVDSLxrBLm0L+IwXDpvwWoEKTOhBFmzO4cexJA=;
-        b=SN1X/MqfJvhVYBUGyOf9BOYeLe+NmaeROrl70bvkK+f00RgsVrca1L7kNXuD/wcg9L
-         xKCmZ2Pz8vWSqvhZGTSGz0bn+yPC7pzdLsxbAHOC7niJ2xUIRbSdTA006UFl43cSvClB
-         Eu/WiEesp2A/IaFSnGxRHNzF65Nbr5OEyJxl/q5scyullQobittuRA9RsL64YhSAmZeE
-         yblyQp16l6Hjn1nxs1PK37HlbUKIs3dYdip0CwpH9Jr/Npemuiakh89gz0E28sfp/eVK
-         AuxWm+yRqP6ewJ+xN63QF5PgRvRcwe0IkEbB5ckzEiEAwC6gCacSZreeldbSK5SU8twf
-         hn8w==
+        bh=nzSg76ac6SX33uvAxMIqRNwFLbBvgCZfP9HnkSBqBXk=;
+        b=QElJKo+jzPOXMMwQ05T0aZ9Dq+Kvu0K78b2J4HE8GzpiJ9OsxoVlgSb7OTHjLRFlbO
+         hfstUvFFX3Wq8mrLlJUFci1T5XCppas8fx4HA7pTXVd6wen3pGaXgeDJghJJivrehVxE
+         rnE6hQDNtZ63MA1OiEp56hEM1HVRVcewvUsUfa+Fw2I8VbDc2IUInGqVJgG0fLdqwTdp
+         OourRBKBgdM7trbKTSRWNrAmdEcCO4d+m0SRLRArbvKBgxMOrVMSGBW771qiupDxE0oE
+         Zo14yyY2Kz3hbKxgYVFTBhs31cDGrmuHAUlUCoKEiV8o3xTgaU3clrT/ohOSsFvdl1fH
+         nJeA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=2eyP4rVDSLxrBLm0L+IwXDpvwWoEKTOhBFmzO4cexJA=;
-        b=0PpvTNKODLTorwdWHYzIDjdlx80ZfY8EZ7gCZyIG0SBk77BjNOQfQYA1JUqiFbVLh/
-         bMmCf3qyu9RHfGjzkS86kn/m8ErqhNhxKoBiW2uYadfZqacyyq6TVTDZCsAg6p+v3zwG
-         IC2RAk/a4Y0vQ5qQNelB/YxpvHnyiaBmM4mcX2tPSOHzZci2z2hRc0KCBb9lsDeigwAM
-         E6M2o8W2MP2SwvEKMeGn+3ToATpIxbOttO8F79uqYw7lUOagYldZ+k5+Q18rKe7TjLtx
-         JUewG+phf5bJlJ00MGjHKZyuR6CWOJ8Az1dlOMk+TOjmSz+uayGgnYH1AZdmEeJrsK+G
-         qYNg==
-X-Gm-Message-State: AOAM531R8RacKMfWfEV96KA95DGWs1pzWbQRi8x38/8QWw95sHBWsrz7
-        aDsqSI4cyLxkj5mlNEXJ3SM=
-X-Google-Smtp-Source: ABdhPJyOSOodlyfcTfw39UkAF/bKoLbJjNNh1s2ZWZwG1dKH8ifuQJeJtZRTl4AMh8in27Ux3laN9Q==
-X-Received: by 2002:a05:622a:2c6:b0:2dd:2d3d:11cd with SMTP id a6-20020a05622a02c600b002dd2d3d11cdmr12732370qtx.638.1645954488604;
-        Sun, 27 Feb 2022 01:34:48 -0800 (PST)
+        bh=nzSg76ac6SX33uvAxMIqRNwFLbBvgCZfP9HnkSBqBXk=;
+        b=LBKgWKP9f+w12SQ4dwU09D5o4dexU7bSqadSyMARsVgJa+VKoxgeYm6W/wSvCFjOQw
+         s8WbpfZhGoOEmnDb5cJGSZR60ZAw3EUyn3HMhGH+KKutw5CjBCwIwYKmu8xc62zyWhPH
+         wvHfzKYP30hv7LZtgqg0ngNYNtiiaeqkvGJu4/kCzPnzbZxtT+vr31WbBLMARc49HW8K
+         ixTq7pRB+2/WUTHTFqImKdTgYFouE44knhxo5QognX7Uv9Lix3NBDICqfOJtBPDnL8KK
+         JkkEiBnh/M34GmzV7CpLDv9/CFfFWJzK4z4wFoWqgDvirwr3vYUaWbV4FPOf5jui7B7c
+         MAXg==
+X-Gm-Message-State: AOAM532FjqyCOYffDGyMJTX8lOhinzxaJ9tNuu/e8ufQ2e/IkmjlgRAf
+        kMlRpftHkdbRQH1QcxHt0DA=
+X-Google-Smtp-Source: ABdhPJyXNsyLxx3dgqMS1QCzsXJ4My1SC/a0A27ijb8+418Y5b2C8EQuXVl4YQq8TZrWVjwY6HfYnw==
+X-Received: by 2002:ac8:5e4b:0:b0:2dd:dc99:d22b with SMTP id i11-20020ac85e4b000000b002dddc99d22bmr12694439qtx.165.1645954492201;
+        Sun, 27 Feb 2022 01:34:52 -0800 (PST)
 Received: from sandstorm.attlocal.net (76-242-90-12.lightspeed.sntcca.sbcglobal.net. [76.242.90.12])
-        by smtp.gmail.com with ESMTPSA id h3-20020a05622a170300b002e008a93f8fsm469815qtk.91.2022.02.27.01.34.46
+        by smtp.gmail.com with ESMTPSA id h3-20020a05622a170300b002e008a93f8fsm469815qtk.91.2022.02.27.01.34.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 27 Feb 2022 01:34:48 -0800 (PST)
+        Sun, 27 Feb 2022 01:34:51 -0800 (PST)
 From:   jhubbard.send.patches@gmail.com
 X-Google-Original-From: jhubbard@nvidia.com
 To:     Jens Axboe <axboe@kernel.dk>, Jan Kara <jack@suse.cz>,
@@ -62,9 +62,9 @@ Cc:     linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-xfs@vger.kernel.org, linux-mm@kvack.org,
         LKML <linux-kernel@vger.kernel.org>,
         John Hubbard <jhubbard@nvidia.com>
-Subject: [PATCH 3/6] block, fs: assert that key paths use iovecs, and nothing else
-Date:   Sun, 27 Feb 2022 01:34:31 -0800
-Message-Id: <20220227093434.2889464-4-jhubbard@nvidia.com>
+Subject: [PATCH 5/6] NFS: direct-io: convert to FOLL_PIN pages
+Date:   Sun, 27 Feb 2022 01:34:33 -0800
+Message-Id: <20220227093434.2889464-6-jhubbard@nvidia.com>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220227093434.2889464-1-jhubbard@nvidia.com>
 References: <20220227093434.2889464-1-jhubbard@nvidia.com>
@@ -77,54 +77,68 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: John Hubbard <jhubbard@nvidia.com>
 
-Upcoming changes to Direct IO will change it from acquiring pages via
-get_user_pages_fast(), to calling pin_user_pages_fast() instead.
-
-Place a few assertions at key points, that the pages are IOVEC (user
-pages), to enforce the assumptions that there are no kernel or pipe or
-other odd variations being passed.
+Convert nfs-direct to use pin_user_pages_fast(), and unpin_user_pages(),
+in place of get_user_pages_fast() and put_page().
 
 Signed-off-by: John Hubbard <jhubbard@nvidia.com>
 ---
- block/bio.c    | 4 ++++
- fs/direct-io.c | 2 ++
- 2 files changed, 6 insertions(+)
+ fs/nfs/direct.c | 15 ++++-----------
+ 1 file changed, 4 insertions(+), 11 deletions(-)
 
-diff --git a/block/bio.c b/block/bio.c
-index b15f5466ce08..4679d6539e2d 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -1167,6 +1167,8 @@ static int __bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
- 	BUILD_BUG_ON(PAGE_PTRS_PER_BVEC < 2);
- 	pages += entries_left * (PAGE_PTRS_PER_BVEC - 1);
+diff --git a/fs/nfs/direct.c b/fs/nfs/direct.c
+index eabfdab543c8..42111a75c0f7 100644
+--- a/fs/nfs/direct.c
++++ b/fs/nfs/direct.c
+@@ -177,13 +177,6 @@ ssize_t nfs_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
+ 	return nfs_file_direct_write(iocb, iter);
+ }
  
-+	WARN_ON_ONCE(!iter_is_iovec(iter));
-+
- 	size = iov_iter_get_pages(iter, pages, LONG_MAX, nr_pages, &offset);
- 	if (unlikely(size <= 0))
- 		return size ? size : -EFAULT;
-@@ -1217,6 +1219,8 @@ static int __bio_iov_append_get_pages(struct bio *bio, struct iov_iter *iter)
- 	BUILD_BUG_ON(PAGE_PTRS_PER_BVEC < 2);
- 	pages += entries_left * (PAGE_PTRS_PER_BVEC - 1);
- 
-+	WARN_ON_ONCE(!iter_is_iovec(iter));
-+
- 	size = iov_iter_get_pages(iter, pages, LONG_MAX, nr_pages, &offset);
- 	if (unlikely(size <= 0))
- 		return size ? size : -EFAULT;
-diff --git a/fs/direct-io.c b/fs/direct-io.c
-index 38bca4980a1c..7dbbbfef300d 100644
---- a/fs/direct-io.c
-+++ b/fs/direct-io.c
-@@ -169,6 +169,8 @@ static inline int dio_refill_pages(struct dio *dio, struct dio_submit *sdio)
+-static void nfs_direct_release_pages(struct page **pages, unsigned int npages)
+-{
+-	unsigned int i;
+-	for (i = 0; i < npages; i++)
+-		put_page(pages[i]);
+-}
+-
+ void nfs_init_cinfo_from_dreq(struct nfs_commit_info *cinfo,
+ 			      struct nfs_direct_req *dreq)
  {
- 	ssize_t ret;
+@@ -367,7 +360,7 @@ static ssize_t nfs_direct_read_schedule_iovec(struct nfs_direct_req *dreq,
+ 		size_t pgbase;
+ 		unsigned npages, i;
  
-+	WARN_ON_ONCE(!iter_is_iovec(sdio->iter));
-+
- 	ret = iov_iter_get_pages(sdio->iter, dio->pages, LONG_MAX, DIO_PAGES,
- 				&sdio->from);
+-		result = iov_iter_get_pages_alloc(iter, &pagevec, 
++		result = iov_iter_pin_pages_alloc(iter, &pagevec,
+ 						  rsize, &pgbase);
+ 		if (result < 0)
+ 			break;
+@@ -398,7 +391,7 @@ static ssize_t nfs_direct_read_schedule_iovec(struct nfs_direct_req *dreq,
+ 			pos += req_len;
+ 			dreq->bytes_left -= req_len;
+ 		}
+-		nfs_direct_release_pages(pagevec, npages);
++		unpin_user_pages(pagevec, npages);
+ 		kvfree(pagevec);
+ 		if (result < 0)
+ 			break;
+@@ -811,7 +804,7 @@ static ssize_t nfs_direct_write_schedule_iovec(struct nfs_direct_req *dreq,
+ 		size_t pgbase;
+ 		unsigned npages, i;
  
+-		result = iov_iter_get_pages_alloc(iter, &pagevec, 
++		result = iov_iter_pin_pages_alloc(iter, &pagevec,
+ 						  wsize, &pgbase);
+ 		if (result < 0)
+ 			break;
+@@ -850,7 +843,7 @@ static ssize_t nfs_direct_write_schedule_iovec(struct nfs_direct_req *dreq,
+ 			pos += req_len;
+ 			dreq->bytes_left -= req_len;
+ 		}
+-		nfs_direct_release_pages(pagevec, npages);
++		unpin_user_pages(pagevec, npages);
+ 		kvfree(pagevec);
+ 		if (result < 0)
+ 			break;
 -- 
 2.35.1
 
