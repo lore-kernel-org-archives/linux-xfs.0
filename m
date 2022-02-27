@@ -2,51 +2,51 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50C88C433EF
-	for <linux-xfs@archiver.kernel.org>; Sun, 27 Feb 2022 09:34:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4ED5C433F5
+	for <linux-xfs@archiver.kernel.org>; Sun, 27 Feb 2022 09:34:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229604AbiB0JfU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 27 Feb 2022 04:35:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34270 "EHLO
+        id S229634AbiB0Jf3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 27 Feb 2022 04:35:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34574 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229512AbiB0JfU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Feb 2022 04:35:20 -0500
-Received: from mail-qv1-xf2f.google.com (mail-qv1-xf2f.google.com [IPv6:2607:f8b0:4864:20::f2f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A6B13AA66;
-        Sun, 27 Feb 2022 01:34:44 -0800 (PST)
-Received: by mail-qv1-xf2f.google.com with SMTP id h13so10137210qvk.12;
-        Sun, 27 Feb 2022 01:34:44 -0800 (PST)
+        with ESMTP id S229627AbiB0JfY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Feb 2022 04:35:24 -0500
+Received: from mail-qv1-xf33.google.com (mail-qv1-xf33.google.com [IPv6:2607:f8b0:4864:20::f33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A12183AA70;
+        Sun, 27 Feb 2022 01:34:47 -0800 (PST)
+Received: by mail-qv1-xf33.google.com with SMTP id h13so10137255qvk.12;
+        Sun, 27 Feb 2022 01:34:47 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=Mni5yEHGP1qoaz/6hLvUm/V5F3W7L/m3Wwp7WeQHDBs=;
-        b=i/DtVk9P1DTHcuWOXDH9pwmZG/a6m++cXjyfgszKxoJCGq61z0Vh9V6VT7598xqiMi
-         EF1aHesjRXqFVb1MLfCyfjVLdKDjxStOIQgcFf5sdUVfVFVSgj5nzuRpk39ZssABWyKh
-         a5V1wQVAoDRNzC9Dl1gk7AqHG50JPjaqkE16unCe75SAiAEMS+WC4cVBEtbtkF7Dem5C
-         uPnBaKWJ7OQhiSUrqoI9Da0PZrEndqPQmR1OX4KId4mTUcIqvmNuHTnvKYBBLBjkQG9b
-         zfm9wn/aSeqIz2OuKsGS5Jxx5jqmvvBDJl5gDl+K45QxzWErwVzB3/emB9ggfzRG4X0z
-         Zzmw==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=ItEq05ZSN1A4hvZTi4QQudlRbzhu6qS+hrN6bdKB7cI=;
+        b=PZBjPgxyjRX0Or72xti11PNZ7haqtTUPt+l6GSVDIjPZvvHFsuzjj7D3LZpd2dlpuI
+         QDBarJXEQFKVIDhBbsFsDTJyelJD1y+jkqX4QIJBbstGPEW9bNw3Mhxz2Sik5EOa4Vap
+         1Y9yLi5/mhlvOIJws68gsbtd9FOSaFcfZPIZzZe56mv7cJ5I1xpv2K/+kRldOPg5pFfy
+         fp1XHYBBzolf8lr3/PZ9ccGYD+Et5/folofDnHM/8wny4qSLItKGNhYaeSkRR1F0h3RS
+         TLQ+YwNORWbEjLneJOR03aiX2RAeaRgvo6Iw5rkoztgQICzpVEs9hhgA89D1X0DA80Xj
+         zWaQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=Mni5yEHGP1qoaz/6hLvUm/V5F3W7L/m3Wwp7WeQHDBs=;
-        b=z7gfc4HX5nXy1chSEyqmSlX1X47whTIgem/EfSk3ZBe0cD4aMk1vBlMnPGbejdoaIf
-         iq6NfBZ0RhxMgfM3VvOJdTk/BWWsojD18e3t10N7mlqDkNZrrNuK4h610LKpVoMG4/uc
-         WU8WUqzLxO24LSSV2cDcZWQF3e13drDQYnAbuQqfIwqs+rvnSVLELjfvCWT9g3ilDHMI
-         aKsA46ULKw5wUys6ArsBgKoN5+5C0ICxP3GsLc3V6FqjzjbCYWTkxC3EoF3srJgvJB2L
-         i6fgf1bQlh0sJLSPqIx1KCTqtI0QfjT73TcyDXgF6yQq9ANO04zJVxBhdoltgU7f3NZK
-         Jzmw==
-X-Gm-Message-State: AOAM5331l3AuHqqfNBB9b75j/Wz/NFgvy/wRQR1CucQzOBdQF8E1RpcS
-        Vpaynl4Wnoc9AaSkVjtp9/A=
-X-Google-Smtp-Source: ABdhPJzlq9Z9ay7IQGmu5husNkkRN/qKFoSudupKCgD7SFi/psSCUSPiOgMXvH9tuYollM3Gca/QcA==
-X-Received: by 2002:a05:6214:ca3:b0:42d:129a:5ac6 with SMTP id s3-20020a0562140ca300b0042d129a5ac6mr11161514qvs.86.1645954483191;
-        Sun, 27 Feb 2022 01:34:43 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=ItEq05ZSN1A4hvZTi4QQudlRbzhu6qS+hrN6bdKB7cI=;
+        b=24BPCDW5LAf3sgvDHimQMo86PKtsXjjUSgCrUmmTT+QqcFyq0qHczfsTA/rN1O0fXN
+         NuftRmXhE0O5wnyJ+81ZmNIhipOEoMQ7vaOQ6tFnCTo3pn0aXzwZkJPZdBkXt/F8YpjV
+         bixB6/cqDRA56UfW93Iix8qvJSK2fn+EJOFkK0ORvKfW+2r08Xnolb0YRHkq5FtpahBZ
+         T+O8w1PYHTinrNC+fOcxIfuWI+CyMKvkBdqIyecPwmHflSm/af+iJZJb3OK1qNWvnNAD
+         qtBgV2jCVZ72wSyH+tHP6f2QZ/5h1pf8kMx4bit90XKdQSxUGT2aMkgpAK7kBvgtRXNc
+         AO0w==
+X-Gm-Message-State: AOAM533MP3RZ5FsjVMdCfWGqCWRusnxcPRXX9q6pxyepwsAfMxoMhLAi
+        syMW3DgLpgAYJwdXa82GqLk=
+X-Google-Smtp-Source: ABdhPJzG6l0z2OorcknGPNxVbjfzbPk10PdLFwWxQT69r0yaHLiCk0a02692yrZUIxBpFRCVItUsNg==
+X-Received: by 2002:a05:6214:4103:b0:42d:7ad0:44ff with SMTP id kc3-20020a056214410300b0042d7ad044ffmr10910530qvb.42.1645954486813;
+        Sun, 27 Feb 2022 01:34:46 -0800 (PST)
 Received: from sandstorm.attlocal.net (76-242-90-12.lightspeed.sntcca.sbcglobal.net. [76.242.90.12])
-        by smtp.gmail.com with ESMTPSA id h3-20020a05622a170300b002e008a93f8fsm469815qtk.91.2022.02.27.01.34.41
+        by smtp.gmail.com with ESMTPSA id h3-20020a05622a170300b002e008a93f8fsm469815qtk.91.2022.02.27.01.34.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 27 Feb 2022 01:34:42 -0800 (PST)
+        Sun, 27 Feb 2022 01:34:46 -0800 (PST)
 From:   jhubbard.send.patches@gmail.com
 X-Google-Original-From: jhubbard@nvidia.com
 To:     Jens Axboe <axboe@kernel.dk>, Jan Kara <jack@suse.cz>,
@@ -62,10 +62,12 @@ Cc:     linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-xfs@vger.kernel.org, linux-mm@kvack.org,
         LKML <linux-kernel@vger.kernel.org>,
         John Hubbard <jhubbard@nvidia.com>
-Subject: [PATCH 0/6] block, fs: convert most Direct IO cases to FOLL_PIN
-Date:   Sun, 27 Feb 2022 01:34:28 -0800
-Message-Id: <20220227093434.2889464-1-jhubbard@nvidia.com>
+Subject: [PATCH 2/6] iov_iter: new iov_iter_pin_pages*(), for FOLL_PIN pages
+Date:   Sun, 27 Feb 2022 01:34:30 -0800
+Message-Id: <20220227093434.2889464-3-jhubbard@nvidia.com>
 X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20220227093434.2889464-1-jhubbard@nvidia.com>
+References: <20220227093434.2889464-1-jhubbard@nvidia.com>
 MIME-Version: 1.0
 X-NVConfidentiality: public
 Content-Transfer-Encoding: 8bit
@@ -75,95 +77,131 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: John Hubbard <jhubbard@nvidia.com>
 
-Hi,
-
-The feedback on the RFC [1] prompted me to convert the core Direct IO
-subsystem all at once. The key differences here, as compared to the RFC,
-are:
-
-    * no dio_w_*() wrapper routines,
-
-    * no CONFIG parameter; and
-
-    * new iov_iter_pin_pages*() routines that pin pages without
-      affecting other callers of iov_iter_get_pages*(). Those other
-      callers (ceph, rds, net, ...) can be converted separately.
-
-Also, many pre-existing callers of unpin_user_pages_dirty_lock() are
-wrong, and this series adds a few more callers. So readers may naturally
-wonder about that. I recently had a very productive discussion with Ted
-Ts'o, who suggested a way to fix the problem, and I'm going to implement
-it, next. However, I think it's best to do that fix separately from
-this, probably layered on top, although it could go either before or
-after.
-
-As part of fixing the "get_user_pages() + file-backed memory" problem
-[2], and to support various COW-related fixes as well [3], we need to
-convert the Direct IO code from get_user_pages_fast(), to
-pin_user_pages_fast(). Because pin_user_pages*() calls require a
-corresponding call to unpin_user_page(), the conversion is more
-elaborate than just substitution.
-
-In the main patch (patch 4) I'm a little concerned about the
-bio_map_user_iov() changes, because the sole caller,
-blk_rq_map_user_iov(), has either a direct mapped case or a copy from
-user case, and I'm still not sure that these are properly kept separate,
-from an unpin pages point of view. So a close look there by reviewers
-would be welcome.
-
-Testing: this needs lots of filesystem testing.
-
-In this patchset:
-
-Patches 1, 2: provide a few new routines that will be used by
-conversion: pin_user_page(), iov_iter_pin_pages(),
+Provide two new specialized routines that only handle user space pages,
+and invoke pin_user_pages_fast() on them: iov_iter_pin_pages() and
 iov_iter_pin_pages_alloc().
 
-Patch 3: provide a few asserts that only user space pages are being
-passed in for Direct IO. (This patch could be folded into another
-patch.)
+This allows subsequent patches to convert various callers of
+iov_iter_get_pages*(), to the new calls, without having to attempt a
+mass conversion all at once.
 
-Patch 4: Convert all Direct IO callers that use iomap, or
-blockdev_direct_IO(), or bio_iov_iter_get_pages().
+Signed-off-by: John Hubbard <jhubbard@nvidia.com>
+---
+ include/linux/uio.h |  4 +++
+ lib/iov_iter.c      | 78 +++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 82 insertions(+)
 
-Patch 5, 6: convert a few other callers to the new system: NFS-Direct,
-and fuse.
-
-This is based on linux-next (next-20220225). I've also stashed it here:
-
-    https://github.com/johnhubbard/linux bio_pup_next_20220225
-
-
-[1] https://lore.kernel.org/r/20220225085025.3052894-1-jhubbard@nvidia.com
-
-[2] https://lwn.net/Articles/753027/ "The trouble with get_user_pages()"
-
-[3] https://lore.kernel.org/all/20211217113049.23850-1-david@redhat.com/T/#u
-    (David Hildenbrand's mm/COW fixes)
-
-John Hubbard (6):
-  mm/gup: introduce pin_user_page()
-  iov_iter: new iov_iter_pin_pages*(), for FOLL_PIN pages
-  block, fs: assert that key paths use iovecs, and nothing else
-  block, bio, fs: convert most filesystems to pin_user_pages_fast()
-  NFS: direct-io: convert to FOLL_PIN pages
-  fuse: convert direct IO paths to use FOLL_PIN
-
- block/bio.c          | 29 ++++++++--------
- block/blk-map.c      |  6 ++--
- fs/direct-io.c       | 28 ++++++++--------
- fs/fuse/dev.c        |  7 ++--
- fs/fuse/file.c       | 38 +++++----------------
- fs/iomap/direct-io.c |  2 +-
- fs/nfs/direct.c      | 15 +++------
- include/linux/mm.h   |  1 +
- include/linux/uio.h  |  4 +++
- lib/iov_iter.c       | 78 ++++++++++++++++++++++++++++++++++++++++++++
- mm/gup.c             | 34 +++++++++++++++++++
- 11 files changed, 170 insertions(+), 72 deletions(-)
-
-
-base-commit: 06aeb1495c39c86ccfaf1adadc1d2200179f16eb
+diff --git a/include/linux/uio.h b/include/linux/uio.h
+index 739285fe5a2f..208020c2b75a 100644
+--- a/include/linux/uio.h
++++ b/include/linux/uio.h
+@@ -236,6 +236,10 @@ ssize_t iov_iter_get_pages(struct iov_iter *i, struct page **pages,
+ 			size_t maxsize, unsigned maxpages, size_t *start);
+ ssize_t iov_iter_get_pages_alloc(struct iov_iter *i, struct page ***pages,
+ 			size_t maxsize, size_t *start);
++ssize_t iov_iter_pin_pages(struct iov_iter *i, struct page **pages,
++			size_t maxsize, unsigned int maxpages, size_t *start);
++ssize_t iov_iter_pin_pages_alloc(struct iov_iter *i, struct page ***pages,
++			size_t maxsize, size_t *start);
+ int iov_iter_npages(const struct iov_iter *i, int maxpages);
+ void iov_iter_restore(struct iov_iter *i, struct iov_iter_state *state);
+ 
+diff --git a/lib/iov_iter.c b/lib/iov_iter.c
+index 6dd5330f7a99..e64e8e4edd0c 100644
+--- a/lib/iov_iter.c
++++ b/lib/iov_iter.c
+@@ -1560,6 +1560,41 @@ ssize_t iov_iter_get_pages(struct iov_iter *i,
+ }
+ EXPORT_SYMBOL(iov_iter_get_pages);
+ 
++ssize_t iov_iter_pin_pages(struct iov_iter *i,
++		   struct page **pages, size_t maxsize, unsigned int maxpages,
++		   size_t *start)
++{
++	size_t len;
++	int n, res;
++
++	if (maxsize > i->count)
++		maxsize = i->count;
++	if (!maxsize)
++		return 0;
++
++	WARN_ON_ONCE(!iter_is_iovec(i));
++
++	if (likely(iter_is_iovec(i))) {
++		unsigned int gup_flags = 0;
++		unsigned long addr;
++
++		if (iov_iter_rw(i) != WRITE)
++			gup_flags |= FOLL_WRITE;
++		if (i->nofault)
++			gup_flags |= FOLL_NOFAULT;
++
++		addr = first_iovec_segment(i, &len, start, maxsize, maxpages);
++		n = DIV_ROUND_UP(len, PAGE_SIZE);
++		res = pin_user_pages_fast(addr, n, gup_flags, pages);
++		if (unlikely(res <= 0))
++			return res;
++		return (res == n ? len : res * PAGE_SIZE) - *start;
++	}
++
++	return -EFAULT;
++}
++EXPORT_SYMBOL(iov_iter_pin_pages);
++
+ static struct page **get_pages_array(size_t n)
+ {
+ 	return kvmalloc_array(n, sizeof(struct page *), GFP_KERNEL);
+@@ -1696,6 +1731,49 @@ ssize_t iov_iter_get_pages_alloc(struct iov_iter *i,
+ }
+ EXPORT_SYMBOL(iov_iter_get_pages_alloc);
+ 
++ssize_t iov_iter_pin_pages_alloc(struct iov_iter *i,
++		   struct page ***pages, size_t maxsize,
++		   size_t *start)
++{
++	struct page **p;
++	size_t len;
++	int n, res;
++
++	if (maxsize > i->count)
++		maxsize = i->count;
++	if (!maxsize)
++		return 0;
++
++	WARN_ON_ONCE(!iter_is_iovec(i));
++
++	if (likely(iter_is_iovec(i))) {
++		unsigned int gup_flags = 0;
++		unsigned long addr;
++
++		if (iov_iter_rw(i) != WRITE)
++			gup_flags |= FOLL_WRITE;
++		if (i->nofault)
++			gup_flags |= FOLL_NOFAULT;
++
++		addr = first_iovec_segment(i, &len, start, maxsize, ~0U);
++		n = DIV_ROUND_UP(len, PAGE_SIZE);
++		p = get_pages_array(n);
++		if (!p)
++			return -ENOMEM;
++		res = pin_user_pages_fast(addr, n, gup_flags, p);
++		if (unlikely(res <= 0)) {
++			kvfree(p);
++			*pages = NULL;
++			return res;
++		}
++		*pages = p;
++		return (res == n ? len : res * PAGE_SIZE) - *start;
++	}
++
++	return -EFAULT;
++}
++EXPORT_SYMBOL(iov_iter_pin_pages_alloc);
++
+ size_t csum_and_copy_from_iter(void *addr, size_t bytes, __wsum *csum,
+ 			       struct iov_iter *i)
+ {
 -- 
 2.35.1
 
