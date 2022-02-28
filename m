@@ -2,90 +2,98 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D145C433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 28 Feb 2022 15:59:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 917FAC433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 28 Feb 2022 19:26:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237696AbiB1QA0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 28 Feb 2022 11:00:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48450 "EHLO
+        id S229436AbiB1T0y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 28 Feb 2022 14:26:54 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42406 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232976AbiB1QAZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Feb 2022 11:00:25 -0500
-Received: from mail-ej1-x629.google.com (mail-ej1-x629.google.com [IPv6:2a00:1450:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48AC370920
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Feb 2022 07:59:46 -0800 (PST)
-Received: by mail-ej1-x629.google.com with SMTP id a8so25713127ejc.8
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Feb 2022 07:59:46 -0800 (PST)
+        with ESMTP id S229463AbiB1T0x (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Feb 2022 14:26:53 -0500
+Received: from mail-lj1-x232.google.com (mail-lj1-x232.google.com [IPv6:2a00:1450:4864:20::232])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44ED4114FE1
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Feb 2022 11:26:08 -0800 (PST)
+Received: by mail-lj1-x232.google.com with SMTP id v28so18811173ljv.9
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Feb 2022 11:26:08 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=szeredi.hu; s=google;
+        d=linux-foundation.org; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=udUUwQMYZOQdeQeu7KJflNOXp5UljA8CQOPQlhHKm+Y=;
-        b=Ps2g3Rmx7y+RxaExNigUlAShr8r9n4HJx4jXh3jX3l48QN2GGz17bPjHQGFh/RPT/a
-         Xe3Y302EzQSNvW7VzbwzWaqmO5xMMVqpxy+XXofnecS/u0ED0x+tbYTlqkSLsLRhSciu
-         N6rSkzsDR47sLeOm/7rAJXCL4mb6S7A5gjjMA=
+        bh=k5Nq2+gFOwIAZZv1z8A5AiR5tZQQa62jzNlsasSMp48=;
+        b=hA07tqoOhzsc3WOqNCaR4tUruW+rdsfqY8YOw2mN7ILGOov8LZJfGyOH0+67N/0EaR
+         4t/JTBCib0ytZP3PxoAumfh81bQl7oYkHnLaS7IusFI7m+FXPGCuZ+b2epjKsi5SuwbN
+         6G/m+gkEWqvwTgFEdCkiL46LSGGVnwGjPchjI=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=udUUwQMYZOQdeQeu7KJflNOXp5UljA8CQOPQlhHKm+Y=;
-        b=5MVKkWBUAgWO2Sgigb6dV6FTRvysUd8uKFzxWIoQ5tG3RfRgC5KrWJzMAMnmq3gpWk
-         U5asBkIGr2IC5EBaVup+brWF6xedGF5jW5Ehd7fx6dUNhS1/NpbTd6SMsbLMQir5Bhm1
-         6kN3RVlNoTPCO1sHX0RspP4MHbMr1GzgJmtzgG54yAj14ZgXw8I5ApUN4L1QhexrmZzt
-         ZWdOzAtydtT+RopbG1rkM+qKJaSPZjO+tXqZJ1zhTYdwI4/qkUcMkfySZ2zSZtoJyJkb
-         XnNA0ungvQDbVXaab7/I+TJscmU1sMv4MQbBuBHQ4Kk1u5KZ1bRWsK57u4os+Kb19cUs
-         qsjg==
-X-Gm-Message-State: AOAM530AKjf2bbXtl7P9eN/ufmrcmpScNGyXbZcA7rg8pDKSeo8syjx7
-        YsMr9pAmfXwXvE9WYBMEPtYl3WdQLldW7YfEXVYFlQ==
-X-Google-Smtp-Source: ABdhPJzFuwC4cXK43NRFP1CzDPmxJHkeyiho2pckN/boPKiQ0vuUKSn6l1ZxMqIRvXXEFW5bhRCbL2ZNT2f45sLUzvo=
-X-Received: by 2002:a17:907:76fc:b0:6ce:a836:34a1 with SMTP id
- kg28-20020a17090776fc00b006cea83634a1mr16312616ejc.663.1646063984879; Mon, 28
- Feb 2022 07:59:44 -0800 (PST)
+        bh=k5Nq2+gFOwIAZZv1z8A5AiR5tZQQa62jzNlsasSMp48=;
+        b=4qbblFxrCa5I1zva3T1UmbMR1mB38cwrc5l+H8/Ooy05yvpm1ONLFzp8OCtkBe7wdq
+         xXUAdfoNfK5VI9+P2+1R8/qwL9kn17r2j1i/HiVrP25kL6y6hUQdCuKwTld6QlST+n0z
+         XPNU37V6583LydrU2Bp35b+pDD/jyIuIYeavpllUOIgK32uUfvjIYDSnRN6h0wEmamYl
+         nvVWn6WoQH6QgSPMIshB9w0zMNgeMZz0VLzQ76FQgInfS59h91wXuiqRty43eMjOqm4b
+         A+unlvR5q0m/lxw+8iFmivKVJTVXKwTVCUcFHfVbOzKem12T2hFjOJBSNUh7AGjR/MQm
+         d5kA==
+X-Gm-Message-State: AOAM530ChW4taCwVSTLhKU7ax1ePIGorbCeazlwT9Md1xZtRAzHQYPG3
+        ntRBNZAGufh8WT7PzrN7WHImBlXN51683vXAOcM=
+X-Google-Smtp-Source: ABdhPJyflzP+AY920mN7JhFxiGa+RFA/7X8HLZ+zfHoCeJcYQeT1KEJusuii5KGrhkZOHoEoTdW92A==
+X-Received: by 2002:a2e:9694:0:b0:246:3853:fe18 with SMTP id q20-20020a2e9694000000b002463853fe18mr15233313lji.348.1646076366369;
+        Mon, 28 Feb 2022 11:26:06 -0800 (PST)
+Received: from mail-lf1-f43.google.com (mail-lf1-f43.google.com. [209.85.167.43])
+        by smtp.gmail.com with ESMTPSA id o25-20020ac24959000000b00443fdf504bcsm1099391lfi.161.2022.02.28.11.26.05
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 28 Feb 2022 11:26:05 -0800 (PST)
+Received: by mail-lf1-f43.google.com with SMTP id b11so23098359lfb.12
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Feb 2022 11:26:05 -0800 (PST)
+X-Received: by 2002:a05:6512:3042:b0:437:96f5:e68a with SMTP id
+ b2-20020a056512304200b0043796f5e68amr14128474lfb.449.1646076365434; Mon, 28
+ Feb 2022 11:26:05 -0800 (PST)
 MIME-Version: 1.0
-References: <20220227093434.2889464-1-jhubbard@nvidia.com> <20220227093434.2889464-7-jhubbard@nvidia.com>
-In-Reply-To: <20220227093434.2889464-7-jhubbard@nvidia.com>
-From:   Miklos Szeredi <miklos@szeredi.hu>
-Date:   Mon, 28 Feb 2022 16:59:33 +0100
-Message-ID: <CAJfpegsDkpdCQiPmfKfX_b4-bkkj5N5vRhseifEH6woJ7r0S6A@mail.gmail.com>
-Subject: Re: [PATCH 6/6] fuse: convert direct IO paths to use FOLL_PIN
-To:     jhubbard.send.patches@gmail.com
-Cc:     Jens Axboe <axboe@kernel.dk>, Jan Kara <jack@suse.cz>,
-        Christoph Hellwig <hch@infradead.org>,
-        Dave Chinner <dchinner@redhat.com>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        "Theodore Ts'o" <tytso@mit.edu>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Chaitanya Kulkarni <kch@nvidia.com>,
-        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+References: <CACsaVZ+mt3CfdXV0_yJh7d50tRcGcRZ12j3n6-hoX2cz3+njsg@mail.gmail.com>
+ <20220219210354.GF59715@dread.disaster.area> <CACsaVZ+LZUebtsGuiKhNV_No8fNLTv5kJywFKOigieB1cZcKUw@mail.gmail.com>
+ <YhN76/ONC9qgIKQc@silpixa00400314> <CACsaVZJFane88cXxG_E1VkcMcJm8YVN+GDqQ2+tRYNpCf+m8zA@mail.gmail.com>
+In-Reply-To: <CACsaVZJFane88cXxG_E1VkcMcJm8YVN+GDqQ2+tRYNpCf+m8zA@mail.gmail.com>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Mon, 28 Feb 2022 11:25:49 -0800
+X-Gmail-Original-Message-ID: <CAHk-=whVT2GcwiJM8m-XzgJj8CjytTHi_pmgmOnSpzvGWzZM1A@mail.gmail.com>
+Message-ID: <CAHk-=whVT2GcwiJM8m-XzgJj8CjytTHi_pmgmOnSpzvGWzZM1A@mail.gmail.com>
+Subject: Re: Intel QAT on A2SDi-8C-HLN4F causes massive data corruption with
+ dm-crypt + xfs
+To:     Kyle Sanderson <kyle.leet@gmail.com>
+Cc:     Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        Dave Chinner <david@fromorbit.com>, qat-linux@intel.com,
+        Linux-Kernal <linux-kernel@vger.kernel.org>,
         linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-mm <linux-mm@kvack.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        John Hubbard <jhubbard@nvidia.com>
+        Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
+        device-mapper development <dm-devel@redhat.com>,
+        Greg KH <gregkh@linuxfoundation.org>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, 27 Feb 2022 at 10:34, <jhubbard.send.patches@gmail.com> wrote:
+On Mon, Feb 28, 2022 at 12:18 AM Kyle Sanderson <kyle.leet@gmail.com> wrote:
 >
-> From: John Hubbard <jhubbard@nvidia.com>
->
-> Convert the fuse filesystem to support the new iov_iter_get_pages()
-> behavior. That routine now invokes pin_user_pages_fast(), which means
-> that such pages must be released via unpin_user_page(), rather than via
-> put_page().
->
-> This commit also removes any possibility of kernel pages being handled,
-> in the fuse_get_user_pages() call. Although this may seem like a steep
-> price to pay, Christoph Hellwig actually recommended it a few years ago
-> for nearly the same situation [1].
+> Makes sense - this kernel driver has been destroying users for many
+> years. I'm disappointed that this critical bricking failure isn't
+> searchable for others.
 
-This might work for O_DIRECT, but fuse has this mode of operation
-which turns normal "buffered" I/O into direct I/O.  And that in turn
-will break execve of such files.
+It does sound like we should just disable that driver entirely until
+it is fixed.
 
-So AFAICS we need to keep kvec handing in some way.
+Or at least the configuration that can cause problems, if there is
+some particular sub-case. Although from a cursory glance and the
+noises made in this thread, it looks like it's all of the 'qat_aeads'
+cases (since that uses qat_alg_aead_enc() which can return -EAGAIN),
+which effectively means that all of the QAT stuff.
 
-Thanks,
-Miklos
+So presumably CRYPTO_DEV_QAT should just be marked as
+
+        depends on BROKEN || COMPILE_TEST
+
+or similar?
+
+              Linus
