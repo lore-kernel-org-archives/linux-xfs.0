@@ -2,201 +2,163 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3E55C433FE
-	for <linux-xfs@archiver.kernel.org>; Mon, 28 Feb 2022 22:49:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 587BEC4332F
+	for <linux-xfs@archiver.kernel.org>; Mon, 28 Feb 2022 22:56:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230175AbiB1Wt6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 28 Feb 2022 17:49:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57352 "EHLO
+        id S230175AbiB1W4j (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 28 Feb 2022 17:56:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48684 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229625AbiB1Wt5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Feb 2022 17:49:57 -0500
-Received: from NAM11-CO1-obe.outbound.protection.outlook.com (mail-co1nam11on2085.outbound.protection.outlook.com [40.107.220.85])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C05D956205;
-        Mon, 28 Feb 2022 14:49:15 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=N84eiNEGWUnYQBvwc4j1m51WpG/MRoVLQ9pXsoAKJhndp6fFPRitHl7b4iq3nqtfVGwXUQyaN/sftxWOJRi17J7MtyH35JiSeyR99bwLnHbxJWLaWasO0AdjodS9M/vfto3/w1EwqqVD+uOifjdptYgmsb7LuvD2g/TulwB1BAtFq39gMrlxsenDuQj2kDz9DlGZnIxa73SA9TP7u17l/GNh4ewTY/36RVeDWVdYFW6T7ks/fEZrT2E50nd1x/FYBFNtc8q+bsBRA7M+FqnxDE3Znd7NfMv8Q9vPE7PObMvU8WSjsSbpmM3bk1n2p1O0cJJdAFx13EooO6K8H1tOWQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=GuqRabi9lpLuspid5GUJ60pcD0deIPUJxE8Rbwc8iys=;
- b=gS2bcSsB62wLHSPeXB2CoSoTivxCy5szs0SWjocMtm7pZZ6nS+cFSDK0VsxaeY9hmsGuPTsRL7Pkz4OH07VPZkYMt3XQegWMbWaXO/LoqPOpWNEcFJLm/IgJ4+OwxwHLQBDx+sxN7jvyZ3/fRXAkNZCZZgi5Ljni6YtFp9HWKGg/aTx2C9CLaNhtLhkR7R0eSZHMdTdCGcbb75CENsywHDo6lfNMA27sz04WZvqyFU7Xt2qPZUQnKx7q3nkk97uww7uDb7az1ce1KrMmZ+w+gfmvOuheC4HMcFbYhEKgIok9rJCybpyuecdxxwlQrNmaGiVYgVF2sDRSlarlSi9q6Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=GuqRabi9lpLuspid5GUJ60pcD0deIPUJxE8Rbwc8iys=;
- b=O/F01zlFBMZCV6l0qvlHVXpr4ayYW6Bd56QJEAiDGMDeFSFcM7v2HlC1KI0fkeO9Hw1YZwKacCSy4AneAuhQ/zgEIPCDb3MOGWSrEdyIidSNvo8DHVpm+sEmEa4UTzan5CUx+AU/igjGjPviUx87BaNA83pbbXVjbPI2ApSjtd4cWlOKhJQWB82zlNTJ4/UfsIuRKWLPoAJI1FuA7rRKSwz30XF8bKQJPeeWIf9V9ylvZPOZOlGmPhyCjIO61/6DxwvqDz2GiEhqxFleyb0RVrdemLvmbEb/UY7IPycJRNoFKIQcJPigHjdrPAAbS28wpxGNfKNSHh1ZSD2zUv+p4A==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from BY5PR12MB4130.namprd12.prod.outlook.com (2603:10b6:a03:20b::16)
- by LV2PR12MB5943.namprd12.prod.outlook.com (2603:10b6:408:170::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5017.21; Mon, 28 Feb
- 2022 22:49:13 +0000
-Received: from BY5PR12MB4130.namprd12.prod.outlook.com
- ([fe80::498:6469:148a:49c7]) by BY5PR12MB4130.namprd12.prod.outlook.com
- ([fe80::498:6469:148a:49c7%7]) with mapi id 15.20.5017.027; Mon, 28 Feb 2022
- 22:49:13 +0000
-Message-ID: <0c5bcd23-607f-2ef9-daa0-11557c9f8e8f@nvidia.com>
-Date:   Mon, 28 Feb 2022 14:49:11 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH 2/6] iov_iter: new iov_iter_pin_pages*(), for FOLL_PIN
- pages
-Content-Language: en-US
-To:     Jens Axboe <axboe@kernel.dk>, jhubbard.send.patches@gmail.com,
-        Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>,
-        Dave Chinner <dchinner@redhat.com>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Chaitanya Kulkarni <kch@nvidia.com>
-Cc:     linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-        LKML <linux-kernel@vger.kernel.org>
-References: <20220227093434.2889464-1-jhubbard@nvidia.com>
- <20220227093434.2889464-3-jhubbard@nvidia.com>
- <06469550-a679-145f-b16e-2f1ffc0b07af@kernel.dk>
-From:   John Hubbard <jhubbard@nvidia.com>
-In-Reply-To: <06469550-a679-145f-b16e-2f1ffc0b07af@kernel.dk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SJ0PR03CA0012.namprd03.prod.outlook.com
- (2603:10b6:a03:33a::17) To BY5PR12MB4130.namprd12.prod.outlook.com
- (2603:10b6:a03:20b::16)
+        with ESMTP id S230102AbiB1W4i (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Feb 2022 17:56:38 -0500
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C478E8CD8B
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Feb 2022 14:55:58 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-17-0.pa.vic.optusnet.com.au [49.186.17.0])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id A231552E772;
+        Tue,  1 Mar 2022 09:55:57 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nOovs-0000iW-Gh; Tue, 01 Mar 2022 09:55:56 +1100
+Date:   Tue, 1 Mar 2022 09:55:56 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH RFC 3/4] xfs: crude chunk allocation retry mechanism
+Message-ID: <20220228225556.GS59715@dread.disaster.area>
+References: <20220217172518.3842951-1-bfoster@redhat.com>
+ <20220217172518.3842951-4-bfoster@redhat.com>
+ <20220217232033.GD59715@dread.disaster.area>
+ <Yg+rdFRpvra8U25D@bfoster>
+ <20220218225440.GE59715@dread.disaster.area>
+ <YhKM6u3yuF1Ek4/w@bfoster>
+ <20220223070058.GK59715@dread.disaster.area>
+ <Yh1CjRONamUG0k1C@bfoster>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 881226c2-a71b-4fbe-ad9e-08d9fb0c8a8d
-X-MS-TrafficTypeDiagnostic: LV2PR12MB5943:EE_
-X-Microsoft-Antispam-PRVS: <LV2PR12MB59435124B8E475C4A9BB2E31A8019@LV2PR12MB5943.namprd12.prod.outlook.com>
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: RLlxyC8aF2x+DnMRH38YDkptM8D/D+neYlkS4AijVyKYLnQ+nheZWdx0bRrk1idL0x/5HtCWBn0OX0E6GilPaYS+0Wz82XdArIQTTOJnhxdbsy4kJpa+QiyUsZ+61Ypr8W3hXC+rH/nZoukcS9YQanqdxhYdWmpHTtby3f4D/XdOVi18s/bfTQIA+eZFIMVcntRqrA1tXNSYfByEtqmnmD1wxXL+TK3qlE9h1G8Z0AWYWbye4mVFuhsW+P8zRxsB3oU34DqNY4IRIHVbu6tbs28WUtnyH2WPGeh+6fnrLFE2uN1xbBq9CDE+PdZMnPADApMTow3AdgFbOVjWDcJuOKjuLPl5Cd/UcNGVP+k2bslE1Hmjk82d74r0qVho/BFiatuGVDkc3XWaU5Q0OYjxX5jz7VfrWPcgkD5IEE9hzxG/4P0YEJmFyzMJD+t7Xg48HLRfNqCEkG1vBRoLnJ9YKD5Ud/uUVvHn/D+XrDqcCFDquSFiiTIfSeAi2PgI3/JKA1yIpxQesby4Kvf1B5Xdm13E7MeYskwk9Ib12iy8VAGl/z4J2Em7evKysKPKs4P0G7RkQlIeuX99+NXWmLmjs9whFnJ+EVXlyERqarGHfPDfLUIx1GIYXL1Ih+a6bLDGbodrlYDuU7iE6Plu082C77Ezs6fH82nNx7t4Wzs60egiqf4M6t7C6rERZCzWaGuRKLDApi/t8tLhf3YhN0hRQ6FZTWqtchoBC2xFqT2x9YfBxkncEKHZMb+RTv3d2EUHSLpmnhU8gtDyFDU2t6fO0Q==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR12MB4130.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(66556008)(6486002)(66476007)(8676002)(110136005)(4326008)(508600001)(31686004)(66946007)(8936002)(5660300002)(7416002)(2616005)(36756003)(53546011)(316002)(6636002)(6506007)(6512007)(2906002)(921005)(186003)(38100700002)(26005)(31696002)(86362001)(45980500001)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?bkFYRUt6ZGJjaEdyV1M3dEdJaUN0TVdUMHFoTWJWa2ljMUlVaXVqVlVXczRN?=
- =?utf-8?B?eUhySjlpbCtoY2dRTUtlL0tsZGhnci9NUk43a2xMLzlENlFoZzdBTkNCYVA0?=
- =?utf-8?B?amFuOXc3N3pHeGE5dTVGcUZ2Tm44NnlGUEczUHBzUkFpMFFFV25TRnErTkN2?=
- =?utf-8?B?SVp3LzB5QnhxZDJCQmVycmN6M3ozbnVBUjNVOSt5L094WUZOSU1rSHlUVThs?=
- =?utf-8?B?aEFaa0xVdFFMcE16cUNJS0ZONTFGamV0NVN0NUdFS3hIbU5OVHcxWkJyRHFT?=
- =?utf-8?B?YzZUL0JDb01nMlVVeEgvNi9MMzZXcEFzMWlvTWZ2ajhSQ05qS3NIZ3VYS1Fj?=
- =?utf-8?B?c0Mwek4rT3N5U3c0czM3ZnpCNnFieXQ2MEFaaEFsMHVtQkdvbm5XUFJVODMz?=
- =?utf-8?B?VWJFNWhMWHdZcFdvUC9MaDduQi84Yk5PMlRDVnJoQkJWdFdLditKazJma042?=
- =?utf-8?B?SWtyalM5QnhWMFI4TGhJU1lZV003ZDhtbURvMlkyMVpreU15MTN3RHAwVHU5?=
- =?utf-8?B?Yks0aHI4WHNTdTA0eldRRzF5VDk5dU43aUNyU1lkUXUzcEc5MnFGaXZHNGM5?=
- =?utf-8?B?TlplelhJVGpmTVdLSnRxZ3ZIWnB4LzBiVndtdEtkUEVCSnA3UDcrNjAxdmNX?=
- =?utf-8?B?MmVlVGU0TWo5VkNzUi9JTTVycGFDUHZUZVBQSHVHVmREbDlIaFltTGVkS1Ba?=
- =?utf-8?B?RDk1UWJMYXVyV0Izamp0dzgxNVRYQ0J2ZFNZbjJ0M3RUT2RQc3BEMGxJaXh4?=
- =?utf-8?B?Y0FWNmRoNVpjQy9qTDRlUlFkZVFsNEJUVEprcjJkOGVucThrZ1JodzNYdC9S?=
- =?utf-8?B?WkxIQnpuMHd3ZHdpNjRmdFJTKzVmLzFXOVBzL0xxRWl6RGRMQnlhaDNxdG9r?=
- =?utf-8?B?UVZSRHZkSThDUVhheERpeTZ2eVVJcGI2L3IyMzVkR1V3SXRTaTVxdzE1L05p?=
- =?utf-8?B?dXJMSXUxZWlReis3bmhic3VPQ2ZINUFKdm1JNGxUU3hFRGJWV2o5M3RKUTlE?=
- =?utf-8?B?VGVIVGxsSCtBcjFqUHYraGJCQWgyR2E5OWxqbkZjdFRDQXNVd2MwYnd3and5?=
- =?utf-8?B?RFpnelNHKzJXekJ5L05tbjNBY3lQMm1HWHp5WjZDMzFXWFg1U3lCOThWNE1Q?=
- =?utf-8?B?MFNSUGN6bHYxNUxabmNVY3FuZjcvRWV1cXBYaVlDRmcrMDVva3VkaXVzOW51?=
- =?utf-8?B?cEt3ZENQV1VzUnNVZEhWdzIyMWtWVmE0d1NFdm9jOHdVQzJsS1FUanFsT1FO?=
- =?utf-8?B?dmFGT2RKc1V5U05Vb0JLdGNGeCtFTURvTkRuVzB4d21VZGRGSThGeFg5eVlE?=
- =?utf-8?B?Q09FY01abk1xa0dIeXRRa3VCVjFIcWxqRWgxSlJidWwrK3VjUHE1bi9TbDhB?=
- =?utf-8?B?UDd2dDI5WXlCSVNJYzUyVGdBaW1xMDE5eVhyKzljUTV2S1pnY3ZtZ0FtY0gz?=
- =?utf-8?B?QVBzQWI3bjdxTFhkdmhocjZoeXpvNlhtR3FpVGJteE45WWJHQit4enlTL016?=
- =?utf-8?B?VVFmSk1HT3pSQ0U3V2ZwQTBrYkpVaUFpRjFzRFNvOUh5SHpWSDJyRHRSN2Jz?=
- =?utf-8?B?WkZmdmlwTkdZUGMvUVNlaGk2MmI1alZ1Z3FZVnB4amEwb1JCQmVQcXNDQ2NU?=
- =?utf-8?B?UHJwaFh0U0hRSEsyekJvQU9lNVUxd2tFM2V3Yjl6MWtvancrSlpiSC9BVjND?=
- =?utf-8?B?WVpGcWFJY2g2MXdtQTRpcUlaN1NlT3lWeTZvODVQQlhKVHc1a1dYUlFrZnpS?=
- =?utf-8?B?L1BqOW1Jb0hXT01jL2F5WXhRYmwvbnJ1NklqWWRJb2xrUHRPT0dDN3JDS2Vy?=
- =?utf-8?B?SDlXWFdDR08zeHJzWEp1VG1yNlJsL01Lc25uRmdTMzBLV05zb0pZTk9QcHdY?=
- =?utf-8?B?ZW9TRlhXSlpiK2JYZjkxTUpjUjJCSU9jRjB1S2VaYXluRHBxWVJmcjRmSW95?=
- =?utf-8?B?b05aMDN1OTNjVHptM09YbFJjbzNWUnNBTEhEcE5DdXBBd2dqb1crYkxqN0t2?=
- =?utf-8?B?OWJUaHI1Sk1vZzIwajZKUW9DbXp5SEFvd0J2Uk54QmRwamI3MzdVSWZuVU9y?=
- =?utf-8?B?cDByTzg1UDRJa0ZsZ3FXdnNIcndnUjRPRzBmMzlwZ2VGQnhkZlpEeTVta3pK?=
- =?utf-8?B?ZkRkeXBlMFUrcXJMVDF2N1lFMFRyaFdDRlVhUmYwYU5BNHVvbU9kOVFZanNY?=
- =?utf-8?Q?b5DR/IGUJJBHJKce+J5Km+U=3D?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 881226c2-a71b-4fbe-ad9e-08d9fb0c8a8d
-X-MS-Exchange-CrossTenant-AuthSource: BY5PR12MB4130.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Feb 2022 22:49:13.3762
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: jYMAeJRBB42T8RdwLoaq7ql/fqrOMNVJ0MeYzX0z97TKEWCfI7MKk5v2TI9qu0S2R/4+a569kVcPpMTGLxvKtg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV2PR12MB5943
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Yh1CjRONamUG0k1C@bfoster>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=621d52fe
+        a=+dVDrTVfsjPpH/ci3UuFng==:117 a=+dVDrTVfsjPpH/ci3UuFng==:17
+        a=kj9zAlcOel0A:10 a=o8Y5sQTvuykA:10 a=7-415B0cAAAA:8
+        a=naSMNv7LkI1SZfMQRSoA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2/27/22 13:57, Jens Axboe wrote:
->> +ssize_t iov_iter_pin_pages(struct iov_iter *i,
->> +		   struct page **pages, size_t maxsize, unsigned int maxpages,
->> +		   size_t *start)
->> +{
->> +	size_t len;
->> +	int n, res;
->> +
->> +	if (maxsize > i->count)
->> +		maxsize = i->count;
->> +	if (!maxsize)
->> +		return 0;
->> +
->> +	WARN_ON_ONCE(!iter_is_iovec(i));
->> +
->> +	if (likely(iter_is_iovec(i))) {
->> +		unsigned int gup_flags = 0;
->> +		unsigned long addr;
->> +
->> +		if (iov_iter_rw(i) != WRITE)
->> +			gup_flags |= FOLL_WRITE;
->> +		if (i->nofault)
->> +			gup_flags |= FOLL_NOFAULT;
->> +
->> +		addr = first_iovec_segment(i, &len, start, maxsize, maxpages);
->> +		n = DIV_ROUND_UP(len, PAGE_SIZE);
->> +		res = pin_user_pages_fast(addr, n, gup_flags, pages);
->> +		if (unlikely(res <= 0))
->> +			return res;
->> +		return (res == n ? len : res * PAGE_SIZE) - *start;
+On Mon, Feb 28, 2022 at 04:45:49PM -0500, Brian Foster wrote:
+> On Wed, Feb 23, 2022 at 06:00:58PM +1100, Dave Chinner wrote:
+> > i.e. as long as we track whether we've allocated a new inode chunk
+> > or not, we can bound the finobt search to a single retry. If we
+> > allocated a new chunk before entering the finobt search, then all we
+> > need is a log force because the busy inodes, by definition, are
+> > XFS_ISTALE at this point and waiting for a CIL push before they can
+> > be reclaimed. At this point an retry of the finobt scan will find
+> > those inodes that were busy now available for allocation.
 > 
-> Trying to be clever like that just makes the code a lot less readable. I
-> should not have to reason about a return value. Same in the other
-> function.
+> Remind me what aspect of the prospective VFS changes prevents inode
+> allocation from seeing a free inode with not-yet-elapsed RCU grace
+> period..? Will this delay freeing (or evicting) the inode until a grace
+> period elapses from when the last reference was dropped?
+
+It will delay it until the inode has been reclaimed, in which case
+reallocating it will result in a new struct xfs_inode being
+allocated from slab, and we're all good. Any lookup that finds the
+old inode will see either I_WILL_FREE, I_FREEING, I_CLEAR,
+XFS_NEED_INACTIVE, XFS_IRECLAIM or ip->i_ino == 0 depending on what
+point the lookup occurs. Hence the lookup will be unable to take a
+new reference to the unlinked inode, and the lookup retry should
+then get the newly allocated xfs_inode once it has been inserted
+into the radix tree...
+
+IOWs, it gets rid of recycling altogether, and that's how we avoid
+the RCU grace period issues with recycled inodes.
+
+> > > Perhaps a simple enough short term option is to use the existing block
+> > > alloc min/max range mechanisms (as mentioned on IRC). For example:
+> > > 
+> > > - Use the existing min/max_agbno allocation arg input values to attempt
+> > >   one or two chunk allocs outside of the known range of busy inodes for
+> > >   the AG (i.e., allocate blocks higher than the max busy agino or lower
+> > >   than the min busy agino).
+> > > - If success, then we know we've got a chunk w/o busy inodes.
+> > > - If failure, fall back to the existing chunk alloc calls, take whatever
+> > >   we get and retry the finobt scan (perhaps more aggressively checking
+> > >   each record) hoping we got a usable new record.
+> > > - If that still fails, then fall back to synchronize_rcu() as a last
+> > >   resort and grab one of the previously busy inodes.
+> > > 
+> > > I couldn't say for sure if that would be effective enough without
+> > > playing with it a bit, but that would sort of emulate an algorithm that
+> > > filtered chunk block allocations with at least one busy inode without
+> > > having to modify block allocation code. If it avoids an RCU sync in the
+> > > majority of cases it might be effective enough as a stopgap until
+> > > background freeing exists. Thoughts?
+> > 
+> > It might work, but I'm not a fan of how many hoops we are considering
+> > jumping through to avoid getting tangled up in the RCU requirements
+> > for VFS inode life cycles. I'd much prefer just being able to say
+> > "all inodes busy, log force, try again" like we do with busy extent
+> > limited block allocation...
+> > 
 > 
+> Well presumably that works fine for your implementation of busy inodes,
+> but not so much for the variant intended to work around the RCU inode
+> reuse problem. ISTM this all just depends on the goals and plan here,
+> and I'm not seeing clear enough reasoning to grok what that is. A
+> summary of the options discussed so far:
+> 
+> - deferred inode freeing - ideal but too involved, want something sooner
+>   and more simple
+> - hinted non-busy chunk allocation - simple but jumping through too many
+>   RCU requirement hoops
+> - sync RCU and retry - most analogous to longer term busy inode
+>   allocation handling (i.e. just replace rcu sync w/ log force and
+>   retry), but RCU sync is too performance costly as a direct fallback
+> 
+> ISTM the options here range from simple and slow, to moderately simple
+> and effective (TBD), to complex and ideal. So what is the goal for this
+> series?
 
-Here is a differential patch on top of this one, and only showing one of
-the two routines. How does this direction look to you?
+To find out if we can do something fast and effective (and without
+hacks that might bite us unexepectedly) with RCU grace periods that
+is less intrusive than changing inode life cycles. If it turns out
+that we can change the inode life cycle faster than we can come up
+with a RCU grace period based solution, then we should just go with
+inode life cycle changes and forget about the interim RCU grace
+period detection changes...
 
+> My understanding to this point is that VFS changes are a ways
+> out, so the first step was busy inodes == inodes with pending grace
+> periods and a rework of the busy inode definition comes later with the
+> associated VFS changes. That essentially means this series gets fixed up
+> and posted as a mergeable component in the meantime, albeit with a
+> "general direction" that is compatible with longer term changes.
 
-diff --git a/lib/iov_iter.c b/lib/iov_iter.c
-index e64e8e4edd0c..8e96f1e9ebc6 100644
---- a/lib/iov_iter.c
-+++ b/lib/iov_iter.c
-@@ -1588,7 +1588,17 @@ ssize_t iov_iter_pin_pages(struct iov_iter *i,
-  		res = pin_user_pages_fast(addr, n, gup_flags, pages);
-  		if (unlikely(res <= 0))
-  			return res;
--		return (res == n ? len : res * PAGE_SIZE) - *start;
-+
-+		/* Cap len at the number of pages that were actually pinned: */
-+		if (res < n)
-+			len = res * PAGE_SIZE;
-+
-+		/*
-+		 * The return value is the amount pinned in bytes that the
-+		 * caller will actually use. So, reduce it by the offset into
-+		 * the first page:
-+		 */
-+		return len - *start;
-  	}
+It seems to me that the RCU detection code is also a ways out,
+so I'm trying to keep our options open and not have us duplicate
+work unnecessarily.
 
-  	return -EFAULT;
+> However, every RCU requirement/characteristic that this series has to
+> deal with is never going to be 100% perfectly aligned with the longer
+> term busy inode requirements because the implementations/definitions
+> will differ, particularly if the RCU handling is pushed up into the VFS.
+> So if we're concerned about that, the alternative approach is to skip
+> incrementally addressing the RCU inode reuse problem and just fold
+> whatever bits of useful logic from here into your inode lifecycle work
+> as needed and drop this as a mergeable component.
 
-thanks,
+*nod*
+
+The signs are pointing somewhat that way, but I'm still finding
+the occasional unexpected gotcha in the code that I have to work
+around. I think I've got them all, but until I've got it working it
+pays to keep our options open....
+
+Cheers,
+
+Dave.
 -- 
-John Hubbard
-NVIDIA
+Dave Chinner
+david@fromorbit.com
