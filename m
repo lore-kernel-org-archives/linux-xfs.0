@@ -2,65 +2,92 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 663CBC433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 28 Feb 2022 21:38:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C468FC433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 28 Feb 2022 21:44:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230505AbiB1Vjc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 28 Feb 2022 16:39:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35794 "EHLO
+        id S230459AbiB1VpM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 28 Feb 2022 16:45:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45080 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230409AbiB1Vjc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Feb 2022 16:39:32 -0500
+        with ESMTP id S230166AbiB1VpK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Feb 2022 16:45:10 -0500
 Received: from sandeen.net (sandeen.net [63.231.237.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8DD9314ACB6
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Feb 2022 13:38:52 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 07A3C32994
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Feb 2022 13:44:30 -0800 (PST)
 Received: from [10.0.0.147] (liberator.sandeen.net [10.0.0.147])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 20E7A116E2;
-        Mon, 28 Feb 2022 15:37:53 -0600 (CST)
-Message-ID: <cf23f057-61c7-6517-7360-69ae1303726f@sandeen.net>
-Date:   Mon, 28 Feb 2022 15:38:51 -0600
+        by sandeen.net (Postfix) with ESMTPSA id 51763116E2;
+        Mon, 28 Feb 2022 15:43:31 -0600 (CST)
+Message-ID: <2476cebf-b383-9788-4222-be918aa7a077@sandeen.net>
+Date:   Mon, 28 Feb 2022 15:44:29 -0600
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
  Gecko/20100101 Thunderbird/91.6.1
-Subject: Re: [PATCH v3 12/17] xfs_scrub: report optional features in version
- string
 Content-Language: en-US
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Theodore Ts'o <tytso@mit.edu>, linux-xfs@vger.kernel.org,
+Cc:     Christoph Hellwig <hch@lst.de>, Dave Chinner <dchinner@redhat.com>,
+        Theodore Ts'o <tytso@mit.edu>, linux-xfs@vger.kernel.org,
         allison.henderson@oracle.com
 References: <164263809453.863810.8908193461297738491.stgit@magnolia>
- <164263816090.863810.16834243121150635355.stgit@magnolia>
- <20220226025339.GX8313@magnolia>
+ <20220226025450.GY8313@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
-In-Reply-To: <20220226025339.GX8313@magnolia>
+Subject: Re: [PATCH 19/17] mkfs: increase default log size for new (aka
+ bigtime) filesystems
+In-Reply-To: <20220226025450.GY8313@magnolia>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2/25/22 8:53 PM, Darrick J. Wong wrote:
+On 2/25/22 8:54 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
+
+...
+
+> Hence we increase the ratio by 16x because there doesn't seem to be much
+> improvement beyond that, and we don't want the log to grow /too/ large.
+> This change does not affect filesystems larger than 4TB, nor does it
+> affect formatting to older formats.
 > 
-> Ted Ts'o reported brittleness in the fstests logic in generic/45[34] to
-> detect whether or not xfs_scrub is capable of detecting Unicode mischief
-> in directory and xattr names.  This is a compile-time feature, since we
-> do not assume that all distros will want to ship xfsprogs with libicu.
-> 
-> Rather than relying on ldd tests (which don't work at all if xfs_scrub
-> is compiled statically), let's have -V print whether or not the feature
-> is built into the tool.  Phase 5 still requires the presence of "UTF-8"
-> in LC_MESSAGES to enable Unicode confusable detection; this merely makes
-> the feature easier to discover.
-> 
-> Reported-by: Theodore Ts'o <tytso@mit.edu>
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
-> v2: correct the name of the reporter
-> v3: only report if -VV specified
+>  mkfs/xfs_mkfs.c |   12 +++++++++++-
+>  1 file changed, 11 insertions(+), 1 deletion(-)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 96682f9a..7178d798 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -3308,7 +3308,17 @@ _("external log device size %lld blocks too small, must be at least %lld blocks\
+>  
+>  	/* internal log - if no size specified, calculate automatically */
+>  	if (!cfg->logblocks) {
+> -		if (cfg->dblocks < GIGABYTES(1, cfg->blocklog)) {
+> +		if (cfg->sb_feat.bigtime) {
 
-Thanks.
+I'm not very keen on conditioning this on bigtime; it seems very ad-hoc and
+unexpected. Future maintainers will look at this and wonder why bigtime is
+in any way related to log size...
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+If we make this change, why not just make it regardless of other features?
+Is there some other risk to doing so?
+
+Thanks,
+-Eric
+
+> +			/*
+> +			 * Starting with bigtime, everybody gets a 256:1 ratio
+> +			 * of fs size to log size unless they say otherwise.
+> +			 * Larger logs reduce contention for log grant space,
+> +			 * which is now a problem with the advent of small
+> +			 * non-rotational storage devices.
+> +			 */
+> +			cfg->logblocks = (cfg->dblocks << cfg->blocklog) / 256;
+> +			cfg->logblocks = cfg->logblocks >> cfg->blocklog;
+> +		} else if (cfg->dblocks < GIGABYTES(1, cfg->blocklog)) {
+>  			/* tiny filesystems get minimum sized logs. */
+>  			cfg->logblocks = min_logblocks;
+>  		} else if (cfg->dblocks < GIGABYTES(16, cfg->blocklog)) {
+> 
