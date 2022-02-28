@@ -2,162 +2,236 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3677BC433EF
-	for <linux-xfs@archiver.kernel.org>; Mon, 28 Feb 2022 03:29:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DBB4C433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 28 Feb 2022 08:18:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232740AbiB1DaX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 27 Feb 2022 22:30:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49104 "EHLO
+        id S232587AbiB1ITX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 28 Feb 2022 03:19:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37260 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229471AbiB1DaW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Feb 2022 22:30:22 -0500
-Received: from NAM10-MW2-obe.outbound.protection.outlook.com (mail-mw2nam10on2048.outbound.protection.outlook.com [40.107.94.48])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17FE259386;
-        Sun, 27 Feb 2022 19:29:45 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=dPfdAZAoaBywkjNz3XiLReXMrcE39RZWx25zxtx/nmU96UXm8yA3TnhpckuhJz3MdtPpLUv0q6HSEvpiNCZc8g423pZTMn5WqWWwTwCyQsgaplafs42+gTdOOxfoPWPf4N0OcMpjl3df9Rx4a11Hyyw93jwSvxFSFVNd1StcAtmFX7vQTrGjPk531Jk/jQyjk1TMIho3DkLKuDMKlg3JpNVJT2LmJWw0RmHRvDMJz/PfYiD6xFBFzQoBrERQafUsnuLUUkUzBS/U44c1WCGuhaUPcFL1YpLu649i+kad5YqGQ/b2DALNWCgG8UGemH6zO95aPulza0XPXP75aZ3N1Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=JDJuF17peCJ3N3oAUITIo8PN4xeSQplp5neDv3xHQno=;
- b=mw3m671OVqEKOaTAkHs5KgRF/v93eUb1/Ztls8VGmxCkW0cgC5cx1fb5C8tTCGCYSI0SUUGEpDZecfZMVDt9As/Ee4x8uaxuafuZ1jTda2bQB5WPM+o/nT0Fi42i3UkOt3tSbxXrBy7YaVHebwFJckRqAlFgwx/aytVduq37OrMx1TcZx+s1Vg3CM1hE+Hd2g5sihOD0axRQe5X7Z7ajTTjKFcAUniju1c5qrRKuHJHqotfXSiLtR30SuVmkue+EySdByGhfeq9AAuWYnvDqwnXVdlZ2m299d7XToGo5HcSeoqI9JGaHHHFc+M5vKRhikWXMB2YeBeXHTIcS/ygskQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=JDJuF17peCJ3N3oAUITIo8PN4xeSQplp5neDv3xHQno=;
- b=GXbe1Yw/IGSZBnqNZDr1UaWhsrrh+Uq0smygu7FVmi6Ja9Xs56PQhqBPHt6USIWGKtqhdBSw791ohXzJgW3OaVlEOmCOM4WNrZ+Xupd/oM75XA7L6FtSOf5xCIvN8bwIhqGyhbvxyBbh48BbkD7RuSN3qDrVjhEwAoQEr6bJ2PUoXevHQLToji6Gh1abfZEmSBQ71Su5Oj0bSwrdzg81Gi9S18HYGPmsuvHEv9/XnSPXQWe+gIauCkGZQ+H0vvMyaAuOK3GfFWIOoVAFKhC7MGi4ye/Qc5NfpVrOm46EoId6Wj+JTXf83wwTIlUj7u8UVgEcgRUCWFBjRr2fhhg/Nw==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from BY5PR12MB4130.namprd12.prod.outlook.com (2603:10b6:a03:20b::16)
- by LV2PR12MB5775.namprd12.prod.outlook.com (2603:10b6:408:179::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5017.22; Mon, 28 Feb
- 2022 03:29:42 +0000
-Received: from BY5PR12MB4130.namprd12.prod.outlook.com
- ([fe80::498:6469:148a:49c7]) by BY5PR12MB4130.namprd12.prod.outlook.com
- ([fe80::498:6469:148a:49c7%7]) with mapi id 15.20.5017.026; Mon, 28 Feb 2022
- 03:29:42 +0000
-Message-ID: <36223c44-d23f-18be-186e-08bcfce496d2@nvidia.com>
-Date:   Sun, 27 Feb 2022 19:29:39 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH 3/6] block, fs: assert that key paths use iovecs, and
- nothing else
-Content-Language: en-US
-To:     Al Viro <viro@zeniv.linux.org.uk>, jhubbard.send.patches@gmail.com
-Cc:     Jens Axboe <axboe@kernel.dk>, Jan Kara <jack@suse.cz>,
-        Christoph Hellwig <hch@infradead.org>,
-        Dave Chinner <dchinner@redhat.com>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Chaitanya Kulkarni <kch@nvidia.com>,
-        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-        LKML <linux-kernel@vger.kernel.org>
-References: <20220227093434.2889464-1-jhubbard@nvidia.com>
- <20220227093434.2889464-4-jhubbard@nvidia.com>
- <Yhv39J4+FwD/B2aJ@zeniv-ca.linux.org.uk>
-From:   John Hubbard <jhubbard@nvidia.com>
-In-Reply-To: <Yhv39J4+FwD/B2aJ@zeniv-ca.linux.org.uk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: BYAPR05CA0052.namprd05.prod.outlook.com
- (2603:10b6:a03:74::29) To BY5PR12MB4130.namprd12.prod.outlook.com
- (2603:10b6:a03:20b::16)
+        with ESMTP id S231473AbiB1ITX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Feb 2022 03:19:23 -0500
+Received: from mail-vk1-xa2b.google.com (mail-vk1-xa2b.google.com [IPv6:2607:f8b0:4864:20::a2b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D35173A1B9;
+        Mon, 28 Feb 2022 00:18:44 -0800 (PST)
+Received: by mail-vk1-xa2b.google.com with SMTP id k9so4733845vki.4;
+        Mon, 28 Feb 2022 00:18:44 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=EVb44ykkDs+f4MAbG4U5GjoBgb488ah3iaA9JdvOooY=;
+        b=UQbaCx4vd3UmemmFi5Ze7mF0Dg4eAS0f3ppxs1QTC78t9oJ2wMd7yXn+wToeDUex2V
+         KyFPpllv1HKP1d5ahP1CEqj0zbTvuqp1lWxm2X/PYzBA3Y3I96jnimCHUP5MKO7nac/p
+         rteKghRoAk1MnzbEtLdh+hf/aR/HJTF/IQLfIoYuW6yixIsqT13ShVQGhhdpnPfd6UZU
+         w6zRN3dzE3R2bYbfCZHZvrzsUfSxiBNbnHwM3RcnY+Bpi39YdmYHPZSYOJgdKhltlnI+
+         MybQsjznieC44QIrP7/u2MBLV93LETsESxeWxRKyMBiuZAmsjMXXiXPtOeFkJu4BxhaB
+         VHJw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=EVb44ykkDs+f4MAbG4U5GjoBgb488ah3iaA9JdvOooY=;
+        b=FT87yHU4O3wZ0e9Dt3EwLIIjcP2qPJqV9OWMxIyNP7MMhpMFGFieVLZI7k9/TF/W2D
+         2SlYG6aU0g0MitzZuVGxyD0/E/35ecJxfEa6zCHwrXdAiiC4s+T8QFQvhtO96udBB/jS
+         GMokBcWRC3kOdDlHcUJEjbJWGMyu/FaaMwNKBe/y6E1AIw9fli4IBIIM2wlYBWLJ6Ego
+         TYtDKD5C/I0AL9pk51ERxYlQuCqIq7UL/MiAQhl/poRWTRAGoyJUOdMRZAK2YEP4SWaL
+         0NgFex5YZmf/5K9FPDyPxpHOT+2HePmqttA2vIKqpsUEuUQkyCktfAlzntS2LuTUN/Vo
+         EMjA==
+X-Gm-Message-State: AOAM532iwcBjIrfNIMkU8xFZEc4/QXBiah3O+8g2xgcJNKDWDHfguNPq
+        MYcmr4O6rBUEXcR0Wc5DpkwmgqoAkaUtD1/ldKc=
+X-Google-Smtp-Source: ABdhPJxhyZpUB9RGDUiNsp2g2BUcqmBdR2rRxOccTiE9XMqsQAP0xeLMCczQQAp8AbYd3NA2ohQ31mLWzwxANmlur+M=
+X-Received: by 2002:a05:6122:169d:b0:321:602f:a70f with SMTP id
+ 29-20020a056122169d00b00321602fa70fmr7596099vkl.3.1646036323802; Mon, 28 Feb
+ 2022 00:18:43 -0800 (PST)
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 5f4eba9c-6108-49a8-c08a-08d9fa6a8efd
-X-MS-TrafficTypeDiagnostic: LV2PR12MB5775:EE_
-X-Microsoft-Antispam-PRVS: <LV2PR12MB57759786A1E90FD15CF6A947A8019@LV2PR12MB5775.namprd12.prod.outlook.com>
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: XUkV1O1mADnfLMw//5U5Sz0WJ/UyZujgztfgZcHqyS5xzIzPqjCP3Z4oamTNVSBg21OyWun3b+9Oco82O2UWu1xT2vMfsIM/rHVJg5Jgh8Jkv83eaG9oE+lGZTUo6CBwz7b4LZsSzafxgWYqmabUSZrVy0cizgQSMyBL8yNWa+7NuTOw117xLbyrS5KFTRqtafVwPIhp5VFQ4rjHkTwsmhJmQ0ea7c/wlVkFitTf2sMogskNDH+3OaLAk24CsAUvlnAOFGdvty0YYqgrqe3RPwvAllVJm7rmxccEyEH+O+ZwsE8IViufqg6n+YDrTxkArXZdJ/3hGhnl7bXR3kF9NjMhKYlMpW+fP7p5q9ozPP4/sMK0LlBrtZE8gC9LF8rdE01mkUDgcrfPZwvUqS1zuiCqpfC8Xy6/1K/iX2uUcGMevvT/7fQewsCmbW/75xWHAzK/OQb9EJbJ3bGlaAis8p2WD1ZvPghxsWaI216sk/7JXAtesWJeuQzPQtsnazcAG//bEaI8iy14XUKTkw/dOMstVRPX3WBrGzMiXHDW+TIixm4JUvJGOPKbNviEo0Cw8ZTj7viV1P+AfvzHLrVbXopyjoIdqLfgJ5rzaB21m5cYGs3g3Lyu4PFxf1Sx/CV1+KLhkmPFuRYsLCy4Y2M809VrI22AnYyvG3ilvRh9iFo0xSudKYHlwzp5RE8meMPOI0H0McSlMsEemqdIHCkhovUxMO0Yipjj5OCKV7WUdNgSh0fOxVNpF0Du+DtVWyrJ/JUWTScoICOCuRq4YtyEwgnv0DopmKXOppwxQKXJBv4=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR12MB4130.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(508600001)(316002)(6506007)(4326008)(86362001)(6486002)(8936002)(36756003)(54906003)(31696002)(53546011)(2616005)(186003)(26005)(6512007)(38100700002)(31686004)(6666004)(66476007)(7416002)(66556008)(2906002)(8676002)(5660300002)(4744005)(66946007)(45980500001)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?VytVNlU5RnJjdllBSkZmcU9yRjZRcFBxUnZ1M1BHL2dnNjc4ZnJ0aEsrS1lq?=
- =?utf-8?B?UEs3RGdmb0Ewd2R6WWZNWWlFYlg0R1BXNEh0a0lSbEpvbzFXcjZiTkcwTXJm?=
- =?utf-8?B?Rk0vbWFNUGlFYWpCeWkwdGdhaGdXSk9VQVU4bzIzK0tCa2VuU291RWRWQjZR?=
- =?utf-8?B?TjYxYW1qbDd2M3E1empIcGp5aVAwMXhBTzVZUjZVd2pvdU0xSElhRDZieDBO?=
- =?utf-8?B?NTVaNnR4R3BzVDM1bHN4aFJXL1lja3RWR2kwMzRwVmdzakNHc2dwSTV1a0Zx?=
- =?utf-8?B?bTFGODJjYzhueDFMcWdQV0htR3hyV3dNMGFXd2pWeVFqaEZHUWVKdTRhNXps?=
- =?utf-8?B?YlNIcUh0TjN0dFVWSmtoeVE1WUxvRFJ3S2YyT1lzSE5JSVM1enN0ckJwSCsr?=
- =?utf-8?B?T3dsZHVhK3dwVTVOSGlDU1RzellwS0JUYVJVQlpJNExPZUdyamxNTnBzWmpy?=
- =?utf-8?B?SEMyLzV3Zi95bHRSY09YcjZydlZHczFjcVBsa1k1QmtmaDZqWlVXRjYrbzV4?=
- =?utf-8?B?c1RyNE9QdjNwZ1BpMVo3MDUyeHpYaUN1eVVXc3dzbjRIMW5PRnN1Z3V4Tnd5?=
- =?utf-8?B?VHgvZEk0aEhMMC96MDBRTHV1enZGaWc1MDQ3RWtIZWVyeCtObkZnSmxaMVhn?=
- =?utf-8?B?T21adXMwNTNoUFZrN01vRzc4aDhVS1BLZWdtZk5QZ1phblNrUEtTb0dHYkRE?=
- =?utf-8?B?eXdvQzBZcE9oMjhDeGpPcXF3NkFObHhZNElERC9uWmZiY2JJWG5LT09uYmo2?=
- =?utf-8?B?Y1piWUcvTnBmRHYzSFpvMllVUm1wL3A5S2psdlZZY0RHRmVSejdtSUYrU09J?=
- =?utf-8?B?RFRwajQwSWlIR0NtaXRRZDRBVXZabkpsRzR1b0FuWXZJSGVvSGNwc1MrRW5J?=
- =?utf-8?B?VGIreWNrR3BhZisvMzJjTVp1Z0ZHamZLeU8xZnZ3cVlCSENpcGFPR08rOFFr?=
- =?utf-8?B?VW82R3k4amhpVnBTNkN6MlBGMlpNWVBmdmEvOUM5dm5RNHdtVmZadzZyc1RY?=
- =?utf-8?B?MU1xVm4zVGJ6bzFEQmc2SVpxYSs1bDMwWnFpV1MyQ0I0ZFF4aDBPYlJtMXRp?=
- =?utf-8?B?SWVQMHArNHVNbi9BeWxvVEJ1Z0pmRE1BYWpVSVdPZlRFOVpXTmpxWXg0UUxz?=
- =?utf-8?B?YmNGVHU3aVRlSmd4aDZpVjVHWXNRUEN0MTNiSzc2L0pzdnpmMTVmdDdmSmd5?=
- =?utf-8?B?R1JIZ2NxNW1JakZ0UzlSOFJvMXdKckFib3cvZmtwWVpsR05Iem5Ld2VSeUxp?=
- =?utf-8?B?eWwvaTV6QXV4OXQ5YjJFYkxoOHNIbXY4eTdSLzJKM2dzUjVHaS9jb2M0WUJ3?=
- =?utf-8?B?ZjJIUjdlTXJGM1M0K09oQVN6KzdqdmxSR0k4a0FIQk90amdLSnlHcmEwTEph?=
- =?utf-8?B?My9YN2doallVZWRSQkJiR1lnY3lIckdnNnBrTTNhQmJCUEJ4UXBXZEI2cVA4?=
- =?utf-8?B?aE9laU1JMXErZXJVMnRpK0lCQ2Yzb0pZeUZLT2MvRHh4YXpOQjZwMVEyNkFL?=
- =?utf-8?B?SG53QVhCVUZHcjhUZ2tNU1JZTGVsbkpjSTdSQzZoNHV1dWdPZXMrYXNIQkxa?=
- =?utf-8?B?S3Y4MDR6RmV4cnZWUVo3c0dXeDQzeEorWFNsWFpibFBMaDhlMitEWHhoRmwv?=
- =?utf-8?B?Tzh5a1Rjcms0OVZjRmtnL0FMalY1bzlCNk1UcHFPOW1NckpFS3g3bEtXMVk0?=
- =?utf-8?B?cTZRMEFaYVRLVzlOUVZZdTE4S0IySnhscm9VL2NhNjBDR2hkM2JGUFN2MEVY?=
- =?utf-8?B?bTRoT095Z1JRNjU4Z2xwSUJkVXVHOFE1ckt6WE54a3ZkTE1vQnY1SnN5SHdz?=
- =?utf-8?B?Z2FsYzVCTHpHcHh4UWorclRRbHpMU0UzT2RLNEp0dC95c0RXUW9IdUNSRHUx?=
- =?utf-8?B?V1JlWldKQXU2Rk9UQ01WN05ZaEo1UjRoSDYxOTlkYm96Nm0wWEpRdFl0Qndw?=
- =?utf-8?B?OC81bjhISENNUmZCK2d6aXRmNFZRclpEWThtUXBHM081czcyY25EU1B1bVBT?=
- =?utf-8?B?U2srYWJTQ09VNFpiSmhseWhEcDl5MFZ2ckxXck83dThUd0lRd2FiMWNnUFl3?=
- =?utf-8?B?N1I0OE4vWW1aYmdGWXpCSlBEN0hxQkFkVHNQL2JEKzBXVHU1NDhiYjdQdGFY?=
- =?utf-8?B?VlRITmw4b2lkbnRWQWtRSEVqeUU2VW55NGRNOFlnSjFTNUtrOExISmsybHFQ?=
- =?utf-8?Q?y8YW1ZxxPGEmsGkYGboBuHo=3D?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5f4eba9c-6108-49a8-c08a-08d9fa6a8efd
-X-MS-Exchange-CrossTenant-AuthSource: BY5PR12MB4130.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Feb 2022 03:29:42.3669
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: DXzmTVq2WxaGecxOMjyeeSYyj9YOlq+ZSZughncDpHJvfEm6bLsomzfWK7E6EY+jmEFupu6SwyaFCn5t8yOW/w==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV2PR12MB5775
+References: <CACsaVZ+mt3CfdXV0_yJh7d50tRcGcRZ12j3n6-hoX2cz3+njsg@mail.gmail.com>
+ <20220219210354.GF59715@dread.disaster.area> <CACsaVZ+LZUebtsGuiKhNV_No8fNLTv5kJywFKOigieB1cZcKUw@mail.gmail.com>
+ <YhN76/ONC9qgIKQc@silpixa00400314>
+In-Reply-To: <YhN76/ONC9qgIKQc@silpixa00400314>
+From:   Kyle Sanderson <kyle.leet@gmail.com>
+Date:   Mon, 28 Feb 2022 00:18:33 -0800
+Message-ID: <CACsaVZJFane88cXxG_E1VkcMcJm8YVN+GDqQ2+tRYNpCf+m8zA@mail.gmail.com>
+Subject: Re: Intel QAT on A2SDi-8C-HLN4F causes massive data corruption with
+ dm-crypt + xfs
+To:     Giovanni Cabiddu <giovanni.cabiddu@intel.com>
+Cc:     herbert@gondor.apana.org.au, Dave Chinner <david@fromorbit.com>,
+        qat-linux@intel.com, Linux-Kernal <linux-kernel@vger.kernel.org>,
+        linux-xfs@vger.kernel.org, linux-crypto@vger.kernel.org,
+        dm-devel@redhat.com,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Greg KH <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2/27/22 14:15, Al Viro wrote:
-> On Sun, Feb 27, 2022 at 01:34:31AM -0800, jhubbard.send.patches@gmail.com wrote:
->> From: John Hubbard <jhubbard@nvidia.com>
->>
->> Upcoming changes to Direct IO will change it from acquiring pages via
->> get_user_pages_fast(), to calling pin_user_pages_fast() instead.
->>
->> Place a few assertions at key points, that the pages are IOVEC (user
->> pages), to enforce the assumptions that there are no kernel or pipe or
->> other odd variations being passed.
-> 
-> Umm...  And what should happen when O_DIRECT file gets passed to splice()?
+> The issue is that the implementations of aead and skcipher in the QAT driver are not properly supporting requests with the CRYPTO_TFM_REQ_MAY_BACKLOG flag set.
 
-OK, right, this is not going to work as-is.
+Thanks Giovanni. Joel (from Intel) reached out to me out of band to
+try and sell me further on QAT but wasn't able to follow-up on any
+questions (like - how is the device actually used, how can I
+personally help, etc).
 
-Any of the remaining iov_iter_get_pages*() callers that do direct IO
-(vmsplice, ceph, ...) will end up calling bio_release_pages(), which is
-now unconditionally calling unpin_user_pages(). So this is just
-completely broken.
+> If the HW queue is full, the driver returns -EBUSY [1] but does not enqueues the request as dm-crypt expects [2]. Dm-crypt ends up waiting indefinitely for a completion to a request that was never submitted, therefore the stall.
 
-And so, once again, I'm back to, "must convert the whole pile of
-iov_iter_get_page*() callers at once".
+Makes sense - this kernel driver has been destroying users for many
+years. I'm disappointed that this critical bricking failure isn't
+searchable for others.
 
-Back to the drawing board.
+> This is not related to QATE-7495 'An incorrectly formatted request to QAT can hang the entire QAT endpoint' [3], which occurs when a malformed request is sent to the device.
 
-thanks,
--- 
-John Hubbard
-NVIDIA
+That's nice to hear that the device itself isn't dying, but it's been
+completely destroying systems for years which itself is a DoS.
+
+> I'm working at patch that resolves this problem. In the meanwhile a workaround is to blacklist the qat_c3xxx.ko driver.
+
+I'm not writing this facetiously, but this driver has caused
+incredible harm over the past 5+ years and seems to continue to do so.
+As there's no patch proposed yet, I'm looking for the driver to be
+completely removed from the tree as it's presently a pure marketing
+campaign that's caused significant harm. If the marketing benefits
+(like accelerated crypto + hashing) aren't there when the accelerated
+instruction set was pulled from these integrated chips - the driver
+continues to serve no purpose for consumers beyond damage. Disabling
+the core I/O bits in December 2020 to make this barely work continues
+to promote this as a side project as it was never resolved in the
+driver.
+
+If I can test patches, or assist with the removal of this present
+in-tree malware I'm happy to help.
+
+Kyle.
+
+
+On Mon, Feb 21, 2022 at 3:48 AM Giovanni Cabiddu
+<giovanni.cabiddu@intel.com> wrote:
+>
+> Hi Kyle,
+>
+> The issue is that the implementations of aead and skcipher in the QAT
+> driver are not properly supporting requests with the
+> CRYPTO_TFM_REQ_MAY_BACKLOG flag set.
+> If the HW queue is full, the driver returns -EBUSY [1] but does not
+> enqueues the request as dm-crypt expects [2]. Dm-crypt ends up waiting
+> indefinitely for a completion to a request that was never submitted,
+> therefore the stall.
+> This is not related to QATE-7495 'An incorrectly formatted request to
+> QAT can hang the entire QAT endpoint' [3], which occurs when a malformed
+> request is sent to the device.
+>
+> I'm working at patch that resolves this problem. In the meanwhile a
+> workaround is to blacklist the qat_c3xxx.ko driver.
+>
+> Regarding avoiding this issue on stable kernels. The usage of QAT with
+> dm-crypt was already disabled in kernel 5.10 for a different issue
+> (the driver allocates memory in the datapath).
+> The following patches implement the change:
+>     7bcb2c99f8ed crypto: algapi - use common mechanism for inheriting flags
+>     2eb27c11937e crypto: algapi - add NEED_FALLBACK to INHERITED_FLAGS
+>     fbb6cda44190 crypto: algapi - introduce the flag CRYPTO_ALG_ALLOCATES_MEMORY
+>     b8aa7dc5c753 crypto: drivers - set the flag CRYPTO_ALG_ALLOCATES_MEMORY
+>     cd74693870fb dm crypt: don't use drivers that have CRYPTO_ALG_ALLOCATES_MEMORY
+> An option would be to send the patches above to stable, another is to wait
+> for a patch that fixes the problems in the QAT driver and send that to
+> stable.
+> @Herbert, what is the preferred approach here?
+>
+> Thanks,
+>
+> [1] https://elixir.bootlin.com/linux/latest/source/drivers/crypto/qat/qat_common/qat_algs.c#L1022
+> [2] https://elixir.bootlin.com/linux/latest/source/drivers/md/dm-crypt.c#L1584
+> [3] https://01.org/sites/default/files/downloads//336211qatsoftwareforlinux-rn-hwversion1.7021.pdf - page 25
+>
+> --
+> Giovanni
+>
+>
+> On Sat, Feb 19, 2022 at 03:00:51PM -0800, Kyle Sanderson wrote:
+> > hi Dave,
+> >
+> > > This really sounds like broken hardware, not a kernel problem.
+> >
+> > It is indeed a hardware issue, specifically the intel qat crypto
+> > driver that's in-tree - the hardware is fine (see below). The IQAT
+> > eratta documentation states that if a request is not submitted
+> > properly it can stall the entire device. The remediation guidance from
+> > 2020 was "don't do that" and "don't allow unprivileged users access to
+> > the device". The in-tree driver is not implemented properly either for
+> > this SoC or board - I'm thinking it's related to QATE-7495.
+> >
+> > https://01.org/sites/default/files/downloads//336211qatsoftwareforlinux-rn-hwversion1.7021.pdf
+> >
+> > > This implies a dmcrypt level problem - XFS can't make progress is dmcrypt is not completing IOs.
+> >
+> > That's the weird part about it. Some bio's are completing, others are
+> > completely dropped, with some stalling forever. I had to use
+> > xfs_repair to get the volumes operational again. I lost a good deal of
+> > files and had to recover from backup after toggling the device back on
+> > on a production system (silly, I know).
+> >
+> > > Where are the XFS corruption reports that the subject implies is occurring?
+> >
+> > I think you're right, it's dm-crypt that's broken here, with
+> > ultimately the crypto driver causing this corruption. XFS being the
+> > edge to the end-user is taking the brunt of it. There's reports going
+> > back to late 2017 of significant issues with this mainlined stable
+> > driver.
+> >
+> > https://bugzilla.redhat.com/show_bug.cgi?id=1522962
+> > https://serverfault.com/questions/1010108/luks-hangs-on-centos-running-on-atom-c3758-cpu
+> > https://www.phoronix.com/forums/forum/software/distributions/1172231-fedora-33-s-enterprise-linux-next-effort-approved-testbed-for-raising-cpu-requirements-etc?p=1174560#post1174560
+> >
+> > Any guidance would be appreciated.
+> > Kyle.
+> > On Sat, Feb 19, 2022 at 1:03 PM Dave Chinner <david@fromorbit.com> wrote:
+> > >
+> > > On Fri, Feb 18, 2022 at 09:02:28PM -0800, Kyle Sanderson wrote:
+> > > > A2SDi-8C-HLN4F has IQAT enabled by default, when this device is
+> > > > attempted to be used by xfs (through dm-crypt) the entire kernel
+> > > > thread stalls forever. Multiple users have hit this over the years
+> > > > (through sporadic reporting) - I ended up trying ZFS and encryption
+> > > > wasn't an issue there at all because I guess they don't use this
+> > > > device. Returning to sanity (xfs), I was able to provision a dm-crypt
+> > > > volume no problem on the disk, however when running mkfs.xfs on the
+> > > > volume is what triggers the cascading failure (each request kills a
+> > > > kthread).
+> > >
+> > > Can you provide the full stack traces for these errors so we can see
+> > > exactly what this cascading failure looks like, please? In reality,
+> > > the stall messages some time after this are not interesting - it's
+> > > the first errors that cause the stall that need to be investigated.
+> > >
+> > > A good idea would be to provide the full storage stack decription
+> > > and hardware in use, as per:
+> > >
+> > > https://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+> > >
+> > > > Disabling IQAT on the south bridge results in a working
+> > > > system, however this is not the default configuration for the
+> > > > distribution of choice (Ubuntu 20.04.3 LTS), nor the motherboard. I'm
+> > > > convinced this never worked properly based on the lack of popularity
+> > > > for kernel encryption (crypto), and the embedded nature that
+> > > > SuperMicro has integrated this device in collaboration with intel as
+> > > > it looks like the primary usage is through external accelerator cards.
+> > >
+> > > This really sounds like broken hardware, not a kernel problem.
+> > >
+> > > > Kernels tried were from RHEL8 over a year ago, and this impacts the
+> > > > entirety of the 5.4 series on Ubuntu.
+> > > > Please CC me on replies as I'm not subscribed to all lists. CPU is C3758.
+> > >
+> > > [snip stalled kcryptd worker threads]
+> > >
+> > > This implies a dmcrypt level problem - XFS can't make progress is
+> > > dmcrypt is not completing IOs.
+> > >
+> > > Where are the XFS corruption reports that the subject implies is
+> > > occurring?
+> > >
+> > > Cheers,
+> > >
+> > > Dave.
+> > > --
+> > > Dave Chinner
+> > > david@fromorbit.com
