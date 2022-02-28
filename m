@@ -2,163 +2,148 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 587BEC4332F
-	for <linux-xfs@archiver.kernel.org>; Mon, 28 Feb 2022 22:56:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72277C433FE
+	for <linux-xfs@archiver.kernel.org>; Mon, 28 Feb 2022 23:22:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230175AbiB1W4j (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 28 Feb 2022 17:56:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48684 "EHLO
+        id S229683AbiB1XWy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 28 Feb 2022 18:22:54 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56000 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230102AbiB1W4i (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Feb 2022 17:56:38 -0500
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C478E8CD8B
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Feb 2022 14:55:58 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-17-0.pa.vic.optusnet.com.au [49.186.17.0])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id A231552E772;
-        Tue,  1 Mar 2022 09:55:57 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nOovs-0000iW-Gh; Tue, 01 Mar 2022 09:55:56 +1100
-Date:   Tue, 1 Mar 2022 09:55:56 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH RFC 3/4] xfs: crude chunk allocation retry mechanism
-Message-ID: <20220228225556.GS59715@dread.disaster.area>
-References: <20220217172518.3842951-1-bfoster@redhat.com>
- <20220217172518.3842951-4-bfoster@redhat.com>
- <20220217232033.GD59715@dread.disaster.area>
- <Yg+rdFRpvra8U25D@bfoster>
- <20220218225440.GE59715@dread.disaster.area>
- <YhKM6u3yuF1Ek4/w@bfoster>
- <20220223070058.GK59715@dread.disaster.area>
- <Yh1CjRONamUG0k1C@bfoster>
+        with ESMTP id S229760AbiB1XWy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Feb 2022 18:22:54 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E83EA27A5
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Feb 2022 15:22:13 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D1CC361411
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Feb 2022 23:22:12 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 304B8C340EE;
+        Mon, 28 Feb 2022 23:22:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1646090532;
+        bh=BMlcKeXWkT8Dr3Dc7+u2UMfT0iFwnnOpTgDXBFVaXoE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Jt9rc9LDHcrsntCYRU8eW06XQrgEOwED9q7IgnaCrHS5VYbhUkR5nF4IT5dy/IfDW
+         uwZbomuuVMZo8cYObTGm0db2hkuWPNr4rcxXMvlwI7neibl75vt3aisNC0PiK/ednP
+         2c5C1Pq41B3/rDcRULXYV/6H3Wq+KxWgifMOTUgzlfoWRcNgkWmBJDGP6VzLZIiGTi
+         mePfaFlmH0NwuKMhgywwPA7GsP37QKHaeOhfcBYHGdVZwHyvBDo7K3LwZWfNddWxRz
+         HuvD/JKJcorvIIqvQyiwuTbNYe/+mqef5KAhiQPZ2Z4DCWMHBSBNHIcGYpXhI0DZp6
+         Xl8bs6XdpK1yA==
+Date:   Mon, 28 Feb 2022 15:22:11 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     sandeen@sandeen.net, Christoph Hellwig <hch@lst.de>,
+        Dave Chinner <dchinner@redhat.com>,
+        Theodore Ts'o <tytso@mit.edu>, linux-xfs@vger.kernel.org,
+        allison.henderson@oracle.com
+Subject: Re: [PATCH 19/17] mkfs: increase default log size for new (aka
+ bigtime) filesystems
+Message-ID: <20220228232211.GA117732@magnolia>
+References: <20220226213720.GQ59715@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Yh1CjRONamUG0k1C@bfoster>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=621d52fe
-        a=+dVDrTVfsjPpH/ci3UuFng==:117 a=+dVDrTVfsjPpH/ci3UuFng==:17
-        a=kj9zAlcOel0A:10 a=o8Y5sQTvuykA:10 a=7-415B0cAAAA:8
-        a=naSMNv7LkI1SZfMQRSoA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20220226213720.GQ59715@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Feb 28, 2022 at 04:45:49PM -0500, Brian Foster wrote:
-> On Wed, Feb 23, 2022 at 06:00:58PM +1100, Dave Chinner wrote:
-> > i.e. as long as we track whether we've allocated a new inode chunk
-> > or not, we can bound the finobt search to a single retry. If we
-> > allocated a new chunk before entering the finobt search, then all we
-> > need is a log force because the busy inodes, by definition, are
-> > XFS_ISTALE at this point and waiting for a CIL push before they can
-> > be reclaimed. At this point an retry of the finobt scan will find
-> > those inodes that were busy now available for allocation.
-> 
-> Remind me what aspect of the prospective VFS changes prevents inode
-> allocation from seeing a free inode with not-yet-elapsed RCU grace
-> period..? Will this delay freeing (or evicting) the inode until a grace
-> period elapses from when the last reference was dropped?
-
-It will delay it until the inode has been reclaimed, in which case
-reallocating it will result in a new struct xfs_inode being
-allocated from slab, and we're all good. Any lookup that finds the
-old inode will see either I_WILL_FREE, I_FREEING, I_CLEAR,
-XFS_NEED_INACTIVE, XFS_IRECLAIM or ip->i_ino == 0 depending on what
-point the lookup occurs. Hence the lookup will be unable to take a
-new reference to the unlinked inode, and the lookup retry should
-then get the newly allocated xfs_inode once it has been inserted
-into the radix tree...
-
-IOWs, it gets rid of recycling altogether, and that's how we avoid
-the RCU grace period issues with recycled inodes.
-
-> > > Perhaps a simple enough short term option is to use the existing block
-> > > alloc min/max range mechanisms (as mentioned on IRC). For example:
-> > > 
-> > > - Use the existing min/max_agbno allocation arg input values to attempt
-> > >   one or two chunk allocs outside of the known range of busy inodes for
-> > >   the AG (i.e., allocate blocks higher than the max busy agino or lower
-> > >   than the min busy agino).
-> > > - If success, then we know we've got a chunk w/o busy inodes.
-> > > - If failure, fall back to the existing chunk alloc calls, take whatever
-> > >   we get and retry the finobt scan (perhaps more aggressively checking
-> > >   each record) hoping we got a usable new record.
-> > > - If that still fails, then fall back to synchronize_rcu() as a last
-> > >   resort and grab one of the previously busy inodes.
-> > > 
-> > > I couldn't say for sure if that would be effective enough without
-> > > playing with it a bit, but that would sort of emulate an algorithm that
-> > > filtered chunk block allocations with at least one busy inode without
-> > > having to modify block allocation code. If it avoids an RCU sync in the
-> > > majority of cases it might be effective enough as a stopgap until
-> > > background freeing exists. Thoughts?
+On Sun, Feb 27, 2022 at 08:37:20AM +1100, Dave Chinner wrote:
+> On Fri, Feb 25, 2022 at 06:54:50PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > It might work, but I'm not a fan of how many hoops we are considering
-> > jumping through to avoid getting tangled up in the RCU requirements
-> > for VFS inode life cycles. I'd much prefer just being able to say
-> > "all inodes busy, log force, try again" like we do with busy extent
-> > limited block allocation...
+> > Recently, the upstream kernel maintainer has been taking a lot of heat on
+> > account of writer threads encountering high latency when asking for log
+> > grant space when the log is small.  The reported use case is a heavily
+> > threaded indexing product logging trace information to a filesystem
+> > ranging in size between 20 and 250GB.  The meetings that result from the
+> > complaints about latency and stall warnings in dmesg both from this use
+> > case and also a large well known cloud product are now consuming 25% of
+> > the maintainer's weekly time and have been for months.
+> 
+> Is the transaction reservation space exhaustion caused by, as I
+> pointed out in another thread yesterday, the unbound concurrency in
+> IO completion?
+
+No.  They're using synchronous directio writes to write trace data in 4k
+chunks.  The number of files does not exceed the number of writer
+threads, and the number of writer threads can be up to 10*NR_CPUS (~400
+on the test system).  If I'm reading the iomap directio code correctly,
+the writer threads block and do not issue more IO until the first IO
+completes...
+
+> i.e. we have hundreds of active concurrent
+> transactions that then block on common objects between them (e.g.
+> inode locks) and serialise?
+
+...so yes, there are hundreds of active transactions, but (AFAICT) they
+mostly don't share objects, other than the log itself.  Once we made the
+log bigger, the hotspot moved to the AGF buffers.  I'm not sure what to
+do about /that/, since a 5GB AG is pretty small.  That aside...
+
+> Hence only handful of completions can
+> actually run concurrently, depsite every completion holding a full
+> reservation of log space to allow them to run concurrently?
+
+...this is still an issue for different scenarios.  I would still be
+interested in experimenting with constraining the number of writeback
+completion workers that get started, even though that isn't at play
+here.
+
+> > For small filesystems, the log is small by default because we have
+> > defaulted to a ratio of 1:2048 (or even less).  For grown filesystems,
+> > this is even worse, because big filesystems generate big metadata.
+> > However, the log size is still insufficient even if it is formatted at
+> > the larger size.
 > > 
+> > Therefore, if we're writing a new filesystem format (aka bigtime), bump
+> > the ratio unconditionally from 1:2048 to 1:256.  On a 220GB filesystem,
+> > the 99.95% latencies observed with a 200-writer file synchronous append
+> > workload running on a 44-AG filesystem (with 44 CPUs) spread across 4
+> > hard disks showed:
+> > 
+> > Log Size (MB)	Latency (ms)	Throughput (MB/s)
+> > 10		520		243w
+> > 20		220		308
+> > 40		140		360
+> > 80		92		363
+> > 160		86		364
+> > 
+> > For 4 NVME, the results were:
+> > 
+> > 10		201		409
+> > 20		177		488
+> > 40		122		550
+> > 80		120		549
+> > 160		121		545
+> > 
+> > Hence we increase the ratio by 16x because there doesn't seem to be much
+> > improvement beyond that, and we don't want the log to grow /too/ large.
 > 
-> Well presumably that works fine for your implementation of busy inodes,
-> but not so much for the variant intended to work around the RCU inode
-> reuse problem. ISTM this all just depends on the goals and plan here,
-> and I'm not seeing clear enough reasoning to grok what that is. A
-> summary of the options discussed so far:
+> 1:2048 -> 1:256 is an 8x bump, yes?  Which means we'll get a 2GB log
+> on a 512GB filesystem, and the 220GB log you tested is getting a
+> ~1GB log?
+
+Right.
+
+> I also wonder if the right thing to do here is just set a minimum
+> log size of 32MB? The worst of the long tail latencies are mitigated
+> by this point, and so even small filesystems grown out to 200GB will
+> have a log size that results in decent performance for this sort of
+> workload.
+
+Are you asking for a second patch where mkfs refuses to format a log
+smaller than 32MB (e.g. 8GB with the x86 defaults)?  Or a second patch
+that cranks the minimum log size up to 32MB, even if that leads to
+absurd results (e.g. 66MB filesystems with 2 AGs and a 32MB log)?
+
+--D
+
+> Cheers,
 > 
-> - deferred inode freeing - ideal but too involved, want something sooner
->   and more simple
-> - hinted non-busy chunk allocation - simple but jumping through too many
->   RCU requirement hoops
-> - sync RCU and retry - most analogous to longer term busy inode
->   allocation handling (i.e. just replace rcu sync w/ log force and
->   retry), but RCU sync is too performance costly as a direct fallback
-> 
-> ISTM the options here range from simple and slow, to moderately simple
-> and effective (TBD), to complex and ideal. So what is the goal for this
-> series?
-
-To find out if we can do something fast and effective (and without
-hacks that might bite us unexepectedly) with RCU grace periods that
-is less intrusive than changing inode life cycles. If it turns out
-that we can change the inode life cycle faster than we can come up
-with a RCU grace period based solution, then we should just go with
-inode life cycle changes and forget about the interim RCU grace
-period detection changes...
-
-> My understanding to this point is that VFS changes are a ways
-> out, so the first step was busy inodes == inodes with pending grace
-> periods and a rework of the busy inode definition comes later with the
-> associated VFS changes. That essentially means this series gets fixed up
-> and posted as a mergeable component in the meantime, albeit with a
-> "general direction" that is compatible with longer term changes.
-
-It seems to me that the RCU detection code is also a ways out,
-so I'm trying to keep our options open and not have us duplicate
-work unnecessarily.
-
-> However, every RCU requirement/characteristic that this series has to
-> deal with is never going to be 100% perfectly aligned with the longer
-> term busy inode requirements because the implementations/definitions
-> will differ, particularly if the RCU handling is pushed up into the VFS.
-> So if we're concerned about that, the alternative approach is to skip
-> incrementally addressing the RCU inode reuse problem and just fold
-> whatever bits of useful logic from here into your inode lifecycle work
-> as needed and drop this as a mergeable component.
-
-*nod*
-
-The signs are pointing somewhat that way, but I'm still finding
-the occasional unexpected gotcha in the code that I have to work
-around. I think I've got them all, but until I've got it working it
-pays to keep our options open....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
