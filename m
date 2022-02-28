@@ -2,722 +2,201 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BBF43C4332F
-	for <linux-xfs@archiver.kernel.org>; Mon, 28 Feb 2022 22:41:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3E55C433FE
+	for <linux-xfs@archiver.kernel.org>; Mon, 28 Feb 2022 22:49:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230056AbiB1WmT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 28 Feb 2022 17:42:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53884 "EHLO
+        id S230175AbiB1Wt6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 28 Feb 2022 17:49:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57352 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229828AbiB1WmS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Feb 2022 17:42:18 -0500
-Received: from NAM12-BN8-obe.outbound.protection.outlook.com (mail-bn8nam12on2070.outbound.protection.outlook.com [40.107.237.70])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86E8912E9F0;
-        Mon, 28 Feb 2022 14:41:37 -0800 (PST)
+        with ESMTP id S229625AbiB1Wt5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Feb 2022 17:49:57 -0500
+Received: from NAM11-CO1-obe.outbound.protection.outlook.com (mail-co1nam11on2085.outbound.protection.outlook.com [40.107.220.85])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C05D956205;
+        Mon, 28 Feb 2022 14:49:15 -0800 (PST)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=hiLetiZ2S2IQCMsSWH2a/VFK+GlmusqNpk3GZbEMSmdQFu1fQZYyk1uamnSdzX57KPt+bgwDaDJ9WrINwqEiydC5HKVhyPaNqS3DnFINNV3msyYpQvrEWVoK5s8Co59UGbJ4DRkFTsynDjNNRC6Fv76JvqrVafYyju2RDcYRpAb8KbMl0vIutnHTBZkQ6VT5cZB/aXDK2OmTKKDFY2WG7W+5AXM1vCtJ8441fYexQf97E9G9xqhQyU2P2asX+58w/0x+Xeu93me9a2sVimIOwwAyXba18XgK8H8s3FBhWjGUpPfuxZUqdHkJ8sBoD3rBRZK1WrjlU+CpJvNQuGpJHg==
+ b=N84eiNEGWUnYQBvwc4j1m51WpG/MRoVLQ9pXsoAKJhndp6fFPRitHl7b4iq3nqtfVGwXUQyaN/sftxWOJRi17J7MtyH35JiSeyR99bwLnHbxJWLaWasO0AdjodS9M/vfto3/w1EwqqVD+uOifjdptYgmsb7LuvD2g/TulwB1BAtFq39gMrlxsenDuQj2kDz9DlGZnIxa73SA9TP7u17l/GNh4ewTY/36RVeDWVdYFW6T7ks/fEZrT2E50nd1x/FYBFNtc8q+bsBRA7M+FqnxDE3Znd7NfMv8Q9vPE7PObMvU8WSjsSbpmM3bk1n2p1O0cJJdAFx13EooO6K8H1tOWQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=04MTcFRaXOySzwREPAl+oFi5WlVa5dkDON/2+XG9Jv8=;
- b=AbBwe1XfbMxO8CbFt7CvCYJeNnMzFy+9/cG/+yBnkK3Kq4QyAYGijpWJhQLFD5TL+wJgpeRLUN3FC1v8ZWgqsmxX+9Aa8xD5Y37eftNO7znZjNm3KyX4X2zLdQChHSgmcbVCcWFKMH29xwV2RaHpvkFQ55PqR3OuEhWT4Ztkozhiy6dKnRYZHYbs/IQ4gwzV/M4qfRwLBR2MC/DNSq0w1RKrVvI/vGtMLOgO8JZcOXdPO/rRv0TCFU4bUur8U7VzdnsK0IyXq6G0L6Nty+Ln0tagFkZ78zFeqIkOL2EMTkXBPIITyS67CDQprUOOy0cXMTgMbaUKAjoxaI1ZwFxwDw==
+ bh=GuqRabi9lpLuspid5GUJ60pcD0deIPUJxE8Rbwc8iys=;
+ b=gS2bcSsB62wLHSPeXB2CoSoTivxCy5szs0SWjocMtm7pZZ6nS+cFSDK0VsxaeY9hmsGuPTsRL7Pkz4OH07VPZkYMt3XQegWMbWaXO/LoqPOpWNEcFJLm/IgJ4+OwxwHLQBDx+sxN7jvyZ3/fRXAkNZCZZgi5Ljni6YtFp9HWKGg/aTx2C9CLaNhtLhkR7R0eSZHMdTdCGcbb75CENsywHDo6lfNMA27sz04WZvqyFU7Xt2qPZUQnKx7q3nkk97uww7uDb7az1ce1KrMmZ+w+gfmvOuheC4HMcFbYhEKgIok9rJCybpyuecdxxwlQrNmaGiVYgVF2sDRSlarlSi9q6Q==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=04MTcFRaXOySzwREPAl+oFi5WlVa5dkDON/2+XG9Jv8=;
- b=UgbadUc1HJSKIy8920f8iuXcp7m33wJdmIBPNPVc0mVhLxRT2HsRNUoeGf+hzdYf8MWp56VIq9QTpJTJWQK54N6nvQB5AfeuPP4hFL6FPAUYK8eJ0RWac4vrFKA+5sBWY5xmpGklOcFik4E7/ALDDYU4uQraTHFn6oDFqOFgWLs=
+ bh=GuqRabi9lpLuspid5GUJ60pcD0deIPUJxE8Rbwc8iys=;
+ b=O/F01zlFBMZCV6l0qvlHVXpr4ayYW6Bd56QJEAiDGMDeFSFcM7v2HlC1KI0fkeO9Hw1YZwKacCSy4AneAuhQ/zgEIPCDb3MOGWSrEdyIidSNvo8DHVpm+sEmEa4UTzan5CUx+AU/igjGjPviUx87BaNA83pbbXVjbPI2ApSjtd4cWlOKhJQWB82zlNTJ4/UfsIuRKWLPoAJI1FuA7rRKSwz30XF8bKQJPeeWIf9V9ylvZPOZOlGmPhyCjIO61/6DxwvqDz2GiEhqxFleyb0RVrdemLvmbEb/UY7IPycJRNoFKIQcJPigHjdrPAAbS28wpxGNfKNSHh1ZSD2zUv+p4A==
 Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from BN9PR12MB5115.namprd12.prod.outlook.com (2603:10b6:408:118::14)
- by SN1PR12MB2559.namprd12.prod.outlook.com (2603:10b6:802:29::30) with
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from BY5PR12MB4130.namprd12.prod.outlook.com (2603:10b6:a03:20b::16)
+ by LV2PR12MB5943.namprd12.prod.outlook.com (2603:10b6:408:170::8) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5017.23; Mon, 28 Feb
- 2022 22:41:35 +0000
-Received: from BN9PR12MB5115.namprd12.prod.outlook.com
- ([fe80::410c:b456:62cb:e3f]) by BN9PR12MB5115.namprd12.prod.outlook.com
- ([fe80::410c:b456:62cb:e3f%5]) with mapi id 15.20.5017.027; Mon, 28 Feb 2022
- 22:41:35 +0000
-Message-ID: <e673332f-b35c-3774-49e3-994b8f885622@amd.com>
-Date:   Mon, 28 Feb 2022 17:41:32 -0500
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5017.21; Mon, 28 Feb
+ 2022 22:49:13 +0000
+Received: from BY5PR12MB4130.namprd12.prod.outlook.com
+ ([fe80::498:6469:148a:49c7]) by BY5PR12MB4130.namprd12.prod.outlook.com
+ ([fe80::498:6469:148a:49c7%7]) with mapi id 15.20.5017.027; Mon, 28 Feb 2022
+ 22:49:13 +0000
+Message-ID: <0c5bcd23-607f-2ef9-daa0-11557c9f8e8f@nvidia.com>
+Date:   Mon, 28 Feb 2022 14:49:11 -0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: [PATCH] mm: split vm_normal_pages for LRU and non-LRU handling
+ Thunderbird/91.6.1
+Subject: Re: [PATCH 2/6] iov_iter: new iov_iter_pin_pages*(), for FOLL_PIN
+ pages
 Content-Language: en-US
-To:     Alex Sierra <alex.sierra@amd.com>, jgg@nvidia.com
-Cc:     david@redhat.com, linux-mm@kvack.org, rcampbell@nvidia.com,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        hch@lst.de, jglisse@redhat.com, apopple@nvidia.com,
-        willy@infradead.org, akpm@linux-foundation.org
-References: <20220218192640.GV4160@nvidia.com>
- <20220228203401.7155-1-alex.sierra@amd.com>
-From:   Felix Kuehling <felix.kuehling@amd.com>
-Organization: AMD Inc.
-In-Reply-To: <20220228203401.7155-1-alex.sierra@amd.com>
+To:     Jens Axboe <axboe@kernel.dk>, jhubbard.send.patches@gmail.com,
+        Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>,
+        Dave Chinner <dchinner@redhat.com>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Chaitanya Kulkarni <kch@nvidia.com>
+Cc:     linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+        LKML <linux-kernel@vger.kernel.org>
+References: <20220227093434.2889464-1-jhubbard@nvidia.com>
+ <20220227093434.2889464-3-jhubbard@nvidia.com>
+ <06469550-a679-145f-b16e-2f1ffc0b07af@kernel.dk>
+From:   John Hubbard <jhubbard@nvidia.com>
+In-Reply-To: <06469550-a679-145f-b16e-2f1ffc0b07af@kernel.dk>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: CH0P220CA0002.NAMP220.PROD.OUTLOOK.COM
- (2603:10b6:610:ef::14) To BN9PR12MB5115.namprd12.prod.outlook.com
- (2603:10b6:408:118::14)
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: SJ0PR03CA0012.namprd03.prod.outlook.com
+ (2603:10b6:a03:33a::17) To BY5PR12MB4130.namprd12.prod.outlook.com
+ (2603:10b6:a03:20b::16)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 87066c09-d917-473e-ed8e-08d9fb0b7963
-X-MS-TrafficTypeDiagnostic: SN1PR12MB2559:EE_
-X-Microsoft-Antispam-PRVS: <SN1PR12MB25593015F5244D9F27D64D5792019@SN1PR12MB2559.namprd12.prod.outlook.com>
+X-MS-Office365-Filtering-Correlation-Id: 881226c2-a71b-4fbe-ad9e-08d9fb0c8a8d
+X-MS-TrafficTypeDiagnostic: LV2PR12MB5943:EE_
+X-Microsoft-Antispam-PRVS: <LV2PR12MB59435124B8E475C4A9BB2E31A8019@LV2PR12MB5943.namprd12.prod.outlook.com>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: pZuqfCJqQZ5WisgtlQjeJ7WzMJGPeDLf3BzU1gO+lbhdDoKit7QauqLK9MGFXeXcKa/RZ5EMDFJBgoty4/H4uWswySVONJjYQURb1ezJQhtSdxOrtD05g7PC/z7h3WCMC2KreBK0g5nRRkuhTLXeXEAl9ou1O9MZZbMCiQfLy2nsu73Qkc1njfW5qRX9qokMypXviO2iEAxKKT6MA2NvjG9pl2PZr6FVlyPHUjHsZPcf+I2lLxtpu9gWyZZbrCLhSNjD9F0A+DSSA1VK3Sj7tSuYiT/h/TFcJH+rkJPkvFGmomi46MdnbhPp5fCkBBRFtPtqlFLk2kL+Qrl286baaBvNRDcuwSO0udmaWaepSXBM+Dvb5x4fPpeG/yxqUS8kShEC7rapEi6iTqJ+F1tiPTtMJ35pMRkHMonLvRrpUvd77Y/U7CHwY4LoJPPRsW7QlChlE/Q1KXPLYJ17kwLbF7jlnlp9okGYtV5+u1TSlDFq52O9tumvbzdXsvTmL6KsVpdZiN47F4bEXekQBRtOKvFXwjeGBtCYpK/S2KGeplgmdAusi8U8CoDj3tXJr4qWm6uKnS5Zzop9Fra6GtwY/AbWJwEO6uFt3hLdfprPOJMLxFGoJ25VLoJi56oGt48weAnLzkQw11HDvyV8bx8uCvT0DhmEYLgKSJmY4XA8BDfJUg0ekTEoqLt3BMg+9jA+AmYOqo3BMOcw1tdyFAYbZNW/JD834frGCb9upVEodnU=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN9PR12MB5115.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(2906002)(8676002)(4326008)(66946007)(508600001)(31686004)(6486002)(66556008)(66476007)(30864003)(8936002)(5660300002)(7416002)(36756003)(2616005)(6666004)(36916002)(53546011)(316002)(44832011)(6506007)(6512007)(38100700002)(186003)(83380400001)(26005)(86362001)(31696002)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: RLlxyC8aF2x+DnMRH38YDkptM8D/D+neYlkS4AijVyKYLnQ+nheZWdx0bRrk1idL0x/5HtCWBn0OX0E6GilPaYS+0Wz82XdArIQTTOJnhxdbsy4kJpa+QiyUsZ+61Ypr8W3hXC+rH/nZoukcS9YQanqdxhYdWmpHTtby3f4D/XdOVi18s/bfTQIA+eZFIMVcntRqrA1tXNSYfByEtqmnmD1wxXL+TK3qlE9h1G8Z0AWYWbye4mVFuhsW+P8zRxsB3oU34DqNY4IRIHVbu6tbs28WUtnyH2WPGeh+6fnrLFE2uN1xbBq9CDE+PdZMnPADApMTow3AdgFbOVjWDcJuOKjuLPl5Cd/UcNGVP+k2bslE1Hmjk82d74r0qVho/BFiatuGVDkc3XWaU5Q0OYjxX5jz7VfrWPcgkD5IEE9hzxG/4P0YEJmFyzMJD+t7Xg48HLRfNqCEkG1vBRoLnJ9YKD5Ud/uUVvHn/D+XrDqcCFDquSFiiTIfSeAi2PgI3/JKA1yIpxQesby4Kvf1B5Xdm13E7MeYskwk9Ib12iy8VAGl/z4J2Em7evKysKPKs4P0G7RkQlIeuX99+NXWmLmjs9whFnJ+EVXlyERqarGHfPDfLUIx1GIYXL1Ih+a6bLDGbodrlYDuU7iE6Plu082C77Ezs6fH82nNx7t4Wzs60egiqf4M6t7C6rERZCzWaGuRKLDApi/t8tLhf3YhN0hRQ6FZTWqtchoBC2xFqT2x9YfBxkncEKHZMb+RTv3d2EUHSLpmnhU8gtDyFDU2t6fO0Q==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR12MB4130.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(66556008)(6486002)(66476007)(8676002)(110136005)(4326008)(508600001)(31686004)(66946007)(8936002)(5660300002)(7416002)(2616005)(36756003)(53546011)(316002)(6636002)(6506007)(6512007)(2906002)(921005)(186003)(38100700002)(26005)(31696002)(86362001)(45980500001)(43740500002);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?RXpkSDFWRjdvakFlelJGcDZmYUNsNjdOZGlZQmg4K0ZGKzVpUDd2VFgxK1My?=
- =?utf-8?B?THFoRHFzWjFKRmluOXM4ZS96KzZDN3lHa05yczN1dHhGRXhvTEpJVUN6OHhP?=
- =?utf-8?B?TEt4ZDVXYkxGYkJKWS9SZjJtQm9tMS9JbnhIMXVkRi9QaFVnSFVtakFDVlI2?=
- =?utf-8?B?VzlPd1BYbWt5Z2NmUFFYVSsybm5GdHRETjRUM2k5VTNuTUJ1eHFWZHFrRGx1?=
- =?utf-8?B?dVdtYm4wRkJSTHVhK3VJWnV5SWpFT05PUW03VkJ6NHhWbzdZT08xWFI0dFh4?=
- =?utf-8?B?Qk1RS1AxakkrSVA2T251R01QSDVoV2dibjNFejFhaXdGSThscG5JZUt6UGk5?=
- =?utf-8?B?VEp3Q05pNGJuQ3cwaUNaaUpPY1NCWVozM0IvNGx2S1ZmS0E0VlFEbTloVkp1?=
- =?utf-8?B?azJPalF1dm12ZGlENUFvTC90SXhWSzg2NEViUitXMURxeWlmaHlVbmk5cVF0?=
- =?utf-8?B?Zk5WZ01Yc0t1WXVDM2FZenBMMzZqcEhZRG1KTk5Jamlqck1hZVkyYUkrZTI0?=
- =?utf-8?B?Q1lYaGc0YXRXVGtKWHFHOUJrdzlyQUZZdU9pd1hNVVlkYnZ3UklQY3RCNXdm?=
- =?utf-8?B?L24vamNtZkQzK1N1WWRicENyMjFpa0wrdCs0Q1hLSzVVMkZOZzY1SkVCNlY5?=
- =?utf-8?B?WnVNV3JGdFFudGdMTEU4R2k1QzNDdmMyYXc4dUxzSno1VmVQVFZ2QXgyQS9T?=
- =?utf-8?B?akh6SEdTbmRKQ25FN2RmZ3IyaUJLMTl1TUlCc1QreGJXZUF2RVBqT3gzVVBM?=
- =?utf-8?B?a1l3RlBTZ3dYVUN3cDk3WDdld2J3bVF6UW9SdDBCL1ZvQ1RoUnY3ajkyNW1N?=
- =?utf-8?B?QXR3UlVoZlNnTk5VeEhnNEM5REhtRU1IaTlxQUlPN1NucEtUa1hhNlY2ZXJo?=
- =?utf-8?B?K0ROeU54cldFZ3REMzhMbUVXbDh5b0QyajVtOFcxUllWRHdUSllYclgyK3dG?=
- =?utf-8?B?WThHMnFJM0dMYVFmYTJpWDZFZVRMQ1pUWERWejdRVDk5cE0wVzBNbUFqM1N6?=
- =?utf-8?B?ZS9lUHE2WmNuUGxkR0Z5MEYyZ1o4SkxDQWJsYW4wMjNuWlo2ejMvSXRUK1I3?=
- =?utf-8?B?SDVJOW95ODJ6MytLMEk5WTkzQ0sybEZRWEExSzZONW5MeGR4R2cyT3VYTVZq?=
- =?utf-8?B?UENqL0lydjZZcDlFckFYeHpGY0dJb0M4OUJDcDVwMll1emFBenI3R2xjT09H?=
- =?utf-8?B?SHZnU25HUTJOWWplOC9aMkdwZ3k3TE5laWJYalljU3hSb3dUVHh3QldhLzR5?=
- =?utf-8?B?L2RFcWNVZEdqbzlUQks5RzhBOFhGNVJCcjdaR1lzc3BSUjBmRXk2a3N4SlBj?=
- =?utf-8?B?clBGSS8yeWRINnVMY0xoQjgzTGl2VUNKeVFUVFpQQVNIMi90aUdZMm1ZWmRr?=
- =?utf-8?B?dlh3OEhNK3ZZRTNabVVyaU92cTRiMjhZOEZlSURLd1E1NytqRUIrQitLV1Yw?=
- =?utf-8?B?U2wxMUlVMlBzQnRjSEV2WWFabm9NRkNmdTdLOVFKd0htcDE4TDdpVmNoeFdt?=
- =?utf-8?B?QWxaeFNrZlA0NFVCWG9paG1Jb3JJMFFXVTltSWIzNzBqSVJpVnFGdG83N3hU?=
- =?utf-8?B?anVNbGJFS0RhdndyNGQzelQ1dEZ1UzlXRTh0RW1XNHNxOG9KRkJiY2ZiQUdL?=
- =?utf-8?B?OXF1UDJHU0MxdHl0WUhvRDZ3VW1ZSEFueDFLY0Nhb0h0UUJuWndNcUdYREF2?=
- =?utf-8?B?TlFmUEU3S0VuRDRkQlhaeEp1ZlFzVzBoRHFzY1BSUHNvTHZKQU5kNlV5RjlW?=
- =?utf-8?B?bXQ5T1VDNy84N1E0dDlYWFF5ckhpVmxrbGNXa2lpbTFJMG5FdTR5bEtUVkNN?=
- =?utf-8?B?S3g5RTE5TlZSVVhHM3NqNTZ6MHpkNTJic0hCeGdYeHlxQVlwOVNaZGlEWWxl?=
- =?utf-8?B?Wk5qM2RWUWgxY1FnRjh5eHRDUXdoSi9hNENBU3J1em9nYlY2WjJ1MkpKUWM5?=
- =?utf-8?B?am95QzZVbG1ENENLQVFKaUtVMlpVRVdmMnRVdWx2S0UwYTM4Rnk1WVFQcFFK?=
- =?utf-8?B?ZjRUQ2RXZXVNVDFmNlFXTExEYi9PWFp0MlNMalJFcUtuQ1ROV0lGeDZSQUxx?=
- =?utf-8?B?enJlRXl6L0x5Zi9OWS80MC9CQ2Rrb0NYQlNzQzZJenh1MG9zeUcrZTBYL3hB?=
- =?utf-8?B?K1UzenJUR1ZQRzJSczNjcmxPa3VDNW1rVFdZK0Y2Q0V5Z3czT2xXb2VoMEdN?=
- =?utf-8?Q?MIDKa7uYdKSCDuwSlIA/iPk=3D?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 87066c09-d917-473e-ed8e-08d9fb0b7963
-X-MS-Exchange-CrossTenant-AuthSource: BN9PR12MB5115.namprd12.prod.outlook.com
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?bkFYRUt6ZGJjaEdyV1M3dEdJaUN0TVdUMHFoTWJWa2ljMUlVaXVqVlVXczRN?=
+ =?utf-8?B?eUhySjlpbCtoY2dRTUtlL0tsZGhnci9NUk43a2xMLzlENlFoZzdBTkNCYVA0?=
+ =?utf-8?B?amFuOXc3N3pHeGE5dTVGcUZ2Tm44NnlGUEczUHBzUkFpMFFFV25TRnErTkN2?=
+ =?utf-8?B?SVp3LzB5QnhxZDJCQmVycmN6M3ozbnVBUjNVOSt5L094WUZOSU1rSHlUVThs?=
+ =?utf-8?B?aEFaa0xVdFFMcE16cUNJS0ZONTFGamV0NVN0NUdFS3hIbU5OVHcxWkJyRHFT?=
+ =?utf-8?B?YzZUL0JDb01nMlVVeEgvNi9MMzZXcEFzMWlvTWZ2ajhSQ05qS3NIZ3VYS1Fj?=
+ =?utf-8?B?c0Mwek4rT3N5U3c0czM3ZnpCNnFieXQ2MEFaaEFsMHVtQkdvbm5XUFJVODMz?=
+ =?utf-8?B?VWJFNWhMWHdZcFdvUC9MaDduQi84Yk5PMlRDVnJoQkJWdFdLditKazJma042?=
+ =?utf-8?B?SWtyalM5QnhWMFI4TGhJU1lZV003ZDhtbURvMlkyMVpreU15MTN3RHAwVHU5?=
+ =?utf-8?B?Yks0aHI4WHNTdTA0eldRRzF5VDk5dU43aUNyU1lkUXUzcEc5MnFGaXZHNGM5?=
+ =?utf-8?B?TlplelhJVGpmTVdLSnRxZ3ZIWnB4LzBiVndtdEtkUEVCSnA3UDcrNjAxdmNX?=
+ =?utf-8?B?MmVlVGU0TWo5VkNzUi9JTTVycGFDUHZUZVBQSHVHVmREbDlIaFltTGVkS1Ba?=
+ =?utf-8?B?RDk1UWJMYXVyV0Izamp0dzgxNVRYQ0J2ZFNZbjJ0M3RUT2RQc3BEMGxJaXh4?=
+ =?utf-8?B?Y0FWNmRoNVpjQy9qTDRlUlFkZVFsNEJUVEprcjJkOGVucThrZ1JodzNYdC9S?=
+ =?utf-8?B?WkxIQnpuMHd3ZHdpNjRmdFJTKzVmLzFXOVBzL0xxRWl6RGRMQnlhaDNxdG9r?=
+ =?utf-8?B?UVZSRHZkSThDUVhheERpeTZ2eVVJcGI2L3IyMzVkR1V3SXRTaTVxdzE1L05p?=
+ =?utf-8?B?dXJMSXUxZWlReis3bmhic3VPQ2ZINUFKdm1JNGxUU3hFRGJWV2o5M3RKUTlE?=
+ =?utf-8?B?VGVIVGxsSCtBcjFqUHYraGJCQWgyR2E5OWxqbkZjdFRDQXNVd2MwYnd3and5?=
+ =?utf-8?B?RFpnelNHKzJXekJ5L05tbjNBY3lQMm1HWHp5WjZDMzFXWFg1U3lCOThWNE1Q?=
+ =?utf-8?B?MFNSUGN6bHYxNUxabmNVY3FuZjcvRWV1cXBYaVlDRmcrMDVva3VkaXVzOW51?=
+ =?utf-8?B?cEt3ZENQV1VzUnNVZEhWdzIyMWtWVmE0d1NFdm9jOHdVQzJsS1FUanFsT1FO?=
+ =?utf-8?B?dmFGT2RKc1V5U05Vb0JLdGNGeCtFTURvTkRuVzB4d21VZGRGSThGeFg5eVlE?=
+ =?utf-8?B?Q09FY01abk1xa0dIeXRRa3VCVjFIcWxqRWgxSlJidWwrK3VjUHE1bi9TbDhB?=
+ =?utf-8?B?UDd2dDI5WXlCSVNJYzUyVGdBaW1xMDE5eVhyKzljUTV2S1pnY3ZtZ0FtY0gz?=
+ =?utf-8?B?QVBzQWI3bjdxTFhkdmhocjZoeXpvNlhtR3FpVGJteE45WWJHQit4enlTL016?=
+ =?utf-8?B?VVFmSk1HT3pSQ0U3V2ZwQTBrYkpVaUFpRjFzRFNvOUh5SHpWSDJyRHRSN2Jz?=
+ =?utf-8?B?WkZmdmlwTkdZUGMvUVNlaGk2MmI1alZ1Z3FZVnB4amEwb1JCQmVQcXNDQ2NU?=
+ =?utf-8?B?UHJwaFh0U0hRSEsyekJvQU9lNVUxd2tFM2V3Yjl6MWtvancrSlpiSC9BVjND?=
+ =?utf-8?B?WVpGcWFJY2g2MXdtQTRpcUlaN1NlT3lWeTZvODVQQlhKVHc1a1dYUlFrZnpS?=
+ =?utf-8?B?L1BqOW1Jb0hXT01jL2F5WXhRYmwvbnJ1NklqWWRJb2xrUHRPT0dDN3JDS2Vy?=
+ =?utf-8?B?SDlXWFdDR08zeHJzWEp1VG1yNlJsL01Lc25uRmdTMzBLV05zb0pZTk9QcHdY?=
+ =?utf-8?B?ZW9TRlhXSlpiK2JYZjkxTUpjUjJCSU9jRjB1S2VaYXluRHBxWVJmcjRmSW95?=
+ =?utf-8?B?b05aMDN1OTNjVHptM09YbFJjbzNWUnNBTEhEcE5DdXBBd2dqb1crYkxqN0t2?=
+ =?utf-8?B?OWJUaHI1Sk1vZzIwajZKUW9DbXp5SEFvd0J2Uk54QmRwamI3MzdVSWZuVU9y?=
+ =?utf-8?B?cDByTzg1UDRJa0ZsZ3FXdnNIcndnUjRPRzBmMzlwZ2VGQnhkZlpEeTVta3pK?=
+ =?utf-8?B?ZkRkeXBlMFUrcXJMVDF2N1lFMFRyaFdDRlVhUmYwYU5BNHVvbU9kOVFZanNY?=
+ =?utf-8?Q?b5DR/IGUJJBHJKce+J5Km+U=3D?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 881226c2-a71b-4fbe-ad9e-08d9fb0c8a8d
+X-MS-Exchange-CrossTenant-AuthSource: BY5PR12MB4130.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Feb 2022 22:41:35.0701
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Feb 2022 22:49:13.3762
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: qS4j4rIE0rrT58bi9ELcFz539J4Zsuabdt/qoJiG6HpV8q+hz4ud3Vs+ZU2tfsQxKHPrqvA6XfB8qGXgwy7ngw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN1PR12MB2559
+X-MS-Exchange-CrossTenant-UserPrincipalName: jYMAeJRBB42T8RdwLoaq7ql/fqrOMNVJ0MeYzX0z97TKEWCfI7MKk5v2TI9qu0S2R/4+a569kVcPpMTGLxvKtg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV2PR12MB5943
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On 2/27/22 13:57, Jens Axboe wrote:
+>> +ssize_t iov_iter_pin_pages(struct iov_iter *i,
+>> +		   struct page **pages, size_t maxsize, unsigned int maxpages,
+>> +		   size_t *start)
+>> +{
+>> +	size_t len;
+>> +	int n, res;
+>> +
+>> +	if (maxsize > i->count)
+>> +		maxsize = i->count;
+>> +	if (!maxsize)
+>> +		return 0;
+>> +
+>> +	WARN_ON_ONCE(!iter_is_iovec(i));
+>> +
+>> +	if (likely(iter_is_iovec(i))) {
+>> +		unsigned int gup_flags = 0;
+>> +		unsigned long addr;
+>> +
+>> +		if (iov_iter_rw(i) != WRITE)
+>> +			gup_flags |= FOLL_WRITE;
+>> +		if (i->nofault)
+>> +			gup_flags |= FOLL_NOFAULT;
+>> +
+>> +		addr = first_iovec_segment(i, &len, start, maxsize, maxpages);
+>> +		n = DIV_ROUND_UP(len, PAGE_SIZE);
+>> +		res = pin_user_pages_fast(addr, n, gup_flags, pages);
+>> +		if (unlikely(res <= 0))
+>> +			return res;
+>> +		return (res == n ? len : res * PAGE_SIZE) - *start;
+> 
+> Trying to be clever like that just makes the code a lot less readable. I
+> should not have to reason about a return value. Same in the other
+> function.
+> 
 
-On 2022-02-28 15:34, Alex Sierra wrote:
-> DEVICE_COHERENT pages introduce a subtle distinction in the way
-> "normal" pages can be used by various callers throughout the kernel.
-> They behave like normal pages for purposes of mapping in CPU page
-> tables, and for COW. But they do not support LRU lists, NUMA
-> migration or THP.
-
-Should have mentioned KSM here as well for completeness.
-
-
->   Therefore we split vm_normal_page into two
-> functions vm_normal_any_page and vm_normal_lru_page. The latter will
-> only return pages that can be put on an LRU list and that support
-> NUMA migration and THP.
->
-> We also introduced a FOLL_LRU flag that adds the same behaviour to
-> follow_page and related APIs, to allow callers to specify that they
-> expect to put pages on an LRU list.
->
-> Signed-off-by: Alex Sierra <alex.sierra@amd.com>
-
-Acked-by: Felix Kuehling <Felix.Kuehling@amd.com>
-
-FWIW. Full disclosure, Alex and I worked on this together, but it's a 
-bit like the blind leading the blind. ;) It's mostly untested at this 
-point. Alex is working on adding tests for get_user_pages of 
-DEVICE_COHERENT pages without FOLL_LONGTERM to test_hmm and also a test 
-for COW of DEVICE_COHERENT pages.
-
-A few more nit-picks inline.
-
-
-> ---
->   fs/proc/task_mmu.c  | 12 +++++-----
->   include/linux/mm.h  | 53 ++++++++++++++++++++++++---------------------
->   mm/gup.c            | 10 +++++----
->   mm/hmm.c            |  2 +-
->   mm/huge_memory.c    |  2 +-
->   mm/khugepaged.c     |  8 +++----
->   mm/ksm.c            |  4 ++--
->   mm/madvise.c        |  4 ++--
->   mm/memcontrol.c     |  2 +-
->   mm/memory.c         | 38 ++++++++++++++++++++++----------
->   mm/mempolicy.c      |  4 ++--
->   mm/migrate.c        |  2 +-
->   mm/migrate_device.c |  2 +-
->   mm/mlock.c          |  6 ++---
->   mm/mprotect.c       |  2 +-
->   15 files changed, 85 insertions(+), 66 deletions(-)
->
-> diff --git a/fs/proc/task_mmu.c b/fs/proc/task_mmu.c
-> index 18f8c3acbb85..4274128fbb4c 100644
-> --- a/fs/proc/task_mmu.c
-> +++ b/fs/proc/task_mmu.c
-> @@ -519,7 +519,7 @@ static void smaps_pte_entry(pte_t *pte, unsigned long addr,
->   	struct page *page = NULL;
->   
->   	if (pte_present(*pte)) {
-> -		page = vm_normal_page(vma, addr, *pte);
-> +		page = vm_normal_any_page(vma, addr, *pte);
->   	} else if (is_swap_pte(*pte)) {
->   		swp_entry_t swpent = pte_to_swp_entry(*pte);
->   
-> @@ -705,7 +705,7 @@ static int smaps_hugetlb_range(pte_t *pte, unsigned long hmask,
->   	struct page *page = NULL;
->   
->   	if (pte_present(*pte)) {
-> -		page = vm_normal_page(vma, addr, *pte);
-> +		page = vm_normal_any_page(vma, addr, *pte);
->   	} else if (is_swap_pte(*pte)) {
->   		swp_entry_t swpent = pte_to_swp_entry(*pte);
->   
-> @@ -1059,7 +1059,7 @@ static inline bool pte_is_pinned(struct vm_area_struct *vma, unsigned long addr,
->   		return false;
->   	if (likely(!test_bit(MMF_HAS_PINNED, &vma->vm_mm->flags)))
->   		return false;
-> -	page = vm_normal_page(vma, addr, pte);
-> +	page = vm_normal_any_page(vma, addr, pte);
->   	if (!page)
->   		return false;
->   	return page_maybe_dma_pinned(page);
-> @@ -1172,7 +1172,7 @@ static int clear_refs_pte_range(pmd_t *pmd, unsigned long addr,
->   		if (!pte_present(ptent))
->   			continue;
->   
-> -		page = vm_normal_page(vma, addr, ptent);
-> +		page = vm_normal_any_page(vma, addr, ptent);
->   		if (!page)
->   			continue;
->   
-> @@ -1383,7 +1383,7 @@ static pagemap_entry_t pte_to_pagemap_entry(struct pagemapread *pm,
->   		if (pm->show_pfn)
->   			frame = pte_pfn(pte);
->   		flags |= PM_PRESENT;
-> -		page = vm_normal_page(vma, addr, pte);
-> +		page = vm_normal_any_page(vma, addr, pte);
->   		if (pte_soft_dirty(pte))
->   			flags |= PM_SOFT_DIRTY;
->   		if (pte_uffd_wp(pte))
-> @@ -1761,7 +1761,7 @@ static struct page *can_gather_numa_stats(pte_t pte, struct vm_area_struct *vma,
->   	if (!pte_present(pte))
->   		return NULL;
->   
-> -	page = vm_normal_page(vma, addr, pte);
-> +	page = vm_normal_lru_page(vma, addr, pte);
->   	if (!page)
->   		return NULL;
->   
-> diff --git a/include/linux/mm.h b/include/linux/mm.h
-> index ff9f149ca201..8c9f87151d93 100644
-> --- a/include/linux/mm.h
-> +++ b/include/linux/mm.h
-> @@ -593,8 +593,8 @@ struct vm_operations_struct {
->   					unsigned long addr);
->   #endif
->   	/*
-> -	 * Called by vm_normal_page() for special PTEs to find the
-> -	 * page for @addr.  This is useful if the default behavior
-> +	 * Called by vm_normal_x_page() for special PTEs to find the
-
-I'd use vm_normal_*_page in these comments to avoid confusion, because 
-vm_normal_x_page is actually a valid symbol name, which doesn't exist.
+Here is a differential patch on top of this one, and only showing one of
+the two routines. How does this direction look to you?
 
 
-> +	 * page for @addr. This is useful if the default behavior
->   	 * (using pte_page()) would not find the correct page.
->   	 */
->   	struct page *(*find_special_page)(struct vm_area_struct *vma,
-> @@ -1781,7 +1781,9 @@ static inline bool can_do_mlock(void) { return false; }
->   extern int user_shm_lock(size_t, struct ucounts *);
->   extern void user_shm_unlock(size_t, struct ucounts *);
->   
-> -struct page *vm_normal_page(struct vm_area_struct *vma, unsigned long addr,
-> +struct page *vm_normal_any_page(struct vm_area_struct *vma, unsigned long addr,
-> +			     pte_t pte);
-> +struct page *vm_normal_lru_page(struct vm_area_struct *vma, unsigned long addr,
->   			     pte_t pte);
->   struct page *vm_normal_page_pmd(struct vm_area_struct *vma, unsigned long addr,
->   				pmd_t pmd);
-> @@ -2880,27 +2882,28 @@ static inline vm_fault_t vmf_error(int err)
->   struct page *follow_page(struct vm_area_struct *vma, unsigned long address,
->   			 unsigned int foll_flags);
->   
-> -#define FOLL_WRITE	0x01	/* check pte is writable */
-> -#define FOLL_TOUCH	0x02	/* mark page accessed */
-> -#define FOLL_GET	0x04	/* do get_page on page */
-> -#define FOLL_DUMP	0x08	/* give error on hole if it would be zero */
-> -#define FOLL_FORCE	0x10	/* get_user_pages read/write w/o permission */
-> -#define FOLL_NOWAIT	0x20	/* if a disk transfer is needed, start the IO
-> -				 * and return without waiting upon it */
-> -#define FOLL_POPULATE	0x40	/* fault in pages (with FOLL_MLOCK) */
-> -#define FOLL_NOFAULT	0x80	/* do not fault in pages */
-> -#define FOLL_HWPOISON	0x100	/* check page is hwpoisoned */
-> -#define FOLL_NUMA	0x200	/* force NUMA hinting page fault */
-> -#define FOLL_MIGRATION	0x400	/* wait for page to replace migration entry */
-> -#define FOLL_TRIED	0x800	/* a retry, previous pass started an IO */
-> -#define FOLL_MLOCK	0x1000	/* lock present pages */
-> -#define FOLL_REMOTE	0x2000	/* we are working on non-current tsk/mm */
-> -#define FOLL_COW	0x4000	/* internal GUP flag */
-> -#define FOLL_ANON	0x8000	/* don't do file mappings */
-> -#define FOLL_LONGTERM	0x10000	/* mapping lifetime is indefinite: see below */
-> -#define FOLL_SPLIT_PMD	0x20000	/* split huge pmd before returning */
-> -#define FOLL_PIN	0x40000	/* pages must be released via unpin_user_page */
-> -#define FOLL_FAST_ONLY	0x80000	/* gup_fast: prevent fall-back to slow gup */
-> +#define FOLL_WRITE	0x01	 /* check pte is writable */
-> +#define FOLL_TOUCH	0x02	 /* mark page accessed */
-> +#define FOLL_GET	0x04	 /* do get_page on page */
-> +#define FOLL_DUMP	0x08	 /* give error on hole if it would be zero */
-> +#define FOLL_FORCE	0x10	 /* get_user_pages read/write w/o permission */
-> +#define FOLL_NOWAIT	0x20	 /* if a disk transfer is needed, start the IO
-> +				  * and return without waiting upon it */
-> +#define FOLL_POPULATE	0x40	 /* fault in pages (with FOLL_MLOCK) */
-> +#define FOLL_NOFAULT	0x80	 /* do not fault in pages */
-> +#define FOLL_HWPOISON	0x100	 /* check page is hwpoisoned */
-> +#define FOLL_NUMA	0x200	 /* force NUMA hinting page fault */
-> +#define FOLL_MIGRATION	0x400	 /* wait for page to replace migration entry */
-> +#define FOLL_TRIED	0x800	 /* a retry, previous pass started an IO */
-> +#define FOLL_MLOCK	0x1000	 /* lock present pages */
-> +#define FOLL_REMOTE	0x2000	 /* we are working on non-current tsk/mm */
-> +#define FOLL_COW	0x4000	 /* internal GUP flag */
-> +#define FOLL_ANON	0x8000	 /* don't do file mappings */
-> +#define FOLL_LONGTERM	0x10000	 /* mapping lifetime is indefinite: see below */
-> +#define FOLL_SPLIT_PMD	0x20000	 /* split huge pmd before returning */
-> +#define FOLL_PIN	0x40000	 /* pages must be released via unpin_user_page */
-> +#define FOLL_FAST_ONLY	0x80000	 /* gup_fast: prevent fall-back to slow gup */
-> +#define FOLL_LRU	0x100000 /* return only LRU (anon or page cache) */
->   
->   /*
->    * FOLL_PIN and FOLL_LONGTERM may be used in various combinations with each
-> @@ -3227,7 +3230,7 @@ extern long copy_huge_page_from_user(struct page *dst_page,
->    * @vma: Pointer to the struct vm_area_struct to consider
->    *
->    * Whether transhuge page-table entries are considered "special" following
-> - * the definition in vm_normal_page().
-> + * the definition in vm_normal_x_page().
+diff --git a/lib/iov_iter.c b/lib/iov_iter.c
+index e64e8e4edd0c..8e96f1e9ebc6 100644
+--- a/lib/iov_iter.c
++++ b/lib/iov_iter.c
+@@ -1588,7 +1588,17 @@ ssize_t iov_iter_pin_pages(struct iov_iter *i,
+  		res = pin_user_pages_fast(addr, n, gup_flags, pages);
+  		if (unlikely(res <= 0))
+  			return res;
+-		return (res == n ? len : res * PAGE_SIZE) - *start;
++
++		/* Cap len at the number of pages that were actually pinned: */
++		if (res < n)
++			len = res * PAGE_SIZE;
++
++		/*
++		 * The return value is the amount pinned in bytes that the
++		 * caller will actually use. So, reduce it by the offset into
++		 * the first page:
++		 */
++		return len - *start;
+  	}
 
-vm_normal_*_page
+  	return -EFAULT;
 
-
->    *
->    * Return: true if transhuge page-table entries should be considered special,
->    * false otherwise.
-> diff --git a/mm/gup.c b/mm/gup.c
-> index 41349b685eaf..9e172c906ded 100644
-> --- a/mm/gup.c
-> +++ b/mm/gup.c
-> @@ -539,8 +539,10 @@ static struct page *follow_page_pte(struct vm_area_struct *vma,
->   		pte_unmap_unlock(ptep, ptl);
->   		return NULL;
->   	}
-> -
-> -	page = vm_normal_page(vma, address, pte);
-> +	if (flags & (FOLL_MLOCK | FOLL_LRU))
-> +		page = vm_normal_lru_page(vma, address, pte);
-> +	else
-> +		page = vm_normal_any_page(vma, address, pte);
->   	if (!page && pte_devmap(pte) && (flags & (FOLL_GET | FOLL_PIN))) {
->   		/*
->   		 * Only return device mapping pages in the FOLL_GET or FOLL_PIN
-> @@ -824,7 +826,7 @@ static struct page *follow_p4d_mask(struct vm_area_struct *vma,
->    *
->    * Return: the mapped (struct page *), %NULL if no mapping exists, or
->    * an error pointer if there is a mapping to something not represented
-> - * by a page descriptor (see also vm_normal_page()).
-> + * by a page descriptor (see also vm_normal_x_page()).
-
-vm_normal_*_page
-
-
->    */
->   static struct page *follow_page_mask(struct vm_area_struct *vma,
->   			      unsigned long address, unsigned int flags,
-> @@ -917,7 +919,7 @@ static int get_gate_page(struct mm_struct *mm, unsigned long address,
->   	*vma = get_gate_vma(mm);
->   	if (!page)
->   		goto out;
-> -	*page = vm_normal_page(*vma, address, *pte);
-> +	*page = vm_normal_any_page(*vma, address, *pte);
->   	if (!*page) {
->   		if ((gup_flags & FOLL_DUMP) || !is_zero_pfn(pte_pfn(*pte)))
->   			goto unmap;
-> diff --git a/mm/hmm.c b/mm/hmm.c
-> index bd56641c79d4..90c949d66712 100644
-> --- a/mm/hmm.c
-> +++ b/mm/hmm.c
-> @@ -300,7 +300,7 @@ static int hmm_vma_handle_pte(struct mm_walk *walk, unsigned long addr,
->   	 * Since each architecture defines a struct page for the zero page, just
->   	 * fall through and treat it like a normal page.
->   	 */
-> -	if (!vm_normal_page(walk->vma, addr, pte) &&
-> +	if (!vm_normal_any_page(walk->vma, addr, pte) &&
->   	    !pte_devmap(pte) &&
->   	    !is_zero_pfn(pte_pfn(pte))) {
->   		if (hmm_pte_need_fault(hmm_vma_walk, pfn_req_flags, 0)) {
-> diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-> index 406a3c28c026..ea1efc825774 100644
-> --- a/mm/huge_memory.c
-> +++ b/mm/huge_memory.c
-> @@ -2966,7 +2966,7 @@ static int split_huge_pages_pid(int pid, unsigned long vaddr_start,
->   		}
->   
->   		/* FOLL_DUMP to ignore special (like zero) pages */
-> -		follflags = FOLL_GET | FOLL_DUMP;
-> +		follflags = FOLL_GET | FOLL_DUMP | FOLL_LRU;
->   		page = follow_page(vma, addr, follflags);
->   
->   		if (IS_ERR(page))
-> diff --git a/mm/khugepaged.c b/mm/khugepaged.c
-> index 131492fd1148..a7153db09afa 100644
-> --- a/mm/khugepaged.c
-> +++ b/mm/khugepaged.c
-> @@ -627,7 +627,7 @@ static int __collapse_huge_page_isolate(struct vm_area_struct *vma,
->   			result = SCAN_PTE_NON_PRESENT;
->   			goto out;
->   		}
-> -		page = vm_normal_page(vma, address, pteval);
-> +		page = vm_normal_lru_page(vma, address, pteval);
->   		if (unlikely(!page)) {
->   			result = SCAN_PAGE_NULL;
->   			goto out;
-> @@ -1286,7 +1286,7 @@ static int khugepaged_scan_pmd(struct mm_struct *mm,
->   		if (pte_write(pteval))
->   			writable = true;
->   
-> -		page = vm_normal_page(vma, _address, pteval);
-> +		page = vm_normal_lru_page(vma, _address, pteval);
->   		if (unlikely(!page)) {
->   			result = SCAN_PAGE_NULL;
->   			goto out_unmap;
-> @@ -1494,7 +1494,7 @@ void collapse_pte_mapped_thp(struct mm_struct *mm, unsigned long addr)
->   		if (!pte_present(*pte))
->   			goto abort;
->   
-> -		page = vm_normal_page(vma, addr, *pte);
-> +		page = vm_normal_lru_page(vma, addr, *pte);
->   
->   		/*
->   		 * Note that uprobe, debugger, or MAP_PRIVATE may change the
-> @@ -1512,7 +1512,7 @@ void collapse_pte_mapped_thp(struct mm_struct *mm, unsigned long addr)
->   
->   		if (pte_none(*pte))
->   			continue;
-> -		page = vm_normal_page(vma, addr, *pte);
-> +		page = vm_normal_lru_page(vma, addr, *pte);
->   		page_remove_rmap(page, false);
->   	}
->   
-> diff --git a/mm/ksm.c b/mm/ksm.c
-> index c20bd4d9a0d9..352d37e44694 100644
-> --- a/mm/ksm.c
-> +++ b/mm/ksm.c
-> @@ -474,7 +474,7 @@ static int break_ksm(struct vm_area_struct *vma, unsigned long addr)
->   	do {
->   		cond_resched();
->   		page = follow_page(vma, addr,
-> -				FOLL_GET | FOLL_MIGRATION | FOLL_REMOTE);
-> +				FOLL_GET | FOLL_MIGRATION | FOLL_REMOTE | FOLL_LRU);
->   		if (IS_ERR_OR_NULL(page))
->   			break;
->   		if (PageKsm(page))
-> @@ -559,7 +559,7 @@ static struct page *get_mergeable_page(struct rmap_item *rmap_item)
->   	if (!vma)
->   		goto out;
->   
-> -	page = follow_page(vma, addr, FOLL_GET);
-> +	page = follow_page(vma, addr, FOLL_GET | FOLL_LRU);
->   	if (IS_ERR_OR_NULL(page))
->   		goto out;
->   	if (PageAnon(page)) {
-> diff --git a/mm/madvise.c b/mm/madvise.c
-> index 5604064df464..1a553aad9aa3 100644
-> --- a/mm/madvise.c
-> +++ b/mm/madvise.c
-> @@ -439,7 +439,7 @@ static int madvise_cold_or_pageout_pte_range(pmd_t *pmd,
->   		if (!pte_present(ptent))
->   			continue;
->   
-> -		page = vm_normal_page(vma, addr, ptent);
-> +		page = vm_normal_lru_page(vma, addr, ptent);
->   		if (!page)
->   			continue;
->   
-> @@ -649,7 +649,7 @@ static int madvise_free_pte_range(pmd_t *pmd, unsigned long addr,
->   			continue;
->   		}
->   
-> -		page = vm_normal_page(vma, addr, ptent);
-> +		page = vm_normal_lru_page(vma, addr, ptent);
->   		if (!page)
->   			continue;
->   
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 10259c35fde2..9677eb27dea8 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -5476,7 +5476,7 @@ enum mc_target_type {
->   static struct page *mc_handle_present_pte(struct vm_area_struct *vma,
->   						unsigned long addr, pte_t ptent)
->   {
-> -	struct page *page = vm_normal_page(vma, addr, ptent);
-> +	struct page *page = vm_normal_any_page(vma, addr, ptent);
->   
->   	if (!page || !page_mapped(page))
->   		return NULL;
-> diff --git a/mm/memory.c b/mm/memory.c
-> index c125c4969913..cff84e6a6c4b 100644
-> --- a/mm/memory.c
-> +++ b/mm/memory.c
-> @@ -565,7 +565,7 @@ static void print_bad_pte(struct vm_area_struct *vma, unsigned long addr,
->   }
->   
->   /*
-> - * vm_normal_page -- This function gets the "struct page" associated with a pte.
-> + * vm_normal_any_page -- This function gets the "struct page" associated with a pte.
->    *
->    * "Special" mappings do not wish to be associated with a "struct page" (either
->    * it doesn't exist, or it exists but they don't want to touch it). In this
-> @@ -606,7 +606,7 @@ static void print_bad_pte(struct vm_area_struct *vma, unsigned long addr,
->    * PFNMAP mappings in order to support COWable mappings.
->    *
->    */
-> -struct page *vm_normal_page(struct vm_area_struct *vma, unsigned long addr,
-> +struct page *vm_normal_any_page(struct vm_area_struct *vma, unsigned long addr,
->   			    pte_t pte)
->   {
->   	unsigned long pfn = pte_pfn(pte);
-> @@ -620,8 +620,6 @@ struct page *vm_normal_page(struct vm_area_struct *vma, unsigned long addr,
->   			return NULL;
->   		if (is_zero_pfn(pfn))
->   			return NULL;
-> -		if (pte_devmap(pte))
-> -			return NULL;
->   
->   		print_bad_pte(vma, addr, pte, NULL);
->   		return NULL;
-> @@ -661,6 +659,22 @@ struct page *vm_normal_page(struct vm_area_struct *vma, unsigned long addr,
->   	return pfn_to_page(pfn);
->   }
->   
-> +/*
-> + * vm_normal_lru_page -- This function gets the "struct page" associated
-> + * with a pte only for page cache and anon page. These pages are LRU handled.
-> + */
-> +struct page *vm_normal_lru_page(struct vm_area_struct *vma, unsigned long addr,
-> +			    pte_t pte)
-> +{
-> +	struct page *page;
-> +
-> +	page = vm_normal_any_page(vma, addr, pte);
-> +	if (is_zone_device_page(page))
-> +		return NULL;
-> +
-> +	return page;
-> +}
-> +
->   #ifdef CONFIG_TRANSPARENT_HUGEPAGE
->   struct page *vm_normal_page_pmd(struct vm_area_struct *vma, unsigned long addr,
->   				pmd_t pmd)
-> @@ -670,7 +684,7 @@ struct page *vm_normal_page_pmd(struct vm_area_struct *vma, unsigned long addr,
->   	/*
->   	 * There is no pmd_special() but there may be special pmds, e.g.
->   	 * in a direct-access (dax) mapping, so let's just replicate the
-> -	 * !CONFIG_ARCH_HAS_PTE_SPECIAL case from vm_normal_page() here.
-> +	 * !CONFIG_ARCH_HAS_PTE_SPECIAL case from vm_normal_any_page() here.
->   	 */
->   	if (unlikely(vma->vm_flags & (VM_PFNMAP|VM_MIXEDMAP))) {
->   		if (vma->vm_flags & VM_MIXEDMAP) {
-> @@ -946,7 +960,7 @@ copy_present_pte(struct vm_area_struct *dst_vma, struct vm_area_struct *src_vma,
->   	pte_t pte = *src_pte;
->   	struct page *page;
->   
-> -	page = vm_normal_page(src_vma, addr, pte);
-> +	page = vm_normal_any_page(src_vma, addr, pte);
->   	if (page) {
->   		int retval;
->   
-> @@ -1358,7 +1372,7 @@ static unsigned long zap_pte_range(struct mmu_gather *tlb,
->   		if (pte_present(ptent)) {
->   			struct page *page;
->   
-> -			page = vm_normal_page(vma, addr, ptent);
-> +			page = vm_normal_any_page(vma, addr, ptent);
->   			if (unlikely(zap_skip_check_mapping(details, page)))
->   				continue;
->   			ptent = ptep_get_and_clear_full(mm, addr, pte,
-> @@ -2168,7 +2182,7 @@ EXPORT_SYMBOL(vmf_insert_pfn);
->   
->   static bool vm_mixed_ok(struct vm_area_struct *vma, pfn_t pfn)
->   {
-> -	/* these checks mirror the abort conditions in vm_normal_page */
-> +	/* these checks mirror the abort conditions in vm_normal_lru_page */
->   	if (vma->vm_flags & VM_MIXEDMAP)
->   		return true;
->   	if (pfn_t_devmap(pfn))
-
-If this is to match the new vm_normal_lru_page, it should replace "if 
-(pfn_t_devmap(pfn))" with a check that the page is not a device page. 
-But for that it would have to actually look up the struct page.
-
-I'm not sure what to do about this. __vm_insert_mixed still does 
-something special with devmap pages, which no longer matches 
-vm_normal_*_page.
-
-
-> @@ -2198,7 +2212,7 @@ static vm_fault_t __vm_insert_mixed(struct vm_area_struct *vma,
->   
->   	/*
->   	 * If we don't have pte special, then we have to use the pfn_valid()
-> -	 * based VM_MIXEDMAP scheme (see vm_normal_page), and thus we *must*
-> +	 * based VM_MIXEDMAP scheme (see vm_normal_any_page), and thus we *must*
->   	 * refcount the page if pfn_valid is true (hence insert_page rather
->   	 * than insert_pfn).  If a zero_pfn were inserted into a VM_MIXEDMAP
->   	 * without pte special, it would there be refcounted as a normal page.
-> @@ -2408,7 +2422,7 @@ int remap_pfn_range_notrack(struct vm_area_struct *vma, unsigned long addr,
->   	 * There's a horrible special case to handle copy-on-write
->   	 * behaviour that some programs depend on. We mark the "original"
->   	 * un-COW'ed pages by matching them up with "vma->vm_pgoff".
-> -	 * See vm_normal_page() for details.
-> +	 * See vm_normal_any_page() for details.
->   	 */
->   	if (is_cow_mapping(vma->vm_flags)) {
->   		if (addr != vma->vm_start || end != vma->vm_end)
-> @@ -3267,7 +3281,7 @@ static vm_fault_t do_wp_page(struct vm_fault *vmf)
->   		     mm_tlb_flush_pending(vmf->vma->vm_mm)))
->   		flush_tlb_page(vmf->vma, vmf->address);
->   
-> -	vmf->page = vm_normal_page(vma, vmf->address, vmf->orig_pte);
-> +	vmf->page = vm_normal_any_page(vma, vmf->address, vmf->orig_pte);
->   	if (!vmf->page) {
->   		/*
->   		 * VM_MIXEDMAP !pfn_valid() case, or VM_SOFTDIRTY clear on a
-> @@ -4364,7 +4378,7 @@ static vm_fault_t do_numa_page(struct vm_fault *vmf)
->   	old_pte = ptep_get(vmf->pte);
->   	pte = pte_modify(old_pte, vma->vm_page_prot);
->   
-> -	page = vm_normal_page(vma, vmf->address, pte);
-> +	page = vm_normal_lru_page(vma, vmf->address, pte);
->   	if (!page)
->   		goto out_map;
->   
-> diff --git a/mm/mempolicy.c b/mm/mempolicy.c
-> index 028e8dd82b44..9962de4981d6 100644
-> --- a/mm/mempolicy.c
-> +++ b/mm/mempolicy.c
-> @@ -527,11 +527,11 @@ static int queue_pages_pte_range(pmd_t *pmd, unsigned long addr,
->   	for (; addr != end; pte++, addr += PAGE_SIZE) {
->   		if (!pte_present(*pte))
->   			continue;
-> -		page = vm_normal_page(vma, addr, *pte);
-> +		page = vm_normal_lru_page(vma, addr, *pte);
->   		if (!page)
->   			continue;
->   		/*
-> -		 * vm_normal_page() filters out zero pages, but there might
-> +		 * vm_normal_lru_page() filters out zero pages, but there might
->   		 * still be PageReserved pages to skip, perhaps in a VDSO.
->   		 */
->   		if (PageReserved(page))
-> diff --git a/mm/migrate.c b/mm/migrate.c
-> index c31d04b46a5e..17d049311b78 100644
-> --- a/mm/migrate.c
-> +++ b/mm/migrate.c
-> @@ -1614,7 +1614,7 @@ static int add_page_for_migration(struct mm_struct *mm, unsigned long addr,
->   		goto out;
->   
->   	/* FOLL_DUMP to ignore special (like zero) pages */
-> -	follflags = FOLL_GET | FOLL_DUMP;
-> +	follflags = FOLL_GET | FOLL_DUMP | FOLL_LRU;
->   	page = follow_page(vma, addr, follflags);
->   
->   	err = PTR_ERR(page);
-> diff --git a/mm/migrate_device.c b/mm/migrate_device.c
-> index 3373b535d5c9..fac1b6978361 100644
-> --- a/mm/migrate_device.c
-> +++ b/mm/migrate_device.c
-> @@ -154,7 +154,7 @@ static int migrate_vma_collect_pmd(pmd_t *pmdp,
->   				migrate->cpages++;
->   				goto next;
->   			}
-> -			page = vm_normal_page(migrate->vma, addr, pte);
-> +			page = vm_normal_any_page(migrate->vma, addr, pte);
->   			if (page && !is_zone_device_page(page) &&
->   			    !(migrate->flags & MIGRATE_VMA_SELECT_SYSTEM))
->   				goto next;
-> diff --git a/mm/mlock.c b/mm/mlock.c
-> index 8f584eddd305..52613e2f2a70 100644
-> --- a/mm/mlock.c
-> +++ b/mm/mlock.c
-> @@ -342,7 +342,7 @@ static void __munlock_pagevec(struct pagevec *pvec, struct zone *zone)
->    * a non-TPH page already pinned and in the @pvec, and that it belongs to @zone.
->    *
->    * The rest of @pvec is filled by subsequent pages within the same pmd and same
-> - * zone, as long as the pte's are present and vm_normal_page() succeeds. These
-> + * zone, as long as the pte's are present and vm_normal_any_page() succeeds. These
-
-The comment says vm_normal_any_page. But the function uses 
-vm_normal_lru_page.
-
-Regards,
-   Felix
-
-
->    * pages also get pinned.
->    *
->    * Returns the address of the next page that should be scanned. This equals
-> @@ -373,7 +373,7 @@ static unsigned long __munlock_pagevec_fill(struct pagevec *pvec,
->   		struct page *page = NULL;
->   		pte++;
->   		if (pte_present(*pte))
-> -			page = vm_normal_page(vma, start, *pte);
-> +			page = vm_normal_lru_page(vma, start, *pte);
->   		/*
->   		 * Break if page could not be obtained or the page's node+zone does not
->   		 * match
-> @@ -439,7 +439,7 @@ void munlock_vma_pages_range(struct vm_area_struct *vma,
->   		 * suits munlock very well (and if somehow an abnormal page
->   		 * has sneaked into the range, we won't oops here: great).
->   		 */
-> -		page = follow_page(vma, start, FOLL_GET | FOLL_DUMP);
-> +		page = follow_page(vma, start, FOLL_GET | FOLL_DUMP | FOLL_LRU);
->   
->   		if (page && !IS_ERR(page)) {
->   			if (PageTransTail(page)) {
-> diff --git a/mm/mprotect.c b/mm/mprotect.c
-> index 0138dfcdb1d8..d236394d41d5 100644
-> --- a/mm/mprotect.c
-> +++ b/mm/mprotect.c
-> @@ -88,7 +88,7 @@ static unsigned long change_pte_range(struct vm_area_struct *vma, pmd_t *pmd,
->   				if (pte_protnone(oldpte))
->   					continue;
->   
-> -				page = vm_normal_page(vma, addr, oldpte);
-> +				page = vm_normal_lru_page(vma, addr, oldpte);
->   				if (!page || PageKsm(page))
->   					continue;
->   
+thanks,
+-- 
+John Hubbard
+NVIDIA
