@@ -2,1093 +2,647 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79D8AC4332F
-	for <linux-xfs@archiver.kernel.org>; Mon, 28 Feb 2022 19:52:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5FA7C433FE
+	for <linux-xfs@archiver.kernel.org>; Mon, 28 Feb 2022 20:34:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229810AbiB1TxO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 28 Feb 2022 14:53:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59774 "EHLO
+        id S229486AbiB1UfO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 28 Feb 2022 15:35:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39166 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229886AbiB1Twm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Feb 2022 14:52:42 -0500
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34555D109E
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Feb 2022 11:51:59 -0800 (PST)
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 21SIJqOs009912
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Feb 2022 19:51:58 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
- date : message-id : in-reply-to : references : content-transfer-encoding :
- content-type : mime-version; s=corp-2021-07-09;
- bh=Tqc6KUAnoZFibEJhryccn0Nl8kg3AJLGfSGVUjcqVVg=;
- b=CHVx/KK3cC81bPHBKFe6frDPS6AyowiBr4scXazV/te8ORe5pT5A+GG2KWPwiCe5dNg/
- uGb6q6krvef+hk4ky8jskk6+RXv2VQcXH/HG3ycSnO3SnMBhKJY1bp6FF7iIiN8IvU4O
- HTKJKnCHQLFgX1gkMrOHoLk9bc1SKdq9nBEZq/UazmQzSNTqfcd37w97OWfzM1VFdZAi
- AwNj9sLKEGBPlXabBe7XGpzXYElTAsPMDoUyCQixHxr2FuNbHj7K3bxck/cxvz1jRIco
- plXxP24JkdGgAj11PriDDSUDz4DO9dOfXPLHz8VAYI+vcEn1MBvaNEWGh8uFJlhTLm2a 3w== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3eh14brshn-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Feb 2022 19:51:58 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 21SJkltk076550
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Feb 2022 19:51:57 GMT
-Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2170.outbound.protection.outlook.com [104.47.59.170])
-        by aserp3020.oracle.com with ESMTP id 3efc13e3fr-5
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Feb 2022 19:51:56 +0000
+        with ESMTP id S229471AbiB1UfN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Feb 2022 15:35:13 -0500
+Received: from NAM10-DM6-obe.outbound.protection.outlook.com (mail-dm6nam10on2050.outbound.protection.outlook.com [40.107.93.50])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F45760A9F;
+        Mon, 28 Feb 2022 12:34:32 -0800 (PST)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=J3czWdfI7I5w72Ic6OmrWzM7Q3JcEpVvQPsUyzIHqQ6wIb5kyk7Qry2erGJJ1z3h/H6OJOBm9j4ETbmyNVGKofdS0dIrRkl+PB2quE62PfhL/JkWRfsu3hj7bkI+Ctt8IqX2jSng6gMk89f5+h3VJvTIcwgf38bHIhB3YyTieeJQ9LwYvjxGg9Y4IsaY2Mf89y75Z9ca5S7AFiLHYrGnQLeH2awCSdIwFd4kcMx5dgwV4EhPPrCRN92QJ0tvbMb9cTZ1FVq9Pob0IXrottsABKxZ5IzCZoLnFBBorGNyVhd7QK9j4Gg8FzsEPVUgi6wIe9QnTWohiT8Cu8d/zSvWSA==
+ b=ZXV4IxVdV2lSFqjTWrl6VVbIvXZygsC+ElMIkqAhb0+vMhHdCdq1C+jkd3Hv6yLqWAE6kT4K9MdhqCHuVz3jYvCbefYFkMuPJ4DKSJ+6T46EVxUgNXXYLHX9O9ZXmqnAuAHiLyuzJA4z6IVD6qCJWJ6jE+PQoUO97oz5emXdJ1PYbphCdj+nXHuyPkxrw/nBZFyuLfqf7O6SVT6bizNVmtHLUQGDWloXnwj1M7ErsXyK8pvYQ/MIMBqOrLOM2//FpUGOT3BnumTJVUwhrvxge301LHPY2xJE9qQQ/WEH8ha4zFWtLll7+NuNO4J6TH6OFwWK7ux/zyKR/3xwZ6V31Q==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Tqc6KUAnoZFibEJhryccn0Nl8kg3AJLGfSGVUjcqVVg=;
- b=b3ZbY9Tke6ePi9/zhLULuc67bf3pP0FvMSVabd7C8quFkv5I1XAF25jxH4tRZz7I2f/thpcNMVgP52P2xRxyEvcqYajXms3ffR5tOEvdQAUY3xctEdMXs+c/gjEt5sQk5IRK/9rFM8YACTopkwBegArNlVL5OtPWX1aRmyFBt/vrnT3cDeNOGV6i2psZLazjW3dCWPLNCbzilF5nA348/7DeyNjtgHQEqzmlLckiE+PalRIYc3GSaWjcULZ6CRIDgSpsSFVez4AQaP4C5y/xjw2NDkYIiOxuh66OOnBKF4u54RfWT47WbwoBCqH/B/plQ76WoTP55GXEI0KXzJklUg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ bh=RX7PGB/PChp3W1B92xyGcTqjJyfE4keZYAfy4x0ERm8=;
+ b=ERvvt34VE7ykQE5WhcWc35qTqDQSs3HCLaliN1uHAIZXyWSQjfXvaVbASu2S+NaxokVdzSYXGoe5058DpljjxLUB6W7dJGnJD2tdx/VbJIUaKWpPf6ipVx6qGuHhLaPTxSBw+T8zlAEP57mBNqXcNuQvFNAIioNo1cLfuizhktgf00wEb7r0rALqoY+MGkI/Ivfg0SYMevMlTkGlSiYPaWsV9qQjbkumkw1C6KIrAdE5Ze1qDxoJloGslfRrB6tGscNnMVcGLXCEH6/6nqj/lpbkfoHllrlSlHvEijpwjG3m5WXVMZTYmWlMFyeirCb25v665LmzvKNu/DoimPU3LA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=nvidia.com smtp.mailfrom=amd.com; dmarc=pass
+ (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
+ dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Tqc6KUAnoZFibEJhryccn0Nl8kg3AJLGfSGVUjcqVVg=;
- b=lZ0kptCQ0+lv14PCbtlbQF3sgmD2rBLyzu6CpjOnm5in4SqhdtfsdGP6YZq+T2/oReS3ZCkHP8y2ph8YL2abHiYvq37QF+cRlAf2RD20cFeuYrbtJTw56yixKq3PCFP5cfUWydWaTls4RfB8vVwShbDRlB83jmF9f0USBXW+1j4=
-Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
- by PH0PR10MB5612.namprd10.prod.outlook.com (2603:10b6:510:fa::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5017.26; Mon, 28 Feb
- 2022 19:51:55 +0000
-Received: from BY5PR10MB4306.namprd10.prod.outlook.com
- ([fe80::a91b:c130:5e3f:119]) by BY5PR10MB4306.namprd10.prod.outlook.com
- ([fe80::a91b:c130:5e3f:119%7]) with mapi id 15.20.5017.027; Mon, 28 Feb 2022
- 19:51:55 +0000
-From:   Allison Henderson <allison.henderson@oracle.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v28 04/15] xfs: Set up infrastructure for log attribute replay
-Date:   Mon, 28 Feb 2022 12:51:36 -0700
-Message-Id: <20220228195147.1913281-5-allison.henderson@oracle.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220228195147.1913281-1-allison.henderson@oracle.com>
-References: <20220228195147.1913281-1-allison.henderson@oracle.com>
+ bh=RX7PGB/PChp3W1B92xyGcTqjJyfE4keZYAfy4x0ERm8=;
+ b=sc3DQMt2hk7eqOy9Itw8w8yY3YR30VSI0heny+CldXJ6vy+zdH/3YSxccah52z9mkgXkwCZsDtjNDZffxv2AgPe/URujkCxEm9PjTFctYJs+zmQhmNuc6/nOCsFdzHU9CktcZVX3JhmCvZtJvhKQKWY/u7rQ68qakFOc8Sm8m7Y=
+Received: from DM5PR13CA0047.namprd13.prod.outlook.com (2603:10b6:3:7b::33) by
+ DM6PR12MB4812.namprd12.prod.outlook.com (2603:10b6:5:1ff::24) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.5017.24; Mon, 28 Feb 2022 20:34:29 +0000
+Received: from DM6NAM11FT040.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:3:7b:cafe::ec) by DM5PR13CA0047.outlook.office365.com
+ (2603:10b6:3:7b::33) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5038.9 via Frontend
+ Transport; Mon, 28 Feb 2022 20:34:29 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=SATLEXMB04.amd.com;
+Received: from SATLEXMB04.amd.com (165.204.84.17) by
+ DM6NAM11FT040.mail.protection.outlook.com (10.13.173.133) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.5017.22 via Frontend Transport; Mon, 28 Feb 2022 20:34:29 +0000
+Received: from alex-MS-7B09.amd.com (10.180.168.240) by SATLEXMB04.amd.com
+ (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.18; Mon, 28 Feb
+ 2022 14:34:28 -0600
+From:   Alex Sierra <alex.sierra@amd.com>
+To:     <jgg@nvidia.com>
+CC:     <david@redhat.com>, <Felix.Kuehling@amd.com>, <linux-mm@kvack.org>,
+        <rcampbell@nvidia.com>, <linux-ext4@vger.kernel.org>,
+        <linux-xfs@vger.kernel.org>, <amd-gfx@lists.freedesktop.org>,
+        <dri-devel@lists.freedesktop.org>, <hch@lst.de>,
+        <jglisse@redhat.com>, <apopple@nvidia.com>, <willy@infradead.org>,
+        <akpm@linux-foundation.org>
+Subject: [PATCH] mm: split vm_normal_pages for LRU and non-LRU handling
+Date:   Mon, 28 Feb 2022 14:34:01 -0600
+Message-ID: <20220228203401.7155-1-alex.sierra@amd.com>
+X-Mailer: git-send-email 2.32.0
+In-Reply-To: <20220218192640.GV4160@nvidia.com>
+References: <20220218192640.GV4160@nvidia.com>
+MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: BY5PR03CA0023.namprd03.prod.outlook.com
- (2603:10b6:a03:1e0::33) To BY5PR10MB4306.namprd10.prod.outlook.com
- (2603:10b6:a03:211::7)
-MIME-Version: 1.0
+X-Originating-IP: [10.180.168.240]
+X-ClientProxiedBy: SATLEXMB04.amd.com (10.181.40.145) To SATLEXMB04.amd.com
+ (10.181.40.145)
+X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 30f141e2-e4c8-475d-f382-08d9faf3c5a1
-X-MS-TrafficTypeDiagnostic: PH0PR10MB5612:EE_
-X-Microsoft-Antispam-PRVS: <PH0PR10MB561253971EA652AC036748D395019@PH0PR10MB5612.namprd10.prod.outlook.com>
+X-MS-Office365-Filtering-Correlation-Id: 94d984be-580f-471a-330e-08d9faf9b84b
+X-MS-TrafficTypeDiagnostic: DM6PR12MB4812:EE_
+X-Microsoft-Antispam-PRVS: <DM6PR12MB4812E8C5360D9C54DA67E62CFD019@DM6PR12MB4812.namprd12.prod.outlook.com>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: tMhUG7dHON2cjQhN7thCuTgi9P1u3uefgxCjOQTsxeoz4v7g2dMnGlknBlFwDwC6zOXTXlq8jpt7bZ7AEcg+pcrEgIbCMhqcmSlvYw+Ei4AHvuRR4OGMcQBmF1KkAe22nBGSSC8AUQ6fzxVDLzyO4NgG2569a7Vzr40X4sVQ/cd33OsYmOcbE7Hhg217c7bkD1s2GIdqVzfCflU0R100bcgXKnmWyxKPeXQi/AgX/gbFgAQawr35GZuLmt8z2Klcf9uvPEId2jBEMijjUCfxqcn3R5NaCXxv/J0Sa04rASSwll8sdl8KcSzDYrBLanYHDTHP3pS5f6ZsZWX4cs9CFD5l9srqyYW+iDGcOnk/rTJ1QgSmA0DJ7HWLZ7241aO7zqEOmZxo6stZ36/Gdj2qk8uZ0AkSXGX4PFse+ghge8071QikoConemGDfwc+o4cUdzfgvEBlkjGmA/eKRR1wsRy18474mJHTSSWBtlJmPzCUF3b9W+mawe9k8TmZeY1dprKWO9K24lHQdLejnW6pBzuCQTVZAx+DrUS0y5fyywVUf/h1e2jOpCCRxQke9EzweVtLvupF/52ZaapONGQJb8pgLC8XBrqdhwYdt04WrCEqAoyOBrQPpkaW4hJVOOyFppKtLaTRXFZoAW6HhHPJy4/1/ue1QH8wKsTEqRLmOEQdZ0VnQ7q/t8r6cEKjRU8zXnTpgc0JH6GR1+IGyc9mTQ==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(26005)(86362001)(186003)(8676002)(6916009)(1076003)(316002)(66946007)(66476007)(66556008)(2906002)(2616005)(6486002)(6666004)(6512007)(52116002)(30864003)(8936002)(508600001)(5660300002)(38350700002)(44832011)(83380400001)(38100700002)(6506007)(36756003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?3Xu1m4nnvAqDsz+GPeWfM/bhzrVuftM4YC1+w7tfD4eXhBprF/SgOh6AwgGa?=
- =?us-ascii?Q?bZltjeVkQW8LgHF2Lpp2FnhOyqsinaVdZi2uLBQJJmgZgzxQb5uBX6ZkpzwC?=
- =?us-ascii?Q?QCpyIIKA6Q6YedxQXYQ4Z9My6TS+Njmrp1C/+T0hV/tLJvtz3eHnn330/3qL?=
- =?us-ascii?Q?RDzBDuqupSDjK4FYM8UntmqlDX0/0l9I+1GqwpJHsr2jaz805/3h74mtgHLe?=
- =?us-ascii?Q?2/EDl/D67II/6L/FPC9cMH0p5xGz1J6JqYtoAUdj5TOPOdv+taA5FYKbo4Aj?=
- =?us-ascii?Q?9+zhjJ+rzQYbhi8NSWNK8ZgIf+NRzHlsQD+QTT9zDfMNT/en99ysbfGvwVGd?=
- =?us-ascii?Q?O1g1j4Bqum6oeNLuQ43vOw1WtHMmNjZkShMI+JZ+LEhOKNQUVdEPAv65kt0B?=
- =?us-ascii?Q?aj2j6G5vUUl8hzmD+RT85JnbFirbchXNizRZNi9htf67O4AI5vNpJQedo7Ve?=
- =?us-ascii?Q?lVM+r5dLy97fkqhqhZ8O4/xrPOppdSwxYNANOp0gR2QkzP6JbQ3ZDJW90c0w?=
- =?us-ascii?Q?CCMCm7kxv4S1edz2fdWqf0zotPG87i/DGA+LTwIlFlok2OW4n8BYELuEo29D?=
- =?us-ascii?Q?Xpfdzp8RqCUE4/z1JoN4Yb/1qHLJrQI9RNa8p/4CxOuc905iUqxI77UPVNBx?=
- =?us-ascii?Q?I31ONAcs8oYADvh13nUhcFQizho5yVPmToTLK83ZbmDCBgsDVwEJspwcsTgp?=
- =?us-ascii?Q?YHYeyE5zWEMQkW64fj/HiehD1dHdmt8utcE3bBxj5G8pf8ABV1EZZbEWWEJM?=
- =?us-ascii?Q?Ik3DUKqk0soCY1ZHIidayNZj7f9Iug8ozNXhWI2dN1VztBlRh1yU/RPNl6TB?=
- =?us-ascii?Q?BZV4jt+4AW1GncHEuP01+ZmHRwVgd2WVsp2xr2iQbn8zFskkTR8+7sB6vrHD?=
- =?us-ascii?Q?utuqBVsLH7awdXpa7HnR5TxugK3Lwymq26qsVviE8ERjHQbVRRmUKX7tRCui?=
- =?us-ascii?Q?rZ8CPugsGt5XXBYu4ZW7nOyj0fvaf9LfvV3u9AGL0O2L4f76wxzV7zJQr8DB?=
- =?us-ascii?Q?28ql5Yx45OHNFMT4vHiuSSfvv344wUNsVinjfnDaF/wn/AxCowUYl5Z2FKFd?=
- =?us-ascii?Q?+K2KfDdZ/IrMVowfNZa8IYmcryktCmiiOa68ipbNSlD4aMQxRuZjQ8/lZU2a?=
- =?us-ascii?Q?nRQZoFz73GNdL3+7s0Y8qLojNn8gS1s5/DoztQNuPIXVkv5C7BgWm4ifH+L8?=
- =?us-ascii?Q?H3Q30pNQQcHCZGitm6EnB9DCUqSXqTCS4cSOyi7w+7/GzE2mO69AvksW0ehH?=
- =?us-ascii?Q?9B+GJ8r9SK7w0gbBCGuVtBCF1lZs/HYJ9ESfwNeiPpjR9KmfhJ7448pGONqq?=
- =?us-ascii?Q?rBv8luBzkZ15LO5MzspTj2kXOcv6SOZlYkeBZ3o5NYMqTDzeRl3K1sAuHG84?=
- =?us-ascii?Q?IRjJXOdPJ2289gOnvemk26yvYZrmmebHSXCFbmwYxtcYCtA5I63iKbBGNpel?=
- =?us-ascii?Q?DS5qpR4Y+cfNJwggI/XEeBnJsVUQw+Vp9XXoqLCdFyS/1oBYG1MhriCygAmQ?=
- =?us-ascii?Q?TdNFX3uniEoBDUvHJ0TuDsJaI2pxoDDlhcc0fJx35lzVYkxldacac9BeHFnj?=
- =?us-ascii?Q?qHOMxi3Lu5Vf4Jjj5IJZD/oK/2G8YEPEt63v2llHth3SZal0z3VoChumXhcS?=
- =?us-ascii?Q?WbReTQDBRPIFRhOvXJQgXsBB+g2EYClvs0+vufa+LwvQvSfAqjVRiyERVTr7?=
- =?us-ascii?Q?C8oU+A=3D=3D?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 30f141e2-e4c8-475d-f382-08d9faf3c5a1
-X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Feb 2022 19:51:55.2638
+X-Microsoft-Antispam-Message-Info: ewojKT4bXnNf7kepHvRQ4fntm6t2pg2ypZCyh0eR4FfVeu+hj0g+28RVLHQFpjUMehdZKvFUdg3G+mZLEE0mppgpv46KLwwp3xXuUOoMl/BaFDKDjXkeVuUY1SQnI5xZ2tDJDdI4ZeDG8MXDB7WiFtZONuxVErlTEAVtAkriaX9baAXv8f0zTIpMSqTiDzcGYZkINhDLZ4lziW7tYjnCgb6giPxd/e8/8ZmI/gnS/aE9sQ2r32RlmKs7UbqfXqYDpCL8GHVYdLRTVX7Ingz/HaalJxkPHxSk9/XSoI2TXbkHr39vH5R0uVwSMtekfJr3qIlwZh1+oYcBXiSfO1T88ZfmEuwU7ao8LIY8ZKmlPIryELMXnNGfIzQcVzx66Q89KppnxVw7X8ygjVn25tcgYDsiuFsLk2s/MICHm1r96q+xxRsETSd3CkppxvFrylXwkKM0KhWz76S890JRjEQF9MRwy3yfe/SvYAPvd3o+K0oO+TDLG3hA9SxgUQ+rooQ8UqFF6EU147DyvdX0xIwsS9VyFa0u70b7E2VjAJ/+JT0oZbub4gLDbH3fksCMmD+p09lBPZuThKI0ggsHkVl+ety/Qp91gOhvgO4+UN4GUdfK18VtWjlcobWxlLhOfowfnUPYPqr4b2cUlEKLRIwjjOFJgA5HCNesYK4s8D373kL7rabT9xrBLYttGVHJzCxhvguPJ5LScj2gMkxt8WcWGA==
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230001)(4636009)(46966006)(36840700001)(40470700004)(316002)(5660300002)(7416002)(8936002)(1076003)(86362001)(44832011)(8676002)(82310400004)(70586007)(70206006)(4326008)(2616005)(2906002)(30864003)(16526019)(186003)(26005)(7696005)(36756003)(81166007)(356005)(6666004)(83380400001)(508600001)(54906003)(426003)(336012)(6916009)(36860700001)(47076005)(40460700003)(36900700001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Feb 2022 20:34:29.4122
  (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: TBQcTSfNOmSdTUMbyJwIB+Gf09U1Fpjaa1JJuALdRKhsU69j1ipOG1SAr21g2nTQ88H+RMpgj29fWxrJF9GRfuaeVuqvlC+yQXjPvB9rO6I=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB5612
-X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10272 signatures=684655
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxscore=0 phishscore=0
- bulkscore=0 adultscore=0 spamscore=0 suspectscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2201110000
- definitions=main-2202280097
-X-Proofpoint-GUID: N_P_txkHhpe9IBIcYRR6Ws3js0K31tHo
-X-Proofpoint-ORIG-GUID: N_P_txkHhpe9IBIcYRR6Ws3js0K31tHo
+X-MS-Exchange-CrossTenant-Network-Message-Id: 94d984be-580f-471a-330e-08d9faf9b84b
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT040.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB4812
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Currently attributes are modified directly across one or more
-transactions. But they are not logged or replayed in the event of an
-error. The goal of log attr replay is to enable logging and replaying
-of attribute operations using the existing delayed operations
-infrastructure.  This will later enable the attributes to become part of
-larger multi part operations that also must first be recorded to the
-log.  This is mostly of interest in the scheme of parent pointers which
-would need to maintain an attribute containing parent inode information
-any time an inode is moved, created, or removed.  Parent pointers would
-then be of interest to any feature that would need to quickly derive an
-inode path from the mount point. Online scrub, nfs lookups and fs grow
-or shrink operations are all features that could take advantage of this.
+DEVICE_COHERENT pages introduce a subtle distinction in the way
+"normal" pages can be used by various callers throughout the kernel.
+They behave like normal pages for purposes of mapping in CPU page
+tables, and for COW. But they do not support LRU lists, NUMA
+migration or THP. Therefore we split vm_normal_page into two
+functions vm_normal_any_page and vm_normal_lru_page. The latter will
+only return pages that can be put on an LRU list and that support
+NUMA migration and THP.
 
-This patch adds two new log item types for setting or removing
-attributes as deferred operations.  The xfs_attri_log_item will log an
-intent to set or remove an attribute.  The corresponding
-xfs_attrd_log_item holds a reference to the xfs_attri_log_item and is
-freed once the transaction is done.  Both log items use a generic
-xfs_attr_log_format structure that contains the attribute name, value,
-flags, inode, and an op_flag that indicates if the operations is a set
-or remove.
+We also introduced a FOLL_LRU flag that adds the same behaviour to
+follow_page and related APIs, to allow callers to specify that they
+expect to put pages on an LRU list.
 
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Alex Sierra <alex.sierra@amd.com>
 ---
- fs/xfs/Makefile                 |   1 +
- fs/xfs/libxfs/xfs_attr.c        |  42 ++-
- fs/xfs/libxfs/xfs_attr.h        |  38 +++
- fs/xfs/libxfs/xfs_defer.c       |  10 +-
- fs/xfs/libxfs/xfs_defer.h       |   2 +
- fs/xfs/libxfs/xfs_log_format.h  |  44 +++-
- fs/xfs/libxfs/xfs_log_recover.h |   2 +
- fs/xfs/scrub/common.c           |   2 +
- fs/xfs/xfs_attr_item.c          | 441 ++++++++++++++++++++++++++++++++
- fs/xfs/xfs_attr_item.h          |  46 ++++
- fs/xfs/xfs_attr_list.c          |   1 +
- fs/xfs/xfs_ioctl32.c            |   2 +
- fs/xfs/xfs_iops.c               |   2 +
- fs/xfs/xfs_log.c                |   4 +
- fs/xfs/xfs_log.h                |  11 +
- fs/xfs/xfs_log_recover.c        |   2 +
- fs/xfs/xfs_ondisk.h             |   2 +
- 17 files changed, 646 insertions(+), 6 deletions(-)
+ fs/proc/task_mmu.c  | 12 +++++-----
+ include/linux/mm.h  | 53 ++++++++++++++++++++++++---------------------
+ mm/gup.c            | 10 +++++----
+ mm/hmm.c            |  2 +-
+ mm/huge_memory.c    |  2 +-
+ mm/khugepaged.c     |  8 +++----
+ mm/ksm.c            |  4 ++--
+ mm/madvise.c        |  4 ++--
+ mm/memcontrol.c     |  2 +-
+ mm/memory.c         | 38 ++++++++++++++++++++++----------
+ mm/mempolicy.c      |  4 ++--
+ mm/migrate.c        |  2 +-
+ mm/migrate_device.c |  2 +-
+ mm/mlock.c          |  6 ++---
+ mm/mprotect.c       |  2 +-
+ 15 files changed, 85 insertions(+), 66 deletions(-)
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 04611a1068b4..b056cfc6398e 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -102,6 +102,7 @@ xfs-y				+= xfs_log.o \
- 				   xfs_buf_item_recover.o \
- 				   xfs_dquot_item_recover.o \
- 				   xfs_extfree_item.o \
-+				   xfs_attr_item.o \
- 				   xfs_icreate_item.o \
- 				   xfs_inode_item.o \
- 				   xfs_inode_item_recover.o \
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 23502a24ce41..21594f814685 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -24,6 +24,10 @@
- #include "xfs_quota.h"
- #include "xfs_trans_space.h"
- #include "xfs_trace.h"
-+#include "xfs_attr_item.h"
-+
-+struct kmem_cache		*xfs_attri_cache;
-+struct kmem_cache		*xfs_attrd_cache;
+diff --git a/fs/proc/task_mmu.c b/fs/proc/task_mmu.c
+index 18f8c3acbb85..4274128fbb4c 100644
+--- a/fs/proc/task_mmu.c
++++ b/fs/proc/task_mmu.c
+@@ -519,7 +519,7 @@ static void smaps_pte_entry(pte_t *pte, unsigned long addr,
+ 	struct page *page = NULL;
+ 
+ 	if (pte_present(*pte)) {
+-		page = vm_normal_page(vma, addr, *pte);
++		page = vm_normal_any_page(vma, addr, *pte);
+ 	} else if (is_swap_pte(*pte)) {
+ 		swp_entry_t swpent = pte_to_swp_entry(*pte);
+ 
+@@ -705,7 +705,7 @@ static int smaps_hugetlb_range(pte_t *pte, unsigned long hmask,
+ 	struct page *page = NULL;
+ 
+ 	if (pte_present(*pte)) {
+-		page = vm_normal_page(vma, addr, *pte);
++		page = vm_normal_any_page(vma, addr, *pte);
+ 	} else if (is_swap_pte(*pte)) {
+ 		swp_entry_t swpent = pte_to_swp_entry(*pte);
+ 
+@@ -1059,7 +1059,7 @@ static inline bool pte_is_pinned(struct vm_area_struct *vma, unsigned long addr,
+ 		return false;
+ 	if (likely(!test_bit(MMF_HAS_PINNED, &vma->vm_mm->flags)))
+ 		return false;
+-	page = vm_normal_page(vma, addr, pte);
++	page = vm_normal_any_page(vma, addr, pte);
+ 	if (!page)
+ 		return false;
+ 	return page_maybe_dma_pinned(page);
+@@ -1172,7 +1172,7 @@ static int clear_refs_pte_range(pmd_t *pmd, unsigned long addr,
+ 		if (!pte_present(ptent))
+ 			continue;
+ 
+-		page = vm_normal_page(vma, addr, ptent);
++		page = vm_normal_any_page(vma, addr, ptent);
+ 		if (!page)
+ 			continue;
+ 
+@@ -1383,7 +1383,7 @@ static pagemap_entry_t pte_to_pagemap_entry(struct pagemapread *pm,
+ 		if (pm->show_pfn)
+ 			frame = pte_pfn(pte);
+ 		flags |= PM_PRESENT;
+-		page = vm_normal_page(vma, addr, pte);
++		page = vm_normal_any_page(vma, addr, pte);
+ 		if (pte_soft_dirty(pte))
+ 			flags |= PM_SOFT_DIRTY;
+ 		if (pte_uffd_wp(pte))
+@@ -1761,7 +1761,7 @@ static struct page *can_gather_numa_stats(pte_t pte, struct vm_area_struct *vma,
+ 	if (!pte_present(pte))
+ 		return NULL;
+ 
+-	page = vm_normal_page(vma, addr, pte);
++	page = vm_normal_lru_page(vma, addr, pte);
+ 	if (!page)
+ 		return NULL;
+ 
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index ff9f149ca201..8c9f87151d93 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -593,8 +593,8 @@ struct vm_operations_struct {
+ 					unsigned long addr);
+ #endif
+ 	/*
+-	 * Called by vm_normal_page() for special PTEs to find the
+-	 * page for @addr.  This is useful if the default behavior
++	 * Called by vm_normal_x_page() for special PTEs to find the
++	 * page for @addr. This is useful if the default behavior
+ 	 * (using pte_page()) would not find the correct page.
+ 	 */
+ 	struct page *(*find_special_page)(struct vm_area_struct *vma,
+@@ -1781,7 +1781,9 @@ static inline bool can_do_mlock(void) { return false; }
+ extern int user_shm_lock(size_t, struct ucounts *);
+ extern void user_shm_unlock(size_t, struct ucounts *);
+ 
+-struct page *vm_normal_page(struct vm_area_struct *vma, unsigned long addr,
++struct page *vm_normal_any_page(struct vm_area_struct *vma, unsigned long addr,
++			     pte_t pte);
++struct page *vm_normal_lru_page(struct vm_area_struct *vma, unsigned long addr,
+ 			     pte_t pte);
+ struct page *vm_normal_page_pmd(struct vm_area_struct *vma, unsigned long addr,
+ 				pmd_t pmd);
+@@ -2880,27 +2882,28 @@ static inline vm_fault_t vmf_error(int err)
+ struct page *follow_page(struct vm_area_struct *vma, unsigned long address,
+ 			 unsigned int foll_flags);
+ 
+-#define FOLL_WRITE	0x01	/* check pte is writable */
+-#define FOLL_TOUCH	0x02	/* mark page accessed */
+-#define FOLL_GET	0x04	/* do get_page on page */
+-#define FOLL_DUMP	0x08	/* give error on hole if it would be zero */
+-#define FOLL_FORCE	0x10	/* get_user_pages read/write w/o permission */
+-#define FOLL_NOWAIT	0x20	/* if a disk transfer is needed, start the IO
+-				 * and return without waiting upon it */
+-#define FOLL_POPULATE	0x40	/* fault in pages (with FOLL_MLOCK) */
+-#define FOLL_NOFAULT	0x80	/* do not fault in pages */
+-#define FOLL_HWPOISON	0x100	/* check page is hwpoisoned */
+-#define FOLL_NUMA	0x200	/* force NUMA hinting page fault */
+-#define FOLL_MIGRATION	0x400	/* wait for page to replace migration entry */
+-#define FOLL_TRIED	0x800	/* a retry, previous pass started an IO */
+-#define FOLL_MLOCK	0x1000	/* lock present pages */
+-#define FOLL_REMOTE	0x2000	/* we are working on non-current tsk/mm */
+-#define FOLL_COW	0x4000	/* internal GUP flag */
+-#define FOLL_ANON	0x8000	/* don't do file mappings */
+-#define FOLL_LONGTERM	0x10000	/* mapping lifetime is indefinite: see below */
+-#define FOLL_SPLIT_PMD	0x20000	/* split huge pmd before returning */
+-#define FOLL_PIN	0x40000	/* pages must be released via unpin_user_page */
+-#define FOLL_FAST_ONLY	0x80000	/* gup_fast: prevent fall-back to slow gup */
++#define FOLL_WRITE	0x01	 /* check pte is writable */
++#define FOLL_TOUCH	0x02	 /* mark page accessed */
++#define FOLL_GET	0x04	 /* do get_page on page */
++#define FOLL_DUMP	0x08	 /* give error on hole if it would be zero */
++#define FOLL_FORCE	0x10	 /* get_user_pages read/write w/o permission */
++#define FOLL_NOWAIT	0x20	 /* if a disk transfer is needed, start the IO
++				  * and return without waiting upon it */
++#define FOLL_POPULATE	0x40	 /* fault in pages (with FOLL_MLOCK) */
++#define FOLL_NOFAULT	0x80	 /* do not fault in pages */
++#define FOLL_HWPOISON	0x100	 /* check page is hwpoisoned */
++#define FOLL_NUMA	0x200	 /* force NUMA hinting page fault */
++#define FOLL_MIGRATION	0x400	 /* wait for page to replace migration entry */
++#define FOLL_TRIED	0x800	 /* a retry, previous pass started an IO */
++#define FOLL_MLOCK	0x1000	 /* lock present pages */
++#define FOLL_REMOTE	0x2000	 /* we are working on non-current tsk/mm */
++#define FOLL_COW	0x4000	 /* internal GUP flag */
++#define FOLL_ANON	0x8000	 /* don't do file mappings */
++#define FOLL_LONGTERM	0x10000	 /* mapping lifetime is indefinite: see below */
++#define FOLL_SPLIT_PMD	0x20000	 /* split huge pmd before returning */
++#define FOLL_PIN	0x40000	 /* pages must be released via unpin_user_page */
++#define FOLL_FAST_ONLY	0x80000	 /* gup_fast: prevent fall-back to slow gup */
++#define FOLL_LRU	0x100000 /* return only LRU (anon or page cache) */
  
  /*
-  * xfs_attr.c
-@@ -61,8 +65,6 @@ STATIC int xfs_attr_node_hasname(xfs_da_args_t *args,
- 				 struct xfs_da_state **state);
- STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
- STATIC int xfs_attr_refillstate(xfs_da_state_t *state);
--STATIC int xfs_attr_set_iter(struct xfs_delattr_context *dac,
--			     struct xfs_buf **leaf_bp);
- STATIC int xfs_attr_node_removename(struct xfs_da_args *args,
- 				    struct xfs_da_state *state);
- 
-@@ -166,7 +168,7 @@ xfs_attr_get(
- /*
-  * Calculate how many blocks we need for the new attribute,
+  * FOLL_PIN and FOLL_LONGTERM may be used in various combinations with each
+@@ -3227,7 +3230,7 @@ extern long copy_huge_page_from_user(struct page *dst_page,
+  * @vma: Pointer to the struct vm_area_struct to consider
+  *
+  * Whether transhuge page-table entries are considered "special" following
+- * the definition in vm_normal_page().
++ * the definition in vm_normal_x_page().
+  *
+  * Return: true if transhuge page-table entries should be considered special,
+  * false otherwise.
+diff --git a/mm/gup.c b/mm/gup.c
+index 41349b685eaf..9e172c906ded 100644
+--- a/mm/gup.c
++++ b/mm/gup.c
+@@ -539,8 +539,10 @@ static struct page *follow_page_pte(struct vm_area_struct *vma,
+ 		pte_unmap_unlock(ptep, ptl);
+ 		return NULL;
+ 	}
+-
+-	page = vm_normal_page(vma, address, pte);
++	if (flags & (FOLL_MLOCK | FOLL_LRU))
++		page = vm_normal_lru_page(vma, address, pte);
++	else
++		page = vm_normal_any_page(vma, address, pte);
+ 	if (!page && pte_devmap(pte) && (flags & (FOLL_GET | FOLL_PIN))) {
+ 		/*
+ 		 * Only return device mapping pages in the FOLL_GET or FOLL_PIN
+@@ -824,7 +826,7 @@ static struct page *follow_p4d_mask(struct vm_area_struct *vma,
+  *
+  * Return: the mapped (struct page *), %NULL if no mapping exists, or
+  * an error pointer if there is a mapping to something not represented
+- * by a page descriptor (see also vm_normal_page()).
++ * by a page descriptor (see also vm_normal_x_page()).
   */
--STATIC int
-+int
- xfs_attr_calc_size(
- 	struct xfs_da_args	*args,
- 	int			*local)
-@@ -837,6 +839,40 @@ xfs_attr_set(
- 	goto out_unlock;
+ static struct page *follow_page_mask(struct vm_area_struct *vma,
+ 			      unsigned long address, unsigned int flags,
+@@ -917,7 +919,7 @@ static int get_gate_page(struct mm_struct *mm, unsigned long address,
+ 	*vma = get_gate_vma(mm);
+ 	if (!page)
+ 		goto out;
+-	*page = vm_normal_page(*vma, address, *pte);
++	*page = vm_normal_any_page(*vma, address, *pte);
+ 	if (!*page) {
+ 		if ((gup_flags & FOLL_DUMP) || !is_zero_pfn(pte_pfn(*pte)))
+ 			goto unmap;
+diff --git a/mm/hmm.c b/mm/hmm.c
+index bd56641c79d4..90c949d66712 100644
+--- a/mm/hmm.c
++++ b/mm/hmm.c
+@@ -300,7 +300,7 @@ static int hmm_vma_handle_pte(struct mm_walk *walk, unsigned long addr,
+ 	 * Since each architecture defines a struct page for the zero page, just
+ 	 * fall through and treat it like a normal page.
+ 	 */
+-	if (!vm_normal_page(walk->vma, addr, pte) &&
++	if (!vm_normal_any_page(walk->vma, addr, pte) &&
+ 	    !pte_devmap(pte) &&
+ 	    !is_zero_pfn(pte_pfn(pte))) {
+ 		if (hmm_pte_need_fault(hmm_vma_walk, pfn_req_flags, 0)) {
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index 406a3c28c026..ea1efc825774 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -2966,7 +2966,7 @@ static int split_huge_pages_pid(int pid, unsigned long vaddr_start,
+ 		}
+ 
+ 		/* FOLL_DUMP to ignore special (like zero) pages */
+-		follflags = FOLL_GET | FOLL_DUMP;
++		follflags = FOLL_GET | FOLL_DUMP | FOLL_LRU;
+ 		page = follow_page(vma, addr, follflags);
+ 
+ 		if (IS_ERR(page))
+diff --git a/mm/khugepaged.c b/mm/khugepaged.c
+index 131492fd1148..a7153db09afa 100644
+--- a/mm/khugepaged.c
++++ b/mm/khugepaged.c
+@@ -627,7 +627,7 @@ static int __collapse_huge_page_isolate(struct vm_area_struct *vma,
+ 			result = SCAN_PTE_NON_PRESENT;
+ 			goto out;
+ 		}
+-		page = vm_normal_page(vma, address, pteval);
++		page = vm_normal_lru_page(vma, address, pteval);
+ 		if (unlikely(!page)) {
+ 			result = SCAN_PAGE_NULL;
+ 			goto out;
+@@ -1286,7 +1286,7 @@ static int khugepaged_scan_pmd(struct mm_struct *mm,
+ 		if (pte_write(pteval))
+ 			writable = true;
+ 
+-		page = vm_normal_page(vma, _address, pteval);
++		page = vm_normal_lru_page(vma, _address, pteval);
+ 		if (unlikely(!page)) {
+ 			result = SCAN_PAGE_NULL;
+ 			goto out_unmap;
+@@ -1494,7 +1494,7 @@ void collapse_pte_mapped_thp(struct mm_struct *mm, unsigned long addr)
+ 		if (!pte_present(*pte))
+ 			goto abort;
+ 
+-		page = vm_normal_page(vma, addr, *pte);
++		page = vm_normal_lru_page(vma, addr, *pte);
+ 
+ 		/*
+ 		 * Note that uprobe, debugger, or MAP_PRIVATE may change the
+@@ -1512,7 +1512,7 @@ void collapse_pte_mapped_thp(struct mm_struct *mm, unsigned long addr)
+ 
+ 		if (pte_none(*pte))
+ 			continue;
+-		page = vm_normal_page(vma, addr, *pte);
++		page = vm_normal_lru_page(vma, addr, *pte);
+ 		page_remove_rmap(page, false);
+ 	}
+ 
+diff --git a/mm/ksm.c b/mm/ksm.c
+index c20bd4d9a0d9..352d37e44694 100644
+--- a/mm/ksm.c
++++ b/mm/ksm.c
+@@ -474,7 +474,7 @@ static int break_ksm(struct vm_area_struct *vma, unsigned long addr)
+ 	do {
+ 		cond_resched();
+ 		page = follow_page(vma, addr,
+-				FOLL_GET | FOLL_MIGRATION | FOLL_REMOTE);
++				FOLL_GET | FOLL_MIGRATION | FOLL_REMOTE | FOLL_LRU);
+ 		if (IS_ERR_OR_NULL(page))
+ 			break;
+ 		if (PageKsm(page))
+@@ -559,7 +559,7 @@ static struct page *get_mergeable_page(struct rmap_item *rmap_item)
+ 	if (!vma)
+ 		goto out;
+ 
+-	page = follow_page(vma, addr, FOLL_GET);
++	page = follow_page(vma, addr, FOLL_GET | FOLL_LRU);
+ 	if (IS_ERR_OR_NULL(page))
+ 		goto out;
+ 	if (PageAnon(page)) {
+diff --git a/mm/madvise.c b/mm/madvise.c
+index 5604064df464..1a553aad9aa3 100644
+--- a/mm/madvise.c
++++ b/mm/madvise.c
+@@ -439,7 +439,7 @@ static int madvise_cold_or_pageout_pte_range(pmd_t *pmd,
+ 		if (!pte_present(ptent))
+ 			continue;
+ 
+-		page = vm_normal_page(vma, addr, ptent);
++		page = vm_normal_lru_page(vma, addr, ptent);
+ 		if (!page)
+ 			continue;
+ 
+@@ -649,7 +649,7 @@ static int madvise_free_pte_range(pmd_t *pmd, unsigned long addr,
+ 			continue;
+ 		}
+ 
+-		page = vm_normal_page(vma, addr, ptent);
++		page = vm_normal_lru_page(vma, addr, ptent);
+ 		if (!page)
+ 			continue;
+ 
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 10259c35fde2..9677eb27dea8 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5476,7 +5476,7 @@ enum mc_target_type {
+ static struct page *mc_handle_present_pte(struct vm_area_struct *vma,
+ 						unsigned long addr, pte_t ptent)
+ {
+-	struct page *page = vm_normal_page(vma, addr, ptent);
++	struct page *page = vm_normal_any_page(vma, addr, ptent);
+ 
+ 	if (!page || !page_mapped(page))
+ 		return NULL;
+diff --git a/mm/memory.c b/mm/memory.c
+index c125c4969913..cff84e6a6c4b 100644
+--- a/mm/memory.c
++++ b/mm/memory.c
+@@ -565,7 +565,7 @@ static void print_bad_pte(struct vm_area_struct *vma, unsigned long addr,
  }
  
-+int __init
-+xfs_attri_init_cache(void)
-+{
-+	xfs_attri_cache = kmem_cache_create("xfs_attri",
-+					    sizeof(struct xfs_attri_log_item),
-+					    0, 0, NULL);
-+
-+	return xfs_attri_cache != NULL ? 0 : -ENOMEM;
-+}
-+
-+void
-+xfs_attri_destroy_cache(void)
-+{
-+	kmem_cache_destroy(xfs_attri_cache);
-+	xfs_attri_cache = NULL;
-+}
-+
-+int __init
-+xfs_attrd_init_cache(void)
-+{
-+	xfs_attrd_cache = kmem_cache_create("xfs_attrd",
-+					    sizeof(struct xfs_attrd_log_item),
-+					    0, 0, NULL);
-+
-+	return xfs_attrd_cache != NULL ? 0 : -ENOMEM;
-+}
-+
-+void
-+xfs_attrd_destroy_cache(void)
-+{
-+	kmem_cache_destroy(xfs_attrd_cache);
-+	xfs_attrd_cache = NULL;
-+}
-+
- /*========================================================================
-  * External routines when attribute list is inside the inode
-  *========================================================================*/
-diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-index 5e71f719bdd5..80b6f28b0d1a 100644
---- a/fs/xfs/libxfs/xfs_attr.h
-+++ b/fs/xfs/libxfs/xfs_attr.h
-@@ -28,6 +28,11 @@ struct xfs_attr_list_context;
-  */
- #define	ATTR_MAX_VALUELEN	(64*1024)	/* max length of a value */
- 
-+static inline bool xfs_has_larp(struct xfs_mount *mp)
-+{
-+	return false;
-+}
-+
  /*
-  * Kernel-internal version of the attrlist cursor.
+- * vm_normal_page -- This function gets the "struct page" associated with a pte.
++ * vm_normal_any_page -- This function gets the "struct page" associated with a pte.
+  *
+  * "Special" mappings do not wish to be associated with a "struct page" (either
+  * it doesn't exist, or it exists but they don't want to touch it). In this
+@@ -606,7 +606,7 @@ static void print_bad_pte(struct vm_area_struct *vma, unsigned long addr,
+  * PFNMAP mappings in order to support COWable mappings.
+  *
   */
-@@ -461,6 +466,11 @@ enum xfs_delattr_state {
- struct xfs_delattr_context {
- 	struct xfs_da_args      *da_args;
- 
-+	/*
-+	 * Used by xfs_attr_set to hold a leaf buffer across a transaction roll
-+	 */
-+	struct xfs_buf		*leaf_bp;
-+
- 	/* Used in xfs_attr_rmtval_set_blk to roll through allocating blocks */
- 	struct xfs_bmbt_irec	map;
- 	xfs_dablk_t		lblkno;
-@@ -474,6 +484,23 @@ struct xfs_delattr_context {
- 	enum xfs_delattr_state  dela_state;
- };
- 
-+/*
-+ * List of attrs to commit later.
-+ */
-+struct xfs_attr_item {
-+	struct xfs_delattr_context	xattri_dac;
-+
-+	/*
-+	 * Indicates if the attr operation is a set or a remove
-+	 * XFS_ATTR_OP_FLAGS_{SET,REMOVE}
-+	 */
-+	unsigned int			xattri_op_flags;
-+
-+	/* used to log this item to an intent */
-+	struct list_head		xattri_list;
-+};
-+
-+
- /*========================================================================
-  * Function prototypes for the kernel.
-  *========================================================================*/
-@@ -490,10 +517,21 @@ int xfs_attr_get_ilocked(struct xfs_da_args *args);
- int xfs_attr_get(struct xfs_da_args *args);
- int xfs_attr_set(struct xfs_da_args *args);
- int xfs_attr_set_args(struct xfs_da_args *args);
-+int xfs_attr_set_iter(struct xfs_delattr_context *dac,
-+		      struct xfs_buf **leaf_bp);
- int xfs_attr_remove_args(struct xfs_da_args *args);
- int xfs_attr_remove_iter(struct xfs_delattr_context *dac);
- bool xfs_attr_namecheck(const void *name, size_t length);
- void xfs_delattr_context_init(struct xfs_delattr_context *dac,
- 			      struct xfs_da_args *args);
-+int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
-+
-+extern struct kmem_cache	*xfs_attri_cache;
-+extern struct kmem_cache	*xfs_attrd_cache;
-+
-+int __init xfs_attri_init_cache(void);
-+void xfs_attri_destroy_cache(void);
-+int __init xfs_attrd_init_cache(void);
-+void xfs_attrd_destroy_cache(void);
- 
- #endif	/* __XFS_ATTR_H__ */
-diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index 5b3f3a7f1f65..91adfb01c848 100644
---- a/fs/xfs/libxfs/xfs_defer.c
-+++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -23,6 +23,7 @@
- #include "xfs_bmap.h"
- #include "xfs_alloc.h"
- #include "xfs_buf.h"
-+#include "xfs_attr.h"
- 
- static struct kmem_cache	*xfs_defer_pending_cache;
- 
-@@ -870,7 +871,12 @@ xfs_defer_init_item_caches(void)
- 	error = xfs_extfree_intent_init_cache();
- 	if (error)
- 		goto err;
--
-+	error = xfs_attri_init_cache();
-+	if (error)
-+		goto err;
-+	error = xfs_attrd_init_cache();
-+	if (error)
-+		goto err;
- 	return 0;
- err:
- 	xfs_defer_destroy_item_caches();
-@@ -881,6 +887,8 @@ xfs_defer_init_item_caches(void)
- void
- xfs_defer_destroy_item_caches(void)
+-struct page *vm_normal_page(struct vm_area_struct *vma, unsigned long addr,
++struct page *vm_normal_any_page(struct vm_area_struct *vma, unsigned long addr,
+ 			    pte_t pte)
  {
-+	xfs_attri_destroy_cache();
-+	xfs_attrd_destroy_cache();
- 	xfs_extfree_intent_destroy_cache();
- 	xfs_bmap_intent_destroy_cache();
- 	xfs_refcount_intent_destroy_cache();
-diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-index 7bb8a31ad65b..fcd23e5cf1ee 100644
---- a/fs/xfs/libxfs/xfs_defer.h
-+++ b/fs/xfs/libxfs/xfs_defer.h
-@@ -63,6 +63,8 @@ extern const struct xfs_defer_op_type xfs_refcount_update_defer_type;
- extern const struct xfs_defer_op_type xfs_rmap_update_defer_type;
- extern const struct xfs_defer_op_type xfs_extent_free_defer_type;
- extern const struct xfs_defer_op_type xfs_agfl_free_defer_type;
-+extern const struct xfs_defer_op_type xfs_attr_defer_type;
-+
+ 	unsigned long pfn = pte_pfn(pte);
+@@ -620,8 +620,6 @@ struct page *vm_normal_page(struct vm_area_struct *vma, unsigned long addr,
+ 			return NULL;
+ 		if (is_zero_pfn(pfn))
+ 			return NULL;
+-		if (pte_devmap(pte))
+-			return NULL;
  
- /*
-  * Deferred operation item relogging limits.
-diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
-index b322db523d65..3301c369e815 100644
---- a/fs/xfs/libxfs/xfs_log_format.h
-+++ b/fs/xfs/libxfs/xfs_log_format.h
-@@ -114,7 +114,12 @@ struct xfs_unmount_log_format {
- #define XLOG_REG_TYPE_CUD_FORMAT	24
- #define XLOG_REG_TYPE_BUI_FORMAT	25
- #define XLOG_REG_TYPE_BUD_FORMAT	26
--#define XLOG_REG_TYPE_MAX		26
-+#define XLOG_REG_TYPE_ATTRI_FORMAT	27
-+#define XLOG_REG_TYPE_ATTRD_FORMAT	28
-+#define XLOG_REG_TYPE_ATTR_NAME	29
-+#define XLOG_REG_TYPE_ATTR_VALUE	30
-+#define XLOG_REG_TYPE_MAX		30
-+
- 
- /*
-  * Flags to log operation header
-@@ -237,6 +242,8 @@ typedef struct xfs_trans_header {
- #define	XFS_LI_CUD		0x1243
- #define	XFS_LI_BUI		0x1244	/* bmbt update intent */
- #define	XFS_LI_BUD		0x1245
-+#define	XFS_LI_ATTRI		0x1246  /* attr set/remove intent*/
-+#define	XFS_LI_ATTRD		0x1247  /* attr set/remove done */
- 
- #define XFS_LI_TYPE_DESC \
- 	{ XFS_LI_EFI,		"XFS_LI_EFI" }, \
-@@ -252,7 +259,9 @@ typedef struct xfs_trans_header {
- 	{ XFS_LI_CUI,		"XFS_LI_CUI" }, \
- 	{ XFS_LI_CUD,		"XFS_LI_CUD" }, \
- 	{ XFS_LI_BUI,		"XFS_LI_BUI" }, \
--	{ XFS_LI_BUD,		"XFS_LI_BUD" }
-+	{ XFS_LI_BUD,		"XFS_LI_BUD" }, \
-+	{ XFS_LI_ATTRI,		"XFS_LI_ATTRI" }, \
-+	{ XFS_LI_ATTRD,		"XFS_LI_ATTRD" }
- 
- /*
-  * Inode Log Item Format definitions.
-@@ -869,4 +878,35 @@ struct xfs_icreate_log {
- 	__be32		icl_gen;	/* inode generation number to use */
- };
+ 		print_bad_pte(vma, addr, pte, NULL);
+ 		return NULL;
+@@ -661,6 +659,22 @@ struct page *vm_normal_page(struct vm_area_struct *vma, unsigned long addr,
+ 	return pfn_to_page(pfn);
+ }
  
 +/*
-+ * Flags for deferred attribute operations.
-+ * Upper bits are flags, lower byte is type code
++ * vm_normal_lru_page -- This function gets the "struct page" associated
++ * with a pte only for page cache and anon page. These pages are LRU handled.
 + */
-+#define XFS_ATTR_OP_FLAGS_SET		1	/* Set the attribute */
-+#define XFS_ATTR_OP_FLAGS_REMOVE	2	/* Remove the attribute */
-+#define XFS_ATTR_OP_FLAGS_TYPE_MASK	0xFF	/* Flags type mask */
++struct page *vm_normal_lru_page(struct vm_area_struct *vma, unsigned long addr,
++			    pte_t pte)
++{
++	struct page *page;
 +
-+/*
-+ * This is the structure used to lay out an attr log item in the
-+ * log.
-+ */
-+struct xfs_attri_log_format {
-+	uint16_t	alfi_type;	/* attri log item type */
-+	uint16_t	alfi_size;	/* size of this item */
-+	uint32_t	__pad;		/* pad to 64 bit aligned */
-+	uint64_t	alfi_id;	/* attri identifier */
-+	uint64_t	alfi_ino;	/* the inode for this attr operation */
-+	uint32_t	alfi_op_flags;	/* marks the op as a set or remove */
-+	uint32_t	alfi_name_len;	/* attr name length */
-+	uint32_t	alfi_value_len;	/* attr value length */
-+	uint32_t	alfi_attr_flags;/* attr flags */
-+};
++	page = vm_normal_any_page(vma, addr, pte);
++	if (is_zone_device_page(page))
++		return NULL;
 +
-+struct xfs_attrd_log_format {
-+	uint16_t	alfd_type;	/* attrd log item type */
-+	uint16_t	alfd_size;	/* size of this item */
-+	uint32_t	__pad;		/* pad to 64 bit aligned */
-+	uint64_t	alfd_alf_id;	/* id of corresponding attri */
-+};
++	return page;
++}
 +
- #endif /* __XFS_LOG_FORMAT_H__ */
-diff --git a/fs/xfs/libxfs/xfs_log_recover.h b/fs/xfs/libxfs/xfs_log_recover.h
-index ff69a0000817..32e216255cb0 100644
---- a/fs/xfs/libxfs/xfs_log_recover.h
-+++ b/fs/xfs/libxfs/xfs_log_recover.h
-@@ -72,6 +72,8 @@ extern const struct xlog_recover_item_ops xlog_rui_item_ops;
- extern const struct xlog_recover_item_ops xlog_rud_item_ops;
- extern const struct xlog_recover_item_ops xlog_cui_item_ops;
- extern const struct xlog_recover_item_ops xlog_cud_item_ops;
-+extern const struct xlog_recover_item_ops xlog_attri_item_ops;
-+extern const struct xlog_recover_item_ops xlog_attrd_item_ops;
+ #ifdef CONFIG_TRANSPARENT_HUGEPAGE
+ struct page *vm_normal_page_pmd(struct vm_area_struct *vma, unsigned long addr,
+ 				pmd_t pmd)
+@@ -670,7 +684,7 @@ struct page *vm_normal_page_pmd(struct vm_area_struct *vma, unsigned long addr,
+ 	/*
+ 	 * There is no pmd_special() but there may be special pmds, e.g.
+ 	 * in a direct-access (dax) mapping, so let's just replicate the
+-	 * !CONFIG_ARCH_HAS_PTE_SPECIAL case from vm_normal_page() here.
++	 * !CONFIG_ARCH_HAS_PTE_SPECIAL case from vm_normal_any_page() here.
+ 	 */
+ 	if (unlikely(vma->vm_flags & (VM_PFNMAP|VM_MIXEDMAP))) {
+ 		if (vma->vm_flags & VM_MIXEDMAP) {
+@@ -946,7 +960,7 @@ copy_present_pte(struct vm_area_struct *dst_vma, struct vm_area_struct *src_vma,
+ 	pte_t pte = *src_pte;
+ 	struct page *page;
  
- /*
-  * Macros, structures, prototypes for internal log manager use.
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index bf1f3607d0b6..97b54ac3075f 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -23,6 +23,8 @@
- #include "xfs_rmap_btree.h"
- #include "xfs_log.h"
- #include "xfs_trans_priv.h"
-+#include "xfs_da_format.h"
-+#include "xfs_da_btree.h"
- #include "xfs_attr.h"
- #include "xfs_reflink.h"
- #include "xfs_ag.h"
-diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-new file mode 100644
-index 000000000000..00ade15cf1eb
---- /dev/null
-+++ b/fs/xfs/xfs_attr_item.c
-@@ -0,0 +1,441 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (C) 2022 Oracle.  All Rights Reserved.
-+ * Author: Allison Henderson <allison.henderson@oracle.com>
-+ */
-+
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_shared.h"
-+#include "xfs_mount.h"
-+#include "xfs_defer.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans.h"
-+#include "xfs_trans_priv.h"
-+#include "xfs_log.h"
-+#include "xfs_inode.h"
-+#include "xfs_da_format.h"
-+#include "xfs_da_btree.h"
-+#include "xfs_attr.h"
-+#include "xfs_attr_item.h"
-+#include "xfs_trace.h"
-+#include "xfs_inode.h"
-+#include "xfs_trans_space.h"
-+#include "xfs_error.h"
-+#include "xfs_log_priv.h"
-+#include "xfs_log_recover.h"
-+
-+static const struct xfs_item_ops xfs_attri_item_ops;
-+static const struct xfs_item_ops xfs_attrd_item_ops;
-+
-+static inline struct xfs_attri_log_item *ATTRI_ITEM(struct xfs_log_item *lip)
-+{
-+	return container_of(lip, struct xfs_attri_log_item, attri_item);
-+}
-+
-+STATIC void
-+xfs_attri_item_free(
-+	struct xfs_attri_log_item	*attrip)
-+{
-+	kmem_free(attrip->attri_item.li_lv_shadow);
-+	kmem_free(attrip);
-+}
-+
-+/*
-+ * Freeing the attrip requires that we remove it from the AIL if it has already
-+ * been placed there. However, the ATTRI may not yet have been placed in the
-+ * AIL when called by xfs_attri_release() from ATTRD processing due to the
-+ * ordering of committed vs unpin operations in bulk insert operations. Hence
-+ * the reference count to ensure only the last caller frees the ATTRI.
-+ */
-+STATIC void
-+xfs_attri_release(
-+	struct xfs_attri_log_item	*attrip)
-+{
-+	ASSERT(atomic_read(&attrip->attri_refcount) > 0);
-+	if (atomic_dec_and_test(&attrip->attri_refcount)) {
-+		xfs_trans_ail_delete(&attrip->attri_item,
-+				     SHUTDOWN_LOG_IO_ERROR);
-+		xfs_attri_item_free(attrip);
-+	}
-+}
-+
-+STATIC void
-+xfs_attri_item_size(
-+	struct xfs_log_item		*lip,
-+	int				*nvecs,
-+	int				*nbytes)
-+{
-+	struct xfs_attri_log_item       *attrip = ATTRI_ITEM(lip);
-+
-+	*nvecs += 2;
-+	*nbytes += sizeof(struct xfs_attri_log_format) +
-+			xlog_calc_iovec_len(attrip->attri_name_len);
-+
-+	if (!attrip->attri_value_len)
-+		return;
-+
-+	*nvecs += 1;
-+	*nbytes += xlog_calc_iovec_len(attrip->attri_value_len);
-+}
-+
-+/*
-+ * This is called to fill in the log iovecs for the given attri log
-+ * item. We use  1 iovec for the attri_format_item, 1 for the name, and
-+ * another for the value if it is present
-+ */
-+STATIC void
-+xfs_attri_item_format(
-+	struct xfs_log_item		*lip,
-+	struct xfs_log_vec		*lv)
-+{
-+	struct xfs_attri_log_item	*attrip = ATTRI_ITEM(lip);
-+	struct xfs_log_iovec		*vecp = NULL;
-+
-+	attrip->attri_format.alfi_type = XFS_LI_ATTRI;
-+	attrip->attri_format.alfi_size = 1;
-+
-+	/*
-+	 * This size accounting must be done before copying the attrip into the
-+	 * iovec.  If we do it after, the wrong size will be recorded to the log
-+	 * and we trip across assertion checks for bad region sizes later during
-+	 * the log recovery.
-+	 */
-+
-+	ASSERT(attrip->attri_name_len > 0);
-+	attrip->attri_format.alfi_size++;
-+
-+	if (attrip->attri_value_len > 0)
-+		attrip->attri_format.alfi_size++;
-+
-+	xlog_copy_iovec(lv, &vecp, XLOG_REG_TYPE_ATTRI_FORMAT,
-+			&attrip->attri_format,
-+			sizeof(struct xfs_attri_log_format));
-+	xlog_copy_iovec(lv, &vecp, XLOG_REG_TYPE_ATTR_NAME,
-+			attrip->attri_name,
-+			xlog_calc_iovec_len(attrip->attri_name_len));
-+	if (attrip->attri_value_len > 0)
-+		xlog_copy_iovec(lv, &vecp, XLOG_REG_TYPE_ATTR_VALUE,
-+				attrip->attri_value,
-+				xlog_calc_iovec_len(attrip->attri_value_len));
-+}
-+
-+/*
-+ * The unpin operation is the last place an ATTRI is manipulated in the log. It
-+ * is either inserted in the AIL or aborted in the event of a log I/O error. In
-+ * either case, the ATTRI transaction has been successfully committed to make
-+ * it this far. Therefore, we expect whoever committed the ATTRI to either
-+ * construct and commit the ATTRD or drop the ATTRD's reference in the event of
-+ * error. Simply drop the log's ATTRI reference now that the log is done with
-+ * it.
-+ */
-+STATIC void
-+xfs_attri_item_unpin(
-+	struct xfs_log_item	*lip,
-+	int			remove)
-+{
-+	xfs_attri_release(ATTRI_ITEM(lip));
-+}
-+
-+
-+STATIC void
-+xfs_attri_item_release(
-+	struct xfs_log_item	*lip)
-+{
-+	xfs_attri_release(ATTRI_ITEM(lip));
-+}
-+
-+/*
-+ * Allocate and initialize an attri item.  Caller may allocate an additional
-+ * trailing buffer of the specified size
-+ */
-+STATIC struct xfs_attri_log_item *
-+xfs_attri_init(
-+	struct xfs_mount		*mp,
-+	int				buffer_size)
-+
-+{
-+	struct xfs_attri_log_item	*attrip;
-+
-+	if (buffer_size) {
-+		attrip = kmem_alloc(sizeof(struct xfs_attri_log_item) +
-+				    buffer_size, KM_NOFS);
-+		if (attrip == NULL)
-+			return NULL;
-+	} else {
-+		attrip = kmem_cache_alloc(xfs_attri_cache,
-+					  GFP_NOFS | __GFP_NOFAIL);
-+	}
-+
-+	xfs_log_item_init(mp, &attrip->attri_item, XFS_LI_ATTRI,
-+			  &xfs_attri_item_ops);
-+	attrip->attri_format.alfi_id = (uintptr_t)(void *)attrip;
-+	atomic_set(&attrip->attri_refcount, 2);
-+
-+	return attrip;
-+}
-+
-+/*
-+ * Copy an attr format buffer from the given buf, and into the destination attr
-+ * format structure.
-+ */
-+STATIC int
-+xfs_attri_copy_format(
-+	struct xfs_log_iovec		*buf,
-+	struct xfs_attri_log_format	*dst_attr_fmt)
-+{
-+	struct xfs_attri_log_format	*src_attr_fmt = buf->i_addr;
-+	size_t				len;
-+
-+	len = sizeof(struct xfs_attri_log_format);
-+	if (buf->i_len != len) {
-+		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, NULL);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	memcpy((char *)dst_attr_fmt, (char *)src_attr_fmt, len);
-+	return 0;
-+}
-+
-+static inline struct xfs_attrd_log_item *ATTRD_ITEM(struct xfs_log_item *lip)
-+{
-+	return container_of(lip, struct xfs_attrd_log_item, attrd_item);
-+}
-+
-+STATIC void
-+xfs_attrd_item_free(struct xfs_attrd_log_item *attrdp)
-+{
-+	kmem_free(attrdp->attrd_item.li_lv_shadow);
-+	kmem_free(attrdp);
-+}
-+
-+STATIC void
-+xfs_attrd_item_size(
-+	struct xfs_log_item		*lip,
-+	int				*nvecs,
-+	int				*nbytes)
-+{
-+	*nvecs += 1;
-+	*nbytes += sizeof(struct xfs_attrd_log_format);
-+}
-+
-+/*
-+ * This is called to fill in the log iovecs for the given attrd log item. We use
-+ * only 1 iovec for the attrd_format, and we point that at the attr_log_format
-+ * structure embedded in the attrd item.
-+ */
-+STATIC void
-+xfs_attrd_item_format(
-+	struct xfs_log_item	*lip,
-+	struct xfs_log_vec	*lv)
-+{
-+	struct xfs_attrd_log_item	*attrdp = ATTRD_ITEM(lip);
-+	struct xfs_log_iovec		*vecp = NULL;
-+
-+	attrdp->attrd_format.alfd_type = XFS_LI_ATTRD;
-+	attrdp->attrd_format.alfd_size = 1;
-+
-+	xlog_copy_iovec(lv, &vecp, XLOG_REG_TYPE_ATTRD_FORMAT,
-+			&attrdp->attrd_format,
-+			sizeof(struct xfs_attrd_log_format));
-+}
-+
-+/*
-+ * The ATTRD is either committed or aborted if the transaction is canceled. If
-+ * the transaction is canceled, drop our reference to the ATTRI and free the
-+ * ATTRD.
-+ */
-+STATIC void
-+xfs_attrd_item_release(
-+	struct xfs_log_item		*lip)
-+{
-+	struct xfs_attrd_log_item	*attrdp = ATTRD_ITEM(lip);
-+
-+	xfs_attri_release(attrdp->attrd_attrip);
-+	xfs_attrd_item_free(attrdp);
-+}
-+
-+STATIC xfs_lsn_t
-+xfs_attri_item_committed(
-+	struct xfs_log_item		*lip,
-+	xfs_lsn_t			lsn)
-+{
-+	struct xfs_attri_log_item	*attrip = ATTRI_ITEM(lip);
-+
-+	/*
-+	 * The attrip refers to xfs_attr_item memory to log the name and value
-+	 * with the intent item. This already occurred when the intent was
-+	 * committed so these fields are no longer accessed. Clear them out of
-+	 * caution since we're about to free the xfs_attr_item.
-+	 */
-+	attrip->attri_name = NULL;
-+	attrip->attri_value = NULL;
-+
-+	/*
-+	 * The ATTRI is logged only once and cannot be moved in the log, so
-+	 * simply return the lsn at which it's been logged.
-+	 */
-+	return lsn;
-+}
-+
-+STATIC bool
-+xfs_attri_item_match(
-+	struct xfs_log_item	*lip,
-+	uint64_t		intent_id)
-+{
-+	return ATTRI_ITEM(lip)->attri_format.alfi_id == intent_id;
-+}
-+
-+/* Is this recovered ATTRI format ok? */
-+static inline bool
-+xfs_attri_validate(
-+	struct xfs_mount		*mp,
-+	struct xfs_attri_log_format	*attrp)
-+{
-+	unsigned int			op = attrp->alfi_op_flags &
-+					     XFS_ATTR_OP_FLAGS_TYPE_MASK;
-+
-+	if (attrp->__pad != 0)
-+		return false;
-+
-+	/* alfi_op_flags should be either a set or remove */
-+	if (op != XFS_ATTR_OP_FLAGS_SET && op != XFS_ATTR_OP_FLAGS_REMOVE)
-+		return false;
-+
-+	if (attrp->alfi_value_len > XATTR_SIZE_MAX)
-+		return false;
-+
-+	if ((attrp->alfi_name_len > XATTR_NAME_MAX) ||
-+	    (attrp->alfi_name_len == 0))
-+		return false;
-+
-+	return xfs_verify_ino(mp, attrp->alfi_ino);
-+}
-+
-+STATIC int
-+xlog_recover_attri_commit_pass2(
-+	struct xlog                     *log,
-+	struct list_head		*buffer_list,
-+	struct xlog_recover_item        *item,
-+	xfs_lsn_t                       lsn)
-+{
-+	int                             error;
-+	struct xfs_mount                *mp = log->l_mp;
-+	struct xfs_attri_log_item       *attrip;
-+	struct xfs_attri_log_format     *attri_formatp;
-+	char				*name = NULL;
-+	char				*value = NULL;
-+	int				region = 0;
-+	int				buffer_size;
-+
-+	attri_formatp = item->ri_buf[region].i_addr;
-+
-+	/* Validate xfs_attri_log_format */
-+	if (!xfs_attri_validate(mp, attri_formatp)) {
-+		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, mp);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	buffer_size = attri_formatp->alfi_name_len +
-+		      attri_formatp->alfi_value_len;
-+
-+	/* memory alloc failure will cause replay to abort */
-+	attrip = xfs_attri_init(mp, buffer_size);
-+	if (attrip == NULL)
-+		return -ENOMEM;
-+
-+	error = xfs_attri_copy_format(&item->ri_buf[region],
-+				      &attrip->attri_format);
-+	if (error)
-+		goto out;
-+
-+	attrip->attri_name_len = attri_formatp->alfi_name_len;
-+	attrip->attri_value_len = attri_formatp->alfi_value_len;
-+	region++;
-+	name = ((char *)attrip) + sizeof(struct xfs_attri_log_item);
-+	memcpy(name, item->ri_buf[region].i_addr, attrip->attri_name_len);
-+	attrip->attri_name = name;
-+
-+	if (!xfs_attr_namecheck(name, attrip->attri_name_len)) {
-+		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, mp);
-+		error = -EFSCORRUPTED;
-+		goto out;
-+	}
-+
-+	if (attrip->attri_value_len > 0) {
-+		region++;
-+		value = ((char *)attrip) + sizeof(struct xfs_attri_log_item) +
-+				attrip->attri_name_len;
-+		memcpy(value, item->ri_buf[region].i_addr,
-+				attrip->attri_value_len);
-+		attrip->attri_value = value;
-+	}
-+
-+	/*
-+	 * The ATTRI has two references. One for the ATTRD and one for ATTRI to
-+	 * ensure it makes it into the AIL. Insert the ATTRI into the AIL
-+	 * directly and drop the ATTRI reference. Note that
-+	 * xfs_trans_ail_update() drops the AIL lock.
-+	 */
-+	xfs_trans_ail_insert(log->l_ailp, &attrip->attri_item, lsn);
-+	xfs_attri_release(attrip);
-+	return 0;
-+out:
-+	xfs_attri_item_free(attrip);
-+	return error;
-+}
-+
-+/*
-+ * This routine is called when an ATTRD format structure is found in a committed
-+ * transaction in the log. Its purpose is to cancel the corresponding ATTRI if
-+ * it was still in the log. To do this it searches the AIL for the ATTRI with
-+ * an id equal to that in the ATTRD format structure. If we find it we drop
-+ * the ATTRD reference, which removes the ATTRI from the AIL and frees it.
-+ */
-+STATIC int
-+xlog_recover_attrd_commit_pass2(
-+	struct xlog			*log,
-+	struct list_head		*buffer_list,
-+	struct xlog_recover_item	*item,
-+	xfs_lsn_t			lsn)
-+{
-+	struct xfs_attrd_log_format	*attrd_formatp;
-+
-+	attrd_formatp = item->ri_buf[0].i_addr;
-+	if (item->ri_buf[0].i_len != sizeof(struct xfs_attrd_log_format)) {
-+		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, NULL);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	xlog_recover_release_intent(log, XFS_LI_ATTRI,
-+				    attrd_formatp->alfd_alf_id);
-+	return 0;
-+}
-+
-+static const struct xfs_item_ops xfs_attri_item_ops = {
-+	.iop_size	= xfs_attri_item_size,
-+	.iop_format	= xfs_attri_item_format,
-+	.iop_unpin	= xfs_attri_item_unpin,
-+	.iop_committed	= xfs_attri_item_committed,
-+	.iop_release    = xfs_attri_item_release,
-+	.iop_match	= xfs_attri_item_match,
-+};
-+
-+const struct xlog_recover_item_ops xlog_attri_item_ops = {
-+	.item_type	= XFS_LI_ATTRI,
-+	.commit_pass2	= xlog_recover_attri_commit_pass2,
-+};
-+
-+static const struct xfs_item_ops xfs_attrd_item_ops = {
-+	.flags		= XFS_ITEM_RELEASE_WHEN_COMMITTED,
-+	.iop_size	= xfs_attrd_item_size,
-+	.iop_format	= xfs_attrd_item_format,
-+	.iop_release    = xfs_attrd_item_release,
-+};
-+
-+const struct xlog_recover_item_ops xlog_attrd_item_ops = {
-+	.item_type	= XFS_LI_ATTRD,
-+	.commit_pass2	= xlog_recover_attrd_commit_pass2,
-+};
-diff --git a/fs/xfs/xfs_attr_item.h b/fs/xfs/xfs_attr_item.h
-new file mode 100644
-index 000000000000..c3b779f82adb
---- /dev/null
-+++ b/fs/xfs/xfs_attr_item.h
-@@ -0,0 +1,46 @@
-+/* SPDX-License-Identifier: GPL-2.0-or-later
-+ *
-+ * Copyright (C) 2022 Oracle.  All Rights Reserved.
-+ * Author: Allison Henderson <allison.henderson@oracle.com>
-+ */
-+#ifndef	__XFS_ATTR_ITEM_H__
-+#define	__XFS_ATTR_ITEM_H__
-+
-+/* kernel only ATTRI/ATTRD definitions */
-+
-+struct xfs_mount;
-+struct kmem_zone;
-+
-+/*
-+ * This is the "attr intention" log item.  It is used to log the fact that some
-+ * extended attribute operations need to be processed.  An operation is
-+ * currently either a set or remove.  Set or remove operations are described by
-+ * the xfs_attr_item which may be logged to this intent.
-+ *
-+ * During a normal attr operation, name and value point to the name and value
-+ * fields of the caller's xfs_da_args structure.  During a recovery, the name
-+ * and value buffers are copied from the log, and stored in a trailing buffer
-+ * attached to the xfs_attr_item until they are committed.  They are freed when
-+ * the xfs_attr_item itself is freed when the work is done.
-+ */
-+struct xfs_attri_log_item {
-+	struct xfs_log_item		attri_item;
-+	atomic_t			attri_refcount;
-+	int				attri_name_len;
-+	int				attri_value_len;
-+	void				*attri_name;
-+	void				*attri_value;
-+	struct xfs_attri_log_format	attri_format;
-+};
-+
-+/*
-+ * This is the "attr done" log item.  It is used to log the fact that some attrs
-+ * earlier mentioned in an attri item have been freed.
-+ */
-+struct xfs_attrd_log_item {
-+	struct xfs_log_item		attrd_item;
-+	struct xfs_attri_log_item	*attrd_attrip;
-+	struct xfs_attrd_log_format	attrd_format;
-+};
-+
-+#endif	/* __XFS_ATTR_ITEM_H__ */
-diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
-index 2d1e5134cebe..90a14e85e76d 100644
---- a/fs/xfs/xfs_attr_list.c
-+++ b/fs/xfs/xfs_attr_list.c
-@@ -15,6 +15,7 @@
- #include "xfs_inode.h"
- #include "xfs_trans.h"
- #include "xfs_bmap.h"
-+#include "xfs_da_btree.h"
- #include "xfs_attr.h"
- #include "xfs_attr_sf.h"
- #include "xfs_attr_leaf.h"
-diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index 004ed2a251e8..618a46a1d5fb 100644
---- a/fs/xfs/xfs_ioctl32.c
-+++ b/fs/xfs/xfs_ioctl32.c
-@@ -17,6 +17,8 @@
- #include "xfs_itable.h"
- #include "xfs_fsops.h"
- #include "xfs_rtalloc.h"
-+#include "xfs_da_format.h"
-+#include "xfs_da_btree.h"
- #include "xfs_attr.h"
- #include "xfs_ioctl.h"
- #include "xfs_ioctl32.h"
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index b79b3846e71b..2b6b6f0434ff 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -13,6 +13,8 @@
- #include "xfs_inode.h"
- #include "xfs_acl.h"
- #include "xfs_quota.h"
-+#include "xfs_da_format.h"
-+#include "xfs_da_btree.h"
- #include "xfs_attr.h"
- #include "xfs_trans.h"
- #include "xfs_trace.h"
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 89fec9a18c34..8ba8563114b9 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -2157,6 +2157,10 @@ xlog_print_tic_res(
- 	    REG_TYPE_STR(CUD_FORMAT, "cud_format"),
- 	    REG_TYPE_STR(BUI_FORMAT, "bui_format"),
- 	    REG_TYPE_STR(BUD_FORMAT, "bud_format"),
-+	    REG_TYPE_STR(ATTRI_FORMAT, "attri_format"),
-+	    REG_TYPE_STR(ATTRD_FORMAT, "attrd_format"),
-+	    REG_TYPE_STR(ATTR_NAME, "attr name"),
-+	    REG_TYPE_STR(ATTR_VALUE, "attr value"),
- 	};
- 	BUILD_BUG_ON(ARRAY_SIZE(res_type_str) != XLOG_REG_TYPE_MAX + 1);
- #undef REG_TYPE_STR
-diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
-index dc1b77b92fc1..fd945eb66c32 100644
---- a/fs/xfs/xfs_log.h
-+++ b/fs/xfs/xfs_log.h
-@@ -21,6 +21,17 @@ struct xfs_log_vec {
+-	page = vm_normal_page(src_vma, addr, pte);
++	page = vm_normal_any_page(src_vma, addr, pte);
+ 	if (page) {
+ 		int retval;
  
- #define XFS_LOG_VEC_ORDERED	(-1)
+@@ -1358,7 +1372,7 @@ static unsigned long zap_pte_range(struct mmu_gather *tlb,
+ 		if (pte_present(ptent)) {
+ 			struct page *page;
  
-+/*
-+ * Calculate the log iovec length for a given user buffer length. Intended to be
-+ * used by ->iop_size implementations when sizing buffers of arbitrary
-+ * alignments.
-+ */
-+static inline int
-+xlog_calc_iovec_len(int len)
-+{
-+	return roundup(len, sizeof(int32_t));
-+}
-+
- static inline void *
- xlog_prepare_iovec(struct xfs_log_vec *lv, struct xfs_log_iovec **vecp,
- 		uint type)
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 96c997ed2ec8..f1edb315e341 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -1800,6 +1800,8 @@ static const struct xlog_recover_item_ops *xlog_recover_item_ops[] = {
- 	&xlog_cud_item_ops,
- 	&xlog_bui_item_ops,
- 	&xlog_bud_item_ops,
-+	&xlog_attri_item_ops,
-+	&xlog_attrd_item_ops,
- };
+-			page = vm_normal_page(vma, addr, ptent);
++			page = vm_normal_any_page(vma, addr, ptent);
+ 			if (unlikely(zap_skip_check_mapping(details, page)))
+ 				continue;
+ 			ptent = ptep_get_and_clear_full(mm, addr, pte,
+@@ -2168,7 +2182,7 @@ EXPORT_SYMBOL(vmf_insert_pfn);
  
- static const struct xlog_recover_item_ops *
-diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
-index 25991923c1a8..758702b9495f 100644
---- a/fs/xfs/xfs_ondisk.h
-+++ b/fs/xfs/xfs_ondisk.h
-@@ -132,6 +132,8 @@ xfs_check_ondisk_structs(void)
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_inode_log_format,	56);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_qoff_logformat,	20);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_trans_header,		16);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_attri_log_format,	40);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_attrd_log_format,	16);
+ static bool vm_mixed_ok(struct vm_area_struct *vma, pfn_t pfn)
+ {
+-	/* these checks mirror the abort conditions in vm_normal_page */
++	/* these checks mirror the abort conditions in vm_normal_lru_page */
+ 	if (vma->vm_flags & VM_MIXEDMAP)
+ 		return true;
+ 	if (pfn_t_devmap(pfn))
+@@ -2198,7 +2212,7 @@ static vm_fault_t __vm_insert_mixed(struct vm_area_struct *vma,
  
  	/*
- 	 * The v5 superblock format extended several v4 header structures with
+ 	 * If we don't have pte special, then we have to use the pfn_valid()
+-	 * based VM_MIXEDMAP scheme (see vm_normal_page), and thus we *must*
++	 * based VM_MIXEDMAP scheme (see vm_normal_any_page), and thus we *must*
+ 	 * refcount the page if pfn_valid is true (hence insert_page rather
+ 	 * than insert_pfn).  If a zero_pfn were inserted into a VM_MIXEDMAP
+ 	 * without pte special, it would there be refcounted as a normal page.
+@@ -2408,7 +2422,7 @@ int remap_pfn_range_notrack(struct vm_area_struct *vma, unsigned long addr,
+ 	 * There's a horrible special case to handle copy-on-write
+ 	 * behaviour that some programs depend on. We mark the "original"
+ 	 * un-COW'ed pages by matching them up with "vma->vm_pgoff".
+-	 * See vm_normal_page() for details.
++	 * See vm_normal_any_page() for details.
+ 	 */
+ 	if (is_cow_mapping(vma->vm_flags)) {
+ 		if (addr != vma->vm_start || end != vma->vm_end)
+@@ -3267,7 +3281,7 @@ static vm_fault_t do_wp_page(struct vm_fault *vmf)
+ 		     mm_tlb_flush_pending(vmf->vma->vm_mm)))
+ 		flush_tlb_page(vmf->vma, vmf->address);
+ 
+-	vmf->page = vm_normal_page(vma, vmf->address, vmf->orig_pte);
++	vmf->page = vm_normal_any_page(vma, vmf->address, vmf->orig_pte);
+ 	if (!vmf->page) {
+ 		/*
+ 		 * VM_MIXEDMAP !pfn_valid() case, or VM_SOFTDIRTY clear on a
+@@ -4364,7 +4378,7 @@ static vm_fault_t do_numa_page(struct vm_fault *vmf)
+ 	old_pte = ptep_get(vmf->pte);
+ 	pte = pte_modify(old_pte, vma->vm_page_prot);
+ 
+-	page = vm_normal_page(vma, vmf->address, pte);
++	page = vm_normal_lru_page(vma, vmf->address, pte);
+ 	if (!page)
+ 		goto out_map;
+ 
+diff --git a/mm/mempolicy.c b/mm/mempolicy.c
+index 028e8dd82b44..9962de4981d6 100644
+--- a/mm/mempolicy.c
++++ b/mm/mempolicy.c
+@@ -527,11 +527,11 @@ static int queue_pages_pte_range(pmd_t *pmd, unsigned long addr,
+ 	for (; addr != end; pte++, addr += PAGE_SIZE) {
+ 		if (!pte_present(*pte))
+ 			continue;
+-		page = vm_normal_page(vma, addr, *pte);
++		page = vm_normal_lru_page(vma, addr, *pte);
+ 		if (!page)
+ 			continue;
+ 		/*
+-		 * vm_normal_page() filters out zero pages, but there might
++		 * vm_normal_lru_page() filters out zero pages, but there might
+ 		 * still be PageReserved pages to skip, perhaps in a VDSO.
+ 		 */
+ 		if (PageReserved(page))
+diff --git a/mm/migrate.c b/mm/migrate.c
+index c31d04b46a5e..17d049311b78 100644
+--- a/mm/migrate.c
++++ b/mm/migrate.c
+@@ -1614,7 +1614,7 @@ static int add_page_for_migration(struct mm_struct *mm, unsigned long addr,
+ 		goto out;
+ 
+ 	/* FOLL_DUMP to ignore special (like zero) pages */
+-	follflags = FOLL_GET | FOLL_DUMP;
++	follflags = FOLL_GET | FOLL_DUMP | FOLL_LRU;
+ 	page = follow_page(vma, addr, follflags);
+ 
+ 	err = PTR_ERR(page);
+diff --git a/mm/migrate_device.c b/mm/migrate_device.c
+index 3373b535d5c9..fac1b6978361 100644
+--- a/mm/migrate_device.c
++++ b/mm/migrate_device.c
+@@ -154,7 +154,7 @@ static int migrate_vma_collect_pmd(pmd_t *pmdp,
+ 				migrate->cpages++;
+ 				goto next;
+ 			}
+-			page = vm_normal_page(migrate->vma, addr, pte);
++			page = vm_normal_any_page(migrate->vma, addr, pte);
+ 			if (page && !is_zone_device_page(page) &&
+ 			    !(migrate->flags & MIGRATE_VMA_SELECT_SYSTEM))
+ 				goto next;
+diff --git a/mm/mlock.c b/mm/mlock.c
+index 8f584eddd305..52613e2f2a70 100644
+--- a/mm/mlock.c
++++ b/mm/mlock.c
+@@ -342,7 +342,7 @@ static void __munlock_pagevec(struct pagevec *pvec, struct zone *zone)
+  * a non-TPH page already pinned and in the @pvec, and that it belongs to @zone.
+  *
+  * The rest of @pvec is filled by subsequent pages within the same pmd and same
+- * zone, as long as the pte's are present and vm_normal_page() succeeds. These
++ * zone, as long as the pte's are present and vm_normal_any_page() succeeds. These
+  * pages also get pinned.
+  *
+  * Returns the address of the next page that should be scanned. This equals
+@@ -373,7 +373,7 @@ static unsigned long __munlock_pagevec_fill(struct pagevec *pvec,
+ 		struct page *page = NULL;
+ 		pte++;
+ 		if (pte_present(*pte))
+-			page = vm_normal_page(vma, start, *pte);
++			page = vm_normal_lru_page(vma, start, *pte);
+ 		/*
+ 		 * Break if page could not be obtained or the page's node+zone does not
+ 		 * match
+@@ -439,7 +439,7 @@ void munlock_vma_pages_range(struct vm_area_struct *vma,
+ 		 * suits munlock very well (and if somehow an abnormal page
+ 		 * has sneaked into the range, we won't oops here: great).
+ 		 */
+-		page = follow_page(vma, start, FOLL_GET | FOLL_DUMP);
++		page = follow_page(vma, start, FOLL_GET | FOLL_DUMP | FOLL_LRU);
+ 
+ 		if (page && !IS_ERR(page)) {
+ 			if (PageTransTail(page)) {
+diff --git a/mm/mprotect.c b/mm/mprotect.c
+index 0138dfcdb1d8..d236394d41d5 100644
+--- a/mm/mprotect.c
++++ b/mm/mprotect.c
+@@ -88,7 +88,7 @@ static unsigned long change_pte_range(struct vm_area_struct *vma, pmd_t *pmd,
+ 				if (pte_protnone(oldpte))
+ 					continue;
+ 
+-				page = vm_normal_page(vma, addr, oldpte);
++				page = vm_normal_lru_page(vma, addr, oldpte);
+ 				if (!page || PageKsm(page))
+ 					continue;
+ 
 -- 
-2.25.1
+2.32.0
 
