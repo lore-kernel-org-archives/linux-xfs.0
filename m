@@ -2,148 +2,110 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72277C433FE
-	for <linux-xfs@archiver.kernel.org>; Mon, 28 Feb 2022 23:22:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFE71C433EF
+	for <linux-xfs@archiver.kernel.org>; Mon, 28 Feb 2022 23:58:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229683AbiB1XWy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 28 Feb 2022 18:22:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56000 "EHLO
+        id S231473AbiB1X6j (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 28 Feb 2022 18:58:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34862 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229760AbiB1XWy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Feb 2022 18:22:54 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E83EA27A5
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Feb 2022 15:22:13 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D1CC361411
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Feb 2022 23:22:12 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 304B8C340EE;
-        Mon, 28 Feb 2022 23:22:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1646090532;
-        bh=BMlcKeXWkT8Dr3Dc7+u2UMfT0iFwnnOpTgDXBFVaXoE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Jt9rc9LDHcrsntCYRU8eW06XQrgEOwED9q7IgnaCrHS5VYbhUkR5nF4IT5dy/IfDW
-         uwZbomuuVMZo8cYObTGm0db2hkuWPNr4rcxXMvlwI7neibl75vt3aisNC0PiK/ednP
-         2c5C1Pq41B3/rDcRULXYV/6H3Wq+KxWgifMOTUgzlfoWRcNgkWmBJDGP6VzLZIiGTi
-         mePfaFlmH0NwuKMhgywwPA7GsP37QKHaeOhfcBYHGdVZwHyvBDo7K3LwZWfNddWxRz
-         HuvD/JKJcorvIIqvQyiwuTbNYe/+mqef5KAhiQPZ2Z4DCWMHBSBNHIcGYpXhI0DZp6
-         Xl8bs6XdpK1yA==
-Date:   Mon, 28 Feb 2022 15:22:11 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     sandeen@sandeen.net, Christoph Hellwig <hch@lst.de>,
-        Dave Chinner <dchinner@redhat.com>,
-        Theodore Ts'o <tytso@mit.edu>, linux-xfs@vger.kernel.org,
-        allison.henderson@oracle.com
-Subject: Re: [PATCH 19/17] mkfs: increase default log size for new (aka
- bigtime) filesystems
-Message-ID: <20220228232211.GA117732@magnolia>
-References: <20220226213720.GQ59715@dread.disaster.area>
+        with ESMTP id S229981AbiB1X6j (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Feb 2022 18:58:39 -0500
+Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A781B37BDF;
+        Mon, 28 Feb 2022 15:57:58 -0800 (PST)
+Received: by mail-pl1-x62a.google.com with SMTP id z2so12067234plg.8;
+        Mon, 28 Feb 2022 15:57:58 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=h0sCSJGBWDN5mRT7aBgm8yBHFMNHKb8Jl03bv/QDMQY=;
+        b=GujjR472ePh+4ybziZIBTl5oJqLyn60Vy/wWd2iruPDB8ietcm6zd0dPOqrAvbbVzg
+         lu1rmIwMX1tX718vXxLYWh6HqAjNXf6Nt481UeNh7PTTVZnqLMfiLohrXOzMrndT/tF9
+         xF7yFEDCllEofZ/7wPRZvgRtjdnb6wT7kJB+cBCSAL+TJqyT67dxGGFriY4zwEms1cL6
+         WN3+St0LOh9HKPTqu+svRT/jobZW1/t3wxrwPM0+GURK/tdO/Ks0HXIFu5S6voTDBrJ9
+         kNKyUyoKks4IOeFQIC0M34I8we8kcEOXlJjYbXD7Pcj7TYN5u3X7MekovnN3yraE6PkT
+         MPuw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=h0sCSJGBWDN5mRT7aBgm8yBHFMNHKb8Jl03bv/QDMQY=;
+        b=xg+KBZqw8NwaGr78vw/7LBc5VVeNrK++qBd8Qn2grmB7p8i23qjFUnxYC7MNMJOYIx
+         dKqqvZYBI0qcov5KnFCTLu25Ryo0BWH7jdDKcacA07/4VZPWPC6+Pf+EQtrej+dBDJtk
+         DRpBEotOf54naOCfF7pvzEtsKhTWKySHCOI4IsdsrOBwPtlItyg9tguHeWGY8K6kc4TV
+         PksvMASawFFwPup3b5/yCBetWV+GnxDeFkZd26xnnmvfN8ZoCJfEIABsLs7XpLC+G7DO
+         OjgI56W6RC8JSE3otczCmf3aNGGJxZsnxYexr+lLyH3MJ5zITuvk7bQzHeOhUGCZ5+Zp
+         Yt7Q==
+X-Gm-Message-State: AOAM533ceOkqyGab/R/efvZrXhhqfr3xvuvErt6S9fqwJ4wSglk7s2E0
+        eAoVyv6GGddgPfx293fVA7A=
+X-Google-Smtp-Source: ABdhPJzD9SKtkQ8vuX0qPac1DGv6DOmMazBubWiEtu4ddPmWBpE6VIc64Q3TkV9smEiRbog2V++tHA==
+X-Received: by 2002:a17:903:2c7:b0:14f:522c:d33c with SMTP id s7-20020a17090302c700b0014f522cd33cmr23162298plk.143.1646092678136;
+        Mon, 28 Feb 2022 15:57:58 -0800 (PST)
+Received: from localhost.localdomain (c-67-174-241-145.hsd1.ca.comcast.net. [67.174.241.145])
+        by smtp.gmail.com with ESMTPSA id on15-20020a17090b1d0f00b001b9d1b5f901sm396963pjb.47.2022.02.28.15.57.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 28 Feb 2022 15:57:57 -0800 (PST)
+From:   Yang Shi <shy828301@gmail.com>
+To:     vbabka@suse.cz, kirill.shutemov@linux.intel.com,
+        songliubraving@fb.com, linmiaohe@huawei.com, riel@surriel.com,
+        willy@infradead.org, ziy@nvidia.com, akpm@linux-foundation.org,
+        tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com
+Cc:     linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 0/8] Make khugepaged collapse readonly FS THP more consistent
+Date:   Mon, 28 Feb 2022 15:57:33 -0800
+Message-Id: <20220228235741.102941-1-shy828301@gmail.com>
+X-Mailer: git-send-email 2.26.3
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220226213720.GQ59715@dread.disaster.area>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Feb 27, 2022 at 08:37:20AM +1100, Dave Chinner wrote:
-> On Fri, Feb 25, 2022 at 06:54:50PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Recently, the upstream kernel maintainer has been taking a lot of heat on
-> > account of writer threads encountering high latency when asking for log
-> > grant space when the log is small.  The reported use case is a heavily
-> > threaded indexing product logging trace information to a filesystem
-> > ranging in size between 20 and 250GB.  The meetings that result from the
-> > complaints about latency and stall warnings in dmesg both from this use
-> > case and also a large well known cloud product are now consuming 25% of
-> > the maintainer's weekly time and have been for months.
-> 
-> Is the transaction reservation space exhaustion caused by, as I
-> pointed out in another thread yesterday, the unbound concurrency in
-> IO completion?
 
-No.  They're using synchronous directio writes to write trace data in 4k
-chunks.  The number of files does not exceed the number of writer
-threads, and the number of writer threads can be up to 10*NR_CPUS (~400
-on the test system).  If I'm reading the iomap directio code correctly,
-the writer threads block and do not issue more IO until the first IO
-completes...
+The readonly FS THP relies on khugepaged to collapse THP for suitable
+vmas.  But it is kind of "random luck" for khugepaged to see the
+readonly FS vmas (see report: https://lore.kernel.org/linux-mm/00f195d4-d039-3cf2-d3a1-a2c88de397a0@suse.cz/) since currently the vmas are registered to khugepaged when:
+  - Anon huge pmd page fault
+  - VMA merge
+  - MADV_HUGEPAGE
+  - Shmem mmap
 
-> i.e. we have hundreds of active concurrent
-> transactions that then block on common objects between them (e.g.
-> inode locks) and serialise?
+If the above conditions are not met, even though khugepaged is enabled
+it won't see readonly FS vmas at all.  MADV_HUGEPAGE could be specified
+explicitly to tell khugepaged to collapse this area, but when khugepaged
+mode is "always" it should scan suitable vmas as long as VM_NOHUGEPAGE
+is not set.
 
-...so yes, there are hundreds of active transactions, but (AFAICT) they
-mostly don't share objects, other than the log itself.  Once we made the
-log bigger, the hotspot moved to the AGF buffers.  I'm not sure what to
-do about /that/, since a 5GB AG is pretty small.  That aside...
+So make sure readonly FS vmas are registered to khugepaged to make the
+behavior more consistent.
 
-> Hence only handful of completions can
-> actually run concurrently, depsite every completion holding a full
-> reservation of log space to allow them to run concurrently?
+Registering the vmas in mmap path seems more preferred from performance
+point of view since page fault path is definitely hot path.
 
-...this is still an issue for different scenarios.  I would still be
-interested in experimenting with constraining the number of writeback
-completion workers that get started, even though that isn't at play
-here.
 
-> > For small filesystems, the log is small by default because we have
-> > defaulted to a ratio of 1:2048 (or even less).  For grown filesystems,
-> > this is even worse, because big filesystems generate big metadata.
-> > However, the log size is still insufficient even if it is formatted at
-> > the larger size.
-> > 
-> > Therefore, if we're writing a new filesystem format (aka bigtime), bump
-> > the ratio unconditionally from 1:2048 to 1:256.  On a 220GB filesystem,
-> > the 99.95% latencies observed with a 200-writer file synchronous append
-> > workload running on a 44-AG filesystem (with 44 CPUs) spread across 4
-> > hard disks showed:
-> > 
-> > Log Size (MB)	Latency (ms)	Throughput (MB/s)
-> > 10		520		243w
-> > 20		220		308
-> > 40		140		360
-> > 80		92		363
-> > 160		86		364
-> > 
-> > For 4 NVME, the results were:
-> > 
-> > 10		201		409
-> > 20		177		488
-> > 40		122		550
-> > 80		120		549
-> > 160		121		545
-> > 
-> > Hence we increase the ratio by 16x because there doesn't seem to be much
-> > improvement beyond that, and we don't want the log to grow /too/ large.
-> 
-> 1:2048 -> 1:256 is an 8x bump, yes?  Which means we'll get a 2GB log
-> on a 512GB filesystem, and the 220GB log you tested is getting a
-> ~1GB log?
+The patch 1 ~ 7 are minor bug fixes, clean up and preparation patches.
+The patch 8 converts ext4 and xfs.  We may need convert more filesystems,
+but I'd like to hear some comments before doing that.
 
-Right.
 
-> I also wonder if the right thing to do here is just set a minimum
-> log size of 32MB? The worst of the long tail latencies are mitigated
-> by this point, and so even small filesystems grown out to 200GB will
-> have a log size that results in decent performance for this sort of
-> workload.
+Tested with khugepaged test in selftests and the testcase provided by
+Vlastimil Babka in https://lore.kernel.org/lkml/df3b5d1c-a36b-2c73-3e27-99e74983de3a@suse.cz/
+by commenting out MADV_HUGEPAGE call.
 
-Are you asking for a second patch where mkfs refuses to format a log
-smaller than 32MB (e.g. 8GB with the x86 defaults)?  Or a second patch
-that cranks the minimum log size up to 32MB, even if that leads to
-absurd results (e.g. 66MB filesystems with 2 AGs and a 32MB log)?
 
---D
+ b/fs/ext4/file.c                 |    4 +++
+ b/fs/xfs/xfs_file.c              |    4 +++
+ b/include/linux/huge_mm.h        |    9 +++++++
+ b/include/linux/khugepaged.h     |   69 +++++++++++++++++++++----------------------------------------
+ b/include/linux/sched/coredump.h |    3 +-
+ b/kernel/fork.c                  |    4 ---
+ b/mm/huge_memory.c               |   15 +++----------
+ b/mm/khugepaged.c                |   71 ++++++++++++++++++++++++++++++++++++++++++++-------------------
+ b/mm/shmem.c                     |   14 +++---------
+ 9 files changed, 102 insertions(+), 91 deletions(-)
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+
