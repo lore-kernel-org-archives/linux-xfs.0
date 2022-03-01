@@ -2,120 +2,363 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F206C433F5
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Mar 2022 16:32:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8169C433EF
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Mar 2022 16:42:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236237AbiCAQdU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Mar 2022 11:33:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40332 "EHLO
+        id S234452AbiCAQmq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Mar 2022 11:42:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40660 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236215AbiCAQdO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Mar 2022 11:33:14 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 87450694A9
-        for <linux-xfs@vger.kernel.org>; Tue,  1 Mar 2022 08:32:31 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1646152350;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=n44Wo6vgxZpi5bWperlxNMLPYijk8JsTILs9YPWVgno=;
-        b=ev/F+9HK1B5n47Khw3eIrrSbtGBzIKfSMiTPlQIzO8XL96Lqhs/+H/mB2j2rjP2NI9dsXd
-        DNTrzlwQXpMDtEcULsg0IA31i0LLsg12j6y2thjtmXPzbQlPSZ0pJf7UswziY3a/r3mE9y
-        yfcVIVhqoHiZLJ8ONQ90eMXbHasYK3g=
-Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
- [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-671-lFalaR1KN4e_yzQPSnPbFQ-1; Tue, 01 Mar 2022 11:32:27 -0500
-X-MC-Unique: lFalaR1KN4e_yzQPSnPbFQ-1
-Received: by mail-wm1-f70.google.com with SMTP id i20-20020a05600c051400b00380d5eb51a7so1455658wmc.3
-        for <linux-xfs@vger.kernel.org>; Tue, 01 Mar 2022 08:32:27 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:organization:in-reply-to
-         :content-transfer-encoding;
-        bh=n44Wo6vgxZpi5bWperlxNMLPYijk8JsTILs9YPWVgno=;
-        b=lDiT1e3N/8c1w7HVKxlma3nXGM1+ohfujDuC1igvvCJrUfsTv5fI2bpDsctVY4sCcL
-         4NWzAlJrgiNp2DtsCU1fWGeBMGNJtkvp60NWPTATvVXAVGZihIaC8x55kBUATKzCGzyg
-         V6Ohz9FH6sQ6o3s8tvd6og4y8ya3e9S9fiacFy22nEhUSuNoUxriy0s/SU3A7XuY7M//
-         qy2dJPv6CmT7tAiA3QweyoyPZTTruL1dqvIdV+1VNl5GqQ2zCQkB0WKHyaviBYcf9tYd
-         XW10YNoCffop3/P5Z6e0gBbQPoPts2GIoVO8lTDQKmyqH3QB6eTEpeaSUio1oruCxekW
-         /0pg==
-X-Gm-Message-State: AOAM532G8WUVSHjPjDC9DOYj4G3NE+699W/hdfl/LLIrKYsrpkbYZTMZ
-        pTG9BxY35yw10q1zqjcpFhLtUhs/RfLLOJP+FPkzFHcq+E+TiYTr/cbCJEoR4nwTERYc61nPLhb
-        uCfoFGEDNs5CT2LeKslTD
-X-Received: by 2002:a05:6000:1b0c:b0:1ef:956e:3210 with SMTP id f12-20020a0560001b0c00b001ef956e3210mr10718764wrz.322.1646152346582;
-        Tue, 01 Mar 2022 08:32:26 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJy3kzdNGIIvZpX2C9to3Pb3Y486zu3gVqra59S1lC+acXexuk7wv16jDLZDxszLnYK+EvUsSg==
-X-Received: by 2002:a05:6000:1b0c:b0:1ef:956e:3210 with SMTP id f12-20020a0560001b0c00b001ef956e3210mr10718743wrz.322.1646152346319;
-        Tue, 01 Mar 2022 08:32:26 -0800 (PST)
-Received: from ?IPV6:2003:cb:c70e:5e00:88ce:ad41:cb1b:323? (p200300cbc70e5e0088cead41cb1b0323.dip0.t-ipconnect.de. [2003:cb:c70e:5e00:88ce:ad41:cb1b:323])
-        by smtp.gmail.com with ESMTPSA id m34-20020a05600c3b2200b00380e3225af9sm3328629wms.0.2022.03.01.08.32.25
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 01 Mar 2022 08:32:25 -0800 (PST)
-Message-ID: <85a68c56-7cce-ef98-7aa6-c68eabf3fa0b@redhat.com>
-Date:   Tue, 1 Mar 2022 17:32:24 +0100
+        with ESMTP id S233634AbiCAQmq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Mar 2022 11:42:46 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8AB5C393;
+        Tue,  1 Mar 2022 08:42:04 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2FE5660A39;
+        Tue,  1 Mar 2022 16:42:04 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85AF9C340EE;
+        Tue,  1 Mar 2022 16:42:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1646152923;
+        bh=HOfbQoF7C4L5DJFPClzffzOhN3z0mconeoaMKw6d+Ik=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=qgDbf8n+OxtYpJSGknDDgQ3WuGucl4nrEYBhz7PWHTBkjYC681JyP1XKjFTA7Cp9M
+         QchYHLc63AcntFY4gxQ31j5EZhrYvGr9kAEjPNYAvJlyYxspcxhRHtAqUZxbn0fro1
+         SeRZe/AuXfv7Fqyw0yqoPK0W1BuaoysFfsleNQDWg05IdWcn1/s/fWsjk01vSKMkqB
+         VnIeC1+enzHsPDICmERmTOzG5shOxyG9QiGV2GlFO/YYui+o270qOlZqA1iT0ceA0i
+         enG0t0CJb2uBtFLGyqlrwJZi1BllLrs/GAwXN0XobVWKFZ/FA1t5PO2EPdOGkeBg9C
+         bmBuHQvKGcIbw==
+Date:   Tue, 1 Mar 2022 08:42:03 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     fdmanana@kernel.org
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, hch@infradead.org,
+        cluster-devel@redhat.com, agruenba@redhat.com,
+        josef@toxicpanda.com, Filipe Manana <fdmanana@suse.com>
+Subject: Re: [PATCH] iomap: fix incomplete async dio reads when using
+ IOMAP_DIO_PARTIAL
+Message-ID: <20220301164203.GJ117732@magnolia>
+References: <1f34c8435fed21e9583492661ceb20d642a75699.1646058596.git.fdmanana@suse.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: [PATCH] mm: split vm_normal_pages for LRU and non-LRU handling
-Content-Language: en-US
-To:     Felix Kuehling <felix.kuehling@amd.com>,
-        Alex Sierra <alex.sierra@amd.com>, jgg@nvidia.com
-Cc:     rcampbell@nvidia.com, willy@infradead.org, apopple@nvidia.com,
-        dri-devel@lists.freedesktop.org, linux-xfs@vger.kernel.org,
-        linux-mm@kvack.org, jglisse@redhat.com,
-        amd-gfx@lists.freedesktop.org, akpm@linux-foundation.org,
-        linux-ext4@vger.kernel.org, hch@lst.de
-References: <20220218192640.GV4160@nvidia.com>
- <20220228203401.7155-1-alex.sierra@amd.com>
- <2a042493-d04d-41b1-ea12-b326d2116861@redhat.com>
- <41469645-55be-1aaa-c1ef-84a123fdb4ea@amd.com>
- <bfae7d17-eb50-55b1-1275-5ba0f86a5273@redhat.com>
- <353c7bbd-b20e-8a7a-029a-cda9b531e5e8@amd.com>
-From:   David Hildenbrand <david@redhat.com>
-Organization: Red Hat
-In-Reply-To: <353c7bbd-b20e-8a7a-029a-cda9b531e5e8@amd.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1f34c8435fed21e9583492661ceb20d642a75699.1646058596.git.fdmanana@suse.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 01.03.22 17:30, Felix Kuehling wrote:
-> Am 2022-03-01 um 11:22 schrieb David Hildenbrand:
->>>>>    		if (PageReserved(page))
->>>>> diff --git a/mm/migrate.c b/mm/migrate.c
->>>>> index c31d04b46a5e..17d049311b78 100644
->>>>> --- a/mm/migrate.c
->>>>> +++ b/mm/migrate.c
->>>>> @@ -1614,7 +1614,7 @@ static int add_page_for_migration(struct mm_struct *mm, unsigned long addr,
->>>>>    		goto out;
->>>>>    
->>>>>    	/* FOLL_DUMP to ignore special (like zero) pages */
->>>>> -	follflags = FOLL_GET | FOLL_DUMP;
->>>>> +	follflags = FOLL_GET | FOLL_DUMP | FOLL_LRU;
->>>>>    	page = follow_page(vma, addr, follflags);
->>>> Why wouldn't we want to dump DEVICE_COHERENT pages? This looks wrong.
->>> This function later calls isolate_lru_page, which is something you can't
->>> do with a device page.
->>>
->> Then, that code might require care instead. We most certainly don't want
->> to have random memory holes in a dump just because some anonymous memory
->> was migrated to DEVICE_COHERENT.
-> I don't think this code is for core dumps. The call chain I see is
+On Mon, Feb 28, 2022 at 02:32:03PM +0000, fdmanana@kernel.org wrote:
+> From: Filipe Manana <fdmanana@suse.com>
 > 
-> SYSCALL_DEFINE6(move_pages, ...) -> kernel_move_pages -> do_pages_move 
-> -> add_page_for_migration
+> Some users recently reported that MariaDB was getting a read corruption
+> when using io_uring on top of btrfs. This started to happen in 5.16,
+> after commit 51bd9563b6783d ("btrfs: fix deadlock due to page faults
+> during direct IO reads and writes"). That changed btrfs to use the new
+> iomap flag IOMAP_DIO_PARTIAL and to disable page faults before calling
+> iomap_dio_rw(). This was necessary to fix deadlocks when the iovector
+> corresponds to a memory mapped file region. That type of scenario is
+> exercised by test case generic/647 from fstests, and it also affected
+> gfs2, which, besides btrfs, is the only user of IOMAP_DIO_PARTIAL.
 > 
+> For this MariaDB scenario, we attempt to read 16K from file offset X
+> using IOCB_NOWAIT and io_uring. In that range we have 4 extents, each
+> with a size of 4K, and what happens is the following:
+> 
+> 1) btrfs_direct_read() disables page faults and calls iomap_dio_rw();
+> 
+> 2) iomap creates a struct iomap_dio object, its reference count is
+>    initialized to 1 and its ->size field is initialized to 0;
+> 
+> 3) iomap calls btrfs_iomap_begin() with file offset X, which finds the
+>    first 4K extent, and setups an iomap for this extent consisting of
+>    a single page;
+> 
+> 4) At iomap_dio_bio_iter(), we are able to access the first page of the
+>    buffer (struct iov_iter) with bio_iov_iter_get_pages() without
+>    triggering a page fault;
+> 
+> 5) iomap submits a bio for this 4K extent
+>    (iomap_dio_submit_bio() -> btrfs_submit_direct()) and increments
+>    the refcount on the struct iomap_dio object to 2; The ->size field
+>    of the struct iomap_dio object is incremented to 4K;
+> 
+> 6) iomap calls btrfs_iomap_begin() again, this time with a file
+>    offset of X + 4K. There we setup an iomap for the next extent
+>    that also has a size of 4K;
+> 
+> 7) Then at iomap_dio_bio_iter() we call bio_iov_iter_get_pages(),
+>    which tries to access the next page (2nd page) of the buffer.
+>    This triggers a page fault and returns -EFAULT;
+> 
+> 8) At __iomap_dio_rw() we see the -EFAULT, but we reset the error
+>    to 0 because we passed the flag IOMAP_DIO_PARTIAL to iomap and
+>    the struct iomap_dio object has a ->size value of 4K (we submitted
+>    a bio for an extent already). The 'wait_for_completion' variable
+>    is not set to true, because our iocb has IOCB_NOWAIT set;
+> 
+> 9) At the bottom of __iomap_dio_rw(), we decrement the reference count
+>    of the struct iomap_dio object from 2 to 1. Because we were not
+>    the only ones holding a reference on it and 'wait_for_completion' is
+>    set to false, -EIOCBQUEUED is returned to btrfs_direct_read(), which
+>    just returns it up the callchain, up to io_uring;
+> 
+> 10) The bio submitted for the first extent (step 5) completes and its
+>     bio endio function, iomap_dio_bio_end_io(), decrements the last
+>     reference on the struct iomap_dio object, resulting in calling
+>     iomap_dio_complete_work() -> iomap_dio_complete().
+> 
+> 11) At iomap_dio_complete() we adjust the iocb->ki_pos from X to X + 4K
+>     and return 4K (the amount of io done) to iomap_dio_complete_work();
+> 
+> 12) iomap_dio_complete_work() calls the iocb completion callback,
+>     iocb->ki_complete() with a second argument value of 4K (total io
+>     done) and the iocb with the adjust ki_pos of X + 4K. This results
+>     in completing the read request for io_uring, leaving it with a
+>     result of 4K bytes read, and only the first page of the buffer
+>     filled in, while the remaining 3 pages, corresponding to the other
+>     3 extents, were not filled;
 
-Ah, sorry, I got mislead by FOLL_DUMP and thought we'd be in
-get_dump_page() . As you said, nothing to do.
+Just checking my understanding of the problem here -- the first page is
+filled, the directio read returns that it read $pagesize bytes, and the
+remaining 3 pages in the reader's buffer are untouched?  And it's not
+the case that there's some IO running in the background that will
+eventually fill those three pages, nor is it the case that iouring will
+say that the read completed 4k before the contents actually reach the
+page?
 
--- 
-Thanks,
+> 13) For the application, the result is unexpected because if we ask
+>     to read N bytes, it expects to get N bytes read as long as those
+>     N bytes don't cross the EOF (i_size).
 
-David / dhildenb
+Hmm.  Is the problem here that directio readers expect that a read
+request for N bytes either (reads N bytes and returns N) or (returns the
+usual negative errno), and nobody's expecting a short direct read?
 
+> So fix this by making __iomap_dio_rw() assign true to the boolean variable
+> 'wait_for_completion' when we have IOMAP_DIO_PARTIAL set, we did some
+> progress for a read and we have not crossed the EOF boundary. Do this even
+> if the read has IOCB_NOWAIT set, as it's the only way to avoid providing
+> an unexpected result to an application. This results in returning a
+> positive value to the iomap caller, which tells it to fault in the
+> remaining pages associated to the buffer (struct iov_iter), followed by
+> another call to iomap_dio_rw() with IOMAP_DIO_PARTIAL set, in order to
+> continue the rest of the read operation.
+
+I would have thought that a NOWAIT read wouldn't wait for anything,
+including page faults...
+
+> The problem can also be triggered with the following simple program:
+> 
+>   /* Get O_DIRECT */
+>   #ifndef _GNU_SOURCE
+>   #define _GNU_SOURCE
+>   #endif
+> 
+>   #include <stdio.h>
+>   #include <stdlib.h>
+>   #include <unistd.h>
+>   #include <fcntl.h>
+>   #include <errno.h>
+>   #include <string.h>
+>   #include <liburing.h>
+> 
+>   int main(int argc, char *argv[])
+>   {
+>       char *foo_path;
+>       struct io_uring ring;
+>       struct io_uring_sqe *sqe;
+>       struct io_uring_cqe *cqe;
+>       struct iovec iovec;
+>       int fd;
+>       long pagesize;
+>       void *write_buf;
+>       void *read_buf;
+>       ssize_t ret;
+>       int i;
+> 
+>       if (argc != 2) {
+>           fprintf(stderr, "Use: %s <directory>\n", argv[0]);
+>           return 1;
+>       }
+> 
+>       foo_path = malloc(strlen(argv[1]) + 5);
+>       if (!foo_path) {
+>           fprintf(stderr, "Failed to allocate memory for file path\n");
+>           return 1;
+>       }
+>       strcpy(foo_path, argv[1]);
+>       strcat(foo_path, "/foo");
+> 
+>       /*
+>        * Create file foo with 2 extents, each with a size matching
+>        * the page size. Then allocate a buffer to read both extents
+>        * with io_uring, using O_DIRECT and IOCB_NOWAIT. Before doing
+>        * the read with io_uring, access the first page of the buffer
+>        * to fault it in, so that during the read we only trigger a
+>        * page fault when accessing the second page of the buffer.
+>        */
+>        fd = open(foo_path, O_CREAT | O_TRUNC | O_WRONLY |
+>                 O_DIRECT, 0666);
+>        if (fd == -1) {
+>            fprintf(stderr,
+>                    "Failed to create file 'foo': %s (errno %d)",
+>                    strerror(errno), errno);
+>            return 1;
+>        }
+> 
+>        pagesize = sysconf(_SC_PAGE_SIZE);
+>        ret = posix_memalign(&write_buf, pagesize, 2 * pagesize);
+>        if (ret) {
+>            fprintf(stderr, "Failed to allocate write buffer\n");
+>            return 1;
+>        }
+> 
+>        memset(write_buf, 0xab, pagesize);
+>        memset(write_buf + pagesize, 0xcd, pagesize);
+> 
+>        /* Create 2 extents, each with a size matching page size. */
+>        for (i = 0; i < 2; i++) {
+>            ret = pwrite(fd, write_buf + i * pagesize, pagesize,
+> 	                i * pagesize);
+>            if (ret != pagesize) {
+>                fprintf(stderr,
+>                      "Failed to write to file, ret = %ld errno %d (%s)\n",
+>                       ret, errno, strerror(errno));
+>                return 1;
+>            }
+>            ret = fsync(fd);
+>            if (ret != 0) {
+>                fprintf(stderr, "Failed to fsync file\n");
+>                return 1;
+>            }
+>        }
+> 
+>        close(fd);
+>        fd = open(foo_path, O_RDONLY | O_DIRECT);
+>        if (fd == -1) {
+>            fprintf(stderr,
+>                    "Failed to open file 'foo': %s (errno %d)",
+>                    strerror(errno), errno);
+>            return 1;
+>        }
+> 
+>        ret = posix_memalign(&read_buf, pagesize, 2 * pagesize);
+>        if (ret) {
+>            fprintf(stderr, "Failed to allocate read buffer\n");
+>            return 1;
+>        }
+> 
+>        /*
+>         * Fault in only the first page of the read buffer.
+>         * We want to trigger a page fault for the 2nd page of the
+>         * read buffer during the read operation with io_uring
+>         * (O_DIRECT and IOCB_NOWAIT).
+>         */
+>        memset(read_buf, 0, 1);
+> 
+>        ret = io_uring_queue_init(1, &ring, 0);
+>        if (ret != 0) {
+>            fprintf(stderr, "Failed to create io_uring queue\n");
+>            return 1;
+>        }
+> 
+>        sqe = io_uring_get_sqe(&ring);
+>        if (!sqe) {
+>            fprintf(stderr, "Failed to get io_uring sqe\n");
+>            return 1;
+>        }
+> 
+>        iovec.iov_base = read_buf;
+>        iovec.iov_len = 2 * pagesize;
+>        io_uring_prep_readv(sqe, fd, &iovec, 1, 0);
+> 
+>        ret = io_uring_submit_and_wait(&ring, 1);
+>        if (ret != 1) {
+>            fprintf(stderr,
+>                    "Failed at io_uring_submit_and_wait()\n");
+>            return 1;
+>        }
+> 
+>        ret = io_uring_wait_cqe(&ring, &cqe);
+>        if (ret < 0) {
+>            fprintf(stderr, "Failed at io_uring_wait_cqe()\n");
+>            return 1;
+>        }
+> 
+>        printf("io_uring read result for file foo:\n\n");
+>        printf("  cqe->res = %d (expected %d)\n", cqe->res, 2 * pagesize);
+>        printf("  memcmp(read_buf, write_buf) == %d (expected 0)\n",
+>               memcmp(read_buf, write_buf, 2 * pagesize));
+> 
+>        io_uring_cqe_seen(&ring, cqe);
+>        io_uring_queue_exit(&ring);
+> 
+>        return 0;
+>   }
+> 
+> When running it on an unpatched kernel:
+> 
+>   $ gcc io_uring_test.c -luring
+>   $ mkfs.btrfs -f /dev/sda
+>   $ mount /dev/sda /mnt/sda
+>   $ ./a.out /mnt/sda
+>   io_uring read result for file foo:
+> 
+>     cqe->res = 4096 (expected 8192)
+>     memcmp(read_buf, write_buf) == -205 (expected 0)
+
+Does memcmp(read_buf, write_buf, pagesize) == 0?  To me it looks like
+you requested a NOWAIT direct read of 8k and it returned 4k, which takes
+us back to the question of whether or not nowait-directio readers ought
+to expect to handle short reads?
+
+--D
+
+> After this patch, the read always returns 8192 bytes, with the buffer
+> filled with the correct data. Although that reproducer always triggers
+> the bug in my test vms, it's possible that it will not be so reliable
+> on other environments, as that can happen if the bio for the first
+> extent completes and decrements the reference on the struct iomap_dio
+> object before we do the atomic_dec_and_test() on the reference at
+> __iomap_dio_rw().
+> 
+> A test case for fstests will followup later.
+> 
+> Link: https://lore.kernel.org/linux-btrfs/CABVffEM0eEWho+206m470rtM0d9J8ue85TtR-A_oVTuGLWFicA@mail.gmail.com/
+> Link: https://lore.kernel.org/linux-btrfs/CAHF2GV6U32gmqSjLe=XKgfcZAmLCiH26cJ2OnHGp5x=VAH4OHQ@mail.gmail.com/
+> Signed-off-by: Filipe Manana <fdmanana@suse.com>
+> ---
+>  fs/iomap/direct-io.c | 14 +++++++++++++-
+>  1 file changed, 13 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+> index 03ea367df19a..9a6fdefa34f3 100644
+> --- a/fs/iomap/direct-io.c
+> +++ b/fs/iomap/direct-io.c
+> @@ -606,7 +606,19 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+>  		iov_iter_revert(iter, iomi.pos - dio->i_size);
+>  
+>  	if (ret == -EFAULT && dio->size && (dio_flags & IOMAP_DIO_PARTIAL)) {
+> -		if (!(iocb->ki_flags & IOCB_NOWAIT))
+> +		/*
+> +		 * If we are a NOWAIT request we don't want to wait for the
+> +		 * completion of any previously submitted bios. However there
+> +		 * is one exception: if we are doing a read and we have not
+> +		 * submitted bios for everything we are supposed to read, then
+> +		 * we have to wait for completion - otherwise we may end up
+> +		 * returning -EIOCBQUEUED without having read everything we
+> +		 * can read, making our caller think we have reached EOF.
+> +		 */
+> +		if (!(iocb->ki_flags & IOCB_NOWAIT) ||
+> +		    (iov_iter_rw(iter) == READ &&
+> +		     iomi.len > 0 &&
+> +		     iomi.pos < dio->i_size))
+>  			wait_for_completion = true;
+>  		ret = 0;
+>  	}
+> -- 
+> 2.33.0
+> 
