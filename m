@@ -2,139 +2,109 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95BB0C433F5
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Mar 2022 00:42:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD56BC433FE
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Mar 2022 01:12:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229483AbiCAAnh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 28 Feb 2022 19:43:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56644 "EHLO
+        id S231821AbiCABNV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 28 Feb 2022 20:13:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60536 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229943AbiCAAnf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Feb 2022 19:43:35 -0500
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id AC326CE8
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Feb 2022 16:42:53 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-17-0.pa.vic.optusnet.com.au [49.186.17.0])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 1969910C7BD1;
-        Tue,  1 Mar 2022 11:42:50 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nOqbJ-0002Um-UK; Tue, 01 Mar 2022 11:42:49 +1100
-Date:   Tue, 1 Mar 2022 11:42:49 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     sandeen@sandeen.net, Christoph Hellwig <hch@lst.de>,
-        Dave Chinner <dchinner@redhat.com>,
-        Theodore Ts'o <tytso@mit.edu>, linux-xfs@vger.kernel.org,
-        allison.henderson@oracle.com
-Subject: Re: [PATCH 19/17] mkfs: increase default log size for new (aka
- bigtime) filesystems
-Message-ID: <20220301004249.GT59715@dread.disaster.area>
-References: <20220226213720.GQ59715@dread.disaster.area>
- <20220228232211.GA117732@magnolia>
+        with ESMTP id S231659AbiCABNU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Feb 2022 20:13:20 -0500
+Received: from mail-lf1-x135.google.com (mail-lf1-x135.google.com [IPv6:2a00:1450:4864:20::135])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E26D9F44
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Feb 2022 17:12:40 -0800 (PST)
+Received: by mail-lf1-x135.google.com with SMTP id f37so24294472lfv.8
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Feb 2022 17:12:40 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=7sPR5FUt6BL5vY4zH7orS+P13v54d72vP0e3RrfoSc8=;
+        b=dNq4touzRtz7uHynhq2fJfbFKWoMp3PFbmT4jP+lWtA+XEV7MUTaj9Bwb0dDhwVCKm
+         Q/BC42Z7ZY0u0gvdOMlG7LxxZ5h5HJ2Yte8aQDgGIv9cAV05D8AcjdgXO3040/xi0YYq
+         UaAoEYAw2FUw8zaH6DSetc0Wr5+8+bf3j3dq4=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=7sPR5FUt6BL5vY4zH7orS+P13v54d72vP0e3RrfoSc8=;
+        b=ikpbDS7eOUWYq1U3wgCeEBmAY+AebcgvcASi4MGPC1ylDokp/pNaqoeVPckraRxfxA
+         faKGTHNHKtxrtTu+gT/sU/rQtQMaLBmDrrYICFQ8mLxEIlJzWAwT/n3DdhbElUxNADN/
+         hVds7nMPqDjyIHmcQFpDcSJSIXtlbU+9ParsKcwhjt7Jo5/SZ/6Ns9bmoFXUjr21zylP
+         CVJ6Kjil+oRHM8oA1O2QcqliYZRx1aUMUFu80nUQqlLnF1JGEdI81Kvs4A2dlaRJEqhD
+         cCbM27prWWmZ3yCStwzui8SXJMgmyd2OsFjLwx1fAM6b8mWULnELGhIewNc1ryO4cZpu
+         KQdg==
+X-Gm-Message-State: AOAM533ZkgzCKg8p9pj3VspsZou01db+DChwn019/26uDWb4TfyWAas/
+        vipopN3GbdfauCa37tjUrBy13lYemjhjdFnAH7o=
+X-Google-Smtp-Source: ABdhPJwm223NvnhFenkr7w1gdXPitkv1kjYzECkSUpLN9Qr5QyPg0qVPWKbgZ7TB9e3kN4frULJ+xQ==
+X-Received: by 2002:ac2:4423:0:b0:438:cc25:81ae with SMTP id w3-20020ac24423000000b00438cc2581aemr13816280lfl.212.1646097159041;
+        Mon, 28 Feb 2022 17:12:39 -0800 (PST)
+Received: from mail-lf1-f46.google.com (mail-lf1-f46.google.com. [209.85.167.46])
+        by smtp.gmail.com with ESMTPSA id p9-20020a19f109000000b00443a79313a8sm1216106lfh.271.2022.02.28.17.12.37
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 28 Feb 2022 17:12:37 -0800 (PST)
+Received: by mail-lf1-f46.google.com with SMTP id t13so12340990lfd.9
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Feb 2022 17:12:37 -0800 (PST)
+X-Received: by 2002:ac2:4d91:0:b0:443:127b:558a with SMTP id
+ g17-20020ac24d91000000b00443127b558amr14616139lfe.542.1646097157337; Mon, 28
+ Feb 2022 17:12:37 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220228232211.GA117732@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=621d6c0c
-        a=+dVDrTVfsjPpH/ci3UuFng==:117 a=+dVDrTVfsjPpH/ci3UuFng==:17
-        a=kj9zAlcOel0A:10 a=o8Y5sQTvuykA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=KM7FsSbDbDw--HxBGP0A:9 a=7Zwj6sZBwVKJAoWSPKxL6X1jA+E=:19
-        a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
+References: <CACsaVZ+mt3CfdXV0_yJh7d50tRcGcRZ12j3n6-hoX2cz3+njsg@mail.gmail.com>
+ <20220219210354.GF59715@dread.disaster.area> <CACsaVZ+LZUebtsGuiKhNV_No8fNLTv5kJywFKOigieB1cZcKUw@mail.gmail.com>
+ <YhN76/ONC9qgIKQc@silpixa00400314> <CACsaVZJFane88cXxG_E1VkcMcJm8YVN+GDqQ2+tRYNpCf+m8zA@mail.gmail.com>
+ <CAHk-=whVT2GcwiJM8m-XzgJj8CjytTHi_pmgmOnSpzvGWzZM1A@mail.gmail.com>
+ <Yh0y75aegqS4jIP7@silpixa00400314> <Yh1aLfy/oBawCJIg@gondor.apana.org.au>
+In-Reply-To: <Yh1aLfy/oBawCJIg@gondor.apana.org.au>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Mon, 28 Feb 2022 17:12:20 -0800
+X-Gmail-Original-Message-ID: <CAHk-=wi+xewHz=BH7LcZAxrj9JXi66s9rp+kBqRchVG3a-b2BA@mail.gmail.com>
+Message-ID: <CAHk-=wi+xewHz=BH7LcZAxrj9JXi66s9rp+kBqRchVG3a-b2BA@mail.gmail.com>
+Subject: Re: Intel QAT on A2SDi-8C-HLN4F causes massive data corruption with
+ dm-crypt + xfs
+To:     Herbert Xu <herbert@gondor.apana.org.au>
+Cc:     Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
+        Kyle Sanderson <kyle.leet@gmail.com>,
+        Dave Chinner <david@fromorbit.com>, qat-linux@intel.com,
+        Linux-Kernal <linux-kernel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
+        device-mapper development <dm-devel@redhat.com>,
+        Greg KH <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Feb 28, 2022 at 03:22:11PM -0800, Darrick J. Wong wrote:
-> On Sun, Feb 27, 2022 at 08:37:20AM +1100, Dave Chinner wrote:
-> > On Fri, Feb 25, 2022 at 06:54:50PM -0800, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <djwong@kernel.org>
-> > > 
-> > > Recently, the upstream kernel maintainer has been taking a lot of heat on
-> > > account of writer threads encountering high latency when asking for log
-> > > grant space when the log is small.  The reported use case is a heavily
-> > > threaded indexing product logging trace information to a filesystem
-> > > ranging in size between 20 and 250GB.  The meetings that result from the
-> > > complaints about latency and stall warnings in dmesg both from this use
-> > > case and also a large well known cloud product are now consuming 25% of
-> > > the maintainer's weekly time and have been for months.
-> > 
-> > Is the transaction reservation space exhaustion caused by, as I
-> > pointed out in another thread yesterday, the unbound concurrency in
-> > IO completion?
-> 
-> No.  They're using synchronous directio writes to write trace data in 4k
+On Mon, Feb 28, 2022 at 3:26 PM Herbert Xu <herbert@gondor.apana.org.au> wrote:
+>
+> Indeed, qat has been disabled for dm-crypt since
+>
+> commit b8aa7dc5c7535f9abfca4bceb0ade9ee10cf5f54
+> Author: Mikulas Patocka <mpatocka@redhat.com>
+> Date:   Thu Jul 9 23:20:41 2020 -0700
+>
+>     crypto: drivers - set the flag CRYPTO_ALG_ALLOCATES_MEMORY
+>
+> So this should no longer be an issue with an up-to-date kernel.
 
-synchronous as in O_(D)SYNC or as in "not using AIO"? Is is also
-append data, and is it one file per logging thread or multiple
-threads writing to a single file?
+Ok, that commit message doesn't exactly make it clear that it also
+fixes a major disk corruption issue.
 
-> chunks.  The number of files does not exceed the number of writer
-> threads, and the number of writer threads can be up to 10*NR_CPUS (~400
-> on the test system).  If I'm reading the iomap directio code correctly,
-> the writer threads block and do not issue more IO until the first IO
-> completes...
+It sounds like it was incidental and almost accidental that it fixed
+that thing, and nobody realized it should perhaps be also moved to
+stable.
 
-So, up to 400 threads concurrently issuing IO that does block
-allocation and performing unwritten extent conversion, so up to ~800
-concurrent running allocation related transactions at a time?
+Oh, except I think you *also* need commit cd74693870fb ("dm crypt:
+don't use drivers that have CRYPTO_ALG_ALLOCATES_MEMORY") that
+actually reacts to that flag.
 
-> > i.e. we have hundreds of active concurrent
-> > transactions that then block on common objects between them (e.g.
-> > inode locks) and serialise?
-> 
-> ...so yes, there are hundreds of active transactions, but (AFAICT) they
-> mostly don't share objects, other than the log itself.  Once we made the
-> log bigger, the hotspot moved to the AGF buffers.  I'm not sure what to
-> do about /that/, since a 5GB AG is pretty small.  That aside...
+Which also wasn't marked for stable, and which is why 5.10 is ok, but
+5.9 (which has that first commit, but not the second) is not ok.
 
-No surprise, AG selection is based on the is based on trying to get
-an adjacent extent for file extension. Hence assuming random
-distribution because of contention and skipping done by the search
-algorithm, then if we have ~50 AGs and 400 writers trying to
-allocate at the same time then you've got, on average, 8 allocations
-per AG being attempted roughly concurrently.
+Of course, maybe they got marked for stable separately and actually
+have been back-ported, but it doesn't sound like that happened.. I
+didn't actually check.
 
-Of course, append write workloads tend to respond really well to
-extent size hints - make sure you allocate a large chunk that
-extents beyond EOF on the first write, then subsequent extending
-writes only need unwritten extent conversion which shouldn't need
-AGF access because it won't require BMBT block allocation during
-conversion because it's just taking away from the unwritten extent
-and putting the space into the adjacent written extent.
-
-> > Hence only handful of completions can
-> > actually run concurrently, depsite every completion holding a full
-> > reservation of log space to allow them to run concurrently?
-> 
-> ...this is still an issue for different scenarios.  I would still be
-> interested in experimenting with constraining the number of writeback
-> completion workers that get started, even though that isn't at play
-> here.
-
-Well, the "running out of log space" problem is still going to
-largely be caused by having up to 400 concurrent unwritten extent
-conversion transactions running at any given point in time...
-
-> > I also wonder if the right thing to do here is just set a minimum
-> > log size of 32MB? The worst of the long tail latencies are mitigated
-> > by this point, and so even small filesystems grown out to 200GB will
-> > have a log size that results in decent performance for this sort of
-> > workload.
-> 
-> Are you asking for a second patch where mkfs refuses to format a log
-> smaller than 32MB (e.g. 8GB with the x86 defaults)?  Or a second patch
-> that cranks the minimum log size up to 32MB, even if that leads to
-> absurd results (e.g. 66MB filesystems with 2 AGs and a 32MB log)?
-
-I'm suggesting the latter.
-
-Along with a refusal to make an XFS filesystem smaller than, say,
-256MB, because allowing users to make tiny XFS filesystems seems to
-always just lead to future troubles.
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+                  Linus
