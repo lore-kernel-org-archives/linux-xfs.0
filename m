@@ -2,120 +2,162 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B1F8C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Mar 2022 09:07:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33F4CC433F5
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Mar 2022 09:31:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233684AbiCAJIB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Mar 2022 04:08:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55810 "EHLO
+        id S233757AbiCAJbl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Mar 2022 04:31:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44580 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233646AbiCAJHx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Mar 2022 04:07:53 -0500
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A359689CD8;
-        Tue,  1 Mar 2022 01:07:11 -0800 (PST)
-Received: from canpemm500002.china.huawei.com (unknown [172.30.72.56])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4K7BDc6q0nzdZmq;
-        Tue,  1 Mar 2022 17:05:52 +0800 (CST)
-Received: from [10.174.177.76] (10.174.177.76) by
- canpemm500002.china.huawei.com (7.192.104.244) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Tue, 1 Mar 2022 17:07:08 +0800
-Subject: Re: [PATCH 2/8] mm: khugepaged: remove redundant check for
- VM_NO_KHUGEPAGED
-To:     Yang Shi <shy828301@gmail.com>
-CC:     <linux-mm@kvack.org>, <linux-fsdevel@vger.kernel.org>,
-        <linux-ext4@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <vbabka@suse.cz>,
-        <kirill.shutemov@linux.intel.com>, <songliubraving@fb.com>,
-        <riel@surriel.com>, <willy@infradead.org>, <ziy@nvidia.com>,
-        <akpm@linux-foundation.org>, <tytso@mit.edu>,
-        <adilger.kernel@dilger.ca>, <darrick.wong@oracle.com>
-References: <20220228235741.102941-1-shy828301@gmail.com>
- <20220228235741.102941-3-shy828301@gmail.com>
-From:   Miaohe Lin <linmiaohe@huawei.com>
-Message-ID: <968ccc31-a87c-4657-7193-464f6b5b9259@huawei.com>
-Date:   Tue, 1 Mar 2022 17:07:07 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.0
+        with ESMTP id S232523AbiCAJbl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Mar 2022 04:31:41 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id BE7CC85658
+        for <linux-xfs@vger.kernel.org>; Tue,  1 Mar 2022 01:31:00 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1646127059;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=QBY88ztZKva4Dfvhre7a4FFaoq99+j707lGLFNj1qsE=;
+        b=hveHPxCLpWQTStfeBEOIz8ES9GayJXFkAMvoqHF6ZKcfls4HfcUfrCUHKL2ZYsuQUqPNp0
+        FtkCmY2mLdgSJN83iz5F9PJE6T0oZeERBT4Ax6B1bMqGn9oxgw4wGHt4f1i5cgq3tcBKaW
+        TSdBL/WnZ007umT5NUCBvDkMhtam3Nc=
+Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
+ [209.85.221.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-315-MZttaGYUOLasnHTWIxz2lw-1; Tue, 01 Mar 2022 04:30:58 -0500
+X-MC-Unique: MZttaGYUOLasnHTWIxz2lw-1
+Received: by mail-wr1-f72.google.com with SMTP id q12-20020adfbb8c000000b001ea938f79e9so2993593wrg.23
+        for <linux-xfs@vger.kernel.org>; Tue, 01 Mar 2022 01:30:58 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:organization:in-reply-to
+         :content-transfer-encoding;
+        bh=QBY88ztZKva4Dfvhre7a4FFaoq99+j707lGLFNj1qsE=;
+        b=fxrCLwQEwezgHM4agII1xnhuRgNGecyJA1Ht+/yAD1hCNO+iJT5PFDt8+Snxi+mFHJ
+         q6Ecq3CWdm6F4qvOkvwQ/z01R5QrGWbfhEIRNP9PCndUsTVnhbI+nrwgJlMyqhclOT4n
+         IBK8iTQcx9bMqYFuD9fh6p6WtxluU2sKqM5N4wKmQMuibP8jNPyp26xck9d52s2Scckn
+         abfbU9K71UnrSJVzoIz4dOX7qWKchmfvpXx4PoALV8a5JWYvNBGcp/cg+K2JKZVEbV03
+         FOFm80+z6SFFihMjc7DfdnRAAuYyXUsTW7pCnCDITuL/w1jCSuJR3LJANnssYkh98mqq
+         tjtQ==
+X-Gm-Message-State: AOAM531GDjg/uWttf9vIM7Hb+inQHzECoXCr43ms6DkekKg1bXyRI5og
+        wss3hhB4xqZ0bA4sB/9gGCsUkVWZUijY7Vuoj56GkiUcZamWRBTcr8ya4d6X6zLAGqMzk1xHEws
+        LOS1ViGkOMoYRgRXkTwFi
+X-Received: by 2002:a1c:a382:0:b0:381:cfd:5564 with SMTP id m124-20020a1ca382000000b003810cfd5564mr16055526wme.103.1646127057606;
+        Tue, 01 Mar 2022 01:30:57 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJxxZ01JTKa85lEAtW7rkRzMrJlA0XsQxMME6SiPZ1SwraatSqHyEOf6kIqynfEITUDTCDJILg==
+X-Received: by 2002:a1c:a382:0:b0:381:cfd:5564 with SMTP id m124-20020a1ca382000000b003810cfd5564mr16055505wme.103.1646127057353;
+        Tue, 01 Mar 2022 01:30:57 -0800 (PST)
+Received: from ?IPV6:2a09:80c0:192:0:20af:34be:985b:b6c8? ([2a09:80c0:192:0:20af:34be:985b:b6c8])
+        by smtp.gmail.com with ESMTPSA id j7-20020adfd207000000b001edc209e70asm12630321wrh.71.2022.03.01.01.30.56
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 01 Mar 2022 01:30:56 -0800 (PST)
+Message-ID: <e0ff6c64-7ab0-6300-7427-5a3e4364661e@redhat.com>
+Date:   Tue, 1 Mar 2022 10:30:55 +0100
 MIME-Version: 1.0
-In-Reply-To: <20220228235741.102941-3-shy828301@gmail.com>
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+Subject: Re: [RFC PATCH 1/7] mm/gup: introduce pin_user_page()
 Content-Language: en-US
+To:     John Hubbard <jhubbard@nvidia.com>, Jens Axboe <axboe@kernel.dk>,
+        Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>,
+        Dave Chinner <dchinner@redhat.com>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Chaitanya Kulkarni <kch@nvidia.com>
+Cc:     linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+        LKML <linux-kernel@vger.kernel.org>
+References: <20220225085025.3052894-1-jhubbard@nvidia.com>
+ <20220225085025.3052894-2-jhubbard@nvidia.com>
+ <6ba088ae-4f84-6cd9-cbcc-bbc6b9547f04@redhat.com>
+ <36300717-48b2-79ec-a97b-386e36bbd2a6@nvidia.com>
+ <d3973adb-9403-5b64-23ec-d6800d67e538@redhat.com>
+ <f531a5be-9698-eb08-f10d-75adc2028483@nvidia.com>
+From:   David Hildenbrand <david@redhat.com>
+Organization: Red Hat
+In-Reply-To: <f531a5be-9698-eb08-f10d-75adc2028483@nvidia.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.177.76]
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- canpemm500002.china.huawei.com (7.192.104.244)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2022/3/1 7:57, Yang Shi wrote:
-> The hugepage_vma_check() called by khugepaged_enter_vma_merge() does
-> check VM_NO_KHUGEPAGED. Remove the check from caller and move the check
-> in hugepage_vma_check() up.
+
+>>>> That might be problematic and possibly the wrong approach, depending on
+>> *what* we're actually pinning and what we're intending to do with that.
+>>
+>> My assumption would have been that this interface is to duplicate a pin
 > 
-> More checks may be run for VM_NO_KHUGEPAGED vmas, but MADV_HUGEPAGE is
-> definitely not a hot path, so cleaner code does outweigh.
+> I see that I need to put more documentation here, so people don't have
+> to assume things... :)
 > 
-> Signed-off-by: Yang Shi <shy828301@gmail.com>
-> ---
->  mm/khugepaged.c | 9 ++++++---
->  1 file changed, 6 insertions(+), 3 deletions(-)
+
+Yes, please :)
+
+>> on a page, which would be perfectly fine, because the page actually saw
+>> a FOLL_PIN previously.
+>>
+>> We're taking a pin on a page that we haven't obtained via FOLL_PIN if I
+>> understand correctly. Which raises the questions, how do we end up with
+>> the pages here, and what are we doing to do with them (use them like we
+>> obtained them via FOLL_PIN?)?
+>>
+>>
+>> If it's converting FOLL_GET -> FOLL_PIN manually, then we're bypassing
+>> FOLL_PIN special handling in GUP code:
+>>
+>> page = get_user_pages(FOLL_GET)
+>> pin_user_page(page)
+>> put_page(page)
 > 
-> diff --git a/mm/khugepaged.c b/mm/khugepaged.c
-> index 131492fd1148..82c71c6da9ce 100644
-> --- a/mm/khugepaged.c
-> +++ b/mm/khugepaged.c
-> @@ -366,8 +366,7 @@ int hugepage_madvise(struct vm_area_struct *vma,
->  		 * register it here without waiting a page fault that
->  		 * may not happen any time soon.
->  		 */
-> -		if (!(*vm_flags & VM_NO_KHUGEPAGED) &&
-> -				khugepaged_enter_vma_merge(vma, *vm_flags))
-> +		if (khugepaged_enter_vma_merge(vma, *vm_flags))
->  			return -ENOMEM;
->  		break;
->  	case MADV_NOHUGEPAGE:
-> @@ -446,6 +445,9 @@ static bool hugepage_vma_check(struct vm_area_struct *vma,
->  	if (!transhuge_vma_enabled(vma, vm_flags))
->  		return false;
->  
-> +	if (vm_flags & VM_NO_KHUGEPAGED)
-> +		return false;
-> +
-
-This patch does improve the readability. But I have a question.
-It seems VM_NO_KHUGEPAGED is not checked in the below if-condition:
-
-	/* Only regular file is valid */
-	if (IS_ENABLED(CONFIG_READ_ONLY_THP_FOR_FS) && vma->vm_file &&
-	    (vm_flags & VM_EXEC)) {
-		struct inode *inode = vma->vm_file->f_inode;
-
-		return !inode_is_open_for_write(inode) &&
-			S_ISREG(inode->i_mode);
-	}
-
-If we return false due to VM_NO_KHUGEPAGED here, it seems it will affect the
-return value of this CONFIG_READ_ONLY_THP_FOR_FS condition check.
-Or am I miss something?
-
-Thanks.
-
->  	if (vma->vm_file && !IS_ALIGNED((vma->vm_start >> PAGE_SHIFT) -
->  				vma->vm_pgoff, HPAGE_PMD_NR))
->  		return false;
-> @@ -471,7 +473,8 @@ static bool hugepage_vma_check(struct vm_area_struct *vma,
->  		return false;
->  	if (vma_is_temporary_stack(vma))
->  		return false;
-> -	return !(vm_flags & VM_NO_KHUGEPAGED);
-> +
-> +	return true;
->  }
->  
->  int __khugepaged_enter(struct mm_struct *mm)
+> No, that's not where this is going at all. The idea, which  I now see
+> needs better documentation, is to handle file-backed pages. Only.
 > 
+> We're not converting from one type to another, nor are we doubling up.
+> We're just keeping the pin type consistent so that the vast block-
+> processing machinery can take pages in and handle them, then release
+> them at the end with bio_release_pages(), which will call
+> unpin_user_pages().
+> 
+
+Ah, okay, that makes sense. Glad to hear that we're intending to use
+this with !anon pages only.
+
+>>
+>>
+>> For anonymous pages, we'll bail out for example once we have
+>>
+>> https://lkml.kernel.org/r/20220224122614.94921-14-david@redhat.com
+>>
+>> Because the conditions for pinned anonymous pages might no longer hold.
+>>
+>> If we won't call pin_user_page() on anonymous pages, it would be fine.
+> 
+> We won't, and in fact, I should add WARN_ON_ONCE(PageAnon(page)) to
+> this function.
+
+Exactly what I would have suggested,
+
+> 
+>> But then, I still wonder how we come up the "struct page" here.
+>>
+> 
+>  From the file system. For example, the NFS-direct and fuse conversions
+> in the last patches show how that works.
+> 
+> Thanks for this feedback, this is very helpful.
+
+Thanks for clarifying, John!
+
+-- 
+Thanks,
+
+David / dhildenb
 
