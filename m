@@ -2,142 +2,167 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48FC1C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Mar 2022 05:00:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4EB8C433FE
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Mar 2022 08:03:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230012AbiCAFAk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Mar 2022 00:00:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46596 "EHLO
+        id S229944AbiCAIDy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Mar 2022 03:03:54 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59414 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229584AbiCAFAh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Mar 2022 00:00:37 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B57C6240A2
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Feb 2022 20:59:52 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 946EFB81709
-        for <linux-xfs@vger.kernel.org>; Tue,  1 Mar 2022 04:59:51 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36136C340EE
-        for <linux-xfs@vger.kernel.org>; Tue,  1 Mar 2022 04:59:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1646110790;
-        bh=nFTcd6a/oH0oOQQhKJhtohXCGQM7yje5LH5R4Q6lnRM=;
-        h=Date:From:To:Subject:References:In-Reply-To:From;
-        b=myMZTqlkJTqGKtzS9YSr/Aqa5CN8LbyZKTQBQzLLXXxGj9oN7C1lBtWAbt5ATqQyB
-         8MY0V9Kg77i654jlfdSeEZdmKKrdD3ERG9t96TQ7j1lEHFkeGTBn7n+Nyx7TadeX5W
-         C2D8T4FmGJIVZxutr+YGLenBYTLVsw1IoGcJPFamAu8RpjtpD5ezjALHbEuABDT04B
-         TsYWAN+X2BpZWDLV7gW9W3t/aGTmP2c8CAS7Y4SIS1skYKE5qMHbHGLEyBuj1vEbYW
-         hT5MibUTSQCTgMAZC8OQMnrzKiT0kWj/M7N7f0tnjW55YwSHs2GUenzIETpvLmzJ3q
-         VICanypRNpW+Q==
-Date:   Mon, 28 Feb 2022 20:59:49 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     xfs <linux-xfs@vger.kernel.org>
-Subject: [PATCH] generic: test that linking into a directory fails with EDQUOT
-Message-ID: <20220301045949.GH117732@magnolia>
-References: <20220301025118.GG117732@magnolia>
+        with ESMTP id S230074AbiCAIDx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Mar 2022 03:03:53 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1C8EA25C7E
+        for <linux-xfs@vger.kernel.org>; Tue,  1 Mar 2022 00:03:13 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1646121792;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=g5HcmxS711SnBUiFSO6QPeyhMTExbS2pi4xO3biwyng=;
+        b=QwekiK8GmAri3TS3n7TewZAm7BlmHA084g8Cjf1KZYUwXTSnFUxx9BXEWl1Lx1HUGTyRBT
+        /jPjbn8OQREaStKlta91gWCkpvXZew3m55viraLJyDVprI1azvpxY76JtPGCgOGkqXyQ3S
+        +3parVm/buw0MnMY4roB4lvNZGKou7Q=
+Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
+ [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-669-a5F5U7RvNZKcTWm4cQnUHA-1; Tue, 01 Mar 2022 03:03:11 -0500
+X-MC-Unique: a5F5U7RvNZKcTWm4cQnUHA-1
+Received: by mail-wm1-f70.google.com with SMTP id bg33-20020a05600c3ca100b00380dee8a62cso1180160wmb.8
+        for <linux-xfs@vger.kernel.org>; Tue, 01 Mar 2022 00:03:10 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:organization:in-reply-to
+         :content-transfer-encoding;
+        bh=g5HcmxS711SnBUiFSO6QPeyhMTExbS2pi4xO3biwyng=;
+        b=wNCKvXBJ9yWDwN3MRWAERGNgw12fUgJOSEipkgOlpTEk7+nANeg8x0rEC3w4aDLocY
+         OufPRb1sVgPEd1SaIxvRnKmU6W3LLXSSA/gEKnyB2lEvBDP/wH4qk65EN/E9etDC8p+2
+         9PbkbDeWVF0z1igGqM2CclLi0+HpRUn8ce1hQnBVf7qUSIeivoJwQk/s5vYFifA0G7mz
+         bzR9RD/W6IyTl1fx1T8y4YtrDRtipmOCJ1ht/FoMt/3mmwEwx9hRmSOlzIAL28pnCGUY
+         llzuW+BlNPQcA7Kg+xMWyUZYD8UNwILXGZHpQBbVWYGnIME0L3ssd6zyXrs2MZAtqOAN
+         MWxw==
+X-Gm-Message-State: AOAM533qqhNrkY1Qn8NAEQXOBDJTnI0607aV0Fx7JFbzhKR2l0rSDyqu
+        qBrxL2SKW/rx6WAseJFctPnlv1KgOgwB6eS/cUUjyaK69gZ6qW9gk54mwqpeys1hDbGBwy+RsXV
+        rVa7u0ND4+WWemPCd6KFD
+X-Received: by 2002:adf:f049:0:b0:1ee:7523:ed53 with SMTP id t9-20020adff049000000b001ee7523ed53mr17566909wro.586.1646121789943;
+        Tue, 01 Mar 2022 00:03:09 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJxpcJ4TqolQDE6BE7vD6rbCwoSwmTCrugFFkBxu6/s97N/cr/HBlvpSmDNAY1B2ylV7rKaSQQ==
+X-Received: by 2002:adf:f049:0:b0:1ee:7523:ed53 with SMTP id t9-20020adff049000000b001ee7523ed53mr17566887wro.586.1646121789674;
+        Tue, 01 Mar 2022 00:03:09 -0800 (PST)
+Received: from ?IPV6:2003:cb:c70e:5e00:88ce:ad41:cb1b:323? (p200300cbc70e5e0088cead41cb1b0323.dip0.t-ipconnect.de. [2003:cb:c70e:5e00:88ce:ad41:cb1b:323])
+        by smtp.gmail.com with ESMTPSA id r12-20020a05600c2c4c00b003816932de9csm1668126wmg.24.2022.03.01.00.03.08
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 01 Mar 2022 00:03:09 -0800 (PST)
+Message-ID: <2a042493-d04d-41b1-ea12-b326d2116861@redhat.com>
+Date:   Tue, 1 Mar 2022 09:03:06 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220301025118.GG117732@magnolia>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+Subject: Re: [PATCH] mm: split vm_normal_pages for LRU and non-LRU handling
+Content-Language: en-US
+To:     Alex Sierra <alex.sierra@amd.com>, jgg@nvidia.com
+Cc:     Felix.Kuehling@amd.com, linux-mm@kvack.org, rcampbell@nvidia.com,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        hch@lst.de, jglisse@redhat.com, apopple@nvidia.com,
+        willy@infradead.org, akpm@linux-foundation.org
+References: <20220218192640.GV4160@nvidia.com>
+ <20220228203401.7155-1-alex.sierra@amd.com>
+From:   David Hildenbrand <david@redhat.com>
+Organization: Red Hat
+In-Reply-To: <20220228203401.7155-1-alex.sierra@amd.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On 28.02.22 21:34, Alex Sierra wrote:
+> DEVICE_COHERENT pages introduce a subtle distinction in the way
+> "normal" pages can be used by various callers throughout the kernel.
+> They behave like normal pages for purposes of mapping in CPU page
+> tables, and for COW. But they do not support LRU lists, NUMA
+> migration or THP. Therefore we split vm_normal_page into two
+> functions vm_normal_any_page and vm_normal_lru_page. The latter will
+> only return pages that can be put on an LRU list and that support
+> NUMA migration and THP.
 
-Add a regression test to make sure that unprivileged userspace linking
-into a directory fails with EDQUOT when the directory quota limits have
-been exceeded.
+Why not s/vm_normal_any_page/vm_normal_page/ and avoid code churn?
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- tests/generic/732     |   67 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/732.out |    3 ++
- 2 files changed, 70 insertions(+)
- create mode 100755 tests/generic/732
- create mode 100644 tests/generic/732.out
+> 
+> We also introduced a FOLL_LRU flag that adds the same behaviour to
+> follow_page and related APIs, to allow callers to specify that they
+> expect to put pages on an LRU list.
 
-diff --git a/tests/generic/732 b/tests/generic/732
-new file mode 100755
-index 00000000..c4a3dcb6
---- /dev/null
-+++ b/tests/generic/732
-@@ -0,0 +1,67 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2022 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test No. 732
-+#
-+# Ensure that unprivileged userspace hits EDQUOT while linking files into a
-+# directory when the directory's quota limits have been exceeded.
-+#
-+# Regression test for commit:
-+#
-+# XXXXXXXXXXXX ("xfs: reserve quota for directory expansion when hardlinking files")
-+#
-+. ./common/preamble
-+_begin_fstest auto quick quota
-+
-+# Import common functions.
-+. ./common/filter
-+. ./common/quota
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs generic
-+_require_quota
-+_require_user
-+_require_scratch
-+
-+_scratch_mkfs > "$seqres.full" 2>&1
-+_qmount_option usrquota
-+_qmount
-+
-+blocksize=$(_get_block_size $SCRATCH_MNT)
-+scratchdir=$SCRATCH_MNT/dir
-+scratchfile=$SCRATCH_MNT/file
-+mkdir $scratchdir
-+touch $scratchfile
-+
-+# Create a 2-block directory for our 1-block quota limit
-+total_size=$((blocksize * 2))
-+dirents=$((total_size / 255))
-+
-+for ((i = 0; i < dirents; i++)); do
-+	name=$(printf "x%0254d" $i)
-+	ln $scratchfile $scratchdir/$name
-+done
-+
-+# Set a low quota hardlimit for an unprivileged uid and chown the files to it
-+echo "set up quota" >> $seqres.full
-+setquota -u $qa_user 0 "$((blocksize / 1024))" 0 0 $SCRATCH_MNT
-+chown $qa_user $scratchdir $scratchfile
-+repquota -upn $SCRATCH_MNT >> $seqres.full
-+
-+# Fail at appending the directory as qa_user to ensure quota enforcement works
-+echo "fail quota" >> $seqres.full
-+for ((i = 0; i < dirents; i++)); do
-+	name=$(printf "y%0254d" $i)
-+	su - "$qa_user" -c "ln $scratchfile $scratchdir/$name" 2>&1 | \
-+		_filter_scratch | sed -e 's/y[0-9]*/yXXX/g'
-+	test "${PIPESTATUS[0]}" -ne 0 && break
-+done
-+repquota -upn $SCRATCH_MNT >> $seqres.full
-+
-+# success, all done
-+echo Silence is golden
-+status=0
-+exit
-diff --git a/tests/generic/732.out b/tests/generic/732.out
-new file mode 100644
-index 00000000..15d2cb61
---- /dev/null
-+++ b/tests/generic/732.out
-@@ -0,0 +1,3 @@
-+QA output created by 732
-+ln: failed to create hard link 'SCRATCH_MNT/dir/yXXX': Disk quota exceeded
-+Silence is golden
+[...]
+> -#define FOLL_WRITE	0x01	/* check pte is writable */
+> -#define FOLL_TOUCH	0x02	/* mark page accessed */
+> -#define FOLL_GET	0x04	/* do get_page on page */
+> -#define FOLL_DUMP	0x08	/* give error on hole if it would be zero */
+> -#define FOLL_FORCE	0x10	/* get_user_pages read/write w/o permission */
+> -#define FOLL_NOWAIT	0x20	/* if a disk transfer is needed, start the IO
+> -				 * and return without waiting upon it */
+> -#define FOLL_POPULATE	0x40	/* fault in pages (with FOLL_MLOCK) */
+> -#define FOLL_NOFAULT	0x80	/* do not fault in pages */
+> -#define FOLL_HWPOISON	0x100	/* check page is hwpoisoned */
+> -#define FOLL_NUMA	0x200	/* force NUMA hinting page fault */
+> -#define FOLL_MIGRATION	0x400	/* wait for page to replace migration entry */
+> -#define FOLL_TRIED	0x800	/* a retry, previous pass started an IO */
+> -#define FOLL_MLOCK	0x1000	/* lock present pages */
+> -#define FOLL_REMOTE	0x2000	/* we are working on non-current tsk/mm */
+> -#define FOLL_COW	0x4000	/* internal GUP flag */
+> -#define FOLL_ANON	0x8000	/* don't do file mappings */
+> -#define FOLL_LONGTERM	0x10000	/* mapping lifetime is indefinite: see below */
+> -#define FOLL_SPLIT_PMD	0x20000	/* split huge pmd before returning */
+> -#define FOLL_PIN	0x40000	/* pages must be released via unpin_user_page */
+> -#define FOLL_FAST_ONLY	0x80000	/* gup_fast: prevent fall-back to slow gup */
+> +#define FOLL_WRITE	0x01	 /* check pte is writable */
+> +#define FOLL_TOUCH	0x02	 /* mark page accessed */
+> +#define FOLL_GET	0x04	 /* do get_page on page */
+> +#define FOLL_DUMP	0x08	 /* give error on hole if it would be zero */
+> +#define FOLL_FORCE	0x10	 /* get_user_pages read/write w/o permission */
+> +#define FOLL_NOWAIT	0x20	 /* if a disk transfer is needed, start the IO
+> +				  * and return without waiting upon it */
+> +#define FOLL_POPULATE	0x40	 /* fault in pages (with FOLL_MLOCK) */
+> +#define FOLL_NOFAULT	0x80	 /* do not fault in pages */
+> +#define FOLL_HWPOISON	0x100	 /* check page is hwpoisoned */
+> +#define FOLL_NUMA	0x200	 /* force NUMA hinting page fault */
+> +#define FOLL_MIGRATION	0x400	 /* wait for page to replace migration entry */
+> +#define FOLL_TRIED	0x800	 /* a retry, previous pass started an IO */
+> +#define FOLL_MLOCK	0x1000	 /* lock present pages */
+> +#define FOLL_REMOTE	0x2000	 /* we are working on non-current tsk/mm */
+> +#define FOLL_COW	0x4000	 /* internal GUP flag */
+> +#define FOLL_ANON	0x8000	 /* don't do file mappings */
+> +#define FOLL_LONGTERM	0x10000	 /* mapping lifetime is indefinite: see below */
+> +#define FOLL_SPLIT_PMD	0x20000	 /* split huge pmd before returning */
+> +#define FOLL_PIN	0x40000	 /* pages must be released via unpin_user_page */
+> +#define FOLL_FAST_ONLY	0x80000	 /* gup_fast: prevent fall-back to slow gup */
+> +#define FOLL_LRU	0x100000 /* return only LRU (anon or page cache) */
+>  
+
+Can we minimize code churn, please?
+
+
+>  		if (PageReserved(page))
+> diff --git a/mm/migrate.c b/mm/migrate.c
+> index c31d04b46a5e..17d049311b78 100644
+> --- a/mm/migrate.c
+> +++ b/mm/migrate.c
+> @@ -1614,7 +1614,7 @@ static int add_page_for_migration(struct mm_struct *mm, unsigned long addr,
+>  		goto out;
+>  
+>  	/* FOLL_DUMP to ignore special (like zero) pages */
+> -	follflags = FOLL_GET | FOLL_DUMP;
+> +	follflags = FOLL_GET | FOLL_DUMP | FOLL_LRU;
+>  	page = follow_page(vma, addr, follflags);
+
+Why wouldn't we want to dump DEVICE_COHERENT pages? This looks wrong.
+
+
+-- 
+Thanks,
+
+David / dhildenb
+
