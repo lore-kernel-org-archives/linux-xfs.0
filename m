@@ -2,84 +2,127 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CD33C433EF
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Mar 2022 02:48:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A430C433F5
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Mar 2022 02:49:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229603AbiCACtI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 28 Feb 2022 21:49:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57170 "EHLO
+        id S231638AbiCACuD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 28 Feb 2022 21:50:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33292 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231265AbiCACtG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Feb 2022 21:49:06 -0500
-Received: from out30-54.freemail.mail.aliyun.com (out30-54.freemail.mail.aliyun.com [115.124.30.54])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45E4E434B1;
-        Mon, 28 Feb 2022 18:48:26 -0800 (PST)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R181e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04407;MF=hsiangkao@linux.alibaba.com;NM=1;PH=DS;RN=3;SR=0;TI=SMTPD_---0V5r3Dlx_1646102902;
-Received: from B-P7TQMD6M-0146.local(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0V5r3Dlx_1646102902)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Tue, 01 Mar 2022 10:48:23 +0800
-Date:   Tue, 1 Mar 2022 10:48:19 +0800
-From:   Gao Xiang <hsiangkao@linux.alibaba.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>,
-        xfs <linux-xfs@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] xfs: add missing cmap->br_state = XFS_EXT_NORM update
-Message-ID: <Yh2Jc5DeF9D7jp8r@B-P7TQMD6M-0146.local>
-Mail-Followup-To: "Darrick J. Wong" <djwong@kernel.org>,
-        xfs <linux-xfs@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
-References: <20220217095542.68085-1-hsiangkao@linux.alibaba.com>
- <20220218054032.GO8313@magnolia>
- <Yg802fTm0n31FC+T@B-P7TQMD6M-0146.local>
- <Yg+DYkuTayILe5YA@B-P7TQMD6M-0146.local>
+        with ESMTP id S230021AbiCACuD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Feb 2022 21:50:03 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 465034755D
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Feb 2022 18:49:19 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id CDC3160B60
+        for <linux-xfs@vger.kernel.org>; Tue,  1 Mar 2022 02:49:18 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32269C340F0;
+        Tue,  1 Mar 2022 02:49:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1646102958;
+        bh=F/IlGAFLz9wxOj+xk/62ysGupb321JrQKtofUxqWWV4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=QTnLMD6p9Hg7avzAA60EAFvpBwpuyZLD46E9/xuOory4CfBp4Czbwfih4oxxfiOm+
+         NyyNxV7Wr1NUf9Ys/dbP8oP+gRrr6HtJouS1JcV9sRG8CJwz7ldkXI8UMFL1AxPnsr
+         QilsXlcW3FzipogJWgqNkS0hnMCkNfE9R+583g1sqWym/kUzmTYTu0HT3TTpT6wrLl
+         VBX9UNXZaz560Ej9r+Zkziiqb49VutHi/0rs9k7hWVNS5E5q08ZCU/EC4nFUXdKYEk
+         Q442R7xQlVNvw/xStf5Ntlz+MPM5wO9NLm2UhWla9BZ9xRyD+GxOn4yMS9NAqM71GB
+         b0YYAGxUb4f5A==
+Date:   Mon, 28 Feb 2022 18:49:17 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     xfs <linux-xfs@vger.kernel.org>
+Cc:     Ondrej Mosnacek <omosnace@redhat.com>,
+        Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: don't generate selinux audit messages for
+ capability testing
+Message-ID: <20220301024917.GE117732@magnolia>
+References: <20220225200206.GS8313@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Yg+DYkuTayILe5YA@B-P7TQMD6M-0146.local>
+In-Reply-To: <20220225200206.GS8313@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Feb 18, 2022 at 07:30:42PM +0800, Gao Xiang wrote:
-> On Fri, Feb 18, 2022 at 01:55:37PM +0800, Gao Xiang wrote:
-> > Hi Darrick,
-> > 
-> > On Thu, Feb 17, 2022 at 09:40:32PM -0800, Darrick J. Wong wrote:
-> > > On Thu, Feb 17, 2022 at 05:55:42PM +0800, Gao Xiang wrote:
-> > > > COW extents are already converted into written real extents after
-> > > > xfs_reflink_convert_cow_locked(), therefore cmap->br_state should
-> > > > reflect it.
-> > > > 
-> > > > Otherwise, there is another necessary unwritten convertion
-> > > > triggered in xfs_dio_write_end_io() for direct I/O cases.
-> > > > 
-> > > > Signed-off-by: Gao Xiang <hsiangkao@linux.alibaba.com>
-> > > 
-> > > I /think/ this looks ok.  Does it test ok too?  AFAICT nothing in the
-> > > iomap/writeback machinery cares the incorrect state because we always
-> > > set IOMAP_F_SHARED (which triggers COW) so I think this is simply a fix
-> > > for directio, like you said?
-> > 
-> > Yeah, I think so, from the code logic buffered i/o seems no impacted...
-> > And the unnecessary unwritten convertion under direct i/o takes
-> > noticeable extra overhead in our workloads...
-> > 
-> > I checked my last night xfstests, it seems it stops unexpectedly (maybe
-> > due to some environmental problem). I will rerun tests today and
-> > feedback later.
+On Fri, Feb 25, 2022 at 12:02:06PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> On my test environment machine, with linux 5.17-rc4,
-> both w/ and w/o the patch, it fails:
+> There are a few places where we test the current process' capability set
+> to decide if we're going to be more or less generous with resource
+> acquisition for a system call.  If the process doesn't have the
+> capability, we can continue the call, albeit in a degraded mode.
 > 
-> generic/594 generic/600 xfs/158 xfs/160
+> These are /not/ the actual security decisions, so it's not proper to use
+> capable(), which (in certain selinux setups) causes audit messages to
+> get logged.  Switch them to has_capability_noaudit.
 > 
-> I think no issue with this patch.
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
-ping.. it seems a simple fix for direct I/O..
+NAK, I'll resend with all the people I was supposed to cc an dforgot.
 
-Thanks,
-Gao Xiang
+--D
 
+> ---
+>  fs/xfs/xfs_fsmap.c  |    4 ++--
+>  fs/xfs/xfs_ioctl.c  |    2 +-
+>  fs/xfs/xfs_iops.c   |    2 +-
+>  kernel/capability.c |    1 +
+>  4 files changed, 5 insertions(+), 4 deletions(-)
 > 
-> Thanks,
-> Gao Xiang
+> diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+> index 48287caad28b..10e1cb71439e 100644
+> --- a/fs/xfs/xfs_fsmap.c
+> +++ b/fs/xfs/xfs_fsmap.c
+> @@ -864,8 +864,8 @@ xfs_getfsmap(
+>  	    !xfs_getfsmap_is_valid_device(mp, &head->fmh_keys[1]))
+>  		return -EINVAL;
+>  
+> -	use_rmap = capable(CAP_SYS_ADMIN) &&
+> -		   xfs_has_rmapbt(mp);
+> +	use_rmap = xfs_has_rmapbt(mp) &&
+> +		   has_capability_noaudit(current, CAP_SYS_ADMIN);
+>  	head->fmh_entries = 0;
+>  
+>  	/* Set up our device handlers. */
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 2515fe8299e1..83481005317a 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -1189,7 +1189,7 @@ xfs_ioctl_setattr_get_trans(
+>  		goto out_error;
+>  
+>  	error = xfs_trans_alloc_ichange(ip, NULL, NULL, pdqp,
+> -			capable(CAP_FOWNER), &tp);
+> +			has_capability_noaudit(current, CAP_FOWNER), &tp);
+>  	if (error)
+>  		goto out_error;
+>  
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index a56f08314a3d..e6d910a6c35f 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -723,7 +723,7 @@ xfs_setattr_nonsize(
+>  	}
+>  
+>  	error = xfs_trans_alloc_ichange(ip, udqp, gdqp, NULL,
+> -			capable(CAP_FOWNER), &tp);
+> +			has_capability_noaudit(current, CAP_FOWNER), &tp);
+>  	if (error)
+>  		goto out_dqrele;
+>  
+> diff --git a/kernel/capability.c b/kernel/capability.c
+> index 46a361dde042..765194f5d678 100644
+> --- a/kernel/capability.c
+> +++ b/kernel/capability.c
+> @@ -360,6 +360,7 @@ bool has_capability_noaudit(struct task_struct *t, int cap)
+>  {
+>  	return has_ns_capability_noaudit(t, &init_user_ns, cap);
+>  }
+> +EXPORT_SYMBOL(has_capability_noaudit);
+>  
+>  static bool ns_capable_common(struct user_namespace *ns,
+>  			      int cap,
