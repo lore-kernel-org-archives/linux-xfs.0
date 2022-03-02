@@ -2,104 +2,88 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FE02C433FE
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Mar 2022 14:56:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C186C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Mar 2022 18:19:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240973AbiCBO5X (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Mar 2022 09:57:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58994 "EHLO
+        id S233577AbiCBSUK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Mar 2022 13:20:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59994 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234237AbiCBO5X (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Mar 2022 09:57:23 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47D6B48396;
-        Wed,  2 Mar 2022 06:56:40 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S231945AbiCBSUI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Mar 2022 13:20:08 -0500
+Received: from sandeen.net (sandeen.net [63.231.237.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id DD1AB23BCE
+        for <linux-xfs@vger.kernel.org>; Wed,  2 Mar 2022 10:19:23 -0800 (PST)
+Received: from [10.0.0.147] (liberator.sandeen.net [10.0.0.147])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D761E61666;
-        Wed,  2 Mar 2022 14:56:39 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EDA49C004E1;
-        Wed,  2 Mar 2022 14:56:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1646232999;
-        bh=Mi9q+LtieiMun2ocnCwKvyOxp+6VG4htF2rkds+fAQw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ufYPWrZbvXBD/NeSNuQz19nBhfwAGhijZ9tRMN/rue6/lWQxOHlIsLST366pfuDxm
-         f7GRuQ1s+ZrXZlgePnpz4cbU0IOQMu3B4ruSuZfSBLXD3tokBdgZbhtsl033uhE7Vg
-         7uF6KajeDwWHh9R2VhoS985ryxkpaiJVHTFO7um8=
-Date:   Wed, 2 Mar 2022 15:56:36 +0100
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Giovanni Cabiddu <giovanni.cabiddu@intel.com>
-Cc:     Herbert Xu <herbert@gondor.apana.org.au>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Kyle Sanderson <kyle.leet@gmail.com>,
-        Dave Chinner <david@fromorbit.com>, qat-linux@intel.com,
-        Linux-Kernal <linux-kernel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
-        device-mapper development <dm-devel@redhat.com>
-Subject: Re: Intel QAT on A2SDi-8C-HLN4F causes massive data corruption with
- dm-crypt + xfs
-Message-ID: <Yh+FpKuoyj3G16lK@kroah.com>
-References: <CACsaVZ+LZUebtsGuiKhNV_No8fNLTv5kJywFKOigieB1cZcKUw@mail.gmail.com>
- <YhN76/ONC9qgIKQc@silpixa00400314>
- <CACsaVZJFane88cXxG_E1VkcMcJm8YVN+GDqQ2+tRYNpCf+m8zA@mail.gmail.com>
- <CAHk-=whVT2GcwiJM8m-XzgJj8CjytTHi_pmgmOnSpzvGWzZM1A@mail.gmail.com>
- <Yh0y75aegqS4jIP7@silpixa00400314>
- <Yh1aLfy/oBawCJIg@gondor.apana.org.au>
- <CAHk-=wi+xewHz=BH7LcZAxrj9JXi66s9rp+kBqRchVG3a-b2BA@mail.gmail.com>
- <Yh2c4Vwu61s51d6N@gondor.apana.org.au>
- <Yh9G7FyCLtsm2mFA@kroah.com>
- <Yh9ZvLHuztwQCu0d@silpixa00400314>
+        by sandeen.net (Postfix) with ESMTPSA id 424764CDD56;
+        Wed,  2 Mar 2022 12:18:21 -0600 (CST)
+Message-ID: <199a3e85-9ee5-1354-e652-ff3d501bd395@sandeen.net>
+Date:   Wed, 2 Mar 2022 12:19:21 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Yh9ZvLHuztwQCu0d@silpixa00400314>
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.6.1
+Content-Language: en-US
+From:   Eric Sandeen <sandeen@sandeen.net>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+References: <159477783164.3263162.2564345443708779029.stgit@magnolia>
+ <159477799812.3263162.13957383827318048593.stgit@magnolia>
+ <01d6be65-f65c-790e-73fb-9529a94673eb@sandeen.net>
+Subject: Re: Quota warning woes (was: [PATCH 25/26] xfs: actually bump warning
+ counts when we send warnings)
+In-Reply-To: <01d6be65-f65c-790e-73fb-9529a94673eb@sandeen.net>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 02, 2022 at 11:49:16AM +0000, Giovanni Cabiddu wrote:
-> Hi Greg,
+On 3/1/22 1:31 PM, Eric Sandeen wrote:
+> On 7/14/20 8:53 PM, Darrick J. Wong wrote:
+>> From: Darrick J. Wong <darrick.wong@oracle.com>
+>>
+>> Currently, xfs quotas have the ability to send netlink warnings when a
+>> user exceeds the limits.  They also have all the support code necessary
+>> to convert softlimit warnings into failures if the number of warnings
+>> exceeds a limit set by the administrator.  Unfortunately, we never
+>> actually increase the warning counter, so this never actually happens.
+>> Make it so we actually do something useful with the warning counts.
+>>
+>> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+>> Reviewed-by: Christoph Hellwig <hch@lst.de>
 > 
-> On Wed, Mar 02, 2022 at 11:29:00AM +0100, Greg KH wrote:
-> > On Tue, Mar 01, 2022 at 04:11:13PM +1200, Herbert Xu wrote:
-> > > On Mon, Feb 28, 2022 at 05:12:20PM -0800, Linus Torvalds wrote:
-> > > > 
-> > > > It sounds like it was incidental and almost accidental that it fixed
-> > > > that thing, and nobody realized it should perhaps be also moved to
-> > > > stable.
-> > > 
-> > > Yes this was incidental.  The patch in question fixes an issue in
-> > > OOM situations where drivers that must allocate memory on each
-> > > request may lead to dead-lock so it's not really targeted at qat.
-> > 
-> > Ok, so what commits should I backport to kernels older than 5.10 to
-> > resolve this?
-> Is it possible to wait for a set that resolves the problem rather than
-> backporting the patches that disables the use-case?
-
-It's already disabled in newer kernels, so we should do so for older
-ones to prevent problems and the delay in getting those potential fixes
-merged some day in the future.
-
-> I have a patchset that fixes the actual issue and we are doing an
-> internal review before submission to the mailing list.
-> I should be able to send a V1 out between today and tomorrow.
+> Sooo I got a bug report that this essentially breaks the timer for
+> soft quota, because we now (and quite rapidly) hit the default
+> 5-warning limit well before we hit any reasonable timer that may
+> have been set, and disallow more space usage.
 > 
-> If not, then these are the patches that should be backported:
->     7bcb2c99f8ed crypto: algapi - use common mechanism for inheriting flags
->     2eb27c11937e crypto: algapi - add NEED_FALLBACK to INHERITED_FLAGS
->     fbb6cda44190 crypto: algapi - introduce the flag CRYPTO_ALG_ALLOCATES_MEMORY
->     b8aa7dc5c753 crypto: drivers - set the flag CRYPTO_ALG_ALLOCATES_MEMORY
->     cd74693870fb dm crypt: don't use drivers that have CRYPTO_ALG_ALLOCATES_MEMORY
-> Herbert, correct me if I'm wrong here.
+> And those warnings rack up in somewhat unexpected (to me, anyway)
+> ways. With a default max warning count of 5, I go over soft quota
+> exactly once, touch/create 2 more empty inodes, and I'm done:
 
-These need to be manually backported as they do not apply cleanly.  Can
-you provide such a set?  Or should I just disable a specific driver here
-instead which would be easier overall?
+Looking at this some more, I think it was never clear when the warnings
+should get incremented. An old IRIX document[1] says:
+
+"With soft limits, whenever a user logs in with a usage greater than his
+soft limit, he or she will be warned (via/bin/login(1))."
+
+Which seems to indicate that perhaps the warning was intended to be
+once per login, not once per allocation attempt. Also ...
+
+Ancient XFS code had a "xfs_qm_dqwarn()" function which incremented the
+warning count, but it never had any callers until the day it was removed
+in 2005, so it's not at all clear what the warning frequency was supposed
+to be or what should trigger it, from the code archives.
+
+Hence, my modest proposal would be to just remove the warning limits
+infrastructure altogether. It's never worked, nobody has ever asked for it
+(?), and its intent is not clear. My only hesitation is that Darrick added
+the warning increment, so perhaps he knows of a current use case that
+matters?
 
 thanks,
+-Eric
 
-greg k-h
+[1] https://irix7.com/techpubs/007-0603-100.pdf
