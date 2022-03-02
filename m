@@ -2,187 +2,78 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C865C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Mar 2022 10:17:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33897C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Mar 2022 10:29:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233485AbiCBKRt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Mar 2022 05:17:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41024 "EHLO
+        id S235406AbiCBK3u (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Mar 2022 05:29:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35094 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233989AbiCBKRs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Mar 2022 05:17:48 -0500
+        with ESMTP id S233902AbiCBK3t (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Mar 2022 05:29:49 -0500
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 902497DAA8;
-        Wed,  2 Mar 2022 02:17:05 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C81E68F983;
+        Wed,  2 Mar 2022 02:29:06 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 3713BB81EE3;
-        Wed,  2 Mar 2022 10:17:04 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F0FCC004E1;
-        Wed,  2 Mar 2022 10:17:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1646216223;
-        bh=e/SK0vwNuTWrPb3jGrtprF0akADgVsdf0TCkDFGAJj8=;
+        by ams.source.kernel.org (Postfix) with ESMTPS id 735E4B81F64;
+        Wed,  2 Mar 2022 10:29:05 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA9CEC004E1;
+        Wed,  2 Mar 2022 10:29:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1646216944;
+        bh=SxiAf4w0t5Z/laDZISR+TqH6C7L6uEHJCHh5rWwHoak=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=OKWqQRUMlWzaBOUgVVkdSvny571YmYkwT0AmZResQjT5OT+qFxnQujG7/WFjeAxAz
-         vUDsi/6I1qlHa+eiG2ndZKEzigt9SiUfZ8KYUmmjOEZIxJRmj+zWZFEURfmMlU/1m3
-         0q7d8etzkcn1qM5TCDerPUoEg05zNFlj4EJiQ3G+Ngqhgu+yrEg615Pshj9SwYsJM0
-         M2ixENL0yT4DzR6OvIzU9iJeaCQTwxPdByuc7euFvfGLSYU/ni4/8TUWCq2YEjHu+b
-         tU1Cspmyb0FXfMSyZa/yZ9TqZt3Eu/+qg03gPhhfe9nW6DyFrlSbj2m1fO4/HxZeuv
-         2C/NNm3tsWqhw==
-Date:   Wed, 2 Mar 2022 10:17:01 +0000
-From:   Filipe Manana <fdmanana@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, djwong@kernel.org, hch@infradead.org,
-        cluster-devel@redhat.com, agruenba@redhat.com,
-        josef@toxicpanda.com, Filipe Manana <fdmanana@suse.com>
-Subject: Re: [PATCH] iomap: fix incomplete async dio reads when using
- IOMAP_DIO_PARTIAL
-Message-ID: <Yh9EHfl3sYJHeo3T@debian9.Home>
-References: <1f34c8435fed21e9583492661ceb20d642a75699.1646058596.git.fdmanana@suse.com>
- <20220228223830.GR59715@dread.disaster.area>
+        b=Au0FuN8NZqg5fQ+d6O/N1dmXPu5GNfYEnDbEMSaNG1Y8T2Tj3ITcdCF+0wuIe+1Ah
+         n/4TUvcQEpUqLJNbhS5GCJAMPbx5IaJfUSfUfh1M1K7pKH10FHyZMcLMjMGLhYYV5L
+         IueFz4+O6nHwvx8amotFPOc55B48mTAqTV4VWUdU=
+Date:   Wed, 2 Mar 2022 11:29:00 +0100
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     Herbert Xu <herbert@gondor.apana.org.au>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
+        Kyle Sanderson <kyle.leet@gmail.com>,
+        Dave Chinner <david@fromorbit.com>, qat-linux@intel.com,
+        Linux-Kernal <linux-kernel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
+        device-mapper development <dm-devel@redhat.com>
+Subject: Re: Intel QAT on A2SDi-8C-HLN4F causes massive data corruption with
+ dm-crypt + xfs
+Message-ID: <Yh9G7FyCLtsm2mFA@kroah.com>
+References: <CACsaVZ+mt3CfdXV0_yJh7d50tRcGcRZ12j3n6-hoX2cz3+njsg@mail.gmail.com>
+ <20220219210354.GF59715@dread.disaster.area>
+ <CACsaVZ+LZUebtsGuiKhNV_No8fNLTv5kJywFKOigieB1cZcKUw@mail.gmail.com>
+ <YhN76/ONC9qgIKQc@silpixa00400314>
+ <CACsaVZJFane88cXxG_E1VkcMcJm8YVN+GDqQ2+tRYNpCf+m8zA@mail.gmail.com>
+ <CAHk-=whVT2GcwiJM8m-XzgJj8CjytTHi_pmgmOnSpzvGWzZM1A@mail.gmail.com>
+ <Yh0y75aegqS4jIP7@silpixa00400314>
+ <Yh1aLfy/oBawCJIg@gondor.apana.org.au>
+ <CAHk-=wi+xewHz=BH7LcZAxrj9JXi66s9rp+kBqRchVG3a-b2BA@mail.gmail.com>
+ <Yh2c4Vwu61s51d6N@gondor.apana.org.au>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220228223830.GR59715@dread.disaster.area>
+In-Reply-To: <Yh2c4Vwu61s51d6N@gondor.apana.org.au>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Mar 01, 2022 at 09:38:30AM +1100, Dave Chinner wrote:
-> On Mon, Feb 28, 2022 at 02:32:03PM +0000, fdmanana@kernel.org wrote:
-> > From: Filipe Manana <fdmanana@suse.com>
+On Tue, Mar 01, 2022 at 04:11:13PM +1200, Herbert Xu wrote:
+> On Mon, Feb 28, 2022 at 05:12:20PM -0800, Linus Torvalds wrote:
 > > 
-> > Some users recently reported that MariaDB was getting a read corruption
-> > when using io_uring on top of btrfs. This started to happen in 5.16,
-> > after commit 51bd9563b6783d ("btrfs: fix deadlock due to page faults
-> > during direct IO reads and writes"). That changed btrfs to use the new
-> > iomap flag IOMAP_DIO_PARTIAL and to disable page faults before calling
-> > iomap_dio_rw(). This was necessary to fix deadlocks when the iovector
-> > corresponds to a memory mapped file region. That type of scenario is
-> > exercised by test case generic/647 from fstests, and it also affected
-> > gfs2, which, besides btrfs, is the only user of IOMAP_DIO_PARTIAL.
-> > 
-> > For this MariaDB scenario, we attempt to read 16K from file offset X
-> > using IOCB_NOWAIT and io_uring. In that range we have 4 extents, each
-> > with a size of 4K, and what happens is the following:
-> > 
-> > 1) btrfs_direct_read() disables page faults and calls iomap_dio_rw();
-> > 
-> > 2) iomap creates a struct iomap_dio object, its reference count is
-> >    initialized to 1 and its ->size field is initialized to 0;
-> > 
-> > 3) iomap calls btrfs_iomap_begin() with file offset X, which finds the
+> > It sounds like it was incidental and almost accidental that it fixed
+> > that thing, and nobody realized it should perhaps be also moved to
+> > stable.
 > 
-> You mean btrfs_dio_iomap_begin()?
+> Yes this was incidental.  The patch in question fixes an issue in
+> OOM situations where drivers that must allocate memory on each
+> request may lead to dead-lock so it's not really targeted at qat.
 
-Yes, correct.
+Ok, so what commits should I backport to kernels older than 5.10 to
+resolve this?
 
-> 
-> >    first 4K extent, and setups an iomap for this extent consisting of
-> >    a single page;
-> 
-> So we have IOCB_NOWAIT, which means btrfs_dio_iomap_begin() is being
-> passed IOMAP_NOWAIT and so knows it is being asked
-> to map an extent for an IO that is on a non-blocking path.
-> 
-> btrfs_dio_iomap_begin() doesn't appear to support NOWAIT semantics
-> at all - it will block doing writeback IO, memory allocation, extent
-> locking, transaction reservations, extent allocation, etc....
+thanks,
 
-We do have some checks for NOWAIT before getting into btrfs_dio_iomap_begin(),
-but they are only for the write path, and they are incomplete. Some are a bit
-tricky to deal with, but yes, there's several cases that are either missing
-or need to be improved.
-
-> 
-> That, to me, looks like the root cause of the problem here -
-> btrfs_dio_iomap_begin() is not guaranteeing non-blocking atomic IO
-> semantics for IOCB_NOWAIT IO.
-> 
-> In the case above, given that the extent lookup only found a 4kB
-> extent, we know that it doesn't span the entire requested IO range.
-> We also known that we cannot tell if we'll block on subsequent
-> mappings of the IO range, and hence no guarantee can be given that
-> IOCB_NOWAIT IO will not block when it is too late to back out with a
-> -EAGAIN error.
-> 
-> Hence this whole set of problems could be avoided if
-> btrfs_dio_iomap_begin() returns -EAGAIN if it can't map the entire
-> IO into a single extent without blocking when IOMAP_NOWAIT is set?
-> That's exactly what XFS does in xfs_direct_iomap_write_begin():
-> 
->         /*
->          * NOWAIT and OVERWRITE I/O needs to span the entire requested I/O with
->          * a single map so that we avoid partial IO failures due to the rest of
->          * the I/O range not covered by this map triggering an EAGAIN condition
->          * when it is subsequently mapped and aborting the I/O.
->          */
->         if (flags & (IOMAP_NOWAIT | IOMAP_OVERWRITE_ONLY)) {
->                 error = -EAGAIN;
->                 if (!imap_spans_range(&imap, offset_fsb, end_fsb))
->                         goto out_unlock;
->         }
-> 
-> Basically, I'm thinking that IOMAP_NOWAIT and IOMAP_DIO_PARTIAL
-> should be exclusive functionality - if you are doing IOMAP_NOWAIT
-> then the entire IO must succeed without blocking, and if it doesn't
-> then we return -EAGAIN and the caller retries without IOCB_NOWAIT
-> set and so then we run with IOMAP_DIO_PARTIAL semantics in a thread
-> that can actually block....
-
-Indeed, I had not considered that, that is simple and effective, plus
-it can be done exclusively in btrfs code, no need to change iomap.
-
-> 
-> .....
-> 
-> > 11) At iomap_dio_complete() we adjust the iocb->ki_pos from X to X + 4K
-> >     and return 4K (the amount of io done) to iomap_dio_complete_work();
-> > 
-> > 12) iomap_dio_complete_work() calls the iocb completion callback,
-> >     iocb->ki_complete() with a second argument value of 4K (total io
-> >     done) and the iocb with the adjust ki_pos of X + 4K. This results
-> >     in completing the read request for io_uring, leaving it with a
-> >     result of 4K bytes read, and only the first page of the buffer
-> >     filled in, while the remaining 3 pages, corresponding to the other
-> >     3 extents, were not filled;
-> > 
-> > 13) For the application, the result is unexpected because if we ask
-> >     to read N bytes, it expects to get N bytes read as long as those
-> >     N bytes don't cross the EOF (i_size).
-> 
-> Yeah, that's exactly the sort of problem we were having with XFS
-> with partial DIO completions due to needing multiple iomap iteration
-> loops to complete a single IO. Hence IOMAP_NOWAIT now triggers the
-> above range check and aborts before we start...
-
-Interesting.
-
-> 
-> > 
-> > So fix this by making __iomap_dio_rw() assign true to the boolean variable
-> > 'wait_for_completion' when we have IOMAP_DIO_PARTIAL set, we did some
-> > progress for a read and we have not crossed the EOF boundary. Do this even
-> > if the read has IOCB_NOWAIT set, as it's the only way to avoid providing
-> > an unexpected result to an application.
-> 
-> That's highly specific and ultimately will be fragile, IMO. I'd much
-> prefer that *_iomap_begin_write() implementations simply follow
-> IOMAP_NOWAIT requirements to ensure that any DIO that needs multiple
-> mappings if punted to a context that can block...
-
-Yes, agreed.
-
-Thanks for your feedback Dave, it provided a really good insight into this
-problem (and others).
-
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+greg k-h
