@@ -2,38 +2,43 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D48FC433EF
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Mar 2022 19:21:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5482C433F5
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Mar 2022 21:24:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231777AbiCCTWX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Mar 2022 14:22:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53282 "EHLO
+        id S236517AbiCCVZh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Mar 2022 16:25:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40262 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229998AbiCCTWW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Mar 2022 14:22:22 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7CC1719D61E;
-        Thu,  3 Mar 2022 11:21:36 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1895261A05;
-        Thu,  3 Mar 2022 19:21:36 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46FFBC004E1;
-        Thu,  3 Mar 2022 19:21:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1646335295;
-        bh=trgVHyCtfDd4sh/3BteU8XpwMHMv2ENMdJz2RE0AFpA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=VNeZhbRBisdlpiBay+maESK2KZYQ7pAjcepR+j7StEctf7d3gVG4cHCUssG0XA1CZ
-         VkCFCm91GtgaepI/qI0Xvjhgs6M112ZGYxSlKGDRSJi/ArboT/n2B9CVW1V7l14lY4
-         1gng4MQ1QW2y78sYBSHI/1KA6nFdtPgP1LTDGFc2XXzug6Wk43yENU7LxI/WLZtMWk
-         4zTLd+yCyuFIfPlRwzTfrowIhLmimk7aspGHrJKV2Vd2V0tjFQurfMJphE5mEjL++g
-         AqD2nBwlHJpuLWacQIbqaaEfIRZcfg17236qFMTLRL7GINK4Zwgje88HLsTK6IeD8j
-         eSqSsyEniYclA==
-Date:   Thu, 3 Mar 2022 19:21:33 +0000
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Giovanni Cabiddu <giovanni.cabiddu@intel.com>
+        with ESMTP id S236516AbiCCVZh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Mar 2022 16:25:37 -0500
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A18713DE03;
+        Thu,  3 Mar 2022 13:24:51 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1646342691; x=1677878691;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=cePptrGSsl2dfgN2SgrOoddSMEntTjj47nFxKZ1BSv8=;
+  b=TmzAhPPwm2oHd4RPA8TMIT91CeANV4gC0T8QIewXeMczVCqEkueO4lRo
+   khtxAIFHbOG/6ZB4iRiWAx2ZPNgWE4QdHqDaUT7k5UWEFoqg0FhJ0TcwE
+   nfjyoMrdIdEyZ/ZPVIBR3U8womyBU6xE8mRT8I3nlfIAxUMGHJAjIoYUO
+   nWCd7NA9HcKrQgQsnAywr/vYPi0T4V/ikoNkn4aQ/nRBBWGU9RqZAIhz8
+   E0ZHPY8xljFGs/F1PH2CkWlEy3c1AXkiSMH8nHPcP6d5CKxtB2JbrtXkj
+   08Xd73wRq6pp7rg0iCqB49psJCBa39ltNSA/d6xlAXSF8EDwHmPlYGRDy
+   A==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10275"; a="253747927"
+X-IronPort-AV: E=Sophos;i="5.90,153,1643702400"; 
+   d="scan'208";a="253747927"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Mar 2022 13:24:51 -0800
+X-IronPort-AV: E=Sophos;i="5.90,153,1643702400"; 
+   d="scan'208";a="536016037"
+Received: from silpixa00400314.ir.intel.com (HELO silpixa00400314) ([10.237.222.76])
+  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Mar 2022 13:24:48 -0800
+Date:   Thu, 3 Mar 2022 21:24:42 +0000
+From:   Giovanni Cabiddu <giovanni.cabiddu@intel.com>
+To:     Eric Biggers <ebiggers@kernel.org>
 Cc:     Herbert Xu <herbert@gondor.apana.org.au>,
         Greg KH <gregkh@linuxfoundation.org>,
         Linus Torvalds <torvalds@linux-foundation.org>,
@@ -45,9 +50,8 @@ Cc:     Herbert Xu <herbert@gondor.apana.org.au>,
         device-mapper development <dm-devel@redhat.com>
 Subject: Re: Intel QAT on A2SDi-8C-HLN4F causes massive data corruption with
  dm-crypt + xfs
-Message-ID: <YiEVPc2cd38AnLZB@gmail.com>
-References: <Yh1aLfy/oBawCJIg@gondor.apana.org.au>
- <CAHk-=wi+xewHz=BH7LcZAxrj9JXi66s9rp+kBqRchVG3a-b2BA@mail.gmail.com>
+Message-ID: <YiEyGoHacN80FcOL@silpixa00400314>
+References: <CAHk-=wi+xewHz=BH7LcZAxrj9JXi66s9rp+kBqRchVG3a-b2BA@mail.gmail.com>
  <Yh2c4Vwu61s51d6N@gondor.apana.org.au>
  <Yh9G7FyCLtsm2mFA@kroah.com>
  <Yh9ZvLHuztwQCu0d@silpixa00400314>
@@ -56,127 +60,76 @@ References: <Yh1aLfy/oBawCJIg@gondor.apana.org.au>
  <Yh/yr6oB5yeOUErL@silpixa00400314>
  <Yh/znCnZzWaL49+o@gondor.apana.org.au>
  <YiDHT31ujlGdQEe/@silpixa00400314>
+ <YiEVPc2cd38AnLZB@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YiDHT31ujlGdQEe/@silpixa00400314>
+In-Reply-To: <YiEVPc2cd38AnLZB@gmail.com>
+Organization: Intel Research and Development Ireland Ltd - Co. Reg. #308263 -
+ Collinstown Industrial Park, Leixlip, County Kildare - Ireland
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 03, 2022 at 01:49:03PM +0000, Giovanni Cabiddu wrote:
-> On Thu, Mar 03, 2022 at 10:45:48AM +1200, Herbert Xu wrote:
-> > On Wed, Mar 02, 2022 at 10:42:20PM +0000, Giovanni Cabiddu wrote:
-> > >
-> > > I was thinking, as an alternative, to lower the cra_priority in the QAT
-> > > driver for the algorithms used by dm-crypt so they are not used by
-> > > default.
-> > > Is that a viable option?
-> > 
-> > Yes I think that should work too.
-> The patch below implements that solution and applies to linux-5.4.y.
-> If it is ok, I can send it to stable for all kernels <= 5.4 following
-> https://www.kernel.org/doc/html/latest/process/stable-kernel-rules.html#option-3
-> 
-> ---8<---
-> From: Giovanni Cabiddu <giovanni.cabiddu@intel.com>
-> Date: Thu, 3 Mar 2022 11:54:07 +0000
-> Subject: [PATCH] crypto: qat - drop priority of algorithms
-> Organization: Intel Research and Development Ireland Ltd - Co. Reg. #308263 - Collinstown Industrial Park, Leixlip, County Kildare - Ireland
-> 
-> The implementations of aead and skcipher in the QAT driver are not
-> properly supporting requests with the CRYPTO_TFM_REQ_MAY_BACKLOG flag set.
-> If the HW queue is full, the driver returns -EBUSY but does not enqueue
-> the request.
-> This can result in applications like dm-crypt waiting indefinitely for a
-> completion of a request that was never submitted to the hardware.
-> 
-> To mitigate this problem, reduce the priority of all skcipher and aead
-> implementations in the QAT driver so they are not used by default.
-> 
-> This patch deviates from the original upstream solution, that prevents
-> dm-crypt to use drivers registered with the flag
-> CRYPTO_ALG_ALLOCATES_MEMORY, since a backport of that set to stable
-> kernels may have a too wide effect.
-> 
-> commit 7bcb2c99f8ed032cfb3f5596b4dccac6b1f501df upstream
-> commit 2eb27c11937ee9984c04b75d213a737291c5f58c upstream
-> commit fbb6cda44190d72aa5199d728797aabc6d2ed816 upstream
-> commit b8aa7dc5c7535f9abfca4bceb0ade9ee10cf5f54 upstream
-> commit cd74693870fb748d812867ba49af733d689a3604 upstream
-> 
-> Signed-off-by: Giovanni Cabiddu <giovanni.cabiddu@intel.com>
-> ---
->  drivers/crypto/qat/qat_common/qat_algs.c | 12 ++++++------
->  1 file changed, 6 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/crypto/qat/qat_common/qat_algs.c b/drivers/crypto/qat/qat_common/qat_algs.c
-> index 6b8ad3d67481..a5c28a08fd8c 100644
-> --- a/drivers/crypto/qat/qat_common/qat_algs.c
-> +++ b/drivers/crypto/qat/qat_common/qat_algs.c
-> @@ -1274,7 +1274,7 @@ static struct aead_alg qat_aeads[] = { {
->  	.base = {
->  		.cra_name = "authenc(hmac(sha1),cbc(aes))",
->  		.cra_driver_name = "qat_aes_cbc_hmac_sha1",
-> -		.cra_priority = 4001,
-> +		.cra_priority = 1,
->  		.cra_flags = CRYPTO_ALG_ASYNC,
->  		.cra_blocksize = AES_BLOCK_SIZE,
->  		.cra_ctxsize = sizeof(struct qat_alg_aead_ctx),
-> @@ -1291,7 +1291,7 @@ static struct aead_alg qat_aeads[] = { {
->  	.base = {
->  		.cra_name = "authenc(hmac(sha256),cbc(aes))",
->  		.cra_driver_name = "qat_aes_cbc_hmac_sha256",
-> -		.cra_priority = 4001,
-> +		.cra_priority = 1,
->  		.cra_flags = CRYPTO_ALG_ASYNC,
->  		.cra_blocksize = AES_BLOCK_SIZE,
->  		.cra_ctxsize = sizeof(struct qat_alg_aead_ctx),
-> @@ -1308,7 +1308,7 @@ static struct aead_alg qat_aeads[] = { {
->  	.base = {
->  		.cra_name = "authenc(hmac(sha512),cbc(aes))",
->  		.cra_driver_name = "qat_aes_cbc_hmac_sha512",
-> -		.cra_priority = 4001,
-> +		.cra_priority = 1,
->  		.cra_flags = CRYPTO_ALG_ASYNC,
->  		.cra_blocksize = AES_BLOCK_SIZE,
->  		.cra_ctxsize = sizeof(struct qat_alg_aead_ctx),
-> @@ -1326,7 +1326,7 @@ static struct aead_alg qat_aeads[] = { {
->  static struct crypto_alg qat_algs[] = { {
->  	.cra_name = "cbc(aes)",
->  	.cra_driver_name = "qat_aes_cbc",
-> -	.cra_priority = 4001,
-> +	.cra_priority = 1,
->  	.cra_flags = CRYPTO_ALG_TYPE_ABLKCIPHER | CRYPTO_ALG_ASYNC,
->  	.cra_blocksize = AES_BLOCK_SIZE,
->  	.cra_ctxsize = sizeof(struct qat_alg_ablkcipher_ctx),
-> @@ -1348,7 +1348,7 @@ static struct crypto_alg qat_algs[] = { {
->  }, {
->  	.cra_name = "ctr(aes)",
->  	.cra_driver_name = "qat_aes_ctr",
-> -	.cra_priority = 4001,
-> +	.cra_priority = 1,
->  	.cra_flags = CRYPTO_ALG_TYPE_ABLKCIPHER | CRYPTO_ALG_ASYNC,
->  	.cra_blocksize = 1,
->  	.cra_ctxsize = sizeof(struct qat_alg_ablkcipher_ctx),
-> @@ -1370,7 +1370,7 @@ static struct crypto_alg qat_algs[] = { {
->  }, {
->  	.cra_name = "xts(aes)",
->  	.cra_driver_name = "qat_aes_xts",
-> -	.cra_priority = 4001,
-> +	.cra_priority = 1,
->  	.cra_flags = CRYPTO_ALG_TYPE_ABLKCIPHER | CRYPTO_ALG_ASYNC,
->  	.cra_blocksize = AES_BLOCK_SIZE,
->  	.cra_ctxsize = sizeof(struct qat_alg_ablkcipher_ctx),
-> 
-> base-commit: 866ae42cf4788c8b18de6bda0a522362702861d7
-> -- 
-> 2.35.1
-> 
+On Thu, Mar 03, 2022 at 07:21:33PM +0000, Eric Biggers wrote:
+> If these algorithms have critical bugs, which it appears they do, then IMO it
+> would be better to disable them (either stop registering them, or disable the
+> whole driver) than to leave them available with low cra_priority.  Low
+> cra_priority doesn't guarantee that they aren't used.
+Thanks for your feedback Eric.
 
-If these algorithms have critical bugs, which it appears they do, then IMO it
-would be better to disable them (either stop registering them, or disable the
-whole driver) than to leave them available with low cra_priority.  Low
-cra_priority doesn't guarantee that they aren't used.
+Here is a patch that disables the registration of the algorithms in the
+QAT driver by setting, a config time, the number of HW queues (aka
+instances) to zero.
 
-- Eric
+---8<---
+From: Giovanni Cabiddu <giovanni.cabiddu@intel.com>
+Subject: [PATCH] crypto: qat - disable registration of algorithms
+Organization: Intel Research and Development Ireland Ltd - Co. Reg. #308263 - Collinstown Industrial Park, Leixlip, County Kildare - Ireland
+
+The implementations of aead and skcipher in the QAT driver do not
+support properly requests with the CRYPTO_TFM_REQ_MAY_BACKLOG flag set.
+If the HW queue is full, the driver returns -EBUSY but does not enqueue
+the request.
+This can result in applications like dm-crypt waiting indefinitely for a
+completion of a request that was never submitted to the hardware.
+
+To avoid this problem, disable the registration of all skcipher and aead
+implementations in the QAT driver by setting the number of crypto
+instances to 0 at configuration time.
+
+This patch deviates from the original upstream solution, that prevents
+dm-crypt to use drivers registered with the flag
+CRYPTO_ALG_ALLOCATES_MEMORY, since a backport of that set to stable
+kernels may have a too wide effect.
+
+commit 7bcb2c99f8ed032cfb3f5596b4dccac6b1f501df upstream
+commit 2eb27c11937ee9984c04b75d213a737291c5f58c upstream
+commit fbb6cda44190d72aa5199d728797aabc6d2ed816 upstream
+commit b8aa7dc5c7535f9abfca4bceb0ade9ee10cf5f54 upstream
+commit cd74693870fb748d812867ba49af733d689a3604 upstream
+
+Signed-off-by: Giovanni Cabiddu <giovanni.cabiddu@intel.com>
+---
+ drivers/crypto/qat/qat_common/qat_crypto.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/drivers/crypto/qat/qat_common/qat_crypto.c b/drivers/crypto/qat/qat_common/qat_crypto.c
+index 3852d31ce0a4..611d214d5198 100644
+--- a/drivers/crypto/qat/qat_common/qat_crypto.c
++++ b/drivers/crypto/qat/qat_common/qat_crypto.c
+@@ -159,9 +159,7 @@ struct qat_crypto_instance *qat_crypto_get_instance_node(int node)
+  */
+ int qat_crypto_dev_config(struct adf_accel_dev *accel_dev)
+ {
+-	int cpus = num_online_cpus();
+-	int banks = GET_MAX_BANKS(accel_dev);
+-	int instances = min(cpus, banks);
++	int instances = 0;
+ 	char key[ADF_CFG_MAX_KEY_LEN_IN_BYTES];
+ 	int i;
+ 	unsigned long val;
+
+base-commit: 866ae42cf4788c8b18de6bda0a522362702861d7
+-- 
+2.35.1
