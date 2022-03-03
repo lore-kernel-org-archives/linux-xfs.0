@@ -2,119 +2,139 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19C2AC433F5
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Mar 2022 00:38:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F83DC433F5
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Mar 2022 04:27:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230435AbiCCAi4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Mar 2022 19:38:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39270 "EHLO
+        id S229529AbiCCE1q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Mar 2022 23:27:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47268 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230422AbiCCAiz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Mar 2022 19:38:55 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 559D9BF5F
-        for <linux-xfs@vger.kernel.org>; Wed,  2 Mar 2022 16:38:11 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 07F4BB822BC
-        for <linux-xfs@vger.kernel.org>; Thu,  3 Mar 2022 00:38:10 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 992CAC004E1;
-        Thu,  3 Mar 2022 00:38:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1646267888;
-        bh=1AotVhlgZW37ZOcPzuNfjD7MKdyQQr3XHIMrC9CQfcI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ZVfSbYMXpPTvqe9XgdsBRDNet44VPBsQvGT361bCRDOjD5pTTJ+nAGAyDAgxvM04e
-         3He29l/1+ft90Hf/moBf5CIPAWFw+1n7lNQkRgP8zO5mNwzfNd/Qlkwd+I1spdZSsU
-         IQ0jFP6AF6BqPkDnkti9vl6n44K6aiAOaWp/4JcTeXNAyj26X7VRj4S0ui8pvPvFux
-         zOwHshss3R9z0xYlhY67ZNwYud05yHCb1QSeLN+tcJvCh5S6GP183erNiDFVqO648o
-         Xpwrvd86OnfYRUyGveVpyFIcyClqH0fqzpeADcHljnJ5gAfrSon+oqLe9vdS+ao7mS
-         N3VyGnzily+ew==
-Date:   Wed, 2 Mar 2022 16:38:08 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Subject: Re: Quota warning woes (was: [PATCH 25/26] xfs: actually bump
- warning counts when we send warnings)
-Message-ID: <20220303003808.GM117732@magnolia>
-References: <159477783164.3263162.2564345443708779029.stgit@magnolia>
- <159477799812.3263162.13957383827318048593.stgit@magnolia>
- <01d6be65-f65c-790e-73fb-9529a94673eb@sandeen.net>
- <199a3e85-9ee5-1354-e652-ff3d501bd395@sandeen.net>
+        with ESMTP id S229509AbiCCE1q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Mar 2022 23:27:46 -0500
+Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F4F61A391;
+        Wed,  2 Mar 2022 20:27:00 -0800 (PST)
+Received: from cwcc.thunk.org (pool-108-7-220-252.bstnma.fios.verizon.net [108.7.220.252])
+        (authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 2234Qdxv022243
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 2 Mar 2022 23:26:39 -0500
+Received: by cwcc.thunk.org (Postfix, from userid 15806)
+        id 3139015C0038; Wed,  2 Mar 2022 23:26:39 -0500 (EST)
+Date:   Wed, 2 Mar 2022 23:26:39 -0500
+From:   "Theodore Ts'o" <tytso@mit.edu>
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     Lee Jones <lee.jones@linaro.org>, linux-ext4@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>,
+        Dave Chinner <dchinner@redhat.com>,
+        Goldwyn Rodrigues <rgoldwyn@suse.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Bob Peterson <rpeterso@redhat.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Ritesh Harjani <riteshh@linux.ibm.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Johannes Thumshirn <jth@kernel.org>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH -v4] ext4: don't BUG if kernel subsystems dirty pages
+ without asking ext4 first
+Message-ID: <YiBDf7XLnTe4Gwis@mit.edu>
+References: <Yg0m6IjcNmfaSokM@google.com>
+ <Yhks88tO3Em/G370@mit.edu>
+ <YhlBUCi9O30szf6l@sol.localdomain>
+ <YhlFRoJ3OdYMIh44@mit.edu>
+ <YhlIvw00Y4MkAgxX@mit.edu>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <199a3e85-9ee5-1354-e652-ff3d501bd395@sandeen.net>
+In-Reply-To: <YhlIvw00Y4MkAgxX@mit.edu>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 02, 2022 at 12:19:21PM -0600, Eric Sandeen wrote:
-> On 3/1/22 1:31 PM, Eric Sandeen wrote:
-> > On 7/14/20 8:53 PM, Darrick J. Wong wrote:
-> >> From: Darrick J. Wong <darrick.wong@oracle.com>
-> >>
-> >> Currently, xfs quotas have the ability to send netlink warnings when a
-> >> user exceeds the limits.  They also have all the support code necessary
-> >> to convert softlimit warnings into failures if the number of warnings
-> >> exceeds a limit set by the administrator.  Unfortunately, we never
-> >> actually increase the warning counter, so this never actually happens.
-> >> Make it so we actually do something useful with the warning counts.
-> >>
-> >> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> >> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > 
-> > Sooo I got a bug report that this essentially breaks the timer for
-> > soft quota, because we now (and quite rapidly) hit the default
-> > 5-warning limit well before we hit any reasonable timer that may
-> > have been set, and disallow more space usage.
-> > 
-> > And those warnings rack up in somewhat unexpected (to me, anyway)
-> > ways. With a default max warning count of 5, I go over soft quota
-> > exactly once, touch/create 2 more empty inodes, and I'm done:
-> 
-> Looking at this some more, I think it was never clear when the warnings
-> should get incremented. An old IRIX document[1] says:
-> 
-> "With soft limits, whenever a user logs in with a usage greater than his
-> soft limit, he or she will be warned (via/bin/login(1))."
-> 
-> Which seems to indicate that perhaps the warning was intended to be
-> once per login, not once per allocation attempt. Also ...
-> 
-> Ancient XFS code had a "xfs_qm_dqwarn()" function which incremented the
-> warning count, but it never had any callers until the day it was removed
-> in 2005, so it's not at all clear what the warning frequency was supposed
-> to be or what should trigger it, from the code archives.
-> 
-> Hence, my modest proposal would be to just remove the warning limits
-> infrastructure altogether. It's never worked, nobody has ever asked for it
-> (?), and its intent is not clear. My only hesitation is that Darrick added
-> the warning increment, so perhaps he knows of a current use case that
-> matters?
+[un]pin_user_pages_remote is dirtying pages without properly warning
+the file system in advance.  A related race was noted by Jan Kara in
+2018[1]; however, more recently instead of it being a very hard-to-hit
+race, it could be reliably triggered by process_vm_writev(2) which was
+discovered by Syzbot[2].
 
-None specifically, but it's a feature, albeit a poorly documented and
-previously broken one.  VFS quotas don't seem to have any warning
-limits, so I suppose there's not a lot of precedent to go on.
+This is technically a bug in mm/gup.c, but arguably ext4 is fragile in
+that if some other kernel subsystem dirty pages without properly
+notifying the file system using page_mkwrite(), ext4 will BUG, while
+other file systems will not BUG (although data will still be lost).
 
-That said -- I don't how gutting a feature (especially since it's now
-been *working* for a year and a half) is the solution here.  If you
-think the default warning limit is too low, then perhaps we should
-increase it.  If you don't like that a single user operation can bump
-the warning counter multiple times, then propose adding a flag to the
-dqtrx structure so that we only bump the warning counter *once* per
-transaction.  "It's never worked" is not true -- this fix was added for
-5.9, and it's now shipped in two LTS kernels.
+So instead of crashing with a BUG, issue a warning (since there may be
+potential data loss) and just mark the page as clean to avoid
+unprivileged denial of service attacks until the problem can be
+properly fixed.  More discussion and background can be found in the
+thread starting at [2].
 
-On the other hand, if you think this feature is totally worthless and it
-should go away, there's a deprecation process for that.
+[1] https://lore.kernel.org/linux-mm/20180103100430.GE4911@quack2.suse.cz
+[2] https://lore.kernel.org/r/Yg0m6IjcNmfaSokM@google.com
 
---D
+Reported-by: syzbot+d59332e2db681cf18f0318a06e994ebbb529a8db@syzkaller.appspotmail.com
+Reported-by: Lee Jones <lee.jones@linaro.org>
+Signed-off-by: Theodore Ts'o <tytso@mit.edu>
+Cc: stable@kernel.org
+---
+v4 - only changes to the commit description to eliminate some inaccuracies
+     and clarify the text.
 
-> 
-> thanks,
-> -Eric
-> 
-> [1] https://irix7.com/techpubs/007-0603-100.pdf
+ fs/ext4/inode.c | 27 ++++++++++++++++++++++++++-
+ 1 file changed, 26 insertions(+), 1 deletion(-)
+
+diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+index 01c9e4f743ba..008fe8750109 100644
+--- a/fs/ext4/inode.c
++++ b/fs/ext4/inode.c
+@@ -1993,6 +1993,15 @@ static int ext4_writepage(struct page *page,
+ 	else
+ 		len = PAGE_SIZE;
+ 
++	/* Should never happen but for bugs in other kernel subsystems */
++	if (!page_has_buffers(page)) {
++		ext4_warning_inode(inode,
++		   "page %lu does not have buffers attached", page->index);
++		ClearPageDirty(page);
++		unlock_page(page);
++		return 0;
++	}
++
+ 	page_bufs = page_buffers(page);
+ 	/*
+ 	 * We cannot do block allocation or other extent handling in this
+@@ -2588,12 +2597,28 @@ static int mpage_prepare_extent_to_map(struct mpage_da_data *mpd)
+ 			     (mpd->wbc->sync_mode == WB_SYNC_NONE)) ||
+ 			    unlikely(page->mapping != mapping)) {
+ 				unlock_page(page);
+-				continue;
++				goto out;
+ 			}
+ 
+ 			wait_on_page_writeback(page);
+ 			BUG_ON(PageWriteback(page));
+ 
++			/*
++			 * Should never happen but for buggy code in
++			 * other subsystems that call
++			 * set_page_dirty() without properly warning
++			 * the file system first.  See [1] for more
++			 * information.
++			 *
++			 * [1] https://lore.kernel.org/linux-mm/20180103100430.GE4911@quack2.suse.cz
++			 */
++			if (!page_has_buffers(page)) {
++				ext4_warning_inode(mpd->inode, "page %lu does not have buffers attached", page->index);
++				ClearPageDirty(page);
++				unlock_page(page);
++				continue;
++			}
++
+ 			if (mpd->map.m_len == 0)
+ 				mpd->first_page = page->index;
+ 			mpd->next_page = page->index + 1;
+-- 
+2.31.0
+
