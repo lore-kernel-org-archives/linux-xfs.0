@@ -2,116 +2,119 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30479C433EF
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Mar 2022 23:49:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19C2AC433F5
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Mar 2022 00:38:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229588AbiCBXuA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Mar 2022 18:50:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41556 "EHLO
+        id S230435AbiCCAi4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Mar 2022 19:38:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39270 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229546AbiCBXt7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Mar 2022 18:49:59 -0500
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 3CDD217924D;
-        Wed,  2 Mar 2022 15:49:13 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-17-0.pa.vic.optusnet.com.au [49.186.17.0])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 5C23C5355EA;
-        Thu,  3 Mar 2022 10:12:08 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nPY8c-000nz7-NA; Thu, 03 Mar 2022 10:12:06 +1100
-Date:   Thu, 3 Mar 2022 10:12:06 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Andreas Gruenbacher <agruenba@redhat.com>
-Cc:     Filipe Manana <fdmanana@kernel.org>,
-        Michael Kerrisk <mtk@man7.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-xfs@vger.kernel.org,
-        linux-btrfs <linux-btrfs@vger.kernel.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        cluster-devel <cluster-devel@redhat.com>,
-        Josef Bacik <josef@toxicpanda.com>,
-        Filipe Manana <fdmanana@suse.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [PATCH] iomap: fix incomplete async dio reads when using
- IOMAP_DIO_PARTIAL
-Message-ID: <20220302231206.GV59715@dread.disaster.area>
-References: <1f34c8435fed21e9583492661ceb20d642a75699.1646058596.git.fdmanana@suse.com>
- <20220228223830.GR59715@dread.disaster.area>
- <Yh9EHfl3sYJHeo3T@debian9.Home>
- <CAHc6FU7jBeUEAaB0BupypG1zdxf4shF5T56cHZCD_xXi-jeB+Q@mail.gmail.com>
+        with ESMTP id S230422AbiCCAiz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Mar 2022 19:38:55 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 559D9BF5F
+        for <linux-xfs@vger.kernel.org>; Wed,  2 Mar 2022 16:38:11 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 07F4BB822BC
+        for <linux-xfs@vger.kernel.org>; Thu,  3 Mar 2022 00:38:10 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 992CAC004E1;
+        Thu,  3 Mar 2022 00:38:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1646267888;
+        bh=1AotVhlgZW37ZOcPzuNfjD7MKdyQQr3XHIMrC9CQfcI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ZVfSbYMXpPTvqe9XgdsBRDNet44VPBsQvGT361bCRDOjD5pTTJ+nAGAyDAgxvM04e
+         3He29l/1+ft90Hf/moBf5CIPAWFw+1n7lNQkRgP8zO5mNwzfNd/Qlkwd+I1spdZSsU
+         IQ0jFP6AF6BqPkDnkti9vl6n44K6aiAOaWp/4JcTeXNAyj26X7VRj4S0ui8pvPvFux
+         zOwHshss3R9z0xYlhY67ZNwYud05yHCb1QSeLN+tcJvCh5S6GP183erNiDFVqO648o
+         Xpwrvd86OnfYRUyGveVpyFIcyClqH0fqzpeADcHljnJ5gAfrSon+oqLe9vdS+ao7mS
+         N3VyGnzily+ew==
+Date:   Wed, 2 Mar 2022 16:38:08 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Subject: Re: Quota warning woes (was: [PATCH 25/26] xfs: actually bump
+ warning counts when we send warnings)
+Message-ID: <20220303003808.GM117732@magnolia>
+References: <159477783164.3263162.2564345443708779029.stgit@magnolia>
+ <159477799812.3263162.13957383827318048593.stgit@magnolia>
+ <01d6be65-f65c-790e-73fb-9529a94673eb@sandeen.net>
+ <199a3e85-9ee5-1354-e652-ff3d501bd395@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAHc6FU7jBeUEAaB0BupypG1zdxf4shF5T56cHZCD_xXi-jeB+Q@mail.gmail.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=621ff9ca
-        a=+dVDrTVfsjPpH/ci3UuFng==:117 a=+dVDrTVfsjPpH/ci3UuFng==:17
-        a=kj9zAlcOel0A:10 a=o8Y5sQTvuykA:10 a=VwQbUJbxAAAA:8 a=iox4zFpeAAAA:8
-        a=7-415B0cAAAA:8 a=kOgEMRnqgivgxslKRJ4A:9 a=CjuIK1q_8ugA:10
-        a=AjGcO6oz07-iQ99wixmX:22 a=WzC6qhA0u3u7Ye7llzcV:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <199a3e85-9ee5-1354-e652-ff3d501bd395@sandeen.net>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 02, 2022 at 02:03:28PM +0100, Andreas Gruenbacher wrote:
-> On Wed, Mar 2, 2022 at 11:17 AM Filipe Manana <fdmanana@kernel.org> wrote:
-> > On Tue, Mar 01, 2022 at 09:38:30AM +1100, Dave Chinner wrote:
-> > > On Mon, Feb 28, 2022 at 02:32:03PM +0000, fdmanana@kernel.org wrote:
-> > > > From: Filipe Manana <fdmanana@suse.com>
-> > > .....
-> > >
-> > > > 11) At iomap_dio_complete() we adjust the iocb->ki_pos from X to X + 4K
-> > > >     and return 4K (the amount of io done) to iomap_dio_complete_work();
-> > > >
-> > > > 12) iomap_dio_complete_work() calls the iocb completion callback,
-> > > >     iocb->ki_complete() with a second argument value of 4K (total io
-> > > >     done) and the iocb with the adjust ki_pos of X + 4K. This results
-> > > >     in completing the read request for io_uring, leaving it with a
-> > > >     result of 4K bytes read, and only the first page of the buffer
-> > > >     filled in, while the remaining 3 pages, corresponding to the other
-> > > >     3 extents, were not filled;
-> > > >
-> > > > 13) For the application, the result is unexpected because if we ask
-> > > >     to read N bytes, it expects to get N bytes read as long as those
-> > > >     N bytes don't cross the EOF (i_size).
-> > >
-> > > Yeah, that's exactly the sort of problem we were having with XFS
-> > > with partial DIO completions due to needing multiple iomap iteration
-> > > loops to complete a single IO. Hence IOMAP_NOWAIT now triggers the
-> > > above range check and aborts before we start...
-> >
-> > Interesting.
+On Wed, Mar 02, 2022 at 12:19:21PM -0600, Eric Sandeen wrote:
+> On 3/1/22 1:31 PM, Eric Sandeen wrote:
+> > On 7/14/20 8:53 PM, Darrick J. Wong wrote:
+> >> From: Darrick J. Wong <darrick.wong@oracle.com>
+> >>
+> >> Currently, xfs quotas have the ability to send netlink warnings when a
+> >> user exceeds the limits.  They also have all the support code necessary
+> >> to convert softlimit warnings into failures if the number of warnings
+> >> exceeds a limit set by the administrator.  Unfortunately, we never
+> >> actually increase the warning counter, so this never actually happens.
+> >> Make it so we actually do something useful with the warning counts.
+> >>
+> >> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> >> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > 
+> > Sooo I got a bug report that this essentially breaks the timer for
+> > soft quota, because we now (and quite rapidly) hit the default
+> > 5-warning limit well before we hit any reasonable timer that may
+> > have been set, and disallow more space usage.
+> > 
+> > And those warnings rack up in somewhat unexpected (to me, anyway)
+> > ways. With a default max warning count of 5, I go over soft quota
+> > exactly once, touch/create 2 more empty inodes, and I'm done:
 > 
-> Dave, this seems to affect all users of iomap_dio_rw in the same way,
-> so would it make sense to move this check there?
+> Looking at this some more, I think it was never clear when the warnings
+> should get incremented. An old IRIX document[1] says:
+> 
+> "With soft limits, whenever a user logs in with a usage greater than his
+> soft limit, he or she will be warned (via/bin/login(1))."
+> 
+> Which seems to indicate that perhaps the warning was intended to be
+> once per login, not once per allocation attempt. Also ...
+> 
+> Ancient XFS code had a "xfs_qm_dqwarn()" function which incremented the
+> warning count, but it never had any callers until the day it was removed
+> in 2005, so it's not at all clear what the warning frequency was supposed
+> to be or what should trigger it, from the code archives.
+> 
+> Hence, my modest proposal would be to just remove the warning limits
+> infrastructure altogether. It's never worked, nobody has ever asked for it
+> (?), and its intent is not clear. My only hesitation is that Darrick added
+> the warning increment, so perhaps he knows of a current use case that
+> matters?
 
-Perhaps, but I'm not sure it makes sense because filesystems need to
-abort ->iomap_begin with -EAGAIN in IOMAP_NOWAIT contexts before
-they make any changes.
+None specifically, but it's a feature, albeit a poorly documented and
+previously broken one.  VFS quotas don't seem to have any warning
+limits, so I suppose there's not a lot of precedent to go on.
 
-Hence detecting short extents in the generic code becomes ...
-difficult because we might now need to undo changes that have been
-made in ->iomap_begin. e.g. if the filesystem allocates space and
-the iomap core says "not long enough" because IOMAP_NOWAIT is set,
-then we may have to punch out that allocation in ->iomap_end beforei
-returning -EAGAIN.
+That said -- I don't how gutting a feature (especially since it's now
+been *working* for a year and a half) is the solution here.  If you
+think the default warning limit is too low, then perhaps we should
+increase it.  If you don't like that a single user operation can bump
+the warning counter multiple times, then propose adding a flag to the
+dqtrx structure so that we only bump the warning counter *once* per
+transaction.  "It's never worked" is not true -- this fix was added for
+5.9, and it's now shipped in two LTS kernels.
 
-That means filesystems like XFS may now need to supply a ->iomap_end
-function to undo stuff the core decides it shouldn't have done,
-instead of the filesystem ensuring it never does the operation it in
-the first place...
+On the other hand, if you think this feature is totally worthless and it
+should go away, there's a deprecation process for that.
 
-IOWs, the correct behaviour here is for the filesystem ->iomap_begin
-method to see that it needs to allocate and return -EAGAIN if
-IOMAP_NOWAIT is set, not do the allocation and hope it that it ends
-up being long enough to cover the entire IO we have to do.
+--D
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> thanks,
+> -Eric
+> 
+> [1] https://irix7.com/techpubs/007-0603-100.pdf
