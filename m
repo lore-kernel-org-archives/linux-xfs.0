@@ -2,86 +2,127 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D55FC433F5
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Mar 2022 08:15:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58432C433EF
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Mar 2022 17:50:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231443AbiCDIQj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 4 Mar 2022 03:16:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59508 "EHLO
+        id S238712AbiCDRvf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 4 Mar 2022 12:51:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38274 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231388AbiCDIQi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Mar 2022 03:16:38 -0500
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id DD026197B51
-        for <linux-xfs@vger.kernel.org>; Fri,  4 Mar 2022 00:15:50 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-17-0.pa.vic.optusnet.com.au [49.186.17.0])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 1AEB410E234C;
-        Fri,  4 Mar 2022 19:15:50 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nQ36L-001Lfo-Gw; Fri, 04 Mar 2022 19:15:49 +1100
-Date:   Fri, 4 Mar 2022 19:15:49 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Chandan Babu R <chandan.babu@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, djwong@kernel.org
-Subject: Re: [PATCH V7 17/17] xfs: Define max extent length based on on-disk
- format definition
-Message-ID: <20220304081549.GL59715@dread.disaster.area>
-References: <20220301103938.1106808-1-chandan.babu@oracle.com>
- <20220301103938.1106808-18-chandan.babu@oracle.com>
+        with ESMTP id S236389AbiCDRvf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Mar 2022 12:51:35 -0500
+Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76FB1E1B54;
+        Fri,  4 Mar 2022 09:50:47 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1646416247; x=1677952247;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=8gdC/LTDrr4qcvIX6OPCBxrk+BVbgh5qgr9DkwVSOOU=;
+  b=npfMvh+m/Bj6va7xhfG5hWScX84tApKuC/3XDJdVQg8zrQrSmnv14uap
+   o9YTYj8pHtjQaT2A9dyaPPsvPhxC+V+szUBFYqfIDp0FolQA/c5bgiaZn
+   CEG1T0h7lbaYfpSbJ6KfhOwNrvNRLD6/FcdX7StJZkGBbs95Iu37IZTdo
+   1CVK5ETtDi+4WxtrotLivc+SlldPpw8ueKm0cwsGuoCo+zRogUTloMlFR
+   VqnRt2YBHgRawgjsC8+vB5p/g0a+/zku6XtHQIHhvCipMKPpr+gqDgCO0
+   eu9HRfRb2dGOKsv4kZqt0K10LAlfJ+R45+zHhVjCAHDZpw9mPp/qP07ix
+   w==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10276"; a="253755655"
+X-IronPort-AV: E=Sophos;i="5.90,155,1643702400"; 
+   d="scan'208";a="253755655"
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Mar 2022 09:50:47 -0800
+X-IronPort-AV: E=Sophos;i="5.90,155,1643702400"; 
+   d="scan'208";a="509047350"
+Received: from silpixa00400314.ir.intel.com (HELO silpixa00400314) ([10.237.222.76])
+  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Mar 2022 09:50:44 -0800
+Date:   Fri, 4 Mar 2022 17:50:38 +0000
+From:   Giovanni Cabiddu <giovanni.cabiddu@intel.com>
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     Herbert Xu <herbert@gondor.apana.org.au>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Kyle Sanderson <kyle.leet@gmail.com>,
+        Dave Chinner <david@fromorbit.com>, qat-linux@intel.com,
+        Linux-Kernal <linux-kernel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
+        device-mapper development <dm-devel@redhat.com>
+Subject: Re: Intel QAT on A2SDi-8C-HLN4F causes massive data corruption with
+ dm-crypt + xfs
+Message-ID: <YiJRQQmSxA/fbm6P@silpixa00400314>
+References: <Yh9G7FyCLtsm2mFA@kroah.com>
+ <Yh9ZvLHuztwQCu0d@silpixa00400314>
+ <Yh+FpKuoyj3G16lK@kroah.com>
+ <Yh/vY4t3xnuoCW3Q@gondor.apana.org.au>
+ <Yh/yr6oB5yeOUErL@silpixa00400314>
+ <Yh/znCnZzWaL49+o@gondor.apana.org.au>
+ <YiDHT31ujlGdQEe/@silpixa00400314>
+ <YiEVPc2cd38AnLZB@gmail.com>
+ <YiEyGoHacN80FcOL@silpixa00400314>
+ <YiE21aPGG5DHwJvb@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220301103938.1106808-18-chandan.babu@oracle.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=6221cab6
-        a=+dVDrTVfsjPpH/ci3UuFng==:117 a=+dVDrTVfsjPpH/ci3UuFng==:17
-        a=kj9zAlcOel0A:10 a=o8Y5sQTvuykA:10 a=VwQbUJbxAAAA:8 a=yPCof4ZbAAAA:8
-        a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=JxtSWZMfg4bXHmjKXcYA:9
-        a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <YiE21aPGG5DHwJvb@gmail.com>
+Organization: Intel Research and Development Ireland Ltd - Co. Reg. #308263 -
+ Collinstown Industrial Park, Leixlip, County Kildare - Ireland
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Mar 01, 2022 at 04:09:38PM +0530, Chandan Babu R wrote:
-> The maximum extent length depends on maximum block count that can be stored in
-> a BMBT record. Hence this commit defines MAXEXTLEN based on
-> BMBT_BLOCKCOUNT_BITLEN.
+On Thu, Mar 03, 2022 at 09:44:53PM +0000, Eric Biggers wrote:
+> On Thu, Mar 03, 2022 at 09:24:42PM +0000, Giovanni Cabiddu wrote:
+> > On Thu, Mar 03, 2022 at 07:21:33PM +0000, Eric Biggers wrote:
+> > > If these algorithms have critical bugs, which it appears they do, then IMO it
+> > > would be better to disable them (either stop registering them, or disable the
+> > > whole driver) than to leave them available with low cra_priority.  Low
+> > > cra_priority doesn't guarantee that they aren't used.
+> > Thanks for your feedback Eric.
+> > 
+> > Here is a patch that disables the registration of the algorithms in the
+> > QAT driver by setting, a config time, the number of HW queues (aka
+> > instances) to zero.
+> > 
+> > ---8<---
+> > From: Giovanni Cabiddu <giovanni.cabiddu@intel.com>
+> > Subject: [PATCH] crypto: qat - disable registration of algorithms
+> > Organization: Intel Research and Development Ireland Ltd - Co. Reg. #308263 - Collinstown Industrial Park, Leixlip, County Kildare - Ireland
+> > 
+> > The implementations of aead and skcipher in the QAT driver do not
+> > support properly requests with the CRYPTO_TFM_REQ_MAY_BACKLOG flag set.
+> > If the HW queue is full, the driver returns -EBUSY but does not enqueue
+> > the request.
+> > This can result in applications like dm-crypt waiting indefinitely for a
+> > completion of a request that was never submitted to the hardware.
+> > 
+> > To avoid this problem, disable the registration of all skcipher and aead
+> > implementations in the QAT driver by setting the number of crypto
+> > instances to 0 at configuration time.
+> > 
+> > This patch deviates from the original upstream solution, that prevents
+> > dm-crypt to use drivers registered with the flag
+> > CRYPTO_ALG_ALLOCATES_MEMORY, since a backport of that set to stable
+> > kernels may have a too wide effect.
+> > 
+> > commit 7bcb2c99f8ed032cfb3f5596b4dccac6b1f501df upstream
+> > commit 2eb27c11937ee9984c04b75d213a737291c5f58c upstream
+> > commit fbb6cda44190d72aa5199d728797aabc6d2ed816 upstream
+> > commit b8aa7dc5c7535f9abfca4bceb0ade9ee10cf5f54 upstream
+> > commit cd74693870fb748d812867ba49af733d689a3604 upstream
+> > 
+> > Signed-off-by: Giovanni Cabiddu <giovanni.cabiddu@intel.com>
+> > ---
+> >  drivers/crypto/qat/qat_common/qat_crypto.c | 4 +---
+> >  1 file changed, 1 insertion(+), 3 deletions(-)
 > 
-> While at it, the commit also renames MAXEXTLEN to XFS_MAX_BMBT_EXTLEN.
-> 
-> Suggested-by: Darrick J. Wong <djwong@kernel.org>
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
+> Sounds good; is there any reason not to apply this upstream too, though?
+> You could revert it later as part of the patch series that fixes the driver.
+Makes sense. I'm going to send it upstream and Cc stable as documented
+in https://www.kernel.org/doc/html/v4.10/process/stable-kernel-rules.html#option-1
+I will then revert this change in the set that fixes the problem.
 
-Looks fine, but this should be up near the top of the series where
-all the extent count definitions are being changed. Also, minor
-formatting nit below.
+Thanks,
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
-> @@ -299,7 +299,8 @@ xfs_calc_write_reservation(
->   *    the agf for each of the ags: 2 * sector size
->   *    the agfl for each of the ags: 2 * sector size
->   *    the super block to reflect the freed blocks: sector size
-> - *    the realtime bitmap: 2 exts * ((MAXEXTLEN / rtextsize) / NBBY) bytes
-> + *    the realtime bitmap: 2 exts * ((XFS_BMBT_MAX_EXTLEN / rtextsize) / NBBY)
-> + *    bytes
-
-Break the line at the ":"
-
- *    the realtime bitmap:
- *		2 exts * ((XFS_BMBT_MAX_EXTLEN / rtextsize) / NBBY) bytes
-
-Which makes it consistent with the rest of the comment:
-
->   *    the realtime summary: 2 exts * 1 block
->   *    worst case split in allocation btrees per extent assuming 2 extents:
->   *		2 exts * 2 trees * (2 * max depth - 1) * block size
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Giovanni
