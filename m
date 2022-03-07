@@ -2,111 +2,86 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64472C433EF
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Mar 2022 23:19:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4D4BC433F5
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Mar 2022 23:31:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235196AbiCGXTz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Mar 2022 18:19:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41764 "EHLO
+        id S235125AbiCGXc3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Mar 2022 18:32:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46274 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231462AbiCGXTz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Mar 2022 18:19:55 -0500
+        with ESMTP id S234760AbiCGXc3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Mar 2022 18:32:29 -0500
 Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1449F31368
-        for <linux-xfs@vger.kernel.org>; Mon,  7 Mar 2022 15:19:00 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 255F212A9F
+        for <linux-xfs@vger.kernel.org>; Mon,  7 Mar 2022 15:31:34 -0800 (PST)
 Received: from dread.disaster.area (pa49-186-17-0.pa.vic.optusnet.com.au [49.186.17.0])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 15BB610E1CAD;
-        Tue,  8 Mar 2022 10:18:58 +1100 (AEDT)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id E19CE10E1DF0;
+        Tue,  8 Mar 2022 10:31:32 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1nRMcz-002mA7-UQ; Tue, 08 Mar 2022 10:18:58 +1100
-Date:   Tue, 8 Mar 2022 10:18:57 +1100
+        id 1nRMpA-002mW5-7P; Tue, 08 Mar 2022 10:31:32 +1100
+Date:   Tue, 8 Mar 2022 10:31:32 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     willy@infradead.org
-Subject: [PATCH 4/3] xfs: async CIL flushes need pending pushes to be made
- stable
-Message-ID: <20220307231857.GR59715@dread.disaster.area>
-References: <20220307053252.2534616-1-david@fromorbit.com>
+To:     David Dal Ben <dalben@gmail.com>
+Cc:     Eric Sandeen <esandeen@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: Inconsistent "EXPERIMENTAL online shrink feature in use. Use at
+ your own risk" alert
+Message-ID: <20220307233132.GA661808@dread.disaster.area>
+References: <CALwRca2+UsEZMPwiCtecM87HVVMs27SdawdWXns+PU7+S-DFaQ@mail.gmail.com>
+ <CALwRca3yS2q4XYr5aFaPWxNcGsYRFDWeU9je1q31KGguTeX6Rw@mail.gmail.com>
+ <YiYIO2lJf123LA2c@B-P7TQMD6M-0146.local>
+ <CALwRca2bZD5tXmL5kzCdL97LpqWGVhYXMNSWSvqn=FkMuMrbjQ@mail.gmail.com>
+ <9f957f7a-0f08-9cb4-d8ff-76440a488184@redhat.com>
+ <CALwRca2Xdp8F_xjXSFXxO-Ra96W685o2qY1xoo=Ko9OWF4oRvw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220307053252.2534616-1-david@fromorbit.com>
+In-Reply-To: <CALwRca2Xdp8F_xjXSFXxO-Ra96W685o2qY1xoo=Ko9OWF4oRvw@mail.gmail.com>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=622692e3
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=622695d5
         a=+dVDrTVfsjPpH/ci3UuFng==:117 a=+dVDrTVfsjPpH/ci3UuFng==:17
-        a=kj9zAlcOel0A:10 a=o8Y5sQTvuykA:10 a=20KFwNOVAAAA:8 a=JfrnYn6hAAAA:8
-        a=Icm_k0NaIDjJNltb-DgA:9 a=CjuIK1q_8ugA:10 a=1CNFftbPRP8L7MoqJWF3:22
+        a=q2rpgJM3of3wzYv4:21 a=kj9zAlcOel0A:10 a=o8Y5sQTvuykA:10 a=7-415B0cAAAA:8
+        a=osnUa62Un3eFc04iFN4A:9 a=CjuIK1q_8ugA:10 a=aujFQpqGlDxcc9pqpD-7:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Tue, Mar 08, 2022 at 06:46:58AM +0800, David Dal Ben wrote:
+> This is where I get out of my depth. I added the drives to unraid, it
+> asked if I wanted to format them, I said yes, when that was completed
+> I started migrating data.
+> 
+> I didn't enter any XFS or disk commands from the CLI.
 
-From: Dave Chinner <dchinner@redhat.com>
+Is there any sort of verbose logging you can turn on from the
+applicance web interface?
 
-When the AIL tries to flush the CIL, it relies on the CIL push
-ending up on stable storage without having to wait for and
-manipulate iclog state directly. However, if there is already a
-pending CIL push when the AIL tries to flush the CIL, it won't set
-the cil->xc_push_commit_stable flag and so the CIL push will not
-actively flush the commit record iclog.
+> 
+> What I can tell you is that there are a couple of others who have
+> reported this alert on the Unraid forums, all seem to have larger
+> disks, over 14tb.
 
-generic/530 when run on a single CPU test VM can trigger this fairly
-reliably. This test exercises unlinked inode recovery, and can
-result in inodes being pinned in memory by ongoing modifications to
-the inode cluster buffer to record unlinked list modifications. As a
-result, the first inode unlinked in a buffer can pin the tail of the
-log whilst the inode cluster buffer is pinned by the current
-checkpoint that has been pushed but isn't on stable storage because
-because the cil->xc_push_commit_stable was not set. This results in
-the log/AIL effectively deadlocking until something triggers the
-commit record iclog to be pushed to stable storage (i.e. the
-periodic log worker calling xfs_log_force()).
+I'd suggest that you ask Unraid to turn off XFS shrinking support in
+the 6.10 release. It's not ready for production release, and
+enabling it is just going to lead to user problems like this.
 
-The fix is simple - always set the cil->xc_push_commit_stable when
-xlog_cil_flush() is called, regardless of whether there is already a
-pending push or not.
+Indeed, this somewhat implies that Unraid haven't actually tested
+shrink functionality at all, because otherwise the would have
+noticed just how limited the current XFS shrink support is and
+understood that it simply cannot be used in a production environment
+yet.
 
-Reported-by: Matthew Wilcox <willy@infradead.org>
-Fixes: 0020a190cf3e ("xfs: AIL needs asynchronous CIL forcing")
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_log_cil.c | 15 ++++++++++++---
- 1 file changed, 12 insertions(+), 3 deletions(-)
+IOWs, if Unraid want to support shrink in their commercial products
+right now, their support engineers need to be testing, triaging and
+reporting shrink problems to upstream and telling us exactly what is
+triggering those issues. Whilst the operations and commands they are
+issuing remains hidden from Unraid users, there's not a huge amount
+we can do upstream to triage the issue...
 
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 05cee602406c..9785ac0351fe 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -1490,11 +1490,21 @@ xlog_cil_push_now(
- 	if (!async)
- 		flush_workqueue(cil->xc_push_wq);
- 
-+	spin_lock(&cil->xc_push_lock);
-+
-+	/*
-+	 * If this is an async flush request, we always need to set the
-+	 * xc_push_commit_stable flag even if something else has already queued
-+	 * a push. The flush caller is asking for the CIL to be on stable
-+	 * storage when the next push completes, so regardless of who has queued
-+	 * the push, the flush requires stable semantics from it.
-+	 */
-+	cil->xc_push_commit_stable = async;
-+
- 	/*
- 	 * If the CIL is empty or we've already pushed the sequence then
--	 * there's no work we need to do.
-+	 * there's no more work that we need to do.
- 	 */
--	spin_lock(&cil->xc_push_lock);
- 	if (test_bit(XLOG_CIL_EMPTY, &cil->xc_flags) ||
- 	    push_seq <= cil->xc_push_seq) {
- 		spin_unlock(&cil->xc_push_lock);
-@@ -1502,7 +1512,6 @@ xlog_cil_push_now(
- 	}
- 
- 	cil->xc_push_seq = push_seq;
--	cil->xc_push_commit_stable = async;
- 	queue_work(cil->xc_push_wq, &cil->xc_ctx->push_work);
- 	spin_unlock(&cil->xc_push_lock);
- }
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
