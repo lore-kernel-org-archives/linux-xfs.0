@@ -2,226 +2,111 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DCEAC433F5
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Mar 2022 22:47:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64472C433EF
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Mar 2022 23:19:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240550AbiCGWsV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Mar 2022 17:48:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53510 "EHLO
+        id S235196AbiCGXTz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Mar 2022 18:19:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41764 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237095AbiCGWsV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Mar 2022 17:48:21 -0500
-Received: from mail-ed1-x532.google.com (mail-ed1-x532.google.com [IPv6:2a00:1450:4864:20::532])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A33CB2A278
-        for <linux-xfs@vger.kernel.org>; Mon,  7 Mar 2022 14:47:25 -0800 (PST)
-Received: by mail-ed1-x532.google.com with SMTP id g20so22062850edw.6
-        for <linux-xfs@vger.kernel.org>; Mon, 07 Mar 2022 14:47:25 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=RuXalIgexcx4/oOogQAa0UsqPlGiDurKy8Yxx7dB4Gg=;
-        b=ceT6wpBAkViBNstBB4MlkkPqnOxVhFYF9Rpsr3d+E5twH7f2fPqqmbnUbOqA6Vrs/6
-         amNolL7Xj96R/WOHMiVfFkNZttSt3yeRzD/BywAuHh+n35sfgV23rm/wjCsmMkPPaC7M
-         iSJiEH9YdM29Dks1nq60YzmmngyGFlHRIuY5+xYzxuM/LlqD2UnKTdQsIZ0gu0mRvFFj
-         u5S7zc330Y8AKWrQ+bmAJQdYll6ns38p3nUl5b7+qHyGaVkEU7wRX/Jfmy4E178iZzna
-         uCSJCj4YIUCxNMNpAPNVE/J2Gq00tPOh3h/EdMrorXf/9aILITxyQl1B0ci2jUGskLI6
-         DD5A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=RuXalIgexcx4/oOogQAa0UsqPlGiDurKy8Yxx7dB4Gg=;
-        b=CFGFE6BFRa0dv2znhC7dceasj9Vl5BLkbfhmg4/gD70KQSxQzRsKiAMBuqKy72d1V3
-         w18bJL0NeThwnqJlNgC8VeZ50K7stn+DmbLHTUfOorQKX8ENnLymONtZIiZOdNg8xULp
-         rYnuncsRKHp3qEYOtvNa6+o4aVgZ/yEU+xEsWcKNlpNPcwF0a5iLMJi5y9V0kDWd+d77
-         J7JvXYYRiVK1zYDSJcNmwPg5J82+1u1WkVly0IRf5G4kuIciugDkyTesKfSkL5uuw9UY
-         bNGdDeqHWVSO/zQpiRNfzwjCD+kz7CNnxVDVWOVEpxMMiong6dx6oF20bErwW3hpIADq
-         PGeA==
-X-Gm-Message-State: AOAM5330LCBcdWkPHGXQRvMeWDEJ4wGW6AIu3KldL0OZOl5yx46A2BdY
-        x+MQFU6FFXR+m0ZXfw4Xzc3Sn7WPsGNpkBYGFjeg2IsGzEY=
-X-Google-Smtp-Source: ABdhPJyhokUYIYJ4s4ZQjWsuKoxOWREfXzPyHWvE12vLzMFgxV3anRm1eFmS8dJcYWvY/wHqaYGWck2ufHibS9Fmn9M=
-X-Received: by 2002:a05:6402:644:b0:416:4ade:54e3 with SMTP id
- u4-20020a056402064400b004164ade54e3mr6026193edx.222.1646693243937; Mon, 07
- Mar 2022 14:47:23 -0800 (PST)
+        with ESMTP id S231462AbiCGXTz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Mar 2022 18:19:55 -0500
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1449F31368
+        for <linux-xfs@vger.kernel.org>; Mon,  7 Mar 2022 15:19:00 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-17-0.pa.vic.optusnet.com.au [49.186.17.0])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 15BB610E1CAD;
+        Tue,  8 Mar 2022 10:18:58 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nRMcz-002mA7-UQ; Tue, 08 Mar 2022 10:18:58 +1100
+Date:   Tue, 8 Mar 2022 10:18:57 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     willy@infradead.org
+Subject: [PATCH 4/3] xfs: async CIL flushes need pending pushes to be made
+ stable
+Message-ID: <20220307231857.GR59715@dread.disaster.area>
+References: <20220307053252.2534616-1-david@fromorbit.com>
 MIME-Version: 1.0
-References: <CALwRca2+UsEZMPwiCtecM87HVVMs27SdawdWXns+PU7+S-DFaQ@mail.gmail.com>
- <CALwRca3yS2q4XYr5aFaPWxNcGsYRFDWeU9je1q31KGguTeX6Rw@mail.gmail.com>
- <YiYIO2lJf123LA2c@B-P7TQMD6M-0146.local> <CALwRca2bZD5tXmL5kzCdL97LpqWGVhYXMNSWSvqn=FkMuMrbjQ@mail.gmail.com>
- <9f957f7a-0f08-9cb4-d8ff-76440a488184@redhat.com>
-In-Reply-To: <9f957f7a-0f08-9cb4-d8ff-76440a488184@redhat.com>
-From:   David Dal Ben <dalben@gmail.com>
-Date:   Tue, 8 Mar 2022 06:46:58 +0800
-Message-ID: <CALwRca2Xdp8F_xjXSFXxO-Ra96W685o2qY1xoo=Ko9OWF4oRvw@mail.gmail.com>
-Subject: Re: Inconsistent "EXPERIMENTAL online shrink feature in use. Use at
- your own risk" alert
-To:     Eric Sandeen <esandeen@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220307053252.2534616-1-david@fromorbit.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=622692e3
+        a=+dVDrTVfsjPpH/ci3UuFng==:117 a=+dVDrTVfsjPpH/ci3UuFng==:17
+        a=kj9zAlcOel0A:10 a=o8Y5sQTvuykA:10 a=20KFwNOVAAAA:8 a=JfrnYn6hAAAA:8
+        a=Icm_k0NaIDjJNltb-DgA:9 a=CjuIK1q_8ugA:10 a=1CNFftbPRP8L7MoqJWF3:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This is where I get out of my depth. I added the drives to unraid, it
-asked if I wanted to format them, I said yes, when that was completed
-I started migrating data.
 
-I didn't enter any XFS or disk commands from the CLI.
+From: Dave Chinner <dchinner@redhat.com>
 
-What I can tell you is that there are a couple of others who have
-reported this alert on the Unraid forums, all seem to have larger
-disks, over 14tb.
+When the AIL tries to flush the CIL, it relies on the CIL push
+ending up on stable storage without having to wait for and
+manipulate iclog state directly. However, if there is already a
+pending CIL push when the AIL tries to flush the CIL, it won't set
+the cil->xc_push_commit_stable flag and so the CIL push will not
+actively flush the commit record iclog.
 
+generic/530 when run on a single CPU test VM can trigger this fairly
+reliably. This test exercises unlinked inode recovery, and can
+result in inodes being pinned in memory by ongoing modifications to
+the inode cluster buffer to record unlinked list modifications. As a
+result, the first inode unlinked in a buffer can pin the tail of the
+log whilst the inode cluster buffer is pinned by the current
+checkpoint that has been pushed but isn't on stable storage because
+because the cil->xc_push_commit_stable was not set. This results in
+the log/AIL effectively deadlocking until something triggers the
+commit record iclog to be pushed to stable storage (i.e. the
+periodic log worker calling xfs_log_force()).
 
-On Mon, 7 Mar 2022 at 23:29, Eric Sandeen <esandeen@redhat.com> wrote:
->
-> On 3/7/22 9:16 AM, David Dal Ben wrote:
-> > xfs_repair version 5.13.0
-> >
-> > Some background.  File system was 24Tb,  Expanded out to 52Tb then
-> > back down 40Tb where it is now after migration data to the new disks.
-> > Both 18Tb disks were added to the array at the same time.
->
-> So, xfs_growfs has historically been unable to shrink the filesystem at
-> all. Thanks to Gao's work, it can be shrunk but only in very unique cases,
-> i.e. the case where there is no data or metadata located in the space
-> that would be removed at the end of the filesystem.  More complete
-> functionality remains unimplemented.
->
-> So to be clear, did you did you actually shrink the underlying device size?
->
-> And/or did you issue an "xfs_growfs" command with a size smaller than the
-> current size?
->
-> If you shrunk the block device without successfully shrinking the filesystem
-> first, then you have a corrupted filesystem and lost data, I'm afraid.
->
-> But AFAIK xfs_growfs should have failed gracefully, and your filesystem
-> should be the same size as before, and should still be consistent, as long
-> as the actual storage was not reduced.
->
-> The concern is re: whether you shrunk the storage.
->
-> What was the actual sequence of commands you issued?
->
-> -Eric
->
->
-> > Not sure how much more info I can give you as I'm relaying info
-> > between Unraid techs and you.  My main concern is whether I do have
-> > any real risk at the moment.
->
->
->
->
-> > On Mon, 7 Mar 2022 at 21:27, Gao Xiang <hsiangkao@linux.alibaba.com> wrote:
-> >>
-> >> Hi,
-> >>
-> >> On Mon, Mar 07, 2022 at 08:19:11PM +0800, David Dal Ben wrote:
-> >>> The "XFS (md1): EXPERIMENTAL online shrink feature in use. Use at your
-> >>> own risk!" alert is appearing in my syslog/on my console.  It started
-> >>> after I upgraded a couple of drives to Toshiba MG09ACA18TE 18Tb
-> >>> drives.
-> >>>
-> >>> Strangely the alert appears for one drive and not the other.  There
-> >>> was no configuring or setting anything up wrt the disks, just
-> >>> installed them straight out of the box.
-> >>>
-> >>> Is there a real risk?  If so, is there a way to disable the feature?
-> >>>
-> >>> Kernel used: Linux version 5.14.15-Unraid
-> >>>
-> >>> Syslog snippet:
-> >>>
-> >>> Mar  6 19:59:21 tdm emhttpd: shcmd (81): mkdir -p /mnt/disk1
-> >>> Mar  6 19:59:21 tdm emhttpd: shcmd (82): mount -t xfs -o noatime
-> >>> /dev/md1 /mnt/disk1
-> >>> Mar  6 19:59:21 tdm kernel: SGI XFS with ACLs, security attributes, no
-> >>> debug enabled
-> >>> Mar  6 19:59:21 tdm kernel: XFS (md1): Mounting V5 Filesystem
-> >>> Mar  6 19:59:21 tdm kernel: XFS (md1): Ending clean mount
-> >>> Mar  6 19:59:21 tdm emhttpd: shcmd (83): xfs_growfs /mnt/disk1
-> >>> Mar  6 19:59:21 tdm kernel: xfs filesystem being mounted at /mnt/disk1
-> >>> supports timestamps until 2038 (0x7fffffff)
-> >>> Mar  6 19:59:21 tdm root: xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl
-> >>> failed: No space left on device
-> >>
-> >> ...
-> >>
-> >> May I ask what is xfsprogs version used now?
-> >>
-> >> At the first glance, it seems that some old xfsprogs is used here,
-> >> otherwise, it will show "[EXPERIMENTAL] try to shrink unused space"
-> >> message together with the kernel message as well.
-> >>
-> >> I'm not sure what's sb_dblocks recorded in on-disk super block
-> >> compared with new disk sizes.
-> >>
-> >> I guess the problem may be that the one new disk is larger than
-> >> sb_dblocks and the other is smaller than sb_dblocks. But if some
-> >> old xfsprogs is used, I'm still confused why old version xfsprogs
-> >> didn't block it at the userspace in advance.
-> >>
-> >> Thanks,
-> >> Gao Xiang
-> >>
-> >>> Mar  6 19:59:21 tdm root: meta-data=/dev/md1               isize=512
-> >>>  agcount=32, agsize=137330687 blks
-> >>> Mar  6 19:59:21 tdm root:          =                       sectsz=512
-> >>>  attr=2, projid32bit=1
-> >>> Mar  6 19:59:21 tdm root:          =                       crc=1
-> >>>  finobt=1, sparse=1, rmapbt=0
-> >>> Mar  6 19:59:21 tdm root:          =                       reflink=1
-> >>>  bigtime=0 inobtcount=0
-> >>> Mar  6 19:59:21 tdm root: data     =                       bsize=4096
-> >>>  blocks=4394581984, imaxpct=5
-> >>> Mar  6 19:59:21 tdm root:          =                       sunit=1
-> >>>  swidth=32 blks
-> >>> Mar  6 19:59:21 tdm root: naming   =version 2              bsize=4096
-> >>>  ascii-ci=0, ftype=1
-> >>> Mar  6 19:59:21 tdm root: log      =internal log           bsize=4096
-> >>>  blocks=521728, version=2
-> >>> Mar  6 19:59:21 tdm root:          =                       sectsz=512
-> >>>  sunit=1 blks, lazy-count=1
-> >>> Mar  6 19:59:21 tdm root: realtime =none                   extsz=4096
-> >>>  blocks=0, rtextents=0
-> >>> Mar  6 19:59:21 tdm emhttpd: shcmd (83): exit status: 1
-> >>> Mar  6 19:59:21 tdm emhttpd: shcmd (84): mkdir -p /mnt/disk2
-> >>> Mar  6 19:59:21 tdm kernel: XFS (md1): EXPERIMENTAL online shrink
-> >>> feature in use. Use at your own risk!
-> >>> Mar  6 19:59:21 tdm emhttpd: shcmd (85): mount -t xfs -o noatime
-> >>> /dev/md2 /mnt/disk2
-> >>> Mar  6 19:59:21 tdm kernel: XFS (md2): Mounting V5 Filesystem
-> >>> Mar  6 19:59:22 tdm kernel: XFS (md2): Ending clean mount
-> >>> Mar  6 19:59:22 tdm kernel: xfs filesystem being mounted at /mnt/disk2
-> >>> supports timestamps until 2038 (0x7fffffff)
-> >>> Mar  6 19:59:22 tdm emhttpd: shcmd (86): xfs_growfs /mnt/disk2
-> >>> Mar  6 19:59:22 tdm root: xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl
-> >>> failed: No space left on device
-> >>
-> >>
-> >>> Mar  6 19:59:22 tdm root: meta-data=/dev/md2               isize=512
-> >>>  agcount=32, agsize=137330687 blks
-> >>> Mar  6 19:59:22 tdm root:          =                       sectsz=512
-> >>>  attr=2, projid32bit=1
-> >>> Mar  6 19:59:22 tdm root:          =                       crc=1
-> >>>  finobt=1, sparse=1, rmapbt=0
-> >>> Mar  6 19:59:22 tdm root:          =                       reflink=1
-> >>>  bigtime=0 inobtcount=0
-> >>> Mar  6 19:59:22 tdm root: data     =                       bsize=4096
-> >>>  blocks=4394581984, imaxpct=5
-> >>> Mar  6 19:59:22 tdm root:          =                       sunit=1
-> >>>  swidth=32 blks
-> >>> Mar  6 19:59:22 tdm root: naming   =version 2              bsize=4096
-> >>>  ascii-ci=0, ftype=1
-> >>> Mar  6 19:59:22 tdm root: log      =internal log           bsize=4096
-> >>>  blocks=521728, version=2
-> >>> Mar  6 19:59:22 tdm root:          =                       sectsz=512
-> >>>  sunit=1 blks, lazy-count=1
-> >>> Mar  6 19:59:22 tdm root: realtime =none                   extsz=4096
-> >>>  blocks=0, rtextents=0
-> >>> Mar  6 19:59:22 tdm emhttpd: shcmd (86): exit status: 1
-> >
-> >
->
+The fix is simple - always set the cil->xc_push_commit_stable when
+xlog_cil_flush() is called, regardless of whether there is already a
+pending push or not.
+
+Reported-by: Matthew Wilcox <willy@infradead.org>
+Fixes: 0020a190cf3e ("xfs: AIL needs asynchronous CIL forcing")
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_log_cil.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
+
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index 05cee602406c..9785ac0351fe 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -1490,11 +1490,21 @@ xlog_cil_push_now(
+ 	if (!async)
+ 		flush_workqueue(cil->xc_push_wq);
+ 
++	spin_lock(&cil->xc_push_lock);
++
++	/*
++	 * If this is an async flush request, we always need to set the
++	 * xc_push_commit_stable flag even if something else has already queued
++	 * a push. The flush caller is asking for the CIL to be on stable
++	 * storage when the next push completes, so regardless of who has queued
++	 * the push, the flush requires stable semantics from it.
++	 */
++	cil->xc_push_commit_stable = async;
++
+ 	/*
+ 	 * If the CIL is empty or we've already pushed the sequence then
+-	 * there's no work we need to do.
++	 * there's no more work that we need to do.
+ 	 */
+-	spin_lock(&cil->xc_push_lock);
+ 	if (test_bit(XLOG_CIL_EMPTY, &cil->xc_flags) ||
+ 	    push_seq <= cil->xc_push_seq) {
+ 		spin_unlock(&cil->xc_push_lock);
+@@ -1502,7 +1512,6 @@ xlog_cil_push_now(
+ 	}
+ 
+ 	cil->xc_push_seq = push_seq;
+-	cil->xc_push_commit_stable = async;
+ 	queue_work(cil->xc_push_wq, &cil->xc_ctx->push_work);
+ 	spin_unlock(&cil->xc_push_lock);
+ }
