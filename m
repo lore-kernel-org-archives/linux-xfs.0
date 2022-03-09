@@ -2,180 +2,287 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C7F2C433FE
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Mar 2022 05:29:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A5E1C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Mar 2022 05:29:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229620AbiCIFal (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Mar 2022 00:30:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43858 "EHLO
+        id S229657AbiCIFam (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Mar 2022 00:30:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43988 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229506AbiCIFak (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Mar 2022 00:30:40 -0500
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9CE423E5D2
-        for <linux-xfs@vger.kernel.org>; Tue,  8 Mar 2022 21:29:41 -0800 (PST)
+        with ESMTP id S229650AbiCIFam (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Mar 2022 00:30:42 -0500
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 35AE63D1E0
+        for <linux-xfs@vger.kernel.org>; Tue,  8 Mar 2022 21:29:44 -0800 (PST)
 Received: from dread.disaster.area (pa49-186-17-0.pa.vic.optusnet.com.au [49.186.17.0])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id AA55710E2520
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id AB96B53115E
         for <linux-xfs@vger.kernel.org>; Wed,  9 Mar 2022 16:29:40 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1nRotH-003H4u-DQ
+        id 1nRotH-003H54-IC
         for linux-xfs@vger.kernel.org; Wed, 09 Mar 2022 16:29:39 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.95)
         (envelope-from <david@fromorbit.com>)
-        id 1nRotH-00BJWW-C4
+        id 1nRotH-00BJWr-Gt
         for linux-xfs@vger.kernel.org;
         Wed, 09 Mar 2022 16:29:39 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 00/16 v8] xfs: rework xlog_write()
-Date:   Wed,  9 Mar 2022 16:29:21 +1100
-Message-Id: <20220309052937.2696447-1-david@fromorbit.com>
+Subject: [PATCH 05/16] xfs: log tickets don't need log client id
+Date:   Wed,  9 Mar 2022 16:29:26 +1100
+Message-Id: <20220309052937.2696447-6-david@fromorbit.com>
 X-Mailer: git-send-email 2.33.0
+In-Reply-To: <20220309052937.2696447-1-david@fromorbit.com>
+References: <20220309052937.2696447-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62283b44
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62283b45
         a=+dVDrTVfsjPpH/ci3UuFng==:117 a=+dVDrTVfsjPpH/ci3UuFng==:17
-        a=o8Y5sQTvuykA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=SarF3Khav3S-rVfkixYA:9 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+        a=o8Y5sQTvuykA:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8 a=yPCof4ZbAAAA:8
+        a=YlqFwBsl5h0Aqb0hd38A:9 a=AjGcO6oz07-iQ99wixmX:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-HI folks,
+From: Dave Chinner <dchinner@redhat.com>
 
-This is the xlog_write() rework patchset again. It's unchanged from
-the fully reviewed v7 patchset except for rebasing onto a more
-recent kernel. I'm trying to untie this from the CIL scalability
-patchset that has caused problems the last two times I've tried to
-get this specific set of patches merged.
+We currently set the log ticket client ID when we reserve a
+transaction. This client ID is only ever written to the log by
+a CIL checkpoint or unmount records, and so anything using a high
+level transaction allocated through xfs_trans_alloc() does not need
+a log ticket client ID to be set.
 
-Cheers,
+For the CIL checkpoint, the client ID written to the journal is
+always XFS_TRANSACTION, and for the unmount record it is always
+XFS_LOG, and nothing else writes to the log. All of these operations
+tell xlog_write() exactly what they need to write to the log (the
+optype) and build their own opheaders for start, commit and unmount
+records. Hence we no longer need to set the client id in either the
+log ticket or the xfs_trans.
 
-Dave.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Chandan Babu R <chandan.babu@oracle.com>
+---
+ fs/xfs/libxfs/xfs_log_format.h |  1 -
+ fs/xfs/xfs_log.c               | 47 ++++++----------------------------
+ fs/xfs/xfs_log.h               | 14 ++++------
+ fs/xfs/xfs_log_cil.c           |  2 +-
+ fs/xfs/xfs_log_priv.h          | 10 ++------
+ fs/xfs/xfs_trans.c             |  6 ++---
+ 6 files changed, 18 insertions(+), 62 deletions(-)
 
-----
-
-xlog_write() is code that causes severe eye bleeding. It's extremely
-difficult to understand the way it is structured, and extremely easy
-to break because of all the weird parameters it passes between
-functions that do very non-obvious things. state is set in
-xlog_write_finish_copy() that is carried across both outer and inner
-loop iterations that is used by xlog_write_setup_copy(), which also
-sets state that xlog_write_finish_copy() needs. The way iclog space
-was obtained affects the accounting logic that ends up being passed
-to xlog_state_finish_copy(). The code that handles commit iclogs is
-spread over multiple functions and is obfuscated by the set/finish
-copy code.
-
-It's just a mess.
-
-It's also extremely inefficient.
-
-For all the complexity created by having to keep track of partial
-copy state for loop continuation, this is a *rare* occurrence. On a
-256kB iclog buffer, we can copy a couple of thousand regions (e.g.
-inode log format + inode core regions) without hitting the partial
-copy case once. IOWs, we don't need to track partial copy state for
-the vast majority of region copy operations we perform. It's all
-unnecessary overhead.
-
-Not to mention that before we even start the copy, we walk every log
-vector and log iovec to count the op headers needed and the amount
-of space consumed by the log vector chain despite having just done a
-log item walk to construct the log vector chain.  This is all
-unnecessary overhead given that the CIL code already counts the
-vectors and can trivially count the size of the log vector chain at
-the same time.
-
-Then there is the opheaders that xlog_write() adds before every
-region. This is why it needs to count headers, because we have
-to account for this space they use in the journal. We've already
-reserved this space when committing items to the CIL, but we still
-require xlog_write() to add these fixed size headers to log regions
-and account for the space in the CIL context log ticket.
-
-Hence we have complexity tracking and reserving CIL space at
-transaction commit time, as well as complexity formatting and
-accounting for this space when the CIL writes them to the log. This
-can be done much more efficiently by adding the opheaders to the log
-regions at item formatting time, largely removing the need to do
-anything but update opheader lengths and flags in xlog_write().
-
-This opens up a bunch of other optimisations in the item formatting
-code that can reduce the number of regions we need to track, but
-that is not a topic this patch set tries to address.
-
-The simplification of the accounting and reservation of space for
-log opheaders during the transaction commit path allows for further
-optimisations of that fast path. e.g. it makes it possible to
-move to per-cpu accounting and tracking of the CIL.
-
-Further, the simplifications in opheader management allow us to
-implement a fast path for xlog_write() that does almost nothing but
-iterate the log vector chain doing memcpy() and advancing the iclog
-data pointer. The only time we need to worry about partial copies is
-when a log vector will not wholly fit within the current iclog. By
-writing a slow path that just handles a single log vector that needs
-to be split across multiple iclogs, we get rid of all the difficult
-to follow logic. That is what this patchset implements.
-
-Overall, we go from 3 iterations of the log vector chain to two, the
-majority of the copies hit the xlog_write_single() fast path, the
-xlog_write() code is much simpler, the handling of iclog state is
-much cleaner, and all the partial copy state is contained within a
-single function. The fast path loops are much smaller and tighter,
-the regions we memcpy() are larger, and so overall the code is much
-more efficient.
-
-Unfortunately, this code is complex and full of subtle stuff that
-takes a *lot* of time and effort to understand. Hence I feel that
-these changes aren't actually properly reviewable by anyone. If
-someone else presented this patchset to me, I'd be pretty much say
-the same thing, because to understand all the subtle corner cases in
-xlog_write() takes weeks of bashing your head repeatedly into said
-corner cases.
-
-But, really, that's why I've rewritten the code. I think the code
-I've written is much easier to understand and there's less of it.
-The compiled code is smaller and faster. It passes fstests. And it
-opens more avenues for future improvement of the log write code
-that would otherwise have to do with the mess of xlog_write()....
-
-git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git xlog-write-rework-3
-
-Version 8:
-- rebase on v5.17-rc4, otherwise unchanged.
-
-Version 7:
-- https://lore.kernel.org/linux-xfs/20211118231352.2051947-1-david@fromorbit.com/
-- fixed th_tid endian issue, updated comment (patch 2).
-- fixed bug not setting ophdr length for transaction header (patch 2).
-  Bug hidden by xlog_write() always overwriting oh_len correctly.
-- fixed oh_len endian issue in xlog_finish_iovec() (patch 7).
-  Bug hidden by xlog_write() always overwriting oh_len correctly.
-- don't overwrite oh_len in xlog_write_full() as xlog_finish_iovec() has already
-  written it correctly (patch 11).
-- removed spurious _ in patch subject (patch 12).
-
-Version 6:
-- https://lore.kernel.org/linux-xfs/20211109015055.1547604-1-david@fromorbit.com/
-- split out from aggregated patchset
-- rebase on linux-xfs/for-next
-- include iclog->ic_datap type change patch from Christoph Hellwig
-- rolled xlog_write_iovec()/xlog_write_full() improvements into the
-  xlog_write_single() introduction (adaption from patches written by Christoph
-  Hellwig)
-- pass record_cnt and data_cnt into xlog_write_single() right from the start
-  rather than modify the interface when xlog_write_partial() comes along.
-- rolled the xlog_write_partial() and log vector iteration improvements into
-  the xlog_write_partial() introduction (adaption from patches written by
-  Christoph Hellwig).
-- include remove xlog_verify_dest_ptr() patch from Christoph Hellwig
-
-Version 5:
-- https://lore.kernel.org/linux-xfs/20210603052240.171998-1-david@fromorbit.com/
+diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+index b322db523d65..2b89141ae81a 100644
+--- a/fs/xfs/libxfs/xfs_log_format.h
++++ b/fs/xfs/libxfs/xfs_log_format.h
+@@ -69,7 +69,6 @@ static inline uint xlog_get_cycle(char *ptr)
+ 
+ /* Log Clients */
+ #define XFS_TRANSACTION		0x69
+-#define XFS_VOLUME		0x2
+ #define XFS_LOG			0xaa
+ 
+ #define XLOG_UNMOUNT_TYPE	0x556e	/* Un for Unmount */
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index f789acd2f755..f09663d3664b 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -434,10 +434,9 @@ xfs_log_regrant(
+ int
+ xfs_log_reserve(
+ 	struct xfs_mount	*mp,
+-	int		 	unit_bytes,
+-	int		 	cnt,
++	int			unit_bytes,
++	int			cnt,
+ 	struct xlog_ticket	**ticp,
+-	uint8_t		 	client,
+ 	bool			permanent)
+ {
+ 	struct xlog		*log = mp->m_log;
+@@ -445,15 +444,13 @@ xfs_log_reserve(
+ 	int			need_bytes;
+ 	int			error = 0;
+ 
+-	ASSERT(client == XFS_TRANSACTION || client == XFS_LOG);
+-
+ 	if (xlog_is_shutdown(log))
+ 		return -EIO;
+ 
+ 	XFS_STATS_INC(mp, xs_try_logspace);
+ 
+ 	ASSERT(*ticp == NULL);
+-	tic = xlog_ticket_alloc(log, unit_bytes, cnt, client, permanent);
++	tic = xlog_ticket_alloc(log, unit_bytes, cnt, permanent);
+ 	*ticp = tic;
+ 
+ 	xlog_grant_push_ail(log, tic->t_cnt ? tic->t_unit_res * tic->t_cnt
+@@ -961,7 +958,7 @@ xlog_unmount_write(
+ 	struct xlog_ticket	*tic = NULL;
+ 	int			error;
+ 
+-	error = xfs_log_reserve(mp, 600, 1, &tic, XFS_LOG, 0);
++	error = xfs_log_reserve(mp, 600, 1, &tic, 0);
+ 	if (error)
+ 		goto out_err;
+ 
+@@ -2296,35 +2293,13 @@ xlog_write_calc_vec_length(
+ 
+ static xlog_op_header_t *
+ xlog_write_setup_ophdr(
+-	struct xlog		*log,
+ 	struct xlog_op_header	*ophdr,
+-	struct xlog_ticket	*ticket,
+-	uint			flags)
++	struct xlog_ticket	*ticket)
+ {
+ 	ophdr->oh_tid = cpu_to_be32(ticket->t_tid);
+-	ophdr->oh_clientid = ticket->t_clientid;
++	ophdr->oh_clientid = XFS_TRANSACTION;
+ 	ophdr->oh_res2 = 0;
+-
+-	/* are we copying a commit or unmount record? */
+-	ophdr->oh_flags = flags;
+-
+-	/*
+-	 * We've seen logs corrupted with bad transaction client ids.  This
+-	 * makes sure that XFS doesn't generate them on.  Turn this into an EIO
+-	 * and shut down the filesystem.
+-	 */
+-	switch (ophdr->oh_clientid)  {
+-	case XFS_TRANSACTION:
+-	case XFS_VOLUME:
+-	case XFS_LOG:
+-		break;
+-	default:
+-		xfs_warn(log->l_mp,
+-			"Bad XFS transaction clientid 0x%x in ticket "PTR_FMT,
+-			ophdr->oh_clientid, ticket);
+-		return NULL;
+-	}
+-
++	ophdr->oh_flags = 0;
+ 	return ophdr;
+ }
+ 
+@@ -2549,11 +2524,7 @@ xlog_write(
+ 				if (index)
+ 					optype &= ~XLOG_START_TRANS;
+ 			} else {
+-				ophdr = xlog_write_setup_ophdr(log, ptr,
+-							ticket, optype);
+-				if (!ophdr)
+-					return -EIO;
+-
++                                ophdr = xlog_write_setup_ophdr(ptr, ticket);
+ 				xlog_write_adv_cnt(&ptr, &len, &log_offset,
+ 					   sizeof(struct xlog_op_header));
+ 				added_ophdr = true;
+@@ -3612,7 +3583,6 @@ xlog_ticket_alloc(
+ 	struct xlog		*log,
+ 	int			unit_bytes,
+ 	int			cnt,
+-	char			client,
+ 	bool			permanent)
+ {
+ 	struct xlog_ticket	*tic;
+@@ -3630,7 +3600,6 @@ xlog_ticket_alloc(
+ 	tic->t_cnt		= cnt;
+ 	tic->t_ocnt		= cnt;
+ 	tic->t_tid		= prandom_u32();
+-	tic->t_clientid		= client;
+ 	if (permanent)
+ 		tic->t_flags |= XLOG_TIC_PERM_RESERV;
+ 
+diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
+index dc1b77b92fc1..09b8fe9994f2 100644
+--- a/fs/xfs/xfs_log.h
++++ b/fs/xfs/xfs_log.h
+@@ -117,15 +117,11 @@ int	  xfs_log_mount_finish(struct xfs_mount *mp);
+ void	xfs_log_mount_cancel(struct xfs_mount *);
+ xfs_lsn_t xlog_assign_tail_lsn(struct xfs_mount *mp);
+ xfs_lsn_t xlog_assign_tail_lsn_locked(struct xfs_mount *mp);
+-void	  xfs_log_space_wake(struct xfs_mount *mp);
+-int	  xfs_log_reserve(struct xfs_mount *mp,
+-			  int		   length,
+-			  int		   count,
+-			  struct xlog_ticket **ticket,
+-			  uint8_t		   clientid,
+-			  bool		   permanent);
+-int	  xfs_log_regrant(struct xfs_mount *mp, struct xlog_ticket *tic);
+-void      xfs_log_unmount(struct xfs_mount *mp);
++void	xfs_log_space_wake(struct xfs_mount *mp);
++int	xfs_log_reserve(struct xfs_mount *mp, int length, int count,
++			struct xlog_ticket **ticket, bool permanent);
++int	xfs_log_regrant(struct xfs_mount *mp, struct xlog_ticket *tic);
++void	xfs_log_unmount(struct xfs_mount *mp);
+ bool	xfs_log_writable(struct xfs_mount *mp);
+ 
+ struct xlog_ticket *xfs_log_ticket_get(struct xlog_ticket *ticket);
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index f7a5d1ec24e0..9e2af0f97fef 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -37,7 +37,7 @@ xlog_cil_ticket_alloc(
+ {
+ 	struct xlog_ticket *tic;
+ 
+-	tic = xlog_ticket_alloc(log, 0, 1, XFS_TRANSACTION, 0);
++	tic = xlog_ticket_alloc(log, 0, 1, 0);
+ 
+ 	/*
+ 	 * set the current reservation to zero so we know to steal the basic
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index 23103d68423c..65fb97d596dd 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -164,7 +164,6 @@ typedef struct xlog_ticket {
+ 	int		   t_unit_res;	 /* unit reservation in bytes    : 4  */
+ 	char		   t_ocnt;	 /* original count		 : 1  */
+ 	char		   t_cnt;	 /* current count		 : 1  */
+-	char		   t_clientid;	 /* who does this belong to;	 : 1  */
+ 	char		   t_flags;	 /* properties of reservation	 : 1  */
+ 
+         /* reservation array fields */
+@@ -498,13 +497,8 @@ extern __le32	 xlog_cksum(struct xlog *log, struct xlog_rec_header *rhead,
+ 			    char *dp, int size);
+ 
+ extern struct kmem_cache *xfs_log_ticket_cache;
+-struct xlog_ticket *
+-xlog_ticket_alloc(
+-	struct xlog	*log,
+-	int		unit_bytes,
+-	int		count,
+-	char		client,
+-	bool		permanent);
++struct xlog_ticket *xlog_ticket_alloc(struct xlog *log, int unit_bytes,
++		int count, bool permanent);
+ 
+ static inline void
+ xlog_write_adv_cnt(void **ptr, int *len, int *off, size_t bytes)
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 59e2f9031b9f..82590007e6c5 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -194,11 +194,9 @@ xfs_trans_reserve(
+ 			ASSERT(resp->tr_logflags & XFS_TRANS_PERM_LOG_RES);
+ 			error = xfs_log_regrant(mp, tp->t_ticket);
+ 		} else {
+-			error = xfs_log_reserve(mp,
+-						resp->tr_logres,
++			error = xfs_log_reserve(mp, resp->tr_logres,
+ 						resp->tr_logcount,
+-						&tp->t_ticket, XFS_TRANSACTION,
+-						permanent);
++						&tp->t_ticket, permanent);
+ 		}
+ 
+ 		if (error)
+-- 
+2.33.0
 
