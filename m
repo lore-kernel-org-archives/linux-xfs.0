@@ -2,149 +2,79 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B04BC433EF
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Mar 2022 22:32:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD35FC433EF
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Mar 2022 22:37:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238696AbiCIWdv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Mar 2022 17:33:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35430 "EHLO
+        id S238760AbiCIWiQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Mar 2022 17:38:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39392 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238709AbiCIWdu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Mar 2022 17:33:50 -0500
+        with ESMTP id S238834AbiCIWiI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Mar 2022 17:38:08 -0500
 Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7B7452B191
-        for <linux-xfs@vger.kernel.org>; Wed,  9 Mar 2022 14:32:47 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 438DB1216AA
+        for <linux-xfs@vger.kernel.org>; Wed,  9 Mar 2022 14:37:09 -0800 (PST)
 Received: from dread.disaster.area (pa49-186-150-27.pa.vic.optusnet.com.au [49.186.150.27])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 91C3E10E2CEF;
-        Thu, 10 Mar 2022 09:32:46 +1100 (AEDT)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 45A4210E2B3D;
+        Thu, 10 Mar 2022 09:37:08 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1nS4rN-003YXP-Dw; Thu, 10 Mar 2022 09:32:45 +1100
-Date:   Thu, 10 Mar 2022 09:32:45 +1100
+        id 1nS4vb-003Yaa-Ht; Thu, 10 Mar 2022 09:37:07 +1100
+Date:   Thu, 10 Mar 2022 09:37:07 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs: constify xfs_name_dotdot
-Message-ID: <20220309223245.GK661808@dread.disaster.area>
-References: <164685375609.496011.2754821878646256374.stgit@magnolia>
- <164685376731.496011.1567771444928519597.stgit@magnolia>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     David Dal Ben <dalben@gmail.com>,
+        Eric Sandeen <esandeen@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: Inconsistent "EXPERIMENTAL online shrink feature in use. Use at
+ your own risk" alert
+Message-ID: <20220309223707.GL661808@dread.disaster.area>
+References: <YiYIO2lJf123LA2c@B-P7TQMD6M-0146.local>
+ <CALwRca2bZD5tXmL5kzCdL97LpqWGVhYXMNSWSvqn=FkMuMrbjQ@mail.gmail.com>
+ <9f957f7a-0f08-9cb4-d8ff-76440a488184@redhat.com>
+ <CALwRca2Xdp8F_xjXSFXxO-Ra96W685o2qY1xoo=Ko9OWF4oRvw@mail.gmail.com>
+ <20220307233132.GA661808@dread.disaster.area>
+ <YiaajBcdSgOyIamT@B-P7TQMD6M-0146.local>
+ <CALwRca0TqcKnBkLm=sOjQdvagBjd12m_7uYOhkMt8LjxsmiEtA@mail.gmail.com>
+ <95ed03a8-e49b-d109-baba-86a190345102@sandeen.net>
+ <20220309211904.GE661808@dread.disaster.area>
+ <06ce8d7f-db56-d742-26d4-ced82185ab94@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <164685376731.496011.1567771444928519597.stgit@magnolia>
+In-Reply-To: <06ce8d7f-db56-d742-26d4-ced82185ab94@sandeen.net>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=62292b0e
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=62292c14
         a=sPqof0Mm7fxWrhYUF33ZaQ==:117 a=sPqof0Mm7fxWrhYUF33ZaQ==:17
-        a=kj9zAlcOel0A:10 a=o8Y5sQTvuykA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=teNfEa-P9VIzn0qQ3soA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
+        a=q2rpgJM3of3wzYv4:21 a=kj9zAlcOel0A:10 a=o8Y5sQTvuykA:10 a=7-415B0cAAAA:8
+        a=JoelFCkZeuPD_wC6vb8A:9 a=CjuIK1q_8ugA:10 a=aujFQpqGlDxcc9pqpD-7:22
         a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 09, 2022 at 11:22:47AM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Wed, Mar 09, 2022 at 04:18:54PM -0600, Eric Sandeen wrote:
+> On 3/9/22 3:19 PM, Dave Chinner wrote:
+> > On Wed, Mar 09, 2022 at 12:22:00PM -0600, Eric Sandeen wrote:
 > 
-> The symbol xfs_name_dotdot is a global variable that the xfs codebase
-> uses here and there to look up directory dotdot entries.  Currently it's
-> a non-const variable, which means that it's a mutable global variable.
-> So far nobody's abused this to cause problems, but let's use the
-> compiler to enforce that.
+> ...
 > 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  fs/xfs/libxfs/xfs_dir2.c |    6 +++++-
->  fs/xfs/libxfs/xfs_dir2.h |    2 +-
->  fs/xfs/scrub/parent.c    |    6 ++++--
->  fs/xfs/xfs_export.c      |    3 ++-
->  4 files changed, 12 insertions(+), 5 deletions(-)
+> >> I'm wondering if we have some path through xfs_growfs_data_private() that calculates
+> >> a delta < 0 unintentionally, or if we get there with delta == 0 and generate the
+> >> warning message.
+> > 
+> > Nope, we're not even getting there for the delta == 0 case...
 > 
+> Ok, thanks - I should have checked that.
 > 
-> diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-> index a77d931d65a3..cf9fa07e62d5 100644
-> --- a/fs/xfs/libxfs/xfs_dir2.c
-> +++ b/fs/xfs/libxfs/xfs_dir2.c
-> @@ -19,7 +19,11 @@
->  #include "xfs_error.h"
->  #include "xfs_trace.h"
->  
-> -struct xfs_name xfs_name_dotdot = { (unsigned char *)"..", 2, XFS_DIR3_FT_DIR };
-> +const struct xfs_name xfs_name_dotdot = {
-> +	.name	= (unsigned char *)"..",
-> +	.len	= 2,
-> +	.type	= XFS_DIR3_FT_DIR,
-> +};
+> Soooo how is a no-argument xfs_growfs, with size calculated by the tool based on the
+> disk size, failing immediately after a mount? Makes no sense to me.
 
-*nod*
-
-> diff --git a/fs/xfs/scrub/parent.c b/fs/xfs/scrub/parent.c
-> index ab182a5cd0c0..e9549d998cdc 100644
-> --- a/fs/xfs/scrub/parent.c
-> +++ b/fs/xfs/scrub/parent.c
-> @@ -131,6 +131,7 @@ xchk_parent_validate(
->  	xfs_ino_t		dnum,
->  	bool			*try_again)
->  {
-> +	struct xfs_name		dotdot = xfs_name_dotdot;
->  	struct xfs_mount	*mp = sc->mp;
->  	struct xfs_inode	*dp = NULL;
->  	xfs_nlink_t		expected_nlink;
-> @@ -230,7 +231,7 @@ xchk_parent_validate(
->  	expected_nlink = VFS_I(sc->ip)->i_nlink == 0 ? 0 : 1;
->  
->  	/* Look up '..' to see if the inode changed. */
-> -	error = xfs_dir_lookup(sc->tp, sc->ip, &xfs_name_dotdot, &dnum, NULL);
-> +	error = xfs_dir_lookup(sc->tp, sc->ip, &dotdot, &dnum, NULL);
->  	if (!xchk_fblock_process_error(sc, XFS_DATA_FORK, 0, &error))
->  		goto out_rele;
->  
-
-Why can't xfs_dir_lookup() be defined as a const xname for the input
-name? All it does is extract the contents into the da_args fields,
-and pass it to xfs_dir_hashname() which you converted to const in
-the previous patch.
-
-Or does the compiler then complain at all the other callsites that
-you're passing non-const stuff to const function parameters? i.e. am
-I just pulling on another dangling end of the ball of string at this
-point?
-
-> @@ -263,6 +264,7 @@ int
->  xchk_parent(
->  	struct xfs_scrub	*sc)
->  {
-> +	struct xfs_name		dotdot = xfs_name_dotdot;
->  	struct xfs_mount	*mp = sc->mp;
->  	xfs_ino_t		dnum;
->  	bool			try_again;
-> @@ -293,7 +295,7 @@ xchk_parent(
->  	xfs_iunlock(sc->ip, XFS_ILOCK_EXCL | XFS_MMAPLOCK_EXCL);
->  
->  	/* Look up '..' */
-> -	error = xfs_dir_lookup(sc->tp, sc->ip, &xfs_name_dotdot, &dnum, NULL);
-> +	error = xfs_dir_lookup(sc->tp, sc->ip, &dotdot, &dnum, NULL);
->  	if (!xchk_fblock_process_error(sc, XFS_DATA_FORK, 0, &error))
->  		goto out;
->  	if (!xfs_verify_dir_ino(mp, dnum)) {
-> diff --git a/fs/xfs/xfs_export.c b/fs/xfs/xfs_export.c
-> index 1064c2342876..8939119191f4 100644
-> --- a/fs/xfs/xfs_export.c
-> +++ b/fs/xfs/xfs_export.c
-> @@ -206,10 +206,11 @@ STATIC struct dentry *
->  xfs_fs_get_parent(
->  	struct dentry		*child)
->  {
-> +	struct xfs_name		dotdot = xfs_name_dotdot;
->  	int			error;
->  	struct xfs_inode	*cip;
->  
-> -	error = xfs_lookup(XFS_I(d_inode(child)), &xfs_name_dotdot, &cip, NULL);
-> +	error = xfs_lookup(XFS_I(d_inode(child)), &dotdot, &cip, NULL);
->  	if (unlikely(error))
->  		return ERR_PTR(error);
-
-This only calls xfs_dir_lookup() with name, so if xfs_dir_lookup()
-can have a const name, so can xfs_lookup()....
+Remember, unraid is an out of tree MD block device driver, so
+there's every chance that XFS is just the messenger telling us that
+the device driver has bugs in it's size handling or
+discovery/recovery/assembly behaviour. Until we get an actual
+command line reproducer for this problem on an in-tree block device,
+I would not spend any more time worrying about it.
 
 Cheers,
 
