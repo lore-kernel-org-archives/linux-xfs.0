@@ -2,163 +2,150 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3622EC433F5
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Mar 2022 18:22:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD2D1C433FE
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Mar 2022 19:22:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230211AbiCISXE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Mar 2022 13:23:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35114 "EHLO
+        id S235475AbiCITXV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Mar 2022 14:23:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43966 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236876AbiCISXC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Mar 2022 13:23:02 -0500
-Received: from sandeen.net (sandeen.net [63.231.237.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6DD5E639A
-        for <linux-xfs@vger.kernel.org>; Wed,  9 Mar 2022 10:22:02 -0800 (PST)
-Received: from [10.0.0.146] (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        with ESMTP id S238364AbiCITXS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Mar 2022 14:23:18 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 688C83E5FB
+        for <linux-xfs@vger.kernel.org>; Wed,  9 Mar 2022 11:22:18 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 596AA4836;
-        Wed,  9 Mar 2022 12:20:49 -0600 (CST)
-Message-ID: <95ed03a8-e49b-d109-baba-86a190345102@sandeen.net>
-Date:   Wed, 9 Mar 2022 12:22:00 -0600
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 93C55618F1
+        for <linux-xfs@vger.kernel.org>; Wed,  9 Mar 2022 19:22:18 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 01C4EC340F4;
+        Wed,  9 Mar 2022 19:22:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1646853738;
+        bh=LVaSQuobN16vUczm40MeGXTLMWNuC1t2FF5dT5DKGQw=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=lanSIRhsSfRl73ucs9EnVcmEt/LSTCv+xOpDVfPW1AXOTEAde2UJOhgwqj09r/rj8
+         Wy62UkHqKa2gLOGDgRzUXAZM5NzbaYP9bAseeArfFno66Zjnb82y7+UmKs8IVOQyMU
+         tO84aeXAjEtI5K4fSvlENj0E55J1UpvLlF5HuY6XDs+EWntfpkyIcbb0M8Fcqj1Gg+
+         MumcboPTL0nXhcd0ipiT2ddCEqZvKZ0W1mHhVfO6K7+7sKTmQ/fk6FrGlBjQcOLJDK
+         Vzb9iPQKqmzC4JGzt+7fTgKNGyoK/g3E8kiD8bejcaZBGPP7G8gDECaktbGbLYAKPW
+         9XIq3OpNgvsbA==
+Subject: [PATCH 2/2] xfs: refactor user/group quota chown in
+ xfs_setattr_nonsize
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     djwong@kernel.org
+Cc:     linux-xfs@vger.kernel.org, fdmanana@kernel.org,
+        andrey.zhadchenko@virtuozzo.com, brauner@kernel.org,
+        david@fromorbit.com, hch@lst.de
+Date:   Wed, 09 Mar 2022 11:22:17 -0800
+Message-ID: <164685373748.495833.4023209082084946055.stgit@magnolia>
+In-Reply-To: <164685372611.495833.8601145506549093582.stgit@magnolia>
+References: <164685372611.495833.8601145506549093582.stgit@magnolia>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.6.2
-Content-Language: en-US
-To:     David Dal Ben <dalben@gmail.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Eric Sandeen <esandeen@redhat.com>, linux-xfs@vger.kernel.org
-References: <CALwRca2+UsEZMPwiCtecM87HVVMs27SdawdWXns+PU7+S-DFaQ@mail.gmail.com>
- <CALwRca3yS2q4XYr5aFaPWxNcGsYRFDWeU9je1q31KGguTeX6Rw@mail.gmail.com>
- <YiYIO2lJf123LA2c@B-P7TQMD6M-0146.local>
- <CALwRca2bZD5tXmL5kzCdL97LpqWGVhYXMNSWSvqn=FkMuMrbjQ@mail.gmail.com>
- <9f957f7a-0f08-9cb4-d8ff-76440a488184@redhat.com>
- <CALwRca2Xdp8F_xjXSFXxO-Ra96W685o2qY1xoo=Ko9OWF4oRvw@mail.gmail.com>
- <20220307233132.GA661808@dread.disaster.area>
- <YiaajBcdSgOyIamT@B-P7TQMD6M-0146.local>
- <CALwRca0TqcKnBkLm=sOjQdvagBjd12m_7uYOhkMt8LjxsmiEtA@mail.gmail.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: Inconsistent "EXPERIMENTAL online shrink feature in use. Use at
- your own risk" alert
-In-Reply-To: <CALwRca0TqcKnBkLm=sOjQdvagBjd12m_7uYOhkMt8LjxsmiEtA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-So a weird thing here is that I think your logs show the xfs_growfs command
-happening immediately after mount, and it doesn't have any size specified, 
-so I can't tell if the intent was to shrink - but I don't think so:
+From: Darrick J. Wong <djwong@kernel.org>
 
-Mar  6 19:59:21 tdm emhttpd: shcmd (81): mkdir -p /mnt/disk1
-Mar  6 19:59:21 tdm emhttpd: shcmd (82): mount -t xfs -o noatime /dev/md1 /mnt/disk1
-Mar  6 19:59:21 tdm kernel: SGI XFS with ACLs, security attributes, no debug enabled
-Mar  6 19:59:21 tdm kernel: XFS (md1): Mounting V5 Filesystem
-Mar  6 19:59:21 tdm kernel: XFS (md1): Ending clean mount
-Mar  6 19:59:21 tdm emhttpd: shcmd (83): xfs_growfs /mnt/disk1
-Mar  6 19:59:21 tdm kernel: xfs filesystem being mounted at /mnt/disk1 supports timestamps until 2038 (0x7fffffff)
-Mar  6 19:59:21 tdm root: xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl failed: No space left on device
-Mar  6 19:59:21 tdm root: meta-data=/dev/md1               isize=512  agcount=32, agsize=137330687 blks
-Mar  6 19:59:21 tdm root:          =                       sectsz=512  attr=2, projid32bit=1
-Mar  6 19:59:21 tdm root:          =                       crc=1  finobt=1, sparse=1, rmapbt=0
-Mar  6 19:59:21 tdm root:          =                       reflink=1  bigtime=0 inobtcount=0
-Mar  6 19:59:21 tdm root: data     =                       bsize=4096  blocks=4394581984, imaxpct=5
-Mar  6 19:59:21 tdm root:          =                       sunit=1  swidth=32 blks
-Mar  6 19:59:21 tdm root: naming   =version 2              bsize=4096  ascii-ci=0, ftype=1
-Mar  6 19:59:21 tdm root: log      =internal log           bsize=4096  blocks=521728, version=2
-Mar  6 19:59:21 tdm root:          =                       sectsz=512  sunit=1 blks, lazy-count=1
-Mar  6 19:59:21 tdm root: realtime =none                   extsz=4096  blocks=0, rtextents=0
-Mar  6 19:59:21 tdm emhttpd: shcmd (83): exit status: 1
-Mar  6 19:59:21 tdm kernel: XFS (md1): EXPERIMENTAL online shrink feature in use. Use at your own risk!
+Combine if tests to reduce the indentation levels of the quota chown
+calls in xfs_setattr_nonsize.
+
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+ fs/xfs/xfs_iops.c |   60 ++++++++++++++++++-----------------------------------
+ 1 file changed, 20 insertions(+), 40 deletions(-)
 
 
-We issue the EXPERIMENTAL message if the block delta is <= 0 (I'm not sure why
-it's done if delta == 0 and I wonder if it should instead be < 0).
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 4132026f5fb0..f6680dade1d9 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -647,10 +647,10 @@ xfs_setattr_nonsize(
+ 	int			mask = iattr->ia_valid;
+ 	xfs_trans_t		*tp;
+ 	int			error;
+-	kuid_t			uid = GLOBAL_ROOT_UID, iuid = GLOBAL_ROOT_UID;
+-	kgid_t			gid = GLOBAL_ROOT_GID, igid = GLOBAL_ROOT_GID;
++	kuid_t			uid = GLOBAL_ROOT_UID;
++	kgid_t			gid = GLOBAL_ROOT_GID;
+ 	struct xfs_dquot	*udqp = NULL, *gdqp = NULL;
+-	struct xfs_dquot	*olddquot1 = NULL, *olddquot2 = NULL;
++	struct xfs_dquot	*old_udqp = NULL, *old_gdqp = NULL;
+ 
+ 	ASSERT((mask & ATTR_SIZE) == 0);
+ 
+@@ -697,42 +697,22 @@ xfs_setattr_nonsize(
+ 		goto out_dqrele;
+ 
+ 	/*
+-	 * Change file ownership.  Must be the owner or privileged.
++	 * Register quota modifications in the transaction.  Must be the owner
++	 * or privileged.  These IDs could have changed since we last looked at
++	 * them.  But, we're assured that if the ownership did change while we
++	 * didn't have the inode locked, inode's dquot(s) would have changed
++	 * also.
+ 	 */
+-	if (mask & (ATTR_UID|ATTR_GID)) {
+-		/*
+-		 * These IDs could have changed since we last looked at them.
+-		 * But, we're assured that if the ownership did change
+-		 * while we didn't have the inode locked, inode's dquot(s)
+-		 * would have changed also.
+-		 */
+-		iuid = inode->i_uid;
+-		igid = inode->i_gid;
+-		gid = (mask & ATTR_GID) ? iattr->ia_gid : igid;
+-		uid = (mask & ATTR_UID) ? iattr->ia_uid : iuid;
+-
+-		/*
+-		 * Change the ownerships and register quota modifications
+-		 * in the transaction.
+-		 */
+-		if (!uid_eq(iuid, uid)) {
+-			if (XFS_IS_UQUOTA_ON(mp)) {
+-				ASSERT(mask & ATTR_UID);
+-				ASSERT(udqp);
+-				olddquot1 = xfs_qm_vop_chown(tp, ip,
+-							&ip->i_udquot, udqp);
+-			}
+-		}
+-		if (!gid_eq(igid, gid)) {
+-			if (XFS_IS_GQUOTA_ON(mp)) {
+-				ASSERT(xfs_has_pquotino(mp) ||
+-				       !XFS_IS_PQUOTA_ON(mp));
+-				ASSERT(mask & ATTR_GID);
+-				ASSERT(gdqp);
+-				olddquot2 = xfs_qm_vop_chown(tp, ip,
+-							&ip->i_gdquot, gdqp);
+-			}
+-		}
++	if ((mask & ATTR_UID) && XFS_IS_UQUOTA_ON(mp) &&
++					!uid_eq(inode->i_uid, iattr->ia_uid)) {
++		ASSERT(udqp);
++		old_udqp = xfs_qm_vop_chown(tp, ip, &ip->i_udquot, udqp);
++	}
++	if ((mask & ATTR_GID) && XFS_IS_GQUOTA_ON(mp) &&
++					!gid_eq(inode->i_gid, iattr->ia_gid)) {
++		ASSERT(xfs_has_pquotino(mp) || !XFS_IS_PQUOTA_ON(mp));
++		ASSERT(gdqp);
++		old_gdqp = xfs_qm_vop_chown(tp, ip, &ip->i_gdquot, gdqp);
+ 	}
+ 
+ 	setattr_copy(mnt_userns, inode, iattr);
+@@ -747,8 +727,8 @@ xfs_setattr_nonsize(
+ 	/*
+ 	 * Release any dquot(s) the inode had kept before chown.
+ 	 */
+-	xfs_qm_dqrele(olddquot1);
+-	xfs_qm_dqrele(olddquot2);
++	xfs_qm_dqrele(old_udqp);
++	xfs_qm_dqrele(old_gdqp);
+ 	xfs_qm_dqrele(udqp);
+ 	xfs_qm_dqrele(gdqp);
+ 
 
-But maybe unraid isn't really trying to shrink, it's just doing an unconditional
-growfs post-mount to ensure it's using the whole device (unnecessary, but should
-be safe.)
-
-I'm wondering if we have some path through xfs_growfs_data_private() that calculates
-a delta < 0 unintentionally, or if we get there with delta == 0 and generate the
-warning message.
-
-However, if I recreate a filesystem with exactly your geometry:
-# mkfs.xfs -b size=4096 -dfile,name=fsfile,agcount=32,size=4394581984b,su=4k,sw=32  -m inobtcount=0,bigtime=0
-meta-data=fsfile                 isize=512    agcount=32, agsize=137330687 blks
-         =                       sectsz=512   attr=2, projid32bit=1
-         =                       crc=1        finobt=1, sparse=1, rmapbt=0
-         =                       reflink=1    bigtime=0 inobtcount=0
-data     =                       bsize=4096   blocks=4394581984, imaxpct=5
-         =                       sunit=1      swidth=32 blks
-naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-log      =internal log           bsize=4096   blocks=521728, version=2
-         =                       sectsz=512   sunit=1 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-
-and then mount it and point xfs_growfs at it with no args, I get no errors.
-So I am still stumped...
-
--Eric
-
-On 3/7/22 6:04 PM, David Dal Ben wrote:
-> OK, thanks.  I'll take this up with the Unraid tech team directly.
-> Thanks for the advice and pointers.
-> 
-> On Tue, 8 Mar 2022 at 07:51, Gao Xiang <hsiangkao@linux.alibaba.com> wrote:
->>
->> On Tue, Mar 08, 2022 at 10:31:32AM +1100, Dave Chinner wrote:
->>> On Tue, Mar 08, 2022 at 06:46:58AM +0800, David Dal Ben wrote:
->>>> This is where I get out of my depth. I added the drives to unraid, it
->>>> asked if I wanted to format them, I said yes, when that was completed
->>>> I started migrating data.
->>>>
->>>> I didn't enter any XFS or disk commands from the CLI.
->>>
->>> Is there any sort of verbose logging you can turn on from the
->>> applicance web interface?
->>>
->>>>
->>>> What I can tell you is that there are a couple of others who have
->>>> reported this alert on the Unraid forums, all seem to have larger
->>>> disks, over 14tb.
->>>
->>> I'd suggest that you ask Unraid to turn off XFS shrinking support in
->>> the 6.10 release. It's not ready for production release, and
->>> enabling it is just going to lead to user problems like this.
->>>
->>> Indeed, this somewhat implies that Unraid haven't actually tested
->>> shrink functionality at all, because otherwise the would have
->>> noticed just how limited the current XFS shrink support is and
->>> understood that it simply cannot be used in a production environment
->>> yet.
->>>
->>> IOWs, if Unraid want to support shrink in their commercial products
->>> right now, their support engineers need to be testing, triaging and
->>> reporting shrink problems to upstream and telling us exactly what is
->>> triggering those issues. Whilst the operations and commands they are
->>> issuing remains hidden from Unraid users, there's not a huge amount
->>> we can do upstream to triage the issue...
->>
->> I'm not sure if it can reproduce on other distribution or it's just a
->> specific behavior with unraid distribution, and it seems that this
->> distribution needs to be paid with $ to get more functionality, so I
->> assume it has a professional support team which can investigate more,
->> at least on the userspace side.
->>
->> In the beginning, we've discussed informally if we needed to add
->> another "-S" option to xfs_growfs to indicate the new shrink behavior
->> for users. And the conclusion was unnecessary. And I think for the case
->> mentioned in the original thread, it didn't actually do anything.
->>
->> Thanks,
->> Gao Xiang
->>
->>> Cheers,
->>>
->>> Dave.
->>> --
->>> Dave Chinner
->>> david@fromorbit.com
-> 
