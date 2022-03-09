@@ -2,177 +2,163 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB631C433F5
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Mar 2022 16:55:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3622EC433F5
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Mar 2022 18:22:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234543AbiCIQ4F (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Mar 2022 11:56:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42120 "EHLO
+        id S230211AbiCISXE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Mar 2022 13:23:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35114 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236366AbiCIQvn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Mar 2022 11:51:43 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78FE2199E0D
-        for <linux-xfs@vger.kernel.org>; Wed,  9 Mar 2022 08:44:47 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S236876AbiCISXC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Mar 2022 13:23:02 -0500
+Received: from sandeen.net (sandeen.net [63.231.237.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6DD5E639A
+        for <linux-xfs@vger.kernel.org>; Wed,  9 Mar 2022 10:22:02 -0800 (PST)
+Received: from [10.0.0.146] (liberator.sandeen.net [10.0.0.146])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 146CA61ADB
-        for <linux-xfs@vger.kernel.org>; Wed,  9 Mar 2022 16:44:47 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6524FC340E8;
-        Wed,  9 Mar 2022 16:44:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1646844286;
-        bh=hSNrps67nHJLL0HqxVPrBOt9xtNP0zL2N9dAOKGTAFc=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=liuao5QWktQZkUqRt9ll8GQpgLs0vHVsewOtk9HCokui3dzA4aHJcO/R6NoiV1yUg
-         NECyJTCy03ZASB0EaaR2MB375yQIZsEgU41l6z7HBKq9evuDFYwkdVntTHUUYYN6XX
-         nU7OksWRk5vjw0y8gLh1gK05cqSpAhNcbDajsbSN0Xe19AJ5uNUEx9FLstttc2o3DM
-         aaphH7sSai9jLApog0xqthbsP471VsawbBg13X/ldY4awiPV70tF47ZYOEwdTi3cJv
-         iNWBuey7pjLEgaRKUEeNF/OTrG2Lozl+mmBoTPW4a0dKarr8zWsPCCS5DEaeInq2ND
-         kFJ/GeRRqOYUQ==
-Date:   Wed, 9 Mar 2022 08:44:45 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: reserve quota for directory expansion when
- hardlinking files
-Message-ID: <20220309164445.GC8224@magnolia>
-References: <20220301025118.GG117732@magnolia>
- <20220308221855.GC661808@dread.disaster.area>
- <20220308231742.GA8241@magnolia>
- <20220309011209.GD661808@dread.disaster.area>
+        by sandeen.net (Postfix) with ESMTPSA id 596AA4836;
+        Wed,  9 Mar 2022 12:20:49 -0600 (CST)
+Message-ID: <95ed03a8-e49b-d109-baba-86a190345102@sandeen.net>
+Date:   Wed, 9 Mar 2022 12:22:00 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220309011209.GD661808@dread.disaster.area>
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.6.2
+Content-Language: en-US
+To:     David Dal Ben <dalben@gmail.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Eric Sandeen <esandeen@redhat.com>, linux-xfs@vger.kernel.org
+References: <CALwRca2+UsEZMPwiCtecM87HVVMs27SdawdWXns+PU7+S-DFaQ@mail.gmail.com>
+ <CALwRca3yS2q4XYr5aFaPWxNcGsYRFDWeU9je1q31KGguTeX6Rw@mail.gmail.com>
+ <YiYIO2lJf123LA2c@B-P7TQMD6M-0146.local>
+ <CALwRca2bZD5tXmL5kzCdL97LpqWGVhYXMNSWSvqn=FkMuMrbjQ@mail.gmail.com>
+ <9f957f7a-0f08-9cb4-d8ff-76440a488184@redhat.com>
+ <CALwRca2Xdp8F_xjXSFXxO-Ra96W685o2qY1xoo=Ko9OWF4oRvw@mail.gmail.com>
+ <20220307233132.GA661808@dread.disaster.area>
+ <YiaajBcdSgOyIamT@B-P7TQMD6M-0146.local>
+ <CALwRca0TqcKnBkLm=sOjQdvagBjd12m_7uYOhkMt8LjxsmiEtA@mail.gmail.com>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: Inconsistent "EXPERIMENTAL online shrink feature in use. Use at
+ your own risk" alert
+In-Reply-To: <CALwRca0TqcKnBkLm=sOjQdvagBjd12m_7uYOhkMt8LjxsmiEtA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 09, 2022 at 12:12:09PM +1100, Dave Chinner wrote:
-> On Tue, Mar 08, 2022 at 03:17:42PM -0800, Darrick J. Wong wrote:
-> > On Wed, Mar 09, 2022 at 09:18:55AM +1100, Dave Chinner wrote:
-> > > On Mon, Feb 28, 2022 at 06:51:18PM -0800, Darrick J. Wong wrote:
-> > > > From: Darrick J. Wong <djwong@kernel.org>
-> > > > 
-> > > > The XFS implementation of the linkat call does not reserve quota for the
-> > > > potential directory expansion.  This means that we don't reject the
-> > > > expansion with EDQUOT when we're at or near a hard limit, which means
-> > > > that one can use linkat() to exceed quota.  Fix this by adding a quota
-> > > > reservation.
-> > > > 
-> > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > > ---
-> > > >  fs/xfs/xfs_inode.c |    4 ++++
-> > > >  1 file changed, 4 insertions(+)
-> > > > 
-> > > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > > > index 04bf467b1090..6e556c9069e8 100644
-> > > > --- a/fs/xfs/xfs_inode.c
-> > > > +++ b/fs/xfs/xfs_inode.c
-> > > > @@ -1249,6 +1249,10 @@ xfs_link(
-> > > >  	xfs_trans_ijoin(tp, sip, XFS_ILOCK_EXCL);
-> > > >  	xfs_trans_ijoin(tp, tdp, XFS_ILOCK_EXCL);
-> > > >  
-> > > > +	error = xfs_trans_reserve_quota_nblks(tp, tdp, resblks, 0, false);
-> > > > +	if (error)
-> > > > +		goto error_return;
-> > > > +
-> 
-> Hmmm - I just noticed that trans_alloc_icreate and trans_alloc_inode
-> also run a blockgc pass on EDQUOT or ENOSPC when they fail to
-> reserve quota to try to free up some space before retrying. Do we
-> need that here, too?
+So a weird thing here is that I think your logs show the xfs_growfs command
+happening immediately after mount, and it doesn't have any size specified, 
+so I can't tell if the intent was to shrink - but I don't think so:
 
-(Re)trying to clear more space sounds like a good idea.
+Mar  6 19:59:21 tdm emhttpd: shcmd (81): mkdir -p /mnt/disk1
+Mar  6 19:59:21 tdm emhttpd: shcmd (82): mount -t xfs -o noatime /dev/md1 /mnt/disk1
+Mar  6 19:59:21 tdm kernel: SGI XFS with ACLs, security attributes, no debug enabled
+Mar  6 19:59:21 tdm kernel: XFS (md1): Mounting V5 Filesystem
+Mar  6 19:59:21 tdm kernel: XFS (md1): Ending clean mount
+Mar  6 19:59:21 tdm emhttpd: shcmd (83): xfs_growfs /mnt/disk1
+Mar  6 19:59:21 tdm kernel: xfs filesystem being mounted at /mnt/disk1 supports timestamps until 2038 (0x7fffffff)
+Mar  6 19:59:21 tdm root: xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl failed: No space left on device
+Mar  6 19:59:21 tdm root: meta-data=/dev/md1               isize=512  agcount=32, agsize=137330687 blks
+Mar  6 19:59:21 tdm root:          =                       sectsz=512  attr=2, projid32bit=1
+Mar  6 19:59:21 tdm root:          =                       crc=1  finobt=1, sparse=1, rmapbt=0
+Mar  6 19:59:21 tdm root:          =                       reflink=1  bigtime=0 inobtcount=0
+Mar  6 19:59:21 tdm root: data     =                       bsize=4096  blocks=4394581984, imaxpct=5
+Mar  6 19:59:21 tdm root:          =                       sunit=1  swidth=32 blks
+Mar  6 19:59:21 tdm root: naming   =version 2              bsize=4096  ascii-ci=0, ftype=1
+Mar  6 19:59:21 tdm root: log      =internal log           bsize=4096  blocks=521728, version=2
+Mar  6 19:59:21 tdm root:          =                       sectsz=512  sunit=1 blks, lazy-count=1
+Mar  6 19:59:21 tdm root: realtime =none                   extsz=4096  blocks=0, rtextents=0
+Mar  6 19:59:21 tdm emhttpd: shcmd (83): exit status: 1
+Mar  6 19:59:21 tdm kernel: XFS (md1): EXPERIMENTAL online shrink feature in use. Use at your own risk!
 
-> > > >  	error = xfs_iext_count_may_overflow(tdp, XFS_DATA_FORK,
-> > > >  			XFS_IEXT_DIR_MANIP_CNT(mp));
-> > > >  	if (error)
-> > > 
-> > > Yup, ok, but doesn't xfs_remove have exactly the same problem? i.e.
-> > 
-> > Yes, it does, however, the reason I don't have a fix for that ready is
-> > that...
-> > 
-> > > removing a directory entry can punch a hole in the bmbt and require
-> > > new allocations for a BMBT split, thereby increasing the number of
-> > 
-> > ...rejecting a directory unlink with EDQUOT creates the situation where
-> > a user who's gone over the soft limit cannot rm a file to get themselves
-> > back under quota because the removal asked for enough bmbt-expansion
-> > quota reservation to push the quota over the hard limit...
-> 
-> Both link and remove already have "zero reservation" paths for
-> ENOSPC - if they are to be made quota aware they'll end up with
-> resblks = 0 and so xfs_trans_reserve_quota_nblks() is a no-op at
-> ENOSPC. So ....
-> 
-> > 
-> > > blocks allocated to the directory? e.g. remove a single data block,
-> > > need to then allocate half a dozen BMBT blocks for the shape change.
-> > 
-> > ...and while the next thing that occurred to me was to retry the quota
-> > reservation with FORCE_RES, having such a path means that one can still
-> > overrun the hard limit (albeit slowly) by creating a fragmented
-> > directory and selectively removing entries to cause bmbt splits.
-> 
-> > I /think/ I'm ok with the "retry with FORCE_QUOTA" solution for
-> > xfs_remove, but I'm hanging onto it for now for further consideration
-> > and QA testing.
-> 
-> ... yes, I think this would be just fine. I don't think we really
-> care in any way about people trying to grow their quota beyond the
-> hard limit by a few blocks by intentionally fragmenting really large
-> directories. If their quota allows them directories and inode counts
-> large enough for this to be an avenue to exceeding hard quota limits
-> by a block or two, nobody is going to notice about a block or two or
-> extra space usage.
 
-At least for the link case, you can trivially continue to expand the
-directory by hardlinking the same file over and over.  Part of the
-weirdness here might be related to the fact that a transaction with no
-quota reservation is allowed to commit the quota usage changes, even if
-that would bump them past the limit.
+We issue the EXPERIMENTAL message if the block delta is <= 0 (I'm not sure why
+it's done if delta == 0 and I wonder if it should instead be < 0).
 
-Hm.  Perhaps the trick here should be that we reduce resblks to zero for
-ENOSPC or EDQUOT, which means that you can continue link()ing files
-into a directory so long as it won't cause the dir to expand.
-xfs_remove (aka unlink()) handles reservationless removals by deferring
-the directory shrink operation if there isn't space, so I think it can
-be ported to use the new "alloc and reserve" function too.
+But maybe unraid isn't really trying to shrink, it's just doing an unconditional
+growfs post-mount to ensure it's using the whole device (unnecessary, but should
+be safe.)
 
-> > > If so, then both xfs_link() and xfs_remove() have exactly the same
-> > > dquot, inode locking and transaction setup code and requirements,
-> > > and probably should be factored out into xfs_trans_alloc_dir() (i.e.
-> > > equivalent of xfs_trans_alloc_icreate() used by all the inode create
-> > > functions).  That way we only have one copy of this preamble and
-> > > only need to fix the bug in one place?
-> > 
-> > They're not the same problem -- adding hardlinks is not a known strategy
-> > for reducing quota usage below the limits, whereas unlinking files is.
-> > 
-> > > Alternatively, fix the bug in both places first and add a followup
-> > > patch that factors out this code as per above.
-> > 
-> > I sent a patch for the link situation because I thought it looked like
-> > an obvious fix, and left the unlink() problem until a full solution is
-> > presented or proved impossible.
+I'm wondering if we have some path through xfs_growfs_data_private() that calculates
+a delta < 0 unintentionally, or if we get there with delta == 0 and generate the
+warning message.
+
+However, if I recreate a filesystem with exactly your geometry:
+# mkfs.xfs -b size=4096 -dfile,name=fsfile,agcount=32,size=4394581984b,su=4k,sw=32  -m inobtcount=0,bigtime=0
+meta-data=fsfile                 isize=512    agcount=32, agsize=137330687 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=0
+         =                       reflink=1    bigtime=0 inobtcount=0
+data     =                       bsize=4096   blocks=4394581984, imaxpct=5
+         =                       sunit=1      swidth=32 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=4096   blocks=521728, version=2
+         =                       sectsz=512   sunit=1 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+and then mount it and point xfs_growfs at it with no args, I get no errors.
+So I am still stumped...
+
+-Eric
+
+On 3/7/22 6:04 PM, David Dal Ben wrote:
+> OK, thanks.  I'll take this up with the Unraid tech team directly.
+> Thanks for the advice and pointers.
 > 
-> Ok. None of this was mentioned in the patch, so I had no idea about
-> any of the things you are doing behind the scenes. I simply saw the
-> same problem in other places....
-
-Yeah, there are more fiddly fixes for setattr coming down the line
-too...
-
---D
-
+> On Tue, 8 Mar 2022 at 07:51, Gao Xiang <hsiangkao@linux.alibaba.com> wrote:
+>>
+>> On Tue, Mar 08, 2022 at 10:31:32AM +1100, Dave Chinner wrote:
+>>> On Tue, Mar 08, 2022 at 06:46:58AM +0800, David Dal Ben wrote:
+>>>> This is where I get out of my depth. I added the drives to unraid, it
+>>>> asked if I wanted to format them, I said yes, when that was completed
+>>>> I started migrating data.
+>>>>
+>>>> I didn't enter any XFS or disk commands from the CLI.
+>>>
+>>> Is there any sort of verbose logging you can turn on from the
+>>> applicance web interface?
+>>>
+>>>>
+>>>> What I can tell you is that there are a couple of others who have
+>>>> reported this alert on the Unraid forums, all seem to have larger
+>>>> disks, over 14tb.
+>>>
+>>> I'd suggest that you ask Unraid to turn off XFS shrinking support in
+>>> the 6.10 release. It's not ready for production release, and
+>>> enabling it is just going to lead to user problems like this.
+>>>
+>>> Indeed, this somewhat implies that Unraid haven't actually tested
+>>> shrink functionality at all, because otherwise the would have
+>>> noticed just how limited the current XFS shrink support is and
+>>> understood that it simply cannot be used in a production environment
+>>> yet.
+>>>
+>>> IOWs, if Unraid want to support shrink in their commercial products
+>>> right now, their support engineers need to be testing, triaging and
+>>> reporting shrink problems to upstream and telling us exactly what is
+>>> triggering those issues. Whilst the operations and commands they are
+>>> issuing remains hidden from Unraid users, there's not a huge amount
+>>> we can do upstream to triage the issue...
+>>
+>> I'm not sure if it can reproduce on other distribution or it's just a
+>> specific behavior with unraid distribution, and it seems that this
+>> distribution needs to be paid with $ to get more functionality, so I
+>> assume it has a professional support team which can investigate more,
+>> at least on the userspace side.
+>>
+>> In the beginning, we've discussed informally if we needed to add
+>> another "-S" option to xfs_growfs to indicate the new shrink behavior
+>> for users. And the conclusion was unnecessary. And I think for the case
+>> mentioned in the original thread, it didn't actually do anything.
+>>
+>> Thanks,
+>> Gao Xiang
+>>
+>>> Cheers,
+>>>
+>>> Dave.
+>>> --
+>>> Dave Chinner
+>>> david@fromorbit.com
 > 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
