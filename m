@@ -2,76 +2,61 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EB0EC433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Mar 2022 09:49:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C93CDC433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Mar 2022 09:59:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240891AbiCJJub (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 10 Mar 2022 04:50:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54444 "EHLO
+        id S236636AbiCJKAe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 10 Mar 2022 05:00:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60952 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233237AbiCJJub (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Mar 2022 04:50:31 -0500
-X-Greylist: delayed 381 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 10 Mar 2022 01:49:30 PST
-Received: from cstnet.cn (smtp23.cstnet.cn [159.226.251.23])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 3445913AA0B
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Mar 2022 01:49:29 -0800 (PST)
-Received: from localhost.localdomain (unknown [124.16.138.126])
-        by APP-03 (Coremail) with SMTP id rQCowADn75spyCli2IJOAg--.60626S2;
-        Thu, 10 Mar 2022 17:43:06 +0800 (CST)
-From:   Jiasheng Jiang <jiasheng@iscas.ac.cn>
-To:     djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jiasheng Jiang <jiasheng@iscas.ac.cn>
-Subject: [PATCH] xfs: xfs_rmap_item: Add ASSERT after calling kmem_zalloc
-Date:   Thu, 10 Mar 2022 17:43:03 +0800
-Message-Id: <20220310094303.2013165-1-jiasheng@iscas.ac.cn>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S240006AbiCJKAb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Mar 2022 05:00:31 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 321B711798F
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Mar 2022 01:59:31 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id DB48FB82589
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Mar 2022 09:59:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 15CBEC340E8;
+        Thu, 10 Mar 2022 09:59:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1646906368;
+        bh=r90c+jt6pEWH6PmS8i0MKjb2cuVqylVT7chaUhulqW8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=HmELPqGnsZig2X+ilhJ2RsW03Y4cw2ZMCMK2dPM3P1ZtF+Doin5OCe+9DrXFdSX0L
+         GPDEHWC64mJZKYJTLS37kVT40viqBFmG749oZ/p4/g0TWumyzwXeZgqdaVHLjxbrNT
+         ttLUq4xS0pnynhxbgVKE2mNo+ticwQgeRff/tgE0IHCFNc1HwjBysiZgUjMfL0Nns5
+         R+ELc+Ynr36pRgCyMjuncDoDTGxHPJvBeoh/ul2RheQXXIS82IU45YMH7odA8NmN6b
+         zhFpkdLN/f9uWOwSAx/yiTYTAfOslVSklzrJDTuE+x2g1pbojU8Nj+YInU5hzmz1o9
+         iLBt22bLj7QeQ==
+Date:   Thu, 10 Mar 2022 10:59:23 +0100
+From:   Christian Brauner <brauner@kernel.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, fdmanana@kernel.org,
+        andrey.zhadchenko@virtuozzo.com, david@fromorbit.com, hch@lst.de
+Subject: Re: [PATCH 2/2] xfs: refactor user/group quota chown in
+ xfs_setattr_nonsize
+Message-ID: <20220310095923.tof2zmtqjn6nwsi3@wittgenstein>
+References: <164685372611.495833.8601145506549093582.stgit@magnolia>
+ <164685373748.495833.4023209082084946055.stgit@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: rQCowADn75spyCli2IJOAg--.60626S2
-X-Coremail-Antispam: 1UD129KBjvdXoWrtF4Dur4DZry7Xr43KF4fAFb_yoW3CFg_ta
-        17GFn3Ca15AryayF1UAr9Y9rn0gw4xAr1I9w4UKa13t348X3W3CrZrZrWSyryfurZ8tFyx
-        JFZrK3y5tFy29jkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUIcSsGvfJTRUUUbz8FF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-        A2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr0_
-        Cr1l84ACjcxK6I8E87Iv67AKxVWxJr0_GcWl84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s
-        0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
-        jxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr
-        1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxAIw28IcxkI7VAKI48J
-        MxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwV
-        AFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY6xIIjxv2
-        0xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4
-        v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E
-        14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfU5WlkUUUUU
-X-Originating-IP: [124.16.138.126]
-X-CM-SenderInfo: pmld2xxhqjqxpvfd2hldfou0/
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <164685373748.495833.4023209082084946055.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-As the potential failure of the kmem_zalloc() without __GFP_NOFAIL,
-it should be better to check it in order to avoid the dereference
-of NULL pointer.
+On Wed, Mar 09, 2022 at 11:22:17AM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Combine if tests to reduce the indentation levels of the quota chown
+> calls in xfs_setattr_nonsize.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
 
-Fixes: 5880f2d78ff1 ("xfs: create rmap update intent log items")
-Signed-off-by: Jiasheng Jiang <jiasheng@iscas.ac.cn>
----
- fs/xfs/xfs_rmap_item.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-index c3966b4c58ef..66395faeeb87 100644
---- a/fs/xfs/xfs_rmap_item.c
-+++ b/fs/xfs/xfs_rmap_item.c
-@@ -143,6 +143,7 @@ xfs_rui_init(
- 	else
- 		ruip = kmem_cache_zalloc(xfs_rui_cache,
- 					 GFP_KERNEL | __GFP_NOFAIL);
-+	ASSERT(ruip);
- 
- 	xfs_log_item_init(mp, &ruip->rui_item, XFS_LI_RUI, &xfs_rui_item_ops);
- 	ruip->rui_format.rui_nextents = nextents;
--- 
-2.25.1
-
+Looks good to me,
+Reviewed-by: Christian Brauner <brauner@kernel.org>
