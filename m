@@ -2,133 +2,144 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B770BC433F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Mar 2022 10:12:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33E59C433F5
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Mar 2022 13:08:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231378AbiCJKNI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 10 Mar 2022 05:13:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56328 "EHLO
+        id S242218AbiCJNJQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 10 Mar 2022 08:09:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58142 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231364AbiCJKNH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Mar 2022 05:13:07 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58B41108BC1
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Mar 2022 02:12:07 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7676B60AEE
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Mar 2022 10:12:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 425BDC340E8;
-        Thu, 10 Mar 2022 10:12:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1646907125;
-        bh=A6wBYUyUjktgEUv1h2nzXuRtAE0zOwbvgMf288qOkTQ=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=lahcdeaVEmShNo7bEEs9iHCQuZdwwze0tqa/RYKiA/ue/GKgUsfRpVt9rF2leJGzI
-         5FnF6qURitsuigpSRyXyk6i+UEi78TodtS8CuTOwSGetXMAxVJpcwoWM/TQOjYhm4c
-         GZy20Z7gHnVV7iQCK0xptd7Xfyz+saXhVkj9sdJ552CHHf+yHkC0+KIe1vFtsKRJ+m
-         I0JeFvIrRKIjE3fj7Ct56Zwxdyu6uXwp8P1RvfFR9pKZe4kbp3iD3NO1qHauPLt+0B
-         Y8KSQcQ3jNxLSP3webPvchRE/o934GYCCeguDe72nk6O0Co6EXBpVN+STVvRDXqval
-         M5LWTa9G5ydWA==
-Date:   Thu, 10 Mar 2022 11:11:58 +0100
-From:   Christian Brauner <brauner@kernel.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, fdmanana@kernel.org,
-        andrey.zhadchenko@virtuozzo.com, david@fromorbit.com, hch@lst.de
-Subject: Re: [PATCH 1/2] xfs: use setattr_copy to set vfs inode attributes
-Message-ID: <20220310101158.atqf7grb2qz7a73o@wittgenstein>
-References: <164685372611.495833.8601145506549093582.stgit@magnolia>
- <164685373184.495833.7593050602112292799.stgit@magnolia>
+        with ESMTP id S238385AbiCJNJQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Mar 2022 08:09:16 -0500
+Received: from heian.cn.fujitsu.com (mail.cn.fujitsu.com [183.91.158.132])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 006082676;
+        Thu, 10 Mar 2022 05:08:10 -0800 (PST)
+IronPort-Data: =?us-ascii?q?A9a23=3AbGct16k6ZJOdBh3HQzXxEljo5gzqJ0RdPkR7XQ2?=
+ =?us-ascii?q?eYbTBsI5bpzVWnWIdWGiDPv+NZDb9eohybtm08EJQ7Z/Wz98wG1Y4+CA2RRqmi?=
+ =?us-ascii?q?+KfW43BcR2Y0wB+jyH7ZBs+qZ1YM7EsFehsJpPnjkrrYuiJQUVUj/nSHOKmULe?=
+ =?us-ascii?q?cY0ideCc/IMsfoUM68wIGqt4w6TSJK1vlVeLa+6UzCnf8s9JHGj58B5a4lf9al?=
+ =?us-ascii?q?K+aVAX0EbAJTasjUFf2zxH5BX+ETE27ByOQroJ8RoZWSwtfpYxV8F81/z91Yj+?=
+ =?us-ascii?q?kur39NEMXQL/OJhXIgX1TM0SgqkEa4HVsjeBgb7xBAatUo2zhc9RZ0shEs4ehD?=
+ =?us-ascii?q?wkvJbHklvkfUgVDDmd1OqguFLrveCLl7JXCkBGbG5fr67A0ZK0sBqUU8/h2DUl?=
+ =?us-ascii?q?A7/sdLyoHbwzFjOWzqJq7QelEh8ItNsDnMYoT/HZ6wlnxAf8gB5KFXKTO4d5R2?=
+ =?us-ascii?q?SwYh8ZSEPKYbM0cARJjbgvHZRJnOVoNDp862uCyiRHXdzxetULQoK8f4Hbaxw8?=
+ =?us-ascii?q?316LiWPLTZNCLQMB9mkeDunmA+2X/HwFcONGBoRKH+3ShwOTPgAv8QosZELD+/?=
+ =?us-ascii?q?flv6HWXx2oOGFgYTle2v/S9olCxVsgZKEEO/Ccq668o+ySDStj7Qg39o3OeuBM?=
+ =?us-ascii?q?Yc8RfHvd86wyXzKfQpQGDCQAsSj9HdcxjpMEtbSIl20XPnN7zAzFr9rqPRhqgG?=
+ =?us-ascii?q?h28xd+pEXFNazZcOmlfFk1Yi+QPabob1nrnJuuP2obs5jEtJQzN/g=3D=3D?=
+IronPort-HdrOrdr: =?us-ascii?q?A9a23=3AJcrJXajzqPVrHXvE9rtHgn3h13BQXuYji2hC?=
+ =?us-ascii?q?6mlwRA09TyX4rbHLoB1/73LJYVkqNk3I5urrBEDtexLhHP1OkOws1NWZLWrbUQ?=
+ =?us-ascii?q?KTRekM0WKI+UyDJ8SRzI5g/JYlW61/Jfm1NlJikPv9iTPSL/8QhPWB74Ck7N2z?=
+ =?us-ascii?q?80tQ?=
+X-IronPort-AV: E=Sophos;i="5.88,333,1635177600"; 
+   d="scan'208";a="122519745"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 10 Mar 2022 21:08:09 +0800
+Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
+        by cn.fujitsu.com (Postfix) with ESMTP id 2552C4D169F3;
+        Thu, 10 Mar 2022 21:08:09 +0800 (CST)
+Received: from G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) by
+ G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.23; Thu, 10 Mar 2022 21:08:09 +0800
+Received: from [10.167.201.6] (10.167.201.6) by
+ G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
+ id 15.0.1497.23 via Frontend Transport; Thu, 10 Mar 2022 21:08:08 +0800
+Message-ID: <87ff591c-ac1c-4460-fc6a-ba2b86714472@fujitsu.com>
+Date:   Thu, 10 Mar 2022 21:08:08 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <164685373184.495833.7593050602112292799.stgit@magnolia>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.0
+Subject: Re: [PATCH v11 0/8] fsdax: introduce fs query to support reflink
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <nvdimm@lists.linux.dev>, <linux-mm@kvack.org>,
+        <linux-fsdevel@vger.kernel.org>
+CC:     <djwong@kernel.org>, <dan.j.williams@intel.com>,
+        <david@fromorbit.com>, <hch@infradead.org>, <jane.chu@oracle.com>
+References: <20220227120747.711169-1-ruansy.fnst@fujitsu.com>
+In-Reply-To: <20220227120747.711169-1-ruansy.fnst@fujitsu.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-yoursite-MailScanner-ID: 2552C4D169F3.A1690
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 09, 2022 at 11:22:11AM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+ping  ;)
+
+在 2022/2/27 20:07, Shiyang Ruan 写道:
+> This patchset is aimed to support shared pages tracking for fsdax.
 > 
-> Filipe Manana pointed out that XFS' behavior w.r.t. setuid/setgid
-> revocation isn't consistent with btrfs[1] or ext4.  Those two
-> filesystems use the VFS function setattr_copy to convey certain
-> attributes from struct iattr into the VFS inode structure.
+> Changes since V10:
+>    - Use cmpxchg() to prevent concurrent registration/unregistration
+>    - Use phys_addr_t for ->memory_failure()
+>    - Add dax_entry_lock() for dax_lock_mapping_entry()
+>    - Fix offset and length calculation at the boundary of a filesystem
 > 
-> Andrey Zhadchenko reported[2] that XFS uses the wrong user namespace to
-> decide if it should clear setgid and setuid on a file attribute update.
-> This is a second symptom of the problem that Filipe noticed.
+> This patchset moves owner tracking from dax_assocaite_entry() to pmem
+> device driver, by introducing an interface ->memory_failure() for struct
+> pagemap.  This interface is called by memory_failure() in mm, and
+> implemented by pmem device.
 > 
-> XFS, on the other hand, open-codes setattr_copy in xfs_setattr_mode,
-> xfs_setattr_nonsize, and xfs_setattr_time.  Regrettably, setattr_copy is
-> /not/ a simple copy function; it contains additional logic to clear the
-> setgid bit when setting the mode, and XFS' version no longer matches.
+> Then call holder operations to find the filesystem which the corrupted
+> data located in, and call filesystem handler to track files or metadata
+> associated with this page.
 > 
-> The VFS implements its own setuid/setgid stripping logic, which
-> establishes consistent behavior.  It's a tad unfortunate that it's
-> scattered across notify_change, should_remove_suid, and setattr_copy but
-> XFS should really follow the Linux VFS.  Adapt XFS to use the VFS
-> functions and get rid of the old functions.
+> Finally we are able to try to fix the corrupted data in filesystem and
+> do other necessary processing, such as killing processes who are using
+> the files affected.
 > 
-> [1] https://lore.kernel.org/fstests/CAL3q7H47iNQ=Wmk83WcGB-KBJVOEtR9+qGczzCeXJ9Y2KCV25Q@mail.gmail.com/
-> [2] https://lore.kernel.org/linux-xfs/20220221182218.748084-1-andrey.zhadchenko@virtuozzo.com/
+> The call trace is like this:
+> memory_failure()
+> |* fsdax case
+> |------------
+> |pgmap->ops->memory_failure()      => pmem_pgmap_memory_failure()
+> | dax_holder_notify_failure()      =>
+> |  dax_device->holder_ops->notify_failure() =>
+> |                                     - xfs_dax_notify_failure()
+> |  |* xfs_dax_notify_failure()
+> |  |--------------------------
+> |  |   xfs_rmap_query_range()
+> |  |    xfs_dax_failure_fn()
+> |  |    * corrupted on metadata
+> |  |       try to recover data, call xfs_force_shutdown()
+> |  |    * corrupted on file data
+> |  |       try to recover data, call mf_dax_kill_procs()
+> |* normal case
+> |-------------
+> |mf_generic_kill_procs()
 > 
-> Fixes: f736d93d76d3 ("xfs: support idmapped mounts")
+> ==
+> Shiyang Ruan (8):
+>    dax: Introduce holder for dax_device
+>    mm: factor helpers for memory_failure_dev_pagemap
+>    pagemap,pmem: Introduce ->memory_failure()
+>    fsdax: Introduce dax_lock_mapping_entry()
+>    mm: move pgoff_address() to vma_pgoff_address()
+>    mm: Introduce mf_dax_kill_procs() for fsdax case
+>    xfs: Implement ->notify_failure() for XFS
+>    fsdax: set a CoW flag when associate reflink mappings
+> 
+>   drivers/dax/super.c         |  89 +++++++++++++
+>   drivers/nvdimm/pmem.c       |  16 +++
+>   fs/dax.c                    | 140 ++++++++++++++++++---
+>   fs/xfs/Makefile             |   1 +
+>   fs/xfs/xfs_buf.c            |  12 ++
+>   fs/xfs/xfs_fsops.c          |   3 +
+>   fs/xfs/xfs_mount.h          |   1 +
+>   fs/xfs/xfs_notify_failure.c | 235 +++++++++++++++++++++++++++++++++++
+>   fs/xfs/xfs_notify_failure.h |  10 ++
+>   fs/xfs/xfs_super.c          |   6 +
+>   include/linux/dax.h         |  47 +++++++
+>   include/linux/memremap.h    |  12 ++
+>   include/linux/mm.h          |  17 +++
+>   include/linux/page-flags.h  |   6 +
+>   mm/memory-failure.c         | 240 ++++++++++++++++++++++++++----------
+>   15 files changed, 747 insertions(+), 88 deletions(-)
+>   create mode 100644 fs/xfs/xfs_notify_failure.c
+>   create mode 100644 fs/xfs/xfs_notify_failure.h
+> 
 
-Fwiw, as I've pointed out in
-https://lore.kernel.org/linux-xfs/20220222122331.ijeapomur76h7xf6@wittgenstein/
-the original analysis that this commit message links to in [2] is not
-correct. But the thread clarifies it so I think it's fine.
 
-But I think the fixes tag is wrong here afaict. As I've pointed out in
-https://lore.kernel.org/linux-xfs/20220222123656.433l67bxhv3s2vbo@wittgenstein/
-the faulty behavior should predate idmapped mounts by a lot. The bug is
-with capable(CAP_FSETID). A simple reproducer that should work on any
-pre 5.12 kernel is:
-
-brauner@wittgenstein|~/src/git/linux/ltp/testcases/kernel/syscalls/chown|master %=
-> unshare -U --map-root
-root@wittgenstein|~/src/git/linux/ltp/testcases/kernel/syscalls/chown|master %=
-> PATH=$PATH:$PWD ./chown02
-tst_memutils.c:157: TWARN: Can't adjust score, even with capabilities!?
-tst_test.c:1455: TINFO: Timeout per run is 0h 05m 00s
-chown02.c:45: TPASS: chown(testfile1, 0, 0) passed
-chown02.c:45: TPASS: chown(testfile2, 0, 0) passed
-chown02.c:57: TFAIL: testfile2: wrong mode permissions 0100700, expected 0102700
-
-Summary:
-passed   2
-failed   1
-broken   0
-skipped  0
-warnings 1
-
-There's no idmapped mounts here in play. The caller simply has been
-placed in a new user namespace and thus they fail the current
-capable(CAP_FSETID) check which will cause xfs to strip the sgid bit.
-
-Now trying the same with ext4:
-
-ubuntu@f2-vm:~/src/git/linux/ltp/testcases/kernel/syscalls/chown$ unshare -U --map-root
-root@f2-vm:~/src/git/linux/ltp/testcases/kernel/syscalls/chown# PATH=$PATH:$PWD ./chown02
-tst_memutils.c:157: TWARN: Can't adjust score, even with capabilities!?
-tst_test.c:1455: TINFO: Timeout per run is 0h 05m 00s
-chown02.c:45: TPASS: chown(testfile1, 0, 0) passed
-chown02.c:45: TPASS: chown(testfile2, 0, 0) passed
-
-Summary:
-passed   2
-failed   0
-broken   0
-skipped  0
-warnings 1
-
-it passes since ext4 uses setattr_copy() and thus the capability is
-checked for in the caller's user namespace.
-
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
-
-Other than the wrong Fixes:,
-Reviewed-by: Christian Brauner <brauner@kernel.org>
