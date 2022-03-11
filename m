@@ -2,134 +2,259 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DA04C433F5
-	for <linux-xfs@archiver.kernel.org>; Fri, 11 Mar 2022 18:36:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0C7EC433EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Mar 2022 23:35:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345129AbiCKSh0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 11 Mar 2022 13:37:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44932 "EHLO
+        id S229613AbiCKXga (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 11 Mar 2022 18:36:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43678 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230313AbiCKShZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Mar 2022 13:37:25 -0500
-Received: from sandeen.net (sandeen.net [63.231.237.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 98F84D3AE7
-        for <linux-xfs@vger.kernel.org>; Fri, 11 Mar 2022 10:36:18 -0800 (PST)
-Received: from [10.0.0.146] (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id C5BC1490B
-        for <linux-xfs@vger.kernel.org>; Fri, 11 Mar 2022 12:35:02 -0600 (CST)
-Message-ID: <f2ff49db-9a85-1303-c268-3d9f035c2418@sandeen.net>
-Date:   Fri, 11 Mar 2022 12:36:16 -0600
+        with ESMTP id S229591AbiCKXg3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Mar 2022 18:36:29 -0500
+Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62B38D9966
+        for <linux-xfs@vger.kernel.org>; Fri, 11 Mar 2022 15:35:25 -0800 (PST)
+Received: by mail-pf1-x431.google.com with SMTP id h2so5170138pfh.6
+        for <linux-xfs@vger.kernel.org>; Fri, 11 Mar 2022 15:35:25 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20210112.gappssmtp.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=13t7T+1H2gbtDRvuwDVr1bm3a+2J2xIzpet95fdBuh4=;
+        b=RIgXQdVfVb6lODawzvdTxr4kAtwLPsRjREsyVUC9K9FXvakpJNymy17e6FkbZx5Gvv
+         LeDcUKOKw2VoVa83HdzrEPE+n4lq8xuCULunoupKYxugg5JDuOq5trFf3fm42gMytdUt
+         ERkjzkjwpAU0zoJJj8eO/F2dpsyBXR6QjMjtDGcOsDfDr2CJipG41gyKlmh4HlNGNwWJ
+         vwkcU6O57nxaJWLRTl+0Hya9nMI7GHfWxpWRkjw+wUNIj2S8tgExKh9huQ4lWfIYS5K0
+         A8C1eX/+5cBiho3K4ItispCSGtWUy9zYfhJ3aJCa4TY2pJ8nVxCb77Wvrz7OmBeIoOjA
+         1QIQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=13t7T+1H2gbtDRvuwDVr1bm3a+2J2xIzpet95fdBuh4=;
+        b=MmymZ+EKQplTmAVpnE1+l2m03iRPxNNQSw6OUGj8CZSvAceSuZ5xLAcX110B0ddqtz
+         GknUrAy13ODSwpcJaEiNzS2Wn6LsyblWvqXDQY/d6LpQyIzY3UKXqo/MWccM5a9TVrTr
+         S44w7dh3LcyVT571/RDGhFwJc/E/Wx/ySUTTdVgk3B29LDR3cm83YViD3MV0PLavGe5+
+         GVdsshY/3rMRlAkHvo3JOwSbzxKRiZOVF9h7UxklBIb9l1vwS4ZQ+FhWtkmaogTM4cQa
+         0eu5ptyDOKqCdkNIWgR3xOxQdwkO+kaG0m7/PXCNOTYFpoRT6mmKmhUAfJ2ksFQK6fk9
+         0a/g==
+X-Gm-Message-State: AOAM533lWTZvUFxlB4BS163X45FpORJvkRMAquomWIrGeYnZkc4A0qBP
+        4Eo6mitXn66MzTj6mSwzygqsHy9E/OS24N4OQvswGQ==
+X-Google-Smtp-Source: ABdhPJy2YDPTfdvIBlgNDhr+xnU7i87kZGa7MwrAaA3nvXLDFGkcmuMWf5/eMsJKEsCu2BWW9StjfFYHKRuRIZXl8BI=
+X-Received: by 2002:a62:1481:0:b0:4f6:38c0:ed08 with SMTP id
+ 123-20020a621481000000b004f638c0ed08mr12796868pfu.86.1647041724808; Fri, 11
+ Mar 2022 15:35:24 -0800 (PST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.7.0
-Content-Language: en-US
-To:     xfs <linux-xfs@vger.kernel.org>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs-5.15.0-rc1 released
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="------------9JZJfTYHJwoaz9TXf050vTD7"
+References: <20220227120747.711169-1-ruansy.fnst@fujitsu.com> <20220227120747.711169-2-ruansy.fnst@fujitsu.com>
+In-Reply-To: <20220227120747.711169-2-ruansy.fnst@fujitsu.com>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Fri, 11 Mar 2022 15:35:13 -0800
+Message-ID: <CAPcyv4jAqV7dZdmGcKrG=f8sYmUXaL7YCQtME6GANywncwd+zg@mail.gmail.com>
+Subject: Re: [PATCH v11 1/8] dax: Introduce holder for dax_device
+To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
+Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Linux NVDIMM <nvdimm@lists.linux.dev>,
+        Linux MM <linux-mm@kvack.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        "Darrick J. Wong" <djwong@kernel.org>, david <david@fromorbit.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Jane Chu <jane.chu@oracle.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---------------9JZJfTYHJwoaz9TXf050vTD7
-Content-Type: multipart/mixed; boundary="------------5uG9Wem0eqV10TpEHEbMJgh5";
- protected-headers="v1"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: xfs <linux-xfs@vger.kernel.org>
-Message-ID: <f2ff49db-9a85-1303-c268-3d9f035c2418@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs-5.15.0-rc1 released
+On Sun, Feb 27, 2022 at 4:08 AM Shiyang Ruan <ruansy.fnst@fujitsu.com> wrote:
+>
+> To easily track filesystem from a pmem device, we introduce a holder for
+> dax_device structure, and also its operation.  This holder is used to
+> remember who is using this dax_device:
+>  - When it is the backend of a filesystem, the holder will be the
+>    instance of this filesystem.
+>  - When this pmem device is one of the targets in a mapped device, the
+>    holder will be this mapped device.  In this case, the mapped device
+>    has its own dax_device and it will follow the first rule.  So that we
+>    can finally track to the filesystem we needed.
+>
+> The holder and holder_ops will be set when filesystem is being mounted,
+> or an target device is being activated.
+>
+> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+> ---
+>  drivers/dax/super.c | 89 +++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/dax.h | 32 ++++++++++++++++
+>  2 files changed, 121 insertions(+)
+>
+> diff --git a/drivers/dax/super.c b/drivers/dax/super.c
+> index e3029389d809..da5798e19d57 100644
+> --- a/drivers/dax/super.c
+> +++ b/drivers/dax/super.c
+> @@ -21,6 +21,9 @@
+>   * @cdev: optional character interface for "device dax"
+>   * @private: dax driver private data
+>   * @flags: state and boolean properties
+> + * @ops: operations for dax_device
+> + * @holder_data: holder of a dax_device: could be filesystem or mapped device
+> + * @holder_ops: operations for the inner holder
+>   */
+>  struct dax_device {
+>         struct inode inode;
+> @@ -28,6 +31,8 @@ struct dax_device {
+>         void *private;
+>         unsigned long flags;
+>         const struct dax_operations *ops;
+> +       void *holder_data;
+> +       const struct dax_holder_operations *holder_ops;
+>  };
+>
+>  static dev_t dax_devt;
+> @@ -193,6 +198,29 @@ int dax_zero_page_range(struct dax_device *dax_dev, pgoff_t pgoff,
+>  }
+>  EXPORT_SYMBOL_GPL(dax_zero_page_range);
+>
+> +int dax_holder_notify_failure(struct dax_device *dax_dev, u64 off,
+> +                             u64 len, int mf_flags)
+> +{
+> +       int rc, id;
+> +
+> +       id = dax_read_lock();
+> +       if (!dax_alive(dax_dev)) {
+> +               rc = -ENXIO;
+> +               goto out;
+> +       }
+> +
+> +       if (!dax_dev->holder_ops) {
+> +               rc = -EOPNOTSUPP;
 
---------------5uG9Wem0eqV10TpEHEbMJgh5
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+I think it is ok to return success (0) for this case. All the caller
+of dax_holder_notify_failure() wants to know is if the notification
+was successfully delivered to the holder. If there is no holder
+present then there is nothing to report. This is minor enough for me
+to fix up locally if nothing else needs to be changed.
 
-Hi folks,
+> +               goto out;
+> +       }
+> +
+> +       rc = dax_dev->holder_ops->notify_failure(dax_dev, off, len, mf_flags);
+> +out:
+> +       dax_read_unlock(id);
+> +       return rc;
+> +}
+> +EXPORT_SYMBOL_GPL(dax_holder_notify_failure);
+> +
+>  #ifdef CONFIG_ARCH_HAS_PMEM_API
+>  void arch_wb_cache_pmem(void *addr, size_t size);
+>  void dax_flush(struct dax_device *dax_dev, void *addr, size_t size)
+> @@ -268,6 +296,10 @@ void kill_dax(struct dax_device *dax_dev)
+>
+>         clear_bit(DAXDEV_ALIVE, &dax_dev->flags);
+>         synchronize_srcu(&dax_srcu);
+> +
+> +       /* clear holder data */
+> +       dax_dev->holder_ops = NULL;
+> +       dax_dev->holder_data = NULL;
 
-The xfsprogs repository at:
+Isn't this another failure scenario? If kill_dax() is called while a
+holder is still holding the dax_device that seems to be another
+->notify_failure scenario to tell the holder that the device is going
+away and the holder has not released the device yet.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+>  }
+>  EXPORT_SYMBOL_GPL(kill_dax);
+>
+> @@ -409,6 +441,63 @@ void put_dax(struct dax_device *dax_dev)
+>  }
+>  EXPORT_SYMBOL_GPL(put_dax);
+>
+> +/**
+> + * dax_holder() - obtain the holder of a dax device
+> + * @dax_dev: a dax_device instance
+> +
+> + * Return: the holder's data which represents the holder if registered,
+> + * otherwize NULL.
+> + */
+> +void *dax_holder(struct dax_device *dax_dev)
+> +{
+> +       if (!dax_alive(dax_dev))
+> +               return NULL;
 
-has just been updated and tagged with v5.15.0-rc1
+It's safe for the holder to assume that it can de-reference
+->holder_data freely in its notify_handler callback because
+dax_holder_notify_failure() arranges for the callback to run in
+dax_read_lock() context.
 
-This is close to (finally!) v5.15.0 final, though I hope to get
-Darrick's log size change in before it's done, as switching feature
-defaults at the same time as the log size change feels ... tidy.
+This is another minor detail that I can fixup locally.
 
-Patches often get missed, so please check if your outstanding
-patches were in this update. If they have not been in this update,
-please resubmit them to linux-xfs@vger.kernel.org so they can be
-picked up in the next update.
+> +
+> +       return dax_dev->holder_data;
+> +}
+> +EXPORT_SYMBOL_GPL(dax_holder);
+> +
+> +/**
+> + * dax_register_holder() - register a holder to a dax device
+> + * @dax_dev: a dax_device instance
+> + * @holder: a pointer to a holder's data which represents the holder
+> + * @ops: operations of this holder
+> +
+> + * Return: negative errno if an error occurs, otherwise 0.
+> + */
+> +int dax_register_holder(struct dax_device *dax_dev, void *holder,
+> +               const struct dax_holder_operations *ops)
+> +{
+> +       if (!dax_alive(dax_dev))
+> +               return -ENXIO;
+> +
+> +       if (cmpxchg(&dax_dev->holder_data, NULL, holder))
+> +               return -EBUSY;
+> +
+> +       dax_dev->holder_ops = ops;
+> +       return 0;
+> +}
+> +EXPORT_SYMBOL_GPL(dax_register_holder);
+> +
+> +/**
+> + * dax_unregister_holder() - unregister the holder for a dax device
+> + * @dax_dev: a dax_device instance
+> + * @holder: the holder to be unregistered
+> + *
+> + * Return: negative errno if an error occurs, otherwise 0.
+> + */
+> +int dax_unregister_holder(struct dax_device *dax_dev, void *holder)
+> +{
+> +       if (!dax_alive(dax_dev))
+> +               return -ENXIO;
+> +
+> +       if (cmpxchg(&dax_dev->holder_data, holder, NULL) != holder)
+> +               return -EBUSY;
+> +       dax_dev->holder_ops = NULL;
+> +       return 0;
+> +}
+> +EXPORT_SYMBOL_GPL(dax_unregister_holder);
+> +
+>  /**
+>   * inode_dax: convert a public inode into its dax_dev
+>   * @inode: An inode with i_cdev pointing to a dax_dev
+> diff --git a/include/linux/dax.h b/include/linux/dax.h
+> index 9fc5f99a0ae2..262d7bad131a 100644
+> --- a/include/linux/dax.h
+> +++ b/include/linux/dax.h
+> @@ -32,8 +32,24 @@ struct dax_operations {
+>         int (*zero_page_range)(struct dax_device *, pgoff_t, size_t);
+>  };
+>
+> +struct dax_holder_operations {
+> +       /*
+> +        * notify_failure - notify memory failure into inner holder device
+> +        * @dax_dev: the dax device which contains the holder
+> +        * @offset: offset on this dax device where memory failure occurs
+> +        * @len: length of this memory failure event
 
-The new head of the master branch is commit:
+Forgive me if this has been discussed before, but since dax_operations
+are in terms of pgoff and nr pages and memory_failure() is in terms of
+pfns what was the rationale for making the function signature byte
+based?
 
-6b4ec98f (HEAD -> for-next, tag: v5.15.0-rc1, korg/master, korg/for-next,=
- refs/patches/for-next/5.15.rc0.1) xfsprogs: Release v5.15.0-rc1
-
-New Commits:
-
-Darrick J. Wong (3):
-      [1e7212c8] xfs_scrub: report optional features in version string
-      [d6febe33] xfs_scrub: fix reporting if we can't open raw block devi=
-ces
-      [a3e22408] mkfs: add a config file for x86_64 pmem filesystems
-
-Eric Sandeen (6):
-      [3cd200ff] xfs_quota: document unit multipliers used in limit comma=
-nd
-      [d8913327] mkfs.xfs(8): remove incorrect default inode allocator de=
-scription
-      [c10023e4] xfs_quota: don't exit on fs_table_insert_project_path fa=
-ilure
-      [12518245] xfs_repair: don't guess about failure reason in phase6
-      [069610ec] xfs_quota: fix up dump and report documentation
-      [6b4ec98f] xfsprogs: Release v5.15.0-rc1
-
-
-Code Diffstat:
-
- VERSION                |  2 +-
- configure.ac           |  2 +-
- doc/CHANGES            | 18 ++++++++++++++++++
- libfrog/paths.c        |  8 ++------
- libfrog/paths.h        |  2 +-
- man/man8/mkfs.xfs.8.in | 19 ++++++-------------
- man/man8/xfs_quota.8   | 18 ++++++++++++++++--
- mkfs/Makefile          |  1 +
- mkfs/dax_x86_64.conf   | 19 +++++++++++++++++++
- quota/project.c        | 10 ++++++++--
- quota/report.c         | 10 ++++------
- repair/phase6.c        | 30 +++++++++---------------------
- scrub/phase1.c         | 20 +++++++++++---------
- scrub/xfs_scrub.c      | 26 ++++++++++++++++++++++----
- 14 files changed, 119 insertions(+), 66 deletions(-)
- create mode 100644 mkfs/dax_x86_64.conf
-
---------------5uG9Wem0eqV10TpEHEbMJgh5--
-
---------------9JZJfTYHJwoaz9TXf050vTD7
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature"
-
------BEGIN PGP SIGNATURE-----
-
-wsF5BAABCAAjFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAmIrlqAFAwAAAAAACgkQIK4WkuE93uCm
-kBAAsB76mL73PbfIM8plruqNW0h+/4EBzW0pdtAHL7Iqtgc1LSyEk3x3lY0bKdCcW6qK3O3OGoDu
-EMN+aFct8hzSmA0V/PmHunI64xKYyybD9Af56cGLaMZEQ0L9nK1vXrecrTw151AojciK4bt3SrPu
-ihjE8jpi+PEZGIsGaB6WqNazUimhHWl9wtEWvznl85kcoxe2UZQP5v28fTmLUYFD6ddUliP1JJg+
-qqXGy4CqCe/3D/Cx8anlNjK4odPu72pjRq43UsNFJNHDpjVMnAh/+C4ESvqD8mdLGU56eDigiscP
-ydEN3yd22LOVuZZKgxcdHBep9bAIPPkGDkJsr0McMoTasi1EX2QmnxqNVVbq3aNjvUaLGZzhc+m0
-pipgKQN8lPOwPOxQPPhqyvTdD9Gwk8xq0IsF33Po3y2EvXT9ZX8jMmaB41kkpwddJADpqmtTgjaK
-luY04jJKmBCL+1O5JDSh8DWXhxpQQV3Yzb4o575xjjkQY3KLj11IYGwMWLPz9oMT0urew7MYLDgs
-H/wpgAm8z/OdY4llAAQv3WvXR3D4zTNmDyBAiYt4vQOdlEGQRqyTevjyCq0VomuL+1TXzIhwKoFE
-hPDw2XbeAJps8yimAulGhZWEGm9nDdMhwj+552+pKkgnsVej2IH3Y4yJLk6FhGIFuYvrD0+gDaSK
-j2Y=
-=QCZX
------END PGP SIGNATURE-----
-
---------------9JZJfTYHJwoaz9TXf050vTD7--
+I want to get this series merged into linux-next shortly after
+v5.18-rc1. Then we can start working on incremental fixups rather
+resending the full series with these long reply cycles.
