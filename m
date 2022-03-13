@@ -2,259 +2,223 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0C7EC433EF
-	for <linux-xfs@archiver.kernel.org>; Fri, 11 Mar 2022 23:35:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADA23C433F5
+	for <linux-xfs@archiver.kernel.org>; Sun, 13 Mar 2022 15:47:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229613AbiCKXga (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 11 Mar 2022 18:36:30 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43678 "EHLO
+        id S234857AbiCMPsf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 13 Mar 2022 11:48:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59218 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229591AbiCKXg3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Mar 2022 18:36:29 -0500
-Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62B38D9966
-        for <linux-xfs@vger.kernel.org>; Fri, 11 Mar 2022 15:35:25 -0800 (PST)
-Received: by mail-pf1-x431.google.com with SMTP id h2so5170138pfh.6
-        for <linux-xfs@vger.kernel.org>; Fri, 11 Mar 2022 15:35:25 -0800 (PST)
+        with ESMTP id S234899AbiCMPse (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 13 Mar 2022 11:48:34 -0400
+Received: from mail-ej1-x633.google.com (mail-ej1-x633.google.com [IPv6:2a00:1450:4864:20::633])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D631F210F
+        for <linux-xfs@vger.kernel.org>; Sun, 13 Mar 2022 08:47:23 -0700 (PDT)
+Received: by mail-ej1-x633.google.com with SMTP id dr20so28763811ejc.6
+        for <linux-xfs@vger.kernel.org>; Sun, 13 Mar 2022 08:47:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20210112.gappssmtp.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=13t7T+1H2gbtDRvuwDVr1bm3a+2J2xIzpet95fdBuh4=;
-        b=RIgXQdVfVb6lODawzvdTxr4kAtwLPsRjREsyVUC9K9FXvakpJNymy17e6FkbZx5Gvv
-         LeDcUKOKw2VoVa83HdzrEPE+n4lq8xuCULunoupKYxugg5JDuOq5trFf3fm42gMytdUt
-         ERkjzkjwpAU0zoJJj8eO/F2dpsyBXR6QjMjtDGcOsDfDr2CJipG41gyKlmh4HlNGNwWJ
-         vwkcU6O57nxaJWLRTl+0Hya9nMI7GHfWxpWRkjw+wUNIj2S8tgExKh9huQ4lWfIYS5K0
-         A8C1eX/+5cBiho3K4ItispCSGtWUy9zYfhJ3aJCa4TY2pJ8nVxCb77Wvrz7OmBeIoOjA
-         1QIQ==
+        d=colorfullife-com.20210112.gappssmtp.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:content-language:to:from
+         :subject:cc:content-transfer-encoding;
+        bh=xxuyoCp3IpYhBrr9Kl/RpkxTwP+UwgQCaB5jhtXZLZc=;
+        b=Rl6/Scd+3XiVXJawD0FjGz0gQbxVrfIESLSe5x7zuC64Y9Ke7F84IhYuD4uz1tZCW2
+         KJ4xNAW8+vl7+IuD/8rR3K8W09OsImyPgO+AiMG5L0ccbdMoMSXdVpUhNTBoBtOkmhvO
+         TpMRugKQwhHeOJ5uZOoWT6JYL6I4vD0xkorK67WC+kaXyY/inBUKBuoASss4N/x8a4L1
+         SVbRYUu+ujVDfroHKnA8TRbv+wlf9GpHRWlRl6j/xc4dmEhnAt9tR47YJ+vjgiLBLyIe
+         +hexXSKekK720Smb7kRetGmT+jGFT6JBM+TyMhqoXLZaojGyrId0HGUxzOOzRbhMVBQu
+         eZ9A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=13t7T+1H2gbtDRvuwDVr1bm3a+2J2xIzpet95fdBuh4=;
-        b=MmymZ+EKQplTmAVpnE1+l2m03iRPxNNQSw6OUGj8CZSvAceSuZ5xLAcX110B0ddqtz
-         GknUrAy13ODSwpcJaEiNzS2Wn6LsyblWvqXDQY/d6LpQyIzY3UKXqo/MWccM5a9TVrTr
-         S44w7dh3LcyVT571/RDGhFwJc/E/Wx/ySUTTdVgk3B29LDR3cm83YViD3MV0PLavGe5+
-         GVdsshY/3rMRlAkHvo3JOwSbzxKRiZOVF9h7UxklBIb9l1vwS4ZQ+FhWtkmaogTM4cQa
-         0eu5ptyDOKqCdkNIWgR3xOxQdwkO+kaG0m7/PXCNOTYFpoRT6mmKmhUAfJ2ksFQK6fk9
-         0a/g==
-X-Gm-Message-State: AOAM533lWTZvUFxlB4BS163X45FpORJvkRMAquomWIrGeYnZkc4A0qBP
-        4Eo6mitXn66MzTj6mSwzygqsHy9E/OS24N4OQvswGQ==
-X-Google-Smtp-Source: ABdhPJy2YDPTfdvIBlgNDhr+xnU7i87kZGa7MwrAaA3nvXLDFGkcmuMWf5/eMsJKEsCu2BWW9StjfFYHKRuRIZXl8BI=
-X-Received: by 2002:a62:1481:0:b0:4f6:38c0:ed08 with SMTP id
- 123-20020a621481000000b004f638c0ed08mr12796868pfu.86.1647041724808; Fri, 11
- Mar 2022 15:35:24 -0800 (PST)
+        h=x-gm-message-state:message-id:date:mime-version:user-agent
+         :content-language:to:from:subject:cc:content-transfer-encoding;
+        bh=xxuyoCp3IpYhBrr9Kl/RpkxTwP+UwgQCaB5jhtXZLZc=;
+        b=3duNzicScWjzeB5tqAA7ZD4Zr6EMnxcp02Mvy6Qdppac5SgBWKtjtb3sioPrq9/YsB
+         oGUeDitNzeXN1Qw2UJAI64n5FVgtGsmWJXfxQp+j89zBdW6jqNzYTJwyKsQ6or58mvA5
+         8tMbDKH8zUNRZp0toZRzueOf3rNwRjfImeOlK74bOj6aNUADHfDn/NJ0bsgvDCJNbBIb
+         /vx7tySPxNFaQLD5kDMtfWWl4pyIYwkTOEyxjnPzxOcUsvEHwsBP0GH4Nf8WxmDPJ34n
+         HIeR44tIO1b1SR3vsKrLKOKgqfPGo65vRv5Uw6KvWsLe1JScaj2shnAIYSeWL2Ij3gQJ
+         RHAg==
+X-Gm-Message-State: AOAM5310Mb3oC+dr339d0TxhXIhK0qjELcGgFv1vjAZGHruuqqKo3dRz
+        EPr0KPl3zPdw1sU/i5v1KvPFeojA755dkA==
+X-Google-Smtp-Source: ABdhPJw7oKD3WOx8hv925ZXDJeu/pAnJ3DYfgo7jVuGu5JkK/3hfYTtzyJgdIDEohFvl+/i3vmlRUw==
+X-Received: by 2002:a17:907:7e90:b0:6da:49e4:c7be with SMTP id qb16-20020a1709077e9000b006da49e4c7bemr15799130ejc.493.1647186441330;
+        Sun, 13 Mar 2022 08:47:21 -0700 (PDT)
+Received: from ?IPV6:2003:d9:9704:7c00:b4c3:cb25:4133:3ad1? (p200300d997047c00b4c3cb2541333ad1.dip0.t-ipconnect.de. [2003:d9:9704:7c00:b4c3:cb25:4133:3ad1])
+        by smtp.googlemail.com with ESMTPSA id m3-20020a17090679c300b006cf9ce53354sm5666637ejo.190.2022.03.13.08.47.20
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 13 Mar 2022 08:47:20 -0700 (PDT)
+Message-ID: <613af505-7646-366c-428a-b64659e1f7cf@colorfullife.com>
+Date:   Sun, 13 Mar 2022 16:47:19 +0100
 MIME-Version: 1.0
-References: <20220227120747.711169-1-ruansy.fnst@fujitsu.com> <20220227120747.711169-2-ruansy.fnst@fujitsu.com>
-In-Reply-To: <20220227120747.711169-2-ruansy.fnst@fujitsu.com>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Fri, 11 Mar 2022 15:35:13 -0800
-Message-ID: <CAPcyv4jAqV7dZdmGcKrG=f8sYmUXaL7YCQtME6GANywncwd+zg@mail.gmail.com>
-Subject: Re: [PATCH v11 1/8] dax: Introduce holder for dax_device
-To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Linux NVDIMM <nvdimm@lists.linux.dev>,
-        Linux MM <linux-mm@kvack.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        "Darrick J. Wong" <djwong@kernel.org>, david <david@fromorbit.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Jane Chu <jane.chu@oracle.com>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.2
+Content-Language: en-US
+To:     linux-xfs@vger.kernel.org
+From:   Manfred Spraul <manfred@colorfullife.com>
+Subject: Metadata CRC error detected at xfs_dir3_block_read_verify+0x9e/0xc0
+ [xfs], xfs_dir3_block block 0x86f58
+Cc:     "Spraul Manfred (XC/QMM21-CT)" <Manfred.Spraul@de.bosch.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Feb 27, 2022 at 4:08 AM Shiyang Ruan <ruansy.fnst@fujitsu.com> wrote:
->
-> To easily track filesystem from a pmem device, we introduce a holder for
-> dax_device structure, and also its operation.  This holder is used to
-> remember who is using this dax_device:
->  - When it is the backend of a filesystem, the holder will be the
->    instance of this filesystem.
->  - When this pmem device is one of the targets in a mapped device, the
->    holder will be this mapped device.  In this case, the mapped device
->    has its own dax_device and it will follow the first rule.  So that we
->    can finally track to the filesystem we needed.
->
-> The holder and holder_ops will be set when filesystem is being mounted,
-> or an target device is being activated.
->
-> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
-> ---
->  drivers/dax/super.c | 89 +++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/dax.h | 32 ++++++++++++++++
->  2 files changed, 121 insertions(+)
->
-> diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-> index e3029389d809..da5798e19d57 100644
-> --- a/drivers/dax/super.c
-> +++ b/drivers/dax/super.c
-> @@ -21,6 +21,9 @@
->   * @cdev: optional character interface for "device dax"
->   * @private: dax driver private data
->   * @flags: state and boolean properties
-> + * @ops: operations for dax_device
-> + * @holder_data: holder of a dax_device: could be filesystem or mapped device
-> + * @holder_ops: operations for the inner holder
->   */
->  struct dax_device {
->         struct inode inode;
-> @@ -28,6 +31,8 @@ struct dax_device {
->         void *private;
->         unsigned long flags;
->         const struct dax_operations *ops;
-> +       void *holder_data;
-> +       const struct dax_holder_operations *holder_ops;
->  };
->
->  static dev_t dax_devt;
-> @@ -193,6 +198,29 @@ int dax_zero_page_range(struct dax_device *dax_dev, pgoff_t pgoff,
->  }
->  EXPORT_SYMBOL_GPL(dax_zero_page_range);
->
-> +int dax_holder_notify_failure(struct dax_device *dax_dev, u64 off,
-> +                             u64 len, int mf_flags)
-> +{
-> +       int rc, id;
-> +
-> +       id = dax_read_lock();
-> +       if (!dax_alive(dax_dev)) {
-> +               rc = -ENXIO;
-> +               goto out;
-> +       }
-> +
-> +       if (!dax_dev->holder_ops) {
-> +               rc = -EOPNOTSUPP;
+Hello together,
 
-I think it is ok to return success (0) for this case. All the caller
-of dax_holder_notify_failure() wants to know is if the notification
-was successfully delivered to the holder. If there is no holder
-present then there is nothing to report. This is minor enough for me
-to fix up locally if nothing else needs to be changed.
 
-> +               goto out;
-> +       }
-> +
-> +       rc = dax_dev->holder_ops->notify_failure(dax_dev, off, len, mf_flags);
-> +out:
-> +       dax_read_unlock(id);
-> +       return rc;
-> +}
-> +EXPORT_SYMBOL_GPL(dax_holder_notify_failure);
-> +
->  #ifdef CONFIG_ARCH_HAS_PMEM_API
->  void arch_wb_cache_pmem(void *addr, size_t size);
->  void dax_flush(struct dax_device *dax_dev, void *addr, size_t size)
-> @@ -268,6 +296,10 @@ void kill_dax(struct dax_device *dax_dev)
+after a simulated power failure, I have observed:
+
+ >>>
+
+Metadata CRC error detected at xfs_dir3_block_read_verify+0x9e/0xc0 
+[xfs], xfs_dir3_block block 0x86f58
+[14768.047531] XFS (loop0): Unmount and run xfs_repair
+[14768.047534] XFS (loop0): First 128 bytes of corrupted metadata buffer:
+[14768.047537] 00000000: 58 44 42 33 9f ab d7 f4 00 00 00 00 00 08 6f 
+58  XDB3..........oX
+
+<<<
+
+Is this a known issue?
+
+The image file is here: 
+https://github.com/manfred-colorfu/nbd-datalog-referencefiles/blob/main/xfs-02/result/data-1821799.img.xz
+
+As first question:
+
+Are 512 byte sectors supported, or does xfs assume that 4096 byte writes 
+are atomic?
+
+
+How were the power failures simulated:
+
+I added support to nbd to log all write operations, including the 
+written data. This got merged into nbd-3.24
+
+I've used that to create a log of running dbench (+ a few tar/rm/manual 
+tests) on a 500 MB image file.
+
+In total, 2.9 mio 512-byte sector writes. The datalog is ~1.5 GB long.
+
+If replaying the initial 1,821,799, 1,821,800, 1,821,801 or 1,821,802 
+blocks, the above listed error message is shown.
+
+After 1,821,799 or 1,821,803 sectors, everything is ok.
+
+(block numbers are 0-based)
+
+> > H=2400000047010000 C=0x00000001 (NBD_CMD_WRITE+NONE) 
+> O=0000000010deb000 L=00001000
+> block 1821795 (0x1bcc63): writing to offset 283029504 (0x10deb000), 
+> len 512 (0x200).
+> block 1821796 (0x1bcc64): writing to offset 283030016 (0x10deb200), 
+> len 512 (0x200).
+> block 1821797 (0x1bcc65): writing to offset 283030528 (0x10deb400), 
+> len 512 (0x200).  << OK
+> block 1821798 (0x1bcc66): writing to offset 283031040 (0x10deb600), 
+> len 512 (0x200).  FAIL
+> block 1821799 (0x1bcc67): writing to offset 283031552 (0x10deb800), 
+> len 512 (0x200).  FAIL
+> block 1821800 (0x1bcc68): writing to offset 283032064 (0x10deba00), 
+> len 512 (0x200).  FAIL
+> block 1821801 (0x1bcc69): writing to offset 283032576 (0x10debc00), 
+> len 512 (0x200).  FAIL
+> block 1821802 (0x1bcc6a): writing to offset 283033088 (0x10debe00), 
+> len 512 (0x200). << OK
 >
->         clear_bit(DAXDEV_ALIVE, &dax_dev->flags);
->         synchronize_srcu(&dax_srcu);
-> +
-> +       /* clear holder data */
-> +       dax_dev->holder_ops = NULL;
-> +       dax_dev->holder_data = NULL;
 
-Isn't this another failure scenario? If kill_dax() is called while a
-holder is still holding the dax_device that seems to be another
-->notify_failure scenario to tell the holder that the device is going
-away and the holder has not released the device yet.
+The output from xfs_repair is below.
 
->  }
->  EXPORT_SYMBOL_GPL(kill_dax);
->
-> @@ -409,6 +441,63 @@ void put_dax(struct dax_device *dax_dev)
->  }
->  EXPORT_SYMBOL_GPL(put_dax);
->
-> +/**
-> + * dax_holder() - obtain the holder of a dax device
-> + * @dax_dev: a dax_device instance
-> +
-> + * Return: the holder's data which represents the holder if registered,
-> + * otherwize NULL.
-> + */
-> +void *dax_holder(struct dax_device *dax_dev)
-> +{
-> +       if (!dax_alive(dax_dev))
-> +               return NULL;
+kernel: 5.16.12-200.fc35.x86_64
 
-It's safe for the holder to assume that it can de-reference
-->holder_data freely in its notify_handler callback because
-dax_holder_notify_failure() arranges for the callback to run in
-dax_read_lock() context.
+nbd:nbd-3.24-1.fc37.x86_64
 
-This is another minor detail that I can fixup locally.
+mkfs options: mkfs.xfs /dev/nbd0 -m bigtime=1 -m finobt=1 -m rmapbt=1
 
-> +
-> +       return dax_dev->holder_data;
-> +}
-> +EXPORT_SYMBOL_GPL(dax_holder);
-> +
-> +/**
-> + * dax_register_holder() - register a holder to a dax device
-> + * @dax_dev: a dax_device instance
-> + * @holder: a pointer to a holder's data which represents the holder
-> + * @ops: operations of this holder
-> +
-> + * Return: negative errno if an error occurs, otherwise 0.
-> + */
-> +int dax_register_holder(struct dax_device *dax_dev, void *holder,
-> +               const struct dax_holder_operations *ops)
-> +{
-> +       if (!dax_alive(dax_dev))
-> +               return -ENXIO;
-> +
-> +       if (cmpxchg(&dax_dev->holder_data, NULL, holder))
-> +               return -EBUSY;
-> +
-> +       dax_dev->holder_ops = ops;
-> +       return 0;
-> +}
-> +EXPORT_SYMBOL_GPL(dax_register_holder);
-> +
-> +/**
-> + * dax_unregister_holder() - unregister the holder for a dax device
-> + * @dax_dev: a dax_device instance
-> + * @holder: the holder to be unregistered
-> + *
-> + * Return: negative errno if an error occurs, otherwise 0.
-> + */
-> +int dax_unregister_holder(struct dax_device *dax_dev, void *holder)
-> +{
-> +       if (!dax_alive(dax_dev))
-> +               return -ENXIO;
-> +
-> +       if (cmpxchg(&dax_dev->holder_data, holder, NULL) != holder)
-> +               return -EBUSY;
-> +       dax_dev->holder_ops = NULL;
-> +       return 0;
-> +}
-> +EXPORT_SYMBOL_GPL(dax_unregister_holder);
-> +
->  /**
->   * inode_dax: convert a public inode into its dax_dev
->   * @inode: An inode with i_cdev pointing to a dax_dev
-> diff --git a/include/linux/dax.h b/include/linux/dax.h
-> index 9fc5f99a0ae2..262d7bad131a 100644
-> --- a/include/linux/dax.h
-> +++ b/include/linux/dax.h
-> @@ -32,8 +32,24 @@ struct dax_operations {
->         int (*zero_page_range)(struct dax_device *, pgoff_t, size_t);
->  };
->
-> +struct dax_holder_operations {
-> +       /*
-> +        * notify_failure - notify memory failure into inner holder device
-> +        * @dax_dev: the dax device which contains the holder
-> +        * @offset: offset on this dax device where memory failure occurs
-> +        * @len: length of this memory failure event
+mount options: mount -t xfs -o uqnoenforce /dev/nbd0 $tmpmnt
 
-Forgive me if this has been discussed before, but since dax_operations
-are in terms of pgoff and nr pages and memory_failure() is in terms of
-pfns what was the rationale for making the function signature byte
-based?
+Generator script: 
+https://github.com/manfred-colorfu/nbd-datalog-referencefiles/blob/main/xfs-02/generator/maketr
 
-I want to get this series merged into linux-next shortly after
-v5.18-rc1. Then we can start working on incremental fixups rather
-resending the full series with these long reply cycles.
+Further log file are also on github: 
+https://github.com/manfred-colorfu/nbd-datalog-referencefiles/tree/main/xfs-02/result
+
+
+<<<
+
+/dev/loop0: [0037]:17060 (/tmp/data-341131.img)
+Phase 1 - find and verify superblock...
+         - block cache size set to 759616 entries
+Phase 2 - using internal log
+         - zero log...
+zero_log: head block 734 tail block 734
+         - scan filesystem freespace and inode maps...
+         - found root inode chunk
+Phase 3 - for each AG...
+         - scan (but don't clear) agi unlinked lists...
+         - process known inodes and perform inode discovery...
+         - agno = 0
+         - agno = 1
+         - agno = 2
+Metadata CRC error detected at 0x563aa27804c3, xfs_dir3_block block 
+0x86f58/0x1000
+corrupt block 0 in directory inode 551205
+         would junk block
+no . entry for directory 551205
+no .. entry for directory 551205
+problem with directory contents in inode 551205
+would have cleared inode 551205
+         - agno = 3
+         - process newly discovered inodes...
+Phase 4 - check for duplicate blocks...
+         - setting up duplicate extent list...
+         - check for inodes claiming duplicate blocks...
+         - agno = 1
+         - agno = 3
+         - agno = 2
+         - agno = 0
+corrupt block 0 in directory inode 551205
+         would junk block
+no . entry for directory 551205
+no .. entry for directory 551205
+problem with directory contents in inode 551205
+would have cleared inode 551205
+entry "COREL" in shortform directory 789069 references free inode 551205
+would have junked entry "COREL" in directory inode 789069
+No modify flag set, skipping phase 5
+Phase 6 - check inode connectivity...
+         - traversing filesystem ...
+         - agno = 0
+         - agno = 1
+         - agno = 2
+         - agno = 3
+entry "COREL" in shortform directory inode 789069 points to free inode 
+551205
+would junk entry
+         - traversal finished ...
+         - moving disconnected inodes to lost+found ...
+disconnected inode 551174, would move to lost+found
+disconnected inode 551176, would move to lost+found
+disconnected inode 551178, would move to lost+found
+disconnected inode 551180, would move to lost+found
+disconnected inode 551206, would move to lost+found
+disconnected inode 551207, would move to lost+found
+
+disconnected inode 551208, would move to lost+found
+disconnected inode 551209, would move to lost+found
+disconnected inode 551210, would move to lost+found
+disconnected inode 551211, would move to lost+found
+disconnected inode 551212, would move to lost+found
+disconnected inode 551213, would move to lost+found
+disconnected inode 551214, would move to lost+found
+disconnected inode 551215, would move to lost+found
+disconnected inode 551217, would move to lost+found
+Phase 7 - verify link counts...
+would have reset inode 789069 nlinks from 11 to 10
+No modify flag set, skipping filesystem flush and exiting.
+
+<<<<
+
+>>>
+
