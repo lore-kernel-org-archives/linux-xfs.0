@@ -2,223 +2,244 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ADA23C433F5
-	for <linux-xfs@archiver.kernel.org>; Sun, 13 Mar 2022 15:47:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BDD5C433EF
+	for <linux-xfs@archiver.kernel.org>; Sun, 13 Mar 2022 22:46:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234857AbiCMPsf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 13 Mar 2022 11:48:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59218 "EHLO
+        id S235625AbiCMWri (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 13 Mar 2022 18:47:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34170 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234899AbiCMPse (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 13 Mar 2022 11:48:34 -0400
-Received: from mail-ej1-x633.google.com (mail-ej1-x633.google.com [IPv6:2a00:1450:4864:20::633])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D631F210F
-        for <linux-xfs@vger.kernel.org>; Sun, 13 Mar 2022 08:47:23 -0700 (PDT)
-Received: by mail-ej1-x633.google.com with SMTP id dr20so28763811ejc.6
-        for <linux-xfs@vger.kernel.org>; Sun, 13 Mar 2022 08:47:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=colorfullife-com.20210112.gappssmtp.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:content-language:to:from
-         :subject:cc:content-transfer-encoding;
-        bh=xxuyoCp3IpYhBrr9Kl/RpkxTwP+UwgQCaB5jhtXZLZc=;
-        b=Rl6/Scd+3XiVXJawD0FjGz0gQbxVrfIESLSe5x7zuC64Y9Ke7F84IhYuD4uz1tZCW2
-         KJ4xNAW8+vl7+IuD/8rR3K8W09OsImyPgO+AiMG5L0ccbdMoMSXdVpUhNTBoBtOkmhvO
-         TpMRugKQwhHeOJ5uZOoWT6JYL6I4vD0xkorK67WC+kaXyY/inBUKBuoASss4N/x8a4L1
-         SVbRYUu+ujVDfroHKnA8TRbv+wlf9GpHRWlRl6j/xc4dmEhnAt9tR47YJ+vjgiLBLyIe
-         +hexXSKekK720Smb7kRetGmT+jGFT6JBM+TyMhqoXLZaojGyrId0HGUxzOOzRbhMVBQu
-         eZ9A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent
-         :content-language:to:from:subject:cc:content-transfer-encoding;
-        bh=xxuyoCp3IpYhBrr9Kl/RpkxTwP+UwgQCaB5jhtXZLZc=;
-        b=3duNzicScWjzeB5tqAA7ZD4Zr6EMnxcp02Mvy6Qdppac5SgBWKtjtb3sioPrq9/YsB
-         oGUeDitNzeXN1Qw2UJAI64n5FVgtGsmWJXfxQp+j89zBdW6jqNzYTJwyKsQ6or58mvA5
-         8tMbDKH8zUNRZp0toZRzueOf3rNwRjfImeOlK74bOj6aNUADHfDn/NJ0bsgvDCJNbBIb
-         /vx7tySPxNFaQLD5kDMtfWWl4pyIYwkTOEyxjnPzxOcUsvEHwsBP0GH4Nf8WxmDPJ34n
-         HIeR44tIO1b1SR3vsKrLKOKgqfPGo65vRv5Uw6KvWsLe1JScaj2shnAIYSeWL2Ij3gQJ
-         RHAg==
-X-Gm-Message-State: AOAM5310Mb3oC+dr339d0TxhXIhK0qjELcGgFv1vjAZGHruuqqKo3dRz
-        EPr0KPl3zPdw1sU/i5v1KvPFeojA755dkA==
-X-Google-Smtp-Source: ABdhPJw7oKD3WOx8hv925ZXDJeu/pAnJ3DYfgo7jVuGu5JkK/3hfYTtzyJgdIDEohFvl+/i3vmlRUw==
-X-Received: by 2002:a17:907:7e90:b0:6da:49e4:c7be with SMTP id qb16-20020a1709077e9000b006da49e4c7bemr15799130ejc.493.1647186441330;
-        Sun, 13 Mar 2022 08:47:21 -0700 (PDT)
-Received: from ?IPV6:2003:d9:9704:7c00:b4c3:cb25:4133:3ad1? (p200300d997047c00b4c3cb2541333ad1.dip0.t-ipconnect.de. [2003:d9:9704:7c00:b4c3:cb25:4133:3ad1])
-        by smtp.googlemail.com with ESMTPSA id m3-20020a17090679c300b006cf9ce53354sm5666637ejo.190.2022.03.13.08.47.20
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 13 Mar 2022 08:47:20 -0700 (PDT)
-Message-ID: <613af505-7646-366c-428a-b64659e1f7cf@colorfullife.com>
-Date:   Sun, 13 Mar 2022 16:47:19 +0100
+        with ESMTP id S235614AbiCMWrh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 13 Mar 2022 18:47:37 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 245717460C
+        for <linux-xfs@vger.kernel.org>; Sun, 13 Mar 2022 15:46:28 -0700 (PDT)
+Received: from dread.disaster.area (pa49-186-150-27.pa.vic.optusnet.com.au [49.186.150.27])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 5CF6E532BFC;
+        Mon, 14 Mar 2022 09:46:24 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nTWym-0058K1-1Q; Mon, 14 Mar 2022 09:46:24 +1100
+Date:   Mon, 14 Mar 2022 09:46:24 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Manfred Spraul <manfred@colorfullife.com>
+Cc:     linux-xfs@vger.kernel.org,
+        "Spraul Manfred (XC/QMM21-CT)" <Manfred.Spraul@de.bosch.com>
+Subject: Re: Metadata CRC error detected at
+ xfs_dir3_block_read_verify+0x9e/0xc0 [xfs], xfs_dir3_block block 0x86f58
+Message-ID: <20220313224624.GJ3927073@dread.disaster.area>
+References: <613af505-7646-366c-428a-b64659e1f7cf@colorfullife.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.2
-Content-Language: en-US
-To:     linux-xfs@vger.kernel.org
-From:   Manfred Spraul <manfred@colorfullife.com>
-Subject: Metadata CRC error detected at xfs_dir3_block_read_verify+0x9e/0xc0
- [xfs], xfs_dir3_block block 0x86f58
-Cc:     "Spraul Manfred (XC/QMM21-CT)" <Manfred.Spraul@de.bosch.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <613af505-7646-366c-428a-b64659e1f7cf@colorfullife.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=622e7442
+        a=sPqof0Mm7fxWrhYUF33ZaQ==:117 a=sPqof0Mm7fxWrhYUF33ZaQ==:17
+        a=8nJEP1OIZ-IA:10 a=o8Y5sQTvuykA:10 a=NEAV23lmAAAA:8 a=7-415B0cAAAA:8
+        a=cHkwaeUAlEJFQVVEHK4A:9 a=wPNLvfGTeEIA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello together,
+On Sun, Mar 13, 2022 at 04:47:19PM +0100, Manfred Spraul wrote:
+> Hello together,
+> 
+> 
+> after a simulated power failure, I have observed:
+> 
+> >>>
+> 
+> Metadata CRC error detected at xfs_dir3_block_read_verify+0x9e/0xc0 [xfs],
+> xfs_dir3_block block 0x86f58
+> [14768.047531] XFS (loop0): Unmount and run xfs_repair
+> [14768.047534] XFS (loop0): First 128 bytes of corrupted metadata buffer:
+> [14768.047537] 00000000: 58 44 42 33 9f ab d7 f4 00 00 00 00 00 08 6f 58�
+> XDB3..........oX
 
+For future reference, please paste the entire log message, from
+the time that the fs was mounted to the end of the hexdump output.
+You might not think the hexdump output is important, but as you'll
+see later....
 
-after a simulated power failure, I have observed:
+> <<<
+> 
+> Is this a known issue?
 
- >>>
+Is what a known issue? All this is XFS finding a corrupt metadata
+block because a CRC is invalid, which is exactly what it's supposed
+to do.
 
-Metadata CRC error detected at xfs_dir3_block_read_verify+0x9e/0xc0 
-[xfs], xfs_dir3_block block 0x86f58
-[14768.047531] XFS (loop0): Unmount and run xfs_repair
-[14768.047534] XFS (loop0): First 128 bytes of corrupted metadata buffer:
-[14768.047537] 00000000: 58 44 42 33 9f ab d7 f4 00 00 00 00 00 08 6f 
-58  XDB3..........oX
+As it is, CRC errors are indicative of storage problem such as bit
+errors and torn writes, because what has been read from disk does
+not match what XFS wrote when it calculated the CRC.
 
-<<<
+> The image file is here: https://github.com/manfred-colorfu/nbd-datalog-referencefiles/blob/main/xfs-02/result/data-1821799.img.xz
+> 
+> As first question:
+> 
+> Are 512 byte sectors supported, or does xfs assume that 4096 byte writes are
+> atomic?
 
-Is this a known issue?
+512 byte *IO* is supported on devices that have 512 byte sector
+support, but there are other rules that XFS sets for metadata. e.g.
+that metadata writes are expected to be written completely or
+replayed completely as a whole unit regardless of their length. This
+is bookended by the use of cache flushes and FUAs to ensure that
+multi-sector writes are wholly completed before the recovery
+information is tossed away.
 
-The image file is here: 
-https://github.com/manfred-colorfu/nbd-datalog-referencefiles/blob/main/xfs-02/result/data-1821799.img.xz
+If a cache flush has not been issued, then the metadata block
+recvoery information is whole in the journal, and so if we crash or
+lose power then journal recovery replays the changes and overwrites
+whatever is on the disk with the correct, consistent metadata.
 
-As first question:
+Log recovery will also issue large writes and cache flushes will
+occur as part of the process so that the recovered metadata is whole
+on stable storage before it is removed from the journal.
 
-Are 512 byte sectors supported, or does xfs assume that 4096 byte writes 
-are atomic?
+IOWs, if the storage ends up doing a partial write as a result of a
+power failure, log recovery fixes that up if it is still in the
+journal. If it is not in the journal then a cache flush *must* have
+happened, and hence the metadata is complete on disk.
 
+So....
 
-How were the power failures simulated:
+> How were the power failures simulated:
+> 
+> I added support to nbd to log all write operations, including the written
+> data. This got merged into nbd-3.24
+> 
+> I've used that to create a log of running dbench (+ a few tar/rm/manual
+> tests) on a 500 MB image file.
+> 
+> In total, 2.9 mio 512-byte sector writes. The datalog is ~1.5 GB long.
+> 
+> If replaying the initial 1,821,799, 1,821,800, 1,821,801 or 1,821,802
+> blocks, the above listed error message is shown.
+> 
+> After 1,821,799 or 1,821,803 sectors, everything is ok.
+> 
+> (block numbers are 0-based)
+> 
+> > > H=2400000047010000 C=0x00000001 (NBD_CMD_WRITE+NONE)
+> > O=0000000010deb000 L=00001000
+> > block 1821795 (0x1bcc63): writing to offset 283029504 (0x10deb000), len
+> > 512 (0x200).
+> > block 1821796 (0x1bcc64): writing to offset 283030016 (0x10deb200), len
+> > 512 (0x200).
+> > block 1821797 (0x1bcc65): writing to offset 283030528 (0x10deb400), len
+> > 512 (0x200).� << OK
+> > block 1821798 (0x1bcc66): writing to offset 283031040 (0x10deb600), len
+> > 512 (0x200).� FAIL
+> > block 1821799 (0x1bcc67): writing to offset 283031552 (0x10deb800), len
+> > 512 (0x200).� FAIL
+> > block 1821800 (0x1bcc68): writing to offset 283032064 (0x10deba00), len
+> > 512 (0x200).� FAIL
+> > block 1821801 (0x1bcc69): writing to offset 283032576 (0x10debc00), len
+> > 512 (0x200).� FAIL
+> > block 1821802 (0x1bcc6a): writing to offset 283033088 (0x10debe00), len
+> > 512 (0x200). << OK
 
-I added support to nbd to log all write operations, including the 
-written data. This got merged into nbd-3.24
+OK, this test is explicitly tearing writes at the storage level.
+When there is an update to multiple sectors of the metadata block,
+the metadata will be inconsistent on disk while those individual
+sector writes are replayed.
 
-I've used that to create a log of running dbench (+ a few tar/rm/manual 
-tests) on a 500 MB image file.
+For example the problem here is likely the LSN that this write
+stamps into the header along with the updated CRC. Log recovery
+doesn't actually check the incoming CRC because it might be invalid
+(say, due to a torn write) but it does check the magic number and
+then the LSN that is stamped into the metadata block to determine if
+it should be replayed or not (i.e. we have metadata version
+checks in recovery).
 
-In total, 2.9 mio 512-byte sector writes. The datalog is ~1.5 GB long.
+If the LSN that is stamped into the header is more recent that the
+object version that log recovery is trying to replay, it will skip
+replay because that can result in unnecessary transient corruption
+of the metadata on disk that doesn't get corrected until later in
+the recovery process. This is bad - if log recovery then fails
+before we recover then more recent changes, we've created new
+on-disk corruption and made things worse, not better....
 
-If replaying the initial 1,821,799, 1,821,800, 1,821,801 or 1,821,802 
-blocks, the above listed error message is shown.
+So, let's find the log recovery lsn (same in all images) via
+logprint - it's last logged as part of this transaction:
 
-After 1,821,799 or 1,821,803 sectors, everything is ok.
+LOG REC AT LSN cycle 15 block 604 (0xf, 0x25c)                                   
+============================================================================     
+TRANS: tid:0x6d1b8e4f  #items:201  trans:0x6d1b8e4f q:0x5608eeb23bd0 
 
-(block numbers are 0-based)
+And there are 3 data regions in it:
 
-> > H=2400000047010000 C=0x00000001 (NBD_CMD_WRITE+NONE) 
-> O=0000000010deb000 L=00001000
-> block 1821795 (0x1bcc63): writing to offset 283029504 (0x10deb000), 
-> len 512 (0x200).
-> block 1821796 (0x1bcc64): writing to offset 283030016 (0x10deb200), 
-> len 512 (0x200).
-> block 1821797 (0x1bcc65): writing to offset 283030528 (0x10deb400), 
-> len 512 (0x200).  << OK
-> block 1821798 (0x1bcc66): writing to offset 283031040 (0x10deb600), 
-> len 512 (0x200).  FAIL
-> block 1821799 (0x1bcc67): writing to offset 283031552 (0x10deb800), 
-> len 512 (0x200).  FAIL
-> block 1821800 (0x1bcc68): writing to offset 283032064 (0x10deba00), 
-> len 512 (0x200).  FAIL
-> block 1821801 (0x1bcc69): writing to offset 283032576 (0x10debc00), 
-> len 512 (0x200).  FAIL
-> block 1821802 (0x1bcc6a): writing to offset 283033088 (0x10debe00), 
-> len 512 (0x200). << OK
->
+BUF: cnt:4 total:4 a:0x5608eeb23f60 len:24 a:0x5608eeb20f70 len:128 a:0x5608eeb23970 len:384 a:0x5608eeb22130 len:256 
+        BUF:  #regs:4   start blkno:0x86f58   len:8   bmap size:1   flags:0x5000 
+        BUF DATA                                                                 
+        BUF DATA                                                                 
+        BUF DATA 
 
-The output from xfs_repair is below.
+The three regions are 128 bytes, 384 bytes and 256 bytes long. The
+first chunk is clearly the first 128 bytes of the sector:
 
-kernel: 5.16.12-200.fc35.x86_64
+40       69    4123c    85000    86f58        0        1 c000001d 4f8e1b6d       
+            buf item             daddr			  TID
+48 80000000       69 33424458 b21e33d9        0 586f0800  e000000 29580000       
+   ophdr flags   ID  XDB3     CRC   		daddr     CYCLE    BLCK
+50 23355a53 f14c2c57 b07cac8d b7eca938        0 25690800 400d2802 30006801       
+58 3000c801        0        0 25690800    22e01 40000000        0 4d0a0c00       
+60  22e2e02 50000000        0 26690800 5244430b 534c4f52 4746432e 60000001       
+68        0 27690800 4f8e1b6d
 
-nbd:nbd-3.24-1.fc37.x86_64
+So, when this item was logged, the LSN in the in memory buffer was
+(0xe,0x5829), and it is being replayed at (0xf,0x25c). That's good,
+it indicates what is in the journal is valid but what is in the
+block on disk?
 
-mkfs options: mkfs.xfs /dev/nbd0 -m bigtime=1 -m finobt=1 -m rmapbt=1
+xfs_db> daddr 0x86f58 
+xfs_db> p
+000: 58444233 9fabd7f4 00000000 00086f58 0000000f 0000025c 535a3523 572c4cf1
+     magic    crc               daddr     block    cycle   ....
 
-mount options: mount -t xfs -o uqnoenforce /dev/nbd0 $tmpmnt
+Oh, I didn't need to get it off disk like this - it's in the second
+line of the hexdump output in the corruption reports:
 
-Generator script: 
-https://github.com/manfred-colorfu/nbd-datalog-referencefiles/blob/main/xfs-02/generator/maketr
+[15063.024355] XFS (loop0): Metadata CRC error detected at xfs_dir3_block_read_verify+0x9e/0xc0 [xfs], xfs_dir3_block block 0x86f58 
+[15063.024466] XFS (loop0): Unmount and run xfs_repair
+[15063.024468] XFS (loop0): First 128 bytes of corrupted metadata buffer:
+[15063.024471] 00000000: 58 44 42 33 9f ab d7 f4 00 00 00 00 00 08 6f 58  XDB3..........oX
+[15063.024474] 00000010: 00 00 00 0f 00 00 02 5c 53 5a 35 23 57 2c 4c f1  .......\SZ5#W,L.
+                         CYCLE       BLOCK
 
-Further log file are also on github: 
-https://github.com/manfred-colorfu/nbd-datalog-referencefiles/tree/main/xfs-02/result
+Yup, there we go. The LSN is (0xf,0x25c), which tells log recovery
+not to recover it because it's the same as the LSN as the last
+journal checkpoint that records changes to the block has.
 
+So the write that the test is tearing up is the in-place metadata
+overwrite, so it's creating physical metadata corruption in the
+storage. That corruption persists until all the sectors in the
+metadata block have been updated, at which point your test failures
+go away again.
 
-<<<
+Hence to answer your original question: Yes, XFS is behaving exactly
+as it was designed to behave. The metadata verifiers have correctly
+detected corruption that has resulted from the storage tearing all
+it's writes to little pieces and that journal recovery couldn't
+automatically repair after the fact. We failed to repair it
+automatically beacuse the nature of the torn write told log recovery
+"don't recover this metadata from the journal because it is already
+up to date". Instead, the problem was detected on first access to
+the torn up metadata, and by xfs_repair.
 
-/dev/loop0: [0037]:17060 (/tmp/data-341131.img)
-Phase 1 - find and verify superblock...
-         - block cache size set to 759616 entries
-Phase 2 - using internal log
-         - zero log...
-zero_log: head block 734 tail block 734
-         - scan filesystem freespace and inode maps...
-         - found root inode chunk
-Phase 3 - for each AG...
-         - scan (but don't clear) agi unlinked lists...
-         - process known inodes and perform inode discovery...
-         - agno = 0
-         - agno = 1
-         - agno = 2
-Metadata CRC error detected at 0x563aa27804c3, xfs_dir3_block block 
-0x86f58/0x1000
-corrupt block 0 in directory inode 551205
-         would junk block
-no . entry for directory 551205
-no .. entry for directory 551205
-problem with directory contents in inode 551205
-would have cleared inode 551205
-         - agno = 3
-         - process newly discovered inodes...
-Phase 4 - check for duplicate blocks...
-         - setting up duplicate extent list...
-         - check for inodes claiming duplicate blocks...
-         - agno = 1
-         - agno = 3
-         - agno = 2
-         - agno = 0
-corrupt block 0 in directory inode 551205
-         would junk block
-no . entry for directory 551205
-no .. entry for directory 551205
-problem with directory contents in inode 551205
-would have cleared inode 551205
-entry "COREL" in shortform directory 789069 references free inode 551205
-would have junked entry "COREL" in directory inode 789069
-No modify flag set, skipping phase 5
-Phase 6 - check inode connectivity...
-         - traversing filesystem ...
-         - agno = 0
-         - agno = 1
-         - agno = 2
-         - agno = 3
-entry "COREL" in shortform directory inode 789069 points to free inode 
-551205
-would junk entry
-         - traversal finished ...
-         - moving disconnected inodes to lost+found ...
-disconnected inode 551174, would move to lost+found
-disconnected inode 551176, would move to lost+found
-disconnected inode 551178, would move to lost+found
-disconnected inode 551180, would move to lost+found
-disconnected inode 551206, would move to lost+found
-disconnected inode 551207, would move to lost+found
+IOWs, there is no problems with XFS here. If there is any issue at
+all, it is with the assumption that filesystems can always cleanly
+recovery from massively (or randomly) torn writes. The fact is that
+they can't and that's why we have things like CRCs and self
+describing metadata to detect when unexpected or unrecoverable torn
+or misplaced writes occur deep down in the storage layers...
 
-disconnected inode 551208, would move to lost+found
-disconnected inode 551209, would move to lost+found
-disconnected inode 551210, would move to lost+found
-disconnected inode 551211, would move to lost+found
-disconnected inode 551212, would move to lost+found
-disconnected inode 551213, would move to lost+found
-disconnected inode 551214, would move to lost+found
-disconnected inode 551215, would move to lost+found
-disconnected inode 551217, would move to lost+found
-Phase 7 - verify link counts...
-would have reset inode 789069 nlinks from 11 to 10
-No modify flag set, skipping filesystem flush and exiting.
+Cheers,
 
-<<<<
-
->>>
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
