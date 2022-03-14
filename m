@@ -2,40 +2,42 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F55CC433FE
-	for <linux-xfs@archiver.kernel.org>; Mon, 14 Mar 2022 18:07:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47507C433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 14 Mar 2022 18:08:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235242AbiCNSIu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 14 Mar 2022 14:08:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46102 "EHLO
+        id S237561AbiCNSKB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 14 Mar 2022 14:10:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49722 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231370AbiCNSIu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Mar 2022 14:08:50 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 770FA3AA7A
-        for <linux-xfs@vger.kernel.org>; Mon, 14 Mar 2022 11:07:39 -0700 (PDT)
+        with ESMTP id S231370AbiCNSKB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Mar 2022 14:10:01 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88FFDE007
+        for <linux-xfs@vger.kernel.org>; Mon, 14 Mar 2022 11:08:50 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id F293D61006
-        for <linux-xfs@vger.kernel.org>; Mon, 14 Mar 2022 18:07:38 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 54CC5C340E9
-        for <linux-xfs@vger.kernel.org>; Mon, 14 Mar 2022 18:07:38 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 05DC6B80EDA
+        for <linux-xfs@vger.kernel.org>; Mon, 14 Mar 2022 18:08:49 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72FA1C340E9;
+        Mon, 14 Mar 2022 18:08:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1647281258;
-        bh=ERBmcN2XFVLJoDZ1NxyMd0wz9FlUp1zYxH6DHgVlcw4=;
-        h=Date:From:To:Subject:From;
-        b=tt8dZsXZBNkAzK+J3DqXnf0V5Ej+O/ZawGxjGaTkwEeQQfUcTAxvszxPHqh3yMCWP
-         PAmN0juNApdzJN302wZEH4JJ5GcSC1yF2SaqPu9dussruFjdE8mgvoMtjLHGvvtVbx
-         ETO+6dUEzIq5WJ3104/ba3Nb5iDP1pfn9Rl3Ej+lnzjz+kBl3OnEB7mnOSZyNVODbY
-         fVKvJGB7nKa7SCEwIZsr3XaqXZ4SinenyxExTJzoLkrUFAdD1M/pqRflIivpbLO+2z
-         WgidDqcjc52K4A2E5xwtfhUYmdamo/MPY65d4mD0hF1EdXrpQd7vF6TudkJ/IwnN+/
-         3HUUuSTc6aUsA==
-Date:   Mon, 14 Mar 2022 11:07:37 -0700
+        s=k20201202; t=1647281327;
+        bh=Xo1PbZquYHJ3DH/PvFXhEoZeT14Vcl0t9iRNiogpO9A=;
+        h=Date:From:To:Cc:Subject:From;
+        b=q8b81oVI5Ab0edZHIGs0L57vy3EZWptXn//7FmIoRb2dLiuxPH8/Ve8r02EAbCRRu
+         hpbSm1KOVG5wlEwWkvAJveCz2wCe6HWH/30DMp1dazoVz5lW1hB+2bnmWN+PUx9qds
+         G4A7rKr+OtlZUI1cAi/WoTsGxsJRhErkN3ftlIb5jspRZAxW0swPvlReG31M+jdAeq
+         WbnS/HDEgs+d7/npA/SdgiXGCUA5uflEf+pRl/3wVty18PEsQKDL2cF7FfJaegblBo
+         v1hwYIcYhuIB7OaJtL4ntZVT1glPouigxlw12WFEr7Xe/AAO6QG6hLm6pmPh+qM4xz
+         AQStRi2zmGbng==
+Date:   Mon, 14 Mar 2022 11:08:47 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     xfs <linux-xfs@vger.kernel.org>
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 744e6c8ada5d
-Message-ID: <20220314180737.GL8224@magnolia>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH] xfs: don't include bnobt blocks when reserving free block
+ pool
+Message-ID: <20220314180847.GM8224@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -43,57 +45,75 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+From: Darrick J. Wong <djwong@kernel.org>
 
-The for-next branch of the xfs-linux repository at:
+xfs_reserve_blocks controls the size of the user-visible free space
+reserve pool.  Given the difference between the current and requested
+pool sizes, it will try to reserve free space from fdblocks.  However,
+the amount requested from fdblocks is also constrained by the amount of
+space that we think xfs_mod_fdblocks will give us.  We'll keep trying to
+reserve space so long as xfs_mod_fdblocks returns ENOSPC.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+In commit fd43cf600cf6, we decided that xfs_mod_fdblocks should not hand
+out the "free space" used by the free space btrees, because some portion
+of the free space btrees hold in reserve space for future btree
+expansion.  Unfortunately, xfs_reserve_blocks' estimation of the number
+of blocks that it could request from xfs_mod_fdblocks was not updated to
+include m_allocbt_blks, so if space is extremely low, the caller hangs.
 
-has just been updated.
+Fix this by including m_allocbt_blks in the estimation, and modify the
+loop so that it will not retry infinitely.
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.  At this point we're past -rc8, which means that I'm
-only accepting bug fixes.
+Found by running xfs/306 (which formats a single-AG 20MB filesystem)
+with an fstests configuration that specifies a 1k blocksize and a
+specially crafted log size that will consume 7/8 of the space (17920
+blocks, specifically) in that AG.
 
-NOTE: Dave Chinner will be taking over as maintainer for one release
-cycle so that I can focus on finishing the design document for online
-fsck.  IOWs, please send your patches to Dave (and linux-xfs) from the
-day after 5.18-rc1 drops until the day after 5.19-rc1 drops.
+Cc: Brian Foster <bfoster@redhat.com>
+Fixes: fd43cf600cf6 ("xfs: set aside allocation btree blocks from block reservation")
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+ fs/xfs/xfs_fsops.c |   16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
 
-The new head of the for-next branch is commit:
-
-744e6c8ada5d xfs: constify xfs_name_dotdot
-
-8 new commits:
-
-Darrick J. Wong (7):
-      [eba0549bc7d1] xfs: don't generate selinux audit messages for capability testing
-      [e014f37db1a2] xfs: use setattr_copy to set vfs inode attributes
-      [dd3b015dd806] xfs: refactor user/group quota chown in xfs_setattr_nonsize
-      [871b9316e7a7] xfs: reserve quota for dir expansion when linking/unlinking files
-      [41667260bc84] xfs: reserve quota for target dir expansion when renaming files
-      [996b2329b20a] xfs: constify the name argument to various directory functions
-      [744e6c8ada5d] xfs: constify xfs_name_dotdot
-
-Gao Xiang (1):
-      [1a39ae415c1b] xfs: add missing cmap->br_state = XFS_EXT_NORM update
-
-Code Diffstat:
-
- fs/xfs/libxfs/xfs_dir2.c      |  36 +++++++------
- fs/xfs/libxfs/xfs_dir2.h      |   8 +--
- fs/xfs/libxfs/xfs_dir2_priv.h |   5 +-
- fs/xfs/xfs_fsmap.c            |   4 +-
- fs/xfs/xfs_inode.c            |  85 ++++++++++++++++++------------
- fs/xfs/xfs_inode.h            |   2 +-
- fs/xfs/xfs_ioctl.c            |   2 +-
- fs/xfs/xfs_iops.c             | 118 +++++++++---------------------------------
- fs/xfs/xfs_pnfs.c             |   3 +-
- fs/xfs/xfs_reflink.c          |   5 +-
- fs/xfs/xfs_trace.h            |   4 +-
- fs/xfs/xfs_trans.c            |  86 ++++++++++++++++++++++++++++++
- fs/xfs/xfs_trans.h            |   3 ++
- kernel/capability.c           |   1 +
- 14 files changed, 205 insertions(+), 157 deletions(-)
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 33e26690a8c4..78b6982ea5b0 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -379,6 +379,7 @@ xfs_reserve_blocks(
+ 	int64_t			fdblks_delta = 0;
+ 	uint64_t		request;
+ 	int64_t			free;
++	unsigned int		tries;
+ 	int			error = 0;
+ 
+ 	/* If inval is null, report current values and return */
+@@ -432,9 +433,16 @@ xfs_reserve_blocks(
+ 	 * perform a partial reservation if the request exceeds free space.
+ 	 */
+ 	error = -ENOSPC;
+-	do {
+-		free = percpu_counter_sum(&mp->m_fdblocks) -
+-						mp->m_alloc_set_aside;
++	for (tries = 0; tries < 30 && error == -ENOSPC; tries++) {
++		/*
++		 * The reservation pool cannot take space that xfs_mod_fdblocks
++		 * will not give us.  This includes the per-AG set-aside space
++		 * and free space btree blocks that are not available for
++		 * allocation due to per-AG metadata reservations.
++		 */
++		free = percpu_counter_sum(&mp->m_fdblocks);
++		free -= mp->m_alloc_set_aside;
++		free -= atomic64_read(&mp->m_allocbt_blks);
+ 		if (free <= 0)
+ 			break;
+ 
+@@ -459,7 +467,7 @@ xfs_reserve_blocks(
+ 		spin_unlock(&mp->m_sb_lock);
+ 		error = xfs_mod_fdblocks(mp, -fdblks_delta, 0);
+ 		spin_lock(&mp->m_sb_lock);
+-	} while (error == -ENOSPC);
++	}
+ 
+ 	/*
+ 	 * Update the reserve counters if blocks have been successfully
