@@ -2,385 +2,174 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B0C9C433FE
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Mar 2022 17:31:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB26CC433EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Mar 2022 19:07:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350632AbiCORcR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 15 Mar 2022 13:32:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34874 "EHLO
+        id S238822AbiCOTI3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 15 Mar 2022 15:08:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38320 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350614AbiCORcQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Mar 2022 13:32:16 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5215F56C02;
-        Tue, 15 Mar 2022 10:31:00 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D19BD615BA;
-        Tue, 15 Mar 2022 17:30:59 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E0821C340F5;
-        Tue, 15 Mar 2022 17:30:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1647365459;
-        bh=cC1+u3mXiYq3IQg609V4K9NOTt01iooFBwqbq8hUi+8=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=qShm6GRzMlS52Rm0Q5chpslnfIJBrLNBko+O34Gj5NlaQVSiXHXPWI7LZnLlVMVQe
-         LdO9y4dEqC+xGYoGcTHLtmvoL4qGxDoMEBb4vxhNuZPRMP/4HVt7OFjgWtPuL9JNOO
-         yJl/sIDM4cCsULyJk6Yzbu3d50a+aql46QtwmpzMNSTypsMeqkdGL7IFqgbAbVsAUm
-         PMzDR5NhULY9M5QLuFSxX/Ow1Xu9u3/0ts67LdDYQdx6dJte6F8zcEEWdxKVEe7oGe
-         NllEBp/X0gvltDLxP2qoIFFGCjZGY98rZ928QvRRnWcXnq8/NZquU8xAn9oP5PR3Th
-         qSeST2zXATUhA==
-Date:   Tue, 15 Mar 2022 17:30:51 +0000
-From:   Filipe Manana <fdmanana@kernel.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-btrfs@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] btrfs: fix fallocate to use file_modified to update
- permissions consistently
-Message-ID: <YjDNSxRHDFRA1tlm@debian9.Home>
-References: <20220310192245.GA8165@magnolia>
- <YitAiiQ+cpbGZ2K/@debian9.Home>
- <20220311235110.GB8241@magnolia>
- <Yi8ky7zU4L6Kk+eo@debian9.Home>
- <20220314174055.GE8241@magnolia>
- <YjByOZr5Lmw2/jw1@debian9.Home>
- <20220315164011.GF8241@magnolia>
+        with ESMTP id S231851AbiCOTI2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Mar 2022 15:08:28 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 19D78F7A
+        for <linux-xfs@vger.kernel.org>; Tue, 15 Mar 2022 12:07:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1647371235;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type;
+        bh=m7Z8URsvaQnoRcZWkuhYfe8q1W/Lfy2+2wu4jrp/4pU=;
+        b=bkOb3s+nWWO1Tdiwm7w+R9J6MvDD05U75T3Z/NfD/GdSwrPV02rGKmcukzGvnmcV444iat
+        WuQAf3Wk8LCyqIdx3asUBkfgy6cKv30EtnrXoa19ZWxK24Zrp+KK9LJCOp1x+Ri3nyGrLe
+        PoerPeMxin/9RXAeINvyMtQekUorn/E=
+Received: from mail-qv1-f70.google.com (mail-qv1-f70.google.com
+ [209.85.219.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-581-SWoC8BeyOT2qd4Qv6yXtxA-1; Tue, 15 Mar 2022 15:07:13 -0400
+X-MC-Unique: SWoC8BeyOT2qd4Qv6yXtxA-1
+Received: by mail-qv1-f70.google.com with SMTP id h18-20020a05621402f200b00440cedaa9a2so190180qvu.17
+        for <linux-xfs@vger.kernel.org>; Tue, 15 Mar 2022 12:07:13 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition;
+        bh=m7Z8URsvaQnoRcZWkuhYfe8q1W/Lfy2+2wu4jrp/4pU=;
+        b=sQVez/CYB/6H3EPtT537KW7R/DhFZ3HZpum+UNCxY/8GO49m4KMDHOKid1L/F5+4xt
+         6HwLlAIkX+8/QS0J6JFV13YruZxCCVerBabwscu/FncVM0wZ93FqrFh0ozwZK7pUjMWt
+         sZm+0uUXpvQK/zqCoZzC5GVnGA/vLTyUjsoWm/2OYYZvMGvnKrUes5KRpk9EgTsCg3xq
+         gZBFxPbM7j3hONY6VNGBz4Q1Gm85dLRUQH3AYqfAqrRiBgd5tO0S1yft7xp524qbONpi
+         1w7yeNKXwkiaXaizJj5ExoRePO4j9Ak2blTDyUCVEr3LPb0kt0DQ2+jWlqDOhbraNd4r
+         /pvw==
+X-Gm-Message-State: AOAM532KJ06RVWHgEWtF9tr6l2ACahBeTfNX1HqMlLfr55jWgT46+4yI
+        IVFcOTgyjr1mbMYAvYnR0DUOQirJUdXubiylTWTFcnCsFtHbCaeUvSJgUv3b8u1DfElpRv3NSol
+        ZJIoGe4QP56pSVV5aLNTU
+X-Received: by 2002:a05:6214:2424:b0:435:8d8b:57e9 with SMTP id gy4-20020a056214242400b004358d8b57e9mr23359176qvb.128.1647371232842;
+        Tue, 15 Mar 2022 12:07:12 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJz2PpDWXkveQAfLwhu4E9UCIJnSQWm7EEMTxU41OTSy61A6rkewZ8pUQjc4DddWZYBDEicUlw==
+X-Received: by 2002:a05:6214:2424:b0:435:8d8b:57e9 with SMTP id gy4-20020a056214242400b004358d8b57e9mr23359155qvb.128.1647371232574;
+        Tue, 15 Mar 2022 12:07:12 -0700 (PDT)
+Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
+        by smtp.gmail.com with ESMTPSA id j20-20020a37a014000000b0067b3a0c7d89sm9683802qke.38.2022.03.15.12.07.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 15 Mar 2022 12:07:12 -0700 (PDT)
+Date:   Tue, 15 Mar 2022 15:07:10 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        Hugh Dickins <hughd@google.com>
+Subject: writeback completion soft lockup BUG in folio_wake_bit()
+Message-ID: <YjDj3lvlNJK/IPiU@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220315164011.GF8241@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Mar 15, 2022 at 09:40:11AM -0700, Darrick J. Wong wrote:
-> [add xfs list]
-> 
-> On Tue, Mar 15, 2022 at 11:02:17AM +0000, Filipe Manana wrote:
-> > On Mon, Mar 14, 2022 at 10:40:55AM -0700, Darrick J. Wong wrote:
-> > > On Mon, Mar 14, 2022 at 11:19:39AM +0000, Filipe Manana wrote:
-> > > > On Fri, Mar 11, 2022 at 03:51:10PM -0800, Darrick J. Wong wrote:
-> > > > > On Fri, Mar 11, 2022 at 12:28:58PM +0000, Filipe Manana wrote:
-> > > > > > On Thu, Mar 10, 2022 at 11:22:45AM -0800, Darrick J. Wong wrote:
-> > > > > > > From: Darrick J. Wong <djwong@kernel.org>
-> > > > > > > 
-> > > > > > > Since the initial introduction of (posix) fallocate back at the turn of
-> > > > > > > the century, it has been possible to use this syscall to change the
-> > > > > > > user-visible contents of files.  This can happen by extending the file
-> > > > > > > size during a preallocation, or through any of the newer modes (punch,
-> > > > > > > zero range).  Because the call can be used to change file contents, we
-> > > > > > > should treat it like we do any other modification to a file -- update
-> > > > > > > the mtime, and drop set[ug]id privileges/capabilities.
-> > > > > > > 
-> > > > > > > The VFS function file_modified() does all this for us if pass it a
-> > > > > > > locked inode, so let's make fallocate drop permissions correctly.
-> > > > > > > 
-> > > > > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > > > > > ---
-> > > > > > > Note: I plan to add fstests to test this behavior, but after the
-> > > > > > > generic/673 mess, I'm holding back on them until I can fix the three
-> > > > > > > major filesystems and clean up the xfs setattr_copy code.
-> > > > > > > 
-> > > > > > > https://lore.kernel.org/linux-ext4/20220310174410.GB8172@magnolia/T/#u
-> > > > > > > ---
-> > > > > > >  fs/btrfs/file.c |   23 +++++++++++++++++++----
-> > > > > > >  1 file changed, 19 insertions(+), 4 deletions(-)
-> > > > > > > 
-> > > > > > > diff --git a/fs/btrfs/file.c b/fs/btrfs/file.c
-> > > > > > > index a0179cc62913..79e61c88b9e7 100644
-> > > > > > > --- a/fs/btrfs/file.c
-> > > > > > > +++ b/fs/btrfs/file.c
-> > > > > > > @@ -2918,8 +2918,9 @@ int btrfs_replace_file_extents(struct btrfs_inode *inode,
-> > > > > > >  	return ret;
-> > > > > > >  }
-> > > > > > >  
-> > > > > > > -static int btrfs_punch_hole(struct inode *inode, loff_t offset, loff_t len)
-> > > > > > > +static int btrfs_punch_hole(struct file *file, loff_t offset, loff_t len)
-> > > > > > >  {
-> > > > > > > +	struct inode *inode = file_inode(file);
-> > > > > > >  	struct btrfs_fs_info *fs_info = btrfs_sb(inode->i_sb);
-> > > > > > >  	struct btrfs_root *root = BTRFS_I(inode)->root;
-> > > > > > >  	struct extent_state *cached_state = NULL;
-> > > > > > > @@ -2951,6 +2952,10 @@ static int btrfs_punch_hole(struct inode *inode, loff_t offset, loff_t len)
-> > > > > > >  		goto out_only_mutex;
-> > > > > > >  	}
-> > > > > > >  
-> > > > > > > +	ret = file_modified(file);
-> > > > > > > +	if (ret)
-> > > > > > > +		goto out_only_mutex;
-> > > > > > > +
-> > > > > > >  	lockstart = round_up(offset, btrfs_inode_sectorsize(BTRFS_I(inode)));
-> > > > > > >  	lockend = round_down(offset + len,
-> > > > > > >  			     btrfs_inode_sectorsize(BTRFS_I(inode))) - 1;
-> > > > > > > @@ -3177,11 +3182,12 @@ static int btrfs_zero_range_check_range_boundary(struct btrfs_inode *inode,
-> > > > > > >  	return ret;
-> > > > > > >  }
-> > > > > > >  
-> > > > > > > -static int btrfs_zero_range(struct inode *inode,
-> > > > > > > +static int btrfs_zero_range(struct file *file,
-> > > > > > >  			    loff_t offset,
-> > > > > > >  			    loff_t len,
-> > > > > > >  			    const int mode)
-> > > > > > >  {
-> > > > > > > +	struct inode *inode = file_inode(file);
-> > > > > > >  	struct btrfs_fs_info *fs_info = BTRFS_I(inode)->root->fs_info;
-> > > > > > >  	struct extent_map *em;
-> > > > > > >  	struct extent_changeset *data_reserved = NULL;
-> > > > > > > @@ -3202,6 +3208,12 @@ static int btrfs_zero_range(struct inode *inode,
-> > > > > > >  		goto out;
-> > > > > > >  	}
-> > > > > > >  
-> > > > > > > +	ret = file_modified(file);
-> > > > > > > +	if (ret) {
-> > > > > > > +		free_extent_map(em);
-> > > > > > > +		goto out;
-> > > > > > > +	}
-> > > > > > > +
-> > > > > > 
-> > > > > > Could be done before getting the extent map, to make the code a bit shorter, or
-> > > > > > see the comment below.
-> > > > > 
-> > > > > The trouble is, if getting the extent map fails, we didn't change the
-> > > > > file, so there's no reason to bump the timestamps and whatnot...
-> > > > 
-> > > > Right, I figured you had that sort of intention.
-> > > > 
-> > > > However after the call to file_modified(), we may actually have not change the
-> > > > file at all, like when trying to zero a range that is already fully covered by a
-> > > > preallocated extent.
-> > > 
-> > > <nod>  At least in XFSland, there's no good way to check for a
-> > > pre-existing prealloc extent without holding the ILOCK, which makes
-> > > things complicated as I'll explain below. :)
-> > > 
-> > > > > 
-> > > > > > 
-> > > > > > >  	/*
-> > > > > > >  	 * Avoid hole punching and extent allocation for some cases. More cases
-> > > > > > >  	 * could be considered, but these are unlikely common and we keep things
-> > > > > > > @@ -3391,7 +3403,7 @@ static long btrfs_fallocate(struct file *file, int mode,
-> > > > > > >  		return -EOPNOTSUPP;
-> > > > > > >  
-> > > > > > >  	if (mode & FALLOC_FL_PUNCH_HOLE)
-> > > > > > > -		return btrfs_punch_hole(inode, offset, len);
-> > > > > > > +		return btrfs_punch_hole(file, offset, len);
-> > > > > > >  
-> > > > > > >  	/*
-> > > > > > >  	 * Only trigger disk allocation, don't trigger qgroup reserve
-> > > > > > > @@ -3446,7 +3458,7 @@ static long btrfs_fallocate(struct file *file, int mode,
-> > > > > > >  		goto out;
-> > > > > > >  
-> > > > > > >  	if (mode & FALLOC_FL_ZERO_RANGE) {
-> > > > > > > -		ret = btrfs_zero_range(inode, offset, len, mode);
-> > > > > > > +		ret = btrfs_zero_range(file, offset, len, mode);
-> > > > > > >  		btrfs_inode_unlock(inode, BTRFS_ILOCK_MMAP);
-> > > > > > >  		return ret;
-> > > > > > >  	}
-> > > > > > > @@ -3528,6 +3540,9 @@ static long btrfs_fallocate(struct file *file, int mode,
-> > > > > > >  		cur_offset = last_byte;
-> > > > > > >  	}
-> > > > > > >  
-> > > > > > > +	if (!ret)
-> > > > > > > +		ret = file_modified(file);
-> > > > > > 
-> > > > > > If call file_modified() before the if that checks for the zero range case,
-> > > > > > then we avoid having to call file_modified() at btrfs_zero_range() too,
-> > > > > > and get the behaviour for both plain fallocate and zero range.
-> > > > > 
-> > > > > ...and the reason I put it here is to make sure the ordered IO finishes
-> > > > > ok and that we pass the quota limit checks before we start modifying
-> > > > > things.
-> > > > 
-> > > > Ok, but before that point we may already have modified the file, through
-> > > > a call to either btrfs_cont_expand() or btrfs_truncate_block() above, to
-> > > > zero out part of the content of a page.
-> > > 
-> > > Ahh, ok.  My goal was to eliminate the places where we don't call
-> > > file_modified, even if that comes at the cost of occasionally doing it
-> > > when it wasn't strictly necessary.
-> > > 
-> > > > So if we did that, and we got an error when waiting for ordered extents
-> > > > or from the qgroup reservation, we end up leaving fallocate without
-> > > > calling file_modified(), despite having modified the file.
-> > > > 
-> > > > > 
-> > > > > That said -- you all know btrfs far better than I do, so if you'd rather
-> > > > > I put these calls further up (probably right after the inode_newsize_ok
-> > > > > check?) then I'm happy to do that. :)
-> > > > 
-> > > > Technically I suppose we should only call file_modified() if we actually
-> > > > change anything in the file, but as it is, we are calling it even when we
-> > > > don't end up modifying it or in some cases not calling it when we modify
-> > > > it.
-> > > 
-> > > Yep.
-> > > 
-> > > > How does xfs behaves in this respect? Does it call file_modified() only
-> > > > if something in the file actually changed?
-> > > 
-> > > file_modified calls back into the filesystem to run transactions to
-> > > update metadata, which means that XFS can't call it if it's already
-> > > gotten a transaction and an inode ILOCK.  Unfortunately, we also can't
-> > > check to see if the file actually requires modifications (zeroing
-> > > contents, extending i_size) until we've taken the ILOCK.
-> > > 
-> > > If we really wanted to be strict about only stripping permissions if the
-> > > file *actually* changed, we'd either have to re-design our setattr
-> > > implementation to notice a running transaction and use it; or do a weird
-> > > little dance where we lock the inode, check it, undo all that to call
-> > > file_modified if we decide it's necessary, and then create a new
-> > > transaction and re-lock it.  We'd also have to keep doing that until the
-> > > file stabilizes, which seemed like a lot of work to handle something
-> > > that's mostly a corner case, so XFS always calls file_modified after
-> > > successfully flushing data to disk.
-> > 
-> > Ah, I see.
-> > 
-> > So that also explains why XFS fails for this test:
-> > 
-> >   #!/bin/bash
-> > 
-> >   DEV=/dev/sdj
-> >   MNT=/mnt/sdj
-> > 
-> >   umount $DEV &> /dev/null
-> > 
-> >   #mkfs.btrfs -f -b 1g $DEV
-> >   #mkfs.ext4 -F -b 4096 $DEV $(((1024 * 1024 * 1024) / 4096))
-> >   #mkfs.f2fs -f -w 4096 $DEV $(((1024 * 1024 * 1024) / 4096))
-> >   mkfs.xfs -f -d size=1g $DEV
-> >   mount $DEV $MNT
-> > 
-> >   # Create a file with a size of 600M and two holes, one at [200M, 201M[
-> >   # and another at [401M, 402M[
-> >   xfs_io -f -c "pwrite -S 0xab 0 200M" \
-> >             -c "pwrite -S 0xcd 201M 200M" \
-> >             -c "pwrite -S 0xef 402M 198M" \
-> >             $MNT/foobar
-> > 
-> >   # Now call fallocate against the whole file range, see if it fails
-> >   # with -ENOSPC or not - it shouldn't since we only need to allocate
-> >   # 2M of data space.
-> >   echo -e "\nCalling fallocate..."
-> >   xfs_io -c "falloc 0 600M" $MNT/foobar
-> > 
-> >   umount $MNT
-> > 
-> > The fallocate fails with -ENOSPC, as it seems XFS tries to allocate 600M
-> > of space. So it seems that happens before taking the ILOCK, but it can
-> > only know for sure how much space it needs to allocate after taking that
-> > lock - I assume the space allocation can't happen after taking the ILOCK,
-> > due to some possible deadlock maybe?
-> 
-> Space *allocation* can only happen after taking the ILOCK, because
-> that's the only way to stabilize the inode metadata.  However, space
-> *reservation* has to take place before taking the ILOCK, which creates
-> an unfortunate chicken-egg problem.
+Hi,
 
-I see. On btrfs we currently reserve space for the entire range before
-we do all the necessary locking, because in the past we could deadlock
-if we reserved the space after doing all the necessary locking - this
-was due to races with mmap writes and direct IO writes within the EOF
-boundary - but we don't have those races anymore, which enables us now
-to do that change.
+I've been chasing down an issue recently that results in the following
+soft lockup warning in XFS writeback (iomap_ioend) completion:
 
-Then after doing all the locking, we iterate over the file range to
-find out where we have holes and then allocate an extent for each hole.
-This should never fail with -ENOSPC because we have previously reserved
-an amount of space that covers the worst possible case (the entire range
-is a hole).
+ watchdog: BUG: soft lockup - CPU#42 stuck for 208s! [kworker/42:0:52508]
+ ...
+ CPU: 42 PID: 52508 Comm: kworker/42:0 Tainted: G S           L    5.17.0-rc8 #5
+ Hardware name: Dell Inc. PowerEdge R750/06V45N, BIOS 1.2.4 05/28/2021
+ Workqueue: xfs-conv/dm-0 xfs_end_io [xfs]
+ RIP: 0010:_raw_spin_unlock_irqrestore+0x1a/0x31
+ Code: 74 01 c3 0f 1f 44 00 00 c3 0f 1f 80 00 00 00 00 0f 1f 44 00 00 c6 07 00 0f 1f 40 00 f7 c6 00 02 00 00 74 01 fb bf 01 00 00 00 <e8> f1 6e 6a ff 65 8b 05 7a e3 1a 63 85 c0 74 01 c3 0f 1f 44 00 00
+ RSP: 0018:ff4a81e4a8a37ce8 EFLAGS: 00000206
+ RAX: 0000000000000001 RBX: ffffffff9de08b28 RCX: ff4a81e4a6cfbd00
+ RDX: ff4a81e4a6cfbd00 RSI: 0000000000000246 RDI: 0000000000000001
+ RBP: 0000000000000246 R08: ff4a81e4a6cfbd00 R09: 000000000002f8c0
+ R10: 00006dfe673f3ac5 R11: 00000000fa83b2da R12: 0000000000000fa8
+ R13: ffcb6e504b14e640 R14: 0000000000000000 R15: 0000000000001000
+ FS:  0000000000000000(0000) GS:ff1a26083fd40000(0000) knlGS:0000000000000000
+ CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+ CR2: 0000000000888000 CR3: 0000000790f4a006 CR4: 0000000000771ee0
+ DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+ DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+ PKRU: 55555554 
+ Call Trace:
+  <TASK>
+  folio_wake_bit+0x8a/0x110
+  folio_end_writeback+0x37/0x80
+  iomap_finish_ioend+0xc6/0x330
+  iomap_finish_ioends+0x93/0xd0
+  xfs_end_ioend+0x5e/0x150 [xfs]
+  xfs_end_io+0xaf/0xe0 [xfs]
+  process_one_work+0x1c5/0x390
+  ? process_one_work+0x390/0x390
+  worker_thread+0x30/0x350
+  ? process_one_work+0x390/0x390
+  kthread+0xe6/0x110
+  ? kthread_complete_and_exit+0x20/0x20
+  ret_from_fork+0x1f/0x30
+  </TASK>
 
-If the sum of the size of the allocated extents ends up being less than
-what we reserved upfront, we then release the excess space.
+This is reproduced via repeated iterations of the LTP diotest3 test [1]
+on a 96xCPU system. This usually first occurs in a transient manner,
+dumping two or three warnings and then the system recovers and test
+continues, but it eventually reproduces a full on livelock in this same
+path. I think I've narrowed the root cause of the warning to commit
+c2407cf7d22d0 ("mm: make wait_on_page_writeback() wait for multiple
+pending writebacks") (last discussed here[2] afaics). The first thing to
+note is that I think the dio aspect of the test program is not
+important. The test in this case creates 100x tasks that each run a
+"buffered write -> fsync -> dio read" loop on an isolated range of the
+test file, where the buffered writes and fsyncs seem to be the primary
+contributing factors.
 
-During this phase where we iterate over the list of extents in the file
-range, we are protected from concurrent operations that can change the
-extent layout (other fallocates, hole punching, truncate, all types of
-writes, etc).
+What seems to happen is that the majority of the fsync calls end up
+waiting on writeback of a particular page, the wakeup of the writeback
+bit on that page wakes a task that immediately resets PG_writeback on
+the page such that N other folio_wait_writeback() waiters see the bit
+still set and immediately place themselves back onto the tail of the
+wait queue.  Meanwhile the waker task spins in the WQ_FLAG_BOOKMARK loop
+in folio_wake_bit() (backing off the lock for a cycle or so in each
+iteration) only to find the same bunch of tasks in the queue. This
+process repeats for a long enough amount of time to trigger the soft
+lockup warning. I've confirmed this spinning behavior with a tracepoint
+in the bookmark loop that indicates we're stuck for many hundreds of
+thousands of iterations (at least) of this loop when the soft lockup
+warning triggers.
 
-> 
-> fallocate /could/ operate in a more incremental fashion -- all we'd have
-> to do is walk the specified range looking for holes in the mapping, and
-> when we find one, we'd reserve space to fill that hole, lock everything,
-> reread the mapping to see if it's still a hole, and if so, actually fill
-> it.  You'd race with someone punching holes, but fmeh to that usecase.
-> :)
-> 
-> However, Dave has opined that fallocate shouldn't fail with ENOSPC
-> halfway through the operation after consuming all of the free space in
-> the filesystem:
-> 
-> https://lore.kernel.org/linux-xfs/20210826020637.GA2402680@onthe.net.au/
-> 
-> ...and that's why it's better to try to reserve the entire amount
-> requested and ENOSPC immediately, even if it were the case that the file
-> isn't sparse at all.
+As to the full livelock variant, I think we end up with a
+write_cache_pages() task that is woken waiting for page P, immediately
+resets PG_writeback on P and moves on to P+1. P+1 is also already under
+writeback, so write_cache_pages() blocks here waiting on that. Page P
+has still not been submitted for I/O because XFS/iomap batches I/O
+submissions across multiple ->writepage() callbacks. The waker task
+spinloop occurs on page P as described above, but since the waker task
+is the XFS workqueue task associated with ioend completion on the inode
+(because these are delalloc writes that require unwritten extent
+conversion on completion), it will never get to waking page P+1 and
+we're stuck for good. IOW:
 
-I see.
+1. Page P is stuck in PG_writeback on a queue awaiting I/O submission.
+2. The P submitting task is blocked waiting on PG_writeback of page P+1.
+3. The waker task responsible for waking P+1 is spinning waking tasks
+for a previous PG_writeback state on page P. This wait queue will never
+drain, however, because it consists of a large number of tasks (>
+WAITQUEUE_WALK_BREAK_CNT) inserted via folio_wait_writeback() that will
+never break the loop for P (because of step 1).
 
-So this seems to be a bit controversial. Avoiding the "false -ENOSPC from
-a user's perspective" may not be easy to implement depending on the specific
-filesystem implementation.
+I've run a few quick experiments to try and corroborate this analysis.
+The problem goes away completely if I either back out the loop change in
+folio_wait_writeback() or bump WAITQUEUE_WALK_BREAK_CNT to something
+like 128 (i.e. greater than the total possible number of waiter tasks in
+this test). I've also played a few games with bookmark behavior mostly
+out of curiosity, but usually end up introducing other problems like
+missed wakeups, etc. I've not been able to reproduce this problem on
+ext4, I suspect due to sufficiently different writeback/completion
+batching behavior. I was thinking about whether skipping writeback of
+PG_writeback pages after an explicit wait (removing the wait loop and
+BUG_ON()) might avoid this problem and the one the loop is intended to
+fix, but I'm not sure that would be safe. Thoughts or ideas?
 
-So I suppose for now I should make the test btrfs specific.
+Brian
 
-Thanks, that was useful and interesting.
+[1] while [ true ]; do TMPDIR=<xfsdir> diotest3 -b 65536 -n 100 -i 100 -o 1024000; done
+[2] https://lore.kernel.org/linux-mm/000000000000886dbd05b7ffa8db@google.com/
 
-> 
-> I feel like this is one of those instances where the original model of
-> what fallocate did was "preallocate space in this empty file range"
-> whereas now it's shifted to include "(p)reallocate space in this heavily
-> fragmented sparse VM image that someone called FITRIM on".
-> 
-> Either that or "preallocate space, but my cloud provider charges me by
-> the gigabyte so I'm financially incentivized to fill the fs to 99%
-> before leasing even one more megabyte and running growfs, and I don't
-> understand why everything is freakishly slow and fragmented". :(
-> 
-> (I don't think that's your usecase, but <cough> I keep hearing things
-> like that from the growing t****fire of customer escalations...)
-> 
-> --D
-> 
-> > That test currently fails on btrfs as well, but I had just sent a patch
-> > to fix it:
-> > 
-> > https://lore.kernel.org/linux-btrfs/9a69626ef93741583ab7f6386f2b450f5d064080.1647340917.git.fdmanana@suse.com/
-> > 
-> > We actually had at least one report about systemd using fallocate against
-> > a file range that has already allocated extents, so it could unnecessarily
-> > fail with -ENOSPC if the fs free space is low (it's reported somewhere
-> > in the middle of the thread in the Link tag of the patch).
-> > 
-> > Ext4 and f2fs pass the test.
-> > 
-> > I was turning the test case into a generic test for fstests, but then
-> > noticied XFS failing. Is this something you would consider fixing for
-> > XFS? Should I submit it as a generic test case, or as a btrfs specific
-> > test case?
-> > 
-> > Thanks for the explanation and the patch.
-> > 
-> > > 
-> > > At that point XFS haven't even gotten to checking quota yet, so
-> > > technically that's also a gap where we could drop privs but then fail
-> > > the fallocate with EDQUOT.
-> > > 
-> > > --D
-> > > 
-> > > > 
-> > > > Thanks.
-> > > > 
-> > > > > 
-> > > > > --D
-> > > > > 
-> > > > > > 
-> > > > > > Otherwise, it looks good.
-> > > > > > 
-> > > > > > Thanks for doing this, I had it on my todo list since I noticed the generic/673
-> > > > > > failure with reflinks and the suid/sgid bits.
-> > > > > > 
-> > > > > > > +
-> > > > > > >  	/*
-> > > > > > >  	 * If ret is still 0, means we're OK to fallocate.
-> > > > > > >  	 * Or just cleanup the list and exit.
