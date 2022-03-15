@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C996C433F5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF128C433EF
 	for <linux-xfs@archiver.kernel.org>; Tue, 15 Mar 2022 23:23:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344631AbiCOXZA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 15 Mar 2022 19:25:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42986 "EHLO
+        id S1352569AbiCOXZB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 15 Mar 2022 19:25:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43324 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352569AbiCOXYz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Mar 2022 19:24:55 -0400
+        with ESMTP id S1346865AbiCOXZA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Mar 2022 19:25:00 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5731EB12
-        for <linux-xfs@vger.kernel.org>; Tue, 15 Mar 2022 16:23:42 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0246AB12
+        for <linux-xfs@vger.kernel.org>; Tue, 15 Mar 2022 16:23:48 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 097F9B8190D
-        for <linux-xfs@vger.kernel.org>; Tue, 15 Mar 2022 23:23:41 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7AC6C340ED;
-        Tue, 15 Mar 2022 23:23:39 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id A2698B818FB
+        for <linux-xfs@vger.kernel.org>; Tue, 15 Mar 2022 23:23:46 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 590E5C340ED;
+        Tue, 15 Mar 2022 23:23:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1647386619;
-        bh=fizv68vb1e0pZfh0whY41T0EmaYDuy578pw+OLPyZzc=;
+        s=k20201202; t=1647386625;
+        bh=aGhqUcvwEsIuRPEw2MOTaHsN1ZOO1MZDACAazGyfCnk=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=I6U5+pjWwIDYrf1zZgYJsD4vsTzPdJaZKhkgVBslwpvWRXCLvJ7OJE7ZInL4Qxqup
-         4b65s8kawUVSVfsu2UdoKcxOakWFRo4fgvJ2S7pIdC+BMMngJ2+fp+nnn5s5FVdICk
-         ipzs64SbJVz0iiBigtlLHYF865TF88cXVkw1xlVgiHFIgKOjMqsW89ATZMEvA4cDb6
-         qOSbSTe+cnYz5n2Z6dfO8JuQxHw6EabRr5ya3qVfms8J5XlrCkqF9EGmbw/tdGG8d4
-         3VV5sFw4GLfueA0CnxokkWiB2i7+4OyT6D1xx2KiOElSXP2sRTGgirxxjTGclgQ8q4
-         O+vOZ+UZfEdgQ==
-Subject: [PATCH 3/5] mkfs: increase the minimum log size to 64MB when possible
+        b=ZbghNW5nFnP5uI9OekxosLQ48llQnhJn5cxALmZxHXYjkwFBQWt5Hkt53jllLmCZa
+         iqtby0lWUguucRc6LMQNWbA6ksBOYfYH9P9vM3ptZ0b3ONy1/zhNhLIHDl1xhh+vJx
+         P3ZnyjqKBZNtZFMhOagDUlhcluz0UeQ2vjlma3ePNBc0wjEnbvdQe4+vYp6oFQVpDZ
+         VZwL8xfzEeDx3ZK9vt61kHIDySt29aAks8zCfmKFOFGh9migjgMm6FEMYR/4MfgcD6
+         hqiJs94jGyM46Bf5+QpR2ertG4cBlMWbEKsD0xpgEmxZ2VAwpc6yYq1nQGSaEjolxv
+         9kD4AhXVfrqpw==
+Subject: [PATCH 4/5] mkfs: stop allowing tiny filesystems
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, allison.henderson@oracle.com
-Date:   Tue, 15 Mar 2022 16:23:39 -0700
-Message-ID: <164738661924.3191861.13544747266285023363.stgit@magnolia>
+Date:   Tue, 15 Mar 2022 16:23:44 -0700
+Message-ID: <164738662491.3191861.15611882856331908607.stgit@magnolia>
 In-Reply-To: <164738660248.3191861.2400129607830047696.stgit@magnolia>
 References: <164738660248.3191861.2400129607830047696.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,131 +49,150 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Recently, the upstream maintainers have been taking a lot of heat on
-account of writer threads encountering high latency when asking for log
-grant space when the log is small.  The reported use case is a heavily
-threaded indexing product logging trace information to a filesystem
-ranging in size between 20 and 250GB.  The meetings that result from the
-complaints about latency and stall warnings in dmesg both from this use
-case and also a large well known cloud product are now consuming 25% of
-the maintainer's weekly time and have been for months.
+Refuse to format a filesystem that are "too small", because these
+configurations are known to have performance and redundancy problems
+that are not present on the volume sizes that XFS is best at handling.
 
-For small filesystems, the log is small by default because we have
-defaulted to a ratio of 1:2048 (or even less).  For grown filesystems,
-this is even worse, because big filesystems generate big metadata.
-However, the log size is still insufficient even if it is formatted at
-the larger size.
+Specifically, this means that we won't allow logs smaller than 64MB, we
+won't allow single-AG filesystems, and we won't allow volumes smaller
+than 300MB.  There are two exceptions: the first is an undocumented CLI
+option that can be used for crafting debug filesystems.
 
-On a 220GB filesystem, the 99.95% latencies observed with a 200-writer
-file synchronous append workload running on a 44-AG filesystem (with 44
-CPUs) spread across 4 hard disks showed:
-
-	99.5%
-Log(MB)	Latency(ms)	BW (MB/s)	xlog_grant_head_wait
-10	520		243		1875
-20	220		308		540
-40	140		360		6
-80	92		363		0
-160	86		364		0
-
-For 4 NVME, the results were:
-
-10	201		409		898
-20	177		488		144
-40	122		550		0
-80	120		549		0
-160	121		545		0
-
-This shows pretty clearly that we could reduce the amount of time that
-threads spend waiting on the XFS log by increasing the log size to at
-least 40MB regardless of size.  We then repeated the benchmark with a
-cloud system and an old machine to see if there were any ill effects on
-less stable hardware.
-
-For cloudy iscsi block storage, the results were:
-
-10	390		176		2584
-20	173		186		357
-40	37		187		0
-80	40		183		0
-160	37		183		0
-
-A decade-old machine w/ 24 CPUs and a giant spinning disk RAID6 array
-produced this:
-
-10	55		5.4		0
-20	40		5.9		0
-40	62		5.7		0
-80	66		5.7		0
-160	25		5.4		0
-
-From the first three scenarios, it is clear that there are gains to be
-had by sizing the log somewhere between 40 and 80MB -- the long tail
-latency drops quite a bit, and programs are no longer blocking on the
-log's transaction space grant heads.  Split the difference and set the
-log size floor to 64MB.
+The second exception is that if fstests is detected, because there are a
+lot of fstests that use tiny filesystems to perform targeted regression
+and functional testing in a controlled environment.  Fixing the ~40 or
+so tests to run more slowly with larger filesystems isn't worth the risk
+of breaking the tests.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- mkfs/xfs_mkfs.c |   32 ++++++++++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
+ mkfs/xfs_mkfs.c |   82 ++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 81 insertions(+), 1 deletion(-)
 
 
 diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index ad776492..84dbb799 100644
+index 84dbb799..239d529c 100644
 --- a/mkfs/xfs_mkfs.c
 +++ b/mkfs/xfs_mkfs.c
-@@ -18,6 +18,14 @@
- #define GIGABYTES(count, blog)	((uint64_t)(count) << (30 - (blog)))
- #define MEGABYTES(count, blog)	((uint64_t)(count) << (20 - (blog)))
+@@ -838,6 +838,7 @@ struct cli_params {
+ 	int64_t	logagno;
+ 	int	loginternal;
+ 	int	lsunit;
++	int	has_warranty;
  
-+/*
-+ * Realistically, the log should never be smaller than 64MB.  Studies by the
-+ * kernel maintainer in early 2022 have shown a dramatic reduction in long tail
-+ * latency of the xlog grant head waitqueue when running a heavy metadata
-+ * update workload when the log size is at least 64MB.
-+ */
-+#define XFS_MIN_REALISTIC_LOG_BLOCKS(blog)	(MEGABYTES(64, (blog)))
-+
- /*
-  * Use this macro before we have superblock and mount structure to
-  * convert from basic blocks to filesystem blocks.
-@@ -3259,6 +3267,28 @@ validate_log_size(uint64_t logblocks, int blocklog, int min_logblocks)
+ 	/* parameters where 0 is not a valid value */
+ 	int64_t	agcount;
+@@ -2463,6 +2464,68 @@ _("illegal CoW extent size hint %lld, must be less than %u.\n"),
  	}
  }
  
-+/*
-+ * Ensure that the log is large enough to provide reasonable performance on a
-+ * modern system.
-+ */
++/* Complain if this filesystem is not a supported configuration. */
 +static void
-+calc_realistic_log_size(
-+	struct mkfs_params	*cfg)
++validate_warranty(
++	struct xfs_mount	*mp,
++	struct cli_params	*cli)
 +{
-+	unsigned int		realistic_log_blocks;
-+
-+	realistic_log_blocks = XFS_MIN_REALISTIC_LOG_BLOCKS(cfg->blocklog);
++	/* Undocumented option to enable unsupported tiny filesystems. */
++	if (!cli->has_warranty) {
++		printf(
++ _("Filesystems formatted with --yes-i-know-what-i-am-doing are not supported!!\n"));
++		return;
++	}
 +
 +	/*
-+	 * If the "realistic" size is more than 7/8 of the AG, this is a tiny
-+	 * filesystem and we don't care.
++	 * fstests has a large number of tests that create tiny filesystems to
++	 * perform specific regression and resource depletion tests in a
++	 * controlled environment.  Avoid breaking fstests by allowing
++	 * unsupported configurations if TEST_DIR, TEST_DEV, and QA_CHECK_FS
++	 * are all set.
 +	 */
-+	if (realistic_log_blocks > (cfg->agsize * 7 / 8))
++	if (getenv("TEST_DIR") && getenv("TEST_DEV") && getenv("QA_CHECK_FS"))
 +		return;
 +
-+	cfg->logblocks = max(cfg->logblocks, realistic_log_blocks);
++	/*
++	 * We don't support filesystems smaller than 300MB anymore.  Tiny
++	 * filesystems have never been XFS' design target.  This limit has been
++	 * carefully calculated to prevent formatting with a log smaller than
++	 * the "realistic" size.
++	 *
++	 * If the realistic log size is 64MB, there are four AGs, and the log
++	 * AG should be at least 1/8 free after formatting, this gives us:
++	 *
++	 * 64MB * (8 / 7) * 4 = 293MB
++	 */
++	if (mp->m_sb.sb_dblocks < MEGABYTES(300, mp->m_sb.sb_blocklog)) {
++		fprintf(stderr,
++ _("Filesystem must be larger than 300MB.\n"));
++		usage();
++	}
++
++	/*
++	 * For best performance, we don't allow unrealistically small logs.
++	 * See the comment for XFS_MIN_REALISTIC_LOG_BLOCKS.
++	 */
++	if (mp->m_sb.sb_logblocks <
++			XFS_MIN_REALISTIC_LOG_BLOCKS(mp->m_sb.sb_blocklog)) {
++		fprintf(stderr,
++ _("Log size must be at least 64MB.\n"));
++		usage();
++	}
++
++	/*
++	 * Filesystems should not have fewer than two AGs, because we need to
++	 * have redundant superblocks.
++	 */
++	if (mp->m_sb.sb_agcount < 2) {
++		fprintf(stderr,
++ _("Filesystem must have redundant superblocks!\n"));
++		usage();
++	}
 +}
 +
- static void
- clamp_internal_log_size(
- 	struct mkfs_params	*cfg,
-@@ -3362,6 +3392,8 @@ _("external log device size %lld blocks too small, must be at least %lld blocks\
- 			cfg->logblocks = cfg->logblocks >> cfg->blocklog;
- 		}
+ /*
+  * Validate the configured stripe geometry, or is none is specified, pull
+  * the configuration from the underlying device.
+@@ -3892,9 +3955,21 @@ main(
+ 	struct cli_params	cli = {
+ 		.xi = &xi,
+ 		.loginternal = 1,
++		.has_warranty	= 1,
+ 	};
+ 	struct mkfs_params	cfg = {};
  
-+		calc_realistic_log_size(cfg);
++	struct option		long_options[] = {
++	{
++		.name		= "yes-i-know-what-i-am-doing",
++		.has_arg	= no_argument,
++		.flag		= &cli.has_warranty,
++		.val		= 0,
++	},
++	{NULL, 0, NULL, 0 },
++	};
++	int			option_index = 0;
 +
- 		clamp_internal_log_size(cfg, mp, min_logblocks);
+ 	/* build time defaults */
+ 	struct mkfs_default_params	dft = {
+ 		.source = _("package build definitions"),
+@@ -3953,8 +4028,11 @@ main(
+ 	memcpy(&cli.sb_feat, &dft.sb_feat, sizeof(cli.sb_feat));
+ 	memcpy(&cli.fsx, &dft.fsx, sizeof(cli.fsx));
  
- 		validate_log_size(cfg->logblocks, cfg->blocklog, min_logblocks);
+-	while ((c = getopt(argc, argv, "b:c:d:i:l:L:m:n:KNp:qr:s:CfV")) != EOF) {
++	while ((c = getopt_long(argc, argv, "b:c:d:i:l:L:m:n:KNp:qr:s:CfV",
++					long_options, &option_index)) != EOF) {
+ 		switch (c) {
++		case 0:
++			break;
+ 		case 'C':
+ 		case 'f':
+ 			force_overwrite = 1;
+@@ -4092,6 +4170,8 @@ main(
+ 	validate_extsize_hint(mp, &cli);
+ 	validate_cowextsize_hint(mp, &cli);
+ 
++	validate_warranty(mp, &cli);
++
+ 	/* Print the intended geometry of the fs. */
+ 	if (!quiet || dry_run) {
+ 		struct xfs_fsop_geom	geo;
 
