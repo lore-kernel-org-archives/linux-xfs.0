@@ -2,174 +2,158 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB26CC433EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Mar 2022 19:07:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6639C433F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Mar 2022 19:13:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238822AbiCOTI3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 15 Mar 2022 15:08:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38320 "EHLO
+        id S1351255AbiCOTOi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 15 Mar 2022 15:14:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46650 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231851AbiCOTI2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Mar 2022 15:08:28 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 19D78F7A
-        for <linux-xfs@vger.kernel.org>; Tue, 15 Mar 2022 12:07:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1647371235;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type;
-        bh=m7Z8URsvaQnoRcZWkuhYfe8q1W/Lfy2+2wu4jrp/4pU=;
-        b=bkOb3s+nWWO1Tdiwm7w+R9J6MvDD05U75T3Z/NfD/GdSwrPV02rGKmcukzGvnmcV444iat
-        WuQAf3Wk8LCyqIdx3asUBkfgy6cKv30EtnrXoa19ZWxK24Zrp+KK9LJCOp1x+Ri3nyGrLe
-        PoerPeMxin/9RXAeINvyMtQekUorn/E=
-Received: from mail-qv1-f70.google.com (mail-qv1-f70.google.com
- [209.85.219.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-581-SWoC8BeyOT2qd4Qv6yXtxA-1; Tue, 15 Mar 2022 15:07:13 -0400
-X-MC-Unique: SWoC8BeyOT2qd4Qv6yXtxA-1
-Received: by mail-qv1-f70.google.com with SMTP id h18-20020a05621402f200b00440cedaa9a2so190180qvu.17
-        for <linux-xfs@vger.kernel.org>; Tue, 15 Mar 2022 12:07:13 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition;
-        bh=m7Z8URsvaQnoRcZWkuhYfe8q1W/Lfy2+2wu4jrp/4pU=;
-        b=sQVez/CYB/6H3EPtT537KW7R/DhFZ3HZpum+UNCxY/8GO49m4KMDHOKid1L/F5+4xt
-         6HwLlAIkX+8/QS0J6JFV13YruZxCCVerBabwscu/FncVM0wZ93FqrFh0ozwZK7pUjMWt
-         sZm+0uUXpvQK/zqCoZzC5GVnGA/vLTyUjsoWm/2OYYZvMGvnKrUes5KRpk9EgTsCg3xq
-         gZBFxPbM7j3hONY6VNGBz4Q1Gm85dLRUQH3AYqfAqrRiBgd5tO0S1yft7xp524qbONpi
-         1w7yeNKXwkiaXaizJj5ExoRePO4j9Ak2blTDyUCVEr3LPb0kt0DQ2+jWlqDOhbraNd4r
-         /pvw==
-X-Gm-Message-State: AOAM532KJ06RVWHgEWtF9tr6l2ACahBeTfNX1HqMlLfr55jWgT46+4yI
-        IVFcOTgyjr1mbMYAvYnR0DUOQirJUdXubiylTWTFcnCsFtHbCaeUvSJgUv3b8u1DfElpRv3NSol
-        ZJIoGe4QP56pSVV5aLNTU
-X-Received: by 2002:a05:6214:2424:b0:435:8d8b:57e9 with SMTP id gy4-20020a056214242400b004358d8b57e9mr23359176qvb.128.1647371232842;
-        Tue, 15 Mar 2022 12:07:12 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJz2PpDWXkveQAfLwhu4E9UCIJnSQWm7EEMTxU41OTSy61A6rkewZ8pUQjc4DddWZYBDEicUlw==
-X-Received: by 2002:a05:6214:2424:b0:435:8d8b:57e9 with SMTP id gy4-20020a056214242400b004358d8b57e9mr23359155qvb.128.1647371232574;
-        Tue, 15 Mar 2022 12:07:12 -0700 (PDT)
-Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
-        by smtp.gmail.com with ESMTPSA id j20-20020a37a014000000b0067b3a0c7d89sm9683802qke.38.2022.03.15.12.07.11
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 15 Mar 2022 12:07:12 -0700 (PDT)
-Date:   Tue, 15 Mar 2022 15:07:10 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        Hugh Dickins <hughd@google.com>
-Subject: writeback completion soft lockup BUG in folio_wake_bit()
-Message-ID: <YjDj3lvlNJK/IPiU@bfoster>
+        with ESMTP id S1351290AbiCOTOg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Mar 2022 15:14:36 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC77960C6
+        for <linux-xfs@vger.kernel.org>; Tue, 15 Mar 2022 12:13:23 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id C48CDB816D6
+        for <linux-xfs@vger.kernel.org>; Tue, 15 Mar 2022 19:13:21 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81CA2C340EE;
+        Tue, 15 Mar 2022 19:13:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1647371600;
+        bh=LwBOHov0gJHXRmgiIe4+jN4P0ONQ+thqIPu8L1tK+pk=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=IFwx5UPVroHRJccb17KYOv+LxcNcWyM3xJkD85voht/8a77E9YetMxTRnmUPBsTnt
+         SXio32hlVgnrwDewiGluRyYadZW1sD2i6t/ttzu1t1hc812HG5O9dODXVPVMoju99M
+         qzp1fr3+I0wmOf82glauQrhVGu288mg4rQ5Y10YwteW8gdCXqvBfCuC4J6nT3z/2Y+
+         8l4UFw/TPyXrNdw5xZdIx3UqYqZslwxlKvAQiw99OoXYY0yCDyH4U0Y3ejdvpRQKDA
+         YrYUwYb2z29raI8SjYkqHa9+PnYSuhGQXxa9Mb8YKpndOY3fjfH0p/FXQJYZ9UyZoa
+         JTe348NuulbFg==
+Date:   Tue, 15 Mar 2022 12:13:20 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/7] xfs: check buffer pin state after locking in
+ delwri_submit
+Message-ID: <20220315191320.GG8241@magnolia>
+References: <20220315064241.3133751-1-david@fromorbit.com>
+ <20220315064241.3133751-3-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20220315064241.3133751-3-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi,
+On Tue, Mar 15, 2022 at 05:42:36PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> AIL flushing can get stuck here:
+> 
+> [316649.005769] INFO: task xfsaild/pmem1:324525 blocked for more than 123 seconds.
+> [316649.007807]       Not tainted 5.17.0-rc6-dgc+ #975
+> [316649.009186] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> [316649.011720] task:xfsaild/pmem1   state:D stack:14544 pid:324525 ppid:     2 flags:0x00004000
+> [316649.014112] Call Trace:
+> [316649.014841]  <TASK>
+> [316649.015492]  __schedule+0x30d/0x9e0
+> [316649.017745]  schedule+0x55/0xd0
+> [316649.018681]  io_schedule+0x4b/0x80
+> [316649.019683]  xfs_buf_wait_unpin+0x9e/0xf0
+> [316649.021850]  __xfs_buf_submit+0x14a/0x230
+> [316649.023033]  xfs_buf_delwri_submit_buffers+0x107/0x280
+> [316649.024511]  xfs_buf_delwri_submit_nowait+0x10/0x20
+> [316649.025931]  xfsaild+0x27e/0x9d0
+> [316649.028283]  kthread+0xf6/0x120
+> [316649.030602]  ret_from_fork+0x1f/0x30
+> 
+> in the situation where flushing gets preempted between the unpin
+> check and the buffer trylock under nowait conditions:
+> 
+> 	blk_start_plug(&plug);
+> 	list_for_each_entry_safe(bp, n, buffer_list, b_list) {
+> 		if (!wait_list) {
+> 			if (xfs_buf_ispinned(bp)) {
+> 				pinned++;
+> 				continue;
+> 			}
+> Here >>>>>>
+> 			if (!xfs_buf_trylock(bp))
+> 				continue;
+> 
+> This means submission is stuck until something else triggers a log
+> force to unpin the buffer.
+> 
+> To get onto the delwri list to begin with, the buffer pin state has
+> already been checked, and hence it's relatively rare we get a race
+> between flushing and encountering a pinned buffer in delwri
+> submission to begin with. Further, to increase the pin count the
+> buffer has to be locked, so the only way we can hit this race
+> without failing the trylock is to be preempted between the pincount
+> check seeing zero and the trylock being run.
+> 
+> Hence to avoid this problem, just invert the order of trylock vs
+> pin check. We shouldn't hit that many pinned buffers here, so
+> optimising away the trylock for pinned buffers should not matter for
+> performance at all.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_buf.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index b45e0d50a405..8867f143598e 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -2094,12 +2094,13 @@ xfs_buf_delwri_submit_buffers(
+>  	blk_start_plug(&plug);
+>  	list_for_each_entry_safe(bp, n, buffer_list, b_list) {
+>  		if (!wait_list) {
+> +			if (!xfs_buf_trylock(bp))
+ +				continue;
+>  			if (xfs_buf_ispinned(bp)) {
+> +				xfs_buf_unlock(bp);
+>  				pinned++;
+>  				continue;
 
-I've been chasing down an issue recently that results in the following
-soft lockup warning in XFS writeback (iomap_ioend) completion:
+Hmm.  So I think this means that this function willl skip buffers that
+are locked or pinned.  The only way that the AIL would encounter this
+situation is when a buffer on its list is now locked by a reader thread
+or is participating in a transaction.  In the reader case this is (one
+hopes) ok because the reader won't block on the AIL.
 
- watchdog: BUG: soft lockup - CPU#42 stuck for 208s! [kworker/42:0:52508]
- ...
- CPU: 42 PID: 52508 Comm: kworker/42:0 Tainted: G S           L    5.17.0-rc8 #5
- Hardware name: Dell Inc. PowerEdge R750/06V45N, BIOS 1.2.4 05/28/2021
- Workqueue: xfs-conv/dm-0 xfs_end_io [xfs]
- RIP: 0010:_raw_spin_unlock_irqrestore+0x1a/0x31
- Code: 74 01 c3 0f 1f 44 00 00 c3 0f 1f 80 00 00 00 00 0f 1f 44 00 00 c6 07 00 0f 1f 40 00 f7 c6 00 02 00 00 74 01 fb bf 01 00 00 00 <e8> f1 6e 6a ff 65 8b 05 7a e3 1a 63 85 c0 74 01 c3 0f 1f 44 00 00
- RSP: 0018:ff4a81e4a8a37ce8 EFLAGS: 00000206
- RAX: 0000000000000001 RBX: ffffffff9de08b28 RCX: ff4a81e4a6cfbd00
- RDX: ff4a81e4a6cfbd00 RSI: 0000000000000246 RDI: 0000000000000001
- RBP: 0000000000000246 R08: ff4a81e4a6cfbd00 R09: 000000000002f8c0
- R10: 00006dfe673f3ac5 R11: 00000000fa83b2da R12: 0000000000000fa8
- R13: ffcb6e504b14e640 R14: 0000000000000000 R15: 0000000000001000
- FS:  0000000000000000(0000) GS:ff1a26083fd40000(0000) knlGS:0000000000000000
- CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
- CR2: 0000000000888000 CR3: 0000000790f4a006 CR4: 0000000000771ee0
- DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
- DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
- PKRU: 55555554 
- Call Trace:
-  <TASK>
-  folio_wake_bit+0x8a/0x110
-  folio_end_writeback+0x37/0x80
-  iomap_finish_ioend+0xc6/0x330
-  iomap_finish_ioends+0x93/0xd0
-  xfs_end_ioend+0x5e/0x150 [xfs]
-  xfs_end_io+0xaf/0xe0 [xfs]
-  process_one_work+0x1c5/0x390
-  ? process_one_work+0x390/0x390
-  worker_thread+0x30/0x350
-  ? process_one_work+0x390/0x390
-  kthread+0xe6/0x110
-  ? kthread_complete_and_exit+0x20/0x20
-  ret_from_fork+0x1f/0x30
-  </TASK>
+The tx case is trickier -- transaction allocation can result in an AIL
+push if the head is too close to the tail, right?  Ordinarily, the AIL
+won't find itself unable to write a buffer that's pinning the log
+because a transaction holds that buffer -- eventually that tx should
+commit, which will unlock the buffer and allow the AIL to make some
+progress.
 
-This is reproduced via repeated iterations of the LTP diotest3 test [1]
-on a 96xCPU system. This usually first occurs in a transient manner,
-dumping two or three warnings and then the system recovers and test
-continues, but it eventually reproduces a full on livelock in this same
-path. I think I've narrowed the root cause of the warning to commit
-c2407cf7d22d0 ("mm: make wait_on_page_writeback() wait for multiple
-pending writebacks") (last discussed here[2] afaics). The first thing to
-note is that I think the dio aspect of the test program is not
-important. The test in this case creates 100x tasks that each run a
-"buffered write -> fsync -> dio read" loop on an isolated range of the
-test file, where the buffered writes and fsyncs seem to be the primary
-contributing factors.
+But -- what if the frontend is running a chained transaction, and it
+bjoin'd the buffer to the transaction, tried to roll the transaction,
+and the chain runs out of permanent log reservation (because we've
+rolled more than logcount times) and we have to wait for more log grant
+space?  The regrant for the successor tx happens before the commit of
+the old tx, so can we livelock the log in this way?
 
-What seems to happen is that the majority of the fsync calls end up
-waiting on writeback of a particular page, the wakeup of the writeback
-bit on that page wakes a task that immediately resets PG_writeback on
-the page such that N other folio_wait_writeback() waiters see the bit
-still set and immediately place themselves back onto the tail of the
-wait queue.  Meanwhile the waker task spins in the WQ_FLAG_BOOKMARK loop
-in folio_wake_bit() (backing off the lock for a cycle or so in each
-iteration) only to find the same bunch of tasks in the queue. This
-process repeats for a long enough amount of time to trigger the soft
-lockup warning. I've confirmed this spinning behavior with a tracepoint
-in the bookmark loop that indicates we're stuck for many hundreds of
-thousands of iterations (at least) of this loop when the soft lockup
-warning triggers.
+And doesn't this potential exist regardless of this patch?
 
-As to the full livelock variant, I think we end up with a
-write_cache_pages() task that is woken waiting for page P, immediately
-resets PG_writeback on P and moves on to P+1. P+1 is also already under
-writeback, so write_cache_pages() blocks here waiting on that. Page P
-has still not been submitted for I/O because XFS/iomap batches I/O
-submissions across multiple ->writepage() callbacks. The waker task
-spinloop occurs on page P as described above, but since the waker task
-is the XFS workqueue task associated with ioend completion on the inode
-(because these are delalloc writes that require unwritten extent
-conversion on completion), it will never get to waking page P+1 and
-we're stuck for good. IOW:
+I suspect the answers are 'yes' and 'yes', which means this patch is ok
+to move forward, but this has been bugging me since the V1 of this
+patch, which is where I got stuck. :/
 
-1. Page P is stuck in PG_writeback on a queue awaiting I/O submission.
-2. The P submitting task is blocked waiting on PG_writeback of page P+1.
-3. The waker task responsible for waking P+1 is spinning waking tasks
-for a previous PG_writeback state on page P. This wait queue will never
-drain, however, because it consists of a large number of tasks (>
-WAITQUEUE_WALK_BREAK_CNT) inserted via folio_wait_writeback() that will
-never break the loop for P (because of step 1).
+--D
 
-I've run a few quick experiments to try and corroborate this analysis.
-The problem goes away completely if I either back out the loop change in
-folio_wait_writeback() or bump WAITQUEUE_WALK_BREAK_CNT to something
-like 128 (i.e. greater than the total possible number of waiter tasks in
-this test). I've also played a few games with bookmark behavior mostly
-out of curiosity, but usually end up introducing other problems like
-missed wakeups, etc. I've not been able to reproduce this problem on
-ext4, I suspect due to sufficiently different writeback/completion
-batching behavior. I was thinking about whether skipping writeback of
-PG_writeback pages after an explicit wait (removing the wait loop and
-BUG_ON()) might avoid this problem and the one the loop is intended to
-fix, but I'm not sure that would be safe. Thoughts or ideas?
-
-Brian
-
-[1] while [ true ]; do TMPDIR=<xfsdir> diotest3 -b 65536 -n 100 -i 100 -o 1024000; done
-[2] https://lore.kernel.org/linux-mm/000000000000886dbd05b7ffa8db@google.com/
-
+>  			}
+> -			if (!xfs_buf_trylock(bp))
+> -				continue;
+>  		} else {
+>  			xfs_buf_lock(bp);
+>  		}
+> -- 
+> 2.35.1
+> 
