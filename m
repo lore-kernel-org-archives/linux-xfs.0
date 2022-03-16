@@ -2,303 +2,197 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02CB8C4332F
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Mar 2022 13:46:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5474C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Mar 2022 16:32:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353854AbiCPNr2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Mar 2022 09:47:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60566 "EHLO
+        id S236583AbiCPQdc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Mar 2022 12:33:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60388 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241647AbiCPNr0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Mar 2022 09:47:26 -0400
-Received: from heian.cn.fujitsu.com (mail.cn.fujitsu.com [183.91.158.132])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id EEB605D65B;
-        Wed, 16 Mar 2022 06:46:10 -0700 (PDT)
-IronPort-Data: =?us-ascii?q?A9a23=3ARC8MSKm+Gx15ewHA4EoSTyro5gzqJ0RdPkR7XQ2?=
- =?us-ascii?q?eYbTBsI5bp2MEmmMcWWyPaa2CZ2D1KthxbYm/8EgDv5LTm9Y3HlRl+CA2RRqmi?=
- =?us-ascii?q?+KfW43BcR2Y0wB+jyH7ZBs+qZ1YM7EsFehsJpPnjkrrYuiJQUVUj/nSHOKmULe?=
- =?us-ascii?q?cY0ideCc/IMsfoUM68wIGqt4w6TSJK1vlVeLa+6UzCnf8s9JHGj58B5a4lf9al?=
- =?us-ascii?q?K+aVAX0EbAJTasjUFf2zxH5BX+ETE27ByOQroJ8RoZWSwtfpYxV8F81/z91Yj+?=
- =?us-ascii?q?kur39NEMXQL/OJhXIgX1TM0SgqkEa4HVsjeBgb7xBAatUo2zhc9RZ0shEs4ehD?=
- =?us-ascii?q?wkvJbHklvkfUgVDDmd1OqguFLrveCLl7pfIkhSZG5fr67A0ZK0sBqUU8/h2DUl?=
- =?us-ascii?q?A7/sdLyoHbwzFjOWzqJq7QelEh8ItNsDnMYoT/HZ6wlnxAf8gB5KFXKTO4d5R2?=
- =?us-ascii?q?SwYh8ZSEPKYbM0cARJjbgvHZRJnOVoNDp862uCyiRHXdzxetULQoK8f4Hbaxw8?=
- =?us-ascii?q?316LiWPLTZNCLQMB9mkeDunmA+2X/HwFcONGBoRKH+3ShwOTPgAv8QosZELD+/?=
- =?us-ascii?q?flv6HWXx2oOGFgYTle2v/S9olCxVsgZKEEO/Ccq668o+ySDStj7Qg39o3OeuBM?=
- =?us-ascii?q?Yc8RfHvd86wyXzKfQpQGDCQAsSj9HdcxjpMEtbSIl20XPnN7zAzFr9rqPRhqgG?=
- =?us-ascii?q?h28xd+pEXFNazZcOmlfFk1Yi+QPabob1nrnJuuP2obs5jEtJQzN/g=3D=3D?=
-IronPort-HdrOrdr: =?us-ascii?q?A9a23=3AVUg6hKlM/KmWHn+NaQObFCc54BzpDfIQ3DAb?=
- =?us-ascii?q?v31ZSRFFG/Fw9vre+MjzsCWYtN9/Yh8dcK+7UpVoLUm8yXcX2/h1AV7BZniEhI?=
- =?us-ascii?q?LAFugLgrcKqAeQeREWmNQ86Y5QN4B6CPDVSWNxlNvG5mCDeOoI8Z2q97+JiI7l?=
- =?us-ascii?q?o0tQcQ=3D=3D?=
-X-IronPort-AV: E=Sophos;i="5.88,333,1635177600"; 
-   d="scan'208";a="122733517"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 16 Mar 2022 21:46:09 +0800
-Received: from G08CNEXMBPEKD06.g08.fujitsu.local (unknown [10.167.33.206])
-        by cn.fujitsu.com (Postfix) with ESMTP id 3582E4D16FC7;
-        Wed, 16 Mar 2022 21:46:09 +0800 (CST)
-Received: from G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) by
- G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206) with Microsoft SMTP Server
- (TLS) id 15.0.1497.23; Wed, 16 Mar 2022 21:46:08 +0800
-Received: from [10.167.201.9] (10.167.201.9) by
- G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.23 via Frontend Transport; Wed, 16 Mar 2022 21:46:08 +0800
-Message-ID: <4fd95f0b-106f-6933-7bc6-9f0890012b53@fujitsu.com>
-Date:   Wed, 16 Mar 2022 21:46:07 +0800
+        with ESMTP id S231220AbiCPQdc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Mar 2022 12:33:32 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AFCEE6D4CB
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Mar 2022 09:32:17 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4C8466179A
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Mar 2022 16:32:17 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4CE0C340EC;
+        Wed, 16 Mar 2022 16:32:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1647448336;
+        bh=qQuQnXYispiQjxGOBz4peKreY8hfbDw2h9E6CgPuXEk=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=tZYpb9+91ilEaGOeYgOA0V2EqIUzXilR4kqFuaCpyrFJhYl9RxNTjYgBMaEyEO6CF
+         vYRIdrBvt2Ch2JQH7Wh2y/9bU4Qj1a9DG4tx52uxne9+ldKMixJesOxrQ/bp+B4TyI
+         OcbOT7mvXWPQ54GWd0EYi7fzRWCgZdBSBUXvjY1Ix3X5I51opuMhr0QWtEAJpeNGrL
+         SI8UG5xp9PCg43lpK6BF+3fYSbMWOcU/mvnc9yDDDknIXcf31dnJFMGs4YXOm2OutF
+         BoMEABZb+djBfvEM0pu4wRxeby8ekxyg9uIQOtMNopAW81jbEvkGdYpOzUbZUOcF91
+         eA8fMm5wD/RSg==
+Date:   Wed, 16 Mar 2022 09:32:16 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: don't include bnobt blocks when reserving free
+ block pool
+Message-ID: <20220316163216.GU8224@magnolia>
+References: <20220314180847.GM8224@magnolia>
+ <YjHJ0qOUnmAUEgoV@bfoster>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.0
-Subject: Re: [PATCH v11 1/8] dax: Introduce holder for dax_device
-To:     Dan Williams <dan.j.williams@intel.com>
-CC:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Linux NVDIMM <nvdimm@lists.linux.dev>,
-        Linux MM <linux-mm@kvack.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        "Darrick J. Wong" <djwong@kernel.org>, david <david@fromorbit.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Jane Chu <jane.chu@oracle.com>
-References: <20220227120747.711169-1-ruansy.fnst@fujitsu.com>
- <20220227120747.711169-2-ruansy.fnst@fujitsu.com>
- <CAPcyv4jAqV7dZdmGcKrG=f8sYmUXaL7YCQtME6GANywncwd+zg@mail.gmail.com>
-From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-In-Reply-To: <CAPcyv4jAqV7dZdmGcKrG=f8sYmUXaL7YCQtME6GANywncwd+zg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-yoursite-MailScanner-ID: 3582E4D16FC7.A3D86
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YjHJ0qOUnmAUEgoV@bfoster>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-在 2022/3/12 7:35, Dan Williams 写道:
-> On Sun, Feb 27, 2022 at 4:08 AM Shiyang Ruan <ruansy.fnst@fujitsu.com> wrote:
->>
->> To easily track filesystem from a pmem device, we introduce a holder for
->> dax_device structure, and also its operation.  This holder is used to
->> remember who is using this dax_device:
->>   - When it is the backend of a filesystem, the holder will be the
->>     instance of this filesystem.
->>   - When this pmem device is one of the targets in a mapped device, the
->>     holder will be this mapped device.  In this case, the mapped device
->>     has its own dax_device and it will follow the first rule.  So that we
->>     can finally track to the filesystem we needed.
->>
->> The holder and holder_ops will be set when filesystem is being mounted,
->> or an target device is being activated.
->>
->> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
->> ---
->>   drivers/dax/super.c | 89 +++++++++++++++++++++++++++++++++++++++++++++
->>   include/linux/dax.h | 32 ++++++++++++++++
->>   2 files changed, 121 insertions(+)
->>
->> diff --git a/drivers/dax/super.c b/drivers/dax/super.c
->> index e3029389d809..da5798e19d57 100644
->> --- a/drivers/dax/super.c
->> +++ b/drivers/dax/super.c
->> @@ -21,6 +21,9 @@
->>    * @cdev: optional character interface for "device dax"
->>    * @private: dax driver private data
->>    * @flags: state and boolean properties
->> + * @ops: operations for dax_device
->> + * @holder_data: holder of a dax_device: could be filesystem or mapped device
->> + * @holder_ops: operations for the inner holder
->>    */
->>   struct dax_device {
->>          struct inode inode;
->> @@ -28,6 +31,8 @@ struct dax_device {
->>          void *private;
->>          unsigned long flags;
->>          const struct dax_operations *ops;
->> +       void *holder_data;
->> +       const struct dax_holder_operations *holder_ops;
->>   };
->>
->>   static dev_t dax_devt;
->> @@ -193,6 +198,29 @@ int dax_zero_page_range(struct dax_device *dax_dev, pgoff_t pgoff,
->>   }
->>   EXPORT_SYMBOL_GPL(dax_zero_page_range);
->>
->> +int dax_holder_notify_failure(struct dax_device *dax_dev, u64 off,
->> +                             u64 len, int mf_flags)
->> +{
->> +       int rc, id;
->> +
->> +       id = dax_read_lock();
->> +       if (!dax_alive(dax_dev)) {
->> +               rc = -ENXIO;
->> +               goto out;
->> +       }
->> +
->> +       if (!dax_dev->holder_ops) {
->> +               rc = -EOPNOTSUPP;
+On Wed, Mar 16, 2022 at 07:28:18AM -0400, Brian Foster wrote:
+> On Mon, Mar 14, 2022 at 11:08:47AM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > xfs_reserve_blocks controls the size of the user-visible free space
+> > reserve pool.  Given the difference between the current and requested
+> > pool sizes, it will try to reserve free space from fdblocks.  However,
+> > the amount requested from fdblocks is also constrained by the amount of
+> > space that we think xfs_mod_fdblocks will give us.  We'll keep trying to
+> > reserve space so long as xfs_mod_fdblocks returns ENOSPC.
+> > 
+> > In commit fd43cf600cf6, we decided that xfs_mod_fdblocks should not hand
+> > out the "free space" used by the free space btrees, because some portion
+> > of the free space btrees hold in reserve space for future btree
+> > expansion.  Unfortunately, xfs_reserve_blocks' estimation of the number
+> > of blocks that it could request from xfs_mod_fdblocks was not updated to
+> > include m_allocbt_blks, so if space is extremely low, the caller hangs.
+> > 
+> > Fix this by including m_allocbt_blks in the estimation, and modify the
+> > loop so that it will not retry infinitely.
+> > 
+> > Found by running xfs/306 (which formats a single-AG 20MB filesystem)
+> > with an fstests configuration that specifies a 1k blocksize and a
+> > specially crafted log size that will consume 7/8 of the space (17920
+> > blocks, specifically) in that AG.
+> > 
+> > Cc: Brian Foster <bfoster@redhat.com>
+> > Fixes: fd43cf600cf6 ("xfs: set aside allocation btree blocks from block reservation")
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  fs/xfs/xfs_fsops.c |   16 ++++++++++++----
+> >  1 file changed, 12 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> > index 33e26690a8c4..78b6982ea5b0 100644
+> > --- a/fs/xfs/xfs_fsops.c
+> > +++ b/fs/xfs/xfs_fsops.c
+> > @@ -379,6 +379,7 @@ xfs_reserve_blocks(
+> >  	int64_t			fdblks_delta = 0;
+> >  	uint64_t		request;
+> >  	int64_t			free;
+> > +	unsigned int		tries;
+> >  	int			error = 0;
+> >  
+> >  	/* If inval is null, report current values and return */
+> > @@ -432,9 +433,16 @@ xfs_reserve_blocks(
+> >  	 * perform a partial reservation if the request exceeds free space.
+> >  	 */
+> >  	error = -ENOSPC;
+> > -	do {
+> > -		free = percpu_counter_sum(&mp->m_fdblocks) -
+> > -						mp->m_alloc_set_aside;
+> > +	for (tries = 0; tries < 30 && error == -ENOSPC; tries++) {
 > 
-> I think it is ok to return success (0) for this case. All the caller
-> of dax_holder_notify_failure() wants to know is if the notification
-> was successfully delivered to the holder. If there is no holder
-> present then there is nothing to report. This is minor enough for me
-> to fix up locally if nothing else needs to be changed.
+> Any reason for the magic number of retries as opposed to perhaps just
+> not retrying at all?
 
-I thought it could fall back to generic memory failure handler: 
-mf_generic_kill_procs(), if holder_ops not exists.
+I /think/ the origins of the loop was commit dbcabad19aa9 ("[XFS] Fix
+block reservation mechanism."), where I guess Dave decided that we
+should loop forever trying to satisfy a request from userspace to
+increase the reserve pool.  OFC you and I have been patching this
+function to fix all its horrible warts over the years, so maybe you're
+right that this should only try once...
 
-> 
->> +               goto out;
->> +       }
->> +
->> +       rc = dax_dev->holder_ops->notify_failure(dax_dev, off, len, mf_flags);
->> +out:
->> +       dax_read_unlock(id);
->> +       return rc;
->> +}
->> +EXPORT_SYMBOL_GPL(dax_holder_notify_failure);
->> +
->>   #ifdef CONFIG_ARCH_HAS_PMEM_API
->>   void arch_wb_cache_pmem(void *addr, size_t size);
->>   void dax_flush(struct dax_device *dax_dev, void *addr, size_t size)
->> @@ -268,6 +296,10 @@ void kill_dax(struct dax_device *dax_dev)
->>
->>          clear_bit(DAXDEV_ALIVE, &dax_dev->flags);
->>          synchronize_srcu(&dax_srcu);
->> +
->> +       /* clear holder data */
->> +       dax_dev->holder_ops = NULL;
->> +       dax_dev->holder_data = NULL;
-> 
-> Isn't this another failure scenario? If kill_dax() is called while a
-> holder is still holding the dax_device that seems to be another
-> ->notify_failure scenario to tell the holder that the device is going
-> away and the holder has not released the device yet.
+(For the mount time default reservation, we should only iterate the loop
+once (provided the accounting is correct ;) since nobody else is
+touching the free space counters.)
 
-Yes.  I should call dax_holder_notify_failure() and then unregister the 
-holder.
+> This seems a little odd when you think about it
+> given that the request is already intended to take available space into
+> account and modify the request from userspace. OTOH, another
+> consideration could be to retry some (really large?) number of times and
+> then bail out if we happen to iterate without an observable change in
+> free space (i.e., something is wrong), however I suppose that could be
+> racy as well. *shrug*
+
+...but if you're the sysadmin desperately trying to increase the size of
+the reserve pool when the fs is running near ENOSPC, you're going to be
+racing with fdblocks bouncing up and down.  The @free samples that we
+take here in the loop body are indeed racy since we can't tell the
+difference between @free being unchanged from the last iteration because
+someone freed a block and someone else immediately consumed it, or a
+totally idle system.
+
+Either way, it's better than hanging the whole system. :)
+
+What if I augment the loop control with a comment capturing some of this:
+
+	/*
+	 * The loop body estimates how many blocks it can request from
+	 * fdblocks to stash in the reserve pool.  This is a classic
+	 * TOCTOU race since fdblocks updates are not always coordinated
+	 * via m_sb_lock.  We also cannot tell if @free remaining
+	 * unchanged between iterations is due to an idle system or
+	 * freed blocks being consumed immediately, so we'll try a
+	 * finite number of times to satisfy the request.
+	 */
+	for (tries = 0; tries < 30...) {
 
 > 
->>   }
->>   EXPORT_SYMBOL_GPL(kill_dax);
->>
->> @@ -409,6 +441,63 @@ void put_dax(struct dax_device *dax_dev)
->>   }
->>   EXPORT_SYMBOL_GPL(put_dax);
->>
->> +/**
->> + * dax_holder() - obtain the holder of a dax device
->> + * @dax_dev: a dax_device instance
->> +
->> + * Return: the holder's data which represents the holder if registered,
->> + * otherwize NULL.
->> + */
->> +void *dax_holder(struct dax_device *dax_dev)
->> +{
->> +       if (!dax_alive(dax_dev))
->> +               return NULL;
+> > +		/*
+> > +		 * The reservation pool cannot take space that xfs_mod_fdblocks
+> > +		 * will not give us.  This includes the per-AG set-aside space
+> > +		 * and free space btree blocks that are not available for
+> > +		 * allocation due to per-AG metadata reservations.
+> > +		 */
+> > +		free = percpu_counter_sum(&mp->m_fdblocks);
+> > +		free -= mp->m_alloc_set_aside;
+> > +		free -= atomic64_read(&mp->m_allocbt_blks);
 > 
-> It's safe for the holder to assume that it can de-reference
-> ->holder_data freely in its notify_handler callback because
-> dax_holder_notify_failure() arranges for the callback to run in
-> dax_read_lock() context.
-> 
-> This is another minor detail that I can fixup locally.
-> 
->> +
->> +       return dax_dev->holder_data;
->> +}
->> +EXPORT_SYMBOL_GPL(dax_holder);
->> +
->> +/**
->> + * dax_register_holder() - register a holder to a dax device
->> + * @dax_dev: a dax_device instance
->> + * @holder: a pointer to a holder's data which represents the holder
->> + * @ops: operations of this holder
->> +
->> + * Return: negative errno if an error occurs, otherwise 0.
->> + */
->> +int dax_register_holder(struct dax_device *dax_dev, void *holder,
->> +               const struct dax_holder_operations *ops)
->> +{
->> +       if (!dax_alive(dax_dev))
->> +               return -ENXIO;
->> +
->> +       if (cmpxchg(&dax_dev->holder_data, NULL, holder))
->> +               return -EBUSY;
->> +
->> +       dax_dev->holder_ops = ops;
->> +       return 0;
->> +}
->> +EXPORT_SYMBOL_GPL(dax_register_holder);
->> +
->> +/**
->> + * dax_unregister_holder() - unregister the holder for a dax device
->> + * @dax_dev: a dax_device instance
->> + * @holder: the holder to be unregistered
->> + *
->> + * Return: negative errno if an error occurs, otherwise 0.
->> + */
->> +int dax_unregister_holder(struct dax_device *dax_dev, void *holder)
->> +{
->> +       if (!dax_alive(dax_dev))
->> +               return -ENXIO;
->> +
->> +       if (cmpxchg(&dax_dev->holder_data, holder, NULL) != holder)
->> +               return -EBUSY;
->> +       dax_dev->holder_ops = NULL;
->> +       return 0;
->> +}
->> +EXPORT_SYMBOL_GPL(dax_unregister_holder);
->> +
->>   /**
->>    * inode_dax: convert a public inode into its dax_dev
->>    * @inode: An inode with i_cdev pointing to a dax_dev
->> diff --git a/include/linux/dax.h b/include/linux/dax.h
->> index 9fc5f99a0ae2..262d7bad131a 100644
->> --- a/include/linux/dax.h
->> +++ b/include/linux/dax.h
->> @@ -32,8 +32,24 @@ struct dax_operations {
->>          int (*zero_page_range)(struct dax_device *, pgoff_t, size_t);
->>   };
->>
->> +struct dax_holder_operations {
->> +       /*
->> +        * notify_failure - notify memory failure into inner holder device
->> +        * @dax_dev: the dax device which contains the holder
->> +        * @offset: offset on this dax device where memory failure occurs
->> +        * @len: length of this memory failure event
-> 
-> Forgive me if this has been discussed before, but since dax_operations
-> are in terms of pgoff and nr pages and memory_failure() is in terms of
-> pfns what was the rationale for making the function signature byte
-> based?
+> Seems reasonable. Do we want to consider ->m_allocbt_blks in other
+> places where ->m_alloc_set_aside is used (i.e. xfs_fs_statfs(), etc.)?
+> Not sure how much it matters for space reporting purposes, but if so, it
+> might also be worth reconsidering the usefulness of a static field and
+> initialization helper (i.e. xfs_alloc_set_aside()) if the majority of
+> uses involve a dynamic calculation (due to ->m_allocbt_blks).
 
-Maybe I didn't describe it clearly...  The @offset and @len here are 
-byte-based.  And so is ->memory_failure().
+When I was writing this patch, I very nearly decided to make those three
+lines above their own helper.  I didn't see any other spots that looked
+like obvious candidates for such a calculation outside of statfs.
 
-You can find the implementation of ->memory_failure() in 3rd patch:
+Subtracting m_allocbt_blks from statfs' avail field is a behavior
+change, since we always used to consider bnobt blocks as available.  We
+don't have an exact count of how many blocks are needed to hide the
+per-ag reserved extents, so in the end we have to decide whether we want
+to hear complaints about over- or under-estimation of available blocks.
 
-+static int pmem_pagemap_memory_failure(struct dev_pagemap *pgmap,
-+		phys_addr_t addr, u64 len, int mf_flags)
-+{
-+	struct pmem_device *pmem =
-+			container_of(pgmap, struct pmem_device, pgmap);
-+	u64 offset = addr - pmem->phys_addr - pmem->data_offset;
-+
-+	return dax_holder_notify_failure(pmem->dax_dev, offset, len, mf_flags);
-+}
+So I think the statfs stuff is a separate patch. :)
+
+--D
 
 > 
-> I want to get this series merged into linux-next shortly after
-> v5.18-rc1. Then we can start working on incremental fixups rather
-> resending the full series with these long reply cycles.
-
-
-Thanks.  That really helps.
-
-
---
-Ruan.
-
-
+> Brian
+> 
+> >  		if (free <= 0)
+> >  			break;
+> >  
+> > @@ -459,7 +467,7 @@ xfs_reserve_blocks(
+> >  		spin_unlock(&mp->m_sb_lock);
+> >  		error = xfs_mod_fdblocks(mp, -fdblks_delta, 0);
+> >  		spin_lock(&mp->m_sb_lock);
+> > -	} while (error == -ENOSPC);
+> > +	}
+> >  
+> >  	/*
+> >  	 * Update the reserve counters if blocks have been successfully
+> > 
+> 
