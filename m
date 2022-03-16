@@ -2,254 +2,179 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 262CEC433F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Mar 2022 07:45:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A720C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Mar 2022 08:33:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354284AbiCPHqS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Mar 2022 03:46:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59066 "EHLO
+        id S1345740AbiCPIex (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Mar 2022 04:34:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38192 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354280AbiCPHqR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Mar 2022 03:46:17 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1E14856201
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Mar 2022 00:45:03 -0700 (PDT)
+        with ESMTP id S241869AbiCPIew (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Mar 2022 04:34:52 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id BE59F3204A
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Mar 2022 01:33:37 -0700 (PDT)
 Received: from dread.disaster.area (pa49-186-150-27.pa.vic.optusnet.com.au [49.186.150.27])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 39C7B533602;
-        Wed, 16 Mar 2022 18:44:59 +1100 (AEDT)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 5721110E4E9B;
+        Wed, 16 Mar 2022 19:33:34 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1nUOL5-0064MG-2r; Wed, 16 Mar 2022 18:44:59 +1100
-Date:   Wed, 16 Mar 2022 18:44:59 +1100
+        id 1nUP65-0065GE-HY; Wed, 16 Mar 2022 19:33:33 +1100
+Date:   Wed, 16 Mar 2022 19:33:33 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     Jan Kara <jack@suse.cz>
-Cc:     linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Chinner <dchinner@redhat.com>
-Subject: Re: Regression in XFS for fsync heavy workload
-Message-ID: <20220316074459.GP3927073@dread.disaster.area>
-References: <20220315124943.wtgwrrkuthnwto7w@quack3.lan>
- <20220316010627.GO3927073@dread.disaster.area>
+To:     nate <linux-xfs@linuxpowered.net>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: XFS reflink copy to different filesystem performance question
+Message-ID: <20220316083333.GQ3927073@dread.disaster.area>
+References: <2cbd42b3bb49720d53ccca3d19d2ae72@linuxpowered.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220316010627.GO3927073@dread.disaster.area>
+In-Reply-To: <2cbd42b3bb49720d53ccca3d19d2ae72@linuxpowered.net>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=6231957c
+X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=6231a0df
         a=sPqof0Mm7fxWrhYUF33ZaQ==:117 a=sPqof0Mm7fxWrhYUF33ZaQ==:17
-        a=kj9zAlcOel0A:10 a=o8Y5sQTvuykA:10 a=7-415B0cAAAA:8 a=20KFwNOVAAAA:8
-        a=VwQbUJbxAAAA:8 a=Wl3NpEY5D9dmIcaYMz4A:9 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22 a=AjGcO6oz07-iQ99wixmX:22
+        a=kj9zAlcOel0A:10 a=o8Y5sQTvuykA:10 a=7-415B0cAAAA:8
+        a=3Dje42ugIqsejEKG6TYA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 16, 2022 at 12:06:27PM +1100, Dave Chinner wrote:
-> On Tue, Mar 15, 2022 at 01:49:43PM +0100, Jan Kara wrote:
-> > Hello,
-> > 
-> > I was tracking down a regression in dbench workload on XFS we have
-> > identified during our performance testing. These are results from one of
-> > our test machine (server with 64GB of RAM, 48 CPUs, SATA SSD for the test
-> > disk):
-> > 
-> > 			       good		       bad
-> > Amean     1        64.29 (   0.00%)       73.11 * -13.70%*
-> > Amean     2        84.71 (   0.00%)       98.05 * -15.75%*
-> > Amean     4       146.97 (   0.00%)      148.29 *  -0.90%*
-> > Amean     8       252.94 (   0.00%)      254.91 *  -0.78%*
-> > Amean     16      454.79 (   0.00%)      456.70 *  -0.42%*
-> > Amean     32      858.84 (   0.00%)      857.74 (   0.13%)
-> > Amean     64     1828.72 (   0.00%)     1865.99 *  -2.04%*
-> > 
-> > Note that the numbers are actually times to complete workload, not
-> > traditional dbench throughput numbers so lower is better.
-....
-
-> > This should still
-> > submit it rather early to provide the latency advantage. Otherwise postpone
-> > the flush to the moment we know we are going to flush the iclog to save
-> > pointless flushes. But we would have to record whether the flush happened
-> > or not in the iclog and it would all get a bit hairy...
+On Tue, Mar 15, 2022 at 05:45:37PM -0700, nate wrote:
+> Hello -
 > 
-> I think we can just set the NEED_FLUSH flag appropriately.
+> Blast from the past this is the first Majordomo mailing list I can recall
+> joining in probably
+> 15-18+ years..
 > 
-> However, given all this, I'm wondering if the async cache flush was
-> really a case of premature optimisation. That is, we don't really
-> gain anything by reducing the flush latency of the first iclog write
-> wehn we are writing 100-1000 iclogs before the commit record, and it
-> can be harmful to some workloads by issuing more flushes than we
-> need to.
+> Anyway, I ran into a situation today and was wondering if someone could
+> clarify or point me to
+> some docs so I just have a better understanding as to what is going on with
+> this XFS setup.
 > 
-> So perhaps the right thing to do is just get rid of it and always
-> mark the first iclog in a checkpoint as NEED_FLUSH....
+> Hardware: HP DL380 Gen10 6x8TB disks in hardware RAID 10
+> Software: Ubuntu 20.04 kernel 5.4.0 using XFS with reflinks enabled
+> Purpose: this system is used to store Veeam Backups (VMware VM backup)
+> 
+> I've used XFS off and on for many years but it wasn't until I set this up
+> last year
+> I had even heard of reflinks. Veeam docs specifically suggested enabling it
+> if possible
+> so I did. Things have been working fine since.
 
-So I've run some tests on code that does this, and the storage I've
-tested it on shows largely no difference in stream CIL commit and
-fsync heavy workloads when comparing synv vs as cache flushes. On
-set of tests was against high speed NVMe ssds, the other against
-old, slower SATA SSDs.
+Yeah, Veeam appears to use the shared data extent functionality in
+XFS for deduplication and cloning. reflink is the use facing name
+for space efficient file cloning (via cp --reflink).
 
-Jan, can you run the patch below (against 5.17-rc8) and see what
-results you get on your modified dbench test?
+> Recently we had a situation come up where we want to copy some of this data
+> to a
+> local USB drive to ship to another location to restore the data. A simple
+> enough
+> process I thought just a basic file copy.
+> 
+> Total of 8.6TB, most of that is in a single 8.3TB file. We got a 18TB USB
+> drive , I formatted
+> it ext4 (feel more comfortable with ext4 on a USB drive).
+> 
+> I started an rsync to copy this data over as I assumed that would be the
+> simplest method.
+> I was pretty surprised to see rsync averaging between 25-30MB/sec. I
+> expected more of course.
+> I checked iostat and was even more surprised to see the 6 disk RAID 10 array
+> showing
+> 100% i/o utilization - the reads were maxed out, the USB drive was barely
+> being touched.
+> Consider me super confused at this point.. there was no other activity on
+> the system.
+> So I tried a basic cp -a command instead maybe data access for rsync is
+> different, I
+> didn't think so but couldn't help to try.. results were similar. iostat
+> showed periodic
+> bursts to 50-60MB/s but most often below 30MB/s. I like rsync with the
+> --progress option
+> so I went back to rsync again.
+
+I'm guessing that you're trying to copy a deduplicated file,
+resulting in the same physical blocks being read over and over again
+at different file offsets and causing the disks to seek because it's
+not physically sequential data.
+
+> So then I looked for other data on the same filesystem that I knew was not
+> Veeam data,
+> so it would not be using reflinks. I found a stash of ~5GB of data and
+> copied that,
+> easily over 100MB/sec(files were smaller and going so fast it was hard to
+> tell for
+> sure).
+
+It could have been using reflinks - upstream coreutils defaults to
+reflink copies with cp these days (i.e. default is cp --reflink=auto
+which means it tries a file clone first, then falls back to a data
+copy if cloning fails. reflink copies are identical to the original
+file - they *are* the original file - until they are overwritten.
+Hence cp doesn't perform any differently with reflinked files vs
+normal files.
+
+[...]
+
+> So I kicked off a copy using Veeam, I don't know what it does on the
+> backend. But
+> iostat showed sustained reads at over 200MB/sec, so call it 8X faster than
+> rsync or cp. At this point the USB drive seemed more of the bottleneck
+> (which
+> is fine).
+
+Because Veeam knows about the dedeuplicated data, it is quite likely
+that it something smarter to optimise reading from files it has
+deduplicated...
+
+> I can only guess that Veeam is more intelligent in that it is using some API
+> call to XFS to pull the sequential data for the most recent backup, vs using
+> a linux CLI tool is pulling the entire file which probably has a ton of
+> different
+> pointers in it causing a lot more random I/O.
+
+Maybe they are doing that with FIEMAP to resolve deduplicated
+regions and caching them, or they have some other infomration in
+their backup/deduplication data store that allows them to optimise
+the IO. You'll need to actually run things like strace on the copies
+to find out exactly what it is doing....
+
+> So again, not having a problem really just looking to get a better simple
+> understanding as to why a rsync or cp from reflinked data to another
+
+rsync and cp are dumb, lowest common denominator copying programs.
+They don't do anything smart like use threads, direct I/O, AIO,
+io_uring, etc that applications that optimise for IO performance
+typically use...
+
+> and with that said are there tools that can copy reflinked data more
+> intelligently from the command line (specifically to another filesystem)?
+
+No, they don't exist because largely reading a reflinked file
+performs no differently to reading a non-shared file.
+
+> I checked the XFS faq and there is no mention of reflink. I couldn't
+> find info on how to find how many "links" there were or how big each
+> one was or how to reference them directly.
+
+To do that efficiently (i.e. without a full filesystem scan) you
+need to look up the filesystem reverse mapping table to find all the
+owners of pointers to a given block.  I bet you didn't make the
+filesystem with "-m rmapbt=1" to enable that functionality - nobody
+does that unless they have a reason to because it's not enabled by
+default (yet).
 
 Cheers,
 
 Dave.
+> 
+> thanks
+> 
+> nate
+> 
+> 
+
 -- 
 Dave Chinner
 david@fromorbit.com
-
-
-xfs: drop async cache flushes from CIL commits.
-
-From: Dave Chinner <dchinner@redhat.com>
-
-As discussed here:
-
-https://lore.kernel.org/linux-xfs/20220316010627.GO3927073@dread.disaster.area/T/#t
-
-This is a prototype for removing async cache flushes from the CIL
-checkpoint path. Fast NVME storage.
-
-From `dbench -t 30`, current TOT:
-
-clients		async			sync
-		BW	Latency		BW	Latency
-1		 767.14   0.858		 792.10   0.812
-8		2231.18   5.607		2263.24  10.985
-16		3023.25   5.779		2999.16   7.087
-32		3712.80  11.468		3649.19   9.967
-128		5997.98  13.719		6973.84  12.620
-512		4256.29 104.050		5089.61  97.548
-
-From `dbench -t 30`, CIL scale:
-
-clients		async			sync
-		BW	Latency		BW	Latency
-1		 935.18   0.855		 915.64   0.903
-8		2404.51   6.873		2341.77   6.511
-16		3003.42   6.460		2931.57   6.529
-32		3697.23   7.939		3596.28   7.894
-128		7237.43  15.495		7217.74  11.588
-512		5079.24  90.587		5167.08  95.822
-
-fsmark, 32 threads, create w/ 64 byte xattr w/32k logbsize
-
-	create		chown		unlink
-async   1m41s		1m16s		2m03s
-sync	1m40s		1m19s		1m54s
-
-async log iops: up to 17kiops
-async log b/w: up to 570MB/s
-
-sync log iops: up to 18kiops
-sync log b/w: up to 600MB/s
-
-Ok, so there's really no difference from async flushes on really
-fast storage.
-
-Slower storage:
-
-From `dbench -t 30`, CIL scale:
-
-clients		async			sync
-		BW	Latency		BW	Latency
-1		  78.59  15.792		  83.78  10.729
-8		 367.88  92.067		 404.63  59.943
-16		 564.51  72.524		 602.71  76.089
-32		 831.66 105.984		 870.26 110.482
-128		1659.76 102.969		1624.73  91.356
-512		2135.91 223.054		2603.07 161.160
-
-fsmark, 16 threads, create w/32k logbsize
-
-	create		unlink
-async   5m06s		4m15s
-sync	5m00s		4m22s
-
-
-Mostly no change here, either. Possibly a bit better fsync overload
-behaviour with sync flushes.
-
-I think we can probably just get rid of async flushes altogether for
-the moment. It looked necessary when developing the code, but seems
-to be complexity we don't actually need now that it's settled down a
-bit and all the bugs have been flushed out.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_log_cil.c | 27 +++++++++++++++++++--------
- 1 file changed, 19 insertions(+), 8 deletions(-)
-
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 83a039762b81..14746253805b 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -705,11 +705,21 @@ xlog_cil_set_ctx_write_state(
- 		 * The LSN we need to pass to the log items on transaction
- 		 * commit is the LSN reported by the first log vector write, not
- 		 * the commit lsn. If we use the commit record lsn then we can
--		 * move the tail beyond the grant write head.
-+		 * move the grant write head beyond the tail LSN and overwrite
-+		 * it.
- 		 */
- 		ctx->start_lsn = lsn;
- 		wake_up_all(&cil->xc_start_wait);
- 		spin_unlock(&cil->xc_push_lock);
-+
-+		/*
-+		 * Make sure the metadata we are about to overwrite in the log
-+		 * has been flushed to stable storage before this iclog is
-+		 * issued.
-+		 */
-+		spin_lock(&cil->xc_log->l_icloglock);
-+		iclog->ic_flags |= XLOG_ICL_NEED_FLUSH;
-+		spin_unlock(&cil->xc_log->l_icloglock);
- 		return;
- 	}
- 
-@@ -888,10 +898,10 @@ xlog_cil_push_work(
- 	struct xfs_trans_header thdr;
- 	struct xfs_log_iovec	lhdr;
- 	struct xfs_log_vec	lvhdr = { NULL };
--	xfs_lsn_t		preflush_tail_lsn;
-+//	xfs_lsn_t		preflush_tail_lsn;
- 	xfs_csn_t		push_seq;
- 	struct bio		bio;
--	DECLARE_COMPLETION_ONSTACK(bdev_flush);
-+//	DECLARE_COMPLETION_ONSTACK(bdev_flush);
- 	bool			push_commit_stable;
- 
- 	new_ctx = xlog_cil_ctx_alloc();
-@@ -974,9 +984,9 @@ xlog_cil_push_work(
- 	 * before the iclog write. To detect whether the log tail moves, sample
- 	 * the tail LSN *before* we issue the flush.
- 	 */
--	preflush_tail_lsn = atomic64_read(&log->l_tail_lsn);
--	xfs_flush_bdev_async(&bio, log->l_mp->m_ddev_targp->bt_bdev,
--				&bdev_flush);
-+//	preflush_tail_lsn = atomic64_read(&log->l_tail_lsn);
-+//	xfs_flush_bdev_async(&bio, log->l_mp->m_ddev_targp->bt_bdev,
-+//				&bdev_flush);
- 
- 	/*
- 	 * Pull all the log vectors off the items in the CIL, and remove the
-@@ -1058,7 +1068,7 @@ xlog_cil_push_work(
- 	 * Before we format and submit the first iclog, we have to ensure that
- 	 * the metadata writeback ordering cache flush is complete.
- 	 */
--	wait_for_completion(&bdev_flush);
-+//	wait_for_completion(&bdev_flush);
- 
- 	error = xlog_cil_write_chain(ctx, &lvhdr);
- 	if (error)
-@@ -1118,7 +1128,8 @@ xlog_cil_push_work(
- 	if (push_commit_stable &&
- 	    ctx->commit_iclog->ic_state == XLOG_STATE_ACTIVE)
- 		xlog_state_switch_iclogs(log, ctx->commit_iclog, 0);
--	xlog_state_release_iclog(log, ctx->commit_iclog, preflush_tail_lsn);
-+//	xlog_state_release_iclog(log, ctx->commit_iclog, preflush_tail_lsn);
-+	xlog_state_release_iclog(log, ctx->commit_iclog, 0);
- 
- 	/* Not safe to reference ctx now! */
- 
